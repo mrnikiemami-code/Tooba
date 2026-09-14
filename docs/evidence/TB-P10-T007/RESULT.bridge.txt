@@ -1,0 +1,88 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+
+BEGIN_TOOBA_WORKER_RESULT
+
+Task-ID:
+TB-P10-T007
+
+Parent-Task:
+TB-P10-T006
+
+Channel:
+tooba-main
+
+WorkerId:
+tooba-worker-01
+
+Status:
+PASS
+
+USER_VISUAL_ACCEPTED=NO
+
+Summary:
+Storefront token completion PASS. Remaining Home/PDP/Shipping/Cart/PLP/customer brand hexes now use semantic primary tokens. Shipping Shopeiva #E53935 brand chrome follows PaletteKey; validation stays text-red-600. amber-gold darkened for WCAG AA. Runtime A–L: tooba-blue, forest-green, wine-burgundy, slate-navy, restore blue. No TB-P10-T008. Worker IDLE.
+
+Applicable-Locks:
+LOCK-SF-001…144 preserved. Added LOCK-SF-145 semantic brand tokens; 146 no Shopeiva red CTA; 147 status independent of PaletteKey; 148 Home/PDP color-only; 149 curated contrast; 150 no page-local palette fetch.
+
+Recovery-Start:
+Phase P10; Architect-accepted/Last Implementation at claim TB-P10-T006; Current Task TB-P10-T007; branch main; HEAD==origin/main 10d4b345; unrelated login/account UX left dirty. Evidence docs/evidence/TB-P10-T007/recovery-start.md
+
+Color-Inventory:
+Home/PDP leftover #2563EB and Shipping #E53935 classified brand A and migrated; validation red C kept; Instagram purple/pink and testimonial gold D kept; Admin/vendor out of scope. Evidence color-inventory.md
+
+Brand-Token-Migration:
+bg-primary / text-primary / from-primary / rgb(var(--color-primary)). STOREFRONT_ACCENT is CSS var. amber-gold 180 83 9 / 146 64 14 on FE+Host registries. Evidence brand-token-migration.md
+
+Home-Token-Completion:
+Rails, links, slider, flash-sale, brands, reviews, articles use primary. home-structure.guard 6/6 including stories. Evidence home-token-completion.md
+
+PDP-Token-Completion:
+CTA, crumbs, price, variants, tabs, related accents tokenized. pdp-structure.guard 5/5. Evidence pdp-token-completion.md
+
+Shipping-Checkout-Token-Completion:
+Brand red chrome → primary / primary-strong. Errors remain text-red-600 / bg-red-50. Checkout/payment leftover blue → primary. Evidence shipping-checkout-token-completion.md
+
+Status-Color-Isolation:
+globals.css danger/success/warning unchanged. Appearance vars omit danger. Forest-green probe text-red-600 stays rgb(220, 38, 38). Evidence status-color-isolation.md
+
+Cross-Surface-Consistency:
+Header/Home/PLP/PDP/Cart/Shipping share one registry via SSR CSS vars. No page-local STOREFRONT_PALETTES. Evidence cross-surface-consistency.md
+
+Contrast-Validation:
+All 7 palettes AA ≥ 4.5 after amber-gold repair. Evidence contrast-validation.md
+
+Shopeiva-Comparison:
+tooba-blue tokens still 37 99 235. Critical Home/PDP/listing guards green. Shopeiva :3001 200. Alternate palettes change brand color only. Evidence shopeiva-comparison.md
+
+Focused-Validation:
+recovery 4/4; Host StoreAppearance 10/10; FE token+appearance 11/11; admin appearance 5/5; test:storefront 67/67; test:critical-storefront green; git diff --check clean. Full tsc not PASS (pre-existing Admin/grid). Evidence focused-validation.md
+
+Runtime:
+A–L green on Host :5088 + FE :3000. PUT forest-green / wine-burgundy / slate-navy / restore tooba-blue. SSR markers and CSS vars match. Screenshots Home/PDP/Shipping default+alternate + status isolation. Evidence runtime.md
+
+AntiPattern-Scan:
+CLEAN — no mechanical every-red, no status→brand, no local registries, no polling, no dark mode/skins/page builder. Evidence antipattern-scan.md
+
+Lock-Registry:
+LOCK-SF-145…150 appended after 144. No renumber.
+
+Recovery-SoT:
+Architect TB-P10-T006; Impl TB-P10-T007; Issued/Repair none; USER_VISUAL_ACCEPTED=NO; do NOT invent TB-P10-T008. Evidence recovery-sot.md
+
+Git:
+ending HEAD 0a18886fe17eaa05f63bd025c4d91a0d9ce9ee98
+origin/main (after push)
+HEAD==origin/main yes
+unrelated login/account UX preserved unstaged
+
+Architectural-Concerns:
+Login leftover dirty tree still has #2563EB (unrelated local UX, not staged). forest-green primary equals success RGB by existing token coincidence.
+
+Visual-Concerns:
+USER_VISUAL_ACCEPTED=NO. Next.js N overlay visible on both palettes; not a hydration mismatch. Locked geometry unchanged; brand color only.
+
+Blockers:
+none
+
+END_TOOBA_WORKER_RESULT
