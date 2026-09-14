@@ -51,7 +51,7 @@ Recovery-SoT:
 Phase P10 Architect TB-P10-T008-R1 Impl TB-P10-T009-R2 Issued/Repair none USER_VISUAL_ACCEPTED=NO Worker IDLE do NOT invent TB-P10-T010. docs/evidence/TB-P10-T009/r2-recovery-sot.md
 
 Git:
-SHA=PENDING HEAD==origin/main after push. Unrelated login leftovers not committed.
+SHA=df62e1022d43af99fb1806d96857dd223b752a5e HEAD==origin/main after push. Unrelated login leftovers not committed.
 
 Architectural-Concerns:
 none
