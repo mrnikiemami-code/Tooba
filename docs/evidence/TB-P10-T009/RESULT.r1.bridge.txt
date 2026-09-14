@@ -1,0 +1,64 @@
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-P10-T009-R1
+Parent-Task: TB-P10-T009
+Status: PASS
+WorkerId: tooba-worker-01
+Channel: tooba-main
+
+Summary:
+Persistent Playwright screenshots for Admin skin controls, all four Product Card skins, Home/PLP/PDP-related/cart-rec consistency, dark + alternate-palette compositions, and classic restore. No skin redesign. No TB-P10-T010. USER_VISUAL_ACCEPTED remains NO.
+
+Applicable-Locks:
+LOCK-SF-001…164 preserved. No new lock.
+
+Recovery-Start:
+branch=main HEAD=7a6df2c7bb8ab621eb74c5801d48518e9c3ac005 origin/main=same Host :5088 FE :3000 appearance=tooba-blue/LightOnly/classic leftover login/account UX preserved docs/evidence/TB-P10-T009/r1-recovery-start.md
+
+Screenshot-Method:
+Reused .tmp-r24r1r2-pw Playwright via docs/evidence/TB-P10-T009/r1-capture.mjs. Files persist under docs/evidence/TB-P10-T009/screenshots/. docs/evidence/TB-P10-T009/r1-screenshot-method.md
+
+Admin-Skin-Visual:
+admin-skin-default.png admin-skin-preview.png admin-skin-saved.png. Four FA-labeled options, selected chrome, preview, dirty then saved. docs/evidence/TB-P10-T009/r1-admin-skin-visual.md
+
+Four-Skin-Visual:
+classic.png clean.png elevated.png glass.png on the same Home card. Geometry shared; chrome differs. docs/evidence/TB-P10-T009/r1-four-skin-visual.md
+
+Cross-Surface-Visual:
+skin-home.png skin-plp.png skin-pdp-related.png skin-cart-recommendation.png with Store skin=clean. Wishlist skipped. docs/evidence/TB-P10-T009/r1-cross-surface-visual.md
+
+Theme-Palette-Visual:
+skin-dark.png (glass+DarkOnly) skin-alt-palette.png (elevated+forest-green) skin-dark-alt-palette.png (glass+DarkOnly+forest-green). docs/evidence/TB-P10-T009/r1-theme-palette-visual.md
+
+Visual-Geometry:
+Aspect, title, price, ATC, hover stack, width, listing density unchanged. docs/evidence/TB-P10-T009/r1-visual-geometry.md
+
+Default-Restore:
+classic-restored.png after PUT tooba-blue/LightOnly/classic. Ending GET matches. docs/evidence/TB-P10-T009/r1-default-restore.md
+
+Focused-Validation:
+Live invalid skin PUT 400. Ending appearance classic. FE appearance+skin 12, storefront 67, critical-storefront 18, recovery 4, git diff --check clean. Host rebuild skipped because live Tooba.Host holds binaries. docs/evidence/TB-P10-T009/r1-focused-validation.md
+
+Runtime:
+A–H PASS. API saves=9. SSR skin markers matched. Host :5088 FE :3000. docs/evidence/TB-P10-T009/r1-runtime.md
+
+AntiPattern-Scan:
+CLEAN. docs/evidence/TB-P10-T009/r1-antipattern-scan.md
+
+Lock-Registry:
+No new lock. docs/evidence/TB-P10-T009/r1-lock-registry.md
+
+Recovery-SoT:
+Phase P10 Architect TB-P10-T008-R1 Impl TB-P10-T009-R1 Issued/Repair none USER_VISUAL_ACCEPTED=NO Worker IDLE do NOT invent TB-P10-T010. docs/evidence/TB-P10-T009/r1-recovery-sot.md
+
+Git:
+branch=main SHA=PENDING HEAD==origin/main after push. Unrelated login leftovers not committed.
+
+Architectural-Concerns:
+none
+
+Visual-Concerns:
+Admin option thumbnails are empty chrome boxes; English keys remain as secondary captions. Isolated card crops make chrome differences (classic vs clean vs elevated vs glass) subtle. Playwright recorded existing hydration attribute mismatches and one Admin Maximum update depth console error; not introduced as a skin redesign. USER_VISUAL_ACCEPTED=NO.
+
+Blockers:
+none
+END_TOOBA_WORKER_RESULT
