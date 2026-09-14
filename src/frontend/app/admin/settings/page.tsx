@@ -85,6 +85,7 @@ export default function AdminSettingsPage() {
   });
   const [appearance, setAppearance] = useState<AppearanceSettingsView | null>(null);
   const [appearanceDraft, setAppearanceDraft] = useState("tooba-blue");
+  const [appearanceThemeDraft, setAppearanceThemeDraft] = useState("LightOnly");
   const [reservationDraft, setReservationDraft] = useState<ReservationPolicyDraft>({
     initial: "",
     retry: "",
@@ -150,6 +151,7 @@ export default function AdminSettingsPage() {
     if (appearanceResult.ok) {
       setAppearance(appearanceResult.data);
       setAppearanceDraft(appearanceResult.data.paletteKey);
+      setAppearanceThemeDraft(appearanceResult.data.themeMode);
     }
   }
 
@@ -345,7 +347,7 @@ export default function AdminSettingsPage() {
     setBusy(true);
     setError(null);
     setSuccess(null);
-    const result = await saveAppearanceSettings(appearanceDraft);
+    const result = await saveAppearanceSettings(appearanceDraft, appearanceThemeDraft);
     if (result.denied) {
       setDenied(true);
       setBusy(false);
@@ -358,12 +360,14 @@ export default function AdminSettingsPage() {
     }
     setAppearance(result.data);
     setAppearanceDraft(result.data.paletteKey);
+    setAppearanceThemeDraft(result.data.themeMode);
     setSuccess("ظاهر فروشگاه ذخیره شد.");
     setBusy(false);
   }
 
   function onCancelAppearance() {
     setAppearanceDraft(appearance?.paletteKey ?? "tooba-blue");
+    setAppearanceThemeDraft(appearance?.themeMode ?? "LightOnly");
     setError(null);
     setSuccess(null);
   }
@@ -458,10 +462,12 @@ export default function AdminSettingsPage() {
             <AdminAppearanceSettingsForm
               view={appearance}
               draftKey={appearanceDraft}
+              draftTheme={appearanceThemeDraft}
               busy={busy}
               readOnly={readOnly}
               error={error}
               onSelect={setAppearanceDraft}
+              onSelectTheme={setAppearanceThemeDraft}
               onSave={() => void onSaveAppearance()}
               onCancel={onCancelAppearance}
             />

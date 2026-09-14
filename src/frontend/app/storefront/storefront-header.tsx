@@ -34,6 +34,7 @@ import { CART_CHANGED_EVENT, loadStorefrontCart } from "./storefront-cart-api.ts
 import { AUTH_CHANGED_EVENT } from "./storefront-identity-api.ts";
 import { StorefrontMiniCartDrawer } from "./storefront-mini-cart.tsx";
 import { StorefrontAccountMenu } from "./storefront-account-menu.tsx";
+import { StorefrontThemeToggle } from "./storefront-theme-toggle.tsx";
 import { LocaleSwitcher } from "../../lib/i18n/LocaleSwitcher.tsx";
 
 /**
@@ -265,6 +266,7 @@ export function StorefrontShopeivaHeader({
             <Link href="/customer-panel/wishlist" className="w-10 h-10 rounded-xl hover:bg-gray-100 flex items-center justify-center text-gray-600" aria-label="علاقه‌مندی">
               <Heart className="w-5 h-5" />
             </Link>
+            <StorefrontThemeToggle />
             <StorefrontAccountMenu />
             <Link href="/admin/products" className="hidden sm:flex items-center gap-1 px-3 py-2 rounded-xl text-sm text-gray-600 hover:bg-gray-50">
               میزکار
@@ -496,6 +498,7 @@ export function StorefrontShopeivaHeader({
           </div>
           <div className="flex-1 overflow-y-auto p-3 space-y-1">
             <StorefrontAccountMenu compact />
+            <StorefrontThemeToggle compact />
             <form action={lp("/products")} method="get" className="mb-2">
               <div className="relative">
                 <input name="q" placeholder="جستجو در کالاها..." className="w-full bg-gray-50 border border-gray-200 rounded-2xl py-2.5 pr-10 pl-3 text-sm" aria-label="جستجوی کالا در موبایل" />

@@ -1,7 +1,8 @@
 "use client";
 
 import { listStorefrontPalettes, resolveBrandTokens, resolvePaletteKey } from "../../lib/storefront-appearance/palette-registry.ts";
-import { appearanceIsDirty, appearancePreviewStyle } from "./admin-appearance-settings.helpers.ts";
+import { resolveThemeMode } from "../../lib/storefront-appearance/theme-mode.ts";
+import { THEME_MODE_OPTIONS, appearanceIsDirty, appearancePreviewStyle } from "./admin-appearance-settings.helpers.ts";
 import type { AppearanceSettingsView } from "./appearance-settings-api.ts";
 
 function rgbCss(rgb: string): string {
@@ -11,17 +12,22 @@ function rgbCss(rgb: string): string {
 export function AdminAppearanceSettingsForm(props: {
   view: AppearanceSettingsView | null;
   draftKey: string;
+  draftTheme: string;
   busy: boolean;
   readOnly: boolean;
   error: string | null;
   onSelect: (key: string) => void;
+  onSelectTheme: (mode: string) => void;
   onSave: () => void;
   onCancel: () => void;
 }) {
   const presets = props.view?.presets?.length ? props.view.presets : [...listStorefrontPalettes()];
   const preview = resolveBrandTokens(props.draftKey);
   const savedKey = props.view?.paletteKey ?? "tooba-blue";
-  const dirty = appearanceIsDirty(savedKey, props.draftKey);
+  const savedTheme = props.view?.themeMode ?? "LightOnly";
+  const draftTheme = resolveThemeMode(props.draftTheme);
+  const dirty = appearanceIsDirty(savedKey, props.draftKey, savedTheme, draftTheme);
+  const previewDark = draftTheme === "DarkOnly";
   const unknown = props.view != null && !props.view.paletteKeyWasKnown;
 
   return (
@@ -36,7 +42,7 @@ export function AdminAppearanceSettingsForm(props: {
       <div>
         <h2 className="text-sm font-bold text-gray-900">ظاهر فروشگاه</h2>
         <p className="text-sm text-gray-500 leading-7 mt-1">
-          یک پالت از پیش تعریف‌شده انتخاب کنید. رنگ‌های وضعیت (موفقیت، هشدار، خطر) تغییر نمی‌کنند.
+          پالت برند و حالت تم را انتخاب کنید. رنگ‌های وضعیت (موفقیت، هشدار، خطر) به پالت وابسته نیستند.
         </p>
       </div>
       {unknown ? (
@@ -71,10 +77,33 @@ export function AdminAppearanceSettingsForm(props: {
           );
         })}
       </div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3" data-testid="admin-settings-appearance-themes">
+        {THEME_MODE_OPTIONS.map((option) => {
+          const selected = draftTheme === option.key;
+          return (
+            <button
+              key={option.key}
+              type="button"
+              disabled={props.readOnly || props.busy}
+              onClick={() => props.onSelectTheme(option.key)}
+              className={`text-right rounded-xl border p-3 transition-all ${
+                selected ? "border-[#2563EB] ring-2 ring-[#2563EB]/20" : "border-gray-200 hover:border-gray-300"
+              }`}
+              data-testid={`admin-settings-appearance-theme-${option.key}`}
+              data-selected={selected ? "true" : "false"}
+            >
+              <span className="block text-sm font-bold text-gray-900">{option.title}</span>
+              <span className="block text-[11px] text-gray-400 mt-1" dir="ltr">{option.key}</span>
+              <span className="block text-xs text-gray-500 mt-2 leading-6">{option.body}</span>
+            </button>
+          );
+        })}
+      </div>
       <div
-        className="rounded-xl border border-gray-200 p-4 space-y-3"
+        className={`rounded-xl border border-gray-200 p-4 space-y-3 ${previewDark ? "dark bg-background text-foreground" : ""}`}
         style={appearancePreviewStyle(props.draftKey)}
         data-testid="admin-settings-appearance-preview"
+        data-preview-theme={draftTheme}
       >
         <p className="text-xs text-gray-500">پیش‌نمایش ذخیره‌نشده</p>
         <button type="button" className="px-4 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-bold">

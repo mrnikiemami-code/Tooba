@@ -26,8 +26,11 @@ test("current palette dirty cancel save states are wired", () => {
   assert.match(form, /admin-settings-appearance-preview/);
   assert.match(form, /admin-settings-appearance-error/);
   assert.match(form, /admin-settings-appearance-unknown/);
+  assert.match(form, /admin-settings-appearance-themes/);
   assert.equal(appearanceIsDirty("tooba-blue", "forest-green"), true);
   assert.equal(appearanceIsDirty("tooba-blue", "tooba-blue"), false);
+  assert.equal(appearanceIsDirty("tooba-blue", "tooba-blue", "LightOnly", "DarkOnly"), true);
+  assert.equal(appearanceIsDirty("tooba-blue", "tooba-blue", "Light", "LightOnly"), false);
 });
 
 test("preview uses canonical registry tokens and leaves status colors", () => {
@@ -42,7 +45,7 @@ test("preview uses canonical registry tokens and leaves status colors", () => {
 
 test("save posts paletteKey only once per helper", () => {
   assert.match(api, /method: \"PUT\"/);
-  assert.match(api, /JSON\.stringify\(\{ paletteKey \}\)/);
+  assert.match(api, /JSON\.stringify\(\{ paletteKey, themeMode \}\)/);
   assert.doesNotMatch(api, /JSON\.stringify\(\{[^}]*primaryRgb/);
   assert.doesNotMatch(api, /localStorage/);
   assert.equal(listStorefrontPalettes().length >= 6, true);

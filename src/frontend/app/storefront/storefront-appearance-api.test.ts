@@ -14,7 +14,8 @@ test("SSR root applies appearance CSS variables", () => {
   assert.match(layout, /data-storefront-palette/);
   assert.match(layout, /data-storefront-scope/);
   assert.match(layout, /storefrontAppearanceStyle/);
-  assert.doesNotMatch(layout, /dangerouslySetInnerHTML/);
+  assert.match(layout, /THEME_BOOTSTRAP_SCRIPT/);
+  assert.doesNotMatch(layout, /dangerouslySetInnerHTML=\{[^}]*payload/);
 });
 
 test("appearance style is brand-token only", () => {

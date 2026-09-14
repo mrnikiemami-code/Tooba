@@ -31,12 +31,27 @@ public sealed class StoreAppearanceSettingsComposer
         return ToView(current);
     }
 
-    /// <summary>فقط PaletteKey مجاز را می‌نویسد؛ ThemeMode حفظ می‌شود.</summary>
-    public async Task<StoreAppearanceAdminView> SaveAsync(string? paletteKey, CancellationToken cancellationToken)
+    /// <summary>PaletteKey مجاز را می‌نویسد؛ ThemeMode در صورت نبود حفظ می‌شود.</summary>
+    public Task<StoreAppearanceAdminView> SaveAsync(string? paletteKey, CancellationToken cancellationToken)
+        => SaveAsync(paletteKey, themeMode: null, cancellationToken);
+
+    /// <summary>PaletteKey و ThemeMode را اتمیک می‌نویسد.</summary>
+    public async Task<StoreAppearanceAdminView> SaveAsync(string? paletteKey, string? themeMode, CancellationToken cancellationToken)
     {
         if (!StoreAppearancePaletteRegistry.IsKnown(paletteKey))
         {
             throw new PlatformHttpException(400, "پالت انتخاب‌شده مجاز نیست.", "appearance.palette.invalid");
+        }
+
+        StoreAppearanceThemeMode? parsedTheme = null;
+        if (themeMode is not null)
+        {
+            if (!StoreAppearanceSettings.TryParseThemeMode(themeMode, out var parsed))
+            {
+                throw new PlatformHttpException(400, "حالت تم انتخاب‌شده مجاز نیست.", "appearance.theme.invalid");
+            }
+
+            parsedTheme = parsed;
         }
 
         var canonical = StoreAppearancePaletteRegistry.ResolveKey(paletteKey);
@@ -49,7 +64,7 @@ public sealed class StoreAppearanceSettingsComposer
             _catalog.StoreAppearanceSettings.Add(row);
         }
 
-        row.Replace(canonical, row.ThemeMode, now);
+        row.Replace(canonical, parsedTheme ?? row.ThemeMode, now);
         await _catalog.SaveChangesAsync(cancellationToken);
         _projector.Invalidate(_commerce.Current);
         return ToView(await _projector.GetEffectiveAsync(cancellationToken));
@@ -102,5 +117,5 @@ public sealed record StoreAppearanceTokenView(
     string OnPrimaryRgb,
     string FocusRgb);
 
-/// <summary>بدنه ذخیره ظاهر.</summary>
-public sealed record StoreAppearanceSettingsWriteRequest(string? PaletteKey);
+/// <summary>بدنه ذخیره ظاهر؛ PaletteKey الزامی و ThemeMode اختیاری.</summary>
+public sealed record StoreAppearanceSettingsWriteRequest(string? PaletteKey, string? ThemeMode = null);

@@ -34,7 +34,7 @@ Channel: tooba-main
 Last Architect Accepted Task:
 
 ```text
-TB-P10-T006
+TB-P10-T007
 ```
 
 Prior accepted catalog wave:
@@ -62,7 +62,7 @@ TB-P05-GATE
 Last Implementation Task:
 
 ```text
-TB-P10-T007
+TB-P10-T008
 ```
 
 Current Issued Task:
@@ -80,6 +80,7 @@ Current Repair Task:
 Implemented Under Review:
 
 ```text
+TB-P10-T008 — Storefront Light/Dark ThemeMode (Admin persist, SSR first paint, UserChoice toggle); USER_VISUAL_ACCEPTED=NO
 TB-P10-T007 — Storefront token completion across Home, PDP, Shipping, and remaining brand-bound surfaces; USER_VISUAL_ACCEPTED=NO
 TB-P10-T006 — Store Appearance Admin (curated palette selection, preview, persistence, cache invalidation, live Storefront apply); USER_VISUAL_ACCEPTED=NO
 TB-P10-T005-R1 — Appearance foundation runtime + recovery repair (live /appearance, migration, Last Architect-accepted = TB-P10-T005-R1); USER_VISUAL_ACCEPTED=NO
@@ -207,7 +208,7 @@ NO
 Worker Next State:
 
 ```text
-IDLE — waits for Bridge Task (no invented next task; do NOT invent TB-P10-T008)
+IDLE — waits for Bridge Task (no invented next task; do NOT invent TB-P10-T009)
 ```
 
 Current Gate:

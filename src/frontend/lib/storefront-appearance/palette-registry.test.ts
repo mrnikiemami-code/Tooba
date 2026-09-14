@@ -46,6 +46,19 @@ test("every curated palette meets AA contrast for CTA and links", () => {
   }
 });
 
+test("dark surfaces meet AA for body muted danger and brand CTA", () => {
+  const darkPaper = "12 12 14";
+  const darkInk = "250 250 250";
+  const darkMuted = "180 180 188";
+  const darkDanger = "248 113 113";
+  assert.ok(contrastRatio(darkInk, darkPaper) >= 4.5, "body");
+  assert.ok(contrastRatio(darkMuted, darkPaper) >= 4.5, "muted");
+  assert.ok(contrastRatio(darkDanger, darkPaper) >= 4.5, "danger");
+  for (const palette of listStorefrontPalettes()) {
+    assert.ok(contrastRatio(palette.tokens.primaryRgb, palette.tokens.onPrimaryRgb) >= 4.5, `${palette.key} dark CTA`);
+  }
+});
+
 test("appearance CSS vars set brand tokens only", () => {
   const vars = appearanceCssVars(resolveBrandTokens("tooba-blue"));
   assert.equal(vars["--color-primary"], "37 99 235");

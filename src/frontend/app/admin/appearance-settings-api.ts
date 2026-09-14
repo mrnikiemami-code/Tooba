@@ -7,6 +7,7 @@ import {
   type StorefrontBrandTokens,
   type StorefrontPaletteDefinition,
 } from "../../lib/storefront-appearance/palette-registry.ts";
+import { resolveThemeMode } from "../../lib/storefront-appearance/theme-mode.ts";
 
 export interface AppearanceSettingsView {
   storeScope: string;
@@ -58,7 +59,7 @@ function mapView(payload: unknown): AppearanceSettingsView | null {
     storeScope: String(row.storeScope ?? "default"),
     paletteKey,
     paletteKeyWasKnown: row.paletteKeyWasKnown !== false,
-    themeMode: String(row.themeMode ?? "Light"),
+    themeMode: resolveThemeMode(typeof row.themeMode === "string" ? row.themeMode : null),
     tokens: mapTokens(row.tokens),
     presets: presets.length > 0 ? presets : [...listStorefrontPalettes()],
   };
@@ -80,11 +81,12 @@ export async function loadAppearanceSettings(): Promise<
 
 export async function saveAppearanceSettings(
   paletteKey: string,
+  themeMode: string,
 ): Promise<{ ok: true; data: AppearanceSettingsView } | { ok: false; denied?: boolean; message?: string }> {
   const response = await fetch("/v1/admin/settings/appearance", {
     method: "PUT",
     headers: { ...adminHeaders(), "Content-Type": "application/json" },
-    body: JSON.stringify({ paletteKey }),
+    body: JSON.stringify({ paletteKey, themeMode }),
   });
   if (response.status === 401 || response.status === 403) {
     return { ok: false, denied: true };
@@ -95,7 +97,9 @@ export async function saveAppearanceSettings(
       ok: false,
       message: payload?.errorCode === "appearance.palette.invalid"
         ? "پالت انتخاب‌شده مجاز نیست."
-        : "ذخیرهٔ ظاهر فروشگاه انجام نشد.",
+        : payload?.errorCode === "appearance.theme.invalid"
+          ? "حالت تم انتخاب‌شده مجاز نیست."
+          : "ذخیرهٔ ظاهر فروشگاه انجام نشد.",
     };
   }
   const data = mapView(await response.json().catch(() => null));

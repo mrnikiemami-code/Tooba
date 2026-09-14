@@ -66,16 +66,41 @@
   --color-foreground: 250 250 250;
   --color-muted: 180 180 188;
   --color-border: 72 72 80;
-  --color-primary: 96 165 250;
-  --color-primary-strong: 37 99 235;
-  --color-primary-foreground: 9 9 11;
   --color-secondary: 39 39 42;
   --color-secondary-foreground: 250 250 250;
   --color-success: 74 222 128;
   --color-warning: 251 191 36;
   --color-danger: 248 113 113;
   --color-info: 147 197 253;
-  --color-focus: 96 165 250;
+}
+
+html.dark .bg-white {
+  background-color: rgb(var(--color-surface));
+}
+
+html.dark .bg-gray-50 {
+  background-color: rgb(var(--color-background));
+}
+
+html.dark .bg-gray-100 {
+  background-color: rgb(var(--color-secondary));
+}
+
+html.dark .text-gray-900,
+html.dark .text-gray-800,
+html.dark .text-gray-700 {
+  color: rgb(var(--color-foreground));
+}
+
+html.dark .text-gray-600,
+html.dark .text-gray-500,
+html.dark .text-gray-400 {
+  color: rgb(var(--color-muted));
+}
+
+html.dark .border-gray-200,
+html.dark .border-gray-100 {
+  border-color: rgb(var(--color-border));
 }
 
 html,

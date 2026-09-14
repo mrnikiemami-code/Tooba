@@ -29,10 +29,32 @@ public sealed class StoreAppearanceAdminTests
         var composer = CreateComposer(out var catalog);
         var view = await composer.SaveAsync("forest-green", CancellationToken.None);
         Assert.Equal("forest-green", view.PaletteKey);
-        Assert.Equal("Light", view.ThemeMode);
+        Assert.Equal("LightOnly", view.ThemeMode);
         var row = await catalog.StoreAppearanceSettings.SingleAsync();
         Assert.Equal("forest-green", row.PaletteKey);
-        Assert.Equal(StoreAppearanceThemeMode.Light, row.ThemeMode);
+        Assert.Equal(StoreAppearanceThemeMode.LightOnly, row.ThemeMode);
+    }
+
+    [Fact]
+    public async Task Valid_theme_mode_updates_and_preserves_palette()
+    {
+        var composer = CreateComposer(out var catalog);
+        await composer.SaveAsync("forest-green", CancellationToken.None);
+        var view = await composer.SaveAsync("forest-green", "DarkOnly", CancellationToken.None);
+        Assert.Equal("forest-green", view.PaletteKey);
+        Assert.Equal("DarkOnly", view.ThemeMode);
+        var row = await catalog.StoreAppearanceSettings.SingleAsync();
+        Assert.Equal(StoreAppearanceThemeMode.DarkOnly, row.ThemeMode);
+    }
+
+    [Fact]
+    public async Task Invalid_theme_mode_is_rejected()
+    {
+        var composer = CreateComposer(out var catalog);
+        var error = await Assert.ThrowsAsync<PlatformHttpException>(() => composer.SaveAsync("tooba-blue", "Sepia", CancellationToken.None));
+        Assert.Equal(400, error.StatusCode);
+        Assert.Equal("appearance.theme.invalid", error.ErrorCode);
+        Assert.Empty(catalog.StoreAppearanceSettings);
     }
 
     [Fact]
@@ -93,7 +115,7 @@ public sealed class StoreAppearanceAdminTests
         var source = File.ReadAllText(Path.Combine(FindRepoRoot(), "src/backend/Host/Tooba.Host/Admin/StoreAppearanceSettingsEndpoints.cs"));
         Assert.Contains("/v1/admin/settings/appearance", source, StringComparison.Ordinal);
         Assert.Contains("AdminPanelAccess.RequireAuthorizedAsync", source, StringComparison.Ordinal);
-        Assert.DoesNotContain("ThemeMode", source, StringComparison.Ordinal);
+        Assert.Contains("body.ThemeMode", source, StringComparison.Ordinal);
     }
 
     private static StoreAppearanceSettingsComposer CreateComposer(out CatalogDbContext catalog)

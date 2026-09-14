@@ -613,3 +613,24 @@ All curated palettes must satisfy canonical contrast requirements before being s
 
 ### LOCK-SF-150 — No page-local palette registry or fetch
 Storefront pages must not define local palette registries or independent appearance fetch/state.
+
+### LOCK-SF-151 — ThemeMode is a controlled Store setting
+ThemeMode is a controlled Store appearance setting; arbitrary mode values are forbidden.
+
+### LOCK-SF-152 — Canonical ThemeMode semantics
+LightOnly/DarkOnly/System/UserChoice semantics are canonical and backend-validated.
+
+### LOCK-SF-153 — Dark mode uses semantic surface tokens
+Dark mode must be driven by semantic surface/text/border tokens, not page-local dark color branches.
+
+### LOCK-SF-154 — UserChoice is device preference
+UserChoice preference is user-device preference and must not mutate Store ThemeMode or commerce state.
+
+### LOCK-SF-155 — First paint resolves theme without flash
+First paint must resolve the effective theme without avoidable light/dark flash.
+
+### LOCK-SF-156 — Palette and ThemeMode compose; status stays independent
+PaletteKey and ThemeMode compose through one canonical appearance system; status semantic colors remain independent.
+
+### LOCK-SF-157 — Home/PDP dark changes color only
+Home/PDP dark implementation may change color/surface only; locked geometry/interactions remain unchanged.

@@ -5,6 +5,7 @@ import {
   resolvePaletteKey,
   type StorefrontBrandTokens,
 } from "../../lib/storefront-appearance/palette-registry.ts";
+import { resolveThemeMode } from "../../lib/storefront-appearance/theme-mode.ts";
 
 export interface StorefrontAppearanceProjection {
   storeScope: string;
@@ -18,7 +19,7 @@ const FALLBACK: StorefrontAppearanceProjection = {
   storeScope: "default",
   paletteKey: "tooba-blue",
   paletteKeyWasKnown: true,
-  themeMode: "Light",
+  themeMode: "LightOnly",
   tokens: resolveBrandTokens("tooba-blue"),
 };
 
@@ -45,7 +46,7 @@ export async function loadStorefrontAppearance(): Promise<StorefrontAppearancePr
       storeScope: payload.storeScope ?? FALLBACK.storeScope,
       paletteKey,
       paletteKeyWasKnown: payload.paletteKeyWasKnown !== false,
-      themeMode: payload.themeMode === "Dark" ? "Dark" : "Light",
+      themeMode: resolveThemeMode(payload.themeMode),
       tokens: {
         primaryRgb: payload.tokens?.primaryRgb ?? defaults.primaryRgb,
         primaryStrongRgb: payload.tokens?.primaryStrongRgb ?? defaults.primaryStrongRgb,

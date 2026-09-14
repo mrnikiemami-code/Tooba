@@ -81,7 +81,7 @@ public sealed class StoreAppearanceProjector
             scope,
             key,
             known || row is null,
-            (row?.ThemeMode ?? StoreAppearanceThemeMode.Light).ToString(),
+            StoreAppearanceSettings.NormalizeThemeMode(row?.ThemeMode ?? StoreAppearanceThemeMode.Light).ToString(),
             tokens.PrimaryRgb,
             tokens.PrimaryStrongRgb,
             tokens.OnPrimaryRgb,

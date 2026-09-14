@@ -11,19 +11,22 @@ interface ThemeContextValue {
 
 const ThemeContext = createContext<ThemeContextValue | null>(null);
 
+function readDocumentScheme(): ColorScheme {
+  if (typeof document === "undefined") {
+    return "light";
+  }
+  return document.documentElement.classList.contains("dark") ? "dark" : "light";
+}
+
 /**
- * تم کلاس‌محور را روی `html` اعمال می‌کند تا توکن معنایی light/dark و bidi فعال شود.
- * اسکریپت تم از پایگاه‌داده اجرا نمی‌شود.
+ * تم کلاس‌محور را با SSR هماهنگ می‌کند؛ اسکریپت تم از پایگاه‌داده اجرا نمی‌شود.
  */
 export function ThemeProvider({ children }: { children: ReactNode }) {
   const [theme, setTheme] = useState<ThemeContract>({ colorScheme: "light", direction: "rtl" });
 
   useEffect(() => {
-    const root = document.documentElement;
-    root.classList.toggle("dark", theme.colorScheme === "dark");
-    root.dir = theme.direction;
-    root.lang = theme.direction === "rtl" ? "fa" : "en";
-  }, [theme]);
+    setTheme((current) => ({ ...current, colorScheme: readDocumentScheme() }));
+  }, []);
 
   const value = useMemo<ThemeContextValue>(
     () => ({

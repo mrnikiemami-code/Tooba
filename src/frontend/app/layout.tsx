@@ -13,6 +13,13 @@ import {
 } from "../lib/i18n/locale";
 import { LOCALE_HEADER_NAME } from "../lib/i18n/routing";
 import { loadStorefrontAppearance, storefrontAppearanceStyle } from "./storefront/storefront-appearance-api.ts";
+import {
+  THEME_BOOTSTRAP_SCRIPT,
+  USER_COLOR_SCHEME_COOKIE,
+  parseUserColorScheme,
+  resolveEffectiveColorScheme,
+  resolveThemeMode,
+} from "../lib/storefront-appearance/theme-mode.ts";
 import "./globals.css";
 
 /**
@@ -35,17 +42,26 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
       ? headerLocale
       : parseLocale(jar.get(LOCALE_COOKIE_NAME)?.value) ?? DEFAULT_LOCALE;
   const appearance = await loadStorefrontAppearance();
+  const themeMode = resolveThemeMode(appearance.themeMode);
+  const userScheme = parseUserColorScheme(jar.get(USER_COLOR_SCHEME_COOKIE)?.value);
+  const colorScheme = resolveEffectiveColorScheme(themeMode, userScheme, false);
 
   return (
     <html
       lang={langForLocale(locale)}
       dir={dirForLocale(locale)}
+      className={colorScheme === "dark" ? "dark" : undefined}
       suppressHydrationWarning
       data-storefront-palette={appearance.paletteKey}
       data-storefront-scope={appearance.storeScope}
+      data-storefront-theme-mode={themeMode}
+      data-storefront-color-scheme={colorScheme}
       style={storefrontAppearanceStyle(appearance)}
     >
-      <body>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: THEME_BOOTSTRAP_SCRIPT }} />
+      </head>
+      <body className="bg-background text-foreground">
         <AppProviders>
           <LocaleProvider locale={locale}>{children}</LocaleProvider>
         </AppProviders>
