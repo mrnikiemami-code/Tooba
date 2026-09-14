@@ -77,6 +77,7 @@ const navGroupDefs: NavGroupDef[] = [
       { id: "stories", labelKey: "stories", href: "/admin/stories", icon: Sparkles, live: true, viewPermission: "story.view" },
       { id: "page-composition", labelKey: "pageComposition", href: "/admin/page-composition", icon: LayoutTemplate, live: true, viewPermission: "pagecomposition.view" },
       { id: "landing-pages", labelKey: "landingPages", href: "/admin/landing-pages", icon: FileText, live: true, viewPermission: "pagecomposition.view" },
+      { id: "menus", labelKey: "menus", href: "/admin/menus", icon: Menu, live: true, viewPermission: "pagecomposition.view" },
     ],
   },
   {

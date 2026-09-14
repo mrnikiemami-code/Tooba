@@ -718,3 +718,24 @@ Publishing/unpublishing and Page/Section writes invalidate only relevant Page/Ho
 
 ### LOCK-SF-185 — Reorder keeps identity and stays accessible
 Composer reorder preserves stable PageSection identity and must remain accessible beyond pointer-only drag/drop.
+
+### LOCK-SF-186 — Menu is Store-scoped structured navigation
+Menu/MenuItem is Store-scoped structured navigation. Arbitrary HTML, CSS, or JavaScript in menus is forbidden.
+
+### LOCK-SF-187 — Menu destinations use typed pickers
+Menu destinations use approved typed link kinds and Store-scoped searchable pickers. Technical IDs are not normal-facing inputs.
+
+### LOCK-SF-188 — Menu hierarchy is bounded and cycle-safe
+Menu hierarchy has bounded canonical depth (L1–L3), cycle prevention, deterministic sibling order, and stable MenuItem identity.
+
+### LOCK-SF-189 — Disabled MenuItems stay in the editor
+Disabled MenuItems are excluded from public projection without deleting editor state. A disabled parent hides its descendants publicly.
+
+### LOCK-SF-190 — Menu references fall back safely
+Page/Home/Header menu references must resolve only enabled same-Store compatible menus. Unset or invalid references preserve accepted fallback navigation.
+
+### LOCK-SF-191 — One Menu projection, controlled presentations
+Header and Landing may use different controlled presentations but share one canonical Menu tree/projection and business rules.
+
+### LOCK-SF-192 — External menu URLs are safe web schemes
+External menu URLs allow only validated http/https web schemes. javascript/data and other schemes are rejected.

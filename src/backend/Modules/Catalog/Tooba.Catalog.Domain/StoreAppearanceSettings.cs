@@ -43,6 +43,9 @@ public sealed class StoreAppearanceSettings
     /// <summary>صفحهٔ Landing منتخب خانه؛ null یعنی خانهٔ کاننیکال فعلی.</summary>
     public Guid? HomePageId { get; private set; }
 
+    /// <summary>منوی هدر؛ null یعنی مگامنوی رده‌ای فعلی.</summary>
+    public Guid? HeaderMenuId { get; private set; }
+
     /// <summary>زمان به‌روزرسانی.</summary>
     public DateTimeOffset UpdatedAt { get; private set; }
 
@@ -73,6 +76,13 @@ public sealed class StoreAppearanceSettings
     public void SetHomePage(Guid? homePageId, DateTimeOffset now)
     {
         HomePageId = homePageId;
+        UpdatedAt = now;
+    }
+
+    /// <summary>ارجاع منوی هدر را می‌نویسد؛ null یعنی fallback پذیرفته‌شده.</summary>
+    public void SetHeaderMenu(Guid? headerMenuId, DateTimeOffset now)
+    {
+        HeaderMenuId = headerMenuId;
         UpdatedAt = now;
     }
 

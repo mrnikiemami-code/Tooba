@@ -858,6 +858,22 @@ const ADMIN_ERROR_MESSAGES: Record<string, { fa: string; en: string }> = {
     fa: "بخش یافت نشد.",
     en: "The section was not found.",
   },
+  "menu.title.required": { fa: "عنوان منو لازم است.", en: "Menu title is required." },
+  "menu.key.duplicate": { fa: "کلید منو تکراری است.", en: "Menu key already exists." },
+  "menu.missing": { fa: "منو یافت نشد.", en: "The menu was not found." },
+  "menu.delete.referenced": { fa: "این منو در حال استفاده است و حذف نمی‌شود.", en: "This menu is in use and cannot be deleted." },
+  "menu.item.missing": { fa: "آیتم منو یافت نشد.", en: "The menu item was not found." },
+  "menu.item.label.required": { fa: "عنوان آیتم لازم است.", en: "Menu item label is required." },
+  "menu.item.cycle": { fa: "چرخه در درخت منو مجاز نیست.", en: "Menu cycles are not allowed." },
+  "menu.item.depth": { fa: "حداکثر سه سطح تو در تو مجاز است.", en: "Menus are limited to three levels." },
+  "menu.item.parent.invalid": { fa: "والد باید در همین منو باشد.", en: "The parent must belong to the same menu." },
+  "menu.item.reorder.invalid": { fa: "ترتیب آیتم‌ها کامل نیست.", en: "The menu order is incomplete." },
+  "menu.link.invalid": { fa: "نوع مقصد منو معتبر نیست.", en: "The destination type is not valid." },
+  "menu.url.required": { fa: "نشانی بیرونی لازم است.", en: "An external address is required." },
+  "menu.url.unsafe": { fa: "فقط نشانی وب امن مجاز است.", en: "Only safe web addresses are allowed." },
+  "menu.target.required": { fa: "مقصد را از فهرست انتخاب کنید.", en: "Choose a destination from the list." },
+  "menu.target.missing": { fa: "مقصد انتخاب‌شده در این فروشگاه نیست.", en: "The selected destination is not in this store." },
+  "menu.header.ineligible": { fa: "فقط منوی فعال قابل انتخاب است.", en: "Only an enabled menu can be selected." },
 };
 
 const TECHNICAL_UI_PATTERNS = [

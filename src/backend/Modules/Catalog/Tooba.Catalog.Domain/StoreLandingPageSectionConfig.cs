@@ -70,6 +70,7 @@ public static class StoreLandingPageSectionConfig
                 StoreLandingPageSectionRegistry.ArticleList => NormalizeArticleList(document.RootElement),
                 StoreLandingPageSectionRegistry.Reviews => NormalizeTitleOnly(document.RootElement),
                 StoreLandingPageSectionRegistry.RichText => NormalizeRichText(document.RootElement),
+                StoreLandingPageSectionRegistry.NavigationMenu => NormalizeNavigationMenu(document.RootElement),
                 _ => throw new PlatformHttpException(400, "نوع بخش تأییدشده نیست.", "landing.section.type.invalid"),
             };
         }
@@ -176,6 +177,16 @@ public static class StoreLandingPageSectionConfig
 
     private static string NormalizeTitleOnly(JsonElement root) =>
         JsonSerializer.Serialize(new { title = OptionalString(root, "title", StoreLandingPageSectionRegistry.TitleMaxLength) }, JsonOptions);
+
+    private static string NormalizeNavigationMenu(JsonElement root)
+    {
+        var menuId = RequiredGuid(root, "menuId");
+        return JsonSerializer.Serialize(new
+        {
+            title = OptionalString(root, "title", StoreLandingPageSectionRegistry.TitleMaxLength),
+            menuId,
+        }, JsonOptions);
+    }
 
     private static string NormalizeRichText(JsonElement root)
     {

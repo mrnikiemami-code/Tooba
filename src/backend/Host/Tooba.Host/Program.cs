@@ -148,6 +148,7 @@ builder.Services.AddMemoryCache();
 builder.Services.AddScoped<Tooba.Host.Storefront.StoreAppearanceProjector>();
 builder.Services.AddScoped<Tooba.Host.Admin.StoreAppearanceSettingsComposer>();
 builder.Services.AddScoped<Tooba.Host.Admin.StoreLandingPageComposer>();
+builder.Services.AddScoped<Tooba.Host.Admin.StoreMenuComposer>();
 builder.Services.AddScoped(sp =>
     new CheckoutIdentityGate(
         sp.GetRequiredService<Tooba.Catalog.Infrastructure.Persistence.CatalogDbContext>(),
@@ -408,6 +409,15 @@ if (app.Environment.IsDevelopment())
         {
             app.Logger.LogError(ex, "LandingPageDevelopmentSeed failed; Host continues without landing demo pages.");
         }
+
+        try
+        {
+            await StoreMenuDevelopmentSeedHost.ApplyAsync(app.Services);
+        }
+        catch (Exception ex)
+        {
+            app.Logger.LogError(ex, "StoreMenuDevelopmentSeed failed; Host continues without demo menu.");
+        }
     }
 }
 
@@ -430,6 +440,7 @@ app.MapCheckoutIdentitySettingsEndpoints();
 app.MapCheckoutAbuseSettingsEndpoints();
 app.MapStoreAppearanceSettingsEndpoints();
 app.MapStoreLandingPageEndpoints();
+app.MapStoreMenuEndpoints();
 app.MapReservationPolicyAdminEndpoints();
 app.MapUnitOfMeasureEndpoints();
 app.MapShippingServiceEndpoints();

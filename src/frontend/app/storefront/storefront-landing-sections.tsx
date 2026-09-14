@@ -13,6 +13,7 @@ import type {
   StorefrontLandingPage,
   StorefrontLandingSection,
 } from "./storefront-landing-api.ts";
+import { StorefrontMenuLinks } from "./storefront-menu-tree.tsx";
 
 export type { LandingRenderContext };
 
@@ -82,6 +83,11 @@ function renderLandingSection(section: StorefrontLandingSection, context: Landin
       return context.reviews.length ? <HomeTestimonialsSection reviews={context.reviews} /> : null;
     case "RichText":
       return <LandingRichText config={config} />;
+    case "NavigationMenu": {
+      const menuId = typeof config.menuId === "string" ? config.menuId : "";
+      const items = menuId ? context.menus[menuId] ?? [] : [];
+      return items.length ? <StorefrontMenuLinks items={items} title={titleOf(config, "")} /> : null;
+    }
     default:
       return null;
   }

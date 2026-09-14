@@ -1,4 +1,5 @@
 import { loadStorefrontHome, loadStorefrontListing, storefrontHostOrigin } from "./storefront-api.ts";
+import { loadStorefrontMenu, type StorefrontMenuItem } from "./storefront-menu-api.ts";
 import type {
   StorefrontArticleItem,
   StorefrontBrandItem,
@@ -13,6 +14,7 @@ export type LandingRenderContext = {
   brands: StorefrontBrandItem[];
   articles: StorefrontArticleItem[];
   reviews: StorefrontFeaturedReviewItem[];
+  menus: Record<string, StorefrontMenuItem[]>;
 };
 
 export interface StorefrontLandingResolvedItem {
@@ -147,12 +149,23 @@ export async function loadLandingRenderContext(
     ...(home?.productRail ?? []),
     ...(listing?.products ?? []),
   ]);
+  const menuIds = [...new Set(page.sections.flatMap((section) => {
+    if (section.sectionType !== "NavigationMenu") return [];
+    try {
+      const config = JSON.parse(section.config) as { menuId?: string };
+      return config.menuId ? [config.menuId] : [];
+    } catch {
+      return [];
+    }
+  }))];
+  const menuEntries = await Promise.all(menuIds.map(async (menuId) => [menuId, await loadStorefrontMenu(menuId)] as const));
   return {
     products,
     categories: home?.categories ?? listing?.categories ?? [],
     brands: home?.brands ?? [],
     articles: home?.latestArticles ?? [],
     reviews: home?.featuredReviews ?? [],
+    menus: Object.fromEntries(menuEntries),
   };
 }
 

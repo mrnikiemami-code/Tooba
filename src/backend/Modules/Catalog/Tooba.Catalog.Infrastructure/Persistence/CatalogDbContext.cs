@@ -55,6 +55,12 @@ public sealed class CatalogDbContext : DbContext
     /// <summary>بخش‌های Landing متعلق به صفحه.</summary>
     public DbSet<StoreLandingPageSection> StoreLandingPageSections => Set<StoreLandingPageSection>();
 
+    /// <summary>منوهای ساختاریافتهٔ فروشگاه.</summary>
+    public DbSet<StoreMenu> StoreMenus => Set<StoreMenu>();
+
+    /// <summary>آیتم‌های درختی منو.</summary>
+    public DbSet<StoreMenuItem> StoreMenuItems => Set<StoreMenuItem>();
+
     /// <summary>override چرخه رزرو Offer/Category.</summary>
     public DbSet<ReservationCyclePolicyOverride> ReservationCyclePolicyOverrides => Set<ReservationCyclePolicyOverride>();
 
@@ -570,6 +576,7 @@ public sealed class CatalogDbContext : DbContext
             entity.Property(x => x.ThemeMode).HasConversion<string>().HasMaxLength(16);
             entity.Property(x => x.ProductCardSkin).HasMaxLength(16).IsRequired();
             entity.Property(x => x.HomePageId);
+            entity.Property(x => x.HeaderMenuId);
         });
 
         modelBuilder.Entity<StoreLandingPage>(entity =>
@@ -595,6 +602,28 @@ public sealed class CatalogDbContext : DbContext
             entity.Property(x => x.SectionType).HasMaxLength(64).IsRequired();
             entity.Property(x => x.ConfigurationJson).HasMaxLength(4000).IsRequired();
             entity.HasIndex(x => new { x.PageId, x.SortOrder });
+        });
+
+        modelBuilder.Entity<StoreMenu>(entity =>
+        {
+            entity.ToTable("store_menus");
+            entity.HasKey(x => x.MenuId);
+            entity.Property(x => x.MenuId).ValueGeneratedNever();
+            entity.Property(x => x.Title).HasMaxLength(200).IsRequired();
+            entity.Property(x => x.Locale).HasMaxLength(16).IsRequired();
+            entity.Property(x => x.MenuKey).HasMaxLength(64).IsRequired();
+            entity.HasIndex(x => new { x.Locale, x.MenuKey }).IsUnique();
+        });
+
+        modelBuilder.Entity<StoreMenuItem>(entity =>
+        {
+            entity.ToTable("store_menu_items");
+            entity.HasKey(x => x.MenuItemId);
+            entity.Property(x => x.MenuItemId).ValueGeneratedNever();
+            entity.Property(x => x.Label).HasMaxLength(120).IsRequired();
+            entity.Property(x => x.LinkType).HasConversion<string>().HasMaxLength(32);
+            entity.Property(x => x.ExternalUrl).HasMaxLength(500);
+            entity.HasIndex(x => new { x.MenuId, x.ParentMenuItemId, x.SortOrder });
         });
 
         modelBuilder.Entity<ReservationCyclePolicyOverride>(entity =>

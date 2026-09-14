@@ -1,0 +1,151 @@
+{
+  "ok": true,
+  "steps": [
+    {
+      "name": "api-list",
+      "pass": true
+    },
+    {
+      "name": "B-menu",
+      "pass": true
+    },
+    {
+      "name": "seed-home",
+      "pass": true
+    },
+    {
+      "name": "J-tree",
+      "pass": true
+    },
+    {
+      "name": "F-landing-picker-ready",
+      "pass": true
+    },
+    {
+      "name": "G-category-ready",
+      "pass": true
+    },
+    {
+      "name": "P-unset-fallback",
+      "pass": true
+    },
+    {
+      "name": "K-assign",
+      "pass": true
+    },
+    {
+      "name": "L-public-selected",
+      "pass": true
+    },
+    {
+      "name": "N-l3",
+      "pass": true
+    },
+    {
+      "name": "O-disabled-absent",
+      "pass": true
+    },
+    {
+      "name": "A-list",
+      "pass": true
+    },
+    {
+      "name": "file:menu-list.png",
+      "pass": true,
+      "data": {
+        "bytes": 65236
+      }
+    },
+    {
+      "name": "CDE-editor",
+      "pass": true
+    },
+    {
+      "name": "file:menu-editor.png",
+      "pass": true,
+      "data": {
+        "bytes": 81811
+      }
+    },
+    {
+      "name": "file:menu-nested.png",
+      "pass": true,
+      "data": {
+        "bytes": 81811
+      }
+    },
+    {
+      "name": "file:menu-picker.png",
+      "pass": true,
+      "data": {
+        "bytes": 83329
+      }
+    },
+    {
+      "name": "L-desktop",
+      "pass": true
+    },
+    {
+      "name": "file:menu-desktop.png",
+      "pass": true,
+      "data": {
+        "bytes": 523248
+      }
+    },
+    {
+      "name": "M-mobile",
+      "pass": true
+    },
+    {
+      "name": "file:menu-mobile.png",
+      "pass": true,
+      "data": {
+        "bytes": 53608
+      }
+    },
+    {
+      "name": "landing-section",
+      "pass": true
+    },
+    {
+      "name": "file:menu-landing-section.png",
+      "pass": true,
+      "data": {
+        "bytes": 367219
+      }
+    },
+    {
+      "name": "P-fallback-restored",
+      "pass": true
+    },
+    {
+      "name": "Q-seed-kept",
+      "pass": true
+    }
+  ],
+  "files": {
+    "menu-list.png": {
+      "bytes": 65236
+    },
+    "menu-editor.png": {
+      "bytes": 81811
+    },
+    "menu-nested.png": {
+      "bytes": 81811
+    },
+    "menu-picker.png": {
+      "bytes": 83329
+    },
+    "menu-desktop.png": {
+      "bytes": 523248
+    },
+    "menu-mobile.png": {
+      "bytes": 53608
+    },
+    "menu-landing-section.png": {
+      "bytes": 367219
+    }
+  },
+  "errors": [],
+  "console": []
+}

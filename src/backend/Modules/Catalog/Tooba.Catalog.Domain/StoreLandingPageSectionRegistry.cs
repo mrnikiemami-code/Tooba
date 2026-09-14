@@ -12,6 +12,7 @@ public static class StoreLandingPageSectionRegistry
     public const string ArticleList = "ArticleList";
     public const string Reviews = "Reviews";
     public const string RichText = "RichText";
+    public const string NavigationMenu = "NavigationMenu";
 
     public const int MaxSectionsPerPage = 40;
     public const int MaxTake = 24;
@@ -22,7 +23,7 @@ public static class StoreLandingPageSectionRegistry
 
     public static readonly IReadOnlySet<string> ApprovedTypes = new HashSet<string>(StringComparer.Ordinal)
     {
-        Hero, ProductCollection, CategoryGrid, BrandStrip, PromoBanner, ArticleList, Reviews, RichText,
+        Hero, ProductCollection, CategoryGrid, BrandStrip, PromoBanner, ArticleList, Reviews, RichText, NavigationMenu,
     };
 
     public static readonly IReadOnlySet<string> ProductSources = new HashSet<string>(StringComparer.OrdinalIgnoreCase)

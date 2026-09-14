@@ -5,6 +5,7 @@ import { AdminSearchableCombobox } from "../admin-searchable-combobox";
 import { loadCategoryTree, type CategoryTreeNodeDto } from "../catalog-category-api";
 import { listAdminBrandOptions, queryAdminProductGrid } from "../host-client";
 import { PRODUCT_SOURCE_CHOICES } from "./landing-section-catalog.ts";
+import { listAdminMenus } from "../menus/admin-menus-api.ts";
 
 function asStringArray(value: unknown): string[] {
   if (!Array.isArray(value)) return [];
@@ -147,7 +148,47 @@ export function LandingSectionForm({
     );
   }
 
+  if (type === "NavigationMenu") {
+    return (
+      <div className="space-y-3" data-testid="landing-section-form">
+        <TextField label="عنوان" value={title} onChange={(next) => set({ title: next })} />
+        <MenuPicker value={typeof value.menuId === "string" ? value.menuId : null} onChange={(menuId) => set({ menuId })} />
+      </div>
+    );
+  }
+
   return <p className="text-sm text-muted">این بخش قابل ویرایش نیست.</p>;
+}
+
+function MenuPicker({ value, onChange }: { value: string | null; onChange: (next: string | null) => void }) {
+  const [options, setOptions] = useState<{ value: string; label: string }[]>([]);
+  const [loading, setLoading] = useState(true);
+  useEffect(() => {
+    let cancelled = false;
+    void listAdminMenus().then((result) => {
+      if (cancelled) return;
+      setLoading(false);
+      if (!result.ok) return;
+      setOptions(result.data.filter((row) => row.isEnabled).map((row) => ({ value: row.menuId, label: row.title })));
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+  return (
+    <div data-testid="landing-menu-picker">
+      <p className="mb-1 text-sm font-bold">منو</p>
+      {loading ? <p className="text-xs text-muted">در حال بارگذاری…</p> : null}
+      {!loading && options.length === 0 ? <p className="text-xs text-muted">منوی فعالی یافت نشد.</p> : null}
+      <AdminSearchableCombobox
+        value={value}
+        options={options}
+        onChange={onChange}
+        placeholder="جستجوی منو…"
+        testId="landing-menu-combobox"
+      />
+    </div>
+  );
 }
 
 function TextField({

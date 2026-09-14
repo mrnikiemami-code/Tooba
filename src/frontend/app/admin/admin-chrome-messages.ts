@@ -34,6 +34,7 @@ export type AdminNavLabels = {
   stories: string;
   pageComposition: string;
   landingPages: string;
+  menus: string;
   sellers: string;
   customers: string;
   reviews: string;
@@ -80,6 +81,7 @@ const faNav: AdminNavLabels = {
   stories: "استوری‌ها",
   pageComposition: "ترکیب صفحهٔ خانه",
   landingPages: "صفحات فرود",
+  menus: "منوها",
   sellers: "فروشندگان",
   customers: "مشتریان",
   reviews: "نظرات",
@@ -126,6 +128,7 @@ const enNav: AdminNavLabels = {
   stories: "Stories",
   pageComposition: "Home page composition",
   landingPages: "Landing pages",
+  menus: "Menus",
   sellers: "Sellers",
   customers: "Customers",
   reviews: "Reviews",

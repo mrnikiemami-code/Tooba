@@ -146,6 +146,7 @@ internal static class ProductWorkspaceDevelopmentBootstrap
             await PageCompositionDevelopmentSeed.ApplyAsync(provider);
             await StoryDevelopmentSeed.ApplyAsync(provider);
             await LandingPageDevelopmentSeed.ApplyAsync(provider);
+            await StoreMenuDevelopmentSeed.ApplyAsync(provider);
             return;
         }
 
@@ -264,6 +265,7 @@ internal static class ProductWorkspaceDevelopmentBootstrap
         await PageCompositionDevelopmentSeed.ApplyAsync(provider, cancellation);
         await StoryDevelopmentSeed.ApplyAsync(provider, cancellation);
         await LandingPageDevelopmentSeed.ApplyAsync(provider, cancellation);
+        await StoreMenuDevelopmentSeed.ApplyAsync(provider, cancellation);
         await EnsureAdminR3PreviewSeedAsync(provider, cancellation);
     }
 

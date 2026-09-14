@@ -1,0 +1,67 @@
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-P10-T013
+Parent-Task: TB-P10-T012
+Status: PASS
+WorkerId: tooba-worker-01
+Channel: tooba-main
+
+Summary:
+Store-scoped Menu/MenuItem is live with Persian Admin list/editor, typed destinations, searchable pickers, bounded L1–L3 nesting, HeaderMenuId selection, and one storefront projection. Unset header keeps Catalog mega-menu/category fallback. NavigationMenu landing section is optional. Demo menu store-demo-menu is seeded. USER_VISUAL_ACCEPTED remains NO. No T014.
+
+Applicable-Locks:
+LOCK-SF-001…185 preserved. Added LOCK-SF-186…192.
+
+Recovery-Start:
+branch=main HEAD-at-claim=b05f644b leftover login/account UX preserved. docs/evidence/TB-P10-T013/recovery-start.md
+
+Menu-Discovery:
+Catalog mega-menu stays category fallback. New StoreMenu is SoT. docs/evidence/TB-P10-T013/menu-discovery.md
+
+Menu-Model:
+StoreMenu + StoreMenuItem, typed links, depth 3. docs/evidence/TB-P10-T013/menu-model.md
+
+Admin-Menu-UX:
+Ops «منوها», tree editor, no raw IDs. docs/evidence/TB-P10-T013/admin-menu-ux.md
+
+Destination-Pickers:
+Landing/Product/Category/Brand/Article pickers; External http/https. docs/evidence/TB-P10-T013/destination-pickers.md
+
+Nesting-Contract:
+L1–L3, cycle rejected, stable IDs, disabled parent hides children publicly. docs/evidence/TB-P10-T013/nesting-contract.md
+
+Storefront-Integration:
+HeaderMenuId + StorefrontMenuLinks; unset uses fallback. docs/evidence/TB-P10-T013/storefront-integration.md
+
+Seed-Demo:
+منوی دموی فروشگاه / store-demo-menu. docs/evidence/TB-P10-T013/seed-demo.md
+
+Focused-Validation:
+Host 23/23. FE guards + critical-storefront + recovery 4/4. docs/evidence/TB-P10-T013/focused-validation.md
+
+Runtime:
+A–Q PASS. screenshots persisted. docs/evidence/TB-P10-T013/runtime.md
+
+Performance:
+One projection, 2-min cache, write invalidation only. docs/evidence/TB-P10-T013/performance.md
+
+AntiPattern-Scan:
+CLEAN. docs/evidence/TB-P10-T013/antipattern-scan.md
+
+Lock-Registry:
+LOCK-SF-186…192 appended.
+
+Recovery-SoT:
+Phase P10 Architect TB-P10-T012 Impl TB-P10-T013 Issued/Repair none USER_VISUAL_ACCEPTED=NO Worker IDLE do NOT invent TB-P10-T014. docs/evidence/TB-P10-T013/recovery-sot.md
+
+Git:
+HEAD==origin/main after push. Unrelated login leftovers not committed.
+
+Architectural-Concerns:
+Article public href is slug-poor without Content DB join; picker still uses published articles.
+
+Visual-Concerns:
+USER_VISUAL_ACCEPTED=NO pending user review of Menu Admin and Header.
+
+Blockers:
+none
+END_TOOBA_WORKER_RESULT

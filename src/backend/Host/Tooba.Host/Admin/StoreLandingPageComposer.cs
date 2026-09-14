@@ -353,6 +353,17 @@ public sealed class StoreLandingPageComposer
                 }
             }
         }
+
+        if (section.SectionType == StoreLandingPageSectionRegistry.NavigationMenu
+            && root.TryGetProperty("menuId", out var menuEl)
+            && menuEl.ValueKind == System.Text.Json.JsonValueKind.String
+            && Guid.TryParse(menuEl.GetString(), out var menuId))
+        {
+            if (!await _catalog.StoreMenus.AnyAsync(x => x.MenuId == menuId && x.IsEnabled, cancellationToken))
+            {
+                throw new PlatformHttpException(400, "منوی انتخاب‌شده در این فروشگاه فعال نیست.", "landing.section.ref.missing");
+            }
+        }
     }
 
     private async Task EnsureCategoryAsync(Guid categoryId, CancellationToken cancellationToken)

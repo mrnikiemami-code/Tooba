@@ -30,6 +30,7 @@ import {
 } from "lucide-react";
 import type { StorefrontBrandItem, StorefrontCategoryItem } from "./storefront-model.ts";
 import { loadStorefrontMegaMenu, type StorefrontMegaMenuItem } from "../admin/catalog-mega-menu-api.ts";
+import { loadStorefrontHeaderMenu, menuChildren, type StorefrontMenuItem } from "./storefront-menu-api.ts";
 import { CART_CHANGED_EVENT, loadStorefrontCart } from "./storefront-cart-api.ts";
 import { AUTH_CHANGED_EVENT } from "./storefront-identity-api.ts";
 import { StorefrontMiniCartDrawer } from "./storefront-mini-cart.tsx";
@@ -54,15 +55,40 @@ export function StorefrontShopeivaHeader({
   const [mobileOpen, setMobileOpen] = useState(false);
   const [mobileOpenCategories, setMobileOpenCategories] = useState<Record<string, boolean>>({ main: true });
   const [megaMenuItems, setMegaMenuItems] = useState<StorefrontMegaMenuItem[]>([]);
-  const useConfiguredMenu = megaMenuItems.length > 0;
+  const [storeMenuItems, setStoreMenuItems] = useState<StorefrontMenuItem[]>([]);
+  const [useStoreMenu, setUseStoreMenu] = useState(false);
+  const useConfiguredMenu = useStoreMenu || megaMenuItems.length > 0;
 
   useEffect(() => {
-    void loadStorefrontMegaMenu(localeToContentApi(locale)).then(setMegaMenuItems);
+    let cancelled = false;
+    void loadStorefrontHeaderMenu().then((header) => {
+      if (cancelled) return;
+      const selected = !header.usesFallback && header.items.length > 0;
+      setUseStoreMenu(selected);
+      setStoreMenuItems(selected ? header.items : []);
+      if (!selected) {
+        void loadStorefrontMegaMenu(localeToContentApi(locale)).then((items) => {
+          if (!cancelled) setMegaMenuItems(items);
+        });
+      } else {
+        setMegaMenuItems([]);
+      }
+    });
+    return () => {
+      cancelled = true;
+    };
   }, [locale]);
 
   type NavRow = StorefrontCategoryItem & { href: string };
 
-  const navigationRoots: NavRow[] = useConfiguredMenu
+  const navigationRoots: NavRow[] = useStoreMenu
+    ? menuChildren(storeMenuItems, null).map((item) => ({
+        categoryId: item.menuItemId,
+        parentCategoryId: item.parentMenuItemId,
+        name: item.label,
+        href: item.href || "#",
+      }))
+    : useConfiguredMenu
     ? megaMenuItems
         .filter((item) => item.parentMegaMenuItemId === null)
         .map((item) => ({
@@ -167,18 +193,30 @@ export function StorefrontShopeivaHeader({
   }, [navigationRoots, selectedCategoryId]);
 
   const selectedCategory = navigationRoots.find((item) => item.categoryId === selectedCategoryId) ?? navigationRoots[0] ?? null;
-  const childCategories: NavRow[] = useConfiguredMenu
-    ? megaMenuItems
-        .filter((item) => item.parentMegaMenuItemId === selectedCategory?.categoryId)
+  const childOf = (parentId: string | null): NavRow[] => {
+    if (useStoreMenu) {
+      return menuChildren(storeMenuItems, parentId).map((item) => ({
+        categoryId: item.menuItemId,
+        parentCategoryId: item.parentMenuItemId,
+        name: item.label,
+        href: item.href || "#",
+      }));
+    }
+    if (useConfiguredMenu) {
+      return megaMenuItems
+        .filter((item) => item.parentMegaMenuItemId === parentId)
         .map((item) => ({
           categoryId: item.megaMenuItemId,
           parentCategoryId: item.parentMegaMenuItemId,
           name: item.title,
           href: item.destination,
-        }))
-    : categories
-        .filter((item) => item.parentCategoryId === selectedCategory?.categoryId)
-        .map((item) => ({ ...item, href: `${lp("/products")}?categoryId=${item.categoryId}` }));
+        }));
+    }
+    return categories
+      .filter((item) => item.parentCategoryId === parentId)
+      .map((item) => ({ ...item, href: `${lp("/products")}?categoryId=${item.categoryId}` }));
+  };
+  const childCategories: NavRow[] = childOf(selectedCategory?.categoryId ?? null);
 
   const categoryIcon = (name: string) => {
     if (name.includes("دیجیتال") || name.includes("موبایل")) return Smartphone;
@@ -380,18 +418,7 @@ export function StorefrontShopeivaHeader({
                           <div className="flex-1 overflow-y-auto mm-scroll min-h-0">
                             <div className="grid grid-cols-2 gap-x-4 gap-y-3.5">
                               {childCategories.map((sub) => {
-                                const descendants: NavRow[] = useConfiguredMenu
-                                  ? megaMenuItems
-                                      .filter((item) => item.parentMegaMenuItemId === sub.categoryId)
-                                      .map((item) => ({
-                                        categoryId: item.megaMenuItemId,
-                                        parentCategoryId: item.parentMegaMenuItemId,
-                                        name: item.title,
-                                        href: item.destination,
-                                      }))
-                                  : categories
-                                      .filter((category) => category.parentCategoryId === sub.categoryId)
-                                      .map((item) => ({ ...item, href: `${lp("/products")}?categoryId=${item.categoryId}` }));
+                                const descendants: NavRow[] = childOf(sub.categoryId);
                                 return (
                                   <div key={sub.categoryId}>
                                     <Link
@@ -513,7 +540,7 @@ export function StorefrontShopeivaHeader({
               {mobileOpenCategories.main ? (
                 <div className="pr-3 mt-1 space-y-3">
                   {navigationRoots.slice(0, 8).map((category) => {
-                    const children = categories.filter((child) => child.parentCategoryId === category.categoryId);
+                    const children = childOf(category.categoryId);
                     const Icon = categoryIcon(category.name);
                     return (
                       <div key={category.categoryId} className="border-b border-gray-100 pb-2 last:border-0">
@@ -524,7 +551,7 @@ export function StorefrontShopeivaHeader({
                         {mobileOpenCategories[category.categoryId] ? (
                           <div className="pr-3 mt-1 space-y-2">
                             {children.slice(0, 10).map((child) => {
-                              const grandchildren = categories.filter((leaf) => leaf.parentCategoryId === child.categoryId);
+                              const grandchildren = childOf(child.categoryId);
                               const childKey = `${category.categoryId}:${child.categoryId}`;
                               return (
                                 <div key={child.categoryId} className="border-b border-gray-50 pb-1 last:border-0">
@@ -534,7 +561,7 @@ export function StorefrontShopeivaHeader({
                                     className="flex justify-between items-center w-full p-2 rounded-xl hover:bg-gray-100 text-right"
                                   >
                                     <Link
-                                      href={`/products?categoryId=${child.categoryId}`}
+                                      href={child.href}
                                       onClick={(event) => {
                                         event.stopPropagation();
                                         setMobileOpen(false);
@@ -552,7 +579,7 @@ export function StorefrontShopeivaHeader({
                                       {grandchildren.slice(0, 6).map((leaf) => (
                                         <Link
                                           key={leaf.categoryId}
-                                          href={`/products?categoryId=${leaf.categoryId}`}
+                                          href={leaf.href}
                                           onClick={() => setMobileOpen(false)}
                                           className="block p-2 text-[11px] text-gray-500 hover:text-primary rounded-lg hover:bg-gray-100 transition truncate"
                                         >

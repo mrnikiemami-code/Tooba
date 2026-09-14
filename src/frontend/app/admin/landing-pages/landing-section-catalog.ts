@@ -7,6 +7,7 @@ export const LANDING_SECTION_TYPES = [
   "ArticleList",
   "Reviews",
   "RichText",
+  "NavigationMenu",
 ] as const;
 
 export type LandingSectionType = (typeof LANDING_SECTION_TYPES)[number];
@@ -27,6 +28,7 @@ export const LANDING_SECTION_CHOICES: LandingSectionChoice[] = [
   { type: "ArticleList", label: "فهرست مطالب", description: "آخرین مقاله‌های منتشرشده", testId: "add-section-articles" },
   { type: "Reviews", label: "نظر خریداران", description: "نظرهای تأییدشدهٔ فروشگاه", testId: "add-section-reviews" },
   { type: "RichText", label: "متن آزاد", description: "یک بلوک متن ساده بدون HTML", testId: "add-section-text" },
+  { type: "NavigationMenu", label: "فهرست پیوند", description: "نمایش یک منوی فعال فروشگاه در بدنهٔ صفحه", testId: "add-section-menu" },
 ];
 
 export const PRODUCT_SOURCE_CHOICES = [
@@ -58,6 +60,8 @@ export function defaultLandingSectionConfig(type: LandingSectionType): Record<st
       return { title: "نظر خریداران" };
     case "RichText":
       return { title: "متن صفحه", text: "متن ساده برای این بخش" };
+    case "NavigationMenu":
+      return { title: "فهرست پیوندها", menuId: "" };
   }
 }
 

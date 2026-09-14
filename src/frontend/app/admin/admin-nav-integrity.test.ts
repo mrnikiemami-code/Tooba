@@ -112,6 +112,15 @@ test("landing pages live in ops after home composition", () => {
   assert.ok(compositionIdx >= 0 && landingIdx > compositionIdx);
 });
 
+test("menus live in ops after landing pages", () => {
+  assert.match(shellSource, /id: "menus"/);
+  assert.match(shellSource, /href: "\/admin\/menus"/);
+  assert.match(chromeMessages, /menus:\s*"منوها"/);
+  const landingIdx = shellSource.indexOf('id: "landing-pages"');
+  const menusIdx = shellSource.indexOf('id: "menus"');
+  assert.ok(landingIdx >= 0 && menusIdx > landingIdx);
+});
+
 test("content group sits between ops and finance with Articles label", () => {
   assert.match(chromeMessages, /groupContent:\s*"محتوا"/);
   assert.match(chromeMessages, /groupContent:\s*"Content"/);
