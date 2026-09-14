@@ -11,3 +11,5 @@ Updated `docs/ai/TOOBA-RECOVERY-CONTEXT.md`, `docs/PROJECT-STATE.md`, `docs/ai/r
 
 Locks added: LOCK-SF-203…208.
 Architecture: `docs/architecture/storefront-global-surface-theme.md`.
+
+Impl SHA: `7ef51494ee2e3f63abed3205a1434c7dedfa00ee`

@@ -1,0 +1,87 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-P10-T017-R3
+Parent-Task: TB-P10-T017-R2
+Status: PASS
+WorkerId: tooba-worker-01
+Channel: tooba-main
+
+Summary:
+Storefront-wide semantic surface coverage is now enforced by shared wrappers, a route inventory, and a reusable crawler. Public storefront, commerce/auth, blogs, and full customer-panel navigation inherit one Store Appearance projection. Large hardcoded page/section wrappers were classified or tokenized; cards/media/status stay independent. Runtime crawler ok=true with Neutral + PaletteTint + Dark representative runs. Canonical appearance restored. USER_VISUAL_ACCEPTED=NO. No TB-P10-T018.
+
+Applicable-Locks:
+LOCK-SF-001…202 preserved. Added LOCK-SF-203 (one Store Appearance on all customer-facing routes), LOCK-SF-204 (major backgrounds require a semantic role), LOCK-SF-205 (new routes join inventory/guards), LOCK-SF-206 (no large hardcoded page/section backgrounds), LOCK-SF-207 (dynamic + customer-nav crawl coverage), LOCK-SF-208 (shared wrappers/guards, not page-by-page screenshot hacks).
+
+Recovery-Start:
+branch=main HEAD-at-claim=22c19340e5078afccb8001df21cc852de86cd6ea leftover login/account UX already committed. Expected previous HEAD 5ab82807 is T017-R2 impl; pin 67a22cf5 + login returnTo 22c19340 are origin/main — not RECOVERY_CONFLICT. docs/evidence/TB-P10-T017/r3-recovery-start.md
+
+Route-Inventory:
+SoT `src/frontend/lib/storefront-appearance/storefront-route-inventory.ts`. Public storefront, commerce, auth, blogs, and live customer-panel nav covered. Dynamic samples: PDP demo-prod-fashion-men-men-pants-1; category demo-cat-mobile-tablet; brand demo-brand-adidas; seller 962c7b3f972781ad8ef562c4; landing landing-campaign; blog t016-sched-20260904082033; order 01a09b8b-3e28-7000-94ed-e37517c5cbf5. Customer ticket [id] layout-static via CustomerPanelShell + SupportTicketForm (no seeded ticket). docs/evidence/TB-P10-T017/r3-route-inventory.md
+
+Static-Theme-Scan:
+Storefront + customer-facing TSX scanned. Wrapper violations repaired (shipping full-width white, customer header/sidebar white, PDP giant white shells, login card, blogs shell, wallet-checkout #F5F5F5, ticket form island). Unresolved real wrapper violations: 0. Cards/inputs/status/media kept. docs/evidence/TB-P10-T017/r3-static-theme-scan.md
+
+Shared-Semantic-Architecture:
+Roles: page/section/alternate/accent plus card/elevated/input/header/footer/overlay. Primitives: StorefrontPageSurface / StorefrontSectionSurface / StorefrontPanelSurface. StorefrontShell page + bg-page (fullBleed Home/Landing). Header/Footer bg-surface. CustomerPanelShell page/header/elevated/section/overlay. Blogs layout uses StorefrontShell. No page-specific theme families. Architecture: docs/architecture/storefront-global-surface-theme.md
+
+Home-Coverage:
+Shell page + fullBleed; hero accent; stories/category/most-viewed/brands section; flash accent; best-sellers/banners/new/testimonials/articles alternate; header/footer surface. Neutral white/gray hierarchy preserved. docs/evidence/TB-P10-T017/r3-home-coverage.md
+
+PDP-Coverage:
+Wrapper section token; gallery/buy-box and tabs CardSurface bg-surface; related SectionAlternate; media well remains media. No over-colored purchase region. docs/evidence/TB-P10-T017/r3-pdp-coverage.md
+
+Auth-Coverage:
+Login uses StorefrontShell + section + elevated card (bg-surface-elevated). OTP flow unchanged.
+
+Commerce-Coverage:
+Cart/checkout/shipping/payment/result/order-confirmation inherit StorefrontShell. Shipping full-width bands bg-section-surface; form cards bg-surface. Checkout redirects to shipping (crawled). Payment empty-cart honest.
+
+Customer-Panel-Coverage:
+Shared CustomerPanelShell; live nav crawled (dashboard, orders, order detail, wishlist, addresses, notifications, tickets, tickets/new, wallet, gift-cards, profile, settings). Ticket [id] layout-static. Notification inbox no longer uses dark:bg-[#111]. docs/evidence/TB-P10-T017/r3-customer-panel-coverage.md
+
+Content-Coverage:
+Blogs layout wraps StorefrontShell. Blog/category/author/landing crawled with real samples.
+
+Runtime-Crawler:
+`src/frontend/scripts/storefront-theme-coverage.mjs` reusable. Report docs/evidence/TB-P10-T017/r3-runtime-report.json ok=true. Runs: Neutral tooba-blue, PaletteTint tooba-blue, PaletteTint wine-burgundy, DarkOnly representative. status500 none in passing run (retry-on-500 for Next compile). Canonical restored tooba-blue / LightOnly / classic / Neutral. docs/evidence/TB-P10-T017/r3-runtime-coverage-report.md
+
+Rendered-Pixel-Coverage:
+Heuristic skips classified surface roles, semantic bg-page/bg-surface/bg-section-* tokens, and media-filled boxes. Passing run flags=[]. Suspicious large-white heuristic passed.
+
+Theme-Inheritance:
+All crawled routes inherit the same Store Appearance projection (paletteKey/themeMode/backgroundStyle from root load). No per-route appearance fetch. No appearance polling duplication.
+
+Neutral-Compatibility:
+Neutral run keeps accepted white/gray page/section/header/footer hierarchy. Cards remain independent.
+
+PaletteTint-Quality:
+Tint runs visibly change page/section/alternate/accent on representative Home/PDP/login/cart/customer. Cards stay independent. Wine-burgundy subset 200. Dark home + customer dashboard 200.
+
+Focused-Validation:
+recovery-staleness 4/4. surface-role / route-inventory / semantic-wrapper / customer-panel-theme / storefront-theme / appearance-api / palette-registry pass. npm run test:critical-storefront pass (includes test:surface-coverage). git diff --check pass. Crawler ok=true. docs/evidence/TB-P10-T017/r3-focused-validation.md
+
+Visual-Evidence:
+docs/evidence/TB-P10-T017/screenshots/r3/ home-r3.png pdp-r3.png plp-r3.png login-r3.png cart-r3.png checkout-r3.png customer-dashboard-r3.png customer-orders-r3.png customer-order-detail-r3.png landing-r3.png content-r3.png dark-home-r3.png dark-customer-r3.png
+
+AntiPattern-Scan:
+CLEAN. No page-specific theme families, screenshot-only CSS, hydration suppression, appearance polling, or customer-panel separate theme engine. docs/evidence/TB-P10-T017/r3-antipattern-scan.md
+
+Lock-Registry:
+LOCK-SF-001…208. New 203–208 only. No duplicates.
+
+Recovery-SoT:
+Phase P10 Architect TB-P10-T017-R2 Impl TB-P10-T017-R3 Issued/Repair none USER_VISUAL_ACCEPTED=NO Worker IDLE do NOT invent TB-P10-T018. docs/evidence/TB-P10-T017/r3-recovery-sot.md
+
+Git:
+SHA=7ef51494ee2e3f63abed3205a1434c7dedfa00ee HEAD==origin/main after push. Unrelated .tmp-* / App_Data leftovers not committed.
+
+Architectural-Concerns:
+Customer ticket [id] lacks a seeded ticket id; coverage is the shared panel shell + SupportTicketForm already crawled on tickets/new. Four-role architecture expanded only with allowed Card/Header/Footer/Overlay roles.
+
+Visual-Concerns:
+USER_VISUAL_ACCEPTED=NO pending actual user inspection. Functional PASS does not imply Visual ACCEPT.
+
+Blockers:
+none
+END_TOOBA_WORKER_RESULT
