@@ -55,10 +55,12 @@ function mapView(payload: unknown): AppearanceSettingsView | null {
         if (!isKnownPaletteKey(key)) {
           return null;
         }
+        const local = listStorefrontPalettes().find((item) => item.key === key);
         return {
           key,
-          nameFa: String(preset.nameFa ?? key),
-          nameEn: String(preset.nameEn ?? key),
+          nameFa: String(preset.nameFa ?? local?.nameFa ?? key),
+          nameEn: String(preset.nameEn ?? local?.nameEn ?? key),
+          descriptionFa: local?.descriptionFa ?? "",
           tokens: mapTokens(preset.tokens),
         } satisfies StorefrontPaletteDefinition;
       })

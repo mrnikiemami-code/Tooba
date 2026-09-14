@@ -1,0 +1,21 @@
+# Recovery start — TB-P10-T014
+
+- Protocol: BRIDGE-WAKE-V1
+- Channel: tooba-main
+- Worker: tooba-worker-01
+- Branch: main
+- HEAD at claim: `0bfa415d35849b3b26fad659310be56410e0e655`
+- origin/main: `0bfa415d35849b3b26fad659310be56410e0e655`
+- Expected previous HEAD in task: `c3ced29efbeea8dd0d1ce3e9767fd53a66c05719` (T013 impl). Current HEAD is the T013 result-pin commit on the same safe line. Not RECOVERY_CONFLICT.
+- Host :5088 listening
+- FE :3000 listening
+- Last Architect-accepted at claim: TB-P10-T013 (task envelope). Repo SoT still listed T012 until this Task writes completion state.
+- Last Implementation at claim: TB-P10-T013
+- USER_VISUAL_ACCEPTED=NO
+- Unrelated local leftovers (preserved, not committed):
+  - `src/frontend/app/login/storefront-login.tsx`
+  - `src/frontend/app/login/storefront-login.guard.test.ts`
+  - `src/frontend/app/storefront/storefront-account-menu.tsx`
+  - `src/frontend/lib/auth/login-return-to.ts`
+  - `src/frontend/lib/auth/login-return-to.test.ts`
+  - historical `.tmp-*` scratch files

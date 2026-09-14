@@ -72,12 +72,17 @@ export function AdminAppearanceSettingsForm(props: {
               data-testid={`admin-settings-appearance-preset-${preset.key}`}
               data-selected={selected ? "true" : "false"}
             >
-              <span className="flex items-center gap-2">
+              <span className="flex items-start gap-2">
                 <span
-                  className="h-7 w-7 rounded-full border border-black/10"
+                  className="h-7 w-7 rounded-full border border-black/10 shrink-0 mt-0.5"
                   style={{ backgroundColor: rgbCss(preset.tokens.primaryRgb) }}
                 />
-                <span className="text-sm font-bold text-gray-900">{preset.nameFa}</span>
+                <span>
+                  <span className="block text-sm font-bold text-gray-900">{preset.nameFa}</span>
+                  {preset.descriptionFa ? (
+                    <span className="block text-xs text-gray-500 mt-1 leading-6">{preset.descriptionFa}</span>
+                  ) : null}
+                </span>
               </span>
             </button>
           );

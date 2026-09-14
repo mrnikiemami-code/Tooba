@@ -1,0 +1,73 @@
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-P10-T014
+Parent-Task: TB-P10-T013
+Status: PASS
+WorkerId: tooba-worker-01
+Channel: tooba-main
+
+Summary:
+Final Appearance + Landing demo/visual pack is inspectable: 7 palettes with Persian catalog copy, 4 skins, 4 theme modes, three seeded landings (published demo, published campaign, draft), demo menu with L1–L3 plus Landing links, Admin discoverability, user inspection guide, and persistent screenshots. Default remains tooba-blue / LightOnly / classic and canonical Home. USER_VISUAL_ACCEPTED remains NO. No T015.
+
+Applicable-Locks:
+LOCK-SF-001…192 preserved. No new locks.
+
+Recovery-Start:
+branch=main HEAD-at-claim=0bfa415d leftover login/account UX preserved. docs/evidence/TB-P10-T014/recovery-start.md
+
+Palette-Review:
+Seven palettes remain professional; tokens unchanged; Admin shows Persian descriptions. docs/evidence/TB-P10-T014/palette-review.md
+
+Demo-Pages:
+landing-demo Published, landing-campaign Published (different order), landing-demo-draft Draft/404. docs/evidence/TB-P10-T014/demo-pages.md
+
+Demo-Menu:
+منوی دموی فروشگاه with Home/Group/Category/Product/Landing demo+campaign. No Article seed. docs/evidence/TB-P10-T014/demo-menu.md
+
+Admin-Discoverability:
+Settings «ظاهر فروشگاه», Ops «صفحات فرود», Ops «منوها». docs/evidence/TB-P10-T014/admin-discoverability.md
+
+Appearance-UX-Review:
+Clear palette/theme/skin/preview/save. docs/evidence/TB-P10-T014/appearance-ux-review.md
+
+Composer-UX-Review:
+List/composer/chooser/pickers remain non-technical. docs/evidence/TB-P10-T014/composer-ux-review.md
+
+Menu-UX-Review:
+Nested editor, pickers, Header assignment, RTL. docs/evidence/TB-P10-T014/menu-ux-review.md
+
+Cross-Feature-Integration:
+Custom Home inherits palette/theme/skin/menu; no page-local appearance. docs/evidence/TB-P10-T014/cross-feature.md
+
+User-Inspection-Guide:
+docs/evidence/TB-P10-T014/user-inspection-guide.md
+
+Visual-Acceptance-Pack:
+19 required screenshots under docs/evidence/TB-P10-T014/screenshots/. docs/evidence/TB-P10-T014/visual-acceptance-pack.md
+
+Focused-Validation:
+Host 39/39. FE 34/34 + critical-storefront + recovery 4/4. docs/evidence/TB-P10-T014/focused-validation.md
+
+Runtime:
+A–K PASS. Draft public 404. Appearance and Home restored. docs/evidence/TB-P10-T014/runtime.md
+
+AntiPattern-Scan:
+CLEAN. docs/evidence/TB-P10-T014/antipattern-scan.md
+
+Lock-Registry:
+LOCK-SF-001…192 unchanged.
+
+Recovery-SoT:
+Phase P10 Architect TB-P10-T013 Impl TB-P10-T014 Issued/Repair none USER_VISUAL_ACCEPTED=NO Worker IDLE do NOT invent TB-P10-T015. docs/evidence/TB-P10-T014/recovery-sot.md
+
+Git:
+SHA=PENDING_IMPL_SHA HEAD==origin/main after push. Unrelated login leftovers not committed.
+
+Architectural-Concerns:
+Article public href remains slug-poor; not seeded. Prior T012 runtime page t012-runtime left in Development DB (non-destructive).
+
+Visual-Concerns:
+USER_VISUAL_ACCEPTED=NO pending actual user review of the inspection pack. Pre-existing storefront theme SSR hydration warnings were observed and are not task-owned new loops.
+
+Blockers:
+none
+END_TOOBA_WORKER_RESULT

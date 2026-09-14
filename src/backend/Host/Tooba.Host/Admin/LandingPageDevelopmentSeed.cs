@@ -10,6 +10,7 @@ namespace Tooba.Host.Admin;
 internal static class LandingPageDevelopmentSeed
 {
     internal const string PublishedSlug = "landing-demo";
+    internal const string CampaignSlug = "landing-campaign";
     internal const string DraftSlug = "landing-demo-draft";
 
     /// <summary>صفحات دمو را اگر نیستند می‌سازد؛ صفحات موجود را بازنویسی نمی‌کند.</summary>
@@ -25,7 +26,17 @@ internal static class LandingPageDevelopmentSeed
             "صفحهٔ فرود دمو",
             "نمونهٔ منتشرشده برای بررسی Composer و رندر ویترین",
             publish: true,
-            includeCatalogSections: true,
+            profile: "main",
+            cancellationToken);
+        await EnsurePageAsync(
+            catalog,
+            composer,
+            CampaignSlug,
+            "صفحهٔ دموی کمپین",
+            "کمپین فروش",
+            "ترکیب متفاوت برای بازرسی بصری کمپین",
+            publish: true,
+            profile: "campaign",
             cancellationToken);
         await EnsurePageAsync(
             catalog,
@@ -35,7 +46,7 @@ internal static class LandingPageDevelopmentSeed
             "پیش‌نویس دمو",
             "فقط Admin می‌تواند این پیش‌نویس را ببیند",
             publish: false,
-            includeCatalogSections: false,
+            profile: "draft",
             cancellationToken);
     }
 
@@ -47,7 +58,7 @@ internal static class LandingPageDevelopmentSeed
         string seoTitle,
         string seoDescription,
         bool publish,
-        bool includeCatalogSections,
+        string profile,
         CancellationToken cancellationToken)
     {
         if (await catalog.StoreLandingPages.AnyAsync(x => x.Locale == "fa" && x.Slug == slug, cancellationToken))
@@ -59,70 +70,52 @@ internal static class LandingPageDevelopmentSeed
             new StoreLandingPageWriteRequest(title, slug, "fa", seoTitle, seoDescription, null),
             cancellationToken);
 
-        await composer.AddSectionAsync(
-            page.PageId,
-            new StoreLandingPageSectionWriteRequest(
-                StoreLandingPageSectionRegistry.Hero,
-                JsonSerializer.Serialize(new { title, subtitle = seoDescription, href = "/products" }),
-                null,
-                true),
-            cancellationToken);
+        var productIds = await catalog.Products.AsNoTracking()
+            .Where(x => x.Status == CatalogPublicationStatus.Published)
+            .OrderByDescending(x => x.UpdatedAt)
+            .Take(6)
+            .Select(x => x.ProductId)
+            .ToListAsync(cancellationToken);
+        var categoryId = await catalog.Categories.AsNoTracking()
+            .Select(x => (Guid?)x.CategoryId)
+            .FirstOrDefaultAsync(cancellationToken);
+        var brandId = await catalog.Brands.AsNoTracking()
+            .Select(x => (Guid?)x.BrandId)
+            .FirstOrDefaultAsync(cancellationToken);
 
-        if (includeCatalogSections)
+        if (profile == "campaign")
         {
-            var productIds = await catalog.Products.AsNoTracking()
-                .Where(x => x.Status == CatalogPublicationStatus.Published)
-                .OrderByDescending(x => x.UpdatedAt)
-                .Take(6)
-                .Select(x => x.ProductId)
-                .ToListAsync(cancellationToken);
-            var categoryId = await catalog.Categories.AsNoTracking()
-                .Select(x => (Guid?)x.CategoryId)
-                .FirstOrDefaultAsync(cancellationToken);
-            var brandId = await catalog.Brands.AsNoTracking()
-                .Select(x => (Guid?)x.BrandId)
-                .FirstOrDefaultAsync(cancellationToken);
-
+            await composer.AddSectionAsync(
+                page.PageId,
+                new StoreLandingPageSectionWriteRequest(
+                    StoreLandingPageSectionRegistry.PromoBanner,
+                    JsonSerializer.Serialize(new { title = "فرصت محدود کمپین", href = "/products" }),
+                    null,
+                    true),
+                cancellationToken);
+            await composer.AddSectionAsync(
+                page.PageId,
+                new StoreLandingPageSectionWriteRequest(
+                    StoreLandingPageSectionRegistry.Hero,
+                    JsonSerializer.Serialize(new { title, subtitle = seoDescription, href = "/products" }),
+                    null,
+                    true),
+                cancellationToken);
             await composer.AddSectionAsync(
                 page.PageId,
                 new StoreLandingPageSectionWriteRequest(
                     StoreLandingPageSectionRegistry.ProductCollection,
-                    JsonSerializer.Serialize(new { title = "تازه‌های فروشگاه", source = "Newest", take = 8 }),
+                    JsonSerializer.Serialize(new { title = "کالاهای کمپین", source = "Newest", take = 8 }),
                     null,
                     true),
                 cancellationToken);
-
-            if (productIds.Count > 0)
-            {
-                await composer.AddSectionAsync(
-                    page.PageId,
-                    new StoreLandingPageSectionWriteRequest(
-                        StoreLandingPageSectionRegistry.ProductCollection,
-                        JsonSerializer.Serialize(new { title = "انتخاب سردبیر", source = "Manual", take = productIds.Count, productIds }),
-                        null,
-                        true),
-                    cancellationToken);
-            }
-
-            if (categoryId is { } cid)
+            if (categoryId is { } campaignCategory)
             {
                 await composer.AddSectionAsync(
                     page.PageId,
                     new StoreLandingPageSectionWriteRequest(
                         StoreLandingPageSectionRegistry.CategoryGrid,
-                        JsonSerializer.Serialize(new { title = "دسته‌ها", categoryIds = new[] { cid } }),
-                        null,
-                        true),
-                    cancellationToken);
-            }
-
-            if (brandId is { } bid)
-            {
-                await composer.AddSectionAsync(
-                    page.PageId,
-                    new StoreLandingPageSectionWriteRequest(
-                        StoreLandingPageSectionRegistry.BrandStrip,
-                        JsonSerializer.Serialize(new { title = "برندها", brandIds = new[] { bid } }),
+                        JsonSerializer.Serialize(new { title = "دسته‌های کمپین", categoryIds = new[] { campaignCategory } }),
                         null,
                         true),
                     cancellationToken);
@@ -131,37 +124,105 @@ internal static class LandingPageDevelopmentSeed
             await composer.AddSectionAsync(
                 page.PageId,
                 new StoreLandingPageSectionWriteRequest(
-                    StoreLandingPageSectionRegistry.PromoBanner,
-                    JsonSerializer.Serialize(new { title = "پیشنهاد ویژه", href = "/offers" }),
-                    null,
-                    true),
-                cancellationToken);
-            await composer.AddSectionAsync(
-                page.PageId,
-                new StoreLandingPageSectionWriteRequest(
-                    StoreLandingPageSectionRegistry.ArticleList,
-                    JsonSerializer.Serialize(new { title = "آخرین مطالب", source = "Latest", take = 4 }),
-                    null,
-                    true),
-                cancellationToken);
-            await composer.AddSectionAsync(
-                page.PageId,
-                new StoreLandingPageSectionWriteRequest(
-                    StoreLandingPageSectionRegistry.Reviews,
-                    JsonSerializer.Serialize(new { title = "نظر خریداران" }),
+                    StoreLandingPageSectionRegistry.RichText,
+                    JsonSerializer.Serialize(new { title = "توضیح کمپین", text = seoDescription }),
                     null,
                     true),
                 cancellationToken);
         }
+        else
+        {
+            await composer.AddSectionAsync(
+                page.PageId,
+                new StoreLandingPageSectionWriteRequest(
+                    StoreLandingPageSectionRegistry.Hero,
+                    JsonSerializer.Serialize(new { title, subtitle = seoDescription, href = "/products" }),
+                    null,
+                    true),
+                cancellationToken);
 
-        await composer.AddSectionAsync(
-            page.PageId,
-            new StoreLandingPageSectionWriteRequest(
-                StoreLandingPageSectionRegistry.RichText,
-                JsonSerializer.Serialize(new { title = "دربارهٔ این صفحه", text = seoDescription }),
-                null,
-                true),
-            cancellationToken);
+            if (profile == "main")
+            {
+                await composer.AddSectionAsync(
+                    page.PageId,
+                    new StoreLandingPageSectionWriteRequest(
+                        StoreLandingPageSectionRegistry.ProductCollection,
+                        JsonSerializer.Serialize(new { title = "تازه‌های فروشگاه", source = "Newest", take = 8 }),
+                        null,
+                        true),
+                    cancellationToken);
+
+                if (productIds.Count > 0)
+                {
+                    await composer.AddSectionAsync(
+                        page.PageId,
+                        new StoreLandingPageSectionWriteRequest(
+                            StoreLandingPageSectionRegistry.ProductCollection,
+                            JsonSerializer.Serialize(new { title = "انتخاب سردبیر", source = "Manual", take = productIds.Count, productIds }),
+                            null,
+                            true),
+                        cancellationToken);
+                }
+
+                if (categoryId is { } cid)
+                {
+                    await composer.AddSectionAsync(
+                        page.PageId,
+                        new StoreLandingPageSectionWriteRequest(
+                            StoreLandingPageSectionRegistry.CategoryGrid,
+                            JsonSerializer.Serialize(new { title = "دسته‌ها", categoryIds = new[] { cid } }),
+                            null,
+                            true),
+                        cancellationToken);
+                }
+
+                if (brandId is { } bid)
+                {
+                    await composer.AddSectionAsync(
+                        page.PageId,
+                        new StoreLandingPageSectionWriteRequest(
+                            StoreLandingPageSectionRegistry.BrandStrip,
+                            JsonSerializer.Serialize(new { title = "برندها", brandIds = new[] { bid } }),
+                            null,
+                            true),
+                        cancellationToken);
+                }
+
+                await composer.AddSectionAsync(
+                    page.PageId,
+                    new StoreLandingPageSectionWriteRequest(
+                        StoreLandingPageSectionRegistry.PromoBanner,
+                        JsonSerializer.Serialize(new { title = "پیشنهاد ویژه", href = "/offers" }),
+                        null,
+                        true),
+                    cancellationToken);
+                await composer.AddSectionAsync(
+                    page.PageId,
+                    new StoreLandingPageSectionWriteRequest(
+                        StoreLandingPageSectionRegistry.ArticleList,
+                        JsonSerializer.Serialize(new { title = "آخرین مطالب", source = "Latest", take = 4 }),
+                        null,
+                        true),
+                    cancellationToken);
+                await composer.AddSectionAsync(
+                    page.PageId,
+                    new StoreLandingPageSectionWriteRequest(
+                        StoreLandingPageSectionRegistry.Reviews,
+                        JsonSerializer.Serialize(new { title = "نظر خریداران" }),
+                        null,
+                        true),
+                    cancellationToken);
+            }
+
+            await composer.AddSectionAsync(
+                page.PageId,
+                new StoreLandingPageSectionWriteRequest(
+                    StoreLandingPageSectionRegistry.RichText,
+                    JsonSerializer.Serialize(new { title = "دربارهٔ این صفحه", text = seoDescription }),
+                    null,
+                    true),
+                cancellationToken);
+        }
 
         if (publish)
         {

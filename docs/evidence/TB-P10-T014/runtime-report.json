@@ -1,0 +1,357 @@
+{
+  "ok": true,
+  "steps": [
+    {
+      "name": "pages-list",
+      "pass": true
+    },
+    {
+      "name": "seed-main",
+      "pass": true
+    },
+    {
+      "name": "seed-campaign",
+      "pass": true
+    },
+    {
+      "name": "seed-draft",
+      "pass": true
+    },
+    {
+      "name": "menus-list",
+      "pass": true
+    },
+    {
+      "name": "seed-menu",
+      "pass": true
+    },
+    {
+      "name": "A-appearance-get",
+      "pass": true
+    },
+    {
+      "name": "B-alt-appearance",
+      "pass": true
+    },
+    {
+      "name": "D-home-selected",
+      "pass": true
+    },
+    {
+      "name": "C-main-public",
+      "pass": true
+    },
+    {
+      "name": "campaign-public",
+      "pass": true
+    },
+    {
+      "name": "H-draft-404",
+      "pass": true
+    },
+    {
+      "name": "F-menu",
+      "pass": true
+    },
+    {
+      "name": "cross-store-no-500",
+      "pass": true
+    },
+    {
+      "name": "A-open-appearance",
+      "pass": true
+    },
+    {
+      "name": "palettes-7",
+      "pass": true
+    },
+    {
+      "name": "themes-4",
+      "pass": true
+    },
+    {
+      "name": "skins-4",
+      "pass": true
+    },
+    {
+      "name": "file:appearance-palettes.png",
+      "pass": true,
+      "data": {
+        "bytes": 169000
+      }
+    },
+    {
+      "name": "file:appearance-theme-mode.png",
+      "pass": true,
+      "data": {
+        "bytes": 168647
+      }
+    },
+    {
+      "name": "file:appearance-card-skins.png",
+      "pass": true,
+      "data": {
+        "bytes": 158487
+      }
+    },
+    {
+      "name": "landing-list",
+      "pass": true
+    },
+    {
+      "name": "file:landing-list.png",
+      "pass": true,
+      "data": {
+        "bytes": 94213
+      }
+    },
+    {
+      "name": "C-composer",
+      "pass": true
+    },
+    {
+      "name": "file:landing-composer.png",
+      "pass": true,
+      "data": {
+        "bytes": 110181
+      }
+    },
+    {
+      "name": "file:landing-add-section.png",
+      "pass": true,
+      "data": {
+        "bytes": 127859
+      }
+    },
+    {
+      "name": "file:landing-product-picker.png",
+      "pass": true,
+      "data": {
+        "bytes": 94626
+      }
+    },
+    {
+      "name": "G-draft-preview",
+      "pass": true
+    },
+    {
+      "name": "file:landing-preview.png",
+      "pass": true,
+      "data": {
+        "bytes": 369642
+      }
+    },
+    {
+      "name": "E-home-custom",
+      "pass": true
+    },
+    {
+      "name": "file:home-alt-palette.png",
+      "pass": true,
+      "data": {
+        "bytes": 367567
+      }
+    },
+    {
+      "name": "file:home-dark.png",
+      "pass": true,
+      "data": {
+        "bytes": 372224
+      }
+    },
+    {
+      "name": "file:landing-card-skin.png",
+      "pass": true,
+      "data": {
+        "bytes": 372224
+      }
+    },
+    {
+      "name": "file:landing-demo.png",
+      "pass": true,
+      "data": {
+        "bytes": 367421
+      }
+    },
+    {
+      "name": "file:landing-campaign.png",
+      "pass": true,
+      "data": {
+        "bytes": 531072
+      }
+    },
+    {
+      "name": "H-draft-public",
+      "pass": true
+    },
+    {
+      "name": "menu-list",
+      "pass": true
+    },
+    {
+      "name": "file:menu-list.png",
+      "pass": true,
+      "data": {
+        "bytes": 63833
+      }
+    },
+    {
+      "name": "file:menu-editor.png",
+      "pass": true,
+      "data": {
+        "bytes": 84273
+      }
+    },
+    {
+      "name": "F-header-desktop",
+      "pass": true
+    },
+    {
+      "name": "file:menu-header-desktop.png",
+      "pass": true,
+      "data": {
+        "bytes": 367421
+      }
+    },
+    {
+      "name": "file:menu-header-mobile.png",
+      "pass": true,
+      "data": {
+        "bytes": 79946
+      }
+    },
+    {
+      "name": "I-restore-appearance",
+      "pass": true
+    },
+    {
+      "name": "J-restore-home",
+      "pass": true
+    },
+    {
+      "name": "file:home-default.png",
+      "pass": true,
+      "data": {
+        "bytes": 523248
+      }
+    },
+    {
+      "name": "no-console-loop",
+      "pass": true,
+      "data": {
+        "loops": []
+      }
+    },
+    {
+      "name": "K-seed-kept",
+      "pass": true
+    }
+  ],
+  "files": {
+    "appearance-palettes.png": {
+      "bytes": 169000
+    },
+    "appearance-theme-mode.png": {
+      "bytes": 168647
+    },
+    "appearance-card-skins.png": {
+      "bytes": 158487
+    },
+    "landing-list.png": {
+      "bytes": 94213
+    },
+    "landing-composer.png": {
+      "bytes": 110181
+    },
+    "landing-add-section.png": {
+      "bytes": 127859
+    },
+    "landing-product-picker.png": {
+      "bytes": 94626
+    },
+    "landing-preview.png": {
+      "bytes": 369642
+    },
+    "home-alt-palette.png": {
+      "bytes": 367567
+    },
+    "home-dark.png": {
+      "bytes": 372224
+    },
+    "landing-card-skin.png": {
+      "bytes": 372224
+    },
+    "landing-demo.png": {
+      "bytes": 367421
+    },
+    "landing-campaign.png": {
+      "bytes": 531072
+    },
+    "menu-list.png": {
+      "bytes": 63833
+    },
+    "menu-editor.png": {
+      "bytes": 84273
+    },
+    "menu-header-desktop.png": {
+      "bytes": 367421
+    },
+    "menu-header-mobile.png": {
+      "bytes": 79946
+    },
+    "home-default.png": {
+      "bytes": 523248
+    }
+  },
+  "errors": [],
+  "console": [
+    {
+      "type": "console-error",
+      "text": "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+    },
+    {
+      "type": "console-error",
+      "text": "A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:\n\n- A server/client branch `if (typeof window !== 'undefined')`."
+    },
+    {
+      "type": "console-error",
+      "text": "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+    },
+    {
+      "type": "console-error",
+      "text": "A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:\n\n- A server/client branch `if (typeof window !== 'undefined')`."
+    },
+    {
+      "type": "console-error",
+      "text": "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+    },
+    {
+      "type": "console-error",
+      "text": "A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:\n\n- A server/client branch `if (typeof window !== 'undefined')`."
+    },
+    {
+      "type": "console-error",
+      "text": "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+    },
+    {
+      "type": "console-error",
+      "text": "Failed to load resource: the server responded with a status of 404 (Not Found)"
+    },
+    {
+      "type": "console-error",
+      "text": "A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:\n\n- A server/client branch `if (typeof window !== 'undefined')`."
+    },
+    {
+      "type": "console-error",
+      "text": "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+    },
+    {
+      "type": "console-error",
+      "text": "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+    },
+    {
+      "type": "console-error",
+      "text": "A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:\n\n- A server/client branch `if (typeof window !== 'undefined')`."
+    }
+  ]
+}

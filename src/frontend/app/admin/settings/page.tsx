@@ -438,7 +438,7 @@ export default function AdminSettingsPage() {
               { id: "holds" as const, label: "مهلت‌ها", icon: Clock },
               { id: "identity" as const, label: "هویت خرید", icon: ShieldCheck },
               { id: "limits" as const, label: "سفارش باز", icon: ShieldAlert },
-              { id: "appearance" as const, label: "ظاهر", icon: Palette },
+              { id: "appearance" as const, label: "ظاهر فروشگاه", icon: Palette },
             ] as const
           ).map((tab) => {
             const Icon = tab.icon;
