@@ -1,0 +1,60 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-P10-T017-R2
+Parent-Task: TB-P10-T017-R1
+Status: PASS
+WorkerId: tooba-worker-01
+Channel: tooba-main
+
+Summary:
+PLP/Landing product-card media wells were collapsed (height 0) because Tailwind never emitted aspect-[4/5] from lib skin chrome. Shared card now emits the aspect class; wells are 4/5 with visible Tooba seeded media. Four skins preserved. Hydration leftover is StorefrontAccountMenu login href returnTo from uncommitted login UX, not Appearance/media. Canonical default restored. USER_VISUAL_ACCEPTED=NO. No T018.
+
+Applicable-Locks:
+LOCK-SF-001…202 preserved. No new locks.
+
+Recovery-Start:
+branch=main HEAD-at-claim=d7f07b2ca52b773b48a6a1266f36545e1a210094 leftover login/account UX preserved. Expected previous HEAD a1900f73 is T017-R1 impl; pin d7f07b2c is origin/main — not RECOVERY_CONFLICT. docs/evidence/TB-P10-T017/r2-recovery-start.md
+
+Media-Root-Cause:
+A — runtime rendering defect. Live well height 0, computed aspect-ratio auto, img naturalWidth 150. Tailwind content omitted lib/, so aspect-[4/5] in product-card-skin.ts was not generated. Not capture-only, not missing seed, not a blank asset. docs/evidence/TB-P10-T017/r2-media-root-cause.md
+
+Media-Repair:
+tailwind.config.ts content includes ./lib/** and safelists aspect-[4/5]; StorefrontProductCardView media well includes static aspect-[4/5]. Home/PLP/Landing share the same card. No route-specific CSS. No runtime sleep.
+
+ProductCard-Media-Contract:
+Well is a visible 4/5 surface; img object-contain fills it. Seeded Tooba placeholder is the intentional visible media. All four skins measured wellH≥200. Guard: tailwind scans lib + aspect class on card.
+
+Hydration-Closure:
+Mismatch is header-login-link href returnTo (server /fa vs client current path) in leftover uncommitted StorefrontAccountMenu. Not Appearance/ThemeToggle/surface/ProductCard/media. Not suppressed. Home matches. docs/evidence/TB-P10-T017/r2-hydration-closure.md
+
+Focused-Validation:
+FE 28/28. critical-storefront 19/19. recovery-staleness 4/4. git diff --check CRLF warnings only. docs/evidence/TB-P10-T017/r2-focused-validation.md
+
+Runtime:
+ok=true. Cold PLP/Landing/Home 200. PaletteTint inspection then restore tooba-blue / LightOnly / classic / Neutral. docs/evidence/TB-P10-T017/r2-runtime.md r2-runtime-report.json
+
+Visual-Evidence:
+docs/evidence/TB-P10-T017/screenshots/r2/ plp-tinted-r2.png landing-tinted-r2.png product-card-classic-r2.png product-card-clean-r2.png product-card-elevated-r2.png product-card-glass-r2.png
+
+AntiPattern-Scan:
+CLEAN. docs/evidence/TB-P10-T017/r2-antipattern-scan.md
+
+Lock-Registry:
+LOCK-SF-001…202. No duplicates. No new locks.
+
+Recovery-SoT:
+Phase P10 Architect TB-P10-T016 Impl TB-P10-T017-R2 Issued/Repair none USER_VISUAL_ACCEPTED=NO Worker IDLE do NOT invent TB-P10-T018. docs/evidence/TB-P10-T017/r2-recovery-sot.md
+
+Git:
+SHA=5ab828075b679464ad1362c29bcc51f1eeb4ddfa HEAD==origin/main after push. Unrelated login leftovers not committed.
+
+Architectural-Concerns:
+Skin chrome classes must be in Tailwind content (lib). Four-role architecture unchanged.
+
+Visual-Concerns:
+USER_VISUAL_ACCEPTED=NO. Seeded card media is the Tooba placeholder, now visible. Leftover login href hydration still paints a Next.js “1 Issue” badge in next dev; not task-owned.
+
+Blockers:
+none
+END_TOOBA_WORKER_RESULT
