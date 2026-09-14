@@ -11,3 +11,5 @@ Updated `docs/ai/TOOBA-RECOVERY-CONTEXT.md`, `docs/PROJECT-STATE.md`, `docs/ai/r
 
 Locks added: LOCK-SF-215…220.
 Architecture: `docs/architecture/storefront-section-context-composition.md`.
+
+Impl SHA: `faf1e1c5d6dccf275fa63624ecb4f12014431659`

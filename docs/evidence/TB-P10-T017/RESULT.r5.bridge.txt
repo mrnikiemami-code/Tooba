@@ -1,0 +1,81 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-P10-T017-R5
+Parent-Task: TB-P10-T017-R4
+Status: PASS
+WorkerId: tooba-worker-01
+Channel: tooba-main
+
+Summary:
+Surface composition now inherits section context by default. Structural PDP/Cart/Customer wrappers no longer paint giant Card surfaces; true cards/elevated/inputs opt in. Local card/elevated/input/interactive/media/border derive from the active SectionSurface/Alternate/Accent. Runtime crawler ok=true with card-area ratios and no giant-card flags. Canonical appearance restored. USER_VISUAL_ACCEPTED=NO. No TB-P10-T018.
+
+Applicable-Locks:
+LOCK-SF-001…214 preserved. Added LOCK-SF-215 (structural children inherit section context), LOCK-SF-216 (local surfaces derive from section context), LOCK-SF-217 (Card/Elevated not generic wrappers), LOCK-SF-218 (PaletteTint acceptance includes composition), LOCK-SF-219 (new components declare inherit vs local), LOCK-SF-220 (only four global user-facing roles).
+
+Recovery-Start:
+branch=main HEAD-at-claim=326dbb32660b32f419ef2bf2979fb1ba5954c14c HEAD==origin/main. Expected previous HEAD 1f111ebf is T017-R4 impl; pin 326dbb32 is origin/main after R4 — not RECOVERY_CONFLICT. docs/evidence/TB-P10-T017/r5-recovery-start.md
+
+Component-Reclassification:
+Unknown=0. Structural/content→inherit; true cards/elevated/input/media/status/decorative classified. docs/evidence/TB-P10-T017/r5-component-reclassification.md
+
+Section-Context-Contract:
+Contexts section/alternate/accent expose local-card/elevated/input/interactive/media/border via deriveLocalSurfacesFromContext + CSS binding on PaletteTint. Architecture: docs/architecture/storefront-section-context-composition.md
+
+Local-Surface-Derivation:
+Central model in derived-surface.ts. Neutral keeps paper cards. PaletteTint locals mix from parent section (not pure white). No DB/API/Admin fields.
+
+PDP-Composition:
+Primary region inherit; gallery media; buy/info inherit; tabs SectionAlternate + inherit body; related alternate + ProductCard local-card. No giant white card on tint. docs/evidence/TB-P10-T017/r5-pdp-composition.md
+
+Cart-Composition:
+Hero accent; list inherit; lines local-card; summary elevated; benefits alternate + inherit items. docs/evidence/TB-P10-T017/r5-cart-composition.md
+
+Home-Composition:
+Existing section bands retained; item cards local-card; wrappers inherit. docs/evidence/TB-P10-T017/r5-home-composition.md
+
+Commerce-Auth-Content-Composition:
+Checkout forms local-input; login elevated; blogs/landing share shell + section contexts. Structural wrappers inherit.
+
+Customer-Composition:
+Main SectionSurface; dashboard list inherit; metrics/actions/order rows local-card; summary elevated; no to-white giant wrapper. docs/evidence/TB-P10-T017/r5-customer-composition.md
+
+Card-Area-Ratio-Guard:
+Crawler measures visible role areas; flags giant Card/Elevated and excessive cardOfViewport. Representative tint-blue ratios: Home 0.163, PDP 0, Cart 0, Shipping 0.091, Customer 0.165; giants=0. docs/evidence/TB-P10-T017/r5-surface-area-report.md
+
+Rendered-Composition-Coverage:
+r5-runtime-report.json ok=true. Neutral + PaletteTint blue + wine subset + Dark representative. flags=0. Ticket [id] layout-static.
+
+PaletteTint-Quality:
+Section colors visible inside page; children harmonize; no paper-white domination on PDP/Cart; no flat monochrome wash.
+
+Neutral-Compatibility:
+Neutral paper cards retained; inherit-by-default does not destroy hierarchy.
+
+Focused-Validation:
+recovery-staleness 4/4. section-context / inherit / PDP / customer composition / derived-surface / component-compliance / critical-storefront pass. Crawler ok=true. docs/evidence/TB-P10-T017/r5-focused-validation.md
+
+Visual-Evidence:
+docs/evidence/TB-P10-T017/screenshots/r5/ pdp-composition-r5.png cart-composition-r5.png home-composition-r5.png checkout-composition-r5.png customer-dashboard-composition-r5.png customer-order-composition-r5.png landing-composition-r5.png dark-pdp-composition-r5.png dark-customer-composition-r5.png (+ plp/login/content/order-detail)
+
+AntiPattern-Scan:
+CLEAN. No new user color settings; giant structural cards repaired; no separate customer theme engine; no appearance polling. docs/evidence/TB-P10-T017/r5-antipattern-scan.md
+
+Lock-Registry:
+LOCK-SF-001…220. New 215–220 only. No duplicates.
+
+Recovery-SoT:
+Phase P10 Last Architect-accepted before review: TB-P10-T017-R4 Last Implementation: TB-P10-T017-R5 Current Issued/Repair: none USER_VISUAL_ACCEPTED=NO Worker IDLE do NOT invent TB-P10-T018. docs/evidence/TB-P10-T017/r5-recovery-sot.md
+
+Git:
+SHA=faf1e1c5d6dccf275fa63624ecb4f12014431659 HEAD==origin/main after push. Unrelated .tmp-* / App_Data leftovers not committed.
+
+Architectural-Concerns:
+Customer ticket [id] remains layout-static (no seeded ticket). Admin/Seller untouched.
+
+Visual-Concerns:
+USER_VISUAL_ACCEPTED=NO pending actual user inspection. Functional PASS does not imply Visual ACCEPT.
+
+Blockers:
+none
+END_TOOBA_WORKER_RESULT
