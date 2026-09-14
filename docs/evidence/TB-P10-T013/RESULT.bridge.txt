@@ -54,7 +54,7 @@ Recovery-SoT:
 Phase P10 Architect TB-P10-T012 Impl TB-P10-T013 Issued/Repair none USER_VISUAL_ACCEPTED=NO Worker IDLE do NOT invent TB-P10-T014. docs/evidence/TB-P10-T013/recovery-sot.md
 
 Git:
-HEAD==origin/main after push. Unrelated login leftovers not committed.
+SHA=c3ced29efbeea8dd0d1ce3e9767fd53a66c05719 HEAD==origin/main after push. Unrelated login leftovers not committed.
 
 Architectural-Concerns:
 Article public href is slug-poor without Content DB join; picker still uses published articles.
