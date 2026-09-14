@@ -214,7 +214,7 @@ export function StorefrontShopeivaHeader({
 
   return (
     <div className="w-full bg-white border-b border-gray-200 sticky top-0 z-50">
-      <div className="bg-[#2563EB] text-white text-[11px] sm:text-xs">
+      <div className="bg-primary text-white text-[11px] sm:text-xs">
         <div className="max-w-[1800px] mx-auto px-4 sm:px-6 h-10 flex items-center justify-center gap-3">
           <Sparkles className="w-3.5 h-3.5" />
           <span>ارسال سریع سفارش‌های فروشگاهی · پشتیبانی خرید</span>
@@ -236,7 +236,7 @@ export function StorefrontShopeivaHeader({
             {/* لوگوی قالب خریداری‌شده؛ نام فروشگاه Tooba است. */}
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src="/images/logos/logo.svg" alt="توبا" className="h-9 sm:h-11 w-auto" />
-            <span className="hidden md:block font-black text-xl text-[#2563EB]">توبا</span>
+            <span className="hidden md:block font-black text-xl text-primary">توبا</span>
           </Link>
 
           <form action={lp("/products")} method="get" className="hidden lg:block flex-1 max-w-xl mx-4">
@@ -246,7 +246,7 @@ export function StorefrontShopeivaHeader({
                 value={query}
                 onChange={(event) => setQuery(event.target.value)}
                 placeholder="جستجو در کالاهای فروشگاه..."
-                className="w-full bg-gray-50 border border-gray-200 rounded-2xl py-2.5 pr-11 pl-4 text-sm focus:outline-none focus:border-[#2563EB] focus:ring-2 focus:ring-[#2563EB]/20"
+                className="w-full bg-gray-50 border border-gray-200 rounded-2xl py-2.5 pr-11 pl-4 text-sm focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
                 aria-label="جستجوی کالا"
               />
               <Search className="absolute right-3.5 top-2.5 w-4 h-4 text-gray-400" />
@@ -279,7 +279,7 @@ export function StorefrontShopeivaHeader({
             >
               <ShoppingBag className="w-5 h-5" />
               <span
-                className="absolute -top-0.5 -left-0.5 min-w-[18px] h-[18px] px-1 rounded-full bg-[#2563EB] text-white text-[10px] font-bold flex items-center justify-center"
+                className="absolute -top-0.5 -left-0.5 min-w-[18px] h-[18px] px-1 rounded-full bg-primary text-white text-[10px] font-bold flex items-center justify-center"
                 data-testid="header-cart-badge"
               >
                 {cartCount.toLocaleString("fa-IR")}
@@ -295,7 +295,7 @@ export function StorefrontShopeivaHeader({
             <button
               type="button"
               className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-sm font-medium transition-all ${
-                megaOpen ? "bg-[#2563EB]/15 text-[#2563EB]" : "text-gray-600 hover:bg-gray-50"
+                megaOpen ? "bg-primary/15 text-primary" : "text-gray-600 hover:bg-gray-50"
               }`}
               aria-expanded={megaOpen}
               aria-controls="storefront-mega-menu"
@@ -315,18 +315,18 @@ export function StorefrontShopeivaHeader({
                 <style>{`
                   .mm-scroll::-webkit-scrollbar { width: 5px; }
                   .mm-scroll::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 10px; }
-                  .mm-scroll::-webkit-scrollbar-thumb { background: #2563EB; border-radius: 10px; }
-                  .mm-scroll { scrollbar-width: thin; scrollbar-color: #2563EB #f1f1f1; }
+                  .mm-scroll::-webkit-scrollbar-thumb { background: rgb(var(--color-primary)); border-radius: 10px; }
+                  .mm-scroll { scrollbar-width: thin; scrollbar-color: rgb(var(--color-primary)) #f1f1f1; }
                 `}</style>
                 <div className="max-w-[1800px] mx-auto px-4 sm:px-6 py-5">
                   <div className="grid grid-cols-12 gap-6">
                     <div className="col-span-3 flex flex-col max-h-[460px]">
                       <div className="shrink-0 pb-2.5 flex items-center justify-between">
                         <div className="flex items-center gap-2">
-                          <span className="w-0.5 h-4 bg-[#2563EB] rounded-full" />
+                          <span className="w-0.5 h-4 bg-primary rounded-full" />
                           <span className="font-bold text-xs text-gray-500 tracking-wider">دسته‌بندی‌ها</span>
                         </div>
-                        <Link href="/products" onClick={closeMegaMenu} className="text-[10px] text-[#2563EB] hover:underline font-semibold">
+                        <Link href="/products" onClick={closeMegaMenu} className="text-[10px] text-primary hover:underline font-semibold">
                           همه
                         </Link>
                       </div>
@@ -344,7 +344,7 @@ export function StorefrontShopeivaHeader({
                                 closeMegaMenu();
                               }}
                               className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-right transition-all ${
-                                selected ? "bg-[#2563EB] text-white shadow-sm" : "text-gray-500 hover:bg-gray-50 hover:text-gray-700"
+                                selected ? "bg-primary text-white shadow-sm" : "text-gray-500 hover:bg-gray-50 hover:text-gray-700"
                               }`}
                             >
                               <span className="flex items-center gap-2.5">
@@ -367,11 +367,11 @@ export function StorefrontShopeivaHeader({
                             <div className="flex items-center gap-2">
                               {(() => {
                                 const Icon = categoryIcon(selectedCategory.name);
-                                return <span className="w-5 h-5 rounded-lg bg-[#2563EB]/10 flex items-center justify-center text-[#2563EB]"><Icon className="w-3.5 h-3.5" /></span>;
+                                return <span className="w-5 h-5 rounded-lg bg-primary/10 flex items-center justify-center text-primary"><Icon className="w-3.5 h-3.5" /></span>;
                               })()}
                               <span className="font-bold text-sm text-gray-800">{selectedCategory.name}</span>
                             </div>
-                            <Link href={selectedCategory.href} onClick={closeMegaMenu} className="text-[10px] text-[#2563EB] hover:underline font-semibold">
+                            <Link href={selectedCategory.href} onClick={closeMegaMenu} className="text-[10px] text-primary hover:underline font-semibold">
                               مشاهده همه
                             </Link>
                           </div>
@@ -395,7 +395,7 @@ export function StorefrontShopeivaHeader({
                                     <Link
                                       href={sub.href}
                                       onClick={closeMegaMenu}
-                                      className="inline-flex items-center gap-1.5 text-xs font-bold text-gray-800 hover:text-[#2563EB] transition-colors mb-1.5"
+                                      className="inline-flex items-center gap-1.5 text-xs font-bold text-gray-800 hover:text-primary transition-colors mb-1.5"
                                     >
                                       <span className="w-1 h-1 rounded-full bg-gray-300" />
                                       {sub.name}
@@ -407,13 +407,13 @@ export function StorefrontShopeivaHeader({
                                             key={child.categoryId}
                                             href={child.href}
                                             onClick={closeMegaMenu}
-                                            className="block text-[11px] text-gray-400 hover:text-[#2563EB] transition-colors truncate py-0.5"
+                                            className="block text-[11px] text-gray-400 hover:text-primary transition-colors truncate py-0.5"
                                           >
                                             {child.name}
                                           </Link>
                                         ))}
                                         {descendants.length > 4 ? (
-                                          <Link href={sub.href} onClick={closeMegaMenu} className="text-[10px] text-[#2563EB] font-semibold hover:underline">
+                                          <Link href={sub.href} onClick={closeMegaMenu} className="text-[10px] text-primary font-semibold hover:underline">
                                             + {(descendants.length - 4).toLocaleString("fa-IR")} بیشتر
                                           </Link>
                                         ) : null}
@@ -433,14 +433,14 @@ export function StorefrontShopeivaHeader({
                     </div>
 
                     <div className="col-span-3 space-y-3 max-h-[460px]">
-                      <div className="bg-gradient-to-br from-[#2563EB] via-[#1d4ed8] to-[#1e40af] rounded-2xl p-4 text-white text-center shadow-lg shadow-[#2563EB]/20 relative overflow-hidden">
+                      <div className="bg-gradient-to-br from-primary via-primary-strong to-[#1e40af] rounded-2xl p-4 text-white text-center shadow-lg shadow-primary/20 relative overflow-hidden">
                         <div className="relative z-10">
                           <div className="w-10 h-10 mx-auto mb-2.5 rounded-xl bg-white/15 flex items-center justify-center">
                             <Gift className="w-5 h-5 text-amber-300" />
                           </div>
                           <h4 className="font-bold text-sm">پیشنهادهای فروشگاه</h4>
                           <p className="text-[11px] mt-1 opacity-80">کالاهای دارای پیشنهاد فعال</p>
-                          <Link href="/offers" onClick={closeMegaMenu} className="mt-3 inline-flex items-center gap-1 px-4 py-1.5 bg-white text-[#2563EB] rounded-xl text-[11px] font-bold hover:bg-blue-50 transition-all shadow-lg shadow-black/10">
+                          <Link href="/offers" onClick={closeMegaMenu} className="mt-3 inline-flex items-center gap-1 px-4 py-1.5 bg-white text-primary rounded-xl text-[11px] font-bold hover:bg-blue-50 transition-all shadow-lg shadow-black/10">
                             مشاهده <ChevronLeft className="w-3 h-3" />
                           </Link>
                         </div>
@@ -457,7 +457,7 @@ export function StorefrontShopeivaHeader({
                                 key={brand.brandId}
                                 href={`/brand/${brand.slug}`}
                                 onClick={closeMegaMenu}
-                                className="px-2.5 py-1 bg-white text-gray-500 rounded-lg text-[10px] font-medium hover:bg-[#2563EB] hover:text-white transition-all border border-gray-100"
+                                className="px-2.5 py-1 bg-white text-gray-500 rounded-lg text-[10px] font-medium hover:bg-primary hover:text-white transition-all border border-gray-100"
                               >
                                 {brand.name}
                               </Link>
@@ -536,7 +536,7 @@ export function StorefrontShopeivaHeader({
                                         event.stopPropagation();
                                         setMobileOpen(false);
                                       }}
-                                      className="text-xs font-semibold text-gray-700 hover:text-[#2563EB]"
+                                      className="text-xs font-semibold text-gray-700 hover:text-primary"
                                     >
                                       {child.name}
                                     </Link>
@@ -551,7 +551,7 @@ export function StorefrontShopeivaHeader({
                                           key={leaf.categoryId}
                                           href={`/products?categoryId=${leaf.categoryId}`}
                                           onClick={() => setMobileOpen(false)}
-                                          className="block p-2 text-[11px] text-gray-500 hover:text-[#2563EB] rounded-lg hover:bg-gray-100 transition truncate"
+                                          className="block p-2 text-[11px] text-gray-500 hover:text-primary rounded-lg hover:bg-gray-100 transition truncate"
                                         >
                                           {leaf.name}
                                         </Link>

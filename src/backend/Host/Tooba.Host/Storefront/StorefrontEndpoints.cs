@@ -26,6 +26,7 @@ public static class StorefrontEndpoints
         group.MapGet("/category-plp/{slug}", GetCategoryPlpAsync);
         group.MapGet("/media/{assetId:guid}", GetPresentationMediaAsync);
         group.MapGet("/checkout-identity-policy", GetCheckoutIdentityPolicyAsync);
+        group.MapGet("/appearance", GetAppearanceAsync);
         group.MapPost("/cart", CreateGuestCartAsync);
         group.MapGet("/cart/current", GetCurrentAuthenticatedCartAsync);
         group.MapGet("/cart/{cartId:guid}", GetCartAsync);
@@ -376,6 +377,28 @@ public static class StorefrontEndpoints
             policy = policy.ToString(),
             cartAnonymousAllowed = true,
             checkoutAuthenticationRequired = policy == Tooba.Catalog.Domain.CheckoutIdentityPolicyKind.AuthenticatedOnly,
+        });
+    }
+
+    private static async Task<IResult> GetAppearanceAsync(
+        StoreAppearanceProjector projector,
+        CancellationToken cancellationToken)
+    {
+        var appearance = await projector.GetEffectiveAsync(cancellationToken);
+        return Results.Json(new
+        {
+            storeScope = appearance.StoreScope,
+            paletteKey = appearance.PaletteKey,
+            paletteKeyWasKnown = appearance.PaletteKeyWasKnown,
+            themeMode = appearance.ThemeMode,
+            tokens = new
+            {
+                primaryRgb = appearance.PrimaryRgb,
+                primaryStrongRgb = appearance.PrimaryStrongRgb,
+                onPrimaryRgb = appearance.OnPrimaryRgb,
+                focusRgb = appearance.FocusRgb,
+            },
+            updatedAt = appearance.UpdatedAt,
         });
     }
 

@@ -11,7 +11,7 @@ import { addOfferToCart, toCustomerCartMessage } from "./storefront-cart-api.ts"
 import type { StorefrontProductCard } from "./storefront-model.ts";
 import { useStorefrontWishlist } from "./storefront-wishlist-provider.tsx";
 
-export const STOREFRONT_ACCENT = "#2563EB";
+export const STOREFRONT_ACCENT = "#2563EB"; // default tooba-blue palette; runtime uses --color-primary
 
 function discountPercent(card: StorefrontProductCard): number | null {
   if (card.promotionalAmountExclusiveOfTax == null || card.offerAmountExclusiveOfTax <= 0) return null;
@@ -100,7 +100,7 @@ export function StorefrontProductCardView({
           />
           <div className="absolute top-2 right-2 z-10 flex flex-col gap-1 items-start">
             {discount !== null ? (
-              <span className="bg-[#2563EB] text-white text-[10px] font-bold px-2.5 py-0.5 rounded-lg shadow-lg shadow-[#2563EB]/30 flex items-center gap-1">
+              <span className="bg-primary text-white text-[10px] font-bold px-2.5 py-0.5 rounded-lg shadow-lg shadow-primary/30 flex items-center gap-1">
                 <Zap className="w-3 h-3" />
                 {discount.toLocaleString("fa-IR")}%
               </span>
@@ -112,7 +112,7 @@ export function StorefrontProductCardView({
               </span>
             ) : null}
             {!showNew && card.promotionLabel ? (
-              <span className="bg-[#2563EB] text-white text-[10px] font-bold px-2.5 py-0.5 rounded-lg">
+              <span className="bg-primary text-white text-[10px] font-bold px-2.5 py-0.5 rounded-lg">
                 {card.promotionLabel}
               </span>
             ) : null}
@@ -153,7 +153,7 @@ export function StorefrontProductCardView({
           ) : null}
         </div>
         <div className="flex-1 flex flex-col p-3 gap-1.5 min-h-[108px]">
-          <h3 className="text-xs sm:text-sm font-bold text-gray-800 line-clamp-2 leading-snug min-h-[36px] group-hover:text-[#2563EB]">
+          <h3 className="text-xs sm:text-sm font-bold text-gray-800 line-clamp-2 leading-snug min-h-[36px] group-hover:text-primary">
             {card.title}
           </h3>
           {card.reviewCount > 0 && card.averageRating !== null ? (
@@ -168,7 +168,7 @@ export function StorefrontProductCardView({
             </div>
           ) : null}
           <div className="flex items-center gap-1.5 flex-wrap">
-            <span className="text-sm sm:text-base font-black text-[#2563EB] whitespace-nowrap">
+            <span className="text-sm sm:text-base font-black text-primary whitespace-nowrap">
               {formatOfferAmount(card.promotionalAmountExclusiveOfTax ?? card.offerAmountExclusiveOfTax, card.currency)}
             </span>
             {card.promotionalAmountExclusiveOfTax !== null ? (
@@ -190,7 +190,7 @@ export function StorefrontProductCardView({
             card.inStock
               ? atcAdded
                 ? "bg-emerald-600 text-white"
-                : "bg-[#2563EB] text-white hover:bg-[#1d4ed8]"
+                : "bg-primary text-white hover:bg-primary-strong"
               : "bg-gray-100 text-gray-400"
           }`}
         >

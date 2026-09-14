@@ -62,7 +62,7 @@ TB-P05-GATE
 Last Implementation Task:
 
 ```text
-TB-P10-T004-R24-R1-R4
+TB-P10-T005
 ```
 
 Current Issued Task:
@@ -80,6 +80,7 @@ Current Repair Task:
 Implemented Under Review:
 
 ```text
+TB-P10-T005 — Storefront Appearance Foundation (canonical Store appearance, semantic tokens, curated palette, future page extension contracts); USER_VISUAL_ACCEPTED=NO
 TB-P10-T004-R24-R1-R4 — Storefront auth/cart network churn repair (canonical session cache, one merge per login, no anonymous 401 storm); USER_VISUAL_ACCEPTED=NO
 TB-P10-T004-R24-R1-R3 — Storefront account identity + logout cart persistence + exact conversion boundary; USER_VISUAL_ACCEPTED=NO
 TB-P10-T004-R24-R1-R2 — Recipient visual verification gate (Payment + Customer + Admin browser proof); USER_VISUAL_ACCEPTED=NO
@@ -203,7 +204,7 @@ NO
 Worker Next State:
 
 ```text
-IDLE — waits for Bridge Task (no invented next task; do NOT invent TB-P10-T005)
+IDLE — waits for Bridge Task (no invented next task; do NOT invent TB-P10-T006)
 ```
 
 Current Gate:

@@ -1,0 +1,63 @@
+import { storefrontHostOrigin } from "./storefront-api.ts";
+import {
+  appearanceCssVars,
+  resolveBrandTokens,
+  resolvePaletteKey,
+  type StorefrontBrandTokens,
+} from "../../lib/storefront-appearance/palette-registry.ts";
+
+export interface StorefrontAppearanceProjection {
+  storeScope: string;
+  paletteKey: string;
+  paletteKeyWasKnown: boolean;
+  themeMode: string;
+  tokens: StorefrontBrandTokens;
+}
+
+const FALLBACK: StorefrontAppearanceProjection = {
+  storeScope: "default",
+  paletteKey: "tooba-blue",
+  paletteKeyWasKnown: true,
+  themeMode: "Light",
+  tokens: resolveBrandTokens("tooba-blue"),
+};
+
+/** ظاهر مؤثر Store را برای SSR ریشه می‌خواند؛ شکست = پالت پیش‌فرض بدون flash. */
+export async function loadStorefrontAppearance(): Promise<StorefrontAppearanceProjection> {
+  try {
+    const response = await fetch(`${storefrontHostOrigin()}/v1/storefront/appearance`, {
+      cache: "no-store",
+      headers: { Accept: "application/json" },
+    });
+    if (!response.ok) {
+      return FALLBACK;
+    }
+    const payload = await response.json() as {
+      storeScope?: string;
+      paletteKey?: string;
+      paletteKeyWasKnown?: boolean;
+      themeMode?: string;
+      tokens?: Partial<StorefrontBrandTokens>;
+    };
+    const paletteKey = resolvePaletteKey(payload.paletteKey);
+    const defaults = resolveBrandTokens(paletteKey);
+    return {
+      storeScope: payload.storeScope ?? FALLBACK.storeScope,
+      paletteKey,
+      paletteKeyWasKnown: payload.paletteKeyWasKnown !== false,
+      themeMode: payload.themeMode === "Dark" ? "Dark" : "Light",
+      tokens: {
+        primaryRgb: payload.tokens?.primaryRgb ?? defaults.primaryRgb,
+        primaryStrongRgb: payload.tokens?.primaryStrongRgb ?? defaults.primaryStrongRgb,
+        onPrimaryRgb: payload.tokens?.onPrimaryRgb ?? defaults.onPrimaryRgb,
+        focusRgb: payload.tokens?.focusRgb ?? defaults.focusRgb,
+      },
+    };
+  } catch {
+    return FALLBACK;
+  }
+}
+
+export function storefrontAppearanceStyle(appearance: StorefrontAppearanceProjection): Record<string, string> {
+  return appearanceCssVars(appearance.tokens);
+}

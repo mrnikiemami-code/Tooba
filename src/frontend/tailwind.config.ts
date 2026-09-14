@@ -17,6 +17,7 @@ const config: Config = {
         muted: "rgb(var(--color-muted) / <alpha-value>)",
         border: "rgb(var(--color-border) / <alpha-value>)",
         primary: "rgb(var(--color-primary) / <alpha-value>)",
+        "primary-strong": "rgb(var(--color-primary-strong) / <alpha-value>)",
         "primary-foreground": "rgb(var(--color-primary-foreground) / <alpha-value>)",
         secondary: "rgb(var(--color-secondary) / <alpha-value>)",
         "secondary-foreground": "rgb(var(--color-secondary-foreground) / <alpha-value>)",

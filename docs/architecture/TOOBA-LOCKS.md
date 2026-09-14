@@ -541,3 +541,39 @@ Header badge and cart lines must not be optimistically cleared on the final chec
 
 ### LOCK-SF-126 — Canonical storefront session resolution
 Storefront account state is resolved through one in-memory session cache with in-flight dedupe. Desktop and mobile header copies reuse that cache. Expected anonymous 401 after logout is cached and must not be retried. Cart merge is one logical POST per login transition. No auth/cart interval polling.
+
+### LOCK-SF-127 — Store appearance is declarative and Store-scoped
+Store appearance is a declarative, Store-scoped contract. Executable HTML, CSS, or JavaScript from the database is forbidden.
+
+### LOCK-SF-128 — Curated appearance now; custom theme only via validated tokens
+The current release uses curated/preset appearance choices only. A future custom theme may exist only as validated declarative tokens — never as free-form CSS/HTML/JS.
+
+### LOCK-SF-129 — Brand tokens stay separate from status semantics
+Brand/primary tokens must not redefine danger, success, or warning semantics.
+
+### LOCK-SF-130 — Appearance changes need no per-store build
+Changing Store appearance must not require a per-store frontend build, publish, or app-pool restart. Runtime applies CSS variables from a cached Store projection.
+
+### LOCK-SF-131 — One Product Card behavior; skins are future presentation only
+StorefrontProductCardView remains one canonical commerce/behavior component. Future controlled visual skins may change presentation only; pricing, actions, and accessibility stay shared. Skins are not implemented in T005.
+
+### LOCK-SF-132 — Future Landing Pages are DB-backed approved sections
+Future Landing Pages are Store+Locale database pages composed only from approved registered Sections. They are not physical Next.js files.
+
+### LOCK-SF-133 — Publishing a Landing Page needs no Storefront redeploy
+Adding or publishing a Landing Page must not require a new physical frontend page file or a Storefront redeploy.
+
+### LOCK-SF-134 — One selectable Home Page per Store
+A Store has one canonical selectable Home Page reference (Store.HomePageId or equivalent). Menu selection is independent of that reference.
+
+### LOCK-SF-135 — Page data sources are approved pickers, never SQL
+Page authors choose approved product/data sources (Manual / Category / Brand / Newest / BestSelling / Featured / Discounted). SQL or arbitrary query authoring is forbidden.
+
+### LOCK-SF-136 — Menu remains independent
+Menu/MenuItem ownership stays independent. Pages or Sections may reference an approved Menu or MenuGroup; they do not own the menu tree.
+
+### LOCK-SF-137 — Dynamic Page routes cannot shadow reserved routes
+Dynamic Store+Locale+Slug page resolution cannot shadow reserved system, product, category, cart, checkout, account, admin, or API routes.
+
+### LOCK-SF-138 — Free-form page-builder execution is forbidden
+Free-form page-builder HTML/CSS/JS execution is forbidden by this architecture.

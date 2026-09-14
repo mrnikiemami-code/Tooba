@@ -144,6 +144,8 @@ builder.Services.AddScoped<CatalogDemoSeedService>();
 builder.Services.AddScoped<CatalogDemoResetAndSeedHost>();
 builder.Services.AddScoped<Tooba.Host.Storefront.StorefrontComposer>();
 builder.Services.AddScoped<Tooba.Order.Application.ICheckoutAbuseGate, Tooba.Host.Storefront.CheckoutAbuseGate>();
+builder.Services.AddMemoryCache();
+builder.Services.AddScoped<Tooba.Host.Storefront.StoreAppearanceProjector>();
 builder.Services.AddScoped(sp =>
     new CheckoutIdentityGate(
         sp.GetRequiredService<Tooba.Catalog.Infrastructure.Persistence.CatalogDbContext>(),

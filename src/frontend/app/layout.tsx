@@ -12,6 +12,7 @@ import {
   parseLocale,
 } from "../lib/i18n/locale";
 import { LOCALE_HEADER_NAME } from "../lib/i18n/routing";
+import { loadStorefrontAppearance, storefrontAppearanceStyle } from "./storefront/storefront-appearance-api.ts";
 import "./globals.css";
 
 /**
@@ -33,9 +34,16 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
     headerLocale && isLocale(headerLocale)
       ? headerLocale
       : parseLocale(jar.get(LOCALE_COOKIE_NAME)?.value) ?? DEFAULT_LOCALE;
+  const appearance = await loadStorefrontAppearance();
 
   return (
-    <html lang={langForLocale(locale)} dir={dirForLocale(locale)} suppressHydrationWarning>
+    <html
+      lang={langForLocale(locale)}
+      dir={dirForLocale(locale)}
+      suppressHydrationWarning
+      data-storefront-palette={appearance.paletteKey}
+      style={storefrontAppearanceStyle(appearance)}
+    >
       <body>
         <AppProviders>
           <LocaleProvider locale={locale}>{children}</LocaleProvider>

@@ -127,7 +127,7 @@ export function StorefrontMiniCartDrawer({
       >
         <div className="p-4 border-b border-gray-200 flex justify-between items-center bg-gray-50">
           <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
-            <ShoppingBag className="w-5 h-5 text-[#2563EB]" />
+            <ShoppingBag className="w-5 h-5 text-primary" />
             سبد خرید ({itemCount.toLocaleString("fa-IR")})
           </h2>
           <button
@@ -173,7 +173,7 @@ export function StorefrontMiniCartDrawer({
                   </div>
                   <div className="flex-1 min-w-0">
                     <h4 className="font-bold text-sm text-gray-900 line-clamp-2">{line.title}</h4>
-                    <p className="text-sm text-[#2563EB] font-bold">
+                    <p className="text-sm text-primary font-bold">
                       {line.lineAmountExclusiveOfTax != null
                         ? formatOfferAmount(line.lineAmountExclusiveOfTax, line.currency)
                         : "—"}
@@ -224,12 +224,12 @@ export function StorefrontMiniCartDrawer({
           <div className="p-4 border-t border-gray-200 bg-gray-50" data-testid="mini-cart-footer">
             <div className="flex justify-between font-bold mb-3 text-base">
               <span className="text-gray-700">جمع کل</span>
-              <span className="text-[#2563EB]">{formatOfferAmount(subtotal, currency)}</span>
+              <span className="text-primary">{formatOfferAmount(subtotal, currency)}</span>
             </div>
             {/* لینک کامل سند — نه Next Link؛ soft-nav به /fa/cart گاهی بدون rewrite می‌ماند. */}
             <a
               href={localizePath("/cart")}
-              className="block w-full py-2.5 bg-[#2563EB] text-white text-center rounded-xl font-bold text-sm hover:bg-[#1d4ed8] transition-all shadow-md hover:shadow-lg hover:shadow-[#2563EB]/25"
+              className="block w-full py-2.5 bg-primary text-white text-center rounded-xl font-bold text-sm hover:bg-primary-strong transition-all shadow-md hover:shadow-lg hover:shadow-primary/25"
               data-testid="mini-cart-checkout-cta"
             >
               تکمیل خرید

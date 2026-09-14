@@ -46,6 +46,9 @@ public sealed class CatalogDbContext : DbContext
     /// <summary>سقف سفارش باز و سهمیه شروع رزرو.</summary>
     public DbSet<StoreCheckoutAbuseSettings> StoreCheckoutAbuseSettings => Set<StoreCheckoutAbuseSettings>();
 
+    /// <summary>ظاهر فروشگاه: پالت curated و حالت تم.</summary>
+    public DbSet<StoreAppearanceSettings> StoreAppearanceSettings => Set<StoreAppearanceSettings>();
+
     /// <summary>override چرخه رزرو Offer/Category.</summary>
     public DbSet<ReservationCyclePolicyOverride> ReservationCyclePolicyOverrides => Set<ReservationCyclePolicyOverride>();
 
@@ -550,6 +553,15 @@ public sealed class CatalogDbContext : DbContext
             entity.ToTable("store_checkout_abuse_settings");
             entity.HasKey(x => x.SettingsId);
             entity.Property(x => x.SettingsId).ValueGeneratedNever();
+        });
+
+        modelBuilder.Entity<StoreAppearanceSettings>(entity =>
+        {
+            entity.ToTable("store_appearance_settings");
+            entity.HasKey(x => x.SettingsId);
+            entity.Property(x => x.SettingsId).ValueGeneratedNever();
+            entity.Property(x => x.PaletteKey).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.ThemeMode).HasConversion<string>().HasMaxLength(16);
         });
 
         modelBuilder.Entity<ReservationCyclePolicyOverride>(entity =>
