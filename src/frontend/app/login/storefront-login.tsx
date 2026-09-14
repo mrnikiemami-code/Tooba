@@ -25,7 +25,7 @@ export function StorefrontCustomerLogin() {
   const copy = locale === "en"
     ? {
         title: "Sign in",
-        lead: "Enter your mobile number to continue checkout.",
+        lead: "Enter your mobile number to sign in.",
         mobile: "Mobile number",
         otp: "One-time code",
         send: "Send code",
@@ -37,7 +37,7 @@ export function StorefrontCustomerLogin() {
       }
     : {
         title: "ورود به حساب",
-        lead: "برای ادامهٔ خرید شماره موبایل خود را وارد کنید.",
+        lead: "شماره موبایل خود را وارد کنید.",
         mobile: "شماره موبایل",
         otp: "کد یک‌بارمصرف",
         send: "ارسال کد",

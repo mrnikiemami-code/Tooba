@@ -21,5 +21,7 @@ test("canonical login page is locale-routed mobile+OTP without password UI", () 
   assert.match(ui, /invalidateStorefrontSession/);
   assert.match(ui, /markStorefrontSessionAnonymous/);
   assert.match(ui, /notifyAuthChanged/);
+  assert.match(ui, /sanitizeReturnTo/);
+  assert.match(ui, /router\.replace\(returnTo\)/);
   assert.doesNotMatch(ui, /setInterval/);
 });

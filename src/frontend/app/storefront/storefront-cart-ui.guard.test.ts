@@ -37,6 +37,8 @@ test("header opens mini-cart drawer instead of bare /cart link", () => {
 test("canonical account menu reuses Shopeiva dropdown and logout", () => {
   const menu = fs.readFileSync(path.join(root, "app/storefront/storefront-account-menu.tsx"), "utf8");
   assert.match(menu, /header-login-link/);
+  assert.match(menu, /canonicalReturnTo/);
+  assert.doesNotMatch(menu, /useSearchParams/);
   assert.match(menu, /header-account-menu/);
   assert.match(menu, /\/customer-panel\/orders/);
   assert.match(menu, /\/customer-panel/);

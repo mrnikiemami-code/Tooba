@@ -1,10 +1,11 @@
 import { LOCALES, type Locale } from "../i18n/locale.ts";
+import { localePath, stripLocalePrefix } from "../i18n/routing.ts";
 
 const SECRET_QUERY = /(guestSecret|refreshToken|accessToken|tooba_session|password|otp|secret)/i;
 
 /** مسیر بازگشت داخلی امن؛ locale حفظ می‌شود و redirect باز رد می‌شود. */
 export function sanitizeReturnTo(raw: string | null | undefined, locale: Locale): string {
-  const fallback = `/${locale}/shipping`;
+  const fallback = `/${locale}`;
   if (!raw) {
     return fallback;
   }
@@ -36,6 +37,15 @@ export function sanitizeReturnTo(raw: string | null | undefined, locale: Locale)
   }
 
   return query ? `${pathPart}?${query}` : pathPart;
+}
+
+/**
+ * مسیر فعلی را به returnTo عمومی با prefix locale تبدیل می‌کند.
+ * usePathname روی SSR مسیر بازنویسی‌شده (/cart) است و روی کلاینت /fa/cart؛
+ * بدون نرمال‌سازی sanitize به /fa سقوط می‌کند و hydration می‌شکند.
+ */
+export function canonicalReturnTo(locale: Locale, pathname: string | null | undefined): string {
+  return sanitizeReturnTo(localePath(locale, stripLocalePrefix(pathname || "/")), locale);
 }
 
 /** نشانی ورود locale-aware. */
