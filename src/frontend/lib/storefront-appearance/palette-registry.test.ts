@@ -10,6 +10,7 @@ import {
   listStorefrontPalettes,
   resolveBrandTokens,
   resolvePaletteKey,
+  resolveTintTokens,
 } from "./palette-registry.ts";
 
 test("default palette is visually equivalent to #2563EB", () => {
@@ -71,6 +72,8 @@ test("appearance CSS vars set brand tokens only", () => {
   assert.equal(Object.hasOwn(vars, "--color-danger"), false);
   assert.equal(Object.hasOwn(vars, "--color-success"), false);
   assert.equal(Object.hasOwn(vars, "--color-warning"), false);
+  assert.equal(vars["--color-page-tint"], "236 241 250");
+  assert.notEqual(vars["--color-page-tint"], vars["--color-primary"]);
 });
 
 test("wine-burgundy dark emphasis is canonical not a page special case", () => {
@@ -79,4 +82,16 @@ test("wine-burgundy dark emphasis is canonical not a page special case", () => {
   assert.equal(wine.primaryOnDarkRgb, "189 91 118");
   assert.ok(contrastRatio(wine.primaryRgb, "12 12 14") < 3);
   assert.ok(contrastRatio(wine.primaryOnDarkRgb, "12 12 14") >= 4.5);
+});
+
+test("curated tints are not primary washes and keep body readable", () => {
+  const paperInk = "24 24 27";
+  const darkInk = "250 250 250";
+  for (const palette of listStorefrontPalettes()) {
+    const tint = resolveTintTokens(palette.key);
+    assert.notEqual(tint.pageBackgroundRgb, palette.tokens.primaryRgb);
+    assert.notEqual(tint.pageBackgroundDarkRgb, palette.tokens.primaryRgb);
+    assert.ok(contrastRatio(paperInk, tint.pageBackgroundRgb) >= 4.5, `${palette.key} light tint`);
+    assert.ok(contrastRatio(darkInk, tint.pageBackgroundDarkRgb) >= 4.5, `${palette.key} dark tint`);
+  }
 });

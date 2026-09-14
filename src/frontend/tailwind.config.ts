@@ -11,6 +11,8 @@ const config: Config = {
     extend: {
       colors: {
         background: "rgb(var(--color-background) / <alpha-value>)",
+        page: "rgb(var(--color-page-background) / <alpha-value>)",
+        section: "rgb(var(--color-section-background) / <alpha-value>)",
         surface: "rgb(var(--color-surface) / <alpha-value>)",
         "surface-elevated": "rgb(var(--color-surface-elevated) / <alpha-value>)",
         foreground: "rgb(var(--color-foreground) / <alpha-value>)",

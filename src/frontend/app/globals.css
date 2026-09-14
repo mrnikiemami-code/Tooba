@@ -13,6 +13,8 @@
   --ref-danger: 185 28 28;
 
   --color-background: 250 250 249;
+  --color-page-background: 243 245 248;
+  --color-section-background: 243 245 248;
   --color-surface: 255 255 255;
   --color-surface-elevated: 255 255 255;
   --color-foreground: 24 24 27;
@@ -75,6 +77,20 @@
   --color-danger: 248 113 113;
   --color-info: 147 197 253;
   --color-brand-emphasis: var(--color-primary-on-dark);
+}
+
+html[data-storefront-background-style="PaletteTint"] {
+  --color-page-background: var(--color-page-tint);
+  --color-section-background: var(--color-section-tint);
+}
+
+html.dark[data-storefront-background-style="PaletteTint"] {
+  --color-page-background: var(--color-page-tint-dark);
+  --color-section-background: var(--color-section-tint-dark);
+}
+
+[data-storefront-canvas] {
+  background-color: rgb(var(--color-page-background));
 }
 
 html.dark .bg-white {

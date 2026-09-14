@@ -87,6 +87,7 @@ export default function AdminSettingsPage() {
   const [appearanceDraft, setAppearanceDraft] = useState("tooba-blue");
   const [appearanceThemeDraft, setAppearanceThemeDraft] = useState("LightOnly");
   const [appearanceSkinDraft, setAppearanceSkinDraft] = useState("classic");
+  const [appearanceBackgroundDraft, setAppearanceBackgroundDraft] = useState("Neutral");
   const [reservationDraft, setReservationDraft] = useState<ReservationPolicyDraft>({
     initial: "",
     retry: "",
@@ -154,6 +155,7 @@ export default function AdminSettingsPage() {
       setAppearanceDraft(appearanceResult.data.paletteKey);
       setAppearanceThemeDraft(appearanceResult.data.themeMode);
       setAppearanceSkinDraft(appearanceResult.data.productCardSkin);
+      setAppearanceBackgroundDraft(appearanceResult.data.backgroundStyle);
     }
   }
 
@@ -349,7 +351,7 @@ export default function AdminSettingsPage() {
     setBusy(true);
     setError(null);
     setSuccess(null);
-    const result = await saveAppearanceSettings(appearanceDraft, appearanceThemeDraft, appearanceSkinDraft);
+    const result = await saveAppearanceSettings(appearanceDraft, appearanceThemeDraft, appearanceSkinDraft, appearanceBackgroundDraft);
     if (result.denied) {
       setDenied(true);
       setBusy(false);
@@ -364,6 +366,7 @@ export default function AdminSettingsPage() {
     setAppearanceDraft(result.data.paletteKey);
     setAppearanceThemeDraft(result.data.themeMode);
     setAppearanceSkinDraft(result.data.productCardSkin);
+    setAppearanceBackgroundDraft(result.data.backgroundStyle);
     setSuccess("ظاهر فروشگاه ذخیره شد.");
     setBusy(false);
   }
@@ -372,6 +375,7 @@ export default function AdminSettingsPage() {
     setAppearanceDraft(appearance?.paletteKey ?? "tooba-blue");
     setAppearanceThemeDraft(appearance?.themeMode ?? "LightOnly");
     setAppearanceSkinDraft(appearance?.productCardSkin ?? "classic");
+    setAppearanceBackgroundDraft(appearance?.backgroundStyle ?? "Neutral");
     setError(null);
     setSuccess(null);
   }
@@ -468,12 +472,14 @@ export default function AdminSettingsPage() {
               draftKey={appearanceDraft}
               draftTheme={appearanceThemeDraft}
               draftSkin={appearanceSkinDraft}
+              draftBackground={appearanceBackgroundDraft}
               busy={busy}
               readOnly={readOnly}
               error={error}
               onSelect={setAppearanceDraft}
               onSelectTheme={setAppearanceThemeDraft}
               onSelectSkin={setAppearanceSkinDraft}
+              onSelectBackground={setAppearanceBackgroundDraft}
               onSave={() => void onSaveAppearance()}
               onCancel={onCancelAppearance}
             />

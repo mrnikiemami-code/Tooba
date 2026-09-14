@@ -575,6 +575,7 @@ public sealed class CatalogDbContext : DbContext
             entity.Property(x => x.PaletteKey).HasMaxLength(32).IsRequired();
             entity.Property(x => x.ThemeMode).HasConversion<string>().HasMaxLength(16);
             entity.Property(x => x.ProductCardSkin).HasMaxLength(16).IsRequired();
+            entity.Property(x => x.BackgroundStyle).HasConversion<string>().HasMaxLength(16);
             entity.Property(x => x.HomePageId);
             entity.Property(x => x.HeaderMenuId);
         });

@@ -20,6 +20,7 @@ public sealed class StoreAppearanceAdminTests
         Assert.Equal("tooba-blue", view.PaletteKey);
         Assert.True(view.PaletteKeyWasKnown);
         Assert.Equal("classic", view.ProductCardSkin);
+        Assert.Equal("Neutral", view.BackgroundStyle);
         Assert.InRange(view.Presets.Count, 6, 8);
         Assert.Equal(4, view.Skins.Count);
         Assert.Contains(view.Presets, item => item.Key == "tooba-blue");
@@ -120,6 +121,7 @@ public sealed class StoreAppearanceAdminTests
         Assert.Contains("AdminPanelAccess.RequireAuthorizedAsync", source, StringComparison.Ordinal);
         Assert.Contains("body.ThemeMode", source, StringComparison.Ordinal);
         Assert.Contains("body.ProductCardSkin", source, StringComparison.Ordinal);
+        Assert.Contains("body.BackgroundStyle", source, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -145,6 +147,55 @@ public sealed class StoreAppearanceAdminTests
         Assert.Equal("classic", second.ProductCardSkin);
         var row = await catalog.StoreAppearanceSettings.SingleAsync();
         Assert.Equal("classic", row.ProductCardSkin);
+    }
+
+    [Fact]
+    public async Task Valid_background_style_updates_and_preserves_palette_theme_and_skin()
+    {
+        var composer = CreateComposer(out var catalog);
+        await composer.SaveAsync("forest-green", "DarkOnly", "clean", CancellationToken.None);
+        var view = await composer.SaveAsync("forest-green", "DarkOnly", "clean", "PaletteTint", CancellationToken.None);
+        Assert.Equal("forest-green", view.PaletteKey);
+        Assert.Equal("DarkOnly", view.ThemeMode);
+        Assert.Equal("clean", view.ProductCardSkin);
+        Assert.Equal("PaletteTint", view.BackgroundStyle);
+        Assert.Equal("236 244 238", view.Tint.PageBackgroundRgb);
+        var row = await catalog.StoreAppearanceSettings.SingleAsync();
+        Assert.Equal(StoreAppearanceBackgroundStyle.PaletteTint, row.BackgroundStyle);
+    }
+
+    [Fact]
+    public async Task Missing_background_style_preserves_existing_or_neutral()
+    {
+        var composer = CreateComposer(out var catalog);
+        var first = await composer.SaveAsync("tooba-blue", "LightOnly", "classic", CancellationToken.None);
+        Assert.Equal("Neutral", first.BackgroundStyle);
+        var second = await composer.SaveAsync("tooba-blue", "LightOnly", "classic", null, CancellationToken.None);
+        Assert.Equal("Neutral", second.BackgroundStyle);
+        var row = await catalog.StoreAppearanceSettings.SingleAsync();
+        Assert.Equal(StoreAppearanceBackgroundStyle.Neutral, row.BackgroundStyle);
+    }
+
+    [Fact]
+    public async Task Invalid_background_style_is_rejected()
+    {
+        var composer = CreateComposer(out var catalog);
+        var error = await Assert.ThrowsAsync<PlatformHttpException>(
+            () => composer.SaveAsync("tooba-blue", "LightOnly", "classic", "custom-wash", CancellationToken.None));
+        Assert.Equal(400, error.StatusCode);
+        Assert.Equal("appearance.background.invalid", error.ErrorCode);
+        Assert.Empty(catalog.StoreAppearanceSettings);
+    }
+
+    [Fact]
+    public async Task Missing_row_projects_neutral_background()
+    {
+        await using var catalog = CreateCatalog();
+        var projector = CreateProjector(catalog, OutboxTestContextFactory.SingleStore("store-a", "conn-a"), new MemoryCache(new MemoryCacheOptions()));
+        var projection = await projector.GetEffectiveAsync(CancellationToken.None);
+        Assert.Equal("Neutral", projection.BackgroundStyle);
+        Assert.Equal("236 241 250", projection.PageBackgroundRgb);
+        Assert.NotEqual(projection.PrimaryRgb, projection.PageBackgroundRgb);
     }
 
     [Fact]

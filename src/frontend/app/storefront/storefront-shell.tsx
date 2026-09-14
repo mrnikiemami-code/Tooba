@@ -16,7 +16,7 @@ export function StorefrontShell({
   searchCatalog?: StorefrontProductCard[];
 }) {
   return (
-    <div className="min-h-screen bg-[#f3f5f8] text-gray-900 flex flex-col">
+    <div className="min-h-screen bg-page text-gray-900 flex flex-col" data-storefront-canvas>
       <StorefrontShopeivaHeader categories={categories} />
       <main className="flex-1 w-full">
         <div className="max-w-[1800px] mx-auto px-4 sm:px-6">{children}</div>

@@ -1,6 +1,8 @@
 export const DEFAULT_PALETTE_KEY = "tooba-blue";
 export const DEFAULT_PRIMARY_HEX = "#2563EB";
 export const DEFAULT_PRIMARY_STRONG_HEX = "#1d4ed8";
+/** Current storefront shell canvas (#f3f5f8) for Neutral. */
+export const NEUTRAL_PAGE_BACKGROUND_RGB = "243 245 248";
 
 export interface StorefrontBrandTokens {
   primaryRgb: string;
@@ -11,12 +13,20 @@ export interface StorefrontBrandTokens {
   primaryOnDarkRgb: string;
 }
 
+export interface StorefrontTintTokens {
+  pageBackgroundRgb: string;
+  sectionBackgroundRgb: string;
+  pageBackgroundDarkRgb: string;
+  sectionBackgroundDarkRgb: string;
+}
+
 export interface StorefrontPaletteDefinition {
   key: string;
   nameFa: string;
   nameEn: string;
   descriptionFa: string;
   tokens: StorefrontBrandTokens;
+  tint: StorefrontTintTokens;
 }
 
 const TOOBA_BLUE: StorefrontBrandTokens = {
@@ -27,14 +37,21 @@ const TOOBA_BLUE: StorefrontBrandTokens = {
   primaryOnDarkRgb: "59 115 237",
 };
 
+const TOOBA_BLUE_TINT: StorefrontTintTokens = {
+  pageBackgroundRgb: "236 241 250",
+  sectionBackgroundRgb: "241 245 252",
+  pageBackgroundDarkRgb: "14 17 26",
+  sectionBackgroundDarkRgb: "18 22 32",
+};
+
 export const STOREFRONT_PALETTES: readonly StorefrontPaletteDefinition[] = [
-  { key: "tooba-blue", nameFa: "آبی توبا", nameEn: "Tooba Blue", descriptionFa: "پالت پیش‌فرض برند؛ آبی روشن و قابل اعتماد برای فروش روزمره.", tokens: TOOBA_BLUE },
-  { key: "forest-green", nameFa: "سبز جنگلی", nameEn: "Forest Green", descriptionFa: "فضای طبیعی و آرام برای کالای سلامت یا فضای سبز.", tokens: { primaryRgb: "21 128 61", primaryStrongRgb: "22 101 52", onPrimaryRgb: "255 255 255", focusRgb: "21 128 61", primaryOnDarkRgb: "42 139 78" } },
-  { key: "wine-burgundy", nameFa: "شرابی تیره", nameEn: "Wine Burgundy", descriptionFa: "حس لوکس و رسمی برای کالای ویژه و مناسبتی.", tokens: { primaryRgb: "159 18 57", primaryStrongRgb: "136 19 55", onPrimaryRgb: "255 255 255", focusRgb: "159 18 57", primaryOnDarkRgb: "189 91 118" } },
-  { key: "slate-navy", nameFa: "سرمه‌ای سنگی", nameEn: "Slate Navy", descriptionFa: "حرفه‌ای و خنثی برای فروشگاه‌های سازمانی.", tokens: { primaryRgb: "30 58 95", primaryStrongRgb: "23 37 84", onPrimaryRgb: "255 255 255", focusRgb: "30 58 95", primaryOnDarkRgb: "104 123 148" } },
-  { key: "amber-gold", nameFa: "کهربایی", nameEn: "Amber Gold", descriptionFa: "گرم و دعوت‌کننده برای کالای خانگی یا هدیه.", tokens: { primaryRgb: "180 83 9", primaryStrongRgb: "146 64 14", onPrimaryRgb: "255 255 255", focusRgb: "180 83 9", primaryOnDarkRgb: "187 98 31" } },
-  { key: "teal-lagoon", nameFa: "سبزآبی مرداب", nameEn: "Teal Lagoon", descriptionFa: "تازه و مدرن برای کالای دیجیتال یا سفر.", tokens: { primaryRgb: "15 118 110", primaryStrongRgb: "17 94 89", onPrimaryRgb: "255 255 255", focusRgb: "15 118 110", primaryOnDarkRgb: "46 136 129" } },
-  { key: "violet-royal", nameFa: "بنفش سلطنتی", nameEn: "Royal Violet", descriptionFa: "متمایز و خلاق برای برندهای جسور؛ اشباع کنترل‌شده.", tokens: { primaryRgb: "124 58 237", primaryStrongRgb: "109 40 217", onPrimaryRgb: "255 255 255", focusRgb: "124 58 237", primaryOnDarkRgb: "144 88 240" } },
+  { key: "tooba-blue", nameFa: "آبی توبا", nameEn: "Tooba Blue", descriptionFa: "پالت پیش‌فرض برند؛ آبی روشن و قابل اعتماد برای فروش روزمره.", tokens: TOOBA_BLUE, tint: TOOBA_BLUE_TINT },
+  { key: "forest-green", nameFa: "سبز جنگلی", nameEn: "Forest Green", descriptionFa: "فضای طبیعی و آرام برای کالای سلامت یا فضای سبز.", tokens: { primaryRgb: "21 128 61", primaryStrongRgb: "22 101 52", onPrimaryRgb: "255 255 255", focusRgb: "21 128 61", primaryOnDarkRgb: "42 139 78" }, tint: { pageBackgroundRgb: "236 244 238", sectionBackgroundRgb: "241 247 242", pageBackgroundDarkRgb: "13 18 15", sectionBackgroundDarkRgb: "16 22 18" } },
+  { key: "wine-burgundy", nameFa: "شرابی تیره", nameEn: "Wine Burgundy", descriptionFa: "حس لوکس و رسمی برای کالای ویژه و مناسبتی.", tokens: { primaryRgb: "159 18 57", primaryStrongRgb: "136 19 55", onPrimaryRgb: "255 255 255", focusRgb: "159 18 57", primaryOnDarkRgb: "189 91 118" }, tint: { pageBackgroundRgb: "248 241 243", sectionBackgroundRgb: "250 245 246", pageBackgroundDarkRgb: "20 13 16", sectionBackgroundDarkRgb: "24 16 19" } },
+  { key: "slate-navy", nameFa: "سرمه‌ای سنگی", nameEn: "Slate Navy", descriptionFa: "حرفه‌ای و خنثی برای فروشگاه‌های سازمانی.", tokens: { primaryRgb: "30 58 95", primaryStrongRgb: "23 37 84", onPrimaryRgb: "255 255 255", focusRgb: "30 58 95", primaryOnDarkRgb: "104 123 148" }, tint: { pageBackgroundRgb: "236 240 247", sectionBackgroundRgb: "241 244 250", pageBackgroundDarkRgb: "14 16 22", sectionBackgroundDarkRgb: "18 21 28" } },
+  { key: "amber-gold", nameFa: "کهربایی", nameEn: "Amber Gold", descriptionFa: "گرم و دعوت‌کننده برای کالای خانگی یا هدیه.", tokens: { primaryRgb: "180 83 9", primaryStrongRgb: "146 64 14", onPrimaryRgb: "255 255 255", focusRgb: "180 83 9", primaryOnDarkRgb: "187 98 31" }, tint: { pageBackgroundRgb: "249 243 235", sectionBackgroundRgb: "251 247 241", pageBackgroundDarkRgb: "20 15 11", sectionBackgroundDarkRgb: "24 18 14" } },
+  { key: "teal-lagoon", nameFa: "سبزآبی مرداب", nameEn: "Teal Lagoon", descriptionFa: "تازه و مدرن برای کالای دیجیتال یا سفر.", tokens: { primaryRgb: "15 118 110", primaryStrongRgb: "17 94 89", onPrimaryRgb: "255 255 255", focusRgb: "15 118 110", primaryOnDarkRgb: "46 136 129" }, tint: { pageBackgroundRgb: "235 244 243", sectionBackgroundRgb: "240 247 246", pageBackgroundDarkRgb: "12 18 18", sectionBackgroundDarkRgb: "15 22 22" } },
+  { key: "violet-royal", nameFa: "بنفش سلطنتی", nameEn: "Royal Violet", descriptionFa: "متمایز و خلاق برای برندهای جسور؛ اشباع کنترل‌شده.", tokens: { primaryRgb: "124 58 237", primaryStrongRgb: "109 40 217", onPrimaryRgb: "255 255 255", focusRgb: "124 58 237", primaryOnDarkRgb: "144 88 240" }, tint: { pageBackgroundRgb: "242 237 250", sectionBackgroundRgb: "246 242 252", pageBackgroundDarkRgb: "17 13 24", sectionBackgroundDarkRgb: "21 16 30" } },
 ];
 
 const REGISTRY: Record<string, StorefrontPaletteDefinition> = Object.fromEntries(
@@ -54,6 +71,10 @@ export function isKnownPaletteKey(raw: string | null | undefined): boolean {
 
 export function resolveBrandTokens(raw: string | null | undefined): StorefrontBrandTokens {
   return REGISTRY[resolvePaletteKey(raw)]?.tokens ?? TOOBA_BLUE;
+}
+
+export function resolveTintTokens(raw: string | null | undefined): StorefrontTintTokens {
+  return REGISTRY[resolvePaletteKey(raw)]?.tint ?? TOOBA_BLUE_TINT;
 }
 
 export function listStorefrontPalettes(): readonly StorefrontPaletteDefinition[] {
@@ -86,7 +107,7 @@ export function contrastRatio(first: string, second: string): number {
   return (lighter + 0.05) / (darker + 0.05);
 }
 
-export function appearanceCssVars(tokens: StorefrontBrandTokens): Record<string, string> {
+export function appearanceCssVars(tokens: StorefrontBrandTokens, tint: StorefrontTintTokens = TOOBA_BLUE_TINT): Record<string, string> {
   return {
     "--color-primary": tokens.primaryRgb,
     "--color-primary-strong": tokens.primaryStrongRgb,
@@ -94,5 +115,9 @@ export function appearanceCssVars(tokens: StorefrontBrandTokens): Record<string,
     "--color-focus": tokens.focusRgb,
     "--color-primary-on-dark": tokens.primaryOnDarkRgb,
     "--ref-brand": tokens.primaryRgb,
+    "--color-page-tint": tint.pageBackgroundRgb,
+    "--color-section-tint": tint.sectionBackgroundRgb,
+    "--color-page-tint-dark": tint.pageBackgroundDarkRgb,
+    "--color-section-tint-dark": tint.sectionBackgroundDarkRgb,
   };
 }

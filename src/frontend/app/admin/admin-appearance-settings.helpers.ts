@@ -1,6 +1,7 @@
-import { appearanceCssVars, resolveBrandTokens, resolvePaletteKey } from "../../lib/storefront-appearance/palette-registry.ts";
+import { appearanceCssVars, resolveBrandTokens, resolvePaletteKey, resolveTintTokens, NEUTRAL_PAGE_BACKGROUND_RGB } from "../../lib/storefront-appearance/palette-registry.ts";
 import { resolveProductCardSkin } from "../../lib/storefront-appearance/product-card-skin.ts";
 import { resolveThemeMode, type StorefrontThemeMode } from "../../lib/storefront-appearance/theme-mode.ts";
+import { resolveBackgroundStyle, type StorefrontBackgroundStyle } from "../../lib/storefront-appearance/background-style.ts";
 
 export function appearanceIsDirty(
   savedKey: string,
@@ -9,6 +10,8 @@ export function appearanceIsDirty(
   draftTheme?: string,
   savedSkin?: string,
   draftSkin?: string,
+  savedBackground?: string,
+  draftBackground?: string,
 ): boolean {
   const paletteDirty = resolvePaletteKey(savedKey) !== resolvePaletteKey(draftKey);
   const themeDirty = savedTheme == null && draftTheme == null
@@ -17,11 +20,33 @@ export function appearanceIsDirty(
   const skinDirty = savedSkin == null && draftSkin == null
     ? false
     : resolveProductCardSkin(savedSkin) !== resolveProductCardSkin(draftSkin);
-  return paletteDirty || themeDirty || skinDirty;
+  const backgroundDirty = savedBackground == null && draftBackground == null
+    ? false
+    : resolveBackgroundStyle(savedBackground) !== resolveBackgroundStyle(draftBackground);
+  return paletteDirty || themeDirty || skinDirty || backgroundDirty;
 }
 
-export function appearancePreviewStyle(paletteKey: string): Record<string, string> {
-  return appearanceCssVars(resolveBrandTokens(paletteKey));
+export function appearancePreviewStyle(
+  paletteKey: string,
+  backgroundStyle?: string,
+  themeMode?: string,
+): Record<string, string> {
+  const tokens = resolveBrandTokens(paletteKey);
+  const tint = resolveTintTokens(paletteKey);
+  const vars = appearanceCssVars(tokens, tint);
+  const style = resolveBackgroundStyle(backgroundStyle);
+  const dark = resolveThemeMode(themeMode) === "DarkOnly";
+  const page = style === "PaletteTint"
+    ? (dark ? tint.pageBackgroundDarkRgb : tint.pageBackgroundRgb)
+    : NEUTRAL_PAGE_BACKGROUND_RGB;
+  const section = style === "PaletteTint"
+    ? (dark ? tint.sectionBackgroundDarkRgb : tint.sectionBackgroundRgb)
+    : NEUTRAL_PAGE_BACKGROUND_RGB;
+  return {
+    ...vars,
+    "--color-page-background": page,
+    "--color-section-background": section,
+  };
 }
 
 export const THEME_MODE_OPTIONS: { key: StorefrontThemeMode; title: string; body: string }[] = [
@@ -29,4 +54,9 @@ export const THEME_MODE_OPTIONS: { key: StorefrontThemeMode; title: string; body
   { key: "DarkOnly", title: "فقط تاریک", body: "فروشگاه همیشه تاریک است و کلید کاربر نمایش داده نمی‌شود." },
   { key: "System", title: "سیستم", body: "از ترجیح روشن/تاریک دستگاه پیروی می‌کند." },
   { key: "UserChoice", title: "انتخاب کاربر", body: "کلید تم در هدر ظاهر می‌شود و ترجیح روی همین دستگاه می‌ماند." },
+];
+
+export const BACKGROUND_STYLE_OPTIONS: { key: StorefrontBackgroundStyle; title: string; body: string }[] = [
+  { key: "Neutral", title: "خنثی", body: "پس‌زمینهٔ خاکستری روشن فعلی. پالت فقط روی دکمه‌ها و پیوندها دیده می‌شود." },
+  { key: "PaletteTint", title: "رنگی ملایم", body: "ته‌رنگ خیلی کم از خانوادهٔ پالت انتخاب‌شده. کارت‌ها سفید می‌مانند." },
 ];

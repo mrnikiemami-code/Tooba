@@ -48,7 +48,7 @@ public static class StoreAppearanceSettingsEndpoints
         {
             await AdminPanelAccess.RequireAuthorizedAsync(
                 request, session, tenant, guard, environment, cancellationToken);
-            return Results.Json(await composer.SaveAsync(body.PaletteKey, body.ThemeMode, body.ProductCardSkin, cancellationToken));
+            return Results.Json(await composer.SaveAsync(body.PaletteKey, body.ThemeMode, body.ProductCardSkin, body.BackgroundStyle, cancellationToken));
         }
         catch (PlatformHttpException ex)
         {

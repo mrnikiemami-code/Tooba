@@ -4,8 +4,10 @@ import {
   listStorefrontPalettes,
   resolveBrandTokens,
   resolvePaletteKey,
+  resolveTintTokens,
   type StorefrontBrandTokens,
   type StorefrontPaletteDefinition,
+  type StorefrontTintTokens,
 } from "../../lib/storefront-appearance/palette-registry.ts";
 import {
   DEFAULT_PRODUCT_CARD_SKIN,
@@ -14,6 +16,7 @@ import {
   type ProductCardSkinDefinition,
 } from "../../lib/storefront-appearance/product-card-skin.ts";
 import { resolveThemeMode } from "../../lib/storefront-appearance/theme-mode.ts";
+import { DEFAULT_BACKGROUND_STYLE, resolveBackgroundStyle } from "../../lib/storefront-appearance/background-style.ts";
 
 export interface AppearanceSettingsView {
   storeScope: string;
@@ -21,9 +24,22 @@ export interface AppearanceSettingsView {
   paletteKeyWasKnown: boolean;
   themeMode: string;
   productCardSkin: string;
+  backgroundStyle: string;
   tokens: StorefrontBrandTokens;
+  tint: StorefrontTintTokens;
   presets: StorefrontPaletteDefinition[];
   skins: ProductCardSkinDefinition[];
+}
+
+function mapTint(raw: unknown, paletteKey: string): StorefrontTintTokens {
+  const row = raw && typeof raw === "object" ? raw as Record<string, unknown> : {};
+  const fallback = resolveTintTokens(paletteKey);
+  return {
+    pageBackgroundRgb: String(row.pageBackgroundRgb ?? fallback.pageBackgroundRgb),
+    sectionBackgroundRgb: String(row.sectionBackgroundRgb ?? fallback.sectionBackgroundRgb),
+    pageBackgroundDarkRgb: String(row.pageBackgroundDarkRgb ?? fallback.pageBackgroundDarkRgb),
+    sectionBackgroundDarkRgb: String(row.sectionBackgroundDarkRgb ?? fallback.sectionBackgroundDarkRgb),
+  };
 }
 
 function mapTokens(raw: unknown): StorefrontBrandTokens {
@@ -62,6 +78,7 @@ function mapView(payload: unknown): AppearanceSettingsView | null {
           nameEn: String(preset.nameEn ?? local?.nameEn ?? key),
           descriptionFa: local?.descriptionFa ?? "",
           tokens: mapTokens(preset.tokens),
+          tint: mapTint(preset.tint, key),
         } satisfies StorefrontPaletteDefinition;
       })
       .filter((item): item is StorefrontPaletteDefinition => item !== null)
@@ -73,7 +90,9 @@ function mapView(payload: unknown): AppearanceSettingsView | null {
     paletteKeyWasKnown: row.paletteKeyWasKnown !== false,
     themeMode: resolveThemeMode(typeof row.themeMode === "string" ? row.themeMode : null),
     productCardSkin: resolveProductCardSkin(typeof row.productCardSkin === "string" ? row.productCardSkin : DEFAULT_PRODUCT_CARD_SKIN),
+    backgroundStyle: resolveBackgroundStyle(typeof row.backgroundStyle === "string" ? row.backgroundStyle : DEFAULT_BACKGROUND_STYLE),
     tokens: mapTokens(row.tokens),
+    tint: mapTint(row.tint, paletteKey),
     presets: presets.length > 0 ? presets : [...listStorefrontPalettes()],
     skins: skins.length > 0 ? skins : [...listProductCardSkins()],
   };
@@ -97,11 +116,12 @@ export async function saveAppearanceSettings(
   paletteKey: string,
   themeMode: string,
   productCardSkin: string,
+  backgroundStyle: string,
 ): Promise<{ ok: true; data: AppearanceSettingsView } | { ok: false; denied?: boolean; message?: string }> {
   const response = await fetch("/v1/admin/settings/appearance", {
     method: "PUT",
     headers: { ...adminHeaders(), "Content-Type": "application/json" },
-    body: JSON.stringify({ paletteKey, themeMode, productCardSkin }),
+    body: JSON.stringify({ paletteKey, themeMode, productCardSkin, backgroundStyle }),
   });
   if (response.status === 401 || response.status === 403) {
     return { ok: false, denied: true };
@@ -116,7 +136,9 @@ export async function saveAppearanceSettings(
           ? "حالت تم انتخاب‌شده مجاز نیست."
           : payload?.errorCode === "appearance.skin.invalid"
             ? "پوستهٔ کارت انتخاب‌شده مجاز نیست."
-            : "ذخیرهٔ ظاهر فروشگاه انجام نشد.",
+            : payload?.errorCode === "appearance.background.invalid"
+              ? "پس‌زمینهٔ انتخاب‌شده مجاز نیست."
+              : "ذخیرهٔ ظاهر فروشگاه انجام نشد.",
     };
   }
   const data = mapView(await response.json().catch(() => null));

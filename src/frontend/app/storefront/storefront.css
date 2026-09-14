@@ -1,6 +1,6 @@
 .sf-shell {
   min-height: 100vh;
-  background: #f3f5f8;
+  background: rgb(var(--color-page-background));
   color: #1f2937;
 }
 

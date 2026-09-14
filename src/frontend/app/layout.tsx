@@ -15,6 +15,7 @@ import { LOCALE_HEADER_NAME } from "../lib/i18n/routing";
 import { loadStorefrontAppearance, storefrontAppearanceStyle } from "./storefront/storefront-appearance-api.ts";
 import { StorefrontProductCardSkinProvider } from "../lib/storefront-appearance/product-card-skin-context.tsx";
 import { resolveProductCardSkin } from "../lib/storefront-appearance/product-card-skin.ts";
+import { resolveBackgroundStyle } from "../lib/storefront-appearance/background-style.ts";
 import {
   THEME_BOOTSTRAP_SCRIPT,
   USER_COLOR_SCHEME_COOKIE,
@@ -48,6 +49,7 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
   const userScheme = parseUserColorScheme(jar.get(USER_COLOR_SCHEME_COOKIE)?.value);
   const colorScheme = resolveEffectiveColorScheme(themeMode, userScheme, false);
   const productCardSkin = resolveProductCardSkin(appearance.productCardSkin);
+  const backgroundStyle = resolveBackgroundStyle(appearance.backgroundStyle);
 
   return (
     <html
@@ -60,6 +62,7 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
       data-storefront-theme-mode={themeMode}
       data-storefront-color-scheme={colorScheme}
       data-storefront-product-card-skin={productCardSkin}
+      data-storefront-background-style={backgroundStyle}
       style={storefrontAppearanceStyle(appearance)}
     >
       <head>

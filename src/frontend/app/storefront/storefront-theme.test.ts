@@ -43,6 +43,8 @@ test("pages still do not poll appearance and dark remaps stay canonical", () => 
   assert.match(globals, /html\.dark \.bg-white\\\/90/);
   assert.match(globals, /html\.dark \.text-primary/);
   assert.match(globals, /--color-brand-emphasis: var\(--color-primary-on-dark\)/);
+  assert.match(globals, /--color-page-background: 243 245 248/);
+  assert.match(globals, /data-storefront-background-style="PaletteTint"/);
   assert.match(globals, /--color-danger: 248 113 113/);
   assert.doesNotMatch(globals, /--color-primary: 96 165 250/);
   assert.doesNotMatch(globals, /wine-burgundy/);

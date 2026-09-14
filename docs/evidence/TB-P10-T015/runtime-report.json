@@ -1,0 +1,195 @@
+{
+  "ok": true,
+  "steps": [
+    {
+      "name": "invalid-background-400",
+      "pass": true
+    },
+    {
+      "name": "A-default-neutral",
+      "pass": true
+    },
+    {
+      "name": "public-neutral",
+      "pass": true
+    },
+    {
+      "name": "public-tint-tokens",
+      "pass": true
+    },
+    {
+      "name": "A-open-appearance",
+      "pass": true
+    },
+    {
+      "name": "B-default-neutral-ui",
+      "pass": true
+    },
+    {
+      "name": "file:appearance-background-style.png",
+      "pass": true,
+      "data": {
+        "bytes": 87060
+      }
+    },
+    {
+      "name": "D-home-neutral-marker",
+      "pass": true
+    },
+    {
+      "name": "D-home-neutral-attr",
+      "pass": true
+    },
+    {
+      "name": "file:home-neutral.png",
+      "pass": true,
+      "data": {
+        "bytes": 523248
+      }
+    },
+    {
+      "name": "C-save-blue-tint",
+      "pass": true
+    },
+    {
+      "name": "D-home-tinted-blue",
+      "pass": true
+    },
+    {
+      "name": "file:home-tinted-blue.png",
+      "pass": true,
+      "data": {
+        "bytes": 523627
+      }
+    },
+    {
+      "name": "E-landing-tinted",
+      "pass": true
+    },
+    {
+      "name": "E-landing-inherits",
+      "pass": true
+    },
+    {
+      "name": "file:landing-tinted.png",
+      "pass": true,
+      "data": {
+        "bytes": 467491
+      }
+    },
+    {
+      "name": "F-forest-tint",
+      "pass": true
+    },
+    {
+      "name": "G-home-forest",
+      "pass": true
+    },
+    {
+      "name": "file:home-tinted-forest.png",
+      "pass": true,
+      "data": {
+        "bytes": 524283
+      }
+    },
+    {
+      "name": "H-dark-tint",
+      "pass": true
+    },
+    {
+      "name": "H-dark-class",
+      "pass": true
+    },
+    {
+      "name": "file:home-dark-tinted.png",
+      "pass": true,
+      "data": {
+        "bytes": 543049
+      }
+    },
+    {
+      "name": "I-restore-neutral",
+      "pass": true
+    },
+    {
+      "name": "J-restore-home",
+      "pass": true
+    },
+    {
+      "name": "no-console-loop",
+      "pass": true,
+      "data": {
+        "loops": []
+      }
+    }
+  ],
+  "files": {
+    "appearance-background-style.png": {
+      "bytes": 87060
+    },
+    "home-neutral.png": {
+      "bytes": 523248
+    },
+    "home-tinted-blue.png": {
+      "bytes": 523627
+    },
+    "landing-tinted.png": {
+      "bytes": 467491
+    },
+    "home-tinted-forest.png": {
+      "bytes": 524283
+    },
+    "home-dark-tinted.png": {
+      "bytes": 543049
+    }
+  },
+  "errors": [],
+  "console": [
+    {
+      "type": "console-error",
+      "text": "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+    },
+    {
+      "type": "console-error",
+      "text": "A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:\n\n- A server/client branch `if (typeof window !== 'undefined')`."
+    },
+    {
+      "type": "console-error",
+      "text": "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+    },
+    {
+      "type": "console-error",
+      "text": "A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:\n\n- A server/client branch `if (typeof window !== 'undefined')`."
+    },
+    {
+      "type": "console-error",
+      "text": "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+    },
+    {
+      "type": "console-error",
+      "text": "A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:\n\n- A server/client branch `if (typeof window !== 'undefined')`."
+    },
+    {
+      "type": "console-error",
+      "text": "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+    },
+    {
+      "type": "console-error",
+      "text": "A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:\n\n- A server/client branch `if (typeof window !== 'undefined')`."
+    },
+    {
+      "type": "console-error",
+      "text": "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+    },
+    {
+      "type": "console-error",
+      "text": "A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:\n\n- A server/client branch `if (typeof window !== 'undefined')`."
+    }
+  ],
+  "appearance": {
+    "paletteKey": "tooba-blue",
+    "themeMode": "LightOnly",
+    "productCardSkin": "classic",
+    "backgroundStyle": "Neutral"
+  }
+}

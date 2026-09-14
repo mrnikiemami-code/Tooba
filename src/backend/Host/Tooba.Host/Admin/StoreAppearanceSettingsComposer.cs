@@ -40,7 +40,16 @@ public sealed class StoreAppearanceSettingsComposer
         => SaveAsync(paletteKey, themeMode, productCardSkin: null, cancellationToken);
 
     /// <summary>PaletteKey و ThemeMode و پوستهٔ کارت را اتمیک می‌نویسد.</summary>
-    public async Task<StoreAppearanceAdminView> SaveAsync(string? paletteKey, string? themeMode, string? productCardSkin, CancellationToken cancellationToken)
+    public Task<StoreAppearanceAdminView> SaveAsync(string? paletteKey, string? themeMode, string? productCardSkin, CancellationToken cancellationToken)
+        => SaveAsync(paletteKey, themeMode, productCardSkin, backgroundStyle: null, cancellationToken);
+
+    /// <summary>PaletteKey و ThemeMode و پوستهٔ کارت و پس‌زمینه را اتمیک می‌نویسد.</summary>
+    public async Task<StoreAppearanceAdminView> SaveAsync(
+        string? paletteKey,
+        string? themeMode,
+        string? productCardSkin,
+        string? backgroundStyle,
+        CancellationToken cancellationToken)
     {
         if (!StoreAppearancePaletteRegistry.IsKnown(paletteKey))
         {
@@ -69,6 +78,17 @@ public sealed class StoreAppearanceSettingsComposer
             canonicalSkin = StoreAppearanceProductCardSkinRegistry.ResolveKey(productCardSkin);
         }
 
+        StoreAppearanceBackgroundStyle? parsedBackground = null;
+        if (backgroundStyle is not null)
+        {
+            if (!StoreAppearanceSettings.TryParseBackgroundStyle(backgroundStyle, out var parsed))
+            {
+                throw new PlatformHttpException(400, "پس‌زمینهٔ انتخاب‌شده مجاز نیست.", "appearance.background.invalid");
+            }
+
+            parsedBackground = parsed;
+        }
+
         var canonical = StoreAppearancePaletteRegistry.ResolveKey(paletteKey);
         var now = DateTimeOffset.UtcNow;
         var row = await _catalog.StoreAppearanceSettings
@@ -79,7 +99,7 @@ public sealed class StoreAppearanceSettingsComposer
             _catalog.StoreAppearanceSettings.Add(row);
         }
 
-        row.Replace(canonical, parsedTheme ?? row.ThemeMode, canonicalSkin, now);
+        row.Replace(canonical, parsedTheme ?? row.ThemeMode, canonicalSkin, parsedBackground, now);
         await _catalog.SaveChangesAsync(cancellationToken);
         _projector.Invalidate(_commerce.Current);
         return ToView(await _projector.GetEffectiveAsync(cancellationToken));
@@ -98,6 +118,12 @@ public sealed class StoreAppearanceSettingsComposer
                 current.FocusRgb,
                 current.PrimaryOnDarkRgb),
             current.ProductCardSkin,
+            current.BackgroundStyle,
+            new StoreAppearanceTintView(
+                current.PageBackgroundRgb,
+                current.SectionBackgroundRgb,
+                current.PageBackgroundDarkRgb,
+                current.SectionBackgroundDarkRgb),
             StoreAppearancePaletteRegistry.All
                 .Select(item => new StoreAppearancePresetView(
                     item.Key,
@@ -108,7 +134,12 @@ public sealed class StoreAppearanceSettingsComposer
                         item.Tokens.PrimaryStrongRgb,
                         item.Tokens.OnPrimaryRgb,
                         item.Tokens.FocusRgb,
-                        item.Tokens.PrimaryOnDarkRgb)))
+                        item.Tokens.PrimaryOnDarkRgb),
+                    new StoreAppearanceTintView(
+                        item.Tint.PageBackgroundRgb,
+                        item.Tint.SectionBackgroundRgb,
+                        item.Tint.PageBackgroundDarkRgb,
+                        item.Tint.SectionBackgroundDarkRgb)))
                 .ToArray(),
             StoreAppearanceProductCardSkinRegistry.All
                 .Select(item => new StoreAppearanceSkinView(item.Key, item.NameFa, item.NameEn))
@@ -123,6 +154,8 @@ public sealed record StoreAppearanceAdminView(
     string ThemeMode,
     StoreAppearanceTokenView Tokens,
     string ProductCardSkin,
+    string BackgroundStyle,
+    StoreAppearanceTintView Tint,
     IReadOnlyList<StoreAppearancePresetView> Presets,
     IReadOnlyList<StoreAppearanceSkinView> Skins);
 
@@ -137,7 +170,8 @@ public sealed record StoreAppearancePresetView(
     string Key,
     string NameFa,
     string NameEn,
-    StoreAppearanceTokenView Tokens);
+    StoreAppearanceTokenView Tokens,
+    StoreAppearanceTintView Tint);
 
 /// <summary>توکن برند بدون رنگ وضعیت.</summary>
 public sealed record StoreAppearanceTokenView(
@@ -147,5 +181,16 @@ public sealed record StoreAppearanceTokenView(
     string FocusRgb,
     string PrimaryOnDarkRgb);
 
+/// <summary>توکن tint بدون رنگ وضعیت.</summary>
+public sealed record StoreAppearanceTintView(
+    string PageBackgroundRgb,
+    string SectionBackgroundRgb,
+    string PageBackgroundDarkRgb,
+    string SectionBackgroundDarkRgb);
+
 /// <summary>بدنه ذخیره ظاهر؛ PaletteKey الزامی و ThemeMode اختیاری.</summary>
-public sealed record StoreAppearanceSettingsWriteRequest(string? PaletteKey, string? ThemeMode = null, string? ProductCardSkin = null);
+public sealed record StoreAppearanceSettingsWriteRequest(
+    string? PaletteKey,
+    string? ThemeMode = null,
+    string? ProductCardSkin = null,
+    string? BackgroundStyle = null);

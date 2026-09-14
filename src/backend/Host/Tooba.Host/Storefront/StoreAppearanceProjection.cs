@@ -6,18 +6,23 @@ using Tooba.Catalog.Infrastructure.Persistence;
 
 namespace Tooba.Host.Storefront;
 
-/// <summary>تصویر ظاهری مؤثر فروشگاه. فقط توکن برند؛ danger/success/warning جدا می‌مانند.</summary>
+/// <summary>تصویر ظاهری مؤثر فروشگاه. توکن برند و tint؛ danger/success/warning جدا می‌مانند.</summary>
 public sealed record StoreAppearanceProjection(
     string StoreScope,
     string PaletteKey,
     bool PaletteKeyWasKnown,
     string ThemeMode,
     string ProductCardSkin,
+    string BackgroundStyle,
     string PrimaryRgb,
     string PrimaryStrongRgb,
     string OnPrimaryRgb,
     string FocusRgb,
     string PrimaryOnDarkRgb,
+    string PageBackgroundRgb,
+    string SectionBackgroundRgb,
+    string PageBackgroundDarkRgb,
+    string SectionBackgroundDarkRgb,
     DateTimeOffset UpdatedAt);
 
 /// <summary>
@@ -79,17 +84,23 @@ public sealed class StoreAppearanceProjector
         var known = StoreAppearancePaletteRegistry.IsKnown(row?.PaletteKey);
         var key = StoreAppearancePaletteRegistry.ResolveKey(row?.PaletteKey);
         var tokens = StoreAppearancePaletteRegistry.ResolveTokens(key);
+        var tint = StoreAppearancePaletteRegistry.ResolveTint(key);
         var projection = new StoreAppearanceProjection(
             scope,
             key,
             known || row is null,
             StoreAppearanceSettings.NormalizeThemeMode(row?.ThemeMode ?? StoreAppearanceThemeMode.Light).ToString(),
             StoreAppearanceProductCardSkinRegistry.ResolveKey(row?.ProductCardSkin),
+            StoreAppearanceSettings.NormalizeBackgroundStyle(row?.BackgroundStyle ?? StoreAppearanceBackgroundStyle.Neutral).ToString(),
             tokens.PrimaryRgb,
             tokens.PrimaryStrongRgb,
             tokens.OnPrimaryRgb,
             tokens.FocusRgb,
             tokens.PrimaryOnDarkRgb,
+            tint.PageBackgroundRgb,
+            tint.SectionBackgroundRgb,
+            tint.PageBackgroundDarkRgb,
+            tint.SectionBackgroundDarkRgb,
             row?.UpdatedAt ?? DateTimeOffset.UnixEpoch);
 
         _cache.Set(CacheKey(scope), projection, new MemoryCacheEntryOptions

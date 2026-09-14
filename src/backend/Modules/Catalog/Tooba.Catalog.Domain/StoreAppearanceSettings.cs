@@ -22,6 +22,16 @@ public enum StoreAppearanceThemeMode
     UserChoice = 5,
 }
 
+/// <summary>پس‌زمینهٔ کنترل‌شدهٔ فروشگاه. رشتهٔ دلخواه پذیرفته نمی‌شود.</summary>
+public enum StoreAppearanceBackgroundStyle
+{
+    /// <summary>پس‌زمینهٔ خنثی فعلی پوسته.</summary>
+    Neutral = 0,
+
+    /// <summary>ته‌رنگ ملایم خانوادهٔ پالت curated.</summary>
+    PaletteTint = 1,
+}
+
 /// <summary>یک ردیف تنظیم ظاهری فروشگاه. مالک همان الگوی تنظیمات Store در Catalog است.</summary>
 public sealed class StoreAppearanceSettings
 {
@@ -40,6 +50,9 @@ public sealed class StoreAppearanceSettings
     /// <summary>پوستهٔ کنترل‌شدهٔ کارت کالا.</summary>
     public string ProductCardSkin { get; private set; } = StoreAppearanceProductCardSkinRegistry.DefaultSkinKey;
 
+    /// <summary>پس‌زمینهٔ کنترل‌شده؛ پیش‌فرض Neutral.</summary>
+    public StoreAppearanceBackgroundStyle BackgroundStyle { get; private set; } = StoreAppearanceBackgroundStyle.Neutral;
+
     /// <summary>صفحهٔ Landing منتخب خانه؛ null یعنی خانهٔ کاننیکال فعلی.</summary>
     public Guid? HomePageId { get; private set; }
 
@@ -56,19 +69,34 @@ public sealed class StoreAppearanceSettings
         PaletteKey = StoreAppearancePaletteRegistry.DefaultPaletteKey,
         ThemeMode = StoreAppearanceThemeMode.Light,
         ProductCardSkin = StoreAppearanceProductCardSkinRegistry.DefaultSkinKey,
+        BackgroundStyle = StoreAppearanceBackgroundStyle.Neutral,
         UpdatedAt = now,
     };
 
     /// <summary>پالت و حالت را با fallback کلید ناشناخته جایگزین می‌کند.</summary>
     public void Replace(string? paletteKey, StoreAppearanceThemeMode themeMode, DateTimeOffset now)
-        => Replace(paletteKey, themeMode, productCardSkin: null, now);
+        => Replace(paletteKey, themeMode, productCardSkin: null, backgroundStyle: null, now);
 
     /// <summary>پالت، تم و پوستهٔ کارت را با fallback کلید ناشناخته جایگزین می‌کند.</summary>
     public void Replace(string? paletteKey, StoreAppearanceThemeMode themeMode, string? productCardSkin, DateTimeOffset now)
+        => Replace(paletteKey, themeMode, productCardSkin, backgroundStyle: null, now);
+
+    /// <summary>پالت، تم، پوستهٔ کارت و پس‌زمینه را اتمیک جایگزین می‌کند.</summary>
+    public void Replace(
+        string? paletteKey,
+        StoreAppearanceThemeMode themeMode,
+        string? productCardSkin,
+        StoreAppearanceBackgroundStyle? backgroundStyle,
+        DateTimeOffset now)
     {
         PaletteKey = StoreAppearancePaletteRegistry.ResolveKey(paletteKey);
         ThemeMode = NormalizeThemeMode(themeMode);
         ProductCardSkin = StoreAppearanceProductCardSkinRegistry.ResolveKey(productCardSkin ?? ProductCardSkin);
+        if (backgroundStyle is { } style)
+        {
+            BackgroundStyle = NormalizeBackgroundStyle(style);
+        }
+
         UpdatedAt = now;
     }
 
@@ -116,6 +144,29 @@ public sealed class StoreAppearanceSettings
                 return true;
             default:
                 mode = StoreAppearanceThemeMode.LightOnly;
+                return false;
+        }
+    }
+
+    /// <summary>مقدار نامعتبر یا میراث به Neutral نگاشت می‌شود.</summary>
+    public static StoreAppearanceBackgroundStyle NormalizeBackgroundStyle(StoreAppearanceBackgroundStyle style)
+        => style == StoreAppearanceBackgroundStyle.PaletteTint
+            ? StoreAppearanceBackgroundStyle.PaletteTint
+            : StoreAppearanceBackgroundStyle.Neutral;
+
+    /// <summary>رشتهٔ ورودی را به پس‌زمینهٔ کاننیکال تبدیل می‌کند.</summary>
+    public static bool TryParseBackgroundStyle(string? raw, out StoreAppearanceBackgroundStyle style)
+    {
+        switch (raw?.Trim())
+        {
+            case "Neutral":
+                style = StoreAppearanceBackgroundStyle.Neutral;
+                return true;
+            case "PaletteTint":
+                style = StoreAppearanceBackgroundStyle.PaletteTint;
+                return true;
+            default:
+                style = StoreAppearanceBackgroundStyle.Neutral;
                 return false;
         }
     }

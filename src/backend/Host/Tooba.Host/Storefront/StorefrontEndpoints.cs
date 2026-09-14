@@ -392,6 +392,7 @@ public static class StorefrontEndpoints
             paletteKeyWasKnown = appearance.PaletteKeyWasKnown,
             themeMode = appearance.ThemeMode,
             productCardSkin = appearance.ProductCardSkin,
+            backgroundStyle = appearance.BackgroundStyle,
             tokens = new
             {
                 primaryRgb = appearance.PrimaryRgb,
@@ -399,6 +400,13 @@ public static class StorefrontEndpoints
                 onPrimaryRgb = appearance.OnPrimaryRgb,
                 focusRgb = appearance.FocusRgb,
                 primaryOnDarkRgb = appearance.PrimaryOnDarkRgb,
+            },
+            tint = new
+            {
+                pageBackgroundRgb = appearance.PageBackgroundRgb,
+                sectionBackgroundRgb = appearance.SectionBackgroundRgb,
+                pageBackgroundDarkRgb = appearance.PageBackgroundDarkRgb,
+                sectionBackgroundDarkRgb = appearance.SectionBackgroundDarkRgb,
             },
             updatedAt = appearance.UpdatedAt,
         });

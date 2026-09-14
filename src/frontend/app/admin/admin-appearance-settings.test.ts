@@ -9,6 +9,7 @@ import { listStorefrontPalettes, resolveBrandTokens } from "../../lib/storefront
 const dir = dirname(fileURLToPath(import.meta.url));
 const page = readFileSync(join(dir, "settings/page.tsx"), "utf8");
 const form = readFileSync(join(dir, "admin-appearance-settings.tsx"), "utf8");
+const helpers = readFileSync(join(dir, "admin-appearance-settings.helpers.ts"), "utf8");
 const api = readFileSync(join(dir, "appearance-settings-api.ts"), "utf8");
 
 test("settings page has appearance tab on existing shell", () => {
@@ -17,7 +18,9 @@ test("settings page has appearance tab on existing shell", () => {
   assert.match(page, /AdminAppearanceSettingsForm/);
   assert.match(page, /loadAppearanceSettings/);
   assert.match(page, /appearanceSkinDraft/);
+  assert.match(page, /appearanceBackgroundDraft/);
   assert.match(page, /onSelectSkin/);
+  assert.match(page, /onSelectBackground/);
   assert.doesNotMatch(page, /type=\"color\"/);
 });
 
@@ -30,10 +33,16 @@ test("current palette dirty cancel save states are wired", () => {
   assert.match(form, /admin-settings-appearance-unknown/);
   assert.match(form, /admin-settings-appearance-themes/);
   assert.match(form, /admin-settings-appearance-skins/);
+  assert.match(form, /admin-settings-appearance-backgrounds/);
+  assert.match(form, /admin-settings-appearance-background-\$\{option\.key\}/);
   assert.match(form, /admin-settings-appearance-skin-\$\{skin\.key\}/);
   assert.match(form, /AdminProductCardSkinPreview/);
   assert.match(form, /descriptionFa/);
   assert.match(form, /admin-settings-appearance-card-preview/);
+  assert.match(form, /پس‌زمینه فروشگاه/);
+  assert.match(form, /خنثی/);
+  assert.match(helpers, /رنگی ملایم/);
+  assert.match(helpers, /title: "خنثی"/);
   assert.doesNotMatch(form, /dir=\"ltr\">\{skin\.key\}/);
   assert.doesNotMatch(form, /dir=\"ltr\">\{option\.key\}/);
   assert.doesNotMatch(form, /dir=\"ltr\">\{preset\.key\}/);
@@ -43,6 +52,8 @@ test("current palette dirty cancel save states are wired", () => {
   assert.equal(appearanceIsDirty("tooba-blue", "tooba-blue", "Light", "LightOnly"), false);
   assert.equal(appearanceIsDirty("tooba-blue", "tooba-blue", "LightOnly", "LightOnly", "classic", "clean"), true);
   assert.equal(appearanceIsDirty("tooba-blue", "tooba-blue", "LightOnly", "LightOnly", "classic", "classic"), false);
+  assert.equal(appearanceIsDirty("tooba-blue", "tooba-blue", "LightOnly", "LightOnly", "classic", "classic", "Neutral", "PaletteTint"), true);
+  assert.equal(appearanceIsDirty("tooba-blue", "tooba-blue", "LightOnly", "LightOnly", "classic", "classic", "Neutral", "Neutral"), false);
 });
 
 test("preview uses canonical registry tokens and leaves status colors", () => {
@@ -59,7 +70,7 @@ test("preview uses canonical registry tokens and leaves status colors", () => {
 
 test("save posts paletteKey only once per helper", () => {
   assert.match(api, /method: \"PUT\"/);
-  assert.match(api, /JSON\.stringify\(\{ paletteKey, themeMode, productCardSkin \}\)/);
+  assert.match(api, /JSON\.stringify\(\{ paletteKey, themeMode, productCardSkin, backgroundStyle \}\)/);
   assert.doesNotMatch(api, /JSON\.stringify\(\{[^}]*primaryRgb/);
   assert.doesNotMatch(api, /localStorage/);
   assert.equal(listStorefrontPalettes().length >= 6, true);

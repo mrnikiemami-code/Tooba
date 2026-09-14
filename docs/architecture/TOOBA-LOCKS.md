@@ -739,3 +739,15 @@ Header and Landing may use different controlled presentations but share one cano
 
 ### LOCK-SF-192 — External menu URLs are safe web schemes
 External menu URLs allow only validated http/https web schemes. javascript/data and other schemes are rejected.
+
+### LOCK-SF-193 — Storefront background tone is a controlled Appearance setting
+Storefront background tone is a controlled optional Store appearance setting. Arbitrary background colors, free-form color pickers, and page-authored CSS washes are forbidden.
+
+### LOCK-SF-194 — BackgroundStyle is Neutral or PaletteTint
+BackgroundStyle supports only Neutral and PaletteTint. Neutral is the backward-compatible default for missing/legacy values.
+
+### LOCK-SF-195 — PaletteTint uses curated semantic tint tokens
+PaletteTint uses curated semantic tint tokens per palette and theme. It must not derive a page wash from primary alpha, repurpose status semantics, or heavily tint elevated cards, inputs, modals, or mini-cart surfaces.
+
+### LOCK-SF-196 — One Store BackgroundStyle for Home and Landing
+Home, Landing, and custom Home inherit one canonical Store BackgroundStyle. Page-local or section-local background overrides are forbidden.

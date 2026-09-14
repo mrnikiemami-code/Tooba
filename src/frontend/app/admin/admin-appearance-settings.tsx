@@ -1,9 +1,10 @@
 "use client";
 
-import { listStorefrontPalettes, resolveBrandTokens, resolvePaletteKey } from "../../lib/storefront-appearance/palette-registry.ts";
+import { listStorefrontPalettes, resolveBrandTokens, resolvePaletteKey, resolveTintTokens } from "../../lib/storefront-appearance/palette-registry.ts";
 import { listProductCardSkins, resolveProductCardSkin } from "../../lib/storefront-appearance/product-card-skin.ts";
 import { resolveThemeMode } from "../../lib/storefront-appearance/theme-mode.ts";
-import { THEME_MODE_OPTIONS, appearanceIsDirty, appearancePreviewStyle } from "./admin-appearance-settings.helpers.ts";
+import { resolveBackgroundStyle } from "../../lib/storefront-appearance/background-style.ts";
+import { BACKGROUND_STYLE_OPTIONS, THEME_MODE_OPTIONS, appearanceIsDirty, appearancePreviewStyle } from "./admin-appearance-settings.helpers.ts";
 import { AdminProductCardSkinPreview } from "./admin-product-card-skin-preview.tsx";
 import type { AppearanceSettingsView } from "./appearance-settings-api.ts";
 
@@ -16,24 +17,29 @@ export function AdminAppearanceSettingsForm(props: {
   draftKey: string;
   draftTheme: string;
   draftSkin: string;
+  draftBackground: string;
   busy: boolean;
   readOnly: boolean;
   error: string | null;
   onSelect: (key: string) => void;
   onSelectTheme: (mode: string) => void;
   onSelectSkin: (skin: string) => void;
+  onSelectBackground: (style: string) => void;
   onSave: () => void;
   onCancel: () => void;
 }) {
   const presets = props.view?.presets?.length ? props.view.presets : [...listStorefrontPalettes()];
   const skins = [...listProductCardSkins()];
   const preview = resolveBrandTokens(props.draftKey);
+  const previewTint = resolveTintTokens(props.draftKey);
   const savedKey = props.view?.paletteKey ?? "tooba-blue";
   const savedTheme = props.view?.themeMode ?? "LightOnly";
   const savedSkin = props.view?.productCardSkin ?? "classic";
+  const savedBackground = props.view?.backgroundStyle ?? "Neutral";
   const draftTheme = resolveThemeMode(props.draftTheme);
   const draftSkin = resolveProductCardSkin(props.draftSkin);
-  const dirty = appearanceIsDirty(savedKey, props.draftKey, savedTheme, draftTheme, savedSkin, draftSkin);
+  const draftBackground = resolveBackgroundStyle(props.draftBackground);
+  const dirty = appearanceIsDirty(savedKey, props.draftKey, savedTheme, draftTheme, savedSkin, draftSkin, savedBackground, draftBackground);
   const previewDark = draftTheme === "DarkOnly";
   const unknown = props.view != null && !props.view.paletteKeyWasKnown;
 
@@ -49,7 +55,7 @@ export function AdminAppearanceSettingsForm(props: {
       <div>
         <h2 className="text-sm font-bold text-gray-900">ظاهر فروشگاه</h2>
         <p className="text-sm text-gray-500 leading-7 mt-1">
-          پالت برند، حالت تم و پوستهٔ کارت کالا را انتخاب کنید. رنگ‌های وضعیت (موفقیت، هشدار، خطر) به پالت وابسته نیستند.
+          پالت برند، حالت تم، پوستهٔ کارت و پس‌زمینهٔ فروشگاه را انتخاب کنید. رنگ‌های وضعیت (موفقیت، هشدار، خطر) به پالت وابسته نیستند.
         </p>
       </div>
       {unknown ? (
@@ -133,26 +139,61 @@ export function AdminAppearanceSettingsForm(props: {
           );
         })}
       </div>
+      <div>
+        <h3 className="text-sm font-bold text-gray-900">پس‌زمینه فروشگاه</h3>
+        <p className="text-xs text-gray-500 leading-6 mt-1">اختیاری است. پیش‌فرض خنثی است و ظاهر فعلی را نگه می‌دارد.</p>
+      </div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3" data-testid="admin-settings-appearance-backgrounds">
+        {BACKGROUND_STYLE_OPTIONS.map((option) => {
+          const selected = draftBackground === option.key;
+          return (
+            <button
+              key={option.key}
+              type="button"
+              disabled={props.readOnly || props.busy}
+              onClick={() => props.onSelectBackground(option.key)}
+              className={`text-right rounded-xl border p-3 transition-all ${
+                selected ? "border-[#2563EB] ring-2 ring-[#2563EB]/20" : "border-gray-200 hover:border-gray-300"
+              }`}
+              data-testid={`admin-settings-appearance-background-${option.key}`}
+              data-selected={selected ? "true" : "false"}
+            >
+              <span className="block text-sm font-bold text-gray-900">{option.title}</span>
+              <span className="block text-xs text-gray-500 mt-2 leading-6">{option.body}</span>
+            </button>
+          );
+        })}
+      </div>
       <div
-        className={`rounded-xl border border-gray-200 p-4 space-y-3 ${previewDark ? "dark bg-background text-foreground" : ""}`}
-        style={appearancePreviewStyle(props.draftKey)}
+        className={`rounded-xl border border-gray-200 p-4 space-y-3 ${previewDark ? "dark text-foreground" : ""}`}
+        style={appearancePreviewStyle(props.draftKey, draftBackground, draftTheme)}
         data-testid="admin-settings-appearance-preview"
         data-preview-theme={draftTheme}
         data-preview-skin={draftSkin}
+        data-preview-background={draftBackground}
       >
         <p className="text-xs text-gray-500">پیش‌نمایش ذخیره‌نشده</p>
-        <button type="button" className="px-4 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-bold">
-          دکمه اصلی
-        </button>
-        <a className="block text-sm text-primary underline" href="#preview">پیوند تأکیدی</a>
-        <AdminProductCardSkinPreview skin={draftSkin} testId="admin-settings-appearance-card-preview" />
-        <p className="text-xs text-gray-500">متن کم‌رنگ</p>
-        <div className="flex gap-2 text-[11px]">
-          <span className="px-2 py-1 rounded bg-success/15 text-success">موفقیت</span>
-          <span className="px-2 py-1 rounded bg-warning/15 text-warning">هشدار</span>
-          <span className="px-2 py-1 rounded bg-danger/15 text-danger">خطر</span>
+        <div
+          className="rounded-lg p-3 space-y-3"
+          style={{ backgroundColor: "rgb(var(--color-page-background))" }}
+          data-testid="admin-settings-appearance-preview-canvas"
+        >
+          <p className="text-xs text-gray-600">نمونهٔ صفحهٔ فروشگاه</p>
+          <button type="button" className="px-4 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-bold">
+            دکمه اصلی
+          </button>
+          <a className="block text-sm text-primary underline" href="#preview">پیوند تأکیدی</a>
+          <div className="rounded-lg bg-white border border-gray-100 shadow-sm p-3">
+            <AdminProductCardSkinPreview skin={draftSkin} testId="admin-settings-appearance-card-preview" />
+          </div>
+          <p className="text-xs text-gray-500">متن کم‌رنگ</p>
+          <div className="flex gap-2 text-[11px]">
+            <span className="px-2 py-1 rounded bg-success/15 text-success">موفقیت</span>
+            <span className="px-2 py-1 rounded bg-warning/15 text-warning">هشدار</span>
+            <span className="px-2 py-1 rounded bg-danger/15 text-danger">خطر</span>
+          </div>
         </div>
-        <span className="hidden" data-preview-primary={preview.primaryRgb} />
+        <span className="hidden" data-preview-primary={preview.primaryRgb} data-preview-page-tint={previewTint.pageBackgroundRgb} />
       </div>
       {props.error ? (
         <p className="text-sm text-red-700" data-testid="admin-settings-appearance-error">{props.error}</p>

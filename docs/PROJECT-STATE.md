@@ -34,7 +34,7 @@ Channel: tooba-main
 Last Architect Accepted Task:
 
 ```text
-TB-P10-T013
+TB-P10-T014
 ```
 
 Prior accepted catalog wave:
@@ -62,7 +62,7 @@ TB-P05-GATE
 Last Implementation Task:
 
 ```text
-TB-P10-T014
+TB-P10-T015
 ```
 
 Current Issued Task:
@@ -80,6 +80,7 @@ Current Repair Task:
 Implemented Under Review:
 
 ```text
+TB-P10-T015 — Storefront Background Tint Option (Neutral/PaletteTint, curated tint tokens, Admin UX, Home/Landing inherit); USER_VISUAL_ACCEPTED=NO
 TB-P10-T014 — Appearance + Landing Final Demo & Visual Acceptance Pack (seeded palettes/pages/menu, inspection guide, screenshot pack); USER_VISUAL_ACCEPTED=NO
 TB-P10-T013 — Storefront Menu Management (Admin UX, Menu/MenuItem, Header/Landing integration, demo seed); USER_VISUAL_ACCEPTED=NO
 TB-P10-T012 — Landing Page Composer (Admin UX, preview, publish, Home selection, storefront section renderer); USER_VISUAL_ACCEPTED=NO
@@ -217,7 +218,7 @@ NO
 Worker Next State:
 
 ```text
-IDLE — waits for Bridge Task (no invented next task; do NOT invent TB-P10-T015)
+IDLE — waits for Bridge Task (no invented next task; do NOT invent TB-P10-T016)
 ```
 
 Current Gate:
