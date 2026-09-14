@@ -71,8 +71,8 @@ Recovery-SoT:
 Architect TB-P10-T006; Impl TB-P10-T007; Issued/Repair none; USER_VISUAL_ACCEPTED=NO; do NOT invent TB-P10-T008. Evidence recovery-sot.md
 
 Git:
-ending HEAD 0a18886fe17eaa05f63bd025c4d91a0d9ce9ee98
-origin/main (after push)
+ending HEAD a93e0a9cea06c79b58a60b467825fde48054cb2d
+origin/main a93e0a9cea06c79b58a60b467825fde48054cb2d
 HEAD==origin/main yes
 unrelated login/account UX preserved unstaged
 
