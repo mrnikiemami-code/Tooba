@@ -15,6 +15,12 @@ public static class StoreLandingPageEndpoints
         admin.MapPut("/{pageId:guid}/status", SetStatusAsync);
         admin.MapPut("/home", SetHomeAsync);
         admin.MapGet("/home", GetHomeAdminAsync);
+        admin.MapGet("/{pageId:guid}/sections", ListSectionsAsync);
+        admin.MapPost("/{pageId:guid}/sections", AddSectionAsync);
+        admin.MapPut("/{pageId:guid}/sections/reorder", ReorderSectionsAsync);
+        admin.MapPut("/{pageId:guid}/sections/{sectionId:guid}", UpdateSectionAsync);
+        admin.MapPut("/{pageId:guid}/sections/{sectionId:guid}/enabled", SetSectionEnabledAsync);
+        admin.MapDelete("/{pageId:guid}/sections/{sectionId:guid}", DeleteSectionAsync);
 
         var storefront = app.MapGroup("/v1/storefront");
         storefront.MapGet("/pages/{slug}", GetPublicAsync);
@@ -140,6 +146,140 @@ public static class StoreLandingPageEndpoints
         {
             await AdminPanelAccess.RequireAuthorizedAsync(request, session, tenant, guard, environment, cancellationToken);
             return Results.Json(await composer.GetHomeSelectionAsync(cancellationToken));
+        }
+        catch (PlatformHttpException ex)
+        {
+            return Results.Json(new { title = ex.Title, errorCode = ex.ErrorCode }, statusCode: ex.StatusCode);
+        }
+    }
+
+    private static async Task<IResult> ListSectionsAsync(
+        Guid pageId,
+        StoreLandingPageComposer composer,
+        HttpRequest request,
+        CurrentAuthenticatedSession session,
+        ICurrentTenant tenant,
+        IAuthorizationGuard guard,
+        IHostEnvironment environment,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            await AdminPanelAccess.RequireAuthorizedAsync(request, session, tenant, guard, environment, cancellationToken);
+            return Results.Json(await composer.ListSectionsAsync(pageId, cancellationToken));
+        }
+        catch (PlatformHttpException ex)
+        {
+            return Results.Json(new { title = ex.Title, errorCode = ex.ErrorCode }, statusCode: ex.StatusCode);
+        }
+    }
+
+    private static async Task<IResult> AddSectionAsync(
+        Guid pageId,
+        StoreLandingPageSectionWriteRequest body,
+        StoreLandingPageComposer composer,
+        HttpRequest request,
+        CurrentAuthenticatedSession session,
+        ICurrentTenant tenant,
+        IAuthorizationGuard guard,
+        IHostEnvironment environment,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            await AdminPanelAccess.RequireAuthorizedAsync(request, session, tenant, guard, environment, cancellationToken);
+            return Results.Json(await composer.AddSectionAsync(pageId, body, cancellationToken));
+        }
+        catch (PlatformHttpException ex)
+        {
+            return Results.Json(new { title = ex.Title, errorCode = ex.ErrorCode }, statusCode: ex.StatusCode);
+        }
+    }
+
+    private static async Task<IResult> UpdateSectionAsync(
+        Guid pageId,
+        Guid sectionId,
+        StoreLandingPageSectionWriteRequest body,
+        StoreLandingPageComposer composer,
+        HttpRequest request,
+        CurrentAuthenticatedSession session,
+        ICurrentTenant tenant,
+        IAuthorizationGuard guard,
+        IHostEnvironment environment,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            await AdminPanelAccess.RequireAuthorizedAsync(request, session, tenant, guard, environment, cancellationToken);
+            return Results.Json(await composer.UpdateSectionAsync(pageId, sectionId, body, cancellationToken));
+        }
+        catch (PlatformHttpException ex)
+        {
+            return Results.Json(new { title = ex.Title, errorCode = ex.ErrorCode }, statusCode: ex.StatusCode);
+        }
+    }
+
+    private static async Task<IResult> SetSectionEnabledAsync(
+        Guid pageId,
+        Guid sectionId,
+        StoreLandingPageSectionEnabledRequest body,
+        StoreLandingPageComposer composer,
+        HttpRequest request,
+        CurrentAuthenticatedSession session,
+        ICurrentTenant tenant,
+        IAuthorizationGuard guard,
+        IHostEnvironment environment,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            await AdminPanelAccess.RequireAuthorizedAsync(request, session, tenant, guard, environment, cancellationToken);
+            return Results.Json(await composer.SetSectionEnabledAsync(pageId, sectionId, body.IsEnabled, cancellationToken));
+        }
+        catch (PlatformHttpException ex)
+        {
+            return Results.Json(new { title = ex.Title, errorCode = ex.ErrorCode }, statusCode: ex.StatusCode);
+        }
+    }
+
+    private static async Task<IResult> ReorderSectionsAsync(
+        Guid pageId,
+        StoreLandingPageSectionReorderRequest body,
+        StoreLandingPageComposer composer,
+        HttpRequest request,
+        CurrentAuthenticatedSession session,
+        ICurrentTenant tenant,
+        IAuthorizationGuard guard,
+        IHostEnvironment environment,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            await AdminPanelAccess.RequireAuthorizedAsync(request, session, tenant, guard, environment, cancellationToken);
+            return Results.Json(await composer.ReorderSectionsAsync(pageId, body.SectionIds, cancellationToken));
+        }
+        catch (PlatformHttpException ex)
+        {
+            return Results.Json(new { title = ex.Title, errorCode = ex.ErrorCode }, statusCode: ex.StatusCode);
+        }
+    }
+
+    private static async Task<IResult> DeleteSectionAsync(
+        Guid pageId,
+        Guid sectionId,
+        StoreLandingPageComposer composer,
+        HttpRequest request,
+        CurrentAuthenticatedSession session,
+        ICurrentTenant tenant,
+        IAuthorizationGuard guard,
+        IHostEnvironment environment,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            await AdminPanelAccess.RequireAuthorizedAsync(request, session, tenant, guard, environment, cancellationToken);
+            await composer.DeleteSectionAsync(pageId, sectionId, cancellationToken);
+            return Results.Json(new { ok = true });
         }
         catch (PlatformHttpException ex)
         {

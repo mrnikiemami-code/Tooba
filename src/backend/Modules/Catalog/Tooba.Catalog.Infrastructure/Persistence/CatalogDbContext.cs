@@ -52,6 +52,9 @@ public sealed class CatalogDbContext : DbContext
     /// <summary>صفحات Landing فروشگاه.</summary>
     public DbSet<StoreLandingPage> StoreLandingPages => Set<StoreLandingPage>();
 
+    /// <summary>بخش‌های Landing متعلق به صفحه.</summary>
+    public DbSet<StoreLandingPageSection> StoreLandingPageSections => Set<StoreLandingPageSection>();
+
     /// <summary>override چرخه رزرو Offer/Category.</summary>
     public DbSet<ReservationCyclePolicyOverride> ReservationCyclePolicyOverrides => Set<ReservationCyclePolicyOverride>();
 
@@ -582,6 +585,16 @@ public sealed class CatalogDbContext : DbContext
             entity.Property(x => x.TemplateKey).HasMaxLength(32).IsRequired();
             entity.Property(x => x.Status).HasConversion<string>().HasMaxLength(16);
             entity.HasIndex(x => new { x.Locale, x.Slug }).IsUnique();
+        });
+
+        modelBuilder.Entity<StoreLandingPageSection>(entity =>
+        {
+            entity.ToTable("store_landing_page_sections");
+            entity.HasKey(x => x.PageSectionId);
+            entity.Property(x => x.PageSectionId).ValueGeneratedNever();
+            entity.Property(x => x.SectionType).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.ConfigurationJson).HasMaxLength(4000).IsRequired();
+            entity.HasIndex(x => new { x.PageId, x.SortOrder });
         });
 
         modelBuilder.Entity<ReservationCyclePolicyOverride>(entity =>

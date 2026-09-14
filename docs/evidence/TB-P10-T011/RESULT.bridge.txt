@@ -1,0 +1,64 @@
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-P10-T011
+Parent-Task: TB-P10-T010
+Status: PASS
+WorkerId: tooba-worker-01
+Channel: tooba-main
+
+Summary:
+Landing pages now own typed PageSections from an approved registry with schema-validated config and controlled ProductCollection sources. Public projection returns enabled sections of Published pages only. No composer UI. No T012. USER_VISUAL_ACCEPTED remains NO.
+
+Applicable-Locks:
+LOCK-SF-001…171 preserved. Added LOCK-SF-172…178.
+
+Recovery-Start:
+branch=main HEAD=89d731d1cca49f2212e880c2cdf7eca4df9b41bf origin/main=same leftover login/account UX preserved docs/evidence/TB-P10-T011/recovery-start.md
+
+Section-Discovery:
+PageComposition remains Home-only. New Catalog StoreLandingPageSection. docs/evidence/TB-P10-T011/section-discovery.md
+
+Section-Model:
+PageSectionId/PageId/SectionType/SortOrder/IsEnabled/typed config. docs/evidence/TB-P10-T011/section-model.md
+
+Section-Registry:
+Hero, ProductCollection, CategoryGrid, BrandStrip, PromoBanner, ArticleList, Reviews, RichText. BestSelling/Featured/Discounted deferred. docs/evidence/TB-P10-T011/section-registry.md
+
+Controlled-Data-Sources:
+Manual/Category/Brand/Newest only; SQL/query rejected. docs/evidence/TB-P10-T011/controlled-data-sources.md
+
+Validation-Isolation:
+Typed validators + same-catalog refs. docs/evidence/TB-P10-T011/validation-isolation.md
+
+Public-Projection:
+Published + enabled + deterministic order + ProductCollection items. Draft 404. docs/evidence/TB-P10-T011/public-projection.md
+
+Performance-Contract:
+One section query; bounded Take; cache invalidate on write. docs/evidence/TB-P10-T011/performance-contract.md
+
+Focused-Validation:
+Host 10/10. Recovery 4/4. git diff --check clean. docs/evidence/TB-P10-T011/focused-validation.md
+
+Runtime:
+Host :5088 A–I 9/9. docs/evidence/TB-P10-T011/runtime.md
+
+AntiPattern-Scan:
+CLEAN. docs/evidence/TB-P10-T011/antipattern-scan.md
+
+Lock-Registry:
+LOCK-SF-172…178 appended.
+
+Recovery-SoT:
+Phase P10 Architect TB-P10-T010 Impl TB-P10-T011 Issued/Repair none USER_VISUAL_ACCEPTED=NO Worker IDLE do NOT invent TB-P10-T012. docs/evidence/TB-P10-T011/recovery-sot.md
+
+Git:
+SHA=pending HEAD==origin/main after push. Unrelated login leftovers not committed.
+
+Architectural-Concerns:
+Admin composer UI deferred. BestSelling/Featured/Discounted not faked.
+
+Visual-Concerns:
+No section renderer on storefront shell. USER_VISUAL_ACCEPTED=NO.
+
+Blockers:
+none
+END_TOOBA_WORKER_RESULT

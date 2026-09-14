@@ -676,3 +676,24 @@ Page records do not store or execute arbitrary HTML, CSS, or JavaScript.
 
 ### LOCK-SF-171 — Page authoring is not a query console
 Page authoring never exposes SQL or arbitrary query authoring.
+
+### LOCK-SF-172 — Landing Pages use approved SectionTypes only
+Landing Pages are composed only from approved code-owned SectionTypes.
+
+### LOCK-SF-173 — PageSection config is schema-validated
+PageSection configuration is typed/schema-validated and cannot execute arbitrary HTML, CSS, or JavaScript.
+
+### LOCK-SF-174 — Controlled data sources only
+Product/content sections use approved controlled data sources; user-authored SQL or arbitrary query expressions are forbidden.
+
+### LOCK-SF-175 — PageSection and references stay Store-scoped
+PageSection ownership and all referenced commerce/content entities remain Store-scoped.
+
+### LOCK-SF-176 — Public projection is enabled Published sections
+Public Page projection includes only enabled Sections of a Published Page in deterministic order.
+
+### LOCK-SF-177 — Reorder keeps PageSection identity
+Reordering preserves stable PageSection identity; reorder is not delete/recreate.
+
+### LOCK-SF-178 — Section limits are server-enforced
+Section configuration limits are server-enforced to prevent unbounded page/query cost.

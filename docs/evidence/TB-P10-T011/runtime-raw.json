@@ -1,0 +1,103 @@
+{
+  "ok": true,
+  "steps": [
+    {
+      "name": "A-publish-page",
+      "pass": true,
+      "data": {
+        "created": 200,
+        "published": 200,
+        "pageId": "01a09e22-cd6c-7000-8e8d-aec9d6251664"
+      }
+    },
+    {
+      "name": "B-add-hero",
+      "pass": true,
+      "data": {
+        "pageSectionId": "01a09e22-cdc4-7000-84e7-5ed2822e9a63",
+        "pageId": "01a09e22-cd6c-7000-8e8d-aec9d6251664",
+        "sectionType": "Hero",
+        "sortOrder": 0,
+        "isEnabled": true,
+        "config": "{\"title\":\"\\u0647\\u06CC\\u0631\\u0648 \\u0622\\u0632\\u0645\\u0627\\u06CC\\u0634\\u06CC\",\"subtitle\":null,\"href\":null,\"mediaAssetId\":null}",
+        "updatedAt": "2026-09-14T04:17:56.1619964+00:00"
+      }
+    },
+    {
+      "name": "C-add-product-collection",
+      "pass": true,
+      "data": {
+        "pageSectionId": "01a09e22-cdde-7000-9c90-af9e4d2e967c",
+        "pageId": "01a09e22-cd6c-7000-8e8d-aec9d6251664",
+        "sectionType": "ProductCollection",
+        "sortOrder": 1,
+        "isEnabled": true,
+        "config": "{\"title\":null,\"source\":\"Newest\",\"take\":4,\"categoryId\":null,\"brandId\":null,\"productIds\":[]}",
+        "updatedAt": "2026-09-14T04:17:56.1887978+00:00"
+      }
+    },
+    {
+      "name": "D-add-banner",
+      "pass": true,
+      "data": {
+        "pageSectionId": "01a09e22-cde6-7000-b253-ee30e6f5d2e3",
+        "pageId": "01a09e22-cd6c-7000-8e8d-aec9d6251664",
+        "sectionType": "PromoBanner",
+        "sortOrder": 2,
+        "isEnabled": true,
+        "config": "{\"title\":\"\\u0628\\u0646\\u0631 \\u0622\\u0632\\u0645\\u0627\\u06CC\\u0634\\u06CC\",\"href\":null,\"mediaAssetId\":null}",
+        "updatedAt": "2026-09-14T04:17:56.1981029+00:00"
+      }
+    },
+    {
+      "name": "E-order",
+      "pass": true,
+      "data": {
+        "typesA": [
+          "Hero",
+          "ProductCollection",
+          "PromoBanner"
+        ],
+        "items": 4
+      }
+    },
+    {
+      "name": "F-disable-middle",
+      "pass": true,
+      "data": {
+        "disabled": 200,
+        "typesB": [
+          "Hero",
+          "PromoBanner"
+        ]
+      }
+    },
+    {
+      "name": "G-reorder",
+      "pass": true,
+      "data": {
+        "reorder": 200,
+        "idsC": [
+          "01a09e22-cde6-7000-b253-ee30e6f5d2e3",
+          "01a09e22-cdc4-7000-84e7-5ed2822e9a63"
+        ]
+      }
+    },
+    {
+      "name": "H-invalid-type",
+      "pass": true,
+      "data": {
+        "title": "نوع بخش تأییدشده نیست.",
+        "errorCode": "landing.section.type.invalid"
+      }
+    },
+    {
+      "name": "I-unpublish-404",
+      "pass": true,
+      "data": {
+        "gone": 404
+      }
+    }
+  ],
+  "errors": []
+}
