@@ -48,7 +48,7 @@ Recovery-SoT:
 Phase P10 Architect TB-P10-T009-R2 Impl TB-P10-T010 Issued/Repair none USER_VISUAL_ACCEPTED=NO Worker IDLE do NOT invent TB-P10-T011. docs/evidence/TB-P10-T010/recovery-sot.md
 
 Git:
-SHA=pending HEAD==origin/main after push. Unrelated login leftovers not committed.
+SHA=aad601062b0ebd4efd6343f8eb351fa1579cecbe HEAD==origin/main after push. Unrelated login leftovers not committed.
 
 Architectural-Concerns:
 Admin Page list/create UI deferred; later T011/T012 may render selected Home without replacing fallback until migration.
