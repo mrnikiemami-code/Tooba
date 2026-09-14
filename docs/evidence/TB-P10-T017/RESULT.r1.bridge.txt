@@ -1,0 +1,60 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-P10-T017-R1
+Parent-Task: TB-P10-T017
+Status: PASS
+WorkerId: tooba-worker-01
+Channel: tooba-main
+
+Summary:
+PDP first-paint 500 repaired. StorefrontThemeToggle no longer calls useTheme outside ThemeProvider; first document GET for Home/PLP/PDP/Landing/Cart is 200 with no client retry. Four-role architecture unchanged. Canonical default restored tooba-blue / LightOnly / classic / Neutral. Inspection shots refreshed under screenshots/r1/. USER_VISUAL_ACCEPTED remains NO. No T018.
+
+Applicable-Locks:
+LOCK-SF-001…202 preserved. No new locks.
+
+Recovery-Start:
+branch=main HEAD-at-claim=8a2f518d840a043b160572f58f498c0d619bc9a8 leftover login/account UX preserved. Expected previous HEAD 60249939 is T017 impl; pin 8a2f518d is origin/main — not RECOVERY_CONFLICT. docs/evidence/TB-P10-T017/r1-recovery-start.md
+
+PDP-500-Root-Cause:
+Theme-owned. useTheme throw in StorefrontThemeToggle during SSR (header is outside ThemeProvider). Same throw also 500'd Home/PLP in T017 logs. Not a product-data or appearance-token bug. docs/evidence/TB-P10-T017/r1-pdp-500-root-cause.md
+
+PDP-First-Paint-Fix:
+Toggle uses document class + cookie/localStorage only. Guards forbid useTheme on toggle and setTimeout/sleep/retryLoop on PDP page. Cold GET /fa/products/demo-prod-fashion-men-men-pants-1 = 200 on first request.
+
+Hydration-Attribution:
+Task-owned useTheme SSR throw gone. Leftover Next.js attribute hydration warning + dev “1 Issue” overlay remain; html already has suppressHydrationWarning. Not hidden with client retry. docs/evidence/TB-P10-T017/r1-hydration-attribution.md
+
+Anonymous-Auth:
+7× GET /api/auth/me 401 (one per capture navigation). Not a retry storm. docs/evidence/TB-P10-T017/r1-anonymous-auth.md
+
+Media-Capture:
+Capture waited for media-well/PDP imgs then scrolled to first viewport. PDP gallery shows Tooba placeholder. PLP/Landing product-card wells still read empty in 1440×1200 clips though imgs load (naturalWidth=150); Landing hero + category media render. Code was not deleted. docs/evidence/TB-P10-T017/r1-media-capture.md screenshots/r1/
+
+Focused-Validation:
+FE appearance/theme/surface 23/23. critical-storefront 19/19. recovery-staleness 4/4. Host StoreAppearance not rerun (no C# change). git diff --check CRLF warnings only. docs/evidence/TB-P10-T017/r1-focused-validation.md
+
+Runtime:
+ok=true. Restored canonical default. docs/evidence/TB-P10-T017/r1-runtime.md r1-runtime-report.json
+
+AntiPattern-Scan:
+CLEAN. docs/evidence/TB-P10-T017/r1-antipattern-scan.md
+
+Lock-Registry:
+LOCK-SF-001…202. No duplicates. No new locks.
+
+Recovery-SoT:
+Phase P10 Architect TB-P10-T016 Impl TB-P10-T017-R1 Issued/Repair none USER_VISUAL_ACCEPTED=NO Worker IDLE do NOT invent TB-P10-T018. docs/evidence/TB-P10-T017/r1-recovery-sot.md
+
+Git:
+SHA=a1900f7358e6bafe3365f4878087427f13311b07 HEAD==origin/main after push. Unrelated login leftovers not committed.
+
+Architectural-Concerns:
+ThemeToggle was Theme-owned (T008 UserChoice). Four global surface roles untouched. Unrelated leftover login/account UX remains uncommitted.
+
+Visual-Concerns:
+USER_VISUAL_ACCEPTED=NO pending actual user review. Leftover SSR hydration attribute warning. Anonymous 401 /api/auth/me is expected session resolution. PLP/Landing product-card photo chrome still empty in 1440×1200 first-viewport clips.
+
+Blockers:
+none
+END_TOOBA_WORKER_RESULT
