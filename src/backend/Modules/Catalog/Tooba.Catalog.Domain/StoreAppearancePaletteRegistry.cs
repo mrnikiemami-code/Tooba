@@ -33,7 +33,7 @@ public static class StoreAppearancePaletteRegistry
         new("forest-green", "سبز جنگلی", "Forest Green", new("21 128 61", "22 101 52", "255 255 255", "21 128 61")),
         new("wine-burgundy", "شرابی تیره", "Wine Burgundy", new("159 18 57", "136 19 55", "255 255 255", "159 18 57")),
         new("slate-navy", "سرمه‌ای سنگی", "Slate Navy", new("30 58 95", "23 37 84", "255 255 255", "30 58 95")),
-        new("amber-gold", "کهربایی", "Amber Gold", new("217 119 6", "180 83 9", "255 255 255", "217 119 6")),
+        new("amber-gold", "کهربایی", "Amber Gold", new("180 83 9", "146 64 14", "255 255 255", "180 83 9")),
         new("teal-lagoon", "سبزآبی مرداب", "Teal Lagoon", new("15 118 110", "17 94 89", "255 255 255", "15 118 110")),
         new("violet-royal", "بنفش سلطنتی", "Royal Violet", new("124 58 237", "109 40 217", "255 255 255", "124 58 237")),
     ];

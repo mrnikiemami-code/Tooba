@@ -35,7 +35,7 @@ export function BlogDetailClient({ slug, contentLocale }: { slug: string; conten
     return (
       <main className="mx-auto max-w-3xl px-3 py-10 text-center md:px-4">
         <h1 className="text-xl font-bold">{copy.notFound}</h1>
-        <Link href="/blogs" className="mt-4 inline-flex items-center gap-1 text-sm text-[#2563EB]">
+        <Link href="/blogs" className="mt-4 inline-flex items-center gap-1 text-sm text-primary">
           <BackArrow className="size-4" /> {copy.backToMagazine}
         </Link>
       </main>
@@ -48,7 +48,7 @@ export function BlogDetailClient({ slug, contentLocale }: { slug: string; conten
 
   return (
     <main className="mx-auto max-w-3xl space-y-6 px-3 py-6 md:px-4" data-testid="blog-detail">
-      <Link href="/blogs" className="inline-flex items-center gap-1 text-sm text-[#2563EB]">
+      <Link href="/blogs" className="inline-flex items-center gap-1 text-sm text-primary">
         <BackArrow className="size-4" /> {copy.backToMagazine}
       </Link>
       <article className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
@@ -59,7 +59,7 @@ export function BlogDetailClient({ slug, contentLocale }: { slug: string; conten
         <div className="space-y-4 p-5 md:p-8">
           <div className="flex flex-wrap items-center gap-3 text-xs text-gray-500">
             {article.authorSlug ? (
-              <Link href={blogsAuthorPath(article.authorSlug)} className="inline-flex items-center gap-1 hover:text-[#2563EB]">
+              <Link href={blogsAuthorPath(article.authorSlug)} className="inline-flex items-center gap-1 hover:text-primary">
                 <User className="size-3.5" />
                 {article.authorDisplayName}
               </Link>
@@ -77,12 +77,12 @@ export function BlogDetailClient({ slug, contentLocale }: { slug: string; conten
               article.categorySlug ? (
                 <Link
                   href={blogsCategoryPath(article.categorySlug)}
-                  className="rounded-full bg-blue-50 px-2 py-0.5 font-bold text-[#2563EB]"
+                  className="rounded-full bg-blue-50 px-2 py-0.5 font-bold text-primary"
                 >
                   {article.category}
                 </Link>
               ) : (
-                <span className="rounded-full bg-blue-50 px-2 py-0.5 font-bold text-[#2563EB]">{article.category}</span>
+                <span className="rounded-full bg-blue-50 px-2 py-0.5 font-bold text-primary">{article.category}</span>
               )
             ) : null}
           </div>
@@ -103,7 +103,7 @@ export function BlogDetailClient({ slug, contentLocale }: { slug: string; conten
         </div>
       </article>
       <div className="flex items-center gap-2 text-sm text-gray-500">
-        <BookOpen className="size-4 text-[#2563EB]" />
+        <BookOpen className="size-4 text-primary" />
         {copy.magazineFooter}
       </div>
     </main>

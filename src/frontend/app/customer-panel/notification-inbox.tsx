@@ -237,8 +237,8 @@ export function NotificationInbox({
 
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-[#E53935]/10 flex items-center justify-center">
-            <Bell className="w-5 h-5 text-[#E53935]" />
+          <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+            <Bell className="w-5 h-5 text-primary" />
           </div>
           <div>
             <h2 className="text-lg font-bold text-gray-900 dark:text-white">اطلاعیه‌ها</h2>
@@ -252,7 +252,7 @@ export function NotificationInbox({
             <button
               type="button"
               onClick={() => void handleMarkAllRead()}
-              className="px-3 py-1.5 bg-[#E53935] text-white rounded-xl text-xs font-medium hover:bg-[#c62828] transition-colors shadow-lg shadow-[#E53935]/30 flex items-center gap-1"
+              className="px-3 py-1.5 bg-primary text-white rounded-xl text-xs font-medium hover:bg-primary-strong transition-colors shadow-lg shadow-primary/30 flex items-center gap-1"
               data-testid="notifications-mark-all-read"
             >
               <Check className="w-3.5 h-3.5" />
@@ -268,7 +268,7 @@ export function NotificationInbox({
           <p className="text-[10px] text-gray-500 dark:text-gray-400">کل</p>
         </div>
         <div className="bg-white dark:bg-[#111] rounded-xl p-3 text-center border border-gray-200 dark:border-gray-800">
-          <p className="text-lg font-black text-[#E53935]">{toPersianDigits(stats.unread)}</p>
+          <p className="text-lg font-black text-primary">{toPersianDigits(stats.unread)}</p>
           <p className="text-[10px] text-gray-500 dark:text-gray-400">خوانده نشده</p>
         </div>
         <div className="bg-white dark:bg-[#111] rounded-xl p-3 text-center border border-gray-200 dark:border-gray-800">
@@ -285,7 +285,7 @@ export function NotificationInbox({
         <button
           type="button"
           onClick={() => setShowFilters(!showFilters)}
-          className="px-3 py-1.5 bg-white dark:bg-[#111] rounded-xl text-xs font-medium text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700 hover:border-[#E53935]/50 transition-colors flex items-center gap-1"
+          className="px-3 py-1.5 bg-white dark:bg-[#111] rounded-xl text-xs font-medium text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700 hover:border-primary/50 transition-colors flex items-center gap-1"
         >
           <Filter className="w-3.5 h-3.5" />
           فیلتر
@@ -295,7 +295,7 @@ export function NotificationInbox({
           <button
             type="button"
             onClick={() => setFilter("all")}
-            className="px-3 py-1.5 bg-[#E53935] text-white rounded-xl text-xs font-medium flex items-center gap-1"
+            className="px-3 py-1.5 bg-primary text-white rounded-xl text-xs font-medium flex items-center gap-1"
           >
             {filterOptions.find((f) => f.value === filter)?.label}
             <X className="w-3 h-3" />
@@ -315,7 +315,7 @@ export function NotificationInbox({
               }}
               className={`px-3 py-1 rounded-lg text-xs font-medium transition-all ${
                 filter === option.value
-                  ? "bg-[#E53935] text-white"
+                  ? "bg-primary text-white"
                   : "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700"
               }`}
             >
@@ -354,7 +354,7 @@ export function NotificationInbox({
               <div
                 key={item.id}
                 className={`bg-white dark:bg-[#111] rounded-2xl p-4 border-2 transition-all duration-300 hover:shadow-md ${
-                  item.read ? "border-gray-200 dark:border-gray-800" : `border-[#E53935]/30 ${item.bgColor}`
+                  item.read ? "border-gray-200 dark:border-gray-800" : `border-primary/30 ${item.bgColor}`
                 }`}
                 data-testid={`notification-row-${item.id}`}
                 data-notification-type={item.type}
@@ -374,7 +374,7 @@ export function NotificationInbox({
                         >
                           {item.title}
                         </p>
-                        {!item.read && <span className="w-2 h-2 rounded-full bg-[#E53935] animate-pulse" />}
+                        {!item.read && <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />}
                       </div>
                       <div className="flex items-center gap-2 text-[10px] text-gray-400">
                         <Calendar className="w-3 h-3" />
@@ -389,7 +389,7 @@ export function NotificationInbox({
                         <button
                           type="button"
                           onClick={() => void handleMarkAsRead(item.id)}
-                          className="text-[10px] text-[#E53935] hover:underline font-medium flex items-center gap-1"
+                          className="text-[10px] text-primary hover:underline font-medium flex items-center gap-1"
                         >
                           <Check className="w-3 h-3" />
                           علامت خوانده شد

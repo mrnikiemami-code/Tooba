@@ -16,10 +16,10 @@ export function StorefrontCheckoutLimitNotice({
       <p className="text-sm text-red-600">{message}</p>
       {openUnpaid ? (
         <div className="flex flex-wrap gap-3 text-sm">
-          <a href="#pending-payments" className="font-bold text-[#2563EB]" data-testid="checkout-limit-pending-link">
+          <a href="#pending-payments" className="font-bold text-primary" data-testid="checkout-limit-pending-link">
             مشاهده سفارش‌های در انتظار پرداخت
           </a>
-          <Link href="/customer-panel/orders" className="font-bold text-[#2563EB]" data-testid="checkout-limit-orders-link">
+          <Link href="/customer-panel/orders" className="font-bold text-primary" data-testid="checkout-limit-orders-link">
             سفارش‌های من
           </Link>
         </div>

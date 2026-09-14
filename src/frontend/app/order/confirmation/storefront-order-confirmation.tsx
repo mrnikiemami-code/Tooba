@@ -106,7 +106,7 @@ function ConfirmationBody() {
     return (
       <div className="py-16 text-center" data-testid="order-confirmation">
         <p className="text-sm text-red-600">{error ?? "سفارش پیدا نشد."}</p>
-        <Link href="/cart" className="inline-flex mt-6 px-5 py-2.5 rounded-xl bg-[#2563EB] text-white text-sm font-bold">
+        <Link href="/cart" className="inline-flex mt-6 px-5 py-2.5 rounded-xl bg-primary text-white text-sm font-bold">
           بازگشت به سبد
         </Link>
       </div>
@@ -188,7 +188,7 @@ function ConfirmationBody() {
               <button
                 type="button"
                 onClick={() => void copyReference()}
-                className="text-[#2563EB] text-[10px] md:text-xs font-bold flex items-center gap-1"
+                className="text-primary text-[10px] md:text-xs font-bold flex items-center gap-1"
               >
                 <Copy className="w-3 h-3" /> {copied ? "کپی شد" : "کپی"}
               </button>
@@ -198,7 +198,7 @@ function ConfirmationBody() {
             </p>
             <div className="flex items-center justify-between mt-4 pt-4 border-t border-gray-200">
               <span className="text-[10px] md:text-xs text-gray-500">مبلغ قابل پرداخت</span>
-              <span className={`text-sm md:text-base font-black ${paid ? "text-emerald-500" : "text-[#2563EB]"}`}>
+              <span className={`text-sm md:text-base font-black ${paid ? "text-emerald-500" : "text-primary"}`}>
                 {formatOfferAmount(page.payableAmount, page.currency)}
               </span>
             </div>
@@ -220,7 +220,7 @@ function ConfirmationBody() {
                 type="button"
                 disabled={paying}
                 onClick={() => void pay()}
-                className="w-full px-6 py-3 rounded-2xl bg-[#2563EB] text-white text-sm font-bold disabled:opacity-50 shadow-lg shadow-[#2563EB]/25"
+                className="w-full px-6 py-3 rounded-2xl bg-primary text-white text-sm font-bold disabled:opacity-50 shadow-lg shadow-primary/25"
                 data-testid="confirmation-pay"
               >
                 {paying
@@ -238,13 +238,13 @@ function ConfirmationBody() {
           <div className="mt-4 flex flex-wrap justify-center gap-2">
             <Link
               href={`/customer-panel/orders/${current.checkoutId}`}
-              className="px-5 py-2.5 rounded-2xl border border-blue-200 text-[#2563EB] text-sm font-bold"
+              className="px-5 py-2.5 rounded-2xl border border-blue-200 text-primary text-sm font-bold"
             >
               مشاهده در سفارش‌های من
             </Link>
             <Link
               href="/"
-              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-2xl bg-[#2563EB] text-white text-sm font-bold"
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-2xl bg-primary text-white text-sm font-bold"
             >
               <Home className="w-4 h-4" /> صفحه اصلی
             </Link>

@@ -86,5 +86,6 @@ test("home stories use live Host binding without fake STORY_IMAGES", () => {
   assert.doesNotMatch(homeSource, /STORY_IMAGES/);
   assert.match(storiesSource, /fetchPublicStories/);
   assert.match(storiesSource, /data-testid="home-stories"/);
-  assert.match(storiesSource, /#E53935/);
+  assert.match(storiesSource, /bg-primary|from-primary|text-primary/);
+  assert.doesNotMatch(storiesSource, /#E53935/);
 });

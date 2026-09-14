@@ -48,7 +48,7 @@ export function LocaleSwitcher({ className = "" }: { className?: string }) {
       <button
         type="button"
         className={`px-1.5 py-0.5 rounded transition-colors ${
-          locale === "fa" ? "text-[#2563EB] bg-[#2563EB]/10" : "hover:text-gray-800"
+          locale === "fa" ? "text-primary bg-primary/10" : "hover:text-gray-800"
         }`}
         aria-pressed={locale === "fa"}
         onClick={() => select("fa")}
@@ -61,7 +61,7 @@ export function LocaleSwitcher({ className = "" }: { className?: string }) {
       <button
         type="button"
         className={`px-1.5 py-0.5 rounded transition-colors ${
-          locale === "en" ? "text-[#2563EB] bg-[#2563EB]/10" : "hover:text-gray-800"
+          locale === "en" ? "text-primary bg-primary/10" : "hover:text-gray-800"
         }`}
         aria-pressed={locale === "en"}
         onClick={() => select("en")}

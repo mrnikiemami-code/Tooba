@@ -86,7 +86,7 @@ export function StorefrontShopeivaListing({
   const filterPanel = (
     <div className="space-y-4" data-testid="listing-filter-sidebar">
       <h2 className="font-bold text-sm flex items-center gap-2 text-gray-900">
-        <Layers className="w-4 h-4 text-[#2563EB]" />
+        <Layers className="w-4 h-4 text-primary" />
         {activeCategory ? "زیرمجموعه‌ها" : "فیلترها"}
       </h2>
 
@@ -94,7 +94,7 @@ export function StorefrontShopeivaListing({
         <Link
           href={listingHref({ categoryId: undefined, page: undefined })}
           className={`flex items-center justify-between px-3 py-2.5 rounded-xl text-sm transition-colors ${
-            !activeCategoryId ? "bg-[#2563EB] text-white shadow-lg shadow-[#2563EB]/20" : "text-gray-700 hover:bg-gray-50"
+            !activeCategoryId ? "bg-primary text-white shadow-lg shadow-primary/20" : "text-gray-700 hover:bg-gray-50"
           }`}
           onClick={() => setMobileFiltersOpen(false)}
         >
@@ -108,7 +108,7 @@ export function StorefrontShopeivaListing({
             data-testid="listing-category-filter"
             className={`flex items-center justify-between px-3 py-2.5 rounded-xl text-sm transition-colors ${
               activeCategoryId === category.categoryId
-                ? "bg-[#2563EB] text-white shadow-lg shadow-[#2563EB]/20"
+                ? "bg-primary text-white shadow-lg shadow-primary/20"
                 : "text-gray-700 hover:bg-gray-50"
             }`}
             onClick={() => setMobileFiltersOpen(false)}
@@ -123,7 +123,7 @@ export function StorefrontShopeivaListing({
         <h3 className="text-xs font-bold mb-2 text-gray-800">موجودی</h3>
         <Link
           href={listingHref({ inStock: inStock ? undefined : "true", page: undefined })}
-          className={`block px-3 py-2.5 rounded-xl text-sm ${inStock ? "bg-[#2563EB] text-white" : "hover:bg-gray-50 text-gray-700"}`}
+          className={`block px-3 py-2.5 rounded-xl text-sm ${inStock ? "bg-primary text-white" : "hover:bg-gray-50 text-gray-700"}`}
           onClick={() => setMobileFiltersOpen(false)}
         >
           فقط کالاهای موجود
@@ -161,7 +161,7 @@ export function StorefrontShopeivaListing({
                   page: undefined,
                 })}
                 className={`block px-3 py-2 rounded-xl text-sm ${
-                  activeSellerPartyId === seller.sellerPartyId ? "bg-[#2563EB] text-white" : "hover:bg-gray-50 text-gray-700"
+                  activeSellerPartyId === seller.sellerPartyId ? "bg-primary text-white" : "hover:bg-gray-50 text-gray-700"
                 }`}
                 onClick={() => setMobileFiltersOpen(false)}
               >
@@ -187,11 +187,11 @@ export function StorefrontShopeivaListing({
     <div className="min-h-[50vh] bg-white" data-testid="storefront-listing">
       <div className="max-w-[1800px] mx-auto px-2 sm:px-4 py-6">
         <nav className="text-xs text-gray-500 mb-6 flex flex-wrap gap-2" aria-label="مسیر صفحه" data-testid="listing-breadcrumb">
-          <Link href="/" className="hover:text-[#2563EB]">
+          <Link href="/" className="hover:text-primary">
             خانه
           </Link>
           <span>/</span>
-          <Link href="/products" className="hover:text-[#2563EB]">
+          <Link href="/products" className="hover:text-primary">
             کالاها
           </Link>
           {activeCategory ? (
@@ -221,12 +221,12 @@ export function StorefrontShopeivaListing({
               >
                 <div className="flex flex-col md:flex-row items-center gap-4">
                   <div className="w-20 h-20 md:w-24 md:h-24 rounded-2xl bg-gray-100 flex items-center justify-center shrink-0">
-                    <Package className="w-8 h-8 text-[#2563EB]" />
+                    <Package className="w-8 h-8 text-primary" />
                   </div>
                   <div className="flex-1 text-center md:text-right space-y-2">
                     <div className="flex items-center justify-center md:justify-start gap-2 flex-wrap">
                       <h1 className="text-xl md:text-2xl font-extrabold text-gray-900">{title}</h1>
-                      <span className="text-xs bg-[#2563EB]/10 text-[#2563EB] px-2.5 py-1 rounded-full font-bold">
+                      <span className="text-xs bg-primary/10 text-primary px-2.5 py-1 rounded-full font-bold">
                         {totalCount.toLocaleString("fa-IR")} محصول
                       </span>
                     </div>
@@ -251,7 +251,7 @@ export function StorefrontShopeivaListing({
                   data-testid="listing-mobile-filter-open"
                   onClick={() => setMobileFiltersOpen(true)}
                 >
-                  <SlidersHorizontal className="w-4 h-4 text-[#2563EB]" />
+                  <SlidersHorizontal className="w-4 h-4 text-primary" />
                   فیلترها
                 </button>
                 <span className="text-xs text-gray-500 whitespace-nowrap" data-testid="listing-result-count">
@@ -270,7 +270,7 @@ export function StorefrontShopeivaListing({
                 <select
                   id="listing-sort"
                   name="sort"
-                  className="px-3 py-2.5 bg-white rounded-xl text-sm text-gray-700 border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#2563EB]"
+                  className="px-3 py-2.5 bg-white rounded-xl text-sm text-gray-700 border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary"
                   defaultValue={sort}
                   aria-label="مرتب‌سازی"
                   data-testid="listing-sort-select"
@@ -324,7 +324,7 @@ export function StorefrontShopeivaListing({
                       key={pageNumber}
                       href={listingHref({ page: pageNumber === 1 ? undefined : String(pageNumber) })}
                       className={`flex items-center justify-center w-8 h-8 rounded-lg text-sm font-medium ${
-                        pageNumber === page ? "bg-[#2563EB] text-white shadow-lg shadow-[#2563EB]/30" : "text-gray-700 hover:bg-gray-100"
+                        pageNumber === page ? "bg-primary text-white shadow-lg shadow-primary/30" : "text-gray-700 hover:bg-gray-100"
                       }`}
                     >
                       {pageNumber.toLocaleString("fa-IR")}

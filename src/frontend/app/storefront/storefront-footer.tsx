@@ -37,8 +37,8 @@ export function StorefrontShopeivaFooter({ categories }: { categories: Storefron
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
             {features.map((item) => (
               <div key={item.title} className="flex items-center justify-center gap-2 md:gap-3 group">
-                <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-[#2563EB]/10 flex items-center justify-center group-hover:bg-[#2563EB] transition-all shrink-0">
-                  <item.icon className="w-4 h-4 md:w-5 md:h-5 text-[#2563EB] group-hover:text-white transition" />
+                <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-primary/10 flex items-center justify-center group-hover:bg-primary transition-all shrink-0">
+                  <item.icon className="w-4 h-4 md:w-5 md:h-5 text-primary group-hover:text-white transition" />
                 </div>
                 <div>
                   <h4 className="text-xs md:text-sm font-bold text-gray-900">{item.title}</h4>
@@ -51,7 +51,7 @@ export function StorefrontShopeivaFooter({ categories }: { categories: Storefron
       </div>
 
       <div className="relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-l from-[#2563EB] to-[#1d4ed8]" />
+        <div className="absolute inset-0 bg-gradient-to-l from-primary to-primary-strong" />
         <div className="relative max-w-[1800px] mx-auto px-3 sm:px-4 py-8 md:py-10">
           <div className="flex flex-col md:flex-row items-center justify-between gap-4 md:gap-6">
             <div className="text-white text-center md:text-right">
@@ -95,7 +95,7 @@ export function StorefrontShopeivaFooter({ categories }: { categories: Storefron
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-5 mb-8">
           <div className="bg-gray-50 rounded-2xl p-4 md:p-5 border border-gray-200 min-h-[220px]">
             <h4 className="font-bold text-gray-900 mb-3 text-sm md:text-base flex items-center gap-2">
-              <span className="w-1 h-5 bg-[#2563EB] rounded-full" />
+              <span className="w-1 h-5 bg-primary rounded-full" />
               دسته‌بندی‌ها
             </h4>
             <div className="space-y-2">
@@ -103,20 +103,20 @@ export function StorefrontShopeivaFooter({ categories }: { categories: Storefron
                 <Link
                   key={category.categoryId}
                   href={`/products?categoryId=${category.categoryId}`}
-                  className="flex items-center gap-2 text-sm text-gray-700 hover:text-[#2563EB]"
+                  className="flex items-center gap-2 text-sm text-gray-700 hover:text-primary"
                 >
                   {category.name}
                 </Link>
               ))}
             </div>
-            <Link href="/products" className="inline-flex items-center gap-1 text-xs text-[#2563EB] font-bold mt-3 pt-2 border-t border-gray-200 w-full">
+            <Link href="/products" className="inline-flex items-center gap-1 text-xs text-primary font-bold mt-3 pt-2 border-t border-gray-200 w-full">
               مشاهده همه
               <ChevronLeft className="w-3 h-3" />
             </Link>
           </div>
           <div className="bg-gray-50 rounded-2xl p-4 md:p-5 border border-gray-200 min-h-[220px]">
             <h4 className="font-bold text-gray-900 mb-3 text-sm md:text-base flex items-center gap-2">
-              <span className="w-1 h-5 bg-[#2563EB] rounded-full" />
+              <span className="w-1 h-5 bg-primary rounded-full" />
               خدمات مشتریان
             </h4>
             <ul className="space-y-2.5 text-sm text-gray-600">
@@ -128,7 +128,7 @@ export function StorefrontShopeivaFooter({ categories }: { categories: Storefron
           </div>
           <div className="bg-gray-50 rounded-2xl p-4 md:p-5 border border-gray-200 min-h-[220px]">
             <h4 className="font-bold text-gray-900 mb-3 text-sm md:text-base flex items-center gap-2">
-              <span className="w-1 h-5 bg-[#2563EB] rounded-full" />
+              <span className="w-1 h-5 bg-primary rounded-full" />
               دسترسی سریع
             </h4>
             <ul className="space-y-2.5 text-sm text-gray-600">
@@ -140,20 +140,20 @@ export function StorefrontShopeivaFooter({ categories }: { categories: Storefron
           </div>
           <div className="bg-gray-50 rounded-2xl p-4 md:p-5 border border-gray-200 min-h-[220px]">
             <h4 className="font-bold text-gray-900 mb-3 text-sm md:text-base flex items-center gap-2">
-              <span className="w-1 h-5 bg-[#2563EB] rounded-full" />
+              <span className="w-1 h-5 bg-primary rounded-full" />
               تماس با ما
             </h4>
             <ul className="space-y-3 text-sm text-gray-600">
               <li className="flex gap-2">
-                <MapPin className="w-4 h-4 text-[#2563EB] shrink-0" />
+                <MapPin className="w-4 h-4 text-primary shrink-0" />
                 تهران، خیابان ولیعصر
               </li>
               <li className="flex gap-2">
-                <Phone className="w-4 h-4 text-[#2563EB] shrink-0" />
+                <Phone className="w-4 h-4 text-primary shrink-0" />
                 ۰۲۱-۹۱۰۰۰۰۰۰
               </li>
               <li className="flex gap-2">
-                <Clock className="w-4 h-4 text-[#2563EB] shrink-0" />
+                <Clock className="w-4 h-4 text-primary shrink-0" />
                 شنبه تا پنج‌شنبه ۹ الی ۱۸
               </li>
             </ul>

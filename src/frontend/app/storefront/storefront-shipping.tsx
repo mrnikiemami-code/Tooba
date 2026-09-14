@@ -329,7 +329,7 @@ export function StorefrontShopeivaShipping() {
         <ShippingHero itemCount={0} subtotalLabel="—" shippingDaysLabel="—" />
         <div className="py-16 text-center">
           {error ? <p className="text-sm text-red-600">{error}</p> : <p className="text-sm text-gray-500">در حال آماده‌سازی ارسال…</p>}
-          <Link href="/cart" className="inline-flex mt-6 px-5 py-2.5 rounded-xl bg-[#E53935] text-white text-sm font-bold">
+          <Link href="/cart" className="inline-flex mt-6 px-5 py-2.5 rounded-xl bg-primary text-white text-sm font-bold">
             بازگشت به سبد
           </Link>
         </div>
@@ -340,7 +340,7 @@ export function StorefrontShopeivaShipping() {
   return (
     <div className="min-h-screen bg-white pb-10" data-testid="shipping-page">
       <nav className="max-w-[1800px] mx-auto px-4 sm:px-6 pt-4 text-xs text-gray-500 mb-2 flex flex-wrap gap-2" aria-label="مسیر صفحه">
-        <Link href="/cart" className="hover:text-[#E53935]">سبد خرید</Link>
+        <Link href="/cart" className="hover:text-primary">سبد خرید</Link>
         <span>/</span>
         <span className="text-gray-800">اطلاعات ارسال</span>
       </nav>
@@ -362,7 +362,7 @@ export function StorefrontShopeivaShipping() {
               {/* Address selection */}
               <div className="bg-white rounded-2xl border border-gray-200 p-4 md:p-5 shadow-sm" data-testid="shipping-address-section">
                 <h3 className="text-sm md:text-base font-black text-gray-900 flex items-center gap-2 mb-3">
-                  <Home className="w-4 h-4 text-[#E53935]" />
+                  <Home className="w-4 h-4 text-primary" />
                   انتخاب آدرس
                 </h3>
                 <div className="flex gap-3 mb-4">
@@ -373,7 +373,7 @@ export function StorefrontShopeivaShipping() {
                       setUseSavedAddress(false);
                     }}
                     className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-2xl text-xs md:text-sm font-bold border-2 transition-all ${
-                      !useSavedAddress ? "border-[#E53935] bg-[#E53935]/5 text-[#E53935]" : "border-gray-200 text-gray-500"
+                      !useSavedAddress ? "border-primary bg-primary/5 text-primary" : "border-gray-200 text-gray-500"
                     }`}
                     data-testid="shipping-new-address"
                   >
@@ -383,7 +383,7 @@ export function StorefrontShopeivaShipping() {
                     type="button"
                     onClick={() => setShowSaved((v) => !v)}
                     className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-2xl text-xs md:text-sm font-bold border-2 transition-all ${
-                      useSavedAddress ? "border-[#E53935] bg-[#E53935]/5 text-[#E53935]" : "border-gray-200 text-gray-500"
+                      useSavedAddress ? "border-primary bg-primary/5 text-primary" : "border-gray-200 text-gray-500"
                     }`}
                     data-testid="shipping-saved-toggle"
                   >
@@ -403,7 +403,7 @@ export function StorefrontShopeivaShipping() {
                           onClick={() => selectSaved(saved)}
                           className={`w-full text-right p-3 md:p-4 rounded-xl border-2 transition-all ${
                             useSavedAddress && savedAddressId === saved.addressId
-                              ? "border-[#E53935] bg-[#E53935]/5"
+                              ? "border-primary bg-primary/5"
                               : "border-gray-100 hover:border-gray-200 bg-gray-50"
                           }`}
                         >
@@ -418,7 +418,7 @@ export function StorefrontShopeivaShipping() {
                               </p>
                             </div>
                             {useSavedAddress && savedAddressId === saved.addressId ? (
-                              <Check className="w-4 h-4 text-[#E53935] shrink-0 mt-1" />
+                              <Check className="w-4 h-4 text-primary shrink-0 mt-1" />
                             ) : null}
                           </div>
                         </button>
@@ -431,7 +431,7 @@ export function StorefrontShopeivaShipping() {
               {/* Recipient */}
               <div className="bg-white rounded-2xl border border-gray-200 p-4 md:p-5 shadow-sm" data-testid="shipping-recipient">
                 <h3 className="text-sm md:text-base font-black text-gray-900 flex items-center gap-2 mb-4">
-                  <MapPin className="w-4 h-4 text-[#E53935]" />
+                  <MapPin className="w-4 h-4 text-primary" />
                   اطلاعات تحویل گیرنده
                 </h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
@@ -442,7 +442,7 @@ export function StorefrontShopeivaShipping() {
                         value={address.firstName}
                         onChange={(e) => setAddress((a) => ({ ...a, firstName: e.target.value }))}
                         data-testid="shipping-first-name"
-                        className="w-full pr-10 pl-3 py-3 rounded-2xl text-sm bg-gray-50 border border-gray-200 outline-none focus:ring-2 focus:ring-[#E53935]"
+                        className="w-full pr-10 pl-3 py-3 rounded-2xl text-sm bg-gray-50 border border-gray-200 outline-none focus:ring-2 focus:ring-primary"
                       />
                     </div>
                   </Field>
@@ -451,7 +451,7 @@ export function StorefrontShopeivaShipping() {
                       value={address.lastName}
                       onChange={(e) => setAddress((a) => ({ ...a, lastName: e.target.value }))}
                       data-testid="shipping-last-name"
-                      className="w-full px-3 py-3 rounded-2xl text-sm bg-gray-50 border border-gray-200 outline-none focus:ring-2 focus:ring-[#E53935]"
+                      className="w-full px-3 py-3 rounded-2xl text-sm bg-gray-50 border border-gray-200 outline-none focus:ring-2 focus:ring-primary"
                     />
                   </Field>
                   <Field label="شماره موبایل">
@@ -466,7 +466,7 @@ export function StorefrontShopeivaShipping() {
                             contactMobile: e.target.value.replace(/[^\d]/g, "").slice(0, 11),
                           }))
                         }
-                        className="w-full pr-10 pl-3 py-3 rounded-2xl text-sm bg-gray-50 border border-gray-200 outline-none focus:ring-2 focus:ring-[#E53935]"
+                        className="w-full pr-10 pl-3 py-3 rounded-2xl text-sm bg-gray-50 border border-gray-200 outline-none focus:ring-2 focus:ring-primary"
                       />
                     </div>
                   </Field>
@@ -478,7 +478,7 @@ export function StorefrontShopeivaShipping() {
                         setAddress((a) => ({ ...a, provinceName, cityName: "" }));
                         void refreshProjection(provinceName, methodCode);
                       }}
-                      className="w-full px-3 py-3 rounded-2xl text-sm bg-gray-50 border border-gray-200 outline-none focus:ring-2 focus:ring-[#E53935]"
+                      className="w-full px-3 py-3 rounded-2xl text-sm bg-gray-50 border border-gray-200 outline-none focus:ring-2 focus:ring-primary"
                     >
                       <option value="">انتخاب استان</option>
                       {provinceOptions.map((p) => (
@@ -493,7 +493,7 @@ export function StorefrontShopeivaShipping() {
                       value={address.cityName}
                       disabled={!address.provinceName}
                       onChange={(e) => setAddress((a) => ({ ...a, cityName: e.target.value }))}
-                      className="w-full px-3 py-3 rounded-2xl text-sm bg-gray-50 border border-gray-200 outline-none focus:ring-2 focus:ring-[#E53935] disabled:opacity-50"
+                      className="w-full px-3 py-3 rounded-2xl text-sm bg-gray-50 border border-gray-200 outline-none focus:ring-2 focus:ring-primary disabled:opacity-50"
                     >
                       <option value="">{address.provinceName ? "انتخاب شهر" : "ابتدا استان را انتخاب کنید"}</option>
                       {cityOptions.map((c) => (
@@ -509,7 +509,7 @@ export function StorefrontShopeivaShipping() {
                     rows={3}
                     value={address.postalAddress}
                     onChange={(e) => setAddress((a) => ({ ...a, postalAddress: e.target.value }))}
-                    className="w-full px-4 py-3 rounded-2xl text-sm bg-gray-50 border border-gray-200 outline-none resize-none focus:ring-2 focus:ring-[#E53935]"
+                    className="w-full px-4 py-3 rounded-2xl text-sm bg-gray-50 border border-gray-200 outline-none resize-none focus:ring-2 focus:ring-primary"
                   />
                 </Field>
                 <div className="mt-3 max-w-xs">
@@ -526,7 +526,7 @@ export function StorefrontShopeivaShipping() {
                             postalCode: e.target.value.replace(/[^\d]/g, "").slice(0, 10),
                           }))
                         }
-                        className="w-full pl-10 pr-3 py-3 rounded-2xl text-sm bg-gray-50 border border-gray-200 outline-none focus:ring-2 focus:ring-[#E53935]"
+                        className="w-full pl-10 pr-3 py-3 rounded-2xl text-sm bg-gray-50 border border-gray-200 outline-none focus:ring-2 focus:ring-primary"
                       />
                     </div>
                   </Field>
@@ -536,7 +536,7 @@ export function StorefrontShopeivaShipping() {
               {/* Methods */}
               <div className="bg-white rounded-2xl border border-gray-200 p-4 md:p-5 shadow-sm" data-testid="shipping-methods">
                 <h3 className="text-sm md:text-base font-black text-gray-900 flex items-center gap-2 mb-3">
-                  <Package className="w-4 h-4 text-[#E53935]" />
+                  <Package className="w-4 h-4 text-primary" />
                   روش ارسال
                 </h3>
                 {projection.methods.length === 0 ? (
@@ -555,23 +555,23 @@ export function StorefrontShopeivaShipping() {
                           onClick={() => void onSelectMethod(m.methodCode)}
                           className={`relative flex items-start gap-3 p-4 rounded-2xl border-2 text-right transition-all ${
                             selected
-                              ? "border-[#E53935] bg-[#E53935]/5 shadow-md shadow-[#E53935]/10"
+                              ? "border-primary bg-primary/5 shadow-md shadow-primary/10"
                               : "border-gray-200 hover:border-gray-300 bg-gray-50"
                           }`}
                           data-testid={`shipping-method-${m.methodCode}`}
                         >
                           <div
                             className={`w-11 h-11 rounded-xl flex items-center justify-center shrink-0 ${
-                              selected ? "bg-[#E53935]/10" : "bg-white"
+                              selected ? "bg-primary/10" : "bg-white"
                             }`}
                           >
-                            <Icon className={`w-5 h-5 ${selected ? "text-[#E53935]" : "text-gray-400"}`} />
+                            <Icon className={`w-5 h-5 ${selected ? "text-primary" : "text-gray-400"}`} />
                           </div>
                           <div className="min-w-0 flex-1">
-                            <p className={`text-xs md:text-sm font-bold ${selected ? "text-[#E53935]" : "text-gray-700"}`}>
+                            <p className={`text-xs md:text-sm font-bold ${selected ? "text-primary" : "text-gray-700"}`}>
                               {m.label}
                             </p>
-                            <p className={`text-[11px] md:text-sm font-black mt-0.5 ${selected ? "text-[#E53935]" : "text-gray-900"}`}>
+                            <p className={`text-[11px] md:text-sm font-black mt-0.5 ${selected ? "text-primary" : "text-gray-900"}`}>
                               {m.isFree || m.priceAmount === 0
                                 ? "رایگان"
                                 : `${formatOfferAmount(m.priceAmount, projection.currency)}`}
@@ -580,7 +580,7 @@ export function StorefrontShopeivaShipping() {
                               <Clock className="w-2.5 h-2.5" /> {m.estimationLabel}
                             </p>
                           </div>
-                          {selected ? <div className="absolute top-2 left-2 w-3 h-3 rounded-full bg-[#E53935]" /> : null}
+                          {selected ? <div className="absolute top-2 left-2 w-3 h-3 rounded-full bg-primary" /> : null}
                         </button>
                       );
                     })}
@@ -591,7 +591,7 @@ export function StorefrontShopeivaShipping() {
               {/* Delivery */}
               <div className="bg-white rounded-2xl border border-gray-200 p-4 md:p-5 shadow-sm" data-testid="shipping-delivery">
                 <h3 className="text-sm md:text-base font-black text-gray-900 flex items-center gap-2 mb-1">
-                  <Calendar className="w-4 h-4 text-[#E53935]" />
+                  <Calendar className="w-4 h-4 text-primary" />
                   زمان تحویل
                 </h3>
                 <p className="text-[11px] text-gray-500 mb-4">روز و بازهٔ ساعت را مثل فروشگاه‌های بزرگ از ردیف زیر انتخاب کنید.</p>
@@ -631,7 +631,7 @@ export function StorefrontShopeivaShipping() {
                                 title={disabled ? "قبل از حداقل زمان فروشگاه مجاز نیست" : `${chip.weekday} ${chip.day} ${chip.month}`}
                                 className={`w-[4.75rem] shrink-0 rounded-2xl border-2 px-2 py-3 text-center transition-all disabled:cursor-not-allowed disabled:opacity-40 ${
                                   selected
-                                    ? "border-[#E53935] bg-[#E53935]/5 text-[#E53935] shadow-sm"
+                                    ? "border-primary bg-primary/5 text-primary shadow-sm"
                                     : "border-gray-200 bg-white text-gray-700 hover:border-gray-300"
                                 }`}
                                 data-testid={`shipping-date-${d.value}`}
@@ -640,7 +640,7 @@ export function StorefrontShopeivaShipping() {
                                 <p className="mt-1 text-xl font-black leading-none tabular-nums">{chip.day}</p>
                                 <p className="mt-1 text-[10px] text-gray-500">{chip.month}</p>
                                 {d.isEarliest ? (
-                                  <p className="mt-1 text-[9px] font-bold text-[#E53935]">نزدیک‌ترین</p>
+                                  <p className="mt-1 text-[9px] font-bold text-primary">نزدیک‌ترین</p>
                                 ) : null}
                               </button>
                             );
@@ -666,7 +666,7 @@ export function StorefrontShopeivaShipping() {
                               onClick={() => setDeliveryTime(t.value)}
                               className={`inline-flex items-center gap-2 rounded-2xl border-2 px-3 py-2.5 text-xs font-bold transition-all ${
                                 selected
-                                  ? "border-[#E53935] bg-[#E53935]/5 text-[#E53935]"
+                                  ? "border-primary bg-primary/5 text-primary"
                                   : "border-gray-200 bg-gray-50 text-gray-600 hover:border-gray-300"
                               }`}
                             >
@@ -684,7 +684,7 @@ export function StorefrontShopeivaShipping() {
               {/* Notes */}
               <div className="bg-white rounded-2xl border border-gray-200 p-4 md:p-5 shadow-sm" data-testid="shipping-notes">
                 <h3 className="text-sm md:text-base font-black text-gray-900 flex items-center gap-2 mb-3">
-                  <Edit3 className="w-4 h-4 text-[#E53935]" />
+                  <Edit3 className="w-4 h-4 text-primary" />
                   توضیحات سفارش <span className="text-[10px] font-normal text-gray-400">(اختیاری)</span>
                 </h3>
                 <textarea
@@ -693,7 +693,7 @@ export function StorefrontShopeivaShipping() {
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
                   placeholder="نکات خاص برای ارسال (مثل: زنگ واحد را بزنید، تحویل درب منزل)..."
-                  className="w-full px-4 py-3 rounded-2xl text-sm bg-gray-50 border border-gray-200 outline-none resize-none focus:ring-2 focus:ring-[#E53935]"
+                  className="w-full px-4 py-3 rounded-2xl text-sm bg-gray-50 border border-gray-200 outline-none resize-none focus:ring-2 focus:ring-primary"
                 />
               </div>
             </div>
@@ -702,7 +702,7 @@ export function StorefrontShopeivaShipping() {
               <div className="lg:sticky lg:top-24 space-y-4">
                 <div className="bg-white rounded-2xl border border-gray-200 p-4 md:p-5 shadow-sm" data-testid="shipping-summary">
                   <h3 className="text-sm md:text-base font-black text-gray-900 flex items-center gap-2 mb-4">
-                    <CreditCard className="w-4 h-4 text-[#E53935]" />
+                    <CreditCard className="w-4 h-4 text-primary" />
                     خلاصه سفارش
                   </h3>
                   <div className="space-y-2.5 text-xs md:text-sm">
@@ -726,7 +726,7 @@ export function StorefrontShopeivaShipping() {
                     </div>
                     <div className="border-t border-gray-200 pt-2.5 mt-2.5 flex justify-between">
                       <span className="text-sm font-black">قابل پرداخت</span>
-                      <span className="text-base font-black text-[#E53935]">
+                      <span className="text-base font-black text-primary">
                         {formatOfferAmount(payable, projection.currency)}
                       </span>
                     </div>
@@ -737,7 +737,7 @@ export function StorefrontShopeivaShipping() {
                     onClick={() => void persistAndContinue()}
                     className={`mt-4 w-full py-3.5 rounded-2xl font-black text-sm flex items-center justify-center gap-2 transition-all shadow-lg ${
                       isValid && !busy
-                        ? "bg-[#E53935] text-white hover:bg-[#d32f2f] shadow-[#E53935]/25"
+                        ? "bg-primary text-white hover:bg-primary-strong shadow-primary/25"
                         : "bg-gray-300 text-gray-500 cursor-not-allowed"
                     }`}
                     data-testid="shipping-continue"
@@ -833,7 +833,7 @@ export function StorefrontShopeivaShipping() {
               </button>
               <button
                 type="button"
-                className="px-4 py-2 rounded-xl text-sm font-bold text-white bg-[#E53935]"
+                className="px-4 py-2 rounded-xl text-sm font-bold text-white bg-primary"
                 onClick={() => void submitNewAddress()}
                 disabled={busy}
               >
@@ -881,7 +881,7 @@ function ShippingHero({
   return (
     <section className="w-full bg-white">
       <div className="max-w-[1800px] mx-auto px-4 sm:px-6 pt-4 md:pt-6">
-        <div className="relative overflow-hidden rounded-2xl md:rounded-3xl bg-gradient-to-l from-[#E53935] to-[#b71c1c] min-h-[220px] md:min-h-[240px]">
+        <div className="relative overflow-hidden rounded-2xl md:rounded-3xl bg-gradient-to-l from-primary to-primary-strong min-h-[220px] md:min-h-[240px]">
           <div className="relative z-10 flex flex-col items-center justify-center text-center p-6 pt-8 md:p-10 md:pt-12">
             <span className="inline-flex items-center gap-1.5 bg-white/15 text-white text-[10px] md:text-xs font-bold px-3 py-1.5 rounded-full mb-4">
               <Truck className="w-3.5 h-3.5" />
@@ -897,7 +897,7 @@ function ShippingHero({
               <div
                 className={`flex items-center gap-1.5 md:gap-2 px-4 md:px-5 py-2.5 md:py-3 rounded-xl text-[11px] md:text-sm font-bold ${
                   s.id === 2
-                    ? "bg-[#E53935] text-white shadow-lg shadow-[#E53935]/30"
+                    ? "bg-primary text-white shadow-lg shadow-primary/30"
                     : s.id < 2
                       ? "bg-red-50 text-red-600"
                       : "bg-gray-100 text-gray-400"
@@ -932,8 +932,8 @@ function SummaryCard({
 }) {
   return (
     <div className="flex items-center gap-1 md:gap-3 p-1.5 md:p-5 rounded-2xl bg-white border border-gray-200 shadow-lg">
-      <div className="w-6 h-6 md:w-12 md:h-12 rounded-lg md:rounded-xl bg-[#E53935]/10 flex items-center justify-center shrink-0">
-        <Icon className="w-3 h-3 md:w-5 md:h-5 text-[#E53935]" />
+      <div className="w-6 h-6 md:w-12 md:h-12 rounded-lg md:rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+        <Icon className="w-3 h-3 md:w-5 md:h-5 text-primary" />
       </div>
       <div className="min-w-0">
         <p className="text-[10px] md:text-2xl font-black text-gray-900 truncate">{value}</p>

@@ -93,8 +93,8 @@ export default function CustomerProfile() {
       <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden shadow-sm">
         <div className="p-4 md:p-6 border-b border-gray-100 bg-gradient-to-r from-blue-50 to-transparent">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-[#2563EB]/10 flex items-center justify-center">
-              <User className="w-5 h-5 text-[#2563EB]" />
+            <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+              <User className="w-5 h-5 text-primary" />
             </div>
             <div>
               <h1 className="text-lg font-black">اطلاعات پروفایل</h1>
@@ -107,7 +107,7 @@ export default function CustomerProfile() {
           <div className="flex flex-col items-center">
             <div className="relative">
               <div className="w-28 h-28 rounded-full bg-blue-50 border-4 border-white shadow-xl flex items-center justify-center">
-                <User className="w-14 h-14 text-[#2563EB]" />
+                <User className="w-14 h-14 text-primary" />
               </div>
               <span className="absolute bottom-0 right-0 p-2 bg-gray-300 rounded-full text-white cursor-not-allowed" title="آپلود آواتر هنوز پشتیبانی نمی‌شود">
                 <Camera className="w-4 h-4" />
@@ -127,7 +127,7 @@ export default function CustomerProfile() {
                 placeholder="نام خود را وارد کنید"
                 className={`w-full mt-1 px-4 py-2.5 bg-gray-50 rounded-xl text-sm border ${
                   errors.name ? "border-red-500" : "border-gray-200"
-                } focus:outline-none focus:ring-2 focus:ring-[#2563EB]`}
+                } focus:outline-none focus:ring-2 focus:ring-primary`}
               />
               {errors.name ? <p className="text-xs text-red-500 mt-1">{errors.name.message}</p> : null}
             </div>
@@ -138,7 +138,7 @@ export default function CustomerProfile() {
                 {...register("birthDate")}
                 type="text"
                 placeholder="مثال: 1403/06/04"
-                className="w-full mt-1 px-4 py-2.5 bg-gray-50 rounded-xl text-sm border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#2563EB]"
+                className="w-full mt-1 px-4 py-2.5 bg-gray-50 rounded-xl text-sm border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary"
               />
               {errors.birthDate ? <p className="text-xs text-red-500 mt-1">{errors.birthDate.message}</p> : null}
             </div>
@@ -187,7 +187,7 @@ export default function CustomerProfile() {
             <div className="mt-1 rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-600">
               {profile.lastShippingAddress ?? "آدرس‌ها در دفترچهٔ «آدرس‌های من» مدیریت می‌شوند."}
               <div className="mt-2">
-                <Link href="/customer-panel/addresses" className="text-xs font-bold text-[#2563EB]">
+                <Link href="/customer-panel/addresses" className="text-xs font-bold text-primary">
                   مدیریت آدرس‌ها
                 </Link>
               </div>
@@ -203,7 +203,7 @@ export default function CustomerProfile() {
               maxLength={200}
               className={`w-full mt-1 px-4 py-2.5 bg-gray-50 rounded-xl text-sm border ${
                 errors.bio ? "border-red-500" : "border-gray-200"
-              } focus:outline-none focus:ring-2 focus:ring-[#2563EB] resize-none`}
+              } focus:outline-none focus:ring-2 focus:ring-primary resize-none`}
             />
             <div className="flex justify-between mt-1">
               {errors.bio ? <p className="text-xs text-red-500">{errors.bio.message}</p> : <span />}
@@ -218,7 +218,7 @@ export default function CustomerProfile() {
             <button
               type="submit"
               disabled={busy || !profile.editable}
-              className={`flex-1 py-3 bg-[#2563EB] text-white rounded-xl text-sm font-bold hover:bg-blue-700 transition-all flex items-center justify-center gap-2 ${
+              className={`flex-1 py-3 bg-primary text-white rounded-xl text-sm font-bold hover:bg-blue-700 transition-all flex items-center justify-center gap-2 ${
                 busy || !profile.editable ? "opacity-70 cursor-not-allowed" : ""
               }`}
             >

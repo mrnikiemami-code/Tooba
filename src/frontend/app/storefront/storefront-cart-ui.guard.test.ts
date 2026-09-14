@@ -17,7 +17,8 @@ test("product card ATC is a real button wired to addOfferToCart", () => {
   assert.match(cardSource, /from "react-toastify"/);
   assert.match(cardSource, /محصول \$\{card\.title\} به سبد خرید اضافه شد/);
   assert.match(cardSource, /اضافه شد/);
-  assert.match(cardSource, /#2563EB/);
+  assert.match(cardSource, /bg-primary|text-primary|--color-primary/);
+  assert.doesNotMatch(cardSource, /#2563EB/);
   assert.doesNotMatch(cardSource, /#E53935/);
   assert.ok(!cardSource.includes('<span\n            className={`mt-auto inline-flex'));
 });
@@ -62,7 +63,8 @@ test("mini-cart drawer preserves Shopeiva structure on Host cart APIs", () => {
   assert.match(miniCartSource, /localizePath\("\/cart"\)/);
   assert.match(miniCartSource, /data-testid="mini-cart-checkout-cta"/);
   assert.match(miniCartSource, /max-w-sm/);
-  assert.match(miniCartSource, /#2563EB/);
+  assert.match(miniCartSource, /bg-primary|text-primary|--color-primary/);
+  assert.doesNotMatch(miniCartSource, /#2563EB/);
 });
 
 test("cart page recommendations use live feed cards with working ATC reuse", () => {

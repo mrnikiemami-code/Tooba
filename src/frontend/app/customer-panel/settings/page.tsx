@@ -81,7 +81,7 @@ export default function CustomerSettingsPage() {
             </p>
             <Link
               href="/customer-panel/profile"
-              className="mt-3 inline-flex items-center gap-2 rounded-xl bg-[#2563EB] text-white text-sm font-bold px-4 py-2.5 hover:bg-[#1D4ED8] transition-colors"
+              className="mt-3 inline-flex items-center gap-2 rounded-xl bg-primary text-white text-sm font-bold px-4 py-2.5 hover:bg-primary-strong transition-colors"
               data-testid="customer-settings-profile-cta"
             >
               رفتن به پروفایل
@@ -94,7 +94,7 @@ export default function CustomerSettingsPage() {
         <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-sm">
           <div className="p-4 md:p-6 border-b border-gray-200">
             <div className="flex items-center gap-2">
-              <Settings className="w-5 h-5 text-[#2563EB]" />
+              <Settings className="w-5 h-5 text-primary" />
               <h1 className="text-lg font-bold text-gray-900">تنظیمات حساب</h1>
             </div>
             <p className="text-sm text-gray-500 mt-1">ترجیح زبان زنده است؛ امنیت و اعلان بدون backend معتبر نیستند</p>
@@ -110,7 +110,7 @@ export default function CustomerSettingsPage() {
                   onClick={() => setActiveTab(tab.id)}
                   className={`flex items-center gap-2 px-4 py-3 text-sm font-medium transition-all whitespace-nowrap border-b-2 ${
                     activeTab === tab.id
-                      ? "border-[#2563EB] text-[#2563EB]"
+                      ? "border-primary text-primary"
                       : "border-transparent text-gray-500 hover:text-gray-700"
                   }`}
                   data-testid={`customer-settings-tab-${tab.id}`}
@@ -145,7 +145,7 @@ export default function CustomerSettingsPage() {
                         onClick={() => void selectLocale(item.id)}
                         className={`p-4 rounded-xl border-2 transition-all ${
                           locale === item.id
-                            ? "border-[#2563EB] bg-[#2563EB]/5"
+                            ? "border-primary bg-primary/5"
                             : "border-gray-200 hover:border-gray-300"
                         } ${busy ? "opacity-70 cursor-not-allowed" : ""}`}
                         data-testid={`customer-settings-locale-${item.id}`}

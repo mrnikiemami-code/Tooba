@@ -84,11 +84,11 @@ export function StorefrontShopeivaPdp({ detail }: { detail: StorefrontProductDet
   return (
     <div className="py-4 space-y-6" data-testid="storefront-pdp">
       <nav className="text-xs text-gray-500 flex gap-2">
-        <Link href="/" className="hover:text-[#2563EB]">
+        <Link href="/" className="hover:text-primary">
           خانه
         </Link>
         <span>/</span>
-        <Link href="/products" className="hover:text-[#2563EB]">
+        <Link href="/products" className="hover:text-primary">
           {currentDetail.categoryName}
         </Link>
         <span>/</span>
@@ -108,7 +108,7 @@ export function StorefrontShopeivaPdp({ detail }: { detail: StorefrontProductDet
                   key={`${id}-${index}`}
                   type="button"
                   onClick={() => setActive(index)}
-                  className={`w-16 h-16 rounded-xl border overflow-hidden shrink-0 ${index === active ? "border-[#2563EB]" : "border-gray-200"}`}
+                  className={`w-16 h-16 rounded-xl border overflow-hidden shrink-0 ${index === active ? "border-primary" : "border-gray-200"}`}
                 >
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img src={storefrontMediaUrl(id)} alt="" className="w-full h-full object-contain p-1" />
@@ -119,7 +119,7 @@ export function StorefrontShopeivaPdp({ detail }: { detail: StorefrontProductDet
 
           <div className="lg:col-span-4 border-b lg:border-b-0 lg:border-l border-gray-200 p-4 lg:p-5 space-y-4">
             <div className="flex items-center gap-2 text-xs text-gray-500">
-              <Link href="/products" className="text-[#2563EB] font-medium hover:underline">
+              <Link href="/products" className="text-primary font-medium hover:underline">
                 {currentDetail.categoryName}
               </Link>
               <span>/</span>
@@ -135,7 +135,7 @@ export function StorefrontShopeivaPdp({ detail }: { detail: StorefrontProductDet
                   از ۵
                 </span>
                 <span>({currentDetail.reviewCount.toLocaleString("fa-IR")} دیدگاه)</span>
-                <span className="text-[#2563EB]">مشاهده نظرات</span>
+                <span className="text-primary">مشاهده نظرات</span>
               </button>
             ) : null}
             {optionVariants.length > 0 ? (
@@ -155,7 +155,7 @@ export function StorefrontShopeivaPdp({ detail }: { detail: StorefrontProductDet
                         title={shoppable ? undefined : "این گزینه فعلاً توسط فروشنده‌ای عرضه نشده است."}
                         className={`max-w-full rounded-xl border px-3 py-2 text-xs text-right ${
                           selected
-                            ? "border-[#2563EB] bg-blue-50 text-[#2563EB]"
+                            ? "border-primary bg-blue-50 text-primary"
                             : shoppable
                               ? "border-gray-200 bg-white text-gray-700 hover:border-gray-300"
                               : "border-dashed border-gray-200 bg-gray-50 text-gray-400"
@@ -277,9 +277,9 @@ export function StorefrontShopeivaPdp({ detail }: { detail: StorefrontProductDet
               </button>
             </div>
             {currentDetail.promotionLabel ?? offer.promotionLabel ? (
-              <p className="text-xs font-bold text-[#2563EB]">{currentDetail.promotionLabel ?? offer.promotionLabel}</p>
+              <p className="text-xs font-bold text-primary">{currentDetail.promotionLabel ?? offer.promotionLabel}</p>
             ) : null}
-            <p className="text-2xl font-black text-[#2563EB]">
+            <p className="text-2xl font-black text-primary">
               {formatOfferAmount(displayAmount, offer.currency)}
             </p>
             {offer.availableUnits <= 0 ? (
@@ -313,7 +313,7 @@ export function StorefrontShopeivaPdp({ detail }: { detail: StorefrontProductDet
                     }
                   })();
                 }}
-                className="w-full py-3 rounded-xl font-bold text-sm bg-[#2563EB] text-white hover:bg-[#1d4ed8] disabled:opacity-60 flex items-center justify-center gap-2"
+                className="w-full py-3 rounded-xl font-bold text-sm bg-primary text-white hover:bg-primary-strong disabled:opacity-60 flex items-center justify-center gap-2"
               >
                 <ShoppingBag className="w-4 h-4" /> افزودن به سبد خرید
               </button>
@@ -343,14 +343,14 @@ export function StorefrontShopeivaPdp({ detail }: { detail: StorefrontProductDet
                       }}
                       className={`w-full rounded-xl border p-2.5 text-right transition-colors ${
                         selected
-                          ? "border-[#2563EB] bg-blue-50 ring-1 ring-[#2563EB]/15"
+                          ? "border-primary bg-blue-50 ring-1 ring-primary/15"
                           : "border-gray-200 bg-white hover:border-gray-300"
                       }`}
                     >
                       <div className="flex items-start gap-2">
                         <span
                           className={`mt-0.5 flex size-4 shrink-0 items-center justify-center rounded-full border ${
-                            selected ? "border-[#2563EB] bg-[#2563EB] text-white" : "border-gray-300 bg-white"
+                            selected ? "border-primary bg-primary text-white" : "border-gray-300 bg-white"
                           }`}
                         >
                           {selected ? <Check className="size-2.5" strokeWidth={3} /> : null}
@@ -367,7 +367,7 @@ export function StorefrontShopeivaPdp({ detail }: { detail: StorefrontProductDet
                           </p>
                         </div>
                         <div className="shrink-0 text-left">
-                          <p className="text-xs font-black tabular-nums text-[#2563EB]" dir="ltr">
+                          <p className="text-xs font-black tabular-nums text-primary" dir="ltr">
                             {formatOfferAmount(seller.amountExclusiveOfTax, seller.currency)}
                           </p>
                           <p className="mt-0.5 text-[10px] text-gray-500">{selected ? "انتخاب‌شده" : "انتخاب"}</p>
@@ -394,14 +394,14 @@ export function StorefrontShopeivaPdp({ detail }: { detail: StorefrontProductDet
               data-testid={`pdp-tab-${item.id}`}
               onClick={() => setTab(item.id)}
               className={`px-4 lg:px-6 py-3 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
-                tab === item.id ? "border-[#2563EB] text-[#2563EB]" : "border-transparent text-gray-500 hover:text-gray-700"
+                tab === item.id ? "border-primary text-primary" : "border-transparent text-gray-500 hover:text-gray-700"
               }`}
             >
               {item.label}
               {(item.count ?? 0) > 0 ? (
                 <span
                   className={`mr-1 rounded-full px-2 py-0.5 text-[10px] ${
-                    tab === item.id ? "bg-[#2563EB] text-white" : "bg-gray-200 text-gray-600"
+                    tab === item.id ? "bg-primary text-white" : "bg-gray-200 text-gray-600"
                   }`}
                 >
                   {item.count?.toLocaleString("fa-IR")}
@@ -435,7 +435,7 @@ export function StorefrontShopeivaPdp({ detail }: { detail: StorefrontProductDet
             <StorefrontPdpBulk detail={currentDetail} />
           ) : tab === "full" ? (
             <div className="space-y-6" data-testid="pdp-full">
-              <h2 className="text-2xl font-extrabold text-gray-900 relative pb-3 before:absolute before:bottom-0 before:right-0 before:h-1 before:w-24 before:bg-[#2563EB] before:rounded">
+              <h2 className="text-2xl font-extrabold text-gray-900 relative pb-3 before:absolute before:bottom-0 before:right-0 before:h-1 before:w-24 before:bg-primary before:rounded">
                 معرفی تکمیلی
               </h2>
               <p className="text-justify leading-8 text-gray-700 whitespace-pre-wrap">
@@ -444,7 +444,7 @@ export function StorefrontShopeivaPdp({ detail }: { detail: StorefrontProductDet
             </div>
           ) : (
             <div className="space-y-6" data-testid="pdp-intro">
-              <h2 className="text-2xl font-extrabold text-gray-900 relative pb-3 before:absolute before:bottom-0 before:right-0 before:h-1 before:w-24 before:bg-[#2563EB] before:rounded">
+              <h2 className="text-2xl font-extrabold text-gray-900 relative pb-3 before:absolute before:bottom-0 before:right-0 before:h-1 before:w-24 before:bg-primary before:rounded">
                 معرفی محصول
               </h2>
               <p className="text-justify leading-8 text-gray-700 whitespace-pre-wrap">
@@ -460,8 +460,8 @@ export function StorefrontShopeivaPdp({ detail }: { detail: StorefrontProductDet
                   { icon: Package, title: "کالای Catalog", desc: "بدون قیمت روی Product" },
                 ].map((item) => (
                   <div key={item.title} className="flex items-center gap-2 p-3 bg-gray-50 rounded-xl">
-                    <div className="w-8 h-8 rounded-lg bg-[#2563EB]/10 flex items-center justify-center shrink-0">
-                      <item.icon className="w-4 h-4 text-[#2563EB]" />
+                    <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                      <item.icon className="w-4 h-4 text-primary" />
                     </div>
                     <div>
                       <p className="text-xs font-bold text-gray-700">{item.title}</p>
@@ -478,7 +478,7 @@ export function StorefrontShopeivaPdp({ detail }: { detail: StorefrontProductDet
         <section className="space-y-3" aria-labelledby="related-products-title" data-testid="pdp-related">
           <div className="flex items-center justify-between">
             <h2 id="related-products-title" className="text-lg font-extrabold text-gray-900">محصولات مرتبط</h2>
-            <Link href="/products" className="text-xs font-bold text-[#2563EB]">مشاهده همه</Link>
+            <Link href="/products" className="text-xs font-bold text-primary">مشاهده همه</Link>
           </div>
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
             {currentDetail.relatedProducts.map((card) => <StorefrontProductCardView key={card.slug} card={card} />)}

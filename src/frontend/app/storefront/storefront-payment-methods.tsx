@@ -10,7 +10,7 @@ import { CheckCircle, CreditCard, Landmark, ShieldCheck, Wallet } from "lucide-r
 import { formatOfferAmount } from "./storefront-api.ts";
 import type { StorefrontPaymentMethodId, StorefrontWalletQuote } from "./storefront-payment-api.ts";
 
-const DEFAULT_ACCENT = "#2563EB";
+const DEFAULT_ACCENT = "rgb(var(--color-primary))";
 
 export function StorefrontPaymentMethodPicker({
   selected,
@@ -47,7 +47,7 @@ export function StorefrontPaymentMethodPicker({
       <div className="flex items-center gap-2.5 mb-1">
         <div
           className="w-9 h-9 rounded-lg flex items-center justify-center"
-          style={{ backgroundColor: `${accent}1A` }}
+          style={{ backgroundColor: "rgb(var(--color-primary) / 0.1)" }}
         >
           <CreditCard className="w-4 h-4" style={{ color: accent }} />
         </div>
@@ -62,8 +62,8 @@ export function StorefrontPaymentMethodPicker({
           title="درگاه بانکی"
           subtitle="پرداخت امن پس از ثبت سفارش — بدون کارت جعلی در صفحه"
           icon={ShieldCheck}
-          iconClass="text-[#2563EB]"
-          iconBg="bg-[#2563EB]/10"
+          iconClass="text-primary"
+          iconBg="bg-primary/10"
           accent={accent}
           testId="payment-method-gateway"
         />
@@ -182,7 +182,7 @@ function MethodRow({
       }`}
       style={
         selected
-          ? { borderColor: accent, backgroundColor: `${accent}0D`, boxShadow: `0 1px 8px ${accent}1A` }
+          ? { borderColor: accent, backgroundColor: "rgb(var(--color-primary) / 0.05)", boxShadow: "0 1px 8px rgb(var(--color-primary) / 0.1)" }
           : undefined
       }
     >

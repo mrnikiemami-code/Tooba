@@ -111,7 +111,7 @@ export function StorefrontCategoryPlpView({
   const filterPanel = (
     <div className="space-y-5" data-testid="category-plp-filters">
       <h2 className="font-bold text-sm flex items-center gap-2 text-gray-900">
-        <Layers className="w-4 h-4 text-[#2563EB]" />
+        <Layers className="w-4 h-4 text-primary" />
         فیلترها
       </h2>
 
@@ -167,7 +167,7 @@ export function StorefrontCategoryPlpView({
                   className="w-full rounded-lg border border-gray-200 px-2 py-1.5 text-xs"
                   dir="ltr"
                 />
-                <button type="submit" className="shrink-0 rounded-lg bg-[#2563EB] text-white px-2 py-1.5 text-[10px] font-bold">
+                <button type="submit" className="shrink-0 rounded-lg bg-primary text-white px-2 py-1.5 text-[10px] font-bold">
                   اعمال
                 </button>
               </form>
@@ -185,7 +185,7 @@ export function StorefrontCategoryPlpView({
                   key={`${facet.code}-${option.value}`}
                   href={toggleEnumValue(facet, option.value)}
                   className={`flex items-center justify-between px-3 py-2 rounded-xl text-sm transition-colors ${
-                    selected ? "bg-[#2563EB] text-white" : "text-gray-700 hover:bg-gray-50"
+                    selected ? "bg-primary text-white" : "text-gray-700 hover:bg-gray-50"
                   }`}
                   onClick={() => setMobileFiltersOpen(false)}
                 >
@@ -214,13 +214,13 @@ export function StorefrontCategoryPlpView({
   return (
     <div className="mt-6" data-testid="category-plp-page">
       <nav className="flex flex-wrap items-center gap-1 text-xs text-gray-500 mb-4" data-testid="category-plp-breadcrumb">
-        <Link href="/" className="hover:text-[#2563EB]">
+        <Link href="/" className="hover:text-primary">
           خانه
         </Link>
         {breadcrumb.map((crumb: StorefrontCategoryBreadcrumbItem) => (
           <span key={crumb.categoryId} className="inline-flex items-center gap-1">
             <ChevronLeft className="w-3 h-3 opacity-40" />
-            <Link href={crumb.path} unprefixed className="hover:text-[#2563EB]">
+            <Link href={crumb.path} unprefixed className="hover:text-primary">
               {crumb.name}
             </Link>
           </span>
@@ -245,7 +245,7 @@ export function StorefrontCategoryPlpView({
             <Link
               key={`${chip.code}-${chip.value}`}
               href={removeChip(chip)}
-              className="inline-flex items-center gap-1 rounded-full bg-blue-50 text-[#2563EB] px-3 py-1 text-xs font-semibold"
+              className="inline-flex items-center gap-1 rounded-full bg-blue-50 text-primary px-3 py-1 text-xs font-semibold"
             >
               {chip.label}: {chip.displayValue}
               <X className="w-3 h-3" />
@@ -287,7 +287,7 @@ export function StorefrontCategoryPlpView({
                   })}
                   className={`rounded-lg px-3 py-1.5 text-xs font-semibold ${
                     page.sort === option.value
-                      ? "bg-[#2563EB] text-white"
+                      ? "bg-primary text-white"
                       : "bg-gray-50 text-gray-700 hover:bg-gray-100"
                   }`}
                 >

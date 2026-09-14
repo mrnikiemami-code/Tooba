@@ -14,7 +14,7 @@ export function StorefrontMerchandisingGrid({
 }) {
   return (
     <div className="py-5 md:py-8">
-      <div className="rounded-2xl bg-gradient-to-l from-[#2563EB] to-slate-900 text-white p-6 md:p-10 mb-5">
+      <div className="rounded-2xl bg-gradient-to-l from-primary to-slate-900 text-white p-6 md:p-10 mb-5">
         <p className="text-xs opacity-80 mb-2">خانه / {title}</p>
         <h1 className="text-2xl md:text-3xl font-black mb-2">{title}</h1>
         <p className="text-sm opacity-90">{description}</p>
@@ -44,7 +44,7 @@ export function StorefrontDirectoryCard({
 }) {
   return (
     <Link href={href} className="rounded-2xl border bg-white p-5 hover:shadow-lg transition min-w-0">
-      <div className="w-12 h-12 rounded-full bg-blue-50 text-[#2563EB] grid place-items-center font-black mb-4">
+      <div className="w-12 h-12 rounded-full bg-blue-50 text-primary grid place-items-center font-black mb-4">
         {title.slice(0, 1)}
       </div>
       <h2 className="font-black truncate">{title}</h2>

@@ -87,7 +87,7 @@ function ReservationCountdown({
 
   return (
     <p
-      className="text-lg md:text-2xl font-black tabular-nums text-[#2563EB] tracking-wide"
+      className="text-lg md:text-2xl font-black tabular-nums text-primary tracking-wide"
       dir="ltr"
       data-testid="pending-payment-countdown"
       aria-label={formatCountdownAccessibleLabel(seconds, locale)}
@@ -198,7 +198,7 @@ export function StorefrontPendingPayments({
   return (
     <section className="pt-8 md:pt-10" data-testid="pending-payment-section" dir={locale === "fa" ? "rtl" : "ltr"}>
       <div className="flex items-center gap-2 mb-4">
-        <Clock className="w-5 h-5 text-[#2563EB]" />
+        <Clock className="w-5 h-5 text-primary" />
         <h2 className="text-base md:text-xl font-black text-gray-900">{labels.title}</h2>
       </div>
       <div className="space-y-3">
@@ -237,7 +237,7 @@ export function StorefrontPendingPayments({
                   <p className="text-[11px] md:text-xs text-gray-500 mt-1 line-clamp-1">
                     {item.items.map((line) => line.title).join(" · ")}
                   </p>
-                  <p className="text-sm font-black text-[#2563EB] mt-1">
+                  <p className="text-sm font-black text-primary mt-1">
                     {formatOfferAmount(item.payableAmount, item.currency)}
                   </p>
                   {statusCopy ? <p className="text-xs text-gray-600 mt-2 leading-6">{statusCopy}</p> : null}
@@ -256,7 +256,7 @@ export function StorefrontPendingPayments({
                   <button
                     type="button"
                     data-testid="pending-payment-pay"
-                    className="inline-flex h-9 items-center justify-center gap-1.5 px-4 rounded-lg bg-[#2563EB] text-white text-sm font-bold hover:bg-[#1d4ed8]"
+                    className="inline-flex h-9 items-center justify-center gap-1.5 px-4 rounded-lg bg-primary text-white text-sm font-bold hover:bg-primary-strong"
                     onClick={() => void onAction(item)}
                   >
                     <CreditCard className="w-3.5 h-3.5" />
@@ -268,7 +268,7 @@ export function StorefrontPendingPayments({
                     type="button"
                     data-testid="pending-payment-retry"
                     disabled={busyId === item.checkoutId}
-                    className="inline-flex h-9 items-center justify-center px-4 rounded-lg bg-[#2563EB] text-white text-sm font-bold hover:bg-[#1d4ed8] disabled:opacity-60"
+                    className="inline-flex h-9 items-center justify-center px-4 rounded-lg bg-primary text-white text-sm font-bold hover:bg-primary-strong disabled:opacity-60"
                     onClick={() => void onAction(item)}
                   >
                     {labels.retry}

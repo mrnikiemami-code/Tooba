@@ -388,7 +388,7 @@ export function StoryModal({
           </button>
 
           <div className="absolute top-12 left-4 right-4 z-20 flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-[#E53935]">
+            <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-primary">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src={avatarUrl} alt={currentStory.title} width={40} height={40} className="object-cover w-full h-full" loading="lazy" />
             </div>
@@ -420,7 +420,7 @@ export function StoryModal({
               onClick={(e) => e.stopPropagation()}
             >
               <button type="button" className="flex items-center gap-3 w-full p-2 text-white hover:bg-white/10 rounded-lg transition-colors">
-                <Flag className="w-4 h-4 text-[#E53935]" />
+                <Flag className="w-4 h-4 text-danger" />
                 <span className="text-sm">گزارش مشکل</span>
               </button>
             </div>
@@ -431,7 +431,7 @@ export function StoryModal({
               <button
                 type="button"
                 onClick={handleCta}
-                className="px-6 py-2.5 rounded-full bg-[#E53935] text-white text-sm font-bold shadow-lg hover:bg-[#c62828] transition-colors"
+                className="px-6 py-2.5 rounded-full bg-primary text-white text-sm font-bold shadow-lg hover:bg-primary-strong transition-colors"
               >
                 مشاهده
               </button>
@@ -449,10 +449,10 @@ export function StoryModal({
                 className="p-2 rounded-full bg-black/30 backdrop-blur-sm hover:bg-black/50 transition-all border border-white/10 group relative"
               >
                 <Heart
-                  className={`w-6 h-6 transition-all ${isLiked ? "text-[#E53935] fill-[#E53935] scale-110" : "text-white group-hover:text-[#E53935]"}`}
+                  className={`w-6 h-6 transition-all ${isLiked ? "text-primary fill-primary scale-110" : "text-white group-hover:text-primary"}`}
                 />
                 {likesCount > 0 ? (
-                  <span className="absolute -top-1 -right-1 text-[10px] text-white bg-[#E53935] px-1.5 py-0.5 rounded-full">
+                  <span className="absolute -top-1 -right-1 text-[10px] text-white bg-primary px-1.5 py-0.5 rounded-full">
                     {toPersianDigits(likesCount)}
                   </span>
                 ) : null}
@@ -468,7 +468,7 @@ export function StoryModal({
               >
                 <MessageCircle className="w-6 h-6 text-white" />
                 {comments.length > 0 ? (
-                  <span className="absolute -top-1 -right-1 text-[10px] text-white bg-[#E53935] px-1.5 py-0.5 rounded-full">
+                  <span className="absolute -top-1 -right-1 text-[10px] text-white bg-primary px-1.5 py-0.5 rounded-full">
                     {toPersianDigits(comments.length)}
                   </span>
                 ) : null}
@@ -508,7 +508,7 @@ export function StoryModal({
                 }}
                 className="p-2 rounded-full bg-black/30 backdrop-blur-sm hover:bg-black/50 transition-all border border-white/10"
               >
-                <Bookmark className={`w-6 h-6 transition-all ${isSaved ? "text-[#E53935] fill-[#E53935]" : "text-white"}`} />
+                <Bookmark className={`w-6 h-6 transition-all ${isSaved ? "text-primary fill-primary" : "text-white"}`} />
               </button>
             </div>
           </div>
@@ -546,12 +546,12 @@ export function StoryModal({
                   value={commentText}
                   onChange={(e) => setCommentText(e.target.value)}
                   placeholder="نظرت چیه؟..."
-                  className="flex-1 bg-white/10 text-white placeholder-white/40 text-sm rounded-full px-4 py-2 outline-none focus:ring-1 focus:ring-[#E53935]"
+                  className="flex-1 bg-white/10 text-white placeholder-white/40 text-sm rounded-full px-4 py-2 outline-none focus:ring-1 focus:ring-primary"
                 />
                 <button
                   type="submit"
                   disabled={!commentText.trim()}
-                  className="p-2 rounded-full bg-[#E53935] text-white disabled:opacity-50 disabled:cursor-not-allowed hover:bg-[#c62828] transition-colors"
+                  className="p-2 rounded-full bg-primary text-white disabled:opacity-50 disabled:cursor-not-allowed hover:bg-primary-strong transition-colors"
                 >
                   <Send className="w-4 h-4" />
                 </button>

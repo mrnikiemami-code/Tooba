@@ -5,6 +5,7 @@ import {
   DEFAULT_PRIMARY_HEX,
   DEFAULT_PRIMARY_STRONG_HEX,
   appearanceCssVars,
+  contrastRatio,
   hexToRgbTriple,
   listStorefrontPalettes,
   resolveBrandTokens,
@@ -32,6 +33,17 @@ test("unknown PaletteKey falls back to tooba-blue", () => {
   assert.equal(resolvePaletteKey("unknown-preset"), DEFAULT_PALETTE_KEY);
   assert.equal(resolvePaletteKey(null), DEFAULT_PALETTE_KEY);
   assert.deepEqual(resolveBrandTokens("nope"), resolveBrandTokens(DEFAULT_PALETTE_KEY));
+});
+
+test("every curated palette meets AA contrast for CTA and links", () => {
+  const paper = "250 250 249";
+  for (const palette of listStorefrontPalettes()) {
+    const { primaryRgb, primaryStrongRgb, onPrimaryRgb } = palette.tokens;
+    assert.ok(contrastRatio(primaryRgb, onPrimaryRgb) >= 4.5, `${palette.key} CTA`);
+    assert.ok(contrastRatio(primaryRgb, paper) >= 4.5, `${palette.key} link`);
+    assert.ok(contrastRatio(primaryStrongRgb, onPrimaryRgb) >= 4.5, `${palette.key} strong`);
+    assert.equal(onPrimaryRgb, "255 255 255");
+  }
 });
 
 test("appearance CSS vars set brand tokens only", () => {

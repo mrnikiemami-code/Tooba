@@ -183,10 +183,10 @@ function HomeCategoryGridSection({ homeCategories }: { homeCategories: Storefron
     <section aria-labelledby="home-categories-heading" className="w-full px-2 sm:px-4 py-8 md:py-10" data-testid="home-categories">
       <div className="flex items-center justify-between mb-4">
         <h2 id="home-categories-heading" className="text-lg md:text-xl font-bold text-gray-900 flex items-center gap-2">
-          <span className="w-1 h-5 bg-[#2563EB] rounded-full" />
+          <span className="w-1 h-5 bg-primary rounded-full" />
           دسته‌بندی‌ها
         </h2>
-        <Link href="/products" className="text-xs text-[#2563EB] font-bold flex items-center gap-1">
+        <Link href="/products" className="text-xs text-primary font-bold flex items-center gap-1">
           همه
           <ChevronLeft className="w-3.5 h-3.5" />
         </Link>
@@ -266,7 +266,7 @@ function HomeHeroSlider() {
             key={item.src}
             type="button"
             aria-label={`اسلاید ${slideIndex + 1}`}
-            className={`h-2 rounded-full transition-all ${slideIndex === index ? "w-6 bg-[#2563EB]" : "w-2 bg-gray-300"}`}
+            className={`h-2 rounded-full transition-all ${slideIndex === index ? "w-6 bg-primary" : "w-2 bg-gray-300"}`}
             onClick={() => setIndex(slideIndex)}
           />
         ))}
@@ -301,13 +301,13 @@ function ProductRailSection({
   if (tone === "accent") {
     return (
       <section id={id} aria-labelledby={headingId} className="w-full px-2 sm:px-4" data-testid={testId}>
-        <div className="bg-gradient-to-l from-[#2563EB] to-[#1d4ed8] rounded-3xl p-4 md:p-6">
+        <div className="bg-gradient-to-l from-primary to-primary-strong rounded-3xl p-4 md:p-6">
           <div className="flex items-center justify-between mb-4 text-white">
             <h2 id={headingId} className="text-lg md:text-xl font-black flex items-center gap-2">
               <Flame className="w-5 h-5" />
               {title}
             </h2>
-            <Link href={href} className="text-xs font-bold bg-white text-[#2563EB] px-3 py-1 rounded-lg">
+            <Link href={href} className="text-xs font-bold bg-white text-primary px-3 py-1 rounded-lg">
               {linkLabel}
             </Link>
           </div>
@@ -327,10 +327,10 @@ function ProductRailSection({
     <section id={id} aria-labelledby={headingId} className="w-full px-2 sm:px-4 py-8 md:py-10" data-testid={testId}>
       <div className="flex items-center justify-between mb-4">
         <h2 id={headingId} className="text-lg md:text-xl font-bold text-gray-900 flex items-center gap-2">
-          <span className="w-1 h-5 bg-[#2563EB] rounded-full" />
+          <span className="w-1 h-5 bg-primary rounded-full" />
           {title}
         </h2>
-        <Link href={href} className="text-xs text-[#2563EB] font-bold">
+        <Link href={href} className="text-xs text-primary font-bold">
           {linkLabel}
         </Link>
       </div>

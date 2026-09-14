@@ -49,7 +49,7 @@ export function HomeStoriesSection() {
       <div className="relative">
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-lg md:text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
-            <span className="w-1 h-5 bg-[#E53935] rounded-full" />
+            <span className="w-1 h-5 bg-primary rounded-full" />
             استوری‌ها
           </h3>
         </div>
@@ -81,7 +81,7 @@ export function HomeStoriesSection() {
                       onMouseEnter={() => setHoveredId(story.storyId)}
                       onMouseLeave={() => setHoveredId(null)}
                     >
-                      <div className="relative w-[80px] h-[80px] md:w-[100px] md:h-[100px] rounded-full p-[3px] group-hover:scale-105 transition-transform duration-300 bg-gradient-to-tr from-[#E53935] via-purple-500 to-pink-500">
+                      <div className="relative w-[80px] h-[80px] md:w-[100px] md:h-[100px] rounded-full p-[3px] group-hover:scale-105 transition-transform duration-300 bg-gradient-to-tr from-primary via-purple-500 to-pink-500">
                         <div className="w-full h-full rounded-full p-[2px] bg-white dark:bg-zinc-950">
                           <div className="relative w-full h-full rounded-full overflow-hidden bg-gray-200 dark:bg-zinc-800">
                             {isVideo ? (
@@ -121,7 +121,7 @@ export function HomeStoriesSection() {
                         </div>
                       </div>
 
-                      <span className="text-[10px] md:text-xs text-gray-600 dark:text-gray-400 font-medium truncate w-[80px] md:w-[100px] text-center group-hover:text-[#E53935] transition-colors">
+                      <span className="text-[10px] md:text-xs text-gray-600 dark:text-gray-400 font-medium truncate w-[80px] md:w-[100px] text-center group-hover:text-primary transition-colors">
                         {story.title}
                       </span>
 

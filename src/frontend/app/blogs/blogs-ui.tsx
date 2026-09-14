@@ -19,7 +19,7 @@ import { localeToContentApi } from "../../lib/i18n/routing.ts";
 import { storefrontMediaUrl } from "../storefront/storefront-api";
 import { blogsAuthorPath, blogsCategoryPath, blogsCopy } from "./blogs-copy.ts";
 
-const ACCENT = "#2563EB";
+const ACCENT = "rgb(var(--color-primary))";
 
 function coverSrc(article: ContentArticleCard): string {
   return article.coverMediaAssetId
@@ -73,7 +73,7 @@ function BlogSlider({
                     )
                   ) : null}
                   {index === 0 && post.isFeatured ? (
-                    <span className="text-[8px] font-bold bg-[#2563EB] px-2 py-0.5 rounded-full animate-pulse flex items-center gap-1">
+                    <span className="text-[8px] font-bold bg-primary px-2 py-0.5 rounded-full animate-pulse flex items-center gap-1">
                       <Flame className="w-3 h-3" /> {copy.featured}
                     </span>
                   ) : null}
@@ -135,7 +135,7 @@ function PostCard({
         <div className="flex items-center gap-1.5 mb-1.5 text-[9px] text-gray-500">
           <User className="w-2.5 h-2.5" />
           {post.authorSlug ? (
-            <Link href={blogsAuthorPath(post.authorSlug)} className="line-clamp-1 hover:text-[#2563EB]">
+            <Link href={blogsAuthorPath(post.authorSlug)} className="line-clamp-1 hover:text-primary">
               {post.authorDisplayName}
             </Link>
           ) : (
@@ -146,7 +146,7 @@ function PostCard({
           <span>{formatArticleDate(post.publishDate, contentLocale)}</span>
         </div>
         <Link href={`/blogs/${post.slug}`} className="block">
-          <h3 className="text-sm font-bold text-gray-900 line-clamp-2 group-hover:text-[#2563EB] transition-colors">{post.title}</h3>
+          <h3 className="text-sm font-bold text-gray-900 line-clamp-2 group-hover:text-primary transition-colors">{post.title}</h3>
           <p className="mt-1 text-xs text-gray-500 line-clamp-2 flex-1">{post.excerpt}</p>
           <span className="mt-3 inline-flex items-center gap-1 text-xs font-bold" style={{ color: ACCENT }}>
             {copy.readMore} <ReadMoreChevron className="w-3.5 h-3.5" />
@@ -192,9 +192,9 @@ export function BlogsListingClient() {
       <BlogSlider posts={items} copy={copy} />
       {categories.length > 0 ? (
         <div className="flex flex-wrap gap-2">
-          <button type="button" onClick={() => { setCategory(""); setPage(1); }} className={`rounded-full px-3 py-1 text-xs font-bold ${category === "" ? "bg-[#2563EB] text-white" : "bg-gray-100 text-gray-700"}`}>{copy.all}</button>
+          <button type="button" onClick={() => { setCategory(""); setPage(1); }} className={`rounded-full px-3 py-1 text-xs font-bold ${category === "" ? "bg-primary text-white" : "bg-gray-100 text-gray-700"}`}>{copy.all}</button>
           {categories.map((cat) => (
-            <button key={cat} type="button" onClick={() => { setCategory(cat); setPage(1); }} className={`rounded-full px-3 py-1 text-xs font-bold ${category === cat ? "bg-[#2563EB] text-white" : "bg-gray-100 text-gray-700"}`}>{cat}</button>
+            <button key={cat} type="button" onClick={() => { setCategory(cat); setPage(1); }} className={`rounded-full px-3 py-1 text-xs font-bold ${category === cat ? "bg-primary text-white" : "bg-gray-100 text-gray-700"}`}>{cat}</button>
           ))}
         </div>
       ) : null}

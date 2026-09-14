@@ -36,7 +36,7 @@ export default function CustomerOrdersPage() {
           <h1 className="text-xl font-black">سفارش‌های من</h1>
           <p className="text-xs text-gray-500 mt-1">پیگیری سفارش‌های ثبت‌شده در فروشگاه توبا</p>
         </div>
-        <Link href="/products" className="inline-flex items-center gap-2 bg-[#2563EB] text-white px-4 py-2.5 rounded-xl text-sm font-bold">
+        <Link href="/products" className="inline-flex items-center gap-2 bg-primary text-white px-4 py-2.5 rounded-xl text-sm font-bold">
           <Plus className="w-4 h-4" />
           سفارش جدید
         </Link>
@@ -55,7 +55,7 @@ export default function CustomerOrdersPage() {
               type="button"
               onClick={() => setFilter(item)}
               className={`shrink-0 px-4 py-2 rounded-xl text-xs font-bold ${
-                filter === item ? "bg-[#2563EB] text-white" : "border border-gray-200 text-gray-600"
+                filter === item ? "bg-primary text-white" : "border border-gray-200 text-gray-600"
               }`}
             >
               {item}

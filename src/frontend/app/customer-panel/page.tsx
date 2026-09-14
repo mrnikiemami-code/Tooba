@@ -52,12 +52,12 @@ export default function CustomerDashboard() {
 
   return (
     <div className="space-y-6" data-testid="customer-dashboard">
-      <section className="rounded-2xl border border-[#2563EB]/20 bg-gradient-to-l from-[#2563EB]/10 to-white p-5 md:p-7">
+      <section className="rounded-2xl border border-primary/20 bg-gradient-to-l from-primary/10 to-white p-5 md:p-7">
         <div className="flex items-start gap-3">
           <Sparkles className="w-6 h-6 text-amber-500 shrink-0 mt-1" />
           <div>
             <h1 className="text-xl md:text-2xl font-black">
-              خوش آمدید، <span className="text-[#2563EB]">{page.displayName}</span>
+              خوش آمدید، <span className="text-primary">{page.displayName}</span>
             </h1>
             <p className="text-sm text-gray-600 mt-2 leading-7">
               سفارش‌ها، علاقه‌مندی‌ها و آدرس‌های خود را از پیشخوان مشتری مدیریت کنید.
@@ -88,9 +88,9 @@ export default function CustomerDashboard() {
           <Link
             key={action.href}
             href={action.href}
-            className="bg-white rounded-2xl border border-gray-200 p-4 text-center shadow-sm hover:border-[#2563EB]/40 hover:shadow-md transition-all"
+            className="bg-white rounded-2xl border border-gray-200 p-4 text-center shadow-sm hover:border-primary/40 hover:shadow-md transition-all"
           >
-            <span className="mx-auto mb-2 flex h-10 w-10 items-center justify-center rounded-xl bg-[#2563EB]/10 text-[#2563EB]">
+            <span className="mx-auto mb-2 flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
               <action.icon className="w-5 h-5" />
             </span>
             <p className="text-xs font-bold text-gray-800">{action.label}</p>
@@ -102,7 +102,7 @@ export default function CustomerDashboard() {
         <section className="lg:col-span-2 bg-white rounded-2xl border border-gray-200 p-4 md:p-6 shadow-sm">
           <div className="flex items-center justify-between mb-5">
             <h2 className="font-black text-lg">آخرین سفارش‌ها</h2>
-            <Link href="/customer-panel/orders" className="text-xs font-bold text-[#2563EB]">
+            <Link href="/customer-panel/orders" className="text-xs font-bold text-primary">
               مشاهده همه
             </Link>
           </div>
@@ -110,7 +110,7 @@ export default function CustomerDashboard() {
             <div className="py-12 text-center text-gray-500">
               <Package className="w-10 h-10 mx-auto mb-3 text-gray-300" />
               <p className="font-bold">هنوز سفارشی ثبت نشده است.</p>
-              <Link href="/products" className="inline-flex mt-4 bg-[#2563EB] text-white rounded-xl px-4 py-2 text-sm font-bold">
+              <Link href="/products" className="inline-flex mt-4 bg-primary text-white rounded-xl px-4 py-2 text-sm font-bold">
                 شروع خرید
               </Link>
             </div>
@@ -129,7 +129,7 @@ export default function CustomerDashboard() {
                       {new Date(order.submittedAt).toLocaleDateString("fa-IR")}
                     </p>
                   </div>
-                  <span className="text-xs rounded-lg bg-blue-50 text-[#2563EB] px-2.5 py-1 font-bold">
+                  <span className="text-xs rounded-lg bg-blue-50 text-primary px-2.5 py-1 font-bold">
                     {formatCustomerOrderStatus(order.paymentState)}
                   </span>
                   <strong className="text-sm">{formatCustomerMoney(order.payableAmount, order.currency)}</strong>
@@ -179,7 +179,7 @@ export default function CustomerDashboard() {
           />
           <Link
             href="/customer-panel/settings"
-            className="block text-center text-xs font-bold text-[#2563EB] pt-2 border-t border-gray-100"
+            className="block text-center text-xs font-bold text-primary pt-2 border-t border-gray-100"
           >
             تنظیمات پنل
           </Link>
@@ -212,7 +212,7 @@ function Metric({
   suffix?: string;
 }) {
   const tones = {
-    blue: "bg-[#2563EB]",
+    blue: "bg-primary",
     green: "bg-emerald-500",
     amber: "bg-amber-500",
     pink: "bg-pink-500",
@@ -238,7 +238,7 @@ function CustomerPanelError() {
     <div className="bg-white rounded-2xl border border-red-100 p-8 text-center">
       <h1 className="font-black text-lg">پنل مشتری در دسترس نیست</h1>
       <p className="text-sm text-gray-500 mt-2">نشست معتبر نیست یا Host پاسخ نمی‌دهد.</p>
-      <Link href="/" className="inline-flex mt-4 px-4 py-2 rounded-xl bg-[#2563EB] text-white text-sm font-bold">
+      <Link href="/" className="inline-flex mt-4 px-4 py-2 rounded-xl bg-primary text-white text-sm font-bold">
         بازگشت به فروشگاه
       </Link>
     </div>

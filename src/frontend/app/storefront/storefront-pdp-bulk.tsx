@@ -60,7 +60,7 @@ export function StorefrontPdpBulk({ detail }: { detail: StorefrontProductDetailP
         <h3 className="text-lg font-bold text-emerald-800">درخواست عمده ثبت شد</h3>
         <p className="text-sm text-emerald-700">کد پیگیری داخلی: {doneId}</p>
         <p className="text-xs text-emerald-600">قیمت عمده پس از بررسی فروشگاه اعلام می‌شود؛ هیچ تخفیف نمایشی در UI محاسبه نشده است.</p>
-        <button type="button" onClick={() => { setDoneId(null); reset(); }} className="text-sm font-bold text-[#2563EB]">
+        <button type="button" onClick={() => { setDoneId(null); reset(); }} className="text-sm font-bold text-primary">
           ثبت درخواست جدید
         </button>
       </div>
@@ -83,7 +83,7 @@ export function StorefrontPdpBulk({ detail }: { detail: StorefrontProductDetailP
           { icon: Shield, title: "بدون قیمت جعلی", desc: "تخفیف نمایشی محاسبه نمی‌شود" },
         ].map((item) => (
           <div key={item.title} className="flex items-center gap-2 p-3 bg-gray-50 rounded-xl border border-gray-200">
-            <item.icon className="w-5 h-5 text-[#2563EB]" />
+            <item.icon className="w-5 h-5 text-primary" />
             <div>
               <p className="text-xs font-bold text-gray-700">{item.title}</p>
               <p className="text-[10px] text-gray-500">{item.desc}</p>
@@ -152,7 +152,7 @@ export function StorefrontPdpBulk({ detail }: { detail: StorefrontProductDetailP
         <button
           type="submit"
           disabled={busy}
-          className="w-full md:w-auto px-6 py-3 bg-[#2563EB] text-white rounded-xl text-sm font-bold disabled:opacity-60 flex items-center justify-center gap-2"
+          className="w-full md:w-auto px-6 py-3 bg-primary text-white rounded-xl text-sm font-bold disabled:opacity-60 flex items-center justify-center gap-2"
         >
           <Send className="w-4 h-4" /> ثبت درخواست عمده
         </button>
@@ -162,7 +162,7 @@ export function StorefrontPdpBulk({ detail }: { detail: StorefrontProductDetailP
 }
 
 const inputClass =
-  "w-full mt-1 px-4 py-2.5 bg-gray-50 rounded-xl text-sm border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#2563EB]";
+  "w-full mt-1 px-4 py-2.5 bg-gray-50 rounded-xl text-sm border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary";
 
 function Field({ label, error, children }: { label: string; error?: string; children: ReactNode }) {
   return (

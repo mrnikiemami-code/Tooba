@@ -56,7 +56,7 @@ export function StorefrontPdpReviews({ detail }: { detail: StorefrontProductDeta
         </div>
       </div>
     ) : null}
-    {!showForm ? <button type="button" onClick={() => { setShowForm(true); setMessage(null); }} className="inline-flex items-center gap-2 rounded-xl bg-[#2563EB] px-5 py-2.5 text-sm font-bold text-white">
+    {!showForm ? <button type="button" onClick={() => { setShowForm(true); setMessage(null); }} className="inline-flex items-center gap-2 rounded-xl bg-primary px-5 py-2.5 text-sm font-bold text-white">
       <Edit3 className="size-4" /> نوشتن نظر
     </button> : (
       <form className="space-y-4 rounded-xl border border-gray-200 bg-white p-4" onSubmit={(event) => {
@@ -71,9 +71,9 @@ export function StorefrontPdpReviews({ detail }: { detail: StorefrontProductDeta
       }}>
         <div className="flex items-center justify-between"><h3 className="font-bold">نوشتن نظر</h3><button type="button" aria-label="بستن فرم" onClick={() => setShowForm(false)}><X className="size-4 text-gray-500" /></button></div>
         <div><span className="mb-1 block text-sm font-medium">امتیاز شما</span><div className="flex gap-1">{[1, 2, 3, 4, 5].map((value) => <button type="button" key={value} onClick={() => setRating(value)} aria-label={`${value} ستاره`}><Star className={`size-7 ${value <= rating ? "fill-amber-400 text-amber-400" : "text-gray-300"}`} /></button>)}</div></div>
-        <label className="block text-sm font-medium">عنوان (اختیاری)<input value={title} onChange={(event) => setTitle(event.target.value)} className="mt-1 w-full rounded-xl bg-gray-100 px-4 py-2 outline-none focus:ring-2 focus:ring-[#2563EB]" /></label>
-        <label className="block text-sm font-medium">متن نظر<textarea value={body} onChange={(event) => setBody(event.target.value)} rows={4} minLength={10} required className="mt-1 w-full resize-none rounded-xl bg-gray-100 px-4 py-2 outline-none focus:ring-2 focus:ring-[#2563EB]" /></label>
-        <button disabled={submitting} className="rounded-xl bg-[#2563EB] px-5 py-2.5 text-sm font-bold text-white disabled:opacity-60">{submitting ? "در حال ارسال…" : "ارسال نظر"}</button>
+        <label className="block text-sm font-medium">عنوان (اختیاری)<input value={title} onChange={(event) => setTitle(event.target.value)} className="mt-1 w-full rounded-xl bg-gray-100 px-4 py-2 outline-none focus:ring-2 focus:ring-primary" /></label>
+        <label className="block text-sm font-medium">متن نظر<textarea value={body} onChange={(event) => setBody(event.target.value)} rows={4} minLength={10} required className="mt-1 w-full resize-none rounded-xl bg-gray-100 px-4 py-2 outline-none focus:ring-2 focus:ring-primary" /></label>
+        <button disabled={submitting} className="rounded-xl bg-primary px-5 py-2.5 text-sm font-bold text-white disabled:opacity-60">{submitting ? "در حال ارسال…" : "ارسال نظر"}</button>
       </form>
     )}
     {message ? <p role="status" className="text-sm text-gray-600">{message}</p> : null}

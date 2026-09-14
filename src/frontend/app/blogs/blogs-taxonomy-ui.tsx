@@ -14,7 +14,7 @@ import { localeToContentApi } from "../../lib/i18n/routing.ts";
 import { storefrontMediaUrl } from "../storefront/storefront-api";
 import { blogsAuthorPath, blogsCategoryPath, blogsCopy } from "./blogs-copy.ts";
 
-const ACCENT = "#2563EB";
+const ACCENT = "rgb(var(--color-primary))";
 const PAGE_SIZE = 12;
 
 function coverSrc(article: ContentArticleCard): string {
@@ -56,7 +56,7 @@ function TaxonomyPostCard({
         <div className="flex items-center gap-1.5 mb-1.5 text-[9px] text-gray-500">
           <User className="w-2.5 h-2.5" />
           {post.authorSlug ? (
-            <Link href={blogsAuthorPath(post.authorSlug)} className="line-clamp-1 hover:text-[#2563EB]">
+            <Link href={blogsAuthorPath(post.authorSlug)} className="line-clamp-1 hover:text-primary">
               {post.authorDisplayName}
             </Link>
           ) : (
@@ -82,7 +82,7 @@ function TaxonomyPostCard({
           )
         ) : null}
         <Link href={`/blogs/${post.slug}`} className="block">
-          <h3 className="text-sm font-bold text-gray-900 line-clamp-2 group-hover:text-[#2563EB] transition-colors">
+          <h3 className="text-sm font-bold text-gray-900 line-clamp-2 group-hover:text-primary transition-colors">
             {post.title}
           </h3>
           <p className="mt-1 text-xs text-gray-500 line-clamp-2 flex-1">{post.excerpt}</p>
@@ -133,7 +133,7 @@ export function BlogsTaxonomyListingClient({
 
   return (
     <main className="mx-auto max-w-6xl space-y-6 px-3 py-6 md:px-4" data-testid={`blogs-${kind}-listing`}>
-      <Link href="/blogs" className="inline-flex items-center gap-1 text-sm text-[#2563EB]">
+      <Link href="/blogs" className="inline-flex items-center gap-1 text-sm text-primary">
         <BackArrow className="size-4" /> {copy.backToMagazine}
       </Link>
       <div className="space-y-2">

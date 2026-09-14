@@ -1,0 +1,499 @@
+{
+  "ok": false,
+  "steps": [
+    {
+      "name": "health",
+      "pass": true,
+      "data": {
+        "host": 200,
+        "fe": 200
+      }
+    },
+    {
+      "name": "dev-context",
+      "pass": true,
+      "data": {
+        "status": 200,
+        "actor": "01a036c2-970e-7000-8eb7-94bf5cc2d8db"
+      }
+    },
+    {
+      "name": "A-admin-tooba-blue-get",
+      "pass": true,
+      "data": {
+        "status": 200,
+        "key": "tooba-blue",
+        "tokens": {
+          "primaryRgb": "37 99 235",
+          "primaryStrongRgb": "29 78 216",
+          "onPrimaryRgb": "255 255 255",
+          "focusRgb": "37 99 235"
+        }
+      }
+    },
+    {
+      "name": "A-storefront-appearance",
+      "pass": true,
+      "data": {
+        "storeScope": "tenant:store-alpha",
+        "paletteKey": "tooba-blue",
+        "paletteKeyWasKnown": true,
+        "themeMode": "Light",
+        "tokens": {
+          "primaryRgb": "37 99 235",
+          "primaryStrongRgb": "29 78 216",
+          "onPrimaryRgb": "255 255 255",
+          "focusRgb": "37 99 235"
+        },
+        "updatedAt": "2026-09-14T01:09:58.914262+00:00"
+      }
+    },
+    {
+      "name": "B-inspect-tooba-blue",
+      "pass": false,
+      "data": {
+        "home": {
+          "status": 200,
+          "palette": "tooba-blue",
+          "scope": "tenant:store-alpha",
+          "primary": "37 99 235",
+          "strong": "29 78 216",
+          "dangerVar": false,
+          "hydration": true,
+          "productHref": "/fa/products/demo-prod-av-audio-headphones-3",
+          "listingHref": "/fa/products",
+          "len": 352398,
+          "sample": "<!DOCTYPE html><html lang=\"fa\" dir=\"rtl\" data-storefront-palette=\"tooba-blue\" data-storefront-scope=\"tenant:store-alpha\" style=\"--color-primary:37 99 235;--color-primary-strong:29 78 216;--color-prima"
+        },
+        "plp": {
+          "status": 200,
+          "palette": "tooba-blue",
+          "scope": "tenant:store-alpha",
+          "primary": "37 99 235",
+          "strong": "29 78 216",
+          "dangerVar": false,
+          "hydration": true,
+          "productHref": "/fa/products/demo-prod-fashion-men-men-pants-1",
+          "listingHref": "/fa/products",
+          "len": 231622,
+          "sample": "<!DOCTYPE html><html lang=\"fa\" dir=\"rtl\" data-storefront-palette=\"tooba-blue\" data-storefront-scope=\"tenant:store-alpha\" style=\"--color-primary:37 99 235;--color-primary-strong:29 78 216;--color-prima"
+        },
+        "pdp": {
+          "status": 200,
+          "palette": "tooba-blue",
+          "scope": "tenant:store-alpha",
+          "primary": "37 99 235",
+          "strong": "29 78 216",
+          "dangerVar": false,
+          "hydration": true,
+          "productHref": "/fa/products/demo-prod-av-audio-headphones-3",
+          "listingHref": "/fa/products",
+          "len": 166535,
+          "sample": "<!DOCTYPE html><html lang=\"fa\" dir=\"rtl\" data-storefront-palette=\"tooba-blue\" data-storefront-scope=\"tenant:store-alpha\" style=\"--color-primary:37 99 235;--color-primary-strong:29 78 216;--color-prima"
+        },
+        "cart": {
+          "status": 200,
+          "palette": "tooba-blue",
+          "scope": "tenant:store-alpha",
+          "primary": "37 99 235",
+          "strong": "29 78 216",
+          "dangerVar": false,
+          "hydration": true,
+          "productHref": null,
+          "listingHref": "/fa/products",
+          "len": 103605,
+          "sample": "<!DOCTYPE html><html lang=\"fa\" dir=\"rtl\" data-storefront-palette=\"tooba-blue\" data-storefront-scope=\"tenant:store-alpha\" style=\"--color-primary:37 99 235;--color-primary-strong:29 78 216;--color-prima"
+        },
+        "shipping": {
+          "status": 200,
+          "palette": "tooba-blue",
+          "scope": "tenant:store-alpha",
+          "primary": "37 99 235",
+          "strong": "29 78 216",
+          "dangerVar": false,
+          "hydration": true,
+          "productHref": null,
+          "listingHref": "/fa/products",
+          "len": 102319,
+          "sample": "<!DOCTYPE html><html lang=\"fa\" dir=\"rtl\" data-storefront-palette=\"tooba-blue\" data-storefront-scope=\"tenant:store-alpha\" style=\"--color-primary:37 99 235;--color-primary-strong:29 78 216;--color-prima"
+        },
+        "pdpPath": "/fa/products/demo-prod-av-audio-headphones-3",
+        "listingPath": "/fa/products"
+      }
+    },
+    {
+      "name": "C-put-forest-green",
+      "pass": true,
+      "data": {
+        "status": 200,
+        "body": {
+          "storeScope": "tenant:store-alpha",
+          "paletteKey": "forest-green",
+          "paletteKeyWasKnown": true,
+          "themeMode": "Light",
+          "tokens": {
+            "primaryRgb": "21 128 61",
+            "primaryStrongRgb": "22 101 52",
+            "onPrimaryRgb": "255 255 255",
+            "focusRgb": "21 128 61"
+          },
+          "presets": [
+            {
+              "key": "tooba-blue",
+              "nameFa": "آبی توبا",
+              "nameEn": "Tooba Blue",
+              "tokens": {
+                "primaryRgb": "37 99 235",
+                "primaryStrongRgb": "29 78 216",
+                "onPrimaryRgb": "255 255 255",
+                "focusRgb": "37 99 235"
+              }
+            },
+            {
+              "key": "forest-green",
+              "nameFa": "سبز جنگلی",
+              "nameEn": "Forest Green",
+              "tokens": {
+                "primaryRgb": "21 128 61",
+                "primaryStrongRgb": "22 101 52",
+                "onPrimaryRgb": "255 255 255",
+                "focusRgb": "21 128 61"
+              }
+            },
+            {
+              "key": "wine-burgundy",
+              "nameFa": "شرابی تیره",
+              "nameEn": "Wine Burgundy",
+              "tokens": {
+                "primaryRgb": "159 18 57",
+                "primaryStrongRgb": "136 19 55",
+                "onPrimaryRgb": "255 255 255",
+                "focusRgb": "159 18 57"
+              }
+            },
+            {
+              "key": "slate-navy",
+              "nameFa": "سرمه‌ای سنگی",
+              "nameEn": "Slate Navy",
+              "tokens": {
+                "primaryRgb": "30 58 95",
+                "primaryStrongRgb": "23 37 84",
+                "onPrimaryRgb": "255 255 255",
+                "focusRgb": "30 58 95"
+              }
+            },
+            {
+              "key": "amber-gold",
+              "nameFa": "کهربایی",
+              "nameEn": "Amber Gold",
+              "tokens": {
+                "primaryRgb": "217 119 6",
+                "primaryStrongRgb": "180 83 9",
+                "onPrimaryRgb": "255 255 255",
+                "focusRgb": "217 119 6"
+              }
+            },
+            {
+              "key": "teal-lagoon",
+              "nameFa": "سبزآبی مرداب",
+              "nameEn": "Teal Lagoon",
+              "tokens": {
+                "primaryRgb": "15 118 110",
+                "primaryStrongRgb": "17 94 89",
+                "onPrimaryRgb": "255 255 255",
+                "focusRgb": "15 118 110"
+              }
+            },
+            {
+              "key": "violet-royal",
+              "nameFa": "بنفش سلطنتی",
+              "nameEn": "Royal Violet",
+              "tokens": {
+                "primaryRgb": "124 58 237",
+                "primaryStrongRgb": "109 40 217",
+                "onPrimaryRgb": "255 255 255",
+                "focusRgb": "124 58 237"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "D-F-forest-green-surfaces",
+      "pass": true,
+      "data": {
+        "appearance": {
+          "storeScope": "tenant:store-alpha",
+          "paletteKey": "forest-green",
+          "paletteKeyWasKnown": true,
+          "themeMode": "Light",
+          "tokens": {
+            "primaryRgb": "21 128 61",
+            "primaryStrongRgb": "22 101 52",
+            "onPrimaryRgb": "255 255 255",
+            "focusRgb": "21 128 61"
+          },
+          "updatedAt": "2026-09-14T01:25:07.535995+00:00"
+        },
+        "home": {
+          "status": 200,
+          "palette": "forest-green",
+          "scope": "tenant:store-alpha",
+          "primary": "21 128 61",
+          "strong": "22 101 52",
+          "dangerVar": false,
+          "hydration": true,
+          "productHref": "/fa/products/demo-prod-av-audio-headphones-3",
+          "listingHref": "/fa/products",
+          "len": 349707,
+          "sample": "<!DOCTYPE html><html lang=\"fa\" dir=\"rtl\" data-storefront-palette=\"forest-green\" data-storefront-scope=\"tenant:store-alpha\" style=\"--color-primary:21 128 61;--color-primary-strong:22 101 52;--color-pri"
+        },
+        "plp": {
+          "status": 200,
+          "palette": "forest-green",
+          "scope": "tenant:store-alpha",
+          "primary": "21 128 61",
+          "strong": "22 101 52",
+          "dangerVar": false,
+          "hydration": true,
+          "productHref": "/fa/products/demo-prod-fashion-men-men-pants-1",
+          "listingHref": "/fa/products",
+          "len": 229210,
+          "sample": "<!DOCTYPE html><html lang=\"fa\" dir=\"rtl\" data-storefront-palette=\"forest-green\" data-storefront-scope=\"tenant:store-alpha\" style=\"--color-primary:21 128 61;--color-primary-strong:22 101 52;--color-pri"
+        },
+        "pdp": {
+          "status": 200,
+          "palette": "forest-green",
+          "scope": "tenant:store-alpha",
+          "primary": "21 128 61",
+          "strong": "22 101 52",
+          "dangerVar": false,
+          "hydration": true,
+          "productHref": "/fa/products/demo-prod-av-audio-headphones-3",
+          "listingHref": "/fa/products",
+          "len": 163823,
+          "sample": "<!DOCTYPE html><html lang=\"fa\" dir=\"rtl\" data-storefront-palette=\"forest-green\" data-storefront-scope=\"tenant:store-alpha\" style=\"--color-primary:21 128 61;--color-primary-strong:22 101 52;--color-pri"
+        },
+        "cart": {
+          "status": 200,
+          "palette": "forest-green",
+          "scope": "tenant:store-alpha",
+          "primary": "21 128 61",
+          "strong": "22 101 52",
+          "dangerVar": false,
+          "hydration": true,
+          "productHref": null,
+          "listingHref": "/fa/products",
+          "len": 104450,
+          "sample": "<!DOCTYPE html><html lang=\"fa\" dir=\"rtl\" data-storefront-palette=\"forest-green\" data-storefront-scope=\"tenant:store-alpha\" style=\"--color-primary:21 128 61;--color-primary-strong:22 101 52;--color-pri"
+        },
+        "shipping": {
+          "status": 200,
+          "palette": "forest-green",
+          "scope": "tenant:store-alpha",
+          "primary": "21 128 61",
+          "strong": "22 101 52",
+          "dangerVar": false,
+          "hydration": true,
+          "productHref": null,
+          "listingHref": "/fa/products",
+          "len": 102327,
+          "sample": "<!DOCTYPE html><html lang=\"fa\" dir=\"rtl\" data-storefront-palette=\"forest-green\" data-storefront-scope=\"tenant:store-alpha\" style=\"--color-primary:21 128 61;--color-primary-strong:22 101 52;--color-pri"
+        }
+      }
+    },
+    {
+      "name": "F-status-not-brand-green",
+      "pass": true,
+      "data": {
+        "shippingHasDangerClassesInApp": true,
+        "htmlDangerVar": false
+      }
+    },
+    {
+      "name": "G-put-wine-burgundy",
+      "pass": true,
+      "data": {
+        "status": 200
+      }
+    },
+    {
+      "name": "H-wine-burgundy-surfaces",
+      "pass": true,
+      "data": {
+        "home": {
+          "status": 200,
+          "palette": "wine-burgundy",
+          "scope": "tenant:store-alpha",
+          "primary": "159 18 57",
+          "strong": "136 19 55",
+          "dangerVar": false,
+          "hydration": true,
+          "productHref": "/fa/products/demo-prod-av-audio-headphones-3",
+          "listingHref": "/fa/products",
+          "len": 349710,
+          "sample": "<!DOCTYPE html><html lang=\"fa\" dir=\"rtl\" data-storefront-palette=\"wine-burgundy\" data-storefront-scope=\"tenant:store-alpha\" style=\"--color-primary:159 18 57;--color-primary-strong:136 19 55;--color-pr"
+        },
+        "pdp": {
+          "status": 200,
+          "palette": "wine-burgundy",
+          "scope": "tenant:store-alpha",
+          "primary": "159 18 57",
+          "strong": "136 19 55",
+          "dangerVar": false,
+          "hydration": true,
+          "productHref": "/fa/products/demo-prod-av-audio-headphones-3",
+          "listingHref": "/fa/products",
+          "len": 166537,
+          "sample": "<!DOCTYPE html><html lang=\"fa\" dir=\"rtl\" data-storefront-palette=\"wine-burgundy\" data-storefront-scope=\"tenant:store-alpha\" style=\"--color-primary:159 18 57;--color-primary-strong:136 19 55;--color-pr"
+        },
+        "shipping": {
+          "status": 200,
+          "palette": "wine-burgundy",
+          "scope": "tenant:store-alpha",
+          "primary": "159 18 57",
+          "strong": "136 19 55",
+          "dangerVar": false,
+          "hydration": true,
+          "productHref": null,
+          "listingHref": "/fa/products",
+          "len": 102330,
+          "sample": "<!DOCTYPE html><html lang=\"fa\" dir=\"rtl\" data-storefront-palette=\"wine-burgundy\" data-storefront-scope=\"tenant:store-alpha\" style=\"--color-primary:159 18 57;--color-primary-strong:136 19 55;--color-pr"
+        }
+      }
+    },
+    {
+      "name": "I-put-slate-navy",
+      "pass": true,
+      "data": {
+        "status": 200
+      }
+    },
+    {
+      "name": "J-slate-navy-surfaces",
+      "pass": true,
+      "data": {
+        "home": {
+          "status": 200,
+          "palette": "slate-navy",
+          "scope": "tenant:store-alpha",
+          "primary": "30 58 95",
+          "strong": "23 37 84",
+          "dangerVar": false,
+          "hydration": true,
+          "productHref": "/fa/products/demo-prod-av-audio-headphones-3",
+          "listingHref": "/fa/products",
+          "len": 350526,
+          "sample": "<!DOCTYPE html><html lang=\"fa\" dir=\"rtl\" data-storefront-palette=\"slate-navy\" data-storefront-scope=\"tenant:store-alpha\" style=\"--color-primary:30 58 95;--color-primary-strong:23 37 84;--color-primary"
+        },
+        "pdp": {
+          "status": 200,
+          "palette": "slate-navy",
+          "scope": "tenant:store-alpha",
+          "primary": "30 58 95",
+          "strong": "23 37 84",
+          "dangerVar": false,
+          "hydration": true,
+          "productHref": "/fa/products/demo-prod-av-audio-headphones-3",
+          "listingHref": "/fa/products",
+          "len": 164640,
+          "sample": "<!DOCTYPE html><html lang=\"fa\" dir=\"rtl\" data-storefront-palette=\"slate-navy\" data-storefront-scope=\"tenant:store-alpha\" style=\"--color-primary:30 58 95;--color-primary-strong:23 37 84;--color-primary"
+        },
+        "shipping": {
+          "status": 200,
+          "palette": "slate-navy",
+          "scope": "tenant:store-alpha",
+          "primary": "30 58 95",
+          "strong": "23 37 84",
+          "dangerVar": false,
+          "hydration": true,
+          "productHref": null,
+          "listingHref": "/fa/products",
+          "len": 102315,
+          "sample": "<!DOCTYPE html><html lang=\"fa\" dir=\"rtl\" data-storefront-palette=\"slate-navy\" data-storefront-scope=\"tenant:store-alpha\" style=\"--color-primary:30 58 95;--color-primary-strong:23 37 84;--color-primary"
+        }
+      }
+    },
+    {
+      "name": "K-restore-tooba-blue",
+      "pass": true,
+      "data": {
+        "status": 200
+      }
+    },
+    {
+      "name": "L-restore-equivalence",
+      "pass": true,
+      "data": {
+        "appearance": {
+          "storeScope": "tenant:store-alpha",
+          "paletteKey": "tooba-blue",
+          "paletteKeyWasKnown": true,
+          "themeMode": "Light",
+          "tokens": {
+            "primaryRgb": "37 99 235",
+            "primaryStrongRgb": "29 78 216",
+            "onPrimaryRgb": "255 255 255",
+            "focusRgb": "37 99 235"
+          },
+          "updatedAt": "2026-09-14T01:25:38.711783+00:00"
+        },
+        "home": {
+          "status": 200,
+          "palette": "tooba-blue",
+          "scope": "tenant:store-alpha",
+          "primary": "37 99 235",
+          "strong": "29 78 216",
+          "dangerVar": false,
+          "hydration": true,
+          "productHref": "/fa/products/demo-prod-av-audio-headphones-3",
+          "listingHref": "/fa/products",
+          "len": 349704,
+          "sample": "<!DOCTYPE html><html lang=\"fa\" dir=\"rtl\" data-storefront-palette=\"tooba-blue\" data-storefront-scope=\"tenant:store-alpha\" style=\"--color-primary:37 99 235;--color-primary-strong:29 78 216;--color-prima"
+        },
+        "pdp": {
+          "status": 200,
+          "palette": "tooba-blue",
+          "scope": "tenant:store-alpha",
+          "primary": "37 99 235",
+          "strong": "29 78 216",
+          "dangerVar": false,
+          "hydration": true,
+          "productHref": "/fa/products/demo-prod-av-audio-headphones-3",
+          "listingHref": "/fa/products",
+          "len": 163816,
+          "sample": "<!DOCTYPE html><html lang=\"fa\" dir=\"rtl\" data-storefront-palette=\"tooba-blue\" data-storefront-scope=\"tenant:store-alpha\" style=\"--color-primary:37 99 235;--color-primary-strong:29 78 216;--color-prima"
+        },
+        "shipping": {
+          "status": 200,
+          "palette": "tooba-blue",
+          "scope": "tenant:store-alpha",
+          "primary": "37 99 235",
+          "strong": "29 78 216",
+          "dangerVar": false,
+          "hydration": true,
+          "productHref": null,
+          "listingHref": "/fa/products",
+          "len": 102324,
+          "sample": "<!DOCTYPE html><html lang=\"fa\" dir=\"rtl\" data-storefront-palette=\"tooba-blue\" data-storefront-scope=\"tenant:store-alpha\" style=\"--color-primary:37 99 235;--color-primary-strong:29 78 216;--color-prima"
+        }
+      }
+    },
+    {
+      "name": "shopeiva-side-by-side",
+      "pass": true,
+      "data": {
+        "status": 200,
+        "len": 424091
+      }
+    }
+  ],
+  "errors": [
+    "B-inspect-tooba-blue"
+  ],
+  "paths": {
+    "listingPath": "/fa/products",
+    "pdpPath": "/fa/products/demo-prod-av-audio-headphones-3"
+  }
+}

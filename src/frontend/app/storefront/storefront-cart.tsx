@@ -195,7 +195,7 @@ export function StorefrontShopeivaCart({
   return (
     <div className="pb-10" data-testid="cart-page">
       <nav className="text-xs text-gray-500 pt-4 mb-2 flex flex-wrap gap-2" aria-label="مسیر صفحه" data-testid="cart-breadcrumb">
-        <Link href="/" className="hover:text-[#2563EB]">
+        <Link href="/" className="hover:text-primary">
           خانه
         </Link>
         <span>/</span>
@@ -239,7 +239,7 @@ export function StorefrontShopeivaCart({
                         <div className="min-w-0">
                           <Link
                             href={line.productSlug ? `/products/${line.productSlug}` : "/products"}
-                            className="text-sm md:text-base font-bold text-gray-900 hover:text-[#2563EB] line-clamp-1"
+                            className="text-sm md:text-base font-bold text-gray-900 hover:text-primary line-clamp-1"
                           >
                             {line.title}
                           </Link>
@@ -279,7 +279,7 @@ export function StorefrontShopeivaCart({
                           {line.unitAmountExclusiveOfTax != null ? (
                             <p className="text-xs text-gray-500">واحد: {formatOfferAmount(line.unitAmountExclusiveOfTax, line.currency)}</p>
                           ) : null}
-                          <p className="text-sm font-black text-[#2563EB]">
+                          <p className="text-sm font-black text-primary">
                             {line.lineAmountExclusiveOfTax != null
                               ? formatOfferAmount(line.lineAmountExclusiveOfTax, line.currency)
                               : "—"}
@@ -303,7 +303,7 @@ export function StorefrontShopeivaCart({
 
               <div className="bg-white rounded-2xl border border-gray-200 p-4 md:p-5 shadow-sm" data-testid="cart-shipping-honest">
                 <h4 className="text-xs md:text-sm font-bold text-gray-900 flex items-center gap-2 mb-2">
-                  <Truck className="w-4 h-4 text-[#2563EB]" />
+                  <Truck className="w-4 h-4 text-primary" />
                   روش ارسال
                 </h4>
                 <p className="text-xs text-gray-500 leading-6">
@@ -317,7 +317,7 @@ export function StorefrontShopeivaCart({
               <div className="lg:sticky lg:top-24 space-y-4" data-testid="cart-summary">
                 <div className="bg-white rounded-2xl border border-gray-200 p-4 md:p-5 shadow-md">
                   <h2 className="text-base md:text-lg font-black text-gray-900 flex items-center gap-2 mb-4">
-                    <CreditCard className="w-4 h-4 text-[#2563EB]" />
+                    <CreditCard className="w-4 h-4 text-primary" />
                     خلاصه سفارش
                   </h2>
                   <div className="space-y-2.5 text-sm">
@@ -335,7 +335,7 @@ export function StorefrontShopeivaCart({
                     </div>
                     <div className="border-t border-gray-200 pt-2.5 flex justify-between">
                       <span className="font-black">قابل پرداخت (برآورد)</span>
-                      <span className="font-black text-[#2563EB]">
+                      <span className="font-black text-primary">
                         {formatOfferAmount(cart.subtotalExclusiveOfTax, cart.currency)}
                       </span>
                     </div>
@@ -363,7 +363,7 @@ export function StorefrontShopeivaCart({
 
                 <div className="bg-white rounded-2xl border border-gray-200 p-4 md:p-5 shadow-sm" data-testid="cart-coupon">
                   <h4 className="text-xs md:text-sm font-bold text-gray-900 flex items-center gap-2 mb-3">
-                    <Tag className="w-4 h-4 text-[#2563EB]" />
+                    <Tag className="w-4 h-4 text-primary" />
                     کد تخفیف
                   </h4>
                   <div className="flex gap-2">
@@ -373,13 +373,13 @@ export function StorefrontShopeivaCart({
                       value={couponInput}
                       onChange={(e) => setCouponInput(e.target.value.toUpperCase())}
                       placeholder="کد تخفیف"
-                      className="flex-1 px-3.5 py-2.5 rounded-xl text-xs bg-gray-50 border border-gray-200 text-gray-900 outline-none focus:ring-2 focus:ring-[#2563EB] font-mono uppercase"
+                      className="flex-1 px-3.5 py-2.5 rounded-xl text-xs bg-gray-50 border border-gray-200 text-gray-900 outline-none focus:ring-2 focus:ring-primary font-mono uppercase"
                     />
                     <button
                       type="button"
                       disabled={couponBusy || busy}
                       onClick={() => void applyCoupon()}
-                      className="px-4 py-2.5 rounded-xl bg-[#2563EB] text-white text-xs font-bold hover:bg-blue-700 disabled:opacity-60 shrink-0"
+                      className="px-4 py-2.5 rounded-xl bg-primary text-white text-xs font-bold hover:bg-blue-700 disabled:opacity-60 shrink-0"
                     >
                       {couponBusy ? "…" : "اعمال"}
                     </button>
@@ -510,7 +510,7 @@ function CartHero({
 }) {
   return (
     <section className="w-full" data-testid="cart-hero">
-      <div className="relative overflow-hidden rounded-2xl md:rounded-3xl bg-gradient-to-l from-[#2563EB] to-[#1e3a8a] min-h-[160px] md:min-h-[180px]">
+      <div className="relative overflow-hidden rounded-2xl md:rounded-3xl bg-gradient-to-l from-primary to-primary-strong min-h-[160px] md:min-h-[180px]">
         <div className="absolute inset-0 opacity-[0.08]">
           <div className="absolute -top-20 -right-20 w-56 h-56 rounded-full bg-white" />
           <div className="absolute -bottom-16 -left-16 w-40 h-40 rounded-full bg-white" />
@@ -527,7 +527,7 @@ function CartHero({
       </div>
       <div className="grid grid-cols-3 gap-1.5 md:gap-4 -mt-8 md:-mt-10 relative z-20">
         <MetricCard
-          icon={<ShoppingBag className="w-3 h-3 md:w-5 md:h-5 text-[#2563EB]" />}
+          icon={<ShoppingBag className="w-3 h-3 md:w-5 md:h-5 text-primary" />}
           value={itemCount.toLocaleString("fa-IR")}
           label="تعداد کالا"
           tone="blue"
@@ -561,7 +561,7 @@ function MetricCard({
   tone: "blue" | "emerald" | "amber";
 }) {
   const bg =
-    tone === "blue" ? "bg-[#2563EB]/10" : tone === "emerald" ? "bg-emerald-50" : "bg-amber-50";
+    tone === "blue" ? "bg-primary/10" : tone === "emerald" ? "bg-emerald-50" : "bg-amber-50";
   return (
     <div className="flex items-center gap-1 md:gap-3 p-1.5 md:p-5 rounded-2xl bg-white border border-gray-200 shadow-lg">
       <div className={`w-6 h-6 md:w-12 md:h-12 rounded-lg md:rounded-xl ${bg} flex items-center justify-center shrink-0`}>
@@ -611,7 +611,7 @@ function CartEmpty({
       {error ? <p className="text-sm text-red-600 mb-6">{error}</p> : null}
       <Link
         href="/products"
-        className="inline-flex items-center gap-2 px-6 py-3 bg-[#2563EB] text-white rounded-xl font-black text-sm hover:bg-[#1d4ed8] shadow-lg shadow-[#2563EB]/25"
+        className="inline-flex items-center gap-2 px-6 py-3 bg-primary text-white rounded-xl font-black text-sm hover:bg-primary-strong shadow-lg shadow-primary/25"
       >
         <ArrowLeft className="w-4 h-4" />
         بازگشت به فروشگاه
@@ -636,8 +636,8 @@ function CartBenefits() {
             key={item.title}
             className="flex items-center gap-3 p-4 md:p-5 rounded-2xl bg-white border border-gray-200 shadow-sm"
           >
-            <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-[#2563EB]/5 flex items-center justify-center shrink-0">
-              <item.icon className="w-4 h-4 md:w-5 md:h-5 text-[#2563EB]" />
+            <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-primary/5 flex items-center justify-center shrink-0">
+              <item.icon className="w-4 h-4 md:w-5 md:h-5 text-primary" />
             </div>
             <div>
               <p className="text-xs md:text-sm font-bold text-gray-900">{item.title}</p>

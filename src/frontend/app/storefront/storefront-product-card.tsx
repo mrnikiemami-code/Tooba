@@ -11,7 +11,7 @@ import { addOfferToCart, toCustomerCartMessage } from "./storefront-cart-api.ts"
 import type { StorefrontProductCard } from "./storefront-model.ts";
 import { useStorefrontWishlist } from "./storefront-wishlist-provider.tsx";
 
-export const STOREFRONT_ACCENT = "#2563EB"; // default tooba-blue palette; runtime uses --color-primary
+export const STOREFRONT_ACCENT = "rgb(var(--color-primary))";
 
 function discountPercent(card: StorefrontProductCard): number | null {
   if (card.promotionalAmountExclusiveOfTax == null || card.offerAmountExclusiveOfTax <= 0) return null;

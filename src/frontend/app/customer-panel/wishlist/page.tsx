@@ -49,7 +49,7 @@ export default function CustomerWishlistPage() {
         <section className="rounded-2xl border border-gray-100 bg-white px-5 py-14 text-center">
           <Heart className="mx-auto size-12 text-gray-200" />
           <p className="mt-4 font-bold text-gray-700">{empty}</p>
-          <Link href="/products" className="mt-5 inline-flex rounded-xl bg-[#2563EB] px-5 py-2.5 text-sm font-bold text-white">مشاهده محصولات</Link>
+          <Link href="/products" className="mt-5 inline-flex rounded-xl bg-primary px-5 py-2.5 text-sm font-bold text-white">مشاهده محصولات</Link>
         </section>
       ) : (
         <section className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-4" aria-label="محصولات علاقه‌مندی">

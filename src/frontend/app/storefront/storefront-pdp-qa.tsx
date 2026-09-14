@@ -35,7 +35,7 @@ export function StorefrontPdpQa({ detail }: { detail: StorefrontProductDetailPag
           <button
             type="button"
             onClick={() => setShowForm(true)}
-            className="px-4 py-2 bg-[#2563EB] text-white rounded-xl text-sm font-bold hover:bg-[#1d4ed8] transition-all flex items-center gap-2"
+            className="px-4 py-2 bg-primary text-white rounded-xl text-sm font-bold hover:bg-primary-strong transition-all flex items-center gap-2"
           >
             <MessageCircle className="w-4 h-4" />
             پرسش جدید
@@ -52,7 +52,7 @@ export function StorefrontPdpQa({ detail }: { detail: StorefrontProductDetailPag
             rows={3}
             maxLength={2000}
             placeholder="سوال خود را بنویسید..."
-            className="w-full mt-1 px-4 py-2 bg-white rounded-xl text-sm border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#2563EB] resize-none"
+            className="w-full mt-1 px-4 py-2 bg-white rounded-xl text-sm border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary resize-none"
           />
           <div className="flex gap-2">
             <button
@@ -74,7 +74,7 @@ export function StorefrontPdpQa({ detail }: { detail: StorefrontProductDetailPag
                   }
                 })();
               }}
-              className="px-4 py-2 bg-[#2563EB] text-white rounded-xl text-sm font-bold disabled:opacity-60 flex items-center gap-2"
+              className="px-4 py-2 bg-primary text-white rounded-xl text-sm font-bold disabled:opacity-60 flex items-center gap-2"
             >
               <Send className="w-4 h-4" /> ارسال پرسش
             </button>
@@ -106,7 +106,7 @@ export function StorefrontPdpQa({ detail }: { detail: StorefrontProductDetailPag
             </div>
             {item.answerBody ? (
               <div className="mr-12 rounded-xl bg-blue-50/60 border border-blue-100 p-3">
-                <p className="text-xs font-bold text-[#2563EB] flex items-center gap-1">
+                <p className="text-xs font-bold text-primary flex items-center gap-1">
                   <CheckCircle className="w-3.5 h-3.5" />
                   {item.answerAuthorDisplayName ?? "پاسخ فروشگاه"}
                 </p>

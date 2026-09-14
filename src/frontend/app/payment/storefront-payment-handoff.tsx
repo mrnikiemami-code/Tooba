@@ -130,7 +130,7 @@ export function StorefrontPaymentHandoff() {
   return (
     <div className="min-h-screen bg-white pb-10" data-testid="payment-handoff-page">
       <div className="max-w-[1800px] mx-auto px-4 sm:px-6 pt-4 md:pt-6">
-        <div className="relative overflow-hidden rounded-2xl md:rounded-3xl bg-gradient-to-l from-[#E53935] to-[#b71c1c] min-h-[180px]">
+        <div className="relative overflow-hidden rounded-2xl md:rounded-3xl bg-gradient-to-l from-primary to-primary-strong min-h-[180px]">
           <div className="relative z-10 flex flex-col items-center justify-center text-center p-8">
             <span className="inline-flex items-center gap-1.5 bg-white/15 text-white text-xs font-bold px-3 py-1.5 rounded-full mb-3">
               <CreditCard className="w-3.5 h-3.5" />
@@ -151,7 +151,7 @@ export function StorefrontPaymentHandoff() {
             <div key={s.id} className="flex items-center gap-2">
               <div
                 className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold ${
-                  s.id === 3 ? "bg-[#E53935] text-white" : "bg-red-50 text-red-600"
+                  s.id === 3 ? "bg-primary text-white" : "bg-red-50 text-red-600"
                 }`}
               >
                 <s.icon className="w-4 h-4" />
@@ -166,7 +166,7 @@ export function StorefrontPaymentHandoff() {
         {error && !page ? (
           <div className="text-center py-10">
             <p className="text-sm text-red-600 mb-4">{error}</p>
-            <Link href="/shipping" className="inline-flex px-5 py-2.5 rounded-xl bg-[#E53935] text-white text-sm font-bold">
+            <Link href="/shipping" className="inline-flex px-5 py-2.5 rounded-xl bg-primary text-white text-sm font-bold">
               بازگشت به ارسال
             </Link>
           </div>
@@ -194,14 +194,14 @@ export function StorefrontPaymentHandoff() {
                       : formatOfferAmount(page.shippingAmount, page.currency)}
                   </span>
                 </p>
-                <p className="text-base font-black text-[#E53935]" data-testid="payment-payable-amount">
+                <p className="text-base font-black text-primary" data-testid="payment-payable-amount">
                   قابل پرداخت: {formatOfferAmount(page.payableAmount, page.currency)}
                 </p>
                 <p className="text-xs text-gray-500">
                   وضعیت پرداخت:{" "}
                   <span className="font-bold text-gray-800">{paid ? "پرداخت‌شده" : "در انتظار پرداخت"}</span>
                 </p>
-                <Link href="/shipping" className="inline-flex text-sm text-[#E53935] font-bold">
+                <Link href="/shipping" className="inline-flex text-sm text-primary font-bold">
                   بازگشت به ارسال
                 </Link>
               </div>
@@ -235,13 +235,13 @@ export function StorefrontPaymentHandoff() {
                     onChange={(id) => setMethod(id)}
                     quote={quote}
                     hostEnabledCodes={enabledCodes}
-                    accent="#E53935"
+                    accent="rgb(var(--color-primary))"
                   />
                   <button
                     type="button"
                     disabled={paying || !method}
                     onClick={() => void pay()}
-                    className="w-full px-6 py-3.5 rounded-2xl bg-[#E53935] text-white text-sm font-bold disabled:opacity-50 shadow-lg shadow-[#E53935]/25"
+                    className="w-full px-6 py-3.5 rounded-2xl bg-primary text-white text-sm font-bold disabled:opacity-50 shadow-lg shadow-primary/25"
                     data-testid="payment-submit"
                   >
                     {paying

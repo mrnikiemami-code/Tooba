@@ -139,7 +139,7 @@ export function StorefrontShopeivaCheckout() {
         />
         <div className="py-16 text-center">
           {error ? <p className="text-sm text-red-600">{error}</p> : <p className="text-sm text-gray-500">در حال آماده‌سازی تسویه…</p>}
-          <Link href="/cart" className="inline-flex mt-6 px-5 py-2.5 rounded-xl bg-[#2563EB] text-white text-sm font-bold">
+          <Link href="/cart" className="inline-flex mt-6 px-5 py-2.5 rounded-xl bg-primary text-white text-sm font-bold">
             بازگشت به سبد
           </Link>
         </div>
@@ -152,7 +152,7 @@ export function StorefrontShopeivaCheckout() {
   return (
     <form onSubmit={(event) => void onSubmit(event)} className="pb-10" data-testid="checkout-page">
       <nav className="text-xs text-gray-500 pt-4 mb-2 flex flex-wrap gap-2" aria-label="مسیر صفحه" data-testid="checkout-breadcrumb">
-        <Link href="/cart" className="hover:text-[#2563EB]">
+        <Link href="/cart" className="hover:text-primary">
           سبد خرید
         </Link>
         <span>/</span>
@@ -180,7 +180,7 @@ export function StorefrontShopeivaCheckout() {
             {savedAddresses ? (
               <section className="bg-white rounded-2xl border border-gray-200 p-4 md:p-5 shadow-sm" data-testid="checkout-address-picker">
                 <h2 className="text-sm md:text-base font-black flex items-center gap-2 mb-3">
-                  <Home className="w-4 h-4 text-[#2563EB]" />
+                  <Home className="w-4 h-4 text-primary" />
                   انتخاب آدرس
                 </h2>
                 <div className="flex gap-3 mb-4">
@@ -189,7 +189,7 @@ export function StorefrontShopeivaCheckout() {
                     onClick={startNewAddress}
                     className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-2xl text-xs md:text-sm font-bold border-2 transition-all ${
                       !useSavedAddress
-                        ? "border-[#2563EB] bg-[#2563EB]/5 text-[#2563EB]"
+                        ? "border-primary bg-primary/5 text-primary"
                         : "border-gray-200 text-gray-500 hover:border-gray-300"
                     }`}
                   >
@@ -200,7 +200,7 @@ export function StorefrontShopeivaCheckout() {
                     onClick={() => setShowSaved((open) => !open)}
                     className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-2xl text-xs md:text-sm font-bold border-2 transition-all ${
                       useSavedAddress
-                        ? "border-[#2563EB] bg-[#2563EB]/5 text-[#2563EB]"
+                        ? "border-primary bg-primary/5 text-primary"
                         : "border-gray-200 text-gray-500 hover:border-gray-300"
                     }`}
                   >
@@ -220,7 +220,7 @@ export function StorefrontShopeivaCheckout() {
                           onClick={() => selectSaved(saved)}
                           className={`w-full text-right p-3 md:p-4 rounded-xl border-2 transition-all ${
                             savedAddressId === saved.addressId
-                              ? "border-[#2563EB] bg-[#2563EB]/5"
+                              ? "border-primary bg-primary/5"
                               : "border-gray-100 hover:border-gray-200 bg-gray-50"
                           }`}
                         >
@@ -236,7 +236,7 @@ export function StorefrontShopeivaCheckout() {
                               </p>
                             </div>
                             {savedAddressId === saved.addressId ? (
-                              <Check className="w-4 h-4 text-[#2563EB] shrink-0 mt-1" />
+                              <Check className="w-4 h-4 text-primary shrink-0 mt-1" />
                             ) : null}
                           </div>
                         </button>
@@ -249,7 +249,7 @@ export function StorefrontShopeivaCheckout() {
 
             <section className="bg-white rounded-2xl border border-gray-200 p-4 md:p-5 shadow-sm space-y-3" data-testid="checkout-recipient">
               <h2 className="text-base font-black flex items-center gap-2">
-                <MapPin className="w-4 h-4 text-[#2563EB]" />
+                <MapPin className="w-4 h-4 text-primary" />
                 اطلاعات گیرنده
               </h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -277,10 +277,10 @@ export function StorefrontShopeivaCheckout() {
 
             <section className="bg-white rounded-2xl border border-gray-200 p-4 md:p-5 shadow-sm" data-testid="checkout-shipping-method">
               <h2 className="text-base font-black flex items-center gap-2 mb-3">
-                <Truck className="w-4 h-4 text-[#2563EB]" />
+                <Truck className="w-4 h-4 text-primary" />
                 روش ارسال
               </h2>
-              <div className="rounded-xl border-2 border-[#2563EB] bg-[#2563EB]/5 p-3 text-sm">
+              <div className="rounded-xl border-2 border-primary bg-primary/5 p-3 text-sm">
                 <p className="font-bold">{page.shippingMethodLabel}</p>
                 <p className="text-xs text-gray-500 mt-1">برچسب از Host است. نرخ چندحامل جعلی اضافه نشده است.</p>
               </div>
@@ -288,13 +288,13 @@ export function StorefrontShopeivaCheckout() {
 
             <section className="bg-white rounded-2xl border border-gray-200 p-4 md:p-5 shadow-sm" data-testid="checkout-payment">
               <h2 className="text-base font-black flex items-center gap-2 mb-3">
-                <CreditCard className="w-4 h-4 text-[#2563EB]" />
+                <CreditCard className="w-4 h-4 text-primary" />
                 پرداخت
               </h2>
-              <div className="rounded-xl border-2 border-[#2563EB] bg-white p-4 space-y-3">
+              <div className="rounded-xl border-2 border-primary bg-white p-4 space-y-3">
                 <div className="flex items-start gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-[#2563EB]/10 flex items-center justify-center shrink-0">
-                    <ShieldCheck className="w-5 h-5 text-[#2563EB]" />
+                  <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+                    <ShieldCheck className="w-5 h-5 text-primary" />
                   </div>
                   <div>
                     <p className="text-sm font-bold text-gray-900">پرداخت پس از ثبت سفارش</p>
@@ -320,7 +320,7 @@ export function StorefrontShopeivaCheckout() {
             <div className="lg:sticky lg:top-24" data-testid="checkout-summary">
               <div className="bg-white rounded-2xl border border-gray-200 p-4 md:p-5 shadow-md">
                 <h2 className="text-base font-black mb-4 flex items-center gap-2">
-                  <CreditCard className="w-4 h-4 text-[#2563EB]" />
+                  <CreditCard className="w-4 h-4 text-primary" />
                   خلاصه سفارش
                 </h2>
                 <div className="space-y-2 text-sm">
@@ -346,7 +346,7 @@ export function StorefrontShopeivaCheckout() {
                     <span className="text-gray-500">مالیات</span>
                     <span>{formatOfferAmount(page.taxAmount, page.currency)}</span>
                   </div>
-                  <div className="flex justify-between font-black text-[#2563EB] border-t border-gray-200 pt-2">
+                  <div className="flex justify-between font-black text-primary border-t border-gray-200 pt-2">
                     <span>قابل پرداخت</span>
                     <span>{formatOfferAmount(page.payableAmount, page.currency)}</span>
                   </div>
@@ -354,7 +354,7 @@ export function StorefrontShopeivaCheckout() {
                 <button
                   type="submit"
                   disabled={busy}
-                  className="mt-4 w-full py-3 rounded-2xl font-black text-sm bg-[#2563EB] text-white disabled:opacity-60 flex items-center justify-center gap-2 shadow-lg shadow-[#2563EB]/25"
+                  className="mt-4 w-full py-3 rounded-2xl font-black text-sm bg-primary text-white disabled:opacity-60 flex items-center justify-center gap-2 shadow-lg shadow-primary/25"
                   data-testid="checkout-submit"
                 >
                   {busy ? "در حال ثبت…" : "ثبت سفارش و ادامه پرداخت"}
@@ -390,7 +390,7 @@ function CheckoutHero({
 }) {
   return (
     <section className="w-full" data-testid="checkout-hero">
-      <div className="relative overflow-hidden rounded-2xl md:rounded-3xl bg-gradient-to-l from-[#2563EB] to-[#1e3a8a] min-h-[200px] md:min-h-[220px]">
+      <div className="relative overflow-hidden rounded-2xl md:rounded-3xl bg-gradient-to-l from-primary to-primary-strong min-h-[200px] md:min-h-[220px]">
         <div className="absolute inset-0 opacity-[0.08]">
           <div className="absolute -top-20 -right-20 w-56 h-56 rounded-full bg-white" />
           <div className="absolute -bottom-16 -left-16 w-40 h-40 rounded-full bg-white" />
@@ -414,9 +414,9 @@ function CheckoutHero({
             <span
               className={`flex items-center gap-1.5 md:gap-2 px-3 md:px-5 py-2 md:py-3 rounded-xl text-[11px] md:text-sm font-bold transition-all ${
                 active
-                  ? "bg-[#2563EB] text-white shadow-lg shadow-[#2563EB]/30"
+                  ? "bg-primary text-white shadow-lg shadow-primary/30"
                   : done
-                    ? "bg-blue-50 text-[#2563EB]"
+                    ? "bg-blue-50 text-primary"
                     : "bg-gray-100 text-gray-400"
               }`}
             >
@@ -435,7 +435,7 @@ function CheckoutHero({
                 content
               )}
               {index < steps.length - 1 ? (
-                <ChevronLeft className={`w-3.5 h-3.5 md:w-4 md:h-4 ${done ? "text-[#2563EB]" : "text-gray-300"}`} />
+                <ChevronLeft className={`w-3.5 h-3.5 md:w-4 md:h-4 ${done ? "text-primary" : "text-gray-300"}`} />
               ) : null}
             </div>
           );
@@ -444,8 +444,8 @@ function CheckoutHero({
 
       <div className="grid grid-cols-3 gap-1.5 md:gap-4 mb-2">
         <div className="flex items-center gap-1 md:gap-3 p-1.5 md:p-5 rounded-2xl bg-white border border-gray-200 shadow-lg">
-          <div className="w-6 h-6 md:w-12 md:h-12 rounded-lg md:rounded-xl bg-[#2563EB]/10 flex items-center justify-center shrink-0">
-            <ShoppingBag className="w-3 h-3 md:w-5 md:h-5 text-[#2563EB]" />
+          <div className="w-6 h-6 md:w-12 md:h-12 rounded-lg md:rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+            <ShoppingBag className="w-3 h-3 md:w-5 md:h-5 text-primary" />
           </div>
           <div className="min-w-0">
             <p className="text-[10px] md:text-2xl font-black text-gray-900">{itemCount.toLocaleString("fa-IR")}</p>

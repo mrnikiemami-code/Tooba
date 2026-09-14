@@ -308,7 +308,7 @@ function ResultBody() {
             <button
               type="submit"
               disabled={busy}
-              className="w-full py-3 rounded-xl bg-[#2563EB] text-white font-bold disabled:opacity-50"
+              className="w-full py-3 rounded-xl bg-primary text-white font-bold disabled:opacity-50"
             >
               ثبت اطلاعات پرداخت
             </button>
@@ -322,14 +322,14 @@ function ResultBody() {
                 type="button"
                 disabled={busy}
                 onClick={() => void onRetryUnpaid()}
-                className="w-full py-3 rounded-xl bg-[#2563EB] text-white font-bold disabled:opacity-50"
+                className="w-full py-3 rounded-xl bg-primary text-white font-bold disabled:opacity-50"
                 data-testid="payment-unpaid-retry"
               >
                 تلاش مجدد پرداخت
               </button>
             ) : null}
             {orderHref ? (
-              <Link href={orderHref} className="inline-flex px-5 py-2.5 rounded-xl border border-blue-200 text-[#2563EB] text-sm font-bold">
+              <Link href={orderHref} className="inline-flex px-5 py-2.5 rounded-xl border border-blue-200 text-primary text-sm font-bold">
                 مشاهده سفارش
               </Link>
             ) : null}
@@ -351,7 +351,7 @@ function ResultBody() {
           <Link
             href={`/payment?checkoutId=${checkoutId}`}
             onClick={() => resetStorefrontPaymentIdempotency(checkoutId, "gateway")}
-            className="inline-flex px-5 py-2.5 rounded-xl bg-[#2563EB] text-white text-sm font-bold"
+            className="inline-flex px-5 py-2.5 rounded-xl bg-primary text-white text-sm font-bold"
           >
             تلاش مجدد برای پرداخت
           </Link>
@@ -359,10 +359,10 @@ function ResultBody() {
 
         {(paid || awaitingAdmin) && orderHref ? (
           <div className="flex flex-wrap justify-center gap-2">
-            <Link href={orderHref} className="inline-flex px-5 py-2.5 rounded-xl bg-[#2563EB] text-white text-sm font-bold">
+            <Link href={orderHref} className="inline-flex px-5 py-2.5 rounded-xl bg-primary text-white text-sm font-bold">
               مشاهده سفارش
             </Link>
-            <Link href="/products" className="inline-flex px-5 py-2.5 rounded-xl border border-blue-200 text-[#2563EB] text-sm font-bold">
+            <Link href="/products" className="inline-flex px-5 py-2.5 rounded-xl border border-blue-200 text-primary text-sm font-bold">
               ادامه خرید
             </Link>
           </div>

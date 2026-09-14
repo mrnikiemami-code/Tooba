@@ -15,7 +15,7 @@ import {
 
 /**
  * کشوی مینی‌سبد Shopeiva روی حقیقت Cart Host.
- * آبی Tooba (#2563EB)؛ بدون قیمت جعلی و بدون پرش مستقیم به shipping.
+ * برند از توکن primary؛ بدون قیمت جعلی و بدون پرش مستقیم به shipping.
  */
 export function StorefrontMiniCartDrawer({
   open,

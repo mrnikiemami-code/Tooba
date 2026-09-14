@@ -162,8 +162,8 @@ export default function CustomerAddressesPage() {
     <div className="space-y-4">
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div className="flex items-center gap-2">
-          <div className="w-10 h-10 rounded-xl bg-[#2563EB]/10 flex items-center justify-center">
-            <MapPin className="w-5 h-5 text-[#2563EB]" />
+          <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+            <MapPin className="w-5 h-5 text-primary" />
           </div>
           <div>
             <h1 className="text-lg font-bold text-gray-900">آدرس‌های من</h1>
@@ -175,7 +175,7 @@ export default function CustomerAddressesPage() {
         <button
           type="button"
           onClick={openCreate}
-          className="px-4 py-2 bg-[#2563EB] text-white rounded-xl text-xs font-bold hover:bg-blue-700 transition-all shadow-lg shadow-[#2563EB]/30 flex items-center gap-1"
+          className="px-4 py-2 bg-primary text-white rounded-xl text-xs font-bold hover:bg-blue-700 transition-all shadow-lg shadow-primary/30 flex items-center gap-1"
         >
           <Plus className="w-4 h-4" />
           آدرس جدید
@@ -193,7 +193,7 @@ export default function CustomerAddressesPage() {
           <button
             type="button"
             onClick={openCreate}
-            className="mt-3 px-4 py-2 bg-[#2563EB] text-white rounded-xl text-xs font-bold"
+            className="mt-3 px-4 py-2 bg-primary text-white rounded-xl text-xs font-bold"
           >
             افزودن آدرس جدید
           </button>
@@ -207,18 +207,18 @@ export default function CustomerAddressesPage() {
               <article
                 key={addr.addressId}
                 className={`bg-white rounded-2xl overflow-hidden border-2 transition-all ${
-                  addr.isDefault ? "border-[#2563EB] shadow-lg shadow-[#2563EB]/10" : "border-gray-200 hover:border-[#2563EB]/30 hover:shadow-md"
+                  addr.isDefault ? "border-primary shadow-lg shadow-primary/10" : "border-gray-200 hover:border-primary/30 hover:shadow-md"
                 } ${deleting ? "opacity-50" : ""}`}
               >
                 <div className={`p-3 border-b flex items-center justify-between ${addr.isDefault ? "bg-blue-50 border-blue-100" : "bg-gray-50 border-gray-100"}`}>
                   <div className="flex items-center gap-2">
-                    <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${addr.isDefault ? "bg-[#2563EB]" : "bg-gray-500"}`}>
+                    <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${addr.isDefault ? "bg-primary" : "bg-gray-500"}`}>
                       <Icon className="w-4 h-4 text-white" />
                     </div>
                     <p className="text-sm font-bold text-gray-900">{addr.label ?? "آدرس"}</p>
                   </div>
                   {addr.isDefault ? (
-                    <span className="text-[8px] font-bold bg-[#2563EB] text-white px-2 py-0.5 rounded-full">پیش‌فرض</span>
+                    <span className="text-[8px] font-bold bg-primary text-white px-2 py-0.5 rounded-full">پیش‌فرض</span>
                   ) : null}
                 </div>
                 <div className="p-3 space-y-2">
@@ -240,7 +240,7 @@ export default function CustomerAddressesPage() {
                         type="button"
                         onClick={() => void onDefault(addr.addressId)}
                         disabled={busy}
-                        className="p-1 text-gray-400 hover:text-[#2563EB] rounded hover:bg-gray-100"
+                        className="p-1 text-gray-400 hover:text-primary rounded hover:bg-gray-100"
                         title="تنظیم پیش‌فرض"
                         aria-label="تنظیم پیش‌فرض"
                       >
@@ -277,8 +277,8 @@ export default function CustomerAddressesPage() {
           <div className="bg-white rounded-2xl max-w-lg w-full p-6 border border-gray-200 shadow-2xl max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-xl bg-[#2563EB]/10 flex items-center justify-center">
-                  {editingId ? <Edit2 className="w-4 h-4 text-[#2563EB]" /> : <Plus className="w-4 h-4 text-[#2563EB]" />}
+                <div className="w-8 h-8 rounded-xl bg-primary/10 flex items-center justify-center">
+                  {editingId ? <Edit2 className="w-4 h-4 text-primary" /> : <Plus className="w-4 h-4 text-primary" />}
                 </div>
                 <h2 className="text-lg font-bold">{editingId ? "ویرایش آدرس" : "آدرس جدید"}</h2>
               </div>
@@ -296,7 +296,7 @@ export default function CustomerAddressesPage() {
                   onChange={(event) => setForm({ ...form, postalAddress: event.target.value })}
                   rows={2}
                   placeholder="آدرس کامل را وارد کنید"
-                  className="w-full mt-1 px-4 py-2.5 bg-gray-50 rounded-xl text-sm border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#2563EB] resize-none"
+                  className="w-full mt-1 px-4 py-2.5 bg-gray-50 rounded-xl text-sm border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary resize-none"
                 />
               </label>
               <div className="grid grid-cols-2 gap-4">
@@ -315,7 +315,7 @@ export default function CustomerAddressesPage() {
                   id="isDefault"
                   checked={form.isDefault === true}
                   onChange={(event) => setForm({ ...form, isDefault: event.target.checked })}
-                  className="w-4 h-4 accent-[#2563EB] rounded"
+                  className="w-4 h-4 accent-primary rounded"
                 />
                 <label htmlFor="isDefault" className="text-sm text-gray-700">تنظیم به عنوان آدرس پیش‌فرض</label>
               </div>
@@ -326,7 +326,7 @@ export default function CustomerAddressesPage() {
                 <button
                   type="submit"
                   disabled={busy}
-                  className="flex-1 py-2.5 bg-[#2563EB] text-white rounded-xl text-sm font-bold disabled:opacity-60 flex items-center justify-center gap-2"
+                  className="flex-1 py-2.5 bg-primary text-white rounded-xl text-sm font-bold disabled:opacity-60 flex items-center justify-center gap-2"
                 >
                   <Save className="w-4 h-4" />
                   {editingId ? "ویرایش آدرس" : "افزودن آدرس"}
@@ -364,7 +364,7 @@ function Field({
         placeholder={placeholder}
         dir={ltr ? "ltr" : undefined}
         onChange={(event) => onChange(event.target.value)}
-        className="w-full mt-1 px-4 py-2.5 bg-gray-50 rounded-xl text-sm border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#2563EB]"
+        className="w-full mt-1 px-4 py-2.5 bg-gray-50 rounded-xl text-sm border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary"
       />
     </label>
   );

@@ -94,7 +94,7 @@ export default function CustomerOrderDetail() {
             <span className={`rounded-xl px-4 py-2 text-sm font-bold ${customerStatusClasses(page.paymentState)}`}>
               پرداخت: {formatCustomerOrderStatus(page.paymentState)}
             </span>
-            <span className="bg-blue-50 text-[#2563EB] rounded-xl px-4 py-2 text-sm font-bold">
+            <span className="bg-blue-50 text-primary rounded-xl px-4 py-2 text-sm font-bold">
               سفارش: {formatCustomerOrderStatus(page.status)}
             </span>
           </div>
@@ -107,7 +107,7 @@ export default function CustomerOrderDetail() {
                 type="button"
                 disabled={retryBusy}
                 data-testid="customer-unpaid-retry"
-                className="mt-3 inline-flex items-center rounded-xl bg-[#2563EB] px-4 py-2 text-sm font-bold text-white disabled:opacity-60"
+                className="mt-3 inline-flex items-center rounded-xl bg-primary px-4 py-2 text-sm font-bold text-white disabled:opacity-60"
                 onClick={() => {
                   setRetryBusy(true);
                   setRetryError(null);
@@ -139,7 +139,7 @@ export default function CustomerOrderDetail() {
           {page.sellerOrders.map((seller) => (
             <article key={seller.sellerOrderId} className="rounded-2xl border border-gray-100 overflow-hidden">
               <div className="bg-gray-50 px-4 py-3 flex flex-wrap items-center gap-3">
-                <Store className="w-5 h-5 text-[#2563EB]" />
+                <Store className="w-5 h-5 text-primary" />
                 <strong className="text-sm">{seller.sellerDisplayName}</strong>
                 <span className="text-xs text-gray-400">{seller.orderNumber}</span>
                 <span className="me-auto text-xs font-bold">سفارش: {formatCustomerOrderStatus(seller.status)}</span>
@@ -151,7 +151,7 @@ export default function CustomerOrderDetail() {
                 {seller.lines.map((line) => (
                   <div key={`${seller.sellerOrderId}-${line.offerId}`} className="p-4 flex items-center gap-4">
                     <div className="w-14 h-14 bg-blue-50 rounded-xl flex items-center justify-center shrink-0">
-                      <Package className="w-6 h-6 text-[#2563EB]" />
+                      <Package className="w-6 h-6 text-primary" />
                     </div>
                     <div className="min-w-0 flex-1">
                       <p className="font-bold text-sm truncate">{line.title}</p>
@@ -173,7 +173,7 @@ export default function CustomerOrderDetail() {
                         sellerOrderId: seller.sellerOrderId,
                         items: fulfillmentBySeller.get(seller.sellerOrderId)!.items,
                       })}
-                      className="inline-flex items-center gap-2 rounded-xl border border-[#2563EB] px-4 py-2 text-sm font-bold text-[#2563EB] hover:bg-blue-50 transition-colors"
+                      className="inline-flex items-center gap-2 rounded-xl border border-primary px-4 py-2 text-sm font-bold text-primary hover:bg-blue-50 transition-colors"
                     >
                       <RotateCcw className="w-4 h-4" />
                       درخواست مرجوعی
@@ -190,7 +190,7 @@ export default function CustomerOrderDetail() {
 
       <section className="bg-white rounded-2xl border border-gray-100 p-4 md:p-6 shadow-sm grid md:grid-cols-2 gap-5">
         <div className="flex gap-3">
-          <MapPin className="w-5 h-5 text-[#2563EB] shrink-0" />
+          <MapPin className="w-5 h-5 text-primary shrink-0" />
           <div>
             <h2 className="font-black text-sm">نشانی تحویل</h2>
             <p className="text-sm text-gray-600 mt-2 leading-7">
@@ -200,7 +200,7 @@ export default function CustomerOrderDetail() {
           </div>
         </div>
         <div className="flex gap-3">
-          <Truck className="w-5 h-5 text-[#2563EB] shrink-0" />
+          <Truck className="w-5 h-5 text-primary shrink-0" />
           <div className="min-w-0 flex-1">
             <h2 className="font-black text-sm">روش ارسال</h2>
             <p className="text-sm text-gray-600 mt-2">{page.shippingMethodLabel || "ثبت نشده"}</p>
@@ -231,7 +231,7 @@ function Money({ label, amount, currency, strong = false }: { label: string; amo
   return (
     <div className={`rounded-xl p-3 ${strong ? "bg-blue-50" : "bg-gray-50"}`}>
       <p className="text-xs text-gray-500">{label}</p>
-      <p className={`text-sm mt-2 ${strong ? "font-black text-[#2563EB]" : "font-bold"}`}>
+      <p className={`text-sm mt-2 ${strong ? "font-black text-primary" : "font-bold"}`}>
         {formatCustomerMoney(amount, currency)}
       </p>
     </div>

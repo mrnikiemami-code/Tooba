@@ -595,3 +595,21 @@ Brand palette changes must not redefine danger, success, or warning semantic col
 
 ### LOCK-SF-144 — Appearance write is backend-authoritative
 Appearance write authorization and Store isolation are backend-authoritative. The frontend cannot grant cross-store writes.
+
+### LOCK-SF-145 — Storefront brand surfaces use semantic tokens
+Every Storefront brand-bound visual surface must resolve brand color from canonical semantic appearance tokens, not page-local hard-coded brand hexes.
+
+### LOCK-SF-146 — Legacy Shopeiva brand red is not a Storefront CTA
+Legacy Shopeiva brand red must not survive as a Storefront brand CTA/accent where the canonical Store palette should apply.
+
+### LOCK-SF-147 — Status semantics stay independent of PaletteKey
+Danger/success/warning/validation/payment-status semantics remain independent of Store brand PaletteKey.
+
+### LOCK-SF-148 — Home/PDP palette migration changes color only
+Home and PDP palette migration may change brand color only; locked geometry, layout, and interaction remain unchanged.
+
+### LOCK-SF-149 — Curated palettes must meet contrast
+All curated palettes must satisfy canonical contrast requirements before being selectable.
+
+### LOCK-SF-150 — No page-local palette registry or fetch
+Storefront pages must not define local palette registries or independent appearance fetch/state.

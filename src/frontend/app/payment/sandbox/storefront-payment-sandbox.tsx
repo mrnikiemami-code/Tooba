@@ -92,7 +92,7 @@ function SandboxBody() {
           type="button"
           disabled={busy || !paymentId || !attemptId || !reference}
           onClick={() => void finish("success")}
-          className="w-full py-3 rounded-xl bg-[#2563EB] text-white font-bold disabled:opacity-50"
+          className="w-full py-3 rounded-xl bg-primary text-white font-bold disabled:opacity-50"
         >
           پرداخت موفق
         </button>
@@ -107,7 +107,7 @@ function SandboxBody() {
         <p className="text-center">
           <Link
             href={checkoutId ? `/payment?checkoutId=${encodeURIComponent(checkoutId)}` : "/payment"}
-            className="text-[#2563EB] text-xs"
+            className="text-primary text-xs"
           >
             بازگشت به پرداخت
           </Link>

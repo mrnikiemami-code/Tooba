@@ -98,7 +98,7 @@ export function HomeBestSellersSection({ columns }: { columns: StorefrontBestSel
                   <Package className="w-3.5 h-3.5" style={{ color: STOREFRONT_ACCENT }} />
                   {column.categoryName}
                 </h4>
-                <span className="text-[10px] px-2.5 py-0.5 rounded-full font-bold" style={{ color: STOREFRONT_ACCENT, backgroundColor: `${STOREFRONT_ACCENT}1a` }}>
+                <span className="text-[10px] px-2.5 py-0.5 rounded-full font-bold" style={{ color: STOREFRONT_ACCENT, backgroundColor: "rgb(var(--color-primary) / 0.1)" }}>
                   {column.products.length.toLocaleString("fa-IR")} کالا
                 </span>
               </div>
@@ -134,7 +134,7 @@ export function HomeBestSellersSection({ columns }: { columns: StorefrontBestSel
                     </Link>
                     <Link href={`/products/${card.slug}`} className="flex-1 min-w-0">
                       <h5 className="text-sm font-bold text-gray-800 truncate group-hover/product:transition-colors" style={{ color: undefined }}>
-                        <span className="group-hover/product:text-[#2563EB]">{card.title}</span>
+                        <span className="group-hover/product:text-primary">{card.title}</span>
                       </h5>
                       {card.reviewCount > 0 && card.averageRating !== null ? (
                         <div className="flex items-center gap-1.5 mt-0.5">
@@ -164,10 +164,10 @@ export function HomeBestSellersSection({ columns }: { columns: StorefrontBestSel
                         aria-label="علاقه‌مندی"
                         onClick={() => void wishlist.toggle(card.productId)}
                       >
-                        <Heart className={`w-4 h-4 ${saved ? "fill-[#2563EB] text-[#2563EB]" : "text-gray-400 hover:text-[#2563EB]"}`} />
+                        <Heart className={`w-4 h-4 ${saved ? "fill-primary text-primary" : "text-gray-400 hover:text-primary"}`} />
                       </button>
                       <Link href={`/products/${card.slug}`} className="p-1.5 rounded-full hover:bg-blue-50 transition-colors">
-                        <ShoppingBag className="w-4 h-4 text-gray-400 hover:text-[#2563EB]" />
+                        <ShoppingBag className="w-4 h-4 text-gray-400 hover:text-primary" />
                       </Link>
                       <Link href={`/products/${card.slug}`} className="p-1.5 rounded-full hover:bg-blue-50 transition-colors">
                         <Eye className="w-4 h-4 text-gray-400 hover:text-blue-500" />
@@ -323,7 +323,7 @@ export function HomeTestimonialsSection({ reviews }: { reviews: StorefrontFeatur
             </h2>
           </div>
           {summary ? (
-            <div className="flex items-center gap-2 px-3 py-1.5 rounded-full border" style={{ backgroundColor: `${STOREFRONT_ACCENT}1a`, borderColor: `${STOREFRONT_ACCENT}33` }}>
+            <div className="flex items-center gap-2 px-3 py-1.5 rounded-full border" style={{ backgroundColor: "rgb(var(--color-primary) / 0.1)", borderColor: "rgb(var(--color-primary) / 0.2)" }}>
               <Star className="w-3 h-3 text-amber-400 fill-amber-400" />
               <span className="text-[11px] font-bold text-gray-800">{summary.average.toLocaleString("fa-IR", { maximumFractionDigits: 1 })}</span>
               <span className="text-[10px] text-gray-500">({reviews.length.toLocaleString("fa-IR")} نظر)</span>
@@ -358,10 +358,10 @@ export function HomeTestimonialsSection({ reviews }: { reviews: StorefrontFeatur
           {reviews.map((item) => (
             <SwiperSlide key={item.publicId} className="!h-auto">
               <article className="bg-white rounded-2xl p-4 md:p-5 border border-gray-200 shadow-md hover:shadow-2xl transition-all duration-400 h-full flex flex-col group relative overflow-hidden">
-                <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r opacity-0 group-hover:opacity-100 transition-opacity duration-500" style={{ backgroundImage: `linear-gradient(to right, ${STOREFRONT_ACCENT}, #fbbf24, ${STOREFRONT_ACCENT})` }} />
-                <Quote className="absolute bottom-3 right-3 w-10 h-10 rotate-180 group-hover:scale-110 transition-all duration-500" style={{ color: `${STOREFRONT_ACCENT}0d` }} />
+                <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r opacity-0 group-hover:opacity-100 transition-opacity duration-500" style={{ backgroundImage: "linear-gradient(to right, rgb(var(--color-primary)), #fbbf24, rgb(var(--color-primary)))" }} />
+                <Quote className="absolute bottom-3 right-3 w-10 h-10 rotate-180 group-hover:scale-110 transition-all duration-500" style={{ color: "rgb(var(--color-primary) / 0.05)" }} />
                 <div className="flex items-center gap-3 mb-3">
-                  <div className="relative w-12 h-12 rounded-full overflow-hidden bg-gray-200 flex-shrink-0 border-2 group-hover:border-[#2563EB]/50 transition-colors duration-300" style={{ borderColor: `${STOREFRONT_ACCENT}33` }}>
+                  <div className="relative w-12 h-12 rounded-full overflow-hidden bg-gray-200 flex-shrink-0 border-2 group-hover:border-primary/50 transition-colors duration-300" style={{ borderColor: "rgb(var(--color-primary) / 0.2)" }}>
                     <div className="w-full h-full flex items-center justify-center text-sm font-bold text-gray-500">
                       {item.authorDisplayName.slice(0, 1)}
                     </div>
@@ -436,7 +436,7 @@ export function HomeArticlesSection({ articles }: { articles: StorefrontArticleI
               آخرین مقالات
             </h2>
           </div>
-          <div className="flex items-center gap-2 px-3 py-1.5 rounded-full border" style={{ backgroundColor: `${STOREFRONT_ACCENT}1a`, borderColor: `${STOREFRONT_ACCENT}33` }}>
+          <div className="flex items-center gap-2 px-3 py-1.5 rounded-full border" style={{ backgroundColor: "rgb(var(--color-primary) / 0.1)", borderColor: "rgb(var(--color-primary) / 0.2)" }}>
             <Sparkles className="w-3 h-3" style={{ color: STOREFRONT_ACCENT }} />
             <span className="text-[10px] font-bold" style={{ color: STOREFRONT_ACCENT }}>
               {articles.length.toLocaleString("fa-IR")} مقاله جدید
@@ -486,7 +486,7 @@ export function HomeArticlesSection({ articles }: { articles: StorefrontArticleI
                     ) : null}
                     <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500">
                       <div className="absolute bottom-2 left-2 right-2">
-                        <span className="block w-full py-1.5 bg-white text-gray-900 rounded-lg text-[10px] font-medium text-center group-hover:text-white transition-colors duration-200 group-hover:bg-[#2563EB]">
+                        <span className="block w-full py-1.5 bg-white text-gray-900 rounded-lg text-[10px] font-medium text-center group-hover:text-white transition-colors duration-200 group-hover:bg-primary">
                           مطالعه مقاله
                         </span>
                       </div>
@@ -501,7 +501,7 @@ export function HomeArticlesSection({ articles }: { articles: StorefrontArticleI
                         <span>{formatArticleDate(post.publishDate)}</span>
                       </div>
                     </div>
-                    <h3 className="text-xs sm:text-sm font-bold text-gray-900 mb-1 line-clamp-2 group-hover:text-[#2563EB] transition-colors duration-200">
+                    <h3 className="text-xs sm:text-sm font-bold text-gray-900 mb-1 line-clamp-2 group-hover:text-primary transition-colors duration-200">
                       {post.title}
                     </h3>
                     <p className="text-[10px] text-gray-600 leading-relaxed line-clamp-2 mb-1.5 flex-1">{post.excerpt}</p>
