@@ -50,7 +50,7 @@ TB-P07-T043
 Last Implementation Task:
 
 ```text
-TB-P10-T017
+TB-P10-T017-R1
 ```
 
 Current Issued Task:
@@ -68,6 +68,7 @@ Current Repair Task:
 Implemented Under Review:
 
 ```text
+TB-P10-T017-R1 — PDP first-paint 500 repair (ThemeToggle without ThemeProvider throw); USER_VISUAL_ACCEPTED=NO
 TB-P10-T017 — Final Surface Theme Visual Acceptance Refresh (four-role demo pack across Storefront pages); USER_VISUAL_ACCEPTED=NO
 TB-P10-T016 — Storefront Semantic Surface Architecture (PageBackground/SectionSurface/SectionAlternate/SectionAccent, Neutral+PaletteTint, Admin four-role preview); USER_VISUAL_ACCEPTED=NO
 TB-P10-T015 — Storefront Background Tint Option (Neutral/PaletteTint, curated tint tokens, Admin UX, Home/Landing inherit); USER_VISUAL_ACCEPTED=NO

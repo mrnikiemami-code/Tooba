@@ -27,6 +27,7 @@ test("UserChoice toggle is in header and does not write appearance API", () => {
   assert.doesNotMatch(toggle, /\/v1\/storefront\/appearance|\/v1\/admin\/settings\/appearance/);
   assert.match(toggle, /localStorage.setItem/);
   assert.match(toggle, /tooba-storefront-color-scheme/);
+  assert.doesNotMatch(toggle, /useTheme/);
 });
 
 test("one ThemeProvider remains and does not force light after SSR", () => {

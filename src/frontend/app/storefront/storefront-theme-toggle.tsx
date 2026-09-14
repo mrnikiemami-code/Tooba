@@ -2,7 +2,6 @@
 
 import { Moon, Sun } from "lucide-react";
 import { useEffect, useState } from "react";
-import { useTheme } from "../../design-system";
 import {
   USER_COLOR_SCHEME_COOKIE,
   USER_COLOR_SCHEME_STORAGE,
@@ -31,7 +30,6 @@ function applyScheme(scheme: StorefrontColorScheme) {
 const SCHEME_EVENT = "tooba-storefront-color-scheme";
 
 export function StorefrontThemeToggle({ compact = false }: { compact?: boolean }) {
-  const { setColorScheme } = useTheme();
   const [visible, setVisible] = useState(false);
   const [scheme, setScheme] = useState<StorefrontColorScheme>("light");
 
@@ -41,12 +39,11 @@ export function StorefrontThemeToggle({ compact = false }: { compact?: boolean }
     const sync = () => {
       const current = document.documentElement.classList.contains("dark") ? "dark" : "light";
       setScheme(current);
-      setColorScheme(current);
     };
     sync();
     window.addEventListener(SCHEME_EVENT, sync);
     return () => window.removeEventListener(SCHEME_EVENT, sync);
-  }, [setColorScheme]);
+  }, []);
 
   if (!visible) {
     return null;
@@ -57,7 +54,6 @@ export function StorefrontThemeToggle({ compact = false }: { compact?: boolean }
     persistScheme(next);
     applyScheme(next);
     setScheme(next);
-    setColorScheme(next);
     window.dispatchEvent(new Event(SCHEME_EVENT));
   }
 

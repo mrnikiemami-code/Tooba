@@ -54,3 +54,11 @@ test("pdp guard forbids Product.Price / Product.Stock authority markers", () => 
   assert.doesNotMatch(pdpSource, /Product\.Stock/);
   assert.ok(pdpSource.includes("formatOfferAmount") || pdpSource.includes("offerAmount") || pdpSource.includes("amountExclusiveOfTax"));
 });
+
+test("pdp first paint does not hide SSR failure with client retry", () => {
+  const page = fs.readFileSync(path.join(root, "app/products/[slug]/page.tsx"), "utf8");
+  const toggle = fs.readFileSync(path.join(root, "app/storefront/storefront-theme-toggle.tsx"), "utf8");
+  assert.doesNotMatch(page, /setTimeout\(|sleep\(|retryLoop/);
+  assert.doesNotMatch(toggle, /useTheme/);
+  assert.match(page, /StorefrontShopeivaPdp/);
+});
