@@ -31,8 +31,12 @@ test("current palette dirty cancel save states are wired", () => {
   assert.match(form, /admin-settings-appearance-themes/);
   assert.match(form, /admin-settings-appearance-skins/);
   assert.match(form, /admin-settings-appearance-skin-\$\{skin\.key\}/);
-  assert.match(form, /resolveProductCardSkinChrome/);
+  assert.match(form, /AdminProductCardSkinPreview/);
+  assert.match(form, /descriptionFa/);
   assert.match(form, /admin-settings-appearance-card-preview/);
+  assert.doesNotMatch(form, /dir=\"ltr\">\{skin\.key\}/);
+  assert.doesNotMatch(form, /dir=\"ltr\">\{option\.key\}/);
+  assert.doesNotMatch(form, /dir=\"ltr\">\{preset\.key\}/);
   assert.equal(appearanceIsDirty("tooba-blue", "forest-green"), true);
   assert.equal(appearanceIsDirty("tooba-blue", "tooba-blue"), false);
   assert.equal(appearanceIsDirty("tooba-blue", "tooba-blue", "LightOnly", "DarkOnly"), true);
@@ -50,6 +54,7 @@ test("preview uses canonical registry tokens and leaves status colors", () => {
   assert.match(form, /bg-danger|text-danger/);
   assert.doesNotMatch(form, /type=\"color\"/);
   assert.doesNotMatch(api, /localStorage/);
+  assert.doesNotMatch(form, /useEffect/);
 });
 
 test("save posts paletteKey only once per helper", () => {

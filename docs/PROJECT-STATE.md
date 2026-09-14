@@ -62,7 +62,7 @@ TB-P05-GATE
 Last Implementation Task:
 
 ```text
-TB-P10-T009-R1
+TB-P10-T009-R2
 ```
 
 Current Issued Task:
@@ -80,6 +80,7 @@ Current Repair Task:
 Implemented Under Review:
 
 ```text
+TB-P10-T009-R2 — Product Card Skin Admin UX + console integrity; USER_VISUAL_ACCEPTED=NO
 TB-P10-T009-R1 — Product Card Skin visual proof (persistent screenshots, Admin preview, cross-surface); USER_VISUAL_ACCEPTED=NO
 TB-P10-T009 — Product Card Skin System (classic/clean/elevated/glass, Admin selection, storefront-wide); USER_VISUAL_ACCEPTED=NO
 TB-P10-T008-R1 — Light/Dark visual integrity repair (canonical dark brand-emphasis + product-card surfaces); USER_VISUAL_ACCEPTED=NO

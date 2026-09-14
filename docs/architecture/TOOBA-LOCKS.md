@@ -655,3 +655,6 @@ All storefront card usages consume the same effective Store ProductCardSkin unle
 
 ### LOCK-SF-164 — Skins compose with PaletteKey and ThemeMode
 Skins compose with every PaletteKey × ThemeMode through semantic tokens. No per-palette or per-dark component branches.
+
+### LOCK-SF-165 — Admin appearance choices stay human-readable
+Store Admin appearance choices use human-readable labels and meaningful visual previews. Stable technical keys remain internal and must not appear as normal Admin UI copy.

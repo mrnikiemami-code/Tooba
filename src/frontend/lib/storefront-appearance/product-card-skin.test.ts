@@ -17,6 +17,12 @@ test("four curated skins resolve with classic default", () => {
   assert.equal(resolveProductCardSkin("Clean"), "clean");
   assert.equal(isKnownProductCardSkin("glass"), true);
   assert.equal(isKnownProductCardSkin("custom-html"), false);
+  for (const skin of listProductCardSkins()) {
+    assert.ok(skin.nameFa.length > 0);
+    assert.ok(skin.descriptionFa.length > 0);
+    assert.doesNotMatch(skin.nameFa, /classic|clean|elevated|glass/i);
+    assert.doesNotMatch(skin.descriptionFa, /classic|clean|elevated|glass/i);
+  }
 });
 
 test("classic chrome stays the accepted default classes", () => {

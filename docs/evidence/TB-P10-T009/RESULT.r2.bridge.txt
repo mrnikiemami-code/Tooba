@@ -1,0 +1,64 @@
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-P10-T009-R2
+Parent-Task: TB-P10-T009-R1
+Status: PASS
+WorkerId: tooba-worker-01
+Channel: tooba-main
+
+Summary:
+Admin Product Card skins now use Persian labels, short explanations, and registry-backed mini-card previews. ThemeProvider setColorScheme identity loop on Home is eliminated. No new skins. No TB-P10-T010. USER_VISUAL_ACCEPTED remains NO.
+
+Applicable-Locks:
+LOCK-SF-001…164 preserved. Added LOCK-SF-165 (human-readable Admin appearance choices; technical keys internal).
+
+Recovery-Start:
+branch=main HEAD=3af90dcc0417b25c2ab7f8083bc11d68793b5acb origin/main=same Host :5088 FE :3000 appearance=tooba-blue/LightOnly/classic leftover login/account UX preserved docs/evidence/TB-P10-T009/r2-recovery-start.md
+
+Defect-Reproduction:
+R1 empty chrome boxes + visible English keys. Home Maximum update depth from ThemeProvider/ThemeToggle setColorScheme churn. Isolated Admin was already clean. docs/evidence/TB-P10-T009/r2-defect-reproduction.md
+
+Admin-Skin-UX:
+Persian names/explanations, meaningful mini cards, obvious selection, Save/Cancel dirty. No raw keys in visible copy. docs/evidence/TB-P10-T009/r2-admin-skin-ux.md
+
+Admin-Preview-Contract:
+AdminProductCardSkinPreview consumes resolveProductCardSkinChrome only. docs/evidence/TB-P10-T009/r2-admin-preview-contract.md
+
+Render-Loop-Fix:
+Stable ThemeProvider setters; skip unchanged scheme. Home and Admin probes 0 max-update. docs/evidence/TB-P10-T009/r2-render-loop-fix.md
+
+Hydration:
+Isolated Admin/Home 0. Full capture 1 generic Next warning, not skin/palette markers. docs/evidence/TB-P10-T009/r2-hydration.md
+
+Four-Skin-Distinctness:
+classic-r2.png clean-r2.png elevated-r2.png glass-r2.png. Geometry unchanged. clean flatter, elevated stronger rest shadow, glass more transparent. Isolated photo crops remain subtle.
+
+Runtime-Console:
+Admin select/preview/cancel/save 0 max-update. Home 0 after fix. Appearance GET 2. docs/evidence/TB-P10-T009/r2-runtime-console.md
+
+Focused-Validation:
+Admin/preview/skin/theme tests green. storefront 67. critical-storefront 18. recovery 4. invalid skin 400. git diff --check clean. docs/evidence/TB-P10-T009/r2-focused-validation.md
+
+Runtime:
+Host :5088 FE :3000. r2-capture.mjs ok. Screenshots persisted. docs/evidence/TB-P10-T009/r2-runtime.md
+
+AntiPattern-Scan:
+CLEAN. docs/evidence/TB-P10-T009/r2-antipattern-scan.md
+
+Lock-Registry:
+LOCK-SF-165 appended. docs/evidence/TB-P10-T009/r2-lock-registry.md
+
+Recovery-SoT:
+Phase P10 Architect TB-P10-T008-R1 Impl TB-P10-T009-R2 Issued/Repair none USER_VISUAL_ACCEPTED=NO Worker IDLE do NOT invent TB-P10-T010. docs/evidence/TB-P10-T009/r2-recovery-sot.md
+
+Git:
+SHA=PENDING HEAD==origin/main after push. Unrelated login leftovers not committed.
+
+Architectural-Concerns:
+none
+
+Visual-Concerns:
+Isolated storefront card crops still make chrome differences subtle against the product photo. Admin tiles now show the intended distinction. USER_VISUAL_ACCEPTED=NO.
+
+Blockers:
+none
+END_TOOBA_WORKER_RESULT

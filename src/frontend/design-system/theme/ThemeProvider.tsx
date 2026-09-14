@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import type { ColorScheme, TextDirection, ThemeContract } from "./types";
 
 interface ThemeContextValue {
@@ -25,16 +25,22 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   const [theme, setTheme] = useState<ThemeContract>({ colorScheme: "light", direction: "rtl" });
 
   useEffect(() => {
-    setTheme((current) => ({ ...current, colorScheme: readDocumentScheme() }));
+    setTheme((current) => {
+      const colorScheme = readDocumentScheme();
+      return current.colorScheme === colorScheme ? current : { ...current, colorScheme };
+    });
+  }, []);
+
+  const setColorScheme = useCallback((colorScheme: ColorScheme) => {
+    setTheme((current) => (current.colorScheme === colorScheme ? current : { ...current, colorScheme }));
+  }, []);
+  const setDirection = useCallback((direction: TextDirection) => {
+    setTheme((current) => (current.direction === direction ? current : { ...current, direction }));
   }, []);
 
   const value = useMemo<ThemeContextValue>(
-    () => ({
-      theme,
-      setColorScheme: (colorScheme) => setTheme((current) => ({ ...current, colorScheme })),
-      setDirection: (direction) => setTheme((current) => ({ ...current, direction })),
-    }),
-    [theme],
+    () => ({ theme, setColorScheme, setDirection }),
+    [theme, setColorScheme, setDirection],
   );
 
   return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>;

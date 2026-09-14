@@ -32,6 +32,8 @@ test("UserChoice toggle is in header and does not write appearance API", () => {
 test("one ThemeProvider remains and does not force light after SSR", () => {
   assert.match(provider, /readDocumentScheme/);
   assert.doesNotMatch(provider, /root.classList.toggle\("dark"/);
+  assert.match(provider, /useCallback\(\(colorScheme: ColorScheme\)/);
+  assert.match(provider, /current.colorScheme === colorScheme \? current/);
   assert.equal((provider.match(/export function ThemeProvider/g) ?? []).length, 1);
 });
 

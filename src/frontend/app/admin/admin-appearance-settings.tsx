@@ -1,9 +1,10 @@
 "use client";
 
 import { listStorefrontPalettes, resolveBrandTokens, resolvePaletteKey } from "../../lib/storefront-appearance/palette-registry.ts";
-import { listProductCardSkins, resolveProductCardSkin, resolveProductCardSkinChrome } from "../../lib/storefront-appearance/product-card-skin.ts";
+import { listProductCardSkins, resolveProductCardSkin } from "../../lib/storefront-appearance/product-card-skin.ts";
 import { resolveThemeMode } from "../../lib/storefront-appearance/theme-mode.ts";
 import { THEME_MODE_OPTIONS, appearanceIsDirty, appearancePreviewStyle } from "./admin-appearance-settings.helpers.ts";
+import { AdminProductCardSkinPreview } from "./admin-product-card-skin-preview.tsx";
 import type { AppearanceSettingsView } from "./appearance-settings-api.ts";
 
 function rgbCss(rgb: string): string {
@@ -25,7 +26,7 @@ export function AdminAppearanceSettingsForm(props: {
   onCancel: () => void;
 }) {
   const presets = props.view?.presets?.length ? props.view.presets : [...listStorefrontPalettes()];
-  const skins = props.view?.skins?.length ? props.view.skins : [...listProductCardSkins()];
+  const skins = [...listProductCardSkins()];
   const preview = resolveBrandTokens(props.draftKey);
   const savedKey = props.view?.paletteKey ?? "tooba-blue";
   const savedTheme = props.view?.themeMode ?? "LightOnly";
@@ -33,7 +34,6 @@ export function AdminAppearanceSettingsForm(props: {
   const draftTheme = resolveThemeMode(props.draftTheme);
   const draftSkin = resolveProductCardSkin(props.draftSkin);
   const dirty = appearanceIsDirty(savedKey, props.draftKey, savedTheme, draftTheme, savedSkin, draftSkin);
-  const chrome = resolveProductCardSkinChrome(draftSkin);
   const previewDark = draftTheme === "DarkOnly";
   const unknown = props.view != null && !props.view.paletteKeyWasKnown;
 
@@ -79,7 +79,6 @@ export function AdminAppearanceSettingsForm(props: {
                 />
                 <span className="text-sm font-bold text-gray-900">{preset.nameFa}</span>
               </span>
-              <span className="block text-[11px] text-gray-400 mt-1" dir="ltr">{preset.key}</span>
             </button>
           );
         })}
@@ -100,7 +99,6 @@ export function AdminAppearanceSettingsForm(props: {
               data-selected={selected ? "true" : "false"}
             >
               <span className="block text-sm font-bold text-gray-900">{option.title}</span>
-              <span className="block text-[11px] text-gray-400 mt-1" dir="ltr">{option.key}</span>
               <span className="block text-xs text-gray-500 mt-2 leading-6">{option.body}</span>
             </button>
           );
@@ -109,7 +107,6 @@ export function AdminAppearanceSettingsForm(props: {
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3" data-testid="admin-settings-appearance-skins">
         {skins.map((skin) => {
           const selected = draftSkin === skin.key;
-          const optionChrome = resolveProductCardSkinChrome(skin.key);
           return (
             <button
               key={skin.key}
@@ -123,12 +120,9 @@ export function AdminAppearanceSettingsForm(props: {
               data-selected={selected ? "true" : "false"}
             >
               <span className="block text-sm font-bold text-gray-900">{skin.nameFa}</span>
-              <span className="block text-[11px] text-gray-400 mt-1" dir="ltr">{skin.key}</span>
-              <span
-                className={`${optionChrome.article} mt-3 pointer-events-none max-w-[140px]`}
-                data-preview-skin-chrome={skin.key}
-              >
-                <span className={optionChrome.media} />
+              <span className="block text-xs text-gray-500 mt-1 leading-6">{skin.descriptionFa}</span>
+              <span className="block mt-3" data-preview-skin-chrome={skin.key}>
+                <AdminProductCardSkinPreview skin={skin.key} compact />
               </span>
             </button>
           );
@@ -146,13 +140,7 @@ export function AdminAppearanceSettingsForm(props: {
           دکمه اصلی
         </button>
         <a className="block text-sm text-primary underline" href="#preview">پیوند تأکیدی</a>
-        <article className={chrome.article} data-testid="admin-settings-appearance-card-preview">
-          <div className={chrome.media} />
-          <div className="flex-1 flex flex-col p-3 gap-1.5">
-            <p className="text-xs font-bold text-foreground">کارت نمونه</p>
-            <span className={chrome.badge}>٪۲۰</span>
-          </div>
-        </article>
+        <AdminProductCardSkinPreview skin={draftSkin} testId="admin-settings-appearance-card-preview" />
         <p className="text-xs text-gray-500">متن کم‌رنگ</p>
         <div className="flex gap-2 text-[11px]">
           <span className="px-2 py-1 rounded bg-success/15 text-success">موفقیت</span>

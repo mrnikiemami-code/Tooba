@@ -9,7 +9,6 @@ import {
 } from "../../lib/storefront-appearance/palette-registry.ts";
 import {
   DEFAULT_PRODUCT_CARD_SKIN,
-  isKnownProductCardSkin,
   listProductCardSkins,
   resolveProductCardSkin,
   type ProductCardSkinDefinition,
@@ -65,26 +64,7 @@ function mapView(payload: unknown): AppearanceSettingsView | null {
       })
       .filter((item): item is StorefrontPaletteDefinition => item !== null)
     : [...listStorefrontPalettes()];
-  const skins = Array.isArray(row.skins)
-    ? row.skins
-      .map((item) => {
-        if (!item || typeof item !== "object") {
-          return null;
-        }
-        const skin = item as Record<string, unknown>;
-        const key = typeof skin.key === "string" ? skin.key : "";
-        if (!isKnownProductCardSkin(key)) {
-          return null;
-        }
-        return {
-          key: resolveProductCardSkin(key),
-          nameFa: String(skin.nameFa ?? key),
-          nameEn: String(skin.nameEn ?? key),
-          chrome: listProductCardSkins().find((known) => known.key === resolveProductCardSkin(key))!.chrome,
-        } satisfies ProductCardSkinDefinition;
-      })
-      .filter((item): item is ProductCardSkinDefinition => item !== null)
-    : [...listProductCardSkins()];
+  const skins = [...listProductCardSkins()];
   return {
     storeScope: String(row.storeScope ?? "default"),
     paletteKey,
