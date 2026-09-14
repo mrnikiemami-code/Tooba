@@ -26,6 +26,7 @@ function mapTokens(raw: unknown): StorefrontBrandTokens {
     primaryStrongRgb: String(row.primaryStrongRgb ?? fallback.primaryStrongRgb),
     onPrimaryRgb: String(row.onPrimaryRgb ?? fallback.onPrimaryRgb),
     focusRgb: String(row.focusRgb ?? fallback.focusRgb),
+    primaryOnDarkRgb: String(row.primaryOnDarkRgb ?? fallback.primaryOnDarkRgb),
   };
 }
 

@@ -397,6 +397,7 @@ public static class StorefrontEndpoints
                 primaryStrongRgb = appearance.PrimaryStrongRgb,
                 onPrimaryRgb = appearance.OnPrimaryRgb,
                 focusRgb = appearance.FocusRgb,
+                primaryOnDarkRgb = appearance.PrimaryOnDarkRgb,
             },
             updatedAt = appearance.UpdatedAt,
         });

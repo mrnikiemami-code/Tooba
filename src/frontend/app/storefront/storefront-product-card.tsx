@@ -87,11 +87,12 @@ export function StorefrontProductCardView({
 
   return (
     <article
-      className="group relative flex flex-col rounded-2xl overflow-hidden bg-white border border-gray-100 hover:shadow-xl hover:-translate-y-1 transition-all duration-300"
+      className="group relative flex flex-col rounded-2xl overflow-hidden bg-surface border border-border hover:shadow-xl hover:shadow-black/40 hover:-translate-y-1 transition-all duration-300"
       data-testid="storefront-product-card"
     >
       <Link href={productHref} className="flex flex-1 flex-col">
-        <div className="relative aspect-[4/5] bg-gray-50 overflow-hidden">
+        {/* Media well: product photo on semantic background; not UI chrome. */}
+        <div className="relative aspect-[4/5] bg-background overflow-hidden" data-storefront-media-well="true">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={storefrontMediaUrl(card.mediaAssetId)}
@@ -124,7 +125,7 @@ export function StorefrontProductCardView({
                 disabled={busy}
                 aria-pressed={saved}
                 aria-label={saved ? `حذف ${card.title} از علاقه‌مندی` : `افزودن ${card.title} به علاقه‌مندی`}
-                className={`w-7 h-7 flex items-center justify-center rounded-full bg-white/90 backdrop-blur-sm shadow-md hover:scale-110 transition-transform disabled:opacity-60 ${saved ? "text-rose-600" : "text-gray-600"}`}
+                className={`w-7 h-7 flex items-center justify-center rounded-full bg-surface-elevated/90 backdrop-blur-sm shadow-md hover:scale-110 transition-transform disabled:opacity-60 ${saved ? "text-rose-600" : "text-muted"}`}
                 onClick={(event) => {
                   event.preventDefault();
                   event.stopPropagation();
@@ -136,7 +137,7 @@ export function StorefrontProductCardView({
               <button
                 type="button"
                 aria-label={`اشتراک‌گذاری ${card.title}`}
-                className="w-7 h-7 flex items-center justify-center rounded-full bg-white/90 backdrop-blur-sm shadow-md hover:scale-110 transition-transform text-gray-600"
+                className="w-7 h-7 flex items-center justify-center rounded-full bg-surface-elevated/90 backdrop-blur-sm shadow-md hover:scale-110 transition-transform text-muted"
                 onClick={handleShare}
               >
                 <Share2 className="w-3.5 h-3.5" />
@@ -144,7 +145,7 @@ export function StorefrontProductCardView({
               <button
                 type="button"
                 aria-label={`مشاهده ${card.title}`}
-                className="w-7 h-7 flex items-center justify-center rounded-full bg-white/90 backdrop-blur-sm shadow-md hover:scale-110 transition-transform text-gray-600"
+                className="w-7 h-7 flex items-center justify-center rounded-full bg-surface-elevated/90 backdrop-blur-sm shadow-md hover:scale-110 transition-transform text-muted"
                 onClick={handleViewProduct}
               >
                 <Eye className="w-3.5 h-3.5" />
@@ -153,7 +154,7 @@ export function StorefrontProductCardView({
           ) : null}
         </div>
         <div className="flex-1 flex flex-col p-3 gap-1.5 min-h-[108px]">
-          <h3 className="text-xs sm:text-sm font-bold text-gray-800 line-clamp-2 leading-snug min-h-[36px] group-hover:text-primary">
+          <h3 className="text-xs sm:text-sm font-bold text-foreground line-clamp-2 leading-snug min-h-[36px] group-hover:text-primary">
             {card.title}
           </h3>
           {card.reviewCount > 0 && card.averageRating !== null ? (
@@ -164,7 +165,7 @@ export function StorefrontProductCardView({
                   className={`w-3 h-3 ${star <= Math.round(card.averageRating!) ? "fill-amber-400 text-amber-400" : "text-gray-300"}`}
                 />
               ))}
-              <span className="text-[10px] text-gray-400">({card.reviewCount.toLocaleString("fa-IR")})</span>
+              <span className="text-[10px] text-muted">({card.reviewCount.toLocaleString("fa-IR")})</span>
             </div>
           ) : null}
           <div className="flex items-center gap-1.5 flex-wrap">
@@ -172,7 +173,7 @@ export function StorefrontProductCardView({
               {formatOfferAmount(card.promotionalAmountExclusiveOfTax ?? card.offerAmountExclusiveOfTax, card.currency)}
             </span>
             {card.promotionalAmountExclusiveOfTax !== null ? (
-              <span className="text-[10px] text-gray-400 line-through whitespace-nowrap">
+              <span className="text-[10px] text-muted line-through whitespace-nowrap">
                 {formatOfferAmount(card.offerAmountExclusiveOfTax, card.currency)}
               </span>
             ) : null}
@@ -191,7 +192,7 @@ export function StorefrontProductCardView({
               ? atcAdded
                 ? "bg-emerald-600 text-white"
                 : "bg-primary text-white hover:bg-primary-strong"
-              : "bg-gray-100 text-gray-400"
+              : "bg-secondary text-muted"
           }`}
         >
           <ShoppingBag className="w-3 h-3" />

@@ -19,6 +19,7 @@ const config: Config = {
         primary: "rgb(var(--color-primary) / <alpha-value>)",
         "primary-strong": "rgb(var(--color-primary-strong) / <alpha-value>)",
         "primary-foreground": "rgb(var(--color-primary-foreground) / <alpha-value>)",
+        "brand-emphasis": "rgb(var(--color-brand-emphasis) / <alpha-value>)",
         secondary: "rgb(var(--color-secondary) / <alpha-value>)",
         "secondary-foreground": "rgb(var(--color-secondary-foreground) / <alpha-value>)",
         success: "rgb(var(--color-success) / <alpha-value>)",

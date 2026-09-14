@@ -38,6 +38,10 @@ test("one ThemeProvider remains and does not force light after SSR", () => {
 test("pages still do not poll appearance and dark remaps stay canonical", () => {
   assert.doesNotMatch(appearance, /setInterval/);
   assert.match(globals, /html\.dark \.bg-white/);
+  assert.match(globals, /html\.dark \.bg-white\\\/90/);
+  assert.match(globals, /html\.dark \.text-primary/);
+  assert.match(globals, /--color-brand-emphasis: var\(--color-primary-on-dark\)/);
   assert.match(globals, /--color-danger: 248 113 113/);
   assert.doesNotMatch(globals, /--color-primary: 96 165 250/);
+  assert.doesNotMatch(globals, /wine-burgundy/);
 });

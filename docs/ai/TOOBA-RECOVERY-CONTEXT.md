@@ -50,7 +50,7 @@ TB-P07-T043
 Last Implementation Task:
 
 ```text
-TB-P10-T008
+TB-P10-T008-R1
 ```
 
 Current Issued Task:
@@ -68,6 +68,7 @@ Current Repair Task:
 Implemented Under Review:
 
 ```text
+TB-P10-T008-R1 — Light/Dark visual integrity repair (canonical dark brand-emphasis + product-card surfaces); USER_VISUAL_ACCEPTED=NO
 TB-P10-T008 — Storefront Light/Dark ThemeMode (Admin persist, SSR first paint, UserChoice toggle); USER_VISUAL_ACCEPTED=NO
 TB-P10-T007 — Storefront token completion across Home, PDP, Shipping, and remaining brand-bound surfaces; USER_VISUAL_ACCEPTED=NO
 TB-P10-T006 — Store Appearance Admin (curated palette selection, preview, persistence, cache invalidation, live Storefront apply); USER_VISUAL_ACCEPTED=NO

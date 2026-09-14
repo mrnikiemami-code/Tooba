@@ -52,6 +52,7 @@ export async function loadStorefrontAppearance(): Promise<StorefrontAppearancePr
         primaryStrongRgb: payload.tokens?.primaryStrongRgb ?? defaults.primaryStrongRgb,
         onPrimaryRgb: payload.tokens?.onPrimaryRgb ?? defaults.onPrimaryRgb,
         focusRgb: payload.tokens?.focusRgb ?? defaults.focusRgb,
+        primaryOnDarkRgb: payload.tokens?.primaryOnDarkRgb ?? defaults.primaryOnDarkRgb,
       },
     };
   } catch {

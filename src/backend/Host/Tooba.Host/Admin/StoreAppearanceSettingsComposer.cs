@@ -80,7 +80,8 @@ public sealed class StoreAppearanceSettingsComposer
                 current.PrimaryRgb,
                 current.PrimaryStrongRgb,
                 current.OnPrimaryRgb,
-                current.FocusRgb),
+                current.FocusRgb,
+                current.PrimaryOnDarkRgb),
             StoreAppearancePaletteRegistry.All
                 .Select(item => new StoreAppearancePresetView(
                     item.Key,
@@ -90,7 +91,8 @@ public sealed class StoreAppearanceSettingsComposer
                         item.Tokens.PrimaryRgb,
                         item.Tokens.PrimaryStrongRgb,
                         item.Tokens.OnPrimaryRgb,
-                        item.Tokens.FocusRgb)))
+                        item.Tokens.FocusRgb,
+                        item.Tokens.PrimaryOnDarkRgb)))
                 .ToArray());
 }
 
@@ -115,7 +117,8 @@ public sealed record StoreAppearanceTokenView(
     string PrimaryRgb,
     string PrimaryStrongRgb,
     string OnPrimaryRgb,
-    string FocusRgb);
+    string FocusRgb,
+    string PrimaryOnDarkRgb);
 
 /// <summary>بدنه ذخیره ظاهر؛ PaletteKey الزامی و ThemeMode اختیاری.</summary>
 public sealed record StoreAppearanceSettingsWriteRequest(string? PaletteKey, string? ThemeMode = null);

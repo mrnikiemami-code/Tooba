@@ -56,6 +56,10 @@ test("dark surfaces meet AA for body muted danger and brand CTA", () => {
   assert.ok(contrastRatio(darkDanger, darkPaper) >= 4.5, "danger");
   for (const palette of listStorefrontPalettes()) {
     assert.ok(contrastRatio(palette.tokens.primaryRgb, palette.tokens.onPrimaryRgb) >= 4.5, `${palette.key} dark CTA`);
+    assert.ok(
+      contrastRatio(palette.tokens.primaryOnDarkRgb, darkPaper) >= 4.5,
+      `${palette.key} brand-emphasis on dark`,
+    );
   }
 });
 
@@ -63,7 +67,16 @@ test("appearance CSS vars set brand tokens only", () => {
   const vars = appearanceCssVars(resolveBrandTokens("tooba-blue"));
   assert.equal(vars["--color-primary"], "37 99 235");
   assert.equal(vars["--color-primary-strong"], "29 78 216");
+  assert.equal(vars["--color-primary-on-dark"], "59 115 237");
   assert.equal(Object.hasOwn(vars, "--color-danger"), false);
   assert.equal(Object.hasOwn(vars, "--color-success"), false);
   assert.equal(Object.hasOwn(vars, "--color-warning"), false);
+});
+
+test("wine-burgundy dark emphasis is canonical not a page special case", () => {
+  const wine = resolveBrandTokens("wine-burgundy");
+  assert.equal(wine.primaryRgb, "159 18 57");
+  assert.equal(wine.primaryOnDarkRgb, "189 91 118");
+  assert.ok(contrastRatio(wine.primaryRgb, "12 12 14") < 3);
+  assert.ok(contrastRatio(wine.primaryOnDarkRgb, "12 12 14") >= 4.5);
 });

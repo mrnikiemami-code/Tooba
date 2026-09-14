@@ -23,6 +23,8 @@ public sealed class StoreAppearanceFoundationTests
         Assert.InRange(StoreAppearancePaletteRegistry.All.Count, 6, 8);
         Assert.Equal("37 99 235", StoreAppearancePaletteRegistry.ToobaBlue.PrimaryRgb);
         Assert.Equal("29 78 216", StoreAppearancePaletteRegistry.ToobaBlue.PrimaryStrongRgb);
+        Assert.Equal("59 115 237", StoreAppearancePaletteRegistry.ToobaBlue.PrimaryOnDarkRgb);
+        Assert.Equal("189 91 118", StoreAppearancePaletteRegistry.ResolveTokens("wine-burgundy").PrimaryOnDarkRgb);
     }
 
     [Fact]

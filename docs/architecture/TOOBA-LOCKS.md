@@ -634,3 +634,6 @@ PaletteKey and ThemeMode compose through one canonical appearance system; status
 
 ### LOCK-SF-157 — Home/PDP dark changes color only
 Home/PDP dark implementation may change color/surface only; locked geometry/interactions remain unchanged.
+
+### LOCK-SF-158 — Dark brand-emphasis is a canonical token
+Meaningful brand text/links/focus on dark surfaces resolve from a canonical per-palette on-dark brand-emphasis token. CTA fill stays primary/on-primary. No page-local or per-palette component color branches.

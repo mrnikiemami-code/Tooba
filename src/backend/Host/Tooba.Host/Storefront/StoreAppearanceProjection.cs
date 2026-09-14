@@ -16,6 +16,7 @@ public sealed record StoreAppearanceProjection(
     string PrimaryStrongRgb,
     string OnPrimaryRgb,
     string FocusRgb,
+    string PrimaryOnDarkRgb,
     DateTimeOffset UpdatedAt);
 
 /// <summary>
@@ -86,6 +87,7 @@ public sealed class StoreAppearanceProjector
             tokens.PrimaryStrongRgb,
             tokens.OnPrimaryRgb,
             tokens.FocusRgb,
+            tokens.PrimaryOnDarkRgb,
             row?.UpdatedAt ?? DateTimeOffset.UnixEpoch);
 
         _cache.Set(CacheKey(scope), projection, new MemoryCacheEntryOptions

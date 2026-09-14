@@ -1,0 +1,85 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+
+BEGIN_TOOBA_WORKER_RESULT
+
+Task-ID:
+TB-P10-T008-R1
+
+Parent-Task:
+TB-P10-T008
+
+Channel:
+tooba-main
+
+WorkerId:
+tooba-worker-01
+
+Status:
+PASS
+
+USER_VISUAL_ACCEPTED=NO
+
+Summary:
+Dark visual integrity repair PASS. Canonical per-palette primaryOnDarkRgb drives brand-emphasis text/links/focus on dark paper (wine-burgundy 189 91 118 = 4.58:1). CTA stays primary/on-primary. Product-card UI chrome uses semantic tokens; media well documented. Runtime A–I green. No TB-P10-T009. Worker IDLE.
+
+Applicable-Locks:
+LOCK-SF-001…157 preserved. Added LOCK-SF-158 dark brand-emphasis canonical token.
+
+Recovery-Start:
+Phase P10; Architect-accepted TB-P10-T007; Last Implementation at claim TB-P10-T008; Current Repair TB-P10-T008-R1; branch main; HEAD==origin/main 00ab6a27. Unrelated login/account UX left dirty. Evidence r1-recovery-start.md
+
+Defect-Reproduction:
+wine-burgundy primary 159 18 57 vs dark paper 2.44:1; slate-navy 1.70:1. Product-card bg-white/90 missed html.dark .bg-white. Evidence r1-defect-reproduction.md
+
+Dark-Contrast-Repair:
+primaryOnDarkRgb on all 7 palettes in FE+Host; --color-brand-emphasis in .dark; text-primary remapped; CTA unchanged. Evidence r1-dark-contrast-repair.md
+
+Product-Card-Dark:
+One StorefrontProductCardView; bg-surface / border-border / surface-elevated actions; media well bg-background documented. Evidence r1-product-card-dark.md
+
+Dark-Surface-Audit:
+Header/Home/PDP/Cart/Shipping remaps; /90 and hover:bg-blue-50 covered in globals; hold chip bg-surface. Evidence r1-dark-surface-audit.md
+
+Palette-Theme-Contrast:
+All 7 × light/dark body/muted/emphasis/CTA/focus/status/card pass; no known failure remains. Evidence r1-palette-theme-contrast.md
+
+First-Paint-Regression:
+LightOnly/DarkOnly/System/UserChoice markers unchanged; --color-primary-on-dark on SSR root. Evidence r1-first-paint-regression.md
+
+Admin-Appearance-Regression:
+7 palettes + ThemeMode persist; preview includes on-dark token; status independent. Evidence r1-admin-appearance.md
+
+Focused-Validation:
+recovery 4/4; Host StoreAppearance 12/12; focused appearance/theme/card 24/24; test:storefront 67/67; test:critical-storefront 18/18; git diff --check clean. Full tsc not PASS (pre-existing Admin/grid). Evidence r1-focused-validation.md
+
+Runtime:
+A–I green on Host :5088 + FE :3000. wine-burgundy DarkOnly tokens + dark class; forest/amber/violet DarkOnly; UserChoice cookie; restore tooba-blue LightOnly. Evidence r1-runtime.md r1-runtime-raw.json
+
+Commerce-Auth-Regression:
+No commerce/auth behavior change. storefront 67 + identity/shipping suites green. Evidence r1-commerce-auth.md
+
+AntiPattern-Scan:
+CLEAN — no wine-burgundy page special case, no duplicate card/provider, no skins/page builder. Evidence r1-antipattern-scan.md
+
+Lock-Registry:
+LOCK-SF-158 appended after 157. No renumber.
+
+Recovery-SoT:
+Architect TB-P10-T007; Impl TB-P10-T008-R1; Issued/Repair none; USER_VISUAL_ACCEPTED=NO; do NOT invent TB-P10-T009. Evidence r1-recovery-sot.md
+
+Git:
+ending HEAD (filled after commit)
+origin/main (filled after push)
+HEAD==origin/main yes
+unrelated login/account UX preserved unstaged
+
+Architectural-Concerns:
+Login leftover dirty tree still has #2563EB (unrelated local UX, not staged).
+
+Visual-Concerns:
+USER_VISUAL_ACCEPTED=NO. Next.js N overlay still visible; not a hydration/theme mismatch. Locked Home/PDP geometry unchanged.
+
+Blockers:
+none
+
+END_TOOBA_WORKER_RESULT

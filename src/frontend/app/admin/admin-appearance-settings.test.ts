@@ -36,6 +36,7 @@ test("current palette dirty cancel save states are wired", () => {
 test("preview uses canonical registry tokens and leaves status colors", () => {
   const style = appearancePreviewStyle("violet-royal");
   assert.equal(style["--color-primary"], resolveBrandTokens("violet-royal").primaryRgb);
+  assert.equal(style["--color-primary-on-dark"], resolveBrandTokens("violet-royal").primaryOnDarkRgb);
   assert.equal(Object.hasOwn(style, "--color-danger"), false);
   assert.match(form, /bg-success|text-success/);
   assert.match(form, /bg-danger|text-danger/);

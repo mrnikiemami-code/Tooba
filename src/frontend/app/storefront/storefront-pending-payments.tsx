@@ -243,7 +243,7 @@ export function StorefrontPendingPayments({
                   {statusCopy ? <p className="text-xs text-gray-600 mt-2 leading-6">{statusCopy}</p> : null}
                 </div>
                 {item.reservationPresentation === "held" ? (
-                  <div className="shrink-0 text-center rounded-xl bg-[#EFF6FF] px-3 py-2 min-w-[6.5rem]">
+                  <div className="shrink-0 text-center rounded-xl bg-surface px-3 py-2 min-w-[6.5rem]">
                     <ReservationCountdown item={item} onExpire={onRefresh} />
                     <p className="text-[10px] text-gray-500 mt-1 leading-4">
                       {item.cycleNumber && item.cycleNumber > 1 ? labels.retryHold : labels.hold}
