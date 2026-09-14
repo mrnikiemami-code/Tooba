@@ -1,4 +1,32 @@
-import { storefrontHostOrigin } from "./storefront-api.ts";
+import { loadStorefrontHome, loadStorefrontListing, storefrontHostOrigin } from "./storefront-api.ts";
+import type {
+  StorefrontArticleItem,
+  StorefrontBrandItem,
+  StorefrontCategoryItem,
+  StorefrontFeaturedReviewItem,
+  StorefrontProductCard,
+} from "./storefront-model.ts";
+
+export type LandingRenderContext = {
+  products: StorefrontProductCard[];
+  categories: StorefrontCategoryItem[];
+  brands: StorefrontBrandItem[];
+  articles: StorefrontArticleItem[];
+  reviews: StorefrontFeaturedReviewItem[];
+};
+
+export interface StorefrontLandingResolvedItem {
+  id: string;
+  slug: string | null;
+}
+
+export interface StorefrontLandingSection {
+  pageSectionId: string;
+  sectionType: string;
+  sortOrder: number;
+  config: string;
+  items: StorefrontLandingResolvedItem[];
+}
 
 export interface StorefrontLandingPage {
   pageId: string;
@@ -8,6 +36,69 @@ export interface StorefrontLandingPage {
   seoTitle: string;
   seoDescription: string | null;
   templateKey: string;
+  sections: StorefrontLandingSection[];
+}
+
+export interface StorefrontHomeSelection {
+  homePageId: string | null;
+  selectedPage: StorefrontLandingPage | null;
+  usesCanonicalHome: boolean;
+}
+
+function asRecord(value: unknown): Record<string, unknown> | null {
+  return value && typeof value === "object" ? value as Record<string, unknown> : null;
+}
+
+function readString(record: Record<string, unknown>, ...keys: string[]): string {
+  for (const key of keys) {
+    const value = record[key];
+    if (typeof value === "string") return value;
+  }
+  return "";
+}
+
+function mapSection(raw: unknown): StorefrontLandingSection | null {
+  const record = asRecord(raw);
+  if (!record) return null;
+  const pageSectionId = readString(record, "pageSectionId", "PageSectionId");
+  const sectionType = readString(record, "sectionType", "SectionType");
+  if (!pageSectionId || !sectionType) return null;
+  const itemsRaw = record.items ?? record.Items;
+  const items = Array.isArray(itemsRaw)
+    ? itemsRaw.map((item) => {
+      const row = asRecord(item) ?? {};
+      return { id: readString(row, "id", "Id"), slug: readString(row, "slug", "Slug") || null };
+    }).filter((item) => item.id)
+    : [];
+  const configValue = record.config ?? record.Config;
+  return {
+    pageSectionId,
+    sectionType,
+    sortOrder: typeof record.sortOrder === "number" ? record.sortOrder : Number(record.SortOrder ?? 0),
+    config: typeof configValue === "string" ? configValue : JSON.stringify(configValue ?? {}),
+    items,
+  };
+}
+
+export function mapStorefrontLandingPage(raw: unknown, fallbackLocale = "fa"): StorefrontLandingPage | null {
+  const record = asRecord(raw);
+  if (!record) return null;
+  const slug = readString(record, "slug", "Slug");
+  const title = readString(record, "title", "Title");
+  if (!slug || !title) return null;
+  const sectionsRaw = record.sections ?? record.Sections;
+  return {
+    pageId: readString(record, "pageId", "PageId"),
+    locale: readString(record, "locale", "Locale") || fallbackLocale,
+    slug,
+    title,
+    seoTitle: readString(record, "seoTitle", "SeoTitle") || title,
+    seoDescription: readString(record, "seoDescription", "SeoDescription") || null,
+    templateKey: readString(record, "templateKey", "TemplateKey") || "default",
+    sections: Array.isArray(sectionsRaw)
+      ? sectionsRaw.map(mapSection).filter((row): row is StorefrontLandingSection => row !== null)
+      : [],
+  };
 }
 
 export async function loadPublishedLandingPage(slug: string, locale: string): Promise<StorefrontLandingPage | null> {
@@ -15,23 +106,63 @@ export async function loadPublishedLandingPage(slug: string, locale: string): Pr
     const url = new URL(`${storefrontHostOrigin()}/v1/storefront/pages/${encodeURIComponent(slug)}`);
     url.searchParams.set("locale", locale);
     const response = await fetch(url, { cache: "no-store", headers: { Accept: "application/json" } });
-    if (!response.ok) {
-      return null;
-    }
-    const payload = await response.json() as Partial<StorefrontLandingPage>;
-    if (!payload.slug || !payload.title) {
-      return null;
-    }
+    if (!response.ok) return null;
+    return mapStorefrontLandingPage(await response.json(), locale);
+  } catch {
+    return null;
+  }
+}
+
+export async function loadStorefrontHomeSelection(): Promise<StorefrontHomeSelection | null> {
+  try {
+    const response = await fetch(`${storefrontHostOrigin()}/v1/storefront/home-selection`, {
+      cache: "no-store",
+      headers: { Accept: "application/json" },
+    });
+    if (!response.ok) return null;
+    const payload = asRecord(await response.json()) ?? {};
+    const selected = mapStorefrontLandingPage(payload.selectedPage ?? payload.SelectedPage);
     return {
-      pageId: String(payload.pageId ?? ""),
-      locale: String(payload.locale ?? locale),
-      slug: payload.slug,
-      title: payload.title,
-      seoTitle: payload.seoTitle ?? payload.title,
-      seoDescription: payload.seoDescription ?? null,
-      templateKey: payload.templateKey ?? "default",
+      homePageId: readString(payload, "homePageId", "HomePageId") || null,
+      selectedPage: selected,
+      usesCanonicalHome: Boolean(payload.usesCanonicalHome ?? payload.UsesCanonicalHome ?? !selected),
     };
   } catch {
     return null;
   }
+}
+
+export async function loadLandingRenderContext(
+  locale: string,
+  page: StorefrontLandingPage,
+): Promise<LandingRenderContext> {
+  const [home, listing] = await Promise.all([
+    loadStorefrontHome(locale),
+    loadStorefrontListing({ sort: "newest" }),
+  ]);
+  const products = uniqueProducts([
+    ...(home?.featuredProducts ?? []),
+    ...(home?.specialOffers ?? []),
+    ...(home?.newArrivals ?? []),
+    ...(home?.productRail ?? []),
+    ...(listing?.products ?? []),
+  ]);
+  return {
+    products,
+    categories: home?.categories ?? listing?.categories ?? [],
+    brands: home?.brands ?? [],
+    articles: home?.latestArticles ?? [],
+    reviews: home?.featuredReviews ?? [],
+  };
+}
+
+function uniqueProducts(cards: StorefrontProductCard[]): StorefrontProductCard[] {
+  const seen = new Set<string>();
+  const rows: StorefrontProductCard[] = [];
+  for (const card of cards) {
+    if (seen.has(card.productId)) continue;
+    seen.add(card.productId);
+    rows.push(card);
+  }
+  return rows;
 }

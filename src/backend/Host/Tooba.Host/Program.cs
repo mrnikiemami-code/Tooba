@@ -399,6 +399,15 @@ if (app.Environment.IsDevelopment())
         {
             app.Logger.LogError(ex, "WalletDevelopmentSeed failed; Host continues without Wallet demo snapshot.");
         }
+
+        try
+        {
+            await LandingPageDevelopmentSeedHost.ApplyAsync(app.Services);
+        }
+        catch (Exception ex)
+        {
+            app.Logger.LogError(ex, "LandingPageDevelopmentSeed failed; Host continues without landing demo pages.");
+        }
     }
 }
 

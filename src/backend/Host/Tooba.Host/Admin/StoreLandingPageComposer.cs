@@ -37,6 +37,17 @@ public sealed class StoreLandingPageComposer
         return rows.Select(ToAdmin).ToList();
     }
 
+    /// <summary>یک صفحه برای ویرایش Admin.</summary>
+    public async Task<StoreLandingPageAdminView> GetAsync(Guid pageId, CancellationToken cancellationToken) =>
+        ToAdmin(await RequirePageAsync(pageId, cancellationToken));
+
+    /// <summary>پیش‌نمایش مجاز Admin؛ پیش‌نویس عمومی نمی‌شود.</summary>
+    public async Task<StoreLandingPagePublicView> ResolvePreviewAsync(Guid pageId, CancellationToken cancellationToken)
+    {
+        var page = await RequirePageAsync(pageId, cancellationToken);
+        return await ToPublicAsync(page, publicOnly: true, cancellationToken);
+    }
+
     /// <summary>صفحهٔ پیش‌نویس می‌سازد.</summary>
     public async Task<StoreLandingPageAdminView> CreateAsync(StoreLandingPageWriteRequest body, CancellationToken cancellationToken)
     {
@@ -295,40 +306,68 @@ public sealed class StoreLandingPageComposer
 
     private async Task EnsureReferencedEntitiesAsync(StoreLandingPageSection section, CancellationToken cancellationToken)
     {
-        if (section.SectionType != StoreLandingPageSectionRegistry.ProductCollection)
+        using var doc = System.Text.Json.JsonDocument.Parse(section.ConfigurationJson);
+        var root = doc.RootElement;
+        if (section.SectionType == StoreLandingPageSectionRegistry.ProductCollection)
         {
+            var source = root.TryGetProperty("source", out var sourceEl) ? sourceEl.GetString() : null;
+            if (string.Equals(source, "Category", StringComparison.Ordinal) && root.TryGetProperty("categoryId", out var categoryEl))
+            {
+                await EnsureCategoryAsync(categoryEl.GetGuid(), cancellationToken);
+            }
+            else if (string.Equals(source, "Brand", StringComparison.Ordinal) && root.TryGetProperty("brandId", out var brandEl))
+            {
+                await EnsureBrandAsync(brandEl.GetGuid(), cancellationToken);
+            }
+            else if (string.Equals(source, "Manual", StringComparison.Ordinal) && root.TryGetProperty("productIds", out var idsEl))
+            {
+                var ids = idsEl.EnumerateArray().Select(x => x.GetGuid()).ToList();
+                var found = await _catalog.Products.CountAsync(x => ids.Contains(x.ProductId), cancellationToken);
+                if (found != ids.Count)
+                {
+                    throw new PlatformHttpException(400, "محصول انتخاب‌شده در این فروشگاه نیست.", "landing.section.ref.missing");
+                }
+            }
+
             return;
         }
 
-        using var doc = System.Text.Json.JsonDocument.Parse(section.ConfigurationJson);
-        var root = doc.RootElement;
-        var source = root.TryGetProperty("source", out var sourceEl) ? sourceEl.GetString() : null;
-        if (string.Equals(source, "Category", StringComparison.Ordinal) && root.TryGetProperty("categoryId", out var categoryEl))
+        if ((section.SectionType == StoreLandingPageSectionRegistry.CategoryGrid
+                || section.SectionType == StoreLandingPageSectionRegistry.BrandStrip)
+            && root.TryGetProperty("ids", out var listEl)
+            && listEl.ValueKind == System.Text.Json.JsonValueKind.Array)
         {
-            var categoryId = categoryEl.GetGuid();
-            var exists = await _catalog.Categories.AnyAsync(x => x.CategoryId == categoryId, cancellationToken);
-            if (!exists)
+            var ids = listEl.EnumerateArray().Select(x => x.GetGuid()).ToList();
+            if (section.SectionType == StoreLandingPageSectionRegistry.CategoryGrid)
             {
-                throw new PlatformHttpException(400, "رده در این فروشگاه نیست.", "landing.section.ref.missing");
+                foreach (var id in ids)
+                {
+                    await EnsureCategoryAsync(id, cancellationToken);
+                }
+            }
+            else
+            {
+                foreach (var id in ids)
+                {
+                    await EnsureBrandAsync(id, cancellationToken);
+                }
             }
         }
-        else if (string.Equals(source, "Brand", StringComparison.Ordinal) && root.TryGetProperty("brandId", out var brandEl))
+    }
+
+    private async Task EnsureCategoryAsync(Guid categoryId, CancellationToken cancellationToken)
+    {
+        if (!await _catalog.Categories.AnyAsync(x => x.CategoryId == categoryId, cancellationToken))
         {
-            var brandId = brandEl.GetGuid();
-            var exists = await _catalog.Brands.AnyAsync(x => x.BrandId == brandId, cancellationToken);
-            if (!exists)
-            {
-                throw new PlatformHttpException(400, "برند در این فروشگاه نیست.", "landing.section.ref.missing");
-            }
+            throw new PlatformHttpException(400, "رده در این فروشگاه نیست.", "landing.section.ref.missing");
         }
-        else if (string.Equals(source, "Manual", StringComparison.Ordinal) && root.TryGetProperty("productIds", out var idsEl))
+    }
+
+    private async Task EnsureBrandAsync(Guid brandId, CancellationToken cancellationToken)
+    {
+        if (!await _catalog.Brands.AnyAsync(x => x.BrandId == brandId, cancellationToken))
         {
-            var ids = idsEl.EnumerateArray().Select(x => x.GetGuid()).ToList();
-            var found = await _catalog.Products.CountAsync(x => ids.Contains(x.ProductId), cancellationToken);
-            if (found != ids.Count)
-            {
-                throw new PlatformHttpException(400, "محصول انتخاب‌شده در این فروشگاه نیست.", "landing.section.ref.missing");
-            }
+            throw new PlatformHttpException(400, "برند در این فروشگاه نیست.", "landing.section.ref.missing");
         }
     }
 

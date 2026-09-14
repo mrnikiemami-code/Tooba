@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { StorefrontShell } from "../storefront/storefront-shell.tsx";
-import { loadPublishedLandingPage } from "../storefront/storefront-landing-api.ts";
+import { StorefrontLandingSections } from "../storefront/storefront-landing-sections.tsx";
+import { loadLandingRenderContext, loadPublishedLandingPage } from "../storefront/storefront-landing-api.ts";
 import { loadStorefrontHome } from "../storefront/storefront-api.ts";
 import { resolveRequestLocale } from "../../lib/i18n/resolve-request-locale.ts";
 import { canonicalForLocale, localeToContentApi } from "../../lib/i18n/routing.ts";
@@ -28,7 +29,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 /**
- * پوستهٔ موقت Landing از فیلدهای کاننیکال صفحه. Section builder اینجا نیست.
+ * صفحهٔ فرود منتشرشده با رندرر کاننیکال بخش‌ها.
  */
 export default async function StoreLandingPageRoute({ params }: Props) {
   const { slug } = await params;
@@ -40,13 +41,14 @@ export default async function StoreLandingPageRoute({ params }: Props) {
   if (!page) {
     notFound();
   }
-  const home = await loadStorefrontHome(localeToContentApi(locale));
+  const contentLocale = localeToContentApi(locale);
+  const [home, context] = await Promise.all([
+    loadStorefrontHome(contentLocale),
+    loadLandingRenderContext(contentLocale, page),
+  ]);
   return (
     <StorefrontShell categories={home?.categories ?? []}>
-      <article className="max-w-3xl mx-auto py-12 px-4" data-testid="storefront-landing-page" data-landing-slug={page.slug}>
-        <h1 className="text-2xl font-bold text-foreground">{page.title}</h1>
-        {page.seoDescription ? <p className="mt-4 text-sm text-foreground/80 leading-7">{page.seoDescription}</p> : null}
-      </article>
+      <StorefrontLandingSections page={page} context={context} />
     </StorefrontShell>
   );
 }

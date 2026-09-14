@@ -130,6 +130,14 @@ test("content article update and media errors are humanized", () => {
     "نویسندهٔ غیرفعال برای انتساب جدید مجاز نیست.",
   );
   assert.equal(
+    mapAdminErrorMessage("landing.slug.reserved", "fa"),
+    "این آدرس برای مسیرهای سامانه رزرو شده است. آدرس دیگری انتخاب کنید.",
+  );
+  assert.equal(
+    mapAdminErrorMessage("landing.home.ineligible", "fa"),
+    "فقط صفحهٔ منتشرشده را می‌توان خانه کرد.",
+  );
+  assert.equal(
     parseAdminProblemErrorCode(
       {
         title: "Bad Request",

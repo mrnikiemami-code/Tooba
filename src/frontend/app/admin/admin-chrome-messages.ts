@@ -33,6 +33,7 @@ export type AdminNavLabels = {
   contentHelp: string;
   stories: string;
   pageComposition: string;
+  landingPages: string;
   sellers: string;
   customers: string;
   reviews: string;
@@ -78,6 +79,7 @@ const faNav: AdminNavLabels = {
   contentHelp: "راهنمای محتوا",
   stories: "استوری‌ها",
   pageComposition: "ترکیب صفحهٔ خانه",
+  landingPages: "صفحات فرود",
   sellers: "فروشندگان",
   customers: "مشتریان",
   reviews: "نظرات",
@@ -123,6 +125,7 @@ const enNav: AdminNavLabels = {
   contentHelp: "Content help",
   stories: "Stories",
   pageComposition: "Home page composition",
+  landingPages: "Landing pages",
   sellers: "Sellers",
   customers: "Customers",
   reviews: "Reviews",

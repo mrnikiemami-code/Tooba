@@ -10,6 +10,7 @@ import {
   Globe,
   LayoutDashboard,
   LayoutTemplate,
+  FileText,
   LogOut,
   Menu,
   PenLine,
@@ -75,6 +76,7 @@ const navGroupDefs: NavGroupDef[] = [
       { id: "returns", labelKey: "returns", href: "/admin/returns", icon: RotateCcw, live: true, viewPermission: "return.view" },
       { id: "stories", labelKey: "stories", href: "/admin/stories", icon: Sparkles, live: true, viewPermission: "story.view" },
       { id: "page-composition", labelKey: "pageComposition", href: "/admin/page-composition", icon: LayoutTemplate, live: true, viewPermission: "pagecomposition.view" },
+      { id: "landing-pages", labelKey: "landingPages", href: "/admin/landing-pages", icon: FileText, live: true, viewPermission: "pagecomposition.view" },
     ],
   },
   {

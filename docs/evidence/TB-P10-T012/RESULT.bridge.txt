@@ -1,0 +1,70 @@
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-P10-T012
+Parent-Task: TB-P10-T011
+Status: PASS
+WorkerId: tooba-worker-01
+Channel: tooba-main
+
+Summary:
+Admin Landing Page Composer is live: list, metadata, visual add-section chooser, typed forms, searchable pickers, reorder/enable/delete, Draft preview, publish, and Home selection. Public Landing and selected Home use one storefront section renderer that inherits Palette/Theme/ProductCardSkin. Demo pages landing-demo and landing-demo-draft are seeded. USER_VISUAL_ACCEPTED remains NO. No T013.
+
+Applicable-Locks:
+LOCK-SF-001…178 preserved. Added LOCK-SF-179…185.
+
+Recovery-Start:
+branch=main HEAD-at-claim=2fdb9d89 leftover login/account UX preserved. docs/evidence/TB-P10-T012/recovery-start.md
+
+Composer-Discovery:
+Ops nav after home composition. Up/down reorder. Existing pickers reused. docs/evidence/TB-P10-T012/composer-discovery.md
+
+Admin-Page-List:
+عنوان/آدرس/زبان/وضعیت/صفحه اصلی/آخرین ویرایش + actions. docs/evidence/TB-P10-T012/admin-page-list.md
+
+Composer-UX:
+Section cards, chooser, side editor, dirty/save, Persian labels. docs/evidence/TB-P10-T012/composer-ux.md
+
+Section-Forms-Pickers:
+Typed forms; Manual/Category/Brand/Newest; name pickers. docs/evidence/TB-P10-T012/section-forms-pickers.md
+
+Storefront-Renderer:
+StorefrontLandingSections dispatcher. docs/evidence/TB-P10-T012/storefront-renderer.md
+
+Preview-Publish:
+Admin preview authorized; public Draft 404; publish immediate. docs/evidence/TB-P10-T012/preview-publish.md
+
+Home-Selection:
+Published HomePageId replaces Home; unset/invalid falls back. docs/evidence/TB-P10-T012/home-selection.md
+
+Seed-Demo:
+landing-demo Published + landing-demo-draft Draft. docs/evidence/TB-P10-T012/seed-demo.md
+
+Focused-Validation:
+Host 16/16. FE landing+nav+home/critical-storefront pass. recovery 4/4. docs/evidence/TB-P10-T012/focused-validation.md
+
+Runtime:
+A–R PASS. screenshots persisted. docs/evidence/TB-P10-T012/runtime.md
+
+Performance:
+No polling; bounded take; page/home cache invalidate on write. docs/evidence/TB-P10-T012/performance.md
+
+AntiPattern-Scan:
+CLEAN. docs/evidence/TB-P10-T012/antipattern-scan.md
+
+Lock-Registry:
+LOCK-SF-179…185 appended.
+
+Recovery-SoT:
+Phase P10 Architect TB-P10-T011 Impl TB-P10-T012 Issued/Repair none USER_VISUAL_ACCEPTED=NO Worker IDLE do NOT invent TB-P10-T013. docs/evidence/TB-P10-T012/recovery-sot.md
+
+Git:
+HEAD==origin/main after push. Unrelated login leftovers not committed.
+
+Architectural-Concerns:
+BestSelling/Featured/Discounted still deferred. ArticleList Latest only.
+
+Visual-Concerns:
+USER_VISUAL_ACCEPTED=NO pending user review of Composer and Landing.
+
+Blockers:
+none
+END_TOOBA_WORKER_RESULT

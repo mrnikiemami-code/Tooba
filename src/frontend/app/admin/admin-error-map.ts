@@ -774,6 +774,90 @@ const ADMIN_ERROR_MESSAGES: Record<string, { fa: string; en: string }> = {
     fa: "بدنه شامل رسانهٔ ناامن است. فقط تصاویر کتابخانه مجازند.",
     en: "The body contains unsafe media. Only library images are allowed.",
   },
+  "landing.slug.invalid": {
+    fa: "آدرس صفحه معتبر نیست. فقط حروف، عدد و خط تیره استفاده کنید.",
+    en: "The page address is not valid.",
+  },
+  "landing.slug.reserved": {
+    fa: "این آدرس برای مسیرهای سامانه رزرو شده است. آدرس دیگری انتخاب کنید.",
+    en: "This address is reserved. Choose another page address.",
+  },
+  "landing.slug.duplicate": {
+    fa: "این آدرس در همین زبان قبلاً ثبت شده است.",
+    en: "This page address is already used in this language.",
+  },
+  "landing.title.required": {
+    fa: "عنوان صفحه لازم است.",
+    en: "A page title is required.",
+  },
+  "landing.status.invalid": {
+    fa: "وضعیت انتشار معتبر نیست.",
+    en: "The publication status is not valid.",
+  },
+  "landing.home.ineligible": {
+    fa: "فقط صفحهٔ منتشرشده را می‌توان خانه کرد.",
+    en: "Only a published page can be selected as Home.",
+  },
+  "landing.page.missing": {
+    fa: "صفحه یافت نشد.",
+    en: "The page was not found.",
+  },
+  "landing.section.limit": {
+    fa: "تعداد بخش‌های صفحه به سقف رسیده است.",
+    en: "This page has reached the section limit.",
+  },
+  "landing.section.type.invalid": {
+    fa: "این نوع بخش پشتیبانی نمی‌شود.",
+    en: "This section type is not supported.",
+  },
+  "landing.section.config.invalid": {
+    fa: "تنظیمات بخش معتبر نیست.",
+    en: "The section settings are not valid.",
+  },
+  "landing.section.config.forbidden": {
+    fa: "تنظیم اجرایی یا پرس‌وجوی آزاد مجاز نیست.",
+    en: "Executable or free-form query settings are not allowed.",
+  },
+  "landing.section.source.unsupported": {
+    fa: "این منبع هنوز پشتیبانی نمی‌شود.",
+    en: "This source is not supported yet.",
+  },
+  "landing.section.source.invalid": {
+    fa: "منبع انتخاب‌شده معتبر نیست.",
+    en: "The selected source is not valid.",
+  },
+  "landing.section.source.missing": {
+    fa: "منبع بخش را کامل کنید.",
+    en: "Complete the section source.",
+  },
+  "landing.section.ref.missing": {
+    fa: "مورد انتخاب‌شده در این فروشگاه نیست.",
+    en: "The selected item is not in this store.",
+  },
+  "landing.section.title.required": {
+    fa: "عنوان بخش لازم است.",
+    en: "A section title is required.",
+  },
+  "landing.section.text.required": {
+    fa: "متن بخش لازم است.",
+    en: "Section text is required.",
+  },
+  "landing.section.text.html": {
+    fa: "HTML در متن مجاز نیست.",
+    en: "HTML is not allowed in this text.",
+  },
+  "landing.section.take.invalid": {
+    fa: "تعداد نمایش باید بین ۱ تا ۲۴ باشد.",
+    en: "Display count must be between 1 and 24.",
+  },
+  "landing.section.reorder.invalid": {
+    fa: "ترتیب بخش‌ها کامل نیست.",
+    en: "The section order is incomplete.",
+  },
+  "landing.section.missing": {
+    fa: "بخش یافت نشد.",
+    en: "The section was not found.",
+  },
 };
 
 const TECHNICAL_UI_PATTERNS = [

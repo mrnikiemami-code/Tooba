@@ -697,3 +697,24 @@ Reordering preserves stable PageSection identity; reorder is not delete/recreate
 
 ### LOCK-SF-178 — Section limits are server-enforced
 Section configuration limits are server-enforced to prevent unbounded page/query cost.
+
+### LOCK-SF-179 — Landing Composer stays human-readable
+Store Admin Landing/Page Composer must be human-readable and must not expose technical IDs, enum keys, JSON, SQL, or route internals.
+
+### LOCK-SF-180 — Typed section forms and Store-scoped pickers
+Section editing uses typed section-specific forms and Store-scoped searchable pickers, never raw config editing.
+
+### LOCK-SF-181 — Draft preview is authorized and non-indexable
+Draft preview is authorized/non-indexable and must not make Draft publicly resolvable.
+
+### LOCK-SF-182 — One canonical Landing renderer inherits Store appearance
+Public Landing rendering uses one canonical approved Section renderer and inherits Store PaletteKey, ThemeMode, and ProductCardSkin.
+
+### LOCK-SF-183 — Home selection uses HomePageId with safe fallback
+Selecting a Published Landing Page as Home replaces Home composition only through canonical HomePageId; unset/invalid selection falls back safely to canonical Home.
+
+### LOCK-SF-184 — Publish and writes invalidate relevant caches only
+Publishing/unpublishing and Page/Section writes invalidate only relevant Page/Home caches and never require rebuild/redeploy.
+
+### LOCK-SF-185 — Reorder keeps identity and stays accessible
+Composer reorder preserves stable PageSection identity and must remain accessible beyond pointer-only drag/drop.

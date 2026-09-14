@@ -1,0 +1,425 @@
+{
+  "ok": true,
+  "steps": [
+    {
+      "name": "A-list",
+      "pass": true
+    },
+    {
+      "name": "file:page-list.png",
+      "pass": true,
+      "data": {
+        "bytes": 86801
+      }
+    },
+    {
+      "name": "B-create",
+      "pass": true
+    },
+    {
+      "name": "file:page-editor.png",
+      "pass": true,
+      "data": {
+        "bytes": 107770
+      }
+    },
+    {
+      "name": "file:add-section.png",
+      "pass": true,
+      "data": {
+        "bytes": 127904
+      }
+    },
+    {
+      "name": "C-hero",
+      "pass": true
+    },
+    {
+      "name": "file:product-section-editor.png",
+      "pass": true,
+      "data": {
+        "bytes": 90773
+      }
+    },
+    {
+      "name": "D-products",
+      "pass": true
+    },
+    {
+      "name": "E-category",
+      "pass": true
+    },
+    {
+      "name": "file:composer-reordered.png",
+      "pass": true,
+      "data": {
+        "bytes": 107891
+      }
+    },
+    {
+      "name": "F-reorder",
+      "pass": true
+    },
+    {
+      "name": "G-disable",
+      "pass": true
+    },
+    {
+      "name": "page-id",
+      "pass": true,
+      "data": {
+        "pageId": "01a09e37-f3ca-7000-9964-8ccbf02f2d42"
+      }
+    },
+    {
+      "name": "H-preview",
+      "pass": true
+    },
+    {
+      "name": "file:draft-preview.png",
+      "pass": true,
+      "data": {
+        "bytes": 519215
+      }
+    },
+    {
+      "name": "I-draft-404",
+      "pass": true,
+      "data": {
+        "status": 404
+      }
+    },
+    {
+      "name": "J-publish",
+      "pass": true,
+      "data": {
+        "status": 200
+      }
+    },
+    {
+      "name": "K-public",
+      "pass": true
+    },
+    {
+      "name": "file:published-landing.png",
+      "pass": true,
+      "data": {
+        "bytes": 568072
+      }
+    },
+    {
+      "name": "L-home",
+      "pass": true
+    },
+    {
+      "name": "M-fa",
+      "pass": true
+    },
+    {
+      "name": "file:custom-home.png",
+      "pass": true,
+      "data": {
+        "bytes": 568234
+      }
+    },
+    {
+      "name": "N-put-palette",
+      "pass": true,
+      "data": {
+        "status": 200,
+        "body": {
+          "storeScope": "tenant:store-alpha",
+          "paletteKey": "forest-green",
+          "paletteKeyWasKnown": true,
+          "themeMode": "LightOnly",
+          "tokens": {
+            "primaryRgb": "21 128 61",
+            "primaryStrongRgb": "22 101 52",
+            "onPrimaryRgb": "255 255 255",
+            "focusRgb": "21 128 61",
+            "primaryOnDarkRgb": "42 139 78"
+          },
+          "productCardSkin": "classic",
+          "presets": [
+            {
+              "key": "tooba-blue",
+              "nameFa": "آبی توبا",
+              "nameEn": "Tooba Blue",
+              "tokens": {
+                "primaryRgb": "37 99 235",
+                "primaryStrongRgb": "29 78 216",
+                "onPrimaryRgb": "255 255 255",
+                "focusRgb": "37 99 235",
+                "primaryOnDarkRgb": "59 115 237"
+              }
+            },
+            {
+              "key": "forest-green",
+              "nameFa": "سبز جنگلی",
+              "nameEn": "Forest Green",
+              "tokens": {
+                "primaryRgb": "21 128 61",
+                "primaryStrongRgb": "22 101 52",
+                "onPrimaryRgb": "255 255 255",
+                "focusRgb": "21 128 61",
+                "primaryOnDarkRgb": "42 139 78"
+              }
+            },
+            {
+              "key": "wine-burgundy",
+              "nameFa": "شرابی تیره",
+              "nameEn": "Wine Burgundy",
+              "tokens": {
+                "primaryRgb": "159 18 57",
+                "primaryStrongRgb": "136 19 55",
+                "onPrimaryRgb": "255 255 255",
+                "focusRgb": "159 18 57",
+                "primaryOnDarkRgb": "189 91 118"
+              }
+            },
+            {
+              "key": "slate-navy",
+              "nameFa": "سرمه‌ای سنگی",
+              "nameEn": "Slate Navy",
+              "tokens": {
+                "primaryRgb": "30 58 95",
+                "primaryStrongRgb": "23 37 84",
+                "onPrimaryRgb": "255 255 255",
+                "focusRgb": "30 58 95",
+                "primaryOnDarkRgb": "104 123 148"
+              }
+            },
+            {
+              "key": "amber-gold",
+              "nameFa": "کهربایی",
+              "nameEn": "Amber Gold",
+              "tokens": {
+                "primaryRgb": "180 83 9",
+                "primaryStrongRgb": "146 64 14",
+                "onPrimaryRgb": "255 255 255",
+                "focusRgb": "180 83 9",
+                "primaryOnDarkRgb": "187 98 31"
+              }
+            },
+            {
+              "key": "teal-lagoon",
+              "nameFa": "سبزآبی مرداب",
+              "nameEn": "Teal Lagoon",
+              "tokens": {
+                "primaryRgb": "15 118 110",
+                "primaryStrongRgb": "17 94 89",
+                "onPrimaryRgb": "255 255 255",
+                "focusRgb": "15 118 110",
+                "primaryOnDarkRgb": "46 136 129"
+              }
+            },
+            {
+              "key": "violet-royal",
+              "nameFa": "بنفش سلطنتی",
+              "nameEn": "Royal Violet",
+              "tokens": {
+                "primaryRgb": "124 58 237",
+                "primaryStrongRgb": "109 40 217",
+                "onPrimaryRgb": "255 255 255",
+                "focusRgb": "124 58 237",
+                "primaryOnDarkRgb": "144 88 240"
+              }
+            }
+          ],
+          "skins": [
+            {
+              "key": "classic",
+              "nameFa": "کلاسیک",
+              "nameEn": "Classic"
+            },
+            {
+              "key": "clean",
+              "nameFa": "ساده",
+              "nameEn": "Clean"
+            },
+            {
+              "key": "elevated",
+              "nameFa": "برجسته",
+              "nameEn": "Elevated"
+            },
+            {
+              "key": "glass",
+              "nameFa": "شیشه‌ای",
+              "nameEn": "Glass"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "N-palette",
+      "pass": true
+    },
+    {
+      "name": "file:landing-alt-palette.png",
+      "pass": true,
+      "data": {
+        "bytes": 568036
+      }
+    },
+    {
+      "name": "O-put-dark",
+      "pass": true,
+      "data": {
+        "status": 200
+      }
+    },
+    {
+      "name": "O-dark",
+      "pass": true
+    },
+    {
+      "name": "file:landing-dark.png",
+      "pass": true,
+      "data": {
+        "bytes": 566723
+      }
+    },
+    {
+      "name": "P-put-skin",
+      "pass": true,
+      "data": {
+        "status": 200
+      }
+    },
+    {
+      "name": "P-skin",
+      "pass": true
+    },
+    {
+      "name": "Q-restore-home",
+      "pass": true
+    },
+    {
+      "name": "R-seed",
+      "pass": true,
+      "data": {
+        "status": 200
+      }
+    }
+  ],
+  "files": {
+    "page-list.png": {
+      "bytes": 86801
+    },
+    "page-editor.png": {
+      "bytes": 107770
+    },
+    "add-section.png": {
+      "bytes": 127904
+    },
+    "product-section-editor.png": {
+      "bytes": 90773
+    },
+    "composer-reordered.png": {
+      "bytes": 107891
+    },
+    "draft-preview.png": {
+      "bytes": 519215
+    },
+    "published-landing.png": {
+      "bytes": 568072
+    },
+    "custom-home.png": {
+      "bytes": 568234
+    },
+    "landing-alt-palette.png": {
+      "bytes": 568036
+    },
+    "landing-dark.png": {
+      "bytes": 566723
+    }
+  },
+  "errors": [],
+  "console": [
+    {
+      "type": "info",
+      "text": "%cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold"
+    },
+    {
+      "type": "info",
+      "text": "%cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold"
+    },
+    {
+      "type": "info",
+      "text": "%cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold"
+    },
+    {
+      "type": "info",
+      "text": "%cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+    },
+    {
+      "type": "info",
+      "text": "%cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold"
+    },
+    {
+      "type": "error",
+      "text": "A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:\n\n- A server/client branch `if (typeof window !== 'undefined')`."
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+    },
+    {
+      "type": "info",
+      "text": "%cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold"
+    },
+    {
+      "type": "error",
+      "text": "A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:\n\n- A server/client branch `if (typeof window !== 'undefined')`."
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+    },
+    {
+      "type": "info",
+      "text": "%cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold"
+    },
+    {
+      "type": "error",
+      "text": "A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:\n\n- A server/client branch `if (typeof window !== 'undefined')`."
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+    },
+    {
+      "type": "info",
+      "text": "%cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold"
+    },
+    {
+      "type": "error",
+      "text": "A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:\n\n- A server/client branch `if (typeof window !== 'undefined')`."
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+    },
+    {
+      "type": "info",
+      "text": "%cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold"
+    },
+    {
+      "type": "error",
+      "text": "A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:\n\n- A server/client branch `if (typeof window !== 'undefined')`."
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+    },
+    {
+      "type": "info",
+      "text": "%cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold"
+    }
+  ]
+}

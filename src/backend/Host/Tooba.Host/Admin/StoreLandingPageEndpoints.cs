@@ -11,6 +11,8 @@ public static class StoreLandingPageEndpoints
         var admin = app.MapGroup("/v1/admin/pages");
         admin.MapGet("/", ListAsync);
         admin.MapPost("/", CreateAsync);
+        admin.MapGet("/{pageId:guid}", GetAsync);
+        admin.MapGet("/{pageId:guid}/preview", PreviewAsync);
         admin.MapPut("/{pageId:guid}", UpdateAsync);
         admin.MapPut("/{pageId:guid}/status", SetStatusAsync);
         admin.MapPut("/home", SetHomeAsync);
@@ -40,6 +42,48 @@ public static class StoreLandingPageEndpoints
         {
             await AdminPanelAccess.RequireAuthorizedAsync(request, session, tenant, guard, environment, cancellationToken);
             return Results.Json(await composer.ListAsync(cancellationToken));
+        }
+        catch (PlatformHttpException ex)
+        {
+            return Results.Json(new { title = ex.Title, errorCode = ex.ErrorCode }, statusCode: ex.StatusCode);
+        }
+    }
+
+    private static async Task<IResult> GetAsync(
+        Guid pageId,
+        StoreLandingPageComposer composer,
+        HttpRequest request,
+        CurrentAuthenticatedSession session,
+        ICurrentTenant tenant,
+        IAuthorizationGuard guard,
+        IHostEnvironment environment,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            await AdminPanelAccess.RequireAuthorizedAsync(request, session, tenant, guard, environment, cancellationToken);
+            return Results.Json(await composer.GetAsync(pageId, cancellationToken));
+        }
+        catch (PlatformHttpException ex)
+        {
+            return Results.Json(new { title = ex.Title, errorCode = ex.ErrorCode }, statusCode: ex.StatusCode);
+        }
+    }
+
+    private static async Task<IResult> PreviewAsync(
+        Guid pageId,
+        StoreLandingPageComposer composer,
+        HttpRequest request,
+        CurrentAuthenticatedSession session,
+        ICurrentTenant tenant,
+        IAuthorizationGuard guard,
+        IHostEnvironment environment,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            await AdminPanelAccess.RequireAuthorizedAsync(request, session, tenant, guard, environment, cancellationToken);
+            return Results.Json(await composer.ResolvePreviewAsync(pageId, cancellationToken));
         }
         catch (PlatformHttpException ex)
         {

@@ -103,6 +103,15 @@ test("deep category routes keep category leaf active", () => {
   );
 });
 
+test("landing pages live in ops after home composition", () => {
+  assert.match(shellSource, /id: "landing-pages"/);
+  assert.match(shellSource, /href: "\/admin\/landing-pages"/);
+  assert.match(chromeMessages, /landingPages:\s*"صفحات فرود"/);
+  const compositionIdx = shellSource.indexOf('id: "page-composition"');
+  const landingIdx = shellSource.indexOf('id: "landing-pages"');
+  assert.ok(compositionIdx >= 0 && landingIdx > compositionIdx);
+});
+
 test("content group sits between ops and finance with Articles label", () => {
   assert.match(chromeMessages, /groupContent:\s*"محتوا"/);
   assert.match(chromeMessages, /groupContent:\s*"Content"/);
