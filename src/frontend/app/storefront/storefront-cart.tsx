@@ -193,7 +193,7 @@ export function StorefrontShopeivaCart({
     .slice(0, 8);
 
   return (
-    <div className="pb-10" data-testid="cart-page">
+    <div className="pb-10" data-testid="cart-page" data-storefront-surface-role="section">
       <nav className="text-xs text-gray-500 pt-4 mb-2 flex flex-wrap gap-2" aria-label="مسیر صفحه" data-testid="cart-breadcrumb">
         <Link href="/" className="hover:text-primary">
           خانه

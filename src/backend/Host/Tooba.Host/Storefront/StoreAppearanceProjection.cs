@@ -23,6 +23,10 @@ public sealed record StoreAppearanceProjection(
     string SectionBackgroundRgb,
     string PageBackgroundDarkRgb,
     string SectionBackgroundDarkRgb,
+    string SectionAlternateRgb,
+    string SectionAccentRgb,
+    string SectionAlternateDarkRgb,
+    string SectionAccentDarkRgb,
     DateTimeOffset UpdatedAt);
 
 /// <summary>
@@ -101,6 +105,10 @@ public sealed class StoreAppearanceProjector
             tint.SectionBackgroundRgb,
             tint.PageBackgroundDarkRgb,
             tint.SectionBackgroundDarkRgb,
+            tint.SectionAlternateRgb,
+            tint.SectionAccentRgb,
+            tint.SectionAlternateDarkRgb,
+            tint.SectionAccentDarkRgb,
             row?.UpdatedAt ?? DateTimeOffset.UnixEpoch);
 
         _cache.Set(CacheKey(scope), projection, new MemoryCacheEntryOptions

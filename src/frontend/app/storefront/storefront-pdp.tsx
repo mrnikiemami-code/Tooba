@@ -82,7 +82,7 @@ export function StorefrontShopeivaPdp({ detail }: { detail: StorefrontProductDet
   ];
 
   return (
-    <div className="py-4 space-y-6" data-testid="storefront-pdp">
+    <div className="py-4 space-y-6" data-testid="storefront-pdp" data-storefront-surface-role="section">
       <nav className="text-xs text-gray-500 flex gap-2">
         <Link href="/" className="hover:text-primary">
           خانه

@@ -1,0 +1,276 @@
+{
+  "ok": true,
+  "steps": [
+    {
+      "name": "invalid-background-400",
+      "pass": true
+    },
+    {
+      "name": "public-four-roles",
+      "pass": true
+    },
+    {
+      "name": "A-blue-tint",
+      "pass": true
+    },
+    {
+      "name": "pdp-slug",
+      "pass": true,
+      "data": {
+        "slug": "demo-prod-fashion-men-men-pants-1"
+      }
+    },
+    {
+      "name": "B-home-style",
+      "pass": true
+    },
+    {
+      "name": "B-home-roles",
+      "pass": true
+    },
+    {
+      "name": "file:home-four-surfaces.png",
+      "pass": true,
+      "data": {
+        "bytes": 504146
+      }
+    },
+    {
+      "name": "C-plp",
+      "pass": true
+    },
+    {
+      "name": "file:plp-four-surfaces.png",
+      "pass": true,
+      "data": {
+        "bytes": 118775
+      }
+    },
+    {
+      "name": "D-pdp",
+      "pass": true
+    },
+    {
+      "name": "D-pdp-marker",
+      "pass": true
+    },
+    {
+      "name": "file:pdp-four-surfaces.png",
+      "pass": true,
+      "data": {
+        "bytes": 250016
+      }
+    },
+    {
+      "name": "E-content",
+      "pass": true
+    },
+    {
+      "name": "file:content-four-surfaces.png",
+      "pass": true,
+      "data": {
+        "bytes": 322522
+      }
+    },
+    {
+      "name": "F-cart",
+      "pass": true
+    },
+    {
+      "name": "file:cart-four-surfaces.png",
+      "pass": true,
+      "data": {
+        "bytes": 151499
+      }
+    },
+    {
+      "name": "G-checkout",
+      "pass": true
+    },
+    {
+      "name": "file:checkout-four-surfaces.png",
+      "pass": true,
+      "data": {
+        "bytes": 164044
+      }
+    },
+    {
+      "name": "H-account",
+      "pass": true
+    },
+    {
+      "name": "H-wishlist",
+      "pass": true
+    },
+    {
+      "name": "I-landing",
+      "pass": true
+    },
+    {
+      "name": "I-landing-roles",
+      "pass": true
+    },
+    {
+      "name": "file:landing-four-surfaces.png",
+      "pass": true,
+      "data": {
+        "bytes": 472121
+      }
+    },
+    {
+      "name": "J-forest",
+      "pass": true
+    },
+    {
+      "name": "J-home",
+      "pass": true
+    },
+    {
+      "name": "file:forest-four-surfaces.png",
+      "pass": true,
+      "data": {
+        "bytes": 504574
+      }
+    },
+    {
+      "name": "K-dark",
+      "pass": true
+    },
+    {
+      "name": "K-home",
+      "pass": true
+    },
+    {
+      "name": "K-dark-class",
+      "pass": true
+    },
+    {
+      "name": "file:dark-four-surfaces.png",
+      "pass": true,
+      "data": {
+        "bytes": 505266
+      }
+    },
+    {
+      "name": "L-restore",
+      "pass": true
+    },
+    {
+      "name": "L-home",
+      "pass": true
+    },
+    {
+      "name": "no-console-loop",
+      "pass": true,
+      "data": {
+        "loops": []
+      }
+    }
+  ],
+  "files": {
+    "home-four-surfaces.png": {
+      "bytes": 504146
+    },
+    "plp-four-surfaces.png": {
+      "bytes": 118775
+    },
+    "pdp-four-surfaces.png": {
+      "bytes": 250016
+    },
+    "content-four-surfaces.png": {
+      "bytes": 322522
+    },
+    "cart-four-surfaces.png": {
+      "bytes": 151499
+    },
+    "checkout-four-surfaces.png": {
+      "bytes": 164044
+    },
+    "landing-four-surfaces.png": {
+      "bytes": 472121
+    },
+    "forest-four-surfaces.png": {
+      "bytes": 504574
+    },
+    "dark-four-surfaces.png": {
+      "bytes": 505266
+    }
+  },
+  "errors": [],
+  "console": [
+    {
+      "type": "console-error",
+      "text": "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+    },
+    {
+      "type": "console-error",
+      "text": "Failed to load resource: the server responded with a status of 500 (Internal Server Error)"
+    },
+    {
+      "type": "console-error",
+      "text": "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+    },
+    {
+      "type": "console-error",
+      "text": "A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:\n\n- A server/client branch `if (typeof window !== 'undefined')`."
+    },
+    {
+      "type": "console-error",
+      "text": "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+    },
+    {
+      "type": "console-error",
+      "text": "A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:\n\n- A server/client branch `if (typeof window !== 'undefined')`."
+    },
+    {
+      "type": "console-error",
+      "text": "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+    },
+    {
+      "type": "console-error",
+      "text": "A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:\n\n- A server/client branch `if (typeof window !== 'undefined')`."
+    },
+    {
+      "type": "console-error",
+      "text": "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+    },
+    {
+      "type": "console-error",
+      "text": "A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:\n\n- A server/client branch `if (typeof window !== 'undefined')`."
+    },
+    {
+      "type": "console-error",
+      "text": "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+    },
+    {
+      "type": "pageerror",
+      "text": "Error: Hydration failed because the server rendered HTML didn't match the client. As a result this tree will be regenerated on the client. This can happen if a SSR-ed Client Component used:\n\n- A server/client branch `if (typeof window !== '"
+    },
+    {
+      "type": "pageerror",
+      "text": "Error: Hydration failed because the server rendered HTML didn't match the client. As a result this tree will be regenerated on the client. This can happen if a SSR-ed Client Component used:\n\n- A server/client branch `if (typeof window !== '"
+    },
+    {
+      "type": "console-error",
+      "text": "A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:\n\n- A server/client branch `if (typeof window !== 'undefined')`."
+    },
+    {
+      "type": "console-error",
+      "text": "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+    },
+    {
+      "type": "console-error",
+      "text": "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+    },
+    {
+      "type": "console-error",
+      "text": "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+    }
+  ],
+  "appearance": {
+    "paletteKey": "tooba-blue",
+    "themeMode": "LightOnly",
+    "productCardSkin": "classic",
+    "backgroundStyle": "Neutral"
+  }
+}

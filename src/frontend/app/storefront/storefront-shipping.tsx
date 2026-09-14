@@ -325,7 +325,7 @@ export function StorefrontShopeivaShipping() {
 
   if (!projection) {
     return (
-      <div className="min-h-screen bg-white" data-testid="shipping-page">
+      <div className="min-h-screen bg-page" data-testid="shipping-page" data-storefront-surface-role="page">
         <ShippingHero itemCount={0} subtotalLabel="—" shippingDaysLabel="—" />
         <div className="py-16 text-center">
           {error ? <p className="text-sm text-red-600">{error}</p> : <p className="text-sm text-gray-500">در حال آماده‌سازی ارسال…</p>}
@@ -338,7 +338,7 @@ export function StorefrontShopeivaShipping() {
   }
 
   return (
-    <div className="min-h-screen bg-white pb-10" data-testid="shipping-page">
+    <div className="min-h-screen bg-page pb-10" data-testid="shipping-page" data-storefront-surface-role="page">
       <nav className="max-w-[1800px] mx-auto px-4 sm:px-6 pt-4 text-xs text-gray-500 mb-2 flex flex-wrap gap-2" aria-label="مسیر صفحه">
         <Link href="/cart" className="hover:text-primary">سبد خرید</Link>
         <span>/</span>

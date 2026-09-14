@@ -128,7 +128,7 @@ export function StorefrontPaymentHandoff() {
   }
 
   return (
-    <div className="min-h-screen bg-white pb-10" data-testid="payment-handoff-page">
+    <div className="min-h-screen bg-page pb-10" data-testid="payment-handoff-page" data-storefront-surface-role="page">
       <div className="max-w-[1800px] mx-auto px-4 sm:px-6 pt-4 md:pt-6">
         <div className="relative overflow-hidden rounded-2xl md:rounded-3xl bg-gradient-to-l from-primary to-primary-strong min-h-[180px]">
           <div className="relative z-10 flex flex-col items-center justify-center text-center p-8">

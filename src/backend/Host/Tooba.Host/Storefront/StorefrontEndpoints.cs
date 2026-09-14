@@ -405,8 +405,14 @@ public static class StorefrontEndpoints
             {
                 pageBackgroundRgb = appearance.PageBackgroundRgb,
                 sectionBackgroundRgb = appearance.SectionBackgroundRgb,
+                sectionSurfaceRgb = appearance.SectionBackgroundRgb,
+                sectionAlternateRgb = appearance.SectionAlternateRgb,
+                sectionAccentRgb = appearance.SectionAccentRgb,
                 pageBackgroundDarkRgb = appearance.PageBackgroundDarkRgb,
                 sectionBackgroundDarkRgb = appearance.SectionBackgroundDarkRgb,
+                sectionSurfaceDarkRgb = appearance.SectionBackgroundDarkRgb,
+                sectionAlternateDarkRgb = appearance.SectionAlternateDarkRgb,
+                sectionAccentDarkRgb = appearance.SectionAccentDarkRgb,
             },
             updatedAt = appearance.UpdatedAt,
         });

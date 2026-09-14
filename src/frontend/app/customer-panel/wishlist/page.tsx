@@ -37,7 +37,7 @@ export default function CustomerWishlistPage() {
   const empty = wishlistEmptyMessage(page.items.length);
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-5" data-storefront-surface-role="section">
       <header className="flex items-center gap-3 rounded-2xl border border-gray-100 bg-white p-5">
         <span className="flex size-11 items-center justify-center rounded-xl bg-rose-50 text-rose-600"><Heart className="size-5" /></span>
         <div>

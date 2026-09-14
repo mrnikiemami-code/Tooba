@@ -27,6 +27,15 @@ public sealed class StoreAppearanceFoundationTests
         Assert.Equal("189 91 118", StoreAppearancePaletteRegistry.ResolveTokens("wine-burgundy").PrimaryOnDarkRgb);
         Assert.Equal("236 241 250", StoreAppearancePaletteRegistry.ToobaBlueTint.PageBackgroundRgb);
         Assert.NotEqual(
+            StoreAppearancePaletteRegistry.ToobaBlueTint.PageBackgroundRgb,
+            StoreAppearancePaletteRegistry.ToobaBlueTint.SectionAlternateRgb);
+        Assert.NotEqual(
+            StoreAppearancePaletteRegistry.ToobaBlueTint.SectionBackgroundRgb,
+            StoreAppearancePaletteRegistry.ToobaBlueTint.SectionAccentRgb);
+        Assert.NotEqual(
+            StoreAppearancePaletteRegistry.ToobaBlue.PrimaryRgb,
+            StoreAppearancePaletteRegistry.ToobaBlueTint.SectionAccentRgb);
+        Assert.NotEqual(
             StoreAppearancePaletteRegistry.ToobaBlue.PrimaryRgb,
             StoreAppearancePaletteRegistry.ResolveTint("forest-green").PageBackgroundRgb);
         Assert.Equal("Neutral", StoreAppearanceSettings.NormalizeBackgroundStyle(default).ToString());
@@ -52,6 +61,8 @@ public sealed class StoreAppearanceFoundationTests
         Assert.Equal("Neutral", projection.BackgroundStyle);
         Assert.Equal("37 99 235", projection.PrimaryRgb);
         Assert.Equal("236 241 250", projection.PageBackgroundRgb);
+        Assert.NotEqual(projection.SectionAlternateRgb, projection.PageBackgroundRgb);
+        Assert.NotEqual(projection.SectionAccentRgb, projection.PrimaryRgb);
         Assert.NotEqual(projection.PrimaryRgb, projection.PageBackgroundRgb);
         Assert.Equal("tenant:store-a", projection.StoreScope);
         Assert.DoesNotContain("danger", projection.PaletteKey, StringComparison.OrdinalIgnoreCase);

@@ -14,6 +14,7 @@ import type {
   StorefrontLandingSection,
 } from "./storefront-landing-api.ts";
 import { StorefrontMenuLinks } from "./storefront-menu-tree.tsx";
+import { landingSectionSurfaceRole, surfaceRoleClass } from "../../lib/storefront-appearance/surface-role.ts";
 
 export type { LandingRenderContext };
 
@@ -52,7 +53,18 @@ export function StorefrontLandingSections({
       <h1 className="sr-only">{page.title}</h1>
       {page.sections.map((section) => {
         const rendered = renderLandingSection(section, context);
-        return rendered ? <div key={section.pageSectionId}>{rendered}</div> : null;
+        if (!rendered) return null;
+        const role = landingSectionSurfaceRole(section.sectionType);
+        return (
+          <div
+            key={section.pageSectionId}
+            className={surfaceRoleClass(role)}
+            data-storefront-surface-role={role}
+            data-landing-section-type={section.sectionType}
+          >
+            {rendered}
+          </div>
+        );
       })}
     </div>
   );

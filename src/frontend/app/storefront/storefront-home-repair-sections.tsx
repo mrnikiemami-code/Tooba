@@ -62,8 +62,9 @@ export function HomeBestSellersSection({ columns }: { columns: StorefrontBestSel
   return (
     <section
       aria-labelledby="home-best-sellers-heading"
-      className="w-full bg-gradient-to-b from-white to-gray-50/50 py-8 md:py-10 px-2 sm:px-4"
+      className="w-full bg-section-alternate py-8 md:py-10 px-2 sm:px-4"
       data-testid="home-best-sellers"
+      data-storefront-surface-role="alternate"
     >
       <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
         <div className="flex items-center gap-3">
@@ -208,7 +209,7 @@ export function HomeBrandsSection({ brands }: { brands: StorefrontBrandItem[] })
   }
 
   return (
-    <section aria-labelledby="home-brands-heading" className="w-full bg-white py-8 md:py-10 px-2 sm:px-4" data-testid="home-brands">
+    <section aria-labelledby="home-brands-heading" className="w-full bg-section-surface py-8 md:py-10 px-2 sm:px-4" data-testid="home-brands" data-storefront-surface-role="section">
       <div className="flex items-center justify-between mb-4">
         <h2 id="home-brands-heading" className="text-lg md:text-xl font-bold text-gray-900 flex items-center gap-2">
           <span className="w-1 h-5 rounded-full" style={{ backgroundColor: STOREFRONT_ACCENT }} />
@@ -261,7 +262,7 @@ export function HomeNewProductsSection({ products }: { products: StorefrontProdu
   if (products.length === 0) return null;
 
   return (
-    <section aria-labelledby="home-new-products-heading" className="w-full bg-gradient-to-b from-white to-gray-50/50 py-8 md:py-10 px-2 sm:px-4" data-testid="home-new-products">
+    <section aria-labelledby="home-new-products-heading" className="w-full bg-section-alternate py-8 md:py-10 px-2 sm:px-4" data-testid="home-new-products" data-storefront-surface-role="alternate">
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-2">
@@ -312,7 +313,7 @@ export function HomeTestimonialsSection({ reviews }: { reviews: StorefrontFeatur
   if (reviews.length === 0) return null;
 
   return (
-    <section aria-labelledby="home-testimonials-heading" className="w-full bg-gradient-to-b from-white via-gray-50/30 to-gray-100/20 py-8 md:py-10 px-2 sm:px-4" data-testid="home-testimonials">
+    <section aria-labelledby="home-testimonials-heading" className="w-full bg-section-alternate py-8 md:py-10 px-2 sm:px-4" data-testid="home-testimonials" data-storefront-surface-role="alternate">
       <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
         <div className="flex items-center gap-3 flex-wrap">
           <div className="flex items-center gap-2">
@@ -426,7 +427,7 @@ export function HomeArticlesSection({ articles }: { articles: StorefrontArticleI
   if (articles.length === 0) return null;
 
   return (
-    <section aria-labelledby="home-articles-heading" className="w-full bg-gradient-to-b from-white via-gray-50/30 to-gray-100/20 py-8 md:py-10 px-2 sm:px-4" data-testid="home-articles">
+    <section aria-labelledby="home-articles-heading" className="w-full bg-section-alternate py-8 md:py-10 px-2 sm:px-4" data-testid="home-articles" data-storefront-surface-role="alternate">
       <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
         <div className="flex items-center gap-3 flex-wrap">
           <div className="flex items-center gap-2">

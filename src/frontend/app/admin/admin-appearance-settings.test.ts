@@ -63,6 +63,13 @@ test("preview uses canonical registry tokens and leaves status colors", () => {
   assert.equal(Object.hasOwn(style, "--color-danger"), false);
   assert.match(form, /bg-success|text-success/);
   assert.match(form, /bg-danger|text-danger/);
+  assert.match(form, /زمینه صفحه/);
+  assert.match(form, /بخش اصلی/);
+  assert.match(form, /بخش جایگزین/);
+  assert.match(form, /بخش برجسته/);
+  assert.match(form, /admin-settings-appearance-preview-section/);
+  assert.match(form, /admin-settings-appearance-preview-alternate/);
+  assert.match(form, /admin-settings-appearance-preview-accent/);
   assert.doesNotMatch(form, /type=\"color\"/);
   assert.doesNotMatch(api, /localStorage/);
   assert.doesNotMatch(form, /useEffect/);

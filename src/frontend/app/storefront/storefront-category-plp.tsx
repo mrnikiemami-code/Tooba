@@ -212,7 +212,7 @@ export function StorefrontCategoryPlpView({
   const breadcrumb = useMemo(() => page.breadcrumb, [page.breadcrumb]);
 
   return (
-    <div className="mt-6" data-testid="category-plp-page">
+    <div className="mt-6 bg-section-surface" data-testid="category-plp-page" data-storefront-surface-role="section">
       <nav className="flex flex-wrap items-center gap-1 text-xs text-gray-500 mb-4" data-testid="category-plp-breadcrumb">
         <Link href="/" className="hover:text-primary">
           خانه

@@ -751,3 +751,21 @@ PaletteTint uses curated semantic tint tokens per palette and theme. It must not
 
 ### LOCK-SF-196 — One Store BackgroundStyle for Home and Landing
 Home, Landing, and custom Home inherit one canonical Store BackgroundStyle. Page-local or section-local background overrides are forbidden.
+
+### LOCK-SF-197 — One storefront semantic surface hierarchy
+All storefront page families share one semantic surface hierarchy: PageBackground, SectionSurface, SectionAlternate, SectionAccent.
+
+### LOCK-SF-198 — Page-specific theme token families are forbidden
+Home, PDP, Blog, Cart, Checkout, Account, and other storefront families map to the shared global surface roles. Page-specific theme token families are forbidden.
+
+### LOCK-SF-199 — PaletteTint supplies curated four-role values
+PaletteTint supplies curated light and dark values for the four surface roles. Neutral remains the backward-compatible white/gray hierarchy.
+
+### LOCK-SF-200 — Landing SectionTypes have code-owned surface roles
+Dynamic Landing SectionTypes have code-owned default surface-role mappings. No user-facing per-section arbitrary color override exists in this release.
+
+### LOCK-SF-201 — Future custom theme edits global roles only
+A future custom theme may override the global semantic surface roles without page-by-page color configuration. Custom color DB fields are not part of this release.
+
+### LOCK-SF-202 — Status and card surfaces stay independent of page/section roles
+Status semantics and Card, Elevated, and Input surfaces remain independent from the four page/section roles.

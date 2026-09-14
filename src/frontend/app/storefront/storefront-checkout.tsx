@@ -150,7 +150,7 @@ export function StorefrontShopeivaCheckout() {
   const itemCount = page.sellerOrders.reduce((sum, order) => sum + order.lines.reduce((s, line) => s + line.quantity, 0), 0);
 
   return (
-    <form onSubmit={(event) => void onSubmit(event)} className="pb-10" data-testid="checkout-page">
+    <form onSubmit={(event) => void onSubmit(event)} className="pb-10" data-testid="checkout-page" data-storefront-surface-role="section">
       <nav className="text-xs text-gray-500 pt-4 mb-2 flex flex-wrap gap-2" aria-label="مسیر صفحه" data-testid="checkout-breadcrumb">
         <Link href="/cart" className="hover:text-primary">
           سبد خرید

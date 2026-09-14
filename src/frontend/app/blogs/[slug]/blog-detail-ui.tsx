@@ -47,7 +47,7 @@ export function BlogDetailClient({ slug, contentLocale }: { slug: string; conten
     : contentCoverUrl(null);
 
   return (
-    <main className="mx-auto max-w-3xl space-y-6 px-3 py-6 md:px-4" data-testid="blog-detail">
+    <main className="mx-auto max-w-3xl space-y-6 px-3 py-6 md:px-4 bg-section-surface" data-testid="blog-detail" data-storefront-surface-role="section">
       <Link href="/blogs" className="inline-flex items-center gap-1 text-sm text-primary">
         <BackArrow className="size-4" /> {copy.backToMagazine}
       </Link>

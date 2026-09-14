@@ -177,16 +177,24 @@ export function AdminAppearanceSettingsForm(props: {
           className="rounded-lg p-3 space-y-3"
           style={{ backgroundColor: "rgb(var(--color-page-background))" }}
           data-testid="admin-settings-appearance-preview-canvas"
+          data-storefront-surface-role="page"
         >
-          <p className="text-xs text-gray-600">نمونهٔ صفحهٔ فروشگاه</p>
-          <button type="button" className="px-4 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-bold">
-            دکمه اصلی
-          </button>
-          <a className="block text-sm text-primary underline" href="#preview">پیوند تأکیدی</a>
-          <div className="rounded-lg bg-white border border-gray-100 shadow-sm p-3">
-            <AdminProductCardSkinPreview skin={draftSkin} testId="admin-settings-appearance-card-preview" />
+          <p className="text-xs text-gray-600">زمینه صفحه</p>
+          <div className="rounded-lg p-3 space-y-2" style={{ backgroundColor: "rgb(var(--color-section-surface))" }} data-storefront-surface-role="section" data-testid="admin-settings-appearance-preview-section">
+            <p className="text-xs font-bold text-gray-800">بخش اصلی</p>
+            <button type="button" className="px-4 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-bold">
+              دکمه اصلی
+            </button>
+            <div className="rounded-lg bg-white border border-gray-100 shadow-sm p-3">
+              <AdminProductCardSkinPreview skin={draftSkin} testId="admin-settings-appearance-card-preview" />
+            </div>
           </div>
-          <p className="text-xs text-gray-500">متن کم‌رنگ</p>
+          <div className="rounded-lg p-3" style={{ backgroundColor: "rgb(var(--color-section-alternate))" }} data-storefront-surface-role="alternate" data-testid="admin-settings-appearance-preview-alternate">
+            <p className="text-xs font-bold text-gray-800">بخش جایگزین</p>
+          </div>
+          <div className="rounded-lg p-3" style={{ backgroundColor: "rgb(var(--color-section-accent))" }} data-storefront-surface-role="accent" data-testid="admin-settings-appearance-preview-accent">
+            <p className="text-xs font-bold text-gray-800">بخش برجسته</p>
+          </div>
           <div className="flex gap-2 text-[11px]">
             <span className="px-2 py-1 rounded bg-success/15 text-success">موفقیت</span>
             <span className="px-2 py-1 rounded bg-warning/15 text-warning">هشدار</span>

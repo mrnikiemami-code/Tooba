@@ -8,12 +8,23 @@ public sealed record StoreAppearanceBrandTokens(
     string FocusRgb,
     string PrimaryOnDarkRgb);
 
-/// <summary>توکن‌های tint curated برای پس‌زمینهٔ صفحه/بخش؛ از primary-alpha ساخته نمی‌شوند.</summary>
+/// <summary>توکن‌های tint curated برای چهار نقش سطح؛ از primary-alpha ساخته نمی‌شوند.</summary>
 public sealed record StoreAppearanceTintTokens(
     string PageBackgroundRgb,
     string SectionBackgroundRgb,
     string PageBackgroundDarkRgb,
-    string SectionBackgroundDarkRgb);
+    string SectionBackgroundDarkRgb,
+    string SectionAlternateRgb,
+    string SectionAccentRgb,
+    string SectionAlternateDarkRgb,
+    string SectionAccentDarkRgb)
+{
+    /// <summary>نام T015؛ همان SectionSurface.</summary>
+    public string SectionSurfaceRgb => SectionBackgroundRgb;
+
+    /// <summary>نام T015؛ همان SectionSurface تاریک.</summary>
+    public string SectionSurfaceDarkRgb => SectionBackgroundDarkRgb;
+}
 
 /// <summary>تعریف curated یک پالت؛ کلید پایدار و توکن‌ها کد-مالک هستند.</summary>
 public sealed record StoreAppearancePaletteDefinition(
@@ -45,7 +56,11 @@ public static class StoreAppearancePaletteRegistry
         "236 241 250",
         "241 245 252",
         "14 17 26",
-        "18 22 32");
+        "18 22 32",
+        "226 234 247",
+        "209 223 244",
+        "16 19 28",
+        "24 30 44");
 
     private static readonly StoreAppearancePaletteDefinition[] Definitions =
     [
@@ -55,37 +70,37 @@ public static class StoreAppearancePaletteRegistry
             "سبز جنگلی",
             "Forest Green",
             new("21 128 61", "22 101 52", "255 255 255", "21 128 61", "42 139 78"),
-            new("236 244 238", "241 247 242", "13 18 15", "16 22 18")),
+            new("236 244 238", "241 247 242", "13 18 15", "16 22 18", "226 238 230", "210 232 218", "14 20 16", "20 30 22")),
         new(
             "wine-burgundy",
             "شرابی تیره",
             "Wine Burgundy",
             new("159 18 57", "136 19 55", "255 255 255", "159 18 57", "189 91 118"),
-            new("248 241 243", "250 245 246", "20 13 16", "24 16 19")),
+            new("248 241 243", "250 245 246", "20 13 16", "24 16 19", "242 228 232", "232 210 218", "22 14 17", "32 18 24")),
         new(
             "slate-navy",
             "سرمه‌ای سنگی",
             "Slate Navy",
             new("30 58 95", "23 37 84", "255 255 255", "30 58 95", "104 123 148"),
-            new("236 240 247", "241 244 250", "14 16 22", "18 21 28")),
+            new("236 240 247", "241 244 250", "14 16 22", "18 21 28", "226 232 242", "210 220 236", "16 18 24", "24 28 38")),
         new(
             "amber-gold",
             "کهربایی",
             "Amber Gold",
             new("180 83 9", "146 64 14", "255 255 255", "180 83 9", "187 98 31"),
-            new("249 243 235", "251 247 241", "20 15 11", "24 18 14")),
+            new("249 243 235", "251 247 241", "20 15 11", "24 18 14", "244 234 220", "236 220 196", "22 16 12", "34 24 16")),
         new(
             "teal-lagoon",
             "سبزآبی مرداب",
             "Teal Lagoon",
             new("15 118 110", "17 94 89", "255 255 255", "15 118 110", "46 136 129"),
-            new("235 244 243", "240 247 246", "12 18 18", "15 22 22")),
+            new("235 244 243", "240 247 246", "12 18 18", "15 22 22", "224 238 236", "204 228 224", "13 20 20", "18 30 30")),
         new(
             "violet-royal",
             "بنفش سلطنتی",
             "Royal Violet",
             new("124 58 237", "109 40 217", "255 255 255", "124 58 237", "144 88 240"),
-            new("242 237 250", "246 242 252", "17 13 24", "21 16 30")),
+            new("242 237 250", "246 242 252", "17 13 24", "21 16 30", "232 224 246", "220 208 240", "19 14 26", "28 20 40")),
     ];
 
     /// <summary>فهرست پایدار پالت‌های مجاز.</summary>

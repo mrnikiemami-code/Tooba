@@ -1,4 +1,4 @@
-import { appearanceCssVars, resolveBrandTokens, resolvePaletteKey, resolveTintTokens, NEUTRAL_PAGE_BACKGROUND_RGB } from "../../lib/storefront-appearance/palette-registry.ts";
+import { appearanceCssVars, resolveBrandTokens, resolvePaletteKey, resolveTintTokens, NEUTRAL_PAGE_BACKGROUND_RGB, NEUTRAL_SECTION_SURFACE_RGB, NEUTRAL_SECTION_ALTERNATE_RGB, NEUTRAL_SECTION_ACCENT_RGB, NEUTRAL_PAGE_BACKGROUND_DARK_RGB, NEUTRAL_SECTION_SURFACE_DARK_RGB, NEUTRAL_SECTION_ALTERNATE_DARK_RGB, NEUTRAL_SECTION_ACCENT_DARK_RGB } from "../../lib/storefront-appearance/palette-registry.ts";
 import { resolveProductCardSkin } from "../../lib/storefront-appearance/product-card-skin.ts";
 import { resolveThemeMode, type StorefrontThemeMode } from "../../lib/storefront-appearance/theme-mode.ts";
 import { resolveBackgroundStyle, type StorefrontBackgroundStyle } from "../../lib/storefront-appearance/background-style.ts";
@@ -38,14 +38,23 @@ export function appearancePreviewStyle(
   const dark = resolveThemeMode(themeMode) === "DarkOnly";
   const page = style === "PaletteTint"
     ? (dark ? tint.pageBackgroundDarkRgb : tint.pageBackgroundRgb)
-    : NEUTRAL_PAGE_BACKGROUND_RGB;
+    : (dark ? NEUTRAL_PAGE_BACKGROUND_DARK_RGB : NEUTRAL_PAGE_BACKGROUND_RGB);
   const section = style === "PaletteTint"
     ? (dark ? tint.sectionBackgroundDarkRgb : tint.sectionBackgroundRgb)
-    : NEUTRAL_PAGE_BACKGROUND_RGB;
+    : (dark ? NEUTRAL_SECTION_SURFACE_DARK_RGB : NEUTRAL_SECTION_SURFACE_RGB);
+  const alternate = style === "PaletteTint"
+    ? (dark ? tint.sectionAlternateDarkRgb : tint.sectionAlternateRgb)
+    : (dark ? NEUTRAL_SECTION_ALTERNATE_DARK_RGB : NEUTRAL_SECTION_ALTERNATE_RGB);
+  const accent = style === "PaletteTint"
+    ? (dark ? tint.sectionAccentDarkRgb : tint.sectionAccentRgb)
+    : (dark ? NEUTRAL_SECTION_ACCENT_DARK_RGB : NEUTRAL_SECTION_ACCENT_RGB);
   return {
     ...vars,
     "--color-page-background": page,
     "--color-section-background": section,
+    "--color-section-surface": section,
+    "--color-section-alternate": alternate,
+    "--color-section-accent": accent,
   };
 }
 

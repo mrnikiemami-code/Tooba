@@ -184,7 +184,7 @@ export function StorefrontShopeivaListing({
   const rangeEnd = Math.min(page * pageSize, totalCount);
 
   return (
-    <div className="min-h-[50vh] bg-white" data-testid="storefront-listing">
+    <div className="min-h-[50vh] bg-section-surface" data-testid="storefront-listing" data-storefront-surface-role="section">
       <div className="max-w-[1800px] mx-auto px-2 sm:px-4 py-6">
         <nav className="text-xs text-gray-500 mb-6 flex flex-wrap gap-2" aria-label="مسیر صفحه" data-testid="listing-breadcrumb">
           <Link href="/" className="hover:text-primary">

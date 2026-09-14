@@ -38,8 +38,12 @@ function mapTint(raw: Partial<StorefrontTintTokens> | undefined, paletteKey: str
   return {
     pageBackgroundRgb: raw?.pageBackgroundRgb ?? fallback.pageBackgroundRgb,
     sectionBackgroundRgb: raw?.sectionBackgroundRgb ?? fallback.sectionBackgroundRgb,
+    sectionAlternateRgb: raw?.sectionAlternateRgb ?? fallback.sectionAlternateRgb,
+    sectionAccentRgb: raw?.sectionAccentRgb ?? fallback.sectionAccentRgb,
     pageBackgroundDarkRgb: raw?.pageBackgroundDarkRgb ?? fallback.pageBackgroundDarkRgb,
     sectionBackgroundDarkRgb: raw?.sectionBackgroundDarkRgb ?? fallback.sectionBackgroundDarkRgb,
+    sectionAlternateDarkRgb: raw?.sectionAlternateDarkRgb ?? fallback.sectionAlternateDarkRgb,
+    sectionAccentDarkRgb: raw?.sectionAccentDarkRgb ?? fallback.sectionAccentDarkRgb,
   };
 }
 

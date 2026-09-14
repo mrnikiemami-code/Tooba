@@ -37,8 +37,12 @@ function mapTint(raw: unknown, paletteKey: string): StorefrontTintTokens {
   return {
     pageBackgroundRgb: String(row.pageBackgroundRgb ?? fallback.pageBackgroundRgb),
     sectionBackgroundRgb: String(row.sectionBackgroundRgb ?? fallback.sectionBackgroundRgb),
+    sectionAlternateRgb: String(row.sectionAlternateRgb ?? fallback.sectionAlternateRgb),
+    sectionAccentRgb: String(row.sectionAccentRgb ?? fallback.sectionAccentRgb),
     pageBackgroundDarkRgb: String(row.pageBackgroundDarkRgb ?? fallback.pageBackgroundDarkRgb),
     sectionBackgroundDarkRgb: String(row.sectionBackgroundDarkRgb ?? fallback.sectionBackgroundDarkRgb),
+    sectionAlternateDarkRgb: String(row.sectionAlternateDarkRgb ?? fallback.sectionAlternateDarkRgb),
+    sectionAccentDarkRgb: String(row.sectionAccentDarkRgb ?? fallback.sectionAccentDarkRgb),
   };
 }
 

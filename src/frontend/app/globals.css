@@ -14,7 +14,10 @@
 
   --color-background: 250 250 249;
   --color-page-background: 243 245 248;
-  --color-section-background: 243 245 248;
+  --color-section-background: 255 255 255;
+  --color-section-surface: 255 255 255;
+  --color-section-alternate: 247 248 250;
+  --color-section-accent: 238 242 247;
   --color-surface: 255 255 255;
   --color-surface-elevated: 255 255 255;
   --color-foreground: 24 24 27;
@@ -65,6 +68,11 @@
 
 .dark {
   --color-background: 12 12 14;
+  --color-page-background: 12 12 14;
+  --color-section-background: 28 28 32;
+  --color-section-surface: 28 28 32;
+  --color-section-alternate: 22 22 26;
+  --color-section-accent: 34 38 48;
   --color-surface: 28 28 32;
   --color-surface-elevated: 44 44 50;
   --color-foreground: 250 250 250;
@@ -81,16 +89,38 @@
 
 html[data-storefront-background-style="PaletteTint"] {
   --color-page-background: var(--color-page-tint);
-  --color-section-background: var(--color-section-tint);
+  --color-section-background: var(--color-section-surface-tint);
+  --color-section-surface: var(--color-section-surface-tint);
+  --color-section-alternate: var(--color-section-alternate-tint);
+  --color-section-accent: var(--color-section-accent-tint);
 }
 
 html.dark[data-storefront-background-style="PaletteTint"] {
   --color-page-background: var(--color-page-tint-dark);
-  --color-section-background: var(--color-section-tint-dark);
+  --color-section-background: var(--color-section-surface-tint-dark);
+  --color-section-surface: var(--color-section-surface-tint-dark);
+  --color-section-alternate: var(--color-section-alternate-tint-dark);
+  --color-section-accent: var(--color-section-accent-tint-dark);
 }
 
 [data-storefront-canvas] {
   background-color: rgb(var(--color-page-background));
+}
+
+[data-storefront-surface-role="page"] {
+  background-color: rgb(var(--color-page-background));
+}
+
+[data-storefront-surface-role="section"] {
+  background-color: rgb(var(--color-section-surface));
+}
+
+[data-storefront-surface-role="alternate"] {
+  background-color: rgb(var(--color-section-alternate));
+}
+
+[data-storefront-surface-role="accent"] {
+  background-color: rgb(var(--color-section-accent));
 }
 
 html.dark .bg-white {

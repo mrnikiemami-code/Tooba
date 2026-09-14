@@ -104,7 +104,7 @@ export function StorefrontShopeivaHome({
     .sort((left, right) => left.displayOrder - right.displayOrder);
 
   return (
-    <div className="py-6 space-y-6 overflow-x-hidden" data-testid="storefront-home">
+    <div className="py-6 space-y-6 overflow-x-hidden" data-testid="storefront-home" data-storefront-surface-role="page">
       <h1 className="sr-only">{heroTitle}</h1>
       {sections.map((section) => {
         const rendered = renderHomeSection(
@@ -180,7 +180,7 @@ function renderHomeSection(
 
 function HomeCategoryGridSection({ homeCategories }: { homeCategories: StorefrontCategoryItem[] }) {
   return (
-    <section aria-labelledby="home-categories-heading" className="w-full px-2 sm:px-4 py-8 md:py-10" data-testid="home-categories">
+    <section aria-labelledby="home-categories-heading" className="w-full px-2 sm:px-4 py-8 md:py-10 bg-section-surface" data-testid="home-categories" data-storefront-surface-role="section">
       <div className="flex items-center justify-between mb-4">
         <h2 id="home-categories-heading" className="text-lg md:text-xl font-bold text-gray-900 flex items-center gap-2">
           <span className="w-1 h-5 bg-primary rounded-full" />
@@ -222,7 +222,7 @@ function HomeCategoryGridSection({ homeCategories }: { homeCategories: Storefron
 
 function HomeMiddleBannersSection() {
   return (
-    <section aria-label="بنرهای میانی" className="w-full px-2 sm:px-4 py-8 md:py-10" data-testid="home-middle-banners">
+    <section aria-label="بنرهای میانی" className="w-full px-2 sm:px-4 py-8 md:py-10 bg-section-alternate" data-testid="home-middle-banners" data-storefront-surface-role="alternate">
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-5">
         {MIDDLE_BANNERS.map((banner) => (
           <Link
@@ -300,7 +300,7 @@ function ProductRailSection({
   }
   if (tone === "accent") {
     return (
-      <section id={id} aria-labelledby={headingId} className="w-full px-2 sm:px-4" data-testid={testId}>
+      <section id={id} aria-labelledby={headingId} className="w-full px-2 sm:px-4 bg-section-accent" data-testid={testId} data-storefront-surface-role="accent">
         <div className="bg-gradient-to-l from-primary to-primary-strong rounded-3xl p-4 md:p-6">
           <div className="flex items-center justify-between mb-4 text-white">
             <h2 id={headingId} className="text-lg md:text-xl font-black flex items-center gap-2">
@@ -324,7 +324,7 @@ function ProductRailSection({
   }
 
   return (
-    <section id={id} aria-labelledby={headingId} className="w-full px-2 sm:px-4 py-8 md:py-10" data-testid={testId}>
+    <section id={id} aria-labelledby={headingId} className="w-full px-2 sm:px-4 py-8 md:py-10 bg-section-surface" data-testid={testId} data-storefront-surface-role="section">
       <div className="flex items-center justify-between mb-4">
         <h2 id={headingId} className="text-lg md:text-xl font-bold text-gray-900 flex items-center gap-2">
           <span className="w-1 h-5 bg-primary rounded-full" />

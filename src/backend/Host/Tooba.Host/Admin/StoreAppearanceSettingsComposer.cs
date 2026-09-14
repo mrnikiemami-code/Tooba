@@ -123,7 +123,11 @@ public sealed class StoreAppearanceSettingsComposer
                 current.PageBackgroundRgb,
                 current.SectionBackgroundRgb,
                 current.PageBackgroundDarkRgb,
-                current.SectionBackgroundDarkRgb),
+                current.SectionBackgroundDarkRgb,
+                current.SectionAlternateRgb,
+                current.SectionAccentRgb,
+                current.SectionAlternateDarkRgb,
+                current.SectionAccentDarkRgb),
             StoreAppearancePaletteRegistry.All
                 .Select(item => new StoreAppearancePresetView(
                     item.Key,
@@ -139,7 +143,11 @@ public sealed class StoreAppearanceSettingsComposer
                         item.Tint.PageBackgroundRgb,
                         item.Tint.SectionBackgroundRgb,
                         item.Tint.PageBackgroundDarkRgb,
-                        item.Tint.SectionBackgroundDarkRgb)))
+                        item.Tint.SectionBackgroundDarkRgb,
+                        item.Tint.SectionAlternateRgb,
+                        item.Tint.SectionAccentRgb,
+                        item.Tint.SectionAlternateDarkRgb,
+                        item.Tint.SectionAccentDarkRgb)))
                 .ToArray(),
             StoreAppearanceProductCardSkinRegistry.All
                 .Select(item => new StoreAppearanceSkinView(item.Key, item.NameFa, item.NameEn))
@@ -186,7 +194,11 @@ public sealed record StoreAppearanceTintView(
     string PageBackgroundRgb,
     string SectionBackgroundRgb,
     string PageBackgroundDarkRgb,
-    string SectionBackgroundDarkRgb);
+    string SectionBackgroundDarkRgb,
+    string SectionAlternateRgb,
+    string SectionAccentRgb,
+    string SectionAlternateDarkRgb,
+    string SectionAccentDarkRgb);
 
 /// <summary>بدنه ذخیره ظاهر؛ PaletteKey الزامی و ThemeMode اختیاری.</summary>
 public sealed record StoreAppearanceSettingsWriteRequest(
