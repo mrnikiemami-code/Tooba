@@ -42,3 +42,14 @@ test("listing density and hover geometry stay canonical", () => {
   assert.match(skins, /hover:-translate-y-1/);
   assert.match(skins, /aspect-\[4\/5\]/);
 });
+
+test("tailwind scans lib so product-card media aspect class is generated", () => {
+  const tw = read("tailwind.config.ts");
+  assert.match(tw, /\.\/lib\/\*\*\/\*\.\{ts,tsx\}/);
+  assert.match(tw, /safelist:\s*\["aspect-\[4\/5\]"\]/);
+  const card = read("app/storefront/storefront-product-card.tsx");
+  assert.match(card, /chrome\.media/);
+  assert.match(card, /data-storefront-media-well="true"/);
+  assert.match(card, /aspect-\[4\/5\]/);
+  assert.match(card, /absolute inset-0 w-full h-full object-contain/);
+});

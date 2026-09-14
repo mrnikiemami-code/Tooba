@@ -1,0 +1,632 @@
+{
+  "ok": true,
+  "steps": [
+    {
+      "name": "cold:/fa/products",
+      "pass": true,
+      "data": {
+        "status": 200
+      }
+    },
+    {
+      "name": "cold:/fa/landing-campaign",
+      "pass": true,
+      "data": {
+        "status": 200
+      }
+    },
+    {
+      "name": "cold:/fa",
+      "pass": true,
+      "data": {
+        "status": 200
+      }
+    },
+    {
+      "name": "nav:/fa/products",
+      "pass": true,
+      "data": {
+        "status": 200
+      }
+    },
+    {
+      "name": "style:/fa/products",
+      "pass": true,
+      "data": {
+        "style": "PaletteTint"
+      }
+    },
+    {
+      "name": "A-plp",
+      "pass": true
+    },
+    {
+      "name": "B-plp-media",
+      "pass": true,
+      "data": {
+        "wellH": 299,
+        "wellW": 240,
+        "aspect": "4 / 5",
+        "imgH": 299,
+        "naturalWidth": 150,
+        "src": "http://127.0.0.1:5088/v1/storefront/media/01a05388-2dab-7000-adab-0449eae01b95"
+      }
+    },
+    {
+      "name": "file:plp-tinted-r2.png",
+      "pass": true,
+      "data": {
+        "bytes": 302518
+      }
+    },
+    {
+      "name": "nav:/fa/landing-campaign",
+      "pass": true,
+      "data": {
+        "status": 200
+      }
+    },
+    {
+      "name": "style:/fa/landing-campaign",
+      "pass": true,
+      "data": {
+        "style": "PaletteTint"
+      }
+    },
+    {
+      "name": "C-landing",
+      "pass": true
+    },
+    {
+      "name": "D-landing-media",
+      "pass": true,
+      "data": {
+        "wellH": 273,
+        "wellW": 218,
+        "aspect": "4 / 5",
+        "imgH": 273,
+        "naturalWidth": 150,
+        "src": "http://127.0.0.1:5088/v1/storefront/media/01a05388-2dab-7000-adab-0449eae01b95"
+      }
+    },
+    {
+      "name": "file:landing-tinted-r2.png",
+      "pass": true,
+      "data": {
+        "bytes": 536801
+      }
+    },
+    {
+      "name": "nav:/fa",
+      "pass": true,
+      "data": {
+        "status": 200
+      }
+    },
+    {
+      "name": "style:/fa",
+      "pass": true,
+      "data": {
+        "style": "PaletteTint"
+      }
+    },
+    {
+      "name": "E-home",
+      "pass": true
+    },
+    {
+      "name": "E-home-media",
+      "pass": true,
+      "data": {
+        "wellH": 273,
+        "wellW": 218,
+        "aspect": "4 / 5",
+        "imgH": 273,
+        "naturalWidth": 150,
+        "src": "http://127.0.0.1:5088/v1/storefront/media/01a05388-2dab-7000-adab-0449eae01b95"
+      }
+    },
+    {
+      "name": "F-skin-classic",
+      "pass": true,
+      "data": {
+        "skin": "classic"
+      }
+    },
+    {
+      "name": "nav:/fa/products",
+      "pass": true,
+      "data": {
+        "status": 200
+      }
+    },
+    {
+      "name": "style:/fa/products",
+      "pass": true,
+      "data": {
+        "style": "PaletteTint"
+      }
+    },
+    {
+      "name": "F-well-classic",
+      "pass": true,
+      "data": {
+        "wellH": 299,
+        "wellW": 240,
+        "aspect": "4 / 5",
+        "imgH": 299,
+        "naturalWidth": 150,
+        "src": "http://127.0.0.1:5088/v1/storefront/media/01a05388-2dab-7000-adab-0449eae01b95"
+      }
+    },
+    {
+      "name": "card-visible:product-card-classic-r2.png",
+      "pass": true
+    },
+    {
+      "name": "file:product-card-classic-r2.png",
+      "pass": true,
+      "data": {
+        "bytes": 23099
+      }
+    },
+    {
+      "name": "F-skin-clean",
+      "pass": true,
+      "data": {
+        "skin": "clean"
+      }
+    },
+    {
+      "name": "nav:/fa/products",
+      "pass": true,
+      "data": {
+        "status": 200
+      }
+    },
+    {
+      "name": "style:/fa/products",
+      "pass": true,
+      "data": {
+        "style": "PaletteTint"
+      }
+    },
+    {
+      "name": "F-well-clean",
+      "pass": true,
+      "data": {
+        "wellH": 299,
+        "wellW": 240,
+        "aspect": "4 / 5",
+        "imgH": 299,
+        "naturalWidth": 150,
+        "src": "http://127.0.0.1:5088/v1/storefront/media/01a05388-2dab-7000-adab-0449eae01b95"
+      }
+    },
+    {
+      "name": "card-visible:product-card-clean-r2.png",
+      "pass": true
+    },
+    {
+      "name": "file:product-card-clean-r2.png",
+      "pass": true,
+      "data": {
+        "bytes": 22768
+      }
+    },
+    {
+      "name": "F-skin-elevated",
+      "pass": true,
+      "data": {
+        "skin": "elevated"
+      }
+    },
+    {
+      "name": "nav:/fa/products",
+      "pass": true,
+      "data": {
+        "status": 200
+      }
+    },
+    {
+      "name": "style:/fa/products",
+      "pass": true,
+      "data": {
+        "style": "PaletteTint"
+      }
+    },
+    {
+      "name": "F-well-elevated",
+      "pass": true,
+      "data": {
+        "wellH": 299,
+        "wellW": 240,
+        "aspect": "4 / 5",
+        "imgH": 299,
+        "naturalWidth": 150,
+        "src": "http://127.0.0.1:5088/v1/storefront/media/01a05388-2dab-7000-adab-0449eae01b95"
+      }
+    },
+    {
+      "name": "card-visible:product-card-elevated-r2.png",
+      "pass": true
+    },
+    {
+      "name": "file:product-card-elevated-r2.png",
+      "pass": true,
+      "data": {
+        "bytes": 24547
+      }
+    },
+    {
+      "name": "F-skin-glass",
+      "pass": true,
+      "data": {
+        "skin": "glass"
+      }
+    },
+    {
+      "name": "nav:/fa/products",
+      "pass": true,
+      "data": {
+        "status": 200
+      }
+    },
+    {
+      "name": "style:/fa/products",
+      "pass": true,
+      "data": {
+        "style": "PaletteTint"
+      }
+    },
+    {
+      "name": "F-well-glass",
+      "pass": true,
+      "data": {
+        "wellH": 299,
+        "wellW": 240,
+        "aspect": "4 / 5",
+        "imgH": 299,
+        "naturalWidth": 150,
+        "src": "http://127.0.0.1:5088/v1/storefront/media/01a05388-2dab-7000-adab-0449eae01b95"
+      }
+    },
+    {
+      "name": "card-visible:product-card-glass-r2.png",
+      "pass": true
+    },
+    {
+      "name": "file:product-card-glass-r2.png",
+      "pass": true,
+      "data": {
+        "bytes": 23926
+      }
+    },
+    {
+      "name": "G-tint",
+      "pass": true
+    },
+    {
+      "name": "H-restore",
+      "pass": true
+    }
+  ],
+  "files": {
+    "plp-tinted-r2.png": {
+      "bytes": 302518
+    },
+    "landing-tinted-r2.png": {
+      "bytes": 536801
+    },
+    "product-card-classic-r2.png": {
+      "bytes": 23099
+    },
+    "product-card-clean-r2.png": {
+      "bytes": 22768
+    },
+    "product-card-elevated-r2.png": {
+      "bytes": 24547
+    },
+    "product-card-glass-r2.png": {
+      "bytes": 23926
+    }
+  },
+  "errors": [],
+  "console": [
+    {
+      "type": "console-error",
+      "text": "A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:\n\n- A server/client branch `if (typeof window !== 'undefined')`.\n- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.\n- Date formatting in a user's locale which doesn't match the serv"
+    },
+    {
+      "type": "console-error",
+      "text": "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+    },
+    {
+      "type": "console-error",
+      "text": "A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:\n\n- A server/client branch `if (typeof window !== 'undefined')`.\n- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.\n- Date formatting in a user's locale which doesn't match the serv"
+    },
+    {
+      "type": "console-error",
+      "text": "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+    },
+    {
+      "type": "console-error",
+      "text": "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+    },
+    {
+      "type": "console-error",
+      "text": "A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:\n\n- A server/client branch `if (typeof window !== 'undefined')`.\n- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.\n- Date formatting in a user's locale which doesn't match the serv"
+    },
+    {
+      "type": "console-error",
+      "text": "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+    },
+    {
+      "type": "console-error",
+      "text": "A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:\n\n- A server/client branch `if (typeof window !== 'undefined')`.\n- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.\n- Date formatting in a user's locale which doesn't match the serv"
+    },
+    {
+      "type": "console-error",
+      "text": "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+    },
+    {
+      "type": "console-error",
+      "text": "A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:\n\n- A server/client branch `if (typeof window !== 'undefined')`.\n- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.\n- Date formatting in a user's locale which doesn't match the serv"
+    },
+    {
+      "type": "console-error",
+      "text": "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+    },
+    {
+      "type": "console-error",
+      "text": "A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:\n\n- A server/client branch `if (typeof window !== 'undefined')`.\n- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.\n- Date formatting in a user's locale which doesn't match the serv"
+    },
+    {
+      "type": "console-error",
+      "text": "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+    }
+  ],
+  "firstStatus": {
+    "/fa/products": 200,
+    "/fa/landing-campaign": 200,
+    "/fa": 200
+  },
+  "appearance": {
+    "paletteKey": "tooba-blue",
+    "themeMode": "LightOnly",
+    "productCardSkin": "classic",
+    "backgroundStyle": "Neutral"
+  },
+  "wells": {
+    "plp": [
+      {
+        "wellH": 299,
+        "wellW": 240,
+        "aspect": "4 / 5",
+        "imgH": 299,
+        "naturalWidth": 150,
+        "src": "http://127.0.0.1:5088/v1/storefront/media/01a05388-2dab-7000-adab-0449eae01b95"
+      },
+      {
+        "wellH": 299,
+        "wellW": 240,
+        "aspect": "4 / 5",
+        "imgH": 299,
+        "naturalWidth": 150,
+        "src": "http://127.0.0.1:5088/v1/storefront/media/01a05388-2dab-7000-adab-0449eae01b95"
+      },
+      {
+        "wellH": 299,
+        "wellW": 240,
+        "aspect": "4 / 5",
+        "imgH": 299,
+        "naturalWidth": 150,
+        "src": "http://127.0.0.1:5088/v1/storefront/media/01a05388-2dc5-7000-9a46-ea726171546d"
+      },
+      {
+        "wellH": 299,
+        "wellW": 240,
+        "aspect": "4 / 5",
+        "imgH": 299,
+        "naturalWidth": 150,
+        "src": "http://127.0.0.1:5088/v1/storefront/media/01a05388-2dbd-7000-97f4-176750427a5f"
+      }
+    ],
+    "landing": [
+      {
+        "wellH": 273,
+        "wellW": 218,
+        "aspect": "4 / 5",
+        "imgH": 273,
+        "naturalWidth": 150,
+        "src": "http://127.0.0.1:5088/v1/storefront/media/01a05388-2dab-7000-adab-0449eae01b95"
+      },
+      {
+        "wellH": 273,
+        "wellW": 218,
+        "aspect": "4 / 5",
+        "imgH": 273,
+        "naturalWidth": 150,
+        "src": "http://127.0.0.1:5088/v1/storefront/media/01a05388-1637-7000-9a01-15e635eaa45b"
+      },
+      {
+        "wellH": 273,
+        "wellW": 218,
+        "aspect": "4 / 5",
+        "imgH": 273,
+        "naturalWidth": 150,
+        "src": "http://127.0.0.1:5088/v1/storefront/media/01a05388-1629-7000-8ab1-d58d34486846"
+      }
+    ],
+    "home": [
+      {
+        "wellH": 273,
+        "wellW": 218,
+        "aspect": "4 / 5",
+        "imgH": 273,
+        "naturalWidth": 150,
+        "src": "http://127.0.0.1:5088/v1/storefront/media/01a05388-2dab-7000-adab-0449eae01b95"
+      },
+      {
+        "wellH": 273,
+        "wellW": 218,
+        "aspect": "4 / 5",
+        "imgH": 273,
+        "naturalWidth": 150,
+        "src": "http://127.0.0.1:5088/v1/storefront/media/01a05388-1605-7000-a61e-5091e3bcdf19"
+      },
+      {
+        "wellH": 273,
+        "wellW": 218,
+        "aspect": "4 / 5",
+        "imgH": 273,
+        "naturalWidth": 150,
+        "src": "http://127.0.0.1:5088/v1/storefront/media/01a05387-fb8e-7000-9af9-106febeb15b7"
+      },
+      {
+        "wellH": 273,
+        "wellW": 218,
+        "aspect": "4 / 5",
+        "imgH": 273,
+        "naturalWidth": 150,
+        "src": "http://127.0.0.1:5088/v1/storefront/media/01a05388-1605-7000-a61e-5091e3bcdf19"
+      }
+    ],
+    "classic": [
+      {
+        "wellH": 299,
+        "wellW": 240,
+        "aspect": "4 / 5",
+        "imgH": 299,
+        "naturalWidth": 150,
+        "src": "http://127.0.0.1:5088/v1/storefront/media/01a05388-2dab-7000-adab-0449eae01b95"
+      },
+      {
+        "wellH": 299,
+        "wellW": 240,
+        "aspect": "4 / 5",
+        "imgH": 299,
+        "naturalWidth": 150,
+        "src": "http://127.0.0.1:5088/v1/storefront/media/01a05388-2dab-7000-adab-0449eae01b95"
+      },
+      {
+        "wellH": 299,
+        "wellW": 240,
+        "aspect": "4 / 5",
+        "imgH": 299,
+        "naturalWidth": 150,
+        "src": "http://127.0.0.1:5088/v1/storefront/media/01a05388-2dc5-7000-9a46-ea726171546d"
+      },
+      {
+        "wellH": 299,
+        "wellW": 240,
+        "aspect": "4 / 5",
+        "imgH": 299,
+        "naturalWidth": 150,
+        "src": "http://127.0.0.1:5088/v1/storefront/media/01a05388-2dbd-7000-97f4-176750427a5f"
+      }
+    ],
+    "clean": [
+      {
+        "wellH": 299,
+        "wellW": 240,
+        "aspect": "4 / 5",
+        "imgH": 299,
+        "naturalWidth": 150,
+        "src": "http://127.0.0.1:5088/v1/storefront/media/01a05388-2dab-7000-adab-0449eae01b95"
+      },
+      {
+        "wellH": 299,
+        "wellW": 240,
+        "aspect": "4 / 5",
+        "imgH": 299,
+        "naturalWidth": 150,
+        "src": "http://127.0.0.1:5088/v1/storefront/media/01a05388-2dab-7000-adab-0449eae01b95"
+      },
+      {
+        "wellH": 299,
+        "wellW": 240,
+        "aspect": "4 / 5",
+        "imgH": 299,
+        "naturalWidth": 150,
+        "src": "http://127.0.0.1:5088/v1/storefront/media/01a05388-2dc5-7000-9a46-ea726171546d"
+      },
+      {
+        "wellH": 299,
+        "wellW": 240,
+        "aspect": "4 / 5",
+        "imgH": 299,
+        "naturalWidth": 150,
+        "src": "http://127.0.0.1:5088/v1/storefront/media/01a05388-2dbd-7000-97f4-176750427a5f"
+      }
+    ],
+    "elevated": [
+      {
+        "wellH": 299,
+        "wellW": 240,
+        "aspect": "4 / 5",
+        "imgH": 299,
+        "naturalWidth": 150,
+        "src": "http://127.0.0.1:5088/v1/storefront/media/01a05388-2dab-7000-adab-0449eae01b95"
+      },
+      {
+        "wellH": 299,
+        "wellW": 240,
+        "aspect": "4 / 5",
+        "imgH": 299,
+        "naturalWidth": 150,
+        "src": "http://127.0.0.1:5088/v1/storefront/media/01a05388-2dab-7000-adab-0449eae01b95"
+      },
+      {
+        "wellH": 299,
+        "wellW": 240,
+        "aspect": "4 / 5",
+        "imgH": 299,
+        "naturalWidth": 150,
+        "src": "http://127.0.0.1:5088/v1/storefront/media/01a05388-2dc5-7000-9a46-ea726171546d"
+      },
+      {
+        "wellH": 299,
+        "wellW": 240,
+        "aspect": "4 / 5",
+        "imgH": 299,
+        "naturalWidth": 150,
+        "src": "http://127.0.0.1:5088/v1/storefront/media/01a05388-2dbd-7000-97f4-176750427a5f"
+      }
+    ],
+    "glass": [
+      {
+        "wellH": 299,
+        "wellW": 240,
+        "aspect": "4 / 5",
+        "imgH": 299,
+        "naturalWidth": 150,
+        "src": "http://127.0.0.1:5088/v1/storefront/media/01a05388-2dab-7000-adab-0449eae01b95"
+      },
+      {
+        "wellH": 299,
+        "wellW": 240,
+        "aspect": "4 / 5",
+        "imgH": 299,
+        "naturalWidth": 150,
+        "src": "http://127.0.0.1:5088/v1/storefront/media/01a05388-2dab-7000-adab-0449eae01b95"
+      },
+      {
+        "wellH": 299,
+        "wellW": 240,
+        "aspect": "4 / 5",
+        "imgH": 299,
+        "naturalWidth": 150,
+        "src": "http://127.0.0.1:5088/v1/storefront/media/01a05388-2dc5-7000-9a46-ea726171546d"
+      },
+      {
+        "wellH": 299,
+        "wellW": 240,
+        "aspect": "4 / 5",
+        "imgH": 299,
+        "naturalWidth": 150,
+        "src": "http://127.0.0.1:5088/v1/storefront/media/01a05388-2dbd-7000-97f4-176750427a5f"
+      }
+    ]
+  }
+}

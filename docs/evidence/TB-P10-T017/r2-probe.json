@@ -1,0 +1,168 @@
+{
+  "console": [
+    {
+      "type": "info",
+      "text": "%cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold"
+    }
+  ],
+  "hydration": [],
+  "cards": [
+    {
+      "skin": "classic",
+      "card": {
+        "tag": "ARTICLE",
+        "className": "group relative flex flex-col rounded-2xl overflow-hidden bg-surface border border-border hover:shadow-xl hover:shadow-black/40 hover:-translate-y-1 transition-all duration-300",
+        "w": 242,
+        "h": 453,
+        "x": 813,
+        "y": 360,
+        "display": "flex",
+        "overflow": "hidden",
+        "position": "relative"
+      },
+      "well": {
+        "tag": "DIV",
+        "className": "relative aspect-[4/5] bg-background overflow-hidden aspect-[4/5]",
+        "w": 240,
+        "h": 299,
+        "x": 814,
+        "y": 361,
+        "display": "block",
+        "visibility": "visible",
+        "opacity": "1",
+        "overflow": "hidden",
+        "position": "relative",
+        "aspect-ratio": "4 / 5",
+        "z-index": "auto",
+        "background-color": "rgb(250, 250, 249)"
+      },
+      "img": {
+        "tag": "IMG",
+        "className": "absolute inset-0 w-full h-full object-contain p-3 group-hover:scale-105 transition duration-700",
+        "w": 240,
+        "h": 299,
+        "x": 814,
+        "y": 361,
+        "display": "block",
+        "visibility": "visible",
+        "opacity": "1",
+        "object-fit": "contain",
+        "object-position": "50% 50%",
+        "position": "absolute",
+        "z-index": "auto",
+        "src": "http://127.0.0.1:5088/v1/storefront/media/01a05388-2dab-7000-adab-0449eae01b95",
+        "naturalWidth": 150,
+        "naturalHeight": 150,
+        "complete": true
+      }
+    },
+    {
+      "skin": "classic",
+      "card": {
+        "tag": "ARTICLE",
+        "className": "group relative flex flex-col rounded-2xl overflow-hidden bg-surface border border-border hover:shadow-xl hover:shadow-black/40 hover:-translate-y-1 transition-all duration-300",
+        "w": 242,
+        "h": 453,
+        "x": 555,
+        "y": 360,
+        "display": "flex",
+        "overflow": "hidden",
+        "position": "relative"
+      },
+      "well": {
+        "tag": "DIV",
+        "className": "relative aspect-[4/5] bg-background overflow-hidden aspect-[4/5]",
+        "w": 240,
+        "h": 299,
+        "x": 556,
+        "y": 361,
+        "display": "block",
+        "visibility": "visible",
+        "opacity": "1",
+        "overflow": "hidden",
+        "position": "relative",
+        "aspect-ratio": "4 / 5",
+        "z-index": "auto",
+        "background-color": "rgb(250, 250, 249)"
+      },
+      "img": {
+        "tag": "IMG",
+        "className": "absolute inset-0 w-full h-full object-contain p-3 group-hover:scale-105 transition duration-700",
+        "w": 240,
+        "h": 299,
+        "x": 556,
+        "y": 361,
+        "display": "block",
+        "visibility": "visible",
+        "opacity": "1",
+        "object-fit": "contain",
+        "object-position": "50% 50%",
+        "position": "absolute",
+        "z-index": "auto",
+        "src": "http://127.0.0.1:5088/v1/storefront/media/01a05388-2dab-7000-adab-0449eae01b95",
+        "naturalWidth": 150,
+        "naturalHeight": 150,
+        "complete": true
+      }
+    },
+    {
+      "skin": "classic",
+      "card": {
+        "tag": "ARTICLE",
+        "className": "group relative flex flex-col rounded-2xl overflow-hidden bg-surface border border-border hover:shadow-xl hover:shadow-black/40 hover:-translate-y-1 transition-all duration-300",
+        "w": 242,
+        "h": 453,
+        "x": 298,
+        "y": 360,
+        "display": "flex",
+        "overflow": "hidden",
+        "position": "relative"
+      },
+      "well": {
+        "tag": "DIV",
+        "className": "relative aspect-[4/5] bg-background overflow-hidden aspect-[4/5]",
+        "w": 240,
+        "h": 299,
+        "x": 299,
+        "y": 361,
+        "display": "block",
+        "visibility": "visible",
+        "opacity": "1",
+        "overflow": "hidden",
+        "position": "relative",
+        "aspect-ratio": "4 / 5",
+        "z-index": "auto",
+        "background-color": "rgb(250, 250, 249)"
+      },
+      "img": {
+        "tag": "IMG",
+        "className": "absolute inset-0 w-full h-full object-contain p-3 group-hover:scale-105 transition duration-700",
+        "w": 240,
+        "h": 299,
+        "x": 299,
+        "y": 361,
+        "display": "block",
+        "visibility": "visible",
+        "opacity": "1",
+        "object-fit": "contain",
+        "object-position": "50% 50%",
+        "position": "absolute",
+        "z-index": "auto",
+        "src": "http://127.0.0.1:5088/v1/storefront/media/01a05388-2dc5-7000-9a46-ea726171546d",
+        "naturalWidth": 150,
+        "naturalHeight": 150,
+        "complete": true
+      }
+    }
+  ],
+  "overlay": {
+    "issueText": null,
+    "htmlAttrs": {
+      "className": "",
+      "colorScheme": "light",
+      "themeMode": "LightOnly",
+      "dir": "rtl",
+      "lang": "fa"
+    }
+  }
+}

@@ -100,7 +100,7 @@ export function StorefrontProductCardView({
     >
       <Link href={productHref} className="flex flex-1 flex-col">
         {/* Media well: product photo on semantic background; not UI chrome. */}
-        <div className={chrome.media} data-storefront-media-well="true">
+        <div className={`${chrome.media} aspect-[4/5]`} data-storefront-media-well="true">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={storefrontMediaUrl(card.mediaAssetId)}

@@ -6,7 +6,8 @@ import type { Config } from "tailwindcss";
  */
 const config: Config = {
   darkMode: "class",
-  content: ["./app/**/*.{ts,tsx}", "./design-system/**/*.{ts,tsx}"],
+  content: ["./app/**/*.{ts,tsx}", "./design-system/**/*.{ts,tsx}", "./lib/**/*.{ts,tsx}"],
+  safelist: ["aspect-[4/5]"],
   theme: {
     extend: {
       colors: {
