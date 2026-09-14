@@ -60,7 +60,7 @@ Recovery-SoT:
 Phase P10 Architect TB-P10-T013 Impl TB-P10-T014 Issued/Repair none USER_VISUAL_ACCEPTED=NO Worker IDLE do NOT invent TB-P10-T015. docs/evidence/TB-P10-T014/recovery-sot.md
 
 Git:
-SHA=PENDING_IMPL_SHA HEAD==origin/main after push. Unrelated login leftovers not committed.
+SHA=9f9132fa243bf2197c3cd40b044942a3980857d9 HEAD==origin/main after push. Unrelated login leftovers not committed.
 
 Architectural-Concerns:
 Article public href remains slug-poor; not seeded. Prior T012 runtime page t012-runtime left in Development DB (non-destructive).
