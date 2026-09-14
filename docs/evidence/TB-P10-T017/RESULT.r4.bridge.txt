@@ -1,0 +1,93 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-P10-T017-R4
+Parent-Task: TB-P10-T017-R3
+Status: PASS
+WorkerId: tooba-worker-01
+Channel: tooba-main
+
+Summary:
+Component-level theme compliance now derives Card/Elevated/Input/Interactive/Media/Overlay/Border from the four global surface roles only. PaletteTint canvases remap leftover gray/white utilities onto those derived tokens; Neutral cards stay paper white. PDP/Home/Commerce/Auth/Customer/Content share one semantic system. Runtime crawler ok=true. Canonical appearance restored. USER_VISUAL_ACCEPTED=NO. No TB-P10-T018.
+
+Applicable-Locks:
+LOCK-SF-001…208 preserved. Added LOCK-SF-209 (customer-facing components consume semantic surfaces), LOCK-SF-210 (only global roles are user-configurable; Card/Elevated/Input/Interactive/Media/Overlay/Border are derived), LOCK-SF-211 (shared primitives/guards, not per-component colors), LOCK-SF-212 (PDP/Home/Commerce/Auth/Content/Customer share one system), LOCK-SF-213 (new customer-facing components must pass compliance), LOCK-SF-214 (raw structural white/gray/hex forbidden unless classified Media/Status/Decorative/semantic exception).
+
+Recovery-Start:
+branch=main HEAD-at-claim=b4a5a5528ff2c6fb31f592109afc2242d182ab4a HEAD==origin/main. Expected previous HEAD 7ef51494 is T017-R3 impl; pin b4a5a552 is origin/main after R3 — not RECOVERY_CONFLICT. docs/evidence/TB-P10-T017/r4-recovery-start.md
+
+Component-Inventory:
+Unknown=0. Customer-facing visuals classified PageShell/Section/Card/Elevated/Input/Interactive/Media/Header-Footer-Nav/Status/Composite/Decorative. docs/evidence/TB-P10-T017/r4-component-inventory.md
+
+Component-Theme-Scan:
+Storefront + Customer Panel TSX scanned. Structural bg-white/bg-gray/bg-[#]/inline hex remapped to semantic or derived surfaces. Unresolved real structural violations=0. docs/evidence/TB-P10-T017/r4-component-theme-scan.md
+
+Derived-Surface-Model:
+ONE central model in src/frontend/lib/storefront-appearance/derived-surface.ts (deriveComponentSurfaces + derivedSurfaceCssVars). Inputs: PaletteKey + ThemeMode + BackgroundStyle + four global roles. No DB columns, no new Appearance fields, no per-page/per-component color config. Architecture: docs/architecture/storefront-component-surface-derivation.md
+
+Shared-Semantic-Primitives:
+StorefrontSurface now allows input|interactive|media. appearanceCssVars injects --color-*-derived (+ -dark). Bound only on [data-storefront-canvas] and [data-customer-panel-canvas] when html[data-storefront-background-style="PaletteTint"]. Neutral light cards remain 255 255 255. Admin stays Neutral paper (derived vars are canvas-scoped).
+
+PDP-Component-Coverage:
+Gallery media; primary/tabs card; related alternate; leftover bg-white → bg-surface. Product cards data-storefront-surface-role=card + media well. docs/evidence/TB-P10-T017/r4-pdp-component-map.md
+
+Home-Component-Coverage:
+Shell page + section/alternate/accent bands; product/story cards use derived Card/Media. docs/evidence/TB-P10-T017/r4-home-component-map.md
+
+Commerce-Component-Coverage:
+Cart/checkout/shipping/payment/result/order-confirmation inherit StorefrontShell + derived Card/Input. Checkout confidence preserved (form cards remain readable paper vs section tint).
+
+Auth-Component-Coverage:
+Login uses elevated + input derived surfaces; OTP CTAs bg-primary. No separate auth theme.
+
+Customer-Component-Coverage:
+CustomerPanelShell data-customer-panel-canvas. Dashboard/orders/profile/settings/tickets/wallet share derived Card. Ticket [id] layout-static via CustomerPanelShell (no seeded ticket). docs/evidence/TB-P10-T017/r4-customer-component-map.md
+
+Content-Component-Coverage:
+Blogs/landing cards tokenized to derived Card. Landing + blog samples crawled.
+
+Component-Compliance-Guard:
+component-compliance.guard.test.ts forbids structural bg-white / bg-[# / inline hex in customer-facing TSX. pdp-component-surface.guard.test.ts + customer-panel-theme.guard.test.ts (canvas attr). Included in npm run test:surface-coverage.
+
+Runtime-Component-Crawler:
+src/frontend/scripts/storefront-theme-coverage.mjs inspects role/bbox/computed bg. PaletteTint flags pure white (r,g,b ≥ 252) only; skips page/section/alternate/accent. Neutral does not flag whites. Report docs/evidence/TB-P10-T017/r4-runtime-report.json ok=true. Canonical restored tooba-blue / LightOnly / classic / Neutral.
+
+Rendered-Component-Coverage:
+Neutral/PaletteTint/wine/Dark representative runs flags=0. No unresolved pure-white component islands under PaletteTint. docs/evidence/TB-P10-T017/r4-runtime-component-coverage.md
+
+Appearance-Preview:
+Admin appearance preview shows four global bands plus derived Card and Elevated/Input samples. No new controls for derived surfaces. PaletteTint copy no longer says cards stay white. BACKGROUND_STYLE_OPTIONS body: cards/forms are system-derived.
+
+Neutral-Compatibility:
+Neutral keeps accepted white/gray paper cards and section hierarchy. Tokenize first; no Neutral redesign.
+
+PaletteTint-Quality:
+Page/section/alternate/accent hierarchy remains visible. Component surfaces use section tint (not pure white) without flattening all bands to one color. Inputs/media readable. Dark representative coherent.
+
+Focused-Validation:
+recovery-staleness 4/4 (CURRENT_TASK_ID=TB-P10-T017-R4). derived-surface / component-compliance / pdp-component-surface / customer-panel-theme pass. npm run test:critical-storefront pass. git diff --check CRLF warnings only. Crawler ok=true. docs/evidence/TB-P10-T017/r4-focused-validation.md
+
+Visual-Evidence:
+docs/evidence/TB-P10-T017/screenshots/r4/ home-components-r4.png pdp-components-r4.png plp-components-r4.png login-components-r4.png cart-components-r4.png checkout-components-r4.png customer-dashboard-components-r4.png customer-order-components-r4.png customer-order-detail-components-r4.png landing-components-r4.png content-components-r4.png dark-pdp-components-r4.png dark-customer-components-r4.png
+
+AntiPattern-Scan:
+CLEAN. No new user color settings, page/component-specific colors, separate customer theme engine, route-specific palette logic, screenshot-only CSS, !important color hacks, hydration suppression, appearance polling, or per-component Appearance fetch. docs/evidence/TB-P10-T017/r4-antipattern-scan.md
+
+Lock-Registry:
+LOCK-SF-001…214. New 209–214 only. LOCK-SF-208 body restored. No duplicates.
+
+Recovery-SoT:
+Phase P10 Last Architect-accepted before review: TB-P10-T017-R3 Last Implementation: TB-P10-T017-R4 Current Issued/Repair: none USER_VISUAL_ACCEPTED=NO Worker IDLE do NOT invent TB-P10-T018. docs/evidence/TB-P10-T017/r4-recovery-sot.md
+
+Git:
+SHA=1f111ebf4b327ec4c6bf3d94e9cc0bca5438642e HEAD==origin/main after push. Unrelated .tmp-* / App_Data leftovers not committed.
+
+Architectural-Concerns:
+Customer ticket [id] lacks a seeded ticket id; coverage is the shared panel shell already crawled on tickets/new. Admin/Seller panels untouched except appearance preview derived samples (no new controls).
+
+Visual-Concerns:
+USER_VISUAL_ACCEPTED=NO pending actual user inspection. Functional PASS does not imply Visual ACCEPT.
+
+Blockers:
+none
+END_TOOBA_WORKER_RESULT
