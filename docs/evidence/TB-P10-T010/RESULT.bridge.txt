@@ -1,0 +1,61 @@
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-P10-T010
+Parent-Task: TB-P10-T009-R2
+Status: PASS
+WorkerId: tooba-worker-01
+Channel: tooba-main
+
+Summary:
+Canonical StoreLandingPage (Draft/Published, locale+slug, SEO identity) plus Store HomePageId contract and Published-only Store+Locale+Slug resolution. Current Home UI unchanged when HomePageId is unset. Admin UI deferred to API+tests. No T011. USER_VISUAL_ACCEPTED remains NO.
+
+Applicable-Locks:
+LOCK-SF-001…165 preserved. Added LOCK-SF-166…171.
+
+Recovery-Start:
+branch=main HEAD=f63cba1332714ec68c315df879cb8ccd0942cb27 origin/main=same Host :5088 FE :3000 leftover login/account UX preserved docs/evidence/TB-P10-T010/recovery-start.md
+
+Page-Discovery:
+PageComposition is Home sections only. ContentArticle is blog. New Catalog StoreLandingPage. docs/evidence/TB-P10-T010/page-discovery.md
+
+Page-Model:
+StoreLandingPage + HomePageId on StoreAppearanceSettings. No HTML/CSS/JS. Admin UI deferred. docs/evidence/TB-P10-T010/page-model.md
+
+Slug-Routing-Contract:
+Normalized unique locale+slug; reserved system first-segments; static routes win; [slug] shell. docs/evidence/TB-P10-T010/slug-routing-contract.md
+
+Home-Selection-Contract:
+Optional same-Store Published HomePageId; unset uses canonical Home; /v1/storefront/home-selection. docs/evidence/TB-P10-T010/home-selection-contract.md
+
+Permissions-Isolation:
+AdminPanelAccess; catalog-scoped; Draft public 404; two in-memory catalogs isolated. docs/evidence/TB-P10-T010/permissions-isolation.md
+
+Runtime-Cache-Strategy:
+IMemoryCache by store+locale+slug and home; invalidate on write; no rebuild to add a Page. docs/evidence/TB-P10-T010/runtime-cache-strategy.md
+
+Focused-Validation:
+Host 6/6. FE+recovery 12/12. git diff --check clean. docs/evidence/TB-P10-T010/focused-validation.md
+
+Runtime:
+Host :5088 FE :3000. A–I 10/10. summer-sale Draft 404 / Published 200. Home UI unchanged. Seed restored. docs/evidence/TB-P10-T010/runtime.md
+
+AntiPattern-Scan:
+CLEAN. docs/evidence/TB-P10-T010/antipattern-scan.md
+
+Lock-Registry:
+LOCK-SF-166…171 appended. docs/evidence/TB-P10-T010/lock-registry.md
+
+Recovery-SoT:
+Phase P10 Architect TB-P10-T009-R2 Impl TB-P10-T010 Issued/Repair none USER_VISUAL_ACCEPTED=NO Worker IDLE do NOT invent TB-P10-T011. docs/evidence/TB-P10-T010/recovery-sot.md
+
+Git:
+SHA=pending HEAD==origin/main after push. Unrelated login leftovers not committed.
+
+Architectural-Concerns:
+Admin Page list/create UI deferred; later T011/T012 may render selected Home without replacing fallback until migration.
+
+Visual-Concerns:
+Neutral published-page title/description shell only. USER_VISUAL_ACCEPTED=NO.
+
+Blockers:
+none
+END_TOOBA_WORKER_RESULT

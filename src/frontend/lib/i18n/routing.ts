@@ -9,6 +9,7 @@ import {
   type Locale,
 } from "./locale.ts";
 import { contentApiLocaleForUrlPrefix } from "./supported-locales.ts";
+import { isReservedLandingSlug } from "../storefront-landing/reserved-slugs.ts";
 
 export const LOCALE_HEADER_NAME = "x-tooba-locale";
 
@@ -58,9 +59,19 @@ export function isExcludedFromLocalePrefix(pathname: string): boolean {
 
 export function isPublicStorefrontPath(pathname: string): boolean {
   if (pathname === "/") return true;
-  return PUBLIC_STOREFRONT_PREFIXES.some(
+  if (PUBLIC_STOREFRONT_PREFIXES.some(
     (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`),
-  );
+  )) {
+    return true;
+  }
+  return isStorefrontLandingPath(pathname);
+}
+
+/** تک‌قطعهٔ Landing پس از مسیرهای ثابت سامانه و مسیرهای رزرو. */
+export function isStorefrontLandingPath(pathname: string): boolean {
+  if (isExcludedFromLocalePrefix(pathname)) return false;
+  if (!/^\/[a-z0-9]+(?:-[a-z0-9]+)*$/.test(pathname)) return false;
+  return !isReservedLandingSlug(pathname.slice(1));
 }
 
 /** استخراج locale از prefix URL؛ null اگر prefix نداشته باشد. */

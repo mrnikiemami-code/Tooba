@@ -49,6 +49,9 @@ public sealed class CatalogDbContext : DbContext
     /// <summary>ظاهر فروشگاه: پالت curated و حالت تم.</summary>
     public DbSet<StoreAppearanceSettings> StoreAppearanceSettings => Set<StoreAppearanceSettings>();
 
+    /// <summary>صفحات Landing فروشگاه.</summary>
+    public DbSet<StoreLandingPage> StoreLandingPages => Set<StoreLandingPage>();
+
     /// <summary>override چرخه رزرو Offer/Category.</summary>
     public DbSet<ReservationCyclePolicyOverride> ReservationCyclePolicyOverrides => Set<ReservationCyclePolicyOverride>();
 
@@ -563,6 +566,22 @@ public sealed class CatalogDbContext : DbContext
             entity.Property(x => x.PaletteKey).HasMaxLength(32).IsRequired();
             entity.Property(x => x.ThemeMode).HasConversion<string>().HasMaxLength(16);
             entity.Property(x => x.ProductCardSkin).HasMaxLength(16).IsRequired();
+            entity.Property(x => x.HomePageId);
+        });
+
+        modelBuilder.Entity<StoreLandingPage>(entity =>
+        {
+            entity.ToTable("store_landing_pages");
+            entity.HasKey(x => x.PageId);
+            entity.Property(x => x.PageId).ValueGeneratedNever();
+            entity.Property(x => x.Locale).HasMaxLength(16).IsRequired();
+            entity.Property(x => x.Slug).HasMaxLength(128).IsRequired();
+            entity.Property(x => x.Title).HasMaxLength(200).IsRequired();
+            entity.Property(x => x.SeoTitle).HasMaxLength(200);
+            entity.Property(x => x.SeoDescription).HasMaxLength(500);
+            entity.Property(x => x.TemplateKey).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.Status).HasConversion<string>().HasMaxLength(16);
+            entity.HasIndex(x => new { x.Locale, x.Slug }).IsUnique();
         });
 
         modelBuilder.Entity<ReservationCyclePolicyOverride>(entity =>

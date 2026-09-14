@@ -28,7 +28,7 @@ Channel: tooba-main
 Last Architect Accepted Task:
 
 ```text
-TB-P10-T008-R1
+TB-P10-T009-R2
 ```
 
 Prior accepted catalog wave:
@@ -50,7 +50,7 @@ TB-P07-T043
 Last Implementation Task:
 
 ```text
-TB-P10-T009-R2
+TB-P10-T010
 ```
 
 Current Issued Task:
@@ -68,6 +68,7 @@ Current Repair Task:
 Implemented Under Review:
 
 ```text
+TB-P10-T010 — Landing Page foundation (Page model, Home selection, dynamic slug, reserved routes); USER_VISUAL_ACCEPTED=NO
 TB-P10-T009-R2 — Product Card Skin Admin UX + console integrity; USER_VISUAL_ACCEPTED=NO
 TB-P10-T009-R1 — Product Card Skin visual proof (persistent screenshots, Admin preview, cross-surface); USER_VISUAL_ACCEPTED=NO
 TB-P10-T009 — Product Card Skin System (classic/clean/elevated/glass, Admin selection, storefront-wide); USER_VISUAL_ACCEPTED=NO
@@ -194,7 +195,7 @@ NO
 Worker Next State:
 
 ```text
-IDLE — waits for Bridge Task (no invented next task; do NOT invent TB-P10-T010)
+IDLE — waits for Bridge Task (no invented next task; do NOT invent TB-P10-T011)
 ```
 
 Issued but not accepted:

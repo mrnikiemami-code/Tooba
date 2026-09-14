@@ -39,6 +39,7 @@ test("public vs excluded paths", () => {
   assert.equal(isPublicStorefrontPath("/category"), true);
   assert.equal(isPublicStorefrontPath("/category/mobile"), true);
   assert.equal(isPublicStorefrontPath("/admin"), false);
+  assert.equal(isPublicStorefrontPath("/summer-sale"), true);
   assert.equal(isExcludedFromLocalePrefix("/admin/orders"), true);
   assert.equal(isExcludedFromLocalePrefix("/customer-panel"), true);
 });

@@ -147,6 +147,7 @@ builder.Services.AddScoped<Tooba.Order.Application.ICheckoutAbuseGate, Tooba.Hos
 builder.Services.AddMemoryCache();
 builder.Services.AddScoped<Tooba.Host.Storefront.StoreAppearanceProjector>();
 builder.Services.AddScoped<Tooba.Host.Admin.StoreAppearanceSettingsComposer>();
+builder.Services.AddScoped<Tooba.Host.Admin.StoreLandingPageComposer>();
 builder.Services.AddScoped(sp =>
     new CheckoutIdentityGate(
         sp.GetRequiredService<Tooba.Catalog.Infrastructure.Persistence.CatalogDbContext>(),
@@ -419,6 +420,7 @@ app.MapHoldPolicySettingsEndpoints();
 app.MapCheckoutIdentitySettingsEndpoints();
 app.MapCheckoutAbuseSettingsEndpoints();
 app.MapStoreAppearanceSettingsEndpoints();
+app.MapStoreLandingPageEndpoints();
 app.MapReservationPolicyAdminEndpoints();
 app.MapUnitOfMeasureEndpoints();
 app.MapShippingServiceEndpoints();

@@ -40,6 +40,9 @@ public sealed class StoreAppearanceSettings
     /// <summary>پوستهٔ کنترل‌شدهٔ کارت کالا.</summary>
     public string ProductCardSkin { get; private set; } = StoreAppearanceProductCardSkinRegistry.DefaultSkinKey;
 
+    /// <summary>صفحهٔ Landing منتخب خانه؛ null یعنی خانهٔ کاننیکال فعلی.</summary>
+    public Guid? HomePageId { get; private set; }
+
     /// <summary>زمان به‌روزرسانی.</summary>
     public DateTimeOffset UpdatedAt { get; private set; }
 
@@ -63,6 +66,13 @@ public sealed class StoreAppearanceSettings
         PaletteKey = StoreAppearancePaletteRegistry.ResolveKey(paletteKey);
         ThemeMode = NormalizeThemeMode(themeMode);
         ProductCardSkin = StoreAppearanceProductCardSkinRegistry.ResolveKey(productCardSkin ?? ProductCardSkin);
+        UpdatedAt = now;
+    }
+
+    /// <summary>ارجاع خانه را می‌نویسد؛ null یعنی fallback کاننیکال.</summary>
+    public void SetHomePage(Guid? homePageId, DateTimeOffset now)
+    {
+        HomePageId = homePageId;
         UpdatedAt = now;
     }
 

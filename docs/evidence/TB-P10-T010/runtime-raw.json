@@ -1,0 +1,133 @@
+{
+  "ok": true,
+  "steps": [
+    {
+      "name": "dev-context",
+      "pass": true,
+      "data": {
+        "actorUserId": "01a036c2-970e-7000-8eb7-94bf5cc2d8db",
+        "actorLabel": "مدیر نمونهٔ توبا",
+        "tenantId": "store-alpha"
+      }
+    },
+    {
+      "name": "A-canonical-home",
+      "pass": true,
+      "data": {
+        "fe": 200,
+        "homeHasShell": true,
+        "homePageId": null,
+        "usesCanonicalHome": true
+      }
+    },
+    {
+      "name": "B-create-draft",
+      "pass": true,
+      "data": {
+        "pageId": "01a09e17-a228-7000-bded-e27271239f77",
+        "locale": "fa",
+        "slug": "summer-sale",
+        "title": "فروش تابستان",
+        "seoTitle": "فروش تابستان | توبا",
+        "seoDescription": "صفحه موقت تست Landing",
+        "templateKey": "default",
+        "status": "Draft",
+        "updatedAt": "2026-09-14T04:05:44.1040016+00:00"
+      }
+    },
+    {
+      "name": "C-draft-404",
+      "pass": true,
+      "data": {
+        "api": 404,
+        "fe": 404
+      }
+    },
+    {
+      "name": "D-publish-resolves",
+      "pass": true,
+      "data": {
+        "statusWrite": 200,
+        "api": 200,
+        "fe": 200,
+        "title": true
+      }
+    },
+    {
+      "name": "G-reserved-rejected",
+      "pass": true,
+      "data": {
+        "create": 400,
+        "errorCode": "landing.slug.reserved",
+        "cartStatus": 200,
+        "cartIsLanding": false
+      }
+    },
+    {
+      "name": "E-set-home",
+      "pass": true,
+      "data": {
+        "storeScope": "tenant:store-alpha",
+        "homePageId": "01a09e17-a228-7000-bded-e27271239f77",
+        "selectedPage": {
+          "pageId": "01a09e17-a228-7000-bded-e27271239f77",
+          "locale": "fa",
+          "slug": "summer-sale",
+          "title": "فروش تابستان",
+          "seoTitle": "فروش تابستان | توبا",
+          "seoDescription": "صفحه موقت تست Landing",
+          "templateKey": "default"
+        },
+        "usesCanonicalHome": false
+      }
+    },
+    {
+      "name": "F-home-identity-without-replacing-ui",
+      "pass": true,
+      "data": {
+        "selection": {
+          "storeScope": "tenant:store-alpha",
+          "homePageId": "01a09e17-a228-7000-bded-e27271239f77",
+          "selectedPage": {
+            "pageId": "01a09e17-a228-7000-bded-e27271239f77",
+            "locale": "fa",
+            "slug": "summer-sale",
+            "title": "فروش تابستان",
+            "seoTitle": "فروش تابستان | توبا",
+            "seoDescription": "صفحه موقت تست Landing",
+            "templateKey": "default"
+          },
+          "usesCanonicalHome": false
+        },
+        "fe": 200,
+        "stillCanonicalHomeUi": true
+      }
+    },
+    {
+      "name": "H-cross-store-or-missing-home",
+      "pass": true,
+      "data": {
+        "title": "صفحه یافت نشد.",
+        "errorCode": "landing.page.missing"
+      }
+    },
+    {
+      "name": "I-restore",
+      "pass": true,
+      "data": {
+        "cleared": {
+          "storeScope": "tenant:store-alpha",
+          "usesCanonicalHome": true
+        },
+        "draft": "Draft",
+        "publicGone": 404,
+        "home": {
+          "storeScope": "tenant:store-alpha",
+          "usesCanonicalHome": true
+        },
+        "fe": 200
+      }
+    }
+  ],
+  "errors": []
+}

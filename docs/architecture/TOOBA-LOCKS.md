@@ -658,3 +658,21 @@ Skins compose with every PaletteKey × ThemeMode through semantic tokens. No per
 
 ### LOCK-SF-165 — Admin appearance choices stay human-readable
 Store Admin appearance choices use human-readable labels and meaningful visual previews. Stable technical keys remain internal and must not appear as normal Admin UI copy.
+
+### LOCK-SF-166 — Landing Page is Store-scoped DB content
+Landing/Page is Store-scoped, locale-aware, database-backed content. Adding a Page must not require a frontend rebuild or redeploy.
+
+### LOCK-SF-167 — Public Page resolution is Published only
+Public dynamic Page resolution uses Store + Locale + Slug and only Published pages.
+
+### LOCK-SF-168 — System routes precede Landing slugs
+System, product, category, cart, checkout, account, admin, and API routes have precedence and cannot be shadowed by Page slugs.
+
+### LOCK-SF-169 — Home Page selection is same-Store and optional
+Store Home Page selection references one same-Store eligible Page. An unset reference preserves the canonical Home until a later composer migration.
+
+### LOCK-SF-170 — Pages do not execute markup
+Page records do not store or execute arbitrary HTML, CSS, or JavaScript.
+
+### LOCK-SF-171 — Page authoring is not a query console
+Page authoring never exposes SQL or arbitrary query authoring.
