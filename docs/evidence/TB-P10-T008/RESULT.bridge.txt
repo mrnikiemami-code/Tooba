@@ -1,0 +1,91 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+
+BEGIN_TOOBA_WORKER_RESULT
+
+Task-ID:
+TB-P10-T008
+
+Parent-Task:
+TB-P10-T007
+
+Channel:
+tooba-main
+
+WorkerId:
+tooba-worker-01
+
+Status:
+PASS
+
+USER_VISUAL_ACCEPTED=NO
+
+Summary:
+Storefront Light/Dark ThemeMode PASS. Canonical LightOnly/DarkOnly/System/UserChoice persist via Admin Appearance, apply on SSR first paint, and UserChoice toggle uses one cookie+storage key without writing Store DB. Dark surfaces remap canonically; brand PaletteKey stays inline. Runtime A–O green. No TB-P10-T009. Worker IDLE.
+
+Applicable-Locks:
+LOCK-SF-001…150 preserved. Added LOCK-SF-151 ThemeMode controlled; 152 canonical semantics; 153 semantic dark tokens; 154 UserChoice device-only; 155 first-paint no flash; 156 palette×theme compose / status independent; 157 Home/PDP color-only.
+
+Recovery-Start:
+Phase P10; Architect-accepted TB-P10-T007; Last Implementation at claim TB-P10-T007; Current Task TB-P10-T008; branch main; HEAD==origin/main 00582dd6; expected previous HEAD a93e0a9c is ancestor (T007 RESULT + SHA pin). Unrelated login/account UX left dirty. Evidence docs/evidence/TB-P10-T008/recovery-start.md
+
+Dark-Discovery:
+One ThemeProvider reused; Tailwind class darkMode kept; ThemeMode unused on Storefront before this task. Evidence dark-discovery.md
+
+Theme-Mode-Contract:
+LightOnly/DarkOnly/System/UserChoice. Legacy Light/Dark normalize. Invalid write 400 appearance.theme.invalid. Existing Light stays light. Evidence theme-mode-contract.md
+
+Admin-Theme-Mode:
+Appearance tab ThemeMode cards + palettes; dirty includes theme; one PUT {paletteKey,themeMode}. Evidence admin-theme-mode.md
+
+Dark-Token-Mapping:
+Canonical .dark surfaces; leftover bg-white/gray remaps in globals only; --color-primary not remapped by .dark. Evidence dark-token-mapping.md
+
+SSR-First-Paint:
+html data-storefront-theme-mode/color-scheme + class=dark when dark; blocking THEME_BOOTSTRAP_SCRIPT; UserChoice missing cookie = light; System SSR fallback light. Evidence ssr-first-paint.md
+
+User-Choice:
+Header + mobile drawer toggle; cookie tooba-storefront-color-scheme + localStorage tooba.storefront.color-scheme; no appearance PUT. Evidence user-choice.md
+
+Palette-Theme-Matrix:
+7 palettes keep brand primary in both modes; CTA AA; wine-burgundy text-primary on dark paper is darker-on-dark (CTA uses on-primary). Evidence palette-theme-matrix.md
+
+Accessibility:
+Dark body/muted/danger AA; toggle aria-label + aria-pressed; focus from PaletteKey. Evidence accessibility.md
+
+Shopeiva-Comparison:
+Home/PDP guards unchanged; tooba-blue LightOnly still 37 99 235. USER_VISUAL_ACCEPTED=NO. Evidence shopeiva-comparison.md
+
+Focused-Validation:
+recovery 4/4; Host StoreAppearance 12/12; FE theme+appearance+admin 21/21; test:storefront 67/67; test:critical-storefront 16/16; git diff --check clean. Full tsc not PASS (pre-existing Admin/grid). Evidence focused-validation.md
+
+Runtime:
+A–O green on Host :5088 + FE :3000. DarkOnly first paint; System SSR light + bootstrap; UserChoice cookie; forest-green while dark; restore LightOnly tooba-blue. Invalid 400; unauthorized 401. Evidence runtime.md
+
+Regression:
+Identity/merge/cart Active/COMMIT/409 unchanged; storefront 67 + critical 16 green. Evidence regression.md
+
+AntiPattern-Scan:
+CLEAN — one ThemeProvider, no page-local dark registries, no polling, toggle does not write Store DB, no skins/page builder. Evidence antipattern-scan.md
+
+Lock-Registry:
+LOCK-SF-151…157 appended after 150. No renumber.
+
+Recovery-SoT:
+Architect TB-P10-T007; Impl TB-P10-T008; Issued/Repair none; USER_VISUAL_ACCEPTED=NO; do NOT invent TB-P10-T009. Evidence recovery-sot.md
+
+Git:
+ending HEAD 706e0d61cca14bee4d2bd16c557e225f7104a3ee
+origin/main 706e0d61cca14bee4d2bd16c557e225f7104a3ee
+HEAD==origin/main yes
+unrelated login/account UX preserved unstaged
+
+Architectural-Concerns:
+Login leftover dirty tree still has #2563EB (unrelated local UX, not staged). wine-burgundy text-primary on dark paper is below 3:1; CTAs still on-primary white.
+
+Visual-Concerns:
+USER_VISUAL_ACCEPTED=NO. Next.js N overlay visible in light and dark; not a hydration mismatch. Some Shopeiva product-card surfaces stay light-tinted under html.dark remaps. Locked geometry unchanged.
+
+Blockers:
+none
+
+END_TOOBA_WORKER_RESULT
