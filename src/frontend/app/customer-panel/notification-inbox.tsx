@@ -217,7 +217,7 @@ export function NotificationInbox({
   if (items === null) {
     return (
       <div className="space-y-4" data-testid={`notifications-inbox-${kind}-loading`}>
-        <div className="bg-white dark:bg-[#111] rounded-2xl p-10 text-center border border-gray-200 dark:border-gray-800">
+        <div className="bg-surface rounded-2xl p-10 text-center border border-gray-200 dark:border-gray-800">
           <p className="text-sm text-gray-500">در حال بارگذاری اعلان‌ها…</p>
         </div>
       </div>
@@ -263,19 +263,19 @@ export function NotificationInbox({
       </div>
 
       <div className="grid grid-cols-4 gap-2">
-        <div className="bg-white dark:bg-[#111] rounded-xl p-3 text-center border border-gray-200 dark:border-gray-800">
+        <div className="bg-surface rounded-xl p-3 text-center border border-gray-200 dark:border-gray-800">
           <p className="text-lg font-black text-gray-900 dark:text-white">{toPersianDigits(stats.total)}</p>
           <p className="text-[10px] text-gray-500 dark:text-gray-400">کل</p>
         </div>
-        <div className="bg-white dark:bg-[#111] rounded-xl p-3 text-center border border-gray-200 dark:border-gray-800">
+        <div className="bg-surface rounded-xl p-3 text-center border border-gray-200 dark:border-gray-800">
           <p className="text-lg font-black text-primary">{toPersianDigits(stats.unread)}</p>
           <p className="text-[10px] text-gray-500 dark:text-gray-400">خوانده نشده</p>
         </div>
-        <div className="bg-white dark:bg-[#111] rounded-xl p-3 text-center border border-gray-200 dark:border-gray-800">
+        <div className="bg-surface rounded-xl p-3 text-center border border-gray-200 dark:border-gray-800">
           <p className="text-lg font-black text-blue-500">{toPersianDigits(stats.orders)}</p>
           <p className="text-[10px] text-gray-500 dark:text-gray-400">سفارشات</p>
         </div>
-        <div className="bg-white dark:bg-[#111] rounded-xl p-3 text-center border border-gray-200 dark:border-gray-800">
+        <div className="bg-surface rounded-xl p-3 text-center border border-gray-200 dark:border-gray-800">
           <p className="text-lg font-black text-amber-500">{toPersianDigits(stats.offers)}</p>
           <p className="text-[10px] text-gray-500 dark:text-gray-400">تخفیف‌ها</p>
         </div>
@@ -285,7 +285,7 @@ export function NotificationInbox({
         <button
           type="button"
           onClick={() => setShowFilters(!showFilters)}
-          className="px-3 py-1.5 bg-white dark:bg-[#111] rounded-xl text-xs font-medium text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700 hover:border-primary/50 transition-colors flex items-center gap-1"
+          className="px-3 py-1.5 bg-surface rounded-xl text-xs font-medium text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700 hover:border-primary/50 transition-colors flex items-center gap-1"
         >
           <Filter className="w-3.5 h-3.5" />
           فیلتر
@@ -304,7 +304,7 @@ export function NotificationInbox({
       </div>
 
       {showFilters && (
-        <div className="flex flex-wrap gap-1.5 p-3 bg-white dark:bg-[#111] rounded-xl border border-gray-200 dark:border-gray-700">
+        <div className="flex flex-wrap gap-1.5 p-3 bg-surface rounded-xl border border-gray-200 dark:border-gray-700">
           {filterOptions.map((option) => (
             <button
               key={option.value}
@@ -340,7 +340,7 @@ export function NotificationInbox({
 
       <div className="space-y-2">
         {filteredItems.length === 0 ? (
-          <div className="bg-white dark:bg-[#111] rounded-2xl p-10 text-center border border-gray-200 dark:border-gray-800">
+          <div className="bg-surface rounded-2xl p-10 text-center border border-gray-200 dark:border-gray-800">
             <div className="w-16 h-16 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center mx-auto mb-3">
               <Bell className="w-8 h-8 text-gray-300 dark:text-gray-600" />
             </div>
@@ -353,7 +353,7 @@ export function NotificationInbox({
             return (
               <div
                 key={item.id}
-                className={`bg-white dark:bg-[#111] rounded-2xl p-4 border-2 transition-all duration-300 hover:shadow-md ${
+                className={`bg-surface rounded-2xl p-4 border-2 transition-all duration-300 hover:shadow-md ${
                   item.read ? "border-gray-200 dark:border-gray-800" : `border-primary/30 ${item.bgColor}`
                 }`}
                 data-testid={`notification-row-${item.id}`}

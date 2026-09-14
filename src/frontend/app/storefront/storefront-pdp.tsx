@@ -82,7 +82,7 @@ export function StorefrontShopeivaPdp({ detail }: { detail: StorefrontProductDet
   ];
 
   return (
-    <div className="py-4 space-y-6" data-testid="storefront-pdp" data-storefront-surface-role="section">
+    <div className="py-4 space-y-6 bg-section-surface" data-testid="storefront-pdp" data-storefront-surface-role="section">
       <nav className="text-xs text-gray-500 flex gap-2">
         <Link href="/" className="hover:text-primary">
           خانه
@@ -95,7 +95,7 @@ export function StorefrontShopeivaPdp({ detail }: { detail: StorefrontProductDet
         <span className="text-gray-800">{currentDetail.title}</span>
       </nav>
 
-      <div className="bg-white rounded-2xl border border-gray-200 shadow-sm">
+      <div className="bg-surface rounded-2xl border border-gray-200 shadow-sm" data-storefront-surface-role="card" data-testid="pdp-primary-card">
         <div className="grid grid-cols-1 lg:grid-cols-12">
           <div className="lg:col-span-5 border-b lg:border-b-0 lg:border-l border-gray-200 p-4">
             <div className="relative aspect-square bg-gray-50 rounded-2xl overflow-hidden">
@@ -382,9 +382,9 @@ export function StorefrontShopeivaPdp({ detail }: { detail: StorefrontProductDet
         </div>
       </div>
 
-      <div className="bg-white rounded-2xl border border-gray-200" data-testid="pdp-tabs-card">
+      <div className="bg-surface rounded-2xl border border-gray-200" data-testid="pdp-tabs-card" data-storefront-surface-role="card">
         <div
-          className="sticky top-0 z-20 flex border-b border-gray-200 overflow-x-auto bg-white rounded-t-2xl"
+          className="sticky top-0 z-20 flex border-b border-gray-200 overflow-x-auto bg-surface rounded-t-2xl"
           data-testid="pdp-sticky-tabs"
         >
           {tabs.map((item) => (
@@ -475,7 +475,7 @@ export function StorefrontShopeivaPdp({ detail }: { detail: StorefrontProductDet
         </div>
       </div>
       {currentDetail.relatedProducts.length > 0 ? (
-        <section className="space-y-3" aria-labelledby="related-products-title" data-testid="pdp-related">
+        <section className="space-y-3 py-8 px-1 bg-section-alternate rounded-2xl" aria-labelledby="related-products-title" data-testid="pdp-related" data-storefront-surface-role="alternate">
           <div className="flex items-center justify-between">
             <h2 id="related-products-title" className="text-lg font-extrabold text-gray-900">محصولات مرتبط</h2>
             <Link href="/products" className="text-xs font-bold text-primary">مشاهده همه</Link>

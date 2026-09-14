@@ -193,7 +193,7 @@ export function StorefrontShopeivaCart({
     .slice(0, 8);
 
   return (
-    <div className="pb-10" data-testid="cart-page" data-storefront-surface-role="section">
+    <div className="pb-10 bg-section-surface" data-testid="cart-page" data-storefront-surface-role="section">
       <nav className="text-xs text-gray-500 pt-4 mb-2 flex flex-wrap gap-2" aria-label="مسیر صفحه" data-testid="cart-breadcrumb">
         <Link href="/" className="hover:text-primary">
           خانه
@@ -226,7 +226,7 @@ export function StorefrontShopeivaCart({
               {cart.lines.map((line) => (
                 <div
                   key={line.lineId}
-                  className="bg-white rounded-2xl border border-gray-200 p-3 md:p-4 shadow-sm hover:shadow-md transition-all"
+                  className="bg-surface rounded-2xl border border-gray-200 p-3 md:p-4 shadow-sm hover:shadow-md transition-all" data-storefront-surface-role="card"
                   data-testid="cart-line"
                 >
                   <div className="flex gap-3 md:gap-4">
@@ -301,7 +301,7 @@ export function StorefrontShopeivaCart({
                 </div>
               ))}
 
-              <div className="bg-white rounded-2xl border border-gray-200 p-4 md:p-5 shadow-sm" data-testid="cart-shipping-honest">
+              <div className="bg-surface rounded-2xl border border-gray-200 p-4 md:p-5 shadow-sm" data-storefront-surface-role="card" data-testid="cart-shipping-honest">
                 <h4 className="text-xs md:text-sm font-bold text-gray-900 flex items-center gap-2 mb-2">
                   <Truck className="w-4 h-4 text-primary" />
                   روش ارسال
@@ -315,7 +315,7 @@ export function StorefrontShopeivaCart({
 
             <div className="lg:col-span-1">
               <div className="lg:sticky lg:top-24 space-y-4" data-testid="cart-summary">
-                <div className="bg-white rounded-2xl border border-gray-200 p-4 md:p-5 shadow-md">
+                <div className="bg-surface-elevated rounded-2xl border border-gray-200 p-4 md:p-5 shadow-md" data-storefront-surface-role="elevated">
                   <h2 className="text-base md:text-lg font-black text-gray-900 flex items-center gap-2 mb-4">
                     <CreditCard className="w-4 h-4 text-primary" />
                     خلاصه سفارش
@@ -361,7 +361,7 @@ export function StorefrontShopeivaCart({
                   </div>
                 </div>
 
-                <div className="bg-white rounded-2xl border border-gray-200 p-4 md:p-5 shadow-sm" data-testid="cart-coupon">
+                <div className="bg-surface rounded-2xl border border-gray-200 p-4 md:p-5 shadow-sm" data-storefront-surface-role="card" data-testid="cart-coupon">
                   <h4 className="text-xs md:text-sm font-bold text-gray-900 flex items-center gap-2 mb-3">
                     <Tag className="w-4 h-4 text-primary" />
                     کد تخفیف
@@ -563,7 +563,7 @@ function MetricCard({
   const bg =
     tone === "blue" ? "bg-primary/10" : tone === "emerald" ? "bg-emerald-50" : "bg-amber-50";
   return (
-    <div className="flex items-center gap-1 md:gap-3 p-1.5 md:p-5 rounded-2xl bg-white border border-gray-200 shadow-lg">
+    <div className="flex items-center gap-1 md:gap-3 p-1.5 md:p-5 rounded-2xl bg-surface border border-gray-200 shadow-lg" data-storefront-surface-role="card">
       <div className={`w-6 h-6 md:w-12 md:h-12 rounded-lg md:rounded-xl ${bg} flex items-center justify-center shrink-0`}>
         {icon}
       </div>
@@ -634,7 +634,7 @@ function CartBenefits() {
         {benefits.map((item) => (
           <div
             key={item.title}
-            className="flex items-center gap-3 p-4 md:p-5 rounded-2xl bg-white border border-gray-200 shadow-sm"
+            className="flex items-center gap-3 p-4 md:p-5 rounded-2xl bg-surface border border-gray-200 shadow-sm" data-storefront-surface-role="card"
           >
             <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-primary/5 flex items-center justify-center shrink-0">
               <item.icon className="w-4 h-4 md:w-5 md:h-5 text-primary" />

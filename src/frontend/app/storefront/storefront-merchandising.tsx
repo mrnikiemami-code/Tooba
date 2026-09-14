@@ -13,7 +13,7 @@ export function StorefrontMerchandisingGrid({
   products: StorefrontProductCard[];
 }) {
   return (
-    <div className="py-5 md:py-8">
+    <div className="py-5 md:py-8 bg-section-surface" data-storefront-surface-role="section">
       <div className="rounded-2xl bg-gradient-to-l from-primary to-slate-900 text-white p-6 md:p-10 mb-5">
         <p className="text-xs opacity-80 mb-2">خانه / {title}</p>
         <h1 className="text-2xl md:text-3xl font-black mb-2">{title}</h1>
@@ -24,7 +24,7 @@ export function StorefrontMerchandisingGrid({
           {products.map((product) => <StorefrontProductCardView key={product.productId} card={product} />)}
         </div>
       ) : (
-        <div className="rounded-2xl border bg-white p-10 text-center text-gray-500">
+        <div className="rounded-2xl border bg-surface p-10 text-center text-gray-500" data-storefront-surface-role="card">
           در حال حاضر کالای منطبق و قابل نمایش وجود ندارد.
         </div>
       )}
@@ -43,7 +43,7 @@ export function StorefrontDirectoryCard({
   meta: string;
 }) {
   return (
-    <Link href={href} className="rounded-2xl border bg-white p-5 hover:shadow-lg transition min-w-0">
+    <Link href={href} className="rounded-2xl border bg-surface p-5 hover:shadow-lg transition min-w-0" data-storefront-surface-role="card">
       <div className="w-12 h-12 rounded-full bg-blue-50 text-primary grid place-items-center font-black mb-4">
         {title.slice(0, 1)}
       </div>

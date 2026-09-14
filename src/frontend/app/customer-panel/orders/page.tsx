@@ -42,7 +42,7 @@ export default function CustomerOrdersPage() {
         </Link>
       </div>
 
-      <section className="bg-white rounded-2xl border border-gray-100 p-3 md:p-5 shadow-sm">
+      <section className="bg-surface rounded-2xl border border-gray-100 p-3 md:p-5 shadow-sm">
         <div className="grid grid-cols-3 gap-2 mb-4">
           <StatusSummary label="کل سفارش‌ها" value={rows?.length ?? 0} color="blue" />
           <StatusSummary label="در انتظار پرداخت" value={rows?.filter((x) => x.paymentState === "PendingPayment").length ?? 0} color="amber" />

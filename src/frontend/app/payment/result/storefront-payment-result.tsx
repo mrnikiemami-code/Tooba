@@ -254,7 +254,7 @@ function ResultBody() {
 
   return (
     <div className="py-10 max-w-lg mx-auto space-y-4">
-      <div className="bg-white rounded-2xl border border-gray-200 p-6 text-center space-y-3">
+      <div className="bg-surface rounded-2xl border border-gray-200 p-6 text-center space-y-3" data-storefront-surface-role="card">
         {error ? <p className="text-sm text-red-600">{error}</p> : null}
         <h1 className="text-xl font-black">{statusLabel}</h1>
         {orderNumber ? (

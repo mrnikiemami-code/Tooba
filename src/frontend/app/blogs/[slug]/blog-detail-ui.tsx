@@ -33,12 +33,12 @@ export function BlogDetailClient({ slug, contentLocale }: { slug: string; conten
   if (loading) return <p className="p-6 text-sm text-gray-500">{copy.loading}</p>;
   if (!article) {
     return (
-      <main className="mx-auto max-w-3xl px-3 py-10 text-center md:px-4">
+      <div className="mx-auto max-w-3xl px-3 py-10 text-center md:px-4">
         <h1 className="text-xl font-bold">{copy.notFound}</h1>
         <Link href="/blogs" className="mt-4 inline-flex items-center gap-1 text-sm text-primary">
           <BackArrow className="size-4" /> {copy.backToMagazine}
         </Link>
-      </main>
+      </div>
     );
   }
 
@@ -47,11 +47,11 @@ export function BlogDetailClient({ slug, contentLocale }: { slug: string; conten
     : contentCoverUrl(null);
 
   return (
-    <main className="mx-auto max-w-3xl space-y-6 px-3 py-6 md:px-4 bg-section-surface" data-testid="blog-detail" data-storefront-surface-role="section">
+    <div className="mx-auto max-w-3xl space-y-6 px-3 py-6 md:px-4 bg-section-surface" data-testid="blog-detail" data-storefront-surface-role="section">
       <Link href="/blogs" className="inline-flex items-center gap-1 text-sm text-primary">
         <BackArrow className="size-4" /> {copy.backToMagazine}
       </Link>
-      <article className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
+      <article className="overflow-hidden rounded-2xl border border-gray-200 bg-surface shadow-sm" data-storefront-surface-role="card">
         <div className="relative aspect-[16/9] bg-gray-100">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src={cover} alt="" className="absolute inset-0 h-full w-full object-cover" />
@@ -106,6 +106,6 @@ export function BlogDetailClient({ slug, contentLocale }: { slug: string; conten
         <BookOpen className="size-4 text-primary" />
         {copy.magazineFooter}
       </div>
-    </main>
+    </div>
   );
 }

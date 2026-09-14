@@ -10,7 +10,7 @@ import { StorefrontOrderConfirmation } from "../../../order/confirmation/storefr
  */
 export default function CustomerWalletCheckoutPreviewPage() {
   return (
-    <div className="min-h-screen bg-[#F5F5F5]" data-testid="wallet-checkout-preview">
+    <div className="min-h-screen bg-page" data-testid="wallet-checkout-preview" data-storefront-surface-role="page">
       <div className="mx-auto max-w-5xl px-4 py-6">
         <p className="mb-4 text-xs text-gray-500">
           پیش‌نمایش توسعهٔ پرداخت با کیف پول — همان UI تأیید سفارش فروشگاه.

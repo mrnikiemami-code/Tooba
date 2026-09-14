@@ -251,7 +251,7 @@ function HomeHeroSlider() {
   }, []);
   const slide = SLIDES[index]!;
   return (
-    <section aria-label="اسلایدر خانه" className="px-2 sm:px-4">
+    <section aria-label="اسلایدر خانه" className="px-2 sm:px-4 py-4 md:py-6 bg-section-accent" data-storefront-surface-role="accent">
       <Link href={slide.href} className="relative block rounded-3xl overflow-hidden shadow-2xl bg-gray-100">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img

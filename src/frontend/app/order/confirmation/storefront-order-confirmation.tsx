@@ -163,7 +163,7 @@ function ConfirmationBody() {
   return (
     <div className="py-8 md:py-12 flex items-center justify-center" data-testid="order-confirmation">
       <div className="max-w-md w-full mx-auto text-center space-y-4 px-3">
-        <div className="bg-white border border-gray-200 rounded-3xl p-6 md:p-10 shadow-2xl">
+        <div className="bg-surface border border-gray-200 rounded-3xl p-6 md:p-10 shadow-2xl" data-storefront-surface-role="elevated">
           <div
             className={`w-16 h-16 md:w-20 md:h-20 mx-auto mb-4 rounded-full flex items-center justify-center ${
               paid ? "bg-emerald-50" : "bg-amber-50"

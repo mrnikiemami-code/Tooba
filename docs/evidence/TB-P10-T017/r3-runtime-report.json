@@ -1,0 +1,2165 @@
+{
+  "ok": true,
+  "samples": {
+    "pdp": "demo-prod-fashion-men-men-pants-1",
+    "category": "demo-cat-mobile-tablet",
+    "brand": "demo-brand-adidas",
+    "seller": "962c7b3f972781ad8ef562c4",
+    "landing": "landing-campaign",
+    "blog": "t016-sched-20260904082033",
+    "blogCategory": "t016-cat-20260904082033",
+    "blogAuthor": "t016-author-20260904082033",
+    "order": "01a09b8b-3e28-7000-94ed-e37517c5cbf5"
+  },
+  "runs": [
+    {
+      "name": "neutral-blue",
+      "status": 200,
+      "body": {
+        "paletteKey": "tooba-blue",
+        "backgroundStyle": "Neutral",
+        "themeMode": "LightOnly"
+      }
+    },
+    {
+      "name": "tint-blue",
+      "status": 200,
+      "body": {
+        "paletteKey": "tooba-blue",
+        "backgroundStyle": "PaletteTint",
+        "themeMode": "LightOnly"
+      }
+    },
+    {
+      "name": "tint-wine",
+      "status": 200,
+      "body": {
+        "paletteKey": "wine-burgundy",
+        "backgroundStyle": "PaletteTint",
+        "themeMode": "LightOnly"
+      }
+    },
+    {
+      "name": "dark-blue",
+      "status": 200,
+      "body": {
+        "paletteKey": "tooba-blue",
+        "backgroundStyle": "PaletteTint",
+        "themeMode": "DarkOnly"
+      }
+    }
+  ],
+  "routes": [
+    {
+      "id": "home",
+      "run": "neutral-blue",
+      "path": "/fa",
+      "status": 200,
+      "ok": true,
+      "inspect": {
+        "title": "فروشگاه توبا | خانه",
+        "palette": "tooba-blue",
+        "themeMode": "LightOnly",
+        "backgroundStyle": "Neutral",
+        "colorScheme": "light",
+        "dark": false,
+        "roles": {
+          "page": "rgb(243, 245, 248)",
+          "header": "rgb(255, 255, 255)",
+          "accent": "rgb(238, 242, 247)",
+          "section": "rgb(255, 255, 255)",
+          "alternate": "rgb(247, 248, 250)",
+          "footer": "rgb(255, 255, 255)"
+        },
+        "flags": []
+      }
+    },
+    {
+      "id": "products",
+      "run": "neutral-blue",
+      "path": "/fa/products",
+      "status": 200,
+      "ok": true,
+      "inspect": {
+        "title": "فهرست کالاها | توبا",
+        "palette": "tooba-blue",
+        "themeMode": "LightOnly",
+        "backgroundStyle": "Neutral",
+        "colorScheme": "light",
+        "dark": false,
+        "roles": {
+          "page": "rgb(243, 245, 248)",
+          "header": "rgb(255, 255, 255)",
+          "section": "rgb(255, 255, 255)",
+          "card": "rgb(255, 255, 255)",
+          "footer": "rgb(255, 255, 255)"
+        },
+        "flags": []
+      }
+    },
+    {
+      "id": "category",
+      "run": "neutral-blue",
+      "path": "/fa/category/demo-cat-mobile-tablet",
+      "status": 200,
+      "ok": true,
+      "inspect": {
+        "title": "موبایل و تبلت | توبا",
+        "palette": "tooba-blue",
+        "themeMode": "LightOnly",
+        "backgroundStyle": "Neutral",
+        "colorScheme": "light",
+        "dark": false,
+        "roles": {
+          "page": "rgb(243, 245, 248)",
+          "header": "rgb(255, 255, 255)",
+          "section": "rgb(255, 255, 255)",
+          "footer": "rgb(255, 255, 255)"
+        },
+        "flags": []
+      }
+    },
+    {
+      "id": "brands",
+      "run": "neutral-blue",
+      "path": "/fa/brands",
+      "status": 200,
+      "ok": true,
+      "inspect": {
+        "title": "برندها | توبا",
+        "palette": "tooba-blue",
+        "themeMode": "LightOnly",
+        "backgroundStyle": "Neutral",
+        "colorScheme": "light",
+        "dark": false,
+        "roles": {
+          "page": "rgb(243, 245, 248)",
+          "header": "rgb(255, 255, 255)",
+          "card": "rgb(255, 255, 255)",
+          "footer": "rgb(255, 255, 255)"
+        },
+        "flags": []
+      }
+    },
+    {
+      "id": "brand",
+      "run": "neutral-blue",
+      "path": "/fa/brand/demo-brand-adidas",
+      "status": 200,
+      "ok": true,
+      "inspect": {
+        "title": "آدیداس | توبا",
+        "palette": "tooba-blue",
+        "themeMode": "LightOnly",
+        "backgroundStyle": "Neutral",
+        "colorScheme": "light",
+        "dark": false,
+        "roles": {
+          "page": "rgb(243, 245, 248)",
+          "header": "rgb(255, 255, 255)",
+          "section": "rgb(255, 255, 255)",
+          "footer": "rgb(255, 255, 255)"
+        },
+        "flags": []
+      }
+    },
+    {
+      "id": "sellers",
+      "run": "neutral-blue",
+      "path": "/fa/sellers",
+      "status": 200,
+      "ok": true,
+      "inspect": {
+        "title": "فروشندگان | توبا",
+        "palette": "tooba-blue",
+        "themeMode": "LightOnly",
+        "backgroundStyle": "Neutral",
+        "colorScheme": "light",
+        "dark": false,
+        "roles": {
+          "page": "rgb(243, 245, 248)",
+          "header": "rgb(255, 255, 255)",
+          "card": "rgb(255, 255, 255)",
+          "footer": "rgb(255, 255, 255)"
+        },
+        "flags": []
+      }
+    },
+    {
+      "id": "seller-profile",
+      "run": "neutral-blue",
+      "path": "/fa/seller-profile/962c7b3f972781ad8ef562c4",
+      "status": 200,
+      "ok": true,
+      "inspect": {
+        "title": "تجارت الکترونیک پارس | فروشندگان توبا",
+        "palette": "tooba-blue",
+        "themeMode": "LightOnly",
+        "backgroundStyle": "Neutral",
+        "colorScheme": "light",
+        "dark": false,
+        "roles": {
+          "page": "rgb(243, 245, 248)",
+          "header": "rgb(255, 255, 255)",
+          "section": "rgb(255, 255, 255)",
+          "footer": "rgb(255, 255, 255)"
+        },
+        "flags": []
+      }
+    },
+    {
+      "id": "offers",
+      "run": "neutral-blue",
+      "path": "/fa/offers",
+      "status": 200,
+      "ok": true,
+      "inspect": {
+        "title": "پیشنهادها | توبا",
+        "palette": "tooba-blue",
+        "themeMode": "LightOnly",
+        "backgroundStyle": "Neutral",
+        "colorScheme": "light",
+        "dark": false,
+        "roles": {
+          "page": "rgb(243, 245, 248)",
+          "header": "rgb(255, 255, 255)",
+          "section": "rgb(255, 255, 255)",
+          "card": "rgb(255, 255, 255)",
+          "footer": "rgb(255, 255, 255)"
+        },
+        "flags": []
+      }
+    },
+    {
+      "id": "sale",
+      "run": "neutral-blue",
+      "path": "/fa/sale",
+      "status": 200,
+      "ok": true,
+      "inspect": {
+        "title": "فروش ویژه | توبا",
+        "palette": "tooba-blue",
+        "themeMode": "LightOnly",
+        "backgroundStyle": "Neutral",
+        "colorScheme": "light",
+        "dark": false,
+        "roles": {
+          "page": "rgb(243, 245, 248)",
+          "header": "rgb(255, 255, 255)",
+          "section": "rgb(255, 255, 255)",
+          "card": "rgb(255, 255, 255)",
+          "footer": "rgb(255, 255, 255)"
+        },
+        "flags": []
+      }
+    },
+    {
+      "id": "new-products",
+      "run": "neutral-blue",
+      "path": "/fa/new-products",
+      "status": 200,
+      "ok": true,
+      "inspect": {
+        "title": "محصولات جدید | توبا",
+        "palette": "tooba-blue",
+        "themeMode": "LightOnly",
+        "backgroundStyle": "Neutral",
+        "colorScheme": "light",
+        "dark": false,
+        "roles": {
+          "page": "rgb(243, 245, 248)",
+          "header": "rgb(255, 255, 255)",
+          "section": "rgb(255, 255, 255)",
+          "footer": "rgb(255, 255, 255)"
+        },
+        "flags": []
+      }
+    },
+    {
+      "id": "most-viewed",
+      "run": "neutral-blue",
+      "path": "/fa/most-viewed",
+      "status": 200,
+      "ok": true,
+      "inspect": {
+        "title": "پربازدیدترین‌ها | توبا",
+        "palette": "tooba-blue",
+        "themeMode": "LightOnly",
+        "backgroundStyle": "Neutral",
+        "colorScheme": "light",
+        "dark": false,
+        "roles": {
+          "page": "rgb(243, 245, 248)",
+          "header": "rgb(255, 255, 255)",
+          "card": "rgb(255, 255, 255)",
+          "footer": "rgb(255, 255, 255)"
+        },
+        "flags": []
+      }
+    },
+    {
+      "id": "best-seller",
+      "run": "neutral-blue",
+      "path": "/fa/best-seller",
+      "status": 200,
+      "ok": true,
+      "inspect": {
+        "title": "پرفروش‌ترین‌ها | توبا",
+        "palette": "tooba-blue",
+        "themeMode": "LightOnly",
+        "backgroundStyle": "Neutral",
+        "colorScheme": "light",
+        "dark": false,
+        "roles": {
+          "page": "rgb(243, 245, 248)",
+          "header": "rgb(255, 255, 255)",
+          "card": "rgb(255, 255, 255)",
+          "footer": "rgb(255, 255, 255)"
+        },
+        "flags": []
+      }
+    },
+    {
+      "id": "trending",
+      "run": "neutral-blue",
+      "path": "/fa/trending",
+      "status": 200,
+      "ok": true,
+      "inspect": {
+        "title": "محبوب‌های روز | توبا",
+        "palette": "tooba-blue",
+        "themeMode": "LightOnly",
+        "backgroundStyle": "Neutral",
+        "colorScheme": "light",
+        "dark": false,
+        "roles": {
+          "page": "rgb(243, 245, 248)",
+          "header": "rgb(255, 255, 255)",
+          "card": "rgb(255, 255, 255)",
+          "footer": "rgb(255, 255, 255)"
+        },
+        "flags": []
+      }
+    },
+    {
+      "id": "pdp",
+      "run": "neutral-blue",
+      "path": "/fa/products/demo-prod-fashion-men-men-pants-1",
+      "status": 200,
+      "ok": true,
+      "inspect": {
+        "title": "Nike Men's pants Series 1 | Men's pants",
+        "palette": "tooba-blue",
+        "themeMode": "LightOnly",
+        "backgroundStyle": "Neutral",
+        "colorScheme": "light",
+        "dark": false,
+        "roles": {
+          "page": "rgb(243, 245, 248)",
+          "header": "rgb(255, 255, 255)",
+          "section": "rgb(255, 255, 255)",
+          "card": "rgb(255, 255, 255)",
+          "alternate": "rgb(247, 248, 250)",
+          "footer": "rgb(255, 255, 255)"
+        },
+        "flags": []
+      }
+    },
+    {
+      "id": "landing",
+      "run": "neutral-blue",
+      "path": "/fa/landing-campaign",
+      "status": 200,
+      "ok": true,
+      "inspect": {
+        "title": "کمپین فروش",
+        "palette": "tooba-blue",
+        "themeMode": "LightOnly",
+        "backgroundStyle": "Neutral",
+        "colorScheme": "light",
+        "dark": false,
+        "roles": {
+          "page": "rgb(243, 245, 248)",
+          "header": "rgb(255, 255, 255)",
+          "accent": "rgb(238, 242, 247)",
+          "alternate": "rgb(247, 248, 250)",
+          "section": "rgb(255, 255, 255)",
+          "footer": "rgb(255, 255, 255)"
+        },
+        "flags": []
+      }
+    },
+    {
+      "id": "cart",
+      "run": "neutral-blue",
+      "path": "/fa/cart",
+      "status": 200,
+      "ok": true,
+      "inspect": {
+        "title": "سبد خرید | توبا",
+        "palette": "tooba-blue",
+        "themeMode": "LightOnly",
+        "backgroundStyle": "Neutral",
+        "colorScheme": "light",
+        "dark": false,
+        "roles": {
+          "page": "rgb(243, 245, 248)",
+          "header": "rgb(255, 255, 255)",
+          "section": "rgb(255, 255, 255)",
+          "card": "rgb(255, 255, 255)",
+          "footer": "rgb(255, 255, 255)"
+        },
+        "flags": []
+      }
+    },
+    {
+      "id": "shipping",
+      "run": "neutral-blue",
+      "path": "/fa/shipping",
+      "status": 200,
+      "ok": true,
+      "inspect": {
+        "title": "اطلاعات ارسال | توبا",
+        "palette": "tooba-blue",
+        "themeMode": "LightOnly",
+        "backgroundStyle": "Neutral",
+        "colorScheme": "light",
+        "dark": false,
+        "roles": {
+          "page": "rgb(243, 245, 248)",
+          "header": "rgb(255, 255, 255)",
+          "section": "rgb(255, 255, 255)",
+          "card": "rgb(255, 255, 255)",
+          "footer": "rgb(255, 255, 255)"
+        },
+        "flags": []
+      }
+    },
+    {
+      "id": "checkout-redirect",
+      "run": "neutral-blue",
+      "path": "/fa/checkout",
+      "status": 200,
+      "ok": true,
+      "inspect": {
+        "title": "اطلاعات ارسال | توبا",
+        "palette": "tooba-blue",
+        "themeMode": "LightOnly",
+        "backgroundStyle": "Neutral",
+        "colorScheme": "light",
+        "dark": false,
+        "roles": {
+          "page": "rgb(243, 245, 248)",
+          "header": "rgb(255, 255, 255)",
+          "section": "rgb(255, 255, 255)",
+          "card": "rgb(255, 255, 255)",
+          "footer": "rgb(255, 255, 255)"
+        },
+        "flags": []
+      }
+    },
+    {
+      "id": "payment",
+      "run": "neutral-blue",
+      "path": "/fa/payment",
+      "status": 200,
+      "ok": true,
+      "inspect": {
+        "title": "پرداخت | توبا",
+        "palette": "tooba-blue",
+        "themeMode": "LightOnly",
+        "backgroundStyle": "Neutral",
+        "colorScheme": "light",
+        "dark": false,
+        "roles": {
+          "page": "rgb(243, 245, 248)",
+          "header": "rgb(255, 255, 255)",
+          "footer": "rgb(255, 255, 255)"
+        },
+        "flags": []
+      }
+    },
+    {
+      "id": "payment-result",
+      "run": "neutral-blue",
+      "path": "/fa/payment/result",
+      "status": 200,
+      "ok": true,
+      "inspect": {
+        "title": "نتیجه پرداخت | توبا",
+        "palette": "tooba-blue",
+        "themeMode": "LightOnly",
+        "backgroundStyle": "Neutral",
+        "colorScheme": "light",
+        "dark": false,
+        "roles": {
+          "page": "rgb(243, 245, 248)",
+          "header": "rgb(255, 255, 255)",
+          "card": "rgb(255, 255, 255)",
+          "footer": "rgb(255, 255, 255)"
+        },
+        "flags": []
+      }
+    },
+    {
+      "id": "order-confirmation",
+      "run": "neutral-blue",
+      "path": "/fa/order/confirmation",
+      "status": 200,
+      "ok": true,
+      "inspect": {
+        "title": "تأیید سفارش | توبا",
+        "palette": "tooba-blue",
+        "themeMode": "LightOnly",
+        "backgroundStyle": "Neutral",
+        "colorScheme": "light",
+        "dark": false,
+        "roles": {
+          "page": "rgb(243, 245, 248)",
+          "header": "rgb(255, 255, 255)",
+          "footer": "rgb(255, 255, 255)"
+        },
+        "flags": []
+      }
+    },
+    {
+      "id": "login",
+      "run": "neutral-blue",
+      "path": "/fa/login",
+      "status": 200,
+      "ok": true,
+      "inspect": {
+        "title": "ورود | توبا",
+        "palette": "tooba-blue",
+        "themeMode": "LightOnly",
+        "backgroundStyle": "Neutral",
+        "colorScheme": "light",
+        "dark": false,
+        "roles": {
+          "page": "rgb(243, 245, 248)",
+          "header": "rgb(255, 255, 255)",
+          "section": "rgb(255, 255, 255)",
+          "elevated": "rgb(255, 255, 255)",
+          "footer": "rgb(255, 255, 255)"
+        },
+        "flags": []
+      }
+    },
+    {
+      "id": "customer-dashboard",
+      "run": "neutral-blue",
+      "path": "/customer-panel",
+      "status": 200,
+      "ok": true,
+      "inspect": {
+        "title": "پنل مشتری توبا",
+        "palette": "tooba-blue",
+        "themeMode": "LightOnly",
+        "backgroundStyle": "Neutral",
+        "colorScheme": "light",
+        "dark": false,
+        "roles": {
+          "page": "rgb(243, 245, 248)",
+          "header": "rgb(255, 255, 255)",
+          "elevated": "rgb(255, 255, 255)",
+          "section": "rgb(255, 255, 255)"
+        },
+        "flags": []
+      }
+    },
+    {
+      "id": "customer-orders",
+      "run": "neutral-blue",
+      "path": "/customer-panel/orders",
+      "status": 200,
+      "ok": true,
+      "inspect": {
+        "title": "پنل مشتری توبا",
+        "palette": "tooba-blue",
+        "themeMode": "LightOnly",
+        "backgroundStyle": "Neutral",
+        "colorScheme": "light",
+        "dark": false,
+        "roles": {
+          "page": "rgb(243, 245, 248)",
+          "header": "rgb(255, 255, 255)",
+          "elevated": "rgb(255, 255, 255)",
+          "section": "rgb(255, 255, 255)"
+        },
+        "flags": []
+      }
+    },
+    {
+      "id": "customer-order-detail",
+      "run": "neutral-blue",
+      "path": "/customer-panel/orders/01a09b8b-3e28-7000-94ed-e37517c5cbf5",
+      "status": 200,
+      "ok": true,
+      "inspect": {
+        "title": "پنل مشتری توبا",
+        "palette": "tooba-blue",
+        "themeMode": "LightOnly",
+        "backgroundStyle": "Neutral",
+        "colorScheme": "light",
+        "dark": false,
+        "roles": {
+          "page": "rgb(243, 245, 248)",
+          "header": "rgb(255, 255, 255)",
+          "elevated": "rgb(255, 255, 255)",
+          "section": "rgb(255, 255, 255)"
+        },
+        "flags": []
+      }
+    },
+    {
+      "id": "customer-wishlist",
+      "run": "neutral-blue",
+      "path": "/customer-panel/wishlist",
+      "status": 200,
+      "ok": true,
+      "inspect": {
+        "title": "پنل مشتری توبا",
+        "palette": "tooba-blue",
+        "themeMode": "LightOnly",
+        "backgroundStyle": "Neutral",
+        "colorScheme": "light",
+        "dark": false,
+        "roles": {
+          "page": "rgb(243, 245, 248)",
+          "header": "rgb(255, 255, 255)",
+          "elevated": "rgb(255, 255, 255)",
+          "section": "rgb(255, 255, 255)"
+        },
+        "flags": []
+      }
+    },
+    {
+      "id": "customer-addresses",
+      "run": "neutral-blue",
+      "path": "/customer-panel/addresses",
+      "status": 200,
+      "ok": true,
+      "inspect": {
+        "title": "پنل مشتری توبا",
+        "palette": "tooba-blue",
+        "themeMode": "LightOnly",
+        "backgroundStyle": "Neutral",
+        "colorScheme": "light",
+        "dark": false,
+        "roles": {
+          "page": "rgb(243, 245, 248)",
+          "header": "rgb(255, 255, 255)",
+          "elevated": "rgb(255, 255, 255)",
+          "section": "rgb(255, 255, 255)"
+        },
+        "flags": []
+      }
+    },
+    {
+      "id": "customer-notifications",
+      "run": "neutral-blue",
+      "path": "/customer-panel/notifications",
+      "status": 200,
+      "ok": true,
+      "inspect": {
+        "title": "پنل مشتری توبا",
+        "palette": "tooba-blue",
+        "themeMode": "LightOnly",
+        "backgroundStyle": "Neutral",
+        "colorScheme": "light",
+        "dark": false,
+        "roles": {
+          "page": "rgb(243, 245, 248)",
+          "header": "rgb(255, 255, 255)",
+          "elevated": "rgb(255, 255, 255)",
+          "section": "rgb(255, 255, 255)"
+        },
+        "flags": []
+      }
+    },
+    {
+      "id": "customer-tickets",
+      "run": "neutral-blue",
+      "path": "/customer-panel/tickets",
+      "status": 200,
+      "ok": true,
+      "inspect": {
+        "title": "پنل مشتری توبا",
+        "palette": "tooba-blue",
+        "themeMode": "LightOnly",
+        "backgroundStyle": "Neutral",
+        "colorScheme": "light",
+        "dark": false,
+        "roles": {
+          "page": "rgb(243, 245, 248)",
+          "header": "rgb(255, 255, 255)",
+          "elevated": "rgb(255, 255, 255)",
+          "section": "rgb(255, 255, 255)"
+        },
+        "flags": []
+      }
+    },
+    {
+      "id": "customer-tickets-new",
+      "run": "neutral-blue",
+      "path": "/customer-panel/tickets/new",
+      "status": 200,
+      "ok": true,
+      "inspect": {
+        "title": "پنل مشتری توبا",
+        "palette": "tooba-blue",
+        "themeMode": "LightOnly",
+        "backgroundStyle": "Neutral",
+        "colorScheme": "light",
+        "dark": false,
+        "roles": {
+          "page": "rgb(243, 245, 248)",
+          "header": "rgb(255, 255, 255)",
+          "elevated": "rgb(255, 255, 255)",
+          "section": "rgb(255, 255, 255)"
+        },
+        "flags": []
+      }
+    },
+    {
+      "id": "customer-wallet",
+      "run": "neutral-blue",
+      "path": "/customer-panel/wallet",
+      "status": 200,
+      "ok": true,
+      "inspect": {
+        "title": "پنل مشتری توبا",
+        "palette": "tooba-blue",
+        "themeMode": "LightOnly",
+        "backgroundStyle": "Neutral",
+        "colorScheme": "light",
+        "dark": false,
+        "roles": {
+          "page": "rgb(243, 245, 248)",
+          "header": "rgb(255, 255, 255)",
+          "elevated": "rgb(255, 255, 255)",
+          "section": "rgb(255, 255, 255)"
+        },
+        "flags": []
+      }
+    },
+    {
+      "id": "customer-gift-cards",
+      "run": "neutral-blue",
+      "path": "/customer-panel/gift-cards",
+      "status": 200,
+      "ok": true,
+      "inspect": {
+        "title": "پنل مشتری توبا",
+        "palette": "tooba-blue",
+        "themeMode": "LightOnly",
+        "backgroundStyle": "Neutral",
+        "colorScheme": "light",
+        "dark": false,
+        "roles": {
+          "page": "rgb(243, 245, 248)",
+          "header": "rgb(255, 255, 255)",
+          "elevated": "rgb(255, 255, 255)",
+          "section": "rgb(255, 255, 255)"
+        },
+        "flags": []
+      }
+    },
+    {
+      "id": "customer-profile",
+      "run": "neutral-blue",
+      "path": "/customer-panel/profile",
+      "status": 200,
+      "ok": true,
+      "inspect": {
+        "title": "پنل مشتری توبا",
+        "palette": "tooba-blue",
+        "themeMode": "LightOnly",
+        "backgroundStyle": "Neutral",
+        "colorScheme": "light",
+        "dark": false,
+        "roles": {
+          "page": "rgb(243, 245, 248)",
+          "header": "rgb(255, 255, 255)",
+          "elevated": "rgb(255, 255, 255)",
+          "section": "rgb(255, 255, 255)"
+        },
+        "flags": []
+      }
+    },
+    {
+      "id": "customer-settings",
+      "run": "neutral-blue",
+      "path": "/customer-panel/settings",
+      "status": 200,
+      "ok": true,
+      "inspect": {
+        "title": "پنل مشتری توبا",
+        "palette": "tooba-blue",
+        "themeMode": "LightOnly",
+        "backgroundStyle": "Neutral",
+        "colorScheme": "light",
+        "dark": false,
+        "roles": {
+          "page": "rgb(243, 245, 248)",
+          "header": "rgb(255, 255, 255)",
+          "elevated": "rgb(255, 255, 255)",
+          "section": "rgb(255, 255, 255)"
+        },
+        "flags": []
+      }
+    },
+    {
+      "id": "customer-wallet-checkout-dev",
+      "run": "neutral-blue",
+      "path": "/customer-panel/dev/wallet-checkout",
+      "status": 200,
+      "ok": true,
+      "inspect": {
+        "title": "پنل مشتری توبا",
+        "palette": "tooba-blue",
+        "themeMode": "LightOnly",
+        "backgroundStyle": "Neutral",
+        "colorScheme": "light",
+        "dark": false,
+        "roles": {
+          "page": "rgb(243, 245, 248)",
+          "header": "rgb(255, 255, 255)",
+          "elevated": "rgb(255, 255, 255)",
+          "section": "rgb(255, 255, 255)"
+        },
+        "flags": []
+      }
+    },
+    {
+      "id": "blogs",
+      "run": "neutral-blue",
+      "path": "/fa/blogs",
+      "status": 200,
+      "ok": true,
+      "inspect": {
+        "title": "مجله توبا | مقالات و راهنماها",
+        "palette": "tooba-blue",
+        "themeMode": "LightOnly",
+        "backgroundStyle": "Neutral",
+        "colorScheme": "light",
+        "dark": false,
+        "roles": {
+          "page": "rgb(243, 245, 248)",
+          "header": "rgb(255, 255, 255)",
+          "section": "rgb(255, 255, 255)",
+          "footer": "rgb(255, 255, 255)"
+        },
+        "flags": []
+      }
+    },
+    {
+      "id": "blog-detail",
+      "run": "neutral-blue",
+      "path": "/fa/blogs/t016-sched-20260904082033",
+      "status": 200,
+      "ok": true,
+      "inspect": {
+        "title": "sched",
+        "palette": "tooba-blue",
+        "themeMode": "LightOnly",
+        "backgroundStyle": "Neutral",
+        "colorScheme": "light",
+        "dark": false,
+        "roles": {
+          "page": "rgb(243, 245, 248)",
+          "header": "rgb(255, 255, 255)",
+          "section": "rgb(255, 255, 255)",
+          "card": "rgb(255, 255, 255)",
+          "footer": "rgb(255, 255, 255)"
+        },
+        "flags": []
+      }
+    },
+    {
+      "id": "blog-category",
+      "run": "neutral-blue",
+      "path": "/fa/blogs/category/t016-cat-20260904082033",
+      "status": 200,
+      "ok": true,
+      "inspect": {
+        "title": "T016 Cat 20260904082033",
+        "palette": "tooba-blue",
+        "themeMode": "LightOnly",
+        "backgroundStyle": "Neutral",
+        "colorScheme": "light",
+        "dark": false,
+        "roles": {
+          "page": "rgb(243, 245, 248)",
+          "header": "rgb(255, 255, 255)",
+          "section": "rgb(255, 255, 255)",
+          "footer": "rgb(255, 255, 255)"
+        },
+        "flags": []
+      }
+    },
+    {
+      "id": "blog-author",
+      "run": "neutral-blue",
+      "path": "/fa/blogs/author/t016-author-20260904082033",
+      "status": 200,
+      "ok": true,
+      "inspect": {
+        "title": "T016 Smoke Author 20260904082033",
+        "palette": "tooba-blue",
+        "themeMode": "LightOnly",
+        "backgroundStyle": "Neutral",
+        "colorScheme": "light",
+        "dark": false,
+        "roles": {
+          "page": "rgb(243, 245, 248)",
+          "header": "rgb(255, 255, 255)",
+          "section": "rgb(255, 255, 255)",
+          "footer": "rgb(255, 255, 255)"
+        },
+        "flags": []
+      }
+    },
+    {
+      "id": "home",
+      "run": "tint-blue",
+      "path": "/fa",
+      "status": 200,
+      "ok": true,
+      "inspect": {
+        "title": "فروشگاه توبا | خانه",
+        "palette": "tooba-blue",
+        "themeMode": "LightOnly",
+        "backgroundStyle": "PaletteTint",
+        "colorScheme": "light",
+        "dark": false,
+        "roles": {
+          "page": "rgb(228, 236, 248)",
+          "header": "rgb(255, 255, 255)",
+          "accent": "rgb(188, 210, 236)",
+          "section": "rgb(247, 250, 253)",
+          "alternate": "rgb(216, 228, 244)",
+          "footer": "rgb(255, 255, 255)"
+        },
+        "flags": []
+      }
+    },
+    {
+      "id": "products",
+      "run": "tint-blue",
+      "path": "/fa/products",
+      "status": 200,
+      "ok": true,
+      "inspect": {
+        "title": "فهرست کالاها | توبا",
+        "palette": "tooba-blue",
+        "themeMode": "LightOnly",
+        "backgroundStyle": "PaletteTint",
+        "colorScheme": "light",
+        "dark": false,
+        "roles": {
+          "page": "rgb(228, 236, 248)",
+          "header": "rgb(255, 255, 255)",
+          "section": "rgb(247, 250, 253)",
+          "card": "rgb(255, 255, 255)",
+          "footer": "rgb(255, 255, 255)"
+        },
+        "flags": []
+      }
+    },
+    {
+      "id": "category",
+      "run": "tint-blue",
+      "path": "/fa/category/demo-cat-mobile-tablet",
+      "status": 200,
+      "ok": true,
+      "inspect": {
+        "title": "موبایل و تبلت | توبا",
+        "palette": "tooba-blue",
+        "themeMode": "LightOnly",
+        "backgroundStyle": "PaletteTint",
+        "colorScheme": "light",
+        "dark": false,
+        "roles": {
+          "page": "rgb(228, 236, 248)",
+          "header": "rgb(255, 255, 255)",
+          "section": "rgb(247, 250, 253)",
+          "footer": "rgb(255, 255, 255)"
+        },
+        "flags": []
+      }
+    },
+    {
+      "id": "brands",
+      "run": "tint-blue",
+      "path": "/fa/brands",
+      "status": 200,
+      "ok": true,
+      "inspect": {
+        "title": "برندها | توبا",
+        "palette": "tooba-blue",
+        "themeMode": "LightOnly",
+        "backgroundStyle": "PaletteTint",
+        "colorScheme": "light",
+        "dark": false,
+        "roles": {
+          "page": "rgb(228, 236, 248)",
+          "header": "rgb(255, 255, 255)",
+          "card": "rgb(255, 255, 255)",
+          "footer": "rgb(255, 255, 255)"
+        },
+        "flags": []
+      }
+    },
+    {
+      "id": "brand",
+      "run": "tint-blue",
+      "path": "/fa/brand/demo-brand-adidas",
+      "status": 200,
+      "ok": true,
+      "inspect": {
+        "title": "آدیداس | توبا",
+        "palette": "tooba-blue",
+        "themeMode": "LightOnly",
+        "backgroundStyle": "PaletteTint",
+        "colorScheme": "light",
+        "dark": false,
+        "roles": {
+          "page": "rgb(228, 236, 248)",
+          "header": "rgb(255, 255, 255)",
+          "section": "rgb(247, 250, 253)",
+          "footer": "rgb(255, 255, 255)"
+        },
+        "flags": []
+      }
+    },
+    {
+      "id": "sellers",
+      "run": "tint-blue",
+      "path": "/fa/sellers",
+      "status": 200,
+      "ok": true,
+      "inspect": {
+        "title": "فروشندگان | توبا",
+        "palette": "tooba-blue",
+        "themeMode": "LightOnly",
+        "backgroundStyle": "PaletteTint",
+        "colorScheme": "light",
+        "dark": false,
+        "roles": {
+          "page": "rgb(228, 236, 248)",
+          "header": "rgb(255, 255, 255)",
+          "card": "rgb(255, 255, 255)",
+          "footer": "rgb(255, 255, 255)"
+        },
+        "flags": []
+      }
+    },
+    {
+      "id": "seller-profile",
+      "run": "tint-blue",
+      "path": "/fa/seller-profile/962c7b3f972781ad8ef562c4",
+      "status": 200,
+      "ok": true,
+      "inspect": {
+        "title": "تجارت الکترونیک پارس | فروشندگان توبا",
+        "palette": "tooba-blue",
+        "themeMode": "LightOnly",
+        "backgroundStyle": "PaletteTint",
+        "colorScheme": "light",
+        "dark": false,
+        "roles": {
+          "page": "rgb(228, 236, 248)",
+          "header": "rgb(255, 255, 255)",
+          "section": "rgb(247, 250, 253)",
+          "footer": "rgb(255, 255, 255)"
+        },
+        "flags": []
+      }
+    },
+    {
+      "id": "offers",
+      "run": "tint-blue",
+      "path": "/fa/offers",
+      "status": 200,
+      "ok": true,
+      "inspect": {
+        "title": "پیشنهادها | توبا",
+        "palette": "tooba-blue",
+        "themeMode": "LightOnly",
+        "backgroundStyle": "PaletteTint",
+        "colorScheme": "light",
+        "dark": false,
+        "roles": {
+          "page": "rgb(228, 236, 248)",
+          "header": "rgb(255, 255, 255)",
+          "section": "rgb(247, 250, 253)",
+          "card": "rgb(255, 255, 255)",
+          "footer": "rgb(255, 255, 255)"
+        },
+        "flags": []
+      }
+    },
+    {
+      "id": "sale",
+      "run": "tint-blue",
+      "path": "/fa/sale",
+      "status": 200,
+      "ok": true,
+      "inspect": {
+        "title": "فروش ویژه | توبا",
+        "palette": "tooba-blue",
+        "themeMode": "LightOnly",
+        "backgroundStyle": "PaletteTint",
+        "colorScheme": "light",
+        "dark": false,
+        "roles": {
+          "page": "rgb(228, 236, 248)",
+          "header": "rgb(255, 255, 255)",
+          "section": "rgb(247, 250, 253)",
+          "card": "rgb(255, 255, 255)",
+          "footer": "rgb(255, 255, 255)"
+        },
+        "flags": []
+      }
+    },
+    {
+      "id": "new-products",
+      "run": "tint-blue",
+      "path": "/fa/new-products",
+      "status": 200,
+      "ok": true,
+      "inspect": {
+        "title": "محصولات جدید | توبا",
+        "palette": "tooba-blue",
+        "themeMode": "LightOnly",
+        "backgroundStyle": "PaletteTint",
+        "colorScheme": "light",
+        "dark": false,
+        "roles": {
+          "page": "rgb(228, 236, 248)",
+          "header": "rgb(255, 255, 255)",
+          "section": "rgb(247, 250, 253)",
+          "footer": "rgb(255, 255, 255)"
+        },
+        "flags": []
+      }
+    },
+    {
+      "id": "most-viewed",
+      "run": "tint-blue",
+      "path": "/fa/most-viewed",
+      "status": 200,
+      "ok": true,
+      "inspect": {
+        "title": "پربازدیدترین‌ها | توبا",
+        "palette": "tooba-blue",
+        "themeMode": "LightOnly",
+        "backgroundStyle": "PaletteTint",
+        "colorScheme": "light",
+        "dark": false,
+        "roles": {
+          "page": "rgb(228, 236, 248)",
+          "header": "rgb(255, 255, 255)",
+          "card": "rgb(255, 255, 255)",
+          "footer": "rgb(255, 255, 255)"
+        },
+        "flags": []
+      }
+    },
+    {
+      "id": "best-seller",
+      "run": "tint-blue",
+      "path": "/fa/best-seller",
+      "status": 200,
+      "ok": true,
+      "inspect": {
+        "title": "پرفروش‌ترین‌ها | توبا",
+        "palette": "tooba-blue",
+        "themeMode": "LightOnly",
+        "backgroundStyle": "PaletteTint",
+        "colorScheme": "light",
+        "dark": false,
+        "roles": {
+          "page": "rgb(228, 236, 248)",
+          "header": "rgb(255, 255, 255)",
+          "card": "rgb(255, 255, 255)",
+          "footer": "rgb(255, 255, 255)"
+        },
+        "flags": []
+      }
+    },
+    {
+      "id": "trending",
+      "run": "tint-blue",
+      "path": "/fa/trending",
+      "status": 200,
+      "ok": true,
+      "inspect": {
+        "title": "محبوب‌های روز | توبا",
+        "palette": "tooba-blue",
+        "themeMode": "LightOnly",
+        "backgroundStyle": "PaletteTint",
+        "colorScheme": "light",
+        "dark": false,
+        "roles": {
+          "page": "rgb(228, 236, 248)",
+          "header": "rgb(255, 255, 255)",
+          "card": "rgb(255, 255, 255)",
+          "footer": "rgb(255, 255, 255)"
+        },
+        "flags": []
+      }
+    },
+    {
+      "id": "pdp",
+      "run": "tint-blue",
+      "path": "/fa/products/demo-prod-fashion-men-men-pants-1",
+      "status": 200,
+      "ok": true,
+      "inspect": {
+        "title": "Nike Men's pants Series 1 | Men's pants",
+        "palette": "tooba-blue",
+        "themeMode": "LightOnly",
+        "backgroundStyle": "PaletteTint",
+        "colorScheme": "light",
+        "dark": false,
+        "roles": {
+          "page": "rgb(228, 236, 248)",
+          "header": "rgb(255, 255, 255)",
+          "section": "rgb(247, 250, 253)",
+          "card": "rgb(255, 255, 255)",
+          "alternate": "rgb(216, 228, 244)",
+          "footer": "rgb(255, 255, 255)"
+        },
+        "flags": []
+      }
+    },
+    {
+      "id": "landing",
+      "run": "tint-blue",
+      "path": "/fa/landing-campaign",
+      "status": 200,
+      "ok": true,
+      "inspect": {
+        "title": "کمپین فروش",
+        "palette": "tooba-blue",
+        "themeMode": "LightOnly",
+        "backgroundStyle": "PaletteTint",
+        "colorScheme": "light",
+        "dark": false,
+        "roles": {
+          "page": "rgb(228, 236, 248)",
+          "header": "rgb(255, 255, 255)",
+          "accent": "rgb(188, 210, 236)",
+          "alternate": "rgb(216, 228, 244)",
+          "section": "rgb(247, 250, 253)",
+          "footer": "rgb(255, 255, 255)"
+        },
+        "flags": []
+      }
+    },
+    {
+      "id": "cart",
+      "run": "tint-blue",
+      "path": "/fa/cart",
+      "status": 200,
+      "ok": true,
+      "inspect": {
+        "title": "سبد خرید | توبا",
+        "palette": "tooba-blue",
+        "themeMode": "LightOnly",
+        "backgroundStyle": "PaletteTint",
+        "colorScheme": "light",
+        "dark": false,
+        "roles": {
+          "page": "rgb(228, 236, 248)",
+          "header": "rgb(255, 255, 255)",
+          "footer": "rgb(255, 255, 255)"
+        },
+        "flags": []
+      }
+    },
+    {
+      "id": "shipping",
+      "run": "tint-blue",
+      "path": "/fa/shipping",
+      "status": 200,
+      "ok": true,
+      "inspect": {
+        "title": "اطلاعات ارسال | توبا",
+        "palette": "tooba-blue",
+        "themeMode": "LightOnly",
+        "backgroundStyle": "PaletteTint",
+        "colorScheme": "light",
+        "dark": false,
+        "roles": {
+          "page": "rgb(228, 236, 248)",
+          "header": "rgb(255, 255, 255)",
+          "section": "rgb(247, 250, 253)",
+          "card": "rgb(255, 255, 255)",
+          "footer": "rgb(255, 255, 255)"
+        },
+        "flags": []
+      }
+    },
+    {
+      "id": "checkout-redirect",
+      "run": "tint-blue",
+      "path": "/fa/checkout",
+      "status": 200,
+      "ok": true,
+      "inspect": {
+        "title": "اطلاعات ارسال | توبا",
+        "palette": "tooba-blue",
+        "themeMode": "LightOnly",
+        "backgroundStyle": "PaletteTint",
+        "colorScheme": "light",
+        "dark": false,
+        "roles": {
+          "page": "rgb(228, 236, 248)",
+          "header": "rgb(255, 255, 255)",
+          "section": "rgb(247, 250, 253)",
+          "card": "rgb(255, 255, 255)",
+          "footer": "rgb(255, 255, 255)"
+        },
+        "flags": []
+      }
+    },
+    {
+      "id": "payment",
+      "run": "tint-blue",
+      "path": "/fa/payment",
+      "status": 200,
+      "ok": true,
+      "inspect": {
+        "title": "پرداخت | توبا",
+        "palette": "tooba-blue",
+        "themeMode": "LightOnly",
+        "backgroundStyle": "PaletteTint",
+        "colorScheme": "light",
+        "dark": false,
+        "roles": {
+          "page": "rgb(228, 236, 248)",
+          "header": "rgb(255, 255, 255)",
+          "footer": "rgb(255, 255, 255)"
+        },
+        "flags": []
+      }
+    },
+    {
+      "id": "payment-result",
+      "run": "tint-blue",
+      "path": "/fa/payment/result",
+      "status": 200,
+      "ok": true,
+      "inspect": {
+        "title": "نتیجه پرداخت | توبا",
+        "palette": "tooba-blue",
+        "themeMode": "LightOnly",
+        "backgroundStyle": "PaletteTint",
+        "colorScheme": "light",
+        "dark": false,
+        "roles": {
+          "page": "rgb(228, 236, 248)",
+          "header": "rgb(255, 255, 255)",
+          "card": "rgb(255, 255, 255)",
+          "footer": "rgb(255, 255, 255)"
+        },
+        "flags": []
+      }
+    },
+    {
+      "id": "order-confirmation",
+      "run": "tint-blue",
+      "path": "/fa/order/confirmation",
+      "status": 200,
+      "ok": true,
+      "inspect": {
+        "title": "تأیید سفارش | توبا",
+        "palette": "tooba-blue",
+        "themeMode": "LightOnly",
+        "backgroundStyle": "PaletteTint",
+        "colorScheme": "light",
+        "dark": false,
+        "roles": {
+          "page": "rgb(228, 236, 248)",
+          "header": "rgb(255, 255, 255)",
+          "footer": "rgb(255, 255, 255)"
+        },
+        "flags": []
+      }
+    },
+    {
+      "id": "login",
+      "run": "tint-blue",
+      "path": "/fa/login",
+      "status": 200,
+      "ok": true,
+      "inspect": {
+        "title": "ورود | توبا",
+        "palette": "tooba-blue",
+        "themeMode": "LightOnly",
+        "backgroundStyle": "PaletteTint",
+        "colorScheme": "light",
+        "dark": false,
+        "roles": {
+          "page": "rgb(228, 236, 248)",
+          "header": "rgb(255, 255, 255)",
+          "section": "rgb(247, 250, 253)",
+          "elevated": "rgb(255, 255, 255)",
+          "footer": "rgb(255, 255, 255)"
+        },
+        "flags": []
+      }
+    },
+    {
+      "id": "customer-dashboard",
+      "run": "tint-blue",
+      "path": "/customer-panel",
+      "status": 200,
+      "ok": true,
+      "inspect": {
+        "title": "پنل مشتری توبا",
+        "palette": "tooba-blue",
+        "themeMode": "LightOnly",
+        "backgroundStyle": "PaletteTint",
+        "colorScheme": "light",
+        "dark": false,
+        "roles": {
+          "page": "rgb(228, 236, 248)",
+          "header": "rgb(255, 255, 255)",
+          "elevated": "rgb(255, 255, 255)",
+          "section": "rgb(247, 250, 253)"
+        },
+        "flags": []
+      }
+    },
+    {
+      "id": "customer-orders",
+      "run": "tint-blue",
+      "path": "/customer-panel/orders",
+      "status": 200,
+      "ok": true,
+      "inspect": {
+        "title": "پنل مشتری توبا",
+        "palette": "tooba-blue",
+        "themeMode": "LightOnly",
+        "backgroundStyle": "PaletteTint",
+        "colorScheme": "light",
+        "dark": false,
+        "roles": {
+          "page": "rgb(228, 236, 248)",
+          "header": "rgb(255, 255, 255)",
+          "elevated": "rgb(255, 255, 255)",
+          "section": "rgb(247, 250, 253)"
+        },
+        "flags": []
+      }
+    },
+    {
+      "id": "customer-order-detail",
+      "run": "tint-blue",
+      "path": "/customer-panel/orders/01a09b8b-3e28-7000-94ed-e37517c5cbf5",
+      "status": 200,
+      "ok": true,
+      "inspect": {
+        "title": "پنل مشتری توبا",
+        "palette": "tooba-blue",
+        "themeMode": "LightOnly",
+        "backgroundStyle": "PaletteTint",
+        "colorScheme": "light",
+        "dark": false,
+        "roles": {
+          "page": "rgb(228, 236, 248)",
+          "header": "rgb(255, 255, 255)",
+          "elevated": "rgb(255, 255, 255)",
+          "section": "rgb(247, 250, 253)"
+        },
+        "flags": []
+      }
+    },
+    {
+      "id": "customer-wishlist",
+      "run": "tint-blue",
+      "path": "/customer-panel/wishlist",
+      "status": 200,
+      "ok": true,
+      "inspect": {
+        "title": "پنل مشتری توبا",
+        "palette": "tooba-blue",
+        "themeMode": "LightOnly",
+        "backgroundStyle": "PaletteTint",
+        "colorScheme": "light",
+        "dark": false,
+        "roles": {
+          "page": "rgb(228, 236, 248)",
+          "header": "rgb(255, 255, 255)",
+          "elevated": "rgb(255, 255, 255)",
+          "section": "rgb(247, 250, 253)"
+        },
+        "flags": []
+      }
+    },
+    {
+      "id": "customer-addresses",
+      "run": "tint-blue",
+      "path": "/customer-panel/addresses",
+      "status": 200,
+      "ok": true,
+      "inspect": {
+        "title": "پنل مشتری توبا",
+        "palette": "tooba-blue",
+        "themeMode": "LightOnly",
+        "backgroundStyle": "PaletteTint",
+        "colorScheme": "light",
+        "dark": false,
+        "roles": {
+          "page": "rgb(228, 236, 248)",
+          "header": "rgb(255, 255, 255)",
+          "elevated": "rgb(255, 255, 255)",
+          "section": "rgb(247, 250, 253)"
+        },
+        "flags": []
+      }
+    },
+    {
+      "id": "customer-notifications",
+      "run": "tint-blue",
+      "path": "/customer-panel/notifications",
+      "status": 200,
+      "ok": true,
+      "inspect": {
+        "title": "پنل مشتری توبا",
+        "palette": "tooba-blue",
+        "themeMode": "LightOnly",
+        "backgroundStyle": "PaletteTint",
+        "colorScheme": "light",
+        "dark": false,
+        "roles": {
+          "page": "rgb(228, 236, 248)",
+          "header": "rgb(255, 255, 255)",
+          "elevated": "rgb(255, 255, 255)",
+          "section": "rgb(247, 250, 253)"
+        },
+        "flags": []
+      }
+    },
+    {
+      "id": "customer-tickets",
+      "run": "tint-blue",
+      "path": "/customer-panel/tickets",
+      "status": 200,
+      "ok": true,
+      "inspect": {
+        "title": "پنل مشتری توبا",
+        "palette": "tooba-blue",
+        "themeMode": "LightOnly",
+        "backgroundStyle": "PaletteTint",
+        "colorScheme": "light",
+        "dark": false,
+        "roles": {
+          "page": "rgb(228, 236, 248)",
+          "header": "rgb(255, 255, 255)",
+          "elevated": "rgb(255, 255, 255)",
+          "section": "rgb(247, 250, 253)"
+        },
+        "flags": []
+      }
+    },
+    {
+      "id": "customer-tickets-new",
+      "run": "tint-blue",
+      "path": "/customer-panel/tickets/new",
+      "status": 200,
+      "ok": true,
+      "inspect": {
+        "title": "پنل مشتری توبا",
+        "palette": "tooba-blue",
+        "themeMode": "LightOnly",
+        "backgroundStyle": "PaletteTint",
+        "colorScheme": "light",
+        "dark": false,
+        "roles": {
+          "page": "rgb(228, 236, 248)",
+          "header": "rgb(255, 255, 255)",
+          "elevated": "rgb(255, 255, 255)",
+          "section": "rgb(247, 250, 253)"
+        },
+        "flags": []
+      }
+    },
+    {
+      "id": "customer-wallet",
+      "run": "tint-blue",
+      "path": "/customer-panel/wallet",
+      "status": 200,
+      "ok": true,
+      "inspect": {
+        "title": "پنل مشتری توبا",
+        "palette": "tooba-blue",
+        "themeMode": "LightOnly",
+        "backgroundStyle": "PaletteTint",
+        "colorScheme": "light",
+        "dark": false,
+        "roles": {
+          "page": "rgb(228, 236, 248)",
+          "header": "rgb(255, 255, 255)",
+          "elevated": "rgb(255, 255, 255)",
+          "section": "rgb(247, 250, 253)"
+        },
+        "flags": []
+      }
+    },
+    {
+      "id": "customer-gift-cards",
+      "run": "tint-blue",
+      "path": "/customer-panel/gift-cards",
+      "status": 200,
+      "ok": true,
+      "inspect": {
+        "title": "پنل مشتری توبا",
+        "palette": "tooba-blue",
+        "themeMode": "LightOnly",
+        "backgroundStyle": "PaletteTint",
+        "colorScheme": "light",
+        "dark": false,
+        "roles": {
+          "page": "rgb(228, 236, 248)",
+          "header": "rgb(255, 255, 255)",
+          "elevated": "rgb(255, 255, 255)",
+          "section": "rgb(247, 250, 253)"
+        },
+        "flags": []
+      }
+    },
+    {
+      "id": "customer-profile",
+      "run": "tint-blue",
+      "path": "/customer-panel/profile",
+      "status": 200,
+      "ok": true,
+      "inspect": {
+        "title": "پنل مشتری توبا",
+        "palette": "tooba-blue",
+        "themeMode": "LightOnly",
+        "backgroundStyle": "PaletteTint",
+        "colorScheme": "light",
+        "dark": false,
+        "roles": {
+          "page": "rgb(228, 236, 248)",
+          "header": "rgb(255, 255, 255)",
+          "elevated": "rgb(255, 255, 255)",
+          "section": "rgb(247, 250, 253)"
+        },
+        "flags": []
+      }
+    },
+    {
+      "id": "customer-settings",
+      "run": "tint-blue",
+      "path": "/customer-panel/settings",
+      "status": 200,
+      "ok": true,
+      "inspect": {
+        "title": "پنل مشتری توبا",
+        "palette": "tooba-blue",
+        "themeMode": "LightOnly",
+        "backgroundStyle": "PaletteTint",
+        "colorScheme": "light",
+        "dark": false,
+        "roles": {
+          "page": "rgb(228, 236, 248)",
+          "header": "rgb(255, 255, 255)",
+          "elevated": "rgb(255, 255, 255)",
+          "section": "rgb(247, 250, 253)"
+        },
+        "flags": []
+      }
+    },
+    {
+      "id": "customer-wallet-checkout-dev",
+      "run": "tint-blue",
+      "path": "/customer-panel/dev/wallet-checkout",
+      "status": 200,
+      "ok": true,
+      "inspect": {
+        "title": "پنل مشتری توبا",
+        "palette": "tooba-blue",
+        "themeMode": "LightOnly",
+        "backgroundStyle": "PaletteTint",
+        "colorScheme": "light",
+        "dark": false,
+        "roles": {
+          "page": "rgb(228, 236, 248)",
+          "header": "rgb(255, 255, 255)",
+          "elevated": "rgb(255, 255, 255)",
+          "section": "rgb(247, 250, 253)"
+        },
+        "flags": []
+      }
+    },
+    {
+      "id": "blogs",
+      "run": "tint-blue",
+      "path": "/fa/blogs",
+      "status": 200,
+      "ok": true,
+      "inspect": {
+        "title": "مجله توبا | مقالات و راهنماها",
+        "palette": "tooba-blue",
+        "themeMode": "LightOnly",
+        "backgroundStyle": "PaletteTint",
+        "colorScheme": "light",
+        "dark": false,
+        "roles": {
+          "page": "rgb(228, 236, 248)",
+          "header": "rgb(255, 255, 255)",
+          "section": "rgb(247, 250, 253)",
+          "footer": "rgb(255, 255, 255)"
+        },
+        "flags": []
+      }
+    },
+    {
+      "id": "blog-detail",
+      "run": "tint-blue",
+      "path": "/fa/blogs/t016-sched-20260904082033",
+      "status": 200,
+      "ok": true,
+      "inspect": {
+        "title": "sched",
+        "palette": "tooba-blue",
+        "themeMode": "LightOnly",
+        "backgroundStyle": "PaletteTint",
+        "colorScheme": "light",
+        "dark": false,
+        "roles": {
+          "page": "rgb(228, 236, 248)",
+          "header": "rgb(255, 255, 255)",
+          "section": "rgb(247, 250, 253)",
+          "card": "rgb(255, 255, 255)",
+          "footer": "rgb(255, 255, 255)"
+        },
+        "flags": []
+      }
+    },
+    {
+      "id": "blog-category",
+      "run": "tint-blue",
+      "path": "/fa/blogs/category/t016-cat-20260904082033",
+      "status": 200,
+      "ok": true,
+      "inspect": {
+        "title": "T016 Cat 20260904082033",
+        "palette": "tooba-blue",
+        "themeMode": "LightOnly",
+        "backgroundStyle": "PaletteTint",
+        "colorScheme": "light",
+        "dark": false,
+        "roles": {
+          "page": "rgb(228, 236, 248)",
+          "header": "rgb(255, 255, 255)",
+          "section": "rgb(247, 250, 253)",
+          "footer": "rgb(255, 255, 255)"
+        },
+        "flags": []
+      }
+    },
+    {
+      "id": "blog-author",
+      "run": "tint-blue",
+      "path": "/fa/blogs/author/t016-author-20260904082033",
+      "status": 200,
+      "ok": true,
+      "inspect": {
+        "title": "T016 Smoke Author 20260904082033",
+        "palette": "tooba-blue",
+        "themeMode": "LightOnly",
+        "backgroundStyle": "PaletteTint",
+        "colorScheme": "light",
+        "dark": false,
+        "roles": {
+          "page": "rgb(228, 236, 248)",
+          "header": "rgb(255, 255, 255)",
+          "section": "rgb(247, 250, 253)",
+          "footer": "rgb(255, 255, 255)"
+        },
+        "flags": []
+      }
+    },
+    {
+      "id": "home",
+      "run": "tint-wine",
+      "path": "/fa",
+      "status": 200,
+      "ok": true,
+      "inspect": {
+        "title": "فروشگاه توبا | خانه",
+        "palette": "wine-burgundy",
+        "themeMode": "LightOnly",
+        "backgroundStyle": "PaletteTint",
+        "colorScheme": "light",
+        "dark": false,
+        "roles": {
+          "page": "rgb(244, 232, 236)",
+          "header": "rgb(255, 255, 255)",
+          "accent": "rgb(222, 192, 204)",
+          "section": "rgb(252, 248, 249)",
+          "alternate": "rgb(236, 218, 224)",
+          "footer": "rgb(255, 255, 255)"
+        },
+        "flags": []
+      }
+    },
+    {
+      "id": "pdp",
+      "run": "tint-wine",
+      "path": "/fa/products/demo-prod-fashion-men-men-pants-1",
+      "status": 200,
+      "ok": true,
+      "inspect": {
+        "title": "Nike Men's pants Series 1 | Men's pants",
+        "palette": "wine-burgundy",
+        "themeMode": "LightOnly",
+        "backgroundStyle": "PaletteTint",
+        "colorScheme": "light",
+        "dark": false,
+        "roles": {
+          "page": "rgb(244, 232, 236)",
+          "header": "rgb(255, 255, 255)",
+          "section": "rgb(252, 248, 249)",
+          "card": "rgb(255, 255, 255)",
+          "alternate": "rgb(236, 218, 224)",
+          "footer": "rgb(255, 255, 255)"
+        },
+        "flags": []
+      }
+    },
+    {
+      "id": "shipping",
+      "run": "tint-wine",
+      "path": "/fa/shipping",
+      "status": 200,
+      "ok": true,
+      "inspect": {
+        "title": "اطلاعات ارسال | توبا",
+        "palette": "wine-burgundy",
+        "themeMode": "LightOnly",
+        "backgroundStyle": "PaletteTint",
+        "colorScheme": "light",
+        "dark": false,
+        "roles": {
+          "page": "rgb(244, 232, 236)",
+          "header": "rgb(255, 255, 255)",
+          "section": "rgb(252, 248, 249)",
+          "card": "rgb(255, 255, 255)",
+          "footer": "rgb(255, 255, 255)"
+        },
+        "flags": []
+      }
+    },
+    {
+      "id": "login",
+      "run": "tint-wine",
+      "path": "/fa/login",
+      "status": 200,
+      "ok": true,
+      "inspect": {
+        "title": "ورود | توبا",
+        "palette": "wine-burgundy",
+        "themeMode": "LightOnly",
+        "backgroundStyle": "PaletteTint",
+        "colorScheme": "light",
+        "dark": false,
+        "roles": {
+          "page": "rgb(244, 232, 236)",
+          "header": "rgb(255, 255, 255)",
+          "section": "rgb(252, 248, 249)",
+          "elevated": "rgb(255, 255, 255)",
+          "footer": "rgb(255, 255, 255)"
+        },
+        "flags": []
+      }
+    },
+    {
+      "id": "customer-dashboard",
+      "run": "tint-wine",
+      "path": "/customer-panel",
+      "status": 200,
+      "ok": true,
+      "inspect": {
+        "title": "پنل مشتری توبا",
+        "palette": "wine-burgundy",
+        "themeMode": "LightOnly",
+        "backgroundStyle": "PaletteTint",
+        "colorScheme": "light",
+        "dark": false,
+        "roles": {
+          "page": "rgb(244, 232, 236)",
+          "header": "rgb(255, 255, 255)",
+          "elevated": "rgb(255, 255, 255)",
+          "section": "rgb(252, 248, 249)"
+        },
+        "flags": []
+      }
+    },
+    {
+      "id": "home",
+      "run": "dark-blue",
+      "path": "/fa",
+      "status": 200,
+      "ok": true,
+      "inspect": {
+        "title": "فروشگاه توبا | خانه",
+        "palette": "tooba-blue",
+        "themeMode": "DarkOnly",
+        "backgroundStyle": "PaletteTint",
+        "colorScheme": "dark",
+        "dark": true,
+        "roles": {
+          "page": "rgb(12, 15, 22)",
+          "header": "rgb(28, 28, 32)",
+          "accent": "rgb(32, 40, 56)",
+          "section": "rgb(22, 26, 36)",
+          "alternate": "rgb(15, 18, 27)",
+          "footer": "rgb(28, 28, 32)"
+        },
+        "flags": []
+      }
+    },
+    {
+      "id": "customer-dashboard",
+      "run": "dark-blue",
+      "path": "/customer-panel",
+      "status": 200,
+      "ok": true,
+      "inspect": {
+        "title": "پنل مشتری توبا",
+        "palette": "tooba-blue",
+        "themeMode": "DarkOnly",
+        "backgroundStyle": "PaletteTint",
+        "colorScheme": "dark",
+        "dark": true,
+        "roles": {
+          "page": "rgb(12, 15, 22)",
+          "header": "rgb(28, 28, 32)",
+          "elevated": "rgb(28, 28, 32)",
+          "section": "rgb(22, 26, 36)"
+        },
+        "flags": []
+      }
+    }
+  ],
+  "heuristic": [],
+  "status500": [],
+  "console": [
+    {
+      "path": "/fa/products",
+      "run": "neutral-blue",
+      "messages": [
+        "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+      ]
+    },
+    {
+      "path": "/fa/category/demo-cat-mobile-tablet",
+      "run": "neutral-blue",
+      "messages": [
+        "Failed to load resource: the server responded with a status of 401 (Unauthorized)",
+        "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+      ]
+    },
+    {
+      "path": "/fa/brands",
+      "run": "neutral-blue",
+      "messages": [
+        "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+      ]
+    },
+    {
+      "path": "/fa/brand/demo-brand-adidas",
+      "run": "neutral-blue",
+      "messages": [
+        "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+      ]
+    },
+    {
+      "path": "/fa/seller-profile/962c7b3f972781ad8ef562c4",
+      "run": "neutral-blue",
+      "messages": [
+        "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+      ]
+    },
+    {
+      "path": "/fa/offers",
+      "run": "neutral-blue",
+      "messages": [
+        "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+      ]
+    },
+    {
+      "path": "/fa/sale",
+      "run": "neutral-blue",
+      "messages": [
+        "Failed to load resource: the server responded with a status of 401 (Unauthorized)",
+        "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+      ]
+    },
+    {
+      "path": "/fa/most-viewed",
+      "run": "neutral-blue",
+      "messages": [
+        "Failed to load resource: the server responded with a status of 401 (Unauthorized)",
+        "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+      ]
+    },
+    {
+      "path": "/fa/best-seller",
+      "run": "neutral-blue",
+      "messages": [
+        "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+      ]
+    },
+    {
+      "path": "/fa/trending",
+      "run": "neutral-blue",
+      "messages": [
+        "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+      ]
+    },
+    {
+      "path": "/fa/products/demo-prod-fashion-men-men-pants-1",
+      "run": "neutral-blue",
+      "messages": [
+        "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+      ]
+    },
+    {
+      "path": "/fa/landing-campaign",
+      "run": "neutral-blue",
+      "messages": [
+        "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+      ]
+    },
+    {
+      "path": "/fa/cart",
+      "run": "neutral-blue",
+      "messages": [
+        "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+      ]
+    },
+    {
+      "path": "/fa/shipping",
+      "run": "neutral-blue",
+      "messages": [
+        "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+      ]
+    },
+    {
+      "path": "/fa/checkout",
+      "run": "neutral-blue",
+      "messages": [
+        "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+      ]
+    },
+    {
+      "path": "/fa/payment",
+      "run": "neutral-blue",
+      "messages": [
+        "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+      ]
+    },
+    {
+      "path": "/fa/payment/result",
+      "run": "neutral-blue",
+      "messages": [
+        "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+      ]
+    },
+    {
+      "path": "/fa/order/confirmation",
+      "run": "neutral-blue",
+      "messages": [
+        "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+      ]
+    },
+    {
+      "path": "/fa/login",
+      "run": "neutral-blue",
+      "messages": [
+        "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+      ]
+    },
+    {
+      "path": "/fa/checkout",
+      "run": "tint-blue",
+      "messages": [
+        "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+      ]
+    }
+  ],
+  "hydration": [],
+  "appearanceGets": 0,
+  "missingSamples": [
+    {
+      "id": "customer-ticket-detail",
+      "path": "/customer-panel/tickets/{id}",
+      "notes": "Crawled if a ticket id exists; otherwise layout-static",
+      "staticCoverage": "layout-static"
+    },
+    {
+      "id": "customer-ticket-detail",
+      "path": "/customer-panel/tickets/{id}",
+      "notes": "Crawled if a ticket id exists; otherwise layout-static",
+      "staticCoverage": "layout-static"
+    }
+  ],
+  "files": {
+    "home-r3.png": {
+      "bytes": 343826
+    },
+    "plp-r3.png": {
+      "bytes": 192835
+    },
+    "pdp-r3.png": {
+      "bytes": 231726
+    },
+    "landing-r3.png": {
+      "bytes": 460228
+    },
+    "cart-r3.png": {
+      "bytes": 162815
+    },
+    "checkout-r3.png": {
+      "bytes": 159616
+    },
+    "login-r3.png": {
+      "bytes": 116995
+    },
+    "customer-dashboard-r3.png": {
+      "bytes": 171364
+    },
+    "customer-orders-r3.png": {
+      "bytes": 40486
+    },
+    "customer-order-detail-r3.png": {
+      "bytes": 80173
+    },
+    "content-r3.png": {
+      "bytes": 133003
+    },
+    "dark-home-r3.png": {
+      "bytes": 341121
+    },
+    "dark-customer-r3.png": {
+      "bytes": 167103
+    }
+  },
+  "restored": {
+    "status": 200,
+    "paletteKey": "tooba-blue",
+    "themeMode": "LightOnly",
+    "backgroundStyle": "Neutral",
+    "productCardSkin": "classic"
+  }
+}

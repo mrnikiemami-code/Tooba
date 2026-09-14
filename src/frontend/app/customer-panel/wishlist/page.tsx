@@ -32,13 +32,13 @@ export default function CustomerWishlistPage() {
     return () => window.removeEventListener(WISHLIST_CHANGED_EVENT, refresh);
   }, []);
 
-  if (page === undefined) return <div className="rounded-2xl border bg-white p-8 text-center text-gray-500">در حال دریافت علاقه‌مندی‌ها...</div>;
-  if (!page) return <div role="alert" className="rounded-2xl border border-red-100 bg-white p-8 text-center text-red-600">{error}</div>;
+  if (page === undefined) return <div className="rounded-2xl border bg-surface p-8 text-center text-gray-500">در حال دریافت علاقه‌مندی‌ها...</div>;
+  if (!page) return <div role="alert" className="rounded-2xl border border-red-100 bg-surface p-8 text-center text-red-600">{error}</div>;
   const empty = wishlistEmptyMessage(page.items.length);
 
   return (
     <div className="space-y-5" data-storefront-surface-role="section">
-      <header className="flex items-center gap-3 rounded-2xl border border-gray-100 bg-white p-5">
+      <header className="flex items-center gap-3 rounded-2xl border border-gray-100 bg-surface p-5">
         <span className="flex size-11 items-center justify-center rounded-xl bg-rose-50 text-rose-600"><Heart className="size-5" /></span>
         <div>
           <h1 className="text-xl font-black">علاقه‌مندی‌های من</h1>
@@ -46,7 +46,7 @@ export default function CustomerWishlistPage() {
         </div>
       </header>
       {empty ? (
-        <section className="rounded-2xl border border-gray-100 bg-white px-5 py-14 text-center">
+        <section className="rounded-2xl border border-gray-100 bg-surface px-5 py-14 text-center">
           <Heart className="mx-auto size-12 text-gray-200" />
           <p className="mt-4 font-bold text-gray-700">{empty}</p>
           <Link href="/products" className="mt-5 inline-flex rounded-xl bg-primary px-5 py-2.5 text-sm font-bold text-white">مشاهده محصولات</Link>

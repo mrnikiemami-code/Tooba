@@ -81,7 +81,7 @@ export function CustomerPanelShell({ children }: { children: ReactNode }) {
 
   return (
     <div className="min-h-screen bg-page flex flex-col overflow-x-hidden" dir="rtl" data-testid="customer-panel-shell" data-storefront-surface-role="page">
-      <header className="sticky top-0 z-40 bg-white border-b border-gray-200 h-[65px] flex items-center" data-testid="customer-panel-header">
+      <header className="sticky top-0 z-40 bg-surface border-b border-gray-200 h-[65px] flex items-center" data-testid="customer-panel-header" data-storefront-surface-role="header">
         <div className="flex items-center justify-between w-full px-4 lg:px-6">
           <div className="flex items-center gap-3">
             <button
@@ -127,10 +127,11 @@ export function CustomerPanelShell({ children }: { children: ReactNode }) {
 
       <div className="flex flex-1 relative">
         <aside
-          className={`hidden lg:block bg-white border-l border-gray-200 shrink-0 transition-all duration-300 ease-in-out sticky top-[65px] h-[calc(100vh-65px)] overflow-y-auto ${
+          className={`hidden lg:block bg-surface border-l border-gray-200 shrink-0 transition-all duration-300 ease-in-out sticky top-[65px] h-[calc(100vh-65px)] overflow-y-auto ${
             sidebarOpen ? "w-64 translate-x-0" : "w-0 -translate-x-full opacity-0"
           }`}
           data-testid="customer-panel-sidebar"
+          data-storefront-surface-role="elevated"
         >
           <nav className="p-4 space-y-1 min-w-[250px]" aria-label="منوی مشتری" data-testid="customer-panel-nav-live-only">
             {visibleMenuItems.map((item) => (
@@ -139,7 +140,7 @@ export function CustomerPanelShell({ children }: { children: ReactNode }) {
           </nav>
         </aside>
 
-        <main className="flex-1 min-w-0 w-full p-4 md:p-6 lg:p-8" data-testid="customer-panel-main">
+        <main className="flex-1 min-w-0 w-full p-4 md:p-6 lg:p-8 bg-section-surface" data-testid="customer-panel-main" data-storefront-surface-role="section">
           {children}
         </main>
       </div>
@@ -147,7 +148,7 @@ export function CustomerPanelShell({ children }: { children: ReactNode }) {
       {mobileOpen ? (
         <div className="lg:hidden fixed inset-0 z-50" role="dialog" aria-modal="true" data-testid="customer-panel-drawer">
           <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setMobileOpen(false)} />
-          <aside className="absolute right-0 top-0 h-full w-[280px] bg-white shadow-2xl flex flex-col">
+          <aside className="absolute right-0 top-0 h-full w-[280px] bg-surface-elevated shadow-2xl flex flex-col" data-storefront-surface-role="overlay">
             <div className="flex items-center justify-between p-4 border-b border-gray-200 shrink-0">
               <div className="flex items-center gap-2">
                 <div className="w-8 h-8 rounded-xl bg-primary flex items-center justify-center">

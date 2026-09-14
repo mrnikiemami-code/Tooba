@@ -150,7 +150,7 @@ export function StorefrontShopeivaCheckout() {
   const itemCount = page.sellerOrders.reduce((sum, order) => sum + order.lines.reduce((s, line) => s + line.quantity, 0), 0);
 
   return (
-    <form onSubmit={(event) => void onSubmit(event)} className="pb-10" data-testid="checkout-page" data-storefront-surface-role="section">
+    <form onSubmit={(event) => void onSubmit(event)} className="pb-10 bg-section-surface" data-testid="checkout-page" data-storefront-surface-role="section">
       <nav className="text-xs text-gray-500 pt-4 mb-2 flex flex-wrap gap-2" aria-label="مسیر صفحه" data-testid="checkout-breadcrumb">
         <Link href="/cart" className="hover:text-primary">
           سبد خرید
@@ -178,7 +178,7 @@ export function StorefrontShopeivaCheckout() {
             ) : null}
 
             {savedAddresses ? (
-              <section className="bg-white rounded-2xl border border-gray-200 p-4 md:p-5 shadow-sm" data-testid="checkout-address-picker">
+              <section className="bg-surface rounded-2xl border border-gray-200 p-4 md:p-5 shadow-sm" data-testid="checkout-address-picker" data-storefront-surface-role="card">
                 <h2 className="text-sm md:text-base font-black flex items-center gap-2 mb-3">
                   <Home className="w-4 h-4 text-primary" />
                   انتخاب آدرس
@@ -247,7 +247,7 @@ export function StorefrontShopeivaCheckout() {
               </section>
             ) : null}
 
-            <section className="bg-white rounded-2xl border border-gray-200 p-4 md:p-5 shadow-sm space-y-3" data-testid="checkout-recipient">
+            <section className="bg-surface rounded-2xl border border-gray-200 p-4 md:p-5 shadow-sm space-y-3" data-testid="checkout-recipient">
               <h2 className="text-base font-black flex items-center gap-2">
                 <MapPin className="w-4 h-4 text-primary" />
                 اطلاعات گیرنده
@@ -275,7 +275,7 @@ export function StorefrontShopeivaCheckout() {
               </p>
             </section>
 
-            <section className="bg-white rounded-2xl border border-gray-200 p-4 md:p-5 shadow-sm" data-testid="checkout-shipping-method">
+            <section className="bg-surface rounded-2xl border border-gray-200 p-4 md:p-5 shadow-sm" data-testid="checkout-shipping-method">
               <h2 className="text-base font-black flex items-center gap-2 mb-3">
                 <Truck className="w-4 h-4 text-primary" />
                 روش ارسال
@@ -286,7 +286,7 @@ export function StorefrontShopeivaCheckout() {
               </div>
             </section>
 
-            <section className="bg-white rounded-2xl border border-gray-200 p-4 md:p-5 shadow-sm" data-testid="checkout-payment">
+            <section className="bg-surface rounded-2xl border border-gray-200 p-4 md:p-5 shadow-sm" data-testid="checkout-payment">
               <h2 className="text-base font-black flex items-center gap-2 mb-3">
                 <CreditCard className="w-4 h-4 text-primary" />
                 پرداخت
@@ -318,7 +318,7 @@ export function StorefrontShopeivaCheckout() {
 
           <aside className="lg:col-span-1">
             <div className="lg:sticky lg:top-24" data-testid="checkout-summary">
-              <div className="bg-white rounded-2xl border border-gray-200 p-4 md:p-5 shadow-md">
+              <div className="bg-surface-elevated rounded-2xl border border-gray-200 p-4 md:p-5 shadow-md" data-storefront-surface-role="elevated">
                 <h2 className="text-base font-black mb-4 flex items-center gap-2">
                   <CreditCard className="w-4 h-4 text-primary" />
                   خلاصه سفارش
@@ -389,7 +389,7 @@ function CheckoutHero({
   subtitle: string;
 }) {
   return (
-    <section className="w-full" data-testid="checkout-hero">
+    <section className="w-full bg-section-surface" data-testid="checkout-hero" data-storefront-surface-role="section">
       <div className="relative overflow-hidden rounded-2xl md:rounded-3xl bg-gradient-to-l from-primary to-primary-strong min-h-[200px] md:min-h-[220px]">
         <div className="absolute inset-0 opacity-[0.08]">
           <div className="absolute -top-20 -right-20 w-56 h-56 rounded-full bg-white" />
@@ -443,7 +443,7 @@ function CheckoutHero({
       </div>
 
       <div className="grid grid-cols-3 gap-1.5 md:gap-4 mb-2">
-        <div className="flex items-center gap-1 md:gap-3 p-1.5 md:p-5 rounded-2xl bg-white border border-gray-200 shadow-lg">
+        <div className="flex items-center gap-1 md:gap-3 p-1.5 md:p-5 rounded-2xl bg-surface border border-gray-200 shadow-lg" data-storefront-surface-role="card">
           <div className="w-6 h-6 md:w-12 md:h-12 rounded-lg md:rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
             <ShoppingBag className="w-3 h-3 md:w-5 md:h-5 text-primary" />
           </div>
@@ -452,7 +452,7 @@ function CheckoutHero({
             <p className="text-[7px] md:text-xs text-gray-500 truncate">تعداد کالا</p>
           </div>
         </div>
-        <div className="flex items-center gap-1 md:gap-3 p-1.5 md:p-5 rounded-2xl bg-white border border-gray-200 shadow-lg">
+        <div className="flex items-center gap-1 md:gap-3 p-1.5 md:p-5 rounded-2xl bg-surface border border-gray-200 shadow-lg" data-storefront-surface-role="card">
           <div className="w-6 h-6 md:w-12 md:h-12 rounded-lg md:rounded-xl bg-emerald-50 flex items-center justify-center shrink-0">
             <CreditCard className="w-3 h-3 md:w-5 md:h-5 text-emerald-500" />
           </div>
@@ -461,7 +461,7 @@ function CheckoutHero({
             <p className="text-[7px] md:text-xs text-gray-500 truncate">قابل پرداخت</p>
           </div>
         </div>
-        <div className="flex items-center gap-1 md:gap-3 p-1.5 md:p-5 rounded-2xl bg-white border border-gray-200 shadow-lg">
+        <div className="flex items-center gap-1 md:gap-3 p-1.5 md:p-5 rounded-2xl bg-surface border border-gray-200 shadow-lg" data-storefront-surface-role="card">
           <div className="w-6 h-6 md:w-12 md:h-12 rounded-lg md:rounded-xl bg-amber-50 flex items-center justify-center shrink-0">
             <ShieldCheck className="w-3 h-3 md:w-5 md:h-5 text-amber-500" />
           </div>

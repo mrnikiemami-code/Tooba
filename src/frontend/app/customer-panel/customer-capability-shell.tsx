@@ -16,7 +16,7 @@ export function CustomerCapabilityShell({
   icon: ReactNode;
 }) {
   return (
-    <section className="bg-white rounded-2xl border border-gray-200 shadow-sm min-h-[420px]" data-testid="customer-capability-unavailable">
+    <section className="bg-surface rounded-2xl border border-gray-200 shadow-sm min-h-[420px]" data-testid="customer-capability-unavailable" data-storefront-surface-role="card">
       <div className="px-5 py-4 border-b border-gray-100 flex items-center gap-3">
         <span className="w-10 h-10 bg-primary/10 text-primary rounded-xl flex items-center justify-center">{icon}</span>
         <div>

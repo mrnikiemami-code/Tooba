@@ -210,7 +210,7 @@ export function StorefrontShopeivaListing({
 
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
           <aside className="hidden lg:block lg:col-span-1">
-            <div className="bg-white rounded-2xl border border-gray-200 p-4 sticky top-24">{filterPanel}</div>
+            <div className="bg-surface rounded-2xl border border-gray-200 p-4 sticky top-24" data-storefront-surface-role="card">{filterPanel}</div>
           </aside>
 
           <section className="lg:col-span-3 space-y-4">
@@ -241,7 +241,7 @@ export function StorefrontShopeivaListing({
             )}
 
             <div
-              className="bg-white rounded-2xl border border-gray-200 p-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3"
+              className="bg-surface rounded-2xl border border-gray-200 p-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3"
               data-testid="listing-sort-toolbar"
             >
               <div className="flex items-center gap-2 flex-wrap">
@@ -353,7 +353,7 @@ export function StorefrontShopeivaListing({
       {mobileFiltersOpen ? (
         <div className="fixed inset-0 z-[60] lg:hidden" data-testid="listing-mobile-filter-drawer">
           <button type="button" className="absolute inset-0 bg-black/50" aria-label="بستن فیلترها" onClick={() => setMobileFiltersOpen(false)} />
-          <div className="absolute inset-y-0 right-0 w-[85%] max-w-sm bg-white shadow-2xl p-4 overflow-y-auto">
+          <div className="absolute inset-y-0 right-0 w-[85%] max-w-sm bg-surface-elevated shadow-2xl p-4 overflow-y-auto" data-storefront-surface-role="overlay">
             <div className="flex items-center justify-between mb-4">
               <strong className="text-sm">فیلترها</strong>
               <button type="button" className="w-9 h-9 rounded-full bg-gray-100 flex items-center justify-center" onClick={() => setMobileFiltersOpen(false)} aria-label="بستن">

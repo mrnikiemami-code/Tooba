@@ -136,8 +136,8 @@ export function StorefrontCustomerLogin() {
   }
 
   return (
-    <section className="max-w-md mx-auto px-4 py-10 md:py-16" data-testid="storefront-login-page" dir={locale === "en" ? "ltr" : "rtl"}>
-      <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-5 md:p-7">
+    <section className="max-w-md mx-auto px-4 py-10 md:py-16" data-testid="storefront-login-page" data-storefront-surface-role="section" dir={locale === "en" ? "ltr" : "rtl"}>
+      <div className="bg-surface-elevated rounded-2xl border border-gray-200 shadow-sm p-5 md:p-7" data-storefront-surface-role="elevated">
         <div className="flex items-center gap-2 mb-2">
           <Smartphone className="w-5 h-5 text-[#2563EB]" />
           <h1 className="text-lg font-black text-gray-900">{copy.title}</h1>
@@ -160,7 +160,7 @@ export function StorefrontCustomerLogin() {
               autoComplete="tel"
               value={mobile}
               onChange={(event) => setMobile(event.target.value)}
-              className="w-full px-3.5 py-3 rounded-xl text-sm bg-gray-50 border border-gray-200 outline-none focus:ring-2 focus:ring-[#2563EB]"
+              className="w-full px-3.5 py-3 rounded-xl text-sm bg-surface border border-gray-200 outline-none focus:ring-2 focus:ring-[#2563EB]"
               data-testid="login-mobile-input"
             />
             <button
@@ -189,7 +189,7 @@ export function StorefrontCustomerLogin() {
               autoComplete="one-time-code"
               value={otp}
               onChange={(event) => setOtp(event.target.value)}
-              className="w-full px-3.5 py-3 rounded-xl text-sm bg-gray-50 border border-gray-200 outline-none focus:ring-2 focus:ring-[#2563EB] tracking-[0.3em]"
+              className="w-full px-3.5 py-3 rounded-xl text-sm bg-surface border border-gray-200 outline-none focus:ring-2 focus:ring-[#2563EB] tracking-[0.3em]"
               data-testid="login-otp-input"
             />
             <button

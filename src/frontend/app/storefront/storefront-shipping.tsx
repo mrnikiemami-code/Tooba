@@ -350,7 +350,7 @@ export function StorefrontShopeivaShipping() {
         shippingDaysLabel={toPersianDigits(projection.maxSellerPreparationDays + (selectedMethod?.leadDays ?? 0))}
       />
 
-      <section className="w-full bg-white">
+      <section className="w-full bg-section-surface" data-storefront-surface-role="section">
         <div className="max-w-[1800px] mx-auto px-4 sm:px-6 py-8 md:py-10">
           {error ? (
             <div className="mb-4 bg-red-50 border border-red-100 rounded-xl px-4 py-3" data-testid="shipping-error">
@@ -360,7 +360,7 @@ export function StorefrontShopeivaShipping() {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6">
             <div className="lg:col-span-2 space-y-4">
               {/* Address selection */}
-              <div className="bg-white rounded-2xl border border-gray-200 p-4 md:p-5 shadow-sm" data-testid="shipping-address-section">
+              <div className="bg-surface rounded-2xl border border-gray-200 p-4 md:p-5 shadow-sm" data-storefront-surface-role="card" data-testid="shipping-address-section">
                 <h3 className="text-sm md:text-base font-black text-gray-900 flex items-center gap-2 mb-3">
                   <Home className="w-4 h-4 text-primary" />
                   انتخاب آدرس
@@ -429,7 +429,7 @@ export function StorefrontShopeivaShipping() {
               </div>
 
               {/* Recipient */}
-              <div className="bg-white rounded-2xl border border-gray-200 p-4 md:p-5 shadow-sm" data-testid="shipping-recipient">
+              <div className="bg-surface rounded-2xl border border-gray-200 p-4 md:p-5 shadow-sm" data-storefront-surface-role="card" data-testid="shipping-recipient">
                 <h3 className="text-sm md:text-base font-black text-gray-900 flex items-center gap-2 mb-4">
                   <MapPin className="w-4 h-4 text-primary" />
                   اطلاعات تحویل گیرنده
@@ -534,7 +534,7 @@ export function StorefrontShopeivaShipping() {
               </div>
 
               {/* Methods */}
-              <div className="bg-white rounded-2xl border border-gray-200 p-4 md:p-5 shadow-sm" data-testid="shipping-methods">
+              <div className="bg-surface rounded-2xl border border-gray-200 p-4 md:p-5 shadow-sm" data-storefront-surface-role="card" data-testid="shipping-methods">
                 <h3 className="text-sm md:text-base font-black text-gray-900 flex items-center gap-2 mb-3">
                   <Package className="w-4 h-4 text-primary" />
                   روش ارسال
@@ -589,7 +589,7 @@ export function StorefrontShopeivaShipping() {
               </div>
 
               {/* Delivery */}
-              <div className="bg-white rounded-2xl border border-gray-200 p-4 md:p-5 shadow-sm" data-testid="shipping-delivery">
+              <div className="bg-surface rounded-2xl border border-gray-200 p-4 md:p-5 shadow-sm" data-storefront-surface-role="card" data-testid="shipping-delivery">
                 <h3 className="text-sm md:text-base font-black text-gray-900 flex items-center gap-2 mb-1">
                   <Calendar className="w-4 h-4 text-primary" />
                   زمان تحویل
@@ -682,7 +682,7 @@ export function StorefrontShopeivaShipping() {
               </div>
 
               {/* Notes */}
-              <div className="bg-white rounded-2xl border border-gray-200 p-4 md:p-5 shadow-sm" data-testid="shipping-notes">
+              <div className="bg-surface rounded-2xl border border-gray-200 p-4 md:p-5 shadow-sm" data-storefront-surface-role="card" data-testid="shipping-notes">
                 <h3 className="text-sm md:text-base font-black text-gray-900 flex items-center gap-2 mb-3">
                   <Edit3 className="w-4 h-4 text-primary" />
                   توضیحات سفارش <span className="text-[10px] font-normal text-gray-400">(اختیاری)</span>
@@ -700,7 +700,7 @@ export function StorefrontShopeivaShipping() {
 
             <aside className="lg:col-span-1">
               <div className="lg:sticky lg:top-24 space-y-4">
-                <div className="bg-white rounded-2xl border border-gray-200 p-4 md:p-5 shadow-sm" data-testid="shipping-summary">
+                <div className="bg-surface rounded-2xl border border-gray-200 p-4 md:p-5 shadow-sm" data-storefront-surface-role="card" data-testid="shipping-summary">
                   <h3 className="text-sm md:text-base font-black text-gray-900 flex items-center gap-2 mb-4">
                     <CreditCard className="w-4 h-4 text-primary" />
                     خلاصه سفارش
@@ -762,7 +762,7 @@ export function StorefrontShopeivaShipping() {
 
       {showNewDialog ? (
         <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4" data-testid="shipping-new-dialog">
-          <div className="bg-white rounded-2xl max-w-lg w-full p-5 shadow-xl space-y-3">
+          <div className="bg-surface-elevated rounded-2xl max-w-lg w-full p-5 shadow-xl space-y-3" data-storefront-surface-role="overlay">
             <h4 className="font-black text-gray-900">آدرس جدید</h4>
             <input
               placeholder="نام"
@@ -879,7 +879,7 @@ function ShippingHero({
     { id: 3, label: "پرداخت", icon: CreditCard },
   ];
   return (
-    <section className="w-full bg-white">
+    <section className="w-full bg-section-surface" data-storefront-surface-role="section">
       <div className="max-w-[1800px] mx-auto px-4 sm:px-6 pt-4 md:pt-6">
         <div className="relative overflow-hidden rounded-2xl md:rounded-3xl bg-gradient-to-l from-primary to-primary-strong min-h-[220px] md:min-h-[240px]">
           <div className="relative z-10 flex flex-col items-center justify-center text-center p-6 pt-8 md:p-10 md:pt-12">
@@ -931,7 +931,7 @@ function SummaryCard({
   label: string;
 }) {
   return (
-    <div className="flex items-center gap-1 md:gap-3 p-1.5 md:p-5 rounded-2xl bg-white border border-gray-200 shadow-lg">
+    <div className="flex items-center gap-1 md:gap-3 p-1.5 md:p-5 rounded-2xl bg-surface border border-gray-200 shadow-lg" data-storefront-surface-role="card">
       <div className="w-6 h-6 md:w-12 md:h-12 rounded-lg md:rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
         <Icon className="w-3 h-3 md:w-5 md:h-5 text-primary" />
       </div>

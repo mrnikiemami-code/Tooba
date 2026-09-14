@@ -252,7 +252,7 @@ export function StorefrontShopeivaHeader({
   ];
 
   return (
-    <div className="w-full bg-white border-b border-gray-200 sticky top-0 z-50" data-storefront-header-surface="true">
+    <div className="w-full bg-surface border-b border-gray-200 sticky top-0 z-50" data-storefront-header-surface="true" data-storefront-surface-role="header">
       <div className="bg-primary text-white text-[11px] sm:text-xs">
         <div className="max-w-[1800px] mx-auto px-4 sm:px-6 h-10 flex items-center justify-center gap-3">
           <Sparkles className="w-3.5 h-3.5" />

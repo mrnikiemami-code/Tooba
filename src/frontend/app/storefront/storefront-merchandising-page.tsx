@@ -13,7 +13,7 @@ export async function StorefrontMerchandisingRoute({ kind }: { kind: string }) {
     return (
       <StorefrontShell categories={categories}>
         <div className="py-8">
-          <div className="rounded-2xl border bg-white p-10 text-center">
+          <div className="rounded-2xl border bg-surface p-10 text-center" data-storefront-surface-role="card">
             <h1 className="text-2xl font-black mb-3">{page.title}</h1>
             <p className="text-gray-500">{page.unavailableReason}</p>
             <p className="text-xs text-gray-400 mt-4">تا زمان وجود سیگنال معتبر، رتبه یا کالای ساختگی نمایش داده نمی‌شود.</p>

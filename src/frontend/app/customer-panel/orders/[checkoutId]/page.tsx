@@ -60,11 +60,11 @@ export default function CustomerOrderDetail() {
   }, [page, fulfillmentBySeller]);
 
   if (page === undefined) {
-    return <div className="bg-white rounded-2xl border p-8 text-center text-gray-500">در حال دریافت جزئیات سفارش...</div>;
+    return <div className="bg-surface rounded-2xl border p-8 text-center text-gray-500">در حال دریافت جزئیات سفارش...</div>;
   }
   if (!page) {
     return (
-      <div className="bg-white rounded-2xl border p-8 text-center">
+      <div className="bg-surface rounded-2xl border p-8 text-center">
         <Package className="w-10 h-10 mx-auto text-gray-300 mb-3" />
         <h1 className="font-black">سفارش پیدا نشد</h1>
         <p className="text-sm text-gray-500 mt-2">این سفارش متعلق به نشست جاری نیست یا دیگر در دسترس نیست.</p>
@@ -83,7 +83,7 @@ export default function CustomerOrderDetail() {
         <strong className="truncate">{page.reference}</strong>
       </div>
 
-      <section className="bg-white rounded-2xl border border-gray-100 p-4 md:p-6 shadow-sm">
+      <section className="bg-surface rounded-2xl border border-gray-100 p-4 md:p-6 shadow-sm">
         <div className="flex flex-wrap items-center justify-between gap-3 pb-5 border-b border-gray-100">
           <div>
             <p className="text-xs text-gray-400">شماره سفارش</p>
@@ -188,7 +188,7 @@ export default function CustomerOrderDetail() {
         </div>
       </section>
 
-      <section className="bg-white rounded-2xl border border-gray-100 p-4 md:p-6 shadow-sm grid md:grid-cols-2 gap-5">
+      <section className="bg-surface rounded-2xl border border-gray-100 p-4 md:p-6 shadow-sm grid md:grid-cols-2 gap-5">
         <div className="flex gap-3">
           <MapPin className="w-5 h-5 text-primary shrink-0" />
           <div>

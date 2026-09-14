@@ -28,7 +28,7 @@ Channel: tooba-main
 Last Architect Accepted Task:
 
 ```text
-TB-P10-T016
+TB-P10-T017-R2
 ```
 
 Prior accepted catalog wave:
@@ -50,7 +50,7 @@ TB-P07-T043
 Last Implementation Task:
 
 ```text
-TB-P10-T017-R2
+TB-P10-T017-R3
 ```
 
 Current Issued Task:
@@ -68,6 +68,7 @@ Current Repair Task:
 Implemented Under Review:
 
 ```text
+TB-P10-T017-R3 — Storefront-wide theme coverage (route inventory + shared surfaces + crawler); USER_VISUAL_ACCEPTED=NO
 TB-P10-T017-R2 — PLP/Landing product-card media well height (Tailwind aspect-[4/5] emitted); USER_VISUAL_ACCEPTED=NO
 TB-P10-T017-R1 — PDP first-paint 500 repair (ThemeToggle without ThemeProvider throw); USER_VISUAL_ACCEPTED=NO
 TB-P10-T017 — Final Surface Theme Visual Acceptance Refresh (four-role demo pack across Storefront pages); USER_VISUAL_ACCEPTED=NO

@@ -149,10 +149,10 @@ export default function CustomerAddressesPage() {
   }
 
   if (rows === undefined) {
-    return <div className="rounded-2xl border bg-white p-8 text-center text-gray-500">در حال دریافت آدرس‌ها...</div>;
+    return <div className="rounded-2xl border bg-surface p-8 text-center text-gray-500">در حال دریافت آدرس‌ها...</div>;
   }
   if (rows === null) {
-    return <div role="alert" className="rounded-2xl border border-red-100 bg-white p-8 text-center text-red-600">{error}</div>;
+    return <div role="alert" className="rounded-2xl border border-red-100 bg-surface p-8 text-center text-red-600">{error}</div>;
   }
 
   const empty = addressBookEmptyMessage(rows.length);
@@ -185,7 +185,7 @@ export default function CustomerAddressesPage() {
       {error ? <p className="text-sm text-red-600 bg-red-50 border border-red-100 rounded-xl p-3">{error}</p> : null}
 
       {empty ? (
-        <div className="bg-white rounded-2xl p-8 text-center border border-gray-200">
+        <div className="bg-surface rounded-2xl p-8 text-center border border-gray-200">
           <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-3">
             <MapPin className="w-8 h-8 text-gray-300" />
           </div>
@@ -206,7 +206,7 @@ export default function CustomerAddressesPage() {
             return (
               <article
                 key={addr.addressId}
-                className={`bg-white rounded-2xl overflow-hidden border-2 transition-all ${
+                className={`bg-surface rounded-2xl overflow-hidden border-2 transition-all ${
                   addr.isDefault ? "border-primary shadow-lg shadow-primary/10" : "border-gray-200 hover:border-primary/30 hover:shadow-md"
                 } ${deleting ? "opacity-50" : ""}`}
               >
@@ -274,7 +274,7 @@ export default function CustomerAddressesPage() {
 
       {showForm ? (
         <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-          <div className="bg-white rounded-2xl max-w-lg w-full p-6 border border-gray-200 shadow-2xl max-h-[90vh] overflow-y-auto">
+          <div className="bg-surface rounded-2xl max-w-lg w-full p-6 border border-gray-200 shadow-2xl max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2">
                 <div className="w-8 h-8 rounded-xl bg-primary/10 flex items-center justify-center">

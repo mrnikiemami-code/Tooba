@@ -31,8 +31,8 @@ export function StorefrontShopeivaFooter({ categories }: { categories: Storefron
   ];
 
   return (
-    <footer className="relative mt-10 bg-white border-t border-gray-200" data-storefront-footer-surface="true">
-      <div className="border-b border-gray-200 bg-gray-50/50">
+    <footer className="relative mt-10 bg-surface border-t border-gray-200" data-storefront-footer-surface="true" data-storefront-surface-role="footer">
+      <div className="border-b border-gray-200 bg-section-alternate">
         <div className="max-w-[1800px] mx-auto px-3 sm:px-4 py-4 md:py-5">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
             {features.map((item) => (

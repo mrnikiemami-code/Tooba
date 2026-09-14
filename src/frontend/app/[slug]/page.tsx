@@ -47,7 +47,7 @@ export default async function StoreLandingPageRoute({ params }: Props) {
     loadLandingRenderContext(contentLocale, page),
   ]);
   return (
-    <StorefrontShell categories={home?.categories ?? []}>
+    <StorefrontShell categories={home?.categories ?? []} fullBleed>
       <StorefrontLandingSections page={page} context={context} />
     </StorefrontShell>
   );

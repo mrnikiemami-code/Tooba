@@ -184,7 +184,7 @@ export function BlogsListingClient() {
   }, [items]);
 
   return (
-    <main className="mx-auto max-w-6xl space-y-6 px-3 py-6 md:px-4 bg-section-surface" data-testid="blogs-listing" data-storefront-surface-role="section">
+    <div className="mx-auto max-w-6xl space-y-6 px-3 py-6 md:px-4 bg-section-surface" data-testid="blogs-listing" data-storefront-surface-role="section">
       <div className="flex items-center gap-2">
         <BookOpen className="size-5" style={{ color: ACCENT }} />
         <h1 className="text-xl font-black md:text-2xl">{copy.title}</h1>
@@ -215,6 +215,6 @@ export function BlogsListingClient() {
           <button type="button" disabled={page * 12 >= total} onClick={() => setPage((p) => p + 1)} className="rounded-xl border px-4 py-2 text-sm disabled:opacity-40">{copy.next}</button>
         </div>
       ) : null}
-    </main>
+    </div>
   );
 }

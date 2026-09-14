@@ -45,8 +45,8 @@ export default async function HomePage() {
   ]);
   if (!home) {
     return (
-      <StorefrontShell categories={[]}>
-        <div className="py-16 text-center bg-white rounded-2xl mt-6">
+      <StorefrontShell categories={[]} fullBleed>
+        <div className="py-16 text-center bg-surface rounded-2xl mt-6" data-storefront-surface-role="card">
           فروشگاه زنده در دسترس نیست. Host باید روی {storefrontHostOrigin()} پاسخ بدهد.
         </div>
       </StorefrontShell>
@@ -56,7 +56,7 @@ export default async function HomePage() {
   if (selection?.selectedPage) {
     const context = await loadLandingRenderContext(contentLocale, selection.selectedPage);
     return (
-      <StorefrontShell categories={home.categories} searchCatalog={home.featuredProducts}>
+      <StorefrontShell categories={home.categories} searchCatalog={home.featuredProducts} fullBleed>
         <div data-testid="storefront-custom-home">
           <StorefrontLandingSections page={selection.selectedPage} context={context} />
         </div>
@@ -65,7 +65,7 @@ export default async function HomePage() {
   }
 
   return (
-    <StorefrontShell categories={home.categories} searchCatalog={home.featuredProducts}>
+    <StorefrontShell categories={home.categories} searchCatalog={home.featuredProducts} fullBleed>
       <StorefrontShopeivaHome
         heroTitle={home.heroTitle}
         heroSubtitle={home.heroSubtitle}

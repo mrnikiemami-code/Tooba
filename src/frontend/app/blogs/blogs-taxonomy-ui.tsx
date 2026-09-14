@@ -132,7 +132,7 @@ export function BlogsTaxonomyListingClient({
   const label = kind === "category" ? copy.categoryHeading : copy.authorHeading;
 
   return (
-    <main className="mx-auto max-w-6xl space-y-6 px-3 py-6 md:px-4" data-testid={`blogs-${kind}-listing`}>
+    <div className="mx-auto max-w-6xl space-y-6 px-3 py-6 md:px-4 bg-section-surface" data-testid={`blogs-${kind}-listing`} data-storefront-surface-role="section">
       <Link href="/blogs" className="inline-flex items-center gap-1 text-sm text-primary">
         <BackArrow className="size-4" /> {copy.backToMagazine}
       </Link>
@@ -177,6 +177,6 @@ export function BlogsTaxonomyListingClient({
           </button>
         </div>
       ) : null}
-    </main>
+    </div>
   );
 }

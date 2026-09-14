@@ -206,7 +206,7 @@ function LedgerList({ entries, emptyHint }: { entries: WalletLedgerEntry[]; empt
 
   return (
     <div
-      className="bg-white rounded-2xl border border-gray-200 overflow-hidden"
+      className="bg-surface rounded-2xl border border-gray-200 overflow-hidden"
       data-testid="wallet-ledger-list"
     >
       <div className="p-4 border-b border-gray-200">

@@ -68,7 +68,7 @@ export default function CustomerSettingsPage() {
 
   return (
     <main className="space-y-6" data-testid="customer-settings-page">
-      <section className="bg-white rounded-2xl border border-gray-200 shadow-sm p-5" data-testid="customer-settings-profile-link">
+      <section className="bg-surface rounded-2xl border border-gray-200 shadow-sm p-5" data-testid="customer-settings-profile-link">
         <div className="flex items-start gap-3">
           <span className="w-10 h-10 bg-emerald-500/10 text-emerald-600 rounded-xl flex items-center justify-center shrink-0">
             <User className="w-5 h-5" />
@@ -91,7 +91,7 @@ export default function CustomerSettingsPage() {
       </section>
 
       <div className="max-w-3xl mx-auto">
-        <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-sm">
+        <div className="bg-surface rounded-2xl border border-gray-200 overflow-hidden shadow-sm">
           <div className="p-4 md:p-6 border-b border-gray-200">
             <div className="flex items-center gap-2">
               <Settings className="w-5 h-5 text-primary" />

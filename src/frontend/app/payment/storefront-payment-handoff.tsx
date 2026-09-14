@@ -176,7 +176,7 @@ export function StorefrontPaymentHandoff() {
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 max-w-5xl mx-auto">
             <div className="lg:col-span-5 space-y-4">
               <div
-                className="bg-white rounded-2xl border border-gray-200 p-5 shadow-sm space-y-3"
+                className="bg-surface rounded-2xl border border-gray-200 p-5 shadow-sm space-y-3" data-storefront-surface-role="card"
                 data-testid="payment-handoff-summary"
               >
                 <h2 className="font-black text-gray-900">خلاصهٔ سفارش</h2>

@@ -255,7 +255,7 @@ export function SupportTicketsList({
         </div>
       ) : null}
 
-      <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
+      <div className="bg-surface rounded-2xl border border-gray-200 overflow-hidden">
         {loading ? (
           <div className="p-8 text-center text-sm text-gray-500 flex items-center justify-center gap-2">
             <Loader2 className="w-4 h-4 animate-spin text-[#E53935]" />
@@ -402,7 +402,7 @@ export function SupportTicketForm({
 
   return (
     <div className="max-w-2xl mx-auto" data-testid="support-ticket-form" dir="rtl">
-      <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
+      <div className="bg-surface rounded-2xl border border-gray-200 overflow-hidden">
         <div className="p-4 md:p-6 border-b border-gray-200">
           <div className="flex items-center gap-2">
             <Ticket className="w-5 h-5 text-[#E53935]" />
@@ -684,7 +684,7 @@ export function SupportTicketThread({
         {adminControls}
       </div>
 
-      <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
+      <div className="bg-surface rounded-2xl border border-gray-200 overflow-hidden">
         <div className="p-4 border-b border-gray-200">
           <h3 className="font-bold text-gray-900 flex items-center gap-2">
             <MessageSquare className="w-5 h-5" style={{ color: ACCENT }} />

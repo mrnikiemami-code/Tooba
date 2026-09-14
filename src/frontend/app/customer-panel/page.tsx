@@ -88,7 +88,7 @@ export default function CustomerDashboard() {
           <Link
             key={action.href}
             href={action.href}
-            className="bg-white rounded-2xl border border-gray-200 p-4 text-center shadow-sm hover:border-primary/40 hover:shadow-md transition-all"
+            className="bg-surface rounded-2xl border border-gray-200 p-4 text-center shadow-sm hover:border-primary/40 hover:shadow-md transition-all"
           >
             <span className="mx-auto mb-2 flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
               <action.icon className="w-5 h-5" />
@@ -99,7 +99,7 @@ export default function CustomerDashboard() {
       </section>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6">
-        <section className="lg:col-span-2 bg-white rounded-2xl border border-gray-200 p-4 md:p-6 shadow-sm">
+        <section className="lg:col-span-2 bg-surface rounded-2xl border border-gray-200 p-4 md:p-6 shadow-sm">
           <div className="flex items-center justify-between mb-5">
             <h2 className="font-black text-lg">آخرین سفارش‌ها</h2>
             <Link href="/customer-panel/orders" className="text-xs font-bold text-primary">
@@ -139,7 +139,7 @@ export default function CustomerDashboard() {
           )}
         </section>
 
-        <section className="bg-white rounded-2xl border border-gray-200 p-4 md:p-6 shadow-sm space-y-4">
+        <section className="bg-surface rounded-2xl border border-gray-200 p-4 md:p-6 shadow-sm space-y-4">
           <h2 className="font-black text-lg">خلاصه حساب</h2>
           <SummaryRow
             label="آدرس‌ها"
@@ -218,7 +218,7 @@ function Metric({
     pink: "bg-pink-500",
   };
   return (
-    <article className="bg-white rounded-2xl border border-gray-200 p-4 md:p-5 shadow-sm min-h-28">
+    <article className="bg-surface rounded-2xl border border-gray-200 p-4 md:p-5 shadow-sm min-h-28">
       <div className={`w-10 h-10 ${tones[tone]} text-white rounded-xl flex items-center justify-center mb-3`}>
         <Icon className="w-5 h-5" />
       </div>
@@ -230,12 +230,12 @@ function Metric({
 }
 
 function CustomerPanelLoading() {
-  return <div className="bg-white rounded-2xl border p-8 text-center text-gray-500">در حال دریافت اطلاعات مشتری...</div>;
+  return <div className="bg-surface rounded-2xl border p-8 text-center text-gray-500">در حال دریافت اطلاعات مشتری...</div>;
 }
 
 function CustomerPanelError() {
   return (
-    <div className="bg-white rounded-2xl border border-red-100 p-8 text-center">
+    <div className="bg-surface rounded-2xl border border-red-100 p-8 text-center">
       <h1 className="font-black text-lg">پنل مشتری در دسترس نیست</h1>
       <p className="text-sm text-gray-500 mt-2">نشست معتبر نیست یا Host پاسخ نمی‌دهد.</p>
       <Link href="/" className="inline-flex mt-4 px-4 py-2 rounded-xl bg-primary text-white text-sm font-bold">

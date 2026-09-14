@@ -80,17 +80,17 @@ export default function CustomerProfile() {
   }
 
   if (profile === undefined) {
-    return <div className="bg-white rounded-2xl border p-8 text-center text-gray-500">در حال دریافت پروفایل...</div>;
+    return <div className="bg-surface rounded-2xl border p-8 text-center text-gray-500">در حال دریافت پروفایل...</div>;
   }
   if (!profile) {
-    return <div className="bg-white rounded-2xl border p-8 text-center text-red-600">پروفایل در دسترس نیست.</div>;
+    return <div className="bg-surface rounded-2xl border p-8 text-center text-red-600">پروفایل در دسترس نیست.</div>;
   }
 
   const bioLength = watch("bio")?.length ?? 0;
 
   return (
     <div className="max-w-2xl mx-auto">
-      <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden shadow-sm">
+      <div className="bg-surface rounded-2xl border border-gray-100 overflow-hidden shadow-sm">
         <div className="p-4 md:p-6 border-b border-gray-100 bg-gradient-to-r from-blue-50 to-transparent">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">

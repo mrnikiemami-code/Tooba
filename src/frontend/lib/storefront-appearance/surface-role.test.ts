@@ -4,7 +4,7 @@ import path from "node:path";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
 import { listStorefrontPalettes, resolveTintTokens } from "./palette-registry.ts";
-import { landingSectionSurfaceRole, STOREFRONT_SURFACE_ROLES } from "./surface-role.ts";
+import { landingSectionSurfaceRole, STOREFRONT_ALLOWED_SURFACES, STOREFRONT_SURFACE_ROLES, surfaceRoleClass } from "./surface-role.ts";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
 
@@ -20,6 +20,9 @@ test("landing SectionTypes map to four global roles not page-local tokens", () =
   assert.equal(landingSectionSurfaceRole("NavigationMenu"), "section");
   assert.equal(landingSectionSurfaceRole("Unknown"), "section");
   assert.deepEqual([...STOREFRONT_SURFACE_ROLES], ["page", "section", "alternate", "accent"]);
+  assert.equal(surfaceRoleClass("card"), "bg-surface");
+  assert.equal(surfaceRoleClass("header"), "bg-surface");
+  assert.ok(STOREFRONT_ALLOWED_SURFACES.includes("elevated"));
 });
 
 test("PaletteTint four roles are distinct and not primary or status", () => {

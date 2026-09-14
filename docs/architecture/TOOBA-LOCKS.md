@@ -769,3 +769,21 @@ A future custom theme may override the global semantic surface roles without pag
 
 ### LOCK-SF-202 — Status and card surfaces stay independent of page/section roles
 Status semantics and Card, Elevated, and Input surfaces remain independent from the four page/section roles.
+
+### LOCK-SF-203 — Customer-facing routes inherit one Store Appearance
+Every public Storefront and customer-facing route must inherit the canonical Store Appearance projection. The customer panel is not a separate theme system.
+
+### LOCK-SF-204 — Major backgrounds require a semantic surface role
+Every major page/section background must map to a canonical semantic surface role or an explicitly allowed Card/Input/Header/Footer/Media/Status role.
+
+### LOCK-SF-205 — New routes join inventory and coverage guards
+New Storefront/customer routes must be added to the route coverage inventory and pass semantic surface coverage before acceptance.
+
+### LOCK-SF-206 — No large hardcoded page/section backgrounds
+Large hardcoded white/gray/arbitrary backgrounds are forbidden on Storefront/customer page/section wrappers when they bypass semantic theme roles.
+
+### LOCK-SF-207 — Dynamic and customer-nav routes require crawl coverage
+Dynamic routes require representative runtime coverage. Customer navigation destinations require authenticated crawl coverage.
+
+### LOCK-SF-208 — Coverage is enforced by shared wrappers and guards
+Theme coverage is enforced by shared wrappers/primitives and generalized guards, not manual screenshot-by-screenshot patching.

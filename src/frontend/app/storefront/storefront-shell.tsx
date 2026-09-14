@@ -10,16 +10,18 @@ import { StorefrontShopeivaHeader } from "./storefront-header.tsx";
 export function StorefrontShell({
   categories,
   children,
+  fullBleed = false,
 }: {
   categories: StorefrontCategoryItem[];
   children: ReactNode;
   searchCatalog?: StorefrontProductCard[];
+  fullBleed?: boolean;
 }) {
   return (
-    <div className="min-h-screen bg-page text-gray-900 flex flex-col" data-storefront-canvas>
+    <div className="min-h-screen bg-page text-gray-900 flex flex-col" data-storefront-canvas data-storefront-surface-role="page">
       <StorefrontShopeivaHeader categories={categories} />
-      <main className="flex-1 w-full">
-        <div className="max-w-[1800px] mx-auto px-4 sm:px-6">{children}</div>
+      <main className="flex-1 w-full" data-storefront-shell-main="true">
+        <div className={fullBleed ? "w-full" : "max-w-[1800px] mx-auto px-4 sm:px-6"}>{children}</div>
       </main>
       <StorefrontShopeivaFooter categories={categories} />
     </div>

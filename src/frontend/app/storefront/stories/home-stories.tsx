@@ -45,7 +45,7 @@ export function HomeStoriesSection() {
   };
 
   return (
-    <div className="w-full px-2 sm:px-4 py-2" data-testid="home-stories">
+    <div className="w-full px-2 sm:px-4 py-6 md:py-8 bg-section-surface" data-testid="home-stories" data-storefront-surface-role="section">
       <div className="relative">
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-lg md:text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
