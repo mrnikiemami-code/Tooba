@@ -42,6 +42,7 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
       dir={dirForLocale(locale)}
       suppressHydrationWarning
       data-storefront-palette={appearance.paletteKey}
+      data-storefront-scope={appearance.storeScope}
       style={storefrontAppearanceStyle(appearance)}
     >
       <body>

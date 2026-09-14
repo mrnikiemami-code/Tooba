@@ -34,7 +34,7 @@ Channel: tooba-main
 Last Architect Accepted Task:
 
 ```text
-TB-P10-T004-R24
+TB-P10-T004-R24-R1-R4
 ```
 
 Prior accepted catalog wave:
@@ -62,7 +62,7 @@ TB-P05-GATE
 Last Implementation Task:
 
 ```text
-TB-P10-T005
+TB-P10-T005-R1
 ```
 
 Current Issued Task:
@@ -80,6 +80,7 @@ Current Repair Task:
 Implemented Under Review:
 
 ```text
+TB-P10-T005-R1 — Appearance foundation runtime + recovery repair (live /appearance, migration, Last Architect-accepted = TB-P10-T004-R24-R1-R4); USER_VISUAL_ACCEPTED=NO
 TB-P10-T005 — Storefront Appearance Foundation (canonical Store appearance, semantic tokens, curated palette, future page extension contracts); USER_VISUAL_ACCEPTED=NO
 TB-P10-T004-R24-R1-R4 — Storefront auth/cart network churn repair (canonical session cache, one merge per login, no anonymous 401 storm); USER_VISUAL_ACCEPTED=NO
 TB-P10-T004-R24-R1-R3 — Storefront account identity + logout cart persistence + exact conversion boundary; USER_VISUAL_ACCEPTED=NO

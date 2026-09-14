@@ -1,0 +1,88 @@
+{
+  "ok": true,
+  "steps": {
+    "liveAppearance": {
+      "status": 200,
+      "body": {
+        "storeScope": "tenant:store-alpha",
+        "paletteKey": "tooba-blue",
+        "paletteKeyWasKnown": true,
+        "themeMode": "Light",
+        "tokens": {
+          "primaryRgb": "37 99 235",
+          "primaryStrongRgb": "29 78 216",
+          "onPrimaryRgb": "255 255 255",
+          "focusRgb": "37 99 235"
+        },
+        "updatedAt": "1970-01-01T00:00:00+00:00"
+      }
+    },
+    "alphaHost": {
+      "status": 200,
+      "scope": "tenant:store-alpha",
+      "palette": "tooba-blue"
+    },
+    "disabledHost": {
+      "status": 200,
+      "scope": "tenant:store-alpha",
+      "palette": "tooba-blue"
+    },
+    "pages": {
+      "/fa": {
+        "status": 200,
+        "palette": "tooba-blue",
+        "primary": "37 99 235",
+        "primaryStrong": "29 78 216",
+        "shopeivaRed": false
+      },
+      "/fa/products": {
+        "status": 200,
+        "palette": "tooba-blue",
+        "primary": "37 99 235",
+        "primaryStrong": "29 78 216",
+        "shopeivaRed": false
+      },
+      "/fa/cart": {
+        "status": 200,
+        "palette": "tooba-blue",
+        "primary": "37 99 235",
+        "primaryStrong": "29 78 216",
+        "shopeivaRed": false
+      },
+      "/fa/shipping": {
+        "status": 200,
+        "palette": "tooba-blue",
+        "primary": "37 99 235",
+        "primaryStrong": "29 78 216",
+        "shopeivaRed": true
+      },
+      "/fa/products/demo-prod-av-audio-headphones-3": {
+        "status": 200,
+        "palette": "tooba-blue",
+        "primary": "37 99 235",
+        "primaryStrong": "29 78 216",
+        "shopeivaRed": false
+      }
+    },
+    "fallback": {
+      "used": true,
+      "storeScope": "default",
+      "paletteKey": "tooba-blue",
+      "tokens": {
+        "primaryRgb": "37 99 235",
+        "primaryStrongRgb": "29 78 216"
+      }
+    },
+    "identityPolicy": {
+      "status": 200,
+      "body": {
+        "policy": "AuthenticatedOnly",
+        "cartAnonymousAllowed": true,
+        "checkoutAuthenticationRequired": true
+      }
+    },
+    "homeApi": {
+      "status": 200
+    }
+  }
+}

@@ -12,6 +12,7 @@ test("SSR root applies appearance CSS variables", () => {
   const layout = fs.readFileSync(path.join(root, "app/layout.tsx"), "utf8");
   assert.match(layout, /loadStorefrontAppearance/);
   assert.match(layout, /data-storefront-palette/);
+  assert.match(layout, /data-storefront-scope/);
   assert.match(layout, /storefrontAppearanceStyle/);
   assert.doesNotMatch(layout, /dangerouslySetInnerHTML/);
 });
