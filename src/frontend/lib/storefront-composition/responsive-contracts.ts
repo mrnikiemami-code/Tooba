@@ -98,7 +98,7 @@ export const RESPONSIVE_CONTRACTS: Record<string, ResponsiveContract> = {
     columns: { desktop: "rail", tablet: "rail", mobile: "rail" },
     height: { desktop: "auto", tablet: "auto", mobile: "auto" },
     itemVisible: { desktop: "4-5", tablet: "3", mobile: "2" },
-    notesFa: "کاروسل کارت کالا.",
+    notesFa: "اسلایدر کارت کالا.",
   },
   "product.grid": {
     variantKey: "product.grid",
@@ -266,7 +266,7 @@ export const RESPONSIVE_CONTRACTS: Record<string, ResponsiveContract> = {
     columns: { desktop: "rail", tablet: "rail", mobile: "rail" },
     height: { desktop: "auto", tablet: "auto", mobile: "auto" },
     itemVisible: { desktop: "3", tablet: "2", mobile: "1" },
-    notesFa: "کاروسل نظر.",
+    notesFa: "اسلایدر نظر.",
   },
   "reviews.compact-quotes": {
     variantKey: "reviews.compact-quotes",
@@ -308,7 +308,7 @@ export const RESPONSIVE_CONTRACTS: Record<string, ResponsiveContract> = {
     columns: { desktop: "1", tablet: "1", mobile: "1" },
     height: { desktop: "auto", tablet: "auto", mobile: "auto" },
     itemVisible: { desktop: "1", tablet: "1", mobile: "1" },
-    notesFa: "متن ساده بدون HTML خام.",
+    notesFa: "متن ساده بدون قالب‌بندی خام.",
   },
   "nav.menu": {
     variantKey: "nav.menu",

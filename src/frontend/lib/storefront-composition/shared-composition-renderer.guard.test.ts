@@ -8,7 +8,7 @@ import {
   VARIANTS,
 } from "./registry.ts";
 import { adaptLandingSectionToComposition } from "./landing-adapter.ts";
-import { resolveSharedVariant } from "./resolve-variant.ts";
+import { canonicalizeVariantKey, resolveSharedVariant } from "./resolve-variant.ts";
 import { requireResponsiveContract } from "./responsive-contracts.ts";
 import { normalizeControlledSettings, BASE_SECTION_SETTINGS } from "./settings.ts";
 import { adminImplementedVariants, adminSelectableSectionTypes, variantPreviewFingerprint, variantPreviewStructure } from "../../app/admin/landing-pages/admin-composition-catalog.ts";
@@ -27,9 +27,11 @@ describe("shared composition renderer", () => {
   });
 
   it("rejects unimplemented variants when strict", () => {
-    const unimplemented = VARIANTS.find((v) => !v.implemented);
+    const unimplemented = VARIANTS.find((v) => !v.implemented && canonicalizeVariantKey(v.key) === v.key);
     if (!unimplemented) {
-      assert.ok(isVariantImplemented("hero.editorial"));
+      // Hidden aliases remapped to canonical implemented Variants (e.g. banner.mosaic-2x2).
+      assert.equal(canonicalizeVariantKey("banner.mosaic-2x2"), "banner.four-grid");
+      assert.equal(resolveSharedVariant("BannerShowcase", "banner.mosaic-2x2", { strict: true }).key, "banner.four-grid");
       return;
     }
     assert.throws(

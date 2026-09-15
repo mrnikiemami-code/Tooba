@@ -227,7 +227,7 @@ export function LandingProductRail({
           <h2 className="text-lg font-bold">{title}</h2>
         </div>
         <p className="rounded-2xl border border-dashed border-gray-200 bg-surface px-4 py-6 text-center text-sm text-gray-500">
-          کالایی از منبع انتخاب‌شده یافت نشد. منبع را در تنظیمات بخش بررسی کنید.
+          کالایی برای نمایش در این بخش یافت نشد.
         </p>
       </section>
     );
@@ -300,7 +300,15 @@ export function LandingReviews({
   reviews: Parameters<typeof HomeTestimonialsSection>[0]["reviews"];
   layout?: "card-carousel" | "compact-quotes";
 }) {
-  return reviews.length ? <HomeTestimonialsSection reviews={reviews} layout={layout} /> : null;
+  return reviews.length ? (
+    <HomeTestimonialsSection reviews={reviews} layout={layout} />
+  ) : (
+    <section className="w-full px-2 py-8 sm:px-4" data-testid="landing-reviews-empty" data-empty="true">
+      <p className="rounded-2xl border border-dashed border-gray-200 bg-surface px-4 py-6 text-center text-sm text-gray-500">
+        نظری برای نمایش نیست.
+      </p>
+    </section>
+  );
 }
 
 export function LandingNavigationMenu({

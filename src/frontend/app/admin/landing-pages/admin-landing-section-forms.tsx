@@ -248,6 +248,11 @@ export function LandingSectionForm({
     return (
       <div className="space-y-3" data-testid="landing-section-form">
         <TextField label="عنوان" value={title} onChange={(next) => set({ title: next })} />
+        {selected.length === 0 ? (
+          <p className="rounded-xl border border-dashed px-3 py-2 text-xs text-muted" data-testid="empty-state-category-source">
+            هنوز دسته‌ای انتخاب نشده. چند دسته اضافه کنید تا بخش در فروشگاه خالی نماند.
+          </p>
+        ) : null}
         <EntityMultiPicker kind="category" selected={selected} onChange={(categoryIds) => set({ categoryIds })} />
       </div>
     );
@@ -258,6 +263,11 @@ export function LandingSectionForm({
     return (
       <div className="space-y-3" data-testid="landing-section-form">
         <TextField label="عنوان" value={title} onChange={(next) => set({ title: next })} />
+        {selected.length === 0 ? (
+          <p className="rounded-xl border border-dashed px-3 py-2 text-xs text-muted" data-testid="empty-state-brand-source">
+            هنوز برندی انتخاب نشده. چند برند اضافه کنید تا بخش در فروشگاه خالی نماند.
+          </p>
+        ) : null}
         <EntityMultiPicker kind="brand" selected={selected} onChange={(brandIds) => set({ brandIds })} />
       </div>
     );

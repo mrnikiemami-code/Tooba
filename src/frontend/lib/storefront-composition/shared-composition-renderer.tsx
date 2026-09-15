@@ -42,10 +42,10 @@ import {
 } from "../../app/storefront/storefront-landing-blocks.tsx";
 import type { CompositionSectionInstance, CompositionSurfaceRole } from "./types.ts";
 import { getVariant } from "./registry.ts";
-import { resolveSharedVariant } from "./resolve-variant.ts";
+import { canonicalizeVariantKey, resolveSharedVariant } from "./resolve-variant.ts";
 import { surfaceRoleClass } from "../storefront-appearance/surface-role.ts";
 
-export { resolveSharedVariant };
+export { resolveSharedVariant, canonicalizeVariantKey };
 
 export type HomeRenderContext = {
   heroTitle: string;
@@ -97,6 +97,7 @@ function bannerLayoutFromVariant(variantKey: string): BannerLayout {
     case "banner.three":
       return "three";
     case "banner.four-grid":
+    case "banner.mosaic-2x2":
       return "four-grid";
     case "banner.one-large-two-small":
       return "one-large-two-small";
@@ -104,8 +105,6 @@ function bannerLayoutFromVariant(variantKey: string): BannerLayout {
       return "one-large-four-small";
     case "banner.eight-compact":
       return "eight-compact";
-    case "banner.mosaic-2x2":
-      return "mosaic-2x2";
     default:
       return "single";
   }
@@ -116,10 +115,11 @@ export function renderSharedHomeSection(
   context: HomeRenderContext,
   config: SectionDisplayConfig,
 ): ReactNode | null {
-  const variant = getVariant(variantKey);
+  const key = canonicalizeVariantKey(variantKey);
+  const variant = getVariant(key);
   if (!variant || !variant.implemented) return null;
 
-  switch (variantKey) {
+  switch (key) {
     case "hero.full-width":
       return (
         <div data-testid="home-hero">
@@ -325,8 +325,6 @@ export function renderSharedHomeSection(
       return <CompositionBannerGrid layout="three" heightPreset={config.heightPreset} />;
     case "banner.four-grid":
       return <CompositionBannerGrid layout="four-grid" heightPreset={config.heightPreset} />;
-    case "banner.mosaic-2x2":
-      return <CompositionBannerGrid layout="mosaic-2x2" heightPreset={config.heightPreset} />;
     case "banner.one-large-four-small":
       return <CompositionBannerGrid layout="one-large-four-small" heightPreset={config.heightPreset} />;
     case "banner.eight-compact":
@@ -383,7 +381,7 @@ export function renderSharedHomeSectionForLegacyType(
 export function renderSharedLandingSection(input: SharedLandingRenderInput): ReactNode | null {
   const { composition, config, context, section } = input;
   if (!composition.enabled) return null;
-  const { variantKey } = composition;
+  const variantKey = canonicalizeVariantKey(composition.variantKey);
 
   try {
     resolveSharedVariant(composition.sectionTypeKey, variantKey, { strict: true });
@@ -444,7 +442,6 @@ export function renderSharedLandingSection(input: SharedLandingRenderInput): Rea
     case "banner.two-asymmetric":
     case "banner.three":
     case "banner.four-grid":
-    case "banner.mosaic-2x2":
     case "banner.one-large-two-small":
     case "banner.one-large-four-small":
     case "banner.eight-compact": {

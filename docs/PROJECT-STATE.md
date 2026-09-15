@@ -34,7 +34,7 @@ Channel: tooba-main
 Last Architect Accepted Task:
 
 ```text
-TB-P10-T020
+TB-P10-T021
 ```
 
 Prior accepted catalog wave:
@@ -62,7 +62,7 @@ TB-P05-GATE
 Last Implementation Task:
 
 ```text
-TB-P10-T021
+TB-P10-T022
 ```
 
 Current Issued Task:
@@ -80,6 +80,7 @@ Current Repair Task:
 Implemented Under Review:
 
 ```text
+TB-P10-T022 — Builder Acceptance Candidate — Completeness Audit, Visual Consistency, Final UX/Runtime Hardening; USER_VISUAL_ACCEPTED=YES (Appearance); Builder USER_VISUAL_ACCEPTED=NO
 TB-P10-T021 — Variant Expansion Wave 2 + Builder visual polish + industry template fidelity; USER_VISUAL_ACCEPTED=YES (Appearance); Builder USER_VISUAL_ACCEPTED=NO
 TB-P10-T020 — Native StoryRail/BannerShowcase + first variant wave + template start UX; USER_VISUAL_ACCEPTED=YES (Appearance); Builder USER_VISUAL_ACCEPTED=NO
 TB-P10-T019 — Shared composition renderer + existing Shopeiva variants + visual Admin variant picker; USER_VISUAL_ACCEPTED=YES (Appearance); Builder USER_VISUAL_ACCEPTED=NO
@@ -229,7 +230,7 @@ YES
 Worker Next State:
 
 ```text
-IDLE — waits for Bridge Task (no invented next task; do NOT invent TB-P10-T022)
+IDLE — waits for Bridge Task (no invented next task; do NOT invent TB-P10-T023)
 ```
 
 Current Gate:

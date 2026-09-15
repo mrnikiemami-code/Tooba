@@ -1,0 +1,314 @@
+{
+  "ok": true,
+  "steps": [
+    {
+      "name": "A-start",
+      "pass": true
+    },
+    {
+      "name": "file:final-start-screen.png",
+      "pass": true,
+      "data": {
+        "bytes": 65260
+      }
+    },
+    {
+      "name": "file:final-template-picker.png",
+      "pass": true,
+      "data": {
+        "bytes": 119115
+      }
+    },
+    {
+      "name": "file:final-section-picker.png",
+      "pass": true,
+      "data": {
+        "bytes": 232248
+      }
+    },
+    {
+      "name": "file:final-settings-form.png",
+      "pass": true,
+      "data": {
+        "bytes": 106813
+      }
+    },
+    {
+      "name": "file:final-product-variant-picker.png",
+      "pass": true,
+      "data": {
+        "bytes": 185278
+      }
+    },
+    {
+      "name": "file:final-banner-variant-picker.png",
+      "pass": true,
+      "data": {
+        "bytes": 194800
+      }
+    },
+    {
+      "name": "file:final-section-card.png",
+      "pass": true,
+      "data": {
+        "bytes": 69279
+      }
+    },
+    {
+      "name": "file:final-composer.png",
+      "pass": true,
+      "data": {
+        "bytes": 107589
+      }
+    },
+    {
+      "name": "composer-sections",
+      "pass": true
+    },
+    {
+      "name": "E-reorder",
+      "pass": true
+    },
+    {
+      "name": "F-disable",
+      "pass": true
+    },
+    {
+      "name": "G-preview",
+      "pass": true
+    },
+    {
+      "name": "H-publish",
+      "pass": true
+    },
+    {
+      "name": "fashion-d",
+      "pass": true
+    },
+    {
+      "name": "file:final-fashion-desktop.png",
+      "pass": true,
+      "data": {
+        "bytes": 415457
+      }
+    },
+    {
+      "name": "auto-d",
+      "pass": true
+    },
+    {
+      "name": "file:final-autoparts-desktop.png",
+      "pass": true,
+      "data": {
+        "bytes": 142554
+      }
+    },
+    {
+      "name": "interior-d",
+      "pass": true
+    },
+    {
+      "name": "file:final-interior-desktop.png",
+      "pass": true,
+      "data": {
+        "bytes": 139674
+      }
+    },
+    {
+      "name": "beauty-d",
+      "pass": true
+    },
+    {
+      "name": "file:final-beauty-desktop.png",
+      "pass": true,
+      "data": {
+        "bytes": 414200
+      }
+    },
+    {
+      "name": "landing-d",
+      "pass": true
+    },
+    {
+      "name": "file:final-landing-desktop.png",
+      "pass": true,
+      "data": {
+        "bytes": 530743
+      }
+    },
+    {
+      "name": "M-home",
+      "pass": true
+    },
+    {
+      "name": "N-custom-home",
+      "pass": true
+    },
+    {
+      "name": "file:final-custom-home-desktop.png",
+      "pass": true,
+      "data": {
+        "bytes": 420231
+      }
+    },
+    {
+      "name": "file:final-palette-tint-home.png",
+      "pass": true,
+      "data": {
+        "bytes": 420231
+      }
+    },
+    {
+      "name": "file:final-dark-home.png",
+      "pass": true,
+      "data": {
+        "bytes": 420231
+      }
+    },
+    {
+      "name": "file:final-neutral-landing.png",
+      "pass": true,
+      "data": {
+        "bytes": 532712
+      }
+    },
+    {
+      "name": "file:final-custom-home-mobile.png",
+      "pass": true,
+      "data": {
+        "bytes": 121919
+      }
+    },
+    {
+      "name": "fashion-m",
+      "pass": true
+    },
+    {
+      "name": "file:final-fashion-mobile.png",
+      "pass": true,
+      "data": {
+        "bytes": 128900
+      }
+    },
+    {
+      "name": "auto-m",
+      "pass": true
+    },
+    {
+      "name": "file:final-autoparts-mobile.png",
+      "pass": true,
+      "data": {
+        "bytes": 48407
+      }
+    },
+    {
+      "name": "interior-m",
+      "pass": true
+    },
+    {
+      "name": "file:final-interior-mobile.png",
+      "pass": true,
+      "data": {
+        "bytes": 52653
+      }
+    },
+    {
+      "name": "beauty-m",
+      "pass": true
+    },
+    {
+      "name": "file:final-beauty-mobile.png",
+      "pass": true,
+      "data": {
+        "bytes": 122547
+      }
+    },
+    {
+      "name": "landing-m",
+      "pass": true
+    },
+    {
+      "name": "file:final-landing-mobile.png",
+      "pass": true,
+      "data": {
+        "bytes": 110029
+      }
+    },
+    {
+      "name": "P-canonical",
+      "pass": true
+    }
+  ],
+  "files": {
+    "final-start-screen.png": {
+      "bytes": 65260
+    },
+    "final-template-picker.png": {
+      "bytes": 119115
+    },
+    "final-section-picker.png": {
+      "bytes": 232248
+    },
+    "final-settings-form.png": {
+      "bytes": 106813
+    },
+    "final-product-variant-picker.png": {
+      "bytes": 185278
+    },
+    "final-banner-variant-picker.png": {
+      "bytes": 194800
+    },
+    "final-section-card.png": {
+      "bytes": 69279
+    },
+    "final-composer.png": {
+      "bytes": 107589
+    },
+    "final-fashion-desktop.png": {
+      "bytes": 415457
+    },
+    "final-autoparts-desktop.png": {
+      "bytes": 142554
+    },
+    "final-interior-desktop.png": {
+      "bytes": 139674
+    },
+    "final-beauty-desktop.png": {
+      "bytes": 414200
+    },
+    "final-landing-desktop.png": {
+      "bytes": 530743
+    },
+    "final-custom-home-desktop.png": {
+      "bytes": 420231
+    },
+    "final-palette-tint-home.png": {
+      "bytes": 420231
+    },
+    "final-dark-home.png": {
+      "bytes": 420231
+    },
+    "final-neutral-landing.png": {
+      "bytes": 532712
+    },
+    "final-custom-home-mobile.png": {
+      "bytes": 121919
+    },
+    "final-fashion-mobile.png": {
+      "bytes": 128900
+    },
+    "final-autoparts-mobile.png": {
+      "bytes": 48407
+    },
+    "final-interior-mobile.png": {
+      "bytes": 52653
+    },
+    "final-beauty-mobile.png": {
+      "bytes": 122547
+    },
+    "final-landing-mobile.png": {
+      "bytes": 110029
+    }
+  },
+  "errors": []
+}

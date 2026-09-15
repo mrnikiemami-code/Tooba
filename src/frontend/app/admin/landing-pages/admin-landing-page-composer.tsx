@@ -363,7 +363,7 @@ export function AdminLandingPageComposer({ pageId }: { pageId?: string }) {
           <div>
             <button type="button" className="text-sm text-muted" onClick={() => setCreateMode(null)}>بازگشت</button>
             <h1 className="mt-1 text-xl font-black">انتخاب قالب آماده</h1>
-            <p className="mt-1 text-sm text-muted">نام فارسی، صنعت، توضیح کوتاه و خلاصهٔ بخش‌ها را ببینید.</p>
+            <p className="mt-1 text-sm text-muted">نام فارسی، توضیح کوتاه و خلاصهٔ بخش‌ها را ببینید؛ هر قالب ترکیب متفاوتی دارد.</p>
           </div>
         </div>
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3" data-testid="template-picker">
@@ -380,7 +380,8 @@ export function AdminLandingPageComposer({ pageId }: { pageId?: string }) {
                   setMeta((current) => ({
                     ...current,
                     title: current.title || template.nameFa,
-                    slug: current.slug || template.templateKey,
+                    // Keep address blank so the operator sets a Persian-friendly slug (no English template key leak).
+                    slug: current.slug || "",
                   }));
                 }}
               >

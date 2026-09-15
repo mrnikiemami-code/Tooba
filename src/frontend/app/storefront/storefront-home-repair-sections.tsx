@@ -208,8 +208,10 @@ export function HomeBrandsSection({
 }) {
   if (brands.length === 0) {
     return (
-      <section aria-labelledby="home-brands-heading" className="w-full px-2 sm:px-4 py-8 md:py-10" data-testid="home-brands">
-        <p className="text-sm text-gray-500 bg-surface rounded-2xl border border-gray-100 p-4">برند منتشرشده‌ای در Catalog نیست.</p>
+      <section aria-labelledby="home-brands-heading" className="w-full px-2 sm:px-4 py-8 md:py-10" data-testid="home-brands" data-empty="true">
+        <p className="rounded-2xl border border-dashed border-gray-200 bg-surface px-4 py-6 text-center text-sm text-gray-500">
+          برندی برای نمایش نیست.
+        </p>
       </section>
     );
   }

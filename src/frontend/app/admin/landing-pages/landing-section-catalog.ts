@@ -34,9 +34,9 @@ export const LANDING_SECTION_CHOICES: LandingSectionChoice[] = [
   { type: "PromoBanner", label: "بنر تبلیغاتی", description: "یک بنر با عنوان و پیوند کنترل‌شده", testId: "add-section-promo" },
   { type: "ArticleList", label: "فهرست مطالب", description: "آخرین مقاله‌های منتشرشده", testId: "add-section-articles" },
   { type: "Reviews", label: "نظر خریداران", description: "نظرهای تأییدشدهٔ فروشگاه", testId: "add-section-reviews" },
-  { type: "RichText", label: "متن آزاد", description: "یک بلوک متن ساده بدون HTML", testId: "add-section-text" },
+  { type: "RichText", label: "متن آزاد", description: "یک بلوک متن ساده بدون قالب‌بندی خام", testId: "add-section-text" },
   { type: "NavigationMenu", label: "فهرست پیوند", description: "نمایش یک منوی فعال فروشگاه در بدنهٔ صفحه", testId: "add-section-menu" },
-  { type: "StoryRail", label: "ریل استوری", description: "میانبرهای دایره‌ای یا کارت‌گرد", testId: "add-section-stories" },
+  { type: "StoryRail", label: "میانبر استوری", description: "میانبرهای دایره‌ای یا کارت‌گرد", testId: "add-section-stories" },
   { type: "BannerShowcase", label: "نمایش بنر", description: "شبکه‌های بنر کنترل‌شده با جایگاه مشخص", testId: "add-section-banners" },
 ];
 
@@ -118,6 +118,24 @@ export function summarizeLandingSection(type: string, config: Record<string, unk
   if (type === "StoryRail" || (variantKey?.startsWith("story.") ?? false)) {
     const items = Array.isArray(config.items) ? config.items.length : 0;
     return title ? `${title}${variantSuffix} · ${items} استوری` : `استوری${variantSuffix}`;
+  }
+  if (type === "CategoryGrid") {
+    const count = Array.isArray(config.categoryIds)
+      ? config.categoryIds.length
+      : Array.isArray(config.ids)
+        ? config.ids.length
+        : 0;
+    const countLabel = count > 0 ? `${count.toLocaleString("fa-IR")} دسته` : "بدون دسته";
+    return title ? `${title}${variantSuffix} · ${countLabel}` : `${countLabel}${variantSuffix}`;
+  }
+  if (type === "BrandStrip") {
+    const count = Array.isArray(config.brandIds)
+      ? config.brandIds.length
+      : Array.isArray(config.ids)
+        ? config.ids.length
+        : 0;
+    const countLabel = count > 0 ? `${count.toLocaleString("fa-IR")} برند` : "بدون برند";
+    return title ? `${title}${variantSuffix} · ${countLabel}` : `${countLabel}${variantSuffix}`;
   }
   if (title) return `${title}${variantSuffix}`;
   return `${landingSectionLabel(type)}${variantSuffix}`;

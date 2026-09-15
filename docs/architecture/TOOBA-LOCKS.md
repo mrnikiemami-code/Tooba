@@ -910,3 +910,21 @@ Mobile visual behavior remains code-owned and bounded for all Variants; Admin mu
 
 ### LOCK-SF-249 — Ranked Variants stay truthful-source only
 ProductRankedList / ticker Variants may use only truthful Admin-selectable sources (Manual/Category/Brand/Newest). Fake ranking APIs are forbidden.
+
+### LOCK-SF-250 — Selectable Variant completeness contract
+A selectable Variant is valid only when renderer, preview metadata, responsive contract, settings/capability metadata, and graceful empty behavior are all present.
+
+### LOCK-SF-251 — Builder UX forbids technical composition leakage
+Builder final UX must remain ordinary-user facing and must not leak technical composition identifiers or breakpoint concepts (SectionType / VariantKey / ResponsiveContract / raw JSON/CSS).
+
+### LOCK-SF-252 — Industry differentiation via composition only
+Industry differentiation is achieved through composition presets and shared Variants, never template-specific renderer/CSS.
+
+### LOCK-SF-253 — Builder acceptance requires visual evidence
+Final Builder acceptance requires representative Admin + Desktop + Mobile visual evidence; functional tests alone are insufficient.
+
+### LOCK-SF-254 — Builder preserves semantic surface inheritance
+Builder-rendered sections must preserve the accepted semantic surface inheritance model (Page/Section/Alternate/Accent).
+
+### LOCK-SF-255 — Canonical Home fallback remains recoverable
+Canonical Home fallback remains recoverable after selecting a composed Home.

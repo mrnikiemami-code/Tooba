@@ -560,7 +560,7 @@ export function CompositionBannerGrid({
   const media = (banner: { src: string; title: string; missing?: boolean }, className: string) => {
     if (banner.missing || !banner.src) {
       return (
-        <div className={`flex flex-col items-center justify-center gap-2 bg-gray-100 text-gray-500 ${className}`} data-banner-missing-media="true">
+        <div className={`flex flex-col items-center justify-center gap-2 bg-section-surface text-muted ${className}`} data-banner-missing-media="true">
           <ImageOff className="h-6 w-6" aria-hidden />
           <span className="text-xs font-bold">تصویر بنر هنوز تنظیم نشده</span>
         </div>
@@ -634,10 +634,10 @@ export function CompositionBannerGrid({
 
   if (layout === "four-grid" || layout === "mosaic-2x2") {
     return (
-      <section className="w-full px-2 sm:px-4 py-6" data-testid={testId ?? "composition-banner-four"} data-banner-layout={layout}>
+      <section className="w-full px-2 sm:px-4 py-8 md:py-10" data-testid={testId ?? "composition-banner-four"} data-banner-layout="four-grid">
         <div className="grid grid-cols-2 gap-3 md:gap-4">
           {banners.slice(0, 4).map((banner) => (
-            <Link key={`${banner.href}-${banner.title}`} href={banner.href} className="relative overflow-hidden rounded-2xl aspect-[21/10] bg-gray-100">
+            <Link key={`${banner.href}-${banner.title}`} href={banner.href} className="relative overflow-hidden rounded-2xl aspect-[21/10] bg-section-surface">
               {media(banner, "absolute inset-0 h-full w-full object-cover")}
             </Link>
           ))}

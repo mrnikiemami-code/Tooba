@@ -44,3 +44,13 @@ test("section chooser has Persian labels and no raw JSON editor", () => {
   assert.doesNotMatch(api, /localStorage/);
   assert.match(api, /\/v1\/admin\/pages/);
 });
+
+test("TB-P10-T022 ordinary-user Admin UX: no technical leakage + empty category/brand hints", () => {
+  assert.doesNotMatch(composer, />SectionType<|>VariantKey<|>ResponsiveContract</);
+  assert.doesNotMatch(composer, /breakpoint|JSON\.stringify|customCss/i);
+  assert.match(forms, /empty-state-category-source/);
+  assert.match(forms, /empty-state-brand-source/);
+  assert.match(forms, /empty-state-product-source/);
+  assert.match(catalog, /بدون قالب‌بندی خام/);
+  assert.doesNotMatch(catalog, /بدون HTML/);
+});
