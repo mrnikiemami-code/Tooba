@@ -87,7 +87,9 @@
   --color-brand-emphasis: var(--color-primary-on-dark);
 }
 
-html[data-storefront-background-style="PaletteTint"] {
+/* Page/section tint remaps only on customer-facing canvases — Admin/Seller stay Neutral. */
+html[data-storefront-background-style="PaletteTint"] [data-storefront-canvas],
+html[data-storefront-background-style="PaletteTint"] [data-customer-panel-canvas] {
   --color-page-background: var(--color-page-tint);
   --color-section-background: var(--color-section-surface-tint);
   --color-section-surface: var(--color-section-surface-tint);
@@ -95,7 +97,8 @@ html[data-storefront-background-style="PaletteTint"] {
   --color-section-accent: var(--color-section-accent-tint);
 }
 
-html.dark[data-storefront-background-style="PaletteTint"] {
+html.dark[data-storefront-background-style="PaletteTint"] [data-storefront-canvas],
+html.dark[data-storefront-background-style="PaletteTint"] [data-customer-panel-canvas] {
   --color-page-background: var(--color-page-tint-dark);
   --color-section-background: var(--color-section-surface-tint-dark);
   --color-section-surface: var(--color-section-surface-tint-dark);
@@ -335,4 +338,33 @@ body {
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
+}
+
+/*
+  LOCK-SF-261 — Admin/Seller fixed panel tokens.
+  Storefront appearance must never recolor these panels (primary stays Tooba blue).
+*/
+[data-panel-theme="admin"],
+[data-panel-theme="seller"] {
+  --color-primary: 37 99 235;
+  --color-primary-strong: 29 78 216;
+  --color-primary-foreground: 255 255 255;
+  --color-focus: 37 99 235;
+  --color-primary-on-dark: 59 115 237;
+  --color-brand-emphasis: 37 99 235;
+  --ref-brand: 37 99 235;
+  --color-page-background: 243 245 248;
+  --color-section-background: 255 255 255;
+  --color-section-surface: 255 255 255;
+  --color-section-alternate: 247 248 250;
+  --color-section-accent: 238 242 247;
+  --color-background: 250 250 249;
+  --color-surface: 255 255 255;
+  --color-surface-elevated: 255 255 255;
+  --color-foreground: 24 24 27;
+  --color-muted: 113 113 122;
+  --color-border: 228 228 231;
+  --color-secondary: 244 244 245;
+  --color-secondary-foreground: 24 24 27;
+  color-scheme: light;
 }

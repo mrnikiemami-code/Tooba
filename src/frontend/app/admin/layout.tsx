@@ -12,7 +12,7 @@ export const metadata: Metadata = {
  */
 export default function AdminLayout({ children }: { children: ReactNode }) {
   return (
-    <div className="min-h-screen bg-background text-foreground">
+    <div className="min-h-screen bg-background text-foreground" data-panel-theme="admin" data-testid="admin-panel-theme-root">
       <Suspense
         fallback={
           <div className="flex min-h-screen items-center justify-center bg-gray-50 text-gray-500">

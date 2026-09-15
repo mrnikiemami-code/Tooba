@@ -12,7 +12,7 @@ export const metadata: Metadata = {
  */
 export default function VendorPanelLayout({ children }: { children: ReactNode }) {
   return (
-    <div className="min-h-screen bg-background text-foreground">
+    <div className="min-h-screen bg-background text-foreground" data-panel-theme="seller" data-testid="seller-panel-theme-root">
       <VendorShell>{children}</VendorShell>
     </div>
   );

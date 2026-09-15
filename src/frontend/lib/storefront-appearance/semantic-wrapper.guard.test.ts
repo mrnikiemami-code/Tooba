@@ -9,6 +9,7 @@ const read = (rel: string) => fs.readFileSync(path.join(root, rel), "utf8");
 
 test("major storefront wrappers use semantic surface roles instead of page-level bg-white", () => {
   const shell = read("app/storefront/storefront-shell.tsx");
+  const canvas = read("app/storefront/storefront-themed-canvas.tsx");
   const header = read("app/storefront/storefront-header.tsx");
   const footer = read("app/storefront/storefront-footer.tsx");
   const login = read("app/login/storefront-login.tsx");
@@ -19,10 +20,12 @@ test("major storefront wrappers use semantic surface roles instead of page-level
   const homeBlocks = read("app/storefront/storefront-home-blocks.tsx");
   const stories = read("app/storefront/stories/home-stories.tsx");
 
-  assert.match(shell, /data-storefront-surface-role="page"/);
+  assert.match(shell, /StorefrontThemedCanvas/);
   assert.match(shell, /bg-page/);
   assert.match(shell, /fullBleed/);
   assert.doesNotMatch(shell, /min-h-screen bg-white/);
+  assert.match(canvas, /data-storefront-surface-role="page"/);
+  assert.match(canvas, /data-storefront-canvas/);
 
   assert.match(header, /data-storefront-surface-role="header"/);
   assert.match(header, /bg-surface/);

@@ -280,7 +280,16 @@ export function LandingArticleList({
   layout?: "magazine-rail" | "grid" | "featured-plus-list";
 }) {
   const take = typeof config.take === "number" ? config.take : 6;
-  const slice = articles.slice(0, take);
+  const source = typeof config.source === "string" ? config.source : "Latest";
+  const articleIds = Array.isArray(config.articleIds)
+    ? config.articleIds.map((id) => String(id)).filter(Boolean)
+    : [];
+  const filtered = source === "Manual" && articleIds.length > 0
+    ? articleIds
+      .map((id) => articles.find((article) => article.articleId === id))
+      .filter((article): article is (typeof articles)[number] => Boolean(article))
+    : articles;
+  const slice = filtered.slice(0, take);
   if (slice.length === 0) {
     return (
       <section className="w-full px-2 py-8 sm:px-4" data-testid="landing-articles-empty" data-empty="true">

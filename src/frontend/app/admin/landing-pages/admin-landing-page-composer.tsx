@@ -4,7 +4,6 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { ChevronDown, ChevronUp, Eye, EyeOff, Pencil, Plus, Trash2 } from "lucide-react";
-import { LandingSectionForm } from "./admin-landing-section-forms.tsx";
 import {
   addAdminLandingSection,
   createAdminLandingPage,
@@ -26,27 +25,19 @@ import {
   landingSectionLabel,
   parseLandingConfig,
   summarizeLandingSection,
-  type LandingSectionType,
 } from "./landing-section-catalog.ts";
 import {
-  adminImplementedVariants,
-  adminSelectableSectionTypes,
   defaultConfigForCompositionSection,
-  previewMosaicClass,
-  sectionSupportsHeightPreset,
-  variantPreviewStructure,
-  type AdminCompositionSectionChoice,
 } from "./admin-composition-catalog.ts";
-import { SIZE_PRESETS } from "../../../lib/storefront-composition/types.ts";
 import { SIZE_PRESET_CONTRACTS } from "../../../lib/storefront-composition/size-presets.ts";
 import { getSectionType, getVariant } from "../../../lib/storefront-composition/registry.ts";
-import { bannerSlotCountForVariant } from "./landing-section-catalog.ts";
 import {
   buildTemplateSectionPayloads,
   listIndustryTemplates,
-  templateCompositionMiniature,
   templateSectionSummaryFa,
 } from "../../../lib/storefront-composition/industry-templates.ts";
+import { AdminSectionWizard } from "./admin-section-wizard.tsx";
+import { layoutAwareTemplatePreview, VariantPreviewCanvas } from "./layout-aware-previews.tsx";
 
 type Meta = {
   title: string;
@@ -72,7 +63,11 @@ function resolveSectionTypeKey(hostType: string, config: Record<string, unknown>
     const fromVariant = getVariant(variantKey);
     if (fromVariant) return fromVariant.sectionTypeKey;
   }
-  return adminSelectableSectionTypes().find((s) => s.hostType === hostType)?.sectionTypeKey ?? null;
+  return null;
+}
+
+function localeLabel(locale: string): string {
+  return locale === "en" ? "انگلیسی" : "فارسی";
 }
 
 export function AdminLandingPageComposer({ pageId }: { pageId?: string }) {
@@ -84,35 +79,19 @@ export function AdminLandingPageComposer({ pageId }: { pageId?: string }) {
   const [message, setMessage] = useState<string>();
   const [busy, setBusy] = useState(false);
   const [saved, setSaved] = useState(true);
-  const [chooserOpen, setChooserOpen] = useState(false);
-  const [chooserStep, setChooserStep] = useState<"section" | "variant">("section");
-  const [chooserSection, setChooserSection] = useState<AdminCompositionSectionChoice | null>(null);
+  const [wizardOpen, setWizardOpen] = useState(false);
+  const [wizardMode, setWizardMode] = useState<"create" | "edit">("create");
   const [editing, setEditing] = useState<AdminLandingSection | null>(null);
-  const [draftConfig, setDraftConfig] = useState<Record<string, unknown>>({});
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
   const [createMode, setCreateMode] = useState<"blank" | "template" | null>(pageId ? "blank" : null);
   const [selectedTemplateKey, setSelectedTemplateKey] = useState<string | null>(null);
   const industryTemplates = useMemo(() => listIndustryTemplates(), []);
-
-  const compositionSections = useMemo(() => adminSelectableSectionTypes(), []);
-  // Keep LANDING_SECTION_CHOICES referenced for admin-landing-pages.guard.test.ts
   void LANDING_SECTION_CHOICES;
-
-  const editingSectionTypeKey = useMemo(() => {
-    if (!editing) return null;
-    return resolveSectionTypeKey(editing.sectionType, draftConfig);
-  }, [editing, draftConfig]);
-
-  const editingVariants = useMemo(
-    () => (editingSectionTypeKey ? adminImplementedVariants(editingSectionTypeKey) : []),
-    [editingSectionTypeKey],
-  );
 
   const dirty = useMemo(() => {
     if (!page) return Boolean(meta.title || meta.slug);
     return meta.title !== page.title
       || meta.slug !== page.slug
-      || meta.locale !== page.locale
       || meta.seoTitle !== (page.seoTitle ?? "")
       || meta.seoDescription !== (page.seoDescription ?? "");
   }, [meta, page]);
@@ -138,22 +117,20 @@ export function AdminLandingPageComposer({ pageId }: { pageId?: string }) {
     if (pageId) void load(pageId);
   }, [load, pageId]);
 
-  const openChooser = () => {
-    setChooserStep("section");
-    setChooserSection(null);
-    setChooserOpen(true);
-  };
-
   const saveMeta = async () => {
     if (!meta.title.trim() || !meta.slug.trim()) {
       setMessage("عنوان و آدرس صفحه لازم است.");
+      return;
+    }
+    if (!page && !meta.locale) {
+      setMessage("زبان صفحه را انتخاب کنید.");
       return;
     }
     setBusy(true);
     const payload = {
       title: meta.title.trim(),
       slug: meta.slug.trim(),
-      locale: meta.locale,
+      locale: page?.locale ?? meta.locale,
       seoTitle: meta.seoTitle.trim() || undefined,
       seoDescription: meta.seoDescription.trim() || undefined,
     };
@@ -201,36 +178,6 @@ export function AdminLandingPageComposer({ pageId }: { pageId?: string }) {
     if (!pageId) router.replace(`/admin/landing-pages/${result.data.pageId}`);
   };
 
-  const addSectionWithVariant = async (choice: AdminCompositionSectionChoice, variantKey: string) => {
-    if (!page) {
-      setMessage("ابتدا مشخصات صفحه را ذخیره کنید.");
-      return;
-    }
-    const hostType = choice.hostType as LandingSectionType;
-    const config = defaultConfigForCompositionSection(choice.sectionTypeKey, variantKey);
-    if (variantKey.startsWith("banner.")) {
-      const slots = bannerSlotCountForVariant(variantKey);
-      config.items = Array.from({ length: slots }, (_, index) => ({
-        imageUrl: "",
-        href: "/offers",
-        title: `بنر ${(index + 1).toLocaleString("fa-IR")}`,
-      }));
-    }
-    setBusy(true);
-    const result = await addAdminLandingSection(page.pageId, hostType, config);
-    setBusy(false);
-    setChooserOpen(false);
-    setChooserStep("section");
-    setChooserSection(null);
-    if (!result.ok) {
-      setMessage(result.message);
-      return;
-    }
-    setSections((rows) => [...rows, result.data]);
-    setEditing(result.data);
-    setDraftConfig(parseLandingConfig(result.data.config));
-  };
-
   const move = async (index: number, direction: -1 | 1) => {
     if (!page) return;
     const target = index + direction;
@@ -263,19 +210,6 @@ export function AdminLandingPageComposer({ pageId }: { pageId?: string }) {
     setSections((rows) => rows.map((item) => item.pageSectionId === row.pageSectionId ? result.data : item));
   };
 
-  const saveSection = async () => {
-    if (!page || !editing) return;
-    setBusy(true);
-    const result = await updateAdminLandingSection(page.pageId, editing.pageSectionId, draftConfig);
-    setBusy(false);
-    if (!result.ok) {
-      setMessage(result.message);
-      return;
-    }
-    setSections((rows) => rows.map((item) => item.pageSectionId === editing.pageSectionId ? result.data : item));
-    setEditing(null);
-  };
-
   const remove = async (sectionId: string) => {
     if (!page) return;
     setBusy(true);
@@ -287,7 +221,10 @@ export function AdminLandingPageComposer({ pageId }: { pageId?: string }) {
       return;
     }
     setSections((rows) => rows.filter((item) => item.pageSectionId !== sectionId));
-    if (editing?.pageSectionId === sectionId) setEditing(null);
+    if (editing?.pageSectionId === sectionId) {
+      setEditing(null);
+      setWizardOpen(false);
+    }
   };
 
   const publish = async () => {
@@ -319,11 +256,6 @@ export function AdminLandingPageComposer({ pageId }: { pageId?: string }) {
     setHomePageId(result.data.homePageId);
   };
 
-  const showHeightPreset = Boolean(
-    editingSectionTypeKey
-      && sectionSupportsHeightPreset(editingSectionTypeKey, typeof draftConfig.variantKey === "string" ? draftConfig.variantKey : undefined),
-  );
-
   if (!pageId && !page && createMode === null) {
     return (
       <main data-testid="admin-landing-page-editor" className="space-y-5">
@@ -333,21 +265,11 @@ export function AdminLandingPageComposer({ pageId }: { pageId?: string }) {
           <p className="mt-1 text-sm text-muted">از صفحه خالی شروع کنید یا یک قالب آمادهٔ صنعتی را انتخاب کنید.</p>
         </div>
         <div className="grid gap-4 md:grid-cols-2" data-testid="composition-start-mode">
-          <button
-            type="button"
-            className="rounded-2xl border border-border bg-surface-elevated p-6 text-start hover:border-primary"
-            data-testid="start-blank"
-            onClick={() => setCreateMode("blank")}
-          >
+          <button type="button" className="rounded-2xl border border-border bg-surface-elevated p-6 text-start hover:border-primary" data-testid="start-blank" onClick={() => setCreateMode("blank")}>
             <p className="text-lg font-black">شروع از صفحه خالی</p>
             <p className="mt-2 text-sm text-muted">یک پیش‌نویس خالی بسازید و بخش‌ها را خودتان اضافه کنید.</p>
           </button>
-          <button
-            type="button"
-            className="rounded-2xl border border-border bg-surface-elevated p-6 text-start hover:border-primary"
-            data-testid="start-from-template"
-            onClick={() => setCreateMode("template")}
-          >
+          <button type="button" className="rounded-2xl border border-border bg-surface-elevated p-6 text-start hover:border-primary" data-testid="start-from-template" onClick={() => setCreateMode("template")}>
             <p className="text-lg font-black">شروع از قالب آماده</p>
             <p className="mt-2 text-sm text-muted">یکی از ۱۰ قالب صنعتی را انتخاب کنید؛ نتیجه یک پیش‌نویس عادی و قابل‌ویرایش است.</p>
           </button>
@@ -368,7 +290,7 @@ export function AdminLandingPageComposer({ pageId }: { pageId?: string }) {
         </div>
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3" data-testid="template-picker">
           {industryTemplates.map((template) => {
-            const miniature = templateCompositionMiniature(template);
+            const preview = layoutAwareTemplatePreview(template);
             return (
               <button
                 key={template.templateKey}
@@ -380,26 +302,20 @@ export function AdminLandingPageComposer({ pageId }: { pageId?: string }) {
                   setMeta((current) => ({
                     ...current,
                     title: current.title || template.nameFa,
-                    // Keep address blank so the operator sets a Persian-friendly slug (no English template key leak).
                     slug: current.slug || "",
                   }));
                 }}
               >
-                <div className="mb-3 grid h-24 grid-cols-6 grid-rows-3 gap-1 rounded-xl bg-slate-100 p-2" aria-hidden data-testid="template-composition-miniature">
-                  {miniature.map((kind, index) => {
-                    const tone =
-                      kind === "hero" ? "bg-sky-400"
-                        : kind === "story" ? "bg-rose-300"
-                          : kind === "category" ? "bg-emerald-400"
-                            : kind === "product" ? "bg-amber-400"
-                              : kind === "banner" ? "bg-violet-400"
-                                : kind === "brand" ? "bg-slate-400"
-                                  : kind === "article" ? "bg-cyan-400"
-                                    : kind === "reviews" ? "bg-yellow-300"
-                                      : "bg-stone-300";
-                    const span = kind === "hero" ? "col-span-6 row-span-1" : "col-span-2";
-                    return <span key={`${template.templateKey}-${index}`} className={`rounded ${tone} ${span}`} />;
-                  })}
+                <div
+                  className={`mb-3 grid h-24 grid-cols-6 gap-1 rounded-xl p-2 ${preview.toneClass}`}
+                  aria-hidden
+                  data-testid="template-composition-miniature"
+                  data-layout-aware="1"
+                  data-industry={template.industry}
+                >
+                  {preview.cells.map((cell, index) => (
+                    <span key={`${template.templateKey}-${index}`} className={cell.className} data-kind={cell.kind} />
+                  ))}
                 </div>
                 <p className="font-black">{template.nameFa}</p>
                 <p className="mt-2 text-sm text-muted">{template.descriptionFa}</p>
@@ -414,11 +330,11 @@ export function AdminLandingPageComposer({ pageId }: { pageId?: string }) {
   }
 
   return (
-    <main data-testid="admin-landing-page-editor">
+    <main data-testid="admin-landing-page-editor" data-page-workspace="1">
       <div className="mb-5 flex flex-wrap items-start justify-between gap-3">
         <div>
           <Link href="/admin/landing-pages" className="text-sm text-muted">بازگشت به فهرست</Link>
-          <h1 className="mt-1 text-xl font-black">{page ? "ویرایش صفحهٔ فرود" : "ایجاد صفحهٔ فرود"}</h1>
+          <h1 className="mt-1 text-xl font-black">{page ? "فضای کار صفحه" : "ایجاد صفحهٔ فرود"}</h1>
           <p className="mt-1 text-sm text-muted">
             {dirty ? "تغییرات ذخیره نشده است." : saved ? "همهٔ تغییرات ذخیره شده‌اند." : "آمادهٔ ویرایش"}
           </p>
@@ -443,14 +359,22 @@ export function AdminLandingPageComposer({ pageId }: { pageId?: string }) {
         </div>
       </div>
 
-      <section className="mb-5 rounded-2xl border border-border bg-surface-elevated p-5">
-        <div className="mb-4 flex items-center justify-between">
+      <section className="mb-5 rounded-2xl border border-border bg-surface-elevated p-5" data-testid="page-workspace-meta">
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
           <h2 className="font-black">مشخصات صفحه</h2>
-          {page ? (
-            <span className={`rounded-full px-2 py-0.5 text-xs font-bold ${page.status === "Published" ? "bg-emerald-50 text-emerald-700" : "bg-amber-50 text-amber-700"}`}>
-              {page.status === "Published" ? "منتشرشده" : "پیش‌نویس"}
+          <div className="flex flex-wrap items-center gap-2">
+            {page ? (
+              <span className={`rounded-full px-2 py-0.5 text-xs font-bold ${page.status === "Published" ? "bg-emerald-50 text-emerald-700" : "bg-amber-50 text-amber-700"}`}>
+                {page.status === "Published" ? "منتشرشده" : "پیش‌نویس"}
+              </span>
+            ) : null}
+            <span
+              className="rounded-full bg-slate-100 px-3 py-1 text-xs font-bold text-slate-700"
+              data-testid={page ? "page-language-fixed" : "page-language-create"}
+            >
+              زبان صفحه: {localeLabel(page?.locale ?? meta.locale)}
             </span>
-          ) : null}
+          </div>
         </div>
         <div className="grid gap-3 md:grid-cols-2">
           <label className="text-sm">
@@ -461,13 +385,22 @@ export function AdminLandingPageComposer({ pageId }: { pageId?: string }) {
             <span className="mb-1 block font-bold">آدرس صفحه</span>
             <input className="w-full rounded-xl border px-3 py-2" dir="ltr" value={meta.slug} onChange={(e) => setMeta({ ...meta, slug: e.target.value })} />
           </label>
-          <label className="text-sm">
-            <span className="mb-1 block font-bold">زبان</span>
-            <select className="w-full rounded-xl border px-3 py-2" value={meta.locale} onChange={(e) => setMeta({ ...meta, locale: e.target.value })}>
-              <option value="fa">فارسی</option>
-              <option value="en">انگلیسی</option>
-            </select>
-          </label>
+          {!page ? (
+            <label className="text-sm" data-testid="page-language-create-field">
+              <span className="mb-1 block font-bold">زبان صفحه</span>
+              <select className="w-full rounded-xl border px-3 py-2" value={meta.locale} onChange={(e) => setMeta({ ...meta, locale: e.target.value })}>
+                <option value="fa">فارسی</option>
+                <option value="en">انگلیسی</option>
+              </select>
+              <span className="mt-1 block text-xs text-muted">زبان فقط هنگام ایجاد انتخاب می‌شود و برای همهٔ بخش‌ها ثابت می‌ماند.</span>
+            </label>
+          ) : (
+            <div className="text-sm" data-testid="page-language-edit-fixed">
+              <span className="mb-1 block font-bold">زبان صفحه</span>
+              <p className="rounded-xl border bg-slate-50 px-3 py-2 font-bold">{localeLabel(page.locale)}</p>
+              <span className="mt-1 block text-xs text-muted">ترجمهٔ صفحه جریان جداگانه‌ای است؛ بخش‌ها زبان مستقل ندارند.</span>
+            </div>
+          )}
           <label className="text-sm">
             <span className="mb-1 block font-bold">عنوان سئو</span>
             <input className="w-full rounded-xl border px-3 py-2" value={meta.seoTitle} onChange={(e) => setMeta({ ...meta, seoTitle: e.target.value })} />
@@ -479,6 +412,40 @@ export function AdminLandingPageComposer({ pageId }: { pageId?: string }) {
         </div>
       </section>
 
+      <section className="mb-5 rounded-2xl border border-border bg-surface-elevated p-5" data-testid="page-workspace-preview">
+        <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+          <h2 className="font-black">پیش‌نمایش ترکیب صفحه</h2>
+          <span className="text-xs font-bold text-muted">{sections.length.toLocaleString("fa-IR")} بخش</span>
+        </div>
+        {sections.length === 0 ? (
+          <p className="rounded-xl border border-dashed px-4 py-8 text-center text-sm text-muted">هنوز بخشی اضافه نشده است.</p>
+        ) : (
+          <div className="space-y-2" data-testid="composition-visual-preview">
+            {sections.map((row) => {
+              const config = parseLandingConfig(row.config);
+              const variantKey = typeof config.variantKey === "string" ? config.variantKey : undefined;
+              const sectionTypeKey = resolveSectionTypeKey(row.sectionType, config);
+              const typeLabel = sectionTypeKey ? (getSectionType(sectionTypeKey)?.nameFa ?? landingSectionLabel(row.sectionType)) : landingSectionLabel(row.sectionType);
+              return (
+                <div key={row.pageSectionId} className={`rounded-xl border px-3 py-2 ${row.isEnabled ? "bg-white" : "bg-slate-50 opacity-70"}`}>
+                  <div className="flex items-center gap-3">
+                    <div className="w-28 shrink-0">
+                      {variantKey ? <VariantPreviewCanvas variantKey={variantKey} testId={`workspace-preview-${row.pageSectionId}`} /> : (
+                        <div className="mb-0 h-10 rounded-lg bg-slate-100" />
+                      )}
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-sm font-bold">{typeLabel}</p>
+                      <p className="truncate text-xs text-muted">{summarizeLandingSection(row.sectionType, config)}</p>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </section>
+
       <section className="rounded-2xl border border-border bg-surface-elevated p-5" data-testid="landing-section-composer">
         <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
           <h2 className="font-black">بخش‌های صفحه</h2>
@@ -486,7 +453,11 @@ export function AdminLandingPageComposer({ pageId }: { pageId?: string }) {
             type="button"
             className="inline-flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-2 text-sm font-bold text-white disabled:opacity-40"
             disabled={!page || busy}
-            onClick={openChooser}
+            onClick={() => {
+              setWizardMode("create");
+              setEditing(null);
+              setWizardOpen(true);
+            }}
             data-testid="landing-add-section"
           >
             <Plus className="h-4 w-4" />
@@ -536,7 +507,8 @@ export function AdminLandingPageComposer({ pageId }: { pageId?: string }) {
                         className="rounded-lg border px-3 py-2 text-xs font-bold min-h-11"
                         onClick={() => {
                           setEditing(row);
-                          setDraftConfig(config);
+                          setWizardMode("edit");
+                          setWizardOpen(true);
                         }}
                       >
                         <span className="inline-flex items-center gap-1"><Pencil className="h-3.5 w-3.5" /> ویرایش</span>
@@ -563,142 +535,49 @@ export function AdminLandingPageComposer({ pageId }: { pageId?: string }) {
 
       {message ? <p className="mt-4 text-sm text-red-600">{message}</p> : null}
 
-      {chooserOpen ? (
-        <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/40 p-4" data-testid="add-section-chooser">
-          <div className="max-h-[80vh] w-full max-w-3xl overflow-auto rounded-2xl bg-white p-5">
-            <div className="mb-4 flex items-center justify-between">
-              <h3 className="text-lg font-black">
-                {chooserStep === "section" ? "افزودن بخش" : `انتخاب ظاهر — ${chooserSection?.nameFa ?? ""}`}
-              </h3>
-              <button
-                type="button"
-                onClick={() => {
-                  if (chooserStep === "variant") {
-                    setChooserStep("section");
-                    setChooserSection(null);
-                    return;
-                  }
-                  setChooserOpen(false);
-                }}
-              >
-                {chooserStep === "variant" ? "بازگشت" : "بستن"}
-              </button>
-            </div>
-            {chooserStep === "section" ? (
-              <div className="grid gap-3 sm:grid-cols-2" data-testid="composition-section-catalog">
-                {compositionSections.map((choice) => (
-                  <button
-                    key={choice.sectionTypeKey}
-                    type="button"
-                    data-testid={choice.testId}
-                    data-section-type-key={choice.sectionTypeKey}
-                    className="rounded-2xl border p-4 text-start hover:border-[#2563EB]"
-                    onClick={() => {
-                      setChooserSection(choice);
-                      setChooserStep("variant");
-                    }}
-                  >
-                    <div className={`mb-3 h-16 rounded-xl bg-gradient-to-l ${previewMosaicClass(choice.previewKind)}`} aria-hidden />
-                    <strong>{choice.nameFa}</strong>
-                    <p className="mt-1 text-xs text-muted">{choice.descriptionFa}</p>
-                  </button>
-                ))}
-              </div>
-            ) : chooserSection ? (
-              <div className="grid gap-3 sm:grid-cols-2" data-testid="composition-variant-picker">
-                {adminImplementedVariants(chooserSection.sectionTypeKey).map((variant) => (
-                  <button
-                    key={variant.variantKey}
-                    type="button"
-                    data-variant-key={variant.variantKey}
-                    data-preview-fingerprint={variant.variantKey}
-                    data-testid={`pick-variant-${variant.variantKey.replace(/\./g, "-")}`}
-                    className="rounded-2xl border p-4 text-start hover:border-[#2563EB]"
-                    onClick={() => void addSectionWithVariant(chooserSection, variant.variantKey)}
-                  >
-                    <div
-                      className={`mb-3 grid h-16 grid-cols-5 grid-rows-2 gap-1 rounded-xl bg-gradient-to-l p-2 ${previewMosaicClass(variant.previewKind)}`}
-                      aria-hidden
-                      data-testid="variant-preview-canvas"
-                    >
-                      {variantPreviewStructure(variant.variantKey).map((cell, index) => (
-                        <span key={`${variant.variantKey}-${index}`} className={cell.className} />
-                      ))}
-                    </div>
-                    <strong>{variant.nameFa}</strong>
-                    <p className="mt-1 text-xs text-muted">{variant.descriptionFa}</p>
-                    {variant.recommendedUseFa ? (
-                      <span className="mt-2 inline-flex rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] font-bold text-emerald-700">
-                        {variant.recommendedUseFa}
-                      </span>
-                    ) : null}
-                  </button>
-                ))}
-              </div>
-            ) : null}
-          </div>
-        </div>
-      ) : null}
-
-      {editing ? (
-        <div className="fixed inset-0 z-40 flex justify-end bg-black/30">
-          <aside className="h-full w-full max-w-md overflow-auto bg-white p-5 shadow-2xl" data-testid="landing-section-drawer">
-            <div className="mb-4 flex items-center justify-between">
-              <h3 className="font-black">ویرایش {landingSectionLabel(editing.sectionType)}</h3>
-              <button type="button" onClick={() => setEditing(null)}>بستن</button>
-            </div>
-            {editingVariants.length > 0 ? (
-              <div className="mb-4" data-testid="edit-variant-picker">
-                <p className="mb-2 text-sm font-bold">ظاهر بخش</p>
-                <div className="grid gap-2">
-                  {editingVariants.map((variant) => {
-                    const selected = draftConfig.variantKey === variant.variantKey
-                      || (!draftConfig.variantKey && variant.variantKey === editingVariants[0]?.variantKey);
-                    return (
-                      <button
-                        key={variant.variantKey}
-                        type="button"
-                        data-variant-key={variant.variantKey}
-                        className={`rounded-xl border p-3 text-start ${selected ? "border-[#2563EB] bg-blue-50" : ""}`}
-                        onClick={() => setDraftConfig({ ...draftConfig, variantKey: variant.variantKey })}
-                      >
-                        <div className="flex items-center gap-3">
-                          <span className={`h-10 w-14 shrink-0 rounded-lg bg-gradient-to-l ${previewMosaicClass(variant.previewKind)}`} aria-hidden />
-                          <span>
-                            <strong className="text-sm">{variant.nameFa}</strong>
-                            <span className="mt-0.5 block text-xs text-muted">{variant.descriptionFa}</span>
-                          </span>
-                        </div>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            ) : null}
-            {showHeightPreset ? (
-              <label className="mb-4 block text-sm">
-                <span className="mb-1 block font-bold">اندازه نمایش</span>
-                <select
-                  className="w-full rounded-xl border px-3 py-2"
-                  value={typeof draftConfig.heightPreset === "string" ? draftConfig.heightPreset : "Medium"}
-                  onChange={(e) => setDraftConfig({ ...draftConfig, heightPreset: e.target.value })}
-                  data-testid="height-preset-select"
-                >
-                  {SIZE_PRESETS.map((preset) => (
-                    <option key={preset} value={preset}>{SIZE_PRESET_CONTRACTS[preset].nameFa}</option>
-                  ))}
-                </select>
-              </label>
-            ) : null}
-            <LandingSectionForm type={editing.sectionType} value={draftConfig} onChange={setDraftConfig} />
-            <div className="mt-5 flex gap-2">
-              <button type="button" className="rounded-xl bg-[#2563EB] px-4 py-2 text-sm font-bold text-white" disabled={busy} onClick={() => void saveSection()}>
-                ذخیرهٔ بخش
-              </button>
-              <button type="button" className="rounded-xl border px-4 py-2 text-sm" onClick={() => setEditing(null)}>انصراف</button>
-            </div>
-          </aside>
-        </div>
+      {wizardOpen ? (
+        <AdminSectionWizard
+          key={editing?.pageSectionId ?? "create"}
+          open={wizardOpen}
+          mode={wizardMode}
+          initialHostType={editing?.sectionType}
+          initialConfig={editing ? parseLandingConfig(editing.config) : undefined}
+          busy={busy}
+          onClose={() => {
+            setWizardOpen(false);
+            setEditing(null);
+          }}
+          onSave={async (payload) => {
+            if (!page) {
+              setMessage("ابتدا مشخصات صفحه را ذخیره کنید.");
+              return;
+            }
+            setBusy(true);
+            if (wizardMode === "edit" && editing) {
+              const result = await updateAdminLandingSection(page.pageId, editing.pageSectionId, payload.config);
+              setBusy(false);
+              if (!result.ok) {
+                setMessage(result.message);
+                return;
+              }
+              setSections((rows) => rows.map((item) => item.pageSectionId === editing.pageSectionId ? result.data : item));
+            } else {
+              const config = payload.config.variantKey
+                ? payload.config
+                : defaultConfigForCompositionSection(payload.sectionTypeKey, payload.variantKey);
+              const result = await addAdminLandingSection(page.pageId, payload.hostType, config);
+              setBusy(false);
+              if (!result.ok) {
+                setMessage(result.message);
+                return;
+              }
+              setSections((rows) => [...rows, result.data]);
+            }
+            setWizardOpen(false);
+            setEditing(null);
+            setMessage(undefined);
+          }}
+        />
       ) : null}
     </main>
   );

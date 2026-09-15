@@ -8,7 +8,7 @@ import { storefrontAppearanceStyle } from "./storefront-appearance-api.ts";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
 
-test("SSR root applies appearance CSS variables", () => {
+test("SSR root loads appearance and scopes tokens via provider (not html style)", () => {
   const layout = fs.readFileSync(path.join(root, "app/layout.tsx"), "utf8");
   assert.match(layout, /loadStorefrontAppearance/);
   assert.match(layout, /data-storefront-palette/);
@@ -16,7 +16,8 @@ test("SSR root applies appearance CSS variables", () => {
   assert.match(layout, /data-storefront-product-card-skin/);
   assert.match(layout, /data-storefront-background-style/);
   assert.match(layout, /StorefrontProductCardSkinProvider/);
-  assert.match(layout, /storefrontAppearanceStyle/);
+  assert.match(layout, /StorefrontAppearanceProvider/);
+  assert.doesNotMatch(layout, /style=\{storefrontAppearanceStyle/);
   assert.match(layout, /THEME_BOOTSTRAP_SCRIPT/);
   assert.doesNotMatch(layout, /dangerouslySetInnerHTML=\{[^}]*payload/);
 });

@@ -172,9 +172,24 @@ public static class StoreLandingPageSectionConfig
     private static string NormalizeArticleList(JsonElement root)
     {
         var source = root.TryGetProperty("source", out var sourceEl) ? sourceEl.GetString()?.Trim() ?? "Latest" : "Latest";
-        if (!string.Equals(source, "Latest", StringComparison.OrdinalIgnoreCase))
+        if (string.Equals(source, "Manual", StringComparison.OrdinalIgnoreCase))
         {
-            throw new PlatformHttpException(400, "فهرست مقاله فعلاً فقط Latest است.", "landing.section.source.unsupported");
+            var articleIds = ReadGuids(root, "articleIds", allowEmpty: true);
+            return JsonSerializer.Serialize(new
+            {
+                title = OptionalString(root, "title", StoreLandingPageSectionRegistry.TitleMaxLength),
+                source = "Manual",
+                take = OptionalTake(root),
+                articleIds,
+                variantKey = OptionalVariantKey(root),
+                heightPreset = OptionalHeightPreset(root),
+            }, JsonOptions);
+        }
+
+        if (!string.Equals(source, "Latest", StringComparison.OrdinalIgnoreCase)
+            && !string.Equals(source, "LatestArticles", StringComparison.OrdinalIgnoreCase))
+        {
+            throw new PlatformHttpException(400, "فهرست مقاله فعلاً فقط Latest یا Manual است.", "landing.section.source.unsupported");
         }
 
         return JsonSerializer.Serialize(new
@@ -227,11 +242,18 @@ public static class StoreLandingPageSectionConfig
 
     private static string NormalizeStoryRail(JsonElement root)
     {
-        var items = ReadStoryItems(root);
+        // Builder display settings only — Story content comes from Story module.
+        var take = OptionalTake(root);
+        var enabled = !root.TryGetProperty("enabled", out var enabledEl)
+            || enabledEl.ValueKind is JsonValueKind.Null or JsonValueKind.Undefined
+            || (enabledEl.ValueKind == JsonValueKind.True)
+            || (enabledEl.ValueKind == JsonValueKind.String && !string.Equals(enabledEl.GetString(), "false", StringComparison.OrdinalIgnoreCase));
         return JsonSerializer.Serialize(new
         {
             title = OptionalString(root, "title", StoreLandingPageSectionRegistry.TitleMaxLength),
-            items,
+            take,
+            enabled,
+            items = Array.Empty<object>(),
             variantKey = OptionalVariantKey(root) ?? "story.circle",
             heightPreset = OptionalHeightPreset(root),
         }, JsonOptions);

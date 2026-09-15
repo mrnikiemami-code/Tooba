@@ -63,7 +63,9 @@ function defaultConfigForSection(sectionTypeKey: string, variantKey: string): Re
     return {
       ...base,
       title: "استوری‌ها",
-      items: [{ imageUrl: "", title: "استوری ۱", href: "/products", enabled: true }],
+      take: 12,
+      enabled: true,
+      items: [],
     };
   }
   if (hostType === "BannerShowcase") {

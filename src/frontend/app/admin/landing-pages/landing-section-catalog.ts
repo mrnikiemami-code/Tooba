@@ -75,7 +75,9 @@ export function defaultLandingSectionConfig(type: LandingSectionType): Record<st
       return {
         title: "استوری‌ها",
         variantKey: "story.circle",
-        items: [{ imageUrl: "", title: "استوری ۱", href: "/products", enabled: true }],
+        take: 12,
+        enabled: true,
+        items: [],
       };
     case "BannerShowcase":
       return {
@@ -109,15 +111,25 @@ export function summarizeLandingSection(type: string, config: Record<string, unk
   }
   if (type === "ArticleList") {
     const take = typeof config.take === "number" ? config.take : 6;
-    return title ? `${title}${variantSuffix} · آخرین مطالب · ${take} مورد` : `آخرین مطالب · ${take} مورد${variantSuffix}`;
+    const source = typeof config.source === "string" ? config.source : "Latest";
+    const sourceLabel = source === "Manual" ? "انتخاب دستی" : "جدیدترین مطالب";
+    const manualCount = Array.isArray(config.articleIds) ? config.articleIds.length : 0;
+    if (source === "Manual") {
+      return title
+        ? `${title}${variantSuffix} · ${sourceLabel} · ${manualCount.toLocaleString("fa-IR")} مطلب`
+        : `${sourceLabel} · ${manualCount.toLocaleString("fa-IR")} مطلب${variantSuffix}`;
+    }
+    return title ? `${title}${variantSuffix} · ${sourceLabel} · ${take} مورد` : `${sourceLabel} · ${take} مورد${variantSuffix}`;
   }
   if (type === "BannerShowcase" || (variantKey?.startsWith("banner.") ?? false)) {
     const slots = bannerSlotCountForVariant(variantKey);
     return title ? `${title}${variantSuffix} · ${slots} جایگاه` : `بنر${variantSuffix} · ${slots} جایگاه`;
   }
   if (type === "StoryRail" || (variantKey?.startsWith("story.") ?? false)) {
-    const items = Array.isArray(config.items) ? config.items.length : 0;
-    return title ? `${title}${variantSuffix} · ${items} استوری` : `استوری${variantSuffix}`;
+    const take = typeof config.take === "number" ? config.take : 12;
+    return title
+      ? `${title}${variantSuffix} · نمایش تا ${take.toLocaleString("fa-IR")} استوری تأییدشده`
+      : `نمایش استوری تأییدشده${variantSuffix} · تا ${take.toLocaleString("fa-IR")}`;
   }
   if (type === "CategoryGrid") {
     const count = Array.isArray(config.categoryIds)

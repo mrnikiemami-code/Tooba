@@ -19,6 +19,7 @@ import {
   Wallet,
   X,
 } from "lucide-react";
+import { useStorefrontAppearanceStyle } from "../../lib/storefront-appearance/storefront-appearance-context.tsx";
 
 type NavItem = {
   id: string;
@@ -65,6 +66,7 @@ function isActivePath(pathname: string, href: string): boolean {
 export function CustomerPanelShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
+  const appearanceStyle = useStorefrontAppearanceStyle();
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [mobileOpen, setMobileOpen] = useState(false);
 
@@ -80,7 +82,15 @@ export function CustomerPanelShell({ children }: { children: ReactNode }) {
   }
 
   return (
-    <div className="min-h-screen bg-page flex flex-col overflow-x-hidden" dir="rtl" data-testid="customer-panel-shell" data-storefront-surface-role="page" data-customer-panel-canvas>
+    <div
+      className="min-h-screen bg-page flex flex-col overflow-x-hidden"
+      dir="rtl"
+      data-testid="customer-panel-shell"
+      data-storefront-surface-role="page"
+      data-customer-panel-canvas
+      data-storefront-theme-scope="customer-panel"
+      style={appearanceStyle}
+    >
       <header className="sticky top-0 z-40 bg-surface border-b border-gray-200 h-[65px] flex items-center" data-testid="customer-panel-header" data-storefront-surface-role="header">
         <div className="flex items-center justify-between w-full px-4 lg:px-6">
           <div className="flex items-center gap-3">

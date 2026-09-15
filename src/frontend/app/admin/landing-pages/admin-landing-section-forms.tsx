@@ -1,11 +1,24 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { AdminSearchableCombobox } from "../admin-searchable-combobox";
 import { loadCategoryTree, type CategoryTreeNodeDto } from "../catalog-category-api";
-import { listAdminBrandOptions, queryAdminProductGrid } from "../host-client";
-import { bannerSlotCountForVariant, PRODUCT_SOURCE_CHOICES } from "./landing-section-catalog.ts";
+import { listAdminBrandOptions } from "../host-client";
+import { bannerSlotCountForVariant } from "./landing-section-catalog.ts";
 import { listAdminMenus } from "../menus/admin-menus-api.ts";
+import { AdminResourceSelector, ResourceSelectorTrigger } from "./admin-resource-selector.tsx";
+import { bannerSlotCellClass, bannerSlotLayoutClass } from "./layout-aware-previews.tsx";
+import {
+  sourceCapabilityForVariant,
+  strategyLabelFa,
+} from "../../../lib/storefront-composition/source-capability.ts";
+import type { AdminSelectableDataSource } from "../../../lib/storefront-composition/types.ts";
+import { SIZE_PRESETS } from "../../../lib/storefront-composition/types.ts";
+import { SIZE_PRESET_CONTRACTS } from "../../../lib/storefront-composition/size-presets.ts";
+import type { SectionWizardStep } from "./admin-landing-section-forms-types.ts";
+
+export type { SectionWizardStep };
+export { validateWizardStep, wizardStepsForHost } from "./admin-section-wizard-logic.ts";
 
 function asStringArray(value: unknown): string[] {
   if (!Array.isArray(value)) return [];
@@ -18,22 +31,7 @@ function flattenCategories(nodes: CategoryTreeNodeDto[]): { value: string; label
     .map((node) => ({ value: node.id, label: node.name }));
 }
 
-type StoryItem = { imageUrl?: string; title?: string; href?: string; enabled?: boolean };
 type BannerItem = { imageUrl?: string; href?: string; title?: string; text?: string; ctaLabel?: string };
-
-function asStoryItems(value: unknown): StoryItem[] {
-  if (!Array.isArray(value)) return [];
-  return value.map((item) => {
-    if (!item || typeof item !== "object") return { imageUrl: "", title: "", href: "", enabled: true };
-    const row = item as Record<string, unknown>;
-    return {
-      imageUrl: typeof row.imageUrl === "string" ? row.imageUrl : "",
-      title: typeof row.title === "string" ? row.title : "",
-      href: typeof row.href === "string" ? row.href : "",
-      enabled: row.enabled !== false,
-    };
-  });
-}
 
 function asBannerItems(value: unknown): BannerItem[] {
   if (!Array.isArray(value)) return [];
@@ -50,37 +48,68 @@ function asBannerItems(value: unknown): BannerItem[] {
   });
 }
 
+/** Settings + source fields for wizard (no language, no story authoring). */
 export function LandingSectionForm({
   type,
   value,
   onChange,
+  mode = "all",
 }: {
   type: string;
   value: Record<string, unknown>;
   onChange: (next: Record<string, unknown>) => void;
+  /** Wizard can show source-only or settings-only slices. */
+  mode?: "all" | "source" | "settings";
 }) {
   const title = typeof value.title === "string" ? value.title : "";
   const set = (patch: Record<string, unknown>) => onChange({ ...value, ...patch });
   const variantKey = typeof value.variantKey === "string" ? value.variantKey : undefined;
   const showBannerSlots = type === "BannerShowcase" || (variantKey?.startsWith("banner.") ?? false);
-  const showStoryItems = type === "StoryRail" || (variantKey?.startsWith("story.") ?? false);
+  const showStorySettings = type === "StoryRail" || (variantKey?.startsWith("story.") ?? false);
+  const capability = variantKey ? sourceCapabilityForVariant(variantKey) : null;
 
-  if (showBannerSlots) {
+  if (showBannerSlots && mode !== "source") {
     const slots = Math.max(1, bannerSlotCountForVariant(variantKey || "banner.single"));
     const current = asBannerItems(value.items);
     const items = Array.from({ length: slots }, (_, index) => current[index] ?? { imageUrl: "", href: "", title: "" });
+    const heightPreset = typeof value.heightPreset === "string" ? value.heightPreset : "Medium";
     return (
       <div className="space-y-3" data-testid="landing-section-form">
-        <TextField label="عنوان" value={title} onChange={(next) => set({ title: next })} />
-        <div className="space-y-3" data-testid="banner-slot-editor">
-          <p className="text-sm font-bold">جایگاه‌های بنر ({slots.toLocaleString("fa-IR")} مورد)</p>
+        {mode !== "settings" ? null : (
+          <TextField label="عنوان بخش" value={title} onChange={(next) => set({ title: next })} />
+        )}
+        {mode === "all" || mode === "settings" ? (
+          <label className="block text-sm">
+            <span className="mb-1 block font-bold">ارتفاع بنر</span>
+            <select
+              className="w-full rounded-xl border border-border bg-surface px-3 py-2"
+              value={heightPreset}
+              onChange={(e) => set({ heightPreset: e.target.value })}
+              data-testid="height-preset-select"
+            >
+              {SIZE_PRESETS.map((preset) => (
+                <option key={preset} value={preset}>{SIZE_PRESET_CONTRACTS[preset].nameFa}</option>
+              ))}
+            </select>
+          </label>
+        ) : null}
+        <div
+          className={bannerSlotLayoutClass(variantKey)}
+          data-testid="banner-slot-editor"
+          data-banner-variant={variantKey}
+        >
+          <p className="col-span-full text-sm font-bold">جایگاه‌های بنر ({slots.toLocaleString("fa-IR")} مورد)</p>
           {items.every((item) => !(item.imageUrl ?? "").trim()) ? (
-            <p className="rounded-xl border border-dashed px-3 py-2 text-xs text-muted" data-testid="banner-empty-media-hint">
+            <p className="col-span-full rounded-xl border border-dashed px-3 py-2 text-xs text-muted" data-testid="banner-empty-media-hint">
               هنوز تصویری برای بنرها تنظیم نشده. برای هر جایگاه یک آدرس تصویر وارد کنید تا در فروشگاه خالی نماند.
             </p>
           ) : null}
           {items.map((item, index) => (
-            <div key={index} className="rounded-xl border border-border p-3 space-y-2">
+            <div
+              key={index}
+              className={`rounded-xl border border-border bg-slate-50 p-3 space-y-2 ${bannerSlotCellClass(variantKey, index)}`}
+              data-testid={`banner-slot-${index}`}
+            >
               <p className="text-xs font-bold text-muted">جایگاه {(index + 1).toLocaleString("fa-IR")}</p>
               <TextField
                 label="آدرس تصویر"
@@ -118,81 +147,29 @@ export function LandingSectionForm({
     );
   }
 
-  if (showStoryItems) {
-    const items = asStoryItems(value.items);
+  if (showStorySettings) {
+    const take = typeof value.take === "number" ? value.take : 12;
+    const enabled = value.enabled !== false;
     return (
-      <div className="space-y-3" data-testid="landing-section-form">
-        <TextField label="عنوان" value={title} onChange={(next) => set({ title: next })} />
-        <div className="space-y-3" data-testid="story-items-editor">
-          <div className="flex items-center justify-between">
-            <p className="text-sm font-bold">فهرست استوری</p>
-            <button
-              type="button"
-              className="rounded-lg border px-3 py-1 text-xs font-bold"
-              onClick={() => set({ items: [...items, { imageUrl: "", title: "", href: "/products", enabled: true }] })}
-            >
-              افزودن استوری
-            </button>
-          </div>
-          {items.length === 0 ? (
-            <p className="text-xs text-muted" data-testid="story-empty-hint">هنوز استوری اضافه نشده است. با «افزودن استوری» شروع کنید.</p>
-          ) : null}
-          {items.map((item, index) => (
-            <div key={index} className="rounded-xl border border-border p-3 space-y-2">
-              <TextField
-                label="آدرس تصویر"
-                value={item.imageUrl ?? ""}
-                onChange={(next) => {
-                  const nextItems = items.slice();
-                  nextItems[index] = { ...item, imageUrl: next };
-                  set({ items: nextItems });
-                }}
-              />
-              <TextField
-                label="عنوان"
-                value={item.title ?? ""}
-                onChange={(next) => {
-                  const nextItems = items.slice();
-                  nextItems[index] = { ...item, title: next };
-                  set({ items: nextItems });
-                }}
-              />
-              <TextField
-                label="پیوند مقصد"
-                value={item.href ?? ""}
-                onChange={(next) => {
-                  const nextItems = items.slice();
-                  nextItems[index] = { ...item, href: next };
-                  set({ items: nextItems });
-                }}
-              />
-              <label className="flex items-center gap-2 text-sm">
-                <input
-                  type="checkbox"
-                  checked={item.enabled !== false}
-                  onChange={(event) => {
-                    const nextItems = items.slice();
-                    nextItems[index] = { ...item, enabled: event.target.checked };
-                    set({ items: nextItems });
-                  }}
-                />
-                فعال
-              </label>
-              <button
-                type="button"
-                className="text-xs text-red-600"
-                onClick={() => set({ items: items.filter((_, i) => i !== index) })}
-              >
-                حذف
-              </button>
-            </div>
-          ))}
-        </div>
+      <div className="space-y-3" data-testid="landing-section-form" data-story-display-settings="1">
+        <TextField label="عنوان بخش (اختیاری)" value={title} onChange={(next) => set({ title: next })} />
+        <TakeField value={take} onChange={(next) => set({ take: next, items: [] })} max={50} label="حداکثر تعداد نمایش" />
+        <label className="flex items-center gap-2 text-sm">
+          <input
+            type="checkbox"
+            checked={enabled}
+            onChange={(event) => set({ enabled: event.target.checked, items: [] })}
+          />
+          نمایش این بخش در فروشگاه
+        </label>
+        <p className="rounded-xl border border-dashed px-3 py-2 text-xs text-muted" data-testid="story-display-only-hint">
+          استوری‌ها از ماژول استوری (پس از تأیید) خوانده می‌شوند. اینجا فقط تنظیمات نمایش است — ساخت استوری در این بخش ممکن نیست.
+        </p>
       </div>
     );
   }
 
-  if (type === "Hero" || type === "PromoBanner") {
+  if ((type === "Hero" || type === "PromoBanner") && mode !== "source") {
     return (
       <div className="space-y-3" data-testid="landing-section-form">
         <TextField label="عنوان" value={title} onChange={(next) => set({ title: next })} required />
@@ -213,7 +190,7 @@ export function LandingSectionForm({
     );
   }
 
-  if (type === "RichText") {
+  if (type === "RichText" && mode !== "source") {
     return (
       <div className="space-y-3" data-testid="landing-section-form">
         <TextField label="عنوان" value={title} onChange={(next) => set({ title: next })} />
@@ -229,106 +206,86 @@ export function LandingSectionForm({
     );
   }
 
-  if (type === "Reviews" || type === "ArticleList") {
+  if (type === "Reviews") {
     return (
       <div className="space-y-3" data-testid="landing-section-form">
-        <TextField label="عنوان" value={title} onChange={(next) => set({ title: next })} />
-        {type === "ArticleList" ? (
-          <TakeField value={typeof value.take === "number" ? value.take : 6} onChange={(take) => set({ take, source: "Latest" })} />
+        {(mode === "all" || mode === "settings") ? (
+          <TextField label="عنوان بخش" value={title} onChange={(next) => set({ title: next })} />
         ) : null}
-        <p className="text-xs text-muted">
-          {type === "ArticleList" ? "فقط آخرین مطالب منتشرشده نمایش داده می‌شود." : "نظرهای تأییدشدهٔ فروشگاه نمایش داده می‌شود."}
-        </p>
+        <p className="text-xs text-muted">نظرهای تأییدشدهٔ فروشگاه نمایش داده می‌شود.</p>
       </div>
+    );
+  }
+
+  if (type === "ArticleList") {
+    return (
+      <ArticleSourceForm
+        value={value}
+        onChange={onChange}
+        mode={mode}
+        strategies={(capability?.strategies ?? ["LatestArticles", "Manual"]) as AdminSelectableDataSource[]}
+      />
     );
   }
 
   if (type === "CategoryGrid") {
     const selected = asStringArray(value.categoryIds ?? value.ids);
+    if (mode === "settings") {
+      return (
+        <div className="space-y-3" data-testid="landing-section-form">
+          <TextField label="عنوان بخش" value={title} onChange={(next) => set({ title: next })} />
+        </div>
+      );
+    }
     return (
       <div className="space-y-3" data-testid="landing-section-form">
-        <TextField label="عنوان" value={title} onChange={(next) => set({ title: next })} />
-        {selected.length === 0 ? (
-          <p className="rounded-xl border border-dashed px-3 py-2 text-xs text-muted" data-testid="empty-state-category-source">
-            هنوز دسته‌ای انتخاب نشده. چند دسته اضافه کنید تا بخش در فروشگاه خالی نماند.
-          </p>
-        ) : null}
-        <EntityMultiPicker kind="category" selected={selected} onChange={(categoryIds) => set({ categoryIds })} />
+        {mode === "all" ? <TextField label="عنوان بخش" value={title} onChange={(next) => set({ title: next })} /> : null}
+        <ManualResourceField
+          family="categories"
+          selected={selected}
+          onChange={(categoryIds) => set({ categoryIds })}
+          emptyHint="هنوز دسته‌ای انتخاب نشده. چند دسته اضافه کنید تا بخش در فروشگاه خالی نماند."
+          emptyTestId="empty-state-category-source"
+        />
       </div>
     );
   }
 
   if (type === "BrandStrip") {
     const selected = asStringArray(value.brandIds ?? value.ids);
+    if (mode === "settings") {
+      return (
+        <div className="space-y-3" data-testid="landing-section-form">
+          <TextField label="عنوان بخش" value={title} onChange={(next) => set({ title: next })} />
+        </div>
+      );
+    }
     return (
       <div className="space-y-3" data-testid="landing-section-form">
-        <TextField label="عنوان" value={title} onChange={(next) => set({ title: next })} />
-        {selected.length === 0 ? (
-          <p className="rounded-xl border border-dashed px-3 py-2 text-xs text-muted" data-testid="empty-state-brand-source">
-            هنوز برندی انتخاب نشده. چند برند اضافه کنید تا بخش در فروشگاه خالی نماند.
-          </p>
-        ) : null}
-        <EntityMultiPicker kind="brand" selected={selected} onChange={(brandIds) => set({ brandIds })} />
+        {mode === "all" ? <TextField label="عنوان بخش" value={title} onChange={(next) => set({ title: next })} /> : null}
+        <ManualResourceField
+          family="brands"
+          selected={selected}
+          onChange={(brandIds) => set({ brandIds })}
+          emptyHint="هنوز برندی انتخاب نشده. چند برند اضافه کنید تا بخش در فروشگاه خالی نماند."
+          emptyTestId="empty-state-brand-source"
+        />
       </div>
     );
   }
 
   if (type === "ProductCollection") {
-    const source = typeof value.source === "string" ? value.source : "Newest";
-    const manualEmpty = source === "Manual" && asStringArray(value.productIds).length === 0;
-    const categoryMissing = source === "Category" && !(typeof value.categoryId === "string" && value.categoryId);
-    const brandMissing = source === "Brand" && !(typeof value.brandId === "string" && value.brandId);
     return (
-      <div className="space-y-3" data-testid="product-section-editor">
-        <TextField label="عنوان" value={title} onChange={(next) => set({ title: next })} />
-        <label className="block text-sm">
-          <span className="mb-1 block font-bold">منبع کالا</span>
-          <select
-            className="w-full rounded-xl border border-border bg-surface px-3 py-2"
-            value={source}
-            onChange={(event) => set({ source: event.target.value })}
-          >
-            {PRODUCT_SOURCE_CHOICES.map((item) => (
-              <option key={item.value} value={item.value}>{item.label}</option>
-            ))}
-          </select>
-        </label>
-        {manualEmpty || categoryMissing || brandMissing ? (
-          <p className="rounded-xl border border-dashed px-3 py-2 text-xs text-muted" data-testid="empty-state-product-source">
-            {manualEmpty
-              ? "هنوز کالایی انتخاب نشده. چند کالا اضافه کنید تا بخش در فروشگاه خالی نماند."
-              : categoryMissing
-                ? "یک دسته انتخاب کنید؛ اگر دسته حذف شده باشد منبع را عوض کنید."
-                : "یک برند انتخاب کنید؛ اگر برند حذف شده باشد منبع را عوض کنید."}
-          </p>
-        ) : null}
-        <TakeField value={typeof value.take === "number" ? value.take : 8} onChange={(take) => set({ take })} />
-        {source === "Category" ? (
-          <EntitySinglePicker
-            kind="category"
-            value={typeof value.categoryId === "string" ? value.categoryId : null}
-            onChange={(categoryId) => set({ categoryId })}
-          />
-        ) : null}
-        {source === "Brand" ? (
-          <EntitySinglePicker
-            kind="brand"
-            value={typeof value.brandId === "string" ? value.brandId : null}
-            onChange={(brandId) => set({ brandId })}
-          />
-        ) : null}
-        {source === "Manual" ? (
-          <EntityMultiPicker
-            kind="product"
-            selected={asStringArray(value.productIds)}
-            onChange={(productIds) => set({ productIds })}
-          />
-        ) : null}
-      </div>
+      <ProductSourceForm
+        value={value}
+        onChange={onChange}
+        mode={mode}
+        strategies={(capability?.strategies ?? ["Manual", "Category", "Brand", "Newest"]) as AdminSelectableDataSource[]}
+      />
     );
   }
 
-  if (type === "NavigationMenu") {
+  if (type === "NavigationMenu" && mode !== "source") {
     return (
       <div className="space-y-3" data-testid="landing-section-form">
         <TextField label="عنوان" value={title} onChange={(next) => set({ title: next })} />
@@ -337,7 +294,183 @@ export function LandingSectionForm({
     );
   }
 
+  if (mode === "source" && !capability?.strategies.length) {
+    return <p className="text-sm text-muted">این بخش منبع محتوای جداگانه‌ای ندارد.</p>;
+  }
+
   return <p className="text-sm text-muted">این بخش قابل ویرایش نیست.</p>;
+}
+
+function ArticleSourceForm({
+  value,
+  onChange,
+  mode,
+  strategies,
+}: {
+  value: Record<string, unknown>;
+  onChange: (next: Record<string, unknown>) => void;
+  mode: "all" | "source" | "settings";
+  strategies: AdminSelectableDataSource[];
+}) {
+  const title = typeof value.title === "string" ? value.title : "";
+  const set = (patch: Record<string, unknown>) => onChange({ ...value, ...patch });
+  const hostSource = typeof value.source === "string" ? value.source : "Latest";
+  const dynamic = hostSource === "Manual" ? "Manual" : "LatestArticles";
+  const articleIds = asStringArray(value.articleIds);
+
+  return (
+    <div className="space-y-3" data-testid="landing-section-form" data-article-source="1">
+      {(mode === "all" || mode === "settings") ? (
+        <TextField label="عنوان بخش" value={title} onChange={(next) => set({ title: next })} />
+      ) : null}
+      {(mode === "all" || mode === "source") ? (
+        <>
+          <label className="block text-sm">
+            <span className="mb-1 block font-bold">منبع محتوا</span>
+            <select
+              className="w-full rounded-xl border border-border bg-surface px-3 py-2"
+              value={dynamic}
+              onChange={(event) => {
+                const next = event.target.value;
+                if (next === "Manual") set({ source: "Manual", articleIds: articleIds });
+                else set({ source: "Latest", articleIds: [] });
+              }}
+              data-testid="article-source-strategy"
+            >
+              {strategies.includes("LatestArticles") ? (
+                <option value="LatestArticles">{strategyLabelFa("LatestArticles")}</option>
+              ) : null}
+              {strategies.includes("Manual") ? (
+                <option value="Manual">{strategyLabelFa("Manual")}</option>
+              ) : null}
+            </select>
+          </label>
+          {dynamic === "LatestArticles" ? (
+            <TakeField value={typeof value.take === "number" ? value.take : 6} onChange={(take) => set({ take, source: "Latest" })} />
+          ) : (
+            <ManualResourceField
+              family="articles"
+              selected={articleIds}
+              onChange={(ids) => set({ articleIds: ids, source: "Manual" })}
+              emptyHint="هنوز مطلبی انتخاب نشده. از فهرست مطالب انتخاب کنید."
+              emptyTestId="empty-state-article-source"
+            />
+          )}
+        </>
+      ) : null}
+    </div>
+  );
+}
+
+function ProductSourceForm({
+  value,
+  onChange,
+  mode,
+  strategies,
+}: {
+  value: Record<string, unknown>;
+  onChange: (next: Record<string, unknown>) => void;
+  mode: "all" | "source" | "settings";
+  strategies: AdminSelectableDataSource[];
+}) {
+  const title = typeof value.title === "string" ? value.title : "";
+  const set = (patch: Record<string, unknown>) => onChange({ ...value, ...patch });
+  const source = typeof value.source === "string" ? value.source : "Newest";
+  const manualEmpty = source === "Manual" && asStringArray(value.productIds).length === 0;
+  const categoryMissing = source === "Category" && !(typeof value.categoryId === "string" && value.categoryId);
+  const brandMissing = source === "Brand" && !(typeof value.brandId === "string" && value.brandId);
+  const allowed = strategies.filter((s) => ["Manual", "Category", "Brand", "Newest"].includes(s));
+
+  return (
+    <div className="space-y-3" data-testid="product-section-editor">
+      {(mode === "all" || mode === "settings") ? (
+        <TextField label="عنوان بخش" value={title} onChange={(next) => set({ title: next })} />
+      ) : null}
+      {(mode === "all" || mode === "source") ? (
+        <>
+          <label className="block text-sm">
+            <span className="mb-1 block font-bold">منبع کالا</span>
+            <select
+              className="w-full rounded-xl border border-border bg-surface px-3 py-2"
+              value={source}
+              onChange={(event) => set({ source: event.target.value })}
+              data-testid="product-source-strategy"
+            >
+              {allowed.map((item) => (
+                <option key={item} value={item}>{strategyLabelFa(item)}</option>
+              ))}
+            </select>
+          </label>
+          {manualEmpty || categoryMissing || brandMissing ? (
+            <p className="rounded-xl border border-dashed px-3 py-2 text-xs text-muted" data-testid="empty-state-product-source">
+              {manualEmpty
+                ? "هنوز کالایی انتخاب نشده. چند کالا اضافه کنید تا بخش در فروشگاه خالی نماند."
+                : categoryMissing
+                  ? "یک دسته انتخاب کنید؛ اگر دسته حذف شده باشد منبع را عوض کنید."
+                  : "یک برند انتخاب کنید؛ اگر برند حذف شده باشد منبع را عوض کنید."}
+            </p>
+          ) : null}
+          <TakeField value={typeof value.take === "number" ? value.take : 8} onChange={(take) => set({ take })} />
+          {source === "Category" ? (
+            <EntitySinglePicker
+              kind="category"
+              value={typeof value.categoryId === "string" ? value.categoryId : null}
+              onChange={(categoryId) => set({ categoryId })}
+            />
+          ) : null}
+          {source === "Brand" ? (
+            <EntitySinglePicker
+              kind="brand"
+              value={typeof value.brandId === "string" ? value.brandId : null}
+              onChange={(brandId) => set({ brandId })}
+            />
+          ) : null}
+          {source === "Manual" ? (
+            <ManualResourceField
+              family="products"
+              selected={asStringArray(value.productIds)}
+              onChange={(productIds) => set({ productIds })}
+              emptyHint="هنوز کالایی انتخاب نشده. از فهرست کالا انتخاب کنید."
+              emptyTestId="empty-state-product-manual"
+            />
+          ) : null}
+        </>
+      ) : null}
+    </div>
+  );
+}
+
+function ManualResourceField({
+  family,
+  selected,
+  onChange,
+  emptyHint,
+  emptyTestId,
+}: {
+  family: "products" | "articles" | "brands" | "categories";
+  selected: string[];
+  onChange: (ids: string[]) => void;
+  emptyHint: string;
+  emptyTestId: string;
+}) {
+  const [open, setOpen] = useState(false);
+  return (
+    <div data-testid={`landing-${family === "products" ? "product" : family}-multi-picker`}>
+      {selected.length === 0 ? (
+        <p className="mb-2 rounded-xl border border-dashed px-3 py-2 text-xs text-muted" data-testid={emptyTestId}>
+          {emptyHint}
+        </p>
+      ) : null}
+      <ResourceSelectorTrigger count={selected.length} onOpen={() => setOpen(true)} emptyHint={emptyHint} />
+      <AdminResourceSelector
+        family={family}
+        selectedIds={selected}
+        onChange={(ids) => onChange(ids)}
+        open={open}
+        onClose={() => setOpen(false)}
+      />
+    </div>
+  );
 }
 
 function MenuPicker({ value, onChange }: { value: string | null; onChange: (next: string | null) => void }) {
@@ -398,17 +531,27 @@ function TextField({
   );
 }
 
-function TakeField({ value, onChange }: { value: number; onChange: (next: number) => void }) {
+function TakeField({
+  value,
+  onChange,
+  max = 24,
+  label = "تعداد نمایش",
+}: {
+  value: number;
+  onChange: (next: number) => void;
+  max?: number;
+  label?: string;
+}) {
   return (
     <label className="block text-sm">
-      <span className="mb-1 block font-bold">تعداد نمایش</span>
+      <span className="mb-1 block font-bold">{label}</span>
       <input
         type="number"
         min={1}
-        max={24}
+        max={max}
         className="w-full rounded-xl border border-border bg-surface px-3 py-2"
         value={value}
-        onChange={(event) => onChange(Math.min(24, Math.max(1, Number(event.target.value) || 1)))}
+        onChange={(event) => onChange(Math.min(max, Math.max(1, Number(event.target.value) || 1)))}
       />
     </label>
   );
@@ -455,124 +598,6 @@ function EntitySinglePicker({
         placeholder={kind === "category" ? "جستجوی دسته…" : "جستجوی برند…"}
         testId={`landing-${kind}-picker`}
       />
-    </div>
-  );
-}
-
-function EntityMultiPicker({
-  kind,
-  selected,
-  onChange,
-}: {
-  kind: "category" | "brand" | "product";
-  selected: string[];
-  onChange: (next: string[]) => void;
-}) {
-  const [query, setQuery] = useState("");
-  const [options, setOptions] = useState<{ value: string; label: string }[]>([]);
-  const [labels, setLabels] = useState<Record<string, string>>({});
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    let cancelled = false;
-    setLoading(true);
-    setError(null);
-    const run = async () => {
-      if (kind === "category") {
-        const result = await loadCategoryTree("fa-IR", query);
-        if (result.state !== "ok" || !result.data) throw new Error(result.message ?? "بارگذاری دسته‌ها ناموفق بود");
-        return flattenCategories(result.data);
-      }
-      if (kind === "brand") {
-        const result = await listAdminBrandOptions(query);
-        if (!result.ok) throw new Error(result.message);
-        return result.items.map((item) => ({ value: item.brandId, label: item.name }));
-      }
-      const result = await queryAdminProductGrid({
-        page: 1,
-        pageSize: 20,
-        sorts: [],
-        filters: {},
-        search: query || undefined,
-      });
-      if (result.source === "error") throw new Error("فهرست کالا خوانده نشد");
-      return result.page.rows.map((row) => ({ value: row.id, label: row.title || row.brandName || "کالا" }));
-    };
-    void run()
-      .then((rows) => {
-        if (cancelled) return;
-        setOptions(rows);
-        setLabels((current) => {
-          const next = { ...current };
-          for (const row of rows) next[row.value] = row.label;
-          return next;
-        });
-        setLoading(false);
-      })
-      .catch((err: unknown) => {
-        if (cancelled) return;
-        setError(err instanceof Error ? err.message : "بارگذاری ناموفق بود");
-        setLoading(false);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [kind, query]);
-
-  const selectedLabels = useMemo(
-    () => selected.map((id) => ({ id, label: labels[id] ?? "مورد انتخاب‌شده" })),
-    [labels, selected],
-  );
-
-  return (
-    <div data-testid={`landing-${kind}-multi-picker`}>
-      <p className="mb-1 text-sm font-bold">
-        {kind === "product" ? "کالاها" : kind === "category" ? "دسته‌ها" : "برندها"}
-      </p>
-      <input
-        className="mb-2 w-full rounded-xl border border-border bg-surface px-3 py-2 text-sm"
-        placeholder="جستجو با نام…"
-        value={query}
-        onChange={(event) => setQuery(event.target.value)}
-      />
-      {loading ? <p className="text-xs text-muted">در حال جستجو…</p> : null}
-      {error ? <p className="text-xs text-red-600">{error}</p> : null}
-      {!loading && options.length === 0 ? <p className="text-xs text-muted">موردی یافت نشد.</p> : null}
-      <ul className="mb-3 max-h-40 overflow-auto rounded-xl border border-border">
-        {options.map((option) => {
-          const checked = selected.includes(option.value);
-          return (
-            <li key={option.value}>
-              <button
-                type="button"
-                className={`flex w-full items-center justify-between px-3 py-2 text-start text-sm ${checked ? "bg-emerald-50" : "hover:bg-slate-50"}`}
-                onClick={() => onChange(checked ? selected.filter((id) => id !== option.value) : [...selected, option.value])}
-              >
-                <span>{option.label}</span>
-                <span className="text-xs text-muted">{checked ? "انتخاب شده" : "افزودن"}</span>
-              </button>
-            </li>
-          );
-        })}
-      </ul>
-      {selectedLabels.length > 0 ? (
-        <div className="flex flex-wrap gap-2">
-          {selectedLabels.map((item, index) => (
-            <span key={item.id} className="inline-flex items-center gap-2 rounded-full bg-slate-100 px-3 py-1 text-xs">
-              {item.label}
-              <button type="button" onClick={() => onChange(selected.filter((id) => id !== item.id))}>حذف</button>
-              {index > 0 ? (
-                <button type="button" onClick={() => {
-                  const next = selected.slice();
-                  [next[index - 1], next[index]] = [next[index]!, next[index - 1]!];
-                  onChange(next);
-                }}>بالا</button>
-              ) : null}
-            </span>
-          ))}
-        </div>
-      ) : null}
     </div>
   );
 }

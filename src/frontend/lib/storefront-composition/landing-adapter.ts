@@ -110,6 +110,7 @@ export function adaptLandingSectionToComposition(input: {
 
 function mapLandingSource(source: string): string {
   if (source === "Latest") return "LatestArticles";
+  if (source === "Manual") return "Manual";
   return source;
 }
 

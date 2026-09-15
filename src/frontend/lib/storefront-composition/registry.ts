@@ -77,7 +77,7 @@ const DS_MANUAL = ["Manual"] as const satisfies readonly AdminSelectableDataSour
 const DS_PRODUCT = ["Manual", "Category", "Brand", "Newest"] as const satisfies readonly AdminSelectableDataSource[];
 const DS_CATEGORY = ["Manual", "Category"] as const satisfies readonly AdminSelectableDataSource[];
 const DS_BRAND = ["Manual", "Brand"] as const satisfies readonly AdminSelectableDataSource[];
-const DS_ARTICLE = ["LatestArticles"] as const satisfies readonly AdminSelectableDataSource[];
+const DS_ARTICLE = ["LatestArticles", "Manual"] as const satisfies readonly AdminSelectableDataSource[];
 const DS_REVIEW = ["ApprovedReviews"] as const satisfies readonly AdminSelectableDataSource[];
 
 /** Substantial initial Variant catalog; most marked NewRequiredLater until built. */

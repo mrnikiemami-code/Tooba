@@ -928,3 +928,33 @@ Builder-rendered sections must preserve the accepted semantic surface inheritanc
 
 ### LOCK-SF-255 — Canonical Home fallback remains recoverable
 Canonical Home fallback remains recoverable after selecting a composed Home.
+
+### LOCK-SF-256 — Orders-grid behavior is canonical for Builder/Admin resource selection
+Orders-grid behavior is canonical for new Builder/Admin resource selection grids.
+
+### LOCK-SF-257 — Large resource selectors use canonical grid capabilities
+Large resource selectors use canonical grid filters, advanced filters, pagination, resize, selected-items, and pinned icon Operations where applicable.
+
+### LOCK-SF-258 — Section create/edit uses one coherent wizard
+Section create/edit uses one coherent wizard; fragmented modal-to-drawer workflow is forbidden.
+
+### LOCK-SF-259 — Page language is page-level
+Page language is page-level; sections cannot choose language independently.
+
+### LOCK-SF-260 — Builder Story sections never author Story records
+Builder Story sections display approved Story-module content and never author Story records.
+
+### LOCK-SF-261 — Storefront Appearance must not leak into Admin or Seller
+Storefront Appearance must not leak into Admin or Seller Panel.
+
+### LOCK-SF-262 — Template/Variant previews communicate layout structure
+Template/Variant previews must communicate actual layout structure, not generic colored bars.
+
+### LOCK-SF-263 — Banner editing uses layout-aware visual slots
+Banner editing uses layout-aware visual slots and bounded height presets.
+
+### LOCK-SF-264 — Dynamic sources must be truthful; Manual uses Resource Selector
+Dynamic sources must be truthful; Manual mode uses canonical Resource Selector.
+
+### LOCK-SF-265 — Admin grid Operations are RTL-pinned icon-only
+Admin grid Operations are RTL-pinned, icon-only, and tooltip-backed.

@@ -1,0 +1,97 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-P10-T022-R1
+Parent-Task: TB-P10-T022
+Status: PASS
+WorkerId: tooba-worker-01
+Channel: tooba-main
+
+Summary:
+Builder Admin UX Repair complete: Orders-grid AppDataGrid Resource Selector, coherent section wizard, truthful Dynamic + Manual sources, page-level language, layout-aware template/variant/banner previews, Story display-only, Admin/Seller theme isolation from Storefront palette. Runtime A–O ok=true (22 screenshots). Appearance USER_VISUAL_ACCEPTED=YES; Builder USER_VISUAL_ACCEPTED=NO pending user visual review. No TB-P10-T023.
+
+Applicable-Locks:
+LOCK-SF-001…255 preserved. Added LOCK-SF-256…265 (Orders-grid canonical selector; large selectors; section wizard; page-level language; Story display-only; Admin/Seller theme isolation; layout-aware previews; banner slots; truthful sources; RTL icon Operations).
+
+Recovery-Start:
+branch=main HEAD-at-claim=c2c9aa8a3829994a0bba6eec86cbb224b2208499 HEAD==origin/main. Expected previous HEAD c34a1855 (T022 impl) / pin c2c9aa8a — not RECOVERY_CONFLICT. docs/evidence/TB-P10-T022-R1/recovery-start.md
+
+Orders-Grid-Standard:
+AppDataGrid + DEFAULT_APP_GRID_CAPABILITIES reused for Builder Manual selectors. docs/evidence/TB-P10-T022-R1/orders-grid-standard.md + screenshots/orders-grid-reference.png
+
+Resource-Selector:
+admin-resource-selector.tsx — Products/Articles/Brands/Categories; Dynamic+Manual. docs/evidence/TB-P10-T022-R1/resource-selector.md
+
+Product-Selector:
+Manual product grid with advanced filters + selected-items; screenshots product-resource-*.png
+
+Article-Source:
+Dynamic truthful strategies + Manual AppDataGrid; screenshots article-source-dynamic.png article-source-manual-grid.png
+
+Brand-Category-Source:
+Same Resource Selector families; Dynamic via source-capability Host truth only.
+
+Section-Wizard:
+AdminSectionWizard Type→Variant→Source→Settings→Preview→Save. docs/evidence/TB-P10-T022-R1/section-wizard.md
+
+Page-Language:
+Page-level create/edit only; screenshots page-language-create.png page-language-edit-fixed.png
+
+Page-Workspace:
+Composer composition preview; screenshot page-workspace-preview.png. docs/evidence/TB-P10-T022-R1/page-workspace.md
+
+Template-Preview:
+layout-aware-previews.tsx; screenshot template-picker-layout-previews.png. docs/evidence/TB-P10-T022-R1/template-preview-repair.md
+
+Variant-Preview:
+Wizard variant step uses layout-aware miniatures; screenshot section-wizard-variant.png
+
+Banner-Editor:
+Visual slot-aware two-slot + mosaic editors; screenshots banner-two-slot-editor.png banner-mosaic-slot-editor.png
+
+Story-Source-Model:
+Display settings only; Host NormalizeStoryRail; no Add Story. docs/evidence/TB-P10-T022-R1/story-display-settings.md
+
+Admin-Theme-Isolation:
+Root html free of storefront CSS vars; Admin/Seller data-panel-theme; runtime adminPrimary=37 99 235 after palette change. docs/evidence/TB-P10-T022-R1/admin-theme-isolation.md
+
+Operations-Column:
+RTL-pinned icon-only Operations with tooltips (AppGridRowActionsCell / DEFAULT_APP_GRID_CAPABILITIES).
+
+Tooltip-Truncation:
+Canonical AppDataGrid truncation/tooltip conventions reused by Resource Selector.
+
+Source-Capability-Model:
+src/frontend/lib/storefront-composition/source-capability.ts — Host-truthful strategies only; HeuristicHomeOnly excluded from Admin Dynamic.
+
+Focused-Validation:
+composition-engine 28/28; critical-storefront 20/20; theme+builder R1 guards 16/16; recovery-staleness 4/4. docs/evidence/TB-P10-T022-R1/focused-validation.md
+
+Runtime:
+runtime-report.json ok=true Host:5088 FE:3000. docs/evidence/TB-P10-T022-R1/runtime.md
+
+Visual-Evidence:
+docs/evidence/TB-P10-T022-R1/screenshots/ orders-grid-reference.png admin-before-store-palette-change.png page-language-create.png page-language-edit-fixed.png page-workspace-preview.png template-picker-layout-previews.png section-wizard-step1.png section-wizard-variant.png section-wizard-source.png product-resource-grid.png product-resource-advanced-filter.png product-resource-selected.png section-wizard-settings.png section-wizard-preview.png banner-two-slot-editor.png banner-mosaic-slot-editor.png article-source-dynamic.png article-source-manual-grid.png story-display-settings.png admin-after-store-palette-change.png seller-after-store-palette-change.png storefront-after-store-palette-change.png
+
+AntiPattern-Scan:
+CLEAN. docs/evidence/TB-P10-T022-R1/antipattern-scan.md
+
+Lock-Registry:
+LOCK-SF-001…265. New 256–265 only.
+
+Recovery-SoT:
+Phase P10 Architect TB-P10-T022 Impl TB-P10-T022-R1 Issued/Repair none Appearance YES Builder NO Worker IDLE do NOT invent TB-P10-T023. docs/evidence/TB-P10-T022-R1/recovery-sot.md
+
+Git:
+SHA=PENDING_PIN_AFTER_PUSH HEAD==origin/main after push. Unrelated .tmp-* leftovers not committed.
+
+Architectural-Concerns:
+none material; Builder remains acceptance candidate for user visual review.
+
+Visual-Concerns:
+Builder USER_VISUAL_ACCEPTED=NO — user must inspect R1 screenshots and Builder UX. Functional PASS ≠ Visual ACCEPT.
+
+Blockers:
+none
+
+END_TOOBA_WORKER_RESULT

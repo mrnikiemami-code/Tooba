@@ -1,0 +1,263 @@
+{
+  "ok": true,
+  "steps": [
+    {
+      "name": "A-orders",
+      "pass": true
+    },
+    {
+      "name": "file:orders-grid-reference.png",
+      "pass": true,
+      "data": {
+        "bytes": 112381
+      }
+    },
+    {
+      "name": "file:admin-before-store-palette-change.png",
+      "pass": true,
+      "data": {
+        "bytes": 131478
+      }
+    },
+    {
+      "name": "file:page-language-create.png",
+      "pass": true,
+      "data": {
+        "bytes": 76816
+      }
+    },
+    {
+      "name": "I-create",
+      "pass": true
+    },
+    {
+      "name": "file:page-language-edit-fixed.png",
+      "pass": true,
+      "data": {
+        "bytes": 87743
+      }
+    },
+    {
+      "name": "file:page-workspace-preview.png",
+      "pass": true,
+      "data": {
+        "bytes": 87743
+      }
+    },
+    {
+      "name": "file:template-picker-layout-previews.png",
+      "pass": true,
+      "data": {
+        "bytes": 127914
+      }
+    },
+    {
+      "name": "file:section-wizard-step1.png",
+      "pass": true,
+      "data": {
+        "bytes": 119788
+      }
+    },
+    {
+      "name": "file:section-wizard-variant.png",
+      "pass": true,
+      "data": {
+        "bytes": 121166
+      }
+    },
+    {
+      "name": "file:section-wizard-source.png",
+      "pass": true,
+      "data": {
+        "bytes": 99323
+      }
+    },
+    {
+      "name": "file:product-resource-grid.png",
+      "pass": true,
+      "data": {
+        "bytes": 99323
+      }
+    },
+    {
+      "name": "file:product-resource-advanced-filter.png",
+      "pass": true,
+      "data": {
+        "bytes": 99323
+      }
+    },
+    {
+      "name": "file:product-resource-selected.png",
+      "pass": true,
+      "data": {
+        "bytes": 99323
+      }
+    },
+    {
+      "name": "file:section-wizard-settings.png",
+      "pass": true,
+      "data": {
+        "bytes": 100959
+      }
+    },
+    {
+      "name": "file:section-wizard-preview.png",
+      "pass": true,
+      "data": {
+        "bytes": 101587
+      }
+    },
+    {
+      "name": "E-product-wizard",
+      "pass": true
+    },
+    {
+      "name": "file:banner-two-slot-editor.png",
+      "pass": true,
+      "data": {
+        "bytes": 125779
+      }
+    },
+    {
+      "name": "file:banner-mosaic-slot-editor.png",
+      "pass": true,
+      "data": {
+        "bytes": 132111
+      }
+    },
+    {
+      "name": "file:article-source-dynamic.png",
+      "pass": true,
+      "data": {
+        "bytes": 110132
+      }
+    },
+    {
+      "name": "file:article-source-manual-grid.png",
+      "pass": true,
+      "data": {
+        "bytes": 124161
+      }
+    },
+    {
+      "name": "file:story-display-settings.png",
+      "pass": true,
+      "data": {
+        "bytes": 118505
+      }
+    },
+    {
+      "name": "H-no-add-story",
+      "pass": true
+    },
+    {
+      "name": "G-edit-wizard",
+      "pass": true
+    },
+    {
+      "name": "file:admin-after-store-palette-change.png",
+      "pass": true,
+      "data": {
+        "bytes": 131478
+      }
+    },
+    {
+      "name": "M-admin-isolated",
+      "pass": true,
+      "data": {
+        "adminPrimary": "37 99 235"
+      }
+    },
+    {
+      "name": "file:seller-after-store-palette-change.png",
+      "pass": true,
+      "data": {
+        "bytes": 11935
+      }
+    },
+    {
+      "name": "N-seller",
+      "pass": true
+    },
+    {
+      "name": "file:storefront-after-store-palette-change.png",
+      "pass": true,
+      "data": {
+        "bytes": 360413
+      }
+    },
+    {
+      "name": "O-storefront",
+      "pass": true
+    }
+  ],
+  "files": {
+    "orders-grid-reference.png": {
+      "bytes": 112381
+    },
+    "admin-before-store-palette-change.png": {
+      "bytes": 131478
+    },
+    "page-language-create.png": {
+      "bytes": 76816
+    },
+    "page-language-edit-fixed.png": {
+      "bytes": 87743
+    },
+    "page-workspace-preview.png": {
+      "bytes": 87743
+    },
+    "template-picker-layout-previews.png": {
+      "bytes": 127914
+    },
+    "section-wizard-step1.png": {
+      "bytes": 119788
+    },
+    "section-wizard-variant.png": {
+      "bytes": 121166
+    },
+    "section-wizard-source.png": {
+      "bytes": 99323
+    },
+    "product-resource-grid.png": {
+      "bytes": 99323
+    },
+    "product-resource-advanced-filter.png": {
+      "bytes": 99323
+    },
+    "product-resource-selected.png": {
+      "bytes": 99323
+    },
+    "section-wizard-settings.png": {
+      "bytes": 100959
+    },
+    "section-wizard-preview.png": {
+      "bytes": 101587
+    },
+    "banner-two-slot-editor.png": {
+      "bytes": 125779
+    },
+    "banner-mosaic-slot-editor.png": {
+      "bytes": 132111
+    },
+    "article-source-dynamic.png": {
+      "bytes": 110132
+    },
+    "article-source-manual-grid.png": {
+      "bytes": 124161
+    },
+    "story-display-settings.png": {
+      "bytes": 118505
+    },
+    "admin-after-store-palette-change.png": {
+      "bytes": 131478
+    },
+    "seller-after-store-palette-change.png": {
+      "bytes": 11935
+    },
+    "storefront-after-store-palette-change.png": {
+      "bytes": 360413
+    }
+  },
+  "errors": []
+}

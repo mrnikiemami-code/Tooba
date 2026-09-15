@@ -12,8 +12,9 @@ import {
   parseLocale,
 } from "../lib/i18n/locale";
 import { LOCALE_HEADER_NAME } from "../lib/i18n/routing";
-import { loadStorefrontAppearance, storefrontAppearanceStyle } from "./storefront/storefront-appearance-api.ts";
+import { loadStorefrontAppearance } from "./storefront/storefront-appearance-api.ts";
 import { StorefrontProductCardSkinProvider } from "../lib/storefront-appearance/product-card-skin-context.tsx";
+import { StorefrontAppearanceProvider } from "../lib/storefront-appearance/storefront-appearance-context.tsx";
 import { resolveProductCardSkin } from "../lib/storefront-appearance/product-card-skin.ts";
 import { resolveBackgroundStyle } from "../lib/storefront-appearance/background-style.ts";
 import {
@@ -51,6 +52,8 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
   const productCardSkin = resolveProductCardSkin(appearance.productCardSkin);
   const backgroundStyle = resolveBackgroundStyle(appearance.backgroundStyle);
 
+  // Appearance CSS vars must NOT land on <html> — that leaked storefront purple into Admin/Seller.
+  // Storefront + customer canvases consume tokens via StorefrontAppearanceProvider.
   return (
     <html
       lang={langForLocale(locale)}
@@ -63,16 +66,17 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
       data-storefront-color-scheme={colorScheme}
       data-storefront-product-card-skin={productCardSkin}
       data-storefront-background-style={backgroundStyle}
-      style={storefrontAppearanceStyle(appearance)}
     >
       <head>
         <script dangerouslySetInnerHTML={{ __html: THEME_BOOTSTRAP_SCRIPT }} />
       </head>
       <body className="bg-background text-foreground">
         <AppProviders>
-          <StorefrontProductCardSkinProvider skin={productCardSkin}>
-            <LocaleProvider locale={locale}>{children}</LocaleProvider>
-          </StorefrontProductCardSkinProvider>
+          <StorefrontAppearanceProvider appearance={appearance}>
+            <StorefrontProductCardSkinProvider skin={productCardSkin}>
+              <LocaleProvider locale={locale}>{children}</LocaleProvider>
+            </StorefrontProductCardSkinProvider>
+          </StorefrontAppearanceProvider>
         </AppProviders>
       </body>
     </html>

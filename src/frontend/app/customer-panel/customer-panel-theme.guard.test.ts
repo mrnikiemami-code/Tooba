@@ -25,7 +25,9 @@ test("customer panel inherits store appearance through shared shell tokens", () 
   assert.doesNotMatch(shell, /sticky top-0 z-40 bg-white/);
 });
 
-test("root layout remains the only storefront appearance projection", () => {
+test("root layout remains the storefront appearance loader; panels consume via canvas scope", () => {
   assert.match(storefrontLayout, /loadStorefrontAppearance/);
+  assert.match(storefrontLayout, /StorefrontAppearanceProvider/);
   assert.equal((shell.match(/loadStorefrontAppearance/g) ?? []).length, 0);
+  assert.match(shell, /useStorefrontAppearanceStyle|data-storefront-theme-scope="customer-panel"/);
 });

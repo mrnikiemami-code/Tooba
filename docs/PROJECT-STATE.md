@@ -34,7 +34,7 @@ Channel: tooba-main
 Last Architect Accepted Task:
 
 ```text
-TB-P10-T021
+TB-P10-T022
 ```
 
 Prior accepted catalog wave:
@@ -62,7 +62,7 @@ TB-P05-GATE
 Last Implementation Task:
 
 ```text
-TB-P10-T022
+TB-P10-T022-R1
 ```
 
 Current Issued Task:
@@ -80,6 +80,7 @@ Current Repair Task:
 Implemented Under Review:
 
 ```text
+TB-P10-T022-R1 — Builder Admin UX Repair (Orders-grid Resource Selector, section wizard, theme isolation, Story display-only); USER_VISUAL_ACCEPTED=YES (Appearance); Builder USER_VISUAL_ACCEPTED=NO
 TB-P10-T022 — Builder Acceptance Candidate — Completeness Audit, Visual Consistency, Final UX/Runtime Hardening; USER_VISUAL_ACCEPTED=YES (Appearance); Builder USER_VISUAL_ACCEPTED=NO
 TB-P10-T021 — Variant Expansion Wave 2 + Builder visual polish + industry template fidelity; USER_VISUAL_ACCEPTED=YES (Appearance); Builder USER_VISUAL_ACCEPTED=NO
 TB-P10-T020 — Native StoryRail/BannerShowcase + first variant wave + template start UX; USER_VISUAL_ACCEPTED=YES (Appearance); Builder USER_VISUAL_ACCEPTED=NO
