@@ -890,24 +890,23 @@ Mobile rendering remains system-owned for every Variant.
 ### LOCK-SF-242 — Plain-language Admin capabilities
 Admin exposes only plain-language controlled capabilities supported by the selected Variant.
 
-### LOCK-SF-236 — StoryRail and BannerShowcase are native section contracts
-StoryRail and BannerShowcase are first-class shared composition SectionTypes with typed Host contracts. They must not be semantic proxies of CategoryGrid or PromoBanner.
+### LOCK-SF-243 — Selectable Variants require meaningful visual difference
+Every selectable Variant must present a meaningful visual difference plus preview metadata. Alias-only Variants are forbidden.
 
-### LOCK-SF-237 — Selectable Variants require distinct runtime
-Every selectable/implemented Variant must have a real distinct renderer path, responsive contract, and capability metadata — not a visual alias of another Variant.
+### LOCK-SF-244 — ProductShowcase reuses shared product presentation
+ProductShowcase variants reuse the shared product presentation system (ProductCard / ProductRail) rather than creating a disconnected second card system.
 
-### LOCK-SF-238 — Banner layouts use bounded slot presets
-BannerShowcase layouts use Variant-owned slot counts and Compact/Medium/Large/ExtraLarge size presets. Arbitrary pixel widths, heights, and user breakpoints are forbidden.
+### LOCK-SF-245 — Template fidelity never owns renderers or CSS
+Template fidelity may vary composition, order, and Variant choice, but must never introduce template-owned renderers or CSS.
 
-### LOCK-SF-239 — Industry templates are distinct editable presets
-The ten industry templates are distinct editable composition presets built only from implemented Variants and truthful data sources. They must not share identical section/variant signatures.
+### LOCK-SF-246 — Builder Admin summaries stay ordinary-user-facing
+Builder Admin summaries remain ordinary-user-facing and hide technical configuration internals (raw keys, JSON, breakpoints).
 
-### LOCK-SF-240 — Templates create normal Drafts
-Selecting a template creates a normal editable Draft composition. Templates do not own special React pages, CSS, or renderers.
+### LOCK-SF-247 — Empty data states degrade gracefully
+Empty data states must degrade gracefully in Admin and Storefront — friendly guidance in Admin, no broken chrome on Storefront.
 
-### LOCK-SF-241 — Mobile remains system-owned per Variant
-Mobile rendering for every Variant remains code-owned via responsive contracts. Admin must not expose mobile breakpoint or layout controls.
+### LOCK-SF-248 — Mobile visual behavior remains code-owned
+Mobile visual behavior remains code-owned and bounded for all Variants; Admin must not expose mobile layout controls.
 
-### LOCK-SF-242 — Admin exposes plain-language Variant capabilities
-Admin Composer exposes only plain-language controlled capabilities supported by the selected Variant (Persian labels, slot counts, size presets, truthful sources). Raw enum keys, JSON, CSS, and unsupported ranking sources are forbidden.
-
+### LOCK-SF-249 — Ranked Variants stay truthful-source only
+ProductRankedList / ticker Variants may use only truthful Admin-selectable sources (Manual/Category/Brand/Newest). Fake ranking APIs are forbidden.

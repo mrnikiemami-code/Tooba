@@ -70,18 +70,21 @@ function heroLayoutFromVariant(variantKey: string): HeroLayout {
   if (variantKey === "hero.contained") return "contained";
   if (variantKey === "hero.split") return "split";
   if (variantKey === "hero.side-promos") return "side-promos";
+  if (variantKey === "hero.editorial") return "editorial";
   return "full-width";
 }
 
-function storyLayoutFromVariant(variantKey: string): "circle" | "image-circles" | "rounded-cards" {
+function storyLayoutFromVariant(variantKey: string): "circle" | "image-circles" | "rounded-cards" | "icon-shortcuts" {
   if (variantKey === "story.image-circles") return "image-circles";
   if (variantKey === "story.rounded-cards") return "rounded-cards";
+  if (variantKey === "story.icon-shortcuts") return "icon-shortcuts";
   return "circle";
 }
 
 function categoryLayoutFromVariant(variantKey: string): CategoryLayout {
   if (variantKey === "category.compact-tiles") return "compact-tiles";
   if (variantKey === "category.horizontal-rail") return "horizontal-rail";
+  if (variantKey === "category.editorial-tiles") return "editorial-tiles";
   return "image-cards";
 }
 
@@ -141,18 +144,28 @@ export function renderSharedHomeSection(
           <HomeHeroSlider heightPreset={config.heightPreset} layout="side-promos" />
         </div>
       );
+    case "hero.editorial":
+      return (
+        <div data-testid="home-hero">
+          <HomeHeroSlider heightPreset={config.heightPreset} layout="editorial" title={config.title} subtitle={config.subtitle} href={config.href} />
+        </div>
+      );
     case "story.circle":
       return <HomeStoriesSection layout="circle" />;
     case "story.image-circles":
       return <HomeStoriesSection layout="image-circles" />;
     case "story.rounded-cards":
       return <HomeStoriesSection layout="rounded-cards" />;
+    case "story.icon-shortcuts":
+      return <HomeStoriesSection layout="icon-shortcuts" />;
     case "category.image-cards":
       return <HomeCategoryGridSection homeCategories={context.homeCategories} layout="image-cards" />;
     case "category.compact-tiles":
       return <HomeCategoryGridSection homeCategories={context.homeCategories} layout="compact-tiles" />;
     case "category.horizontal-rail":
       return <HomeCategoryGridSection homeCategories={context.homeCategories} layout="horizontal-rail" />;
+    case "category.editorial-tiles":
+      return <HomeCategoryGridSection homeCategories={context.homeCategories} layout="editorial-tiles" />;
     case "product.card-carousel":
       if (config.href === "/new-products" || config.title === "جدیدترین‌ها") {
         return <HomeNewProductsSection products={context.newArrivals} />;
@@ -230,6 +243,48 @@ export function renderSharedHomeSection(
           layout="featured-plus-rail"
         />
       );
+    case "product.tabbed":
+      return (
+        <ProductRailSection
+          id="home-product-tabbed"
+          title={config.title ?? "کالاها"}
+          href={config.href ?? "/products"}
+          linkLabel="همه"
+          tone="plain"
+          products={context.newArrivals.length ? context.newArrivals : context.specialOffers}
+          slideClassName="w-[170px] md:w-[210px]"
+          testId="home-product-tabbed"
+          layout="tabbed"
+        />
+      );
+    case "product.large-cards":
+      return (
+        <ProductRailSection
+          id="home-product-large-cards"
+          title={config.title ?? "کارت‌های بزرگ"}
+          href={config.href ?? "/products"}
+          linkLabel="همه"
+          tone="plain"
+          products={context.newArrivals.length ? context.newArrivals : context.specialOffers}
+          slideClassName="w-full"
+          testId="home-product-large-cards"
+          layout="large-cards"
+        />
+      );
+    case "product.minimal-list":
+      return (
+        <ProductRailSection
+          id="home-product-minimal-list"
+          title={config.title ?? "فهرست کالا"}
+          href={config.href ?? "/products"}
+          linkLabel="همه"
+          tone="plain"
+          products={context.mostViewedProducts.length ? context.mostViewedProducts : context.newArrivals}
+          slideClassName="w-full"
+          testId="home-product-minimal-list"
+          layout="minimal-list"
+        />
+      );
     case "ranked.grid":
       return (
         <ProductRailSection
@@ -242,6 +297,20 @@ export function renderSharedHomeSection(
           slideClassName="w-[170px]"
           testId="home-ranked-grid"
           layout="ranked-grid"
+        />
+      );
+    case "ranked.ticker":
+      return (
+        <ProductRailSection
+          id="home-ranked-ticker"
+          title={config.title ?? "رتبه‌بندی فشرده"}
+          href={config.href ?? "/products"}
+          linkLabel="همه"
+          tone="plain"
+          products={context.mostViewedProducts.length ? context.mostViewedProducts : context.newArrivals}
+          slideClassName="w-[220px]"
+          testId="home-ranked-ticker"
+          layout="ticker"
         />
       );
     case "banner.one-large-two-small":
@@ -327,10 +396,12 @@ export function renderSharedLandingSection(input: SharedLandingRenderInput): Rea
     case "hero.contained":
     case "hero.split":
     case "hero.side-promos":
+    case "hero.editorial":
       return <LandingHero config={config} layout={heroLayoutFromVariant(variantKey)} />;
     case "story.circle":
     case "story.image-circles":
     case "story.rounded-cards":
+    case "story.icon-shortcuts":
       return <HomeStoriesSection layout={storyLayoutFromVariant(variantKey)} />;
     case "product.card-carousel":
       return <LandingProductRail section={section} config={config} products={context.products} layout="rail" />;
@@ -345,11 +416,20 @@ export function renderSharedLandingSection(input: SharedLandingRenderInput): Rea
       return <LandingProductRail section={section} config={config} products={context.products} layout="columns" />;
     case "product.featured-plus-rail":
       return <LandingProductRail section={section} config={config} products={context.products} layout="featured-plus-rail" />;
+    case "product.tabbed":
+      return <LandingProductRail section={section} config={config} products={context.products} layout="tabbed" />;
+    case "product.large-cards":
+      return <LandingProductRail section={section} config={config} products={context.products} layout="large-cards" />;
+    case "product.minimal-list":
+      return <LandingProductRail section={section} config={config} products={context.products} layout="minimal-list" />;
     case "ranked.grid":
       return <LandingProductRail section={section} config={config} products={context.products} layout="ranked-grid" />;
+    case "ranked.ticker":
+      return <LandingProductRail section={section} config={config} products={context.products} layout="ticker" />;
     case "category.image-cards":
     case "category.compact-tiles":
     case "category.horizontal-rail":
+    case "category.editorial-tiles":
       return <LandingCategoryGrid config={config} categories={context.categories} layout={categoryLayoutFromVariant(variantKey)} />;
     case "brand.logo-rail":
       return <LandingBrandStrip config={config} brands={context.brands} layout="logo-rail" />;

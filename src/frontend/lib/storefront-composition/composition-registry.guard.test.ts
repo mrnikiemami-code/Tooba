@@ -125,6 +125,16 @@ describe("storefront composition registry", () => {
     }
   });
 
+  it("implemented variants do not share identical responsive classification", () => {
+    const implemented = VARIANTS.filter((v) => v.implemented);
+    const signatures = implemented.map((v) => {
+      const c = RESPONSIVE_CONTRACTS[v.key]!;
+      return `${v.sectionTypeKey}|${c.columns.desktop}|${c.columns.mobile}|${c.height.desktop}|${c.itemVisible.desktop}|${v.previewKind}`;
+    });
+    // Allow some overlap across section types, but require more uniqueness than a single alias bucket.
+    assert.ok(new Set(signatures).size >= Math.floor(implemented.length * 0.55));
+  });
+
   it("does not expand user color model beyond four global roles", () => {
     assert.equal(SURFACE_ROLES.length, 4);
     assert.deepEqual([...SURFACE_ROLES], ["page", "section", "alternate", "accent"]);

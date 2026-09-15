@@ -11,7 +11,7 @@ import { adaptLandingSectionToComposition } from "./landing-adapter.ts";
 import { resolveSharedVariant } from "./resolve-variant.ts";
 import { requireResponsiveContract } from "./responsive-contracts.ts";
 import { normalizeControlledSettings, BASE_SECTION_SETTINGS } from "./settings.ts";
-import { adminImplementedVariants, adminSelectableSectionTypes } from "../../app/admin/landing-pages/admin-composition-catalog.ts";
+import { adminImplementedVariants, adminSelectableSectionTypes, variantPreviewFingerprint, variantPreviewStructure } from "../../app/admin/landing-pages/admin-composition-catalog.ts";
 
 describe("shared composition renderer", () => {
   it("resolves registered SectionType+Variant", () => {
@@ -27,7 +27,58 @@ describe("shared composition renderer", () => {
   });
 
   it("rejects unimplemented variants when strict", () => {
-    assert.throws(() => resolveSharedVariant("HeroCarousel", "hero.editorial", { strict: true }), /not implemented/i);
+    const unimplemented = VARIANTS.find((v) => !v.implemented);
+    if (!unimplemented) {
+      assert.ok(isVariantImplemented("hero.editorial"));
+      return;
+    }
+    assert.throws(
+      () => resolveSharedVariant(unimplemented.sectionTypeKey, unimplemented.key, { strict: true }),
+      /not implemented/i,
+    );
+  });
+
+  it("wave-2 variants are implemented with distinct layout metadata", () => {
+    for (const key of [
+      "hero.editorial",
+      "story.icon-shortcuts",
+      "category.editorial-tiles",
+      "product.tabbed",
+      "product.large-cards",
+      "product.minimal-list",
+      "ranked.ticker",
+      "banner.three",
+      "brand.featured",
+      "reviews.compact-quotes",
+      "article.featured-plus-list",
+    ]) {
+      assert.equal(isVariantImplemented(key), true, key);
+      assert.ok(requireResponsiveContract(key).columns.mobile);
+    }
+  });
+
+  it("implemented variants expose distinct preview fingerprints", () => {
+    const fingerprints = VARIANTS.filter((v) => v.implemented).map((v) => {
+      const structure = variantPreviewStructure(v.key).map((c) => c.className).join("|");
+      return `${variantPreviewFingerprint(v.key)}::${structure}::${v.previewKind}`;
+    });
+    // Not every pair must differ globally, but wave-2 keys must not collapse to identical structure.
+    const wave2 = [
+      "hero.editorial",
+      "hero.split",
+      "story.icon-shortcuts",
+      "story.circle",
+      "product.tabbed",
+      "product.large-cards",
+      "product.minimal-list",
+      "ranked.ticker",
+    ];
+    const waveFingerprints = wave2.map((key) => {
+      const structure = variantPreviewStructure(key).map((c) => c.className).join("|");
+      return `${key}::${structure}`;
+    });
+    assert.equal(new Set(waveFingerprints).size, waveFingerprints.length);
+    assert.ok(fingerprints.length >= wave2.length);
   });
 
   it("maps native StoryRail and BannerShowcase without CategoryGrid/PromoBanner proxy", () => {

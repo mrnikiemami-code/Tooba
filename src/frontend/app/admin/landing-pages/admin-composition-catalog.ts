@@ -162,4 +162,78 @@ export function previewMosaicClass(kind: VariantPreviewKind): string {
   }
 }
 
+/** Distinct structural fingerprint for Admin preview canvases (not CSS free-form). */
+export function variantPreviewFingerprint(variantKey: string): string {
+  const parts = variantKey.split(".");
+  return `${parts[0] ?? "x"}:${parts[1] ?? "default"}`;
+}
+
+export function variantPreviewStructure(variantKey: string): Array<{ className: string }> {
+  switch (variantKey) {
+    case "hero.editorial":
+      return [
+        { className: "col-span-3 row-span-2 rounded-lg bg-white/40" },
+        { className: "col-span-2 row-span-2 rounded-lg bg-white/80" },
+      ];
+    case "hero.split":
+      return [
+        { className: "col-span-3 row-span-2 rounded-lg bg-white/55" },
+        { className: "col-span-2 row-span-2 rounded-lg bg-white/85" },
+      ];
+    case "hero.side-promos":
+      return [
+        { className: "col-span-3 row-span-2 rounded-lg bg-white/70" },
+        { className: "col-span-2 rounded-md bg-white/50" },
+        { className: "col-span-2 rounded-md bg-white/40" },
+      ];
+    case "story.icon-shortcuts":
+      return Array.from({ length: 5 }, () => ({ className: "rounded-md bg-white/70 aspect-square" }));
+    case "story.rounded-cards":
+      return Array.from({ length: 4 }, () => ({ className: "rounded-xl bg-white/65 h-10" }));
+    case "story.circle":
+    case "story.image-circles":
+      return Array.from({ length: 5 }, () => ({ className: "rounded-full bg-white/70 aspect-square" }));
+    case "category.editorial-tiles":
+      return Array.from({ length: 4 }, () => ({ className: "rounded-lg bg-white/60 h-8" }));
+    case "category.compact-tiles":
+      return Array.from({ length: 6 }, () => ({ className: "rounded-md bg-white/55 h-5" }));
+    case "product.tabbed":
+      return [
+        { className: "col-span-5 h-3 rounded bg-white/80" },
+        { className: "col-span-5 h-8 rounded-lg bg-white/55" },
+      ];
+    case "product.large-cards":
+      return Array.from({ length: 3 }, () => ({ className: "rounded-xl bg-white/65 h-12" }));
+    case "product.minimal-list":
+      return Array.from({ length: 4 }, () => ({ className: "col-span-5 h-3 rounded bg-white/60" }));
+    case "ranked.ticker":
+      return Array.from({ length: 4 }, () => ({ className: "rounded-md bg-white/70 h-6" }));
+    case "banner.three":
+      return Array.from({ length: 3 }, () => ({ className: "rounded-lg bg-white/60 h-8" }));
+    case "banner.single":
+      return [{ className: "col-span-5 h-10 rounded-xl bg-white/70" }];
+    case "brand.featured":
+      return Array.from({ length: 3 }, () => ({ className: "rounded-2xl bg-white/65 h-10" }));
+    case "article.featured-plus-list":
+      return [
+        { className: "col-span-3 row-span-2 rounded-xl bg-white/70" },
+        { className: "col-span-2 h-3 rounded bg-white/55" },
+        { className: "col-span-2 h-3 rounded bg-white/45" },
+        { className: "col-span-2 h-3 rounded bg-white/40" },
+      ];
+    case "reviews.compact-quotes":
+      return Array.from({ length: 3 }, () => ({ className: "rounded-lg bg-white/60 h-8" }));
+    default: {
+      const kind = getVariant(variantKey)?.previewKind ?? "promo";
+      if (kind.startsWith("banner")) {
+        return Array.from({ length: 4 }, () => ({ className: "rounded-md bg-white/55 h-6" }));
+      }
+      if (kind.startsWith("product") || kind.startsWith("ranked")) {
+        return Array.from({ length: 4 }, () => ({ className: "rounded-lg bg-white/60 h-8" }));
+      }
+      return Array.from({ length: 3 }, () => ({ className: "rounded-lg bg-white/55 h-7" }));
+    }
+  }
+}
+
 export type { VariantDefinition };

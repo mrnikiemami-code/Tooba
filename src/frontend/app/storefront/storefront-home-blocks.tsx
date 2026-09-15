@@ -1,8 +1,8 @@
 "use client";
 
 import { LocalizedLink as Link } from "../../lib/i18n/LocalizedLink.tsx";
-import { useEffect, useState, type ReactNode } from "react";
-import { ChevronLeft, Flame } from "lucide-react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { ChevronLeft, Flame, ImageOff } from "lucide-react";
 import { StorefrontProductCardView } from "./storefront-product-card.tsx";
 import type { StorefrontCategoryItem, StorefrontProductCard } from "./storefront-model.ts";
 import { heightPresetHeroClass } from "../../lib/storefront-composition/size-presets.ts";
@@ -27,8 +27,8 @@ const MIDDLE_BANNERS = [
   { src: "/images/middleBanner/2.webp", href: "/new-products", title: "جدید" },
 ];
 
-export type CategoryLayout = "image-cards" | "compact-tiles" | "horizontal-rail";
-export type HeroLayout = "full-width" | "contained" | "split" | "side-promos";
+export type CategoryLayout = "image-cards" | "compact-tiles" | "horizontal-rail" | "editorial-tiles";
+export type HeroLayout = "full-width" | "contained" | "split" | "side-promos" | "editorial";
 export type BannerLayout =
   | "single"
   | "two-equal"
@@ -53,12 +53,30 @@ export function HomeCategoryGridSection({
         <span className="w-1 h-5 bg-primary rounded-full" />
         دسته‌بندی‌ها
       </h2>
-      <Link href="/products" className="text-xs text-primary font-bold flex items-center gap-1">
+      <Link href="/products" className="text-xs text-primary font-bold flex items-center gap-1 min-h-11 min-w-11 justify-end">
         همه
         <ChevronLeft className="w-3.5 h-3.5" />
       </Link>
     </div>
   );
+
+  if (homeCategories.length === 0) {
+    return (
+      <section
+        aria-labelledby="home-categories-heading"
+        className="w-full px-2 sm:px-4 py-8 md:py-10 bg-section-surface"
+        data-testid="home-categories"
+        data-category-layout={layout}
+        data-empty="true"
+        data-storefront-surface-role="section"
+      >
+        {heading}
+        <p className="rounded-2xl border border-dashed border-gray-200 bg-surface px-4 py-6 text-center text-sm text-gray-500">
+          در حال حاضر دسته‌ای برای نمایش نیست.
+        </p>
+      </section>
+    );
+  }
 
   const card = (category: StorefrontCategoryItem, index: number, className: string) => {
     const imageIndex = CATEGORY_IMAGE_INDEXES[index % CATEGORY_IMAGE_INDEXES.length]!;
@@ -78,6 +96,45 @@ export function HomeCategoryGridSection({
       </Link>
     );
   };
+
+  if (layout === "editorial-tiles") {
+    return (
+      <section
+        aria-labelledby="home-categories-heading"
+        className="w-full px-2 sm:px-4 py-8 md:py-10 bg-section-surface"
+        data-testid="home-categories"
+        data-category-layout="editorial-tiles"
+        data-storefront-surface-role="section"
+      >
+        {heading}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
+          {homeCategories.slice(0, 8).map((category, index) => {
+            const imageIndex = CATEGORY_IMAGE_INDEXES[index % CATEGORY_IMAGE_INDEXES.length]!;
+            const extension = imageIndex === 10 ? "jpg" : "png";
+            return (
+              <Link
+                key={category.categoryId}
+                href={`/products?categoryId=${category.categoryId}`}
+                className="group relative min-h-[160px] md:min-h-[200px] overflow-hidden rounded-3xl bg-gray-100"
+                data-testid="home-category-card"
+              >
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={`/images/categories/${imageIndex}.${extension}`}
+                  alt=""
+                  className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+                <p className="absolute bottom-4 right-4 left-4 text-base md:text-lg font-black text-white line-clamp-2 drop-shadow">
+                  {category.name}
+                </p>
+              </Link>
+            );
+          })}
+        </div>
+      </section>
+    );
+  }
 
   if (layout === "compact-tiles") {
     return (
@@ -189,6 +246,26 @@ export function HomeHeroSlider({
   const heightClass = heightPresetHeroClass(heightPreset);
   const link = href ?? slide.href;
 
+  if (layout === "editorial") {
+    return (
+      <section aria-label="اسلایدر خانه" className="px-2 sm:px-4 py-4 md:py-6 bg-section-accent" data-hero-layout="editorial" data-storefront-surface-role="accent">
+        <Link href={link} className="relative block overflow-hidden rounded-none md:rounded-3xl bg-gray-100 shadow-2xl">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={slide.src} alt={slide.alt} className={`w-full object-cover ${heightClass}`} />
+          <div className="absolute inset-0 bg-gradient-to-l from-black/75 via-black/35 to-transparent" />
+          <div className="absolute inset-y-0 right-0 flex w-full max-w-xl flex-col justify-end md:justify-center p-6 md:p-10 text-white">
+            <p className="text-[11px] md:text-xs font-bold tracking-wide text-white/80 mb-2">ویترین انتخابی</p>
+            <h2 className="text-2xl md:text-4xl font-black leading-tight line-clamp-3">{title ?? "داستان این فصل"}</h2>
+            <p className="mt-3 text-sm md:text-base text-white/90 line-clamp-3">{subtitle ?? slide.alt}</p>
+            <span className="mt-5 inline-flex min-h-11 w-fit items-center rounded-xl bg-surface px-4 py-2 text-sm font-bold text-gray-900">
+              مشاهده مجموعه
+            </span>
+          </div>
+        </Link>
+      </section>
+    );
+  }
+
   if (layout === "split") {
     return (
       <section aria-label="اسلایدر خانه" className="px-2 sm:px-4 py-4 md:py-6 bg-section-accent" data-hero-layout="split" data-storefront-surface-role="accent">
@@ -200,7 +277,7 @@ export function HomeHeroSlider({
           <div className="flex flex-col justify-center p-6 md:p-8">
             <h2 className="text-2xl md:text-3xl font-black text-gray-900">{title ?? "فروشگاه توبا"}</h2>
             {subtitle ? <p className="mt-2 text-sm text-gray-600">{subtitle}</p> : <p className="mt-2 text-sm text-gray-600">{slide.alt}</p>}
-            <Link href={link} className="mt-4 inline-flex w-fit rounded-xl bg-primary px-4 py-2 text-sm font-bold text-white">مشاهده</Link>
+            <Link href={link} className="mt-4 inline-flex min-h-11 w-fit items-center rounded-xl bg-primary px-4 py-2 text-sm font-bold text-white">مشاهده</Link>
           </div>
         </div>
       </section>
@@ -274,27 +351,117 @@ export function ProductRailSection({
   products: StorefrontProductCard[];
   slideClassName: string;
   testId: string;
-  layout?: "rail" | "grid" | "compact-rows" | "featured-plus-rail" | "ranked-grid";
+  layout?: "rail" | "grid" | "compact-rows" | "featured-plus-rail" | "ranked-grid" | "tabbed" | "large-cards" | "minimal-list" | "ticker" | "columns";
 }) {
   const headingId = `${id}-heading`;
-  if (products.length === 0) {
-    return null;
-  }
+  const [activeTab, setActiveTab] = useState(0);
+  const tabs = useMemo(() => {
+    if (layout !== "tabbed" || products.length === 0) return [] as Array<{ label: string; items: StorefrontProductCard[] }>;
+    const chunk = Math.max(3, Math.ceil(products.length / 3));
+    const labels = ["پیشنهادها", "تازه‌ها", "منتخب"];
+    return labels.map((label, index) => ({
+      label,
+      items: products.slice(index * chunk, index * chunk + chunk),
+    })).filter((tab) => tab.items.length > 0);
+  }, [layout, products]);
 
   const header = (
-    <div className="flex items-center justify-between mb-4">
-      <h2 id={headingId} className={`text-lg md:text-xl font-bold flex items-center gap-2 ${tone === "accent" ? "text-white" : "text-gray-900"}`}>
-        {tone === "accent" ? <Flame className="w-5 h-5" /> : <span className="w-1 h-5 bg-primary rounded-full" />}
-        {title}
+    <div className="flex items-center justify-between mb-4 gap-3">
+      <h2 id={headingId} className={`text-lg md:text-xl font-bold flex items-center gap-2 min-w-0 ${tone === "accent" ? "text-white" : "text-gray-900"}`}>
+        {tone === "accent" ? <Flame className="w-5 h-5 shrink-0" /> : <span className="w-1 h-5 bg-primary rounded-full shrink-0" />}
+        <span className="truncate">{title}</span>
       </h2>
-      <Link href={href} className={tone === "accent" ? "text-xs font-bold bg-surface text-primary px-3 py-1 rounded-lg" : "text-xs text-primary font-bold"}>
+      <Link href={href} className={tone === "accent" ? "text-xs font-bold bg-surface text-primary px-3 py-2 rounded-lg min-h-11 inline-flex items-center" : "text-xs text-primary font-bold min-h-11 inline-flex items-center"}>
         {linkLabel}
       </Link>
     </div>
   );
 
+  if (products.length === 0) {
+    return (
+      <section id={id} aria-labelledby={headingId} className="w-full px-2 sm:px-4 py-8 md:py-10 bg-section-surface" data-testid={testId} data-empty="true" data-storefront-surface-role="section">
+        {header}
+        <p className="rounded-2xl border border-dashed border-gray-200 bg-surface px-4 py-6 text-center text-sm text-gray-500">
+          کالایی برای این بخش یافت نشد.
+        </p>
+      </section>
+    );
+  }
+
   let body: ReactNode;
-  if (layout === "grid" || layout === "ranked-grid") {
+  if (layout === "tabbed") {
+    const active = tabs[Math.min(activeTab, Math.max(tabs.length - 1, 0))] ?? tabs[0];
+    body = (
+      <div data-product-layout="tabbed">
+        <div className="mb-4 flex gap-2 overflow-x-auto pb-1" role="tablist" aria-label="تب‌های کالا">
+          {tabs.map((tab, index) => (
+            <button
+              key={tab.label}
+              type="button"
+              role="tab"
+              aria-selected={index === activeTab}
+              className={`min-h-11 shrink-0 rounded-xl px-4 text-sm font-bold ${index === activeTab ? "bg-primary text-white" : "bg-surface border border-gray-200 text-gray-700"}`}
+              onClick={() => setActiveTab(index)}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
+        <div className="flex gap-3 md:gap-4 overflow-x-auto pb-1">
+          {(active?.items ?? []).map((card) => (
+            <div key={`${id}-${card.productId}`} className={`shrink-0 ${slideClassName}`}>
+              <StorefrontProductCardView card={card} />
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  } else if (layout === "large-cards") {
+    body = (
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-5" data-product-layout="large-cards">
+        {products.slice(0, 6).map((card) => (
+          <div key={`${id}-${card.productId}`} className="min-w-0">
+            <StorefrontProductCardView card={card} />
+          </div>
+        ))}
+      </div>
+    );
+  } else if (layout === "columns") {
+    body = (
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4" data-product-layout="columns">
+        {products.map((card) => (
+          <StorefrontProductCardView key={`${id}-${card.productId}`} card={card} />
+        ))}
+      </div>
+    );
+  } else if (layout === "minimal-list") {
+    body = (
+      <ul className="divide-y divide-gray-100 rounded-2xl border border-gray-100 bg-surface overflow-hidden" data-product-layout="minimal-list">
+        {products.map((card) => (
+          <li key={`${id}-${card.productId}`} className="p-2 md:p-3">
+            <StorefrontProductCardView card={card} showHoverActions={false} />
+          </li>
+        ))}
+      </ul>
+    );
+  } else if (layout === "ticker") {
+    body = (
+      <div className="overflow-x-auto rounded-2xl border border-gray-100 bg-surface" data-product-layout="ticker">
+        <ol className="flex min-w-full gap-0">
+          {products.map((card, index) => (
+            <li key={`${id}-${card.productId}`} className="flex min-w-[220px] md:min-w-[260px] items-stretch border-l border-gray-100 last:border-l-0">
+              <div className="flex w-10 shrink-0 items-center justify-center bg-gray-50 text-sm font-black text-primary">
+                {(index + 1).toLocaleString("fa-IR")}
+              </div>
+              <div className="min-w-0 flex-1 p-2">
+                <StorefrontProductCardView card={card} showHoverActions={false} />
+              </div>
+            </li>
+          ))}
+        </ol>
+      </div>
+    );
+  } else if (layout === "grid" || layout === "ranked-grid") {
     body = (
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 md:gap-4" data-product-layout={layout}>
         {products.map((card) => (
@@ -379,23 +546,41 @@ export function CompositionBannerGrid({
   testId?: string;
   items?: Array<{ src?: string; href?: string; title?: string }>;
 }) {
-  const banners = (items && items.length > 0
-    ? items.map((item, index) => ({
-      src: item.src || MIDDLE_BANNERS[index % MIDDLE_BANNERS.length]!.src,
+  const hasConfiguredItems = Boolean(items && items.length > 0);
+  const banners = (hasConfiguredItems
+    ? items!.map((item, index) => ({
+      src: item.src?.trim() || "",
       href: item.href || "/offers",
       title: item.title || MIDDLE_BANNERS[index % MIDDLE_BANNERS.length]!.title,
+      missing: !item.src?.trim(),
     }))
-    : MIDDLE_BANNERS);
+    : MIDDLE_BANNERS.map((banner) => ({ ...banner, missing: false })));
   const link = href ?? "/offers";
+
+  const media = (banner: { src: string; title: string; missing?: boolean }, className: string) => {
+    if (banner.missing || !banner.src) {
+      return (
+        <div className={`flex flex-col items-center justify-center gap-2 bg-gray-100 text-gray-500 ${className}`} data-banner-missing-media="true">
+          <ImageOff className="h-6 w-6" aria-hidden />
+          <span className="text-xs font-bold">تصویر بنر هنوز تنظیم نشده</span>
+        </div>
+      );
+    }
+    return (
+      // eslint-disable-next-line @next/next/no-img-element
+      <img src={banner.src} alt={banner.title || ""} className={className} />
+    );
+  };
 
   if (layout === "single") {
     const banner = banners[0]!;
     return (
       <section className="w-full px-2 sm:px-4 py-6" data-testid={testId ?? "composition-banner-single"} data-banner-layout="single">
-        <Link href={link} className="relative block overflow-hidden rounded-3xl bg-gray-100">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={banner.src} alt="" className={`w-full object-cover ${heightPresetHeroClass(heightPreset)}`} />
-          <span className="absolute bottom-4 right-4 text-sm font-bold text-white">{title ?? banner.title}</span>
+        <Link href={banner.missing ? link : (banner.href || link)} className="relative block overflow-hidden rounded-3xl bg-gray-100">
+          {media(banner, `w-full object-cover ${heightPresetHeroClass(heightPreset)}`)}
+          {!banner.missing ? (
+            <span className="absolute bottom-4 right-4 rounded-lg bg-black/45 px-3 py-1 text-sm font-bold text-white">{title ?? banner.title}</span>
+          ) : null}
         </Link>
       </section>
     );
@@ -407,9 +592,8 @@ export function CompositionBannerGrid({
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {banners.slice(0, 2).map((banner) => (
             <Link key={banner.title} href={banner.href} className="relative overflow-hidden rounded-3xl aspect-[21/9] bg-gray-100">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={banner.src} alt="" className="absolute inset-0 h-full w-full object-cover" />
-              <span className="absolute bottom-3 right-3 text-xs font-bold text-white">{banner.title}</span>
+              {media(banner, "absolute inset-0 h-full w-full object-cover")}
+              {!banner.missing ? <span className="absolute bottom-3 right-3 rounded bg-black/40 px-2 py-0.5 text-xs font-bold text-white">{banner.title}</span> : null}
             </Link>
           ))}
         </div>
@@ -423,8 +607,7 @@ export function CompositionBannerGrid({
         <div className="grid grid-cols-1 sm:grid-cols-[2fr_1fr] gap-4">
           {banners.slice(0, 2).map((banner, index) => (
             <Link key={banner.title} href={banner.href} className={`relative overflow-hidden rounded-3xl bg-gray-100 ${index === 0 ? "aspect-[21/9]" : "aspect-[4/3] sm:aspect-auto"}`}>
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={banner.src} alt="" className="absolute inset-0 h-full w-full object-cover" />
+              {media(banner, "absolute inset-0 h-full w-full object-cover")}
             </Link>
           ))}
         </div>
@@ -438,8 +621,10 @@ export function CompositionBannerGrid({
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           {banners.slice(0, 3).map((banner) => (
             <Link key={banner.title} href={banner.href} className="relative overflow-hidden rounded-2xl aspect-[16/9] bg-gray-100">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={banner.src} alt="" className="absolute inset-0 h-full w-full object-cover" />
+              {media(banner, "absolute inset-0 h-full w-full object-cover")}
+              {!banner.missing ? (
+                <span className="absolute bottom-2 right-2 rounded bg-black/45 px-2 py-0.5 text-[11px] font-bold text-white">{banner.title}</span>
+              ) : null}
             </Link>
           ))}
         </div>
@@ -453,8 +638,7 @@ export function CompositionBannerGrid({
         <div className="grid grid-cols-2 gap-3 md:gap-4">
           {banners.slice(0, 4).map((banner) => (
             <Link key={`${banner.href}-${banner.title}`} href={banner.href} className="relative overflow-hidden rounded-2xl aspect-[21/10] bg-gray-100">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={banner.src} alt="" className="absolute inset-0 h-full w-full object-cover" />
+              {media(banner, "absolute inset-0 h-full w-full object-cover")}
             </Link>
           ))}
         </div>
@@ -472,8 +656,7 @@ export function CompositionBannerGrid({
               href={banner.href}
               className={`relative overflow-hidden rounded-2xl bg-gray-100 ${index === 0 ? "sm:row-span-2 aspect-[16/10] sm:aspect-auto sm:min-h-full" : "aspect-[21/9]"}`}
             >
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={banner.src} alt="" className="absolute inset-0 h-full w-full object-cover" />
+              {media(banner, "absolute inset-0 h-full w-full object-cover")}
             </Link>
           ))}
         </div>
@@ -491,8 +674,7 @@ export function CompositionBannerGrid({
               href={banner.href}
               className={`relative overflow-hidden rounded-2xl bg-gray-100 aspect-[16/10] ${index === 0 ? "col-span-2 row-span-2 md:aspect-auto md:min-h-[220px]" : ""}`}
             >
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={banner.src} alt="" className="absolute inset-0 h-full w-full object-cover" />
+              {media(banner, "absolute inset-0 h-full w-full object-cover")}
             </Link>
           ))}
         </div>
@@ -506,8 +688,7 @@ export function CompositionBannerGrid({
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
           {banners.slice(0, 8).map((banner, index) => (
             <Link key={`${banner.href}-${banner.title}-${index}`} href={banner.href} className="relative overflow-hidden rounded-xl aspect-[16/9] bg-gray-100">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={banner.src} alt="" className="absolute inset-0 h-full w-full object-cover" />
+              {media(banner, "absolute inset-0 h-full w-full object-cover")}
             </Link>
           ))}
         </div>

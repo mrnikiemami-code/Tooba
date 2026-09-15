@@ -34,15 +34,17 @@ import {
   defaultConfigForCompositionSection,
   previewMosaicClass,
   sectionSupportsHeightPreset,
+  variantPreviewStructure,
   type AdminCompositionSectionChoice,
 } from "./admin-composition-catalog.ts";
 import { SIZE_PRESETS } from "../../../lib/storefront-composition/types.ts";
 import { SIZE_PRESET_CONTRACTS } from "../../../lib/storefront-composition/size-presets.ts";
-import { getVariant } from "../../../lib/storefront-composition/registry.ts";
+import { getSectionType, getVariant } from "../../../lib/storefront-composition/registry.ts";
 import { bannerSlotCountForVariant } from "./landing-section-catalog.ts";
 import {
   buildTemplateSectionPayloads,
   listIndustryTemplates,
+  templateCompositionMiniature,
   templateSectionSummaryFa,
 } from "../../../lib/storefront-composition/industry-templates.ts";
 
@@ -366,7 +368,7 @@ export function AdminLandingPageComposer({ pageId }: { pageId?: string }) {
         </div>
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3" data-testid="template-picker">
           {industryTemplates.map((template) => {
-            const preview = getVariant(template.sectionPresetList[0]?.variantKey ?? "")?.previewKind ?? "promo";
+            const miniature = templateCompositionMiniature(template);
             return (
               <button
                 key={template.templateKey}
@@ -382,11 +384,26 @@ export function AdminLandingPageComposer({ pageId }: { pageId?: string }) {
                   }));
                 }}
               >
-                <div className={`mb-3 h-20 rounded-xl bg-gradient-to-l ${previewMosaicClass(preview)}`} aria-hidden />
+                <div className="mb-3 grid h-24 grid-cols-6 grid-rows-3 gap-1 rounded-xl bg-slate-100 p-2" aria-hidden data-testid="template-composition-miniature">
+                  {miniature.map((kind, index) => {
+                    const tone =
+                      kind === "hero" ? "bg-sky-400"
+                        : kind === "story" ? "bg-rose-300"
+                          : kind === "category" ? "bg-emerald-400"
+                            : kind === "product" ? "bg-amber-400"
+                              : kind === "banner" ? "bg-violet-400"
+                                : kind === "brand" ? "bg-slate-400"
+                                  : kind === "article" ? "bg-cyan-400"
+                                    : kind === "reviews" ? "bg-yellow-300"
+                                      : "bg-stone-300";
+                    const span = kind === "hero" ? "col-span-6 row-span-1" : "col-span-2";
+                    return <span key={`${template.templateKey}-${index}`} className={`rounded ${tone} ${span}`} />;
+                  })}
+                </div>
                 <p className="font-black">{template.nameFa}</p>
-                <p className="mt-1 text-xs font-bold text-primary">{template.industry}</p>
                 <p className="mt-2 text-sm text-muted">{template.descriptionFa}</p>
-                <p className="mt-3 text-xs text-muted">{templateSectionSummaryFa(template)}</p>
+                <p className="mt-2 text-xs font-bold text-slate-600">{template.sectionPresetList.length.toLocaleString("fa-IR")} بخش</p>
+                <p className="mt-1 text-xs text-muted">{templateSectionSummaryFa(template)}</p>
               </button>
             );
           })}
@@ -481,26 +498,41 @@ export function AdminLandingPageComposer({ pageId }: { pageId?: string }) {
           <ol className="space-y-3">
             {sections.map((row, index) => {
               const config = parseLandingConfig(row.config);
+              const variantKey = typeof config.variantKey === "string" ? config.variantKey : undefined;
+              const sectionTypeKey = resolveSectionTypeKey(row.sectionType, config);
+              const typeLabel = sectionTypeKey ? (getSectionType(sectionTypeKey)?.nameFa ?? landingSectionLabel(row.sectionType)) : landingSectionLabel(row.sectionType);
+              const variantLabel = variantKey ? getVariant(variantKey)?.nameFa : null;
+              const heightPreset = typeof config.heightPreset === "string" ? config.heightPreset : null;
+              const heightFa = heightPreset && heightPreset in SIZE_PRESET_CONTRACTS
+                ? SIZE_PRESET_CONTRACTS[heightPreset as keyof typeof SIZE_PRESET_CONTRACTS].nameFa
+                : null;
               return (
-                <li key={row.pageSectionId} className={`rounded-xl border px-4 py-3 ${row.isEnabled ? "bg-white" : "bg-slate-50 opacity-80"}`}>
+                <li key={row.pageSectionId} className={`rounded-xl border px-4 py-3 ${row.isEnabled ? "bg-white" : "bg-slate-50 opacity-80"}`} data-testid="composer-section-card">
                   <div className="flex flex-wrap items-center justify-between gap-3">
-                    <div>
-                      <strong>{landingSectionLabel(row.sectionType)}</strong>
+                    <div className="min-w-0">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <strong>{typeLabel}</strong>
+                        {variantLabel ? <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-bold text-slate-700">{variantLabel}</span> : null}
+                        <span className={`rounded-full px-2 py-0.5 text-[11px] font-bold ${row.isEnabled ? "bg-emerald-50 text-emerald-700" : "bg-slate-200 text-slate-600"}`}>
+                          {row.isEnabled ? "فعال" : "غیرفعال"}
+                        </span>
+                        {heightFa ? <span className="rounded-full bg-blue-50 px-2 py-0.5 text-[11px] font-bold text-blue-700">{heightFa}</span> : null}
+                      </div>
                       <p className="mt-1 text-xs text-muted">{summarizeLandingSection(row.sectionType, config)}</p>
                     </div>
                     <div className="flex flex-wrap items-center gap-2">
-                      <button type="button" aria-label="بالا" className="rounded-lg border p-2" disabled={busy || index === 0} onClick={() => void move(index, -1)}>
+                      <button type="button" aria-label="بالا" className="rounded-lg border p-2 min-h-11 min-w-11" disabled={busy || index === 0} onClick={() => void move(index, -1)}>
                         <ChevronUp className="h-4 w-4" />
                       </button>
-                      <button type="button" aria-label="پایین" className="rounded-lg border p-2" disabled={busy || index === sections.length - 1} onClick={() => void move(index, 1)}>
+                      <button type="button" aria-label="پایین" className="rounded-lg border p-2 min-h-11 min-w-11" disabled={busy || index === sections.length - 1} onClick={() => void move(index, 1)}>
                         <ChevronDown className="h-4 w-4" />
                       </button>
-                      <button type="button" className="rounded-lg border px-3 py-2 text-xs font-bold" disabled={busy} onClick={() => void toggle(row)}>
+                      <button type="button" className="rounded-lg border px-3 py-2 text-xs font-bold min-h-11" disabled={busy} onClick={() => void toggle(row)}>
                         {row.isEnabled ? <span className="inline-flex items-center gap-1"><Eye className="h-3.5 w-3.5" /> فعال</span> : <span className="inline-flex items-center gap-1"><EyeOff className="h-3.5 w-3.5" /> غیرفعال</span>}
                       </button>
                       <button
                         type="button"
-                        className="rounded-lg border px-3 py-2 text-xs font-bold"
+                        className="rounded-lg border px-3 py-2 text-xs font-bold min-h-11"
                         onClick={() => {
                           setEditing(row);
                           setDraftConfig(config);
@@ -515,7 +547,7 @@ export function AdminLandingPageComposer({ pageId }: { pageId?: string }) {
                           <button type="button" onClick={() => setConfirmDelete(null)}>خیر</button>
                         </span>
                       ) : (
-                        <button type="button" className="rounded-lg border px-3 py-2 text-xs" onClick={() => setConfirmDelete(row.pageSectionId)}>
+                        <button type="button" className="rounded-lg border px-3 py-2 text-xs min-h-11" onClick={() => setConfirmDelete(row.pageSectionId)}>
                           <Trash2 className="h-3.5 w-3.5" />
                         </button>
                       )}
@@ -578,14 +610,27 @@ export function AdminLandingPageComposer({ pageId }: { pageId?: string }) {
                     key={variant.variantKey}
                     type="button"
                     data-variant-key={variant.variantKey}
+                    data-preview-fingerprint={variant.variantKey}
                     data-testid={`pick-variant-${variant.variantKey.replace(/\./g, "-")}`}
                     className="rounded-2xl border p-4 text-start hover:border-[#2563EB]"
                     onClick={() => void addSectionWithVariant(chooserSection, variant.variantKey)}
                   >
-                    <div className={`mb-3 h-14 rounded-xl bg-gradient-to-l ${previewMosaicClass(variant.previewKind)}`} aria-hidden />
+                    <div
+                      className={`mb-3 grid h-16 grid-cols-5 grid-rows-2 gap-1 rounded-xl bg-gradient-to-l p-2 ${previewMosaicClass(variant.previewKind)}`}
+                      aria-hidden
+                      data-testid="variant-preview-canvas"
+                    >
+                      {variantPreviewStructure(variant.variantKey).map((cell, index) => (
+                        <span key={`${variant.variantKey}-${index}`} className={cell.className} />
+                      ))}
+                    </div>
                     <strong>{variant.nameFa}</strong>
                     <p className="mt-1 text-xs text-muted">{variant.descriptionFa}</p>
-                    {variant.recommendedUseFa ? <p className="mt-1 text-[11px] text-slate-500">{variant.recommendedUseFa}</p> : null}
+                    {variant.recommendedUseFa ? (
+                      <span className="mt-2 inline-flex rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] font-bold text-emerald-700">
+                        {variant.recommendedUseFa}
+                      </span>
+                    ) : null}
                   </button>
                 ))}
               </div>

@@ -64,6 +64,7 @@ export interface SectionCatalogSnapshot {
 
 export interface SectionDisplayConfig {
   title?: string;
+  subtitle?: string;
   href?: string;
   itemCount?: number;
   sourceKind?: string;
@@ -219,6 +220,7 @@ export function parseSectionDisplayConfig(configurationJson?: string): SectionDi
     const parsed = JSON.parse(configurationJson) as Record<string, unknown>;
     const config: SectionDisplayConfig = {};
     if (typeof parsed.title === "string" && parsed.title.trim()) config.title = parsed.title.trim();
+    if (typeof parsed.subtitle === "string" && parsed.subtitle.trim()) config.subtitle = parsed.subtitle.trim();
     if (typeof parsed.href === "string" && parsed.href.trim()) config.href = parsed.href.trim();
     if (typeof parsed.itemCount === "number" && Number.isFinite(parsed.itemCount)) config.itemCount = parsed.itemCount;
     if (typeof parsed.sourceKind === "string" && parsed.sourceKind.trim()) config.sourceKind = parsed.sourceKind.trim();

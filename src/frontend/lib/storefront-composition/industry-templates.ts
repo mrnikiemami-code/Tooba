@@ -154,8 +154,54 @@ export function buildTemplateSectionPayloads(templateKey: string): Array<{
 }
 
 export function templateSectionSummaryFa(template: IndustryTemplateSeed): string {
-  return `${template.sectionPresetList.length} بخش · ${template.sectionPresetList
-    .map((p) => getVariant(p.variantKey)?.nameFa ?? p.variantKey)
-    .slice(0, 4)
-    .join("، ")}${template.sectionPresetList.length > 4 ? "…" : ""}`;
+  const counts = {
+    hero: 0,
+    story: 0,
+    category: 0,
+    product: 0,
+    banner: 0,
+    brand: 0,
+    article: 0,
+    reviews: 0,
+    promo: 0,
+    other: 0,
+  };
+  for (const preset of template.sectionPresetList) {
+    if (preset.sectionTypeKey === "HeroCarousel") counts.hero += 1;
+    else if (preset.sectionTypeKey === "StoryRail") counts.story += 1;
+    else if (preset.sectionTypeKey === "CategoryShowcase") counts.category += 1;
+    else if (preset.sectionTypeKey === "ProductShowcase" || preset.sectionTypeKey === "ProductRankedList") counts.product += 1;
+    else if (preset.sectionTypeKey === "BannerShowcase") counts.banner += 1;
+    else if (preset.sectionTypeKey === "BrandShowcase") counts.brand += 1;
+    else if (preset.sectionTypeKey === "ArticleShowcase") counts.article += 1;
+    else if (preset.sectionTypeKey === "ReviewsShowcase") counts.reviews += 1;
+    else if (preset.sectionTypeKey === "PromoSection") counts.promo += 1;
+    else counts.other += 1;
+  }
+  const parts: string[] = [];
+  if (counts.hero) parts.push(counts.hero === 1 ? "هدر تصویری" : `${counts.hero.toLocaleString("fa-IR")} هدر تصویری`);
+  if (counts.story) parts.push(counts.story === 1 ? "استوری" : `${counts.story.toLocaleString("fa-IR")} استوری`);
+  if (counts.category) parts.push(counts.category === 1 ? "دسته" : `${counts.category.toLocaleString("fa-IR")} بخش دسته`);
+  if (counts.product) parts.push(`${counts.product.toLocaleString("fa-IR")} بخش محصول`);
+  if (counts.banner) parts.push(counts.banner === 1 ? "بنر" : `${counts.banner.toLocaleString("fa-IR")} بنر`);
+  if (counts.brand) parts.push(counts.brand === 1 ? "برند" : `${counts.brand.toLocaleString("fa-IR")} برند`);
+  if (counts.article) parts.push(counts.article === 1 ? "مقاله" : `${counts.article.toLocaleString("fa-IR")} مقاله`);
+  if (counts.reviews) parts.push("نظر خریداران");
+  if (counts.promo) parts.push("پرومو");
+  if (counts.other) parts.push(`${counts.other.toLocaleString("fa-IR")} بخش دیگر`);
+  return `${template.sectionPresetList.length.toLocaleString("fa-IR")} بخش · ${parts.join(" + ")}`;
+}
+
+export function templateCompositionMiniature(template: IndustryTemplateSeed): string[] {
+  return template.sectionPresetList.map((preset) => {
+    if (preset.sectionTypeKey === "HeroCarousel") return "hero";
+    if (preset.sectionTypeKey === "StoryRail") return "story";
+    if (preset.sectionTypeKey === "CategoryShowcase") return "category";
+    if (preset.sectionTypeKey === "ProductShowcase" || preset.sectionTypeKey === "ProductRankedList") return "product";
+    if (preset.sectionTypeKey === "BannerShowcase") return "banner";
+    if (preset.sectionTypeKey === "BrandShowcase") return "brand";
+    if (preset.sectionTypeKey === "ArticleShowcase") return "article";
+    if (preset.sectionTypeKey === "ReviewsShowcase") return "reviews";
+    return "other";
+  });
 }

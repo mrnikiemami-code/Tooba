@@ -1,4 +1,4 @@
-﻿# Tooba — Recovery Context
+# Tooba — Recovery Context
 
 Canonical repository:
 
@@ -28,7 +28,7 @@ Channel: tooba-main
 Last Architect Accepted Task:
 
 ```text
-TB-P10-T019
+TB-P10-T020
 ```
 
 Prior accepted catalog wave:
@@ -50,7 +50,7 @@ TB-P07-T043
 Last Implementation Task:
 
 ```text
-TB-P10-T020
+TB-P10-T021
 ```
 
 Current Issued Task:
@@ -68,6 +68,7 @@ Current Repair Task:
 Implemented Under Review:
 
 ```text
+TB-P10-T021 — Variant Expansion Wave 2 + Builder visual polish + industry template fidelity; USER_VISUAL_ACCEPTED=YES (Appearance); Builder USER_VISUAL_ACCEPTED=NO
 TB-P10-T020 — Native StoryRail/BannerShowcase + first variant wave + template start UX; USER_VISUAL_ACCEPTED=YES (Appearance); Builder USER_VISUAL_ACCEPTED=NO
 TB-P10-T019 — Shared composition renderer + existing Shopeiva variants + visual Admin variant picker; USER_VISUAL_ACCEPTED=YES (Appearance); Builder USER_VISUAL_ACCEPTED=NO
 TB-P10-T018 — Home+Landing composition engine foundation (shared registry, responsive contracts, Landing adapter); USER_VISUAL_ACCEPTED=YES (Appearance); Builder not visually accepted
@@ -210,7 +211,7 @@ YES
 Worker Next State:
 
 ```text
-IDLE — waits for Bridge Task (no invented next task; do NOT invent TB-P10-T021)
+IDLE — waits for Bridge Task (no invented next task; do NOT invent TB-P10-T022)
 ```
 
 Issued but not accepted:

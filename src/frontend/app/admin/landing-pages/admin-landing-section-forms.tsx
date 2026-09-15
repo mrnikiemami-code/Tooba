@@ -74,6 +74,11 @@ export function LandingSectionForm({
         <TextField label="عنوان" value={title} onChange={(next) => set({ title: next })} />
         <div className="space-y-3" data-testid="banner-slot-editor">
           <p className="text-sm font-bold">جایگاه‌های بنر ({slots.toLocaleString("fa-IR")} مورد)</p>
+          {items.every((item) => !(item.imageUrl ?? "").trim()) ? (
+            <p className="rounded-xl border border-dashed px-3 py-2 text-xs text-muted" data-testid="banner-empty-media-hint">
+              هنوز تصویری برای بنرها تنظیم نشده. برای هر جایگاه یک آدرس تصویر وارد کنید تا در فروشگاه خالی نماند.
+            </p>
+          ) : null}
           {items.map((item, index) => (
             <div key={index} className="rounded-xl border border-border p-3 space-y-2">
               <p className="text-xs font-bold text-muted">جایگاه {(index + 1).toLocaleString("fa-IR")}</p>
@@ -129,7 +134,9 @@ export function LandingSectionForm({
               افزودن استوری
             </button>
           </div>
-          {items.length === 0 ? <p className="text-xs text-muted">هنوز استوری اضافه نشده است.</p> : null}
+          {items.length === 0 ? (
+            <p className="text-xs text-muted" data-testid="story-empty-hint">هنوز استوری اضافه نشده است. با «افزودن استوری» شروع کنید.</p>
+          ) : null}
           {items.map((item, index) => (
             <div key={index} className="rounded-xl border border-border p-3 space-y-2">
               <TextField
@@ -258,6 +265,9 @@ export function LandingSectionForm({
 
   if (type === "ProductCollection") {
     const source = typeof value.source === "string" ? value.source : "Newest";
+    const manualEmpty = source === "Manual" && asStringArray(value.productIds).length === 0;
+    const categoryMissing = source === "Category" && !(typeof value.categoryId === "string" && value.categoryId);
+    const brandMissing = source === "Brand" && !(typeof value.brandId === "string" && value.brandId);
     return (
       <div className="space-y-3" data-testid="product-section-editor">
         <TextField label="عنوان" value={title} onChange={(next) => set({ title: next })} />
@@ -273,6 +283,15 @@ export function LandingSectionForm({
             ))}
           </select>
         </label>
+        {manualEmpty || categoryMissing || brandMissing ? (
+          <p className="rounded-xl border border-dashed px-3 py-2 text-xs text-muted" data-testid="empty-state-product-source">
+            {manualEmpty
+              ? "هنوز کالایی انتخاب نشده. چند کالا اضافه کنید تا بخش در فروشگاه خالی نماند."
+              : categoryMissing
+                ? "یک دسته انتخاب کنید؛ اگر دسته حذف شده باشد منبع را عوض کنید."
+                : "یک برند انتخاب کنید؛ اگر برند حذف شده باشد منبع را عوض کنید."}
+          </p>
+        ) : null}
         <TakeField value={typeof value.take === "number" ? value.take : 8} onChange={(take) => set({ take })} />
         {source === "Category" ? (
           <EntitySinglePicker

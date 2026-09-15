@@ -1,0 +1,79 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-P10-T021
+Parent-Task: TB-P10-T020
+Status: PASS
+WorkerId: tooba-worker-01
+Channel: tooba-main
+
+Summary:
+Wave-2 Variants (hero.editorial, story.icon-shortcuts, category.editorial-tiles, product.tabbed/large-cards/minimal-list, ranked.ticker) implemented with distinct layouts. ProductShowcase professionalism and banner polish retained on shared ProductCard/CompositionBannerGrid. All 10 industry templates fidelity-reviewed. Admin template/variant/section-card polish + empty-state guidance. Runtime ok=true with required Admin/Desktop/Mobile screenshots. Appearance USER_VISUAL_ACCEPTED=YES; Builder USER_VISUAL_ACCEPTED=NO. No TB-P10-T022.
+
+Applicable-Locks:
+LOCK-SF-001…242 preserved. Added LOCK-SF-243…249 (meaningful visual difference; shared ProductShowcase; template fidelity without owned CSS/renderers; ordinary-user Admin summaries; graceful empty states; code-owned mobile; truthful ranked sources).
+
+Recovery-Start:
+branch=main HEAD-at-claim=e1bef2930481e0c2bb9de057f9fbd695546de2c4 HEAD==origin/main. Expected previous HEAD afbfd669 is T020 impl; pin e1bef293 is SoT pin — not RECOVERY_CONFLICT. docs/evidence/TB-P10-T021/recovery-start.md
+
+Variant-Wave-2:
+docs/evidence/TB-P10-T021/variant-wave2.md
+
+Product-Showcase-Quality:
+docs/evidence/TB-P10-T021/product-showcase-quality.md
+
+Banner-Quality:
+docs/evidence/TB-P10-T021/banner-quality.md
+
+Template-Fidelity:
+docs/evidence/TB-P10-T021/template-fidelity.md
+
+Template-Preview-UX:
+Polished template-picker with FA industry, description, section summary. docs/evidence/TB-P10-T021/admin-polish.md
+
+Variant-Picker-UX:
+Wave-2 product/banner pickers with FA labels and distinct previews.
+
+Composer-Card-UX:
+Collapsed section cards show type/variant/source summaries.
+
+Empty-Error-States:
+docs/evidence/TB-P10-T021/empty-states.md
+
+Mobile-Visual-Quality:
+docs/evidence/TB-P10-T021/mobile-visual-quality.md
+
+Accessibility:
+docs/evidence/TB-P10-T021/responsive-a11y.md
+
+Focused-Validation:
+composition-engine 24/24; critical-storefront 20/20; recovery 4/4. docs/evidence/TB-P10-T021/focused-validation.md
+
+Runtime:
+runtime-report.json ok=true. docs/evidence/TB-P10-T021/runtime.md
+
+Visual-Evidence:
+docs/evidence/TB-P10-T021/screenshots/ template-picker-polished.png variant-picker-product-wave2.png variant-picker-banner-wave2.png section-card-collapsed.png section-settings-expanded.png empty-state-product-source.png fashion-desktop.png autoparts-desktop.png interior-decor-desktop.png beauty-desktop.png mixed-landing-desktop.png fashion-mobile.png autoparts-mobile.png interior-decor-mobile.png beauty-mobile.png mixed-landing-mobile.png
+
+AntiPattern-Scan:
+CLEAN. docs/evidence/TB-P10-T021/antipattern-scan.md
+
+Lock-Registry:
+LOCK-SF-001…249. New 243–249 only.
+
+Recovery-SoT:
+Phase P10 Architect TB-P10-T020 Impl TB-P10-T021 Issued/Repair none Appearance YES Builder NO Worker IDLE do NOT invent TB-P10-T022. docs/evidence/TB-P10-T021/recovery-sot.md
+
+Git:
+SHA=PLACEHOLDER_IMPL HEAD==origin/main after push. Unrelated .tmp-* leftovers not committed.
+
+Architectural-Concerns:
+none material for this wave.
+
+Visual-Concerns:
+Builder USER_VISUAL_ACCEPTED=NO pending user inspection of wave-2 Admin polish. Functional PASS ≠ Visual ACCEPT for builder.
+
+Blockers:
+none
+
+END_TOOBA_WORKER_RESULT

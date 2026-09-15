@@ -1,0 +1,382 @@
+{
+  "ok": true,
+  "steps": [
+    {
+      "name": "A-template-picker",
+      "pass": true
+    },
+    {
+      "name": "file:template-picker-polished.png",
+      "pass": true,
+      "data": {
+        "bytes": 118286
+      }
+    },
+    {
+      "name": "file:variant-picker-product-wave2.png",
+      "pass": true,
+      "data": {
+        "bytes": 182985
+      }
+    },
+    {
+      "name": "file:section-settings-expanded.png",
+      "pass": true,
+      "data": {
+        "bytes": 118757
+      }
+    },
+    {
+      "name": "file:empty-state-product-source.png",
+      "pass": true,
+      "data": {
+        "bytes": 118757
+      }
+    },
+    {
+      "name": "file:variant-picker-banner-wave2.png",
+      "pass": true,
+      "data": {
+        "bytes": 198477
+      }
+    },
+    {
+      "name": "file:section-card-collapsed.png",
+      "pass": true,
+      "data": {
+        "bytes": 69279
+      }
+    },
+    {
+      "name": "B-composer-cards",
+      "pass": true
+    },
+    {
+      "name": "fashion-desktop",
+      "pass": true
+    },
+    {
+      "name": "file:fashion-desktop.png",
+      "pass": true,
+      "data": {
+        "bytes": 406682
+      }
+    },
+    {
+      "name": "autoparts-desktop",
+      "pass": true
+    },
+    {
+      "name": "file:autoparts-desktop.png",
+      "pass": true,
+      "data": {
+        "bytes": 142081
+      }
+    },
+    {
+      "name": "interior-desktop",
+      "pass": true
+    },
+    {
+      "name": "file:interior-decor-desktop.png",
+      "pass": true,
+      "data": {
+        "bytes": 168062
+      }
+    },
+    {
+      "name": "beauty-desktop",
+      "pass": true
+    },
+    {
+      "name": "file:beauty-desktop.png",
+      "pass": true,
+      "data": {
+        "bytes": 408846
+      }
+    },
+    {
+      "name": "mixed-desktop",
+      "pass": true
+    },
+    {
+      "name": "file:mixed-landing-desktop.png",
+      "pass": true,
+      "data": {
+        "bytes": 420174
+      }
+    },
+    {
+      "name": "fashion-mobile",
+      "pass": true
+    },
+    {
+      "name": "file:fashion-mobile.png",
+      "pass": true,
+      "data": {
+        "bytes": 112800
+      }
+    },
+    {
+      "name": "autoparts-mobile",
+      "pass": true
+    },
+    {
+      "name": "file:autoparts-mobile.png",
+      "pass": true,
+      "data": {
+        "bytes": 48001
+      }
+    },
+    {
+      "name": "interior-mobile",
+      "pass": true
+    },
+    {
+      "name": "file:interior-decor-mobile.png",
+      "pass": true,
+      "data": {
+        "bytes": 41279
+      }
+    },
+    {
+      "name": "beauty-mobile",
+      "pass": true
+    },
+    {
+      "name": "file:beauty-mobile.png",
+      "pass": true,
+      "data": {
+        "bytes": 122202
+      }
+    },
+    {
+      "name": "mixed-mobile",
+      "pass": true
+    },
+    {
+      "name": "file:mixed-landing-mobile.png",
+      "pass": true,
+      "data": {
+        "bytes": 133176
+      }
+    },
+    {
+      "name": "set-home",
+      "pass": true
+    },
+    {
+      "name": "custom-home",
+      "pass": true
+    },
+    {
+      "name": "canonical-home",
+      "pass": true
+    }
+  ],
+  "files": {
+    "template-picker-polished.png": {
+      "bytes": 118286
+    },
+    "variant-picker-product-wave2.png": {
+      "bytes": 182985
+    },
+    "section-settings-expanded.png": {
+      "bytes": 118757
+    },
+    "empty-state-product-source.png": {
+      "bytes": 118757
+    },
+    "variant-picker-banner-wave2.png": {
+      "bytes": 198477
+    },
+    "section-card-collapsed.png": {
+      "bytes": 69279
+    },
+    "fashion-desktop.png": {
+      "bytes": 406682
+    },
+    "autoparts-desktop.png": {
+      "bytes": 142081
+    },
+    "interior-decor-desktop.png": {
+      "bytes": 168062
+    },
+    "beauty-desktop.png": {
+      "bytes": 408846
+    },
+    "mixed-landing-desktop.png": {
+      "bytes": 420174
+    },
+    "fashion-mobile.png": {
+      "bytes": 112800
+    },
+    "autoparts-mobile.png": {
+      "bytes": 48001
+    },
+    "interior-decor-mobile.png": {
+      "bytes": 41279
+    },
+    "beauty-mobile.png": {
+      "bytes": 122202
+    },
+    "mixed-landing-mobile.png": {
+      "bytes": 133176
+    }
+  },
+  "errors": [],
+  "console": [
+    {
+      "type": "info",
+      "text": "%cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold"
+    },
+    {
+      "type": "info",
+      "text": "%cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold"
+    },
+    {
+      "type": "info",
+      "text": "%cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold"
+    },
+    {
+      "type": "info",
+      "text": "%cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold"
+    },
+    {
+      "type": "info",
+      "text": "%cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold"
+    },
+    {
+      "type": "error",
+      "text": "A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:\n\n- A server/client bran"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+    },
+    {
+      "type": "info",
+      "text": "%cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold"
+    },
+    {
+      "type": "error",
+      "text": "A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:\n\n- A server/client bran"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+    },
+    {
+      "type": "info",
+      "text": "%cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold"
+    },
+    {
+      "type": "error",
+      "text": "A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:\n\n- A server/client bran"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+    },
+    {
+      "type": "info",
+      "text": "%cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold"
+    },
+    {
+      "type": "error",
+      "text": "A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:\n\n- A server/client bran"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+    },
+    {
+      "type": "info",
+      "text": "%cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold"
+    },
+    {
+      "type": "error",
+      "text": "A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:\n\n- A server/client bran"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+    },
+    {
+      "type": "info",
+      "text": "%cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold"
+    },
+    {
+      "type": "error",
+      "text": "A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:\n\n- A server/client bran"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+    },
+    {
+      "type": "info",
+      "text": "%cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold"
+    },
+    {
+      "type": "error",
+      "text": "A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:\n\n- A server/client bran"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+    },
+    {
+      "type": "info",
+      "text": "%cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold"
+    },
+    {
+      "type": "error",
+      "text": "A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:\n\n- A server/client bran"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+    },
+    {
+      "type": "info",
+      "text": "%cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold"
+    },
+    {
+      "type": "error",
+      "text": "A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:\n\n- A server/client bran"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+    },
+    {
+      "type": "info",
+      "text": "%cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold"
+    },
+    {
+      "type": "error",
+      "text": "A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:\n\n- A server/client bran"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+    },
+    {
+      "type": "info",
+      "text": "%cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+    },
+    {
+      "type": "info",
+      "text": "%cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+    }
+  ]
+}

@@ -15,7 +15,7 @@ import "swiper/css/free-mode";
  * ریل استوری خانه — پورت بصری/تعاملی Shopeiva با دادهٔ زندهٔ Host.
  * دکمهٔ «افزودن استوری» عمداً حذف شده (ادمین می‌سازد).
  */
-export type StoryLayout = "circle" | "image-circles" | "rounded-cards";
+export type StoryLayout = "circle" | "image-circles" | "rounded-cards" | "icon-shortcuts";
 
 export function HomeStoriesSection({ layout = "circle" }: { layout?: StoryLayout } = {}) {
   const locale = useLocale();
@@ -37,14 +37,71 @@ export function HomeStoriesSection({ layout = "circle" }: { layout?: StoryLayout
     };
   }, [locale]);
 
-  if (!loaded || stories.length === 0) {
+  if (!loaded) {
     return null;
+  }
+
+  if (stories.length === 0) {
+    return (
+      <div className="w-full px-2 sm:px-4 py-6 md:py-8 bg-section-surface" data-testid="home-stories" data-story-layout={layout} data-empty="true" data-storefront-surface-role="section">
+        <h3 className="text-lg md:text-xl font-bold text-gray-900 flex items-center gap-2 mb-4">
+          <span className="w-1 h-5 bg-primary rounded-full" />
+          استوری‌ها
+        </h3>
+        <p className="rounded-2xl border border-dashed border-gray-200 bg-surface px-4 py-6 text-center text-sm text-gray-500">
+          استوری فعالی برای نمایش نیست.
+        </p>
+      </div>
+    );
   }
 
   const openStory = (storyId: string) => {
     setSelectedStoryId(storyId);
     setModalOpen(true);
   };
+
+  if (layout === "icon-shortcuts") {
+    return (
+      <div className="w-full px-2 sm:px-4 py-6 md:py-8 bg-section-surface" data-testid="home-stories" data-story-layout="icon-shortcuts" data-storefront-surface-role="section">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-lg md:text-xl font-bold text-gray-900 flex items-center gap-2">
+            <span className="w-1 h-5 bg-primary rounded-full" />
+            میانبرها
+          </h3>
+        </div>
+        <div className="flex gap-3 overflow-x-auto pb-2">
+          {stories.map((story) => {
+            const cover = story.coverMediaUrl ?? story.items[0]?.mediaUrl;
+            const initial = story.title.trim().slice(0, 1) || "س";
+            return (
+              <button
+                key={story.storyId}
+                type="button"
+                onClick={() => openStory(story.storyId)}
+                className="flex w-[76px] shrink-0 flex-col items-center gap-2 min-h-11"
+              >
+                <span className="flex h-14 w-14 items-center justify-center overflow-hidden rounded-2xl border border-gray-200 bg-surface shadow-sm">
+                  {cover ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={cover} alt="" className="h-full w-full object-cover" />
+                  ) : (
+                    <span className="text-lg font-black text-primary">{initial}</span>
+                  )}
+                </span>
+                <span className="w-full truncate text-center text-[11px] font-bold text-gray-700">{story.title}</span>
+              </button>
+            );
+          })}
+        </div>
+        <StoryModal
+          isOpen={modalOpen}
+          onClose={() => setModalOpen(false)}
+          stories={stories}
+          initialStoryId={selectedStoryId}
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="w-full px-2 sm:px-4 py-6 md:py-8 bg-section-surface" data-testid="home-stories" data-story-layout={layout} data-storefront-surface-role="section">
@@ -82,7 +139,7 @@ export function HomeStoriesSection({ layout = "circle" }: { layout?: StoryLayout
                     <button
                       type="button"
                       onClick={() => openStory(story.storyId)}
-                      className="flex flex-col items-center gap-1.5 group relative w-full"
+                      className="flex flex-col items-center gap-1.5 group relative w-full min-h-11"
                       onMouseEnter={() => setHoveredId(story.storyId)}
                       onMouseLeave={() => setHoveredId(null)}
                     >
