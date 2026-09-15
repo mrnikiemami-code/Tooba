@@ -34,10 +34,10 @@ import { getSectionType, getVariant } from "../../../lib/storefront-composition/
 import {
   buildTemplateSectionPayloads,
   listIndustryTemplates,
-  templateSectionSummaryFa,
 } from "../../../lib/storefront-composition/industry-templates.ts";
 import { AdminSectionWizard } from "./admin-section-wizard.tsx";
-import { layoutAwareTemplatePreview, VariantPreviewCanvas } from "./layout-aware-previews.tsx";
+import { VariantPreviewCanvas } from "./layout-aware-previews.tsx";
+import { AdminTemplateSelectionWorkspace } from "./admin-template-selection-workspace.tsx";
 
 type Meta = {
   title: string;
@@ -293,7 +293,17 @@ export function AdminLandingPageComposer({ pageId }: { pageId?: string }) {
             <p className="text-lg font-black">شروع از صفحه خالی</p>
             <p className="mt-2 text-sm text-muted">یک پیش‌نویس خالی بسازید و بخش‌ها را خودتان اضافه کنید.</p>
           </button>
-          <button type="button" className="rounded-2xl border border-border bg-surface-elevated p-6 text-start hover:border-primary" data-testid="start-from-template" onClick={() => setCreateMode("template")}>
+          <button type="button" className="rounded-2xl border border-border bg-surface-elevated p-6 text-start hover:border-primary" data-testid="start-from-template" onClick={() => {
+            const first = industryTemplates[0];
+            setCreateMode("template");
+            if (first) {
+              setSelectedTemplateKey(first.templateKey);
+              setMeta((current) => ({
+                ...current,
+                title: current.title || first.nameFa,
+              }));
+            }
+          }}>
             <p className="text-lg font-black">شروع از قالب آماده</p>
             <p className="mt-2 text-sm text-muted">یکی از ۱۰ قالب صنعتی را انتخاب کنید؛ نتیجه یک پیش‌نویس عادی و قابل‌ویرایش است.</p>
           </button>
@@ -304,76 +314,37 @@ export function AdminLandingPageComposer({ pageId }: { pageId?: string }) {
 
   if (!pageId && !page && createMode === "template" && !templateConfirmed) {
     return (
-      <main data-testid="admin-landing-page-editor" className="space-y-5">
-        <div className="flex flex-wrap items-start justify-between gap-3">
-          <div>
-            <button type="button" className="text-sm text-muted" onClick={() => setCreateMode(null)}>بازگشت</button>
-            <h1 className="mt-1 text-xl font-black">انتخاب قالب آماده</h1>
-            <p className="mt-1 text-sm text-muted">نام فارسی، توضیح کوتاه و خلاصهٔ بخش‌ها را ببینید؛ هر قالب ترکیب متفاوتی دارد.</p>
-          </div>
-        </div>
-        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3" data-testid="template-picker" data-template-preview-v2="1">
-          {industryTemplates.map((template) => {
-            const preview = layoutAwareTemplatePreview(template);
-            const selected = selectedTemplateKey === template.templateKey;
-            return (
-              <button
-                key={template.templateKey}
-                type="button"
-                className={`rounded-2xl border bg-surface-elevated p-4 text-start hover:border-primary ${
-                  selected ? "border-[#2563EB] ring-2 ring-[#2563EB]/30" : "border-border"
-                }`}
-                data-testid={`template-card-${template.templateKey}`}
-                data-template-selected={selected ? "true" : undefined}
-                onClick={() => {
-                  setSelectedTemplateKey(template.templateKey);
-                  setMeta((current) => ({
-                    ...current,
-                    title: current.title || template.nameFa,
-                    slug: current.slug || "",
-                  }));
-                }}
-              >
-                <div
-                  className={`mb-3 grid h-32 grid-cols-6 gap-1 rounded-xl p-2 ${preview.toneClass}`}
-                  aria-hidden
-                  data-testid="template-composition-miniature"
-                  data-layout-aware="1"
-                  data-template-preview-v2="1"
-                  data-industry={template.industry}
-                >
-                  {preview.cells.map((cell, index) => (
-                    <span key={`${template.templateKey}-${index}`} className={cell.className} data-kind={cell.kind} />
-                  ))}
-                </div>
-                <p className="font-black">{template.nameFa}</p>
-                <p className="mt-2 text-sm text-muted">{template.descriptionFa}</p>
-                <p className="mt-2 text-xs font-bold text-slate-600">{template.sectionPresetList.length.toLocaleString("fa-IR")} بخش</p>
-                <p className="mt-1 text-xs text-muted">{templateSectionSummaryFa(template)}</p>
-                {selected ? (
-                  <span className="mt-3 inline-flex rounded-full bg-[#2563EB] px-3 py-1 text-xs font-bold text-white">
-                    انتخاب‌شده
-                  </span>
-                ) : null}
-              </button>
-            );
-          })}
-        </div>
-        <div className="flex flex-wrap gap-2">
-          <button
-            type="button"
-            className="rounded-xl bg-[#2563EB] px-4 py-2 text-sm font-bold text-white disabled:opacity-40"
-            disabled={!selectedTemplateKey}
-            data-testid="use-selected-template"
-            onClick={() => setTemplateConfirmed(true)}
-          >
-            استفاده از قالب انتخاب‌شده
-          </button>
-          <button type="button" className="rounded-xl border px-4 py-2 text-sm font-bold" data-testid="start-blank-from-templates" onClick={() => { setCreateMode("blank"); setSelectedTemplateKey(null); setTemplateConfirmed(false); }}>
-            شروع از صفحه خالی
-          </button>
-        </div>
-      </main>
+      <AdminTemplateSelectionWorkspace
+        selectedTemplateKey={selectedTemplateKey}
+        onBack={() => setCreateMode(null)}
+        onStartBlank={() => {
+          setCreateMode("blank");
+          setSelectedTemplateKey(null);
+          setTemplateConfirmed(false);
+        }}
+        onSelect={(templateKey, template) => {
+          setSelectedTemplateKey(templateKey);
+          setMeta((current) => ({
+            ...current,
+            title: current.title || template.nameFa,
+            slug: current.slug || "",
+          }));
+        }}
+        onConfirmTemplate={() => {
+          if (!selectedTemplateKey) {
+            const first = industryTemplates[0];
+            if (first) {
+              setSelectedTemplateKey(first.templateKey);
+              setMeta((current) => ({
+                ...current,
+                title: current.title || first.nameFa,
+                slug: current.slug || "",
+              }));
+            }
+          }
+          setTemplateConfirmed(true);
+        }}
+      />
     );
   }
 

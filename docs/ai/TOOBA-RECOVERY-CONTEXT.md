@@ -28,7 +28,7 @@ Channel: tooba-main
 Last Architect Accepted Task:
 
 ```text
-TB-P10-T022
+TB-P10-T022-R2
 ```
 
 Prior accepted catalog wave:
@@ -50,7 +50,7 @@ TB-P07-T043
 Last Implementation Task:
 
 ```text
-TB-P10-T022-R2
+TB-P10-T022-R3
 ```
 
 Current Issued Task:
@@ -68,6 +68,7 @@ Current Repair Task:
 Implemented Under Review:
 
 ```text
+TB-P10-T022-R3 — Template Selection Wireframe (device modes, seed-pack UX skeleton, distinct industry previews); USER_VISUAL_ACCEPTED=YES (Appearance); Builder USER_VISUAL_ACCEPTED=NO
 TB-P10-T022-R2 — Builder Visual/Workflow Repair R2 (Landing AppDataGrid, blank Add Section, fixed wizard shell, template V2, banner/brand/workspace); USER_VISUAL_ACCEPTED=YES (Appearance); Builder USER_VISUAL_ACCEPTED=NO
 TB-P10-T022-R1 — Builder Admin UX Repair (Orders-grid Resource Selector, section wizard, theme isolation, Story display-only); USER_VISUAL_ACCEPTED=YES (Appearance); Builder USER_VISUAL_ACCEPTED=NO
 TB-P10-T022 — Builder Acceptance Candidate — Completeness Audit, Visual Consistency, Final UX/Runtime Hardening; USER_VISUAL_ACCEPTED=YES (Appearance); Builder USER_VISUAL_ACCEPTED=NO

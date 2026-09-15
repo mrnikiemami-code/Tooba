@@ -10,6 +10,7 @@ const composer = readFileSync(join(dir, "admin-landing-page-composer.tsx"), "utf
 const wizard = readFileSync(join(dir, "admin-section-wizard.tsx"), "utf8");
 const forms = readFileSync(join(dir, "admin-landing-section-forms.tsx"), "utf8");
 const previews = readFileSync(join(dir, "layout-aware-previews.tsx"), "utf8");
+const workspace = readFileSync(join(dir, "admin-template-selection-workspace.tsx"), "utf8");
 const locks = readFileSync(join(dir, "../../../../../docs/architecture/TOOBA-LOCKS.md"), "utf8");
 
 test("Landing Pages uses canonical AppDataGrid profile", () => {
@@ -51,8 +52,9 @@ test("Review uses variant-aware preview metadata", () => {
 test("Template preview structural distinctness", () => {
   assert.match(previews, /data-template-preview-v2|template-preview-v2|layoutAwareTemplatePreview/);
   assert.match(previews, /industryTone/);
-  assert.match(composer, /data-template-preview-v2/);
-  assert.match(composer, /use-selected-template/);
+  assert.match(composer, /AdminTemplateSelectionWorkspace|use-selected-template/);
+  assert.match(workspace, /data-template-preview-v2|template-device-toolbar|industryWireframeBlocks/);
+  assert.match(workspace, /use-selected-template/);
 });
 
 test("Banner editor geometry matches variant metadata", () => {

@@ -1,0 +1,123 @@
+{
+  "ok": true,
+  "steps": [
+    {
+      "name": "file:template-wireframe-desktop.png",
+      "pass": true,
+      "data": {
+        "bytes": 125258
+      }
+    },
+    {
+      "name": "file:template-wireframe-fashion.png",
+      "pass": true,
+      "data": {
+        "bytes": 125258
+      }
+    },
+    {
+      "name": "file:template-wireframe-tablet.png",
+      "pass": true,
+      "data": {
+        "bytes": 127491
+      }
+    },
+    {
+      "name": "file:template-wireframe-mobile.png",
+      "pass": true,
+      "data": {
+        "bytes": 124030
+      }
+    },
+    {
+      "name": "device-frame-widths-differ",
+      "pass": true,
+      "data": {
+        "desktop": 680,
+        "tablet": 640,
+        "mobile": 360
+      }
+    },
+    {
+      "name": "file:template-wireframe-autoparts.png",
+      "pass": true,
+      "data": {
+        "bytes": 123446
+      }
+    },
+    {
+      "name": "file:template-wireframe-interior.png",
+      "pass": true,
+      "data": {
+        "bytes": 124516
+      }
+    },
+    {
+      "name": "industry-previews-distinct",
+      "pass": true,
+      "data": {
+        "autoKind": "AutoParts",
+        "interiorKind": "InteriorDecor"
+      }
+    },
+    {
+      "name": "file:template-wireframe-seed-summary.png",
+      "pass": true,
+      "data": {
+        "bytes": 119111
+      }
+    },
+    {
+      "name": "file:template-wireframe-cleanup-actions.png",
+      "pass": true,
+      "data": {
+        "bytes": 104366
+      }
+    },
+    {
+      "name": "cleanup-non-destructive",
+      "pass": true
+    },
+    {
+      "name": "file:template-wireframe-start-blank.png",
+      "pass": true,
+      "data": {
+        "bytes": 124493
+      }
+    },
+    {
+      "name": "start-blank-visible",
+      "pass": true
+    }
+  ],
+  "files": {
+    "template-wireframe-desktop.png": {
+      "bytes": 125258
+    },
+    "template-wireframe-fashion.png": {
+      "bytes": 125258
+    },
+    "template-wireframe-tablet.png": {
+      "bytes": 127491
+    },
+    "template-wireframe-mobile.png": {
+      "bytes": 124030
+    },
+    "template-wireframe-autoparts.png": {
+      "bytes": 123446
+    },
+    "template-wireframe-interior.png": {
+      "bytes": 124516
+    },
+    "template-wireframe-seed-summary.png": {
+      "bytes": 119111
+    },
+    "template-wireframe-cleanup-actions.png": {
+      "bytes": 104366
+    },
+    "template-wireframe-start-blank.png": {
+      "bytes": 124493
+    }
+  },
+  "errors": []
+}

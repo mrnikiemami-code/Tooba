@@ -983,3 +983,22 @@ Brand editing uses shared Resource Selector plus variant-aware settings/preview.
 ### LOCK-SF-273 — Workspace preview reflects composition
 Page workspace preview reflects saved section order/geometry.
 
+### LOCK-SF-274 — Template selection device preview modes
+Template selection requires Desktop/Tablet/Mobile preview modes.
+
+### LOCK-SF-275 — Template-specific future seed pack contract
+Template-specific future seed pack contains 8 three-level category trees, 15 products, related product images, related banners, and related brands.
+
+### LOCK-SF-276 — Articles not template-specific; Stories/Reviews shared
+Articles are not template-specific in current seed plan; Stories/Reviews use shared demo data.
+
+### LOCK-SF-277 — Seed data traceable for safe cleanup
+Seed data must be traceable for safe cleanup without deleting user-owned data.
+
+### LOCK-SF-278 — Template previews structurally distinct before final design
+Template previews must be structurally distinct and representative before full visual design is implemented.
+
+### LOCK-SF-279 — Seed cleanup/preparation non-destructive until dedicated task
+Seed cleanup/preparation actions remain non-destructive until dedicated seed-data implementation task.
+
+
