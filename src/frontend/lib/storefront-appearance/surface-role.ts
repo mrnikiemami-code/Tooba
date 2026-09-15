@@ -52,6 +52,8 @@ const LANDING_SECTION_ROLE: Record<string, StorefrontSurfaceRole> = {
   Reviews: "section",
   RichText: "section",
   NavigationMenu: "section",
+  StoryRail: "section",
+  BannerShowcase: "alternate",
 };
 
 export function surfaceRoleClass(role: StorefrontAllowedSurface): string {

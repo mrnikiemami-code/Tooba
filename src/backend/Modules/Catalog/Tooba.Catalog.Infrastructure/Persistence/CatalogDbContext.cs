@@ -601,7 +601,7 @@ public sealed class CatalogDbContext : DbContext
             entity.HasKey(x => x.PageSectionId);
             entity.Property(x => x.PageSectionId).ValueGeneratedNever();
             entity.Property(x => x.SectionType).HasMaxLength(64).IsRequired();
-            entity.Property(x => x.ConfigurationJson).HasMaxLength(4000).IsRequired();
+            entity.Property(x => x.ConfigurationJson).HasMaxLength(12000).IsRequired();
             entity.HasIndex(x => new { x.PageId, x.SortOrder });
         });
 

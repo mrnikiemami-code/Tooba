@@ -71,6 +71,8 @@ public static class StoreLandingPageSectionConfig
                 StoreLandingPageSectionRegistry.Reviews => NormalizeTitleOnly(document.RootElement),
                 StoreLandingPageSectionRegistry.RichText => NormalizeRichText(document.RootElement),
                 StoreLandingPageSectionRegistry.NavigationMenu => NormalizeNavigationMenu(document.RootElement),
+                StoreLandingPageSectionRegistry.StoryRail => NormalizeStoryRail(document.RootElement),
+                StoreLandingPageSectionRegistry.BannerShowcase => NormalizeBannerShowcase(document.RootElement),
                 _ => throw new PlatformHttpException(400, "نوع بخش تأییدشده نیست.", "landing.section.type.invalid"),
             };
         }
@@ -87,6 +89,8 @@ public static class StoreLandingPageSectionConfig
             subtitle = OptionalString(root, "subtitle", StoreLandingPageSectionRegistry.TitleMaxLength),
             href = OptionalHref(root),
             mediaAssetId = OptionalGuid(root, "mediaAssetId"),
+            variantKey = OptionalVariantKey(root),
+            heightPreset = OptionalHeightPreset(root),
         }, JsonOptions);
     }
 
@@ -98,6 +102,8 @@ public static class StoreLandingPageSectionConfig
             title,
             href = OptionalHref(root),
             mediaAssetId = OptionalGuid(root, "mediaAssetId"),
+            variantKey = OptionalVariantKey(root),
+            heightPreset = OptionalHeightPreset(root),
         }, JsonOptions);
     }
 
@@ -147,6 +153,8 @@ public static class StoreLandingPageSectionConfig
             categoryId,
             brandId,
             productIds,
+            variantKey = OptionalVariantKey(root),
+            heightPreset = OptionalHeightPreset(root),
         }, JsonOptions);
     }
 
@@ -156,6 +164,8 @@ public static class StoreLandingPageSectionConfig
         {
             title = OptionalString(root, "title", StoreLandingPageSectionRegistry.TitleMaxLength),
             ids = ReadGuids(root, listName, allowEmpty),
+            variantKey = OptionalVariantKey(root),
+            heightPreset = OptionalHeightPreset(root),
         }, JsonOptions);
     }
 
@@ -172,11 +182,18 @@ public static class StoreLandingPageSectionConfig
             title = OptionalString(root, "title", StoreLandingPageSectionRegistry.TitleMaxLength),
             source = "Latest",
             take = OptionalTake(root),
+            variantKey = OptionalVariantKey(root),
+            heightPreset = OptionalHeightPreset(root),
         }, JsonOptions);
     }
 
     private static string NormalizeTitleOnly(JsonElement root) =>
-        JsonSerializer.Serialize(new { title = OptionalString(root, "title", StoreLandingPageSectionRegistry.TitleMaxLength) }, JsonOptions);
+        JsonSerializer.Serialize(new
+        {
+            title = OptionalString(root, "title", StoreLandingPageSectionRegistry.TitleMaxLength),
+            variantKey = OptionalVariantKey(root),
+            heightPreset = OptionalHeightPreset(root),
+        }, JsonOptions);
 
     private static string NormalizeNavigationMenu(JsonElement root)
     {
@@ -185,6 +202,8 @@ public static class StoreLandingPageSectionConfig
         {
             title = OptionalString(root, "title", StoreLandingPageSectionRegistry.TitleMaxLength),
             menuId,
+            variantKey = OptionalVariantKey(root),
+            heightPreset = OptionalHeightPreset(root),
         }, JsonOptions);
     }
 
@@ -201,7 +220,134 @@ public static class StoreLandingPageSectionConfig
         {
             title = OptionalString(root, "title", StoreLandingPageSectionRegistry.TitleMaxLength),
             text,
+            variantKey = OptionalVariantKey(root),
+            heightPreset = OptionalHeightPreset(root),
         }, JsonOptions);
+    }
+
+    private static string NormalizeStoryRail(JsonElement root)
+    {
+        var items = ReadStoryItems(root);
+        return JsonSerializer.Serialize(new
+        {
+            title = OptionalString(root, "title", StoreLandingPageSectionRegistry.TitleMaxLength),
+            items,
+            variantKey = OptionalVariantKey(root) ?? "story.circle",
+            heightPreset = OptionalHeightPreset(root),
+        }, JsonOptions);
+    }
+
+    private static string NormalizeBannerShowcase(JsonElement root)
+    {
+        var variantKey = OptionalVariantKey(root) ?? "banner.single";
+        var expected = ExpectedBannerSlotCount(variantKey);
+        var items = ReadBannerItems(root);
+        if (expected > 0 && items.Length > expected)
+        {
+            throw new PlatformHttpException(400, "تعداد جایگاه بنر با مدل چیدمان هم‌خوان نیست.", "landing.section.banner.slots");
+        }
+
+        if (items.Length > StoreLandingPageSectionRegistry.MaxBannerSlots)
+        {
+            throw new PlatformHttpException(400, "تعداد جایگاه بنر بیش از حد است.", "landing.section.banner.slots");
+        }
+
+        return JsonSerializer.Serialize(new
+        {
+            title = OptionalString(root, "title", StoreLandingPageSectionRegistry.TitleMaxLength),
+            heightPreset = OptionalHeightPreset(root),
+            variantKey,
+            items,
+        }, JsonOptions);
+    }
+
+    private static int ExpectedBannerSlotCount(string variantKey) => variantKey switch
+    {
+        "banner.single" => 1,
+        "banner.two-equal" or "banner.two-asymmetric" => 2,
+        "banner.three" or "banner.one-large-two-small" => 3,
+        "banner.four-grid" or "banner.mosaic-2x2" => 4,
+        "banner.one-large-four-small" => 5,
+        "banner.eight-compact" => 8,
+        _ => 0,
+    };
+
+    private static object[] ReadStoryItems(JsonElement root)
+    {
+        if (!root.TryGetProperty("items", out var el) || el.ValueKind is JsonValueKind.Null or JsonValueKind.Undefined)
+        {
+            return [];
+        }
+
+        if (el.ValueKind != JsonValueKind.Array)
+        {
+            throw new PlatformHttpException(400, "فهرست استوری معتبر نیست.", "landing.section.config.invalid");
+        }
+
+        var items = new List<object>();
+        foreach (var item in el.EnumerateArray())
+        {
+            if (item.ValueKind != JsonValueKind.Object)
+            {
+                throw new PlatformHttpException(400, "آیتم استوری معتبر نیست.", "landing.section.config.invalid");
+            }
+
+            if (items.Count >= StoreLandingPageSectionRegistry.MaxStoryItems)
+            {
+                throw new PlatformHttpException(400, "تعداد استوری بیش از حد است.", "landing.section.ids.limit");
+            }
+
+            var enabled = true;
+            if (item.TryGetProperty("enabled", out var enabledEl) && enabledEl.ValueKind is JsonValueKind.False)
+            {
+                enabled = false;
+            }
+
+            items.Add(new
+            {
+                imageUrl = OptionalString(item, "imageUrl", 512),
+                mediaAssetId = OptionalGuid(item, "mediaAssetId"),
+                title = OptionalString(item, "title", StoreLandingPageSectionRegistry.TitleMaxLength),
+                href = OptionalHref(item) ?? OptionalString(item, "href", 256),
+                enabled,
+            });
+        }
+
+        return items.ToArray();
+    }
+
+    private static object[] ReadBannerItems(JsonElement root)
+    {
+        if (!root.TryGetProperty("items", out var el) || el.ValueKind is JsonValueKind.Null or JsonValueKind.Undefined)
+        {
+            return [];
+        }
+
+        if (el.ValueKind != JsonValueKind.Array)
+        {
+            throw new PlatformHttpException(400, "فهرست بنر معتبر نیست.", "landing.section.config.invalid");
+        }
+
+        var items = new List<object>();
+        foreach (var item in el.EnumerateArray())
+        {
+            if (item.ValueKind != JsonValueKind.Object)
+            {
+                throw new PlatformHttpException(400, "آیتم بنر معتبر نیست.", "landing.section.config.invalid");
+            }
+
+            items.Add(new
+            {
+                mediaAssetId = OptionalGuid(item, "mediaAssetId"),
+                imageUrl = OptionalString(item, "imageUrl", 512),
+                href = OptionalHref(item) ?? OptionalString(item, "href", 256),
+                title = OptionalString(item, "title", StoreLandingPageSectionRegistry.TitleMaxLength),
+                text = OptionalString(item, "text", 240),
+                ctaLabel = OptionalString(item, "ctaLabel", 80),
+            });
+        }
+
+        return items.ToArray();
     }
 
     private static string RequiredTitle(JsonElement root)
@@ -213,6 +359,33 @@ public static class StoreLandingPageSectionConfig
         }
 
         return title;
+    }
+
+    private static string? OptionalVariantKey(JsonElement root) =>
+        OptionalString(root, "variantKey", 80);
+
+    private static string? OptionalHeightPreset(JsonElement root)
+    {
+        var value = OptionalString(root, "heightPreset", 32);
+        if (value is null)
+        {
+            return null;
+        }
+
+        if (!StoreLandingPageSectionRegistry.SizePresets.Contains(value))
+        {
+            throw new PlatformHttpException(400, "اندازه نمایش معتبر نیست.", "landing.section.height.invalid");
+        }
+
+        foreach (var preset in StoreLandingPageSectionRegistry.SizePresets)
+        {
+            if (string.Equals(preset, value, StringComparison.OrdinalIgnoreCase))
+            {
+                return preset;
+            }
+        }
+
+        return value;
     }
 
     private static string? OptionalString(JsonElement root, string name, int max)
@@ -291,12 +464,16 @@ public static class StoreLandingPageSectionConfig
     {
         if (!root.TryGetProperty(name, out var el) || el.ValueKind is JsonValueKind.Null or JsonValueKind.Undefined)
         {
-            if (allowEmpty)
+            // Legacy CategoryGrid/BrandStrip may already store `ids`.
+            if (!root.TryGetProperty("ids", out el) || el.ValueKind is JsonValueKind.Null or JsonValueKind.Undefined)
             {
-                return [];
-            }
+                if (allowEmpty)
+                {
+                    return [];
+                }
 
-            throw new PlatformHttpException(400, "فهرست شناسه لازم است.", "landing.section.ids.required");
+                throw new PlatformHttpException(400, "فهرست شناسه لازم است.", "landing.section.ids.required");
+            }
         }
 
         if (el.ValueKind != JsonValueKind.Array)

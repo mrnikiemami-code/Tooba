@@ -39,6 +39,12 @@ import {
 import { SIZE_PRESETS } from "../../../lib/storefront-composition/types.ts";
 import { SIZE_PRESET_CONTRACTS } from "../../../lib/storefront-composition/size-presets.ts";
 import { getVariant } from "../../../lib/storefront-composition/registry.ts";
+import { bannerSlotCountForVariant } from "./landing-section-catalog.ts";
+import {
+  buildTemplateSectionPayloads,
+  listIndustryTemplates,
+  templateSectionSummaryFa,
+} from "../../../lib/storefront-composition/industry-templates.ts";
 
 type Meta = {
   title: string;
@@ -82,6 +88,9 @@ export function AdminLandingPageComposer({ pageId }: { pageId?: string }) {
   const [editing, setEditing] = useState<AdminLandingSection | null>(null);
   const [draftConfig, setDraftConfig] = useState<Record<string, unknown>>({});
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
+  const [createMode, setCreateMode] = useState<"blank" | "template" | null>(pageId ? "blank" : null);
+  const [selectedTemplateKey, setSelectedTemplateKey] = useState<string | null>(null);
+  const industryTemplates = useMemo(() => listIndustryTemplates(), []);
 
   const compositionSections = useMemo(() => adminSelectableSectionTypes(), []);
   // Keep LANDING_SECTION_CHOICES referenced for admin-landing-pages.guard.test.ts
@@ -149,13 +158,42 @@ export function AdminLandingPageComposer({ pageId }: { pageId?: string }) {
     const result = page
       ? await updateAdminLandingPage(page.pageId, payload)
       : await createAdminLandingPage(payload);
-    setBusy(false);
     if (!result.ok) {
+      setBusy(false);
       setMessage(result.message);
       return;
     }
+
+    let createdSections: AdminLandingSection[] = [];
+    if (!page && createMode === "template" && selectedTemplateKey) {
+      try {
+        const payloads = buildTemplateSectionPayloads(selectedTemplateKey);
+        for (const item of payloads) {
+          const sectionResult = await addAdminLandingSection(result.data.pageId, item.hostType, item.config);
+          if (sectionResult.ok) createdSections = [...createdSections, sectionResult.data];
+          else {
+            setBusy(false);
+            setPage(result.data);
+            setMeta(toMeta(result.data));
+            setMessage(sectionResult.message);
+            router.replace(`/admin/landing-pages/${result.data.pageId}`);
+            return;
+          }
+        }
+      } catch (error) {
+        setBusy(false);
+        setPage(result.data);
+        setMeta(toMeta(result.data));
+        setMessage(error instanceof Error ? error.message : "اعمال قالب ناموفق بود.");
+        router.replace(`/admin/landing-pages/${result.data.pageId}`);
+        return;
+      }
+    }
+
+    setBusy(false);
     setPage(result.data);
     setMeta(toMeta(result.data));
+    if (createdSections.length) setSections(createdSections);
     setSaved(true);
     setMessage(undefined);
     if (!pageId) router.replace(`/admin/landing-pages/${result.data.pageId}`);
@@ -168,6 +206,14 @@ export function AdminLandingPageComposer({ pageId }: { pageId?: string }) {
     }
     const hostType = choice.hostType as LandingSectionType;
     const config = defaultConfigForCompositionSection(choice.sectionTypeKey, variantKey);
+    if (variantKey.startsWith("banner.")) {
+      const slots = bannerSlotCountForVariant(variantKey);
+      config.items = Array.from({ length: slots }, (_, index) => ({
+        imageUrl: "",
+        href: "/offers",
+        title: `بنر ${(index + 1).toLocaleString("fa-IR")}`,
+      }));
+    }
     setBusy(true);
     const result = await addAdminLandingSection(page.pageId, hostType, config);
     setBusy(false);
@@ -275,6 +321,79 @@ export function AdminLandingPageComposer({ pageId }: { pageId?: string }) {
     editingSectionTypeKey
       && sectionSupportsHeightPreset(editingSectionTypeKey, typeof draftConfig.variantKey === "string" ? draftConfig.variantKey : undefined),
   );
+
+  if (!pageId && !page && createMode === null) {
+    return (
+      <main data-testid="admin-landing-page-editor" className="space-y-5">
+        <div>
+          <Link href="/admin/landing-pages" className="text-sm text-muted">بازگشت به فهرست</Link>
+          <h1 className="mt-1 text-xl font-black">ایجاد صفحهٔ فرود / خانه</h1>
+          <p className="mt-1 text-sm text-muted">از صفحه خالی شروع کنید یا یک قالب آمادهٔ صنعتی را انتخاب کنید.</p>
+        </div>
+        <div className="grid gap-4 md:grid-cols-2" data-testid="composition-start-mode">
+          <button
+            type="button"
+            className="rounded-2xl border border-border bg-surface-elevated p-6 text-start hover:border-primary"
+            data-testid="start-blank"
+            onClick={() => setCreateMode("blank")}
+          >
+            <p className="text-lg font-black">شروع از صفحه خالی</p>
+            <p className="mt-2 text-sm text-muted">یک پیش‌نویس خالی بسازید و بخش‌ها را خودتان اضافه کنید.</p>
+          </button>
+          <button
+            type="button"
+            className="rounded-2xl border border-border bg-surface-elevated p-6 text-start hover:border-primary"
+            data-testid="start-from-template"
+            onClick={() => setCreateMode("template")}
+          >
+            <p className="text-lg font-black">شروع از قالب آماده</p>
+            <p className="mt-2 text-sm text-muted">یکی از ۱۰ قالب صنعتی را انتخاب کنید؛ نتیجه یک پیش‌نویس عادی و قابل‌ویرایش است.</p>
+          </button>
+        </div>
+      </main>
+    );
+  }
+
+  if (!pageId && !page && createMode === "template" && !selectedTemplateKey) {
+    return (
+      <main data-testid="admin-landing-page-editor" className="space-y-5">
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div>
+            <button type="button" className="text-sm text-muted" onClick={() => setCreateMode(null)}>بازگشت</button>
+            <h1 className="mt-1 text-xl font-black">انتخاب قالب آماده</h1>
+            <p className="mt-1 text-sm text-muted">نام فارسی، صنعت، توضیح کوتاه و خلاصهٔ بخش‌ها را ببینید.</p>
+          </div>
+        </div>
+        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3" data-testid="template-picker">
+          {industryTemplates.map((template) => {
+            const preview = getVariant(template.sectionPresetList[0]?.variantKey ?? "")?.previewKind ?? "promo";
+            return (
+              <button
+                key={template.templateKey}
+                type="button"
+                className="rounded-2xl border border-border bg-surface-elevated p-4 text-start hover:border-primary"
+                data-testid={`template-card-${template.templateKey}`}
+                onClick={() => {
+                  setSelectedTemplateKey(template.templateKey);
+                  setMeta((current) => ({
+                    ...current,
+                    title: current.title || template.nameFa,
+                    slug: current.slug || template.templateKey,
+                  }));
+                }}
+              >
+                <div className={`mb-3 h-20 rounded-xl bg-gradient-to-l ${previewMosaicClass(preview)}`} aria-hidden />
+                <p className="font-black">{template.nameFa}</p>
+                <p className="mt-1 text-xs font-bold text-primary">{template.industry}</p>
+                <p className="mt-2 text-sm text-muted">{template.descriptionFa}</p>
+                <p className="mt-3 text-xs text-muted">{templateSectionSummaryFa(template)}</p>
+              </button>
+            );
+          })}
+        </div>
+      </main>
+    );
+  }
 
   return (
     <main data-testid="admin-landing-page-editor">

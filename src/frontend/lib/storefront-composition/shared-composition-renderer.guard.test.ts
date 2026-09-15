@@ -27,7 +27,48 @@ describe("shared composition renderer", () => {
   });
 
   it("rejects unimplemented variants when strict", () => {
-    assert.throws(() => resolveSharedVariant("HeroCarousel", "hero.split", { strict: true }), /not implemented/i);
+    assert.throws(() => resolveSharedVariant("HeroCarousel", "hero.editorial", { strict: true }), /not implemented/i);
+  });
+
+  it("maps native StoryRail and BannerShowcase without CategoryGrid/PromoBanner proxy", () => {
+    assert.equal(landingHostTypeForSection("StoryRail"), "StoryRail");
+    assert.equal(landingHostTypeForSection("BannerShowcase"), "BannerShowcase");
+    assert.notEqual(landingHostTypeForSection("StoryRail"), "CategoryGrid");
+    assert.notEqual(landingHostTypeForSection("BannerShowcase"), "PromoBanner");
+    const story = adaptLandingSectionToComposition({
+      pageSectionId: "s1",
+      sectionType: "StoryRail",
+      displayOrder: 0,
+      config: { title: "استوری", variantKey: "story.circle", items: [] },
+    });
+    assert.equal(story.sectionTypeKey, "StoryRail");
+    const banner = adaptLandingSectionToComposition({
+      pageSectionId: "b1",
+      sectionType: "BannerShowcase",
+      displayOrder: 1,
+      config: { title: "بنر", variantKey: "banner.four-grid" },
+    });
+    assert.equal(banner.sectionTypeKey, "BannerShowcase");
+    assert.equal(banner.variantKey, "banner.four-grid");
+  });
+
+  it("migrates T019 proxy configs carrying story/banner variantKey", () => {
+    const fromCategory = adaptLandingSectionToComposition({
+      pageSectionId: "proxy-story",
+      sectionType: "CategoryGrid",
+      displayOrder: 0,
+      config: { title: "س", variantKey: "story.rounded-cards" },
+    });
+    assert.equal(fromCategory.sectionTypeKey, "StoryRail");
+    assert.equal(fromCategory.variantKey, "story.rounded-cards");
+    const fromPromo = adaptLandingSectionToComposition({
+      pageSectionId: "proxy-banner",
+      sectionType: "PromoBanner",
+      displayOrder: 1,
+      config: { title: "ب", variantKey: "banner.two-equal" },
+    });
+    assert.equal(fromPromo.sectionTypeKey, "BannerShowcase");
+    assert.equal(fromPromo.variantKey, "banner.two-equal");
   });
 
   it("legacy Landing adapter is deterministic", () => {
@@ -72,6 +113,8 @@ describe("shared composition renderer", () => {
       adminImplementedVariants(v.sectionTypeKey).some((a) => a.variantKey === v.key),
     ));
     assert.equal(landingHostTypeForSection("HeroCarousel"), "Hero");
+    assert.equal(landingHostTypeForSection("StoryRail"), "StoryRail");
+    assert.equal(landingHostTypeForSection("BannerShowcase"), "BannerShowcase");
   });
 
   it("responsive contract present for every implemented variant", () => {

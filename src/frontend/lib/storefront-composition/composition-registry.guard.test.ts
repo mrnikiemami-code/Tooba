@@ -1,18 +1,27 @@
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
+import { dirname, join } from "node:path";
 import { describe, it } from "node:test";
+import { fileURLToPath } from "node:url";
 import {
   assertRegistryIntegrity,
   SECTION_TYPES,
   VARIANTS,
   getVariant,
   variantsForSection,
+  INDUSTRY_TEMPLATE_SEEDS,
+  landingHostTypeForSection,
+  isVariantImplemented,
 } from "./registry.ts";
 import { RESPONSIVE_CONTRACTS, requireResponsiveContract } from "./responsive-contracts.ts";
 import { normalizeControlledSettings, BASE_SECTION_SETTINGS, assertNoForbiddenSettings } from "./settings.ts";
-import { adaptLandingSectionToComposition, assertLandingTypesCovered, LANDING_SECTION_TYPE_MAP } from "./landing-adapter.ts";
+import { adaptLandingSectionToComposition, assertLandingTypesCovered, LANDING_SECTION_TYPE_MAP, migrateProxySectionType } from "./landing-adapter.ts";
 import { LANDING_SECTION_TYPES } from "../../app/admin/landing-pages/landing-section-catalog.ts";
 import { SURFACE_ROLES } from "./types.ts";
 import { FORBIDDEN_SETTING_KEYS } from "./types.ts";
+import { assertIndustryTemplatesValid } from "./industry-templates.ts";
+
+const rendererSource = readFileSync(join(dirname(fileURLToPath(import.meta.url)), "shared-composition-renderer.tsx"), "utf8");
 
 describe("storefront composition registry", () => {
   it("has unique section and variant keys with valid defaults", () => {
@@ -57,9 +66,13 @@ describe("storefront composition registry", () => {
     assert.equal(ok.itemCount, 6);
   });
 
-  it("adapts existing Landing section types", () => {
+  it("adapts existing Landing section types including native StoryRail/BannerShowcase", () => {
     assertLandingTypesCovered(LANDING_SECTION_TYPES);
     assert.equal(Object.keys(LANDING_SECTION_TYPE_MAP).length, LANDING_SECTION_TYPES.length);
+    assert.equal(landingHostTypeForSection("StoryRail"), "StoryRail");
+    assert.equal(landingHostTypeForSection("BannerShowcase"), "BannerShowcase");
+    assert.notEqual(landingHostTypeForSection("StoryRail"), "CategoryGrid");
+    assert.notEqual(landingHostTypeForSection("BannerShowcase"), "PromoBanner");
     const hero = adaptLandingSectionToComposition({
       pageSectionId: "ps-1",
       sectionType: "Hero",
@@ -77,6 +90,39 @@ describe("storefront composition registry", () => {
     });
     assert.equal(products.sectionTypeKey, "ProductShowcase");
     assert.equal(products.settings.dataSource, "Newest");
+    const story = adaptLandingSectionToComposition({
+      pageSectionId: "ps-3",
+      sectionType: "StoryRail",
+      displayOrder: 2,
+      config: { title: "استوری", variantKey: "story.circle" },
+    });
+    assert.equal(story.sectionTypeKey, "StoryRail");
+    const migrated = migrateProxySectionType("CategoryGrid", "story.rounded-cards");
+    assert.equal(migrated?.sectionTypeKey, "StoryRail");
+  });
+
+  it("every implemented variant has renderer case presence and contract", () => {
+    for (const v of VARIANTS.filter((x) => x.implemented)) {
+      assert.ok(
+        rendererSource.includes(`"${v.key}"`) || rendererSource.includes(`case "${v.key}"`),
+        `missing renderer case for ${v.key}`,
+      );
+      assert.ok(RESPONSIVE_CONTRACTS[v.key]);
+    }
+  });
+
+  it("templates use only implemented truthful variants and stay distinct", () => {
+    assertIndustryTemplatesValid();
+    const firstHashes = INDUSTRY_TEMPLATE_SEEDS.map((t) =>
+      `${t.sectionPresetList[0]?.sectionTypeKey}:${t.sectionPresetList.map((p) => p.variantKey).join(",")}`,
+    );
+    assert.equal(new Set(firstHashes).size, INDUSTRY_TEMPLATE_SEEDS.length);
+    for (const t of INDUSTRY_TEMPLATE_SEEDS) {
+      for (const p of t.sectionPresetList) {
+        assert.equal(isVariantImplemented(p.variantKey), true);
+        assert.doesNotMatch(p.dataSourceIntent, /BestSelling|Featured|MostViewed|Discounted|HotTrending/);
+      }
+    }
   });
 
   it("does not expand user color model beyond four global roles", () => {

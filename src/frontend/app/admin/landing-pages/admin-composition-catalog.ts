@@ -10,6 +10,7 @@ import {
   defaultLandingSectionConfig,
   type LandingSectionType,
 } from "./landing-section-catalog.ts";
+import { bannerSlotCountForVariant } from "../../../lib/storefront-composition/industry-templates.ts";
 
 export type AdminCompositionSectionChoice = {
   sectionTypeKey: string;
@@ -64,13 +65,7 @@ export function adminSelectableSectionTypes(): AdminCompositionSectionChoice[] {
         defaultVariantKey: s.defaultVariantKey,
       } satisfies AdminCompositionSectionChoice;
     })
-    .filter((item): item is AdminCompositionSectionChoice => item != null)
-    // Prefer unique Host mappings: keep first occurrence per hostType for StoryRail/Banner proxy collisions
-    .filter((item, index, all) => {
-      // Allow BannerShowcase + PromoSection both (same Host PromoBanner) — both selectable
-      // Allow StoryRail + CategoryShowcase both (same Host CategoryGrid)
-      return all.findIndex((x) => x.sectionTypeKey === item.sectionTypeKey) === index;
-    });
+    .filter((item): item is AdminCompositionSectionChoice => item != null);
 }
 
 export function adminImplementedVariants(sectionTypeKey: string): AdminCompositionVariantChoice[] {
@@ -94,10 +89,21 @@ export function defaultConfigForCompositionSection(
   const key = variantKey ?? section?.defaultVariantKey ?? "";
   const variant = getVariant(key);
   const base = hostType ? defaultLandingSectionConfig(hostType) : { title: section?.nameFa ?? "بخش" };
-  return {
+  const next: Record<string, unknown> = {
     ...base,
     variantKey: variant?.implemented ? variant.key : section?.defaultVariantKey,
   };
+  if (sectionTypeKey === "BannerShowcase" || hostType === "BannerShowcase") {
+    const slots = bannerSlotCountForVariant(typeof next.variantKey === "string" ? next.variantKey : key);
+    const existing = Array.isArray(next.items) ? next.items : [];
+    next.heightPreset = typeof next.heightPreset === "string" ? next.heightPreset : "Medium";
+    next.items = Array.from({ length: Math.max(slots, 1) }, (_, i) => {
+      const row = existing[i];
+      if (row && typeof row === "object") return row;
+      return { imageUrl: "", href: "/offers", title: `بنر ${i + 1}` };
+    });
+  }
+  return next;
 }
 
 export function variantLabelFa(variantKey: string | undefined | null): string | null {

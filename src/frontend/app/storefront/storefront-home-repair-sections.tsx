@@ -199,7 +199,13 @@ export function HomeBestSellersSection({ columns }: { columns: StorefrontBestSel
   );
 }
 
-export function HomeBrandsSection({ brands }: { brands: StorefrontBrandItem[] }) {
+export function HomeBrandsSection({
+  brands,
+  layout = "logo-rail",
+}: {
+  brands: StorefrontBrandItem[];
+  layout?: "logo-rail" | "logo-grid" | "featured";
+}) {
   if (brands.length === 0) {
     return (
       <section aria-labelledby="home-brands-heading" className="w-full px-2 sm:px-4 py-8 md:py-10" data-testid="home-brands">
@@ -208,8 +214,30 @@ export function HomeBrandsSection({ brands }: { brands: StorefrontBrandItem[] })
     );
   }
 
+  const brandCard = (brand: StorefrontBrandItem, className: string) => (
+    <Link key={brand.brandId} href={`/brand/${brand.slug}`} className={`group block text-right outline-none ${className}`}>
+      <div className={`relative w-full overflow-hidden bg-gray-100 shadow-sm hover:shadow-xl transition-all duration-300 border border-gray-200 ${layout === "featured" ? "aspect-[4/3] rounded-3xl" : "aspect-square rounded-2xl"}`}>
+        <div className="absolute inset-0 z-0 flex items-center justify-center bg-gray-100">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={storefrontMediaUrl(brand.logoMediaAssetId)}
+            alt=""
+            className={`absolute inset-0 w-full h-full object-contain transition-transform duration-500 group-hover:scale-105 ${layout === "featured" ? "p-6" : "p-3"}`}
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+        </div>
+        <div className="absolute bottom-0 left-0 right-0 pb-1 p-3 z-10">
+          <h3 className={`text-white font-bold drop-shadow-lg line-clamp-1 text-right ${layout === "featured" ? "text-base md:text-xl" : "text-sm md:text-lg"}`}>{brand.name}</h3>
+          <span className="text-[8px] md:text-[9px] text-gray-300/80 bg-black/30 backdrop-blur-sm px-2 py-0.5 rounded-full inline-block mt-0.5">
+            {brand.productCount.toLocaleString("fa-IR")} محصول
+          </span>
+        </div>
+      </div>
+    </Link>
+  );
+
   return (
-    <section aria-labelledby="home-brands-heading" className="w-full bg-section-surface py-8 md:py-10 px-2 sm:px-4" data-testid="home-brands" data-storefront-surface-role="section">
+    <section aria-labelledby="home-brands-heading" className="w-full bg-section-surface py-8 md:py-10 px-2 sm:px-4" data-testid="home-brands" data-brand-layout={layout} data-storefront-surface-role="section">
       <div className="flex items-center justify-between mb-4">
         <h2 id="home-brands-heading" className="text-lg md:text-xl font-bold text-gray-900 flex items-center gap-2">
           <span className="w-1 h-5 rounded-full" style={{ backgroundColor: STOREFRONT_ACCENT }} />
@@ -219,40 +247,21 @@ export function HomeBrandsSection({ brands }: { brands: StorefrontBrandItem[] })
           مشاهده همه
         </Link>
       </div>
-      <div className="relative">
-        <Swiper modules={[FreeMode]} slidesPerView="auto" spaceBetween={12} freeMode={{ sticky: true, momentumRatio: 0.5 }} dir="rtl" grabCursor className="!pb-2">
-          {brands.map((brand) => (
-            <SwiperSlide key={brand.brandId} className="!w-[160px] md:!w-[180px]">
-              <Link href={`/brand/${brand.slug}`} className="group w-full block text-right outline-none">
-                <div className="relative w-full aspect-square rounded-2xl overflow-hidden bg-gray-100 shadow-sm hover:shadow-xl transition-all duration-300 border border-gray-200" style={{ boxShadow: undefined }}>
-                  <div className="absolute inset-0 z-0 flex items-center justify-center bg-gray-100">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      src={storefrontMediaUrl(brand.logoMediaAssetId)}
-                      alt=""
-                      className="absolute inset-0 w-full h-full object-contain p-3 transition-transform duration-500 group-hover:scale-105"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
-                  </div>
-                  <div className="absolute bottom-0 left-0 right-0 pb-1 p-3 z-10">
-                    <div className="transform transition-all duration-300 group-hover:scale-105 origin-bottom-right">
-                      <h3 className="text-white font-bold text-sm md:text-lg drop-shadow-lg line-clamp-1 text-right">{brand.name}</h3>
-                      <span className="text-[8px] md:text-[9px] text-gray-300/80 bg-black/30 backdrop-blur-sm px-2 py-0.5 rounded-full inline-block mt-0.5">
-                        {brand.productCount.toLocaleString("fa-IR")} محصول
-                      </span>
-                    </div>
-                  </div>
-                  <div className="absolute inset-0 z-10 flex items-center justify-center gap-3 opacity-0 group-hover:opacity-100 transition-all duration-300 bg-black/40 backdrop-blur-sm">
-                    <div className="bg-surface/20 backdrop-blur-md rounded-full p-2.5 border border-white/30 hover:scale-110 transition-all duration-300 shadow-lg" style={{ borderColor: undefined }}>
-                      <Eye className="w-5 h-5 text-white" />
-                    </div>
-                  </div>
-                </div>
-              </Link>
-            </SwiperSlide>
-          ))}
-        </Swiper>
-      </div>
+      {layout === "logo-grid" || layout === "featured" ? (
+        <div className={`grid gap-3 md:gap-4 ${layout === "featured" ? "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3" : "grid-cols-3 sm:grid-cols-4 md:grid-cols-6"}`}>
+          {brands.map((brand) => brandCard(brand, "w-full"))}
+        </div>
+      ) : (
+        <div className="relative">
+          <Swiper modules={[FreeMode]} slidesPerView="auto" spaceBetween={12} freeMode={{ sticky: true, momentumRatio: 0.5 }} dir="rtl" grabCursor className="!pb-2">
+            {brands.map((brand) => (
+              <SwiperSlide key={brand.brandId} className="!w-[160px] md:!w-[180px]">
+                {brandCard(brand, "w-full")}
+              </SwiperSlide>
+            ))}
+          </Swiper>
+        </div>
+      )}
       <div className="w-full h-px bg-gradient-to-r from-transparent via-gray-200 to-transparent mt-2" />
     </section>
   );
@@ -303,7 +312,13 @@ export function HomeNewProductsSection({ products }: { products: StorefrontProdu
   );
 }
 
-export function HomeTestimonialsSection({ reviews }: { reviews: StorefrontFeaturedReviewItem[] }) {
+export function HomeTestimonialsSection({
+  reviews,
+  layout = "card-carousel",
+}: {
+  reviews: StorefrontFeaturedReviewItem[];
+  layout?: "card-carousel" | "compact-quotes";
+}) {
   const summary = useMemo(() => {
     if (reviews.length === 0) return null;
     const average = reviews.reduce((sum, item) => sum + item.rating, 0) / reviews.length;
@@ -312,8 +327,33 @@ export function HomeTestimonialsSection({ reviews }: { reviews: StorefrontFeatur
 
   if (reviews.length === 0) return null;
 
+  if (layout === "compact-quotes") {
+    return (
+      <section
+        aria-labelledby="home-testimonials-heading"
+        className="w-full bg-section-alternate py-8 md:py-10 px-2 sm:px-4"
+        data-testid="home-testimonials"
+        data-reviews-layout="compact-quotes"
+        data-storefront-surface-role="alternate"
+      >
+        <h2 id="home-testimonials-heading" className="mb-4 text-lg md:text-xl font-extrabold text-gray-900 flex items-center gap-2">
+          <Quote className="w-5 h-5" style={{ color: STOREFRONT_ACCENT }} />
+          نقل‌قول خریداران
+        </h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+          {reviews.map((item) => (
+            <blockquote key={item.publicId} className="rounded-2xl border border-gray-200 bg-surface p-4 text-sm leading-7 text-gray-700">
+              <p className="line-clamp-4">&ldquo;{item.body}&rdquo;</p>
+              <footer className="mt-3 text-xs font-bold text-gray-900">— {item.authorDisplayName}</footer>
+            </blockquote>
+          ))}
+        </div>
+      </section>
+    );
+  }
+
   return (
-    <section aria-labelledby="home-testimonials-heading" className="w-full bg-section-alternate py-8 md:py-10 px-2 sm:px-4" data-testid="home-testimonials" data-storefront-surface-role="alternate">
+    <section aria-labelledby="home-testimonials-heading" className="w-full bg-section-alternate py-8 md:py-10 px-2 sm:px-4" data-testid="home-testimonials" data-reviews-layout="card-carousel" data-storefront-surface-role="alternate">
       <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
         <div className="flex items-center gap-3 flex-wrap">
           <div className="flex items-center gap-2">
@@ -423,11 +463,69 @@ export function HomeTestimonialsSection({ reviews }: { reviews: StorefrontFeatur
   );
 }
 
-export function HomeArticlesSection({ articles }: { articles: StorefrontArticleItem[] }) {
+export function HomeArticlesSection({
+  articles,
+  layout = "magazine-rail",
+}: {
+  articles: StorefrontArticleItem[];
+  layout?: "magazine-rail" | "grid" | "featured-plus-list";
+}) {
   if (articles.length === 0) return null;
 
+  if (layout === "grid") {
+    return (
+      <section aria-labelledby="home-articles-heading" className="w-full bg-section-alternate py-8 md:py-10 px-2 sm:px-4" data-testid="home-articles" data-article-layout="grid" data-storefront-surface-role="alternate">
+        <h2 id="home-articles-heading" className="mb-4 text-lg font-extrabold">آخرین مقالات</h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {articles.map((post) => (
+            <Link key={post.articleId} href={`/blogs/${post.slug}`} className="rounded-2xl border border-gray-200 bg-surface overflow-hidden">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={storefrontMediaUrl(post.coverMediaAssetId)} alt="" className="aspect-[16/10] w-full object-cover" />
+              <div className="p-3">
+                <h3 className="text-sm font-bold line-clamp-2">{post.title}</h3>
+                <p className="mt-1 text-xs text-gray-600 line-clamp-2">{post.excerpt}</p>
+              </div>
+            </Link>
+          ))}
+        </div>
+      </section>
+    );
+  }
+
+  if (layout === "featured-plus-list") {
+    const [featured, ...rest] = articles;
+    return (
+      <section aria-labelledby="home-articles-heading" className="w-full bg-section-alternate py-8 md:py-10 px-2 sm:px-4" data-testid="home-articles" data-article-layout="featured-plus-list" data-storefront-surface-role="alternate">
+        <h2 id="home-articles-heading" className="mb-4 text-lg font-extrabold">آخرین مقالات</h2>
+        <div className="grid grid-cols-1 md:grid-cols-[1.4fr_1fr] gap-4">
+          {featured ? (
+            <Link href={`/blogs/${featured.slug}`} className="rounded-2xl border border-gray-200 bg-surface overflow-hidden">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={storefrontMediaUrl(featured.coverMediaAssetId)} alt="" className="aspect-[16/10] w-full object-cover" />
+              <div className="p-4">
+                <h3 className="text-base font-black">{featured.title}</h3>
+                <p className="mt-2 text-sm text-gray-600 line-clamp-3">{featured.excerpt}</p>
+              </div>
+            </Link>
+          ) : null}
+          <ul className="space-y-3">
+            {rest.map((post) => (
+              <li key={post.articleId}>
+                <Link href={`/blogs/${post.slug}`} className="flex gap-3 rounded-xl border border-gray-100 bg-surface p-2">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={storefrontMediaUrl(post.coverMediaAssetId)} alt="" className="h-16 w-20 rounded-lg object-cover" />
+                  <span className="text-sm font-bold line-clamp-2">{post.title}</span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </section>
+    );
+  }
+
   return (
-    <section aria-labelledby="home-articles-heading" className="w-full bg-section-alternate py-8 md:py-10 px-2 sm:px-4" data-testid="home-articles" data-storefront-surface-role="alternate">
+    <section aria-labelledby="home-articles-heading" className="w-full bg-section-alternate py-8 md:py-10 px-2 sm:px-4" data-testid="home-articles" data-article-layout="magazine-rail" data-storefront-surface-role="alternate">
       <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
         <div className="flex items-center gap-3 flex-wrap">
           <div className="flex items-center gap-2">

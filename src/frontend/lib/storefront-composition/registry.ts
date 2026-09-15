@@ -88,8 +88,12 @@ export const VARIANTS: VariantDefinition[] = [
   variant("hero.contained", "HeroCarousel", "داخل کانتینر", "اسلاید با گوشه گرد", "ReusableViaAdapter", {
     previewKind: "hero-contained", recommendedUseFa: "لندینگ و صفحات داخلی", sizePresetsSupported: true, autoplaySupported: true, dataSources: DS_MANUAL,
   }),
-  variant("hero.split", "HeroCarousel", "دو ستون", "تصویر + متن", "NewRequiredLater", { previewKind: "hero-contained", dataSources: DS_MANUAL }),
-  variant("hero.side-promos", "HeroCarousel", "هیرو با پروموی کناری", "هیرو + دو پرومو", "NewRequiredLater", { previewKind: "hero-slider", dataSources: DS_MANUAL }),
+  variant("hero.split", "HeroCarousel", "دو ستون", "تصویر + متن", "ReusableViaAdapter", {
+    previewKind: "hero-contained", sizePresetsSupported: true, dataSources: DS_MANUAL,
+  }),
+  variant("hero.side-promos", "HeroCarousel", "هیرو با پروموی کناری", "هیرو + دو پرومو", "ReusableViaAdapter", {
+    previewKind: "hero-slider", sizePresetsSupported: true, dataSources: DS_MANUAL,
+  }),
   variant("hero.editorial", "HeroCarousel", "تحریریه", "کپشن قوی", "NewRequiredLater", { previewKind: "hero-contained", dataSources: DS_MANUAL }),
 
   variant("story.circle", "StoryRail", "دایره استوری", "دایره‌های افقی", "Existing", {
@@ -126,7 +130,9 @@ export const VARIANTS: VariantDefinition[] = [
   variant("product.category-columns", "ProductShowcase", "ستون‌های دسته‌بندی", "پرفروش ستونی", "Existing", {
     previewKind: "product-columns", recommendedUseFa: "پرفروش چندستونه", dataSources: DS_PRODUCT,
   }),
-  variant("product.featured-plus-rail", "ProductShowcase", "ویژه + ریل", "یک ویژه + ریل", "NewRequiredLater", { previewKind: "product-carousel", dataSources: DS_PRODUCT }),
+  variant("product.featured-plus-rail", "ProductShowcase", "ویژه + ریل", "یک ویژه + ریل", "ReusableViaAdapter", {
+    previewKind: "product-carousel", dataSources: DS_PRODUCT,
+  }),
   variant("product.tabbed", "ProductShowcase", "تب‌دار", "چند تب کالا", "NewRequiredLater", { previewKind: "product-carousel", dataSources: DS_PRODUCT }),
   variant("product.large-cards", "ProductShowcase", "کارت بزرگ", "کارت درشت", "NewRequiredLater", { previewKind: "product-grid", dataSources: DS_PRODUCT }),
   variant("product.minimal-list", "ProductShowcase", "فهرست مینیمال", "لیست ساده", "NewRequiredLater", { previewKind: "product-rows", dataSources: DS_PRODUCT }),
@@ -134,7 +140,9 @@ export const VARIANTS: VariantDefinition[] = [
   variant("ranked.horizontal", "ProductRankedList", "افقی رتبه‌دار", "ریل رتبه", "ReusableViaAdapter", {
     previewKind: "ranked-rail", dataSources: DS_PRODUCT,
   }),
-  variant("ranked.grid", "ProductRankedList", "شبکه رتبه‌دار", "شبکه با رتبه", "NewRequiredLater", { previewKind: "product-grid", dataSources: DS_PRODUCT }),
+  variant("ranked.grid", "ProductRankedList", "شبکه رتبه‌دار", "شبکه با رتبه", "ReusableViaAdapter", {
+    previewKind: "product-grid", dataSources: DS_PRODUCT,
+  }),
   variant("ranked.ticker", "ProductRankedList", "تیکر فشرده", "نوار فشرده", "NewRequiredLater", { previewKind: "ranked-rail", dataSources: DS_PRODUCT }),
   variant("ranked.multi-column", "ProductRankedList", "چند ستون", "چند ستون رتبه", "ReusableViaAdapter", {
     previewKind: "ranked-columns", dataSources: DS_PRODUCT,
@@ -146,7 +154,9 @@ export const VARIANTS: VariantDefinition[] = [
   variant("banner.two-equal", "BannerShowcase", "دو بنر مساوی", "دو بنر برابر", "ReusableViaAdapter", {
     previewKind: "banner-two", sizePresetsSupported: true, dataSources: DS_MANUAL,
   }),
-  variant("banner.two-asymmetric", "BannerShowcase", "دو نامتقارن", "دو بنر ناهمسان", "NewRequiredLater", { previewKind: "banner-two", dataSources: DS_MANUAL }),
+  variant("banner.two-asymmetric", "BannerShowcase", "دو نامتقارن", "دو بنر ناهمسان", "ReusableViaAdapter", {
+    previewKind: "banner-two", sizePresetsSupported: true, dataSources: DS_MANUAL,
+  }),
   variant("banner.three", "BannerShowcase", "سه تایی", "سه بنر", "ReusableViaAdapter", {
     previewKind: "banner-three", sizePresetsSupported: true, dataSources: DS_MANUAL,
   }),
@@ -156,8 +166,12 @@ export const VARIANTS: VariantDefinition[] = [
   variant("banner.one-large-two-small", "BannerShowcase", "۱ بزرگ ۲ کوچک", "موزاییک ۳", "ReusableViaAdapter", {
     previewKind: "banner-mosaic", sizePresetsSupported: true, dataSources: DS_MANUAL,
   }),
-  variant("banner.one-large-four-small", "BannerShowcase", "۱ بزرگ ۴ کوچک", "موزاییک ۵", "NewRequiredLater", { previewKind: "banner-mosaic", dataSources: DS_MANUAL }),
-  variant("banner.eight-compact", "BannerShowcase", "هشت فشرده", "۸ کاشی", "NewRequiredLater", { previewKind: "banner-four", dataSources: DS_MANUAL }),
+  variant("banner.one-large-four-small", "BannerShowcase", "۱ بزرگ ۴ کوچک", "موزاییک ۵", "ReusableViaAdapter", {
+    previewKind: "banner-mosaic", sizePresetsSupported: true, dataSources: DS_MANUAL,
+  }),
+  variant("banner.eight-compact", "BannerShowcase", "هشت فشرده", "۸ کاشی", "ReusableViaAdapter", {
+    previewKind: "banner-four", sizePresetsSupported: true, dataSources: DS_MANUAL,
+  }),
   variant("banner.mosaic-2x2", "BannerShowcase", "موزاییک ۲×۲", "موزاییک مساوی", "ReusableViaAdapter", {
     previewKind: "banner-four", sizePresetsSupported: true, dataSources: DS_MANUAL,
   }),
@@ -168,12 +182,16 @@ export const VARIANTS: VariantDefinition[] = [
   variant("brand.logo-grid", "BrandShowcase", "شبکه لوگو", "شبکه برند", "ReusableViaAdapter", {
     previewKind: "brand-grid", dataSources: DS_BRAND,
   }),
-  variant("brand.featured", "BrandShowcase", "برند ویژه", "کارت برند", "NewRequiredLater", { previewKind: "brand-grid", dataSources: DS_BRAND }),
+  variant("brand.featured", "BrandShowcase", "برند ویژه", "کارت برند", "ReusableViaAdapter", {
+    previewKind: "brand-grid", dataSources: DS_BRAND,
+  }),
 
   variant("reviews.card-carousel", "ReviewsShowcase", "کاروسل نظر", "کارت نظر", "Existing", {
     previewKind: "reviews-carousel", autoplaySupported: true, dataSources: DS_REVIEW,
   }),
-  variant("reviews.compact-quotes", "ReviewsShowcase", "نقل فشرده", "نقل کوتاه", "NewRequiredLater", { previewKind: "reviews-carousel", dataSources: DS_REVIEW }),
+  variant("reviews.compact-quotes", "ReviewsShowcase", "نقل فشرده", "نقل کوتاه", "ReusableViaAdapter", {
+    previewKind: "reviews-carousel", dataSources: DS_REVIEW,
+  }),
 
   variant("article.magazine-rail", "ArticleShowcase", "ریل مجله", "کارت مقاله افقی", "Existing", {
     previewKind: "article-rail", autoplaySupported: true, dataSources: DS_ARTICLE,
@@ -181,7 +199,9 @@ export const VARIANTS: VariantDefinition[] = [
   variant("article.grid", "ArticleShowcase", "شبکه مقاله", "شبکه مطالب", "ReusableViaAdapter", {
     previewKind: "article-grid", dataSources: DS_ARTICLE,
   }),
-  variant("article.featured-plus-list", "ArticleShowcase", "ویژه + فهرست", "یک ویژه + لیست", "NewRequiredLater", { previewKind: "article-rail", dataSources: DS_ARTICLE }),
+  variant("article.featured-plus-list", "ArticleShowcase", "ویژه + فهرست", "یک ویژه + لیست", "ReusableViaAdapter", {
+    previewKind: "article-rail", dataSources: DS_ARTICLE,
+  }),
 
   variant("promo.default", "PromoSection", "پروموی پیش‌فرض", "بنر پرومو تکی", "Existing", {
     previewKind: "promo", sizePresetsSupported: true, dataSources: DS_MANUAL,
@@ -205,7 +225,7 @@ export const INDUSTRY_TEMPLATE_SEEDS: Array<{
     templateKey: "fashion",
     nameFa: "پوشاک",
     industry: "Fashion",
-    descriptionFa: "هیرو + استوری + دسته + کاروسل کالا + بنر + برند",
+    descriptionFa: "ویژوال و استوری: هیرو تمام‌عرض، دایره استوری، دسته تصویری، کاروسل کالا و بنر دوتایی",
     sectionPresetList: [
       { sectionTypeKey: "HeroCarousel", variantKey: "hero.full-width", dataSourceIntent: "Manual" },
       { sectionTypeKey: "StoryRail", variantKey: "story.circle", dataSourceIntent: "Manual" },
@@ -213,39 +233,46 @@ export const INDUSTRY_TEMPLATE_SEEDS: Array<{
       { sectionTypeKey: "ProductShowcase", variantKey: "product.card-carousel", dataSourceIntent: "Newest" },
       { sectionTypeKey: "BannerShowcase", variantKey: "banner.two-equal", dataSourceIntent: "Manual" },
       { sectionTypeKey: "BrandShowcase", variantKey: "brand.logo-rail", dataSourceIntent: "Manual" },
+      { sectionTypeKey: "ReviewsShowcase", variantKey: "reviews.compact-quotes", dataSourceIntent: "ApprovedReviews" },
     ],
   },
   {
     templateKey: "auto-parts",
     nameFa: "لوازم یدکی خودرو",
     industry: "AutoParts",
-    descriptionFa: "جست‌وجوی سریع با دسته و کالا",
+    descriptionFa: "چگالی دسته/برند/کالا: هیرو کانتینر، کاشی فشرده، ردیف فشرده، شبکه برند و رتبه افقی",
     sectionPresetList: [
       { sectionTypeKey: "HeroCarousel", variantKey: "hero.contained", dataSourceIntent: "Manual" },
       { sectionTypeKey: "CategoryShowcase", variantKey: "category.compact-tiles", dataSourceIntent: "Manual" },
       { sectionTypeKey: "ProductShowcase", variantKey: "product.compact-rows", dataSourceIntent: "Category" },
       { sectionTypeKey: "BrandShowcase", variantKey: "brand.logo-grid", dataSourceIntent: "Manual" },
+      { sectionTypeKey: "ProductRankedList", variantKey: "ranked.horizontal", dataSourceIntent: "Newest" },
+      { sectionTypeKey: "BannerShowcase", variantKey: "banner.single", dataSourceIntent: "Manual" },
     ],
   },
   {
     templateKey: "building-supplies",
     nameFa: "لوازم ساختمانی",
     industry: "BuildingSupplies",
-    descriptionFa: "دسته قوی + شبکه کالا + بنر",
+    descriptionFa: "دسته قوی + شبکه کالا + بنر سه‌تایی و مقالات شبکه‌ای",
     sectionPresetList: [
-      { sectionTypeKey: "CategoryShowcase", variantKey: "category.editorial-tiles", dataSourceIntent: "Manual" },
+      { sectionTypeKey: "CategoryShowcase", variantKey: "category.image-cards", dataSourceIntent: "Manual" },
       { sectionTypeKey: "ProductShowcase", variantKey: "product.grid", dataSourceIntent: "Category" },
       { sectionTypeKey: "BannerShowcase", variantKey: "banner.three", dataSourceIntent: "Manual" },
+      { sectionTypeKey: "ArticleShowcase", variantKey: "article.grid", dataSourceIntent: "LatestArticles" },
+      { sectionTypeKey: "BrandShowcase", variantKey: "brand.logo-rail", dataSourceIntent: "Manual" },
     ],
   },
   {
     templateKey: "tools-hardware",
     nameFa: "ابزار و یراق",
     industry: "ToolsHardware",
-    descriptionFa: "دسته فشرده + ردیف کالا",
+    descriptionFa: "ترکیب فشرده: کاشی دسته، ردیف کالا، رتبه چندستونه و بنر هشت‌تایی",
     sectionPresetList: [
       { sectionTypeKey: "CategoryShowcase", variantKey: "category.compact-tiles", dataSourceIntent: "Manual" },
       { sectionTypeKey: "ProductShowcase", variantKey: "product.compact-rows", dataSourceIntent: "Brand" },
+      { sectionTypeKey: "ProductRankedList", variantKey: "ranked.multi-column", dataSourceIntent: "Newest" },
+      { sectionTypeKey: "BannerShowcase", variantKey: "banner.eight-compact", dataSourceIntent: "Manual" },
       { sectionTypeKey: "BrandShowcase", variantKey: "brand.logo-rail", dataSourceIntent: "Manual" },
     ],
   },
@@ -253,54 +280,64 @@ export const INDUSTRY_TEMPLATE_SEEDS: Array<{
     templateKey: "tile-ceramic",
     nameFa: "کاشی و سرامیک",
     industry: "TileCeramic",
-    descriptionFa: "هیرو تصویری + شبکه بزرگ کالا",
+    descriptionFa: "کلکسیون تصویری: هیرو با پروموی کناری، شبکه کالا و موزاییک بنر",
     sectionPresetList: [
-      { sectionTypeKey: "HeroCarousel", variantKey: "hero.editorial", dataSourceIntent: "Manual" },
-      { sectionTypeKey: "ProductShowcase", variantKey: "product.large-cards", dataSourceIntent: "Newest" },
+      { sectionTypeKey: "HeroCarousel", variantKey: "hero.side-promos", dataSourceIntent: "Manual" },
+      { sectionTypeKey: "BannerShowcase", variantKey: "banner.one-large-four-small", dataSourceIntent: "Manual" },
+      { sectionTypeKey: "ProductShowcase", variantKey: "product.grid", dataSourceIntent: "Newest" },
       { sectionTypeKey: "BannerShowcase", variantKey: "banner.mosaic-2x2", dataSourceIntent: "Manual" },
+      { sectionTypeKey: "CategoryShowcase", variantKey: "category.horizontal-rail", dataSourceIntent: "Manual" },
     ],
   },
   {
     templateKey: "interior-decor",
     nameFa: "دکوراسیون داخلی",
     industry: "InteriorDecor",
-    descriptionFa: "هیرو تحریریه + مقالات + کالا",
+    descriptionFa: "تصویر بزرگ و انتخاب‌شده: هیرو دو ستونه، ویژه+ریل، مقالات مجله‌ای",
     sectionPresetList: [
       { sectionTypeKey: "HeroCarousel", variantKey: "hero.split", dataSourceIntent: "Manual" },
-      { sectionTypeKey: "ProductShowcase", variantKey: "product.featured-plus-rail", dataSourceIntent: "Featured" },
+      { sectionTypeKey: "ProductShowcase", variantKey: "product.featured-plus-rail", dataSourceIntent: "Newest" },
       { sectionTypeKey: "ArticleShowcase", variantKey: "article.magazine-rail", dataSourceIntent: "LatestArticles" },
+      { sectionTypeKey: "BannerShowcase", variantKey: "banner.one-large-two-small", dataSourceIntent: "Manual" },
+      { sectionTypeKey: "ReviewsShowcase", variantKey: "reviews.card-carousel", dataSourceIntent: "ApprovedReviews" },
     ],
   },
   {
     templateKey: "home-appliance",
     nameFa: "لوازم خانگی",
     industry: "HomeAppliance",
-    descriptionFa: "دسته + پرفروش ستونی + برند",
+    descriptionFa: "دسته + ستون کالا + برند ویژه و شبکه رتبه",
     sectionPresetList: [
+      { sectionTypeKey: "HeroCarousel", variantKey: "hero.contained", dataSourceIntent: "Manual" },
       { sectionTypeKey: "CategoryShowcase", variantKey: "category.image-cards", dataSourceIntent: "Manual" },
-      { sectionTypeKey: "ProductShowcase", variantKey: "product.category-columns", dataSourceIntent: "BestSelling" },
+      { sectionTypeKey: "ProductShowcase", variantKey: "product.category-columns", dataSourceIntent: "Category" },
       { sectionTypeKey: "BrandShowcase", variantKey: "brand.featured", dataSourceIntent: "Manual" },
+      { sectionTypeKey: "ProductRankedList", variantKey: "ranked.grid", dataSourceIntent: "Newest" },
     ],
   },
   {
     templateKey: "shoes",
     nameFa: "کفش",
     industry: "Shoes",
-    descriptionFa: "استوری + کاروسل + بنر",
+    descriptionFa: "استوری کارت‌گرد، کاروسل کالا و بنر نامتقارن",
     sectionPresetList: [
       { sectionTypeKey: "StoryRail", variantKey: "story.rounded-cards", dataSourceIntent: "Manual" },
+      { sectionTypeKey: "HeroCarousel", variantKey: "hero.full-width", dataSourceIntent: "Manual" },
       { sectionTypeKey: "ProductShowcase", variantKey: "product.card-carousel", dataSourceIntent: "Newest" },
       { sectionTypeKey: "BannerShowcase", variantKey: "banner.two-asymmetric", dataSourceIntent: "Manual" },
+      { sectionTypeKey: "CategoryShowcase", variantKey: "category.horizontal-rail", dataSourceIntent: "Manual" },
     ],
   },
   {
     templateKey: "plants",
     nameFa: "گل و گیاه",
     industry: "Plants",
-    descriptionFa: "هیرو + دسته + نظرات",
+    descriptionFa: "هیرو + ریل دسته + مقالات ویژه+فهرست و نظرات",
     sectionPresetList: [
       { sectionTypeKey: "HeroCarousel", variantKey: "hero.full-width", dataSourceIntent: "Manual" },
       { sectionTypeKey: "CategoryShowcase", variantKey: "category.horizontal-rail", dataSourceIntent: "Manual" },
+      { sectionTypeKey: "ProductShowcase", variantKey: "product.featured-plus-rail", dataSourceIntent: "Newest" },
+      { sectionTypeKey: "ArticleShowcase", variantKey: "article.featured-plus-list", dataSourceIntent: "LatestArticles" },
       { sectionTypeKey: "ReviewsShowcase", variantKey: "reviews.card-carousel", dataSourceIntent: "ApprovedReviews" },
     ],
   },
@@ -308,11 +345,14 @@ export const INDUSTRY_TEMPLATE_SEEDS: Array<{
     templateKey: "beauty",
     nameFa: "آرایشی بهداشتی",
     industry: "Beauty",
-    descriptionFa: "استوری + تب کالا + پرومو",
+    descriptionFa: "برند و استوری: دایره تصویری، کاروسل کالا، برند ویژه و پرومو",
     sectionPresetList: [
       { sectionTypeKey: "StoryRail", variantKey: "story.image-circles", dataSourceIntent: "Manual" },
-      { sectionTypeKey: "ProductShowcase", variantKey: "product.tabbed", dataSourceIntent: "Category" },
+      { sectionTypeKey: "BrandShowcase", variantKey: "brand.featured", dataSourceIntent: "Manual" },
+      { sectionTypeKey: "ProductShowcase", variantKey: "product.card-carousel", dataSourceIntent: "Category" },
+      { sectionTypeKey: "BannerShowcase", variantKey: "banner.four-grid", dataSourceIntent: "Manual" },
       { sectionTypeKey: "PromoSection", variantKey: "promo.default", dataSourceIntent: "Manual" },
+      { sectionTypeKey: "ReviewsShowcase", variantKey: "reviews.compact-quotes", dataSourceIntent: "ApprovedReviews" },
     ],
   },
 ];
@@ -320,11 +360,11 @@ export const INDUSTRY_TEMPLATE_SEEDS: Array<{
 /** Shared SectionType → Host Landing PascalCase type (storage). */
 export const SECTION_TO_LANDING_HOST: Record<string, string> = {
   HeroCarousel: "Hero",
-  StoryRail: "CategoryGrid",
+  StoryRail: "StoryRail",
   CategoryShowcase: "CategoryGrid",
   ProductShowcase: "ProductCollection",
   ProductRankedList: "ProductCollection",
-  BannerShowcase: "PromoBanner",
+  BannerShowcase: "BannerShowcase",
   BrandShowcase: "BrandStrip",
   PromoSection: "PromoBanner",
   ArticleShowcase: "ArticleList",

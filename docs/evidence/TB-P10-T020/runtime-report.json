@@ -1,0 +1,416 @@
+{
+  "ok": true,
+  "steps": [
+    {
+      "name": "A-composer-start",
+      "pass": true
+    },
+    {
+      "name": "file:template-picker.png",
+      "pass": true,
+      "data": {
+        "bytes": 65260
+      }
+    },
+    {
+      "name": "file:template-picker.png",
+      "pass": true,
+      "data": {
+        "bytes": 262359
+      }
+    },
+    {
+      "name": "file:template-fashion-preview.png",
+      "pass": true,
+      "data": {
+        "bytes": 262359
+      }
+    },
+    {
+      "name": "file:template-autoparts-preview.png",
+      "pass": true,
+      "data": {
+        "bytes": 262359
+      }
+    },
+    {
+      "name": "B-blank-create",
+      "pass": true
+    },
+    {
+      "name": "file:hero-variant-picker.png",
+      "pass": true,
+      "data": {
+        "bytes": 126128
+      }
+    },
+    {
+      "name": "C-hero-split",
+      "pass": true
+    },
+    {
+      "name": "file:story-variant-picker.png",
+      "pass": true,
+      "data": {
+        "bytes": 122831
+      }
+    },
+    {
+      "name": "file:banner-slot-editor.png",
+      "pass": true,
+      "data": {
+        "bytes": 100978
+      }
+    },
+    {
+      "name": "D-story-circle",
+      "pass": true
+    },
+    {
+      "name": "file:product-variant-picker.png",
+      "pass": true,
+      "data": {
+        "bytes": 142266
+      }
+    },
+    {
+      "name": "E-product-compact-rows",
+      "pass": true
+    },
+    {
+      "name": "file:banner-variant-picker.png",
+      "pass": true,
+      "data": {
+        "bytes": 192116
+      }
+    },
+    {
+      "name": "file:banner-slot-editor.png",
+      "pass": true,
+      "data": {
+        "bytes": 121008
+      }
+    },
+    {
+      "name": "F-banner-four-grid",
+      "pass": true
+    },
+    {
+      "name": "G-brand-logo-rail",
+      "pass": true
+    },
+    {
+      "name": "file:composer-mixed-page.png",
+      "pass": true,
+      "data": {
+        "bytes": 69279
+      }
+    },
+    {
+      "name": "sections-native",
+      "pass": true,
+      "data": {
+        "types": [
+          "Hero",
+          "StoryRail",
+          "ProductCollection",
+          "BannerShowcase",
+          "BrandStrip"
+        ]
+      }
+    },
+    {
+      "name": "sections-count",
+      "pass": true,
+      "data": {
+        "count": 5
+      }
+    },
+    {
+      "name": "H-preview-desktop",
+      "pass": true
+    },
+    {
+      "name": "I-preview-mobile",
+      "pass": true
+    },
+    {
+      "name": "J-publish",
+      "pass": true,
+      "data": {
+        "status": 200
+      }
+    },
+    {
+      "name": "K-public",
+      "pass": true
+    },
+    {
+      "name": "file:storefront-mixed-desktop.png",
+      "pass": true,
+      "data": {
+        "bytes": 403840
+      }
+    },
+    {
+      "name": "file:storefront-mixed-mobile.png",
+      "pass": true,
+      "data": {
+        "bytes": 112626
+      }
+    },
+    {
+      "name": "L-fashion-template",
+      "pass": true,
+      "data": {
+        "count": 4
+      }
+    },
+    {
+      "name": "M-fashion-editable",
+      "pass": true
+    },
+    {
+      "name": "L-fashion-publish",
+      "pass": true
+    },
+    {
+      "name": "N-autoparts-template",
+      "pass": true,
+      "data": {
+        "count": 2
+      }
+    },
+    {
+      "name": "O-templates-distinct",
+      "pass": true,
+      "data": {
+        "fashionTypes": "StoryRail:story.circle|CategoryGrid:|BannerShowcase:banner.single|BrandStrip:",
+        "autoTypes": "CategoryGrid:|BrandStrip:"
+      }
+    },
+    {
+      "name": "N-autoparts-publish",
+      "pass": true
+    },
+    {
+      "name": "P-set-home",
+      "pass": true,
+      "data": {
+        "status": 200
+      }
+    },
+    {
+      "name": "P-home-selection",
+      "pass": true,
+      "data": {
+        "status": 200
+      }
+    },
+    {
+      "name": "Q-fashion-home",
+      "pass": true
+    },
+    {
+      "name": "file:fashion-template-home.png",
+      "pass": true,
+      "data": {
+        "bytes": 408749
+      }
+    },
+    {
+      "name": "Q-fashion-home-mobile",
+      "pass": true
+    },
+    {
+      "name": "file:autoparts-template-home.png",
+      "pass": true,
+      "data": {
+        "bytes": 139255
+      }
+    },
+    {
+      "name": "R-unset-home",
+      "pass": true,
+      "data": {
+        "status": 200
+      }
+    },
+    {
+      "name": "R-canonical",
+      "pass": true
+    }
+  ],
+  "files": {
+    "template-picker.png": {
+      "bytes": 262359
+    },
+    "template-fashion-preview.png": {
+      "bytes": 262359
+    },
+    "template-autoparts-preview.png": {
+      "bytes": 262359
+    },
+    "hero-variant-picker.png": {
+      "bytes": 126128
+    },
+    "story-variant-picker.png": {
+      "bytes": 122831
+    },
+    "banner-slot-editor.png": {
+      "bytes": 121008
+    },
+    "product-variant-picker.png": {
+      "bytes": 142266
+    },
+    "banner-variant-picker.png": {
+      "bytes": 192116
+    },
+    "composer-mixed-page.png": {
+      "bytes": 69279
+    },
+    "storefront-mixed-desktop.png": {
+      "bytes": 403840
+    },
+    "storefront-mixed-mobile.png": {
+      "bytes": 112626
+    },
+    "fashion-template-home.png": {
+      "bytes": 408749
+    },
+    "autoparts-template-home.png": {
+      "bytes": 139255
+    }
+  },
+  "errors": [],
+  "console": [
+    {
+      "type": "info",
+      "text": "%cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold"
+    },
+    {
+      "type": "info",
+      "text": "%cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold"
+    },
+    {
+      "type": "info",
+      "text": "%cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold"
+    },
+    {
+      "type": "info",
+      "text": "%cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold"
+    },
+    {
+      "type": "info",
+      "text": "%cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 500 (Internal Server Error)"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 500 (Internal Server Error)"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 500 (Internal Server Error)"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 500 (Internal Server Error)"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+    },
+    {
+      "type": "info",
+      "text": "%cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 500 (Internal Server Error)"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 500 (Internal Server Error)"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 500 (Internal Server Error)"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 500 (Internal Server Error)"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+    },
+    {
+      "type": "info",
+      "text": "%cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold"
+    },
+    {
+      "type": "error",
+      "text": "A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:\n\n- A server/client branch `if (typeof window !== 'undefined')`."
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+    },
+    {
+      "type": "info",
+      "text": "%cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+    },
+    {
+      "type": "info",
+      "text": "%cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold"
+    },
+    {
+      "type": "info",
+      "text": "%cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold"
+    },
+    {
+      "type": "info",
+      "text": "%cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+    },
+    {
+      "type": "info",
+      "text": "%cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+    },
+    {
+      "type": "info",
+      "text": "%cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold"
+    },
+    {
+      "type": "error",
+      "text": "A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:\n\n- A server/client branch `if (typeof window !== 'undefined')`."
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+    },
+    {
+      "type": "info",
+      "text": "%cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+    }
+  ]
+}

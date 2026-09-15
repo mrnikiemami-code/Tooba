@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { AdminSearchableCombobox } from "../admin-searchable-combobox";
 import { loadCategoryTree, type CategoryTreeNodeDto } from "../catalog-category-api";
 import { listAdminBrandOptions, queryAdminProductGrid } from "../host-client";
-import { PRODUCT_SOURCE_CHOICES } from "./landing-section-catalog.ts";
+import { bannerSlotCountForVariant, PRODUCT_SOURCE_CHOICES } from "./landing-section-catalog.ts";
 import { listAdminMenus } from "../menus/admin-menus-api.ts";
 
 function asStringArray(value: unknown): string[] {
@@ -18,6 +18,38 @@ function flattenCategories(nodes: CategoryTreeNodeDto[]): { value: string; label
     .map((node) => ({ value: node.id, label: node.name }));
 }
 
+type StoryItem = { imageUrl?: string; title?: string; href?: string; enabled?: boolean };
+type BannerItem = { imageUrl?: string; href?: string; title?: string; text?: string; ctaLabel?: string };
+
+function asStoryItems(value: unknown): StoryItem[] {
+  if (!Array.isArray(value)) return [];
+  return value.map((item) => {
+    if (!item || typeof item !== "object") return { imageUrl: "", title: "", href: "", enabled: true };
+    const row = item as Record<string, unknown>;
+    return {
+      imageUrl: typeof row.imageUrl === "string" ? row.imageUrl : "",
+      title: typeof row.title === "string" ? row.title : "",
+      href: typeof row.href === "string" ? row.href : "",
+      enabled: row.enabled !== false,
+    };
+  });
+}
+
+function asBannerItems(value: unknown): BannerItem[] {
+  if (!Array.isArray(value)) return [];
+  return value.map((item) => {
+    if (!item || typeof item !== "object") return { imageUrl: "", href: "", title: "" };
+    const row = item as Record<string, unknown>;
+    return {
+      imageUrl: typeof row.imageUrl === "string" ? row.imageUrl : "",
+      href: typeof row.href === "string" ? row.href : "",
+      title: typeof row.title === "string" ? row.title : "",
+      text: typeof row.text === "string" ? row.text : "",
+      ctaLabel: typeof row.ctaLabel === "string" ? row.ctaLabel : "",
+    };
+  });
+}
+
 export function LandingSectionForm({
   type,
   value,
@@ -29,6 +61,129 @@ export function LandingSectionForm({
 }) {
   const title = typeof value.title === "string" ? value.title : "";
   const set = (patch: Record<string, unknown>) => onChange({ ...value, ...patch });
+  const variantKey = typeof value.variantKey === "string" ? value.variantKey : undefined;
+  const showBannerSlots = type === "BannerShowcase" || (variantKey?.startsWith("banner.") ?? false);
+  const showStoryItems = type === "StoryRail" || (variantKey?.startsWith("story.") ?? false);
+
+  if (showBannerSlots) {
+    const slots = Math.max(1, bannerSlotCountForVariant(variantKey || "banner.single"));
+    const current = asBannerItems(value.items);
+    const items = Array.from({ length: slots }, (_, index) => current[index] ?? { imageUrl: "", href: "", title: "" });
+    return (
+      <div className="space-y-3" data-testid="landing-section-form">
+        <TextField label="عنوان" value={title} onChange={(next) => set({ title: next })} />
+        <div className="space-y-3" data-testid="banner-slot-editor">
+          <p className="text-sm font-bold">جایگاه‌های بنر ({slots.toLocaleString("fa-IR")} مورد)</p>
+          {items.map((item, index) => (
+            <div key={index} className="rounded-xl border border-border p-3 space-y-2">
+              <p className="text-xs font-bold text-muted">جایگاه {(index + 1).toLocaleString("fa-IR")}</p>
+              <TextField
+                label="آدرس تصویر"
+                value={item.imageUrl ?? ""}
+                onChange={(next) => {
+                  const nextItems = items.slice();
+                  nextItems[index] = { ...item, imageUrl: next };
+                  set({ items: nextItems });
+                }}
+                placeholder="https://…"
+              />
+              <TextField
+                label="پیوند مقصد"
+                value={item.href ?? ""}
+                onChange={(next) => {
+                  const nextItems = items.slice();
+                  nextItems[index] = { ...item, href: next };
+                  set({ items: nextItems });
+                }}
+                placeholder="/offers"
+              />
+              <TextField
+                label="عنوان کوتاه"
+                value={item.title ?? ""}
+                onChange={(next) => {
+                  const nextItems = items.slice();
+                  nextItems[index] = { ...item, title: next };
+                  set({ items: nextItems });
+                }}
+              />
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  if (showStoryItems) {
+    const items = asStoryItems(value.items);
+    return (
+      <div className="space-y-3" data-testid="landing-section-form">
+        <TextField label="عنوان" value={title} onChange={(next) => set({ title: next })} />
+        <div className="space-y-3" data-testid="story-items-editor">
+          <div className="flex items-center justify-between">
+            <p className="text-sm font-bold">فهرست استوری</p>
+            <button
+              type="button"
+              className="rounded-lg border px-3 py-1 text-xs font-bold"
+              onClick={() => set({ items: [...items, { imageUrl: "", title: "", href: "/products", enabled: true }] })}
+            >
+              افزودن استوری
+            </button>
+          </div>
+          {items.length === 0 ? <p className="text-xs text-muted">هنوز استوری اضافه نشده است.</p> : null}
+          {items.map((item, index) => (
+            <div key={index} className="rounded-xl border border-border p-3 space-y-2">
+              <TextField
+                label="آدرس تصویر"
+                value={item.imageUrl ?? ""}
+                onChange={(next) => {
+                  const nextItems = items.slice();
+                  nextItems[index] = { ...item, imageUrl: next };
+                  set({ items: nextItems });
+                }}
+              />
+              <TextField
+                label="عنوان"
+                value={item.title ?? ""}
+                onChange={(next) => {
+                  const nextItems = items.slice();
+                  nextItems[index] = { ...item, title: next };
+                  set({ items: nextItems });
+                }}
+              />
+              <TextField
+                label="پیوند مقصد"
+                value={item.href ?? ""}
+                onChange={(next) => {
+                  const nextItems = items.slice();
+                  nextItems[index] = { ...item, href: next };
+                  set({ items: nextItems });
+                }}
+              />
+              <label className="flex items-center gap-2 text-sm">
+                <input
+                  type="checkbox"
+                  checked={item.enabled !== false}
+                  onChange={(event) => {
+                    const nextItems = items.slice();
+                    nextItems[index] = { ...item, enabled: event.target.checked };
+                    set({ items: nextItems });
+                  }}
+                />
+                فعال
+              </label>
+              <button
+                type="button"
+                className="text-xs text-red-600"
+                onClick={() => set({ items: items.filter((_, i) => i !== index) })}
+              >
+                حذف
+              </button>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
 
   if (type === "Hero" || type === "PromoBanner") {
     return (
@@ -86,11 +241,7 @@ export function LandingSectionForm({
     return (
       <div className="space-y-3" data-testid="landing-section-form">
         <TextField label="عنوان" value={title} onChange={(next) => set({ title: next })} />
-        <EntityMultiPicker
-          kind="category"
-          selected={selected}
-          onChange={(categoryIds) => set({ categoryIds })}
-        />
+        <EntityMultiPicker kind="category" selected={selected} onChange={(categoryIds) => set({ categoryIds })} />
       </div>
     );
   }

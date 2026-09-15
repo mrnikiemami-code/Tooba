@@ -66,7 +66,9 @@ function renderLandingSection(section: StorefrontLandingSection, context: Landin
     case "ArticleList":
     case "Reviews":
     case "RichText":
-    case "NavigationMenu": {
+    case "NavigationMenu":
+    case "StoryRail":
+    case "BannerShowcase": {
       const composition = adaptLandingSectionToComposition({
         pageSectionId: section.pageSectionId,
         sectionType: section.sectionType,

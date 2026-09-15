@@ -14,6 +14,8 @@ export const LANDING_SECTION_TYPE_MAP: Record<string, { sectionTypeKey: string; 
   Reviews: { sectionTypeKey: "ReviewsShowcase", variantKey: "reviews.card-carousel" },
   RichText: { sectionTypeKey: "RichText", variantKey: "richtext.default" },
   NavigationMenu: { sectionTypeKey: "NavigationMenu", variantKey: "nav.menu" },
+  StoryRail: { sectionTypeKey: "StoryRail", variantKey: "story.circle" },
+  BannerShowcase: { sectionTypeKey: "BannerShowcase", variantKey: "banner.single" },
 };
 
 /** Legacy Home snake_case section types → shared registry keys. */
@@ -31,6 +33,24 @@ export const HOME_SECTION_TYPE_MAP: Record<string, { sectionTypeKey: string; var
   latest_articles: { sectionTypeKey: "ArticleShowcase", variantKey: "article.magazine-rail" },
 };
 
+/** T019 proxy migration: CategoryGrid/PromoBanner configs carrying story.* / banner.* variantKey. */
+export function migrateProxySectionType(
+  hostSectionType: string,
+  configVariantKey: string | undefined,
+): { sectionTypeKey: string; variantKey: string } | null {
+  if (!configVariantKey) return null;
+  const override = getVariant(configVariantKey);
+  if (!override || !isVariantImplemented(configVariantKey)) return null;
+
+  if (hostSectionType === "CategoryGrid" && configVariantKey.startsWith("story.")) {
+    return { sectionTypeKey: "StoryRail", variantKey: override.key };
+  }
+  if (hostSectionType === "PromoBanner" && configVariantKey.startsWith("banner.")) {
+    return { sectionTypeKey: "BannerShowcase", variantKey: override.key };
+  }
+  return null;
+}
+
 export function adaptLandingSectionToComposition(input: {
   pageSectionId: string;
   sectionType: string;
@@ -46,7 +66,11 @@ export function adaptLandingSectionToComposition(input: {
   let sectionTypeKey = mapped.sectionTypeKey;
   let variantKey = mapped.variantKey;
 
-  if (configVariantKey) {
+  const migrated = migrateProxySectionType(input.sectionType, configVariantKey);
+  if (migrated) {
+    sectionTypeKey = migrated.sectionTypeKey;
+    variantKey = migrated.variantKey;
+  } else if (configVariantKey) {
     const override = getVariant(configVariantKey);
     if (override && isVariantImplemented(configVariantKey)) {
       sectionTypeKey = override.sectionTypeKey;

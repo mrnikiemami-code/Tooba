@@ -869,3 +869,45 @@ Existing Landing configs remain readable through deterministic compatibility ada
 ### LOCK-SF-235 — Swiper primary carousel engine
 One primary carousel engine (Swiper) serves composition variants unless a future proven gap justifies otherwise.
 
+### LOCK-SF-236 — Native StoryRail and BannerShowcase contracts
+StoryRail and BannerShowcase are native composition section contracts, not semantic proxies.
+
+### LOCK-SF-237 — Distinct selectable Variant renderers
+Every selectable Variant must have a real distinct renderer, responsive contract, and capability metadata.
+
+### LOCK-SF-238 — Bounded banner slot layouts
+Banner layouts use bounded Variant slot patterns and size presets; arbitrary pixel layout is forbidden.
+
+### LOCK-SF-239 — Industry templates are editable compositions
+Industry templates are distinct editable compositions built only from implemented Variants and truthful sources.
+
+### LOCK-SF-240 — Templates create normal Drafts
+Template selection creates a normal Draft; templates do not own special renderers or CSS.
+
+### LOCK-SF-241 — Mobile remains system-owned per Variant
+Mobile rendering remains system-owned for every Variant.
+
+### LOCK-SF-242 — Plain-language Admin capabilities
+Admin exposes only plain-language controlled capabilities supported by the selected Variant.
+
+### LOCK-SF-236 — StoryRail and BannerShowcase are native section contracts
+StoryRail and BannerShowcase are first-class shared composition SectionTypes with typed Host contracts. They must not be semantic proxies of CategoryGrid or PromoBanner.
+
+### LOCK-SF-237 — Selectable Variants require distinct runtime
+Every selectable/implemented Variant must have a real distinct renderer path, responsive contract, and capability metadata — not a visual alias of another Variant.
+
+### LOCK-SF-238 — Banner layouts use bounded slot presets
+BannerShowcase layouts use Variant-owned slot counts and Compact/Medium/Large/ExtraLarge size presets. Arbitrary pixel widths, heights, and user breakpoints are forbidden.
+
+### LOCK-SF-239 — Industry templates are distinct editable presets
+The ten industry templates are distinct editable composition presets built only from implemented Variants and truthful data sources. They must not share identical section/variant signatures.
+
+### LOCK-SF-240 — Templates create normal Drafts
+Selecting a template creates a normal editable Draft composition. Templates do not own special React pages, CSS, or renderers.
+
+### LOCK-SF-241 — Mobile remains system-owned per Variant
+Mobile rendering for every Variant remains code-owned via responsive contracts. Admin must not expose mobile breakpoint or layout controls.
+
+### LOCK-SF-242 — Admin exposes plain-language Variant capabilities
+Admin Composer exposes only plain-language controlled capabilities supported by the selected Variant (Persian labels, slot counts, size presets, truthful sources). Raw enum keys, JSON, CSS, and unsupported ranking sources are forbidden.
+

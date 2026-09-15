@@ -18,6 +18,8 @@ test("landing SectionTypes map to four global roles not page-local tokens", () =
   assert.equal(landingSectionSurfaceRole("Reviews"), "section");
   assert.equal(landingSectionSurfaceRole("RichText"), "section");
   assert.equal(landingSectionSurfaceRole("NavigationMenu"), "section");
+  assert.equal(landingSectionSurfaceRole("StoryRail"), "section");
+  assert.equal(landingSectionSurfaceRole("BannerShowcase"), "alternate");
   assert.equal(landingSectionSurfaceRole("Unknown"), "section");
   assert.deepEqual([...STOREFRONT_SURFACE_ROLES], ["page", "section", "alternate", "accent"]);
   assert.equal(surfaceRoleClass("interactive"), "bg-secondary");

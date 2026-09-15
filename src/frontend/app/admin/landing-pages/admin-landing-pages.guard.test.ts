@@ -25,11 +25,15 @@ test("composer uses typed forms and searchable pickers", () => {
   assert.match(composer, /افزودن بخش/);
   assert.match(composer, /LANDING_SECTION_CHOICES|adminSelectableSectionTypes|composition-section-catalog/);
   assert.match(composer, /composition-variant-picker|edit-variant-picker/);
+  assert.match(composer, /شروع از صفحه خالی|start-blank/);
+  assert.match(composer, /شروع از قالب آماده|start-from-template|template-picker/);
   assert.match(forms, /AdminSearchableCombobox|landing-product-multi-picker|landing-category/);
+  assert.match(forms, /story-items-editor|banner-slot-editor/);
   assert.match(catalog, /انتخاب دستی/);
+  assert.match(catalog, /StoryRail|BannerShowcase/);
   assert.doesNotMatch(forms, /BestSelling|Featured|Discounted/);
   assert.doesNotMatch(compositionCatalog, /BestSelling|Featured|Discounted|MostViewed|HotTrending/);
-  assert.doesNotMatch(composer, /dangerouslySetInnerHTML|contentEditable/);
+  assert.doesNotMatch(composer, /dangerouslySetInnerHTML|contentEditable|BestSelling/);
 });
 
 test("section chooser has Persian labels and no raw JSON editor", () => {

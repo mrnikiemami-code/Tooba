@@ -15,7 +15,9 @@ import "swiper/css/free-mode";
  * ریل استوری خانه — پورت بصری/تعاملی Shopeiva با دادهٔ زندهٔ Host.
  * دکمهٔ «افزودن استوری» عمداً حذف شده (ادمین می‌سازد).
  */
-export function HomeStoriesSection() {
+export type StoryLayout = "circle" | "image-circles" | "rounded-cards";
+
+export function HomeStoriesSection({ layout = "circle" }: { layout?: StoryLayout } = {}) {
   const locale = useLocale();
   const [stories, setStories] = useState<PublicStoryCard[]>([]);
   const [loaded, setLoaded] = useState(false);
@@ -45,7 +47,7 @@ export function HomeStoriesSection() {
   };
 
   return (
-    <div className="w-full px-2 sm:px-4 py-6 md:py-8 bg-section-surface" data-testid="home-stories" data-storefront-surface-role="section">
+    <div className="w-full px-2 sm:px-4 py-6 md:py-8 bg-section-surface" data-testid="home-stories" data-story-layout={layout} data-storefront-surface-role="section">
       <div className="relative">
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-lg md:text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
@@ -73,7 +75,10 @@ export function HomeStoriesSection() {
                 const cover = story.coverMediaUrl ?? story.items[0]?.mediaUrl ?? "/images/stories/1.jpg";
                 const isVideo = story.isVideo || story.items.some((item) => item.mediaType === "video");
                 return (
-                  <SwiperSlide key={story.storyId} className="!w-[80px] my-2 mb-7 md:!w-[100px]">
+                  <SwiperSlide
+                    key={story.storyId}
+                    className={layout === "rounded-cards" ? "!w-[120px] my-2 mb-7 md:!w-[140px]" : "!w-[80px] my-2 mb-7 md:!w-[100px]"}
+                  >
                     <button
                       type="button"
                       onClick={() => openStory(story.storyId)}
@@ -81,9 +86,17 @@ export function HomeStoriesSection() {
                       onMouseEnter={() => setHoveredId(story.storyId)}
                       onMouseLeave={() => setHoveredId(null)}
                     >
-                      <div className="relative w-[80px] h-[80px] md:w-[100px] md:h-[100px] rounded-full p-[3px] group-hover:scale-105 transition-transform duration-300 bg-gradient-to-tr from-primary via-purple-500 to-pink-500">
-                        <div className="w-full h-full rounded-full p-[2px] bg-surface dark:bg-zinc-950">
-                          <div className="relative w-full h-full rounded-full overflow-hidden bg-gray-200 dark:bg-zinc-800">
+                      <div
+                        className={`relative group-hover:scale-105 transition-transform duration-300 bg-gradient-to-tr from-primary via-purple-500 to-pink-500 ${
+                          layout === "rounded-cards"
+                            ? "w-[120px] h-[140px] md:w-[140px] md:h-[160px] rounded-3xl p-[3px]"
+                            : layout === "image-circles"
+                              ? "w-[80px] h-[80px] md:w-[100px] md:h-[100px] rounded-full p-[2px] ring-2 ring-offset-2 ring-primary/40"
+                              : "w-[80px] h-[80px] md:w-[100px] md:h-[100px] rounded-full p-[3px]"
+                        }`}
+                      >
+                        <div className={`w-full h-full p-[2px] bg-surface dark:bg-zinc-950 ${layout === "rounded-cards" ? "rounded-3xl" : "rounded-full"}`}>
+                          <div className={`relative w-full h-full overflow-hidden bg-gray-200 dark:bg-zinc-800 ${layout === "rounded-cards" ? "rounded-[1.25rem]" : "rounded-full"}`}>
                             {isVideo ? (
                               // eslint-disable-next-line jsx-a11y/media-has-caption
                               <video

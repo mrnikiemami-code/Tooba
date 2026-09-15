@@ -1,4 +1,7 @@
 import { getVariant } from "../../../lib/storefront-composition/registry.ts";
+import { bannerSlotCountForVariant } from "../../../lib/storefront-composition/industry-templates.ts";
+
+export { bannerSlotCountForVariant };
 
 export const LANDING_SECTION_TYPES = [
   "Hero",
@@ -10,6 +13,8 @@ export const LANDING_SECTION_TYPES = [
   "Reviews",
   "RichText",
   "NavigationMenu",
+  "StoryRail",
+  "BannerShowcase",
 ] as const;
 
 export type LandingSectionType = (typeof LANDING_SECTION_TYPES)[number];
@@ -31,6 +36,8 @@ export const LANDING_SECTION_CHOICES: LandingSectionChoice[] = [
   { type: "Reviews", label: "نظر خریداران", description: "نظرهای تأییدشدهٔ فروشگاه", testId: "add-section-reviews" },
   { type: "RichText", label: "متن آزاد", description: "یک بلوک متن ساده بدون HTML", testId: "add-section-text" },
   { type: "NavigationMenu", label: "فهرست پیوند", description: "نمایش یک منوی فعال فروشگاه در بدنهٔ صفحه", testId: "add-section-menu" },
+  { type: "StoryRail", label: "ریل استوری", description: "میانبرهای دایره‌ای یا کارت‌گرد", testId: "add-section-stories" },
+  { type: "BannerShowcase", label: "نمایش بنر", description: "شبکه‌های بنر کنترل‌شده با جایگاه مشخص", testId: "add-section-banners" },
 ];
 
 export const PRODUCT_SOURCE_CHOICES = [
@@ -64,6 +71,19 @@ export function defaultLandingSectionConfig(type: LandingSectionType): Record<st
       return { title: "متن صفحه", text: "متن ساده برای این بخش" };
     case "NavigationMenu":
       return { title: "فهرست پیوندها", menuId: "" };
+    case "StoryRail":
+      return {
+        title: "استوری‌ها",
+        variantKey: "story.circle",
+        items: [{ imageUrl: "", title: "استوری ۱", href: "/products", enabled: true }],
+      };
+    case "BannerShowcase":
+      return {
+        title: "بنرها",
+        variantKey: "banner.single",
+        heightPreset: "Medium",
+        items: [{ imageUrl: "", href: "/offers", title: "بنر ۱" }],
+      };
   }
 }
 
@@ -90,6 +110,14 @@ export function summarizeLandingSection(type: string, config: Record<string, unk
   if (type === "ArticleList") {
     const take = typeof config.take === "number" ? config.take : 6;
     return title ? `${title}${variantSuffix} · آخرین مطالب · ${take} مورد` : `آخرین مطالب · ${take} مورد${variantSuffix}`;
+  }
+  if (type === "BannerShowcase" || (variantKey?.startsWith("banner.") ?? false)) {
+    const slots = bannerSlotCountForVariant(variantKey);
+    return title ? `${title}${variantSuffix} · ${slots} جایگاه` : `بنر${variantSuffix} · ${slots} جایگاه`;
+  }
+  if (type === "StoryRail" || (variantKey?.startsWith("story.") ?? false)) {
+    const items = Array.isArray(config.items) ? config.items.length : 0;
+    return title ? `${title}${variantSuffix} · ${items} استوری` : `استوری${variantSuffix}`;
   }
   if (title) return `${title}${variantSuffix}`;
   return `${landingSectionLabel(type)}${variantSuffix}`;
