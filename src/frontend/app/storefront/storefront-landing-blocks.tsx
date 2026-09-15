@@ -12,6 +12,7 @@ import type { StorefrontLandingSection } from "./storefront-landing-api.ts";
 import { StorefrontMenuLinks } from "./storefront-menu-tree.tsx";
 import type { StorefrontMenuItem } from "./storefront-menu-api.ts";
 import { heightPresetBannerClass, heightPresetHeroClass } from "../../lib/storefront-composition/size-presets.ts";
+import { storefrontMediaUrl } from "./storefront-api.ts";
 
 export function asIds(config: Record<string, unknown>, ...keys: string[]): string[] {
   for (const key of keys) {
@@ -161,17 +162,25 @@ export function LandingCategoryGrid({
     );
   }
   const images = [2, 3, 4, 5, 6, 7, 8, 9] as const;
+  const resolveCategoryImage = (category: StorefrontCategoryItem, index: number) => {
+    if (category.imageUrl && category.imageUrl.trim()) return category.imageUrl.trim();
+    if (category.imageMediaAssetId) {
+      const resolved = storefrontMediaUrl(category.imageMediaAssetId);
+      if (resolved && !resolved.includes("/v1/storefront/media/")) return resolved;
+      if (resolved) return resolved;
+    }
+    return `/images/categories/${images[index % images.length]!}.png`;
+  };
   if (layout === "editorial-tiles") {
     return (
       <section className="w-full px-2 py-8 sm:px-4" data-testid="landing-categories" data-category-layout="editorial-tiles">
         <h2 className="mb-4 text-lg font-bold">{titleOf(config, "دسته‌بندی‌ها")}</h2>
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4 md:gap-4">
           {items.slice(0, 8).map((category, index) => {
-            const imageIndex = images[index % images.length]!;
             return (
               <Link key={category.categoryId} href={`/products?categoryId=${category.categoryId}`} className="group relative min-h-[160px] overflow-hidden rounded-3xl bg-gray-100 md:min-h-[200px]">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={`/images/categories/${imageIndex}.png`} alt="" className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" />
+                <img src={resolveCategoryImage(category, index)} alt="" className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" data-category-media={category.imageMediaAssetId ? "template" : "placeholder"} />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
                 <p className="absolute bottom-4 right-4 left-4 text-base font-black text-white line-clamp-2 drop-shadow md:text-lg">{category.name}</p>
               </Link>
@@ -196,11 +205,10 @@ export function LandingCategoryGrid({
       <h2 className="mb-4 text-lg font-bold">{titleOf(config, "دسته‌بندی‌ها")}</h2>
       <div className={listClass}>
         {items.map((category, index) => {
-          const imageIndex = images[index % images.length]!;
           return (
             <Link key={category.categoryId} href={`/products?categoryId=${category.categoryId}`} className={cardClass}>
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={`/images/categories/${imageIndex}.png`} alt="" className="aspect-square w-full object-contain p-4" />
+              <img src={resolveCategoryImage(category, index)} alt="" className="aspect-square w-full object-cover" data-category-media={category.imageMediaAssetId ? "template" : "placeholder"} />
               <p className="px-2 py-3 text-center text-sm font-bold">{category.name}</p>
             </Link>
           );

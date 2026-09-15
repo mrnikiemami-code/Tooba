@@ -115,6 +115,9 @@ public enum TemplateLocalizedOwnerKind
     Product = 0,
     Category = 1,
     Brand = 2,
+    AttributeDefinition = 3,
+    AttributeOption = 4,
+    Tag = 5,
 }
 
 /// <summary>آینهٔ متن چندزبانهٔ Template Catalog.</summary>

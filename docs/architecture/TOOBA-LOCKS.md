@@ -1040,3 +1040,15 @@ Fashion persistent template seed is idempotent and replaces the R4 in-memory pil
 ### LOCK-SF-292 — TemplateId indexes without widening operational tables
 Template Catalog root tables are indexed for TemplateId and must not increase operational Catalog table width.
 
+### LOCK-SF-293 — Product/Category/Brand Template structural parity
+Product/Category/Brand Template Catalog families must maintain structural parity with their current operational Catalog families; structural deferral is forbidden.
+
+### LOCK-SF-294 — Template child tables mirror operational semantics
+Template child tables mirror operational child/relation semantics and do not introduce independent demo-domain concepts.
+
+### LOCK-SF-295 — Fashion category preview media from Template Catalog
+Fashion category preview media must come from Fashion-relevant Template Catalog media semantics, not generic category placeholders.
+
+### LOCK-SF-296 — Clone remaps identity/FK without schema translation
+Future cloning may require identity/FK remapping but must not require translating between different Catalog schemas.
+

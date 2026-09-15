@@ -32,6 +32,10 @@ export interface StorefrontCategoryItem {
   categoryId: string;
   parentCategoryId: string | null;
   name: string;
+  /** Optional Template/Catalog image media id for category cards. */
+  imageMediaAssetId?: string | null;
+  /** Optional resolved public image URL (Template Catalog Fashion media). */
+  imageUrl?: string | null;
 }
 
 /**

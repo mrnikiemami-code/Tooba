@@ -62,7 +62,13 @@ type HostFashionPreview = {
       configurationJson: string;
     }>;
   };
-  categories: Array<{ categoryId: string; parentCategoryId: string | null; name: string }>;
+  categories: Array<{
+    categoryId: string;
+    parentCategoryId: string | null;
+    name: string;
+    imageMediaAssetId?: string | null;
+    imageUrl?: string | null;
+  }>;
   products: Array<{
     productId: string;
     slug: string;
@@ -134,6 +140,8 @@ function mapContext(preview: HostFashionPreview): LandingRenderContext {
     categoryId: c.categoryId,
     parentCategoryId: c.parentCategoryId,
     name: c.name,
+    imageMediaAssetId: c.imageMediaAssetId ?? null,
+    imageUrl: c.imageUrl ?? null,
   }));
   const products: StorefrontProductCard[] = preview.products.map((p) => ({
     productId: p.productId,
@@ -335,6 +343,8 @@ function normalizePreview(raw: Record<string, unknown>): HostFashionPreview {
         categoryId: String(pick(row, "categoryId", "CategoryId") ?? ""),
         parentCategoryId: (pick(row, "parentCategoryId", "ParentCategoryId") as string | null) ?? null,
         name: String(pick(row, "name", "Name") ?? ""),
+        imageMediaAssetId: (pick(row, "imageMediaAssetId", "ImageMediaAssetId") as string | null) ?? null,
+        imageUrl: (pick(row, "imageUrl", "ImageUrl") as string | null) ?? null,
       };
     }),
     products: productsRaw.map((p) => {

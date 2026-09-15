@@ -84,7 +84,7 @@ test("no destructive cleanup action", () => {
   assert.match(workspace, /disabled/);
 });
 
-test("R4+R5 locks registered", () => {
+test("R4+R5+R6 locks registered", () => {
   for (const lock of [
     "LOCK-SF-280",
     "LOCK-SF-285",
@@ -95,6 +95,10 @@ test("R4+R5 locks registered", () => {
     "LOCK-SF-290",
     "LOCK-SF-291",
     "LOCK-SF-292",
+    "LOCK-SF-293",
+    "LOCK-SF-294",
+    "LOCK-SF-295",
+    "LOCK-SF-296",
   ]) {
     assert.match(locks, new RegExp(lock));
   }

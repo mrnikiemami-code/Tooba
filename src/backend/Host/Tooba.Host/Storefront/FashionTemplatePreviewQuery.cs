@@ -40,7 +40,9 @@ public sealed class FashionTemplatePreviewQuery
             select new FashionTemplateCategoryDto(
                 c.CategoryId.ToString("D"),
                 c.ParentCategoryId.HasValue ? c.ParentCategoryId.Value.ToString("D") : null,
-                t.Name)).ToListAsync(cancellationToken);
+                t.Name,
+                c.ImageMediaAssetId.HasValue ? c.ImageMediaAssetId.Value.ToString("D") : null,
+                c.ImageMediaAssetId.HasValue ? FashionTemplateMediaPaths.TryResolve(c.ImageMediaAssetId.Value) : null)).ToListAsync(cancellationToken);
 
         var productRows = await (
             from p in _catalog.TemplateProducts.AsNoTracking()
@@ -291,7 +293,13 @@ public sealed record FashionTemplateSectionDto(
     int SortOrder,
     string ConfigurationJson);
 
-public sealed record FashionTemplateCategoryDto(string CategoryId, string? ParentCategoryId, string Name);
+public sealed record FashionTemplateCategoryDto(
+    string CategoryId,
+    string? ParentCategoryId,
+    string Name,
+    string? ImageMediaAssetId,
+    string? ImageUrl);
+
 
 public sealed record FashionTemplateProductDto(
     string ProductId,

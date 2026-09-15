@@ -88,6 +88,35 @@ public sealed class CatalogDbContext : DbContext
     /// <summary>بخش‌های Landing قالب (شامل BannerShowcase).</summary>
     public DbSet<TemplateStoreLandingPageSection> TemplateStoreLandingPageSections => Set<TemplateStoreLandingPageSection>();
 
+    /// <summary>برچسب‌های قالب.</summary>
+    public DbSet<TemplateTag> TemplateTags => Set<TemplateTag>();
+    /// <summary>پیوند محصول-برچسب قالب.</summary>
+    public DbSet<TemplateProductTagAssignment> TemplateProductTagAssignments => Set<TemplateProductTagAssignment>();
+    /// <summary>پیوند رده-برچسب قالب.</summary>
+    public DbSet<TemplateCategoryTagAssignment> TemplateCategoryTagAssignments => Set<TemplateCategoryTagAssignment>();
+    /// <summary>تعاریف ویژگی قالب.</summary>
+    public DbSet<TemplateAttributeDefinition> TemplateAttributeDefinitions => Set<TemplateAttributeDefinition>();
+    /// <summary>گزینه‌های ویژگی قالب.</summary>
+    public DbSet<TemplateAttributeOption> TemplateAttributeOptions => Set<TemplateAttributeOption>();
+    /// <summary>binding ویژگی ردهٔ قالب.</summary>
+    public DbSet<TemplateCategoryAttributeBinding> TemplateCategoryAttributeBindings => Set<TemplateCategoryAttributeBinding>();
+    /// <summary>facet ردهٔ قالب.</summary>
+    public DbSet<TemplateCategoryFacetConfiguration> TemplateCategoryFacetConfigurations => Set<TemplateCategoryFacetConfiguration>();
+    /// <summary>مگامنوی قالب.</summary>
+    public DbSet<TemplateMegaMenuItem> TemplateMegaMenuItems => Set<TemplateMegaMenuItem>();
+    /// <summary>ترجمهٔ مگامنوی قالب.</summary>
+    public DbSet<TemplateMegaMenuItemTranslation> TemplateMegaMenuItemTranslations => Set<TemplateMegaMenuItemTranslation>();
+    /// <summary>محورهای تنوع محصول قالب.</summary>
+    public DbSet<TemplateProductVariantAxis> TemplateProductVariantAxes => Set<TemplateProductVariantAxis>();
+    /// <summary>مقادیر ویژگی محصول قالب.</summary>
+    public DbSet<TemplateProductAttributeValue> TemplateProductAttributeValues => Set<TemplateProductAttributeValue>();
+    /// <summary>مقادیر ویژگی گونهٔ قالب.</summary>
+    public DbSet<TemplateVariantAttributeValue> TemplateVariantAttributeValues => Set<TemplateVariantAttributeValue>();
+    /// <summary>تاریخچهٔ محصول قالب.</summary>
+    public DbSet<TemplateProductHistoryEntry> TemplateProductHistoryEntries => Set<TemplateProductHistoryEntry>();
+    /// <summary>تاریخچهٔ slug ردهٔ قالب.</summary>
+    public DbSet<TemplateCategorySlugHistory> TemplateCategorySlugHistories => Set<TemplateCategorySlugHistory>();
+
     /// <summary>منوهای ساختاریافتهٔ فروشگاه.</summary>
     public DbSet<StoreMenu> StoreMenus => Set<StoreMenu>();
 
@@ -870,6 +899,168 @@ public sealed class CatalogDbContext : DbContext
                 .WithMany()
                 .HasForeignKey(x => x.PageId)
                 .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<TemplateTag>(entity =>
+        {
+            entity.ToTable("template_tags");
+            entity.HasKey(x => x.TagId);
+            entity.Property(x => x.TagId).ValueGeneratedNever();
+            entity.Property(x => x.Code).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.SlugSeam).HasMaxLength(128);
+            entity.Property(x => x.Status).HasConversion<string>().HasMaxLength(32);
+            entity.HasIndex(x => x.TemplateId);
+            entity.HasIndex(x => new { x.TemplateId, x.Code }).IsUnique();
+            entity.HasOne<StoreTemplate>().WithMany().HasForeignKey(x => x.TemplateId).OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<TemplateProductTagAssignment>(entity =>
+        {
+            entity.ToTable("template_product_tag_assignments");
+            entity.HasKey(x => x.AssignmentId);
+            entity.Property(x => x.AssignmentId).ValueGeneratedNever();
+            entity.HasIndex(x => new { x.ProductId, x.TagId }).IsUnique();
+            entity.HasOne<TemplateProduct>().WithMany().HasForeignKey(x => x.ProductId).OnDelete(DeleteBehavior.Cascade);
+            entity.HasOne<TemplateTag>().WithMany().HasForeignKey(x => x.TagId).OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<TemplateCategoryTagAssignment>(entity =>
+        {
+            entity.ToTable("template_category_tag_assignments");
+            entity.HasKey(x => x.AssignmentId);
+            entity.Property(x => x.AssignmentId).ValueGeneratedNever();
+            entity.HasIndex(x => new { x.CategoryId, x.TagId }).IsUnique();
+            entity.HasOne<TemplateCategory>().WithMany().HasForeignKey(x => x.CategoryId).OnDelete(DeleteBehavior.Cascade);
+            entity.HasOne<TemplateTag>().WithMany().HasForeignKey(x => x.TagId).OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<TemplateAttributeDefinition>(entity =>
+        {
+            entity.ToTable("template_attribute_definitions");
+            entity.HasKey(x => x.DefinitionId);
+            entity.Property(x => x.DefinitionId).ValueGeneratedNever();
+            entity.Property(x => x.Code).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.ValueKind).HasConversion<string>().HasMaxLength(32);
+            entity.Property(x => x.Unit).HasMaxLength(32);
+            entity.Property(x => x.ValidationMin).HasPrecision(18, 4);
+            entity.Property(x => x.ValidationMax).HasPrecision(18, 4);
+            entity.HasIndex(x => x.TemplateId);
+            entity.HasIndex(x => new { x.TemplateId, x.Code }).IsUnique();
+            entity.HasOne<StoreTemplate>().WithMany().HasForeignKey(x => x.TemplateId).OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<TemplateAttributeOption>(entity =>
+        {
+            entity.ToTable("template_attribute_options");
+            entity.HasKey(x => x.OptionId);
+            entity.Property(x => x.OptionId).ValueGeneratedNever();
+            entity.Property(x => x.Code).HasMaxLength(64).IsRequired();
+            entity.HasIndex(x => new { x.DefinitionId, x.Code }).IsUnique();
+            entity.HasOne<TemplateAttributeDefinition>().WithMany().HasForeignKey(x => x.DefinitionId).OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<TemplateCategoryAttributeBinding>(entity =>
+        {
+            entity.ToTable("template_category_attribute_bindings");
+            entity.HasKey(x => x.BindingId);
+            entity.Property(x => x.BindingId).ValueGeneratedNever();
+            entity.HasIndex(x => new { x.CategoryId, x.DefinitionId }).IsUnique();
+            entity.HasOne<TemplateCategory>().WithMany().HasForeignKey(x => x.CategoryId).OnDelete(DeleteBehavior.Cascade);
+            entity.HasOne<TemplateAttributeDefinition>().WithMany().HasForeignKey(x => x.DefinitionId).OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<TemplateCategoryFacetConfiguration>(entity =>
+        {
+            entity.ToTable("template_category_facet_configurations");
+            entity.HasKey(x => x.FacetConfigurationId);
+            entity.Property(x => x.FacetConfigurationId).ValueGeneratedNever();
+            entity.Property(x => x.DisplayType).HasConversion<string>().HasMaxLength(32);
+            entity.HasIndex(x => new { x.CategoryId, x.DefinitionId }).IsUnique();
+            entity.HasOne<TemplateCategory>().WithMany().HasForeignKey(x => x.CategoryId).OnDelete(DeleteBehavior.Cascade);
+            entity.HasOne<TemplateAttributeDefinition>().WithMany().HasForeignKey(x => x.DefinitionId).OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<TemplateMegaMenuItem>(entity =>
+        {
+            entity.ToTable("template_mega_menu_items");
+            entity.HasKey(x => x.MegaMenuItemId);
+            entity.Property(x => x.MegaMenuItemId).ValueGeneratedNever();
+            entity.Property(x => x.ItemType).HasConversion<string>().HasMaxLength(32);
+            entity.HasIndex(x => x.CategoryId).IsUnique();
+            entity.HasIndex(x => new { x.ParentMegaMenuItemId, x.SortOrder });
+            entity.HasOne<TemplateCategory>().WithMany().HasForeignKey(x => x.CategoryId).OnDelete(DeleteBehavior.Cascade);
+            entity.HasOne<TemplateMegaMenuItem>().WithMany().HasForeignKey(x => x.ParentMegaMenuItemId).OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<TemplateMegaMenuItemTranslation>(entity =>
+        {
+            entity.ToTable("template_mega_menu_item_translations");
+            entity.HasKey(x => x.MegaMenuItemTranslationId);
+            entity.Property(x => x.MegaMenuItemTranslationId).ValueGeneratedNever();
+            entity.Property(x => x.Locale).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.TitleOverride).HasMaxLength(256);
+            entity.Property(x => x.BadgeText).HasMaxLength(64);
+            entity.Property(x => x.ShortLabel).HasMaxLength(128);
+            entity.HasIndex(x => new { x.MegaMenuItemId, x.Locale }).IsUnique();
+            entity.HasOne<TemplateMegaMenuItem>().WithMany().HasForeignKey(x => x.MegaMenuItemId).OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<TemplateProductVariantAxis>(entity =>
+        {
+            entity.ToTable("template_product_variant_axes");
+            entity.HasKey(x => x.AxisId);
+            entity.Property(x => x.AxisId).ValueGeneratedNever();
+            entity.HasIndex(x => new { x.ProductId, x.DefinitionId }).IsUnique();
+            entity.HasOne<TemplateProduct>().WithMany().HasForeignKey(x => x.ProductId).OnDelete(DeleteBehavior.Cascade);
+            entity.HasOne<TemplateAttributeDefinition>().WithMany().HasForeignKey(x => x.DefinitionId).OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<TemplateProductAttributeValue>(entity =>
+        {
+            entity.ToTable("template_product_attribute_values");
+            entity.HasKey(x => x.ValueId);
+            entity.Property(x => x.ValueId).ValueGeneratedNever();
+            entity.Property(x => x.CanonicalValue).HasMaxLength(256).IsRequired();
+            entity.HasIndex(x => new { x.ProductId, x.DefinitionId }).IsUnique();
+            entity.HasOne<TemplateProduct>().WithMany().HasForeignKey(x => x.ProductId).OnDelete(DeleteBehavior.Cascade);
+            entity.HasOne<TemplateAttributeDefinition>().WithMany().HasForeignKey(x => x.DefinitionId).OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<TemplateVariantAttributeValue>(entity =>
+        {
+            entity.ToTable("template_variant_attribute_values");
+            entity.HasKey(x => x.ValueId);
+            entity.Property(x => x.ValueId).ValueGeneratedNever();
+            entity.Property(x => x.CanonicalValue).HasMaxLength(256).IsRequired();
+            entity.HasIndex(x => new { x.VariantId, x.DefinitionId }).IsUnique();
+            entity.HasOne<TemplateVariant>().WithMany().HasForeignKey(x => x.VariantId).OnDelete(DeleteBehavior.Cascade);
+            entity.HasOne<TemplateAttributeDefinition>().WithMany().HasForeignKey(x => x.DefinitionId).OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<TemplateProductHistoryEntry>(entity =>
+        {
+            entity.ToTable("template_product_history_entries");
+            entity.HasKey(x => x.HistoryId);
+            entity.Property(x => x.HistoryId).ValueGeneratedNever();
+            entity.Property(x => x.EventType).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.Section).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.SummaryFa).HasMaxLength(512).IsRequired();
+            entity.Property(x => x.BeforeSummary).HasMaxLength(512);
+            entity.Property(x => x.AfterSummary).HasMaxLength(512);
+            entity.Property(x => x.ActorDisplayName).HasMaxLength(256);
+            entity.HasIndex(x => new { x.ProductId, x.OccurredAt });
+            entity.HasOne<TemplateProduct>().WithMany().HasForeignKey(x => x.ProductId).OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<TemplateCategorySlugHistory>(entity =>
+        {
+            entity.ToTable("template_category_slug_histories");
+            entity.HasKey(x => x.HistoryId);
+            entity.Property(x => x.HistoryId).ValueGeneratedNever();
+            entity.Property(x => x.Locale).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.OldSlug).HasMaxLength(160).IsRequired();
+            entity.HasIndex(x => new { x.Locale, x.OldSlug });
+            entity.HasOne<TemplateCategory>().WithMany().HasForeignKey(x => x.CategoryId).OnDelete(DeleteBehavior.Cascade);
         });
 
         OutboxMessageMapping.Map(modelBuilder, Schema);

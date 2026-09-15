@@ -58,11 +58,19 @@ internal static class FashionTemplateCatalogSeed
         var catalog = provider.GetRequiredService<CatalogDbContext>();
         var now = DateTimeOffset.UtcNow;
 
-        if (await catalog.StoreTemplates.AnyAsync(x => x.Key == FashionTemplateCatalogIds.FashionKey, cancellationToken))
+        if (!await catalog.StoreTemplates.AnyAsync(x => x.Key == FashionTemplateCatalogIds.FashionKey, cancellationToken))
         {
-            return;
+            await SeedCoreFashionAsync(catalog, now, cancellationToken);
         }
 
+        await EnsureStructuralParityAsync(catalog, now, cancellationToken);
+    }
+
+    private static async Task SeedCoreFashionAsync(
+        CatalogDbContext catalog,
+        DateTimeOffset now,
+        CancellationToken cancellationToken)
+    {
         catalog.StoreTemplates.Add(StoreTemplate.Create(
             FashionTemplateCatalogIds.FashionKey,
             "پوشاک",
@@ -216,6 +224,238 @@ internal static class FashionTemplateCatalogSeed
             CreatedAt = now,
             UpdatedAt = now,
         });
+
+        await catalog.SaveChangesAsync(cancellationToken);
+    }
+
+    /// <summary>R6 — seed mirrored attribute/tag/variant/history/mega-menu structure if missing.</summary>
+    private static async Task EnsureStructuralParityAsync(
+        CatalogDbContext catalog,
+        DateTimeOffset now,
+        CancellationToken cancellationToken)
+    {
+        if (await catalog.TemplateAttributeDefinitions.AnyAsync(
+                x => x.TemplateId == FashionTemplateCatalogIds.TemplateId,
+                cancellationToken))
+        {
+            return;
+        }
+
+        var colorDef = FashionTemplateParityIds.AttributeDefinition(1);
+        var sizeDef = FashionTemplateParityIds.AttributeDefinition(2);
+        catalog.TemplateAttributeDefinitions.Add(new TemplateAttributeDefinition
+        {
+            DefinitionId = colorDef,
+            TemplateId = FashionTemplateCatalogIds.TemplateId,
+            Code = "color",
+            ValueKind = CatalogAttributeValueKind.Enumeration,
+            IsVariantAxis = true,
+            IsFilterable = true,
+            IsComparable = true,
+            IsActive = true,
+            DisplayOrder = 1,
+            CreatedAt = now,
+        });
+        catalog.TemplateAttributeDefinitions.Add(new TemplateAttributeDefinition
+        {
+            DefinitionId = sizeDef,
+            TemplateId = FashionTemplateCatalogIds.TemplateId,
+            Code = "material",
+            ValueKind = CatalogAttributeValueKind.Text,
+            IsVariantAxis = false,
+            IsFilterable = true,
+            IsComparable = true,
+            IsActive = true,
+            DisplayOrder = 2,
+            CreatedAt = now,
+        });
+        catalog.TemplateLocalizedTexts.Add(new TemplateLocalizedText
+        {
+            TextId = FashionTemplateParityIds.LocalizedAttrName(1),
+            OwnerKind = TemplateLocalizedOwnerKind.AttributeDefinition,
+            OwnerId = colorDef,
+            FieldKey = "name",
+            Locale = LocaleFa,
+            Value = "رنگ",
+        });
+        catalog.TemplateLocalizedTexts.Add(new TemplateLocalizedText
+        {
+            TextId = FashionTemplateParityIds.LocalizedAttrName(2),
+            OwnerKind = TemplateLocalizedOwnerKind.AttributeDefinition,
+            OwnerId = sizeDef,
+            FieldKey = "name",
+            Locale = LocaleFa,
+            Value = "جنس",
+        });
+
+        string[] colorCodes = ["black", "beige", "navy"];
+        string[] colorNames = ["مشکی", "بژ", "سرمه‌ای"];
+        for (var i = 0; i < colorCodes.Length; i++)
+        {
+            var optionId = FashionTemplateParityIds.AttributeOption(1, i + 1);
+            catalog.TemplateAttributeOptions.Add(new TemplateAttributeOption
+            {
+                OptionId = optionId,
+                DefinitionId = colorDef,
+                Code = colorCodes[i]!,
+                DisplayOrder = i + 1,
+                IsActive = true,
+            });
+            catalog.TemplateLocalizedTexts.Add(new TemplateLocalizedText
+            {
+                TextId = FashionTemplateParityIds.LocalizedOptionName(1, i + 1),
+                OwnerKind = TemplateLocalizedOwnerKind.AttributeOption,
+                OwnerId = optionId,
+                FieldKey = "name",
+                Locale = LocaleFa,
+                Value = colorNames[i]!,
+            });
+        }
+
+        string[] tagCodes = ["spring", "cotton"];
+        string[] tagNames = ["بهاره", "نخی"];
+        for (var t = 1; t <= tagCodes.Length; t++)
+        {
+            var tagId = FashionTemplateParityIds.Tag(t);
+            catalog.TemplateTags.Add(new TemplateTag
+            {
+                TagId = tagId,
+                TemplateId = FashionTemplateCatalogIds.TemplateId,
+                Code = tagCodes[t - 1]!,
+                SlugSeam = tagCodes[t - 1],
+                Status = CatalogPublicationStatus.Published,
+                CreatedAt = now,
+                UpdatedAt = now,
+            });
+            catalog.TemplateLocalizedTexts.Add(new TemplateLocalizedText
+            {
+                TextId = FashionTemplateParityIds.LocalizedTagName(t),
+                OwnerKind = TemplateLocalizedOwnerKind.Tag,
+                OwnerId = tagId,
+                FieldKey = "name",
+                Locale = LocaleFa,
+                Value = tagNames[t - 1]!,
+            });
+        }
+
+        for (var root = 1; root <= 8; root++)
+        {
+            var rootId = FashionTemplateCatalogIds.CategoryRoot(root);
+            catalog.TemplateCategoryAttributeBindings.Add(new TemplateCategoryAttributeBinding
+            {
+                BindingId = FashionTemplateParityIds.CategoryBinding(root, 1),
+                CategoryId = rootId,
+                DefinitionId = colorDef,
+                DisplayOrder = 1,
+                IsRequired = false,
+                IsFilterable = true,
+                IsVariantAxis = true,
+                IsComparable = true,
+                CreatedAt = now,
+            });
+            catalog.TemplateCategoryFacetConfigurations.Add(new TemplateCategoryFacetConfiguration
+            {
+                FacetConfigurationId = FashionTemplateParityIds.CategoryFacet(root, 1),
+                CategoryId = rootId,
+                DefinitionId = colorDef,
+                DisplayType = CatalogFacetDisplayType.CheckboxList,
+                SortOrder = 1,
+                IsVisible = true,
+                IsSearchable = true,
+                IsCollapsedByDefault = false,
+                ShowCounts = true,
+                CreatedAt = now,
+            });
+            catalog.TemplateCategoryTagAssignments.Add(new TemplateCategoryTagAssignment
+            {
+                AssignmentId = FashionTemplateParityIds.CategoryTagAssignment(root, 1),
+                CategoryId = rootId,
+                TagId = FashionTemplateParityIds.Tag(1),
+            });
+            var megaId = FashionTemplateParityIds.MegaMenuItem(root);
+            catalog.TemplateMegaMenuItems.Add(new TemplateMegaMenuItem
+            {
+                MegaMenuItemId = megaId,
+                ItemType = CatalogMegaMenuItemType.Category,
+                CategoryId = rootId,
+                SortOrder = root,
+                IsVisible = true,
+                IsFeatured = root <= 2,
+                ImageMediaAssetId = FashionTemplateCatalogIds.MediaAsset(((root - 1) % 8) + 1),
+                CreatedAt = now,
+            });
+            catalog.TemplateMegaMenuItemTranslations.Add(new TemplateMegaMenuItemTranslation
+            {
+                MegaMenuItemTranslationId = FashionTemplateParityIds.MegaMenuTranslation(root),
+                MegaMenuItemId = megaId,
+                Locale = LocaleFa,
+                ShortLabel = TreeRoots[root - 1],
+            });
+            catalog.TemplateCategorySlugHistories.Add(new TemplateCategorySlugHistory
+            {
+                HistoryId = FashionTemplateParityIds.CategorySlugHistory(root),
+                CategoryId = rootId,
+                Locale = LocaleFa,
+                OldSlug = $"fashion-root-{root}-legacy",
+                ChangedAt = now,
+            });
+        }
+
+        for (var n = 1; n <= 15; n++)
+        {
+            var productId = FashionTemplateCatalogIds.ProductId(n);
+            var colorCode = colorCodes[(n - 1) % colorCodes.Length]!;
+            catalog.TemplateProductAttributeValues.Add(new TemplateProductAttributeValue
+            {
+                ValueId = FashionTemplateParityIds.ProductAttrValue(n, 2),
+                ProductId = productId,
+                DefinitionId = sizeDef,
+                CanonicalValue = n % 2 == 0 ? "cotton" : "linen",
+            });
+            catalog.TemplateProductTagAssignments.Add(new TemplateProductTagAssignment
+            {
+                AssignmentId = FashionTemplateParityIds.ProductTagAssignment(n, 1),
+                ProductId = productId,
+                TagId = FashionTemplateParityIds.Tag(((n - 1) % 2) + 1),
+            });
+            catalog.TemplateProductVariantAxes.Add(new TemplateProductVariantAxis
+            {
+                AxisId = FashionTemplateParityIds.VariantAxis(n),
+                ProductId = productId,
+                DefinitionId = colorDef,
+                DisplayOrder = 0,
+            });
+            var variantId = FashionTemplateParityIds.Variant(n);
+            var fingerprint = $"{colorDef:N}={colorCode}";
+            catalog.TemplateVariants.Add(new TemplateVariant
+            {
+                VariantId = variantId,
+                ProductId = productId,
+                CombinationFingerprint = fingerprint,
+                Status = CatalogPublicationStatus.Published,
+                SortOrder = 0,
+                IsDefault = true,
+                CreatedAt = now,
+                UpdatedAt = now,
+            });
+            catalog.TemplateVariantAttributeValues.Add(new TemplateVariantAttributeValue
+            {
+                ValueId = FashionTemplateParityIds.VariantAttrValue(n),
+                VariantId = variantId,
+                DefinitionId = colorDef,
+                CanonicalValue = colorCode,
+            });
+            catalog.TemplateProductHistoryEntries.Add(new TemplateProductHistoryEntry
+            {
+                HistoryId = FashionTemplateParityIds.ProductHistory(n),
+                ProductId = productId,
+                EventType = "product.publish",
+                Section = "lifecycle",
+                SummaryFa = "انتشار محصول قالب پوشاک",
+                OccurredAt = now,
+                ActorDisplayName = "FashionTemplateCatalogSeed",
+            });
+        }
 
         await catalog.SaveChangesAsync(cancellationToken);
     }

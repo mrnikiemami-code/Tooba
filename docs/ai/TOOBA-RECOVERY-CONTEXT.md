@@ -50,7 +50,7 @@ TB-P07-T043
 Last Implementation Task:
 
 ```text
-TB-P10-T022-R5
+TB-P10-T022-R6
 ```
 
 Current Issued Task:
@@ -68,6 +68,7 @@ Current Repair Task:
 Implemented Under Review:
 
 ```text
+TB-P10-T022-R6 — Exact Product/Category/Brand Template Catalog parity + Fashion category media fidelity; USER_VISUAL_ACCEPTED=YES (Appearance); Builder USER_VISUAL_ACCEPTED=NO
 TB-P10-T022-R5 — Fashion Template Catalog Persistence (exact schema mirror + 8/15 Fashion seed + Sample purity); USER_VISUAL_ACCEPTED=YES (Appearance); Builder USER_VISUAL_ACCEPTED=NO
 TB-P10-T022-R4 — Fashion Template Live Preview Pilot (real /template-preview/fashion + Admin iframe Desktop/Tablet/Mobile, isolated demo pack); USER_VISUAL_ACCEPTED=YES (Appearance); Builder USER_VISUAL_ACCEPTED=NO
 TB-P10-T022-R3 — Template Selection Wireframe (device modes, seed-pack UX skeleton, distinct industry previews); USER_VISUAL_ACCEPTED=YES (Appearance); Builder USER_VISUAL_ACCEPTED=NO
