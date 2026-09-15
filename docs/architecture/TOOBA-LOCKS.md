@@ -1001,4 +1001,22 @@ Template previews must be structurally distinct and representative before full v
 ### LOCK-SF-279 — Seed cleanup/preparation non-destructive until dedicated task
 Seed cleanup/preparation actions remain non-destructive until dedicated seed-data implementation task.
 
+### LOCK-SF-280 — Template pilot preview uses real Storefront route
+Template pilot preview uses a real Storefront route rendered by the shared composition engine.
+
+### LOCK-SF-281 — Device preview modes resize iframe viewport
+Device preview modes resize the iframe viewport and rely on real responsive behavior; CSS zoom is forbidden.
+
+### LOCK-SF-282 — Fashion pilot demo pack contents
+Fashion pilot demo pack uses 8 three-level category trees, 15 Fashion products, related images/banners/brands, plus shared demo stories/reviews/articles.
+
+### LOCK-SF-283 — Demo data traceable and isolated
+Demo data must remain traceable and isolated from user-owned content before cleanup is enabled.
+
+### LOCK-SF-284 — Template summary panel lists real sections
+Template summary panel lists actual numbered composition sections and uses an industry visual rather than abstract layout bars.
+
+### LOCK-SF-285 — Cleanup/preparation remain non-destructive
+Cleanup/preparation actions remain non-destructive until the dedicated seed lifecycle task.
+
 

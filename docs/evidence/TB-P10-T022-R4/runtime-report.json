@@ -1,0 +1,152 @@
+{
+  "ok": true,
+  "steps": [
+    {
+      "name": "file:fashion-selector-overview.png",
+      "pass": true,
+      "data": {
+        "bytes": 202296
+      }
+    },
+    {
+      "name": "file:fashion-summary-panel.png",
+      "pass": true,
+      "data": {
+        "bytes": 202296
+      }
+    },
+    {
+      "name": "file:fashion-preview-desktop.png",
+      "pass": true,
+      "data": {
+        "bytes": 202296
+      }
+    },
+    {
+      "name": "file:fashion-preview-tablet.png",
+      "pass": true,
+      "data": {
+        "bytes": 202173
+      }
+    },
+    {
+      "name": "file:fashion-preview-mobile.png",
+      "pass": true,
+      "data": {
+        "bytes": 174346
+      }
+    },
+    {
+      "name": "device-iframe-widths-differ",
+      "pass": true,
+      "data": {
+        "desktopAttr": "920",
+        "tabletAttr": "768",
+        "mobileAttr": "390",
+        "desktop": 680,
+        "tablet": 680,
+        "mobile": 390
+      }
+    },
+    {
+      "name": "no-css-zoom",
+      "pass": true
+    },
+    {
+      "name": "file:fashion-preview-products.png",
+      "pass": true,
+      "data": {
+        "bytes": 128978
+      }
+    },
+    {
+      "name": "file:fashion-preview-banners.png",
+      "pass": true,
+      "data": {
+        "bytes": 133607
+      }
+    },
+    {
+      "name": "file:fashion-preview-brands.png",
+      "pass": true,
+      "data": {
+        "bytes": 141228
+      }
+    },
+    {
+      "name": "file:fashion-preview-reviews.png",
+      "pass": true,
+      "data": {
+        "bytes": 135025
+      }
+    },
+    {
+      "name": "file:fashion-preview-articles.png",
+      "pass": true,
+      "data": {
+        "bytes": 135344
+      }
+    },
+    {
+      "name": "file:fashion-seed-summary.png",
+      "pass": true,
+      "data": {
+        "bytes": 98750
+      }
+    },
+    {
+      "name": "cleanup-disabled",
+      "pass": true
+    },
+    {
+      "name": "file:fashion-cleanup-actions-disabled.png",
+      "pass": true,
+      "data": {
+        "bytes": 98750
+      }
+    },
+    {
+      "name": "admin-shell-not-storefront-recolored",
+      "pass": true
+    }
+  ],
+  "files": {
+    "fashion-selector-overview.png": {
+      "bytes": 202296
+    },
+    "fashion-summary-panel.png": {
+      "bytes": 202296
+    },
+    "fashion-preview-desktop.png": {
+      "bytes": 202296
+    },
+    "fashion-preview-tablet.png": {
+      "bytes": 202173
+    },
+    "fashion-preview-mobile.png": {
+      "bytes": 174346
+    },
+    "fashion-preview-products.png": {
+      "bytes": 128978
+    },
+    "fashion-preview-banners.png": {
+      "bytes": 133607
+    },
+    "fashion-preview-brands.png": {
+      "bytes": 141228
+    },
+    "fashion-preview-reviews.png": {
+      "bytes": 135025
+    },
+    "fashion-preview-articles.png": {
+      "bytes": 135344
+    },
+    "fashion-seed-summary.png": {
+      "bytes": 98750
+    },
+    "fashion-cleanup-actions-disabled.png": {
+      "bytes": 98750
+    }
+  },
+  "errors": []
+}

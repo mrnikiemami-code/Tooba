@@ -30,13 +30,17 @@ export function LandingHero({ config, layout = "contained" }: { config: Record<s
   const subtitle = typeof config.subtitle === "string" ? config.subtitle : "";
   const href = typeof config.href === "string" && config.href.trim() ? config.href : "/products";
   const heightClass = heightPresetHeroClass(config.heightPreset);
+  const heroImage =
+    typeof config.imageUrl === "string" && config.imageUrl.trim()
+      ? config.imageUrl.trim()
+      : "/images/sliders/slider-1.jpg";
 
   if (layout === "editorial") {
     return (
       <section className="px-2 sm:px-4" data-testid="landing-hero" data-hero-layout="editorial">
         <Link href={href} className="relative block overflow-hidden rounded-none md:rounded-3xl bg-gray-100 shadow-2xl">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/images/sliders/slider-1.jpg" alt="" className={`w-full object-cover ${heightClass}`} />
+          <img src={heroImage} alt="" className={`w-full object-cover ${heightClass}`} />
           <div className="absolute inset-0 bg-gradient-to-l from-black/75 via-black/35 to-transparent" />
           <div className="absolute inset-y-0 right-0 flex w-full max-w-xl flex-col justify-end md:justify-center p-6 md:p-10 text-white">
             <p className="mb-2 text-[11px] font-bold text-white/80 md:text-xs">ویترین انتخابی</p>
@@ -55,7 +59,7 @@ export function LandingHero({ config, layout = "contained" }: { config: Record<s
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 overflow-hidden rounded-3xl border border-gray-100 bg-surface shadow-xl">
           <Link href={href} className="relative block min-h-[180px] bg-gray-100">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/images/sliders/slider-1.jpg" alt="" className={`h-full w-full object-cover ${heightClass}`} />
+            <img src={heroImage} alt="" className={`h-full w-full object-cover ${heightClass}`} />
           </Link>
           <div className="flex flex-col justify-center p-6">
             <h2 className="text-2xl font-black md:text-4xl">{title}</h2>
@@ -73,7 +77,7 @@ export function LandingHero({ config, layout = "contained" }: { config: Record<s
         <div className="grid grid-cols-1 gap-3 md:grid-cols-[2fr_1fr]">
           <Link href={href} className="relative block overflow-hidden rounded-3xl bg-gradient-to-l from-primary to-primary-strong shadow-2xl">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/images/sliders/slider-1.jpg" alt="" className={`w-full object-cover ${heightClass}`} />
+            <img src={heroImage} alt="" className={`w-full object-cover ${heightClass}`} />
             <div className="absolute inset-0 bg-black/35" />
             <div className="absolute inset-0 flex flex-col justify-end p-6 text-white">
               <h2 className="text-2xl font-black md:text-4xl">{title}</h2>
@@ -97,7 +101,7 @@ export function LandingHero({ config, layout = "contained" }: { config: Record<s
     <section className={`px-2 sm:px-4 ${layout === "contained" ? "max-w-6xl mx-auto" : ""}`} data-testid="landing-hero" data-hero-layout={layout}>
       <Link href={href} className={`relative block overflow-hidden bg-gradient-to-l from-primary to-primary-strong shadow-2xl ${layout === "contained" ? "rounded-3xl" : "rounded-none md:rounded-3xl"}`}>
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src="/images/sliders/slider-1.jpg" alt="" className={`w-full object-cover ${heightClass}`} />
+        <img src={heroImage} alt="" className={`w-full object-cover ${heightClass}`} />
         <div className="absolute inset-0 bg-black/35" />
         <div className="absolute inset-0 flex flex-col justify-end p-6 text-white">
           <h2 className="text-2xl font-black md:text-4xl">{title}</h2>

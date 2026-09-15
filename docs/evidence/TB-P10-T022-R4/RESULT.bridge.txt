@@ -1,0 +1,61 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-P10-T022-R4
+Parent-Task: TB-P10-T022-R3
+Status: PASS
+WorkerId: tooba-worker-01
+Channel: tooba-main
+
+Summary:
+Fashion Template Live Preview Pilot: real `/template-preview/fashion` Storefront route via shared composition engine; Admin Fashion selection uses live iframe with Desktop/Tablet/Mobile px viewport resize (no CSS zoom); isolated in-memory demo pack (8 three-level category trees, 15 Fashion products, banners/brands, shared reviews/articles); origin marker `fashion-template-preview-pilot`; cleanup/prepare remain disabled non-destructive. Appearance YES; Builder USER_VISUAL_ACCEPTED=NO. No TB-P10-T023.
+
+Applicable-Locks:
+LOCK-SF-001…279 preserved. Added LOCK-SF-280…285.
+
+Recovery-Start:
+branch=main HEAD-at-claim=120029073975bcd010a3b58ccfb9127df6f774d5 HEAD==origin/main. Expected previous 1f0706fe (R3 impl); pin 12002907 — not RECOVERY_CONFLICT. docs/evidence/TB-P10-T022-R4/recovery-start.md
+
+Fashion-Preview-Route:
+/template-preview/fashion — StorefrontLandingSections + shared renderer; no Admin chrome; preview-safe click/submit intercept.
+
+Fashion-Demo-Data:
+fashion-demo-preview.ts — in-memory only; demo-fashion-* IDs; media via fashionDemoMediaUrl; no Host Catalog writes.
+
+Admin-Iframe-Preview:
+Fashion selected → iframe sandbox + FASHION_IFRAME_VIEWPORT 920/768/390; summary panel industry thumbnail + numbered sections; seed summary FA lines; other templates keep wireframe.
+
+Device-Modes:
+data-iframe-width attrs Desktop 920 / Tablet 768 / Mobile 390; no zoom/scale.
+
+Focused-Validation:
+R4 8/8; R3 8/8; R2 9/9; critical-storefront 20/20; recovery 4/4. docs/evidence/TB-P10-T022-R4/focused-validation.md
+
+Runtime:
+runtime-report.json ok=true. docs/evidence/TB-P10-T022-R4/runtime.md
+
+Visual-Evidence:
+docs/evidence/TB-P10-T022-R4/screenshots/ fashion-selector-overview.png fashion-summary-panel.png fashion-preview-desktop.png fashion-preview-tablet.png fashion-preview-mobile.png fashion-preview-products.png fashion-preview-banners.png fashion-preview-brands.png fashion-preview-reviews.png fashion-preview-articles.png fashion-seed-summary.png fashion-cleanup-actions-disabled.png
+
+AntiPattern-Scan:
+CLEAN. docs/evidence/TB-P10-T022-R4/antipattern-scan.md
+
+Lock-Registry:
+LOCK-SF-001…285. New 280–285 only.
+
+Recovery-SoT:
+Phase P10 Architect TB-P10-T022-R3 Impl TB-P10-T022-R4 Issued/Repair none Appearance YES Builder NO Worker IDLE do NOT invent TB-P10-T023. docs/evidence/TB-P10-T022-R4/recovery-sot.md
+
+Git:
+SHA=PENDING_AFTER_PUSH HEAD==origin/main after push. Unrelated .tmp-* leftovers not committed.
+
+Architectural-Concerns:
+Pilot Fashion-only; full seed persistence/cleanup deferred.
+
+Visual-Concerns:
+Builder USER_VISUAL_ACCEPTED=NO — user must approve live Fashion preview before expanding industries/seed lifecycle.
+
+Blockers:
+none
+
+END_TOOBA_WORKER_RESULT

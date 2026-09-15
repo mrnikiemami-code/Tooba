@@ -50,7 +50,7 @@ test("cleanup actions are non-destructive in this wireframe task", () => {
   assert.match(workspace, /cleanup-sample-data-action/);
   assert.match(workspace, /prepare-store-action/);
   assert.match(workspace, /disabled/);
-  assert.match(workspace, /در مرحله بعد فعال می‌شود/);
+  assert.match(workspace, /در مرحله بعد فعال می‌شود|پس از تأیید الگوی داده نمونه فعال می‌شود/);
   assert.doesNotMatch(workspace, /fetch\(.*cleanup|DELETE.*seed/i);
 });
 

@@ -28,6 +28,7 @@ import type {
   StorefrontReviewsPage,
   StorefrontReviewSubmission,
 } from "./storefront-model.ts";
+import { fashionDemoMediaUrl } from "../../lib/storefront-composition/fashion-demo-preview.ts";
 
 function readProp(record: Record<string, unknown>, camel: string, pascal: string): unknown {
   return record[camel] ?? record[pascal];
@@ -62,8 +63,11 @@ export function storefrontHostOrigin(): string {
 
 /**
  * نشانی تصویر نمایشی توسعه برای مرجع مات Media. حقیقت Catalog نیست.
+ * Fashion pilot demo assets (`demo-fashion-media-*`) resolve to isolated CDN URLs.
  */
 export function storefrontMediaUrl(assetId: string | null | undefined): string {
+  const demo = fashionDemoMediaUrl(assetId);
+  if (demo) return demo;
   const id =
     assetId && assetId !== "00000000-0000-0000-0000-000000000000"
       ? assetId

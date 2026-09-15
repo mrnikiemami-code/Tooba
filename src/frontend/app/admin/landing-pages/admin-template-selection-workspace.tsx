@@ -7,6 +7,11 @@ import {
   templateSectionSummaryFa,
   type IndustryTemplateSeed,
 } from "../../../lib/storefront-composition/industry-templates.ts";
+import {
+  FASHION_DEMO_ORIGIN,
+  FASHION_SECTION_LABELS_FA,
+  fashionDemoSeedSummaryFa,
+} from "../../../lib/storefront-composition/fashion-demo-preview.ts";
 import { layoutAwareTemplatePreview } from "./layout-aware-previews.tsx";
 
 export type TemplatePreviewDevice = "desktop" | "tablet" | "mobile";
@@ -16,6 +21,17 @@ const DEVICE_FRAME: Record<TemplatePreviewDevice, { widthClass: string; heightCl
   tablet: { widthClass: "w-full max-w-[640px]", heightClass: "min-h-[480px]", label: "تبلت" },
   mobile: { widthClass: "w-full max-w-[360px]", heightClass: "min-h-[560px]", label: "موبایل" },
 };
+
+/** Fashion iframe viewport — real width resize, never CSS zoom (LOCK-SF-281). */
+const FASHION_IFRAME_VIEWPORT: Record<TemplatePreviewDevice, { width: number; height: number; label: string }> = {
+  desktop: { width: 920, height: 640, label: "دسکتاپ" },
+  tablet: { width: 768, height: 720, label: "تبلت" },
+  mobile: { width: 390, height: 720, label: "موبایل" },
+};
+
+const FASHION_PREVIEW_SRC = "/template-preview/fashion";
+const FASHION_INDUSTRY_THUMB =
+  "https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&w=240&h=240&q=80";
 
 /** Wireframe block recipes — structurally distinct per industry (not identical skeletons). */
 function industryWireframeBlocks(template: IndustryTemplateSeed, device: TemplatePreviewDevice): Array<{ kind: string; className: string }> {
@@ -113,15 +129,19 @@ export function AdminTemplateSelectionWorkspace({
   const templates = useMemo(() => listIndustryTemplates(), []);
   const [device, setDevice] = useState<TemplatePreviewDevice>("desktop");
   const selected = templates.find((t) => t.templateKey === selectedTemplateKey) ?? templates[0] ?? null;
+  const isFashionLive = selected?.templateKey === "fashion";
   const frame = DEVICE_FRAME[device];
-  const blocks = selected ? industryWireframeBlocks(selected, device) : [];
+  const fashionViewport = FASHION_IFRAME_VIEWPORT[device];
+  const blocks = selected && !isFashionLive ? industryWireframeBlocks(selected, device) : [];
   const compactPreview = selected ? layoutAwareTemplatePreview(selected) : null;
+  const fashionSeedLines = fashionDemoSeedSummaryFa();
 
   return (
     <main
       data-testid="admin-landing-page-editor"
       data-template-selection-workspace="1"
       data-template-preview-v2="1"
+      data-fashion-live-preview={isFashionLive ? "1" : undefined}
       className="space-y-5"
     >
       <div className="flex flex-wrap items-start justify-between gap-3">
@@ -131,7 +151,9 @@ export function AdminTemplateSelectionWorkspace({
           </button>
           <h1 className="mt-1 text-xl font-black">فضای انتخاب قالب</h1>
           <p className="mt-1 text-sm text-muted">
-            پیش‌نمایش سیمی ترکیب صفحه در دستگاه‌های مختلف — بدون ایجاد داده نمونه واقعی در این مرحله.
+            {isFashionLive
+              ? "پیش‌نمایش زنده قالب پوشاک از مسیر ویترین — بدون ایجاد داده واقعی در فروشگاه."
+              : "پیش‌نمایش سیمی ترکیب صفحه در دستگاه‌های مختلف — بدون ایجاد داده نمونه واقعی در این مرحله."}
           </p>
         </div>
         <button
@@ -186,14 +208,64 @@ export function AdminTemplateSelectionWorkspace({
         <section className="space-y-4 rounded-2xl border border-border bg-surface-elevated p-4" data-testid="template-detail-panel">
           {selected && compactPreview ? (
             <>
-              <div className="flex flex-wrap items-start justify-between gap-3">
-                <div>
-                  <h2 className="text-lg font-black" data-testid="template-detail-name">{selected.nameFa}</h2>
-                  <p className="mt-1 text-sm text-muted">{selected.descriptionFa}</p>
-                  <p className="mt-2 text-xs font-bold text-slate-600" data-testid="template-detail-sections">
-                    {selected.sectionPresetList.length.toLocaleString("fa-IR")} بخش · {templateSectionSummaryFa(selected)}
-                  </p>
+              {isFashionLive ? (
+                <div
+                  className="grid gap-4 rounded-2xl border border-border bg-slate-50 p-4 lg:grid-cols-[7rem_minmax(0,1fr)]"
+                  data-testid="fashion-summary-panel"
+                  data-lock="LOCK-SF-284"
+                >
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={FASHION_INDUSTRY_THUMB}
+                    alt=""
+                    className="h-28 w-28 rounded-2xl object-cover border border-rose-200"
+                    data-testid="fashion-industry-thumbnail"
+                  />
+                  <div>
+                    <h2 className="text-lg font-black" data-testid="template-detail-name">
+                      {selected.nameFa}
+                    </h2>
+                    <p className="mt-1 text-sm text-muted">{selected.descriptionFa}</p>
+                    <ol className="mt-3 list-decimal space-y-1 ps-5 text-sm font-bold text-slate-800" data-testid="fashion-section-list">
+                      {FASHION_SECTION_LABELS_FA.map((label) => (
+                        <li key={label}>{label}</li>
+                      ))}
+                    </ol>
+                  </div>
                 </div>
+              ) : (
+                <div className="flex flex-wrap items-start justify-between gap-3">
+                  <div>
+                    <h2 className="text-lg font-black" data-testid="template-detail-name">
+                      {selected.nameFa}
+                    </h2>
+                    <p className="mt-1 text-sm text-muted">{selected.descriptionFa}</p>
+                    <p className="mt-2 text-xs font-bold text-slate-600" data-testid="template-detail-sections">
+                      {selected.sectionPresetList.length.toLocaleString("fa-IR")} بخش · {templateSectionSummaryFa(selected)}
+                    </p>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    <button
+                      type="button"
+                      className="rounded-xl bg-[#2563EB] px-4 py-2 text-sm font-bold text-white"
+                      data-testid="use-selected-template"
+                      onClick={onConfirmTemplate}
+                    >
+                      استفاده از این قالب
+                    </button>
+                    <button
+                      type="button"
+                      className="rounded-xl border px-4 py-2 text-sm font-bold"
+                      data-testid="template-detail-start-blank"
+                      onClick={onStartBlank}
+                    >
+                      شروع از صفحه خالی
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {isFashionLive ? (
                 <div className="flex flex-wrap gap-2">
                   <button
                     type="button"
@@ -212,7 +284,7 @@ export function AdminTemplateSelectionWorkspace({
                     شروع از صفحه خالی
                   </button>
                 </div>
-              </div>
+              ) : null}
 
               <div className="flex flex-wrap items-center gap-2" data-testid="template-device-toolbar" role="toolbar" aria-label="حالت پیش‌نمایش دستگاه">
                 {(
@@ -246,47 +318,93 @@ export function AdminTemplateSelectionWorkspace({
               </div>
 
               <div className="flex justify-center overflow-x-auto rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-4" data-testid="template-preview-stage">
-                <div
-                  className={`${frame.widthClass} ${frame.heightClass} rounded-2xl border border-slate-300 bg-white p-3 shadow-sm`}
-                  data-testid="template-preview-frame"
-                  data-preview-device={device}
-                  data-preview-width={device}
-                >
-                  <div className="mb-2 flex items-center justify-between text-[11px] font-bold text-slate-500">
-                    <span>پیش‌نمایش سیمی · {selected.nameFa}</span>
-                    <span>{frame.label}</span>
-                  </div>
+                {isFashionLive ? (
                   <div
-                    className={`grid grid-cols-12 gap-2 ${compactPreview.toneClass} rounded-xl p-2`}
-                    data-testid="template-wireframe-canvas"
-                    data-industry={selected.industry}
-                    data-template-key={selected.templateKey}
+                    className="overflow-hidden rounded-2xl border border-slate-300 bg-white shadow-sm"
+                    style={{ width: fashionViewport.width, height: fashionViewport.height }}
+                    data-testid="template-preview-frame"
+                    data-preview-device={device}
+                    data-preview-width={device}
+                    data-preview-mode="iframe"
+                    data-iframe-width={fashionViewport.width}
+                    data-iframe-height={fashionViewport.height}
+                    data-lock="LOCK-SF-281"
                   >
-                    {blocks.map((block, index) => (
-                      <span key={`${selected.templateKey}-${device}-${index}`} className={block.className} data-kind={block.kind} />
-                    ))}
+                    <div className="flex items-center justify-between border-b border-slate-200 bg-slate-100 px-3 py-1.5 text-[11px] font-bold text-slate-500">
+                      <span>پیش‌نمایش زنده · پوشاک</span>
+                      <span>
+                        {fashionViewport.label} · {fashionViewport.width}px
+                      </span>
+                    </div>
+                    <iframe
+                      title="پیش‌نمایش قالب پوشاک"
+                      src={FASHION_PREVIEW_SRC}
+                      className="block h-[calc(100%-28px)] w-full border-0 bg-white"
+                      data-testid="fashion-preview-iframe"
+                      data-demo-origin={FASHION_DEMO_ORIGIN}
+                      sandbox="allow-scripts allow-same-origin"
+                      referrerPolicy="no-referrer"
+                    />
                   </div>
-                </div>
+                ) : (
+                  <div
+                    className={`${frame.widthClass} ${frame.heightClass} rounded-2xl border border-slate-300 bg-white p-3 shadow-sm`}
+                    data-testid="template-preview-frame"
+                    data-preview-device={device}
+                    data-preview-width={device}
+                  >
+                    <div className="mb-2 flex items-center justify-between text-[11px] font-bold text-slate-500">
+                      <span>پیش‌نمایش سیمی · {selected.nameFa}</span>
+                      <span>{frame.label}</span>
+                    </div>
+                    <div
+                      className={`grid grid-cols-12 gap-2 ${compactPreview.toneClass} rounded-xl p-2`}
+                      data-testid="template-wireframe-canvas"
+                      data-industry={selected.industry}
+                      data-template-key={selected.templateKey}
+                    >
+                      {blocks.map((block, index) => (
+                        <span key={`${selected.templateKey}-${device}-${index}`} className={block.className} data-kind={block.kind} />
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
 
               <div className="rounded-2xl border border-border bg-slate-50 p-4" data-testid="template-seed-pack-summary">
                 <h3 className="font-black">داده نمونه این قالب</h3>
-                <p className="mt-1 text-xs text-muted">خلاصهٔ قرارداد آینده — در این مرحله داده‌ای ساخته نمی‌شود.</p>
-                <ul className="mt-3 space-y-1 text-sm font-bold text-slate-800" data-testid="template-seed-counts">
-                  <li>۸ درخت دسته‌بندی سه‌سطحی</li>
-                  <li>۱۵ محصول نمونه</li>
-                  <li>تصاویر محصول مرتبط</li>
-                  <li>بنرهای مرتبط</li>
-                  <li>برندهای مرتبط</li>
-                </ul>
-                <div className="mt-3 rounded-xl border border-dashed border-slate-300 bg-white px-3 py-2 text-xs text-muted" data-testid="template-shared-demo-note">
-                  <p className="font-bold text-slate-700">محتوای نمایشی مشترک (غیرقالب‌محور):</p>
-                  <p className="mt-1">استوری‌های نمونه عمومی · نظرات نمونه عمومی · مقالات عمومی نمایشی</p>
-                  <p className="mt-1">مقالات مخصوص قالب نیستند؛ استوری و نظر از دادهٔ نمایشی مشترک استفاده می‌کنند.</p>
-                </div>
-                <p className="mt-3 text-xs text-slate-600" data-testid="template-seed-tracking-note">
-                  داده‌های نمونه با برچسب سیستمی ثبت می‌شوند تا بعداً بدون حذف اطلاعات واقعی فروشگاه پاک‌سازی شوند.
-                </p>
+                {isFashionLive ? (
+                  <>
+                    <p className="mt-1 text-xs text-muted">بسته نمایشی ایزوله برای پیش‌نمایش — بدون نوشتن در Catalog واقعی.</p>
+                    <ul className="mt-3 space-y-1 text-sm font-bold text-slate-800" data-testid="template-seed-counts">
+                      {fashionSeedLines.map((line) => (
+                        <li key={line}>{line}</li>
+                      ))}
+                    </ul>
+                    <p className="mt-3 text-xs text-slate-600" data-testid="template-seed-tracking-note">
+                      مبدأ داده نمونه: {FASHION_DEMO_ORIGIN} — قابل تشخیص از محتوای کاربر.
+                    </p>
+                  </>
+                ) : (
+                  <>
+                    <p className="mt-1 text-xs text-muted">خلاصهٔ قرارداد آینده — در این مرحله داده‌ای ساخته نمی‌شود.</p>
+                    <ul className="mt-3 space-y-1 text-sm font-bold text-slate-800" data-testid="template-seed-counts">
+                      <li>۸ درخت دسته‌بندی سه‌سطحی</li>
+                      <li>۱۵ محصول نمونه</li>
+                      <li>تصاویر محصول مرتبط</li>
+                      <li>بنرهای مرتبط</li>
+                      <li>برندهای مرتبط</li>
+                    </ul>
+                    <div className="mt-3 rounded-xl border border-dashed border-slate-300 bg-white px-3 py-2 text-xs text-muted" data-testid="template-shared-demo-note">
+                      <p className="font-bold text-slate-700">محتوای نمایشی مشترک (غیرقالب‌محور):</p>
+                      <p className="mt-1">استوری‌های نمونه عمومی · نظرات نمونه عمومی · مقالات عمومی نمایشی</p>
+                      <p className="mt-1">مقالات مخصوص قالب نیستند؛ استوری و نظر از دادهٔ نمایشی مشترک استفاده می‌کنند.</p>
+                    </div>
+                    <p className="mt-3 text-xs text-slate-600" data-testid="template-seed-tracking-note">
+                      داده‌های نمونه با برچسب سیستمی ثبت می‌شوند تا بعداً بدون حذف اطلاعات واقعی فروشگاه پاک‌سازی شوند.
+                    </p>
+                  </>
+                )}
               </div>
 
               <div className="flex flex-wrap gap-2" data-testid="template-cleanup-prepare-actions">
@@ -295,20 +413,20 @@ export function AdminTemplateSelectionWorkspace({
                   disabled
                   className="rounded-xl border border-border bg-white px-4 py-2 text-sm font-bold text-slate-500 opacity-70"
                   data-testid="cleanup-sample-data-action"
-                  title="در مرحله بعد فعال می‌شود"
+                  title="پس از تأیید الگوی داده نمونه فعال می‌شود"
                 >
                   پاک‌سازی داده‌های نمونه
-                  <span className="ms-2 text-[11px] font-normal">(در مرحله بعد فعال می‌شود)</span>
+                  <span className="ms-2 text-[11px] font-normal">(پس از تأیید الگوی داده نمونه فعال می‌شود)</span>
                 </button>
                 <button
                   type="button"
                   disabled
                   className="rounded-xl border border-border bg-white px-4 py-2 text-sm font-bold text-slate-500 opacity-70"
                   data-testid="prepare-store-action"
-                  title="در مرحله بعد فعال می‌شود"
+                  title="پس از تأیید الگوی داده نمونه فعال می‌شود"
                 >
                   آماده‌سازی فروشگاه برای ورود اطلاعات
-                  <span className="ms-2 text-[11px] font-normal">(در مرحله بعد فعال می‌شود)</span>
+                  <span className="ms-2 text-[11px] font-normal">(پس از تأیید الگوی داده نمونه فعال می‌شود)</span>
                 </button>
               </div>
             </>
