@@ -55,6 +55,39 @@ public sealed class CatalogDbContext : DbContext
     /// <summary>بخش‌های Landing متعلق به صفحه.</summary>
     public DbSet<StoreLandingPageSection> StoreLandingPageSections => Set<StoreLandingPageSection>();
 
+    /// <summary>ریشهٔ قالب‌های فروشگاه (Template Catalog).</summary>
+    public DbSet<StoreTemplate> StoreTemplates => Set<StoreTemplate>();
+
+    /// <summary>رده‌های آینهٔ قالب.</summary>
+    public DbSet<TemplateCategory> TemplateCategories => Set<TemplateCategory>();
+
+    /// <summary>ترجمه‌های ردهٔ قالب.</summary>
+    public DbSet<TemplateCategoryTranslation> TemplateCategoryTranslations => Set<TemplateCategoryTranslation>();
+
+    /// <summary>برندهای آینهٔ قالب.</summary>
+    public DbSet<TemplateBrand> TemplateBrands => Set<TemplateBrand>();
+
+    /// <summary>متن‌های چندزبانهٔ Template Catalog.</summary>
+    public DbSet<TemplateLocalizedText> TemplateLocalizedTexts => Set<TemplateLocalizedText>();
+
+    /// <summary>محصولات آینهٔ قالب.</summary>
+    public DbSet<TemplateProduct> TemplateProducts => Set<TemplateProduct>();
+
+    /// <summary>پیوند محصول-ردهٔ قالب.</summary>
+    public DbSet<TemplateProductCategory> TemplateProductCategories => Set<TemplateProductCategory>();
+
+    /// <summary>رسانهٔ محصول قالب.</summary>
+    public DbSet<TemplateProductMediaReference> TemplateProductMediaReferences => Set<TemplateProductMediaReference>();
+
+    /// <summary>گونهٔ محصول قالب.</summary>
+    public DbSet<TemplateVariant> TemplateVariants => Set<TemplateVariant>();
+
+    /// <summary>صفحهٔ Landing قالب.</summary>
+    public DbSet<TemplateStoreLandingPage> TemplateStoreLandingPages => Set<TemplateStoreLandingPage>();
+
+    /// <summary>بخش‌های Landing قالب (شامل BannerShowcase).</summary>
+    public DbSet<TemplateStoreLandingPageSection> TemplateStoreLandingPageSections => Set<TemplateStoreLandingPageSection>();
+
     /// <summary>منوهای ساختاریافتهٔ فروشگاه.</summary>
     public DbSet<StoreMenu> StoreMenus => Set<StoreMenu>();
 
@@ -646,6 +679,197 @@ public sealed class CatalogDbContext : DbContext
             entity.Property(x => x.OldOverride).HasMaxLength(32);
             entity.Property(x => x.NewOverride).HasMaxLength(32);
             entity.HasIndex(x => x.OccurredAt);
+        });
+
+        modelBuilder.Entity<StoreTemplate>(entity =>
+        {
+            entity.ToTable("store_templates");
+            entity.HasKey(x => x.TemplateId);
+            entity.Property(x => x.TemplateId).ValueGeneratedNever();
+            entity.Property(x => x.Key).HasMaxLength(StoreTemplate.KeyMaxLength).IsRequired();
+            entity.Property(x => x.Name).HasMaxLength(StoreTemplate.NameMaxLength).IsRequired();
+            entity.HasIndex(x => x.Key).IsUnique();
+        });
+
+        modelBuilder.Entity<TemplateCategory>(entity =>
+        {
+            entity.ToTable("template_categories");
+            entity.HasKey(x => x.CategoryId);
+            entity.Property(x => x.CategoryId).ValueGeneratedNever();
+            entity.Property(x => x.Status).HasConversion<string>().HasMaxLength(32);
+            entity.Property(x => x.SortOrder).HasDefaultValue(0);
+            entity.Property(x => x.IsVisible).HasDefaultValue(true);
+            entity.HasIndex(x => x.TemplateId);
+            entity.HasIndex(x => new { x.TemplateId, x.ParentCategoryId, x.SortOrder });
+            entity.HasOne<StoreTemplate>()
+                .WithMany()
+                .HasForeignKey(x => x.TemplateId)
+                .OnDelete(DeleteBehavior.Cascade);
+            entity.HasOne<TemplateCategory>()
+                .WithMany()
+                .HasForeignKey(x => x.ParentCategoryId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<TemplateCategoryTranslation>(entity =>
+        {
+            entity.ToTable("template_category_translations");
+            entity.HasKey(x => x.TranslationId);
+            entity.Property(x => x.TranslationId).ValueGeneratedNever();
+            entity.Property(x => x.Locale).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.Name).HasMaxLength(256).IsRequired();
+            entity.Property(x => x.Slug).HasMaxLength(160).IsRequired();
+            entity.Property(x => x.ShortDescription).HasMaxLength(512);
+            entity.Property(x => x.Description).HasMaxLength(4000);
+            entity.Property(x => x.SeoTitle).HasMaxLength(256);
+            entity.Property(x => x.SeoDescription).HasMaxLength(512);
+            entity.Property(x => x.MetaKeywords).HasMaxLength(512);
+            entity.HasIndex(x => new { x.CategoryId, x.Locale }).IsUnique();
+            entity.HasIndex(x => new { x.Locale, x.Slug }).IsUnique();
+            entity.HasOne<TemplateCategory>()
+                .WithMany()
+                .HasForeignKey(x => x.CategoryId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<TemplateBrand>(entity =>
+        {
+            entity.ToTable("template_brands");
+            entity.HasKey(x => x.BrandId);
+            entity.Property(x => x.BrandId).ValueGeneratedNever();
+            entity.Property(x => x.SlugSeam).HasMaxLength(128);
+            entity.Property(x => x.Status).HasConversion<string>().HasMaxLength(32);
+            entity.HasIndex(x => x.TemplateId);
+            entity.HasOne<StoreTemplate>()
+                .WithMany()
+                .HasForeignKey(x => x.TemplateId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<TemplateLocalizedText>(entity =>
+        {
+            entity.ToTable("template_localized_texts");
+            entity.HasKey(x => x.TextId);
+            entity.Property(x => x.TextId).ValueGeneratedNever();
+            entity.Property(x => x.OwnerKind).HasConversion<string>().HasMaxLength(32);
+            entity.Property(x => x.FieldKey).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.Locale).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.Value).HasMaxLength(1024).IsRequired();
+            entity.HasIndex(x => new { x.OwnerKind, x.OwnerId, x.FieldKey, x.Locale }).IsUnique();
+        });
+
+        modelBuilder.Entity<TemplateProduct>(entity =>
+        {
+            entity.ToTable("template_products");
+            entity.HasKey(x => x.ProductId);
+            entity.Property(x => x.ProductId).ValueGeneratedNever();
+            entity.Property(x => x.Kind).HasConversion<string>().HasMaxLength(32);
+            entity.Property(x => x.Status).HasConversion<string>().HasMaxLength(32);
+            entity.Property(x => x.SlugSeam).HasMaxLength(160);
+            entity.Property(x => x.SeoTitleSeam).HasMaxLength(256);
+            entity.Property(x => x.QuantityDecimalPlaces).HasDefaultValue(0);
+            entity.Property(x => x.QuantityStep).HasColumnType("numeric(18,6)");
+            entity.HasIndex(x => x.TemplateId);
+            entity.HasOne<StoreTemplate>()
+                .WithMany()
+                .HasForeignKey(x => x.TemplateId)
+                .OnDelete(DeleteBehavior.Cascade);
+            entity.HasOne<TemplateBrand>()
+                .WithMany()
+                .HasForeignKey(x => x.BrandId)
+                .OnDelete(DeleteBehavior.SetNull);
+        });
+
+        modelBuilder.Entity<TemplateProductCategory>(entity =>
+        {
+            entity.ToTable("template_product_categories");
+            entity.HasKey(x => x.AssignmentId);
+            entity.Property(x => x.AssignmentId).ValueGeneratedNever();
+            entity.Property(x => x.Role)
+                .HasConversion<byte>()
+                .HasColumnName("role")
+                .HasDefaultValue(CatalogProductCategoryRole.Primary);
+            entity.HasIndex(x => new { x.ProductId, x.CategoryId }).IsUnique();
+            entity.HasIndex(x => new { x.CategoryId, x.Role });
+            entity.HasIndex(x => x.ProductId)
+                .IsUnique()
+                .HasFilter("\"role\" = 0")
+                .HasDatabaseName("ix_template_product_categories_one_primary_per_product");
+            entity.HasOne<TemplateProduct>()
+                .WithMany()
+                .HasForeignKey(x => x.ProductId)
+                .OnDelete(DeleteBehavior.Cascade);
+            entity.HasOne<TemplateCategory>()
+                .WithMany()
+                .HasForeignKey(x => x.CategoryId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<TemplateProductMediaReference>(entity =>
+        {
+            entity.ToTable("template_product_media_references");
+            entity.HasKey(x => x.ReferenceId);
+            entity.Property(x => x.ReferenceId).ValueGeneratedNever();
+            entity.Property(x => x.AltText).HasMaxLength(512);
+            entity.Property(x => x.DisplayOrder).HasDefaultValue(0);
+            entity.Property(x => x.IsPrimary).HasDefaultValue(false);
+            entity.HasIndex(x => new { x.ProductId, x.MediaAssetId }).IsUnique();
+            entity.HasIndex(x => new { x.ProductId, x.DisplayOrder });
+            entity.HasOne<TemplateProduct>()
+                .WithMany()
+                .HasForeignKey(x => x.ProductId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<TemplateVariant>(entity =>
+        {
+            entity.ToTable("template_variants");
+            entity.HasKey(x => x.VariantId);
+            entity.Property(x => x.VariantId).ValueGeneratedNever();
+            entity.Property(x => x.CatalogCodeSeam).HasMaxLength(64);
+            entity.Property(x => x.CombinationFingerprint).HasMaxLength(512).IsRequired();
+            entity.Property(x => x.Status).HasConversion<string>().HasMaxLength(32);
+            entity.Property(x => x.SortOrder).HasDefaultValue(0);
+            entity.Property(x => x.IsDefault).HasDefaultValue(false);
+            entity.HasIndex(x => new { x.ProductId, x.CombinationFingerprint }).IsUnique();
+            entity.HasOne<TemplateProduct>()
+                .WithMany()
+                .HasForeignKey(x => x.ProductId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<TemplateStoreLandingPage>(entity =>
+        {
+            entity.ToTable("template_store_landing_pages");
+            entity.HasKey(x => x.PageId);
+            entity.Property(x => x.PageId).ValueGeneratedNever();
+            entity.Property(x => x.Locale).HasMaxLength(16).IsRequired();
+            entity.Property(x => x.Slug).HasMaxLength(128).IsRequired();
+            entity.Property(x => x.Title).HasMaxLength(200).IsRequired();
+            entity.Property(x => x.SeoTitle).HasMaxLength(200);
+            entity.Property(x => x.SeoDescription).HasMaxLength(500);
+            entity.Property(x => x.TemplateKey).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.Status).HasConversion<string>().HasMaxLength(16);
+            entity.HasIndex(x => x.TemplateId);
+            entity.HasIndex(x => new { x.TemplateId, x.Locale, x.Slug }).IsUnique();
+            entity.HasOne<StoreTemplate>()
+                .WithMany()
+                .HasForeignKey(x => x.TemplateId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<TemplateStoreLandingPageSection>(entity =>
+        {
+            entity.ToTable("template_store_landing_page_sections");
+            entity.HasKey(x => x.PageSectionId);
+            entity.Property(x => x.PageSectionId).ValueGeneratedNever();
+            entity.Property(x => x.SectionType).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.ConfigurationJson).HasMaxLength(12000).IsRequired();
+            entity.HasIndex(x => new { x.PageId, x.SortOrder });
+            entity.HasOne<TemplateStoreLandingPage>()
+                .WithMany()
+                .HasForeignKey(x => x.PageId)
+                .OnDelete(DeleteBehavior.Cascade);
         });
 
         OutboxMessageMapping.Map(modelBuilder, Schema);

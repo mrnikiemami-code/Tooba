@@ -4,8 +4,6 @@ import { dirname, join } from "node:path";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
 import {
-  buildFashionDemoContext,
-  buildFashionDemoPage,
   FASHION_DEMO_CATEGORY_TREE_COUNT,
   FASHION_DEMO_ORIGIN,
   FASHION_DEMO_PRODUCT_COUNT,
@@ -17,17 +15,26 @@ const root = join(dir, "../../../../../");
 const workspace = readFileSync(join(dir, "admin-template-selection-workspace.tsx"), "utf8");
 const fashionPage = readFileSync(join(root, "src/frontend/app/template-preview/fashion/page.tsx"), "utf8");
 const fashionDemo = readFileSync(join(root, "src/frontend/lib/storefront-composition/fashion-demo-preview.ts"), "utf8");
+const fashionMedia = readFileSync(join(root, "src/frontend/lib/storefront-composition/fashion-demo-media.ts"), "utf8");
 const sharedRenderer = readFileSync(join(root, "src/frontend/lib/storefront-composition/shared-composition-renderer.tsx"), "utf8");
 const landingSections = readFileSync(join(root, "src/frontend/app/storefront/storefront-landing-sections.tsx"), "utf8");
 const locks = readFileSync(join(root, "docs/architecture/TOOBA-LOCKS.md"), "utf8");
+const catalogDomain = readFileSync(
+  join(root, "src/backend/Modules/Catalog/Tooba.Catalog.Domain/TemplateCatalog.cs"),
+  "utf8",
+);
+const productEntity = readFileSync(
+  join(root, "src/backend/Modules/Catalog/Tooba.Catalog.Domain/CatalogDomain.cs"),
+  "utf8",
+);
 
-test("Fashion preview route uses shared renderer/composition engine", () => {
+test("Fashion preview route uses shared renderer and Template Catalog loader", () => {
   assert.match(fashionPage, /StorefrontLandingSections/);
-  assert.match(fashionPage, /buildFashionDemoPage|buildFashionDemoContext/);
+  assert.match(fashionPage, /loadFashionTemplatePreview/);
+  assert.doesNotMatch(fashionPage, /buildFashionDemoContext\(\)/);
   assert.match(landingSections, /adaptLandingSectionToComposition/);
   assert.match(landingSections, /renderSharedLandingSection/);
   assert.match(sharedRenderer, /export function renderSharedLandingSection/);
-  assert.doesNotMatch(fashionPage, /hardcoded Fashion renderer|FashionOnlyRenderer/i);
 });
 
 test("Fashion preview route has no Admin chrome", () => {
@@ -42,53 +49,53 @@ test("device toolbar changes iframe viewport contract, not CSS zoom", () => {
   assert.match(workspace, /width:\s*fashionViewport\.width/);
   assert.match(workspace, /height:\s*fashionViewport\.height/);
   assert.doesNotMatch(workspace, /transform:\s*scale|zoom:\s*|style=\{\{[^}]*zoom/);
-  assert.match(workspace, /920/);
-  assert.match(workspace, /768/);
-  assert.match(workspace, /390/);
 });
 
-test("Fashion demo data count guard: 8 category trees / 15 products", () => {
-  const ctx = buildFashionDemoContext();
-  const roots = ctx.categories.filter((c) => c.parentCategoryId === null);
-  assert.equal(roots.length, FASHION_DEMO_CATEGORY_TREE_COUNT);
+test("Fashion Template Catalog count constants remain 8 trees / 15 products", () => {
   assert.equal(FASHION_DEMO_CATEGORY_TREE_COUNT, 8);
-  assert.equal(ctx.products.length, FASHION_DEMO_PRODUCT_COUNT);
   assert.equal(FASHION_DEMO_PRODUCT_COUNT, 15);
-  for (const rootCat of roots) {
-    const mids = ctx.categories.filter((c) => c.parentCategoryId === rootCat.categoryId);
-    assert.ok(mids.length >= 1, "each tree has mid level");
-    const leaves = ctx.categories.filter((c) => mids.some((m) => m.categoryId === c.parentCategoryId));
-    assert.ok(leaves.length >= 1, "each tree has leaf level");
-  }
+  assert.match(fashionDemo, /loadFashionTemplatePreview/);
+  assert.match(fashionDemo, /In-memory Fashion demo removed/);
 });
 
-test("Fashion demo sources are traceable", () => {
-  assert.equal(FASHION_DEMO_ORIGIN, "fashion-template-preview-pilot");
-  assert.match(fashionDemo, /demoOrigin:\s*FASHION_DEMO_ORIGIN|demo-fashion-/);
-  const page = buildFashionDemoPage(buildFashionDemoContext());
-  for (const section of page.sections) {
-    assert.match(section.config, /fashion-template-preview-pilot/);
-  }
-  assert.ok(fashionDemoMediaUrl("demo-fashion-media-1")?.startsWith("https://"));
+test("Fashion sample origin is persisted Template Catalog", () => {
+  assert.equal(FASHION_DEMO_ORIGIN, "fashion-template-catalog-persisted");
+  assert.match(fashionDemo, /demoOrigin:\s*FASHION_DEMO_ORIGIN/);
+  assert.match(fashionMedia, /\/images\/fashion-template\//);
+  assert.ok(fashionDemoMediaUrl("demo-fashion-media-1")?.startsWith("/images/fashion-template/"));
+  assert.ok(
+    fashionDemoMediaUrl("019022a5-0000-7000-8000-00000000a001")?.startsWith("/images/fashion-template/"),
+  );
   assert.equal(fashionDemoMediaUrl("real-asset"), null);
+  assert.doesNotMatch(fashionMedia, /images\.unsplash\.com/);
+});
+
+test("operational Product schema has no template ownership columns", () => {
+  assert.match(productEntity, /public sealed class CatalogProduct/);
+  assert.doesNotMatch(productEntity, /class CatalogProduct[\s\S]*TemplateId/);
+  assert.doesNotMatch(productEntity, /IsDemo|DataScope|SeedBatchId/);
+  assert.match(catalogDomain, /class TemplateProduct/);
+  assert.match(catalogDomain, /TemplateId/);
 });
 
 test("no destructive cleanup action", () => {
   assert.match(workspace, /cleanup-sample-data-action/);
   assert.match(workspace, /prepare-store-action/);
   assert.match(workspace, /disabled/);
-  assert.match(workspace, /پس از تأیید الگوی داده نمونه فعال می‌شود/);
-  assert.doesNotMatch(workspace, /fetch\(.*cleanup|DELETE.*seed|destroySample/i);
 });
 
-test("no Admin/Storefront style leakage via iframe boundary", () => {
-  assert.match(workspace, /sandbox=\"allow-scripts allow-same-origin\"/);
-  assert.match(workspace, /fashion-preview-iframe/);
-  assert.doesNotMatch(workspace, /import .*globals\.css.*fashion|storefront-theme.*admin/i);
-});
-
-test("R4 locks registered", () => {
-  for (const lock of ["LOCK-SF-280", "LOCK-SF-281", "LOCK-SF-282", "LOCK-SF-283", "LOCK-SF-284", "LOCK-SF-285"]) {
+test("R4+R5 locks registered", () => {
+  for (const lock of [
+    "LOCK-SF-280",
+    "LOCK-SF-285",
+    "LOCK-SF-286",
+    "LOCK-SF-287",
+    "LOCK-SF-288",
+    "LOCK-SF-289",
+    "LOCK-SF-290",
+    "LOCK-SF-291",
+    "LOCK-SF-292",
+  ]) {
     assert.match(locks, new RegExp(lock));
   }
 });

@@ -1,0 +1,93 @@
+BEGIN_TOOBA_WORKER_RESULT
+
+Task-ID:
+TB-P10-T022-R5
+
+Status:
+PASS
+
+Summary:
+Replaced R4 in-memory Fashion demo with persisted Template Catalog: StoreTemplate + mirrored TemplateProduct/Category/Brand/LocalizedText/Media/Variant tables and Template landing sections for BannerShowcase; idempotent Fashion seed (8 three-level trees, 15 products, 6 brands, banners/media); Sample preview API + FE loader with purity guard; operational Catalog schemas unchanged; locks SF-286…292.
+
+Applicable-Locks:
+LOCK-SF-001…285 preserved; added LOCK-SF-286…292.
+
+Recovery-Start:
+docs/evidence/TB-P10-T022-R5/recovery-start.md — main @ 6b9ecc12 start; no RECOVERY_CONFLICT.
+
+Schema-Parity-Audit:
+docs/evidence/TB-P10-T022-R5/schema-parity-audit.md — Product/Category/Brand mirrored; Banner via Template landing section JSON (no Banner entity).
+
+StoreTemplate:
+catalog.store_templates — Fashion key=`fashion`, name=`پوشاک`, IsActive=true, deterministic TemplateId.
+
+Template-Product-Family:
+template_products + template_localized_texts + template_product_media_references + template_product_categories + template_variants (+ TemplateId on root only).
+
+Template-Category-Family:
+template_categories + template_category_translations with ParentCategoryId hierarchy (+ TemplateId).
+
+Template-Brand-Family:
+template_brands + template_localized_texts name (+ TemplateId).
+
+Template-Banner-Family:
+No operational Banner table; mirrored via template_store_landing_pages + template_store_landing_page_sections BannerShowcase ConfigurationJson.
+
+Translation-Parity:
+Category translations Locale uniqueness mirrored; Product/Brand names via template_localized_texts (OwnerKind, OwnerId, FieldKey, Locale) — fa-IR Fashion mandatory.
+
+Fashion-Seed-Data:
+Exactly 8 roots × mid × leaf; exactly 15 products; 6 brands; BannerShowcase 2 slots; idempotent on StoreTemplate key.
+
+Media-Strategy:
+Deterministic MediaAssetIds resolve to local `/images/fashion-template/{1..8}.jpg` — no Unsplash/hotlinks.
+
+Repository-Separation:
+FashionTemplatePreviewQuery reads only Template* / StoreTemplates; no union with operational Products/Categories/Brands.
+
+Preview-Migration:
+`/template-preview/fashion` uses loadFashionTemplatePreview(); in-memory builders throw if called.
+
+Preview-Purity:
+API purity.isPure=true; operationalProduct/Category/BrandIdHits=0; FE data-template-purity=pure.
+
+Clone-Readiness:
+docs/evidence/TB-P10-T022-R5/clone-readiness.md — structural mapping only; attribute/tag/history/mega deferred; no clone implemented.
+
+Database-Migration:
+20260915150000_AddTemplateCatalog + FashionTemplateCatalogSeedHost on Development startup.
+
+Performance:
+docs/evidence/TB-P10-T022-R5/performance.md — TemplateId indexes; no operational width increase; joined TemplateId-scoped preview query.
+
+Focused-Validation:
+Host FashionTemplateCatalogT022R5Tests (3 PASS); admin-builder-ux-r4.guard + recovery-staleness (12 PASS); critical-storefront (20 PASS); git diff --check clean of whitespace errors.
+
+Runtime:
+docs/evidence/TB-P10-T022-R5/runtime.md — A–N PASS on Host+FE.
+
+Visual-Evidence:
+docs/evidence/TB-P10-T022-R5/screenshots/ + visual-evidence.md
+
+AntiPattern-Scan:
+docs/evidence/TB-P10-T022-R5/antipattern-scan.md — CLEAN
+
+Lock-Registry:
+docs/architecture/TOOBA-LOCKS.md LOCK-SF-286…292 appended.
+
+Recovery-SoT:
+TOOBA-RECOVERY-CONTEXT.md + PROJECT-STATE.md — Last Architect-accepted=TB-P10-T022-R4; Last Implementation=TB-P10-T022-R5; Issued/Repair=none; no T023.
+
+Git:
+branch main; commit+push after validation; HEAD==origin/main expected.
+
+Architectural-Concerns:
+Attribute/facet/tag/history/mega-menu Template mirrors deferred until attributed clone wave; LandingCategoryGrid still uses static `/images/categories/*.png` placeholders (names from Template Catalog).
+
+Visual-Concerns:
+Category card decorative placeholders are not Fashion photography; product/brand/banner use local fashion-template assets.
+
+Blockers:
+none
+
+END_TOOBA_WORKER_RESULT

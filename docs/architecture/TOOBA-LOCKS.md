@@ -1019,4 +1019,24 @@ Template summary panel lists actual numbered composition sections and uses an in
 ### LOCK-SF-285 — Cleanup/preparation remain non-destructive
 Cleanup/preparation actions remain non-destructive until the dedicated seed lifecycle task.
 
+### LOCK-SF-286 — Operational Catalog free of template ownership columns
+Operational Product/Category/Brand schemas remain free of template/demo ownership columns.
+
+### LOCK-SF-287 — Template Catalog mirrors operational schema families
+Template Catalog mirrors operational Catalog schema families rather than creating simplified parallel domain shapes.
+
+### LOCK-SF-288 — TemplateId is the only template ownership field on roots
+Template root Catalog entities add only TemplateId as template ownership data beyond structural parity.
+
+### LOCK-SF-289 — Fashion Template Catalog exact seed counts
+Fashion Template Catalog persists exactly 8 three-level category roots and exactly 15 Fashion products with related media/brands/banners.
+
+### LOCK-SF-290 — Sample preview reads only Template Catalog
+Sample preview reads only Template Catalog repositories; operational store catalog rows must never mix into Sample mode.
+
+### LOCK-SF-291 — Fashion persistent seed replaces in-memory pilot
+Fashion persistent template seed is idempotent and replaces the R4 in-memory pilot source as the single sample source of truth.
+
+### LOCK-SF-292 — TemplateId indexes without widening operational tables
+Template Catalog root tables are indexed for TemplateId and must not increase operational Catalog table width.
 

@@ -143,6 +143,7 @@ builder.Services.AddScoped<CatalogDemoProductSeedService>();
 builder.Services.AddScoped<CatalogDemoSeedService>();
 builder.Services.AddScoped<CatalogDemoResetAndSeedHost>();
 builder.Services.AddScoped<Tooba.Host.Storefront.StorefrontComposer>();
+builder.Services.AddScoped<Tooba.Host.Storefront.FashionTemplatePreviewQuery>();
 builder.Services.AddScoped<Tooba.Order.Application.ICheckoutAbuseGate, Tooba.Host.Storefront.CheckoutAbuseGate>();
 builder.Services.AddMemoryCache();
 builder.Services.AddScoped<Tooba.Host.Storefront.StoreAppearanceProjector>();
@@ -417,6 +418,15 @@ if (app.Environment.IsDevelopment())
         catch (Exception ex)
         {
             app.Logger.LogError(ex, "StoreMenuDevelopmentSeed failed; Host continues without demo menu.");
+        }
+
+        try
+        {
+            await FashionTemplateCatalogSeedHost.ApplyAsync(app.Services);
+        }
+        catch (Exception ex)
+        {
+            app.Logger.LogError(ex, "FashionTemplateCatalogSeed failed; Host continues without Fashion Template Catalog seed.");
         }
     }
 }
