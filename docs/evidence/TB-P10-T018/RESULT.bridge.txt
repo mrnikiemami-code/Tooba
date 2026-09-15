@@ -1,0 +1,91 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-P10-T018
+Parent-Task: TB-P10-T017-R5
+Status: PASS
+WorkerId: tooba-worker-01
+Channel: tooba-main
+
+Summary:
+Shared Home+Landing composition engine foundation delivered: typed Section/Variant registry, controlled settings (no CSS), code-owned responsive contracts, size presets, Landing/Home adapters, Swiper-as-primary carousel decision, truthful data-source support matrix, Admin UX spec, 10 industry template presets, migration plan, essential guards. Appearance USER_VISUAL_ACCEPTED=YES; Builder not visually accepted. No TB-P10-T019.
+
+Applicable-Locks:
+LOCK-SF-001…220 preserved. Added LOCK-SF-221 (shared engine), LOCK-SF-222 (controlled composition), LOCK-SF-223 (mobile code-owned), LOCK-SF-224 (templates as presets), LOCK-SF-225 (reuse Shopeiva blocks), LOCK-SF-226 (four global roles), LOCK-SF-227 (truthful data sources), LOCK-SF-228 (prefer Variants).
+
+Recovery-Start:
+branch=main HEAD-at-claim=726496b394eb094f812e29abf2b98ab5372204ec HEAD==origin/main. Expected previous HEAD faf1e1c5 is T017-R5 impl; pin 726496b3 is origin/main after R5 — not RECOVERY_CONFLICT. Host:5088/FE:3000 down at preflight (non-blocking). docs/evidence/TB-P10-T018/recovery-start.md
+
+Existing-Home-Audit:
+All live Home blocks mapped to shared SectionTypes/Variants with Reuse As-Is / Adapter / Refactor classifications. docs/evidence/TB-P10-T018/existing-home-block-audit.md
+
+Existing-Landing-Audit:
+T010–T013 Landing registry/composer/renderer audited; safe adapter path via LANDING_SECTION_TYPE_MAP. docs/evidence/TB-P10-T018/existing-landing-audit.md
+
+Composition-Engine:
+docs/architecture/storefront-composition-engine.md + src/frontend/lib/storefront-composition/*
+
+Section-Catalog:
+12 first-wave SectionTypes (HeroCarousel…NavigationMenu). docs/evidence/TB-P10-T018/section-catalog.md
+
+Variant-Catalog:
+Substantial Variant catalog with Existing/ReusableViaAdapter/NewRequiredLater. docs/evidence/TB-P10-T018/variant-catalog.md
+
+Controlled-Settings:
+title/subtitle/CTA/itemCount/dataSource/layoutPreset/heightPreset/autoplay/enabled/surfaceRole only; FORBIDDEN_SETTING_KEYS reject CSS/class/breakpoint/px.
+
+Size-Presets:
+Compact/Medium/Large/ExtraLarge with desktop/tablet/mobile caps. docs/evidence/TB-P10-T018/size-presets.md
+
+Responsive-Contracts:
+Per-variant contracts in responsive-contracts.ts. docs/architecture/storefront-responsive-variant-contracts.md
+
+Carousel-Decision:
+Primary engine Swiper (only installed carousel). docs/evidence/TB-P10-T018/carousel-decision.md
+
+Data-Source-Contract:
+Supported vs HeuristicHomeOnly vs Deferred documented; no faked Landing rankings. docs/evidence/TB-P10-T018/data-source-contract.md
+
+Shared-Renderer-Contract:
+One registry/Appearance/ProductCard/surfaces for Home, Landing, Landing-as-Home; current Home fallback retained until migration accepted.
+
+Admin-UX-Spec:
+Persian ordinary-user catalog/variant/settings UX; no enum/JSON/CSS/breakpoint UI. docs/evidence/TB-P10-T018/admin-ux-spec.md
+
+Template-Architecture:
+Versioned composition presets (INDUSTRY_TEMPLATE_SEEDS); Draft creation, no template-specific renderer.
+
+Industry-Template-Plan:
+10 industries planned (fashion…beauty). docs/evidence/TB-P10-T018/industry-template-plan.md
+
+Migration-Compatibility:
+Adapter → dual-read → dual-write path; published Landings readable; seeded demos preserved. docs/evidence/TB-P10-T018/migration-plan.md
+
+Foundation-Implementation:
+types/registry/responsive/settings/size-presets/landing-adapter + composition-registry.guard.test.ts. No mass variant build; no full Admin rewrite.
+
+Focused-Validation:
+test:composition-engine 6/6; recovery-staleness 4/4; git diff --check clean. docs/evidence/TB-P10-T018/focused-validation.md
+
+AntiPattern-Scan:
+CLEAN. docs/evidence/TB-P10-T018/antipattern-scan.md
+
+Lock-Registry:
+LOCK-SF-001…228. New 221–228 only.
+
+Recovery-SoT:
+Phase P10 Last Architect-accepted: TB-P10-T017-R5 Last Implementation: TB-P10-T018 Issued/Repair: none USER_VISUAL_ACCEPTED=YES (Appearance); Builder not visually accepted Worker IDLE do NOT invent TB-P10-T019. docs/evidence/TB-P10-T018/recovery-sot.md
+
+Git:
+SHA=9ae63f852703ca7c1eb8a49b7392ceea9fdc7c76 HEAD==origin/main after push. Unrelated .tmp-* leftovers not committed.
+
+Architectural-Concerns:
+Full variant renderers and Admin composer migration deferred by design. Ranking APIs for BestSelling/MostViewed remain heuristic/deferred.
+
+Visual-Concerns:
+Appearance visually accepted per task; composition Builder UX not visually accepted yet. Functional PASS ≠ Visual ACCEPT for builder.
+
+Blockers:
+none
+
+END_TOOBA_WORKER_RESULT
