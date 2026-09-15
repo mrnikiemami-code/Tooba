@@ -12,9 +12,15 @@ export type PreviewCell = {
 };
 
 const INDUSTRY_ACCENT: Record<string, string> = {
-  fashion: "bg-rose-200/80",
-  autoparts: "bg-slate-300/90",
+  fashion: "bg-rose-100/90",
+  autoparts: "bg-slate-200/95",
+  building: "bg-stone-200/90",
+  tools: "bg-orange-100/90",
+  tile: "bg-teal-100/90",
   interior: "bg-amber-100/90",
+  appliance: "bg-sky-100/90",
+  shoes: "bg-violet-100/90",
+  plants: "bg-lime-100/90",
   beauty: "bg-fuchsia-100/80",
   grocery: "bg-lime-100/90",
   electronics: "bg-sky-100/90",
@@ -26,9 +32,17 @@ const INDUSTRY_ACCENT: Record<string, string> = {
 
 function industryTone(industry: string): string {
   const key = industry.toLowerCase();
-  if (key.includes("fashion") || key.includes("مدا")) return INDUSTRY_ACCENT.fashion!;
+  if (key.includes("fashion") || key.includes("مدا") || key.includes("کفش") || key.includes("shoe")) {
+    if (key.includes("shoe") || key.includes("کفش")) return INDUSTRY_ACCENT.shoes!;
+    return INDUSTRY_ACCENT.fashion!;
+  }
   if (key.includes("auto") || key.includes("قطعه")) return INDUSTRY_ACCENT.autoparts!;
-  if (key.includes("interior") || key.includes("دکور") || key.includes("منزل")) return INDUSTRY_ACCENT.interior!;
+  if (key.includes("build") || key.includes("ساختمان") || key.includes("مصالح")) return INDUSTRY_ACCENT.building!;
+  if (key.includes("tool") || key.includes("ابزار")) return INDUSTRY_ACCENT.tools!;
+  if (key.includes("tile") || key.includes("سرامیک") || key.includes("کاشی")) return INDUSTRY_ACCENT.tile!;
+  if (key.includes("interior") || key.includes("دکور") || key.includes("منزل") || key.includes("decor")) return INDUSTRY_ACCENT.interior!;
+  if (key.includes("appliance") || key.includes("لوازم خانگی")) return INDUSTRY_ACCENT.appliance!;
+  if (key.includes("plant") || key.includes("گیاه") || key.includes("گل")) return INDUSTRY_ACCENT.plants!;
   if (key.includes("beauty") || key.includes("زیبایی")) return INDUSTRY_ACCENT.beauty!;
   return INDUSTRY_ACCENT.general!;
 }
@@ -154,16 +168,22 @@ export function layoutAwareVariantPreview(variantKey: string): PreviewCell[] {
         })),
       ].map((cell, i) => (i === 0 ? cell : { ...cell, className: "col-span-3 h-4 rounded-sm bg-violet-200/40" }));
     case "brand.logo-rail":
-    case "brand.featured":
       return Array.from({ length: 5 }, () => ({
         className: "rounded-full h-8 w-8 bg-white border border-slate-300",
         kind: "brand-logo",
       }));
+    case "brand.logo-grid":
     case "brand.grid":
       return Array.from({ length: 6 }, () => ({
         className: "rounded-md h-7 bg-white border border-slate-300",
         kind: "brand-tile",
       }));
+    case "brand.featured":
+      return [
+        { className: "col-span-3 row-span-2 rounded-lg bg-white border-2 border-slate-400/50", kind: "brand-featured" },
+        { className: "col-span-3 h-5 rounded-md bg-white border border-slate-300" },
+        { className: "col-span-3 h-5 rounded-md bg-white border border-slate-300" },
+      ];
     case "article.magazine-rail":
       return Array.from({ length: 3 }, () => ({
         className: "rounded-md h-12 bg-white border border-cyan-200/70 flex flex-col p-0.5 gap-0.5",
@@ -248,7 +268,7 @@ function previewKindFallback(kind: VariantPreviewKind): PreviewCell[] {
   }));
 }
 
-/** Industry template miniature — Fashion/AutoParts/Interior/Beauty visibly differ. */
+/** Industry template miniature — structural rhythm differs across industries. */
 export function layoutAwareTemplatePreview(template: IndustryTemplateSeed): {
   toneClass: string;
   cells: Array<{ kind: string; className: string }>;
@@ -256,37 +276,62 @@ export function layoutAwareTemplatePreview(template: IndustryTemplateSeed): {
   const miniature = templateCompositionMiniature(template);
   const toneClass = industryTone(template.industry);
   const dense = miniature.length >= 6;
+  const heroScale = template.templateKey.includes("fashion") || template.templateKey.includes("beauty")
+    ? "h-10"
+    : template.templateKey.includes("auto") || template.templateKey.includes("tool")
+      ? "h-7"
+      : dense
+        ? "h-6"
+        : "h-8";
   return {
     toneClass,
-    cells: miniature.map((kind, index) => {
+    cells: miniature.flatMap((kind, index) => {
       if (kind === "hero") {
-        return { kind, className: `col-span-6 ${dense ? "h-5" : "h-7"} rounded-md bg-slate-600/35 border border-slate-500/30` };
+        return [{ kind, className: `col-span-6 ${heroScale} rounded-md bg-slate-700/40 border border-slate-500/40` }];
       }
       if (kind === "story") {
-        return { kind, className: "col-span-1 flex gap-0.5" };
+        return Array.from({ length: 5 }, (_, i) => ({
+          kind: `story-dot-${i}`,
+          className: "col-span-1 aspect-square rounded-full bg-white border-2 border-rose-300/80",
+        }));
       }
       if (kind === "banner") {
-        return { kind, className: `col-span-3 ${dense ? "h-4" : "h-6"} rounded bg-violet-300/45 border border-violet-400/30` };
+        return [
+          { kind, className: `col-span-3 ${dense ? "h-5" : "h-7"} rounded-lg bg-violet-300/55 border border-violet-400/40` },
+          { kind: "banner-b", className: `col-span-3 ${dense ? "h-5" : "h-7"} rounded-lg bg-violet-200/45 border border-violet-300/40` },
+        ];
       }
       if (kind === "product") {
-        return { kind, className: `col-span-2 ${dense ? "h-5" : "h-7"} rounded-md bg-white border border-amber-200/70` };
+        return Array.from({ length: 3 }, (_, i) => ({
+          kind: `product-${i}`,
+          className: `col-span-2 ${dense ? "h-6" : "h-8"} rounded-md bg-white border border-amber-200/80 ${i === 0 ? "ring-1 ring-amber-300/50" : ""}`,
+        }));
       }
       if (kind === "brand") {
-        return { kind, className: "col-span-1 rounded-full aspect-square bg-white border border-slate-300" };
+        return Array.from({ length: 4 }, (_, i) => ({
+          kind: `brand-${i}`,
+          className: "col-span-1 aspect-square rounded-full bg-white border border-slate-300",
+        }));
       }
       if (kind === "article") {
-        return { kind, className: `col-span-2 ${dense ? "h-5" : "h-7"} rounded-md bg-white border border-cyan-200/70` };
+        return [
+          { kind, className: `col-span-3 ${dense ? "h-6" : "h-8"} rounded-md bg-white border border-cyan-200/80` },
+          { kind: "article-b", className: `col-span-3 ${dense ? "h-6" : "h-8"} rounded-md bg-cyan-50 border border-cyan-100` },
+        ];
       }
       if (kind === "category") {
-        return { kind, className: `col-span-2 ${dense ? "h-4" : "h-6"} rounded-md bg-white border border-emerald-200/70` };
+        return Array.from({ length: 3 }, (_, i) => ({
+          kind: `category-${i}`,
+          className: `col-span-2 ${dense ? "h-5" : "h-7"} rounded-md bg-white border border-emerald-200/80`,
+        }));
       }
       if (kind === "reviews") {
-        return { kind, className: `col-span-2 ${dense ? "h-4" : "h-6"} rounded-md bg-white border border-yellow-200/70` };
+        return [{ kind, className: `col-span-6 ${dense ? "h-5" : "h-6"} rounded-md bg-white border border-yellow-200/80` }];
       }
-      return {
+      return [{
         kind,
         className: `col-span-2 ${dense ? "h-4" : "h-5"} rounded bg-white/80 border border-slate-200 ${index % 2 === 0 ? "" : "opacity-80"}`,
-      };
+      }];
     }),
   };
 }
@@ -295,20 +340,21 @@ export function layoutAwareTemplatePreview(template: IndustryTemplateSeed): {
 export function bannerSlotLayoutClass(variantKey: string | undefined): string {
   switch (variantKey) {
     case "banner.two-equal":
-      return "grid grid-cols-2 gap-3";
+      return "grid grid-cols-1 gap-3 md:grid-cols-2";
     case "banner.two-asymmetric":
-      return "grid grid-cols-[2fr_1fr] gap-3";
+      return "grid grid-cols-1 gap-3 md:grid-cols-[2fr_1fr]";
     case "banner.four-grid":
+      return "grid grid-cols-1 gap-3 sm:grid-cols-2";
     case "banner.mosaic-2x2":
-      return "grid grid-cols-2 gap-3";
+      return "grid grid-cols-1 gap-3 sm:grid-cols-2 sm:grid-rows-2";
     case "banner.one-large-two-small":
-      return "grid grid-cols-[2fr_1fr] grid-rows-2 gap-3";
+      return "grid grid-cols-1 gap-3 md:grid-cols-[2fr_1fr] md:grid-rows-2";
     case "banner.eight-compact":
-      return "grid grid-cols-4 gap-2";
+      return "grid grid-cols-2 gap-2 md:grid-cols-4";
     case "banner.three":
-      return "grid grid-cols-3 gap-3";
+      return "grid grid-cols-1 gap-3 md:grid-cols-3";
     case "banner.one-large-four-small":
-      return "grid grid-cols-2 gap-3";
+      return "grid grid-cols-1 gap-3 sm:grid-cols-2";
     default:
       return "grid grid-cols-1 gap-3";
   }
@@ -316,13 +362,16 @@ export function bannerSlotLayoutClass(variantKey: string | undefined): string {
 
 export function bannerSlotCellClass(variantKey: string | undefined, index: number): string {
   if (variantKey === "banner.one-large-two-small" && index === 0) {
-    return "row-span-2 min-h-[140px]";
+    return "md:row-span-2 min-h-[160px]";
   }
   if (variantKey === "banner.mosaic-2x2" && index === 0) {
-    return "min-h-[100px]";
+    return "sm:row-span-2 min-h-[140px]";
   }
   if (variantKey === "banner.eight-compact") {
     return "min-h-[72px]";
+  }
+  if (variantKey === "banner.two-equal") {
+    return "min-h-[120px]";
   }
   return "min-h-[96px]";
 }

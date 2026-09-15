@@ -7,7 +7,7 @@ import { listAdminBrandOptions } from "../host-client";
 import { bannerSlotCountForVariant } from "./landing-section-catalog.ts";
 import { listAdminMenus } from "../menus/admin-menus-api.ts";
 import { AdminResourceSelector, ResourceSelectorTrigger } from "./admin-resource-selector.tsx";
-import { bannerSlotCellClass, bannerSlotLayoutClass } from "./layout-aware-previews.tsx";
+import { bannerSlotCellClass, bannerSlotLayoutClass, VariantPreviewCanvas } from "./layout-aware-previews.tsx";
 import {
   sourceCapabilityForVariant,
   strategyLabelFa,
@@ -253,23 +253,43 @@ export function LandingSectionForm({
 
   if (type === "BrandStrip") {
     const selected = asStringArray(value.brandIds ?? value.ids);
+    const source = typeof value.source === "string" ? value.source : "Manual";
+    // Host BrandStrip persists Manual brandIds only — no fake Dynamic strategies.
     if (mode === "settings") {
       return (
-        <div className="space-y-3" data-testid="landing-section-form">
+        <div className="space-y-3" data-testid="landing-section-form" data-brand-settings="1">
           <TextField label="عنوان بخش" value={title} onChange={(next) => set({ title: next })} />
+          <TakeField value={typeof value.take === "number" ? value.take : Math.max(selected.length, 6)} onChange={(take) => set({ take })} />
+          {variantKey ? <VariantPreviewCanvas variantKey={variantKey} testId="brand-settings-preview" /> : null}
         </div>
       );
     }
     return (
-      <div className="space-y-3" data-testid="landing-section-form">
+      <div className="space-y-3" data-testid="landing-section-form" data-brand-source="1">
         {mode === "all" ? <TextField label="عنوان بخش" value={title} onChange={(next) => set({ title: next })} /> : null}
-        <ManualResourceField
-          family="brands"
-          selected={selected}
-          onChange={(brandIds) => set({ brandIds })}
-          emptyHint="هنوز برندی انتخاب نشده. چند برند اضافه کنید تا بخش در فروشگاه خالی نماند."
-          emptyTestId="empty-state-brand-source"
-        />
+        {(mode === "all" || mode === "source") ? (
+          <>
+            <label className="block text-sm">
+              <span className="mb-1 block font-bold">منبع برندها</span>
+              <select
+                className="w-full rounded-xl border border-border bg-surface px-3 py-2"
+                value={source === "Manual" ? "Manual" : "Manual"}
+                onChange={() => set({ source: "Manual" })}
+                data-testid="brand-source-strategy"
+              >
+                <option value="Manual">انتخاب دستی</option>
+              </select>
+              <span className="mt-1 block text-xs text-muted">منبع پویای برند روی Host برای این بخش تعریف نشده؛ فقط انتخاب دستی معتبر است.</span>
+            </label>
+            <ManualResourceField
+              family="brands"
+              selected={selected}
+              onChange={(brandIds) => set({ brandIds, source: "Manual" })}
+              emptyHint="هنوز برندی انتخاب نشده. چند برند اضافه کنید تا بخش در فروشگاه خالی نماند."
+              emptyTestId="empty-state-brand-source"
+            />
+          </>
+        ) : null}
       </div>
     );
   }

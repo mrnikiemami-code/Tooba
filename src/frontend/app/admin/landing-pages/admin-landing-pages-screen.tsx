@@ -1,7 +1,21 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { Eye, Home, Pencil, Upload } from "lucide-react";
+import {
+  AppDataGrid,
+  createClientGridQueryAdapter,
+  formatJalaliDate,
+  useLegacyAdminGridDirectProps,
+} from "../../../design-system";
+import { DEFAULT_APP_GRID_CAPABILITIES } from "../../../design-system/app-data-grid/app-grid-capabilities";
+import {
+  AppGridRowActionsCell,
+  type AppGridRowAction,
+} from "../../../design-system/app-data-grid/app-grid-row-actions";
+import type { GridColumnDef, GridServerQuery } from "../../../design-system/data-grid";
+import { ADMIN_LANDING_PAGES_GRID_VIEW_KEY, createHostSavedViewStore } from "../saved-view-store";
 import {
   getAdminLandingHome,
   listAdminLandingPages,
@@ -10,23 +24,23 @@ import {
   type AdminLandingPage,
 } from "./admin-landing-pages-api.ts";
 
-function formatUpdated(value: string): string {
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return "—";
-  return date.toLocaleString("fa-IR");
-}
+type LandingGridRow = AdminLandingPage & { id: string; isHomeLabel: string };
 
-function localeLabel(locale: string): string {
-  return locale === "en" ? "انگلیسی" : "فارسی";
-}
+const ORDERS_LIKE_CAPABILITIES = {
+  ...DEFAULT_APP_GRID_CAPABILITIES,
+  csvExport: false,
+  excelExport: false,
+};
 
 export function AdminLandingPagesScreen() {
-  const [rows, setRows] = useState<AdminLandingPage[]>([]);
+  const [rows, setRows] = useState<LandingGridRow[]>([]);
   const [homePageId, setHomePageId] = useState<string | null>(null);
   const [message, setMessage] = useState<string>();
   const [busy, setBusy] = useState(false);
   const [loading, setLoading] = useState(true);
   const [denied, setDenied] = useState(false);
+  const [reloadToken, setReloadToken] = useState(0);
+  const savedViewStore = useMemo(() => createHostSavedViewStore(ADMIN_LANDING_PAGES_GRID_VIEW_KEY), []);
 
   const refresh = useCallback(() => {
     setLoading(true);
@@ -38,15 +52,23 @@ export function AdminLandingPagesScreen() {
         return;
       }
       setDenied(false);
-      setRows(pages.data);
-      if (home.ok) setHomePageId(home.data.homePageId);
+      const nextHome = home.ok ? home.data.homePageId : null;
+      if (home.ok) setHomePageId(nextHome);
+      setRows(
+        pages.data.map((page) => ({
+          ...page,
+          id: page.pageId,
+          isHomeLabel: nextHome === page.pageId ? "بله" : "خیر",
+        })),
+      );
       setMessage(undefined);
+      setReloadToken((value) => value + 1);
     });
   }, []);
 
   useEffect(refresh, [refresh]);
 
-  const publish = async (row: AdminLandingPage) => {
+  const publish = useCallback(async (row: LandingGridRow) => {
     setBusy(true);
     const next = row.status === "Published" ? "Draft" : "Published";
     const result = await setAdminLandingPageStatus(row.pageId, next);
@@ -56,14 +78,11 @@ export function AdminLandingPagesScreen() {
       return;
     }
     refresh();
-  };
+  }, [refresh]);
 
-  const setHome = async (row: AdminLandingPage) => {
+  const setHome = useCallback(async (row: LandingGridRow) => {
     if (row.status !== "Published") {
       setMessage("برای انتخاب به‌عنوان صفحهٔ اصلی ابتدا صفحه را منتشر کنید.");
-      return;
-    }
-    if (homePageId && homePageId !== row.pageId && !window.confirm("صفحهٔ اصلی فعلی جایگزین شود؟")) {
       return;
     }
     setBusy(true);
@@ -74,8 +93,152 @@ export function AdminLandingPagesScreen() {
       return;
     }
     setHomePageId(result.data.homePageId);
-    setMessage(undefined);
-  };
+    refresh();
+  }, [homePageId, refresh]);
+
+  const rowActions = useMemo<AppGridRowAction<LandingGridRow>[]>(
+    () => [
+      {
+        id: "edit",
+        label: "ویرایش",
+        icon: Pencil,
+        href: (row) => `/admin/landing-pages/${row.pageId}`,
+        testId: (row) => `landing-edit-${row.slug}`,
+      },
+      {
+        id: "preview",
+        label: "پیش‌نمایش",
+        icon: Eye,
+        href: (row) => `/admin/landing-pages/${row.pageId}/preview`,
+        testId: (row) => `landing-preview-${row.slug}`,
+      },
+      {
+        id: "publish",
+        label: "انتشار / پیش‌نویس",
+        icon: Upload,
+        disabled: () => busy,
+        onClick: (row) => publish(row),
+        testId: (row) => `landing-publish-${row.slug}`,
+      },
+      {
+        id: "home",
+        label: "صفحه اصلی",
+        icon: Home,
+        disabled: () => busy,
+        confirm: (row) =>
+          homePageId && homePageId !== row.pageId ? "صفحهٔ اصلی فعلی جایگزین شود؟" : false,
+        onClick: (row) => setHome(row),
+        testId: (row) => `landing-home-${row.slug}`,
+      },
+    ],
+    [busy, homePageId, publish, setHome],
+  );
+
+  const columns = useMemo<GridColumnDef<LandingGridRow>[]>(
+    () => [
+      {
+        id: "title",
+        header: "عنوان",
+        accessor: (row) => row.title,
+        filterKind: "text",
+        sortable: true,
+        width: 220,
+        minWidth: 140,
+      },
+      {
+        id: "slug",
+        header: "آدرس صفحه",
+        accessor: (row) => row.slug,
+        cell: (row) => <span dir="ltr">/{row.slug}</span>,
+        filterKind: "text",
+        sortable: true,
+        width: 160,
+        minWidth: 120,
+      },
+      {
+        id: "locale",
+        header: "زبان",
+        accessor: (row) => row.locale,
+        cell: (row) => (row.locale === "en" ? "انگلیسی" : "فارسی"),
+        filterKind: "status",
+        enumOptions: [
+          { value: "fa", label: "فارسی" },
+          { value: "en", label: "انگلیسی" },
+        ],
+        width: 110,
+        minWidth: 90,
+      },
+      {
+        id: "status",
+        header: "وضعیت",
+        accessor: (row) => row.status,
+        cell: (row) => (
+          <span
+            className={`rounded-full px-2 py-0.5 text-xs font-bold ${
+              row.status === "Published" ? "bg-emerald-50 text-emerald-700" : "bg-amber-50 text-amber-700"
+            }`}
+          >
+            {row.status === "Published" ? "منتشرشده" : "پیش‌نویس"}
+          </span>
+        ),
+        filterKind: "status",
+        enumOptions: [
+          { value: "Published", label: "منتشرشده" },
+          { value: "Draft", label: "پیش‌نویس" },
+        ],
+        width: 120,
+        minWidth: 100,
+      },
+      {
+        id: "isHome",
+        header: "صفحه اصلی؟",
+        accessor: (row) => row.isHomeLabel,
+        filterKind: "status",
+        enumOptions: [
+          { value: "بله", label: "بله" },
+          { value: "خیر", label: "خیر" },
+        ],
+        width: 110,
+        minWidth: 90,
+      },
+      {
+        id: "updatedAt",
+        header: "آخرین ویرایش",
+        accessor: (row) => row.updatedAt,
+        cell: (row) => formatJalaliDate(row.updatedAt, "fa"),
+        filterKind: "date",
+        sortable: true,
+        width: 140,
+        minWidth: 120,
+      },
+      {
+        id: "actions",
+        header: "عملیات",
+        accessor: () => "",
+        exportable: false,
+        sortable: false,
+        width: 168,
+        minWidth: 148,
+        cell: (row) => <AppGridRowActionsCell row={row} actions={rowActions} compact />,
+      },
+    ],
+    [rowActions],
+  );
+
+  const queryAdapter = useCallback(
+    async (query: GridServerQuery) => {
+      void reloadToken;
+      return createClientGridQueryAdapter(rows, columns)(query);
+    },
+    [columns, reloadToken, rows],
+  );
+
+  const gridProps = useLegacyAdminGridDirectProps({
+    gridId: ADMIN_LANDING_PAGES_GRID_VIEW_KEY,
+    columns,
+    queryAdapter,
+    savedViewStore,
+  });
 
   if (denied) {
     return (
@@ -87,11 +250,13 @@ export function AdminLandingPagesScreen() {
   }
 
   return (
-    <main data-testid="admin-landing-pages">
+    <main data-testid="admin-landing-pages" data-grid-profile="orders-canonical">
       <div className="mb-5 flex flex-wrap items-end justify-between gap-3">
         <div>
           <h1 className="text-xl font-black">صفحات فرود</h1>
-          <p className="mt-1 text-sm text-muted">صفحات قابل انتشار فروشگاه را بسازید، پیش‌نمایش کنید و در صورت نیاز خانه را عوض کنید.</p>
+          <p className="mt-1 text-sm text-muted">
+            فهرست صفحات با همان استاندارد جدول سفارش‌ها؛ ایجاد، پیش‌نمایش، انتشار و خانه.
+          </p>
         </div>
         <Link
           href="/admin/landing-pages/new"
@@ -111,51 +276,16 @@ export function AdminLandingPagesScreen() {
             <p className="mt-2 text-sm text-muted">با «ایجاد صفحه» یک پیش‌نویس بسازید و بخش‌ها را اضافه کنید.</p>
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full min-w-[820px] text-sm">
-              <thead className="bg-slate-50 text-right text-muted">
-                <tr>
-                  <th className="px-4 py-3 font-bold">عنوان</th>
-                  <th className="px-4 py-3 font-bold">آدرس صفحه</th>
-                  <th className="px-4 py-3 font-bold">زبان</th>
-                  <th className="px-4 py-3 font-bold">وضعیت</th>
-                  <th className="px-4 py-3 font-bold">صفحه اصلی؟</th>
-                  <th className="px-4 py-3 font-bold">آخرین ویرایش</th>
-                  <th className="px-4 py-3 font-bold">اقدامات</th>
-                </tr>
-              </thead>
-              <tbody>
-                {rows.map((row) => {
-                  const isHome = homePageId === row.pageId;
-                  return (
-                    <tr key={row.pageId} className="border-t border-border" data-testid={`landing-row-${row.slug}`}>
-                      <td className="px-4 py-3 font-bold">{row.title}</td>
-                      <td className="px-4 py-3" dir="ltr">/{row.slug}</td>
-                      <td className="px-4 py-3">{localeLabel(row.locale)}</td>
-                      <td className="px-4 py-3">
-                        <span className={`rounded-full px-2 py-0.5 text-xs font-bold ${row.status === "Published" ? "bg-emerald-50 text-emerald-700" : "bg-amber-50 text-amber-700"}`}>
-                          {row.status === "Published" ? "منتشرشده" : "پیش‌نویس"}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3">{isHome ? "بله" : "خیر"}</td>
-                      <td className="px-4 py-3">{formatUpdated(row.updatedAt)}</td>
-                      <td className="px-4 py-3">
-                        <div className="flex flex-wrap gap-2">
-                          <Link className="rounded-lg border px-2 py-1" href={`/admin/landing-pages/${row.pageId}`}>ویرایش</Link>
-                          <Link className="rounded-lg border px-2 py-1" href={`/admin/landing-pages/${row.pageId}/preview`}>پیش‌نمایش</Link>
-                          <button type="button" className="rounded-lg border px-2 py-1" disabled={busy} onClick={() => void publish(row)}>
-                            {row.status === "Published" ? "بازگرداندن به پیش‌نویس" : "انتشار"}
-                          </button>
-                          <button type="button" className="rounded-lg border px-2 py-1" disabled={busy} onClick={() => void setHome(row)}>
-                            {isHome ? "لغو خانه" : "انتخاب به‌عنوان صفحه اصلی"}
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+          <div className="overflow-x-auto p-2 md:p-4" data-testid="landing-pages-app-data-grid">
+            <AppDataGrid<LandingGridRow>
+              {...gridProps}
+              capabilities={ORDERS_LIKE_CAPABILITIES}
+              rowCountNoun={{ fa: "صفحه", en: "pages" }}
+              messageOverrides={{
+                advancedFilterTitle: "فیلتر پیشرفته صفحات فرود",
+                advancedFilterSubtitle: "جستجوی دقیق مانند فهرست سفارش‌ها",
+              }}
+            />
           </div>
         )}
         {message ? <p className="px-4 py-3 text-sm text-red-600">{message}</p> : null}

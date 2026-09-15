@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ChevronDown, ChevronUp, Eye, EyeOff, Pencil, Plus, Trash2 } from "lucide-react";
 import {
   addAdminLandingSection,
@@ -73,6 +73,7 @@ function localeLabel(locale: string): string {
 export function AdminLandingPageComposer({ pageId }: { pageId?: string }) {
   const router = useRouter();
   const [page, setPage] = useState<AdminLandingPage | null>(null);
+  const pageRef = useRef<AdminLandingPage | null>(null);
   const [meta, setMeta] = useState<Meta>(toMeta());
   const [sections, setSections] = useState<AdminLandingSection[]>([]);
   const [homePageId, setHomePageId] = useState<string | null>(null);
@@ -83,10 +84,16 @@ export function AdminLandingPageComposer({ pageId }: { pageId?: string }) {
   const [wizardMode, setWizardMode] = useState<"create" | "edit">("create");
   const [editing, setEditing] = useState<AdminLandingSection | null>(null);
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
+  const [focusedSectionId, setFocusedSectionId] = useState<string | null>(null);
   const [createMode, setCreateMode] = useState<"blank" | "template" | null>(pageId ? "blank" : null);
   const [selectedTemplateKey, setSelectedTemplateKey] = useState<string | null>(null);
+  const [templateConfirmed, setTemplateConfirmed] = useState(false);
   const industryTemplates = useMemo(() => listIndustryTemplates(), []);
   void LANDING_SECTION_CHOICES;
+
+  useEffect(() => {
+    pageRef.current = page;
+  }, [page]);
 
   const dirty = useMemo(() => {
     if (!page) return Boolean(meta.title || meta.slug);
@@ -117,14 +124,14 @@ export function AdminLandingPageComposer({ pageId }: { pageId?: string }) {
     if (pageId) void load(pageId);
   }, [load, pageId]);
 
-  const saveMeta = async () => {
+  const saveMeta = async (options?: { openWizardAfter?: boolean }) => {
     if (!meta.title.trim() || !meta.slug.trim()) {
       setMessage("عنوان و آدرس صفحه لازم است.");
-      return;
+      return null;
     }
     if (!page && !meta.locale) {
       setMessage("زبان صفحه را انتخاب کنید.");
-      return;
+      return null;
     }
     setBusy(true);
     const payload = {
@@ -140,7 +147,7 @@ export function AdminLandingPageComposer({ pageId }: { pageId?: string }) {
     if (!result.ok) {
       setBusy(false);
       setMessage(result.message);
-      return;
+      return null;
     }
 
     let createdSections: AdminLandingSection[] = [];
@@ -156,7 +163,7 @@ export function AdminLandingPageComposer({ pageId }: { pageId?: string }) {
             setMeta(toMeta(result.data));
             setMessage(sectionResult.message);
             router.replace(`/admin/landing-pages/${result.data.pageId}`);
-            return;
+            return null;
           }
         }
       } catch (error) {
@@ -165,17 +172,34 @@ export function AdminLandingPageComposer({ pageId }: { pageId?: string }) {
         setMeta(toMeta(result.data));
         setMessage(error instanceof Error ? error.message : "اعمال قالب ناموفق بود.");
         router.replace(`/admin/landing-pages/${result.data.pageId}`);
-        return;
+        return null;
       }
     }
 
     setBusy(false);
     setPage(result.data);
+    pageRef.current = result.data;
     setMeta(toMeta(result.data));
     if (createdSections.length) setSections(createdSections);
     setSaved(true);
     setMessage(undefined);
     if (!pageId) router.replace(`/admin/landing-pages/${result.data.pageId}`);
+    if (options?.openWizardAfter) {
+      setWizardMode("create");
+      setEditing(null);
+      setWizardOpen(true);
+    }
+    return result.data;
+  };
+
+  const openAddSectionWizard = async () => {
+    if (page) {
+      setWizardMode("create");
+      setEditing(null);
+      setWizardOpen(true);
+      return;
+    }
+    await saveMeta({ openWizardAfter: true });
   };
 
   const move = async (index: number, direction: -1 | 1) => {
@@ -278,7 +302,7 @@ export function AdminLandingPageComposer({ pageId }: { pageId?: string }) {
     );
   }
 
-  if (!pageId && !page && createMode === "template" && !selectedTemplateKey) {
+  if (!pageId && !page && createMode === "template" && !templateConfirmed) {
     return (
       <main data-testid="admin-landing-page-editor" className="space-y-5">
         <div className="flex flex-wrap items-start justify-between gap-3">
@@ -288,15 +312,19 @@ export function AdminLandingPageComposer({ pageId }: { pageId?: string }) {
             <p className="mt-1 text-sm text-muted">نام فارسی، توضیح کوتاه و خلاصهٔ بخش‌ها را ببینید؛ هر قالب ترکیب متفاوتی دارد.</p>
           </div>
         </div>
-        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3" data-testid="template-picker">
+        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3" data-testid="template-picker" data-template-preview-v2="1">
           {industryTemplates.map((template) => {
             const preview = layoutAwareTemplatePreview(template);
+            const selected = selectedTemplateKey === template.templateKey;
             return (
               <button
                 key={template.templateKey}
                 type="button"
-                className="rounded-2xl border border-border bg-surface-elevated p-4 text-start hover:border-primary"
+                className={`rounded-2xl border bg-surface-elevated p-4 text-start hover:border-primary ${
+                  selected ? "border-[#2563EB] ring-2 ring-[#2563EB]/30" : "border-border"
+                }`}
                 data-testid={`template-card-${template.templateKey}`}
+                data-template-selected={selected ? "true" : undefined}
                 onClick={() => {
                   setSelectedTemplateKey(template.templateKey);
                   setMeta((current) => ({
@@ -307,10 +335,11 @@ export function AdminLandingPageComposer({ pageId }: { pageId?: string }) {
                 }}
               >
                 <div
-                  className={`mb-3 grid h-24 grid-cols-6 gap-1 rounded-xl p-2 ${preview.toneClass}`}
+                  className={`mb-3 grid h-32 grid-cols-6 gap-1 rounded-xl p-2 ${preview.toneClass}`}
                   aria-hidden
                   data-testid="template-composition-miniature"
                   data-layout-aware="1"
+                  data-template-preview-v2="1"
                   data-industry={template.industry}
                 >
                   {preview.cells.map((cell, index) => (
@@ -321,9 +350,28 @@ export function AdminLandingPageComposer({ pageId }: { pageId?: string }) {
                 <p className="mt-2 text-sm text-muted">{template.descriptionFa}</p>
                 <p className="mt-2 text-xs font-bold text-slate-600">{template.sectionPresetList.length.toLocaleString("fa-IR")} بخش</p>
                 <p className="mt-1 text-xs text-muted">{templateSectionSummaryFa(template)}</p>
+                {selected ? (
+                  <span className="mt-3 inline-flex rounded-full bg-[#2563EB] px-3 py-1 text-xs font-bold text-white">
+                    انتخاب‌شده
+                  </span>
+                ) : null}
               </button>
             );
           })}
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <button
+            type="button"
+            className="rounded-xl bg-[#2563EB] px-4 py-2 text-sm font-bold text-white disabled:opacity-40"
+            disabled={!selectedTemplateKey}
+            data-testid="use-selected-template"
+            onClick={() => setTemplateConfirmed(true)}
+          >
+            استفاده از قالب انتخاب‌شده
+          </button>
+          <button type="button" className="rounded-xl border px-4 py-2 text-sm font-bold" data-testid="start-blank-from-templates" onClick={() => { setCreateMode("blank"); setSelectedTemplateKey(null); setTemplateConfirmed(false); }}>
+            شروع از صفحه خالی
+          </button>
         </div>
       </main>
     );
@@ -418,16 +466,39 @@ export function AdminLandingPageComposer({ pageId }: { pageId?: string }) {
           <span className="text-xs font-bold text-muted">{sections.length.toLocaleString("fa-IR")} بخش</span>
         </div>
         {sections.length === 0 ? (
-          <p className="rounded-xl border border-dashed px-4 py-8 text-center text-sm text-muted">هنوز بخشی اضافه نشده است.</p>
+          <div className="rounded-xl border border-dashed px-4 py-8 text-center" data-testid="blank-page-empty-state">
+            <p className="text-sm font-bold">صفحه هنوز بخشی ندارد.</p>
+            <p className="mt-2 text-sm text-muted">پس از ذخیرهٔ پیش‌نویس، اولین بخش را با جادوگر اضافه کنید.</p>
+            <button
+              type="button"
+              className="mt-4 inline-flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-2 text-sm font-bold text-white disabled:opacity-40"
+              disabled={busy}
+              onClick={() => void openAddSectionWizard()}
+              data-testid="add-first-section-cta"
+            >
+              <Plus className="h-4 w-4" />
+              افزودن اولین بخش
+            </button>
+          </div>
         ) : (
-          <div className="space-y-2" data-testid="composition-visual-preview">
+          <div className="space-y-2" data-testid="composition-visual-preview" data-workspace-composition="1">
             {sections.map((row) => {
               const config = parseLandingConfig(row.config);
               const variantKey = typeof config.variantKey === "string" ? config.variantKey : undefined;
               const sectionTypeKey = resolveSectionTypeKey(row.sectionType, config);
               const typeLabel = sectionTypeKey ? (getSectionType(sectionTypeKey)?.nameFa ?? landingSectionLabel(row.sectionType)) : landingSectionLabel(row.sectionType);
+              const focused = focusedSectionId === row.pageSectionId;
               return (
-                <div key={row.pageSectionId} className={`rounded-xl border px-3 py-2 ${row.isEnabled ? "bg-white" : "bg-slate-50 opacity-70"}`}>
+                <button
+                  key={row.pageSectionId}
+                  type="button"
+                  onClick={() => setFocusedSectionId(row.pageSectionId)}
+                  className={`w-full rounded-xl border px-3 py-2 text-start ${
+                    focused ? "border-[#2563EB] ring-2 ring-[#2563EB]/20" : ""
+                  } ${row.isEnabled ? "bg-white" : "bg-slate-50 opacity-60"}`}
+                  data-testid={`workspace-mini-${row.pageSectionId}`}
+                  data-section-focused={focused ? "true" : undefined}
+                >
                   <div className="flex items-center gap-3">
                     <div className="w-28 shrink-0">
                       {variantKey ? <VariantPreviewCanvas variantKey={variantKey} testId={`workspace-preview-${row.pageSectionId}`} /> : (
@@ -439,7 +510,7 @@ export function AdminLandingPageComposer({ pageId }: { pageId?: string }) {
                       <p className="truncate text-xs text-muted">{summarizeLandingSection(row.sectionType, config)}</p>
                     </div>
                   </div>
-                </div>
+                </button>
               );
             })}
           </div>
@@ -452,12 +523,8 @@ export function AdminLandingPageComposer({ pageId }: { pageId?: string }) {
           <button
             type="button"
             className="inline-flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-2 text-sm font-bold text-white disabled:opacity-40"
-            disabled={!page || busy}
-            onClick={() => {
-              setWizardMode("create");
-              setEditing(null);
-              setWizardOpen(true);
-            }}
+            disabled={busy}
+            onClick={() => void openAddSectionWizard()}
             data-testid="landing-add-section"
           >
             <Plus className="h-4 w-4" />
@@ -465,7 +532,7 @@ export function AdminLandingPageComposer({ pageId }: { pageId?: string }) {
           </button>
         </div>
         {sections.length === 0 ? (
-          <p className="rounded-xl border border-dashed px-4 py-8 text-center text-sm text-muted">هنوز بخشی اضافه نشده است.</p>
+          <p className="rounded-xl border border-dashed px-4 py-8 text-center text-sm text-muted">هنوز بخشی اضافه نشده است. «افزودن بخش» پیش‌نویس را در صورت نیاز می‌سازد و جادوگر را باز می‌کند.</p>
         ) : (
           <ol className="space-y-3">
             {sections.map((row, index) => {
@@ -478,8 +545,14 @@ export function AdminLandingPageComposer({ pageId }: { pageId?: string }) {
               const heightFa = heightPreset && heightPreset in SIZE_PRESET_CONTRACTS
                 ? SIZE_PRESET_CONTRACTS[heightPreset as keyof typeof SIZE_PRESET_CONTRACTS].nameFa
                 : null;
+              const focused = focusedSectionId === row.pageSectionId;
               return (
-                <li key={row.pageSectionId} className={`rounded-xl border px-4 py-3 ${row.isEnabled ? "bg-white" : "bg-slate-50 opacity-80"}`} data-testid="composer-section-card">
+                <li
+                  key={row.pageSectionId}
+                  id={`composer-section-${row.pageSectionId}`}
+                  className={`rounded-xl border px-4 py-3 ${focused ? "border-[#2563EB] ring-2 ring-[#2563EB]/15" : ""} ${row.isEnabled ? "bg-white" : "bg-slate-50 opacity-80"}`}
+                  data-testid="composer-section-card"
+                >
                   <div className="flex flex-wrap items-center justify-between gap-3">
                     <div className="min-w-0">
                       <div className="flex flex-wrap items-center gap-2">
@@ -548,13 +621,14 @@ export function AdminLandingPageComposer({ pageId }: { pageId?: string }) {
             setEditing(null);
           }}
           onSave={async (payload) => {
-            if (!page) {
+            const activePage = pageRef.current;
+            if (!activePage) {
               setMessage("ابتدا مشخصات صفحه را ذخیره کنید.");
               return;
             }
             setBusy(true);
             if (wizardMode === "edit" && editing) {
-              const result = await updateAdminLandingSection(page.pageId, editing.pageSectionId, payload.config);
+              const result = await updateAdminLandingSection(activePage.pageId, editing.pageSectionId, payload.config);
               setBusy(false);
               if (!result.ok) {
                 setMessage(result.message);
@@ -565,13 +639,14 @@ export function AdminLandingPageComposer({ pageId }: { pageId?: string }) {
               const config = payload.config.variantKey
                 ? payload.config
                 : defaultConfigForCompositionSection(payload.sectionTypeKey, payload.variantKey);
-              const result = await addAdminLandingSection(page.pageId, payload.hostType, config);
+              const result = await addAdminLandingSection(activePage.pageId, payload.hostType, config);
               setBusy(false);
               if (!result.ok) {
                 setMessage(result.message);
                 return;
               }
               setSections((rows) => [...rows, result.data]);
+              setFocusedSectionId(result.data.pageSectionId);
             }
             setWizardOpen(false);
             setEditing(null);

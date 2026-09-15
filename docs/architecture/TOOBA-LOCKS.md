@@ -958,3 +958,28 @@ Dynamic sources must be truthful; Manual mode uses canonical Resource Selector.
 
 ### LOCK-SF-265 — Admin grid Operations are RTL-pinned icon-only
 Admin grid Operations are RTL-pinned, icon-only, and tooltip-backed.
+
+### LOCK-SF-266 — Builder list pages use canonical Orders/AppDataGrid
+Builder list pages such as Landing Pages use canonical Orders/AppDataGrid behavior.
+
+### LOCK-SF-267 — Blank-page first section via normal wizard
+Blank-page creation must allow immediate first-section creation through normal wizard.
+
+### LOCK-SF-268 — Wizard stable shell geometry
+Wizard uses stable shell geometry with internal scrolling.
+
+### LOCK-SF-269 — Review is variant-aware
+Review is variant-aware, not generic.
+
+### LOCK-SF-270 — Template previews are structurally distinct
+Template previews approximate real composition and are structurally distinct.
+
+### LOCK-SF-271 — Banner settings mirror layout
+Banner settings spatially mirror selected layout.
+
+### LOCK-SF-272 — Brand editing uses Resource Selector
+Brand editing uses shared Resource Selector plus variant-aware settings/preview.
+
+### LOCK-SF-273 — Workspace preview reflects composition
+Page workspace preview reflects saved section order/geometry.
+

@@ -1,0 +1,88 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-P10-T022-R2
+Parent-Task: TB-P10-T022-R1
+Status: PASS
+WorkerId: tooba-worker-01
+Channel: tooba-main
+
+Summary:
+Builder Visual/Workflow Repair R2: Landing Pages converted to Orders-canonical AppDataGrid; blank Add Section auto-creates Draft then opens fixed-geometry wizard; variant-aware Review; Template Preview V2 with distinct industry miniatures + explicit select/confirm; Banner settings mirror layout; Brand Manual Resource Selector; workspace composition preview with focus. Runtime ok=true (26 screenshots). Appearance YES; Builder USER_VISUAL_ACCEPTED=NO. No TB-P10-T023.
+
+Applicable-Locks:
+LOCK-SF-001…265 preserved. Added LOCK-SF-266…273.
+
+Recovery-Start:
+branch=main HEAD-at-claim=b36d23583062682f5e14c81ebbce1e4ef1e50508 HEAD==origin/main. Expected previous 78027a92 (R1 impl); pin b36d2358 — not RECOVERY_CONFLICT. docs/evidence/TB-P10-T022-R2/recovery-start.md
+
+Landing-Grid:
+AppDataGrid ORDERS_LIKE + icon Operations. docs/evidence/TB-P10-T022-R2/landing-pages-grid.md
+
+Grid-Runtime-Comparison:
+docs/evidence/TB-P10-T022-R2/grid-runtime-comparison.md
+
+Blank-Page-Flow:
+openAddSectionWizard auto-draft. docs/evidence/TB-P10-T022-R2/blank-page-flow.md
+
+Wizard-Shell:
+fixed h-[min(90vh,720px)] shell. docs/evidence/TB-P10-T022-R2/wizard-shell.md
+
+Wizard-Stepper:
+completed/current/upcoming states; steps نوع/ظاهر/منبع/تنظیمات/بازبینی.
+
+Review-Step:
+variant-aware canvas + plain summary. docs/evidence/TB-P10-T022-R2/review-step.md
+
+Template-Preview-V2:
+docs/evidence/TB-P10-T022-R2/template-preview-v2.md
+
+Template-Selection:
+selected ring + استفاده از قالب انتخاب‌شده + شروع از صفحه خالی.
+
+Banner-Settings:
+docs/evidence/TB-P10-T022-R2/banner-settings-layout.md
+
+Brand-Settings:
+docs/evidence/TB-P10-T022-R2/brand-settings-layout.md
+
+Page-Workspace:
+vertical mini-canvas; click focuses section; empty CTA افزودن اولین بخش.
+
+Create-Page-UX:
+Language → Title/Slug → Draft → workspace; language page-level only.
+
+Admin-Theme-Isolation:
+reverified; admin-theme-isolation-r2.png
+
+Focused-Validation:
+R2 guards 9/9; critical-storefront 20/20; recovery 4/4. docs/evidence/TB-P10-T022-R2/focused-validation.md
+
+Runtime:
+runtime-report.json ok=true. docs/evidence/TB-P10-T022-R2/runtime.md
+
+Visual-Evidence:
+docs/evidence/TB-P10-T022-R2/screenshots/ orders-grid-reference.png landing-grid-canonical.png landing-grid-column-filter.png landing-grid-advanced-filter.png landing-grid-saved-view.png landing-grid-pinned-operations.png blank-page-empty-state.png blank-page-first-section.png blank-page-second-section.png wizard-step-type-fixed-shell.png wizard-step-variant-fixed-shell.png wizard-step-source-fixed-shell.png wizard-step-settings-fixed-shell.png wizard-step-review-fixed-shell.png template-picker-v2.png template-fashion-preview-v2.png template-autoparts-preview-v2.png template-interior-preview-v2.png banner-twoequal-settings-v2.png banner-mosaic-settings-v2.png brand-manual-selector.png brand-settings-v2.png review-product-grid.png review-story-circle.png workspace-composition-preview.png admin-theme-isolation-r2.png
+
+AntiPattern-Scan:
+CLEAN. docs/evidence/TB-P10-T022-R2/antipattern-scan.md
+
+Lock-Registry:
+LOCK-SF-001…273. New 266–273 only.
+
+Recovery-SoT:
+Phase P10 Architect TB-P10-T022 Impl TB-P10-T022-R2 Issued/Repair none Appearance YES Builder NO Worker IDLE do NOT invent TB-P10-T023. docs/evidence/TB-P10-T022-R2/recovery-sot.md
+
+Git:
+SHA=PENDING_PIN_AFTER_PUSH HEAD==origin/main after push. Unrelated .tmp-* leftovers not committed.
+
+Architectural-Concerns:
+Landing list uses client GridQuery until Host /pages/query exists; capability parity maintained.
+
+Visual-Concerns:
+Builder USER_VISUAL_ACCEPTED=NO — user must inspect R2 screenshots. Functional PASS ≠ Visual ACCEPT.
+
+Blockers:
+none
+
+END_TOOBA_WORKER_RESULT

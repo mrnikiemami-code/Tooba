@@ -1,0 +1,307 @@
+{
+  "ok": true,
+  "steps": [
+    {
+      "name": "orders-grid",
+      "pass": true
+    },
+    {
+      "name": "file:orders-grid-reference.png",
+      "pass": true,
+      "data": {
+        "bytes": 112381
+      }
+    },
+    {
+      "name": "file:landing-grid-canonical.png",
+      "pass": true,
+      "data": {
+        "bytes": 137477
+      }
+    },
+    {
+      "name": "file:landing-grid-column-filter.png",
+      "pass": true,
+      "data": {
+        "bytes": 116589
+      }
+    },
+    {
+      "name": "file:landing-grid-advanced-filter.png",
+      "pass": true,
+      "data": {
+        "bytes": 99644
+      }
+    },
+    {
+      "name": "file:landing-grid-saved-view.png",
+      "pass": true,
+      "data": {
+        "bytes": 138969
+      }
+    },
+    {
+      "name": "file:landing-grid-pinned-operations.png",
+      "pass": true,
+      "data": {
+        "bytes": 138969
+      }
+    },
+    {
+      "name": "file:blank-page-empty-state.png",
+      "pass": true,
+      "data": {
+        "bytes": 88834
+      }
+    },
+    {
+      "name": "file:wizard-step-type-fixed-shell.png",
+      "pass": true,
+      "data": {
+        "bytes": 113929
+      }
+    },
+    {
+      "name": "file:wizard-step-variant-fixed-shell.png",
+      "pass": true,
+      "data": {
+        "bytes": 116116
+      }
+    },
+    {
+      "name": "file:wizard-step-source-fixed-shell.png",
+      "pass": true,
+      "data": {
+        "bytes": 94675
+      }
+    },
+    {
+      "name": "file:wizard-step-settings-fixed-shell.png",
+      "pass": true,
+      "data": {
+        "bytes": 92248
+      }
+    },
+    {
+      "name": "file:wizard-step-review-fixed-shell.png",
+      "pass": true,
+      "data": {
+        "bytes": 99842
+      }
+    },
+    {
+      "name": "file:review-product-grid.png",
+      "pass": true,
+      "data": {
+        "bytes": 99842
+      }
+    },
+    {
+      "name": "wizard-shell-heights-equal",
+      "pass": true,
+      "data": {
+        "heights": [
+          {
+            "label": "type",
+            "height": 720
+          },
+          {
+            "label": "variant",
+            "height": 720
+          },
+          {
+            "label": "source",
+            "height": 720
+          },
+          {
+            "label": "settings",
+            "height": 720
+          },
+          {
+            "label": "review",
+            "height": 720
+          }
+        ]
+      }
+    },
+    {
+      "name": "file:blank-page-first-section.png",
+      "pass": true,
+      "data": {
+        "bytes": 87953
+      }
+    },
+    {
+      "name": "file:review-story-circle.png",
+      "pass": true,
+      "data": {
+        "bytes": 106022
+      }
+    },
+    {
+      "name": "file:blank-page-second-section.png",
+      "pass": true,
+      "data": {
+        "bytes": 99594
+      }
+    },
+    {
+      "name": "file:workspace-composition-preview.png",
+      "pass": true,
+      "data": {
+        "bytes": 99594
+      }
+    },
+    {
+      "name": "file:template-picker-v2.png",
+      "pass": true,
+      "data": {
+        "bytes": 162880
+      }
+    },
+    {
+      "name": "file:template-fashion-preview-v2.png",
+      "pass": true,
+      "data": {
+        "bytes": 160012
+      }
+    },
+    {
+      "name": "file:template-autoparts-preview-v2.png",
+      "pass": true,
+      "data": {
+        "bytes": 161806
+      }
+    },
+    {
+      "name": "file:template-interior-preview-v2.png",
+      "pass": true,
+      "data": {
+        "bytes": 161093
+      }
+    },
+    {
+      "name": "file:banner-twoequal-settings-v2.png",
+      "pass": true,
+      "data": {
+        "bytes": 124601
+      }
+    },
+    {
+      "name": "file:banner-mosaic-settings-v2.png",
+      "pass": true,
+      "data": {
+        "bytes": 119172
+      }
+    },
+    {
+      "name": "file:brand-manual-selector.png",
+      "pass": true,
+      "data": {
+        "bytes": 99806
+      }
+    },
+    {
+      "name": "file:brand-settings-v2.png",
+      "pass": true,
+      "data": {
+        "bytes": 118583
+      }
+    },
+    {
+      "name": "file:admin-theme-isolation-r2.png",
+      "pass": true,
+      "data": {
+        "bytes": 137816
+      }
+    },
+    {
+      "name": "admin-theme-isolation",
+      "pass": true,
+      "data": {
+        "adminPrimary": "37 99 235"
+      }
+    }
+  ],
+  "files": {
+    "orders-grid-reference.png": {
+      "bytes": 112381
+    },
+    "landing-grid-canonical.png": {
+      "bytes": 137477
+    },
+    "landing-grid-column-filter.png": {
+      "bytes": 116589
+    },
+    "landing-grid-advanced-filter.png": {
+      "bytes": 99644
+    },
+    "landing-grid-saved-view.png": {
+      "bytes": 138969
+    },
+    "landing-grid-pinned-operations.png": {
+      "bytes": 138969
+    },
+    "blank-page-empty-state.png": {
+      "bytes": 88834
+    },
+    "wizard-step-type-fixed-shell.png": {
+      "bytes": 113929
+    },
+    "wizard-step-variant-fixed-shell.png": {
+      "bytes": 116116
+    },
+    "wizard-step-source-fixed-shell.png": {
+      "bytes": 94675
+    },
+    "wizard-step-settings-fixed-shell.png": {
+      "bytes": 92248
+    },
+    "wizard-step-review-fixed-shell.png": {
+      "bytes": 99842
+    },
+    "review-product-grid.png": {
+      "bytes": 99842
+    },
+    "blank-page-first-section.png": {
+      "bytes": 87953
+    },
+    "review-story-circle.png": {
+      "bytes": 106022
+    },
+    "blank-page-second-section.png": {
+      "bytes": 99594
+    },
+    "workspace-composition-preview.png": {
+      "bytes": 99594
+    },
+    "template-picker-v2.png": {
+      "bytes": 162880
+    },
+    "template-fashion-preview-v2.png": {
+      "bytes": 160012
+    },
+    "template-autoparts-preview-v2.png": {
+      "bytes": 161806
+    },
+    "template-interior-preview-v2.png": {
+      "bytes": 161093
+    },
+    "banner-twoequal-settings-v2.png": {
+      "bytes": 124601
+    },
+    "banner-mosaic-settings-v2.png": {
+      "bytes": 119172
+    },
+    "brand-manual-selector.png": {
+      "bytes": 99806
+    },
+    "brand-settings-v2.png": {
+      "bytes": 118583
+    },
+    "admin-theme-isolation-r2.png": {
+      "bytes": 137816
+    }
+  },
+  "errors": []
+}

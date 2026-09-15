@@ -151,33 +151,41 @@ export function AdminSectionWizard({
 
   return (
     <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/40 p-4" data-testid="section-wizard">
-      <div className="flex max-h-[90vh] w-full max-w-3xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl">
-        <div className="border-b border-border px-5 py-4">
+      <div
+        className="flex h-[min(90vh,720px)] w-full max-w-3xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl"
+        data-testid="section-wizard-shell"
+        data-wizard-shell="fixed"
+      >
+        <div className="shrink-0 border-b border-border px-5 py-4">
           <div className="flex items-center justify-between gap-3">
             <h3 className="text-lg font-black">{mode === "edit" ? "ویرایش بخش" : "افزودن بخش"}</h3>
             <button type="button" onClick={onClose}>بستن</button>
           </div>
           <ol className="mt-3 flex flex-wrap gap-2" data-testid="section-wizard-steps">
-            {steps.map((item, index) => (
-              <li
-                key={item}
-                className={`rounded-full px-3 py-1 text-xs font-bold ${
-                  index === stepIndex
-                    ? "bg-[#2563EB] text-white"
-                    : index < stepIndex
-                      ? "bg-emerald-50 text-emerald-700"
-                      : "bg-slate-100 text-slate-600"
-                }`}
-                data-wizard-step={item}
-                data-active={index === stepIndex ? "true" : undefined}
-              >
-                {(index + 1).toLocaleString("fa-IR")}. {STEP_LABELS[item]}
-              </li>
-            ))}
+            {steps.map((item, index) => {
+              const state = index === stepIndex ? "current" : index < stepIndex ? "completed" : "upcoming";
+              return (
+                <li
+                  key={item}
+                  className={`rounded-full px-3 py-1 text-xs font-bold ${
+                    state === "current"
+                      ? "bg-[#2563EB] text-white"
+                      : state === "completed"
+                        ? "bg-emerald-50 text-emerald-700"
+                        : "bg-slate-100 text-slate-600"
+                  }`}
+                  data-wizard-step={item}
+                  data-step-state={state}
+                  data-active={state === "current" ? "true" : undefined}
+                >
+                  {(index + 1).toLocaleString("fa-IR")}. {STEP_LABELS[item]}
+                </li>
+              );
+            })}
           </ol>
         </div>
 
-        <div className="min-h-0 flex-1 overflow-auto px-5 py-4">
+        <div className="min-h-0 flex-1 overflow-y-auto px-5 py-4">
           {step === "type" ? (
             <div className="grid gap-3 sm:grid-cols-2" data-testid="composition-section-catalog">
               {compositionSections.map((item) => (
@@ -281,9 +289,14 @@ export function AdminSectionWizard({
           ) : null}
 
           {step === "preview" && choice ? (
-            <div className="space-y-4" data-testid="section-wizard-preview">
-              <VariantPreviewCanvas variantKey={variantKey ?? choice.defaultVariantKey} />
-              <dl className="grid gap-2 text-sm">
+            <div className="space-y-4" data-testid="section-wizard-preview" data-review-variant-aware="1">
+              <div className="rounded-2xl border border-border bg-slate-50 p-4">
+                <VariantPreviewCanvas
+                  variantKey={variantKey ?? choice.defaultVariantKey}
+                  testId={`review-preview-${(variantKey ?? choice.defaultVariantKey).replace(/\./g, "-")}`}
+                />
+              </div>
+              <dl className="grid gap-2 text-sm" data-testid="review-plain-summary">
                 <div className="flex justify-between gap-3 border-b border-dashed py-2">
                   <dt className="text-muted">نوع</dt>
                   <dd className="font-bold">{getSectionType(choice.sectionTypeKey)?.nameFa}</dd>
@@ -293,8 +306,36 @@ export function AdminSectionWizard({
                   <dd className="font-bold">{getVariant(variantKey ?? "")?.nameFa}</dd>
                 </div>
                 <div className="flex justify-between gap-3 border-b border-dashed py-2">
-                  <dt className="text-muted">خلاصه</dt>
+                  <dt className="text-muted">منبع</dt>
                   <dd className="font-bold text-end">{summarizeLandingSection(choice.hostType, config)}</dd>
+                </div>
+                <div className="flex justify-between gap-3 border-b border-dashed py-2">
+                  <dt className="text-muted">تعداد</dt>
+                  <dd className="font-bold">
+                    {typeof config.take === "number"
+                      ? config.take.toLocaleString("fa-IR")
+                      : Array.isArray(config.items)
+                        ? config.items.length.toLocaleString("fa-IR")
+                        : Array.isArray(config.productIds)
+                          ? config.productIds.length.toLocaleString("fa-IR")
+                          : Array.isArray(config.brandIds)
+                            ? config.brandIds.length.toLocaleString("fa-IR")
+                            : Array.isArray(config.articleIds)
+                              ? config.articleIds.length.toLocaleString("fa-IR")
+                              : "—"}
+                  </dd>
+                </div>
+                <div className="flex justify-between gap-3 border-b border-dashed py-2">
+                  <dt className="text-muted">اندازه</dt>
+                  <dd className="font-bold">
+                    {typeof config.heightPreset === "string" && config.heightPreset in SIZE_PRESET_CONTRACTS
+                      ? SIZE_PRESET_CONTRACTS[config.heightPreset as keyof typeof SIZE_PRESET_CONTRACTS].nameFa
+                      : "پیش‌فرض"}
+                  </dd>
+                </div>
+                <div className="flex justify-between gap-3 border-b border-dashed py-2">
+                  <dt className="text-muted">فعال</dt>
+                  <dd className="font-bold">{config.enabled === false ? "خیر" : "بله"}</dd>
                 </div>
               </dl>
             </div>
@@ -303,7 +344,7 @@ export function AdminSectionWizard({
           {error ? <p className="mt-3 text-sm text-red-600" role="alert">{error}</p> : null}
         </div>
 
-        <div className="flex flex-wrap items-center justify-between gap-2 border-t border-border px-5 py-3">
+        <div className="flex shrink-0 flex-wrap items-center justify-between gap-2 border-t border-border px-5 py-3">
           <button type="button" className="rounded-xl border px-4 py-2 text-sm font-bold" onClick={goBack} data-testid="section-wizard-back">
             {stepIndex === 0 ? "انصراف" : "قبلی"}
           </button>
