@@ -28,7 +28,7 @@ Channel: tooba-main
 Last Architect Accepted Task:
 
 ```text
-TB-P10-T017-R4
+TB-P10-T017-R5
 ```
 
 Prior accepted catalog wave:
@@ -50,7 +50,7 @@ TB-P07-T043
 Last Implementation Task:
 
 ```text
-TB-P10-T017-R5
+TB-P10-T018
 ```
 
 Current Issued Task:
@@ -68,7 +68,8 @@ Current Repair Task:
 Implemented Under Review:
 
 ```text
-TB-P10-T017-R5 — Section-context composition (inherit-by-default, local derived surfaces, card-area guard); USER_VISUAL_ACCEPTED=NO
+TB-P10-T018 — Home+Landing composition engine foundation (shared registry, responsive contracts, Landing adapter); USER_VISUAL_ACCEPTED=YES (Appearance); Builder not visually accepted
+TB-P10-T017-R5 — Section-context composition (inherit-by-default, local derived surfaces, card-area guard); USER_VISUAL_ACCEPTED=YES (Appearance accepted with T018)
 TB-P10-T017-R4 — Component-level theme compliance (derived Card/Elevated/Input; shared primitives; crawler); USER_VISUAL_ACCEPTED=NO
 TB-P10-T017-R3 — Storefront-wide theme coverage (route inventory + shared surfaces + crawler); USER_VISUAL_ACCEPTED=NO
 TB-P10-T017-R2 — PLP/Landing product-card media well height (Tailwind aspect-[4/5] emitted); USER_VISUAL_ACCEPTED=NO
@@ -201,13 +202,13 @@ TB-P07-T043 — Order Detail visual fidelity polish (accepted baseline)
 USER_VISUAL_ACCEPTED:
 
 ```text
-NO
+YES
 ```
 
 Worker Next State:
 
 ```text
-IDLE — waits for Bridge Task (no invented next task; do NOT invent TB-P10-T018)
+IDLE — waits for Bridge Task (no invented next task; do NOT invent TB-P10-T019)
 ```
 
 Issued but not accepted:

@@ -824,3 +824,27 @@ New customer-facing components must declare inherit versus an explicit local sur
 ### LOCK-SF-220 — User-configurable colors remain four global roles
 User-configurable colors remain the four global surface roles. All local surfaces are automatic.
 
+### LOCK-SF-221 — Shared Home+Landing composition engine
+Home and Landing share one composition engine and one Section/Variant registry.
+
+### LOCK-SF-222 — Controlled composition only
+Composition is controlled and preset-driven; arbitrary CSS, HTML, or JS settings are forbidden.
+
+### LOCK-SF-223 — Mobile behavior is code-owned
+Mobile responsive behavior is code-owned per Variant via Responsive Contracts; users do not configure breakpoints.
+
+### LOCK-SF-224 — Templates are composition presets
+Industry templates are editable composition presets from the shared registry, not special renderers or pages.
+
+### LOCK-SF-225 — Reuse Shopeiva blocks before redesign
+Existing Shopeiva Home/Landing blocks are reused or adapted before redundant redesign.
+
+### LOCK-SF-226 — Four global surface roles only
+Only four global surface roles are user-editable; local colors remain derived.
+
+### LOCK-SF-227 — Truthful data sources
+Data-source options must reflect real backend truth; unsupported ranking sources are not faked.
+
+### LOCK-SF-228 — Prefer Variants over SectionTypes
+Visual diversity should prefer curated Variants over proliferating Section Types.
+
