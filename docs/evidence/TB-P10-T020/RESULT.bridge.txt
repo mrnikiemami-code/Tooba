@@ -1,0 +1,73 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-P10-T020
+Parent-Task: TB-P10-T019
+Status: PASS
+WorkerId: tooba-worker-01
+Channel: tooba-main
+
+Summary:
+Native Host+FE StoryRail and BannerShowcase replace CategoryGrid/PromoBanner proxies. First substantial distinct Variant wave (Hero split/side-promos; Story circle/image/rounded; Category tiles/rail; Product grid/compact/columns/featured-plus; Ranked layouts with truthful sources only; Banner 1/2/4/5/8/mosaic; Brand grid/featured; Reviews quotes; Article grid/featured-plus-list). Admin Start Blank / Start from Template UX with 10 distinct industry seeds. Banner slot editor + Story items UX. Runtime A–R ok=true. Appearance USER_VISUAL_ACCEPTED=YES; Builder USER_VISUAL_ACCEPTED=NO. No TB-P10-T021.
+
+Applicable-Locks:
+LOCK-SF-001…235 preserved. Added LOCK-SF-236…242 (native Story/Banner contracts; distinct selectable Variants; bounded banner slots/presets; distinct industry templates; templates create normal Drafts; system-owned mobile; plain-language Admin capabilities).
+
+Recovery-Start:
+branch=main HEAD-at-claim=c988d10a58e75ef55d3a7862acd2b887d8b9eb25 HEAD==origin/main. Expected previous HEAD a54bde5c is T019 impl; pin c988d10a is SoT pin — not RECOVERY_CONFLICT. docs/evidence/TB-P10-T020/recovery-start.md
+
+Native-Section-Contracts:
+Host ApprovedTypes + typed normalizers for StoryRail (items) and BannerShowcase (slots/items + heightPreset). FE SECTION_TO_LANDING_HOST maps StoryRail→StoryRail and BannerShowcase→BannerShowcase. docs/evidence/TB-P10-T020/native-section-contracts.md
+
+Variant-Wave:
+Implemented first-wave Variants with distinct layout classes/render paths in shared-composition-renderer + home/landing blocks. docs/evidence/TB-P10-T020/variant-reuse-map.md
+
+Capability-Matrix:
+Registry dataSources/size/autoplay/settings drive Admin controls. docs/evidence/TB-P10-T020/variant-capability-matrix.md
+
+Banner-Story-UX:
+banner-slot-editor with required slot counts; story-items-editor (image/title/destination/enabled). No px/breakpoints.
+
+Template-Start-UX:
+composition-start-mode: start-blank + start-from-template; template-picker with FA name/industry/description/mosaic/summary. Creates normal editable Draft sections via shared Host types.
+
+Template-Seeds:
+10 distinct INDUSTRY_TEMPLATE_SEEDS using only implemented Variants and truthful sources. docs/evidence/TB-P10-T020/template-seeds.md
+
+Admin-UX:
+docs/evidence/TB-P10-T020/admin-ux.md
+
+Responsive-Runtime:
+docs/evidence/TB-P10-T020/responsive-runtime.md
+
+Focused-Validation:
+composition-engine 19/19; critical-storefront 20/20; recovery-staleness 4/4; admin landing guards pass. docs/evidence/TB-P10-T020/focused-validation.md
+
+Runtime:
+runtime-report.json ok=true A–R. docs/evidence/TB-P10-T020/runtime.md
+
+Visual-Evidence:
+docs/evidence/TB-P10-T020/screenshots/ template-picker.png template-fashion-preview.png template-autoparts-preview.png hero-variant-picker.png story-variant-picker.png product-variant-picker.png banner-variant-picker.png banner-slot-editor.png composer-mixed-page.png storefront-mixed-desktop.png storefront-mixed-mobile.png fashion-template-home.png autoparts-template-home.png
+
+AntiPattern-Scan:
+CLEAN — no StoryRail→CategoryGrid or BannerShowcase→PromoBanner proxies; no fake ranking sources; no template-owned renderers/CSS. docs/evidence/TB-P10-T020/antipattern-scan.md
+
+Lock-Registry:
+LOCK-SF-001…242. New 236–242 only.
+
+Recovery-SoT:
+Phase P10 Architect TB-P10-T019 Impl TB-P10-T020 Issued/Repair none Appearance YES Builder NO Worker IDLE do NOT invent TB-P10-T021. docs/evidence/TB-P10-T020/recovery-sot.md
+
+Git:
+SHA=afbfd6697f9c14a19ce812e10fa0a6d4351a99f8 HEAD==origin/main after push. Unrelated .tmp-* leftovers not committed.
+
+Architectural-Concerns:
+Some NewRequiredLater Variants remain intentionally unavailable. Ranking visuals use truthful Manual/Category/Brand/Newest only.
+
+Visual-Concerns:
+Builder USER_VISUAL_ACCEPTED=NO pending user inspection of new Variant/template UX. Functional PASS ≠ Visual ACCEPT for builder.
+
+Blockers:
+none
+
+END_TOOBA_WORKER_RESULT
