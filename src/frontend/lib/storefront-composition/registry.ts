@@ -1,4 +1,10 @@
-import type { SectionTypeDefinition, VariantDefinition } from "./types.ts";
+import type {
+  AdminSelectableDataSource,
+  SectionTypeDefinition,
+  VariantDefinition,
+  VariantPreviewKind,
+  VariantStatus,
+} from "./types.ts";
 import { BASE_SECTION_SETTINGS } from "./settings.ts";
 import { RESPONSIVE_CONTRACTS } from "./responsive-contracts.ts";
 
@@ -20,18 +26,33 @@ const section = (
   settings: BASE_SECTION_SETTINGS,
 });
 
+type VariantOpts = {
+  previewKind: VariantPreviewKind;
+  recommendedUseFa?: string;
+  sizePresetsSupported?: boolean;
+  autoplaySupported?: boolean;
+  dataSources?: readonly AdminSelectableDataSource[];
+};
+
 const variant = (
   key: string,
   sectionTypeKey: string,
   nameFa: string,
   descriptionFa: string,
-  status: VariantDefinition["status"],
+  status: VariantStatus,
+  opts: VariantOpts,
 ): VariantDefinition => ({
   key,
   sectionTypeKey,
   nameFa,
   descriptionFa,
   status,
+  implemented: status === "Existing" || status === "ReusableViaAdapter",
+  previewKind: opts.previewKind,
+  recommendedUseFa: opts.recommendedUseFa,
+  sizePresetsSupported: opts.sizePresetsSupported ?? false,
+  autoplaySupported: opts.autoplaySupported ?? false,
+  dataSources: opts.dataSources ?? (["Manual"] as const),
   responsiveContractKey: key,
   settings: BASE_SECTION_SETTINGS,
 });
@@ -52,62 +73,125 @@ export const SECTION_TYPES: SectionTypeDefinition[] = [
   section("NavigationMenu", "فهرست پیوند", "منوی فعال فروشگاه", "nav.menu", { home: false, landing: true }),
 ];
 
+const DS_MANUAL = ["Manual"] as const satisfies readonly AdminSelectableDataSource[];
+const DS_PRODUCT = ["Manual", "Category", "Brand", "Newest"] as const satisfies readonly AdminSelectableDataSource[];
+const DS_CATEGORY = ["Manual", "Category"] as const satisfies readonly AdminSelectableDataSource[];
+const DS_BRAND = ["Manual", "Brand"] as const satisfies readonly AdminSelectableDataSource[];
+const DS_ARTICLE = ["LatestArticles"] as const satisfies readonly AdminSelectableDataSource[];
+const DS_REVIEW = ["ApprovedReviews"] as const satisfies readonly AdminSelectableDataSource[];
+
 /** Substantial initial Variant catalog; most marked NewRequiredLater until built. */
 export const VARIANTS: VariantDefinition[] = [
-  variant("hero.full-width", "HeroCarousel", "تمام‌عرض", "اسلاید تمام‌عرض", "Existing"),
-  variant("hero.contained", "HeroCarousel", "داخل کانتینر", "اسلاید با گوشه گرد", "ReusableViaAdapter"),
-  variant("hero.split", "HeroCarousel", "دو ستون", "تصویر + متن", "NewRequiredLater"),
-  variant("hero.side-promos", "HeroCarousel", "هیرو با پروموی کناری", "هیرو + دو پرومو", "NewRequiredLater"),
-  variant("hero.editorial", "HeroCarousel", "تحریریه", "کپشن قوی", "NewRequiredLater"),
+  variant("hero.full-width", "HeroCarousel", "تمام‌عرض", "اسلاید تمام‌عرض", "Existing", {
+    previewKind: "hero-slider", recommendedUseFa: "بالای صفحه اصلی", sizePresetsSupported: true, autoplaySupported: true, dataSources: DS_MANUAL,
+  }),
+  variant("hero.contained", "HeroCarousel", "داخل کانتینر", "اسلاید با گوشه گرد", "ReusableViaAdapter", {
+    previewKind: "hero-contained", recommendedUseFa: "لندینگ و صفحات داخلی", sizePresetsSupported: true, autoplaySupported: true, dataSources: DS_MANUAL,
+  }),
+  variant("hero.split", "HeroCarousel", "دو ستون", "تصویر + متن", "NewRequiredLater", { previewKind: "hero-contained", dataSources: DS_MANUAL }),
+  variant("hero.side-promos", "HeroCarousel", "هیرو با پروموی کناری", "هیرو + دو پرومو", "NewRequiredLater", { previewKind: "hero-slider", dataSources: DS_MANUAL }),
+  variant("hero.editorial", "HeroCarousel", "تحریریه", "کپشن قوی", "NewRequiredLater", { previewKind: "hero-contained", dataSources: DS_MANUAL }),
 
-  variant("story.circle", "StoryRail", "دایره استوری", "دایره‌های افقی", "Existing"),
-  variant("story.image-circles", "StoryRail", "دایره تصویری", "پر از تصویر", "ReusableViaAdapter"),
-  variant("story.rounded-cards", "StoryRail", "کارت گرد", "میانبر کارت‌گرد", "ReusableViaAdapter"),
-  variant("story.icon-shortcuts", "StoryRail", "میانبر آیکون", "آیکون + برچسب", "NewRequiredLater"),
+  variant("story.circle", "StoryRail", "دایره استوری", "دایره‌های افقی", "Existing", {
+    previewKind: "story-circles", recommendedUseFa: "میانبر سریع بالای صفحه", autoplaySupported: true, dataSources: DS_MANUAL,
+  }),
+  variant("story.image-circles", "StoryRail", "دایره تصویری", "پر از تصویر", "ReusableViaAdapter", {
+    previewKind: "story-circles", autoplaySupported: true, dataSources: DS_MANUAL,
+  }),
+  variant("story.rounded-cards", "StoryRail", "کارت گرد", "میانبر کارت‌گرد", "ReusableViaAdapter", {
+    previewKind: "story-cards", dataSources: DS_MANUAL,
+  }),
+  variant("story.icon-shortcuts", "StoryRail", "میانبر آیکون", "آیکون + برچسب", "NewRequiredLater", { previewKind: "story-cards", dataSources: DS_MANUAL }),
 
-  variant("category.image-cards", "CategoryShowcase", "کارت تصویری", "کارت دسته با تصویر", "Existing"),
-  variant("category.compact-tiles", "CategoryShowcase", "کاشی فشرده", "شبکه فشرده", "ReusableViaAdapter"),
-  variant("category.horizontal-rail", "CategoryShowcase", "ریل افقی", "اسکرول افقی", "ReusableViaAdapter"),
-  variant("category.editorial-tiles", "CategoryShowcase", "کاشی تحریریه", "کاشی بزرگ", "NewRequiredLater"),
+  variant("category.image-cards", "CategoryShowcase", "کارت تصویری", "کارت دسته با تصویر", "Existing", {
+    previewKind: "category-cards", recommendedUseFa: "ویترین دسته‌ها", dataSources: DS_CATEGORY,
+  }),
+  variant("category.compact-tiles", "CategoryShowcase", "کاشی فشرده", "شبکه فشرده", "ReusableViaAdapter", {
+    previewKind: "category-tiles", dataSources: DS_CATEGORY,
+  }),
+  variant("category.horizontal-rail", "CategoryShowcase", "ریل افقی", "اسکرول افقی", "ReusableViaAdapter", {
+    previewKind: "category-rail", dataSources: DS_CATEGORY,
+  }),
+  variant("category.editorial-tiles", "CategoryShowcase", "کاشی تحریریه", "کاشی بزرگ", "NewRequiredLater", { previewKind: "category-tiles", dataSources: DS_CATEGORY }),
 
-  variant("product.card-carousel", "ProductShowcase", "کاروسل کارت", "ریل کارت کالا", "Existing"),
-  variant("product.grid", "ProductShowcase", "شبکه کالا", "شبکه چندستونه", "ReusableViaAdapter"),
-  variant("product.compact-rows", "ProductShowcase", "ردیف فشرده", "لیست فشرده", "Existing"),
-  variant("product.category-columns", "ProductShowcase", "ستون دسته‌ای", "پرفروش ستونی", "Existing"),
-  variant("product.featured-plus-rail", "ProductShowcase", "ویژه + ریل", "یک ویژه + ریل", "NewRequiredLater"),
-  variant("product.tabbed", "ProductShowcase", "تب‌دار", "چند تب کالا", "NewRequiredLater"),
-  variant("product.large-cards", "ProductShowcase", "کارت بزرگ", "کارت درشت", "NewRequiredLater"),
-  variant("product.minimal-list", "ProductShowcase", "فهرست مینیمال", "لیست ساده", "NewRequiredLater"),
+  variant("product.card-carousel", "ProductShowcase", "اسلایدر کارت محصول", "ریل کارت کالا", "Existing", {
+    previewKind: "product-carousel", recommendedUseFa: "پیشنهاد و تازه‌ها", autoplaySupported: true, dataSources: DS_PRODUCT,
+  }),
+  variant("product.grid", "ProductShowcase", "شبکه کالا", "شبکه چندستونه", "ReusableViaAdapter", {
+    previewKind: "product-grid", dataSources: DS_PRODUCT,
+  }),
+  variant("product.compact-rows", "ProductShowcase", "ردیف‌های فشرده", "لیست فشرده", "Existing", {
+    previewKind: "product-rows", recommendedUseFa: "پربازدید فشرده", dataSources: DS_PRODUCT,
+  }),
+  variant("product.category-columns", "ProductShowcase", "ستون‌های دسته‌بندی", "پرفروش ستونی", "Existing", {
+    previewKind: "product-columns", recommendedUseFa: "پرفروش چندستونه", dataSources: DS_PRODUCT,
+  }),
+  variant("product.featured-plus-rail", "ProductShowcase", "ویژه + ریل", "یک ویژه + ریل", "NewRequiredLater", { previewKind: "product-carousel", dataSources: DS_PRODUCT }),
+  variant("product.tabbed", "ProductShowcase", "تب‌دار", "چند تب کالا", "NewRequiredLater", { previewKind: "product-carousel", dataSources: DS_PRODUCT }),
+  variant("product.large-cards", "ProductShowcase", "کارت بزرگ", "کارت درشت", "NewRequiredLater", { previewKind: "product-grid", dataSources: DS_PRODUCT }),
+  variant("product.minimal-list", "ProductShowcase", "فهرست مینیمال", "لیست ساده", "NewRequiredLater", { previewKind: "product-rows", dataSources: DS_PRODUCT }),
 
-  variant("ranked.horizontal", "ProductRankedList", "افقی رتبه‌دار", "ریل رتبه", "ReusableViaAdapter"),
-  variant("ranked.grid", "ProductRankedList", "شبکه رتبه‌دار", "شبکه با رتبه", "NewRequiredLater"),
-  variant("ranked.ticker", "ProductRankedList", "تیکر فشرده", "نوار فشرده", "NewRequiredLater"),
-  variant("ranked.multi-column", "ProductRankedList", "چند ستون", "چند ستون رتبه", "ReusableViaAdapter"),
+  variant("ranked.horizontal", "ProductRankedList", "افقی رتبه‌دار", "ریل رتبه", "ReusableViaAdapter", {
+    previewKind: "ranked-rail", dataSources: DS_PRODUCT,
+  }),
+  variant("ranked.grid", "ProductRankedList", "شبکه رتبه‌دار", "شبکه با رتبه", "NewRequiredLater", { previewKind: "product-grid", dataSources: DS_PRODUCT }),
+  variant("ranked.ticker", "ProductRankedList", "تیکر فشرده", "نوار فشرده", "NewRequiredLater", { previewKind: "ranked-rail", dataSources: DS_PRODUCT }),
+  variant("ranked.multi-column", "ProductRankedList", "چند ستون", "چند ستون رتبه", "ReusableViaAdapter", {
+    previewKind: "ranked-columns", dataSources: DS_PRODUCT,
+  }),
 
-  variant("banner.single", "BannerShowcase", "تکی", "یک بنر", "Existing"),
-  variant("banner.two-equal", "BannerShowcase", "دو مساوی", "دو بنر برابر", "ReusableViaAdapter"),
-  variant("banner.two-asymmetric", "BannerShowcase", "دو نامتقارن", "دو بنر ناهمسان", "NewRequiredLater"),
-  variant("banner.three", "BannerShowcase", "سه تایی", "سه بنر", "ReusableViaAdapter"),
-  variant("banner.four-grid", "BannerShowcase", "چهار شبکه", "۲×۲", "ReusableViaAdapter"),
-  variant("banner.one-large-two-small", "BannerShowcase", "۱ بزرگ ۲ کوچک", "موزاییک ۳", "ReusableViaAdapter"),
-  variant("banner.one-large-four-small", "BannerShowcase", "۱ بزرگ ۴ کوچک", "موزاییک ۵", "NewRequiredLater"),
-  variant("banner.eight-compact", "BannerShowcase", "هشت فشرده", "۸ کاشی", "NewRequiredLater"),
-  variant("banner.mosaic-2x2", "BannerShowcase", "موزاییک ۲×۲", "موزاییک مساوی", "ReusableViaAdapter"),
+  variant("banner.single", "BannerShowcase", "تک بنر", "یک بنر", "Existing", {
+    previewKind: "banner-single", sizePresetsSupported: true, dataSources: DS_MANUAL,
+  }),
+  variant("banner.two-equal", "BannerShowcase", "دو بنر مساوی", "دو بنر برابر", "ReusableViaAdapter", {
+    previewKind: "banner-two", sizePresetsSupported: true, dataSources: DS_MANUAL,
+  }),
+  variant("banner.two-asymmetric", "BannerShowcase", "دو نامتقارن", "دو بنر ناهمسان", "NewRequiredLater", { previewKind: "banner-two", dataSources: DS_MANUAL }),
+  variant("banner.three", "BannerShowcase", "سه تایی", "سه بنر", "ReusableViaAdapter", {
+    previewKind: "banner-three", sizePresetsSupported: true, dataSources: DS_MANUAL,
+  }),
+  variant("banner.four-grid", "BannerShowcase", "چهارتایی", "۲×۲", "ReusableViaAdapter", {
+    previewKind: "banner-four", sizePresetsSupported: true, dataSources: DS_MANUAL,
+  }),
+  variant("banner.one-large-two-small", "BannerShowcase", "۱ بزرگ ۲ کوچک", "موزاییک ۳", "ReusableViaAdapter", {
+    previewKind: "banner-mosaic", sizePresetsSupported: true, dataSources: DS_MANUAL,
+  }),
+  variant("banner.one-large-four-small", "BannerShowcase", "۱ بزرگ ۴ کوچک", "موزاییک ۵", "NewRequiredLater", { previewKind: "banner-mosaic", dataSources: DS_MANUAL }),
+  variant("banner.eight-compact", "BannerShowcase", "هشت فشرده", "۸ کاشی", "NewRequiredLater", { previewKind: "banner-four", dataSources: DS_MANUAL }),
+  variant("banner.mosaic-2x2", "BannerShowcase", "موزاییک ۲×۲", "موزاییک مساوی", "ReusableViaAdapter", {
+    previewKind: "banner-four", sizePresetsSupported: true, dataSources: DS_MANUAL,
+  }),
 
-  variant("brand.logo-rail", "BrandShowcase", "ریل لوگو", "اسکرول لوگو", "Existing"),
-  variant("brand.logo-grid", "BrandShowcase", "شبکه لوگو", "شبکه برند", "ReusableViaAdapter"),
-  variant("brand.featured", "BrandShowcase", "برند ویژه", "کارت برند", "NewRequiredLater"),
+  variant("brand.logo-rail", "BrandShowcase", "ریل لوگو", "اسکرول لوگو", "Existing", {
+    previewKind: "brand-rail", autoplaySupported: true, dataSources: DS_BRAND,
+  }),
+  variant("brand.logo-grid", "BrandShowcase", "شبکه لوگو", "شبکه برند", "ReusableViaAdapter", {
+    previewKind: "brand-grid", dataSources: DS_BRAND,
+  }),
+  variant("brand.featured", "BrandShowcase", "برند ویژه", "کارت برند", "NewRequiredLater", { previewKind: "brand-grid", dataSources: DS_BRAND }),
 
-  variant("reviews.card-carousel", "ReviewsShowcase", "کاروسل نظر", "کارت نظر", "Existing"),
-  variant("reviews.compact-quotes", "ReviewsShowcase", "نقل فشرده", "نقل کوتاه", "NewRequiredLater"),
+  variant("reviews.card-carousel", "ReviewsShowcase", "کاروسل نظر", "کارت نظر", "Existing", {
+    previewKind: "reviews-carousel", autoplaySupported: true, dataSources: DS_REVIEW,
+  }),
+  variant("reviews.compact-quotes", "ReviewsShowcase", "نقل فشرده", "نقل کوتاه", "NewRequiredLater", { previewKind: "reviews-carousel", dataSources: DS_REVIEW }),
 
-  variant("article.magazine-rail", "ArticleShowcase", "ریل مجله", "کارت مقاله افقی", "Existing"),
-  variant("article.grid", "ArticleShowcase", "شبکه مقاله", "شبکه مطالب", "ReusableViaAdapter"),
-  variant("article.featured-plus-list", "ArticleShowcase", "ویژه + فهرست", "یک ویژه + لیست", "NewRequiredLater"),
+  variant("article.magazine-rail", "ArticleShowcase", "ریل مجله", "کارت مقاله افقی", "Existing", {
+    previewKind: "article-rail", autoplaySupported: true, dataSources: DS_ARTICLE,
+  }),
+  variant("article.grid", "ArticleShowcase", "شبکه مقاله", "شبکه مطالب", "ReusableViaAdapter", {
+    previewKind: "article-grid", dataSources: DS_ARTICLE,
+  }),
+  variant("article.featured-plus-list", "ArticleShowcase", "ویژه + فهرست", "یک ویژه + لیست", "NewRequiredLater", { previewKind: "article-rail", dataSources: DS_ARTICLE }),
 
-  variant("promo.default", "PromoSection", "پروموی پیش‌فرض", "بنر پرومو تکی", "Existing"),
-  variant("richtext.default", "RichText", "متن ساده", "بدون HTML خام", "Existing"),
-  variant("nav.menu", "NavigationMenu", "منوی پیوند", "منوی فعال", "Existing"),
+  variant("promo.default", "PromoSection", "پروموی پیش‌فرض", "بنر پرومو تکی", "Existing", {
+    previewKind: "promo", sizePresetsSupported: true, dataSources: DS_MANUAL,
+  }),
+  variant("richtext.default", "RichText", "متن ساده", "بدون HTML خام", "Existing", {
+    previewKind: "richtext", dataSources: DS_MANUAL,
+  }),
+  variant("nav.menu", "NavigationMenu", "منوی پیوند", "منوی فعال", "Existing", {
+    previewKind: "nav", dataSources: DS_MANUAL,
+  }),
 ];
 
 export const INDUSTRY_TEMPLATE_SEEDS: Array<{
@@ -233,6 +317,22 @@ export const INDUSTRY_TEMPLATE_SEEDS: Array<{
   },
 ];
 
+/** Shared SectionType → Host Landing PascalCase type (storage). */
+export const SECTION_TO_LANDING_HOST: Record<string, string> = {
+  HeroCarousel: "Hero",
+  StoryRail: "CategoryGrid",
+  CategoryShowcase: "CategoryGrid",
+  ProductShowcase: "ProductCollection",
+  ProductRankedList: "ProductCollection",
+  BannerShowcase: "PromoBanner",
+  BrandShowcase: "BrandStrip",
+  PromoSection: "PromoBanner",
+  ArticleShowcase: "ArticleList",
+  ReviewsShowcase: "Reviews",
+  RichText: "RichText",
+  NavigationMenu: "NavigationMenu",
+};
+
 export function getSectionType(key: string): SectionTypeDefinition | undefined {
   return SECTION_TYPES.find((s) => s.key === key);
 }
@@ -243,6 +343,27 @@ export function getVariant(key: string): VariantDefinition | undefined {
 
 export function variantsForSection(sectionTypeKey: string): VariantDefinition[] {
   return VARIANTS.filter((v) => v.sectionTypeKey === sectionTypeKey);
+}
+
+export function isVariantImplemented(key: string): boolean {
+  return Boolean(getVariant(key)?.implemented);
+}
+
+export function implementedVariantsForSection(sectionTypeKey: string): VariantDefinition[] {
+  return variantsForSection(sectionTypeKey).filter((v) => v.implemented);
+}
+
+export function assertVariantCompatible(sectionTypeKey: string, variantKey: string): VariantDefinition {
+  const v = getVariant(variantKey);
+  if (!v) throw new Error(`Unknown variant: ${variantKey}`);
+  if (v.sectionTypeKey !== sectionTypeKey) {
+    throw new Error(`Variant ${variantKey} is not compatible with section ${sectionTypeKey}`);
+  }
+  return v;
+}
+
+export function landingHostTypeForSection(sectionTypeKey: string): string | undefined {
+  return SECTION_TO_LANDING_HOST[sectionTypeKey];
 }
 
 export function assertRegistryIntegrity(): void {
@@ -261,6 +382,11 @@ export function assertRegistryIntegrity(): void {
     if (!sectionKeys.has(v.sectionTypeKey)) throw new Error(`Orphan variant ${v.key}`);
     if (!RESPONSIVE_CONTRACTS[v.responsiveContractKey]) {
       throw new Error(`Missing responsive contract for ${v.key}`);
+    }
+    for (const ds of v.dataSources) {
+      if (["BestSelling", "MostViewed", "Discounted", "Featured", "HotTrending"].includes(ds)) {
+        throw new Error(`Variant ${v.key} exposes unsupported admin data source ${ds}`);
+      }
     }
   }
 }

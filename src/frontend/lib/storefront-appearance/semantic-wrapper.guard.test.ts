@@ -16,6 +16,7 @@ test("major storefront wrappers use semantic surface roles instead of page-level
   const shipping = read("app/storefront/storefront-shipping.tsx");
   const primitive = read("app/storefront/storefront-surface.tsx");
   const home = read("app/storefront/storefront-home.tsx");
+  const homeBlocks = read("app/storefront/storefront-home-blocks.tsx");
   const stories = read("app/storefront/stories/home-stories.tsx");
 
   assert.match(shell, /data-storefront-surface-role="page"/);
@@ -49,7 +50,8 @@ test("major storefront wrappers use semantic surface roles instead of page-level
   assert.doesNotMatch(primitive, /backgroundColor/);
   assert.doesNotMatch(primitive, /bg-\[#/);
 
-  assert.match(home, /data-storefront-surface-role="accent"/);
+  assert.match(home, /data-storefront-surface-role="page"/);
+  assert.match(homeBlocks, /data-storefront-surface-role="accent"/);
   assert.match(stories, /data-storefront-surface-role="section"/);
 });
 

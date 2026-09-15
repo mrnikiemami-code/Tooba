@@ -1,0 +1,412 @@
+{
+  "ok": true,
+  "steps": [
+    {
+      "name": "A-canonical-home-or-landing",
+      "pass": true
+    },
+    {
+      "name": "A-home",
+      "pass": true
+    },
+    {
+      "name": "file:canonical-home-after-shared-renderer.png",
+      "pass": true,
+      "data": {
+        "bytes": 505078
+      }
+    },
+    {
+      "name": "B-create-edit",
+      "pass": true
+    },
+    {
+      "name": "file:draft-composer.png",
+      "pass": true,
+      "data": {
+        "bytes": 69279
+      }
+    },
+    {
+      "name": "file:admin-add-section.png",
+      "pass": true,
+      "data": {
+        "bytes": 232697
+      }
+    },
+    {
+      "name": "file:admin-controlled-settings.png",
+      "pass": true,
+      "data": {
+        "bytes": 91158
+      }
+    },
+    {
+      "name": "C-hero",
+      "pass": true
+    },
+    {
+      "name": "file:admin-add-section.png",
+      "pass": true,
+      "data": {
+        "bytes": 235221
+      }
+    },
+    {
+      "name": "file:admin-controlled-settings.png",
+      "pass": true,
+      "data": {
+        "bytes": 93005
+      }
+    },
+    {
+      "name": "D-story",
+      "pass": true
+    },
+    {
+      "name": "file:admin-add-section.png",
+      "pass": true,
+      "data": {
+        "bytes": 238987
+      }
+    },
+    {
+      "name": "file:admin-variant-picker-product.png",
+      "pass": true,
+      "data": {
+        "bytes": 131116
+      }
+    },
+    {
+      "name": "file:admin-controlled-settings.png",
+      "pass": true,
+      "data": {
+        "bytes": 102823
+      }
+    },
+    {
+      "name": "E-product",
+      "pass": true
+    },
+    {
+      "name": "file:admin-add-section.png",
+      "pass": true,
+      "data": {
+        "bytes": 242850
+      }
+    },
+    {
+      "name": "file:admin-variant-picker-banner.png",
+      "pass": true,
+      "data": {
+        "bytes": 155457
+      }
+    },
+    {
+      "name": "file:admin-controlled-settings.png",
+      "pass": true,
+      "data": {
+        "bytes": 106803
+      }
+    },
+    {
+      "name": "F-banner",
+      "pass": true
+    },
+    {
+      "name": "file:admin-add-section.png",
+      "pass": true,
+      "data": {
+        "bytes": 246128
+      }
+    },
+    {
+      "name": "file:admin-controlled-settings.png",
+      "pass": true,
+      "data": {
+        "bytes": 97606
+      }
+    },
+    {
+      "name": "G-brand",
+      "pass": true
+    },
+    {
+      "name": "sections-count",
+      "pass": true,
+      "data": {
+        "count": 5
+      }
+    },
+    {
+      "name": "H-reorder",
+      "pass": true,
+      "data": {
+        "status": 200
+      }
+    },
+    {
+      "name": "I-disable",
+      "pass": true,
+      "data": {
+        "status": 200
+      }
+    },
+    {
+      "name": "file:draft-composer.png",
+      "pass": true,
+      "data": {
+        "bytes": 69279
+      }
+    },
+    {
+      "name": "J-preview",
+      "pass": true
+    },
+    {
+      "name": "file:draft-preview.png",
+      "pass": true,
+      "data": {
+        "bytes": 314741
+      }
+    },
+    {
+      "name": "K-publish",
+      "pass": true,
+      "data": {
+        "status": 200,
+        "body": {
+          "pageId": "01a0a337-5a7d-7000-aa29-c88bc92ca49a",
+          "locale": "fa",
+          "slug": "t019-runtime",
+          "title": "صفحه آزمایش T019",
+          "templateKey": "default",
+          "status": "Published",
+          "updatedAt": "2026-09-15T04:03:15.2441241+00:00"
+        }
+      }
+    },
+    {
+      "name": "L-public",
+      "pass": true
+    },
+    {
+      "name": "file:published-landing.png",
+      "pass": true,
+      "data": {
+        "bytes": 319387
+      }
+    },
+    {
+      "name": "M-set-home",
+      "pass": true,
+      "data": {
+        "status": 200,
+        "body": {
+          "storeScope": "tenant:store-alpha",
+          "homePageId": "01a0a337-5a7d-7000-aa29-c88bc92ca49a",
+          "selectedPage": {
+            "pageId": "01a0a337-5a7d-7000-aa29-c88bc92ca49a",
+            "locale": "fa",
+            "slug": "t019-runtime",
+            "title": "صفحه آزمایش T019",
+            "seoTitle": "صفحه آزمایش T019",
+            "templateKey": "default",
+            "sections": [
+              {
+                "pageSectionId": "01a0a33b-87ec-7000-9977-e8a517d6450b",
+                "sectionType": "CategoryGrid",
+                "sortOrder": 0,
+                "config": "{\"title\":\"\\u062F\\u0633\\u062A\\u0647\\u200C\\u0647\\u0627\",\"ids\":[]}",
+                "items": []
+              },
+              {
+                "pageSectionId": "01a0a33b-8dbb-7000-b70d-7483e3d6dc93",
+                "sectionType": "ProductCollection",
+                "sortOrder": 2,
+                "config": "{\"title\":\"\\u06A9\\u0627\\u0644\\u0627\\u0647\\u0627\",\"source\":\"Newest\",\"take\":8,\"categoryId\":null,\"brandId\":null,\"productIds\":[]}",
+                "items": [
+                  {
+                    "id": "01a05388-282e-7000-ae08-3eada4690390",
+                    "slug": "demo-prod-laptop-computer-laptops-student-laptops-3"
+                  },
+                  {
+                    "id": "01a05388-0cd8-7000-ade0-90c129a0596f",
+                    "slug": "demo-prod-mobile-tablet-tablets-android-tablets-1"
+                  },
+                  {
+                    "id": "01a05388-1d9e-7000-ad5c-35225173b829",
+                    "slug": "demo-prod-laptop-computer-laptops-ultrabooks-5"
+                  },
+                  {
+                    "id": "01a05388-7c93-7000-a102-0160861d58cd",
+                    "slug": "demo-prod-fashion-men-men-shirts-1"
+                  },
+                  {
+                    "id": "01a05388-03e4-7000-9111-b0ce246fef3a",
+                    "slug": "demo-prod-mobile-tablet-phones-feature-phones-2"
+                  },
+                  {
+                    "id": "01a05387-fbd0-7000-acd3-4382ce92c773",
+                    "slug": "demo-prod-mobile-tablet-phones-smartphones-1"
+                  },
+                  {
+                    "id": "01a05388-1a17-7000-bc2d-068c8b3ae806",
+                    "slug": "demo-prod-laptop-computer-laptops-ultrabooks-3"
+                  },
+                  {
+                    "id": "01a05388-2a14-7000-be0e-f0ee54a13a87",
+                    "slug": "demo-prod-laptop-computer-laptops-student-laptops-4"
+                  }
+                ]
+              },
+              {
+                "pageSectionId": "01a0a33b-935d-7000-8ead-5e49ad0640e1",
+                "sectionType": "PromoBanner",
+                "sortOrder": 3,
+                "config": "{\"title\":\"\\u067E\\u06CC\\u0634\\u0646\\u0647\\u0627\\u062F \\u0648\\u06CC\\u0698\\u0647\",\"href\":\"/offers\",\"mediaAssetId\":null}",
+                "items": []
+              },
+              {
+                "pageSectionId": "01a0a33b-986f-7000-9401-c66b8b33e805",
+                "sectionType": "BrandStrip",
+                "sortOrder": 4,
+                "config": "{\"title\":\"\\u0628\\u0631\\u0646\\u062F\\u0647\\u0627\",\"ids\":[]}",
+                "items": []
+              }
+            ]
+          },
+          "usesCanonicalHome": false
+        }
+      }
+    },
+    {
+      "name": "M-home-selection",
+      "pass": true,
+      "data": {
+        "status": 200
+      }
+    },
+    {
+      "name": "N-landing-as-home",
+      "pass": true
+    },
+    {
+      "name": "file:landing-as-home.png",
+      "pass": true,
+      "data": {
+        "bytes": 318249
+      }
+    },
+    {
+      "name": "O-unset-home",
+      "pass": true,
+      "data": {
+        "status": 200
+      }
+    },
+    {
+      "name": "O-canonical",
+      "pass": true
+    },
+    {
+      "name": "file:canonical-home-after-shared-renderer.png",
+      "pass": true,
+      "data": {
+        "bytes": 505078
+      }
+    }
+  ],
+  "files": {
+    "canonical-home-after-shared-renderer.png": {
+      "bytes": 505078
+    },
+    "draft-composer.png": {
+      "bytes": 69279
+    },
+    "admin-add-section.png": {
+      "bytes": 246128
+    },
+    "admin-controlled-settings.png": {
+      "bytes": 97606
+    },
+    "admin-variant-picker-product.png": {
+      "bytes": 131116
+    },
+    "admin-variant-picker-banner.png": {
+      "bytes": 155457
+    },
+    "draft-preview.png": {
+      "bytes": 314741
+    },
+    "published-landing.png": {
+      "bytes": 319387
+    },
+    "landing-as-home.png": {
+      "bytes": 318249
+    }
+  },
+  "errors": [],
+  "console": [
+    {
+      "type": "info",
+      "text": "%cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+    },
+    {
+      "type": "info",
+      "text": "%cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold"
+    },
+    {
+      "type": "info",
+      "text": "%cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold"
+    },
+    {
+      "type": "info",
+      "text": "%cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold"
+    },
+    {
+      "type": "info",
+      "text": "%cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold"
+    },
+    {
+      "type": "info",
+      "text": "%cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+    },
+    {
+      "type": "info",
+      "text": "%cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold"
+    },
+    {
+      "type": "error",
+      "text": "A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:\n\n- A server/client branch `if (typeof window !== 'undefined')`."
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+    },
+    {
+      "type": "info",
+      "text": "%cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+    },
+    {
+      "type": "info",
+      "text": "%cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+    }
+  ]
+}

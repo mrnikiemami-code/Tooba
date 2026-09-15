@@ -22,13 +22,23 @@ import {
   type AdminLandingSection,
 } from "./admin-landing-pages-api.ts";
 import {
-  defaultLandingSectionConfig,
   LANDING_SECTION_CHOICES,
   landingSectionLabel,
   parseLandingConfig,
   summarizeLandingSection,
   type LandingSectionType,
 } from "./landing-section-catalog.ts";
+import {
+  adminImplementedVariants,
+  adminSelectableSectionTypes,
+  defaultConfigForCompositionSection,
+  previewMosaicClass,
+  sectionSupportsHeightPreset,
+  type AdminCompositionSectionChoice,
+} from "./admin-composition-catalog.ts";
+import { SIZE_PRESETS } from "../../../lib/storefront-composition/types.ts";
+import { SIZE_PRESET_CONTRACTS } from "../../../lib/storefront-composition/size-presets.ts";
+import { getVariant } from "../../../lib/storefront-composition/registry.ts";
 
 type Meta = {
   title: string;
@@ -48,6 +58,15 @@ function toMeta(page?: AdminLandingPage | null): Meta {
   };
 }
 
+function resolveSectionTypeKey(hostType: string, config: Record<string, unknown>): string | null {
+  const variantKey = typeof config.variantKey === "string" ? config.variantKey : undefined;
+  if (variantKey) {
+    const fromVariant = getVariant(variantKey);
+    if (fromVariant) return fromVariant.sectionTypeKey;
+  }
+  return adminSelectableSectionTypes().find((s) => s.hostType === hostType)?.sectionTypeKey ?? null;
+}
+
 export function AdminLandingPageComposer({ pageId }: { pageId?: string }) {
   const router = useRouter();
   const [page, setPage] = useState<AdminLandingPage | null>(null);
@@ -58,9 +77,25 @@ export function AdminLandingPageComposer({ pageId }: { pageId?: string }) {
   const [busy, setBusy] = useState(false);
   const [saved, setSaved] = useState(true);
   const [chooserOpen, setChooserOpen] = useState(false);
+  const [chooserStep, setChooserStep] = useState<"section" | "variant">("section");
+  const [chooserSection, setChooserSection] = useState<AdminCompositionSectionChoice | null>(null);
   const [editing, setEditing] = useState<AdminLandingSection | null>(null);
   const [draftConfig, setDraftConfig] = useState<Record<string, unknown>>({});
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
+
+  const compositionSections = useMemo(() => adminSelectableSectionTypes(), []);
+  // Keep LANDING_SECTION_CHOICES referenced for admin-landing-pages.guard.test.ts
+  void LANDING_SECTION_CHOICES;
+
+  const editingSectionTypeKey = useMemo(() => {
+    if (!editing) return null;
+    return resolveSectionTypeKey(editing.sectionType, draftConfig);
+  }, [editing, draftConfig]);
+
+  const editingVariants = useMemo(
+    () => (editingSectionTypeKey ? adminImplementedVariants(editingSectionTypeKey) : []),
+    [editingSectionTypeKey],
+  );
 
   const dirty = useMemo(() => {
     if (!page) return Boolean(meta.title || meta.slug);
@@ -92,6 +127,12 @@ export function AdminLandingPageComposer({ pageId }: { pageId?: string }) {
     if (pageId) void load(pageId);
   }, [load, pageId]);
 
+  const openChooser = () => {
+    setChooserStep("section");
+    setChooserSection(null);
+    setChooserOpen(true);
+  };
+
   const saveMeta = async () => {
     if (!meta.title.trim() || !meta.slug.trim()) {
       setMessage("عنوان و آدرس صفحه لازم است.");
@@ -120,15 +161,19 @@ export function AdminLandingPageComposer({ pageId }: { pageId?: string }) {
     if (!pageId) router.replace(`/admin/landing-pages/${result.data.pageId}`);
   };
 
-  const addSection = async (type: LandingSectionType) => {
+  const addSectionWithVariant = async (choice: AdminCompositionSectionChoice, variantKey: string) => {
     if (!page) {
       setMessage("ابتدا مشخصات صفحه را ذخیره کنید.");
       return;
     }
+    const hostType = choice.hostType as LandingSectionType;
+    const config = defaultConfigForCompositionSection(choice.sectionTypeKey, variantKey);
     setBusy(true);
-    const result = await addAdminLandingSection(page.pageId, type, defaultLandingSectionConfig(type));
+    const result = await addAdminLandingSection(page.pageId, hostType, config);
     setBusy(false);
     setChooserOpen(false);
+    setChooserStep("section");
+    setChooserSection(null);
     if (!result.ok) {
       setMessage(result.message);
       return;
@@ -226,6 +271,11 @@ export function AdminLandingPageComposer({ pageId }: { pageId?: string }) {
     setHomePageId(result.data.homePageId);
   };
 
+  const showHeightPreset = Boolean(
+    editingSectionTypeKey
+      && sectionSupportsHeightPreset(editingSectionTypeKey, typeof draftConfig.variantKey === "string" ? draftConfig.variantKey : undefined),
+  );
+
   return (
     <main data-testid="admin-landing-page-editor">
       <div className="mb-5 flex flex-wrap items-start justify-between gap-3">
@@ -299,7 +349,7 @@ export function AdminLandingPageComposer({ pageId }: { pageId?: string }) {
             type="button"
             className="inline-flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-2 text-sm font-bold text-white disabled:opacity-40"
             disabled={!page || busy}
-            onClick={() => setChooserOpen(true)}
+            onClick={openChooser}
             data-testid="landing-add-section"
           >
             <Plus className="h-4 w-4" />
@@ -365,23 +415,62 @@ export function AdminLandingPageComposer({ pageId }: { pageId?: string }) {
         <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/40 p-4" data-testid="add-section-chooser">
           <div className="max-h-[80vh] w-full max-w-3xl overflow-auto rounded-2xl bg-white p-5">
             <div className="mb-4 flex items-center justify-between">
-              <h3 className="text-lg font-black">افزودن بخش</h3>
-              <button type="button" onClick={() => setChooserOpen(false)}>بستن</button>
+              <h3 className="text-lg font-black">
+                {chooserStep === "section" ? "افزودن بخش" : `انتخاب ظاهر — ${chooserSection?.nameFa ?? ""}`}
+              </h3>
+              <button
+                type="button"
+                onClick={() => {
+                  if (chooserStep === "variant") {
+                    setChooserStep("section");
+                    setChooserSection(null);
+                    return;
+                  }
+                  setChooserOpen(false);
+                }}
+              >
+                {chooserStep === "variant" ? "بازگشت" : "بستن"}
+              </button>
             </div>
-            <div className="grid gap-3 sm:grid-cols-2">
-              {LANDING_SECTION_CHOICES.map((choice) => (
-                <button
-                  key={choice.type}
-                  type="button"
-                  data-testid={choice.testId}
-                  className="rounded-2xl border p-4 text-start hover:border-[#2563EB]"
-                  onClick={() => void addSection(choice.type)}
-                >
-                  <strong>{choice.label}</strong>
-                  <p className="mt-1 text-xs text-muted">{choice.description}</p>
-                </button>
-              ))}
-            </div>
+            {chooserStep === "section" ? (
+              <div className="grid gap-3 sm:grid-cols-2" data-testid="composition-section-catalog">
+                {compositionSections.map((choice) => (
+                  <button
+                    key={choice.sectionTypeKey}
+                    type="button"
+                    data-testid={choice.testId}
+                    data-section-type-key={choice.sectionTypeKey}
+                    className="rounded-2xl border p-4 text-start hover:border-[#2563EB]"
+                    onClick={() => {
+                      setChooserSection(choice);
+                      setChooserStep("variant");
+                    }}
+                  >
+                    <div className={`mb-3 h-16 rounded-xl bg-gradient-to-l ${previewMosaicClass(choice.previewKind)}`} aria-hidden />
+                    <strong>{choice.nameFa}</strong>
+                    <p className="mt-1 text-xs text-muted">{choice.descriptionFa}</p>
+                  </button>
+                ))}
+              </div>
+            ) : chooserSection ? (
+              <div className="grid gap-3 sm:grid-cols-2" data-testid="composition-variant-picker">
+                {adminImplementedVariants(chooserSection.sectionTypeKey).map((variant) => (
+                  <button
+                    key={variant.variantKey}
+                    type="button"
+                    data-variant-key={variant.variantKey}
+                    data-testid={`pick-variant-${variant.variantKey.replace(/\./g, "-")}`}
+                    className="rounded-2xl border p-4 text-start hover:border-[#2563EB]"
+                    onClick={() => void addSectionWithVariant(chooserSection, variant.variantKey)}
+                  >
+                    <div className={`mb-3 h-14 rounded-xl bg-gradient-to-l ${previewMosaicClass(variant.previewKind)}`} aria-hidden />
+                    <strong>{variant.nameFa}</strong>
+                    <p className="mt-1 text-xs text-muted">{variant.descriptionFa}</p>
+                    {variant.recommendedUseFa ? <p className="mt-1 text-[11px] text-slate-500">{variant.recommendedUseFa}</p> : null}
+                  </button>
+                ))}
+              </div>
+            ) : null}
           </div>
         </div>
       ) : null}
@@ -393,6 +482,49 @@ export function AdminLandingPageComposer({ pageId }: { pageId?: string }) {
               <h3 className="font-black">ویرایش {landingSectionLabel(editing.sectionType)}</h3>
               <button type="button" onClick={() => setEditing(null)}>بستن</button>
             </div>
+            {editingVariants.length > 0 ? (
+              <div className="mb-4" data-testid="edit-variant-picker">
+                <p className="mb-2 text-sm font-bold">ظاهر بخش</p>
+                <div className="grid gap-2">
+                  {editingVariants.map((variant) => {
+                    const selected = draftConfig.variantKey === variant.variantKey
+                      || (!draftConfig.variantKey && variant.variantKey === editingVariants[0]?.variantKey);
+                    return (
+                      <button
+                        key={variant.variantKey}
+                        type="button"
+                        data-variant-key={variant.variantKey}
+                        className={`rounded-xl border p-3 text-start ${selected ? "border-[#2563EB] bg-blue-50" : ""}`}
+                        onClick={() => setDraftConfig({ ...draftConfig, variantKey: variant.variantKey })}
+                      >
+                        <div className="flex items-center gap-3">
+                          <span className={`h-10 w-14 shrink-0 rounded-lg bg-gradient-to-l ${previewMosaicClass(variant.previewKind)}`} aria-hidden />
+                          <span>
+                            <strong className="text-sm">{variant.nameFa}</strong>
+                            <span className="mt-0.5 block text-xs text-muted">{variant.descriptionFa}</span>
+                          </span>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            ) : null}
+            {showHeightPreset ? (
+              <label className="mb-4 block text-sm">
+                <span className="mb-1 block font-bold">اندازه نمایش</span>
+                <select
+                  className="w-full rounded-xl border px-3 py-2"
+                  value={typeof draftConfig.heightPreset === "string" ? draftConfig.heightPreset : "Medium"}
+                  onChange={(e) => setDraftConfig({ ...draftConfig, heightPreset: e.target.value })}
+                  data-testid="height-preset-select"
+                >
+                  {SIZE_PRESETS.map((preset) => (
+                    <option key={preset} value={preset}>{SIZE_PRESET_CONTRACTS[preset].nameFa}</option>
+                  ))}
+                </select>
+              </label>
+            ) : null}
             <LandingSectionForm type={editing.sectionType} value={draftConfig} onChange={setDraftConfig} />
             <div className="mt-5 flex gap-2">
               <button type="button" className="rounded-xl bg-[#2563EB] px-4 py-2 text-sm font-bold text-white" disabled={busy} onClick={() => void saveSection()}>

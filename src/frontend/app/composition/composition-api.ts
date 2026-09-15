@@ -67,6 +67,7 @@ export interface SectionDisplayConfig {
   href?: string;
   itemCount?: number;
   sourceKind?: string;
+  heightPreset?: string;
 }
 
 export const SECTION_TYPE_LABELS: Record<string, string> = {

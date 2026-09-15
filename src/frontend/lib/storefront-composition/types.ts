@@ -21,9 +21,48 @@ export const DATA_SOURCE_KINDS = [
 ] as const;
 export type DataSourceKind = (typeof DATA_SOURCE_KINDS)[number];
 
+/** Admin-selectable sources only — never BestSelling/MostViewed/Discounted/Featured/HotTrending. */
+export const ADMIN_SELECTABLE_DATA_SOURCES = [
+  "Manual",
+  "Category",
+  "Brand",
+  "Newest",
+  "LatestArticles",
+  "ApprovedReviews",
+] as const;
+export type AdminSelectableDataSource = (typeof ADMIN_SELECTABLE_DATA_SOURCES)[number];
+
 export type DataSourceSupport = "Supported" | "HeuristicHomeOnly" | "Deferred";
 
 export type VariantStatus = "Existing" | "ReusableViaAdapter" | "NewRequiredLater";
+
+export type VariantPreviewKind =
+  | "hero-slider"
+  | "hero-contained"
+  | "story-circles"
+  | "story-cards"
+  | "category-cards"
+  | "category-tiles"
+  | "category-rail"
+  | "product-carousel"
+  | "product-grid"
+  | "product-rows"
+  | "product-columns"
+  | "ranked-rail"
+  | "ranked-columns"
+  | "banner-single"
+  | "banner-two"
+  | "banner-three"
+  | "banner-four"
+  | "banner-mosaic"
+  | "brand-rail"
+  | "brand-grid"
+  | "reviews-carousel"
+  | "article-rail"
+  | "article-grid"
+  | "promo"
+  | "richtext"
+  | "nav";
 
 export type ControlledSettingKey =
   | "title"
@@ -90,6 +129,14 @@ export type VariantDefinition = {
   nameFa: string;
   descriptionFa: string;
   status: VariantStatus;
+  /** Existing + ReusableViaAdapter are selectable; NewRequiredLater is not. */
+  implemented: boolean;
+  previewKind: VariantPreviewKind;
+  recommendedUseFa?: string;
+  sizePresetsSupported: boolean;
+  autoplaySupported: boolean;
+  /** Only Supported admin-selectable kinds. */
+  dataSources: readonly AdminSelectableDataSource[];
   responsiveContractKey: string;
   settings: ControlledSettingsSchema;
 };

@@ -848,3 +848,24 @@ Data-source options must reflect real backend truth; unsupported ranking sources
 ### LOCK-SF-228 — Prefer Variants over SectionTypes
 Visual diversity should prefer curated Variants over proliferating Section Types.
 
+### LOCK-SF-229 — Shared Section/Variant renderer path
+Home and Landing runtime sections resolve through the shared Section/Variant renderer contract.
+
+### LOCK-SF-230 — Admin exposes only implemented Variants
+Admin may expose only implemented/valid Variants with human-readable previews; planned variants remain unavailable until implemented.
+
+### LOCK-SF-231 — Capability-driven Variant settings
+Variant settings are capability-driven and controlled; unsupported controls are hidden/rejected.
+
+### LOCK-SF-232 — Responsive contracts own mobile layout
+Responsive behavior comes from registered Variant contracts; mobile layout remains code-owned.
+
+### LOCK-SF-233 — Reuse accepted Shopeiva Home blocks
+Existing accepted Shopeiva Home blocks are adapted/reused rather than redundantly redesigned.
+
+### LOCK-SF-234 — Landing compatibility adapters
+Existing Landing configs remain readable through deterministic compatibility adapters until explicit migration.
+
+### LOCK-SF-235 — Swiper primary carousel engine
+One primary carousel engine (Swiper) serves composition variants unless a future proven gap justifies otherwise.
+

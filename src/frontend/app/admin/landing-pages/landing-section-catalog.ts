@@ -1,3 +1,5 @@
+import { getVariant } from "../../../lib/storefront-composition/registry.ts";
+
 export const LANDING_SECTION_TYPES = [
   "Hero",
   "ProductCollection",
@@ -77,14 +79,18 @@ export function parseLandingConfig(raw: string | null | undefined): Record<strin
 
 export function summarizeLandingSection(type: string, config: Record<string, unknown>): string {
   const title = typeof config.title === "string" && config.title.trim() ? config.title.trim() : null;
+  const variantKey = typeof config.variantKey === "string" ? config.variantKey : undefined;
+  const variantFa = variantKey ? getVariant(variantKey)?.nameFa ?? null : null;
+  const variantSuffix = variantFa ? ` · ${variantFa}` : "";
   if (type === "ProductCollection") {
     const source = PRODUCT_SOURCE_CHOICES.find((item) => item.value === config.source)?.label ?? "منبع کالا";
     const take = typeof config.take === "number" ? config.take : 8;
-    return title ? `${title} · ${source} · ${take} کالا` : `${source} · ${take} کالا`;
+    return title ? `${title}${variantSuffix} · ${source} · ${take} کالا` : `${source} · ${take} کالا${variantSuffix}`;
   }
   if (type === "ArticleList") {
     const take = typeof config.take === "number" ? config.take : 6;
-    return title ? `${title} · آخرین مطالب · ${take} مورد` : `آخرین مطالب · ${take} مورد`;
+    return title ? `${title}${variantSuffix} · آخرین مطالب · ${take} مورد` : `آخرین مطالب · ${take} مورد${variantSuffix}`;
   }
-  return title ?? landingSectionLabel(type);
+  if (title) return `${title}${variantSuffix}`;
+  return `${landingSectionLabel(type)}${variantSuffix}`;
 }

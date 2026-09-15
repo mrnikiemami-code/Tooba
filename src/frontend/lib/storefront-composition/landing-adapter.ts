@@ -1,5 +1,5 @@
 import type { CompositionSectionInstance, CompositionSurfaceRole } from "./types.ts";
-import { getSectionType, getVariant } from "./registry.ts";
+import { getSectionType, getVariant, isVariantImplemented } from "./registry.ts";
 import { normalizeControlledSettings } from "./settings.ts";
 import { landingSectionSurfaceRole } from "../storefront-appearance/surface-role.ts";
 
@@ -40,12 +40,25 @@ export function adaptLandingSectionToComposition(input: {
 }): CompositionSectionInstance {
   const mapped = LANDING_SECTION_TYPE_MAP[input.sectionType];
   if (!mapped) throw new Error(`Unsupported landing section type: ${input.sectionType}`);
-  const section = getSectionType(mapped.sectionTypeKey);
-  const variant = getVariant(mapped.variantKey);
-  if (!section || !variant) throw new Error(`Registry missing mapping for ${input.sectionType}`);
-  if (!section.landingAllowed) throw new Error(`${mapped.sectionTypeKey} not landing-allowed`);
 
   const config = input.config ?? {};
+  const configVariantKey = typeof config.variantKey === "string" ? config.variantKey : undefined;
+  let sectionTypeKey = mapped.sectionTypeKey;
+  let variantKey = mapped.variantKey;
+
+  if (configVariantKey) {
+    const override = getVariant(configVariantKey);
+    if (override && isVariantImplemented(configVariantKey)) {
+      sectionTypeKey = override.sectionTypeKey;
+      variantKey = override.key;
+    }
+  }
+
+  const section = getSectionType(sectionTypeKey);
+  const variant = getVariant(variantKey);
+  if (!section || !variant) throw new Error(`Registry missing mapping for ${input.sectionType}`);
+  if (!section.landingAllowed) throw new Error(`${sectionTypeKey} not landing-allowed`);
+
   const settingsRaw: Record<string, unknown> = {
     enabled: input.enabled ?? true,
     title: typeof config.title === "string" ? config.title : undefined,
@@ -53,6 +66,8 @@ export function adaptLandingSectionToComposition(input: {
     ctaHref: typeof config.href === "string" ? config.href : undefined,
     itemCount: typeof config.take === "number" ? config.take : undefined,
     dataSource: typeof config.source === "string" ? mapLandingSource(config.source) : undefined,
+    heightPreset: typeof config.heightPreset === "string" ? config.heightPreset : undefined,
+    autoplay: typeof config.autoplay === "boolean" ? config.autoplay : undefined,
     surfaceRole: landingSectionSurfaceRole(input.sectionType),
   };
   const cleaned = Object.fromEntries(Object.entries(settingsRaw).filter(([, v]) => v !== undefined));
@@ -60,8 +75,8 @@ export function adaptLandingSectionToComposition(input: {
 
   return {
     id: input.pageSectionId,
-    sectionTypeKey: mapped.sectionTypeKey,
-    variantKey: mapped.variantKey,
+    sectionTypeKey,
+    variantKey,
     enabled: Boolean(settings.enabled ?? true),
     displayOrder: input.displayOrder,
     settings,

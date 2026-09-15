@@ -7,9 +7,11 @@ import { DEFAULT_HOME_SECTION_ORDER } from "../composition/composition-api.ts";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
 const homeSource = fs.readFileSync(path.join(root, "app/storefront/storefront-home.tsx"), "utf8");
+const blocksSource = fs.readFileSync(path.join(root, "app/storefront/storefront-home-blocks.tsx"), "utf8");
 const repairSource = fs.readFileSync(path.join(root, "app/storefront/storefront-home-repair-sections.tsx"), "utf8");
 const storiesSource = fs.readFileSync(path.join(root, "app/storefront/stories/home-stories.tsx"), "utf8");
-const combinedSource = `${homeSource}\n${repairSource}\n${storiesSource}`;
+const sharedSource = fs.readFileSync(path.join(root, "lib/storefront-composition/shared-composition-renderer.tsx"), "utf8");
+const combinedSource = `${homeSource}\n${blocksSource}\n${repairSource}\n${storiesSource}\n${sharedSource}`;
 
 const REQUIRED_MARKERS = [
   'data-testid="storefront-home"',
@@ -65,13 +67,13 @@ test("home guard preserves canonical default section order", () => {
   for (const sectionType of DEFAULT_HOME_SECTION_ORDER) {
     const marker = SECTION_TYPE_MARKERS[sectionType];
     assert.ok(marker, `missing marker mapping for ${sectionType}`);
-    assert.ok(homeSource.includes(marker), `missing renderer marker for ${sectionType}`);
+    assert.ok(combinedSource.includes(marker), `missing renderer marker for ${sectionType}`);
   }
 });
 
 test("home guard rejects giant catalog dump on Home rail", () => {
-  assert.equal(homeSource.includes('data-testid="home-all-categories"'), false);
-  assert.match(homeSource, /homeCategories\.map/);
+  assert.equal(combinedSource.includes('data-testid="home-all-categories"'), false);
+  assert.match(combinedSource, /homeCategories\.map/);
   assert.doesNotMatch(homeSource, /\{categories\.map\(/);
 });
 
