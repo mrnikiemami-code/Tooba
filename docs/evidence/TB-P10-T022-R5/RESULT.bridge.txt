@@ -1,4 +1,4 @@
-BEGIN_TOOBA_WORKER_RESULT
+﻿BEGIN_TOOBA_WORKER_RESULT
 
 Task-ID:
 TB-P10-T022-R5
@@ -79,7 +79,7 @@ Recovery-SoT:
 TOOBA-RECOVERY-CONTEXT.md + PROJECT-STATE.md — Last Architect-accepted=TB-P10-T022-R4; Last Implementation=TB-P10-T022-R5; Issued/Repair=none; no T023.
 
 Git:
-branch main; commit+push after validation; HEAD==origin/main expected.
+branch main; HEAD=3ba246a727807799e783c38fabd0126fb3042b38 == origin/main.
 
 Architectural-Concerns:
 Attribute/facet/tag/history/mega-menu Template mirrors deferred until attributed clone wave; LandingCategoryGrid still uses static `/images/categories/*.png` placeholders (names from Template Catalog).
