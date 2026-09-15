@@ -83,7 +83,7 @@ Recovery-SoT:
 Phase P10 Architect TB-P10-T022 Impl TB-P10-T022-R1 Issued/Repair none Appearance YES Builder NO Worker IDLE do NOT invent TB-P10-T023. docs/evidence/TB-P10-T022-R1/recovery-sot.md
 
 Git:
-SHA=PENDING_PIN_AFTER_PUSH HEAD==origin/main after push. Unrelated .tmp-* leftovers not committed.
+SHA=78027a926d8b85be6a15b21a25efee654fb0f008 HEAD==origin/main after push. Unrelated .tmp-* leftovers not committed.
 
 Architectural-Concerns:
 none material; Builder remains acceptance candidate for user visual review.
