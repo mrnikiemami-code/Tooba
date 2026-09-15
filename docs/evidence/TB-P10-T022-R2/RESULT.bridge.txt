@@ -1,4 +1,4 @@
-PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+﻿PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
 
 BEGIN_TOOBA_WORKER_RESULT
 Task-ID: TB-P10-T022-R2
@@ -74,7 +74,7 @@ Recovery-SoT:
 Phase P10 Architect TB-P10-T022 Impl TB-P10-T022-R2 Issued/Repair none Appearance YES Builder NO Worker IDLE do NOT invent TB-P10-T023. docs/evidence/TB-P10-T022-R2/recovery-sot.md
 
 Git:
-SHA=PENDING_PIN_AFTER_PUSH HEAD==origin/main after push. Unrelated .tmp-* leftovers not committed.
+SHA=587c7e85fc0b488196817f9d63d6b0ac6630c754 HEAD==origin/main after push. Unrelated .tmp-* leftovers not committed.
 
 Architectural-Concerns:
 Landing list uses client GridQuery until Host /pages/query exists; capability parity maintained.
