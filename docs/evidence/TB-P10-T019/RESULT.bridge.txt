@@ -1,0 +1,88 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-P10-T019
+Parent-Task: TB-P10-T018
+Status: PASS
+WorkerId: tooba-worker-01
+Channel: tooba-main
+
+Summary:
+Shared Home+Landing composition renderer ships with reuse of existing Shopeiva Home blocks, deterministic Landing adapters, Admin two-step Section+implemented Variant picker (Persian FA labels, mosaic previews, no raw keys), controlled settings/height presets, Swiper-primary carousel policy, and Host/FE runtime A–O proof (ok=true). Appearance USER_VISUAL_ACCEPTED=YES; Builder USER_VISUAL_ACCEPTED=NO. No TB-P10-T020.
+
+Applicable-Locks:
+LOCK-SF-001…228 preserved. Added LOCK-SF-229…235 (shared renderer path; only implemented Variants selectable; capability-driven settings; code-owned responsive mobile; reuse Shopeiva blocks; Landing adapter compatibility; Swiper primary engine).
+
+Recovery-Start:
+branch=main HEAD-at-claim=f9de29fe0d5dee6c7927f0f7960ad444f2facf3a HEAD==origin/main. Expected previous HEAD 9ae63f85 is T018 impl; pin f9de29fe is SoT pin — not RECOVERY_CONFLICT. docs/evidence/TB-P10-T019/recovery-start.md
+
+Shopeiva-Reuse:
+Home blocks extracted to storefront-home-blocks.tsx and wired via shared renderer variants (hero/story/category/product rails/best sellers/banners/brands/reviews/articles). docs/evidence/TB-P10-T019/shopeiva-reuse-map.md
+
+Shared-Renderer:
+src/frontend/lib/storefront-composition/shared-composition-renderer.tsx + resolve-variant.ts. Home switch cases delegate; Landing adapts then renders. docs/evidence/TB-P10-T019/shared-renderer.md
+
+Home-Fidelity:
+Canonical default order markers preserved; home-structure + critical-storefront pass; shared path reuses existing components.
+
+Landing-Compatibility:
+Legacy PascalCase configs remain readable via landing-adapter; Draft/Preview/Publish/Home-selection work. docs/evidence/TB-P10-T019/landing-compatibility.md
+
+Admin-Variant-Picker:
+Two-step chooser (composition-section-catalog → composition-variant-picker); only implemented Variants; FA names/descriptions/mosaic previews. docs/evidence/TB-P10-T019/admin-variant-ux.md
+
+Variant-Preview:
+Registry previewKind + recommendedUseFa + size/autoplay/dataSources metadata; no empty chrome boxes.
+
+Controlled-Settings:
+Capability-driven forms; height preset for supported Hero/Banner; no JSON/CSS/breakpoint controls.
+
+Size-Presets:
+Compact/Medium/Large/ExtraLarge runtime mapping via size-presets + responsive contracts.
+
+Carousel-Standardization:
+Swiper remains sole installed engine; HomeNewProducts Swiper reused; no second library.
+
+Data-Source-Truth:
+Admin exposes Supported sources only (Manual/Category/Brand/Newest/LatestArticles/ApprovedReviews); ranking heuristics not faked as Landing choices.
+
+Responsive-Contracts:
+Per-variant contracts enforced for implemented Variants. docs/evidence/TB-P10-T019/responsive-runtime.md
+
+Appearance-Inheritance:
+Four global roles + section-context locals; no section color editor; no per-section appearance fetch.
+
+Composer-Operations:
+Reorder/enable/delete/save/preview/publish remain stable with VariantKey in config.
+
+Focused-Validation:
+composition-engine 13/13; recovery 4/4; critical-storefront + landing admin guards pass. docs/evidence/TB-P10-T019/focused-validation.md
+
+Runtime:
+runtime-report.json ok=true A–O. docs/evidence/TB-P10-T019/runtime.md
+
+Visual-Evidence:
+docs/evidence/TB-P10-T019/screenshots/ admin-add-section.png admin-variant-picker-product.png admin-variant-picker-banner.png admin-controlled-settings.png draft-composer.png draft-preview.png published-landing.png landing-as-home.png canonical-home-after-shared-renderer.png
+
+AntiPattern-Scan:
+CLEAN. docs/evidence/TB-P10-T019/antipattern-scan.md
+
+Lock-Registry:
+LOCK-SF-001…235. New 229–235 only.
+
+Recovery-SoT:
+Phase P10 Architect TB-P10-T018 Impl TB-P10-T019 Issued/Repair none Appearance YES Builder NO Worker IDLE do NOT invent TB-P10-T020. docs/evidence/TB-P10-T019/recovery-sot.md
+
+Git:
+SHA=a54bde5c38f93499e5b400ebd186ffe9d2b787fe HEAD==origin/main after push. Unrelated .tmp-* leftovers not committed.
+
+Architectural-Concerns:
+StoryRail/BannerShowcase currently map to Host CategoryGrid/PromoBanner proxies until Host registry expands. NewRequiredLater Variants remain unavailable by design.
+
+Visual-Concerns:
+Builder USER_VISUAL_ACCEPTED=NO pending user inspection of Admin variant UX. Functional PASS ≠ Visual ACCEPT for builder.
+
+Blockers:
+none
+
+END_TOOBA_WORKER_RESULT
