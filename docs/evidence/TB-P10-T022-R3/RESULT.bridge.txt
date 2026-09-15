@@ -1,0 +1,76 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-P10-T022-R3
+Parent-Task: TB-P10-T022-R2
+Status: PASS
+WorkerId: tooba-worker-01
+Channel: tooba-main
+
+Summary:
+Template Selection Wireframe: browser + detail panel workspace with Desktop/Tablet/Mobile preview frames (distinct max-widths, not CSS zoom), industry-distinct wireframe compositions, seed-pack UX skeleton (8 category trees / 15 products; shared stories/reviews/articles note), disabled non-destructive cleanup/prepare actions, clear Start Blank. No seed persistence. Appearance YES; Builder USER_VISUAL_ACCEPTED=NO. No TB-P10-T023.
+
+Applicable-Locks:
+LOCK-SF-001…273 preserved. Added LOCK-SF-274…279.
+
+Recovery-Start:
+branch=main HEAD-at-claim=f14dee757d5b82f761364bfe0bd530cb969b8d94 HEAD==origin/main. Expected previous 587c7e85 (R2 impl); pin f14dee75 — not RECOVERY_CONFLICT. docs/evidence/TB-P10-T022-R3/recovery-start.md
+
+Template-Workspace:
+AdminTemplateSelectionWorkspace — browser cards + detail panel. Wired from /admin/landing-pages/new start-from-template.
+
+Device-Preview-Modes:
+Desktop max-w 920 / Tablet 640 / Mobile 360; toolbar with tooltips; data-preview-device.
+
+Industry-Preview-Distinctness:
+industryWireframeBlocks recipes for Fashion/Shoes/Beauty, AutoParts/Tools/Building, Tile/Interior, HomeAppliance, Plants.
+
+Seed-Pack-Wireframe:
+۸ درخت / ۱۵ محصول / images / banners / brands; shared demo note for stories/reviews/articles.
+
+Seed-Tracking-UX:
+Wireframe text that sample data will be system-tagged for safe later cleanup.
+
+Cleanup-Prepare-UX:
+Disabled پاک‌سازی داده‌های نمونه + آماده‌سازی فروشگاه — «در مرحله بعد فعال می‌شود».
+
+Start-Blank:
+Secondary but visible start-blank-from-templates + detail CTA.
+
+Language-Placement:
+Page-level only in create flow after confirm; not in template preview controls.
+
+Admin-Theme-Isolation:
+Admin fixed tokens on cards/toolbar/actions; no storefront palette binding.
+
+Focused-Validation:
+R3 8/8; R2 9/9; critical-storefront 20/20; recovery 4/4. docs/evidence/TB-P10-T022-R3/focused-validation.md
+
+Runtime:
+runtime-report.json ok=true. docs/evidence/TB-P10-T022-R3/runtime.md
+
+Visual-Evidence:
+docs/evidence/TB-P10-T022-R3/screenshots/ template-wireframe-desktop.png template-wireframe-tablet.png template-wireframe-mobile.png template-wireframe-fashion.png template-wireframe-autoparts.png template-wireframe-interior.png template-wireframe-seed-summary.png template-wireframe-cleanup-actions.png template-wireframe-start-blank.png
+
+AntiPattern-Scan:
+CLEAN. docs/evidence/TB-P10-T022-R3/antipattern-scan.md
+
+Lock-Registry:
+LOCK-SF-001…279. New 274–279 only.
+
+Recovery-SoT:
+Phase P10 Architect TB-P10-T022-R2 Impl TB-P10-T022-R3 Issued/Repair none Appearance YES Builder NO Worker IDLE do NOT invent TB-P10-T023. docs/evidence/TB-P10-T022-R3/recovery-sot.md
+
+Git:
+SHA=1f0706fe1c51f8f96e61b7e26744f7b5311e6f80 HEAD==origin/main after push. Unrelated .tmp-* leftovers not committed.
+
+Architectural-Concerns:
+Wireframe only — future seed persistence/cleanup is out of scope until dedicated task.
+
+Visual-Concerns:
+Builder USER_VISUAL_ACCEPTED=NO — user must approve wireframe structure before final design/seed work.
+
+Blockers:
+none
+
+END_TOOBA_WORKER_RESULT
