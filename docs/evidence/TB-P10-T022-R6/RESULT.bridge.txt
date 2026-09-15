@@ -1,1 +1,81 @@
-﻿
+BEGIN_TOOBA_WORKER_RESULT
+
+Task-ID:
+TB-P10-T022-R6
+
+Status:
+PASS
+
+Summary:
+Completed exact Product/Category/Brand Template Catalog structural parity deferred from R5: Template tags/attrs/options/bindings/facets/mega-menu/variant axes/values/history/slug history; Fashion structural seed; category preview media from Template fashion-template assets instead of generic `/images/categories` placeholders; operational Catalog unchanged; locks SF-293…296.
+
+Applicable-Locks:
+LOCK-SF-001…292 preserved; added LOCK-SF-293…296.
+
+Recovery-Start:
+docs/evidence/TB-P10-T022-R6/recovery-start.md — main @ df881c29 start; no RECOVERY_CONFLICT.
+
+Exact-Parity-Matrix:
+docs/evidence/TB-P10-T022-R6/exact-parity-matrix.md — no deferred Product/Category/Brand structural mirrors remain.
+
+Product-Parity:
+template_product_variant_axes, template_product_attribute_values, template_variant_attribute_values, template_product_tag_assignments, template_product_history_entries (+ TemplateVariants exercised).
+
+Category-Parity:
+template_category_tag_assignments, template_category_attribute_bindings, template_category_facet_configurations, template_mega_menu_items(+translations), template_category_slug_histories.
+
+Brand-Parity:
+Template brands already mirrored in R5; no additional Brand child tables required beyond localized name.
+
+Migration-Repair:
+20260915180000_AddTemplateCatalogParity applied on Host Development startup.
+
+Fashion-Seed-Exercise:
+EnsureStructuralParityAsync after core Fashion seed — attrs=2, tags=2, mega=8, variants=15, history=15, slugHist=8, bindings=8, facets=8; counts remain 8 roots / 15 products / 6 brands.
+
+Category-Media-Fidelity:
+docs/evidence/TB-P10-T022-R6/category-media-fidelity.md — preview DTO imageUrl/imageMediaAssetId; LandingCategoryGrid prefers Template media; DOM data-category-media=template ×8.
+
+Media-Recheck:
+Root category URLs `/images/fashion-template/{1..8}.jpg`; no `/images/categories/` in Fashion preview roots.
+
+Repository-Purity:
+FashionTemplatePreviewQuery still Template-only; purity.isPure=true; operational*Hits=0.
+
+Clone-Readiness:
+docs/evidence/TB-P10-T022-R6/clone-readiness.md — schema-shape blocker cleared; clone not implemented.
+
+Performance:
+docs/evidence/TB-P10-T022-R6/performance.md — TemplateId indexes; no operational width increase.
+
+Focused-Validation:
+Host FashionTemplateCatalogT022R5+R6 tests (6 PASS); admin-builder-ux-r4.guard (8 PASS); recovery-staleness (4 PASS); critical-storefront (20 PASS); git diff --check clean of whitespace errors.
+
+Runtime:
+docs/evidence/TB-P10-T022-R6/runtime.md — Host :5088 + FE :3000 PASS A–L.
+
+Visual-Evidence:
+docs/evidence/TB-P10-T022-R6/screenshots/ + visual-evidence.md
+
+AntiPattern-Scan:
+docs/evidence/TB-P10-T022-R6/antipattern-scan.md — CLEAN
+
+Lock-Registry:
+docs/architecture/TOOBA-LOCKS.md LOCK-SF-293…296 appended.
+
+Recovery-SoT:
+TOOBA-RECOVERY-CONTEXT.md + PROJECT-STATE.md — Last Architect-accepted=TB-P10-T022-R4; Last Implementation=TB-P10-T022-R6; Issued/Repair=none; no T023.
+
+Git:
+branch main; HEAD==origin/main after push; implementation=7f6e23c811d69d27e011a5d9f43ee2725cb2afe9.
+
+Architectural-Concerns:
+none for Product/Category/Brand structural parity scope.
+
+Visual-Concerns:
+Fashion template media assets are shared lifestyle shots across several category cards; still Fashion-relevant Template media (not generic category PNG placeholders).
+
+Blockers:
+none
+
+END_TOOBA_WORKER_RESULT
