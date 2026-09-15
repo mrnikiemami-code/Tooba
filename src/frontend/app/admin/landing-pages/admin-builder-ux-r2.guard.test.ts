@@ -54,6 +54,8 @@ test("Template preview structural distinctness", () => {
   assert.match(previews, /industryTone/);
   assert.match(composer, /AdminTemplateSelectionWorkspace|use-selected-template/);
   assert.match(workspace, /data-template-preview-v2|template-device-toolbar|industryWireframeBlocks/);
+  assert.match(workspace, /template-industry-photo|INDUSTRY_TEMPLATE_PHOTO/);
+  assert.doesNotMatch(workspace, /template-composition-miniature/);
   assert.match(workspace, /use-selected-template/);
 });
 

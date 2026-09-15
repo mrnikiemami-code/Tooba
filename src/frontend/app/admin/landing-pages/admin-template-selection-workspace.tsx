@@ -4,12 +4,11 @@ import { useMemo, useState } from "react";
 import { Monitor, Smartphone, Tablet } from "lucide-react";
 import {
   listIndustryTemplates,
-  templateSectionSummaryFa,
+  templateSectionLabelsFa,
   type IndustryTemplateSeed,
 } from "../../../lib/storefront-composition/industry-templates.ts";
 import {
   FASHION_DEMO_ORIGIN,
-  FASHION_SECTION_LABELS_FA,
   fashionDemoSeedSummaryFa,
 } from "../../../lib/storefront-composition/fashion-demo-preview.ts";
 import { layoutAwareTemplatePreview } from "./layout-aware-previews.tsx";
@@ -30,8 +29,24 @@ const FASHION_IFRAME_VIEWPORT: Record<TemplatePreviewDevice, { width: number; he
 };
 
 const FASHION_PREVIEW_SRC = "/template-preview/fashion";
-const FASHION_INDUSTRY_THUMB =
-  "https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&w=240&h=240&q=80";
+
+/** Local industry photos for template cards/summary (no geometric wireframe thumbs). */
+const INDUSTRY_TEMPLATE_PHOTO: Record<string, string> = {
+  fashion: "/images/industry-templates/fashion.jpg",
+  "auto-parts": "/images/industry-templates/auto-parts.jpg",
+  "building-supplies": "/images/industry-templates/building-supplies.jpg",
+  "tools-hardware": "/images/industry-templates/tools-hardware.jpg",
+  "tile-ceramic": "/images/industry-templates/tile-ceramic.jpg",
+  "interior-decor": "/images/industry-templates/interior-decor.jpg",
+  "home-appliance": "/images/industry-templates/home-appliance.jpg",
+  shoes: "/images/industry-templates/shoes.jpg",
+  plants: "/images/industry-templates/plants.jpg",
+  beauty: "/images/industry-templates/beauty.jpg",
+};
+
+function industryTemplatePhoto(templateKey: string): string {
+  return INDUSTRY_TEMPLATE_PHOTO[templateKey] ?? INDUSTRY_TEMPLATE_PHOTO.fashion!;
+}
 
 /** Wireframe block recipes — structurally distinct per industry (not identical skeletons). */
 function industryWireframeBlocks(template: IndustryTemplateSeed, device: TemplatePreviewDevice): Array<{ kind: string; className: string }> {
@@ -171,34 +186,42 @@ export function AdminTemplateSelectionWorkspace({
           <h2 className="text-sm font-black text-slate-800">قالب‌های صنعتی</h2>
           <div className="grid max-h-[70vh] gap-3 overflow-y-auto pe-1 sm:grid-cols-2 xl:grid-cols-1">
             {templates.map((template) => {
-              const preview = layoutAwareTemplatePreview(template);
               const isSelected = selected?.templateKey === template.templateKey;
+              const photoSrc = industryTemplatePhoto(template.templateKey);
+              const sectionLabels = templateSectionLabelsFa(template);
               return (
                 <button
                   key={template.templateKey}
                   type="button"
-                  className={`rounded-2xl border bg-surface-elevated p-3 text-start transition-colors ${
+                  className={`flex items-start gap-3 rounded-2xl border bg-surface-elevated p-3 text-start transition-colors ${
                     isSelected ? "border-[#2563EB] ring-2 ring-[#2563EB]/25" : "border-border hover:border-[#2563EB]/50"
                   }`}
                   data-testid={`template-card-${template.templateKey}`}
                   data-template-selected={isSelected ? "true" : undefined}
                   onClick={() => onSelect(template.templateKey, template)}
                 >
-                  <div
-                    className={`mb-2 grid h-20 grid-cols-6 gap-1 rounded-xl p-1.5 ${preview.toneClass}`}
-                    aria-hidden
-                    data-testid="template-composition-miniature"
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={photoSrc}
+                    alt=""
+                    className="h-20 w-20 shrink-0 rounded-2xl border border-border object-cover"
+                    data-testid="template-industry-photo"
                     data-industry={template.industry}
-                  >
-                    {preview.cells.slice(0, 10).map((cell, index) => (
-                      <span key={`${template.templateKey}-${index}`} className={cell.className} data-kind={cell.kind} />
-                    ))}
+                    data-template-key={template.templateKey}
+                  />
+                  <div className="min-w-0 flex-1">
+                    <p className="font-black">{template.nameFa}</p>
+                    <p className="mt-1 line-clamp-2 text-xs text-muted">{template.descriptionFa}</p>
+                    <ol
+                      className="mt-2 list-decimal space-y-0.5 ps-4 text-[11px] font-bold text-slate-800"
+                      data-testid={template.templateKey === "fashion" ? "fashion-card-section-list" : `template-card-section-list-${template.templateKey}`}
+                      data-lock={template.templateKey === "fashion" ? "LOCK-SF-284" : undefined}
+                    >
+                      {sectionLabels.map((label, index) => (
+                        <li key={`${template.templateKey}-${index}-${label}`}>{label}</li>
+                      ))}
+                    </ol>
                   </div>
-                  <p className="font-black">{template.nameFa}</p>
-                  <p className="mt-1 line-clamp-2 text-xs text-muted">{template.descriptionFa}</p>
-                  <p className="mt-2 text-[11px] font-bold text-slate-600">
-                    {template.sectionPresetList.length.toLocaleString("fa-IR")} بخش · {templateSectionSummaryFa(template)}
-                  </p>
                 </button>
               );
             })}
@@ -208,64 +231,13 @@ export function AdminTemplateSelectionWorkspace({
         <section className="space-y-4 rounded-2xl border border-border bg-surface-elevated p-4" data-testid="template-detail-panel">
           {selected && compactPreview ? (
             <>
-              {isFashionLive ? (
-                <div
-                  className="grid gap-4 rounded-2xl border border-border bg-slate-50 p-4 lg:grid-cols-[7rem_minmax(0,1fr)]"
-                  data-testid="fashion-summary-panel"
-                  data-lock="LOCK-SF-284"
-                >
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={FASHION_INDUSTRY_THUMB}
-                    alt=""
-                    className="h-28 w-28 rounded-2xl object-cover border border-rose-200"
-                    data-testid="fashion-industry-thumbnail"
-                  />
-                  <div>
-                    <h2 className="text-lg font-black" data-testid="template-detail-name">
-                      {selected.nameFa}
-                    </h2>
-                    <p className="mt-1 text-sm text-muted">{selected.descriptionFa}</p>
-                    <ol className="mt-3 list-decimal space-y-1 ps-5 text-sm font-bold text-slate-800" data-testid="fashion-section-list">
-                      {FASHION_SECTION_LABELS_FA.map((label) => (
-                        <li key={label}>{label}</li>
-                      ))}
-                    </ol>
-                  </div>
+              <div className="flex flex-wrap items-start justify-between gap-3">
+                <div className="min-w-0 flex-1">
+                  <h2 className="text-lg font-black" data-testid="template-detail-name">
+                    {selected.nameFa}
+                  </h2>
+                  <p className="mt-1 text-sm text-muted">{selected.descriptionFa}</p>
                 </div>
-              ) : (
-                <div className="flex flex-wrap items-start justify-between gap-3">
-                  <div>
-                    <h2 className="text-lg font-black" data-testid="template-detail-name">
-                      {selected.nameFa}
-                    </h2>
-                    <p className="mt-1 text-sm text-muted">{selected.descriptionFa}</p>
-                    <p className="mt-2 text-xs font-bold text-slate-600" data-testid="template-detail-sections">
-                      {selected.sectionPresetList.length.toLocaleString("fa-IR")} بخش · {templateSectionSummaryFa(selected)}
-                    </p>
-                  </div>
-                  <div className="flex flex-wrap gap-2">
-                    <button
-                      type="button"
-                      className="rounded-xl bg-[#2563EB] px-4 py-2 text-sm font-bold text-white"
-                      data-testid="use-selected-template"
-                      onClick={onConfirmTemplate}
-                    >
-                      استفاده از این قالب
-                    </button>
-                    <button
-                      type="button"
-                      className="rounded-xl border px-4 py-2 text-sm font-bold"
-                      data-testid="template-detail-start-blank"
-                      onClick={onStartBlank}
-                    >
-                      شروع از صفحه خالی
-                    </button>
-                  </div>
-                </div>
-              )}
-
-              {isFashionLive ? (
                 <div className="flex flex-wrap gap-2">
                   <button
                     type="button"
@@ -284,7 +256,7 @@ export function AdminTemplateSelectionWorkspace({
                     شروع از صفحه خالی
                   </button>
                 </div>
-              ) : null}
+              </div>
 
               <div className="flex flex-wrap items-center gap-2" data-testid="template-device-toolbar" role="toolbar" aria-label="حالت پیش‌نمایش دستگاه">
                 {(

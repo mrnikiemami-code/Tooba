@@ -28,7 +28,7 @@ import type {
   StorefrontReviewsPage,
   StorefrontReviewSubmission,
 } from "./storefront-model.ts";
-import { fashionDemoMediaUrl } from "../../lib/storefront-composition/fashion-demo-preview.ts";
+import { fashionDemoMediaUrl } from "../../lib/storefront-composition/fashion-demo-media.ts";
 
 function readProp(record: Record<string, unknown>, camel: string, pascal: string): unknown {
   return record[camel] ?? record[pascal];

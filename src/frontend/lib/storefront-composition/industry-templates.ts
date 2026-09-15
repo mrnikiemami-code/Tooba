@@ -194,6 +194,26 @@ export function templateSectionSummaryFa(template: IndustryTemplateSeed): string
   return `${template.sectionPresetList.length.toLocaleString("fa-IR")} بخش · ${parts.join(" + ")}`;
 }
 
+/** Ordered short section labels for template cards (Fashion pilot includes مقالات). */
+export function templateSectionLabelsFa(template: IndustryTemplateSeed): string[] {
+  if (template.templateKey === "fashion") {
+    return ["هیرو", "استوری", "دسته‌بندی", "محصولات", "بنر کمپین", "برندها", "نظرات", "مقالات"];
+  }
+  const labelByType: Record<string, string> = {
+    HeroCarousel: "هیرو",
+    StoryRail: "استوری",
+    CategoryShowcase: "دسته‌بندی",
+    ProductShowcase: "محصولات",
+    ProductRankedList: "محصولات",
+    BannerShowcase: "بنر کمپین",
+    BrandShowcase: "برندها",
+    ReviewsShowcase: "نظرات",
+    ArticleShowcase: "مقالات",
+    PromoSection: "پرومو",
+  };
+  return template.sectionPresetList.map((preset) => labelByType[preset.sectionTypeKey] ?? "بخش");
+}
+
 export function templateCompositionMiniature(template: IndustryTemplateSeed): string[] {
   return template.sectionPresetList.map((preset) => {
     if (preset.sectionTypeKey === "HeroCarousel") return "hero";
