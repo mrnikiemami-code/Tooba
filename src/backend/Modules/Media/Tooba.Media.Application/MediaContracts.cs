@@ -12,7 +12,9 @@ public sealed record MediaAssetInfo(
     int? Width,
     int? Height,
     DateTimeOffset CreatedAt,
-    string? DisplayUrl = null);
+    string? DisplayUrl = null,
+    double? FocalPointX = null,
+    double? FocalPointY = null);
 
 /// <summary>ذخیره‌ساز باینری محلی یا ابری برای کلیدهای نسبی امن.</summary>
 public interface IMediaObjectStore

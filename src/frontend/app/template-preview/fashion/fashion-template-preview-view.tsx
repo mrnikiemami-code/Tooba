@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState, type FormEvent, type MouseEvent } from "react";
+import { useCallback, useEffect, useMemo, useState, type FormEvent, type MouseEvent } from "react";
 import {
   FASHION_DEMO_ORIGIN,
   FASHION_STORE_ORIGIN,
@@ -9,7 +9,10 @@ import {
   loadFashionTemplatePreview,
   type FashionPreviewSource,
 } from "../../../lib/storefront-composition/fashion-demo-preview.ts";
-import { useLocale } from "../../../lib/i18n/locale-context.tsx";
+import {
+  previewStatusLabel,
+  type TemplatePreviewContext,
+} from "../../../lib/storefront-composition/template-preview-context.ts";
 import type {
   LandingRenderContext,
   StorefrontLandingPage,
@@ -18,16 +21,18 @@ import { StorefrontLandingSections } from "../../storefront/storefront-landing-s
 import { StorefrontShell } from "../../storefront/storefront-shell.tsx";
 
 type Props = {
-  source: FashionPreviewSource;
+  context: TemplatePreviewContext;
   /** Full standalone page (not Admin iframe). */
   fullPage?: boolean;
 };
 
 /**
- * Fashion template preview — same composition for sample and store; only data source changes.
+ * Fashion template preview — iframe and full-page share this view + loaders (LOCK-SF-300).
  */
-export function FashionTemplatePreviewView({ source, fullPage = false }: Props) {
-  const locale = useLocale();
+export function FashionTemplatePreviewView({ context: previewContext, fullPage = false }: Props) {
+  const source = previewContext.sourceMode;
+  const localeCode = previewContext.locale || "fa-IR";
+  const uiLocale = localeCode.toLowerCase().startsWith("en") ? "en" : "fa";
   const [context, setContext] = useState<LandingRenderContext | null>(null);
   const [page, setPage] = useState<StorefrontLandingPage | null>(null);
   const [origin, setOrigin] = useState(source === "store" ? FASHION_STORE_ORIGIN : FASHION_DEMO_ORIGIN);
@@ -40,7 +45,7 @@ export function FashionTemplatePreviewView({ source, fullPage = false }: Props) 
     setContext(null);
     setPage(null);
 
-    const load = source === "store" ? loadFashionStorePreview(locale) : loadFashionTemplatePreview();
+    const load = source === "store" ? loadFashionStorePreview(uiLocale) : loadFashionTemplatePreview();
     load
       .then((result) => {
         if (cancelled) return;
@@ -52,13 +57,13 @@ export function FashionTemplatePreviewView({ source, fullPage = false }: Props) 
       .catch((err: unknown) => {
         if (cancelled) return;
         const raw = err instanceof Error ? err.message : "preview.load.failed";
-        setError(fashionPreviewErrorMessage(raw, locale));
+        setError(fashionPreviewErrorMessage(raw, uiLocale));
       });
 
     return () => {
       cancelled = true;
     };
-  }, [source, locale]);
+  }, [source, uiLocale, localeCode]);
 
   const blockPreviewSideEffects = useCallback((event: MouseEvent) => {
     if (fullPage) return;
@@ -76,9 +81,11 @@ export function FashionTemplatePreviewView({ source, fullPage = false }: Props) 
     event.stopPropagation();
   }, [fullPage]);
 
+  const banner = useMemo(() => previewStatusLabel(source, localeCode), [source, localeCode]);
+
   if (error) {
     return (
-      <div data-testid="fashion-template-preview-error" className="p-6 text-sm text-red-700" lang={locale}>
+      <div data-testid="fashion-template-preview-error" className="p-6 text-sm text-red-700" lang={uiLocale}>
         {error}
       </div>
     );
@@ -86,37 +93,30 @@ export function FashionTemplatePreviewView({ source, fullPage = false }: Props) 
 
   if (!context || !page) {
     return (
-      <div data-testid="fashion-template-preview-loading" className="p-6 text-sm text-slate-600" lang={locale}>
+      <div data-testid="fashion-template-preview-loading" className="p-6 text-sm text-slate-600" lang={uiLocale}>
         {source === "sample"
-          ? locale === "en"
-            ? "Loading Template Catalog…"
-            : "در حال بارگذاری Template Catalog…"
-          : locale === "en"
-            ? "Loading store data into the Fashion template…"
-            : "در حال بارگذاری داده فروشگاه روی قالب پوشاک…"}
+          ? uiLocale === "en"
+            ? "Loading sample data…"
+            : "در حال بارگذاری داده نمونه…"
+          : uiLocale === "en"
+            ? "Loading your store data…"
+            : "در حال بارگذاری اطلاعات فروشگاه…"}
       </div>
     );
   }
-
-  const banner =
-    source === "sample"
-      ? locale === "en"
-        ? "Fashion template preview — persisted Template Catalog · no operational store mix"
-        : "پیش‌نمایش قالب پوشاک — Template Catalog پایدار · بدون مخلوط فروشگاه عملیاتی"
-      : locale === "en"
-        ? "Same Fashion template — data from operational store Catalog"
-        : "همان قالب پوشاک — داده از Catalog عملیاتی فروشگاه";
 
   return (
     <div
       data-testid="fashion-template-preview"
       data-demo-origin={origin}
       data-preview-source={source}
+      data-preview-locale={localeCode}
+      data-preview-device={previewContext.deviceMode}
       data-preview-safe={fullPage ? undefined : "1"}
       data-preview-full={fullPage ? "1" : undefined}
       data-template-purity={source === "sample" ? (purityOk ? "pure" : "mixed") : "store"}
-      data-template-key="fashion"
-      lang={locale}
+      data-template-key={previewContext.templateKey}
+      lang={uiLocale}
       onClickCapture={blockPreviewSideEffects}
       onSubmitCapture={blockSubmit}
     >
@@ -128,7 +128,13 @@ export function FashionTemplatePreviewView({ source, fullPage = false }: Props) 
         {banner}
       </div>
       <StorefrontShell categories={context.categories} fullBleed={fullPage}>
-        <StorefrontLandingSections page={page} context={context} preview={!fullPage} />
+        <StorefrontLandingSections
+          page={page}
+          context={context}
+          preview
+          previewSource={source}
+          previewLocale={localeCode}
+        />
       </StorefrontShell>
     </div>
   );

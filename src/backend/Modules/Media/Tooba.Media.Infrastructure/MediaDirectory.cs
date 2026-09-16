@@ -225,5 +225,7 @@ public sealed class MediaDirectory : IMediaDirectory
             asset.Width,
             asset.Height,
             asset.CreatedAt,
-            DisplayUrl: $"/v1/storefront/media/{asset.MediaAssetId:D}");
+            DisplayUrl: $"/v1/storefront/media/{asset.MediaAssetId:D}",
+            FocalPointX: asset.FocalPointX,
+            FocalPointY: asset.FocalPointY);
 }

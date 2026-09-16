@@ -8,11 +8,22 @@ import { FashionTemplatePreviewView } from "../fashion-template-preview-view.tsx
 function FashionTemplateFullPageBody() {
   const params = useSearchParams();
   const source = parseFashionPreviewSource(params.get("source"));
-  return <FashionTemplatePreviewView source={source} fullPage />;
+  const locale = params.get("locale")?.trim() || "fa-IR";
+  return (
+    <FashionTemplatePreviewView
+      context={{
+        templateKey: "fashion",
+        sourceMode: source,
+        locale,
+        deviceMode: "fullPage",
+      }}
+      fullPage
+    />
+  );
 }
 
 /**
- * Full-page Fashion template preview (same design as iframe, standalone route).
+ * Full-page Fashion template preview — same canonical context as iframe.
  */
 export default function FashionTemplateFullPage() {
   return (

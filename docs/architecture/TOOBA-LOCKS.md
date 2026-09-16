@@ -1052,3 +1052,30 @@ Fashion category preview media must come from Fashion-relevant Template Catalog 
 ### LOCK-SF-296 — Clone remaps identity/FK without schema translation
 Future cloning may require identity/FK remapping but must not require translating between different Catalog schemas.
 
+### LOCK-SF-297 — Preview source isolation
+Preview source modes are strictly isolated: Store mode never falls back to Template/Sample catalog content.
+
+### LOCK-SF-298 — Preview empty-state geometry
+Missing Store content in preview preserves real Section/Variant geometry using non-persistent preview-only placeholders.
+
+### LOCK-SF-299 — Preview placeholders never publish
+Preview-only placeholders must never persist and must never appear on published Storefront.
+
+### LOCK-SF-300 — Canonical preview context
+Iframe and full-page preview consume one canonical preview context and shared renderer/data resolver.
+
+### LOCK-SF-301 — Dynamic preview locale
+Preview locale is dynamic from existing language configuration/translation tables and is page-level, not section-level.
+
+### LOCK-SF-302 — Iframe/full-page identity
+Same preview context must resolve identical content/media identity in iframe and full-page rendering.
+
+### LOCK-SF-303 — Focal-point media crop
+Hero/banner responsive media uses standard focal-point semantics; device-specific magic crop coordinates are forbidden.
+
+### LOCK-SF-304 — Focal defaults without mass rewrite
+Existing large operational media data must not require mass rewrite merely to adopt focal-point defaults; null/default-center semantics are permitted.
+
+### LOCK-SF-305 — User-facing preview copy
+User-facing preview UI must not expose internal architecture terms such as Template Catalog purity/debug text.
+

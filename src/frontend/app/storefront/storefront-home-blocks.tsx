@@ -6,6 +6,7 @@ import { ChevronLeft, Flame, ImageOff } from "lucide-react";
 import { StorefrontProductCardView } from "./storefront-product-card.tsx";
 import type { StorefrontCategoryItem, StorefrontProductCard } from "./storefront-model.ts";
 import { heightPresetHeroClass } from "../../lib/storefront-composition/size-presets.ts";
+import { PreviewPlaceholderSurface } from "./preview-placeholder-surface.tsx";
 
 const SLIDES = [
   { src: "/images/sliders/slider-1.jpg", href: "/offers", alt: "بنر فروشگاهی یک" },
@@ -538,27 +539,66 @@ export function CompositionBannerGrid({
   heightPreset,
   testId,
   items,
+  allowHomeFallback = true,
+  previewPlaceholder = false,
+  previewPlaceholderSlots,
+  previewLocale = "fa",
 }: {
   layout: BannerLayout;
   title?: string;
   href?: string;
   heightPreset?: unknown;
   testId?: string;
-  items?: Array<{ src?: string; href?: string; title?: string }>;
+  items?: Array<{ src?: string; href?: string; title?: string; objectPosition?: string }>;
+  /** When false (template Store preview), never fill from home MIDDLE_BANNERS. */
+  allowHomeFallback?: boolean;
+  previewPlaceholder?: boolean;
+  previewPlaceholderSlots?: number;
+  previewLocale?: string;
 }) {
   const hasConfiguredItems = Boolean(items && items.length > 0);
+  if (!hasConfiguredItems && !allowHomeFallback) {
+    if (previewPlaceholder) {
+      const slots =
+        previewPlaceholderSlots
+        ?? (layout === "single" ? 1 : layout === "three" ? 3 : layout === "four-grid" ? 4 : 2);
+      return (
+        <PreviewPlaceholderSurface
+          kind="banner"
+          locale={previewLocale}
+          slots={slots}
+          aspectClass={layout === "single" ? "min-h-[180px] md:min-h-[240px]" : "aspect-[21/9]"}
+        />
+      );
+    }
+    return (
+      <section className="w-full px-2 sm:px-4 py-6" data-testid={testId ?? "composition-banner-empty"} data-banner-empty="true">
+        <div className="rounded-3xl border border-dashed border-gray-200 bg-section-surface px-4 py-10 text-center text-sm text-muted">
+          بنری برای نمایش تنظیم نشده است.
+        </div>
+      </section>
+    );
+  }
   const banners = (hasConfiguredItems
     ? items!.map((item, index) => ({
       src: item.src?.trim() || "",
       href: item.href || "/offers",
-      title: item.title || MIDDLE_BANNERS[index % MIDDLE_BANNERS.length]!.title,
+      title: item.title || (allowHomeFallback ? MIDDLE_BANNERS[index % MIDDLE_BANNERS.length]!.title : `بنر ${index + 1}`),
       missing: !item.src?.trim(),
+      objectPosition: item.objectPosition ?? "50% 50%",
     }))
-    : MIDDLE_BANNERS.map((banner) => ({ ...banner, missing: false })));
+    : MIDDLE_BANNERS.map((banner) => ({ ...banner, missing: false, objectPosition: "50% 50%" })));
   const link = href ?? "/offers";
 
-  const media = (banner: { src: string; title: string; missing?: boolean }, className: string) => {
+  const media = (banner: { src: string; title: string; missing?: boolean; objectPosition?: string }, className: string) => {
     if (banner.missing || !banner.src) {
+      if (previewPlaceholder) {
+        return (
+          <div className={`flex flex-col items-center justify-center gap-2 border-2 border-dashed border-slate-300 bg-slate-50 text-slate-600 ${className}`} data-preview-placeholder="preview-placeholder" data-banner-missing-media="true">
+            <span className="text-xs font-bold px-3 text-center">تصویر بنر فروشگاه شما در این قسمت نمایش داده می‌شود</span>
+          </div>
+        );
+      }
       return (
         <div className={`flex flex-col items-center justify-center gap-2 bg-section-surface text-muted ${className}`} data-banner-missing-media="true">
           <ImageOff className="h-6 w-6" aria-hidden />
@@ -568,7 +608,7 @@ export function CompositionBannerGrid({
     }
     return (
       // eslint-disable-next-line @next/next/no-img-element
-      <img src={banner.src} alt={banner.title || ""} className={className} />
+      <img src={banner.src} alt={banner.title || ""} className={className} style={{ objectPosition: banner.objectPosition ?? "50% 50%" }} />
     );
   };
 

@@ -287,7 +287,9 @@ type FashionTemplatePageOptions = {
   bannerItems?: Array<Record<string, unknown>>;
 };
 
-/** Same Fashion industry template composition; data IDs come from `context`. */
+/** Same Fashion industry template composition; data IDs come from `context`.
+ * Store mode never substitutes Template/Sample assets (LOCK-SF-297).
+ */
 export function buildFashionTemplatePage(
   context: LandingRenderContext,
   options: FashionTemplatePageOptions,
@@ -295,6 +297,7 @@ export function buildFashionTemplatePage(
   const template = getIndustryTemplate("fashion");
   if (!template) throw new Error("Fashion template missing");
   const payloads = buildTemplateSectionPayloads("fashion");
+  const isStore = options.origin === FASHION_STORE_ORIGIN;
   const rootCategoryIds = context.categories
     .filter((c) => !c.parentCategoryId)
     .map((c) => c.categoryId);
@@ -303,63 +306,96 @@ export function buildFashionTemplatePage(
     : context.categories.map((c) => c.categoryId);
   const productIds = context.products.map((p) => p.productId);
   const brandIds = context.brands.map((b) => b.brandId);
-  const heroImage =
-    context.products.find((p) => p.mediaAssetId)?.mediaAssetId
-      ? undefined
-      : FASHION_IMAGES[0];
   const firstProductMedia = context.products
     .map((p) => p.mediaAssetId)
-    .filter(Boolean)
+    .filter((id): id is string => Boolean(id))
     .slice(0, 2);
-  const bannerItems =
-    options.bannerItems
-    ?? (firstProductMedia.length > 0
+
+  let bannerItems: Array<Record<string, unknown>>;
+  if (options.bannerItems && options.bannerItems.length > 0) {
+    bannerItems = options.bannerItems;
+  } else if (isStore) {
+    // Strict isolation: never inject Template/Sample banner assets.
+    bannerItems = [];
+  } else {
+    bannerItems = firstProductMedia.length > 0
       ? firstProductMedia.map((mediaAssetId, index) => ({
           mediaAssetId,
           href: "/products",
-          title: index === 0 ? "پیشنهاد فروشگاه" : "منتخب فروشگاه",
+          title: index === 0 ? "پیشنهاد نمونه" : "منتخب نمونه",
         }))
       : [
           { imageUrl: FASHION_IMAGES[1], href: "/products", title: "کمپین فصل جدید" },
           { imageUrl: FASHION_IMAGES[2], href: "/products", title: "تخفیف اکسسوری" },
-        ]);
+        ];
+  }
 
   const sections: StorefrontLandingSection[] = payloads.map((payload, index) => {
-    const config = { ...payload.config, demoOrigin: options.origin };
+    const config: Record<string, unknown> = { ...payload.config, demoOrigin: options.origin };
     if (payload.hostType === "Hero") {
-      Object.assign(config, {
-        title: "مجموعه بهاره پوشاک",
-        subtitle: "استایل روزمره با قطعات ساده و قابل ترکیب",
-        href: "/products",
-        imageUrl: heroImage ?? FASHION_IMAGES[0],
-        ...(firstProductMedia[0] ? { mediaAssetId: firstProductMedia[0] } : {}),
-      });
+      if (isStore) {
+        Object.assign(config, {
+          title: "مجموعه فروشگاه",
+          subtitle: "محصولات واقعی Catalog عملیاتی",
+          href: "/products",
+          ...(firstProductMedia[0]
+            ? { mediaAssetId: firstProductMedia[0] }
+            : { previewPlaceholder: true }),
+        });
+        delete config.imageUrl;
+      } else {
+        Object.assign(config, {
+          title: "مجموعه بهاره پوشاک",
+          subtitle: "استایل روزمره با قطعات ساده و قابل ترکیب",
+          href: "/products",
+          imageUrl: FASHION_IMAGES[0],
+          ...(firstProductMedia[0] ? { mediaAssetId: firstProductMedia[0] } : {}),
+          focalPointX: 0.62,
+          focalPointY: 0.42,
+        });
+      }
     }
     if (payload.hostType === "CategoryGrid") {
       config.categoryIds = categoryIdsForGrid.slice(0, 8);
-      config.title = "دسته‌بندی پوشاک";
+      config.title = isStore ? "دسته‌بندی فروشگاه" : "دسته‌بندی پوشاک";
+      if (isStore && categoryIdsForGrid.length === 0) config.previewPlaceholder = true;
     }
     if (payload.hostType === "ProductCollection") {
       config.source = "Manual";
       config.productIds = productIds.slice(0, 15);
       config.take = 15;
-      config.title = "منتخب پوشاک";
+      config.title = isStore ? "منتخب فروشگاه" : "منتخب پوشاک";
+      if (isStore && productIds.length === 0) config.previewPlaceholder = true;
     }
     if (payload.hostType === "BannerShowcase") {
       config.items = bannerItems;
-      config.title = "بنرهای پوشاک";
+      config.title = isStore ? "بنرهای فروشگاه" : "بنرهای پوشاک";
+      if (isStore && bannerItems.length === 0) {
+        config.previewPlaceholder = true;
+        config.previewPlaceholderSlots = 2;
+      } else if (!isStore) {
+        // Fashion sample banners: bias focal toward subject.
+        config.items = bannerItems.map((item, i) => ({
+          ...item,
+          focalPointX: i === 0 ? 0.55 : 0.45,
+          focalPointY: 0.4,
+        }));
+      }
     }
     if (payload.hostType === "BrandStrip") {
       config.brandIds = brandIds.slice(0, 8);
       config.source = "Manual";
-      config.title = "برندهای نمایشی پوشاک";
+      config.title = isStore ? "برندهای فروشگاه" : "برندهای نمایشی پوشاک";
+      if (isStore && brandIds.length === 0) config.previewPlaceholder = true;
     }
     if (payload.hostType === "Reviews") {
       config.title = "نظر خریداران";
+      if (isStore && context.reviews.length === 0) config.previewPlaceholder = true;
     }
     if (payload.hostType === "StoryRail") {
-      config.title = "استوری‌های نمایشی";
+      config.title = isStore ? "استوری فروشگاه" : "استوری‌های نمایشی";
       config.take = 8;
+      if (isStore) config.previewPlaceholder = true;
     }
 
     const items =
@@ -381,11 +417,12 @@ export function buildFashionTemplatePage(
     sectionType: "ArticleList",
     sortOrder: sections.length,
     config: JSON.stringify({
-      title: "مجله پوشاک",
+      title: isStore ? "مقالات فروشگاه" : "مجله پوشاک",
       source: "Latest",
       take: 3,
       variantKey: "article.magazine-rail",
       demoOrigin: options.origin,
+      ...(isStore && context.articles.length === 0 ? { previewPlaceholder: true } : {}),
     }),
     items: [],
   });

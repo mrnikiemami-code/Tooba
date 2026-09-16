@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { ExternalLink, Monitor, Smartphone, Tablet } from "lucide-react";
 import {
   listIndustryTemplates,
@@ -13,6 +13,9 @@ import {
   fashionDemoSeedSummaryFa,
   type FashionPreviewSource,
 } from "../../../lib/storefront-composition/fashion-demo-preview.ts";
+import { fashionPreviewPath } from "../../../lib/storefront-composition/template-preview-context.ts";
+import { loadAdminLanguages } from "../language-api.ts";
+import type { SupportedLocaleDefinition } from "../../../lib/i18n/supported-locales.ts";
 import { layoutAwareTemplatePreview } from "./layout-aware-previews.tsx";
 
 export type TemplatePreviewDevice = "desktop" | "tablet" | "mobile";
@@ -33,12 +36,12 @@ const FASHION_IFRAME_VIEWPORT: Record<TemplatePreviewDevice, { width: number; he
 const FASHION_PREVIEW_PATH = "/template-preview/fashion";
 const FASHION_FULL_PAGE_PATH = "/template-preview/fashion/full";
 
-function fashionPreviewSrc(source: FashionPreviewSource): string {
-  return `${FASHION_PREVIEW_PATH}?source=${source}`;
+function fashionPreviewSrc(source: FashionPreviewSource, locale: string): string {
+  return fashionPreviewPath(false, { sourceMode: source, locale });
 }
 
-function fashionFullPageHref(source: FashionPreviewSource): string {
-  return `${FASHION_FULL_PAGE_PATH}?source=${source}`;
+function fashionFullPageHref(source: FashionPreviewSource, locale: string): string {
+  return fashionPreviewPath(true, { sourceMode: source, locale });
 }
 
 /** Local industry photos for template cards/summary (no geometric wireframe thumbs). */
@@ -155,6 +158,8 @@ export function AdminTemplateSelectionWorkspace({
   const templates = useMemo(() => listIndustryTemplates(), []);
   const [device, setDevice] = useState<TemplatePreviewDevice>("desktop");
   const [previewSource, setPreviewSource] = useState<FashionPreviewSource>("sample");
+  const [previewLocale, setPreviewLocale] = useState("fa-IR");
+  const [languages, setLanguages] = useState<SupportedLocaleDefinition[]>([]);
   const [iframeKey, setIframeKey] = useState(0);
   const selected = templates.find((t) => t.templateKey === selectedTemplateKey) ?? templates[0] ?? null;
   const isFashionLive = selected?.templateKey === "fashion";
@@ -163,10 +168,30 @@ export function AdminTemplateSelectionWorkspace({
   const blocks = selected && !isFashionLive ? industryWireframeBlocks(selected, device) : [];
   const compactPreview = selected ? layoutAwareTemplatePreview(selected) : null;
   const fashionSeedLines = fashionDemoSeedSummaryFa();
-  const fashionIframeSrc = fashionPreviewSrc(previewSource);
+  const fashionIframeSrc = fashionPreviewSrc(previewSource, previewLocale);
+
+  useEffect(() => {
+    let cancelled = false;
+    loadAdminLanguages().then((result) => {
+      if (cancelled || result.state !== "ok" || !result.data?.length) return;
+      const active = result.data.filter((row) => row.active).sort((a, b) => a.sortOrder - b.sortOrder);
+      const rows = active.length > 0 ? active : result.data;
+      setLanguages(rows);
+      const defaultRow = rows.find((row) => row.default) ?? rows[0];
+      if (defaultRow?.code) setPreviewLocale(defaultRow.code);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const loadPreviewSource = (source: FashionPreviewSource) => {
     setPreviewSource(source);
+    setIframeKey((key) => key + 1);
+  };
+
+  const changePreviewLocale = (code: string) => {
+    setPreviewLocale(code);
     setIframeKey((key) => key + 1);
   };
 
@@ -308,7 +333,7 @@ export function AdminTemplateSelectionWorkspace({
                 })}
                 {isFashionLive ? (
                   <a
-                    href={fashionFullPageHref(previewSource)}
+                    href={fashionFullPageHref(previewSource, previewLocale)}
                     target="_blank"
                     rel="noopener noreferrer"
                     title="همان طراحی را در یک صفحهٔ واقعی باز می‌کند"
@@ -318,6 +343,23 @@ export function AdminTemplateSelectionWorkspace({
                     <ExternalLink className="h-4 w-4" aria-hidden />
                     نمایش در یک صفحه
                   </a>
+                ) : null}
+                {isFashionLive && languages.length > 0 ? (
+                  <label className="inline-flex items-center gap-2 rounded-xl border border-border px-3 py-2 text-xs font-bold text-slate-700" data-testid="template-preview-language">
+                    <span className="text-muted">زبان</span>
+                    <select
+                      className="rounded-lg border border-border bg-white px-2 py-1 text-xs font-bold"
+                      value={previewLocale}
+                      onChange={(event) => changePreviewLocale(event.target.value)}
+                      aria-label="زبان پیش‌نمایش"
+                    >
+                      {languages.map((lang) => (
+                        <option key={lang.code} value={lang.code}>
+                          {lang.nativeName || lang.displayName || lang.code}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
                 ) : null}
               </div>
 

@@ -52,6 +52,12 @@ public sealed class MediaAsset
     /// <summary>ارتفاع پیکسل در صورت استخراج موفق؛ وگرنه null.</summary>
     public int? Height { get; private set; }
 
+    /// <summary>نقطهٔ کانونی افقی نرمال‌شده ۰..۱؛ null یعنی مرکز (۰٫۵).</summary>
+    public double? FocalPointX { get; private set; }
+
+    /// <summary>نقطهٔ کانونی عمودی نرمال‌شده ۰..۱؛ null یعنی مرکز (۰٫۵).</summary>
+    public double? FocalPointY { get; private set; }
+
     /// <summary>هش SHA-256 هگزادسیمال اختیاری.</summary>
     public string? ChecksumSha256 { get; private set; }
 
@@ -103,6 +109,21 @@ public sealed class MediaAsset
     {
         Status = MediaAssetStatus.Failed;
         UpdatedAt = now;
+    }
+
+    /// <summary>نقطهٔ کانونی نرمال‌شده را برای crop پاسخ‌گو تنظیم می‌کند؛ null یعنی مرکز.</summary>
+    public void SetFocalPoint(double? focalPointX, double? focalPointY, DateTimeOffset now)
+    {
+        FocalPointX = NormalizeFocal(focalPointX);
+        FocalPointY = NormalizeFocal(focalPointY);
+        UpdatedAt = now;
+    }
+
+    private static double? NormalizeFocal(double? value)
+    {
+        if (value is null) return null;
+        if (double.IsNaN(value.Value) || double.IsInfinity(value.Value)) return null;
+        return Math.Clamp(value.Value, 0d, 1d);
     }
 
     private static void Validate(

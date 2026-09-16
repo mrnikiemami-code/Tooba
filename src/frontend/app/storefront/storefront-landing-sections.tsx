@@ -28,16 +28,27 @@ export function StorefrontLandingSections({
   page,
   context,
   preview = false,
+  previewSource,
+  previewLocale = "fa",
 }: {
   page: StorefrontLandingPage;
   context: LandingRenderContext;
   preview?: boolean;
+  previewSource?: "sample" | "store";
+  previewLocale?: string;
 }) {
   return (
-    <div className="space-y-6 py-6 overflow-x-hidden" data-testid="storefront-landing-page" data-landing-slug={page.slug} data-landing-preview={preview ? "1" : "0"}>
+    <div
+      className="space-y-6 py-6 overflow-x-hidden"
+      data-testid="storefront-landing-page"
+      data-landing-slug={page.slug}
+      data-landing-preview={preview ? "1" : "0"}
+      data-preview-source={previewSource}
+      data-preview-locale={previewLocale}
+    >
       <h1 className="sr-only">{page.title}</h1>
       {page.sections.map((section) => {
-        const rendered = renderLandingSection(section, context);
+        const rendered = renderLandingSection(section, context, preview, previewSource, previewLocale);
         if (!rendered) return null;
         const role = landingSectionSurfaceRole(section.sectionType);
         return (
@@ -55,7 +66,13 @@ export function StorefrontLandingSections({
   );
 }
 
-function renderLandingSection(section: StorefrontLandingSection, context: LandingRenderContext) {
+function renderLandingSection(
+  section: StorefrontLandingSection,
+  context: LandingRenderContext,
+  preview: boolean,
+  previewSource: "sample" | "store" | undefined,
+  previewLocale: string,
+) {
   const config = parseConfig(section.config);
   switch (section.sectionType) {
     case "Hero":
@@ -75,7 +92,15 @@ function renderLandingSection(section: StorefrontLandingSection, context: Landin
         displayOrder: section.sortOrder,
         config,
       });
-      return renderSharedLandingSection({ section, composition, config, context });
+      return renderSharedLandingSection({
+        section,
+        composition,
+        config,
+        context,
+        preview,
+        previewSource,
+        previewLocale,
+      });
     }
     default:
       return null;

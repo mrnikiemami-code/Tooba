@@ -56,6 +56,14 @@ namespace Tooba.Media.Infrastructure.Migrations
                         .HasColumnType("integer")
                         .HasColumnName("height");
 
+                    b.Property<double?>("FocalPointX")
+                        .HasColumnType("double precision")
+                        .HasColumnName("focal_point_x");
+
+                    b.Property<double?>("FocalPointY")
+                        .HasColumnType("double precision")
+                        .HasColumnName("focal_point_y");
+
                     b.Property<string>("OriginalFileName")
                         .IsRequired()
                         .HasMaxLength(255)

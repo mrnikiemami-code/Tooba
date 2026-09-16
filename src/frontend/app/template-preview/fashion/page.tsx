@@ -8,7 +8,17 @@ import { FashionTemplatePreviewView } from "./fashion-template-preview-view.tsx"
 function FashionTemplatePreviewBody() {
   const params = useSearchParams();
   const source = parseFashionPreviewSource(params.get("source"));
-  return <FashionTemplatePreviewView source={source} />;
+  const locale = params.get("locale")?.trim() || "fa-IR";
+  return (
+    <FashionTemplatePreviewView
+      context={{
+        templateKey: "fashion",
+        sourceMode: source,
+        locale,
+        deviceMode: "desktop",
+      }}
+    />
+  );
 }
 
 /**

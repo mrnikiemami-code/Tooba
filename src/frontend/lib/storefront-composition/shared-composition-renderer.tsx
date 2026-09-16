@@ -40,6 +40,10 @@ import {
   LandingReviews,
   LandingRichText,
 } from "../../app/storefront/storefront-landing-blocks.tsx";
+import { PreviewPlaceholderSurface } from "../../app/storefront/preview-placeholder-surface.tsx";
+import { storefrontMediaUrl } from "../../app/storefront/storefront-api.ts";
+import { resolveObjectPosition } from "./template-preview-context.ts";
+import { resolveObjectPosition } from "./template-preview-context.ts";
 import type { CompositionSectionInstance, CompositionSurfaceRole } from "./types.ts";
 import { getVariant } from "./registry.ts";
 import { canonicalizeVariantKey, resolveSharedVariant } from "./resolve-variant.ts";
@@ -64,6 +68,11 @@ export type SharedLandingRenderInput = {
   composition: CompositionSectionInstance;
   config: Record<string, unknown>;
   context: LandingRenderContext;
+  /** Template preview mode — enables preview-only placeholders; never published. */
+  preview?: boolean;
+  /** sample | store — store forbids home/sample banner fallbacks. */
+  previewSource?: "sample" | "store";
+  previewLocale?: string;
 };
 
 function heroLayoutFromVariant(variantKey: string): HeroLayout {
@@ -379,9 +388,11 @@ export function renderSharedHomeSectionForLegacyType(
 }
 
 export function renderSharedLandingSection(input: SharedLandingRenderInput): ReactNode | null {
-  const { composition, config, context, section } = input;
+  const { composition, config, context, section, preview = false, previewSource, previewLocale = "fa" } = input;
   if (!composition.enabled) return null;
   const variantKey = canonicalizeVariantKey(composition.variantKey);
+  const storePreview = Boolean(preview && previewSource === "store");
+  const wantsPlaceholder = Boolean(config.previewPlaceholder);
 
   try {
     resolveSharedVariant(composition.sectionTypeKey, variantKey, { strict: true });
@@ -394,16 +405,39 @@ export function renderSharedLandingSection(input: SharedLandingRenderInput): Rea
     case "hero.contained":
     case "hero.split":
     case "hero.side-promos":
-    case "hero.editorial":
-      return <LandingHero config={config} layout={heroLayoutFromVariant(variantKey)} />;
+    case "hero.editorial": {
+      if (storePreview && wantsPlaceholder) {
+        return <PreviewPlaceholderSurface kind="hero" locale={previewLocale} aspectClass="min-h-[200px] md:min-h-[280px]" />;
+      }
+      const heroConfig = { ...config };
+      if (typeof heroConfig.mediaAssetId === "string" && heroConfig.mediaAssetId && !heroConfig.imageUrl) {
+        heroConfig.imageUrl = storefrontMediaUrl(String(heroConfig.mediaAssetId));
+      }
+      if (heroConfig.focalPointX != null || heroConfig.focalPointY != null) {
+        heroConfig.objectPosition = resolveObjectPosition(
+          typeof heroConfig.focalPointX === "number" ? heroConfig.focalPointX : null,
+          typeof heroConfig.focalPointY === "number" ? heroConfig.focalPointY : null,
+        );
+      }
+      return <LandingHero config={heroConfig} layout={heroLayoutFromVariant(variantKey)} />;
+    }
     case "story.circle":
     case "story.image-circles":
     case "story.rounded-cards":
     case "story.icon-shortcuts":
+      if (storePreview && wantsPlaceholder) {
+        return <PreviewPlaceholderSurface kind="story" locale={previewLocale} slots={4} aspectClass="aspect-square min-h-[96px]" />;
+      }
       return <HomeStoriesSection layout={storyLayoutFromVariant(variantKey)} />;
     case "product.card-carousel":
+      if (storePreview && wantsPlaceholder) {
+        return <PreviewPlaceholderSurface kind="product" locale={previewLocale} slots={2} aspectClass="min-h-[160px]" />;
+      }
       return <LandingProductRail section={section} config={config} products={context.products} layout="rail" />;
     case "product.grid":
+      if (storePreview && wantsPlaceholder) {
+        return <PreviewPlaceholderSurface kind="product" locale={previewLocale} slots={2} aspectClass="min-h-[160px]" />;
+      }
       return <LandingProductRail section={section} config={config} products={context.products} layout="grid" />;
     case "product.compact-rows":
       return <LandingProductRail section={section} config={config} products={context.products} layout="compact-rows" />;
@@ -428,14 +462,29 @@ export function renderSharedLandingSection(input: SharedLandingRenderInput): Rea
     case "category.compact-tiles":
     case "category.horizontal-rail":
     case "category.editorial-tiles":
+      if (storePreview && wantsPlaceholder) {
+        return <PreviewPlaceholderSurface kind="category" locale={previewLocale} slots={2} aspectClass="min-h-[140px]" />;
+      }
       return <LandingCategoryGrid config={config} categories={context.categories} layout={categoryLayoutFromVariant(variantKey)} />;
     case "brand.logo-rail":
+      if (storePreview && wantsPlaceholder) {
+        return <PreviewPlaceholderSurface kind="brand" locale={previewLocale} slots={2} aspectClass="min-h-[100px]" />;
+      }
       return <LandingBrandStrip config={config} brands={context.brands} layout="logo-rail" />;
     case "brand.logo-grid":
+      if (storePreview && wantsPlaceholder) {
+        return <PreviewPlaceholderSurface kind="brand" locale={previewLocale} slots={2} aspectClass="min-h-[100px]" />;
+      }
       return <LandingBrandStrip config={config} brands={context.brands} layout="logo-grid" />;
     case "brand.featured":
+      if (storePreview && wantsPlaceholder) {
+        return <PreviewPlaceholderSurface kind="brand" locale={previewLocale} slots={2} aspectClass="min-h-[100px]" />;
+      }
       return <LandingBrandStrip config={config} brands={context.brands} layout="featured" />;
     case "promo.default":
+      if (storePreview && wantsPlaceholder) {
+        return <PreviewPlaceholderSurface kind="promo" locale={previewLocale} />;
+      }
       return <LandingPromo config={config} />;
     case "banner.single":
     case "banner.two-equal":
@@ -448,11 +497,20 @@ export function renderSharedLandingSection(input: SharedLandingRenderInput): Rea
       const rawItems = Array.isArray(config.items) ? config.items : [];
       const items = rawItems
         .filter((item): item is Record<string, unknown> => Boolean(item) && typeof item === "object")
-        .map((item) => ({
-          src: typeof item.imageUrl === "string" ? item.imageUrl : undefined,
-          href: typeof item.href === "string" ? item.href : undefined,
-          title: typeof item.title === "string" ? item.title : undefined,
-        }));
+        .map((item) => {
+          const mediaId = typeof item.mediaAssetId === "string" ? item.mediaAssetId : undefined;
+          const imageUrl = typeof item.imageUrl === "string" ? item.imageUrl : undefined;
+          const src = imageUrl?.trim() || (mediaId ? storefrontMediaUrl(mediaId) : undefined);
+          return {
+            src,
+            href: typeof item.href === "string" ? item.href : undefined,
+            title: typeof item.title === "string" ? item.title : undefined,
+            objectPosition: resolveObjectPosition(
+              typeof item.focalPointX === "number" ? item.focalPointX : null,
+              typeof item.focalPointY === "number" ? item.focalPointY : null,
+            ),
+          };
+        });
       return (
         <CompositionBannerGrid
           layout={bannerLayoutFromVariant(variantKey)}
@@ -461,20 +519,42 @@ export function renderSharedLandingSection(input: SharedLandingRenderInput): Rea
           heightPreset={config.heightPreset}
           testId="landing-banner-showcase"
           items={items}
+          allowHomeFallback={!storePreview}
+          previewPlaceholder={storePreview && (wantsPlaceholder || items.length === 0 || items.every((i) => !i.src))}
+          previewPlaceholderSlots={typeof config.previewPlaceholderSlots === "number" ? config.previewPlaceholderSlots : undefined}
+          previewLocale={previewLocale}
         />
       );
     }
     case "article.magazine-rail":
+      if (storePreview && wantsPlaceholder) {
+        return <PreviewPlaceholderSurface kind="article" locale={previewLocale} slots={2} aspectClass="min-h-[140px]" />;
+      }
       return <LandingArticleList config={config} articles={context.articles} layout="magazine-rail" />;
     case "article.grid":
+      if (storePreview && wantsPlaceholder) {
+        return <PreviewPlaceholderSurface kind="article" locale={previewLocale} slots={2} aspectClass="min-h-[140px]" />;
+      }
       return <LandingArticleList config={config} articles={context.articles} layout="grid" />;
     case "article.featured-plus-list":
+      if (storePreview && wantsPlaceholder) {
+        return <PreviewPlaceholderSurface kind="article" locale={previewLocale} slots={2} aspectClass="min-h-[140px]" />;
+      }
       return <LandingArticleList config={config} articles={context.articles} layout="featured-plus-list" />;
     case "reviews.card-carousel":
+      if (storePreview && wantsPlaceholder) {
+        return <PreviewPlaceholderSurface kind="reviews" locale={previewLocale} slots={2} aspectClass="min-h-[140px]" />;
+      }
       return <LandingReviews reviews={context.reviews} layout="card-carousel" />;
     case "reviews.compact-quotes":
+      if (storePreview && wantsPlaceholder) {
+        return <PreviewPlaceholderSurface kind="reviews" locale={previewLocale} slots={2} aspectClass="min-h-[140px]" />;
+      }
       return <LandingReviews reviews={context.reviews} layout="compact-quotes" />;
     case "richtext.default":
+      if (storePreview && wantsPlaceholder) {
+        return <PreviewPlaceholderSurface kind="richtext" locale={previewLocale} />;
+      }
       return <LandingRichText config={config} />;
     case "nav.menu":
       return <LandingNavigationMenu config={config} menus={context.menus} />;

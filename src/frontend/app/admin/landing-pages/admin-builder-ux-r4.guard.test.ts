@@ -82,7 +82,7 @@ test("Fashion sample origin is persisted Template Catalog", () => {
   assert.match(fashionDemo, /store\.data\.unavailable/);
   assert.doesNotMatch(fashionDemo, /Operational store home is unavailable/);
   assert.match(fashionView, /fashionPreviewErrorMessage/);
-  assert.match(fashionView, /useLocale/);
+  assert.match(fashionView, /previewLocale|TemplatePreviewContext|previewStatusLabel/);
   assert.match(fashionMedia, /\/images\/fashion-template\//);
   assert.ok(fashionDemoMediaUrl("demo-fashion-media-1")?.startsWith("/images/fashion-template/"));
   assert.ok(
