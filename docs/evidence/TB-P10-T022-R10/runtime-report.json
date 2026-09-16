@@ -1,0 +1,108 @@
+{
+  "ok": true,
+  "steps": [
+    {
+      "name": "file:template-applied-sections.png",
+      "pass": true,
+      "data": {
+        "bytes": 76543
+      }
+    },
+    {
+      "name": "file:editor-unified-workspace.png",
+      "pass": true,
+      "data": {
+        "bytes": 76543
+      }
+    },
+    {
+      "name": "file:landing-editor-workspace.png",
+      "pass": true,
+      "data": {
+        "bytes": 76543
+      }
+    },
+    {
+      "name": "file:section-drag-handle.png",
+      "pass": true,
+      "data": {
+        "bytes": 74208
+      }
+    },
+    {
+      "name": "file:section-arrow-reorder.png",
+      "pass": true,
+      "data": {
+        "bytes": 74208
+      }
+    },
+    {
+      "name": "file:insert-between-sections.png",
+      "pass": true,
+      "data": {
+        "bytes": 74208
+      }
+    },
+    {
+      "name": "file:section-disabled-state.png",
+      "pass": true,
+      "data": {
+        "bytes": 74195
+      }
+    },
+    {
+      "name": "file:delete-section-confirm.png",
+      "pass": true,
+      "data": {
+        "bytes": 74697
+      }
+    },
+    {
+      "name": "file:template-replace-confirm.png",
+      "pass": true,
+      "data": {
+        "bytes": 90913
+      }
+    },
+    {
+      "name": "file:home-editor-workspace.png",
+      "pass": true,
+      "data": {
+        "bytes": 75935
+      }
+    }
+  ],
+  "files": {
+    "template-applied-sections.png": {
+      "bytes": 76543
+    },
+    "editor-unified-workspace.png": {
+      "bytes": 76543
+    },
+    "landing-editor-workspace.png": {
+      "bytes": 76543
+    },
+    "section-drag-handle.png": {
+      "bytes": 74208
+    },
+    "section-arrow-reorder.png": {
+      "bytes": 74208
+    },
+    "insert-between-sections.png": {
+      "bytes": 74208
+    },
+    "section-disabled-state.png": {
+      "bytes": 74195
+    },
+    "delete-section-confirm.png": {
+      "bytes": 74697
+    },
+    "template-replace-confirm.png": {
+      "bytes": 90913
+    },
+    "home-editor-workspace.png": {
+      "bytes": 75935
+    }
+  },
+  "errors": []
+}

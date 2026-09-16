@@ -307,8 +307,36 @@ export async function addAdminLandingSection(
   pageId: string,
   sectionType: string,
   config: Record<string, unknown>,
+  insertAt?: number,
 ): Promise<AdminResult<AdminLandingSection>> {
-  return writeSection(`/v1/admin/pages/${pageId}/sections`, "POST", { sectionType, config: JSON.stringify(config) });
+  const body: Record<string, unknown> = { sectionType, config: JSON.stringify(config) };
+  if (typeof insertAt === "number") body.insertAt = insertAt;
+  return writeSection(`/v1/admin/pages/${pageId}/sections`, "POST", body);
+}
+
+export async function replaceAdminLandingComposition(
+  pageId: string,
+  sections: Array<{ sectionType: string; config: Record<string, unknown>; isEnabled?: boolean }>,
+): Promise<AdminResult<AdminLandingSection[]>> {
+  try {
+    const { status, body } = await readJson(`/v1/admin/pages/${pageId}/sections/composition`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        sections: sections.map((item) => ({
+          sectionType: item.sectionType,
+          config: JSON.stringify(item.config),
+          isEnabled: item.isEnabled,
+        })),
+      }),
+    });
+    if (status < 200 || status >= 300) return fail(status, body);
+    const rows = Array.isArray(body) ? body.map(mapSection).filter((row): row is AdminLandingSection => row !== null) : [];
+    await invalidateStorePagesNamespace();
+    return { ok: true, data: rows };
+  } catch {
+    return { ok: false, message: mapAdminErrorMessage("host-unreachable", "fa") };
+  }
 }
 
 export async function updateAdminLandingSection(

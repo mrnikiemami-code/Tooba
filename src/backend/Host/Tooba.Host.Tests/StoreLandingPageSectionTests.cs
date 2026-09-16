@@ -84,6 +84,45 @@ public sealed class StoreLandingPageSectionTests
         Assert.Null(await composer.ResolvePublicAsync("fa", "draft-lab", CancellationToken.None));
     }
 
+    [Fact]
+    public async Task InsertAt_places_section_between_existing_and_compacts_order()
+    {
+        var composer = CreateComposer(out _);
+        var page = await composer.CreateAsync(new StoreLandingPageWriteRequest("درج", "insert-lab", "fa", null, null, null), CancellationToken.None);
+        var first = await composer.AddSectionAsync(page.PageId, new StoreLandingPageSectionWriteRequest("Hero", """{"title":"۱"}""", null, null), CancellationToken.None);
+        var third = await composer.AddSectionAsync(page.PageId, new StoreLandingPageSectionWriteRequest("PromoBanner", """{"title":"۳"}""", null, null), CancellationToken.None);
+        var middle = await composer.AddSectionAsync(
+            page.PageId,
+            new StoreLandingPageSectionWriteRequest("RichText", """{"text":"۲"}""", null, null, InsertAt: 1),
+            CancellationToken.None);
+        var listed = await composer.ListSectionsAsync(page.PageId, CancellationToken.None);
+        Assert.Equal(new[] { first.PageSectionId, middle.PageSectionId, third.PageSectionId }, listed.Select(x => x.PageSectionId).ToArray());
+        Assert.Equal(new[] { 0, 1, 2 }, listed.Select(x => x.SortOrder).ToArray());
+    }
+
+    [Fact]
+    public async Task ReplaceComposition_replaces_all_sections_without_silent_append()
+    {
+        var composer = CreateComposer(out _);
+        var page = await composer.CreateAsync(new StoreLandingPageWriteRequest("قالب", "replace-lab", "fa", null, null, null), CancellationToken.None);
+        await composer.AddSectionAsync(page.PageId, new StoreLandingPageSectionWriteRequest("Hero", """{"title":"قدیمی"}""", null, null), CancellationToken.None);
+        await composer.AddSectionAsync(page.PageId, new StoreLandingPageSectionWriteRequest("PromoBanner", """{"title":"قدیمی۲"}""", null, null), CancellationToken.None);
+        var replaced = await composer.ReplaceCompositionAsync(
+            page.PageId,
+            [
+                new StoreLandingPageSectionWriteRequest("RichText", """{"text":"الف"}""", null, null),
+                new StoreLandingPageSectionWriteRequest("Hero", """{"title":"ب"}""", null, null),
+                new StoreLandingPageSectionWriteRequest("PromoBanner", """{"title":"ج"}""", null, true),
+            ],
+            CancellationToken.None);
+        Assert.Equal(3, replaced.Count);
+        Assert.Equal(new[] { "RichText", "Hero", "PromoBanner" }, replaced.Select(x => x.SectionType).ToArray());
+        Assert.Equal(new[] { 0, 1, 2 }, replaced.Select(x => x.SortOrder).ToArray());
+        var listed = await composer.ListSectionsAsync(page.PageId, CancellationToken.None);
+        Assert.Equal(3, listed.Count);
+        Assert.DoesNotContain(listed, x => x.Config.Contains("قدیمی", StringComparison.Ordinal));
+    }
+
     private static async Task<StoreLandingPageAdminView> PublishPageAsync(StoreLandingPageComposer composer)
     {
         var created = await composer.CreateAsync(new StoreLandingPageWriteRequest("آزمایش بخش", "section-lab", "fa", null, null, null), CancellationToken.None);

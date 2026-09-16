@@ -1145,3 +1145,24 @@ Public Store Page caching/revalidation is Store+locale+page scoped and invalidat
 ### LOCK-SF-327 — Performance must not weaken SEO or isolation
 Performance fixes must not weaken SEO metadata, tenant isolation, or content freshness.
 
+### LOCK-SF-328 — Template Apply materializes full ordered composition
+Applying a Template materializes its complete ordered Section composition into the Store Page Draft; it must not open an empty Page.
+
+### LOCK-SF-329 — One canonical Section workspace/order source
+Store Page Editor uses one canonical Section workspace/order source; separate geometric composition preview is removed.
+
+### LOCK-SF-330 — Arrows and drag/drop share persisted order
+Section order supports both arrows and drag/drop through the same persisted ordering model.
+
+### LOCK-SF-331 — Insert Section at any index
+New Sections can be inserted at start, between existing Sections, or at end.
+
+### LOCK-SF-332 — Delete/disable never deletes Store or Catalog content
+Deleting/disabling Page Sections never deletes operational Store content or Template Catalog data.
+
+### LOCK-SF-333 — Disabled Sections preserve config and stay off Storefront
+Disabled Sections preserve configuration/order and are excluded from published Storefront rendering.
+
+### LOCK-SF-334 — Home and Landing share Page Editor workspace
+Home and Landing share the same Page Editor workspace.
+

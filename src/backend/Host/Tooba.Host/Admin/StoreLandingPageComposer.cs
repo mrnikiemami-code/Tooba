@@ -17,14 +17,14 @@ public sealed class StoreLandingPageComposer
     private readonly CatalogDbContext _catalog;
     private readonly ICurrentCommerceContext _commerce;
     private readonly IMemoryCache _cache;
-    private readonly StorefrontComposer _storefront;
+    private readonly StorefrontComposer? _storefront;
 
     /// <summary>نویسنده صفحه را به Catalog همین Store وصل می‌کند.</summary>
     public StoreLandingPageComposer(
         CatalogDbContext catalog,
         ICurrentCommerceContext commerce,
         IMemoryCache cache,
-        StorefrontComposer storefront)
+        StorefrontComposer? storefront = null)
     {
         _catalog = catalog;
         _commerce = commerce;
@@ -249,25 +249,84 @@ public sealed class StoreLandingPageComposer
         return rows.Select(ToAdminSection).ToList();
     }
 
-    /// <summary>بخش تأییدشده به صفحه اضافه می‌کند.</summary>
+    /// <summary>بخش تأییدشده به صفحه اضافه می‌کند؛ InsertAt ایندکس اختیاری برای درج بین بخش‌ها است.</summary>
     public async Task<StoreLandingPageSectionAdminView> AddSectionAsync(Guid pageId, StoreLandingPageSectionWriteRequest body, CancellationToken cancellationToken)
     {
         var page = await RequirePageAsync(pageId, cancellationToken);
-        var count = await _catalog.StoreLandingPageSections.CountAsync(x => x.PageId == pageId, cancellationToken);
-        if (count >= StoreLandingPageSectionRegistry.MaxSectionsPerPage)
+        var existing = await LoadSectionsAsync(pageId, cancellationToken);
+        if (existing.Count >= StoreLandingPageSectionRegistry.MaxSectionsPerPage)
         {
             throw new PlatformHttpException(400, "تعداد بخش‌های صفحه به سقف رسیده است.", "landing.section.limit");
         }
 
-        var nextOrder = count == 0
-            ? 0
-            : await _catalog.StoreLandingPageSections.Where(x => x.PageId == pageId).MaxAsync(x => x.SortOrder, cancellationToken) + 1;
-        var section = StoreLandingPageSection.Create(pageId, body.SectionType, body.ConfigJson ?? body.Config, nextOrder, DateTimeOffset.UtcNow);
+        var now = DateTimeOffset.UtcNow;
+        var insertAt = body.InsertAt;
+        int targetOrder;
+        if (insertAt is null)
+        {
+            targetOrder = existing.Count == 0 ? 0 : existing.Max(x => x.SortOrder) + 1;
+        }
+        else
+        {
+            if (insertAt < 0 || insertAt > existing.Count)
+            {
+                throw new PlatformHttpException(400, "موقعیت درج بخش نامعتبر است.", "landing.section.insert.invalid");
+            }
+
+            targetOrder = insertAt.Value;
+            for (var i = existing.Count - 1; i >= targetOrder; i--)
+            {
+                existing[i].SetSortOrder(i + 1, now);
+            }
+        }
+
+        var section = StoreLandingPageSection.Create(pageId, body.SectionType, body.ConfigJson ?? body.Config, targetOrder, now);
         await EnsureReferencedEntitiesAsync(section, cancellationToken);
         _catalog.StoreLandingPageSections.Add(section);
         await _catalog.SaveChangesAsync(cancellationToken);
         Invalidate(page.Locale, page.Slug);
         return ToAdminSection(section);
+    }
+
+    /// <summary>ترکیب بخش‌های صفحه را یکجا جایگزین می‌کند (اعمال قالب)؛ دادهٔ Catalog کسب‌وکار را لمس نمی‌کند.</summary>
+    public async Task<IReadOnlyList<StoreLandingPageSectionAdminView>> ReplaceCompositionAsync(
+        Guid pageId,
+        IReadOnlyList<StoreLandingPageSectionWriteRequest>? sections,
+        CancellationToken cancellationToken)
+    {
+        var page = await RequirePageAsync(pageId, cancellationToken);
+        var payloads = sections ?? [];
+        if (payloads.Count > StoreLandingPageSectionRegistry.MaxSectionsPerPage)
+        {
+            throw new PlatformHttpException(400, "تعداد بخش‌های صفحه به سقف رسیده است.", "landing.section.limit");
+        }
+
+        var existing = await LoadSectionsAsync(pageId, cancellationToken);
+        if (existing.Count > 0)
+        {
+            _catalog.StoreLandingPageSections.RemoveRange(existing);
+            await _catalog.SaveChangesAsync(cancellationToken);
+        }
+
+        var now = DateTimeOffset.UtcNow;
+        var created = new List<StoreLandingPageSection>(payloads.Count);
+        for (var i = 0; i < payloads.Count; i++)
+        {
+            var body = payloads[i];
+            var section = StoreLandingPageSection.Create(pageId, body.SectionType, body.ConfigJson ?? body.Config, i, now);
+            if (body.IsEnabled is { } enabled)
+            {
+                section.SetEnabled(enabled, now);
+            }
+
+            await EnsureReferencedEntitiesAsync(section, cancellationToken);
+            _catalog.StoreLandingPageSections.Add(section);
+            created.Add(section);
+        }
+
+        await _catalog.SaveChangesAsync(cancellationToken);
+        Invalidate(page.Locale, page.Slug);
+        return created.OrderBy(x => x.SortOrder).Select(ToAdminSection).ToList();
     }
 
     /// <summary>پیکربندی بخش را به‌روز می‌کند.</summary>
@@ -591,28 +650,36 @@ public sealed class StoreLandingPageComposer
         var needsReviews = sections.Any(x => x.SectionType == StoreLandingPageSectionRegistry.Reviews);
 
         IReadOnlyList<StorefrontProductCard> products = Array.Empty<StorefrontProductCard>();
-        if (needsProducts)
-        {
-            var productIds = sections
-                .SelectMany(section => section.Items.Select(item => item.Id))
-                .Distinct()
-                .ToArray();
-            products = (await _storefront.ComposeProductCardsAsync(productIds, cancellationToken)).Values.ToList();
-        }
+        IReadOnlyList<StorefrontCategoryItem> categories = Array.Empty<StorefrontCategoryItem>();
+        IReadOnlyList<StorefrontBrandItem> brands = Array.Empty<StorefrontBrandItem>();
+        IReadOnlyList<StorefrontArticleItem> articles = Array.Empty<StorefrontArticleItem>();
+        IReadOnlyList<StorefrontFeaturedReviewItem> reviews = Array.Empty<StorefrontFeaturedReviewItem>();
 
-        // Sequential shell fetches — shared scoped DbContexts must not run concurrently.
-        var categories = await _storefront.ListCategoriesAsync(cancellationToken);
-        var brands = needsBrands
-            ? await _storefront.ListBrandsAsync(cancellationToken)
-            : Array.Empty<StorefrontBrandItem>();
-        var articles = needsArticles
-            ? await _storefront.BuildLatestArticlesAsync(
-                ContentTaxonomySeoRules.ResolveContentLocale(page.Locale),
-                cancellationToken)
-            : Array.Empty<StorefrontArticleItem>();
-        var reviews = needsReviews
-            ? await _storefront.BuildFeaturedReviewsAsync(cancellationToken)
-            : Array.Empty<StorefrontFeaturedReviewItem>();
+        if (_storefront is not null)
+        {
+            if (needsProducts)
+            {
+                var productIds = sections
+                    .SelectMany(section => section.Items.Select(item => item.Id))
+                    .Distinct()
+                    .ToArray();
+                products = (await _storefront.ComposeProductCardsAsync(productIds, cancellationToken)).Values.ToList();
+            }
+
+            // Sequential shell fetches — shared scoped DbContexts must not run concurrently.
+            categories = await _storefront.ListCategoriesAsync(cancellationToken);
+            brands = needsBrands
+                ? await _storefront.ListBrandsAsync(cancellationToken)
+                : Array.Empty<StorefrontBrandItem>();
+            articles = needsArticles
+                ? await _storefront.BuildLatestArticlesAsync(
+                    ContentTaxonomySeoRules.ResolveContentLocale(page.Locale),
+                    cancellationToken)
+                : Array.Empty<StorefrontArticleItem>();
+            reviews = needsReviews
+                ? await _storefront.BuildFeaturedReviewsAsync(cancellationToken)
+                : Array.Empty<StorefrontFeaturedReviewItem>();
+        }
 
         return new StoreLandingPagePublicView(
             page.PageId,
@@ -723,7 +790,12 @@ public sealed record StoreLandingPageSectionWriteRequest(
     string? SectionType,
     string? Config,
     string? ConfigJson,
-    bool? IsEnabled);
+    bool? IsEnabled,
+    int? InsertAt = null);
+
+/// <summary>درخواست جایگزینی کامل ترکیب بخش‌ها (اعمال قالب).</summary>
+public sealed record StoreLandingPageCompositionReplaceRequest(
+    IReadOnlyList<StoreLandingPageSectionWriteRequest>? Sections);
 
 /// <summary>درخواست ترتیب بخش‌ها.</summary>
 public sealed record StoreLandingPageSectionReorderRequest(IReadOnlyList<Guid>? SectionIds);

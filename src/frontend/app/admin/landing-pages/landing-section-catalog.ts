@@ -152,3 +152,43 @@ export function summarizeLandingSection(type: string, config: Record<string, unk
   if (title) return `${title}${variantSuffix}`;
   return `${landingSectionLabel(type)}${variantSuffix}`;
 }
+
+/** هشدار منبع ناقص برای فضای کار بخش‌ها (بدون مسدود کردن ذخیره). */
+export function incompleteSourceWarning(type: string, config: Record<string, unknown>): string | null {
+  if (type === "ProductCollection") {
+    const source = typeof config.source === "string" ? config.source : "Newest";
+    if (source === "Manual" && (!Array.isArray(config.productIds) || config.productIds.length === 0)) {
+      return "منبع کالا ناقص است — حداقل یک کالا انتخاب کنید.";
+    }
+    if (source === "Category" && !(typeof config.categoryId === "string" && config.categoryId)) {
+      return "منبع کالا ناقص است — یک دسته انتخاب کنید.";
+    }
+    if (source === "Brand" && !(typeof config.brandId === "string" && config.brandId)) {
+      return "منبع کالا ناقص است — یک برند انتخاب کنید.";
+    }
+  }
+  if (type === "ArticleList") {
+    const source = typeof config.source === "string" ? config.source : "Latest";
+    if (source === "Manual" && (!Array.isArray(config.articleIds) || config.articleIds.length === 0)) {
+      return "منبع مطلب ناقص است.";
+    }
+  }
+  if (type === "CategoryGrid") {
+    const ids = Array.isArray(config.categoryIds) ? config.categoryIds : Array.isArray(config.ids) ? config.ids : [];
+    if (ids.length === 0) return "هنوز دسته‌ای انتخاب نشده است.";
+  }
+  if (type === "BrandStrip") {
+    const ids = Array.isArray(config.brandIds) ? config.brandIds : Array.isArray(config.ids) ? config.ids : [];
+    if (ids.length === 0) return "هنوز برندی انتخاب نشده است.";
+  }
+  if (type === "BannerShowcase") {
+    const items = Array.isArray(config.items) ? config.items : [];
+    const empty = items.length === 0 || items.every((item) => {
+      if (!item || typeof item !== "object") return true;
+      const imageUrl = (item as { imageUrl?: unknown }).imageUrl;
+      return typeof imageUrl !== "string" || !imageUrl.trim();
+    });
+    if (empty) return "تصویر بنر هنوز کامل نشده است.";
+  }
+  return null;
+}

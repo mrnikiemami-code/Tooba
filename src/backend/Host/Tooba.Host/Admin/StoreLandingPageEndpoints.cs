@@ -19,6 +19,7 @@ public static class StoreLandingPageEndpoints
         admin.MapGet("/home", GetHomeAdminAsync);
         admin.MapGet("/{pageId:guid}/sections", ListSectionsAsync);
         admin.MapPost("/{pageId:guid}/sections", AddSectionAsync);
+        admin.MapPut("/{pageId:guid}/sections/composition", ReplaceCompositionAsync);
         admin.MapPut("/{pageId:guid}/sections/reorder", ReorderSectionsAsync);
         admin.MapPut("/{pageId:guid}/sections/{sectionId:guid}", UpdateSectionAsync);
         admin.MapPut("/{pageId:guid}/sections/{sectionId:guid}/enabled", SetSectionEnabledAsync);
@@ -234,6 +235,28 @@ public static class StoreLandingPageEndpoints
         {
             await AdminPanelAccess.RequireAuthorizedAsync(request, session, tenant, guard, environment, cancellationToken);
             return Results.Json(await composer.AddSectionAsync(pageId, body, cancellationToken));
+        }
+        catch (PlatformHttpException ex)
+        {
+            return Results.Json(new { title = ex.Title, errorCode = ex.ErrorCode }, statusCode: ex.StatusCode);
+        }
+    }
+
+    private static async Task<IResult> ReplaceCompositionAsync(
+        Guid pageId,
+        StoreLandingPageCompositionReplaceRequest body,
+        StoreLandingPageComposer composer,
+        HttpRequest request,
+        CurrentAuthenticatedSession session,
+        ICurrentTenant tenant,
+        IAuthorizationGuard guard,
+        IHostEnvironment environment,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            await AdminPanelAccess.RequireAuthorizedAsync(request, session, tenant, guard, environment, cancellationToken);
+            return Results.Json(await composer.ReplaceCompositionAsync(pageId, body.Sections, cancellationToken));
         }
         catch (PlatformHttpException ex)
         {

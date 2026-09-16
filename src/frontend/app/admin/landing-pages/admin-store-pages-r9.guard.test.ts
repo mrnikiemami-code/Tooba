@@ -33,7 +33,7 @@ test("create page type + SEO admin UX groups", () => {
   assert.match(composer, /create-page-type/);
   assert.match(composer, /اطلاعات صفحه/);
   assert.match(composer, /سئو و اشتراک‌گذاری/);
-  assert.match(composer, /ترکیب صفحه/);
+  assert.match(composer, /بخش‌های صفحه|unified-section-workspace/);
   assert.match(composer, /page-seo-panel/);
   assert.match(composer, /seo-snippet-preview/);
   assert.match(composer, /تنظیم به عنوان صفحه اصلی/);
