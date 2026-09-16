@@ -25,6 +25,8 @@ export interface StorefrontProductCard {
   brandId?: string | null;
   /** Store-preview fill only — never persisted / never published. */
   previewFake?: boolean;
+  /** In-memory PreviewFake source marker — never persisted / never shown as jargon in UI. */
+  previewSource?: "PreviewFake";
 }
 
 /**
@@ -40,6 +42,8 @@ export interface StorefrontCategoryItem {
   imageUrl?: string | null;
   /** Store-preview fill only — never persisted / never published. */
   previewFake?: boolean;
+  /** In-memory PreviewFake source marker — never persisted / never shown as jargon in UI. */
+  previewSource?: "PreviewFake";
 }
 
 /**
@@ -53,6 +57,8 @@ export interface StorefrontBrandItem {
   logoMediaAssetId: string | null;
   /** Store-preview fill only — never persisted / never published. */
   previewFake?: boolean;
+  /** In-memory PreviewFake source marker — never persisted / never shown as jargon in UI. */
+  previewSource?: "PreviewFake";
 }
 
 /** فروشندهٔ عمومی بدون PartyId، رابطهٔ مجوز، اطلاعات تماس یا دادهٔ تسویه. */
@@ -123,8 +129,12 @@ export interface StorefrontFeaturedReviewItem {
   createdAt: string;
   productTitle: string;
   productSlug: string;
+  /** Optional author avatar URL (Preview-Fake only today). */
+  authorAvatarUrl?: string | null;
   /** Store-preview fill only — never persisted / never published. */
   previewFake?: boolean;
+  /** In-memory PreviewFake source marker — never persisted / never shown as jargon in UI. */
+  previewSource?: "PreviewFake";
 }
 
 /** مقالهٔ منتشرشدهٔ اخیر برای ریل خانه. */
@@ -140,6 +150,8 @@ export interface StorefrontArticleItem {
   isFeatured: boolean;
   /** Store-preview fill only — never persisted / never published. */
   previewFake?: boolean;
+  /** In-memory PreviewFake source marker — never persisted / never shown as jargon in UI. */
+  previewSource?: "PreviewFake";
 }
 
 /**

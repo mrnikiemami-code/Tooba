@@ -9,10 +9,17 @@ import {
   resolveVariantPreviewCardinality,
 } from "../../../lib/storefront-composition/preview-fill-policy.ts";
 import {
+  createFakeArticle,
+  createFakeBanner,
+  createFakeBrand,
+  createFakeCategory,
   createFakeProduct,
   createFakeReview,
+  createFakeStory,
   PREVIEW_FAKE_ID_PREFIX,
+  PREVIEW_FAKE_SOURCE,
 } from "../../../lib/storefront-composition/preview-fake-data.ts";
+import { PREVIEW_FAKE_ASSET_ROOT } from "../../../lib/storefront-composition/preview-fake-media.ts";
 import { previewFakeProductTitle, previewSampleBadgeLabel } from "../../../lib/storefront-composition/preview-fake-locale.ts";
 import { getVariant } from "../../../lib/storefront-composition/registry.ts";
 import {
@@ -20,12 +27,14 @@ import {
   FASHION_DEMO_ORIGIN,
   FASHION_STORE_ORIGIN,
 } from "../../../lib/storefront-composition/fashion-demo-preview.ts";
+import { FASHION_IMAGES, TEMPLATE_MEDIA_GUIDS } from "../../../lib/storefront-composition/fashion-demo-media.ts";
 
 const dir = dirname(fileURLToPath(import.meta.url));
 const root = join(dir, "../../../../../");
 const sharedRenderer = readFileSync(join(root, "src/frontend/lib/storefront-composition/shared-composition-renderer.tsx"), "utf8");
 const fillPolicy = readFileSync(join(root, "src/frontend/lib/storefront-composition/preview-fill-policy.ts"), "utf8");
 const fakeData = readFileSync(join(root, "src/frontend/lib/storefront-composition/preview-fake-data.ts"), "utf8");
+const fakeMedia = readFileSync(join(root, "src/frontend/lib/storefront-composition/preview-fake-media.ts"), "utf8");
 const bannerGrid = readFileSync(join(root, "src/frontend/app/storefront/storefront-home-blocks.tsx"), "utf8");
 const locks = readFileSync(join(root, "docs/architecture/TOOBA-LOCKS.md"), "utf8");
 const fashionDemo = readFileSync(join(root, "src/frontend/lib/storefront-composition/fashion-demo-preview.ts"), "utf8");
@@ -127,17 +136,18 @@ test("Banner Store preview with no Store banner uses fake fill not Template bann
     enabled: true,
     variantKey: "banner.two-equal",
     realItems: [] as Array<{ src: string }>,
-    createFake: (i) => ({ src: `/images/fashion-template/${(i % 8) + 1}.jpg`, previewFake: true as const }),
+    createFake: (i) => createFakeBanner(i, "fa"),
   });
   assert.equal(filled.items.length, 2);
-  assert.ok(filled.items.every((item) => item.src.includes("/images/fashion-template/")));
+  assert.ok(filled.items.every((item) => item.src.includes("/images/preview-placeholder/")));
+  assert.ok(filled.items.every((item) => !item.src.includes("/images/fashion-template/")));
   assert.match(sharedRenderer, /createFakeBanner/);
   assert.match(sharedRenderer, /allowHomeFallback=\{!storePreview\}/);
 });
 
 test("localized fake preview resources follow selected locale", () => {
-  assert.match(previewFakeProductTitle(0, "fa"), /کالا/);
-  assert.match(previewFakeProductTitle(0, "en-US"), /Preview product/);
+  assert.match(previewFakeProductTitle(0, "fa"), /محصول نمونه/);
+  assert.match(previewFakeProductTitle(0, "en-US"), /Sample product/);
   assert.match(previewFakeProductTitle(0, "ar"), /منتج/);
   assert.equal(previewSampleBadgeLabel("fa"), "نمونه نمایشی");
   assert.match(previewSampleBadgeLabel("en"), /Sample/);
@@ -158,6 +168,69 @@ test("R8 locks registered", () => {
     "LOCK-SF-310",
     "LOCK-SF-311",
   ]) {
+    assert.match(locks, new RegExp(lock));
+  }
+});
+
+test("Store Preview fake fill uses dedicated Preview-Fake media, not Template Fashion assets", () => {
+  assert.doesNotMatch(fakeData, /from ["'].*fashion-demo-media/);
+  assert.doesNotMatch(fakeData, /FASHION_IMAGES|TEMPLATE_MEDIA_GUIDS|\/images\/fashion-template\//);
+  assert.doesNotMatch(fakeMedia, /from ["'].*fashion-demo-media|\/images\/fashion-template\/|TEMPLATE_MEDIA_GUIDS\b/);
+  assert.doesNotMatch(fakeMedia, /\bFASHION_IMAGES\b/);
+  assert.match(fakeMedia, /preview-placeholder/);
+
+  const product = createFakeProduct(0, "fa");
+  const category = createFakeCategory(0, "fa");
+  const brand = createFakeBrand(0, "fa");
+  const article = createFakeArticle(0, "fa");
+  const banner = createFakeBanner(0, "fa");
+  const story = createFakeStory(0, "fa");
+  const review = createFakeReview(0, "fa");
+
+  const mediaUrls = [
+    product.mediaAssetId,
+    category.imageUrl,
+    category.imageMediaAssetId,
+    brand.logoMediaAssetId,
+    article.coverMediaAssetId,
+    banner.src,
+    story.coverMediaUrl,
+    review.authorAvatarUrl,
+  ];
+
+  for (const url of mediaUrls) {
+    assert.ok(url?.startsWith(`${PREVIEW_FAKE_ASSET_ROOT}/`), `expected preview-placeholder url, got ${url}`);
+    assert.ok(!url?.includes("/images/fashion-template/"));
+    assert.equal(FASHION_IMAGES.includes(url as (typeof FASHION_IMAGES)[number]), false);
+    assert.equal(TEMPLATE_MEDIA_GUIDS.includes(url as (typeof TEMPLATE_MEDIA_GUIDS)[number]), false);
+  }
+
+  assert.equal(product.previewSource, PREVIEW_FAKE_SOURCE);
+  assert.equal(category.previewSource, PREVIEW_FAKE_SOURCE);
+  assert.equal(brand.previewSource, PREVIEW_FAKE_SOURCE);
+  assert.equal(article.previewSource, PREVIEW_FAKE_SOURCE);
+  assert.equal(banner.previewSource, PREVIEW_FAKE_SOURCE);
+  assert.equal(story.previewSource, PREVIEW_FAKE_SOURCE);
+  assert.equal(review.previewSource, PREVIEW_FAKE_SOURCE);
+
+  const serialized = JSON.stringify({ product, category, brand, article, banner, story, review });
+  assert.doesNotMatch(serialized, /019022a5-0000-7000-8000-00000000a00/);
+  assert.doesNotMatch(serialized, /fashion-template/);
+  assert.doesNotMatch(serialized, /demo-fashion-media-/);
+});
+
+test("Sample mode still uses Template Catalog Fashion media paths", () => {
+  const sample = buildFashionTemplatePage(
+    { products: [], categories: [], brands: [], articles: [], reviews: [], menus: {} },
+    { origin: FASHION_DEMO_ORIGIN },
+  );
+  const blob = JSON.stringify(sample);
+  assert.match(blob, /fashion-template|imageUrl/);
+  assert.doesNotMatch(blob, /preview-placeholder/);
+});
+
+test("R8-R2 Preview-Fake isolation locks registered", () => {
+  for (const lock of ["LOCK-SF-312", "LOCK-SF-313", "LOCK-SF-314", "LOCK-SF-315"]) {
     assert.match(locks, new RegExp(lock));
   }
 });

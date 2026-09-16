@@ -66,6 +66,8 @@ export function storefrontHostOrigin(): string {
  * Fashion pilot demo assets (`demo-fashion-media-*`) resolve to isolated CDN URLs.
  */
 export function storefrontMediaUrl(assetId: string | null | undefined): string {
+  // Local static assets (Template Fashion or dedicated Preview-Fake placeholders).
+  if (assetId?.startsWith("/images/")) return assetId;
   const demo = fashionDemoMediaUrl(assetId);
   if (demo) return demo;
   const id =

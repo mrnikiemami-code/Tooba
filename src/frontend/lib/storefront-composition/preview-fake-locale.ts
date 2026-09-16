@@ -37,10 +37,10 @@ export function previewFakeProductTitle(index: number, locale: string | null | u
   const n = index + 1;
   return pick(
     {
-      fa: `کالای نمایشی ${n}`,
-      en: `Preview product ${n}`,
-      ar: `منتج تجريبي ${n}`,
-      default: `Preview product ${n}`,
+      fa: `محصول نمونه ${n}`,
+      en: `Sample product ${n}`,
+      ar: `منتج نموذجي ${n}`,
+      default: `Sample product ${n}`,
     },
     locale,
   );
@@ -50,10 +50,10 @@ export function previewFakeCategoryName(index: number, locale: string | null | u
   const n = index + 1;
   return pick(
     {
-      fa: `دسته نمایشی ${n}`,
-      en: `Preview category ${n}`,
-      ar: `فئة تجريبية ${n}`,
-      default: `Preview category ${n}`,
+      fa: `دسته‌بندی نمونه ${n}`,
+      en: `Sample category ${n}`,
+      ar: `فئة نموذجية ${n}`,
+      default: `Sample category ${n}`,
     },
     locale,
   );
@@ -63,10 +63,10 @@ export function previewFakeBrandName(index: number, locale: string | null | unde
   const n = index + 1;
   return pick(
     {
-      fa: `برند نمایشی ${n}`,
-      en: `Preview brand ${n}`,
-      ar: `علامة تجريبية ${n}`,
-      default: `Preview brand ${n}`,
+      fa: `برند نمونه ${n}`,
+      en: `Sample brand ${n}`,
+      ar: `علامة نموذجية ${n}`,
+      default: `Sample brand ${n}`,
     },
     locale,
   );
@@ -75,22 +75,22 @@ export function previewFakeBrandName(index: number, locale: string | null | unde
 export function previewFakeReviewBody(index: number, locale: string | null | undefined): string {
   const bodies: LocaleMap[] = [
     {
-      fa: "کیفیت خوب و ارسال به‌موقع بود؛ تجربه خرید رضایت‌بخشی داشتم.",
-      en: "Good quality and on-time delivery — a satisfying purchase.",
-      ar: "جودة جيدة وتوصيل في الوقت المناسب.",
-      default: "Good quality and on-time delivery — a satisfying purchase.",
+      fa: "متن نمونه برای نمایش نظر مشتری در پیش‌نمایش فروشگاه.",
+      en: "Sample text to demonstrate a customer review in store preview.",
+      ar: "نص نموذجي لعرض رأي العميل في معاينة المتجر.",
+      default: "Sample text to demonstrate a customer review in store preview.",
     },
     {
-      fa: "بسته‌بندی مرتب بود و کالا با توضیحات صفحه هم‌خوانی داشت.",
-      en: "Packaging was neat and the item matched the listing.",
-      ar: "التغليف مرتب والمنتج مطابق للوصف.",
-      default: "Packaging was neat and the item matched the listing.",
+      fa: "متن نمونه برای نمایش نظر مشتری — تجربه خرید نمایشی.",
+      en: "Sample customer review copy for preview layout only.",
+      ar: "نص نموذجي لرأي العميل — للمعاينة فقط.",
+      default: "Sample customer review copy for preview layout only.",
     },
     {
-      fa: "نسبت قیمت به کیفیت مناسب است؛ دوباره خرید می‌کنم.",
-      en: "Fair value for money — I would buy again.",
-      ar: "قيمة جيدة مقابل السعر.",
-      default: "Fair value for money — I would buy again.",
+      fa: "متن نمونه برای نمایش نظر مشتری در کارت نظرات.",
+      en: "Sample review body for the reviews showcase layout.",
+      ar: "نص نموذجي لبطاقة آراء العملاء.",
+      default: "Sample review body for the reviews showcase layout.",
     },
   ];
   return pick(bodies[index % bodies.length]!, locale);
@@ -102,7 +102,7 @@ export function previewFakeReviewAuthor(index: number, locale: string | null | u
     {
       fa: `خریدار نمونه ${n}`,
       en: `Sample buyer ${n}`,
-      ar: `مشتري تجريبي ${n}`,
+      ar: `مشتري نموذجي ${n}`,
       default: `Sample buyer ${n}`,
     },
     locale,
@@ -113,10 +113,10 @@ export function previewFakeArticleTitle(index: number, locale: string | null | u
   const n = index + 1;
   return pick(
     {
-      fa: `مقاله نمایشی ${n}`,
-      en: `Preview article ${n}`,
-      ar: `مقال تجريبي ${n}`,
-      default: `Preview article ${n}`,
+      fa: `عنوان نمونه مقاله ${n}`,
+      en: `Sample article title ${n}`,
+      ar: `عنوان مقال نموذجي ${n}`,
+      default: `Sample article title ${n}`,
     },
     locale,
   );
@@ -125,10 +125,10 @@ export function previewFakeArticleTitle(index: number, locale: string | null | u
 export function previewFakeArticleExcerpt(index: number, locale: string | null | undefined): string {
   return pick(
     {
-      fa: "متن کوتاه نمایشی برای نشان‌دادن چیدمان کارت مقاله در پیش‌نمایش فروشگاه.",
-      en: "Short preview copy to demonstrate article card layout in store preview.",
-      ar: "نص تجريبي قصير لعرض تخطيط بطاقة المقال.",
-      default: "Short preview copy to demonstrate article card layout in store preview.",
+      fa: "متن کوتاه نمونه برای نمایش چیدمان کارت مقاله در پیش‌نمایش فروشگاه.",
+      en: "Short sample copy to demonstrate article card layout in store preview.",
+      ar: "نص نموذجي قصير لعرض تخطيط بطاقة المقال.",
+      default: "Short sample copy to demonstrate article card layout in store preview.",
     },
     locale,
   );
@@ -138,10 +138,10 @@ export function previewFakeBannerTitle(index: number, locale: string | null | un
   const n = index + 1;
   return pick(
     {
-      fa: `بنر نمایشی ${n}`,
-      en: `Preview banner ${n}`,
-      ar: `بانر تجريبي ${n}`,
-      default: `Preview banner ${n}`,
+      fa: n === 1 ? "تصویر بنر فروشگاه شما" : `تصویر بنر فروشگاه شما ${n}`,
+      en: n === 1 ? "Your store banner image" : `Your store banner image ${n}`,
+      ar: n === 1 ? "صورة بانر متجرك" : `صورة بانر متجرك ${n}`,
+      default: n === 1 ? "Your store banner image" : `Your store banner image ${n}`,
     },
     locale,
   );

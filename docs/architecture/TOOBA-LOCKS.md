@@ -1097,3 +1097,15 @@ Preview fake items must never appear on published Storefront.
 ### LOCK-SF-311 — Localized marked fake preview items
 Preview fake items are localized by the active dynamic locale and visually marked as sample preview content without changing core geometry.
 
+### LOCK-SF-312 — Preview-Fake independent of Template Catalog media
+Store Preview Preview-Fake content/media must be fully independent from Template Catalog content/media, including local static asset paths.
+
+### LOCK-SF-313 — No Template IDs/URLs in Store Preview fake fill
+Store Preview fake fill must never reference Template entity IDs, Template media IDs, Template media URLs, or Template localized content.
+
+### LOCK-SF-314 — Preview-Fake assets never persisted
+Preview-Fake assets are generic code-owned/static preview resources and are never persisted to Store or Template Catalog.
+
+### LOCK-SF-315 — Sample mode keeps Template Catalog; Preview-Fake is Store-preview only
+Sample mode remains persistent Template Catalog content/media; Preview-Fake resources are reserved for Store preview slot filling only.
+

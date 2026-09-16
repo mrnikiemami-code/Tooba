@@ -34,6 +34,8 @@ export interface PublicStoryCard {
   items: PublicStoryItem[];
   /** Store-preview fill only — never persisted / never published. */
   previewFake?: boolean;
+  /** In-memory PreviewFake source marker — never persisted / never shown as jargon in UI. */
+  previewSource?: "PreviewFake";
 }
 
 export interface AdminStoryItem {

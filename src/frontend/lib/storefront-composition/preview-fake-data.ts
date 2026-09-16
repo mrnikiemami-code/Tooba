@@ -1,9 +1,22 @@
 /**
  * In-memory deterministic fake items for Store preview fill only.
  * Never persisted; never queried from Template Catalog; never used on published storefront.
+ * Media comes exclusively from /images/preview-placeholder/ (dedicated Preview-Fake family).
  */
 
-import { FASHION_IMAGES } from "./fashion-demo-media.ts";
+import {
+  PREVIEW_FAKE_HERO,
+  PREVIEW_FAKE_PROMO,
+  PREVIEW_FAKE_SOURCE,
+  previewFakeArticleUrl,
+  previewFakeAvatarUrl,
+  previewFakeBannerUrl,
+  previewFakeBrandUrl,
+  previewFakeCategoryUrl,
+  previewFakeProductUrl,
+  previewFakeStoryUrl,
+  type PreviewFakeSourceMarker,
+} from "./preview-fake-media.ts";
 import {
   previewFakeArticleExcerpt,
   previewFakeArticleTitle,
@@ -30,15 +43,20 @@ import type { PublicStoryCard } from "../../app/stories/story-api.ts";
 
 export const PREVIEW_FAKE_ID_PREFIX = "preview-fake-" as const;
 
+export { PREVIEW_FAKE_SOURCE };
+export type { PreviewFakeSourceMarker };
+
 export function isPreviewFakeId(id: string | null | undefined): boolean {
   return Boolean(id && id.startsWith(PREVIEW_FAKE_ID_PREFIX));
 }
 
-function demoImage(index: number): string {
-  return FASHION_IMAGES[index % FASHION_IMAGES.length]!;
-}
+type PreviewFakeMarked = {
+  previewFake: true;
+  /** In-memory only — never persisted / never shown as developer jargon in UI. */
+  previewSource: PreviewFakeSourceMarker;
+};
 
-export function createFakeProduct(index: number, locale: string): StorefrontProductCard {
+export function createFakeProduct(index: number, locale: string): StorefrontProductCard & PreviewFakeMarked {
   const id = `${PREVIEW_FAKE_ID_PREFIX}product-${index + 1}`;
   return {
     productId: id,
@@ -46,7 +64,7 @@ export function createFakeProduct(index: number, locale: string): StorefrontProd
     title: previewFakeProductTitle(index, locale),
     categoryName: previewFakeCategoryName(0, locale),
     categoryId: `${PREVIEW_FAKE_ID_PREFIX}category-1`,
-    mediaAssetId: demoImage(index),
+    mediaAssetId: previewFakeProductUrl(index),
     primaryOfferId: "",
     sellerPartyId: "",
     sellerDisplayName: "",
@@ -60,34 +78,38 @@ export function createFakeProduct(index: number, locale: string): StorefrontProd
     reviewCount: 12,
     brandId: null,
     previewFake: true,
+    previewSource: PREVIEW_FAKE_SOURCE,
   };
 }
 
-export function createFakeCategory(index: number, locale: string): StorefrontCategoryItem {
+export function createFakeCategory(index: number, locale: string): StorefrontCategoryItem & PreviewFakeMarked {
   const id = `${PREVIEW_FAKE_ID_PREFIX}category-${index + 1}`;
+  const image = previewFakeCategoryUrl(index);
   return {
     categoryId: id,
     parentCategoryId: null,
     name: previewFakeCategoryName(index, locale),
-    imageMediaAssetId: demoImage(index + 2),
-    imageUrl: demoImage(index + 2),
+    imageMediaAssetId: image,
+    imageUrl: image,
     previewFake: true,
+    previewSource: PREVIEW_FAKE_SOURCE,
   };
 }
 
-export function createFakeBrand(index: number, locale: string): StorefrontBrandItem {
+export function createFakeBrand(index: number, locale: string): StorefrontBrandItem & PreviewFakeMarked {
   const id = `${PREVIEW_FAKE_ID_PREFIX}brand-${index + 1}`;
   return {
     brandId: id,
     slug: id,
     name: previewFakeBrandName(index, locale),
     productCount: 0,
-    logoMediaAssetId: demoImage(index + 3),
+    logoMediaAssetId: previewFakeBrandUrl(index),
     previewFake: true,
+    previewSource: PREVIEW_FAKE_SOURCE,
   };
 }
 
-export function createFakeReview(index: number, locale: string): StorefrontFeaturedReviewItem {
+export function createFakeReview(index: number, locale: string): StorefrontFeaturedReviewItem & PreviewFakeMarked {
   return {
     publicId: `${PREVIEW_FAKE_ID_PREFIX}review-${index + 1}`,
     authorDisplayName: previewFakeReviewAuthor(index, locale),
@@ -98,23 +120,26 @@ export function createFakeReview(index: number, locale: string): StorefrontFeatu
     createdAt: "2026-01-01T00:00:00.000Z",
     productTitle: previewFakeProductTitle(index, locale),
     productSlug: `${PREVIEW_FAKE_ID_PREFIX}product-${index + 1}`,
+    authorAvatarUrl: previewFakeAvatarUrl(index),
     previewFake: true,
+    previewSource: PREVIEW_FAKE_SOURCE,
   };
 }
 
-export function createFakeArticle(index: number, locale: string): StorefrontArticleItem {
+export function createFakeArticle(index: number, locale: string): StorefrontArticleItem & PreviewFakeMarked {
   const id = `${PREVIEW_FAKE_ID_PREFIX}article-${index + 1}`;
   return {
     articleId: id,
     slug: id,
     title: previewFakeArticleTitle(index, locale),
     excerpt: previewFakeArticleExcerpt(index, locale),
-    coverMediaAssetId: demoImage(index + 1),
+    coverMediaAssetId: previewFakeArticleUrl(index),
     publishDate: "2026-01-01T00:00:00.000Z",
     authorDisplayName: previewFakeReviewAuthor(index, locale),
     tags: [],
     isFeatured: index === 0,
     previewFake: true,
+    previewSource: PREVIEW_FAKE_SOURCE,
   };
 }
 
@@ -124,15 +149,17 @@ export type PreviewFakeBannerItem = {
   title: string;
   objectPosition: string;
   previewFake: true;
+  previewSource: PreviewFakeSourceMarker;
 };
 
 export function createFakeBanner(index: number, locale: string): PreviewFakeBannerItem {
   return {
-    src: demoImage(index + 1),
+    src: previewFakeBannerUrl(index),
     href: "/products",
     title: previewFakeBannerTitle(index, locale),
     objectPosition: "50.00% 50.00%",
     previewFake: true,
+    previewSource: PREVIEW_FAKE_SOURCE,
   };
 }
 
@@ -141,10 +168,11 @@ export function createFakeHeroConfig(locale: string): Record<string, unknown> {
     title: previewFakeHeroTitle(locale),
     subtitle: previewFakeHeroSubtitle(locale),
     href: "/products",
-    imageUrl: demoImage(0),
+    imageUrl: PREVIEW_FAKE_HERO,
     focalPointX: 0.5,
     focalPointY: 0.45,
     previewFake: true,
+    previewSource: PREVIEW_FAKE_SOURCE,
   };
 }
 
@@ -152,8 +180,9 @@ export function createFakePromoConfig(locale: string): Record<string, unknown> {
   return {
     title: previewFakePromoTitle(locale),
     href: "/offers",
-    imageUrl: demoImage(4),
+    imageUrl: PREVIEW_FAKE_PROMO,
     previewFake: true,
+    previewSource: PREVIEW_FAKE_SOURCE,
   };
 }
 
@@ -163,12 +192,13 @@ export function createFakeRichTextConfig(locale: string): Record<string, unknown
     title: copy.title,
     text: copy.text,
     previewFake: true,
+    previewSource: PREVIEW_FAKE_SOURCE,
   };
 }
 
-export function createFakeStory(index: number, locale: string): PublicStoryCard {
+export function createFakeStory(index: number, locale: string): PublicStoryCard & PreviewFakeMarked {
   const id = `${PREVIEW_FAKE_ID_PREFIX}story-${index + 1}`;
-  const media = demoImage(index);
+  const media = previewFakeStoryUrl(index);
   return {
     storyId: id,
     title: previewFakeStoryTitle(index, locale),
@@ -189,5 +219,6 @@ export function createFakeStory(index: number, locale: string): PublicStoryCard 
       },
     ],
     previewFake: true,
+    previewSource: PREVIEW_FAKE_SOURCE,
   };
 }

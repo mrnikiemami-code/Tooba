@@ -50,7 +50,7 @@ TB-P07-T043
 Last Implementation Task:
 
 ```text
-TB-P10-T022-R8-R1
+TB-P10-T022-R8-R2
 ```
 
 Current Issued Task:
@@ -68,6 +68,7 @@ Current Repair Task:
 Implemented Under Review:
 
 ```text
+TB-P10-T022-R8-R2 — Store Preview Asset Isolation Repair (dedicated Preview-Fake content/media; zero Template Fashion asset reuse in Store fake fill); USER_VISUAL_ACCEPTED=YES (Appearance); Builder USER_VISUAL_ACCEPTED=NO
 TB-P10-T022-R8-R1 — R8 Runtime Visual Closure (FE+Host evidence PNGs; article magazine-rail sample marker repair; preview-only partial-fillers fixture); USER_VISUAL_ACCEPTED=YES (Appearance); Builder USER_VISUAL_ACCEPTED=NO
 TB-P10-T022-R8 — Store Preview Variant-Fidelity Repair (preview-only fake fill through real Section/Variant components); USER_VISUAL_ACCEPTED=YES (Appearance); Builder USER_VISUAL_ACCEPTED=NO
 TB-P10-T022-R7 — Preview context unification (strict Sample/Store isolation, preview placeholders, dynamic locale, focal crop); USER_VISUAL_ACCEPTED=YES (Appearance); Builder USER_VISUAL_ACCEPTED=NO

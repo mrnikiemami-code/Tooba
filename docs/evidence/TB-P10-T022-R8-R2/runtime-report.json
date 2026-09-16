@@ -1,0 +1,186 @@
+{
+  "ok": true,
+  "steps": [
+    {
+      "name": "file:sample-fashion-still-template-data.png",
+      "pass": true,
+      "data": {
+        "bytes": 592046
+      }
+    },
+    {
+      "name": "sample-uses-fashion-template",
+      "pass": true,
+      "data": {
+        "sampleHasFashion": true,
+        "sampleHasPreviewFake": false,
+        "count": 31
+      }
+    },
+    {
+      "name": "sample-no-preview-fake-media",
+      "pass": true,
+      "data": {
+        "sampleHasPreviewFake": false
+      }
+    },
+    {
+      "name": "file:store-banner-previewfake-isolated.png",
+      "pass": true,
+      "data": {
+        "bytes": 214189,
+        "selector": "[data-testid=landing-banner-showcase]"
+      }
+    },
+    {
+      "name": "file:store-products-previewfake-isolated.png",
+      "pass": true,
+      "data": {
+        "bytes": 44895,
+        "selector": "[data-testid=landing-products]"
+      }
+    },
+    {
+      "name": "file:store-brands-previewfake-isolated.png",
+      "pass": true,
+      "data": {
+        "bytes": 39148,
+        "selector": "[data-testid=home-brands]"
+      }
+    },
+    {
+      "name": "file:store-articles-previewfake-isolated.png",
+      "pass": true,
+      "data": {
+        "bytes": 97371,
+        "selector": "[data-testid=home-articles]"
+      }
+    },
+    {
+      "name": "file:store-reviews-previewfake-isolated.png",
+      "pass": true,
+      "data": {
+        "bytes": 14372,
+        "selector": "[data-testid=home-testimonials]"
+      }
+    },
+    {
+      "name": "file:store-stories-previewfake-isolated.png",
+      "pass": true,
+      "data": {
+        "bytes": 44704,
+        "selector": "[data-testid=home-stories]"
+      }
+    },
+    {
+      "name": "store-has-fake-badges",
+      "pass": true,
+      "data": {
+        "fakeBadges": 25
+      }
+    },
+    {
+      "name": "store-uses-preview-placeholder",
+      "pass": true,
+      "data": {
+        "storeHasPreviewFake": true
+      }
+    },
+    {
+      "name": "file:store-categories-previewfake-isolated.png",
+      "pass": true,
+      "data": {
+        "bytes": 124884,
+        "selector": "[data-testid=landing-categories]"
+      }
+    },
+    {
+      "name": "file:store-partial-real-plus-previewfake.png",
+      "pass": true,
+      "data": {
+        "bytes": 435033
+      }
+    },
+    {
+      "name": "partial-mixed",
+      "pass": true,
+      "data": {
+        "realProduct": 1,
+        "fakeInPartial": 21
+      }
+    },
+    {
+      "name": "file:sample-vs-store-assets-clearly-distinct.png",
+      "pass": true,
+      "data": {
+        "bytes": 356874
+      }
+    },
+    {
+      "name": "file:published-storefront-no-previewfake-r2.png",
+      "pass": true,
+      "data": {
+        "bytes": 361767
+      }
+    },
+    {
+      "name": "published-no-fake",
+      "pass": true,
+      "data": {
+        "pubFakeBadge": 0,
+        "pubSampleFa": 0,
+        "pubHasPreviewFake": false
+      }
+    }
+  ],
+  "files": {
+    "sample-fashion-still-template-data.png": {
+      "bytes": 592046
+    },
+    "store-banner-previewfake-isolated.png": {
+      "bytes": 214189,
+      "selector": "[data-testid=landing-banner-showcase]"
+    },
+    "store-products-previewfake-isolated.png": {
+      "bytes": 44895,
+      "selector": "[data-testid=landing-products]"
+    },
+    "store-brands-previewfake-isolated.png": {
+      "bytes": 39148,
+      "selector": "[data-testid=home-brands]"
+    },
+    "store-articles-previewfake-isolated.png": {
+      "bytes": 97371,
+      "selector": "[data-testid=home-articles]"
+    },
+    "store-reviews-previewfake-isolated.png": {
+      "bytes": 14372,
+      "selector": "[data-testid=home-testimonials]"
+    },
+    "store-stories-previewfake-isolated.png": {
+      "bytes": 44704,
+      "selector": "[data-testid=home-stories]"
+    },
+    "store-categories-previewfake-isolated.png": {
+      "bytes": 124884,
+      "selector": "[data-testid=landing-categories]"
+    },
+    "store-partial-real-plus-previewfake.png": {
+      "bytes": 435033
+    },
+    "sample-vs-store-assets-clearly-distinct.png": {
+      "bytes": 356874
+    },
+    "published-storefront-no-previewfake-r2.png": {
+      "bytes": 361767
+    }
+  },
+  "purity": {
+    "storeImgs": {
+      "fashionHits": 0,
+      "previewFakeHits": 22,
+      "fakeBadges": 25
+    }
+  },
+  "errors": []
+}
