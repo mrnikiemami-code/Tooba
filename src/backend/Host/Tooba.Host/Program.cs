@@ -447,6 +447,15 @@ if (app.Environment.IsDevelopment())
         {
             app.Logger.LogError(ex, "IndustryBatchBTemplateCatalogSeed failed; Host continues without Batch B Template Catalog seed.");
         }
+
+        try
+        {
+            await IndustryBatchCTemplateCatalogSeedHost.ApplyAsync(app.Services);
+        }
+        catch (Exception ex)
+        {
+            app.Logger.LogError(ex, "IndustryBatchCTemplateCatalogSeed failed; Host continues without Batch C Template Catalog seed.");
+        }
     }
 }
 

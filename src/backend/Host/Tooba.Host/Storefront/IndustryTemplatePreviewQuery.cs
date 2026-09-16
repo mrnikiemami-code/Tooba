@@ -91,7 +91,10 @@ public sealed class IndustryTemplatePreviewQuery
                 "tools-hardware" => 350_000 + n * 32_000,
                 "tile-ceramic" => 290_000 + n * 38_000,
                 "interior-decor" => 1_250_000 + n * 95_000,
-                _ => 4_800_000 + n * 210_000,
+                "home-appliances" => 4_800_000 + n * 210_000,
+                "shoes" => 890_000 + n * 55_000,
+                "plants" => 220_000 + n * 18_000,
+                _ => 310_000 + n * 22_000,
             };
             return new FashionTemplateProductDto(
                 row.ProductId.ToString("D"),
@@ -221,7 +224,10 @@ public sealed class IndustryTemplatePreviewQuery
             "tools-hardware" => "ابزار",
             "tile-ceramic" => "کاشی",
             "interior-decor" => "دکوراسیون",
-            _ => "لوازم خانگی",
+            "home-appliances" => "لوازم خانگی",
+            "shoes" => "کفش",
+            "plants" => "گیاه",
+            _ => "زیبایی",
         };
         return new FashionTemplateCompositionFillersDto(
             [

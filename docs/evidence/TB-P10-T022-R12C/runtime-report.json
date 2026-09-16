@@ -1,0 +1,222 @@
+{
+  "ok": true,
+  "steps": [
+    {
+      "name": "api-shoes-status",
+      "pass": true,
+      "data": {
+        "status": 200
+      }
+    },
+    {
+      "name": "api-shoes-counts",
+      "pass": true,
+      "data": {
+        "products": 15,
+        "roots": 8,
+        "brands": 6,
+        "pure": true
+      }
+    },
+    {
+      "name": "api-plants-status",
+      "pass": true,
+      "data": {
+        "status": 200
+      }
+    },
+    {
+      "name": "api-plants-counts",
+      "pass": true,
+      "data": {
+        "products": 15,
+        "roots": 8,
+        "brands": 6,
+        "pure": true
+      }
+    },
+    {
+      "name": "api-beauty-status",
+      "pass": true,
+      "data": {
+        "status": 200
+      }
+    },
+    {
+      "name": "api-beauty-counts",
+      "pass": true,
+      "data": {
+        "products": 15,
+        "roots": 8,
+        "brands": 6,
+        "pure": true
+      }
+    },
+    {
+      "name": "file:shoes-preview-desktop.png",
+      "pass": true,
+      "data": {
+        "bytes": 127153
+      }
+    },
+    {
+      "name": "file:shoes-preview-mobile.png",
+      "pass": true,
+      "data": {
+        "bytes": 69003
+      }
+    },
+    {
+      "name": "shoes-sample-purity",
+      "pass": true,
+      "data": {
+        "purity": "pure"
+      }
+    },
+    {
+      "name": "shoes-store-no-template-origin",
+      "pass": true,
+      "data": {
+        "storeOrigin": "operational-store-catalog",
+        "storePurity": "store"
+      }
+    },
+    {
+      "name": "file:plants-preview-desktop.png",
+      "pass": true,
+      "data": {
+        "bytes": 263320
+      }
+    },
+    {
+      "name": "file:plants-preview-mobile.png",
+      "pass": true,
+      "data": {
+        "bytes": 76145
+      }
+    },
+    {
+      "name": "plants-sample-purity",
+      "pass": true,
+      "data": {
+        "purity": "pure"
+      }
+    },
+    {
+      "name": "plants-store-no-template-origin",
+      "pass": true,
+      "data": {
+        "storeOrigin": "operational-store-catalog",
+        "storePurity": "store"
+      }
+    },
+    {
+      "name": "file:beauty-preview-desktop.png",
+      "pass": true,
+      "data": {
+        "bytes": 157197
+      }
+    },
+    {
+      "name": "file:beauty-preview-mobile.png",
+      "pass": true,
+      "data": {
+        "bytes": 73567
+      }
+    },
+    {
+      "name": "beauty-sample-purity",
+      "pass": true,
+      "data": {
+        "purity": "pure"
+      }
+    },
+    {
+      "name": "beauty-store-no-template-origin",
+      "pass": true,
+      "data": {
+        "storeOrigin": "operational-store-catalog",
+        "storePurity": "store"
+      }
+    },
+    {
+      "name": "file:batch-c-template-selector.png",
+      "pass": true,
+      "data": {
+        "bytes": 136593
+      }
+    },
+    {
+      "name": "file:shoes-template-overview.png",
+      "pass": true,
+      "data": {
+        "bytes": 136593
+      }
+    },
+    {
+      "name": "file:plants-template-overview.png",
+      "pass": true,
+      "data": {
+        "bytes": 210369
+      }
+    },
+    {
+      "name": "file:beauty-template-overview.png",
+      "pass": true,
+      "data": {
+        "bytes": 136603
+      }
+    },
+    {
+      "name": "file:batch-c-use-template.png",
+      "pass": true,
+      "data": {
+        "bytes": 76396
+      }
+    },
+    {
+      "name": "use-template-sections",
+      "pass": true,
+      "data": {
+        "sectionCount": 0,
+        "url": "http://127.0.0.1:3000/admin/landing-pages/01a0ab1c-3c49-7000-9015-71fcbbc7e422"
+      }
+    }
+  ],
+  "files": {
+    "shoes-preview-desktop.png": {
+      "bytes": 127153
+    },
+    "shoes-preview-mobile.png": {
+      "bytes": 69003
+    },
+    "plants-preview-desktop.png": {
+      "bytes": 263320
+    },
+    "plants-preview-mobile.png": {
+      "bytes": 76145
+    },
+    "beauty-preview-desktop.png": {
+      "bytes": 157197
+    },
+    "beauty-preview-mobile.png": {
+      "bytes": 73567
+    },
+    "batch-c-template-selector.png": {
+      "bytes": 136593
+    },
+    "shoes-template-overview.png": {
+      "bytes": 136593
+    },
+    "plants-template-overview.png": {
+      "bytes": 210369
+    },
+    "beauty-template-overview.png": {
+      "bytes": 136603
+    },
+    "batch-c-use-template.png": {
+      "bytes": 76396
+    }
+  },
+  "errors": []
+}

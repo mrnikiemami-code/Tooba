@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Batch A industry template sample/store preview — Template Catalog only for sample.
  * Shared composition engine (same Fashion query/page-builder pattern).
  */
@@ -441,6 +441,18 @@ const HERO_COPY: Record<IndustryCatalogTemplateKey, { title: string; subtitle: s
   "home-appliances": {
     title: "لوازم خانگی برندمحور",
     subtitle: "یخچال، شستشو، پخت‌و‌پز و نظافت",
+  },
+  shoes: {
+    title: "کفش برای هر مسیر",
+    subtitle: "ورزشی، رسمی، بوت و مراقبت از کفش",
+  },
+  plants: {
+    title: "گل و گیاه خانه",
+    subtitle: "آپارتمانی، گلدان، خاک و باکس هدیه",
+  },
+  beauty: {
+    title: "آرایشی و بهداشتی روزمره",
+    subtitle: "مراقبت پوست، آرایش و بهداشت شخصی فروشگاهی",
   },
 };
 

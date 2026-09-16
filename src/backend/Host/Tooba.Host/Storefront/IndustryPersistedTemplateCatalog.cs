@@ -9,7 +9,8 @@ internal static class IndustryPersistedTemplateCatalog
 
     public static bool IsSupported(string templateKey) =>
         IndustryBatchATemplateCatalogSeed.SupportedKeys.Contains(templateKey)
-        || IndustryBatchBTemplateCatalogSeed.SupportedKeys.Contains(templateKey);
+        || IndustryBatchBTemplateCatalogSeed.SupportedKeys.Contains(templateKey)
+        || IndustryBatchCTemplateCatalogSeed.SupportedKeys.Contains(templateKey);
 
     public static string OriginFor(string templateKey)
     {
@@ -18,7 +19,12 @@ internal static class IndustryPersistedTemplateCatalog
             return IndustryBatchATemplateCatalogSeed.OriginFor(templateKey);
         }
 
-        return IndustryBatchBTemplateCatalogSeed.OriginFor(templateKey);
+        if (IndustryBatchBTemplateCatalogSeed.SupportedKeys.Contains(templateKey))
+        {
+            return IndustryBatchBTemplateCatalogSeed.OriginFor(templateKey);
+        }
+
+        return IndustryBatchCTemplateCatalogSeed.OriginFor(templateKey);
     }
 
     public static string MediaPublicUrl(string templateKey, int index)
@@ -28,7 +34,12 @@ internal static class IndustryPersistedTemplateCatalog
             return IndustryBatchATemplateCatalogSeed.MediaPublicUrl(templateKey, index);
         }
 
-        return IndustryBatchBTemplateCatalogSeed.MediaPublicUrl(templateKey, index);
+        if (IndustryBatchBTemplateCatalogSeed.SupportedKeys.Contains(templateKey))
+        {
+            return IndustryBatchBTemplateCatalogSeed.MediaPublicUrl(templateKey, index);
+        }
+
+        return IndustryBatchCTemplateCatalogSeed.MediaPublicUrl(templateKey, index);
     }
 
     public static string? TryResolveMedia(string templateKey, Guid mediaAssetId)
@@ -41,6 +52,11 @@ internal static class IndustryPersistedTemplateCatalog
         if (IndustryBatchBTemplateCatalogSeed.SupportedKeys.Contains(templateKey))
         {
             return IndustryBatchBTemplateCatalogSeed.TryResolveMedia(templateKey, mediaAssetId);
+        }
+
+        if (IndustryBatchCTemplateCatalogSeed.SupportedKeys.Contains(templateKey))
+        {
+            return IndustryBatchCTemplateCatalogSeed.TryResolveMedia(templateKey, mediaAssetId);
         }
 
         return null;

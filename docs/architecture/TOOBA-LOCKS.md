@@ -1217,3 +1217,18 @@ Industry media remains template-specific and semantically relevant; unrelated cr
 ### LOCK-SF-351 — Batch B shared preview/apply engines
 Batch B preview routes and Template Apply use only shared engines/workflows; template-specific renderer/apply forks are forbidden.
 
+### LOCK-SF-352 — Batch C Template Catalog parity
+Batch C packs use the same Template Catalog parity, preview, locale, and apply contracts as prior packs.
+
+### LOCK-SF-353 — Batch C pack cardinality
+Shoes, Plants, and Beauty each persist exactly 8 meaningful three-level roots and exactly 15 products with relevant media/brands/banners.
+
+### LOCK-SF-354 — Batch C media isolation
+Batch C media remains template-specific and semantically relevant; unrelated cross-template asset reuse is forbidden.
+
+### LOCK-SF-355 — Beauty demo retail-only copy
+Beauty Template demo content must avoid medical/therapeutic claims and remain ordinary retail demo content.
+
+### LOCK-SF-356 — Batch C shared preview/apply engines
+Batch C preview routes and Template Apply use only shared engines/workflows; template-specific renderer/apply forks are forbidden.
+
