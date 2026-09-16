@@ -1,0 +1,120 @@
+{
+  "ok": true,
+  "steps": [
+    {
+      "name": "host-health",
+      "pass": true
+    },
+    {
+      "name": "fe-reachable",
+      "pass": true
+    },
+    {
+      "name": "dashboard-not-login",
+      "pass": true
+    },
+    {
+      "name": "file:admin-dashboard-current.png",
+      "pass": true,
+      "data": {
+        "bytes": 136203
+      }
+    },
+    {
+      "name": "file:admin-orders-canonical-grid.png",
+      "pass": true,
+      "data": {
+        "bytes": 61867
+      }
+    },
+    {
+      "name": "file:admin-products-current.png",
+      "pass": true,
+      "data": {
+        "bytes": 60997
+      }
+    },
+    {
+      "name": "file:admin-categories-current.png",
+      "pass": true,
+      "data": {
+        "bytes": 50538
+      }
+    },
+    {
+      "name": "file:admin-brands-current.png",
+      "pass": true,
+      "data": {
+        "bytes": 60997
+      }
+    },
+    {
+      "name": "file:admin-access-control-current.png",
+      "pass": true,
+      "data": {
+        "bytes": 63818
+      }
+    },
+    {
+      "name": "file:admin-store-settings-current.png",
+      "pass": true,
+      "data": {
+        "bytes": 39471
+      }
+    },
+    {
+      "name": "file:admin-store-pages-current.png",
+      "pass": true,
+      "data": {
+        "bytes": 122213
+      }
+    },
+    {
+      "name": "file:admin-appearance-current.png",
+      "pass": true,
+      "data": {
+        "bytes": 116173
+      }
+    },
+    {
+      "name": "file:admin-edition-boundary-current.png",
+      "pass": true,
+      "data": {
+        "bytes": 59647
+      }
+    }
+  ],
+  "files": {
+    "admin-dashboard-current.png": {
+      "bytes": 136203
+    },
+    "admin-orders-canonical-grid.png": {
+      "bytes": 61867
+    },
+    "admin-products-current.png": {
+      "bytes": 60997
+    },
+    "admin-categories-current.png": {
+      "bytes": 50538
+    },
+    "admin-brands-current.png": {
+      "bytes": 60997
+    },
+    "admin-access-control-current.png": {
+      "bytes": 63818
+    },
+    "admin-store-settings-current.png": {
+      "bytes": 39471
+    },
+    "admin-store-pages-current.png": {
+      "bytes": 122213
+    },
+    "admin-appearance-current.png": {
+      "bytes": 116173
+    },
+    "admin-edition-boundary-current.png": {
+      "bytes": 59647
+    }
+  },
+  "errors": []
+}

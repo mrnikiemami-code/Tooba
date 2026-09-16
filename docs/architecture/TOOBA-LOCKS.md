@@ -1250,3 +1250,15 @@ Storefront appearance/theme tokens must never leak into Admin or Seller Panel ch
 ### LOCK-SF-362 — No Builder hardening workarounds
 Final Builder hardening must not introduce template-specific rendering forks, duplicate ordering models, raw internal identifiers, or temporary workaround logic.
 
+### LOCK-SF-363 — Canonical Admin DataGrid reuse
+Admin completion work must reuse the canonical AppDataGrid/resource UX patterns rather than introducing simplified parallel tables.
+
+### LOCK-SF-364 — Admin/Seller chrome isolation from Storefront theme
+Admin and Seller Panel chrome remain isolated from Storefront theme tokens across all future Admin work.
+
+### LOCK-SF-365 — Marketplace vs Single-Store Admin edition boundaries
+Marketplace and Single-Store Admin workflows must respect edition boundaries; Single-Store must never expose multi-store creation/management flows.
+
+### LOCK-SF-366 — Admin work preserves Bridge recovery and Builder contracts
+Future Admin work must preserve Bridge recovery discipline and must not regress accepted Builder contracts.
+
