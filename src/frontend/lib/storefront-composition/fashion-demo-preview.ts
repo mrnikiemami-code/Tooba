@@ -11,7 +11,7 @@ import {
   buildTemplateSectionPayloads,
   getIndustryTemplate,
 } from "./industry-templates.ts";
-import { storefrontHostOrigin } from "../../app/storefront/storefront-api.ts";
+import { loadStorefrontBrands, loadStorefrontCategories, loadStorefrontListing, storefrontHostOrigin } from "../../app/storefront/storefront-api.ts";
 import type {
   LandingRenderContext,
   StorefrontLandingPage,
@@ -26,8 +26,58 @@ import type {
 } from "../../app/storefront/storefront-model.ts";
 
 export const FASHION_DEMO_ORIGIN = "fashion-template-catalog-persisted" as const;
+export const FASHION_STORE_ORIGIN = "operational-store-catalog" as const;
+export type FashionPreviewSource = "sample" | "store";
 export const FASHION_DEMO_CATEGORY_TREE_COUNT = 8;
 export const FASHION_DEMO_PRODUCT_COUNT = 15;
+
+export type FashionPreviewErrorCode =
+  | "store.data.unavailable"
+  | "sample.preview.failed"
+  | "preview.load.failed";
+
+const FASHION_PREVIEW_ERRORS: Record<FashionPreviewErrorCode, { fa: string; en: string }> = {
+  "store.data.unavailable": {
+    fa: "دادهٔ فروشگاه در دسترس نیست. اتصال Host یا Catalog عملیاتی را بررسی کنید.",
+    en: "Store catalog data is unavailable. Check the Host connection or operational Catalog.",
+  },
+  "sample.preview.failed": {
+    fa: "بارگذاری پیش‌نمایش Template Catalog ناموفق بود.",
+    en: "Fashion Template Catalog preview failed to load.",
+  },
+  "preview.load.failed": {
+    fa: "بارگذاری پیش‌نمایش ناموفق بود.",
+    en: "Preview failed to load.",
+  },
+};
+
+export class FashionPreviewLoadError extends Error {
+  readonly code: FashionPreviewErrorCode;
+
+  constructor(code: FashionPreviewErrorCode) {
+    super(code);
+    this.name = "FashionPreviewLoadError";
+    this.code = code;
+  }
+}
+
+/** Localized user-facing message for Fashion template preview failures. */
+export function fashionPreviewErrorMessage(
+  raw: string | null | undefined,
+  locale: "fa" | "en" = "fa",
+): string {
+  const code = (raw ?? "").trim() as FashionPreviewErrorCode;
+  const row = FASHION_PREVIEW_ERRORS[code];
+  if (row) return row[locale];
+  if (raw && !/^[a-z0-9]+(?:\.[a-z0-9_-]+)+$/i.test(raw) && !/unavailable|failed/i.test(raw)) {
+    return raw;
+  }
+  return FASHION_PREVIEW_ERRORS["preview.load.failed"][locale];
+}
+
+export function parseFashionPreviewSource(value: string | null | undefined): FashionPreviewSource {
+  return value === "store" ? "store" : "sample";
+}
 
 export { fashionDemoMediaUrl };
 
@@ -208,39 +258,90 @@ export function buildFashionDemoPageFromPreview(
   preview: HostFashionPreview,
   context: LandingRenderContext,
 ): StorefrontLandingPage {
+  const bannerSection = preview.page.sections.find((s) => s.sectionType === "BannerShowcase");
+  const bannerItems = bannerSection
+    ? parseBannerItems(bannerSection.configurationJson)
+    : undefined;
+  return buildFashionTemplatePage(context, {
+    origin: FASHION_DEMO_ORIGIN,
+    pageId: preview.page.pageId,
+    locale: preview.page.locale,
+    slug: preview.page.slug,
+    title: preview.page.title,
+    seoTitle: preview.page.seoTitle ?? preview.page.title,
+    seoDescription: preview.page.seoDescription ?? "پیش‌نمایش قالب پوشاک از Template Catalog",
+    sectionIds: preview.page.sections.map((s) => s.pageSectionId),
+    bannerItems,
+  });
+}
+
+type FashionTemplatePageOptions = {
+  origin: string;
+  pageId?: string;
+  locale?: string;
+  slug?: string;
+  title?: string;
+  seoTitle?: string;
+  seoDescription?: string;
+  sectionIds?: string[];
+  bannerItems?: Array<Record<string, unknown>>;
+};
+
+/** Same Fashion industry template composition; data IDs come from `context`. */
+export function buildFashionTemplatePage(
+  context: LandingRenderContext,
+  options: FashionTemplatePageOptions,
+): StorefrontLandingPage {
   const template = getIndustryTemplate("fashion");
   if (!template) throw new Error("Fashion template missing");
   const payloads = buildTemplateSectionPayloads("fashion");
   const rootCategoryIds = context.categories
-    .filter((c) => c.parentCategoryId === null)
+    .filter((c) => !c.parentCategoryId)
     .map((c) => c.categoryId);
+  const categoryIdsForGrid = rootCategoryIds.length > 0
+    ? rootCategoryIds
+    : context.categories.map((c) => c.categoryId);
   const productIds = context.products.map((p) => p.productId);
   const brandIds = context.brands.map((b) => b.brandId);
-  const bannerSection = preview.page.sections.find((s) => s.sectionType === "BannerShowcase");
-  const bannerItems = bannerSection
-    ? parseBannerItems(bannerSection.configurationJson)
-    : [
-        { imageUrl: FASHION_IMAGES[1], href: "/products", title: "کمپین فصل جدید" },
-        { imageUrl: FASHION_IMAGES[2], href: "/products", title: "تخفیف اکسسوری" },
-      ];
+  const heroImage =
+    context.products.find((p) => p.mediaAssetId)?.mediaAssetId
+      ? undefined
+      : FASHION_IMAGES[0];
+  const firstProductMedia = context.products
+    .map((p) => p.mediaAssetId)
+    .filter(Boolean)
+    .slice(0, 2);
+  const bannerItems =
+    options.bannerItems
+    ?? (firstProductMedia.length > 0
+      ? firstProductMedia.map((mediaAssetId, index) => ({
+          mediaAssetId,
+          href: "/products",
+          title: index === 0 ? "پیشنهاد فروشگاه" : "منتخب فروشگاه",
+        }))
+      : [
+          { imageUrl: FASHION_IMAGES[1], href: "/products", title: "کمپین فصل جدید" },
+          { imageUrl: FASHION_IMAGES[2], href: "/products", title: "تخفیف اکسسوری" },
+        ]);
 
   const sections: StorefrontLandingSection[] = payloads.map((payload, index) => {
-    const config = { ...payload.config, demoOrigin: FASHION_DEMO_ORIGIN };
+    const config = { ...payload.config, demoOrigin: options.origin };
     if (payload.hostType === "Hero") {
       Object.assign(config, {
         title: "مجموعه بهاره پوشاک",
         subtitle: "استایل روزمره با قطعات ساده و قابل ترکیب",
         href: "/products",
-        imageUrl: FASHION_IMAGES[0],
+        imageUrl: heroImage ?? FASHION_IMAGES[0],
+        ...(firstProductMedia[0] ? { mediaAssetId: firstProductMedia[0] } : {}),
       });
     }
     if (payload.hostType === "CategoryGrid") {
-      config.categoryIds = rootCategoryIds;
+      config.categoryIds = categoryIdsForGrid.slice(0, 8);
       config.title = "دسته‌بندی پوشاک";
     }
     if (payload.hostType === "ProductCollection") {
       config.source = "Manual";
-      config.productIds = productIds;
+      config.productIds = productIds.slice(0, 15);
       config.take = 15;
       config.title = "منتخب پوشاک";
     }
@@ -249,7 +350,7 @@ export function buildFashionDemoPageFromPreview(
       config.title = "بنرهای پوشاک";
     }
     if (payload.hostType === "BrandStrip") {
-      config.brandIds = brandIds;
+      config.brandIds = brandIds.slice(0, 8);
       config.source = "Manual";
       config.title = "برندهای نمایشی پوشاک";
     }
@@ -263,11 +364,11 @@ export function buildFashionDemoPageFromPreview(
 
     const items =
       payload.hostType === "ProductCollection"
-        ? productIds.map((id) => ({ id, slug: id }))
+        ? productIds.slice(0, 15).map((id) => ({ id, slug: id }))
         : [];
 
     return {
-      pageSectionId: preview.page.sections[index]?.pageSectionId ?? `fashion-section-${index + 1}`,
+      pageSectionId: options.sectionIds?.[index] ?? `fashion-section-${index + 1}`,
       sectionType: payload.hostType,
       sortOrder: index,
       config: JSON.stringify(config),
@@ -284,18 +385,18 @@ export function buildFashionDemoPageFromPreview(
       source: "Latest",
       take: 3,
       variantKey: "article.magazine-rail",
-      demoOrigin: FASHION_DEMO_ORIGIN,
+      demoOrigin: options.origin,
     }),
     items: [],
   });
 
   return {
-    pageId: preview.page.pageId,
-    locale: preview.page.locale,
-    slug: preview.page.slug,
-    title: preview.page.title,
-    seoTitle: preview.page.seoTitle ?? preview.page.title,
-    seoDescription: preview.page.seoDescription ?? "پیش‌نمایش قالب پوشاک از Template Catalog",
+    pageId: options.pageId ?? "fashion-template-preview",
+    locale: options.locale ?? "fa",
+    slug: options.slug ?? "fashion-template-sample",
+    title: options.title ?? "پیش‌نمایش قالب پوشاک",
+    seoTitle: options.seoTitle ?? options.title ?? "پیش‌نمایش قالب پوشاک",
+    seoDescription: options.seoDescription ?? "پیش‌نمایش قالب پوشاک",
     templateKey: "fashion",
     sections,
   };
@@ -430,22 +531,102 @@ function normalizePreview(raw: Record<string, unknown>): HostFashionPreview {
 }
 
 export async function loadFashionTemplatePreview(): Promise<{
+  kind: "sample";
   context: LandingRenderContext;
   page: StorefrontLandingPage;
   purity: HostFashionPreview["purity"];
   origin: string;
 }> {
   const host = storefrontHostOrigin();
-  const response = await fetch(`${host}/v1/storefront/template-catalog/fashion/preview`, {
-    cache: "no-store",
-  });
+  let response: Response;
+  try {
+    response = await fetch(`${host}/v1/storefront/template-catalog/fashion/preview`, {
+      cache: "no-store",
+    });
+  } catch {
+    throw new FashionPreviewLoadError("sample.preview.failed");
+  }
   if (!response.ok) {
-    throw new Error(`Fashion Template Catalog preview failed: ${response.status}`);
+    throw new FashionPreviewLoadError("sample.preview.failed");
   }
   const preview = normalizePreview((await response.json()) as Record<string, unknown>);
   const context = mapContext(preview);
   const page = buildFashionDemoPageFromPreview(preview, context);
-  return { context, page, purity: preview.purity, origin: preview.origin || FASHION_DEMO_ORIGIN };
+  return {
+    kind: "sample",
+    context,
+    page,
+    purity: preview.purity,
+    origin: preview.origin || FASHION_DEMO_ORIGIN,
+  };
+}
+
+/** Operational store Catalog data into the same Fashion template composition.
+ * Uses light endpoints (/products, /categories, /brands) — avoids heavy /home which can 500 under load.
+ */
+export async function loadFashionStorePreview(uiLocale: "fa" | "en" = "fa"): Promise<{
+  kind: "store";
+  context: LandingRenderContext;
+  page: StorefrontLandingPage;
+  origin: typeof FASHION_STORE_ORIGIN;
+}> {
+  const [listing, categoriesRaw, brandsRaw] = await Promise.all([
+    loadStorefrontListing({ sort: "newest" }),
+    loadStorefrontCategories(),
+    loadStorefrontBrands(),
+  ]);
+
+  const products = uniqueStoreProducts(listing?.products ?? []);
+  const categories =
+    (categoriesRaw && categoriesRaw.length > 0 ? categoriesRaw : null)
+    ?? listing?.categories
+    ?? [];
+  const brands = brandsRaw ?? [];
+  const hasStoreData = products.length > 0 || categories.length > 0 || brands.length > 0;
+  if (!hasStoreData) {
+    throw new FashionPreviewLoadError("store.data.unavailable");
+  }
+
+  const context: LandingRenderContext = {
+    products,
+    categories,
+    brands,
+    articles: [],
+    reviews: [],
+    menus: {},
+  };
+  const page = buildFashionTemplatePage(context, {
+    origin: FASHION_STORE_ORIGIN,
+    pageId: "fashion-template-store-preview",
+    locale: uiLocale,
+    slug: "fashion-template-store",
+    title: uiLocale === "en"
+      ? "Fashion template preview with store data"
+      : "پیش‌نمایش قالب پوشاک با داده فروشگاه",
+    seoTitle: uiLocale === "en"
+      ? "Fashion template preview with store data"
+      : "پیش‌نمایش قالب پوشاک با داده فروشگاه",
+    seoDescription: uiLocale === "en"
+      ? "Same Fashion template composition filled from the operational store Catalog"
+      : "همان قالب پوشاک با داده Catalog عملیاتی فروشگاه",
+  });
+  return {
+    kind: "store",
+    context,
+    page,
+    origin: FASHION_STORE_ORIGIN,
+  };
+}
+
+function uniqueStoreProducts(cards: StorefrontProductCard[]): StorefrontProductCard[] {
+  const seen = new Set<string>();
+  const rows: StorefrontProductCard[] = [];
+  for (const card of cards) {
+    if (!card.productId || seen.has(card.productId)) continue;
+    seen.add(card.productId);
+    rows.push(card);
+  }
+  return rows;
 }
 
 /** @deprecated R4 in-memory builders removed; use loadFashionTemplatePreview. */

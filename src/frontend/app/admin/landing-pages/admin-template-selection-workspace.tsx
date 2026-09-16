@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Monitor, Smartphone, Tablet } from "lucide-react";
+import { ExternalLink, Monitor, Smartphone, Tablet } from "lucide-react";
 import {
   listIndustryTemplates,
   templateSectionLabelsFa,
@@ -9,7 +9,9 @@ import {
 } from "../../../lib/storefront-composition/industry-templates.ts";
 import {
   FASHION_DEMO_ORIGIN,
+  FASHION_STORE_ORIGIN,
   fashionDemoSeedSummaryFa,
+  type FashionPreviewSource,
 } from "../../../lib/storefront-composition/fashion-demo-preview.ts";
 import { layoutAwareTemplatePreview } from "./layout-aware-previews.tsx";
 
@@ -28,7 +30,16 @@ const FASHION_IFRAME_VIEWPORT: Record<TemplatePreviewDevice, { width: number; he
   mobile: { width: 390, height: 720, label: "موبایل" },
 };
 
-const FASHION_PREVIEW_SRC = "/template-preview/fashion";
+const FASHION_PREVIEW_PATH = "/template-preview/fashion";
+const FASHION_FULL_PAGE_PATH = "/template-preview/fashion/full";
+
+function fashionPreviewSrc(source: FashionPreviewSource): string {
+  return `${FASHION_PREVIEW_PATH}?source=${source}`;
+}
+
+function fashionFullPageHref(source: FashionPreviewSource): string {
+  return `${FASHION_FULL_PAGE_PATH}?source=${source}`;
+}
 
 /** Local industry photos for template cards/summary (no geometric wireframe thumbs). */
 const INDUSTRY_TEMPLATE_PHOTO: Record<string, string> = {
@@ -143,6 +154,8 @@ export function AdminTemplateSelectionWorkspace({
 }: Props) {
   const templates = useMemo(() => listIndustryTemplates(), []);
   const [device, setDevice] = useState<TemplatePreviewDevice>("desktop");
+  const [previewSource, setPreviewSource] = useState<FashionPreviewSource>("sample");
+  const [iframeKey, setIframeKey] = useState(0);
   const selected = templates.find((t) => t.templateKey === selectedTemplateKey) ?? templates[0] ?? null;
   const isFashionLive = selected?.templateKey === "fashion";
   const frame = DEVICE_FRAME[device];
@@ -150,6 +163,12 @@ export function AdminTemplateSelectionWorkspace({
   const blocks = selected && !isFashionLive ? industryWireframeBlocks(selected, device) : [];
   const compactPreview = selected ? layoutAwareTemplatePreview(selected) : null;
   const fashionSeedLines = fashionDemoSeedSummaryFa();
+  const fashionIframeSrc = fashionPreviewSrc(previewSource);
+
+  const loadPreviewSource = (source: FashionPreviewSource) => {
+    setPreviewSource(source);
+    setIframeKey((key) => key + 1);
+  };
 
   return (
     <main
@@ -287,6 +306,19 @@ export function AdminTemplateSelectionWorkspace({
                     </button>
                   );
                 })}
+                {isFashionLive ? (
+                  <a
+                    href={fashionFullPageHref(previewSource)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    title="همان طراحی را در یک صفحهٔ واقعی باز می‌کند"
+                    data-testid="template-open-full-page"
+                    className="inline-flex items-center gap-2 rounded-xl border border-border px-3 py-2 text-xs font-bold text-slate-700 hover:border-[#2563EB] hover:text-[#2563EB]"
+                  >
+                    <ExternalLink className="h-4 w-4" aria-hidden />
+                    نمایش در یک صفحه
+                  </a>
+                ) : null}
               </div>
 
               <div className="flex justify-center overflow-x-auto rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-4" data-testid="template-preview-stage">
@@ -303,17 +335,22 @@ export function AdminTemplateSelectionWorkspace({
                     data-lock="LOCK-SF-281"
                   >
                     <div className="flex items-center justify-between border-b border-slate-200 bg-slate-100 px-3 py-1.5 text-[11px] font-bold text-slate-500">
-                      <span>پیش‌نمایش زنده · پوشاک</span>
+                      <span>
+                        پیش‌نمایش زنده · پوشاک ·{" "}
+                        {previewSource === "sample" ? "داده نمونه" : "داده فروشگاه"}
+                      </span>
                       <span>
                         {fashionViewport.label} · {fashionViewport.width}px
                       </span>
                     </div>
                     <iframe
+                      key={iframeKey}
                       title="پیش‌نمایش قالب پوشاک"
-                      src={FASHION_PREVIEW_SRC}
+                      src={fashionIframeSrc}
                       className="block h-[calc(100%-28px)] w-full border-0 bg-white"
                       data-testid="fashion-preview-iframe"
-                      data-demo-origin={FASHION_DEMO_ORIGIN}
+                      data-demo-origin={previewSource === "sample" ? FASHION_DEMO_ORIGIN : FASHION_STORE_ORIGIN}
+                      data-preview-source={previewSource}
                       sandbox="allow-scripts allow-same-origin"
                       referrerPolicy="no-referrer"
                     />
@@ -379,7 +416,37 @@ export function AdminTemplateSelectionWorkspace({
                 )}
               </div>
 
-              <div className="flex flex-wrap gap-2" data-testid="template-cleanup-prepare-actions">
+              <div className="flex flex-wrap gap-2" data-testid="template-preview-source-actions">
+                {isFashionLive ? (
+                  <>
+                    <button
+                      type="button"
+                      className={`rounded-xl border px-4 py-2 text-sm font-bold ${
+                        previewSource === "sample"
+                          ? "border-[#2563EB] bg-blue-50 text-[#2563EB]"
+                          : "border-border bg-white text-slate-800"
+                      }`}
+                      data-testid="load-sample-data-action"
+                      aria-pressed={previewSource === "sample"}
+                      onClick={() => loadPreviewSource("sample")}
+                    >
+                      بارگذاری از داده‌های نمونه
+                    </button>
+                    <button
+                      type="button"
+                      className={`rounded-xl border px-4 py-2 text-sm font-bold ${
+                        previewSource === "store"
+                          ? "border-[#2563EB] bg-blue-50 text-[#2563EB]"
+                          : "border-border bg-white text-slate-800"
+                      }`}
+                      data-testid="load-store-data-action"
+                      aria-pressed={previewSource === "store"}
+                      onClick={() => loadPreviewSource("store")}
+                    >
+                      بارگذاری از داده‌های فروشگاه
+                    </button>
+                  </>
+                ) : null}
                 <button
                   type="button"
                   disabled

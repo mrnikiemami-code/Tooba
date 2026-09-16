@@ -741,6 +741,14 @@ export async function loadStorefrontBrands(): Promise<StorefrontBrandItem[] | nu
   return Array.isArray(payload) ? payload.map(mapBrand).filter((row): row is StorefrontBrandItem => row !== null) : null;
 }
 
+/** فهرست رده‌های منتشرشده را از Catalog می‌خواند (سبک‌تر از /home). */
+export async function loadStorefrontCategories(): Promise<StorefrontCategoryItem[] | null> {
+  const payload = await readJson("/v1/storefront/categories");
+  return Array.isArray(payload)
+    ? payload.map(mapCategory).filter((row): row is StorefrontCategoryItem => row !== null)
+    : null;
+}
+
 /** landing برند را بدون کپی بازاریابی ساختگی نگاشت می‌کند. */
 export async function loadStorefrontBrand(slug: string): Promise<StorefrontBrandPage | null> {
   const item = asRecord(await readJson(`/v1/storefront/brands/${encodeURIComponent(slug)}`));
