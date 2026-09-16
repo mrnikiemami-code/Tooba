@@ -87,7 +87,7 @@ Recovery-SoT:
 Phase P11; Last Architect-accepted before review TB-P10-T022-R13; Last Implementation TB-P11-T001; Issued/Repair none; Appearance YES; Builder NO; Worker IDLE; do NOT invent TB-P10-T023; do NOT start TB-P11-T002.
 
 Git:
-SHA=9ef220369795e851ef4a1ea0fe58d901c7237745 HEAD==origin/main after push.
+SHA=e5185ae99768742b505524f5b30e9c69cfcc969a HEAD==origin/main after push.
 
 Architectural-Concerns:
 ACC fail-open is production BLOCKER for T002. Edition CallContext hardcode + marketplace-always-on Admin surfaces. Dual Page Composition vs Store Pages SoT.
