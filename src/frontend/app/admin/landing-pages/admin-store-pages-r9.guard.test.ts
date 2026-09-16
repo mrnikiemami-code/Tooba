@@ -48,6 +48,7 @@ test("create page type + SEO admin UX groups", () => {
 test("canonical landing route + legacy redirect + sitemap", () => {
   assert.match(landingRoute, /\/landing\/\{slug\}|landing\/\[slug\]|data-testid="landing-route"/);
   assert.match(landingRoute, /buildStorePageMetadata|buildStorePageStructuredData/);
+  assert.match(landingRoute, /resolvePublishedStorePage|resolveLandingRouteModel/);
   assert.match(legacySlug, /permanentRedirect/);
   assert.match(legacySlug, /\/landing\//);
   assert.match(sitemap, /listIndexableLandingPages/);

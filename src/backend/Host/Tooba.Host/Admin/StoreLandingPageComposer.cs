@@ -3,6 +3,7 @@ using Microsoft.Extensions.Caching.Memory;
 using Tooba.BuildingBlocks;
 using Tooba.Catalog.Domain;
 using Tooba.Catalog.Infrastructure.Persistence;
+using Tooba.Content.Domain;
 using Tooba.Host.Storefront;
 
 namespace Tooba.Host.Admin;
@@ -16,16 +17,19 @@ public sealed class StoreLandingPageComposer
     private readonly CatalogDbContext _catalog;
     private readonly ICurrentCommerceContext _commerce;
     private readonly IMemoryCache _cache;
+    private readonly StorefrontComposer _storefront;
 
     /// <summary>نویسنده صفحه را به Catalog همین Store وصل می‌کند.</summary>
     public StoreLandingPageComposer(
         CatalogDbContext catalog,
         ICurrentCommerceContext commerce,
-        IMemoryCache cache)
+        IMemoryCache cache,
+        StorefrontComposer storefront)
     {
         _catalog = catalog;
         _commerce = commerce;
         _cache = cache;
+        _storefront = storefront;
     }
 
     /// <summary>فهرست صفحات همین Store.</summary>
@@ -203,13 +207,15 @@ public sealed class StoreLandingPageComposer
             return cached;
         }
 
+        // Indexed Locale+Slug unique; Status/PageType predicates avoid loading non-public rows.
         var page = await _catalog.StoreLandingPages.AsNoTracking()
             .SingleOrDefaultAsync(
                 x => x.Locale == normalizedLocale
                     && x.Slug == normalizedSlug
-                    && x.PageType == StorePageType.Landing,
+                    && x.PageType == StorePageType.Landing
+                    && x.Status == StoreLandingPageStatus.Published,
                 cancellationToken);
-        if (page is null || page.Status != StoreLandingPageStatus.Published)
+        if (page is null)
         {
             _cache.Set(cacheKey, (StoreLandingPagePublicView?)null, TimeSpan.FromSeconds(15));
             return null;
@@ -563,6 +569,7 @@ public sealed class StoreLandingPageComposer
             rows = rows.Where(x => x.IsEnabled).ToList();
         }
 
+        // Sequential section resolve — CatalogDbContext is not thread-safe for concurrent queries.
         var sections = new List<StoreLandingPagePublicSectionView>(rows.Count);
         foreach (var row in rows)
         {
@@ -576,6 +583,36 @@ public sealed class StoreLandingPageComposer
                 row.ConfigurationJson,
                 items));
         }
+
+        // Embed only section-scoped shell data so FE SSR avoids heavy /home + full Catalog listing.
+        var needsProducts = sections.Any(x => x.SectionType == StoreLandingPageSectionRegistry.ProductCollection);
+        var needsBrands = sections.Any(x => x.SectionType == StoreLandingPageSectionRegistry.BrandStrip);
+        var needsArticles = sections.Any(x => x.SectionType == StoreLandingPageSectionRegistry.ArticleList);
+        var needsReviews = sections.Any(x => x.SectionType == StoreLandingPageSectionRegistry.Reviews);
+
+        IReadOnlyList<StorefrontProductCard> products = Array.Empty<StorefrontProductCard>();
+        if (needsProducts)
+        {
+            var productIds = sections
+                .SelectMany(section => section.Items.Select(item => item.Id))
+                .Distinct()
+                .ToArray();
+            products = (await _storefront.ComposeProductCardsAsync(productIds, cancellationToken)).Values.ToList();
+        }
+
+        // Sequential shell fetches — shared scoped DbContexts must not run concurrently.
+        var categories = await _storefront.ListCategoriesAsync(cancellationToken);
+        var brands = needsBrands
+            ? await _storefront.ListBrandsAsync(cancellationToken)
+            : Array.Empty<StorefrontBrandItem>();
+        var articles = needsArticles
+            ? await _storefront.BuildLatestArticlesAsync(
+                ContentTaxonomySeoRules.ResolveContentLocale(page.Locale),
+                cancellationToken)
+            : Array.Empty<StorefrontArticleItem>();
+        var reviews = needsReviews
+            ? await _storefront.BuildFeaturedReviewsAsync(cancellationToken)
+            : Array.Empty<StorefrontFeaturedReviewItem>();
 
         return new StoreLandingPagePublicView(
             page.PageId,
@@ -593,7 +630,12 @@ public sealed class StoreLandingPageComposer
             page.OgImageUrl,
             page.ResolvePrimaryH1(),
             page.TemplateKey,
-            sections);
+            sections,
+            products,
+            categories,
+            brands,
+            articles,
+            reviews);
     }
 
     private async Task<IReadOnlyList<StoreLandingPageResolvedItem>> ResolveProductItemsAsync(
@@ -727,7 +769,12 @@ public sealed record StoreLandingPagePublicView(
     string? OgImageUrl,
     string PrimaryH1,
     string TemplateKey,
-    IReadOnlyList<StoreLandingPagePublicSectionView> Sections);
+    IReadOnlyList<StoreLandingPagePublicSectionView> Sections,
+    IReadOnlyList<StorefrontProductCard> Products,
+    IReadOnlyList<StorefrontCategoryItem> Categories,
+    IReadOnlyList<StorefrontBrandItem> Brands,
+    IReadOnlyList<StorefrontArticleItem> Articles,
+    IReadOnlyList<StorefrontFeaturedReviewItem> Reviews);
 
 /// <summary>ورودی sitemap برای Landing ایندکس‌پذیر.</summary>
 public sealed record StoreLandingSitemapEntry(string Locale, string Slug, DateTimeOffset UpdatedAt);

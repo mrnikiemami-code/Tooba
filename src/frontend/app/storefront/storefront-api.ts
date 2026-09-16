@@ -437,6 +437,25 @@ function mapArticle(value: unknown): StorefrontArticleItem | null {
   };
 }
 
+/** Maps Host-embedded Store Page shell arrays (section-scoped; not full /home). */
+export function mapStorefrontProductCardList(raw: unknown): StorefrontProductCard[] {
+  return Array.isArray(raw) ? raw.map(mapCard).filter((row): row is StorefrontProductCard => row !== null) : [];
+}
+export function mapStorefrontCategoryList(raw: unknown): StorefrontCategoryItem[] {
+  return Array.isArray(raw) ? raw.map(mapCategory).filter((row): row is StorefrontCategoryItem => row !== null) : [];
+}
+export function mapStorefrontBrandList(raw: unknown): StorefrontBrandItem[] {
+  return Array.isArray(raw) ? raw.map(mapBrand).filter((row): row is StorefrontBrandItem => row !== null) : [];
+}
+export function mapStorefrontArticleList(raw: unknown): StorefrontArticleItem[] {
+  return Array.isArray(raw) ? raw.map(mapArticle).filter((row): row is StorefrontArticleItem => row !== null) : [];
+}
+export function mapStorefrontFeaturedReviewList(raw: unknown): StorefrontFeaturedReviewItem[] {
+  return Array.isArray(raw)
+    ? raw.map(mapFeaturedReview).filter((row): row is StorefrontFeaturedReviewItem => row !== null)
+    : [];
+}
+
 function mapPublicSeller(value: unknown): StorefrontPublicSellerItem | null {
   const item = asRecord(value);
   const publicId = item ? asString(readProp(item, "publicId", "PublicId")) : "";
@@ -673,11 +692,22 @@ export function mapStorefrontDetail(payload: unknown): StorefrontProductDetailPa
   };
 }
 
-async function readJson(path: string): Promise<unknown | null> {
+export type StorefrontReadCacheOptions = {
+  revalidateSeconds?: number;
+  tags?: string[];
+};
+
+async function readJson(path: string, options?: StorefrontReadCacheOptions): Promise<unknown | null> {
   try {
     // درخواست مرورگر از rewrite هم‌مبدأ Next عبور می‌کند؛ RSC مستقیماً Host را می‌خواند.
     const url = typeof window === "undefined" ? `${storefrontHostOrigin()}${path}` : path;
-    const response = await fetch(url, { cache: "no-store" });
+    const init: RequestInit =
+      typeof window !== "undefined" || options?.revalidateSeconds == null
+        ? { cache: "no-store" }
+        : {
+            next: { revalidate: options.revalidateSeconds, tags: options.tags ?? [] },
+          };
+    const response = await fetch(url, init);
     if (!response.ok) {
       return null;
     }
@@ -690,9 +720,12 @@ async function readJson(path: string): Promise<unknown | null> {
 /**
  * خانه را از Host می‌خواند. در خطا null برمی‌گردد تا UI فیکسچر نسازد.
  */
-export async function loadStorefrontHome(locale?: string): Promise<StorefrontHomePage | null> {
+export async function loadStorefrontHome(
+  locale?: string,
+  options?: StorefrontReadCacheOptions,
+): Promise<StorefrontHomePage | null> {
   const suffix = locale ? `?locale=${encodeURIComponent(locale)}` : "";
-  return mapStorefrontHome(await readJson(`/v1/storefront/home${suffix}`));
+  return mapStorefrontHome(await readJson(`/v1/storefront/home${suffix}`, options));
 }
 
 /**

@@ -50,7 +50,7 @@ TB-P07-T043
 Last Implementation Task:
 
 ```text
-TB-P10-T022-R9
+TB-P10-T022-R9-R1
 ```
 
 Current Issued Task:
@@ -68,6 +68,7 @@ Current Repair Task:
 Implemented Under Review:
 
 ```text
+TB-P10-T022-R9-R1 — Store Pages SSR Performance Repair (Landing latency, canonical resolver dedupe, Store+locale+page cache invalidation); USER_VISUAL_ACCEPTED=YES (Appearance); Builder USER_VISUAL_ACCEPTED=NO
 TB-P10-T022-R9 — Store Pages Foundation (Home/Landing type, /landing/{slug}, Home set/restore, page SEO, sitemap, AppDataGrid); USER_VISUAL_ACCEPTED=YES (Appearance); Builder USER_VISUAL_ACCEPTED=NO
 TB-P10-T022-R8-R2 — Store Preview Asset Isolation Repair (dedicated Preview-Fake content/media; zero Template Fashion asset reuse in Store fake fill); USER_VISUAL_ACCEPTED=YES (Appearance); Builder USER_VISUAL_ACCEPTED=NO
 TB-P10-T022-R8-R1 — R8 Runtime Visual Closure (FE+Host evidence PNGs; article magazine-rail sample marker repair; preview-only partial-fillers fixture); USER_VISUAL_ACCEPTED=YES (Appearance); Builder USER_VISUAL_ACCEPTED=NO

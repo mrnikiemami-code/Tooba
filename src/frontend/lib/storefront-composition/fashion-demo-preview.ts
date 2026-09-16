@@ -429,13 +429,26 @@ export function buildFashionTemplatePage(
 
   return {
     pageId: options.pageId ?? "fashion-template-preview",
+    pageType: "Landing",
     locale: options.locale ?? "fa",
     slug: options.slug ?? "fashion-template-sample",
     title: options.title ?? "پیش‌نمایش قالب پوشاک",
     seoTitle: options.seoTitle ?? options.title ?? "پیش‌نمایش قالب پوشاک",
     seoDescription: options.seoDescription ?? "پیش‌نمایش قالب پوشاک",
+    robotsIndex: false,
+    robotsFollow: false,
+    canonicalUrl: null,
+    ogTitle: null,
+    ogDescription: null,
+    ogImageUrl: null,
+    primaryH1: options.title ?? "پیش‌نمایش قالب پوشاک",
     templateKey: "fashion",
     sections,
+    products: context.products,
+    categories: context.categories,
+    brands: context.brands,
+    articles: context.articles,
+    reviews: context.reviews,
   };
 }
 

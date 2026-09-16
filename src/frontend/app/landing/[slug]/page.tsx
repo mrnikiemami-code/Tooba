@@ -2,11 +2,12 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { StorefrontShell } from "../../storefront/storefront-shell.tsx";
 import { StorefrontLandingSections } from "../../storefront/storefront-landing-sections.tsx";
-import { loadLandingRenderContext, loadPublishedLandingPage } from "../../storefront/storefront-landing-api.ts";
-import { loadStorefrontHome } from "../../storefront/storefront-api.ts";
+import {
+  resolveLandingRouteModel,
+  resolvePublishedStorePage,
+} from "../../storefront/storefront-store-page-resolver.ts";
 import { buildStorePageMetadata, buildStorePageStructuredData, storePagePublicPath } from "../../storefront/storefront-page-seo.ts";
 import { resolveRequestLocale } from "../../../lib/i18n/resolve-request-locale.ts";
-import { localeToContentApi } from "../../../lib/i18n/routing.ts";
 import { isReservedLandingSlug } from "../../../lib/storefront-landing/reserved-slugs.ts";
 
 type Props = { params: Promise<{ slug: string }> };
@@ -17,7 +18,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   if (isReservedLandingSlug(slug)) {
     return { robots: { index: false, follow: false } };
   }
-  const page = await loadPublishedLandingPage(slug, locale);
+  // Shares request-scoped resolver with the page body (LOCK-SF-325) — no second Host round-trip.
+  const page = await resolvePublishedStorePage(slug, locale);
   if (!page) {
     return { title: locale === "fa" ? "صفحه پیدا نشد | توبا" : "Page not found | Tooba", robots: { index: false, follow: false } };
   }
@@ -33,19 +35,15 @@ export default async function StoreLandingCanonicalRoute({ params }: Props) {
     notFound();
   }
   const locale = await resolveRequestLocale();
-  const page = await loadPublishedLandingPage(slug, locale);
-  if (!page) {
+  const model = await resolveLandingRouteModel(slug, locale);
+  if (!model) {
     notFound();
   }
-  const contentLocale = localeToContentApi(locale);
-  const [home, context] = await Promise.all([
-    loadStorefrontHome(contentLocale),
-    loadLandingRenderContext(contentLocale, page),
-  ]);
+  const { page, context } = model;
   const canonicalPath = storePagePublicPath(page);
   const jsonLd = buildStorePageStructuredData(page, canonicalPath);
   return (
-    <StorefrontShell categories={home?.categories ?? []} fullBleed>
+    <StorefrontShell categories={context.categories} searchCatalog={context.products} fullBleed>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
       <div data-testid="landing-route" data-landing-canonical="1">
         <StorefrontLandingSections page={page} context={context} />

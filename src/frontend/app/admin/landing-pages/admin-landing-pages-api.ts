@@ -1,5 +1,6 @@
 import { adminHeaders } from "../admin-api.ts";
 import { mapAdminErrorMessage, parseAdminProblemErrorCode } from "../admin-error-map.ts";
+import type { StorePageRevalidatePayload } from "../../storefront/storefront-store-page-cache.ts";
 
 export type StorePageType = "Home" | "Landing";
 
@@ -144,6 +145,40 @@ function fail(status: number, body: unknown): AdminResult<never> {
   return { ok: false, message: mapAdminErrorMessage(code, "fa") };
 }
 
+/** Bust Store+locale+page scoped public SSR cache after publish / Home selection (LOCK-SF-326). */
+function currentStoreScope(): string {
+  if (typeof document !== "undefined") {
+    const scope = document.documentElement.getAttribute("data-storefront-scope");
+    if (scope && scope.trim()) return scope.trim();
+  }
+  return "default";
+}
+
+async function invalidatePublicStorePageCache(payload: Omit<StorePageRevalidatePayload, "storeScope"> & { storeScope?: string }): Promise<void> {
+  try {
+    await fetch("/api/storefront/revalidate", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ ...payload, storeScope: payload.storeScope || currentStoreScope() }),
+      cache: "no-store",
+    });
+  } catch {
+    // Host write already succeeded; SSR TTL still bounds staleness.
+  }
+}
+
+async function invalidateFromPage(page: Pick<AdminLandingPage, "locale" | "slug" | "pageType">, homeSelection = false): Promise<void> {
+  await invalidatePublicStorePageCache({
+    locale: page.locale,
+    slug: page.pageType === "Home" ? "home" : page.slug,
+    homeSelection: homeSelection || page.pageType === "Home",
+  });
+}
+
+async function invalidateStorePagesNamespace(): Promise<void> {
+  await invalidatePublicStorePageCache({ homeSelection: true });
+}
+
 export async function listAdminLandingPages(): Promise<AdminResult<AdminLandingPage[]>> {
   try {
     const { status, body } = await readJson("/v1/admin/pages");
@@ -183,7 +218,9 @@ async function writePage(path: string, method: string, input: Record<string, unk
     });
     if (status < 200 || status >= 300) return fail(status, body);
     const page = mapPage(body);
-    return page ? { ok: true, data: page } : { ok: false, message: mapAdminErrorMessage(null, "fa") };
+    if (!page) return { ok: false, message: mapAdminErrorMessage(null, "fa") };
+    await invalidateFromPage(page, page.pageType === "Home");
+    return { ok: true, data: page };
   } catch {
     return { ok: false, message: mapAdminErrorMessage("host-unreachable", "fa") };
   }
@@ -198,7 +235,9 @@ export async function setAdminLandingPageStatus(pageId: string, statusValue: "Dr
     });
     if (status < 200 || status >= 300) return fail(status, body);
     const page = mapPage(body);
-    return page ? { ok: true, data: page } : { ok: false, message: mapAdminErrorMessage(null, "fa") };
+    if (!page) return { ok: false, message: mapAdminErrorMessage(null, "fa") };
+    await invalidateFromPage(page, true);
+    return { ok: true, data: page };
   } catch {
     return { ok: false, message: mapAdminErrorMessage("host-unreachable", "fa") };
   }
@@ -230,6 +269,12 @@ export async function setAdminLandingHome(homePageId: string | null): Promise<Ad
     });
     if (status < 200 || status >= 300) return fail(status, body);
     const record = body && typeof body === "object" ? body as Record<string, unknown> : {};
+    await invalidatePublicStorePageCache({
+      storeScope: readString(record, "storeScope", "StoreScope") || currentStoreScope(),
+      homeSelection: true,
+      locale: "fa",
+      slug: "home",
+    });
     return {
       ok: true,
       data: {
@@ -291,7 +336,9 @@ async function writeSection(path: string, method: string, bodyValue: unknown): P
     });
     if (status < 200 || status >= 300) return fail(status, body);
     const row = mapSection(body);
-    return row ? { ok: true, data: row } : { ok: false, message: mapAdminErrorMessage(null, "fa") };
+    if (!row) return { ok: false, message: mapAdminErrorMessage(null, "fa") };
+    await invalidateStorePagesNamespace();
+    return { ok: true, data: row };
   } catch {
     return { ok: false, message: mapAdminErrorMessage("host-unreachable", "fa") };
   }
@@ -306,6 +353,7 @@ export async function reorderAdminLandingSections(pageId: string, sectionIds: st
     });
     if (status < 200 || status >= 300) return fail(status, body);
     const rows = Array.isArray(body) ? body.map(mapSection).filter((row): row is AdminLandingSection => row !== null) : [];
+    await invalidateStorePagesNamespace();
     return { ok: true, data: rows };
   } catch {
     return { ok: false, message: mapAdminErrorMessage("host-unreachable", "fa") };
@@ -316,6 +364,7 @@ export async function deleteAdminLandingSection(pageId: string, sectionId: strin
   try {
     const { status, body } = await readJson(`/v1/admin/pages/${pageId}/sections/${sectionId}`, { method: "DELETE" });
     if (status < 200 || status >= 300) return fail(status, body);
+    await invalidateStorePagesNamespace();
     return { ok: true, data: true };
   } catch {
     return { ok: false, message: mapAdminErrorMessage("host-unreachable", "fa") };

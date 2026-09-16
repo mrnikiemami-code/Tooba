@@ -1,5 +1,5 @@
 import { permanentRedirect, notFound } from "next/navigation";
-import { loadPublishedLandingPage } from "../storefront/storefront-landing-api.ts";
+import { resolvePublishedStorePage } from "../storefront/storefront-store-page-resolver.ts";
 import { resolveRequestLocale } from "../../lib/i18n/resolve-request-locale.ts";
 import { isReservedLandingSlug } from "../../lib/storefront-landing/reserved-slugs.ts";
 
@@ -15,7 +15,7 @@ export default async function LegacyLandingSlugRedirect({ params }: Props) {
     notFound();
   }
   const locale = await resolveRequestLocale();
-  const page = await loadPublishedLandingPage(slug, locale);
+  const page = await resolvePublishedStorePage(slug, locale);
   if (!page) {
     notFound();
   }

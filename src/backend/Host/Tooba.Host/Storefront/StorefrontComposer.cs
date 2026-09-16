@@ -105,9 +105,9 @@ public sealed class StorefrontComposer
     }
 
     /// <summary>
-    /// نظرهای Published اخیر را برای ریل خانه به DTO عمومی نگاشت می‌کند.
+    /// نظرهای Published اخیر را برای ریل خانه / Landing به DTO عمومی نگاشت می‌کند.
     /// </summary>
-    private async Task<IReadOnlyList<StorefrontFeaturedReviewItem>> BuildFeaturedReviewsAsync(CancellationToken cancellationToken)
+    public async Task<IReadOnlyList<StorefrontFeaturedReviewItem>> BuildFeaturedReviewsAsync(CancellationToken cancellationToken)
     {
         var reviews = await _reviews.GetRecentPublishedForHomeAsync(8, cancellationToken);
         return reviews.Select(review => new StorefrontFeaturedReviewItem(
@@ -123,9 +123,9 @@ public sealed class StorefrontComposer
     }
 
     /// <summary>
-    /// مقالات Published اخیر را برای ریل خانه می‌خواند.
+    /// مقالات Published اخیر را برای ریل خانه / Landing می‌خواند.
     /// </summary>
-    private async Task<IReadOnlyList<StorefrontArticleItem>> BuildLatestArticlesAsync(
+    public async Task<IReadOnlyList<StorefrontArticleItem>> BuildLatestArticlesAsync(
         string locale,
         CancellationToken cancellationToken)
     {

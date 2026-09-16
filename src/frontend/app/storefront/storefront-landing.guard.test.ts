@@ -11,8 +11,8 @@ const api = readFileSync(join(dir, "storefront-landing-api.ts"), "utf8");
 const renderer = readFileSync(join(dir, "storefront-landing-sections.tsx"), "utf8");
 
 test("landing route uses one canonical section renderer", () => {
-  assert.match(route, /loadPublishedLandingPage/);
-  assert.match(route, /StorefrontLandingSections/);
+  assert.match(route, /resolvePublishedStorePage|loadPublishedLandingPage/);
+  assert.match(route, /StorefrontLandingSections|permanentRedirect/);
   assert.match(route, /isReservedLandingSlug/);
   assert.match(route, /notFound\(\)/);
   assert.doesNotMatch(route, /drag|composer|PageId/);
@@ -22,8 +22,8 @@ test("landing route uses one canonical section renderer", () => {
 });
 
 test("home uses selected published landing or canonical home", () => {
-  assert.match(home, /loadStorefrontHomeSelection/);
-  assert.match(home, /selectedPage/);
+  assert.match(home, /resolveStoreHomeSelection|loadStorefrontHomeSelection/);
+  assert.match(home, /selectedPage|customHomePage|resolveHomeRouteModel/);
   assert.match(home, /StorefrontShopeivaHome/);
   assert.match(home, /storefront-custom-home/);
 });

@@ -47,13 +47,31 @@ function mapTint(raw: Partial<StorefrontTintTokens> | undefined, paletteKey: str
   };
 }
 
+export type StorefrontFetchCacheOptions = {
+  /** When set (SSR), enables Next Data Cache with tags. Client/admin preview omit this. */
+  revalidateSeconds?: number;
+  tags?: string[];
+};
+
+function appearanceFetchInit(options?: StorefrontFetchCacheOptions): RequestInit {
+  if (typeof window !== "undefined" || options?.revalidateSeconds == null) {
+    return { cache: "no-store", headers: { Accept: "application/json" } };
+  }
+  return {
+    headers: { Accept: "application/json" },
+    next: { revalidate: options.revalidateSeconds, tags: options.tags ?? [] },
+  };
+}
+
 /** ظاهر مؤثر Store را برای SSR ریشه می‌خواند؛ شکست = پالت پیش‌فرض بدون flash. */
-export async function loadStorefrontAppearance(): Promise<StorefrontAppearanceProjection> {
+export async function loadStorefrontAppearance(
+  options?: StorefrontFetchCacheOptions,
+): Promise<StorefrontAppearanceProjection> {
   try {
-    const response = await fetch(`${storefrontHostOrigin()}/v1/storefront/appearance`, {
-      cache: "no-store",
-      headers: { Accept: "application/json" },
-    });
+    const response = await fetch(
+      `${storefrontHostOrigin()}/v1/storefront/appearance`,
+      appearanceFetchInit(options),
+    );
     if (!response.ok) {
       return FALLBACK;
     }

@@ -1136,3 +1136,12 @@ Structured data is typed/code-owned; raw JSON editing is forbidden for ordinary 
 ### LOCK-SF-324 — Page language remains page-level
 Page language remains page-level and drives localized SEO/content resolution.
 
+### LOCK-SF-325 — Store Page SSR canonical request resolver
+Store Page SSR uses a deduplicated canonical request resolver for page/SEO data rather than duplicate metadata/page fetches.
+
+### LOCK-SF-326 — Store Page cache Store+locale+page scoped
+Public Store Page caching/revalidation is Store+locale+page scoped and invalidated on relevant publish/Home-selection changes.
+
+### LOCK-SF-327 — Performance must not weaken SEO or isolation
+Performance fixes must not weaken SEO metadata, tenant isolation, or content freshness.
+
