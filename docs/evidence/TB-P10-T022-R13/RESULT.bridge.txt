@@ -108,7 +108,7 @@ Recovery-SoT:
 Phase P10; Last Architect-accepted before review TB-P10-T022-R12C; Last Implementation TB-P10-T022-R13; Issued/Repair none; Appearance YES; Builder NO; Worker IDLE; do NOT invent TB-P10-T023.
 
 Git:
-SHA=6db71050e451cb987794d0e78b7d5d329a81bf9a HEAD==origin/main after push (RESULT artifact commit may follow).
+SHA=068d54efb83c21f420046000a8f647562ef58a11 HEAD==origin/main after push (implementation commit 6db71050e451cb987794d0e78b7d5d329a81bf9a).
 
 Architectural-Concerns:
 none material; Builder visual acceptance still Architect/User-owned.
