@@ -1205,3 +1205,15 @@ Applying any industry Template materializes its full ordered composition into th
 ### LOCK-SF-347 — Industry Template seed purity
 Industry Template seeds are deterministic/idempotent and must not modify operational Store Catalog data.
 
+### LOCK-SF-348 — Batch B Template Catalog parity
+Batch B packs use the same Template Catalog parity, preview, locale, and apply contracts as Fashion and Batch A.
+
+### LOCK-SF-349 — Batch B pack cardinality
+Tile/Ceramic, Interior Decor, and Home Appliances each persist exactly 8 meaningful three-level roots and exactly 15 products with relevant media/brands/banners.
+
+### LOCK-SF-350 — Batch B media isolation
+Industry media remains template-specific and semantically relevant; unrelated cross-template asset reuse is forbidden.
+
+### LOCK-SF-351 — Batch B shared preview/apply engines
+Batch B preview routes and Template Apply use only shared engines/workflows; template-specific renderer/apply forks are forbidden.
+

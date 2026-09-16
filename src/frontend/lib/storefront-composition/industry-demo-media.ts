@@ -1,5 +1,5 @@
 /**
- * Batch A Template Catalog media — local static assets only (no Fashion reuse / no hotlinks).
+ * Persisted industry Template Catalog media — local static assets only (no Fashion reuse / no hotlinks).
  */
 
 export const BATCH_A_TEMPLATE_KEYS = [
@@ -8,32 +8,62 @@ export const BATCH_A_TEMPLATE_KEYS = [
   "tools-hardware",
 ] as const;
 
-export type BatchATemplateKey = (typeof BATCH_A_TEMPLATE_KEYS)[number];
+export const BATCH_B_TEMPLATE_KEYS = [
+  "tile-ceramic",
+  "interior-decor",
+  "home-appliances",
+] as const;
 
-const MEDIA_FOLDERS: Record<BatchATemplateKey, string> = {
+export const INDUSTRY_CATALOG_TEMPLATE_KEYS = [
+  ...BATCH_A_TEMPLATE_KEYS,
+  ...BATCH_B_TEMPLATE_KEYS,
+] as const;
+
+export type BatchATemplateKey = (typeof BATCH_A_TEMPLATE_KEYS)[number];
+export type BatchBTemplateKey = (typeof BATCH_B_TEMPLATE_KEYS)[number];
+export type IndustryCatalogTemplateKey = (typeof INDUSTRY_CATALOG_TEMPLATE_KEYS)[number];
+
+/** @deprecated Prefer IndustryCatalogTemplateKey — kept for Batch A call sites. */
+export type BatchATemplateKeyCompat = IndustryCatalogTemplateKey;
+
+const MEDIA_FOLDERS: Record<IndustryCatalogTemplateKey, string> = {
   "auto-parts": "template-auto-parts",
   "building-materials": "template-building-materials",
   "tools-hardware": "template-tools-hardware",
+  "tile-ceramic": "template-tile-ceramic",
+  "interior-decor": "template-interior-decor",
+  "home-appliances": "template-home-appliances",
 };
 
-/** Deterministic Template Catalog media GUIDs per pack (IndustryBatchATemplateCatalogIds). */
-const MEDIA_GUID_PREFIX: Record<BatchATemplateKey, string> = {
+/** Deterministic Template Catalog media GUIDs per pack. */
+const MEDIA_GUID_PREFIX: Record<IndustryCatalogTemplateKey, string> = {
   "auto-parts": "019022b1-0000-7000-8000-00000000a",
   "building-materials": "019022b3-0000-7000-8000-00000000a",
   "tools-hardware": "019022b5-0000-7000-8000-00000000a",
+  "tile-ceramic": "019022b7-0000-7000-8000-00000000a",
+  "interior-decor": "019022b9-0000-7000-8000-00000000a",
+  "home-appliances": "019022bb-0000-7000-8000-00000000a",
 };
 
 export function isBatchATemplateKey(key: string): key is BatchATemplateKey {
   return (BATCH_A_TEMPLATE_KEYS as readonly string[]).includes(key);
 }
 
-export function industryTemplateImages(templateKey: BatchATemplateKey): readonly string[] {
+export function isBatchBTemplateKey(key: string): key is BatchBTemplateKey {
+  return (BATCH_B_TEMPLATE_KEYS as readonly string[]).includes(key);
+}
+
+export function isIndustryCatalogTemplateKey(key: string): key is IndustryCatalogTemplateKey {
+  return (INDUSTRY_CATALOG_TEMPLATE_KEYS as readonly string[]).includes(key);
+}
+
+export function industryTemplateImages(templateKey: IndustryCatalogTemplateKey): readonly string[] {
   const folder = MEDIA_FOLDERS[templateKey];
   return Array.from({ length: 8 }, (_, i) => `/images/${folder}/${i + 1}.jpg`);
 }
 
 export function industryDemoMediaUrl(
-  templateKey: BatchATemplateKey,
+  templateKey: IndustryCatalogTemplateKey,
   assetId: string | null | undefined,
 ): string | null {
   if (!assetId) return null;
@@ -48,7 +78,7 @@ export function industryDemoMediaUrl(
   return null;
 }
 
-export function industryDemoOrigin(templateKey: BatchATemplateKey): string {
+export function industryDemoOrigin(templateKey: IndustryCatalogTemplateKey): string {
   return `${templateKey}-template-catalog-persisted`;
 }
 

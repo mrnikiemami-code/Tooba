@@ -5,10 +5,10 @@ import {
   fashionPreviewErrorMessage,
   INDUSTRY_STORE_ORIGIN,
   industryDemoOrigin,
-  isBatchATemplateKey,
+  isIndustryCatalogTemplateKey,
   loadIndustryStorePreview,
   loadIndustryTemplatePreview,
-  type BatchATemplateKey,
+  type IndustryCatalogTemplateKey,
   type IndustryStorePreviewFixture,
 } from "../../../lib/storefront-composition/industry-template-preview.ts";
 import {
@@ -29,7 +29,7 @@ type Props = {
 };
 
 /**
- * Batch A industry template preview — shared Storefront renderer (LOCK-SF-345).
+ * Industry Template Catalog preview — shared Storefront renderer (LOCK-SF-345).
  */
 export function IndustryTemplatePreviewView({
   context: previewContext,
@@ -37,10 +37,10 @@ export function IndustryTemplatePreviewView({
   storeFixture = null,
 }: Props) {
   const templateKey = previewContext.templateKey;
-  if (!isBatchATemplateKey(templateKey)) {
+  if (!isIndustryCatalogTemplateKey(templateKey)) {
     return (
       <div data-testid="industry-template-preview-error" className="p-6 text-sm text-red-700">
-        قالب Batch A نامعتبر است.
+        قالب صنعت نامعتبر است.
       </div>
     );
   }
@@ -61,7 +61,7 @@ function IndustryTemplatePreviewBody({
   fullPage,
   storeFixture,
 }: {
-  templateKey: BatchATemplateKey;
+  templateKey: IndustryCatalogTemplateKey;
   previewContext: TemplatePreviewContext;
   fullPage: boolean;
   storeFixture: IndustryStorePreviewFixture;

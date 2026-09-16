@@ -15,7 +15,7 @@ import {
 import {
   INDUSTRY_STORE_ORIGIN,
   industryDemoOrigin,
-  isBatchATemplateKey,
+  isIndustryCatalogTemplateKey,
 } from "../../../lib/storefront-composition/industry-demo-media.ts";
 import { industryTemplatePreviewPath } from "../../../lib/storefront-composition/template-preview-context.ts";
 import { loadAdminLanguages } from "../language-api.ts";
@@ -62,7 +62,7 @@ function liveDemoOrigin(templateKey: string, source: FashionPreviewSource): stri
     return templateKey === "fashion" ? FASHION_STORE_ORIGIN : INDUSTRY_STORE_ORIGIN;
   }
   if (templateKey === "fashion") return FASHION_DEMO_ORIGIN;
-  if (isBatchATemplateKey(templateKey)) return industryDemoOrigin(templateKey);
+  if (isIndustryCatalogTemplateKey(templateKey)) return industryDemoOrigin(templateKey);
   return FASHION_DEMO_ORIGIN;
 }
 
@@ -74,7 +74,7 @@ const INDUSTRY_TEMPLATE_PHOTO: Record<string, string> = {
   "tools-hardware": "/images/industry-templates/tools-hardware.jpg",
   "tile-ceramic": "/images/industry-templates/tile-ceramic.jpg",
   "interior-decor": "/images/industry-templates/interior-decor.jpg",
-  "home-appliance": "/images/industry-templates/home-appliance.jpg",
+  "home-appliances": "/images/industry-templates/home-appliances.jpg",
   shoes: "/images/industry-templates/shoes.jpg",
   plants: "/images/industry-templates/plants.jpg",
   beauty: "/images/industry-templates/beauty.jpg",
@@ -135,7 +135,7 @@ function industryWireframeBlocks(template: IndustryTemplateSeed, device: Templat
     ];
   }
 
-  if (key === "home-appliance") {
+  if (key === "home-appliances") {
     return [
       { kind: "hero", className: `col-span-12 ${dense ? "h-20" : "h-24"} rounded-xl bg-sky-100 border border-sky-200` },
       { kind: "brand-feature", className: `col-span-12 ${dense ? "h-16" : "h-20"} rounded-xl bg-white border-2 border-slate-300` },
@@ -185,7 +185,7 @@ export function AdminTemplateSelectionWorkspace({
   const [iframeKey, setIframeKey] = useState(0);
   const selected = templates.find((t) => t.templateKey === selectedTemplateKey) ?? templates[0] ?? null;
   const isLiveCatalogPreview =
-    selected?.templateKey === "fashion" || isBatchATemplateKey(selected?.templateKey ?? "");
+    selected?.templateKey === "fashion" || isIndustryCatalogTemplateKey(selected?.templateKey ?? "");
   /** Keep `fashionViewport` name for R4 guard source contract. */
   const fashionViewport = FASHION_IFRAME_VIEWPORT[device];
   const frame = DEVICE_FRAME[device];

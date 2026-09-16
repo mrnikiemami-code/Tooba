@@ -7,7 +7,7 @@ using Tooba.Host.Admin;
 
 namespace Tooba.Host.Storefront;
 
-/// <summary>خواندن Sample Batch A فقط از Template Catalog — بدون union با Catalog عملیاتی.</summary>
+/// <summary>خواندن Sample Batch A/B فقط از Template Catalog — بدون union با Catalog عملیاتی.</summary>
 public sealed class IndustryTemplatePreviewQuery
 {
     private readonly CatalogDbContext _catalog;
@@ -21,7 +21,7 @@ public sealed class IndustryTemplatePreviewQuery
         string templateKey,
         CancellationToken cancellationToken = default)
     {
-        if (!IndustryBatchATemplateCatalogSeed.SupportedKeys.Contains(templateKey))
+        if (!IndustryPersistedTemplateCatalog.IsSupported(templateKey))
         {
             return null;
         }
@@ -34,14 +34,14 @@ public sealed class IndustryTemplatePreviewQuery
         }
 
         var templateId = template.TemplateId;
-        var origin = IndustryBatchATemplateCatalogSeed.OriginFor(templateKey);
+        var origin = IndustryPersistedTemplateCatalog.OriginFor(templateKey);
 
         var categories = await (
             from c in _catalog.TemplateCategories.AsNoTracking()
             where c.TemplateId == templateId
             join t in _catalog.TemplateCategoryTranslations.AsNoTracking()
                 on c.CategoryId equals t.CategoryId
-            where t.Locale == IndustryBatchATemplateCatalogSeed.LocaleFa
+            where t.Locale == IndustryPersistedTemplateCatalog.LocaleFa
             orderby c.SortOrder, t.Name
             select new FashionTemplateCategoryDto(
                 c.CategoryId.ToString("D"),
@@ -49,7 +49,7 @@ public sealed class IndustryTemplatePreviewQuery
                 t.Name,
                 c.ImageMediaAssetId.HasValue ? c.ImageMediaAssetId.Value.ToString("D") : null,
                 c.ImageMediaAssetId.HasValue
-                    ? IndustryBatchATemplateCatalogSeed.TryResolveMedia(templateKey, c.ImageMediaAssetId.Value)
+                    ? IndustryPersistedTemplateCatalog.TryResolveMedia(templateKey, c.ImageMediaAssetId.Value)
                     : null)).ToListAsync(cancellationToken);
 
         var productRows = await (
@@ -58,13 +58,13 @@ public sealed class IndustryTemplatePreviewQuery
             join name in _catalog.TemplateLocalizedTexts.AsNoTracking().Where(x =>
                 x.OwnerKind == TemplateLocalizedOwnerKind.Product
                 && x.FieldKey == "name"
-                && x.Locale == IndustryBatchATemplateCatalogSeed.LocaleFa)
+                && x.Locale == IndustryPersistedTemplateCatalog.LocaleFa)
                 on p.ProductId equals name.OwnerId
             join assign in _catalog.TemplateProductCategories.AsNoTracking()
                 .Where(x => x.Role == CatalogProductCategoryRole.Primary)
                 on p.ProductId equals assign.ProductId
             join catName in _catalog.TemplateCategoryTranslations.AsNoTracking()
-                .Where(x => x.Locale == IndustryBatchATemplateCatalogSeed.LocaleFa)
+                .Where(x => x.Locale == IndustryPersistedTemplateCatalog.LocaleFa)
                 on assign.CategoryId equals catName.CategoryId
             join media in _catalog.TemplateProductMediaReferences.AsNoTracking()
                 .Where(x => x.IsPrimary)
@@ -88,7 +88,10 @@ public sealed class IndustryTemplatePreviewQuery
             {
                 "auto-parts" => 420_000 + n * 28_000,
                 "building-materials" => 180_000 + n * 45_000,
-                _ => 350_000 + n * 32_000,
+                "tools-hardware" => 350_000 + n * 32_000,
+                "tile-ceramic" => 290_000 + n * 38_000,
+                "interior-decor" => 1_250_000 + n * 95_000,
+                _ => 4_800_000 + n * 210_000,
             };
             return new FashionTemplateProductDto(
                 row.ProductId.ToString("D"),
@@ -97,7 +100,7 @@ public sealed class IndustryTemplatePreviewQuery
                 row.CategoryName,
                 row.CategoryId.ToString("D"),
                 row.MediaAssetId.ToString("D"),
-                IndustryBatchATemplateCatalogSeed.TryResolveMedia(templateKey, row.MediaAssetId),
+                IndustryPersistedTemplateCatalog.TryResolveMedia(templateKey, row.MediaAssetId),
                 $"template-{templateKey}-offer-{n}",
                 $"template-{templateKey}-seller",
                 $"نمایشگاه {template.Name} آزمایشی",
@@ -118,7 +121,7 @@ public sealed class IndustryTemplatePreviewQuery
             join name in _catalog.TemplateLocalizedTexts.AsNoTracking().Where(x =>
                 x.OwnerKind == TemplateLocalizedOwnerKind.Brand
                 && x.FieldKey == "name"
-                && x.Locale == IndustryBatchATemplateCatalogSeed.LocaleFa)
+                && x.Locale == IndustryPersistedTemplateCatalog.LocaleFa)
                 on b.BrandId equals name.OwnerId
             orderby b.SlugSeam
             select new { b.BrandId, b.SlugSeam, Name = name.Value, b.LogoMediaAssetId }).ToListAsync(cancellationToken);
@@ -130,7 +133,7 @@ public sealed class IndustryTemplatePreviewQuery
             3 + index,
             b.LogoMediaAssetId?.ToString("D"),
             b.LogoMediaAssetId is Guid logo
-                ? IndustryBatchATemplateCatalogSeed.TryResolveMedia(templateKey, logo)
+                ? IndustryPersistedTemplateCatalog.TryResolveMedia(templateKey, logo)
                 : null)).ToList();
 
         var landing = await _catalog.TemplateStoreLandingPages.AsNoTracking()
@@ -208,14 +211,17 @@ public sealed class IndustryTemplatePreviewQuery
         string templateKey,
         IReadOnlyList<FashionTemplateProductDto> products)
     {
-        var media1 = IndustryBatchATemplateCatalogSeed.MediaPublicUrl(templateKey, 2);
-        var media2 = IndustryBatchATemplateCatalogSeed.MediaPublicUrl(templateKey, 4);
-        var media3 = IndustryBatchATemplateCatalogSeed.MediaPublicUrl(templateKey, 6);
+        var media1 = IndustryPersistedTemplateCatalog.MediaPublicUrl(templateKey, 2);
+        var media2 = IndustryPersistedTemplateCatalog.MediaPublicUrl(templateKey, 4);
+        var media3 = IndustryPersistedTemplateCatalog.MediaPublicUrl(templateKey, 6);
         var packLabel = templateKey switch
         {
             "auto-parts" => "لوازم یدکی",
             "building-materials" => "ساختمانی",
-            _ => "ابزار",
+            "tools-hardware" => "ابزار",
+            "tile-ceramic" => "کاشی",
+            "interior-decor" => "دکوراسیون",
+            _ => "لوازم خانگی",
         };
         return new FashionTemplateCompositionFillersDto(
             [

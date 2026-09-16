@@ -9,8 +9,8 @@ import {
   industryDemoMediaUrl,
   industryDemoOrigin,
   industryTemplateImages,
-  isBatchATemplateKey,
-  type BatchATemplateKey,
+  isIndustryCatalogTemplateKey,
+  type IndustryCatalogTemplateKey,
 } from "./industry-demo-media.ts";
 import {
   buildTemplateSectionPayloads,
@@ -48,8 +48,8 @@ export {
   BATCH_A_TEMPLATE_KEYS,
   INDUSTRY_STORE_ORIGIN,
   industryDemoOrigin,
-  isBatchATemplateKey,
-  type BatchATemplateKey,
+  isIndustryCatalogTemplateKey,
+  type IndustryCatalogTemplateKey,
   fashionPreviewErrorMessage,
   parseFashionPreviewSource as parseIndustryPreviewSource,
   parseFashionStorePreviewFixture as parseIndustryStorePreviewFixture,
@@ -329,7 +329,7 @@ function normalizePreview(raw: Record<string, unknown>): HostIndustryPreview {
   };
 }
 
-function mapContext(preview: HostIndustryPreview, templateKey: BatchATemplateKey): LandingRenderContext {
+function mapContext(preview: HostIndustryPreview, templateKey: IndustryCatalogTemplateKey): LandingRenderContext {
   const products: StorefrontProductCard[] = preview.products.map((p) => ({
     productId: p.productId,
     slug: p.slug,
@@ -417,7 +417,7 @@ type IndustryTemplatePageOptions = {
   bannerItems?: Array<Record<string, unknown>>;
 };
 
-const HERO_COPY: Record<BatchATemplateKey, { title: string; subtitle: string }> = {
+const HERO_COPY: Record<IndustryCatalogTemplateKey, { title: string; subtitle: string }> = {
   "auto-parts": {
     title: "قطعات مطمئن خودرو",
     subtitle: "موتور، ترمز و مصرفی‌های استاندارد برای ویترین یدکی",
@@ -430,11 +430,23 @@ const HERO_COPY: Record<BatchATemplateKey, { title: string; subtitle: string }> 
     title: "ابزار و یراق حرفه‌ای",
     subtitle: "برقی، دستی، ایمنی و پیچ و مهره برای کارگاه",
   },
+  "tile-ceramic": {
+    title: "کاشی و سرامیک معاصر",
+    subtitle: "پرسلان، اسلب و کلکسیون‌های دیوار و کف",
+  },
+  "interior-decor": {
+    title: "دکوراسیون داخلی آرام",
+    subtitle: "مبل، فرش، نور و منسوجات برای خانه",
+  },
+  "home-appliances": {
+    title: "لوازم خانگی برندمحور",
+    subtitle: "یخچال، شستشو، پخت‌و‌پز و نظافت",
+  },
 };
 
 /** Shared composition page builder for Batch A industry templates. */
 export function buildIndustryTemplatePage(
-  templateKey: BatchATemplateKey,
+  templateKey: IndustryCatalogTemplateKey,
   context: LandingRenderContext,
   options: IndustryTemplatePageOptions,
 ): StorefrontLandingPage {
@@ -602,7 +614,7 @@ export function buildIndustryTemplatePage(
   };
 }
 
-export async function loadIndustryTemplatePreview(templateKey: BatchATemplateKey): Promise<{
+export async function loadIndustryTemplatePreview(templateKey: IndustryCatalogTemplateKey): Promise<{
   kind: "sample";
   context: LandingRenderContext;
   page: StorefrontLandingPage;
@@ -646,7 +658,7 @@ export async function loadIndustryTemplatePreview(templateKey: BatchATemplateKey
 }
 
 export async function loadIndustryStorePreview(
-  templateKey: BatchATemplateKey,
+  templateKey: IndustryCatalogTemplateKey,
   uiLocale: "fa" | "en" = "fa",
   options?: { fixture?: FashionStorePreviewFixture },
 ): Promise<{

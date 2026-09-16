@@ -378,9 +378,9 @@ export const INDUSTRY_TEMPLATE_SEEDS: Array<{
     ],
   },
   {
-    templateKey: "home-appliance",
+    templateKey: "home-appliances",
     nameFa: "لوازم خانگی",
-    industry: "HomeAppliance",
+    industry: "HomeAppliances",
     descriptionFa: "برندمحور، مقایسه تب‌دار کالا و بنرهای کاربردی",
     sectionPresetList: [
       { sectionTypeKey: "HeroCarousel", variantKey: "hero.contained", dataSourceIntent: "Manual" },

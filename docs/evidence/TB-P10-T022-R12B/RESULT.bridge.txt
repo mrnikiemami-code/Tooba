@@ -1,0 +1,104 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+
+BEGIN_TOOBA_WORKER_RESULT
+
+Task-ID:
+TB-P10-T022-R12B
+
+Parent-Task:
+TB-P10-T022-R12A
+
+Channel:
+tooba-main
+
+WorkerId:
+tooba-worker-01
+
+AgentType:
+cursor
+
+Status:
+PASS
+
+Appearance-USER_VISUAL_ACCEPTED=YES
+Builder-USER_VISUAL_ACCEPTED=NO
+
+Summary:
+Industry Template Catalog Batch B PASS. Persisted Fashion/R12A-parity packs for tile-ceramic, interior-decor, home-appliances: each 1 StoreTemplate, 8 three-level roots, 15 TemplateProducts, brands/banners/media, Persian translations, /template-preview/{key}, selector + Template Apply. Sample/Store isolation preserved. LOCK-SF-348…351. No cloning. No R12C/T023. Worker IDLE.
+
+Applicable-Locks:
+LOCK-SF-001…347 preserved. Added LOCK-SF-348…351.
+
+Recovery-Start:
+branch=main expected HEAD 8c3732e17ba0eacccf9dee1d4fb3dcd40e3690ea == origin/main. docs/evidence/TB-P10-T022-R12B/recovery-start.md
+
+Batch-B-Templates:
+tile-ceramic, interior-decor, home-appliances — three durable Template Catalog packs with Fashion/Batch A schema parity; no alternate schema; no operational Catalog columns.
+
+Tile-Ceramic-Pack:
+8 three-level roots + 15 products + brands/media/banners; key tile-ceramic; preview /template-preview/tile-ceramic.
+
+Interior-Decor-Pack:
+8 three-level roots + 15 products + brands/media/banners; key interior-decor; preview /template-preview/interior-decor.
+
+Home-Appliances-Pack:
+8 three-level roots + 15 products + brands/media/banners; key home-appliances (renamed from home-appliance); preview /template-preview/home-appliances.
+
+Translation:
+Persian mandatory via existing Template translation architecture; no hardcoded language list.
+
+Media:
+/images/template-tile-ceramic|interior-decor|home-appliances/; no Fashion/Batch A reuse; no hotlinks; focal where needed.
+
+Template-Compositions:
+Distinct recipes per pack via existing variants. docs/evidence/TB-P10-T022-R12B/template-compositions.md
+
+Template-Selector:
+Live iframe Desktop/Tablet/Mobile + language + Use Template; shared composition engine; no Admin chrome.
+
+Preview-Routes:
+/template-preview/tile-ceramic|interior-decor|home-appliances (+ /full); shared IndustryTemplatePreviewView + canonical preview context.
+
+Source-Isolation:
+Sample=Template Catalog; Store=operational+PreviewFake only; published=Store only; purity proven for all 3.
+
+Template-Apply:
+Materializes full ordered composition into Page Draft for Batch B packs; opens R10 editor; no Catalog mutation.
+
+Seed-Idempotency:
+Deterministic idempotent Industry Batch B seed; re-run safe; no operational Catalog writes.
+
+Performance:
+Fashion/R12A query path reused via IndustryPersistedTemplateCatalog facade; no N+1/preview waterfalls.
+
+Focused-Validation:
+Host IndustryBatchBTemplateCatalogT022R12BTests 8 PASS; FE r12b+r12a guards 10 PASS; critical-storefront PASS; runtime API 15/8/pure each pack. docs/evidence/TB-P10-T022-R12B/
+
+Runtime:
+Host :5088 + FE :3000 capture ok=true. docs/evidence/TB-P10-T022-R12B/runtime.md
+
+Visual-Evidence:
+11 required PNGs under docs/evidence/TB-P10-T022-R12B/screenshots/.
+
+AntiPattern-Scan:
+CLEAN — no schema fork; no cross-template media reuse; no Catalog mutation; no empty Apply; no R12C.
+
+Lock-Registry:
+LOCK-SF-001…351. New 348–351 only.
+
+Recovery-SoT:
+Phase P10; Last Architect-accepted before review TB-P10-T022-R12A; Last Implementation TB-P10-T022-R12B; Issued/Repair none; Appearance YES; Builder NO; Worker IDLE; do NOT invent TB-P10-T023; do NOT start R12C.
+
+Git:
+SHA=PENDING_AFTER_PUSH HEAD==origin/main after push.
+
+Architectural-Concerns:
+none material; Batch C industries deferred.
+
+Visual-Concerns:
+Builder USER_VISUAL_ACCEPTED=NO — Architect visual review of Batch B packs still required.
+
+Blockers:
+none
+
+END_TOOBA_WORKER_RESULT
