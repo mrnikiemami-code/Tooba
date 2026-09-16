@@ -52,7 +52,21 @@ public sealed class StoreLandingPageComposer
     public async Task<StoreLandingPageAdminView> CreateAsync(StoreLandingPageWriteRequest body, CancellationToken cancellationToken)
     {
         var now = DateTimeOffset.UtcNow;
-        var page = StoreLandingPage.Create(body.Locale, body.Slug, body.Title, body.SeoTitle, body.SeoDescription, now);
+        var page = StoreLandingPage.Create(
+            body.Locale,
+            body.Slug,
+            body.Title,
+            body.SeoTitle,
+            body.SeoDescription,
+            now,
+            body.PageType,
+            body.RobotsIndex,
+            body.RobotsFollow,
+            body.CanonicalUrl,
+            body.OgTitle,
+            body.OgDescription,
+            body.OgImageUrl,
+            body.PrimaryH1);
         await EnsureUniqueSlugAsync(page.Locale, page.Slug, exceptPageId: null, cancellationToken);
         _catalog.StoreLandingPages.Add(page);
         await _catalog.SaveChangesAsync(cancellationToken);
@@ -66,7 +80,19 @@ public sealed class StoreLandingPageComposer
         var page = await RequirePageAsync(pageId, cancellationToken);
         var previousLocale = page.Locale;
         var previousSlug = page.Slug;
-        page.Update(body.Slug, body.Title, body.SeoTitle, body.SeoDescription, DateTimeOffset.UtcNow);
+        page.Update(
+            body.Slug,
+            body.Title,
+            body.SeoTitle,
+            body.SeoDescription,
+            DateTimeOffset.UtcNow,
+            body.RobotsIndex,
+            body.RobotsFollow,
+            body.CanonicalUrl,
+            body.OgTitle,
+            body.OgDescription,
+            body.OgImageUrl,
+            body.PrimaryH1);
         await EnsureUniqueSlugAsync(page.Locale, page.Slug, page.PageId, cancellationToken);
         await _catalog.SaveChangesAsync(cancellationToken);
         Invalidate(previousLocale, previousSlug);
@@ -97,13 +123,30 @@ public sealed class StoreLandingPageComposer
         return ToAdmin(page);
     }
 
-    /// <summary>ارجاع خانه را روی همین Store می‌نویسد.</summary>
+    /// <summary>ارجاع خانه را اتمیک روی همین Store می‌نویسد؛ نوع صفحه را هم‌زمان عوض می‌کند.</summary>
     public async Task<StoreHomeSelectionView> SetHomeAsync(Guid? pageId, CancellationToken cancellationToken)
     {
         var now = DateTimeOffset.UtcNow;
+        var useTx = _catalog.Database.IsRelational();
+        await using var tx = useTx
+            ? await _catalog.Database.BeginTransactionAsync(cancellationToken)
+            : null;
         var settings = await RequireSettingsAsync(now, cancellationToken);
+
+        if (settings.HomePageId is { } previousHomeId)
+        {
+            var previous = await _catalog.StoreLandingPages
+                .SingleOrDefaultAsync(x => x.PageId == previousHomeId, cancellationToken);
+            if (previous is not null && previous.PageType == StorePageType.Home)
+            {
+                previous.SetPageType(StorePageType.Landing, now);
+                Invalidate(previous.Locale, previous.Slug);
+            }
+        }
+
         if (pageId is null)
         {
+            // بازگردانی خانهٔ پیش‌فرض: فقط انتخاب/ترکیب؛ Catalog/Template لمس نمی‌شود.
             settings.SetHomePage(null, now);
         }
         else
@@ -114,15 +157,37 @@ public sealed class StoreLandingPageComposer
                 throw new PlatformHttpException(400, "فقط صفحهٔ منتشرشده را می‌توان خانه کرد.", "landing.home.ineligible");
             }
 
+            page.SetPageType(StorePageType.Home, now);
             settings.SetHomePage(page.PageId, now);
         }
 
         await _catalog.SaveChangesAsync(cancellationToken);
+        if (tx is not null)
+        {
+            await tx.CommitAsync(cancellationToken);
+        }
+
+        // پس از Persist، کش عمومی صفحه/خانه را خالی کن تا PageType جدید دیده شود.
+        if (settings.HomePageId is { } activeHomeId)
+        {
+            var active = await _catalog.StoreLandingPages.AsNoTracking()
+                .SingleOrDefaultAsync(x => x.PageId == activeHomeId, cancellationToken);
+            if (active is not null)
+            {
+                Invalidate(active.Locale, active.Slug);
+            }
+        }
+        else if (pageId is null)
+        {
+            InvalidateHome();
+        }
+
+        // demoted previous already invalidated above when type flipped
         InvalidateHome();
         return await GetHomeSelectionAsync(cancellationToken);
     }
 
-    /// <summary>صفحهٔ منتشرشدهٔ عمومی را با Store+Locale+Slug حل می‌کند.</summary>
+    /// <summary>صفحهٔ Landing منتشرشدهٔ عمومی را با Store+Locale+Slug حل می‌کند.</summary>
     public async Task<StoreLandingPagePublicView?> ResolvePublicAsync(string? locale, string? slug, CancellationToken cancellationToken)
     {
         var normalizedLocale = StoreLandingPageSlug.NormalizeLocale(locale);
@@ -139,7 +204,11 @@ public sealed class StoreLandingPageComposer
         }
 
         var page = await _catalog.StoreLandingPages.AsNoTracking()
-            .SingleOrDefaultAsync(x => x.Locale == normalizedLocale && x.Slug == normalizedSlug, cancellationToken);
+            .SingleOrDefaultAsync(
+                x => x.Locale == normalizedLocale
+                    && x.Slug == normalizedSlug
+                    && x.PageType == StorePageType.Landing,
+                cancellationToken);
         if (page is null || page.Status != StoreLandingPageStatus.Published)
         {
             _cache.Set(cacheKey, (StoreLandingPagePublicView?)null, TimeSpan.FromSeconds(15));
@@ -149,6 +218,21 @@ public sealed class StoreLandingPageComposer
         var view = await ToPublicAsync(page, publicOnly: true, cancellationToken);
         _cache.Set(cacheKey, view, TimeSpan.FromMinutes(2));
         return view;
+    }
+
+    /// <summary>Landingهای ایندکس‌پذیر برای sitemap (بدون تکرار ریشهٔ Home).</summary>
+    public async Task<IReadOnlyList<StoreLandingSitemapEntry>> ListIndexableLandingsAsync(CancellationToken cancellationToken)
+    {
+        var rows = await _catalog.StoreLandingPages.AsNoTracking()
+            .Where(x =>
+                x.PageType == StorePageType.Landing
+                && x.Status == StoreLandingPageStatus.Published
+                && x.RobotsIndex)
+            .OrderBy(x => x.Locale)
+            .ThenBy(x => x.Slug)
+            .Select(x => new StoreLandingSitemapEntry(x.Locale, x.Slug, x.UpdatedAt))
+            .ToListAsync(cancellationToken);
+        return rows;
     }
 
     /// <summary>فهرست بخش‌های یک صفحه برای Admin.</summary>
@@ -413,6 +497,12 @@ public sealed class StoreLandingPageComposer
             .SingleOrDefaultAsync(x => x.SettingsId == StoreAppearanceSettings.SingletonId, cancellationToken);
         if (settings?.HomePageId == pageId)
         {
+            var page = await _catalog.StoreLandingPages.SingleOrDefaultAsync(x => x.PageId == pageId, cancellationToken);
+            if (page is not null && page.PageType == StorePageType.Home)
+            {
+                page.SetPageType(StorePageType.Landing, DateTimeOffset.UtcNow);
+            }
+
             settings.SetHomePage(null, DateTimeOffset.UtcNow);
             InvalidateHome();
         }
@@ -435,11 +525,19 @@ public sealed class StoreLandingPageComposer
 
     private static StoreLandingPageAdminView ToAdmin(StoreLandingPage page) => new(
         page.PageId,
+        page.PageType.ToString(),
         page.Locale,
         page.Slug,
         page.Title,
         page.SeoTitle,
         page.SeoDescription,
+        page.RobotsIndex,
+        page.RobotsFollow,
+        page.CanonicalUrl,
+        page.OgTitle,
+        page.OgDescription,
+        page.OgImageUrl,
+        page.PrimaryH1,
         page.TemplateKey,
         page.Status.ToString(),
         page.UpdatedAt);
@@ -481,11 +579,19 @@ public sealed class StoreLandingPageComposer
 
         return new StoreLandingPagePublicView(
             page.PageId,
+            page.PageType.ToString(),
             page.Locale,
             page.Slug,
             page.Title,
             page.SeoTitle ?? page.Title,
             page.SeoDescription,
+            page.RobotsIndex,
+            page.RobotsFollow,
+            page.CanonicalUrl,
+            page.OgTitle ?? page.SeoTitle ?? page.Title,
+            page.OgDescription ?? page.SeoDescription,
+            page.OgImageUrl,
+            page.ResolvePrimaryH1(),
             page.TemplateKey,
             sections);
     }
@@ -537,7 +643,15 @@ public sealed record StoreLandingPageWriteRequest(
     string? Locale,
     string? SeoTitle,
     string? SeoDescription,
-    string? Status);
+    string? Status,
+    string? PageType = null,
+    bool? RobotsIndex = null,
+    bool? RobotsFollow = null,
+    string? CanonicalUrl = null,
+    string? OgTitle = null,
+    string? OgDescription = null,
+    string? OgImageUrl = null,
+    string? PrimaryH1 = null);
 
 /// <summary>درخواست انتخاب خانه.</summary>
 public sealed record StoreHomeSelectionWriteRequest(Guid? HomePageId);
@@ -545,11 +659,19 @@ public sealed record StoreHomeSelectionWriteRequest(Guid? HomePageId);
 /// <summary>نمای Admin.</summary>
 public sealed record StoreLandingPageAdminView(
     Guid PageId,
+    string PageType,
     string Locale,
     string Slug,
     string Title,
     string? SeoTitle,
     string? SeoDescription,
+    bool RobotsIndex,
+    bool RobotsFollow,
+    string? CanonicalUrl,
+    string? OgTitle,
+    string? OgDescription,
+    string? OgImageUrl,
+    string? PrimaryH1,
     string TemplateKey,
     string Status,
     DateTimeOffset UpdatedAt);
@@ -591,13 +713,24 @@ public sealed record StoreLandingPagePublicSectionView(
 /// <summary>نمای عمومی Published.</summary>
 public sealed record StoreLandingPagePublicView(
     Guid PageId,
+    string PageType,
     string Locale,
     string Slug,
     string Title,
     string SeoTitle,
     string? SeoDescription,
+    bool RobotsIndex,
+    bool RobotsFollow,
+    string? CanonicalUrl,
+    string? OgTitle,
+    string? OgDescription,
+    string? OgImageUrl,
+    string PrimaryH1,
     string TemplateKey,
     IReadOnlyList<StoreLandingPagePublicSectionView> Sections);
+
+/// <summary>ورودی sitemap برای Landing ایندکس‌پذیر.</summary>
+public sealed record StoreLandingSitemapEntry(string Locale, string Slug, DateTimeOffset UpdatedAt);
 
 /// <summary>ارجاع خانه بدون جایگزینی UI خانه.</summary>
 public sealed record StoreHomeSelectionView(

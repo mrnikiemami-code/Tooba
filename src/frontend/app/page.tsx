@@ -5,6 +5,7 @@ import { StorefrontShopeivaHome } from "./storefront/storefront-home.tsx";
 import { StorefrontLandingSections } from "./storefront/storefront-landing-sections.tsx";
 import { loadLandingRenderContext, loadStorefrontHomeSelection } from "./storefront/storefront-landing-api.ts";
 import { loadStorefrontHome, storefrontHostOrigin } from "./storefront/storefront-api.ts";
+import { buildStorePageMetadata, buildStorePageStructuredData } from "./storefront/storefront-page-seo.ts";
 import { resolveRequestLocale } from "../lib/i18n/resolve-request-locale.ts";
 import { buildLocaleAlternates, canonicalForLocale, localeToContentApi } from "../lib/i18n/routing.ts";
 import { openGraphLocaleFor } from "../lib/i18n/locale.ts";
@@ -16,19 +17,22 @@ export async function generateMetadata(): Promise<Metadata> {
   const locale = await resolveRequestLocale();
   const selection = await loadStorefrontHomeSelection();
   const landing = selection?.selectedPage;
+  if (landing) {
+    return buildStorePageMetadata({ ...landing, pageType: "Home" }, locale);
+  }
   const alternates = buildLocaleAlternates("/", { includeXDefault: true });
   return {
-    title: landing?.seoTitle ?? (locale === "fa" ? "فروشگاه توبا | خانه" : "Tooba Store | Home"),
+    title: locale === "fa" ? "فروشگاه توبا | خانه" : "Tooba Store | Home",
     description:
-      landing?.seoDescription
-      ?? (locale === "fa"
+      locale === "fa"
         ? "ویترین زنده Catalog با قیمت Offer و موجودی انبار"
-        : "Live catalog storefront with offer pricing and inventory"),
+        : "Live catalog storefront with offer pricing and inventory",
     alternates: {
       canonical: canonicalForLocale(locale, "/"),
       languages: alternates.languages,
     },
-    openGraph: { locale: openGraphLocaleFor(locale) },
+    openGraph: { locale: openGraphLocaleFor(locale), type: "website" },
+    robots: { index: true, follow: true },
   };
 }
 
@@ -55,10 +59,13 @@ export default async function HomePage() {
 
   if (selection?.selectedPage) {
     const context = await loadLandingRenderContext(contentLocale, selection.selectedPage);
+    const page = { ...selection.selectedPage, pageType: "Home" as const };
+    const jsonLd = buildStorePageStructuredData(page, "/");
     return (
       <StorefrontShell categories={home.categories} searchCatalog={home.featuredProducts} fullBleed>
-        <div data-testid="storefront-custom-home">
-          <StorefrontLandingSections page={selection.selectedPage} context={context} />
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+        <div data-testid="storefront-custom-home" data-home-route="custom">
+          <StorefrontLandingSections page={page} context={context} />
         </div>
       </StorefrontShell>
     );
@@ -66,22 +73,24 @@ export default async function HomePage() {
 
   return (
     <StorefrontShell categories={home.categories} searchCatalog={home.featuredProducts} fullBleed>
-      <StorefrontShopeivaHome
-        heroTitle={home.heroTitle}
-        heroSubtitle={home.heroSubtitle}
-        categories={home.categories}
-        homeCategories={home.homeCategories}
-        specialOffers={home.specialOffers}
-        campaignProducts={home.campaignProducts}
-        newArrivals={home.newArrivals}
-        productRail={home.productRail}
-        brands={home.brands}
-        bestSellerColumns={home.bestSellerColumns}
-        mostViewedProducts={home.mostViewedProducts}
-        featuredReviews={home.featuredReviews}
-        latestArticles={home.latestArticles}
-        compositionSections={composition?.sections}
-      />
+      <div data-testid="storefront-default-home" data-home-route="default">
+        <StorefrontShopeivaHome
+          heroTitle={home.heroTitle}
+          heroSubtitle={home.heroSubtitle}
+          categories={home.categories}
+          homeCategories={home.homeCategories}
+          specialOffers={home.specialOffers}
+          campaignProducts={home.campaignProducts}
+          newArrivals={home.newArrivals}
+          productRail={home.productRail}
+          brands={home.brands}
+          bestSellerColumns={home.bestSellerColumns}
+          mostViewedProducts={home.mostViewedProducts}
+          featuredReviews={home.featuredReviews}
+          latestArticles={home.latestArticles}
+          compositionSections={composition?.sections}
+        />
+      </div>
     </StorefrontShell>
   );
 }

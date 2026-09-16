@@ -1,0 +1,42 @@
+{
+  "ok": true,
+  "landingHtmlCaptured": false,
+  "files": {
+    "store-pages-menu.png": {
+      "bytes": 129198
+    },
+    "store-pages-grid.png": {
+      "bytes": 129198
+    },
+    "create-page-type.png": {
+      "bytes": 109916
+    },
+    "home-current-indicator.png": {
+      "bytes": 129198
+    },
+    "set-as-home.png": {
+      "bytes": 129198
+    },
+    "restore-default-home.png": {
+      "bytes": 129198
+    },
+    "page-seo-panel.png": {
+      "bytes": 109825
+    },
+    "seo-snippet-preview.png": {
+      "bytes": 109825
+    },
+    "landing-route.png": {
+      "bytes": 88750
+    },
+    "home-route-custom.png": {
+      "bytes": 6704
+    },
+    "home-route-default-restored.png": {
+      "bytes": 6704
+    }
+  },
+  "errors": [],
+  "host": "http://127.0.0.1:5088",
+  "fe": "http://127.0.0.1:3000"
+}

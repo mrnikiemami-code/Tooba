@@ -647,14 +647,21 @@ public sealed class CatalogDbContext : DbContext
             entity.ToTable("store_landing_pages");
             entity.HasKey(x => x.PageId);
             entity.Property(x => x.PageId).ValueGeneratedNever();
+            entity.Property(x => x.PageType).HasConversion<string>().HasMaxLength(16).IsRequired();
             entity.Property(x => x.Locale).HasMaxLength(16).IsRequired();
             entity.Property(x => x.Slug).HasMaxLength(128).IsRequired();
             entity.Property(x => x.Title).HasMaxLength(200).IsRequired();
             entity.Property(x => x.SeoTitle).HasMaxLength(200);
             entity.Property(x => x.SeoDescription).HasMaxLength(500);
+            entity.Property(x => x.CanonicalUrl).HasMaxLength(500);
+            entity.Property(x => x.OgTitle).HasMaxLength(200);
+            entity.Property(x => x.OgDescription).HasMaxLength(500);
+            entity.Property(x => x.OgImageUrl).HasMaxLength(500);
+            entity.Property(x => x.PrimaryH1).HasMaxLength(200);
             entity.Property(x => x.TemplateKey).HasMaxLength(32).IsRequired();
             entity.Property(x => x.Status).HasConversion<string>().HasMaxLength(16);
             entity.HasIndex(x => new { x.Locale, x.Slug }).IsUnique();
+            entity.HasIndex(x => x.PageType);
         });
 
         modelBuilder.Entity<StoreLandingPageSection>(entity =>

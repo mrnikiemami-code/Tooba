@@ -46,7 +46,7 @@ export function StorefrontLandingSections({
       data-preview-source={previewSource}
       data-preview-locale={previewLocale}
     >
-      <h1 className="sr-only">{page.title}</h1>
+      <h1 className="sr-only" data-testid="store-page-primary-h1">{page.primaryH1 || page.title}</h1>
       {page.sections.map((section) => {
         const rendered = renderLandingSection(section, context, preview, previewSource, previewLocale);
         if (!rendered) return null;

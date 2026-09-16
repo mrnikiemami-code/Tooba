@@ -25,6 +25,7 @@ public static class StoreLandingPageEndpoints
         admin.MapDelete("/{pageId:guid}/sections/{sectionId:guid}", DeleteSectionAsync);
 
         var storefront = app.MapGroup("/v1/storefront");
+        storefront.MapGet("/pages", ListPublicSitemapAsync);
         storefront.MapGet("/pages/{slug}", GetPublicAsync);
         storefront.MapGet("/home-selection", GetHomePublicAsync);
     }
@@ -342,6 +343,11 @@ public static class StoreLandingPageEndpoints
             ? Results.Json(new { title = "Not Found", errorCode = "landing.page.missing" }, statusCode: StatusCodes.Status404NotFound)
             : Results.Json(page);
     }
+
+    private static async Task<IResult> ListPublicSitemapAsync(
+        StoreLandingPageComposer composer,
+        CancellationToken cancellationToken)
+        => Results.Json(await composer.ListIndexableLandingsAsync(cancellationToken));
 
     private static async Task<IResult> GetHomePublicAsync(
         StoreLandingPageComposer composer,

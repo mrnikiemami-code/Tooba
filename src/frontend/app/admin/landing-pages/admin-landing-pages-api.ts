@@ -1,13 +1,23 @@
 import { adminHeaders } from "../admin-api.ts";
 import { mapAdminErrorMessage, parseAdminProblemErrorCode } from "../admin-error-map.ts";
 
+export type StorePageType = "Home" | "Landing";
+
 export type AdminLandingPage = {
   pageId: string;
+  pageType: StorePageType;
   locale: string;
   slug: string;
   title: string;
   seoTitle: string | null;
   seoDescription: string | null;
+  robotsIndex: boolean;
+  robotsFollow: boolean;
+  canonicalUrl: string | null;
+  ogTitle: string | null;
+  ogDescription: string | null;
+  ogImageUrl: string | null;
+  primaryH1: string | null;
   status: "Draft" | "Published";
   updatedAt: string;
 };
@@ -27,6 +37,22 @@ export type AdminLandingHomeSelection = {
   usesCanonicalHome: boolean;
 };
 
+export type AdminLandingPageWriteInput = {
+  title: string;
+  slug: string;
+  locale: string;
+  pageType?: StorePageType;
+  seoTitle?: string;
+  seoDescription?: string;
+  robotsIndex?: boolean;
+  robotsFollow?: boolean;
+  canonicalUrl?: string;
+  ogTitle?: string;
+  ogDescription?: string;
+  ogImageUrl?: string;
+  primaryH1?: string;
+};
+
 export type AdminResult<T> = { ok: true; data: T } | { ok: false; message: string; denied?: boolean };
 
 function readString(record: Record<string, unknown>, ...keys: string[]): string {
@@ -37,6 +63,14 @@ function readString(record: Record<string, unknown>, ...keys: string[]): string 
   return "";
 }
 
+function readBool(record: Record<string, unknown>, ...keys: string[]): boolean | undefined {
+  for (const key of keys) {
+    const value = record[key];
+    if (typeof value === "boolean") return value;
+  }
+  return undefined;
+}
+
 function mapPage(raw: unknown): AdminLandingPage | null {
   if (!raw || typeof raw !== "object") return null;
   const record = raw as Record<string, unknown>;
@@ -45,13 +79,23 @@ function mapPage(raw: unknown): AdminLandingPage | null {
   const slug = readString(record, "slug", "Slug");
   if (!pageId || !title || !slug) return null;
   const status = readString(record, "status", "Status") === "Published" ? "Published" : "Draft";
+  const pageTypeRaw = readString(record, "pageType", "PageType");
+  const pageType: StorePageType = pageTypeRaw === "Home" ? "Home" : "Landing";
   return {
     pageId,
+    pageType,
     locale: readString(record, "locale", "Locale") || "fa",
     slug,
     title,
     seoTitle: readString(record, "seoTitle", "SeoTitle") || null,
     seoDescription: readString(record, "seoDescription", "SeoDescription") || null,
+    robotsIndex: readBool(record, "robotsIndex", "RobotsIndex") ?? true,
+    robotsFollow: readBool(record, "robotsFollow", "RobotsFollow") ?? true,
+    canonicalUrl: readString(record, "canonicalUrl", "CanonicalUrl") || null,
+    ogTitle: readString(record, "ogTitle", "OgTitle") || null,
+    ogDescription: readString(record, "ogDescription", "OgDescription") || null,
+    ogImageUrl: readString(record, "ogImageUrl", "OgImageUrl") || null,
+    primaryH1: readString(record, "primaryH1", "PrimaryH1") || null,
     status,
     updatedAt: readString(record, "updatedAt", "UpdatedAt"),
   };
@@ -122,23 +166,11 @@ export async function getAdminLandingPage(pageId: string): Promise<AdminResult<A
   }
 }
 
-export async function createAdminLandingPage(input: {
-  title: string;
-  slug: string;
-  locale: string;
-  seoTitle?: string;
-  seoDescription?: string;
-}): Promise<AdminResult<AdminLandingPage>> {
+export async function createAdminLandingPage(input: AdminLandingPageWriteInput): Promise<AdminResult<AdminLandingPage>> {
   return writePage("/v1/admin/pages", "POST", input);
 }
 
-export async function updateAdminLandingPage(pageId: string, input: {
-  title: string;
-  slug: string;
-  locale: string;
-  seoTitle?: string;
-  seoDescription?: string;
-}): Promise<AdminResult<AdminLandingPage>> {
+export async function updateAdminLandingPage(pageId: string, input: AdminLandingPageWriteInput): Promise<AdminResult<AdminLandingPage>> {
   return writePage(`/v1/admin/pages/${pageId}`, "PUT", input);
 }
 
@@ -208,6 +240,11 @@ export async function setAdminLandingHome(homePageId: string | null): Promise<Ad
   } catch {
     return { ok: false, message: mapAdminErrorMessage("host-unreachable", "fa") };
   }
+}
+
+/** بازگردانی صفحه اصلی پیش‌فرض — فقط انتخاب Home؛ دادهٔ Catalog دست‌نخورده می‌ماند. */
+export async function restoreDefaultAdminHome(): Promise<AdminResult<AdminLandingHomeSelection>> {
+  return setAdminLandingHome(null);
 }
 
 export async function listAdminLandingSections(pageId: string): Promise<AdminResult<AdminLandingSection[]>> {
@@ -293,4 +330,8 @@ export async function loadAdminLandingPreview(pageId: string): Promise<AdminResu
   } catch {
     return { ok: false, message: mapAdminErrorMessage("host-unreachable", "fa") };
   }
+}
+
+export function publicPathForStorePage(page: Pick<AdminLandingPage, "pageType" | "slug">): string {
+  return page.pageType === "Home" ? "/" : `/landing/${page.slug}`;
 }

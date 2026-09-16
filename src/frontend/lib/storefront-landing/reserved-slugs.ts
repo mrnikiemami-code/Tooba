@@ -1,7 +1,7 @@
 export const RESERVED_LANDING_SLUGS = [
   "account", "admin", "api", "auth", "best-seller", "blog", "blogs", "brand", "brands",
   "cart", "categories", "category", "checkout", "customer-panel", "design-system",
-  "en", "fa", "favicon", "home", "icon", "login", "most-viewed", "new-products",
+  "en", "fa", "favicon", "home", "icon", "landing", "login", "most-viewed", "new-products",
   "not-found", "offers", "order", "page", "pages", "payment", "product", "products",
   "sale", "search", "seller-profile", "sellers", "settings", "shipping", "trending",
   "v1", "vendor-panel",

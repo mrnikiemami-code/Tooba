@@ -1109,3 +1109,30 @@ Preview-Fake assets are generic code-owned/static preview resources and are neve
 ### LOCK-SF-315 — Sample mode keeps Template Catalog; Preview-Fake is Store-preview only
 Sample mode remains persistent Template Catalog content/media; Preview-Fake resources are reserved for Store preview slot filling only.
 
+### LOCK-SF-316 — Store Pages module covers Home and Landing
+Builder Admin module represents Store Pages, covering Home and Landing.
+
+### LOCK-SF-317 — Explicit Store Page type; one active Home
+Store Page type is explicit Home or Landing; only one active Home per Store.
+
+### LOCK-SF-318 — Canonical Home and Landing routes
+Landing canonical route is /landing/{slug}; Home canonical route is /.
+
+### LOCK-SF-319 — Restore default Home is selection-only
+Restoring default Home changes Home composition/selection only and never deletes operational Store data.
+
+### LOCK-SF-320 — Page-level SEO via existing multilingual infrastructure
+Page-level SEO uses existing multilingual/SEO infrastructure and complete crawl/social metadata.
+
+### LOCK-SF-321 — Section SEO stays conditional in Settings
+Section SEO is conditional inside Settings; mandatory SEO step for every Section is forbidden.
+
+### LOCK-SF-322 — Store Pages listing uses AppDataGrid
+Store Pages listing uses canonical Admin AppDataGrid.
+
+### LOCK-SF-323 — Typed structured data only
+Structured data is typed/code-owned; raw JSON editing is forbidden for ordinary Admin users.
+
+### LOCK-SF-324 — Page language remains page-level
+Page language remains page-level and drives localized SEO/content resolution.
+

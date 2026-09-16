@@ -2,6 +2,7 @@ import type { MetadataRoute } from "next";
 import { LOCALES } from "../lib/i18n/locale.ts";
 import { localePath, localeToContentApi } from "../lib/i18n/routing.ts";
 import { loadPublicAuthors, loadPublicCategories } from "./content/content-api.ts";
+import { listIndexableLandingPages } from "./storefront/storefront-landing-api.ts";
 import { storefrontHostOrigin } from "./storefront/storefront-api.ts";
 
 const STATIC_INTERNAL_PATHS = [
@@ -79,7 +80,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     }
   }
 
-  // دسته‌ها زبان‌وابسته‌اند؛ نویسندگان با مسیر locale جدا — بدون hreflang ساختگی.
   for (const locale of LOCALES) {
     const contentLocale = localeToContentApi(locale);
     const [categories, authors] = await Promise.all([
@@ -94,6 +94,16 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       const path = author.canonicalPath ?? localePath(locale, `/blogs/author/${author.slug}`);
       entries.push({ url: `${base}${path}` });
     }
+  }
+
+  // Landingهای ایندکس‌پذیر در /landing/{slug}؛ ریشهٔ Home (/) از STATIC تکراری نمی‌شود؛ NoIndex حذف شده است.
+  const landings = await listIndexableLandingPages();
+  for (const landing of landings) {
+    const locale = (landing.locale.startsWith("en") ? "en" : "fa") as (typeof LOCALES)[number];
+    const internal = `/landing/${landing.slug}`;
+    entries.push({
+      url: `${base}${localePath(locale, internal)}`,
+    });
   }
 
   return entries;

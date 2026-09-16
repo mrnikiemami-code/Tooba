@@ -32,11 +32,19 @@ export interface StorefrontLandingSection {
 
 export interface StorefrontLandingPage {
   pageId: string;
+  pageType: "Home" | "Landing";
   locale: string;
   slug: string;
   title: string;
   seoTitle: string;
   seoDescription: string | null;
+  robotsIndex: boolean;
+  robotsFollow: boolean;
+  canonicalUrl: string | null;
+  ogTitle: string | null;
+  ogDescription: string | null;
+  ogImageUrl: string | null;
+  primaryH1: string;
   templateKey: string;
   sections: StorefrontLandingSection[];
 }
@@ -89,18 +97,50 @@ export function mapStorefrontLandingPage(raw: unknown, fallbackLocale = "fa"): S
   const title = readString(record, "title", "Title");
   if (!slug || !title) return null;
   const sectionsRaw = record.sections ?? record.Sections;
+  const pageTypeRaw = readString(record, "pageType", "PageType");
+  const robotsIndex = record.robotsIndex ?? record.RobotsIndex;
+  const robotsFollow = record.robotsFollow ?? record.RobotsFollow;
   return {
     pageId: readString(record, "pageId", "PageId"),
+    pageType: pageTypeRaw === "Home" ? "Home" : "Landing",
     locale: readString(record, "locale", "Locale") || fallbackLocale,
     slug,
     title,
     seoTitle: readString(record, "seoTitle", "SeoTitle") || title,
     seoDescription: readString(record, "seoDescription", "SeoDescription") || null,
+    robotsIndex: typeof robotsIndex === "boolean" ? robotsIndex : true,
+    robotsFollow: typeof robotsFollow === "boolean" ? robotsFollow : true,
+    canonicalUrl: readString(record, "canonicalUrl", "CanonicalUrl") || null,
+    ogTitle: readString(record, "ogTitle", "OgTitle") || null,
+    ogDescription: readString(record, "ogDescription", "OgDescription") || null,
+    ogImageUrl: readString(record, "ogImageUrl", "OgImageUrl") || null,
+    primaryH1: readString(record, "primaryH1", "PrimaryH1") || title,
     templateKey: readString(record, "templateKey", "TemplateKey") || "default",
     sections: Array.isArray(sectionsRaw)
       ? sectionsRaw.map(mapSection).filter((row): row is StorefrontLandingSection => row !== null)
       : [],
   };
+}
+
+export async function listIndexableLandingPages(): Promise<{ locale: string; slug: string }[]> {
+  try {
+    const response = await fetch(`${storefrontHostOrigin()}/v1/storefront/pages`, {
+      cache: "no-store",
+      headers: { Accept: "application/json" },
+    });
+    if (!response.ok) return [];
+    const body = await response.json();
+    if (!Array.isArray(body)) return [];
+    return body.map((row) => {
+      const record = asRecord(row) ?? {};
+      return {
+        locale: readString(record, "locale", "Locale") || "fa",
+        slug: readString(record, "slug", "Slug"),
+      };
+    }).filter((row) => row.slug);
+  } catch {
+    return [];
+  }
 }
 
 export async function loadPublishedLandingPage(slug: string, locale: string): Promise<StorefrontLandingPage | null> {

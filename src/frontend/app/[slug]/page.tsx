@@ -1,37 +1,15 @@
-import type { Metadata } from "next";
-import { notFound } from "next/navigation";
-import { StorefrontShell } from "../storefront/storefront-shell.tsx";
-import { StorefrontLandingSections } from "../storefront/storefront-landing-sections.tsx";
-import { loadLandingRenderContext, loadPublishedLandingPage } from "../storefront/storefront-landing-api.ts";
-import { loadStorefrontHome } from "../storefront/storefront-api.ts";
+import { permanentRedirect, notFound } from "next/navigation";
+import { loadPublishedLandingPage } from "../storefront/storefront-landing-api.ts";
 import { resolveRequestLocale } from "../../lib/i18n/resolve-request-locale.ts";
-import { canonicalForLocale, localeToContentApi } from "../../lib/i18n/routing.ts";
 import { isReservedLandingSlug } from "../../lib/storefront-landing/reserved-slugs.ts";
 
 type Props = { params: Promise<{ slug: string }> };
 
-export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const { slug } = await params;
-  const locale = await resolveRequestLocale();
-  if (isReservedLandingSlug(slug)) {
-    return { robots: { index: false, follow: false } };
-  }
-  const page = await loadPublishedLandingPage(slug, locale);
-  if (!page) {
-    return { title: locale === "fa" ? "صفحه پیدا نشد | توبا" : "Page not found | Tooba", robots: { index: false, follow: false } };
-  }
-  return {
-    title: page.seoTitle,
-    description: page.seoDescription ?? undefined,
-    alternates: { canonical: canonicalForLocale(locale, `/${page.slug}`) },
-    robots: { index: true, follow: true },
-  };
-}
-
 /**
- * صفحهٔ فرود منتشرشده با رندرر کاننیکال بخش‌ها.
+ * سازگاری: /{slug} قدیمی → /landing/{slug} کاننیکال.
+ * مسیرهای رزروشده و صفحات ناموجود ۴۰۴ می‌مانند.
  */
-export default async function StoreLandingPageRoute({ params }: Props) {
+export default async function LegacyLandingSlugRedirect({ params }: Props) {
   const { slug } = await params;
   if (isReservedLandingSlug(slug)) {
     notFound();
@@ -41,14 +19,5 @@ export default async function StoreLandingPageRoute({ params }: Props) {
   if (!page) {
     notFound();
   }
-  const contentLocale = localeToContentApi(locale);
-  const [home, context] = await Promise.all([
-    loadStorefrontHome(contentLocale),
-    loadLandingRenderContext(contentLocale, page),
-  ]);
-  return (
-    <StorefrontShell categories={home?.categories ?? []} fullBleed>
-      <StorefrontLandingSections page={page} context={context} />
-    </StorefrontShell>
-  );
+  permanentRedirect(`/landing/${page.slug}`);
 }

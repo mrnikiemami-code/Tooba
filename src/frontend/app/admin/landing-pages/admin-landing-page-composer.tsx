@@ -17,8 +17,10 @@ import {
   setAdminLandingSectionEnabled,
   updateAdminLandingPage,
   updateAdminLandingSection,
+  publicPathForStorePage,
   type AdminLandingPage,
   type AdminLandingSection,
+  type StorePageType,
 } from "./admin-landing-pages-api.ts";
 import {
   LANDING_SECTION_CHOICES,
@@ -43,8 +45,16 @@ type Meta = {
   title: string;
   slug: string;
   locale: string;
+  pageType: StorePageType;
   seoTitle: string;
   seoDescription: string;
+  robotsIndex: boolean;
+  robotsFollow: boolean;
+  canonicalUrl: string;
+  ogTitle: string;
+  ogDescription: string;
+  ogImageUrl: string;
+  primaryH1: string;
 };
 
 function toMeta(page?: AdminLandingPage | null): Meta {
@@ -52,8 +62,16 @@ function toMeta(page?: AdminLandingPage | null): Meta {
     title: page?.title ?? "",
     slug: page?.slug ?? "",
     locale: page?.locale ?? "fa",
+    pageType: page?.pageType ?? "Landing",
     seoTitle: page?.seoTitle ?? "",
     seoDescription: page?.seoDescription ?? "",
+    robotsIndex: page?.robotsIndex ?? true,
+    robotsFollow: page?.robotsFollow ?? true,
+    canonicalUrl: page?.canonicalUrl ?? "",
+    ogTitle: page?.ogTitle ?? "",
+    ogDescription: page?.ogDescription ?? "",
+    ogImageUrl: page?.ogImageUrl ?? "",
+    primaryH1: page?.primaryH1 ?? "",
   };
 }
 
@@ -100,7 +118,14 @@ export function AdminLandingPageComposer({ pageId }: { pageId?: string }) {
     return meta.title !== page.title
       || meta.slug !== page.slug
       || meta.seoTitle !== (page.seoTitle ?? "")
-      || meta.seoDescription !== (page.seoDescription ?? "");
+      || meta.seoDescription !== (page.seoDescription ?? "")
+      || meta.robotsIndex !== page.robotsIndex
+      || meta.robotsFollow !== page.robotsFollow
+      || meta.canonicalUrl !== (page.canonicalUrl ?? "")
+      || meta.ogTitle !== (page.ogTitle ?? "")
+      || meta.ogDescription !== (page.ogDescription ?? "")
+      || meta.ogImageUrl !== (page.ogImageUrl ?? "")
+      || meta.primaryH1 !== (page.primaryH1 ?? "");
   }, [meta, page]);
 
   const load = useCallback(async (id: string) => {
@@ -138,8 +163,16 @@ export function AdminLandingPageComposer({ pageId }: { pageId?: string }) {
       title: meta.title.trim(),
       slug: meta.slug.trim(),
       locale: page?.locale ?? meta.locale,
+      pageType: page ? undefined : meta.pageType,
       seoTitle: meta.seoTitle.trim() || undefined,
       seoDescription: meta.seoDescription.trim() || undefined,
+      robotsIndex: meta.robotsIndex,
+      robotsFollow: meta.robotsFollow,
+      canonicalUrl: meta.canonicalUrl.trim() || undefined,
+      ogTitle: meta.ogTitle.trim() || undefined,
+      ogDescription: meta.ogDescription.trim() || undefined,
+      ogImageUrl: meta.ogImageUrl.trim() || undefined,
+      primaryH1: meta.primaryH1.trim() || undefined,
     };
     const result = page
       ? await updateAdminLandingPage(page.pageId, payload)
@@ -267,8 +300,16 @@ export function AdminLandingPageComposer({ pageId }: { pageId?: string }) {
   const setHome = async () => {
     if (!page) return;
     if (page.status !== "Published") {
-      setMessage("برای انتخاب به‌عنوان صفحهٔ اصلی ابتدا صفحه را منتشر کنید.");
+      setMessage("برای «تنظیم به عنوان صفحه اصلی» ابتدا صفحه را منتشر کنید.");
       return;
+    }
+    if (homePageId !== page.pageId) {
+      const ok = window.confirm(
+        homePageId
+          ? "صفحهٔ اصلی فعلی جایگزین شود؟ دادهٔ کالا و قالب‌ها حذف نمی‌شود."
+          : "این صفحه به‌عنوان صفحه اصلی فروشگاه تنظیم شود؟",
+      );
+      if (!ok) return;
     }
     setBusy(true);
     const result = await setAdminLandingHome(homePageId === page.pageId ? null : page.pageId);
@@ -285,7 +326,7 @@ export function AdminLandingPageComposer({ pageId }: { pageId?: string }) {
       <main data-testid="admin-landing-page-editor" className="space-y-5">
         <div>
           <Link href="/admin/landing-pages" className="text-sm text-muted">بازگشت به فهرست</Link>
-          <h1 className="mt-1 text-xl font-black">ایجاد صفحهٔ فرود / خانه</h1>
+          <h1 className="mt-1 text-xl font-black">ایجاد صفحه فروشگاه</h1>
           <p className="mt-1 text-sm text-muted">از صفحه خالی شروع کنید یا یک قالب آمادهٔ صنعتی را انتخاب کنید.</p>
         </div>
         <div className="grid gap-4 md:grid-cols-2" data-testid="composition-start-mode">
@@ -353,7 +394,7 @@ export function AdminLandingPageComposer({ pageId }: { pageId?: string }) {
       <div className="mb-5 flex flex-wrap items-start justify-between gap-3">
         <div>
           <Link href="/admin/landing-pages" className="text-sm text-muted">بازگشت به فهرست</Link>
-          <h1 className="mt-1 text-xl font-black">{page ? "فضای کار صفحه" : "ایجاد صفحهٔ فرود"}</h1>
+          <h1 className="mt-1 text-xl font-black">{page ? "فضای کار صفحه" : "ایجاد صفحه فروشگاه"}</h1>
           <p className="mt-1 text-sm text-muted">
             {dirty ? "تغییرات ذخیره نشده است." : saved ? "همهٔ تغییرات ذخیره شده‌اند." : "آمادهٔ ویرایش"}
           </p>
@@ -367,8 +408,14 @@ export function AdminLandingPageComposer({ pageId }: { pageId?: string }) {
               <button type="button" className="rounded-xl border px-4 py-2 text-sm font-bold" disabled={busy} onClick={() => void publish()}>
                 {page.status === "Published" ? "بازگرداندن به پیش‌نویس" : "انتشار"}
               </button>
-              <button type="button" className="rounded-xl border px-4 py-2 text-sm font-bold" disabled={busy} onClick={() => void setHome()}>
-                {homePageId === page.pageId ? "لغو خانه" : "انتخاب به‌عنوان صفحه اصلی"}
+              <button
+                type="button"
+                className="rounded-xl border px-4 py-2 text-sm font-bold"
+                disabled={busy}
+                onClick={() => void setHome()}
+                data-testid={homePageId === page.pageId ? "restore-default-home" : "set-as-home"}
+              >
+                {homePageId === page.pageId ? "بازگردانی صفحه اصلی پیش‌فرض" : "تنظیم به عنوان صفحه اصلی"}
               </button>
             </>
           ) : null}
@@ -380,12 +427,15 @@ export function AdminLandingPageComposer({ pageId }: { pageId?: string }) {
 
       <section className="mb-5 rounded-2xl border border-border bg-surface-elevated p-5" data-testid="page-workspace-meta">
         <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-          <h2 className="font-black">مشخصات صفحه</h2>
+          <h2 className="font-black">اطلاعات صفحه</h2>
           <div className="flex flex-wrap items-center gap-2">
             {page ? (
               <span className={`rounded-full px-2 py-0.5 text-xs font-bold ${page.status === "Published" ? "bg-emerald-50 text-emerald-700" : "bg-amber-50 text-amber-700"}`}>
                 {page.status === "Published" ? "منتشرشده" : "پیش‌نویس"}
               </span>
+            ) : null}
+            {homePageId && page && homePageId === page.pageId ? (
+              <span className="rounded-full bg-blue-50 px-2 py-0.5 text-xs font-bold text-blue-700" data-testid="home-current-indicator">خانه فعلی</span>
             ) : null}
             <span
               className="rounded-full bg-slate-100 px-3 py-1 text-xs font-bold text-slate-700"
@@ -401,39 +451,122 @@ export function AdminLandingPageComposer({ pageId }: { pageId?: string }) {
             <input className="w-full rounded-xl border px-3 py-2" value={meta.title} onChange={(e) => setMeta({ ...meta, title: e.target.value })} />
           </label>
           <label className="text-sm">
-            <span className="mb-1 block font-bold">آدرس صفحه</span>
+            <span className="mb-1 block font-bold">آدرس صفحه (slug)</span>
             <input className="w-full rounded-xl border px-3 py-2" dir="ltr" value={meta.slug} onChange={(e) => setMeta({ ...meta, slug: e.target.value })} />
+            <span className="mt-1 block text-xs text-muted" dir="ltr">
+              مسیر عمومی: {publicPathForStorePage({ pageType: page?.pageType ?? meta.pageType, slug: meta.slug || "slug" })}
+            </span>
           </label>
           {!page ? (
-            <label className="text-sm" data-testid="page-language-create-field">
-              <span className="mb-1 block font-bold">زبان صفحه</span>
-              <select className="w-full rounded-xl border px-3 py-2" value={meta.locale} onChange={(e) => setMeta({ ...meta, locale: e.target.value })}>
-                <option value="fa">فارسی</option>
-                <option value="en">انگلیسی</option>
-              </select>
-              <span className="mt-1 block text-xs text-muted">زبان فقط هنگام ایجاد انتخاب می‌شود و برای همهٔ بخش‌ها ثابت می‌ماند.</span>
-            </label>
+            <>
+              <label className="text-sm" data-testid="create-page-type">
+                <span className="mb-1 block font-bold">نوع صفحه</span>
+                <select
+                  className="w-full rounded-xl border px-3 py-2"
+                  value={meta.pageType}
+                  onChange={(e) => setMeta({ ...meta, pageType: e.target.value === "Home" ? "Home" : "Landing" })}
+                >
+                  <option value="Landing">فرود (Landing)</option>
+                  <option value="Home">خانه (Home)</option>
+                </select>
+              </label>
+              <label className="text-sm" data-testid="page-language-create-field">
+                <span className="mb-1 block font-bold">زبان صفحه</span>
+                <select className="w-full rounded-xl border px-3 py-2" value={meta.locale} onChange={(e) => setMeta({ ...meta, locale: e.target.value })}>
+                  <option value="fa">فارسی</option>
+                  <option value="en">انگلیسی</option>
+                </select>
+                <span className="mt-1 block text-xs text-muted">زبان فقط هنگام ایجاد انتخاب می‌شود و برای همهٔ بخش‌ها ثابت می‌ماند.</span>
+              </label>
+            </>
           ) : (
-            <div className="text-sm" data-testid="page-language-edit-fixed">
-              <span className="mb-1 block font-bold">زبان صفحه</span>
-              <p className="rounded-xl border bg-slate-50 px-3 py-2 font-bold">{localeLabel(page.locale)}</p>
-              <span className="mt-1 block text-xs text-muted">ترجمهٔ صفحه جریان جداگانه‌ای است؛ بخش‌ها زبان مستقل ندارند.</span>
-            </div>
+            <>
+              <div className="text-sm">
+                <span className="mb-1 block font-bold">نوع صفحه</span>
+                <p className="rounded-xl border bg-slate-50 px-3 py-2 font-bold">{page.pageType === "Home" ? "خانه" : "فرود"}</p>
+              </div>
+              <div className="text-sm" data-testid="page-language-edit-fixed">
+                <span className="mb-1 block font-bold">زبان صفحه</span>
+                <p className="rounded-xl border bg-slate-50 px-3 py-2 font-bold">{localeLabel(page.locale)}</p>
+                <span className="mt-1 block text-xs text-muted">ترجمهٔ صفحه جریان جداگانه‌ای است؛ بخش‌ها زبان مستقل ندارند.</span>
+              </div>
+            </>
           )}
+        </div>
+      </section>
+
+      <section className="mb-5 rounded-2xl border border-border bg-surface-elevated p-5" data-testid="page-seo-panel">
+        <h2 className="mb-4 font-black">سئو و اشتراک‌گذاری</h2>
+        <div className="grid gap-3 md:grid-cols-2">
           <label className="text-sm">
             <span className="mb-1 block font-bold">عنوان سئو</span>
             <input className="w-full rounded-xl border px-3 py-2" value={meta.seoTitle} onChange={(e) => setMeta({ ...meta, seoTitle: e.target.value })} />
+          </label>
+          <label className="text-sm">
+            <span className="mb-1 block font-bold">H1 اصلی (اختیاری)</span>
+            <input className="w-full rounded-xl border px-3 py-2" value={meta.primaryH1} onChange={(e) => setMeta({ ...meta, primaryH1: e.target.value })} placeholder="پیش‌فرض: عنوان صفحه" />
           </label>
           <label className="text-sm md:col-span-2">
             <span className="mb-1 block font-bold">توضیح سئو</span>
             <textarea className="min-h-20 w-full rounded-xl border px-3 py-2" value={meta.seoDescription} onChange={(e) => setMeta({ ...meta, seoDescription: e.target.value })} />
           </label>
+          <label className="text-sm">
+            <span className="mb-1 block font-bold">Canonical URL (اختیاری)</span>
+            <input className="w-full rounded-xl border px-3 py-2" dir="ltr" value={meta.canonicalUrl} onChange={(e) => setMeta({ ...meta, canonicalUrl: e.target.value })} />
+          </label>
+          <div className="flex flex-wrap items-center gap-4 text-sm">
+            <label className="inline-flex items-center gap-2 font-bold">
+              <input type="checkbox" checked={meta.robotsIndex} onChange={(e) => setMeta({ ...meta, robotsIndex: e.target.checked })} />
+              Index
+            </label>
+            <label className="inline-flex items-center gap-2 font-bold">
+              <input type="checkbox" checked={meta.robotsFollow} onChange={(e) => setMeta({ ...meta, robotsFollow: e.target.checked })} />
+              Follow
+            </label>
+          </div>
+          <label className="text-sm">
+            <span className="mb-1 block font-bold">OpenGraph Title</span>
+            <input className="w-full rounded-xl border px-3 py-2" value={meta.ogTitle} onChange={(e) => setMeta({ ...meta, ogTitle: e.target.value })} />
+          </label>
+          <label className="text-sm">
+            <span className="mb-1 block font-bold">OpenGraph Image URL</span>
+            <input className="w-full rounded-xl border px-3 py-2" dir="ltr" value={meta.ogImageUrl} onChange={(e) => setMeta({ ...meta, ogImageUrl: e.target.value })} />
+          </label>
+          <label className="text-sm md:col-span-2">
+            <span className="mb-1 block font-bold">OpenGraph Description</span>
+            <textarea className="min-h-16 w-full rounded-xl border px-3 py-2" value={meta.ogDescription} onChange={(e) => setMeta({ ...meta, ogDescription: e.target.value })} />
+          </label>
+        </div>
+        <div className="mt-4 grid gap-3 md:grid-cols-2" data-testid="seo-snippet-preview">
+          <div className="rounded-xl border bg-white p-4">
+            <p className="text-xs text-muted">پیش‌نمایش نتیجهٔ جستجو</p>
+            <p className="mt-2 text-lg text-[#1a0dab]" dir="auto">{meta.seoTitle || meta.title || "عنوان سئو"}</p>
+            <p className="text-sm text-[#006621]" dir="ltr">
+              {meta.canonicalUrl
+                || `https://store.example${publicPathForStorePage({ pageType: page?.pageType ?? meta.pageType, slug: meta.slug || "slug" })}`}
+            </p>
+            <p className="mt-1 text-sm text-[#4d5156]" dir="auto">{meta.seoDescription || "توضیح سئو اینجا نمایش داده می‌شود."}</p>
+            <p className="mt-2 text-xs font-bold text-muted">
+              ایندکس: {meta.robotsIndex ? "بله" : "خیر"} · Follow: {meta.robotsFollow ? "بله" : "خیر"}
+            </p>
+          </div>
+          <div className="rounded-xl border bg-slate-50 p-4">
+            <p className="text-xs text-muted">پیش‌نمایش OpenGraph</p>
+            {meta.ogImageUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={meta.ogImageUrl} alt="" className="mt-2 h-28 w-full rounded-lg object-cover" />
+            ) : (
+              <div className="mt-2 flex h-28 items-center justify-center rounded-lg bg-slate-200 text-xs text-muted">بدون تصویر</div>
+            )}
+            <p className="mt-2 font-bold" dir="auto">{meta.ogTitle || meta.seoTitle || meta.title || "عنوان اشتراک"}</p>
+            <p className="text-sm text-muted" dir="auto">{meta.ogDescription || meta.seoDescription || "توضیح اشتراک"}</p>
+          </div>
         </div>
       </section>
 
       <section className="mb-5 rounded-2xl border border-border bg-surface-elevated p-5" data-testid="page-workspace-preview">
         <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-          <h2 className="font-black">پیش‌نمایش ترکیب صفحه</h2>
+          <h2 className="font-black">ترکیب صفحه</h2>
           <span className="text-xs font-bold text-muted">{sections.length.toLocaleString("fa-IR")} بخش</span>
         </div>
         {sections.length === 0 ? (

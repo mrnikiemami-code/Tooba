@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Eye, Home, Pencil, Upload } from "lucide-react";
+import { Eye, Home, Pencil, RotateCcw, Upload } from "lucide-react";
 import {
   AppDataGrid,
   createClientGridQueryAdapter,
@@ -19,12 +19,20 @@ import { ADMIN_LANDING_PAGES_GRID_VIEW_KEY, createHostSavedViewStore } from "../
 import {
   getAdminLandingHome,
   listAdminLandingPages,
+  publicPathForStorePage,
+  restoreDefaultAdminHome,
   setAdminLandingHome,
   setAdminLandingPageStatus,
   type AdminLandingPage,
 } from "./admin-landing-pages-api.ts";
 
-type LandingGridRow = AdminLandingPage & { id: string; isHomeLabel: string };
+type LandingGridRow = AdminLandingPage & {
+  id: string;
+  isHomeLabel: string;
+  pageTypeLabel: string;
+  indexabilityLabel: string;
+  pathLabel: string;
+};
 
 const ORDERS_LIKE_CAPABILITIES = {
   ...DEFAULT_APP_GRID_CAPABILITIES,
@@ -59,6 +67,9 @@ export function AdminLandingPagesScreen() {
           ...page,
           id: page.pageId,
           isHomeLabel: nextHome === page.pageId ? "بله" : "خیر",
+          pageTypeLabel: page.pageType === "Home" ? "خانه" : "فرود",
+          indexabilityLabel: page.robotsIndex ? "ایندکس" : "بدون ایندکس",
+          pathLabel: publicPathForStorePage(page),
         })),
       );
       setMessage(undefined);
@@ -82,11 +93,30 @@ export function AdminLandingPagesScreen() {
 
   const setHome = useCallback(async (row: LandingGridRow) => {
     if (row.status !== "Published") {
-      setMessage("برای انتخاب به‌عنوان صفحهٔ اصلی ابتدا صفحه را منتشر کنید.");
+      setMessage("برای «تنظیم به عنوان صفحه اصلی» ابتدا صفحه را منتشر کنید.");
       return;
     }
     setBusy(true);
     const result = await setAdminLandingHome(homePageId === row.pageId ? null : row.pageId);
+    setBusy(false);
+    if (!result.ok) {
+      setMessage(result.message);
+      return;
+    }
+    setHomePageId(result.data.homePageId);
+    refresh();
+  }, [homePageId, refresh]);
+
+  const restoreDefault = useCallback(async () => {
+    if (!homePageId) {
+      setMessage("صفحه اصلی پیش‌فرض هم‌اکنون فعال است.");
+      return;
+    }
+    if (!window.confirm("صفحه اصلی سفارشی لغو شود و خانهٔ پیش‌فرض سامانه بازگردد؟ دادهٔ کالا/دسته/برند حذف نمی‌شود.")) {
+      return;
+    }
+    setBusy(true);
+    const result = await restoreDefaultAdminHome();
     setBusy(false);
     if (!result.ok) {
       setMessage(result.message);
@@ -122,7 +152,7 @@ export function AdminLandingPagesScreen() {
       },
       {
         id: "home",
-        label: "صفحه اصلی",
+        label: "تنظیم به عنوان صفحه اصلی",
         icon: Home,
         disabled: () => busy,
         confirm: (row) =>
@@ -142,17 +172,29 @@ export function AdminLandingPagesScreen() {
         accessor: (row) => row.title,
         filterKind: "text",
         sortable: true,
-        width: 220,
+        width: 200,
         minWidth: 140,
+      },
+      {
+        id: "pageType",
+        header: "نوع صفحه",
+        accessor: (row) => row.pageTypeLabel,
+        filterKind: "status",
+        enumOptions: [
+          { value: "خانه", label: "خانه" },
+          { value: "فرود", label: "فرود" },
+        ],
+        width: 110,
+        minWidth: 90,
       },
       {
         id: "slug",
         header: "آدرس صفحه",
-        accessor: (row) => row.slug,
-        cell: (row) => <span dir="ltr">/{row.slug}</span>,
+        accessor: (row) => row.pathLabel,
+        cell: (row) => <span dir="ltr">{row.pathLabel}</span>,
         filterKind: "text",
         sortable: true,
-        width: 160,
+        width: 180,
         minWidth: 120,
       },
       {
@@ -165,8 +207,8 @@ export function AdminLandingPagesScreen() {
           { value: "fa", label: "فارسی" },
           { value: "en", label: "انگلیسی" },
         ],
-        width: 110,
-        minWidth: 90,
+        width: 100,
+        minWidth: 80,
       },
       {
         id: "status",
@@ -186,6 +228,18 @@ export function AdminLandingPagesScreen() {
           { value: "Published", label: "منتشرشده" },
           { value: "Draft", label: "پیش‌نویس" },
         ],
+        width: 110,
+        minWidth: 90,
+      },
+      {
+        id: "indexability",
+        header: "ایندکس‌پذیری",
+        accessor: (row) => row.indexabilityLabel,
+        filterKind: "status",
+        enumOptions: [
+          { value: "ایندکس", label: "ایندکس" },
+          { value: "بدون ایندکس", label: "بدون ایندکس" },
+        ],
         width: 120,
         minWidth: 100,
       },
@@ -193,12 +247,20 @@ export function AdminLandingPagesScreen() {
         id: "isHome",
         header: "صفحه اصلی؟",
         accessor: (row) => row.isHomeLabel,
+        cell: (row) =>
+          row.isHomeLabel === "بله" ? (
+            <span className="rounded-full bg-blue-50 px-2 py-0.5 text-xs font-bold text-blue-700" data-testid="home-current-indicator">
+              خانه فعلی
+            </span>
+          ) : (
+            "خیر"
+          ),
         filterKind: "status",
         enumOptions: [
           { value: "بله", label: "بله" },
           { value: "خیر", label: "خیر" },
         ],
-        width: 110,
+        width: 120,
         minWidth: 90,
       },
       {
@@ -208,8 +270,8 @@ export function AdminLandingPagesScreen() {
         cell: (row) => formatJalaliDate(row.updatedAt, "fa"),
         filterKind: "date",
         sortable: true,
-        width: 140,
-        minWidth: 120,
+        width: 130,
+        minWidth: 110,
       },
       {
         id: "actions",
@@ -243,7 +305,7 @@ export function AdminLandingPagesScreen() {
   if (denied) {
     return (
       <main className="rounded-2xl border border-border bg-surface-elevated p-8" data-testid="admin-landing-pages">
-        <p>دسترسی به صفحات فرود مجاز نیست.</p>
+        <p>دسترسی به صفحات فروشگاه مجاز نیست.</p>
         <button type="button" className="mt-3 rounded-xl border px-4 py-2" onClick={refresh}>تلاش دوباره</button>
       </main>
     );
@@ -253,18 +315,30 @@ export function AdminLandingPagesScreen() {
     <main data-testid="admin-landing-pages" data-grid-profile="orders-canonical">
       <div className="mb-5 flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="text-xl font-black">صفحات فرود</h1>
+          <h1 className="text-xl font-black">صفحات فروشگاه</h1>
           <p className="mt-1 text-sm text-muted">
-            فهرست صفحات با همان استاندارد جدول سفارش‌ها؛ ایجاد، پیش‌نمایش، انتشار و خانه.
+            مدیریت خانه و صفحات فرود با جدول استاندارد سفارش‌ها؛ ایجاد، سئو، انتشار و خانه.
           </p>
         </div>
-        <Link
-          href="/admin/landing-pages/new"
-          className="rounded-xl bg-[#2563EB] px-4 py-2 text-sm font-bold text-white"
-          data-testid="landing-create"
-        >
-          ایجاد صفحه
-        </Link>
+        <div className="flex flex-wrap gap-2">
+          <button
+            type="button"
+            className="inline-flex items-center gap-2 rounded-xl border px-4 py-2 text-sm font-bold"
+            disabled={busy || !homePageId}
+            onClick={() => void restoreDefault()}
+            data-testid="restore-default-home"
+          >
+            <RotateCcw className="h-4 w-4" />
+            بازگردانی صفحه اصلی پیش‌فرض
+          </button>
+          <Link
+            href="/admin/landing-pages/new"
+            className="rounded-xl bg-[#2563EB] px-4 py-2 text-sm font-bold text-white"
+            data-testid="landing-create"
+          >
+            ایجاد صفحه
+          </Link>
+        </div>
       </div>
 
       <section className="overflow-hidden rounded-2xl border border-border bg-surface-elevated shadow-sm">
@@ -273,7 +347,7 @@ export function AdminLandingPagesScreen() {
         ) : rows.length === 0 ? (
           <div className="p-10 text-center" data-testid="landing-empty">
             <p className="font-bold">هنوز صفحه‌ای ساخته نشده است.</p>
-            <p className="mt-2 text-sm text-muted">با «ایجاد صفحه» یک پیش‌نویس بسازید و بخش‌ها را اضافه کنید.</p>
+            <p className="mt-2 text-sm text-muted">با «ایجاد صفحه» یک پیش‌نویس خانه یا فرود بسازید.</p>
           </div>
         ) : (
           <div className="overflow-x-auto p-2 md:p-4" data-testid="landing-pages-app-data-grid">
@@ -282,7 +356,7 @@ export function AdminLandingPagesScreen() {
               capabilities={ORDERS_LIKE_CAPABILITIES}
               rowCountNoun={{ fa: "صفحه", en: "pages" }}
               messageOverrides={{
-                advancedFilterTitle: "فیلتر پیشرفته صفحات فرود",
+                advancedFilterTitle: "فیلتر پیشرفته صفحات فروشگاه",
                 advancedFilterSubtitle: "جستجوی دقیق مانند فهرست سفارش‌ها",
               }}
             />
