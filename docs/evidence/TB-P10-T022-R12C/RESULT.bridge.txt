@@ -1,0 +1,105 @@
+﻿PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+
+BEGIN_TOOBA_WORKER_RESULT
+
+Task-ID:
+TB-P10-T022-R12C
+
+Parent-Task:
+TB-P10-T022-R12B
+
+Channel:
+tooba-main
+
+WorkerId:
+tooba-worker-01
+
+AgentType:
+cursor
+
+Status:
+PASS
+
+Appearance-USER_VISUAL_ACCEPTED=YES
+Builder-USER_VISUAL_ACCEPTED=NO
+
+Summary:
+Industry Template Catalog Batch C PASS. Persisted Fashion/R12A/R12B-parity packs for shoes, plants, beauty: each 1 StoreTemplate, 8 three-level roots, 15 TemplateProducts, brands/banners/media, Persian translations, /template-preview/{key}, selector + Template Apply. Sample/Store isolation preserved. Beauty demo retail-only (no medical claims). LOCK-SF-352…356. No cloning. No R13/T023. Worker IDLE.
+
+Applicable-Locks:
+LOCK-SF-001…351 preserved. Added LOCK-SF-352…356.
+
+Recovery-Start:
+branch=main expected HEAD 0ec6be98c31c326c4146ba3d06fdc51ac4fc42ef == origin/main. docs/evidence/TB-P10-T022-R12C/recovery-start.md
+
+Batch-C-Templates:
+shoes, plants, beauty — three durable Template Catalog packs with prior-batch schema parity; no alternate schema; no operational Catalog columns.
+
+Shoes-Pack:
+8 three-level roots + 15 products + brands/media/banners; key shoes; preview /template-preview/shoes.
+
+Plants-Pack:
+8 three-level roots + 15 products + brands/media/banners; key plants; preview /template-preview/plants.
+
+Beauty-Pack:
+8 three-level roots + 15 products + brands/media/banners; key beauty; preview /template-preview/beauty; retail-only demo copy.
+
+Translation:
+Persian mandatory via existing Template translation architecture; no hardcoded language list.
+
+Media:
+/images/template-shoes|plants|beauty/; no Fashion/prior-batch reuse; no hotlinks; focal where needed.
+
+Template-Compositions:
+Distinct recipes per pack via existing variants. docs/evidence/TB-P10-T022-R12C/template-compositions.md
+
+Template-Selector:
+Live iframe Desktop/Tablet/Mobile + language + Use Template; shared composition engine; no Admin chrome.
+
+Preview-Routes:
+/template-preview/shoes|plants|beauty (+ /full); shared IndustryTemplatePreviewView + canonical preview context.
+
+Source-Isolation:
+Sample=Template Catalog; Store=operational+PreviewFake only; published=Store only; purity proven for all 3.
+
+Template-Apply:
+Materializes full ordered composition into Page Draft for Batch C packs; opens R10 editor; no Catalog mutation.
+
+Seed-Idempotency:
+Deterministic idempotent Industry Batch C seed; re-run safe; no operational Catalog writes.
+
+Performance:
+Fashion/R12A/R12B query path reused via IndustryPersistedTemplateCatalog facade; no N+1/preview waterfalls.
+
+Focused-Validation:
+Host IndustryBatchCTemplateCatalogT022R12CTests 8 PASS; FE r12c 6 PASS + r12b regression; critical-storefront PASS; runtime API 15/8/pure each pack; Beauty medical-claim gate PASS. docs/evidence/TB-P10-T022-R12C/
+
+Runtime:
+Host :5088 + FE :3000 capture ok=true. docs/evidence/TB-P10-T022-R12C/runtime.md
+
+Visual-Evidence:
+11 required PNGs under docs/evidence/TB-P10-T022-R12C/screenshots/.
+
+AntiPattern-Scan:
+CLEAN — no schema fork; no cross-template media reuse; no Catalog mutation; no medical Beauty claims; no R13.
+
+Lock-Registry:
+LOCK-SF-001…356. New 352–356 only.
+
+Recovery-SoT:
+Phase P10; Last Architect-accepted before review TB-P10-T022-R12B; Last Implementation TB-P10-T022-R12C; Issued/Repair none; Appearance YES; Builder NO; Worker IDLE; do NOT invent TB-P10-T023; do NOT start R13.
+
+Git:
+SHA=8687198c8faba4bde7e42b92d14281523a41dbc6 HEAD==origin/main after push.
+
+Architectural-Concerns:
+none material; R13 Builder hardening deferred until issued.
+
+Visual-Concerns:
+Builder USER_VISUAL_ACCEPTED=NO — Architect visual review of Batch C packs still required.
+
+Blockers:
+none
+
+END_TOOBA_WORKER_RESULT
+
