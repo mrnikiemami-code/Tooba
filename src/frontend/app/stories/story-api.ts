@@ -32,6 +32,8 @@ export interface PublicStoryCard {
   ctaType: string;
   ctaTarget: string | null;
   items: PublicStoryItem[];
+  /** Store-preview fill only — never persisted / never published. */
+  previewFake?: boolean;
 }
 
 export interface AdminStoryItem {

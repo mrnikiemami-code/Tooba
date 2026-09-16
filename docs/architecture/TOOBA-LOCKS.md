@@ -1079,3 +1079,21 @@ Existing large operational media data must not require mass rewrite merely to ad
 ### LOCK-SF-305 — User-facing preview copy
 User-facing preview UI must not expose internal architecture terms such as Template Catalog purity/debug text.
 
+### LOCK-SF-306 — Store preview variant fidelity via fake fill
+Missing/insufficient Store preview data must render the actual selected Section Variant using preview-only fake fill rather than generic placeholder boxes.
+
+### LOCK-SF-307 — Preserve real Store items when filling
+Preview fake fill preserves all available real Store items and fills only missing visual slots.
+
+### LOCK-SF-308 — Variant-owned preview cardinality
+Preview fill cardinality is code-owned by the Section Variant contract; scattered magic counts are forbidden.
+
+### LOCK-SF-309 — Non-persistent Store fill without Template fallback
+Store preview fake fill is in-memory/non-persistent and must never query Template Catalog as fallback.
+
+### LOCK-SF-310 — No preview fakes on published Storefront
+Preview fake items must never appear on published Storefront.
+
+### LOCK-SF-311 — Localized marked fake preview items
+Preview fake items are localized by the active dynamic locale and visually marked as sample preview content without changing core geometry.
+

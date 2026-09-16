@@ -1,12 +1,15 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Eye, Play } from "lucide-react";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Autoplay, FreeMode } from "swiper/modules";
 import { useLocale } from "../../../lib/i18n/locale-context.tsx";
 import { fetchPublicStories, type PublicStoryCard } from "../../stories/story-api.ts";
 import { StoryModal } from "./story-modal.tsx";
+import { createFakeStory } from "../../../lib/storefront-composition/preview-fake-data.ts";
+import { applyPreviewFill } from "../../../lib/storefront-composition/preview-fill-policy.ts";
+import { PreviewSampleBadge } from "../preview-sample-badge.tsx";
 
 import "swiper/css";
 import "swiper/css/free-mode";
@@ -17,7 +20,18 @@ import "swiper/css/free-mode";
  */
 export type StoryLayout = "circle" | "image-circles" | "rounded-cards" | "icon-shortcuts";
 
-export function HomeStoriesSection({ layout = "circle" }: { layout?: StoryLayout } = {}) {
+export function HomeStoriesSection({
+  layout = "circle",
+  storePreviewFill = false,
+  previewLocale = "fa",
+  previewVariantKey = "story.circle",
+}: {
+  layout?: StoryLayout;
+  /** When true and live stories are empty, render in-memory fake stories (Store preview only). */
+  storePreviewFill?: boolean;
+  previewLocale?: string;
+  previewVariantKey?: string;
+} = {}) {
   const locale = useLocale();
   const [stories, setStories] = useState<PublicStoryCard[]>([]);
   const [loaded, setLoaded] = useState(false);
@@ -37,11 +51,21 @@ export function HomeStoriesSection({ layout = "circle" }: { layout?: StoryLayout
     };
   }, [locale]);
 
-  if (!loaded) {
+  const displayStories = useMemo(() => {
+    if (!storePreviewFill) return stories;
+    return applyPreviewFill({
+      enabled: true,
+      variantKey: previewVariantKey,
+      realItems: stories,
+      createFake: (index) => createFakeStory(index, previewLocale),
+    }).items;
+  }, [storePreviewFill, stories, previewLocale, previewVariantKey]);
+
+  if (!loaded && !storePreviewFill) {
     return null;
   }
 
-  if (stories.length === 0) {
+  if (displayStories.length === 0) {
     return (
       <div className="w-full px-2 sm:px-4 py-6 md:py-8 bg-section-surface" data-testid="home-stories" data-story-layout={layout} data-empty="true" data-storefront-surface-role="section">
         <h3 className="text-lg md:text-xl font-bold text-gray-900 flex items-center gap-2 mb-4">
@@ -70,7 +94,7 @@ export function HomeStoriesSection({ layout = "circle" }: { layout?: StoryLayout
           </h3>
         </div>
         <div className="flex gap-3 overflow-x-auto pb-2">
-          {stories.map((story) => {
+          {displayStories.map((story) => {
             const cover = story.coverMediaUrl ?? story.items[0]?.mediaUrl;
             const initial = story.title.trim().slice(0, 1) || "س";
             return (
@@ -78,8 +102,9 @@ export function HomeStoriesSection({ layout = "circle" }: { layout?: StoryLayout
                 key={story.storyId}
                 type="button"
                 onClick={() => openStory(story.storyId)}
-                className="flex w-[76px] shrink-0 flex-col items-center gap-2 min-h-11"
+                className="relative flex w-[76px] shrink-0 flex-col items-center gap-2 min-h-11"
               >
+                {story.previewFake ? <PreviewSampleBadge locale={previewLocale} className="absolute -top-1 left-0" /> : null}
                 <span className="flex h-14 w-14 items-center justify-center overflow-hidden rounded-2xl border border-gray-200 bg-surface shadow-sm">
                   {cover ? (
                     // eslint-disable-next-line @next/next/no-img-element
@@ -96,7 +121,7 @@ export function HomeStoriesSection({ layout = "circle" }: { layout?: StoryLayout
         <StoryModal
           isOpen={modalOpen}
           onClose={() => setModalOpen(false)}
-          stories={stories}
+          stories={displayStories}
           initialStoryId={selectedStoryId}
         />
       </div>
@@ -128,7 +153,7 @@ export function HomeStoriesSection({ layout = "circle" }: { layout?: StoryLayout
               dir="rtl"
               className="w-full"
             >
-              {stories.map((story) => {
+              {displayStories.map((story) => {
                 const cover = story.coverMediaUrl ?? story.items[0]?.mediaUrl ?? "/images/stories/1.jpg";
                 const isVideo = story.isVideo || story.items.some((item) => item.mediaType === "video");
                 return (
@@ -143,6 +168,7 @@ export function HomeStoriesSection({ layout = "circle" }: { layout?: StoryLayout
                       onMouseEnter={() => setHoveredId(story.storyId)}
                       onMouseLeave={() => setHoveredId(null)}
                     >
+                      {story.previewFake ? <PreviewSampleBadge locale={previewLocale} className="absolute top-0 left-0 z-30" /> : null}
                       <div
                         className={`relative group-hover:scale-105 transition-transform duration-300 bg-gradient-to-tr from-primary via-purple-500 to-pink-500 ${
                           layout === "rounded-cards"
@@ -217,7 +243,7 @@ export function HomeStoriesSection({ layout = "circle" }: { layout?: StoryLayout
       <StoryModal
         isOpen={modalOpen}
         onClose={() => setModalOpen(false)}
-        stories={stories}
+        stories={displayStories}
         initialStoryId={selectedStoryId}
       />
     </div>

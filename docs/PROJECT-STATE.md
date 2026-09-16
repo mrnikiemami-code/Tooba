@@ -34,7 +34,7 @@ Channel: tooba-main
 Last Architect Accepted Task:
 
 ```text
-TB-P10-T022-R4
+TB-P10-T022-R7
 ```
 
 Prior accepted catalog wave:
@@ -62,7 +62,7 @@ TB-P05-GATE
 Last Implementation Task:
 
 ```text
-TB-P10-T022-R6
+TB-P10-T022-R8
 ```
 
 Current Issued Task:
@@ -80,6 +80,8 @@ Current Repair Task:
 Implemented Under Review:
 
 ```text
+TB-P10-T022-R8 — Store Preview Variant-Fidelity Repair (preview-only fake fill through real Section/Variant components); USER_VISUAL_ACCEPTED=YES (Appearance); Builder USER_VISUAL_ACCEPTED=NO
+TB-P10-T022-R7 — Preview context unification (strict Sample/Store isolation, preview placeholders, dynamic locale, focal crop); USER_VISUAL_ACCEPTED=YES (Appearance); Builder USER_VISUAL_ACCEPTED=NO
 TB-P10-T022-R6 — Exact Product/Category/Brand Template Catalog parity + Fashion category media fidelity; USER_VISUAL_ACCEPTED=YES (Appearance); Builder USER_VISUAL_ACCEPTED=NO
 TB-P10-T022-R5 — Fashion Template Catalog Persistence (exact schema mirror + 8/15 Fashion seed + Sample purity); USER_VISUAL_ACCEPTED=YES (Appearance); Builder USER_VISUAL_ACCEPTED=NO
 TB-P10-T022-R4 — Fashion Template Live Preview Pilot (real /template-preview/fashion + Admin iframe Desktop/Tablet/Mobile, isolated demo pack); USER_VISUAL_ACCEPTED=YES (Appearance); Builder USER_VISUAL_ACCEPTED=NO

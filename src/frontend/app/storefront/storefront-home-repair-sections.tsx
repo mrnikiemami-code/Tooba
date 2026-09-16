@@ -202,9 +202,11 @@ export function HomeBestSellersSection({ columns }: { columns: StorefrontBestSel
 export function HomeBrandsSection({
   brands,
   layout = "logo-rail",
+  previewLocale = "fa",
 }: {
   brands: StorefrontBrandItem[];
   layout?: "logo-rail" | "logo-grid" | "featured";
+  previewLocale?: string;
 }) {
   if (brands.length === 0) {
     return (
@@ -219,6 +221,11 @@ export function HomeBrandsSection({
   const brandCard = (brand: StorefrontBrandItem, className: string) => (
     <Link key={brand.brandId} href={`/brand/${brand.slug}`} className={`group block text-right outline-none ${className}`}>
       <div className={`relative w-full overflow-hidden bg-gray-100 shadow-sm hover:shadow-xl transition-all duration-300 border border-gray-200 ${layout === "featured" ? "aspect-[4/3] rounded-3xl" : "aspect-square rounded-2xl"}`}>
+        {brand.previewFake ? (
+          <span className="pointer-events-none absolute top-2 left-2 z-20 rounded bg-black/55 px-1.5 py-0.5 text-[9px] font-bold leading-none text-white" data-preview-fake-badge="true">
+            {previewLocale.toLowerCase().startsWith("en") ? "Sample preview" : previewLocale.toLowerCase().startsWith("ar") ? "معاينة تجريبية" : "نمونه نمایشی"}
+          </span>
+        ) : null}
         <div className="absolute inset-0 z-0 flex items-center justify-center bg-gray-100">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
@@ -317,9 +324,11 @@ export function HomeNewProductsSection({ products }: { products: StorefrontProdu
 export function HomeTestimonialsSection({
   reviews,
   layout = "card-carousel",
+  previewLocale = "fa",
 }: {
   reviews: StorefrontFeaturedReviewItem[];
   layout?: "card-carousel" | "compact-quotes";
+  previewLocale?: string;
 }) {
   const summary = useMemo(() => {
     if (reviews.length === 0) return null;
@@ -344,7 +353,12 @@ export function HomeTestimonialsSection({
         </h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
           {reviews.map((item) => (
-            <blockquote key={item.publicId} className="rounded-2xl border border-gray-200 bg-surface p-4 text-sm leading-7 text-gray-700">
+            <blockquote key={item.publicId} className="relative rounded-2xl border border-gray-200 bg-surface p-4 text-sm leading-7 text-gray-700">
+              {item.previewFake ? (
+                <span className="pointer-events-none absolute top-2 left-2 z-20 rounded bg-black/55 px-1.5 py-0.5 text-[9px] font-bold leading-none text-white" data-preview-fake-badge="true">
+                  {previewLocale.toLowerCase().startsWith("en") ? "Sample preview" : previewLocale.toLowerCase().startsWith("ar") ? "معاينة تجريبية" : "نمونه نمایشی"}
+                </span>
+              ) : null}
               <p className="line-clamp-4">&ldquo;{item.body}&rdquo;</p>
               <footer className="mt-3 text-xs font-bold text-gray-900">— {item.authorDisplayName}</footer>
             </blockquote>
@@ -401,6 +415,11 @@ export function HomeTestimonialsSection({
           {reviews.map((item) => (
             <SwiperSlide key={item.publicId} className="!h-auto">
               <article className="bg-surface rounded-2xl p-4 md:p-5 border border-gray-200 shadow-md hover:shadow-2xl transition-all duration-400 h-full flex flex-col group relative overflow-hidden">
+                {item.previewFake ? (
+                  <span className="pointer-events-none absolute top-2 left-2 z-20 rounded bg-black/55 px-1.5 py-0.5 text-[9px] font-bold leading-none text-white" data-preview-fake-badge="true">
+                    {previewLocale.toLowerCase().startsWith("en") ? "Sample preview" : previewLocale.toLowerCase().startsWith("ar") ? "معاينة تجريبية" : "نمونه نمایشی"}
+                  </span>
+                ) : null}
                 <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r opacity-0 group-hover:opacity-100 transition-opacity duration-500" style={{ backgroundImage: "linear-gradient(to right, rgb(var(--color-primary)), #fbbf24, rgb(var(--color-primary)))" }} />
                 <Quote className="absolute bottom-3 right-3 w-10 h-10 rotate-180 group-hover:scale-110 transition-all duration-500" style={{ color: "rgb(var(--color-primary) / 0.05)" }} />
                 <div className="flex items-center gap-3 mb-3">
@@ -468,9 +487,11 @@ export function HomeTestimonialsSection({
 export function HomeArticlesSection({
   articles,
   layout = "magazine-rail",
+  previewLocale = "fa",
 }: {
   articles: StorefrontArticleItem[];
   layout?: "magazine-rail" | "grid" | "featured-plus-list";
+  previewLocale?: string;
 }) {
   if (articles.length === 0) return null;
 
@@ -480,7 +501,12 @@ export function HomeArticlesSection({
         <h2 id="home-articles-heading" className="mb-4 text-lg font-extrabold">آخرین مقالات</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {articles.map((post) => (
-            <Link key={post.articleId} href={`/blogs/${post.slug}`} className="rounded-2xl border border-gray-200 bg-surface overflow-hidden">
+            <Link key={post.articleId} href={`/blogs/${post.slug}`} className="relative rounded-2xl border border-gray-200 bg-surface overflow-hidden">
+              {post.previewFake ? (
+                <span className="pointer-events-none absolute top-2 left-2 z-20 rounded bg-black/55 px-1.5 py-0.5 text-[9px] font-bold leading-none text-white" data-preview-fake-badge="true">
+                  {previewLocale.toLowerCase().startsWith("en") ? "Sample preview" : previewLocale.toLowerCase().startsWith("ar") ? "معاينة تجريبية" : "نمونه نمایشی"}
+                </span>
+              ) : null}
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src={storefrontMediaUrl(post.coverMediaAssetId)} alt="" className="aspect-[16/10] w-full object-cover" />
               <div className="p-3">

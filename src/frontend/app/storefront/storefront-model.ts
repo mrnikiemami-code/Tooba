@@ -23,6 +23,8 @@ export interface StorefrontProductCard {
   reviewCount: number;
   /** برند اختیاری؛ فیلتر سراسری PLP با f_brand. */
   brandId?: string | null;
+  /** Store-preview fill only — never persisted / never published. */
+  previewFake?: boolean;
 }
 
 /**
@@ -36,6 +38,8 @@ export interface StorefrontCategoryItem {
   imageMediaAssetId?: string | null;
   /** Optional resolved public image URL (Template Catalog Fashion media). */
   imageUrl?: string | null;
+  /** Store-preview fill only — never persisted / never published. */
+  previewFake?: boolean;
 }
 
 /**
@@ -47,6 +51,8 @@ export interface StorefrontBrandItem {
   name: string;
   productCount: number;
   logoMediaAssetId: string | null;
+  /** Store-preview fill only — never persisted / never published. */
+  previewFake?: boolean;
 }
 
 /** فروشندهٔ عمومی بدون PartyId، رابطهٔ مجوز، اطلاعات تماس یا دادهٔ تسویه. */
@@ -117,6 +123,8 @@ export interface StorefrontFeaturedReviewItem {
   createdAt: string;
   productTitle: string;
   productSlug: string;
+  /** Store-preview fill only — never persisted / never published. */
+  previewFake?: boolean;
 }
 
 /** مقالهٔ منتشرشدهٔ اخیر برای ریل خانه. */
@@ -130,6 +138,8 @@ export interface StorefrontArticleItem {
   authorDisplayName: string;
   tags: string[];
   isFeatured: boolean;
+  /** Store-preview fill only — never persisted / never published. */
+  previewFake?: boolean;
 }
 
 /**

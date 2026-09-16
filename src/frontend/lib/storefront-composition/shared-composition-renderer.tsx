@@ -40,14 +40,25 @@ import {
   LandingReviews,
   LandingRichText,
 } from "../../app/storefront/storefront-landing-blocks.tsx";
-import { PreviewPlaceholderSurface } from "../../app/storefront/preview-placeholder-surface.tsx";
 import { storefrontMediaUrl } from "../../app/storefront/storefront-api.ts";
-import { resolveObjectPosition } from "./template-preview-context.ts";
 import { resolveObjectPosition } from "./template-preview-context.ts";
 import type { CompositionSectionInstance, CompositionSurfaceRole } from "./types.ts";
 import { getVariant } from "./registry.ts";
 import { canonicalizeVariantKey, resolveSharedVariant } from "./resolve-variant.ts";
 import { surfaceRoleClass } from "../storefront-appearance/surface-role.ts";
+import {
+  createFakeArticle,
+  createFakeBanner,
+  createFakeBrand,
+  createFakeCategory,
+  createFakeHeroConfig,
+  createFakeProduct,
+  createFakePromoConfig,
+  createFakeReview,
+  createFakeRichTextConfig,
+} from "./preview-fake-data.ts";
+import { applyPreviewFill, isStorePreviewFillEnabled } from "./preview-fill-policy.ts";
+import { asIds } from "../../app/storefront/storefront-landing-blocks.tsx";
 
 export { resolveSharedVariant, canonicalizeVariantKey };
 
@@ -391,8 +402,8 @@ export function renderSharedLandingSection(input: SharedLandingRenderInput): Rea
   const { composition, config, context, section, preview = false, previewSource, previewLocale = "fa" } = input;
   if (!composition.enabled) return null;
   const variantKey = canonicalizeVariantKey(composition.variantKey);
-  const storePreview = Boolean(preview && previewSource === "store");
-  const wantsPlaceholder = Boolean(config.previewPlaceholder);
+  const storePreview = isStorePreviewFillEnabled(preview, previewSource);
+  const locale = previewLocale || "fa";
 
   try {
     resolveSharedVariant(composition.sectionTypeKey, variantKey, { strict: true });
@@ -400,16 +411,56 @@ export function renderSharedLandingSection(input: SharedLandingRenderInput): Rea
     return null;
   }
 
+  const fillProducts = (layout: Parameters<typeof LandingProductRail>[0]["layout"]) => {
+    const wanted = new Set(
+      section.items.map((item) => item.id).concat(section.items.map((item) => item.slug).filter(Boolean) as string[]),
+    );
+    const realSelected = wanted.size
+      ? context.products.filter((card) => wanted.has(card.productId) || wanted.has(card.slug))
+      : context.products;
+    const filled = applyPreviewFill({
+      enabled: storePreview,
+      variantKey,
+      realItems: realSelected,
+      createFake: (index) => createFakeProduct(index, locale),
+    });
+    const sectionFilled = {
+      ...section,
+      items: filled.items.map((card) => ({ id: card.productId, slug: card.slug })),
+    };
+    const configFilled = {
+      ...config,
+      productIds: filled.items.map((card) => card.productId),
+      take: Math.max(typeof config.take === "number" ? config.take : 0, filled.items.length),
+    };
+    delete (configFilled as { previewPlaceholder?: boolean }).previewPlaceholder;
+    return (
+      <LandingProductRail
+        section={sectionFilled}
+        config={configFilled}
+        products={filled.items}
+        layout={layout}
+        previewLocale={locale}
+      />
+    );
+  };
+
   switch (variantKey) {
     case "hero.full-width":
     case "hero.contained":
     case "hero.split":
     case "hero.side-promos":
     case "hero.editorial": {
-      if (storePreview && wantsPlaceholder) {
-        return <PreviewPlaceholderSurface kind="hero" locale={previewLocale} aspectClass="min-h-[200px] md:min-h-[280px]" />;
+      const hasMedia =
+        (typeof config.imageUrl === "string" && config.imageUrl.trim().length > 0)
+        || (typeof config.mediaAssetId === "string" && config.mediaAssetId.trim().length > 0);
+      const heroConfig = {
+        ...(storePreview && !hasMedia ? createFakeHeroConfig(locale) : {}),
+        ...config,
+      };
+      if (storePreview && !hasMedia) {
+        Object.assign(heroConfig, createFakeHeroConfig(locale));
       }
-      const heroConfig = { ...config };
       if (typeof heroConfig.mediaAssetId === "string" && heroConfig.mediaAssetId && !heroConfig.imageUrl) {
         heroConfig.imageUrl = storefrontMediaUrl(String(heroConfig.mediaAssetId));
       }
@@ -419,73 +470,116 @@ export function renderSharedLandingSection(input: SharedLandingRenderInput): Rea
           typeof heroConfig.focalPointY === "number" ? heroConfig.focalPointY : null,
         );
       }
-      return <LandingHero config={heroConfig} layout={heroLayoutFromVariant(variantKey)} />;
+      delete (heroConfig as { previewPlaceholder?: boolean }).previewPlaceholder;
+      return (
+        <LandingHero
+          config={heroConfig}
+          layout={heroLayoutFromVariant(variantKey)}
+          previewLocale={locale}
+          showPreviewBadge={Boolean(storePreview && heroConfig.previewFake)}
+        />
+      );
     }
     case "story.circle":
     case "story.image-circles":
     case "story.rounded-cards":
     case "story.icon-shortcuts":
-      if (storePreview && wantsPlaceholder) {
-        return <PreviewPlaceholderSurface kind="story" locale={previewLocale} slots={4} aspectClass="aspect-square min-h-[96px]" />;
-      }
-      return <HomeStoriesSection layout={storyLayoutFromVariant(variantKey)} />;
+      return (
+        <HomeStoriesSection
+          layout={storyLayoutFromVariant(variantKey)}
+          storePreviewFill={storePreview}
+          previewLocale={locale}
+          previewVariantKey={variantKey}
+        />
+      );
     case "product.card-carousel":
-      if (storePreview && wantsPlaceholder) {
-        return <PreviewPlaceholderSurface kind="product" locale={previewLocale} slots={2} aspectClass="min-h-[160px]" />;
-      }
-      return <LandingProductRail section={section} config={config} products={context.products} layout="rail" />;
+      return fillProducts("rail");
     case "product.grid":
-      if (storePreview && wantsPlaceholder) {
-        return <PreviewPlaceholderSurface kind="product" locale={previewLocale} slots={2} aspectClass="min-h-[160px]" />;
-      }
-      return <LandingProductRail section={section} config={config} products={context.products} layout="grid" />;
+      return fillProducts("grid");
     case "product.compact-rows":
-      return <LandingProductRail section={section} config={config} products={context.products} layout="compact-rows" />;
+      return fillProducts("compact-rows");
     case "ranked.horizontal":
-      return <LandingProductRail section={section} config={config} products={context.products} layout="rail" />;
+      return fillProducts("rail");
     case "product.category-columns":
     case "ranked.multi-column":
-      return <LandingProductRail section={section} config={config} products={context.products} layout="columns" />;
+      return fillProducts("columns");
     case "product.featured-plus-rail":
-      return <LandingProductRail section={section} config={config} products={context.products} layout="featured-plus-rail" />;
+      return fillProducts("featured-plus-rail");
     case "product.tabbed":
-      return <LandingProductRail section={section} config={config} products={context.products} layout="tabbed" />;
+      return fillProducts("tabbed");
     case "product.large-cards":
-      return <LandingProductRail section={section} config={config} products={context.products} layout="large-cards" />;
+      return fillProducts("large-cards");
     case "product.minimal-list":
-      return <LandingProductRail section={section} config={config} products={context.products} layout="minimal-list" />;
+      return fillProducts("minimal-list");
     case "ranked.grid":
-      return <LandingProductRail section={section} config={config} products={context.products} layout="ranked-grid" />;
+      return fillProducts("ranked-grid");
     case "ranked.ticker":
-      return <LandingProductRail section={section} config={config} products={context.products} layout="ticker" />;
+      return fillProducts("ticker");
     case "category.image-cards":
     case "category.compact-tiles":
     case "category.horizontal-rail":
-    case "category.editorial-tiles":
-      if (storePreview && wantsPlaceholder) {
-        return <PreviewPlaceholderSurface kind="category" locale={previewLocale} slots={2} aspectClass="min-h-[140px]" />;
-      }
-      return <LandingCategoryGrid config={config} categories={context.categories} layout={categoryLayoutFromVariant(variantKey)} />;
+    case "category.editorial-tiles": {
+      const ids = asIds(config, "ids", "categoryIds");
+      const realSelected = ids.length
+        ? context.categories.filter((item) => ids.includes(item.categoryId))
+        : context.categories;
+      const filled = applyPreviewFill({
+        enabled: storePreview,
+        variantKey,
+        realItems: realSelected,
+        createFake: (index) => createFakeCategory(index, locale),
+      });
+      const configFilled = {
+        ...config,
+        categoryIds: filled.items.map((item) => item.categoryId),
+      };
+      delete (configFilled as { previewPlaceholder?: boolean }).previewPlaceholder;
+      return (
+        <LandingCategoryGrid
+          config={configFilled}
+          categories={filled.items}
+          layout={categoryLayoutFromVariant(variantKey)}
+          previewLocale={locale}
+        />
+      );
+    }
     case "brand.logo-rail":
-      if (storePreview && wantsPlaceholder) {
-        return <PreviewPlaceholderSurface kind="brand" locale={previewLocale} slots={2} aspectClass="min-h-[100px]" />;
-      }
-      return <LandingBrandStrip config={config} brands={context.brands} layout="logo-rail" />;
     case "brand.logo-grid":
-      if (storePreview && wantsPlaceholder) {
-        return <PreviewPlaceholderSurface kind="brand" locale={previewLocale} slots={2} aspectClass="min-h-[100px]" />;
-      }
-      return <LandingBrandStrip config={config} brands={context.brands} layout="logo-grid" />;
-    case "brand.featured":
-      if (storePreview && wantsPlaceholder) {
-        return <PreviewPlaceholderSurface kind="brand" locale={previewLocale} slots={2} aspectClass="min-h-[100px]" />;
-      }
-      return <LandingBrandStrip config={config} brands={context.brands} layout="featured" />;
-    case "promo.default":
-      if (storePreview && wantsPlaceholder) {
-        return <PreviewPlaceholderSurface kind="promo" locale={previewLocale} />;
-      }
-      return <LandingPromo config={config} />;
+    case "brand.featured": {
+      const ids = asIds(config, "ids", "brandIds");
+      const realSelected = ids.length
+        ? context.brands.filter((item) => ids.includes(item.brandId))
+        : context.brands;
+      const filled = applyPreviewFill({
+        enabled: storePreview,
+        variantKey,
+        realItems: realSelected,
+        createFake: (index) => createFakeBrand(index, locale),
+      });
+      const configFilled = {
+        ...config,
+        brandIds: filled.items.map((item) => item.brandId),
+      };
+      delete (configFilled as { previewPlaceholder?: boolean }).previewPlaceholder;
+      const layout =
+        variantKey === "brand.logo-grid" ? "logo-grid" : variantKey === "brand.featured" ? "featured" : "logo-rail";
+      return (
+        <LandingBrandStrip
+          config={configFilled}
+          brands={filled.items}
+          layout={layout}
+          previewLocale={locale}
+        />
+      );
+    }
+    case "promo.default": {
+      const hasContent = typeof config.title === "string" && config.title.trim().length > 0;
+      const promoConfig = storePreview && !hasContent
+        ? { ...createFakePromoConfig(locale), ...config, ...createFakePromoConfig(locale) }
+        : { ...config };
+      delete (promoConfig as { previewPlaceholder?: boolean }).previewPlaceholder;
+      return <LandingPromo config={promoConfig} previewLocale={locale} showPreviewBadge={Boolean(storePreview && promoConfig.previewFake)} />;
+    }
     case "banner.single":
     case "banner.two-equal":
     case "banner.two-asymmetric":
@@ -495,7 +589,7 @@ export function renderSharedLandingSection(input: SharedLandingRenderInput): Rea
     case "banner.one-large-four-small":
     case "banner.eight-compact": {
       const rawItems = Array.isArray(config.items) ? config.items : [];
-      const items = rawItems
+      const realItems = rawItems
         .filter((item): item is Record<string, unknown> => Boolean(item) && typeof item === "object")
         .map((item) => {
           const mediaId = typeof item.mediaAssetId === "string" ? item.mediaAssetId : undefined;
@@ -509,8 +603,16 @@ export function renderSharedLandingSection(input: SharedLandingRenderInput): Rea
               typeof item.focalPointX === "number" ? item.focalPointX : null,
               typeof item.focalPointY === "number" ? item.focalPointY : null,
             ),
+            previewFake: false as boolean | undefined,
           };
-        });
+        })
+        .filter((item) => Boolean(item.src));
+      const filled = applyPreviewFill({
+        enabled: storePreview,
+        variantKey,
+        realItems,
+        createFake: (index) => createFakeBanner(index, locale),
+      });
       return (
         <CompositionBannerGrid
           layout={bannerLayoutFromVariant(variantKey)}
@@ -518,44 +620,70 @@ export function renderSharedLandingSection(input: SharedLandingRenderInput): Rea
           href={typeof config.href === "string" ? config.href : undefined}
           heightPreset={config.heightPreset}
           testId="landing-banner-showcase"
-          items={items}
+          items={filled.items}
           allowHomeFallback={!storePreview}
-          previewPlaceholder={storePreview && (wantsPlaceholder || items.length === 0 || items.every((i) => !i.src))}
-          previewPlaceholderSlots={typeof config.previewPlaceholderSlots === "number" ? config.previewPlaceholderSlots : undefined}
-          previewLocale={previewLocale}
+          previewLocale={locale}
         />
       );
     }
     case "article.magazine-rail":
-      if (storePreview && wantsPlaceholder) {
-        return <PreviewPlaceholderSurface kind="article" locale={previewLocale} slots={2} aspectClass="min-h-[140px]" />;
-      }
-      return <LandingArticleList config={config} articles={context.articles} layout="magazine-rail" />;
     case "article.grid":
-      if (storePreview && wantsPlaceholder) {
-        return <PreviewPlaceholderSurface kind="article" locale={previewLocale} slots={2} aspectClass="min-h-[140px]" />;
-      }
-      return <LandingArticleList config={config} articles={context.articles} layout="grid" />;
-    case "article.featured-plus-list":
-      if (storePreview && wantsPlaceholder) {
-        return <PreviewPlaceholderSurface kind="article" locale={previewLocale} slots={2} aspectClass="min-h-[140px]" />;
-      }
-      return <LandingArticleList config={config} articles={context.articles} layout="featured-plus-list" />;
+    case "article.featured-plus-list": {
+      const take = typeof config.take === "number" ? config.take : 6;
+      const source = typeof config.source === "string" ? config.source : "Latest";
+      const articleIds = Array.isArray(config.articleIds)
+        ? config.articleIds.map((id) => String(id)).filter(Boolean)
+        : [];
+      const realSelected = source === "Manual" && articleIds.length > 0
+        ? articleIds
+          .map((id) => context.articles.find((article) => article.articleId === id))
+          .filter((article): article is (typeof context.articles)[number] => Boolean(article))
+        : context.articles;
+      const filled = applyPreviewFill({
+        enabled: storePreview,
+        variantKey,
+        realItems: realSelected.slice(0, take),
+        createFake: (index) => createFakeArticle(index, locale),
+      });
+      const layout =
+        variantKey === "article.grid"
+          ? "grid"
+          : variantKey === "article.featured-plus-list"
+            ? "featured-plus-list"
+            : "magazine-rail";
+      return (
+        <LandingArticleList
+          config={{ ...config, take: filled.items.length, source: "Latest" }}
+          articles={filled.items}
+          layout={layout}
+          previewLocale={locale}
+        />
+      );
+    }
     case "reviews.card-carousel":
-      if (storePreview && wantsPlaceholder) {
-        return <PreviewPlaceholderSurface kind="reviews" locale={previewLocale} slots={2} aspectClass="min-h-[140px]" />;
-      }
-      return <LandingReviews reviews={context.reviews} layout="card-carousel" />;
-    case "reviews.compact-quotes":
-      if (storePreview && wantsPlaceholder) {
-        return <PreviewPlaceholderSurface kind="reviews" locale={previewLocale} slots={2} aspectClass="min-h-[140px]" />;
-      }
-      return <LandingReviews reviews={context.reviews} layout="compact-quotes" />;
-    case "richtext.default":
-      if (storePreview && wantsPlaceholder) {
-        return <PreviewPlaceholderSurface kind="richtext" locale={previewLocale} />;
-      }
-      return <LandingRichText config={config} />;
+    case "reviews.compact-quotes": {
+      const filled = applyPreviewFill({
+        enabled: storePreview,
+        variantKey,
+        realItems: context.reviews,
+        createFake: (index) => createFakeReview(index, locale),
+      });
+      return (
+        <LandingReviews
+          reviews={filled.items}
+          layout={variantKey === "reviews.compact-quotes" ? "compact-quotes" : "card-carousel"}
+          previewLocale={locale}
+        />
+      );
+    }
+    case "richtext.default": {
+      const hasText = typeof config.text === "string" && config.text.trim().length > 0;
+      const richConfig = storePreview && !hasText
+        ? { ...createFakeRichTextConfig(locale) }
+        : { ...config };
+      delete (richConfig as { previewPlaceholder?: boolean }).previewPlaceholder;
+      return <LandingRichText config={richConfig} previewLocale={locale} showPreviewBadge={Boolean(storePreview && richConfig.previewFake)} />;
+    }
     case "nav.menu":
       return <LandingNavigationMenu config={config} menus={context.menus} />;
     default:

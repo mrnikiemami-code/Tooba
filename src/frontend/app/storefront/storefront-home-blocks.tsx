@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { LocalizedLink as Link } from "../../lib/i18n/LocalizedLink.tsx";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
@@ -6,7 +6,6 @@ import { ChevronLeft, Flame, ImageOff } from "lucide-react";
 import { StorefrontProductCardView } from "./storefront-product-card.tsx";
 import type { StorefrontCategoryItem, StorefrontProductCard } from "./storefront-model.ts";
 import { heightPresetHeroClass } from "../../lib/storefront-composition/size-presets.ts";
-import { PreviewPlaceholderSurface } from "./preview-placeholder-surface.tsx";
 
 const SLIDES = [
   { src: "/images/sliders/slider-1.jpg", href: "/offers", alt: "بنر فروشگاهی یک" },
@@ -343,6 +342,7 @@ export function ProductRailSection({
   slideClassName,
   testId,
   layout = "rail",
+  previewLocale = "fa",
 }: {
   id: string;
   title: string;
@@ -353,6 +353,7 @@ export function ProductRailSection({
   slideClassName: string;
   testId: string;
   layout?: "rail" | "grid" | "compact-rows" | "featured-plus-rail" | "ranked-grid" | "tabbed" | "large-cards" | "minimal-list" | "ticker" | "columns";
+  previewLocale?: string;
 }) {
   const headingId = `${id}-heading`;
   const [activeTab, setActiveTab] = useState(0);
@@ -411,7 +412,7 @@ export function ProductRailSection({
         <div className="flex gap-3 md:gap-4 overflow-x-auto pb-1">
           {(active?.items ?? []).map((card) => (
             <div key={`${id}-${card.productId}`} className={`shrink-0 ${slideClassName}`}>
-              <StorefrontProductCardView card={card} />
+              <StorefrontProductCardView card={card} previewLocale={previewLocale} />
             </div>
           ))}
         </div>
@@ -422,7 +423,7 @@ export function ProductRailSection({
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-5" data-product-layout="large-cards">
         {products.slice(0, 6).map((card) => (
           <div key={`${id}-${card.productId}`} className="min-w-0">
-            <StorefrontProductCardView card={card} />
+            <StorefrontProductCardView card={card} previewLocale={previewLocale} />
           </div>
         ))}
       </div>
@@ -431,7 +432,7 @@ export function ProductRailSection({
     body = (
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4" data-product-layout="columns">
         {products.map((card) => (
-          <StorefrontProductCardView key={`${id}-${card.productId}`} card={card} />
+          <StorefrontProductCardView key={`${id}-${card.productId}`} card={card} previewLocale={previewLocale} />
         ))}
       </div>
     );
@@ -440,7 +441,7 @@ export function ProductRailSection({
       <ul className="divide-y divide-gray-100 rounded-2xl border border-gray-100 bg-surface overflow-hidden" data-product-layout="minimal-list">
         {products.map((card) => (
           <li key={`${id}-${card.productId}`} className="p-2 md:p-3">
-            <StorefrontProductCardView card={card} showHoverActions={false} />
+            <StorefrontProductCardView card={card} previewLocale={previewLocale} showHoverActions={false} />
           </li>
         ))}
       </ul>
@@ -455,7 +456,7 @@ export function ProductRailSection({
                 {(index + 1).toLocaleString("fa-IR")}
               </div>
               <div className="min-w-0 flex-1 p-2">
-                <StorefrontProductCardView card={card} showHoverActions={false} />
+                <StorefrontProductCardView card={card} previewLocale={previewLocale} showHoverActions={false} />
               </div>
             </li>
           ))}
@@ -466,7 +467,7 @@ export function ProductRailSection({
     body = (
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 md:gap-4" data-product-layout={layout}>
         {products.map((card) => (
-          <StorefrontProductCardView key={`${id}-${card.productId}`} card={card} />
+          <StorefrontProductCardView key={`${id}-${card.productId}`} card={card} previewLocale={previewLocale} />
         ))}
       </div>
     );
@@ -477,7 +478,7 @@ export function ProductRailSection({
           <div key={`${id}-${card.productId}`} className="flex items-center gap-3 rounded-xl border border-gray-100 bg-surface p-2">
             <span className="w-6 text-center text-xs font-bold text-muted">{index + 1}</span>
             <div className="min-w-0 flex-1">
-              <StorefrontProductCardView card={card} />
+              <StorefrontProductCardView card={card} previewLocale={previewLocale} />
             </div>
           </div>
         ))}
@@ -489,13 +490,13 @@ export function ProductRailSection({
       <div className="grid grid-cols-1 md:grid-cols-[1.2fr_2fr] gap-4" data-product-layout="featured-plus-rail">
         {featured ? (
           <div className="md:min-h-full">
-            <StorefrontProductCardView card={featured} />
+            <StorefrontProductCardView card={featured} previewLocale={previewLocale} />
           </div>
         ) : null}
         <div className="flex gap-3 overflow-x-auto pb-1">
           {rest.map((card) => (
             <div key={`${id}-${card.productId}`} className={`shrink-0 ${slideClassName}`}>
-              <StorefrontProductCardView card={card} />
+              <StorefrontProductCardView card={card} previewLocale={previewLocale} />
             </div>
           ))}
         </div>
@@ -506,7 +507,7 @@ export function ProductRailSection({
       <div className="flex gap-3 md:gap-4 overflow-x-auto pb-1" data-product-layout="rail">
         {products.map((card) => (
           <div key={`${id}-${card.productId}`} className={`shrink-0 ${slideClassName}`}>
-            <StorefrontProductCardView card={card} />
+            <StorefrontProductCardView card={card} previewLocale={previewLocale} />
           </div>
         ))}
       </div>
@@ -540,8 +541,6 @@ export function CompositionBannerGrid({
   testId,
   items,
   allowHomeFallback = true,
-  previewPlaceholder = false,
-  previewPlaceholderSlots,
   previewLocale = "fa",
 }: {
   layout: BannerLayout;
@@ -549,28 +548,13 @@ export function CompositionBannerGrid({
   href?: string;
   heightPreset?: unknown;
   testId?: string;
-  items?: Array<{ src?: string; href?: string; title?: string; objectPosition?: string }>;
+  items?: Array<{ src?: string; href?: string; title?: string; objectPosition?: string; previewFake?: boolean }>;
   /** When false (template Store preview), never fill from home MIDDLE_BANNERS. */
   allowHomeFallback?: boolean;
-  previewPlaceholder?: boolean;
-  previewPlaceholderSlots?: number;
   previewLocale?: string;
 }) {
   const hasConfiguredItems = Boolean(items && items.length > 0);
   if (!hasConfiguredItems && !allowHomeFallback) {
-    if (previewPlaceholder) {
-      const slots =
-        previewPlaceholderSlots
-        ?? (layout === "single" ? 1 : layout === "three" ? 3 : layout === "four-grid" ? 4 : 2);
-      return (
-        <PreviewPlaceholderSurface
-          kind="banner"
-          locale={previewLocale}
-          slots={slots}
-          aspectClass={layout === "single" ? "min-h-[180px] md:min-h-[240px]" : "aspect-[21/9]"}
-        />
-      );
-    }
     return (
       <section className="w-full px-2 sm:px-4 py-6" data-testid={testId ?? "composition-banner-empty"} data-banner-empty="true">
         <div className="rounded-3xl border border-dashed border-gray-200 bg-section-surface px-4 py-10 text-center text-sm text-muted">
@@ -586,19 +570,13 @@ export function CompositionBannerGrid({
       title: item.title || (allowHomeFallback ? MIDDLE_BANNERS[index % MIDDLE_BANNERS.length]!.title : `بنر ${index + 1}`),
       missing: !item.src?.trim(),
       objectPosition: item.objectPosition ?? "50% 50%",
+      previewFake: Boolean(item.previewFake),
     }))
-    : MIDDLE_BANNERS.map((banner) => ({ ...banner, missing: false, objectPosition: "50% 50%" })));
+    : MIDDLE_BANNERS.map((banner) => ({ ...banner, missing: false, objectPosition: "50% 50%", previewFake: false })));
   const link = href ?? "/offers";
 
-  const media = (banner: { src: string; title: string; missing?: boolean; objectPosition?: string }, className: string) => {
+  const media = (banner: { src: string; title: string; missing?: boolean; objectPosition?: string; previewFake?: boolean }, className: string) => {
     if (banner.missing || !banner.src) {
-      if (previewPlaceholder) {
-        return (
-          <div className={`flex flex-col items-center justify-center gap-2 border-2 border-dashed border-slate-300 bg-slate-50 text-slate-600 ${className}`} data-preview-placeholder="preview-placeholder" data-banner-missing-media="true">
-            <span className="text-xs font-bold px-3 text-center">تصویر بنر فروشگاه شما در این قسمت نمایش داده می‌شود</span>
-          </div>
-        );
-      }
       return (
         <div className={`flex flex-col items-center justify-center gap-2 bg-section-surface text-muted ${className}`} data-banner-missing-media="true">
           <ImageOff className="h-6 w-6" aria-hidden />
@@ -607,8 +585,15 @@ export function CompositionBannerGrid({
       );
     }
     return (
-      // eslint-disable-next-line @next/next/no-img-element
-      <img src={banner.src} alt={banner.title || ""} className={className} style={{ objectPosition: banner.objectPosition ?? "50% 50%" }} />
+      <>
+        {banner.previewFake ? (
+          <span className="pointer-events-none absolute top-2 left-2 z-20 rounded bg-black/55 px-1.5 py-0.5 text-[9px] font-bold leading-none text-white" data-preview-fake-badge="true">
+            {previewLocale.toLowerCase().startsWith("en") ? "Sample preview" : previewLocale.toLowerCase().startsWith("ar") ? "معاينة تجريبية" : "نمونه نمایشی"}
+          </span>
+        ) : null}
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src={banner.src} alt={banner.title || ""} className={className} style={{ objectPosition: banner.objectPosition ?? "50% 50%" }} />
+      </>
     );
   };
 

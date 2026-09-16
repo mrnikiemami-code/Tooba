@@ -12,6 +12,7 @@ import type { StorefrontProductCard } from "./storefront-model.ts";
 import { useStorefrontWishlist } from "./storefront-wishlist-provider.tsx";
 import { resolveProductCardSkin, resolveProductCardSkinChrome } from "../../lib/storefront-appearance/product-card-skin.ts";
 import { useProductCardSkin } from "../../lib/storefront-appearance/product-card-skin-context.tsx";
+import { PreviewSampleBadge } from "./preview-sample-badge.tsx";
 
 export const STOREFRONT_ACCENT = "rgb(var(--color-primary))";
 
@@ -30,11 +31,13 @@ export function StorefrontProductCardView({
   showNew = false,
   showHoverActions = true,
   skin,
+  previewLocale = "fa",
 }: {
   card: StorefrontProductCard;
   showNew?: boolean;
   showHoverActions?: boolean;
   skin?: string | null;
+  previewLocale?: string;
 }) {
   const storeSkin = useProductCardSkin();
   const effectiveSkin = resolveProductCardSkin(skin ?? storeSkin);
@@ -110,6 +113,7 @@ export function StorefrontProductCardView({
             className="absolute inset-0 w-full h-full object-contain p-3 group-hover:scale-105 transition duration-700"
           />
           <div className="absolute top-2 right-2 z-10 flex flex-col gap-1 items-start">
+            {card.previewFake ? <PreviewSampleBadge locale={previewLocale} className="relative" /> : null}
             {discount !== null ? (
               <span className={chrome.badge}>
                 <Zap className="w-3 h-3" />

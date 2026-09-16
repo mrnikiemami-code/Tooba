@@ -52,17 +52,17 @@ test("Store mode never substitutes Template catalog product/category/brand IDs",
   assert.match(product!.config, /previewPlaceholder":true/);
 });
 
-test("missing Store content uses preview-only placeholders in shared renderer", () => {
-  assert.match(sharedRenderer, /PreviewPlaceholderSurface/);
+test("missing Store content uses preview fake fill (not generic placeholder boxes)", () => {
+  assert.doesNotMatch(sharedRenderer, /PreviewPlaceholderSurface/);
+  assert.match(sharedRenderer, /applyPreviewFill|isStorePreviewFillEnabled/);
   assert.match(sharedRenderer, /allowHomeFallback=\{!storePreview\}/);
-  assert.match(bannerGrid, /allowHomeFallback/);
-  assert.match(bannerGrid, /PreviewPlaceholderSurface/);
+  assert.doesNotMatch(bannerGrid, /PreviewPlaceholderSurface/);
   assert.doesNotMatch(fashionView, /Template Catalog پایدار/);
   assert.match(fashionView, /previewStatusLabel|پیش‌نمایش با/);
 });
 
-test("preview placeholders are non-persistent and preview-gated", () => {
-  assert.match(sharedRenderer, /storePreview && wantsPlaceholder/);
+test("preview fill is non-persistent and Store-preview gated", () => {
+  assert.match(sharedRenderer, /isStorePreviewFillEnabled/);
   assert.match(landingSections, /previewSource/);
   assert.equal(previewPlaceholderCopy("banner", "fa").body.includes("بنر"), true);
   assert.doesNotMatch(fashionDemo, /INSERT INTO|previewPlaceholder.*db/i);

@@ -139,6 +139,12 @@ export type VariantDefinition = {
   dataSources: readonly AdminSelectableDataSource[];
   responsiveContractKey: string;
   settings: ControlledSettingsSchema;
+  /**
+   * Code-owned Store-preview visual cardinality (LOCK-SF-308).
+   * Not user-configurable Admin settings.
+   */
+  previewMinItems?: number;
+  previewTargetItems?: number;
 };
 
 export type CompositionSectionInstance = {

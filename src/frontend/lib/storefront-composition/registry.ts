@@ -32,6 +32,57 @@ type VariantOpts = {
   sizePresetsSupported?: boolean;
   autoplaySupported?: boolean;
   dataSources?: readonly AdminSelectableDataSource[];
+  previewMinItems?: number;
+  previewTargetItems?: number;
+};
+
+/** Code-owned Store-preview slot counts (not Admin settings). */
+const PREVIEW_CARDINALITY: Record<string, { min: number; target: number }> = {
+  "hero.full-width": { min: 1, target: 1 },
+  "hero.contained": { min: 1, target: 1 },
+  "hero.split": { min: 1, target: 1 },
+  "hero.side-promos": { min: 1, target: 1 },
+  "hero.editorial": { min: 1, target: 1 },
+  "story.circle": { min: 4, target: 6 },
+  "story.image-circles": { min: 4, target: 6 },
+  "story.rounded-cards": { min: 3, target: 5 },
+  "story.icon-shortcuts": { min: 4, target: 6 },
+  "category.image-cards": { min: 2, target: 4 },
+  "category.compact-tiles": { min: 4, target: 6 },
+  "category.horizontal-rail": { min: 3, target: 5 },
+  "category.editorial-tiles": { min: 2, target: 4 },
+  "product.card-carousel": { min: 2, target: 4 },
+  "product.grid": { min: 4, target: 6 },
+  "product.compact-rows": { min: 3, target: 5 },
+  "product.category-columns": { min: 3, target: 6 },
+  "product.featured-plus-rail": { min: 3, target: 5 },
+  "product.tabbed": { min: 2, target: 4 },
+  "product.large-cards": { min: 2, target: 3 },
+  "product.minimal-list": { min: 3, target: 5 },
+  "ranked.horizontal": { min: 2, target: 4 },
+  "ranked.grid": { min: 4, target: 6 },
+  "ranked.ticker": { min: 3, target: 5 },
+  "ranked.multi-column": { min: 3, target: 6 },
+  "banner.single": { min: 1, target: 1 },
+  "banner.two-equal": { min: 2, target: 2 },
+  "banner.two-asymmetric": { min: 2, target: 2 },
+  "banner.three": { min: 3, target: 3 },
+  "banner.four-grid": { min: 4, target: 4 },
+  "banner.one-large-two-small": { min: 3, target: 3 },
+  "banner.one-large-four-small": { min: 5, target: 5 },
+  "banner.eight-compact": { min: 4, target: 8 },
+  "banner.mosaic-2x2": { min: 4, target: 4 },
+  "brand.logo-rail": { min: 4, target: 6 },
+  "brand.logo-grid": { min: 4, target: 8 },
+  "brand.featured": { min: 2, target: 3 },
+  "reviews.card-carousel": { min: 2, target: 3 },
+  "reviews.compact-quotes": { min: 2, target: 3 },
+  "article.magazine-rail": { min: 2, target: 3 },
+  "article.grid": { min: 2, target: 3 },
+  "article.featured-plus-list": { min: 2, target: 3 },
+  "promo.default": { min: 1, target: 1 },
+  "richtext.default": { min: 1, target: 1 },
+  "nav.menu": { min: 0, target: 0 },
 };
 
 const variant = (
@@ -41,21 +92,26 @@ const variant = (
   descriptionFa: string,
   status: VariantStatus,
   opts: VariantOpts,
-): VariantDefinition => ({
-  key,
-  sectionTypeKey,
-  nameFa,
-  descriptionFa,
-  status,
-  implemented: status === "Existing" || status === "ReusableViaAdapter",
-  previewKind: opts.previewKind,
-  recommendedUseFa: opts.recommendedUseFa,
-  sizePresetsSupported: opts.sizePresetsSupported ?? false,
-  autoplaySupported: opts.autoplaySupported ?? false,
-  dataSources: opts.dataSources ?? (["Manual"] as const),
-  responsiveContractKey: key,
-  settings: BASE_SECTION_SETTINGS,
-});
+): VariantDefinition => {
+  const card = PREVIEW_CARDINALITY[key];
+  return {
+    key,
+    sectionTypeKey,
+    nameFa,
+    descriptionFa,
+    status,
+    implemented: status === "Existing" || status === "ReusableViaAdapter",
+    previewKind: opts.previewKind,
+    recommendedUseFa: opts.recommendedUseFa,
+    sizePresetsSupported: opts.sizePresetsSupported ?? false,
+    autoplaySupported: opts.autoplaySupported ?? false,
+    dataSources: opts.dataSources ?? (["Manual"] as const),
+    responsiveContractKey: key,
+    settings: BASE_SECTION_SETTINGS,
+    previewMinItems: opts.previewMinItems ?? card?.min,
+    previewTargetItems: opts.previewTargetItems ?? card?.target,
+  };
+};
 
 /** First-wave shared Section Types (prefer Variants over new Types). */
 export const SECTION_TYPES: SectionTypeDefinition[] = [
