@@ -1,0 +1,223 @@
+{
+  "ok": false,
+  "steps": [
+    {
+      "name": "api-auto-parts-status",
+      "pass": true,
+      "data": {
+        "status": 200
+      }
+    },
+    {
+      "name": "api-auto-parts-counts",
+      "pass": true,
+      "data": {
+        "products": 15,
+        "roots": 8,
+        "brands": 6,
+        "pure": true
+      }
+    },
+    {
+      "name": "api-building-materials-status",
+      "pass": true,
+      "data": {
+        "status": 200
+      }
+    },
+    {
+      "name": "api-building-materials-counts",
+      "pass": true,
+      "data": {
+        "products": 15,
+        "roots": 8,
+        "brands": 6,
+        "pure": true
+      }
+    },
+    {
+      "name": "api-tools-hardware-status",
+      "pass": true,
+      "data": {
+        "status": 200
+      }
+    },
+    {
+      "name": "api-tools-hardware-counts",
+      "pass": true,
+      "data": {
+        "products": 15,
+        "roots": 8,
+        "brands": 6,
+        "pure": true
+      }
+    },
+    {
+      "name": "file:auto-parts-preview-desktop.png",
+      "pass": true,
+      "data": {
+        "bytes": 177698
+      }
+    },
+    {
+      "name": "file:auto-parts-preview-mobile.png",
+      "pass": true,
+      "data": {
+        "bytes": 101203
+      }
+    },
+    {
+      "name": "auto-parts-sample-purity",
+      "pass": true,
+      "data": {
+        "purity": "pure"
+      }
+    },
+    {
+      "name": "auto-parts-store-no-template-origin",
+      "pass": true,
+      "data": {
+        "storeOrigin": "operational-store-catalog",
+        "storePurity": "store"
+      }
+    },
+    {
+      "name": "file:building-materials-preview-desktop.png",
+      "pass": true,
+      "data": {
+        "bytes": 83752
+      }
+    },
+    {
+      "name": "file:building-materials-preview-mobile.png",
+      "pass": true,
+      "data": {
+        "bytes": 51649
+      }
+    },
+    {
+      "name": "building-materials-sample-purity",
+      "pass": true,
+      "data": {
+        "purity": "pure"
+      }
+    },
+    {
+      "name": "building-materials-store-no-template-origin",
+      "pass": true,
+      "data": {
+        "storeOrigin": "operational-store-catalog",
+        "storePurity": "store"
+      }
+    },
+    {
+      "name": "file:tools-hardware-preview-desktop.png",
+      "pass": true,
+      "data": {
+        "bytes": 56668
+      }
+    },
+    {
+      "name": "file:tools-hardware-preview-mobile.png",
+      "pass": true,
+      "data": {
+        "bytes": 35391
+      }
+    },
+    {
+      "name": "tools-hardware-sample-purity",
+      "pass": true,
+      "data": {
+        "purity": "pure"
+      }
+    },
+    {
+      "name": "tools-hardware-store-no-template-origin",
+      "pass": true,
+      "data": {
+        "storeOrigin": "operational-store-catalog",
+        "storePurity": "store"
+      }
+    },
+    {
+      "name": "file:batch-a-template-selector.png",
+      "pass": true,
+      "data": {
+        "bytes": 126670
+      }
+    },
+    {
+      "name": "file:auto-parts-template-overview.png",
+      "pass": true,
+      "data": {
+        "bytes": 126670
+      }
+    },
+    {
+      "name": "file:building-materials-template-overview.png",
+      "pass": true,
+      "data": {
+        "bytes": 157561
+      }
+    },
+    {
+      "name": "file:tools-hardware-template-overview.png",
+      "pass": true,
+      "data": {
+        "bytes": 125133
+      }
+    },
+    {
+      "name": "file:batch-a-use-template.png",
+      "pass": true,
+      "data": {
+        "bytes": 151535
+      }
+    },
+    {
+      "name": "use-template-sections",
+      "pass": false,
+      "data": {
+        "sectionCount": 0
+      }
+    }
+  ],
+  "files": {
+    "auto-parts-preview-desktop.png": {
+      "bytes": 177698
+    },
+    "auto-parts-preview-mobile.png": {
+      "bytes": 101203
+    },
+    "building-materials-preview-desktop.png": {
+      "bytes": 83752
+    },
+    "building-materials-preview-mobile.png": {
+      "bytes": 51649
+    },
+    "tools-hardware-preview-desktop.png": {
+      "bytes": 56668
+    },
+    "tools-hardware-preview-mobile.png": {
+      "bytes": 35391
+    },
+    "batch-a-template-selector.png": {
+      "bytes": 126670
+    },
+    "auto-parts-template-overview.png": {
+      "bytes": 126670
+    },
+    "building-materials-template-overview.png": {
+      "bytes": 157561
+    },
+    "tools-hardware-template-overview.png": {
+      "bytes": 125133
+    },
+    "batch-a-use-template.png": {
+      "bytes": 151535
+    }
+  },
+  "errors": [
+    "use-template-sections"
+  ]
+}

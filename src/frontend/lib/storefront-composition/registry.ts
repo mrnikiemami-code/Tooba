@@ -325,9 +325,9 @@ export const INDUSTRY_TEMPLATE_SEEDS: Array<{
     ],
   },
   {
-    templateKey: "building-supplies",
+    templateKey: "building-materials",
     nameFa: "لوازم ساختمانی",
-    industry: "BuildingSupplies",
+    industry: "BuildingMaterials",
     descriptionFa: "دسته سنگین، شبکه کاربردی کالا، بنر سه‌تایی و اعتبار برند",
     sectionPresetList: [
       { sectionTypeKey: "CategoryShowcase", variantKey: "category.image-cards", dataSourceIntent: "Manual" },

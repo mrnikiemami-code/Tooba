@@ -12,7 +12,12 @@ import {
   FASHION_STORE_ORIGIN,
   type FashionPreviewSource,
 } from "../../../lib/storefront-composition/fashion-demo-preview.ts";
-import { fashionPreviewPath } from "../../../lib/storefront-composition/template-preview-context.ts";
+import {
+  INDUSTRY_STORE_ORIGIN,
+  industryDemoOrigin,
+  isBatchATemplateKey,
+} from "../../../lib/storefront-composition/industry-demo-media.ts";
+import { industryTemplatePreviewPath } from "../../../lib/storefront-composition/template-preview-context.ts";
 import { loadAdminLanguages } from "../language-api.ts";
 import type { SupportedLocaleDefinition } from "../../../lib/i18n/supported-locales.ts";
 import { layoutAwareTemplatePreview } from "./layout-aware-previews.tsx";
@@ -32,22 +37,40 @@ const FASHION_IFRAME_VIEWPORT: Record<TemplatePreviewDevice, { width: number; he
   mobile: { width: 390, height: 720, label: "موبایل" },
 };
 
+/** Canonical Fashion routes retained for R4 guard + LOCK-SF-300. */
 const FASHION_PREVIEW_PATH = "/template-preview/fashion";
 const FASHION_FULL_PAGE_PATH = "/template-preview/fashion/full";
 
-function fashionPreviewSrc(source: FashionPreviewSource, locale: string): string {
-  return fashionPreviewPath(false, { sourceMode: source, locale });
+function livePreviewSrc(templateKey: string, source: FashionPreviewSource, locale: string): string {
+  if (templateKey === "fashion") {
+    const q = new URLSearchParams({ source, ...(locale ? { locale } : {}) }).toString();
+    return `${FASHION_PREVIEW_PATH}?${q}`;
+  }
+  return industryTemplatePreviewPath(templateKey, false, { sourceMode: source, locale });
 }
 
-function fashionFullPageHref(source: FashionPreviewSource, locale: string): string {
-  return fashionPreviewPath(true, { sourceMode: source, locale });
+function liveFullPageHref(templateKey: string, source: FashionPreviewSource, locale: string): string {
+  if (templateKey === "fashion") {
+    const q = new URLSearchParams({ source, ...(locale ? { locale } : {}) }).toString();
+    return `${FASHION_FULL_PAGE_PATH}?${q}`;
+  }
+  return industryTemplatePreviewPath(templateKey, true, { sourceMode: source, locale });
+}
+
+function liveDemoOrigin(templateKey: string, source: FashionPreviewSource): string {
+  if (source === "store") {
+    return templateKey === "fashion" ? FASHION_STORE_ORIGIN : INDUSTRY_STORE_ORIGIN;
+  }
+  if (templateKey === "fashion") return FASHION_DEMO_ORIGIN;
+  if (isBatchATemplateKey(templateKey)) return industryDemoOrigin(templateKey);
+  return FASHION_DEMO_ORIGIN;
 }
 
 /** Local industry photos for template cards/summary (no geometric wireframe thumbs). */
 const INDUSTRY_TEMPLATE_PHOTO: Record<string, string> = {
   fashion: "/images/industry-templates/fashion.jpg",
   "auto-parts": "/images/industry-templates/auto-parts.jpg",
-  "building-supplies": "/images/industry-templates/building-supplies.jpg",
+  "building-materials": "/images/industry-templates/building-materials.jpg",
   "tools-hardware": "/images/industry-templates/tools-hardware.jpg",
   "tile-ceramic": "/images/industry-templates/tile-ceramic.jpg",
   "interior-decor": "/images/industry-templates/interior-decor.jpg",
@@ -86,7 +109,7 @@ function industryWireframeBlocks(template: IndustryTemplateSeed, device: Templat
     ];
   }
 
-  if (key === "auto-parts" || key === "tools-hardware" || key === "building-supplies") {
+  if (key === "auto-parts" || key === "tools-hardware" || key === "building-materials") {
     return [
       { kind: "search-bar", className: `col-span-12 ${dense ? "h-9" : "h-10"} rounded-md bg-slate-200 border border-slate-300` },
       { kind: "cat-a", className: `col-span-3 ${dense ? "h-12" : "h-16"} rounded-md bg-white border border-slate-300` },
@@ -161,12 +184,16 @@ export function AdminTemplateSelectionWorkspace({
   const [languages, setLanguages] = useState<SupportedLocaleDefinition[]>([]);
   const [iframeKey, setIframeKey] = useState(0);
   const selected = templates.find((t) => t.templateKey === selectedTemplateKey) ?? templates[0] ?? null;
-  const isFashionLive = selected?.templateKey === "fashion";
-  const frame = DEVICE_FRAME[device];
+  const isLiveCatalogPreview =
+    selected?.templateKey === "fashion" || isBatchATemplateKey(selected?.templateKey ?? "");
+  /** Keep `fashionViewport` name for R4 guard source contract. */
   const fashionViewport = FASHION_IFRAME_VIEWPORT[device];
-  const blocks = selected && !isFashionLive ? industryWireframeBlocks(selected, device) : [];
+  const frame = DEVICE_FRAME[device];
+  const blocks = selected && !isLiveCatalogPreview ? industryWireframeBlocks(selected, device) : [];
   const compactPreview = selected ? layoutAwareTemplatePreview(selected) : null;
-  const fashionIframeSrc = fashionPreviewSrc(previewSource, previewLocale);
+  const liveIframeSrc = selected
+    ? livePreviewSrc(selected.templateKey, previewSource, previewLocale)
+    : "";
 
   useEffect(() => {
     let cancelled = false;
@@ -198,7 +225,7 @@ export function AdminTemplateSelectionWorkspace({
       data-testid="admin-landing-page-editor"
       data-template-selection-workspace="1"
       data-template-preview-v2="1"
-      data-fashion-live-preview={isFashionLive ? "1" : undefined}
+      data-fashion-live-preview={isLiveCatalogPreview ? "1" : undefined}
       className="space-y-5"
     >
       <div className="flex flex-wrap items-start justify-between gap-3">
@@ -208,8 +235,8 @@ export function AdminTemplateSelectionWorkspace({
           </button>
           <h1 className="mt-1 text-xl font-black">فضای انتخاب قالب</h1>
           <p className="mt-1 text-sm text-muted">
-            {isFashionLive
-              ? "پیش‌نمایش زنده قالب پوشاک از مسیر ویترین — بدون ایجاد داده واقعی در فروشگاه."
+            {isLiveCatalogPreview
+              ? "پیش‌نمایش زنده قالب از مسیر ویترین — بدون ایجاد داده واقعی در فروشگاه."
               : "پیش‌نمایش سیمی ترکیب صفحه در دستگاه‌های مختلف — بدون ایجاد داده نمونه واقعی در این مرحله."}
           </p>
         </div>
@@ -329,9 +356,9 @@ export function AdminTemplateSelectionWorkspace({
                     </button>
                   );
                 })}
-                {isFashionLive ? (
+                {isLiveCatalogPreview ? (
                   <a
-                    href={fashionFullPageHref(previewSource, previewLocale)}
+                    href={liveFullPageHref(selected.templateKey, previewSource, previewLocale)}
                     target="_blank"
                     rel="noopener noreferrer"
                     title="همان طراحی را در یک صفحهٔ واقعی باز می‌کند"
@@ -342,7 +369,7 @@ export function AdminTemplateSelectionWorkspace({
                     نمایش در یک صفحه
                   </a>
                 ) : null}
-                {isFashionLive && languages.length > 0 ? (
+                {isLiveCatalogPreview && languages.length > 0 ? (
                   <label className="inline-flex items-center gap-2 rounded-xl border border-border px-3 py-2 text-xs font-bold text-slate-700" data-testid="template-preview-language">
                     <span className="text-muted">زبان</span>
                     <select
@@ -362,7 +389,7 @@ export function AdminTemplateSelectionWorkspace({
               </div>
 
               <div className="flex justify-center overflow-x-auto rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-4" data-testid="template-preview-stage">
-                {isFashionLive ? (
+                {isLiveCatalogPreview ? (
                   <div
                     className="overflow-hidden rounded-2xl border border-slate-300 bg-white shadow-sm"
                     style={{ width: fashionViewport.width, height: fashionViewport.height }}
@@ -376,7 +403,7 @@ export function AdminTemplateSelectionWorkspace({
                   >
                     <div className="flex items-center justify-between border-b border-slate-200 bg-slate-100 px-3 py-1.5 text-[11px] font-bold text-slate-500">
                       <span>
-                        پیش‌نمایش زنده · پوشاک ·{" "}
+                        پیش‌نمایش زنده · {selected.nameFa} ·{" "}
                         {previewSource === "sample" ? "داده نمونه" : "داده فروشگاه"}
                       </span>
                       <span>
@@ -385,11 +412,11 @@ export function AdminTemplateSelectionWorkspace({
                     </div>
                     <iframe
                       key={iframeKey}
-                      title="پیش‌نمایش قالب پوشاک"
-                      src={fashionIframeSrc}
+                      title={`پیش‌نمایش قالب ${selected.nameFa}`}
+                      src={liveIframeSrc}
                       className="block h-[calc(100%-28px)] w-full border-0 bg-white"
                       data-testid="fashion-preview-iframe"
-                      data-demo-origin={previewSource === "sample" ? FASHION_DEMO_ORIGIN : FASHION_STORE_ORIGIN}
+                      data-demo-origin={liveDemoOrigin(selected.templateKey, previewSource)}
                       data-preview-source={previewSource}
                       sandbox="allow-scripts allow-same-origin"
                       referrerPolicy="no-referrer"
@@ -420,7 +447,7 @@ export function AdminTemplateSelectionWorkspace({
                 )}
               </div>
 
-              {isFashionLive ? (
+              {isLiveCatalogPreview ? (
                 <div className="flex flex-wrap gap-2" data-testid="template-preview-source-actions">
                   <button
                     type="button"

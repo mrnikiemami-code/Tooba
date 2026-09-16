@@ -96,7 +96,18 @@ export function fashionPreviewPath(
   fullPage: boolean,
   ctx: Pick<TemplatePreviewContext, "sourceMode" | "locale">,
 ): string {
-  const base = fullPage ? "/template-preview/fashion/full" : "/template-preview/fashion";
+  return industryTemplatePreviewPath("fashion", fullPage, ctx);
+}
+
+/** Canonical preview path for any industry template key (Fashion + Batch A). */
+export function industryTemplatePreviewPath(
+  templateKey: string,
+  fullPage: boolean,
+  ctx: Pick<TemplatePreviewContext, "sourceMode" | "locale">,
+): string {
+  const base = fullPage
+    ? `/template-preview/${templateKey}/full`
+    : `/template-preview/${templateKey}`;
   return `${base}?${buildTemplatePreviewQuery(ctx)}`;
 }
 

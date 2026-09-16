@@ -16,6 +16,7 @@ public static class StorefrontEndpoints
         var group = app.MapGroup("/v1/storefront");
         group.MapGet("/home", GetHomeAsync);
         group.MapGet("/template-catalog/fashion/preview", GetFashionTemplatePreviewAsync);
+        group.MapGet("/template-catalog/{templateKey}/preview", GetIndustryTemplatePreviewAsync);
         group.MapGet("/categories", GetCategoriesAsync);
         group.MapGet("/brands", GetBrandsAsync);
         group.MapGet("/brands/{slug}", GetBrandAsync);
@@ -70,6 +71,22 @@ public static class StorefrontEndpoints
         var preview = await query.GetFashionSampleAsync(cancellationToken);
         return preview is null
             ? Results.Json(new { title = "Not Found", errorCode = "template_catalog.fashion.missing" }, statusCode: StatusCodes.Status404NotFound)
+            : Results.Json(preview);
+    }
+
+    private static async Task<IResult> GetIndustryTemplatePreviewAsync(
+        string templateKey,
+        IndustryTemplatePreviewQuery query,
+        CancellationToken cancellationToken = default)
+    {
+        if (string.Equals(templateKey, "fashion", StringComparison.OrdinalIgnoreCase))
+        {
+            return Results.Json(new { title = "Not Found", errorCode = "template_catalog.use_fashion_route" }, statusCode: StatusCodes.Status404NotFound);
+        }
+
+        var preview = await query.GetSampleAsync(templateKey, cancellationToken);
+        return preview is null
+            ? Results.Json(new { title = "Not Found", errorCode = $"template_catalog.{templateKey}.missing" }, statusCode: StatusCodes.Status404NotFound)
             : Results.Json(preview);
     }
 

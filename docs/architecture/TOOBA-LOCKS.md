@@ -1187,3 +1187,21 @@ Preview shells suppress navigation/business mutations while preserving safe visu
 ### LOCK-SF-341 — Variant Picker performance
 Variant Picker performance must avoid mounting unnecessary heavy interactive previews simultaneously.
 
+### LOCK-SF-342 — Industry Template Catalog schema parity
+Every industry Template pack uses the same persistent Template Catalog architecture and exact schema parity established by Fashion.
+
+### LOCK-SF-343 — Industry Template pack cardinality
+Every industry Template pack contains exactly 8 meaningful three-level category roots and exactly 15 products with related brands/media/banners.
+
+### LOCK-SF-344 — Industry Template media isolation
+Industry Template media must be relevant and isolated from other Template packs; misleading cross-industry asset reuse is forbidden.
+
+### LOCK-SF-345 — Industry Template shared preview engine
+Industry Template preview routes use the shared composition engine and canonical preview context; per-template hardcoded renderers are forbidden.
+
+### LOCK-SF-346 — Industry Template Apply materialization
+Applying any industry Template materializes its full ordered composition into the Page Draft through the shared R10 workflow.
+
+### LOCK-SF-347 — Industry Template seed purity
+Industry Template seeds are deterministic/idempotent and must not modify operational Store Catalog data.
+

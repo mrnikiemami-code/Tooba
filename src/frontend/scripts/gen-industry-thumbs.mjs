@@ -80,7 +80,7 @@ const scenes = [
     </svg>`,
   },
   {
-    key: "building-supplies",
+    key: "building-materials",
     svg: `<svg xmlns="http://www.w3.org/2000/svg" width="640" height="640" viewBox="0 0 640 640">
       <rect width="640" height="640" fill="#fffbeb"/>
       <g fill="#b45309">${Array.from({ length: 6 }, (_, r) => Array.from({ length: 8 }, (_, c) => `<rect x="${40 + c * 72 + (r % 2) * 36}" y="${80 + r * 80}" width="64" height="36" rx="4"/>`).join("")).join("")}</g>

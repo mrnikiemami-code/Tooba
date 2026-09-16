@@ -29,6 +29,11 @@ import type {
   StorefrontReviewSubmission,
 } from "./storefront-model.ts";
 import { fashionDemoMediaUrl } from "../../lib/storefront-composition/fashion-demo-media.ts";
+import {
+  BATCH_A_TEMPLATE_KEYS,
+  industryDemoMediaUrl,
+  type BatchATemplateKey,
+} from "../../lib/storefront-composition/industry-demo-media.ts";
 
 function readProp(record: Record<string, unknown>, camel: string, pascal: string): unknown {
   return record[camel] ?? record[pascal];
@@ -70,6 +75,10 @@ export function storefrontMediaUrl(assetId: string | null | undefined): string {
   if (assetId?.startsWith("/images/")) return assetId;
   const demo = fashionDemoMediaUrl(assetId);
   if (demo) return demo;
+  for (const key of BATCH_A_TEMPLATE_KEYS) {
+    const industry = industryDemoMediaUrl(key as BatchATemplateKey, assetId);
+    if (industry) return industry;
+  }
   const id =
     assetId && assetId !== "00000000-0000-0000-0000-000000000000"
       ? assetId

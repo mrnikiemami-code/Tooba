@@ -62,7 +62,7 @@ TB-P05-GATE
 Last Implementation Task:
 
 ```text
-TB-P10-T022-R11
+TB-P10-T022-R12A
 ```
 
 Current Issued Task:
@@ -80,6 +80,7 @@ Current Repair Task:
 Implemented Under Review:
 
 ```text
+TB-P10-T022-R12A — Industry Template Catalog Batch A (auto-parts, building-materials, tools-hardware); USER_VISUAL_ACCEPTED=YES (Appearance); Builder USER_VISUAL_ACCEPTED=NO
 TB-P10-T022-R11 — Variant Picker V2 (human design names, real component previews, live carousel/tab behavior, Review live preview); USER_VISUAL_ACCEPTED=YES (Appearance); Builder USER_VISUAL_ACCEPTED=NO
 TB-P10-T022-R10 — Store Page Editor Workspace (Template Apply materialization, unified section list, drag/drop + arrow reorder, insert/delete/disable); USER_VISUAL_ACCEPTED=YES (Appearance); Builder USER_VISUAL_ACCEPTED=NO
 TB-P10-T022-R9-R1 — Store Pages SSR Performance Repair (Landing latency, canonical resolver dedupe, Store+locale+page cache invalidation); USER_VISUAL_ACCEPTED=YES (Appearance); Builder USER_VISUAL_ACCEPTED=NO
