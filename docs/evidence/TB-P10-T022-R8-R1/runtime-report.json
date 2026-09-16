@@ -1,0 +1,607 @@
+{
+  "ok": true,
+  "steps": [
+    {
+      "name": "file:sample-reviews.png",
+      "pass": true,
+      "data": {
+        "bytes": 9734,
+        "metrics": {
+          "selector": "[data-testid=home-testimonials]",
+          "box": {
+            "x": 24,
+            "y": 443,
+            "width": 1392,
+            "height": 214
+          },
+          "empty": null,
+          "badges": 0,
+          "placeholderHits": 0
+        }
+      }
+    },
+    {
+      "name": "file:sample-articles.png",
+      "pass": true,
+      "data": {
+        "bytes": 113742,
+        "metrics": {
+          "selector": "[data-testid=home-articles]",
+          "box": {
+            "x": 24,
+            "y": 590,
+            "width": 1392,
+            "height": 510
+          },
+          "empty": null,
+          "badges": 0,
+          "placeholderHits": 0
+        }
+      }
+    },
+    {
+      "name": "sample-template-origin",
+      "pass": true,
+      "data": {
+        "sampleOrigin": "fashion-template-catalog-persisted",
+        "sampleSource": "sample"
+      }
+    },
+    {
+      "name": "store-origin",
+      "pass": true,
+      "data": {
+        "storeOrigin": "operational-store-catalog",
+        "storeSource": "store"
+      }
+    },
+    {
+      "name": "file:store-reviews-zero-filled.png",
+      "pass": true,
+      "data": {
+        "bytes": 14651,
+        "metrics": {
+          "selector": "[data-testid=home-testimonials]",
+          "box": {
+            "x": 24,
+            "y": 442.5,
+            "width": 1392,
+            "height": 214
+          },
+          "empty": null,
+          "badges": 3,
+          "placeholderHits": 0
+        }
+      }
+    },
+    {
+      "name": "file:store-articles-zero-filled.png",
+      "pass": true,
+      "data": {
+        "bytes": 108339,
+        "metrics": {
+          "selector": "[data-testid=home-articles]",
+          "box": {
+            "x": 24,
+            "y": 588.5,
+            "width": 1392,
+            "height": 511.75
+          },
+          "empty": null,
+          "badges": 3,
+          "placeholderHits": 0
+        }
+      }
+    },
+    {
+      "name": "file:store-banner-zero-filled.png",
+      "pass": true,
+      "data": {
+        "bytes": 220809,
+        "metrics": {
+          "selector": "[data-testid=landing-banner-showcase]",
+          "box": {
+            "x": 24,
+            "y": 381.5,
+            "width": 1392,
+            "height": 336
+          },
+          "empty": null,
+          "badges": 2,
+          "placeholderHits": 0
+        }
+      }
+    },
+    {
+      "name": "file:store-products-zero-filled.png",
+      "pass": true,
+      "data": {
+        "bytes": 236732,
+        "metrics": {
+          "selector": "[data-testid=landing-products]",
+          "box": {
+            "x": 24,
+            "y": 0,
+            "width": 1392,
+            "height": 844.5
+          },
+          "empty": null,
+          "badges": 3,
+          "placeholderHits": 0
+        }
+      }
+    },
+    {
+      "name": "file:store-brands-zero-filled.png",
+      "pass": true,
+      "data": {
+        "bytes": 52614,
+        "metrics": {
+          "selector": "[data-testid=home-brands]",
+          "box": {
+            "x": 24,
+            "y": 389.5,
+            "width": 1392,
+            "height": 321
+          },
+          "empty": null,
+          "badges": 6,
+          "placeholderHits": 0
+        }
+      }
+    },
+    {
+      "name": "store-has-fake-badges",
+      "pass": true,
+      "data": {
+        "fakeBadges": 25
+      }
+    },
+    {
+      "name": "store-no-generic-dashed-primary",
+      "pass": true,
+      "data": {
+        "dashedPlaceholders": 0
+      }
+    },
+    {
+      "name": "file:store-categories-zero-filled.png",
+      "pass": true,
+      "data": {
+        "bytes": 170302,
+        "metrics": {
+          "selector": "[data-testid=landing-categories]",
+          "box": {
+            "x": 24,
+            "y": 792,
+            "width": 1392,
+            "height": 308
+          },
+          "empty": null,
+          "badges": 4,
+          "placeholderHits": 0
+        }
+      }
+    },
+    {
+      "name": "file:sample-vs-store-reviews-geometry.png",
+      "pass": true,
+      "data": {
+        "bytes": 295450
+      }
+    },
+    {
+      "name": "file:sample-vs-store-articles-geometry.png",
+      "pass": true,
+      "data": {
+        "bytes": 295450
+      }
+    },
+    {
+      "name": "file:store-preview-localized-fake-items.png",
+      "pass": true,
+      "data": {
+        "bytes": 229410,
+        "metrics": {
+          "selector": "[data-testid=landing-products]",
+          "box": {
+            "x": 24,
+            "y": 128,
+            "width": 1392,
+            "height": 844.5
+          },
+          "empty": null,
+          "badges": 3,
+          "placeholderHits": 0
+        }
+      }
+    },
+    {
+      "name": "localized-en-badge",
+      "pass": true,
+      "data": {
+        "enBadge": 25
+      }
+    },
+    {
+      "name": "file:store-reviews-partial-filled.png",
+      "pass": true,
+      "data": {
+        "bytes": 14530,
+        "metrics": {
+          "selector": "[data-testid=home-testimonials]",
+          "box": {
+            "x": 24,
+            "y": 442.5,
+            "width": 1392,
+            "height": 214
+          },
+          "empty": null,
+          "badges": 2,
+          "placeholderHits": 0
+        }
+      }
+    },
+    {
+      "name": "file:store-articles-partial-filled.png",
+      "pass": true,
+      "data": {
+        "bytes": 111478,
+        "metrics": {
+          "selector": "[data-testid=home-articles]",
+          "box": {
+            "x": 24,
+            "y": 588.5,
+            "width": 1392,
+            "height": 511.75
+          },
+          "empty": null,
+          "badges": 2,
+          "placeholderHits": 0
+        }
+      }
+    },
+    {
+      "name": "partial-reviews-mixed",
+      "pass": true,
+      "data": {
+        "realReviewVisible": 1,
+        "fakeInPartial": 2,
+        "metrics": {
+          "selector": "[data-testid=home-testimonials]",
+          "box": {
+            "x": 24,
+            "y": 442.5,
+            "width": 1392,
+            "height": 214
+          },
+          "empty": null,
+          "badges": 2,
+          "placeholderHits": 0
+        }
+      }
+    },
+    {
+      "name": "partial-articles-mixed",
+      "pass": true,
+      "data": {
+        "realArticleVisible": 1,
+        "fakeArticles": 2,
+        "metrics": {
+          "selector": "[data-testid=home-articles]",
+          "box": {
+            "x": 24,
+            "y": 588.5,
+            "width": 1392,
+            "height": 511.75
+          },
+          "empty": null,
+          "badges": 2,
+          "placeholderHits": 0
+        }
+      }
+    },
+    {
+      "name": "file:store-banner-iframe.png",
+      "pass": true,
+      "data": {
+        "bytes": 221383
+      }
+    },
+    {
+      "name": "file:preview-language-selector-r8r1.png",
+      "pass": true,
+      "data": {
+        "bytes": 264253
+      }
+    },
+    {
+      "name": "file:store-banner-fullpage.png",
+      "pass": true,
+      "data": {
+        "bytes": 318185
+      }
+    },
+    {
+      "name": "file:published-storefront-no-preview-fake.png",
+      "pass": true,
+      "data": {
+        "bytes": 361767
+      }
+    },
+    {
+      "name": "published-no-fake-badge",
+      "pass": true,
+      "data": {
+        "pubFakeBadge": 0,
+        "pubSampleFa": 0,
+        "pubSampleEn": 0
+      }
+    },
+    {
+      "name": "geometry-reviews-material",
+      "pass": true,
+      "data": {
+        "rhS": 214,
+        "rhZ": 214,
+        "reviewsRatio": 1
+      }
+    },
+    {
+      "name": "geometry-articles-material",
+      "pass": true,
+      "data": {
+        "ahS": 510,
+        "ahZ": 511.75,
+        "articlesRatio": 0.9965803615046409
+      }
+    }
+  ],
+  "files": {
+    "sample-reviews.png": {
+      "bytes": 9734,
+      "metrics": {
+        "selector": "[data-testid=home-testimonials]",
+        "box": {
+          "x": 24,
+          "y": 443,
+          "width": 1392,
+          "height": 214
+        },
+        "empty": null,
+        "badges": 0,
+        "placeholderHits": 0
+      }
+    },
+    "sample-articles.png": {
+      "bytes": 113742,
+      "metrics": {
+        "selector": "[data-testid=home-articles]",
+        "box": {
+          "x": 24,
+          "y": 590,
+          "width": 1392,
+          "height": 510
+        },
+        "empty": null,
+        "badges": 0,
+        "placeholderHits": 0
+      }
+    },
+    "store-reviews-zero-filled.png": {
+      "bytes": 14651,
+      "metrics": {
+        "selector": "[data-testid=home-testimonials]",
+        "box": {
+          "x": 24,
+          "y": 442.5,
+          "width": 1392,
+          "height": 214
+        },
+        "empty": null,
+        "badges": 3,
+        "placeholderHits": 0
+      }
+    },
+    "store-articles-zero-filled.png": {
+      "bytes": 108339,
+      "metrics": {
+        "selector": "[data-testid=home-articles]",
+        "box": {
+          "x": 24,
+          "y": 588.5,
+          "width": 1392,
+          "height": 511.75
+        },
+        "empty": null,
+        "badges": 3,
+        "placeholderHits": 0
+      }
+    },
+    "store-banner-zero-filled.png": {
+      "bytes": 220809,
+      "metrics": {
+        "selector": "[data-testid=landing-banner-showcase]",
+        "box": {
+          "x": 24,
+          "y": 381.5,
+          "width": 1392,
+          "height": 336
+        },
+        "empty": null,
+        "badges": 2,
+        "placeholderHits": 0
+      }
+    },
+    "store-products-zero-filled.png": {
+      "bytes": 236732,
+      "metrics": {
+        "selector": "[data-testid=landing-products]",
+        "box": {
+          "x": 24,
+          "y": 0,
+          "width": 1392,
+          "height": 844.5
+        },
+        "empty": null,
+        "badges": 3,
+        "placeholderHits": 0
+      }
+    },
+    "store-brands-zero-filled.png": {
+      "bytes": 52614,
+      "metrics": {
+        "selector": "[data-testid=home-brands]",
+        "box": {
+          "x": 24,
+          "y": 389.5,
+          "width": 1392,
+          "height": 321
+        },
+        "empty": null,
+        "badges": 6,
+        "placeholderHits": 0
+      }
+    },
+    "store-categories-zero-filled.png": {
+      "bytes": 170302,
+      "metrics": {
+        "selector": "[data-testid=landing-categories]",
+        "box": {
+          "x": 24,
+          "y": 792,
+          "width": 1392,
+          "height": 308
+        },
+        "empty": null,
+        "badges": 4,
+        "placeholderHits": 0
+      }
+    },
+    "sample-vs-store-reviews-geometry.png": {
+      "bytes": 295450
+    },
+    "sample-vs-store-articles-geometry.png": {
+      "bytes": 295450
+    },
+    "store-preview-localized-fake-items.png": {
+      "bytes": 229410,
+      "metrics": {
+        "selector": "[data-testid=landing-products]",
+        "box": {
+          "x": 24,
+          "y": 128,
+          "width": 1392,
+          "height": 844.5
+        },
+        "empty": null,
+        "badges": 3,
+        "placeholderHits": 0
+      }
+    },
+    "store-reviews-partial-filled.png": {
+      "bytes": 14530,
+      "metrics": {
+        "selector": "[data-testid=home-testimonials]",
+        "box": {
+          "x": 24,
+          "y": 442.5,
+          "width": 1392,
+          "height": 214
+        },
+        "empty": null,
+        "badges": 2,
+        "placeholderHits": 0
+      }
+    },
+    "store-articles-partial-filled.png": {
+      "bytes": 111478,
+      "metrics": {
+        "selector": "[data-testid=home-articles]",
+        "box": {
+          "x": 24,
+          "y": 588.5,
+          "width": 1392,
+          "height": 511.75
+        },
+        "empty": null,
+        "badges": 2,
+        "placeholderHits": 0
+      }
+    },
+    "store-banner-iframe.png": {
+      "bytes": 221383
+    },
+    "preview-language-selector-r8r1.png": {
+      "bytes": 264253
+    },
+    "store-banner-fullpage.png": {
+      "bytes": 318185
+    },
+    "published-storefront-no-preview-fake.png": {
+      "bytes": 361767
+    }
+  },
+  "geometry": {
+    "sampleReviews": {
+      "selector": "[data-testid=home-testimonials]",
+      "box": {
+        "x": 24,
+        "y": 443,
+        "width": 1392,
+        "height": 214
+      },
+      "empty": null,
+      "badges": 0,
+      "placeholderHits": 0
+    },
+    "sampleArticles": {
+      "selector": "[data-testid=home-articles]",
+      "box": {
+        "x": 24,
+        "y": 590,
+        "width": 1392,
+        "height": 510
+      },
+      "empty": null,
+      "badges": 0,
+      "placeholderHits": 0
+    },
+    "storeReviewsZero": {
+      "selector": "[data-testid=home-testimonials]",
+      "box": {
+        "x": 24,
+        "y": 442.5,
+        "width": 1392,
+        "height": 214
+      },
+      "empty": null,
+      "badges": 3,
+      "placeholderHits": 0
+    },
+    "storeArticlesZero": {
+      "selector": "[data-testid=home-articles]",
+      "box": {
+        "x": 24,
+        "y": 588.5,
+        "width": 1392,
+        "height": 511.75
+      },
+      "empty": null,
+      "badges": 3,
+      "placeholderHits": 0
+    },
+    "reviewsHeightRatio": 1,
+    "articlesHeightRatio": 0.9965803615046409
+  },
+  "purity": {
+    "storeFakeBadges": 25,
+    "storeDashed": 0,
+    "published": {
+      "pubFakeBadge": 0,
+      "pubSampleFa": 0,
+      "pubSampleEn": 0
+    }
+  },
+  "errors": []
+}

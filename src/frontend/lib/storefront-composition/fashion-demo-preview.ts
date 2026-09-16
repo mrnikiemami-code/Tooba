@@ -598,10 +598,60 @@ export async function loadFashionTemplatePreview(): Promise<{
   };
 }
 
+/** Preview-only visual fixtures (R8-R1 capture). Never Template Catalog; never published. */
+export type FashionStorePreviewFixture = "partial-fillers" | null;
+
+export function parseFashionStorePreviewFixture(value: string | null | undefined): FashionStorePreviewFixture {
+  return value === "partial-fillers" ? "partial-fillers" : null;
+}
+
+/** One operational-looking Store review/article for mixed real+fake visual proof (not Template Catalog). */
+function storeVisualPartialFillers(uiLocale: "fa" | "en"): {
+  reviews: StorefrontFeaturedReviewItem[];
+  articles: StorefrontArticleItem[];
+} {
+  const fa = uiLocale === "fa";
+  return {
+    reviews: [
+      {
+        publicId: "store-visual-review-1",
+        authorDisplayName: fa ? "خریدار فروشگاه" : "Store buyer",
+        rating: 5,
+        title: null,
+        body: fa
+          ? "خرید واقعی از فروشگاه — کیفیت عالی بود."
+          : "Real store purchase — excellent quality.",
+        verifiedPurchase: true,
+        createdAt: "2026-03-01T00:00:00.000Z",
+        productTitle: fa ? "محصول فروشگاه" : "Store product",
+        productSlug: "store-visual-product-1",
+        previewFake: false,
+      },
+    ],
+    articles: [
+      {
+        articleId: "store-visual-article-1",
+        slug: "store-visual-article-1",
+        title: fa ? "مقاله واقعی فروشگاه" : "Real store article",
+        excerpt: fa ? "محتوای واقعی فروشگاه برای پیش‌نمایش ترکیبی." : "Real store content for mixed preview.",
+        coverMediaAssetId: "/images/fashion-template/2.jpg",
+        publishDate: "2026-03-01T00:00:00.000Z",
+        authorDisplayName: fa ? "تحریریه فروشگاه" : "Store editorial",
+        tags: [],
+        isFeatured: true,
+        previewFake: false,
+      },
+    ],
+  };
+}
+
 /** Operational store Catalog data into the same Fashion template composition.
  * Uses light endpoints (/products, /categories, /brands) — avoids heavy /home which can 500 under load.
  */
-export async function loadFashionStorePreview(uiLocale: "fa" | "en" = "fa"): Promise<{
+export async function loadFashionStorePreview(
+  uiLocale: "fa" | "en" = "fa",
+  options?: { fixture?: FashionStorePreviewFixture },
+): Promise<{
   kind: "store";
   context: LandingRenderContext;
   page: StorefrontLandingPage;
@@ -624,12 +674,13 @@ export async function loadFashionStorePreview(uiLocale: "fa" | "en" = "fa"): Pro
     throw new FashionPreviewLoadError("store.data.unavailable");
   }
 
+  const partial = options?.fixture === "partial-fillers" ? storeVisualPartialFillers(uiLocale) : null;
   const context: LandingRenderContext = {
     products,
     categories,
     brands,
-    articles: [],
-    reviews: [],
+    articles: partial?.articles ?? [],
+    reviews: partial?.reviews ?? [],
     menus: {},
   };
   const page = buildFashionTemplatePage(context, {

@@ -7,7 +7,7 @@ import {
   fashionPreviewErrorMessage,
   loadFashionStorePreview,
   loadFashionTemplatePreview,
-  type FashionPreviewSource,
+  type FashionStorePreviewFixture,
 } from "../../../lib/storefront-composition/fashion-demo-preview.ts";
 import {
   previewStatusLabel,
@@ -24,12 +24,18 @@ type Props = {
   context: TemplatePreviewContext;
   /** Full standalone page (not Admin iframe). */
   fullPage?: boolean;
+  /** Preview-only visual fixture (R8-R1 evidence). */
+  storeFixture?: FashionStorePreviewFixture;
 };
 
 /**
  * Fashion template preview — iframe and full-page share this view + loaders (LOCK-SF-300).
  */
-export function FashionTemplatePreviewView({ context: previewContext, fullPage = false }: Props) {
+export function FashionTemplatePreviewView({
+  context: previewContext,
+  fullPage = false,
+  storeFixture = null,
+}: Props) {
   const source = previewContext.sourceMode;
   const localeCode = previewContext.locale || "fa-IR";
   const uiLocale = localeCode.toLowerCase().startsWith("en") ? "en" : "fa";
@@ -45,7 +51,9 @@ export function FashionTemplatePreviewView({ context: previewContext, fullPage =
     setContext(null);
     setPage(null);
 
-    const load = source === "store" ? loadFashionStorePreview(uiLocale) : loadFashionTemplatePreview();
+    const load = source === "store"
+      ? loadFashionStorePreview(uiLocale, { fixture: storeFixture })
+      : loadFashionTemplatePreview();
     load
       .then((result) => {
         if (cancelled) return;
@@ -63,7 +71,7 @@ export function FashionTemplatePreviewView({ context: previewContext, fullPage =
     return () => {
       cancelled = true;
     };
-  }, [source, uiLocale, localeCode]);
+  }, [source, uiLocale, localeCode, storeFixture]);
 
   const blockPreviewSideEffects = useCallback((event: MouseEvent) => {
     if (fullPage) return;

@@ -27,6 +27,7 @@ import "swiper/css";
 import "swiper/css/free-mode";
 import "swiper/css/pagination";
 import { formatOfferAmount, storefrontMediaUrl } from "./storefront-api.ts";
+import { PreviewSampleBadge } from "./preview-sample-badge.tsx";
 import { StorefrontProductCardView, STOREFRONT_ACCENT } from "./storefront-product-card.tsx";
 import type {
   StorefrontArticleItem,
@@ -502,11 +503,7 @@ export function HomeArticlesSection({
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {articles.map((post) => (
             <Link key={post.articleId} href={`/blogs/${post.slug}`} className="relative rounded-2xl border border-gray-200 bg-surface overflow-hidden">
-              {post.previewFake ? (
-                <span className="pointer-events-none absolute top-2 left-2 z-20 rounded bg-black/55 px-1.5 py-0.5 text-[9px] font-bold leading-none text-white" data-preview-fake-badge="true">
-                  {previewLocale.toLowerCase().startsWith("en") ? "Sample preview" : previewLocale.toLowerCase().startsWith("ar") ? "معاينة تجريبية" : "نمونه نمایشی"}
-                </span>
-              ) : null}
+              {post.previewFake ? <PreviewSampleBadge locale={previewLocale} className="absolute top-2 left-2" /> : null}
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src={storefrontMediaUrl(post.coverMediaAssetId)} alt="" className="aspect-[16/10] w-full object-cover" />
               <div className="p-3">
@@ -527,7 +524,8 @@ export function HomeArticlesSection({
         <h2 id="home-articles-heading" className="mb-4 text-lg font-extrabold">آخرین مقالات</h2>
         <div className="grid grid-cols-1 md:grid-cols-[1.4fr_1fr] gap-4">
           {featured ? (
-            <Link href={`/blogs/${featured.slug}`} className="rounded-2xl border border-gray-200 bg-surface overflow-hidden">
+            <Link href={`/blogs/${featured.slug}`} className="relative rounded-2xl border border-gray-200 bg-surface overflow-hidden">
+              {featured.previewFake ? <PreviewSampleBadge locale={previewLocale} className="absolute top-2 left-2" /> : null}
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src={storefrontMediaUrl(featured.coverMediaAssetId)} alt="" className="aspect-[16/10] w-full object-cover" />
               <div className="p-4">
@@ -539,7 +537,8 @@ export function HomeArticlesSection({
           <ul className="space-y-3">
             {rest.map((post) => (
               <li key={post.articleId}>
-                <Link href={`/blogs/${post.slug}`} className="flex gap-3 rounded-xl border border-gray-100 bg-surface p-2">
+                <Link href={`/blogs/${post.slug}`} className="relative flex gap-3 rounded-xl border border-gray-100 bg-surface p-2">
+                  {post.previewFake ? <PreviewSampleBadge locale={previewLocale} className="absolute top-1 left-1" /> : null}
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img src={storefrontMediaUrl(post.coverMediaAssetId)} alt="" className="h-16 w-20 rounded-lg object-cover" />
                   <span className="text-sm font-bold line-clamp-2">{post.title}</span>
@@ -596,8 +595,9 @@ export function HomeArticlesSection({
                       alt=""
                       className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                     />
+                    {post.previewFake ? <PreviewSampleBadge locale={previewLocale} className="absolute top-2 left-2" /> : null}
                     {post.tags[0] ? (
-                      <div className="absolute top-2 left-2">
+                      <div className={`absolute left-2 ${post.previewFake ? "top-8" : "top-2"}`}>
                         <span className="px-2 py-0.5 text-[9px] font-medium bg-surface/95 backdrop-blur-sm rounded-lg shadow-sm border border-gray-200" style={{ color: STOREFRONT_ACCENT }}>
                           {post.tags[0]}
                         </span>
