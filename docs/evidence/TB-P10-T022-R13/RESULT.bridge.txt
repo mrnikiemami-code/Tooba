@@ -1,0 +1,122 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+
+BEGIN_TOOBA_WORKER_RESULT
+
+Task-ID:
+TB-P10-T022-R13
+
+Parent-Task:
+TB-P10-T022-R12C
+
+Channel:
+tooba-main
+
+WorkerId:
+tooba-worker-01
+
+AgentType:
+cursor
+
+Status:
+PASS
+
+Appearance-USER_VISUAL_ACCEPTED=YES
+Builder-USER_VISUAL_ACCEPTED=NO
+
+Summary:
+Final Builder Hardening PASS. Audited all 10 industry Template packs (8 roots / 3-level / 15 products / brands / banners / routes / apply). Media isolation + PreviewFake independence proven (media-integrity.json). Home+Landing SEO regression documented. Performance healthy (Home warm ~0.5s; no 90–120s stalls). Anti-pattern CLEAN. Removed unused geometric VariantPreviewCanvas remnant. Fashion Template Apply materializes sections (sectionCount=7). LOCK-SF-357…362. 20 screenshots. No cloning. No TB-P10-T023. Builder USER_VISUAL_ACCEPTED remains NO. Worker IDLE.
+
+Applicable-Locks:
+LOCK-SF-001…356 preserved. Added LOCK-SF-357…362.
+
+Recovery-Start:
+branch=main expected HEAD 454ef53221017e107aee7f8f9c71af3ce533b07a == origin/main at start. docs/evidence/TB-P10-T022-R13/recovery-start.md
+
+EndToEnd-Builder-Journey:
+Exercised Store Pages → template selector → Sample/Store preview → Use Template → editor reorder/insert/disable → Variant picker/review → SEO → Home/Landing routes. No hidden refresh workaround required for captured paths.
+
+Store-Pages-IA:
+Module label «صفحات فروشگاه»; Home+Landing share one editor; AppDataGrid canonical profile retained.
+
+Home-Landing:
+Home `/`; Landing `/landing/{slug}` (published Landing 200 proven); set/restore Home contracts retained from R9.
+
+SEO-Regression:
+docs/evidence/TB-P10-T022-R13/seo-regression.md — title/description/canonical/robots/OG/hreflang/H1/structured-data/sitemap gates intact; no raw JSON SEO editor.
+
+Template-Inventory:
+docs/evidence/TB-P10-T022-R13/template-inventory.md — all 10 packs 15/8/pure; preview routes + shared Apply.
+
+Media-Integrity:
+docs/evidence/TB-P10-T022-R13/media-integrity.json — no cross-template contamination; PreviewFake under /images/preview-placeholder/; no hotlinks.
+
+Source-Isolation:
+Sample=Template Catalog; Store=operational+PreviewFake; Published=Store only. R8/R12* purity + runtime sample/store src difference captured.
+
+Template-Selector:
+All 10 cards + live iframe Desktop/Tablet/Mobile + language + Use Template. No geometric card thumbs.
+
+Preview-Consistency:
+Fashion/Auto Parts/Interior Decor/Beauty selector iframe shots captured; shared engines.
+
+Variant-Picker:
+Production-component live previews; human «طرح …» names; carousel before/after + review step screenshots.
+
+Editor-Workspace:
+Unified workspace; reorder controls, insert-between, disabled-section screenshots; Apply populated editor with 7 sections.
+
+Template-Apply:
+Fashion Apply materialized full composition (sectionCount=7); replace/cancel contracts retained (R10 guards).
+
+Disabled-Section:
+Admin-visible disabled badge captured; published exclusion contract retained.
+
+Persistence:
+R10 persistence guards PASS; runtime editor operations exercised.
+
+Responsiveness:
+Desktop/Tablet/Mobile device toolbar + mobile-preview-final.png; no CSS zoom hacks.
+
+Performance:
+docs/evidence/TB-P10-T022-R13/performance.md — Home warm ~516–570ms; Landing published ~2.2s first nav; no stalls; selector single-iframe; picker IntersectionObserver retained.
+
+Accessibility-UX:
+Icon tooltips/device toolbar; human Variant names; no raw GUID/enum exposure in ordinary Admin copy (guards).
+
+Error-Empty-Partial:
+PreviewFake isolation for empty Store; missing Landing slug 404 safe; no magic polling.
+
+Admin-DataGrid:
+Store Pages listing retains orders-canonical AppDataGrid profile.
+
+Focused-Validation:
+FE R13 7 + R12C 6 + R11 10 + R10 10 + R9 4 + R8 + industry-templates + R9-R1 SSR + recovery-staleness 4 + critical-storefront 20 PASS; Host BatchA/B/C+FashionR6+StorePagesR9 35 PASS (--no-build). docs/evidence/TB-P10-T022-R13/focused-validation.md
+
+Runtime:
+Host :5088 + FE :3000. docs/evidence/TB-P10-T022-R13/runtime.md
+
+Visual-Evidence:
+20 required PNGs under docs/evidence/TB-P10-T022-R13/screenshots/.
+
+AntiPattern-Scan:
+CLEAN — docs/evidence/TB-P10-T022-R13/antipattern-scan.md
+
+Lock-Registry:
+LOCK-SF-001…362. New 357–362 only. docs/evidence/TB-P10-T022-R13/lock-registry.md
+
+Recovery-SoT:
+Phase P10; Last Architect-accepted before review TB-P10-T022-R12C; Last Implementation TB-P10-T022-R13; Issued/Repair none; Appearance YES; Builder NO; Worker IDLE; do NOT invent TB-P10-T023.
+
+Git:
+SHA=6db71050e451cb987794d0e78b7d5d329a81bf9a HEAD==origin/main after push (RESULT artifact commit may follow).
+
+Architectural-Concerns:
+none material; Builder visual acceptance still Architect/User-owned.
+
+Visual-Concerns:
+Builder USER_VISUAL_ACCEPTED=NO — technical completion only; final user visual acceptance deferred.
+
+Blockers:
+none
+
+END_TOOBA_WORKER_RESULT

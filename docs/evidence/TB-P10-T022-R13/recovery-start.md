@@ -15,7 +15,7 @@
 
 `fashion`, `auto-parts`, `building-materials`, `tools-hardware`, `tile-ceramic`, `interior-decor`, `home-appliances`, `shoes`, `plants`, `beauty`
 
-FE: `listIndustryTemplates()` / `INDUSTRY_TEMPLATE_SEEDS`  
+FE: `listIndustryTemplates()` / `INDUSTRY_TEMPLATE_SEEDS`
 BE: Fashion + Industry Batch A/B/C seeds → `StoreTemplates`
 
 ## Store Pages IA
@@ -76,3 +76,4 @@ All 10 packs: products=15, roots=8, brands=6, purity=true
 
 - Preserved; not modified by this task
 - Do NOT invent TB-P10-T023; do NOT implement cloning; Builder USER_VISUAL_ACCEPTED remains NO
+
