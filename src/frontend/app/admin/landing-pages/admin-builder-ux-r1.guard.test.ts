@@ -66,12 +66,14 @@ test("truthful dynamic sources exclude HeuristicHomeOnly kinds", () => {
   assert.ok(article?.manualSupported);
 });
 
-test("template/variant previews are layout-aware miniatures", () => {
+test("template/variant previews: banner slots stay layout-aware; picker uses live components", () => {
   assert.match(previews, /layoutAwareVariantPreview/);
   assert.match(previews, /banner\.two-equal/);
   assert.match(previews, /rounded-full/);
   assert.match(previews, /data-layout-aware/);
-  assert.match(composer, /layoutAwareTemplatePreview|data-layout-aware/);
+  // R10 removed geometric composition miniature from editor; R11 variant picker is live.
+  assert.doesNotMatch(composer, /VariantPreviewCanvas/);
+  assert.match(wizard, /VariantLivePreview|data-variant-picker-v2/);
 });
 
 test("operations column metadata remains icon-only tooltip pattern", () => {

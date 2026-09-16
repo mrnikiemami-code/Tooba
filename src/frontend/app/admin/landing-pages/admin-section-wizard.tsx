@@ -12,8 +12,8 @@ import {
   type SectionWizardStep,
 } from "./admin-landing-section-forms.tsx";
 import { validateWizardStep, wizardStepsForHost } from "./admin-section-wizard-logic.ts";
-import { VariantPreviewCanvas } from "./layout-aware-previews.tsx";
 import { getSectionType, getVariant } from "../../../lib/storefront-composition/registry.ts";
+import { VariantLivePreview } from "../../../lib/storefront-composition/variant-live-preview.tsx";
 import { SIZE_PRESETS } from "../../../lib/storefront-composition/types.ts";
 import { SIZE_PRESET_CONTRACTS } from "../../../lib/storefront-composition/size-presets.ts";
 import { sectionSupportsHeightPreset } from "./admin-composition-catalog.ts";
@@ -187,72 +187,111 @@ export function AdminSectionWizard({
 
         <div className="min-h-0 flex-1 overflow-y-auto px-5 py-4">
           {step === "type" ? (
-            <div className="grid gap-3 sm:grid-cols-2" data-testid="composition-section-catalog">
-              {compositionSections.map((item) => (
-                <button
-                  key={item.sectionTypeKey}
-                  type="button"
-                  data-testid={item.testId}
-                  data-section-type-key={item.sectionTypeKey}
-                  className={`rounded-2xl border p-4 text-start hover:border-[#2563EB] ${
-                    choice?.sectionTypeKey === item.sectionTypeKey ? "border-[#2563EB] bg-blue-50" : ""
-                  }`}
-                  onClick={() => {
-                    setChoice(item);
-                    setVariantKey(item.defaultVariantKey);
-                    setConfig(defaultConfigForCompositionSection(item.sectionTypeKey, item.defaultVariantKey));
-                    setError(null);
-                  }}
-                >
-                  <VariantPreviewCanvas variantKey={item.defaultVariantKey} />
-                  <strong>{item.nameFa}</strong>
-                  <p className="mt-1 text-xs text-muted">{item.descriptionFa}</p>
-                </button>
-              ))}
+            <div className="grid gap-3 sm:grid-cols-2" data-testid="composition-section-catalog" role="listbox" aria-label="نوع بخش">
+              {compositionSections.map((item) => {
+                const selected = choice?.sectionTypeKey === item.sectionTypeKey;
+                return (
+                  <div
+                    key={item.sectionTypeKey}
+                    role="option"
+                    aria-selected={selected}
+                    data-testid={item.testId}
+                    data-section-type-key={item.sectionTypeKey}
+                    className={`rounded-2xl border p-3 text-start ${
+                      selected ? "border-[#2563EB] bg-blue-50 ring-1 ring-[#2563EB]" : "border-border"
+                    }`}
+                  >
+                    <div onClick={(e) => e.stopPropagation()} onKeyDown={(e) => e.stopPropagation()}>
+                      <VariantLivePreview variantKey={item.defaultVariantKey} size="card" />
+                    </div>
+                    <button
+                      type="button"
+                      data-select-choice="1"
+                      className="mt-2 w-full rounded-xl text-start ring-offset-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2563EB]"
+                      aria-pressed={selected}
+                      onClick={() => {
+                        setChoice(item);
+                        setVariantKey(item.defaultVariantKey);
+                        setConfig(defaultConfigForCompositionSection(item.sectionTypeKey, item.defaultVariantKey));
+                        setError(null);
+                      }}
+                    >
+                      <strong className="block">{item.nameFa}</strong>
+                      <p className="mt-1 text-xs text-muted">{item.descriptionFa}</p>
+                    </button>
+                  </div>
+                );
+              })}
             </div>
           ) : null}
 
           {step === "variant" && choice ? (
-            <div className="grid gap-3 sm:grid-cols-2" data-testid="composition-variant-picker">
-              {adminImplementedVariants(choice.sectionTypeKey).map((variant) => (
-                <button
-                  key={variant.variantKey}
-                  type="button"
-                  data-variant-key={variant.variantKey}
-                  data-preview-fingerprint={variant.variantKey}
-                  data-testid={`pick-variant-${variant.variantKey.replace(/\./g, "-")}`}
-                  className={`rounded-2xl border p-4 text-start hover:border-[#2563EB] ${
-                    variantKey === variant.variantKey ? "border-[#2563EB] bg-blue-50" : ""
-                  }`}
-                  onClick={() => {
-                    setVariantKey(variant.variantKey);
-                    const next = defaultConfigForCompositionSection(choice.sectionTypeKey, variant.variantKey);
-                    if (variant.variantKey.startsWith("banner.")) {
-                      const slots = bannerSlotCountForVariant(variant.variantKey);
-                      next.items = Array.from({ length: slots }, (_, index) => ({
-                        imageUrl: "",
-                        href: "/offers",
-                        title: `بنر ${(index + 1).toLocaleString("fa-IR")}`,
-                      }));
-                    }
-                    if (choice.hostType === "StoryRail") {
-                      next.items = [];
-                      next.take = typeof config.take === "number" ? config.take : 12;
-                    }
-                    setConfig({ ...config, ...next, title: typeof config.title === "string" ? config.title : next.title });
-                    setError(null);
-                  }}
-                >
-                  <VariantPreviewCanvas variantKey={variant.variantKey} />
-                  <strong>{variant.nameFa}</strong>
-                  <p className="mt-1 text-xs text-muted">{variant.descriptionFa}</p>
-                  {variant.recommendedUseFa ? (
-                    <span className="mt-2 inline-flex rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] font-bold text-emerald-700">
-                      {variant.recommendedUseFa}
-                    </span>
-                  ) : null}
-                </button>
-              ))}
+            <div
+              className="grid gap-3 sm:grid-cols-2"
+              data-testid="composition-variant-picker"
+              data-variant-picker-v2="1"
+              role="listbox"
+              aria-label="ظاهر بخش"
+            >
+              {adminImplementedVariants(choice.sectionTypeKey).map((variant) => {
+                const selected = variantKey === variant.variantKey;
+                return (
+                  <div
+                    key={variant.variantKey}
+                    role="option"
+                    aria-selected={selected}
+                    data-variant-key={variant.variantKey}
+                    data-preview-fingerprint={variant.variantKey}
+                    data-testid={`pick-variant-${variant.variantKey.replace(/\./g, "-")}`}
+                    className={`rounded-2xl border p-3 text-start ${
+                      selected ? "border-[#2563EB] bg-blue-50 ring-1 ring-[#2563EB]" : "border-border"
+                    }`}
+                  >
+                    <div onClick={(e) => e.stopPropagation()} onKeyDown={(e) => e.stopPropagation()}>
+                      <VariantLivePreview
+                        variantKey={variant.variantKey}
+                        size="card"
+                        testId={`variant-live-preview-${variant.variantKey.replace(/\./g, "-")}`}
+                      />
+                    </div>
+                    <button
+                      type="button"
+                      data-select-choice="1"
+                      className="mt-2 w-full rounded-xl text-start ring-offset-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2563EB]"
+                      aria-pressed={selected}
+                      title={variant.descriptionFa}
+                      onClick={() => {
+                        setVariantKey(variant.variantKey);
+                        const next = defaultConfigForCompositionSection(choice.sectionTypeKey, variant.variantKey);
+                        if (variant.variantKey.startsWith("banner.")) {
+                          const slots = bannerSlotCountForVariant(variant.variantKey);
+                          next.items = Array.from({ length: slots }, (_, index) => ({
+                            imageUrl: "",
+                            href: "/offers",
+                            title: `بنر ${(index + 1).toLocaleString("fa-IR")}`,
+                          }));
+                        }
+                        if (choice.hostType === "StoryRail") {
+                          next.items = [];
+                          next.take = typeof config.take === "number" ? config.take : 12;
+                        }
+                        setConfig({ ...config, ...next, title: typeof config.title === "string" ? config.title : next.title });
+                        setError(null);
+                      }}
+                    >
+                      <strong className="block text-sm" data-variant-design-name={variant.variantKey}>
+                        {variant.nameFa}
+                      </strong>
+                      <p className="mt-1 text-xs text-muted">{variant.descriptionFa}</p>
+                      {variant.recommendedUseFa ? (
+                        <span className="mt-2 inline-flex rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] font-bold text-emerald-700">
+                          {variant.recommendedUseFa}
+                        </span>
+                      ) : null}
+                    </button>
+                  </div>
+                );
+              })}
             </div>
           ) : null}
 
@@ -289,10 +328,15 @@ export function AdminSectionWizard({
           ) : null}
 
           {step === "preview" && choice ? (
-            <div className="space-y-4" data-testid="section-wizard-preview" data-review-variant-aware="1">
-              <div className="rounded-2xl border border-border bg-slate-50 p-4">
-                <VariantPreviewCanvas
+            <div className="space-y-4" data-testid="section-wizard-preview" data-review-variant-aware="1" data-review-live-preview="1">
+              <div className="rounded-2xl border border-border bg-slate-50 p-3">
+                <p className="mb-2 text-xs font-bold text-amber-800" data-review-preview-notice="1">
+                  پیش‌نمایش با محتوای نمونه (غیرواقعی)
+                </p>
+                <VariantLivePreview
                   variantKey={variantKey ?? choice.defaultVariantKey}
+                  eager
+                  size="review"
                   testId={`review-preview-${(variantKey ?? choice.defaultVariantKey).replace(/\./g, "-")}`}
                 />
               </div>
@@ -303,7 +347,7 @@ export function AdminSectionWizard({
                 </div>
                 <div className="flex justify-between gap-3 border-b border-dashed py-2">
                   <dt className="text-muted">ظاهر</dt>
-                  <dd className="font-bold">{getVariant(variantKey ?? "")?.nameFa}</dd>
+                  <dd className="font-bold" data-review-design-name="1">{getVariant(variantKey ?? "")?.nameFa}</dd>
                 </div>
                 <div className="flex justify-between gap-3 border-b border-dashed py-2">
                   <dt className="text-muted">منبع</dt>

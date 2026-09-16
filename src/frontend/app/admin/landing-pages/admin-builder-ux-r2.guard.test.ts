@@ -43,10 +43,11 @@ test("Wizard shell stable across steps", () => {
   assert.match(wizard, /data-step-state/);
 });
 
-test("Review uses variant-aware preview metadata", () => {
+test("Review uses variant-aware live preview (real component)", () => {
   assert.match(wizard, /data-review-variant-aware/);
   assert.match(wizard, /review-plain-summary/);
-  assert.match(wizard, /VariantPreviewCanvas/);
+  assert.match(wizard, /VariantLivePreview/);
+  assert.doesNotMatch(wizard, /VariantPreviewCanvas/);
 });
 
 test("Template preview structural distinctness", () => {

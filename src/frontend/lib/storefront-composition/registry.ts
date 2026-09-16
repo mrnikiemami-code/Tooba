@@ -7,6 +7,7 @@ import type {
 } from "./types.ts";
 import { BASE_SECTION_SETTINGS } from "./settings.ts";
 import { RESPONSIVE_CONTRACTS } from "./responsive-contracts.ts";
+import { getVariantDesignMeta } from "./variant-design-names.ts";
 
 const section = (
   key: string,
@@ -94,15 +95,17 @@ const variant = (
   opts: VariantOpts,
 ): VariantDefinition => {
   const card = PREVIEW_CARDINALITY[key];
+  const design = getVariantDesignMeta(key);
   return {
     key,
     sectionTypeKey,
-    nameFa,
-    descriptionFa,
+    // Presentation metadata only — persisted identity is `key` (LOCK-SF-335/337).
+    nameFa: design?.designNameFa ?? nameFa,
+    descriptionFa: design?.descriptionFa ?? descriptionFa,
     status,
     implemented: status === "Existing" || status === "ReusableViaAdapter",
     previewKind: opts.previewKind,
-    recommendedUseFa: opts.recommendedUseFa,
+    recommendedUseFa: opts.recommendedUseFa ?? design?.badgeFa,
     sizePresetsSupported: opts.sizePresetsSupported ?? false,
     autoplaySupported: opts.autoplaySupported ?? false,
     dataSources: opts.dataSources ?? (["Manual"] as const),

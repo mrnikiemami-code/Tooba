@@ -7,7 +7,8 @@ import { listAdminBrandOptions } from "../host-client";
 import { bannerSlotCountForVariant } from "./landing-section-catalog.ts";
 import { listAdminMenus } from "../menus/admin-menus-api.ts";
 import { AdminResourceSelector, ResourceSelectorTrigger } from "./admin-resource-selector.tsx";
-import { bannerSlotCellClass, bannerSlotLayoutClass, VariantPreviewCanvas } from "./layout-aware-previews.tsx";
+import { bannerSlotCellClass, bannerSlotLayoutClass } from "./layout-aware-previews.tsx";
+import { VariantLivePreview } from "../../../lib/storefront-composition/variant-live-preview.tsx";
 import {
   sourceCapabilityForVariant,
   strategyLabelFa,
@@ -260,7 +261,7 @@ export function LandingSectionForm({
         <div className="space-y-3" data-testid="landing-section-form" data-brand-settings="1">
           <TextField label="عنوان بخش" value={title} onChange={(next) => set({ title: next })} />
           <TakeField value={typeof value.take === "number" ? value.take : Math.max(selected.length, 6)} onChange={(take) => set({ take })} />
-          {variantKey ? <VariantPreviewCanvas variantKey={variantKey} testId="brand-settings-preview" /> : null}
+          {variantKey ? <VariantLivePreview variantKey={variantKey} eager testId="brand-settings-preview" /> : null}
         </div>
       );
     }

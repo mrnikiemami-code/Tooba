@@ -1,0 +1,183 @@
+{
+  "ok": true,
+  "steps": [
+    {
+      "name": "blank-page-saved",
+      "pass": true,
+      "data": {
+        "url": "http://127.0.0.1:3000/admin/landing-pages/01a0aaa4-82bc-7000-914f-32c8d4e61ca4"
+      }
+    },
+    {
+      "name": "file:variant-picker-story.png",
+      "pass": true,
+      "data": {
+        "bytes": 142473
+      }
+    },
+    {
+      "name": "file:variant-human-names.png",
+      "pass": true,
+      "data": {
+        "bytes": 142473
+      }
+    },
+    {
+      "name": "story-human-name",
+      "pass": true,
+      "data": {
+        "storyName": "استوری دایره‌ای — طرح یاقوت"
+      }
+    },
+    {
+      "name": "file:variant-selected-state.png",
+      "pass": true,
+      "data": {
+        "bytes": 142473
+      }
+    },
+    {
+      "name": "story-selected",
+      "pass": true
+    },
+    {
+      "name": "file:variant-picker-product.png",
+      "pass": true,
+      "data": {
+        "bytes": 108529
+      }
+    },
+    {
+      "name": "file:carousel-before.png",
+      "pass": true,
+      "data": {
+        "bytes": 108529
+      }
+    },
+    {
+      "name": "file:carousel-after.png",
+      "pass": true,
+      "data": {
+        "bytes": 108529
+      }
+    },
+    {
+      "name": "carousel-slide",
+      "pass": true
+    },
+    {
+      "name": "file:tabbed-products-preview.png",
+      "pass": true,
+      "data": {
+        "bytes": 97564
+      }
+    },
+    {
+      "name": "tabbed-switch",
+      "pass": true
+    },
+    {
+      "name": "file:variant-picker-banner.png",
+      "pass": true,
+      "data": {
+        "bytes": 181099
+      }
+    },
+    {
+      "name": "file:variant-picker-brand.png",
+      "pass": true,
+      "data": {
+        "bytes": 85117
+      }
+    },
+    {
+      "name": "brand-logo-rail",
+      "pass": true
+    },
+    {
+      "name": "file:variant-picker-reviews.png",
+      "pass": true,
+      "data": {
+        "bytes": 70377
+      }
+    },
+    {
+      "name": "file:variant-picker-articles.png",
+      "pass": true,
+      "data": {
+        "bytes": 109387
+      }
+    },
+    {
+      "name": "file:review-real-component.png",
+      "pass": true,
+      "data": {
+        "bytes": 107463
+      }
+    },
+    {
+      "name": "review-live",
+      "pass": true
+    },
+    {
+      "name": "file:editor-human-variant-name.png",
+      "pass": true,
+      "data": {
+        "bytes": 59765
+      }
+    },
+    {
+      "name": "editor-human-name",
+      "pass": true,
+      "data": {
+        "editorText": "۱\nنمایش مقالات\nردیف مجله مقالات — طرح سپیده\nفعال\n\nآخرین مطالب · ردیف مجله مقالات — طرح سپیده · جدیدترین مطالب · 6 مورد\n\nفعال\nویرایش"
+      }
+    },
+    {
+      "name": "no-geometric-canvas",
+      "pass": true
+    }
+  ],
+  "files": {
+    "variant-picker-story.png": {
+      "bytes": 142473
+    },
+    "variant-human-names.png": {
+      "bytes": 142473
+    },
+    "variant-selected-state.png": {
+      "bytes": 142473
+    },
+    "variant-picker-product.png": {
+      "bytes": 108529
+    },
+    "carousel-before.png": {
+      "bytes": 108529
+    },
+    "carousel-after.png": {
+      "bytes": 108529
+    },
+    "tabbed-products-preview.png": {
+      "bytes": 97564
+    },
+    "variant-picker-banner.png": {
+      "bytes": 181099
+    },
+    "variant-picker-brand.png": {
+      "bytes": 85117
+    },
+    "variant-picker-reviews.png": {
+      "bytes": 70377
+    },
+    "variant-picker-articles.png": {
+      "bytes": 109387
+    },
+    "review-real-component.png": {
+      "bytes": 107463
+    },
+    "editor-human-variant-name.png": {
+      "bytes": 59765
+    }
+  },
+  "errors": []
+}

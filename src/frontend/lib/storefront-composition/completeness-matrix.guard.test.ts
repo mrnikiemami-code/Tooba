@@ -68,6 +68,7 @@ describe("TB-P10-T022 selectable-variant completeness matrix", () => {
       assert.doesNotMatch(v.descriptionFa, /SectionType|VariantKey|ResponsiveContract|breakpoint/i);
       assert.doesNotMatch(v.nameFa, /\bHTML\b/);
       assert.doesNotMatch(v.descriptionFa, /\bHTML\b/);
+      assert.match(v.nameFa, /طرح/, `human design name missing طرح for ${v.key}`);
     }
   });
 });
