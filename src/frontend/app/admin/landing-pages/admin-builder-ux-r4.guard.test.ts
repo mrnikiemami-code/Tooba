@@ -101,9 +101,10 @@ test("operational Product schema has no template ownership columns", () => {
 });
 
 test("no destructive cleanup action", () => {
-  assert.match(workspace, /cleanup-sample-data-action/);
-  assert.match(workspace, /prepare-store-action/);
-  assert.match(workspace, /disabled/);
+  assert.doesNotMatch(workspace, /cleanup-sample-data-action/);
+  assert.doesNotMatch(workspace, /prepare-store-action/);
+  assert.doesNotMatch(workspace, /پاک‌سازی داده‌های نمونه/);
+  assert.doesNotMatch(workspace, /آماده‌سازی فروشگاه برای ورود اطلاعات/);
   assert.match(workspace, /load-sample-data-action/);
   assert.match(workspace, /load-store-data-action/);
   assert.match(workspace, /template-open-full-page/);

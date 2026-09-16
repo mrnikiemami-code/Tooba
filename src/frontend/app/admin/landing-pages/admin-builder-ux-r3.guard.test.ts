@@ -33,24 +33,22 @@ test("template previews are structurally distinct", () => {
   assert.match(workspace, /plants/);
 });
 
-test("seed summary shows 8 category trees + 15 products", () => {
-  assert.match(workspace, /۸ درخت دسته‌بندی سه‌سطحی/);
-  assert.match(workspace, /۱۵ محصول نمونه/);
-  assert.match(workspace, /template-seed-counts/);
+test("seed pack summary card is not shown on template picker", () => {
+  assert.doesNotMatch(workspace, /template-seed-pack-summary/);
+  assert.doesNotMatch(workspace, /template-seed-counts/);
+  assert.doesNotMatch(workspace, /داده نمونه این قالب/);
 });
 
-test("articles/stories/reviews are not marked template-specific", () => {
-  assert.match(workspace, /مقالات مخصوص قالب نیستند/);
-  assert.match(workspace, /استوری‌های نمونه عمومی/);
-  assert.match(workspace, /نظرات نمونه عمومی/);
-  assert.match(workspace, /template-shared-demo-note/);
+test("shared demo note card is not shown on template picker", () => {
+  assert.doesNotMatch(workspace, /template-shared-demo-note/);
+  assert.doesNotMatch(workspace, /مقالات مخصوص قالب نیستند/);
 });
 
-test("cleanup actions are non-destructive in this wireframe task", () => {
-  assert.match(workspace, /cleanup-sample-data-action/);
-  assert.match(workspace, /prepare-store-action/);
-  assert.match(workspace, /disabled/);
-  assert.match(workspace, /در مرحله بعد فعال می‌شود|پس از تأیید الگوی داده نمونه فعال می‌شود/);
+test("cleanup and prepare-store actions are removed from template picker", () => {
+  assert.doesNotMatch(workspace, /cleanup-sample-data-action/);
+  assert.doesNotMatch(workspace, /prepare-store-action/);
+  assert.doesNotMatch(workspace, /پاک‌سازی داده‌های نمونه/);
+  assert.doesNotMatch(workspace, /آماده‌سازی فروشگاه برای ورود اطلاعات/);
   assert.doesNotMatch(workspace, /fetch\(.*cleanup|DELETE.*seed/i);
 });
 

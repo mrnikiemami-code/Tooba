@@ -10,7 +10,6 @@ import {
 import {
   FASHION_DEMO_ORIGIN,
   FASHION_STORE_ORIGIN,
-  fashionDemoSeedSummaryFa,
   type FashionPreviewSource,
 } from "../../../lib/storefront-composition/fashion-demo-preview.ts";
 import { fashionPreviewPath } from "../../../lib/storefront-composition/template-preview-context.ts";
@@ -167,7 +166,6 @@ export function AdminTemplateSelectionWorkspace({
   const fashionViewport = FASHION_IFRAME_VIEWPORT[device];
   const blocks = selected && !isFashionLive ? industryWireframeBlocks(selected, device) : [];
   const compactPreview = selected ? layoutAwareTemplatePreview(selected) : null;
-  const fashionSeedLines = fashionDemoSeedSummaryFa();
   const fashionIframeSrc = fashionPreviewSrc(previewSource, previewLocale);
 
   useEffect(() => {
@@ -422,94 +420,36 @@ export function AdminTemplateSelectionWorkspace({
                 )}
               </div>
 
-              <div className="rounded-2xl border border-border bg-slate-50 p-4" data-testid="template-seed-pack-summary">
-                <h3 className="font-black">داده نمونه این قالب</h3>
-                {isFashionLive ? (
-                  <>
-                    <p className="mt-1 text-xs text-muted">بسته نمایشی ایزوله برای پیش‌نمایش — بدون نوشتن در Catalog واقعی.</p>
-                    <ul className="mt-3 space-y-1 text-sm font-bold text-slate-800" data-testid="template-seed-counts">
-                      {fashionSeedLines.map((line) => (
-                        <li key={line}>{line}</li>
-                      ))}
-                    </ul>
-                    <p className="mt-3 text-xs text-slate-600" data-testid="template-seed-tracking-note">
-                      مبدأ داده نمونه: {FASHION_DEMO_ORIGIN} — قابل تشخیص از محتوای کاربر.
-                    </p>
-                  </>
-                ) : (
-                  <>
-                    <p className="mt-1 text-xs text-muted">خلاصهٔ قرارداد آینده — در این مرحله داده‌ای ساخته نمی‌شود.</p>
-                    <ul className="mt-3 space-y-1 text-sm font-bold text-slate-800" data-testid="template-seed-counts">
-                      <li>۸ درخت دسته‌بندی سه‌سطحی</li>
-                      <li>۱۵ محصول نمونه</li>
-                      <li>تصاویر محصول مرتبط</li>
-                      <li>بنرهای مرتبط</li>
-                      <li>برندهای مرتبط</li>
-                    </ul>
-                    <div className="mt-3 rounded-xl border border-dashed border-slate-300 bg-white px-3 py-2 text-xs text-muted" data-testid="template-shared-demo-note">
-                      <p className="font-bold text-slate-700">محتوای نمایشی مشترک (غیرقالب‌محور):</p>
-                      <p className="mt-1">استوری‌های نمونه عمومی · نظرات نمونه عمومی · مقالات عمومی نمایشی</p>
-                      <p className="mt-1">مقالات مخصوص قالب نیستند؛ استوری و نظر از دادهٔ نمایشی مشترک استفاده می‌کنند.</p>
-                    </div>
-                    <p className="mt-3 text-xs text-slate-600" data-testid="template-seed-tracking-note">
-                      داده‌های نمونه با برچسب سیستمی ثبت می‌شوند تا بعداً بدون حذف اطلاعات واقعی فروشگاه پاک‌سازی شوند.
-                    </p>
-                  </>
-                )}
-              </div>
-
-              <div className="flex flex-wrap gap-2" data-testid="template-preview-source-actions">
-                {isFashionLive ? (
-                  <>
-                    <button
-                      type="button"
-                      className={`rounded-xl border px-4 py-2 text-sm font-bold ${
-                        previewSource === "sample"
-                          ? "border-[#2563EB] bg-blue-50 text-[#2563EB]"
-                          : "border-border bg-white text-slate-800"
-                      }`}
-                      data-testid="load-sample-data-action"
-                      aria-pressed={previewSource === "sample"}
-                      onClick={() => loadPreviewSource("sample")}
-                    >
-                      بارگذاری از داده‌های نمونه
-                    </button>
-                    <button
-                      type="button"
-                      className={`rounded-xl border px-4 py-2 text-sm font-bold ${
-                        previewSource === "store"
-                          ? "border-[#2563EB] bg-blue-50 text-[#2563EB]"
-                          : "border-border bg-white text-slate-800"
-                      }`}
-                      data-testid="load-store-data-action"
-                      aria-pressed={previewSource === "store"}
-                      onClick={() => loadPreviewSource("store")}
-                    >
-                      بارگذاری از داده‌های فروشگاه
-                    </button>
-                  </>
-                ) : null}
-                <button
-                  type="button"
-                  disabled
-                  className="rounded-xl border border-border bg-white px-4 py-2 text-sm font-bold text-slate-500 opacity-70"
-                  data-testid="cleanup-sample-data-action"
-                  title="پس از تأیید الگوی داده نمونه فعال می‌شود"
-                >
-                  پاک‌سازی داده‌های نمونه
-                  <span className="ms-2 text-[11px] font-normal">(پس از تأیید الگوی داده نمونه فعال می‌شود)</span>
-                </button>
-                <button
-                  type="button"
-                  disabled
-                  className="rounded-xl border border-border bg-white px-4 py-2 text-sm font-bold text-slate-500 opacity-70"
-                  data-testid="prepare-store-action"
-                  title="پس از تأیید الگوی داده نمونه فعال می‌شود"
-                >
-                  آماده‌سازی فروشگاه برای ورود اطلاعات
-                  <span className="ms-2 text-[11px] font-normal">(پس از تأیید الگوی داده نمونه فعال می‌شود)</span>
-                </button>
-              </div>
+              {isFashionLive ? (
+                <div className="flex flex-wrap gap-2" data-testid="template-preview-source-actions">
+                  <button
+                    type="button"
+                    className={`rounded-xl border px-4 py-2 text-sm font-bold ${
+                      previewSource === "sample"
+                        ? "border-[#2563EB] bg-blue-50 text-[#2563EB]"
+                        : "border-border bg-white text-slate-800"
+                    }`}
+                    data-testid="load-sample-data-action"
+                    aria-pressed={previewSource === "sample"}
+                    onClick={() => loadPreviewSource("sample")}
+                  >
+                    بارگذاری از داده‌های نمونه
+                  </button>
+                  <button
+                    type="button"
+                    className={`rounded-xl border px-4 py-2 text-sm font-bold ${
+                      previewSource === "store"
+                        ? "border-[#2563EB] bg-blue-50 text-[#2563EB]"
+                        : "border-border bg-white text-slate-800"
+                    }`}
+                    data-testid="load-store-data-action"
+                    aria-pressed={previewSource === "store"}
+                    onClick={() => loadPreviewSource("store")}
+                  >
+                    بارگذاری از داده‌های فروشگاه
+                  </button>
+                </div>
+              ) : null}
             </>
           ) : (
             <p className="text-sm text-muted">یک قالب را از فهرست انتخاب کنید.</p>
