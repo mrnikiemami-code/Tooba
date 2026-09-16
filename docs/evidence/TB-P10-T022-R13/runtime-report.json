@@ -1,0 +1,295 @@
+{
+  "ok": true,
+  "steps": [
+    {
+      "name": "landing-warm-reachable",
+      "pass": true,
+      "data": {
+        "status": 404,
+        "ms": 3641
+      }
+    },
+    {
+      "name": "api-fashion",
+      "pass": true,
+      "data": {
+        "products": 15,
+        "roots": 8
+      }
+    },
+    {
+      "name": "api-auto-parts",
+      "pass": true,
+      "data": {
+        "products": 15,
+        "roots": 8
+      }
+    },
+    {
+      "name": "api-interior-decor",
+      "pass": true,
+      "data": {
+        "products": 15,
+        "roots": 8
+      }
+    },
+    {
+      "name": "api-beauty",
+      "pass": true,
+      "data": {
+        "products": 15,
+        "roots": 8
+      }
+    },
+    {
+      "name": "api-shoes",
+      "pass": true,
+      "data": {
+        "products": 15,
+        "roots": 8
+      }
+    },
+    {
+      "name": "api-plants",
+      "pass": true,
+      "data": {
+        "products": 15,
+        "roots": 8
+      }
+    },
+    {
+      "name": "file:store-pages-grid-final.png",
+      "pass": true,
+      "data": {
+        "bytes": 123415
+      }
+    },
+    {
+      "name": "store-pages-label",
+      "pass": true
+    },
+    {
+      "name": "selector-10-cards",
+      "pass": true,
+      "data": {
+        "cardCount": 19
+      }
+    },
+    {
+      "name": "file:template-selector-all-10.png",
+      "pass": true,
+      "data": {
+        "bytes": 123851
+      }
+    },
+    {
+      "name": "file:fashion-preview-final.png",
+      "pass": true,
+      "data": {
+        "bytes": 339144
+      }
+    },
+    {
+      "name": "file:auto-parts-preview-final.png",
+      "pass": true,
+      "data": {
+        "bytes": 340750
+      }
+    },
+    {
+      "name": "file:interior-decor-preview-final.png",
+      "pass": true,
+      "data": {
+        "bytes": 318763
+      }
+    },
+    {
+      "name": "file:beauty-preview-final.png",
+      "pass": true,
+      "data": {
+        "bytes": 136616
+      }
+    },
+    {
+      "name": "sample-store-src-diff",
+      "pass": true,
+      "data": {
+        "sampleSrc": "/template-preview/beauty?source=sample&locale=fa-IR",
+        "storeSrc": "/template-preview/beauty?source=store&locale=fa-IR"
+      }
+    },
+    {
+      "name": "file:sample-store-mode-difference.png",
+      "pass": true,
+      "data": {
+        "bytes": 90989
+      }
+    },
+    {
+      "name": "use-template-sections",
+      "pass": true,
+      "data": {
+        "sectionCount": 7,
+        "url": "http://127.0.0.1:3000/admin/landing-pages/01a0ab49-5877-7000-b6ea-7c0948e54db8"
+      }
+    },
+    {
+      "name": "file:use-template-populated-editor.png",
+      "pass": true,
+      "data": {
+        "bytes": 76460
+      }
+    },
+    {
+      "name": "file:editor-reorder-controls-final.png",
+      "pass": true,
+      "data": {
+        "bytes": 94135
+      }
+    },
+    {
+      "name": "file:editor-insert-between-final.png",
+      "pass": true,
+      "data": {
+        "bytes": 94135
+      }
+    },
+    {
+      "name": "file:editor-disabled-section-final.png",
+      "pass": true,
+      "data": {
+        "bytes": 94221
+      }
+    },
+    {
+      "name": "file:landing-seo-final.png",
+      "pass": true,
+      "data": {
+        "bytes": 57182
+      }
+    },
+    {
+      "name": "file:variant-picker-real-components-final.png",
+      "pass": true,
+      "data": {
+        "bytes": 108529
+      }
+    },
+    {
+      "name": "file:variant-carousel-before-final.png",
+      "pass": true,
+      "data": {
+        "bytes": 108529
+      }
+    },
+    {
+      "name": "file:variant-carousel-after-final.png",
+      "pass": true,
+      "data": {
+        "bytes": 108529
+      }
+    },
+    {
+      "name": "file:review-step-real-component-final.png",
+      "pass": true,
+      "data": {
+        "bytes": 73584
+      }
+    },
+    {
+      "name": "file:home-seo-final.png",
+      "pass": true,
+      "data": {
+        "bytes": 60838
+      }
+    },
+    {
+      "name": "file:home-route-final.png",
+      "pass": true,
+      "data": {
+        "bytes": 326923
+      }
+    },
+    {
+      "name": "file:landing-route-final.png",
+      "pass": true,
+      "data": {
+        "bytes": 9999
+      }
+    },
+    {
+      "name": "file:mobile-preview-final.png",
+      "pass": true,
+      "data": {
+        "bytes": 233840
+      }
+    }
+  ],
+  "files": {
+    "store-pages-grid-final.png": {
+      "bytes": 123415
+    },
+    "template-selector-all-10.png": {
+      "bytes": 123851
+    },
+    "fashion-preview-final.png": {
+      "bytes": 339144
+    },
+    "auto-parts-preview-final.png": {
+      "bytes": 340750
+    },
+    "interior-decor-preview-final.png": {
+      "bytes": 318763
+    },
+    "beauty-preview-final.png": {
+      "bytes": 136616
+    },
+    "sample-store-mode-difference.png": {
+      "bytes": 90989
+    },
+    "use-template-populated-editor.png": {
+      "bytes": 76460
+    },
+    "editor-reorder-controls-final.png": {
+      "bytes": 94135
+    },
+    "editor-insert-between-final.png": {
+      "bytes": 94135
+    },
+    "editor-disabled-section-final.png": {
+      "bytes": 94221
+    },
+    "landing-seo-final.png": {
+      "bytes": 57182
+    },
+    "variant-picker-real-components-final.png": {
+      "bytes": 108529
+    },
+    "variant-carousel-before-final.png": {
+      "bytes": 108529
+    },
+    "variant-carousel-after-final.png": {
+      "bytes": 108529
+    },
+    "review-step-real-component-final.png": {
+      "bytes": 73584
+    },
+    "home-seo-final.png": {
+      "bytes": 60838
+    },
+    "home-route-final.png": {
+      "bytes": 326923
+    },
+    "landing-route-final.png": {
+      "bytes": 9999
+    },
+    "mobile-preview-final.png": {
+      "bytes": 233840
+    }
+  },
+  "errors": [],
+  "timings": {
+    "landingWarmMs": 3641,
+    "totalMs": 53741
+  }
+}

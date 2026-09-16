@@ -1232,3 +1232,21 @@ Beauty Template demo content must avoid medical/therapeutic claims and remain or
 ### LOCK-SF-356 — Batch C shared preview/apply engines
 Batch C preview routes and Template Apply use only shared engines/workflows; template-specific renderer/apply forks are forbidden.
 
+### LOCK-SF-357 — Builder end-to-end coherence
+Store Pages Builder must remain end-to-end coherent across Template selector, Apply, Editor, Variant Picker, SEO, Preview and Storefront publish paths.
+
+### LOCK-SF-358 — Ten industry Template packs contract
+All 10 industry Template packs are part of the persistent Template Catalog contract and must remain selector-visible, previewable, applicable and schema-parity compliant.
+
+### LOCK-SF-359 — Global Sample/Store/Published isolation
+Sample, Store Preview and Published Storefront source domains remain strictly isolated across all Template packs and Sections.
+
+### LOCK-SF-360 — Builder final technical acceptance bar
+The Builder final acceptance requires persisted editor operations, production-component previews, complete page SEO, responsive preview modes and zero geometric-preview fallbacks.
+
+### LOCK-SF-361 — No Storefront theme leakage into Admin/Seller chrome
+Storefront appearance/theme tokens must never leak into Admin or Seller Panel chrome; only embedded Storefront preview surfaces may carry Storefront theming.
+
+### LOCK-SF-362 — No Builder hardening workarounds
+Final Builder hardening must not introduce template-specific rendering forks, duplicate ordering models, raw internal identifiers, or temporary workaround logic.
+

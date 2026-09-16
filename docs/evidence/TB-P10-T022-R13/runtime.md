@@ -1,0 +1,41 @@
+# Runtime — TB-P10-T022-R13
+
+- Host http://127.0.0.1:5088
+- FE http://127.0.0.1:3000
+- ok=true
+- errors=none
+- landingWarmMs=3641
+- totalMs=53741
+
+## Steps
+- PASS landing-warm-reachable — {"status":404,"ms":3641}
+- PASS api-fashion — {"products":15,"roots":8}
+- PASS api-auto-parts — {"products":15,"roots":8}
+- PASS api-interior-decor — {"products":15,"roots":8}
+- PASS api-beauty — {"products":15,"roots":8}
+- PASS api-shoes — {"products":15,"roots":8}
+- PASS api-plants — {"products":15,"roots":8}
+- PASS file:store-pages-grid-final.png — {"bytes":123415}
+- PASS store-pages-label
+- PASS selector-10-cards — {"cardCount":19}
+- PASS file:template-selector-all-10.png — {"bytes":123851}
+- PASS file:fashion-preview-final.png — {"bytes":339144}
+- PASS file:auto-parts-preview-final.png — {"bytes":340750}
+- PASS file:interior-decor-preview-final.png — {"bytes":318763}
+- PASS file:beauty-preview-final.png — {"bytes":136616}
+- PASS sample-store-src-diff — {"sampleSrc":"/template-preview/beauty?source=sample&locale=fa-IR","storeSrc":"/template-preview/beauty?source=store&locale=fa-IR"}
+- PASS file:sample-store-mode-difference.png — {"bytes":90989}
+- PASS use-template-sections — {"sectionCount":7,"url":"http://127.0.0.1:3000/admin/landing-pages/01a0ab49-5877-7000-b6ea-7c0948e54db8"}
+- PASS file:use-template-populated-editor.png — {"bytes":76460}
+- PASS file:editor-reorder-controls-final.png — {"bytes":94135}
+- PASS file:editor-insert-between-final.png — {"bytes":94135}
+- PASS file:editor-disabled-section-final.png — {"bytes":94221}
+- PASS file:landing-seo-final.png — {"bytes":57182}
+- PASS file:variant-picker-real-components-final.png — {"bytes":108529}
+- PASS file:variant-carousel-before-final.png — {"bytes":108529}
+- PASS file:variant-carousel-after-final.png — {"bytes":108529}
+- PASS file:review-step-real-component-final.png — {"bytes":73584}
+- PASS file:home-seo-final.png — {"bytes":60838}
+- PASS file:home-route-final.png — {"bytes":326923}
+- PASS file:landing-route-final.png — {"bytes":9999}
+- PASS file:mobile-preview-final.png — {"bytes":233840}

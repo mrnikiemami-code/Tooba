@@ -34,7 +34,7 @@ Channel: tooba-main
 Last Architect Accepted Task:
 
 ```text
-TB-P10-T022-R10
+TB-P10-T022-R12C
 ```
 
 Prior accepted catalog wave:
@@ -62,7 +62,7 @@ TB-P05-GATE
 Last Implementation Task:
 
 ```text
-TB-P10-T022-R12A
+TB-P10-T022-R13
 ```
 
 Current Issued Task:
@@ -80,6 +80,9 @@ Current Repair Task:
 Implemented Under Review:
 
 ```text
+TB-P10-T022-R13 — Final Builder Hardening (end-to-end completeness/consistency across 10 industry Template packs); USER_VISUAL_ACCEPTED=YES (Appearance); Builder USER_VISUAL_ACCEPTED=NO
+TB-P10-T022-R12C — Industry Template Catalog Batch C (shoes, plants, beauty); USER_VISUAL_ACCEPTED=YES (Appearance); Builder USER_VISUAL_ACCEPTED=NO
+TB-P10-T022-R12B — Industry Template Catalog Batch B (tile-ceramic, interior-decor, home-appliances); USER_VISUAL_ACCEPTED=YES (Appearance); Builder USER_VISUAL_ACCEPTED=NO
 TB-P10-T022-R12A — Industry Template Catalog Batch A (auto-parts, building-materials, tools-hardware); USER_VISUAL_ACCEPTED=YES (Appearance); Builder USER_VISUAL_ACCEPTED=NO
 TB-P10-T022-R11 — Variant Picker V2 (human design names, real component previews, live carousel/tab behavior, Review live preview); USER_VISUAL_ACCEPTED=YES (Appearance); Builder USER_VISUAL_ACCEPTED=NO
 TB-P10-T022-R10 — Store Page Editor Workspace (Template Apply materialization, unified section list, drag/drop + arrow reorder, insert/delete/disable); USER_VISUAL_ACCEPTED=YES (Appearance); Builder USER_VISUAL_ACCEPTED=NO
@@ -245,7 +248,7 @@ YES
 Worker Next State:
 
 ```text
-IDLE — waits for Bridge Task (no invented next task; do NOT invent TB-P10-T023; do NOT start R12 industry packs)
+IDLE — waits for Bridge Task (no invented next task; do NOT invent TB-P10-T023; Builder USER_VISUAL_ACCEPTED=NO)
 ```
 
 Current Gate:

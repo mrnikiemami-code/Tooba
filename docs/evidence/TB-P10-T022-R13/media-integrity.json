@@ -1,0 +1,198 @@
+{
+  "task": "TB-P10-T022-R13",
+  "host": "http://127.0.0.1:5088",
+  "previewFakeRoot": "/images/preview-placeholder/",
+  "packs": {
+    "fashion": {
+      "mediaPrefix": "/images/fashion-template/",
+      "diskFiles": 8,
+      "sampleMediaUrls": [
+        "/images/fashion-template/3.jpg",
+        "/images/fashion-template/1.jpg",
+        "/images/fashion-template/8.jpg",
+        "/images/fashion-template/4.jpg",
+        "/images/fashion-template/5.jpg",
+        "/images/fashion-template/7.jpg",
+        "/images/fashion-template/2.jpg",
+        "/images/fashion-template/6.jpg"
+      ],
+      "foreignMedia": [],
+      "previewFakeHits": [],
+      "hotlinks": [],
+      "isolationOk": true
+    },
+    "auto-parts": {
+      "mediaPrefix": "/images/template-auto-parts/",
+      "diskFiles": 8,
+      "sampleMediaUrls": [
+        "/images/template-auto-parts/8.jpg",
+        "/images/template-auto-parts/7.jpg",
+        "/images/template-auto-parts/4.jpg",
+        "/images/template-auto-parts/3.jpg",
+        "/images/template-auto-parts/2.jpg",
+        "/images/template-auto-parts/6.jpg",
+        "/images/template-auto-parts/5.jpg",
+        "/images/template-auto-parts/1.jpg"
+      ],
+      "foreignMedia": [],
+      "previewFakeHits": [],
+      "hotlinks": [],
+      "isolationOk": true
+    },
+    "building-materials": {
+      "mediaPrefix": "/images/template-building-materials/",
+      "diskFiles": 8,
+      "sampleMediaUrls": [
+        "/images/template-building-materials/8.jpg",
+        "/images/template-building-materials/7.jpg",
+        "/images/template-building-materials/5.jpg",
+        "/images/template-building-materials/6.jpg",
+        "/images/template-building-materials/2.jpg",
+        "/images/template-building-materials/3.jpg",
+        "/images/template-building-materials/4.jpg",
+        "/images/template-building-materials/1.jpg"
+      ],
+      "foreignMedia": [],
+      "previewFakeHits": [],
+      "hotlinks": [],
+      "isolationOk": true
+    },
+    "tools-hardware": {
+      "mediaPrefix": "/images/template-tools-hardware/",
+      "diskFiles": 8,
+      "sampleMediaUrls": [
+        "/images/template-tools-hardware/3.jpg",
+        "/images/template-tools-hardware/6.jpg",
+        "/images/template-tools-hardware/1.jpg",
+        "/images/template-tools-hardware/2.jpg",
+        "/images/template-tools-hardware/8.jpg",
+        "/images/template-tools-hardware/5.jpg",
+        "/images/template-tools-hardware/7.jpg",
+        "/images/template-tools-hardware/4.jpg"
+      ],
+      "foreignMedia": [],
+      "previewFakeHits": [],
+      "hotlinks": [],
+      "isolationOk": true
+    },
+    "tile-ceramic": {
+      "mediaPrefix": "/images/template-tile-ceramic/",
+      "diskFiles": 8,
+      "sampleMediaUrls": [
+        "/images/template-tile-ceramic/4.jpg",
+        "/images/template-tile-ceramic/3.jpg",
+        "/images/template-tile-ceramic/8.jpg",
+        "/images/template-tile-ceramic/2.jpg",
+        "/images/template-tile-ceramic/7.jpg",
+        "/images/template-tile-ceramic/6.jpg",
+        "/images/template-tile-ceramic/1.jpg",
+        "/images/template-tile-ceramic/5.jpg"
+      ],
+      "foreignMedia": [],
+      "previewFakeHits": [],
+      "hotlinks": [],
+      "isolationOk": true
+    },
+    "interior-decor": {
+      "mediaPrefix": "/images/template-interior-decor/",
+      "diskFiles": 8,
+      "sampleMediaUrls": [
+        "/images/template-interior-decor/8.jpg",
+        "/images/template-interior-decor/7.jpg",
+        "/images/template-interior-decor/4.jpg",
+        "/images/template-interior-decor/2.jpg",
+        "/images/template-interior-decor/6.jpg",
+        "/images/template-interior-decor/3.jpg",
+        "/images/template-interior-decor/1.jpg",
+        "/images/template-interior-decor/5.jpg"
+      ],
+      "foreignMedia": [],
+      "previewFakeHits": [],
+      "hotlinks": [],
+      "isolationOk": true
+    },
+    "home-appliances": {
+      "mediaPrefix": "/images/template-home-appliances/",
+      "diskFiles": 8,
+      "sampleMediaUrls": [
+        "/images/template-home-appliances/3.jpg",
+        "/images/template-home-appliances/5.jpg",
+        "/images/template-home-appliances/4.jpg",
+        "/images/template-home-appliances/7.jpg",
+        "/images/template-home-appliances/6.jpg",
+        "/images/template-home-appliances/8.jpg",
+        "/images/template-home-appliances/2.jpg",
+        "/images/template-home-appliances/1.jpg"
+      ],
+      "foreignMedia": [],
+      "previewFakeHits": [],
+      "hotlinks": [],
+      "isolationOk": true
+    },
+    "shoes": {
+      "mediaPrefix": "/images/template-shoes/",
+      "diskFiles": 8,
+      "sampleMediaUrls": [
+        "/images/template-shoes/7.jpg",
+        "/images/template-shoes/6.jpg",
+        "/images/template-shoes/3.jpg",
+        "/images/template-shoes/5.jpg",
+        "/images/template-shoes/2.jpg",
+        "/images/template-shoes/1.jpg",
+        "/images/template-shoes/4.jpg",
+        "/images/template-shoes/8.jpg"
+      ],
+      "foreignMedia": [],
+      "previewFakeHits": [],
+      "hotlinks": [],
+      "isolationOk": true
+    },
+    "plants": {
+      "mediaPrefix": "/images/template-plants/",
+      "diskFiles": 8,
+      "sampleMediaUrls": [
+        "/images/template-plants/7.jpg",
+        "/images/template-plants/6.jpg",
+        "/images/template-plants/3.jpg",
+        "/images/template-plants/5.jpg",
+        "/images/template-plants/2.jpg",
+        "/images/template-plants/1.jpg",
+        "/images/template-plants/4.jpg",
+        "/images/template-plants/8.jpg"
+      ],
+      "foreignMedia": [],
+      "previewFakeHits": [],
+      "hotlinks": [],
+      "isolationOk": true
+    },
+    "beauty": {
+      "mediaPrefix": "/images/template-beauty/",
+      "diskFiles": 8,
+      "sampleMediaUrls": [
+        "/images/template-beauty/4.jpg",
+        "/images/template-beauty/3.jpg",
+        "/images/template-beauty/5.jpg",
+        "/images/template-beauty/8.jpg",
+        "/images/template-beauty/7.jpg",
+        "/images/template-beauty/6.jpg",
+        "/images/template-beauty/1.jpg",
+        "/images/template-beauty/2.jpg"
+      ],
+      "foreignMedia": [],
+      "previewFakeHits": [],
+      "hotlinks": [],
+      "isolationOk": true
+    }
+  },
+  "crossContamination": [],
+  "previewFakeLeakage": [],
+  "hotlinks": [],
+  "missingLocalFiles": [],
+  "ok": true,
+  "previewFake": {
+    "root": "/images/preview-placeholder/",
+    "fileCount": 24,
+    "independentFromTemplates": true,
+    "note": "PreviewFake assets live only under preview-placeholder; Template packs never reference them in Sample mode."
+  }
+}

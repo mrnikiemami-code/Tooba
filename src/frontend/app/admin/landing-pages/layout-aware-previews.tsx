@@ -375,30 +375,3 @@ export function bannerSlotCellClass(variantKey: string | undefined, index: numbe
   }
   return "min-h-[96px]";
 }
-
-export function VariantPreviewCanvas({
-  variantKey,
-  testId = "variant-preview-canvas",
-}: {
-  variantKey: string;
-  testId?: string;
-}) {
-  const cells = layoutAwareVariantPreview(variantKey);
-  const isStory = variantKey.startsWith("story.");
-  const isBrand = variantKey.startsWith("brand.");
-  return (
-    <div
-      className={`mb-3 grid h-16 gap-1 rounded-xl border border-slate-200 bg-slate-50 p-2 ${
-        isStory || isBrand ? "grid-flow-col auto-cols-fr items-center" : "grid-cols-6 grid-rows-2"
-      }`}
-      aria-hidden
-      data-testid={testId}
-      data-layout-aware="1"
-      data-preview-fingerprint={variantKey}
-    >
-      {cells.map((cell, index) => (
-        <span key={`${variantKey}-${index}`} className={cell.className} data-preview-kind={cell.kind} />
-      ))}
-    </div>
-  );
-}
