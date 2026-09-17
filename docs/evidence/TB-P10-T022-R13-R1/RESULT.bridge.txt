@@ -1,0 +1,101 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+
+BEGIN_TOOBA_WORKER_RESULT
+
+Task-ID:
+TB-P10-T022-R13-R1
+
+Parent-Task:
+TB-P10-T022-R13
+
+Channel:
+tooba-main
+
+WorkerId:
+tooba-worker-01
+
+AgentType:
+cursor
+
+Status:
+PASS
+
+Appearance-USER_VISUAL_ACCEPTED=YES
+Builder-USER_VISUAL_ACCEPTED=NO
+
+Summary:
+Hero Slider Builder Repair PASS. Exactly six variants (fullscreen/الماس … editorial/عقیق) retained on one HeroSlider/Swiper engine. Raw pixel height replaced with Medium/Large/ExtraLarge presets + variant×height image guidance. Slide fake SEO fields renamed to visible عنوان/توضیح; typed CTA destinations (none/all-products/product/category/custom-url) with AdminResourceSelector. Wizard validation surfaces modal summary + inline errors + tab badges + first-error focus with live clear. LOCK-SF-367…374. Canonical Home reset preserved. No P11/T002/T023. Admin Builder PNGs partially blocked (draft-save race); storefront desktop/mobile captured; contracts proven by guards.
+
+Applicable-Locks:
+LOCK-SF-001…366 preserved. Added LOCK-SF-367…374.
+
+Recovery-Start:
+branch=main HEAD b462889c == origin/main at start; descendant of pin 3d694233 with Home-reset preserved. docs/evidence/TB-P10-T022-R13-R1/recovery-start.md
+
+Slider-Variant-Map:
+docs/evidence/TB-P10-T022-R13-R1/slider-variant-map.md — 6 keys + Persian UI names.
+
+Single-Engine-Architecture:
+One HeroSlider in storefront-landing-blocks.tsx; Swiper only; variants differ by layout/effect metadata.
+
+Live-Variant-Previews:
+Appearance step continues to use VariantLivePreview → production HeroSlider for all six; PreviewFakeData content only.
+
+Height-Presets:
+Admin exposes متوسط/بزرگ/خیلی بزرگ → Medium/Large/ExtraLarge; legacy displayHeightPx mapped for edit/render compat.
+
+Image-Guidance:
+docs/evidence/TB-P10-T022-R13-R1/slider-image-guidance.md — per variant+height aspect/min px/focal copy.
+
+Slide-Content-SEO:
+Per-slide image/alt/title required; description optional; fake SEO Title/Description controls removed; page SEO remains page-level.
+
+CTA-Destination-Model:
+destinationType + targetId/targetSlug/customUrl/ctaLabel; resolveHeroSlideHref for runtime.
+
+Product-Category-Pickers:
+AdminResourceSelector products/categories (searchable AppDataGrid); labels shown, GUIDs not exposed in ordinary UI.
+
+Validation-UX:
+hero-validation-modal + inline aria-invalid + slide-tab data-has-error + step data-step-error + first invalid slide/field focus.
+
+Live-Error-Recovery:
+showErrors clears live as validateHeroSliderDetailed becomes ok; no polling/timeouts.
+
+Modal-UX:
+Wizard shell keeps scrollable body + sticky footer; validation dialog z-index above wizard.
+
+Runtime-Rendering:
+HeroSlider uses heightPreset classes; RTL/autoplay/pagination retained; CTA href resolution typed.
+
+Backward-Compatibility:
+docs/evidence/TB-P10-T022-R13-R1/backward-compatibility.md
+
+Focused-Validation:
+R13-R1 guards 9 PASS; R11 10 PASS; critical-storefront 20 PASS; git diff --check PASS; composition-engine banner.four-grid responsive FAIL pre-existing unrelated. docs/evidence/TB-P10-T022-R13-R1/focused-validation.md
+
+Visual-Evidence:
+Storefront desktop/mobile captured. Admin picker/settings/validation PNGs incomplete — draft-save/open-wizard race documented in visual-evidence.md / runtime-report.json.
+
+AntiPattern-Scan:
+CLEAN — docs/evidence/TB-P10-T022-R13-R1/antipattern-scan.md
+
+Lock-Registry:
+LOCK-SF-367…374 added. docs/evidence/TB-P10-T022-R13-R1/lock-registry.md
+
+Recovery-SoT:
+Phase P10 Builder Acceptance Repair; Last Architect-accepted TB-P10-T022-R13; Last Implementation TB-P10-T022-R13-R1; TB-P11-T001 retained unused; Issued/Repair none; Appearance YES; Builder NO; no T023/T002.
+
+Git:
+SHA=3f654c9c48400c6791c89a4084c1f258aadea968 HEAD==origin/main after push.
+
+Architectural-Concerns:
+none material; composition-engine banner.four-grid responsive gap pre-existing outside Hero scope.
+
+Visual-Concerns:
+Builder USER_VISUAL_ACCEPTED=NO — Admin visual PNG set incomplete due to automation save race; functional contracts guarded.
+
+Blockers:
+Admin Builder screenshot set incomplete (create/save-before-wizard race); Host+FE were up; storefront shots OK.
+
+END_TOOBA_WORKER_RESULT
