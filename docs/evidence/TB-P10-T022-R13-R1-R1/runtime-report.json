@@ -1,0 +1,228 @@
+{
+  "ok": true,
+  "steps": [
+    {
+      "name": "host-5088",
+      "pass": true
+    },
+    {
+      "name": "fe-3000",
+      "pass": true
+    },
+    {
+      "name": "file:slider-storefront-desktop.png",
+      "pass": true,
+      "data": {
+        "bytes": 364694
+      }
+    },
+    {
+      "name": "file:slider-storefront-mobile.png",
+      "pass": true,
+      "data": {
+        "bytes": 172998
+      }
+    },
+    {
+      "name": "file:slider-six-variants.png",
+      "pass": true,
+      "data": {
+        "bytes": 212458
+      }
+    },
+    {
+      "name": "hero-variant-card-count",
+      "pass": true,
+      "data": {
+        "heroCount": 6
+      }
+    },
+    {
+      "name": "file:slider-almas-preview.png",
+      "pass": true,
+      "data": {
+        "bytes": 212458
+      }
+    },
+    {
+      "name": "file:slider-simin-preview.png",
+      "pass": true,
+      "data": {
+        "bytes": 212446
+      }
+    },
+    {
+      "name": "file:slider-kimia-preview.png",
+      "pass": true,
+      "data": {
+        "bytes": 207707
+      }
+    },
+    {
+      "name": "file:slider-fakhteh-preview.png",
+      "pass": true,
+      "data": {
+        "bytes": 207742
+      }
+    },
+    {
+      "name": "file:slider-saba-preview.png",
+      "pass": true,
+      "data": {
+        "bytes": 202269
+      }
+    },
+    {
+      "name": "file:slider-aghigh-preview.png",
+      "pass": true,
+      "data": {
+        "bytes": 197484
+      }
+    },
+    {
+      "name": "file:slider-height-presets.png",
+      "pass": true,
+      "data": {
+        "bytes": 77179
+      }
+    },
+    {
+      "name": "file:slider-image-guidance.png",
+      "pass": true,
+      "data": {
+        "bytes": 77179
+      }
+    },
+    {
+      "name": "file:slider-tabs.png",
+      "pass": true,
+      "data": {
+        "bytes": 77179
+      }
+    },
+    {
+      "name": "file:slider-destination-type.png",
+      "pass": true,
+      "data": {
+        "bytes": 77167
+      }
+    },
+    {
+      "name": "file:slider-product-picker.png",
+      "pass": true,
+      "data": {
+        "bytes": 112140
+      }
+    },
+    {
+      "name": "file:slider-category-picker.png",
+      "pass": true,
+      "data": {
+        "bytes": 85239
+      }
+    },
+    {
+      "name": "file:slider-validation-popup.png",
+      "pass": true,
+      "data": {
+        "bytes": 82573
+      }
+    },
+    {
+      "name": "file:slider-invalid-fields.png",
+      "pass": true,
+      "data": {
+        "bytes": 79004
+      }
+    },
+    {
+      "name": "file:slider-tab-error-state.png",
+      "pass": true,
+      "data": {
+        "bytes": 79004
+      }
+    },
+    {
+      "name": "file:slider-error-cleared-live.png",
+      "pass": true,
+      "data": {
+        "bytes": 79688
+      }
+    },
+    {
+      "name": "file:slider-review-final.png",
+      "pass": true,
+      "data": {
+        "bytes": 82351
+      }
+    },
+    {
+      "name": "admin-capture-complete",
+      "pass": true
+    }
+  ],
+  "files": {
+    "slider-storefront-desktop.png": {
+      "bytes": 364694
+    },
+    "slider-storefront-mobile.png": {
+      "bytes": 172998
+    },
+    "slider-six-variants.png": {
+      "bytes": 212458
+    },
+    "slider-almas-preview.png": {
+      "bytes": 212458
+    },
+    "slider-simin-preview.png": {
+      "bytes": 212446
+    },
+    "slider-kimia-preview.png": {
+      "bytes": 207707
+    },
+    "slider-fakhteh-preview.png": {
+      "bytes": 207742
+    },
+    "slider-saba-preview.png": {
+      "bytes": 202269
+    },
+    "slider-aghigh-preview.png": {
+      "bytes": 197484
+    },
+    "slider-height-presets.png": {
+      "bytes": 77179
+    },
+    "slider-image-guidance.png": {
+      "bytes": 77179
+    },
+    "slider-tabs.png": {
+      "bytes": 77179
+    },
+    "slider-destination-type.png": {
+      "bytes": 77167
+    },
+    "slider-product-picker.png": {
+      "bytes": 112140
+    },
+    "slider-category-picker.png": {
+      "bytes": 85239
+    },
+    "slider-validation-popup.png": {
+      "bytes": 82573
+    },
+    "slider-invalid-fields.png": {
+      "bytes": 79004
+    },
+    "slider-tab-error-state.png": {
+      "bytes": 79004
+    },
+    "slider-error-cleared-live.png": {
+      "bytes": 79688
+    },
+    "slider-review-final.png": {
+      "bytes": 82351
+    }
+  },
+  "errors": [],
+  "blockers": []
+}

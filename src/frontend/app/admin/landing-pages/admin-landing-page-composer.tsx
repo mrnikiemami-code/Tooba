@@ -209,10 +209,29 @@ export function AdminLandingPageComposer({ pageId }: { pageId?: string }) {
       return;
     }
     setPage(pageResult.data);
+    pageRef.current = pageResult.data;
     setMeta(toMeta(pageResult.data));
     setSaved(true);
     if (sectionResult.ok) setSections(sectionResult.data);
     if (home.ok) setHomePageId(home.data.homePageId);
+
+    const pendingKey = `tooba.landing.openWizard.${id}`;
+    try {
+      const raw = sessionStorage.getItem(pendingKey);
+      if (!raw) return;
+      sessionStorage.removeItem(pendingKey);
+      const pending = JSON.parse(raw) as { insertAt?: number | null; mode?: "create" | "edit" };
+      setWizardMode(pending.mode === "edit" ? "edit" : "create");
+      setEditing(null);
+      setInsertAt(typeof pending.insertAt === "number" ? pending.insertAt : null);
+      setWizardOpen(true);
+    } catch {
+      try {
+        sessionStorage.removeItem(pendingKey);
+      } catch {
+        /* ignore */
+      }
+    }
   }, [showError]);
 
   useEffect(() => {
@@ -401,7 +420,22 @@ export function AdminLandingPageComposer({ pageId }: { pageId?: string }) {
     pageRef.current = savedPage;
     setMeta(toMeta(savedPage));
     setSaved(true);
-    if (!pageId) router.replace(`/admin/landing-pages/${savedPage.pageId}`);
+    if (!pageId) {
+      // Route change remounts the composer. Persist "open wizard after load" so the
+      // wizard is not lost when create+open runs in one action (no sleep/poll).
+      if (options?.openWizardAfter) {
+        try {
+          sessionStorage.setItem(
+            `tooba.landing.openWizard.${savedPage.pageId}`,
+            JSON.stringify({ insertAt: options.insertAtAfter ?? null, mode: "create" }),
+          );
+        } catch {
+          /* ignore quota / private mode */
+        }
+      }
+      router.replace(`/admin/landing-pages/${savedPage.pageId}`);
+      return savedPage;
+    }
     if (options?.openWizardAfter) {
       setWizardMode("create");
       setEditing(null);
