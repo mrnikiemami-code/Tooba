@@ -13,7 +13,7 @@
       "name": "file:slider-storefront-desktop.png",
       "pass": true,
       "data": {
-        "bytes": 364694
+        "bytes": 388890
       }
     },
     {
@@ -22,6 +22,21 @@
       "data": {
         "bytes": 172998
       }
+    },
+    {
+      "name": "title-filled",
+      "pass": true
+    },
+    {
+      "name": "create-route-remount",
+      "pass": true,
+      "data": {
+        "savedUrl": "http://127.0.0.1:3000/admin/landing-pages/01a0aeb9-25ef-7000-abcc-64c30d010719"
+      }
+    },
+    {
+      "name": "wizard-after-remount",
+      "pass": true
     },
     {
       "name": "file:slider-six-variants.png",
@@ -34,7 +49,63 @@
       "name": "hero-variant-card-count",
       "pass": true,
       "data": {
-        "heroCount": 6
+        "names": [
+          {
+            "testid": "pick-variant-hero-fullscreen",
+            "text": "نمونه نمایشیویترین نمایشی فروشگاهاین محتوا فقط برای پیش‌نمایش چیدمان است و در ویترین منتشرشده نمایش داده نمی‌شود.مشاهدهمحتوای نمونهاسلایدر تمام‌عرض — طرح الماستصویر تمام‌عرض، متن روی تصویر؛ مناسب فروشگاه‌های عمومیفروشگاه‌های عمومیانتخاب‌شده"
+          },
+          {
+            "testid": "pick-variant-hero-shapes",
+            "text": "نمونه نمایشیویترین نمایشی فروشگاهاین محتوا فقط برای پیش‌نمایش چیدمان است و در ویترین منتشرشده نمایش داده نمی‌شود.مشاهدهمحتوای نمونهاسلایدر شکلی — طرح سیمینلایه‌های گرافیکی و فرم‌های تزئینی؛ مناسب beauty / fashion / decorbeauty / fashion / decorانتخاب"
+          },
+          {
+            "testid": "pick-variant-hero-diagonal",
+            "text": "نمونه نمایشیویترین نمایشی فروشگاهاین محتوا فقط برای پیش‌نمایش چیدمان است و در ویترین منتشرشده نمایش داده نمی‌شود.مشاهدهمحتوای نمونهاسلایدر مورب — طرح کیمیااسپلیت مورب و مدرن؛ مناسب tech / tools / autotech / tools / autoانتخاب"
+          },
+          {
+            "testid": "pick-variant-hero-cinematic",
+            "text": "نمونه نمایشیویترین نمایشی فروشگاهاین محتوا فقط برای پیش‌نمایش چیدمان است و در ویترین منتشرشده نمایش داده نمی‌شود.مشاهدهمحتوای نمونهاسلایدر سینمایی — طرح فاختهتصویر بزرگ با عمق و transition سنگین‌تر؛ مناسب برندهای premiumبرندهای premiumانتخاب"
+          },
+          {
+            "testid": "pick-variant-hero-split",
+            "text": "در حال آماده‌سازی پیش‌نمایش…محتوای نمونهبنر دوتکه — طرح صبامتن و CTA یک سمت، تصویر سمت دیگر؛ تمیز و conversion-friendlyتبدیل‌محورانتخاب"
+          },
+          {
+            "testid": "pick-variant-hero-editorial",
+            "text": "در حال آماده‌سازی پیش‌نمایش…محتوای نمونهبنر تحریریه — طرح عقیقحس مجله‌ای/لوکس با تایپوگرافی پررنگ؛ مناسب fashion / interior / lifestylefashion / interior / lifestyleانتخاب"
+          }
+        ]
+      }
+    },
+    {
+      "name": "persian-name:الماس",
+      "pass": true
+    },
+    {
+      "name": "persian-name:سیمین",
+      "pass": true
+    },
+    {
+      "name": "persian-name:کیمیا",
+      "pass": true
+    },
+    {
+      "name": "persian-name:فاخته",
+      "pass": true
+    },
+    {
+      "name": "persian-name:صبا",
+      "pass": true
+    },
+    {
+      "name": "persian-name:عقیق",
+      "pass": true
+    },
+    {
+      "name": "file:slider-editor-human-variant-name.png",
+      "pass": true,
+      "data": {
+        "bytes": 212458
       }
     },
     {
@@ -94,17 +165,52 @@
       }
     },
     {
+      "name": "file:slider-image-guidance.png",
+      "pass": true,
+      "data": {
+        "bytes": 77216
+      }
+    },
+    {
       "name": "file:slider-tabs.png",
       "pass": true,
       "data": {
-        "bytes": 77179
+        "bytes": 79511
+      }
+    },
+    {
+      "name": "cta-options",
+      "pass": true,
+      "data": {
+        "options": [
+          {
+            "value": "none",
+            "text": "بدون پیوند"
+          },
+          {
+            "value": "all-products",
+            "text": "همه محصولات"
+          },
+          {
+            "value": "product",
+            "text": "محصول مشخص"
+          },
+          {
+            "value": "category",
+            "text": "دسته‌بندی مشخص"
+          },
+          {
+            "value": "custom-url",
+            "text": "آدرس سفارشی"
+          }
+        ]
       }
     },
     {
       "name": "file:slider-destination-type.png",
       "pass": true,
       "data": {
-        "bytes": 77167
+        "bytes": 79062
       }
     },
     {
@@ -115,45 +221,71 @@
       }
     },
     {
+      "name": "product-picker-no-raw-guid-chrome",
+      "pass": true
+    },
+    {
       "name": "file:slider-category-picker.png",
       "pass": true,
       "data": {
-        "bytes": 85239
+        "bytes": 85245
       }
     },
     {
       "name": "file:slider-validation-popup.png",
       "pass": true,
       "data": {
-        "bytes": 82573
+        "bytes": 84634
       }
     },
     {
-      "name": "file:slider-invalid-fields.png",
+      "name": "validation-popup",
+      "pass": true
+    },
+    {
+      "name": "slide2-tab-error",
       "pass": true,
       "data": {
-        "bytes": 79004
+        "tabHasError": "true"
       }
     },
     {
       "name": "file:slider-tab-error-state.png",
       "pass": true,
       "data": {
-        "bytes": 79004
+        "bytes": 80283
+      }
+    },
+    {
+      "name": "file:slider-invalid-fields.png",
+      "pass": true,
+      "data": {
+        "bytes": 80283
       }
     },
     {
       "name": "file:slider-error-cleared-live.png",
       "pass": true,
       "data": {
-        "bytes": 79688
+        "bytes": 81926
       }
+    },
+    {
+      "name": "file:slider-validation-popup.png",
+      "pass": true,
+      "data": {
+        "bytes": 85714
+      }
+    },
+    {
+      "name": "review-blocked-by-image-required",
+      "pass": true
     },
     {
       "name": "file:slider-review-final.png",
       "pass": true,
       "data": {
-        "bytes": 82351
+        "bytes": 81321
       }
     },
     {
@@ -163,12 +295,15 @@
   ],
   "files": {
     "slider-storefront-desktop.png": {
-      "bytes": 364694
+      "bytes": 388890
     },
     "slider-storefront-mobile.png": {
       "bytes": 172998
     },
     "slider-six-variants.png": {
+      "bytes": 212458
+    },
+    "slider-editor-human-variant-name.png": {
       "bytes": 212458
     },
     "slider-almas-preview.png": {
@@ -193,36 +328,40 @@
       "bytes": 77179
     },
     "slider-image-guidance.png": {
-      "bytes": 77179
+      "bytes": 77216
     },
     "slider-tabs.png": {
-      "bytes": 77179
+      "bytes": 79511
     },
     "slider-destination-type.png": {
-      "bytes": 77167
+      "bytes": 79062
     },
     "slider-product-picker.png": {
       "bytes": 112140
     },
     "slider-category-picker.png": {
-      "bytes": 85239
+      "bytes": 85245
     },
     "slider-validation-popup.png": {
-      "bytes": 82573
-    },
-    "slider-invalid-fields.png": {
-      "bytes": 79004
+      "bytes": 85714
     },
     "slider-tab-error-state.png": {
-      "bytes": 79004
+      "bytes": 80283
+    },
+    "slider-invalid-fields.png": {
+      "bytes": 80283
     },
     "slider-error-cleared-live.png": {
-      "bytes": 79688
+      "bytes": 81926
     },
     "slider-review-final.png": {
-      "bytes": 82351
+      "bytes": 81321
     }
   },
   "errors": [],
-  "blockers": []
+  "blockers": [],
+  "race": {
+    "savedUrl": "http://127.0.0.1:3000/admin/landing-pages/01a0aeb9-25ef-7000-abcc-64c30d010719",
+    "conclusion": "product-bug-fixed-via-sessionStorage-pending-open"
+  }
 }

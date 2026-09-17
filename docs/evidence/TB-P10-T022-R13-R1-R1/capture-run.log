@@ -1,0 +1,10 @@
+﻿{
+  "ok": true,
+  "files": 21,
+  "blockers": [],
+  "race": {
+    "savedUrl": "http://127.0.0.1:3000/admin/landing-pages/01a0aeb9-25ef-7000-abcc-64c30d010719",
+    "conclusion": "product-bug-fixed-via-sessionStorage-pending-open"
+  },
+  "errors": []
+}
