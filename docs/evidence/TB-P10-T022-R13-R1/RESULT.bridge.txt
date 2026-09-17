@@ -87,7 +87,7 @@ Recovery-SoT:
 Phase P10 Builder Acceptance Repair; Last Architect-accepted TB-P10-T022-R13; Last Implementation TB-P10-T022-R13-R1; TB-P11-T001 retained unused; Issued/Repair none; Appearance YES; Builder NO; no T023/T002.
 
 Git:
-SHA=3f654c9c48400c6791c89a4084c1f258aadea968 HEAD==origin/main after push.
+SHA=311e247c343c93046bba825d09fc3447956a6537 HEAD==origin/main after push (implementation commit 3f654c9c48400c6791c89a4084c1f258aadea968).
 
 Architectural-Concerns:
 none material; composition-engine banner.four-grid responsive gap pre-existing outside Hero scope.
