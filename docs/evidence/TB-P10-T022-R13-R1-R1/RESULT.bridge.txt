@@ -24,22 +24,22 @@ Appearance-USER_VISUAL_ACCEPTED=YES
 Builder-USER_VISUAL_ACCEPTED=NO
 
 Summary:
-Hero Slider Builder Visual Closure PASS. Root cause of draft-save→wizard loss was Next.js remount after router.replace on first create discarding setWizardOpen; fixed via sessionStorage pending-open consumed after authoritative load(pageId). Complete Admin PNG set captured (six variants Persian names, height presets, guidance, tabs, CTA destination/product/category pickers, validation popup/inline/tab/live-clear, review, storefront desktop/mobile). Home reset preserved. banner.four-grid left out-of-scope. No P11/T002/T023. critical-storefront PASS.
+Hero Slider Builder Visual Closure PASS. Root cause of draft-save→wizard loss was Next.js remount after router.replace on first create discarding setWizardOpen; fixed via sessionStorage pending-open consumed after authoritative load(pageId). Complete Admin PNG set captured (21 files: six variants with Persian names الماس…عقیق, height presets, guidance, tabs, CTA destination/product/category pickers, validation popup/inline/tab/live-clear, review, storefront desktop/mobile). Runtime remount URL proven. Home reset preserved. banner.four-grid left out-of-scope. No P11/T002/T023. critical-storefront 20 PASS; R13-R1 guards 9 PASS; git diff --check PASS.
 
 Applicable-Locks:
 LOCK-SF-001…374 retained; no new locks.
 
 Recovery-Start:
-docs/evidence/TB-P10-T022-R13-R1-R1/recovery-start.md — main; tip after fix 9efa6a55; ancestry includes 3f654c9c R13-R1.
+docs/evidence/TB-P10-T022-R13-R1-R1/recovery-start.md — main; ancestry includes 3f654c9c R13-R1; fix commit 9efa6a55.
 
 Race-Root-Cause:
-docs/evidence/TB-P10-T022-R13-R1-R1/race-root-cause.md — product remount race, not missing await.
+docs/evidence/TB-P10-T022-R13-R1-R1/race-root-cause.md — product remount race (not automation-only; not missing await).
 
 Race-Fix:
-docs/evidence/TB-P10-T022-R13-R1-R1/race-fix.md — sessionStorage tooba.landing.openWizard.{pageId} + open after load; pageRef set on load.
+docs/evidence/TB-P10-T022-R13-R1-R1/race-fix.md — sessionStorage tooba.landing.openWizard.{pageId} + open after load; capture race.conclusion=product-bug-fixed-via-sessionStorage-pending-open.
 
 Six-Variant-Visual-Proof:
-docs/evidence/TB-P10-T022-R13-R1-R1/six-variant-visual-proof.md + screenshots slider-six-variants / almas…aghigh / slider-editor-human-variant-name.
+docs/evidence/TB-P10-T022-R13-R1-R1/six-variant-visual.md (+ six-variant-visual-proof.md) + screenshots slider-six-variants / almas…aghigh / slider-editor-human-variant-name.
 
 Height-Preset-Proof:
 docs/evidence/TB-P10-T022-R13-R1-R1/height-preset-proof.md + slider-height-presets.png
@@ -51,13 +51,13 @@ CTA-Picker-Proof:
 docs/evidence/TB-P10-T022-R13-R1-R1/cta-picker-proof.md + destination/product/category PNGs
 
 Validation-Runtime-Proof:
-docs/evidence/TB-P10-T022-R13-R1-R1/validation-runtime-proof.md
+docs/evidence/TB-P10-T022-R13-R1-R1/validation-runtime-proof.md — A–K
 
 Live-Error-Recovery-Proof:
-docs/evidence/TB-P10-T022-R13-R1-R1/live-error-recovery-proof.md
+docs/evidence/TB-P10-T022-R13-R1-R1/live-error-recovery-proof.md + slider-error-cleared-live.png
 
 Review-Step-Proof:
-docs/evidence/TB-P10-T022-R13-R1-R1/review-step-proof.md
+docs/evidence/TB-P10-T022-R13-R1-R1/review-step-proof.md + slider-review-final.png
 
 Storefront-Regression:
 docs/evidence/TB-P10-T022-R13-R1-R1/storefront-regression.md + desktop/mobile PNGs
@@ -69,13 +69,13 @@ Focused-Validation:
 docs/evidence/TB-P10-T022-R13-R1-R1/focused-validation.md — items 1–21 PASS; banner.four-grid OOS
 
 Visual-Evidence:
-docs/evidence/TB-P10-T022-R13-R1-R1/visual-evidence.md — capture ok=true
+docs/evidence/TB-P10-T022-R13-R1-R1/visual-evidence.md — capture ok=true; 21 PNGs
 
 Out-Of-Scope-Failures:
-docs/evidence/TB-P10-T022-R13-R1-R1/out-of-scope-failures.md — banner.four-grid
+docs/evidence/TB-P10-T022-R13-R1-R1/out-of-scope.md (+ out-of-scope-failures.md) — banner.four-grid
 
 AntiPattern-Scan:
-docs/evidence/TB-P10-T022-R13-R1-R1/antipattern-scan.md
+docs/evidence/TB-P10-T022-R13-R1-R1/antipattern-scan.md — CLEAN
 
 Lock-Registry:
 docs/evidence/TB-P10-T022-R13-R1-R1/lock-registry.md
@@ -85,7 +85,7 @@ docs/evidence/TB-P10-T022-R13-R1-R1/recovery-sot.md
 
 Git:
 branch=main
-HEAD=44e5a68028c4e710329b8f1186f6219c52b03f2c
+HEAD=PLACEHOLDER_SHA
 origin/main synced after push
 unrelated .tmp-* untouched
 
