@@ -28,7 +28,7 @@ export type LandingSectionChoice = {
 };
 
 export const LANDING_SECTION_CHOICES: LandingSectionChoice[] = [
-  { type: "Hero", label: "اسلایدر اصلی", description: "چند اسلاید با تصویر، عنوان، alt و سئو", testId: "add-section-hero" },
+  { type: "Hero", label: "اسلایدر اصلی", description: "چند اسلاید با تصویر، عنوان و Alt", testId: "add-section-hero" },
   { type: "ProductCollection", label: "مجموعه کالا", description: "نمایش کالا از انتخاب دستی، دسته، برند یا تازه‌ها", testId: "add-section-products" },
   { type: "CategoryGrid", label: "شبکهٔ دسته‌ها", description: "چند دستهٔ فروشگاه را در یک ردیف نشان می‌دهد", testId: "add-section-categories" },
   { type: "BrandStrip", label: "نوار برند", description: "برندهای انتخاب‌شده را در ویترین می‌چیند", testId: "add-section-brands" },

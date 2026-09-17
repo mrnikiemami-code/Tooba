@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { AlertCircle } from "lucide-react";
 import {
   adminImplementedVariants,
   adminSelectableSectionTypes,
@@ -19,6 +20,12 @@ import { SIZE_PRESET_CONTRACTS } from "../../../lib/storefront-composition/size-
 import { sectionSupportsHeightPreset } from "./admin-composition-catalog.ts";
 import { summarizeLandingSection, type LandingSectionType } from "./landing-section-catalog.ts";
 import { bannerSlotCountForVariant } from "./landing-section-catalog.ts";
+import {
+  HERO_HEIGHT_PRESET_LABELS_FA,
+  isHeroHeightPreset,
+  validateHeroSliderDetailed,
+  type HeroSlideFieldKey,
+} from "../../../lib/storefront-composition/hero-slider-config.ts";
 
 const STEP_LABELS: Record<SectionWizardStep, string> = {
   type: "نوع بخش",
@@ -85,6 +92,14 @@ export function AdminSectionWizard({
         : {}),
   );
   const [error, setError] = useState<string | null>(null);
+  const [validationModal, setValidationModal] = useState<string | null>(null);
+  const [heroShowErrors, setHeroShowErrors] = useState(false);
+  const [heroFocusRequest, setHeroFocusRequest] = useState<{
+    slideIndex: number;
+    field: HeroSlideFieldKey;
+    token: number;
+  } | null>(null);
+  const [blockedSteps, setBlockedSteps] = useState<Partial<Record<SectionWizardStep, boolean>>>({});
 
   const steps = useMemo(
     () => wizardStepsForHost(choice?.hostType ?? initialHostType),
@@ -92,8 +107,39 @@ export function AdminSectionWizard({
   );
 
   const stepIndex = Math.max(0, steps.indexOf(step));
+  const heroValidation = useMemo(
+    () => (choice?.hostType === "Hero" ? validateHeroSliderDetailed(config) : null),
+    [choice?.hostType, config],
+  );
 
   if (!open) return null;
+
+  const applyHeroValidationUx = (summary: string) => {
+    setHeroShowErrors(true);
+    setValidationModal(summary);
+    setError(summary);
+    setBlockedSteps((current) => ({ ...current, settings: true, preview: true }));
+    const detailed = validateHeroSliderDetailed(config);
+    if (detailed.firstInvalidSlideIndex != null && detailed.firstInvalidField) {
+      setHeroFocusRequest({
+        slideIndex: detailed.firstInvalidSlideIndex,
+        field: detailed.firstInvalidField,
+        token: Date.now(),
+      });
+    }
+    setStep("settings");
+  };
+
+  const clearHeroValidationUxIfResolved = (nextConfig: Record<string, unknown>) => {
+    if (!heroShowErrors || choice?.hostType !== "Hero") return;
+    const next = validateHeroSliderDetailed(nextConfig);
+    if (next.ok) {
+      setHeroShowErrors(false);
+      setValidationModal(null);
+      setError(null);
+      setBlockedSteps((current) => ({ ...current, settings: false, preview: false }));
+    }
+  };
 
   const goNext = () => {
     const message = validateWizardStep(step, {
@@ -103,16 +149,24 @@ export function AdminSectionWizard({
       config,
     });
     if (message) {
+      if (choice?.hostType === "Hero" && step === "settings") {
+        applyHeroValidationUx(message);
+        return;
+      }
       setError(message);
+      setBlockedSteps((current) => ({ ...current, [step]: true }));
       return;
     }
     setError(null);
+    setValidationModal(null);
+    setBlockedSteps((current) => ({ ...current, [step]: false }));
     const next = steps[stepIndex + 1];
     if (next) setStep(next);
   };
 
   const goBack = () => {
     setError(null);
+    setValidationModal(null);
     const prev = steps[stepIndex - 1];
     if (prev) setStep(prev);
     else onClose();
@@ -131,12 +185,18 @@ export function AdminSectionWizard({
         config,
       });
       if (message) {
+        if (choice.hostType === "Hero" && (s === "settings" || s === "preview")) {
+          applyHeroValidationUx(message);
+          return;
+        }
         setError(message);
+        setBlockedSteps((current) => ({ ...current, [s]: true }));
         setStep(s);
         return;
       }
     }
     setError(null);
+    setValidationModal(null);
     await onSave({
       hostType: choice.hostType,
       sectionTypeKey: choice.sectionTypeKey,
@@ -150,6 +210,18 @@ export function AdminSectionWizard({
       && choice.hostType !== "Hero"
       && sectionSupportsHeightPreset(choice.sectionTypeKey, variantKey ?? undefined),
   );
+
+  const heightSummaryFa = (() => {
+    if (choice?.hostType === "Hero") {
+      const preset = config.heightPreset;
+      if (isHeroHeightPreset(preset)) return HERO_HEIGHT_PRESET_LABELS_FA[preset];
+      return HERO_HEIGHT_PRESET_LABELS_FA.Medium;
+    }
+    if (typeof config.heightPreset === "string" && config.heightPreset in SIZE_PRESET_CONTRACTS) {
+      return SIZE_PRESET_CONTRACTS[config.heightPreset as keyof typeof SIZE_PRESET_CONTRACTS].nameFa;
+    }
+    return "پیش‌فرض";
+  })();
 
   return (
     <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/40 p-4" data-testid="section-wizard">
@@ -166,20 +238,28 @@ export function AdminSectionWizard({
           <ol className="mt-3 flex flex-wrap gap-2" data-testid="section-wizard-steps">
             {steps.map((item, index) => {
               const state = index === stepIndex ? "current" : index < stepIndex ? "completed" : "upcoming";
+              const blocked = Boolean(blockedSteps[item]) || (
+                heroShowErrors && choice?.hostType === "Hero" && (item === "settings" || item === "preview")
+                && Boolean(heroValidation && !heroValidation.ok)
+              );
               return (
                 <li
                   key={item}
-                  className={`rounded-full px-3 py-1 text-xs font-bold ${
-                    state === "current"
-                      ? "bg-[#2563EB] text-white"
-                      : state === "completed"
-                        ? "bg-emerald-50 text-emerald-700"
-                        : "bg-slate-100 text-slate-600"
+                  className={`inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-bold ${
+                    blocked
+                      ? "bg-red-50 text-red-700 ring-1 ring-red-400"
+                      : state === "current"
+                        ? "bg-[#2563EB] text-white"
+                        : state === "completed"
+                          ? "bg-emerald-50 text-emerald-700"
+                          : "bg-slate-100 text-slate-600"
                   }`}
                   data-wizard-step={item}
                   data-step-state={state}
+                  data-step-error={blocked ? "true" : undefined}
                   data-active={state === "current" ? "true" : undefined}
                 >
+                  {blocked ? <AlertCircle className="h-3.5 w-3.5" aria-hidden /> : null}
                   {(index + 1).toLocaleString("fa-IR")}. {STEP_LABELS[item]}
                 </li>
               );
@@ -187,7 +267,7 @@ export function AdminSectionWizard({
           </ol>
         </div>
 
-        <div className="min-h-0 flex-1 overflow-y-auto px-5 py-4">
+        <div className="min-h-0 flex-1 overflow-y-auto px-5 py-4" data-testid="section-wizard-scroll">
           {step === "type" ? (
             <div className="grid gap-3 sm:grid-cols-2" data-testid="composition-section-catalog" role="listbox" aria-label="نوع بخش">
               {compositionSections.map((item) => {
@@ -211,7 +291,7 @@ export function AdminSectionWizard({
                         type="button"
                         data-select-choice="1"
                         aria-pressed={selected}
-                        className={`rounded-xl px-3 py-1.5 text-xs font-bold ${
+                        className={`rounded-xl px-3 py-1.5 text-xs font-bold focus-visible:ring-2 focus-visible:ring-[#2563EB] ${
                           selected
                             ? "bg-[#2563EB] text-white"
                             : "border border-border bg-white text-slate-800 hover:border-[#2563EB] hover:text-[#2563EB]"
@@ -221,6 +301,8 @@ export function AdminSectionWizard({
                           setVariantKey(item.defaultVariantKey);
                           setConfig(defaultConfigForCompositionSection(item.sectionTypeKey, item.defaultVariantKey));
                           setError(null);
+                          setHeroShowErrors(false);
+                          setBlockedSteps({});
                         }}
                       >
                         {selected ? "انتخاب‌شده" : "انتخاب"}
@@ -274,7 +356,7 @@ export function AdminSectionWizard({
                         data-select-choice="1"
                         aria-pressed={selected}
                         title={variant.descriptionFa}
-                        className={`rounded-xl px-3 py-1.5 text-xs font-bold ${
+                        className={`rounded-xl px-3 py-1.5 text-xs font-bold focus-visible:ring-2 focus-visible:ring-[#2563EB] ${
                           selected
                             ? "bg-[#2563EB] text-white"
                             : "border border-border bg-white text-slate-800 hover:border-[#2563EB] hover:text-[#2563EB]"
@@ -335,7 +417,18 @@ export function AdminSectionWizard({
                   </select>
                 </label>
               ) : null}
-              <LandingSectionForm type={choice.hostType} value={config} onChange={setConfig} mode="settings" />
+              <LandingSectionForm
+                type={choice.hostType}
+                value={config}
+                onChange={(next) => {
+                  setConfig(next);
+                  clearHeroValidationUxIfResolved(next);
+                }}
+                mode="settings"
+                heroShowErrors={heroShowErrors}
+                heroFocusRequest={heroFocusRequest}
+                heroVariantKey={variantKey}
+              />
             </div>
           ) : null}
 
@@ -370,6 +463,8 @@ export function AdminSectionWizard({
                   <dd className="font-bold">
                     {typeof config.take === "number"
                       ? config.take.toLocaleString("fa-IR")
+                      : typeof config.slideCount === "number"
+                        ? config.slideCount.toLocaleString("fa-IR")
                       : Array.isArray(config.items)
                         ? config.items.length.toLocaleString("fa-IR")
                         : Array.isArray(config.productIds)
@@ -383,11 +478,7 @@ export function AdminSectionWizard({
                 </div>
                 <div className="flex justify-between gap-3 border-b border-dashed py-2">
                   <dt className="text-muted">اندازه</dt>
-                  <dd className="font-bold">
-                    {typeof config.heightPreset === "string" && config.heightPreset in SIZE_PRESET_CONTRACTS
-                      ? SIZE_PRESET_CONTRACTS[config.heightPreset as keyof typeof SIZE_PRESET_CONTRACTS].nameFa
-                      : "پیش‌فرض"}
-                  </dd>
+                  <dd className="font-bold">{heightSummaryFa}</dd>
                 </div>
                 <div className="flex justify-between gap-3 border-b border-dashed py-2">
                   <dt className="text-muted">فعال</dt>
@@ -397,10 +488,13 @@ export function AdminSectionWizard({
             </div>
           ) : null}
 
-          {error ? <p className="mt-3 text-sm text-red-600" role="alert">{error}</p> : null}
+          {error && !validationModal ? <p className="mt-3 text-sm text-red-600" role="alert">{error}</p> : null}
         </div>
 
-        <div className="flex shrink-0 flex-wrap items-center justify-between gap-2 border-t border-border px-5 py-3">
+        <div
+          className="sticky bottom-0 flex shrink-0 flex-wrap items-center justify-between gap-2 border-t border-border bg-white px-5 py-3"
+          data-testid="section-wizard-footer"
+        >
           <button type="button" className="rounded-xl border px-4 py-2 text-sm font-bold" onClick={goBack} data-testid="section-wizard-back">
             {stepIndex === 0 ? "انصراف" : "قبلی"}
           </button>
@@ -426,6 +520,33 @@ export function AdminSectionWizard({
           )}
         </div>
       </div>
+
+      {validationModal ? (
+        <div
+          className="fixed inset-0 z-[80] flex items-center justify-center bg-black/50 p-4"
+          role="alertdialog"
+          aria-modal="true"
+          aria-labelledby="hero-validation-title"
+          data-testid="hero-validation-modal"
+        >
+          <div className="w-full max-w-md rounded-2xl bg-white p-5 shadow-2xl">
+            <h4 id="hero-validation-title" className="text-base font-black text-slate-900">
+              تکمیل اطلاعات لازم است
+            </h4>
+            <p className="mt-3 text-sm leading-7 text-slate-700">{validationModal}</p>
+            <div className="mt-5 flex justify-end">
+              <button
+                type="button"
+                className="rounded-xl bg-[#2563EB] px-4 py-2 text-sm font-bold text-white"
+                onClick={() => setValidationModal(null)}
+                data-testid="hero-validation-modal-dismiss"
+              >
+                متوجه شدم
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }

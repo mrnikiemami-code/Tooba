@@ -56,12 +56,22 @@ export function LandingSectionForm({
   value,
   onChange,
   mode = "all",
+  heroShowErrors,
+  heroFocusRequest,
+  heroVariantKey,
 }: {
   type: string;
   value: Record<string, unknown>;
   onChange: (next: Record<string, unknown>) => void;
   /** Wizard can show source-only or settings-only slices. */
   mode?: "all" | "source" | "settings";
+  heroShowErrors?: boolean;
+  heroFocusRequest?: {
+    slideIndex: number;
+    field: import("../../../lib/storefront-composition/hero-slider-config.ts").HeroSlideFieldKey;
+    token: number;
+  } | null;
+  heroVariantKey?: string | null;
 }) {
   const title = typeof value.title === "string" ? value.title : "";
   const set = (patch: Record<string, unknown>) => onChange({ ...value, ...patch });
@@ -174,7 +184,13 @@ export function LandingSectionForm({
   if (type === "Hero" && mode !== "source") {
     return (
       <div className="space-y-3" data-testid="landing-section-form">
-        <AdminHeroSliderSettings value={value} onChange={onChange} />
+        <AdminHeroSliderSettings
+          value={value}
+          onChange={onChange}
+          showErrors={heroShowErrors}
+          focusRequest={heroFocusRequest}
+          variantKey={heroVariantKey}
+        />
       </div>
     );
   }

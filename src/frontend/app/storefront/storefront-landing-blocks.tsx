@@ -13,8 +13,11 @@ import { StorefrontMenuLinks } from "./storefront-menu-tree.tsx";
 import type { StorefrontMenuItem } from "./storefront-menu-api.ts";
 import { heightPresetBannerClass } from "../../lib/storefront-composition/size-presets.ts";
 import {
+  heroHeightClass,
+  heroHeightPresetDesktopPx,
   heroVariantToSwiperEffect,
   readHeroSliderFields,
+  resolveHeroSlideHref,
   type HeroSlideConfig,
   type HeroSliderVariantId,
 } from "../../lib/storefront-composition/hero-slider-config.ts";
@@ -54,6 +57,10 @@ function slideImageSrc(slide: HeroSlideConfig): string {
   return "";
 }
 
+function slideHref(slide: HeroSlideConfig): string {
+  return resolveHeroSlideHref(slide) || slide.href.trim();
+}
+
 function hasConfiguredSlides(config: Record<string, unknown>): boolean {
   return Array.isArray(config.slides) && config.slides.length > 0;
 }
@@ -79,7 +86,9 @@ export function HeroSlider({
   slides,
   autoplay = true,
   direction = "rtl",
-  heightPx = 420,
+  heightPreset = "Medium",
+  /** Legacy numeric height — used only when preset missing and legacy px present. */
+  heightPx,
   intervalSec = 5,
   previewLocale = "fa",
   showPreviewBadge = false,
@@ -88,6 +97,7 @@ export function HeroSlider({
   slides: HeroSlideConfig[];
   autoplay?: boolean;
   direction?: "rtl" | "ltr";
+  heightPreset?: string;
   heightPx?: number;
   intervalSec?: number;
   previewLocale?: string;
@@ -107,13 +117,21 @@ export function HeroSlider({
   ];
   const { shellClass, rounded } = shellForVariant(variant);
   const badge = showPreviewBadge ? <PreviewSampleBadge locale={previewLocale} className="top-3 left-3 z-20" /> : null;
+  const heightClass = heroHeightClass(heightPreset);
+  const legacyMinHeight =
+    typeof heightPx === "number" && heightPx > 0 ? heightPx : undefined;
   const safeSlides = slides.length > 0 ? slides : [{
     mediaAssetId: "",
     imageUrl: "/images/sliders/slider-1.jpg",
     title: "فروشگاه توبا",
     alt: "فروشگاه توبا",
-    seoTitle: "فروشگاه توبا",
-    seoDescription: "",
+    description: "",
+    ctaLabel: "مشاهده",
+    destinationType: "all-products" as const,
+    targetId: "",
+    targetSlug: "",
+    targetLabel: "",
+    customUrl: "",
     href: "/products",
   }];
 
@@ -136,20 +154,27 @@ export function HeroSlider({
 
   if (variant === "split") {
     const src = slideImageSrc(first) || "/images/sliders/slider-1.jpg";
-    const href = first.href.trim() || "/products";
+    const href = slideHref(first) || "/products";
     const title = first.title.trim() || "فروشگاه توبا";
+    const cta = first.ctaLabel.trim() || "مشاهده";
     return (
-      <section className={shellClass} data-testid="landing-hero" data-hero-variant={variant}>
+      <section className={shellClass} data-testid="landing-hero" data-hero-variant={variant} data-height-preset={heightPreset}>
         <div className={`grid grid-cols-1 md:grid-cols-2 gap-0 overflow-hidden border border-gray-100 bg-surface shadow-xl ${rounded}`}>
           {badge}
-          <Link href={href} className="relative block min-h-[180px] bg-gray-100" style={{ minHeight: heightPx }}>
+          <Link
+            href={href}
+            className={`relative block min-h-[180px] bg-gray-100 ${heightClass}`}
+            style={legacyMinHeight ? { minHeight: legacyMinHeight } : undefined}
+          >
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={src} alt={first.alt || title} title={first.seoTitle || title} className="h-full w-full object-cover" />
+            <img src={src} alt={first.alt || title} className="h-full w-full object-cover" />
           </Link>
           <div className="flex flex-col justify-center gap-3 p-6 md:p-10">
             <h2 className="text-2xl font-black md:text-4xl">{title}</h2>
-            {first.seoDescription ? <p className="max-w-xl text-sm md:text-base text-foreground/80">{first.seoDescription}</p> : null}
-            <Link href={href} className="inline-flex w-fit rounded-xl bg-primary px-4 py-2 text-sm font-bold text-white">مشاهده</Link>
+            {first.description ? <p className="max-w-xl text-sm md:text-base text-foreground/80">{first.description}</p> : null}
+            {href ? (
+              <Link href={href} className="inline-flex w-fit rounded-xl bg-primary px-4 py-2 text-sm font-bold text-white">{cta}</Link>
+            ) : null}
           </div>
         </div>
       </section>
@@ -158,11 +183,15 @@ export function HeroSlider({
 
   if (variant === "diagonal") {
     const src = slideImageSrc(first) || "/images/sliders/slider-1.jpg";
-    const href = first.href.trim() || "/products";
+    const href = slideHref(first) || "/products";
     const title = first.title.trim() || "فروشگاه توبا";
+    const cta = first.ctaLabel.trim() || "مشاهده";
     return (
-      <section className={shellClass} data-testid="landing-hero" data-hero-variant={variant}>
-        <div className={`relative overflow-hidden bg-slate-900 shadow-2xl ${rounded}`} style={{ minHeight: heightPx }}>
+      <section className={shellClass} data-testid="landing-hero" data-hero-variant={variant} data-height-preset={heightPreset}>
+        <div
+          className={`relative overflow-hidden bg-slate-900 shadow-2xl ${rounded} ${heightClass}`}
+          style={legacyMinHeight ? { minHeight: legacyMinHeight } : undefined}
+        >
           {badge}
           <div
             className="absolute inset-0"
@@ -172,10 +201,12 @@ export function HeroSlider({
             <img src={src} alt={first.alt || title} className="h-full w-full object-cover opacity-90" />
           </div>
           <div className="relative z-10 flex h-full min-h-[inherit] items-center justify-end p-6 md:p-12">
-            <div className="max-w-md rounded-2xl bg-white/95 p-6 text-gray-900 shadow-lg backdrop-blur md:p-8">
+            <div className="max-w-md rounded-2xl bg-surface/95 p-6 text-gray-900 shadow-lg backdrop-blur md:p-8">
               <h2 className="text-2xl font-black md:text-4xl">{title}</h2>
-              {first.seoDescription ? <p className="mt-2 text-sm md:text-base">{first.seoDescription}</p> : null}
-              <Link href={href} className="mt-4 inline-flex rounded-xl bg-primary px-4 py-2 text-sm font-bold text-white">مشاهده</Link>
+              {first.description ? <p className="mt-2 text-sm md:text-base">{first.description}</p> : null}
+              {href ? (
+                <Link href={href} className="mt-4 inline-flex rounded-xl bg-primary px-4 py-2 text-sm font-bold text-white">{cta}</Link>
+              ) : null}
             </div>
           </div>
         </div>
@@ -185,22 +216,35 @@ export function HeroSlider({
 
   if (variant === "editorial") {
     const src = slideImageSrc(first) || "/images/sliders/slider-1.jpg";
-    const href = first.href.trim() || "/products";
+    const href = slideHref(first) || "/products";
     const title = first.title.trim() || "فروشگاه توبا";
+    const cta = first.ctaLabel.trim() || "مشاهده مجموعه";
+    const body = (
+      <>
+        {badge}
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={src}
+          alt={first.alt || title}
+          className={`w-full object-cover ${heightClass}`}
+          style={legacyMinHeight ? { height: legacyMinHeight } : undefined}
+        />
+        <div className="absolute inset-0 bg-gradient-to-l from-black/80 via-black/35 to-transparent" />
+        <div className="absolute inset-y-0 right-0 flex w-full max-w-xl flex-col justify-end md:justify-center p-6 md:p-10 text-white">
+          <p className="mb-2 text-[11px] font-bold text-white/80 md:text-xs">ویترین انتخابی</p>
+          <h2 className="text-3xl font-black leading-tight md:text-5xl line-clamp-3">{title}</h2>
+          {first.description ? <p className="mt-3 text-sm text-white/90 md:text-base line-clamp-3">{first.description}</p> : null}
+          <span className="mt-5 inline-flex min-h-11 w-fit items-center rounded-xl bg-surface px-4 py-2 text-sm font-bold text-gray-900">{cta}</span>
+        </div>
+      </>
+    );
     return (
-      <section className={shellClass} data-testid="landing-hero" data-hero-variant={variant}>
-        <Link href={href} className={`relative block overflow-hidden bg-gray-100 shadow-2xl ${rounded}`}>
-          {badge}
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={src} alt={first.alt || title} title={first.seoTitle || title} className="w-full object-cover" style={{ height: heightPx }} />
-          <div className="absolute inset-0 bg-gradient-to-l from-black/80 via-black/35 to-transparent" />
-          <div className="absolute inset-y-0 right-0 flex w-full max-w-xl flex-col justify-end md:justify-center p-6 md:p-10 text-white">
-            <p className="mb-2 text-[11px] font-bold text-white/80 md:text-xs">ویترین انتخابی</p>
-            <h2 className="text-3xl font-black leading-tight md:text-5xl line-clamp-3">{title}</h2>
-            {first.seoDescription ? <p className="mt-3 text-sm text-white/90 md:text-base line-clamp-3">{first.seoDescription}</p> : null}
-            <span className="mt-5 inline-flex min-h-11 w-fit items-center rounded-xl bg-surface px-4 py-2 text-sm font-bold text-gray-900">مشاهده مجموعه</span>
-          </div>
-        </Link>
+      <section className={shellClass} data-testid="landing-hero" data-hero-variant={variant} data-height-preset={heightPreset}>
+        {href ? (
+          <Link href={href} className={`relative block overflow-hidden bg-gray-100 shadow-2xl ${rounded}`}>{body}</Link>
+        ) : (
+          <div className={`relative overflow-hidden bg-gray-100 shadow-2xl ${rounded}`}>{body}</div>
+        )}
       </section>
     );
   }
@@ -213,13 +257,13 @@ export function HeroSlider({
         : "bg-black/35";
 
   return (
-    <section className={shellClass} data-testid="landing-hero" data-hero-variant={variant}>
+    <section className={shellClass} data-testid="landing-hero" data-hero-variant={variant} data-height-preset={heightPreset}>
       <div className={`relative overflow-hidden bg-gray-100 shadow-2xl ${rounded}`}>
         {badge}
         {variant === "shapes" ? (
           <>
-            <div className="pointer-events-none absolute -left-8 top-6 z-10 h-24 w-24 rounded-full bg-white/20 blur-sm" />
-            <div className="pointer-events-none absolute bottom-8 right-10 z-10 h-16 w-16 rotate-12 rounded-2xl bg-white/15" />
+            <div className="pointer-events-none absolute -left-8 top-6 z-10 h-24 w-24 rounded-full bg-surface/20 blur-sm" />
+            <div className="pointer-events-none absolute bottom-8 right-10 z-10 h-16 w-16 rotate-12 rounded-2xl bg-surface/15" />
           </>
         ) : null}
         <Swiper
@@ -235,35 +279,48 @@ export function HeroSlider({
           }
           pagination={{ clickable: true, dynamicBullets: true }}
           dir={direction}
-          className="w-full"
-          style={{ height: heightPx }}
+          className={`w-full ${heightClass}`}
+          style={legacyMinHeight ? { height: legacyMinHeight } : undefined}
           {...creativeProps}
           {...coverflowProps}
         >
           {safeSlides.map((slide, index) => {
             const src = slideImageSrc(slide) || "/images/sliders/slider-1.jpg";
-            const href = slide.href.trim() || "/products";
+            const href = slideHref(slide);
             const title = slide.title.trim() || "فروشگاه توبا";
+            const inner = (
+              <>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={src}
+                  alt={slide.alt || title}
+                  className={`h-full w-full object-cover ${variant === "cinematic" ? "scale-105" : ""}`}
+                />
+                <div className={`absolute inset-0 ${overlayClass}`} />
+                <div className="absolute inset-0 flex flex-col justify-end p-6 text-white md:p-10">
+                  <h2 className={`font-black line-clamp-2 ${variant === "cinematic" ? "text-3xl md:text-5xl" : "text-2xl md:text-4xl"}`}>
+                    {title}
+                  </h2>
+                  {slide.description ? (
+                    <p className="mt-2 max-w-xl text-sm md:text-base line-clamp-2">{slide.description}</p>
+                  ) : null}
+                  {slide.ctaLabel.trim() && href ? (
+                    <span className="mt-3 inline-flex w-fit rounded-xl bg-surface/95 px-3 py-1.5 text-xs font-bold text-gray-900">
+                      {slide.ctaLabel.trim()}
+                    </span>
+                  ) : null}
+                </div>
+              </>
+            );
             return (
               <SwiperSlide key={`hero-slide-${index}-${slide.mediaAssetId || src}`}>
-                <Link href={href} className="relative block h-full w-full" aria-label={slide.seoTitle || title}>
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={src}
-                    alt={slide.alt || title}
-                    title={slide.seoTitle || title}
-                    className={`h-full w-full object-cover ${variant === "cinematic" ? "scale-105" : ""}`}
-                  />
-                  <div className={`absolute inset-0 ${overlayClass}`} />
-                  <div className="absolute inset-0 flex flex-col justify-end p-6 text-white md:p-10">
-                    <h2 className={`font-black line-clamp-2 ${variant === "cinematic" ? "text-3xl md:text-5xl" : "text-2xl md:text-4xl"}`}>
-                      {title}
-                    </h2>
-                    {slide.seoDescription ? (
-                      <p className="mt-2 max-w-xl text-sm md:text-base line-clamp-2">{slide.seoDescription}</p>
-                    ) : null}
-                  </div>
-                </Link>
+                {href ? (
+                  <Link href={href} className="relative block h-full w-full" aria-label={slide.ctaLabel || title}>
+                    {inner}
+                  </Link>
+                ) : (
+                  <div className="relative block h-full w-full">{inner}</div>
+                )}
               </SwiperSlide>
             );
           })}
@@ -302,7 +359,8 @@ export function LandingHero({
         slides={fields.slides}
         autoplay
         direction="rtl"
-        heightPx={fields.displayHeightPx}
+        heightPreset={fields.heightPreset}
+        heightPx={fields.displayHeightPx ?? undefined}
         intervalSec={fields.slideIntervalSec}
         previewLocale={previewLocale}
         showPreviewBadge={showPreviewBadge}
@@ -321,10 +379,7 @@ export function LandingHero({
       : mediaId
         ? storefrontMediaUrl(mediaId)
         : "";
-  const heightPx =
-    typeof config.displayHeightPx === "number" && config.displayHeightPx > 0
-      ? config.displayHeightPx
-      : 420;
+  const fields = readHeroSliderFields(config);
 
   return (
     <HeroSlider
@@ -335,14 +390,20 @@ export function LandingHero({
           imageUrl: configuredImage || "/images/sliders/slider-1.jpg",
           title,
           alt: title,
-          seoTitle: title,
-          seoDescription: subtitle,
+          description: subtitle,
+          ctaLabel: "مشاهده",
+          destinationType: href === "/products" ? "all-products" : "custom-url",
+          targetId: "",
+          targetSlug: "",
+          targetLabel: "",
+          customUrl: href === "/products" ? "" : href,
           href,
         },
       ]}
       autoplay
       direction="rtl"
-      heightPx={heightPx}
+      heightPreset={fields.heightPreset}
+      heightPx={fields.displayHeightPx ?? heroHeightPresetDesktopPx(fields.heightPreset)}
       intervalSec={5}
       previewLocale={previewLocale}
       showPreviewBadge={showPreviewBadge}

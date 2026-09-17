@@ -15,7 +15,7 @@ main
 Current Phase:
 
 ```text
-P11 — Admin Completion
+P10 — Builder Acceptance Repair
 ```
 
 Pipeline Mode:
@@ -50,7 +50,7 @@ TB-P07-T043
 Last Implementation Task:
 
 ```text
-TB-P11-T001
+TB-P10-T022-R13-R1
 ```
 
 Current Issued Task:
@@ -68,7 +68,8 @@ Current Repair Task:
 Implemented Under Review:
 
 ```text
-TB-P11-T001 — Admin Completion Kickoff (Recovery SoT reconciliation + production-grade Admin gap audit); USER_VISUAL_ACCEPTED=YES (Appearance); Builder USER_VISUAL_ACCEPTED=NO
+TB-P10-T022-R13-R1 — Hero Slider Builder Repair (six variants, height presets, structured CTA, visible validation); USER_VISUAL_ACCEPTED=YES (Appearance); Builder USER_VISUAL_ACCEPTED=NO
+TB-P11-T001 — Admin Completion Kickoff (Recovery SoT reconciliation + production-grade Admin gap audit); retained for later — not executed further; USER_VISUAL_ACCEPTED=YES (Appearance); Builder USER_VISUAL_ACCEPTED=NO
 TB-P10-T022-R13 — Final Builder Hardening (end-to-end completeness/consistency across 10 industry Template packs); Architect-ACCEPTED after worker Result; USER_VISUAL_ACCEPTED=YES (Appearance); Builder USER_VISUAL_ACCEPTED=NO
 TB-P10-T022-R12C — Industry Template Catalog Batch C (shoes, plants, beauty); USER_VISUAL_ACCEPTED=YES (Appearance); Builder USER_VISUAL_ACCEPTED=NO
 TB-P10-T022-R12B — Industry Template Catalog Batch B (tile-ceramic, interior-decor, home-appliances); USER_VISUAL_ACCEPTED=YES (Appearance); Builder USER_VISUAL_ACCEPTED=NO

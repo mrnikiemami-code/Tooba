@@ -1,0 +1,18 @@
+{
+  "ok": false,
+  "steps": [],
+  "files": {
+    "slider-storefront-desktop.png": {
+      "bytes": 364694
+    },
+    "slider-storefront-mobile.png": {
+      "bytes": 172998
+    },
+    "slider-capture-error.png": {
+      "bytes": 80491
+    }
+  },
+  "blockers": [
+    "locator.click: Timeout 15000ms exceeded.\nCall log:\n  - waiting for getByRole('button', { name: /افزودن بخش/ }).first()\n"
+  ]
+}

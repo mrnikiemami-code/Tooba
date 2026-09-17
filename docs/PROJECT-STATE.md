@@ -21,7 +21,7 @@ main
 Current Phase:
 
 ```text
-P11 — Admin Completion
+P10 — Builder Acceptance Repair
 ```
 
 Pipeline Mode:
@@ -62,7 +62,7 @@ TB-P05-GATE
 Last Implementation Task:
 
 ```text
-TB-P11-T001
+TB-P10-T022-R13-R1
 ```
 
 Current Issued Task:
