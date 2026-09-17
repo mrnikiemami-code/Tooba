@@ -22,7 +22,7 @@ test("Template Apply materializes full Fashion composition via replace API", () 
   assert.equal(payloads.length, fashion!.sectionPresetList.length);
   assert.ok(payloads.length >= 3);
   assert.match(composer, /applyTemplateToDraft|replaceAdminLandingComposition|buildTemplateSectionPayloads/);
-  assert.match(composer, /use-selected-template|onConfirmTemplate|اعمال قالب/);
+  assert.match(composer, /onConfirmTemplate|applyTemplateToDraft/);
   assert.match(api, /sections\/composition|replaceAdminLandingComposition/);
   assert.match(hostComposer, /ReplaceCompositionAsync/);
   assert.match(hostEndpoints, /sections\/composition/);
@@ -65,13 +65,14 @@ test("arrow + drag/drop share canonical reorder persistence", () => {
   assert.match(composer, /data-canonical-order/);
 });
 
-test("insert between start/middle/end", () => {
-  assert.match(composer, /insert-before-first/);
-  assert.match(composer, /insert-after-/);
+test("insert below section from in-row add action", () => {
+  assert.match(composer, /section-add-below-/);
   assert.match(composer, /openAddSectionWizard/);
   assert.match(composer, /insertAt/);
   assert.match(api, /insertAt/);
   assert.match(hostComposer, /InsertAt/);
+  assert.doesNotMatch(composer, /insert-before-first/);
+  assert.doesNotMatch(composer, /پیش‌نمایش هندسی جدا حذف شده است/);
 });
 
 test("delete and disable preserve catalog / exclude published", () => {

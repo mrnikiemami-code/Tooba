@@ -96,7 +96,7 @@ function renderHomeSection(
   const variantKey = mapped?.variantKey;
   switch (sectionType) {
     case "hero":
-      return renderSharedHomeSectionForLegacyType("hero", variantKey ?? "hero.full-width", context, config);
+      return renderSharedHomeSectionForLegacyType("hero", variantKey ?? "hero.fullscreen", context, config);
     case "stories":
       return renderSharedHomeSectionForLegacyType("stories", variantKey ?? "story.circle", context, config);
     case "category_grid":

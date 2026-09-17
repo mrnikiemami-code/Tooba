@@ -164,11 +164,28 @@ export function createFakeBanner(index: number, locale: string): PreviewFakeBann
 }
 
 export function createFakeHeroConfig(locale: string): Record<string, unknown> {
+  const title = previewFakeHeroTitle(locale);
+  const subtitle = previewFakeHeroSubtitle(locale);
   return {
-    title: previewFakeHeroTitle(locale),
-    subtitle: previewFakeHeroSubtitle(locale),
+    title,
+    subtitle,
     href: "/products",
     imageUrl: PREVIEW_FAKE_HERO,
+    displayHeightPx: 420,
+    slideIntervalSec: 5,
+    slideCount: 1,
+    slides: [
+      {
+        mediaAssetId: "",
+        imageUrl: PREVIEW_FAKE_HERO,
+        title,
+        alt: title,
+        seoTitle: title,
+        seoDescription: subtitle,
+        href: "/products",
+      },
+    ],
+    autoplay: true,
     focalPointX: 0.5,
     focalPointY: 0.45,
     previewFake: true,

@@ -146,13 +146,15 @@ export function AdminSectionWizard({
   };
 
   const showHeight = Boolean(
-    choice && sectionSupportsHeightPreset(choice.sectionTypeKey, variantKey ?? undefined),
+    choice
+      && choice.hostType !== "Hero"
+      && sectionSupportsHeightPreset(choice.sectionTypeKey, variantKey ?? undefined),
   );
 
   return (
     <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/40 p-4" data-testid="section-wizard">
       <div
-        className="flex h-[min(90vh,720px)] w-full max-w-3xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl"
+        className="flex h-[min(90vh,720px)] w-full max-w-4xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl"
         data-testid="section-wizard-shell"
         data-wizard-shell="fixed"
       >
@@ -197,28 +199,33 @@ export function AdminSectionWizard({
                     aria-selected={selected}
                     data-testid={item.testId}
                     data-section-type-key={item.sectionTypeKey}
-                    className={`rounded-2xl border p-3 text-start ${
+                    className={`flex flex-col rounded-2xl border p-3 text-start ${
                       selected ? "border-[#2563EB] bg-blue-50 ring-1 ring-[#2563EB]" : "border-border"
                     }`}
                   >
-                    <div onClick={(e) => e.stopPropagation()} onKeyDown={(e) => e.stopPropagation()}>
-                      <VariantLivePreview variantKey={item.defaultVariantKey} size="card" />
+                    <VariantLivePreview variantKey={item.defaultVariantKey} size="card" />
+                    <strong className="mt-2 block">{item.nameFa}</strong>
+                    <p className="mt-1 text-xs text-muted">{item.descriptionFa}</p>
+                    <div className="mt-3 flex justify-end">
+                      <button
+                        type="button"
+                        data-select-choice="1"
+                        aria-pressed={selected}
+                        className={`rounded-xl px-3 py-1.5 text-xs font-bold ${
+                          selected
+                            ? "bg-[#2563EB] text-white"
+                            : "border border-border bg-white text-slate-800 hover:border-[#2563EB] hover:text-[#2563EB]"
+                        }`}
+                        onClick={() => {
+                          setChoice(item);
+                          setVariantKey(item.defaultVariantKey);
+                          setConfig(defaultConfigForCompositionSection(item.sectionTypeKey, item.defaultVariantKey));
+                          setError(null);
+                        }}
+                      >
+                        {selected ? "انتخاب‌شده" : "انتخاب"}
+                      </button>
                     </div>
-                    <button
-                      type="button"
-                      data-select-choice="1"
-                      className="mt-2 w-full rounded-xl text-start ring-offset-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2563EB]"
-                      aria-pressed={selected}
-                      onClick={() => {
-                        setChoice(item);
-                        setVariantKey(item.defaultVariantKey);
-                        setConfig(defaultConfigForCompositionSection(item.sectionTypeKey, item.defaultVariantKey));
-                        setError(null);
-                      }}
-                    >
-                      <strong className="block">{item.nameFa}</strong>
-                      <p className="mt-1 text-xs text-muted">{item.descriptionFa}</p>
-                    </button>
                   </div>
                 );
               })}
@@ -243,52 +250,57 @@ export function AdminSectionWizard({
                     data-variant-key={variant.variantKey}
                     data-preview-fingerprint={variant.variantKey}
                     data-testid={`pick-variant-${variant.variantKey.replace(/\./g, "-")}`}
-                    className={`rounded-2xl border p-3 text-start ${
+                    className={`flex flex-col rounded-2xl border p-3 text-start ${
                       selected ? "border-[#2563EB] bg-blue-50 ring-1 ring-[#2563EB]" : "border-border"
                     }`}
                   >
-                    <div onClick={(e) => e.stopPropagation()} onKeyDown={(e) => e.stopPropagation()}>
-                      <VariantLivePreview
-                        variantKey={variant.variantKey}
-                        size="card"
-                        testId={`variant-live-preview-${variant.variantKey.replace(/\./g, "-")}`}
-                      />
+                    <VariantLivePreview
+                      variantKey={variant.variantKey}
+                      size="card"
+                      testId={`variant-live-preview-${variant.variantKey.replace(/\./g, "-")}`}
+                    />
+                    <strong className="mt-2 block text-sm" data-variant-design-name={variant.variantKey}>
+                      {variant.nameFa}
+                    </strong>
+                    <p className="mt-1 text-xs text-muted">{variant.descriptionFa}</p>
+                    {variant.recommendedUseFa ? (
+                      <span className="mt-2 inline-flex rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] font-bold text-emerald-700">
+                        {variant.recommendedUseFa}
+                      </span>
+                    ) : null}
+                    <div className="mt-3 flex justify-end">
+                      <button
+                        type="button"
+                        data-select-choice="1"
+                        aria-pressed={selected}
+                        title={variant.descriptionFa}
+                        className={`rounded-xl px-3 py-1.5 text-xs font-bold ${
+                          selected
+                            ? "bg-[#2563EB] text-white"
+                            : "border border-border bg-white text-slate-800 hover:border-[#2563EB] hover:text-[#2563EB]"
+                        }`}
+                        onClick={() => {
+                          setVariantKey(variant.variantKey);
+                          const next = defaultConfigForCompositionSection(choice.sectionTypeKey, variant.variantKey);
+                          if (variant.variantKey.startsWith("banner.")) {
+                            const slots = bannerSlotCountForVariant(variant.variantKey);
+                            next.items = Array.from({ length: slots }, (_, index) => ({
+                              imageUrl: "",
+                              href: "/offers",
+                              title: `بنر ${(index + 1).toLocaleString("fa-IR")}`,
+                            }));
+                          }
+                          if (choice.hostType === "StoryRail") {
+                            next.items = [];
+                            next.take = typeof config.take === "number" ? config.take : 12;
+                          }
+                          setConfig({ ...config, ...next, title: typeof config.title === "string" ? config.title : next.title });
+                          setError(null);
+                        }}
+                      >
+                        {selected ? "انتخاب‌شده" : "انتخاب"}
+                      </button>
                     </div>
-                    <button
-                      type="button"
-                      data-select-choice="1"
-                      className="mt-2 w-full rounded-xl text-start ring-offset-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2563EB]"
-                      aria-pressed={selected}
-                      title={variant.descriptionFa}
-                      onClick={() => {
-                        setVariantKey(variant.variantKey);
-                        const next = defaultConfigForCompositionSection(choice.sectionTypeKey, variant.variantKey);
-                        if (variant.variantKey.startsWith("banner.")) {
-                          const slots = bannerSlotCountForVariant(variant.variantKey);
-                          next.items = Array.from({ length: slots }, (_, index) => ({
-                            imageUrl: "",
-                            href: "/offers",
-                            title: `بنر ${(index + 1).toLocaleString("fa-IR")}`,
-                          }));
-                        }
-                        if (choice.hostType === "StoryRail") {
-                          next.items = [];
-                          next.take = typeof config.take === "number" ? config.take : 12;
-                        }
-                        setConfig({ ...config, ...next, title: typeof config.title === "string" ? config.title : next.title });
-                        setError(null);
-                      }}
-                    >
-                      <strong className="block text-sm" data-variant-design-name={variant.variantKey}>
-                        {variant.nameFa}
-                      </strong>
-                      <p className="mt-1 text-xs text-muted">{variant.descriptionFa}</p>
-                      {variant.recommendedUseFa ? (
-                        <span className="mt-2 inline-flex rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] font-bold text-emerald-700">
-                          {variant.recommendedUseFa}
-                        </span>
-                      ) : null}
-                    </button>
                   </div>
                 );
               })}

@@ -228,8 +228,9 @@ public sealed class StoreLandingPage
         UpdatedAt = now;
     }
 
-    /// <summary>آیا برای انتخاب به‌عنوان خانه واجد شرایط است.</summary>
-    public bool IsEligibleHome => Status == StoreLandingPageStatus.Published;
+    /// <summary>آیا برای انتخاب به‌عنوان خانه واجد شرایط است (فقط فرود منتشرشده).</summary>
+    public bool IsEligibleHome =>
+        Status == StoreLandingPageStatus.Published && PageType == StorePageType.Landing;
 
     /// <summary>H1 اولیهٔ صفحه را برمی‌گرداند.</summary>
     public string ResolvePrimaryH1() => string.IsNullOrWhiteSpace(PrimaryH1) ? Title : PrimaryH1!;

@@ -5,7 +5,7 @@ import { landingSectionSurfaceRole } from "../storefront-appearance/surface-role
 
 /** Legacy Landing PascalCase section types → shared registry keys. */
 export const LANDING_SECTION_TYPE_MAP: Record<string, { sectionTypeKey: string; variantKey: string }> = {
-  Hero: { sectionTypeKey: "HeroCarousel", variantKey: "hero.contained" },
+  Hero: { sectionTypeKey: "HeroCarousel", variantKey: "hero.shapes" },
   ProductCollection: { sectionTypeKey: "ProductShowcase", variantKey: "product.card-carousel" },
   CategoryGrid: { sectionTypeKey: "CategoryShowcase", variantKey: "category.image-cards" },
   BrandStrip: { sectionTypeKey: "BrandShowcase", variantKey: "brand.logo-rail" },
@@ -20,7 +20,7 @@ export const LANDING_SECTION_TYPE_MAP: Record<string, { sectionTypeKey: string; 
 
 /** Legacy Home snake_case section types → shared registry keys. */
 export const HOME_SECTION_TYPE_MAP: Record<string, { sectionTypeKey: string; variantKey: string }> = {
-  hero: { sectionTypeKey: "HeroCarousel", variantKey: "hero.full-width" },
+  hero: { sectionTypeKey: "HeroCarousel", variantKey: "hero.fullscreen" },
   stories: { sectionTypeKey: "StoryRail", variantKey: "story.circle" },
   category_grid: { sectionTypeKey: "CategoryShowcase", variantKey: "category.image-cards" },
   product_rail_flash: { sectionTypeKey: "ProductShowcase", variantKey: "product.amazing" },

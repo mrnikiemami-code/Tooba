@@ -171,15 +171,20 @@ export function variantPreviewFingerprint(variantKey: string): string {
 export function variantPreviewStructure(variantKey: string): Array<{ className: string }> {
   switch (variantKey) {
     case "hero.editorial":
+    case "hero.cinematic":
       return [
         { className: "col-span-3 row-span-2 rounded-lg bg-white/40" },
         { className: "col-span-2 row-span-2 rounded-lg bg-white/80" },
       ];
     case "hero.split":
+    case "hero.diagonal":
       return [
         { className: "col-span-3 row-span-2 rounded-lg bg-white/55" },
         { className: "col-span-2 row-span-2 rounded-lg bg-white/85" },
       ];
+    case "hero.shapes":
+    case "hero.fullscreen":
+      return [{ className: "col-span-5 row-span-2 rounded-lg bg-white/70" }];
     case "hero.side-promos":
       return [
         { className: "col-span-3 row-span-2 rounded-lg bg-white/70" },

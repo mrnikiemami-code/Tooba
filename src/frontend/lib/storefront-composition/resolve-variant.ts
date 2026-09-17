@@ -4,6 +4,9 @@ import { assertVariantCompatible, getVariant, isVariantImplemented } from "./reg
 /** Accidental aliases remapped to the canonical selectable Variant. */
 const VARIANT_ALIASES: Record<string, string> = {
   "banner.mosaic-2x2": "banner.four-grid",
+  "hero.full-width": "hero.fullscreen",
+  "hero.contained": "hero.shapes",
+  "hero.side-promos": "hero.diagonal",
 };
 
 export function canonicalizeVariantKey(variantKey: string): string {

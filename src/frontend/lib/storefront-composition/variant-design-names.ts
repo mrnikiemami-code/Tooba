@@ -18,33 +18,41 @@ export type VariantDesignMeta = {
  * Style: «خانواده قابل‌فهم — طرح [نام]».
  */
 export const VARIANT_DESIGN_NAMES: Record<string, VariantDesignMeta> = {
-  "hero.full-width": {
-    variantKey: "hero.full-width",
+  "hero.fullscreen": {
+    variantKey: "hero.fullscreen",
     designNameFa: "اسلایدر تمام‌عرض — طرح الماس",
-    descriptionFa: "تصویر بزرگ تمام عرض بالای صفحه با اسلاید",
-    badgeFa: "بالای صفحه",
+    descriptionFa: "تصویر تمام‌عرض، متن روی تصویر؛ مناسب فروشگاه‌های عمومی",
+    badgeFa: "عمومی",
   },
-  "hero.contained": {
-    variantKey: "hero.contained",
-    designNameFa: "اسلایدر کادردار — طرح زمرد",
-    descriptionFa: "اسلاید داخل کادر با گوشه گرد",
-    badgeFa: "لندینگ",
+  "hero.shapes": {
+    variantKey: "hero.shapes",
+    designNameFa: "اسلایدر شکلی — طرح سیمین",
+    descriptionFa: "لایه‌های گرافیکی و فرم‌های تزئینی؛ مناسب beauty / fashion / decor",
+    badgeFa: "زیبایی و مد",
+  },
+  "hero.diagonal": {
+    variantKey: "hero.diagonal",
+    designNameFa: "اسلایدر مورب — طرح کیمیا",
+    descriptionFa: "اسپلیت مورب و مدرن؛ مناسب tech / tools / auto",
+    badgeFa: "فنی",
+  },
+  "hero.cinematic": {
+    variantKey: "hero.cinematic",
+    designNameFa: "اسلایدر سینمایی — طرح فاخته",
+    descriptionFa: "تصویر بزرگ با عمق و transition سنگین‌تر؛ مناسب برندهای premium",
+    badgeFa: "پرمیوم",
   },
   "hero.split": {
     variantKey: "hero.split",
-    designNameFa: "بنر دوتکه — طرح یاقوت",
-    descriptionFa: "تصویر و متن در دو ستون کنار هم",
-  },
-  "hero.side-promos": {
-    variantKey: "hero.side-promos",
-    designNameFa: "اسلایدر با پرومو — طرح فیروزه",
-    descriptionFa: "اسلایدر اصلی همراه دو بنر کناری",
+    designNameFa: "بنر دوتکه — طرح صبا",
+    descriptionFa: "متن و CTA یک سمت، تصویر سمت دیگر؛ تمیز و conversion-friendly",
+    badgeFa: "تبدیل‌محور",
   },
   "hero.editorial": {
     variantKey: "hero.editorial",
     designNameFa: "بنر تحریریه — طرح عقیق",
-    descriptionFa: "تصویر تمام‌عرض با عنوان و متن برجسته",
-    badgeFa: "تصویری",
+    descriptionFa: "حس مجله‌ای/لوکس با تایپوگرافی پررنگ؛ مناسب fashion / interior / lifestyle",
+    badgeFa: "مجله‌ای",
   },
 
   "story.circle": {

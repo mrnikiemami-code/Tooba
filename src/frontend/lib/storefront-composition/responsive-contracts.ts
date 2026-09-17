@@ -2,19 +2,33 @@ import type { ResponsiveContract } from "./types.ts";
 
 /** Code-owned responsive contracts. Admin never configures breakpoints. */
 export const RESPONSIVE_CONTRACTS: Record<string, ResponsiveContract> = {
-  "hero.full-width": {
-    variantKey: "hero.full-width",
+  "hero.fullscreen": {
+    variantKey: "hero.fullscreen",
     columns: { desktop: "1", tablet: "1", mobile: "1" },
     height: { desktop: "Large", tablet: "Medium", mobile: "Compact" },
     itemVisible: { desktop: "1", tablet: "1", mobile: "1" },
     notesFa: "اسلاید تمام‌عرض؛ موبایل ارتفاع محدود سیستم.",
   },
-  "hero.contained": {
-    variantKey: "hero.contained",
+  "hero.shapes": {
+    variantKey: "hero.shapes",
     columns: { desktop: "1", tablet: "1", mobile: "1" },
     height: { desktop: "Medium", tablet: "Medium", mobile: "Compact" },
     itemVisible: { desktop: "1", tablet: "1", mobile: "1" },
-    notesFa: "اسلاید داخل کانتینر با گوشه گرد.",
+    notesFa: "اسلاید شکلی با لایه‌های تزئینی.",
+  },
+  "hero.diagonal": {
+    variantKey: "hero.diagonal",
+    columns: { desktop: "2", tablet: "2", mobile: "1" },
+    height: { desktop: "Large", tablet: "Medium", mobile: "Compact" },
+    itemVisible: { desktop: "1", tablet: "1", mobile: "1" },
+    notesFa: "اسپلیت مورب؛ موبایل پشته.",
+  },
+  "hero.cinematic": {
+    variantKey: "hero.cinematic",
+    columns: { desktop: "1", tablet: "1", mobile: "1" },
+    height: { desktop: "ExtraLarge", tablet: "Large", mobile: "Medium" },
+    itemVisible: { desktop: "1", tablet: "1", mobile: "1" },
+    notesFa: "هیرو سینمایی با transition سنگین‌تر.",
   },
   "hero.split": {
     variantKey: "hero.split",
@@ -22,13 +36,6 @@ export const RESPONSIVE_CONTRACTS: Record<string, ResponsiveContract> = {
     height: { desktop: "Large", tablet: "Medium", mobile: "Compact" },
     itemVisible: { desktop: "1", tablet: "1", mobile: "1" },
     notesFa: "دو ستون دسکتاپ؛ موبایل پشته.",
-  },
-  "hero.side-promos": {
-    variantKey: "hero.side-promos",
-    columns: { desktop: "3", tablet: "2", mobile: "1" },
-    height: { desktop: "Large", tablet: "Medium", mobile: "Compact" },
-    itemVisible: { desktop: "1+2", tablet: "1+1", mobile: "1" },
-    notesFa: "هیرو + پروموی کناری؛ موبایل فقط هیرو.",
   },
   "hero.editorial": {
     variantKey: "hero.editorial",
@@ -341,7 +348,14 @@ export const RESPONSIVE_CONTRACTS: Record<string, ResponsiveContract> = {
 };
 
 export function requireResponsiveContract(variantKey: string): ResponsiveContract {
-  const contract = RESPONSIVE_CONTRACTS[variantKey];
+  const aliases: Record<string, string> = {
+    "banner.mosaic-2x2": "banner.four-grid",
+    "hero.full-width": "hero.fullscreen",
+    "hero.contained": "hero.shapes",
+    "hero.side-promos": "hero.diagonal",
+  };
+  const key = aliases[variantKey] ?? variantKey;
+  const contract = RESPONSIVE_CONTRACTS[key];
   if (!contract) throw new Error(`Missing responsive contract: ${variantKey}`);
   return contract;
 }

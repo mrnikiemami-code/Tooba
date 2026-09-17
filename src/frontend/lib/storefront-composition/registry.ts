@@ -9,6 +9,18 @@ import { BASE_SECTION_SETTINGS } from "./settings.ts";
 import { RESPONSIVE_CONTRACTS } from "./responsive-contracts.ts";
 import { getVariantDesignMeta } from "./variant-design-names.ts";
 
+/** Keep in sync with resolve-variant VARIANT_ALIASES (avoid import cycle). */
+const VARIANT_KEY_ALIASES: Record<string, string> = {
+  "banner.mosaic-2x2": "banner.four-grid",
+  "hero.full-width": "hero.fullscreen",
+  "hero.contained": "hero.shapes",
+  "hero.side-promos": "hero.diagonal",
+};
+
+function canonicalVariantKey(key: string): string {
+  return VARIANT_KEY_ALIASES[key] ?? key;
+}
+
 const section = (
   key: string,
   nameFa: string,
@@ -39,10 +51,11 @@ type VariantOpts = {
 
 /** Code-owned Store-preview slot counts (not Admin settings). */
 const PREVIEW_CARDINALITY: Record<string, { min: number; target: number }> = {
-  "hero.full-width": { min: 1, target: 1 },
-  "hero.contained": { min: 1, target: 1 },
+  "hero.fullscreen": { min: 1, target: 1 },
+  "hero.shapes": { min: 1, target: 1 },
+  "hero.diagonal": { min: 1, target: 1 },
+  "hero.cinematic": { min: 1, target: 1 },
   "hero.split": { min: 1, target: 1 },
-  "hero.side-promos": { min: 1, target: 1 },
   "hero.editorial": { min: 1, target: 1 },
   "story.circle": { min: 4, target: 6 },
   "story.image-circles": { min: 4, target: 6 },
@@ -121,7 +134,7 @@ const variant = (
 
 /** First-wave shared Section Types (prefer Variants over new Types). */
 export const SECTION_TYPES: SectionTypeDefinition[] = [
-  section("HeroCarousel", "اسلایدر اصلی", "بنر متحرک بالای صفحه", "hero.full-width", { home: true, landing: true }, "page"),
+  section("HeroCarousel", "اسلایدر اصلی", "بنر متحرک بالای صفحه", "hero.fullscreen", { home: true, landing: true }, "page"),
   section("StoryRail", "میانبر استوری", "میانبرهای دایره‌ای یا کارت‌گرد", "story.circle", { home: true, landing: true }),
   section("CategoryShowcase", "نمایش دسته‌ها", "کارت، کاشی یا ردیف افقی دسته", "category.image-cards", { home: true, landing: true }),
   section("ProductShowcase", "نمایش کالا", "اسلایدر، شبکه یا ردیف کالا", "product.card-carousel", { home: true, landing: true }),
@@ -144,20 +157,23 @@ const DS_REVIEW = ["ApprovedReviews"] as const satisfies readonly AdminSelectabl
 
 /** Substantial initial Variant catalog; most marked NewRequiredLater until built. */
 export const VARIANTS: VariantDefinition[] = [
-  variant("hero.full-width", "HeroCarousel", "تمام‌عرض", "اسلاید تمام‌عرض", "Existing", {
-    previewKind: "hero-slider", recommendedUseFa: "بالای صفحه اصلی", sizePresetsSupported: true, autoplaySupported: true, dataSources: DS_MANUAL,
+  variant("hero.fullscreen", "HeroCarousel", "تمام‌عرض", "تصویر تمام‌عرض با متن روی تصویر", "Existing", {
+    previewKind: "hero-slider", recommendedUseFa: "فروشگاه‌های عمومی", sizePresetsSupported: true, autoplaySupported: true, dataSources: DS_MANUAL,
   }),
-  variant("hero.contained", "HeroCarousel", "داخل کانتینر", "اسلاید با گوشه گرد", "ReusableViaAdapter", {
-    previewKind: "hero-contained", recommendedUseFa: "لندینگ و صفحات داخلی", sizePresetsSupported: true, autoplaySupported: true, dataSources: DS_MANUAL,
+  variant("hero.shapes", "HeroCarousel", "شکلی", "لایه‌های گرافیکی و فرم‌های تزئینی", "ReusableViaAdapter", {
+    previewKind: "hero-contained", recommendedUseFa: "beauty / fashion / decor", sizePresetsSupported: true, autoplaySupported: true, dataSources: DS_MANUAL,
   }),
-  variant("hero.split", "HeroCarousel", "دو ستون", "تصویر + متن", "ReusableViaAdapter", {
-    previewKind: "hero-contained", sizePresetsSupported: true, dataSources: DS_MANUAL,
+  variant("hero.diagonal", "HeroCarousel", "مورب", "اسپلیت مورب و مدرن", "ReusableViaAdapter", {
+    previewKind: "hero-slider", recommendedUseFa: "tech / tools / auto", sizePresetsSupported: true, autoplaySupported: true, dataSources: DS_MANUAL,
   }),
-  variant("hero.side-promos", "HeroCarousel", "اسلایدر با پروموی کناری", "اسلایدر اصلی + دو پرومو", "ReusableViaAdapter", {
-    previewKind: "hero-slider", sizePresetsSupported: true, dataSources: DS_MANUAL,
+  variant("hero.cinematic", "HeroCarousel", "سینمایی", "تصویر بزرگ با عمق و transition سنگین", "Existing", {
+    previewKind: "hero-slider", recommendedUseFa: "برندهای premium", sizePresetsSupported: true, autoplaySupported: true, dataSources: DS_MANUAL,
   }),
-  variant("hero.editorial", "HeroCarousel", "تحریریه", "تصویر تمام‌عرض با عنوان و متن برجسته", "Existing", {
-    previewKind: "hero-contained", recommendedUseFa: "مناسب فروشگاه‌های تصویری", sizePresetsSupported: true, dataSources: DS_MANUAL,
+  variant("hero.split", "HeroCarousel", "دوتکه", "متن و CTA کنار تصویر", "ReusableViaAdapter", {
+    previewKind: "hero-contained", recommendedUseFa: "تبدیل‌محور", sizePresetsSupported: true, autoplaySupported: true, dataSources: DS_MANUAL,
+  }),
+  variant("hero.editorial", "HeroCarousel", "تحریریه", "حس مجله‌ای با تایپوگرافی پررنگ", "Existing", {
+    previewKind: "hero-contained", recommendedUseFa: "fashion / interior / lifestyle", sizePresetsSupported: true, autoplaySupported: true, dataSources: DS_MANUAL,
   }),
 
   variant("story.circle", "StoryRail", "دایره استوری", "دایره‌های افقی با حاشیه", "Existing", {
@@ -328,7 +344,7 @@ export const INDUSTRY_TEMPLATE_SEEDS: Array<{
     industry: "AutoParts",
     descriptionFa: "اولویت دسته و برند، فهرست فشرده کالا و تیکر رتبه بدون شلوغی تحریریه‌ای",
     sectionPresetList: [
-      { sectionTypeKey: "HeroCarousel", variantKey: "hero.contained", dataSourceIntent: "Manual" },
+      { sectionTypeKey: "HeroCarousel", variantKey: "hero.shapes", dataSourceIntent: "Manual" },
       { sectionTypeKey: "CategoryShowcase", variantKey: "category.compact-tiles", dataSourceIntent: "Manual" },
       { sectionTypeKey: "BrandShowcase", variantKey: "brand.logo-grid", dataSourceIntent: "Manual" },
       { sectionTypeKey: "ProductShowcase", variantKey: "product.minimal-list", dataSourceIntent: "Category" },
@@ -368,7 +384,7 @@ export const INDUSTRY_TEMPLATE_SEEDS: Array<{
     industry: "TileCeramic",
     descriptionFa: "تصویر بزرگ، تأکید کلکسیون/دسته و بنرهای موزاییکی با تراکم کالای محدود",
     sectionPresetList: [
-      { sectionTypeKey: "HeroCarousel", variantKey: "hero.side-promos", dataSourceIntent: "Manual" },
+      { sectionTypeKey: "HeroCarousel", variantKey: "hero.diagonal", dataSourceIntent: "Manual" },
       { sectionTypeKey: "CategoryShowcase", variantKey: "category.editorial-tiles", dataSourceIntent: "Manual" },
       { sectionTypeKey: "BannerShowcase", variantKey: "banner.one-large-four-small", dataSourceIntent: "Manual" },
       { sectionTypeKey: "ProductShowcase", variantKey: "product.large-cards", dataSourceIntent: "Newest" },
@@ -395,7 +411,7 @@ export const INDUSTRY_TEMPLATE_SEEDS: Array<{
     industry: "HomeAppliances",
     descriptionFa: "برندمحور، مقایسه تب‌دار کالا و بنرهای کاربردی",
     sectionPresetList: [
-      { sectionTypeKey: "HeroCarousel", variantKey: "hero.contained", dataSourceIntent: "Manual" },
+      { sectionTypeKey: "HeroCarousel", variantKey: "hero.shapes", dataSourceIntent: "Manual" },
       { sectionTypeKey: "BrandShowcase", variantKey: "brand.featured", dataSourceIntent: "Manual" },
       { sectionTypeKey: "ProductShowcase", variantKey: "product.tabbed", dataSourceIntent: "Category" },
       { sectionTypeKey: "ProductRankedList", variantKey: "ranked.grid", dataSourceIntent: "Newest" },
@@ -408,7 +424,7 @@ export const INDUSTRY_TEMPLATE_SEEDS: Array<{
     industry: "Shoes",
     descriptionFa: "کمپین تصویری بالا، کشف دسته و استوری، ردیف کالای بصری متمایز از پوشاک",
     sectionPresetList: [
-      { sectionTypeKey: "HeroCarousel", variantKey: "hero.full-width", dataSourceIntent: "Manual" },
+      { sectionTypeKey: "HeroCarousel", variantKey: "hero.fullscreen", dataSourceIntent: "Manual" },
       { sectionTypeKey: "StoryRail", variantKey: "story.rounded-cards", dataSourceIntent: "Manual" },
       { sectionTypeKey: "CategoryShowcase", variantKey: "category.horizontal-rail", dataSourceIntent: "Manual" },
       { sectionTypeKey: "ProductShowcase", variantKey: "product.card-carousel", dataSourceIntent: "Newest" },
@@ -466,7 +482,8 @@ export function getSectionType(key: string): SectionTypeDefinition | undefined {
 }
 
 export function getVariant(key: string): VariantDefinition | undefined {
-  return VARIANTS.find((v) => v.key === key);
+  const canonical = canonicalVariantKey(key);
+  return VARIANTS.find((v) => v.key === canonical);
 }
 
 export function variantsForSection(sectionTypeKey: string): VariantDefinition[] {

@@ -15,6 +15,7 @@ public static class StoreLandingPageEndpoints
         admin.MapGet("/{pageId:guid}/preview", PreviewAsync);
         admin.MapPut("/{pageId:guid}", UpdateAsync);
         admin.MapPut("/{pageId:guid}/status", SetStatusAsync);
+        admin.MapDelete("/{pageId:guid}", DeletePageAsync);
         admin.MapPut("/home", SetHomeAsync);
         admin.MapGet("/home", GetHomeAdminAsync);
         admin.MapGet("/{pageId:guid}/sections", ListSectionsAsync);
@@ -129,6 +130,28 @@ public static class StoreLandingPageEndpoints
         {
             await AdminPanelAccess.RequireAuthorizedAsync(request, session, tenant, guard, environment, cancellationToken);
             return Results.Json(await composer.UpdateAsync(pageId, body, cancellationToken));
+        }
+        catch (PlatformHttpException ex)
+        {
+            return Results.Json(new { title = ex.Title, errorCode = ex.ErrorCode }, statusCode: ex.StatusCode);
+        }
+    }
+
+    private static async Task<IResult> DeletePageAsync(
+        Guid pageId,
+        StoreLandingPageComposer composer,
+        HttpRequest request,
+        CurrentAuthenticatedSession session,
+        ICurrentTenant tenant,
+        IAuthorizationGuard guard,
+        IHostEnvironment environment,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            await AdminPanelAccess.RequireAuthorizedAsync(request, session, tenant, guard, environment, cancellationToken);
+            await composer.DeletePageAsync(pageId, cancellationToken);
+            return Results.Json(new { ok = true });
         }
         catch (PlatformHttpException ex)
         {

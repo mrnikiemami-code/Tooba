@@ -50,23 +50,36 @@ function industryTone(industry: string): string {
 /** Distinct layout miniature for a Variant — structure communicates the real layout. */
 export function layoutAwareVariantPreview(variantKey: string): PreviewCell[] {
   switch (variantKey) {
-    case "hero.full-width":
-    case "hero.contained":
-      return [{ className: "col-span-6 row-span-2 rounded-md bg-slate-700/25 border border-slate-400/40" }];
+    case "hero.fullscreen":
+      return [{ className: "col-span-6 row-span-2 rounded-md bg-sky-600/80 border border-sky-300/50" }];
+    case "hero.shapes":
+      return [{ className: "col-span-6 row-span-2 rounded-md bg-fuchsia-500/75 border border-fuchsia-200/60" }];
+    case "hero.diagonal":
+      return [
+        { className: "col-span-3 row-span-2 rounded-md bg-amber-500/80 border border-amber-200/50 skew-y-1" },
+        { className: "col-span-3 row-span-2 rounded-md bg-amber-100/90 border border-amber-300/40 -skew-y-1" },
+      ];
+    case "hero.cinematic":
+      return [{ className: "col-span-6 row-span-2 rounded-md bg-indigo-700/85 border border-indigo-300/40 shadow-inner" }];
     case "hero.split":
       return [
-        { className: "col-span-3 row-span-2 rounded-md bg-slate-600/30 border border-slate-400/30" },
-        { className: "col-span-3 row-span-2 rounded-md bg-white/70 border border-slate-300/50 space-y-1 p-1 flex flex-col justify-center" },
-      ];
-    case "hero.side-promos":
-      return [
-        { className: "col-span-4 row-span-2 rounded-md bg-slate-600/30" },
-        { className: "col-span-2 rounded-sm bg-slate-400/25" },
-        { className: "col-span-2 rounded-sm bg-slate-400/20" },
+        { className: "col-span-3 row-span-2 rounded-md bg-emerald-600/80 border border-emerald-300/40" },
+        { className: "col-span-3 row-span-2 rounded-md bg-emerald-50/95 border border-emerald-200/60 space-y-1 p-1 flex flex-col justify-center" },
       ];
     case "hero.editorial":
       return [
-        { className: "col-span-6 row-span-2 rounded-md bg-gradient-to-l from-slate-500/20 to-slate-700/35 relative" },
+        { className: "col-span-6 row-span-2 rounded-md bg-gradient-to-l from-rose-400/50 to-rose-700/85 border border-rose-300/40 relative" },
+      ];
+    // legacy aliases still referenced by older miniature helpers
+    case "hero.full-width":
+      return [{ className: "col-span-6 row-span-2 rounded-md bg-sky-600/80 border border-sky-300/50" }];
+    case "hero.contained":
+      return [{ className: "col-span-6 row-span-2 rounded-md bg-fuchsia-500/75 border border-fuchsia-200/60" }];
+    case "hero.side-promos":
+      return [
+        { className: "col-span-4 row-span-2 rounded-md bg-amber-500/70" },
+        { className: "col-span-2 rounded-sm bg-amber-300/40" },
+        { className: "col-span-2 rounded-sm bg-amber-200/35" },
       ];
     case "story.circle":
     case "story.image-circles":

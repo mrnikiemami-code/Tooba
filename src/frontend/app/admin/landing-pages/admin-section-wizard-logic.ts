@@ -1,4 +1,5 @@
 import type { SectionWizardStep } from "./admin-landing-section-forms-types.ts";
+import { validateHeroSliderSettings } from "../../../lib/storefront-composition/hero-slider-config.ts";
 
 export type { SectionWizardStep };
 
@@ -18,6 +19,9 @@ export function validateWizardStep(
 ): string | null {
   if (step === "type" && !draft.sectionTypeKey) return "یک نوع بخش انتخاب کنید.";
   if (step === "variant" && !draft.variantKey) return "یک ظاهر انتخاب کنید.";
+  if (step === "settings" && draft.hostType === "Hero") {
+    return validateHeroSliderSettings(draft.config);
+  }
   if (step === "source") {
     const host = draft.hostType;
     const config = draft.config;

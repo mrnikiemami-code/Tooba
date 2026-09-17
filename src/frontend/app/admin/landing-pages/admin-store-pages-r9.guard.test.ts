@@ -29,6 +29,7 @@ test("Store Pages rename + AppDataGrid listing columns", () => {
   assert.match(list, /home-current-indicator/);
   assert.match(list, /landing-home-/);
   assert.match(list, /confirm:/);
+  assert.match(list, /pageType === "Landing"/);
   assert.match(api, /pageType === "Home" \? ""/);
   assert.match(api, /restoreDefaultAdminHome/);
   assert.match(api, /setAdminLandingHome\(null\)/);
@@ -37,12 +38,24 @@ test("Store Pages rename + AppDataGrid listing columns", () => {
 test("create page type + SEO admin UX groups", () => {
   assert.match(composer, /create-page-type/);
   assert.match(composer, /اطلاعات صفحه/);
-  assert.match(composer, /سئو و اشتراک‌گذاری/);
+  assert.match(composer, /اطلاعات سئو/);
+  assert.match(composer, /page-meta-tabs|tab-page-info|tab-seo-info/);
+  assert.match(composer, /tab-page-warning|tab-seo-warning|AlertTriangle/);
+  assert.match(composer, /LandingPublishReadinessCard|landing-publish-readiness-card/);
+  assert.match(composer, /LandingPublishIssuesModal|landing-publish-issues-modal/);
   assert.match(composer, /بخش‌های صفحه|unified-section-workspace/);
   assert.match(composer, /page-seo-panel/);
   assert.match(composer, /seo-snippet-preview/);
   assert.match(composer, /تنظیم به عنوان صفحه اصلی/);
-  assert.match(composer, /بازگردانی صفحه اصلی پیش‌فرض/);
+  assert.match(composer, /set-as-home/);
+  assert.match(composer, /pageType === "Landing"/);
+  assert.match(composer, /بازگشت به فهرست/);
+  assert.match(composer, /page-workspace-actions/);
+  assert.match(composer, /delete-page|deleteAdminLandingPage/);
+  assert.match(composer, /hideSlugField|pageType === "Landing"/);
+  assert.doesNotMatch(composer, /برای صفحات فرود باید آدرس عمومی/);
+  assert.doesNotMatch(composer, /apply-template-action/);
+  assert.doesNotMatch(composer, /\/admin\/landing-pages\/\$\{page\.pageId\}\/preview/);
   assert.match(api, /pageType/);
   assert.match(api, /robotsIndex/);
   assert.match(api, /ogTitle/);

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Eye, FilePenLine, Home, Pencil, RotateCcw, Upload } from "lucide-react";
+import { Eye, FilePenLine, Home, Pencil, RotateCcw, Trash2, Upload } from "lucide-react";
 import {
   AppDataGrid,
   createClientGridQueryAdapter,
@@ -19,13 +19,18 @@ import type { GridColumnDef, GridServerQuery } from "../../../design-system/data
 import { ADMIN_LANDING_PAGES_GRID_VIEW_KEY, createHostSavedViewStore } from "../saved-view-store";
 import {
   getAdminLandingHome,
+  getAdminLandingPage,
+  deleteAdminLandingPage,
   listAdminLandingPages,
+  listAdminLandingSections,
   publicPathForStorePage,
   restoreDefaultAdminHome,
   setAdminLandingHome,
   setAdminLandingPageStatus,
   type AdminLandingPage,
 } from "./admin-landing-pages-api.ts";
+import { buildLandingPublishReadiness, type LandingPublishCheck } from "./admin-landing-page-readiness.ts";
+import { LandingPublishIssuesModal } from "./admin-landing-page-readiness-ui.tsx";
 
 type LandingGridRow = AdminLandingPage & {
   id: string;
@@ -55,6 +60,7 @@ export function AdminLandingPagesScreen() {
   const [loading, setLoading] = useState(true);
   const [denied, setDenied] = useState(false);
   const [reloadToken, setReloadToken] = useState(0);
+  const [publishIssues, setPublishIssues] = useState<LandingPublishCheck[] | null>(null);
   const savedViewStore = useMemo(() => createHostSavedViewStore(ADMIN_LANDING_PAGES_GRID_VIEW_KEY), []);
 
   const refresh = useCallback((opts?: { notice?: string; tone?: "error" | "success" }) => {
@@ -99,27 +105,82 @@ export function AdminLandingPagesScreen() {
   }, [refresh]);
 
   const publish = useCallback(async (row: LandingGridRow) => {
+    if (row.status === "Published") {
+      setBusy(true);
+      const result = await setAdminLandingPageStatus(row.pageId, "Draft");
+      setBusy(false);
+      if (!result.ok) {
+        setMessageTone("error");
+        setMessage(result.message);
+        return;
+      }
+      refresh({ notice: "صفحه به پیش‌نویس برگشت.", tone: "success" });
+      return;
+    }
+
     setBusy(true);
-    const next = row.status === "Published" ? "Draft" : "Published";
-    const result = await setAdminLandingPageStatus(row.pageId, next);
+    const [pageResult, sectionResult, home] = await Promise.all([
+      getAdminLandingPage(row.pageId),
+      listAdminLandingSections(row.pageId),
+      getAdminLandingHome(),
+    ]);
+    if (!pageResult.ok || !sectionResult.ok) {
+      setBusy(false);
+      setMessageTone("error");
+      setMessage(pageResult.ok ? sectionResult.message : pageResult.message);
+      return;
+    }
+    const homeId = home.ok ? home.data.homePageId : homePageId;
+    const readiness = buildLandingPublishReadiness({
+      title: pageResult.data.title,
+      slug: pageResult.data.slug,
+      pageType: pageResult.data.pageType,
+      isHome: pageResult.data.pageType === "Home" || homeId === pageResult.data.pageId,
+      seoTitle: pageResult.data.seoTitle ?? "",
+      seoDescription: pageResult.data.seoDescription ?? "",
+      sections: sectionResult.data,
+    });
+    if (!readiness.canPublish) {
+      setBusy(false);
+      setPublishIssues(readiness.missing);
+      return;
+    }
+
+    const result = await setAdminLandingPageStatus(row.pageId, "Published");
     setBusy(false);
     if (!result.ok) {
       setMessageTone("error");
       setMessage(result.message);
       return;
     }
-    refresh({ notice: next === "Published" ? "صفحه منتشر شد." : "صفحه به پیش‌نویس برگشت.", tone: "success" });
+    refresh({ notice: "صفحه منتشر شد.", tone: "success" });
+  }, [homePageId, refresh]);
+
+  const removePage = useCallback(async (row: LandingGridRow) => {
+    setBusy(true);
+    const result = await deleteAdminLandingPage(row.pageId);
+    setBusy(false);
+    if (!result.ok) {
+      setMessageTone("error");
+      setMessage(result.message);
+      return;
+    }
+    refresh({ notice: `«${row.title}» حذف شد.`, tone: "success" });
   }, [refresh]);
 
   const setHome = useCallback(async (row: LandingGridRow) => {
+    if (row.pageType !== "Landing") {
+      setMessageTone("error");
+      setMessage("فقط صفحات فرود را می‌توان به‌عنوان صفحه اصلی تنظیم کرد.");
+      return;
+    }
     if (row.status !== "Published") {
       setMessageTone("error");
       setMessage("برای «تنظیم به عنوان صفحه اصلی» ابتدا صفحه را منتشر کنید.");
       return;
     }
-    const clearing = homePageId === row.pageId;
     setBusy(true);
-    const result = await setAdminLandingHome(clearing ? null : row.pageId);
+    const result = await setAdminLandingHome(row.pageId);
     setBusy(false);
     if (!result.ok) {
       setMessageTone("error");
@@ -199,18 +260,26 @@ export function AdminLandingPagesScreen() {
         id: "home",
         label: "تنظیم به عنوان صفحه اصلی",
         icon: Home,
+        visible: (row) => row.pageType === "Landing",
         disabled: () => busy,
-        confirm: (row) =>
-          homePageId === row.pageId
-            ? "این صفحه از حالت خانه خارج شود و خانهٔ پیش‌فرض بازگردد؟ صفحه حذف نمی‌شود."
-            : homePageId
-              ? "صفحهٔ اصلی فعلی جایگزین شود؟ صفحهٔ قبلی حذف نمی‌شود و آدرس این صفحه در فهرست خالی می‌شود."
-              : "این صفحه به‌عنوان صفحه اصلی فروشگاه تنظیم شود؟ آدرس صفحه در فهرست خالی می‌شود؛ صفحه حذف نمی‌شود.",
+        confirm: () =>
+          homePageId
+            ? "صفحهٔ اصلی فعلی جایگزین شود؟ صفحهٔ قبلی حذف نمی‌شود و آدرس این صفحه در فهرست خالی می‌شود."
+            : "این صفحه به‌عنوان صفحه اصلی فروشگاه تنظیم شود؟ آدرس صفحه در فهرست خالی می‌شود؛ صفحه حذف نمی‌شود.",
         onClick: (row) => setHome(row),
         testId: (row) => `landing-home-${row.slug}`,
       },
+      {
+        id: "delete",
+        label: "حذف",
+        icon: Trash2,
+        disabled: () => busy,
+        confirm: (row) => `صفحهٔ «${row.title}» و بخش‌هایش حذف شود؟ این عمل قابل بازگشت نیست.`,
+        onClick: (row) => void removePage(row),
+        testId: (row) => `landing-delete-${row.slug}`,
+      },
     ],
-    [busy, homePageId, publish, setHome],
+    [busy, homePageId, publish, removePage, setHome],
   );
 
   const columns = useMemo<GridColumnDef<LandingGridRow>[]>(
@@ -329,8 +398,8 @@ export function AdminLandingPagesScreen() {
         accessor: () => "",
         exportable: false,
         sortable: false,
-        width: 168,
-        minWidth: 148,
+        width: 190,
+        minWidth: 170,
         cell: (row) => <AppGridRowActionsCell row={row} actions={rowActions} compact />,
       },
     ],
@@ -427,6 +496,15 @@ export function AdminLandingPagesScreen() {
           </p>
         ) : null}
       </section>
+
+      <LandingPublishIssuesModal
+        open={publishIssues != null}
+        locale="fa"
+        title="انتشار ممکن نیست"
+        description="برای انتشار از فهرست باید همهٔ موارد الزامی تکمیل شوند."
+        issues={publishIssues ?? []}
+        onClose={() => setPublishIssues(null)}
+      />
     </main>
   );
 }

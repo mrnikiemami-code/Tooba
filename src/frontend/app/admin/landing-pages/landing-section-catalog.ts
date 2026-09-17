@@ -1,5 +1,6 @@
 import { getVariant } from "../../../lib/storefront-composition/registry.ts";
 import { bannerSlotCountForVariant } from "../../../lib/storefront-composition/industry-templates.ts";
+import { defaultHeroSliderConfig } from "../../../lib/storefront-composition/hero-slider-config.ts";
 
 export { bannerSlotCountForVariant };
 
@@ -27,7 +28,7 @@ export type LandingSectionChoice = {
 };
 
 export const LANDING_SECTION_CHOICES: LandingSectionChoice[] = [
-  { type: "Hero", label: "بنر اصلی", description: "عنوان، توضیح کوتاه و دکمهٔ دعوت به اقدام", testId: "add-section-hero" },
+  { type: "Hero", label: "اسلایدر اصلی", description: "چند اسلاید با تصویر، عنوان، alt و سئو", testId: "add-section-hero" },
   { type: "ProductCollection", label: "مجموعه کالا", description: "نمایش کالا از انتخاب دستی، دسته، برند یا تازه‌ها", testId: "add-section-products" },
   { type: "CategoryGrid", label: "شبکهٔ دسته‌ها", description: "چند دستهٔ فروشگاه را در یک ردیف نشان می‌دهد", testId: "add-section-categories" },
   { type: "BrandStrip", label: "نوار برند", description: "برندهای انتخاب‌شده را در ویترین می‌چیند", testId: "add-section-brands" },
@@ -54,7 +55,7 @@ export function landingSectionLabel(type: string): string {
 export function defaultLandingSectionConfig(type: LandingSectionType): Record<string, unknown> {
   switch (type) {
     case "Hero":
-      return { title: "عنوان بنر", subtitle: "توضیح کوتاه", href: "/products" };
+      return defaultHeroSliderConfig();
     case "ProductCollection":
       return { title: "کالاها", source: "Newest", take: 8, productIds: [] };
     case "CategoryGrid":

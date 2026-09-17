@@ -16,6 +16,7 @@ import {
 import type { AdminSelectableDataSource } from "../../../lib/storefront-composition/types.ts";
 import { SIZE_PRESETS } from "../../../lib/storefront-composition/types.ts";
 import { SIZE_PRESET_CONTRACTS } from "../../../lib/storefront-composition/size-presets.ts";
+import { AdminHeroSliderSettings } from "./admin-hero-slider-settings.tsx";
 import type { SectionWizardStep } from "./admin-landing-section-forms-types.ts";
 
 export type { SectionWizardStep };
@@ -170,17 +171,18 @@ export function LandingSectionForm({
     );
   }
 
-  if ((type === "Hero" || type === "PromoBanner") && mode !== "source") {
+  if (type === "Hero" && mode !== "source") {
+    return (
+      <div className="space-y-3" data-testid="landing-section-form">
+        <AdminHeroSliderSettings value={value} onChange={onChange} />
+      </div>
+    );
+  }
+
+  if (type === "PromoBanner" && mode !== "source") {
     return (
       <div className="space-y-3" data-testid="landing-section-form">
         <TextField label="عنوان" value={title} onChange={(next) => set({ title: next })} required />
-        {type === "Hero" ? (
-          <TextField
-            label="توضیح کوتاه"
-            value={typeof value.subtitle === "string" ? value.subtitle : ""}
-            onChange={(next) => set({ subtitle: next })}
-          />
-        ) : null}
         <TextField
           label="پیوند دکمه"
           value={typeof value.href === "string" ? value.href : ""}

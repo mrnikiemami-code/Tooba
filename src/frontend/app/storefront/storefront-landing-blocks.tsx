@@ -11,9 +11,30 @@ import type { StorefrontCategoryItem, StorefrontProductCard } from "./storefront
 import type { StorefrontLandingSection } from "./storefront-landing-api.ts";
 import { StorefrontMenuLinks } from "./storefront-menu-tree.tsx";
 import type { StorefrontMenuItem } from "./storefront-menu-api.ts";
-import { heightPresetBannerClass, heightPresetHeroClass } from "../../lib/storefront-composition/size-presets.ts";
+import { heightPresetBannerClass } from "../../lib/storefront-composition/size-presets.ts";
+import {
+  heroVariantToSwiperEffect,
+  readHeroSliderFields,
+  type HeroSlideConfig,
+  type HeroSliderVariantId,
+} from "../../lib/storefront-composition/hero-slider-config.ts";
 import { storefrontMediaUrl } from "./storefront-api.ts";
 import { PreviewSampleBadge } from "./preview-sample-badge.tsx";
+import { Swiper, SwiperSlide } from "swiper/react";
+import {
+  Autoplay,
+  EffectCoverflow,
+  EffectCreative,
+  EffectCube,
+  EffectFade,
+  Pagination,
+} from "swiper/modules";
+import "swiper/css";
+import "swiper/css/pagination";
+import "swiper/css/effect-fade";
+import "swiper/css/effect-coverflow";
+import "swiper/css/effect-cube";
+import "swiper/css/effect-creative";
 
 export function asIds(config: Record<string, unknown>, ...keys: string[]): string[] {
   for (const key of keys) {
@@ -27,48 +48,156 @@ export function titleOf(config: Record<string, unknown>, fallback: string): stri
   return typeof config.title === "string" && config.title.trim() ? config.title.trim() : fallback;
 }
 
-export function LandingHero({
-  config,
-  layout = "contained",
+function slideImageSrc(slide: HeroSlideConfig): string {
+  if (slide.imageUrl.trim()) return slide.imageUrl.trim();
+  if (slide.mediaAssetId.trim()) return storefrontMediaUrl(slide.mediaAssetId.trim());
+  return "";
+}
+
+function hasConfiguredSlides(config: Record<string, unknown>): boolean {
+  return Array.isArray(config.slides) && config.slides.length > 0;
+}
+
+function shellForVariant(variant: HeroSliderVariantId): { shellClass: string; rounded: string } {
+  switch (variant) {
+    case "shapes":
+      return { shellClass: "px-2 sm:px-4 max-w-6xl mx-auto", rounded: "rounded-3xl" };
+    case "split":
+    case "diagonal":
+      return { shellClass: "px-2 sm:px-4", rounded: "rounded-3xl" };
+    case "editorial":
+    case "cinematic":
+    case "fullscreen":
+    default:
+      return { shellClass: "px-2 sm:px-4", rounded: "rounded-none md:rounded-3xl" };
+  }
+}
+
+/** یک کامپوننت؛ فقط variant رفتار layout/effect را عوض می‌کند. */
+export function HeroSlider({
+  variant,
+  slides,
+  autoplay = true,
+  direction = "rtl",
+  heightPx = 420,
+  intervalSec = 5,
   previewLocale = "fa",
   showPreviewBadge = false,
 }: {
-  config: Record<string, unknown>;
-  layout?: "full-width" | "contained" | "split" | "side-promos" | "editorial";
+  variant: HeroSliderVariantId;
+  slides: HeroSlideConfig[];
+  autoplay?: boolean;
+  direction?: "rtl" | "ltr";
+  heightPx?: number;
+  intervalSec?: number;
   previewLocale?: string;
   showPreviewBadge?: boolean;
 }) {
-  const title = titleOf(config, "فروشگاه توبا");
-  const subtitle = typeof config.subtitle === "string" ? config.subtitle : "";
-  const href = typeof config.href === "string" && config.href.trim() ? config.href : "/products";
-  const heightClass = heightPresetHeroClass(config.heightPreset);
-  const mediaId = typeof config.mediaAssetId === "string" ? config.mediaAssetId.trim() : "";
-  const configuredImage =
-    typeof config.imageUrl === "string" && config.imageUrl.trim()
-      ? config.imageUrl.trim()
-      : mediaId
-        ? storefrontMediaUrl(mediaId)
-        : "";
-  const heroImage = configuredImage || "/images/sliders/slider-1.jpg";
-  const objectPosition =
-    typeof config.objectPosition === "string" && config.objectPosition.trim()
-      ? config.objectPosition.trim()
-      : "50% 50%";
-  const imgStyle = { objectPosition };
-  const badge = showPreviewBadge ? <PreviewSampleBadge locale={previewLocale} className="top-3 left-3" /> : null;
+  const mapping = heroVariantToSwiperEffect(variant);
+  const effectModules = {
+    EffectCreative,
+    EffectFade,
+    EffectCoverflow,
+    EffectCube,
+  } as const;
+  const modules = [
+    Autoplay,
+    Pagination,
+    ...mapping.modules.map((name) => effectModules[name]),
+  ];
+  const { shellClass, rounded } = shellForVariant(variant);
+  const badge = showPreviewBadge ? <PreviewSampleBadge locale={previewLocale} className="top-3 left-3 z-20" /> : null;
+  const safeSlides = slides.length > 0 ? slides : [{
+    mediaAssetId: "",
+    imageUrl: "/images/sliders/slider-1.jpg",
+    title: "فروشگاه توبا",
+    alt: "فروشگاه توبا",
+    seoTitle: "فروشگاه توبا",
+    seoDescription: "",
+    href: "/products",
+  }];
 
-  if (layout === "editorial") {
+  const creativeProps =
+    mapping.effect === "creative"
+      ? {
+          creativeEffect: {
+            prev: { shadow: true, translate: [0, 0, -400] },
+            next: { translate: ["100%", 0, 0] },
+          },
+        }
+      : {};
+
+  const coverflowProps =
+    mapping.effect === "coverflow"
+      ? { coverflowEffect: { rotate: 28, stretch: 0, depth: 120, modifier: 1, slideShadows: true } }
+      : {};
+
+  const first = safeSlides[0]!;
+
+  if (variant === "split") {
+    const src = slideImageSrc(first) || "/images/sliders/slider-1.jpg";
+    const href = first.href.trim() || "/products";
+    const title = first.title.trim() || "فروشگاه توبا";
     return (
-      <section className="px-2 sm:px-4" data-testid="landing-hero" data-hero-layout="editorial">
-        <Link href={href} className="relative block overflow-hidden rounded-none md:rounded-3xl bg-gray-100 shadow-2xl">
+      <section className={shellClass} data-testid="landing-hero" data-hero-variant={variant}>
+        <div className={`grid grid-cols-1 md:grid-cols-2 gap-0 overflow-hidden border border-gray-100 bg-surface shadow-xl ${rounded}`}>
+          {badge}
+          <Link href={href} className="relative block min-h-[180px] bg-gray-100" style={{ minHeight: heightPx }}>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={src} alt={first.alt || title} title={first.seoTitle || title} className="h-full w-full object-cover" />
+          </Link>
+          <div className="flex flex-col justify-center gap-3 p-6 md:p-10">
+            <h2 className="text-2xl font-black md:text-4xl">{title}</h2>
+            {first.seoDescription ? <p className="max-w-xl text-sm md:text-base text-foreground/80">{first.seoDescription}</p> : null}
+            <Link href={href} className="inline-flex w-fit rounded-xl bg-primary px-4 py-2 text-sm font-bold text-white">مشاهده</Link>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  if (variant === "diagonal") {
+    const src = slideImageSrc(first) || "/images/sliders/slider-1.jpg";
+    const href = first.href.trim() || "/products";
+    const title = first.title.trim() || "فروشگاه توبا";
+    return (
+      <section className={shellClass} data-testid="landing-hero" data-hero-variant={variant}>
+        <div className={`relative overflow-hidden bg-slate-900 shadow-2xl ${rounded}`} style={{ minHeight: heightPx }}>
+          {badge}
+          <div
+            className="absolute inset-0"
+            style={{ clipPath: "polygon(0 0, 72% 0, 48% 100%, 0 100%)" }}
+          >
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={src} alt={first.alt || title} className="h-full w-full object-cover opacity-90" />
+          </div>
+          <div className="relative z-10 flex h-full min-h-[inherit] items-center justify-end p-6 md:p-12">
+            <div className="max-w-md rounded-2xl bg-white/95 p-6 text-gray-900 shadow-lg backdrop-blur md:p-8">
+              <h2 className="text-2xl font-black md:text-4xl">{title}</h2>
+              {first.seoDescription ? <p className="mt-2 text-sm md:text-base">{first.seoDescription}</p> : null}
+              <Link href={href} className="mt-4 inline-flex rounded-xl bg-primary px-4 py-2 text-sm font-bold text-white">مشاهده</Link>
+            </div>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  if (variant === "editorial") {
+    const src = slideImageSrc(first) || "/images/sliders/slider-1.jpg";
+    const href = first.href.trim() || "/products";
+    const title = first.title.trim() || "فروشگاه توبا";
+    return (
+      <section className={shellClass} data-testid="landing-hero" data-hero-variant={variant}>
+        <Link href={href} className={`relative block overflow-hidden bg-gray-100 shadow-2xl ${rounded}`}>
           {badge}
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={heroImage} alt="" className={`w-full object-cover ${heightClass}`} style={imgStyle} />
-          <div className="absolute inset-0 bg-gradient-to-l from-black/75 via-black/35 to-transparent" />
+          <img src={src} alt={first.alt || title} title={first.seoTitle || title} className="w-full object-cover" style={{ height: heightPx }} />
+          <div className="absolute inset-0 bg-gradient-to-l from-black/80 via-black/35 to-transparent" />
           <div className="absolute inset-y-0 right-0 flex w-full max-w-xl flex-col justify-end md:justify-center p-6 md:p-10 text-white">
             <p className="mb-2 text-[11px] font-bold text-white/80 md:text-xs">ویترین انتخابی</p>
-            <h2 className="text-2xl font-black leading-tight md:text-4xl line-clamp-3">{title}</h2>
-            {subtitle ? <p className="mt-3 text-sm text-white/90 md:text-base line-clamp-3">{subtitle}</p> : null}
+            <h2 className="text-3xl font-black leading-tight md:text-5xl line-clamp-3">{title}</h2>
+            {first.seoDescription ? <p className="mt-3 text-sm text-white/90 md:text-base line-clamp-3">{first.seoDescription}</p> : null}
             <span className="mt-5 inline-flex min-h-11 w-fit items-center rounded-xl bg-surface px-4 py-2 text-sm font-bold text-gray-900">مشاهده مجموعه</span>
           </div>
         </Link>
@@ -76,65 +205,148 @@ export function LandingHero({
     );
   }
 
-  if (layout === "split") {
-    return (
-      <section className="px-2 sm:px-4" data-testid="landing-hero" data-hero-layout="split">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 overflow-hidden rounded-3xl border border-gray-100 bg-surface shadow-xl">
-          <Link href={href} className="relative block min-h-[180px] bg-gray-100">
-            {badge}
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={heroImage} alt="" className={`h-full w-full object-cover ${heightClass}`} style={imgStyle} />
-          </Link>
-          <div className="flex flex-col justify-center p-6">
-            <h2 className="text-2xl font-black md:text-4xl">{title}</h2>
-            {subtitle ? <p className="mt-2 max-w-xl text-sm md:text-base">{subtitle}</p> : null}
-            <Link href={href} className="mt-4 inline-flex w-fit rounded-xl bg-primary px-4 py-2 text-sm font-bold text-white">مشاهده</Link>
-          </div>
-        </div>
-      </section>
-    );
-  }
-
-  if (layout === "side-promos") {
-    return (
-      <section className="px-2 sm:px-4" data-testid="landing-hero" data-hero-layout="side-promos">
-        <div className="grid grid-cols-1 gap-3 md:grid-cols-[2fr_1fr]">
-          <Link href={href} className="relative block overflow-hidden rounded-3xl bg-gradient-to-l from-primary to-primary-strong shadow-2xl">
-            {badge}
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={heroImage} alt="" className={`w-full object-cover ${heightClass}`} style={imgStyle} />
-            <div className="absolute inset-0 bg-black/35" />
-            <div className="absolute inset-0 flex flex-col justify-end p-6 text-white">
-              <h2 className="text-2xl font-black md:text-4xl">{title}</h2>
-              {subtitle ? <p className="mt-2 max-w-xl text-sm md:text-base">{subtitle}</p> : null}
-            </div>
-          </Link>
-          <div className="grid grid-cols-2 gap-3 md:grid-cols-1">
-            {["/images/sliders/slider-2.jpg", "/images/sliders/slider-3.jpg"].map((src) => (
-              <Link key={src} href={href} className="relative block overflow-hidden rounded-2xl bg-gray-100 aspect-[16/9] md:aspect-auto md:min-h-[120px]">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={src} alt="" className="absolute inset-0 h-full w-full object-cover" />
-              </Link>
-            ))}
-          </div>
-        </div>
-      </section>
-    );
-  }
+  const overlayClass =
+    variant === "shapes"
+      ? "bg-gradient-to-tr from-fuchsia-900/45 via-black/25 to-amber-400/20"
+      : variant === "cinematic"
+        ? "bg-gradient-to-t from-black/70 via-black/25 to-transparent"
+        : "bg-black/35";
 
   return (
-    <section className={`px-2 sm:px-4 ${layout === "contained" ? "max-w-6xl mx-auto" : ""}`} data-testid="landing-hero" data-hero-layout={layout}>
-      <Link href={href} className={`relative block overflow-hidden bg-gradient-to-l from-primary to-primary-strong shadow-2xl ${layout === "contained" ? "rounded-3xl" : "rounded-none md:rounded-3xl"}`}>
+    <section className={shellClass} data-testid="landing-hero" data-hero-variant={variant}>
+      <div className={`relative overflow-hidden bg-gray-100 shadow-2xl ${rounded}`}>
         {badge}
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={heroImage} alt="" className={`w-full object-cover ${heightClass}`} style={imgStyle} />
-        <div className="absolute inset-0 bg-black/35" />
-        <div className="absolute inset-0 flex flex-col justify-end p-6 text-white">
-          <h2 className="text-2xl font-black md:text-4xl">{title}</h2>
-          {subtitle ? <p className="mt-2 max-w-xl text-sm md:text-base">{subtitle}</p> : null}
-        </div>
-      </Link>
+        {variant === "shapes" ? (
+          <>
+            <div className="pointer-events-none absolute -left-8 top-6 z-10 h-24 w-24 rounded-full bg-white/20 blur-sm" />
+            <div className="pointer-events-none absolute bottom-8 right-10 z-10 h-16 w-16 rotate-12 rounded-2xl bg-white/15" />
+          </>
+        ) : null}
+        <Swiper
+          modules={modules}
+          effect={mapping.effect === "slide" ? undefined : mapping.effect}
+          speed={mapping.speed}
+          grabCursor
+          loop={safeSlides.length > 1}
+          autoplay={
+            autoplay
+              ? { delay: Math.max(1000, Math.round(intervalSec * 1000)), disableOnInteraction: false }
+              : false
+          }
+          pagination={{ clickable: true, dynamicBullets: true }}
+          dir={direction}
+          className="w-full"
+          style={{ height: heightPx }}
+          {...creativeProps}
+          {...coverflowProps}
+        >
+          {safeSlides.map((slide, index) => {
+            const src = slideImageSrc(slide) || "/images/sliders/slider-1.jpg";
+            const href = slide.href.trim() || "/products";
+            const title = slide.title.trim() || "فروشگاه توبا";
+            return (
+              <SwiperSlide key={`hero-slide-${index}-${slide.mediaAssetId || src}`}>
+                <Link href={href} className="relative block h-full w-full" aria-label={slide.seoTitle || title}>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={src}
+                    alt={slide.alt || title}
+                    title={slide.seoTitle || title}
+                    className={`h-full w-full object-cover ${variant === "cinematic" ? "scale-105" : ""}`}
+                  />
+                  <div className={`absolute inset-0 ${overlayClass}`} />
+                  <div className="absolute inset-0 flex flex-col justify-end p-6 text-white md:p-10">
+                    <h2 className={`font-black line-clamp-2 ${variant === "cinematic" ? "text-3xl md:text-5xl" : "text-2xl md:text-4xl"}`}>
+                      {title}
+                    </h2>
+                    {slide.seoDescription ? (
+                      <p className="mt-2 max-w-xl text-sm md:text-base line-clamp-2">{slide.seoDescription}</p>
+                    ) : null}
+                  </div>
+                </Link>
+              </SwiperSlide>
+            );
+          })}
+        </Swiper>
+      </div>
     </section>
+  );
+}
+
+export function LandingHero({
+  config,
+  layout = "fullscreen",
+  previewLocale = "fa",
+  showPreviewBadge = false,
+}: {
+  config: Record<string, unknown>;
+  /** Variant id یا کلید legacy layout. */
+  layout?: HeroSliderVariantId | "full-width" | "contained" | "side-promos";
+  previewLocale?: string;
+  showPreviewBadge?: boolean;
+}) {
+  const variant =
+    layout === "full-width"
+      ? "fullscreen"
+      : layout === "contained"
+        ? "shapes"
+        : layout === "side-promos"
+          ? "diagonal"
+          : (layout as HeroSliderVariantId);
+
+  if (hasConfiguredSlides(config)) {
+    const fields = readHeroSliderFields(config);
+    return (
+      <HeroSlider
+        variant={variant}
+        slides={fields.slides}
+        autoplay
+        direction="rtl"
+        heightPx={fields.displayHeightPx}
+        intervalSec={fields.slideIntervalSec}
+        previewLocale={previewLocale}
+        showPreviewBadge={showPreviewBadge}
+      />
+    );
+  }
+
+  // سازگاری با config قدیمی تک‌تصویری
+  const title = titleOf(config, "فروشگاه توبا");
+  const subtitle = typeof config.subtitle === "string" ? config.subtitle : "";
+  const href = typeof config.href === "string" && config.href.trim() ? config.href : "/products";
+  const mediaId = typeof config.mediaAssetId === "string" ? config.mediaAssetId.trim() : "";
+  const configuredImage =
+    typeof config.imageUrl === "string" && config.imageUrl.trim()
+      ? config.imageUrl.trim()
+      : mediaId
+        ? storefrontMediaUrl(mediaId)
+        : "";
+  const heightPx =
+    typeof config.displayHeightPx === "number" && config.displayHeightPx > 0
+      ? config.displayHeightPx
+      : 420;
+
+  return (
+    <HeroSlider
+      variant={variant}
+      slides={[
+        {
+          mediaAssetId: mediaId,
+          imageUrl: configuredImage || "/images/sliders/slider-1.jpg",
+          title,
+          alt: title,
+          seoTitle: title,
+          seoDescription: subtitle,
+          href,
+        },
+      ]}
+      autoplay
+      direction="rtl"
+      heightPx={heightPx}
+      intervalSec={5}
+      previewLocale={previewLocale}
+      showPreviewBadge={showPreviewBadge}
+    />
   );
 }
 

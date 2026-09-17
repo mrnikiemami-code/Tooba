@@ -80,7 +80,7 @@ describe("storefront composition registry", () => {
       config: { title: "بنر", subtitle: "توضیح", href: "/products" },
     });
     assert.equal(hero.sectionTypeKey, "HeroCarousel");
-    assert.equal(hero.variantKey, "hero.contained");
+    assert.equal(hero.variantKey, "hero.shapes");
     assert.equal(hero.settings.title, "بنر");
     const products = adaptLandingSectionToComposition({
       pageSectionId: "ps-2",

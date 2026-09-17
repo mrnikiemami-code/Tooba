@@ -31,7 +31,6 @@ import {
   ProductRailSection,
   type BannerLayout,
   type CategoryLayout,
-  type HeroLayout,
 } from "../../app/storefront/storefront-home-blocks.tsx";
 import {
   LandingArticleList,
@@ -49,6 +48,7 @@ import { resolveObjectPosition } from "./template-preview-context.ts";
 import type { CompositionSectionInstance, CompositionSurfaceRole } from "./types.ts";
 import { getVariant } from "./registry.ts";
 import { canonicalizeVariantKey, resolveSharedVariant } from "./resolve-variant.ts";
+import { heroVariantIdFromKey, type HeroSliderVariantId } from "./hero-slider-config.ts";
 import { surfaceRoleClass } from "../storefront-appearance/surface-role.ts";
 import {
   createFakeArticle,
@@ -90,12 +90,28 @@ export type SharedLandingRenderInput = {
   previewLocale?: string;
 };
 
-function heroLayoutFromVariant(variantKey: string): HeroLayout {
-  if (variantKey === "hero.contained") return "contained";
-  if (variantKey === "hero.split") return "split";
-  if (variantKey === "hero.side-promos") return "side-promos";
-  if (variantKey === "hero.editorial") return "editorial";
-  return "full-width";
+function heroLayoutFromVariant(variantKey: string): HeroSliderVariantId {
+  return heroVariantIdFromKey(variantKey);
+}
+
+function homeHeroLayoutFromVariant(
+  variantKey: string,
+): "full-width" | "contained" | "split" | "side-promos" | "editorial" {
+  const id = heroVariantIdFromKey(variantKey);
+  switch (id) {
+    case "shapes":
+      return "contained";
+    case "diagonal":
+      return "side-promos";
+    case "split":
+      return "split";
+    case "editorial":
+    case "cinematic":
+      return "editorial";
+    case "fullscreen":
+    default:
+      return "full-width";
+  }
 }
 
 function storyLayoutFromVariant(variantKey: string): "circle" | "image-circles" | "rounded-cards" | "icon-shortcuts" {
@@ -144,16 +160,18 @@ export function renderSharedHomeSection(
   if (!variant || !variant.implemented) return null;
 
   switch (key) {
+    case "hero.fullscreen":
     case "hero.full-width":
       return (
         <div data-testid="home-hero">
-          <HomeHeroSlider heightPreset={config.heightPreset} layout="full-width" />
+          <HomeHeroSlider heightPreset={config.heightPreset} layout={homeHeroLayoutFromVariant(key)} />
         </div>
       );
+    case "hero.shapes":
     case "hero.contained":
       return (
         <div data-testid="home-hero">
-          <HomeHeroSlider heightPreset={config.heightPreset} layout="contained" />
+          <HomeHeroSlider heightPreset={config.heightPreset} layout={homeHeroLayoutFromVariant(key)} />
         </div>
       );
     case "hero.split":
@@ -162,12 +180,14 @@ export function renderSharedHomeSection(
           <HomeHeroSlider heightPreset={config.heightPreset} layout="split" title={config.title} />
         </div>
       );
+    case "hero.diagonal":
     case "hero.side-promos":
       return (
         <div data-testid="home-hero">
-          <HomeHeroSlider heightPreset={config.heightPreset} layout="side-promos" />
+          <HomeHeroSlider heightPreset={config.heightPreset} layout={homeHeroLayoutFromVariant(key)} />
         </div>
       );
+    case "hero.cinematic":
     case "hero.editorial":
       return (
         <div data-testid="home-hero">
@@ -445,13 +465,28 @@ export function renderSharedLandingSection(input: SharedLandingRenderInput): Rea
   };
 
   switch (variantKey) {
+    case "hero.fullscreen":
+    case "hero.shapes":
+    case "hero.diagonal":
+    case "hero.cinematic":
+    case "hero.split":
+    case "hero.editorial":
     case "hero.full-width":
     case "hero.contained":
-    case "hero.split":
-    case "hero.side-promos":
-    case "hero.editorial": {
+    case "hero.side-promos": {
+      const hasSlideMedia =
+        Array.isArray(config.slides)
+        && config.slides.some((item) => {
+          if (!item || typeof item !== "object") return false;
+          const row = item as Record<string, unknown>;
+          return (
+            (typeof row.imageUrl === "string" && row.imageUrl.trim().length > 0)
+            || (typeof row.mediaAssetId === "string" && row.mediaAssetId.trim().length > 0)
+          );
+        });
       const hasMedia =
-        (typeof config.imageUrl === "string" && config.imageUrl.trim().length > 0)
+        hasSlideMedia
+        || (typeof config.imageUrl === "string" && config.imageUrl.trim().length > 0)
         || (typeof config.mediaAssetId === "string" && config.mediaAssetId.trim().length > 0);
       const heroConfig = {
         ...(storePreview && !hasMedia ? createFakeHeroConfig(locale) : {}),

@@ -159,7 +159,7 @@ public sealed class StoreLandingPageComposer
             var page = await RequirePageAsync(pageId.Value, cancellationToken);
             if (!page.IsEligibleHome)
             {
-                throw new PlatformHttpException(400, "فقط صفحهٔ منتشرشده را می‌توان خانه کرد.", "landing.home.ineligible");
+                throw new PlatformHttpException(400, "فقط صفحهٔ فرود منتشرشده را می‌توان خانه کرد.", "landing.home.ineligible");
             }
 
             page.SetPageType(StorePageType.Home, now);
@@ -378,6 +378,28 @@ public sealed class StoreLandingPageComposer
         await _catalog.SaveChangesAsync(cancellationToken);
         Invalidate(page.Locale, page.Slug);
         return rows.OrderBy(x => x.SortOrder).Select(ToAdminSection).ToList();
+    }
+
+    /// <summary>صفحه و بخش‌هایش را حذف می‌کند؛ اگر خانه بود ارجاع را پاک می‌کند.</summary>
+    public async Task DeletePageAsync(Guid pageId, CancellationToken cancellationToken)
+    {
+        var page = await RequirePageAsync(pageId, cancellationToken);
+        await ClearHomeIfMatchesAsync(page.PageId, cancellationToken);
+        var sections = await _catalog.StoreLandingPageSections
+            .Where(x => x.PageId == pageId)
+            .ToListAsync(cancellationToken);
+        if (sections.Count > 0)
+        {
+            _catalog.StoreLandingPageSections.RemoveRange(sections);
+        }
+
+        _catalog.StoreLandingPages.Remove(page);
+        await _catalog.SaveChangesAsync(cancellationToken);
+        Invalidate(page.Locale, page.Slug);
+        if (page.PageType == StorePageType.Home)
+        {
+            Invalidate(page.Locale, "home");
+        }
     }
 
     /// <summary>بخش را حذف می‌کند و ترتیب را نرمال می‌کند.</summary>

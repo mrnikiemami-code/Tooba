@@ -388,6 +388,17 @@ export async function reorderAdminLandingSections(pageId: string, sectionIds: st
   }
 }
 
+export async function deleteAdminLandingPage(pageId: string): Promise<AdminResult<true>> {
+  try {
+    const { status, body } = await readJson(`/v1/admin/pages/${pageId}`, { method: "DELETE" });
+    if (status < 200 || status >= 300) return fail(status, body);
+    await invalidateStorePagesNamespace();
+    return { ok: true, data: true };
+  } catch {
+    return { ok: false, message: mapAdminErrorMessage("host-unreachable", "fa") };
+  }
+}
+
 export async function deleteAdminLandingSection(pageId: string, sectionId: string): Promise<AdminResult<true>> {
   try {
     const { status, body } = await readJson(`/v1/admin/pages/${pageId}/sections/${sectionId}`, { method: "DELETE" });

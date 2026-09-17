@@ -16,7 +16,7 @@ import { adminImplementedVariants, adminSelectableSectionTypes, variantPreviewFi
 describe("shared composition renderer", () => {
   it("resolves registered SectionType+Variant", () => {
     const v = resolveSharedVariant("HeroCarousel", "hero.full-width");
-    assert.equal(v.key, "hero.full-width");
+    assert.equal(v.key, "hero.fullscreen");
     assert.equal(v.implemented, true);
     assert.equal(assertVariantCompatible("ProductShowcase", "product.card-carousel").sectionTypeKey, "ProductShowcase");
   });
@@ -137,7 +137,7 @@ describe("shared composition renderer", () => {
       displayOrder: 0,
       config: { title: "ت" },
     });
-    assert.equal(a.variantKey, "hero.contained");
+    assert.equal(a.variantKey, "hero.shapes");
     assert.equal(a.sectionTypeKey, b.sectionTypeKey);
     assert.equal(a.variantKey, b.variantKey);
     const withVariant = adaptLandingSectionToComposition({
