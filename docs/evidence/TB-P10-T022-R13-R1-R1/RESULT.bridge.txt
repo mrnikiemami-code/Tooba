@@ -1,0 +1,101 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+
+BEGIN_TOOBA_WORKER_RESULT
+
+Task-ID:
+TB-P10-T022-R13-R1-R1
+
+Parent-Task:
+TB-P10-T022-R13-R1
+
+Channel:
+tooba-main
+
+WorkerId:
+tooba-worker-01
+
+AgentType:
+cursor
+
+Status:
+PASS
+
+Appearance-USER_VISUAL_ACCEPTED=YES
+Builder-USER_VISUAL_ACCEPTED=NO
+
+Summary:
+Hero Slider Builder Visual Closure PASS. Root cause of draft-save→wizard loss was Next.js remount after router.replace on first create discarding setWizardOpen; fixed via sessionStorage pending-open consumed after authoritative load(pageId). Complete Admin PNG set captured (six variants Persian names, height presets, guidance, tabs, CTA destination/product/category pickers, validation popup/inline/tab/live-clear, review, storefront desktop/mobile). Home reset preserved. banner.four-grid left out-of-scope. No P11/T002/T023. critical-storefront PASS.
+
+Applicable-Locks:
+LOCK-SF-001…374 retained; no new locks.
+
+Recovery-Start:
+docs/evidence/TB-P10-T022-R13-R1-R1/recovery-start.md — main; tip after fix 9efa6a55; ancestry includes 3f654c9c R13-R1.
+
+Race-Root-Cause:
+docs/evidence/TB-P10-T022-R13-R1-R1/race-root-cause.md — product remount race, not missing await.
+
+Race-Fix:
+docs/evidence/TB-P10-T022-R13-R1-R1/race-fix.md — sessionStorage tooba.landing.openWizard.{pageId} + open after load; pageRef set on load.
+
+Six-Variant-Visual-Proof:
+docs/evidence/TB-P10-T022-R13-R1-R1/six-variant-visual-proof.md + screenshots slider-six-variants / almas…aghigh / slider-editor-human-variant-name.
+
+Height-Preset-Proof:
+docs/evidence/TB-P10-T022-R13-R1-R1/height-preset-proof.md + slider-height-presets.png
+
+Image-Guidance-Proof:
+docs/evidence/TB-P10-T022-R13-R1-R1/image-guidance-proof.md + slider-image-guidance.png
+
+CTA-Picker-Proof:
+docs/evidence/TB-P10-T022-R13-R1-R1/cta-picker-proof.md + destination/product/category PNGs
+
+Validation-Runtime-Proof:
+docs/evidence/TB-P10-T022-R13-R1-R1/validation-runtime-proof.md
+
+Live-Error-Recovery-Proof:
+docs/evidence/TB-P10-T022-R13-R1-R1/live-error-recovery-proof.md
+
+Review-Step-Proof:
+docs/evidence/TB-P10-T022-R13-R1-R1/review-step-proof.md
+
+Storefront-Regression:
+docs/evidence/TB-P10-T022-R13-R1-R1/storefront-regression.md + desktop/mobile PNGs
+
+Backward-Compatibility:
+docs/evidence/TB-P10-T022-R13-R1-R1/backward-compatibility.md
+
+Focused-Validation:
+docs/evidence/TB-P10-T022-R13-R1-R1/focused-validation.md — items 1–21 PASS; banner.four-grid OOS
+
+Visual-Evidence:
+docs/evidence/TB-P10-T022-R13-R1-R1/visual-evidence.md — capture ok=true
+
+Out-Of-Scope-Failures:
+docs/evidence/TB-P10-T022-R13-R1-R1/out-of-scope-failures.md — banner.four-grid
+
+AntiPattern-Scan:
+docs/evidence/TB-P10-T022-R13-R1-R1/antipattern-scan.md
+
+Lock-Registry:
+docs/evidence/TB-P10-T022-R13-R1-R1/lock-registry.md
+
+Recovery-SoT:
+docs/evidence/TB-P10-T022-R13-R1-R1/recovery-sot.md
+
+Git:
+branch=main
+HEAD=9efa6a55f4b15507cfd7a3cecc158c4497636a56
+origin/main synced after push
+unrelated .tmp-* untouched
+
+Architectural-Concerns:
+None for this repair scope.
+
+Visual-Concerns:
+None remaining for required Admin PNG set after race fix + capture.
+
+Blockers:
+None.
+
+END_TOOBA_WORKER_RESULT
