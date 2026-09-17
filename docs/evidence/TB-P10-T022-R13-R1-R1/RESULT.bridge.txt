@@ -1,4 +1,4 @@
-﻿PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
 
 BEGIN_TOOBA_WORKER_RESULT
 
@@ -85,7 +85,7 @@ docs/evidence/TB-P10-T022-R13-R1-R1/recovery-sot.md
 
 Git:
 branch=main
-HEAD=PLACEHOLDER_SHA
+HEAD=76913fcc194d6d92353a1206092c699ebc748b48
 origin/main synced after push
 unrelated .tmp-* untouched
 
