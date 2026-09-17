@@ -85,7 +85,7 @@ docs/evidence/TB-P10-T022-R13-R1-R1/recovery-sot.md
 
 Git:
 branch=main
-HEAD=76913fcc194d6d92353a1206092c699ebc748b48
+HEAD=f820850ec89c427117bb32560899cdf22b4ab558
 origin/main synced after push
 unrelated .tmp-* untouched
 
