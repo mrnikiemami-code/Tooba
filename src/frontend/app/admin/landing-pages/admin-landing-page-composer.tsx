@@ -442,22 +442,33 @@ export function AdminLandingPageComposer({ pageId }: { pageId?: string }) {
       setMessage("برای «تنظیم به عنوان صفحه اصلی» ابتدا صفحه را منتشر کنید.");
       return;
     }
-    if (homePageId !== page.pageId) {
+    const restoring = homePageId === page.pageId;
+    if (restoring) {
+      const ok = window.confirm(
+        "این صفحه از حالت خانه خارج شود و خانهٔ پیش‌فرض فروشگاه (canonical) فعال گردد؟\nدادهٔ کالا و صفحات لندینگ حذف نمی‌شوند.",
+      );
+      if (!ok) return;
+    } else {
       const ok = window.confirm(
         homePageId
-          ? "صفحهٔ اصلی فعلی جایگزین شود؟ دادهٔ کالا و قالب‌ها حذف نمی‌شود."
-          : "این صفحه به‌عنوان صفحه اصلی فروشگاه تنظیم شود؟",
+          ? "صفحهٔ اصلی فعلی جایگزین شود؟ خانهٔ پیش‌فرض canonical در کد باقی می‌ماند و بعداً قابل بازگردانی است."
+          : "این صفحه به‌عنوان صفحه اصلی سفارشی فروشگاه تنظیم شود؟",
       );
       if (!ok) return;
     }
     setBusy(true);
-    const result = await setAdminLandingHome(homePageId === page.pageId ? null : page.pageId);
+    const result = await setAdminLandingHome(restoring ? null : page.pageId);
     setBusy(false);
     if (!result.ok) {
       setMessage(result.message);
       return;
     }
     setHomePageId(result.data.homePageId);
+    setMessage(
+      result.data.usesCanonicalHome
+        ? "خانهٔ پیش‌فرض فروشگاه (canonical) فعال شد."
+        : "این صفحه به‌عنوان صفحه اصلی سفارشی تنظیم شد.",
+    );
   };
 
   if (!pageId && !page && createMode === null) {
@@ -613,7 +624,9 @@ export function AdminLandingPageComposer({ pageId }: { pageId?: string }) {
             <span className="mb-1 block font-bold">آدرس صفحه (slug)</span>
             <input className="w-full rounded-xl border px-3 py-2" dir="ltr" value={meta.slug} onChange={(e) => setMeta({ ...meta, slug: e.target.value })} />
             <span className="mt-1 block text-xs text-muted" dir="ltr">
-              مسیر عمومی: {publicPathForStorePage({ pageType: page?.pageType ?? meta.pageType, slug: meta.slug || "slug" })}
+              مسیر عمومی:{" "}
+              {publicPathForStorePage({ pageType: page?.pageType ?? meta.pageType, slug: meta.slug || "slug" }) ||
+                (page?.pageType === "Home" || meta.pageType === "Home" ? "(خانه — آدرس فهرست خالی)" : "/")}
             </span>
           </label>
           {!page ? (
@@ -713,7 +726,7 @@ export function AdminLandingPageComposer({ pageId }: { pageId?: string }) {
                 <p className="mt-2 text-lg text-[#1a0dab]" dir="auto">{meta.seoTitle || meta.title || "عنوان سئو"}</p>
                 <p className="text-sm text-[#006621]" dir="ltr">
                   {meta.canonicalUrl
-                    || `https://store.example${publicPathForStorePage({ pageType: page?.pageType ?? meta.pageType, slug: meta.slug || "slug" })}`}
+                    || `https://store.example${publicPathForStorePage({ pageType: page?.pageType ?? meta.pageType, slug: meta.slug || "slug" }) || "/"}`}
                 </p>
                 <p className="mt-1 text-sm text-[#4d5156]" dir="auto">{meta.seoDescription || "توضیح سئو اینجا نمایش داده می‌شود."}</p>
                 <p className="mt-2 text-xs font-bold text-muted">

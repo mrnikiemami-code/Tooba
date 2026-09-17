@@ -102,6 +102,24 @@ export const VARIANT_DESIGN_NAMES: Record<string, VariantDesignMeta> = {
     descriptionFa: "ردیف افقی کارت کالا با اسلاید",
     badgeFa: "پیشنهاد",
   },
+  "product.amazing": {
+    variantKey: "product.amazing",
+    designNameFa: "طرح شگفت‌انگیز",
+    descriptionFa: "اسلایدر کارت کامل با تایمر شمارش معکوس و نشان تخفیف",
+    badgeFa: "پیشنهاد شگفت‌انگیز",
+  },
+  "product.zohreh": {
+    variantKey: "product.zohreh",
+    designNameFa: "طرح زهره",
+    descriptionFa: "ستون‌های افقی پربازدید با رتبه و قیمت",
+    badgeFa: "پربازدید",
+  },
+  "product.mahoor": {
+    variantKey: "product.mahoor",
+    designNameFa: "طرح ماهور",
+    descriptionFa: "اسلایدر جدیدترین محصولات با نشان جدید",
+    badgeFa: "تازه‌ها",
+  },
   "product.grid": {
     variantKey: "product.grid",
     designNameFa: "شبکه محصولات — طرح پارسا",

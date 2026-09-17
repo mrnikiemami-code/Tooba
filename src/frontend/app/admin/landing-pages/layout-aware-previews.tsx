@@ -109,10 +109,17 @@ export function layoutAwareVariantPreview(variantKey: string): PreviewCell[] {
         { className: "col-span-4 h-5 rounded bg-white border border-amber-100" },
       ];
     case "product.card-carousel":
+    case "product.amazing":
+    case "product.mahoor":
     case "product.tabbed":
       return Array.from({ length: 4 }, () => ({
         className: "rounded-md h-11 bg-white border border-amber-200/70",
         kind: "product-rail",
+      }));
+    case "product.zohreh":
+      return Array.from({ length: 3 }, () => ({
+        className: "col-span-6 h-8 rounded bg-white border border-amber-100 flex gap-1 p-0.5",
+        kind: "product-row",
       }));
     case "ranked.horizontal":
     case "ranked.ticker":

@@ -29,6 +29,7 @@ import "swiper/css/pagination";
 import { formatOfferAmount, storefrontMediaUrl } from "./storefront-api.ts";
 import { PreviewSampleBadge } from "./preview-sample-badge.tsx";
 import { StorefrontProductCardView, STOREFRONT_ACCENT } from "./storefront-product-card.tsx";
+import { HomeMahoorProductSection } from "./storefront-home-shopeiva-product-layouts.tsx";
 import type {
   StorefrontArticleItem,
   StorefrontBestSellerColumn,
@@ -278,48 +279,7 @@ export function HomeBrandsSection({
 }
 
 export function HomeNewProductsSection({ products }: { products: StorefrontProductCard[] }) {
-  if (products.length === 0) return null;
-
-  return (
-    <section aria-labelledby="home-new-products-heading" className="w-full bg-section-alternate py-8 md:py-10 px-2 sm:px-4" data-testid="home-new-products" data-storefront-surface-role="alternate">
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2">
-            <span className="w-1 h-6 rounded-full" style={{ backgroundColor: STOREFRONT_ACCENT }} />
-            <h2 id="home-new-products-heading" className="text-lg md:text-xl font-extrabold text-gray-900 flex items-center gap-2">
-              <Sparkles className="w-5 h-5 text-emerald-500" />
-              جدیدترین محصولات
-            </h2>
-          </div>
-          <div className="hidden sm:flex items-center gap-1 bg-emerald-500/10 px-3 py-1 rounded-full border border-emerald-500/20">
-            <span className="text-[10px] font-bold text-emerald-600">{products.length.toLocaleString("fa-IR")} محصول جدید</span>
-          </div>
-        </div>
-        <Link href="/new-products" className="text-xs hover:underline font-medium" style={{ color: STOREFRONT_ACCENT }}>
-          مشاهده همه
-        </Link>
-      </div>
-      <div className="relative -mx-1" data-testid="home-new-products-carousel">
-        <Swiper
-          modules={[FreeMode, Autoplay]}
-          slidesPerView="auto"
-          spaceBetween={16}
-          freeMode={{ sticky: true, momentumRatio: 0.5 }}
-          autoplay={{ delay: 4000, disableOnInteraction: false, pauseOnMouseEnter: true }}
-          dir="rtl"
-          grabCursor
-          className="!pb-2"
-        >
-          {products.map((card) => (
-            <SwiperSlide key={card.productId} className="!w-[180px] mb-3 md:!w-[220px]">
-              <StorefrontProductCardView card={card} showNew showHoverActions />
-            </SwiperSlide>
-          ))}
-        </Swiper>
-      </div>
-      <div className="w-full h-px bg-gradient-to-r from-transparent via-gray-200 to-transparent mt-2" />
-    </section>
-  );
+  return <HomeMahoorProductSection products={products} />;
 }
 
 export function HomeTestimonialsSection({

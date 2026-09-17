@@ -1,0 +1,10 @@
+﻿---
+description: When user says «اصلی‌گرید» / asli-grid — promote view اصلی to code defaults
+alwaysApply: false
+---
+
+# اصلی‌گرید
+
+If the user says **اصلی‌گرید** or **asli-grid**, follow project skill `.cursor/skills/asli-grid/SKILL.md`:
+read saved view «اصلی», apply as code grid defaults, delete the view.
+---

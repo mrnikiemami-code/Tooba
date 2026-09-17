@@ -70,16 +70,21 @@ public sealed class StorefrontComposer
 
     /// <summary>
     /// خانهٔ فروشگاه را با رده‌ها و محصولات منتشرشده می‌سازد.
+    /// کارت‌ها با سقف ثابت و مسیر card-only ساخته می‌شوند تا N+1 کامل Listing خانه را قفل نکند.
     /// </summary>
     public async Task<StorefrontHomePage> GetHomeAsync(string? locale, CancellationToken cancellationToken)
     {
         var categories = await ListCategoriesAsync(cancellationToken);
-        var listing = await GetListingAsync(null, null, null, null, "newest", 1, 48, cancellationToken);
+        var products = await BuildProductCardsAsync(cancellationToken, preferredSellerPartyId: null, maxProducts: 48, cardOnly: true);
         var brands = await ListBrandsAsync(cancellationToken);
-        var promotedProducts = listing.Products.Where(card => card.PromotionLabel is not null).Take(10).ToList();
+        var promotedProducts = products
+            .Where(card => card.PromotionLabel is not null
+                || (card.PromotionalAmountExclusiveOfTax is decimal promo && promo < card.OfferAmountExclusiveOfTax))
+            .Take(10)
+            .ToList();
         var homeCategories = SelectHomeCategories(categories, 20);
-        var bestSellerColumns = BuildBestSellerColumns(categories, listing.Products, 4, 3);
-        var mostViewed = listing.Products
+        var bestSellerColumns = BuildBestSellerColumns(categories, products, 4, 3);
+        var mostViewed = products
             .OrderByDescending(card => card.ReviewCount)
             .ThenBy(card => card.Title, StringComparer.Ordinal)
             .Take(12)
@@ -89,11 +94,11 @@ public sealed class StorefrontComposer
         var latestArticles = await BuildLatestArticlesAsync(contentLocale, cancellationToken);
         return new StorefrontHomePage(
             categories,
-            listing.Products.Take(24).ToList(),
+            products.Take(24).ToList(),
             promotedProducts.Take(8).ToList(),
             promotedProducts.Skip(Math.Min(5, promotedProducts.Count)).Take(8).ToList(),
-            listing.Products.Take(8).ToList(),
-            listing.Products.Skip(8).Take(8).ToList(),
+            products.Take(8).ToList(),
+            products.Skip(8).Take(8).ToList(),
             brands.Take(20).ToList(),
             "فروشگاه توبا",
             "کالای واقعی از Catalog با قیمت Offer و موجودی انبار",
@@ -748,16 +753,25 @@ public sealed class StorefrontComposer
 
     private async Task<IReadOnlyList<StorefrontProductCard>> BuildProductCardsAsync(
         CancellationToken cancellationToken,
-        Guid? preferredSellerPartyId = null)
+        Guid? preferredSellerPartyId = null,
+        int? maxProducts = null,
+        bool cardOnly = false)
     {
-        var products = await _catalog.Products.AsNoTracking()
+        var query = _catalog.Products.AsNoTracking()
             .Where(x => x.Status == CatalogPublicationStatus.Published)
-            .OrderByDescending(x => x.CreatedAt)
-            .ToListAsync(cancellationToken);
+            .OrderByDescending(x => x.CreatedAt);
+        var products = maxProducts is int limit
+            ? await query.Take(Math.Clamp(limit, 1, 48)).ToListAsync(cancellationToken)
+            : await query.ToListAsync(cancellationToken);
         var cards = new List<StorefrontProductCard>();
         foreach (var product in products)
         {
-            var composed = await ComposeProductAsync(product, cancellationToken, preferredSellerPartyId);
+            var composed = await ComposeProductAsync(
+                product,
+                cancellationToken,
+                preferredSellerPartyId,
+                selectedVariantId: null,
+                cardOnly: cardOnly);
             if (composed is null)
             {
                 continue;
@@ -778,16 +792,23 @@ public sealed class StorefrontComposer
         CatalogProduct product,
         CancellationToken cancellationToken,
         Guid? preferredSellerPartyId = null,
-        Guid? selectedVariantId = null)
+        Guid? selectedVariantId = null,
+        bool cardOnly = false)
     {
         var now = DateTimeOffset.UtcNow;
         var title = (await LoadNamesAsync(CatalogLocalizedOwnerKind.Product, [product.ProductId], cancellationToken))
             .GetValueOrDefault(product.ProductId)
             ?? product.SlugSeam
             ?? "کالا";
-        var shortDescriptions = await LoadFieldAsync(CatalogLocalizedOwnerKind.Product, [product.ProductId], "short_description", cancellationToken);
-        var fullDescriptions = await LoadFieldAsync(CatalogLocalizedOwnerKind.Product, [product.ProductId], "full_description", cancellationToken);
-        var legacyDescriptions = await LoadFieldAsync(CatalogLocalizedOwnerKind.Product, [product.ProductId], "description", cancellationToken);
+        var shortDescriptions = cardOnly
+            ? new Dictionary<Guid, string>()
+            : await LoadFieldAsync(CatalogLocalizedOwnerKind.Product, [product.ProductId], "short_description", cancellationToken);
+        var fullDescriptions = cardOnly
+            ? new Dictionary<Guid, string>()
+            : await LoadFieldAsync(CatalogLocalizedOwnerKind.Product, [product.ProductId], "full_description", cancellationToken);
+        var legacyDescriptions = cardOnly
+            ? new Dictionary<Guid, string>()
+            : await LoadFieldAsync(CatalogLocalizedOwnerKind.Product, [product.ProductId], "description", cancellationToken);
         var categoryLinks = await _catalog.ProductCategories.AsNoTracking()
             .Where(x => x.ProductId == product.ProductId)
             .ToListAsync(cancellationToken);
@@ -942,8 +963,12 @@ public sealed class StorefrontComposer
             primary.AvailableUnits > 0,
             promotionLabel,
             BrandId: product.BrandId);
-        var specifications = await BuildSpecificationsAsync(product.ProductId, chosenVariantId.Value, cancellationToken);
-        var variantViews = await BuildVariantsAsync(variants, candidates, cancellationToken);
+        var specifications = cardOnly
+            ? Array.Empty<StorefrontProductSpecification>()
+            : await BuildSpecificationsAsync(product.ProductId, chosenVariantId.Value, cancellationToken);
+        var variantViews = cardOnly
+            ? Array.Empty<StorefrontProductVariant>()
+            : await BuildVariantsAsync(variants, candidates, cancellationToken);
         var shortDescription = shortDescriptions.GetValueOrDefault(product.ProductId)
             ?? legacyDescriptions.GetValueOrDefault(product.ProductId);
         var fullDescription = fullDescriptions.GetValueOrDefault(product.ProductId)

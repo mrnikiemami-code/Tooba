@@ -27,6 +27,11 @@ test("Store Pages rename + AppDataGrid listing columns", () => {
   assert.match(list, /بازگردانی صفحه اصلی پیش‌فرض/);
   assert.match(list, /تنظیم به عنوان صفحه اصلی/);
   assert.match(list, /home-current-indicator/);
+  assert.match(list, /landing-home-/);
+  assert.match(list, /confirm:/);
+  assert.match(api, /pageType === "Home" \? ""/);
+  assert.match(api, /restoreDefaultAdminHome/);
+  assert.match(api, /setAdminLandingHome\(null\)/);
 });
 
 test("create page type + SEO admin UX groups", () => {

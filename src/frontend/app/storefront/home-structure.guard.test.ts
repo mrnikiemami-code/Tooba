@@ -9,18 +9,19 @@ const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..")
 const homeSource = fs.readFileSync(path.join(root, "app/storefront/storefront-home.tsx"), "utf8");
 const blocksSource = fs.readFileSync(path.join(root, "app/storefront/storefront-home-blocks.tsx"), "utf8");
 const repairSource = fs.readFileSync(path.join(root, "app/storefront/storefront-home-repair-sections.tsx"), "utf8");
+const shopeivaProductSource = fs.readFileSync(path.join(root, "app/storefront/storefront-home-shopeiva-product-layouts.tsx"), "utf8");
 const storiesSource = fs.readFileSync(path.join(root, "app/storefront/stories/home-stories.tsx"), "utf8");
 const sharedSource = fs.readFileSync(path.join(root, "lib/storefront-composition/shared-composition-renderer.tsx"), "utf8");
-const combinedSource = `${homeSource}\n${blocksSource}\n${repairSource}\n${storiesSource}\n${sharedSource}`;
+const combinedSource = `${homeSource}\n${blocksSource}\n${repairSource}\n${shopeivaProductSource}\n${storiesSource}\n${sharedSource}`;
 
 const REQUIRED_MARKERS = [
   'data-testid="storefront-home"',
   'data-testid="home-hero"',
   'data-testid="home-stories"',
   'data-testid="home-categories"',
-  'testId="home-flash-sales"',
+  'data-testid="home-flash-sales"',
   'data-testid="home-best-sellers"',
-  'testId="home-most-viewed"',
+  'data-testid="home-most-viewed"',
   'data-testid="home-middle-banners"',
   'data-testid="home-brands"',
   'data-testid="home-new-products"',
@@ -34,12 +35,12 @@ const SECTION_TYPE_MARKERS: Record<string, string> = {
   hero: 'data-testid="home-hero"',
   stories: "<HomeStoriesSection",
   category_grid: 'data-testid="home-categories"',
-  product_rail_flash: 'testId="home-flash-sales"',
+  product_rail_flash: "HomeAmazingProductSection",
   best_sellers: "<HomeBestSellersSection",
-  product_rail_most_viewed: 'testId="home-most-viewed"',
+  product_rail_most_viewed: "HomeZohrehProductSection",
   middle_banners: 'data-testid="home-middle-banners"',
   brands: "<HomeBrandsSection",
-  newest_products: "<HomeNewProductsSection",
+  newest_products: "HomeMahoorProductSection",
   customer_reviews: "<HomeTestimonialsSection",
   latest_articles: "<HomeArticlesSection",
 };

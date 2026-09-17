@@ -1,0 +1,24 @@
+---
+description: Never modify the external Shopeiva visual/reference tree
+alwaysApply: true
+---
+
+# Immutable Shopeiva reference
+
+The Shopeiva reference is **read-only**. Agents must never create, edit, delete, move, or rewrite any file under:
+
+`D:\Users\User\source\repos\SarvNewVerRequirment\reference\shopeiva`
+
+That path is the locked visual/structure authority for Home (and related storefront fidelity). Use it only as a read-only reference when arranging Tooba storefront pages with existing components and live store data.
+
+## Forbidden
+
+- Any write, patch, rename, or delete under the reference tree
+- "Fixing" reference code, assets, or docs "to match" the app
+- Copying changes back into the reference
+
+## Allowed
+
+- Read reference files to confirm section order and structure
+- Implement the equivalent arrangement only inside `SarvNewVer` (this repo)
+---

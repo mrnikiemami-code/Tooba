@@ -15,9 +15,13 @@ import {
   HomeArticlesSection,
   HomeBestSellersSection,
   HomeBrandsSection,
-  HomeNewProductsSection,
   HomeTestimonialsSection,
 } from "../../app/storefront/storefront-home-repair-sections.tsx";
+import {
+  HomeAmazingProductSection,
+  HomeMahoorProductSection,
+  HomeZohrehProductSection,
+} from "../../app/storefront/storefront-home-shopeiva-product-layouts.tsx";
 import { HomeStoriesSection } from "../../app/storefront/stories/home-stories.tsx";
 import {
   CompositionBannerGrid,
@@ -188,38 +192,24 @@ export function renderSharedHomeSection(
       return <HomeCategoryGridSection homeCategories={context.homeCategories} layout="editorial-tiles" />;
     case "product.card-carousel":
       if (config.href === "/new-products" || config.title === "جدیدترین‌ها") {
-        return <HomeNewProductsSection products={context.newArrivals} />;
+        return <HomeMahoorProductSection products={context.newArrivals} />;
       }
       return context.specialOffers.length > 0 ? (
-        <ProductRailSection
-          id="home-flash"
-          title={config.title ?? "پیشنهاد شگفت‌انگیز"}
-          href={config.href ?? "/offers"}
-          linkLabel="همه"
-          tone="accent"
-          products={context.specialOffers}
-          slideClassName="w-[170px] md:w-[210px]"
-          testId="home-flash-sales"
-          layout="rail"
-        />
+        <HomeAmazingProductSection products={context.specialOffers} title={config.title} href={config.href} />
       ) : null;
+    case "product.amazing":
+      return <HomeAmazingProductSection products={context.specialOffers} title={config.title} href={config.href} />;
+    case "product.zohreh":
+      return <HomeZohrehProductSection products={context.mostViewedProducts} title={config.title} href={config.href} />;
+    case "product.mahoor":
+      return <HomeMahoorProductSection products={context.newArrivals} title={config.title} href={config.href} />;
     case "product.category-columns":
       return <HomeBestSellersSection columns={context.bestSellerColumns} />;
     case "ranked.multi-column":
       return <HomeBestSellersSection columns={context.bestSellerColumns} />;
     case "product.compact-rows":
       return context.mostViewedProducts.length > 0 ? (
-        <ProductRailSection
-          id="home-most-viewed"
-          title={config.title ?? "پربازدیدترین‌ها"}
-          href={config.href ?? "/most-viewed"}
-          linkLabel="همه"
-          tone="plain"
-          products={context.mostViewedProducts}
-          slideClassName="w-[170px] md:w-[220px]"
-          testId="home-most-viewed"
-          layout="compact-rows"
-        />
+        <HomeZohrehProductSection products={context.mostViewedProducts} title={config.title ?? "پربازدیدترین‌ها"} href={config.href} />
       ) : null;
     case "ranked.horizontal":
       return context.mostViewedProducts.length > 0 ? (
@@ -370,7 +360,7 @@ export function renderSharedHomeSection(
   }
 }
 
-/** Home path: flash vs newest both use product.card-carousel — disambiguate by home section key. */
+/** Home path: flash / newest / most-viewed use Shopeiva product layouts. */
 export function renderSharedHomeSectionForLegacyType(
   homeSectionType: string,
   variantKey: string,
@@ -378,22 +368,31 @@ export function renderSharedHomeSectionForLegacyType(
   config: SectionDisplayConfig,
 ): ReactNode | null {
   if (homeSectionType === "product_rail_flash") {
-    return context.specialOffers.length > 0 ? (
-      <ProductRailSection
-        id="home-flash"
-        title={config.title ?? "پیشنهاد شگفت‌انگیز"}
-        href={config.href ?? "/offers"}
-        linkLabel="همه"
-        tone="accent"
+    return (
+      <HomeAmazingProductSection
         products={context.specialOffers}
-        slideClassName="w-[170px] md:w-[210px]"
-        testId="home-flash-sales"
-        layout="rail"
+        title={config.title ?? "شگفت‌انگیزهای امروز"}
+        href={config.href ?? "/offers"}
       />
-    ) : null;
+    );
+  }
+  if (homeSectionType === "product_rail_most_viewed") {
+    return (
+      <HomeZohrehProductSection
+        products={context.mostViewedProducts}
+        title={config.title ?? "پربازدیدترین‌ها"}
+        href={config.href ?? "/most-viewed"}
+      />
+    );
   }
   if (homeSectionType === "newest_products") {
-    return <HomeNewProductsSection products={context.newArrivals} />;
+    return (
+      <HomeMahoorProductSection
+        products={context.newArrivals}
+        title={config.title ?? "جدیدترین محصولات"}
+        href={config.href ?? "/new-products"}
+      />
+    );
   }
   return renderSharedHomeSection(variantKey, context, config);
 }
@@ -494,6 +493,72 @@ export function renderSharedLandingSection(input: SharedLandingRenderInput): Rea
       );
     case "product.card-carousel":
       return fillProducts("rail");
+    case "product.amazing": {
+      const wanted = new Set(
+        section.items.map((item) => item.id).concat(section.items.map((item) => item.slug).filter(Boolean) as string[]),
+      );
+      const realSelected = wanted.size
+        ? context.products.filter((card) => wanted.has(card.productId) || wanted.has(card.slug))
+        : context.products.filter((card) => card.promotionalAmountExclusiveOfTax != null || card.promotionLabel);
+      const filled = applyPreviewFill({
+        enabled: storePreview,
+        variantKey,
+        realItems: realSelected.length ? realSelected : context.products,
+        createFake: (index) => createFakeProduct(index, locale),
+      });
+      return (
+        <HomeAmazingProductSection
+          products={filled.items}
+          title={typeof config.title === "string" ? config.title : "شگفت‌انگیزهای امروز"}
+          href={typeof config.href === "string" ? config.href : "/offers"}
+          previewLocale={locale}
+        />
+      );
+    }
+    case "product.zohreh": {
+      const wanted = new Set(
+        section.items.map((item) => item.id).concat(section.items.map((item) => item.slug).filter(Boolean) as string[]),
+      );
+      const realSelected = wanted.size
+        ? context.products.filter((card) => wanted.has(card.productId) || wanted.has(card.slug))
+        : context.products;
+      const filled = applyPreviewFill({
+        enabled: storePreview,
+        variantKey,
+        realItems: realSelected,
+        createFake: (index) => createFakeProduct(index, locale),
+      });
+      return (
+        <HomeZohrehProductSection
+          products={filled.items}
+          title={typeof config.title === "string" ? config.title : "پربازدیدترین‌ها"}
+          href={typeof config.href === "string" ? config.href : "/most-viewed"}
+          previewLocale={locale}
+        />
+      );
+    }
+    case "product.mahoor": {
+      const wanted = new Set(
+        section.items.map((item) => item.id).concat(section.items.map((item) => item.slug).filter(Boolean) as string[]),
+      );
+      const realSelected = wanted.size
+        ? context.products.filter((card) => wanted.has(card.productId) || wanted.has(card.slug))
+        : context.products;
+      const filled = applyPreviewFill({
+        enabled: storePreview,
+        variantKey,
+        realItems: realSelected,
+        createFake: (index) => createFakeProduct(index, locale),
+      });
+      return (
+        <HomeMahoorProductSection
+          products={filled.items}
+          title={typeof config.title === "string" ? config.title : "جدیدترین محصولات"}
+          href={typeof config.href === "string" ? config.href : "/new-products"}
+          previewLocale={locale}
+        />
+      );
+    }
     case "product.grid":
       return fillProducts("grid");
     case "product.compact-rows":

@@ -41,7 +41,10 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 /**
- * خانهٔ فروشگاه زنده با پوستهٔ Shopeiva. داده از Host می‌آید نه از JSON دمو.
+ * خانهٔ فروشگاه زنده با پوستهٔ Shopeiva.
+ * پیش‌فرض پایدار = مسیر canonical (`StorefrontShopeivaHome`) وقتی home_page_id خالی است.
+ * Store Page سفارشی فقط وقتی ادمین صفحه را «خانه» کرده؛ بازگردانی پیش‌فرض همان canonical را برمی‌گرداند.
+ * داده از Host می‌آید نه از JSON دمو.
  */
 export default async function HomePage() {
   const locale = await resolveRequestLocale();

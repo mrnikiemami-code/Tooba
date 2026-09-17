@@ -100,6 +100,27 @@ export const RESPONSIVE_CONTRACTS: Record<string, ResponsiveContract> = {
     itemVisible: { desktop: "4-5", tablet: "3", mobile: "2" },
     notesFa: "اسلایدر کارت کالا.",
   },
+  "product.amazing": {
+    variantKey: "product.amazing",
+    columns: { desktop: "rail", tablet: "rail", mobile: "rail" },
+    height: { desktop: "auto", tablet: "auto", mobile: "auto" },
+    itemVisible: { desktop: "4-5", tablet: "3", mobile: "2" },
+    notesFa: "شگفت‌انگیز با تایمر.",
+  },
+  "product.zohreh": {
+    variantKey: "product.zohreh",
+    columns: { desktop: "3", tablet: "2", mobile: "1" },
+    height: { desktop: "auto", tablet: "auto", mobile: "auto" },
+    itemVisible: { desktop: "9", tablet: "6", mobile: "3" },
+    notesFa: "طرح زهره — ستون افقی پربازدید.",
+  },
+  "product.mahoor": {
+    variantKey: "product.mahoor",
+    columns: { desktop: "rail", tablet: "rail", mobile: "rail" },
+    height: { desktop: "auto", tablet: "auto", mobile: "auto" },
+    itemVisible: { desktop: "4-5", tablet: "3", mobile: "2" },
+    notesFa: "طرح ماهور — جدیدترین‌ها.",
+  },
   "product.grid": {
     variantKey: "product.grid",
     columns: { desktop: "4", tablet: "3", mobile: "2" },

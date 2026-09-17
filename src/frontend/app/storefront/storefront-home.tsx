@@ -102,17 +102,17 @@ function renderHomeSection(
     case "category_grid":
       return renderSharedHomeSectionForLegacyType("category_grid", variantKey ?? "category.image-cards", context, config);
     case "product_rail_flash":
-      return renderSharedHomeSectionForLegacyType("product_rail_flash", variantKey ?? "product.card-carousel", context, config);
+      return renderSharedHomeSectionForLegacyType("product_rail_flash", variantKey ?? "product.amazing", context, config);
     case "best_sellers":
       return renderSharedHomeSectionForLegacyType("best_sellers", variantKey ?? "product.category-columns", context, config);
     case "product_rail_most_viewed":
-      return renderSharedHomeSectionForLegacyType("product_rail_most_viewed", variantKey ?? "product.compact-rows", context, config);
+      return renderSharedHomeSectionForLegacyType("product_rail_most_viewed", variantKey ?? "product.zohreh", context, config);
     case "middle_banners":
       return renderSharedHomeSectionForLegacyType("middle_banners", variantKey ?? "banner.one-large-two-small", context, config);
     case "brands":
       return renderSharedHomeSectionForLegacyType("brands", variantKey ?? "brand.logo-rail", context, config);
     case "newest_products":
-      return renderSharedHomeSectionForLegacyType("newest_products", variantKey ?? "product.card-carousel", context, config);
+      return renderSharedHomeSectionForLegacyType("newest_products", variantKey ?? "product.mahoor", context, config);
     case "customer_reviews":
       return renderSharedHomeSectionForLegacyType("customer_reviews", variantKey ?? "reviews.card-carousel", context, config);
     case "latest_articles":

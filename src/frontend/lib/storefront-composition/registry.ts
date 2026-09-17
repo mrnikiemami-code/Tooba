@@ -53,6 +53,9 @@ const PREVIEW_CARDINALITY: Record<string, { min: number; target: number }> = {
   "category.horizontal-rail": { min: 3, target: 5 },
   "category.editorial-tiles": { min: 2, target: 4 },
   "product.card-carousel": { min: 2, target: 4 },
+  "product.amazing": { min: 2, target: 4 },
+  "product.zohreh": { min: 3, target: 9 },
+  "product.mahoor": { min: 2, target: 4 },
   "product.grid": { min: 4, target: 6 },
   "product.compact-rows": { min: 3, target: 5 },
   "product.category-columns": { min: 3, target: 6 },
@@ -185,6 +188,15 @@ export const VARIANTS: VariantDefinition[] = [
 
   variant("product.card-carousel", "ProductShowcase", "اسلایدر کارت محصول", "ردیف افقی کارت کالا", "Existing", {
     previewKind: "product-carousel", recommendedUseFa: "پیشنهاد و تازه‌ها", autoplaySupported: true, dataSources: DS_PRODUCT,
+  }),
+  variant("product.amazing", "ProductShowcase", "شگفت‌انگیز", "اسلایدر کارت با تایمر شمارش معکوس", "Existing", {
+    previewKind: "product-carousel", recommendedUseFa: "پیشنهاد شگفت‌انگیز", autoplaySupported: true, dataSources: DS_PRODUCT,
+  }),
+  variant("product.zohreh", "ProductShowcase", "طرح زهره", "ستون‌های افقی پربازدید", "Existing", {
+    previewKind: "product-rows", recommendedUseFa: "پربازدیدترین‌ها", autoplaySupported: true, dataSources: DS_PRODUCT,
+  }),
+  variant("product.mahoor", "ProductShowcase", "طرح ماهور", "اسلایدر جدیدترین محصولات", "Existing", {
+    previewKind: "product-carousel", recommendedUseFa: "تازه‌ها", autoplaySupported: true, dataSources: DS_PRODUCT,
   }),
   variant("product.grid", "ProductShowcase", "شبکه کالا", "شبکه چندستونه", "ReusableViaAdapter", {
     previewKind: "product-grid", recommendedUseFa: "مناسب نمایش فشرده", dataSources: DS_PRODUCT,

@@ -148,11 +148,12 @@ public sealed class StoreLandingPageComposer
             }
         }
 
-        if (pageId is null)
-        {
-            // بازگردانی خانهٔ پیش‌فرض: فقط انتخاب/ترکیب؛ Catalog/Template لمس نمی‌شود.
-            settings.SetHomePage(null, now);
-        }
+            if (pageId is null)
+            {
+                // بازگردانی خانهٔ پیش‌فرض: home_page_id=null → StorefrontShopeivaHome canonical در FE.
+                // Catalog/Template و Store Pages دیگر لمس نمی‌شوند.
+                settings.SetHomePage(null, now);
+            }
         else
         {
             var page = await RequirePageAsync(pageId.Value, cancellationToken);

@@ -287,7 +287,7 @@ export async function setAdminLandingHome(homePageId: string | null): Promise<Ad
   }
 }
 
-/** بازگردانی صفحه اصلی پیش‌فرض — فقط انتخاب Home؛ دادهٔ Catalog دست‌نخورده می‌ماند. */
+/** بازگردانی صفحه اصلی پیش‌فرض = پاک کردن home_page_id و فعال‌سازی خانهٔ canonical کد‌محور. */
 export async function restoreDefaultAdminHome(): Promise<AdminResult<AdminLandingHomeSelection>> {
   return setAdminLandingHome(null);
 }
@@ -410,5 +410,6 @@ export async function loadAdminLandingPreview(pageId: string): Promise<AdminResu
 }
 
 export function publicPathForStorePage(page: Pick<AdminLandingPage, "pageType" | "slug">): string {
-  return page.pageType === "Home" ? "/" : `/landing/${page.slug}`;
+  // خانه روی ریشهٔ ویترین است؛ در فهرست Admin آدرس خالی نشان داده می‌شود (نه /landing/...).
+  return page.pageType === "Home" ? "" : `/landing/${page.slug}`;
 }
