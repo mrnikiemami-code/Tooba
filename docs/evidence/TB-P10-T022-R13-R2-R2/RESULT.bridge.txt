@@ -61,7 +61,11 @@ Recovery-SoT:
 docs/evidence/TB-P10-T022-R13-R2-R2/recovery-sot.md — Phase P10; Architect TB-P10-T022-R13-R1-R1; Impl TB-P10-T022-R13-R2-R2; T001 retained later; no T023/T002.
 
 Git:
-a5b2039e9fd2e7d080dbfd5b56aaf418dcaf197e
+branch: main
+HEAD: 4fa0f108eb71d4f43202e409836f5d7c4281014d
+origin/main: 4fa0f108eb71d4f43202e409836f5d7c4281014d
+HEAD==origin/main: YES
+18ca10c9 ancestor: YES
 
 Architectural-Concerns:
 none
