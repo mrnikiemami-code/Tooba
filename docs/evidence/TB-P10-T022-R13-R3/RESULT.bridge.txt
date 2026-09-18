@@ -1,4 +1,4 @@
-PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+﻿PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
 
 BEGIN_TOOBA_WORKER_RESULT
 
@@ -92,11 +92,10 @@ docs/evidence/TB-P10-T022-R13-R3/recovery-sot.md — Architect TB-P10-T022-R13-R
 
 Git:
 branch: main
-HEAD: PLACEHOLDER_SHA
-origin/main: PLACEHOLDER_SHA
+HEAD: b9c97adc8aabd3dcbe42f4fe3a44cc907d0cd688
+origin/main: b9c97adc8aabd3dcbe42f4fe3a44cc907d0cd688
 HEAD==origin/main: YES
 18ca10c9 ancestor: YES
-
 Architectural-Concerns:
 none
 
