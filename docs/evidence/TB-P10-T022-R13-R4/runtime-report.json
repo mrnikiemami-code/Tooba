@@ -1,0 +1,681 @@
+{
+  "ok": true,
+  "steps": [
+    {
+      "name": "host-5088",
+      "pass": true
+    },
+    {
+      "name": "fe-3000",
+      "pass": true
+    },
+    {
+      "name": "dev-actor",
+      "pass": true
+    },
+    {
+      "name": "file:admin-picker-polished-previews.png",
+      "pass": true,
+      "data": {
+        "bytes": 80116
+      }
+    },
+    {
+      "name": "published",
+      "pass": true,
+      "data": {
+        "badge": 1
+      }
+    },
+    {
+      "name": "page-route-binding",
+      "pass": true,
+      "data": {
+        "adminUrl": "http://127.0.0.1:3000/admin/landing-pages/01a0b5fb-86a8-7000-95be-69a3ec06fcc2",
+        "pageId": "01a0b5fb-86a8-7000-95be-69a3ec06fcc2",
+        "slug": "r13-r4-polish-1789759553222-cmn4v",
+        "exactPublicPath": "/landing/r13-r4-polish-1789759553222-cmn4v",
+        "exactPublicUrl": "http://127.0.0.1:3000/landing/r13-r4-polish-1789759553222-cmn4v"
+      }
+    },
+    {
+      "name": "admin-selected-sunny",
+      "pass": true,
+      "data": {
+        "selected": "true"
+      }
+    },
+    {
+      "name": "public-layout-sunny",
+      "pass": true
+    },
+    {
+      "name": "no-sweep-sunny",
+      "pass": true
+    },
+    {
+      "name": "file:sunny-polished.png",
+      "pass": true,
+      "data": {
+        "bytes": 218974
+      }
+    },
+    {
+      "name": "file:sunny-motion-initial.png",
+      "pass": true,
+      "data": {
+        "bytes": 218974
+      }
+    },
+    {
+      "name": "file:sunny-motion-mid.png",
+      "pass": true,
+      "data": {
+        "bytes": 218974
+      }
+    },
+    {
+      "name": "file:sunny-motion-settled.png",
+      "pass": true,
+      "data": {
+        "bytes": 190439
+      }
+    },
+    {
+      "name": "autoplay-sunny",
+      "pass": true,
+      "data": {
+        "initial": "0",
+        "after1": "1",
+        "e1": 7512,
+        "autoAttr": "on"
+      }
+    },
+    {
+      "name": "autoplay2-sunny",
+      "pass": true,
+      "data": {
+        "after1": "1",
+        "after2": "3",
+        "e2": 7214
+      }
+    },
+    {
+      "name": "admin-selected-money",
+      "pass": true,
+      "data": {
+        "selected": "true"
+      }
+    },
+    {
+      "name": "public-layout-money",
+      "pass": true
+    },
+    {
+      "name": "no-sweep-money",
+      "pass": true
+    },
+    {
+      "name": "file:money-polished.png",
+      "pass": true,
+      "data": {
+        "bytes": 244322
+      }
+    },
+    {
+      "name": "file:money-motion-initial.png",
+      "pass": true,
+      "data": {
+        "bytes": 244322
+      }
+    },
+    {
+      "name": "file:money-motion-mid.png",
+      "pass": true,
+      "data": {
+        "bytes": 244322
+      }
+    },
+    {
+      "name": "file:money-motion-settled.png",
+      "pass": true,
+      "data": {
+        "bytes": 220992
+      }
+    },
+    {
+      "name": "autoplay-money",
+      "pass": true,
+      "data": {
+        "initial": "0",
+        "after1": "1",
+        "e1": 6289,
+        "autoAttr": "on"
+      }
+    },
+    {
+      "name": "autoplay2-money",
+      "pass": true,
+      "data": {
+        "after1": "1",
+        "after2": "3",
+        "e2": 6012
+      }
+    },
+    {
+      "name": "admin-selected-cinematic",
+      "pass": true,
+      "data": {
+        "selected": "true"
+      }
+    },
+    {
+      "name": "public-layout-cinematic",
+      "pass": true
+    },
+    {
+      "name": "no-sweep-cinematic",
+      "pass": true
+    },
+    {
+      "name": "file:cinematic-polished.png",
+      "pass": true,
+      "data": {
+        "bytes": 382794
+      }
+    },
+    {
+      "name": "file:cinematic-motion-initial.png",
+      "pass": true,
+      "data": {
+        "bytes": 375698
+      }
+    },
+    {
+      "name": "file:cinematic-motion-mid.png",
+      "pass": true,
+      "data": {
+        "bytes": 375698
+      }
+    },
+    {
+      "name": "file:cinematic-motion-settled.png",
+      "pass": true,
+      "data": {
+        "bytes": 318198
+      }
+    },
+    {
+      "name": "autoplay-cinematic",
+      "pass": true,
+      "data": {
+        "initial": "0",
+        "after1": "1",
+        "e1": 8368,
+        "autoAttr": "on"
+      }
+    },
+    {
+      "name": "autoplay2-cinematic",
+      "pass": true,
+      "data": {
+        "after1": "1",
+        "after2": "2",
+        "e2": 8017
+      }
+    },
+    {
+      "name": "file:cinematic-desktop.png",
+      "pass": true,
+      "data": {
+        "bytes": 333538
+      }
+    },
+    {
+      "name": "file:cinematic-tablet.png",
+      "pass": true,
+      "data": {
+        "bytes": 228710
+      }
+    },
+    {
+      "name": "file:cinematic-mobile.png",
+      "pass": true,
+      "data": {
+        "bytes": 92668
+      }
+    },
+    {
+      "name": "admin-selected-cinematic-plus",
+      "pass": true,
+      "data": {
+        "selected": "true"
+      }
+    },
+    {
+      "name": "public-layout-cinematic-plus",
+      "pass": true
+    },
+    {
+      "name": "no-sweep-cinematic-plus",
+      "pass": true
+    },
+    {
+      "name": "file:cinematic-plus-polished.png",
+      "pass": true,
+      "data": {
+        "bytes": 406061
+      }
+    },
+    {
+      "name": "file:cinematic-plus-motion-initial.png",
+      "pass": true,
+      "data": {
+        "bytes": 406061
+      }
+    },
+    {
+      "name": "file:cinematic-plus-motion-mid.png",
+      "pass": true,
+      "data": {
+        "bytes": 406061
+      }
+    },
+    {
+      "name": "file:cinematic-plus-motion-settled.png",
+      "pass": true,
+      "data": {
+        "bytes": 353922
+      }
+    },
+    {
+      "name": "autoplay-cinematic-plus",
+      "pass": true,
+      "data": {
+        "initial": "0",
+        "after1": "1",
+        "e1": 9171,
+        "autoAttr": "on"
+      }
+    },
+    {
+      "name": "autoplay2-cinematic-plus",
+      "pass": true,
+      "data": {
+        "after1": "1",
+        "after2": "2",
+        "e2": 8806
+      }
+    },
+    {
+      "name": "file:cinematic-plus-desktop.png",
+      "pass": true,
+      "data": {
+        "bytes": 357343
+      }
+    },
+    {
+      "name": "file:cinematic-plus-mobile.png",
+      "pass": true,
+      "data": {
+        "bytes": 92360
+      }
+    },
+    {
+      "name": "admin-selected-explorer",
+      "pass": true,
+      "data": {
+        "selected": "true"
+      }
+    },
+    {
+      "name": "public-layout-explorer",
+      "pass": true
+    },
+    {
+      "name": "no-sweep-explorer",
+      "pass": true
+    },
+    {
+      "name": "explorer-upright",
+      "pass": true
+    },
+    {
+      "name": "file:explorer-polished.png",
+      "pass": true,
+      "data": {
+        "bytes": 251464
+      }
+    },
+    {
+      "name": "file:explorer-motion-initial.png",
+      "pass": true,
+      "data": {
+        "bytes": 251464
+      }
+    },
+    {
+      "name": "file:explorer-motion-mid.png",
+      "pass": true,
+      "data": {
+        "bytes": 251464
+      }
+    },
+    {
+      "name": "file:explorer-motion-settled.png",
+      "pass": true,
+      "data": {
+        "bytes": 247556
+      }
+    },
+    {
+      "name": "autoplay-explorer",
+      "pass": true,
+      "data": {
+        "initial": "0",
+        "after1": "1",
+        "e1": 7094,
+        "autoAttr": "on"
+      }
+    },
+    {
+      "name": "autoplay2-explorer",
+      "pass": true,
+      "data": {
+        "after1": "1",
+        "after2": "3",
+        "e2": 6804
+      }
+    },
+    {
+      "name": "file:explorer-desktop.png",
+      "pass": true,
+      "data": {
+        "bytes": 217124
+      }
+    },
+    {
+      "name": "file:explorer-mobile.png",
+      "pass": true,
+      "data": {
+        "bytes": 61206
+      }
+    },
+    {
+      "name": "existing-preserved:آریا",
+      "pass": true
+    },
+    {
+      "name": "existing-preserved:زهره",
+      "pass": true
+    },
+    {
+      "name": "existing-preserved:ماهور",
+      "pass": true
+    },
+    {
+      "name": "existing-preserved:شگفت",
+      "pass": true
+    }
+  ],
+  "files": {
+    "admin-picker-polished-previews.png": {
+      "bytes": 80116
+    },
+    "sunny-polished.png": {
+      "bytes": 218974
+    },
+    "sunny-motion-initial.png": {
+      "bytes": 218974
+    },
+    "sunny-motion-mid.png": {
+      "bytes": 218974
+    },
+    "sunny-motion-settled.png": {
+      "bytes": 190439
+    },
+    "money-polished.png": {
+      "bytes": 244322
+    },
+    "money-motion-initial.png": {
+      "bytes": 244322
+    },
+    "money-motion-mid.png": {
+      "bytes": 244322
+    },
+    "money-motion-settled.png": {
+      "bytes": 220992
+    },
+    "cinematic-polished.png": {
+      "bytes": 382794
+    },
+    "cinematic-motion-initial.png": {
+      "bytes": 375698
+    },
+    "cinematic-motion-mid.png": {
+      "bytes": 375698
+    },
+    "cinematic-motion-settled.png": {
+      "bytes": 318198
+    },
+    "cinematic-desktop.png": {
+      "bytes": 333538
+    },
+    "cinematic-tablet.png": {
+      "bytes": 228710
+    },
+    "cinematic-mobile.png": {
+      "bytes": 92668
+    },
+    "cinematic-plus-polished.png": {
+      "bytes": 406061
+    },
+    "cinematic-plus-motion-initial.png": {
+      "bytes": 406061
+    },
+    "cinematic-plus-motion-mid.png": {
+      "bytes": 406061
+    },
+    "cinematic-plus-motion-settled.png": {
+      "bytes": 353922
+    },
+    "cinematic-plus-desktop.png": {
+      "bytes": 357343
+    },
+    "cinematic-plus-mobile.png": {
+      "bytes": 92360
+    },
+    "explorer-polished.png": {
+      "bytes": 251464
+    },
+    "explorer-motion-initial.png": {
+      "bytes": 251464
+    },
+    "explorer-motion-mid.png": {
+      "bytes": 251464
+    },
+    "explorer-motion-settled.png": {
+      "bytes": 247556
+    },
+    "explorer-desktop.png": {
+      "bytes": 217124
+    },
+    "explorer-mobile.png": {
+      "bytes": 61206
+    }
+  },
+  "errors": [],
+  "blockers": [],
+  "auth": {
+    "devContext": {
+      "actorUserId": "01a036c2-970e-7000-8eb7-94bf5cc2d8db",
+      "actorLabel": "مدیر نمونهٔ توبا",
+      "tenantId": "store-alpha"
+    }
+  },
+  "pageBinding": {
+    "adminUrl": "http://127.0.0.1:3000/admin/landing-pages/01a0b5fb-86a8-7000-95be-69a3ec06fcc2",
+    "pageId": "01a0b5fb-86a8-7000-95be-69a3ec06fcc2",
+    "slug": "r13-r4-polish-1789759553222-cmn4v",
+    "exactPublicPath": "/landing/r13-r4-polish-1789759553222-cmn4v",
+    "exactPublicUrl": "http://127.0.0.1:3000/landing/r13-r4-polish-1789759553222-cmn4v"
+  },
+  "autoplay": [
+    {
+      "variant": "product.sunny",
+      "layout": "sunny",
+      "beforeIdx": "0",
+      "afterIdx": "1",
+      "secondIdx": "3",
+      "elapsed": 7512,
+      "elapsed2": 7214,
+      "autoAttr": "on",
+      "advanced": true,
+      "advanced2": true
+    },
+    {
+      "variant": "product.money",
+      "layout": "money",
+      "beforeIdx": "0",
+      "afterIdx": "1",
+      "secondIdx": "3",
+      "elapsed": 6289,
+      "elapsed2": 6012,
+      "autoAttr": "on",
+      "advanced": true,
+      "advanced2": true
+    },
+    {
+      "variant": "product.cinematic",
+      "layout": "cinematic",
+      "beforeIdx": "0",
+      "afterIdx": "1",
+      "secondIdx": "2",
+      "elapsed": 8368,
+      "elapsed2": 8017,
+      "autoAttr": "on",
+      "advanced": true,
+      "advanced2": true
+    },
+    {
+      "variant": "product.cinematic-plus",
+      "layout": "cinematic-plus",
+      "beforeIdx": "0",
+      "afterIdx": "1",
+      "secondIdx": "2",
+      "elapsed": 9171,
+      "elapsed2": 8806,
+      "autoAttr": "on",
+      "advanced": true,
+      "advanced2": true
+    },
+    {
+      "variant": "product.explorer",
+      "layout": "explorer",
+      "beforeIdx": "0",
+      "afterIdx": "1",
+      "secondIdx": "3",
+      "elapsed": 7094,
+      "elapsed2": 6804,
+      "autoAttr": "on",
+      "advanced": true,
+      "advanced2": true
+    }
+  ],
+  "motion": [
+    {
+      "layout": "sunny",
+      "initial": "0",
+      "after1": "1",
+      "after2": "3",
+      "advanced1": true,
+      "advanced2": true
+    },
+    {
+      "layout": "money",
+      "initial": "0",
+      "after1": "1",
+      "after2": "3",
+      "advanced1": true,
+      "advanced2": true
+    },
+    {
+      "layout": "cinematic",
+      "initial": "0",
+      "after1": "1",
+      "after2": "2",
+      "advanced1": true,
+      "advanced2": true
+    },
+    {
+      "layout": "cinematic-plus",
+      "initial": "0",
+      "after1": "1",
+      "after2": "2",
+      "advanced1": true,
+      "advanced2": true
+    },
+    {
+      "layout": "explorer",
+      "initial": "0",
+      "after1": "1",
+      "after2": "3",
+      "advanced1": true,
+      "advanced2": true
+    }
+  ],
+  "noGlitch": {
+    "sunny": {
+      "edgeSweepOverlay": true,
+      "activeUpright": true
+    },
+    "money": {
+      "edgeSweepOverlay": true,
+      "activeUpright": true
+    },
+    "cinematic": {
+      "edgeSweepOverlay": true,
+      "activeUpright": true
+    },
+    "cinematic-plus": {
+      "edgeSweepOverlay": true,
+      "activeUpright": true
+    },
+    "explorer": {
+      "edgeSweepOverlay": true,
+      "activeUpright": true
+    }
+  },
+  "variants": {
+    "sunny": {
+      "initial": "0",
+      "after1": "1",
+      "after2": "3",
+      "autoAttr": "on"
+    },
+    "money": {
+      "initial": "0",
+      "after1": "1",
+      "after2": "3",
+      "autoAttr": "on"
+    },
+    "cinematic": {
+      "initial": "0",
+      "after1": "1",
+      "after2": "2",
+      "autoAttr": "on"
+    },
+    "cinematic-plus": {
+      "initial": "0",
+      "after1": "1",
+      "after2": "2",
+      "autoAttr": "on"
+    },
+    "explorer": {
+      "initial": "0",
+      "after1": "1",
+      "after2": "3",
+      "autoAttr": "on"
+    }
+  }
+}

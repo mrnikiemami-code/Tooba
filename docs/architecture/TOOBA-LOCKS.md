@@ -1332,3 +1332,23 @@ Product Showcase cinematic behavior must be implemented with lightweight Embla/C
 
 Visual quality acceptance requires real Admin→published Storefront proof; technical wiring alone is insufficient.
 
+### LOCK-SF-386 — Product Showcase readability and orientation
+
+Product Showcase motion must never distort ProductCard readability or make merchandise appear tilted, oversized, clipped, or visually broken.
+
+### LOCK-SF-387 — No independent Sunny/Money sweeping overlays
+
+Sunny and Money decorative treatments must not use independent sweeping overlays; emphasis remains tied to slide state.
+
+### LOCK-SF-388 — Cinematic depth without oversized center
+
+Cinematic/Cinematic Plus differentiation comes from controlled depth/spacing/shadow, not oversized center cards.
+
+### LOCK-SF-389 — Explorer positional asymmetry, upright active
+
+Explorer asymmetry is positional/peek-based; the active product card remains visually upright.
+
+### LOCK-SF-390 — Calm settled autoplay
+
+Autoplay transitions are calm, fully settled, loop-clean, and pause/resume correctly on interaction.
+

@@ -79,8 +79,8 @@ test("Embla dependency present and scoped to new rail component", () => {
   assert.doesNotMatch(sharedRenderer, /replace.*Swiper|migrate.*Swiper/i);
 });
 
-test("locks LOCK-SF-375…385 present", () => {
-  for (const id of [375, 376, 377, 378, 379, 380, 381, 382, 383, 384, 385]) {
+test("locks LOCK-SF-375…390 present", () => {
+  for (const id of [375, 376, 377, 378, 379, 380, 381, 382, 383, 384, 385, 386, 387, 388, 389, 390]) {
     assert.match(locks, new RegExp(`LOCK-SF-${id}`));
   }
 });

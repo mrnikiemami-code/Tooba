@@ -1,9 +1,10 @@
 "use client";
 
 /**
- * Product Showcase Embla rails — additive variants only (LOCK-SF-375…385).
+ * Product Showcase Embla rails — additive variants only (LOCK-SF-375…390).
  * One shared rail engine + variant-driven composition/motion metadata.
  * Reuses StorefrontProductCardView unchanged; Embla + Autoplay scoped to these five keys.
+ * R13-R4: calm motion, readable proportions, no sweep overlays, upright explorer.
  */
 
 import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
@@ -61,23 +62,25 @@ const VARIANT_CONTRACTS: Record<ProductShowcaseEmblaVariant, RailContract> = {
     align: "center",
     loop: true,
     dragFree: false,
-    duration: 28,
-    autoplayDelayMs: 5000,
-    slideBasis: "basis-[58%] sm:basis-[38%] md:basis-[26%] lg:basis-[20%]",
+    // Embla duration ticks — higher = calmer (~500–800ms feel with CSS ease)
+    duration: 26,
+    autoplayDelayMs: 5200,
+    slideBasis: "basis-[56%] sm:basis-[36%] md:basis-[24%] lg:basis-[19%]",
     gapClass: "gap-4 md:gap-5",
-    sectionClass: "bg-gradient-to-b from-amber-50/50 via-section-surface to-section-surface",
-    viewportClass: "py-3",
+    sectionClass: "bg-gradient-to-b from-amber-50/40 via-section-surface to-section-surface",
+    viewportClass: "py-2",
     perspective: undefined,
-    edgeFade: true,
+    edgeFade: false,
     asymmetry: false,
     navCompact: false,
-    activeScale: 1.06,
-    neighborScaleStep: 0.02,
+    activeScale: 1.02,
+    neighborScaleStep: 0.012,
     rotateYDeg: 0,
     translateZActive: 0,
     translateZStep: 0,
-    elevateActivePx: 10,
-    neighborOpacityStep: 0.04,
+    elevateActivePx: 4,
+    neighborOpacityStep: 0.03,
+    // Local active-only warm ring — no traveling edge sweep (LOCK-SF-387)
     warmGlow: true,
     commerceRing: false,
     vignette: false,
@@ -90,23 +93,23 @@ const VARIANT_CONTRACTS: Record<ProductShowcaseEmblaVariant, RailContract> = {
     align: "center",
     loop: true,
     dragFree: false,
-    duration: 16,
-    autoplayDelayMs: 3600,
-    slideBasis: "basis-[64%] sm:basis-[42%] md:basis-[28%] lg:basis-[22%]",
+    duration: 22,
+    autoplayDelayMs: 4000,
+    slideBasis: "basis-[58%] sm:basis-[38%] md:basis-[25%] lg:basis-[20%]",
     gapClass: "gap-2 md:gap-2.5",
-    sectionClass: "bg-gradient-to-b from-orange-50/70 via-amber-50/30 to-section-surface",
+    sectionClass: "bg-gradient-to-b from-orange-50/50 via-amber-50/20 to-section-surface",
     viewportClass: "py-2",
     perspective: undefined,
     edgeFade: false,
     asymmetry: false,
     navCompact: true,
-    activeScale: 1.1,
-    neighborScaleStep: 0.05,
+    activeScale: 1.03,
+    neighborScaleStep: 0.02,
     rotateYDeg: 0,
     translateZActive: 0,
     translateZStep: 0,
     elevateActivePx: 0,
-    neighborOpacityStep: 0.1,
+    neighborOpacityStep: 0.05,
     warmGlow: false,
     commerceRing: true,
     vignette: false,
@@ -119,23 +122,23 @@ const VARIANT_CONTRACTS: Record<ProductShowcaseEmblaVariant, RailContract> = {
     align: "center",
     loop: true,
     dragFree: false,
-    duration: 32,
+    duration: 30,
     autoplayDelayMs: 6000,
-    slideBasis: "basis-[72%] sm:basis-[48%] md:basis-[34%] lg:basis-[28%]",
-    gapClass: "gap-1 md:gap-2",
-    sectionClass: "bg-gradient-to-b from-slate-100/80 via-section-surface to-section-surface",
-    viewportClass: "py-6 md:py-8",
-    perspective: 1100,
+    slideBasis: "basis-[62%] sm:basis-[40%] md:basis-[28%] lg:basis-[22%]",
+    gapClass: "gap-2 md:gap-3",
+    sectionClass: "bg-gradient-to-b from-slate-100/70 via-section-surface to-section-surface",
+    viewportClass: "py-4 md:py-5",
+    perspective: 1200,
     edgeFade: true,
     asymmetry: false,
     navCompact: false,
-    activeScale: 1.08,
-    neighborScaleStep: 0.06,
-    rotateYDeg: 4.5,
-    translateZActive: 36,
-    translateZStep: 22,
+    activeScale: 1.03,
+    neighborScaleStep: 0.025,
+    rotateYDeg: 3,
+    translateZActive: 18,
+    translateZStep: 14,
     elevateActivePx: 0,
-    neighborOpacityStep: 0.12,
+    neighborOpacityStep: 0.08,
     warmGlow: false,
     commerceRing: false,
     vignette: true,
@@ -148,23 +151,24 @@ const VARIANT_CONTRACTS: Record<ProductShowcaseEmblaVariant, RailContract> = {
     align: "center",
     loop: true,
     dragFree: false,
-    duration: 40,
+    duration: 34,
     autoplayDelayMs: 6800,
-    slideBasis: "basis-[78%] sm:basis-[52%] md:basis-[36%] lg:basis-[30%]",
-    gapClass: "gap-0 md:gap-1",
-    sectionClass: "bg-gradient-to-b from-slate-200/70 via-slate-50/40 to-section-surface",
-    viewportClass: "py-8 md:py-10",
-    perspective: 1400,
+    // Same commercial basis as cinematic — richness via depth/shadow, not size (LOCK-SF-388)
+    slideBasis: "basis-[62%] sm:basis-[40%] md:basis-[28%] lg:basis-[22%]",
+    gapClass: "gap-2.5 md:gap-3.5",
+    sectionClass: "bg-gradient-to-b from-slate-200/60 via-slate-50/30 to-section-surface",
+    viewportClass: "py-5 md:py-6",
+    perspective: 1300,
     edgeFade: true,
     asymmetry: false,
     navCompact: false,
-    activeScale: 1.14,
-    neighborScaleStep: 0.09,
-    rotateYDeg: 6,
-    translateZActive: 56,
-    translateZStep: 34,
+    activeScale: 1.035,
+    neighborScaleStep: 0.035,
+    rotateYDeg: 3.5,
+    translateZActive: 28,
+    translateZStep: 20,
     elevateActivePx: 0,
-    neighborOpacityStep: 0.16,
+    neighborOpacityStep: 0.1,
     warmGlow: false,
     commerceRing: false,
     vignette: true,
@@ -174,26 +178,26 @@ const VARIANT_CONTRACTS: Record<ProductShowcaseEmblaVariant, RailContract> = {
     testId: "product-showcase-explorer",
     defaultTitle: "کاشف",
     defaultHref: "/products",
-    align: "center",
+    align: "start",
     loop: true,
     dragFree: false,
-    duration: 24,
-    autoplayDelayMs: 4500,
-    slideBasis: "basis-[62%] sm:basis-[40%] md:basis-[27%] lg:basis-[21%]",
+    duration: 26,
+    autoplayDelayMs: 4800,
+    slideBasis: "basis-[58%] sm:basis-[38%] md:basis-[25%] lg:basis-[20%]",
     gapClass: "gap-3 md:gap-4",
-    sectionClass: "bg-gradient-to-l from-sky-50/50 via-section-surface to-section-surface",
-    viewportClass: "py-2 ps-1 pe-8 md:pe-16",
+    sectionClass: "bg-gradient-to-l from-sky-50/40 via-section-surface to-section-surface",
+    viewportClass: "py-2 ps-1 pe-10 md:pe-20",
     perspective: undefined,
     edgeFade: false,
     asymmetry: true,
     navCompact: false,
-    activeScale: 1.02,
+    activeScale: 1.01,
     neighborScaleStep: 0.01,
     rotateYDeg: 0,
     translateZActive: 0,
     translateZStep: 0,
     elevateActivePx: 0,
-    neighborOpacityStep: 0.02,
+    neighborOpacityStep: 0.03,
     warmGlow: false,
     commerceRing: false,
     vignette: false,
@@ -308,7 +312,7 @@ export function ProductShowcaseEmblaRail({
 
     if (reducedMotion) {
       if (offset === 0) return { zIndex: 2, transform: `scale(${1 + (contract.activeScale - 1) * 0.35})` };
-      return { opacity: Math.max(0.75, 1 - abs * 0.08) };
+      return { opacity: Math.max(0.8, 1 - abs * 0.06) };
     }
 
     if (isDepth) {
@@ -318,22 +322,21 @@ export function ProductShowcaseEmblaRail({
           zIndex: 5,
           boxShadow:
             variant === "cinematic-plus"
-              ? "0 28px 48px rgba(15, 23, 42, 0.22)"
-              : "0 20px 40px rgba(15, 23, 42, 0.16)",
+              ? "0 18px 36px rgba(15, 23, 42, 0.18)"
+              : "0 12px 28px rgba(15, 23, 42, 0.12)",
         };
       }
-      // RTL: positive index is visually to the left; flip rotate sign for natural stage.
+      // Active stays front-facing; only neighbors rotate (LOCK-SF-386/388).
       const rotate = (offset > 0 ? 1 : -1) * contract.rotateYDeg * Math.min(abs, 2);
-      const scale = Math.max(0.72, 1 - abs * contract.neighborScaleStep);
-      const opacity = Math.max(0.45, 1 - abs * contract.neighborOpacityStep);
+      const scale = Math.max(0.9, 1 - abs * contract.neighborScaleStep);
+      const opacity = Math.max(0.62, 1 - abs * contract.neighborOpacityStep);
       const xShift =
-        variant === "cinematic-plus" ? (offset > 0 ? 10 : -10) * abs : (offset > 0 ? 4 : -4) * abs;
+        variant === "cinematic-plus" ? (offset > 0 ? 6 : -6) * abs : (offset > 0 ? 3 : -3) * abs;
       return {
-        transform: `translate3d(${xShift}px, ${abs * 6}px, ${-abs * contract.translateZStep}px) rotateY(${rotate}deg) scale(${scale})`,
+        transform: `translate3d(${xShift}px, ${abs * 3}px, ${-abs * contract.translateZStep}px) rotateY(${rotate}deg) scale(${scale})`,
         opacity,
         zIndex: 4 - abs,
-        boxShadow: abs === 1 ? "0 12px 28px rgba(15, 23, 42, 0.12)" : undefined,
-        filter: abs >= 2 ? "brightness(0.92)" : undefined,
+        boxShadow: abs === 1 ? "0 8px 20px rgba(15, 23, 42, 0.1)" : undefined,
       };
     }
 
@@ -342,12 +345,11 @@ export function ProductShowcaseEmblaRail({
         return {
           transform: `translate3d(0, -${contract.elevateActivePx}px, 0) scale(${contract.activeScale})`,
           zIndex: 3,
-          filter: "drop-shadow(0 12px 20px rgba(251, 191, 36, 0.28))",
         };
       }
       return {
-        transform: `scale(${1 - abs * contract.neighborScaleStep})`,
-        opacity: Math.max(0.82, 1 - abs * contract.neighborOpacityStep),
+        transform: `scale(${Math.max(0.97, 1 - abs * contract.neighborScaleStep)})`,
+        opacity: Math.max(0.88, 1 - abs * contract.neighborOpacityStep),
       };
     }
 
@@ -359,42 +361,41 @@ export function ProductShowcaseEmblaRail({
         };
       }
       return {
-        transform: `scale(${Math.max(0.86, 1 - abs * contract.neighborScaleStep)})`,
-        opacity: Math.max(0.55, 1 - abs * contract.neighborOpacityStep),
-        filter: abs >= 1 ? "saturate(0.92)" : undefined,
+        transform: `scale(${Math.max(0.96, 1 - abs * contract.neighborScaleStep)})`,
+        opacity: Math.max(0.78, 1 - abs * contract.neighborOpacityStep),
       };
     }
 
-    // Explorer — asymmetrical discovery peeks
+    // Explorer — positional asymmetry / peek only; active upright (LOCK-SF-389).
     if (offset === 0) {
       return {
-        transform: `translate3d(0, 0, 0) scale(${contract.activeScale}) rotate(-0.6deg)`,
+        transform: `translate3d(0, 0, 0) scale(${contract.activeScale})`,
         zIndex: 3,
       };
     }
     if (offset === 1) {
       return {
-        transform: "translate3d(-6px, 14px, 0) scale(0.94) rotate(1.8deg)",
-        opacity: 0.92,
+        transform: "translate3d(-10px, 6px, 0) scale(0.98)",
+        opacity: 0.94,
         zIndex: 2,
       };
     }
     if (offset === -1) {
       return {
-        transform: "translate3d(12px, -8px, 0) scale(0.9) rotate(-2.2deg)",
-        opacity: 0.78,
+        transform: "translate3d(14px, 2px, 0) scale(0.97)",
+        opacity: 0.86,
         zIndex: 1,
       };
     }
     if (offset > 1) {
       return {
-        transform: `translate3d(${-8 * abs}px, ${10 * abs}px, 0) scale(${0.88 - abs * 0.02})`,
-        opacity: Math.max(0.5, 0.85 - abs * 0.1),
+        transform: `translate3d(${-12 * abs}px, ${4 * abs}px, 0) scale(${0.96 - abs * 0.01})`,
+        opacity: Math.max(0.7, 0.9 - abs * 0.08),
       };
     }
     return {
-      transform: `translate3d(${12 * abs}px, ${-4 * abs}px, 0) scale(0.86)`,
-      opacity: 0.55,
+      transform: `translate3d(${14 * abs}px, ${2 * abs}px, 0) scale(0.95)`,
+      opacity: 0.72,
     };
   };
 
@@ -444,7 +445,7 @@ export function ProductShowcaseEmblaRail({
         {contract.vignette ? (
           <div
             aria-hidden
-            className="pointer-events-none absolute inset-x-0 top-16 bottom-8 bg-[radial-gradient(ellipse_at_center,transparent_42%,rgba(15,23,42,0.12)_100%)]"
+            className="pointer-events-none absolute inset-x-0 top-16 bottom-8 bg-[radial-gradient(ellipse_at_center,transparent_48%,rgba(15,23,42,0.08)_100%)]"
             data-rail-vignette="1"
           />
         ) : null}
@@ -498,19 +499,13 @@ export function ProductShowcaseEmblaRail({
           </div>
         </div>
 
-        {/* Decorative overlays must stay outside emblaRef — Embla uses viewport's first child as container. */}
+        {/* Decorative overlays must stay outside emblaRef — Embla uses viewport's first child as container.
+            No traveling edge-sweep glow (LOCK-SF-387); peek cue is static positional only. */}
         <div className="relative" data-rail-asymmetry={contract.asymmetry ? "1" : "0"}>
-          {contract.warmGlow ? (
-            <div
-              aria-hidden
-              className="pointer-events-none absolute inset-y-4 start-0 z-10 w-16 bg-gradient-to-l from-amber-200/40 to-transparent"
-              data-sunny-edge-glow="1"
-            />
-          ) : null}
           {contract.asymmetry ? (
             <div
               aria-hidden
-              className="pointer-events-none absolute inset-y-0 end-0 z-10 w-10 md:w-20 bg-gradient-to-r from-transparent to-sky-100/80"
+              className="pointer-events-none absolute inset-y-0 end-0 z-10 w-8 md:w-14 bg-gradient-to-r from-transparent to-sky-100/50"
               data-explorer-peek-cue="1"
             />
           ) : null}
@@ -525,13 +520,13 @@ export function ProductShowcaseEmblaRail({
               data-embla-container=""
               style={{
                 transformStyle: isDepth && !reducedMotion ? "preserve-3d" : undefined,
-                minHeight: isDepth ? "20rem" : "16.5rem",
+                minHeight: isDepth ? "18rem" : "16rem",
               }}
             >
               {products.map((card, index) => (
                 <div
                   key={`${contract.testId}-${card.productId}`}
-                  className={`min-w-0 shrink-0 grow-0 ${contract.slideBasis} transition-[transform,opacity,filter] duration-500 ease-out`}
+                  className={`min-w-0 shrink-0 grow-0 ${contract.slideBasis} transition-[transform,opacity,filter,box-shadow] duration-700 ease-[cubic-bezier(0.22,1,0.36,1)]`}
                   data-embla-slide=""
                   data-slide-index={index}
                   data-slide-active={index === selectedIndex ? "true" : "false"}
@@ -543,19 +538,17 @@ export function ProductShowcaseEmblaRail({
                   <div
                     className={`h-full ${
                       contract.warmGlow && index === selectedIndex
-                        ? "rounded-2xl bg-amber-50/70 p-1.5 shadow-[0_0_0_1px_rgba(251,191,36,0.35)]"
-                        : contract.warmGlow
-                          ? "rounded-2xl bg-surface/70 p-1"
-                          : ""
+                        ? "rounded-2xl bg-amber-50/40 p-1 shadow-[0_0_0_1px_rgba(251,191,36,0.22)]"
+                        : ""
                     } ${
                       contract.commerceRing && index === selectedIndex
-                        ? "rounded-xl ring-[3px] ring-orange-400/80 shadow-md"
+                        ? "rounded-xl ring-2 ring-orange-300/70 shadow-sm"
                         : ""
                     } ${
                       isDepth && index === selectedIndex ? "rounded-2xl" : ""
                     } ${
                       contract.asymmetry && index === selectedIndex
-                        ? "rounded-2xl border border-sky-200/80 bg-sky-50/40 p-1"
+                        ? "rounded-2xl border border-sky-100/90 bg-sky-50/25 p-0.5"
                         : ""
                     }`}
                   >

@@ -1,0 +1,126 @@
+{
+  "ok": true,
+  "errors": [],
+  "blockers": [],
+  "files": [
+    "admin-picker-polished-previews.png",
+    "sunny-polished.png",
+    "sunny-motion-initial.png",
+    "sunny-motion-mid.png",
+    "sunny-motion-settled.png",
+    "money-polished.png",
+    "money-motion-initial.png",
+    "money-motion-mid.png",
+    "money-motion-settled.png",
+    "cinematic-polished.png",
+    "cinematic-motion-initial.png",
+    "cinematic-motion-mid.png",
+    "cinematic-motion-settled.png",
+    "cinematic-desktop.png",
+    "cinematic-tablet.png",
+    "cinematic-mobile.png",
+    "cinematic-plus-polished.png",
+    "cinematic-plus-motion-initial.png",
+    "cinematic-plus-motion-mid.png",
+    "cinematic-plus-motion-settled.png",
+    "cinematic-plus-desktop.png",
+    "cinematic-plus-mobile.png",
+    "explorer-polished.png",
+    "explorer-motion-initial.png",
+    "explorer-motion-mid.png",
+    "explorer-motion-settled.png",
+    "explorer-desktop.png",
+    "explorer-mobile.png"
+  ],
+  "autoplay": [
+    {
+      "variant": "product.sunny",
+      "layout": "sunny",
+      "beforeIdx": "0",
+      "afterIdx": "1",
+      "secondIdx": "3",
+      "elapsed": 7512,
+      "elapsed2": 7214,
+      "autoAttr": "on",
+      "advanced": true,
+      "advanced2": true
+    },
+    {
+      "variant": "product.money",
+      "layout": "money",
+      "beforeIdx": "0",
+      "afterIdx": "1",
+      "secondIdx": "3",
+      "elapsed": 6289,
+      "elapsed2": 6012,
+      "autoAttr": "on",
+      "advanced": true,
+      "advanced2": true
+    },
+    {
+      "variant": "product.cinematic",
+      "layout": "cinematic",
+      "beforeIdx": "0",
+      "afterIdx": "1",
+      "secondIdx": "2",
+      "elapsed": 8368,
+      "elapsed2": 8017,
+      "autoAttr": "on",
+      "advanced": true,
+      "advanced2": true
+    },
+    {
+      "variant": "product.cinematic-plus",
+      "layout": "cinematic-plus",
+      "beforeIdx": "0",
+      "afterIdx": "1",
+      "secondIdx": "2",
+      "elapsed": 9171,
+      "elapsed2": 8806,
+      "autoAttr": "on",
+      "advanced": true,
+      "advanced2": true
+    },
+    {
+      "variant": "product.explorer",
+      "layout": "explorer",
+      "beforeIdx": "0",
+      "afterIdx": "1",
+      "secondIdx": "3",
+      "elapsed": 7094,
+      "elapsed2": 6804,
+      "autoAttr": "on",
+      "advanced": true,
+      "advanced2": true
+    }
+  ],
+  "noGlitch": {
+    "sunny": {
+      "edgeSweepOverlay": true,
+      "activeUpright": true
+    },
+    "money": {
+      "edgeSweepOverlay": true,
+      "activeUpright": true
+    },
+    "cinematic": {
+      "edgeSweepOverlay": true,
+      "activeUpright": true
+    },
+    "cinematic-plus": {
+      "edgeSweepOverlay": true,
+      "activeUpright": true
+    },
+    "explorer": {
+      "edgeSweepOverlay": true,
+      "activeUpright": true
+    }
+  },
+  "pageBinding": {
+    "adminUrl": "http://127.0.0.1:3000/admin/landing-pages/01a0b5fb-86a8-7000-95be-69a3ec06fcc2",
+    "pageId": "01a0b5fb-86a8-7000-95be-69a3ec06fcc2",
+    "slug": "r13-r4-polish-1789759553222-cmn4v",
+    "exactPublicPath": "/landing/r13-r4-polish-1789759553222-cmn4v",
+    "exactPublicUrl": "http://127.0.0.1:3000/landing/r13-r4-polish-1789759553222-cmn4v"
+  }
+}

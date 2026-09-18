@@ -1,0 +1,103 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+
+BEGIN_TOOBA_WORKER_RESULT
+
+Task-ID: TB-P10-T022-R13-R4
+Parent-Task: TB-P10-T022-R13-R3
+Channel: tooba-main
+WorkerId: tooba-worker-01
+AgentType: cursor
+Status: PASS
+
+Summary:
+Polished Product Showcase Embla rails for calm premium motion and readable proportions: removed Sunny edge-sweep overlay; capped Cinematic/Plus scale/basis (depth/shadow differentiation); Explorer active upright with positional peek only; calmer Embla duration + longer autoplay delays; CSS ease 700ms. Exact published Landing proof with 2 autoplay cycles per variant. ProductCard/old variants/Builder/Hero/Home/P11 untouched. LOCK-SF-386…390 recorded. User work 18ca10c9 preserved.
+
+Applicable-Locks:
+LOCK-SF-001…385 retained; LOCK-SF-386…390 added.
+
+Recovery-Start:
+docs/evidence/TB-P10-T022-R13-R4/recovery-start.md — main @ 3351481b == origin/main at claim; 18ca10c9 ancestor; Bridge 3b7b453e… / TB-P10-T022-R13-R4.
+
+User-Visual-Rejection-Closure:
+Sunny/Money sweep glitch removed; Cinematic oversized fixed; Cinematic Plus oversized fixed via depth-not-size; Explorer crooked tilt removed; motion calm/settled.
+
+Global-Motion-Principles:
+Product hero; no independent sweep overlays; calm Embla duration; autoplay delay >> transition; active front-facing; neighbors subtle depth only.
+
+Sunny-Polish:
+Local active warm ring only; scale ~1.02; elevate 4px; no edge-sweep; autoplay 5200ms; 2 cycles PASS.
+
+Money-Polish:
+Subtle ring-2; scale ~1.03; denser gap; no streak; autoplay 4000ms; 2 cycles PASS.
+
+Cinematic-Polish:
+Reduced basis/scale (~1.03); rotateY neighbors ~3deg; translateZ capped; title/price/ATC readable; desktop/tablet/mobile shots.
+
+CinematicPlus-Polish:
+Same commercial basis as cinematic; richer shadow/translateZ/neighbor recession; not larger center; desktop/mobile shots.
+
+Explorer-Polish:
+align start + end peek cue; active transform upright (no rotate); positional neighbor offsets only; desktop/mobile shots.
+
+Shared-Rail-Architecture:
+One `storefront-product-showcase-embla-rails.tsx` + VARIANT_CONTRACTS; StorefrontProductCardView unchanged.
+
+Autoplay-Quality:
+embla-carousel-autoplay; hover/focus/drag pause; reduced-motion off; two settled advances proven per variant (motion-quality-proof.md).
+
+ProductCard-Preservation:
+No ProductCard internals/business markup changes.
+
+Static-Visual-Proof:
+sunny/money/cinematic/cinematic-plus/explorer-polished.png on exact Landing.
+
+Motion-Quality-Proof:
+docs/evidence/TB-P10-T022-R13-R4/motion-quality-proof.md — initial/mid/settled + 2 cycles.
+
+Responsive:
+cinematic desktop/tablet/mobile; cinematic-plus desktop/mobile; explorer desktop/mobile.
+
+RTL:
+Embla direction=rtl retained.
+
+Existing-Variant-Regression:
+آریا/زهره/ماهور/شگفت preserved in picker (capture).
+
+SSR:
+Public Landing SSR layout markers; client Embla hydrate.
+
+Performance:
+Embla + CSS transforms only; no WebGL/Three/RAF/video.
+
+Focused-Validation:
+docs/evidence/TB-P10-T022-R13-R4/focused-validation.md — critical-storefront + recovery-staleness + guards PASS.
+
+Visual-Evidence:
+docs/evidence/TB-P10-T022-R13-R4/visual-evidence.md + screenshots/.
+
+AntiPattern-Scan:
+docs/evidence/TB-P10-T022-R13-R4/antipattern-scan.md — CLEAN.
+
+Lock-Registry:
+docs/evidence/TB-P10-T022-R13-R4/lock-registry.md — LOCK-SF-386…390.
+
+Recovery-SoT:
+docs/evidence/TB-P10-T022-R13-R4/recovery-sot.md — Architect TB-P10-T022-R13-R3; Impl TB-P10-T022-R13-R4; Phase P10.
+
+Git:
+branch: main
+HEAD: PLACEHOLDER_SHA
+origin/main: PLACEHOLDER_SHA
+HEAD==origin/main: YES
+18ca10c9 ancestor: YES
+
+Architectural-Concerns:
+none
+
+Visual-Concerns:
+none — Builder USER_VISUAL_ACCEPTED remains NO pending Architect visual review of polish.
+
+Blockers:
+none
+
+END_TOOBA_WORKER_RESULT
