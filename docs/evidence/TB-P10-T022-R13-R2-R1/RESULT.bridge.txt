@@ -1,0 +1,78 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+
+BEGIN_TOOBA_WORKER_RESULT
+
+Task-ID: TB-P10-T022-R13-R2-R1
+Parent-Task: TB-P10-T022-R13-R2
+Channel: tooba-main
+WorkerId: tooba-worker-01
+AgentType: cursor
+Status: PASS
+
+Summary:
+Proved five Product Showcase variants in the real Admin ویرایش بخش → ظاهر picker (not evidence page), with existing variants preserved, selection/reopen persistence, real Review live preview, and Admin→Storefront capture for sunny+cinematic. User-work commit 18ca10c9 verified as ancestor with sampled files byte-identical.
+
+Applicable-Locks:
+LOCK-SF-001…380 (no new locks)
+
+Recovery-Start:
+docs/evidence/TB-P10-T022-R13-R2-R1/recovery-start.md
+
+User-Work-Preservation:
+docs/evidence/TB-P10-T022-R13-R2-R1/user-work-preservation.md — 18ca10c9 ancestor PASS; critical pre-task files unchanged.
+
+Admin-Route-Proof:
+Real `/admin/landing-pages/{id}` wizard via Development Dev Actor fixture from GET /v1/admin/dev-context (supported harness; no product auth bypass / no fake cookies).
+
+Picker-Integration:
+admin-product-showcase-picker-real-route.png — سانی/مانی/سینمایی/سینمایی پلاس/کاشف present alongside existing designs.
+
+Existing-Variant-Preservation:
+admin-product-showcase-existing-variants-preserved.png — آریا/زهره/ماهور/شگفت‌انگیز present.
+
+Selection-Persistence:
+sunny return-to-Appearance persists; reopen after save keeps cinematic (admin-product-showcase-reopen-persisted.png).
+
+Review-Step-Proof:
+admin-product-showcase-review-real-route.png — Persian name + live production preview.
+
+Admin-To-Storefront:
+storefront-product-showcase-sunny-real-flow.png, storefront-product-showcase-cinematic-real-flow.png, storefront-product-showcase-mobile-real-flow.png after Admin save flows.
+
+SSR-ProductCard-Regression:
+R13-R2 guards + critical-storefront PASS; ProductCard unchanged; Embla scoped; Hero Swiper unchanged.
+
+Embla-Scope:
+Confirmed via admin-product-showcase-r13r2.guard.test.ts PASS.
+
+No-Redesign-Proof:
+docs/evidence/TB-P10-T022-R13-R2-R1/no-redesign-proof.md
+
+Focused-Validation:
+docs/evidence/TB-P10-T022-R13-R2-R1/focused-validation.md
+
+Visual-Evidence:
+docs/evidence/TB-P10-T022-R13-R2-R1/screenshots/ + runtime-report.json
+
+AntiPattern-Scan:
+docs/evidence/TB-P10-T022-R13-R2-R1/antipattern-scan.md
+
+Lock-Registry:
+docs/evidence/TB-P10-T022-R13-R2-R1/lock-registry.md
+
+Recovery-SoT:
+docs/evidence/TB-P10-T022-R13-R2-R1/recovery-sot.md
+
+Git:
+PLACEHOLDER_SHA
+
+Architectural-Concerns:
+none
+
+Visual-Concerns:
+Storefront home may not always host the edited Landing page; captures include Admin-persisted section flow plus storefront route probes after save. Admin proof is from real wizard, not /evidence page.
+
+Blockers:
+none
+
+END_TOOBA_WORKER_RESULT

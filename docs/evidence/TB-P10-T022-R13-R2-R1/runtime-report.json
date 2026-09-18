@@ -1,0 +1,306 @@
+{
+  "ok": {
+    "bytes": 76229
+  },
+  "steps": [
+    {
+      "name": "host-5088",
+      "pass": true
+    },
+    {
+      "name": "fe-3000",
+      "pass": true
+    },
+    {
+      "name": "dev-actor-fixture",
+      "pass": true,
+      "data": {
+        "actorUserId": "01a036c2-970e-7000-8eb7-94bf5cc2d8db"
+      }
+    },
+    {
+      "name": "admin-real-route-wizard",
+      "pass": true,
+      "data": {
+        "url": "http://127.0.0.1:3000/admin/landing-pages/01a0b59a-7ff7-7000-bbb3-db6cd9867b08"
+      }
+    },
+    {
+      "name": "file:admin-product-showcase-picker-real-route.png",
+      "pass": true,
+      "data": {
+        "bytes": 79716
+      }
+    },
+    {
+      "name": "new-variant-present:سانی",
+      "pass": true
+    },
+    {
+      "name": "new-variant-present:مانی",
+      "pass": true
+    },
+    {
+      "name": "new-variant-present:سینمایی پلاس",
+      "pass": true
+    },
+    {
+      "name": "new-variant-present:سینمایی",
+      "pass": true
+    },
+    {
+      "name": "new-variant-present:کاشف",
+      "pass": true
+    },
+    {
+      "name": "existing-present:آریا",
+      "pass": true
+    },
+    {
+      "name": "existing-present:زهره",
+      "pass": true
+    },
+    {
+      "name": "existing-present:ماهور",
+      "pass": true
+    },
+    {
+      "name": "existing-present:شگفت",
+      "pass": true
+    },
+    {
+      "name": "file:admin-product-showcase-existing-variants-preserved.png",
+      "pass": true,
+      "data": {
+        "bytes": 79750
+      }
+    },
+    {
+      "name": "file:admin-product-showcase-sunny-selected.png",
+      "pass": true,
+      "data": {
+        "bytes": 20982
+      }
+    },
+    {
+      "name": "sunny-selection-persists-on-return",
+      "pass": true,
+      "data": {
+        "sunnyStill": "true"
+      }
+    },
+    {
+      "name": "file:admin-product-showcase-cinematic-selected.png",
+      "pass": true,
+      "data": {
+        "bytes": 18894
+      }
+    },
+    {
+      "name": "review-shows-cinematic-name",
+      "pass": true
+    },
+    {
+      "name": "review-live-preview",
+      "pass": true
+    },
+    {
+      "name": "file:admin-product-showcase-review-real-route.png",
+      "pass": true,
+      "data": {
+        "bytes": 48150
+      }
+    },
+    {
+      "name": "admin-capture",
+      "pass": false,
+      "data": {
+        "error": "page.waitForSelector: Timeout 30000ms exceeded.\nCall log:\n  - waiting for locator('[data-testid=section-wizard]') to be visible\n"
+      }
+    },
+    {
+      "name": "file:admin-capture-error.png",
+      "pass": true,
+      "data": {
+        "bytes": 80521
+      }
+    },
+    {
+      "name": "reopen-cinematic-persisted",
+      "pass": true,
+      "data": {
+        "selected": "true"
+      }
+    },
+    {
+      "name": "file:admin-product-showcase-reopen-persisted.png",
+      "pass": true,
+      "data": {
+        "bytes": 76229
+      }
+    },
+    {
+      "name": "sunny-resave",
+      "pass": true
+    },
+    {
+      "name": "file:storefront-product-showcase-sunny-real-flow.png",
+      "pass": true,
+      "data": {
+        "bytes": 537339
+      }
+    },
+    {
+      "name": "file:storefront-product-showcase-cinematic-real-flow.png",
+      "pass": true,
+      "data": {
+        "bytes": 537339
+      }
+    },
+    {
+      "name": "file:storefront-product-showcase-mobile-real-flow.png",
+      "pass": true,
+      "data": {
+        "bytes": 111955
+      }
+    },
+    {
+      "name": "storefront-embla-or-layout-marker",
+      "pass": true
+    },
+    {
+      "name": "continuation-complete",
+      "pass": true
+    }
+  ],
+  "files": {
+    "admin-product-showcase-picker-real-route.png": {
+      "bytes": 79716
+    },
+    "admin-product-showcase-existing-variants-preserved.png": {
+      "bytes": 79750
+    },
+    "admin-product-showcase-sunny-selected.png": {
+      "bytes": 20982
+    },
+    "admin-product-showcase-cinematic-selected.png": {
+      "bytes": 18894
+    },
+    "admin-product-showcase-review-real-route.png": {
+      "bytes": 48150
+    },
+    "admin-capture-error.png": {
+      "bytes": 80521
+    },
+    "admin-product-showcase-reopen-persisted.png": {
+      "bytes": 76229
+    },
+    "storefront-product-showcase-sunny-real-flow.png": {
+      "bytes": 537339
+    },
+    "storefront-product-showcase-cinematic-real-flow.png": {
+      "bytes": 537339
+    },
+    "storefront-product-showcase-mobile-real-flow.png": {
+      "bytes": 111955
+    }
+  },
+  "errors": [],
+  "blockers": [],
+  "auth": {
+    "devContext": {
+      "actorUserId": "01a036c2-970e-7000-8eb7-94bf5cc2d8db",
+      "actorLabel": "مدیر نمونهٔ توبا",
+      "tenantId": "store-alpha"
+    }
+  },
+  "flow": {
+    "pageUrl": "http://127.0.0.1:3000/admin/landing-pages/01a0b59a-7ff7-7000-bbb3-db6cd9867b08",
+    "variantCards": [
+      {
+        "key": "product.card-carousel",
+        "name": "ویترین محصولات — طرح آریا",
+        "text": "پیش‌نمایشهمهنمونه نمایشیمحصول نمونه 1(۱۲)۱٬۲۵۰٬۰۰۰ ریالناموجودنمونه نمایشیمحصول نمونه 2(۱۲)۱٬۳۰۰٬۰۰۰ ریالناموجودنمونه نمایشیمحصول نمونه 3(۱۲)۱٬۳۵۰٬۰۰۰ ریالناموجودنمونه نمایشیمحصول نمونه 4(۱۲)۱٬۴۰۰٬۰۰۰ ریالناموجودمحتوای نمونهویترین محصولات — طرح آریاردیف افقی کارت کالا با اسلایدپیشنهاد و تازه‌هاانتخاب‌شده"
+      },
+      {
+        "key": "product.amazing",
+        "name": "طرح شگفت‌انگیز",
+        "text": "پیش‌نمایش02:14:35مشاهده همه02:14:35نمونه نمایشیمحصول نمونه 1(۱۲)۱٬۲۵۰٬۰۰۰ ریالناموجودنمونه نمایشیمحصول نمونه 2(۱۲)۱٬۳۰۰٬۰۰۰ ریالناموجودنمونه نمایشیمحصول نمونه 3(۱۲)۱٬۳۵۰٬۰۰۰ ریالناموجودنمونه نمایشیمحصول نمونه 4(۱۲)۱٬۴۰۰٬۰۰۰ ریالناموجودمحتوای نمونهطرح شگفت‌انگیزاسلایدر کارت کامل با تایمر شمارش معکوس و نشان تخفیفپیشنهاد شگفت‌انگیزانتخاب"
+      },
+      {
+        "key": "product.zohreh",
+        "name": "طرح زهره",
+        "text": "پیش‌نمایش۹ محصول۱۰۸ نظرمشاهده همهنمونه نمایشیمحصول نمونه 1(۱۲)۱٬۲۵۰٬۰۰۰ ریالنمونه نمایشیمحصول نمونه 2(۱۲)۱٬۳۰۰٬۰۰۰ ریالنمونه نمایشیمحصول نمونه 3(۱۲)۱٬۳۵۰٬۰۰۰ ریالنمونه نمایشیمحصول نمونه 4(۱۲)۱٬۴۰۰٬۰۰۰ ریالنمونه نمایشیمحصول نمونه 5(۱۲)۱٬۴۵۰٬۰۰۰ ریالنمونه نمایشیمحصول نمونه 6(۱۲)۱٬۵۰۰٬۰۰۰ ریالنمونه نمایشیمحصول نمونه 7(۱۲)۱٬۵۵۰٬۰۰۰ ریالنمونه نمایشیمحصول نمونه 8(۱۲)۱٬۶۰۰٬۰۰۰ ریالنمونه نمایشیمحصول نمونه 9(۱۲)۱٬۶۵۰٬۰۰۰ ریالمحتوای نمونهطرح زهرهستون‌های افقی پربازدید با رتبه و قیمتپربازدیدترین‌هاانتخاب"
+      },
+      {
+        "key": "product.mahoor",
+        "name": "طرح ماهور",
+        "text": "پیش‌نمایش۴ محصول جدیدمشاهده همهنمونه نمایشیجدیدمحصول نمونه 1(۱۲)۱٬۲۵۰٬۰۰۰ ریالناموجودنمونه نمایشیجدیدمحصول نمونه 2(۱۲)۱٬۳۰۰٬۰۰۰ ریالناموجودنمونه نمایشیجدیدمحصول نمونه 3(۱۲)۱٬۳۵۰٬۰۰۰ ریالناموجودنمونه نمایشیجدیدمحصول نمونه 4(۱۲)۱٬۴۰۰٬۰۰۰ ریالناموجودمحتوای نمونهطرح ماهوراسلایدر جدیدترین محصولات با نشان جدیدتازه‌هاانتخاب"
+      },
+      {
+        "key": "product.sunny",
+        "name": "سانی",
+        "text": "پیش‌نمایشمشاهده همهنمونه نمایشیمحصول نمونه 1(۱۲)۱٬۲۵۰٬۰۰۰ ریالناموجودنمونه نمایشیمحصول نمونه 2(۱۲)۱٬۳۰۰٬۰۰۰ ریالناموجودنمونه نمایشیمحصول نمونه 3(۱۲)۱٬۳۵۰٬۰۰۰ ریالناموجودنمونه نمایشیمحصول نمونه 4(۱۲)۱٬۴۰۰٬۰۰۰ ریالناموجودمحتوای نمونهسانیردیف روشن و تمیز با کارت فعال کمی بالاتر و محو لبه نرمویترین پریمیوم روشنانتخاب"
+      },
+      {
+        "key": "product.money",
+        "name": "مانی",
+        "text": "پیش‌نمایشمشاهده همهنمونه نمایشیمحصول نمونه 1(۱۲)۱٬۲۵۰٬۰۰۰ ریالناموجودنمونه نمایشیمحصول نمونه 2(۱۲)۱٬۳۰۰٬۰۰۰ ریالناموجودنمونه نمایشیمحصول نمونه 3(۱۲)۱٬۳۵۰٬۰۰۰ ریالناموجودنمونه نمایشیمحصول نمونه 4(۱۲)۱٬۴۰۰٬۰۰۰ ریالناموجودمحتوای نمونهمانیردیف فروش‌محور با تمرکز قوی مرکز و تأکید تجاری بدون تغییر کارت کالاتأکید فروش و تبدیلانتخاب"
+      },
+      {
+        "key": "product.cinematic",
+        "name": "سینمایی",
+        "text": "در حال آماده‌سازی پیش‌نمایش…محتوای نمونهسینماییردیف سینمایی پریمیوم با عمق ملایم و چرخش جزئی همسایه‌هاویترین پریمیومانتخاب"
+      },
+      {
+        "key": "product.cinematic-plus",
+        "name": "سینمایی پلاس",
+        "text": "در حال آماده‌سازی پیش‌نمایش…محتوای نمونهسینمایی پلاسعمق سینمایی غنی‌تر با برجستگی مرکز کنترل‌شده و بدون افکت اغراق‌آمیزویترین پریمیوم عمیقانتخاب"
+      },
+      {
+        "key": "product.explorer",
+        "name": "کاشف",
+        "text": "در حال آماده‌سازی پیش‌نمایش…محتوای نمونهکاشفردیف اکتشافی با peek نامتقارن همسایه‌ها برای حس مرور و کشفمرور و کشف کالاانتخاب"
+      },
+      {
+        "key": "product.grid",
+        "name": "شبکه محصولات — طرح پارسا",
+        "text": "در حال آماده‌سازی پیش‌نمایش…محتوای نمونهشبکه محصولات — طرح پارساشبکه چندستونه کالامناسب نمایش فشردهانتخاب"
+      },
+      {
+        "key": "product.compact-rows",
+        "name": "ردیف فشرده کالا — طرح نیکان",
+        "text": "در حال آماده‌سازی پیش‌نمایش…محتوای نمونهردیف فشرده کالا — طرح نیکانلیست فشرده عنوان و قیمتمناسب نمایش فشردهانتخاب"
+      },
+      {
+        "key": "product.category-columns",
+        "name": "ستون‌های دسته کالا — طرح آرمین",
+        "text": "در حال آماده‌سازی پیش‌نمایش…محتوای نمونهستون‌های دسته کالا — طرح آرمینچند ستون کالا کنار همنمایش چندستونهانتخاب"
+      },
+      {
+        "key": "product.featured-plus-rail",
+        "name": "ویژه و ردیف — طرح کیان",
+        "text": "در حال آماده‌سازی پیش‌نمایش…محتوای نمونهویژه و ردیف — طرح کیانیک کالای ویژه کنار ردیف افقیمناسب فروشگاه‌های تصویریانتخاب"
+      },
+      {
+        "key": "product.tabbed",
+        "name": "محصولات زبانه‌دار — طرح سامان",
+        "text": "در حال آماده‌سازی پیش‌نمایش…محتوای نمونهمحصولات زبانه‌دار — طرح سامانچند زبانه با یک ردیف مشترک کالامناسب کمپینانتخاب"
+      },
+      {
+        "key": "product.large-cards",
+        "name": "کارت‌های بزرگ کالا — طرح رامان",
+        "text": "در حال آماده‌سازی پیش‌نمایش…محتوای نمونهکارت‌های بزرگ کالا — طرح رامانکارت درشت با تصویر بزرگمناسب فروشگاه‌های تصویریانتخاب"
+      },
+      {
+        "key": "product.minimal-list",
+        "name": "فهرست ساده کالا — طرح آرین",
+        "text": "در حال آماده‌سازی پیش‌نمایش…محتوای نمونهفهرست ساده کالا — طرح آرینلیست ساده عنوان و قیمتمناسب نمایش فشردهانتخاب"
+      }
+    ],
+    "afterSaveUrl": "http://127.0.0.1:3000/admin/landing-pages/01a0b59a-7ff7-7000-bbb3-db6cd9867b08",
+    "slug": "",
+    "probe:http://127.0.0.1:3000/fa": false
+  },
+  "continuation": true
+}
