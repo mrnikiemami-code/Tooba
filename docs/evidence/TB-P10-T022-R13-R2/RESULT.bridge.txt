@@ -73,13 +73,13 @@ Recovery-SoT:
 docs/evidence/TB-P10-T022-R13-R2/recovery-sot.md — Phase P10; Architect TB-P10-T022-R13-R1-R1; Impl TB-P10-T022-R13-R2; Issued none; T001 retained later; no T023/T002.
 
 Git:
-4b7dddfcf3fb838a6a8965aeb6b7e88562996901
+18ca10c9db803af048bc4b8fadb9e982e16eb17c
 
 Architectural-Concerns:
 none
 
 Visual-Concerns:
-Admin auth cookies unavailable; visual PNGs captured via evidence page mounting production VariantLivePreview/Embla rails (same renderer path as Admin Appearance/Review). Unrelated local dirty hero/selector work preserved unstaged.
+Admin auth cookies unavailable; visual PNGs captured via evidence page mounting production VariantLivePreview/Embla rails (same renderer path as Admin Appearance/Review). Pre-task local hero/selector/grid work committed and pushed as 18ca10c9 (preserved).
 
 Blockers:
 none
