@@ -64,7 +64,7 @@ Recovery-SoT:
 docs/evidence/TB-P10-T022-R13-R2-R1/recovery-sot.md
 
 Git:
-81bc6de283b1debf2d0e3e9a70d9560721a04331
+c5b618f0ffc03996effe287d829f4e9451492dd7
 
 Architectural-Concerns:
 none
