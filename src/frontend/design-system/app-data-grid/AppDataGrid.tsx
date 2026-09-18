@@ -746,6 +746,28 @@ export function AppDataGrid<T extends { id: string }>({
               {messages.selectedCount}: {selected.length.toLocaleString(locale === "fa" ? "fa-IR" : "en-US")}
             </span>
           ) : null}
+          {bulkActions.length > 0 && selected.length > 0
+            ? bulkActions
+                .filter((action) => action.isAvailable(selected))
+                .map((action) => {
+                  const destructive = action.id.includes("remove") || action.id.includes("delete");
+                  return (
+                    <button
+                      key={action.id}
+                      type="button"
+                      className={
+                        destructive
+                          ? "inline-flex min-h-9 items-center rounded-full border border-red-300 bg-red-50 px-3 text-sm font-bold text-red-700"
+                          : "inline-flex min-h-9 items-center rounded-full border border-[#2563EB] bg-[#2563EB] px-3 text-sm font-bold text-white"
+                      }
+                      onClick={() => void action.execute(selected)}
+                      data-testid={`app-grid-bulk-${action.id}`}
+                    >
+                      {action.label}
+                    </button>
+                  );
+                })
+            : null}
         </div>
         {capabilities.savedViews && savedViewStore ? (
           <SavedViewsToolbar

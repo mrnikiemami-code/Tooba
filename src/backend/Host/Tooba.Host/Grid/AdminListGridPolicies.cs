@@ -123,6 +123,7 @@ public static class AdminListGridPolicies
     /// <summary>گرید مقالات Admin.</summary>
     public static readonly AdminListGridQueryPolicy<AdminArticleSnapshot> Content = new(
     [
+        new("articleId", x => x.ArticleId.ToString("D"), InMemoryGridFieldKind.Enum, sortable: false),
         new("title", x => x.Title, InMemoryGridFieldKind.Text, searchable: true),
         new("slug", x => x.Slug, InMemoryGridFieldKind.Text, searchable: true),
         new("status", x => x.Status.ToString(), InMemoryGridFieldKind.Enum),

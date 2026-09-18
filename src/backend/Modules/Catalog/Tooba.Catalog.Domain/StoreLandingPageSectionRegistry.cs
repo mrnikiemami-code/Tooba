@@ -19,11 +19,13 @@ public static class StoreLandingPageSectionRegistry
     public const int MaxSectionsPerPage = 40;
     public const int MaxTake = 24;
     public const int DefaultTake = 8;
-    public const int ConfigMaxLength = 12000;
+    public const int ConfigMaxLength = 24000;
     public const int TitleMaxLength = 200;
     public const int TextMaxLength = 2000;
     public const int MaxBannerSlots = 8;
     public const int MaxStoryItems = 24;
+    public const int MaxHeroSlides = 8;
+    public const int DefaultHeroSlideIntervalSec = 5;
 
     public static readonly IReadOnlySet<string> ApprovedTypes = new HashSet<string>(StringComparer.Ordinal)
     {

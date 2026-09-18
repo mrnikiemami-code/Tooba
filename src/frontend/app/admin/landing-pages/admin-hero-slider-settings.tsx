@@ -379,6 +379,8 @@ export function AdminHeroSliderSettings({
                   targetLabel:
                     destinationType === "product" || destinationType === "category" ? slide.targetLabel : "",
                   customUrl: destinationType === "custom-url" ? slide.customUrl : "",
+                  // بدون پیوند: برچسب اختیاری را نگه می‌داریم ولی مقصد خالی می‌شود (بدون خطا)
+                  ...(destinationType === "none" ? { href: "" } : {}),
                 });
               }}
               aria-invalid={Boolean(errorFor("destination"))}

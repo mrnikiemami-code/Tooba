@@ -82,7 +82,23 @@ public static class StoreLandingPageSectionConfig
 
     private static string NormalizeHero(JsonElement root)
     {
-        var title = RequiredTitle(root);
+        var slides = ReadHeroSlides(root);
+        var title = OptionalString(root, "title", StoreLandingPageSectionRegistry.TitleMaxLength);
+        if (string.IsNullOrEmpty(title) && slides.Count > 0)
+        {
+            title = slides[0].Title;
+        }
+
+        if (string.IsNullOrEmpty(title))
+        {
+            throw new PlatformHttpException(400, "عنوان بخش لازم است.", "landing.section.title.required");
+        }
+
+        var intervalSec = OptionalHeroSlideInterval(root);
+        var slideCount = slides.Count > 0
+            ? slides.Count
+            : Math.Clamp(OptionalHeroSlideCount(root), 1, StoreLandingPageSectionRegistry.MaxHeroSlides);
+
         return JsonSerializer.Serialize(new
         {
             title,
@@ -90,8 +106,162 @@ public static class StoreLandingPageSectionConfig
             href = OptionalHref(root),
             mediaAssetId = OptionalGuid(root, "mediaAssetId"),
             variantKey = OptionalVariantKey(root),
-            heightPreset = OptionalHeightPreset(root),
+            heightPreset = OptionalHeightPreset(root) ?? "Medium",
+            slideIntervalSec = intervalSec,
+            slideCount,
+            autoplay = true,
+            slides = slides.Select(s => new
+            {
+                mediaAssetId = s.MediaAssetId,
+                imageUrl = s.ImageUrl,
+                title = s.Title,
+                alt = s.Alt,
+                description = s.Description,
+                ctaLabel = s.CtaLabel,
+                destinationType = s.DestinationType,
+                targetId = s.TargetId,
+                targetSlug = s.TargetSlug,
+                targetLabel = s.TargetLabel,
+                customUrl = s.CustomUrl,
+                href = s.Href,
+            }).ToArray(),
         }, JsonOptions);
+    }
+
+    private sealed class HeroSlideNormalized
+    {
+        public Guid? MediaAssetId { get; init; }
+        public string? ImageUrl { get; init; }
+        public string Title { get; init; } = "";
+        public string Alt { get; init; } = "";
+        public string? Description { get; init; }
+        public string? CtaLabel { get; init; }
+        public string DestinationType { get; init; } = "none";
+        public string? TargetId { get; init; }
+        public string? TargetSlug { get; init; }
+        public string? TargetLabel { get; init; }
+        public string? CustomUrl { get; init; }
+        public string? Href { get; init; }
+    }
+
+    private static List<HeroSlideNormalized> ReadHeroSlides(JsonElement root)
+    {
+        if (!root.TryGetProperty("slides", out var el) || el.ValueKind is JsonValueKind.Null or JsonValueKind.Undefined)
+        {
+            return [];
+        }
+
+        if (el.ValueKind != JsonValueKind.Array)
+        {
+            throw new PlatformHttpException(400, "فهرست اسلاید معتبر نیست.", "landing.section.config.invalid");
+        }
+
+        var slides = new List<HeroSlideNormalized>();
+        foreach (var item in el.EnumerateArray())
+        {
+            if (item.ValueKind != JsonValueKind.Object)
+            {
+                throw new PlatformHttpException(400, "آیتم اسلاید معتبر نیست.", "landing.section.config.invalid");
+            }
+
+            if (slides.Count >= StoreLandingPageSectionRegistry.MaxHeroSlides)
+            {
+                throw new PlatformHttpException(400, "تعداد اسلاید بیش از حد است.", "landing.section.ids.limit");
+            }
+
+            var destinationRaw = (OptionalString(item, "destinationType", 32) ?? "none").Trim().ToLowerInvariant();
+            var destinationType = destinationRaw switch
+            {
+                "none" => "none",
+                "all-products" => "all-products",
+                "product" => "product",
+                "category" => "category",
+                "custom-url" => "custom-url",
+                _ => "none",
+            };
+
+            var title = OptionalString(item, "title", StoreLandingPageSectionRegistry.TitleMaxLength) ?? "";
+            var alt = OptionalString(item, "alt", StoreLandingPageSectionRegistry.TitleMaxLength) ?? "";
+            var mediaAssetId = OptionalGuid(item, "mediaAssetId");
+            var imageUrl = OptionalString(item, "imageUrl", 512);
+            var href = OptionalHref(item) ?? OptionalString(item, "href", 256);
+            var customUrl = OptionalString(item, "customUrl", 256);
+            if (customUrl is not null
+                && (customUrl.Contains("javascript:", StringComparison.OrdinalIgnoreCase)
+                    || customUrl.Contains("data:", StringComparison.OrdinalIgnoreCase)
+                    || customUrl.Contains('<', StringComparison.Ordinal)))
+            {
+                throw new PlatformHttpException(400, "آدرس بخش معتبر نیست.", "landing.section.href.invalid");
+            }
+
+            slides.Add(new HeroSlideNormalized
+            {
+                MediaAssetId = mediaAssetId,
+                ImageUrl = imageUrl,
+                Title = title,
+                Alt = alt,
+                Description = OptionalString(item, "description", 500),
+                CtaLabel = OptionalString(item, "ctaLabel", 80),
+                DestinationType = destinationType,
+                TargetId = OptionalString(item, "targetId", 64),
+                TargetSlug = OptionalString(item, "targetSlug", 200),
+                TargetLabel = OptionalString(item, "targetLabel", StoreLandingPageSectionRegistry.TitleMaxLength),
+                CustomUrl = customUrl,
+                Href = href,
+            });
+        }
+
+        return slides;
+    }
+
+    private static int OptionalHeroSlideInterval(JsonElement root)
+    {
+        if (!root.TryGetProperty("slideIntervalSec", out var el) || el.ValueKind is JsonValueKind.Null or JsonValueKind.Undefined)
+        {
+            return StoreLandingPageSectionRegistry.DefaultHeroSlideIntervalSec;
+        }
+
+        double raw;
+        if (el.ValueKind == JsonValueKind.Number && el.TryGetDouble(out raw))
+        {
+            // ok
+        }
+        else if (el.ValueKind == JsonValueKind.String && double.TryParse(el.GetString(), out raw))
+        {
+            // ok
+        }
+        else
+        {
+            throw new PlatformHttpException(400, "زمان تغییر اسلایدر معتبر نیست.", "landing.section.config.invalid");
+        }
+
+        var sec = (int)Math.Round(raw);
+        if (sec < 1 || sec > 120)
+        {
+            throw new PlatformHttpException(400, "زمان تغییر اسلایدر خارج از محدوده است.", "landing.section.config.invalid");
+        }
+
+        return sec;
+    }
+
+    private static int OptionalHeroSlideCount(JsonElement root)
+    {
+        if (!root.TryGetProperty("slideCount", out var el) || el.ValueKind is JsonValueKind.Null or JsonValueKind.Undefined)
+        {
+            return 1;
+        }
+
+        if (el.ValueKind == JsonValueKind.Number && el.TryGetInt32(out var count))
+        {
+            return count;
+        }
+
+        if (el.ValueKind == JsonValueKind.String && int.TryParse(el.GetString(), out count))
+        {
+            return count;
+        }
+
+        return 1;
     }
 
     private static string NormalizePromo(JsonElement root)

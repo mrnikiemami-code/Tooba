@@ -518,16 +518,8 @@ export function validateHeroSlide(slide: HeroSlideConfig): HeroSlideFieldError[]
     errors.push({ field: "title", messageFa: "عنوان قابل‌نمایش الزامی است." });
   }
 
-  const hasCtaLabel = Boolean(slide.ctaLabel.trim());
-  const hasDestination = slide.destinationType !== "none";
-
-  if (hasDestination && !hasCtaLabel) {
-    errors.push({ field: "ctaLabel", messageFa: "با انتخاب مقصد، برچسب دکمه الزامی است." });
-  }
-  if (hasCtaLabel && !hasDestination) {
-    errors.push({ field: "destination", messageFa: "با وارد کردن برچسب دکمه، مقصد پیوند الزامی است." });
-  }
-
+  // CTA label و مقصد «بدون پیوند» اختیاری‌اند و نباید خطا بدهند.
+  // فقط وقتی مقصد مشخص انتخاب شده، شناسه/آدرس مربوطه لازم است.
   if (slide.destinationType === "product" && !(slide.targetId.trim() || slide.targetSlug.trim())) {
     errors.push({ field: "destination", messageFa: "یک محصول انتخاب کنید." });
   }

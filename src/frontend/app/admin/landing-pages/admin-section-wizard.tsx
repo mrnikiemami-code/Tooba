@@ -23,6 +23,7 @@ import { bannerSlotCountForVariant } from "./landing-section-catalog.ts";
 import {
   HERO_HEIGHT_PRESET_LABELS_FA,
   isHeroHeightPreset,
+  readHeroSliderFields,
   validateHeroSliderDetailed,
   type HeroSlideFieldKey,
 } from "../../../lib/storefront-composition/hero-slider-config.ts";
@@ -197,11 +198,21 @@ export function AdminSectionWizard({
     }
     setError(null);
     setValidationModal(null);
+    const saveConfig: Record<string, unknown> = { ...config, variantKey };
+    if (choice.hostType === "Hero") {
+      const fields = readHeroSliderFields(saveConfig);
+      const firstTitle = fields.slides[0]?.title?.trim() ?? "";
+      if (firstTitle && !(typeof saveConfig.title === "string" && saveConfig.title.trim())) {
+        saveConfig.title = firstTitle;
+      }
+      saveConfig.slideCount = fields.slides.length;
+      saveConfig.autoplay = true;
+    }
     await onSave({
       hostType: choice.hostType,
       sectionTypeKey: choice.sectionTypeKey,
       variantKey,
-      config: { ...config, variantKey },
+      config: saveConfig,
     });
   };
 

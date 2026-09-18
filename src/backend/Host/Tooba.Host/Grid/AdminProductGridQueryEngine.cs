@@ -38,6 +38,7 @@ internal sealed class AdminProductGridQueryEngine
     {
         var products = _catalog.Products.AsNoTracking();
         products = ApplyCatalogScalarFilters(products, query);
+        products = ApplyProductIdSetFilter(products, query);
 
         if (!string.IsNullOrWhiteSpace(query.Search))
         {
@@ -47,7 +48,7 @@ internal sealed class AdminProductGridQueryEngine
 
         foreach (var filter in query.Filters)
         {
-            if (ShouldSkipFilter(filter))
+            if (ShouldSkipFilter(filter) || filter.Field is "productId")
             {
                 continue;
             }
@@ -163,6 +164,58 @@ internal sealed class AdminProductGridQueryEngine
         }
 
         return products;
+    }
+
+    /// <summary>
+    /// حذف/شمول شناسه‌های از‌پیش‌انتخاب‌شده در SQL (مثلاً Resource Selector) — قبل از Count/Page.
+    /// </summary>
+    private static IQueryable<CatalogProduct> ApplyProductIdSetFilter(
+        IQueryable<CatalogProduct> products,
+        GridQueryRequest query)
+    {
+        foreach (var filter in query.Filters.Where(f => f.Field is "productId"))
+        {
+            var ids = ParseGuidValues(filter);
+            if (ids.Count == 0)
+            {
+                continue;
+            }
+
+            products = filter.Operator switch
+            {
+                "notIn" => products.Where(p => !ids.Contains(p.ProductId)),
+                "in" => products.Where(p => ids.Contains(p.ProductId)),
+                "equals" when ids.Count == 1 => products.Where(p => p.ProductId == ids[0]),
+                "notEqual" when ids.Count == 1 => products.Where(p => p.ProductId != ids[0]),
+                _ => products,
+            };
+        }
+
+        return products;
+    }
+
+    private static List<Guid> ParseGuidValues(GridFilterRequest filter)
+    {
+        var raw = new List<string>();
+        if (filter.Values is { Count: > 0 })
+        {
+            raw.AddRange(filter.Values);
+        }
+        else if (!string.IsNullOrWhiteSpace(filter.Value))
+        {
+            raw.Add(filter.Value);
+        }
+
+        var ids = new List<Guid>(raw.Count);
+        foreach (var value in raw)
+        {
+            if (Guid.TryParse(value, out var id) && !ids.Contains(id))
+            {
+                ids.Add(id);
+            }
+        }
+
+        return ids;
     }
 
     private static IQueryable<CatalogProduct> ApplyStatusFilter(IQueryable<CatalogProduct> products, GridFilterRequest filter)

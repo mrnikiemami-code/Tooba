@@ -144,6 +144,50 @@ test("legacy slide seo* and href remain adaptable", () => {
   assert.equal(slides[0]!.destinationType, "all-products");
 });
 
+test("optional CTA and none destination do not error", () => {
+  const noneOnly = validateHeroSliderDetailed({
+    heightPreset: "Medium",
+    slideIntervalSec: 5,
+    slideCount: 1,
+    slides: [{
+      title: "عنوان",
+      alt: "alt",
+      mediaAssetId: "m1",
+      imageUrl: "",
+      description: "",
+      ctaLabel: "مشاهده",
+      destinationType: "none",
+      targetId: "",
+      targetSlug: "",
+      targetLabel: "",
+      customUrl: "",
+      href: "",
+    }],
+  });
+  assert.equal(noneOnly.ok, true);
+
+  const destWithoutCta = validateHeroSliderDetailed({
+    heightPreset: "Medium",
+    slideIntervalSec: 5,
+    slideCount: 1,
+    slides: [{
+      title: "عنوان",
+      alt: "alt",
+      mediaAssetId: "m1",
+      imageUrl: "",
+      description: "",
+      ctaLabel: "",
+      destinationType: "all-products",
+      targetId: "",
+      targetSlug: "",
+      targetLabel: "",
+      customUrl: "",
+      href: "/products",
+    }],
+  });
+  assert.equal(destWithoutCta.ok, true);
+});
+
 test("LOCK-SF-367…374 present", () => {
   for (const id of [367, 368, 369, 370, 371, 372, 373, 374]) {
     assert.match(locks, new RegExp(`LOCK-SF-${id}`));

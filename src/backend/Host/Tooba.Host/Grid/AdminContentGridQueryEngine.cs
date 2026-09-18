@@ -74,6 +74,7 @@ internal sealed class AdminContentGridQueryEngine
     private static IQueryable<ContentArticle> ApplyFilter(IQueryable<ContentArticle> source, GridFilterRequest filter) =>
         filter.Field switch
         {
+            "articleId" => ApplyArticleIdFilter(source, filter),
             "title" => AdminEfGridQuery.ApplyTextFilter(source, x => x.Title, filter),
             "slug" => AdminEfGridQuery.ApplyTextFilter(source, x => x.Slug, filter),
             "category" => AdminEfGridQuery.ApplyTextFilter(source, x => x.Category, filter),
@@ -84,6 +85,40 @@ internal sealed class AdminContentGridQueryEngine
             "updated" => AdminEfGridQuery.ApplyDateFilter(source, x => x.UpdatedAt, filter),
             _ => source,
         };
+
+    private static IQueryable<ContentArticle> ApplyArticleIdFilter(
+        IQueryable<ContentArticle> source,
+        GridFilterRequest filter)
+    {
+        var ids = new List<Guid>();
+        if (filter.Values is { Count: > 0 })
+        {
+            foreach (var value in filter.Values)
+            {
+                if (Guid.TryParse(value, out var id) && !ids.Contains(id))
+                {
+                    ids.Add(id);
+                }
+            }
+        }
+        else if (Guid.TryParse(filter.Value, out var single))
+        {
+            ids.Add(single);
+        }
+
+        if (ids.Count == 0)
+        {
+            return source;
+        }
+
+        return filter.Operator switch
+        {
+            "notIn" => source.Where(x => !ids.Contains(x.ArticleId)),
+            "in" => source.Where(x => ids.Contains(x.ArticleId)),
+            "notEqual" when ids.Count == 1 => source.Where(x => x.ArticleId != ids[0]),
+            _ => source.Where(x => x.ArticleId == ids[0]),
+        };
+    }
 
     private static IQueryable<ContentArticle> ApplyAuthorIdFilter(
         IQueryable<ContentArticle> source,

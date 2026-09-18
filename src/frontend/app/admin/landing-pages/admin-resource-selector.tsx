@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Check, Plus } from "lucide-react";
+import { Plus, Trash2 } from "lucide-react";
 import {
   AppDataGrid,
   adminGridQueryAdapter,
@@ -9,7 +9,7 @@ import {
   formatJalaliDate,
   useLegacyAdminGridDirectProps,
 } from "../../../design-system";
-import type { GridColumnDef, GridServerQuery } from "../../../design-system/data-grid";
+import type { GridBulkAction, GridColumnDef, GridServerQuery } from "../../../design-system/data-grid";
 import { AppGridRowActionsCell, type AppGridRowAction } from "../../../design-system/app-data-grid/app-grid-row-actions";
 import { DEFAULT_APP_GRID_CAPABILITIES } from "../../../design-system/app-data-grid/app-grid-capabilities";
 import { createHostSavedViewStore } from "../saved-view-store";
@@ -40,12 +40,58 @@ type ResourceSelectorProps = {
 
 type BrandRow = { id: string; name: string; status: string };
 type CategoryRow = { id: string; name: string; status: string };
+type LabeledRow = { id: string; label: string };
 
 const ORDERS_LIKE_CAPABILITIES = {
   ...DEFAULT_APP_GRID_CAPABILITIES,
   csvExport: false,
   excelExport: false,
 };
+
+const SINGLE_SELECT_CAPABILITIES = {
+  ...ORDERS_LIKE_CAPABILITIES,
+  rowSelection: false,
+};
+
+function gridCapabilities(multiSelect: boolean) {
+  return multiSelect ? ORDERS_LIKE_CAPABILITIES : SINGLE_SELECT_CAPABILITIES;
+}
+
+function buildSelectionRowActions<T extends { id: string }>(
+  tab: "all" | "selected",
+  selectedSet: Set<string>,
+  getLabel: (row: T) => string,
+  onToggle: (id: string, label: string) => void,
+): AppGridRowAction<T>[] {
+  if (tab === "selected") {
+    return [
+      {
+        id: "remove",
+        label: "حذف",
+        icon: Trash2,
+        variant: "destructive",
+        onClick: (row) => onToggle(row.id, getLabel(row)),
+      },
+    ];
+  }
+  return [
+    {
+      id: "add",
+      label: "افزودن",
+      icon: Plus,
+      onClick: (row) => onToggle(row.id, getLabel(row)),
+      visible: (row) => !selectedSet.has(row.id),
+    },
+    {
+      id: "remove",
+      label: "حذف از انتخاب",
+      icon: Trash2,
+      variant: "destructive",
+      onClick: (row) => onToggle(row.id, getLabel(row)),
+      visible: (row) => selectedSet.has(row.id),
+    },
+  ];
+}
 
 /**
  * Shared Resource Selector — Orders-grid standard (AppDataGrid canonical profile).
@@ -90,6 +136,41 @@ export function AdminResourceSelector({
     [labels, maxCount, multiSelect, onChange, selectedIds, selectedSet],
   );
 
+  const addMany = useCallback(
+    (items: LabeledRow[]) => {
+      const nextLabels = { ...labels };
+      for (const item of items) nextLabels[item.id] = item.label;
+      if (!multiSelect) {
+        const first = items[0];
+        if (!first) return;
+        setLabels(nextLabels);
+        onChange([first.id], nextLabels);
+        return;
+      }
+      const nextIds = [...selectedIds];
+      for (const item of items) {
+        if (nextIds.includes(item.id)) continue;
+        if (nextIds.length >= maxCount) break;
+        nextIds.push(item.id);
+      }
+      setLabels(nextLabels);
+      onChange(nextIds, nextLabels);
+    },
+    [labels, maxCount, multiSelect, onChange, selectedIds],
+  );
+
+  const removeMany = useCallback(
+    (ids: string[]) => {
+      const drop = new Set(ids);
+      onChange(selectedIds.filter((id) => !drop.has(id)), labels);
+    },
+    [labels, onChange, selectedIds],
+  );
+
+  const clearAll = useCallback(() => {
+    onChange([]);
+  }, [onChange]);
+
   const titleFa =
     title
     ?? (family === "products"
@@ -110,6 +191,8 @@ export function AdminResourceSelector({
       data-testid="admin-resource-selector"
       data-resource-family={family}
       data-grid-profile="orders-canonical"
+      data-selector-tab={tab}
+      data-multi-select={multiSelect ? "true" : "false"}
     >
       <div className="flex max-h-[92vh] w-full max-w-6xl flex-col overflow-hidden rounded-2xl bg-white shadow-xl">
         <div className="border-b border-border px-5 py-4">
@@ -117,7 +200,9 @@ export function AdminResourceSelector({
             <div>
               <h3 className="text-base font-black text-slate-900">{titleFa}</h3>
               <p className="mt-1 text-sm text-muted">
-                فیلتر ستون، فیلتر پیشرفته، صفحه‌بندی و انتخاب چندصفحه‌ای — استاندارد فهرست سفارش‌ها
+                {multiSelect
+                  ? "فیلتر ستون، فیلتر پیشرفته، صفحه‌بندی و انتخاب چندصفحه‌ای — استاندارد فهرست سفارش‌ها"
+                  : "فقط یک مورد قابل انتخاب است. با انتخاب مورد جدید، انتخاب قبلی جایگزین می‌شود."}
               </p>
             </div>
             <button type="button" className="rounded-xl border px-3 py-2 text-sm" onClick={onClose} data-testid="resource-selector-close">
@@ -145,15 +230,19 @@ export function AdminResourceSelector({
             >
               انتخاب‌شده‌ها ({selectedIds.length.toLocaleString("fa-IR")})
             </button>
-            <button
-              type="button"
-              className="ms-auto rounded-xl border px-3 py-1.5 text-xs font-bold disabled:opacity-40"
-              disabled={selectedIds.length === 0}
-              onClick={() => onChange([])}
-              data-testid="resource-selector-clear"
-            >
-              پاک‌کردن انتخاب
-            </button>
+            {tab === "selected" ? (
+              <button
+                type="button"
+                className="ms-auto rounded-xl border border-red-300 px-3 py-1.5 text-xs font-bold text-red-700 disabled:opacity-40"
+                disabled={selectedIds.length === 0}
+                onClick={clearAll}
+                data-testid="resource-selector-clear-all"
+              >
+                حذف همه
+              </button>
+            ) : (
+              <span className="ms-auto" />
+            )}
             <button
               type="button"
               className="rounded-xl bg-[#2563EB] px-3 py-1.5 text-xs font-bold text-white"
@@ -166,16 +255,54 @@ export function AdminResourceSelector({
         </div>
         <div className="min-h-0 flex-1 overflow-auto p-3" data-testid="resource-selector-grid">
           {family === "products" ? (
-            <ProductResourceGrid tab={tab} selectedIds={selectedIds} selectedSet={selectedSet} reloadToken={reloadToken} onToggle={toggleId} onLabels={mergeLabels} />
+            <ProductResourceGrid
+              tab={tab}
+              selectedIds={selectedIds}
+              selectedSet={selectedSet}
+              reloadToken={reloadToken}
+              multiSelect={multiSelect}
+              onToggle={toggleId}
+              onAddMany={addMany}
+              onRemoveMany={removeMany}
+              onLabels={mergeLabels}
+            />
           ) : null}
           {family === "articles" ? (
-            <ArticleResourceGrid tab={tab} selectedIds={selectedIds} selectedSet={selectedSet} reloadToken={reloadToken} onToggle={toggleId} onLabels={mergeLabels} />
+            <ArticleResourceGrid
+              tab={tab}
+              selectedIds={selectedIds}
+              selectedSet={selectedSet}
+              reloadToken={reloadToken}
+              multiSelect={multiSelect}
+              onToggle={toggleId}
+              onAddMany={addMany}
+              onRemoveMany={removeMany}
+              onLabels={mergeLabels}
+            />
           ) : null}
           {family === "brands" ? (
-            <BrandResourceGrid tab={tab} selectedSet={selectedSet} reloadToken={reloadToken} onToggle={toggleId} onLabels={mergeLabels} />
+            <BrandResourceGrid
+              tab={tab}
+              selectedSet={selectedSet}
+              reloadToken={reloadToken}
+              multiSelect={multiSelect}
+              onToggle={toggleId}
+              onAddMany={addMany}
+              onRemoveMany={removeMany}
+              onLabels={mergeLabels}
+            />
           ) : null}
           {family === "categories" ? (
-            <CategoryResourceGrid tab={tab} selectedSet={selectedSet} reloadToken={reloadToken} onToggle={toggleId} onLabels={mergeLabels} />
+            <CategoryResourceGrid
+              tab={tab}
+              selectedSet={selectedSet}
+              reloadToken={reloadToken}
+              multiSelect={multiSelect}
+              onToggle={toggleId}
+              onAddMany={addMany}
+              onRemoveMany={removeMany}
+              onLabels={mergeLabels}
+            />
           ) : null}
         </div>
         {selectedIds.length > 0 ? (
@@ -202,40 +329,99 @@ function truncated(value: string) {
   );
 }
 
+/** Exclude already-selected ids from the All-tab server query (SQL NOT IN). */
+function withExcludedIds(
+  query: GridServerQuery,
+  field: "productId" | "articleId",
+  excludeIds: readonly string[],
+): GridServerQuery {
+  if (excludeIds.length === 0) return query;
+  return {
+    ...query,
+    filters: {
+      ...query.filters,
+      [field]: { kind: "enum", operator: "notIn", values: [...excludeIds] },
+    },
+  };
+}
+
+/** In-memory All/Selected split with O(1) membership via Set. */
+function partitionBySelection<T extends { id: string }>(
+  rows: readonly T[],
+  tab: "all" | "selected",
+  selectedSet: Set<string>,
+): T[] {
+  if (tab === "selected") {
+    if (selectedSet.size === 0) return [];
+    return rows.filter((row) => selectedSet.has(row.id));
+  }
+  if (selectedSet.size === 0) return rows as T[];
+  return rows.filter((row) => !selectedSet.has(row.id));
+}
+
+function selectionBulkActions<T extends { id: string }>(
+  tab: "all" | "selected",
+  getLabel: (row: T) => string,
+  onAddMany: (items: LabeledRow[]) => void,
+  onRemoveMany: (ids: string[]) => void,
+): GridBulkAction<T>[] {
+  if (tab === "selected") {
+    return [
+      {
+        id: "remove-checked",
+        label: "حذف انتخاب‌شده‌ها",
+        requiresConfirmation: false,
+        isAvailable: (rows) => rows.length > 0,
+        execute: async (rows) => {
+          onRemoveMany(rows.map((row) => row.id));
+          return { ok: true, message: "" };
+        },
+      },
+    ];
+  }
+  return [
+    {
+      id: "add-checked",
+      label: "افزودن به انتخاب‌شده‌ها",
+      requiresConfirmation: false,
+      isAvailable: (rows) => rows.length > 0,
+      execute: async (rows) => {
+        onAddMany(rows.map((row) => ({ id: row.id, label: getLabel(row) })));
+        return { ok: true, message: "" };
+      },
+    },
+  ];
+}
+
 function ProductResourceGrid({
   tab,
   selectedIds,
   selectedSet,
   reloadToken,
+  multiSelect,
   onToggle,
+  onAddMany,
+  onRemoveMany,
   onLabels,
 }: {
   tab: "all" | "selected";
   selectedIds: string[];
   selectedSet: Set<string>;
   reloadToken: number;
+  multiSelect: boolean;
   onToggle: (id: string, label: string) => void;
+  onAddMany: (items: LabeledRow[]) => void;
+  onRemoveMany: (ids: string[]) => void;
   onLabels: (rows: Array<{ id: string; label: string }>) => void;
 }) {
   const savedViewStore = useMemo(() => createHostSavedViewStore("grid.admin.resource.products"), []);
-  const actions: AppGridRowAction<AdminProductListRow>[] = useMemo(
-    () => [
-      {
-        id: "toggle",
-        label: "انتخاب / حذف",
-        icon: Plus,
-        onClick: (row) => onToggle(row.id, row.title),
-        visible: (row) => !selectedSet.has(row.id),
-      },
-      {
-        id: "remove",
-        label: "حذف از انتخاب",
-        icon: Check,
-        onClick: (row) => onToggle(row.id, row.title),
-        visible: (row) => selectedSet.has(row.id),
-      },
-    ],
-    [onToggle, selectedSet],
+  const actions = useMemo(
+    () => buildSelectionRowActions<AdminProductListRow>(tab, selectedSet, (row) => row.title, onToggle),
+    [onToggle, selectedSet, tab],
+  );
+  const bulkActions = useMemo(
+    () => (multiSelect ? selectionBulkActions<AdminProductListRow>(tab, (row) => row.title, onAddMany, onRemoveMany) : []),
+    [multiSelect, onAddMany, onRemoveMany, tab],
   );
 
   const columns = useMemo(
@@ -321,17 +507,23 @@ function ProductResourceGrid({
           ...query,
           page: 1,
           pageSize: Math.max(selectedIds.length, query.pageSize),
+          filters: {
+            ...query.filters,
+            productId: { kind: "enum", operator: "in", values: selectedIds },
+          },
         });
         if (result.source === "error" || result.denied) throw new Error(result.message ?? "error");
         const rows = result.page.rows.filter((row) => selectedSet.has(row.id));
         onLabels(rows.map((row) => ({ id: row.id, label: row.title })));
         return { rows, total: rows.length };
       }
-      const result = await adminGridQueryAdapter(queryAdminProductGrid)(query);
+      const result = await adminGridQueryAdapter(queryAdminProductGrid)(
+        withExcludedIds(query, "productId", selectedIds),
+      );
       onLabels(result.rows.map((row) => ({ id: row.id, label: row.title })));
       return result;
     },
-    [onLabels, reloadToken, selectedIds.length, selectedSet, tab],
+    [onLabels, reloadToken, selectedIds, selectedSet, tab],
   );
 
   const gridProps = useLegacyAdminGridDirectProps({
@@ -344,7 +536,8 @@ function ProductResourceGrid({
   return (
     <AppDataGrid<AdminProductListRow>
       {...gridProps}
-      capabilities={ORDERS_LIKE_CAPABILITIES}
+      capabilities={gridCapabilities(multiSelect)}
+      bulkActions={bulkActions}
       rowCountNoun={{ fa: "کالا", en: "products" }}
       messageOverrides={{
         advancedFilterTitle: "فیلتر پیشرفته کالاها",
@@ -359,27 +552,30 @@ function ArticleResourceGrid({
   selectedIds,
   selectedSet,
   reloadToken,
+  multiSelect,
   onToggle,
+  onAddMany,
+  onRemoveMany,
   onLabels,
 }: {
   tab: "all" | "selected";
   selectedIds: string[];
   selectedSet: Set<string>;
   reloadToken: number;
+  multiSelect: boolean;
   onToggle: (id: string, label: string) => void;
+  onAddMany: (items: LabeledRow[]) => void;
+  onRemoveMany: (ids: string[]) => void;
   onLabels: (rows: Array<{ id: string; label: string }>) => void;
 }) {
   const savedViewStore = useMemo(() => createHostSavedViewStore("grid.admin.resource.articles"), []);
-  const actions: AppGridRowAction<AdminContentArticle>[] = useMemo(
-    () => [
-      {
-        id: "toggle",
-        label: "انتخاب / حذف",
-        icon: Plus,
-        onClick: (row) => onToggle(row.id, row.title),
-      },
-    ],
-    [onToggle],
+  const actions = useMemo(
+    () => buildSelectionRowActions<AdminContentArticle>(tab, selectedSet, (row) => row.title, onToggle),
+    [onToggle, selectedSet, tab],
+  );
+  const bulkActions = useMemo(
+    () => (multiSelect ? selectionBulkActions<AdminContentArticle>(tab, (row) => row.title, onAddMany, onRemoveMany) : []),
+    [multiSelect, onAddMany, onRemoveMany, tab],
   );
 
   const columns = useMemo(
@@ -457,17 +653,23 @@ function ArticleResourceGrid({
           ...query,
           page: 1,
           pageSize: Math.max(selectedIds.length, query.pageSize),
+          filters: {
+            ...query.filters,
+            articleId: { kind: "enum", operator: "in", values: selectedIds },
+          },
         });
         if (result.denied || result.source === "error") throw new Error(result.message ?? "error");
         const rows = result.page.rows.filter((row) => selectedSet.has(row.id));
         onLabels(rows.map((row) => ({ id: row.id, label: row.title })));
         return { rows, total: rows.length };
       }
-      const result = await adminGridQueryAdapter(queryAdminContentArticlesGrid)(query);
+      const result = await adminGridQueryAdapter(queryAdminContentArticlesGrid)(
+        withExcludedIds(query, "articleId", selectedIds),
+      );
       onLabels(result.rows.map((row) => ({ id: row.id, label: row.title })));
       return result;
     },
-    [onLabels, reloadToken, selectedIds.length, selectedSet, tab],
+    [onLabels, reloadToken, selectedIds, selectedSet, tab],
   );
 
   const gridProps = useLegacyAdminGridDirectProps({
@@ -480,7 +682,8 @@ function ArticleResourceGrid({
   return (
     <AppDataGrid<AdminContentArticle>
       {...gridProps}
-      capabilities={ORDERS_LIKE_CAPABILITIES}
+      capabilities={gridCapabilities(multiSelect)}
+      bulkActions={bulkActions}
       rowCountNoun={{ fa: "مطلب", en: "articles" }}
     />
   );
@@ -490,13 +693,19 @@ function BrandResourceGrid({
   tab,
   selectedSet,
   reloadToken,
+  multiSelect,
   onToggle,
+  onAddMany,
+  onRemoveMany,
   onLabels,
 }: {
   tab: "all" | "selected";
   selectedSet: Set<string>;
   reloadToken: number;
+  multiSelect: boolean;
   onToggle: (id: string, label: string) => void;
+  onAddMany: (items: LabeledRow[]) => void;
+  onRemoveMany: (ids: string[]) => void;
   onLabels: (rows: Array<{ id: string; label: string }>) => void;
 }) {
   const [rows, setRows] = useState<BrandRow[]>([]);
@@ -510,10 +719,17 @@ function BrandResourceGrid({
     });
   }, [onLabels, reloadToken]);
 
-  const visible = tab === "selected" ? rows.filter((row) => selectedSet.has(row.id)) : rows;
-  const actions: AppGridRowAction<BrandRow>[] = useMemo(
-    () => [{ id: "toggle", label: "انتخاب / حذف", icon: Plus, onClick: (row) => onToggle(row.id, row.name) }],
-    [onToggle],
+  const visible = useMemo(
+    () => partitionBySelection(rows, tab, selectedSet),
+    [rows, selectedSet, tab],
+  );
+  const actions = useMemo(
+    () => buildSelectionRowActions<BrandRow>(tab, selectedSet, (row) => row.name, onToggle),
+    [onToggle, selectedSet, tab],
+  );
+  const bulkActions = useMemo(
+    () => (multiSelect ? selectionBulkActions<BrandRow>(tab, (row) => row.name, onAddMany, onRemoveMany) : []),
+    [multiSelect, onAddMany, onRemoveMany, tab],
   );
   const columns = useMemo(
     (): GridColumnDef<BrandRow>[] => [
@@ -549,20 +765,33 @@ function BrandResourceGrid({
     queryAdapter,
     savedViewStore,
   });
-  return <AppDataGrid<BrandRow> {...gridProps} capabilities={ORDERS_LIKE_CAPABILITIES} rowCountNoun={{ fa: "برند", en: "brands" }} />;
+  return (
+    <AppDataGrid<BrandRow>
+      {...gridProps}
+      capabilities={gridCapabilities(multiSelect)}
+      bulkActions={bulkActions}
+      rowCountNoun={{ fa: "برند", en: "brands" }}
+    />
+  );
 }
 
 function CategoryResourceGrid({
   tab,
   selectedSet,
   reloadToken,
+  multiSelect,
   onToggle,
+  onAddMany,
+  onRemoveMany,
   onLabels,
 }: {
   tab: "all" | "selected";
   selectedSet: Set<string>;
   reloadToken: number;
+  multiSelect: boolean;
   onToggle: (id: string, label: string) => void;
+  onAddMany: (items: LabeledRow[]) => void;
+  onRemoveMany: (ids: string[]) => void;
   onLabels: (rows: Array<{ id: string; label: string }>) => void;
 }) {
   const [rows, setRows] = useState<CategoryRow[]>([]);
@@ -578,10 +807,17 @@ function CategoryResourceGrid({
     });
   }, [onLabels, reloadToken]);
 
-  const visible = tab === "selected" ? rows.filter((row) => selectedSet.has(row.id)) : rows;
-  const actions: AppGridRowAction<CategoryRow>[] = useMemo(
-    () => [{ id: "toggle", label: "انتخاب / حذف", icon: Plus, onClick: (row) => onToggle(row.id, row.name) }],
-    [onToggle],
+  const visible = useMemo(
+    () => partitionBySelection(rows, tab, selectedSet),
+    [rows, selectedSet, tab],
+  );
+  const actions = useMemo(
+    () => buildSelectionRowActions<CategoryRow>(tab, selectedSet, (row) => row.name, onToggle),
+    [onToggle, selectedSet, tab],
+  );
+  const bulkActions = useMemo(
+    () => (multiSelect ? selectionBulkActions<CategoryRow>(tab, (row) => row.name, onAddMany, onRemoveMany) : []),
+    [multiSelect, onAddMany, onRemoveMany, tab],
   );
   const columns = useMemo(
     (): GridColumnDef<CategoryRow>[] => [
@@ -626,7 +862,14 @@ function CategoryResourceGrid({
     queryAdapter,
     savedViewStore,
   });
-  return <AppDataGrid<CategoryRow> {...gridProps} capabilities={ORDERS_LIKE_CAPABILITIES} rowCountNoun={{ fa: "دسته", en: "categories" }} />;
+  return (
+    <AppDataGrid<CategoryRow>
+      {...gridProps}
+      capabilities={gridCapabilities(multiSelect)}
+      bulkActions={bulkActions}
+      rowCountNoun={{ fa: "دسته", en: "categories" }}
+    />
+  );
 }
 
 /** Compact inline trigger showing selected count + open selector. */
@@ -634,15 +877,22 @@ export function ResourceSelectorTrigger({
   count,
   onOpen,
   emptyHint,
+  emptyTestId,
 }: {
   count: number;
   onOpen: () => void;
   emptyHint: string;
+  emptyTestId?: string;
 }) {
   return (
     <div className="space-y-2" data-testid="resource-selector-trigger">
       {count === 0 ? (
-        <p className="rounded-xl border border-dashed px-3 py-2 text-xs text-muted">{emptyHint}</p>
+        <p
+          className="rounded-xl border border-dashed px-3 py-2 text-xs text-muted"
+          data-testid={emptyTestId}
+        >
+          {emptyHint}
+        </p>
       ) : (
         <p className="text-sm font-bold">{count.toLocaleString("fa-IR")} مورد انتخاب شده</p>
       )}

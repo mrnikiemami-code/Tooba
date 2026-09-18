@@ -90,13 +90,17 @@ function mapFilter(field: string, value: GridFilterValue): GridFilterRequest {
         value: String(value.value),
         valueTo: value.valueTo !== undefined ? String(value.valueTo) : undefined,
       };
-    case "enum":
+    case "enum": {
+      const operator = value.operator ?? (value.values.length === 1 ? "equals" : "in");
+      if (operator === "in" || operator === "notIn") {
+        return { field, operator, values: value.values };
+      }
       return {
         field,
-        operator: value.operator ?? (value.values.length === 1 ? "equals" : "in"),
-        value: value.values.length === 1 ? value.values[0] : undefined,
-        values: value.values.length === 1 ? undefined : value.values,
+        operator,
+        value: value.values[0],
       };
+    }
     case "status": {
       const operator = value.operator ?? (value.values.length === 1 ? "equals" : "in");
       if (operator === "in" || operator === "notIn") {

@@ -81,7 +81,7 @@ public static class GridQueryPolicyBase
                 .Where(v => !string.IsNullOrWhiteSpace(v))
                 .Select(v => v.Trim())
                 .Distinct(StringComparer.Ordinal)
-                .Take(20)
+                .Take(32)
                 .ToList());
 
     /// <summary>مقدار scalar فیلتر را trim می‌کند.</summary>

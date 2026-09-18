@@ -88,18 +88,18 @@ export function buildLandingPublishReadiness(input: LandingReadinessInput): Land
   ];
 
   for (const row of enabled) {
+    if (!sectionParticipatesInSourceReadiness(row.sectionType)) continue;
     const config = parseLandingConfig(row.config);
     const warning = incompleteSourceWarning(row.sectionType, config);
-    if (!warning) continue;
     checks.push(
       check({
         key: `section-source-${row.pageSectionId}`,
         group: "sections",
-        satisfied: false,
-        titleFa: `منبع بخش «${row.sectionType}»`,
+        satisfied: warning == null,
+        titleFa: `منبع بخش «${landingSectionTypeLabelFa(row.sectionType)}»`,
         titleEn: `Section source (${row.sectionType})`,
-        descriptionFa: warning,
-        descriptionEn: warning,
+        descriptionFa: warning ?? "منبع این بخش کامل است.",
+        descriptionEn: warning ?? "This section source is complete.",
         actionTarget: "sections",
       }),
     );
@@ -119,6 +119,36 @@ export function buildLandingPublishReadiness(input: LandingReadinessInput): Land
     pageTabIncomplete: missing.some((item) => item.group === "page"),
     seoTabIncomplete: missing.some((item) => item.group === "seo"),
   };
+}
+
+/** بخش‌هایی که منبع محتوایشان در چک‌لیست انتشار می‌ماند (حتی پس از تکمیل). */
+function sectionParticipatesInSourceReadiness(sectionType: string): boolean {
+  return (
+    sectionType === "ProductCollection"
+    || sectionType === "ArticleList"
+    || sectionType === "CategoryGrid"
+    || sectionType === "BrandStrip"
+    || sectionType === "BannerShowcase"
+  );
+}
+
+function landingSectionTypeLabelFa(sectionType: string): string {
+  switch (sectionType) {
+    case "ProductCollection":
+      return "مجموعه کالا";
+    case "ArticleList":
+      return "فهرست مطالب";
+    case "CategoryGrid":
+      return "شبکه دسته";
+    case "BrandStrip":
+      return "نوار برند";
+    case "BannerShowcase":
+      return "بنر";
+    case "Hero":
+      return "اسلایدر اصلی";
+    default:
+      return sectionType;
+  }
 }
 
 export function landingCheckTitle(check: LandingPublishCheck, locale: string): string {

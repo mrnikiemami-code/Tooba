@@ -123,6 +123,61 @@ public sealed class StoreLandingPageSectionTests
         Assert.DoesNotContain(listed, x => x.Config.Contains("قدیمی", StringComparison.Ordinal));
     }
 
+    [Fact]
+    public void NormalizeHero_persists_multi_slides()
+    {
+        var json = StoreLandingPageSectionConfig.ValidateAndNormalize(
+            "Hero",
+            """
+            {
+              "variantKey":"hero.diagonal",
+              "heightPreset":"Large",
+              "slideIntervalSec":4,
+              "slideCount":2,
+              "slides":[
+                {
+                  "mediaAssetId":"aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa",
+                  "imageUrl":"/v1/storefront/media/aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa",
+                  "title":"اسلاید یک",
+                  "alt":"alt1",
+                  "description":"",
+                  "ctaLabel":"",
+                  "destinationType":"none",
+                  "targetId":"",
+                  "targetSlug":"",
+                  "targetLabel":"",
+                  "customUrl":"",
+                  "href":""
+                },
+                {
+                  "mediaAssetId":"bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb",
+                  "imageUrl":"",
+                  "title":"اسلاید دو",
+                  "alt":"alt2",
+                  "description":"توضیح",
+                  "ctaLabel":"مشاهده",
+                  "destinationType":"all-products",
+                  "targetId":"",
+                  "targetSlug":"",
+                  "targetLabel":"",
+                  "customUrl":"",
+                  "href":"/products"
+                }
+              ]
+            }
+            """);
+
+        using var doc = JsonDocument.Parse(json);
+        var root = doc.RootElement;
+        Assert.Equal("اسلاید یک", root.GetProperty("title").GetString());
+        Assert.Equal("hero.diagonal", root.GetProperty("variantKey").GetString());
+        Assert.Equal(4, root.GetProperty("slideIntervalSec").GetInt32());
+        Assert.Equal(2, root.GetProperty("slideCount").GetInt32());
+        Assert.Equal(2, root.GetProperty("slides").GetArrayLength());
+        Assert.Equal("اسلاید دو", root.GetProperty("slides")[1].GetProperty("title").GetString());
+        Assert.Equal("all-products", root.GetProperty("slides")[1].GetProperty("destinationType").GetString());
+    }
+
     private static async Task<StoreLandingPageAdminView> PublishPageAsync(StoreLandingPageComposer composer)
     {
         var created = await composer.CreateAsync(new StoreLandingPageWriteRequest("آزمایش بخش", "section-lab", "fa", null, null, null), CancellationToken.None);

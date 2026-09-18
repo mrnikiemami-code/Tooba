@@ -495,12 +495,12 @@ function ManualResourceField({
   const [open, setOpen] = useState(false);
   return (
     <div data-testid={`landing-${family === "products" ? "product" : family}-multi-picker`}>
-      {selected.length === 0 ? (
-        <p className="mb-2 rounded-xl border border-dashed px-3 py-2 text-xs text-muted" data-testid={emptyTestId}>
-          {emptyHint}
-        </p>
-      ) : null}
-      <ResourceSelectorTrigger count={selected.length} onOpen={() => setOpen(true)} emptyHint={emptyHint} />
+      <ResourceSelectorTrigger
+        count={selected.length}
+        onOpen={() => setOpen(true)}
+        emptyHint={emptyHint}
+        emptyTestId={emptyTestId}
+      />
       <AdminResourceSelector
         family={family}
         selectedIds={selected}

@@ -32,6 +32,7 @@ public sealed class AdminProductGridQueryPolicy : IGridQueryPolicy
     [
         ..SortableFields,
         "additionalCategoryNames",
+        "productId",
     ];
 
     /// <summary>نقطهٔ ورود static برای endpointهای موجود.</summary>
@@ -134,6 +135,7 @@ public sealed class AdminProductGridQueryPolicy : IGridQueryPolicy
             "title" or "categorySummary" or "primaryCategoryName" or "additionalCategoryNames" => GridQueryOperators.Text,
             "offerAmountRange" or "variantCount" or "offerCount" or "sellableUnits" or "locationCount" => GridQueryOperators.Number,
             "status" => GridQueryOperators.Enum,
+            "productId" => GridQueryOperators.Enum,
             "updatedAt" => GridQueryOperators.Date,
             _ => throw GridQueryValidationException.FilterFieldInvalid(),
         };
