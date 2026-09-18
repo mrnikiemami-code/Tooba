@@ -25,10 +25,13 @@ const locks = readFileSync(join(root, "docs/architecture/TOOBA-LOCKS.md"), "utf8
 const sharedRenderer = readFileSync(join(dir, "../../../lib/storefront-composition/shared-composition-renderer.tsx"), "utf8");
 
 test("every registered Variant has Persian human design metadata", () => {
+  const exactProductShowcaseNames = new Set(["سانی", "مانی", "سینمایی", "سینمایی پلاس", "کاشف"]);
   for (const v of VARIANTS) {
     const meta = getVariantDesignMeta(v.key);
     assert.ok(meta, `missing design meta for ${v.key}`);
-    assert.match(meta!.designNameFa, /طرح/);
+    if (!exactProductShowcaseNames.has(meta!.designNameFa)) {
+      assert.match(meta!.designNameFa, /طرح/);
+    }
     assert.ok(meta!.descriptionFa.trim().length > 4);
     assert.equal(v.nameFa, meta!.designNameFa);
     assert.doesNotMatch(meta!.designNameFa, /SectionType|VariantKey|breakpoint|JSON|CSS|HTML/i);
@@ -52,7 +55,7 @@ test("picker uses production shared renderer mapping", () => {
 });
 
 test("selected Variant key persists unchanged (display name is presentation only)", () => {
-  assert.match(wizard, /config:\s*\{\s*\.\.\.config,\s*variantKey\s*\}/);
+  assert.match(wizard, /(?:config:\s*\{\s*\.\.\.config,\s*variantKey\s*\}|saveConfig:\s*Record<string,\s*unknown>\s*=\s*\{\s*\.\.\.config,\s*variantKey\s*\})/);
   assert.match(wizard, /setVariantKey\(variant\.variantKey\)/);
   assert.match(designNames, /Persisted identity remains the stable variant key/);
   assert.equal(canonicalizeVariantKey("banner.mosaic-2x2"), "banner.four-grid");

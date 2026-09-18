@@ -1284,5 +1284,31 @@ Slide CTA destinations use a typed target model with canonical Product/Category/
 Wizard validation must surface blocked progression through visible summary + inline field errors + slide-tab state + first-error navigation, and error state clears live once corrected.
 
 ### LOCK-SF-374 — Stop after Bridge Result
+
+Worker must stop completely after posting the canonical Result through Bridge; no IDLE loop and no automatic next-task claim.
 After Bridge Result delivery, Cursor stops completely; no heartbeat, polling, IDLE loop, or automatic next-task fetch is part of the Tooba worker protocol.
+
+### LOCK-SF-375 — Product Showcase five additive variants
+
+Product Showcase adds five variants only: sunny/سانی, money/مانی, cinematic/سینمایی, cinematic-plus/سینمایی پلاس, explorer/کاشف (registry keys `product.sunny`…`product.explorer` with bare-key aliases). Existing Product Showcase variants remain unchanged.
+
+### LOCK-SF-376 — ProductCard reuse for new rails
+
+New Product Showcase rail variants reuse the existing production ProductCard (`StorefrontProductCardView`) without changing ProductCard business behavior or API contracts.
+
+### LOCK-SF-377 — Embla scoped to new Product Showcase rails
+
+Embla is scoped to the new Product Showcase rail variants only; existing Swiper-based components are not globally migrated.
+
+### LOCK-SF-378 — SSR-visible Product Showcase rail content
+
+Product Showcase rail content remains SSR-visible; hydration may add drag/snap/depth behavior but must not make product content client-only.
+
+### LOCK-SF-379 — Lightweight cinematic CSS depth
+
+Cinematic depth effects use lightweight CSS transforms and respect RTL, responsive behavior, reduced motion, and stable layout without WebGL/Three.js/video.
+
+### LOCK-SF-380 — Additive Product Showcase expansion only
+
+Product Showcase variant expansion is additive only; no redesign of existing Builder/Product Showcase UX is permitted.
 

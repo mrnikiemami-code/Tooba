@@ -22,6 +22,10 @@ import {
   HomeMahoorProductSection,
   HomeZohrehProductSection,
 } from "../../app/storefront/storefront-home-shopeiva-product-layouts.tsx";
+import {
+  ProductShowcaseEmblaRail,
+  productShowcaseEmblaVariantFromKey,
+} from "../../app/storefront/storefront-product-showcase-embla-rails.tsx";
 import { HomeStoriesSection } from "../../app/storefront/stories/home-stories.tsx";
 import {
   CompositionBannerGrid,
@@ -223,6 +227,28 @@ export function renderSharedHomeSection(
       return <HomeZohrehProductSection products={context.mostViewedProducts} title={config.title} href={config.href} />;
     case "product.mahoor":
       return <HomeMahoorProductSection products={context.newArrivals} title={config.title} href={config.href} />;
+    case "product.sunny":
+    case "product.money":
+    case "product.cinematic":
+    case "product.cinematic-plus":
+    case "product.explorer": {
+      const emblaVariant = productShowcaseEmblaVariantFromKey(key);
+      if (!emblaVariant) return null;
+      const products =
+        context.newArrivals.length > 0
+          ? context.newArrivals
+          : context.specialOffers.length > 0
+            ? context.specialOffers
+            : context.mostViewedProducts;
+      return (
+        <ProductShowcaseEmblaRail
+          variant={emblaVariant}
+          products={products}
+          title={config.title}
+          href={config.href ?? "/products"}
+        />
+      );
+    }
     case "product.category-columns":
       return <HomeBestSellersSection columns={context.bestSellerColumns} />;
     case "ranked.multi-column":
@@ -590,6 +616,35 @@ export function renderSharedLandingSection(input: SharedLandingRenderInput): Rea
           products={filled.items}
           title={typeof config.title === "string" ? config.title : "جدیدترین محصولات"}
           href={typeof config.href === "string" ? config.href : "/new-products"}
+          previewLocale={locale}
+        />
+      );
+    }
+    case "product.sunny":
+    case "product.money":
+    case "product.cinematic":
+    case "product.cinematic-plus":
+    case "product.explorer": {
+      const emblaVariant = productShowcaseEmblaVariantFromKey(variantKey);
+      if (!emblaVariant) return null;
+      const wanted = new Set(
+        section.items.map((item) => item.id).concat(section.items.map((item) => item.slug).filter(Boolean) as string[]),
+      );
+      const realSelected = wanted.size
+        ? context.products.filter((card) => wanted.has(card.productId) || wanted.has(card.slug))
+        : context.products;
+      const filled = applyPreviewFill({
+        enabled: storePreview,
+        variantKey,
+        realItems: realSelected,
+        createFake: (index) => createFakeProduct(index, locale),
+      });
+      return (
+        <ProductShowcaseEmblaRail
+          variant={emblaVariant}
+          products={filled.items}
+          title={typeof config.title === "string" ? config.title : undefined}
+          href={typeof config.href === "string" ? config.href : "/products"}
           previewLocale={locale}
         />
       );

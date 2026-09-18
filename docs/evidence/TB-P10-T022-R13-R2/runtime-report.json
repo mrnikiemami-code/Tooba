@@ -1,0 +1,167 @@
+{
+  "ok": true,
+  "steps": [
+    {
+      "name": "fe-3000",
+      "pass": true
+    },
+    {
+      "name": "file:product-showcase-picker-existing-plus-new.png",
+      "pass": true,
+      "data": {
+        "bytes": 8478
+      }
+    },
+    {
+      "name": "file:product-showcase-sunny-preview.png",
+      "pass": true,
+      "data": {
+        "bytes": 34537
+      }
+    },
+    {
+      "name": "file:product-showcase-storefront-sunny.png",
+      "pass": true,
+      "data": {
+        "bytes": 34537
+      }
+    },
+    {
+      "name": "file:product-showcase-money-preview.png",
+      "pass": true,
+      "data": {
+        "bytes": 46481
+      }
+    },
+    {
+      "name": "file:product-showcase-storefront-money.png",
+      "pass": true,
+      "data": {
+        "bytes": 46481
+      }
+    },
+    {
+      "name": "file:product-showcase-cinematic-preview.png",
+      "pass": true,
+      "data": {
+        "bytes": 34650
+      }
+    },
+    {
+      "name": "file:product-showcase-storefront-cinematic.png",
+      "pass": true,
+      "data": {
+        "bytes": 34650
+      }
+    },
+    {
+      "name": "file:product-showcase-cinematic-plus-preview.png",
+      "pass": true,
+      "data": {
+        "bytes": 35905
+      }
+    },
+    {
+      "name": "file:product-showcase-storefront-cinematic-plus.png",
+      "pass": true,
+      "data": {
+        "bytes": 35905
+      }
+    },
+    {
+      "name": "file:product-showcase-explorer-preview.png",
+      "pass": true,
+      "data": {
+        "bytes": 33500
+      }
+    },
+    {
+      "name": "file:product-showcase-storefront-explorer.png",
+      "pass": true,
+      "data": {
+        "bytes": 33500
+      }
+    },
+    {
+      "name": "file:product-showcase-review-new-variant.png",
+      "pass": true,
+      "data": {
+        "bytes": 34623
+      }
+    },
+    {
+      "name": "file:product-showcase-rtl-cinematic.png",
+      "pass": true,
+      "data": {
+        "bytes": 34623
+      }
+    },
+    {
+      "name": "file:product-showcase-productcard-actions.png",
+      "pass": true,
+      "data": {
+        "bytes": 44797
+      }
+    },
+    {
+      "name": "file:product-showcase-mobile-cinematic.png",
+      "pass": true,
+      "data": {
+        "bytes": 14228
+      }
+    },
+    {
+      "name": "ssr-html-markers",
+      "pass": true
+    }
+  ],
+  "files": {
+    "product-showcase-picker-existing-plus-new.png": {
+      "bytes": 8478
+    },
+    "product-showcase-sunny-preview.png": {
+      "bytes": 34537
+    },
+    "product-showcase-storefront-sunny.png": {
+      "bytes": 34537
+    },
+    "product-showcase-money-preview.png": {
+      "bytes": 46481
+    },
+    "product-showcase-storefront-money.png": {
+      "bytes": 46481
+    },
+    "product-showcase-cinematic-preview.png": {
+      "bytes": 34650
+    },
+    "product-showcase-storefront-cinematic.png": {
+      "bytes": 34650
+    },
+    "product-showcase-cinematic-plus-preview.png": {
+      "bytes": 35905
+    },
+    "product-showcase-storefront-cinematic-plus.png": {
+      "bytes": 35905
+    },
+    "product-showcase-explorer-preview.png": {
+      "bytes": 33500
+    },
+    "product-showcase-storefront-explorer.png": {
+      "bytes": 33500
+    },
+    "product-showcase-review-new-variant.png": {
+      "bytes": 34623
+    },
+    "product-showcase-rtl-cinematic.png": {
+      "bytes": 34623
+    },
+    "product-showcase-productcard-actions.png": {
+      "bytes": 44797
+    },
+    "product-showcase-mobile-cinematic.png": {
+      "bytes": 14228
+    }
+  },
+  "errors": [],
+  "blockers": []
+}

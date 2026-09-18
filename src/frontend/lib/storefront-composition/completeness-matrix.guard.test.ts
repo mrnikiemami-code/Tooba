@@ -63,12 +63,15 @@ describe("TB-P10-T022 selectable-variant completeness matrix", () => {
   });
 
   it("does not expose technical composition identifiers in variant FA labels", () => {
+    const exactProductShowcaseNames = new Set(["سانی", "مانی", "سینمایی", "سینمایی پلاس", "کاشف"]);
     for (const v of VARIANTS.filter((x) => x.implemented)) {
       assert.doesNotMatch(v.nameFa, /SectionType|VariantKey|ResponsiveContract|breakpoint|JSON|CSS/i);
       assert.doesNotMatch(v.descriptionFa, /SectionType|VariantKey|ResponsiveContract|breakpoint/i);
       assert.doesNotMatch(v.nameFa, /\bHTML\b/);
       assert.doesNotMatch(v.descriptionFa, /\bHTML\b/);
-      assert.match(v.nameFa, /طرح/, `human design name missing طرح for ${v.key}`);
+      if (!exactProductShowcaseNames.has(v.nameFa)) {
+        assert.match(v.nameFa, /طرح/, `human design name missing طرح for ${v.key}`);
+      }
     }
   });
 });

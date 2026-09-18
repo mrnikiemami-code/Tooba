@@ -128,6 +128,41 @@ export const RESPONSIVE_CONTRACTS: Record<string, ResponsiveContract> = {
     itemVisible: { desktop: "4-5", tablet: "3", mobile: "2" },
     notesFa: "طرح ماهور — جدیدترین‌ها.",
   },
+  "product.sunny": {
+    variantKey: "product.sunny",
+    columns: { desktop: "rail", tablet: "rail", mobile: "rail" },
+    height: { desktop: "auto", tablet: "auto", mobile: "auto" },
+    itemVisible: { desktop: "4-5", tablet: "3", mobile: "1-2" },
+    notesFa: "سانی — ریل Embla روشن با کارت فعال کمی بالاتر.",
+  },
+  "product.money": {
+    variantKey: "product.money",
+    columns: { desktop: "rail", tablet: "rail", mobile: "rail" },
+    height: { desktop: "auto", tablet: "auto", mobile: "auto" },
+    itemVisible: { desktop: "3-4", tablet: "2-3", mobile: "1-2" },
+    notesFa: "مانی — تمرکز مرکز فروش‌محور.",
+  },
+  "product.cinematic": {
+    variantKey: "product.cinematic",
+    columns: { desktop: "rail", tablet: "rail", mobile: "rail" },
+    height: { desktop: "auto", tablet: "auto", mobile: "auto" },
+    itemVisible: { desktop: "3-4", tablet: "2-3", mobile: "1" },
+    notesFa: "سینمایی — عمق CSS ملایم؛ موبایل عمق کمتر.",
+  },
+  "product.cinematic-plus": {
+    variantKey: "product.cinematic-plus",
+    columns: { desktop: "rail", tablet: "rail", mobile: "rail" },
+    height: { desktop: "auto", tablet: "auto", mobile: "auto" },
+    itemVisible: { desktop: "3-4", tablet: "2-3", mobile: "1" },
+    notesFa: "سینمایی پلاس — عمق غنی‌تر کنترل‌شده.",
+  },
+  "product.explorer": {
+    variantKey: "product.explorer",
+    columns: { desktop: "rail", tablet: "rail", mobile: "rail" },
+    height: { desktop: "auto", tablet: "auto", mobile: "auto" },
+    itemVisible: { desktop: "4-5", tablet: "3", mobile: "1-2" },
+    notesFa: "کاشف — peek نامتقارن اکتشافی.",
+  },
   "product.grid": {
     variantKey: "product.grid",
     columns: { desktop: "4", tablet: "3", mobile: "2" },
@@ -354,7 +389,9 @@ export function requireResponsiveContract(variantKey: string): ResponsiveContrac
     "hero.contained": "hero.shapes",
     "hero.side-promos": "hero.diagonal",
   };
-  const key = aliases[variantKey] ?? variantKey;
+  const key = RESPONSIVE_CONTRACTS[variantKey]
+    ? variantKey
+    : (aliases[variantKey] ?? variantKey);
   const contract = RESPONSIVE_CONTRACTS[key];
   if (!contract) throw new Error(`Missing responsive contract: ${variantKey}`);
   return contract;

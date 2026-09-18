@@ -128,6 +128,36 @@ export const VARIANT_DESIGN_NAMES: Record<string, VariantDesignMeta> = {
     descriptionFa: "اسلایدر جدیدترین محصولات با نشان جدید",
     badgeFa: "تازه‌ها",
   },
+  "product.sunny": {
+    variantKey: "product.sunny",
+    designNameFa: "سانی",
+    descriptionFa: "ردیف روشن و تمیز با کارت فعال کمی بالاتر و محو لبه نرم",
+    badgeFa: "سانی",
+  },
+  "product.money": {
+    variantKey: "product.money",
+    designNameFa: "مانی",
+    descriptionFa: "ردیف فروش‌محور با تمرکز قوی مرکز و تأکید تجاری بدون تغییر کارت کالا",
+    badgeFa: "مانی",
+  },
+  "product.cinematic": {
+    variantKey: "product.cinematic",
+    designNameFa: "سینمایی",
+    descriptionFa: "ردیف سینمایی پریمیوم با عمق ملایم و چرخش جزئی همسایه‌ها",
+    badgeFa: "سینمایی",
+  },
+  "product.cinematic-plus": {
+    variantKey: "product.cinematic-plus",
+    designNameFa: "سینمایی پلاس",
+    descriptionFa: "عمق سینمایی غنی‌تر با برجستگی مرکز کنترل‌شده و بدون افکت اغراق‌آمیز",
+    badgeFa: "سینمایی پلاس",
+  },
+  "product.explorer": {
+    variantKey: "product.explorer",
+    designNameFa: "کاشف",
+    descriptionFa: "ردیف اکتشافی با peek نامتقارن همسایه‌ها برای حس مرور و کشف",
+    badgeFa: "کاشف",
+  },
   "product.grid": {
     variantKey: "product.grid",
     designNameFa: "شبکه محصولات — طرح پارسا",

@@ -69,6 +69,11 @@ const PREVIEW_CARDINALITY: Record<string, { min: number; target: number }> = {
   "product.amazing": { min: 2, target: 4 },
   "product.zohreh": { min: 3, target: 9 },
   "product.mahoor": { min: 2, target: 4 },
+  "product.sunny": { min: 2, target: 4 },
+  "product.money": { min: 2, target: 4 },
+  "product.cinematic": { min: 2, target: 4 },
+  "product.cinematic-plus": { min: 2, target: 4 },
+  "product.explorer": { min: 2, target: 4 },
   "product.grid": { min: 4, target: 6 },
   "product.compact-rows": { min: 3, target: 5 },
   "product.category-columns": { min: 3, target: 6 },
@@ -213,6 +218,21 @@ export const VARIANTS: VariantDefinition[] = [
   }),
   variant("product.mahoor", "ProductShowcase", "طرح ماهور", "اسلایدر جدیدترین محصولات", "Existing", {
     previewKind: "product-carousel", recommendedUseFa: "تازه‌ها", autoplaySupported: true, dataSources: DS_PRODUCT,
+  }),
+  variant("product.sunny", "ProductShowcase", "سانی", "ردیف روشن و تمیز با کارت فعال کمی بالاتر و محو لبه نرم", "Existing", {
+    previewKind: "product-carousel", recommendedUseFa: "ویترین پریمیوم روشن", dataSources: DS_PRODUCT,
+  }),
+  variant("product.money", "ProductShowcase", "مانی", "ردیف فروش‌محور با تمرکز قوی روی کارت مرکزی", "Existing", {
+    previewKind: "product-carousel", recommendedUseFa: "تأکید فروش و تبدیل", dataSources: DS_PRODUCT,
+  }),
+  variant("product.cinematic", "ProductShowcase", "سینمایی", "ردیف سینمایی با عمق ملایم و چرخش همسایه‌ها", "Existing", {
+    previewKind: "product-carousel", recommendedUseFa: "ویترین پریمیوم", dataSources: DS_PRODUCT,
+  }),
+  variant("product.cinematic-plus", "ProductShowcase", "سینمایی پلاس", "عمق سینمایی غنی‌تر با برجستگی مرکز کنترل‌شده", "Existing", {
+    previewKind: "product-carousel", recommendedUseFa: "ویترین پریمیوم عمیق", dataSources: DS_PRODUCT,
+  }),
+  variant("product.explorer", "ProductShowcase", "کاشف", "ردیف اکتشافی با peek نامتقارن کارت‌های همسایه", "Existing", {
+    previewKind: "product-carousel", recommendedUseFa: "مرور و کشف کالا", dataSources: DS_PRODUCT,
   }),
   variant("product.grid", "ProductShowcase", "شبکه کالا", "شبکه چندستونه", "ReusableViaAdapter", {
     previewKind: "product-grid", recommendedUseFa: "مناسب نمایش فشرده", dataSources: DS_PRODUCT,

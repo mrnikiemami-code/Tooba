@@ -1,0 +1,87 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+
+BEGIN_TOOBA_WORKER_RESULT
+
+Task-ID: TB-P10-T022-R13-R2
+Parent-Task: TB-P10-T022-R13-R1-R1
+Channel: tooba-main
+WorkerId: tooba-worker-01
+AgentType: cursor
+Status: PASS
+
+Summary:
+Added five Product Showcase variants (sunny/سانی, money/مانی, cinematic/سینمایی, cinematic-plus/سینمایی پلاس, explorer/کاشف) as Embla rails wrapping unchanged StorefrontProductCardView. Existing Product Showcase variants and Swiper layouts left intact. LOCK-SF-375…380 registered. Recovery SoT updated for R13-R2.
+
+Applicable-Locks:
+LOCK-SF-001…374 retained; LOCK-SF-375…380 added.
+
+Recovery-Start:
+docs/evidence/TB-P10-T022-R13-R2/recovery-start.md
+
+New-Variant-Map:
+docs/evidence/TB-P10-T022-R13-R2/product-showcase-variant-contract.md — product.sunny|money|cinematic|cinematic-plus|explorer with bare-key aliases.
+
+Existing-Variant-Preservation:
+آریا/شگفت‌انگیز/زهره/ماهور and other ProductShowcase registry entries unchanged; Swiper layouts untouched.
+
+Embla-Architecture:
+embla-carousel-react@8.5.2 scoped to storefront-product-showcase-embla-rails.tsx only; no global Swiper migration.
+
+SSR-Hydration:
+docs/evidence/TB-P10-T022-R13-R2/ssr-hydration-contract.md — product markup SSR-visible; hydration adds drag/snap/depth.
+
+ProductCard-Preservation:
+StorefrontProductCardView reused; business actions/pricing/wishlist/ATC unchanged.
+
+CSS3D-Behavior:
+translate3d/scale/rotateY/opacity/shadow/edge fade; reduced-motion simplifies depth.
+
+Motion-Accessibility:
+RTL Embla direction; keyboard prev/next; prefers-reduced-motion; no autoplay/RAF loop.
+
+Variant-Picker:
+Registry + VARIANT_DESIGN_NAMES exact FA names; live VariantLivePreview path unchanged.
+
+Review-Step:
+Same VariantLivePreview / shared renderer (evidence page + Admin Review path).
+
+Storefront-Integration:
+shared-composition-renderer home + landing cases for five keys → ProductShowcaseEmblaRail.
+
+Responsive:
+responsive-contracts.ts entries per variant; system-owned breakpoints only.
+
+Performance:
+docs/evidence/TB-P10-T022-R13-R2/performance.md
+
+Focused-Validation:
+docs/evidence/TB-P10-T022-R13-R2/focused-validation.md — composition-engine, R13-R2/R11 guards, critical-storefront, recovery-staleness, git diff --check PASS.
+
+Runtime:
+Host :5088 + FE :3000; capture.mjs ok; runtime-report.json.
+
+Visual-Evidence:
+docs/evidence/TB-P10-T022-R13-R2/screenshots/ (required PNG set).
+
+AntiPattern-Scan:
+docs/evidence/TB-P10-T022-R13-R2/antipattern-scan.md
+
+Lock-Registry:
+docs/evidence/TB-P10-T022-R13-R2/lock-registry.md
+
+Recovery-SoT:
+docs/evidence/TB-P10-T022-R13-R2/recovery-sot.md — Phase P10; Architect TB-P10-T022-R13-R1-R1; Impl TB-P10-T022-R13-R2; Issued none; T001 retained later; no T023/T002.
+
+Git:
+PLACEHOLDER_SHA
+
+Architectural-Concerns:
+none
+
+Visual-Concerns:
+Admin auth cookies unavailable; visual PNGs captured via evidence page mounting production VariantLivePreview/Embla rails (same renderer path as Admin Appearance/Review). Unrelated local dirty hero/selector work preserved unstaged.
+
+Blockers:
+none
+
+END_TOOBA_WORKER_RESULT

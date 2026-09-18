@@ -28,7 +28,7 @@ Channel: tooba-main
 Last Architect Accepted Task:
 
 ```text
-TB-P10-T022-R13
+TB-P10-T022-R13-R1-R1
 ```
 
 Prior accepted catalog wave:
@@ -50,7 +50,7 @@ TB-P07-T043
 Last Implementation Task:
 
 ```text
-TB-P10-T022-R13-R1
+TB-P10-T022-R13-R2
 ```
 
 Current Issued Task:
@@ -68,6 +68,8 @@ Current Repair Task:
 Implemented Under Review:
 
 ```text
+TB-P10-T022-R13-R2 — Product Showcase Variant Expansion (sunny/سانی, money/مانی, cinematic/سینمایی, cinematic-plus/سینمایی پلاس, explorer/کاشف; Embla rails; ProductCard unchanged); USER_VISUAL_ACCEPTED=YES (Appearance); Builder USER_VISUAL_ACCEPTED=NO
+TB-P10-T022-R13-R1-R1 — Hero Slider Builder Visual Closure Repair; Architect-ACCEPTED before R13-R2; USER_VISUAL_ACCEPTED=YES (Appearance); Builder USER_VISUAL_ACCEPTED=NO
 TB-P10-T022-R13-R1 — Hero Slider Builder Repair (six variants, height presets, structured CTA, visible validation); USER_VISUAL_ACCEPTED=YES (Appearance); Builder USER_VISUAL_ACCEPTED=NO
 TB-P11-T001 — Admin Completion Kickoff (Recovery SoT reconciliation + production-grade Admin gap audit); retained for later — not executed further; USER_VISUAL_ACCEPTED=YES (Appearance); Builder USER_VISUAL_ACCEPTED=NO
 TB-P10-T022-R13 — Final Builder Hardening (end-to-end completeness/consistency across 10 industry Template packs); Architect-ACCEPTED after worker Result; USER_VISUAL_ACCEPTED=YES (Appearance); Builder USER_VISUAL_ACCEPTED=NO
@@ -232,7 +234,7 @@ YES
 Worker Next State:
 
 ```text
-IDLE — waits for Bridge Task (no invented next task; do NOT invent TB-P10-T023; do NOT start TB-P11-T002; Builder USER_VISUAL_ACCEPTED=NO)
+IDLE — waits for Bridge Task (no invented next task; do NOT invent TB-P10-T023; do NOT start TB-P11-T002; TB-P11-T001 retained for later; Builder USER_VISUAL_ACCEPTED=NO)
 ```
 
 Issued but not accepted:

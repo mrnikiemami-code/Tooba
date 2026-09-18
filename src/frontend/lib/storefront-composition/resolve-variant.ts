@@ -7,6 +7,11 @@ const VARIANT_ALIASES: Record<string, string> = {
   "hero.full-width": "hero.fullscreen",
   "hero.contained": "hero.shapes",
   "hero.side-promos": "hero.diagonal",
+  sunny: "product.sunny",
+  money: "product.money",
+  cinematic: "product.cinematic",
+  "cinematic-plus": "product.cinematic-plus",
+  explorer: "product.explorer",
 };
 
 export function canonicalizeVariantKey(variantKey: string): string {
