@@ -1,4 +1,4 @@
-PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+﻿PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
 
 BEGIN_TOOBA_WORKER_RESULT
 
@@ -73,7 +73,7 @@ Recovery-SoT:
 docs/evidence/TB-P10-T022-R13-R2/recovery-sot.md — Phase P10; Architect TB-P10-T022-R13-R1-R1; Impl TB-P10-T022-R13-R2; Issued none; T001 retained later; no T023/T002.
 
 Git:
-18ca10c9db803af048bc4b8fadb9e982e16eb17c
+a08092bd3c3d1984e149db96f9b39a161766524f
 
 Architectural-Concerns:
 none
