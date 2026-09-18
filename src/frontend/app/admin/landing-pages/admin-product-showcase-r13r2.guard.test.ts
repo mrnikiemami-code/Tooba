@@ -68,16 +68,19 @@ test("existing Product Showcase named designs remain registered", () => {
 
 test("Embla dependency present and scoped to new rail component", () => {
   assert.ok(packageJson.dependencies?.["embla-carousel-react"]);
+  assert.ok(packageJson.dependencies?.["embla-carousel-autoplay"]);
   assert.match(emblaRails, /embla-carousel-react/);
+  assert.match(emblaRails, /embla-carousel-autoplay/);
   assert.match(emblaRails, /StorefrontProductCardView/);
   assert.match(emblaRails, /prefers-reduced-motion/);
-  assert.doesNotMatch(emblaRails, /three\.js|WebGL|canvas|video/i);
+  assert.match(emblaRails, /VARIANT_CONTRACTS|autoplayDelayMs/);
+  assert.doesNotMatch(emblaRails, /three\.js|WebGL|requestAnimationFrame|video/i);
   assert.match(sharedRenderer, /ProductShowcaseEmblaRail/);
   assert.doesNotMatch(sharedRenderer, /replace.*Swiper|migrate.*Swiper/i);
 });
 
-test("locks LOCK-SF-375…380 present", () => {
-  for (const id of [375, 376, 377, 378, 379, 380]) {
+test("locks LOCK-SF-375…385 present", () => {
+  for (const id of [375, 376, 377, 378, 379, 380, 381, 382, 383, 384, 385]) {
     assert.match(locks, new RegExp(`LOCK-SF-${id}`));
   }
 });

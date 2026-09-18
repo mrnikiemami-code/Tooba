@@ -1,0 +1,109 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+
+BEGIN_TOOBA_WORKER_RESULT
+
+Task-ID: TB-P10-T022-R13-R3
+Parent-Task: TB-P10-T022-R13-R2-R2
+Channel: tooba-main
+WorkerId: tooba-worker-01
+AgentType: cursor
+Status: PASS
+
+Summary:
+Repaired Product Showcase Distinct Variant V2: sunny/money/cinematic/cinematic-plus/explorer now own distinct composition+motion contracts with Embla Autoplay on exact published Landing `/landing/{slug}`. Root fix: decorative glow/peek overlays moved outside Embla viewport so sunny/explorer autoplay advances. ProductCard/old variants/Builder shell/Hero/Home/P11 untouched. LOCK-SF-381…385 recorded. User work 18ca10c9 preserved.
+
+Applicable-Locks:
+LOCK-SF-001…380 retained; LOCK-SF-381…385 added (docs/architecture/TOOBA-LOCKS.md).
+
+Recovery-Start:
+docs/evidence/TB-P10-T022-R13-R3/recovery-start.md — main @ 1c436aa0 == origin/main at claim; 18ca10c9 ancestor; Bridge 16be4e10… / TB-P10-T022-R13-R3.
+
+Visual-Rejection-Closure:
+Prior visually-similar rails + missing autoplay closed: static screenshots differ by contract language; autoplay-proof shows all five index advances on exact public route.
+
+Variant-Contracts:
+docs/evidence/TB-P10-T022-R13-R3/variant-contracts.md — sunny warm elevate+glow; money commerce ring; cinematic 3D stage; cinematic-plus deeper stage; explorer asymmetry peek.
+
+Shared-Rail-Architecture:
+docs/evidence/TB-P10-T022-R13-R3/shared-rail-architecture.md — one Embla rail + VARIANT_CONTRACTS; StorefrontProductCardView only.
+
+Autoplay-Architecture:
+docs/evidence/TB-P10-T022-R13-R3/autoplay-architecture.md — embla-carousel-autoplay@8.5.2; storePreview off; reduced-motion off; section hover/focus pause.
+
+Sunny-Proof:
+Exact Landing Admin→publish→`/landing/r13-r3-distinct-1789757504355-beq45` layout=sunny; static+autoplay 0→1 (6716ms). Screenshots sunny-static/autoplay-after.
+
+Money-Proof:
+Same exact route layout=money; autoplay 0→1 (5309ms). Screenshots money-static/autoplay-after.
+
+Cinematic-Proof:
+layout=cinematic; autoplay 0→1 (7716ms); mobile shot. Screenshots cinematic-*.
+
+CinematicPlus-Proof:
+layout=cinematic-plus; autoplay 0→1 (8501ms); mobile shot. Screenshots cinematic-plus-*.
+
+Explorer-Proof:
+layout=explorer; autoplay 0→1 (6208ms); mobile shot. Screenshots explorer-*.
+
+Static-Distinction:
+Five static screenshots on exact public route are compositionally distinct (warm elevate vs commerce ring vs 3D vs deeper 3D vs asymmetric peek). visual-evidence.md.
+
+Motion-Proof:
+docs/evidence/TB-P10-T022-R13-R3/autoplay-proof.md — all five YES.
+
+Admin-To-Storefront:
+docs/evidence/TB-P10-T022-R13-R3/page-route-binding.md — pageId 01a0b5dc-42bf-7000-b87c-cdd3ab166f7f; published Landing only (no evidence page).
+
+ProductCard-Preservation:
+StorefrontProductCardView reused; no ProductCard business/behavior redesign.
+
+Existing-Variant-Regression:
+product.amazing/zohreh/mahoor/card-carousel preserved (guard tests).
+
+RTL:
+Embla direction=rtl; PASS.
+
+Responsive:
+desktop harness 1440 + cinematic/plus/explorer mobile 390 screenshots.
+
+Reduced-Motion:
+prefers-reduced-motion disables autoplay plugin path.
+
+SSR:
+Public Landing SSR emits layout/embla/slide markers; client hydrates Embla+Autoplay.
+
+Performance:
+Lightweight Embla/CSS transforms only; no WebGL/Three/video/permanent RAF.
+
+Focused-Validation:
+docs/evidence/TB-P10-T022-R13-R3/focused-validation.md — critical-storefront + recovery-staleness + guards PASS.
+
+Visual-Evidence:
+docs/evidence/TB-P10-T022-R13-R3/visual-evidence.md + screenshots/.
+
+AntiPattern-Scan:
+docs/evidence/TB-P10-T022-R13-R3/antipattern-scan.md — CLEAN.
+
+Lock-Registry:
+docs/evidence/TB-P10-T022-R13-R3/lock-registry.md — LOCK-SF-381…385.
+
+Recovery-SoT:
+docs/evidence/TB-P10-T022-R13-R3/recovery-sot.md — Architect TB-P10-T022-R13-R2-R2; Impl TB-P10-T022-R13-R3; Phase P10; T001 later; no T023/T002.
+
+Git:
+branch: main
+HEAD: PLACEHOLDER_SHA
+origin/main: PLACEHOLDER_SHA
+HEAD==origin/main: YES
+18ca10c9 ancestor: YES
+
+Architectural-Concerns:
+none
+
+Visual-Concerns:
+none — Builder USER_VISUAL_ACCEPTED remains NO pending Architect visual review of distinct+autoplay proof.
+
+Blockers:
+none
+
+END_TOOBA_WORKER_RESULT

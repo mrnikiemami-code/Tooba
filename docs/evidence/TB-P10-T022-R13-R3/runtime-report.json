@@ -1,0 +1,398 @@
+{
+  "ok": true,
+  "steps": [
+    {
+      "name": "host-5088",
+      "pass": true
+    },
+    {
+      "name": "fe-3000",
+      "pass": true
+    },
+    {
+      "name": "dev-actor",
+      "pass": true
+    },
+    {
+      "name": "file:admin-picker-five-new-distinct-previews.png",
+      "pass": true,
+      "data": {
+        "bytes": 80111
+      }
+    },
+    {
+      "name": "published",
+      "pass": true,
+      "data": {
+        "badge": 1
+      }
+    },
+    {
+      "name": "page-route-binding",
+      "pass": true,
+      "data": {
+        "adminUrl": "http://127.0.0.1:3000/admin/landing-pages/01a0b5dc-42bf-7000-b87c-cdd3ab166f7f",
+        "pageId": "01a0b5dc-42bf-7000-b87c-cdd3ab166f7f",
+        "slug": "r13-r3-distinct-1789757504355-beq45",
+        "exactPublicPath": "/landing/r13-r3-distinct-1789757504355-beq45",
+        "exactPublicUrl": "http://127.0.0.1:3000/landing/r13-r3-distinct-1789757504355-beq45"
+      }
+    },
+    {
+      "name": "file:admin-review-cinematic-plus.png",
+      "pass": true,
+      "data": {
+        "bytes": 120377
+      }
+    },
+    {
+      "name": "admin-selected-sunny",
+      "pass": true,
+      "data": {
+        "selected": "true"
+      }
+    },
+    {
+      "name": "public-layout-sunny",
+      "pass": true
+    },
+    {
+      "name": "file:sunny-static.png",
+      "pass": true,
+      "data": {
+        "bytes": 276627
+      }
+    },
+    {
+      "name": "file:sunny-autoplay-after.png",
+      "pass": true,
+      "data": {
+        "bytes": 245311
+      }
+    },
+    {
+      "name": "autoplay-sunny",
+      "pass": true,
+      "data": {
+        "beforeIdx": "0",
+        "afterIdx": "1",
+        "elapsed": 6716,
+        "autoAttr": "on"
+      }
+    },
+    {
+      "name": "admin-selected-money",
+      "pass": true,
+      "data": {
+        "selected": "true"
+      }
+    },
+    {
+      "name": "public-layout-money",
+      "pass": true
+    },
+    {
+      "name": "file:money-static.png",
+      "pass": true,
+      "data": {
+        "bytes": 305121
+      }
+    },
+    {
+      "name": "file:money-autoplay-after.png",
+      "pass": true,
+      "data": {
+        "bytes": 303180
+      }
+    },
+    {
+      "name": "autoplay-money",
+      "pass": true,
+      "data": {
+        "beforeIdx": "0",
+        "afterIdx": "1",
+        "elapsed": 5309,
+        "autoAttr": "on"
+      }
+    },
+    {
+      "name": "admin-selected-cinematic",
+      "pass": true,
+      "data": {
+        "selected": "true"
+      }
+    },
+    {
+      "name": "public-layout-cinematic",
+      "pass": true
+    },
+    {
+      "name": "file:cinematic-static.png",
+      "pass": true,
+      "data": {
+        "bytes": 448208
+      }
+    },
+    {
+      "name": "file:cinematic-autoplay-after.png",
+      "pass": true,
+      "data": {
+        "bytes": 359923
+      }
+    },
+    {
+      "name": "autoplay-cinematic",
+      "pass": true,
+      "data": {
+        "beforeIdx": "0",
+        "afterIdx": "1",
+        "elapsed": 7716,
+        "autoAttr": "on"
+      }
+    },
+    {
+      "name": "file:cinematic-mobile.png",
+      "pass": true,
+      "data": {
+        "bytes": 112919
+      }
+    },
+    {
+      "name": "admin-selected-cinematic-plus",
+      "pass": true,
+      "data": {
+        "selected": "true"
+      }
+    },
+    {
+      "name": "public-layout-cinematic-plus",
+      "pass": true
+    },
+    {
+      "name": "file:cinematic-plus-static.png",
+      "pass": true,
+      "data": {
+        "bytes": 474154
+      }
+    },
+    {
+      "name": "file:cinematic-plus-autoplay-after.png",
+      "pass": true,
+      "data": {
+        "bytes": 372778
+      }
+    },
+    {
+      "name": "autoplay-cinematic-plus",
+      "pass": true,
+      "data": {
+        "beforeIdx": "0",
+        "afterIdx": "1",
+        "elapsed": 8501,
+        "autoAttr": "on"
+      }
+    },
+    {
+      "name": "file:cinematic-plus-mobile.png",
+      "pass": true,
+      "data": {
+        "bytes": 121568
+      }
+    },
+    {
+      "name": "admin-selected-explorer",
+      "pass": true,
+      "data": {
+        "selected": "true"
+      }
+    },
+    {
+      "name": "public-layout-explorer",
+      "pass": true
+    },
+    {
+      "name": "file:explorer-static.png",
+      "pass": true,
+      "data": {
+        "bytes": 299545
+      }
+    },
+    {
+      "name": "file:explorer-autoplay-after.png",
+      "pass": true,
+      "data": {
+        "bytes": 299398
+      }
+    },
+    {
+      "name": "autoplay-explorer",
+      "pass": true,
+      "data": {
+        "beforeIdx": "0",
+        "afterIdx": "1",
+        "elapsed": 6208,
+        "autoAttr": "on"
+      }
+    },
+    {
+      "name": "file:explorer-mobile.png",
+      "pass": true,
+      "data": {
+        "bytes": 66143
+      }
+    },
+    {
+      "name": "existing-preserved:آریا",
+      "pass": true
+    },
+    {
+      "name": "existing-preserved:زهره",
+      "pass": true
+    },
+    {
+      "name": "existing-preserved:ماهور",
+      "pass": true
+    },
+    {
+      "name": "existing-preserved:شگفت",
+      "pass": true
+    }
+  ],
+  "files": {
+    "admin-picker-five-new-distinct-previews.png": {
+      "bytes": 80111
+    },
+    "admin-review-cinematic-plus.png": {
+      "bytes": 120377
+    },
+    "sunny-static.png": {
+      "bytes": 276627
+    },
+    "sunny-autoplay-after.png": {
+      "bytes": 245311
+    },
+    "money-static.png": {
+      "bytes": 305121
+    },
+    "money-autoplay-after.png": {
+      "bytes": 303180
+    },
+    "cinematic-static.png": {
+      "bytes": 448208
+    },
+    "cinematic-autoplay-after.png": {
+      "bytes": 359923
+    },
+    "cinematic-mobile.png": {
+      "bytes": 112919
+    },
+    "cinematic-plus-static.png": {
+      "bytes": 474154
+    },
+    "cinematic-plus-autoplay-after.png": {
+      "bytes": 372778
+    },
+    "cinematic-plus-mobile.png": {
+      "bytes": 121568
+    },
+    "explorer-static.png": {
+      "bytes": 299545
+    },
+    "explorer-autoplay-after.png": {
+      "bytes": 299398
+    },
+    "explorer-mobile.png": {
+      "bytes": 66143
+    }
+  },
+  "errors": [],
+  "blockers": [],
+  "auth": {
+    "devContext": {
+      "actorUserId": "01a036c2-970e-7000-8eb7-94bf5cc2d8db",
+      "actorLabel": "مدیر نمونهٔ توبا",
+      "tenantId": "store-alpha"
+    }
+  },
+  "pageBinding": {
+    "adminUrl": "http://127.0.0.1:3000/admin/landing-pages/01a0b5dc-42bf-7000-b87c-cdd3ab166f7f",
+    "pageId": "01a0b5dc-42bf-7000-b87c-cdd3ab166f7f",
+    "slug": "r13-r3-distinct-1789757504355-beq45",
+    "exactPublicPath": "/landing/r13-r3-distinct-1789757504355-beq45",
+    "exactPublicUrl": "http://127.0.0.1:3000/landing/r13-r3-distinct-1789757504355-beq45"
+  },
+  "autoplay": [
+    {
+      "variant": "product.sunny",
+      "layout": "sunny",
+      "beforeIdx": "0",
+      "afterIdx": "1",
+      "elapsed": 6716,
+      "autoAttr": "on",
+      "advanced": true
+    },
+    {
+      "variant": "product.money",
+      "layout": "money",
+      "beforeIdx": "0",
+      "afterIdx": "1",
+      "elapsed": 5309,
+      "autoAttr": "on",
+      "advanced": true
+    },
+    {
+      "variant": "product.cinematic",
+      "layout": "cinematic",
+      "beforeIdx": "0",
+      "afterIdx": "1",
+      "elapsed": 7716,
+      "autoAttr": "on",
+      "advanced": true
+    },
+    {
+      "variant": "product.cinematic-plus",
+      "layout": "cinematic-plus",
+      "beforeIdx": "0",
+      "afterIdx": "1",
+      "elapsed": 8501,
+      "autoAttr": "on",
+      "advanced": true
+    },
+    {
+      "variant": "product.explorer",
+      "layout": "explorer",
+      "beforeIdx": "0",
+      "afterIdx": "1",
+      "elapsed": 6208,
+      "autoAttr": "on",
+      "advanced": true
+    }
+  ],
+  "variants": {
+    "sunny": {
+      "beforeIdx": "0",
+      "afterIdx": "1",
+      "autoAttr": "on"
+    },
+    "money": {
+      "beforeIdx": "0",
+      "afterIdx": "1",
+      "autoAttr": "on"
+    },
+    "cinematic": {
+      "beforeIdx": "0",
+      "afterIdx": "1",
+      "autoAttr": "on"
+    },
+    "cinematic-plus": {
+      "beforeIdx": "0",
+      "afterIdx": "1",
+      "autoAttr": "on"
+    },
+    "explorer": {
+      "beforeIdx": "0",
+      "afterIdx": "1",
+      "autoAttr": "on"
+    }
+  }
+}

@@ -1312,3 +1312,23 @@ Cinematic depth effects use lightweight CSS transforms and respect RTL, responsi
 
 Product Showcase variant expansion is additive only; no redesign of existing Builder/Product Showcase UX is permitted.
 
+### LOCK-SF-381 — Product Showcase static visual distinction
+
+The five new Product Showcase variants must be visually distinguishable from static screenshots; equivalent compositions with cosmetic-only differences are not acceptable.
+
+### LOCK-SF-382 — Distinct motion/composition contracts
+
+Sunny, Money, Cinematic, Cinematic Plus, and Explorer each own a distinct motion/composition contract while sharing one underlying rail engine and unchanged ProductCard.
+
+### LOCK-SF-383 — Product Showcase autoplay default
+
+The five new Product Showcase variants autoplay by default unless explicitly disabled by canonical section settings; reduced-motion disables autoplay.
+
+### LOCK-SF-384 — Lightweight cinematic Embla/CSS only
+
+Product Showcase cinematic behavior must be implemented with lightweight Embla/CSS-transform behavior, not WebGL/Three.js/video or permanent RAF animation.
+
+### LOCK-SF-385 — Real Admin→Storefront visual acceptance
+
+Visual quality acceptance requires real Admin→published Storefront proof; technical wiring alone is insufficient.
+

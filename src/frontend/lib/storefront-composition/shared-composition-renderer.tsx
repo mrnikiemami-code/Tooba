@@ -246,6 +246,7 @@ export function renderSharedHomeSection(
           products={products}
           title={config.title}
           href={config.href ?? "/products"}
+          enableAutoplay
         />
       );
     }
@@ -646,6 +647,7 @@ export function renderSharedLandingSection(input: SharedLandingRenderInput): Rea
           title={typeof config.title === "string" ? config.title : undefined}
           href={typeof config.href === "string" ? config.href : "/products"}
           previewLocale={locale}
+          enableAutoplay={!storePreview}
         />
       );
     }
