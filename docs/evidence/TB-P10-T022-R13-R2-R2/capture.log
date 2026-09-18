@@ -1,0 +1,18 @@
+﻿{
+  "ok": true,
+  "errors": [],
+  "blockers": [],
+  "pageBinding": {
+    "pageId": "01a0b5a6-6d33-7000-876e-78575bbe3f04",
+    "pageType": "Landing",
+    "slug": "r13-r2-r2-exact-route-1789753976219-9b3u1",
+    "status": "Published",
+    "exactPublicPath": "/landing/r13-r2-r2-exact-route-1789753976219-9b3u1"
+  },
+  "files": [
+    "admin-sunny-selected-exact-page.png",
+    "public-sunny-exact-route.png",
+    "admin-cinematic-selected-exact-page.png",
+    "public-cinematic-exact-route.png"
+  ]
+}

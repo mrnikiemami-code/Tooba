@@ -1,0 +1,341 @@
+{
+  "ok": true,
+  "steps": [
+    {
+      "name": "host-5088",
+      "pass": true
+    },
+    {
+      "name": "fe-3000",
+      "pass": true
+    },
+    {
+      "name": "dev-actor-fixture",
+      "pass": true,
+      "data": {
+        "actorUserId": "01a036c2-970e-7000-8eb7-94bf5cc2d8db"
+      }
+    },
+    {
+      "name": "admin-page-created",
+      "pass": true,
+      "data": {
+        "pageId": "01a0b5a6-6d33-7000-876e-78575bbe3f04",
+        "adminUrl": "http://127.0.0.1:3000/admin/landing-pages/01a0b5a6-6d33-7000-876e-78575bbe3f04"
+      }
+    },
+    {
+      "name": "file:admin-sunny-selected-exact-page.png",
+      "pass": true,
+      "data": {
+        "bytes": 94927
+      }
+    },
+    {
+      "name": "sunny-section-saved",
+      "pass": true
+    },
+    {
+      "name": "publish",
+      "pass": true,
+      "data": {
+        "publishedBadge": 1
+      }
+    },
+    {
+      "name": "page-route-binding",
+      "pass": true,
+      "data": {
+        "pageId": "01a0b5a6-6d33-7000-876e-78575bbe3f04",
+        "pageType": "Landing",
+        "title": "R13-R2-R2 Exact Route 1789753976219",
+        "slug": "r13-r2-r2-exact-route-1789753976219-9b3u1",
+        "status": "Published",
+        "exactPublicPath": "/landing/r13-r2-r2-exact-route-1789753976219-9b3u1",
+        "exactPublicUrl": "http://127.0.0.1:3000/landing/r13-r2-r2-exact-route-1789753976219-9b3u1",
+        "exactPublicUrlFa": "http://127.0.0.1:3000/landing/r13-r2-r2-exact-route-1789753976219-9b3u1"
+      }
+    },
+    {
+      "name": "sunny-exact-route-layout",
+      "pass": true,
+      "data": {
+        "url": "http://127.0.0.1:3000/landing/r13-r2-r2-exact-route-1789753976219-9b3u1",
+        "landingCanonical": true,
+        "layout": true,
+        "testId": true,
+        "embla": true,
+        "productCard": true
+      }
+    },
+    {
+      "name": "sunny-exact-route-embla",
+      "pass": true,
+      "data": {
+        "url": "http://127.0.0.1:3000/landing/r13-r2-r2-exact-route-1789753976219-9b3u1",
+        "landingCanonical": true,
+        "layout": true,
+        "testId": true,
+        "embla": true,
+        "productCard": true
+      }
+    },
+    {
+      "name": "file:public-sunny-exact-route.png",
+      "pass": true,
+      "data": {
+        "bytes": 231886
+      }
+    },
+    {
+      "name": "sunny-persisted-after-refresh",
+      "pass": true,
+      "data": {
+        "url": "http://127.0.0.1:3000/landing/r13-r2-r2-exact-route-1789753976219-9b3u1",
+        "landingCanonical": true,
+        "layout": true,
+        "testId": true,
+        "embla": true,
+        "productCard": true
+      }
+    },
+    {
+      "name": "ssr-sunny-exact-route",
+      "pass": true,
+      "data": {
+        "status": 200,
+        "layout": true,
+        "testId": true,
+        "embla": true,
+        "heading": true,
+        "pdpLink": true,
+        "price": true
+      }
+    },
+    {
+      "name": "productcard-title-price-link",
+      "pass": true,
+      "data": {
+        "cardCount": 1,
+        "linkCount": 1,
+        "href": "/fa/products/demo-prod-mobile-tablet-phones-smartphones-1",
+        "text": "گوشی هوشمند سری 1 ۹۹۸ ریال افزودن به سبد",
+        "hasPrice": true
+      }
+    },
+    {
+      "name": "admin-selected-product.cinematic",
+      "pass": true,
+      "data": {
+        "cinSelected": "true"
+      }
+    },
+    {
+      "name": "file:admin-cinematic-selected-exact-page.png",
+      "pass": true,
+      "data": {
+        "bytes": 89022
+      }
+    },
+    {
+      "name": "cinematic-section-saved",
+      "pass": true
+    },
+    {
+      "name": "same-exact-route-after-cinematic",
+      "pass": true,
+      "data": {
+        "before": "/landing/r13-r2-r2-exact-route-1789753976219-9b3u1",
+        "after": "/landing/r13-r2-r2-exact-route-1789753976219-9b3u1"
+      }
+    },
+    {
+      "name": "cinematic-exact-route-layout",
+      "pass": true,
+      "data": {
+        "url": "http://127.0.0.1:3000/landing/r13-r2-r2-exact-route-1789753976219-9b3u1",
+        "landingCanonical": true,
+        "layout": true,
+        "testId": true,
+        "embla": true,
+        "productCard": true
+      }
+    },
+    {
+      "name": "file:public-cinematic-exact-route.png",
+      "pass": true,
+      "data": {
+        "bytes": 194103
+      }
+    },
+    {
+      "name": "cinematic-persisted-after-refresh",
+      "pass": true,
+      "data": {
+        "layout": true,
+        "testId": true,
+        "embla": true,
+        "notSunny": true
+      }
+    },
+    {
+      "name": "no-stale-sunny-after-cinematic-publish",
+      "pass": true,
+      "data": {
+        "layout": true,
+        "testId": true,
+        "embla": true,
+        "notSunny": true
+      }
+    },
+    {
+      "name": "ssr-cinematic-exact-route",
+      "pass": true,
+      "data": {
+        "status": 200,
+        "layout": true,
+        "testId": true,
+        "embla": true,
+        "product": true
+      }
+    }
+  ],
+  "files": {
+    "admin-sunny-selected-exact-page.png": {
+      "bytes": 94927
+    },
+    "public-sunny-exact-route.png": {
+      "bytes": 231886
+    },
+    "admin-cinematic-selected-exact-page.png": {
+      "bytes": 89022
+    },
+    "public-cinematic-exact-route.png": {
+      "bytes": 194103
+    }
+  },
+  "errors": [],
+  "blockers": [],
+  "auth": {
+    "devContext": {
+      "actorUserId": "01a036c2-970e-7000-8eb7-94bf5cc2d8db",
+      "actorLabel": "مدیر نمونهٔ توبا",
+      "tenantId": "store-alpha"
+    }
+  },
+  "pageBinding": {
+    "adminUrl": "http://127.0.0.1:3000/admin/landing-pages/01a0b5a6-6d33-7000-876e-78575bbe3f04",
+    "adminApi": {
+      "ok": true,
+      "data": {
+        "pageId": "01a0b5a6-6d33-7000-876e-78575bbe3f04",
+        "pageType": "Landing",
+        "locale": "fa",
+        "slug": "r13-r2-r2-exact-route-1789753976219-9b3u1",
+        "title": "R13-R2-R2 Exact Route 1789753976219",
+        "seoTitle": "R13-R2-R2 Product Showcase SEO",
+        "seoDescription": "Exact-route closure proof for Product Showcase Embla variants.",
+        "robotsIndex": true,
+        "robotsFollow": true,
+        "templateKey": "default",
+        "status": "Published",
+        "updatedAt": "2026-09-18T17:53:02.595791+00:00"
+      }
+    },
+    "pageId": "01a0b5a6-6d33-7000-876e-78575bbe3f04",
+    "pageType": "Landing",
+    "title": "R13-R2-R2 Exact Route 1789753976219",
+    "slug": "r13-r2-r2-exact-route-1789753976219-9b3u1",
+    "status": "Published",
+    "exactPublicPath": "/landing/r13-r2-r2-exact-route-1789753976219-9b3u1",
+    "exactPublicUrl": "http://127.0.0.1:3000/landing/r13-r2-r2-exact-route-1789753976219-9b3u1",
+    "exactPublicUrlFa": "http://127.0.0.1:3000/landing/r13-r2-r2-exact-route-1789753976219-9b3u1",
+    "afterCinematic": {
+      "pageId": "01a0b5a6-6d33-7000-876e-78575bbe3f04",
+      "pageType": "Landing",
+      "title": "R13-R2-R2 Exact Route 1789753976219",
+      "slug": "r13-r2-r2-exact-route-1789753976219-9b3u1",
+      "status": "Published",
+      "exactPublicPath": "/landing/r13-r2-r2-exact-route-1789753976219-9b3u1",
+      "exactPublicUrl": "http://127.0.0.1:3000/landing/r13-r2-r2-exact-route-1789753976219-9b3u1",
+      "exactPublicUrlFa": "http://127.0.0.1:3000/landing/r13-r2-r2-exact-route-1789753976219-9b3u1"
+    }
+  },
+  "sunny": {
+    "first": {
+      "url": "http://127.0.0.1:3000/landing/r13-r2-r2-exact-route-1789753976219-9b3u1",
+      "landingCanonical": true,
+      "layout": true,
+      "testId": true,
+      "embla": true,
+      "productCard": true
+    },
+    "afterRefresh": {
+      "url": "http://127.0.0.1:3000/landing/r13-r2-r2-exact-route-1789753976219-9b3u1",
+      "landingCanonical": true,
+      "layout": true,
+      "testId": true,
+      "embla": true,
+      "productCard": true
+    }
+  },
+  "cinematic": {
+    "first": {
+      "url": "http://127.0.0.1:3000/landing/r13-r2-r2-exact-route-1789753976219-9b3u1",
+      "landingCanonical": true,
+      "layout": true,
+      "testId": true,
+      "embla": true,
+      "productCard": true
+    },
+    "afterRefresh": {
+      "layout": true,
+      "testId": true,
+      "embla": true,
+      "notSunny": true
+    }
+  },
+  "ssr": {
+    "sunny": {
+      "status": 200,
+      "layout": true,
+      "testId": true,
+      "embla": true,
+      "heading": true,
+      "pdpLink": true,
+      "price": true
+    },
+    "cinematic": {
+      "status": 200,
+      "layout": true,
+      "testId": true,
+      "embla": true,
+      "product": true
+    }
+  },
+  "productCard": {
+    "cardCount": 1,
+    "linkCount": 1,
+    "href": "/fa/products/demo-prod-mobile-tablet-phones-smartphones-1",
+    "text": "گوشی هوشمند سری 1 ۹۹۸ ریال افزودن به سبد",
+    "hasPrice": true,
+    "wishlist": 8,
+    "atc": 8
+  },
+  "cache": {
+    "sunnyRefresh": {
+      "url": "http://127.0.0.1:3000/landing/r13-r2-r2-exact-route-1789753976219-9b3u1",
+      "landingCanonical": true,
+      "layout": true,
+      "testId": true,
+      "embla": true,
+      "productCard": true
+    },
+    "cinematicRefresh": {
+      "layout": true,
+      "testId": true,
+      "embla": true,
+      "notSunny": true
+    }
+  }
+}

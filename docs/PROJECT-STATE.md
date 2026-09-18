@@ -62,7 +62,7 @@ TB-P05-GATE
 Last Implementation Task:
 
 ```text
-TB-P10-T022-R13-R2-R1
+TB-P10-T022-R13-R2-R2
 ```
 
 Current Issued Task:
@@ -80,6 +80,7 @@ Current Repair Task:
 Implemented Under Review:
 
 ```text
+TB-P10-T022-R13-R2-R2 — Product Showcase Final Closure (Admin→exact published Landing route sunny+cinematic; real Git SHA; user-work 18ca10c9 preserved); USER_VISUAL_ACCEPTED=YES (Appearance); Builder USER_VISUAL_ACCEPTED=NO
 TB-P10-T022-R13-R2-R1 — Product Showcase Variant Visual Closure (real Admin Appearance/Review proof; user-work 18ca10c9 preserved); USER_VISUAL_ACCEPTED=YES (Appearance); Builder USER_VISUAL_ACCEPTED=NO
 TB-P10-T022-R13-R2 — Product Showcase Variant Expansion (sunny/سانی, money/مانی, cinematic/سینمایی, cinematic-plus/سینمایی پلاس, explorer/کاشف; Embla rails; ProductCard unchanged); USER_VISUAL_ACCEPTED=YES (Appearance); Builder USER_VISUAL_ACCEPTED=NO
 TB-P10-T022-R13-R1-R1 — Hero Slider Builder Visual Closure Repair; Architect-ACCEPTED before R13-R2; USER_VISUAL_ACCEPTED=YES (Appearance); Builder USER_VISUAL_ACCEPTED=NO
