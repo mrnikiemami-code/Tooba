@@ -772,6 +772,7 @@ export function renderSharedLandingSection(input: SharedLandingRenderInput): Rea
             src,
             href: typeof item.href === "string" ? item.href : undefined,
             title: typeof item.title === "string" ? item.title : undefined,
+            alt: typeof item.alt === "string" ? item.alt : undefined,
             objectPosition: resolveObjectPosition(
               typeof item.focalPointX === "number" ? item.focalPointX : null,
               typeof item.focalPointY === "number" ? item.focalPointY : null,

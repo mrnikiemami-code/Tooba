@@ -9,7 +9,6 @@ import { listAdminMenus } from "../menus/admin-menus-api.ts";
 import { MediaLibraryDialog } from "../media-library-dialog.tsx";
 import { mediaPreviewUrl, type MediaAssetDto } from "../media-api.ts";
 import { AdminResourceSelector, ResourceSelectorTrigger } from "./admin-resource-selector.tsx";
-import { bannerSlotCellClass, bannerSlotLayoutClass } from "./layout-aware-previews.tsx";
 import { VariantLivePreview } from "../../../lib/storefront-composition/variant-live-preview.tsx";
 import {
   sourceCapabilityForVariant,
@@ -19,6 +18,7 @@ import type { AdminSelectableDataSource } from "../../../lib/storefront-composit
 import { SIZE_PRESETS } from "../../../lib/storefront-composition/types.ts";
 import { SIZE_PRESET_CONTRACTS } from "../../../lib/storefront-composition/size-presets.ts";
 import { AdminHeroSliderSettings } from "./admin-hero-slider-settings.tsx";
+import { AdminBannerSliderSettings } from "./admin-banner-slider-settings.tsx";
 import type { SectionWizardStep } from "./admin-landing-section-forms-types.ts";
 
 export type { SectionWizardStep };
@@ -33,23 +33,6 @@ function flattenCategories(nodes: CategoryTreeNodeDto[]): { value: string; label
   return nodes
     .filter((node) => node.status !== "Archived")
     .map((node) => ({ value: node.id, label: node.name }));
-}
-
-type BannerItem = { imageUrl?: string; href?: string; title?: string; text?: string; ctaLabel?: string };
-
-function asBannerItems(value: unknown): BannerItem[] {
-  if (!Array.isArray(value)) return [];
-  return value.map((item) => {
-    if (!item || typeof item !== "object") return { imageUrl: "", href: "", title: "" };
-    const row = item as Record<string, unknown>;
-    return {
-      imageUrl: typeof row.imageUrl === "string" ? row.imageUrl : "",
-      href: typeof row.href === "string" ? row.href : "",
-      title: typeof row.title === "string" ? row.title : "",
-      text: typeof row.text === "string" ? row.text : "",
-      ctaLabel: typeof row.ctaLabel === "string" ? row.ctaLabel : "",
-    };
-  });
 }
 
 /** Settings + source fields for wizard (no language, no story authoring). */
@@ -84,8 +67,6 @@ export function LandingSectionForm({
 
   if (showBannerSlots && mode !== "source") {
     const slots = Math.max(1, bannerSlotCountForVariant(variantKey || "banner.single"));
-    const current = asBannerItems(value.items);
-    const items = Array.from({ length: slots }, (_, index) => current[index] ?? { imageUrl: "", href: "", title: "" });
     const heightPreset = typeof value.heightPreset === "string" ? value.heightPreset : "Medium";
     return (
       <div className="space-y-3" data-testid="landing-section-form">
@@ -107,56 +88,12 @@ export function LandingSectionForm({
             </select>
           </label>
         ) : null}
-        <div
-          className={bannerSlotLayoutClass(variantKey)}
-          data-testid="banner-slot-editor"
-          data-banner-variant={variantKey}
-        >
-          <p className="col-span-full text-sm font-bold">جایگاه‌های بنر ({slots.toLocaleString("fa-IR")} مورد)</p>
-          {items.every((item) => !(item.imageUrl ?? "").trim()) ? (
-            <p className="col-span-full rounded-xl border border-dashed px-3 py-2 text-xs text-muted" data-testid="banner-empty-media-hint">
-              هنوز تصویری برای بنرها تنظیم نشده. برای هر جایگاه یک آدرس تصویر وارد کنید تا در فروشگاه خالی نماند.
-            </p>
-          ) : null}
-          {items.map((item, index) => (
-            <div
-              key={index}
-              className={`rounded-xl border border-border bg-slate-50 p-3 space-y-2 ${bannerSlotCellClass(variantKey, index)}`}
-              data-testid={`banner-slot-${index}`}
-            >
-              <p className="text-xs font-bold text-muted">جایگاه {(index + 1).toLocaleString("fa-IR")}</p>
-              <TextField
-                label="آدرس تصویر"
-                value={item.imageUrl ?? ""}
-                onChange={(next) => {
-                  const nextItems = items.slice();
-                  nextItems[index] = { ...item, imageUrl: next };
-                  set({ items: nextItems });
-                }}
-                placeholder="https://…"
-              />
-              <TextField
-                label="پیوند مقصد"
-                value={item.href ?? ""}
-                onChange={(next) => {
-                  const nextItems = items.slice();
-                  nextItems[index] = { ...item, href: next };
-                  set({ items: nextItems });
-                }}
-                placeholder="/offers"
-              />
-              <TextField
-                label="عنوان کوتاه"
-                value={item.title ?? ""}
-                onChange={(next) => {
-                  const nextItems = items.slice();
-                  nextItems[index] = { ...item, title: next };
-                  set({ items: nextItems });
-                }}
-              />
-            </div>
-          ))}
-        </div>
+        <AdminBannerSliderSettings
+          value={value}
+          onChange={onChange}
+          slotCount={slots}
+          showErrors={Boolean(heroShowErrors)}
+        />
       </div>
     );
   }

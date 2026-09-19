@@ -585,10 +585,17 @@ public static class StoreLandingPageSectionConfig
             {
                 mediaAssetId = OptionalGuid(item, "mediaAssetId"),
                 imageUrl = OptionalString(item, "imageUrl", 512),
+                alt = OptionalString(item, "alt", StoreLandingPageSectionRegistry.TitleMaxLength)
+                    ?? OptionalString(item, "altText", StoreLandingPageSectionRegistry.TitleMaxLength),
                 href = OptionalHref(item) ?? OptionalString(item, "href", 256),
                 title = OptionalString(item, "title", StoreLandingPageSectionRegistry.TitleMaxLength),
                 text = OptionalString(item, "text", 240),
                 ctaLabel = OptionalString(item, "ctaLabel", 80),
+                destinationType = OptionalString(item, "destinationType", 32),
+                targetId = OptionalString(item, "targetId", 64),
+                targetSlug = OptionalString(item, "targetSlug", 200),
+                targetLabel = OptionalString(item, "targetLabel", StoreLandingPageSectionRegistry.TitleMaxLength),
+                customUrl = OptionalString(item, "customUrl", 256),
             });
         }
 
