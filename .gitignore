@@ -28,3 +28,5 @@ help.pdf
 src/backend/Host/Tooba.Host/*.log
 src/frontend/next-dev*.log
 src/frontend/next-dev*.err.log
+
+.tmp-t014-test-out/
