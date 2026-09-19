@@ -77,8 +77,8 @@ docs/evidence/TB-P10-T022-R16/recovery-sot.md; PROJECT-STATE + RECOVERY-CONTEXT 
 
 Git:
 branch=main
-HEAD=TIP_PLACEHOLDER
-origin/main=TIP_PLACEHOLDER
+HEAD=e4fa011b7daccc059b77a7db609474b73433aa2d
+origin/main=e4fa011b7daccc059b77a7db609474b73433aa2d
 HEAD==origin/main=YES
 18ca10c9-ancestor=YES
 task-artifact=docs/ai/tasks/TB-P10-T022-R16.task.md
