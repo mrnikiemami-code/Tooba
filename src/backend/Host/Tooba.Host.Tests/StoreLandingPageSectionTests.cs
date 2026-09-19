@@ -161,7 +161,11 @@ public sealed class StoreLandingPageSectionTests
                   "targetSlug":"",
                   "targetLabel":"",
                   "customUrl":"",
-                  "href":"/products"
+                  "href":"/products",
+                  "panelMediaAssetId":"cccccccc-cccc-4ccc-8ccc-cccccccccccc",
+                  "panelImageUrl":"/v1/storefront/media/cccccccc-cccc-4ccc-8ccc-cccccccccccc",
+                  "panelColor":"#112233",
+                  "panelSize":"medium"
                 }
               ]
             }
@@ -176,6 +180,10 @@ public sealed class StoreLandingPageSectionTests
         Assert.Equal(2, root.GetProperty("slides").GetArrayLength());
         Assert.Equal("اسلاید دو", root.GetProperty("slides")[1].GetProperty("title").GetString());
         Assert.Equal("all-products", root.GetProperty("slides")[1].GetProperty("destinationType").GetString());
+        Assert.Equal("cccccccc-cccc-4ccc-8ccc-cccccccccccc", root.GetProperty("slides")[1].GetProperty("panelMediaAssetId").GetString());
+        Assert.Equal("medium", root.GetProperty("slides")[1].GetProperty("panelSize").GetString());
+        Assert.Equal("#0f172a", root.GetProperty("slides")[0].GetProperty("panelColor").GetString());
+        Assert.Equal("xlarge", root.GetProperty("slides")[0].GetProperty("panelSize").GetString());
     }
 
     private static async Task<StoreLandingPageAdminView> PublishPageAsync(StoreLandingPageComposer composer)

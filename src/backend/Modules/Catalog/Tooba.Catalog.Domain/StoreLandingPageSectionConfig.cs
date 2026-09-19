@@ -124,6 +124,10 @@ public static class StoreLandingPageSectionConfig
                 targetLabel = s.TargetLabel,
                 customUrl = s.CustomUrl,
                 href = s.Href,
+                panelMediaAssetId = s.PanelMediaAssetId,
+                panelImageUrl = s.PanelImageUrl,
+                panelColor = s.PanelColor,
+                panelSize = s.PanelSize,
             }).ToArray(),
         }, JsonOptions);
     }
@@ -142,6 +146,10 @@ public static class StoreLandingPageSectionConfig
         public string? TargetLabel { get; init; }
         public string? CustomUrl { get; init; }
         public string? Href { get; init; }
+        public Guid? PanelMediaAssetId { get; init; }
+        public string? PanelImageUrl { get; init; }
+        public string PanelColor { get; init; } = "#0f172a";
+        public string PanelSize { get; init; } = "xlarge";
     }
 
     private static List<HeroSlideNormalized> ReadHeroSlides(JsonElement root)
@@ -194,6 +202,18 @@ public static class StoreLandingPageSectionConfig
                 throw new PlatformHttpException(400, "آدرس بخش معتبر نیست.", "landing.section.href.invalid");
             }
 
+            var panelColorRaw = OptionalString(item, "panelColor", 16);
+            var panelColor = IsHexColor(panelColorRaw) ? panelColorRaw! : "#0f172a";
+            var panelSizeRaw = (OptionalString(item, "panelSize", 16) ?? "xlarge").Trim().ToLowerInvariant();
+            var panelSize = panelSizeRaw switch
+            {
+                "small" => "small",
+                "medium" => "medium",
+                "large" => "large",
+                "xlarge" => "xlarge",
+                _ => "xlarge",
+            };
+
             slides.Add(new HeroSlideNormalized
             {
                 MediaAssetId = mediaAssetId,
@@ -208,6 +228,10 @@ public static class StoreLandingPageSectionConfig
                 TargetLabel = OptionalString(item, "targetLabel", StoreLandingPageSectionRegistry.TitleMaxLength),
                 CustomUrl = customUrl,
                 Href = href,
+                PanelMediaAssetId = OptionalGuid(item, "panelMediaAssetId"),
+                PanelImageUrl = OptionalString(item, "panelImageUrl", 512),
+                PanelColor = panelColor,
+                PanelSize = panelSize,
             });
         }
 
@@ -660,6 +684,28 @@ public static class StoreLandingPageSectionConfig
         }
 
         throw new PlatformHttpException(400, "شناسه معتبر نیست.", "landing.section.id.invalid");
+    }
+
+    private static bool IsHexColor(string? value)
+    {
+        if (value is null || value.Length != 7 || value[0] != '#')
+        {
+            return false;
+        }
+
+        for (var i = 1; i < 7; i++)
+        {
+            var c = value[i];
+            var ok = (c >= '0' && c <= '9')
+                || (c >= 'a' && c <= 'f')
+                || (c >= 'A' && c <= 'F');
+            if (!ok)
+            {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     private static Guid RequiredGuid(JsonElement root, string name) =>
