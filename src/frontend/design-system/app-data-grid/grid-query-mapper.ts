@@ -149,7 +149,7 @@ export function fromHostGridPage<TItem, TRow>(
 
 export const DEFAULT_GRID_QUERY: GridServerQuery = {
   page: 1,
-  pageSize: 20,
+  pageSize: 10,
   sorts: [{ columnId: "updatedAt", direction: "desc" }],
   filters: {},
   advancedFilter: { conditions: [], connectors: [] },

@@ -71,7 +71,7 @@ export function sourceCapabilityForVariant(variantKey: string): SourceCapability
     manualSupported: strategies.includes("Manual"),
     multiSelect: MULTI_SELECT_SECTIONS.has(variant.sectionTypeKey),
     defaultCount,
-    maxCount: 24,
+    maxCount: 48,
     selectorGridProfile: "orders-canonical",
   };
 }

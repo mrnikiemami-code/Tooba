@@ -17,7 +17,7 @@ public static class StoreLandingPageSectionRegistry
     public const string BannerShowcase = "BannerShowcase";
 
     public const int MaxSectionsPerPage = 40;
-    public const int MaxTake = 24;
+    public const int MaxTake = 48;
     public const int DefaultTake = 8;
     public const int ConfigMaxLength = 24000;
     public const int TitleMaxLength = 200;

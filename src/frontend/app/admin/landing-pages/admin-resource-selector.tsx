@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Plus, Trash2 } from "lucide-react";
 import {
   AppDataGrid,
@@ -19,6 +19,7 @@ import {
   type AdminProductListRow,
 } from "../host-client";
 import { loadCategoryTree } from "../catalog-category-api";
+import { getCategoryLevel } from "../product-category-level";
 import {
   queryAdminContentArticlesGrid,
   type AdminContentArticle,
@@ -39,8 +40,30 @@ type ResourceSelectorProps = {
 };
 
 type BrandRow = { id: string; name: string; status: string };
-type CategoryRow = { id: string; name: string; status: string };
+type CategoryRow = { id: string; name: string; status: string; parentId: string | null; level: number };
 type LabeledRow = { id: string; label: string };
+type CategoryLevelFilter = 1 | 2 | 3;
+
+const CATEGORY_LEVEL_LABELS_FA: Record<CategoryLevelFilter, string> = {
+  1: "سطح یک",
+  2: "سطح دو",
+  3: "سطح سه",
+};
+
+const CATEGORY_LEVEL_BUTTON_CLASS: Record<CategoryLevelFilter, { active: string; idle: string }> = {
+  1: {
+    active: "bg-emerald-600 text-white ring-2 ring-emerald-300",
+    idle: "border-2 border-emerald-500 bg-emerald-50 text-emerald-900",
+  },
+  2: {
+    active: "bg-amber-500 text-white ring-2 ring-amber-300",
+    idle: "border-2 border-amber-500 bg-amber-50 text-amber-950",
+  },
+  3: {
+    active: "bg-violet-600 text-white ring-2 ring-violet-300",
+    idle: "border-2 border-violet-500 bg-violet-50 text-violet-950",
+  },
+};
 
 const ORDERS_LIKE_CAPABILITIES = {
   ...DEFAULT_APP_GRID_CAPABILITIES,
@@ -102,7 +125,7 @@ export function AdminResourceSelector({
   selectedIds,
   onChange,
   multiSelect = true,
-  maxCount = 24,
+  maxCount = 48,
   open = true,
   onClose,
   title,
@@ -110,7 +133,33 @@ export function AdminResourceSelector({
   const [tab, setTab] = useState<"all" | "selected">("all");
   const [labels, setLabels] = useState<Record<string, string>>({});
   const [reloadToken, setReloadToken] = useState(0);
+  const [categoryLevel, setCategoryLevel] = useState<CategoryLevelFilter>(1);
+  const [categoryLevelById, setCategoryLevelById] = useState<Record<string, number>>({});
+  const [selectedSummaryOpen, setSelectedSummaryOpen] = useState(false);
+  const prevOpenRef = useRef(false);
   const selectedSet = useMemo(() => new Set(selectedIds), [selectedIds]);
+
+  const lockedCategoryLevel = useMemo((): CategoryLevelFilter | null => {
+    if (family !== "categories" || selectedIds.length === 0) return null;
+    for (const id of selectedIds) {
+      const level = categoryLevelById[id];
+      if (level === 1 || level === 2 || level === 3) return level;
+    }
+    return null;
+  }, [categoryLevelById, family, selectedIds]);
+
+  useEffect(() => {
+    if (lockedCategoryLevel != null && lockedCategoryLevel !== categoryLevel) {
+      setCategoryLevel(lockedCategoryLevel);
+    }
+  }, [categoryLevel, lockedCategoryLevel]);
+
+  useEffect(() => {
+    const justOpened = open && !prevOpenRef.current;
+    prevOpenRef.current = open;
+    if (!justOpened || family !== "categories") return;
+    if (selectedIds.length === 0) setCategoryLevel(1);
+  }, [family, open, selectedIds.length]);
 
   const mergeLabels = useCallback((rows: Array<{ id: string; label: string }>) => {
     setLabels((current) => {
@@ -209,6 +258,43 @@ export function AdminResourceSelector({
               بستن
             </button>
           </div>
+          {family === "categories" ? (
+            <div
+              className="mt-3 w-full rounded-xl border border-emerald-200 bg-gradient-to-l from-emerald-50 via-amber-50 to-violet-50 p-2.5"
+              data-testid="resource-selector-category-levels"
+            >
+              <p className="mb-2 text-[11px] font-bold text-slate-700">
+                فیلتر سطح دسته — فقط از یک سطح می‌توانید انتخاب کنید
+              </p>
+              <div className="flex flex-wrap gap-2" role="group" aria-label="فیلتر سطح دسته">
+                {([1, 2, 3] as const).map((level) => {
+                  const selected = categoryLevel === level;
+                  const disabled = lockedCategoryLevel != null && lockedCategoryLevel !== level;
+                  const tone = CATEGORY_LEVEL_BUTTON_CLASS[level];
+                  return (
+                    <button
+                      key={level}
+                      type="button"
+                      disabled={disabled}
+                      aria-pressed={selected}
+                      className={`rounded-full px-3.5 py-1.5 text-xs font-bold transition ${
+                        selected ? tone.active : tone.idle
+                      } disabled:cursor-not-allowed disabled:border-slate-200 disabled:bg-slate-100 disabled:text-slate-400 disabled:ring-0 disabled:opacity-60`}
+                      onClick={() => {
+                        if (disabled) return;
+                        setCategoryLevel(level);
+                        setTab("all");
+                        setReloadToken((n) => n + 1);
+                      }}
+                      data-testid={`resource-selector-category-level-${level}`}
+                    >
+                      {CATEGORY_LEVEL_LABELS_FA[level]}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          ) : null}
           <div className="mt-3 flex flex-wrap items-center gap-2" role="tablist">
             <button
               type="button"
@@ -228,7 +314,8 @@ export function AdminResourceSelector({
               onClick={() => { setTab("selected"); setReloadToken((n) => n + 1); }}
               data-testid="resource-selector-tab-selected"
             >
-              انتخاب‌شده‌ها ({selectedIds.length.toLocaleString("fa-IR")})
+              انتخاب‌شده‌ها ({selectedIds.length.toLocaleString("fa-IR")}
+              {multiSelect ? ` / ${maxCount.toLocaleString("fa-IR")}` : ""})
             </button>
             {tab === "selected" ? (
               <button
@@ -241,7 +328,11 @@ export function AdminResourceSelector({
                 حذف همه
               </button>
             ) : (
-              <span className="ms-auto" />
+              <span className="ms-auto text-[11px] text-muted">
+                {multiSelect && selectedIds.length >= maxCount
+                  ? `حداکثر ${maxCount.toLocaleString("fa-IR")} مورد`
+                  : null}
+              </span>
             )}
             <button
               type="button"
@@ -298,24 +389,47 @@ export function AdminResourceSelector({
               selectedSet={selectedSet}
               reloadToken={reloadToken}
               multiSelect={multiSelect}
+              levelFilter={categoryLevel}
               onToggle={toggleId}
               onAddMany={addMany}
               onRemoveMany={removeMany}
               onLabels={mergeLabels}
+              onLevelIndex={setCategoryLevelById}
             />
           ) : null}
         </div>
         {selectedIds.length > 0 ? (
           <div className="border-t border-border px-5 py-3" data-testid="resource-selector-selected-summary">
-            <p className="mb-2 text-xs font-bold text-muted">انتخاب‌شده‌ها</p>
-            <div className="flex flex-wrap gap-2">
-              {selectedIds.map((id) => (
-                <span key={id} className="inline-flex items-center gap-2 rounded-full bg-slate-100 px-3 py-1 text-xs">
-                  {labels[id] ?? "مورد انتخاب‌شده"}
-                  <button type="button" onClick={() => toggleId(id, labels[id] ?? id)} aria-label="حذف">×</button>
-                </span>
-              ))}
-            </div>
+            <button
+              type="button"
+              className="flex w-full items-center justify-between gap-2 text-start"
+              aria-expanded={selectedSummaryOpen}
+              aria-controls="resource-selector-selected-chips"
+              onClick={() => setSelectedSummaryOpen((v) => !v)}
+              data-testid="resource-selector-selected-toggle"
+            >
+              <span className="text-xs font-bold text-muted">
+                انتخاب‌شده‌ها ({selectedIds.length.toLocaleString("fa-IR")})
+              </span>
+              <span
+                className={`inline-flex h-6 w-6 items-center justify-center rounded-full border text-xs transition-transform ${
+                  selectedSummaryOpen ? "rotate-180 border-slate-400 bg-slate-100" : "border-border"
+                }`}
+                aria-hidden
+              >
+                ▾
+              </span>
+            </button>
+            {selectedSummaryOpen ? (
+              <div id="resource-selector-selected-chips" className="mt-2 flex flex-wrap gap-2">
+                {selectedIds.map((id) => (
+                  <span key={id} className="inline-flex items-center gap-2 rounded-full bg-slate-100 px-3 py-1 text-xs">
+                    {labels[id] ?? "مورد انتخاب‌شده"}
+                    <button type="button" onClick={() => toggleId(id, labels[id] ?? id)} aria-label="حذف">×</button>
+                  </span>
+                ))}
+              </div>
+            ) : null}
           </div>
         ) : null}
       </div>
@@ -780,36 +894,57 @@ function CategoryResourceGrid({
   selectedSet,
   reloadToken,
   multiSelect,
+  levelFilter,
   onToggle,
   onAddMany,
   onRemoveMany,
   onLabels,
+  onLevelIndex,
 }: {
   tab: "all" | "selected";
   selectedSet: Set<string>;
   reloadToken: number;
   multiSelect: boolean;
+  levelFilter: CategoryLevelFilter;
   onToggle: (id: string, label: string) => void;
   onAddMany: (items: LabeledRow[]) => void;
   onRemoveMany: (ids: string[]) => void;
   onLabels: (rows: Array<{ id: string; label: string }>) => void;
+  onLevelIndex: (levels: Record<string, number>) => void;
 }) {
   const [rows, setRows] = useState<CategoryRow[]>([]);
   const savedViewStore = useMemo(() => createHostSavedViewStore("grid.admin.resource.categories"), []);
   useEffect(() => {
     void loadCategoryTree("fa-IR").then((result) => {
       if (result.state !== "ok" || !result.data) return;
-      const mapped = result.data
-        .filter((node) => node.status !== "Archived")
-        .map((node) => ({ id: node.id, name: node.name, status: node.status }));
+      const tree = result.data.filter((node) => node.status !== "Archived");
+      const levelNodes = tree.map((node) => ({ id: node.id, parentId: node.parentId }));
+      const levelIndex: Record<string, number> = {};
+      const mapped: CategoryRow[] = tree.map((node) => {
+        const level = getCategoryLevel(levelNodes, node.id) ?? 1;
+        levelIndex[node.id] = level;
+        return {
+          id: node.id,
+          name: node.name,
+          status: node.status,
+          parentId: node.parentId,
+          level,
+        };
+      });
       setRows(mapped);
+      onLevelIndex(levelIndex);
       onLabels(mapped.map((row) => ({ id: row.id, label: row.name })));
     });
-  }, [onLabels, reloadToken]);
+  }, [onLabels, onLevelIndex, reloadToken]);
+
+  const leveled = useMemo(() => {
+    if (tab === "selected") return rows;
+    return rows.filter((row) => row.level === levelFilter);
+  }, [levelFilter, rows, tab]);
 
   const visible = useMemo(
-    () => partitionBySelection(rows, tab, selectedSet),
-    [rows, selectedSet, tab],
+    () => partitionBySelection(leveled, tab, selectedSet),
+    [leveled, selectedSet, tab],
   );
   const actions = useMemo(
     () => buildSelectionRowActions<CategoryRow>(tab, selectedSet, (row) => row.name, onToggle),

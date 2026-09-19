@@ -93,7 +93,7 @@ export interface AppDataGridProps<T extends { id: string }> {
   pageSelectionOnly?: boolean;
 }
 
-const PAGE_SIZES = [10, 25, 50, 100, 1000];
+const PAGE_SIZES = [10, 20, 25, 50, 100, 1000];
 const GRID_ROW_HEIGHT = 56;
 const GRID_HEADER_HEIGHT = 48;
 
@@ -1048,11 +1048,14 @@ export function AppDataGrid<T extends { id: string }>({
         <label className="flex items-center gap-2">
           {messages.pageSize}
           <select
-            value={query.pageSize}
+            value={PAGE_SIZES.includes(query.pageSize) ? query.pageSize : PAGE_SIZES[0]}
             className="min-h-9 rounded-ds border border-border bg-surface px-2"
             onChange={(e) => void load({ ...query, page: 1, pageSize: Number(e.target.value) })}
           >
-            {PAGE_SIZES.map((size) => (
+            {(PAGE_SIZES.includes(query.pageSize) ? PAGE_SIZES : [query.pageSize, ...PAGE_SIZES])
+              .filter((size, index, all) => all.indexOf(size) === index)
+              .sort((a, b) => a - b)
+              .map((size) => (
               <option key={size} value={size}>
                 {size.toLocaleString(locale === "fa" ? "fa-IR" : "en-US")}
               </option>
