@@ -1,4 +1,4 @@
-# Tooba — Architecture / Product Lock Registry
+﻿# Tooba — Architecture / Product Lock Registry
 
 Canonical lock file. Future tasks must read applicable locks, list IDs, discover, state reuse vs change, and regress touched locked behavior.
 
@@ -1476,3 +1476,26 @@ Final checkout revalidates merchandising campaign eligibility and price before a
 
 Order pricing is an immutable authoritative snapshot of the accepted checkout quote and never depends on later live campaign state for historical totals.
 
+### LOCK-SF-422 — Human-readable campaign Admin UX
+
+Merchandising campaign Admin UX exposes human-readable campaign, offer, seller, lifecycle and pricing concepts; raw campaign IDs, PromotionType codes and Pricing qualifier internals are not normal-user UI.
+
+### LOCK-SF-423 — Membership via SellerOffer selectors
+
+Campaign membership authoring reuses canonical SellerOffer/Catalog selectors and persists only CampaignOffer membership/order; it never copies product truth into campaign records.
+
+### LOCK-SF-424 — Campaign price via AuthoredPrice APIs
+
+Campaign price authoring uses canonical AuthoredPrice campaign qualifier APIs and pricing dimensions; Admin campaign UI never owns an independent promotional-price store.
+
+### LOCK-SF-425 — Derived runtime status
+
+Merchandising campaign runtime status shown in Admin is derived from lifecycle + StartAt/EndAt; there is no manually maintained Active truth toggle.
+
+### LOCK-SF-426 — Archive-safe lifecycle
+
+Published/history-bearing merchandising campaigns use archive/history-safe lifecycle semantics and must never mutate historical Order pricing snapshots.
+
+### LOCK-SF-427 — Dynamic PromotionCampaign source
+
+A PromotionCampaign Product Showcase with CampaignId=null tracks the currently eligible Admin-managed campaign dynamically; campaign membership/price changes do not require page content snapshot rewrites.

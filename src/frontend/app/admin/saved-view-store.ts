@@ -21,6 +21,7 @@ export const ADMIN_ATTRIBUTE_DEF_GRID_VIEW_KEY = "grid.admin.catalog.attributes"
 export const ADMIN_CATEGORY_SCHEMA_GRID_VIEW_KEY = "grid.admin.catalog.category-schema";
 export const ADMIN_GIFT_CARD_GRID_VIEW_KEY = "grid.admin.gift-cards";
 export const ADMIN_LANDING_PAGES_GRID_VIEW_KEY = "grid.admin.landing-pages";
+export const ADMIN_CAMPAIGNS_GRID_VIEW_KEY = "grid.admin.campaigns";
 
 export const SAVED_VIEW_COLLECTION_SCHEMA_VERSION = 1;
 

@@ -163,4 +163,66 @@ public interface IMerchandisingCampaignDirectory
         Guid expectedStoreId,
         IReadOnlyList<Guid> orderedSellerOfferIds,
         CancellationToken cancellationToken);
+
+    /// <summary>
+    /// فهرست Store-scoped کمپین‌ها با فیلتر و صفحه‌بندی برای Admin.
+    /// </summary>
+    Task<(IReadOnlyList<MerchandisingCampaignListRow> Items, int Total)> ListCampaignsAsync(
+        Guid storeId,
+        string? search,
+        MerchandisingCampaignLifecycleStatus? lifecycle,
+        Guid? promotionTypeId,
+        string? runtimeWindow,
+        DateTimeOffset now,
+        string titleLocale,
+        int skip,
+        int take,
+        CancellationToken cancellationToken);
+
+    /// <summary>
+    /// جزئیات یک کمپین Store-scoped را برمی‌گرداند یا null.
+    /// </summary>
+    Task<MerchandisingCampaignReference?> GetCampaignAsync(
+        Guid campaignId,
+        Guid storeId,
+        CancellationToken cancellationToken);
+
+    /// <summary>
+    /// ترجمه‌های کمپین را برمی‌گرداند.
+    /// </summary>
+    Task<IReadOnlyList<MerchandisingCampaignTranslationReference>> ListCampaignTranslationsAsync(
+        Guid campaignId,
+        CancellationToken cancellationToken);
+
+    /// <summary>
+    /// گونه‌های فعال با نام نمایشی (بدون افشای کد خام در UI؛ Code فقط برای قرارداد داخلی).
+    /// </summary>
+    Task<IReadOnlyList<MerchandisingPromotionTypeOption>> ListPromotionTypeOptionsAsync(
+        string locale,
+        CancellationToken cancellationToken);
 }
+
+/// <summary>
+/// ردیف فهرست Admin کمپین.
+/// </summary>
+public sealed record MerchandisingCampaignListRow(
+    Guid Id,
+    Guid PromotionTypeId,
+    string PromotionTypeDisplayName,
+    MerchandisingCampaignLifecycleStatus LifecycleStatus,
+    DateTimeOffset StartAt,
+    DateTimeOffset? EndAt,
+    int Priority,
+    int MemberCount,
+    string? Title,
+    DateTimeOffset UpdatedAt,
+    string RuntimeLabel);
+
+/// <summary>
+/// گزینهٔ گونه برای انتخاب Admin (DisplayName محور).
+/// </summary>
+public sealed record MerchandisingPromotionTypeOption(
+    Guid Id,
+    string DisplayName,
+    string Code,
+    bool IsSystem);

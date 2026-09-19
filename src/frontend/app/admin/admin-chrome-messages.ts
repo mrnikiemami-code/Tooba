@@ -42,6 +42,7 @@ export type AdminNavLabels = {
   giftCards: string;
   wallets: string;
   promotions: string;
+  campaigns: string;
   settings: string;
   languages: string;
   accessControl: string;
@@ -89,6 +90,7 @@ const faNav: AdminNavLabels = {
   giftCards: "کارت هدیه",
   wallets: "کیف پول مشتریان",
   promotions: "پروموشن‌ها",
+  campaigns: "کمپین‌های فروش",
   settings: "تنظیمات",
   languages: "زبان‌ها",
   accessControl: "کنترل دسترسی",
@@ -136,6 +138,7 @@ const enNav: AdminNavLabels = {
   giftCards: "Gift cards",
   wallets: "Customer wallets",
   promotions: "Promotions",
+  campaigns: "Sales campaigns",
   settings: "Settings",
   languages: "Languages",
   accessControl: "Access control",

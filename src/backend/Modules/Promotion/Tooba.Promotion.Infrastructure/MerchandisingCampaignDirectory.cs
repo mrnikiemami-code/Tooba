@@ -362,6 +362,194 @@ public sealed class MerchandisingCampaignDirectory : IMerchandisingCampaignDirec
         await _db.SaveChangesAsync(cancellationToken);
     }
 
+    /// <inheritdoc />
+    public async Task<(IReadOnlyList<MerchandisingCampaignListRow> Items, int Total)> ListCampaignsAsync(
+        Guid storeId,
+        string? search,
+        MerchandisingCampaignLifecycleStatus? lifecycle,
+        Guid? promotionTypeId,
+        string? runtimeWindow,
+        DateTimeOffset now,
+        string titleLocale,
+        int skip,
+        int take,
+        CancellationToken cancellationToken)
+    {
+        skip = Math.Max(0, skip);
+        take = Math.Clamp(take, 1, 100);
+        var locale = string.IsNullOrWhiteSpace(titleLocale) ? "fa-IR" : titleLocale.Trim();
+        var query = _db.MerchandisingCampaigns.AsNoTracking().Where(x => x.StoreId == storeId);
+        if (lifecycle is { } life)
+        {
+            query = query.Where(x => x.LifecycleStatus == life);
+        }
+
+        if (promotionTypeId is { } typeId && typeId != Guid.Empty)
+        {
+            query = query.Where(x => x.PromotionTypeId == typeId);
+        }
+
+        var window = runtimeWindow?.Trim().ToLowerInvariant();
+        if (window is "active")
+        {
+            query = query.Where(x =>
+                x.LifecycleStatus == MerchandisingCampaignLifecycleStatus.Published
+                && x.StartAt <= now
+                && (x.EndAt == null || x.EndAt > now));
+        }
+        else if (window is "future" or "scheduled")
+        {
+            query = query.Where(x =>
+                x.LifecycleStatus == MerchandisingCampaignLifecycleStatus.Published && x.StartAt > now);
+        }
+        else if (window is "expired")
+        {
+            query = query.Where(x =>
+                x.LifecycleStatus == MerchandisingCampaignLifecycleStatus.Published
+                && x.EndAt != null
+                && x.EndAt <= now);
+        }
+
+        if (!string.IsNullOrWhiteSpace(search))
+        {
+            var term = search.Trim();
+            var matchingIds = await _db.MerchandisingCampaignTranslations.AsNoTracking()
+                .Where(t => t.Title.Contains(term) || (t.Subtitle != null && t.Subtitle.Contains(term)))
+                .Select(t => t.CampaignId)
+                .Distinct()
+                .ToListAsync(cancellationToken);
+            query = query.Where(x => matchingIds.Contains(x.Id));
+        }
+
+        var total = await query.CountAsync(cancellationToken);
+        var page = await query
+            .OrderByDescending(x => x.UpdatedAt)
+            .ThenBy(x => x.Id)
+            .Skip(skip)
+            .Take(take)
+            .ToListAsync(cancellationToken);
+        if (page.Count == 0)
+        {
+            return (Array.Empty<MerchandisingCampaignListRow>(), total);
+        }
+
+        var ids = page.Select(x => x.Id).ToArray();
+        var typeIds = page.Select(x => x.PromotionTypeId).Distinct().ToArray();
+        var titles = await _db.MerchandisingCampaignTranslations.AsNoTracking()
+            .Where(t => ids.Contains(t.CampaignId))
+            .ToListAsync(cancellationToken);
+        var typeNames = await _db.MerchandisingPromotionTypeTranslations.AsNoTracking()
+            .Where(t => typeIds.Contains(t.TypeId))
+            .ToListAsync(cancellationToken);
+        var counts = await _db.MerchandisingCampaignOffers.AsNoTracking()
+            .Where(o => ids.Contains(o.CampaignId))
+            .GroupBy(o => o.CampaignId)
+            .Select(g => new { CampaignId = g.Key, Count = g.Count() })
+            .ToListAsync(cancellationToken);
+        var countMap = counts.ToDictionary(x => x.CampaignId, x => x.Count);
+
+        var rows = page.Select(c =>
+        {
+            var title = titles.FirstOrDefault(t => t.CampaignId == c.Id && t.Locale == locale)?.Title
+                ?? titles.FirstOrDefault(t => t.CampaignId == c.Id)?.Title;
+            var typeName = typeNames.FirstOrDefault(t => t.TypeId == c.PromotionTypeId && t.Locale == locale)?.DisplayName
+                ?? typeNames.FirstOrDefault(t => t.TypeId == c.PromotionTypeId)?.DisplayName
+                ?? "—";
+            countMap.TryGetValue(c.Id, out var memberCount);
+            return new MerchandisingCampaignListRow(
+                c.Id,
+                c.PromotionTypeId,
+                typeName,
+                c.LifecycleStatus,
+                c.StartAt,
+                c.EndAt,
+                c.Priority,
+                memberCount,
+                title,
+                c.UpdatedAt,
+                DeriveRuntimeLabel(c, now));
+        }).ToList();
+        return (rows, total);
+    }
+
+    /// <inheritdoc />
+    public async Task<MerchandisingCampaignReference?> GetCampaignAsync(
+        Guid campaignId,
+        Guid storeId,
+        CancellationToken cancellationToken)
+    {
+        var campaign = await _db.MerchandisingCampaigns.AsNoTracking()
+            .SingleOrDefaultAsync(x => x.Id == campaignId && x.StoreId == storeId, cancellationToken);
+        return campaign is null ? null : ToCampaignReference(campaign);
+    }
+
+    /// <inheritdoc />
+    public async Task<IReadOnlyList<MerchandisingCampaignTranslationReference>> ListCampaignTranslationsAsync(
+        Guid campaignId,
+        CancellationToken cancellationToken)
+    {
+        var rows = await _db.MerchandisingCampaignTranslations.AsNoTracking()
+            .Where(x => x.CampaignId == campaignId)
+            .OrderBy(x => x.Locale)
+            .ToListAsync(cancellationToken);
+        return rows.Select(row => new MerchandisingCampaignTranslationReference(
+            row.CampaignId,
+            row.Locale,
+            row.Title,
+            row.Subtitle,
+            row.BadgeText)).ToList();
+    }
+
+    /// <inheritdoc />
+    public async Task<IReadOnlyList<MerchandisingPromotionTypeOption>> ListPromotionTypeOptionsAsync(
+        string locale,
+        CancellationToken cancellationToken)
+    {
+        await EnsureAmazingTypeSeededAsync(cancellationToken);
+        var normalized = string.IsNullOrWhiteSpace(locale) ? "fa-IR" : locale.Trim();
+        var types = await _db.MerchandisingPromotionTypes.AsNoTracking()
+            .Where(x => x.IsActive)
+            .OrderBy(x => x.SortOrder)
+            .ThenBy(x => x.Id)
+            .ToListAsync(cancellationToken);
+        var typeIds = types.Select(x => x.Id).ToArray();
+        var translations = await _db.MerchandisingPromotionTypeTranslations.AsNoTracking()
+            .Where(t => typeIds.Contains(t.TypeId))
+            .ToListAsync(cancellationToken);
+        return types.Select(t =>
+        {
+            var name = translations.FirstOrDefault(x => x.TypeId == t.Id && x.Locale == normalized)?.DisplayName
+                ?? translations.FirstOrDefault(x => x.TypeId == t.Id)?.DisplayName
+                ?? t.Code;
+            return new MerchandisingPromotionTypeOption(t.Id, name, t.Code, t.IsSystem);
+        }).ToList();
+    }
+
+    private static string DeriveRuntimeLabel(MerchandisingCampaign campaign, DateTimeOffset now)
+    {
+        if (campaign.LifecycleStatus == MerchandisingCampaignLifecycleStatus.Draft)
+        {
+            return "draft";
+        }
+
+        if (campaign.LifecycleStatus == MerchandisingCampaignLifecycleStatus.Archived)
+        {
+            return "archived";
+        }
+
+        if (campaign.StartAt > now)
+        {
+            return "scheduled";
+        }
+
+        if (campaign.EndAt is { } end && end <= now)
+        {
+            return "expired";
+        }
+
+        return "active";
+    }
+
     private async Task UpsertTypeTranslationAsync(
         Guid typeId,
         string locale,

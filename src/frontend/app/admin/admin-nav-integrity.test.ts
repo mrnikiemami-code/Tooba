@@ -121,6 +121,17 @@ test("menus live in ops after landing pages", () => {
   assert.ok(landingIdx >= 0 && menusIdx > landingIdx);
 });
 
+test("sales campaigns live in moderation after promotions", () => {
+  assert.match(shellSource, /id: "campaigns"/);
+  assert.match(shellSource, /href: "\/admin\/campaigns"/);
+  assert.match(shellSource, /viewPermission: "promotion\.view"/);
+  assert.match(chromeMessages, /campaigns:\s*"کمپین‌های فروش"/);
+  assert.match(chromeMessages, /campaigns:\s*"Sales campaigns"/);
+  const promotionsIdx = shellSource.indexOf('id: "promotions"');
+  const campaignsIdx = shellSource.indexOf('id: "campaigns"');
+  assert.ok(promotionsIdx >= 0 && campaignsIdx > promotionsIdx);
+});
+
 test("content group sits between ops and finance with Articles label", () => {
   assert.match(chromeMessages, /groupContent:\s*"محتوا"/);
   assert.match(chromeMessages, /groupContent:\s*"Content"/);

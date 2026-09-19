@@ -1,0 +1,13 @@
+{
+  "ok": true,
+  "note": "List/create recaptured after admin boot; workspace/pricing/offers/storefront from capture.mjs",
+  "files": {
+    "01-campaign-list.png": true,
+    "02-create-basic.png": true,
+    "03-workspace-info.png": true,
+    "04-offer-membership.png": true,
+    "05-pricing-ui.png": true,
+    "06-status.png": true,
+    "07-storefront.png": true
+  }
+}

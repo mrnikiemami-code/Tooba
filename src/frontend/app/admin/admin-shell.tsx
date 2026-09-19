@@ -133,6 +133,7 @@ const navGroupDefs: NavGroupDef[] = [
       { id: "gift-cards", labelKey: "giftCards", href: "/admin/gift-cards", icon: Gift, live: true, viewPermission: "giftcard.view" },
       { id: "wallets", labelKey: "wallets", href: "/admin/wallets", icon: WalletCards, live: true, viewPermission: "wallet.view" },
       { id: "promotions", labelKey: "promotions", href: "/admin/promotions", icon: Tag, live: true, viewPermission: "promotion.view" },
+      { id: "campaigns", labelKey: "campaigns", href: "/admin/campaigns", icon: Sparkles, live: true, viewPermission: "promotion.view" },
     ],
   },
   {

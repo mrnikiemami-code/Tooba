@@ -1,0 +1,265 @@
+{
+  "ok": true,
+  "steps": [
+    {
+      "name": "A-host-ready",
+      "pass": true
+    },
+    {
+      "name": "dev-actor",
+      "pass": true,
+      "data": {
+        "actor": "01a036c2-970e-7000-8eb7-94bf5cc2d8db"
+      }
+    },
+    {
+      "name": "B-types",
+      "pass": true,
+      "data": {
+        "status": 200,
+        "count": 1,
+        "name": "پیشنهاد شگفت‌انگیز"
+      }
+    },
+    {
+      "name": "C-create-draft",
+      "pass": true,
+      "data": {
+        "status": 200,
+        "campaignId": "01a0ba59-a5aa-7000-8730-0b6ae26d0a28"
+      }
+    },
+    {
+      "name": "D-list-contains",
+      "pass": true,
+      "data": {
+        "total": 6
+      }
+    },
+    {
+      "name": "E-offer-candidates",
+      "pass": true,
+      "data": {
+        "status": 200,
+        "count": 50,
+        "inStock": 49
+      }
+    },
+    {
+      "name": "F-add-member-4ddbc452",
+      "pass": true,
+      "data": {
+        "status": 200
+      }
+    },
+    {
+      "name": "F-add-member-7dd0805d",
+      "pass": true,
+      "data": {
+        "status": 200
+      }
+    },
+    {
+      "name": "F-add-member-20c120e8",
+      "pass": true,
+      "data": {
+        "status": 200
+      }
+    },
+    {
+      "name": "F-add-member-a26caa6d",
+      "pass": true,
+      "data": {
+        "status": 200
+      }
+    },
+    {
+      "name": "F-add-member-718ad325",
+      "pass": true,
+      "data": {
+        "status": 200
+      }
+    },
+    {
+      "name": "G-duplicate-rejected",
+      "pass": true,
+      "data": {
+        "status": 400
+      }
+    },
+    {
+      "name": "H-reorder",
+      "pass": true,
+      "data": {
+        "status": 200
+      }
+    },
+    {
+      "name": "I-reorder-persisted",
+      "pass": true,
+      "data": {
+        "first": "718ad325-8d1c-4d62-b09b-29ebec187d7f",
+        "expected": "718ad325-8d1c-4d62-b09b-29ebec187d7f"
+      }
+    },
+    {
+      "name": "J-price-718ad325",
+      "pass": true,
+      "data": {
+        "status": 200,
+        "promo": 2066611
+      }
+    },
+    {
+      "name": "J-price-a26caa6d",
+      "pass": true,
+      "data": {
+        "status": 200,
+        "promo": 4350795
+      }
+    },
+    {
+      "name": "J-price-20c120e8",
+      "pass": true,
+      "data": {
+        "status": 200,
+        "promo": 1295000
+      }
+    },
+    {
+      "name": "K-prices-persisted",
+      "pass": true,
+      "data": {
+        "pricedCount": 3
+      }
+    },
+    {
+      "name": "L-translations-fa-en",
+      "pass": true,
+      "data": {
+        "locales": [
+          "en-US",
+          "fa-IR"
+        ]
+      }
+    },
+    {
+      "name": "M-publish",
+      "pass": true,
+      "data": {
+        "status": 200
+      }
+    },
+    {
+      "name": "N-runtime-active",
+      "pass": true,
+      "data": {
+        "runtime": "active",
+        "life": "Published"
+      }
+    },
+    {
+      "name": "O-list-active",
+      "pass": true,
+      "data": {
+        "count": 3
+      }
+    },
+    {
+      "name": "P-create-page",
+      "pass": true,
+      "data": {
+        "status": 200,
+        "pageId": "01a0ba59-ab27-7000-a080-3edefe9e89a5"
+      }
+    },
+    {
+      "name": "Q-add-showcase",
+      "pass": true,
+      "data": {
+        "status": 200,
+        "body": {
+          "pageSectionId": "01a0ba59-ab30-7000-b1c6-0b34b8b849bc",
+          "pageId": "01a0ba59-ab27-7000-a080-3edefe9e89a5",
+          "sectionType": "ProductCollection",
+          "sortOrder": 0,
+          "isEnabled": true,
+          "config": "{\"title\":\"\\u067E\\u06CC\\u0634\\u0646\\u0647\\u0627\\u062F \\u0634\\u06AF\\u0641\\u062A\\u200C\\u0627\\u0646\\u06AF\\u06CC\\u0632\",\"source\":\"PromotionCampaign\",\"take\":8,\"categoryId\":null,\"brandId\":null,\"productIds\":[],\"promotionTypeCode\":\"AMAZING\",\"campaignId\":null,\"variantKey\":\"product.card-carousel\",\"heightPreset\":null,\"href\":null,\"bannerImageUrl\":null,\"bannerHref\":null,\"bannerMediaAssetId\":null}",
+          "updatedAt": "2026-09-19T15:47:13.8408032+00:00"
+        }
+      }
+    },
+    {
+      "name": "R-builder-preview-resolves",
+      "pass": true,
+      "data": {
+        "status": 200,
+        "hasId": true
+      }
+    },
+    {
+      "name": "S-storefront-resolves",
+      "pass": true,
+      "data": {
+        "status": 200,
+        "productCount": 4,
+        "campaignMatch": true
+      }
+    },
+    {
+      "name": "S2-storefront-html",
+      "pass": true,
+      "data": {
+        "status": 200,
+        "len": 133314
+      }
+    },
+    {
+      "name": "T-cart-create",
+      "pass": true,
+      "data": {
+        "status": 200,
+        "cartId": "01a0ba59-b695-7000-8629-288f7fcb0172"
+      }
+    },
+    {
+      "name": "U-cart-campaign-price",
+      "pass": true,
+      "data": {
+        "status": 200,
+        "unit": 2066611,
+        "tipAmount": 2066611,
+        "lineCamp": "01a0ba59-a5aa-7000-8730-0b6ae26d0a28"
+      }
+    },
+    {
+      "name": "V-archive",
+      "pass": true,
+      "data": {
+        "status": 200
+      }
+    },
+    {
+      "name": "W-archived-state",
+      "pass": true,
+      "data": {
+        "archLife": "Archived",
+        "archRuntime": "archived"
+      }
+    },
+    {
+      "name": "X-archived-not-primary",
+      "pass": true,
+      "data": {
+        "stillPrimary": false,
+        "previewStill": false,
+        "productCount": 7,
+        "notInActive": true,
+        "publicOk": true
+      }
+    }
+  ],
+  "errors": [],
+  "campaignId": "01a0ba59-a5aa-7000-8730-0b6ae26d0a28",
+  "tip": null
+}
