@@ -21,7 +21,7 @@ main
 Current Phase:
 
 ```text
-P10 — Builder Acceptance Repair
+P10 — Builder Acceptance + Promotion Source Architecture Audit
 ```
 
 Pipeline Mode:
@@ -65,6 +65,12 @@ Last Implementation Task:
 TB-P10-T022-R13-R4
 ```
 
+Last Architecture Audit Task:
+
+```text
+TB-P10-T022-R14
+```
+
 Current Issued Task:
 
 ```text
@@ -80,6 +86,7 @@ Current Repair Task:
 Implemented Under Review:
 
 ```text
+TB-P10-T022-R14 — Amazing Offers / Promotion Engine Architecture Audit (docs only; zero schema/UI/storefront code); Appearance YES; Builder NO; awaiting Architect review
 TB-P10-T022-R13-R4 — Product Showcase Motion & Proportion Polish (calm autoplay, no sweep, proportionate cinematic, upright explorer); USER_VISUAL_ACCEPTED=YES (Appearance); Builder USER_VISUAL_ACCEPTED=NO
 TB-P10-T022-R13-R3 — Product Showcase Distinct Variant V2 (visually distinct sunny/money/cinematic/cinematic-plus/explorer + autoplay); Architect-ACCEPTED before R13-R4; USER_VISUAL_ACCEPTED=YES (Appearance); Builder USER_VISUAL_ACCEPTED=NO
 TB-P10-T022-R13-R2-R2 — Product Showcase Final Closure (Admin→exact published Landing route sunny+cinematic; real Git SHA; user-work 18ca10c9 preserved); Architect-ACCEPTED before R13-R3; USER_VISUAL_ACCEPTED=YES (Appearance); Builder USER_VISUAL_ACCEPTED=NO
