@@ -1,1 +1,95 @@
-﻿
+﻿PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+
+BEGIN_TOOBA_WORKER_RESULT
+
+Task-ID: TB-P10-T022-R14
+Parent-Task: TB-P10-T022-R13-R4
+Channel: tooba-main
+WorkerId: tooba-worker-01
+AgentType: cursor
+Status: PASS
+
+Summary:
+Architecture audit only for Amazing Offers / merchandising promotion source. Inventoried real Offer (SellerOffer), AuthoredPrice, Inventory StockPosition, checkout PromotionDefinition, Catalog/Landing product sources Manual|Category|Brand|Newest. No Amazing campaign/membership tables exist. Recommended new MerchandisingCampaign + CampaignOffer + Type AMAZING + translations; Builder source PromotionCampaign (label پیشنهاد شگفت‌انگیز); reuse Pricing/Inventory; timer/discount% derived; do not overload checkout promotions or Offer.IsAmazing. Zero production schema/UI/storefront code. Evidence under docs/evidence/TB-P10-T022-R14/. User work 18ca10c9 preserved.
+
+Applicable-Locks:
+LOCK-SF-001…390 retained. PROPOSED-LOCK-PROMO-001…007 recorded for Architect approval only (not canonicalized).
+
+Recovery-Start:
+docs/evidence/TB-P10-T022-R14/recovery-start.md — main @ 83cf2b89 == origin/main at claim; 18ca10c9 ancestor; Bridge b2ff684a… / TB-P10-T022-R14.
+
+Current-Domain-Inventory:
+docs/evidence/TB-P10-T022-R14/current-domain-inventory.md
+
+Current-DB-Schema:
+docs/evidence/TB-P10-T022-R14/current-db-schema.md
+
+Current-Product-Source-Architecture:
+docs/evidence/TB-P10-T022-R14/current-product-source-architecture.md
+
+Localization-Audit:
+docs/evidence/TB-P10-T022-R14/localization-audit.md
+
+Edition-Scope-Audit:
+docs/evidence/TB-P10-T022-R14/edition-scope-audit.md
+
+Scheduling-Audit:
+docs/evidence/TB-P10-T022-R14/scheduling-audit.md
+
+Digikala-Benchmark:
+docs/evidence/TB-P10-T022-R14/digikala-gap-analysis.md — A/B/C/D classification; no Digikala schema copy.
+
+Offer-Promotion-Boundary:
+docs/evidence/TB-P10-T022-R14/offer-promotion-boundary.md — Offer=listing without price/stock; PromotionDefinition=checkout discount ≠ merchandising rail.
+
+Architecture-Options:
+docs/evidence/TB-P10-T022-R14/architecture-options.md
+
+Recommended-Architecture:
+docs/evidence/TB-P10-T022-R14/recommended-architecture.md — MerchandisingCampaign + membership + PromoAmount + Type AMAZING.
+
+Derived-Vs-Stored:
+docs/evidence/TB-P10-T022-R14/derived-vs-stored.md
+
+Query-Index-Plan:
+docs/evidence/TB-P10-T022-R14/query-index-plan.md — proposal only; no indexes created.
+
+Builder-Source-Plan:
+docs/evidence/TB-P10-T022-R14/builder-source-plan.md — source=PromotionCampaign; CampaignId nullable → active AMAZING.
+
+Test-Data-Plan:
+docs/evidence/TB-P10-T022-R14/test-data-plan.md — no seed executed.
+
+Implementation-Roadmap:
+docs/evidence/TB-P10-T022-R14/implementation-roadmap.md — Phase 1 schema next; not executed.
+
+Risk-Register:
+docs/evidence/TB-P10-T022-R14/risk-register.md
+
+Decision-Matrix:
+docs/evidence/TB-P10-T022-R14/decision-matrix.md
+
+Proposed-Locks:
+docs/evidence/TB-P10-T022-R14/proposed-locks.md
+
+AntiPattern-Scan:
+docs/evidence/TB-P10-T022-R14/antipattern-scan.md — PASS (no forbidden proposals implemented).
+
+Recovery-SoT:
+docs/evidence/TB-P10-T022-R14/recovery-sot.md; docs/PROJECT-STATE.md + docs/ai/TOOBA-RECOVERY-CONTEXT.md updated for audit R14 under review; Last Implementation remains R13-R4.
+
+Git:
+branch=main
+HEAD=TIP_PLACEHOLDER
+origin/main=TIP_PLACEHOLDER
+HEAD==origin/main=YES
+18ca10c9-ancestor=YES
+task-artifact=docs/ai/tasks/TB-P10-T022-R14.task.md
+
+Architectural-Concerns:
+Checkout PromotionDefinition must not be overloaded as Digikala-style rails. AuthoredPrice has no compare-at column — list price = Amount; promo selling on membership. UnsupportedProductSources already reserves Discounted/Featured/BestSelling — prefer new PromotionCampaign source key rather than reusing Discounted.
+
+Blockers:
+none
+
+END_TOOBA_WORKER_RESULT
