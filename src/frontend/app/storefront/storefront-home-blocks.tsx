@@ -597,12 +597,14 @@ export function CompositionBannerGrid({
     );
   };
 
+  const bannerHeightClass = heightPresetHeroClass(heightPreset);
+
   if (layout === "single") {
     const banner = banners[0]!;
     return (
       <section className="w-full px-2 sm:px-4 py-6" data-testid={testId ?? "composition-banner-single"} data-banner-layout="single">
         <Link href={banner.missing ? link : (banner.href || link)} className="relative block overflow-hidden rounded-3xl bg-gray-100">
-          {media(banner, `w-full object-cover ${heightPresetHeroClass(heightPreset)}`)}
+          {media(banner, `w-full object-cover ${bannerHeightClass}`)}
           {!banner.missing ? (
             <span className="absolute bottom-4 right-4 rounded-lg bg-black/45 px-3 py-1 text-sm font-bold text-white">{title ?? banner.title}</span>
           ) : null}
@@ -614,9 +616,9 @@ export function CompositionBannerGrid({
   if (layout === "two-equal") {
     return (
       <section className="w-full px-2 sm:px-4 py-6" data-testid={testId ?? "composition-banner-two"} data-banner-layout="two-equal">
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className={`grid grid-cols-1 gap-4 sm:grid-cols-2 ${bannerHeightClass}`}>
           {banners.slice(0, 2).map((banner) => (
-            <Link key={banner.title} href={banner.href} className="relative overflow-hidden rounded-3xl aspect-[21/9] bg-gray-100">
+            <Link key={banner.title} href={banner.href} className="relative block h-full overflow-hidden rounded-3xl bg-gray-100">
               {media(banner, "absolute inset-0 h-full w-full object-cover")}
               {!banner.missing ? <span className="absolute bottom-3 right-3 rounded bg-black/40 px-2 py-0.5 text-xs font-bold text-white">{banner.title}</span> : null}
             </Link>
@@ -629,9 +631,9 @@ export function CompositionBannerGrid({
   if (layout === "two-asymmetric") {
     return (
       <section className="w-full px-2 sm:px-4 py-6" data-testid={testId ?? "composition-banner-two-asymmetric"} data-banner-layout="two-asymmetric">
-        <div className="grid grid-cols-1 sm:grid-cols-[2fr_1fr] gap-4">
-          {banners.slice(0, 2).map((banner, index) => (
-            <Link key={banner.title} href={banner.href} className={`relative overflow-hidden rounded-3xl bg-gray-100 ${index === 0 ? "aspect-[21/9]" : "aspect-[4/3] sm:aspect-auto"}`}>
+        <div className={`grid grid-cols-1 gap-4 sm:grid-cols-[2fr_1fr] ${bannerHeightClass}`}>
+          {banners.slice(0, 2).map((banner) => (
+            <Link key={banner.title} href={banner.href} className="relative block h-full overflow-hidden rounded-3xl bg-gray-100">
               {media(banner, "absolute inset-0 h-full w-full object-cover")}
             </Link>
           ))}
@@ -643,9 +645,9 @@ export function CompositionBannerGrid({
   if (layout === "three") {
     return (
       <section className="w-full px-2 sm:px-4 py-6" data-testid={testId ?? "composition-banner-three"} data-banner-layout="three">
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <div className={`grid grid-cols-1 gap-3 sm:grid-cols-3 ${bannerHeightClass}`}>
           {banners.slice(0, 3).map((banner) => (
-            <Link key={banner.title} href={banner.href} className="relative overflow-hidden rounded-2xl aspect-[16/9] bg-gray-100">
+            <Link key={banner.title} href={banner.href} className="relative block h-full overflow-hidden rounded-2xl bg-gray-100">
               {media(banner, "absolute inset-0 h-full w-full object-cover")}
               {!banner.missing ? (
                 <span className="absolute bottom-2 right-2 rounded bg-black/45 px-2 py-0.5 text-[11px] font-bold text-white">{banner.title}</span>
@@ -660,9 +662,9 @@ export function CompositionBannerGrid({
   if (layout === "four-grid" || layout === "mosaic-2x2") {
     return (
       <section className="w-full px-2 sm:px-4 py-8 md:py-10" data-testid={testId ?? "composition-banner-four"} data-banner-layout="four-grid">
-        <div className="grid grid-cols-2 gap-3 md:gap-4">
+        <div className={`grid grid-cols-2 gap-3 md:gap-4 ${bannerHeightClass}`}>
           {banners.slice(0, 4).map((banner) => (
-            <Link key={`${banner.href}-${banner.title}`} href={banner.href} className="relative overflow-hidden rounded-2xl aspect-[21/10] bg-section-surface">
+            <Link key={`${banner.href}-${banner.title}`} href={banner.href} className="relative block h-full overflow-hidden rounded-2xl bg-section-surface">
               {media(banner, "absolute inset-0 h-full w-full object-cover")}
             </Link>
           ))}
@@ -674,12 +676,12 @@ export function CompositionBannerGrid({
   if (layout === "one-large-two-small") {
     return (
       <section className="w-full px-2 sm:px-4 py-6" data-testid={testId ?? "composition-banner-mosaic-3"} data-banner-layout="one-large-two-small">
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4">
+        <div className={`grid grid-cols-1 gap-3 sm:grid-cols-2 sm:grid-rows-2 md:gap-4 ${bannerHeightClass}`}>
           {banners.slice(0, 3).map((banner, index) => (
             <Link
               key={`${banner.href}-${banner.title}-${index}`}
               href={banner.href}
-              className={`relative overflow-hidden rounded-2xl bg-gray-100 ${index === 0 ? "sm:row-span-2 aspect-[16/10] sm:aspect-auto sm:min-h-full" : "aspect-[21/9]"}`}
+              className={`relative block h-full min-h-0 overflow-hidden rounded-2xl bg-gray-100 ${index === 0 ? "sm:row-span-2 sm:h-full" : ""}`}
             >
               {media(banner, "absolute inset-0 h-full w-full object-cover")}
             </Link>
@@ -692,12 +694,12 @@ export function CompositionBannerGrid({
   if (layout === "one-large-four-small") {
     return (
       <section className="w-full px-2 sm:px-4 py-6" data-testid={testId ?? "composition-banner-mosaic-5"} data-banner-layout="one-large-four-small">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <div className={`grid grid-cols-2 gap-3 md:grid-cols-4 ${bannerHeightClass}`}>
           {banners.slice(0, 5).map((banner, index) => (
             <Link
               key={`${banner.href}-${banner.title}-${index}`}
               href={banner.href}
-              className={`relative overflow-hidden rounded-2xl bg-gray-100 aspect-[16/10] ${index === 0 ? "col-span-2 row-span-2 md:aspect-auto md:min-h-[220px]" : ""}`}
+              className={`relative block h-full min-h-0 overflow-hidden rounded-2xl bg-gray-100 ${index === 0 ? "col-span-2 row-span-2" : ""}`}
             >
               {media(banner, "absolute inset-0 h-full w-full object-cover")}
             </Link>
@@ -710,9 +712,9 @@ export function CompositionBannerGrid({
   if (layout === "eight-compact") {
     return (
       <section className="w-full px-2 sm:px-4 py-6" data-testid={testId ?? "composition-banner-eight"} data-banner-layout="eight-compact">
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+        <div className={`grid grid-cols-2 gap-2 sm:grid-cols-4 ${bannerHeightClass}`}>
           {banners.slice(0, 8).map((banner, index) => (
-            <Link key={`${banner.href}-${banner.title}-${index}`} href={banner.href} className="relative overflow-hidden rounded-xl aspect-[16/9] bg-gray-100">
+            <Link key={`${banner.href}-${banner.title}-${index}`} href={banner.href} className="relative block h-full overflow-hidden rounded-xl bg-gray-100">
               {media(banner, "absolute inset-0 h-full w-full object-cover")}
             </Link>
           ))}

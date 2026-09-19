@@ -290,14 +290,14 @@ export function AdminSectionWizard({
                     aria-selected={selected}
                     data-testid={item.testId}
                     data-section-type-key={item.sectionTypeKey}
-                    className={`flex flex-col rounded-2xl border p-3 text-start ${
+                    className={`flex h-full flex-col rounded-2xl border p-3 text-start ${
                       selected ? "border-[#2563EB] bg-blue-50 ring-1 ring-[#2563EB]" : "border-border"
                     }`}
                   >
                     <VariantLivePreview variantKey={item.defaultVariantKey} size="card" />
                     <strong className="mt-2 block">{item.nameFa}</strong>
                     <p className="mt-1 text-xs text-muted">{item.descriptionFa}</p>
-                    <div className="mt-3 flex justify-end">
+                    <div className="mt-auto flex w-full justify-end pt-3">
                       <button
                         type="button"
                         data-select-choice="1"
@@ -343,7 +343,7 @@ export function AdminSectionWizard({
                     data-variant-key={variant.variantKey}
                     data-preview-fingerprint={variant.variantKey}
                     data-testid={`pick-variant-${variant.variantKey.replace(/\./g, "-")}`}
-                    className={`flex flex-col rounded-2xl border p-3 text-start ${
+                    className={`flex h-full flex-col rounded-2xl border p-3 text-start ${
                       selected ? "border-[#2563EB] bg-blue-50 ring-1 ring-[#2563EB]" : "border-border"
                     }`}
                   >
@@ -361,7 +361,7 @@ export function AdminSectionWizard({
                         {variant.recommendedUseFa}
                       </span>
                     ) : null}
-                    <div className="mt-3 flex justify-end">
+                    <div className="mt-auto flex w-full justify-end pt-3">
                       <button
                         type="button"
                         data-select-choice="1"
