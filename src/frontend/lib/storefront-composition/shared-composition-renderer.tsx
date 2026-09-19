@@ -240,12 +240,20 @@ export function renderSharedHomeSection(
           : context.specialOffers.length > 0
             ? context.specialOffers
             : context.mostViewedProducts;
+      const bannerImageUrl =
+        typeof config.bannerImageUrl === "string" && config.bannerImageUrl.trim()
+          ? config.bannerImageUrl.trim()
+          : typeof config.bannerMediaAssetId === "string" && config.bannerMediaAssetId.trim()
+            ? `/v1/storefront/media/${config.bannerMediaAssetId.trim()}`
+            : undefined;
       return (
         <ProductShowcaseEmblaRail
           variant={emblaVariant}
           products={products}
           title={config.title}
           href={config.href ?? "/products"}
+          bannerImageUrl={bannerImageUrl}
+          bannerHref={typeof config.bannerHref === "string" ? config.bannerHref : undefined}
           enableAutoplay
         />
       );
@@ -640,12 +648,20 @@ export function renderSharedLandingSection(input: SharedLandingRenderInput): Rea
         realItems: realSelected,
         createFake: (index) => createFakeProduct(index, locale),
       });
+      const bannerImageUrl =
+        typeof config.bannerImageUrl === "string" && config.bannerImageUrl.trim()
+          ? config.bannerImageUrl.trim()
+          : typeof config.bannerMediaAssetId === "string" && config.bannerMediaAssetId.trim()
+            ? `/v1/storefront/media/${config.bannerMediaAssetId.trim()}`
+            : undefined;
       return (
         <ProductShowcaseEmblaRail
           variant={emblaVariant}
           products={filled.items}
           title={typeof config.title === "string" ? config.title : undefined}
           href={typeof config.href === "string" ? config.href : "/products"}
+          bannerImageUrl={bannerImageUrl}
+          bannerHref={typeof config.bannerHref === "string" ? config.bannerHref : undefined}
           previewLocale={locale}
           enableAutoplay={!storePreview}
         />

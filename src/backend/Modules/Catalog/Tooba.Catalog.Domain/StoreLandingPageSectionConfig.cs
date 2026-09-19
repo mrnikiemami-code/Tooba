@@ -325,6 +325,10 @@ public static class StoreLandingPageSectionConfig
             productIds,
             variantKey = OptionalVariantKey(root),
             heightPreset = OptionalHeightPreset(root),
+            href = OptionalHref(root),
+            bannerImageUrl = OptionalString(root, "bannerImageUrl", 512),
+            bannerHref = OptionalHref(root, "bannerHref"),
+            bannerMediaAssetId = OptionalGuid(root, "bannerMediaAssetId"),
         }, JsonOptions);
     }
 
@@ -601,9 +605,9 @@ public static class StoreLandingPageSectionConfig
         return value.Length > max ? value[..max] : value;
     }
 
-    private static string? OptionalHref(JsonElement root)
+    private static string? OptionalHref(JsonElement root, string name = "href")
     {
-        var href = OptionalString(root, "href", 256);
+        var href = OptionalString(root, name, 256);
         if (href is null)
         {
             return null;
@@ -641,9 +645,18 @@ public static class StoreLandingPageSectionConfig
             return null;
         }
 
-        if (el.ValueKind == JsonValueKind.String && Guid.TryParse(el.GetString(), out var id))
+        if (el.ValueKind == JsonValueKind.String)
         {
-            return id;
+            var raw = el.GetString()?.Trim() ?? string.Empty;
+            if (raw.Length == 0)
+            {
+                return null;
+            }
+
+            if (Guid.TryParse(raw, out var id))
+            {
+                return id;
+            }
         }
 
         throw new PlatformHttpException(400, "شناسه معتبر نیست.", "landing.section.id.invalid");

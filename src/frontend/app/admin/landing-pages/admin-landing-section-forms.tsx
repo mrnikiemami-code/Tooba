@@ -6,6 +6,8 @@ import { loadCategoryTree, type CategoryTreeNodeDto } from "../catalog-category-
 import { listAdminBrandOptions } from "../host-client";
 import { bannerSlotCountForVariant } from "./landing-section-catalog.ts";
 import { listAdminMenus } from "../menus/admin-menus-api.ts";
+import { MediaLibraryDialog } from "../media-library-dialog.tsx";
+import { mediaPreviewUrl, type MediaAssetDto } from "../media-api.ts";
 import { AdminResourceSelector, ResourceSelectorTrigger } from "./admin-resource-selector.tsx";
 import { bannerSlotCellClass, bannerSlotLayoutClass } from "./layout-aware-previews.tsx";
 import { VariantLivePreview } from "../../../lib/storefront-composition/variant-live-preview.tsx";
@@ -415,15 +417,84 @@ function ProductSourceForm({
   const title = typeof value.title === "string" ? value.title : "";
   const set = (patch: Record<string, unknown>) => onChange({ ...value, ...patch });
   const source = typeof value.source === "string" ? value.source : "Newest";
+  const variantKey = typeof value.variantKey === "string" ? value.variantKey : "";
+  const isExplorer = variantKey === "product.explorer" || variantKey === "explorer";
+  const bannerImageUrl = typeof value.bannerImageUrl === "string" ? value.bannerImageUrl : "";
+  const bannerHref = typeof value.bannerHref === "string" ? value.bannerHref : "";
+  const bannerMediaAssetId = typeof value.bannerMediaAssetId === "string" ? value.bannerMediaAssetId : "";
+  const [bannerMediaOpen, setBannerMediaOpen] = useState(false);
   const manualEmpty = source === "Manual" && asStringArray(value.productIds).length === 0;
   const categoryMissing = source === "Category" && !(typeof value.categoryId === "string" && value.categoryId);
   const brandMissing = source === "Brand" && !(typeof value.brandId === "string" && value.brandId);
   const allowed = strategies.filter((s) => ["Manual", "Category", "Brand", "Newest"].includes(s));
+  const bannerPreview =
+    bannerImageUrl.trim()
+    || (bannerMediaAssetId.trim() ? mediaPreviewUrl(bannerMediaAssetId) ?? "" : "");
 
   return (
     <div className="space-y-3" data-testid="product-section-editor">
       {(mode === "all" || mode === "settings") ? (
         <TextField label="عنوان بخش" value={title} onChange={(next) => set({ title: next })} />
+      ) : null}
+      {(mode === "all" || mode === "settings") && isExplorer ? (
+        <div className="space-y-3 rounded-2xl border border-border bg-surface p-3" data-testid="explorer-banner-settings">
+          <p className="text-sm font-bold text-foreground">بنر ثابت کاشف</p>
+          <p className="text-xs text-muted">
+            بنر هم‌اندازه کارت سمت راست است؛ با کشیدن (گراب) جمع می‌شود و نوار باریک می‌ماند تا دوباره باز شود. فلش راهنما فقط نشانهٔ ورق‌زدن است.
+          </p>
+          <div className="flex flex-wrap items-center gap-3">
+            <button
+              type="button"
+              className="inline-flex min-h-11 items-center rounded-xl border border-border bg-background px-3 text-sm font-bold"
+              onClick={() => setBannerMediaOpen(true)}
+              data-testid="explorer-banner-pick-media"
+            >
+              {bannerPreview ? "تغییر تصویر بنر" : "انتخاب تصویر بنر"}
+            </button>
+            {bannerPreview ? (
+              <button
+                type="button"
+                className="text-xs font-bold text-red-600"
+                onClick={() => set({ bannerImageUrl: "", bannerMediaAssetId: null })}
+                data-testid="explorer-banner-clear-media"
+              >
+                حذف تصویر
+              </button>
+            ) : null}
+          </div>
+          {bannerPreview ? (
+            <div className="overflow-hidden rounded-xl border border-border bg-background">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={bannerPreview} alt="" className="h-36 w-full object-cover" data-testid="explorer-banner-preview" />
+            </div>
+          ) : (
+            <p className="rounded-xl border border-dashed border-border px-3 py-6 text-center text-xs text-muted">
+              هنوز بنری انتخاب نشده.
+            </p>
+          )}
+          <TextField
+            label="لینک بنر"
+            value={bannerHref}
+            onChange={(next) => set({ bannerHref: next })}
+            placeholder="/products یا آدرس کامل"
+          />
+          <MediaLibraryDialog
+            open={bannerMediaOpen}
+            title="انتخاب تصویر بنر کاشف"
+            selectionMode="single"
+            assetKind="image"
+            onClose={() => setBannerMediaOpen(false)}
+            onConfirm={(assets: MediaAssetDto[]) => {
+              const asset = assets[0];
+              if (!asset) return;
+              set({
+                bannerMediaAssetId: asset.mediaAssetId,
+                bannerImageUrl: mediaPreviewUrl(asset.mediaAssetId) ?? "",
+              });
+              setBannerMediaOpen(false);
+            }}
+          />
+        </div>
       ) : null}
       {(mode === "all" || mode === "source") ? (
         <>

@@ -231,8 +231,8 @@ export const VARIANTS: VariantDefinition[] = [
   variant("product.cinematic-plus", "ProductShowcase", "سینمایی پلاس", "عمق سینمایی غنی‌تر با برجستگی مرکز کنترل‌شده", "Existing", {
     previewKind: "product-carousel", recommendedUseFa: "ویترین پریمیوم عمیق", dataSources: DS_PRODUCT,
   }),
-  variant("product.explorer", "ProductShowcase", "کاشف", "ردیف اکتشافی با peek نامتقارن کارت‌های همسایه", "Existing", {
-    previewKind: "product-carousel", recommendedUseFa: "مرور و کشف کالا", dataSources: DS_PRODUCT,
+  variant("product.explorer", "ProductShowcase", "کاشف", "بنر ثابت کنار ردیف؛ کارت‌ها از پشت بنر حرکت می‌کنند", "Existing", {
+    previewKind: "product-carousel", recommendedUseFa: "مرور و کشف کالا با بنر کناری", dataSources: DS_PRODUCT,
   }),
   variant("product.grid", "ProductShowcase", "شبکه کالا", "شبکه چندستونه", "ReusableViaAdapter", {
     previewKind: "product-grid", recommendedUseFa: "مناسب نمایش فشرده", dataSources: DS_PRODUCT,

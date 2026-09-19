@@ -2,12 +2,11 @@
 
 /**
  * Product Showcase Embla rails — additive variants only (LOCK-SF-375…390).
- * One shared rail engine + variant-driven composition/motion metadata.
- * Reuses StorefrontProductCardView unchanged; Embla + Autoplay scoped to these five keys.
- * R13-R4: calm motion, readable proportions, no sweep overlays, upright explorer.
+ * Sunny/Money/Cinematic: Embla rails. Cinematic Plus: cards deck.
+ * Explorer: Beauty Cosmetics–style editorial peek rail (no per-slide transform).
  */
 
-import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, type PointerEvent as ReactPointerEvent } from "react";
 import useEmblaCarousel from "embla-carousel-react";
 import Autoplay from "embla-carousel-autoplay";
 import { ChevronLeft, ChevronRight } from "lucide-react";
@@ -27,7 +26,7 @@ type RailContract = {
   testId: string;
   defaultTitle: string;
   defaultHref: string;
-  align: "start" | "center";
+  align: "start" | "center" | "end";
   loop: boolean;
   dragFree: boolean;
   duration: number;
@@ -40,7 +39,6 @@ type RailContract = {
   edgeFade: boolean;
   asymmetry: boolean;
   navCompact: boolean;
-  /** Active scale / depth strength multipliers for composition. */
   activeScale: number;
   neighborScaleStep: number;
   rotateYDeg: number;
@@ -55,46 +53,44 @@ type RailContract = {
 
 const VARIANT_CONTRACTS: Record<ProductShowcaseEmblaVariant, RailContract> = {
   sunny: {
-    designNameFa: "سانی",
+    designNameFa: "آفتابی",
     testId: "product-showcase-sunny",
-    defaultTitle: "سانی",
+    defaultTitle: "آفتابی",
     defaultHref: "/products",
-    align: "center",
+    align: "start",
     loop: true,
     dragFree: false,
-    // Embla duration ticks — higher = calmer (~500–800ms feel with CSS ease)
-    duration: 26,
-    autoplayDelayMs: 5200,
-    slideBasis: "basis-[56%] sm:basis-[36%] md:basis-[24%] lg:basis-[19%]",
-    gapClass: "gap-4 md:gap-5",
-    sectionClass: "bg-gradient-to-b from-amber-50/40 via-section-surface to-section-surface",
-    viewportClass: "py-2",
+    duration: 34,
+    autoplayDelayMs: 5600,
+    slideBasis: "basis-[58%] sm:basis-[38%] md:basis-[25%] lg:basis-[20%]",
+    gapClass: "gap-3 md:gap-4",
+    sectionClass: "bg-gradient-to-b from-amber-50/60 via-section-surface to-section-surface",
+    viewportClass: "py-3",
     perspective: undefined,
     edgeFade: false,
     asymmetry: false,
-    navCompact: false,
-    activeScale: 1.02,
-    neighborScaleStep: 0.012,
+    navCompact: true,
+    activeScale: 1.04,
+    neighborScaleStep: 0.015,
     rotateYDeg: 0,
     translateZActive: 0,
     translateZStep: 0,
-    elevateActivePx: 4,
-    neighborOpacityStep: 0.03,
-    // Local active-only warm ring — no traveling edge sweep (LOCK-SF-387)
+    elevateActivePx: 6,
+    neighborOpacityStep: 0.04,
     warmGlow: true,
     commerceRing: false,
     vignette: false,
   },
   money: {
-    designNameFa: "مانی",
+    designNameFa: "پولی",
     testId: "product-showcase-money",
-    defaultTitle: "مانی",
+    defaultTitle: "پولی",
     defaultHref: "/products",
-    align: "center",
+    align: "start",
     loop: true,
     dragFree: false,
-    duration: 22,
-    autoplayDelayMs: 4000,
+    duration: 32,
+    autoplayDelayMs: 5400,
     slideBasis: "basis-[58%] sm:basis-[38%] md:basis-[25%] lg:basis-[20%]",
     gapClass: "gap-2 md:gap-2.5",
     sectionClass: "bg-gradient-to-b from-orange-50/50 via-amber-50/20 to-section-surface",
@@ -122,23 +118,23 @@ const VARIANT_CONTRACTS: Record<ProductShowcaseEmblaVariant, RailContract> = {
     align: "center",
     loop: true,
     dragFree: false,
-    duration: 30,
-    autoplayDelayMs: 6000,
-    slideBasis: "basis-[62%] sm:basis-[40%] md:basis-[28%] lg:basis-[22%]",
-    gapClass: "gap-2 md:gap-3",
+    duration: 42,
+    autoplayDelayMs: 6500,
+    slideBasis: "basis-[58%] sm:basis-[38%] md:basis-[25%] lg:basis-[20%]",
+    gapClass: "gap-6 md:gap-8",
     sectionClass: "bg-gradient-to-b from-slate-100/70 via-section-surface to-section-surface",
-    viewportClass: "py-4 md:py-5",
-    perspective: 1200,
+    viewportClass: "py-5 md:py-6",
+    perspective: 1400,
     edgeFade: true,
     asymmetry: false,
     navCompact: false,
-    activeScale: 1.03,
-    neighborScaleStep: 0.025,
-    rotateYDeg: 3,
-    translateZActive: 18,
-    translateZStep: 14,
+    activeScale: 1.0,
+    neighborScaleStep: 0.06,
+    rotateYDeg: 16,
+    translateZActive: 12,
+    translateZStep: 28,
     elevateActivePx: 0,
-    neighborOpacityStep: 0.08,
+    neighborOpacityStep: 0.14,
     warmGlow: false,
     commerceRing: false,
     vignette: true,
@@ -151,53 +147,55 @@ const VARIANT_CONTRACTS: Record<ProductShowcaseEmblaVariant, RailContract> = {
     align: "center",
     loop: true,
     dragFree: false,
-    duration: 34,
-    autoplayDelayMs: 6800,
-    // Same commercial basis as cinematic — richness via depth/shadow, not size (LOCK-SF-388)
-    slideBasis: "basis-[62%] sm:basis-[40%] md:basis-[28%] lg:basis-[22%]",
-    gapClass: "gap-2.5 md:gap-3.5",
-    sectionClass: "bg-gradient-to-b from-slate-200/60 via-slate-50/30 to-section-surface",
-    viewportClass: "py-5 md:py-6",
-    perspective: 1300,
-    edgeFade: true,
+    duration: 36,
+    autoplayDelayMs: 7000,
+    // Same commercial card width — deck via absolute stack, not rail/size
+    slideBasis: "w-[58%] sm:w-[38%] md:w-[25%] lg:w-[20%]",
+    gapClass: "gap-0",
+    sectionClass: "bg-gradient-to-b from-slate-200/50 via-section-surface to-section-surface",
+    viewportClass: "py-8 md:py-10",
+    perspective: undefined,
+    edgeFade: false,
     asymmetry: false,
     navCompact: false,
-    activeScale: 1.035,
-    neighborScaleStep: 0.035,
-    rotateYDeg: 3.5,
-    translateZActive: 28,
-    translateZStep: 20,
+    activeScale: 1.0,
+    neighborScaleStep: 0.025,
+    rotateYDeg: 0,
+    translateZActive: 0,
+    translateZStep: 0,
     elevateActivePx: 0,
-    neighborOpacityStep: 0.1,
+    neighborOpacityStep: 0.12,
     warmGlow: false,
     commerceRing: false,
-    vignette: true,
+    vignette: false,
   },
   explorer: {
     designNameFa: "کاشف",
     testId: "product-showcase-explorer",
     defaultTitle: "کاشف",
     defaultHref: "/products",
+    // Beauty peek rail; transparent shell so user/theme section background shows
     align: "start",
     loop: true,
     dragFree: false,
-    duration: 26,
-    autoplayDelayMs: 4800,
-    slideBasis: "basis-[58%] sm:basis-[38%] md:basis-[25%] lg:basis-[20%]",
+    duration: 28,
+    autoplayDelayMs: 5200,
+    // Banner + slides share column width; a bit wider, height capped on banner
+    slideBasis: "basis-[13.5rem] sm:basis-[15rem] md:basis-[16.5rem] lg:basis-[18rem]",
     gapClass: "gap-3 md:gap-4",
-    sectionClass: "bg-gradient-to-l from-sky-50/40 via-section-surface to-section-surface",
-    viewportClass: "py-2 ps-1 pe-10 md:pe-20",
+    sectionClass: "",
+    viewportClass: "py-0",
     perspective: undefined,
     edgeFade: false,
-    asymmetry: true,
+    asymmetry: false,
     navCompact: false,
-    activeScale: 1.01,
-    neighborScaleStep: 0.01,
+    activeScale: 1,
+    neighborScaleStep: 0,
     rotateYDeg: 0,
     translateZActive: 0,
     translateZStep: 0,
     elevateActivePx: 0,
-    neighborOpacityStep: 0.03,
+    neighborOpacityStep: 0,
     warmGlow: false,
     commerceRing: false,
     vignette: false,
@@ -216,28 +214,439 @@ function useReducedMotionFlag(): boolean {
   return reduced;
 }
 
-export function ProductShowcaseEmblaRail({
+/** Shortest signed distance on a circular index ring (seamless end→start). */
+function circularOffset(index: number, selected: number, len: number): number {
+  if (len <= 0) return 0;
+  let d = index - selected;
+  const half = Math.floor(len / 2);
+  if (d > half) d -= len;
+  if (d < -half) d += len;
+  return d;
+}
+
+/**
+ * Explorer side banner: same rem column as product cards; height via flex stretch.
+ * No post-paint resize (avoids F5 large→small flash). Grab/chevron to collapse.
+ */
+function ExplorerCollapsibleBanner({
+  imageUrl,
+  href,
+  widthClass,
+}: {
+  imageUrl: string;
+  href?: string;
+  widthClass: string;
+}) {
+  const [collapsed, setCollapsed] = useState(false);
+  const [dragX, setDragX] = useState(0);
+  const [dragging, setDragging] = useState(false);
+  const startX = useRef<number | null>(null);
+  const moved = useRef(false);
+
+  const finishDrag = useCallback(
+    (clientX: number) => {
+      const start = startX.current;
+      startX.current = null;
+      setDragging(false);
+      setDragX(0);
+      if (start == null) return;
+      const dx = clientX - start;
+      if (collapsed) {
+        if (dx < -40) setCollapsed(false);
+      } else if (dx > 48) {
+        setCollapsed(true);
+      }
+    },
+    [collapsed],
+  );
+
+  const onPointerDown = (e: ReactPointerEvent<HTMLDivElement>) => {
+    if (e.button !== 0) return;
+    startX.current = e.clientX;
+    moved.current = false;
+    setDragging(true);
+    setDragX(0);
+    e.currentTarget.setPointerCapture(e.pointerId);
+  };
+
+  const onPointerMove = (e: ReactPointerEvent<HTMLDivElement>) => {
+    if (startX.current == null) return;
+    const dx = e.clientX - startX.current;
+    if (Math.abs(dx) > 6) moved.current = true;
+    if (collapsed) setDragX(Math.min(0, dx * 0.55));
+    else setDragX(Math.max(0, dx * 0.55));
+  };
+
+  const onPointerUp = (e: ReactPointerEvent<HTMLDivElement>) => {
+    if (e.currentTarget.hasPointerCapture(e.pointerId)) {
+      e.currentTarget.releasePointerCapture(e.pointerId);
+    }
+    finishDrag(e.clientX);
+  };
+
+  const onPointerCancel = (e: ReactPointerEvent<HTMLDivElement>) => {
+    if (e.currentTarget.hasPointerCapture(e.pointerId)) {
+      e.currentTarget.releasePointerCapture(e.pointerId);
+    }
+    startX.current = null;
+    setDragging(false);
+    setDragX(0);
+  };
+
+  return (
+    <div
+      className={`relative z-20 shrink-0 grow-0 self-stretch pe-1 ps-0.5 ${collapsed ? "w-9" : widthClass}`}
+      data-explorer-side-banner-slot=""
+      data-explorer-banner-collapsed={collapsed ? "1" : "0"}
+      onPointerDown={onPointerDown}
+      onPointerMove={onPointerMove}
+      onPointerUp={onPointerUp}
+      onPointerCancel={onPointerCancel}
+      onClickCapture={(e) => {
+        if (moved.current) {
+          e.preventDefault();
+          e.stopPropagation();
+          moved.current = false;
+          return;
+        }
+        if (collapsed) {
+          e.preventDefault();
+          e.stopPropagation();
+          setCollapsed(false);
+        }
+      }}
+      style={{
+        transform: `translate3d(${dragX}px, 0, 0)`,
+        transition: dragging ? "none" : "transform 420ms cubic-bezier(0.22, 1, 0.36, 1)",
+        cursor: dragging ? "grabbing" : "grab",
+        touchAction: "none",
+      }}
+    >
+      {collapsed ? (
+        <div
+          className="flex h-full min-h-[16rem] w-full flex-col items-center justify-center gap-1 rounded-xl border border-black/10 bg-surface/95 shadow-[0_14px_28px_-8px_rgba(15,23,42,0.3)] ring-1 ring-black/5"
+          data-explorer-side-banner-peek=""
+          role="img"
+          aria-label="بنر جمع‌شده — بکشید یا بزنید تا باز شود"
+        >
+          <ChevronLeft className="h-4 w-4 text-gray-600 rtl:rotate-180" aria-hidden />
+          <span className="text-[10px] font-bold text-muted [writing-mode:vertical-rl]">بنر</span>
+        </div>
+      ) : (
+        <div
+          className="relative h-full min-h-[16rem] w-full overflow-hidden rounded-xl border border-black/10 bg-surface shadow-[0_18px_36px_-10px_rgba(15,23,42,0.32),0_8px_14px_-6px_rgba(15,23,42,0.16)] ring-1 ring-black/5"
+          data-explorer-side-banner=""
+        >
+          {href?.trim() ? (
+            <Link href={href.trim()} className="absolute inset-0 block" aria-label="بنر بخش">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={imageUrl} alt="" className="absolute inset-0 h-full w-full object-cover" draggable={false} />
+            </Link>
+          ) : (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={imageUrl} alt="" className="absolute inset-0 h-full w-full object-cover" draggable={false} />
+          )}
+          <button
+            type="button"
+            className="absolute inset-y-0 end-0 z-30 flex w-9 items-center justify-center bg-gradient-to-r from-transparent to-black/35"
+            data-explorer-banner-swipe-cue=""
+            aria-label="جمع کردن بنر"
+            onPointerDown={(e) => {
+              e.stopPropagation();
+            }}
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              setCollapsed(true);
+            }}
+          >
+            <span className="flex h-9 w-5 items-center justify-center rounded-full bg-white/95 text-gray-700 shadow-md">
+              <ChevronRight className="h-3.5 w-3.5 rtl:rotate-180" />
+            </span>
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+type ShowcaseProps = {
+  variant: ProductShowcaseEmblaVariant;
+  products: StorefrontProductCard[];
+  title?: string;
+  href?: string;
+  previewLocale?: string;
+  enableAutoplay?: boolean;
+  /** Explorer side banner (Beauty layout) — same visual width as a card. */
+  bannerImageUrl?: string;
+  bannerHref?: string;
+};
+
+type CardsStageKind = "cinematic-plus";
+
+/**
+ * In-place card stage (no Embla rail) — cinematic-plus fan deck (accepted).
+ */
+function ProductShowcaseCardsStage({
+  kind = "cinematic-plus",
+  products,
+  title,
+  href,
+  previewLocale = "fa",
+  enableAutoplay = true,
+}: Omit<ShowcaseProps, "variant"> & { kind?: CardsStageKind }) {
+  const contract = VARIANT_CONTRACTS["cinematic-plus"];
+  const sectionTitle = title?.trim() || contract.defaultTitle;
+  const sectionHref = href?.trim() || contract.defaultHref;
+  const headingId = `${contract.testId}-heading`;
+  const reducedMotion = useReducedMotionFlag();
+  const rootRef = useRef<HTMLElement | null>(null);
+  const hoverPaused = useRef(false);
+  const dragPaused = useRef(false);
+  const pointerStartX = useRef<number | null>(null);
+  const dragMoved = useRef(false);
+  const autoplayAllowed = enableAutoplay && !reducedMotion;
+
+  const [selectedIndex, setSelectedIndex] = useState(0);
+  const [dragX, setDragX] = useState(0);
+  const [dragging, setDragging] = useState(false);
+  const len = products.length;
+
+  const go = useCallback(
+    (delta: number) => {
+      if (len <= 0) return;
+      setSelectedIndex((i) => ((i + delta) % len + len) % len);
+    },
+    [len],
+  );
+
+  const scrollPrev = useCallback(() => go(1), [go]);
+  const scrollNext = useCallback(() => go(-1), [go]);
+
+  useEffect(() => {
+    if (!autoplayAllowed || len < 2) return;
+    const id = window.setInterval(() => {
+      if (hoverPaused.current || dragPaused.current) return;
+      setSelectedIndex((i) => (i + 1) % len);
+    }, contract.autoplayDelayMs);
+    return () => window.clearInterval(id);
+  }, [autoplayAllowed, len, contract.autoplayDelayMs]);
+
+  const finishDrag = useCallback(
+    (clientX: number) => {
+      const start = pointerStartX.current;
+      pointerStartX.current = null;
+      dragPaused.current = false;
+      setDragging(false);
+      if (start == null) {
+        setDragX(0);
+        return;
+      }
+      const dx = clientX - start;
+      setDragX(0);
+      if (Math.abs(dx) < 48) return;
+      if (dx > 0) go(-1);
+      else go(1);
+    },
+    [go],
+  );
+
+  const onPointerDown = (e: ReactPointerEvent<HTMLDivElement>) => {
+    if (e.button !== 0) return;
+    pointerStartX.current = e.clientX;
+    dragMoved.current = false;
+    dragPaused.current = true;
+    setDragging(true);
+    setDragX(0);
+    e.currentTarget.setPointerCapture(e.pointerId);
+  };
+
+  const onPointerMove = (e: ReactPointerEvent<HTMLDivElement>) => {
+    if (pointerStartX.current == null) return;
+    const dx = e.clientX - pointerStartX.current;
+    if (Math.abs(dx) > 6) dragMoved.current = true;
+    setDragX(dx * 0.55);
+  };
+
+  const onPointerUp = (e: ReactPointerEvent<HTMLDivElement>) => {
+    if (e.currentTarget.hasPointerCapture(e.pointerId)) {
+      e.currentTarget.releasePointerCapture(e.pointerId);
+    }
+    finishDrag(e.clientX);
+  };
+
+  const onPointerCancel = (e: ReactPointerEvent<HTMLDivElement>) => {
+    if (e.currentTarget.hasPointerCapture(e.pointerId)) {
+      e.currentTarget.releasePointerCapture(e.pointerId);
+    }
+    pointerStartX.current = null;
+    dragPaused.current = false;
+    setDragging(false);
+    setDragX(0);
+  };
+
+  const cardStyle = (index: number): CSSProperties => {
+    const offset = circularOffset(index, selectedIndex, len);
+    const abs = Math.abs(offset);
+    const transition = dragging
+      ? "none"
+      : "transform 520ms cubic-bezier(0.22, 1, 0.36, 1), opacity 520ms ease-out, box-shadow 520ms ease-out";
+
+    if (reducedMotion) {
+      if (offset === 0) return { zIndex: 10, transform: "translate3d(0, 0, 0) scale(1)" };
+      return { opacity: 0, visibility: "hidden", zIndex: 0 };
+    }
+
+    if (abs > 3) {
+      return {
+        opacity: 0,
+        pointerEvents: "none",
+        transform: "translate3d(0, 24px, 0) scale(0.9)",
+        zIndex: 0,
+        visibility: "hidden",
+      };
+    }
+
+    if (offset === 0) {
+      const grabRotate = dragging ? dragX * 0.04 : 0;
+      return {
+        transform: `translate3d(${dragX}px, 0, 0) rotate(${grabRotate}deg) scale(1)`,
+        zIndex: 10,
+        opacity: 1,
+        boxShadow: "0 18px 36px rgba(15, 23, 42, 0.16)",
+        pointerEvents: "auto",
+        transition,
+        cursor: dragging ? "grabbing" : "grab",
+      };
+    }
+
+    const dir = offset > 0 ? 1 : -1;
+    const stack = Math.min(abs, 3);
+    const follow = dragging ? dragX * (0.18 / stack) : 0;
+    return {
+      transform: `translate3d(${dir * stack * 14 + follow}px, ${stack * 10}px, 0) rotate(${dir * stack * 6}deg) scale(${Math.max(0.92, 1 - stack * contract.neighborScaleStep)})`,
+      opacity: Math.max(0.5, 1 - stack * contract.neighborOpacityStep),
+      zIndex: 10 - stack,
+      boxShadow: "0 10px 22px rgba(15, 23, 42, 0.1)",
+      pointerEvents: "none",
+      transition,
+    };
+  };
+
+  if (len === 0) return null;
+
+  const navBtnClass =
+    "inline-flex h-11 w-11 items-center justify-center rounded-xl border border-gray-200 bg-surface text-gray-700";
+
+  return (
+    <section
+      ref={rootRef}
+      className={`w-full bg-section-surface ${contract.sectionClass}`}
+      data-testid={contract.testId}
+      data-product-layout={kind}
+      data-product-showcase-rail="cards-deck"
+      data-product-showcase-autoplay={autoplayAllowed ? "on" : "off"}
+      data-product-showcase-autoplay-delay={String(contract.autoplayDelayMs)}
+      data-storefront-surface-role="section"
+      onMouseEnter={() => {
+        hoverPaused.current = true;
+      }}
+      onMouseLeave={() => {
+        hoverPaused.current = false;
+      }}
+      onFocusCapture={() => {
+        hoverPaused.current = true;
+      }}
+      onBlurCapture={(event) => {
+        const next = event.relatedTarget as Node | null;
+        if (next && rootRef.current?.contains(next)) return;
+        hoverPaused.current = false;
+      }}
+    >
+      <div className="relative w-full px-2 sm:px-4 py-8 md:py-10">
+        <div className="relative mb-4 flex items-center justify-between gap-3">
+          <h2 id={headingId} className="flex min-w-0 items-center gap-2 text-lg font-bold text-gray-900 md:text-xl">
+            <span className="h-5 w-1 shrink-0 rounded-full" style={{ backgroundColor: STOREFRONT_ACCENT }} />
+            <span className="truncate">{sectionTitle}</span>
+          </h2>
+          <div className="flex items-center gap-2">
+            <div className="hidden items-center gap-1 sm:flex" role="group" aria-label="ناوبری دسته کارت">
+              <button type="button" className={navBtnClass} onClick={scrollPrev} aria-label="قبلی" data-rail-nav="prev">
+                <ChevronRight className="h-4 w-4" />
+              </button>
+              <button type="button" className={navBtnClass} onClick={scrollNext} aria-label="بعدی" data-rail-nav="next">
+                <ChevronLeft className="h-4 w-4" />
+              </button>
+            </div>
+            <Link
+              href={sectionHref}
+              className="inline-flex min-h-11 items-center text-xs font-bold hover:underline"
+              style={{ color: STOREFRONT_ACCENT }}
+            >
+              مشاهده همه
+            </Link>
+          </div>
+        </div>
+
+        <div
+          className={`relative mx-auto flex justify-center overflow-visible px-4 select-none ${contract.viewportClass}`}
+          data-cards-deck-stage=""
+          data-rail-cards="1"
+          onPointerDown={onPointerDown}
+          onPointerMove={onPointerMove}
+          onPointerUp={onPointerUp}
+          onPointerCancel={onPointerCancel}
+          onClickCapture={(e) => {
+            if (dragMoved.current) {
+              e.preventDefault();
+              e.stopPropagation();
+              dragMoved.current = false;
+            }
+          }}
+          style={{ touchAction: "pan-y", cursor: dragging ? "grabbing" : "grab" }}
+        >
+          <div className={`relative ${contract.slideBasis}`} data-cards-deck-anchor="">
+            <div className="invisible pointer-events-none" aria-hidden>
+              <StorefrontProductCardView card={products[selectedIndex]!} previewLocale={previewLocale} />
+            </div>
+            {products.map((card, index) => (
+              <div
+                key={`${contract.testId}-${card.productId}`}
+                className="absolute inset-x-0 top-0"
+                data-cards-deck-slide=""
+                data-slide-index={index}
+                data-slide-active={index === selectedIndex ? "true" : "false"}
+                style={cardStyle(index)}
+              >
+                <div className={index === selectedIndex ? "rounded-2xl" : undefined}>
+                  <StorefrontProductCardView card={card} previewLocale={previewLocale} />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function ProductShowcaseEmblaRailInner({
   variant,
   products,
   title,
   href,
   previewLocale = "fa",
   enableAutoplay = true,
-}: {
-  variant: ProductShowcaseEmblaVariant;
-  products: StorefrontProductCard[];
-  title?: string;
-  href?: string;
-  previewLocale?: string;
-  /** Storefront rails autoplay; Admin picker/Review previews keep motion off (LOCK-SF-383). */
-  enableAutoplay?: boolean;
-}) {
+  bannerImageUrl,
+  bannerHref,
+}: ShowcaseProps) {
   const contract = VARIANT_CONTRACTS[variant];
   const sectionTitle = title?.trim() || contract.defaultTitle;
   const sectionHref = href?.trim() || contract.defaultHref;
   const headingId = `${contract.testId}-heading`;
   const reducedMotion = useReducedMotionFlag();
-  const isDepth = variant === "cinematic" || variant === "cinematic-plus";
+  const isDepth = variant === "cinematic";
+  const isBeauty = variant === "explorer";
   const rootRef = useRef<HTMLElement | null>(null);
   const autoplayAllowed = enableAutoplay && !reducedMotion;
 
@@ -246,8 +655,6 @@ export function ProductShowcaseEmblaRail({
     return Autoplay({
       delay: contract.autoplayDelayMs,
       stopOnInteraction: false,
-      // Hover pause is handled via section mouse enter/leave so Playwright proofs
-      // and first paint are not blocked by the default cursor position.
       stopOnMouseEnter: false,
       stopOnFocusIn: false,
       playOnInit: true,
@@ -261,7 +668,6 @@ export function ProductShowcaseEmblaRail({
       direction: "rtl",
       align: contract.align,
       loop: contract.loop && products.length > 2,
-      // Loop + trimSnaps conflicts in Embla and can freeze autoplay for some rails.
       containScroll: contract.loop && products.length > 2 ? false : contract.asymmetry ? false : "trimSnaps",
       dragFree: contract.dragFree && !reducedMotion,
       skipSnaps: false,
@@ -320,23 +726,21 @@ export function ProductShowcaseEmblaRail({
         return {
           transform: `translate3d(0, 0, ${contract.translateZActive}px) scale(${contract.activeScale})`,
           zIndex: 5,
-          boxShadow:
-            variant === "cinematic-plus"
-              ? "0 18px 36px rgba(15, 23, 42, 0.18)"
-              : "0 12px 28px rgba(15, 23, 42, 0.12)",
+          filter: "none",
+          boxShadow: "0 14px 32px rgba(15, 23, 42, 0.14)",
         };
       }
-      // Active stays front-facing; only neighbors rotate (LOCK-SF-386/388).
       const rotate = (offset > 0 ? 1 : -1) * contract.rotateYDeg * Math.min(abs, 2);
-      const scale = Math.max(0.9, 1 - abs * contract.neighborScaleStep);
-      const opacity = Math.max(0.62, 1 - abs * contract.neighborOpacityStep);
-      const xShift =
-        variant === "cinematic-plus" ? (offset > 0 ? 6 : -6) * abs : (offset > 0 ? 3 : -3) * abs;
+      const scale = Math.max(0.86, 1 - abs * contract.neighborScaleStep);
+      const opacity = Math.max(0.55, 1 - abs * contract.neighborOpacityStep);
+      const xShift = (offset > 0 ? 10 : -10) * abs;
+      const gray = Math.min(0.85, 0.35 + abs * 0.28);
       return {
-        transform: `translate3d(${xShift}px, ${abs * 3}px, ${-abs * contract.translateZStep}px) rotateY(${rotate}deg) scale(${scale})`,
+        transform: `translate3d(${xShift}px, ${abs * 8}px, ${-abs * contract.translateZStep}px) rotateY(${rotate}deg) scale(${scale})`,
         opacity,
         zIndex: 4 - abs,
-        boxShadow: abs === 1 ? "0 8px 20px rgba(15, 23, 42, 0.1)" : undefined,
+        filter: `grayscale(${gray})`,
+        boxShadow: abs === 1 ? "0 10px 24px rgba(15, 23, 42, 0.12)" : undefined,
       };
     }
 
@@ -366,36 +770,20 @@ export function ProductShowcaseEmblaRail({
       };
     }
 
-    // Explorer — positional asymmetry / peek only; active upright (LOCK-SF-389).
+    if (isBeauty) {
+      // Beauty Cosmetics: no per-slide transform — Embla alone scrolls (avoids glitch).
+      return {};
+    }
+
     if (offset === 0) {
       return {
         transform: `translate3d(0, 0, 0) scale(${contract.activeScale})`,
         zIndex: 3,
       };
     }
-    if (offset === 1) {
-      return {
-        transform: "translate3d(-10px, 6px, 0) scale(0.98)",
-        opacity: 0.94,
-        zIndex: 2,
-      };
-    }
-    if (offset === -1) {
-      return {
-        transform: "translate3d(14px, 2px, 0) scale(0.97)",
-        opacity: 0.86,
-        zIndex: 1,
-      };
-    }
-    if (offset > 1) {
-      return {
-        transform: `translate3d(${-12 * abs}px, ${4 * abs}px, 0) scale(${0.96 - abs * 0.01})`,
-        opacity: Math.max(0.7, 0.9 - abs * 0.08),
-      };
-    }
     return {
-      transform: `translate3d(${14 * abs}px, ${2 * abs}px, 0) scale(0.95)`,
-      opacity: 0.72,
+      transform: `scale(${Math.max(0.96, 1 - abs * 0.02)})`,
+      opacity: Math.max(0.75, 1 - abs * 0.08),
     };
   };
 
@@ -415,13 +803,13 @@ export function ProductShowcaseEmblaRail({
   return (
     <section
       ref={rootRef}
-      className={`w-full bg-section-surface ${contract.sectionClass}`}
+      className={`w-full ${isBeauty ? "bg-transparent" : `bg-section-surface ${contract.sectionClass}`}`}
       data-testid={contract.testId}
       data-product-layout={variant}
-      data-product-showcase-rail="embla"
+      data-product-showcase-rail={isBeauty ? "beauty" : "embla"}
       data-product-showcase-autoplay={autoplayAllowed ? "on" : "off"}
       data-product-showcase-autoplay-delay={String(contract.autoplayDelayMs)}
-      data-storefront-surface-role="section"
+      data-storefront-surface-role={isBeauty ? "inherit" : "section"}
       onMouseEnter={() => {
         if (autoplayAllowed) autoplayPlugin?.stop();
       }}
@@ -439,6 +827,7 @@ export function ProductShowcaseEmblaRail({
       }}
       style={{
         perspective: isDepth && !reducedMotion ? contract.perspective : undefined,
+        perspectiveOrigin: isDepth ? "50% 45%" : undefined,
       }}
     >
       <div className="relative w-full px-2 sm:px-4 py-8 md:py-10">
@@ -452,25 +841,29 @@ export function ProductShowcaseEmblaRail({
         <div className="relative mb-4 flex items-center justify-between gap-3">
           <h2 id={headingId} className="flex min-w-0 items-center gap-2 text-lg font-bold text-gray-900 md:text-xl">
             <span
-              className={`h-5 w-1 shrink-0 rounded-full ${variant === "money" ? "w-1.5" : ""}`}
+              className={`h-5 w-1 shrink-0 rounded-full ${variant === "money" ? "w-1.5" : ""} ${isBeauty ? "rounded-sm" : ""}`}
               style={{
                 backgroundColor:
                   variant === "sunny"
                     ? "#f59e0b"
                     : variant === "money"
                       ? "#ea580c"
-                      : variant === "explorer"
-                        ? "#0284c7"
-                        : STOREFRONT_ACCENT,
+                      : STOREFRONT_ACCENT,
               }}
             />
-            <span className="truncate">{sectionTitle}</span>
+            <span className={`truncate ${isBeauty ? "font-semibold tracking-wide" : ""}`}>
+              {sectionTitle}
+            </span>
           </h2>
           <div className="flex items-center gap-2">
             <div className="hidden items-center gap-1 sm:flex" role="group" aria-label="ناوبری ردیف کالا">
               <button
                 type="button"
-                className={navBtnClass}
+                className={
+                  isBeauty
+                    ? "inline-flex h-11 w-11 items-center justify-center rounded-full border border-gray-200 bg-surface text-gray-700 disabled:opacity-40"
+                    : navBtnClass
+                }
                 onClick={scrollNext}
                 disabled={!canNext && !contract.loop}
                 aria-label="قبلی"
@@ -480,7 +873,11 @@ export function ProductShowcaseEmblaRail({
               </button>
               <button
                 type="button"
-                className={navBtnClass}
+                className={
+                  isBeauty
+                    ? "inline-flex h-11 w-11 items-center justify-center rounded-full border border-gray-200 bg-surface text-gray-700 disabled:opacity-40"
+                    : navBtnClass
+                }
                 onClick={scrollPrev}
                 disabled={!canPrev && !contract.loop}
                 aria-label="بعدی"
@@ -499,9 +896,15 @@ export function ProductShowcaseEmblaRail({
           </div>
         </div>
 
-        {/* Decorative overlays must stay outside emblaRef — Embla uses viewport's first child as container.
-            No traveling edge-sweep glow (LOCK-SF-387); peek cue is static positional only. */}
-        <div className="relative" data-rail-asymmetry={contract.asymmetry ? "1" : "0"}>
+        <div
+          className={
+            isBeauty && bannerImageUrl?.trim()
+              ? "relative flex items-stretch gap-3 md:gap-4"
+              : "relative"
+          }
+          data-rail-asymmetry={contract.asymmetry ? "1" : "0"}
+          data-explorer-banner={isBeauty && bannerImageUrl?.trim() ? "1" : "0"}
+        >
           {contract.asymmetry ? (
             <div
               aria-hidden
@@ -509,59 +912,90 @@ export function ProductShowcaseEmblaRail({
               data-explorer-peek-cue="1"
             />
           ) : null}
+          {isBeauty && bannerImageUrl?.trim() ? (
+            <ExplorerCollapsibleBanner
+              imageUrl={bannerImageUrl.trim()}
+              href={bannerHref}
+              widthClass={contract.slideBasis}
+            />
+          ) : null}
           <div
-            className={`relative overflow-hidden ${contract.viewportClass}`}
-            style={edgeMask}
-            ref={emblaRef}
-            data-embla-viewport=""
+            className={
+              isBeauty && bannerImageUrl?.trim()
+                ? "relative z-0 min-w-0 flex-1"
+                : "relative"
+            }
           >
             <div
-              className={`flex touch-pan-y ${contract.gapClass}`}
-              data-embla-container=""
-              style={{
-                transformStyle: isDepth && !reducedMotion ? "preserve-3d" : undefined,
-                minHeight: isDepth ? "18rem" : "16rem",
-              }}
+              className={`relative overflow-hidden ${contract.viewportClass}`}
+              style={edgeMask}
+              ref={emblaRef}
+              data-embla-viewport=""
             >
-              {products.map((card, index) => (
-                <div
-                  key={`${contract.testId}-${card.productId}`}
-                  className={`min-w-0 shrink-0 grow-0 ${contract.slideBasis} transition-[transform,opacity,filter,box-shadow] duration-700 ease-[cubic-bezier(0.22,1,0.36,1)]`}
-                  data-embla-slide=""
-                  data-slide-index={index}
-                  data-slide-active={index === selectedIndex ? "true" : "false"}
-                  style={{
-                    ...slideStyle(index),
-                    backfaceVisibility: "hidden",
-                  }}
-                >
+              <div
+                className={`flex touch-pan-y ${contract.gapClass}`}
+                data-embla-container=""
+                style={{
+                  transformStyle: isDepth && !reducedMotion ? "preserve-3d" : undefined,
+                  minHeight: isDepth ? "18rem" : "16rem",
+                }}
+              >
+                {products.map((card, index) => (
                   <div
-                    className={`h-full ${
-                      contract.warmGlow && index === selectedIndex
-                        ? "rounded-2xl bg-amber-50/40 p-1 shadow-[0_0_0_1px_rgba(251,191,36,0.22)]"
-                        : ""
-                    } ${
-                      contract.commerceRing && index === selectedIndex
-                        ? "rounded-xl ring-2 ring-orange-300/70 shadow-sm"
-                        : ""
-                    } ${
-                      isDepth && index === selectedIndex ? "rounded-2xl" : ""
-                    } ${
-                      contract.asymmetry && index === selectedIndex
-                        ? "rounded-2xl border border-sky-100/90 bg-sky-50/25 p-0.5"
-                        : ""
+                    key={`${contract.testId}-${card.productId}`}
+                    className={`min-w-0 shrink-0 grow-0 ${contract.slideBasis} ${
+                      isDepth
+                        ? "transition-[opacity,filter,box-shadow] duration-500 ease-out"
+                        : isBeauty
+                          ? ""
+                          : "transition-[transform,opacity,filter,box-shadow] duration-700 ease-[cubic-bezier(0.22,1,0.36,1)]"
                     }`}
+                    data-embla-slide=""
+                    data-slide-index={index}
+                    data-slide-active={index === selectedIndex ? "true" : "false"}
+                    style={{
+                      ...slideStyle(index),
+                      backfaceVisibility: "hidden",
+                      transformStyle: isDepth && !reducedMotion ? "preserve-3d" : undefined,
+                    }}
                   >
-                    <StorefrontProductCardView card={card} previewLocale={previewLocale} />
+                    <div
+                      className={`h-full ${
+                        contract.warmGlow && index === selectedIndex
+                          ? "rounded-2xl bg-amber-50/40 p-1 shadow-[0_0_0_1px_rgba(251,191,36,0.22)]"
+                          : ""
+                      } ${
+                        contract.commerceRing && index === selectedIndex
+                          ? "rounded-xl ring-2 ring-orange-300/70 shadow-sm"
+                          : ""
+                      } ${isDepth && index === selectedIndex ? "rounded-2xl" : ""} ${
+                        isBeauty
+                          ? "rounded-xl bg-surface/80 p-0.5 shadow-sm ring-1 ring-black/5"
+                          : ""
+                      } ${
+                        contract.asymmetry && index === selectedIndex
+                          ? "rounded-2xl border border-sky-100/90 bg-sky-50/25 p-0.5"
+                          : ""
+                      }`}
+                    >
+                      <StorefrontProductCardView card={card} previewLocale={previewLocale} />
+                    </div>
                   </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
           </div>
         </div>
       </div>
     </section>
   );
+}
+
+export function ProductShowcaseEmblaRail(props: ShowcaseProps) {
+  if (props.variant === "cinematic-plus") {
+    return <ProductShowcaseCardsStage kind="cinematic-plus" {...props} />;
+  }
+  return <ProductShowcaseEmblaRailInner {...props} />;
 }
 
 export function productShowcaseEmblaVariantFromKey(

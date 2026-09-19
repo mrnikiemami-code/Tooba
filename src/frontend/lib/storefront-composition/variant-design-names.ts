@@ -155,7 +155,7 @@ export const VARIANT_DESIGN_NAMES: Record<string, VariantDesignMeta> = {
   "product.explorer": {
     variantKey: "product.explorer",
     designNameFa: "کاشف",
-    descriptionFa: "ردیف اکتشافی با peek نامتقارن همسایه‌ها برای حس مرور و کشف",
+    descriptionFa: "بنر ثابت کنار ردیف؛ کارت‌ها از پشت بنر به سمت راست حرکت می‌کنند",
     badgeFa: "کاشف",
   },
   "product.grid": {

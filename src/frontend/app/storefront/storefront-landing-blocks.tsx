@@ -1,5 +1,6 @@
 "use client";
 
+import { useCallback, useEffect, useRef, useState, type CSSProperties } from "react";
 import { LocalizedLink as Link } from "../../lib/i18n/LocalizedLink.tsx";
 import { ProductRailSection } from "./storefront-home-blocks.tsx";
 import {
@@ -80,6 +81,215 @@ function shellForVariant(variant: HeroSliderVariantId): { shellClass: string; ro
   }
 }
 
+const DIAMOND_CROSSFADE_MS = 700;
+
+function DiamondSlideFace({
+  slide,
+  overlayClass,
+  interactive,
+}: {
+  slide: HeroSlideConfig;
+  overlayClass: string;
+  /** فقط لایهٔ رویی لینک/کلیک می‌گیرد تا لایهٔ زیر مزاحم نباشد. */
+  interactive: boolean;
+}) {
+  const src = slideImageSrc(slide) || "/images/sliders/slider-1.jpg";
+  const href = slideHref(slide);
+  const title = slide.title.trim() || "فروشگاه توبا";
+  const cta = slide.ctaLabel.trim();
+  const inner = (
+    <>
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img src={src} alt={slide.alt || title} className="h-full w-full object-cover" draggable={false} />
+      <div className={`absolute inset-0 ${overlayClass}`} />
+      <div className="absolute inset-0 flex flex-col justify-end p-6 text-white md:p-10">
+        <h2 className="text-2xl font-black line-clamp-2 md:text-4xl">{title}</h2>
+        {slide.description ? (
+          <p className="mt-2 max-w-xl text-sm md:text-base line-clamp-2">{slide.description}</p>
+        ) : null}
+        {cta && href ? (
+          <span className="mt-3 inline-flex w-fit rounded-xl bg-surface/95 px-3 py-1.5 text-xs font-bold text-gray-900">
+            {cta}
+          </span>
+        ) : null}
+      </div>
+    </>
+  );
+
+  if (interactive && href) {
+    return (
+      <Link href={href} className="relative block h-full w-full" aria-label={cta || title} tabIndex={interactive ? 0 : -1}>
+        {inner}
+      </Link>
+    );
+  }
+  return (
+    <div className="relative block h-full w-full" aria-hidden={!interactive}>
+      {inner}
+    </div>
+  );
+}
+
+/**
+ * الماس: کراس‌فید هم‌زمان — تصویر قبلی آرام محو و تصویر جدید همزمان ظاهر می‌شود (بدون فلش پس‌زمینه).
+ */
+function HeroDiamondSequential({
+  slides,
+  autoplay,
+  intervalSec,
+  heightClass,
+  legacyMinHeight,
+  rounded,
+  overlayClass,
+  direction,
+}: {
+  slides: HeroSlideConfig[];
+  autoplay: boolean;
+  intervalSec: number;
+  heightClass: string;
+  legacyMinHeight?: number;
+  rounded: string;
+  overlayClass: string;
+  direction: "rtl" | "ltr";
+}) {
+  const [active, setActive] = useState(0);
+  /** لایهٔ در حال محو شدن؛ null یعنی فقط یک لایه. */
+  const [outgoing, setOutgoing] = useState<number | null>(null);
+  const [phase, setPhase] = useState<"idle" | "crossfade">("idle");
+  const activeRef = useRef(0);
+  const busyRef = useRef(false);
+  const timerRef = useRef<number | null>(null);
+  const pointerX = useRef<number | null>(null);
+  const len = slides.length;
+
+  useEffect(() => {
+    return () => {
+      if (timerRef.current != null) window.clearTimeout(timerRef.current);
+    };
+  }, []);
+
+  const goTo = useCallback(
+    (nextRaw: number) => {
+      if (len < 2 || busyRef.current) return;
+      const next = ((nextRaw % len) + len) % len;
+      if (next === activeRef.current) return;
+      busyRef.current = true;
+      setOutgoing(activeRef.current);
+      activeRef.current = next;
+      setActive(next);
+      setPhase("idle");
+      // دو فریم: ابتدا هر دو لایه در جای خود (قدیمی ۱، جدید ۰)، بعد کراس‌فید
+      window.requestAnimationFrame(() => {
+        window.requestAnimationFrame(() => {
+          setPhase("crossfade");
+          if (timerRef.current != null) window.clearTimeout(timerRef.current);
+          timerRef.current = window.setTimeout(() => {
+            setOutgoing(null);
+            setPhase("idle");
+            busyRef.current = false;
+            timerRef.current = null;
+          }, DIAMOND_CROSSFADE_MS);
+        });
+      });
+    },
+    [len],
+  );
+
+  useEffect(() => {
+    if (!autoplay || len < 2) return;
+    const delay = Math.max(1000, Math.round(intervalSec * 1000));
+    const id = window.setInterval(() => {
+      goTo(activeRef.current + 1);
+    }, delay);
+    return () => window.clearInterval(id);
+  }, [autoplay, intervalSec, len, goTo]);
+
+  const fadeStyle = (role: "incoming" | "outgoing"): CSSProperties => {
+    const transitioning = phase === "crossfade";
+    if (role === "outgoing") {
+      return {
+        opacity: transitioning ? 0 : 1,
+        transition: transitioning ? `opacity ${DIAMOND_CROSSFADE_MS}ms ease` : "none",
+        zIndex: 1,
+        pointerEvents: "none",
+      };
+    }
+    // incoming / sole active
+    const hasOutgoing = outgoing != null;
+    return {
+      opacity: hasOutgoing && !transitioning ? 0 : 1,
+      transition: transitioning ? `opacity ${DIAMOND_CROSSFADE_MS}ms ease` : "none",
+      zIndex: 2,
+      pointerEvents: hasOutgoing && !transitioning ? "none" : "auto",
+    };
+  };
+
+  return (
+    <div
+      className={`relative w-full overflow-hidden ${heightClass}`}
+      style={legacyMinHeight ? { height: legacyMinHeight } : undefined}
+      data-hero-diamond-crossfade=""
+      dir={direction}
+      onPointerDown={(e) => {
+        if (e.button !== 0) return;
+        pointerX.current = e.clientX;
+      }}
+      onPointerUp={(e) => {
+        const start = pointerX.current;
+        pointerX.current = null;
+        if (start == null || len < 2) return;
+        const dx = e.clientX - start;
+        if (Math.abs(dx) < 48) return;
+        if (direction === "rtl") {
+          if (dx > 0) goTo(activeRef.current - 1);
+          else goTo(activeRef.current + 1);
+        } else if (dx > 0) {
+          goTo(activeRef.current - 1);
+        } else {
+          goTo(activeRef.current + 1);
+        }
+      }}
+      onPointerCancel={() => {
+        pointerX.current = null;
+      }}
+    >
+      {outgoing != null && outgoing !== active ? (
+        <div className={`absolute inset-0 ${rounded} overflow-hidden`} style={fadeStyle("outgoing")}>
+          <DiamondSlideFace slide={slides[outgoing]!} overlayClass={overlayClass} interactive={false} />
+        </div>
+      ) : null}
+      <div className={`absolute inset-0 ${rounded} overflow-hidden`} style={fadeStyle("incoming")}>
+        <DiamondSlideFace
+          slide={slides[active]!}
+          overlayClass={overlayClass}
+          interactive={outgoing == null || phase === "crossfade"}
+        />
+      </div>
+      {len > 1 ? (
+        <div
+          className="absolute inset-x-0 bottom-3 z-10 flex items-center justify-center gap-2"
+          role="tablist"
+          aria-label="اسلایدهای هیرو"
+        >
+          {slides.map((_, i) => (
+            <button
+              key={`diamond-dot-${i}`}
+              type="button"
+              role="tab"
+              aria-selected={i === active}
+              aria-label={`اسلاید ${i + 1}`}
+              className={`h-2.5 w-2.5 rounded-full transition-colors ${
+                i === active ? "bg-sky-500" : "bg-white/70"
+              }`}
+              onClick={() => goTo(i)}
+            />
+          ))}
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
 /** یک کامپوننت؛ فقط variant رفتار layout/effect را عوض می‌کند. */
 export function HeroSlider({
   variant,
@@ -138,9 +348,11 @@ export function HeroSlider({
   const creativeProps =
     mapping.effect === "creative"
       ? {
+          // سیمین: اسلاید قبلی کامل خارج شود (بدون کارت زیرین)؛ حرکت اسلاید بعدی حفظ شود.
           creativeEffect: {
-            prev: { shadow: true, translate: [0, 0, -400] },
-            next: { translate: ["100%", 0, 0] },
+            limitProgress: 1,
+            prev: { shadow: false, translate: ["-100%", 0, 0], opacity: 0 },
+            next: { translate: ["100%", 0, 0], opacity: 1 },
           },
         }
       : {};
@@ -157,7 +369,21 @@ export function HeroSlider({
         ? "bg-gradient-to-t from-black/70 via-black/25 to-transparent"
         : "bg-black/35";
 
-  const swiper = (
+  const diamondSequential =
+    variant === "fullscreen" ? (
+      <HeroDiamondSequential
+        slides={safeSlides}
+        autoplay={autoplay}
+        intervalSec={intervalSec}
+        heightClass={heightClass}
+        legacyMinHeight={legacyMinHeight}
+        rounded={rounded}
+        overlayClass={overlayClass}
+        direction={direction}
+      />
+    ) : null;
+
+  const swiper = diamondSequential ? null : (
     <Swiper
       modules={modules}
       effect={mapping.effect === "slide" ? undefined : mapping.effect}
@@ -171,8 +397,9 @@ export function HeroSlider({
       }
       pagination={{ clickable: true, dynamicBullets: true }}
       dir={direction}
-      className={`w-full ${variant === "split" ? "" : heightClass}`}
+      className={`w-full overflow-hidden ${variant === "split" ? "" : heightClass}`}
       style={variant === "split" ? undefined : legacyMinHeight ? { height: legacyMinHeight } : undefined}
+      fadeEffect={mapping.effect === "fade" ? { crossFade: true } : undefined}
       {...creativeProps}
       {...coverflowProps}
     >
@@ -305,13 +532,13 @@ export function HeroSlider({
           </>
         );
         return (
-          <SwiperSlide key={key}>
+          <SwiperSlide key={key} className={variant === "shapes" ? "!overflow-hidden" : undefined}>
             {href ? (
-              <Link href={href} className="relative block h-full w-full" aria-label={cta || title}>
+              <Link href={href} className="relative block h-full w-full overflow-hidden" aria-label={cta || title}>
                 {inner}
               </Link>
             ) : (
-              <div className="relative block h-full w-full">{inner}</div>
+              <div className="relative block h-full w-full overflow-hidden">{inner}</div>
             )}
           </SwiperSlide>
         );
@@ -329,7 +556,7 @@ export function HeroSlider({
             <div className="pointer-events-none absolute bottom-8 right-10 z-10 h-16 w-16 rotate-12 rounded-2xl bg-surface/15" />
           </>
         ) : null}
-        {swiper}
+        {diamondSequential ?? swiper}
       </div>
     </section>
   );
