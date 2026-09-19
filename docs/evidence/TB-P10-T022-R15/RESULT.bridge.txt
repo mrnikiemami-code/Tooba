@@ -68,8 +68,8 @@ docs/evidence/TB-P10-T022-R15/recovery-sot.md; PROJECT-STATE + TOOBA-RECOVERY-CO
 
 Git:
 branch=main
-HEAD=TIP_PLACEHOLDER
-origin/main=TIP_PLACEHOLDER
+HEAD=b3d96fed15a31fe6e80952b80d526dca31a81dc2
+origin/main=b3d96fed15a31fe6e80952b80d526dca31a81dc2
 HEAD==origin/main=YES
 18ca10c9-ancestor=YES
 task-artifact=docs/ai/tasks/TB-P10-T022-R15.task.md
