@@ -1,6 +1,7 @@
 using System.Text.Json;
 using Tooba.Catalog.Domain;
 using Tooba.BuildingBlocks;
+using Tooba.Promotion.Application;
 using Xunit;
 
 namespace Tooba.Host.Tests;
@@ -62,5 +63,23 @@ public sealed class PromotionCampaignSourceTests
         using var doc = JsonDocument.Parse(json);
         Assert.Equal("Newest", doc.RootElement.GetProperty("source").GetString());
         Assert.Equal(4, doc.RootElement.GetProperty("take").GetInt32());
+    }
+
+    [Fact]
+    public void Amazing_rail_requires_effective_campaign_discount()
+    {
+        var discounted = new MerchandisingCampaignMemberRuntimeModel(
+            Guid.NewGuid(), Guid.NewGuid(), 0, true, 70000m, "IRR", 5m, 1m, 10m, 100000m);
+        var baseOnly = new MerchandisingCampaignMemberRuntimeModel(
+            Guid.NewGuid(), Guid.NewGuid(), 1, true, 100000m, "IRR", 5m, 1m, 10m, null);
+        var oos = new MerchandisingCampaignMemberRuntimeModel(
+            Guid.NewGuid(), Guid.NewGuid(), 2, true, 70000m, "IRR", 0m, 1m, 10m, 100000m);
+        var promoNotCheaper = new MerchandisingCampaignMemberRuntimeModel(
+            Guid.NewGuid(), Guid.NewGuid(), 3, true, 100000m, "IRR", 5m, 1m, 10m, 100000m);
+
+        Assert.True(MerchandisingCampaignStorefrontEligibility.IsAmazingRailEligible(discounted));
+        Assert.False(MerchandisingCampaignStorefrontEligibility.IsAmazingRailEligible(baseOnly));
+        Assert.False(MerchandisingCampaignStorefrontEligibility.IsAmazingRailEligible(oos));
+        Assert.False(MerchandisingCampaignStorefrontEligibility.IsAmazingRailEligible(promoNotCheaper));
     }
 }

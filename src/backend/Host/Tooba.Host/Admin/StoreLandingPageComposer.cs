@@ -865,6 +865,10 @@ public sealed class StoreLandingPageComposer
         }
 
         var now = DateTimeOffset.UtcNow;
+        // Oversample so commercial-eligibility filter can still fill `take`.
+        var fetchTake = Math.Min(
+            MerchandisingCampaignRuntimeLimits.MaxMemberTake,
+            Math.Max(take * 3, take));
         IReadOnlyList<MerchandisingCampaignMemberRuntimeModel> members;
         string? badge = "Amazing";
         Guid? resolvedCampaignId = campaignId;
@@ -875,7 +879,7 @@ public sealed class StoreLandingPageComposer
                 storeId.Value,
                 pageLocale,
                 now,
-                take,
+                fetchTake,
                 null,
                 cancellationToken);
         }
@@ -886,7 +890,7 @@ public sealed class StoreLandingPageComposer
                 typeCode,
                 pageLocale,
                 now,
-                take,
+                fetchTake,
                 null,
                 cancellationToken);
             members = active?.Members ?? Array.Empty<MerchandisingCampaignMemberRuntimeModel>();
@@ -896,6 +900,12 @@ public sealed class StoreLandingPageComposer
                 badge = active.BadgeText;
             }
         }
+
+        // Membership may omit promo price; Amazing rail only shows commercially eligible discounts.
+        members = members
+            .Where(MerchandisingCampaignStorefrontEligibility.IsAmazingRailEligible)
+            .Take(take)
+            .ToList();
 
         if (members.Count == 0)
         {

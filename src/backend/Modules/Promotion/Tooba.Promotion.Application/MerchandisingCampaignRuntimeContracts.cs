@@ -52,6 +52,23 @@ public sealed record MerchandisingCampaignMemberRuntimeModel(
     decimal? CompareAtAmount = null);
 
 /// <summary>
+/// واجدشرایطی نمایش در source فروشگاهی «پیشنهاد شگفت‌انگیز».
+/// عضویت Campaign می‌تواند بدون promo بماند؛ storefront فقط تخفیف مؤثر را نشان می‌دهد.
+/// </summary>
+public static class MerchandisingCampaignStorefrontEligibility
+{
+    /// <summary>
+    /// عضو قابل‌فروش + موجود + قیمت کمپین معتبر اکیداً کمتر از قیمت عادی.
+    /// </summary>
+    public static bool IsAmazingRailEligible(MerchandisingCampaignMemberRuntimeModel member) =>
+        member.IsMarketable
+        && member.AvailableQuantity > 0
+        && member.PriceAmount is decimal selling and > 0
+        && member.CompareAtAmount is decimal compareAt and > 0
+        && selling < compareAt;
+}
+
+/// <summary>
 /// پارامترهای حل قیمت برای projection کمپین.
 /// </summary>
 public sealed record MerchandisingPriceScope(
