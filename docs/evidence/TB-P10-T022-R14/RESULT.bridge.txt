@@ -80,8 +80,8 @@ docs/evidence/TB-P10-T022-R14/recovery-sot.md; docs/PROJECT-STATE.md + docs/ai/T
 
 Git:
 branch=main
-HEAD=0c8bd0d2feb41cc2afb262456d3573b9eea0b3b2
-origin/main=0c8bd0d2feb41cc2afb262456d3573b9eea0b3b2
+HEAD=060b87b63b983bc132b44064342028881c3120bd
+origin/main=060b87b63b983bc132b44064342028881c3120bd
 HEAD==origin/main=YES
 18ca10c9-ancestor=YES
 task-artifact=docs/ai/tasks/TB-P10-T022-R14.task.md
