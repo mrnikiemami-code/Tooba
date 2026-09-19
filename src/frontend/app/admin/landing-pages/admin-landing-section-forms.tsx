@@ -163,19 +163,10 @@ export function LandingSectionForm({
 
   if (showStorySettings) {
     const take = typeof value.take === "number" ? value.take : 12;
-    const enabled = value.enabled !== false;
     return (
       <div className="space-y-3" data-testid="landing-section-form" data-story-display-settings="1">
         <TextField label="عنوان بخش (اختیاری)" value={title} onChange={(next) => set({ title: next })} />
         <TakeField value={take} onChange={(next) => set({ take: next, items: [] })} max={50} label="حداکثر تعداد نمایش" />
-        <label className="flex items-center gap-2 text-sm">
-          <input
-            type="checkbox"
-            checked={enabled}
-            onChange={(event) => set({ enabled: event.target.checked, items: [] })}
-          />
-          نمایش این بخش در فروشگاه
-        </label>
         <p className="rounded-xl border border-dashed px-3 py-2 text-xs text-muted" data-testid="story-display-only-hint">
           استوری‌ها از ماژول استوری (پس از تأیید) خوانده می‌شوند. اینجا فقط تنظیمات نمایش است — ساخت استوری در این بخش ممکن نیست.
         </p>
