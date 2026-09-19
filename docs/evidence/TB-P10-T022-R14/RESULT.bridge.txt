@@ -1,4 +1,4 @@
-PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+﻿PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
 
 BEGIN_TOOBA_WORKER_RESULT
 
@@ -80,8 +80,8 @@ docs/evidence/TB-P10-T022-R14/recovery-sot.md; docs/PROJECT-STATE.md + docs/ai/T
 
 Git:
 branch=main
-HEAD=<POST_PUSH_SHA>
-origin/main=<POST_PUSH_SHA>
+HEAD=fad28fe130535cd7279cb65f693dd52814943500
+origin/main=fad28fe130535cd7279cb65f693dd52814943500
 HEAD==origin/main=YES
 18ca10c9-ancestor=YES
 task-artifact=docs/ai/tasks/TB-P10-T022-R14.task.md
