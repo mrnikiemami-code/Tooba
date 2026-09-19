@@ -1436,3 +1436,23 @@ Published PromotionCampaign sections resolve current campaign membership at runt
 
 Until campaign-scoped price qualifiers are correctly modeled, PromotionCampaign storefront output must use canonical normal price and must not fabricate promotional price, compare-at price or discount percentage.
 
+### LOCK-SF-412 — Campaign promo via canonical Pricing
+
+Merchandising campaign promotional price participates in the canonical Pricing/AuthoredPrice engine through existing pricing dimensions/qualifiers; a parallel campaign price engine or scalar CampaignOffer PromoAmount is forbidden.
+
+### LOCK-SF-413 — Derived discount only
+
+Campaign discount percentage is derived from applicable canonical normal price and active campaign selling price; it is never persisted as campaign truth.
+
+### LOCK-SF-414 — Runtime-contextual campaign price
+
+Campaign price applicability is runtime-contextual: active campaign membership + Store + canonical pricing dimensions must all match; future/expired/archived campaign prices never apply.
+
+### LOCK-SF-415 — Bulk campaign pricing
+
+PromotionCampaign pricing resolution is bulk/bounded and must not introduce per-item Pricing database queries.
+
+### LOCK-SF-416 — Capability map usage
+
+TOOBA-CAPABILITY-MAP is a compact architectural ownership index updated when capability ownership/schema materially changes; it is not a mandatory per-task startup read.
+

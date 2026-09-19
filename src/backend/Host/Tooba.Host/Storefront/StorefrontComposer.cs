@@ -867,6 +867,7 @@ public sealed class StorefrontComposer
         {
             var price = prices
                 .Where(item => item.OfferId == offer.OfferId
+                    && item.QualifierKind == PriceQualifierKind.Base
                     && item.ValidFrom <= now
                     && (item.ValidTo is null || item.ValidTo >= now))
                 .OrderBy(item => item.Amount)

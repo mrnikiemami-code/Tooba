@@ -105,6 +105,55 @@ public sealed class PriceDirectory : IPriceDirectory, IPriceLookupGateway
     }
 
     /// <inheritdoc />
+    public async Task<IReadOnlyDictionary<Guid, PriceQuote>> ResolveCampaignPricesBatchAsync(
+        IReadOnlyCollection<Guid> offerIds,
+        Guid campaignId,
+        string market,
+        SalesChannel channel,
+        string currency,
+        DateTimeOffset at,
+        CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(offerIds);
+        if (offerIds.Count == 0 || campaignId == Guid.Empty)
+        {
+            return new Dictionary<Guid, PriceQuote>();
+        }
+
+        var marketCode = MarketCode.Parse(market);
+        var currencyCode = CurrencyCode.Parse(currency);
+        var key = campaignId.ToString("D");
+        var ids = offerIds.Distinct().ToArray();
+        var matches = await _db.Prices.AsNoTracking()
+            .Where(x => ids.Contains(x.OfferId)
+                        && x.Market == marketCode.Value
+                        && x.Channel == channel
+                        && x.Currency == currencyCode.Value
+                        && x.QualifierKind == PriceQualifierKind.MerchandisingCampaign
+                        && x.QualifierKey == key
+                        && x.Status == PriceStatus.Active)
+            .ToListAsync(cancellationToken);
+
+        var result = new Dictionary<Guid, PriceQuote>();
+        foreach (var group in matches.GroupBy(x => x.OfferId))
+        {
+            var effective = group.Where(x => x.IsEffectiveAt(at)).ToList();
+            if (effective.Count > 1)
+            {
+                throw new InvalidOperationException(
+                    $"چند قیمت کمپین فعال هم‌پوشان برای Offer {group.Key} و Campaign {campaignId} وجود دارد.");
+            }
+
+            if (effective.Count == 1)
+            {
+                result[group.Key] = ToQuote(effective[0]);
+            }
+        }
+
+        return result;
+    }
+
+    /// <inheritdoc />
     public async Task<PriceQuote> CreatePriceAsync(
         Guid offerId,
         string market,
@@ -122,6 +171,39 @@ public sealed class PriceDirectory : IPriceDirectory, IPriceLookupGateway
         }
 
         var price = AuthoredPrice.Create(offerId, market, channel, amount, currency, validFrom, validTo, DateTimeOffset.UtcNow);
+        _db.Prices.Add(price);
+        await _db.SaveChangesAsync(cancellationToken);
+        return ToQuote(price);
+    }
+
+    /// <inheritdoc />
+    public async Task<PriceQuote> CreateCampaignPriceAsync(
+        Guid offerId,
+        Guid campaignId,
+        string market,
+        SalesChannel channel,
+        decimal amount,
+        string currency,
+        DateTimeOffset validFrom,
+        DateTimeOffset? validTo,
+        CancellationToken cancellationToken)
+    {
+        await _guard.EnsureCanMutateAsync(cancellationToken);
+        if (await _offers.FindOfferAsync(offerId, cancellationToken) is null)
+        {
+            throw new InvalidOperationException("Offer از قرارداد Lookup پیدا نشد؛ DbContext Offer خوانده نشد.");
+        }
+
+        var price = AuthoredPrice.CreateMerchandisingCampaign(
+            offerId,
+            campaignId,
+            market,
+            channel,
+            amount,
+            currency,
+            validFrom,
+            validTo,
+            DateTimeOffset.UtcNow);
         _db.Prices.Add(price);
         await _db.SaveChangesAsync(cancellationToken);
         return ToQuote(price);
@@ -163,12 +245,13 @@ public sealed class PriceDirectory : IPriceDirectory, IPriceLookupGateway
                         && x.Channel == candidate.Channel
                         && x.Currency == candidate.Currency
                         && x.QualifierKind == candidate.QualifierKind
+                        && x.QualifierKey == candidate.QualifierKey
                         && x.Status == PriceStatus.Active
                         && x.PriceId != excludePriceId)
             .ToListAsync(cancellationToken);
         if (siblings.Any(candidate.Overlaps))
         {
-            throw new InvalidOperationException("قیمت پایهٔ فعال هم‌پوشان برای Offer و بازار و کانال و ارز مجاز نیست.");
+            throw new InvalidOperationException("قیمت فعال هم‌پوشان برای Offer و بازار و کانال و ارز و محدودکننده مجاز نیست.");
         }
     }
 

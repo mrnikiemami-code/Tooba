@@ -1,4 +1,6 @@
 using Microsoft.EntityFrameworkCore;
+using Tooba.Catalog.Domain;
+using Tooba.Catalog.Infrastructure.Persistence;
 using Tooba.Inventory.Application;
 using Tooba.Inventory.Domain;
 using Tooba.Inventory.Infrastructure.Persistence;
@@ -6,6 +8,9 @@ using Tooba.Offer.Domain;
 using Tooba.Offer.Infrastructure.Persistence;
 using Tooba.Party.Application;
 using Tooba.Party.Infrastructure.Persistence;
+using Tooba.Pricing.Application;
+using Tooba.Pricing.Domain;
+using Tooba.Pricing.Infrastructure.Persistence;
 using Tooba.Promotion.Application;
 using Tooba.Promotion.Domain;
 
@@ -56,18 +61,40 @@ internal static class MerchandisingCampaignDevelopmentSeed
         var dir = provider.GetRequiredService<IMerchandisingCampaignDirectory>();
         var type = await dir.EnsureAmazingTypeSeededAsync(cancellationToken);
         var offerDb = provider.GetRequiredService<OfferDbContext>();
+        var catalogDb = provider.GetRequiredService<CatalogDbContext>();
         var inventoryDb = provider.GetRequiredService<InventoryDbContext>();
         var inventory = provider.GetRequiredService<IInventoryDirectory>();
         var parties = provider.GetRequiredService<IPartyDirectory>();
         var partyDb = provider.GetRequiredService<PartyDbContext>();
+        var prices = provider.GetRequiredService<IPriceDirectory>();
+        var priceDb = provider.GetRequiredService<PricingDbContext>();
         var now = DateTimeOffset.UtcNow;
 
+        // Prefer offers whose Catalog Product is Published so Storefront ProductCards can project promo prices.
+        var publishedVariantIds = await catalogDb.Variants.AsNoTracking()
+            .Where(v => catalogDb.Products.Any(p =>
+                p.ProductId == v.ProductId && p.Status == CatalogPublicationStatus.Published))
+            .Select(v => v.VariantId)
+            .ToListAsync(cancellationToken);
         var activeOffers = await offerDb.Offers.AsNoTracking()
-            .Where(x => x.Status == OfferStatus.Active && x.SellerSku != OosSellerSku)
+            .Where(x =>
+                x.Status == OfferStatus.Active
+                && x.SellerSku != OosSellerSku
+                && publishedVariantIds.Contains(x.CatalogVariantId))
             .OrderBy(x => x.OfferId)
             .Take(8)
             .Select(x => x.OfferId)
             .ToListAsync(cancellationToken);
+        if (activeOffers.Count < 4)
+        {
+            // Fallback: any active offers if published set is thin.
+            activeOffers = await offerDb.Offers.AsNoTracking()
+                .Where(x => x.Status == OfferStatus.Active && x.SellerSku != OosSellerSku)
+                .OrderBy(x => x.OfferId)
+                .Take(8)
+                .Select(x => x.OfferId)
+                .ToListAsync(cancellationToken);
+        }
 
         var oosOfferId = await EnsureOosOfferAsync(
             offerDb,
@@ -156,6 +183,98 @@ internal static class MerchandisingCampaignDevelopmentSeed
             "Amazing Draft",
             activeOffers.Take(1).ToList(),
             cancellationToken);
+
+        // R18: campaign-scoped AuthoredPrice seeds (not PromoAmount scalar).
+        // Active primary: first 3 members get promo < base; 4th (if present) keeps base-only fallback.
+        await EnsureCampaignPromoPricesAsync(
+            prices,
+            priceDb,
+            ActivePrimaryId,
+            activeOffers.Take(3).ToList(),
+            fractionOfBase: 0.7m,
+            validFrom: now.AddHours(-2),
+            validTo: now.AddDays(7),
+            cancellationToken);
+        // Future: promo rows exist but must not apply until StartAt.
+        await EnsureCampaignPromoPricesAsync(
+            prices,
+            priceDb,
+            FutureId,
+            activeOffers.Take(1).ToList(),
+            fractionOfBase: 0.5m,
+            validFrom: now.AddDays(1),
+            validTo: now.AddDays(2),
+            cancellationToken);
+    }
+
+    /// <summary>
+    /// برای هر Offer، در صورت نبود قیمت کمپین، مبلغی کمتر از پایه می‌نویسد و فعال می‌کند.
+    /// </summary>
+    private static async Task EnsureCampaignPromoPricesAsync(
+        IPriceDirectory prices,
+        PricingDbContext priceDb,
+        Guid campaignId,
+        IReadOnlyList<Guid> offerIds,
+        decimal fractionOfBase,
+        DateTimeOffset validFrom,
+        DateTimeOffset? validTo,
+        CancellationToken cancellationToken)
+    {
+        if (offerIds.Count == 0)
+        {
+            return;
+        }
+
+        var key = campaignId.ToString("D");
+        var existing = await priceDb.Prices.AsNoTracking()
+            .Where(x =>
+                offerIds.Contains(x.OfferId)
+                && x.QualifierKind == PriceQualifierKind.MerchandisingCampaign
+                && x.QualifierKey == key
+                && x.Status == PriceStatus.Active)
+            .Select(x => x.OfferId)
+            .ToListAsync(cancellationToken);
+        var have = existing.ToHashSet();
+
+        foreach (var offerId in offerIds)
+        {
+            if (have.Contains(offerId))
+            {
+                continue;
+            }
+
+            var basePrice = await priceDb.Prices.AsNoTracking()
+                .Where(x =>
+                    x.OfferId == offerId
+                    && x.QualifierKind == PriceQualifierKind.Base
+                    && x.Status == PriceStatus.Active
+                    && x.Market == "IR"
+                    && x.Currency == "IRR")
+                .OrderByDescending(x => x.ValidFrom)
+                .FirstOrDefaultAsync(cancellationToken);
+            if (basePrice is null || basePrice.Amount <= 0)
+            {
+                continue;
+            }
+
+            var promoAmount = decimal.Round(basePrice.Amount * fractionOfBase, 0, MidpointRounding.AwayFromZero);
+            if (promoAmount <= 0 || promoAmount >= basePrice.Amount)
+            {
+                promoAmount = Math.Max(1, basePrice.Amount - 1);
+            }
+
+            var created = await prices.CreateCampaignPriceAsync(
+                offerId,
+                campaignId,
+                basePrice.Market,
+                basePrice.Channel,
+                promoAmount,
+                basePrice.Currency,
+                validFrom,
+                validTo,
+                cancellationToken);
+            await prices.ActivateAsync(created.PriceId, cancellationToken);
+        }
     }
 
     private static async Task UpsertCampaignAsync(

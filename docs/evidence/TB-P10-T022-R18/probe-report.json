@@ -1,0 +1,125 @@
+{
+  "ok": true,
+  "steps": [
+    {
+      "name": "host-ready",
+      "pass": true
+    },
+    {
+      "name": "dev-actor",
+      "pass": true
+    },
+    {
+      "name": "create-page",
+      "pass": true,
+      "data": {
+        "status": 200
+      }
+    },
+    {
+      "name": "add-section",
+      "pass": true,
+      "data": {
+        "status": 200
+      }
+    },
+    {
+      "name": "preview-ok",
+      "pass": true
+    },
+    {
+      "name": "preview-has-products",
+      "pass": true
+    },
+    {
+      "name": "preview-at-least-3-promos",
+      "pass": true,
+      "data": {
+        "previewPromos": 3
+      }
+    },
+    {
+      "name": "preview-has-base-only-fallback",
+      "pass": true,
+      "data": {
+        "previewBaseOnly": 4
+      }
+    },
+    {
+      "name": "publish",
+      "pass": true,
+      "data": {
+        "status": 200
+      }
+    },
+    {
+      "name": "storefront-ok",
+      "pass": true
+    },
+    {
+      "name": "storefront-at-least-3-promos",
+      "pass": true,
+      "data": {
+        "faPromos": 3
+      }
+    },
+    {
+      "name": "storefront-base-only-fallback",
+      "pass": true,
+      "data": {
+        "faBaseOnly": 4
+      }
+    },
+    {
+      "name": "discount-math-valid",
+      "pass": true,
+      "data": {
+        "offer": 6769412,
+        "promo": 4738588,
+        "pct": 30
+      }
+    }
+  ],
+  "errors": [],
+  "preview": {
+    "productCount": 7,
+    "promoCount": 3,
+    "baseOnlyCount": 4,
+    "sample": [
+      {
+        "offer": 1850000
+      },
+      {
+        "offer": 6597070.04
+      },
+      {
+        "offer": 6769412,
+        "promo": 4738588,
+        "label": "Amazing"
+      },
+      {
+        "offer": 2314625.07
+      }
+    ]
+  },
+  "storefront": {
+    "productCount": 7,
+    "promoCount": 3,
+    "baseOnlyCount": 4,
+    "sample": [
+      {
+        "offer": 1850000
+      },
+      {
+        "offer": 6597070.04
+      },
+      {
+        "offer": 6769412,
+        "promo": 4738588
+      },
+      {
+        "offer": 2314625.07
+      }
+    ]
+  }
+}

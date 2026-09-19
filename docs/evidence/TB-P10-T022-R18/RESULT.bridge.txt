@@ -1,0 +1,75 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+
+BEGIN_TOOBA_WORKER_RESULT
+
+Task-ID: TB-P10-T022-R18
+Parent-Task: TB-P10-T022-R17
+Channel: tooba-main
+WorkerId: tooba-worker-01
+AgentType: cursor
+Status: PASS
+
+Summary:
+Campaign promotional selling price modeled as AuthoredPrice with QualifierKind=MerchandisingCampaign and QualifierKey=CampaignId (no PromoAmount scalar). MerchandisingCampaignQuery bulk-resolves Base + campaign prices; ProductCard overlay for PromotionCampaign Preview/SSR; Dev seed creates ≥3 Published-product promos + base-only fallback + future non-leak; TOOBA-CAPABILITY-MAP added; locks 412–416. Cart/Checkout campaign context documented as guarded follow-up gap. Appearance YES; Builder NO.
+
+Applicable-Locks:
+LOCK-SF-001…411 retained; LOCK-SF-412…416 added.
+
+Recovery-Start:
+docs/evidence/TB-P10-T022-R18/recovery-start.md
+
+Pricing-Discovery:
+docs/evidence/TB-P10-T022-R18/pricing-discovery.md
+
+Campaign-Price-Qualifier:
+PriceQualifierKind.MerchandisingCampaign + QualifierKey=CampaignId (“D”); CreateCampaignPriceAsync / ResolveCampaignPricesBatchAsync on canonical Pricing.
+
+Price-Precedence:
+docs/evidence/TB-P10-T022-R18/price-precedence.md
+
+Discount-Semantics:
+docs/evidence/TB-P10-T022-R18/discount-semantics.md
+
+Bulk-Pricing:
+docs/evidence/TB-P10-T022-R18/bulk-pricing.md
+
+Test-Prices:
+docs/evidence/TB-P10-T022-R18/test-prices.md
+
+Builder-Preview-Pricing:
+docs/evidence/TB-P10-T022-R18/builder-preview-pricing.md — probe preview promoCount=3
+
+Storefront-Pricing:
+docs/evidence/TB-P10-T022-R18/storefront-pricing.md — public page promoCount=3
+
+Cart-Price-Integrity:
+docs/evidence/TB-P10-T022-R18/cart-price-integrity.md — Base-only ResolvePriceAsync; campaign context follow-up
+
+Capability-Map:
+docs/architecture/TOOBA-CAPABILITY-MAP.md
+
+Focused-Validation:
+docs/evidence/TB-P10-T022-R18/focused-validation.md — MerchandisingCampaignRuntimeTests + Pricing/PromotionCampaign filters PASS; recovery-staleness PASS; 18ca10c9 ancestor PASS
+
+Runtime-Proof:
+docs/evidence/TB-P10-T022-R18/runtime-proof.md — probe.mjs EXIT 0; probe-report.json
+
+AntiPattern-Scan:
+docs/evidence/TB-P10-T022-R18/antipattern-scan.md
+
+Lock-Registry:
+docs/architecture/TOOBA-LOCKS.md — LOCK-SF-412…416
+
+Recovery-SoT:
+docs/PROJECT-STATE.md + docs/ai/TOOBA-RECOVERY-CONTEXT.md — Last Architect-accepted TB-P10-T022-R17; Last Implementation TB-P10-T022-R18
+
+Git:
+branch main; tip TIP_PLACEHOLDER; pushed origin/main; HEAD==origin/main; 18ca10c9 ancestor
+
+Architectural-Concerns:
+Cart/Checkout does not yet carry MerchandisingCampaign qualifier at add-line; storefront display correct. Follow-up task for campaign-aware cart quote without trusting client.
+
+Blockers:
+(none)
+
+END_TOOBA_WORKER_RESULT

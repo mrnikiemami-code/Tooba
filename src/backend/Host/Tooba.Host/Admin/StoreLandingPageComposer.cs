@@ -710,7 +710,35 @@ public sealed class StoreLandingPageComposer
                     .SelectMany(section => section.Items.Select(item => item.Id))
                     .Distinct()
                     .ToArray();
-                products = (await _storefront.ComposeProductCardsAsync(productIds, cancellationToken)).Values.ToList();
+                var composed = await _storefront.ComposeProductCardsAsync(productIds, cancellationToken);
+                var overlays = sections
+                    .SelectMany(section => section.Items)
+                    .Where(item => item.PromotionalAmountExclusiveOfTax is not null
+                                   || item.OfferAmountExclusiveOfTax is not null)
+                    .GroupBy(item => item.Id)
+                    .ToDictionary(group => group.Key, group => group.First());
+                products = composed.Values.Select(card =>
+                {
+                    if (!overlays.TryGetValue(card.ProductId, out var overlay))
+                    {
+                        return card;
+                    }
+
+                    var offerAmount = overlay.OfferAmountExclusiveOfTax ?? card.OfferAmountExclusiveOfTax;
+                    var promo = overlay.PromotionalAmountExclusiveOfTax;
+                    if (promo is decimal promoAmount && promoAmount >= offerAmount)
+                    {
+                        promo = null;
+                    }
+
+                    return card with
+                    {
+                        OfferAmountExclusiveOfTax = offerAmount,
+                        PromotionalAmountExclusiveOfTax = promo,
+                        Currency = overlay.Currency ?? card.Currency,
+                        PromotionLabel = overlay.PromotionLabel ?? card.PromotionLabel,
+                    };
+                }).ToList();
             }
 
             // Sequential shell fetches — shared scoped DbContexts must not run concurrently.
@@ -793,7 +821,13 @@ public sealed class StoreLandingPageComposer
         return await query
             .OrderByDescending(x => x.UpdatedAt)
             .Take(take)
-            .Select(x => new StoreLandingPageResolvedItem(x.ProductId, x.SlugSeam))
+            .Select(x => new StoreLandingPageResolvedItem(
+                x.ProductId,
+                x.SlugSeam,
+                null,
+                null,
+                null,
+                null))
             .ToListAsync(cancellationToken);
     }
 
@@ -829,6 +863,7 @@ public sealed class StoreLandingPageComposer
 
         var now = DateTimeOffset.UtcNow;
         IReadOnlyList<MerchandisingCampaignMemberRuntimeModel> members;
+        string? badge = "Amazing";
         if (campaignId is { } explicitId)
         {
             members = await _campaignQuery.ResolveCampaignMembersAsync(
@@ -851,6 +886,10 @@ public sealed class StoreLandingPageComposer
                 null,
                 cancellationToken);
             members = active?.Members ?? Array.Empty<MerchandisingCampaignMemberRuntimeModel>();
+            if (!string.IsNullOrWhiteSpace(active?.BadgeText))
+            {
+                badge = active.BadgeText;
+            }
         }
 
         if (members.Count == 0)
@@ -865,6 +904,7 @@ public sealed class StoreLandingPageComposer
             .ToListAsync(cancellationToken);
         var variantToProduct = variantRows.ToDictionary(x => x.VariantId, x => x.ProductId);
         var productIdsOrdered = new List<Guid>(members.Count);
+        var memberByProduct = new Dictionary<Guid, MerchandisingCampaignMemberRuntimeModel>();
         foreach (var member in members)
         {
             if (!variantToProduct.TryGetValue(member.CatalogVariantId, out var productId))
@@ -872,7 +912,7 @@ public sealed class StoreLandingPageComposer
                 continue;
             }
 
-            if (productIdsOrdered.Contains(productId))
+            if (!memberByProduct.TryAdd(productId, member))
             {
                 continue;
             }
@@ -898,7 +938,33 @@ public sealed class StoreLandingPageComposer
                 continue;
             }
 
-            result.Add(new StoreLandingPageResolvedItem(row.ProductId, row.SlugSeam));
+            memberByProduct.TryGetValue(productId, out var member);
+            decimal? offerAmount = null;
+            decimal? promoAmount = null;
+            string? currency = null;
+            string? label = null;
+            if (member is not null)
+            {
+                currency = member.PriceCurrency;
+                if (member.CompareAtAmount is decimal compareAt && member.PriceAmount is decimal selling)
+                {
+                    offerAmount = compareAt;
+                    promoAmount = selling;
+                    label = badge;
+                }
+                else if (member.PriceAmount is decimal only)
+                {
+                    offerAmount = only;
+                }
+            }
+
+            result.Add(new StoreLandingPageResolvedItem(
+                row.ProductId,
+                row.SlugSeam,
+                offerAmount,
+                promoAmount,
+                currency,
+                label));
         }
 
         return result;
@@ -993,7 +1059,13 @@ public sealed record StoreLandingPageSectionAdminView(
     DateTimeOffset UpdatedAt);
 
 /// <summary>آیتم حل‌شدهٔ منبع کنترل‌شده.</summary>
-public sealed record StoreLandingPageResolvedItem(Guid Id, string? Slug);
+public sealed record StoreLandingPageResolvedItem(
+    Guid Id,
+    string? Slug,
+    decimal? OfferAmountExclusiveOfTax = null,
+    decimal? PromotionalAmountExclusiveOfTax = null,
+    string? Currency = null,
+    string? PromotionLabel = null);
 
 /// <summary>نمای عمومی بخش Published.</summary>
 public sealed record StoreLandingPagePublicSectionView(

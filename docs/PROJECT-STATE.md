@@ -21,7 +21,7 @@ main
 Current Phase:
 
 ```text
-P10 — Builder Acceptance + Promotion Source Vertical Integration
+P10 — Builder Acceptance + Amazing Commercial Pricing
 ```
 
 Pipeline Mode:
@@ -34,7 +34,7 @@ Channel: tooba-main
 Last Architect Accepted Task:
 
 ```text
-TB-P10-T022-R15
+TB-P10-T022-R17
 ```
 
 Prior accepted catalog wave:
@@ -62,7 +62,7 @@ TB-P05-GATE
 Last Implementation Task:
 
 ```text
-TB-P10-T022-R17
+TB-P10-T022-R18
 ```
 
 Last Architecture Audit Task:
@@ -86,7 +86,8 @@ Current Repair Task:
 Implemented Under Review:
 
 ```text
-TB-P10-T022-R17 — Product Showcase PromotionCampaign source (پیشنهاد شگفت‌انگیز) Builder→Preview→Publish→Storefront; locks 405–411; Appearance YES; Builder NO; awaiting Architect review
+TB-P10-T022-R18 — Campaign promotional pricing via AuthoredPrice QualifierKind=MerchandisingCampaign + TOOBA-CAPABILITY-MAP; locks 412–416; Cart campaign context guarded gap; Appearance YES; Builder NO; awaiting Architect review
+TB-P10-T022-R17 — Product Showcase PromotionCampaign source (پیشنهاد شگفت‌انگیز) Builder→Preview→Publish→Storefront; locks 405–411; Architect-ACCEPTED before R18; Appearance YES; Builder NO
 TB-P10-T022-R16 — Amazing Offers Runtime Resolver + Real Test Data (active/future selection, availability filter, Dev seed, locks 399–404); Architect-ACCEPTED before R17; Appearance YES; Builder NO
 TB-P10-T022-R15 — Merchandising Promotion Foundation (Campaign + Type AMAZING + membership + translations; promo price deferred; no Builder/Storefront); Architect-ACCEPTED before R16; Appearance YES; Builder NO
 TB-P10-T022-R14 — Amazing Offers / Promotion Engine Architecture Audit (docs only; zero schema/UI/storefront code); Architect-ACCEPTED before R15; Appearance YES; Builder NO

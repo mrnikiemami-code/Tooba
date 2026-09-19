@@ -49,6 +49,18 @@ public interface IPriceLookupGateway
         string currency,
         DateTimeOffset at,
         CancellationToken cancellationToken);
+
+    /// <summary>
+    /// قیمت کمپین مرچندایزینگ مؤثر چند Offer را در یک خواندن برای CampaignId + ابعاد قیمت برمی‌گرداند.
+    /// </summary>
+    Task<IReadOnlyDictionary<Guid, PriceQuote>> ResolveCampaignPricesBatchAsync(
+        IReadOnlyCollection<Guid> offerIds,
+        Guid campaignId,
+        string market,
+        SalesChannel channel,
+        string currency,
+        DateTimeOffset at,
+        CancellationToken cancellationToken);
 }
 
 /// <summary>
@@ -72,6 +84,20 @@ public interface IPriceDirectory
     /// </summary>
     Task<PriceQuote> CreatePriceAsync(
         Guid offerId,
+        string market,
+        SalesChannel channel,
+        decimal amount,
+        string currency,
+        DateTimeOffset validFrom,
+        DateTimeOffset? validTo,
+        CancellationToken cancellationToken);
+
+    /// <summary>
+    /// قیمت کمپین مرچندایزینگ می‌سازد (QualifierKind=MerchandisingCampaign، QualifierKey=CampaignId).
+    /// </summary>
+    Task<PriceQuote> CreateCampaignPriceAsync(
+        Guid offerId,
+        Guid campaignId,
         string market,
         SalesChannel channel,
         decimal amount,

@@ -36,6 +36,8 @@ public sealed record MerchandisingCampaignRuntimeModel(
 
 /// <summary>
 /// عضو زمان‌اجرا با حقیقت Offer/Price/Inventory؛ بدون ProductCard کامل.
+/// PriceAmount = فروش مؤثر (کمپین در صورت اعمال، وگرنه پایه).
+/// CompareAtAmount = قیمت پایه فقط وقتی اکیداً بیشتر از فروش مؤثر است.
 /// </summary>
 public sealed record MerchandisingCampaignMemberRuntimeModel(
     Guid SellerOfferId,
@@ -46,7 +48,8 @@ public sealed record MerchandisingCampaignMemberRuntimeModel(
     string? PriceCurrency,
     decimal AvailableQuantity,
     decimal? MinimumOrderQuantity,
-    decimal? MaximumOrderQuantity);
+    decimal? MaximumOrderQuantity,
+    decimal? CompareAtAmount = null);
 
 /// <summary>
 /// پارامترهای حل قیمت برای projection کمپین.

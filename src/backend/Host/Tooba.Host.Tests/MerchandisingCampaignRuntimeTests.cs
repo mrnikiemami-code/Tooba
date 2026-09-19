@@ -225,6 +225,40 @@ public sealed class MerchandisingCampaignRuntimeTests : IAsyncLifetime
             ],
             CancellationToken.None);
 
+        // R18: campaign-scoped AuthoredPrice for first three members; offers[3] stays base-only.
+        foreach (var (offer, promo) in new[]
+                 {
+                     (offers[0], 70000m),
+                     (offers[1], 71000m),
+                     (offers[2], 72000m),
+                 })
+        {
+            var campaignPrice = await priceDir.CreateCampaignPriceAsync(
+                offer.OfferId,
+                primary.Id,
+                "IR",
+                SalesChannel.Marketplace,
+                promo,
+                "IRR",
+                now.AddHours(-2),
+                now.AddDays(2),
+                CancellationToken.None);
+            await priceDir.ActivateAsync(campaignPrice.PriceId, CancellationToken.None);
+        }
+
+        // Future campaign price must not leak through future resolver.
+        var futurePromo = await priceDir.CreateCampaignPriceAsync(
+            offers[0].OfferId,
+            Guid.Parse("019a16a0-0003-7000-8000-000000000003"),
+            "IR",
+            SalesChannel.Marketplace,
+            50000m,
+            "IRR",
+            now.AddDays(1),
+            now.AddDays(2),
+            CancellationToken.None);
+        await priceDir.ActivateAsync(futurePromo.PriceId, CancellationToken.None);
+
         var loser = await merchDir.UpsertSeedCampaignAsync(
             Guid.Parse("019a16a0-0002-7000-8000-000000000002"),
             type.Id,
@@ -259,6 +293,7 @@ public sealed class MerchandisingCampaignRuntimeTests : IAsyncLifetime
             null,
             null,
             CancellationToken.None);
+        await merchDir.SyncSeedMembersAsync(future.Id, storeA, [offers[0].OfferId], CancellationToken.None);
 
         var expired = await merchDir.UpsertSeedCampaignAsync(
             Guid.Parse("019a16a0-0004-7000-8000-000000000004"),
@@ -316,14 +351,25 @@ public sealed class MerchandisingCampaignRuntimeTests : IAsyncLifetime
         Assert.DoesNotContain(active.Members, x => x.SellerOfferId == offers[4].OfferId);
         Assert.DoesNotContain(active.Members, x => x.SellerOfferId == suspended.OfferId);
 
-        // Canonical price + qty limits
+        // Canonical price + qty limits + campaign promo compare-at
         var firstMember = active.Members.Single(x => x.SellerOfferId == offers[0].OfferId);
-        Assert.Equal(100000m, firstMember.PriceAmount);
+        Assert.Equal(70000m, firstMember.PriceAmount);
+        Assert.Equal(100000m, firstMember.CompareAtAmount);
         Assert.Equal("IRR", firstMember.PriceCurrency);
         Assert.Equal(1m, firstMember.MinimumOrderQuantity);
         Assert.Equal(3m, firstMember.MaximumOrderQuantity);
         Assert.True(firstMember.AvailableQuantity > 0);
         Assert.DoesNotContain("PromoAmount", typeof(MerchandisingCampaignMemberRuntimeModel).GetProperties().Select(p => p.Name));
+
+        var baseOnlyMember = active.Members.Single(x => x.SellerOfferId == offers[3].OfferId);
+        Assert.Equal(103000m, baseOnlyMember.PriceAmount);
+        Assert.Null(baseOnlyMember.CompareAtAmount);
+
+        // Base resolution unchanged without campaign context
+        var baseQuote = await priceDir.ResolvePriceAsync(
+            new PriceResolutionQuery(offers[0].OfferId, "IR", SalesChannel.Marketplace, "IRR", now, null, null, null),
+            CancellationToken.None);
+        Assert.Equal(100000m, baseQuote!.Amount);
 
         // FA locale
         var activeFa = await query.ResolveActiveByTypeAsync(
@@ -360,6 +406,13 @@ public sealed class MerchandisingCampaignRuntimeTests : IAsyncLifetime
         Assert.Equal(future.Id, futureModel!.CampaignId);
         Assert.True(futureModel.IsTeasing);
         Assert.NotEqual(active.CampaignId, futureModel.CampaignId);
+        // Future membership projection must not apply campaign promo prices.
+        Assert.All(futureModel.Members, m => Assert.Null(m.CompareAtAmount));
+        var futureMember0 = futureModel.Members.FirstOrDefault(x => x.SellerOfferId == offers[0].OfferId);
+        if (futureMember0 is not null)
+        {
+            Assert.Equal(100000m, futureMember0.PriceAmount);
+        }
 
         // Expired / draft / archived not active at fixed clock `now`
         Assert.False((await promoDb.MerchandisingCampaigns.SingleAsync(x => x.Id == expired.Id)).IsRuntimeActive(now));
@@ -441,7 +494,9 @@ public sealed class MerchandisingCampaignRuntimeTests : IAsyncLifetime
 
         // Max take bound
         Assert.Equal(48, MerchandisingCampaignRuntimeLimits.MaxMemberTake);
-        Assert.Equal(typeof(PriceQualifierKind).GetEnumNames(), new[] { nameof(PriceQualifierKind.Base) });
+        Assert.Equal(
+            typeof(PriceQualifierKind).GetEnumNames(),
+            new[] { nameof(PriceQualifierKind.Base), nameof(PriceQualifierKind.MerchandisingCampaign) });
 
         // Recovery markers
         var root = FindRepoRoot();

@@ -74,6 +74,7 @@ public sealed class MerchandisingCampaignQuery : IMerchandisingCampaignQuery
             take,
             priceScope ?? MerchandisingPriceScope.Default,
             filterUnavailable: true,
+            applyCampaignPrices: true,
             cancellationToken);
     }
 
@@ -116,6 +117,7 @@ public sealed class MerchandisingCampaignQuery : IMerchandisingCampaignQuery
             take,
             priceScope ?? MerchandisingPriceScope.Default,
             filterUnavailable: true,
+            applyCampaignPrices: false,
             cancellationToken);
     }
 
@@ -137,12 +139,18 @@ public sealed class MerchandisingCampaignQuery : IMerchandisingCampaignQuery
             return Array.Empty<MerchandisingCampaignMemberRuntimeModel>();
         }
 
+        var applyCampaignPrices =
+            campaign.LifecycleStatus == MerchandisingCampaignLifecycleStatus.Published
+            && campaign.StartAt <= now
+            && (campaign.EndAt is null || campaign.EndAt > now);
+
         return await ProjectMembersAsync(
             campaign.Id,
             now,
             take,
             priceScope ?? MerchandisingPriceScope.Default,
             filterUnavailable: true,
+            applyCampaignPrices,
             cancellationToken);
     }
 
@@ -176,6 +184,7 @@ public sealed class MerchandisingCampaignQuery : IMerchandisingCampaignQuery
         int take,
         MerchandisingPriceScope priceScope,
         bool filterUnavailable,
+        bool applyCampaignPrices,
         CancellationToken cancellationToken)
     {
         var text = await ResolveTranslationAsync(campaign.Id, locale, cancellationToken);
@@ -185,6 +194,7 @@ public sealed class MerchandisingCampaignQuery : IMerchandisingCampaignQuery
             take,
             priceScope,
             filterUnavailable,
+            applyCampaignPrices,
             cancellationToken);
         var isTeasing = campaign.LifecycleStatus == MerchandisingCampaignLifecycleStatus.Published
                         && campaign.StartAt > now;
@@ -215,6 +225,7 @@ public sealed class MerchandisingCampaignQuery : IMerchandisingCampaignQuery
         int take,
         MerchandisingPriceScope priceScope,
         bool filterUnavailable,
+        bool applyCampaignPrices,
         CancellationToken cancellationToken)
     {
         var capped = Math.Clamp(
@@ -238,13 +249,23 @@ public sealed class MerchandisingCampaignQuery : IMerchandisingCampaignQuery
         var offerIds = memberships.Select(x => x.SellerOfferId).Distinct().ToArray();
         var offers = await _offers.FindOffersBatchAsync(offerIds, cancellationToken);
         var stock = await _inventory.GetAvailabilityBatchAsync(offerIds, cancellationToken);
-        var prices = await _prices.ResolvePricesBatchAsync(
+        var basePrices = await _prices.ResolvePricesBatchAsync(
             offerIds,
             priceScope.Market,
             priceScope.Channel,
             priceScope.Currency,
             now,
             cancellationToken);
+        var campaignPrices = applyCampaignPrices
+            ? await _prices.ResolveCampaignPricesBatchAsync(
+                offerIds,
+                campaignId,
+                priceScope.Market,
+                priceScope.Channel,
+                priceScope.Currency,
+                now,
+                cancellationToken)
+            : new Dictionary<Guid, PriceQuote>();
 
         var projected = new List<MerchandisingCampaignMemberRuntimeModel>(memberships.Count);
         foreach (var membership in memberships)
@@ -262,18 +283,22 @@ public sealed class MerchandisingCampaignQuery : IMerchandisingCampaignQuery
                 continue;
             }
 
-            prices.TryGetValue(membership.SellerOfferId, out var quote);
+            basePrices.TryGetValue(membership.SellerOfferId, out var baseQuote);
+            campaignPrices.TryGetValue(membership.SellerOfferId, out var campaignQuote);
+            var (selling, compareAt, currency) = ResolveMemberPricing(baseQuote, campaignQuote);
+
             projected.Add(
                 new MerchandisingCampaignMemberRuntimeModel(
                     membership.SellerOfferId,
                     offer.CatalogVariantId,
                     membership.SortOrder,
                     IsMarketable: true,
-                    quote?.Amount,
-                    quote?.Currency,
+                    selling,
+                    currency,
                     available,
                     offer.MinimumOrderQuantity,
-                    offer.MaximumOrderQuantity));
+                    offer.MaximumOrderQuantity,
+                    compareAt));
 
             if (projected.Count >= capped)
             {
@@ -282,6 +307,32 @@ public sealed class MerchandisingCampaignQuery : IMerchandisingCampaignQuery
         }
 
         return projected;
+    }
+
+    /// <summary>
+    /// فروش مؤثر = قیمت کمپین در صورت وجود؛ compare-at فقط وقتی پایه اکیداً بیشتر است.
+    /// </summary>
+    private static (decimal? Selling, decimal? CompareAt, string? Currency) ResolveMemberPricing(
+        PriceQuote? baseQuote,
+        PriceQuote? campaignQuote)
+    {
+        if (campaignQuote is null)
+        {
+            return (baseQuote?.Amount, null, baseQuote?.Currency);
+        }
+
+        if (baseQuote is null)
+        {
+            return (campaignQuote.Amount, null, campaignQuote.Currency);
+        }
+
+        if (campaignQuote.Amount < baseQuote.Amount)
+        {
+            return (campaignQuote.Amount, baseQuote.Amount, campaignQuote.Currency);
+        }
+
+        // promo >= normal → بدون compare-at جعلی؛ فروش همان پایه.
+        return (baseQuote.Amount, null, baseQuote.Currency);
     }
 
     private async Task<(string Title, string? Subtitle, string? BadgeText)> ResolveTranslationAsync(

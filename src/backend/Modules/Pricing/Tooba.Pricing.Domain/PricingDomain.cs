@@ -25,7 +25,7 @@ public enum PriceStatus
 }
 
 /// <summary>
-/// گونهٔ محدودکنندهٔ قیمت. فعلاً فقط پایه است تا قیمت مشتری/سازمان/قرارداد بعداً اضافه شود.
+/// گونهٔ محدودکنندهٔ قیمت. پایه برای فروش عادی؛ کمپین مرچندایزینگ برای قیمت تبلیغاتی همان Offer.
 /// </summary>
 public enum PriceQualifierKind
 {
@@ -33,6 +33,11 @@ public enum PriceQualifierKind
     /// قیمت پایهٔ کانال/بازار بدون مشتری یا قرارداد.
     /// </summary>
     Base = 0,
+
+    /// <summary>
+    /// قیمت نوشته‌شدهٔ محدود به یک MerchandisingCampaign مشخص (QualifierKey = CampaignId).
+    /// </summary>
+    MerchandisingCampaign = 1,
 }
 
 /// <summary>
@@ -243,7 +248,62 @@ public sealed class AuthoredPrice : IHasDomainEvents
         string currencyCode,
         DateTimeOffset validFrom,
         DateTimeOffset? validTo,
+        DateTimeOffset now) =>
+        CreateCore(
+            offerId,
+            marketCode,
+            channel,
+            amount,
+            currencyCode,
+            validFrom,
+            validTo,
+            now,
+            PriceQualifierKind.Base,
+            qualifierKey: null);
+
+    /// <summary>
+    /// قیمت کمپین مرچندایزینگ می‌سازد؛ QualifierKey همان CampaignId پایدار است.
+    /// </summary>
+    public static AuthoredPrice CreateMerchandisingCampaign(
+        Guid offerId,
+        Guid campaignId,
+        string marketCode,
+        SalesChannel channel,
+        decimal amount,
+        string currencyCode,
+        DateTimeOffset validFrom,
+        DateTimeOffset? validTo,
         DateTimeOffset now)
+    {
+        if (campaignId == Guid.Empty)
+        {
+            throw new InvalidOperationException("CampaignId برای قیمت کمپین الزامی است.");
+        }
+
+        return CreateCore(
+            offerId,
+            marketCode,
+            channel,
+            amount,
+            currencyCode,
+            validFrom,
+            validTo,
+            now,
+            PriceQualifierKind.MerchandisingCampaign,
+            campaignId.ToString("D"));
+    }
+
+    private static AuthoredPrice CreateCore(
+        Guid offerId,
+        string marketCode,
+        SalesChannel channel,
+        decimal amount,
+        string currencyCode,
+        DateTimeOffset validFrom,
+        DateTimeOffset? validTo,
+        DateTimeOffset now,
+        PriceQualifierKind qualifierKind,
+        string? qualifierKey)
     {
         var market = MarketCode.Parse(marketCode);
         var money = Money.Create(amount, currencyCode);
@@ -263,8 +323,8 @@ public sealed class AuthoredPrice : IHasDomainEvents
             ValidFrom = validFrom,
             ValidTo = validTo,
             Status = PriceStatus.Draft,
-            QualifierKind = PriceQualifierKind.Base,
-            QualifierKey = null,
+            QualifierKind = qualifierKind,
+            QualifierKey = qualifierKey,
             CreatedAt = now,
             UpdatedAt = now,
         };
