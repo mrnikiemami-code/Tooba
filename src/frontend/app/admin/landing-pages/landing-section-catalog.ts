@@ -29,7 +29,7 @@ export type LandingSectionChoice = {
 
 export const LANDING_SECTION_CHOICES: LandingSectionChoice[] = [
   { type: "Hero", label: "اسلایدر اصلی", description: "چند اسلاید با تصویر، عنوان و Alt", testId: "add-section-hero" },
-  { type: "ProductCollection", label: "مجموعه کالا", description: "نمایش کالا از انتخاب دستی، دسته، برند یا تازه‌ها", testId: "add-section-products" },
+  { type: "ProductCollection", label: "مجموعه کالا", description: "نمایش کالا از انتخاب دستی، دسته، برند، تازه‌ها یا پیشنهاد شگفت‌انگیز", testId: "add-section-products" },
   { type: "CategoryGrid", label: "شبکهٔ دسته‌ها", description: "چند دستهٔ فروشگاه را در یک ردیف نشان می‌دهد", testId: "add-section-categories" },
   { type: "BrandStrip", label: "نوار برند", description: "برندهای انتخاب‌شده را در ویترین می‌چیند", testId: "add-section-brands" },
   { type: "PromoBanner", label: "بنر تبلیغاتی", description: "یک بنر با عنوان و پیوند کنترل‌شده", testId: "add-section-promo" },
@@ -46,6 +46,7 @@ export const PRODUCT_SOURCE_CHOICES = [
   { value: "Category", label: "دسته‌بندی" },
   { value: "Brand", label: "برند" },
   { value: "Newest", label: "جدیدترین‌ها" },
+  { value: "PromotionCampaign", label: "پیشنهاد شگفت‌انگیز" },
 ] as const;
 
 export function landingSectionLabel(type: string): string {

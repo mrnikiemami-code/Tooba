@@ -146,6 +146,14 @@ public sealed class MerchandisingCampaignQuery : IMerchandisingCampaignQuery
             cancellationToken);
     }
 
+    /// <inheritdoc />
+    public Task<bool> CampaignBelongsToStoreAsync(
+        Guid campaignId,
+        Guid storeId,
+        CancellationToken cancellationToken) =>
+        _db.MerchandisingCampaigns.AsNoTracking()
+            .AnyAsync(x => x.Id == campaignId && x.StoreId == storeId, cancellationToken);
+
     private async Task<MerchandisingPromotionType?> FindActiveTypeAsync(
         string typeCode,
         CancellationToken cancellationToken)

@@ -105,4 +105,12 @@ public interface IMerchandisingCampaignQuery
         int take,
         MerchandisingPriceScope? priceScope,
         CancellationToken cancellationToken);
+
+    /// <summary>
+    /// آیا کمپین در همین فروشگاه وجود دارد (برای اعتبارسنجی پیکربندی Builder).
+    /// </summary>
+    Task<bool> CampaignBelongsToStoreAsync(
+        Guid campaignId,
+        Guid storeId,
+        CancellationToken cancellationToken);
 }

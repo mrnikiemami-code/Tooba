@@ -466,14 +466,20 @@ export function renderSharedLandingSection(input: SharedLandingRenderInput): Rea
   }
 
   const fillProducts = (layout: Parameters<typeof LandingProductRail>[0]["layout"]) => {
-    const wanted = new Set(
-      section.items.map((item) => item.id).concat(section.items.map((item) => item.slug).filter(Boolean) as string[]),
-    );
-    const realSelected = wanted.size
-      ? context.products.filter((card) => wanted.has(card.productId) || wanted.has(card.slug))
+    const byKey = new Map<string, (typeof context.products)[number]>();
+    for (const card of context.products) {
+      byKey.set(card.productId, card);
+      if (card.slug) byKey.set(card.slug, card);
+    }
+    const realSelected = section.items.length
+      ? section.items
+        .map((item) => byKey.get(item.id) ?? (item.slug ? byKey.get(item.slug) : undefined))
+        .filter((card): card is (typeof context.products)[number] => Boolean(card))
       : context.products;
+    const source = typeof config.source === "string" ? config.source : "";
+    const allowFakeFill = storePreview && source !== "PromotionCampaign";
     const filled = applyPreviewFill({
-      enabled: storePreview,
+      enabled: allowFakeFill,
       variantKey,
       realItems: realSelected,
       createFake: (index) => createFakeProduct(index, locale),
@@ -564,16 +570,26 @@ export function renderSharedLandingSection(input: SharedLandingRenderInput): Rea
     case "product.card-carousel":
       return fillProducts("rail");
     case "product.amazing": {
-      const wanted = new Set(
-        section.items.map((item) => item.id).concat(section.items.map((item) => item.slug).filter(Boolean) as string[]),
-      );
-      const realSelected = wanted.size
-        ? context.products.filter((card) => wanted.has(card.productId) || wanted.has(card.slug))
-        : context.products.filter((card) => card.promotionalAmountExclusiveOfTax != null || card.promotionLabel);
+      const byKey = new Map<string, (typeof context.products)[number]>();
+      for (const card of context.products) {
+        byKey.set(card.productId, card);
+        if (card.slug) byKey.set(card.slug, card);
+      }
+      const orderedFromItems = section.items.length
+        ? section.items
+          .map((item) => byKey.get(item.id) ?? (item.slug ? byKey.get(item.slug) : undefined))
+          .filter((card): card is (typeof context.products)[number] => Boolean(card))
+        : [];
+      const source = typeof config.source === "string" ? config.source : "";
+      const realSelected = orderedFromItems.length
+        ? orderedFromItems
+        : source === "PromotionCampaign"
+          ? []
+          : context.products.filter((card) => card.promotionalAmountExclusiveOfTax != null || card.promotionLabel);
       const filled = applyPreviewFill({
-        enabled: storePreview,
+        enabled: storePreview && source !== "PromotionCampaign",
         variantKey,
-        realItems: realSelected.length ? realSelected : context.products,
+        realItems: realSelected.length || source === "PromotionCampaign" ? realSelected : context.products,
         createFake: (index) => createFakeProduct(index, locale),
       });
       return (
@@ -586,14 +602,19 @@ export function renderSharedLandingSection(input: SharedLandingRenderInput): Rea
       );
     }
     case "product.zohreh": {
-      const wanted = new Set(
-        section.items.map((item) => item.id).concat(section.items.map((item) => item.slug).filter(Boolean) as string[]),
-      );
-      const realSelected = wanted.size
-        ? context.products.filter((card) => wanted.has(card.productId) || wanted.has(card.slug))
+      const source = typeof config.source === "string" ? config.source : "";
+      const byKey = new Map<string, (typeof context.products)[number]>();
+      for (const card of context.products) {
+        byKey.set(card.productId, card);
+        if (card.slug) byKey.set(card.slug, card);
+      }
+      const realSelected = section.items.length
+        ? section.items
+          .map((item) => byKey.get(item.id) ?? (item.slug ? byKey.get(item.slug) : undefined))
+          .filter((card): card is (typeof context.products)[number] => Boolean(card))
         : context.products;
       const filled = applyPreviewFill({
-        enabled: storePreview,
+        enabled: storePreview && source !== "PromotionCampaign",
         variantKey,
         realItems: realSelected,
         createFake: (index) => createFakeProduct(index, locale),
@@ -608,14 +629,19 @@ export function renderSharedLandingSection(input: SharedLandingRenderInput): Rea
       );
     }
     case "product.mahoor": {
-      const wanted = new Set(
-        section.items.map((item) => item.id).concat(section.items.map((item) => item.slug).filter(Boolean) as string[]),
-      );
-      const realSelected = wanted.size
-        ? context.products.filter((card) => wanted.has(card.productId) || wanted.has(card.slug))
+      const source = typeof config.source === "string" ? config.source : "";
+      const byKey = new Map<string, (typeof context.products)[number]>();
+      for (const card of context.products) {
+        byKey.set(card.productId, card);
+        if (card.slug) byKey.set(card.slug, card);
+      }
+      const realSelected = section.items.length
+        ? section.items
+          .map((item) => byKey.get(item.id) ?? (item.slug ? byKey.get(item.slug) : undefined))
+          .filter((card): card is (typeof context.products)[number] => Boolean(card))
         : context.products;
       const filled = applyPreviewFill({
-        enabled: storePreview,
+        enabled: storePreview && source !== "PromotionCampaign",
         variantKey,
         realItems: realSelected,
         createFake: (index) => createFakeProduct(index, locale),
@@ -636,14 +662,19 @@ export function renderSharedLandingSection(input: SharedLandingRenderInput): Rea
     case "product.explorer": {
       const emblaVariant = productShowcaseEmblaVariantFromKey(variantKey);
       if (!emblaVariant) return null;
-      const wanted = new Set(
-        section.items.map((item) => item.id).concat(section.items.map((item) => item.slug).filter(Boolean) as string[]),
-      );
-      const realSelected = wanted.size
-        ? context.products.filter((card) => wanted.has(card.productId) || wanted.has(card.slug))
+      const source = typeof config.source === "string" ? config.source : "";
+      const byKey = new Map<string, (typeof context.products)[number]>();
+      for (const card of context.products) {
+        byKey.set(card.productId, card);
+        if (card.slug) byKey.set(card.slug, card);
+      }
+      const realSelected = section.items.length
+        ? section.items
+          .map((item) => byKey.get(item.id) ?? (item.slug ? byKey.get(item.slug) : undefined))
+          .filter((card): card is (typeof context.products)[number] => Boolean(card))
         : context.products;
       const filled = applyPreviewFill({
-        enabled: storePreview,
+        enabled: storePreview && source !== "PromotionCampaign",
         variantKey,
         realItems: realSelected,
         createFake: (index) => createFakeProduct(index, locale),

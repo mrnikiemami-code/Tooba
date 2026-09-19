@@ -15,7 +15,7 @@ main
 Current Phase:
 
 ```text
-P10 — Builder Acceptance + Promotion Engine Runtime Foundation
+P10 — Builder Acceptance + Promotion Source Vertical Integration
 ```
 
 Pipeline Mode:
@@ -28,7 +28,7 @@ Channel: tooba-main
 Last Architect Accepted Task:
 
 ```text
-TB-P10-T022-R15
+TB-P10-T022-R16
 ```
 
 Prior accepted catalog wave:
@@ -50,7 +50,7 @@ TB-P07-T043
 Last Implementation Task:
 
 ```text
-TB-P10-T022-R16
+TB-P10-T022-R17
 ```
 
 Last Architecture Audit Task:
@@ -74,7 +74,8 @@ Current Repair Task:
 Implemented Under Review:
 
 ```text
-TB-P10-T022-R16 — Amazing Offers Runtime Resolver + Real Test Data (active/future selection, availability filter, Dev seed, locks 399–404); Appearance YES; Builder NO; awaiting Architect review
+TB-P10-T022-R17 — Product Showcase PromotionCampaign source (پیشنهاد شگفت‌انگیز) Builder→Preview→Publish→Storefront; locks 405–411; Appearance YES; Builder NO; awaiting Architect review
+TB-P10-T022-R16 — Amazing Offers Runtime Resolver + Real Test Data (active/future selection, availability filter, Dev seed, locks 399–404); Architect-ACCEPTED before R17; Appearance YES; Builder NO
 TB-P10-T022-R15 — Merchandising Promotion Foundation (Campaign + Type AMAZING + membership + translations; promo price deferred; no Builder/Storefront); Architect-ACCEPTED before R16; Appearance YES; Builder NO
 TB-P10-T022-R14 — Amazing Offers / Promotion Engine Architecture Audit (docs only; zero schema/UI/storefront code); Architect-ACCEPTED before R15; Appearance YES; Builder NO
 TB-P10-T022-R13-R4 — Product Showcase Motion & Proportion Polish (calm autoplay, no sweep, proportionate cinematic, upright explorer); USER_VISUAL_ACCEPTED=YES (Appearance); Builder USER_VISUAL_ACCEPTED=NO

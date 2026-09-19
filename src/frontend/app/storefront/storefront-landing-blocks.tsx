@@ -889,12 +889,20 @@ export function LandingProductRail({
   layout?: "rail" | "grid" | "compact-rows" | "columns" | "featured-plus-rail" | "ranked-grid" | "tabbed" | "large-cards" | "minimal-list" | "ticker";
   previewLocale?: string;
 }) {
-  const wanted = new Set(section.items.map((item) => item.id).concat(section.items.map((item) => item.slug).filter(Boolean) as string[]));
-  const cards = (wanted.size
-    ? products.filter((card) => wanted.has(card.productId) || wanted.has(card.slug))
-    : products
-  ).slice(0, typeof config.take === "number" ? config.take : 8);
+  const wanted = section.items;
+  const byKey = new Map<string, (typeof products)[number]>();
+  for (const card of products) {
+    byKey.set(card.productId, card);
+    if (card.slug) byKey.set(card.slug, card);
+  }
+  const ordered = wanted.length
+    ? wanted
+      .map((item) => byKey.get(item.id) ?? (item.slug ? byKey.get(item.slug) : undefined))
+      .filter((card): card is (typeof products)[number] => Boolean(card))
+    : products;
+  const cards = ordered.slice(0, typeof config.take === "number" ? config.take : 8);
   const title = titleOf(config, "کالاها");
+  const source = typeof config.source === "string" ? config.source : "";
   if (cards.length === 0) {
     return (
       <section className="w-full px-2 py-8 sm:px-4" data-testid="landing-products" data-empty="true">
@@ -902,7 +910,9 @@ export function LandingProductRail({
           <h2 className="text-lg font-bold">{title}</h2>
         </div>
         <p className="rounded-2xl border border-dashed border-gray-200 bg-surface px-4 py-6 text-center text-sm text-gray-500">
-          کالایی برای نمایش در این بخش یافت نشد.
+          {source === "PromotionCampaign"
+            ? "در حال حاضر پیشنهاد شگفت‌انگیز فعالی برای نمایش نیست."
+            : "کالایی برای نمایش در این بخش یافت نشد."}
         </p>
       </section>
     );

@@ -1,0 +1,88 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+
+BEGIN_TOOBA_WORKER_RESULT
+
+Task-ID: TB-P10-T022-R17
+Parent-Task: TB-P10-T022-R16
+Channel: tooba-main
+WorkerId: tooba-worker-01
+AgentType: cursor
+Status: PASS
+
+Summary:
+Product Showcase generic SourceType=PromotionCampaign with Builder label «پیشنهاد شگفت‌انگیز» (promotionTypeCode=AMAZING, CampaignId=null). Persists source intent only; resolves via IMerchandisingCampaignQuery + canonical ProductCard projection; PreviewFake/Newest fallback forbidden; Dev AMAZING seed runs under MigrateSchemaOnly when RunLegacyBootstraps=false. LOCK-SF-405…411. Browser/API proof EXIT 0. Promo price still deferred. Appearance YES; Builder NO.
+
+Applicable-Locks:
+LOCK-SF-001…404 retained; LOCK-SF-405…411 added.
+
+Recovery-Start:
+docs/evidence/TB-P10-T022-R17/recovery-start.md — main @ 26394e97 == origin/main at claim; Bridge 8efb935e… / TB-P10-T022-R17.
+
+Source-Contract:
+docs/evidence/TB-P10-T022-R17/source-contract.md
+
+Persistence:
+docs/evidence/TB-P10-T022-R17/persistence.md
+
+Builder-Source-UI:
+docs/evidence/TB-P10-T022-R17/builder-source-ui.md — screenshots/builder-source-amazing.png
+
+Campaign-Selection:
+docs/evidence/TB-P10-T022-R17/campaign-selection.md — default active AMAZING; explicit picker deferred.
+
+Resolver-Adapter:
+docs/evidence/TB-P10-T022-R17/resolver-adapter.md
+
+Localization:
+docs/evidence/TB-P10-T022-R17/localization.md — page locale; LOCK-SF-408.
+
+Preview:
+docs/evidence/TB-P10-T022-R17/preview.md — real Dev campaign data.
+
+Storefront-Runtime:
+docs/evidence/TB-P10-T022-R17/storefront-runtime.md — runtime resolve, no member snapshot.
+
+SSR:
+Host embeds section items + ComposeProductCardsAsync in public HTML; capture ssr-html-has-products PASS.
+
+Pricing-Gap:
+docs/evidence/TB-P10-T022-R17/pricing-gap.md — LOCK-SF-411.
+
+Validation:
+PromotionCampaign valid without active campaign at save; CampaignId cross-store rejected via CampaignBelongsToStoreAsync.
+
+Cache:
+docs/evidence/TB-P10-T022-R17/cache.md
+
+Browser-Proof:
+docs/evidence/TB-P10-T022-R17/browser-proof.md + runtime-report.json (ok:true) + screenshots.
+
+Persistence-Proof:
+docs/evidence/TB-P10-T022-R17/persistence-proof.md
+
+Focused-Validation:
+docs/evidence/TB-P10-T022-R17/focused-validation.md — PromotionCampaignSourceTests + landing + merchandising runtime; capture EXIT 0.
+
+AntiPattern-Scan:
+docs/evidence/TB-P10-T022-R17/antipattern-scan.md
+
+Lock-Registry:
+docs/architecture/TOOBA-LOCKS.md — LOCK-SF-405…411.
+
+Recovery-SoT:
+docs/evidence/TB-P10-T022-R17/recovery-sot.md — 18ca10c9 ancestor; user work preserved.
+
+Git:
+TIP_PLACEHOLDER
+branch main; HEAD==origin/main after push.
+
+Visual-Concerns:
+Builder remains USER_VISUAL_ACCEPTED=NO until Architect/user visual accept. No Shopeiva redesign; source option only.
+
+Architectural-Concerns:
+None blocking. Promo-price override still deferred by design.
+
+Blockers:
+None.
+
+END_TOOBA_WORKER_RESULT

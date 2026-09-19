@@ -81,6 +81,7 @@ export const DATA_SOURCE_SUPPORT: Record<DataSourceKind, DataSourceSupport> = {
   Category: "Supported",
   Brand: "Supported",
   Newest: "Supported",
+  PromotionCampaign: "Supported",
   LatestArticles: "Supported",
   ApprovedReviews: "Supported",
   /** Home currently sorts listing by ReviewCount — not a dedicated API. */

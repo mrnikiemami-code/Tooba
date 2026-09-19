@@ -343,6 +343,8 @@ public static class StoreLandingPageSectionConfig
         Guid? categoryId = null;
         Guid? brandId = null;
         var productIds = Array.Empty<Guid>();
+        string? promotionTypeCode = null;
+        Guid? campaignId = null;
 
         if (string.Equals(source, "Category", StringComparison.OrdinalIgnoreCase))
         {
@@ -359,6 +361,22 @@ public static class StoreLandingPageSectionConfig
             productIds = ReadGuids(root, "productIds", allowEmpty: false);
             source = "Manual";
         }
+        else if (string.Equals(source, "PromotionCampaign", StringComparison.OrdinalIgnoreCase))
+        {
+            source = "PromotionCampaign";
+            promotionTypeCode = OptionalString(root, "promotionTypeCode", 32)?.Trim().ToUpperInvariant();
+            if (string.IsNullOrWhiteSpace(promotionTypeCode))
+            {
+                promotionTypeCode = "AMAZING";
+            }
+
+            if (promotionTypeCode.Any(static ch => !(char.IsLetterOrDigit(ch) || ch is '_' or '-')))
+            {
+                throw new PlatformHttpException(400, "کد گونهٔ پیشنهاد معتبر نیست.", "landing.section.promotionType.invalid");
+            }
+
+            campaignId = OptionalGuid(root, "campaignId");
+        }
         else
         {
             source = "Newest";
@@ -372,6 +390,8 @@ public static class StoreLandingPageSectionConfig
             categoryId,
             brandId,
             productIds,
+            promotionTypeCode,
+            campaignId,
             variantKey = OptionalVariantKey(root),
             heightPreset = OptionalHeightPreset(root),
             href = OptionalHref(root),

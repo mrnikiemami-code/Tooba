@@ -354,7 +354,9 @@ function ProductSourceForm({
   const manualEmpty = source === "Manual" && asStringArray(value.productIds).length === 0;
   const categoryMissing = source === "Category" && !(typeof value.categoryId === "string" && value.categoryId);
   const brandMissing = source === "Brand" && !(typeof value.brandId === "string" && value.brandId);
-  const allowed = strategies.filter((s) => ["Manual", "Category", "Brand", "Newest"].includes(s));
+  const allowed = strategies.filter((s) =>
+    ["Manual", "Category", "Brand", "Newest", "PromotionCampaign"].includes(s),
+  );
   const bannerPreview =
     bannerImageUrl.trim()
     || (bannerMediaAssetId.trim() ? mediaPreviewUrl(bannerMediaAssetId) ?? "" : "");
@@ -431,7 +433,25 @@ function ProductSourceForm({
             <select
               className="w-full rounded-xl border border-border bg-surface px-3 py-2"
               value={source}
-              onChange={(event) => set({ source: event.target.value })}
+              onChange={(event) => {
+                const next = event.target.value;
+                if (next === "PromotionCampaign") {
+                  set({
+                    source: next,
+                    promotionTypeCode: "AMAZING",
+                    campaignId: null,
+                    productIds: [],
+                    categoryId: null,
+                    brandId: null,
+                  });
+                  return;
+                }
+                set({
+                  source: next,
+                  promotionTypeCode: undefined,
+                  campaignId: undefined,
+                });
+              }}
               data-testid="product-source-strategy"
             >
               {allowed.map((item) => (
@@ -439,6 +459,11 @@ function ProductSourceForm({
               ))}
             </select>
           </label>
+          {source === "PromotionCampaign" ? (
+            <p className="rounded-xl border border-dashed px-3 py-2 text-xs text-muted" data-testid="promotion-campaign-source-hint">
+              پیشنهاد شگفت‌انگیز فعال — کالاها از کمپین فعال فروشگاه در زمان پیش‌نمایش و انتشار خوانده می‌شوند.
+            </p>
+          ) : null}
           {manualEmpty || categoryMissing || brandMissing ? (
             <p className="rounded-xl border border-dashed px-3 py-2 text-xs text-muted" data-testid="empty-state-product-source">
               {manualEmpty

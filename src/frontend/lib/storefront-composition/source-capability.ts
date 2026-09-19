@@ -94,6 +94,8 @@ export function strategyLabelFa(kind: AdminSelectableDataSource): string {
       return "از یک دسته";
     case "Brand":
       return "از یک برند";
+    case "PromotionCampaign":
+      return "پیشنهاد شگفت‌انگیز";
     case "LatestArticles":
       return "جدیدترین مطالب";
     case "ApprovedReviews":

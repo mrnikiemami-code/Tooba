@@ -110,6 +110,10 @@ internal static class ProductWorkspaceDevelopmentBootstrap
         await MigrateAsync(provider.GetRequiredService<PromotionDbContext>());
         await provider.GetRequiredService<IMerchandisingCampaignDirectory>()
             .EnsureAmazingTypeSeededAsync(CancellationToken.None);
+        // Development AMAZING campaigns must seed even when legacy Catalog bootstraps are off
+        // (RunLegacyBootstraps=false → MigrateSchemaOnly), so Storefront/Builder PromotionCampaign
+        // sources have real runtime data (LOCK-SF-402).
+        await MerchandisingCampaignDevelopmentSeed.EnsureAsync(provider, CancellationToken.None);
         await MigrateAsync(provider.GetRequiredService<PlatformProbeDbContext>());
         await MigrateAsync(provider.GetRequiredService<ReviewsDbContext>());
         await MigrateAsync(provider.GetRequiredService<ProductQnADbContext>());

@@ -5,6 +5,8 @@ using Tooba.Catalog.Domain;
 using Tooba.Catalog.Infrastructure.Persistence;
 using Tooba.Content.Domain;
 using Tooba.Host.Storefront;
+using Tooba.Promotion.Application;
+using Tooba.Promotion.Domain;
 
 namespace Tooba.Host.Admin;
 
@@ -18,17 +20,20 @@ public sealed class StoreLandingPageComposer
     private readonly ICurrentCommerceContext _commerce;
     private readonly IMemoryCache _cache;
     private readonly StorefrontComposer? _storefront;
+    private readonly IMerchandisingCampaignQuery _campaignQuery;
 
     /// <summary>نویسنده صفحه را به Catalog همین Store وصل می‌کند.</summary>
     public StoreLandingPageComposer(
         CatalogDbContext catalog,
         ICurrentCommerceContext commerce,
         IMemoryCache cache,
+        IMerchandisingCampaignQuery campaignQuery,
         StorefrontComposer? storefront = null)
     {
         _catalog = catalog;
         _commerce = commerce;
         _cache = cache;
+        _campaignQuery = campaignQuery;
         _storefront = storefront;
     }
 
@@ -500,6 +505,25 @@ public sealed class StoreLandingPageComposer
                     throw new PlatformHttpException(400, "محصول انتخاب‌شده در این فروشگاه نیست.", "landing.section.ref.missing");
                 }
             }
+            else if (string.Equals(source, "PromotionCampaign", StringComparison.OrdinalIgnoreCase)
+                     && root.TryGetProperty("campaignId", out var campaignEl)
+                     && campaignEl.ValueKind is not System.Text.Json.JsonValueKind.Null
+                     && campaignEl.ValueKind is not System.Text.Json.JsonValueKind.Undefined
+                     && Guid.TryParse(campaignEl.ToString(), out var campaignId)
+                     && campaignId != Guid.Empty)
+            {
+                var storeId = ResolveMerchandisingStoreId();
+                if (storeId is null)
+                {
+                    throw new PlatformHttpException(400, "کمپین انتخاب‌شده در این فروشگاه نیست.", "landing.section.ref.missing");
+                }
+
+                var belongs = await _campaignQuery.CampaignBelongsToStoreAsync(campaignId, storeId.Value, cancellationToken);
+                if (!belongs)
+                {
+                    throw new PlatformHttpException(400, "کمپین انتخاب‌شده در این فروشگاه نیست.", "landing.section.ref.missing");
+                }
+            }
 
             return;
         }
@@ -656,7 +680,7 @@ public sealed class StoreLandingPageComposer
         foreach (var row in rows)
         {
             var items = row.SectionType == StoreLandingPageSectionRegistry.ProductCollection
-                ? await ResolveProductItemsAsync(row, cancellationToken)
+                ? await ResolveProductItemsAsync(row, page.Locale, cancellationToken)
                 : Array.Empty<StoreLandingPageResolvedItem>();
             sections.Add(new StoreLandingPagePublicSectionView(
                 row.PageSectionId,
@@ -730,6 +754,7 @@ public sealed class StoreLandingPageComposer
 
     private async Task<IReadOnlyList<StoreLandingPageResolvedItem>> ResolveProductItemsAsync(
         StoreLandingPageSection section,
+        string pageLocale,
         CancellationToken cancellationToken)
     {
         using var doc = System.Text.Json.JsonDocument.Parse(section.ConfigurationJson);
@@ -738,6 +763,11 @@ public sealed class StoreLandingPageComposer
         var take = root.TryGetProperty("take", out var takeEl) && takeEl.TryGetInt32(out var parsedTake)
             ? Math.Clamp(parsedTake, 1, StoreLandingPageSectionRegistry.MaxTake)
             : StoreLandingPageSectionRegistry.DefaultTake;
+
+        if (string.Equals(source, "PromotionCampaign", StringComparison.OrdinalIgnoreCase))
+        {
+            return await ResolvePromotionCampaignItemsAsync(root, pageLocale, take, cancellationToken);
+        }
 
         IQueryable<CatalogProduct> query = _catalog.Products.AsNoTracking()
             .Where(x => x.Status == CatalogPublicationStatus.Published);
@@ -765,6 +795,132 @@ public sealed class StoreLandingPageComposer
             .Take(take)
             .Select(x => new StoreLandingPageResolvedItem(x.ProductId, x.SlugSeam))
             .ToListAsync(cancellationToken);
+    }
+
+    private async Task<IReadOnlyList<StoreLandingPageResolvedItem>> ResolvePromotionCampaignItemsAsync(
+        System.Text.Json.JsonElement root,
+        string pageLocale,
+        int take,
+        CancellationToken cancellationToken)
+    {
+        var storeId = ResolveMerchandisingStoreId();
+        if (storeId is null)
+        {
+            return Array.Empty<StoreLandingPageResolvedItem>();
+        }
+
+        var typeCode = root.TryGetProperty("promotionTypeCode", out var typeEl)
+            ? typeEl.GetString()?.Trim()
+            : null;
+        if (string.IsNullOrWhiteSpace(typeCode))
+        {
+            typeCode = MerchandisingPromotionType.AmazingCode;
+        }
+
+        Guid? campaignId = null;
+        if (root.TryGetProperty("campaignId", out var campaignEl)
+            && campaignEl.ValueKind is not System.Text.Json.JsonValueKind.Null
+            && campaignEl.ValueKind is not System.Text.Json.JsonValueKind.Undefined
+            && Guid.TryParse(campaignEl.ToString(), out var parsedCampaign)
+            && parsedCampaign != Guid.Empty)
+        {
+            campaignId = parsedCampaign;
+        }
+
+        var now = DateTimeOffset.UtcNow;
+        IReadOnlyList<MerchandisingCampaignMemberRuntimeModel> members;
+        if (campaignId is { } explicitId)
+        {
+            members = await _campaignQuery.ResolveCampaignMembersAsync(
+                explicitId,
+                storeId.Value,
+                pageLocale,
+                now,
+                take,
+                null,
+                cancellationToken);
+        }
+        else
+        {
+            var active = await _campaignQuery.ResolveActiveByTypeAsync(
+                storeId.Value,
+                typeCode,
+                pageLocale,
+                now,
+                take,
+                null,
+                cancellationToken);
+            members = active?.Members ?? Array.Empty<MerchandisingCampaignMemberRuntimeModel>();
+        }
+
+        if (members.Count == 0)
+        {
+            return Array.Empty<StoreLandingPageResolvedItem>();
+        }
+
+        var variantIds = members.Select(x => x.CatalogVariantId).Distinct().ToArray();
+        var variantRows = await _catalog.Variants.AsNoTracking()
+            .Where(x => variantIds.Contains(x.VariantId))
+            .Select(x => new { x.VariantId, x.ProductId })
+            .ToListAsync(cancellationToken);
+        var variantToProduct = variantRows.ToDictionary(x => x.VariantId, x => x.ProductId);
+        var productIdsOrdered = new List<Guid>(members.Count);
+        foreach (var member in members)
+        {
+            if (!variantToProduct.TryGetValue(member.CatalogVariantId, out var productId))
+            {
+                continue;
+            }
+
+            if (productIdsOrdered.Contains(productId))
+            {
+                continue;
+            }
+
+            productIdsOrdered.Add(productId);
+        }
+
+        if (productIdsOrdered.Count == 0)
+        {
+            return Array.Empty<StoreLandingPageResolvedItem>();
+        }
+
+        var products = await _catalog.Products.AsNoTracking()
+            .Where(x => productIdsOrdered.Contains(x.ProductId) && x.Status == CatalogPublicationStatus.Published)
+            .Select(x => new { x.ProductId, x.SlugSeam })
+            .ToListAsync(cancellationToken);
+        var byId = products.ToDictionary(x => x.ProductId);
+        var result = new List<StoreLandingPageResolvedItem>(productIdsOrdered.Count);
+        foreach (var productId in productIdsOrdered)
+        {
+            if (!byId.TryGetValue(productId, out var row))
+            {
+                continue;
+            }
+
+            result.Add(new StoreLandingPageResolvedItem(row.ProductId, row.SlugSeam));
+        }
+
+        return result;
+    }
+
+    /// <summary>
+    /// StoreId کمپین مرچندایزینگ برای tenant جاری (SingleStore store-alpha → GUID پایدار دانهٔ Dev).
+    /// </summary>
+    private Guid? ResolveMerchandisingStoreId()
+    {
+        var tenantId = _commerce.Current?.Tenant?.TenantId.Value;
+        if (string.IsNullOrWhiteSpace(tenantId))
+        {
+            return null;
+        }
+
+        if (string.Equals(tenantId, "store-alpha", StringComparison.OrdinalIgnoreCase))
+        {
+            return MerchandisingCampaignDevelopmentSeed.StoreAlphaId;
+        }
+
+        return Guid.TryParse(tenantId, out var parsed) ? parsed : null;
     }
 }
 

@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
 using Tooba.BuildingBlocks;
 using Tooba.Catalog.Domain;
@@ -154,7 +154,7 @@ public sealed class StorePagesFoundationT022R9Tests
             .UseInMemoryDatabase(Guid.NewGuid().ToString("N"))
             .Options);
         var context = OutboxTestContextFactory.SingleStore("store-a", "conn-a");
-        return new StoreLandingPageComposer(catalog, new FixedCommerce(context), new MemoryCache(new MemoryCacheOptions()));
+        return new StoreLandingPageComposer(catalog, new FixedCommerce(context), new MemoryCache(new MemoryCacheOptions()), new EmptyMerchandisingCampaignQuery());
     }
 
     private sealed class FixedCommerce : ICurrentCommerceContext

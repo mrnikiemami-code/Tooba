@@ -11,6 +11,7 @@ export const DATA_SOURCE_KINDS = [
   "Category",
   "Brand",
   "Newest",
+  "PromotionCampaign",
   "BestSelling",
   "MostViewed",
   "Discounted",
@@ -27,6 +28,7 @@ export const ADMIN_SELECTABLE_DATA_SOURCES = [
   "Category",
   "Brand",
   "Newest",
+  "PromotionCampaign",
   "LatestArticles",
   "ApprovedReviews",
 ] as const;

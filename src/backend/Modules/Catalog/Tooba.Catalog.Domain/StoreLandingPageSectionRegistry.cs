@@ -35,7 +35,7 @@ public static class StoreLandingPageSectionRegistry
 
     public static readonly IReadOnlySet<string> ProductSources = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
     {
-        "Manual", "Category", "Brand", "Newest",
+        "Manual", "Category", "Brand", "Newest", "PromotionCampaign",
     };
 
     public static readonly IReadOnlySet<string> UnsupportedProductSources = new HashSet<string>(StringComparer.OrdinalIgnoreCase)

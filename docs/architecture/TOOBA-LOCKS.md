@@ -1408,3 +1408,31 @@ Merchandising read models may expose only canonical pricing/inventory facts; fab
 
 Merchandising runtime queries are Store-scoped, locale-aware, ordered and bounded; no full-offer scan or N+1 pricing/inventory query is allowed.
 
+### LOCK-SF-405 — Generic PromotionCampaign source type
+
+Product Showcase promotion sourcing is represented by generic SourceType=PromotionCampaign; Amazing is configuration via stable PromotionType Code, never a dedicated Amazing source engine.
+
+### LOCK-SF-406 — Persist source intent only
+
+PromotionCampaign section persistence stores source intent only (type/code/optional campaign identity), never denormalized product, price, stock, timer or discount snapshots.
+
+### LOCK-SF-407 — Reuse canonical ProductCard projection
+
+Product Showcase PromotionCampaign resolution reuses the canonical campaign query plus canonical Product Showcase/ProductCard projection; no campaign-specific ProductCard or renderer is allowed.
+
+### LOCK-SF-408 — Page locale owns campaign source locale
+
+Page locale remains the sole locale context for PromotionCampaign source resolution in Builder Preview and published Storefront.
+
+### LOCK-SF-409 — Empty campaign is valid empty result
+
+A missing active campaign is a valid empty dynamic-source result and must never silently fall back to Newest, Manual, Template sample or PreviewFake content.
+
+### LOCK-SF-410 — Runtime membership, not publish snapshot
+
+Published PromotionCampaign sections resolve current campaign membership at runtime/SSR from canonical data rather than snapshotting members at page publish time.
+
+### LOCK-SF-411 — No fabricated promo price until modeled
+
+Until campaign-scoped price qualifiers are correctly modeled, PromotionCampaign storefront output must use canonical normal price and must not fabricate promotional price, compare-at price or discount percentage.
+
