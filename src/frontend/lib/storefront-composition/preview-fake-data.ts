@@ -192,6 +192,8 @@ export function createFakeHeroConfig(locale: string): Record<string, unknown> {
         panelImageUrl: "",
         panelColor: "#0f172a",
         panelSize: "xlarge",
+        panelOpacity: 100,
+        panelSide: "left",
       },
     ],
     autoplay: true,

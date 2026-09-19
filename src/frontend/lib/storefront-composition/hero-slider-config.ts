@@ -28,6 +28,43 @@ export const HERO_DIAGONAL_PANEL_SIZE_LABELS_FA: Record<HeroDiagonalPanelSize, s
 
 export const HERO_DIAGONAL_PANEL_DEFAULT_COLOR = "#0f172a";
 
+/** صبا: رنگ پیش‌فرض پنل متن (نیمهٔ رنگی). */
+export const HERO_SPLIT_PANEL_DEFAULT_COLOR = "#e8e0f5";
+
+export const HERO_PANEL_SIDES = ["left", "right"] as const;
+export type HeroPanelSide = (typeof HERO_PANEL_SIDES)[number];
+
+export const HERO_PANEL_SIDE_LABELS_FA: Record<HeroPanelSide, string> = {
+  left: "چپ",
+  right: "راست",
+};
+
+export function isHeroPanelSide(value: unknown): value is HeroPanelSide {
+  return typeof value === "string" && (HERO_PANEL_SIDES as readonly string[]).includes(value);
+}
+
+/** عرض پنل صبا (٪). بزرگ = ۵۰٪ همان نیمه‌نیمهٔ فعلی. */
+export function heroSplitPanelPercent(size: HeroDiagonalPanelSize): number {
+  switch (size) {
+    case "small":
+      return 28;
+    case "medium":
+      return 38;
+    case "large":
+      return 50;
+    case "xlarge":
+      return 62;
+    default:
+      return 50;
+  }
+}
+
+export function clampPanelOpacity(value: unknown): number {
+  const n = typeof value === "number" ? value : Number(value);
+  if (!Number.isFinite(n)) return 100;
+  return Math.max(0, Math.min(100, Math.round(n)));
+}
+
 export function isHeroDiagonalPanelSize(value: unknown): value is HeroDiagonalPanelSize {
   return typeof value === "string" && (HERO_DIAGONAL_PANEL_SIZES as readonly string[]).includes(value);
 }
@@ -170,13 +207,17 @@ export type HeroSlideConfig = {
   customUrl: string;
   /** Resolved href for runtime/compat (derived from destination). */
   href: string;
-  /** کیمیا: تصویر اختیاری پنل مورب/مشکی. */
+  /** کیمیا/صبا: تصویر اختیاری پنل دوم. */
   panelMediaAssetId: string;
   panelImageUrl: string;
-  /** کیمیا: رنگ پنل وقتی تصویر دوم نیست. */
+  /** کیمیا/صبا: رنگ پنل وقتی تصویر دوم نیست. */
   panelColor: string;
-  /** کیمیا: اندازهٔ پنل مورب. */
+  /** کیمیا/صبا: اندازهٔ پنل. */
   panelSize: HeroDiagonalPanelSize;
+  /** صبا: شفافیت پنل ۰–۱۰۰ (۰ = تم فروشگاه دیده می‌شود). */
+  panelOpacity: number;
+  /** صبا: سمت پنل رنگی/تصویر دوم. */
+  panelSide: HeroPanelSide;
 };
 
 export type HeroSliderConfigFields = {
@@ -227,6 +268,8 @@ export function emptyHeroSlide(): HeroSlideConfig {
     panelImageUrl: "",
     panelColor: HERO_DIAGONAL_PANEL_DEFAULT_COLOR,
     panelSize: "xlarge",
+    panelOpacity: 100,
+    panelSide: "left",
   };
 }
 
@@ -548,6 +591,8 @@ export function normalizeHeroSlides(value: unknown, count: number): HeroSlideCon
           ? row.panelColor.trim()
           : HERO_DIAGONAL_PANEL_DEFAULT_COLOR,
       panelSize: isHeroDiagonalPanelSize(row.panelSize) ? row.panelSize : "xlarge",
+      panelOpacity: clampPanelOpacity(row.panelOpacity),
+      panelSide: isHeroPanelSide(row.panelSide) ? row.panelSide : "left",
     };
     normalized.href = resolveHeroSlideHref(normalized) || legacyHref;
     return normalized;

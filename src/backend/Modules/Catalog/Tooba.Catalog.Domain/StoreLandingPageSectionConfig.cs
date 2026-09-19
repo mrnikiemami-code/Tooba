@@ -128,6 +128,8 @@ public static class StoreLandingPageSectionConfig
                 panelImageUrl = s.PanelImageUrl,
                 panelColor = s.PanelColor,
                 panelSize = s.PanelSize,
+                panelOpacity = s.PanelOpacity,
+                panelSide = s.PanelSide,
             }).ToArray(),
         }, JsonOptions);
     }
@@ -150,6 +152,8 @@ public static class StoreLandingPageSectionConfig
         public string? PanelImageUrl { get; init; }
         public string PanelColor { get; init; } = "#0f172a";
         public string PanelSize { get; init; } = "xlarge";
+        public int PanelOpacity { get; init; } = 100;
+        public string PanelSide { get; init; } = "left";
     }
 
     private static List<HeroSlideNormalized> ReadHeroSlides(JsonElement root)
@@ -213,6 +217,25 @@ public static class StoreLandingPageSectionConfig
                 "xlarge" => "xlarge",
                 _ => "xlarge",
             };
+            var panelSideRaw = (OptionalString(item, "panelSide", 16) ?? "left").Trim().ToLowerInvariant();
+            var panelSide = panelSideRaw is "right" ? "right" : "left";
+            var panelOpacity = 100;
+            if (item.TryGetProperty("panelOpacity", out var opacityEl)
+                && opacityEl.ValueKind is not JsonValueKind.Null and not JsonValueKind.Undefined)
+            {
+                double opacityRaw = 100;
+                if (opacityEl.ValueKind == JsonValueKind.Number && opacityEl.TryGetDouble(out opacityRaw))
+                {
+                    // ok
+                }
+                else if (opacityEl.ValueKind == JsonValueKind.String
+                    && double.TryParse(opacityEl.GetString(), out opacityRaw))
+                {
+                    // ok
+                }
+
+                panelOpacity = (int)Math.Round(Math.Clamp(opacityRaw, 0, 100));
+            }
 
             slides.Add(new HeroSlideNormalized
             {
@@ -232,6 +255,8 @@ public static class StoreLandingPageSectionConfig
                 PanelImageUrl = OptionalString(item, "panelImageUrl", 512),
                 PanelColor = panelColor,
                 PanelSize = panelSize,
+                PanelOpacity = panelOpacity,
+                PanelSide = panelSide,
             });
         }
 

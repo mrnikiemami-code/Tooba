@@ -14,7 +14,10 @@ import {
   HERO_DIAGONAL_PANEL_SIZES,
   HERO_HEIGHT_PRESETS,
   HERO_HEIGHT_PRESET_LABELS_FA,
+  HERO_PANEL_SIDE_LABELS_FA,
+  HERO_PANEL_SIDES,
   HERO_SLIDER_MAX_SLIDES,
+  HERO_SPLIT_PANEL_DEFAULT_COLOR,
   emptyHeroSlide,
   heroImageGuidance,
   heroVariantIdFromKey,
@@ -25,6 +28,7 @@ import {
   type HeroDestinationType,
   type HeroDiagonalPanelSize,
   type HeroHeightPreset,
+  type HeroPanelSide,
   type HeroSlideConfig,
   type HeroSlideFieldKey,
 } from "../../../lib/storefront-composition/hero-slider-config.ts";
@@ -194,6 +198,7 @@ export function AdminHeroSliderSettings({
     slide.panelImageUrl.trim()
     || (slide.panelMediaAssetId.trim() ? mediaPreviewUrl(slide.panelMediaAssetId) ?? "" : "");
   const isKimia = variantId === "diagonal";
+  const isSaba = variantId === "split";
 
   const fieldClass = (field: HeroSlideFieldKey) =>
     `w-full rounded-xl border px-3 py-2 ${
@@ -421,6 +426,145 @@ export function AdminHeroSliderSettings({
             </div>
           ) : null}
 
+          {isSaba ? (
+            <div
+              className="space-y-3 rounded-xl border border-dashed border-violet-200 bg-violet-50/60 p-3"
+              data-testid="hero-saba-panel-settings"
+            >
+              <p className="text-xs font-bold text-violet-950">قسمت رنگی (صبا) — اختیاری</p>
+              <div className="flex flex-wrap items-start gap-3">
+                <div className="h-20 w-28 overflow-hidden rounded-xl border bg-slate-100">
+                  {panelPreviewSrc ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={panelPreviewSrc} alt="" className="h-full w-full object-cover" />
+                  ) : (
+                    <div className="flex h-full items-center justify-center text-[10px] text-muted">بدون تصویر</div>
+                  )}
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  <button
+                    type="button"
+                    className="rounded-xl border px-3 py-2 text-sm font-bold"
+                    onClick={() => {
+                      setMediaTarget("panel");
+                      setMediaOpen(true);
+                    }}
+                    data-testid="hero-slide-pick-saba-panel-media"
+                  >
+                    انتخاب تصویر قسمت رنگی
+                  </button>
+                  {panelPreviewSrc ? (
+                    <button
+                      type="button"
+                      className="rounded-xl border border-red-200 px-3 py-2 text-sm text-red-700"
+                      onClick={() =>
+                        patchSlide(activeSlide, { panelMediaAssetId: "", panelImageUrl: "" })
+                      }
+                      data-testid="hero-slide-clear-saba-panel-media"
+                    >
+                      حذف تصویر قسمت رنگی
+                    </button>
+                  ) : null}
+                </div>
+              </div>
+
+              <label className="block text-sm">
+                <span className="mb-1 block font-bold">اندازه قسمت رنگی</span>
+                <select
+                  className="w-full rounded-xl border border-border bg-surface px-3 py-2"
+                  value={slide.panelSize === "xlarge" || slide.panelSize === "small" || slide.panelSize === "medium" || slide.panelSize === "large" ? slide.panelSize : "large"}
+                  onChange={(e) =>
+                    patchSlide(activeSlide, {
+                      panelSize: e.target.value as HeroDiagonalPanelSize,
+                    })
+                  }
+                  data-testid="hero-slide-saba-panel-size"
+                >
+                  {HERO_DIAGONAL_PANEL_SIZES.map((size) => (
+                    <option key={size} value={size}>
+                      {HERO_DIAGONAL_PANEL_SIZE_LABELS_FA[size]}
+                      {size === "large" ? " (نصف)" : ""}
+                    </option>
+                  ))}
+                </select>
+              </label>
+
+              <label className="block text-sm">
+                <span className="mb-1 block font-bold">سمت قسمت رنگی</span>
+                <select
+                  className="w-full rounded-xl border border-border bg-surface px-3 py-2"
+                  value={slide.panelSide || "left"}
+                  onChange={(e) =>
+                    patchSlide(activeSlide, { panelSide: e.target.value as HeroPanelSide })
+                  }
+                  data-testid="hero-slide-saba-panel-side"
+                >
+                  {HERO_PANEL_SIDES.map((side) => (
+                    <option key={side} value={side}>
+                      {HERO_PANEL_SIDE_LABELS_FA[side]}
+                    </option>
+                  ))}
+                </select>
+              </label>
+
+              <label className="block text-sm">
+                <span className="mb-1 block font-bold">شفافیت (۰ = تم فروشگاه، ۱۰۰ = مات)</span>
+                <input
+                  type="range"
+                  min={0}
+                  max={100}
+                  step={5}
+                  className="w-full"
+                  value={typeof slide.panelOpacity === "number" ? slide.panelOpacity : 100}
+                  onChange={(e) =>
+                    patchSlide(activeSlide, { panelOpacity: Number(e.target.value) })
+                  }
+                  data-testid="hero-slide-saba-panel-opacity"
+                />
+                <span className="mt-1 block text-xs text-muted">
+                  {(typeof slide.panelOpacity === "number" ? slide.panelOpacity : 100).toLocaleString("fa-IR")}٪
+                </span>
+              </label>
+
+              {!panelPreviewSrc ? (
+                <label className="block text-sm">
+                  <span className="mb-1 block font-bold">رنگ قسمت رنگی</span>
+                  <div className="flex items-center gap-3">
+                    <input
+                      type="color"
+                      className="h-10 w-14 cursor-pointer rounded-lg border border-border bg-surface p-1"
+                      value={
+                        slide.panelColor && /^#[0-9A-Fa-f]{6}$/.test(slide.panelColor)
+                          ? slide.panelColor
+                          : HERO_SPLIT_PANEL_DEFAULT_COLOR
+                      }
+                      onChange={(e) => patchSlide(activeSlide, { panelColor: e.target.value })}
+                      data-testid="hero-slide-saba-panel-color"
+                    />
+                    <input
+                      className="w-full rounded-xl border border-border px-3 py-2 font-mono text-sm"
+                      value={
+                        slide.panelColor && /^#[0-9A-Fa-f]{6}$/.test(slide.panelColor)
+                          ? slide.panelColor
+                          : HERO_SPLIT_PANEL_DEFAULT_COLOR
+                      }
+                      onChange={(e) => {
+                        const next = e.target.value.trim();
+                        if (/^#[0-9A-Fa-f]{6}$/.test(next) || next === "") {
+                          patchSlide(activeSlide, {
+                            panelColor: next || HERO_SPLIT_PANEL_DEFAULT_COLOR,
+                          });
+                        }
+                      }}
+                      data-testid="hero-slide-saba-panel-color-hex"
+                      spellCheck={false}
+                    />
+                  </div>
+                </label>
+              ) : null}
+            </div>
+          ) : null}
+
           <label className="block text-sm">
             <span className={`mb-1 block font-bold ${errorFor("title") ? "text-red-600" : ""}`}>عنوان</span>
             <input
@@ -592,7 +736,13 @@ export function AdminHeroSliderSettings({
 
       <MediaLibraryDialog
         open={mediaOpen}
-        title={mediaTarget === "panel" ? "انتخاب تصویر قسمت مورب" : "انتخاب تصویر اسلاید"}
+        title={
+          mediaTarget === "panel"
+            ? isSaba
+              ? "انتخاب تصویر قسمت رنگی"
+              : "انتخاب تصویر قسمت مورب"
+            : "انتخاب تصویر اسلاید"
+        }
         selectionMode="single"
         assetKind="image"
         onClose={() => setMediaOpen(false)}

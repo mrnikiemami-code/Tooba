@@ -18,6 +18,7 @@ import {
   heroDiagonalPanelClip,
   heroHeightClass,
   heroHeightPresetDesktopPx,
+  heroSplitPanelPercent,
   heroVariantToSwiperEffect,
   readHeroSliderFields,
   resolveHeroSlideHref,
@@ -349,6 +350,8 @@ export function HeroSlider({
     panelImageUrl: "",
     panelColor: "#0f172a",
     panelSize: "xlarge" as const,
+    panelOpacity: 100,
+    panelSide: "left" as const,
   }];
 
   const creativeProps =
@@ -417,22 +420,95 @@ export function HeroSlider({
         const key = `hero-slide-${index}-${slide.mediaAssetId || src}`;
 
         if (variant === "split") {
-          const body = (
-            <div className={`grid grid-cols-1 md:grid-cols-2 gap-0 overflow-hidden border border-gray-100 bg-surface shadow-xl ${rounded}`}>
-              <div
-                className={`relative block min-h-[180px] bg-gray-100 ${heightClass}`}
-                style={legacyMinHeight ? { minHeight: legacyMinHeight } : undefined}
-              >
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={src} alt={slide.alt || title} className="h-full w-full object-cover" />
-              </div>
-              <div className="flex flex-col justify-center gap-3 p-6 md:p-10">
+          const panelSize =
+            slide.panelSize === "xlarge"
+            || slide.panelSize === "small"
+            || slide.panelSize === "medium"
+            || slide.panelSize === "large"
+              ? slide.panelSize
+              : "large";
+          const panelPct = heroSplitPanelPercent(panelSize);
+          const panelSide = slide.panelSide === "right" ? "right" : "left";
+          const panelOpacity = Math.max(0, Math.min(100, slide.panelOpacity ?? 100)) / 100;
+          const panelColor = slide.panelColor?.trim() || "#e8e0f5";
+          const panelSrc = slide.panelMediaAssetId.trim()
+            ? storefrontMediaUrl(slide.panelMediaAssetId.trim())
+            : slide.panelImageUrl.trim();
+          const cols =
+            panelSide === "left"
+              ? `${panelPct}% ${100 - panelPct}%`
+              : `${100 - panelPct}% ${panelPct}%`;
+          const imageCol = (
+            <div
+              className={`relative block min-h-[180px] bg-gray-100 ${heightClass}`}
+              style={legacyMinHeight ? { minHeight: legacyMinHeight } : undefined}
+            >
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={src} alt={slide.alt || title} className="h-full w-full object-cover" />
+            </div>
+          );
+          const panelCol = (
+            <div
+              className={`relative flex flex-col justify-center gap-3 overflow-hidden p-6 md:p-10 ${heightClass}`}
+              style={{
+                ...(legacyMinHeight ? { minHeight: legacyMinHeight } : {}),
+                backgroundColor:
+                  panelSrc || panelOpacity <= 0
+                    ? "transparent"
+                    : panelOpacity >= 1
+                      ? panelColor
+                      : "transparent",
+              }}
+            >
+              {panelSrc ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={panelSrc}
+                  alt=""
+                  className="absolute inset-0 h-full w-full object-cover"
+                  style={{ opacity: panelOpacity }}
+                  aria-hidden
+                />
+              ) : panelOpacity > 0 && panelOpacity < 1 ? (
+                <div
+                  className="absolute inset-0"
+                  style={{ backgroundColor: panelColor, opacity: panelOpacity }}
+                  aria-hidden
+                />
+              ) : null}
+              <div className="relative z-10 flex flex-col gap-3" dir="rtl">
                 <h2 className="text-2xl font-black md:text-4xl">{title}</h2>
-                {slide.description ? <p className="max-w-xl text-sm md:text-base text-foreground/80">{slide.description}</p> : null}
+                {slide.description ? (
+                  <p className="max-w-xl text-sm md:text-base text-foreground/80">{slide.description}</p>
+                ) : null}
                 {cta && href ? (
-                  <span className="inline-flex w-fit rounded-xl bg-primary px-4 py-2 text-sm font-bold text-white">{cta}</span>
+                  <span className="inline-flex w-fit rounded-xl bg-primary px-4 py-2 text-sm font-bold text-white">
+                    {cta}
+                  </span>
                 ) : null}
               </div>
+            </div>
+          );
+          const body = (
+            <div
+              className={`grid grid-cols-1 gap-0 overflow-hidden border border-gray-100 shadow-xl md:grid-cols-[var(--saba-cols)] ${rounded}`}
+              style={{ ["--saba-cols" as string]: cols }}
+              data-hero-saba-split=""
+              data-panel-side={panelSide}
+              data-panel-size={panelSize}
+              dir="ltr"
+            >
+              {panelSide === "left" ? (
+                <>
+                  {panelCol}
+                  {imageCol}
+                </>
+              ) : (
+                <>
+                  {imageCol}
+                  {panelCol}
+                </>
+              )}
             </div>
           );
           return (
