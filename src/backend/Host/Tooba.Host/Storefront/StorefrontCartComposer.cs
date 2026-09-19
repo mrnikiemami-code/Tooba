@@ -85,7 +85,8 @@ public sealed class StorefrontCartComposer
         int expectedVersion,
         Guid offerId,
         decimal quantity,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        Guid? merchandisingCampaignId = null)
     {
         var snapshot = await _carts.AddOrIncreaseLineAsync(
             cartId,
@@ -93,7 +94,8 @@ public sealed class StorefrontCartComposer
             expectedVersion,
             offerId,
             quantity,
-            cancellationToken);
+            cancellationToken,
+            merchandisingCampaignId);
         return await PresentAsync(snapshot, guestSecret: null, cancellationToken);
     }
 
@@ -214,7 +216,8 @@ public sealed class StorefrontCartComposer
                 policy?.UnitDisplayName ?? policy?.UnitShortName,
                 policy?.DecimalPlaces ?? 0,
                 policy?.Step,
-                line.Availability.ToString()));
+                line.Availability.ToString(),
+                line.MerchandisingCampaignId));
         }
 
         var subtotal = lines.Sum(item => item.LineAmountExclusiveOfTax ?? 0);

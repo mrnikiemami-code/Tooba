@@ -82,7 +82,7 @@ export function StorefrontProductCardView({
     setAtcBusy(true);
     setNote(null);
     try {
-      await addOfferToCart(card.primaryOfferId, 1);
+      await addOfferToCart(card.primaryOfferId, 1, card.merchandisingCampaignId ?? undefined);
       setAtcAdded(true);
       toast.success(`محصول ${card.title} به سبد خرید اضافه شد`, { autoClose: 2800 });
       window.setTimeout(() => setAtcAdded(false), 1800);

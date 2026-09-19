@@ -714,7 +714,8 @@ public sealed class StoreLandingPageComposer
                 var overlays = sections
                     .SelectMany(section => section.Items)
                     .Where(item => item.PromotionalAmountExclusiveOfTax is not null
-                                   || item.OfferAmountExclusiveOfTax is not null)
+                                   || item.OfferAmountExclusiveOfTax is not null
+                                   || item.MerchandisingCampaignId is not null)
                     .GroupBy(item => item.Id)
                     .ToDictionary(group => group.Key, group => group.First());
                 products = composed.Values.Select(card =>
@@ -737,6 +738,7 @@ public sealed class StoreLandingPageComposer
                         PromotionalAmountExclusiveOfTax = promo,
                         Currency = overlay.Currency ?? card.Currency,
                         PromotionLabel = overlay.PromotionLabel ?? card.PromotionLabel,
+                        MerchandisingCampaignId = overlay.MerchandisingCampaignId ?? card.MerchandisingCampaignId,
                     };
                 }).ToList();
             }
@@ -827,6 +829,7 @@ public sealed class StoreLandingPageComposer
                 null,
                 null,
                 null,
+                null,
                 null))
             .ToListAsync(cancellationToken);
     }
@@ -864,6 +867,7 @@ public sealed class StoreLandingPageComposer
         var now = DateTimeOffset.UtcNow;
         IReadOnlyList<MerchandisingCampaignMemberRuntimeModel> members;
         string? badge = "Amazing";
+        Guid? resolvedCampaignId = campaignId;
         if (campaignId is { } explicitId)
         {
             members = await _campaignQuery.ResolveCampaignMembersAsync(
@@ -886,6 +890,7 @@ public sealed class StoreLandingPageComposer
                 null,
                 cancellationToken);
             members = active?.Members ?? Array.Empty<MerchandisingCampaignMemberRuntimeModel>();
+            resolvedCampaignId = active?.CampaignId;
             if (!string.IsNullOrWhiteSpace(active?.BadgeText))
             {
                 badge = active.BadgeText;
@@ -964,7 +969,8 @@ public sealed class StoreLandingPageComposer
                 offerAmount,
                 promoAmount,
                 currency,
-                label));
+                label,
+                resolvedCampaignId));
         }
 
         return result;
@@ -1065,7 +1071,8 @@ public sealed record StoreLandingPageResolvedItem(
     decimal? OfferAmountExclusiveOfTax = null,
     decimal? PromotionalAmountExclusiveOfTax = null,
     string? Currency = null,
-    string? PromotionLabel = null);
+    string? PromotionLabel = null,
+    Guid? MerchandisingCampaignId = null);
 
 /// <summary>نمای عمومی بخش Published.</summary>
 public sealed record StoreLandingPagePublicSectionView(

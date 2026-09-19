@@ -45,6 +45,10 @@ namespace Tooba.Cart.Infrastructure.Persistence.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("price_id");
 
+                    b.Property<Guid?>("MerchandisingCampaignId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("merchandising_campaign_id");
+
                     b.Property<int>("Quantity")
                         .HasColumnType("integer")
                         .HasColumnName("quantity");

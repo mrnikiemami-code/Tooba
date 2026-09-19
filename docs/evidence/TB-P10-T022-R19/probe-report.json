@@ -1,0 +1,147 @@
+{
+  "ok": true,
+  "steps": [
+    {
+      "name": "A-host-ready",
+      "pass": true
+    },
+    {
+      "name": "dev-actor",
+      "pass": true
+    },
+    {
+      "name": "create-page",
+      "pass": true,
+      "data": {
+        "status": 200
+      }
+    },
+    {
+      "name": "add-section",
+      "pass": true,
+      "data": {
+        "status": 200
+      }
+    },
+    {
+      "name": "publish",
+      "pass": true,
+      "data": {
+        "status": 200
+      }
+    },
+    {
+      "name": "B-promo-card-with-campaignId",
+      "pass": true,
+      "data": {
+        "productCount": 7,
+        "campaignId": "019a16a0-0001-7000-8000-000000000001",
+        "sample": [
+          {
+            "campaignId": "019a16a0-0001-7000-8000-000000000001",
+            "offer": 1850000
+          },
+          {
+            "campaignId": "019a16a0-0001-7000-8000-000000000001",
+            "offer": 6597070.04
+          },
+          {
+            "campaignId": "019a16a0-0001-7000-8000-000000000001",
+            "promo": 4738588,
+            "offer": 6769412
+          }
+        ]
+      }
+    },
+    {
+      "name": "C-create-guest-cart",
+      "pass": true,
+      "data": {
+        "cartId": "01a0ba3f-1607-7000-a450-eac3d3b8eaeb",
+        "version": 1
+      }
+    },
+    {
+      "name": "D-add-campaign-line-promo-price",
+      "pass": true,
+      "data": {
+        "status": 200,
+        "unit": 4738588,
+        "expectedPromo": 4738588,
+        "lineCampaign": "019a16a0-0001-7000-8000-000000000001",
+        "err": {
+          "cartId": "01a0ba3f-1607-7000-a450-eac3d3b8eaeb",
+          "version": 3,
+          "market": "IR",
+          "currency": "IRR",
+          "channel": "Marketplace",
+          "itemCount": 1,
+          "subtotalExclusiveOfTax": 4738588,
+          "lines": [
+            {
+              "lineId": "01a0ba3f-1622-7000-8175-b95e3edea3cf",
+              "offerId": "005e50c2-c260-4cb3-994c-8179e2d5213b",
+              "catalogVariantId": "01a05388-1c80-7000-baf7-af1487e24bdf",
+              "sellerPartyId": "01a030d1-40cb-7000-8abe-6d31739956c5",
+              "productId": "01a05388-1bcd-7000-953a-62e5219310a1",
+              "productSlug": "demo-prod-laptop-computer-laptops-ultrabooks-4",
+              "title": "دل اولترابوک مجموعه 4",
+              "sellerDisplayName": "فروشگاه آرمان",
+              "mediaAssetId": "01a05388-1637-7000-9a01-15e635eaa45b",
+              "quantity": 1,
+              "unitAmountExclusiveOfTax": 4738588,
+              "lineAmountExclusiveOfTax": 4738588,
+              "currency": "IRR",
+              "quotedTaxExclusive": true,
+              "unitCode": "pcs",
+              "unitDisplayName": "عدد",
+              "quantityDecimalPlaces": 0,
+              "availability": "Available",
+              "merchandisingCampaignId": "019a16a0-0001-7000-8000-000000000001"
+            }
+          ],
+          "status": "Active"
+        }
+      }
+    },
+    {
+      "name": "E-reload-same-promo",
+      "pass": true,
+      "data": {
+        "unit": 4738588
+      }
+    },
+    {
+      "name": "F-qty-keeps-promo",
+      "pass": true,
+      "data": {
+        "unit": 4738588,
+        "quantity": 2
+      }
+    },
+    {
+      "name": "P-wrong-campaign-base-price",
+      "pass": true,
+      "data": {
+        "status": 200,
+        "unit": 6769412,
+        "baseOffer": 6769412
+      }
+    },
+    {
+      "name": "Q-client-price-not-in-contract",
+      "pass": true,
+      "data": {
+        "note": "StorefrontAddCartLineRequest(OfferId, Quantity, MerchandisingCampaignId?) — no amount"
+      }
+    }
+  ],
+  "errors": [],
+  "cart": {
+    "expectedPromo": 4738588,
+    "baseOffer": 6769412,
+    "campaignId": "019a16a0-0001-7000-8000-000000000001",
+    "offerId": "005e50c2-c260-4cb3-994c-8179e2d5213b",
+    "pageSlug": "r19-cart-1789831091169"
+  }
+}

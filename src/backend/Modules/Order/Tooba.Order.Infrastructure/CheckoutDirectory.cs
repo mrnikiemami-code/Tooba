@@ -52,6 +52,7 @@ public sealed class CheckoutDirectory : ICheckoutDirectory
     private readonly IInventoryAvailabilityGateway _availability;
     private readonly ICheckoutCommitBarrier _commitBarrier;
     private readonly ICheckoutAbuseGate _abuseGate;
+    private readonly ICampaignCartPriceAuthority? _campaignPrices;
 
     /// <summary>
     /// دایرکتوری را به schema order و درزهای ماژول‌های دیگر وصل می‌کند.
@@ -74,7 +75,8 @@ public sealed class CheckoutDirectory : ICheckoutDirectory
         IReservationCycleDirectory? cycles = null,
         IReservationCyclePolicyResolver? cyclePolicy = null,
         ICheckoutCommitBarrier? commitBarrier = null,
-        ICheckoutAbuseGate? abuseGate = null)
+        ICheckoutAbuseGate? abuseGate = null,
+        ICampaignCartPriceAuthority? campaignPrices = null)
     {
         _db = db;
         _guard = guard;
@@ -96,6 +98,7 @@ public sealed class CheckoutDirectory : ICheckoutDirectory
         _availability = availability
             ?? inventory as IInventoryAvailabilityGateway
             ?? throw new InvalidOperationException("درز موجودی برای commit سفارش لازم است.");
+        _campaignPrices = campaignPrices;
     }
 
     /// <inheritdoc />
@@ -819,17 +822,7 @@ public sealed class CheckoutDirectory : ICheckoutDirectory
                     offer.ReturnPolicyChoice,
                     offer.CustomReturnWindowDays);
 
-                var quote = await _prices.ResolvePriceAsync(
-                    new PriceResolutionQuery(
-                        cartLine.OfferId,
-                        cart.Market,
-                        cart.Channel,
-                        cart.Currency,
-                        now,
-                        command.BuyerPartyId,
-                        null,
-                        cartLine.Quantity),
-                    cancellationToken)
+                var quote = await ResolveCheckoutLineQuoteAsync(cart, cartLine, now, cancellationToken)
                     ?? throw new InvalidOperationException("نقل‌قول قیمت از قرارداد Pricing پیدا نشد.");
 
                 if (cartLine.QuotedAmount is null
@@ -1065,4 +1058,44 @@ public sealed class CheckoutDirectory : ICheckoutDirectory
                 line.UnitDisplaySnapshot,
                 line.QuantityDecimalPlacesSnapshot,
                 line.QuantityStepSnapshot)).ToList());
+
+    /// <summary>
+    /// نقل‌قول خط checkout: کمپین واجد شرایط در صورت وجود، وگرنه Base.
+    /// </summary>
+    private async Task<PriceQuote?> ResolveCheckoutLineQuoteAsync(
+        CartSnapshot cart,
+        CartLineSnapshot cartLine,
+        DateTimeOffset now,
+        CancellationToken cancellationToken)
+    {
+        if (cartLine.MerchandisingCampaignId is Guid campaignId
+            && campaignId != Guid.Empty
+            && _campaignPrices is not null)
+        {
+            var campaignQuote = await _campaignPrices.TryResolveEligibleCampaignPriceAsync(
+                campaignId,
+                cartLine.OfferId,
+                cart.Market,
+                cart.Channel,
+                cart.Currency,
+                now,
+                cancellationToken);
+            if (campaignQuote is not null)
+            {
+                return campaignQuote;
+            }
+        }
+
+        return await _prices.ResolvePriceAsync(
+            new PriceResolutionQuery(
+                cartLine.OfferId,
+                cart.Market,
+                cart.Channel,
+                cart.Currency,
+                now,
+                null,
+                null,
+                cartLine.Quantity),
+            cancellationToken);
+    }
 }

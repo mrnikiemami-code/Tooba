@@ -36,7 +36,8 @@ public sealed record StorefrontProductCard(
     string? PromotionLabel,
     decimal? AverageRating = null,
     long ReviewCount = 0,
-    Guid? BrandId = null);
+    Guid? BrandId = null,
+    Guid? MerchandisingCampaignId = null);
 
 /// <summary>
 /// ردهٔ منتشرشده برای ناوبری فروشگاه. رابطهٔ والد از Catalog می‌آید و مسیر landing همان فیلتر پایدار رده است.
@@ -244,7 +245,8 @@ public sealed record StorefrontCartLineView(
     string? UnitDisplayName = null,
     int QuantityDecimalPlaces = 0,
     decimal? QuantityStep = null,
-    string Availability = "Available");
+    string Availability = "Available",
+    Guid? MerchandisingCampaignId = null);
 
 /// <summary>
 /// صفحهٔ سبد زنده. جمع‌ها برآورد بدون مالیات از نقل‌قول سبد هستند نه تسویهٔ Checkout.
@@ -264,7 +266,7 @@ public sealed record StorefrontCartPage(
 /// <summary>
 /// ورودی افزودن خط از PDP. هویت خط Offer است.
 /// </summary>
-public sealed record StorefrontAddCartLineRequest(Guid OfferId, decimal Quantity);
+public sealed record StorefrontAddCartLineRequest(Guid OfferId, decimal Quantity, Guid? MerchandisingCampaignId = null);
 
 /// <summary>ادغام سبد مهمان پس از ورود؛ CartId بدون راز مهمان پذیرفته نیست.</summary>
 public sealed record StorefrontMergeCartRequest(Guid? CartId);

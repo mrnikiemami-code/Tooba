@@ -38,6 +38,7 @@ public sealed class CartDirectory : ICartDirectory, ICartQueryGateway
     private readonly ICatalogLookupGateway? _catalog;
     private readonly IQuantityNormalizer _normalizer;
     private readonly ICartPersistenceHoursSource? _persistenceHours;
+    private readonly ICampaignCartPriceAuthority? _campaignPrices;
 
     /// <summary>
     /// دایرکتوری را به schema Cart و درزهای Offer/Pricing/Inventory وصل می‌کند.
@@ -52,7 +53,8 @@ public sealed class CartDirectory : ICartDirectory, ICartQueryGateway
         ICatalogLookupGateway? catalog = null,
         IQuantityNormalizer? normalizer = null,
         IOptions<CartLifetimeOptions>? lifetime = null,
-        ICartPersistenceHoursSource? persistenceHours = null)
+        ICartPersistenceHoursSource? persistenceHours = null,
+        ICampaignCartPriceAuthority? campaignPrices = null)
     {
         _db = db;
         _guard = guard;
@@ -63,6 +65,7 @@ public sealed class CartDirectory : ICartDirectory, ICartQueryGateway
         _catalog = catalog;
         _normalizer = normalizer ?? new QuantityNormalizer();
         _persistenceHours = persistenceHours;
+        _campaignPrices = campaignPrices;
         var hours = Math.Clamp(lifetime?.Value.PersistenceHours ?? 168, 1, 24 * 90);
         _persistenceTtl = TimeSpan.FromHours(hours);
     }
@@ -77,6 +80,7 @@ public sealed class CartDirectory : ICartDirectory, ICartQueryGateway
         }
 
         EnsureAccess(cart, access);
+        await RevalidateCampaignQuotesAsync(cart, cancellationToken);
         return await ToSnapshotAsync(cart, cancellationToken);
     }
 
@@ -121,7 +125,8 @@ public sealed class CartDirectory : ICartDirectory, ICartQueryGateway
         int expectedVersion,
         Guid offerId,
         decimal quantity,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        Guid? merchandisingCampaignId = null)
     {
         await _guard.EnsureCanMutateAsync(cancellationToken);
         var cart = await LoadRequiredAsync(cartId, cancellationToken);
@@ -130,11 +135,20 @@ public sealed class CartDirectory : ICartDirectory, ICartQueryGateway
         var existing = cart.FindLineByOffer(offerId);
         if (existing is not null)
         {
+            // Prefer surviving campaign context when merging quantity into an existing line.
+            var mergedCampaign = merchandisingCampaignId ?? existing.MerchandisingCampaignId;
+            existing.SetMerchandisingCampaignId(mergedCampaign);
             return await ChangeLineCoreAsync(cart, existing, existing.Quantity + quantity, cancellationToken);
         }
 
         var now = DateTimeOffset.UtcNow;
-        var (offer, quote, normalized) = await ValidateOfferAndQuoteAsync(cart, offerId, quantity, now, cancellationToken);
+        var (offer, quote, normalized, effectiveCampaignId) = await ValidateOfferAndQuoteAsync(
+            cart,
+            offerId,
+            quantity,
+            now,
+            merchandisingCampaignId,
+            cancellationToken);
         quantity = normalized;
         var line = CartLine.Open(
             cart.CartId,
@@ -147,7 +161,8 @@ public sealed class CartDirectory : ICartDirectory, ICartQueryGateway
             quote.Currency,
             quote.TaxExclusive,
             quote.PriceId,
-            now);
+            now,
+            effectiveCampaignId);
         await EnsureSellableAsync(offer.OfferId, quantity, cancellationToken);
         cart.RefreshExpiry(now.Add(ResolvePersistenceTtl()), now);
         cart.AddLine(line, now);
@@ -381,7 +396,13 @@ public sealed class CartDirectory : ICartDirectory, ICartQueryGateway
     private async Task<CartSnapshot> ChangeLineCoreAsync(ShoppingCart cart, CartLine line, decimal quantity, CancellationToken cancellationToken)
     {
         var now = DateTimeOffset.UtcNow;
-        var (_, quote, normalized) = await ValidateOfferAndQuoteAsync(cart, line.OfferId, quantity, now, cancellationToken);
+        var (_, quote, normalized, effectiveCampaignId) = await ValidateOfferAndQuoteAsync(
+            cart,
+            line.OfferId,
+            quantity,
+            now,
+            line.MerchandisingCampaignId,
+            cancellationToken);
         quantity = normalized;
         await EnsureSellableAsync(line.OfferId, quantity, cancellationToken);
         if (line.ReservationId is { } oldId)
@@ -390,7 +411,15 @@ public sealed class CartDirectory : ICartDirectory, ICartQueryGateway
             line.ClearReservation();
         }
 
-        line.ReplaceHold(quantity, null, quote.Amount, quote.Currency, quote.TaxExclusive, quote.PriceId, now);
+        line.ReplaceHold(
+            quantity,
+            null,
+            quote.Amount,
+            quote.Currency,
+            quote.TaxExclusive,
+            quote.PriceId,
+            now,
+            effectiveCampaignId);
         cart.RefreshExpiry(now.Add(ResolvePersistenceTtl()), now);
         cart.RecordLineChanged(line.LineId, line.OfferId, quantity, now);
         await SaveCartAsync(cancellationToken);
@@ -410,11 +439,12 @@ public sealed class CartDirectory : ICartDirectory, ICartQueryGateway
         return await ToSnapshotAsync(cart, cancellationToken);
     }
 
-    private async Task<(OfferReference Offer, PriceQuote Quote, decimal Quantity)> ValidateOfferAndQuoteAsync(
+    private async Task<(OfferReference Offer, PriceQuote Quote, decimal Quantity, Guid? EffectiveCampaignId)> ValidateOfferAndQuoteAsync(
         ShoppingCart cart,
         Guid offerId,
         decimal quantity,
         DateTimeOffset now,
+        Guid? merchandisingCampaignId,
         CancellationToken cancellationToken)
     {
         var offer = await _offers.FindOfferAsync(offerId, cancellationToken)
@@ -447,11 +477,36 @@ public sealed class CartDirectory : ICartDirectory, ICartQueryGateway
             throw new InvalidOperationException("offer.max_quantity.exceeded");
         }
 
+        Guid? effectiveCampaignId = null;
+        PriceQuote? campaignQuote = null;
+        if (merchandisingCampaignId is Guid campaignId
+            && campaignId != Guid.Empty
+            && _campaignPrices is not null)
+        {
+            campaignQuote = await _campaignPrices.TryResolveEligibleCampaignPriceAsync(
+                campaignId,
+                offerId,
+                cart.Market,
+                cart.Channel,
+                cart.Currency,
+                now,
+                cancellationToken);
+            if (campaignQuote is not null)
+            {
+                effectiveCampaignId = campaignId;
+            }
+        }
+
+        if (campaignQuote is not null)
+        {
+            return (offer, campaignQuote, quantity, effectiveCampaignId);
+        }
+
         var quote = await _prices.ResolvePriceAsync(
             new PriceResolutionQuery(offerId, cart.Market, cart.Channel, cart.Currency, now, null, null, quantity),
             cancellationToken)
             ?? throw new InvalidOperationException("نقل‌قول قیمت از قرارداد Pricing پیدا نشد؛ مبلغ روی Product/Offer نیست.");
-        return (offer, quote, quantity);
+        return (offer, quote, quantity, null);
     }
 
     private TimeSpan ResolvePersistenceTtl()
@@ -493,12 +548,26 @@ public sealed class CartDirectory : ICartDirectory, ICartQueryGateway
         var priceId = source.PriceId ?? Guid.Empty;
         try
         {
-            var (_, quote, normalized) = await ValidateOfferAndQuoteAsync(target, source.OfferId, quantity, now, cancellationToken);
+            var (_, quote, normalized, effectiveCampaign) = await ValidateOfferAndQuoteAsync(
+                target,
+                source.OfferId,
+                quantity,
+                now,
+                source.MerchandisingCampaignId ?? existing?.MerchandisingCampaignId,
+                cancellationToken);
             quantity = normalized;
             quotedAmount = quote.Amount;
             quotedCurrency = quote.Currency;
             taxExclusive = quote.TaxExclusive;
             priceId = quote.PriceId;
+            if (existing is not null)
+            {
+                existing.SetMerchandisingCampaignId(effectiveCampaign);
+            }
+            else
+            {
+                source.SetMerchandisingCampaignId(effectiveCampaign);
+            }
         }
         catch (InvalidOperationException)
         {
@@ -513,7 +582,15 @@ public sealed class CartDirectory : ICartDirectory, ICartQueryGateway
                 existing.ClearReservation();
             }
 
-            existing.ReplaceHold(quantity, null, quotedAmount, quotedCurrency, taxExclusive, priceId, now);
+            existing.ReplaceHold(
+                quantity,
+                null,
+                quotedAmount,
+                quotedCurrency,
+                taxExclusive,
+                priceId,
+                now,
+                existing.MerchandisingCampaignId);
             target.RecordLineChanged(existing.LineId, existing.OfferId, quantity, now);
             return;
         }
@@ -529,7 +606,8 @@ public sealed class CartDirectory : ICartDirectory, ICartQueryGateway
             quotedCurrency,
             taxExclusive,
             priceId,
-            now);
+            now,
+            source.MerchandisingCampaignId);
         target.AddLine(line, now);
     }
 
@@ -631,7 +709,66 @@ public sealed class CartDirectory : ICartDirectory, ICartQueryGateway
                     line.QuotedTaxExclusive,
                     line.PriceId,
                     line.QuotedAt,
-                    kind);
+                    kind,
+                    line.MerchandisingCampaignId);
             }).ToList());
+    }
+
+    /// <summary>
+    /// نقل‌قول خطوط کمپین را با واجدشرایطی جاری هم‌تراز می‌کند؛ تخفیف منقضی به Base برمی‌گردد.
+    /// </summary>
+    private async Task RevalidateCampaignQuotesAsync(ShoppingCart cart, CancellationToken cancellationToken)
+    {
+        if (_campaignPrices is null || cart.Status != CartStatus.Active)
+        {
+            return;
+        }
+
+        var now = DateTimeOffset.UtcNow;
+        var changed = false;
+        foreach (var line in cart.Lines.ToList())
+        {
+            if (line.MerchandisingCampaignId is null)
+            {
+                continue;
+            }
+
+            try
+            {
+                var (_, quote, _, effectiveCampaign) = await ValidateOfferAndQuoteAsync(
+                    cart,
+                    line.OfferId,
+                    line.Quantity,
+                    now,
+                    line.MerchandisingCampaignId,
+                    cancellationToken);
+                if (line.QuotedAmount != quote.Amount
+                    || !string.Equals(line.QuotedCurrency, quote.Currency, StringComparison.Ordinal)
+                    || line.PriceId != quote.PriceId
+                    || line.MerchandisingCampaignId != effectiveCampaign)
+                {
+                    line.ReplaceHold(
+                        line.Quantity,
+                        line.ReservationId,
+                        quote.Amount,
+                        quote.Currency,
+                        quote.TaxExclusive,
+                        quote.PriceId,
+                        now,
+                        effectiveCampaign);
+                    cart.RecordLineChanged(line.LineId, line.OfferId, line.Quantity, now);
+                    changed = true;
+                }
+            }
+            catch (InvalidOperationException)
+            {
+                // leave line; availability snapshot will reflect issues
+            }
+        }
+
+        if (changed)
+        {
+            await SaveCartAsync(cancellationToken);
+        }
     }
 }

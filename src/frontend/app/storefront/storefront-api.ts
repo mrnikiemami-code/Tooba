@@ -141,6 +141,10 @@ function mapCard(value: unknown): StorefrontProductCard | null {
       const raw = readProp(item, "brandId", "BrandId");
       return raw == null || raw === "" ? null : asString(raw);
     })(),
+    merchandisingCampaignId: (() => {
+      const raw = readProp(item, "merchandisingCampaignId", "MerchandisingCampaignId");
+      return raw == null || raw === "" ? null : asString(raw);
+    })(),
   };
 }
 

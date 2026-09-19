@@ -23,6 +23,11 @@ export interface StorefrontProductCard {
   reviewCount: number;
   /** برند اختیاری؛ فیلتر سراسری PLP با f_brand. */
   brandId?: string | null;
+  /**
+   * زمینهٔ کمپین مرچندایزینگ برای ATC — فقط هویت کمپین، نه مبلغ.
+   * فقط روی کارت‌های منبع PromotionCampaign پر می‌شود.
+   */
+  merchandisingCampaignId?: string | null;
   /** Store-preview fill only — never persisted / never published. */
   previewFake?: boolean;
   /** In-memory PreviewFake source marker — never persisted / never shown as jargon in UI. */

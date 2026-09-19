@@ -270,7 +270,8 @@ public static class StorefrontEndpoints
             ReadExpectedVersion(request, expectedVersion),
             body.OfferId,
             body.Quantity,
-            cancellationToken));
+            cancellationToken,
+            body.MerchandisingCampaignId));
 
     private static Task<IResult> ChangeCartLineAsync(
         Guid lineId,

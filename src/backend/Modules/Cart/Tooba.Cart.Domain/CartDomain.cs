@@ -134,6 +134,11 @@ public sealed class CartLine
     public Guid? PriceId { get; private set; }
 
     /// <summary>
+    /// زمینهٔ کمپین مرچندایزینگ (اختیاری)؛ مرجع واجدشرایطی است نه مبلغ کلاینت.
+    /// </summary>
+    public Guid? MerchandisingCampaignId { get; private set; }
+
+    /// <summary>
     /// زمان UTC گرفتن نقل‌قول نمایشی.
     /// </summary>
     public DateTimeOffset QuotedAt { get; private set; }
@@ -152,7 +157,8 @@ public sealed class CartLine
         string quotedCurrency,
         bool taxExclusive,
         Guid priceId,
-        DateTimeOffset quotedAt)
+        DateTimeOffset quotedAt,
+        Guid? merchandisingCampaignId = null)
     {
         EnsureQuantity(quantity);
         return new CartLine
@@ -168,6 +174,7 @@ public sealed class CartLine
             QuotedCurrency = quotedCurrency,
             QuotedTaxExclusive = taxExclusive,
             PriceId = priceId,
+            MerchandisingCampaignId = merchandisingCampaignId,
             QuotedAt = quotedAt,
         };
     }
@@ -182,7 +189,8 @@ public sealed class CartLine
         string quotedCurrency,
         bool taxExclusive,
         Guid priceId,
-        DateTimeOffset quotedAt)
+        DateTimeOffset quotedAt,
+        Guid? merchandisingCampaignId = null)
     {
         EnsureQuantity(quantity);
         Quantity = quantity;
@@ -191,8 +199,15 @@ public sealed class CartLine
         QuotedCurrency = quotedCurrency;
         QuotedTaxExclusive = taxExclusive;
         PriceId = priceId;
+        MerchandisingCampaignId = merchandisingCampaignId;
         QuotedAt = quotedAt;
     }
+
+    /// <summary>
+    /// زمینهٔ کمپین را پس از ادغام/بازنویسی خط تنظیم می‌کند.
+    /// </summary>
+    public void SetMerchandisingCampaignId(Guid? merchandisingCampaignId) =>
+        MerchandisingCampaignId = merchandisingCampaignId;
 
     /// <summary>
     /// رزرو را پس از آزادسازی از خط جدا می‌کند.

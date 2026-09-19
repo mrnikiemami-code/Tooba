@@ -68,6 +68,7 @@ public sealed class CartDbContext : DbContext
             entity.Property(x => x.Quantity).HasColumnType("numeric(18,6)");
             entity.Property(x => x.QuotedAmount).HasPrecision(19, 4);
             entity.Property(x => x.QuotedCurrency).HasMaxLength(3);
+            entity.Property(x => x.MerchandisingCampaignId).HasColumnName("merchandising_campaign_id");
             entity.HasIndex(x => new { x.CartId, x.OfferId }).IsUnique();
         });
         OutboxMessageMapping.Map(modelBuilder, Schema);

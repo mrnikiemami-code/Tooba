@@ -1456,3 +1456,23 @@ PromotionCampaign pricing resolution is bulk/bounded and must not introduce per-
 
 TOOBA-CAPABILITY-MAP is a compact architectural ownership index updated when capability ownership/schema materially changes; it is not a mandatory per-task startup read.
 
+### LOCK-SF-417 — Campaign context is not price authority
+
+MerchandisingCampaign identity carried from Storefront/Cart is pricing context only, never price authority; server validates Store, active window, membership and canonical Pricing dimensions before applying campaign price.
+
+### LOCK-SF-418 — Minimal campaign context on CartLine
+
+Cart lines that participate in merchandising pricing retain only the minimal campaign pricing context needed for authoritative repricing; client amount, discount percent, timer and display metadata are never Cart truth.
+
+### LOCK-SF-419 — Revalidate campaign pricing on cart mutations
+
+Cart quantity changes, reloads, merges and final checkout must preserve/revalidate campaign pricing context through the canonical Pricing engine; stale or ineligible campaign discounts cannot survive authoritative reprice.
+
+### LOCK-SF-420 — Checkout revalidates campaign price before commit
+
+Final checkout revalidates merchandising campaign eligibility and price before atomic Order commit; a failed or changed-price validation cannot convert the Cart or navigate to Payment.
+
+### LOCK-SF-421 — Order snapshot independent of live campaign
+
+Order pricing is an immutable authoritative snapshot of the accepted checkout quote and never depends on later live campaign state for historical totals.
+

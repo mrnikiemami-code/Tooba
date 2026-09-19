@@ -36,7 +36,8 @@ public sealed record CartLineSnapshot(
     bool QuotedTaxExclusive,
     Guid? PriceId,
     DateTimeOffset QuotedAt,
-    CartLineAvailabilityKind Availability = CartLineAvailabilityKind.Available);
+    CartLineAvailabilityKind Availability = CartLineAvailabilityKind.Available,
+    Guid? MerchandisingCampaignId = null);
 
 /// <summary>
 /// نمای سبد بدون نشت EF. حقیقت تسویه یا سفارش نیست.
@@ -107,6 +108,7 @@ public interface ICartDirectory
 
     /// <summary>
     /// خط Offer اضافه یا ادغام می‌کند پس از اعتبارسنجی موجودی؛ رزرو سخت نمی‌سازد.
+    /// merchandisingCampaignId فقط زمینهٔ واجدشرایطی است؛ مبلغ از Pricing canonical حل می‌شود.
     /// </summary>
     Task<CartSnapshot> AddOrIncreaseLineAsync(
         Guid cartId,
@@ -114,7 +116,8 @@ public interface ICartDirectory
         int expectedVersion,
         Guid offerId,
         decimal quantity,
-        CancellationToken cancellationToken);
+        CancellationToken cancellationToken,
+        Guid? merchandisingCampaignId = null);
 
     /// <summary>
     /// تعداد خط را عوض می‌کند. صفر یعنی حذف؛ رزرو تاریخی سبد در صورت وجود آزاد می‌شود.

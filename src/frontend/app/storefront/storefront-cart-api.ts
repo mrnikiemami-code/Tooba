@@ -712,17 +712,22 @@ export async function loadStorefrontCart(): Promise<StorefrontCartPage | null> {
 
 /**
  * Offer انتخاب‌شده را با تعداد به سبد زنده اضافه می‌کند.
+ * merchandisingCampaignId فقط زمینهٔ واجدشرایطی است؛ مبلغ از کلاینت ارسال نمی‌شود.
  * سبد Converted اینجا نگه داشته نمی‌شود؛ ensure فقط Active می‌سازد.
  */
-export async function addOfferToCart(offerId: string, quantity: number): Promise<StorefrontCartPage> {
+export async function addOfferToCart(
+  offerId: string,
+  quantity: number,
+  merchandisingCampaignId?: string | null,
+): Promise<StorefrontCartPage> {
   try {
-    return await addOfferToActiveCart(offerId, quantity);
+    return await addOfferToActiveCart(offerId, quantity, merchandisingCampaignId);
   } catch (cause) {
     if (!shouldRotateAfterAddFailure(cause)) {
       throw cause;
     }
     clearCartSession();
-    return addOfferToActiveCart(offerId, quantity);
+    return addOfferToActiveCart(offerId, quantity, merchandisingCampaignId);
   }
 }
 
@@ -730,13 +735,21 @@ function shouldRotateAfterAddFailure(cause: unknown): boolean {
   return cause instanceof StorefrontCartApiError && cause.errorCode === "cart.rejected";
 }
 
-async function addOfferToActiveCart(offerId: string, quantity: number): Promise<StorefrontCartPage> {
+async function addOfferToActiveCart(
+  offerId: string,
+  quantity: number,
+  merchandisingCampaignId?: string | null,
+): Promise<StorefrontCartPage> {
   const cart = await ensureStorefrontCart();
+  const body: Record<string, unknown> = { offerId, quantity };
+  if (merchandisingCampaignId) {
+    body.merchandisingCampaignId = merchandisingCampaignId;
+  }
   const response = await fetch(`/v1/storefront/cart/${cart.cartId}/lines?expectedVersion=${cart.version}`, {
     method: "POST",
     cache: "no-store",
     headers: cartHeaders(cart.version),
-    body: JSON.stringify({ offerId, quantity }),
+    body: JSON.stringify(body),
   });
   const next = await parseCartResponse(response);
   notifyCartChanged();

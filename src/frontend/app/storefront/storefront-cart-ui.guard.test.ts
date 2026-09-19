@@ -14,6 +14,7 @@ const cartPageSource = fs.readFileSync(path.join(root, "app/cart/page.tsx"), "ut
 test("product card ATC is a real button wired to addOfferToCart", () => {
   assert.match(cardSource, /data-testid="product-card-atc"/);
   assert.match(cardSource, /addOfferToCart\(card\.primaryOfferId/);
+  assert.match(cardSource, /merchandisingCampaignId/);
   assert.match(cardSource, /from "react-toastify"/);
   assert.match(cardSource, /محصول \$\{card\.title\} به سبد خرید اضافه شد/);
   assert.match(cardSource, /اضافه شد/);
