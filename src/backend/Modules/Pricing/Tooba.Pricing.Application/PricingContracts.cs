@@ -38,6 +38,17 @@ public interface IPriceLookupGateway
     /// قیمت پایهٔ نوشته‌شده را در پایگاه Tenant/Marketplace جاری انتخاب می‌کند.
     /// </summary>
     Task<PriceQuote?> ResolvePriceAsync(PriceResolutionQuery query, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// قیمت پایهٔ مؤثر چند Offer را در یک خواندن برای Market/Channel/Currency/At برمی‌گرداند.
+    /// </summary>
+    Task<IReadOnlyDictionary<Guid, PriceQuote>> ResolvePricesBatchAsync(
+        IReadOnlyCollection<Guid> offerIds,
+        string market,
+        SalesChannel channel,
+        string currency,
+        DateTimeOffset at,
+        CancellationToken cancellationToken);
 }
 
 /// <summary>

@@ -28,6 +28,13 @@ public interface IOfferLookupGateway
     Task<OfferReference?> FindOfferAsync(Guid offerId, CancellationToken cancellationToken);
 
     /// <summary>
+    /// چند Offer را در یک خواندن برمی‌گرداند تا resolverهای ریل N+1 نشوند.
+    /// </summary>
+    Task<IReadOnlyDictionary<Guid, OfferReference>> FindOffersBatchAsync(
+        IReadOnlyCollection<Guid> offerIds,
+        CancellationToken cancellationToken);
+
+    /// <summary>
     /// تعداد Offerهای وابسته به هر CatalogVariant را بدون join به Catalog برمی‌گرداند.
     /// </summary>
     Task<IReadOnlyDictionary<Guid, int>> CountOffersByCatalogVariantIdsAsync(

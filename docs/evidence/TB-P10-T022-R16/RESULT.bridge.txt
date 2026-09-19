@@ -1,0 +1,92 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+
+BEGIN_TOOBA_WORKER_RESULT
+
+Task-ID: TB-P10-T022-R16
+Parent-Task: TB-P10-T022-R15
+Channel: tooba-main
+WorkerId: tooba-worker-01
+AgentType: cursor
+Status: PASS
+
+Summary:
+Merchandising runtime foundation: IMerchandisingCampaignQuery active/future/members with deterministic Priority→StartAt→Id selection, batch Offer/Price/Inventory availability filtering, locale fallback, Development-only idempotent AMAZING campaign seed (active high/low, future, expired, draft/archived) with relative UtcNow windows. Promo price still deferred. No Builder/Storefront/Admin UI. LOCK-SF-399…404. Tests 2/2 Pass. User work 18ca10c9 preserved.
+
+Applicable-Locks:
+LOCK-SF-001…398 retained; LOCK-SF-399…404 added.
+
+Recovery-Start:
+docs/evidence/TB-P10-T022-R16/recovery-start.md — main @ c0c4e6be == origin/main at claim; Bridge 495b5c7e… / TB-P10-T022-R16.
+
+Read-Model:
+docs/evidence/TB-P10-T022-R16/read-model.md — MerchandisingCampaignRuntimeModel + members (offer-centric).
+
+Active-Selection:
+docs/evidence/TB-P10-T022-R16/active-selection.md — Priority DESC, StartAt DESC, Id ASC.
+
+Future-Teasing:
+Separate ResolveFutureByTypeAsync; IsTeasing when Published && StartAt>now; never in active.
+
+Availability-Filter:
+docs/evidence/TB-P10-T022-R16/availability-filter.md — Active SellerOffer + batch stock Available + batch AuthoredPrice.
+
+Price-Projection:
+docs/evidence/TB-P10-T022-R16/price-projection.md — canonical AuthoredPrice only; no PromoAmount/discount fabrication.
+
+Quantity-Projection:
+SellerOffer min/max + AvailableUnits from inventory batch when present.
+
+Localization:
+docs/evidence/TB-P10-T022-R16/localization.md — requested locale → fa → en → any.
+
+Store-Scope:
+docs/evidence/TB-P10-T022-R16/store-scope.md — campaign.StoreId must match caller; tenant DB boundary.
+
+Test-Data:
+docs/evidence/TB-P10-T022-R16/test-data.md — MerchandisingCampaignDevelopmentSeed Development-only.
+
+Seed-Time-Stability:
+Relative UtcNow windows; well-known campaign IDs; upsert by marker names.
+
+Resolver-API:
+IMerchandisingCampaignQuery.ResolveActiveByTypeAsync / ResolveFutureByTypeAsync / ResolveCampaignMembersAsync.
+
+Pagination:
+take clamped to ProductShowcase MaxTake (48); SortOrder ordering.
+
+Query-Performance:
+docs/evidence/TB-P10-T022-R16/query-performance.md — batched offer/price/stock; no N+1.
+
+Cache-Strategy:
+Deferred; key shape Store+Type+Locale+campaign window documented.
+
+Runtime-Data-Proof:
+docs/evidence/TB-P10-T022-R16/runtime-data-proof.md + focused tests.
+
+Focused-Validation:
+docs/evidence/TB-P10-T022-R16/focused-validation.md; test-run.log Passed 2/2.
+
+AntiPattern-Scan:
+docs/evidence/TB-P10-T022-R16/antipattern-scan.md — PASS.
+
+Lock-Registry:
+docs/architecture/TOOBA-LOCKS.md LOCK-SF-399…404.
+
+Recovery-SoT:
+docs/evidence/TB-P10-T022-R16/recovery-sot.md; PROJECT-STATE + RECOVERY-CONTEXT Last Implementation R16.
+
+Git:
+branch=main
+HEAD=TIP_PLACEHOLDER
+origin/main=TIP_PLACEHOLDER
+HEAD==origin/main=YES
+18ca10c9-ancestor=YES
+task-artifact=docs/ai/tasks/TB-P10-T022-R16.task.md
+
+Architectural-Concerns:
+Read model remains offer-centric until Builder integration needs ProductCard slug/title join. Dev seed uses available Active offers when catalog has fewer than five.
+
+Blockers:
+none
+
+END_TOOBA_WORKER_RESULT

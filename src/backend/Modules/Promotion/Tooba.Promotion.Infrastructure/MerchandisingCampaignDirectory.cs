@@ -245,6 +245,7 @@ public sealed class MerchandisingCampaignDirectory : IMerchandisingCampaignDirec
                 && x.StartAt <= now
                 && (x.EndAt == null || x.EndAt > now))
             .OrderByDescending(x => x.Priority)
+            .ThenByDescending(x => x.StartAt)
             .ThenBy(x => x.Id)
             .ToListAsync(cancellationToken);
 
@@ -263,6 +264,102 @@ public sealed class MerchandisingCampaignDirectory : IMerchandisingCampaignDirec
             .ThenBy(x => x.Id)
             .ToListAsync(cancellationToken);
         return rows.Select(ToMemberReference).ToList();
+    }
+
+    /// <inheritdoc />
+    public async Task<MerchandisingCampaignReference> UpsertSeedCampaignAsync(
+        Guid campaignId,
+        Guid promotionTypeId,
+        Guid storeId,
+        DateTimeOffset startAt,
+        DateTimeOffset? endAt,
+        int priority,
+        MerchandisingCampaignLifecycleStatus lifecycle,
+        CancellationToken cancellationToken)
+    {
+        var typeExists = await _db.MerchandisingPromotionTypes
+            .AnyAsync(x => x.Id == promotionTypeId, cancellationToken);
+        if (!typeExists)
+        {
+            throw new InvalidOperationException("گونهٔ مرچندایزینگ یافت نشد.");
+        }
+
+        var now = DateTimeOffset.UtcNow;
+        var existing = await _db.MerchandisingCampaigns
+            .SingleOrDefaultAsync(x => x.Id == campaignId, cancellationToken);
+        if (existing is null)
+        {
+            existing = MerchandisingCampaign.Create(
+                promotionTypeId,
+                storeId,
+                startAt,
+                endAt,
+                priority,
+                now,
+                campaignId);
+            existing.ForceLifecycleForSeed(lifecycle, now);
+            _db.MerchandisingCampaigns.Add(existing);
+        }
+        else
+        {
+            if (existing.StoreId != storeId || existing.PromotionTypeId != promotionTypeId)
+            {
+                throw new InvalidOperationException("شناسهٔ دانهٔ کمپین با Store/Type موجود سازگار نیست.");
+            }
+
+            existing.UpdateWindow(startAt, endAt, priority, now);
+            existing.ForceLifecycleForSeed(lifecycle, now);
+        }
+
+        await _db.SaveChangesAsync(cancellationToken);
+        return ToCampaignReference(existing);
+    }
+
+    /// <inheritdoc />
+    public async Task SyncSeedMembersAsync(
+        Guid campaignId,
+        Guid expectedStoreId,
+        IReadOnlyList<Guid> orderedSellerOfferIds,
+        CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(orderedSellerOfferIds);
+        var campaign = await RequireCampaignAsync(campaignId, cancellationToken);
+        if (campaign.StoreId != expectedStoreId)
+        {
+            throw new InvalidOperationException(
+                "عضویت میان‌فروشگاهی مجاز نیست؛ expectedStoreId با StoreId کمپین یکی نیست.");
+        }
+
+        var members = await _db.MerchandisingCampaignOffers
+            .Where(x => x.CampaignId == campaignId)
+            .ToListAsync(cancellationToken);
+        var desired = orderedSellerOfferIds.Distinct().ToArray();
+        var desiredSet = desired.ToHashSet();
+
+        foreach (var row in members.Where(x => !desiredSet.Contains(x.SellerOfferId)).ToList())
+        {
+            _db.MerchandisingCampaignOffers.Remove(row);
+        }
+
+        var byOffer = members
+            .Where(x => desiredSet.Contains(x.SellerOfferId))
+            .ToDictionary(x => x.SellerOfferId);
+        var now = DateTimeOffset.UtcNow;
+        for (var i = 0; i < desired.Length; i++)
+        {
+            var offerId = desired[i];
+            if (byOffer.TryGetValue(offerId, out var existing))
+            {
+                existing.SetSortOrder(i);
+            }
+            else
+            {
+                _db.MerchandisingCampaignOffers.Add(
+                    MerchandisingCampaignOffer.Create(campaignId, offerId, i, now));
+            }
+        }
+
+        await _db.SaveChangesAsync(cancellationToken);
     }
 
     private async Task UpsertTypeTranslationAsync(

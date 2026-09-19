@@ -269,7 +269,8 @@ public sealed class MerchandisingCampaign
         DateTimeOffset startAt,
         DateTimeOffset? endAt,
         int priority,
-        DateTimeOffset now)
+        DateTimeOffset now,
+        Guid? fixedId = null)
     {
         if (promotionTypeId == Guid.Empty)
         {
@@ -285,7 +286,7 @@ public sealed class MerchandisingCampaign
 
         return new MerchandisingCampaign
         {
-            Id = UuidV7.New(),
+            Id = fixedId ?? UuidV7.New(),
             PromotionTypeId = promotionTypeId,
             StoreId = storeId,
             LifecycleStatus = MerchandisingCampaignLifecycleStatus.Draft,
@@ -295,6 +296,15 @@ public sealed class MerchandisingCampaign
             CreatedAt = now,
             UpdatedAt = now,
         };
+    }
+
+    /// <summary>
+    /// وضعیت چرخهٔ عمر را برای upsert دانهٔ Development تنظیم می‌کند (فقط seed).
+    /// </summary>
+    public void ForceLifecycleForSeed(MerchandisingCampaignLifecycleStatus status, DateTimeOffset now)
+    {
+        LifecycleStatus = status;
+        UpdatedAt = now;
     }
 
     /// <summary>

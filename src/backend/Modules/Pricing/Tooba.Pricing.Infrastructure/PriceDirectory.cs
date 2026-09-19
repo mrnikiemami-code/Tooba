@@ -59,6 +59,52 @@ public sealed class PriceDirectory : IPriceDirectory, IPriceLookupGateway
     }
 
     /// <inheritdoc />
+    public async Task<IReadOnlyDictionary<Guid, PriceQuote>> ResolvePricesBatchAsync(
+        IReadOnlyCollection<Guid> offerIds,
+        string market,
+        SalesChannel channel,
+        string currency,
+        DateTimeOffset at,
+        CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(offerIds);
+        if (offerIds.Count == 0)
+        {
+            return new Dictionary<Guid, PriceQuote>();
+        }
+
+        var marketCode = MarketCode.Parse(market);
+        var currencyCode = CurrencyCode.Parse(currency);
+        var ids = offerIds.Distinct().ToArray();
+        var matches = await _db.Prices.AsNoTracking()
+            .Where(x => ids.Contains(x.OfferId)
+                        && x.Market == marketCode.Value
+                        && x.Channel == channel
+                        && x.Currency == currencyCode.Value
+                        && x.QualifierKind == PriceQualifierKind.Base
+                        && x.Status == PriceStatus.Active)
+            .ToListAsync(cancellationToken);
+
+        var result = new Dictionary<Guid, PriceQuote>();
+        foreach (var group in matches.GroupBy(x => x.OfferId))
+        {
+            var effective = group.Where(x => x.IsEffectiveAt(at)).ToList();
+            if (effective.Count > 1)
+            {
+                throw new InvalidOperationException(
+                    $"چند قیمت پایهٔ فعال هم‌پوشان برای Offer {group.Key} وجود دارد.");
+            }
+
+            if (effective.Count == 1)
+            {
+                result[group.Key] = ToQuote(effective[0]);
+            }
+        }
+
+        return result;
+    }
+
+    /// <inheritdoc />
     public async Task<PriceQuote> CreatePriceAsync(
         Guid offerId,
         string market,

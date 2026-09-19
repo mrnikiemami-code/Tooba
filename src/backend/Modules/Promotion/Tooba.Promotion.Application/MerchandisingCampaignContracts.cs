@@ -125,8 +125,8 @@ public interface IMerchandisingCampaignDirectory
         CancellationToken cancellationToken);
 
     /// <summary>
-    /// کمپین فعال زمان‌اجرا را برای فروشگاه + کد گونه برمی‌گرداند (بالاترین Priority سپس Id).
-    /// آمادهٔ صفحه‌بندی/locale/فیلتر موجودی در فاز بعد؛ بدون N+1 عضویت.
+    /// کمپین فعال زمان‌اجرا را برای فروشگاه + کد گونه برمی‌گرداند
+    /// (Priority DESC، StartAt DESC، Id ASC).
     /// </summary>
     Task<MerchandisingCampaignReference?> ResolveActiveCampaignAsync(
         Guid storeId,
@@ -139,5 +139,28 @@ public interface IMerchandisingCampaignDirectory
     /// </summary>
     Task<IReadOnlyList<MerchandisingCampaignMemberReference>> ResolveOrderedMembersAsync(
         Guid campaignId,
+        CancellationToken cancellationToken);
+
+    /// <summary>
+    /// کمپین دانهٔ Development را با شناسهٔ پایدار upsert می‌کند (پنجره/اولویت/lifecycle).
+    /// فقط برای seed idempotent؛ API عمومی Admin نیست.
+    /// </summary>
+    Task<MerchandisingCampaignReference> UpsertSeedCampaignAsync(
+        Guid campaignId,
+        Guid promotionTypeId,
+        Guid storeId,
+        DateTimeOffset startAt,
+        DateTimeOffset? endAt,
+        int priority,
+        MerchandisingCampaignLifecycleStatus lifecycle,
+        CancellationToken cancellationToken);
+
+    /// <summary>
+    /// عضویت‌های کمپین را با لیست مرتب SellerOfferId همگام می‌کند (حذف اضافه، درج کمبود).
+    /// </summary>
+    Task SyncSeedMembersAsync(
+        Guid campaignId,
+        Guid expectedStoreId,
+        IReadOnlyList<Guid> orderedSellerOfferIds,
         CancellationToken cancellationToken);
 }

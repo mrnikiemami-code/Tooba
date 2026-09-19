@@ -1,0 +1,292 @@
+using Microsoft.EntityFrameworkCore;
+using Tooba.Inventory.Application;
+using Tooba.Inventory.Domain;
+using Tooba.Inventory.Infrastructure.Persistence;
+using Tooba.Offer.Domain;
+using Tooba.Offer.Infrastructure.Persistence;
+using Tooba.Party.Application;
+using Tooba.Party.Infrastructure.Persistence;
+using Tooba.Promotion.Application;
+using Tooba.Promotion.Domain;
+
+namespace Tooba.Host.Admin;
+
+/// <summary>
+/// دانهٔ idempotent کمپین‌های AMAZING برای Development؛ Production را لمس نمی‌کند.
+/// پنجره‌ها نسبت به UtcNow تازه می‌شوند تا سناریوهای active/future/expired پایدار بمانند.
+/// </summary>
+internal static class MerchandisingCampaignDevelopmentSeed
+{
+    /// <summary>StoreId پایدار برای tenant SingleStore store-alpha داخل DB tenant.</summary>
+    public static readonly Guid StoreAlphaId = Guid.Parse("aaaaaaaa-aaaa-7aaa-8aaa-aaaaaaaaaaa1");
+
+    /// <summary>کمپین فعال اولویت بالا.</summary>
+    public static readonly Guid ActivePrimaryId = Guid.Parse("019a16a0-0001-7000-8000-000000000001");
+
+    /// <summary>کمپین فعال بازندهٔ اولویت.</summary>
+    public static readonly Guid ActiveLoserId = Guid.Parse("019a16a0-0002-7000-8000-000000000002");
+
+    /// <summary>کمپین آینده / teasing.</summary>
+    public static readonly Guid FutureId = Guid.Parse("019a16a0-0003-7000-8000-000000000003");
+
+    /// <summary>کمپین منقضی.</summary>
+    public static readonly Guid ExpiredId = Guid.Parse("019a16a0-0004-7000-8000-000000000004");
+
+    /// <summary>کمپین پیش‌نویس.</summary>
+    public static readonly Guid DraftId = Guid.Parse("019a16a0-0005-7000-8000-000000000005");
+
+    internal const string OosSellerSku = "DEV-SEED-OOS";
+    internal const string MarkerActivePrimary = "[DEV-SEED] Amazing Active Primary";
+    internal const string MarkerActiveLoser = "[DEV-SEED] Amazing Active Loser";
+    internal const string MarkerFuture = "[DEV-SEED] Amazing Future Teasing";
+    internal const string MarkerExpired = "[DEV-SEED] Amazing Expired";
+    internal const string MarkerDraft = "[DEV-SEED] Amazing Draft";
+
+    /// <summary>
+    /// کمپین‌های AMAZING را فقط در Development upsert می‌کند.
+    /// </summary>
+    public static async Task EnsureAsync(IServiceProvider provider, CancellationToken cancellationToken)
+    {
+        var environment = provider.GetRequiredService<IHostEnvironment>();
+        if (!environment.IsDevelopment())
+        {
+            return;
+        }
+
+        var dir = provider.GetRequiredService<IMerchandisingCampaignDirectory>();
+        var type = await dir.EnsureAmazingTypeSeededAsync(cancellationToken);
+        var offerDb = provider.GetRequiredService<OfferDbContext>();
+        var inventoryDb = provider.GetRequiredService<InventoryDbContext>();
+        var inventory = provider.GetRequiredService<IInventoryDirectory>();
+        var parties = provider.GetRequiredService<IPartyDirectory>();
+        var partyDb = provider.GetRequiredService<PartyDbContext>();
+        var now = DateTimeOffset.UtcNow;
+
+        var activeOffers = await offerDb.Offers.AsNoTracking()
+            .Where(x => x.Status == OfferStatus.Active && x.SellerSku != OosSellerSku)
+            .OrderBy(x => x.OfferId)
+            .Take(8)
+            .Select(x => x.OfferId)
+            .ToListAsync(cancellationToken);
+
+        var oosOfferId = await EnsureOosOfferAsync(
+            offerDb,
+            inventoryDb,
+            inventory,
+            parties,
+            partyDb,
+            cancellationToken);
+        var primaryMembers = activeOffers.ToList();
+        if (oosOfferId is not null)
+        {
+            primaryMembers.Add(oosOfferId.Value);
+        }
+
+        await UpsertCampaignAsync(
+            dir,
+            ActivePrimaryId,
+            type.Id,
+            StoreAlphaId,
+            startAt: now.AddHours(-2),
+            endAt: now.AddDays(7),
+            priority: 100,
+            MerchandisingCampaignLifecycleStatus.Published,
+            MarkerActivePrimary,
+            "پیشنهاد شگفت‌انگیز فعال",
+            "Amazing Active Primary",
+            primaryMembers,
+            cancellationToken);
+
+        await UpsertCampaignAsync(
+            dir,
+            ActiveLoserId,
+            type.Id,
+            StoreAlphaId,
+            startAt: now.AddHours(-1),
+            endAt: now.AddDays(3),
+            priority: 10,
+            MerchandisingCampaignLifecycleStatus.Published,
+            MarkerActiveLoser,
+            "پیشنهاد شگفت‌انگیز بازنده",
+            "Amazing Active Loser",
+            activeOffers.Take(2).ToList(),
+            cancellationToken);
+
+        await UpsertCampaignAsync(
+            dir,
+            FutureId,
+            type.Id,
+            StoreAlphaId,
+            startAt: now.AddDays(1),
+            endAt: now.AddDays(2),
+            priority: 80,
+            MerchandisingCampaignLifecycleStatus.Published,
+            MarkerFuture,
+            "فردای شگفت‌انگیز",
+            "Amazing Future Teasing",
+            activeOffers.Take(3).ToList(),
+            cancellationToken);
+
+        await UpsertCampaignAsync(
+            dir,
+            ExpiredId,
+            type.Id,
+            StoreAlphaId,
+            startAt: now.AddDays(-3),
+            endAt: now.AddDays(-1),
+            priority: 90,
+            MerchandisingCampaignLifecycleStatus.Published,
+            MarkerExpired,
+            "شگفت‌انگیز منقضی",
+            "Amazing Expired",
+            activeOffers.Take(1).ToList(),
+            cancellationToken);
+
+        await UpsertCampaignAsync(
+            dir,
+            DraftId,
+            type.Id,
+            StoreAlphaId,
+            startAt: now.AddHours(-1),
+            endAt: now.AddDays(1),
+            priority: 50,
+            MerchandisingCampaignLifecycleStatus.Draft,
+            MarkerDraft,
+            "شگفت‌انگیز پیش‌نویس",
+            "Amazing Draft",
+            activeOffers.Take(1).ToList(),
+            cancellationToken);
+    }
+
+    private static async Task UpsertCampaignAsync(
+        IMerchandisingCampaignDirectory dir,
+        Guid campaignId,
+        Guid typeId,
+        Guid storeId,
+        DateTimeOffset startAt,
+        DateTimeOffset? endAt,
+        int priority,
+        MerchandisingCampaignLifecycleStatus lifecycle,
+        string markerTitleEn,
+        string titleFa,
+        string titleEn,
+        IReadOnlyList<Guid> memberOfferIds,
+        CancellationToken cancellationToken)
+    {
+        await dir.UpsertSeedCampaignAsync(
+            campaignId,
+            typeId,
+            storeId,
+            startAt,
+            endAt,
+            priority,
+            lifecycle,
+            cancellationToken);
+        await dir.UpsertCampaignTranslationAsync(
+            campaignId,
+            "fa-IR",
+            $"{markerTitleEn} | {titleFa}",
+            subtitle: null,
+            badgeText: "Amazing",
+            cancellationToken);
+        await dir.UpsertCampaignTranslationAsync(
+            campaignId,
+            "en-US",
+            markerTitleEn,
+            subtitle: titleEn,
+            badgeText: "Amazing",
+            cancellationToken);
+        if (memberOfferIds.Count > 0)
+        {
+            await dir.SyncSeedMembersAsync(campaignId, storeId, memberOfferIds, cancellationToken);
+        }
+    }
+
+    private static async Task<Guid?> EnsureOosOfferAsync(
+        OfferDbContext offerDb,
+        InventoryDbContext inventoryDb,
+        IInventoryDirectory inventory,
+        IPartyDirectory parties,
+        PartyDbContext partyDb,
+        CancellationToken cancellationToken)
+    {
+        var existing = await offerDb.Offers
+            .SingleOrDefaultAsync(x => x.SellerSku == OosSellerSku, cancellationToken);
+        if (existing is not null)
+        {
+            if (existing.Status != OfferStatus.Active)
+            {
+                existing.Activate(DateTimeOffset.UtcNow);
+                await offerDb.SaveChangesAsync(cancellationToken);
+            }
+
+            await EnsureZeroStockAsync(existing.OfferId, inventoryDb, inventory, cancellationToken);
+            return existing.OfferId;
+        }
+
+        var template = await offerDb.Offers.AsNoTracking()
+            .Where(x => x.Status == OfferStatus.Active)
+            .OrderBy(x => x.OfferId)
+            .FirstOrDefaultAsync(cancellationToken);
+        if (template is null)
+        {
+            return null;
+        }
+
+        const string oosSellerName = "DEV-SEED OOS Seller";
+        var sellerPartyId = await partyDb.Parties.AsNoTracking()
+            .Where(x => x.DisplayName == oosSellerName)
+            .Select(x => x.PartyId)
+            .FirstOrDefaultAsync(cancellationToken);
+        if (sellerPartyId == Guid.Empty)
+        {
+            var createdSeller = await parties.CreateOrganizationAsync(
+                oosSellerName,
+                "DEV-SEED OOS Seller Legal",
+                cancellationToken);
+            sellerPartyId = createdSeller.PartyId;
+        }
+
+        var offer = SellerOffer.Create(
+            template.CatalogVariantId,
+            sellerPartyId,
+            template.Channel,
+            OosSellerSku,
+            DateTimeOffset.UtcNow);
+        offerDb.Offers.Add(offer);
+        await offerDb.SaveChangesAsync(cancellationToken);
+        offer.Activate(DateTimeOffset.UtcNow);
+        await offerDb.SaveChangesAsync(cancellationToken);
+        await EnsureZeroStockAsync(offer.OfferId, inventoryDb, inventory, cancellationToken);
+        return offer.OfferId;
+    }
+
+    private static async Task EnsureZeroStockAsync(
+        Guid offerId,
+        InventoryDbContext inventoryDb,
+        IInventoryDirectory inventory,
+        CancellationToken cancellationToken)
+    {
+        var locationId = await inventoryDb.Locations.AsNoTracking()
+            .Select(x => x.LocationId)
+            .FirstOrDefaultAsync(cancellationToken);
+        if (locationId == Guid.Empty)
+        {
+            locationId = await inventory.CreateLocationAsync("WH-DEV-OOS", "Dev OOS bin", cancellationToken);
+        }
+
+        var stockItemId = await inventory.OpenPositionAsync(offerId, locationId, cancellationToken);
+        var position = await inventoryDb.Positions.SingleAsync(x => x.StockItemId == stockItemId, cancellationToken);
+        var available = position.OnHand - position.Reserved;
+        if (available > 0)
+        {
+            await inventory.AdjustAsync(
+                stockItemId,
+                StockAdjustmentKind.Decrease,
+                available,
+                "dev-seed-oos-drain",
+                "dev-seed-oos-drain",
+                cancellationToken);
+        }
+    }
+}

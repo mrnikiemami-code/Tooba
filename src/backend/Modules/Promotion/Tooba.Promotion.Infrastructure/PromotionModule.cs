@@ -31,6 +31,7 @@ public sealed class PromotionModule : IToobaModule
         services.AddScoped<IPromotionDirectory, PromotionDirectory>();
         services.AddScoped<IPromotionEvaluator>(sp => sp.GetRequiredService<IPromotionDirectory>());
         services.AddScoped<IMerchandisingCampaignDirectory, MerchandisingCampaignDirectory>();
+        services.AddScoped<IMerchandisingCampaignQuery, MerchandisingCampaignQuery>();
         services.AddDbContext<PromotionDbContext>((sp, options) =>
         {
             var connectionString = ToobaNpgsql.ResolveForContext(

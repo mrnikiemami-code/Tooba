@@ -50,6 +50,24 @@ public sealed class OfferDirectory : IOfferDirectory, IOfferLookupGateway
     }
 
     /// <inheritdoc />
+    public async Task<IReadOnlyDictionary<Guid, OfferReference>> FindOffersBatchAsync(
+        IReadOnlyCollection<Guid> offerIds,
+        CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(offerIds);
+        if (offerIds.Count == 0)
+        {
+            return new Dictionary<Guid, OfferReference>();
+        }
+
+        var ids = offerIds.Distinct().ToArray();
+        var rows = await _db.Offers.AsNoTracking()
+            .Where(x => ids.Contains(x.OfferId))
+            .ToListAsync(cancellationToken);
+        return rows.ToDictionary(x => x.OfferId, ToReference);
+    }
+
+    /// <inheritdoc />
     public async Task<IReadOnlyDictionary<Guid, int>> CountOffersByCatalogVariantIdsAsync(
         IReadOnlyCollection<Guid> catalogVariantIds,
         CancellationToken cancellationToken)

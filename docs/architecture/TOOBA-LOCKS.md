@@ -1384,3 +1384,27 @@ Campaign promotional pricing, when present, preserves canonical pricing dimensio
 
 Marketplace and Single-Store share one merchandising campaign model with enforced Store scope; no edition-specific duplicate campaign schema.
 
+### LOCK-SF-399 — Deterministic active campaign selection
+
+Active merchandising campaign selection is deterministic by runtime eligibility, Priority, StartAt and stable tiebreaker; database natural order is never relied upon.
+
+### LOCK-SF-400 — Future campaigns stay out of active
+
+Future/teasing merchandising campaigns are queried separately and never leak into active Storefront sources before StartAt.
+
+### LOCK-SF-401 — Membership reuses canonical availability
+
+Campaign member visibility reuses canonical SellerOffer/Product marketability, Pricing and StockPosition availability truth; campaign membership alone never makes an unavailable offer storefront-visible.
+
+### LOCK-SF-402 — Dev campaign seeds are scoped
+
+Development/test merchandising campaign seeds are idempotent, environment-scoped and time-stable; production is never populated by demo campaign bootstrap.
+
+### LOCK-SF-403 — No fabricated promo price facts
+
+Merchandising read models may expose only canonical pricing/inventory facts; fabricated discount, compare-at, sold-percentage or campaign promo price values are forbidden.
+
+### LOCK-SF-404 — Runtime queries bounded and batched
+
+Merchandising runtime queries are Store-scoped, locale-aware, ordered and bounded; no full-offer scan or N+1 pricing/inventory query is allowed.
+
