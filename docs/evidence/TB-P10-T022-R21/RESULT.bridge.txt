@@ -1,0 +1,75 @@
+﻿PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+
+BEGIN_TOOBA_WORKER_RESULT
+
+Task-ID: TB-P10-T022-R21
+Parent-Task: TB-P10-T022-R20
+Channel: tooba-main
+WorkerId: tooba-worker-01
+AgentType: cursor
+Status: PASS
+
+Summary:
+Product Source Final Integration — additive «پیشنهاد شگفت‌انگیز» only. Maps to PromotionCampaign + AMAZING + CampaignId=null; Review shows «نوع منبع» human label; zero redesign of wizard geometry/controls; Manual/Category/Brand/Newest unchanged. Locks 428–430. Appearance YES; Builder NO. No P11. Capability map untouched.
+
+Applicable-Locks:
+LOCK-SF-001…427 retained; LOCK-SF-428…430 added.
+
+Recovery-Start:
+docs/evidence/TB-P10-T022-R21/recovery-start.md
+
+Zero-Redesign-Proof:
+docs/evidence/TB-P10-T022-R21/zero-redesign-proof.md
+
+Source-Step:
+docs/evidence/TB-P10-T022-R21/source-step.md
+
+Source-Mapping:
+docs/evidence/TB-P10-T022-R21/source-mapping.md
+
+Review:
+docs/evidence/TB-P10-T022-R21/review.md
+
+Persistence:
+docs/evidence/TB-P10-T022-R21/persistence.md
+
+Preview:
+docs/evidence/TB-P10-T022-R21/preview-storefront.md
+
+Storefront:
+docs/evidence/TB-P10-T022-R21/preview-storefront.md
+
+Existing-Source-Regression:
+docs/evidence/TB-P10-T022-R21/existing-source-regression.md
+
+Visual-Diff:
+docs/evidence/TB-P10-T022-R21/visual-diff.md
+
+Browser-Proof:
+docs/evidence/TB-P10-T022-R21/browser-proof.md — probe.mjs EXIT 0; screenshots/01-landing-list.png
+
+Focused-Validation:
+docs/evidence/TB-P10-T022-R21/focused-validation.md — admin-amazing-source-r21.guard PASS; recovery-staleness PASS; probe EXIT 0; 18ca10c9 ancestor PASS
+
+AntiPattern-Scan:
+docs/evidence/TB-P10-T022-R21/antipattern-scan.md
+
+Lock-Registry:
+docs/architecture/TOOBA-LOCKS.md — LOCK-SF-428…430
+
+Recovery-SoT:
+docs/PROJECT-STATE.md + docs/ai/TOOBA-RECOVERY-CONTEXT.md — Last Architect-accepted TB-P10-T022-R20; Last Implementation TB-P10-T022-R21
+
+Git:
+branch main; tip e4008324b0822334f2770cf556fc454b5b605e7d; pushed origin/main; HEAD==origin/main; 18ca10c9 ancestor
+
+Visual-Concerns:
+Builder remains NO until user visual acceptance; Appearance YES unchanged.
+
+Architectural-Concerns:
+(none for this scope)
+
+Blockers:
+(none)
+
+END_TOOBA_WORKER_RESULT
