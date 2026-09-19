@@ -73,7 +73,7 @@ Recovery-SoT:
 docs/evidence/TB-P10-T022-R17/recovery-sot.md — 18ca10c9 ancestor; user work preserved.
 
 Git:
-TIP_PLACEHOLDER
+368dba34bb0ad893354cb33005a88bf6c581bcec
 branch main; HEAD==origin/main after push.
 
 Visual-Concerns:
