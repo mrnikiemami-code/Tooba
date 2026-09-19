@@ -1,4 +1,4 @@
-PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+﻿PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
 
 BEGIN_TOOBA_WORKER_RESULT
 
@@ -64,7 +64,7 @@ Recovery-SoT:
 docs/PROJECT-STATE.md + docs/ai/TOOBA-RECOVERY-CONTEXT.md — Last Architect-accepted TB-P10-T022-R17; Last Implementation TB-P10-T022-R18
 
 Git:
-branch main; tip TIP_PLACEHOLDER; pushed origin/main; HEAD==origin/main; 18ca10c9 ancestor
+branch main; tip 74a4a0a966969b9e9a10df7a116e0ab68d5bbd4b; pushed origin/main; HEAD==origin/main; 18ca10c9 ancestor
 
 Architectural-Concerns:
 Cart/Checkout does not yet carry MerchandisingCampaign qualifier at add-line; storefront display correct. Follow-up task for campaign-aware cart quote without trusting client.
