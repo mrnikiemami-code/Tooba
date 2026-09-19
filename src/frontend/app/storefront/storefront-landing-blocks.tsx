@@ -14,6 +14,8 @@ import { StorefrontMenuLinks } from "./storefront-menu-tree.tsx";
 import type { StorefrontMenuItem } from "./storefront-menu-api.ts";
 import { heightPresetBannerClass } from "../../lib/storefront-composition/size-presets.ts";
 import {
+  heroDiagonalImageClip,
+  heroDiagonalPanelClip,
   heroHeightClass,
   heroHeightPresetDesktopPx,
   heroVariantToSwiperEffect,
@@ -343,6 +345,10 @@ export function HeroSlider({
     targetLabel: "",
     customUrl: "",
     href: "/products",
+    panelMediaAssetId: "",
+    panelImageUrl: "",
+    panelColor: "#0f172a",
+    panelSize: "xlarge" as const,
   }];
 
   const creativeProps =
@@ -441,17 +447,37 @@ export function HeroSlider({
         }
 
         if (variant === "diagonal") {
+          const panelSize = slide.panelSize || "xlarge";
+          const panelColor = slide.panelColor?.trim() || "#0f172a";
+          const panelSrc = slide.panelMediaAssetId.trim()
+            ? storefrontMediaUrl(slide.panelMediaAssetId.trim())
+            : slide.panelImageUrl.trim();
           const body = (
             <div
-              className={`relative overflow-hidden bg-slate-900 shadow-2xl ${rounded} ${heightClass}`}
-              style={legacyMinHeight ? { minHeight: legacyMinHeight } : undefined}
+              className={`relative overflow-hidden shadow-2xl ${rounded} ${heightClass}`}
+              style={{
+                ...(legacyMinHeight ? { minHeight: legacyMinHeight } : {}),
+                backgroundColor: panelSrc ? "#0f172a" : panelColor,
+              }}
             >
               <div
                 className="absolute inset-0"
-                style={{ clipPath: "polygon(0 0, 72% 0, 48% 100%, 0 100%)" }}
+                style={{ clipPath: heroDiagonalImageClip(panelSize) }}
               >
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src={src} alt={slide.alt || title} className="h-full w-full object-cover opacity-90" />
+              </div>
+              <div
+                className="absolute inset-0"
+                style={{ clipPath: heroDiagonalPanelClip(panelSize) }}
+                aria-hidden={panelSrc ? undefined : true}
+              >
+                {panelSrc ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={panelSrc} alt="" className="h-full w-full object-cover" />
+                ) : (
+                  <div className="h-full w-full" style={{ backgroundColor: panelColor }} />
+                )}
               </div>
               <div className="relative z-10 flex h-full min-h-[inherit] items-center justify-end p-6 md:p-12">
                 <div className="max-w-md rounded-2xl bg-surface/95 p-6 text-gray-900 shadow-lg backdrop-blur md:p-8">

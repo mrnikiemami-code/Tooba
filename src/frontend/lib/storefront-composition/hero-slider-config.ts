@@ -15,6 +15,56 @@ export const HERO_HEIGHT_PRESET_LABELS_FA: Record<HeroHeightPreset, string> = {
   ExtraLarge: "خیلی بزرگ",
 };
 
+/** اندازهٔ پنل مورب کیمیا (خیلی‌بزرگ = اندازهٔ فعلی). */
+export const HERO_DIAGONAL_PANEL_SIZES = ["small", "medium", "large", "xlarge"] as const;
+export type HeroDiagonalPanelSize = (typeof HERO_DIAGONAL_PANEL_SIZES)[number];
+
+export const HERO_DIAGONAL_PANEL_SIZE_LABELS_FA: Record<HeroDiagonalPanelSize, string> = {
+  small: "کوچک",
+  medium: "متوسط",
+  large: "بزرگ",
+  xlarge: "خیلی بزرگ",
+};
+
+export const HERO_DIAGONAL_PANEL_DEFAULT_COLOR = "#0f172a";
+
+export function isHeroDiagonalPanelSize(value: unknown): value is HeroDiagonalPanelSize {
+  return typeof value === "string" && (HERO_DIAGONAL_PANEL_SIZES as readonly string[]).includes(value);
+}
+
+/**
+ * برش تصویر اصلی (چپ) بر اساس اندازهٔ پنل مشکی/راست.
+ * xlarge = هندسهٔ فعلی کیمیا.
+ */
+export function heroDiagonalImageClip(size: HeroDiagonalPanelSize): string {
+  switch (size) {
+    case "small":
+      return "polygon(0 0, 94% 0, 82% 100%, 0 100%)";
+    case "medium":
+      return "polygon(0 0, 88% 0, 70% 100%, 0 100%)";
+    case "large":
+      return "polygon(0 0, 80% 0, 58% 100%, 0 100%)";
+    case "xlarge":
+    default:
+      return "polygon(0 0, 72% 0, 48% 100%, 0 100%)";
+  }
+}
+
+/** برش مکمل برای پنل راست (رنگ یا تصویر دوم). */
+export function heroDiagonalPanelClip(size: HeroDiagonalPanelSize): string {
+  switch (size) {
+    case "small":
+      return "polygon(94% 0, 100% 0, 100% 100%, 82% 100%)";
+    case "medium":
+      return "polygon(88% 0, 100% 0, 100% 100%, 70% 100%)";
+    case "large":
+      return "polygon(80% 0, 100% 0, 100% 100%, 58% 100%)";
+    case "xlarge":
+    default:
+      return "polygon(72% 0, 100% 0, 100% 100%, 48% 100%)";
+  }
+}
+
 /** شناسه‌های پایدار Variant (بدون پکیج پولی UI Initiative). */
 export const HERO_SLIDER_VARIANTS = [
   {
@@ -120,6 +170,13 @@ export type HeroSlideConfig = {
   customUrl: string;
   /** Resolved href for runtime/compat (derived from destination). */
   href: string;
+  /** کیمیا: تصویر اختیاری پنل مورب/مشکی. */
+  panelMediaAssetId: string;
+  panelImageUrl: string;
+  /** کیمیا: رنگ پنل وقتی تصویر دوم نیست. */
+  panelColor: string;
+  /** کیمیا: اندازهٔ پنل مورب. */
+  panelSize: HeroDiagonalPanelSize;
 };
 
 export type HeroSliderConfigFields = {
@@ -166,6 +223,10 @@ export function emptyHeroSlide(): HeroSlideConfig {
     targetLabel: "",
     customUrl: "",
     href: "",
+    panelMediaAssetId: "",
+    panelImageUrl: "",
+    panelColor: HERO_DIAGONAL_PANEL_DEFAULT_COLOR,
+    panelSize: "xlarge",
   };
 }
 
@@ -480,6 +541,13 @@ export function normalizeHeroSlides(value: unknown, count: number): HeroSlideCon
       targetLabel,
       customUrl,
       href: "",
+      panelMediaAssetId: typeof row.panelMediaAssetId === "string" ? row.panelMediaAssetId : "",
+      panelImageUrl: typeof row.panelImageUrl === "string" ? row.panelImageUrl : "",
+      panelColor:
+        typeof row.panelColor === "string" && /^#[0-9A-Fa-f]{6}$/.test(row.panelColor.trim())
+          ? row.panelColor.trim()
+          : HERO_DIAGONAL_PANEL_DEFAULT_COLOR,
+      panelSize: isHeroDiagonalPanelSize(row.panelSize) ? row.panelSize : "xlarge",
     };
     normalized.href = resolveHeroSlideHref(normalized) || legacyHref;
     return normalized;

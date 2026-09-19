@@ -9,6 +9,9 @@ import { loadProductWorkspace } from "../host-client.ts";
 import {
   HERO_DESTINATION_LABELS_FA,
   HERO_DESTINATION_TYPES,
+  HERO_DIAGONAL_PANEL_DEFAULT_COLOR,
+  HERO_DIAGONAL_PANEL_SIZE_LABELS_FA,
+  HERO_DIAGONAL_PANEL_SIZES,
   HERO_HEIGHT_PRESETS,
   HERO_HEIGHT_PRESET_LABELS_FA,
   HERO_SLIDER_MAX_SLIDES,
@@ -20,6 +23,7 @@ import {
   resolveHeroSlideHref,
   validateHeroSliderDetailed,
   type HeroDestinationType,
+  type HeroDiagonalPanelSize,
   type HeroHeightPreset,
   type HeroSlideConfig,
   type HeroSlideFieldKey,
@@ -55,6 +59,7 @@ export function AdminHeroSliderSettings({
   const fields = readHeroSliderFields(value);
   const [activeSlide, setActiveSlide] = useState(0);
   const [mediaOpen, setMediaOpen] = useState(false);
+  const [mediaTarget, setMediaTarget] = useState<"main" | "panel">("main");
   const [productOpen, setProductOpen] = useState(false);
   const [categoryOpen, setCategoryOpen] = useState(false);
   const [productBusy, setProductBusy] = useState(false);
@@ -99,11 +104,18 @@ export function AdminHeroSliderSettings({
   const onPickMedia = (assets: MediaAssetDto[]) => {
     const asset = assets[0];
     if (!asset) return;
-    patchSlide(activeSlide, {
-      mediaAssetId: asset.mediaAssetId,
-      imageUrl: mediaPreviewUrl(asset.mediaAssetId) ?? "",
-      alt: fields.slides[activeSlide]?.alt || asset.originalFileName || "",
-    });
+    if (mediaTarget === "panel") {
+      patchSlide(activeSlide, {
+        panelMediaAssetId: asset.mediaAssetId,
+        panelImageUrl: mediaPreviewUrl(asset.mediaAssetId) ?? "",
+      });
+    } else {
+      patchSlide(activeSlide, {
+        mediaAssetId: asset.mediaAssetId,
+        imageUrl: mediaPreviewUrl(asset.mediaAssetId) ?? "",
+        alt: fields.slides[activeSlide]?.alt || asset.originalFileName || "",
+      });
+    }
     setMediaOpen(false);
   };
 
@@ -178,6 +190,10 @@ export function AdminHeroSliderSettings({
   const previewSrc =
     slide.imageUrl.trim()
     || (slide.mediaAssetId.trim() ? mediaPreviewUrl(slide.mediaAssetId) ?? "" : "");
+  const panelPreviewSrc =
+    slide.panelImageUrl.trim()
+    || (slide.panelMediaAssetId.trim() ? mediaPreviewUrl(slide.panelMediaAssetId) ?? "" : "");
+  const isKimia = variantId === "diagonal";
 
   const fieldClass = (field: HeroSlideFieldKey) =>
     `w-full rounded-xl border px-3 py-2 ${
@@ -298,7 +314,10 @@ export function AdminHeroSliderSettings({
               className={`rounded-xl border px-3 py-2 text-sm font-bold ${
                 errorFor("image") ? "border-red-500 text-red-700" : ""
               }`}
-              onClick={() => setMediaOpen(true)}
+              onClick={() => {
+                setMediaTarget("main");
+                setMediaOpen(true);
+              }}
               data-testid="hero-slide-pick-media"
               aria-invalid={Boolean(errorFor("image"))}
             >
@@ -307,6 +326,99 @@ export function AdminHeroSliderSettings({
           </div>
           {errorFor("image") ? (
             <p className="text-xs text-red-600" role="alert">{errorFor("image")}</p>
+          ) : null}
+
+          {isKimia ? (
+            <div
+              className="space-y-3 rounded-xl border border-dashed border-amber-200 bg-amber-50/60 p-3"
+              data-testid="hero-kimia-panel-settings"
+            >
+              <p className="text-xs font-bold text-amber-950">قسمت مورب (کیمیا) — اختیاری</p>
+              <div className="flex flex-wrap items-start gap-3">
+                <div className="h-20 w-28 overflow-hidden rounded-xl border bg-slate-100">
+                  {panelPreviewSrc ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={panelPreviewSrc} alt="" className="h-full w-full object-cover" />
+                  ) : (
+                    <div className="flex h-full items-center justify-center text-[10px] text-muted">بدون تصویر</div>
+                  )}
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  <button
+                    type="button"
+                    className="rounded-xl border px-3 py-2 text-sm font-bold"
+                    onClick={() => {
+                      setMediaTarget("panel");
+                      setMediaOpen(true);
+                    }}
+                    data-testid="hero-slide-pick-panel-media"
+                  >
+                    انتخاب تصویر قسمت مورب
+                  </button>
+                  {panelPreviewSrc ? (
+                    <button
+                      type="button"
+                      className="rounded-xl border border-red-200 px-3 py-2 text-sm text-red-700"
+                      onClick={() =>
+                        patchSlide(activeSlide, { panelMediaAssetId: "", panelImageUrl: "" })
+                      }
+                      data-testid="hero-slide-clear-panel-media"
+                    >
+                      حذف تصویر مورب
+                    </button>
+                  ) : null}
+                </div>
+              </div>
+
+              <label className="block text-sm">
+                <span className="mb-1 block font-bold">اندازه قسمت مورب</span>
+                <select
+                  className="w-full rounded-xl border border-border bg-surface px-3 py-2"
+                  value={slide.panelSize || "xlarge"}
+                  onChange={(e) =>
+                    patchSlide(activeSlide, {
+                      panelSize: e.target.value as HeroDiagonalPanelSize,
+                    })
+                  }
+                  data-testid="hero-slide-panel-size"
+                >
+                  {HERO_DIAGONAL_PANEL_SIZES.map((size) => (
+                    <option key={size} value={size}>
+                      {HERO_DIAGONAL_PANEL_SIZE_LABELS_FA[size]}
+                    </option>
+                  ))}
+                </select>
+              </label>
+
+              {!panelPreviewSrc ? (
+                <label className="block text-sm">
+                  <span className="mb-1 block font-bold">رنگ قسمت مورب</span>
+                  <div className="flex items-center gap-3">
+                    <input
+                      type="color"
+                      className="h-10 w-14 cursor-pointer rounded-lg border border-border bg-surface p-1"
+                      value={slide.panelColor || HERO_DIAGONAL_PANEL_DEFAULT_COLOR}
+                      onChange={(e) => patchSlide(activeSlide, { panelColor: e.target.value })}
+                      data-testid="hero-slide-panel-color"
+                    />
+                    <input
+                      className="w-full rounded-xl border border-border px-3 py-2 font-mono text-sm"
+                      value={slide.panelColor || HERO_DIAGONAL_PANEL_DEFAULT_COLOR}
+                      onChange={(e) => {
+                        const next = e.target.value.trim();
+                        if (/^#[0-9A-Fa-f]{6}$/.test(next) || next === "") {
+                          patchSlide(activeSlide, {
+                            panelColor: next || HERO_DIAGONAL_PANEL_DEFAULT_COLOR,
+                          });
+                        }
+                      }}
+                      data-testid="hero-slide-panel-color-hex"
+                      spellCheck={false}
+                    />
+                  </div>
+                </label>
+              ) : null}
+            </div>
           ) : null}
 
           <label className="block text-sm">
@@ -480,7 +592,7 @@ export function AdminHeroSliderSettings({
 
       <MediaLibraryDialog
         open={mediaOpen}
-        title="انتخاب تصویر اسلاید"
+        title={mediaTarget === "panel" ? "انتخاب تصویر قسمت مورب" : "انتخاب تصویر اسلاید"}
         selectionMode="single"
         assetKind="image"
         onClose={() => setMediaOpen(false)}
