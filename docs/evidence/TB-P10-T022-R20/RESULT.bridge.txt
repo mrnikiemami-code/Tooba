@@ -1,0 +1,93 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+
+BEGIN_TOOBA_WORKER_RESULT
+
+Task-ID: TB-P10-T022-R20
+Parent-Task: TB-P10-T022-R19
+Channel: tooba-main
+WorkerId: tooba-worker-01
+AgentType: cursor
+Status: PASS
+
+Summary:
+Amazing Campaign Admin Workspace. Admin nav «کمپین‌های فروش» + AppDataGrid list/create/edit; offer membership/reorder; campaign prices via canonical AuthoredPrice; FA/EN translations; publish/archive with derived runtime labels (no Active toggle). Host `/v1/admin/merchandising-campaigns`. Builder PromotionCampaign CampaignId=null resolves Admin-created active campaign; Storefront/Cart R19 intact. Locks 422–427. Appearance YES; Builder NO. No P11.
+
+Applicable-Locks:
+LOCK-SF-001…421 retained; LOCK-SF-422…427 added.
+
+Recovery-Start:
+docs/evidence/TB-P10-T022-R20/recovery-start.md
+
+Navigation:
+docs/evidence/TB-P10-T022-R20/navigation.md
+
+Campaign-List:
+docs/evidence/TB-P10-T022-R20/campaign-list.md
+
+Create-Flow:
+docs/evidence/TB-P10-T022-R20/create-flow.md
+
+Workspace:
+docs/evidence/TB-P10-T022-R20/workspace.md
+
+Offer-Selector:
+docs/evidence/TB-P10-T022-R20/offer-selector.md
+
+Reordering:
+docs/evidence/TB-P10-T022-R20/reordering.md
+
+Pricing-UI:
+docs/evidence/TB-P10-T022-R20/pricing-ui.md
+
+Translations:
+docs/evidence/TB-P10-T022-R20/translations.md
+
+Lifecycle-Actions:
+docs/evidence/TB-P10-T022-R20/lifecycle-actions.md
+
+Archive-Semantics:
+docs/evidence/TB-P10-T022-R20/archive-semantics.md
+
+Builder-Integration:
+docs/evidence/TB-P10-T022-R20/builder-integration.md
+
+Cart-Checkout-Regression:
+docs/evidence/TB-P10-T022-R20/cart-checkout-regression.md
+
+Browser-Proof:
+docs/evidence/TB-P10-T022-R20/browser-proof.md — screenshots 01–07; probe.mjs EXIT 0
+
+Permissions:
+docs/evidence/TB-P10-T022-R20/permissions.md
+
+API-Validation:
+docs/evidence/TB-P10-T022-R20/api-validation.md
+
+Focused-Validation:
+docs/evidence/TB-P10-T022-R20/focused-validation.md — MerchandisingCampaignAdminTests PASS; recovery-staleness PASS; admin-nav-integrity PASS; probe EXIT 0; 18ca10c9 ancestor PASS
+
+Capability-Map:
+docs/architecture/TOOBA-CAPABILITY-MAP.md — Last Verified Task TB-P10-T022-R20
+
+AntiPattern-Scan:
+docs/evidence/TB-P10-T022-R20/antipattern-scan.md
+
+Lock-Registry:
+docs/architecture/TOOBA-LOCKS.md — LOCK-SF-422…427
+
+Recovery-SoT:
+docs/PROJECT-STATE.md + docs/ai/TOOBA-RECOVERY-CONTEXT.md — Last Architect-accepted TB-P10-T022-R19; Last Implementation TB-P10-T022-R20
+
+Git:
+branch main; tip 31a8a6e464bf09b6716bd53aa0bf49ae3d5cd854; pushed origin/main; HEAD==origin/main; 18ca10c9 ancestor
+
+Visual-Concerns:
+Builder remains NO until user visual acceptance; Appearance YES unchanged.
+
+Architectural-Concerns:
+(none for this scope)
+
+Blockers:
+(none)
+
+END_TOOBA_WORKER_RESULT
