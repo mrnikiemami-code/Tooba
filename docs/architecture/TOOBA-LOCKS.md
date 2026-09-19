@@ -1352,3 +1352,35 @@ Explorer asymmetry is positional/peek-based; the active product card remains vis
 
 Autoplay transitions are calm, fully settled, loop-clean, and pause/resume correctly on interaction.
 
+### LOCK-SF-391 — Merchandising PromotionType is data-driven
+
+Merchandising promotion classification is data-driven through a master PromotionType with stable system Code; Amazing is Code=AMAZING, never Offer.IsAmazing or a persisted promotion enum.
+
+### LOCK-SF-392 — MerchandisingCampaign distinct from checkout PromotionDefinition
+
+MerchandisingCampaign is distinct from checkout PromotionDefinition; checkout discount mechanics are not Storefront merchandising rails.
+
+### LOCK-SF-393 — SellerOffer membership, never Offer booleans
+
+SellerOffer remains the sellable listing identity; campaign participation is CampaignOffer membership, never promotion booleans on SellerOffer.
+
+### LOCK-SF-394 — AuthoredPrice and StockPosition remain canonical
+
+AuthoredPrice and StockPosition remain canonical normal price/inventory truth; campaigns may not duplicate base price or inventory state.
+
+### LOCK-SF-395 — Campaign active state is derived
+
+Campaign active state is derived from lifecycle/publication plus StartAt/EndAt using canonical time semantics; countdown is derived and no per-second truth updates are allowed.
+
+### LOCK-SF-396 — Campaign localization follows Tooba translation architecture
+
+Campaign-facing localized text follows existing Tooba translation/fallback architecture and downstream Page locale; no section-owned language context.
+
+### LOCK-SF-397 — Campaign promo price preserves pricing dimensions
+
+Campaign promotional pricing, when present, preserves canonical pricing dimensions/currency scope; currency-ambiguous scalar PromoAmount is forbidden.
+
+### LOCK-SF-398 — One merchandising campaign model across editions
+
+Marketplace and Single-Store share one merchandising campaign model with enforced Store scope; no edition-specific duplicate campaign schema.
+

@@ -1,0 +1,83 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+
+BEGIN_TOOBA_WORKER_RESULT
+
+Task-ID: TB-P10-T022-R15
+Parent-Task: TB-P10-T022-R14
+Channel: tooba-main
+WorkerId: tooba-worker-01
+AgentType: cursor
+Status: PASS
+
+Summary:
+Implemented merchandising campaign foundation inside existing Promotion module (schema promotion), separate from checkout PromotionDefinition. Added MerchandisingPromotionType (AMAZING system seed FA/EN), MerchandisingCampaign + translations + SellerOffer membership, query contract ResolveActive/OrderedMembers, EF migration validated on Testcontainers + tooba_alpha. Promo price storage deferred (no scalar PromoAmount). No Builder/Storefront/Admin UI/campaign seed. LOCK-SF-391…398 recorded. User work 18ca10c9 preserved.
+
+Applicable-Locks:
+LOCK-SF-001…390 retained; LOCK-SF-391…398 added.
+
+Recovery-Start:
+docs/evidence/TB-P10-T022-R15/recovery-start.md — main @ 6cdd5e72 == origin/main at claim; Bridge 0308dbf6… / TB-P10-T022-R15.
+
+Domain-Placement:
+docs/evidence/TB-P10-T022-R15/domain-placement.md — Promotion module, merchandising_* tables; not checkout PromotionDefinition; not SellerOffer flags.
+
+PromotionType:
+MerchandisingPromotionType master table; Code unique; AMAZING IsSystem; FA پیشنهاد شگفت‌انگیز / EN Amazing Offers; rename/delete protected.
+
+Campaign-Model:
+MerchandisingCampaign StoreId + PromotionTypeId + Draft/Published/Archived + StartAt/EndAt + Priority; IsRuntimeActive derived.
+
+Campaign-Translations:
+MerchandisingCampaignTranslation unique (CampaignId, Locale); Title/Subtitle?/BadgeText?.
+
+CampaignOffer-Membership:
+MerchandisingCampaignOffer unique (CampaignId, SellerOfferId); SortOrder; cascade delete membership never deletes SellerOffer.
+
+Promotion-Price-Ownership:
+docs/evidence/TB-P10-T022-R15/promotion-price-ownership.md — DEFERRED; IMerchandisingCampaignPromoPrice extension point; AuthoredPrice unchanged.
+
+Quantity-Ownership:
+docs/evidence/TB-P10-T022-R15/quantity-ownership.md — reuse Offer min/max + Inventory; no sold_percentage; no campaign allocation fields.
+
+Lifecycle:
+docs/evidence/TB-P10-T022-R15/lifecycle.md — Draft/future/expired/Archived inactive; Published in window active; no per-second job.
+
+Edition-Boundaries:
+Same schema; StoreId enforced on membership API (cross-store rejected); no edition-specific tables.
+
+Query-Contract:
+IMerchandisingCampaignDirectory.ResolveActiveCampaignAsync(store, typeCode, now); ResolveOrderedMembersAsync(campaignId) — ready for take/locale/availability later.
+
+Migration:
+docs/evidence/TB-P10-T022-R15/migration.md — 20260919134400_MerchandisingCampaignFoundation; reversible; applied Testcontainers + tooba_alpha.
+
+System-Seed:
+EnsureAmazingTypeSeededAsync idempotent; Host ProductWorkspaceDevelopmentBootstrap after Promote migrate.
+
+Focused-Validation:
+docs/evidence/TB-P10-T022-R15/focused-validation.md + test-run.log — MerchandisingCampaignFoundationTests Passed 1/1 (cases 1–21).
+
+AntiPattern-Scan:
+docs/evidence/TB-P10-T022-R15/antipattern-scan.md — PASS.
+
+Lock-Registry:
+docs/architecture/TOOBA-LOCKS.md LOCK-SF-391…398.
+
+Recovery-SoT:
+docs/evidence/TB-P10-T022-R15/recovery-sot.md; PROJECT-STATE + TOOBA-RECOVERY-CONTEXT updated (Last Implementation R15).
+
+Git:
+branch=main
+HEAD=TIP_PLACEHOLDER
+origin/main=TIP_PLACEHOLDER
+HEAD==origin/main=YES
+18ca10c9-ancestor=YES
+task-artifact=docs/ai/tasks/TB-P10-T022-R15.task.md
+
+Architectural-Concerns:
+Promo price deferred until Pricing QualifierKind can safely express campaign-scoped amounts with Market/Channel/Currency. SellerOffer lacks StoreId column — membership store boundary enforced via campaign.StoreId vs caller storeId argument within tenant DB.
+
+Blockers:
+none
+
+END_TOOBA_WORKER_RESULT

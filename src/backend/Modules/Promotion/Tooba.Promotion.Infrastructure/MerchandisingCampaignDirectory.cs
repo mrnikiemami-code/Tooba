@@ -1,0 +1,326 @@
+using Microsoft.EntityFrameworkCore;
+using Tooba.Promotion.Application;
+using Tooba.Promotion.Domain;
+using Tooba.Promotion.Infrastructure.Persistence;
+
+namespace Tooba.Promotion.Infrastructure;
+
+/// <summary>
+/// مالک کمپین مرچندایزینگ در schema promotion. تعریف تخفیف تسویه را لمس نمی‌کند.
+/// </summary>
+public sealed class MerchandisingCampaignDirectory : IMerchandisingCampaignDirectory
+{
+    private readonly PromotionDbContext _db;
+
+    /// <summary>
+    /// دایرکتوری را به schema promotion وصل می‌کند.
+    /// </summary>
+    public MerchandisingCampaignDirectory(PromotionDbContext db) => _db = db;
+
+    /// <inheritdoc />
+    public async Task<MerchandisingPromotionTypeReference> EnsureAmazingTypeSeededAsync(
+        CancellationToken cancellationToken)
+    {
+        var now = DateTimeOffset.UtcNow;
+        var existing = await _db.MerchandisingPromotionTypes
+            .SingleOrDefaultAsync(x => x.Code == MerchandisingPromotionType.AmazingCode, cancellationToken);
+
+        if (existing is null)
+        {
+            existing = MerchandisingPromotionType.CreateSystem(
+                MerchandisingPromotionType.AmazingCode,
+                sortOrder: 100,
+                now);
+            _db.MerchandisingPromotionTypes.Add(existing);
+            await _db.SaveChangesAsync(cancellationToken);
+        }
+
+        await UpsertTypeTranslationAsync(
+            existing.Id,
+            "fa-IR",
+            "پیشنهاد شگفت‌انگیز",
+            cancellationToken);
+        await UpsertTypeTranslationAsync(
+            existing.Id,
+            "en-US",
+            "Amazing Offers",
+            cancellationToken);
+
+        return ToTypeReference(existing);
+    }
+
+    /// <inheritdoc />
+    public async Task<MerchandisingCampaignReference> CreateCampaignAsync(
+        Guid promotionTypeId,
+        Guid storeId,
+        DateTimeOffset startAt,
+        DateTimeOffset? endAt,
+        int priority,
+        CancellationToken cancellationToken)
+    {
+        var typeExists = await _db.MerchandisingPromotionTypes
+            .AnyAsync(x => x.Id == promotionTypeId, cancellationToken);
+        if (!typeExists)
+        {
+            throw new InvalidOperationException("گونهٔ مرچندایزینگ یافت نشد.");
+        }
+
+        var campaign = MerchandisingCampaign.Create(
+            promotionTypeId,
+            storeId,
+            startAt,
+            endAt,
+            priority,
+            DateTimeOffset.UtcNow);
+        _db.MerchandisingCampaigns.Add(campaign);
+        await _db.SaveChangesAsync(cancellationToken);
+        return ToCampaignReference(campaign);
+    }
+
+    /// <inheritdoc />
+    public async Task<MerchandisingCampaignReference> UpdateCampaignWindowAsync(
+        Guid campaignId,
+        DateTimeOffset startAt,
+        DateTimeOffset? endAt,
+        int priority,
+        CancellationToken cancellationToken)
+    {
+        var campaign = await RequireCampaignAsync(campaignId, cancellationToken);
+        campaign.UpdateWindow(startAt, endAt, priority, DateTimeOffset.UtcNow);
+        await _db.SaveChangesAsync(cancellationToken);
+        return ToCampaignReference(campaign);
+    }
+
+    /// <inheritdoc />
+    public async Task PublishCampaignAsync(Guid campaignId, CancellationToken cancellationToken)
+    {
+        var campaign = await RequireCampaignAsync(campaignId, cancellationToken);
+        campaign.Publish(DateTimeOffset.UtcNow);
+        await _db.SaveChangesAsync(cancellationToken);
+    }
+
+    /// <inheritdoc />
+    public async Task ArchiveCampaignAsync(Guid campaignId, CancellationToken cancellationToken)
+    {
+        var campaign = await RequireCampaignAsync(campaignId, cancellationToken);
+        campaign.Archive(DateTimeOffset.UtcNow);
+        await _db.SaveChangesAsync(cancellationToken);
+    }
+
+    /// <inheritdoc />
+    public async Task<MerchandisingCampaignTranslationReference> UpsertCampaignTranslationAsync(
+        Guid campaignId,
+        string locale,
+        string title,
+        string? subtitle,
+        string? badgeText,
+        CancellationToken cancellationToken)
+    {
+        _ = await RequireCampaignAsync(campaignId, cancellationToken);
+        var normalized = locale.Trim();
+        var row = await _db.MerchandisingCampaignTranslations
+            .SingleOrDefaultAsync(x => x.CampaignId == campaignId && x.Locale == normalized, cancellationToken);
+        if (row is null)
+        {
+            row = MerchandisingCampaignTranslation.Create(campaignId, normalized, title, subtitle, badgeText);
+            _db.MerchandisingCampaignTranslations.Add(row);
+        }
+        else
+        {
+            row.Upsert(title, subtitle, badgeText);
+        }
+
+        await _db.SaveChangesAsync(cancellationToken);
+        return new MerchandisingCampaignTranslationReference(
+            row.CampaignId,
+            row.Locale,
+            row.Title,
+            row.Subtitle,
+            row.BadgeText);
+    }
+
+    /// <inheritdoc />
+    public async Task<MerchandisingCampaignMemberReference> AddOfferAsync(
+        Guid campaignId,
+        Guid sellerOfferId,
+        int sortOrder,
+        Guid expectedStoreId,
+        CancellationToken cancellationToken)
+    {
+        var campaign = await RequireCampaignAsync(campaignId, cancellationToken);
+        if (campaign.StoreId != expectedStoreId)
+        {
+            throw new InvalidOperationException(
+                "عضویت میان‌فروشگاهی مجاز نیست؛ expectedStoreId با StoreId کمپین یکی نیست.");
+        }
+
+        var exists = await _db.MerchandisingCampaignOffers.AnyAsync(
+            x => x.CampaignId == campaignId && x.SellerOfferId == sellerOfferId,
+            cancellationToken);
+        if (exists)
+        {
+            throw new InvalidOperationException("این Offer قبلاً در کمپین عضو است.");
+        }
+
+        var membership = MerchandisingCampaignOffer.Create(
+            campaignId,
+            sellerOfferId,
+            sortOrder,
+            DateTimeOffset.UtcNow);
+        _db.MerchandisingCampaignOffers.Add(membership);
+        await _db.SaveChangesAsync(cancellationToken);
+        return ToMemberReference(membership);
+    }
+
+    /// <inheritdoc />
+    public async Task RemoveOfferAsync(
+        Guid campaignId,
+        Guid sellerOfferId,
+        CancellationToken cancellationToken)
+    {
+        var row = await _db.MerchandisingCampaignOffers.SingleOrDefaultAsync(
+            x => x.CampaignId == campaignId && x.SellerOfferId == sellerOfferId,
+            cancellationToken);
+        if (row is null)
+        {
+            return;
+        }
+
+        _db.MerchandisingCampaignOffers.Remove(row);
+        await _db.SaveChangesAsync(cancellationToken);
+    }
+
+    /// <inheritdoc />
+    public async Task ReorderOffersAsync(
+        Guid campaignId,
+        IReadOnlyList<Guid> orderedSellerOfferIds,
+        CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(orderedSellerOfferIds);
+        _ = await RequireCampaignAsync(campaignId, cancellationToken);
+        var members = await _db.MerchandisingCampaignOffers
+            .Where(x => x.CampaignId == campaignId)
+            .ToListAsync(cancellationToken);
+        if (members.Count != orderedSellerOfferIds.Count
+            || members.Select(x => x.SellerOfferId).ToHashSet().Count != orderedSellerOfferIds.Count
+            || orderedSellerOfferIds.Any(id => members.All(m => m.SellerOfferId != id)))
+        {
+            throw new InvalidOperationException("فهرست ترتیب باید دقیقاً همان اعضای کمپین باشد.");
+        }
+
+        for (var i = 0; i < orderedSellerOfferIds.Count; i++)
+        {
+            var member = members.Single(x => x.SellerOfferId == orderedSellerOfferIds[i]);
+            member.SetSortOrder(i);
+        }
+
+        await _db.SaveChangesAsync(cancellationToken);
+    }
+
+    /// <inheritdoc />
+    public async Task<MerchandisingCampaignReference?> ResolveActiveCampaignAsync(
+        Guid storeId,
+        string typeCode,
+        DateTimeOffset now,
+        CancellationToken cancellationToken)
+    {
+        if (string.IsNullOrWhiteSpace(typeCode))
+        {
+            return null;
+        }
+
+        var code = typeCode.Trim().ToUpperInvariant();
+        var type = await _db.MerchandisingPromotionTypes.AsNoTracking()
+            .SingleOrDefaultAsync(x => x.Code == code && x.IsActive, cancellationToken);
+        if (type is null)
+        {
+            return null;
+        }
+
+        var candidates = await _db.MerchandisingCampaigns.AsNoTracking()
+            .Where(x =>
+                x.StoreId == storeId
+                && x.PromotionTypeId == type.Id
+                && x.LifecycleStatus == MerchandisingCampaignLifecycleStatus.Published
+                && x.StartAt <= now
+                && (x.EndAt == null || x.EndAt > now))
+            .OrderByDescending(x => x.Priority)
+            .ThenBy(x => x.Id)
+            .ToListAsync(cancellationToken);
+
+        var winner = candidates.FirstOrDefault();
+        return winner is null ? null : ToCampaignReference(winner);
+    }
+
+    /// <inheritdoc />
+    public async Task<IReadOnlyList<MerchandisingCampaignMemberReference>> ResolveOrderedMembersAsync(
+        Guid campaignId,
+        CancellationToken cancellationToken)
+    {
+        var rows = await _db.MerchandisingCampaignOffers.AsNoTracking()
+            .Where(x => x.CampaignId == campaignId)
+            .OrderBy(x => x.SortOrder)
+            .ThenBy(x => x.Id)
+            .ToListAsync(cancellationToken);
+        return rows.Select(ToMemberReference).ToList();
+    }
+
+    private async Task UpsertTypeTranslationAsync(
+        Guid typeId,
+        string locale,
+        string displayName,
+        CancellationToken cancellationToken)
+    {
+        var row = await _db.MerchandisingPromotionTypeTranslations
+            .SingleOrDefaultAsync(x => x.TypeId == typeId && x.Locale == locale, cancellationToken);
+        if (row is null)
+        {
+            _db.MerchandisingPromotionTypeTranslations.Add(
+                MerchandisingPromotionTypeTranslation.Create(typeId, locale, displayName));
+        }
+        else
+        {
+            row.SetDisplayName(displayName);
+        }
+
+        await _db.SaveChangesAsync(cancellationToken);
+    }
+
+    private async Task<MerchandisingCampaign> RequireCampaignAsync(
+        Guid campaignId,
+        CancellationToken cancellationToken)
+    {
+        var campaign = await _db.MerchandisingCampaigns.SingleOrDefaultAsync(
+            x => x.Id == campaignId,
+            cancellationToken);
+        if (campaign is null)
+        {
+            throw new InvalidOperationException("کمپین یافت نشد.");
+        }
+
+        return campaign;
+    }
+
+    private static MerchandisingPromotionTypeReference ToTypeReference(MerchandisingPromotionType type) =>
+        new(type.Id, type.Code, type.IsSystem, type.IsActive, type.SortOrder);
+
+    private static MerchandisingCampaignReference ToCampaignReference(MerchandisingCampaign campaign) =>
+        new(
+            campaign.Id,
+            campaign.PromotionTypeId,
+            campaign.StoreId,
+            campaign.LifecycleStatus,
+            campaign.StartAt,
+            campaign.EndAt,
+            campaign.Priority,
+            campaign.CreatedAt,
+            campaign.UpdatedAt);
+
+    private static MerchandisingCampaignMemberReference ToMemberReference(MerchandisingCampaignOffer membership) =>
+        new(
+            membership.Id,
+            membership.CampaignId,
+            membership.SellerOfferId,
+            membership.SortOrder,
+            membership.CreatedAt);
+}

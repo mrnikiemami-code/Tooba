@@ -1,0 +1,116 @@
+﻿  Determining projects to restore...
+D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Content\Tooba.Content.Infrastructure\Tooba.Content.Infrastructure.csproj : warning NU1900: Error occurred while getting package vulnerability data: Unable to load the service index for source https://api.nuget.org/v3/index.json. [D:\Users\User\source\repos\SarvNewVer\src\backend\Host\Tooba.Host.Tests\Tooba.Host.Tests.csproj]
+D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Localization\Tooba.Localization.Infrastructure\Tooba.Localization.Infrastructure.csproj : warning NU1900: Error occurred while getting package vulnerability data: Unable to load the service index for source https://api.nuget.org/v3/index.json. [D:\Users\User\source\repos\SarvNewVer\src\backend\Host\Tooba.Host.Tests\Tooba.Host.Tests.csproj]
+  All projects are up-to-date for restore.
+D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Content\Tooba.Content.Infrastructure\Tooba.Content.Infrastructure.csproj : warning NU1900: Error occurred while getting package vulnerability data: Unable to load the service index for source https://api.nuget.org/v3/index.json.
+  Tooba.BuildingBlocks -> D:\Users\User\source\repos\SarvNewVer\.tmp-r15-test-out\Tooba.BuildingBlocks.dll
+  Tooba.ModuleContracts -> D:\Users\User\source\repos\SarvNewVer\.tmp-r15-test-out\Tooba.ModuleContracts.dll
+  Tooba.Promotion.Domain -> D:\Users\User\source\repos\SarvNewVer\.tmp-r15-test-out\Tooba.Promotion.Domain.dll
+  Tooba.Wallet.Domain -> D:\Users\User\source\repos\SarvNewVer\.tmp-r15-test-out\Tooba.Wallet.Domain.dll
+  Tooba.Media.Domain -> D:\Users\User\source\repos\SarvNewVer\.tmp-r15-test-out\Tooba.Media.Domain.dll
+  Tooba.Wishlist.Domain -> D:\Users\User\source\repos\SarvNewVer\.tmp-r15-test-out\Tooba.Wishlist.Domain.dll
+  Tooba.Inventory.Domain -> D:\Users\User\source\repos\SarvNewVer\.tmp-r15-test-out\Tooba.Inventory.Domain.dll
+  Tooba.Persistence -> D:\Users\User\source\repos\SarvNewVer\.tmp-r15-test-out\Tooba.Persistence.dll
+D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Localization\Tooba.Localization.Infrastructure\Tooba.Localization.Infrastructure.csproj : warning NU1900: Error occurred while getting package vulnerability data: Unable to load the service index for source https://api.nuget.org/v3/index.json.
+  Tooba.OperatorProfile.Domain -> D:\Users\User\source\repos\SarvNewVer\.tmp-r15-test-out\Tooba.OperatorProfile.Domain.dll
+  Tooba.ProductQnA.Domain -> D:\Users\User\source\repos\SarvNewVer\.tmp-r15-test-out\Tooba.ProductQnA.Domain.dll
+  Tooba.Identity.Domain -> D:\Users\User\source\repos\SarvNewVer\.tmp-r15-test-out\Tooba.Identity.Domain.dll
+  Tooba.AccessControl.Domain -> D:\Users\User\source\repos\SarvNewVer\.tmp-r15-test-out\Tooba.AccessControl.Domain.dll
+  Tooba.Tax.Domain -> D:\Users\User\source\repos\SarvNewVer\.tmp-r15-test-out\Tooba.Tax.Domain.dll
+  Tooba.Returns.Domain -> D:\Users\User\source\repos\SarvNewVer\.tmp-r15-test-out\Tooba.Returns.Domain.dll
+  Tooba.Settlement.Domain -> D:\Users\User\source\repos\SarvNewVer\.tmp-r15-test-out\Tooba.Settlement.Domain.dll
+  Tooba.Story.Domain -> D:\Users\User\source\repos\SarvNewVer\.tmp-r15-test-out\Tooba.Story.Domain.dll
+  Tooba.Support.Domain -> D:\Users\User\source\repos\SarvNewVer\.tmp-r15-test-out\Tooba.Support.Domain.dll
+  Tooba.Offer.Domain -> D:\Users\User\source\repos\SarvNewVer\.tmp-r15-test-out\Tooba.Offer.Domain.dll
+  Tooba.Wishlist.Application -> D:\Users\User\source\repos\SarvNewVer\.tmp-r15-test-out\Tooba.Wishlist.Application.dll
+  Tooba.CustomerProfile.Domain -> D:\Users\User\source\repos\SarvNewVer\.tmp-r15-test-out\Tooba.CustomerProfile.Domain.dll
+  Tooba.Party.Domain -> D:\Users\User\source\repos\SarvNewVer\.tmp-r15-test-out\Tooba.Party.Domain.dll
+  Tooba.Notification.Domain -> D:\Users\User\source\repos\SarvNewVer\.tmp-r15-test-out\Tooba.Notification.Domain.dll
+  Tooba.AddressBook.Domain -> D:\Users\User\source\repos\SarvNewVer\.tmp-r15-test-out\Tooba.AddressBook.Domain.dll
+  Tooba.Promotion.Application -> D:\Users\User\source\repos\SarvNewVer\.tmp-r15-test-out\Tooba.Promotion.Application.dll
+  Tooba.PageComposition.Domain -> D:\Users\User\source\repos\SarvNewVer\.tmp-r15-test-out\Tooba.PageComposition.Domain.dll
+  Tooba.Reviews.Domain -> D:\Users\User\source\repos\SarvNewVer\.tmp-r15-test-out\Tooba.Reviews.Domain.dll
+  Tooba.Payment.Domain -> D:\Users\User\source\repos\SarvNewVer\.tmp-r15-test-out\Tooba.Payment.Domain.dll
+  Tooba.Localization.Domain -> D:\Users\User\source\repos\SarvNewVer\.tmp-r15-test-out\Tooba.Localization.Domain.dll
+  Tooba.UserPreference.Domain -> D:\Users\User\source\repos\SarvNewVer\.tmp-r15-test-out\Tooba.UserPreference.Domain.dll
+  Tooba.Catalog.Domain -> D:\Users\User\source\repos\SarvNewVer\.tmp-r15-test-out\Tooba.Catalog.Domain.dll
+  Tooba.AccessControl.Application -> D:\Users\User\source\repos\SarvNewVer\.tmp-r15-test-out\Tooba.AccessControl.Application.dll
+  Tooba.ProductQnA.Application -> D:\Users\User\source\repos\SarvNewVer\.tmp-r15-test-out\Tooba.ProductQnA.Application.dll
+  Tooba.Tax.Application -> D:\Users\User\source\repos\SarvNewVer\.tmp-r15-test-out\Tooba.Tax.Application.dll
+  Tooba.Story.Application -> D:\Users\User\source\repos\SarvNewVer\.tmp-r15-test-out\Tooba.Story.Application.dll
+  Tooba.Notification.Application -> D:\Users\User\source\repos\SarvNewVer\.tmp-r15-test-out\Tooba.Notification.Application.dll
+  Tooba.Media.Application -> D:\Users\User\source\repos\SarvNewVer\.tmp-r15-test-out\Tooba.Media.Application.dll
+  Tooba.Fulfillment.Domain -> D:\Users\User\source\repos\SarvNewVer\.tmp-r15-test-out\Tooba.Fulfillment.Domain.dll
+  Tooba.CustomerProfile.Application -> D:\Users\User\source\repos\SarvNewVer\.tmp-r15-test-out\Tooba.CustomerProfile.Application.dll
+  Tooba.Cart.Domain -> D:\Users\User\source\repos\SarvNewVer\.tmp-r15-test-out\Tooba.Cart.Domain.dll
+  Tooba.OperatorProfile.Application -> D:\Users\User\source\repos\SarvNewVer\.tmp-r15-test-out\Tooba.OperatorProfile.Application.dll
+  Tooba.Catalog.Application -> D:\Users\User\source\repos\SarvNewVer\.tmp-r15-test-out\Tooba.Catalog.Application.dll
+  Tooba.Content.Domain -> D:\Users\User\source\repos\SarvNewVer\.tmp-r15-test-out\Tooba.Content.Domain.dll
+  Tooba.Settlement.Application -> D:\Users\User\source\repos\SarvNewVer\.tmp-r15-test-out\Tooba.Settlement.Application.dll
+  Tooba.PlatformProbe.Infrastructure -> D:\Users\User\source\repos\SarvNewVer\.tmp-r15-test-out\Tooba.PlatformProbe.Infrastructure.dll
+  Tooba.Wallet.Application -> D:\Users\User\source\repos\SarvNewVer\.tmp-r15-test-out\Tooba.Wallet.Application.dll
+  Tooba.CustomerProfile.Infrastructure -> D:\Users\User\source\repos\SarvNewVer\.tmp-r15-test-out\Tooba.CustomerProfile.Infrastructure.dll
+  Tooba.Localization.Application -> D:\Users\User\source\repos\SarvNewVer\.tmp-r15-test-out\Tooba.Localization.Application.dll
+  Tooba.AddressBook.Application -> D:\Users\User\source\repos\SarvNewVer\.tmp-r15-test-out\Tooba.AddressBook.Application.dll
+  Tooba.BulkInquiry.Domain -> D:\Users\User\source\repos\SarvNewVer\.tmp-r15-test-out\Tooba.BulkInquiry.Domain.dll
+  Tooba.Support.Application -> D:\Users\User\source\repos\SarvNewVer\.tmp-r15-test-out\Tooba.Support.Application.dll
+  Tooba.Order.Domain -> D:\Users\User\source\repos\SarvNewVer\.tmp-r15-test-out\Tooba.Order.Domain.dll
+  Tooba.Offer.Application -> D:\Users\User\source\repos\SarvNewVer\.tmp-r15-test-out\Tooba.Offer.Application.dll
+  Tooba.PageComposition.Application -> D:\Users\User\source\repos\SarvNewVer\.tmp-r15-test-out\Tooba.PageComposition.Application.dll
+  Tooba.Wallet.Infrastructure -> D:\Users\User\source\repos\SarvNewVer\.tmp-r15-test-out\Tooba.Wallet.Infrastructure.dll
+  Tooba.Story.Infrastructure -> D:\Users\User\source\repos\SarvNewVer\.tmp-r15-test-out\Tooba.Story.Infrastructure.dll
+  Tooba.Media.Infrastructure -> D:\Users\User\source\repos\SarvNewVer\.tmp-r15-test-out\Tooba.Media.Infrastructure.dll
+  Tooba.OperatorProfile.Infrastructure -> D:\Users\User\source\repos\SarvNewVer\.tmp-r15-test-out\Tooba.OperatorProfile.Infrastructure.dll
+  Tooba.Promotion.Infrastructure -> D:\Users\User\source\repos\SarvNewVer\.tmp-r15-test-out\Tooba.Promotion.Infrastructure.dll
+  Tooba.Payment.Application -> D:\Users\User\source\repos\SarvNewVer\.tmp-r15-test-out\Tooba.Payment.Application.dll
+  Tooba.Localization.Infrastructure -> D:\Users\User\source\repos\SarvNewVer\.tmp-r15-test-out\Tooba.Localization.Infrastructure.dll
+  Tooba.Content.Application -> D:\Users\User\source\repos\SarvNewVer\.tmp-r15-test-out\Tooba.Content.Application.dll
+  Tooba.Support.Infrastructure -> D:\Users\User\source\repos\SarvNewVer\.tmp-r15-test-out\Tooba.Support.Infrastructure.dll
+  Tooba.PageComposition.Infrastructure -> D:\Users\User\source\repos\SarvNewVer\.tmp-r15-test-out\Tooba.PageComposition.Infrastructure.dll
+  Tooba.ProductQnA.Infrastructure -> D:\Users\User\source\repos\SarvNewVer\.tmp-r15-test-out\Tooba.ProductQnA.Infrastructure.dll
+  Tooba.Catalog.Infrastructure -> D:\Users\User\source\repos\SarvNewVer\.tmp-r15-test-out\Tooba.Catalog.Infrastructure.dll
+  Tooba.Returns.Application -> D:\Users\User\source\repos\SarvNewVer\.tmp-r15-test-out\Tooba.Returns.Application.dll
+  Tooba.Payment.Infrastructure -> D:\Users\User\source\repos\SarvNewVer\.tmp-r15-test-out\Tooba.Payment.Infrastructure.dll
+  Tooba.Content.Infrastructure -> D:\Users\User\source\repos\SarvNewVer\.tmp-r15-test-out\Tooba.Content.Infrastructure.dll
+  Tooba.AddressBook.Infrastructure -> D:\Users\User\source\repos\SarvNewVer\.tmp-r15-test-out\Tooba.AddressBook.Infrastructure.dll
+  Tooba.Tax.Infrastructure -> D:\Users\User\source\repos\SarvNewVer\.tmp-r15-test-out\Tooba.Tax.Infrastructure.dll
+  Tooba.AccessControl.Infrastructure -> D:\Users\User\source\repos\SarvNewVer\.tmp-r15-test-out\Tooba.AccessControl.Infrastructure.dll
+  Tooba.Identity.Application -> D:\Users\User\source\repos\SarvNewVer\.tmp-r15-test-out\Tooba.Identity.Application.dll
+  Tooba.BulkInquiry.Application -> D:\Users\User\source\repos\SarvNewVer\.tmp-r15-test-out\Tooba.BulkInquiry.Application.dll
+  Tooba.Pricing.Domain -> D:\Users\User\source\repos\SarvNewVer\.tmp-r15-test-out\Tooba.Pricing.Domain.dll
+  Tooba.Reviews.Application -> D:\Users\User\source\repos\SarvNewVer\.tmp-r15-test-out\Tooba.Reviews.Application.dll
+  Tooba.UserPreference.Application -> D:\Users\User\source\repos\SarvNewVer\.tmp-r15-test-out\Tooba.UserPreference.Application.dll
+  Tooba.Party.Application -> D:\Users\User\source\repos\SarvNewVer\.tmp-r15-test-out\Tooba.Party.Application.dll
+  Tooba.Fulfillment.Application -> D:\Users\User\source\repos\SarvNewVer\.tmp-r15-test-out\Tooba.Fulfillment.Application.dll
+  Tooba.Wishlist.Infrastructure -> D:\Users\User\source\repos\SarvNewVer\.tmp-r15-test-out\Tooba.Wishlist.Infrastructure.dll
+  Tooba.UserPreference.Infrastructure -> D:\Users\User\source\repos\SarvNewVer\.tmp-r15-test-out\Tooba.UserPreference.Infrastructure.dll
+  Tooba.BulkInquiry.Infrastructure -> D:\Users\User\source\repos\SarvNewVer\.tmp-r15-test-out\Tooba.BulkInquiry.Infrastructure.dll
+  Tooba.Pricing.Application -> D:\Users\User\source\repos\SarvNewVer\.tmp-r15-test-out\Tooba.Pricing.Application.dll
+  Tooba.Offer.Infrastructure -> D:\Users\User\source\repos\SarvNewVer\.tmp-r15-test-out\Tooba.Offer.Infrastructure.dll
+  Tooba.Identity.Infrastructure -> D:\Users\User\source\repos\SarvNewVer\.tmp-r15-test-out\Tooba.Identity.Infrastructure.dll
+  Tooba.Party.Infrastructure -> D:\Users\User\source\repos\SarvNewVer\.tmp-r15-test-out\Tooba.Party.Infrastructure.dll
+  Tooba.Inventory.Application -> D:\Users\User\source\repos\SarvNewVer\.tmp-r15-test-out\Tooba.Inventory.Application.dll
+  Tooba.Pricing.Infrastructure -> D:\Users\User\source\repos\SarvNewVer\.tmp-r15-test-out\Tooba.Pricing.Infrastructure.dll
+  Tooba.Cart.Application -> D:\Users\User\source\repos\SarvNewVer\.tmp-r15-test-out\Tooba.Cart.Application.dll
+  Tooba.Inventory.Infrastructure -> D:\Users\User\source\repos\SarvNewVer\.tmp-r15-test-out\Tooba.Inventory.Infrastructure.dll
+  Tooba.Cart.Infrastructure -> D:\Users\User\source\repos\SarvNewVer\.tmp-r15-test-out\Tooba.Cart.Infrastructure.dll
+  Tooba.Order.Application -> D:\Users\User\source\repos\SarvNewVer\.tmp-r15-test-out\Tooba.Order.Application.dll
+  Tooba.Notification.Infrastructure -> D:\Users\User\source\repos\SarvNewVer\.tmp-r15-test-out\Tooba.Notification.Infrastructure.dll
+  Tooba.Settlement.Infrastructure -> D:\Users\User\source\repos\SarvNewVer\.tmp-r15-test-out\Tooba.Settlement.Infrastructure.dll
+  Tooba.Fulfillment.Infrastructure -> D:\Users\User\source\repos\SarvNewVer\.tmp-r15-test-out\Tooba.Fulfillment.Infrastructure.dll
+  Tooba.Order.Infrastructure -> D:\Users\User\source\repos\SarvNewVer\.tmp-r15-test-out\Tooba.Order.Infrastructure.dll
+  Tooba.Returns.Infrastructure -> D:\Users\User\source\repos\SarvNewVer\.tmp-r15-test-out\Tooba.Returns.Infrastructure.dll
+  Tooba.Reviews.Infrastructure -> D:\Users\User\source\repos\SarvNewVer\.tmp-r15-test-out\Tooba.Reviews.Infrastructure.dll
+D:\Users\User\source\repos\SarvNewVer\src\backend\Host\Tooba.Host\Admin\ProductWorkspaceComposer.cs(1864,16): warning CS8603: Possible null reference return. [D:\Users\User\source\repos\SarvNewVer\src\backend\Host\Tooba.Host\Tooba.Host.csproj]
+  Tooba.Host -> D:\Users\User\source\repos\SarvNewVer\.tmp-r15-test-out\Tooba.Host.dll
+D:\Users\User\source\repos\SarvNewVer\src\backend\Host\Tooba.Host.Tests\LanguageDirectoryPersistenceTests.cs(33,9): warning xUnit2031: Do not use a Where clause to filter before calling Assert.Single. Use the overload of Assert.Single that accepts a filtering function. (https://xunit.net/xunit.analyzers/rules/xUnit2031) [D:\Users\User\source\repos\SarvNewVer\src\backend\Host\Tooba.Host.Tests\Tooba.Host.Tests.csproj]
+D:\Users\User\source\repos\SarvNewVer\src\backend\Host\Tooba.Host.Tests\LanguageDirectoryPersistenceTests.cs(52,9): warning xUnit2031: Do not use a Where clause to filter before calling Assert.Single. Use the overload of Assert.Single that accepts a filtering function. (https://xunit.net/xunit.analyzers/rules/xUnit2031) [D:\Users\User\source\repos\SarvNewVer\src\backend\Host\Tooba.Host.Tests\Tooba.Host.Tests.csproj]
+D:\Users\User\source\repos\SarvNewVer\src\backend\Host\Tooba.Host.Tests\ContentTaxonomyTagsTests.cs(160,9): warning xUnit2013: Do not use Assert.Equal() to check for collection size. Use Assert.Single instead. (https://xunit.net/xunit.analyzers/rules/xUnit2013) [D:\Users\User\source\repos\SarvNewVer\src\backend\Host\Tooba.Host.Tests\Tooba.Host.Tests.csproj]
+  Tooba.Host.Tests -> D:\Users\User\source\repos\SarvNewVer\.tmp-r15-test-out\Tooba.Host.Tests.dll
+Test run for D:\Users\User\source\repos\SarvNewVer\.tmp-r15-test-out\Tooba.Host.Tests.dll (.NETCoreApp,Version=v8.0)
+VSTest version 18.0.1 (x64)
+
+Starting test execution, please wait...
+A total of 1 test files matched the specified pattern.
+
+Passed!  - Failed:     0, Passed:     1, Skipped:     0, Total:     1, Duration: 3 s - Tooba.Host.Tests.dll (net8.0)

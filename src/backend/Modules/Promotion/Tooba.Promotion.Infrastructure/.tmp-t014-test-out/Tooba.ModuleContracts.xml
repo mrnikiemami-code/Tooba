@@ -1,0 +1,33 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>Tooba.ModuleContracts</name>
+    </assembly>
+    <members>
+        <member name="T:Tooba.ModuleContracts.IToobaModule">
+            <summary>
+            قرارداد ثبت یک ماژول در ریشهٔ ترکیب Host. کشف بازتابی ندارد؛ Host فهرست را صریح می‌چیند.
+            این رابط سرویس، زیرساخت و کارگر پس‌زمینه را ثبت می‌کند. نگاشت endpoint اختیاری است و نباید این قرارداد را به خدای ترکیب تبدیل کند.
+            </summary>
+        </member>
+        <member name="P:Tooba.ModuleContracts.IToobaModule.Name">
+            <summary>
+            نام پایدار ماژول برای تله‌متری و مستند ترکیب؛ هویت Tenant یا hostname نیست.
+            </summary>
+        </member>
+        <member name="M:Tooba.ModuleContracts.IToobaModule.AddServices(Microsoft.Extensions.DependencyInjection.IServiceCollection,Microsoft.Extensions.Configuration.IConfiguration,Microsoft.Extensions.Hosting.IHostEnvironment)">
+            <summary>
+            سرویس‌ها و زیرساخت متعلق به همین ماژول را ثبت می‌کند. نباید DbContext یا repository ماژول دیگر را لمس کند.
+            </summary>
+            <param name="services">ظرف DI فرآیند.</param>
+            <param name="configuration">پیکربندی Host؛ ماژول TenantId را از Host خام نمی‌سازد.</param>
+            <param name="environment">محیط اجرا برای محدود کردن مسیرهای تشخیصی.</param>
+        </member>
+        <member name="T:Tooba.ModuleContracts.ModuleContractsMarker">
+            <summary>
+            نشانگر قراردادهای بین‌ماژولی پایدار. persistence و DbContext و join بین‌schema اینجا نمی‌آید.
+            قرارداد کسب‌وکار Catalog/Identity هنوز اضافه نمی‌شود؛ این اسمبلی محل تخلیهٔ انواع تصادفی نیست.
+            </summary>
+        </member>
+    </members>
+</doc>

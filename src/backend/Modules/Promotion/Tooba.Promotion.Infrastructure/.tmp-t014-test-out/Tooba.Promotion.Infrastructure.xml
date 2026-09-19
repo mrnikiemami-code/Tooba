@@ -1,0 +1,230 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>Tooba.Promotion.Infrastructure</name>
+    </assembly>
+    <members>
+        <member name="T:Tooba.Promotion.Infrastructure.Events.PromotionCreatedIntegrationEvent">
+            <summary>
+            ایجاد پروموشن.
+            </summary>
+        </member>
+        <member name="F:Tooba.Promotion.Infrastructure.Events.PromotionCreatedIntegrationEvent.EventTypeName">
+            <summary>
+            نام پایدار.
+            </summary>
+        </member>
+        <member name="P:Tooba.Promotion.Infrastructure.Events.PromotionCreatedIntegrationEvent.Metadata">
+            <inheritdoc />
+        </member>
+        <member name="P:Tooba.Promotion.Infrastructure.Events.PromotionCreatedIntegrationEvent.PromotionId">
+            <summary>
+            پروموشن.
+            </summary>
+        </member>
+        <member name="T:Tooba.Promotion.Infrastructure.Events.PromotionActivatedIntegrationEvent">
+            <summary>
+            فعال‌سازی پروموشن.
+            </summary>
+        </member>
+        <member name="F:Tooba.Promotion.Infrastructure.Events.PromotionActivatedIntegrationEvent.EventTypeName">
+            <summary>
+            نام پایدار.
+            </summary>
+        </member>
+        <member name="P:Tooba.Promotion.Infrastructure.Events.PromotionActivatedIntegrationEvent.Metadata">
+            <inheritdoc />
+        </member>
+        <member name="P:Tooba.Promotion.Infrastructure.Events.PromotionActivatedIntegrationEvent.PromotionId">
+            <summary>
+            پروموشن.
+            </summary>
+        </member>
+        <member name="T:Tooba.Promotion.Infrastructure.Events.PromotionChangedIntegrationEvent">
+            <summary>
+            تغییر تعریف.
+            </summary>
+        </member>
+        <member name="F:Tooba.Promotion.Infrastructure.Events.PromotionChangedIntegrationEvent.EventTypeName">
+            <summary>
+            نام پایدار.
+            </summary>
+        </member>
+        <member name="P:Tooba.Promotion.Infrastructure.Events.PromotionChangedIntegrationEvent.Metadata">
+            <inheritdoc />
+        </member>
+        <member name="P:Tooba.Promotion.Infrastructure.Events.PromotionChangedIntegrationEvent.PromotionId">
+            <summary>
+            پروموشن.
+            </summary>
+        </member>
+        <member name="T:Tooba.Promotion.Infrastructure.Events.PromotionExpiredIntegrationEvent">
+            <summary>
+            انقضای پروموشن.
+            </summary>
+        </member>
+        <member name="F:Tooba.Promotion.Infrastructure.Events.PromotionExpiredIntegrationEvent.EventTypeName">
+            <summary>
+            نام پایدار.
+            </summary>
+        </member>
+        <member name="P:Tooba.Promotion.Infrastructure.Events.PromotionExpiredIntegrationEvent.Metadata">
+            <inheritdoc />
+        </member>
+        <member name="P:Tooba.Promotion.Infrastructure.Events.PromotionExpiredIntegrationEvent.PromotionId">
+            <summary>
+            پروموشن.
+            </summary>
+        </member>
+        <member name="T:Tooba.Promotion.Infrastructure.Persistence.Migrations.InitialPromotion">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Promotion.Infrastructure.Persistence.Migrations.InitialPromotion.Up(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Promotion.Infrastructure.Persistence.Migrations.InitialPromotion.Down(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Promotion.Infrastructure.Persistence.Migrations.InitialPromotion.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.Promotion.Infrastructure.Persistence.PromotionDbContext">
+            <summary>
+            DbContext مالک schema <c>promotion</c>. قیمت، سفارش و مالیات را نگه نمی‌دارد.
+            </summary>
+        </member>
+        <member name="F:Tooba.Promotion.Infrastructure.Persistence.PromotionDbContext.Schema">
+            <summary>
+            schema اختصاصی Promotion.
+            </summary>
+        </member>
+        <member name="M:Tooba.Promotion.Infrastructure.Persistence.PromotionDbContext.#ctor(Microsoft.EntityFrameworkCore.DbContextOptions{Tooba.Promotion.Infrastructure.Persistence.PromotionDbContext})">
+            <summary>
+            DbContext را با گزینه‌های Host می‌سازد.
+            </summary>
+        </member>
+        <member name="P:Tooba.Promotion.Infrastructure.Persistence.PromotionDbContext.Promotions">
+            <summary>
+            تعاریف پروموشن.
+            </summary>
+        </member>
+        <member name="P:Tooba.Promotion.Infrastructure.Persistence.PromotionDbContext.OutboxMessages">
+            <summary>
+            Outbox همین ماژول.
+            </summary>
+        </member>
+        <member name="M:Tooba.Promotion.Infrastructure.Persistence.PromotionDbContext.OnModelCreating(Microsoft.EntityFrameworkCore.ModelBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.Promotion.Infrastructure.Persistence.PromotionDbContextFactory">
+            <summary>
+            کارخانهٔ design-time مهاجرت Promotion.
+            </summary>
+        </member>
+        <member name="M:Tooba.Promotion.Infrastructure.Persistence.PromotionDbContextFactory.CreateDbContext(System.String[])">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.Promotion.Infrastructure.OpenPromotionUseCaseGuard">
+            <summary>
+            نگهبان باز نوشتن پروموشن. ماتریس SpiceDB اینجا قفل نمی‌شود.
+            </summary>
+        </member>
+        <member name="M:Tooba.Promotion.Infrastructure.OpenPromotionUseCaseGuard.EnsureCanMutateAsync(System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.Promotion.Infrastructure.DeferredPromotionRedemptionLedger">
+            <summary>
+            دفتر مصرف آینده. سقف هم‌زمان در این foundation قفل و شمرده نمی‌شود.
+            </summary>
+        </member>
+        <member name="M:Tooba.Promotion.Infrastructure.DeferredPromotionRedemptionLedger.CanRedeemAsync(System.Guid,System.Nullable{System.Guid},System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.Promotion.Infrastructure.PromotionDirectory">
+            <summary>
+            مالک schema promotion: تعریف، فعال‌سازی و ارزیابی قطعی. Pricing را بازنویسی نمی‌کند.
+            </summary>
+        </member>
+        <member name="M:Tooba.Promotion.Infrastructure.PromotionDirectory.#ctor(Tooba.Promotion.Infrastructure.Persistence.PromotionDbContext,Tooba.Promotion.Application.IPromotionUseCaseGuard,Tooba.Promotion.Application.IPromotionRedemptionLedger)">
+            <summary>
+            دایرکتوری را به schema promotion وصل می‌کند.
+            </summary>
+        </member>
+        <member name="M:Tooba.Promotion.Infrastructure.PromotionDirectory.CreateAsync(System.String,System.Int32,System.DateTimeOffset,System.Nullable{System.DateTimeOffset},Tooba.Promotion.Domain.PromotionStackingPolicy,Tooba.Promotion.Domain.PromotionDiscountKind,System.Decimal,System.Decimal,System.String,System.String,System.Nullable{System.Guid},System.Nullable{System.Guid},System.Nullable{System.Guid},System.Nullable{System.Guid},System.String,System.String,System.String,System.Nullable{System.Guid},System.Nullable{System.Guid},System.Nullable{System.Int32},System.Nullable{System.Decimal},System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Promotion.Infrastructure.PromotionDirectory.ActivateAsync(System.Guid,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Promotion.Infrastructure.PromotionDirectory.ChangeAsync(System.Guid,System.String,System.Int32,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Promotion.Infrastructure.PromotionDirectory.ExpireAsync(System.Guid,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Promotion.Infrastructure.PromotionDirectory.ListBySellerAsync(System.Nullable{System.Guid},System.Guid,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Promotion.Infrastructure.PromotionDirectory.GetForSellerAsync(System.Nullable{System.Guid},System.Guid,System.Guid,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Promotion.Infrastructure.PromotionDirectory.CreateForSellerAsync(System.Nullable{System.Guid},System.Guid,System.String,System.DateTimeOffset,System.Nullable{System.DateTimeOffset},Tooba.Promotion.Domain.PromotionDiscountKind,System.Decimal,System.Decimal,System.String,System.String,System.Nullable{System.Decimal},System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Promotion.Infrastructure.PromotionDirectory.UpdateForSellerAsync(System.Nullable{System.Guid},System.Guid,System.Guid,System.String,System.DateTimeOffset,System.Nullable{System.DateTimeOffset},Tooba.Promotion.Domain.PromotionDiscountKind,System.Decimal,System.Decimal,System.String,System.String,System.Nullable{System.Decimal},System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Promotion.Infrastructure.PromotionDirectory.ActivateForSellerAsync(System.Nullable{System.Guid},System.Guid,System.Guid,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Promotion.Infrastructure.PromotionDirectory.DeactivateForSellerAsync(System.Nullable{System.Guid},System.Guid,System.Guid,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Promotion.Infrastructure.PromotionDirectory.ListForAdminAsync(System.Nullable{System.Guid},System.Nullable{System.Guid},System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Promotion.Infrastructure.PromotionDirectory.GetForAdminAsync(System.Nullable{System.Guid},System.Guid,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Promotion.Infrastructure.PromotionDirectory.DeactivateForAdminAsync(System.Nullable{System.Guid},System.Guid,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Promotion.Infrastructure.PromotionDirectory.EvaluateAsync(Tooba.Promotion.Application.PromotionEvaluationRequest,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.Promotion.Infrastructure.PromotionModule">
+            <summary>
+            ماژول Promotion: تعریف و ارزیابی تخفیف جدا از Pricing و Tax.
+            </summary>
+        </member>
+        <member name="P:Tooba.Promotion.Infrastructure.PromotionModule.Name">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Promotion.Infrastructure.PromotionModule.AddServices(Microsoft.Extensions.DependencyInjection.IServiceCollection,Microsoft.Extensions.Configuration.IConfiguration,Microsoft.Extensions.Hosting.IHostEnvironment)">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.Promotion.Infrastructure.PromotionOutboxRegistration">
+            <summary>
+            ثبت Outbox ماژول Promotion.
+            </summary>
+        </member>
+        <member name="P:Tooba.Promotion.Infrastructure.PromotionOutboxRegistration.Schema">
+            <inheritdoc />
+        </member>
+        <member name="P:Tooba.Promotion.Infrastructure.PromotionOutboxRegistration.TableName">
+            <inheritdoc />
+        </member>
+        <member name="P:Tooba.Promotion.Infrastructure.PromotionOutboxRegistration.DbContextType">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Promotion.Infrastructure.PromotionOutboxRegistration.Translate(Tooba.BuildingBlocks.IDomainEvent,Tooba.BuildingBlocks.EventMetadata)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Promotion.Infrastructure.PromotionOutboxRegistration.GetEventTypeName(System.Type)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Promotion.Infrastructure.PromotionOutboxRegistration.ResolveEventClrType(System.String)">
+            <inheritdoc />
+        </member>
+    </members>
+</doc>

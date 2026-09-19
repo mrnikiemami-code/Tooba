@@ -19,6 +19,7 @@ using Tooba.Fulfillment.Infrastructure.Persistence;
 using Tooba.PlatformProbe.Infrastructure.Persistence;
 using Tooba.Pricing.Application;
 using Tooba.Pricing.Infrastructure.Persistence;
+using Tooba.Promotion.Application;
 using Tooba.Promotion.Infrastructure.Persistence;
 using Tooba.Tax.Application;
 using Tooba.Tax.Domain;
@@ -107,6 +108,8 @@ internal static class ProductWorkspaceDevelopmentBootstrap
         await MigrateAsync(provider.GetRequiredService<PaymentDbContext>());
         await MigrateAsync(provider.GetRequiredService<FulfillmentDbContext>());
         await MigrateAsync(provider.GetRequiredService<PromotionDbContext>());
+        await provider.GetRequiredService<IMerchandisingCampaignDirectory>()
+            .EnsureAmazingTypeSeededAsync(CancellationToken.None);
         await MigrateAsync(provider.GetRequiredService<PlatformProbeDbContext>());
         await MigrateAsync(provider.GetRequiredService<ReviewsDbContext>());
         await MigrateAsync(provider.GetRequiredService<ProductQnADbContext>());
