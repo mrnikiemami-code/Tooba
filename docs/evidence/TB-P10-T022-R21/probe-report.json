@@ -1,0 +1,94 @@
+{
+  "ok": true,
+  "steps": [
+    {
+      "name": "host-ready",
+      "pass": true
+    },
+    {
+      "name": "actor",
+      "pass": true
+    },
+    {
+      "name": "create-page",
+      "pass": true,
+      "data": {
+        "status": 200
+      }
+    },
+    {
+      "name": "add-amazing-section",
+      "pass": true,
+      "data": {
+        "status": 200
+      }
+    },
+    {
+      "name": "persist-source",
+      "pass": true,
+      "data": {
+        "parsed": {
+          "title": "پیشنهاد شگفت‌انگیز",
+          "source": "PromotionCampaign",
+          "take": 8,
+          "categoryId": null,
+          "brandId": null,
+          "productIds": [],
+          "promotionTypeCode": "AMAZING",
+          "campaignId": null,
+          "variantKey": "product.card-carousel",
+          "heightPreset": null,
+          "href": null,
+          "bannerImageUrl": null,
+          "bannerHref": null,
+          "bannerMediaAssetId": null
+        }
+      }
+    },
+    {
+      "name": "existing-source-Newest",
+      "pass": true,
+      "data": {
+        "status": 200
+      }
+    },
+    {
+      "name": "restore-amazing",
+      "pass": true,
+      "data": {
+        "status": 200
+      }
+    },
+    {
+      "name": "preview-products",
+      "pass": true,
+      "data": {
+        "status": 200,
+        "count": 7
+      }
+    },
+    {
+      "name": "preview-ok",
+      "pass": true,
+      "data": {
+        "hasTechLeak": false
+      }
+    },
+    {
+      "name": "storefront-ok",
+      "pass": true,
+      "data": {
+        "status": 200,
+        "count": 7
+      }
+    },
+    {
+      "name": "fe-amazing-label",
+      "pass": true,
+      "data": {
+        "note": "guard tests cover UI labels"
+      }
+    }
+  ],
+  "errors": []
+}

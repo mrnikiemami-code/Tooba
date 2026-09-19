@@ -1499,3 +1499,15 @@ Published/history-bearing merchandising campaigns use archive/history-safe lifec
 ### LOCK-SF-427 — Dynamic PromotionCampaign source
 
 A PromotionCampaign Product Showcase with CampaignId=null tracks the currently eligible Admin-managed campaign dynamically; campaign membership/price changes do not require page content snapshot rewrites.
+
+### LOCK-SF-428 — Additive Amazing source-step only
+
+Product Showcase Source-step integration for «پیشنهاد شگفت‌انگیز» is additive-only; existing source-step geometry, sizing, spacing, controls and source behaviors are preserved.
+
+### LOCK-SF-429 — Amazing maps to PromotionCampaign
+
+The user-facing Amazing source label maps to the existing generic PromotionCampaign source with PromotionTypeCode=AMAZING and default CampaignId=null; no dedicated Amazing source engine exists.
+
+### LOCK-SF-430 — Existing product sources immutable under Amazing integration
+
+Existing Manual, Category, Brand and Newest Product Showcase source contracts are immutable under Amazing-source integration unless a separate explicit task changes them.

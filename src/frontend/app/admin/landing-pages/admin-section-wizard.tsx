@@ -18,8 +18,12 @@ import { VariantLivePreview } from "../../../lib/storefront-composition/variant-
 import { SIZE_PRESETS } from "../../../lib/storefront-composition/types.ts";
 import { SIZE_PRESET_CONTRACTS } from "../../../lib/storefront-composition/size-presets.ts";
 import { sectionSupportsHeightPreset } from "./admin-composition-catalog.ts";
-import { summarizeLandingSection, type LandingSectionType } from "./landing-section-catalog.ts";
-import { bannerSlotCountForVariant } from "./landing-section-catalog.ts";
+import {
+  bannerSlotCountForVariant,
+  productSourceLabelFa,
+  summarizeLandingSection,
+  type LandingSectionType,
+} from "./landing-section-catalog.ts";
 import {
   HERO_HEIGHT_PRESET_LABELS_FA,
   isHeroHeightPreset,
@@ -466,8 +470,12 @@ export function AdminSectionWizard({
                   <dd className="font-bold" data-review-design-name="1">{getVariant(variantKey ?? "")?.nameFa}</dd>
                 </div>
                 <div className="flex justify-between gap-3 border-b border-dashed py-2">
-                  <dt className="text-muted">منبع</dt>
-                  <dd className="font-bold text-end">{summarizeLandingSection(choice.hostType, config)}</dd>
+                  <dt className="text-muted">نوع منبع</dt>
+                  <dd className="font-bold text-end" data-testid="review-source-label">
+                    {choice.hostType === "ProductCollection"
+                      ? productSourceLabelFa(config.source)
+                      : summarizeLandingSection(choice.hostType, config)}
+                  </dd>
                 </div>
                 <div className="flex justify-between gap-3 border-b border-dashed py-2">
                   <dt className="text-muted">تعداد</dt>

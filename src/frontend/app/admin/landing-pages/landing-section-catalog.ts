@@ -43,11 +43,17 @@ export const LANDING_SECTION_CHOICES: LandingSectionChoice[] = [
 
 export const PRODUCT_SOURCE_CHOICES = [
   { value: "Manual", label: "انتخاب دستی" },
-  { value: "Category", label: "دسته‌بندی" },
-  { value: "Brand", label: "برند" },
-  { value: "Newest", label: "جدیدترین‌ها" },
+  { value: "Category", label: "از یک دسته" },
+  { value: "Brand", label: "از یک برند" },
+  { value: "Newest", label: "جدیدترین کالاها" },
   { value: "PromotionCampaign", label: "پیشنهاد شگفت‌انگیز" },
 ] as const;
+
+/** برچسب انسانی منبع کالا برای Review (بدون کد فنی). */
+export function productSourceLabelFa(source: unknown): string {
+  if (typeof source !== "string") return "جدیدترین کالاها";
+  return PRODUCT_SOURCE_CHOICES.find((item) => item.value === source)?.label ?? "منبع کالا";
+}
 
 export function landingSectionLabel(type: string): string {
   return LANDING_SECTION_CHOICES.find((item) => item.type === type)?.label ?? "بخش";
@@ -107,7 +113,7 @@ export function summarizeLandingSection(type: string, config: Record<string, unk
   const variantFa = variantKey ? getVariant(variantKey)?.nameFa ?? null : null;
   const variantSuffix = variantFa ? ` · ${variantFa}` : "";
   if (type === "ProductCollection") {
-    const source = PRODUCT_SOURCE_CHOICES.find((item) => item.value === config.source)?.label ?? "منبع کالا";
+    const source = productSourceLabelFa(config.source);
     const take = typeof config.take === "number" ? config.take : 8;
     return title ? `${title}${variantSuffix} · ${source} · ${take} کالا` : `${source} · ${take} کالا${variantSuffix}`;
   }

@@ -21,7 +21,7 @@ main
 Current Phase:
 
 ```text
-P10 — Builder Acceptance + Amazing Campaign Operational Management
+P10 — Builder Acceptance + Product Source Finalization
 ```
 
 Pipeline Mode:
@@ -34,7 +34,7 @@ Channel: tooba-main
 Last Architect Accepted Task:
 
 ```text
-TB-P10-T022-R19
+TB-P10-T022-R20
 ```
 
 Prior accepted catalog wave:
@@ -62,7 +62,7 @@ TB-P05-GATE
 Last Implementation Task:
 
 ```text
-TB-P10-T022-R20
+TB-P10-T022-R21
 ```
 
 Last Architecture Audit Task:
@@ -86,8 +86,9 @@ Current Repair Task:
 Implemented Under Review:
 
 ```text
-TB-P10-T022-R20 — Amazing Campaign Admin Workspace (list/workspace/offers/pricing); locks 422–427; Appearance YES; Builder NO; awaiting Architect review
-TB-P10-T022-R19 — Campaign-aware Cart/Checkout quote integrity (MerchandisingCampaignId + ICampaignCartPriceAuthority); locks 417–421; Appearance YES; Builder NO; awaiting Architect review
+TB-P10-T022-R21 — Product Source Final Integration «پیشنهاد شگفت‌انگیز» additive-only (PromotionCampaign/AMAZING, CampaignId=null); locks 428–430; Appearance YES; Builder NO; awaiting Architect review
+TB-P10-T022-R20 — Amazing Campaign Admin Workspace (list/workspace/offers/pricing); locks 422–427; Architect-ACCEPTED before R21; Appearance YES; Builder NO
+TB-P10-T022-R19 — Campaign-aware Cart/Checkout quote integrity (MerchandisingCampaignId + ICampaignCartPriceAuthority); locks 417–421; Architect-ACCEPTED before R20; Appearance YES; Builder NO
 TB-P10-T022-R18 — Campaign promotional pricing via AuthoredPrice QualifierKind=MerchandisingCampaign + TOOBA-CAPABILITY-MAP; locks 412–416; Architect-ACCEPTED before R19; Appearance YES; Builder NO
 TB-P10-T022-R17 — Product Showcase PromotionCampaign source (پیشنهاد شگفت‌انگیز) Builder→Preview→Publish→Storefront; locks 405–411; Architect-ACCEPTED before R18; Appearance YES; Builder NO
 TB-P10-T022-R16 — Amazing Offers Runtime Resolver + Real Test Data (active/future selection, availability filter, Dev seed, locks 399–404); Architect-ACCEPTED before R17; Appearance YES; Builder NO
