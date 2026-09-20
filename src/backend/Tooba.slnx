@@ -21,9 +21,6 @@
     <Project Path="Modules/Catalog/Tooba.Catalog.Domain/Tooba.Catalog.Domain.csproj" />
     <Project Path="Modules/Catalog/Tooba.Catalog.Application/Tooba.Catalog.Application.csproj" />
     <Project Path="Modules/Catalog/Tooba.Catalog.Infrastructure/Tooba.Catalog.Infrastructure.csproj" />
-    <Project Path="Modules/Offer/Tooba.Offer.Domain/Tooba.Offer.Domain.csproj" />
-    <Project Path="Modules/Offer/Tooba.Offer.Application/Tooba.Offer.Application.csproj" />
-    <Project Path="Modules/Offer/Tooba.Offer.Infrastructure/Tooba.Offer.Infrastructure.csproj" />
     <Project Path="Modules/Pricing/Tooba.Pricing.Domain/Tooba.Pricing.Domain.csproj" />
     <Project Path="Modules/Pricing/Tooba.Pricing.Application/Tooba.Pricing.Application.csproj" />
     <Project Path="Modules/Pricing/Tooba.Pricing.Infrastructure/Tooba.Pricing.Infrastructure.csproj" />
@@ -94,5 +91,13 @@
     <Project Path="Modules/Wallet/Tooba.Wallet.Domain/Tooba.Wallet.Domain.csproj" />
     <Project Path="Modules/Wallet/Tooba.Wallet.Application/Tooba.Wallet.Application.csproj" />
     <Project Path="Modules/Wallet/Tooba.Wallet.Infrastructure/Tooba.Wallet.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/Modules/Offer/">
+    <Project Path="Modules/Offer/Tooba.Offer.Application/Tooba.Offer.Application.csproj" />
+    <Project Path="Modules/Offer/Tooba.Offer.Contracts/Tooba.Offer.Contracts.csproj" />
+    <Project Path="Modules/Offer/Tooba.Offer.Domain/Tooba.Offer.Domain.csproj" />
+    <Project Path="Modules/Offer/Tooba.Offer.Endpoints/Tooba.Offer.Endpoints.csproj" />
+    <Project Path="Modules/Offer/Tooba.Offer.Infrastructure/Tooba.Offer.Infrastructure.csproj" />
+    <Project Path="Modules/Offer/Tooba.Offer.Tests/Tooba.Offer.Tests.csproj" />
   </Folder>
 </Solution>
