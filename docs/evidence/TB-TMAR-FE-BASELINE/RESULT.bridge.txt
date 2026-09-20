@@ -1,4 +1,4 @@
-﻿PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
 
 BEGIN_TOOBA_WORKER_RESULT
 
@@ -76,7 +76,7 @@ Recovery-SoT:
 docs/evidence/TB-TMAR-FE-BASELINE/recovery-sot.md
 
 Git:
-branch main; tip 04af02c960ecb741942aca7a35b0f2683336722d; pushed origin/main; HEAD==origin/main; 18ca10c9 ancestor; user work preserved
+branch main; tip aa393175729cf524679eff240f504bac006bc747; pushed origin/main; HEAD==origin/main; 18ca10c9 ancestor; user work preserved
 
 Architectural-Concerns:
 Flat admin giants + admin-api remain; shared→feature reverse edges baselined; dual carousel/editor deps deferred to FE-F6; Order-hub App→App still frozen; Checkout shared-ACID deferred
