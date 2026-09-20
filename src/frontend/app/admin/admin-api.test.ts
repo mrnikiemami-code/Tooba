@@ -13,7 +13,6 @@ import {
   formatOrderSellerLabel,
   enrichAdminOrderDetail,
   mapAdminOrderDetail,
-  mapAdminSellers,
 } from "./admin-api.ts";
 
 test("maps live dashboard, order, seller and customer DTOs", () => {
@@ -28,7 +27,6 @@ test("maps live dashboard, order, seller and customer DTOs", () => {
   assert.equal(formatOrderSellerLabel({ sellerCount: 3, sellerDisplayNames: "3 فروشنده" }), "۳ فروشنده");
   assert.equal(order?.lineCount, 3);
 
-  assert.equal(mapAdminSellers([{ SellerPartyId: "s1", SellerDisplayName: "فروشگاه آرمان", ActiveOffers: 7 }])[0]?.activeOfferCount, 7);
   assert.equal(mapAdminCustomers([{ ActorUserId: "u1", DisplayName: "مینا", OrderCount: 4, LastOrderAt: "2026-08-25T00:00:00Z" }])[0]?.orderCount, 4);
 });
 

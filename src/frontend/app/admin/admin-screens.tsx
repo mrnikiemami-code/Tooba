@@ -15,7 +15,6 @@ import {
   formatOrderSellerLabel,
   loadAdminDashboard,
   queryAdminOrdersGrid,
-  queryAdminSellersGrid,
   queryAdminCustomersGrid,
   queryAdminReceiptsGrid,
   type AdminCustomerRow,
@@ -23,7 +22,6 @@ import {
   type AdminLoadState,
   type AdminOrderRow,
   type AdminResult,
-  type AdminSellerRow,
   type AdminReceiptRow,
 } from "./admin-api";
 import { adminSupplyBadgeClass, formatAdminSupplyStatus, supplyStatusEnumOptions } from "./admin-order-supply";
@@ -31,7 +29,7 @@ import { reservationBadgeClass, reservationStateEnumOptions } from "./admin-rese
 export { AdminOrderDetailScreen } from "./admin-order-detail-screen";
 export { AdminContentScreen } from "./content-list";
 import {
-  ADMIN_ORDER_GRID_VIEW_KEY, createHostSavedViewStore, ADMIN_SELLER_GRID_VIEW_KEY, ADMIN_CUSTOMER_GRID_VIEW_KEY, ADMIN_SETTLEMENT_GRID_VIEW_KEY, ADMIN_PAYOUT_GRID_VIEW_KEY, ADMIN_RECEIPT_GRID_VIEW_KEY,
+  ADMIN_ORDER_GRID_VIEW_KEY, createHostSavedViewStore, ADMIN_CUSTOMER_GRID_VIEW_KEY, ADMIN_SETTLEMENT_GRID_VIEW_KEY, ADMIN_PAYOUT_GRID_VIEW_KEY, ADMIN_RECEIPT_GRID_VIEW_KEY,
 } from "./saved-view-store";
 import {
   formatFulfillmentStatus,
@@ -429,13 +427,6 @@ function createOrderColumns(onOperationCompleted?: () => void): GridColumnDef<Ad
 
 const orderColumns = createOrderColumns();
 
-const sellerColumns: GridColumnDef<AdminSellerRow>[] = [
-  { id: "name", header: "فروشنده", accessor: (row) => row.displayName, cell: (row) => <strong>{row.displayName}</strong>, width: 220, minWidth: 150, maxWidth: 300, sticky: "start", filterKind: "text", sortable: true },
-  { id: "relationship", header: "رابطه", accessor: (row) => row.relationship, width: 150, minWidth: 110, maxWidth: 210, filterKind: "text" },
-  { id: "status", header: "وضعیت", accessor: (row) => row.status, cell: (row) => <Status value={row.status} />, width: 120, minWidth: 100, maxWidth: 160, filterKind: "status" },
-  { id: "offers", header: "پیشنهاد فعال", accessor: (row) => row.activeOfferCount, cell: (row) => row.activeOfferCount.toLocaleString("fa-IR"), width: 120, minWidth: 95, maxWidth: 150, sortable: true },
-  { id: "orders", header: "سفارش", accessor: (row) => row.orderCount, cell: (row) => row.orderCount.toLocaleString("fa-IR"), width: 100, minWidth: 80, maxWidth: 130, sortable: true },
-];
 
 const customerColumns: GridColumnDef<AdminCustomerRow>[] = [
   { id: "name", header: "مشتری", accessor: (row) => row.displayName, cell: (row) => <strong>{row.displayName}</strong>, width: 220, minWidth: 150, maxWidth: 300, sticky: "start", filterKind: "text", sortable: true },
@@ -562,18 +553,6 @@ export function AdminReturnDetailScreen({ returnRequestId }: { returnRequestId: 
   );
 }
 
-/** فهرست زندهٔ فروشندگان. */
-export function AdminSellersScreen() {
-  return (
-    <ServerGridPage
-      title="فروشندگان"
-      description="فروشندگان و رابطهٔ عملیاتی ثبت‌شده"
-      queryFn={queryAdminSellersGrid}
-      columns={sellerColumns}
-      gridId={ADMIN_SELLER_GRID_VIEW_KEY}
-    />
-  );
-}
 
 /** فهرست صادقانهٔ خریداران شناخته‌شده؛ نه CRM. */
 export function AdminCustomersScreen() {

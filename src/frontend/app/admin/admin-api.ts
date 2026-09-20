@@ -247,15 +247,6 @@ export interface AdminPaymentOps {
   reservationRetryLimitReached?: boolean;
 }
 
-export interface AdminSellerRow {
-  id: string;
-  sellerPartyId: string;
-  displayName: string;
-  status: string;
-  relationship: string;
-  activeOfferCount: number;
-  orderCount: number;
-}
 
 export interface AdminCustomerRow {
   id: string;
@@ -940,24 +931,6 @@ function optionalNumber(value: unknown): number | null {
   return Number.isFinite(n) ? n : null;
 }
 
-/** فهرست فروشندگان را بدون ایجاد دادهٔ CRM نگاشت می‌کند. */
-export function mapAdminSellers(value: unknown): AdminSellerRow[] {
-  return array(value).flatMap((raw): AdminSellerRow[] => {
-    const item = record(raw);
-    if (!item) return [];
-    const sellerPartyId = text(prop(item, "sellerPartyId", "SellerPartyId"));
-    if (!sellerPartyId) return [];
-    return [{
-      id: sellerPartyId,
-      sellerPartyId,
-      displayName: text(prop(item, "displayName", "DisplayName"), text(prop(item, "sellerDisplayName", "SellerDisplayName"), "فروشنده")),
-      status: text(prop(item, "status", "Status"), "Active"),
-      relationship: text(prop(item, "relationship", "Relationship"), "فروشنده"),
-      activeOfferCount: number(prop(item, "activeOfferCount", "ActiveOfferCount") ?? prop(item, "activeOffers", "ActiveOffers")),
-      orderCount: number(prop(item, "orderCount", "OrderCount")),
-    }];
-  });
-}
 
 /** فهرست خریداران شناخته‌شده از سفارش‌ها را نگاشت می‌کند؛ این مدل CRM نیست. */
 export function mapAdminCustomers(value: unknown): AdminCustomerRow[] {
@@ -1041,10 +1014,6 @@ export function loadAdminOrderDetail(checkoutId: string): Promise<AdminResult<Ad
   return mapped(`/v1/admin/orders/${encodeURIComponent(checkoutId)}`, mapAdminOrderDetail);
 }
 
-/** فروشندگان را از read composition زنده می‌خواند. */
-export function loadAdminSellers(): Promise<AdminResult<AdminSellerRow[]>> {
-  return mapped("/v1/admin/sellers", (value) => Array.isArray(value) ? mapAdminSellers(value) : null);
-}
 
 /** خریداران شناخته‌شده را از read composition زنده می‌خواند. */
 export function loadAdminCustomers(): Promise<AdminResult<AdminCustomerRow[]>> {
@@ -1116,13 +1085,6 @@ export function queryAdminOrdersGrid(query: GridServerQuery): Promise<AdminGridQ
   return postAdminGridQuery("/v1/admin/orders/query", query, adminHeaders(), (item) => mapAdminOrder(item));
 }
 
-/** Server GridQuery — فروشندگان Admin. */
-export function queryAdminSellersGrid(query: GridServerQuery): Promise<AdminGridQueryResult<AdminSellerRow>> {
-  return postAdminGridQuery("/v1/admin/sellers/query", query, adminHeaders(), (item) => {
-    const rows = mapAdminSellers([item]);
-    return rows[0] ?? null;
-  });
-}
 
 /** Server GridQuery — مشتریان Admin. */
 export function queryAdminCustomersGrid(query: GridServerQuery): Promise<AdminGridQueryResult<AdminCustomerRow>> {
