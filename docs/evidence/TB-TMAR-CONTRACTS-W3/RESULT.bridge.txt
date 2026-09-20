@@ -61,7 +61,7 @@ Recovery-SoT:
 docs/evidence/TB-TMAR-CONTRACTS-W3/recovery-sot.md
 
 Git:
-branch main; tip PLACEHOLDER_SHA; pushed origin/main; HEAD==origin/main; 18ca10c9 ancestor; user work preserved
+branch main; tip 18eaf41ab6af6fba3d458ba8861e9cd66fd4c7f6; pushed origin/main; HEAD==origin/main; 18ca10c9 ancestor; user work preserved
 
 Architectural-Concerns:
 Checkout TransactionScope shared-ACID remains; Order.Application hub still has Cart/Inventory/Pricing/Promotion/Tax App edges; Cart.App→Offer.App remains
