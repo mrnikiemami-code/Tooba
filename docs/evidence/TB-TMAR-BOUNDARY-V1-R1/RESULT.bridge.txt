@@ -1,0 +1,66 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+
+BEGIN_TOOBA_WORKER_RESULT
+
+Task-ID: TB-TMAR-BOUNDARY-V1-R1
+Parent-Task: TB-TMAR-BOUNDARY-V1
+Channel: tooba-main
+WorkerId: tooba-worker-01
+AgentType: cursor
+Status: PASS
+
+Summary:
+Completed BOUNDARY-V1 missing outputs: repository-wide hand-written source-size inventory (1717 files; 55 oversized), shrink-only god-file baseline, NEW>800 and growth guards with synthetic proofs, ARCH-SIZE-001/002 + ARCH-REFACTOR-001 locks, top-10 decomposition queue, and exact freeze of 33 Infrastructure→foreign Application edges. No broad refactor / no giant-file splits / no Contracts extraction. Boundary V1 acceptance state now complete for structural expansion freezes. Product-Resume-Safety NOT_YET. Next: TB-TMAR-CONTRACTS-W1.
+
+Program-Name:
+TMAR — Tooba Microservice-Ready Architecture Recovery
+
+Recovery-Start:
+docs/evidence/TB-TMAR-BOUNDARY-V1-R1/recovery-start.md
+
+Source-Size-Inventory:
+docs/evidence/TB-TMAR-BOUNDARY-V1-R1/source-size-inventory.md + source-size-inventory.json
+
+God-File-Baseline:
+src/backend/Host/Tooba.Host.Tests/Baselines/tmar-source-size-baseline.json (55 exact entries)
+
+God-File-Guard:
+docs/evidence/TB-TMAR-BOUNDARY-V1-R1/god-file-guard.md — TmarSourceSizeGuard + TmarSourceSizeAndInfraAppTests
+
+Refactor-Locks:
+docs/evidence/TB-TMAR-BOUNDARY-V1-R1/refactor-locks.md — ARCH-SIZE-001/002 + ARCH-REFACTOR-001 in TMAR-architecture-locks.md
+
+God-File-Plan:
+docs/evidence/TB-TMAR-BOUNDARY-V1-R1/god-file-plan.md — prioritized top-10 (CatalogDirectory/Domain, Host composers/endpoints, FE admin)
+
+Infra-Foreign-Application-Guard:
+docs/evidence/TB-TMAR-BOUNDARY-V1-R1/infra-foreign-application-guard.md — tmar-infra-to-foreign-application.json (33 exact edges)
+
+Tests:
+docs/evidence/TB-TMAR-BOUNDARY-V1-R1/tests.md — 24 passed (source-size + Infra→App + foundation + ArchitectureBoundary)
+
+Capability-Map:
+docs/architecture/TOOBA-CAPABILITY-MAP.md — Last Verified = TB-TMAR-BOUNDARY-V1-R1
+
+Bootstrap:
+docs/architecture/TOOBA-ARCHITECT-BOOTSTRAP.md — boundary-v1-r1 PASS; next CONTRACTS-W1
+
+Recovery-SoT:
+docs/evidence/TB-TMAR-BOUNDARY-V1-R1/recovery-sot.md
+
+Git:
+branch main; tip PLACEHOLDER_SHA; pushed origin/main; HEAD==origin/main; 18ca10c9 ancestor; user work preserved
+
+Architectural-Concerns:
+Oversized files remain frozen-not-split; Contracts still required before safe product resume; dead Domain→Offer refs still present (deferred)
+
+Blockers:
+(none)
+
+Product-Resume-Safety:
+NOT_YET
+
+Next-Recommended-Task:
+TB-TMAR-CONTRACTS-W1
+
+END_TOOBA_WORKER_RESULT

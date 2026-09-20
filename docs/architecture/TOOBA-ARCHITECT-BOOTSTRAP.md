@@ -22,13 +22,14 @@ Accepted architecture baseline:
 TB-TMAR-ARCH-BASELINE
 
 Current next task:
-(none — Boundary V1 complete; next = TB-TMAR-CONTRACTS-W1 per Result)
+(none — Boundary V1-R1 complete; next = TB-TMAR-CONTRACTS-W1 per Result)
 
 Product development rule:
 Foundation (TB-TMAR-FND-001) is ACCEPTED.
 Host Wave 1 Slice 1 accepted after TB-TMAR-HOST-W1 + TB-TMAR-HOST-W1-R1.
 Host Wave 2 (TB-TMAR-HOST-W2) PASS.
 Boundary verification (TB-TMAR-BOUNDARY-V1) PASS — cross-module leaks confirmed and frozen.
+Boundary repair (TB-TMAR-BOUNDARY-V1-R1) PASS — god-file growth frozen; Infra→foreign Application growth frozen.
 Last Product Task = TB-P10-T022-R21.
 Architecture Baseline = TB-TMAR-ARCH-BASELINE.
 Primary goal = painless future Microservice migration.
@@ -401,6 +402,8 @@ host-wave-1-slice-1 = TB-TMAR-HOST-W1 + TB-TMAR-HOST-W1-R1 PASS (handlers in App
 host-wave-2 = TB-TMAR-HOST-W2 PASS (Store Menu CQRS)
 
 boundary-v1 = TB-TMAR-BOUNDARY-V1 PASS (claims verified; foreign Domain edges frozen)
+
+boundary-v1-r1 = TB-TMAR-BOUNDARY-V1-R1 PASS (source-size + Infra→foreign Application frozen)
 
 next task = TB-TMAR-CONTRACTS-W1 unless Recovery SoT says otherwise
 

@@ -1,0 +1,336 @@
+{
+  "rule": "SourceSize",
+  "thresholdNewFileLoc": 800,
+  "files": [
+    {
+      "path": "src/backend/Modules/Catalog/Tooba.Catalog.Infrastructure/CatalogDirectory.cs",
+      "language": "cs",
+      "loc": 5124,
+      "classification": "CRITICAL_GOD_FILE"
+    },
+    {
+      "path": "src/backend/Host/Tooba.Host/Admin/AdminOrderOperationsComposer.cs",
+      "language": "cs",
+      "loc": 2468,
+      "classification": "CRITICAL_GOD_FILE"
+    },
+    {
+      "path": "src/backend/Modules/Catalog/Tooba.Catalog.Domain/CatalogDomain.cs",
+      "language": "cs",
+      "loc": 2305,
+      "classification": "CRITICAL_GOD_FILE"
+    },
+    {
+      "path": "src/frontend/app/admin/category-admin-screen.tsx",
+      "language": "tsx",
+      "loc": 2215,
+      "classification": "CRITICAL_GOD_FILE"
+    },
+    {
+      "path": "src/backend/Host/Tooba.Host/Admin/ProductWorkspaceComposer.cs",
+      "language": "cs",
+      "loc": 1910,
+      "classification": "CRITICAL_GOD_FILE"
+    },
+    {
+      "path": "src/backend/Host/Tooba.Host/Storefront/StorefrontComposer.cs",
+      "language": "cs",
+      "loc": 1579,
+      "classification": "CRITICAL_GOD_FILE"
+    },
+    {
+      "path": "src/frontend/app/admin/product-workspace-screen.tsx",
+      "language": "tsx",
+      "loc": 1570,
+      "classification": "CRITICAL_GOD_FILE"
+    },
+    {
+      "path": "src/frontend/app/admin/content-article-admin-screen.tsx",
+      "language": "tsx",
+      "loc": 1528,
+      "classification": "CRITICAL_GOD_FILE"
+    },
+    {
+      "path": "src/frontend/app/admin/landing-pages/admin-landing-page-composer.tsx",
+      "language": "tsx",
+      "loc": 1440,
+      "classification": "CRITICAL_GOD_FILE"
+    },
+    {
+      "path": "src/frontend/app/admin/admin-api.ts",
+      "language": "ts",
+      "loc": 1326,
+      "classification": "CRITICAL_GOD_FILE"
+    },
+    {
+      "path": "src/backend/Modules/Catalog/Tooba.Catalog.Application/CatalogContracts.cs",
+      "language": "cs",
+      "loc": 1303,
+      "classification": "OVERSIZED_LEGACY"
+    },
+    {
+      "path": "src/frontend/app/admin/catalog-attribute-api.ts",
+      "language": "ts",
+      "loc": 1259,
+      "classification": "CRITICAL_GOD_FILE"
+    },
+    {
+      "path": "src/frontend/app/admin/host-client.ts",
+      "language": "ts",
+      "loc": 1254,
+      "classification": "CRITICAL_GOD_FILE"
+    },
+    {
+      "path": "src/backend/Modules/Payment/Tooba.Payment.Domain/PaymentDomain.cs",
+      "language": "cs",
+      "loc": 1250,
+      "classification": "OVERSIZED_LEGACY"
+    },
+    {
+      "path": "src/frontend/app/access-control/access-control-center.tsx",
+      "language": "tsx",
+      "loc": 1248,
+      "classification": "CRITICAL_GOD_FILE"
+    },
+    {
+      "path": "src/backend/Host/Tooba.Host/Storefront/StorefrontEndpoints.cs",
+      "language": "cs",
+      "loc": 1242,
+      "classification": "OVERSIZED_LEGACY"
+    },
+    {
+      "path": "src/backend/Modules/Fulfillment/Tooba.Fulfillment.Domain/FulfillmentDomain.cs",
+      "language": "cs",
+      "loc": 1241,
+      "classification": "OVERSIZED_LEGACY"
+    },
+    {
+      "path": "src/frontend/app/admin/admin-screens.tsx",
+      "language": "tsx",
+      "loc": 1230,
+      "classification": "CRITICAL_GOD_FILE"
+    },
+    {
+      "path": "src/frontend/app/vendor-panel/seller-api.ts",
+      "language": "ts",
+      "loc": 1211,
+      "classification": "CRITICAL_GOD_FILE"
+    },
+    {
+      "path": "src/backend/Host/Tooba.Host/Admin/AdminOrderCompletenessComposer.cs",
+      "language": "cs",
+      "loc": 1204,
+      "classification": "OVERSIZED_LEGACY"
+    },
+    {
+      "path": "src/backend/Modules/Fulfillment/Tooba.Fulfillment.Infrastructure/FulfillmentDirectory.cs",
+      "language": "cs",
+      "loc": 1195,
+      "classification": "OVERSIZED_LEGACY"
+    },
+    {
+      "path": "src/frontend/app/admin/category-attributes-panel.tsx",
+      "language": "tsx",
+      "loc": 1190,
+      "classification": "OVERSIZED_LEGACY"
+    },
+    {
+      "path": "src/backend/Modules/Order/Tooba.Order.Infrastructure/CheckoutDirectory.cs",
+      "language": "cs",
+      "loc": 1102,
+      "classification": "OVERSIZED_LEGACY"
+    },
+    {
+      "path": "src/frontend/app/admin/admin-order-detail-screen.tsx",
+      "language": "tsx",
+      "loc": 1096,
+      "classification": "OVERSIZED_LEGACY"
+    },
+    {
+      "path": "src/backend/Modules/Catalog/Tooba.Catalog.Infrastructure/Persistence/CatalogDbContext.cs",
+      "language": "cs",
+      "loc": 1094,
+      "classification": "OVERSIZED_LEGACY"
+    },
+    {
+      "path": "src/frontend/design-system/app-data-grid/AppDataGrid.tsx",
+      "language": "tsx",
+      "loc": 1086,
+      "classification": "OVERSIZED_LEGACY"
+    },
+    {
+      "path": "src/frontend/app/admin/catalog-attribute-ui.tsx",
+      "language": "tsx",
+      "loc": 1062,
+      "classification": "OVERSIZED_LEGACY"
+    },
+    {
+      "path": "src/backend/Modules/Order/Tooba.Order.Domain/OrderDomain.cs",
+      "language": "cs",
+      "loc": 1054,
+      "classification": "OVERSIZED_LEGACY"
+    },
+    {
+      "path": "src/frontend/app/wallet/wallet-ui.tsx",
+      "language": "tsx",
+      "loc": 1053,
+      "classification": "OVERSIZED_LEGACY"
+    },
+    {
+      "path": "src/frontend/app/admin/landing-pages/admin-resource-selector.tsx",
+      "language": "tsx",
+      "loc": 1045,
+      "classification": "OVERSIZED_LEGACY"
+    },
+    {
+      "path": "src/frontend/app/storefront/storefront-product-showcase-embla-rails.tsx",
+      "language": "tsx",
+      "loc": 1028,
+      "classification": "OVERSIZED_LEGACY"
+    },
+    {
+      "path": "src/frontend/app/storefront/storefront-landing-blocks.tsx",
+      "language": "tsx",
+      "loc": 1026,
+      "classification": "OVERSIZED_LEGACY"
+    },
+    {
+      "path": "src/backend/Host/Tooba.Host/Admin/CatalogAttributeEndpoints.cs",
+      "language": "cs",
+      "loc": 1014,
+      "classification": "OVERSIZED_LEGACY"
+    },
+    {
+      "path": "src/frontend/app/admin/admin-error-map.ts",
+      "language": "ts",
+      "loc": 1002,
+      "classification": "OVERSIZED_LEGACY"
+    },
+    {
+      "path": "src/backend/Host/Tooba.Host/AccessControl/AccessControlEndpoints.cs",
+      "language": "cs",
+      "loc": 984,
+      "classification": "OVERSIZED_LEGACY"
+    },
+    {
+      "path": "src/frontend/app/storefront/storefront-api.ts",
+      "language": "ts",
+      "loc": 978,
+      "classification": "OVERSIZED_LEGACY"
+    },
+    {
+      "path": "src/backend/Modules/Payment/Tooba.Payment.Infrastructure/PaymentDirectory.cs",
+      "language": "cs",
+      "loc": 963,
+      "classification": "OVERSIZED_LEGACY"
+    },
+    {
+      "path": "src/backend/Modules/AccessControl/Tooba.AccessControl.Infrastructure/AccessControlDirectory.cs",
+      "language": "cs",
+      "loc": 957,
+      "classification": "OVERSIZED_LEGACY"
+    },
+    {
+      "path": "src/frontend/app/storefront/storefront-shipping.tsx",
+      "language": "tsx",
+      "loc": 945,
+      "classification": "OVERSIZED_LEGACY"
+    },
+    {
+      "path": "src/backend/Host/Tooba.Host/Seller/SellerPanelComposer.cs",
+      "language": "cs",
+      "loc": 934,
+      "classification": "OVERSIZED_LEGACY"
+    },
+    {
+      "path": "src/frontend/app/admin/category-products-panel.tsx",
+      "language": "tsx",
+      "loc": 926,
+      "classification": "OVERSIZED_LEGACY"
+    },
+    {
+      "path": "src/backend/Host/Tooba.Host/Admin/AdminPanelComposer.cs",
+      "language": "cs",
+      "loc": 924,
+      "classification": "OVERSIZED_LEGACY"
+    },
+    {
+      "path": "src/frontend/app/admin/settings/page.tsx",
+      "language": "tsx",
+      "loc": 910,
+      "classification": "OVERSIZED_LEGACY"
+    },
+    {
+      "path": "src/frontend/lib/storefront-composition/shared-composition-renderer.tsx",
+      "language": "tsx",
+      "loc": 907,
+      "classification": "OVERSIZED_LEGACY"
+    },
+    {
+      "path": "src/frontend/app/admin/admin-order-items-shipping-panel.tsx",
+      "language": "tsx",
+      "loc": 884,
+      "classification": "OVERSIZED_LEGACY"
+    },
+    {
+      "path": "src/backend/Host/Tooba.Host/Admin/ProductWorkspaceEndpoints.cs",
+      "language": "cs",
+      "loc": 879,
+      "classification": "OVERSIZED_LEGACY"
+    },
+    {
+      "path": "src/backend/Host/Tooba.Host/Admin/IndustryBatchCTemplateCatalogSeed.cs",
+      "language": "cs",
+      "loc": 867,
+      "classification": "OVERSIZED_LEGACY"
+    },
+    {
+      "path": "src/backend/Host/Tooba.Host/Admin/IndustryBatchBTemplateCatalogSeed.cs",
+      "language": "cs",
+      "loc": 866,
+      "classification": "OVERSIZED_LEGACY"
+    },
+    {
+      "path": "src/backend/Host/Tooba.Host/Admin/IndustryBatchATemplateCatalogSeed.cs",
+      "language": "cs",
+      "loc": 865,
+      "classification": "OVERSIZED_LEGACY"
+    },
+    {
+      "path": "src/backend/Host/Tooba.Host/Admin/MerchandisingCampaignAdminEndpoints.cs",
+      "language": "cs",
+      "loc": 835,
+      "classification": "OVERSIZED_LEGACY"
+    },
+    {
+      "path": "src/backend/Modules/Settlement/Tooba.Settlement.Domain/SettlementDomain.cs",
+      "language": "cs",
+      "loc": 834,
+      "classification": "OVERSIZED_LEGACY"
+    },
+    {
+      "path": "src/frontend/app/admin/campaigns/admin-campaign-workspace.tsx",
+      "language": "tsx",
+      "loc": 826,
+      "classification": "OVERSIZED_LEGACY"
+    },
+    {
+      "path": "src/backend/Host/Tooba.Host/Admin/StoreLandingPageComposer.cs",
+      "language": "cs",
+      "loc": 824,
+      "classification": "OVERSIZED_LEGACY"
+    },
+    {
+      "path": "src/backend/Host/Tooba.Host/AuthenticationHttpBoundary.cs",
+      "language": "cs",
+      "loc": 824,
+      "classification": "OVERSIZED_LEGACY"
+    },
+    {
+      "path": "src/backend/Modules/Catalog/Tooba.Catalog.Domain/StoreLandingPageSectionConfig.cs",
+      "language": "cs",
+      "loc": 814,
+      "classification": "OVERSIZED_LEGACY"
+    }
+  ]
+}

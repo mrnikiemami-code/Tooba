@@ -36,6 +36,7 @@ Evidence files remain the deep-detail source; this map is the quick index.
 | Host Wave 1 Slice 1 | Store Landing CQRS; handlers in Application; Infrastructure Directory/EF | TB-TMAR-HOST-W1-R1 |
 | Host Wave 2 | Store Menu Host writes behind CQRS; baseline shrunk | TB-TMAR-HOST-W2 |
 | Boundary V1 | Independent review claims verified: Domain→Offer (3) + Payment.Infra→Wallet.Domain CONFIRMED; Order.Application hub mapped; Domain/Infra foreign Domain edges frozen with exact baselines | TB-TMAR-BOUNDARY-V1 |
-| Next | Contracts extraction wave 1 (Offer/Wallet ports) — higher priority than next Host slice | TB-TMAR-BOUNDARY-V1 |
+| Boundary V1-R1 | God-file/source-size freeze + Infra→foreign Application freeze; ARCH-SIZE-001/002 + ARCH-REFACTOR-001; top-10 decomposition queue | TB-TMAR-BOUNDARY-V1-R1 |
+| Next | Contracts extraction wave 1 (Offer/Wallet ports) — higher priority than next Host slice | TB-TMAR-BOUNDARY-V1-R1 |
 
-Last Verified Task = TB-TMAR-BOUNDARY-V1
+Last Verified Task = TB-TMAR-BOUNDARY-V1-R1

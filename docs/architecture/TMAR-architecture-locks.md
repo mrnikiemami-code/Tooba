@@ -45,3 +45,12 @@ NEW cache consumption uses `ICache`; direct `IMemoryCache` use must not expand.
 
 ## ARCH-FOLDER-001
 Physical folder moves happen only after ownership/dependency repair.
+
+## ARCH-SIZE-001
+No new hand-written source file may exceed the approved oversized-file threshold (800 physical LOC) without explicit architecture approval. Guard: `tmar-source-size-baseline.json` + `TmarSourceSizeAndInfraAppTests`.
+
+## ARCH-SIZE-002
+Existing oversized legacy / critical god files may only stay equal or shrink; growth above their recorded baseline LOC is forbidden. Baseline entries must be removed or reduced when files are split or deleted; baselines never auto-raise.
+
+## ARCH-REFACTOR-001
+Critical giant-file decomposition requires characterization tests around the touched slice before structural splitting. Preserve public behavior; split incrementally by capability/use-case; keep architecture guards green; do not rely only on AI-generated diff inspection.
