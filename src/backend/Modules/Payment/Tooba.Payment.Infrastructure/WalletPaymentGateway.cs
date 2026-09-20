@@ -1,5 +1,4 @@
 using Tooba.Payment.Application;
-using Tooba.Wallet.Application;
 using Tooba.Wallet.Contracts;
 
 namespace Tooba.Payment.Infrastructure;
@@ -12,11 +11,11 @@ public sealed class WalletPaymentGateway : IPaymentGateway
     /// <summary>کد پایدار درگاه.</summary>
     public const string ProviderCodeValue = "wallet";
 
-    private readonly IWalletDirectory _wallets;
+    private readonly IWalletOrderPaymentPort _wallets;
     private readonly PaymentGatewayActorContext _actorContext;
 
-    /// <summary>درگاه کیف پول را به دایرکتوری ledger وصل می‌کند.</summary>
-    public WalletPaymentGateway(IWalletDirectory wallets, PaymentGatewayActorContext actorContext)
+    /// <summary>درگاه کیف پول را به درز پرداخت Wallet وصل می‌کند.</summary>
+    public WalletPaymentGateway(IWalletOrderPaymentPort wallets, PaymentGatewayActorContext actorContext)
     {
         _wallets = wallets;
         _actorContext = actorContext;

@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Tooba.Catalog.Application;
 using Tooba.Offer.Application;
+using Tooba.Offer.Contracts;
 using Tooba.Offer.Domain;
 using Tooba.Offer.Infrastructure.Persistence;
 using Tooba.Party.Application;

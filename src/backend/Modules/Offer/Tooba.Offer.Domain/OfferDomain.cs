@@ -3,32 +3,6 @@ using Tooba.BuildingBlocks;
 namespace Tooba.Offer.Domain;
 
 /// <summary>
-/// وضعیت تجاری Offer. موجودی، اعتبار قیمت، و انتشار Catalog را نشان نمی‌دهد.
-/// </summary>
-public enum OfferStatus
-{
-    /// <summary>
-    /// پیش‌نویس listing. قابل‌خرید بودن را تضمین نمی‌کند.
-    /// </summary>
-    Draft = 0,
-
-    /// <summary>
-    /// Offer برای کانال فعال است؛ هنوز Price/Stock جدا هستند.
-    /// </summary>
-    Active = 1,
-
-    /// <summary>
-    /// تعلیق تجاری فروشنده/کانال. موجودی صفر نیست.
-    /// </summary>
-    Suspended = 2,
-
-    /// <summary>
-    /// بایگانی listing. حذف Product نیست.
-    /// </summary>
-    Archived = 3,
-}
-
-/// <summary>
 /// listing تجاری فروشنده روی یک Variant Catalog. قیمت و موجودی ندارد.
 /// </summary>
 public sealed class SellerOffer : IHasDomainEvents

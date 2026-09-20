@@ -38,6 +38,7 @@ Evidence files remain the deep-detail source; this map is the quick index.
 | Boundary V1 | Independent review claims verified: Domain→Offer (3) + Payment.Infra→Wallet.Domain CONFIRMED; Order.Application hub mapped; Domain/Infra foreign Domain edges frozen with exact baselines | TB-TMAR-BOUNDARY-V1 |
 | Boundary V1-R1 | God-file/source-size freeze + Infra→foreign Application freeze; ARCH-SIZE-001/002 + ARCH-REFACTOR-001; top-10 decomposition queue | TB-TMAR-BOUNDARY-V1-R1 |
 | Contracts W1 | Offer.Contracts (SalesChannel); Wallet.Contracts (WalletCurrency); Domain→Offer Domain refs removed; Payment→Wallet.Domain removed; Domain/Infra foreign Domain baselines empty | TB-TMAR-CONTRACTS-W1 |
-| Next | Contracts W2 — Wallet payment Application port + Order hub Contracts ports | TB-TMAR-CONTRACTS-W1 |
+| Contracts W2 | Wallet order-payment port; Offer lookup gateway in Contracts; Infra/App baselines shrunk; ARCH-TX-001 + TransactionScope freeze; migration notes imported | TB-TMAR-CONTRACTS-W2 |
+| Next | Contracts W3 — continue App→App / Infra→App extraction (Cart/Inventory/Order Offer surfaces remain) | TB-TMAR-CONTRACTS-W2 |
 
-Last Verified Task = TB-TMAR-CONTRACTS-W1
+Last Verified Task = TB-TMAR-CONTRACTS-W2

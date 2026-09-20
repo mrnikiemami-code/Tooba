@@ -1,3 +1,4 @@
+using Tooba.Wallet.Contracts;
 using Tooba.Wallet.Domain;
 
 namespace Tooba.Wallet.Application;
@@ -135,14 +136,6 @@ public sealed record WalletCreditResultDto(
     WalletLedgerEntryDto Entry,
     decimal Balance,
     bool IdempotentReplay);
-
-/// <summary>نقل قول قابل استفاده بودن کیف پول برای مبلغ قابل پرداخت.</summary>
-public sealed record WalletCheckoutQuoteDto(
-    decimal WalletBalance,
-    decimal MaxUsable,
-    decimal RemainingPayable,
-    bool CanPayFullyWithWallet,
-    string Currency);
 
 /// <summary>snapshot پیش‌نمایش توسعه.</summary>
 public sealed record WalletDemoPreviewDto(

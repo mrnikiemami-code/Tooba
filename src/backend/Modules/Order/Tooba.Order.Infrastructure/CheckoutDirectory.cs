@@ -7,6 +7,7 @@ using Tooba.Cart.Domain;
 using Tooba.Catalog.Application;
 using Tooba.Inventory.Application;
 using Tooba.Offer.Application;
+using Tooba.Offer.Contracts;
 using Tooba.Offer.Domain;
 using Tooba.Order.Application;
 using Tooba.Order.Domain;
@@ -16,7 +17,6 @@ using Tooba.Promotion.Application;
 using Tooba.Promotion.Domain;
 using Tooba.Tax.Application;
 using Tooba.Tax.Domain;
-
 namespace Tooba.Order.Infrastructure;
 
 /// <summary>

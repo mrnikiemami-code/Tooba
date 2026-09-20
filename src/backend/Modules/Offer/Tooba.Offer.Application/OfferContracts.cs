@@ -1,46 +1,7 @@
+using Tooba.Offer.Contracts;
 using Tooba.Offer.Domain;
 
 namespace Tooba.Offer.Application;
-
-/// <summary>
-/// مرجع پایدار Offer بدون نشت EF. مبلغ و موجودی ندارد؛ هویت User ورود نیست.
-/// </summary>
-public sealed record OfferReference(
-    Guid OfferId,
-    Guid CatalogVariantId,
-    Guid SellerPartyId,
-    SalesChannel Channel,
-    OfferStatus Status,
-    string? SellerSku,
-    string ReturnPolicyChoice = "Default",
-    int? CustomReturnWindowDays = null,
-    decimal? MinimumOrderQuantity = null,
-    decimal? MaximumOrderQuantity = null);
-
-/// <summary>
-/// درز خواندن Offer برای Pricing و Inventory آینده. Search منبع حقیقت Offer نمی‌شود.
-/// </summary>
-public interface IOfferLookupGateway
-{
-    /// <summary>
-    /// Offer را در پایگاه Tenant یا Marketplace جاری پیدا می‌کند؛ Host parse نمی‌شود.
-    /// </summary>
-    Task<OfferReference?> FindOfferAsync(Guid offerId, CancellationToken cancellationToken);
-
-    /// <summary>
-    /// چند Offer را در یک خواندن برمی‌گرداند تا resolverهای ریل N+1 نشوند.
-    /// </summary>
-    Task<IReadOnlyDictionary<Guid, OfferReference>> FindOffersBatchAsync(
-        IReadOnlyCollection<Guid> offerIds,
-        CancellationToken cancellationToken);
-
-    /// <summary>
-    /// تعداد Offerهای وابسته به هر CatalogVariant را بدون join به Catalog برمی‌گرداند.
-    /// </summary>
-    Task<IReadOnlyDictionary<Guid, int>> CountOffersByCatalogVariantIdsAsync(
-        IReadOnlyCollection<Guid> catalogVariantIds,
-        CancellationToken cancellationToken);
-}
 
 /// <summary>
 /// درز نگهبان مجوز موردکاربرد Offer. ماتریس نهایی Seller Portal و SDK اسپایس‌دی‌بی اینجا نیست.

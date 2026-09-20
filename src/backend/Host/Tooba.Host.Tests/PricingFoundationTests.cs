@@ -101,7 +101,8 @@ public sealed class PricingFoundationTests : IAsyncLifetime
             Assert.DoesNotContain("Tooba.Identity", csproj, StringComparison.Ordinal);
         }
 
-        Assert.Contains("Tooba.Offer.Application", File.ReadAllText(Path.Combine(root, "src", "backend", "Modules", "Pricing", "Tooba.Pricing.Infrastructure", "Tooba.Pricing.Infrastructure.csproj")));
+        Assert.Contains("Tooba.Offer.Contracts", File.ReadAllText(Path.Combine(root, "src", "backend", "Modules", "Pricing", "Tooba.Pricing.Infrastructure", "Tooba.Pricing.Infrastructure.csproj")));
+        Assert.DoesNotContain("Tooba.Offer.Application", File.ReadAllText(Path.Combine(root, "src", "backend", "Modules", "Pricing", "Tooba.Pricing.Infrastructure", "Tooba.Pricing.Infrastructure.csproj")));
         Assert.Equal("pricing", PricingDbContext.Schema);
         Assert.DoesNotContain("MassTransit", typeof(AuthoredPrice).Assembly.GetReferencedAssemblies().Select(a => a.Name));
         Assert.DoesNotContain("MassTransit", typeof(IPriceDirectory).Assembly.GetReferencedAssemblies().Select(a => a.Name));

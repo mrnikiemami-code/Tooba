@@ -1,0 +1,203 @@
+{
+  "generatedAt": "2026-09-20T06:18:24.811Z",
+  "count": 15,
+  "entries": [
+    {
+      "file": "src/backend/BuildingBlocks/Tooba.Persistence/NpgsqlOutboxDispatcherStore.cs",
+      "line": 45,
+      "member": "(nearby)",
+      "owningModule": "BuildingBlocks",
+      "participatingModules": [
+        "BuildingBlocks"
+      ],
+      "mechanism": "BeginTransaction",
+      "atomicityAssumption": "infrastructure/outbox technical transaction",
+      "extractionRisk": "low if stays in-process same DB schema",
+      "classification": "NEEDS_REVIEW"
+    },
+    {
+      "file": "src/backend/Host/Tooba.Host/Admin/CatalogDemo/CatalogDemoResetService.cs",
+      "line": 41,
+      "member": "    public async Task<CatalogDemoResetResult> ResetAsync(CancellationToken cancellationToken)",
+      "owningModule": "Host",
+      "participatingModules": [
+        "Host"
+      ],
+      "mechanism": "BeginTransaction",
+      "atomicityAssumption": "single-module DbContext transaction",
+      "extractionRisk": "low if stays in-process same DB schema",
+      "classification": "LOCAL_MODULE_TRANSACTION"
+    },
+    {
+      "file": "src/backend/Modules/AddressBook/Tooba.AddressBook.Infrastructure/AddressBookDirectory.cs",
+      "line": 26,
+      "member": "    public async Task<CustomerAddressRecord> CreateAsync(",
+      "owningModule": "AddressBook",
+      "participatingModules": [
+        "AddressBook"
+      ],
+      "mechanism": "BeginTransaction",
+      "atomicityAssumption": "single-module DbContext transaction",
+      "extractionRisk": "low if stays in-process same DB schema",
+      "classification": "LOCAL_MODULE_TRANSACTION"
+    },
+    {
+      "file": "src/backend/Modules/AddressBook/Tooba.AddressBook.Infrastructure/AddressBookDirectory.cs",
+      "line": 86,
+      "member": "    public async Task<CustomerAddressRecord> UpdateAsync(",
+      "owningModule": "AddressBook",
+      "participatingModules": [
+        "AddressBook"
+      ],
+      "mechanism": "BeginTransaction",
+      "atomicityAssumption": "single-module DbContext transaction",
+      "extractionRisk": "low if stays in-process same DB schema",
+      "classification": "LOCAL_MODULE_TRANSACTION"
+    },
+    {
+      "file": "src/backend/Modules/AddressBook/Tooba.AddressBook.Infrastructure/AddressBookDirectory.cs",
+      "line": 134,
+      "member": "    public async Task<CustomerAddressRecord> SetDefaultAsync(",
+      "owningModule": "AddressBook",
+      "participatingModules": [
+        "AddressBook"
+      ],
+      "mechanism": "BeginTransaction",
+      "atomicityAssumption": "single-module DbContext transaction",
+      "extractionRisk": "low if stays in-process same DB schema",
+      "classification": "LOCAL_MODULE_TRANSACTION"
+    },
+    {
+      "file": "src/backend/Modules/Cart/Tooba.Cart.Infrastructure/CartDirectory.cs",
+      "line": 245,
+      "member": "    private async Task<int> ExpireDueBatchAsync(DateTimeOffset utcNow, int batchSize, CancellationToken cancellationToken)",
+      "owningModule": "Cart",
+      "participatingModules": [
+        "Cart"
+      ],
+      "mechanism": "BeginTransaction",
+      "atomicityAssumption": "single-module DbContext transaction",
+      "extractionRisk": "low if stays in-process same DB schema",
+      "classification": "LOCAL_MODULE_TRANSACTION"
+    },
+    {
+      "file": "src/backend/Modules/Catalog/Tooba.Catalog.Infrastructure/CatalogDirectory.cs",
+      "line": 2662,
+      "member": "(nearby)",
+      "owningModule": "Catalog",
+      "participatingModules": [
+        "Catalog"
+      ],
+      "mechanism": "BeginTransaction",
+      "atomicityAssumption": "single-module DbContext transaction",
+      "extractionRisk": "low if stays in-process same DB schema",
+      "classification": "LOCAL_MODULE_TRANSACTION"
+    },
+    {
+      "file": "src/backend/Modules/Catalog/Tooba.Catalog.Infrastructure/CatalogDirectory.cs",
+      "line": 2986,
+      "member": "(nearby)",
+      "owningModule": "Catalog",
+      "participatingModules": [
+        "Catalog"
+      ],
+      "mechanism": "BeginTransaction",
+      "atomicityAssumption": "single-module DbContext transaction",
+      "extractionRisk": "low if stays in-process same DB schema",
+      "classification": "LOCAL_MODULE_TRANSACTION"
+    },
+    {
+      "file": "src/backend/Modules/Catalog/Tooba.Catalog.Infrastructure/CatalogDirectory.cs",
+      "line": 3457,
+      "member": "(nearby)",
+      "owningModule": "Catalog",
+      "participatingModules": [
+        "Catalog"
+      ],
+      "mechanism": "BeginTransaction",
+      "atomicityAssumption": "single-module DbContext transaction",
+      "extractionRisk": "low if stays in-process same DB schema",
+      "classification": "LOCAL_MODULE_TRANSACTION"
+    },
+    {
+      "file": "src/backend/Modules/Catalog/Tooba.Catalog.Infrastructure/StoreLandingPageDirectory.cs",
+      "line": 109,
+      "member": "    public async Task<StoreHomeWriteResult> SetHomeAsync(Guid? pageId, CancellationToken cancellationToken)",
+      "owningModule": "Catalog",
+      "participatingModules": [
+        "Catalog"
+      ],
+      "mechanism": "BeginTransaction",
+      "atomicityAssumption": "single-module DbContext transaction",
+      "extractionRisk": "low if stays in-process same DB schema",
+      "classification": "LOCAL_MODULE_TRANSACTION"
+    },
+    {
+      "file": "src/backend/Modules/Inventory/Tooba.Inventory.Infrastructure/InventoryDirectory.cs",
+      "line": 277,
+      "member": "    private async Task<int> ReleaseExpiredBatchAsync(DateTimeOffset utcNow, int batchSize, CancellationToken cancellationToken)",
+      "owningModule": "Inventory",
+      "participatingModules": [
+        "Inventory"
+      ],
+      "mechanism": "BeginTransaction",
+      "atomicityAssumption": "single-module DbContext transaction",
+      "extractionRisk": "low if stays in-process same DB schema",
+      "classification": "LOCAL_MODULE_TRANSACTION"
+    },
+    {
+      "file": "src/backend/Modules/Order/Tooba.Order.Infrastructure/CheckoutDirectory.cs",
+      "line": 151,
+      "member": "(nearby)",
+      "owningModule": "Order",
+      "participatingModules": [
+        "Order",
+        "Inventory",
+        "Cart"
+      ],
+      "mechanism": "TransactionScope",
+      "atomicityAssumption": "shared physical PostgreSQL ACID across Order write + Inventory reserve + Cart convert",
+      "extractionRisk": "breaks when modules have separate databases",
+      "classification": "CROSS_CONTEXT_SHARED_ACID"
+    },
+    {
+      "file": "src/backend/Modules/Payment/Tooba.Payment.Infrastructure/PaymentDirectory.cs",
+      "line": 835,
+      "member": "    public async Task<IReadOnlyList<Guid>> ExpireDueUnpaidAsync(",
+      "owningModule": "Payment",
+      "participatingModules": [
+        "Payment"
+      ],
+      "mechanism": "BeginTransaction",
+      "atomicityAssumption": "single-module DbContext transaction",
+      "extractionRisk": "low if stays in-process same DB schema",
+      "classification": "LOCAL_MODULE_TRANSACTION"
+    },
+    {
+      "file": "src/backend/Modules/Wallet/Tooba.Wallet.Infrastructure/WalletDirectory.cs",
+      "line": 335,
+      "member": "(nearby)",
+      "owningModule": "Wallet",
+      "participatingModules": [
+        "Wallet"
+      ],
+      "mechanism": "BeginTransaction",
+      "atomicityAssumption": "single-module DbContext transaction",
+      "extractionRisk": "low if stays in-process same DB schema",
+      "classification": "LOCAL_MODULE_TRANSACTION"
+    },
+    {
+      "file": "src/backend/Modules/Wallet/Tooba.Wallet.Infrastructure/WalletDirectory.cs",
+      "line": 448,
+      "member": "(nearby)",
+      "owningModule": "Wallet",
+      "participatingModules": [
+        "Wallet"
+      ],
+      "mechanism": "BeginTransaction",
+      "atomicityAssumption": "single-module DbContext transaction",
+      "extractionRisk": "low if stays in-process same DB schema",
+      "classification": "LOCAL_MODULE_TRANSACTION"
+    }
+  ]
+}

@@ -97,7 +97,8 @@ public sealed class InventoryFoundationTests : IAsyncLifetime
             Assert.DoesNotContain("Tooba.Identity", csproj, StringComparison.Ordinal);
         }
 
-        Assert.Contains("Tooba.Offer.Application", File.ReadAllText(Path.Combine(root, "src", "backend", "Modules", "Inventory", "Tooba.Inventory.Infrastructure", "Tooba.Inventory.Infrastructure.csproj")));
+        Assert.Contains("Tooba.Offer.Contracts", File.ReadAllText(Path.Combine(root, "src", "backend", "Modules", "Inventory", "Tooba.Inventory.Infrastructure", "Tooba.Inventory.Infrastructure.csproj")));
+        Assert.DoesNotContain("Tooba.Offer.Application", File.ReadAllText(Path.Combine(root, "src", "backend", "Modules", "Inventory", "Tooba.Inventory.Infrastructure", "Tooba.Inventory.Infrastructure.csproj")));
         Assert.Equal("inventory", InventoryDbContext.Schema);
         Assert.DoesNotContain("MassTransit", typeof(StockPosition).Assembly.GetReferencedAssemblies().Select(a => a.Name));
         Assert.DoesNotContain("MassTransit", typeof(IInventoryDirectory).Assembly.GetReferencedAssemblies().Select(a => a.Name));

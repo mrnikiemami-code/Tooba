@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Tooba.BuildingBlocks;
 using Tooba.Cart.Infrastructure.Persistence;
 using Tooba.Catalog.Application;
@@ -9,6 +9,7 @@ using Tooba.Inventory.Application;
 using Tooba.Inventory.Domain;
 using Tooba.Inventory.Infrastructure.Persistence;
 using Tooba.Offer.Application;
+using Tooba.Offer.Contracts;
 using Tooba.Offer.Domain;
 using Tooba.Offer.Infrastructure.Persistence;
 using Tooba.Order.Infrastructure.Persistence;

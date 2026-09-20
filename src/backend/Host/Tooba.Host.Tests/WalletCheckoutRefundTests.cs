@@ -158,7 +158,7 @@ public sealed class WalletCheckoutRefundTests : IAsyncLifetime
         await orderDb.SaveChangesAsync();
         var paymentBridge = new OrderPaymentBridge(orderDb, new UnusedInventoryDirectory());
         var actorCtx = new PaymentGatewayActorContext();
-        var gateways = new PaymentGatewayRegistry([new FakePaymentGateway(), new WalletPaymentGateway(wallets, actorCtx)]);
+        var gateways = new PaymentGatewayRegistry([new FakePaymentGateway(), new WalletPaymentGateway((Tooba.Wallet.Contracts.IWalletOrderPaymentPort)wallets, actorCtx)]);
         var payments = new PaymentDirectory(paymentDb, new OpenPaymentUseCaseGuard(), paymentBridge, gateways, actorCtx);
 
         var initiated = await payments.InitiateAsync(

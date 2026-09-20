@@ -1,5 +1,5 @@
-using Microsoft.EntityFrameworkCore;
-using Tooba.Offer.Application;
+﻿using Microsoft.EntityFrameworkCore;
+using Tooba.Offer.Contracts;
 using Tooba.Offer.Domain;
 using Tooba.Pricing.Application;
 using Tooba.Pricing.Domain;

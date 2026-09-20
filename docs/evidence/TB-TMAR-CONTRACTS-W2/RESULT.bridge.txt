@@ -1,0 +1,81 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+
+BEGIN_TOOBA_WORKER_RESULT
+
+Task-ID: TB-TMAR-CONTRACTS-W2
+Parent-Task: TB-TMAR-CONTRACTS-W1
+Channel: tooba-main
+WorkerId: tooba-worker-01
+AgentType: cursor
+Status: PASS
+
+Summary:
+CONTRACTS-W2 PASS. Imported TOOBA-MICROSERVICE-MIGRATION-NOTES. Removed Payment.Infrastructure→Wallet.Application via IWalletOrderPaymentPort in Wallet.Contracts. Migrated Offer lookup (IOfferLookupGateway/OfferReference/OfferStatus) into Offer.Contracts; shrunk Pricing/Inventory Infra→Offer.App and Pricing.App→Offer.App. Inventoried cross-context transactions; canonicalized ARCH-TX-001; froze NEW TransactionScope orchestrators. No Saga/Checkout redesign. Product-Resume-Safety SAFE_WITH_TMAR_PARALLEL. Next: TB-TMAR-CONTRACTS-W3.
+
+Program-Name:
+TMAR — Tooba Microservice-Ready Architecture Recovery
+
+Recovery-Start:
+docs/evidence/TB-TMAR-CONTRACTS-W2/recovery-start.md
+
+Migration-Notes:
+docs/architecture/TOOBA-MICROSERVICE-MIGRATION-NOTES.md — evidence migration-notes.md
+
+Payment-Wallet-Contract:
+docs/evidence/TB-TMAR-CONTRACTS-W2/payment-wallet-contract.md
+
+Slice-Selection:
+docs/evidence/TB-TMAR-CONTRACTS-W2/slice-selection.md — Offer lookup gateway
+
+Contracts-Changes:
+Wallet.Contracts += IWalletOrderPaymentPort; Offer.Contracts += IOfferLookupGateway/OfferReference/OfferStatus
+
+Dependency-Changes:
+− Payment.Infra→Wallet.App; − Pricing.Infra→Offer.App; − Inventory.Infra→Offer.App; − Pricing.App→Offer.App
+
+Cross-Context-Transactions:
+docs/evidence/TB-TMAR-CONTRACTS-W2/cross-context-transactions.md (+ .json) — CheckoutDirectory CROSS_CONTEXT_SHARED_ACID
+
+Transaction-Guard:
+docs/evidence/TB-TMAR-CONTRACTS-W2/transaction-guard.md — ARCH-TX-001 + tmar-cross-context-transaction-files.json
+
+Checkout-Consistency-Future:
+TB-TMAR-CHECKOUT-CONSISTENCY-DESIGN (design-first; not executed)
+
+Architecture-Guards:
+docs/evidence/TB-TMAR-CONTRACTS-W2/architecture-guards.md
+
+Characterization-Tests:
+WalletOrderPaymentPortContractsTests; WalletCurrencyContractsTests
+
+Tests:
+docs/evidence/TB-TMAR-CONTRACTS-W2/tests.md — 48 passed focused suite
+
+Source-Size-Compliance:
+inventory refreshed; no oversized growth above baseline
+
+Capability-Map:
+docs/architecture/TOOBA-CAPABILITY-MAP.md — Last Verified = TB-TMAR-CONTRACTS-W2
+
+Bootstrap:
+docs/architecture/TOOBA-ARCHITECT-BOOTSTRAP.md — contracts-w2 PASS; next CONTRACTS-W3
+
+Recovery-SoT:
+docs/evidence/TB-TMAR-CONTRACTS-W2/recovery-sot.md
+
+Git:
+branch main; tip PLACEHOLDER_SHA; pushed origin/main; HEAD==origin/main; 18ca10c9 ancestor; user work preserved
+
+Architectural-Concerns:
+Checkout TransactionScope shared-ACID remains; Order.Application hub App→App edges remain; Returns.Infra→Wallet.Application still present
+
+Blockers:
+(none)
+
+Product-Resume-Safety:
+SAFE_WITH_TMAR_PARALLEL
+
+Next-Recommended-Task:
+TB-TMAR-CONTRACTS-W3
+
+END_TOOBA_WORKER_RESULT

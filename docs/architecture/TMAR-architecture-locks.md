@@ -54,3 +54,6 @@ Existing oversized legacy / critical god files may only stay equal or shrink; gr
 
 ## ARCH-REFACTOR-001
 Critical giant-file decomposition requires characterization tests around the touched slice before structural splitting. Preserve public behavior; split incrementally by capability/use-case; keep architecture guards green; do not rely only on AI-generated diff inspection.
+
+## ARCH-TX-001
+No NEW business workflow may rely on a single ACID transaction spanning multiple bounded contexts. Existing confirmed cross-context/shared-database transactions are explicit migration debt (baseline `tmar-cross-context-transaction-files.json`). Future extraction requires an explicit distributed-consistency design (see TB-TMAR-CHECKOUT-CONSISTENCY-DESIGN). Do not add a global MediatR TransactionBehavior.

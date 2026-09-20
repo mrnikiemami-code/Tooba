@@ -1,7 +1,7 @@
-using Tooba.BuildingBlocks;
+﻿using Tooba.BuildingBlocks;
 using Tooba.Catalog.Application;
 using Tooba.Catalog.Domain;
-using Tooba.Offer.Application;
+using Tooba.Offer.Contracts;
 
 namespace Tooba.Host.Admin;
 

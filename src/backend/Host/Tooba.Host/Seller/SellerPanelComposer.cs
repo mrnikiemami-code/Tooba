@@ -9,6 +9,7 @@ using Tooba.Inventory.Application;
 using Tooba.Inventory.Domain;
 using Tooba.Inventory.Infrastructure.Persistence;
 using Tooba.Offer.Application;
+using Tooba.Offer.Contracts;
 using Tooba.Offer.Domain;
 using Tooba.Offer.Infrastructure.Persistence;
 using Tooba.Order.Domain;
@@ -30,7 +31,6 @@ public sealed class SellerPanelComposer
 {
     /// <summary>بازار پیش‌فرض store-alpha / دمو ایران.</summary>
     public const string DefaultMarket = "IR";
-
     /// <summary>ارز نوشته‌شدهٔ پیش‌فرض؛ تومان نمایشی نیست.</summary>
     public const string DefaultCurrency = "IRR";
 

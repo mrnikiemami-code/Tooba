@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk.Web">
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
     <Nullable>enable</Nullable>
@@ -21,6 +21,7 @@
     <ProjectReference Include="..\..\Modules\Catalog\Tooba.Catalog.Application\Tooba.Catalog.Application.csproj" />
     <ProjectReference Include="..\..\Modules\Catalog\Tooba.Catalog.Infrastructure\Tooba.Catalog.Infrastructure.csproj" />
     <ProjectReference Include="..\..\Modules\Offer\Tooba.Offer.Application\Tooba.Offer.Application.csproj" />
+    <ProjectReference Include="..\..\Modules\Offer\Tooba.Offer.Contracts\Tooba.Offer.Contracts.csproj" />
     <ProjectReference Include="..\..\Modules\Offer\Tooba.Offer.Infrastructure\Tooba.Offer.Infrastructure.csproj" />
     <ProjectReference Include="..\..\Modules\Party\Tooba.Party.Application\Tooba.Party.Application.csproj" />
     <ProjectReference Include="..\..\Modules\Pricing\Tooba.Pricing.Application\Tooba.Pricing.Application.csproj" />

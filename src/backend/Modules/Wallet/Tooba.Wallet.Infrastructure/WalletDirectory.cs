@@ -3,13 +3,14 @@ using Microsoft.EntityFrameworkCore;
 using Tooba.Notification.Application;
 using Tooba.Notification.Domain;
 using Tooba.Wallet.Application;
+using Tooba.Wallet.Contracts;
 using Tooba.Wallet.Domain;
 using Tooba.Wallet.Infrastructure.Persistence;
 
 namespace Tooba.Wallet.Infrastructure;
 
 /// <summary>پیاده‌سازی دایرکتوری کیف پول در schema wallet.</summary>
-public sealed class WalletDirectory : IWalletDirectory
+public sealed class WalletDirectory : IWalletDirectory, IWalletOrderPaymentPort
 {
     private readonly WalletDbContext _db;
     private readonly INotificationDirectory _notifications;
@@ -391,6 +392,19 @@ public sealed class WalletDirectory : IWalletDirectory
             await tx.RollbackAsync(cancellationToken);
             throw;
         }
+    }
+
+    async Task<WalletOrderPaymentDebitResultDto> IWalletOrderPaymentPort.SpendForOrderPaymentAsync(
+        Guid customerActorId,
+        decimal amount,
+        string currency,
+        Guid paymentId,
+        string idempotencyKey,
+        CancellationToken cancellationToken)
+    {
+        var result = await SpendForOrderPaymentAsync(
+            customerActorId, amount, currency, paymentId, idempotencyKey, cancellationToken);
+        return new WalletOrderPaymentDebitResultDto(result.Balance, result.IdempotentReplay);
     }
 
     /// <inheritdoc />

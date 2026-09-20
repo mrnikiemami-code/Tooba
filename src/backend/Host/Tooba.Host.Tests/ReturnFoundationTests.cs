@@ -457,7 +457,7 @@ public sealed class ReturnFoundationTests : IAsyncLifetime
             throw new NotSupportedException();
         public Task<Tooba.Wallet.Application.WalletCreditResultDto> CreditRefundAsync(Guid customerActorId, decimal amount, string currency, Guid returnRequestId, string idempotencyKey, CancellationToken cancellationToken) =>
             throw new NotSupportedException();
-        public Task<Tooba.Wallet.Application.WalletCheckoutQuoteDto> QuoteForPayableAsync(Guid customerActorId, decimal payableAmount, string currency, CancellationToken cancellationToken) =>
+        public Task<Tooba.Wallet.Contracts.WalletCheckoutQuoteDto> QuoteForPayableAsync(Guid customerActorId, decimal payableAmount, string currency, CancellationToken cancellationToken) =>
             throw new NotSupportedException();
     }
 }

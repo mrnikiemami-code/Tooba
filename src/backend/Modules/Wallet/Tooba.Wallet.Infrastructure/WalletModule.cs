@@ -6,6 +6,7 @@ using Tooba.BuildingBlocks;
 using Tooba.ModuleContracts;
 using Tooba.Persistence;
 using Tooba.Wallet.Application;
+using Tooba.Wallet.Contracts;
 using Tooba.Wallet.Infrastructure.Persistence;
 
 namespace Tooba.Wallet.Infrastructure;
@@ -21,6 +22,7 @@ public sealed class WalletModule : IToobaModule
     {
         services.AddSingleton<IOutboxModuleRegistration, WalletOutboxRegistration>();
         services.AddScoped<IWalletDirectory, WalletDirectory>();
+        services.AddScoped<IWalletOrderPaymentPort>(sp => (IWalletOrderPaymentPort)sp.GetRequiredService<IWalletDirectory>());
         services.AddDbContext<WalletDbContext>((sp, options) =>
         {
             var connection = ToobaNpgsql.ResolveForContext(

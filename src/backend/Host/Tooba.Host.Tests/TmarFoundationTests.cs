@@ -291,6 +291,37 @@ public sealed class TmarFoundationTests
         Assert.Contains("Tooba.Wallet.Contracts", refs);
     }
 
+    [Fact]
+    public void Cross_context_TransactionScope_orchestrators_do_not_expand_beyond_baseline()
+    {
+        var baseline = LoadJsonBaseline("tmar-cross-context-transaction-files.json");
+        var allowed = baseline.GetProperty("files").EnumerateArray().Select(e => e.GetString()!).ToHashSet(StringComparer.OrdinalIgnoreCase);
+        var backend = Path.Combine(FindRepoRoot(), "src", "backend");
+        var actual = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        foreach (var file in Directory.GetFiles(backend, "*.cs", SearchOption.AllDirectories))
+        {
+            var normalized = file.Replace('\\', '/');
+            if (normalized.Contains("/obj/", StringComparison.OrdinalIgnoreCase)
+                || normalized.Contains("/bin/", StringComparison.OrdinalIgnoreCase)
+                || normalized.Contains(".Tests/", StringComparison.OrdinalIgnoreCase)
+                || normalized.Contains("/Tests/", StringComparison.OrdinalIgnoreCase))
+            {
+                continue;
+            }
+
+            var text = File.ReadAllText(file);
+            if (!text.Contains("TransactionScope", StringComparison.Ordinal))
+            {
+                continue;
+            }
+
+            actual.Add(Path.GetRelativePath(FindRepoRoot(), file).Replace('\\', '/'));
+        }
+
+        var extra = actual.Except(allowed, StringComparer.OrdinalIgnoreCase).OrderBy(x => x).ToArray();
+        Assert.True(extra.Length == 0, "NEW TransactionScope orchestrators (ARCH-TX-001): " + string.Join("; ", extra));
+    }
+
     private static JsonElement LoadJsonBaseline(string fileName)
     {
         var path = Path.Combine(FindRepoRoot(), "src", "backend", "Host", "Tooba.Host.Tests", "Baselines", fileName);

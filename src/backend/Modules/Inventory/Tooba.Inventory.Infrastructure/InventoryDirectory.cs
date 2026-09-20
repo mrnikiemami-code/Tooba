@@ -1,10 +1,10 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Npgsql;
 using Tooba.Catalog.Application;
 using Tooba.Inventory.Application;
 using Tooba.Inventory.Domain;
 using Tooba.Inventory.Infrastructure.Persistence;
-using Tooba.Offer.Application;
+using Tooba.Offer.Contracts;
 
 namespace Tooba.Inventory.Infrastructure;
 
