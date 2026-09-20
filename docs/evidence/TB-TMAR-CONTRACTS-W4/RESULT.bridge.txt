@@ -64,7 +64,7 @@ Recovery-SoT:
 docs/evidence/TB-TMAR-CONTRACTS-W4/recovery-sot.md
 
 Git:
-branch main; tip 50f770893b872649ba0697d8819474f8dd0c4c6a; pushed origin/main; HEAD==origin/main; 18ca10c9 ancestor; user work preserved
+branch main; tip a258c6d8dd3eeb8eca54ec73279c7ff4b0e0a871; pushed origin/main; HEAD==origin/main; 18ca10c9 ancestor; user work preserved
 
 Architectural-Concerns:
 Checkout shared-ACID remains; Order hub still has Cart/Inventory/Pricing/Promotion App edges; Inventory.App→Offer.App remains; FE deferred
