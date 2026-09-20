@@ -1,0 +1,81 @@
+﻿PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+
+BEGIN_TOOBA_WORKER_RESULT
+
+Task-ID: TB-TMAR-FE-ADMIN-W1
+Parent-Task: TB-TMAR-FE-F1
+Channel: tooba-main
+WorkerId: tooba-worker-01
+AgentType: cursor
+Status: PASS
+
+Summary:
+ADMIN-W1 PASS. Migrated admin-promotions to features/admin-promotions (API+screen+public boundary). admin-api LOC 1321→1234 and export freeze 59→55; admin-screens 1230→1120 (CRITICAL→OVERSIZED). Architecture 11/11 + promotions characterization 5/5. Pattern SAFE_TO_CONTINUE. Next: TB-TMAR-FE-ADMIN-W2. Product-Resume-Safety SAFE_WITH_TMAR_PARALLEL.
+
+Program-Name:
+TMAR — Tooba Microservice-Ready Architecture Recovery
+
+Recovery-Start:
+docs/evidence/TB-TMAR-FE-ADMIN-W1/recovery-start.md
+
+Slice-Selection:
+docs/evidence/TB-TMAR-FE-ADMIN-W1/slice-selection.md — admin-promotions
+
+Characterization-Tests:
+docs/evidence/TB-TMAR-FE-ADMIN-W1/characterization-tests.md — 5/5 PASS
+
+Migration:
+docs/evidence/TB-TMAR-FE-ADMIN-W1/migration.md
+
+Admin-Api-Shrink:
+docs/evidence/TB-TMAR-FE-ADMIN-W1/admin-api-shrink.md — LOC 1321→1234; exports 59→55
+
+Feature-Boundary:
+docs/evidence/TB-TMAR-FE-ADMIN-W1/feature-boundary.md
+
+Folder-Guards:
+docs/evidence/TB-TMAR-FE-ADMIN-W1/folder-guards.md — FE-FOLDER-001/002 green; baseline shrunk
+
+Client-Boundary:
+docs/evidence/TB-TMAR-FE-ADMIN-W1/client-boundary.md
+
+Source-Size-Compliance:
+docs/evidence/TB-TMAR-FE-ADMIN-W1/source-size-compliance.md
+
+Test-Discovery:
+docs/evidence/TB-TMAR-FE-ADMIN-W1/test-discovery.md — canonical discovery retained
+
+Tests:
+docs/evidence/TB-TMAR-FE-ADMIN-W1/tests.md — architecture 11/11; promotions 5/5; TmarSourceSize 6/6
+
+Admin-Migration-Pattern:
+docs/evidence/TB-TMAR-FE-ADMIN-W1/admin-migration-pattern.md — SAFE_TO_CONTINUE
+
+Capability-Map:
+docs/architecture/TOOBA-CAPABILITY-MAP.md — Last Verified = TB-TMAR-FE-ADMIN-W1
+
+Bootstrap:
+docs/architecture/TOOBA-ARCHITECT-BOOTSTRAP.md — fe-admin-w1 PASS; next FE-ADMIN-W2
+
+Master-Recovery-State:
+docs/architecture/TOOBA-TMAR-MASTER-RECOVERY.md — ADMIN-W1 listed; next FE-ADMIN-W2; SAFE_WITH_TMAR_PARALLEL
+
+Recovery-SoT:
+docs/evidence/TB-TMAR-FE-ADMIN-W1/recovery-sot.md
+
+Git:
+branch main; tip TIP_PLACEHOLDER; pushed origin/main; HEAD==origin/main; 18ca10c9 ancestor; user work preserved
+
+Architectural-Concerns:
+Remaining admin-api capability debt (orders/reviews/sellers/…); formatters still SHARED on admin-api; giants deferred; Order-hub App→App frozen; Checkout shared-ACID deferred
+
+Blockers:
+(none)
+
+Product-Resume-Safety:
+SAFE_WITH_TMAR_PARALLEL
+
+Next-Recommended-Task:
+TB-TMAR-FE-ADMIN-W2
+
+END_TOOBA_WORKER_RESULT
