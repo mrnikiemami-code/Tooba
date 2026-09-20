@@ -95,7 +95,7 @@ Recovery-SoT:
 docs/evidence/TB-TMAR-OFFER-REFERENCE-W1-R5/recovery-sot.md
 
 Git:
-eb8947c87818b3ba12ac6611a2022ccda938f65f
+38d39a7998acbc7ccbd444d249f6b9255183d24a
 HEAD==origin/main: YES
 branch: main
 
