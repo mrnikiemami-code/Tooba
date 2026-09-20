@@ -1,0 +1,63 @@
+﻿PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+
+BEGIN_TOOBA_WORKER_RESULT
+
+Task-ID: TB-TMAR-HOST-W1-R1
+Parent-Task: TB-TMAR-HOST-W1
+Channel: tooba-main
+WorkerId: tooba-worker-01
+AgentType: cursor
+Status: PASS
+
+Summary:
+Narrow layering repair only: moved Store Landing MediatR business handlers from Catalog.Infrastructure into Catalog.Application. Handlers depend on IStoreLandingPageDirectory; EF/DbContext/SetHome transaction remain in StoreLandingPageDirectory (Infrastructure). MediatR registration scans Catalog.Application assembly (no Infrastructure handler scan). Added architecture guard forbidding IRequestHandler<> in module *.Infrastructure. Host write removal preserved. Focused tests 43/43 PASS. No HOST-W2, Domain move, Contracts, Redis, or behavior change.
+
+Recovery-Start:
+docs/evidence/TB-TMAR-HOST-W1-R1/recovery-start.md
+
+Before-Layering:
+Host → ISender → Handlers in Catalog.Infrastructure → Directory → DbContext
+
+After-Layering:
+Host → ISender → Handlers in Catalog.Application → IStoreLandingPageDirectory → Infrastructure Directory/DbContext
+
+Application-Handlers:
+src/backend/Modules/Catalog/Tooba.Catalog.Application/StoreLandingPageWriteHandlers.cs
+
+Infrastructure-Persistence:
+StoreLandingPageDirectory + CatalogDbContext remain in Catalog.Infrastructure; CatalogModule registers Directory
+
+Transaction-Preservation:
+SetHome BeginTransaction/SaveChanges/Commit still owned by Directory; Application does not reference EF
+
+Registration:
+Program AddToobaCqrsFoundation(Catalog.Application assembly); test factory updated; no duplicate Infrastructure handler registration
+
+Architecture-Guard:
+docs/evidence/TB-TMAR-HOST-W1-R1/architecture-guard.md — Module_business_MediatR_handlers_do_not_live_in_Infrastructure
+
+Tests:
+docs/evidence/TB-TMAR-HOST-W1-R1/tests.md — 43 passed
+
+Changed-Files:
+Moved handlers to Application; deleted Infrastructure handlers; Program/test factory registration; TmarFoundationTests guard; capability/bootstrap/evidence/task artifacts
+
+Capability-Map:
+docs/architecture/TOOBA-CAPABILITY-MAP.md — Last Verified = TB-TMAR-HOST-W1-R1; HOST-W1 accepted after repair
+
+Recovery-SoT:
+docs/evidence/TB-TMAR-HOST-W1-R1/recovery-sot.md
+
+Git:
+branch main; tip 85cc584efc48acd19c7247caca2bea0b82c5e880; pushed origin/main; HEAD==origin/main; 18ca10c9 ancestor
+
+Architectural-Concerns:
+StoreLandingPage* Domain ownership still temporary in Catalog; remaining Host write slices deferred
+
+Blockers:
+(none)
+
+Next-Recommended-Task:
+TB-TMAR-HOST-W2 — next Host dangerous-write slice from host-cleanup-waves.md (Architect chooses)
+
+END_TOOBA_WORKER_RESULT
