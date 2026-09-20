@@ -57,12 +57,6 @@
       "classification": "CRITICAL_GOD_FILE"
     },
     {
-      "path": "src/frontend/app/admin/admin-api.ts",
-      "language": "ts",
-      "loc": 1022,
-      "classification": "CRITICAL_GOD_FILE"
-    },
-    {
       "path": "src/backend/Modules/Catalog/Tooba.Catalog.Application/CatalogContracts.cs",
       "language": "cs",
       "loc": 1303,
@@ -105,12 +99,6 @@
       "classification": "OVERSIZED_LEGACY"
     },
     {
-      "path": "src/frontend/app/admin/admin-screens.tsx",
-      "language": "tsx",
-      "loc": 894,
-      "classification": "OVERSIZED_LEGACY"
-    },
-    {
       "path": "src/frontend/app/vendor-panel/seller-api.ts",
       "language": "ts",
       "loc": 1211,
@@ -132,12 +120,6 @@
       "path": "src/frontend/app/admin/category-attributes-panel.tsx",
       "language": "tsx",
       "loc": 1190,
-      "classification": "OVERSIZED_LEGACY"
-    },
-    {
-      "path": "src/backend/Modules/Order/Tooba.Order.Infrastructure/CheckoutDirectory.cs",
-      "language": "cs",
-      "loc": 946,
       "classification": "OVERSIZED_LEGACY"
     },
     {
@@ -193,6 +175,12 @@
       "language": "tsx",
       "loc": 1026,
       "classification": "OVERSIZED_LEGACY"
+    },
+    {
+      "path": "src/frontend/app/admin/admin-api.ts",
+      "language": "ts",
+      "loc": 1022,
+      "classification": "CRITICAL_GOD_FILE"
     },
     {
       "path": "src/backend/Host/Tooba.Host/Admin/CatalogAttributeEndpoints.cs",
@@ -264,6 +252,18 @@
       "path": "src/frontend/lib/storefront-composition/shared-composition-renderer.tsx",
       "language": "tsx",
       "loc": 907,
+      "classification": "OVERSIZED_LEGACY"
+    },
+    {
+      "path": "src/backend/Modules/Order/Tooba.Order.Infrastructure/CheckoutDirectory.cs",
+      "language": "cs",
+      "loc": 904,
+      "classification": "OVERSIZED_LEGACY"
+    },
+    {
+      "path": "src/frontend/app/admin/admin-screens.tsx",
+      "language": "tsx",
+      "loc": 894,
       "classification": "OVERSIZED_LEGACY"
     },
     {

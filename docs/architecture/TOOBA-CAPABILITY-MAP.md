@@ -57,6 +57,7 @@ Evidence files remain the deep-detail source; this map is the quick index.
 | Host W6 | ShippingService Host writes → Fulfillment CQRS Directory; Host-Exit-State READY_TO_PIVOT; Priority CHECKOUT_DESIGN | TB-TMAR-HOST-W6 |
 | Checkout Consistency Design | Shared-ACID redesign documented; ARCH-CHECKOUT-001…005; Process Manager (Order); PONR MULTI_STAGE; READY_FOR_IMPLEMENTATION_W1 | TB-TMAR-CHECKOUT-CONSISTENCY-DESIGN |
 | Checkout Implementation W1 | Durable checkout_processes + submission idempotency; TransactionScope preserved; no Saga runtime; W2 READY | TB-TMAR-CHECKOUT-IMPL-W1 |
-| Next | Checkout implementation Stage 2 (in-process Process Manager + Inventory reservation contract seam) | TB-TMAR-CHECKOUT-IMPL-W2 |
+| Checkout Implementation W2 | In-process Process Manager + Inventory.Contracts reservation; Order.Application↛Inventory.Application; TX preserved; W3 READY | TB-TMAR-CHECKOUT-IMPL-W2 |
+| Next | Checkout implementation Stage 3 (Cart conversion contract seam) | TB-TMAR-CHECKOUT-IMPL-W3 |
 
-Last Verified Task = TB-TMAR-CHECKOUT-IMPL-W1
+Last Verified Task = TB-TMAR-CHECKOUT-IMPL-W2

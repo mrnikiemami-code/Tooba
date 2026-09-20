@@ -1,4 +1,4 @@
-TOOBA TMAR MASTER RECOVERY
+﻿TOOBA TMAR MASTER RECOVERY
 
 Purpose
 
@@ -159,6 +159,8 @@ TB-TMAR-CHECKOUT-CONSISTENCY-DESIGN
 
 TB-TMAR-CHECKOUT-IMPL-W1
 
+TB-TMAR-CHECKOUT-IMPL-W2
+
 Current Product Resume Gate:
 SAFE_WITH_TMAR_PARALLEL
 
@@ -166,7 +168,10 @@ User choice:
 Continue TMAR for now until user explicitly says to return to product feature work.
 
 Next TMAR task:
-TB-TMAR-CHECKOUT-IMPL-W2
+TB-TMAR-CHECKOUT-IMPL-W3
+
+Checkout Implementation W2:
+TB-TMAR-CHECKOUT-IMPL-W2 — in-process Process Manager + Inventory.Contracts reservation seam; TX preserved; Order.Application↛Inventory.Application; W3 READY; Orders FE STILL_WAITING_FOR_BACKEND_W3. Evidence: `docs/evidence/TB-TMAR-CHECKOUT-IMPL-W2/`.
 
 Checkout Implementation W1:
 TB-TMAR-CHECKOUT-IMPL-W1 — durable Order-owned checkout process state + submission idempotency; TransactionScope preserved; no Saga runtime; W2 READY; Orders FE STILL_WAITING_FOR_BACKEND_W2; Architecture-Priority CHECKOUT_IMPLEMENTATION. Evidence: `docs/evidence/TB-TMAR-CHECKOUT-IMPL-W1/`.

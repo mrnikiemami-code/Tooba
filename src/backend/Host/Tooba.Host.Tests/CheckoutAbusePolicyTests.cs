@@ -54,7 +54,9 @@ public sealed class CheckoutAbusePolicyTests
     public void Enforcement_and_admin_boundaries_are_backend_authoritative()
     {
         var root = FindRepoRoot();
-        var checkout = File.ReadAllText(Path.Combine(root, "src", "backend", "Modules", "Order", "Tooba.Order.Infrastructure", "CheckoutDirectory.cs"));
+        var checkout = File.ReadAllText(Path.Combine(root, "src", "backend", "Modules", "Order", "Tooba.Order.Application", "CheckoutProcessManager.cs"));
+        var host = File.ReadAllText(Path.Combine(root, "src", "backend", "Modules", "Order", "Tooba.Order.Infrastructure", "CheckoutSubmitHost.cs"));
+        var directory = File.ReadAllText(Path.Combine(root, "src", "backend", "Modules", "Order", "Tooba.Order.Infrastructure", "CheckoutDirectory.cs"));
         var gate = File.ReadAllText(Path.Combine(root, "src", "backend", "Host", "Tooba.Host", "Storefront", "CheckoutAbuseGate.cs"));
         var hide = File.ReadAllText(Path.Combine(root, "src", "backend", "Host", "Tooba.Host", "Storefront", "StorefrontPendingPaymentComposer.cs"));
         var endpoints = File.ReadAllText(Path.Combine(root, "src", "backend", "Host", "Tooba.Host", "Storefront", "StorefrontEndpoints.cs"));
@@ -65,8 +67,9 @@ public sealed class CheckoutAbusePolicyTests
 
         Assert.True(
             checkout.IndexOf("EnsureCanStartInitialReservationAsync", StringComparison.Ordinal)
-            < checkout.IndexOf("ReserveCartLinesForOrderAsync", StringComparison.Ordinal));
-        Assert.Contains("PrepareInitialCommit", checkout, StringComparison.Ordinal);
+            < checkout.IndexOf("ReserveForCheckoutAsync", StringComparison.Ordinal));
+        Assert.Contains("PrepareInitialCommit", host, StringComparison.Ordinal);
+        Assert.Contains("CheckoutProcessManager", directory, StringComparison.Ordinal);
         Assert.Contains("OpenUnpaidOrderPredicate.OpenUnpaidStatuses", gate, StringComparison.Ordinal);
         Assert.Contains("CheckoutReservationCommits", gate, StringComparison.Ordinal);
         Assert.Contains("CheckoutAbuseCustomerLocks", gate, StringComparison.Ordinal);

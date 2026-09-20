@@ -54,7 +54,7 @@ public sealed class CheckoutProcessTracker : ICheckoutProcessTracker
             }
             else
             {
-                // فرآیند نیمه‌کارهٔ همان کلید: برای W1 با TransactionScope مشترک، ردیف باید با rollback پاک شود.
+                // فرآیند نیمه‌کارهٔ همان کلید: برای W1 با تراکنش مشترک، ردیف باید با rollback پاک شود.
                 // اگر باقی مانده، همان هویت را برای ادامهٔ همان کلید بازمی‌گردانیم.
                 return existing;
             }

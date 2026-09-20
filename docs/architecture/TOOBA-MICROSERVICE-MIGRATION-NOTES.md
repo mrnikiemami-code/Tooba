@@ -1,4 +1,4 @@
-Tooba Microservice Migration Notes
+﻿Tooba Microservice Migration Notes
 
 Purpose
 
@@ -91,6 +91,9 @@ First document the invariants and workflow.
 
 Status after TB-TMAR-CHECKOUT-CONSISTENCY-DESIGN:
 Design + ARCH-CHECKOUT-001…005 locks landed. Chosen model: Order-owned Process Manager (orchestrated Saga) with local ACID + Outbox per participant. Checkout-Point-Of-No-Return = MULTI_STAGE. Implementation readiness = READY_FOR_IMPLEMENTATION_W1 (next TB-TMAR-CHECKOUT-IMPL-W1). No Saga/Process Manager code in the design task.
+
+Status after TB-TMAR-CHECKOUT-IMPL-W2:
+In-process CheckoutProcessManager owns submit orchestration. Inventory reservation exposed via Tooba.Inventory.Contracts (ICheckoutInventoryReservationPort). Order.Application no longer references Inventory.Application. Shared TransactionScope retained. Next TB-TMAR-CHECKOUT-IMPL-W3 (Cart conversion contract).
 
 Status after TB-TMAR-CHECKOUT-IMPL-W1:
 Order-owned durable `checkout_processes` + submission idempotency primitives integrated into SubmitAsync path. Shared TransactionScope (Order+Inventory+Cart) intentionally retained. No Saga/Process Manager runtime, no participant commit split, no new workflow Outbox choreography. W2 readiness READY; next TB-TMAR-CHECKOUT-IMPL-W2.

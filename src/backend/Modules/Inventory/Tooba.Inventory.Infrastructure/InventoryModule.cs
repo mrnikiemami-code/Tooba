@@ -1,10 +1,11 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Tooba.BuildingBlocks;
 using Tooba.ModuleContracts;
 using Tooba.Inventory.Application;
+using Tooba.Inventory.Contracts;
 using Tooba.Inventory.Infrastructure.Persistence;
 using Tooba.Persistence;
 
@@ -30,6 +31,7 @@ public sealed class InventoryModule : IToobaModule
         services.AddScoped<IInventoryDirectory, InventoryDirectory>();
         services.AddScoped<IInventoryReturnGateway, InventoryReturnGateway>();
         services.AddScoped<IInventoryAvailabilityGateway>(sp => (InventoryDirectory)sp.GetRequiredService<IInventoryDirectory>());
+        services.AddScoped<ICheckoutInventoryReservationPort, CheckoutInventoryReservationAdapter>();
         services.AddDbContext<InventoryDbContext>((sp, options) =>
         {
             var connectionString = ToobaNpgsql.ResolveForContext(

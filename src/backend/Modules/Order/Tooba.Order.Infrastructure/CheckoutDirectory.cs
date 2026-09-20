@@ -6,6 +6,7 @@ using Tooba.Cart.Application;
 using Tooba.Cart.Domain;
 using Tooba.Catalog.Application;
 using Tooba.Inventory.Application;
+using Tooba.Inventory.Contracts;
 using Tooba.Offer.Contracts;
 using Tooba.Offer.Domain;
 using Tooba.Order.Application;
@@ -21,7 +22,7 @@ namespace Tooba.Order.Infrastructure;
 /// <summary>
 /// ارکستراسیون checkout: سبد از قرارداد Cart، قیمت از Pricing، Offer از Lookup، رزرو از Inventory.
 /// </summary>
-public sealed class CheckoutDirectory : ICheckoutDirectory
+public sealed partial class CheckoutDirectory : ICheckoutDirectory
 {
     internal readonly OrderDbContext _db;
     internal readonly IOrderUseCaseGuard _guard;
@@ -43,6 +44,7 @@ public sealed class CheckoutDirectory : ICheckoutDirectory
     internal readonly ICheckoutAbuseGate _abuseGate;
     internal readonly ICampaignCartPriceAuthority? _campaignPrices;
     internal readonly ICheckoutProcessTracker? _processes;
+    internal readonly ICheckoutInventoryReservationPort _inventoryReservation;
 
     /// <summary>
     /// دایرکتوری را به schema order و درزهای ماژول‌های دیگر وصل می‌کند.
@@ -67,7 +69,8 @@ public sealed class CheckoutDirectory : ICheckoutDirectory
         ICheckoutCommitBarrier? commitBarrier = null,
         ICheckoutAbuseGate? abuseGate = null,
         ICampaignCartPriceAuthority? campaignPrices = null,
-        ICheckoutProcessTracker? processes = null)
+        ICheckoutProcessTracker? processes = null,
+        ICheckoutInventoryReservationPort? inventoryReservation = null)
     {
         _db = db;
         _guard = guard;
@@ -91,11 +94,14 @@ public sealed class CheckoutDirectory : ICheckoutDirectory
             ?? throw new InvalidOperationException("درز موجودی برای commit سفارش لازم است.");
         _campaignPrices = campaignPrices;
         _processes = processes;
+        _inventoryReservation = inventoryReservation
+            ?? new CheckoutInventoryReservationAdapter(_inventory, _availability);
     }
 
     /// <inheritdoc />
     public Task<CheckoutSnapshot> SubmitAsync(SubmitCheckoutCommand command, CancellationToken cancellationToken)
-        => CheckoutSubmitExecutor.ExecuteAsync(this, command, cancellationToken);
+        => new CheckoutProcessManager(this, _inventoryReservation, _processes)
+            .SubmitAsync(command, cancellationToken);
 
     /// <inheritdoc />
     public async Task<CheckoutSnapshot> PreviewAsync(SubmitCheckoutCommand command, CancellationToken cancellationToken)
@@ -466,56 +472,20 @@ public sealed class CheckoutDirectory : ICheckoutDirectory
         CancellationToken cancellationToken)
     {
         var expiresAt = await ResolveInitialCycleExpiresAtAsync(cart, now, cancellationToken);
-        var stock = await _availability.GetAvailabilityBatchAsync(
-            cart.Lines.Select(x => x.OfferId).Distinct().ToArray(),
+        var result = await _inventoryReservation.ReserveForCheckoutAsync(
+            new CheckoutInventoryReservationRequest(
+                cart.CartId,
+                ProcessId: null,
+                CorrelationId: $"checkout-submit:{cart.CartId:N}",
+                now,
+                expiresAt,
+                cart.Lines.Select(line => new CheckoutInventoryLineRequest(
+                    line.LineId,
+                    line.OfferId,
+                    line.Quantity,
+                    line.ReservationId)).ToArray()),
             cancellationToken);
-        var acquired = new List<Guid>();
-        var map = new Dictionary<Guid, Guid>();
-        try
-        {
-            foreach (var cartLine in cart.Lines)
-            {
-                if (cartLine.ReservationId is { } existingId)
-                {
-                    var existing = await _inventory.FindReservationAsync(existingId, cancellationToken);
-                    if (existing is { Status: Tooba.Inventory.Domain.StockReservationStatus.Held }
-                        && existing.Quantity >= cartLine.Quantity
-                        && (existing.ExpiresAt is null || existing.ExpiresAt > now))
-                    {
-                        map[cartLine.LineId] = existingId;
-                        continue;
-                    }
-                }
-
-                if (!stock.TryGetValue(cartLine.OfferId, out var availability))
-                {
-                    throw new InvalidOperationException("inventory.supply.unavailable");
-                }
-
-                var location = availability.Locations
-                    .Where(x => x.Available >= cartLine.Quantity)
-                    .OrderByDescending(x => x.Available)
-                    .FirstOrDefault()
-                    ?? throw new InvalidOperationException("inventory.supply.unavailable");
-
-                var receipt = await _inventory.ReserveAsync(
-                    location.StockItemId,
-                    cartLine.Quantity,
-                    $"order-commit:{cart.CartId:N}",
-                    $"cc-{cart.CartId:N}-{cartLine.LineId:N}",
-                    expiresAt,
-                    cancellationToken);
-                acquired.Add(receipt.ReservationId);
-                map[cartLine.LineId] = receipt.ReservationId;
-            }
-
-            return map;
-        }
-        catch
-        {
-            await ReleaseAcquiredAsync(acquired, cancellationToken);
-            throw;
-        }
+        return result.ByCartLineId.ToDictionary(x => x.Key, x => x.Value);
     }
 
     internal static void BindReservationsToOrders(
@@ -606,20 +576,8 @@ public sealed class CheckoutDirectory : ICheckoutDirectory
         return new ReservationCyclePolicySnapshot(120, 120, 3, "platform");
     }
 
-    internal async Task ReleaseAcquiredAsync(IEnumerable<Guid> reservationIds, CancellationToken cancellationToken)
-    {
-        foreach (var reservationId in reservationIds.Distinct())
-        {
-            try
-            {
-                await _inventory.ReleaseAsync(reservationId, cancellationToken);
-            }
-            catch (InvalidOperationException)
-            {
-                // رزرو ممکن است قبلاً آزاد یا به سفارش برنده وصل شده باشد.
-            }
-        }
-    }
+    internal Task ReleaseAcquiredAsync(IEnumerable<Guid> reservationIds, CancellationToken cancellationToken)
+        => _inventoryReservation.ReleaseAsync(reservationIds, cancellationToken);
 
     /// <summary>
     /// قیمت، ترویج و مالیات را روی خطوط سبد دوباره ارزیابی می‌کند. نتیجه هنوز سفارش پایدار نیست.

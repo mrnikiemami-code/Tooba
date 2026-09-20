@@ -1,4 +1,4 @@
-using Tooba.Order.Infrastructure;
+﻿using Tooba.Order.Infrastructure;
 using Xunit;
 
 namespace Tooba.Host.Tests;
@@ -10,7 +10,9 @@ public sealed class AtomicCheckoutCommitTests
     public void Submit_uses_one_ambient_transaction_and_convert_before_complete()
     {
         var root = FindRepoRoot();
-        var checkout = File.ReadAllText(Path.Combine(root, "src", "backend", "Modules", "Order", "Tooba.Order.Infrastructure", "CheckoutDirectory.cs"));
+        var checkout = File.ReadAllText(Path.Combine(root, "src", "backend", "Modules", "Order", "Tooba.Order.Application", "CheckoutProcessManager.cs"));
+        var host = File.ReadAllText(Path.Combine(root, "src", "backend", "Modules", "Order", "Tooba.Order.Infrastructure", "CheckoutSubmitHost.cs"));
+        var directory = File.ReadAllText(Path.Combine(root, "src", "backend", "Modules", "Order", "Tooba.Order.Infrastructure", "CheckoutDirectory.cs"));
         var payment = File.ReadAllText(Path.Combine(root, "src", "backend", "Host", "Tooba.Host", "Storefront", "StorefrontPaymentComposer.cs"));
         var feCheckout = File.ReadAllText(Path.Combine(root, "src", "frontend", "app", "storefront", "storefront-checkout-api.ts"));
         var feShipping = File.ReadAllText(Path.Combine(root, "src", "frontend", "app", "storefront", "storefront-shipping-api.ts"));
@@ -19,15 +21,16 @@ public sealed class AtomicCheckoutCommitTests
         Assert.Contains("OnAfterOrderWriteAsync", checkout, StringComparison.Ordinal);
         Assert.Contains("OnAfterCartConvertedWriteAsync", checkout, StringComparison.Ordinal);
         Assert.Contains("scope.Complete()", checkout, StringComparison.Ordinal);
-        Assert.Contains("ConvertAsync", checkout, StringComparison.Ordinal);
+        Assert.Contains("ConvertCartAsync", checkout, StringComparison.Ordinal);
         Assert.DoesNotContain("ReconcileCartConversionAsync(group, command", checkout, StringComparison.Ordinal);
-        Assert.Contains("ReserveCartLinesForOrderAsync", checkout, StringComparison.Ordinal);
+        Assert.Contains("ReserveForCheckoutAsync", checkout, StringComparison.Ordinal);
+        Assert.Contains("ReserveCartLinesForOrderAsync", directory, StringComparison.Ordinal);
         Assert.Contains("EnsureCanStartInitialReservationAsync", checkout, StringComparison.Ordinal);
         Assert.True(
             checkout.IndexOf("EnsureCanStartInitialReservationAsync", StringComparison.Ordinal)
-            < checkout.IndexOf("ReserveCartLinesForOrderAsync", StringComparison.Ordinal));
-        Assert.Contains("PrepareInitialCommit", checkout, StringComparison.Ordinal);
-        Assert.Contains("PrepareInitialCycleAsync", checkout, StringComparison.Ordinal);
+            < checkout.IndexOf("ReserveForCheckoutAsync", StringComparison.Ordinal));
+        Assert.Contains("PrepareInitialCommit", host, StringComparison.Ordinal);
+        Assert.Contains("PrepareInitialCycleAsync", host, StringComparison.Ordinal);
         Assert.DoesNotContain("_checkouts.SubmitAsync", payment, StringComparison.Ordinal);
         Assert.Contains("InitiateAsync", payment, StringComparison.Ordinal);
         Assert.Contains("if (!response.ok)", feCheckout, StringComparison.Ordinal);

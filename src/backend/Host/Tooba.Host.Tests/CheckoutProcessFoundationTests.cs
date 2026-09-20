@@ -99,12 +99,12 @@ public sealed class CheckoutProcessFoundationTests
     public void Submit_path_still_uses_TransactionScope()
     {
         var root = FindRepoRoot();
-        var executor = File.ReadAllText(Path.Combine(root, "src/backend/Modules/Order/Tooba.Order.Infrastructure/CheckoutSubmitExecutor.cs"));
+        var manager = File.ReadAllText(Path.Combine(root, "src/backend/Modules/Order/Tooba.Order.Application/CheckoutProcessManager.cs"));
         var directory = File.ReadAllText(Path.Combine(root, "src/backend/Modules/Order/Tooba.Order.Infrastructure/CheckoutDirectory.cs"));
-        Assert.Contains("new TransactionScope(", executor, StringComparison.Ordinal);
+        Assert.Contains("new TransactionScope(", manager, StringComparison.Ordinal);
         Assert.Contains("ICheckoutProcessTracker", directory, StringComparison.Ordinal);
-        Assert.Contains("MarkPaymentPending", executor, StringComparison.Ordinal);
-        Assert.Contains("CheckoutSubmitExecutor.ExecuteAsync", directory, StringComparison.Ordinal);
+        Assert.Contains("ICheckoutInventoryReservationPort", manager, StringComparison.Ordinal);
+        Assert.Contains("CheckoutProcessManager", directory, StringComparison.Ordinal);
     }
 
     [Fact]
