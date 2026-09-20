@@ -73,7 +73,7 @@ Recovery-SoT:
 docs/evidence/TB-TMAR-FE-ADMIN-W3/recovery-sot.md
 
 Git:
-branch main; tip 316f55e7fd771bcc9cf635f056588cb908483f15; pushed origin/main; HEAD==origin/main; 18ca10c9 ancestor; user work preserved
+branch main; tip cf1ff2b14b5197d6ba56aeee197805d4a49eb259; pushed origin/main; HEAD==origin/main; 18ca10c9 ancestor; user work preserved
 
 Architectural-Concerns:
 Remaining admin-api capability debt (customers/receipts/orders/…); formatters SHARED; giants deferred; Flat CONTINUE_FEATURE_MIGRATION
