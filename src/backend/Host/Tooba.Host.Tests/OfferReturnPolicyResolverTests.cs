@@ -1,4 +1,5 @@
 using Tooba.Offer.Application;
+using Tooba.Offer.Contracts;
 using Xunit;
 
 namespace Tooba.Host.Tests;

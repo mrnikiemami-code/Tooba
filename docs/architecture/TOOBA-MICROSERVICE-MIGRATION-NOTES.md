@@ -314,8 +314,11 @@ TB-TMAR-CONTRACTS-W4
 
 TB-TMAR-CONTRACTS-W5
 
-Current expected architecture wave:
 TB-TMAR-CONTRACTS-W6
+
+Current expected architecture wave:
+TB-TMAR-FE-BASELINE
+
 
 Future design candidate (not implemented):
 TB-TMAR-CHECKOUT-CONSISTENCY-DESIGN

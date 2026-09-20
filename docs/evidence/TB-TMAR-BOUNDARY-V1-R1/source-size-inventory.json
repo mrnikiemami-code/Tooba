@@ -1,6 +1,6 @@
 {
-  "generatedAt": "2026-09-20T06:52:46.181Z",
-  "fileCount": 1734,
+  "generatedAt": "2026-09-20T06:58:45.035Z",
+  "fileCount": 1737,
   "oversizedCount": 55,
   "files": [
     {
@@ -138,7 +138,7 @@
     {
       "path": "src/backend/Modules/Order/Tooba.Order.Infrastructure/CheckoutDirectory.cs",
       "language": "cs",
-      "physicalLoc": 1102,
+      "physicalLoc": 1100,
       "classification": "OVERSIZED_LEGACY"
     },
     {
@@ -384,7 +384,7 @@
     {
       "path": "src/backend/Modules/Cart/Tooba.Cart.Infrastructure/CartDirectory.cs",
       "language": "cs",
-      "physicalLoc": 776,
+      "physicalLoc": 775,
       "classification": "WATCH"
     },
     {
@@ -838,12 +838,6 @@
       "classification": "WATCH"
     },
     {
-      "path": "src/backend/Modules/Pricing/Tooba.Pricing.Domain/PricingDomain.cs",
-      "language": "cs",
-      "physicalLoc": 511,
-      "classification": "WATCH"
-    },
-    {
       "path": "src/frontend/app/admin/landing-pages/admin-landing-pages-screen.tsx",
       "language": "tsx",
       "physicalLoc": 511,
@@ -979,6 +973,12 @@
       "path": "src/frontend/scripts/storefront-theme-coverage.mjs",
       "language": "mjs",
       "physicalLoc": 470,
+      "classification": "NORMAL"
+    },
+    {
+      "path": "src/backend/Modules/Pricing/Tooba.Pricing.Domain/PricingDomain.cs",
+      "language": "cs",
+      "physicalLoc": 466,
       "classification": "NORMAL"
     },
     {
@@ -1324,15 +1324,15 @@
       "classification": "NORMAL"
     },
     {
-      "path": "src/backend/Host/Tooba.Host.Tests/StoryFoundationTests.cs",
+      "path": "src/backend/Host/Tooba.Host.Tests/CampaignCartPriceIntegrityTests.cs",
       "language": "cs",
       "physicalLoc": 390,
       "classification": "NORMAL"
     },
     {
-      "path": "src/backend/Host/Tooba.Host.Tests/CampaignCartPriceIntegrityTests.cs",
+      "path": "src/backend/Host/Tooba.Host.Tests/StoryFoundationTests.cs",
       "language": "cs",
-      "physicalLoc": 388,
+      "physicalLoc": 390,
       "classification": "NORMAL"
     },
     {
@@ -1720,15 +1720,15 @@
       "classification": "NORMAL"
     },
     {
-      "path": "src/frontend/app/admin/shipping-services-api.ts",
-      "language": "ts",
+      "path": "src/backend/Host/Tooba.Host.Tests/SellerOfferSaleWriteTests.cs",
+      "language": "cs",
       "physicalLoc": 338,
       "classification": "NORMAL"
     },
     {
-      "path": "src/backend/Host/Tooba.Host.Tests/SellerOfferSaleWriteTests.cs",
-      "language": "cs",
-      "physicalLoc": 337,
+      "path": "src/frontend/app/admin/shipping-services-api.ts",
+      "language": "ts",
+      "physicalLoc": 338,
       "classification": "NORMAL"
     },
     {
@@ -3658,7 +3658,7 @@
       "classification": "NORMAL"
     },
     {
-      "path": "src/backend/Modules/Offer/Tooba.Offer.Application/ReturnPolicyContracts.cs",
+      "path": "src/backend/Modules/Offer/Tooba.Offer.Contracts/ReturnPolicyContracts.cs",
       "language": "cs",
       "physicalLoc": 176,
       "classification": "NORMAL"
@@ -5530,12 +5530,6 @@
       "classification": "NORMAL"
     },
     {
-      "path": "src/backend/Modules/Promotion/Tooba.Promotion.Infrastructure/CampaignCartPriceAuthority.cs",
-      "language": "cs",
-      "physicalLoc": 100,
-      "classification": "NORMAL"
-    },
-    {
       "path": "src/backend/Modules/Tax/Tooba.Tax.Infrastructure/Persistence/TaxDbContext.cs",
       "language": "cs",
       "physicalLoc": 100,
@@ -5567,6 +5561,12 @@
     },
     {
       "path": "src/backend/Modules/Payment/Tooba.Payment.Infrastructure/PaymentOutboxRegistration.cs",
+      "language": "cs",
+      "physicalLoc": 99,
+      "classification": "NORMAL"
+    },
+    {
+      "path": "src/backend/Modules/Promotion/Tooba.Promotion.Infrastructure/CampaignCartPriceAuthority.cs",
       "language": "cs",
       "physicalLoc": 99,
       "classification": "NORMAL"
@@ -5992,6 +5992,12 @@
       "classification": "NORMAL"
     },
     {
+      "path": "src/backend/Host/Tooba.Host.Tests/OfferReturnPolicyResolverTests.cs",
+      "language": "cs",
+      "physicalLoc": 86,
+      "classification": "NORMAL"
+    },
+    {
       "path": "src/backend/Host/Tooba.Host.Tests/PromotionCampaignSourceTests.cs",
       "language": "cs",
       "physicalLoc": 86,
@@ -6042,12 +6048,6 @@
     {
       "path": "docs/evidence/TB-P06-T023-R1/_capture-r1.cjs",
       "language": "cjs",
-      "physicalLoc": 85,
-      "classification": "NORMAL"
-    },
-    {
-      "path": "src/backend/Host/Tooba.Host.Tests/OfferReturnPolicyResolverTests.cs",
-      "language": "cs",
       "physicalLoc": 85,
       "classification": "NORMAL"
     },
@@ -6868,6 +6868,12 @@
       "classification": "NORMAL"
     },
     {
+      "path": "src/backend/Host/Tooba.Host.Tests/ContractsW6CharacterizationTests.cs",
+      "language": "cs",
+      "physicalLoc": 61,
+      "classification": "NORMAL"
+    },
+    {
       "path": "src/backend/Host/Tooba.Host/Content/ContentArticleMediaPanelComposer.cs",
       "language": "cs",
       "physicalLoc": 61,
@@ -7637,6 +7643,12 @@
     },
     {
       "path": "src/backend/Modules/Payment/Tooba.Payment.Infrastructure/PaymentGatewayInstrumentation.cs",
+      "language": "cs",
+      "physicalLoc": 48,
+      "classification": "NORMAL"
+    },
+    {
+      "path": "src/backend/Modules/Pricing/Tooba.Pricing.Contracts/CurrencyCode.cs",
       "language": "cs",
       "physicalLoc": 48,
       "classification": "NORMAL"
@@ -9328,12 +9340,6 @@
       "classification": "NORMAL"
     },
     {
-      "path": "src/backend/Modules/Pricing/Tooba.Pricing.Application/CampaignCartPriceAuthority.cs",
-      "language": "cs",
-      "physicalLoc": 24,
-      "classification": "NORMAL"
-    },
-    {
       "path": "src/frontend/app/[slug]/page.tsx",
       "language": "tsx",
       "physicalLoc": 24,
@@ -9389,6 +9395,12 @@
     },
     {
       "path": "src/backend/Modules/Identity/Tooba.Identity.Infrastructure/OtpDeliveryInstrumentation.cs",
+      "language": "cs",
+      "physicalLoc": 23,
+      "classification": "NORMAL"
+    },
+    {
+      "path": "src/backend/Modules/Pricing/Tooba.Pricing.Contracts/CampaignCartPriceAuthority.cs",
       "language": "cs",
       "physicalLoc": 23,
       "classification": "NORMAL"
@@ -10386,6 +10398,12 @@
     {
       "path": ".tmp-pg-del/verify-fa.mjs",
       "language": "mjs",
+      "physicalLoc": 5,
+      "classification": "NORMAL"
+    },
+    {
+      "path": "src/backend/Modules/Pricing/Tooba.Pricing.Domain/TypeForwarders.cs",
+      "language": "cs",
       "physicalLoc": 5,
       "classification": "NORMAL"
     },

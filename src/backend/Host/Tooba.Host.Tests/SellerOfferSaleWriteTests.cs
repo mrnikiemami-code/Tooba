@@ -10,6 +10,7 @@ using Tooba.Inventory.Domain;
 using Tooba.Inventory.Infrastructure;
 using Tooba.Inventory.Infrastructure.Persistence;
 using Tooba.Offer.Application;
+using Tooba.Offer.Contracts;
 using Tooba.Offer.Domain;
 using Tooba.Offer.Infrastructure;
 using Tooba.Offer.Infrastructure.Persistence;

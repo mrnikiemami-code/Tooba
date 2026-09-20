@@ -129,6 +129,8 @@ TB-TMAR-CONTRACTS-W4
 
 TB-TMAR-CONTRACTS-W5
 
+TB-TMAR-CONTRACTS-W6
+
 Current Product Resume Gate:
 SAFE_WITH_TMAR_PARALLEL
 
@@ -136,7 +138,7 @@ User choice:
 Continue TMAR for now until user explicitly says to return to product feature work.
 
 Next TMAR task:
-TB-TMAR-CONTRACTS-W6
+TB-TMAR-FE-BASELINE
 
 Confirmed Architecture Facts
 
@@ -177,6 +179,10 @@ Order.Application → Tax.Application: removed in CONTRACTS-W4 (ITaxCalculator v
 Inventory.Application → Offer.Application: removed in CONTRACTS-W5 (Offer.Contracts)
 
 Order.Application → Pricing.Application: removed in CONTRACTS-W5 (IPriceLookupGateway via Pricing.Contracts)
+
+Promotion.Application → Offer.Application: removed in CONTRACTS-W6 (Offer.Contracts)
+
+Cart.Application → Pricing.Application: removed in CONTRACTS-W6 (Pricing.Contracts + campaign authority)
 
 Order.Application is a synchronous hub with remaining foreign Application dependencies
 

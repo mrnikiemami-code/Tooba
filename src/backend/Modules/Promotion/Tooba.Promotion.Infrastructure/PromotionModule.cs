@@ -32,7 +32,7 @@ public sealed class PromotionModule : IToobaModule
         services.AddScoped<IPromotionEvaluator>(sp => sp.GetRequiredService<IPromotionDirectory>());
         services.AddScoped<IMerchandisingCampaignDirectory, MerchandisingCampaignDirectory>();
         services.AddScoped<IMerchandisingCampaignQuery, MerchandisingCampaignQuery>();
-        services.AddScoped<Tooba.Pricing.Application.ICampaignCartPriceAuthority, CampaignCartPriceAuthority>();
+        services.AddScoped<Tooba.Pricing.Contracts.ICampaignCartPriceAuthority, CampaignCartPriceAuthority>();
         services.AddDbContext<PromotionDbContext>((sp, options) =>
         {
             var connectionString = ToobaNpgsql.ResolveForContext(

@@ -105,7 +105,9 @@ public sealed class CartFoundationTests : IAsyncLifetime
             Assert.DoesNotContain("Tooba.Identity", csproj, StringComparison.Ordinal);
         }
 
-        Assert.Contains("Tooba.Offer.Application", File.ReadAllText(Path.Combine(root, "src", "backend", "Modules", "Cart", "Tooba.Cart.Application", "Tooba.Cart.Application.csproj")));
+        Assert.Contains("Tooba.Offer.Contracts", File.ReadAllText(Path.Combine(root, "src", "backend", "Modules", "Cart", "Tooba.Cart.Application", "Tooba.Cart.Application.csproj")));
+        Assert.Contains("Tooba.Pricing.Contracts", File.ReadAllText(Path.Combine(root, "src", "backend", "Modules", "Cart", "Tooba.Cart.Application", "Tooba.Cart.Application.csproj")));
+        Assert.DoesNotContain("Tooba.Pricing.Application", File.ReadAllText(Path.Combine(root, "src", "backend", "Modules", "Cart", "Tooba.Cart.Application", "Tooba.Cart.Application.csproj")));
         Assert.Contains("Tooba.Inventory.Application", File.ReadAllText(Path.Combine(root, "src", "backend", "Modules", "Cart", "Tooba.Cart.Application", "Tooba.Cart.Application.csproj")));
         Assert.Equal("cart", CartDbContext.Schema);
         Assert.DoesNotContain("MassTransit", typeof(ShoppingCart).Assembly.GetReferencedAssemblies().Select(a => a.Name));

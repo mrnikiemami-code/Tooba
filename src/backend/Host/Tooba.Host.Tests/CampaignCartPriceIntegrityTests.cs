@@ -75,7 +75,9 @@ public sealed class CampaignCartPriceIntegrityTests : IAsyncLifetime
         Assert.Contains(nameof(Tooba.Cart.Domain.CartLine.MerchandisingCampaignId), typeof(Tooba.Cart.Domain.CartLine).GetProperties().Select(p => p.Name));
         Assert.DoesNotContain("DiscountPercent", typeof(Tooba.Cart.Domain.CartLine).GetProperties().Select(p => p.Name));
         Assert.DoesNotContain("PromoAmount", typeof(Tooba.Cart.Domain.CartLine).GetProperties().Select(p => p.Name));
-        Assert.Contains("ICampaignCartPriceAuthority", File.ReadAllText(Path.Combine(FindRepoRoot(), "src", "backend", "Modules", "Pricing", "Tooba.Pricing.Application", "CampaignCartPriceAuthority.cs")));
+        Assert.Contains("ICampaignCartPriceAuthority", File.ReadAllText(Path.Combine(FindRepoRoot(), "src", "backend", "Modules", "Pricing", "Tooba.Pricing.Contracts", "CampaignCartPriceAuthority.cs")));
+        Assert.Contains("Tooba.Pricing.Contracts", File.ReadAllText(Path.Combine(FindRepoRoot(), "src", "backend", "Modules", "Cart", "Tooba.Cart.Application", "Tooba.Cart.Application.csproj")));
+        Assert.DoesNotContain("Tooba.Pricing.Application", File.ReadAllText(Path.Combine(FindRepoRoot(), "src", "backend", "Modules", "Cart", "Tooba.Cart.Application", "Tooba.Cart.Application.csproj")));
     }
 
     [SkippableFact]

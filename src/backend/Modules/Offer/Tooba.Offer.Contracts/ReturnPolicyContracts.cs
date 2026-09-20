@@ -1,4 +1,4 @@
-namespace Tooba.Offer.Application;
+namespace Tooba.Offer.Contracts;
 
 /// <summary>
 /// پیکربندی حاکمیت سیاست مرجوعی فروشگاه/پلتفرم (نه قانون سخت ۷ روز).
