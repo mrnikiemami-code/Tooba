@@ -1,0 +1,232 @@
+﻿{
+    "generatedAtUtc":  "2026-09-20T23:33:10.8663099Z",
+    "hostProductionHits":  0,
+    "foreignModuleHits":  0,
+    "totalHits":  131,
+    "byPath":  [
+                   {
+                       "path":  "src/backend/Modules/Offer/Tooba.Offer.Infrastructure/Adapters/OfferDevelopmentSeedGateway.cs",
+                       "class":  "LEGITIMATE_OFFER_INFRASTRUCTURE",
+                       "allowed":  "YES",
+                       "hits":  2,
+                       "reason":  "Offer-owned EF"
+                   },
+                   {
+                       "path":  "src/backend/Modules/Offer/Tooba.Offer.Infrastructure/Adapters/OfferModuleMigration.cs",
+                       "class":  "LEGITIMATE_OFFER_INFRASTRUCTURE",
+                       "allowed":  "YES",
+                       "hits":  7,
+                       "reason":  "Offer-owned EF"
+                   },
+                   {
+                       "path":  "src/backend/Modules/Offer/Tooba.Offer.Infrastructure/Adapters/OfferSchemaMigrator.cs",
+                       "class":  "LEGITIMATE_OFFER_INFRASTRUCTURE",
+                       "allowed":  "YES",
+                       "hits":  3,
+                       "reason":  "Offer-owned EF"
+                   },
+                   {
+                       "path":  "src/backend/Modules/Offer/Tooba.Offer.Infrastructure/Adapters/OfferStore.cs",
+                       "class":  "LEGITIMATE_OFFER_INFRASTRUCTURE",
+                       "allowed":  "YES",
+                       "hits":  2,
+                       "reason":  "Offer-owned EF"
+                   },
+                   {
+                       "path":  "src/backend/Modules/Offer/Tooba.Offer.Infrastructure/DependencyInjection/OfferModule.cs",
+                       "class":  "LEGITIMATE_OFFER_INFRASTRUCTURE",
+                       "allowed":  "YES",
+                       "hits":  4,
+                       "reason":  "Offer-owned EF"
+                   },
+                   {
+                       "path":  "src/backend/Modules/Offer/Tooba.Offer.Infrastructure/Outbox/OfferOutboxRegistration.cs",
+                       "class":  "LEGITIMATE_OFFER_INFRASTRUCTURE",
+                       "allowed":  "YES",
+                       "hits":  3,
+                       "reason":  "Offer-owned EF"
+                   },
+                   {
+                       "path":  "src/backend/Modules/Offer/Tooba.Offer.Infrastructure/Persistence/Configurations/SellerOfferConfiguration.cs",
+                       "class":  "LEGITIMATE_OFFER_INFRASTRUCTURE",
+                       "allowed":  "YES",
+                       "hits":  1,
+                       "reason":  "Offer-owned EF"
+                   },
+                   {
+                       "path":  "src/backend/Modules/Offer/Tooba.Offer.Infrastructure/Persistence/Migrations/20260823082919_InitialOffer.cs",
+                       "class":  "LEGITIMATE_OFFER_INFRASTRUCTURE",
+                       "allowed":  "YES",
+                       "hits":  1,
+                       "reason":  "Offer-owned EF"
+                   },
+                   {
+                       "path":  "src/backend/Modules/Offer/Tooba.Offer.Infrastructure/Persistence/Migrations/20260823082919_InitialOffer.Designer.cs",
+                       "class":  "LEGITIMATE_OFFER_INFRASTRUCTURE",
+                       "allowed":  "YES",
+                       "hits":  3,
+                       "reason":  "Offer-owned EF"
+                   },
+                   {
+                       "path":  "src/backend/Modules/Offer/Tooba.Offer.Infrastructure/Persistence/Migrations/20260907120000_AddOfferReturnPolicy.cs",
+                       "class":  "LEGITIMATE_OFFER_INFRASTRUCTURE",
+                       "allowed":  "YES",
+                       "hits":  3,
+                       "reason":  "Offer-owned EF"
+                   },
+                   {
+                       "path":  "src/backend/Modules/Offer/Tooba.Offer.Infrastructure/Persistence/Migrations/20260909130100_AddOfferQuantityLimits.cs",
+                       "class":  "LEGITIMATE_OFFER_INFRASTRUCTURE",
+                       "allowed":  "YES",
+                       "hits":  3,
+                       "reason":  "Offer-owned EF"
+                   },
+                   {
+                       "path":  "src/backend/Modules/Offer/Tooba.Offer.Infrastructure/Persistence/Migrations/OfferDbContextModelSnapshot.cs",
+                       "class":  "LEGITIMATE_OFFER_INFRASTRUCTURE",
+                       "allowed":  "YES",
+                       "hits":  4,
+                       "reason":  "Offer-owned EF"
+                   },
+                   {
+                       "path":  "src/backend/Modules/Offer/Tooba.Offer.Infrastructure/Persistence/OfferDbContext.cs",
+                       "class":  "LEGITIMATE_OFFER_INFRASTRUCTURE",
+                       "allowed":  "YES",
+                       "hits":  10,
+                       "reason":  "Offer-owned EF"
+                   },
+                   {
+                       "path":  "src/backend/Modules/Offer/Tooba.Offer.Contracts/Ports/IOfferSchemaMigrator.cs",
+                       "class":  "OTHER",
+                       "allowed":  "NO",
+                       "hits":  1,
+                       "reason":  "review"
+                   },
+                   {
+                       "path":  "src/backend/Host/Tooba.Host.Tests/AdminPanelCompositionTests.cs",
+                       "class":  "TEST_ONLY",
+                       "allowed":  "YES",
+                       "hits":  2,
+                       "reason":  "integration/architecture test"
+                   },
+                   {
+                       "path":  "src/backend/Host/Tooba.Host.Tests/CampaignCartPriceIntegrityTests.cs",
+                       "class":  "TEST_ONLY",
+                       "allowed":  "YES",
+                       "hits":  5,
+                       "reason":  "integration/architecture test"
+                   },
+                   {
+                       "path":  "src/backend/Host/Tooba.Host.Tests/CartExpiryPostgresTests.cs",
+                       "class":  "TEST_ONLY",
+                       "allowed":  "YES",
+                       "hits":  5,
+                       "reason":  "integration/architecture test"
+                   },
+                   {
+                       "path":  "src/backend/Host/Tooba.Host.Tests/CartFoundationTests.cs",
+                       "class":  "TEST_ONLY",
+                       "allowed":  "YES",
+                       "hits":  5,
+                       "reason":  "integration/architecture test"
+                   },
+                   {
+                       "path":  "src/backend/Host/Tooba.Host.Tests/CheckoutOrderFoundationTests.cs",
+                       "class":  "TEST_ONLY",
+                       "allowed":  "YES",
+                       "hits":  5,
+                       "reason":  "integration/architecture test"
+                   },
+                   {
+                       "path":  "src/backend/Host/Tooba.Host.Tests/InventoryFoundationTests.cs",
+                       "class":  "TEST_ONLY",
+                       "allowed":  "YES",
+                       "hits":  5,
+                       "reason":  "integration/architecture test"
+                   },
+                   {
+                       "path":  "src/backend/Host/Tooba.Host.Tests/MerchandisingCampaignAdminTests.cs",
+                       "class":  "TEST_ONLY",
+                       "allowed":  "YES",
+                       "hits":  1,
+                       "reason":  "integration/architecture test"
+                   },
+                   {
+                       "path":  "src/backend/Host/Tooba.Host.Tests/MerchandisingCampaignRuntimeTests.cs",
+                       "class":  "TEST_ONLY",
+                       "allowed":  "YES",
+                       "hits":  5,
+                       "reason":  "integration/architecture test"
+                   },
+                   {
+                       "path":  "src/backend/Host/Tooba.Host.Tests/OfferDirectoryTestHelper.cs",
+                       "class":  "TEST_ONLY",
+                       "allowed":  "YES",
+                       "hits":  3,
+                       "reason":  "integration/architecture test"
+                   },
+                   {
+                       "path":  "src/backend/Host/Tooba.Host.Tests/OfferFoundationTests.cs",
+                       "class":  "TEST_ONLY",
+                       "allowed":  "YES",
+                       "hits":  6,
+                       "reason":  "integration/architecture test"
+                   },
+                   {
+                       "path":  "src/backend/Host/Tooba.Host.Tests/PaidOrderReservationLifecycleTests.cs",
+                       "class":  "TEST_ONLY",
+                       "allowed":  "YES",
+                       "hits":  5,
+                       "reason":  "integration/architecture test"
+                   },
+                   {
+                       "path":  "src/backend/Host/Tooba.Host.Tests/PricingFoundationTests.cs",
+                       "class":  "TEST_ONLY",
+                       "allowed":  "YES",
+                       "hits":  5,
+                       "reason":  "integration/architecture test"
+                   },
+                   {
+                       "path":  "src/backend/Host/Tooba.Host.Tests/ProductHistoryTests.cs",
+                       "class":  "TEST_ONLY",
+                       "allowed":  "YES",
+                       "hits":  1,
+                       "reason":  "integration/architecture test"
+                   },
+                   {
+                       "path":  "src/backend/Host/Tooba.Host.Tests/StorefrontDemoCatalogSeedTests.cs",
+                       "class":  "TEST_ONLY",
+                       "allowed":  "YES",
+                       "hits":  5,
+                       "reason":  "integration/architecture test"
+                   },
+                   {
+                       "path":  "src/backend/Host/Tooba.MigrationRunner.Tests/OfferMigrationIntegrityTests.cs",
+                       "class":  "TEST_ONLY",
+                       "allowed":  "YES",
+                       "hits":  6,
+                       "reason":  "integration/architecture test"
+                   },
+                   {
+                       "path":  "src/backend/Modules/Offer/Tooba.Offer.Tests/Architecture/OfferArchitectureGuardTests.cs",
+                       "class":  "TEST_ONLY",
+                       "allowed":  "YES",
+                       "hits":  10,
+                       "reason":  "integration/architecture test"
+                   },
+                   {
+                       "path":  "src/backend/Modules/Offer/Tooba.Offer.Tests/Infrastructure/OfferDbContextOwnershipTests.cs",
+                       "class":  "TEST_ONLY",
+                       "allowed":  "YES",
+                       "hits":  6,
+                       "reason":  "integration/architecture test"
+                   },
+                   {
+                       "path":  "src/backend/Modules/Offer/Tooba.Offer.Tests/Infrastructure/OfferQueryGatewayTests.cs",
+                       "class":  "TEST_ONLY",
+                       "allowed":  "YES",
+                       "hits":  4,
+                       "reason":  "integration/architecture test"
+                   }
+               ]
+}

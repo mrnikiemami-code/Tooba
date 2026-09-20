@@ -167,7 +167,8 @@ public sealed class StorefrontDemoCatalogSeedTests : IAsyncLifetime
         Assert.True(first.PublishedBrands >= 8, $"published brands = {first.PublishedBrands}");
         Assert.Equal(StorefrontDemoCatalogMatrix.ExpectedOfferCount, first.Offers);
 
-        var offerCount = await offerDb.Offers.AsNoTracking().CountAsync(offer => offer.Status == OfferStatus.Active);
+        var offerCount = await offerDb.Offers.AsNoTracking().CountAsync(
+            offer => offer.Status == Tooba.Offer.Domain.ValueObjects.OfferStatus.Active);
         var priceCount = await pricingDb.Prices.AsNoTracking().CountAsync(price => price.Status == PriceStatus.Active);
         var positionCount = await inventoryDb.Positions.AsNoTracking().CountAsync();
         Assert.Equal(StorefrontDemoCatalogMatrix.ExpectedOfferCount, offerCount);

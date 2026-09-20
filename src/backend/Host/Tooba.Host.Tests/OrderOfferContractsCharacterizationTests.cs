@@ -1,4 +1,4 @@
-using Tooba.Offer.Domain;
+using Tooba.Offer.Contracts.Dtos;
 using Xunit;
 
 namespace Tooba.Host.Tests;
@@ -19,7 +19,7 @@ public sealed class OrderOfferContractsCharacterizationTests
     [Fact]
     public void Sales_channel_is_offer_contracts_assembly_owned()
     {
-        Assert.Equal("Tooba.Offer.Domain", typeof(SalesChannel).Namespace);
+        Assert.Equal("Tooba.Offer.Contracts.Dtos", typeof(SalesChannel).Namespace);
         Assert.Equal("Tooba.Offer.Contracts", typeof(SalesChannel).Assembly.GetName().Name);
         Assert.Equal(SalesChannel.Marketplace, Enum.Parse<SalesChannel>("Marketplace"));
     }

@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Tooba.AddressBook.Infrastructure.Persistence;
 using Tooba.BulkInquiry.Infrastructure.Persistence;
 using Tooba.Cart.Infrastructure.Persistence;
@@ -13,7 +13,6 @@ using Tooba.UserPreference.Infrastructure.Persistence;
 using Tooba.OperatorProfile.Infrastructure.Persistence;
 using Tooba.Identity.Infrastructure.Persistence;
 using Tooba.Inventory.Infrastructure.Persistence;
-using Tooba.Offer.Infrastructure.Persistence;
 using Tooba.Order.Infrastructure.Persistence;
 using Tooba.Party.Infrastructure.Persistence;
 using Tooba.Fulfillment.Infrastructure.Persistence;
@@ -54,7 +53,7 @@ internal static class ModuleMigrationRegistry
     internal static IReadOnlyList<ModuleMigrationDescriptor> All { get; } =
     [
         Descriptor<CatalogDbContext>("Catalog", CatalogDbContext.Schema),
-        Descriptor<OfferDbContext>("Offer", OfferDbContext.Schema),
+        new ModuleMigrationDescriptor(Tooba.Offer.Infrastructure.Adapters.OfferModuleMigration.Module, Tooba.Offer.Infrastructure.Adapters.OfferModuleMigration.Schema, Tooba.Offer.Infrastructure.Adapters.OfferModuleMigration.CreateContext),
         Descriptor<PricingDbContext>("Pricing", PricingDbContext.Schema),
         Descriptor<InventoryDbContext>("Inventory", InventoryDbContext.Schema),
         Descriptor<TaxDbContext>("Tax", TaxDbContext.Schema),

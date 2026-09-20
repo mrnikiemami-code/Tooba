@@ -9,8 +9,6 @@ using Tooba.Inventory.Infrastructure.Persistence;
 using Tooba.Offer.Application.Ports;
 using Tooba.Offer.Contracts.Dtos;
 using Tooba.Offer.Contracts.Ports;
-using Tooba.Offer.Domain;
-using Tooba.Offer.Infrastructure.Persistence;
 using Tooba.Party.Application;
 using Tooba.Party.Infrastructure.Persistence;
 using Tooba.Pricing.Application;
@@ -186,7 +184,7 @@ internal static class CatalogAttributeSchemaDevelopmentBootstrap
         }
 
         var offers = provider.GetRequiredService<MediatR.ISender>();
-        var offerDb = provider.GetRequiredService<OfferDbContext>();
+        var offerQueries = provider.GetRequiredService<IOfferQueryGateway>();
         var parties = provider.GetRequiredService<IPartyDirectory>();
         var partyDb = provider.GetRequiredService<PartyDbContext>();
         var prices = provider.GetRequiredService<IPriceDirectory>();
@@ -222,9 +220,7 @@ internal static class CatalogAttributeSchemaDevelopmentBootstrap
         foreach (var variant in variants)
         {
             var sku = $"{DemoSellerSkuPrefix}-{variant.CatalogCodeSeam ?? variant.VariantId.ToString("N")[..8]}";
-            if (await offerDb.Offers.AnyAsync(
-                    o => o.SellerPartyId == sellerPartyId && o.SellerSku == sku,
-                    cancellationToken))
+            if (await offerQueries.ExistsBySellerSkuAsync(sellerPartyId, sku, cancellationToken))
             {
                 continue;
             }

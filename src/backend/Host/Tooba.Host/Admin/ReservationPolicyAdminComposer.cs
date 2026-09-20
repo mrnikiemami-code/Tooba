@@ -2,7 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Tooba.BuildingBlocks;
 using Tooba.Catalog.Domain;
 using Tooba.Catalog.Infrastructure.Persistence;
-using Tooba.Offer.Infrastructure.Persistence;
+using Tooba.Offer.Contracts.Ports;
 using Tooba.Order.Application;
 
 namespace Tooba.Host.Admin;
@@ -78,13 +78,12 @@ public static class ReservationPolicyAdminComposer
 
     /// <summary>دستهٔ اصلی محصول Offer را پیدا می‌کند.</summary>
     public static async Task<Guid?> ResolveOfferCategoryAsync(
-        OfferDbContext offers,
+        IOfferQueryGateway offers,
         CatalogDbContext catalog,
         Guid offerId,
         CancellationToken cancellationToken)
     {
-        var offer = await offers.Offers.AsNoTracking()
-            .SingleOrDefaultAsync(x => x.OfferId == offerId, cancellationToken);
+        var offer = await offers.FindOfferAsync(offerId, cancellationToken);
         if (offer is null)
         {
             return null;
@@ -105,7 +104,7 @@ public static class ReservationPolicyAdminComposer
 
     /// <summary>دستهٔ اصلی چند Offer را بدون N+1 برمی‌گرداند.</summary>
     public static async Task<IReadOnlyDictionary<Guid, Guid?>> ResolveOfferCategoriesAsync(
-        OfferDbContext offers,
+        IOfferQueryGateway offers,
         CatalogDbContext catalog,
         IReadOnlyList<Guid> offerIds,
         CancellationToken cancellationToken)
@@ -116,11 +115,8 @@ public static class ReservationPolicyAdminComposer
             return map;
         }
 
-        var offerRows = await offers.Offers.AsNoTracking()
-            .Where(x => map.Keys.Contains(x.OfferId))
-            .Select(x => new { x.OfferId, x.CatalogVariantId })
-            .ToListAsync(cancellationToken);
-        var variantIds = offerRows.Select(x => x.CatalogVariantId).Distinct().ToArray();
+        var offerRows = await offers.FindOffersBatchAsync(map.Keys.ToArray(), cancellationToken);
+        var variantIds = offerRows.Values.Select(x => x.CatalogVariantId).Distinct().ToArray();
         var variants = await catalog.Variants.AsNoTracking()
             .Where(x => variantIds.Contains(x.VariantId))
             .Select(x => new { x.VariantId, x.ProductId })
@@ -132,7 +128,7 @@ public static class ReservationPolicyAdminComposer
             .ToListAsync(cancellationToken);
         var variantToProduct = variants.ToDictionary(x => x.VariantId, x => x.ProductId);
         var productToCategory = categories.ToDictionary(x => x.ProductId, x => (Guid?)x.CategoryId);
-        foreach (var row in offerRows)
+        foreach (var row in offerRows.Values)
         {
             if (variantToProduct.TryGetValue(row.CatalogVariantId, out var productId)
                 && productToCategory.TryGetValue(productId, out var categoryId))

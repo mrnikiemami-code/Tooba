@@ -1,8 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Tooba.BuildingBlocks.Grid;
 using Tooba.Host.Admin;
-using Tooba.Offer.Domain;
-using Tooba.Offer.Infrastructure.Persistence;
+using Tooba.Offer.Contracts.Ports;
 using Tooba.Order.Infrastructure.Persistence;
 using Tooba.Party.Domain;
 using Tooba.Party.Infrastructure.Persistence;
@@ -16,12 +15,12 @@ namespace Tooba.Host.Grid;
 /// </summary>
 internal sealed class AdminSellersGridQueryEngine
 {
-    private readonly OfferDbContext _offers;
+    private readonly IOfferQueryGateway _offers;
     private readonly PartyDbContext _parties;
     private readonly OrderDbContext _orders;
 
     public AdminSellersGridQueryEngine(
-        OfferDbContext offers,
+        IOfferQueryGateway offers,
         PartyDbContext parties,
         OrderDbContext orders)
     {
@@ -34,10 +33,7 @@ internal sealed class AdminSellersGridQueryEngine
         GridQueryRequest request,
         CancellationToken cancellationToken)
     {
-        var sellerIds = await _offers.Offers.AsNoTracking()
-            .Select(x => x.SellerPartyId)
-            .Distinct()
-            .ToListAsync(cancellationToken);
+        var sellerIds = await _offers.ListDistinctSellerPartyIdsAsync(cancellationToken);
 
         IQueryable<BusinessParty> parties = _parties.Parties.AsNoTracking()
             .Where(p => sellerIds.Contains(p.PartyId));
@@ -190,12 +186,8 @@ internal sealed class AdminSellersGridQueryEngine
 
     private async Task<Dictionary<Guid, int>> BuildOfferCountMetricsAsync(CancellationToken cancellationToken)
     {
-        var rows = await _offers.Offers.AsNoTracking()
-            .Where(x => x.Status == OfferStatus.Active)
-            .GroupBy(x => x.SellerPartyId)
-            .Select(g => new { SellerPartyId = g.Key, Count = g.Count() })
-            .ToListAsync(cancellationToken);
-        return rows.ToDictionary(x => x.SellerPartyId, x => x.Count);
+        var rows = await _offers.CountActiveOffersBySellerAsync(cancellationToken);
+        return rows.ToDictionary(x => x.Key, x => x.Value);
     }
 
     private async Task<Dictionary<Guid, int>> BuildOrderCountMetricsAsync(

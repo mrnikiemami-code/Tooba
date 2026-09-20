@@ -188,7 +188,7 @@ User choice:
 Continue TMAR for now until user explicitly says to return to product feature work.
 
 Next TMAR task:
-Offer physical repair R1 complete — Pricing remains gated as NOT_STARTED_UNTIL_OFFER_REPAIR_ACCEPTED until Architect ACCEPT of R1; Tax/Pricing physical recheck independent later. Checkout remains PAUSED_AT_SAFE_W5_CHECKPOINT; W6 deferred.
+Offer R6 COMPLETE_REFERENCE_PATTERN — Host OfferDbContext leaks closed; next USER_REVIEW_OFFER. Pricing remains gated as NOT_STARTED_UNTIL_OFFER_REPAIR_ACCEPTED until Architect ACCEPT of Offer Golden; Tax/Pricing physical recheck independent later. Checkout remains PAUSED_AT_SAFE_W5_CHECKPOINT; W6 deferred.
 
 Offer Reference Module W1-R1:
 TB-TMAR-OFFER-REFERENCE-W1-R1 — prior Offer COMPLETE REOPENED on visual evidence; physical folders/namespaces aligned; ARCH-MODULE-PHYSICAL-001; Physical-Structure-State VERIFIED_ON_DISK; COMPLETE_REFERENCE_PATTERN revalidated. Evidence: docs/evidence/TB-TMAR-OFFER-REFERENCE-W1-R1/.
@@ -206,6 +206,9 @@ TB-TMAR-OFFER-REFERENCE-W1-R4 — fake CQRS and Host Offer BFF removed; owner co
 
 Offer Reference Final Verification R5:
 TB-TMAR-OFFER-REFERENCE-W1-R5 — magic offer.not_found exception seam repaired (SemanticException); seller Offer CQRS/guards green; Host Admin/Storefront OfferDbContext residual blocks COMPLETE. Module-Recovery-State: INCOMPLETE. Next: TB-TMAR-OFFER-REFERENCE-W1-R6. Evidence: docs/evidence/TB-TMAR-OFFER-REFERENCE-W1-R5/.
+
+Offer Reference Host Persistence Closure R6:
+TB-TMAR-OFFER-REFERENCE-W1-R6 — Host/foreign production OfferDbContext leaks removed via IOfferQueryGateway + Offer.Infrastructure adapter; composers/grids/storefront/merch/reservation/seeds rewired; architecture guards green. Module-Recovery-State: COMPLETE_REFERENCE_PATTERN. Next: USER_REVIEW_OFFER. Evidence: docs/evidence/TB-TMAR-OFFER-REFERENCE-W1-R6/.
 
 Checkout Implementation W5:
 TB-TMAR-CHECKOUT-IMPL-W5 — Promotion checkout seam (ICheckoutPromotionPort); Order.Application↛Promotion.Application; TX preserved; W6 READY (intentionally paused); FE freeze intact. Evidence: docs/evidence/TB-TMAR-CHECKOUT-IMPL-W5/.

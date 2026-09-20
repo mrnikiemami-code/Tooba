@@ -11,8 +11,6 @@ using Tooba.Inventory.Infrastructure.Persistence;
 using Tooba.Offer.Application.Ports;
 using Tooba.Offer.Contracts.Dtos;
 using Tooba.Offer.Contracts.Ports;
-using Tooba.Offer.Domain;
-using Tooba.Offer.Infrastructure.Persistence;
 using Tooba.Order.Infrastructure.Persistence;
 using Tooba.Party.Application;
 using Tooba.Party.Infrastructure.Persistence;
@@ -99,7 +97,7 @@ internal static class ProductWorkspaceDevelopmentBootstrap
             seedCatalog ? "workspace-dev-seed" : "workspace-dev-schema"));
 
         await MigrateAsync(provider.GetRequiredService<CatalogDbContext>());
-        await MigrateAsync(provider.GetRequiredService<OfferDbContext>());
+        await provider.GetRequiredService<IOfferSchemaMigrator>().MigrateAsync();
         await MigrateAsync(provider.GetRequiredService<PricingDbContext>());
         await MigrateAsync(provider.GetRequiredService<InventoryDbContext>());
         await MigrateAsync(provider.GetRequiredService<TaxDbContext>());

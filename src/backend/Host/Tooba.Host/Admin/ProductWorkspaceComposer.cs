@@ -4,8 +4,8 @@ using Tooba.Catalog.Application;
 using Tooba.Catalog.Domain;
 using Tooba.Catalog.Infrastructure.Persistence;
 using Tooba.Inventory.Infrastructure.Persistence;
-using Tooba.Offer.Domain;
-using Tooba.Offer.Infrastructure.Persistence;
+using Tooba.Offer.Contracts.Dtos;
+using Tooba.Offer.Contracts.Ports;
 using Tooba.Pricing.Infrastructure.Persistence;
 using Tooba.Party.Application;
 using Tooba.Tax.Infrastructure.Persistence;
@@ -21,7 +21,7 @@ namespace Tooba.Host.Admin;
 public sealed class ProductWorkspaceComposer
 {
     private readonly CatalogDbContext _catalog;
-    private readonly OfferDbContext _offers;
+    private readonly IOfferQueryGateway _offers;
     private readonly PricingDbContext _prices;
     private readonly InventoryDbContext _inventory;
     private readonly TaxDbContext _tax;
@@ -33,7 +33,7 @@ public sealed class ProductWorkspaceComposer
     /// </summary>
     public ProductWorkspaceComposer(
         CatalogDbContext catalog,
-        OfferDbContext offers,
+        IOfferQueryGateway offers,
         PricingDbContext prices,
         InventoryDbContext inventory,
         TaxDbContext tax,
@@ -84,10 +84,9 @@ public sealed class ProductWorkspaceComposer
         var variantIds = variantRows.Select(x => x.VariantId).ToList();
         var offerRows = variantIds.Count == 0
             ? []
-            : await _offers.Offers.AsNoTracking()
-                .Where(x => variantIds.Contains(x.CatalogVariantId))
+            : (await _offers.ListOffersByCatalogVariantIdsAsync(variantIds, cancellationToken))
                 .Select(x => new { x.OfferId, x.CatalogVariantId })
-                .ToListAsync(cancellationToken);
+                .ToList();
         var offerIds = offerRows.Select(x => x.OfferId).ToList();
         var amountRows = offerIds.Count == 0
             ? []
@@ -233,7 +232,7 @@ public sealed class ProductWorkspaceComposer
 
         var offers = variantIds.Count == 0
             ? []
-            : await _offers.Offers.AsNoTracking().Where(x => variantIds.Contains(x.CatalogVariantId)).ToListAsync(cancellationToken);
+            : (await _offers.ListOffersByCatalogVariantIdsAsync(variantIds, cancellationToken)).ToList();
         var offerIds = offers.Select(x => x.OfferId).ToList();
         var prices = offerIds.Count == 0
             ? []
@@ -1295,7 +1294,7 @@ public sealed class ProductWorkspaceComposer
             .Select(x => x.VariantId)
             .ToListAsync(cancellationToken);
         var hasOffers = variantIds.Count > 0
-            && await _offers.Offers.AsNoTracking().AnyAsync(x => variantIds.Contains(x.CatalogVariantId), cancellationToken);
+            && await _offers.AnyOffersForCatalogVariantIdsAsync(variantIds, cancellationToken);
 
         if (hasOffers)
         {

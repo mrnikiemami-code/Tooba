@@ -5,7 +5,7 @@ using Tooba.Catalog.Domain;
 using Tooba.Catalog.Infrastructure.Persistence;
 using Tooba.Inventory.Application;
 using Tooba.Offer.Contracts.Dtos;
-using Tooba.Offer.Infrastructure.Persistence;
+using Tooba.Offer.Contracts.Ports;
 using Tooba.Party.Infrastructure.Persistence;
 using Tooba.Pricing.Application;
 using Tooba.Pricing.Contracts;
@@ -106,7 +106,7 @@ public sealed class MerchandisingCampaignAdminComposer
     private readonly IPriceDirectory _prices;
     private readonly IPriceLookupGateway _priceLookup;
     private readonly IInventoryAvailabilityGateway _availability;
-    private readonly OfferDbContext _offers;
+    private readonly IOfferQueryGateway _offers;
     private readonly CatalogDbContext _catalog;
     private readonly PartyDbContext _parties;
     private readonly ICurrentCommerceContext _commerce;
@@ -116,7 +116,7 @@ public sealed class MerchandisingCampaignAdminComposer
         IPriceDirectory prices,
         IPriceLookupGateway priceLookup,
         IInventoryAvailabilityGateway availability,
-        OfferDbContext offers,
+        IOfferQueryGateway offers,
         CatalogDbContext catalog,
         PartyDbContext parties,
         ICurrentCommerceContext commerce)
@@ -334,8 +334,7 @@ public sealed class MerchandisingCampaignAdminComposer
             return null;
         }
 
-        var offer = await _offers.Offers.AsNoTracking()
-            .SingleOrDefaultAsync(x => x.OfferId == sellerOfferId, cancellationToken)
+        var offer = await _offers.FindOfferAsync(sellerOfferId, cancellationToken)
             ?? throw new InvalidOperationException("Offer یافت نشد.");
         if (offer.Status != OfferStatus.Active)
         {
@@ -449,11 +448,7 @@ public sealed class MerchandisingCampaignAdminComposer
     {
         skip = Math.Max(0, skip);
         take = Math.Clamp(take, 1, 50);
-        var offers = await _offers.Offers.AsNoTracking()
-            .Where(x => x.Status == OfferStatus.Active)
-            .OrderByDescending(x => x.UpdatedAt)
-            .Take(200)
-            .ToListAsync(cancellationToken);
+        var offers = await _offers.ListRecentActiveOffersAsync(200, cancellationToken);
         var variantIds = offers.Select(o => o.CatalogVariantId).Distinct().ToArray();
         var variants = await _catalog.Variants.AsNoTracking()
             .Where(v => variantIds.Contains(v.VariantId))
@@ -541,11 +536,8 @@ public sealed class MerchandisingCampaignAdminComposer
         }
 
         var offerIds = members.Select(m => m.SellerOfferId).ToArray();
-        var offers = await _offers.Offers.AsNoTracking()
-            .Where(o => offerIds.Contains(o.OfferId))
-            .ToListAsync(cancellationToken);
-        var offerMap = offers.ToDictionary(o => o.OfferId);
-        var variantIds = offers.Select(o => o.CatalogVariantId).Distinct().ToArray();
+        var offerMap = await _offers.FindOffersBatchAsync(offerIds, cancellationToken);
+        var variantIds = offerMap.Values.Select(o => o.CatalogVariantId).Distinct().ToArray();
         var variants = await _catalog.Variants.AsNoTracking()
             .Where(v => variantIds.Contains(v.VariantId))
             .ToListAsync(cancellationToken);
@@ -556,7 +548,7 @@ public sealed class MerchandisingCampaignAdminComposer
                         && f.FieldKey == "name"
                         && f.Locale == "fa-IR")
             .ToListAsync(cancellationToken);
-        var sellerIds = offers.Select(o => o.SellerPartyId).Distinct().ToArray();
+        var sellerIds = offerMap.Values.Select(o => o.SellerPartyId).Distinct().ToArray();
         var sellers = await _parties.Parties.AsNoTracking()
             .Where(o => sellerIds.Contains(o.PartyId))
             .Select(o => new { o.PartyId, o.DisplayName })

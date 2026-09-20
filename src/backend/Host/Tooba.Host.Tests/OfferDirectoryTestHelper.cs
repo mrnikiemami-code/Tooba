@@ -102,8 +102,7 @@ internal sealed class OfferTestSender(OfferDirectory offers) : MediatR.ISender
     public async Task<TResponse> Send<TResponse>(MediatR.IRequest<TResponse> request, CancellationToken token = default) =>
         request switch
         {
-            CreateOfferCommand create => (TResponse)(object)await offers.CreateOfferAsync(
-                create.CatalogVariantId, create.SellerPartyId, create.Channel, create.SellerSku, token),
+            CreateOfferCommand create => (TResponse)(object)await CreateDetailAsync(create, token),
             ActivateOfferCommand activate => (TResponse)(object)await ActivateAsync(activate.OfferId, token),
             _ => throw new NotSupportedException(request.GetType().Name),
         };
@@ -111,7 +110,7 @@ internal sealed class OfferTestSender(OfferDirectory offers) : MediatR.ISender
     public async Task<object?> Send(object request, CancellationToken token = default)
     {
         if (request is CreateOfferCommand create)
-            return await offers.CreateOfferAsync(create.CatalogVariantId, create.SellerPartyId, create.Channel, create.SellerSku, token);
+            return await CreateDetailAsync(create, token);
         if (request is ActivateOfferCommand activate)
             return await ActivateAsync(activate.OfferId, token);
         throw new NotSupportedException(request.GetType().Name);
@@ -123,9 +122,39 @@ internal sealed class OfferTestSender(OfferDirectory offers) : MediatR.ISender
     public IAsyncEnumerable<object?> CreateStream(object request, CancellationToken token = default) =>
         throw new NotSupportedException();
 
+    private async Task<SellerOfferDetailPage> CreateDetailAsync(CreateOfferCommand create, CancellationToken token)
+    {
+        var reference = await offers.CreateOfferAsync(
+            create.CatalogVariantId, create.SellerPartyId, create.Channel, create.SellerSku, token);
+        return ToDetail(reference);
+    }
+
     private async Task<OfferReference> ActivateAsync(Guid id, CancellationToken token)
     {
         await offers.ActivateAsync(id, token);
         return (await offers.FindOfferAsync(id, token))!;
     }
+
+    private static SellerOfferDetailPage ToDetail(OfferReference reference) =>
+        new(
+            reference.OfferId,
+            reference.SellerPartyId,
+            "seller",
+            reference.CatalogVariantId,
+            null,
+            "product",
+            null,
+            reference.SellerSku,
+            reference.Status.ToString(),
+            reference.Channel.ToString(),
+            null,
+            "IRR",
+            0,
+            0,
+            0,
+            true,
+            reference.ReturnPolicyChoice,
+            reference.CustomReturnWindowDays,
+            MinimumOrderQuantity: reference.MinimumOrderQuantity,
+            MaximumOrderQuantity: reference.MaximumOrderQuantity);
 }

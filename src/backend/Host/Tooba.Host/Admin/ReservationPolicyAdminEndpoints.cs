@@ -1,7 +1,7 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Tooba.BuildingBlocks;
 using Tooba.Catalog.Infrastructure.Persistence;
-using Tooba.Offer.Infrastructure.Persistence;
+using Tooba.Offer.Contracts.Ports;
 using Tooba.Order.Application;
 
 namespace Tooba.Host.Admin;
@@ -143,7 +143,7 @@ public static class ReservationPolicyAdminEndpoints
     private static async Task<IResult> GetOfferAsync(
         Guid offerId,
         IReservationCyclePolicyResolver resolver,
-        OfferDbContext offers,
+        IOfferQueryGateway offers,
         CatalogDbContext catalog,
         HttpRequest request,
         CurrentAuthenticatedSession session,
@@ -170,7 +170,7 @@ public static class ReservationPolicyAdminEndpoints
     private static async Task<IResult> GetOffersBatchAsync(
         string? offerIds,
         IReservationCyclePolicyResolver resolver,
-        OfferDbContext offers,
+        IOfferQueryGateway offers,
         CatalogDbContext catalog,
         HttpRequest request,
         CurrentAuthenticatedSession session,
@@ -206,7 +206,7 @@ public static class ReservationPolicyAdminEndpoints
         Guid offerId,
         ReservationPolicyWriteRequest body,
         CatalogDbContext catalog,
-        OfferDbContext offers,
+        IOfferQueryGateway offers,
         IReservationCyclePolicyResolver resolver,
         HttpRequest request,
         CurrentAuthenticatedSession session,
@@ -277,7 +277,7 @@ public static class ReservationPolicyAdminEndpoints
     private static async Task<IResult> SellerGetOfferAsync(
         Guid offerId,
         IReservationCyclePolicyResolver resolver,
-        OfferDbContext offers,
+        IOfferQueryGateway offers,
         CatalogDbContext catalog,
         HttpRequest request,
         CurrentAuthenticatedSession session,

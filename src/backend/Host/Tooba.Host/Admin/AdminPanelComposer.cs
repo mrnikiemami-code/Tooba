@@ -5,8 +5,8 @@ using Tooba.Catalog.Infrastructure.Persistence;
 using Tooba.Fulfillment.Application;
 using Tooba.Fulfillment.Domain;
 using Tooba.Host.Grid;
-using Tooba.Offer.Domain;
-using Tooba.Offer.Infrastructure.Persistence;
+using Tooba.Offer.Contracts.Dtos;
+using Tooba.Offer.Contracts.Ports;
 using Tooba.Order.Application;
 using Tooba.Order.Domain;
 using Tooba.Order.Infrastructure.Persistence;
@@ -28,7 +28,7 @@ namespace Tooba.Host.Admin;
 public sealed class AdminPanelComposer
 {
     private readonly CatalogDbContext _catalog;
-    private readonly OfferDbContext _offers;
+    private readonly IOfferQueryGateway _offers;
     private readonly OrderDbContext _orders;
     private readonly PartyDbContext _parties;
     private readonly IPaymentAdminDirectory _payments;
@@ -47,7 +47,7 @@ public sealed class AdminPanelComposer
     /// </summary>
     public AdminPanelComposer(
         CatalogDbContext catalog,
-        OfferDbContext offers,
+        IOfferQueryGateway offers,
         OrderDbContext orders,
         PartyDbContext parties,
         PaymentDbContext paymentDb,
@@ -81,15 +81,11 @@ public sealed class AdminPanelComposer
     {
         var publishedProducts = await _catalog.Products.AsNoTracking()
             .CountAsync(x => x.Status == CatalogPublicationStatus.Published, cancellationToken);
-        var activeOffers = await _offers.Offers.AsNoTracking()
-            .CountAsync(x => x.Status == OfferStatus.Active, cancellationToken);
+        var activeOffers = await _offers.CountActiveOffersAsync(cancellationToken);
         var statuses = await _orders.SellerOrders.AsNoTracking()
             .Select(x => x.Status)
             .ToListAsync(cancellationToken);
-        var sellerIds = await _offers.Offers.AsNoTracking()
-            .Select(x => x.SellerPartyId)
-            .Distinct()
-            .ToListAsync(cancellationToken);
+        var sellerIds = await _offers.ListDistinctSellerPartyIdsAsync(cancellationToken);
         var customers = await _orders.Checkouts.AsNoTracking()
             .Select(x => x.PlacedByUserId)
             .Distinct()
@@ -378,10 +374,8 @@ public sealed class AdminPanelComposer
     /// </summary>
     public async Task<IReadOnlyList<AdminSellerListItem>> ListSellersAsync(CancellationToken cancellationToken)
     {
-        var offers = await _offers.Offers.AsNoTracking()
-            .Select(x => new { x.SellerPartyId, x.Status })
-            .ToListAsync(cancellationToken);
-        var sellerIds = offers.Select(x => x.SellerPartyId).Distinct().ToList();
+        var offerRows = await _offers.ListSellerStatusRowsAsync(cancellationToken);
+        var sellerIds = offerRows.Select(x => x.SellerPartyId).Distinct().ToList();
         var parties = await _parties.Parties.AsNoTracking()
             .Where(x => sellerIds.Contains(x.PartyId))
             .Select(x => new { x.PartyId, x.DisplayName, x.Status })
@@ -396,7 +390,7 @@ public sealed class AdminPanelComposer
             party.PartyId,
             party.DisplayName,
             party.Status.ToString(),
-            offers.Count(x => x.SellerPartyId == party.PartyId && x.Status == OfferStatus.Active),
+            offerRows.Count(x => x.SellerPartyId == party.PartyId && x.Status == OfferStatus.Active),
             orderMap.GetValueOrDefault(party.PartyId))).ToList();
     }
 

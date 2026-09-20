@@ -1,0 +1,127 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+
+BEGIN_TOOBA_WORKER_RESULT
+
+Task-ID: TB-TMAR-OFFER-REFERENCE-W1-R6
+Parent-Task: TB-TMAR-OFFER-REFERENCE-W1-R5
+Channel: tooba-main
+WorkerId: tooba-worker-01
+AgentType: cursor
+Status: PASS
+
+Summary:
+OFFER-REFERENCE-W1-R6 PASS. Removed all Host production OfferDbContext / Offer.Infrastructure.Persistence / _offers.Offers leaks. Added IOfferQueryGateway (+ schema migrator/dev seed ports) with Offer.Infrastructure adapters; rewired AdminPanel, ProductWorkspace, Admin grids, Merchandising, Storefront, Reservation policy, and Host seeds/bootstraps through Offer Contracts. Module-Recovery-State COMPLETE_REFERENCE_PATTERN. Next USER_REVIEW_OFFER. Frontend untouched. User .rar preserved.
+
+Program-Name:
+TMAR — Tooba Microservice-Ready Architecture Recovery
+
+Track:
+OFFER_REFERENCE_MODULE
+
+Recovery-Start:
+docs/evidence/TB-TMAR-OFFER-REFERENCE-W1-R6/recovery-start.md
+
+Architect-Verified-R5-Blocker:
+Host Admin/Storefront/grid/seed OfferDbContext ownership — CONFIRMED and CLOSED
+
+TMAR-Execution-Mode:
+BACKEND_ONLY_UNTIL_EXPLICIT_RELEASE
+
+Frontend-Production-Changes:
+NONE
+
+Persistence-Leak-Inventory:
+docs/evidence/TB-TMAR-OFFER-REFERENCE-W1-R6/offer-persistence-leak-inventory.md
+docs/evidence/TB-TMAR-OFFER-REFERENCE-W1-R6/offer-persistence-leak-inventory.json
+
+Offer-Read-Contract:
+docs/evidence/TB-TMAR-OFFER-REFERENCE-W1-R6/offer-read-contract.md
+
+Offer-Read-Adapter:
+docs/evidence/TB-TMAR-OFFER-REFERENCE-W1-R6/offer-read-adapter.md
+
+Admin-Panel-Extraction:
+docs/evidence/TB-TMAR-OFFER-REFERENCE-W1-R6/admin-panel-extraction.md
+
+Product-Workspace-Extraction:
+docs/evidence/TB-TMAR-OFFER-REFERENCE-W1-R6/product-workspace-extraction.md
+
+Admin-Product-Grid-Extraction:
+docs/evidence/TB-TMAR-OFFER-REFERENCE-W1-R6/admin-product-grid-extraction.md
+
+Admin-Sellers-Grid-Extraction:
+docs/evidence/TB-TMAR-OFFER-REFERENCE-W1-R6/admin-sellers-grid-extraction.md
+
+Merchandising-Extraction:
+docs/evidence/TB-TMAR-OFFER-REFERENCE-W1-R6/merchandising-extraction.md
+
+Storefront-Extraction:
+docs/evidence/TB-TMAR-OFFER-REFERENCE-W1-R6/storefront-extraction.md
+
+Seed-Bootstrap-Extraction:
+docs/evidence/TB-TMAR-OFFER-REFERENCE-W1-R6/seed-bootstrap-extraction.md
+
+Foreign-Module-Scan:
+docs/evidence/TB-TMAR-OFFER-REFERENCE-W1-R6/foreign-module-scan.md
+
+Project-Reference-Hygiene:
+Composition-root may register Offer.Infrastructure; Host business composers no longer reference Offer persistence namespaces
+
+Query-Shape:
+docs/evidence/TB-TMAR-OFFER-REFERENCE-W1-R6/query-shape.md
+
+Architecture-Guards:
+docs/evidence/TB-TMAR-OFFER-REFERENCE-W1-R6/offer-persistence-guards.md
+
+Focused-Validation:
+docs/evidence/TB-TMAR-OFFER-REFERENCE-W1-R6/focused-validation.md
+Offer.Tests 35/35
+
+Full-Validation:
+Offer.Tests 35/35; focused Host Offer-related 9/9; Host/MigrationRunner builds green
+
+Final-Persistence-Scan:
+docs/evidence/TB-TMAR-OFFER-REFERENCE-W1-R6/final-persistence-scan.md
+docs/evidence/TB-TMAR-OFFER-REFERENCE-W1-R6/final-persistence-scan.json
+Host production OfferDbContext hits: 0
+
+AntiPattern-Gate:
+CLEAN
+docs/evidence/TB-TMAR-OFFER-REFERENCE-W1-R6/antipattern-gate.md
+
+Residual-Defects:
+NONE mandatory for Offer Golden Host persistence ownership
+
+Capability-Map:
+UNCHANGED (Offer read boundary extended; capability ownership unchanged)
+
+Bootstrap:
+Updated COMPLETE_REFERENCE_PATTERN / USER_REVIEW_OFFER
+
+Master-Recovery-State:
+Updated COMPLETE_REFERENCE_PATTERN / USER_REVIEW_OFFER
+
+Recovery-SoT:
+docs/evidence/TB-TMAR-OFFER-REFERENCE-W1-R6/recovery-sot.md
+
+Git:
+TIP_SHA_PLACEHOLDER
+HEAD==origin/main: YES
+branch: main
+
+Blockers:
+NONE
+
+User-Work-Preserved:
+YES (.rar untracked; stashes untouched)
+
+Product-Resume-Safety:
+SAFE_WITH_TMAR_PARALLEL
+
+Module-Recovery-State:
+COMPLETE_REFERENCE_PATTERN
+
+Next-Recommended-Task:
+USER_REVIEW_OFFER
+
+END_TOOBA_WORKER_RESULT

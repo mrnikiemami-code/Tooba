@@ -192,6 +192,82 @@ public sealed class OfferArchitectureGuardTests
         Assert.Empty(violations);
     }
 
+    [Fact]
+    public void Host_production_sources_do_not_reference_offer_persistence()
+    {
+        var hostRoot = Path.Combine(RepoRoot(), "src", "backend", "Host", "Tooba.Host");
+        var violations = Directory.EnumerateFiles(hostRoot, "*.cs", SearchOption.AllDirectories)
+            .Where(path =>
+            {
+                var n = path.Replace('\\', '/');
+                return !n.Contains("/bin/", StringComparison.Ordinal)
+                       && !n.Contains("/obj/", StringComparison.Ordinal);
+            })
+            .Select(path => (Path: Path.GetRelativePath(RepoRoot(), path), Text: File.ReadAllText(path)))
+            .Where(x =>
+                x.Text.Contains("OfferDbContext", StringComparison.Ordinal)
+                || x.Text.Contains("Tooba.Offer.Infrastructure.Persistence", StringComparison.Ordinal)
+                || x.Text.Contains("_offers.Offers", StringComparison.Ordinal))
+            .Select(x => x.Path)
+            .ToList();
+        Assert.True(violations.Count == 0, "Host Offer persistence leaks: " + string.Join("; ", violations));
+    }
+
+    [Fact]
+    public void Foreign_modules_do_not_reference_offer_dbcontext()
+    {
+        var modulesRoot = Path.Combine(RepoRoot(), "src", "backend", "Modules");
+        var violations = Directory.EnumerateFiles(modulesRoot, "*.cs", SearchOption.AllDirectories)
+            .Where(path =>
+            {
+                var n = path.Replace('\\', '/');
+                if (n.Contains("/bin/", StringComparison.Ordinal) || n.Contains("/obj/", StringComparison.Ordinal))
+                {
+                    return false;
+                }
+
+                if (n.Contains("/Modules/Offer/", StringComparison.OrdinalIgnoreCase)
+                    || n.Contains("/Tooba.Offer.", StringComparison.OrdinalIgnoreCase))
+                {
+                    return false;
+                }
+
+                return true;
+            })
+            .Select(path => (Path: Path.GetRelativePath(RepoRoot(), path), Text: File.ReadAllText(path)))
+            .Where(x =>
+                x.Text.Contains("OfferDbContext", StringComparison.Ordinal)
+                || x.Text.Contains("Tooba.Offer.Infrastructure.Persistence", StringComparison.Ordinal))
+            .Select(x => x.Path)
+            .ToList();
+        Assert.True(violations.Count == 0, "Foreign Offer persistence leaks: " + string.Join("; ", violations));
+    }
+
+    [Fact]
+    public void Extracted_host_surfaces_use_offer_query_gateway_not_persistence()
+    {
+        var host = Path.Combine(RepoRoot(), "src", "backend", "Host", "Tooba.Host");
+        var files = new[]
+        {
+            Path.Combine(host, "Admin", "AdminPanelComposer.cs"),
+            Path.Combine(host, "Admin", "ProductWorkspaceComposer.cs"),
+            Path.Combine(host, "Admin", "MerchandisingCampaignAdminEndpoints.cs"),
+            Path.Combine(host, "Admin", "ReservationPolicyAdminComposer.cs"),
+            Path.Combine(host, "Admin", "ReservationPolicyAdminEndpoints.cs"),
+            Path.Combine(host, "Grid", "AdminProductGridQueryEngine.cs"),
+            Path.Combine(host, "Grid", "AdminSellersGridQueryEngine.cs"),
+            Path.Combine(host, "Storefront", "StorefrontComposer.cs"),
+        };
+        foreach (var file in files)
+        {
+            var text = File.ReadAllText(file);
+            Assert.DoesNotContain("OfferDbContext", text, StringComparison.Ordinal);
+            Assert.DoesNotContain("Tooba.Offer.Infrastructure.Persistence", text, StringComparison.Ordinal);
+            Assert.DoesNotContain("_offers.Offers", text, StringComparison.Ordinal);
+            Assert.Contains("IOfferQueryGateway", text, StringComparison.Ordinal);
+        }
+    }
+
     private static IReadOnlyList<(string Path, string Text)> Sources(string project) =>
         Directory.EnumerateFiles(Path.Combine(OfferRoot(), project), "*.cs", SearchOption.AllDirectories)
             .Where(x => !x.Contains($"{Path.DirectorySeparatorChar}obj{Path.DirectorySeparatorChar}", StringComparison.Ordinal))

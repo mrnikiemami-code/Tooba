@@ -5,9 +5,8 @@ using Tooba.Catalog.Infrastructure.Persistence;
 using Tooba.Inventory.Application;
 using Tooba.Inventory.Domain;
 using Tooba.Inventory.Infrastructure.Persistence;
-using Tooba.Offer.Domain;
-using Tooba.Offer.Domain.Aggregates;
-using Tooba.Offer.Infrastructure.Persistence;
+using Tooba.Offer.Contracts.Dtos;
+using Tooba.Offer.Contracts.Ports;
 using Tooba.Party.Application;
 using Tooba.Party.Infrastructure.Persistence;
 using Tooba.Pricing.Application;
@@ -62,7 +61,8 @@ internal static class MerchandisingCampaignDevelopmentSeed
 
         var dir = provider.GetRequiredService<IMerchandisingCampaignDirectory>();
         var type = await dir.EnsureAmazingTypeSeededAsync(cancellationToken);
-        var offerDb = provider.GetRequiredService<OfferDbContext>();
+        var offerQueries = provider.GetRequiredService<IOfferQueryGateway>();
+        var offerSeeds = provider.GetRequiredService<IOfferDevelopmentSeedGateway>();
         var catalogDb = provider.GetRequiredService<CatalogDbContext>();
         var inventoryDb = provider.GetRequiredService<InventoryDbContext>();
         var inventory = provider.GetRequiredService<IInventoryDirectory>();
@@ -78,28 +78,27 @@ internal static class MerchandisingCampaignDevelopmentSeed
                 p.ProductId == v.ProductId && p.Status == CatalogPublicationStatus.Published))
             .Select(v => v.VariantId)
             .ToListAsync(cancellationToken);
-        var activeOffers = await offerDb.Offers.AsNoTracking()
-            .Where(x =>
-                x.Status == OfferStatus.Active
-                && x.SellerSku != OosSellerSku
-                && publishedVariantIds.Contains(x.CatalogVariantId))
+        var publishedVariantSet = publishedVariantIds.ToHashSet();
+        var allActive = await offerQueries.ListActiveOffersAsync(cancellationToken);
+        var activeOffers = allActive
+            .Where(x => x.SellerSku != OosSellerSku && publishedVariantSet.Contains(x.CatalogVariantId))
             .OrderBy(x => x.OfferId)
             .Take(8)
             .Select(x => x.OfferId)
-            .ToListAsync(cancellationToken);
+            .ToList();
         if (activeOffers.Count < 4)
         {
             // Fallback: any active offers if published set is thin.
-            activeOffers = await offerDb.Offers.AsNoTracking()
-                .Where(x => x.Status == OfferStatus.Active && x.SellerSku != OosSellerSku)
+            activeOffers = allActive
+                .Where(x => x.SellerSku != OosSellerSku)
                 .OrderBy(x => x.OfferId)
                 .Take(8)
                 .Select(x => x.OfferId)
-                .ToListAsync(cancellationToken);
+                .ToList();
         }
 
         var oosOfferId = await EnsureOosOfferAsync(
-            offerDb,
+            offerSeeds,
             inventoryDb,
             inventory,
             parties,
@@ -324,36 +323,13 @@ internal static class MerchandisingCampaignDevelopmentSeed
     }
 
     private static async Task<Guid?> EnsureOosOfferAsync(
-        OfferDbContext offerDb,
+        IOfferDevelopmentSeedGateway offerSeeds,
         InventoryDbContext inventoryDb,
         IInventoryDirectory inventory,
         IPartyDirectory parties,
         PartyDbContext partyDb,
         CancellationToken cancellationToken)
     {
-        var existing = await offerDb.Offers
-            .SingleOrDefaultAsync(x => x.SellerSku == OosSellerSku, cancellationToken);
-        if (existing is not null)
-        {
-            if (existing.Status != OfferStatus.Active)
-            {
-                existing.Activate(DateTimeOffset.UtcNow);
-                await offerDb.SaveChangesAsync(cancellationToken);
-            }
-
-            await EnsureZeroStockAsync(existing.OfferId, inventoryDb, inventory, cancellationToken);
-            return existing.OfferId;
-        }
-
-        var template = await offerDb.Offers.AsNoTracking()
-            .Where(x => x.Status == OfferStatus.Active)
-            .OrderBy(x => x.OfferId)
-            .FirstOrDefaultAsync(cancellationToken);
-        if (template is null)
-        {
-            return null;
-        }
-
         const string oosSellerName = "DEV-SEED OOS Seller";
         var sellerPartyId = await partyDb.Parties.AsNoTracking()
             .Where(x => x.DisplayName == oosSellerName)
@@ -368,19 +344,17 @@ internal static class MerchandisingCampaignDevelopmentSeed
             sellerPartyId = createdSeller.PartyId;
         }
 
-        var offer = SellerOffer.Create(
-            UuidV7.New(),
-            template.CatalogVariantId,
-            sellerPartyId,
-            template.Channel,
+        var offerId = await offerSeeds.EnsureActiveCloneFromAnyActiveAsync(
             OosSellerSku,
-            DateTimeOffset.UtcNow);
-        offerDb.Offers.Add(offer);
-        await offerDb.SaveChangesAsync(cancellationToken);
-        offer.Activate(DateTimeOffset.UtcNow);
-        await offerDb.SaveChangesAsync(cancellationToken);
-        await EnsureZeroStockAsync(offer.OfferId, inventoryDb, inventory, cancellationToken);
-        return offer.OfferId;
+            sellerPartyId,
+            cancellationToken);
+        if (offerId is null)
+        {
+            return null;
+        }
+
+        await EnsureZeroStockAsync(offerId.Value, inventoryDb, inventory, cancellationToken);
+        return offerId;
     }
 
     private static async Task EnsureZeroStockAsync(

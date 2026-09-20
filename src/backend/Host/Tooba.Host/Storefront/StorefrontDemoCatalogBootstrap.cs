@@ -8,8 +8,6 @@ using Tooba.Inventory.Domain;
 using Tooba.Offer.Application.Ports;
 using Tooba.Offer.Contracts.Dtos;
 using Tooba.Offer.Contracts.Ports;
-using Tooba.Offer.Domain;
-using Tooba.Offer.Infrastructure.Persistence;
 using Tooba.Party.Application;
 using Tooba.Pricing.Application;
 using Tooba.ProductQnA.Infrastructure;
@@ -119,7 +117,7 @@ internal static class StorefrontDemoCatalogBootstrap
             provider.GetRequiredService<TaxDbContext>(),
             CancellationToken.None);
         await EnsureDemoTaxCoverageAsync(
-            provider.GetRequiredService<OfferDbContext>(),
+            provider.GetRequiredService<IOfferQueryGateway>(),
             provider.GetRequiredService<TaxDbContext>(),
             provider.GetRequiredService<ITaxDirectory>(),
             CancellationToken.None);
@@ -471,7 +469,7 @@ internal static class StorefrontDemoCatalogBootstrap
     /// انتساب Offerهای DEMO را تضمین می‌کند تا Checkout با TAX_NO_APPLICABLE_RULE fail-closed نشود.
     /// </summary>
     private static async Task EnsureDemoTaxCoverageAsync(
-        OfferDbContext offers,
+        IOfferQueryGateway offers,
         TaxDbContext taxDb,
         ITaxDirectory tax,
         CancellationToken cancellationToken)
@@ -479,10 +477,7 @@ internal static class StorefrontDemoCatalogBootstrap
         var category = await EnsureStandardTaxCategoryAsync(tax, taxDb, cancellationToken);
         await EnsureStandardTaxRuleAsync(tax, taxDb, category.CategoryId, cancellationToken);
 
-        var demoOfferIds = await offers.Offers.AsNoTracking()
-            .Where(offer => offer.SellerSku != null && offer.SellerSku.StartsWith("DEMO-"))
-            .Select(offer => offer.OfferId)
-            .ToListAsync(cancellationToken);
+        var demoOfferIds = await offers.ListOfferIdsBySellerSkuPrefixAsync("DEMO-", cancellationToken);
         foreach (var offerId in demoOfferIds)
         {
             await tax.AssignOfferCategoryAsync(offerId, category.CategoryId, cancellationToken);

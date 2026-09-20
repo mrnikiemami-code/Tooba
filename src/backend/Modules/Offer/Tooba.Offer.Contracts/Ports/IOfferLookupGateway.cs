@@ -3,19 +3,22 @@ using Tooba.Offer.Contracts.Dtos;
 namespace Tooba.Offer.Contracts.Ports;
 
 /// <summary>
-/// درز خواندن Offer برای Pricing/Inventory/Cart/Order/Promotion.
+/// Offer identity lookup port for Pricing, Inventory, Cart, Order, and Promotion.
 /// </summary>
 public interface IOfferLookupGateway
 {
-    /// <summary>Offer را پیدا می‌کند؛ Host parse نمی‌شود.</summary>
+    /// <summary>Finds a single offer by id.</summary>
     Task<OfferReference?> FindOfferAsync(Guid offerId, CancellationToken cancellationToken);
 
-    /// <summary>چند Offer را در یک خواندن برمی‌گرداند.</summary>
+    /// <summary>Batch-resolves offers by id.</summary>
     Task<IReadOnlyDictionary<Guid, OfferReference>> FindOffersBatchAsync(
         IReadOnlyCollection<Guid> offerIds,
         CancellationToken cancellationToken);
 
-    /// <summary>تعداد Offerهای وابسته به هر CatalogVariant.</summary>
+    /// <summary>
+    /// Counts non-archived offers for each catalog variant id.
+    /// Missing keys are returned with count 0.
+    /// </summary>
     Task<IReadOnlyDictionary<Guid, int>> CountOffersByCatalogVariantIdsAsync(
         IReadOnlyCollection<Guid> catalogVariantIds,
         CancellationToken cancellationToken);

@@ -64,11 +64,13 @@ public sealed class AdminPanelCompositionTests
         var source = File.ReadAllText(Path.Combine(
             FindRepoRoot(), "src", "backend", "Host", "Tooba.Host", "Admin", "AdminPanelComposer.cs"));
         Assert.Contains("_catalog.Products", source, StringComparison.Ordinal);
-        Assert.Contains("_offers.Offers", source, StringComparison.Ordinal);
+        Assert.Contains("IOfferQueryGateway", source, StringComparison.Ordinal);
+        Assert.Contains("CountActiveOffersAsync", source, StringComparison.Ordinal);
         Assert.Contains("_orders.Checkouts", source, StringComparison.Ordinal);
         Assert.Contains("_parties.Parties", source, StringComparison.Ordinal);
+        Assert.DoesNotContain("OfferDbContext", source, StringComparison.Ordinal);
+        Assert.DoesNotContain("_offers.Offers", source, StringComparison.Ordinal);
         Assert.DoesNotContain("_catalog.Products.Join(", source, StringComparison.Ordinal);
-        Assert.DoesNotContain("_offers.Offers.Join(", source, StringComparison.Ordinal);
         Assert.DoesNotContain("_orders.Checkouts.Join(", source, StringComparison.Ordinal);
         Assert.DoesNotContain("_parties.Parties.Join(", source, StringComparison.Ordinal);
         Assert.DoesNotContain("FromSql", source, StringComparison.OrdinalIgnoreCase);

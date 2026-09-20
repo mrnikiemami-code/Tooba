@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Tooba.Catalog.Domain;
 using Tooba.Catalog.Infrastructure.Persistence;
 using Tooba.Inventory.Infrastructure.Persistence;
-using Tooba.Offer.Infrastructure.Persistence;
+using Tooba.Offer.Contracts.Ports;
 using Tooba.Pricing.Infrastructure.Persistence;
 
 using Tooba.BuildingBlocks.Grid;
@@ -16,13 +16,13 @@ namespace Tooba.Host.Grid;
 internal sealed class AdminProductGridQueryEngine
 {
     private readonly CatalogDbContext _catalog;
-    private readonly OfferDbContext _offers;
+    private readonly IOfferQueryGateway _offers;
     private readonly PricingDbContext _prices;
     private readonly InventoryDbContext _inventory;
 
     public AdminProductGridQueryEngine(
         CatalogDbContext catalog,
-        OfferDbContext offers,
+        IOfferQueryGateway offers,
         PricingDbContext prices,
         InventoryDbContext inventory)
     {
@@ -370,10 +370,7 @@ internal sealed class AdminProductGridQueryEngine
     private async Task<Dictionary<Guid, int>> BuildOfferCountMetricsAsync(CancellationToken cancellationToken)
     {
         var variantToProduct = await LoadVariantToProductMapAsync(cancellationToken);
-        var grouped = await _offers.Offers.AsNoTracking()
-            .GroupBy(o => o.CatalogVariantId)
-            .Select(g => new { g.Key, Count = g.Count() })
-            .ToListAsync(cancellationToken);
+        var grouped = await _offers.CountAllOffersGroupedByCatalogVariantAsync(cancellationToken);
 
         var metrics = new Dictionary<Guid, int>();
         foreach (var row in grouped)
@@ -383,7 +380,7 @@ internal sealed class AdminProductGridQueryEngine
                 continue;
             }
 
-            metrics[productId] = metrics.GetValueOrDefault(productId) + row.Count;
+            metrics[productId] = metrics.GetValueOrDefault(productId) + row.Value;
         }
 
         return metrics;
@@ -395,9 +392,7 @@ internal sealed class AdminProductGridQueryEngine
     private async Task<Dictionary<Guid, decimal>> BuildSellableUnitsMetricsAsync(CancellationToken cancellationToken)
     {
         var variantToProduct = await LoadVariantToProductMapAsync(cancellationToken);
-        var offerToVariant = await _offers.Offers.AsNoTracking()
-            .Select(o => new { o.OfferId, o.CatalogVariantId })
-            .ToDictionaryAsync(x => x.OfferId, x => x.CatalogVariantId, cancellationToken);
+        var offerToVariant = await _offers.MapAllOfferIdsToCatalogVariantIdsAsync(cancellationToken);
         var positions = await _inventory.Positions.AsNoTracking()
             .Select(p => new { p.OfferId, Units = p.OnHand - p.Reserved })
             .ToListAsync(cancellationToken);
@@ -422,9 +417,7 @@ internal sealed class AdminProductGridQueryEngine
     private async Task<Dictionary<Guid, int>> BuildLocationCountMetricsAsync(CancellationToken cancellationToken)
     {
         var variantToProduct = await LoadVariantToProductMapAsync(cancellationToken);
-        var offerToVariant = await _offers.Offers.AsNoTracking()
-            .Select(o => new { o.OfferId, o.CatalogVariantId })
-            .ToDictionaryAsync(x => x.OfferId, x => x.CatalogVariantId, cancellationToken);
+        var offerToVariant = await _offers.MapAllOfferIdsToCatalogVariantIdsAsync(cancellationToken);
         var positions = await _inventory.Positions.AsNoTracking()
             .Select(p => new { p.OfferId, p.LocationId })
             .ToListAsync(cancellationToken);
@@ -567,9 +560,7 @@ internal sealed class AdminProductGridQueryEngine
     private async Task<Dictionary<Guid, (decimal Min, decimal Max)>> BuildOfferAmountRangeMetricsAsync(CancellationToken cancellationToken)
     {
         var variantToProduct = await LoadVariantToProductMapAsync(cancellationToken);
-        var offerToVariant = await _offers.Offers.AsNoTracking()
-            .Select(o => new { o.OfferId, o.CatalogVariantId })
-            .ToDictionaryAsync(x => x.OfferId, x => x.CatalogVariantId, cancellationToken);
+        var offerToVariant = await _offers.MapAllOfferIdsToCatalogVariantIdsAsync(cancellationToken);
         var prices = await _prices.Prices.AsNoTracking().Select(p => new { p.OfferId, p.Amount }).ToListAsync(cancellationToken);
         var byProduct = new Dictionary<Guid, List<decimal>>();
         foreach (var price in prices)

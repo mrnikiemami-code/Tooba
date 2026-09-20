@@ -19,13 +19,11 @@ using Tooba.Inventory.Infrastructure.Persistence;
 using Tooba.Offer.Application.Ports;
 using Tooba.Offer.Contracts.Dtos;
 using Tooba.Offer.Contracts.Ports;
-using Tooba.Offer.Domain;
 using Tooba.Order.Application;
 using Tooba.Order.Domain;
 using Tooba.Order.Infrastructure.Persistence;
 using Tooba.Party.Domain;
 using Tooba.Party.Infrastructure.Persistence;
-using Tooba.Offer.Infrastructure.Persistence;
 using Tooba.Pricing.Application;
 using Tooba.Tax.Application;
 using Tooba.Tax.Domain;
@@ -86,7 +84,7 @@ internal static class AccessControlDevelopmentSeed
         var partyDb = provider.GetRequiredService<PartyDbContext>();
         var catalogDb = provider.GetRequiredService<CatalogDbContext>();
         var orderDb = provider.GetRequiredService<OrderDbContext>();
-        var offerDb = provider.GetRequiredService<OfferDbContext>();
+        var offerQueries = provider.GetRequiredService<IOfferQueryGateway>();
         var inventoryDb = provider.GetRequiredService<InventoryDbContext>();
 
         var seller = await partyDb.Parties.AsNoTracking()
@@ -137,7 +135,7 @@ internal static class AccessControlDevelopmentSeed
             tax,
             taxDb,
             catalogDb,
-            offerDb,
+            offerQueries,
             inventoryDb,
             seller.PartyId,
             MobileProductSlug,
@@ -155,7 +153,7 @@ internal static class AccessControlDevelopmentSeed
             tax,
             taxDb,
             catalogDb,
-            offerDb,
+            offerQueries,
             inventoryDb,
             seller.PartyId,
             BooksProductSlug,
@@ -349,7 +347,7 @@ internal static class AccessControlDevelopmentSeed
         ITaxDirectory tax,
         TaxDbContext taxDb,
         CatalogDbContext catalogDb,
-        OfferDbContext offerDb,
+        IOfferQueryGateway offerQueries,
         InventoryDbContext inventoryDb,
         Guid sellerPartyId,
         string slug,
@@ -374,21 +372,15 @@ internal static class AccessControlDevelopmentSeed
                 .FirstOrDefaultAsync(cancellationToken);
             if (variantId != Guid.Empty)
             {
-                var existingOffer = await offerDb.Offers.AsNoTracking()
-                    .Where(x => x.SellerPartyId == sellerPartyId && x.CatalogVariantId == variantId)
-                    .OrderByDescending(x => x.UpdatedAt)
-                    .FirstOrDefaultAsync(cancellationToken);
+                var existingOffer = await offerQueries.FindLatestBySellerAndVariantAsync(
+                    sellerPartyId,
+                    variantId,
+                    cancellationToken);
                 if (existingOffer is not null)
                 {
                     await tax.AssignOfferCategoryAsync(existingOffer.OfferId, taxCategory.CategoryId, cancellationToken);
                     await EnsureOfferStockAsync(inventory, inventoryDb, existingOffer.OfferId, locationCode, cancellationToken);
-                    return new OfferReference(
-                        existingOffer.OfferId,
-                        existingOffer.CatalogVariantId,
-                        existingOffer.SellerPartyId,
-                        (Tooba.Offer.Contracts.Dtos.SalesChannel)(int)existingOffer.Channel,
-                        (Tooba.Offer.Contracts.Dtos.OfferStatus)(int)existingOffer.Status,
-                        existingOffer.SellerSku);
+                    return existingOffer;
                 }
             }
         }

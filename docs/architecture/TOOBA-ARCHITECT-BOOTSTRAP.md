@@ -64,6 +64,7 @@ Offer Reference Module Repair R1 (TB-TMAR-OFFER-REFERENCE-W1-R1) PASS — Physic
 Offer Reference Repair R3 (TB-TMAR-OFFER-REFERENCE-W1-R3) — Module-Recovery-State IN_PROGRESS_REFERENCE_REPAIR; CQRS and contract-boundary repair; Checkout paused; next TB-TMAR-OFFER-REFERENCE-W1-R4.
 Offer Reference Repair R4 (TB-TMAR-OFFER-REFERENCE-W1-R4) — Module-Recovery-State READY_FOR_FINAL_VERIFICATION; real CQRS reads, Host BFF removal, and Pricing/Inventory owner gates; next TB-TMAR-OFFER-REFERENCE-W1-R5.
 Offer Reference Final Verification R5 (TB-TMAR-OFFER-REFERENCE-W1-R5) — Module-Recovery-State INCOMPLETE; magic exception seam repaired; Host OfferDbContext residual remains; next TB-TMAR-OFFER-REFERENCE-W1-R6.
+Offer Reference Host Persistence Closure R6 (TB-TMAR-OFFER-REFERENCE-W1-R6) — Module-Recovery-State COMPLETE_REFERENCE_PATTERN; Host/foreign production OfferDbContext removed; IOfferQueryGateway boundary; next USER_REVIEW_OFFER.
 Tax Reference Module W1 (TB-TMAR-TAX-REFERENCE-W1) PASS — COMPLETE_REFERENCE_PATTERN historically; physical recheck pending after Offer R1.
 Pricing Reference Module W1 (TB-TMAR-PRICING-REFERENCE-W1) PASS historically — gated NOT_STARTED_UNTIL_OFFER_REPAIR_ACCEPTED for next Architect sequencing after Offer R1.
 Product-Resume-Safety = SAFE_WITH_TMAR_PARALLEL (Order hub still frozen; do not expand App→App / Infra→App; no NEW cross-context ACID).

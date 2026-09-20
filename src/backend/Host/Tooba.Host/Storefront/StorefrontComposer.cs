@@ -5,8 +5,8 @@ using Tooba.Catalog.Application;
 using Tooba.Catalog.Domain;
 using Tooba.Catalog.Infrastructure.Persistence;
 using Tooba.Inventory.Infrastructure.Persistence;
-using Tooba.Offer.Domain;
-using Tooba.Offer.Infrastructure.Persistence;
+using Tooba.Offer.Contracts.Dtos;
+using Tooba.Offer.Contracts.Ports;
 using Tooba.Party.Application;
 using Tooba.Pricing.Domain;
 using Tooba.Pricing.Infrastructure.Persistence;
@@ -31,7 +31,7 @@ public sealed class StorefrontComposer
     internal const string GlobalBrandFacetCode = "brand";
 
     private readonly CatalogDbContext _catalog;
-    private readonly OfferDbContext _offers;
+    private readonly IOfferQueryGateway _offers;
     private readonly PricingDbContext _prices;
     private readonly InventoryDbContext _inventory;
     private readonly TaxDbContext _tax;
@@ -46,7 +46,7 @@ public sealed class StorefrontComposer
     /// </summary>
     public StorefrontComposer(
         CatalogDbContext catalog,
-        OfferDbContext offers,
+        IOfferQueryGateway offers,
         PricingDbContext prices,
         InventoryDbContext inventory,
         TaxDbContext tax,
@@ -261,9 +261,7 @@ public sealed class StorefrontComposer
     /// </summary>
     public async Task<IReadOnlyList<StorefrontPublicSellerItem>> ListPublicSellersAsync(CancellationToken cancellationToken)
     {
-        var activeOffers = await _offers.Offers.AsNoTracking()
-            .Where(offer => offer.Status == OfferStatus.Active)
-            .ToListAsync(cancellationToken);
+        var activeOffers = await _offers.ListActiveOffersAsync(cancellationToken);
         var variants = await _catalog.Variants.AsNoTracking()
             .Where(variant => activeOffers.Select(offer => offer.CatalogVariantId).Contains(variant.VariantId))
             .ToDictionaryAsync(variant => variant.VariantId, variant => variant.ProductId, cancellationToken);
@@ -294,9 +292,7 @@ public sealed class StorefrontComposer
     /// </summary>
     public async Task<StorefrontPublicSellerPage?> GetPublicSellerAsync(string publicId, CancellationToken cancellationToken)
     {
-        var activeOffers = await _offers.Offers.AsNoTracking()
-            .Where(offer => offer.Status == OfferStatus.Active)
-            .ToListAsync(cancellationToken);
+        var activeOffers = await _offers.ListActiveOffersAsync(cancellationToken);
         var sellerPartyId = activeOffers.Select(offer => offer.SellerPartyId).Distinct().FirstOrDefault(partyId =>
             string.Equals(CreatePublicSellerId(partyId), publicId, StringComparison.OrdinalIgnoreCase));
         if (sellerPartyId == Guid.Empty)
@@ -763,15 +759,38 @@ public sealed class StorefrontComposer
         var products = maxProducts is int limit
             ? await query.Take(Math.Clamp(limit, 1, 48)).ToListAsync(cancellationToken)
             : await query.ToListAsync(cancellationToken);
+        var productIds = products.Select(x => x.ProductId).ToList();
+        var variants = productIds.Count == 0
+            ? []
+            : await _catalog.Variants.AsNoTracking()
+                .Where(x => productIds.Contains(x.ProductId))
+                .Select(x => new { x.ProductId, x.VariantId })
+                .ToListAsync(cancellationToken);
+        var variantIds = variants.Select(x => x.VariantId).Distinct().ToList();
+        var activeOffers = await _offers.ListActiveOffersByCatalogVariantIdsAsync(variantIds, cancellationToken);
+        var offersByProduct = variants
+            .GroupBy(x => x.ProductId)
+            .ToDictionary(
+                g => g.Key,
+                g =>
+                {
+                    var ids = g.Select(v => v.VariantId).ToHashSet();
+                    return (IReadOnlyList<OfferReference>)activeOffers
+                        .Where(o => ids.Contains(o.CatalogVariantId))
+                        .ToList();
+                });
+
         var cards = new List<StorefrontProductCard>();
         foreach (var product in products)
         {
+            offersByProduct.TryGetValue(product.ProductId, out var productOffers);
             var composed = await ComposeProductAsync(
                 product,
                 cancellationToken,
                 preferredSellerPartyId,
                 selectedVariantId: null,
-                cardOnly: cardOnly);
+                cardOnly: cardOnly,
+                preloadedActiveOffers: productOffers);
             if (composed is null)
             {
                 continue;
@@ -793,7 +812,8 @@ public sealed class StorefrontComposer
         CancellationToken cancellationToken,
         Guid? preferredSellerPartyId = null,
         Guid? selectedVariantId = null,
-        bool cardOnly = false)
+        bool cardOnly = false,
+        IReadOnlyList<OfferReference>? preloadedActiveOffers = null)
     {
         var now = DateTimeOffset.UtcNow;
         var title = (await LoadNamesAsync(CatalogLocalizedOwnerKind.Product, [product.ProductId], cancellationToken))
@@ -838,9 +858,8 @@ public sealed class StorefrontComposer
             return null;
         }
 
-        var offers = await _offers.Offers.AsNoTracking()
-            .Where(x => variantIds.Contains(x.CatalogVariantId) && x.Status == OfferStatus.Active)
-            .ToListAsync(cancellationToken);
+        var offers = preloadedActiveOffers
+            ?? await _offers.ListActiveOffersByCatalogVariantIdsAsync(variantIds, cancellationToken);
         var offerIds = offers.Select(x => x.OfferId).ToList();
         if (offerIds.Count == 0)
         {

@@ -1,0 +1,1350 @@
+{
+  "generatedAtUtc": "2026-09-20T23:20:32.808Z",
+  "hitCount": 111,
+  "byClass": {
+    "HOST_SEED_BOOTSTRAP": [
+      {
+        "path": "src/backend/Host/Tooba.Host/AccessControl/AccessControlDevelopmentSeed.cs",
+        "line": 28,
+        "text": "using Tooba.Offer.Infrastructure.Persistence;",
+        "class": "HOST_SEED_BOOTSTRAP"
+      },
+      {
+        "path": "src/backend/Host/Tooba.Host/AccessControl/AccessControlDevelopmentSeed.cs",
+        "line": 89,
+        "text": "var offerDb = provider.GetRequiredService<OfferDbContext>();",
+        "class": "HOST_SEED_BOOTSTRAP"
+      },
+      {
+        "path": "src/backend/Host/Tooba.Host/AccessControl/AccessControlDevelopmentSeed.cs",
+        "line": 352,
+        "text": "OfferDbContext offerDb,",
+        "class": "HOST_SEED_BOOTSTRAP"
+      },
+      {
+        "path": "src/backend/Host/Tooba.Host/Admin/CatalogAttributeSchemaDevelopmentBootstrap.cs",
+        "line": 13,
+        "text": "using Tooba.Offer.Infrastructure.Persistence;",
+        "class": "HOST_SEED_BOOTSTRAP"
+      },
+      {
+        "path": "src/backend/Host/Tooba.Host/Admin/CatalogAttributeSchemaDevelopmentBootstrap.cs",
+        "line": 189,
+        "text": "var offerDb = provider.GetRequiredService<OfferDbContext>();",
+        "class": "HOST_SEED_BOOTSTRAP"
+      },
+      {
+        "path": "src/backend/Host/Tooba.Host/Admin/MerchandisingCampaignDevelopmentSeed.cs",
+        "line": 10,
+        "text": "using Tooba.Offer.Infrastructure.Persistence;",
+        "class": "HOST_SEED_BOOTSTRAP"
+      },
+      {
+        "path": "src/backend/Host/Tooba.Host/Admin/MerchandisingCampaignDevelopmentSeed.cs",
+        "line": 65,
+        "text": "var offerDb = provider.GetRequiredService<OfferDbContext>();",
+        "class": "HOST_SEED_BOOTSTRAP"
+      },
+      {
+        "path": "src/backend/Host/Tooba.Host/Admin/MerchandisingCampaignDevelopmentSeed.cs",
+        "line": 327,
+        "text": "OfferDbContext offerDb,",
+        "class": "HOST_SEED_BOOTSTRAP"
+      },
+      {
+        "path": "src/backend/Host/Tooba.Host/Admin/ProductWorkspaceDevelopmentBootstrap.cs",
+        "line": 15,
+        "text": "using Tooba.Offer.Infrastructure.Persistence;",
+        "class": "HOST_SEED_BOOTSTRAP"
+      },
+      {
+        "path": "src/backend/Host/Tooba.Host/Admin/ProductWorkspaceDevelopmentBootstrap.cs",
+        "line": 102,
+        "text": "await MigrateAsync(provider.GetRequiredService<OfferDbContext>());",
+        "class": "HOST_SEED_BOOTSTRAP"
+      },
+      {
+        "path": "src/backend/Host/Tooba.Host/Storefront/StorefrontDemoCatalogBootstrap.cs",
+        "line": 12,
+        "text": "using Tooba.Offer.Infrastructure.Persistence;",
+        "class": "HOST_SEED_BOOTSTRAP"
+      },
+      {
+        "path": "src/backend/Host/Tooba.Host/Storefront/StorefrontDemoCatalogBootstrap.cs",
+        "line": 122,
+        "text": "provider.GetRequiredService<OfferDbContext>(),",
+        "class": "HOST_SEED_BOOTSTRAP"
+      },
+      {
+        "path": "src/backend/Host/Tooba.Host/Storefront/StorefrontDemoCatalogBootstrap.cs",
+        "line": 474,
+        "text": "OfferDbContext offers,",
+        "class": "HOST_SEED_BOOTSTRAP"
+      }
+    ],
+    "HOST_ADMIN": [
+      {
+        "path": "src/backend/Host/Tooba.Host/Admin/AdminPanelComposer.cs",
+        "line": 9,
+        "text": "using Tooba.Offer.Infrastructure.Persistence;",
+        "class": "HOST_ADMIN"
+      },
+      {
+        "path": "src/backend/Host/Tooba.Host/Admin/AdminPanelComposer.cs",
+        "line": 31,
+        "text": "private readonly OfferDbContext _offers;",
+        "class": "HOST_ADMIN"
+      },
+      {
+        "path": "src/backend/Host/Tooba.Host/Admin/AdminPanelComposer.cs",
+        "line": 50,
+        "text": "OfferDbContext offers,",
+        "class": "HOST_ADMIN"
+      },
+      {
+        "path": "src/backend/Host/Tooba.Host/Admin/MerchandisingCampaignAdminEndpoints.cs",
+        "line": 8,
+        "text": "using Tooba.Offer.Infrastructure.Persistence;",
+        "class": "HOST_ADMIN"
+      },
+      {
+        "path": "src/backend/Host/Tooba.Host/Admin/MerchandisingCampaignAdminEndpoints.cs",
+        "line": 109,
+        "text": "private readonly OfferDbContext _offers;",
+        "class": "HOST_ADMIN"
+      },
+      {
+        "path": "src/backend/Host/Tooba.Host/Admin/MerchandisingCampaignAdminEndpoints.cs",
+        "line": 119,
+        "text": "OfferDbContext offers,",
+        "class": "HOST_ADMIN"
+      },
+      {
+        "path": "src/backend/Host/Tooba.Host/Admin/ProductWorkspaceComposer.cs",
+        "line": 8,
+        "text": "using Tooba.Offer.Infrastructure.Persistence;",
+        "class": "HOST_ADMIN"
+      },
+      {
+        "path": "src/backend/Host/Tooba.Host/Admin/ProductWorkspaceComposer.cs",
+        "line": 24,
+        "text": "private readonly OfferDbContext _offers;",
+        "class": "HOST_ADMIN"
+      },
+      {
+        "path": "src/backend/Host/Tooba.Host/Admin/ProductWorkspaceComposer.cs",
+        "line": 36,
+        "text": "OfferDbContext offers,",
+        "class": "HOST_ADMIN"
+      },
+      {
+        "path": "src/backend/Host/Tooba.Host/Admin/ReservationPolicyAdminComposer.cs",
+        "line": 5,
+        "text": "using Tooba.Offer.Infrastructure.Persistence;",
+        "class": "HOST_ADMIN"
+      },
+      {
+        "path": "src/backend/Host/Tooba.Host/Admin/ReservationPolicyAdminComposer.cs",
+        "line": 81,
+        "text": "OfferDbContext offers,",
+        "class": "HOST_ADMIN"
+      },
+      {
+        "path": "src/backend/Host/Tooba.Host/Admin/ReservationPolicyAdminComposer.cs",
+        "line": 108,
+        "text": "OfferDbContext offers,",
+        "class": "HOST_ADMIN"
+      },
+      {
+        "path": "src/backend/Host/Tooba.Host/Admin/ReservationPolicyAdminEndpoints.cs",
+        "line": 4,
+        "text": "using Tooba.Offer.Infrastructure.Persistence;",
+        "class": "HOST_ADMIN"
+      },
+      {
+        "path": "src/backend/Host/Tooba.Host/Admin/ReservationPolicyAdminEndpoints.cs",
+        "line": 146,
+        "text": "OfferDbContext offers,",
+        "class": "HOST_ADMIN"
+      },
+      {
+        "path": "src/backend/Host/Tooba.Host/Admin/ReservationPolicyAdminEndpoints.cs",
+        "line": 173,
+        "text": "OfferDbContext offers,",
+        "class": "HOST_ADMIN"
+      },
+      {
+        "path": "src/backend/Host/Tooba.Host/Admin/ReservationPolicyAdminEndpoints.cs",
+        "line": 209,
+        "text": "OfferDbContext offers,",
+        "class": "HOST_ADMIN"
+      },
+      {
+        "path": "src/backend/Host/Tooba.Host/Admin/ReservationPolicyAdminEndpoints.cs",
+        "line": 280,
+        "text": "OfferDbContext offers,",
+        "class": "HOST_ADMIN"
+      },
+      {
+        "path": "src/backend/Host/Tooba.MigrationRunner/ModuleMigrationRegistry.cs",
+        "line": 16,
+        "text": "using Tooba.Offer.Infrastructure.Persistence;",
+        "class": "HOST_ADMIN"
+      },
+      {
+        "path": "src/backend/Host/Tooba.MigrationRunner/ModuleMigrationRegistry.cs",
+        "line": 57,
+        "text": "Descriptor<OfferDbContext>(\"Offer\", OfferDbContext.Schema),",
+        "class": "HOST_ADMIN"
+      }
+    ],
+    "HOST_GRID": [
+      {
+        "path": "src/backend/Host/Tooba.Host/Grid/AdminProductGridQueryEngine.cs",
+        "line": 6,
+        "text": "using Tooba.Offer.Infrastructure.Persistence;",
+        "class": "HOST_GRID"
+      },
+      {
+        "path": "src/backend/Host/Tooba.Host/Grid/AdminProductGridQueryEngine.cs",
+        "line": 19,
+        "text": "private readonly OfferDbContext _offers;",
+        "class": "HOST_GRID"
+      },
+      {
+        "path": "src/backend/Host/Tooba.Host/Grid/AdminProductGridQueryEngine.cs",
+        "line": 25,
+        "text": "OfferDbContext offers,",
+        "class": "HOST_GRID"
+      },
+      {
+        "path": "src/backend/Host/Tooba.Host/Grid/AdminSellersGridQueryEngine.cs",
+        "line": 5,
+        "text": "using Tooba.Offer.Infrastructure.Persistence;",
+        "class": "HOST_GRID"
+      },
+      {
+        "path": "src/backend/Host/Tooba.Host/Grid/AdminSellersGridQueryEngine.cs",
+        "line": 19,
+        "text": "private readonly OfferDbContext _offers;",
+        "class": "HOST_GRID"
+      },
+      {
+        "path": "src/backend/Host/Tooba.Host/Grid/AdminSellersGridQueryEngine.cs",
+        "line": 24,
+        "text": "OfferDbContext offers,",
+        "class": "HOST_GRID"
+      }
+    ],
+    "HOST_STOREFRONT": [
+      {
+        "path": "src/backend/Host/Tooba.Host/Storefront/StorefrontComposer.cs",
+        "line": 9,
+        "text": "using Tooba.Offer.Infrastructure.Persistence;",
+        "class": "HOST_STOREFRONT"
+      },
+      {
+        "path": "src/backend/Host/Tooba.Host/Storefront/StorefrontComposer.cs",
+        "line": 34,
+        "text": "private readonly OfferDbContext _offers;",
+        "class": "HOST_STOREFRONT"
+      },
+      {
+        "path": "src/backend/Host/Tooba.Host/Storefront/StorefrontComposer.cs",
+        "line": 49,
+        "text": "OfferDbContext offers,",
+        "class": "HOST_STOREFRONT"
+      }
+    ],
+    "TEST_ONLY": [
+      {
+        "path": "src/backend/Host/Tooba.Host.Tests/CampaignCartPriceIntegrityTests.cs",
+        "line": 21,
+        "text": "using Tooba.Offer.Infrastructure.Persistence;",
+        "class": "TEST_ONLY"
+      },
+      {
+        "path": "src/backend/Host/Tooba.Host.Tests/CampaignCartPriceIntegrityTests.cs",
+        "line": 338,
+        "text": "private static OfferDbContext CreateOfferDb(string connectionString, ICurrentCommerceContext commerce)",
+        "class": "TEST_ONLY"
+      },
+      {
+        "path": "src/backend/Host/Tooba.Host.Tests/CampaignCartPriceIntegrityTests.cs",
+        "line": 343,
+        "text": "var options = new DbContextOptionsBuilder<OfferDbContext>();",
+        "class": "TEST_ONLY"
+      },
+      {
+        "path": "src/backend/Host/Tooba.Host.Tests/CampaignCartPriceIntegrityTests.cs",
+        "line": 344,
+        "text": "ToobaNpgsql.ConfigureModuleContext(options, connectionString, OfferDbContext.Schema, typeof(OfferDbContext));",
+        "class": "TEST_ONLY"
+      },
+      {
+        "path": "src/backend/Host/Tooba.Host.Tests/CampaignCartPriceIntegrityTests.cs",
+        "line": 346,
+        "text": "return new OfferDbContext(options.Options);",
+        "class": "TEST_ONLY"
+      },
+      {
+        "path": "src/backend/Host/Tooba.Host.Tests/CartExpiryPostgresTests.cs",
+        "line": 24,
+        "text": "using Tooba.Offer.Infrastructure.Persistence;",
+        "class": "TEST_ONLY"
+      },
+      {
+        "path": "src/backend/Host/Tooba.Host.Tests/CartExpiryPostgresTests.cs",
+        "line": 200,
+        "text": "private static OfferDbContext CreateOfferDb(string connectionString, ICurrentCommerceContext commerce)",
+        "class": "TEST_ONLY"
+      },
+      {
+        "path": "src/backend/Host/Tooba.Host.Tests/CartExpiryPostgresTests.cs",
+        "line": 205,
+        "text": "var options = new DbContextOptionsBuilder<OfferDbContext>();",
+        "class": "TEST_ONLY"
+      },
+      {
+        "path": "src/backend/Host/Tooba.Host.Tests/CartExpiryPostgresTests.cs",
+        "line": 206,
+        "text": "ToobaNpgsql.ConfigureModuleContext(options, connectionString, OfferDbContext.Schema, typeof(OfferDbContext));",
+        "class": "TEST_ONLY"
+      },
+      {
+        "path": "src/backend/Host/Tooba.Host.Tests/CartExpiryPostgresTests.cs",
+        "line": 208,
+        "text": "return new OfferDbContext(options.Options);",
+        "class": "TEST_ONLY"
+      },
+      {
+        "path": "src/backend/Host/Tooba.Host.Tests/CartFoundationTests.cs",
+        "line": 29,
+        "text": "using Tooba.Offer.Infrastructure.Persistence;",
+        "class": "TEST_ONLY"
+      },
+      {
+        "path": "src/backend/Host/Tooba.Host.Tests/CartFoundationTests.cs",
+        "line": 334,
+        "text": "private static OfferDbContext CreateOfferDb(string connectionString, ICurrentCommerceContext commerce)",
+        "class": "TEST_ONLY"
+      },
+      {
+        "path": "src/backend/Host/Tooba.Host.Tests/CartFoundationTests.cs",
+        "line": 339,
+        "text": "var options = new DbContextOptionsBuilder<OfferDbContext>();",
+        "class": "TEST_ONLY"
+      },
+      {
+        "path": "src/backend/Host/Tooba.Host.Tests/CartFoundationTests.cs",
+        "line": 340,
+        "text": "ToobaNpgsql.ConfigureModuleContext(options, connectionString, OfferDbContext.Schema, typeof(OfferDbContext));",
+        "class": "TEST_ONLY"
+      },
+      {
+        "path": "src/backend/Host/Tooba.Host.Tests/CartFoundationTests.cs",
+        "line": 342,
+        "text": "return new OfferDbContext(options.Options);",
+        "class": "TEST_ONLY"
+      },
+      {
+        "path": "src/backend/Host/Tooba.Host.Tests/CheckoutOrderFoundationTests.cs",
+        "line": 23,
+        "text": "using Tooba.Offer.Infrastructure.Persistence;",
+        "class": "TEST_ONLY"
+      },
+      {
+        "path": "src/backend/Host/Tooba.Host.Tests/CheckoutOrderFoundationTests.cs",
+        "line": 496,
+        "text": "private static OfferDbContext CreateOfferDb(string connectionString, ICurrentCommerceContext commerce)",
+        "class": "TEST_ONLY"
+      },
+      {
+        "path": "src/backend/Host/Tooba.Host.Tests/CheckoutOrderFoundationTests.cs",
+        "line": 501,
+        "text": "var options = new DbContextOptionsBuilder<OfferDbContext>();",
+        "class": "TEST_ONLY"
+      },
+      {
+        "path": "src/backend/Host/Tooba.Host.Tests/CheckoutOrderFoundationTests.cs",
+        "line": 502,
+        "text": "ToobaNpgsql.ConfigureModuleContext(options, connectionString, OfferDbContext.Schema, typeof(OfferDbContext));",
+        "class": "TEST_ONLY"
+      },
+      {
+        "path": "src/backend/Host/Tooba.Host.Tests/CheckoutOrderFoundationTests.cs",
+        "line": 504,
+        "text": "return new OfferDbContext(options.Options);",
+        "class": "TEST_ONLY"
+      },
+      {
+        "path": "src/backend/Host/Tooba.Host.Tests/InventoryFoundationTests.cs",
+        "line": 20,
+        "text": "using Tooba.Offer.Infrastructure.Persistence;",
+        "class": "TEST_ONLY"
+      },
+      {
+        "path": "src/backend/Host/Tooba.Host.Tests/InventoryFoundationTests.cs",
+        "line": 338,
+        "text": "private static OfferDbContext CreateOfferDb(string connectionString, ICurrentCommerceContext commerce)",
+        "class": "TEST_ONLY"
+      },
+      {
+        "path": "src/backend/Host/Tooba.Host.Tests/InventoryFoundationTests.cs",
+        "line": 343,
+        "text": "var options = new DbContextOptionsBuilder<OfferDbContext>();",
+        "class": "TEST_ONLY"
+      },
+      {
+        "path": "src/backend/Host/Tooba.Host.Tests/InventoryFoundationTests.cs",
+        "line": 344,
+        "text": "ToobaNpgsql.ConfigureModuleContext(options, connectionString, OfferDbContext.Schema, typeof(OfferDbContext));",
+        "class": "TEST_ONLY"
+      },
+      {
+        "path": "src/backend/Host/Tooba.Host.Tests/InventoryFoundationTests.cs",
+        "line": 346,
+        "text": "return new OfferDbContext(options.Options);",
+        "class": "TEST_ONLY"
+      },
+      {
+        "path": "src/backend/Host/Tooba.Host.Tests/MerchandisingCampaignAdminTests.cs",
+        "line": 15,
+        "text": "using Tooba.Offer.Infrastructure.Persistence;",
+        "class": "TEST_ONLY"
+      },
+      {
+        "path": "src/backend/Host/Tooba.Host.Tests/MerchandisingCampaignRuntimeTests.cs",
+        "line": 19,
+        "text": "using Tooba.Offer.Infrastructure.Persistence;",
+        "class": "TEST_ONLY"
+      },
+      {
+        "path": "src/backend/Host/Tooba.Host.Tests/MerchandisingCampaignRuntimeTests.cs",
+        "line": 545,
+        "text": "private static OfferDbContext CreateOfferDb(string connectionString, ICurrentCommerceContext commerce)",
+        "class": "TEST_ONLY"
+      },
+      {
+        "path": "src/backend/Host/Tooba.Host.Tests/MerchandisingCampaignRuntimeTests.cs",
+        "line": 550,
+        "text": "var options = new DbContextOptionsBuilder<OfferDbContext>();",
+        "class": "TEST_ONLY"
+      },
+      {
+        "path": "src/backend/Host/Tooba.Host.Tests/MerchandisingCampaignRuntimeTests.cs",
+        "line": 551,
+        "text": "ToobaNpgsql.ConfigureModuleContext(options, connectionString, OfferDbContext.Schema, typeof(OfferDbContext));",
+        "class": "TEST_ONLY"
+      },
+      {
+        "path": "src/backend/Host/Tooba.Host.Tests/MerchandisingCampaignRuntimeTests.cs",
+        "line": 553,
+        "text": "return new OfferDbContext(options.Options);",
+        "class": "TEST_ONLY"
+      },
+      {
+        "path": "src/backend/Host/Tooba.Host.Tests/OfferDirectoryTestHelper.cs",
+        "line": 12,
+        "text": "using Tooba.Offer.Infrastructure.Persistence;",
+        "class": "TEST_ONLY"
+      },
+      {
+        "path": "src/backend/Host/Tooba.Host.Tests/OfferDirectoryTestHelper.cs",
+        "line": 26,
+        "text": "private readonly OfferDbContext _db;",
+        "class": "TEST_ONLY"
+      },
+      {
+        "path": "src/backend/Host/Tooba.Host.Tests/OfferDirectoryTestHelper.cs",
+        "line": 33,
+        "text": "public OfferDirectory(OfferDbContext db, IOfferUseCaseGuard guard, ICatalogLookupGateway catalog, IPartyLookupGateway party, IClock clock, IIdGenerator ids)",
+        "class": "TEST_ONLY"
+      },
+      {
+        "path": "src/backend/Host/Tooba.Host.Tests/OfferFoundationTests.cs",
+        "line": 18,
+        "text": "using Tooba.Offer.Infrastructure.Persistence;",
+        "class": "TEST_ONLY"
+      },
+      {
+        "path": "src/backend/Host/Tooba.Host.Tests/OfferFoundationTests.cs",
+        "line": 118,
+        "text": "Assert.Equal(\"offer\", OfferDbContext.Schema);",
+        "class": "TEST_ONLY"
+      },
+      {
+        "path": "src/backend/Host/Tooba.Host.Tests/OfferFoundationTests.cs",
+        "line": 269,
+        "text": "private static OfferDbContext CreateOfferDb(string connectionString, ICurrentCommerceContext commerce)",
+        "class": "TEST_ONLY"
+      },
+      {
+        "path": "src/backend/Host/Tooba.Host.Tests/OfferFoundationTests.cs",
+        "line": 274,
+        "text": "var options = new DbContextOptionsBuilder<OfferDbContext>();",
+        "class": "TEST_ONLY"
+      },
+      {
+        "path": "src/backend/Host/Tooba.Host.Tests/OfferFoundationTests.cs",
+        "line": 275,
+        "text": "ToobaNpgsql.ConfigureModuleContext(options, connectionString, OfferDbContext.Schema, typeof(OfferDbContext));",
+        "class": "TEST_ONLY"
+      },
+      {
+        "path": "src/backend/Host/Tooba.Host.Tests/OfferFoundationTests.cs",
+        "line": 277,
+        "text": "return new OfferDbContext(options.Options);",
+        "class": "TEST_ONLY"
+      },
+      {
+        "path": "src/backend/Host/Tooba.Host.Tests/PaidOrderReservationLifecycleTests.cs",
+        "line": 17,
+        "text": "using Tooba.Offer.Infrastructure.Persistence;",
+        "class": "TEST_ONLY"
+      },
+      {
+        "path": "src/backend/Host/Tooba.Host.Tests/PaidOrderReservationLifecycleTests.cs",
+        "line": 371,
+        "text": "private static OfferDbContext CreateOfferDb(string connectionString, ICurrentCommerceContext commerce)",
+        "class": "TEST_ONLY"
+      },
+      {
+        "path": "src/backend/Host/Tooba.Host.Tests/PaidOrderReservationLifecycleTests.cs",
+        "line": 376,
+        "text": "var options = new DbContextOptionsBuilder<OfferDbContext>();",
+        "class": "TEST_ONLY"
+      },
+      {
+        "path": "src/backend/Host/Tooba.Host.Tests/PaidOrderReservationLifecycleTests.cs",
+        "line": 377,
+        "text": "ToobaNpgsql.ConfigureModuleContext(options, connectionString, OfferDbContext.Schema, typeof(OfferDbContext));",
+        "class": "TEST_ONLY"
+      },
+      {
+        "path": "src/backend/Host/Tooba.Host.Tests/PaidOrderReservationLifecycleTests.cs",
+        "line": 379,
+        "text": "return new OfferDbContext(options.Options);",
+        "class": "TEST_ONLY"
+      },
+      {
+        "path": "src/backend/Host/Tooba.Host.Tests/PricingFoundationTests.cs",
+        "line": 15,
+        "text": "using Tooba.Offer.Infrastructure.Persistence;",
+        "class": "TEST_ONLY"
+      },
+      {
+        "path": "src/backend/Host/Tooba.Host.Tests/PricingFoundationTests.cs",
+        "line": 278,
+        "text": "private static OfferDbContext CreateOfferDb(string connectionString, ICurrentCommerceContext commerce)",
+        "class": "TEST_ONLY"
+      },
+      {
+        "path": "src/backend/Host/Tooba.Host.Tests/PricingFoundationTests.cs",
+        "line": 283,
+        "text": "var options = new DbContextOptionsBuilder<OfferDbContext>();",
+        "class": "TEST_ONLY"
+      },
+      {
+        "path": "src/backend/Host/Tooba.Host.Tests/PricingFoundationTests.cs",
+        "line": 284,
+        "text": "ToobaNpgsql.ConfigureModuleContext(options, connectionString, OfferDbContext.Schema, typeof(OfferDbContext));",
+        "class": "TEST_ONLY"
+      },
+      {
+        "path": "src/backend/Host/Tooba.Host.Tests/PricingFoundationTests.cs",
+        "line": 286,
+        "text": "return new OfferDbContext(options.Options);",
+        "class": "TEST_ONLY"
+      },
+      {
+        "path": "src/backend/Host/Tooba.Host.Tests/ProductHistoryTests.cs",
+        "line": 79,
+        "text": "Assert.DoesNotContain(\"OfferDbContext\", directory, StringComparison.Ordinal);",
+        "class": "TEST_ONLY"
+      },
+      {
+        "path": "src/backend/Host/Tooba.Host.Tests/StorefrontDemoCatalogSeedTests.cs",
+        "line": 15,
+        "text": "using Tooba.Offer.Infrastructure.Persistence;",
+        "class": "TEST_ONLY"
+      },
+      {
+        "path": "src/backend/Host/Tooba.Host.Tests/StorefrontDemoCatalogSeedTests.cs",
+        "line": 288,
+        "text": "private static OfferDbContext CreateOfferDb(string connectionString, ICurrentCommerceContext commerce)",
+        "class": "TEST_ONLY"
+      },
+      {
+        "path": "src/backend/Host/Tooba.Host.Tests/StorefrontDemoCatalogSeedTests.cs",
+        "line": 290,
+        "text": "var options = new DbContextOptionsBuilder<OfferDbContext>();",
+        "class": "TEST_ONLY"
+      },
+      {
+        "path": "src/backend/Host/Tooba.Host.Tests/StorefrontDemoCatalogSeedTests.cs",
+        "line": 291,
+        "text": "ToobaNpgsql.ConfigureModuleContext(options, connectionString, OfferDbContext.Schema, typeof(OfferDbContext));",
+        "class": "TEST_ONLY"
+      },
+      {
+        "path": "src/backend/Host/Tooba.Host.Tests/StorefrontDemoCatalogSeedTests.cs",
+        "line": 293,
+        "text": "return new OfferDbContext(options.Options);",
+        "class": "TEST_ONLY"
+      },
+      {
+        "path": "src/backend/Host/Tooba.MigrationRunner.Tests/OfferMigrationIntegrityTests.cs",
+        "line": 9,
+        "text": "using Tooba.Offer.Infrastructure.Persistence;",
+        "class": "TEST_ONLY"
+      },
+      {
+        "path": "src/backend/Host/Tooba.MigrationRunner.Tests/OfferMigrationIntegrityTests.cs",
+        "line": 115,
+        "text": "private static OfferDbContext CreateOffer(string connectionString)",
+        "class": "TEST_ONLY"
+      },
+      {
+        "path": "src/backend/Host/Tooba.MigrationRunner.Tests/OfferMigrationIntegrityTests.cs",
+        "line": 117,
+        "text": "var options = new DbContextOptionsBuilder<OfferDbContext>();",
+        "class": "TEST_ONLY"
+      },
+      {
+        "path": "src/backend/Host/Tooba.MigrationRunner.Tests/OfferMigrationIntegrityTests.cs",
+        "line": 121,
+        "text": "OfferDbContext.Schema,",
+        "class": "TEST_ONLY"
+      },
+      {
+        "path": "src/backend/Host/Tooba.MigrationRunner.Tests/OfferMigrationIntegrityTests.cs",
+        "line": 122,
+        "text": "typeof(OfferDbContext));",
+        "class": "TEST_ONLY"
+      },
+      {
+        "path": "src/backend/Host/Tooba.MigrationRunner.Tests/OfferMigrationIntegrityTests.cs",
+        "line": 123,
+        "text": "return new OfferDbContext(options.Options);",
+        "class": "TEST_ONLY"
+      },
+      {
+        "path": "src/backend/Modules/Offer/Tooba.Offer.Tests/Architecture/OfferArchitectureGuardTests.cs",
+        "line": 144,
+        "text": ".Where(x => x.Text.Contains(\"OfferDbContext\", StringComparison.Ordinal))",
+        "class": "TEST_ONLY"
+      },
+      {
+        "path": "src/backend/Modules/Offer/Tooba.Offer.Tests/Architecture/OfferArchitectureGuardTests.cs",
+        "line": 166,
+        "text": "Assert.DoesNotContain(\"OfferDbContext\", composer, StringComparison.Ordinal);",
+        "class": "TEST_ONLY"
+      },
+      {
+        "path": "src/backend/Modules/Offer/Tooba.Offer.Tests/Infrastructure/OfferDbContextOwnershipTests.cs",
+        "line": 9,
+        "text": "using Tooba.Offer.Infrastructure.Persistence;",
+        "class": "TEST_ONLY"
+      },
+      {
+        "path": "src/backend/Modules/Offer/Tooba.Offer.Tests/Infrastructure/OfferDbContextOwnershipTests.cs",
+        "line": 13,
+        "text": "public sealed class OfferDbContextOwnershipTests",
+        "class": "TEST_ONLY"
+      },
+      {
+        "path": "src/backend/Modules/Offer/Tooba.Offer.Tests/Infrastructure/OfferDbContextOwnershipTests.cs",
+        "line": 16,
+        "text": "public void OfferDbContext_schema_is_offer_and_maps_seller_offer_only()",
+        "class": "TEST_ONLY"
+      },
+      {
+        "path": "src/backend/Modules/Offer/Tooba.Offer.Tests/Infrastructure/OfferDbContextOwnershipTests.cs",
+        "line": 18,
+        "text": "var options = new DbContextOptionsBuilder<OfferDbContext>()",
+        "class": "TEST_ONLY"
+      },
+      {
+        "path": "src/backend/Modules/Offer/Tooba.Offer.Tests/Infrastructure/OfferDbContextOwnershipTests.cs",
+        "line": 21,
+        "text": "using var db = new OfferDbContext(options);",
+        "class": "TEST_ONLY"
+      },
+      {
+        "path": "src/backend/Modules/Offer/Tooba.Offer.Tests/Infrastructure/OfferDbContextOwnershipTests.cs",
+        "line": 22,
+        "text": "Assert.Equal(\"offer\", OfferDbContext.Schema);",
+        "class": "TEST_ONLY"
+      }
+    ]
+  },
+  "hits": [
+    {
+      "path": "src/backend/Host/Tooba.Host/AccessControl/AccessControlDevelopmentSeed.cs",
+      "line": 28,
+      "text": "using Tooba.Offer.Infrastructure.Persistence;",
+      "class": "HOST_SEED_BOOTSTRAP"
+    },
+    {
+      "path": "src/backend/Host/Tooba.Host/AccessControl/AccessControlDevelopmentSeed.cs",
+      "line": 89,
+      "text": "var offerDb = provider.GetRequiredService<OfferDbContext>();",
+      "class": "HOST_SEED_BOOTSTRAP"
+    },
+    {
+      "path": "src/backend/Host/Tooba.Host/AccessControl/AccessControlDevelopmentSeed.cs",
+      "line": 352,
+      "text": "OfferDbContext offerDb,",
+      "class": "HOST_SEED_BOOTSTRAP"
+    },
+    {
+      "path": "src/backend/Host/Tooba.Host/Admin/AdminPanelComposer.cs",
+      "line": 9,
+      "text": "using Tooba.Offer.Infrastructure.Persistence;",
+      "class": "HOST_ADMIN"
+    },
+    {
+      "path": "src/backend/Host/Tooba.Host/Admin/AdminPanelComposer.cs",
+      "line": 31,
+      "text": "private readonly OfferDbContext _offers;",
+      "class": "HOST_ADMIN"
+    },
+    {
+      "path": "src/backend/Host/Tooba.Host/Admin/AdminPanelComposer.cs",
+      "line": 50,
+      "text": "OfferDbContext offers,",
+      "class": "HOST_ADMIN"
+    },
+    {
+      "path": "src/backend/Host/Tooba.Host/Admin/CatalogAttributeSchemaDevelopmentBootstrap.cs",
+      "line": 13,
+      "text": "using Tooba.Offer.Infrastructure.Persistence;",
+      "class": "HOST_SEED_BOOTSTRAP"
+    },
+    {
+      "path": "src/backend/Host/Tooba.Host/Admin/CatalogAttributeSchemaDevelopmentBootstrap.cs",
+      "line": 189,
+      "text": "var offerDb = provider.GetRequiredService<OfferDbContext>();",
+      "class": "HOST_SEED_BOOTSTRAP"
+    },
+    {
+      "path": "src/backend/Host/Tooba.Host/Admin/MerchandisingCampaignAdminEndpoints.cs",
+      "line": 8,
+      "text": "using Tooba.Offer.Infrastructure.Persistence;",
+      "class": "HOST_ADMIN"
+    },
+    {
+      "path": "src/backend/Host/Tooba.Host/Admin/MerchandisingCampaignAdminEndpoints.cs",
+      "line": 109,
+      "text": "private readonly OfferDbContext _offers;",
+      "class": "HOST_ADMIN"
+    },
+    {
+      "path": "src/backend/Host/Tooba.Host/Admin/MerchandisingCampaignAdminEndpoints.cs",
+      "line": 119,
+      "text": "OfferDbContext offers,",
+      "class": "HOST_ADMIN"
+    },
+    {
+      "path": "src/backend/Host/Tooba.Host/Admin/MerchandisingCampaignDevelopmentSeed.cs",
+      "line": 10,
+      "text": "using Tooba.Offer.Infrastructure.Persistence;",
+      "class": "HOST_SEED_BOOTSTRAP"
+    },
+    {
+      "path": "src/backend/Host/Tooba.Host/Admin/MerchandisingCampaignDevelopmentSeed.cs",
+      "line": 65,
+      "text": "var offerDb = provider.GetRequiredService<OfferDbContext>();",
+      "class": "HOST_SEED_BOOTSTRAP"
+    },
+    {
+      "path": "src/backend/Host/Tooba.Host/Admin/MerchandisingCampaignDevelopmentSeed.cs",
+      "line": 327,
+      "text": "OfferDbContext offerDb,",
+      "class": "HOST_SEED_BOOTSTRAP"
+    },
+    {
+      "path": "src/backend/Host/Tooba.Host/Admin/ProductWorkspaceComposer.cs",
+      "line": 8,
+      "text": "using Tooba.Offer.Infrastructure.Persistence;",
+      "class": "HOST_ADMIN"
+    },
+    {
+      "path": "src/backend/Host/Tooba.Host/Admin/ProductWorkspaceComposer.cs",
+      "line": 24,
+      "text": "private readonly OfferDbContext _offers;",
+      "class": "HOST_ADMIN"
+    },
+    {
+      "path": "src/backend/Host/Tooba.Host/Admin/ProductWorkspaceComposer.cs",
+      "line": 36,
+      "text": "OfferDbContext offers,",
+      "class": "HOST_ADMIN"
+    },
+    {
+      "path": "src/backend/Host/Tooba.Host/Admin/ProductWorkspaceDevelopmentBootstrap.cs",
+      "line": 15,
+      "text": "using Tooba.Offer.Infrastructure.Persistence;",
+      "class": "HOST_SEED_BOOTSTRAP"
+    },
+    {
+      "path": "src/backend/Host/Tooba.Host/Admin/ProductWorkspaceDevelopmentBootstrap.cs",
+      "line": 102,
+      "text": "await MigrateAsync(provider.GetRequiredService<OfferDbContext>());",
+      "class": "HOST_SEED_BOOTSTRAP"
+    },
+    {
+      "path": "src/backend/Host/Tooba.Host/Admin/ReservationPolicyAdminComposer.cs",
+      "line": 5,
+      "text": "using Tooba.Offer.Infrastructure.Persistence;",
+      "class": "HOST_ADMIN"
+    },
+    {
+      "path": "src/backend/Host/Tooba.Host/Admin/ReservationPolicyAdminComposer.cs",
+      "line": 81,
+      "text": "OfferDbContext offers,",
+      "class": "HOST_ADMIN"
+    },
+    {
+      "path": "src/backend/Host/Tooba.Host/Admin/ReservationPolicyAdminComposer.cs",
+      "line": 108,
+      "text": "OfferDbContext offers,",
+      "class": "HOST_ADMIN"
+    },
+    {
+      "path": "src/backend/Host/Tooba.Host/Admin/ReservationPolicyAdminEndpoints.cs",
+      "line": 4,
+      "text": "using Tooba.Offer.Infrastructure.Persistence;",
+      "class": "HOST_ADMIN"
+    },
+    {
+      "path": "src/backend/Host/Tooba.Host/Admin/ReservationPolicyAdminEndpoints.cs",
+      "line": 146,
+      "text": "OfferDbContext offers,",
+      "class": "HOST_ADMIN"
+    },
+    {
+      "path": "src/backend/Host/Tooba.Host/Admin/ReservationPolicyAdminEndpoints.cs",
+      "line": 173,
+      "text": "OfferDbContext offers,",
+      "class": "HOST_ADMIN"
+    },
+    {
+      "path": "src/backend/Host/Tooba.Host/Admin/ReservationPolicyAdminEndpoints.cs",
+      "line": 209,
+      "text": "OfferDbContext offers,",
+      "class": "HOST_ADMIN"
+    },
+    {
+      "path": "src/backend/Host/Tooba.Host/Admin/ReservationPolicyAdminEndpoints.cs",
+      "line": 280,
+      "text": "OfferDbContext offers,",
+      "class": "HOST_ADMIN"
+    },
+    {
+      "path": "src/backend/Host/Tooba.Host/Grid/AdminProductGridQueryEngine.cs",
+      "line": 6,
+      "text": "using Tooba.Offer.Infrastructure.Persistence;",
+      "class": "HOST_GRID"
+    },
+    {
+      "path": "src/backend/Host/Tooba.Host/Grid/AdminProductGridQueryEngine.cs",
+      "line": 19,
+      "text": "private readonly OfferDbContext _offers;",
+      "class": "HOST_GRID"
+    },
+    {
+      "path": "src/backend/Host/Tooba.Host/Grid/AdminProductGridQueryEngine.cs",
+      "line": 25,
+      "text": "OfferDbContext offers,",
+      "class": "HOST_GRID"
+    },
+    {
+      "path": "src/backend/Host/Tooba.Host/Grid/AdminSellersGridQueryEngine.cs",
+      "line": 5,
+      "text": "using Tooba.Offer.Infrastructure.Persistence;",
+      "class": "HOST_GRID"
+    },
+    {
+      "path": "src/backend/Host/Tooba.Host/Grid/AdminSellersGridQueryEngine.cs",
+      "line": 19,
+      "text": "private readonly OfferDbContext _offers;",
+      "class": "HOST_GRID"
+    },
+    {
+      "path": "src/backend/Host/Tooba.Host/Grid/AdminSellersGridQueryEngine.cs",
+      "line": 24,
+      "text": "OfferDbContext offers,",
+      "class": "HOST_GRID"
+    },
+    {
+      "path": "src/backend/Host/Tooba.Host/Storefront/StorefrontComposer.cs",
+      "line": 9,
+      "text": "using Tooba.Offer.Infrastructure.Persistence;",
+      "class": "HOST_STOREFRONT"
+    },
+    {
+      "path": "src/backend/Host/Tooba.Host/Storefront/StorefrontComposer.cs",
+      "line": 34,
+      "text": "private readonly OfferDbContext _offers;",
+      "class": "HOST_STOREFRONT"
+    },
+    {
+      "path": "src/backend/Host/Tooba.Host/Storefront/StorefrontComposer.cs",
+      "line": 49,
+      "text": "OfferDbContext offers,",
+      "class": "HOST_STOREFRONT"
+    },
+    {
+      "path": "src/backend/Host/Tooba.Host/Storefront/StorefrontDemoCatalogBootstrap.cs",
+      "line": 12,
+      "text": "using Tooba.Offer.Infrastructure.Persistence;",
+      "class": "HOST_SEED_BOOTSTRAP"
+    },
+    {
+      "path": "src/backend/Host/Tooba.Host/Storefront/StorefrontDemoCatalogBootstrap.cs",
+      "line": 122,
+      "text": "provider.GetRequiredService<OfferDbContext>(),",
+      "class": "HOST_SEED_BOOTSTRAP"
+    },
+    {
+      "path": "src/backend/Host/Tooba.Host/Storefront/StorefrontDemoCatalogBootstrap.cs",
+      "line": 474,
+      "text": "OfferDbContext offers,",
+      "class": "HOST_SEED_BOOTSTRAP"
+    },
+    {
+      "path": "src/backend/Host/Tooba.Host.Tests/CampaignCartPriceIntegrityTests.cs",
+      "line": 21,
+      "text": "using Tooba.Offer.Infrastructure.Persistence;",
+      "class": "TEST_ONLY"
+    },
+    {
+      "path": "src/backend/Host/Tooba.Host.Tests/CampaignCartPriceIntegrityTests.cs",
+      "line": 338,
+      "text": "private static OfferDbContext CreateOfferDb(string connectionString, ICurrentCommerceContext commerce)",
+      "class": "TEST_ONLY"
+    },
+    {
+      "path": "src/backend/Host/Tooba.Host.Tests/CampaignCartPriceIntegrityTests.cs",
+      "line": 343,
+      "text": "var options = new DbContextOptionsBuilder<OfferDbContext>();",
+      "class": "TEST_ONLY"
+    },
+    {
+      "path": "src/backend/Host/Tooba.Host.Tests/CampaignCartPriceIntegrityTests.cs",
+      "line": 344,
+      "text": "ToobaNpgsql.ConfigureModuleContext(options, connectionString, OfferDbContext.Schema, typeof(OfferDbContext));",
+      "class": "TEST_ONLY"
+    },
+    {
+      "path": "src/backend/Host/Tooba.Host.Tests/CampaignCartPriceIntegrityTests.cs",
+      "line": 346,
+      "text": "return new OfferDbContext(options.Options);",
+      "class": "TEST_ONLY"
+    },
+    {
+      "path": "src/backend/Host/Tooba.Host.Tests/CartExpiryPostgresTests.cs",
+      "line": 24,
+      "text": "using Tooba.Offer.Infrastructure.Persistence;",
+      "class": "TEST_ONLY"
+    },
+    {
+      "path": "src/backend/Host/Tooba.Host.Tests/CartExpiryPostgresTests.cs",
+      "line": 200,
+      "text": "private static OfferDbContext CreateOfferDb(string connectionString, ICurrentCommerceContext commerce)",
+      "class": "TEST_ONLY"
+    },
+    {
+      "path": "src/backend/Host/Tooba.Host.Tests/CartExpiryPostgresTests.cs",
+      "line": 205,
+      "text": "var options = new DbContextOptionsBuilder<OfferDbContext>();",
+      "class": "TEST_ONLY"
+    },
+    {
+      "path": "src/backend/Host/Tooba.Host.Tests/CartExpiryPostgresTests.cs",
+      "line": 206,
+      "text": "ToobaNpgsql.ConfigureModuleContext(options, connectionString, OfferDbContext.Schema, typeof(OfferDbContext));",
+      "class": "TEST_ONLY"
+    },
+    {
+      "path": "src/backend/Host/Tooba.Host.Tests/CartExpiryPostgresTests.cs",
+      "line": 208,
+      "text": "return new OfferDbContext(options.Options);",
+      "class": "TEST_ONLY"
+    },
+    {
+      "path": "src/backend/Host/Tooba.Host.Tests/CartFoundationTests.cs",
+      "line": 29,
+      "text": "using Tooba.Offer.Infrastructure.Persistence;",
+      "class": "TEST_ONLY"
+    },
+    {
+      "path": "src/backend/Host/Tooba.Host.Tests/CartFoundationTests.cs",
+      "line": 334,
+      "text": "private static OfferDbContext CreateOfferDb(string connectionString, ICurrentCommerceContext commerce)",
+      "class": "TEST_ONLY"
+    },
+    {
+      "path": "src/backend/Host/Tooba.Host.Tests/CartFoundationTests.cs",
+      "line": 339,
+      "text": "var options = new DbContextOptionsBuilder<OfferDbContext>();",
+      "class": "TEST_ONLY"
+    },
+    {
+      "path": "src/backend/Host/Tooba.Host.Tests/CartFoundationTests.cs",
+      "line": 340,
+      "text": "ToobaNpgsql.ConfigureModuleContext(options, connectionString, OfferDbContext.Schema, typeof(OfferDbContext));",
+      "class": "TEST_ONLY"
+    },
+    {
+      "path": "src/backend/Host/Tooba.Host.Tests/CartFoundationTests.cs",
+      "line": 342,
+      "text": "return new OfferDbContext(options.Options);",
+      "class": "TEST_ONLY"
+    },
+    {
+      "path": "src/backend/Host/Tooba.Host.Tests/CheckoutOrderFoundationTests.cs",
+      "line": 23,
+      "text": "using Tooba.Offer.Infrastructure.Persistence;",
+      "class": "TEST_ONLY"
+    },
+    {
+      "path": "src/backend/Host/Tooba.Host.Tests/CheckoutOrderFoundationTests.cs",
+      "line": 496,
+      "text": "private static OfferDbContext CreateOfferDb(string connectionString, ICurrentCommerceContext commerce)",
+      "class": "TEST_ONLY"
+    },
+    {
+      "path": "src/backend/Host/Tooba.Host.Tests/CheckoutOrderFoundationTests.cs",
+      "line": 501,
+      "text": "var options = new DbContextOptionsBuilder<OfferDbContext>();",
+      "class": "TEST_ONLY"
+    },
+    {
+      "path": "src/backend/Host/Tooba.Host.Tests/CheckoutOrderFoundationTests.cs",
+      "line": 502,
+      "text": "ToobaNpgsql.ConfigureModuleContext(options, connectionString, OfferDbContext.Schema, typeof(OfferDbContext));",
+      "class": "TEST_ONLY"
+    },
+    {
+      "path": "src/backend/Host/Tooba.Host.Tests/CheckoutOrderFoundationTests.cs",
+      "line": 504,
+      "text": "return new OfferDbContext(options.Options);",
+      "class": "TEST_ONLY"
+    },
+    {
+      "path": "src/backend/Host/Tooba.Host.Tests/InventoryFoundationTests.cs",
+      "line": 20,
+      "text": "using Tooba.Offer.Infrastructure.Persistence;",
+      "class": "TEST_ONLY"
+    },
+    {
+      "path": "src/backend/Host/Tooba.Host.Tests/InventoryFoundationTests.cs",
+      "line": 338,
+      "text": "private static OfferDbContext CreateOfferDb(string connectionString, ICurrentCommerceContext commerce)",
+      "class": "TEST_ONLY"
+    },
+    {
+      "path": "src/backend/Host/Tooba.Host.Tests/InventoryFoundationTests.cs",
+      "line": 343,
+      "text": "var options = new DbContextOptionsBuilder<OfferDbContext>();",
+      "class": "TEST_ONLY"
+    },
+    {
+      "path": "src/backend/Host/Tooba.Host.Tests/InventoryFoundationTests.cs",
+      "line": 344,
+      "text": "ToobaNpgsql.ConfigureModuleContext(options, connectionString, OfferDbContext.Schema, typeof(OfferDbContext));",
+      "class": "TEST_ONLY"
+    },
+    {
+      "path": "src/backend/Host/Tooba.Host.Tests/InventoryFoundationTests.cs",
+      "line": 346,
+      "text": "return new OfferDbContext(options.Options);",
+      "class": "TEST_ONLY"
+    },
+    {
+      "path": "src/backend/Host/Tooba.Host.Tests/MerchandisingCampaignAdminTests.cs",
+      "line": 15,
+      "text": "using Tooba.Offer.Infrastructure.Persistence;",
+      "class": "TEST_ONLY"
+    },
+    {
+      "path": "src/backend/Host/Tooba.Host.Tests/MerchandisingCampaignRuntimeTests.cs",
+      "line": 19,
+      "text": "using Tooba.Offer.Infrastructure.Persistence;",
+      "class": "TEST_ONLY"
+    },
+    {
+      "path": "src/backend/Host/Tooba.Host.Tests/MerchandisingCampaignRuntimeTests.cs",
+      "line": 545,
+      "text": "private static OfferDbContext CreateOfferDb(string connectionString, ICurrentCommerceContext commerce)",
+      "class": "TEST_ONLY"
+    },
+    {
+      "path": "src/backend/Host/Tooba.Host.Tests/MerchandisingCampaignRuntimeTests.cs",
+      "line": 550,
+      "text": "var options = new DbContextOptionsBuilder<OfferDbContext>();",
+      "class": "TEST_ONLY"
+    },
+    {
+      "path": "src/backend/Host/Tooba.Host.Tests/MerchandisingCampaignRuntimeTests.cs",
+      "line": 551,
+      "text": "ToobaNpgsql.ConfigureModuleContext(options, connectionString, OfferDbContext.Schema, typeof(OfferDbContext));",
+      "class": "TEST_ONLY"
+    },
+    {
+      "path": "src/backend/Host/Tooba.Host.Tests/MerchandisingCampaignRuntimeTests.cs",
+      "line": 553,
+      "text": "return new OfferDbContext(options.Options);",
+      "class": "TEST_ONLY"
+    },
+    {
+      "path": "src/backend/Host/Tooba.Host.Tests/OfferDirectoryTestHelper.cs",
+      "line": 12,
+      "text": "using Tooba.Offer.Infrastructure.Persistence;",
+      "class": "TEST_ONLY"
+    },
+    {
+      "path": "src/backend/Host/Tooba.Host.Tests/OfferDirectoryTestHelper.cs",
+      "line": 26,
+      "text": "private readonly OfferDbContext _db;",
+      "class": "TEST_ONLY"
+    },
+    {
+      "path": "src/backend/Host/Tooba.Host.Tests/OfferDirectoryTestHelper.cs",
+      "line": 33,
+      "text": "public OfferDirectory(OfferDbContext db, IOfferUseCaseGuard guard, ICatalogLookupGateway catalog, IPartyLookupGateway party, IClock clock, IIdGenerator ids)",
+      "class": "TEST_ONLY"
+    },
+    {
+      "path": "src/backend/Host/Tooba.Host.Tests/OfferFoundationTests.cs",
+      "line": 18,
+      "text": "using Tooba.Offer.Infrastructure.Persistence;",
+      "class": "TEST_ONLY"
+    },
+    {
+      "path": "src/backend/Host/Tooba.Host.Tests/OfferFoundationTests.cs",
+      "line": 118,
+      "text": "Assert.Equal(\"offer\", OfferDbContext.Schema);",
+      "class": "TEST_ONLY"
+    },
+    {
+      "path": "src/backend/Host/Tooba.Host.Tests/OfferFoundationTests.cs",
+      "line": 269,
+      "text": "private static OfferDbContext CreateOfferDb(string connectionString, ICurrentCommerceContext commerce)",
+      "class": "TEST_ONLY"
+    },
+    {
+      "path": "src/backend/Host/Tooba.Host.Tests/OfferFoundationTests.cs",
+      "line": 274,
+      "text": "var options = new DbContextOptionsBuilder<OfferDbContext>();",
+      "class": "TEST_ONLY"
+    },
+    {
+      "path": "src/backend/Host/Tooba.Host.Tests/OfferFoundationTests.cs",
+      "line": 275,
+      "text": "ToobaNpgsql.ConfigureModuleContext(options, connectionString, OfferDbContext.Schema, typeof(OfferDbContext));",
+      "class": "TEST_ONLY"
+    },
+    {
+      "path": "src/backend/Host/Tooba.Host.Tests/OfferFoundationTests.cs",
+      "line": 277,
+      "text": "return new OfferDbContext(options.Options);",
+      "class": "TEST_ONLY"
+    },
+    {
+      "path": "src/backend/Host/Tooba.Host.Tests/PaidOrderReservationLifecycleTests.cs",
+      "line": 17,
+      "text": "using Tooba.Offer.Infrastructure.Persistence;",
+      "class": "TEST_ONLY"
+    },
+    {
+      "path": "src/backend/Host/Tooba.Host.Tests/PaidOrderReservationLifecycleTests.cs",
+      "line": 371,
+      "text": "private static OfferDbContext CreateOfferDb(string connectionString, ICurrentCommerceContext commerce)",
+      "class": "TEST_ONLY"
+    },
+    {
+      "path": "src/backend/Host/Tooba.Host.Tests/PaidOrderReservationLifecycleTests.cs",
+      "line": 376,
+      "text": "var options = new DbContextOptionsBuilder<OfferDbContext>();",
+      "class": "TEST_ONLY"
+    },
+    {
+      "path": "src/backend/Host/Tooba.Host.Tests/PaidOrderReservationLifecycleTests.cs",
+      "line": 377,
+      "text": "ToobaNpgsql.ConfigureModuleContext(options, connectionString, OfferDbContext.Schema, typeof(OfferDbContext));",
+      "class": "TEST_ONLY"
+    },
+    {
+      "path": "src/backend/Host/Tooba.Host.Tests/PaidOrderReservationLifecycleTests.cs",
+      "line": 379,
+      "text": "return new OfferDbContext(options.Options);",
+      "class": "TEST_ONLY"
+    },
+    {
+      "path": "src/backend/Host/Tooba.Host.Tests/PricingFoundationTests.cs",
+      "line": 15,
+      "text": "using Tooba.Offer.Infrastructure.Persistence;",
+      "class": "TEST_ONLY"
+    },
+    {
+      "path": "src/backend/Host/Tooba.Host.Tests/PricingFoundationTests.cs",
+      "line": 278,
+      "text": "private static OfferDbContext CreateOfferDb(string connectionString, ICurrentCommerceContext commerce)",
+      "class": "TEST_ONLY"
+    },
+    {
+      "path": "src/backend/Host/Tooba.Host.Tests/PricingFoundationTests.cs",
+      "line": 283,
+      "text": "var options = new DbContextOptionsBuilder<OfferDbContext>();",
+      "class": "TEST_ONLY"
+    },
+    {
+      "path": "src/backend/Host/Tooba.Host.Tests/PricingFoundationTests.cs",
+      "line": 284,
+      "text": "ToobaNpgsql.ConfigureModuleContext(options, connectionString, OfferDbContext.Schema, typeof(OfferDbContext));",
+      "class": "TEST_ONLY"
+    },
+    {
+      "path": "src/backend/Host/Tooba.Host.Tests/PricingFoundationTests.cs",
+      "line": 286,
+      "text": "return new OfferDbContext(options.Options);",
+      "class": "TEST_ONLY"
+    },
+    {
+      "path": "src/backend/Host/Tooba.Host.Tests/ProductHistoryTests.cs",
+      "line": 79,
+      "text": "Assert.DoesNotContain(\"OfferDbContext\", directory, StringComparison.Ordinal);",
+      "class": "TEST_ONLY"
+    },
+    {
+      "path": "src/backend/Host/Tooba.Host.Tests/StorefrontDemoCatalogSeedTests.cs",
+      "line": 15,
+      "text": "using Tooba.Offer.Infrastructure.Persistence;",
+      "class": "TEST_ONLY"
+    },
+    {
+      "path": "src/backend/Host/Tooba.Host.Tests/StorefrontDemoCatalogSeedTests.cs",
+      "line": 288,
+      "text": "private static OfferDbContext CreateOfferDb(string connectionString, ICurrentCommerceContext commerce)",
+      "class": "TEST_ONLY"
+    },
+    {
+      "path": "src/backend/Host/Tooba.Host.Tests/StorefrontDemoCatalogSeedTests.cs",
+      "line": 290,
+      "text": "var options = new DbContextOptionsBuilder<OfferDbContext>();",
+      "class": "TEST_ONLY"
+    },
+    {
+      "path": "src/backend/Host/Tooba.Host.Tests/StorefrontDemoCatalogSeedTests.cs",
+      "line": 291,
+      "text": "ToobaNpgsql.ConfigureModuleContext(options, connectionString, OfferDbContext.Schema, typeof(OfferDbContext));",
+      "class": "TEST_ONLY"
+    },
+    {
+      "path": "src/backend/Host/Tooba.Host.Tests/StorefrontDemoCatalogSeedTests.cs",
+      "line": 293,
+      "text": "return new OfferDbContext(options.Options);",
+      "class": "TEST_ONLY"
+    },
+    {
+      "path": "src/backend/Host/Tooba.MigrationRunner/ModuleMigrationRegistry.cs",
+      "line": 16,
+      "text": "using Tooba.Offer.Infrastructure.Persistence;",
+      "class": "HOST_ADMIN"
+    },
+    {
+      "path": "src/backend/Host/Tooba.MigrationRunner/ModuleMigrationRegistry.cs",
+      "line": 57,
+      "text": "Descriptor<OfferDbContext>(\"Offer\", OfferDbContext.Schema),",
+      "class": "HOST_ADMIN"
+    },
+    {
+      "path": "src/backend/Host/Tooba.MigrationRunner.Tests/OfferMigrationIntegrityTests.cs",
+      "line": 9,
+      "text": "using Tooba.Offer.Infrastructure.Persistence;",
+      "class": "TEST_ONLY"
+    },
+    {
+      "path": "src/backend/Host/Tooba.MigrationRunner.Tests/OfferMigrationIntegrityTests.cs",
+      "line": 115,
+      "text": "private static OfferDbContext CreateOffer(string connectionString)",
+      "class": "TEST_ONLY"
+    },
+    {
+      "path": "src/backend/Host/Tooba.MigrationRunner.Tests/OfferMigrationIntegrityTests.cs",
+      "line": 117,
+      "text": "var options = new DbContextOptionsBuilder<OfferDbContext>();",
+      "class": "TEST_ONLY"
+    },
+    {
+      "path": "src/backend/Host/Tooba.MigrationRunner.Tests/OfferMigrationIntegrityTests.cs",
+      "line": 121,
+      "text": "OfferDbContext.Schema,",
+      "class": "TEST_ONLY"
+    },
+    {
+      "path": "src/backend/Host/Tooba.MigrationRunner.Tests/OfferMigrationIntegrityTests.cs",
+      "line": 122,
+      "text": "typeof(OfferDbContext));",
+      "class": "TEST_ONLY"
+    },
+    {
+      "path": "src/backend/Host/Tooba.MigrationRunner.Tests/OfferMigrationIntegrityTests.cs",
+      "line": 123,
+      "text": "return new OfferDbContext(options.Options);",
+      "class": "TEST_ONLY"
+    },
+    {
+      "path": "src/backend/Modules/Offer/Tooba.Offer.Tests/Architecture/OfferArchitectureGuardTests.cs",
+      "line": 144,
+      "text": ".Where(x => x.Text.Contains(\"OfferDbContext\", StringComparison.Ordinal))",
+      "class": "TEST_ONLY"
+    },
+    {
+      "path": "src/backend/Modules/Offer/Tooba.Offer.Tests/Architecture/OfferArchitectureGuardTests.cs",
+      "line": 166,
+      "text": "Assert.DoesNotContain(\"OfferDbContext\", composer, StringComparison.Ordinal);",
+      "class": "TEST_ONLY"
+    },
+    {
+      "path": "src/backend/Modules/Offer/Tooba.Offer.Tests/Infrastructure/OfferDbContextOwnershipTests.cs",
+      "line": 9,
+      "text": "using Tooba.Offer.Infrastructure.Persistence;",
+      "class": "TEST_ONLY"
+    },
+    {
+      "path": "src/backend/Modules/Offer/Tooba.Offer.Tests/Infrastructure/OfferDbContextOwnershipTests.cs",
+      "line": 13,
+      "text": "public sealed class OfferDbContextOwnershipTests",
+      "class": "TEST_ONLY"
+    },
+    {
+      "path": "src/backend/Modules/Offer/Tooba.Offer.Tests/Infrastructure/OfferDbContextOwnershipTests.cs",
+      "line": 16,
+      "text": "public void OfferDbContext_schema_is_offer_and_maps_seller_offer_only()",
+      "class": "TEST_ONLY"
+    },
+    {
+      "path": "src/backend/Modules/Offer/Tooba.Offer.Tests/Infrastructure/OfferDbContextOwnershipTests.cs",
+      "line": 18,
+      "text": "var options = new DbContextOptionsBuilder<OfferDbContext>()",
+      "class": "TEST_ONLY"
+    },
+    {
+      "path": "src/backend/Modules/Offer/Tooba.Offer.Tests/Infrastructure/OfferDbContextOwnershipTests.cs",
+      "line": 21,
+      "text": "using var db = new OfferDbContext(options);",
+      "class": "TEST_ONLY"
+    },
+    {
+      "path": "src/backend/Modules/Offer/Tooba.Offer.Tests/Infrastructure/OfferDbContextOwnershipTests.cs",
+      "line": 22,
+      "text": "Assert.Equal(\"offer\", OfferDbContext.Schema);",
+      "class": "TEST_ONLY"
+    }
+  ]
+}
