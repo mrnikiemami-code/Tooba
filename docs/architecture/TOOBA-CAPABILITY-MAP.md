@@ -58,6 +58,8 @@ Evidence files remain the deep-detail source; this map is the quick index.
 | Checkout Consistency Design | Shared-ACID redesign documented; ARCH-CHECKOUT-001…005; Process Manager (Order); PONR MULTI_STAGE; READY_FOR_IMPLEMENTATION_W1 | TB-TMAR-CHECKOUT-CONSISTENCY-DESIGN |
 | Checkout Implementation W1 | Durable checkout_processes + submission idempotency; TransactionScope preserved; no Saga runtime; W2 READY | TB-TMAR-CHECKOUT-IMPL-W1 |
 | Checkout Implementation W2 | In-process Process Manager + Inventory.Contracts reservation; Order.Application↛Inventory.Application; TX preserved; W3 READY | TB-TMAR-CHECKOUT-IMPL-W2 |
-| Next | Checkout implementation Stage 3 (Cart conversion contract seam) | TB-TMAR-CHECKOUT-IMPL-W3 |
+| Checkout Implementation W3 | Cart.Contracts conversion; Order.Application↛Cart.Application; TX preserved; W4 READY | TB-TMAR-CHECKOUT-IMPL-W3 |
+| Checkout Implementation W4 | Order.Infrastructure lifecycle via IOrderInventoryLifecyclePort; Infra↛Inventory.Application; TX preserved; W5 READY | TB-TMAR-CHECKOUT-IMPL-W4 |
+| Next | Checkout implementation Stage 5 (Promotion contract seam) | TB-TMAR-CHECKOUT-IMPL-W5 |
 
-Last Verified Task = TB-TMAR-CHECKOUT-IMPL-W2
+Last Verified Task = TB-TMAR-CHECKOUT-IMPL-W4

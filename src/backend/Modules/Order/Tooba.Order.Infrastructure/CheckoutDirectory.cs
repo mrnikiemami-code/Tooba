@@ -5,7 +5,6 @@ using Tooba.BuildingBlocks;
 using Tooba.Cart.Application;
 using Tooba.Cart.Contracts;
 using Tooba.Catalog.Application;
-using Tooba.Inventory.Application;
 using Tooba.Inventory.Contracts;
 using Tooba.Offer.Contracts;
 using Tooba.Offer.Domain;
@@ -30,7 +29,7 @@ public sealed partial class CheckoutDirectory : ICheckoutDirectory
     internal readonly ICartDirectory _cartMutations;
     internal readonly IOfferLookupGateway _offers;
     internal readonly IPriceLookupGateway _prices;
-    internal readonly IInventoryDirectory _inventory;
+    internal readonly IOrderInventoryLifecyclePort _inventoryLifecycle;
     internal readonly ITaxCalculator _taxes;
     internal readonly IPromotionEvaluator _promotions;
     internal readonly ICatalogLookupGateway _catalog;
@@ -39,7 +38,6 @@ public sealed partial class CheckoutDirectory : ICheckoutDirectory
     internal readonly ICheckoutReservationHoldPolicy? _holdPolicy;
     internal readonly IReservationCycleDirectory? _cycles;
     internal readonly IReservationCyclePolicyResolver? _cyclePolicy;
-    internal readonly IInventoryAvailabilityGateway _availability;
     internal readonly ICheckoutCommitBarrier _commitBarrier;
     internal readonly ICheckoutAbuseGate _abuseGate;
     internal readonly ICampaignCartPriceAuthority? _campaignPrices;
@@ -57,21 +55,21 @@ public sealed partial class CheckoutDirectory : ICheckoutDirectory
         ICartDirectory cartMutations,
         IOfferLookupGateway offers,
         IPriceLookupGateway prices,
-        IInventoryDirectory inventory,
+        IOrderInventoryLifecyclePort inventoryLifecycle,
         ITaxCalculator taxes,
         IPromotionEvaluator promotions,
         ICatalogLookupGateway catalog,
         ISellerOrderCancelFulfillmentGate cancelFulfillmentGate,
         IReturnPolicyResolver? returnPolicies = null,
         ICheckoutReservationHoldPolicy? holdPolicy = null,
-        IInventoryAvailabilityGateway? availability = null,
         IReservationCycleDirectory? cycles = null,
         IReservationCyclePolicyResolver? cyclePolicy = null,
         ICheckoutCommitBarrier? commitBarrier = null,
         ICheckoutAbuseGate? abuseGate = null,
         ICampaignCartPriceAuthority? campaignPrices = null,
         ICheckoutProcessTracker? processes = null,
-        ICheckoutInventoryReservationPort? inventoryReservation = null, ICartConversionPort? cartConversion = null)
+        ICheckoutInventoryReservationPort? inventoryReservation = null,
+        ICartConversionPort? cartConversion = null)
     {
         _db = db;
         _guard = guard;
@@ -79,7 +77,7 @@ public sealed partial class CheckoutDirectory : ICheckoutDirectory
         _cartMutations = cartMutations;
         _offers = offers;
         _prices = prices;
-        _inventory = inventory;
+        _inventoryLifecycle = inventoryLifecycle;
         _taxes = taxes;
         _promotions = promotions;
         _catalog = catalog;
@@ -90,12 +88,10 @@ public sealed partial class CheckoutDirectory : ICheckoutDirectory
         _cyclePolicy = cyclePolicy;
         _commitBarrier = commitBarrier ?? new NullCheckoutCommitBarrier();
         _abuseGate = abuseGate ?? new NullCheckoutAbuseGate();
-        _availability = availability
-            ?? inventory as IInventoryAvailabilityGateway
-            ?? throw new InvalidOperationException("درز موجودی برای commit سفارش لازم است.");
         _campaignPrices = campaignPrices;
         _processes = processes;
-        _inventoryReservation = inventoryReservation ?? new CheckoutInventoryReservationAdapter(_inventory, _availability);
+        _inventoryReservation = inventoryReservation
+            ?? throw new InvalidOperationException("درز رزرو موجودی checkout لازم است.");
         _cartConversion = cartConversion ?? new CartConversionAdapter(_cartMutations);
     }
 
@@ -221,7 +217,7 @@ public sealed partial class CheckoutDirectory : ICheckoutDirectory
         {
             if (line.ReservationId is { } reservationId)
             {
-                await _inventory.ReleaseAsync(reservationId, cancellationToken);
+                await _inventoryLifecycle.ReleaseHeldReservationAsync(reservationId, cancellationToken);
             }
         }
 
@@ -280,19 +276,15 @@ public sealed partial class CheckoutDirectory : ICheckoutDirectory
                         continue;
                     }
 
-                    var previous = await _inventory.FindReservationAsync(previousId, cancellationToken)
-                        ?? throw new InvalidOperationException("order.restore.inventory_failed");
                     // Restore reacquires a durable hold (expiresAt: null) — not cart TTL.
                     // Paid/pending restored reservations must not be eligible for ReleaseExpiredHoldsAsync.
-                    var receipt = await _inventory.ReserveAsync(
-                        previous.StockItemId,
-                        previous.Quantity,
+                    var newReservationId = await _inventoryLifecycle.ReacquireDurableHoldFromPreviousAsync(
+                        previousId,
                         $"order-restore-{line.LineId:N}",
                         $"order-restore-{line.LineId:N}",
-                        null,
                         cancellationToken);
-                    acquired.Add(receipt.ReservationId);
-                    line.ReplaceReservation(receipt.ReservationId);
+                    acquired.Add(newReservationId);
+                    line.ReplaceReservation(newReservationId);
                 }
 
                 order.RestoreFromCancellation(DateTimeOffset.UtcNow);
@@ -334,14 +326,8 @@ public sealed partial class CheckoutDirectory : ICheckoutDirectory
         {
             foreach (var reservationId in acquired)
             {
-                try
-                {
-                    await _inventory.ReleaseAsync(reservationId, cancellationToken);
-                }
-                catch (InvalidOperationException)
-                {
-                    // رزرو تازه‌گرفته‌شده را تا حد ممکن آزاد می‌کنیم؛ سفارش لغو می‌ماند.
-                }
+                // رزرو تازه‌گرفته‌شده را تا حد ممکن آزاد می‌کنیم؛ سفارش لغو می‌ماند.
+                await _inventoryLifecycle.TryReleaseReservationAsync(reservationId, cancellationToken);
             }
 
             throw;

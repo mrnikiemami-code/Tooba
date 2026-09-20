@@ -1,0 +1,12 @@
+﻿# Recovery SoT — TB-TMAR-CHECKOUT-IMPL-W4
+- IOrderInventoryLifecyclePort in Inventory.Contracts
+- Order.Infrastructure Cancel/Restore/PaymentBridge use Contracts only
+- Order.Infrastructure → Inventory.Application ProjectReference removed; Infra→App baseline shrunk
+- Shared TransactionScope intact; no async compensation
+- TMAR-Execution-Mode: BACKEND_ONLY_UNTIL_EXPLICIT_RELEASE
+- Frontend-Production-Changes: NONE
+- Checkout-Implementation-W5-Readiness: READY
+- W5-Candidate: Promotion contract seam
+- Architecture-Priority: CHECKOUT_IMPLEMENTATION
+- Next-Recommended-Task: TB-TMAR-CHECKOUT-IMPL-W5
+- Product-Resume-Safety: SAFE_WITH_TMAR_PARALLEL

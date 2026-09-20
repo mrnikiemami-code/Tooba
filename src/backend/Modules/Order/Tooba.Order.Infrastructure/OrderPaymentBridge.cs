@@ -1,6 +1,5 @@
 using Microsoft.EntityFrameworkCore;
-using Tooba.Inventory.Application;
-using Tooba.Inventory.Domain;
+using Tooba.Inventory.Contracts;
 using Tooba.Order.Application;
 using Tooba.Order.Domain;
 using Tooba.Order.Infrastructure.Persistence;
@@ -15,7 +14,7 @@ namespace Tooba.Order.Infrastructure;
 public sealed class OrderPaymentBridge : IPayableCheckoutReader, IOrderPaymentProjection
 {
     private readonly OrderDbContext _db;
-    private readonly IInventoryDirectory _inventory;
+    private readonly IOrderInventoryLifecyclePort _inventoryLifecycle;
     private readonly IReservationCycleDirectory? _cycles;
     private readonly IReservationCyclePolicyResolver? _cyclePolicy;
 
@@ -24,12 +23,12 @@ public sealed class OrderPaymentBridge : IPayableCheckoutReader, IOrderPaymentPr
     /// </summary>
     public OrderPaymentBridge(
         OrderDbContext db,
-        IInventoryDirectory inventory,
+        IOrderInventoryLifecyclePort inventoryLifecycle,
         IReservationCycleDirectory? cycles = null,
         IReservationCyclePolicyResolver? cyclePolicy = null)
     {
         _db = db;
-        _inventory = inventory;
+        _inventoryLifecycle = inventoryLifecycle;
         _cycles = cycles;
         _cyclePolicy = cyclePolicy;
     }
@@ -152,36 +151,15 @@ public sealed class OrderPaymentBridge : IPayableCheckoutReader, IOrderPaymentPr
                 continue;
             }
 
-            var existing = await _inventory.FindReservationAsync(reservationId, cancellationToken);
-            if (existing is { Status: StockReservationStatus.Held })
+            var effectiveId = await _inventoryLifecycle.PromoteOrReacquireForManualPaymentReviewAsync(
+                reservationId,
+                reviewExpiresAt,
+                $"manual-review-{line.LineId:N}",
+                $"manual-review-{line.LineId:N}-{reviewExpiresAt.UtcTicks}",
+                cancellationToken);
+            if (effectiveId != reservationId)
             {
-                await _inventory.PromoteReservationForManualPaymentReviewAsync(
-                    reservationId,
-                    reviewExpiresAt,
-                    cancellationToken);
-                continue;
-            }
-
-            // Released/Consumed: never resurrect; authoritative reacquire under review TTL.
-            if (existing is null)
-            {
-                throw new InvalidOperationException("inventory.reservation.not_found");
-            }
-
-            try
-            {
-                var receipt = await _inventory.ReserveAsync(
-                    existing.StockItemId,
-                    existing.Quantity,
-                    $"manual-review-{line.LineId:N}",
-                    $"manual-review-{line.LineId:N}-{reviewExpiresAt.UtcTicks}",
-                    reviewExpiresAt,
-                    cancellationToken);
-                line.ReplaceReservation(receipt.ReservationId);
-            }
-            catch (InvalidOperationException)
-            {
-                throw new InvalidOperationException("inventory.manual_review.unavailable");
+                line.ReplaceReservation(effectiveId);
             }
         }
 
@@ -243,13 +221,7 @@ public sealed class OrderPaymentBridge : IPayableCheckoutReader, IOrderPaymentPr
                 continue;
             }
 
-            var existing = await _inventory.FindReservationAsync(reservationId, cancellationToken);
-            if (existing is not { Status: StockReservationStatus.Held })
-            {
-                continue;
-            }
-
-            await _inventory.ReleaseAsync(reservationId, cancellationToken);
+            await _inventoryLifecycle.ReleaseIfHeldAsync(reservationId, cancellationToken);
         }
 
         if (_cycles is not null)
@@ -312,7 +284,7 @@ public sealed class OrderPaymentBridge : IPayableCheckoutReader, IOrderPaymentPr
         var lines = group.SellerOrders
             .Where(x => x.Status != SellerOrderStatus.Cancelled)
             .SelectMany(order => order.Lines)
-            .Select(line => new OrderSupplyLineInput(
+            .Select(line => new OrderInventoryPaidSupplyLine(
                 line.LineId,
                 line.OfferId,
                 line.ReservationId,
@@ -325,14 +297,11 @@ public sealed class OrderPaymentBridge : IPayableCheckoutReader, IOrderPaymentPr
             return;
         }
 
-        var result = await _inventory.EnsureOrderSupplyAsync(
-            new EnsureOrderSupplyRequest(
+        var result = await _inventoryLifecycle.EnsurePaidDurableSupplyAsync(
+            new OrderInventoryPaidSupplyRequest(
                 group.CheckoutId,
-                OrderSupplyMode.EnsurePaidDurable,
-                AllowReacquire: true,
                 Reason: "late-captured-payment",
                 CorrelationId: $"paid:{group.CheckoutId:N}",
-                ReviewExpiresAt: null,
                 lines),
             cancellationToken);
         foreach (var pair in result.NewBindingsByOrderLineId)

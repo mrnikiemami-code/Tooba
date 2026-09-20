@@ -173,7 +173,10 @@ User choice:
 Continue TMAR for now until user explicitly says to return to product feature work.
 
 Next TMAR task:
-TB-TMAR-CHECKOUT-IMPL-W4
+TB-TMAR-CHECKOUT-IMPL-W5
+
+Checkout Implementation W4:
+TB-TMAR-CHECKOUT-IMPL-W4 — Order.Infrastructure Cancel/Restore/PaymentBridge behind Inventory.Contracts (IOrderInventoryLifecyclePort); Infra→Inventory.Application removed; TX preserved; W5 READY; FE freeze intact. Evidence: docs/evidence/TB-TMAR-CHECKOUT-IMPL-W4/.
 
 Host Structure W1:
 TB-TMAR-HOST-STRUCTURE-W1 — Host root responsibility folders + HOST-FOLDER-001/HOST-HYGIENE-001; READY_TO_PAUSE; Checkout-W4 resume READY. Evidence: docs/evidence/TB-TMAR-HOST-STRUCTURE-W1/.

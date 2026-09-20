@@ -1,7 +1,8 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Tooba.BuildingBlocks;
 using Tooba.Offer.Domain;
 using Tooba.Order.Domain;
+using Tooba.Inventory.Application;
 using Tooba.Order.Infrastructure;
 using Tooba.Order.Infrastructure.Persistence;
 using Tooba.Payment.Application;
@@ -63,7 +64,7 @@ public sealed class R2LiveMarketplaceSmokeTests
         await orderDb.SaveChangesAsync();
         var sellerOrderId = checkout.SellerOrders.Single().SellerOrderId;
 
-        var paymentBridge = new OrderPaymentBridge(orderDb, new UnusedInventoryDirectory());
+        var paymentBridge = new OrderPaymentBridge(orderDb, new OrderInventoryLifecycleAdapter(new UnusedInventoryDirectory()));
         var paymentDirectory = new PaymentDirectory(
             paymentDb,
             new OpenPaymentUseCaseGuard(),

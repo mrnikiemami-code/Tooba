@@ -32,6 +32,7 @@ public sealed class InventoryModule : IToobaModule
         services.AddScoped<IInventoryReturnGateway, InventoryReturnGateway>();
         services.AddScoped<IInventoryAvailabilityGateway>(sp => (InventoryDirectory)sp.GetRequiredService<IInventoryDirectory>());
         services.AddScoped<ICheckoutInventoryReservationPort, CheckoutInventoryReservationAdapter>();
+        services.AddScoped<IOrderInventoryLifecyclePort, OrderInventoryLifecycleAdapter>();
         services.AddDbContext<InventoryDbContext>((sp, options) =>
         {
             var connectionString = ToobaNpgsql.ResolveForContext(

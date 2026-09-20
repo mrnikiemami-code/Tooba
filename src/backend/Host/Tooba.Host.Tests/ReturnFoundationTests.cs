@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging.Abstractions;
 using Testcontainers.PostgreSql;
 using Tooba.BuildingBlocks;
@@ -8,6 +8,7 @@ using Tooba.Fulfillment.Infrastructure;
 using Tooba.Fulfillment.Infrastructure.Persistence;
 using Tooba.Offer.Domain;
 using Tooba.Order.Domain;
+using Tooba.Inventory.Application;
 using Tooba.Order.Infrastructure;
 using Tooba.Order.Infrastructure.Persistence;
 using Tooba.Payment.Application;
@@ -131,7 +132,7 @@ public sealed class ReturnFoundationTests : IAsyncLifetime
         var lineId = (await orderDb.Lines.AsNoTracking().SingleAsync()).LineId;
         var lineUnitPrice = (await orderDb.Lines.AsNoTracking().SingleAsync()).UnitPriceSnapshot;
 
-        var paymentBridge = new OrderPaymentBridge(orderDb, new UnusedInventoryDirectory());
+        var paymentBridge = new OrderPaymentBridge(orderDb, new OrderInventoryLifecycleAdapter(new UnusedInventoryDirectory()));
         var paymentGateways = new PaymentGatewayRegistry([new FakePaymentGateway()]);
         var paymentDirectory = new PaymentDirectory(
             paymentDb,

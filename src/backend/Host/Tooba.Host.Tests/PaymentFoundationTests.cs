@@ -1,4 +1,4 @@
-using System.Reflection;
+﻿using System.Reflection;
 using System.Text.Json.Nodes;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -7,6 +7,7 @@ using Testcontainers.PostgreSql;
 using Tooba.BuildingBlocks;
 using Tooba.Host;
 using Tooba.Inventory.Application;
+using Tooba.Inventory.Contracts;
 using Tooba.Offer.Domain;
 using Tooba.Order.Domain;
 using Tooba.Order.Infrastructure;
@@ -142,7 +143,7 @@ public sealed class PaymentFoundationTests : IAsyncLifetime
         var reserve = SeedCheckout(orderA, OrderMode.RequestToReserve, buyer, actor, seller1, seller2, 109000m, 98100m, now);
         await orderA.SaveChangesAsync();
 
-        var bridge = new OrderPaymentBridge(orderA, new UnusedInventoryDirectory());
+        var bridge = new OrderPaymentBridge(orderA, new OrderInventoryLifecycleAdapter(new UnusedInventoryDirectory()));
         var gateways = new PaymentGatewayRegistry([new FakePaymentGateway(), new FakeFailingPaymentGateway()]);
         var directory = new PaymentDirectory(paymentA, new OpenPaymentUseCaseGuard(), bridge, gateways, new PaymentGatewayActorContext());
 
@@ -353,6 +354,8 @@ public sealed class PaymentFoundationTests : IAsyncLifetime
         services.AddHttpContextAccessor();
         services.AddScoped<IIntegrationEventPublisher, InProcessIntegrationEventPublisher>();
         services.AddScoped<IInventoryDirectory, UnusedInventoryDirectory>();
+        services.AddScoped<IOrderInventoryLifecyclePort>(sp =>
+            new OrderInventoryLifecycleAdapter(sp.GetRequiredService<IInventoryDirectory>()));
         services.AddScoped<IPayableCheckoutReader, OrderPaymentBridge>();
         services.AddScoped<IOrderPaymentProjection, OrderPaymentBridge>();
         services.AddScoped<IIntegrationEventHandler<PaymentSucceededIntegrationEvent>, OrderPaymentSucceededHandler>();
