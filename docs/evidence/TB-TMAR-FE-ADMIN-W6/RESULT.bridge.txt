@@ -88,7 +88,7 @@ Recovery-SoT:
 docs/evidence/TB-TMAR-FE-ADMIN-W6/recovery-sot.md
 
 Git:
-branch main; tip f612d90c13c93480fc93aa4606b8c41cab1278e3; pushed origin/main; HEAD==origin/main; 18ca10c9 ancestor; user work preserved
+branch main; tip 58ed9bd749cb6633b575084187ab0cce836d0d0e; pushed origin/main; HEAD==origin/main; 18ca10c9 ancestor; user work preserved
 
 Architectural-Concerns:
 Residual admin-api is Orders + SHARED formatters; admin-screens still >800 (Orders-coupled); low-risk FE admin waves exhausted; Host outranks further ADMIN-Wx; godfile deferred
