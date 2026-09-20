@@ -1,0 +1,117 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+
+BEGIN_TOOBA_WORKER_RESULT
+
+Task-ID: TB-TMAR-OFFER-REFERENCE-W1-R5
+Parent-Task: TB-TMAR-OFFER-REFERENCE-W1-R4
+Channel: tooba-main
+WorkerId: tooba-worker-01
+AgentType: cursor
+Status: PASS
+
+Summary:
+OFFER-REFERENCE-W1-R5 final verification PASS with INCOMPLETE module state. Repaired magic InvalidOperationException("offer.not_found") seam: Pricing/Inventory seller gateways now throw SemanticException with OfferErrorCodes.NotFound / PricingErrorCodes.AmountInvalid / InventoryErrorCodes.QuantityInvalid; Offer endpoints map SemanticException only. Seller Offer CQRS/structure/guards/tests green. COMPLETE blocked by remaining Host Admin/Storefront/grid OfferDbContext business reads. Next TB-TMAR-OFFER-REFERENCE-W1-R6. Frontend untouched. User .rar preserved.
+
+Program-Name:
+TMAR — Tooba Microservice-Ready Architecture Recovery
+
+Track:
+OFFER_REFERENCE_MODULE
+
+Recovery-Start:
+docs/evidence/TB-TMAR-OFFER-REFERENCE-W1-R5/recovery-start.md
+
+Architect-Verified-R4-State:
+e8c8fb95d93532723b942f6ea46f7590c49480fe READY_FOR_FINAL_VERIFICATION
+
+TMAR-Execution-Mode:
+BACKEND_ONLY_UNTIL_EXPLICIT_RELEASE
+
+Frontend-Production-Changes:
+NONE
+
+Physical-Structure:
+docs/evidence/TB-TMAR-OFFER-REFERENCE-W1-R5/physical-structure-final.md
+
+Namespace-Ownership:
+docs/evidence/TB-TMAR-OFFER-REFERENCE-W1-R5/namespace-ownership-final.md
+
+Domain-Final:
+docs/evidence/TB-TMAR-OFFER-REFERENCE-W1-R5/domain-final.md
+
+Application-MediatR-Final:
+docs/evidence/TB-TMAR-OFFER-REFERENCE-W1-R5/application-final.md
+
+Contracts-Final:
+docs/evidence/TB-TMAR-OFFER-REFERENCE-W1-R5/contracts-final.md
+
+Infrastructure-Final:
+docs/evidence/TB-TMAR-OFFER-REFERENCE-W1-R5/infrastructure-final.md
+
+Endpoints-Final:
+docs/evidence/TB-TMAR-OFFER-REFERENCE-W1-R5/endpoints-final.md
+
+Magic-Exception-Seam:
+docs/evidence/TB-TMAR-OFFER-REFERENCE-W1-R5/error-seam-repair.md — REPAIRED
+
+Host-Offer-Leak-Scan:
+docs/evidence/TB-TMAR-OFFER-REFERENCE-W1-R5/host-offer-leak-final.md — RESIDUAL Host OfferDbContext (Admin/Storefront/grid)
+
+Dependency-Graph:
+docs/evidence/TB-TMAR-OFFER-REFERENCE-W1-R5/dependency-final.md
+docs/evidence/TB-TMAR-OFFER-REFERENCE-W1-R5/dependency-final.json
+
+Language-Localization:
+docs/evidence/TB-TMAR-OFFER-REFERENCE-W1-R5/language-final.md
+
+Source-Size:
+docs/evidence/TB-TMAR-OFFER-REFERENCE-W1-R5/source-size-final.md
+
+AntiPattern-Gate:
+CLEAN (seller Offer surface; magic exception seam removed)
+
+Golden-Guards:
+docs/evidence/TB-TMAR-OFFER-REFERENCE-W1-R5/golden-guards.md — includes no string-matched expected exceptions
+
+Focused-Validation:
+Offer.Tests 30/30; Pricing.Tests 11/11; Host focused seller Offer 7/7
+
+Full-Validation:
+docs/evidence/TB-TMAR-OFFER-REFERENCE-W1-R5/validation-final.md; solution build succeeded
+
+Residual-Defects:
+docs/evidence/TB-TMAR-OFFER-REFERENCE-W1-R5/residual-defects.md
+
+Capability-Map:
+UNCHANGED
+
+Bootstrap:
+Updated for R5 INCOMPLETE / next R6
+
+Master-Recovery-State:
+Updated for R5 INCOMPLETE / next R6
+
+Recovery-SoT:
+docs/evidence/TB-TMAR-OFFER-REFERENCE-W1-R5/recovery-sot.md
+
+Git:
+eb8947c87818b3ba12ac6611a2022ccda938f65f
+HEAD==origin/main: YES
+branch: main
+
+Blockers:
+Host OfferDbContext residual in Admin/Storefront/grid blocks COMPLETE_REFERENCE_PATTERN
+
+User-Work-Preserved:
+YES (.rar untracked; stashes untouched)
+
+Product-Resume-Safety:
+SAFE_WITH_TMAR_PARALLEL
+
+Module-Recovery-State:
+INCOMPLETE
+
+Next-Recommended-Task:
+TB-TMAR-OFFER-REFERENCE-W1-R6
+
+END_TOOBA_WORKER_RESULT
