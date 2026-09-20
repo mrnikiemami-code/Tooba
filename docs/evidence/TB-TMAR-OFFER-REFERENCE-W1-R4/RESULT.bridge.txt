@@ -95,7 +95,7 @@ Recovery-SoT:
 docs/evidence/TB-TMAR-OFFER-REFERENCE-W1-R4/recovery-sot.md
 
 Git:
-TIP_SHA_PLACEHOLDER
+0ebc34950022a63af0277b012ee0800ae301f5c1
 HEAD==origin/main: YES
 branch: main
 
