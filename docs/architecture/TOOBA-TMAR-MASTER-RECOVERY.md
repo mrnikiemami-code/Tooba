@@ -173,7 +173,10 @@ User choice:
 Continue TMAR for now until user explicitly says to return to product feature work.
 
 Next TMAR task:
-TB-TMAR-CHECKOUT-IMPL-W5
+TB-TMAR-CHECKOUT-IMPL-W6
+
+Checkout Implementation W5:
+TB-TMAR-CHECKOUT-IMPL-W5 — Promotion checkout seam (ICheckoutPromotionPort); Order.Application↛Promotion.Application; TX preserved; W6 READY; FE freeze intact. Evidence: docs/evidence/TB-TMAR-CHECKOUT-IMPL-W5/.
 
 Checkout Implementation W4:
 TB-TMAR-CHECKOUT-IMPL-W4 — Order.Infrastructure Cancel/Restore/PaymentBridge behind Inventory.Contracts (IOrderInventoryLifecyclePort); Infra→Inventory.Application removed; TX preserved; W5 READY; FE freeze intact. Evidence: docs/evidence/TB-TMAR-CHECKOUT-IMPL-W4/.

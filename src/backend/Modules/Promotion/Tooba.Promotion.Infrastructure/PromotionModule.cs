@@ -6,6 +6,7 @@ using Tooba.BuildingBlocks;
 using Tooba.ModuleContracts;
 using Tooba.Persistence;
 using Tooba.Promotion.Application;
+using Tooba.Promotion.Contracts;
 using Tooba.Promotion.Infrastructure.Persistence;
 
 namespace Tooba.Promotion.Infrastructure;
@@ -30,6 +31,7 @@ public sealed class PromotionModule : IToobaModule
         services.AddScoped<IPromotionRedemptionLedger, DeferredPromotionRedemptionLedger>();
         services.AddScoped<IPromotionDirectory, PromotionDirectory>();
         services.AddScoped<IPromotionEvaluator>(sp => sp.GetRequiredService<IPromotionDirectory>());
+        services.AddScoped<ICheckoutPromotionPort, CheckoutPromotionAdapter>();
         services.AddScoped<IMerchandisingCampaignDirectory, MerchandisingCampaignDirectory>();
         services.AddScoped<IMerchandisingCampaignQuery, MerchandisingCampaignQuery>();
         services.AddScoped<Tooba.Pricing.Contracts.ICampaignCartPriceAuthority, CampaignCartPriceAuthority>();

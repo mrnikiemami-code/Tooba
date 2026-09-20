@@ -58,6 +58,7 @@ Checkout Implementation W2 (TB-TMAR-CHECKOUT-IMPL-W2) PASS — Process Manager +
 Checkout Implementation W3 (TB-TMAR-CHECKOUT-IMPL-W3) PASS — Cart.Contracts ICartConversionPort; Order.Application↛Cart.Application; TX preserved; W4 READY; next CHECKOUT-IMPL-W4.
 Host Structure W1 (TB-TMAR-HOST-STRUCTURE-W1) PASS — Host folder reorganization; HOST-FOLDER-001; READY_TO_PAUSE; next CHECKOUT-IMPL-W4.
 Checkout Implementation W4 (TB-TMAR-CHECKOUT-IMPL-W4) PASS — IOrderInventoryLifecyclePort; Order.Infrastructure↛Inventory.Application; TX preserved; W5 READY; next CHECKOUT-IMPL-W5.
+Checkout Implementation W5 (TB-TMAR-CHECKOUT-IMPL-W5) PASS — ICheckoutPromotionPort; Order.Application↛Promotion.Application; TX preserved; W6 READY; next CHECKOUT-IMPL-W6.
 Product-Resume-Safety = SAFE_WITH_TMAR_PARALLEL (Order hub still frozen; do not expand App→App / Infra→App; no NEW cross-context ACID).
 Last Product Task = TB-P10-T022-R21.
 Architecture Baseline = TB-TMAR-ARCH-BASELINE.
@@ -464,7 +465,8 @@ checkout-impl-w3 = TB-TMAR-CHECKOUT-IMPL-W3 PASS (Cart.Contracts conversion; TX 
 host-structure-w1 = TB-TMAR-HOST-STRUCTURE-W1 PASS (folder map + guards; READY_TO_PAUSE; next CHECKOUT-IMPL-W4)
 host-structure-w1-r1 = TB-TMAR-HOST-STRUCTURE-W1-R1 PASS (durable locks + FE freeze; BACKEND_ONLY; next CHECKOUT-IMPL-W4)
 checkout-impl-w4 = TB-TMAR-CHECKOUT-IMPL-W4 PASS (Order.Infra Inventory lifecycle Contracts; Infra→Inventory.Application removed; W5 READY)
-next task = TB-TMAR-CHECKOUT-IMPL-W5 unless Recovery SoT says otherwise
+checkout-impl-w5 = TB-TMAR-CHECKOUT-IMPL-W5 PASS (Promotion checkout Contracts; Order.App→Promotion.Application removed; W6 READY)
+next task = TB-TMAR-CHECKOUT-IMPL-W6 unless Recovery SoT says otherwise
 
 primary goal = painless future Microservice migration
 

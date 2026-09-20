@@ -36,6 +36,7 @@ using Tooba.Tax.Domain;
 using Tooba.Tax.Infrastructure;
 using Tooba.Tax.Infrastructure.Persistence;
 using Tooba.Promotion.Application;
+using Tooba.Promotion.Contracts;
 using Tooba.Promotion.Domain;
 using Tooba.Promotion.Infrastructure;
 using Tooba.Promotion.Infrastructure.Persistence;
@@ -135,7 +136,8 @@ public sealed class CheckoutOrderFoundationTests : IAsyncLifetime
         Assert.Contains("Tooba.Pricing.Contracts", application);
         Assert.Contains("Tooba.Inventory.Contracts", application);
         Assert.Contains("Tooba.Tax.Contracts", application);
-        Assert.Contains("Tooba.Promotion.Application", application);
+        Assert.DoesNotContain("Tooba.Promotion.Application", application);
+        Assert.Contains("Tooba.Promotion.Contracts", File.ReadAllText(Path.Combine(root, "src", "backend", "Modules", "Order", "Tooba.Order.Infrastructure", "Tooba.Order.Infrastructure.csproj")));
         Assert.DoesNotContain("Tooba.Tax.Infrastructure", File.ReadAllText(Path.Combine(root, "src", "backend", "Modules", "Order", "Tooba.Order.Infrastructure", "Tooba.Order.Infrastructure.csproj")), StringComparison.Ordinal);
         Assert.DoesNotContain("Tooba.Promotion.Infrastructure", File.ReadAllText(Path.Combine(root, "src", "backend", "Modules", "Order", "Tooba.Order.Infrastructure", "Tooba.Order.Infrastructure.csproj")), StringComparison.Ordinal);
         Assert.DoesNotContain("Tooba.Payment.Infrastructure", File.ReadAllText(Path.Combine(root, "src", "backend", "Modules", "Order", "Tooba.Order.Infrastructure", "Tooba.Order.Infrastructure.csproj")), StringComparison.Ordinal);
@@ -225,7 +227,7 @@ public sealed class CheckoutOrderFoundationTests : IAsyncLifetime
         var cartDirA = new CartDirectory(cartA, new OpenCartUseCaseGuard(), offerDirA, priceDirA, inventoryDirA, inventoryDirA);
         var taxDirA = new TaxDirectory(taxA, new OpenTaxUseCaseGuard());
         var promoDirA = new PromotionDirectory(promotionA, new OpenPromotionUseCaseGuard(), new DeferredPromotionRedemptionLedger());
-        var checkoutA = new CheckoutDirectory(orderA, new OpenOrderUseCaseGuard(), cartDirA, cartDirA, offerDirA, priceDirA, new OrderInventoryLifecycleAdapter(inventoryDirA), taxDirA, promoDirA, catalogDirA, new NullCancelGate(), inventoryReservation: new CheckoutInventoryReservationAdapter(inventoryDirA, inventoryDirA), cartConversion: new CartConversionAdapter(cartDirA));
+        var checkoutA = new CheckoutDirectory(orderA, new OpenOrderUseCaseGuard(), cartDirA, cartDirA, offerDirA, priceDirA, new OrderInventoryLifecycleAdapter(inventoryDirA), taxDirA, new CheckoutPromotionAdapter(promoDirA), catalogDirA, new NullCancelGate(), inventoryReservation: new CheckoutInventoryReservationAdapter(inventoryDirA, inventoryDirA), cartConversion: new CartConversionAdapter(cartDirA));
 
         var names = new Dictionary<string, string> { ["fa-IR"] = "پیراهن سفارش", ["en-US"] = "Order shirt" };
         var product = await catalogDirA.CreateProductAsync(CatalogProductKind.PhysicalGood, "shirt-order", null, names, CancellationToken.None);
@@ -386,14 +388,14 @@ public sealed class CheckoutOrderFoundationTests : IAsyncLifetime
         var cartDirB = new CartDirectory(cartB, new OpenCartUseCaseGuard(), offerDirB, priceDirB, inventoryDirB, inventoryDirB);
         var taxDirB = new TaxDirectory(taxB, new OpenTaxUseCaseGuard());
         var promoDirB = new PromotionDirectory(promotionB, new OpenPromotionUseCaseGuard(), new DeferredPromotionRedemptionLedger());
-        var checkoutB = new CheckoutDirectory(orderB, new OpenOrderUseCaseGuard(), cartDirB, cartDirB, offerDirB, priceDirB, new OrderInventoryLifecycleAdapter(inventoryDirB), taxDirB, promoDirB, catalogDirB, new NullCancelGate(), inventoryReservation: new CheckoutInventoryReservationAdapter(inventoryDirB, inventoryDirB), cartConversion: new CartConversionAdapter(cartDirB));
+        var checkoutB = new CheckoutDirectory(orderB, new OpenOrderUseCaseGuard(), cartDirB, cartDirB, offerDirB, priceDirB, new OrderInventoryLifecycleAdapter(inventoryDirB), taxDirB, new CheckoutPromotionAdapter(promoDirB), catalogDirB, new NullCancelGate(), inventoryReservation: new CheckoutInventoryReservationAdapter(inventoryDirB, inventoryDirB), cartConversion: new CartConversionAdapter(cartDirB));
         Assert.Null(await checkoutB.GetCheckoutAsync(submitted.CheckoutId, orderAccess, CancellationToken.None));
         Assert.Null(await checkoutA.GetCheckoutAsync(Guid.Parse("dddddddd-dddd-dddd-dddd-dddddddddddd"), orderAccess, CancellationToken.None));
 
         var repairCart = await cartDirA.CreateAuthenticatedAsync(actor, "IR", "IRR", SalesChannel.Marketplace, CancellationToken.None);
         var repairLined = await cartDirA.AddOrIncreaseLineAsync(repairCart.CartId, access, repairCart.Version, offer2.OfferId, 1, CancellationToken.None);
         var failOnce = new FailOnceCartDirectory(cartDirA);
-        var checkoutFail = new CheckoutDirectory(orderA, new OpenOrderUseCaseGuard(), cartDirA, failOnce, offerDirA, priceDirA, new OrderInventoryLifecycleAdapter(inventoryDirA), taxDirA, promoDirA, catalogDirA, new NullCancelGate(), inventoryReservation: new CheckoutInventoryReservationAdapter(inventoryDirA, inventoryDirA), cartConversion: new CartConversionAdapter(failOnce));
+        var checkoutFail = new CheckoutDirectory(orderA, new OpenOrderUseCaseGuard(), cartDirA, failOnce, offerDirA, priceDirA, new OrderInventoryLifecycleAdapter(inventoryDirA), taxDirA, new CheckoutPromotionAdapter(promoDirA), catalogDirA, new NullCancelGate(), inventoryReservation: new CheckoutInventoryReservationAdapter(inventoryDirA, inventoryDirA), cartConversion: new CartConversionAdapter(failOnce));
         var repairCommand = new SubmitCheckoutCommand(
             repairLined.CartId,
             access,
@@ -436,7 +438,7 @@ public sealed class CheckoutOrderFoundationTests : IAsyncLifetime
         var cartDirA2 = new CartDirectory(cartA2, new OpenCartUseCaseGuard(), offerDirA2, priceDirA2, inventoryDirA2, inventoryDirA2);
         var taxDirA2 = new TaxDirectory(taxA2, new OpenTaxUseCaseGuard());
         var promoDirA2 = new PromotionDirectory(promotionA2, new OpenPromotionUseCaseGuard(), new DeferredPromotionRedemptionLedger());
-        var checkoutA2 = new CheckoutDirectory(orderA2, new OpenOrderUseCaseGuard(), cartDirA2, cartDirA2, offerDirA2, priceDirA2, new OrderInventoryLifecycleAdapter(inventoryDirA2), taxDirA2, promoDirA2, catalogDirA2, new NullCancelGate(), inventoryReservation: new CheckoutInventoryReservationAdapter(inventoryDirA2, inventoryDirA2), cartConversion: new CartConversionAdapter(cartDirA2));
+        var checkoutA2 = new CheckoutDirectory(orderA2, new OpenOrderUseCaseGuard(), cartDirA2, cartDirA2, offerDirA2, priceDirA2, new OrderInventoryLifecycleAdapter(inventoryDirA2), taxDirA2, new CheckoutPromotionAdapter(promoDirA2), catalogDirA2, new NullCancelGate(), inventoryReservation: new CheckoutInventoryReservationAdapter(inventoryDirA2, inventoryDirA2), cartConversion: new CartConversionAdapter(cartDirA2));
         var concLeft = checkoutA.SubmitAsync(
             new SubmitCheckoutCommand(concLined.CartId, access, concLined.Version, OrderMode.OnlinePurchase, buyer.PartyId, actor, "idem-conc-a", "IR-NAT"),
             CancellationToken.None);

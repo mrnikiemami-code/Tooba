@@ -12,8 +12,7 @@ using Tooba.Order.Application;
 using Tooba.Order.Domain;
 using Tooba.Order.Infrastructure.Persistence;
 using Tooba.Pricing.Contracts;
-using Tooba.Promotion.Application;
-using Tooba.Promotion.Domain;
+using Tooba.Promotion.Contracts;
 using Tooba.Tax.Contracts;
 using Tooba.Tax.Domain;
 namespace Tooba.Order.Infrastructure;
@@ -31,7 +30,7 @@ public sealed partial class CheckoutDirectory : ICheckoutDirectory
     internal readonly IPriceLookupGateway _prices;
     internal readonly IOrderInventoryLifecyclePort _inventoryLifecycle;
     internal readonly ITaxCalculator _taxes;
-    internal readonly IPromotionEvaluator _promotions;
+    internal readonly ICheckoutPromotionPort _promotions;
     internal readonly ICatalogLookupGateway _catalog;
     internal readonly ISellerOrderCancelFulfillmentGate _cancelFulfillmentGate;
     internal readonly IReturnPolicyResolver _returnPolicies;
@@ -57,7 +56,7 @@ public sealed partial class CheckoutDirectory : ICheckoutDirectory
         IPriceLookupGateway prices,
         IOrderInventoryLifecyclePort inventoryLifecycle,
         ITaxCalculator taxes,
-        IPromotionEvaluator promotions,
+        ICheckoutPromotionPort promotions,
         ICatalogLookupGateway catalog,
         ISellerOrderCancelFulfillmentGate cancelFulfillmentGate,
         IReturnPolicyResolver? returnPolicies = null,
@@ -629,8 +628,8 @@ public sealed partial class CheckoutDirectory : ICheckoutDirectory
                 }
 
                 var lineExclusive = quote.Amount * cartLine.Quantity;
-                var promotion = await _promotions.EvaluateAsync(
-                    new PromotionEvaluationRequest(
+                var promotion = await _promotions.EvaluateForCheckoutAsync(
+                    new CheckoutPromotionEvaluationRequest(
                         cartLine.OfferId,
                         cartLine.CatalogVariantId,
                         null,

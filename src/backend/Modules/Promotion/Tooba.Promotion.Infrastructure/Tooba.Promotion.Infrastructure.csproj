@@ -14,6 +14,7 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Tooba.Promotion.Application\Tooba.Promotion.Application.csproj" />
+    <ProjectReference Include="..\Tooba.Promotion.Contracts\Tooba.Promotion.Contracts.csproj" />
     <ProjectReference Include="..\..\Tooba.ModuleContracts\Tooba.ModuleContracts.csproj" />
     <ProjectReference Include="..\..\..\BuildingBlocks\Tooba.Persistence\Tooba.Persistence.csproj" />
   </ItemGroup>

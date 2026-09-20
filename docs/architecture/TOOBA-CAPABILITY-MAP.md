@@ -60,6 +60,7 @@ Evidence files remain the deep-detail source; this map is the quick index.
 | Checkout Implementation W2 | In-process Process Manager + Inventory.Contracts reservation; Order.Application↛Inventory.Application; TX preserved; W3 READY | TB-TMAR-CHECKOUT-IMPL-W2 |
 | Checkout Implementation W3 | Cart.Contracts conversion; Order.Application↛Cart.Application; TX preserved; W4 READY | TB-TMAR-CHECKOUT-IMPL-W3 |
 | Checkout Implementation W4 | Order.Infrastructure lifecycle via IOrderInventoryLifecyclePort; Infra↛Inventory.Application; TX preserved; W5 READY | TB-TMAR-CHECKOUT-IMPL-W4 |
-| Next | Checkout implementation Stage 5 (Promotion contract seam) | TB-TMAR-CHECKOUT-IMPL-W5 |
+| Checkout Implementation W5 | Promotion checkout via ICheckoutPromotionPort; Order.Application↛Promotion.Application; TX preserved; W6 READY | TB-TMAR-CHECKOUT-IMPL-W5 |
+| Next | Checkout implementation Stage 6 (Order.Infra Cart.Contracts cleanup) | TB-TMAR-CHECKOUT-IMPL-W6 |
 
-Last Verified Task = TB-TMAR-CHECKOUT-IMPL-W4
+Last Verified Task = TB-TMAR-CHECKOUT-IMPL-W5
