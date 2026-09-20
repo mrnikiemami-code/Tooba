@@ -1,4 +1,4 @@
-PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+﻿PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
 
 BEGIN_TOOBA_WORKER_RESULT
 
@@ -97,7 +97,7 @@ Recovery-SoT:
 docs/evidence/TB-TMAR-TAX-REFERENCE-W1/recovery-sot.md
 
 Git:
-tip PLACEHOLDER_SHA
+tip edecccce7829059ed5948899de13d4549b9fffdb
 
 Architectural-Concerns:
 Host composers/bootstrap still use ITaxDirectory/TaxDbContext directly (library consumption, not Tax HTTP ownership).
