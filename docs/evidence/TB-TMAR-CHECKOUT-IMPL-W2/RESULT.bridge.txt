@@ -1,0 +1,111 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+
+BEGIN_TOOBA_WORKER_RESULT
+
+Task-ID: TB-TMAR-CHECKOUT-IMPL-W2
+Parent-Task: TB-TMAR-CHECKOUT-IMPL-W1
+Channel: tooba-main
+WorkerId: tooba-worker-01
+AgentType: cursor
+Status: PASS
+
+Summary:
+CHECKOUT-IMPL-W2 PASS. In-process CheckoutProcessManager owns submit orchestration. Inventory reservation extracted to Tooba.Inventory.Contracts (ICheckoutInventoryReservationPort) with in-process adapter. Removed Order.Application→Inventory.Application. Shared TransactionScope preserved. No async Saga/messaging/compensation. Checkout-Implementation-W3-Readiness READY. W3-Candidate: Cart conversion contract seam. Orders-Frontend-Readiness STILL_WAITING_FOR_BACKEND_W3. Architecture-Priority CHECKOUT_IMPLEMENTATION. Next: TB-TMAR-CHECKOUT-IMPL-W3. Product-Resume-Safety SAFE_WITH_TMAR_PARALLEL.
+
+Program-Name:
+TMAR — Tooba Microservice-Ready Architecture Recovery
+
+Recovery-Start:
+docs/evidence/TB-TMAR-CHECKOUT-IMPL-W2/recovery-start.md
+
+W1-Verification:
+docs/evidence/TB-TMAR-CHECKOUT-IMPL-W2/w1-verification.md
+
+Process-Manager-Boundary:
+docs/evidence/TB-TMAR-CHECKOUT-IMPL-W2/process-manager-boundary.md
+
+Transaction-Preservation:
+docs/evidence/TB-TMAR-CHECKOUT-IMPL-W2/transaction-preservation.md
+
+Inventory-Contract:
+docs/evidence/TB-TMAR-CHECKOUT-IMPL-W2/inventory-contract.md
+
+Order-Inventory-Dependency:
+docs/evidence/TB-TMAR-CHECKOUT-IMPL-W2/order-inventory-dependency.md
+
+Inventory-Adapter:
+docs/evidence/TB-TMAR-CHECKOUT-IMPL-W2/inventory-adapter.md
+
+Orchestration-Move:
+docs/evidence/TB-TMAR-CHECKOUT-IMPL-W2/orchestration-move.md
+
+State-Transitions:
+docs/evidence/TB-TMAR-CHECKOUT-IMPL-W2/state-transitions.md
+
+Failure-Behavior:
+docs/evidence/TB-TMAR-CHECKOUT-IMPL-W2/failure-behavior.md
+
+Idempotency:
+docs/evidence/TB-TMAR-CHECKOUT-IMPL-W2/idempotency.md
+
+Correlation:
+docs/evidence/TB-TMAR-CHECKOUT-IMPL-W2/correlation.md
+
+Messaging-Scope:
+docs/evidence/TB-TMAR-CHECKOUT-IMPL-W2/messaging-scope.md
+
+Layering:
+docs/evidence/TB-TMAR-CHECKOUT-IMPL-W2/layering.md
+
+Architecture-Guards:
+docs/evidence/TB-TMAR-CHECKOUT-IMPL-W2/architecture-guards.md
+
+Source-Size-Compliance:
+docs/evidence/TB-TMAR-CHECKOUT-IMPL-W2/source-size-compliance.md
+
+Data-Migration:
+docs/evidence/TB-TMAR-CHECKOUT-IMPL-W2/data-migration.md
+
+Tests:
+docs/evidence/TB-TMAR-CHECKOUT-IMPL-W2/tests.md — focused suite 48/48 PASS
+
+Checkout-Implementation-W3-Readiness:
+READY
+
+W3-Candidate:
+Cart conversion contract seam (explicit ICartConversionPort) while keeping shared TransactionScope
+
+Orders-Frontend-Readiness:
+STILL_WAITING_FOR_BACKEND_W3
+
+Architecture-Priority:
+CHECKOUT_IMPLEMENTATION
+
+Capability-Map:
+docs/architecture/TOOBA-CAPABILITY-MAP.md — Last Verified = TB-TMAR-CHECKOUT-IMPL-W2
+
+Bootstrap:
+docs/architecture/TOOBA-ARCHITECT-BOOTSTRAP.md — checkout-impl-w2 PASS; next CHECKOUT-IMPL-W3
+
+Master-Recovery-State:
+docs/architecture/TOOBA-TMAR-MASTER-RECOVERY.md — IMPL-W2 listed; next CHECKOUT-IMPL-W3; SAFE_WITH_TMAR_PARALLEL
+
+Recovery-SoT:
+docs/evidence/TB-TMAR-CHECKOUT-IMPL-W2/recovery-sot.md
+
+Git:
+branch main; tip 3124614664fb376ffa37c751ae85948a1f6fe786; pushed origin/main; HEAD==origin/main; 18ca10c9 ancestor; user work preserved
+
+Architectural-Concerns:
+Shared TransactionScope remains until later IMPL stages; residual Order.Infrastructure→Inventory.Application for Cancel/Restore/PaymentBridge; Cart conversion still Application-coupled
+
+Blockers:
+(none)
+
+Product-Resume-Safety:
+SAFE_WITH_TMAR_PARALLEL
+
+Next-Recommended-Task:
+TB-TMAR-CHECKOUT-IMPL-W3
+
+END_TOOBA_WORKER_RESULT
