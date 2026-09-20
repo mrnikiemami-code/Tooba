@@ -1,0 +1,358 @@
+TOOBA TMAR MASTER RECOVERY
+
+Purpose
+
+This file is the durable recovery entry point for the Tooba architecture program.
+If chat/session context is lost, this file plus repository architecture docs are the source of truth.
+
+Primary Goal
+
+Tooba must remain a strict Modular Monolith today and be continuously prepared for low-friction, incremental migration to Microservices later.
+
+The goal is NOT a rewrite.
+
+The goal is:
+
+preserve working product behavior
+
+enforce bounded-context ownership
+
+eliminate cross-module structural leakage
+
+move module communication behind stable Contracts/Gates/Events
+
+keep Host as transport/composition root only
+
+use CQRS + MediatR for new application use-cases
+
+centralize time, ID, error/localization and cache abstractions
+
+prevent giant-file and architecture debt growth
+
+redesign cross-service consistency before physical extraction where shared ACID transactions exist
+
+Worker Protocol
+
+Architect: ChatGPT
+Worker: Cursor only (tooba-worker-01)
+Channel: tooba-main
+Protocol: BRIDGE-WAKE-V1
+
+Worker lifecycle:
+
+User manually gives exact .task.md to Cursor.
+
+Worker executes only that Task-ID.
+
+Worker returns canonical Result through Bridge.
+
+Worker STOPS.
+
+No polling / no automatic next task / no Worker IDLE.
+
+Task-file rule:
+filename MUST equal Task-ID exactly.
+
+Repository Safety
+
+Repository:
+D:\Users\User\source\repos\SarvNewVer
+
+Protected user-work ancestor:
+18ca10c9
+
+Never:
+
+git reset
+
+git clean
+
+destructive checkout/restore
+
+unsafe rebase
+
+blind stash manipulation
+
+broad git add .
+
+If user work conflicts:
+return RECOVERY_CONFLICT.
+
+Durable Architecture Sources
+
+Inside repository:
+
+docs/architecture/TOOBA-ARCHITECT-BOOTSTRAP.md
+
+docs/architecture/TMAR-architecture-locks.md
+
+docs/architecture/TOOBA-CAPABILITY-MAP.md
+
+docs/architecture/TOOBA-MICROSERVICE-MIGRATION-NOTES.md (must be copied in by next TMAR task if not already present)
+
+latest docs/evidence/<Task-ID>/recovery-sot.md
+
+External reference copies:
+
+D:\Users\User\source\repos\SarvNewVerRequirment\reference\Tooba-Architect-Bootstrap.md
+
+D:\Users\User\source\repos\SarvNewVerRequirment\reference\TOOBA-MICROSERVICE-MIGRATION-NOTES.md
+
+Repository docs override stale chat memory.
+
+Product / TMAR State
+
+Last Product Task:
+TB-P10-T022-R21
+
+Accepted TMAR:
+
+TB-TMAR-ARCH-BASELINE
+
+TB-TMAR-FND-001
+
+TB-TMAR-HOST-W1-R1
+
+TB-TMAR-HOST-W2
+
+TB-TMAR-BOUNDARY-V1
+
+TB-TMAR-BOUNDARY-V1-R1
+
+TB-TMAR-CONTRACTS-W1
+
+TB-TMAR-CONTRACTS-W2
+
+TB-TMAR-CONTRACTS-W3
+
+Current Product Resume Gate:
+SAFE_WITH_TMAR_PARALLEL
+
+User choice:
+Continue TMAR for now until user explicitly says to return to product feature work.
+
+Next TMAR task:
+TB-TMAR-CONTRACTS-W4
+
+Confirmed Architecture Facts
+
+Foundation:
+
+MediatR 12.5.0
+
+FluentValidation pipeline
+
+IClock
+
+IIdGenerator / UUIDv7 abstraction
+
+SemanticError foundation
+
+architecture freeze guards
+
+Confirmed cross-module debt:
+
+Cart.Domain → Offer.Domain: removed in CONTRACTS-W1
+
+Order.Domain → Offer.Domain: removed in CONTRACTS-W1
+
+Pricing.Domain → Offer.Domain: removed in CONTRACTS-W1
+
+Payment.Infrastructure → Wallet.Domain: removed in CONTRACTS-W1
+
+Payment.Infrastructure → Wallet.Application: removed in CONTRACTS-W2 (IWalletOrderPaymentPort)
+
+Returns.Infrastructure → Wallet.Application: removed in CONTRACTS-W3 (IWalletRefundCreditPort)
+
+Order.Application → Offer.Application: removed in CONTRACTS-W3 (SalesChannel via Offer.Contracts)
+
+Order.Application is a synchronous hub with remaining foreign Application dependencies
+
+legacy App→App edges exist and are frozen against expansion
+
+legacy Infra→foreign Application edges exist and are frozen against expansion
+
+Host:
+
+StoreLandingPage Host direct writes removed
+
+StoreMenu Host direct writes removed
+
+many legacy Host write sites still remain
+
+new Host business writes/decisions are frozen
+
+Domain:
+
+repository-wide Domain ownership audit exists
+
+some types are likely in wrong bounded contexts
+
+Catalog currently contains transitional StoreAppearance / Landing / Menu / other ownership debt
+
+no Big Bang Domain move
+
+God files:
+
+repository-wide source-size inventory exists
+
+55 oversized legacy files baselined
+
+new handwritten files >800 LOC are rejected
+
+oversized legacy files may not grow above baseline
+
+critical decomposition requires characterization tests first
+
+Contracts Target
+
+Cross-module public boundaries converge toward:
+Tooba.<Module>.Contracts
+
+Foreign Application / Domain / Infrastructure must not become public module APIs.
+
+No 31-project Big Bang extraction.
+Contracts are extracted in waves by verified coupling and extraction value.
+
+CQRS Target
+
+New use cases:
+HTTP Endpoint
+→ ISender
+→ Command/Query
+→ Handler in Application
+→ Domain + abstractions
+→ Infrastructure implementation
+
+Business MediatR handlers must not live in Infrastructure.
+
+Host Target
+
+Host may own:
+
+HTTP transport
+
+auth/session boundary
+
+middleware
+
+DI/composition root
+
+endpoint mapping
+
+serialization
+
+minimal presentation/read composition
+
+Host must not gain:
+
+business writes
+
+SaveChanges/transactions
+
+price/inventory/seller/campaign business truth
+
+domain ownership
+
+Domain Ownership Rule
+
+A Domain type belongs to the bounded context that owns its invariant and lifecycle.
+Never place a type in a module merely because persistence was convenient.
+
+Examples such as StoreAppearance*, StoreLandingPage*, StoreMenu*, StoreCheckout* are examples only.
+Ownership rules apply repository-wide.
+
+Errors / Locale
+
+No hardcoded user-facing localized Domain messages in ANY language.
+Domain/Application errors are semantic and stable.
+HTTP boundary maps them to localized ProblemDetails.
+
+Locale architecture must support unlimited locales.
+Do not hard-code architecture around only FA/EN.
+
+Cache
+
+Canonical:
+
+ICache
+
+ICacheKeyBuilder
+
+ICacheInvalidator
+
+No new direct IMemoryCache bypass.
+Redis remains a future provider.
+
+Microservice Migration Critical Note
+
+A full rewrite is NOT required.
+
+Many peripheral modules are relatively extractable after contracts and operational readiness.
+
+The hard area is the Checkout / Cart / Order / Inventory / Payment consistency chain.
+
+Current shared-database TransactionScope patterns cannot be assumed to work after physical service/database separation.
+
+Future extraction requires explicit consistency design:
+
+Saga / Process Manager where appropriate
+
+compensating actions
+
+idempotency
+
+retry semantics
+
+duplicate delivery handling
+
+timeouts/recovery
+
+intermediate states
+
+point-of-no-return
+
+Outbox / Integration Events
+
+DO NOT implement a Saga prematurely.
+
+Canonical rule to add:
+No NEW business workflow may depend on one ACID transaction spanning multiple bounded contexts.
+
+Existing cross-context transactions must be inventoried and treated as extraction debt.
+
+Feature Resume Rule
+
+TMAR already reached:
+Product-Resume-Safety: SAFE_WITH_TMAR_PARALLEL
+
+Therefore product work MAY resume when the user says so.
+
+Until the user says to return to product work:
+continue TMAR tasks sequentially.
+
+When product work resumes:
+
+TMAR continues in parallel
+
+all new product code must obey current TMAR locks
+
+no new legacy debt patterns
+
+Recovery Phrase
+
+If chat is lost, user can say:
+
+برگردیم به TMAR — فایل TOOBA-TMAR-MASTER-RECOVERY.md و آخرین recovery-sot را مبنا بگیر
+
+Then:
+
+read this file
+
+read repository bootstrap/locks/capability map/migration notes
+
+read latest recovery-sot
+
+identify last accepted Task-ID
+
+continue from next task without reconstructing from guesses

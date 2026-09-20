@@ -1,0 +1,78 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+
+BEGIN_TOOBA_WORKER_RESULT
+
+Task-ID: TB-TMAR-CONTRACTS-W3
+Parent-Task: TB-TMAR-CONTRACTS-W2
+Channel: tooba-main
+WorkerId: tooba-worker-01
+AgentType: cursor
+Status: PASS
+
+Summary:
+CONTRACTS-W3 PASS. Persisted TOOBA-TMAR-MASTER-RECOVERY into repository. Removed Returns.Infrastructure→Wallet.Application via IWalletRefundCreditPort in Wallet.Contracts. Replaced Order.Application→Offer.Application with Offer.Contracts (SalesChannel). Shrunk Infra→foreign Application (30→29) and App→App (15→14). No Checkout/Saga redesign; transaction semantics unchanged. Product-Resume-Safety SAFE_WITH_TMAR_PARALLEL. Next: TB-TMAR-CONTRACTS-W4.
+
+Program-Name:
+TMAR — Tooba Microservice-Ready Architecture Recovery
+
+Recovery-Start:
+docs/evidence/TB-TMAR-CONTRACTS-W3/recovery-start.md
+
+Master-Recovery:
+docs/architecture/TOOBA-TMAR-MASTER-RECOVERY.md — evidence master-recovery.md
+
+Returns-Wallet-Contract:
+docs/evidence/TB-TMAR-CONTRACTS-W3/returns-wallet-contract.md
+
+Order-Slice-Selection:
+docs/evidence/TB-TMAR-CONTRACTS-W3/order-slice-selection.md — Order.App→Offer.App SalesChannel
+
+Order-Contract-Extraction:
+docs/evidence/TB-TMAR-CONTRACTS-W3/order-contract-extraction.md
+
+Dependency-Changes:
+− Returns.Infra→Wallet.App; − Order.App→Offer.App
+
+Transaction-Semantics:
+unchanged — no CheckoutDirectory / TransactionScope / reservation atomicity edits
+
+Architecture-Guards:
+docs/evidence/TB-TMAR-CONTRACTS-W3/architecture-guards.md
+
+Characterization-Tests:
+WalletRefundCreditPortContractsTests; OrderOfferContractsCharacterizationTests
+
+Tests:
+docs/evidence/TB-TMAR-CONTRACTS-W3/tests.md — 45 passed focused suite
+
+Source-Size-Compliance:
+docs/evidence/TB-TMAR-CONTRACTS-W3/source-size-compliance.md; inventory refreshed to 1728
+
+Capability-Map:
+docs/architecture/TOOBA-CAPABILITY-MAP.md — Last Verified = TB-TMAR-CONTRACTS-W3
+
+Bootstrap:
+docs/architecture/TOOBA-ARCHITECT-BOOTSTRAP.md — contracts-w3 PASS; next CONTRACTS-W4
+
+Master-Recovery-State:
+docs/architecture/TOOBA-TMAR-MASTER-RECOVERY.md — W2/W3 accepted; next W4; SAFE_WITH_TMAR_PARALLEL
+
+Recovery-SoT:
+docs/evidence/TB-TMAR-CONTRACTS-W3/recovery-sot.md
+
+Git:
+branch main; tip PLACEHOLDER_SHA; pushed origin/main; HEAD==origin/main; 18ca10c9 ancestor; user work preserved
+
+Architectural-Concerns:
+Checkout TransactionScope shared-ACID remains; Order.Application hub still has Cart/Inventory/Pricing/Promotion/Tax App edges; Cart.App→Offer.App remains
+
+Blockers:
+(none)
+
+Product-Resume-Safety:
+SAFE_WITH_TMAR_PARALLEL
+
+Next-Recommended-Task:
+TB-TMAR-CONTRACTS-W4
+
+END_TOOBA_WORKER_RESULT

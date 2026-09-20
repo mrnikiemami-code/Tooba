@@ -22,7 +22,6 @@
     "Tooba.Returns.Infrastructure -> Tooba.Inventory.Application",
     "Tooba.Returns.Infrastructure -> Tooba.Order.Application",
     "Tooba.Returns.Infrastructure -> Tooba.Payment.Application",
-    "Tooba.Returns.Infrastructure -> Tooba.Wallet.Application",
     "Tooba.Reviews.Infrastructure -> Tooba.Catalog.Application",
     "Tooba.Reviews.Infrastructure -> Tooba.Order.Application",
     "Tooba.Settlement.Infrastructure -> Tooba.Order.Application",

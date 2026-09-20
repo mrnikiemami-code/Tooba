@@ -9,7 +9,6 @@
     "Tooba.Inventory.Application -> Tooba.Offer.Application",
     "Tooba.Order.Application -> Tooba.Cart.Application",
     "Tooba.Order.Application -> Tooba.Inventory.Application",
-    "Tooba.Order.Application -> Tooba.Offer.Application",
     "Tooba.Order.Application -> Tooba.Pricing.Application",
     "Tooba.Order.Application -> Tooba.Promotion.Application",
     "Tooba.Order.Application -> Tooba.Tax.Application",

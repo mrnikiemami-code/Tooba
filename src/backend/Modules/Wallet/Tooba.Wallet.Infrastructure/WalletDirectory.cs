@@ -10,7 +10,7 @@ using Tooba.Wallet.Infrastructure.Persistence;
 namespace Tooba.Wallet.Infrastructure;
 
 /// <summary>پیاده‌سازی دایرکتوری کیف پول در schema wallet.</summary>
-public sealed class WalletDirectory : IWalletDirectory, IWalletOrderPaymentPort
+public sealed class WalletDirectory : IWalletDirectory, IWalletOrderPaymentPort, IWalletRefundCreditPort
 {
     private readonly WalletDbContext _db;
     private readonly INotificationDirectory _notifications;
@@ -500,6 +500,19 @@ public sealed class WalletDirectory : IWalletDirectory, IWalletOrderPaymentPort
             await tx.RollbackAsync(cancellationToken);
             throw;
         }
+    }
+
+    async Task<WalletRefundCreditResultDto> IWalletRefundCreditPort.CreditRefundAsync(
+        Guid customerActorId,
+        decimal amount,
+        string currency,
+        Guid returnRequestId,
+        string idempotencyKey,
+        CancellationToken cancellationToken)
+    {
+        var result = await CreditRefundAsync(
+            customerActorId, amount, currency, returnRequestId, idempotencyKey, cancellationToken);
+        return new WalletRefundCreditResultDto(result.Balance, result.IdempotentReplay);
     }
 
     /// <inheritdoc />

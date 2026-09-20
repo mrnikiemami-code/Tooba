@@ -6,7 +6,7 @@ using Tooba.Payment.Domain;
 using Tooba.Returns.Application;
 using Tooba.Returns.Domain;
 using Tooba.Returns.Infrastructure.Persistence;
-using Tooba.Wallet.Application;
+using Tooba.Wallet.Contracts;
 
 namespace Tooba.Returns.Infrastructure;
 
@@ -31,7 +31,7 @@ public sealed class ReturnDirectory : IReturnDirectory
     private readonly IReturnEligibilityEvaluator _eligibility;
     private readonly IPaymentDirectory _payments;
     private readonly IPaymentRefundGateway _refundGateway;
-    private readonly IWalletDirectory _wallets;
+    private readonly IWalletRefundCreditPort _wallets;
     private readonly IReturnInventoryGateway _inventory;
     private readonly ReturnsInstrumentation _telemetry;
     private readonly ILogger<ReturnDirectory> _logger;
@@ -46,7 +46,7 @@ public sealed class ReturnDirectory : IReturnDirectory
         IReturnEligibilityEvaluator eligibility,
         IPaymentDirectory payments,
         IPaymentRefundGateway refundGateway,
-        IWalletDirectory wallets,
+        IWalletRefundCreditPort wallets,
         IReturnInventoryGateway inventory,
         ReturnsInstrumentation telemetry,
         ILogger<ReturnDirectory> logger)

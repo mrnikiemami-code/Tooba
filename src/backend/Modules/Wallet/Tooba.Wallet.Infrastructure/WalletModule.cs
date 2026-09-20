@@ -23,6 +23,7 @@ public sealed class WalletModule : IToobaModule
         services.AddSingleton<IOutboxModuleRegistration, WalletOutboxRegistration>();
         services.AddScoped<IWalletDirectory, WalletDirectory>();
         services.AddScoped<IWalletOrderPaymentPort>(sp => (IWalletOrderPaymentPort)sp.GetRequiredService<IWalletDirectory>());
+        services.AddScoped<IWalletRefundCreditPort>(sp => (IWalletRefundCreditPort)sp.GetRequiredService<IWalletDirectory>());
         services.AddDbContext<WalletDbContext>((sp, options) =>
         {
             var connection = ToobaNpgsql.ResolveForContext(

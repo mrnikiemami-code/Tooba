@@ -431,33 +431,15 @@ public sealed class ReturnFoundationTests : IAsyncLifetime
     }
 
     /// <summary>Stub کیف پول برای مسیر OriginalPayment که Credit را صدا نمی‌زند.</summary>
-    private sealed class UnusedWalletDirectoryStub : Tooba.Wallet.Application.IWalletDirectory
+    private sealed class UnusedWalletDirectoryStub : Tooba.Wallet.Contracts.IWalletRefundCreditPort
     {
-        public Task<Tooba.Wallet.Application.WalletSummaryDto> GetOrCreateSummaryForCustomerAsync(Guid customerActorUserId, CancellationToken cancellationToken) =>
-            throw new NotSupportedException();
-        public Task<Tooba.Wallet.Application.WalletLedgerPageDto> ListLedgerForCustomerAsync(Guid customerActorUserId, int page, int pageSize, CancellationToken cancellationToken) =>
-            throw new NotSupportedException();
-        public Task<Tooba.Wallet.Application.GiftCardRedeemResultDto> RedeemGiftCardForCustomerAsync(Guid customerActorUserId, Tooba.Wallet.Application.RedeemGiftCardCommand command, CancellationToken cancellationToken) =>
-            throw new NotSupportedException();
-        public Task<Tooba.Wallet.Application.GiftCardListPageDto> ListGiftCardsForAdminAsync(Tooba.Wallet.Application.AdminGiftCardListQuery query, CancellationToken cancellationToken) =>
-            throw new NotSupportedException();
-        public Task<Tooba.Wallet.Application.GiftCardDetailDto?> GetGiftCardForAdminAsync(Guid cardId, CancellationToken cancellationToken) =>
-            throw new NotSupportedException();
-        public Task<Tooba.Wallet.Application.GiftCardIssueResultDto> IssueGiftCardForAdminAsync(Guid adminActorUserId, Tooba.Wallet.Application.IssueGiftCardCommand command, CancellationToken cancellationToken) =>
-            throw new NotSupportedException();
-        public Task<Tooba.Wallet.Application.GiftCardDetailDto> RevokeGiftCardForAdminAsync(Guid cardId, CancellationToken cancellationToken) =>
-            throw new NotSupportedException();
-        public Task<Tooba.Wallet.Application.WalletSummaryDto?> GetWalletForAdminAsync(Guid customerActorUserId, CancellationToken cancellationToken) =>
-            throw new NotSupportedException();
-        public Task<Tooba.Wallet.Application.WalletLedgerPageDto> ListLedgerForAdminAsync(Guid customerActorUserId, int page, int pageSize, CancellationToken cancellationToken) =>
-            throw new NotSupportedException();
-        public Task<Tooba.Wallet.Application.AdminWalletAdjustmentResultDto> AdjustWalletForAdminAsync(Guid customerActorUserId, Guid adminActorUserId, Tooba.Wallet.Application.AdminWalletAdjustmentCommand command, CancellationToken cancellationToken) =>
-            throw new NotSupportedException();
-        public Task<Tooba.Wallet.Application.WalletSpendResultDto> SpendForOrderPaymentAsync(Guid customerActorId, decimal amount, string currency, Guid paymentId, string idempotencyKey, CancellationToken cancellationToken) =>
-            throw new NotSupportedException();
-        public Task<Tooba.Wallet.Application.WalletCreditResultDto> CreditRefundAsync(Guid customerActorId, decimal amount, string currency, Guid returnRequestId, string idempotencyKey, CancellationToken cancellationToken) =>
-            throw new NotSupportedException();
-        public Task<Tooba.Wallet.Contracts.WalletCheckoutQuoteDto> QuoteForPayableAsync(Guid customerActorId, decimal payableAmount, string currency, CancellationToken cancellationToken) =>
+        public Task<Tooba.Wallet.Contracts.WalletRefundCreditResultDto> CreditRefundAsync(
+            Guid customerActorId,
+            decimal amount,
+            string currency,
+            Guid returnRequestId,
+            string idempotencyKey,
+            CancellationToken cancellationToken) =>
             throw new NotSupportedException();
     }
 }

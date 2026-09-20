@@ -22,7 +22,7 @@ Accepted architecture baseline:
 TB-TMAR-ARCH-BASELINE
 
 Current next task:
-(none — Contracts W2 complete; next = TB-TMAR-CONTRACTS-W3 per Result)
+(none — Contracts W3 complete; next = TB-TMAR-CONTRACTS-W4 per Result)
 
 Product development rule:
 Foundation (TB-TMAR-FND-001) is ACCEPTED.
@@ -32,6 +32,7 @@ Boundary verification (TB-TMAR-BOUNDARY-V1) PASS — cross-module leaks confirme
 Boundary repair (TB-TMAR-BOUNDARY-V1-R1) PASS — god-file growth frozen; Infra→foreign Application growth frozen.
 Contracts Wave 1 (TB-TMAR-CONTRACTS-W1) PASS — Offer/Wallet Contracts; Domain→Offer Domain and Payment→Wallet.Domain removed.
 Contracts Wave 2 (TB-TMAR-CONTRACTS-W2) PASS — Wallet payment port; Offer lookup Contracts; ARCH-TX-001.
+Contracts Wave 3 (TB-TMAR-CONTRACTS-W3) PASS — Returns→Wallet.Contracts refund port; Order.App→Offer.Contracts SalesChannel.
 Product-Resume-Safety = SAFE_WITH_TMAR_PARALLEL (Order hub still frozen; do not expand App→App / Infra→App; no NEW cross-context ACID).
 Last Product Task = TB-P10-T022-R21.
 Architecture Baseline = TB-TMAR-ARCH-BASELINE.
@@ -412,7 +413,9 @@ contracts-w1 = TB-TMAR-CONTRACTS-W1 PASS (Offer.Contracts + Wallet.Contracts; Do
 
 contracts-w2 = TB-TMAR-CONTRACTS-W2 PASS (Wallet payment port + Offer lookup; ARCH-TX-001)
 
-next task = TB-TMAR-CONTRACTS-W3 unless Recovery SoT says otherwise
+contracts-w3 = TB-TMAR-CONTRACTS-W3 PASS (Returns Wallet refund port + Order→Offer.Contracts)
+
+next task = TB-TMAR-CONTRACTS-W4 unless Recovery SoT says otherwise
 
 primary goal = painless future Microservice migration
 
