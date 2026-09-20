@@ -1,4 +1,4 @@
-﻿PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
 
 BEGIN_TOOBA_WORKER_RESULT
 
@@ -67,7 +67,7 @@ Recovery-SoT:
 docs/evidence/TB-TMAR-HOST-STRUCTURE-W1-R1/recovery-sot.md
 
 Git:
-branch main; tip PLACEHOLDER; pushed origin/main; HEAD==origin/main; 18ca10c9 ancestor; user work preserved
+branch main; tip 5ae3b26b7d6acb05b2cb6357d30c8b3bd24f5892; pushed origin/main; HEAD==origin/main; 18ca10c9 ancestor; user work preserved
 
 Architectural-Concerns:
 Frontend remains frozen until explicit Architect/User release of TMAR-Execution-Mode
