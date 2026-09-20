@@ -1,4 +1,4 @@
-import { AdminReceiptsScreen } from "../admin-screens";
+import { AdminReceiptsScreen } from "../../../features/admin-receipts";
 
 /** فهرست دریافت‌های مشتری برای Admin. */
 export default function AdminReceiptsPage() {

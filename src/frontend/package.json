@@ -39,7 +39,8 @@
     "test:admin-promotions": "node --experimental-strip-types --test features/admin-promotions/admin-promotions.characterization.test.ts",
     "test:admin-reviews": "node --experimental-strip-types --test features/admin-reviews/admin-reviews.characterization.test.ts",
     "test:admin-sellers": "node --experimental-strip-types --test features/admin-sellers/admin-sellers.characterization.test.ts",
-    "test:admin-customers": "node --experimental-strip-types --test features/admin-customers/admin-customers.characterization.test.ts"
+    "test:admin-customers": "node --experimental-strip-types --test features/admin-customers/admin-customers.characterization.test.ts",
+    "test:admin-receipts": "node --experimental-strip-types --test features/admin-receipts/admin-receipts.characterization.test.ts"
   },
   "dependencies": {
     "@ckeditor/ckeditor5-react": "^11.2.0",

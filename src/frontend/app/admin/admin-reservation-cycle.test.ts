@@ -8,11 +8,13 @@ import {
   remainingSecondsFromServer,
   shouldRefreshOnceAtZero,
 } from "./admin-reservation-cycle.ts";
-import { mapAdminOrder, mapAdminOrderDetail, mapAdminReceipt, mapAdminReservationCycleAudit } from "./admin-api.ts";
+import { mapAdminOrder, mapAdminOrderDetail, mapAdminReservationCycleAudit } from "./admin-api.ts";
 
 const dir = dirname(fileURLToPath(import.meta.url));
 const detail = readFileSync(join(dir, "admin-order-detail-screen.tsx"), "utf8");
 const screens = readFileSync(join(dir, "admin-screens.tsx"), "utf8");
+const receiptsScreen = readFileSync(join(dir, "../../features/admin-receipts/components/receipts-screen.tsx"), "utf8");
+const receiptsApi = readFileSync(join(dir, "../../features/admin-receipts/api/receipts-api.ts"), "utf8");
 const ops = readFileSync(join(dir, "admin-order-operations.ts"), "utf8");
 const api = readFileSync(join(dir, "admin-api.ts"), "utf8");
 const cycle = readFileSync(join(dir, "admin-reservation-cycle.ts"), "utf8");
@@ -102,20 +104,14 @@ test("grids show compact reservation without per-row fetch", () => {
     ReservationCycleNumber: 1,
   });
   assert.equal(order?.reservationLabel, "فعال #1");
-  const receipt = mapAdminReceipt({
-    PaymentId: "p1",
-    CheckoutId: "c1",
-    ReservationLabel: "پایان‌یافته #1",
-    ReservationState: "expired",
-    ReservationRetryPossible: true,
-    ReservationNeedsReacquire: true,
-  });
-  assert.equal(receipt?.reservationLabel, "پایان‌یافته #1");
-  assert.equal(receipt?.reservationRetryPossible, true);
+  assert.match(receiptsApi, /ReservationLabel/);
+  assert.match(receiptsApi, /reservationRetryPossible/);
+  assert.match(receiptsApi, /mapAdminReceipt/);
   assert.match(screens, /رزرو موجودی/);
   assert.match(screens, /reservationStateEnumOptions/);
   assert.match(screens, /ADMIN_ORDER_GRID_VIEW_KEY/);
-  assert.match(screens, /ADMIN_RECEIPT_GRID_VIEW_KEY/);
+  assert.match(receiptsScreen, /ADMIN_RECEIPT_GRID_VIEW_KEY/);
+  assert.match(receiptsScreen, /رزرو موجودی/);
   assert.doesNotMatch(screens, /reservation-cycle\/\$\{row/);
   assert.doesNotMatch(api, /\/reservation-cycle\/\$\{/);
   assert.match(detail, /admin-payment-reservation-label/);

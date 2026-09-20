@@ -15,19 +15,17 @@ import {
   formatOrderSellerLabel,
   loadAdminDashboard,
   queryAdminOrdersGrid,
-  queryAdminReceiptsGrid,
   type AdminDashboard,
   type AdminLoadState,
   type AdminOrderRow,
   type AdminResult,
-  type AdminReceiptRow,
 } from "./admin-api";
 import { adminSupplyBadgeClass, formatAdminSupplyStatus, supplyStatusEnumOptions } from "./admin-order-supply";
 import { reservationBadgeClass, reservationStateEnumOptions } from "./admin-reservation-cycle";
 export { AdminOrderDetailScreen } from "./admin-order-detail-screen";
 export { AdminContentScreen } from "./content-list";
 import {
-  ADMIN_ORDER_GRID_VIEW_KEY, createHostSavedViewStore, ADMIN_SETTLEMENT_GRID_VIEW_KEY, ADMIN_PAYOUT_GRID_VIEW_KEY, ADMIN_RECEIPT_GRID_VIEW_KEY,
+  ADMIN_ORDER_GRID_VIEW_KEY, createHostSavedViewStore, ADMIN_SETTLEMENT_GRID_VIEW_KEY, ADMIN_PAYOUT_GRID_VIEW_KEY,
 } from "./saved-view-store";
 import {
   formatFulfillmentStatus,
@@ -549,149 +547,9 @@ export function AdminReturnDetailScreen({ returnRequestId }: { returnRequestId: 
 
 /** جزئیات checkout — re-export از admin-order-detail-screen. */
 
-const receiptStatusEnumOptions = [
-  { value: "Pending", label: formatAdminStatus("Pending") },
-  { value: "Succeeded", label: formatAdminStatus("Succeeded") },
-  { value: "Failed", label: formatAdminStatus("Failed") },
-  { value: "Cancelled", label: formatAdminStatus("Cancelled") },
-  { value: "Expired", label: formatAdminStatus("Expired") },
-];
 
-const receiptRowActions: AppGridRowAction<AdminReceiptRow>[] = [
-  {
-    id: "view",
-    label: "مشاهده",
-    icon: Eye,
-    href: (row) => `/admin/orders/${row.checkoutId}`,
-    testId: (row) => `admin-receipt-view-${row.paymentId}`,
-  },
-];
 
-const receiptColumns: GridColumnDef<AdminReceiptRow>[] = [
-  {
-    id: "reference",
-    header: "سفارش",
-    accessor: (row) => row.orderReference,
-    cell: (row) => (
-      <Link className="font-semibold text-primary hover:underline" href={`/admin/orders/${row.checkoutId}`}>
-        {row.orderReference}
-      </Link>
-    ),
-    width: 180,
-    minWidth: 140,
-    maxWidth: 240,
-    sticky: "start",
-    filterKind: "text",
-    sortable: true,
-  },
-  {
-    id: "customer",
-    header: "مشتری",
-    accessor: (row) => row.customerDisplayName,
-    width: 150,
-    minWidth: 110,
-    filterKind: "text",
-    sortable: true,
-  },
-  {
-    id: "amount",
-    header: "مبلغ",
-    accessor: (row) => row.amount,
-    cell: (row) => formatAdminMoney(row.amount, row.currency),
-    width: 140,
-    minWidth: 110,
-    sortable: true,
-  },
-  {
-    id: "status",
-    header: "وضعیت",
-    accessor: (row) => row.status,
-    cell: (row) => <Status value={row.status} />,
-    width: 120,
-    minWidth: 100,
-    filterKind: "status",
-    enumOptions: receiptStatusEnumOptions,
-  },
-  {
-    id: "supply",
-    header: "وضعیت تأمین",
-    accessor: (row) => row.supplyStatus,
-    cell: (row) => (
-      <span className={`inline-flex rounded-full px-2.5 py-1 text-xs font-medium ${adminSupplyBadgeClass(row.supplyStatus)}`}>
-        {formatAdminSupplyStatus(row.supplyStatus)}
-      </span>
-    ),
-    width: 140,
-    minWidth: 120,
-    filterKind: "status",
-    enumOptions: supplyStatusEnumOptions,
-    sortable: true,
-  },
-  {
-    id: "reservation",
-    header: "رزرو موجودی",
-    accessor: (row) => row.reservationState,
-    cell: (row) => (
-      <span className="inline-flex max-w-full flex-col gap-0.5">
-        <span className={`inline-flex rounded-full px-2.5 py-1 text-xs font-medium ${reservationBadgeClass(row.reservationState)}`}>
-          {row.reservationLabel || "—"}
-        </span>
-        {row.reservationRetryLimitReached ? (
-          <span className="text-[10px] text-rose-700">سقف رزرو</span>
-        ) : row.reservationNeedsReacquire ? (
-          <span className="text-[10px] text-amber-800">نیاز به رزرو مجدد</span>
-        ) : row.reservationRetryPossible ? (
-          <span className="text-[10px] text-gray-500">امکان تلاش مجدد</span>
-        ) : null}
-      </span>
-    ),
-    width: 150,
-    minWidth: 124,
-    filterKind: "status",
-    enumOptions: reservationStateEnumOptions,
-    sortable: true,
-  },
-  {
-    id: "provider",
-    header: "درگاه",
-    accessor: (row) => row.providerCode,
-    cell: (row) => <span dir="ltr">{row.providerCode || "—"}</span>,
-    width: 120,
-    minWidth: 90,
-    filterKind: "text",
-  },
-  {
-    id: "created",
-    header: "تاریخ",
-    accessor: (row) => row.createdAt,
-    cell: (row) => formatAdminDate(row.createdAt),
-    width: 120,
-    minWidth: 100,
-    sortable: true,
-  },
-  {
-    id: "actions",
-    header: "عملیات",
-    accessor: () => "",
-    cell: (row) => <AppGridRowActionsCell row={row} actions={receiptRowActions} compact />,
-    exportable: false,
-    sortable: false,
-  },
-];
 
-/** فهرست دریافت‌های مشتری (پرداخت) برای Admin. */
-export function AdminReceiptsScreen() {
-  return (
-    <ServerGridPage
-      title="دریافت‌ها"
-      description="پرداخت‌های واقعی مشتریان با enrich سفارش از Host"
-      queryFn={queryAdminReceiptsGrid}
-      columns={receiptColumns}
-      gridId={ADMIN_RECEIPT_GRID_VIEW_KEY}
-      testId="admin-receipts"
-    />
-  );
-}
 
 type SettlementBalanceRow = SettlementBalance & { id: string };
 type PayoutQueueRow = PayoutRequestRow & { id: string };
