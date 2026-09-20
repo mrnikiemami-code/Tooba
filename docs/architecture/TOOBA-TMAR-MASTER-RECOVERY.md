@@ -170,6 +170,9 @@ Continue TMAR for now until user explicitly says to return to product feature wo
 Next TMAR task:
 TB-TMAR-CHECKOUT-IMPL-W4
 
+Host Structure W1:
+TB-TMAR-HOST-STRUCTURE-W1 — Host root responsibility folders + HOST-FOLDER-001/HOST-HYGIENE-001; READY_TO_PAUSE; Checkout-W4 resume READY. Evidence: docs/evidence/TB-TMAR-HOST-STRUCTURE-W1/.
+
 Checkout Implementation W3:
 TB-TMAR-CHECKOUT-IMPL-W3 — Cart.Contracts conversion seam (ICartConversionPort); Order.Application↛Cart.Application; TX preserved; W4 READY; Orders FE STILL_WAITING_FOR_BACKEND_W4. Evidence: docs/evidence/TB-TMAR-CHECKOUT-IMPL-W3/.
 

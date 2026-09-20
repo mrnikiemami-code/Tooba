@@ -1,0 +1,1 @@
+# Target folder map\nComposition/, Authentication/, Authorization/, Security/, Caching/, Messaging/, Outbox/, Transport/, Persistence/, MultiTenancy/, Health/, Errors/, Jobs/, Development/, Configuration/\n+ existing module/feature folders unchanged\nRoot allow: Program.cs + deferred checkout/order/payment jobs\n

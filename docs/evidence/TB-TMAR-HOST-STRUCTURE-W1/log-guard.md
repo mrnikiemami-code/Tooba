@@ -1,0 +1,1 @@
+# Log guard\n- HOST-HYGIENE-001: Host runtime logs must not be tracked\n- .gitignore: Tooba.Host/*.log and **/*.log / *.err.log\n

@@ -1,0 +1,209 @@
+{
+  "moved": [
+    {
+      "from": "src/backend/Host/Tooba.Host/AuthSecurityHostOptions.cs",
+      "to": "src/backend/Host/Tooba.Host/Security/AuthSecurityHostOptions.cs",
+      "namespacePreserved": true
+    },
+    {
+      "from": "src/backend/Host/Tooba.Host/AuthenticationHttpBoundary.cs",
+      "to": "src/backend/Host/Tooba.Host/Authentication/AuthenticationHttpBoundary.cs",
+      "namespacePreserved": true
+    },
+    {
+      "from": "src/backend/Host/Tooba.Host/AuthenticationInstrumentation.cs",
+      "to": "src/backend/Host/Tooba.Host/Authentication/AuthenticationInstrumentation.cs",
+      "namespacePreserved": true
+    },
+    {
+      "from": "src/backend/Host/Tooba.Host/AuthenticationRateLimitThrottleSeam.cs",
+      "to": "src/backend/Host/Tooba.Host/Authentication/AuthenticationRateLimitThrottleSeam.cs",
+      "namespacePreserved": true
+    },
+    {
+      "from": "src/backend/Host/Tooba.Host/AuthorizationAdapters.cs",
+      "to": "src/backend/Host/Tooba.Host/Authorization/AuthorizationAdapters.cs",
+      "namespacePreserved": true
+    },
+    {
+      "from": "src/backend/Host/Tooba.Host/AuthorizationHostOptions.cs",
+      "to": "src/backend/Host/Tooba.Host/Authorization/AuthorizationHostOptions.cs",
+      "namespacePreserved": true
+    },
+    {
+      "from": "src/backend/Host/Tooba.Host/AuthorizationInstrumentation.cs",
+      "to": "src/backend/Host/Tooba.Host/Authorization/AuthorizationInstrumentation.cs",
+      "namespacePreserved": true
+    },
+    {
+      "from": "src/backend/Host/Tooba.Host/AuthorizationRegistration.cs",
+      "to": "src/backend/Host/Tooba.Host/Authorization/AuthorizationRegistration.cs",
+      "namespacePreserved": true
+    },
+    {
+      "from": "src/backend/Host/Tooba.Host/AuthorizationSchemaHostedService.cs",
+      "to": "src/backend/Host/Tooba.Host/Authorization/AuthorizationSchemaHostedService.cs",
+      "namespacePreserved": true
+    },
+    {
+      "from": "src/backend/Host/Tooba.Host/BackgroundWorkerRegistry.cs",
+      "to": "src/backend/Host/Tooba.Host/Jobs/BackgroundWorkerRegistry.cs",
+      "namespacePreserved": true
+    },
+    {
+      "from": "src/backend/Host/Tooba.Host/CacheHostOptions.cs",
+      "to": "src/backend/Host/Tooba.Host/Caching/CacheHostOptions.cs",
+      "namespacePreserved": true
+    },
+    {
+      "from": "src/backend/Host/Tooba.Host/CacheInstrumentation.cs",
+      "to": "src/backend/Host/Tooba.Host/Caching/CacheInstrumentation.cs",
+      "namespacePreserved": true
+    },
+    {
+      "from": "src/backend/Host/Tooba.Host/CacheRegistration.cs",
+      "to": "src/backend/Host/Tooba.Host/Caching/CacheRegistration.cs",
+      "namespacePreserved": true
+    },
+    {
+      "from": "src/backend/Host/Tooba.Host/DatabaseConnectionResolver.cs",
+      "to": "src/backend/Host/Tooba.Host/Persistence/DatabaseConnectionResolver.cs",
+      "namespacePreserved": true
+    },
+    {
+      "from": "src/backend/Host/Tooba.Host/HostHealthEndpoints.cs",
+      "to": "src/backend/Host/Tooba.Host/Health/HostHealthEndpoints.cs",
+      "namespacePreserved": true
+    },
+    {
+      "from": "src/backend/Host/Tooba.Host/HostReadinessEvaluator.cs",
+      "to": "src/backend/Host/Tooba.Host/Health/HostReadinessEvaluator.cs",
+      "namespacePreserved": true
+    },
+    {
+      "from": "src/backend/Host/Tooba.Host/InProcessIntegrationEventPublisher.cs",
+      "to": "src/backend/Host/Tooba.Host/Messaging/InProcessIntegrationEventPublisher.cs",
+      "namespacePreserved": true
+    },
+    {
+      "from": "src/backend/Host/Tooba.Host/MarketplaceAdminDevBootstrap.cs",
+      "to": "src/backend/Host/Tooba.Host/Development/MarketplaceAdminDevBootstrap.cs",
+      "namespacePreserved": true
+    },
+    {
+      "from": "src/backend/Host/Tooba.Host/MarketplaceDevelopmentBootstrap.cs",
+      "to": "src/backend/Host/Tooba.Host/Development/MarketplaceDevelopmentBootstrap.cs",
+      "namespacePreserved": true
+    },
+    {
+      "from": "src/backend/Host/Tooba.Host/MarketplaceSellerDevBootstrap.cs",
+      "to": "src/backend/Host/Tooba.Host/Development/MarketplaceSellerDevBootstrap.cs",
+      "namespacePreserved": true
+    },
+    {
+      "from": "src/backend/Host/Tooba.Host/MassTransitIntegrationEventPublisher.cs",
+      "to": "src/backend/Host/Tooba.Host/Messaging/MassTransitIntegrationEventPublisher.cs",
+      "namespacePreserved": true
+    },
+    {
+      "from": "src/backend/Host/Tooba.Host/MemoryToobaCache.cs",
+      "to": "src/backend/Host/Tooba.Host/Caching/MemoryToobaCache.cs",
+      "namespacePreserved": true
+    },
+    {
+      "from": "src/backend/Host/Tooba.Host/MessagingDisabledPublisher.cs",
+      "to": "src/backend/Host/Tooba.Host/Messaging/MessagingDisabledPublisher.cs",
+      "namespacePreserved": true
+    },
+    {
+      "from": "src/backend/Host/Tooba.Host/MessagingHostOptions.cs",
+      "to": "src/backend/Host/Tooba.Host/Messaging/MessagingHostOptions.cs",
+      "namespacePreserved": true
+    },
+    {
+      "from": "src/backend/Host/Tooba.Host/MessagingRegistration.cs",
+      "to": "src/backend/Host/Tooba.Host/Messaging/MessagingRegistration.cs",
+      "namespacePreserved": true
+    },
+    {
+      "from": "src/backend/Host/Tooba.Host/MessagingRetryConfigurator.cs",
+      "to": "src/backend/Host/Tooba.Host/Messaging/MessagingRetryConfigurator.cs",
+      "namespacePreserved": true
+    },
+    {
+      "from": "src/backend/Host/Tooba.Host/OutboxDispatcher.cs",
+      "to": "src/backend/Host/Tooba.Host/Outbox/OutboxDispatcher.cs",
+      "namespacePreserved": true
+    },
+    {
+      "from": "src/backend/Host/Tooba.Host/OutboxHostOptions.cs",
+      "to": "src/backend/Host/Tooba.Host/Outbox/OutboxHostOptions.cs",
+      "namespacePreserved": true
+    },
+    {
+      "from": "src/backend/Host/Tooba.Host/OutboxWorkerSeams.cs",
+      "to": "src/backend/Host/Tooba.Host/Outbox/OutboxWorkerSeams.cs",
+      "namespacePreserved": true
+    },
+    {
+      "from": "src/backend/Host/Tooba.Host/PlatformExceptionMapper.cs",
+      "to": "src/backend/Host/Tooba.Host/Errors/PlatformExceptionMapper.cs",
+      "namespacePreserved": true
+    },
+    {
+      "from": "src/backend/Host/Tooba.Host/SecurityHeadersMiddleware.cs",
+      "to": "src/backend/Host/Tooba.Host/Security/SecurityHeadersMiddleware.cs",
+      "namespacePreserved": true
+    },
+    {
+      "from": "src/backend/Host/Tooba.Host/SpiceDbAuthorizationAdapter.cs",
+      "to": "src/backend/Host/Tooba.Host/Authorization/SpiceDbAuthorizationAdapter.cs",
+      "namespacePreserved": true
+    },
+    {
+      "from": "src/backend/Host/Tooba.Host/SpiceDbHealthProbe.cs",
+      "to": "src/backend/Host/Tooba.Host/Health/SpiceDbHealthProbe.cs",
+      "namespacePreserved": true
+    },
+    {
+      "from": "src/backend/Host/Tooba.Host/SqlTransportOptionsMapper.cs",
+      "to": "src/backend/Host/Tooba.Host/Transport/SqlTransportOptionsMapper.cs",
+      "namespacePreserved": true
+    },
+    {
+      "from": "src/backend/Host/Tooba.Host/TenantResolutionMiddleware.cs",
+      "to": "src/backend/Host/Tooba.Host/MultiTenancy/TenantResolutionMiddleware.cs",
+      "namespacePreserved": true
+    },
+    {
+      "from": "src/backend/Host/Tooba.Host/ToobaExceptionHandler.cs",
+      "to": "src/backend/Host/Tooba.Host/Errors/ToobaExceptionHandler.cs",
+      "namespacePreserved": true
+    },
+    {
+      "from": "src/backend/Host/Tooba.Host/ToobaIntegrationTransportConsumer.cs",
+      "to": "src/backend/Host/Tooba.Host/Transport/ToobaIntegrationTransportConsumer.cs",
+      "namespacePreserved": true
+    },
+    {
+      "from": "src/backend/Host/Tooba.Host/ToobaIntegrationTransportMessage.cs",
+      "to": "src/backend/Host/Tooba.Host/Transport/ToobaIntegrationTransportMessage.cs",
+      "namespacePreserved": true
+    },
+    {
+      "from": "src/backend/Host/Tooba.Host/ToobaModuleComposition.cs",
+      "to": "src/backend/Host/Tooba.Host/Composition/ToobaModuleComposition.cs",
+      "namespacePreserved": true
+    },
+    {
+      "from": "src/backend/Host/Tooba.Host/ToobaPlatformOptions.cs",
+      "to": "src/backend/Host/Tooba.Host/Configuration/ToobaPlatformOptions.cs",
+      "namespacePreserved": true
+    },
+    {
+      "from": "src/backend/Host/Tooba.Host/authorization-foundation.zed",
+      "to": "src/backend/Host/Tooba.Host/Authorization/authorization-foundation.zed",
+      "namespacePreserved": true
+    }
+  ]
+}

@@ -3,8 +3,8 @@
   "files": [
     "Admin/StoreLandingPageComposer.cs",
     "Admin/StoreMenuComposer.cs",
-    "CacheRegistration.cs",
-    "MemoryToobaCache.cs",
+    "Caching/CacheRegistration.cs",
+    "Caching/MemoryToobaCache.cs",
     "Program.cs",
     "Storefront/StoreAppearanceProjection.cs"
   ]

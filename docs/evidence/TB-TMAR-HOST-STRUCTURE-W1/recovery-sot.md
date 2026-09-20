@@ -1,0 +1,1 @@
+# Recovery SoT — TB-TMAR-HOST-STRUCTURE-W1\n- Moved 40+ Host platform files into responsibility folders\n- Namespace PRESERVE_EXISTING\n- HOST-FOLDER-001 + HOST-HYGIENE-001\n- Host-Structure-State READY_TO_PAUSE\n- Checkout-W4-Resume-Readiness READY\n- Next: TB-TMAR-CHECKOUT-IMPL-W4\n- Product-Resume-Safety SAFE_WITH_TMAR_PARALLEL\n

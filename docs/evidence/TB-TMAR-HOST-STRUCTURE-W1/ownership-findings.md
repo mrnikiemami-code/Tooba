@@ -1,0 +1,1 @@
+# Ownership findings\n- Deferred root files are Host platform jobs/policies but checkout/order/payment adjacent — SHOULD remain root until semantic extraction, not hidden in Jobs/\n- No module business logic relocated into Host folders\n

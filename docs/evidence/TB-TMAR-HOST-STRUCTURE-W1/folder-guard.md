@@ -1,0 +1,1 @@
+# Folder guard\n- HOST-FOLDER-001 active via HostFolderStructureTests\n- Root .cs allowlist: Program.cs + deferred reservation/order/payment job files\n

@@ -1,8 +1,8 @@
 {
   "rule": "SourceSizeInventory",
-  "generatedAt": "2026-09-20T11:41:45.498Z",
-  "refreshedBy": "TB-TMAR-CHECKOUT-IMPL-W3",
-  "fileCount": 1797,
+  "generatedAt": "2026-09-20T11:51:21.594Z",
+  "refreshedBy": "TB-TMAR-HOST-STRUCTURE-W1",
+  "fileCount": 1798,
   "files": [
     {
       "path": ".tmp-bridge-live-copy/Program.cs",
@@ -1943,6 +1943,12 @@
       "classification": "NORMAL"
     },
     {
+      "path": "src/backend/Host/Tooba.Host.Tests/HostFolderStructureTests.cs",
+      "language": "cs",
+      "loc": 72,
+      "classification": "NORMAL"
+    },
+    {
       "path": "src/backend/Host/Tooba.Host.Tests/HostHealthEndpointTests.cs",
       "language": "cs",
       "loc": 54,
@@ -3065,81 +3071,81 @@
       "classification": "NORMAL"
     },
     {
-      "path": "src/backend/Host/Tooba.Host/AuthenticationHttpBoundary.cs",
+      "path": "src/backend/Host/Tooba.Host/Authentication/AuthenticationHttpBoundary.cs",
       "language": "cs",
       "loc": 824,
       "classification": "OVERSIZED_LEGACY"
     },
     {
-      "path": "src/backend/Host/Tooba.Host/AuthenticationInstrumentation.cs",
+      "path": "src/backend/Host/Tooba.Host/Authentication/AuthenticationInstrumentation.cs",
       "language": "cs",
       "loc": 23,
       "classification": "NORMAL"
     },
     {
-      "path": "src/backend/Host/Tooba.Host/AuthenticationRateLimitThrottleSeam.cs",
+      "path": "src/backend/Host/Tooba.Host/Authentication/AuthenticationRateLimitThrottleSeam.cs",
       "language": "cs",
       "loc": 54,
       "classification": "NORMAL"
     },
     {
-      "path": "src/backend/Host/Tooba.Host/AuthorizationAdapters.cs",
+      "path": "src/backend/Host/Tooba.Host/Authorization/AuthorizationAdapters.cs",
       "language": "cs",
       "loc": 291,
       "classification": "NORMAL"
     },
     {
-      "path": "src/backend/Host/Tooba.Host/AuthorizationHostOptions.cs",
+      "path": "src/backend/Host/Tooba.Host/Authorization/AuthorizationHostOptions.cs",
       "language": "cs",
       "loc": 141,
       "classification": "NORMAL"
     },
     {
-      "path": "src/backend/Host/Tooba.Host/AuthorizationInstrumentation.cs",
+      "path": "src/backend/Host/Tooba.Host/Authorization/AuthorizationInstrumentation.cs",
       "language": "cs",
       "loc": 66,
       "classification": "NORMAL"
     },
     {
-      "path": "src/backend/Host/Tooba.Host/AuthorizationRegistration.cs",
+      "path": "src/backend/Host/Tooba.Host/Authorization/AuthorizationRegistration.cs",
       "language": "cs",
       "loc": 49,
       "classification": "NORMAL"
     },
     {
-      "path": "src/backend/Host/Tooba.Host/AuthorizationSchemaHostedService.cs",
+      "path": "src/backend/Host/Tooba.Host/Authorization/AuthorizationSchemaHostedService.cs",
       "language": "cs",
       "loc": 26,
       "classification": "NORMAL"
     },
     {
-      "path": "src/backend/Host/Tooba.Host/AuthSecurityHostOptions.cs",
+      "path": "src/backend/Host/Tooba.Host/Authorization/SpiceDbAuthorizationAdapter.cs",
       "language": "cs",
-      "loc": 88,
+      "loc": 354,
       "classification": "NORMAL"
     },
     {
-      "path": "src/backend/Host/Tooba.Host/BackgroundWorkerRegistry.cs",
-      "language": "cs",
-      "loc": 58,
-      "classification": "NORMAL"
-    },
-    {
-      "path": "src/backend/Host/Tooba.Host/CacheHostOptions.cs",
+      "path": "src/backend/Host/Tooba.Host/Caching/CacheHostOptions.cs",
       "language": "cs",
       "loc": 65,
       "classification": "NORMAL"
     },
     {
-      "path": "src/backend/Host/Tooba.Host/CacheInstrumentation.cs",
+      "path": "src/backend/Host/Tooba.Host/Caching/CacheInstrumentation.cs",
       "language": "cs",
       "loc": 81,
       "classification": "NORMAL"
     },
     {
-      "path": "src/backend/Host/Tooba.Host/CacheRegistration.cs",
+      "path": "src/backend/Host/Tooba.Host/Caching/CacheRegistration.cs",
       "language": "cs",
       "loc": 33,
+      "classification": "NORMAL"
+    },
+    {
+      "path": "src/backend/Host/Tooba.Host/Caching/MemoryToobaCache.cs",
+      "language": "cs",
+      "loc": 419,
       "classification": "NORMAL"
     },
     {
@@ -3164,6 +3170,18 @@
       "path": "src/backend/Host/Tooba.Host/CommerceHoldPolicy.cs",
       "language": "cs",
       "loc": 130,
+      "classification": "NORMAL"
+    },
+    {
+      "path": "src/backend/Host/Tooba.Host/Composition/ToobaModuleComposition.cs",
+      "language": "cs",
+      "loc": 98,
+      "classification": "NORMAL"
+    },
+    {
+      "path": "src/backend/Host/Tooba.Host/Configuration/ToobaPlatformOptions.cs",
+      "language": "cs",
+      "loc": 474,
       "classification": "NORMAL"
     },
     {
@@ -3263,9 +3281,33 @@
       "classification": "NORMAL"
     },
     {
-      "path": "src/backend/Host/Tooba.Host/DatabaseConnectionResolver.cs",
+      "path": "src/backend/Host/Tooba.Host/Development/MarketplaceAdminDevBootstrap.cs",
       "language": "cs",
-      "loc": 50,
+      "loc": 37,
+      "classification": "NORMAL"
+    },
+    {
+      "path": "src/backend/Host/Tooba.Host/Development/MarketplaceDevelopmentBootstrap.cs",
+      "language": "cs",
+      "loc": 67,
+      "classification": "NORMAL"
+    },
+    {
+      "path": "src/backend/Host/Tooba.Host/Development/MarketplaceSellerDevBootstrap.cs",
+      "language": "cs",
+      "loc": 44,
+      "classification": "NORMAL"
+    },
+    {
+      "path": "src/backend/Host/Tooba.Host/Errors/PlatformExceptionMapper.cs",
+      "language": "cs",
+      "loc": 66,
+      "classification": "NORMAL"
+    },
+    {
+      "path": "src/backend/Host/Tooba.Host/Errors/ToobaExceptionHandler.cs",
+      "language": "cs",
+      "loc": 68,
       "classification": "NORMAL"
     },
     {
@@ -3395,21 +3437,27 @@
       "classification": "NORMAL"
     },
     {
-      "path": "src/backend/Host/Tooba.Host/HostHealthEndpoints.cs",
+      "path": "src/backend/Host/Tooba.Host/Health/HostHealthEndpoints.cs",
       "language": "cs",
       "loc": 62,
       "classification": "NORMAL"
     },
     {
-      "path": "src/backend/Host/Tooba.Host/HostReadinessEvaluator.cs",
+      "path": "src/backend/Host/Tooba.Host/Health/HostReadinessEvaluator.cs",
       "language": "cs",
       "loc": 136,
       "classification": "NORMAL"
     },
     {
-      "path": "src/backend/Host/Tooba.Host/InProcessIntegrationEventPublisher.cs",
+      "path": "src/backend/Host/Tooba.Host/Health/SpiceDbHealthProbe.cs",
       "language": "cs",
-      "loc": 51,
+      "loc": 127,
+      "classification": "NORMAL"
+    },
+    {
+      "path": "src/backend/Host/Tooba.Host/Jobs/BackgroundWorkerRegistry.cs",
+      "language": "cs",
+      "loc": 58,
       "classification": "NORMAL"
     },
     {
@@ -3425,63 +3473,51 @@
       "classification": "NORMAL"
     },
     {
-      "path": "src/backend/Host/Tooba.Host/MarketplaceAdminDevBootstrap.cs",
-      "language": "cs",
-      "loc": 37,
-      "classification": "NORMAL"
-    },
-    {
-      "path": "src/backend/Host/Tooba.Host/MarketplaceDevelopmentBootstrap.cs",
-      "language": "cs",
-      "loc": 67,
-      "classification": "NORMAL"
-    },
-    {
-      "path": "src/backend/Host/Tooba.Host/MarketplaceSellerDevBootstrap.cs",
-      "language": "cs",
-      "loc": 44,
-      "classification": "NORMAL"
-    },
-    {
-      "path": "src/backend/Host/Tooba.Host/MassTransitIntegrationEventPublisher.cs",
-      "language": "cs",
-      "loc": 70,
-      "classification": "NORMAL"
-    },
-    {
       "path": "src/backend/Host/Tooba.Host/Media/MediaEndpoints.cs",
       "language": "cs",
       "loc": 206,
       "classification": "NORMAL"
     },
     {
-      "path": "src/backend/Host/Tooba.Host/MemoryToobaCache.cs",
+      "path": "src/backend/Host/Tooba.Host/Messaging/InProcessIntegrationEventPublisher.cs",
       "language": "cs",
-      "loc": 419,
+      "loc": 51,
       "classification": "NORMAL"
     },
     {
-      "path": "src/backend/Host/Tooba.Host/MessagingDisabledPublisher.cs",
+      "path": "src/backend/Host/Tooba.Host/Messaging/MassTransitIntegrationEventPublisher.cs",
+      "language": "cs",
+      "loc": 70,
+      "classification": "NORMAL"
+    },
+    {
+      "path": "src/backend/Host/Tooba.Host/Messaging/MessagingDisabledPublisher.cs",
       "language": "cs",
       "loc": 17,
       "classification": "NORMAL"
     },
     {
-      "path": "src/backend/Host/Tooba.Host/MessagingHostOptions.cs",
+      "path": "src/backend/Host/Tooba.Host/Messaging/MessagingHostOptions.cs",
       "language": "cs",
       "loc": 103,
       "classification": "NORMAL"
     },
     {
-      "path": "src/backend/Host/Tooba.Host/MessagingRegistration.cs",
+      "path": "src/backend/Host/Tooba.Host/Messaging/MessagingRegistration.cs",
       "language": "cs",
       "loc": 103,
       "classification": "NORMAL"
     },
     {
-      "path": "src/backend/Host/Tooba.Host/MessagingRetryConfigurator.cs",
+      "path": "src/backend/Host/Tooba.Host/Messaging/MessagingRetryConfigurator.cs",
       "language": "cs",
       "loc": 22,
+      "classification": "NORMAL"
+    },
+    {
+      "path": "src/backend/Host/Tooba.Host/MultiTenancy/TenantResolutionMiddleware.cs",
+      "language": "cs",
+      "loc": 209,
       "classification": "NORMAL"
     },
     {
@@ -3497,19 +3533,19 @@
       "classification": "NORMAL"
     },
     {
-      "path": "src/backend/Host/Tooba.Host/OutboxDispatcher.cs",
+      "path": "src/backend/Host/Tooba.Host/Outbox/OutboxDispatcher.cs",
       "language": "cs",
       "loc": 240,
       "classification": "NORMAL"
     },
     {
-      "path": "src/backend/Host/Tooba.Host/OutboxHostOptions.cs",
+      "path": "src/backend/Host/Tooba.Host/Outbox/OutboxHostOptions.cs",
       "language": "cs",
       "loc": 40,
       "classification": "NORMAL"
     },
     {
-      "path": "src/backend/Host/Tooba.Host/OutboxWorkerSeams.cs",
+      "path": "src/backend/Host/Tooba.Host/Outbox/OutboxWorkerSeams.cs",
       "language": "cs",
       "loc": 141,
       "classification": "NORMAL"
@@ -3545,9 +3581,9 @@
       "classification": "NORMAL"
     },
     {
-      "path": "src/backend/Host/Tooba.Host/PlatformExceptionMapper.cs",
+      "path": "src/backend/Host/Tooba.Host/Persistence/DatabaseConnectionResolver.cs",
       "language": "cs",
-      "loc": 66,
+      "loc": 50,
       "classification": "NORMAL"
     },
     {
@@ -3629,7 +3665,13 @@
       "classification": "NORMAL"
     },
     {
-      "path": "src/backend/Host/Tooba.Host/SecurityHeadersMiddleware.cs",
+      "path": "src/backend/Host/Tooba.Host/Security/AuthSecurityHostOptions.cs",
+      "language": "cs",
+      "loc": 88,
+      "classification": "NORMAL"
+    },
+    {
+      "path": "src/backend/Host/Tooba.Host/Security/SecurityHeadersMiddleware.cs",
       "language": "cs",
       "loc": 48,
       "classification": "NORMAL"
@@ -3692,24 +3734,6 @@
       "path": "src/backend/Host/Tooba.Host/Settlement/SettlementPanelComposer.cs",
       "language": "cs",
       "loc": 144,
-      "classification": "NORMAL"
-    },
-    {
-      "path": "src/backend/Host/Tooba.Host/SpiceDbAuthorizationAdapter.cs",
-      "language": "cs",
-      "loc": 354,
-      "classification": "NORMAL"
-    },
-    {
-      "path": "src/backend/Host/Tooba.Host/SpiceDbHealthProbe.cs",
-      "language": "cs",
-      "loc": 127,
-      "classification": "NORMAL"
-    },
-    {
-      "path": "src/backend/Host/Tooba.Host/SqlTransportOptionsMapper.cs",
-      "language": "cs",
-      "loc": 40,
       "classification": "NORMAL"
     },
     {
@@ -3869,39 +3893,21 @@
       "classification": "WATCH"
     },
     {
-      "path": "src/backend/Host/Tooba.Host/TenantResolutionMiddleware.cs",
+      "path": "src/backend/Host/Tooba.Host/Transport/SqlTransportOptionsMapper.cs",
       "language": "cs",
-      "loc": 209,
+      "loc": 40,
       "classification": "NORMAL"
     },
     {
-      "path": "src/backend/Host/Tooba.Host/ToobaExceptionHandler.cs",
-      "language": "cs",
-      "loc": 68,
-      "classification": "NORMAL"
-    },
-    {
-      "path": "src/backend/Host/Tooba.Host/ToobaIntegrationTransportConsumer.cs",
+      "path": "src/backend/Host/Tooba.Host/Transport/ToobaIntegrationTransportConsumer.cs",
       "language": "cs",
       "loc": 109,
       "classification": "NORMAL"
     },
     {
-      "path": "src/backend/Host/Tooba.Host/ToobaIntegrationTransportMessage.cs",
+      "path": "src/backend/Host/Tooba.Host/Transport/ToobaIntegrationTransportMessage.cs",
       "language": "cs",
       "loc": 54,
-      "classification": "NORMAL"
-    },
-    {
-      "path": "src/backend/Host/Tooba.Host/ToobaModuleComposition.cs",
-      "language": "cs",
-      "loc": 98,
-      "classification": "NORMAL"
-    },
-    {
-      "path": "src/backend/Host/Tooba.Host/ToobaPlatformOptions.cs",
-      "language": "cs",
-      "loc": 474,
       "classification": "NORMAL"
     },
     {

@@ -22,6 +22,12 @@ ID generation uses an approved abstraction at orchestration boundaries; direct i
 ## ARCH-HOST-001
 Host is transport/composition root only; no NEW business write, transaction, pricing/inventory/seller/campaign decision, or Domain ownership.
 
+## HOST-FOLDER-001
+New Host production `.cs` source must live under an approved responsibility folder unless explicitly exempted. Root allowlist is enforced by `HostFolderStructureTests` (Program.cs + reviewed deferred job/policy leftovers). Do not dump new arbitrary platform files at `Tooba.Host/` root.
+
+## HOST-HYGIENE-001
+Host runtime log artifacts (`*.log` / `*.err.log` under `Tooba.Host`) must not be tracked in source control. `.gitignore` covers Host log paths; local diagnostics remain untracked.
+
 ## ARCH-READ-001
 NEW cross-module read composition uses declared read contracts/gateways; direct foreign DbContext composition is legacy-only and must not expand.
 

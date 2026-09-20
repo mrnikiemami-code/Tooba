@@ -1,0 +1,1 @@
+# Log artifact audit\n- host-dev.log / host-r*.log / host-t*.log present under Host root\n- git status: untracked (covered by .gitignore *.log)\n- producers: local host/dev processes\n- runtime does not require exact source-tree path\n- disposition: remain ignored; do not track; gitignore strengthened for **/*.log and *.err.log\n- no blind delete of large local diagnostics\n

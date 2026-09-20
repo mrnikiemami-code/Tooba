@@ -1,0 +1,1 @@
+# Composition safety\n- Program.cs remained at root; no registration-order refactor\n- Host build succeeded after moves\n- DI discovery via SDK recursive compile unchanged\n

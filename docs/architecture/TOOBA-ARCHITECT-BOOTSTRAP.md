@@ -52,6 +52,7 @@ Checkout Consistency Design (TB-TMAR-CHECKOUT-CONSISTENCY-DESIGN) PASS — desig
 Checkout Implementation W1 (TB-TMAR-CHECKOUT-IMPL-W1) PASS — durable process state + idempotency foundation; TransactionScope preserved; no Saga runtime; W2 READY; Orders FE STILL_WAITING_FOR_BACKEND_W2; Architecture-Priority CHECKOUT_IMPLEMENTATION; next CHECKOUT-IMPL-W2.
 Checkout Implementation W2 (TB-TMAR-CHECKOUT-IMPL-W2) PASS — Process Manager + Inventory.Contracts; TX preserved; W3 READY; next CHECKOUT-IMPL-W3.
 Checkout Implementation W3 (TB-TMAR-CHECKOUT-IMPL-W3) PASS — Cart.Contracts ICartConversionPort; Order.Application↛Cart.Application; TX preserved; W4 READY; next CHECKOUT-IMPL-W4.
+Host Structure W1 (TB-TMAR-HOST-STRUCTURE-W1) PASS — Host folder reorganization; HOST-FOLDER-001; READY_TO_PAUSE; next CHECKOUT-IMPL-W4.
 Product-Resume-Safety = SAFE_WITH_TMAR_PARALLEL (Order hub still frozen; do not expand App→App / Infra→App; no NEW cross-context ACID).
 Last Product Task = TB-P10-T022-R21.
 Architecture Baseline = TB-TMAR-ARCH-BASELINE.
@@ -455,6 +456,7 @@ checkout-consistency-design = TB-TMAR-CHECKOUT-CONSISTENCY-DESIGN PASS (design+l
 checkout-impl-w1 = TB-TMAR-CHECKOUT-IMPL-W1 PASS (process state + idempotency; TX preserved; W2 READY; Priority CHECKOUT_IMPLEMENTATION)
 checkout-impl-w2 = TB-TMAR-CHECKOUT-IMPL-W2 PASS (PM + Inventory.Contracts; TX preserved; W3 READY)
 checkout-impl-w3 = TB-TMAR-CHECKOUT-IMPL-W3 PASS (Cart.Contracts conversion; TX preserved; W4 READY)
+host-structure-w1 = TB-TMAR-HOST-STRUCTURE-W1 PASS (folder map + guards; READY_TO_PAUSE; next CHECKOUT-IMPL-W4)
 next task = TB-TMAR-CHECKOUT-IMPL-W3 unless Recovery SoT says otherwise
 
 primary goal = painless future Microservice migration

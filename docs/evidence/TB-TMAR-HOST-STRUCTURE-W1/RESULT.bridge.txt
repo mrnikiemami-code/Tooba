@@ -1,0 +1,87 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+
+BEGIN_TOOBA_WORKER_RESULT
+
+Task-ID: TB-TMAR-HOST-STRUCTURE-W1
+Parent-Task: TB-TMAR-CHECKOUT-IMPL-W3
+Channel: tooba-main
+WorkerId: tooba-worker-01
+AgentType: cursor
+Status: PASS
+
+Summary:
+HOST-STRUCTURE-W1 PASS. Inventoried Tooba.Host root; moved 41 safe platform files into responsibility folders (Authentication/Authorization/Security/Caching/Messaging/Outbox/Transport/Persistence/MultiTenancy/Health/Errors/Jobs/Development/Configuration/Composition). Namespace PRESERVE_EXISTING. Deferred checkout/order/payment-adjacent root files. Runtime logs audited; gitignore hygiene strengthened. HOST-FOLDER-001 + HOST-HYGIENE-001 added. Host-Structure-State READY_TO_PAUSE. Checkout-W4-Resume-Readiness READY. Next: TB-TMAR-CHECKOUT-IMPL-W4. Product-Resume-Safety SAFE_WITH_TMAR_PARALLEL.
+
+Program-Name:
+TMAR — Tooba Microservice-Ready Architecture Recovery
+
+Recovery-Start:
+docs/evidence/TB-TMAR-HOST-STRUCTURE-W1/recovery-start.md
+
+Host-File-Inventory:
+docs/evidence/TB-TMAR-HOST-STRUCTURE-W1/host-file-inventory.md
+
+Log-Artifact-Audit:
+docs/evidence/TB-TMAR-HOST-STRUCTURE-W1/log-artifact-audit.md
+
+Target-Folder-Map:
+docs/evidence/TB-TMAR-HOST-STRUCTURE-W1/target-folder-map.md
+
+Move-Manifest:
+docs/evidence/TB-TMAR-HOST-STRUCTURE-W1/move-manifest.md
+
+Moves:
+docs/evidence/TB-TMAR-HOST-STRUCTURE-W1/moves.md
+
+Composition-Safety:
+docs/evidence/TB-TMAR-HOST-STRUCTURE-W1/composition-safety.md
+
+Host-Namespace-Strategy:
+PRESERVE_EXISTING
+
+Folder-Guard:
+docs/evidence/TB-TMAR-HOST-STRUCTURE-W1/folder-guard.md — HOST-FOLDER-001
+
+Log-Guard:
+docs/evidence/TB-TMAR-HOST-STRUCTURE-W1/log-guard.md — HOST-HYGIENE-001
+
+Ownership-Findings:
+docs/evidence/TB-TMAR-HOST-STRUCTURE-W1/ownership-findings.md
+
+Tests:
+docs/evidence/TB-TMAR-HOST-STRUCTURE-W1/tests.md — focused suite 32/32 PASS; Host build PASS
+
+Host-Structure-State:
+READY_TO_PAUSE
+
+Checkout-W4-Resume-Readiness:
+READY
+
+Capability-Map:
+docs/architecture/TOOBA-CAPABILITY-MAP.md — unchanged ownership facts
+
+Bootstrap:
+docs/architecture/TOOBA-ARCHITECT-BOOTSTRAP.md — host-structure-w1 PASS; next CHECKOUT-IMPL-W4
+
+Master-Recovery-State:
+docs/architecture/TOOBA-TMAR-MASTER-RECOVERY.md — HOST-STRUCTURE-W1 listed; next CHECKOUT-IMPL-W4; SAFE_WITH_TMAR_PARALLEL
+
+Recovery-SoT:
+docs/evidence/TB-TMAR-HOST-STRUCTURE-W1/recovery-sot.md
+
+Git:
+branch main; tip PLACEHOLDER; pushed origin/main; HEAD==origin/main; 18ca10c9 ancestor; user work preserved
+
+Architectural-Concerns:
+Deferred Host root leftovers remain for checkout/order/payment jobs/policies until semantic extraction; not hidden under Jobs folders in W1
+
+Blockers:
+(none)
+
+Product-Resume-Safety:
+SAFE_WITH_TMAR_PARALLEL
+
+Next-Recommended-Task:
+TB-TMAR-CHECKOUT-IMPL-W4
+
+END_TOOBA_WORKER_RESULT

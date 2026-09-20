@@ -1,0 +1,1 @@
+# Structure state\nHost-Structure-State: READY_TO_PAUSE\nRemaining root files are allowlisted deferred or Program.cs; further move-only of checkout-adjacent files has low safe value.\n

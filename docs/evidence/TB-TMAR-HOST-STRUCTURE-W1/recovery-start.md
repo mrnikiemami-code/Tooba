@@ -1,0 +1,1 @@
+# Recovery start — TB-TMAR-HOST-STRUCTURE-W1\n- branch main\n- HEAD==origin/main @ c17a67d80ad3af59b4aee2b0a807814339394509\n- 18ca10c9 ancestor\n- user work preserved (.tmp untracked only)\n- No RECOVERY_CONFLICT\n

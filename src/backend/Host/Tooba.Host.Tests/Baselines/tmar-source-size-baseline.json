@@ -321,7 +321,7 @@
       "classification": "OVERSIZED_LEGACY"
     },
     {
-      "path": "src/backend/Host/Tooba.Host/AuthenticationHttpBoundary.cs",
+      "path": "src/backend/Host/Tooba.Host/Authentication/AuthenticationHttpBoundary.cs",
       "language": "cs",
       "loc": 824,
       "classification": "OVERSIZED_LEGACY"

@@ -26,6 +26,9 @@ help.pdf
 
 # Host/runtime logs
 src/backend/Host/Tooba.Host/*.log
+src/backend/Host/Tooba.Host/**/*.log
+src/backend/Host/Tooba.Host/*.err.log
+src/backend/Host/Tooba.Host/**/*.err.log
 src/frontend/next-dev*.log
 src/frontend/next-dev*.err.log
 
