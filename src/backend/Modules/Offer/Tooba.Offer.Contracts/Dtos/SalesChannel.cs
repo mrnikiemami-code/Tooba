@@ -1,26 +1,25 @@
-﻿namespace Tooba.Offer.Domain;
+﻿namespace Tooba.Offer.Contracts.Dtos;
 
 /// <summary>
-/// کانال فروش پایدار. رشتهٔ UI آزاد نیست.
-/// Owned public contract type (Tooba.Offer.Contracts assembly) for cross-module Domain/Application use.
+/// Public sales channel representation.
 /// </summary>
 public enum SalesChannel
 {
-    /// <summary>فروش مستقیم فروشگاه.</summary>
+    /// <summary>Direct store sales.</summary>
     Direct = 0,
 
-    /// <summary>کانال Marketplace چندفروشنده.</summary>
+    /// <summary>Multi-seller marketplace.</summary>
     Marketplace = 1,
 
-    /// <summary>کانال نمایندگی.</summary>
+    /// <summary>Agency sales.</summary>
     Agency = 2,
 
-    /// <summary>کانال سازمانی.</summary>
+    /// <summary>Corporate sales.</summary>
     Corporate = 3,
 
-    /// <summary>کانال همکاری در فروش.</summary>
+    /// <summary>Affiliate sales.</summary>
     Affiliate = 4,
 
-    /// <summary>کانال API یکپارچه.</summary>
+    /// <summary>Integrated API sales.</summary>
     Api = 5,
 }

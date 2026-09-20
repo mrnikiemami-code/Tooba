@@ -4,6 +4,7 @@ using Microsoft.Extensions.Hosting;
 using FluentValidation;
 using Tooba.BuildingBlocks;
 using Tooba.Catalog.Application;
+using Tooba.Catalog.Contracts;
 using Tooba.Catalog.Infrastructure.Persistence;
 using Tooba.ModuleContracts;
 using Tooba.Persistence;
@@ -32,6 +33,7 @@ public sealed class CatalogModule : IToobaModule
         services.AddScoped<ICatalogActorContext, CatalogActorContext>();
         services.AddScoped<ICatalogDirectory, CatalogDirectory>();
         services.AddScoped<ICatalogLookupGateway>(sp => (CatalogDirectory)sp.GetRequiredService<ICatalogDirectory>());
+        services.AddScoped<ICatalogVariantLookup>(sp => (CatalogDirectory)sp.GetRequiredService<ICatalogDirectory>());
         services.AddScoped<IStoreLandingPageDirectory, StoreLandingPageDirectory>();
         services.AddScoped<IStoreMenuDirectory, StoreMenuDirectory>();
         services.AddScoped<IStoreAppearanceSettingsDirectory, StoreAppearanceSettingsDirectory>();

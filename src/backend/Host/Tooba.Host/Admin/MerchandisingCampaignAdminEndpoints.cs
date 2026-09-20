@@ -4,7 +4,7 @@ using Tooba.BuildingBlocks;
 using Tooba.Catalog.Domain;
 using Tooba.Catalog.Infrastructure.Persistence;
 using Tooba.Inventory.Application;
-using Tooba.Offer.Domain;
+using Tooba.Offer.Contracts.Dtos;
 using Tooba.Offer.Infrastructure.Persistence;
 using Tooba.Party.Infrastructure.Persistence;
 using Tooba.Pricing.Application;

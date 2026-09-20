@@ -9,7 +9,7 @@ using Tooba.Catalog.Application;
 using Tooba.Inventory.Application;
 using Tooba.Offer.Contracts.Dtos;
 using Tooba.Offer.Contracts.Ports;
-using Tooba.Offer.Domain;
+using Tooba.Offer.Contracts.Dtos;
 using Tooba.Pricing.Contracts;
 using Tooba.Pricing.Domain;
 

@@ -119,7 +119,8 @@ builder.Services.AddHostedService<PaymentReconciliationHostedService>();
 builder.Services.AddHostedService<UnpaidOrderExpiryHostedService>();
 builder.Services.AddToobaCqrsFoundation(
     typeof(Tooba.Catalog.Application.CreateStoreLandingPageCommand).Assembly,
-    typeof(Tooba.Fulfillment.Application.CreateShippingServiceCommand).Assembly);
+    typeof(Tooba.Fulfillment.Application.CreateShippingServiceCommand).Assembly,
+    typeof(Tooba.Offer.Application.CreateOfferCommand).Assembly);
 builder.Services.AddScoped<Tooba.Catalog.Application.IStoreLandingExternalReferenceGate, Tooba.Host.Admin.MerchandisingStoreLandingReferenceGate>();
 builder.Services.AddScoped<Tooba.Catalog.Application.IUnitOfMeasureLanguageGate, Tooba.Host.Admin.HostUnitOfMeasureLanguageGate>();
 builder.Services.AddScoped<Tooba.Fulfillment.Application.IShippingServiceLanguageGate, Tooba.Host.Admin.HostShippingServiceLanguageGate>();

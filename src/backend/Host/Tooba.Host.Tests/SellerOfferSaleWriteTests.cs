@@ -141,11 +141,8 @@ public sealed class SellerOfferSaleWriteTests : IAsyncLifetime
             inventory,
             orders,
             partyDir,
-            offerDir,
             priceDir,
             inventoryDir,
-            taxDir,
-            tax,
             new FakeAccessControlDirectory(),
             catalogDir,
             new ReturnPolicyResolver(new ReturnPolicyOptions()),
@@ -186,27 +183,21 @@ public sealed class SellerOfferSaleWriteTests : IAsyncLifetime
         var sellerA = await partyDir.CreateOrganizationAsync("فروشنده الف", null, CancellationToken.None);
         var sellerB = await partyDir.CreateOrganizationAsync("فروشنده ب", null, CancellationToken.None);
 
-        var createdA = await composer.CreateOfferAsync(
-            sellerA.PartyId,
-            new SellerOfferCreateRequest(variant.VariantId, "SKU-A-1", nameof(OfferStatus.Active)),
-            CancellationToken.None);
+        var offerA = await offerDir.CreateOfferAsync(variant.VariantId, sellerA.PartyId, SalesChannel.Marketplace, "SKU-A-1", CancellationToken.None);
+        await offerDir.ActivateAsync(offerA.OfferId, CancellationToken.None);
+        var createdA = (await composer.GetOfferAsync(sellerA.PartyId, offerA.OfferId, CancellationToken.None))!;
         Assert.Equal(sellerA.PartyId, createdA.SellerPartyId);
         Assert.Equal(nameof(OfferStatus.Active), createdA.Status);
         Assert.True(createdA.CatalogReadOnly);
 
-        var createdB = await composer.CreateOfferAsync(
-            sellerB.PartyId,
-            new SellerOfferCreateRequest(variant.VariantId, "SKU-B-1", nameof(OfferStatus.Active)),
-            CancellationToken.None);
+        var offerB = await offerDir.CreateOfferAsync(variant.VariantId, sellerB.PartyId, SalesChannel.Marketplace, "SKU-B-1", CancellationToken.None);
+        await offerDir.ActivateAsync(offerB.OfferId, CancellationToken.None);
+        var createdB = (await composer.GetOfferAsync(sellerB.PartyId, offerB.OfferId, CancellationToken.None))!;
         Assert.Equal(sellerB.PartyId, createdB.SellerPartyId);
 
-        var duplicateOwn = await Assert.ThrowsAsync<PlatformHttpException>(() =>
-            composer.CreateOfferAsync(
-                sellerA.PartyId,
-                new SellerOfferCreateRequest(variant.VariantId, "SKU-A-2", nameof(OfferStatus.Active)),
-                CancellationToken.None));
-        Assert.Equal(400, duplicateOwn.StatusCode);
-        Assert.Equal("offer.listing.duplicate_active", duplicateOwn.ErrorCode);
+        var duplicateOwn = await Assert.ThrowsAsync<SemanticException>(() =>
+            offerDir.CreateOfferAsync(variant.VariantId, sellerA.PartyId, SalesChannel.Marketplace, "SKU-A-2", CancellationToken.None));
+        Assert.Equal("offer.listing.duplicate_active", duplicateOwn.Error.Code);
 
         var createShape = typeof(SellerOfferCreateRequest).GetProperties().Select(p => p.Name).ToHashSet(StringComparer.Ordinal);
         Assert.DoesNotContain("SellerPartyId", createShape);

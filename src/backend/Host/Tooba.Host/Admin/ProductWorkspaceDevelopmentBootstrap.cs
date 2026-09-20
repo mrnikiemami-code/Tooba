@@ -162,7 +162,7 @@ internal static class ProductWorkspaceDevelopmentBootstrap
 
         var catalog = provider.GetRequiredService<ICatalogDirectory>();
         var parties = provider.GetRequiredService<IPartyDirectory>();
-        var offers = provider.GetRequiredService<IOfferDirectory>();
+        var offers = provider.GetRequiredService<MediatR.ISender>();
         var prices = provider.GetRequiredService<IPriceDirectory>();
         var inventory = provider.GetRequiredService<IInventoryDirectory>();
         var tax = provider.GetRequiredService<ITaxDirectory>();
@@ -226,10 +226,10 @@ internal static class ProductWorkspaceDevelopmentBootstrap
 
         var sellerA = await parties.CreateOrganizationAsync("فروشگاه آرمان", "Arman Store Legal", cancellation);
         var sellerB = await parties.CreateOrganizationAsync("دیجی‌استایل نمونه", "Digistyle Sample Legal", cancellation);
-        var offerA = await offers.CreateOfferAsync(variant.VariantId, sellerA.PartyId, SalesChannel.Marketplace, "ARM-LN-01", cancellation);
-        var offerB = await offers.CreateOfferAsync(variant.VariantId, sellerB.PartyId, SalesChannel.Marketplace, "DGS-LN-01", cancellation);
-        await offers.ActivateAsync(offerA.OfferId, cancellation);
-        await offers.ActivateAsync(offerB.OfferId, cancellation);
+        var offerA = await offers.Send(new Tooba.Offer.Application.CreateOfferCommand(variant.VariantId, sellerA.PartyId, SalesChannel.Marketplace, "ARM-LN-01"), cancellation);
+        var offerB = await offers.Send(new Tooba.Offer.Application.CreateOfferCommand(variant.VariantId, sellerB.PartyId, SalesChannel.Marketplace, "DGS-LN-01"), cancellation);
+        await offers.Send(new Tooba.Offer.Application.ActivateOfferCommand(offerA.OfferId), cancellation);
+        await offers.Send(new Tooba.Offer.Application.ActivateOfferCommand(offerB.OfferId), cancellation);
 
         var start = DateTimeOffset.Parse("2026-01-01T00:00:00Z");
         var priceA = await prices.CreatePriceAsync(offerA.OfferId, "IR", SalesChannel.Marketplace, 1850000, "IRR", start, null, cancellation);

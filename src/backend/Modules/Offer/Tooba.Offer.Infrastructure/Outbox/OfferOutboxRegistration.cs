@@ -8,7 +8,7 @@ using Tooba.Persistence;
 namespace Tooba.Offer.Infrastructure.Outbox;
 
 /// <summary>
-/// ثبت Outbox ماژول Offer. ترجمه فقط رویدادهای صریح listing است.
+/// Registers Offer outbox translation for explicit listing events.
 /// </summary>
 public sealed class OfferOutboxRegistration : IOutboxModuleRegistration
 {

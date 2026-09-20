@@ -1,5 +1,7 @@
 using Tooba.Offer.Contracts.Dtos;
 using Tooba.Offer.Application.Ports;
+using Tooba.Offer.Application;
+using MediatR;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
@@ -8,12 +10,12 @@ using Tooba.BuildingBlocks;
 namespace Tooba.Offer.Endpoints.Seller;
 
 /// <summary>
-/// نگاشت HTTP مسیرهای Offer پنل فروشنده؛ تصمیم تجاری و persistence ندارد.
+/// Maps seller Offer HTTP routes without business or persistence decisions.
 /// </summary>
 public static class OfferSellerEndpoints
 {
     /// <summary>
-    /// مسیرهای Offer را روی گروه seller ثبت می‌کند.
+    /// Maps Offer routes on the seller route group.
     /// </summary>
     public static void Map(RouteGroupBuilder group)
     {
@@ -39,6 +41,7 @@ public static class OfferSellerEndpoints
     }
 
     private static async Task<IResult> ListOffersAsync(
+        ISender sender,
         IOfferSellerPanel panel,
         IOfferSellerAuthorizer authorizer,
         HttpContext httpContext,
@@ -47,6 +50,7 @@ public static class OfferSellerEndpoints
         try
         {
             var (_, sellerPartyId) = await authorizer.RequireAuthorizedAsync(httpContext, cancellationToken);
+            await sender.Send(new ListSellerOffersQuery(sellerPartyId), cancellationToken);
             var items = await panel.ListOffersAsync(sellerPartyId, cancellationToken);
             return Results.Json(items);
         }
@@ -62,6 +66,7 @@ public static class OfferSellerEndpoints
 
     private static async Task<IResult> CreateOfferAsync(
         SellerOfferCreateRequest body,
+        ISender sender,
         IOfferSellerPanel panel,
         IOfferSellerAuthorizer authorizer,
         HttpContext httpContext,
@@ -70,7 +75,14 @@ public static class OfferSellerEndpoints
         try
         {
             var (_, sellerPartyId) = await authorizer.RequireAuthorizedAsync(httpContext, cancellationToken);
-            var page = await panel.CreateOfferAsync(sellerPartyId, body, cancellationToken);
+            var created = await sender.Send(
+                new CreateOfferCommand(body.CatalogVariantId, sellerPartyId, SalesChannel.Marketplace, body.SellerSku),
+                cancellationToken);
+            if (string.Equals(body.Status, nameof(OfferStatus.Active), StringComparison.OrdinalIgnoreCase))
+                await sender.Send(new ActivateOfferCommand(created.OfferId), cancellationToken);
+            if (body.ReturnPolicyChoice is not null || body.CustomReturnWindowDays is not null)
+                await sender.Send(new SetReturnPolicyCommand(created.OfferId, body.ReturnPolicyChoice ?? "Default", body.CustomReturnWindowDays), cancellationToken);
+            var page = await panel.GetOfferAsync(sellerPartyId, created.OfferId, cancellationToken);
             return Results.Json(page, statusCode: StatusCodes.Status201Created);
         }
         catch (PlatformHttpException ex)
@@ -85,6 +97,7 @@ public static class OfferSellerEndpoints
 
     private static async Task<IResult> GetOfferAsync(
         Guid offerId,
+        ISender sender,
         IOfferSellerPanel panel,
         IOfferSellerAuthorizer authorizer,
         HttpContext httpContext,
@@ -93,9 +106,12 @@ public static class OfferSellerEndpoints
         try
         {
             var (_, sellerPartyId) = await authorizer.RequireAuthorizedAsync(httpContext, cancellationToken);
+            var offer = await sender.Send(new GetOfferQuery(offerId), cancellationToken);
+            if (offer is null || offer.SellerPartyId != sellerPartyId)
+                return Results.Json(new { title = "Offer not found.", errorCode = "seller.offer.missing" }, statusCode: StatusCodes.Status404NotFound);
             var page = await panel.GetOfferAsync(sellerPartyId, offerId, cancellationToken);
             return page is null
-                ? Results.Json(new { title = "پیشنهاد پیدا نشد.", errorCode = "seller.offer.missing" }, statusCode: StatusCodes.Status404NotFound)
+                ? Results.Json(new { title = "Offer not found.", errorCode = "seller.offer.missing" }, statusCode: StatusCodes.Status404NotFound)
                 : Results.Json(page);
         }
         catch (PlatformHttpException ex)
@@ -111,6 +127,7 @@ public static class OfferSellerEndpoints
     private static async Task<IResult> PatchOfferAsync(
         Guid offerId,
         SellerOfferPatchRequest body,
+        ISender sender,
         IOfferSellerPanel panel,
         IOfferSellerAuthorizer authorizer,
         HttpContext httpContext,
@@ -119,7 +136,12 @@ public static class OfferSellerEndpoints
         try
         {
             var (_, sellerPartyId) = await authorizer.RequireAuthorizedAsync(httpContext, cancellationToken);
-            var page = await panel.PatchOfferAsync(sellerPartyId, offerId, body, cancellationToken);
+            await sender.Send(new UpdateOfferCommand(offerId, sellerPartyId, body.SellerSku, body.Status), cancellationToken);
+            if (body.ReturnPolicyChoice is not null || body.CustomReturnWindowDays is not null)
+                await sender.Send(new SetReturnPolicyCommand(offerId, body.ReturnPolicyChoice ?? "Default", body.CustomReturnWindowDays), cancellationToken);
+            if (body.MinimumOrderQuantity is not null || body.MaximumOrderQuantity is not null)
+                await sender.Send(new SetOrderQuantityLimitsCommand(offerId, body.MinimumOrderQuantity, body.MaximumOrderQuantity), cancellationToken);
+            var page = await panel.GetOfferAsync(sellerPartyId, offerId, cancellationToken);
             return Results.Json(page);
         }
         catch (PlatformHttpException ex)

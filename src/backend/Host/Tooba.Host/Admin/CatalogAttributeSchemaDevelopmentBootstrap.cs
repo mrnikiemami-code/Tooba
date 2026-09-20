@@ -185,7 +185,7 @@ internal static class CatalogAttributeSchemaDevelopmentBootstrap
             return;
         }
 
-        var offers = provider.GetRequiredService<IOfferDirectory>();
+        var offers = provider.GetRequiredService<MediatR.ISender>();
         var offerDb = provider.GetRequiredService<OfferDbContext>();
         var parties = provider.GetRequiredService<IPartyDirectory>();
         var partyDb = provider.GetRequiredService<PartyDbContext>();
@@ -229,13 +229,9 @@ internal static class CatalogAttributeSchemaDevelopmentBootstrap
                 continue;
             }
 
-            var offer = await offers.CreateOfferAsync(
-                variant.VariantId,
-                sellerPartyId,
-                SalesChannel.Marketplace,
-                sku,
-                cancellationToken);
-            await offers.ActivateAsync(offer.OfferId, cancellationToken);
+            var offer = await offers.Send(new Tooba.Offer.Application.CreateOfferCommand(
+                variant.VariantId, sellerPartyId, SalesChannel.Marketplace, sku), cancellationToken);
+            await offers.Send(new Tooba.Offer.Application.ActivateOfferCommand(offer.OfferId), cancellationToken);
             var price = await prices.CreatePriceAsync(
                 offer.OfferId,
                 "IR",

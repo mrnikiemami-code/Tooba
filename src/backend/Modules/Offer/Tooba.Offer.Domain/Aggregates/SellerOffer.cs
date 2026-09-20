@@ -1,78 +1,85 @@
 using Tooba.Offer.Domain.Events;
 using Tooba.BuildingBlocks;
-using Tooba.Offer.Contracts;
-using Tooba.Offer.Domain;
+using Tooba.Offer.Domain.Errors;
+using Tooba.Offer.Domain.ValueObjects;
 
 namespace Tooba.Offer.Domain.Aggregates;
 
 /// <summary>
-/// listing تجاری فروشنده روی یک Variant Catalog. قیمت و موجودی ندارد.
+/// Seller commercial listing for a Catalog variant; price and inventory are separate.
 /// </summary>
 public sealed class SellerOffer : IHasDomainEvents
 {
     private readonly DomainEventCollector _domainEvents = new();
 
     /// <summary>
-    /// شناسهٔ پایدار Offer.
+    /// Stable offer identifier.
     /// </summary>
     public Guid OfferId { get; init; }
 
     /// <summary>
-    /// شناسهٔ مات Variant Catalog؛ FK بین‌ماژولی نیست.
+    /// Catalog variant identifier without a cross-module foreign key.
     /// </summary>
     public Guid CatalogVariantId { get; init; }
 
     /// <summary>
-    /// Party سازمان فروشنده. UserId ورود نیست.
+    /// Seller organization Party identifier.
     /// </summary>
     public Guid SellerPartyId { get; init; }
 
     /// <summary>
-    /// SKU اختصاصی فروشنده؛ کد Variant Catalog نیست.
+    /// Seller-owned SKU.
     /// </summary>
     public string? SellerSku { get; set; }
 
     /// <summary>
-    /// وضعیت listing.
+    /// Listing lifecycle status.
     /// </summary>
     public OfferStatus Status { get; set; }
 
     /// <summary>
-    /// کانال فروش.
+    /// Sales channel.
     /// </summary>
     public SalesChannel Channel { get; init; }
 
     /// <summary>
-    /// زمان ایجاد.
+    /// Creation timestamp.
     /// </summary>
     public DateTimeOffset CreatedAt { get; init; }
 
     /// <summary>
-    /// زمان به‌روزرسانی.
+    /// Last update timestamp.
     /// </summary>
     public DateTimeOffset UpdatedAt { get; set; }
 
     /// <summary>
-    /// انتخاب سیاست مرجوعی: Default | Custom | NonReturnable.
+    /// Return policy choice.
     /// </summary>
     public string ReturnPolicyChoice { get; private set; } = "Default";
 
     /// <summary>
-    /// مهلت اختصاصی (روز) وقتی Choice=Custom.
+    /// Custom return window in days.
     /// </summary>
     public int? CustomReturnWindowDays { get; private set; }
 
-    /// <summary>حداقل مقدار خرید فروشنده؛ اختیاری.</summary>
+    /// <summary>Optional minimum order quantity.</summary>
     public decimal? MinimumOrderQuantity { get; private set; }
 
-    /// <summary>حداکثر مقدار خرید فروشنده؛ اختیاری.</summary>
+    /// <summary>Optional maximum order quantity.</summary>
     public decimal? MaximumOrderQuantity { get; private set; }
 
     /// <inheritdoc />
     public IReadOnlyCollection<IDomainEvent> DomainEvents => _domainEvents.Events;
 
+    /// <summary>Updates the seller-owned SKU.</summary>
+    public void UpdateSellerSku(string? sellerSku, DateTimeOffset now)
+    {
+        SellerSku = string.IsNullOrWhiteSpace(sellerSku) ? null : sellerSku.Trim();
+        UpdatedAt = now;
+    }
+
     /// <summary>
-    /// Offer می‌سازد بدون مبلغ و موجودی. شناسه از Application/`IIdGenerator` می‌آید.
+    /// Creates an offer without price or inventory.
     /// </summary>
     public static SellerOffer Create(
         Guid offerId,
@@ -100,7 +107,7 @@ public sealed class SellerOffer : IHasDomainEvents
     }
 
     /// <summary>
-    /// سیاست مرجوعی listing را تنظیم می‌کند (اعتبارسنجی حاکمیت در لایهٔ Application/Host).
+    /// Sets the listing return policy after Application validation.
     /// </summary>
     public void SetReturnPolicy(string choice, int? customReturnWindowDays, DateTimeOffset now)
     {
@@ -115,7 +122,7 @@ public sealed class SellerOffer : IHasDomainEvents
         UpdatedAt = now;
     }
 
-    /// <summary>حداقل/حداکثر مقدار خرید listing را تنظیم می‌کند.</summary>
+    /// <summary>Sets minimum and maximum order quantities.</summary>
     public void SetOrderQuantityLimits(decimal? minimum, decimal? maximum, DateTimeOffset now)
     {
         if (minimum is { } min && min <= 0)
@@ -139,7 +146,7 @@ public sealed class SellerOffer : IHasDomainEvents
     }
 
     /// <summary>
-    /// listing را فعال می‌کند. اعتبار Price/Stock را اعلام نمی‌کند.
+    /// Activates the listing without asserting price or stock validity.
     /// </summary>
     public void Activate(DateTimeOffset now)
     {
@@ -154,7 +161,7 @@ public sealed class SellerOffer : IHasDomainEvents
     }
 
     /// <summary>
-    /// listing را معلق می‌کند.
+    /// Suspends the listing.
     /// </summary>
     public void Suspend(DateTimeOffset now)
     {
@@ -164,7 +171,7 @@ public sealed class SellerOffer : IHasDomainEvents
     }
 
     /// <summary>
-    /// listing را بایگانی می‌کند تا جای همان فروشنده+گونه+کانال آزاد شود.
+    /// Archives the listing and releases its seller, variant, and channel key.
     /// </summary>
     public void Archive(DateTimeOffset now)
     {

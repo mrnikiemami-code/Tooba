@@ -1,9 +1,8 @@
 using Tooba.BuildingBlocks;
 using Tooba.Offer.Contracts;
-using Tooba.Offer.Contracts.Dtos;
-using Tooba.Offer.Domain;
 using Tooba.Offer.Domain.Aggregates;
 using Tooba.Offer.Domain.Events;
+using Tooba.Offer.Domain.ValueObjects;
 using Xunit;
 
 namespace Tooba.Offer.Tests.Domain;

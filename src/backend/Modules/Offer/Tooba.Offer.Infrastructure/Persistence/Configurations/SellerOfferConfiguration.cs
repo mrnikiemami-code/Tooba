@@ -6,7 +6,7 @@ using Tooba.Offer.Domain;
 namespace Tooba.Offer.Infrastructure.Persistence.Configurations;
 
 /// <summary>
-/// پیکربندی EF برای ریشهٔ SellerOffer.
+/// Configures SellerOffer persistence.
 /// </summary>
 public sealed class SellerOfferConfiguration : IEntityTypeConfiguration<SellerOffer>
 {

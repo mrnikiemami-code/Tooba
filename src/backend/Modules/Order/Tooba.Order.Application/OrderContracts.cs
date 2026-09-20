@@ -1,5 +1,5 @@
 ﻿using Tooba.Cart.Contracts;
-using Tooba.Offer.Domain;
+using Tooba.Offer.Contracts.Dtos;
 using Tooba.Order.Domain;
 
 namespace Tooba.Order.Application;

@@ -14,8 +14,7 @@ using Tooba.Persistence;
 namespace Tooba.Offer.Infrastructure.DependencyInjection;
 
 /// <summary>
-/// ماژول Offer: listing تجاری فروشنده روی Variant. قیمت، موجودی، Catalog persistence و UI فروشنده اینجا نیست.
-/// Single-Store هم از همین Offer استفاده می‌کند و Price را روی Product نمی‌گذارد.
+/// Registers the Offer module, which owns seller listings but not price, inventory, or Catalog persistence.
 /// </summary>
 public sealed class OfferModule : IToobaModule
 {
@@ -48,8 +47,8 @@ public sealed class OfferModule : IToobaModule
             return new ReturnPolicyResolver(opts);
         });
         services.AddScoped<IOfferUseCaseGuard, OpenOfferUseCaseGuard>();
-        services.AddScoped<IOfferDirectory, OfferDirectory>();
-        services.AddScoped<IOfferLookupGateway>(sp => (OfferDirectory)sp.GetRequiredService<IOfferDirectory>());
+        services.AddScoped<IOfferStore, OfferStore>();
+        services.AddScoped<IOfferLookupGateway>(sp => (OfferStore)sp.GetRequiredService<IOfferStore>());
         services.AddDbContext<OfferDbContext>((sp, options) =>
         {
             var connectionString = ToobaNpgsql.ResolveForContext(

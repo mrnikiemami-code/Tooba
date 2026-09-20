@@ -20,9 +20,6 @@ using Tooba.Party.Application;
 using Tooba.Pricing.Application;
 using Tooba.Pricing.Domain;
 using Tooba.Pricing.Infrastructure.Persistence;
-using Tooba.Tax.Application;
-using Tooba.Tax.Domain;
-using Tooba.Tax.Infrastructure.Persistence;
 
 namespace Tooba.Host.Seller;
 
@@ -42,11 +39,8 @@ public sealed class SellerPanelComposer : IOfferSellerPanel
     private readonly InventoryDbContext _inventory;
     private readonly OrderDbContext _orders;
     private readonly IPartyLookupGateway _parties;
-    private readonly IOfferDirectory _offerDirectory;
     private readonly IPriceDirectory _priceDirectory;
     private readonly IInventoryDirectory _inventoryDirectory;
-    private readonly ITaxDirectory _taxDirectory;
-    private readonly TaxDbContext _tax;
     private readonly IAccessControlDirectory _access;
     private readonly ICatalogLookupGateway _catalogLookup;
     private readonly IReturnPolicyResolver _returnPolicies;
@@ -62,11 +56,8 @@ public sealed class SellerPanelComposer : IOfferSellerPanel
         InventoryDbContext inventory,
         OrderDbContext orders,
         IPartyLookupGateway parties,
-        IOfferDirectory offerDirectory,
         IPriceDirectory priceDirectory,
         IInventoryDirectory inventoryDirectory,
-        ITaxDirectory taxDirectory,
-        TaxDbContext tax,
         IAccessControlDirectory access,
         ICatalogLookupGateway catalogLookup,
         IReturnPolicyResolver returnPolicies,
@@ -78,11 +69,8 @@ public sealed class SellerPanelComposer : IOfferSellerPanel
         _inventory = inventory;
         _orders = orders;
         _parties = parties;
-        _offerDirectory = offerDirectory;
         _priceDirectory = priceDirectory;
         _inventoryDirectory = inventoryDirectory;
-        _taxDirectory = taxDirectory;
-        _tax = tax;
         _access = access;
         _catalogLookup = catalogLookup;
         _returnPolicies = returnPolicies;
@@ -245,86 +233,6 @@ public sealed class SellerPanelComposer : IOfferSellerPanel
     }
 
     /// <summary>
-    /// به‌روزرسانی باریک SKU/وضعیت Offer متعلق به همان فروشنده.
-    /// </summary>
-    public async Task<SellerOfferDetailPage> PatchOfferAsync(
-        Guid sellerPartyId,
-        Guid offerId,
-        SellerOfferPatchRequest patch,
-        CancellationToken cancellationToken)
-    {
-        await EnsureSellerAsync(sellerPartyId, cancellationToken);
-        var offer = await _offers.Offers
-            .SingleOrDefaultAsync(x => x.OfferId == offerId && x.SellerPartyId == sellerPartyId, cancellationToken)
-            ?? throw new PlatformHttpException(404, "پیشنهاد فروشنده پیدا نشد.", "seller.offer.missing");
-
-        if (patch.SellerSku is not null)
-        {
-            var sku = patch.SellerSku.Trim();
-            if (sku.Length > 0)
-            {
-                var dup = await _offers.Offers.AnyAsync(
-                    x => x.SellerPartyId == sellerPartyId && x.SellerSku == sku && x.OfferId != offerId,
-                    cancellationToken);
-                if (dup)
-                {
-                    throw new PlatformHttpException(409, "کد فروشنده تکراری است.", "seller.offer.sku.conflict");
-                }
-            }
-
-            offer.SellerSku = string.IsNullOrWhiteSpace(sku) ? null : sku;
-            offer.UpdatedAt = _clock.UtcNow;
-        }
-
-        if (!string.IsNullOrWhiteSpace(patch.Status))
-        {
-            if (string.Equals(patch.Status, nameof(OfferStatus.Active), StringComparison.OrdinalIgnoreCase))
-            {
-                offer.Activate(_clock.UtcNow);
-            }
-            else if (string.Equals(patch.Status, nameof(OfferStatus.Suspended), StringComparison.OrdinalIgnoreCase))
-            {
-                offer.Suspend(_clock.UtcNow);
-            }
-            else
-            {
-                throw new PlatformHttpException(400, "وضعیت پشتیبانی‌شده نیست.", "seller.offer.status.unsupported");
-            }
-        }
-
-        if (patch.ReturnPolicyChoice is not null || patch.CustomReturnWindowDays is not null)
-        {
-            var choice = patch.ReturnPolicyChoice ?? offer.ReturnPolicyChoice;
-            var days = patch.CustomReturnWindowDays ?? offer.CustomReturnWindowDays;
-            try
-            {
-                _returnPolicies.ValidateOfferChoice(choice, days);
-            }
-            catch (SemanticException ex)
-            {
-                throw new PlatformHttpException(400, OfferSemanticLocalizer.Title(ex.Error), ex.Error.Code);
-            }
-
-            offer.SetReturnPolicy(choice, days, _clock.UtcNow);
-        }
-
-        if (patch.MinimumOrderQuantity is not null || patch.MaximumOrderQuantity is not null)
-        {
-            try
-            {
-                offer.SetOrderQuantityLimits(patch.MinimumOrderQuantity, patch.MaximumOrderQuantity, _clock.UtcNow);
-            }
-            catch (SemanticException ex)
-            {
-                throw new PlatformHttpException(400, OfferSemanticLocalizer.Title(ex.Error), ex.Error.Code);
-            }
-        }
-
-        await _offers.SaveChangesAsync(cancellationToken);
-        return (await GetOfferAsync(sellerPartyId, offerId, cancellationToken))!;
-    }
-
-    /// <summary>
     /// گونه‌های Catalog منتشرشده را برای انتخاب Offer برمی‌گرداند؛ نوشتن Catalog نیست.
     /// </summary>
     public async Task<IReadOnlyList<SellerCatalogVariantOption>> ListCatalogVariantsAsync(
@@ -367,111 +275,6 @@ public sealed class SellerPanelComposer : IOfferSellerPanel
     }
 
     /// <summary>
-    /// Offer را فقط برای Party فروشندهٔ احرازشده می‌سازد؛ بدنه شناسهٔ فروشندهٔ خارجی را نمی‌پذیرد.
-    /// </summary>
-    public async Task<SellerOfferDetailPage> CreateOfferAsync(
-        Guid sellerPartyId,
-        SellerOfferCreateRequest request,
-        CancellationToken cancellationToken)
-    {
-        await EnsureSellerAsync(sellerPartyId, cancellationToken);
-        if (request.CatalogVariantId == Guid.Empty)
-        {
-            throw new PlatformHttpException(400, "گونهٔ Catalog لازم است.", "seller.offer.variant.missing");
-        }
-
-        OfferReference created;
-        try
-        {
-            created = await _offerDirectory.CreateOfferAsync(
-                request.CatalogVariantId,
-                sellerPartyId,
-                SalesChannel.Marketplace,
-                request.SellerSku,
-                cancellationToken);
-            if (string.Equals(request.Status, nameof(OfferStatus.Active), StringComparison.OrdinalIgnoreCase))
-            {
-                await _offerDirectory.ActivateAsync(created.OfferId, cancellationToken);
-            }
-            else if (!string.IsNullOrWhiteSpace(request.Status)
-                     && !string.Equals(request.Status, nameof(OfferStatus.Draft), StringComparison.OrdinalIgnoreCase))
-            {
-                throw new PlatformHttpException(400, "وضعیت پشتیبانی‌شده نیست.", "seller.offer.status.unsupported");
-            }
-
-            await EnsureOfferTaxCoverageAsync(created.OfferId, cancellationToken);
-
-            if (request.ReturnPolicyChoice is not null || request.CustomReturnWindowDays is not null)
-            {
-                var choice = request.ReturnPolicyChoice ?? OfferReturnPolicyChoices.Default;
-                try
-                {
-                    _returnPolicies.ValidateOfferChoice(choice, request.CustomReturnWindowDays);
-                }
-                catch (SemanticException ex)
-                {
-                    throw new PlatformHttpException(400, OfferSemanticLocalizer.Title(ex.Error), ex.Error.Code);
-                }
-
-                var entity = await _offers.Offers.SingleAsync(x => x.OfferId == created.OfferId, cancellationToken);
-                entity.SetReturnPolicy(choice, request.CustomReturnWindowDays, _clock.UtcNow);
-                await _offers.SaveChangesAsync(cancellationToken);
-            }
-        }
-        catch (SemanticException ex)
-        {
-            throw new PlatformHttpException(400, OfferSemanticLocalizer.Title(ex.Error), ex.Error.Code);
-        }
-
-        return (await GetOfferAsync(sellerPartyId, created.OfferId, cancellationToken))!;
-    }
-
-    /// <summary>
-    /// طبقه/قاعدهٔ مالیاتی استاندارد را برای Offer تازه تضمین می‌کند تا Checkout با TAX_NO_APPLICABLE_RULE نشکند.
-    /// </summary>
-    private async Task EnsureOfferTaxCoverageAsync(Guid offerId, CancellationToken cancellationToken)
-    {
-        var category = await _tax.Categories.AsNoTracking()
-            .FirstOrDefaultAsync(
-                x => x.Code == "standard" || x.Code == "standard-demo",
-                cancellationToken);
-        TaxCategoryReference categoryRef;
-        if (category is null)
-        {
-            categoryRef = await _taxDirectory.CreateCategoryAsync("standard", "استاندارد", cancellationToken);
-        }
-        else
-        {
-            categoryRef = new TaxCategoryReference(category.CategoryId, category.Code, category.DisplayName);
-        }
-
-        var hasActiveRule = await _tax.Rules.AsNoTracking()
-            .AnyAsync(
-                rule => rule.CategoryId == categoryRef.CategoryId
-                    && rule.Jurisdiction == "IR-NAT"
-                    && rule.Market == DefaultMarket
-                    && rule.Status == TaxRuleStatus.Active,
-                cancellationToken);
-        if (!hasActiveRule)
-        {
-            var rule = await _taxDirectory.CreateRuleAsync(
-                "IR-NAT",
-                DefaultMarket,
-                categoryRef.CategoryId,
-                TaxRuleKind.Percentage,
-                0.09m,
-                _clock.UtcNow.AddYears(-1),
-                null,
-                100,
-                TaxOverridePolicy.Disabled,
-                cancellationToken);
-            await _taxDirectory.ActivateRuleAsync(rule.RuleId, cancellationToken);
-        }
-
-        await _taxDirectory.AssignOfferCategoryAsync(offerId, categoryRef.CategoryId, cancellationToken);
-    }
-
-    /// <summary>
     /// مبلغ بدون مالیات Offer خود فروشنده را از طریق IPriceDirectory می‌نویسد؛ Offer خارجی رد می‌شود.
     /// </summary>
     public async Task<SellerOfferDetailPage> SetOfferPriceAsync(
@@ -495,7 +298,7 @@ public sealed class SellerPanelComposer : IOfferSellerPanel
                 .AsNoTracking()
                 .Where(x => x.OfferId == offerId
                             && x.Market == market
-                            && x.Channel == offer.Channel
+                            && x.Channel == (Tooba.Offer.Contracts.Dtos.SalesChannel)(int)offer.Channel
                             && x.Currency == currency)
                 .OrderByDescending(x => x.PriceId)
                 .FirstOrDefaultAsync(cancellationToken);
@@ -505,7 +308,7 @@ public sealed class SellerPanelComposer : IOfferSellerPanel
                 var created = await _priceDirectory.CreatePriceAsync(
                     offerId,
                     market,
-                    offer.Channel,
+                    (Tooba.Offer.Contracts.Dtos.SalesChannel)(int)offer.Channel,
                     request.Amount,
                     currency,
                     _clock.UtcNow.AddYears(-1),

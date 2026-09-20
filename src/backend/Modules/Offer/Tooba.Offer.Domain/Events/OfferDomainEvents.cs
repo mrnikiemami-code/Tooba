@@ -4,12 +4,12 @@ using Tooba.BuildingBlocks;
 namespace Tooba.Offer.Domain.Events;
 
 /// <summary>
-/// رویداد ایجاد Offer.
+/// Raised when an offer is created.
 /// </summary>
 public sealed class OfferCreatedDomainEvent : IDomainEvent
 {
     /// <summary>
-    /// از ریشه می‌سازد.
+    /// Creates the event from an aggregate.
     /// </summary>
     public OfferCreatedDomainEvent(SellerOffer offer)
     {
@@ -21,17 +21,17 @@ public sealed class OfferCreatedDomainEvent : IDomainEvent
     }
 
     /// <summary>
-    /// Offer ایجادشده.
+    /// Created offer identifier.
     /// </summary>
     public Guid OfferId { get; }
 
     /// <summary>
-    /// Variant هدف.
+    /// Target Catalog variant identifier.
     /// </summary>
     public Guid CatalogVariantId { get; }
 
     /// <summary>
-    /// فروشندهٔ Party.
+    /// Seller Party identifier.
     /// </summary>
     public Guid SellerPartyId { get; }
 
@@ -40,12 +40,12 @@ public sealed class OfferCreatedDomainEvent : IDomainEvent
 }
 
 /// <summary>
-/// رویداد فعال‌سازی listing.
+/// Raised when an offer is activated.
 /// </summary>
 public sealed class OfferActivatedDomainEvent : IDomainEvent
 {
     /// <summary>
-    /// از ریشه می‌سازد.
+    /// Creates the event from an aggregate.
     /// </summary>
     public OfferActivatedDomainEvent(SellerOffer offer)
     {
@@ -55,7 +55,7 @@ public sealed class OfferActivatedDomainEvent : IDomainEvent
     }
 
     /// <summary>
-    /// Offer فعال‌شده.
+    /// Activated offer identifier.
     /// </summary>
     public Guid OfferId { get; }
 
@@ -64,12 +64,12 @@ public sealed class OfferActivatedDomainEvent : IDomainEvent
 }
 
 /// <summary>
-/// رویداد تعلیق listing.
+/// Raised when an offer is suspended.
 /// </summary>
 public sealed class OfferSuspendedDomainEvent : IDomainEvent
 {
     /// <summary>
-    /// از ریشه می‌سازد.
+    /// Creates the event from an aggregate.
     /// </summary>
     public OfferSuspendedDomainEvent(SellerOffer offer)
     {
@@ -79,7 +79,7 @@ public sealed class OfferSuspendedDomainEvent : IDomainEvent
     }
 
     /// <summary>
-    /// Offer معلق.
+    /// Suspended offer identifier.
     /// </summary>
     public Guid OfferId { get; }
 
@@ -88,12 +88,12 @@ public sealed class OfferSuspendedDomainEvent : IDomainEvent
 }
 
 /// <summary>
-/// رویداد بایگانی listing.
+/// Raised when an offer is archived.
 /// </summary>
 public sealed class OfferArchivedDomainEvent : IDomainEvent
 {
     /// <summary>
-    /// از ریشه می‌سازد.
+    /// Creates the event from an aggregate.
     /// </summary>
     public OfferArchivedDomainEvent(SellerOffer offer)
     {
@@ -103,7 +103,7 @@ public sealed class OfferArchivedDomainEvent : IDomainEvent
     }
 
     /// <summary>
-    /// Offer بایگانی‌شده.
+    /// Archived offer identifier.
     /// </summary>
     public Guid OfferId { get; }
 

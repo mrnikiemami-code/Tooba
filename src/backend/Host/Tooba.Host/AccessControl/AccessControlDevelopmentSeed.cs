@@ -106,7 +106,7 @@ internal static class AccessControlDevelopmentSeed
         }
 
         var catalog = provider.GetRequiredService<ICatalogDirectory>();
-        var offers = provider.GetRequiredService<IOfferDirectory>();
+        var offers = provider.GetRequiredService<MediatR.ISender>();
         var prices = provider.GetRequiredService<IPriceDirectory>();
         var inventory = provider.GetRequiredService<IInventoryDirectory>();
         var tax = provider.GetRequiredService<ITaxDirectory>();
@@ -343,7 +343,7 @@ internal static class AccessControlDevelopmentSeed
 
     private static async Task<OfferReference> EnsureDemoOfferAsync(
         ICatalogDirectory catalog,
-        IOfferDirectory offers,
+        MediatR.ISender offers,
         IPriceDirectory prices,
         IInventoryDirectory inventory,
         ITaxDirectory tax,
@@ -386,8 +386,8 @@ internal static class AccessControlDevelopmentSeed
                         existingOffer.OfferId,
                         existingOffer.CatalogVariantId,
                         existingOffer.SellerPartyId,
-                        existingOffer.Channel,
-                        existingOffer.Status,
+                        (Tooba.Offer.Contracts.Dtos.SalesChannel)(int)existingOffer.Channel,
+                        (Tooba.Offer.Contracts.Dtos.OfferStatus)(int)existingOffer.Status,
                         existingOffer.SellerSku);
                 }
             }
@@ -440,13 +440,9 @@ internal static class AccessControlDevelopmentSeed
             variantRef = new VariantReference(variant.VariantId, variant.ProductId, variant.CombinationFingerprint, variant.Status);
         }
 
-        var offer = await offers.CreateOfferAsync(
-            variantRef.VariantId,
-            sellerPartyId,
-            SalesChannel.Marketplace,
-            slug.ToUpperInvariant(),
-            cancellationToken);
-        await offers.ActivateAsync(offer.OfferId, cancellationToken);
+        var offer = await offers.Send(new Tooba.Offer.Application.CreateOfferCommand(
+            variantRef.VariantId, sellerPartyId, SalesChannel.Marketplace, slug.ToUpperInvariant()), cancellationToken);
+        await offers.Send(new Tooba.Offer.Application.ActivateOfferCommand(offer.OfferId), cancellationToken);
         var start = DateTimeOffset.Parse("2026-01-01T00:00:00Z");
         var price = await prices.CreatePriceAsync(offer.OfferId, "IR", SalesChannel.Marketplace, amount, "IRR", start, null, cancellationToken);
         await prices.ActivateAsync(price.PriceId, cancellationToken);

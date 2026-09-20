@@ -1,4 +1,4 @@
-using Tooba.Offer.Domain;
+using Tooba.Offer.Contracts.Dtos;
 
 namespace Tooba.Pricing.Contracts;
 

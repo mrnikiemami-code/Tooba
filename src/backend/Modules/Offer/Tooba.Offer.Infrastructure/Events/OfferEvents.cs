@@ -3,12 +3,12 @@ using Tooba.BuildingBlocks;
 namespace Tooba.Offer.Infrastructure.Events;
 
 /// <summary>
-/// قرارداد Integration ایجاد listing. قیمت اینجا نیست.
+/// Integration event emitted when a listing is created.
 /// </summary>
 public sealed class OfferCreatedIntegrationEvent : IIntegrationEvent
 {
     /// <summary>
-    /// نام پایدار type map.
+    /// Stable event type name.
     /// </summary>
     public const string EventTypeName = "offer.created.v1";
 
@@ -17,28 +17,28 @@ public sealed class OfferCreatedIntegrationEvent : IIntegrationEvent
     public EventMetadata Metadata { get; set; } = EventMetadataFactory.ForDomain(EventTypeName);
 
     /// <summary>
-    /// Offer ایجادشده.
+    /// Created offer identifier.
     /// </summary>
     public Guid OfferId { get; set; }
 
     /// <summary>
-    /// Variant Catalog هدف.
+    /// Target Catalog variant identifier.
     /// </summary>
     public Guid CatalogVariantId { get; set; }
 
     /// <summary>
-    /// Party فروشنده.
+    /// Seller Party identifier.
     /// </summary>
     public Guid SellerPartyId { get; set; }
 }
 
 /// <summary>
-/// قرارداد فعال‌سازی listing. اعتبار Price/Stock را اعلام نمی‌کند.
+/// Integration event emitted when a listing is activated.
 /// </summary>
 public sealed class OfferActivatedIntegrationEvent : IIntegrationEvent
 {
     /// <summary>
-    /// نام پایدار type map.
+    /// Stable event type name.
     /// </summary>
     public const string EventTypeName = "offer.activated.v1";
 
@@ -47,18 +47,18 @@ public sealed class OfferActivatedIntegrationEvent : IIntegrationEvent
     public EventMetadata Metadata { get; set; } = EventMetadataFactory.ForDomain(EventTypeName);
 
     /// <summary>
-    /// Offer فعال‌شده.
+    /// Activated offer identifier.
     /// </summary>
     public Guid OfferId { get; set; }
 }
 
 /// <summary>
-/// قرارداد تعلیق listing.
+/// Integration event emitted when a listing is suspended.
 /// </summary>
 public sealed class OfferSuspendedIntegrationEvent : IIntegrationEvent
 {
     /// <summary>
-    /// نام پایدار type map.
+    /// Stable event type name.
     /// </summary>
     public const string EventTypeName = "offer.suspended.v1";
 
@@ -67,18 +67,18 @@ public sealed class OfferSuspendedIntegrationEvent : IIntegrationEvent
     public EventMetadata Metadata { get; set; } = EventMetadataFactory.ForDomain(EventTypeName);
 
     /// <summary>
-    /// Offer معلق.
+    /// Suspended offer identifier.
     /// </summary>
     public Guid OfferId { get; set; }
 }
 
 /// <summary>
-/// قرارداد بایگانی listing.
+/// Integration event emitted when a listing is archived.
 /// </summary>
 public sealed class OfferArchivedIntegrationEvent : IIntegrationEvent
 {
     /// <summary>
-    /// نام پایدار type map.
+    /// Stable event type name.
     /// </summary>
     public const string EventTypeName = "offer.archived.v1";
 
@@ -87,7 +87,7 @@ public sealed class OfferArchivedIntegrationEvent : IIntegrationEvent
     public EventMetadata Metadata { get; set; } = EventMetadataFactory.ForDomain(EventTypeName);
 
     /// <summary>
-    /// Offer بایگانی‌شده.
+    /// Archived offer identifier.
     /// </summary>
     public Guid OfferId { get; set; }
 }

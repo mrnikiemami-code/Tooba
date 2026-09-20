@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Tooba.Party.Application;
+using Tooba.Party.Contracts;
 using Tooba.Party.Domain;
 using Tooba.Party.Infrastructure.Persistence;
 
@@ -8,7 +9,7 @@ namespace Tooba.Party.Infrastructure;
 /// <summary>
 /// پیاده‌سازی نوشتن/خواندن Party روی schema همین ماژول. SpiceDB را در SaveChanges صدا نمی‌زند.
 /// </summary>
-public sealed class PartyDirectory : IPartyDirectory, IPartyLookupGateway
+public sealed class PartyDirectory : IPartyDirectory, IPartyLookupGateway, IPartyLookup
 {
     private readonly PartyDbContext _db;
 
@@ -22,6 +23,13 @@ public sealed class PartyDirectory : IPartyDirectory, IPartyLookupGateway
     {
         var party = await _db.Parties.AsNoTracking().SingleOrDefaultAsync(x => x.PartyId == partyId, cancellationToken);
         return party is null ? null : new PartyReference(party.PartyId, party.Kind, party.DisplayName);
+    }
+
+    async Task<PartyLookupResult?> IPartyLookup.FindByIdAsync(Guid partyId, CancellationToken cancellationToken)
+    {
+        var party = await _db.Parties.AsNoTracking()
+            .SingleOrDefaultAsync(x => x.PartyId == partyId, cancellationToken);
+        return party is null ? null : new PartyLookupResult(party.PartyId, party.Kind.ToString());
     }
 
     /// <inheritdoc />

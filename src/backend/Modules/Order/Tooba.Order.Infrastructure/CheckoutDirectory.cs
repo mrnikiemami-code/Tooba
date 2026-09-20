@@ -8,7 +8,7 @@ using Tooba.Catalog.Application;
 using Tooba.Inventory.Contracts;
 using Tooba.Offer.Contracts.Dtos;
 using Tooba.Offer.Contracts.Ports;
-using Tooba.Offer.Domain;
+using Tooba.Offer.Contracts.Dtos;
 using Tooba.Order.Application;
 using Tooba.Order.Domain;
 using Tooba.Order.Infrastructure.Persistence;

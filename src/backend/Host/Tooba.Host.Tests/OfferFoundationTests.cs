@@ -113,12 +113,12 @@ public sealed class OfferFoundationTests : IAsyncLifetime
             Assert.DoesNotContain("Tooba.Identity", csproj, StringComparison.Ordinal);
         }
 
-        Assert.Contains("Tooba.Catalog.Application", File.ReadAllText(Path.Combine(root, "src", "backend", "Modules", "Offer", "Tooba.Offer.Infrastructure", "Tooba.Offer.Infrastructure.csproj")));
-        Assert.Contains("Tooba.Party.Application", File.ReadAllText(Path.Combine(root, "src", "backend", "Modules", "Offer", "Tooba.Offer.Infrastructure", "Tooba.Offer.Infrastructure.csproj")));
+        Assert.DoesNotContain("Tooba.Catalog.Application", File.ReadAllText(Path.Combine(root, "src", "backend", "Modules", "Offer", "Tooba.Offer.Infrastructure", "Tooba.Offer.Infrastructure.csproj")));
+        Assert.DoesNotContain("Tooba.Party.Application", File.ReadAllText(Path.Combine(root, "src", "backend", "Modules", "Offer", "Tooba.Offer.Infrastructure", "Tooba.Offer.Infrastructure.csproj")));
         Assert.Equal("offer", OfferDbContext.Schema);
         Assert.DoesNotContain("MassTransit", typeof(SellerOffer).Assembly.GetReferencedAssemblies().Select(a => a.Name));
         Assert.DoesNotContain("Authzed.Net", typeof(SellerOffer).Assembly.GetReferencedAssemblies().Select(a => a.Name));
-        Assert.DoesNotContain("MassTransit", typeof(IOfferDirectory).Assembly.GetReferencedAssemblies().Select(a => a.Name));
+        Assert.DoesNotContain("MassTransit", typeof(IOfferStore).Assembly.GetReferencedAssemblies().Select(a => a.Name));
     }
 
     [SkippableFact]

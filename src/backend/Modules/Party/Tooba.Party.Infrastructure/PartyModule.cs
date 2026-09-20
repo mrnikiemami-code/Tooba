@@ -5,6 +5,7 @@ using Microsoft.Extensions.Hosting;
 using Tooba.BuildingBlocks;
 using Tooba.ModuleContracts;
 using Tooba.Party.Application;
+using Tooba.Party.Contracts;
 using Tooba.Party.Infrastructure.Events;
 using Tooba.Party.Infrastructure.Persistence;
 using Tooba.Persistence;
@@ -29,6 +30,7 @@ public sealed class PartyModule : IToobaModule
         services.AddSingleton<IOutboxModuleRegistration, PartyOutboxRegistration>();
         services.AddScoped<IPartyDirectory, PartyDirectory>();
         services.AddScoped<IPartyLookupGateway>(sp => (PartyDirectory)sp.GetRequiredService<IPartyDirectory>());
+        services.AddScoped<IPartyLookup>(sp => (PartyDirectory)sp.GetRequiredService<IPartyDirectory>());
         services.AddScoped<IIntegrationEventHandler<PartyMembershipEstablishedIntegrationEvent>, PartyMembershipProjectionHandler>();
         services.AddDbContext<PartyDbContext>((sp, options) =>
         {

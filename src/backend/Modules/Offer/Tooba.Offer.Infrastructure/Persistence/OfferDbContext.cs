@@ -8,17 +8,17 @@ using Tooba.Persistence;
 namespace Tooba.Offer.Infrastructure.Persistence;
 
 /// <summary>
-/// DbContext مالک schema <c>offer</c>. قیمت و موجودی اینجا نیستند.
+/// Owns the <c>offer</c> schema; price and inventory are separate.
 /// </summary>
 public sealed class OfferDbContext : DbContext
 {
     /// <summary>
-    /// schema اختصاصی Offer.
+    /// Offer schema name.
     /// </summary>
     public const string Schema = "offer";
 
     /// <summary>
-    /// DbContext را با گزینه‌های Host می‌سازد.
+    /// Creates the context from Host-provided options.
     /// </summary>
     public OfferDbContext(DbContextOptions<OfferDbContext> options)
         : base(options)
@@ -26,12 +26,12 @@ public sealed class OfferDbContext : DbContext
     }
 
     /// <summary>
-    /// listingهای فروشنده.
+    /// Seller listings.
     /// </summary>
     public DbSet<SellerOffer> Offers => Set<SellerOffer>();
 
     /// <summary>
-    /// Outbox همین ماژول.
+    /// Offer outbox messages.
     /// </summary>
     public DbSet<OutboxMessage> OutboxMessages => Set<OutboxMessage>();
 
@@ -45,7 +45,7 @@ public sealed class OfferDbContext : DbContext
 }
 
 /// <summary>
-/// کارخانهٔ design-time مهاجرت Offer.
+/// Design-time Offer migration context factory.
 /// </summary>
 public sealed class OfferDbContextFactory : IDesignTimeDbContextFactory<OfferDbContext>
 {

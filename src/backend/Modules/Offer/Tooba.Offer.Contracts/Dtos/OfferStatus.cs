@@ -1,20 +1,19 @@
-﻿namespace Tooba.Offer.Domain;
+﻿namespace Tooba.Offer.Contracts.Dtos;
 
 /// <summary>
-/// وضعیت تجاری Offer. موجودی، اعتبار قیمت، و انتشار Catalog را نشان نمی‌دهد.
-/// Owned public contract type (Tooba.Offer.Contracts assembly).
+/// Public commercial offer status.
 /// </summary>
 public enum OfferStatus
 {
-    /// <summary>پیش‌نویس listing.</summary>
+    /// <summary>Draft listing.</summary>
     Draft = 0,
 
-    /// <summary>Offer برای کانال فعال است.</summary>
+    /// <summary>Active listing.</summary>
     Active = 1,
 
-    /// <summary>تعلیق تجاری فروشنده/کانال.</summary>
+    /// <summary>Suspended listing.</summary>
     Suspended = 2,
 
-    /// <summary>بایگانی listing.</summary>
+    /// <summary>Archived listing.</summary>
     Archived = 3,
 }

@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Tooba.BuildingBlocks;
 using Tooba.Catalog.Application;
+using Tooba.Catalog.Contracts;
 using Tooba.Catalog.Domain;
 using Tooba.Catalog.Infrastructure.Persistence;
 
@@ -18,7 +19,7 @@ public sealed class OpenCatalogUseCaseGuard : ICatalogUseCaseGuard
 /// <summary>
 /// پیاده‌سازی نوشتن/خواندن Catalog روی schema همین ماژول. Host و Search را parse/ایندکس نمی‌کند.
 /// </summary>
-public sealed class CatalogDirectory : ICatalogDirectory, ICatalogLookupGateway
+public sealed class CatalogDirectory : ICatalogDirectory, ICatalogLookupGateway, ICatalogVariantLookup
 {
     private readonly CatalogDbContext _db;
     private readonly ICatalogUseCaseGuard _guard;
@@ -48,6 +49,15 @@ public sealed class CatalogDirectory : ICatalogDirectory, ICatalogLookupGateway
         return variant is null
             ? null
             : new VariantReference(variant.VariantId, variant.ProductId, variant.CombinationFingerprint, variant.Status);
+    }
+
+    async Task<CatalogVariantLookupResult?> ICatalogVariantLookup.FindVariantAsync(
+        Guid variantId,
+        CancellationToken cancellationToken)
+    {
+        var variant = await _db.Variants.AsNoTracking()
+            .SingleOrDefaultAsync(x => x.VariantId == variantId, cancellationToken);
+        return variant is null ? null : new CatalogVariantLookupResult(variant.VariantId, variant.ProductId);
     }
 
     /// <inheritdoc />

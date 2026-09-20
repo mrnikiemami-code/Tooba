@@ -1,9 +1,7 @@
-using Tooba.Offer.Domain;
-
 namespace Tooba.Offer.Contracts.Dtos;
 
 /// <summary>
-/// مرجع پایدار Offer بدون نشت EF. مبلغ و موجودی ندارد.
+/// Stable public offer reference without persistence details.
 /// </summary>
 public sealed record OfferReference(
     Guid OfferId,

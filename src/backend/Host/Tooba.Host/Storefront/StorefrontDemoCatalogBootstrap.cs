@@ -112,7 +112,7 @@ internal static class StorefrontDemoCatalogBootstrap
             provider.GetRequiredService<CatalogDbContext>(),
             provider.GetRequiredService<ICatalogDirectory>(),
             provider.GetRequiredService<IPartyDirectory>(),
-            provider.GetRequiredService<IOfferDirectory>(),
+            provider.GetRequiredService<MediatR.ISender>(),
             provider.GetRequiredService<IPriceDirectory>(),
             provider.GetRequiredService<IInventoryDirectory>(),
             provider.GetRequiredService<ITaxDirectory>(),
@@ -147,7 +147,7 @@ internal static class StorefrontDemoCatalogBootstrap
         CatalogDbContext catalogRead,
         ICatalogDirectory catalog,
         IPartyDirectory parties,
-        IOfferDirectory offers,
+        MediatR.ISender offers,
         IPriceDirectory prices,
         IInventoryDirectory inventory,
         ITaxDirectory tax,
@@ -423,7 +423,7 @@ internal static class StorefrontDemoCatalogBootstrap
     /// هر بخش در ماژول مالک خودش نوشته می‌شود و کلید مشترکشان فقط OfferId است.
     /// </summary>
     private static async Task PublishOfferAsync(
-        IOfferDirectory offers,
+        MediatR.ISender offers,
         IPriceDirectory prices,
         IInventoryDirectory inventory,
         ITaxDirectory tax,
@@ -436,13 +436,9 @@ internal static class StorefrontDemoCatalogBootstrap
         int quantity,
         CancellationToken cancellationToken)
     {
-        var offer = await offers.CreateOfferAsync(
-            variantId,
-            sellerPartyId,
-            SalesChannel.Marketplace,
-            $"DEMO-{skuSuffix}",
-            cancellationToken);
-        await offers.ActivateAsync(offer.OfferId, cancellationToken);
+        var offer = await offers.Send(new Tooba.Offer.Application.CreateOfferCommand(
+            variantId, sellerPartyId, SalesChannel.Marketplace, $"DEMO-{skuSuffix}"), cancellationToken);
+        await offers.Send(new Tooba.Offer.Application.ActivateOfferCommand(offer.OfferId), cancellationToken);
 
         var price = await prices.CreatePriceAsync(
             offer.OfferId,

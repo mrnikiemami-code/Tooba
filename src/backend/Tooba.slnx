@@ -16,9 +16,11 @@
     <Project Path="Modules/Identity/Tooba.Identity.Application/Tooba.Identity.Application.csproj" />
     <Project Path="Modules/Identity/Tooba.Identity.Infrastructure/Tooba.Identity.Infrastructure.csproj" />
     <Project Path="Modules/Party/Tooba.Party.Domain/Tooba.Party.Domain.csproj" />
+    <Project Path="Modules/Party/Tooba.Party.Contracts/Tooba.Party.Contracts.csproj" />
     <Project Path="Modules/Party/Tooba.Party.Application/Tooba.Party.Application.csproj" />
     <Project Path="Modules/Party/Tooba.Party.Infrastructure/Tooba.Party.Infrastructure.csproj" />
     <Project Path="Modules/Catalog/Tooba.Catalog.Domain/Tooba.Catalog.Domain.csproj" />
+    <Project Path="Modules/Catalog/Tooba.Catalog.Contracts/Tooba.Catalog.Contracts.csproj" />
     <Project Path="Modules/Catalog/Tooba.Catalog.Application/Tooba.Catalog.Application.csproj" />
     <Project Path="Modules/Catalog/Tooba.Catalog.Infrastructure/Tooba.Catalog.Infrastructure.csproj" />
     <Project Path="Modules/Pricing/Tooba.Pricing.Domain/Tooba.Pricing.Domain.csproj" />

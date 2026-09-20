@@ -100,6 +100,78 @@ public sealed class OfferArchitectureGuardTests
         Assert.DoesNotContain("MapPatch(\"/offers/", text, StringComparison.Ordinal);
     }
 
+    [Fact]
+    public void Offer_reference_boundaries_remain_clean()
+    {
+        var contracts = Sources("Tooba.Offer.Contracts");
+        Assert.DoesNotContain(contracts, x => x.Text.Contains("namespace Tooba.Offer.Domain", StringComparison.Ordinal));
+        Assert.DoesNotContain(ProjectRefs("Tooba.Offer.Domain"), x => x.Contains("Tooba.Offer.Contracts", StringComparison.Ordinal));
+        Assert.DoesNotContain(AllOfferSources(), x => x.Text.Contains("TypeForwardedTo", StringComparison.Ordinal));
+
+        var application = Sources("Tooba.Offer.Application");
+        Assert.Contains(application, x => x.Text.Contains("IRequestHandler<", StringComparison.Ordinal));
+        Assert.Contains(application, x => x.Text.Contains("CreateOfferCommand", StringComparison.Ordinal));
+
+        var infrastructureRefs = ProjectRefs("Tooba.Offer.Infrastructure");
+        Assert.DoesNotContain(infrastructureRefs, x => x.Contains("Catalog.Application", StringComparison.Ordinal));
+        Assert.DoesNotContain(infrastructureRefs, x => x.Contains("Party.Application", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public void Offer_endpoint_and_host_writes_remain_in_cqrs()
+    {
+        var endpoint = File.ReadAllText(Path.Combine(
+            OfferRoot(), "Tooba.Offer.Endpoints", "Seller", "OfferSellerEndpoints.cs"));
+        Assert.Contains("ISender sender", endpoint, StringComparison.Ordinal);
+        Assert.DoesNotContain("panel.CreateOfferAsync", endpoint, StringComparison.Ordinal);
+        Assert.DoesNotContain("panel.PatchOfferAsync", endpoint, StringComparison.Ordinal);
+
+        var composer = File.ReadAllText(Path.Combine(
+            RepoRoot(), "src", "backend", "Host", "Tooba.Host", "Seller", "SellerPanelComposer.cs"));
+        Assert.DoesNotContain("CreateOfferAsync(", composer, StringComparison.Ordinal);
+        Assert.DoesNotContain("PatchOfferAsync(", composer, StringComparison.Ordinal);
+        Assert.DoesNotContain(".Activate(", composer, StringComparison.Ordinal);
+        Assert.DoesNotContain(".SetReturnPolicy(", composer, StringComparison.Ordinal);
+        Assert.DoesNotContain(".SetOrderQuantityLimits(", composer, StringComparison.Ordinal);
+        Assert.DoesNotContain("_offers.SaveChanges", composer, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void Offer_application_and_endpoints_do_not_use_dbcontext()
+    {
+        var violations = Sources("Tooba.Offer.Application")
+            .Concat(Sources("Tooba.Offer.Endpoints"))
+            .Where(x => x.Text.Contains("OfferDbContext", StringComparison.Ordinal))
+            .Select(x => x.Path)
+            .ToList();
+        Assert.Empty(violations);
+    }
+
+    [Fact]
+    public void Offer_domain_and_application_have_no_persian_prose()
+    {
+        var violations = Sources("Tooba.Offer.Domain")
+            .Concat(Sources("Tooba.Offer.Application"))
+            .Concat(Sources("Tooba.Offer.Infrastructure"))
+            .Where(x => x.Text.Any(ch => ch is >= '\u0600' and <= '\u06ff'))
+            .Select(x => x.Path)
+            .ToList();
+        Assert.Empty(violations);
+    }
+
+    private static IReadOnlyList<(string Path, string Text)> Sources(string project) =>
+        Directory.EnumerateFiles(Path.Combine(OfferRoot(), project), "*.cs", SearchOption.AllDirectories)
+            .Where(x => !x.Contains($"{Path.DirectorySeparatorChar}obj{Path.DirectorySeparatorChar}", StringComparison.Ordinal))
+            .Select(x => (Path.GetRelativePath(RepoRoot(), x), File.ReadAllText(x)))
+            .ToList();
+
+    private static IReadOnlyList<(string Path, string Text)> AllOfferSources() =>
+        Directory.EnumerateFiles(OfferRoot(), "*.cs", SearchOption.AllDirectories)
+            .Where(x => !x.Contains($"{Path.DirectorySeparatorChar}obj{Path.DirectorySeparatorChar}", StringComparison.Ordinal))
+            .Where(x => !x.Contains($"{Path.DirectorySeparatorChar}Tooba.Offer.Tests{Path.DirectorySeparatorChar}", StringComparison.Ordinal))
+            .Select(x => (Path.GetRelativePath(RepoRoot(), x), File.ReadAllText(x)))
+            .ToList();
+
     private static IReadOnlyList<string> ProjectRefs(string projectFolder)
     {
         var csproj = Path.Combine(OfferRoot(), projectFolder, projectFolder + ".csproj");
