@@ -21,7 +21,7 @@ public sealed class AtomicCheckoutCommitTests
         Assert.Contains("OnAfterOrderWriteAsync", checkout, StringComparison.Ordinal);
         Assert.Contains("OnAfterCartConvertedWriteAsync", checkout, StringComparison.Ordinal);
         Assert.Contains("scope.Complete()", checkout, StringComparison.Ordinal);
-        Assert.Contains("ConvertCartAsync", checkout, StringComparison.Ordinal);
+        Assert.Contains("ConvertForCheckoutAsync", checkout, StringComparison.Ordinal);
         Assert.DoesNotContain("ReconcileCartConversionAsync(group, command", checkout, StringComparison.Ordinal);
         Assert.Contains("ReserveForCheckoutAsync", checkout, StringComparison.Ordinal);
         Assert.Contains("ReserveCartLinesForOrderAsync", directory, StringComparison.Ordinal);

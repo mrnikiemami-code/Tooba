@@ -1,8 +1,7 @@
-using System.Linq.Expressions;
+﻿using System.Linq.Expressions;
 using Microsoft.EntityFrameworkCore;
 using Tooba.BuildingBlocks;
-using Tooba.Cart.Application;
-using Tooba.Cart.Domain;
+using Tooba.Cart.Contracts;
 using Tooba.Inventory.Contracts;
 using Tooba.Order.Application;
 using Tooba.Order.Domain;
@@ -194,14 +193,6 @@ public sealed partial class CheckoutDirectory : ICheckoutSubmitHost
     Task ICheckoutSubmitHost.SaveProcessMilestonesAsync(CancellationToken cancellationToken)
         => _db.SaveChangesAsync(cancellationToken);
 
-    /// <inheritdoc />
-    Task ICheckoutSubmitHost.ConvertCartAsync(
-        Guid cartId,
-        CartAccess access,
-        int expectedVersion,
-        CartConversionIntent intent,
-        CancellationToken cancellationToken)
-        => _cartMutations.ConvertAsync(cartId, access, expectedVersion, intent, cancellationToken);
 
     /// <inheritdoc />
     Task ICheckoutSubmitHost.OnAfterCartConvertedWriteAsync(CancellationToken cancellationToken)

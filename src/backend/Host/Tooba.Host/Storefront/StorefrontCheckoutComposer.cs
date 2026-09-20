@@ -1,5 +1,6 @@
 using Tooba.AddressBook.Application;
 using Tooba.Cart.Application;
+using Tooba.Cart.Contracts;
 using Tooba.Order.Application;
 using Tooba.Order.Domain;
 

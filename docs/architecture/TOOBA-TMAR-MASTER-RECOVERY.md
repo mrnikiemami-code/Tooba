@@ -168,7 +168,10 @@ User choice:
 Continue TMAR for now until user explicitly says to return to product feature work.
 
 Next TMAR task:
-TB-TMAR-CHECKOUT-IMPL-W3
+TB-TMAR-CHECKOUT-IMPL-W4
+
+Checkout Implementation W3:
+TB-TMAR-CHECKOUT-IMPL-W3 — Cart.Contracts conversion seam (ICartConversionPort); Order.Application↛Cart.Application; TX preserved; W4 READY; Orders FE STILL_WAITING_FOR_BACKEND_W4. Evidence: docs/evidence/TB-TMAR-CHECKOUT-IMPL-W3/.
 
 Checkout Implementation W2:
 TB-TMAR-CHECKOUT-IMPL-W2 — in-process Process Manager + Inventory.Contracts reservation seam; TX preserved; Order.Application↛Inventory.Application; W3 READY; Orders FE STILL_WAITING_FOR_BACKEND_W3. Evidence: `docs/evidence/TB-TMAR-CHECKOUT-IMPL-W2/`.

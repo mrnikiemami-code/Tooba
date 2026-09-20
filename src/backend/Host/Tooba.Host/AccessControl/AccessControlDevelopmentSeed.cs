@@ -3,6 +3,7 @@ using Tooba.AccessControl.Application;
 using Tooba.AccessControl.Domain;
 using Tooba.BuildingBlocks;
 using Tooba.Cart.Application;
+using Tooba.Cart.Contracts;
 using Tooba.Catalog.Application;
 using Tooba.Catalog.Domain;
 using Tooba.Catalog.Infrastructure.Persistence;

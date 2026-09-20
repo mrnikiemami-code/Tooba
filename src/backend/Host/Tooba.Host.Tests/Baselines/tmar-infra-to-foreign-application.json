@@ -14,6 +14,7 @@
     "Tooba.Notification.Infrastructure -> Tooba.Returns.Application",
     "Tooba.Offer.Infrastructure -> Tooba.Catalog.Application",
     "Tooba.Offer.Infrastructure -> Tooba.Party.Application",
+    "Tooba.Order.Infrastructure -> Tooba.Cart.Application",
     "Tooba.Order.Infrastructure -> Tooba.Catalog.Application",
     "Tooba.Order.Infrastructure -> Tooba.Inventory.Application",
     "Tooba.Order.Infrastructure -> Tooba.Payment.Application",

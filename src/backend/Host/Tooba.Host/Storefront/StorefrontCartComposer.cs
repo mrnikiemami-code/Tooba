@@ -1,6 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Tooba.Cart.Application;
-using Tooba.Cart.Domain;
+using Tooba.Cart.Contracts;
 using Tooba.Catalog.Application;
 using Tooba.Catalog.Domain;
 using Tooba.Catalog.Infrastructure.Persistence;

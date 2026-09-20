@@ -104,6 +104,7 @@ public sealed class CheckoutProcessFoundationTests
         Assert.Contains("new TransactionScope(", manager, StringComparison.Ordinal);
         Assert.Contains("ICheckoutProcessTracker", directory, StringComparison.Ordinal);
         Assert.Contains("ICheckoutInventoryReservationPort", manager, StringComparison.Ordinal);
+        Assert.Contains("ICartConversionPort", manager, StringComparison.Ordinal);
         Assert.Contains("CheckoutProcessManager", directory, StringComparison.Ordinal);
     }
 

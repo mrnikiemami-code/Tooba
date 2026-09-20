@@ -1,4 +1,5 @@
 using Tooba.Cart.Application;
+using Tooba.Cart.Contracts;
 using Tooba.Order.Application;
 using Tooba.Payment.Infrastructure;
 using Xunit;
@@ -58,7 +59,7 @@ public sealed class CartLifetimeSeparationTests
         Assert.Equal(0, (int)CartLineAvailabilityKind.Available);
         Assert.Equal(1, (int)CartLineAvailabilityKind.LimitedQuantity);
         Assert.Equal(2, (int)CartLineAvailabilityKind.Unavailable);
-        var contracts = Read("src/backend/Modules/Cart/Tooba.Cart.Application/CartContracts.cs");
+        var contracts = Read("src/backend/Modules/Cart/Tooba.Cart.Contracts/CartContracts.cs");
         Assert.Contains("CartLineAvailabilityKind", contracts, StringComparison.Ordinal);
         Assert.DoesNotContain("OrderSupplyStatusKind", contracts, StringComparison.Ordinal);
     }

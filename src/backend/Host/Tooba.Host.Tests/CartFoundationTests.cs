@@ -4,6 +4,10 @@ using Microsoft.EntityFrameworkCore;
 using Testcontainers.PostgreSql;
 using Tooba.BuildingBlocks;
 using Tooba.Cart.Application;
+using CartAccess = Tooba.Cart.Contracts.CartAccess;
+using CartSnapshot = Tooba.Cart.Contracts.CartSnapshot;
+using ContractCartStatus = Tooba.Cart.Contracts.CartStatus;
+using ContractCartConversionIntent = Tooba.Cart.Contracts.CartConversionIntent;
 using Tooba.Cart.Domain;
 using Tooba.Cart.Infrastructure;
 using Tooba.Cart.Infrastructure.Events;
@@ -260,18 +264,18 @@ public sealed class CartFoundationTests : IAsyncLifetime
         Assert.Equal(1, race.Count(ok => ok));
 
         var converted = first.IsCompletedSuccessfully ? first.Result : second.Result;
-        var marked = await cartDirA.ConvertAsync(converted.CartId, authAccess, converted.Version, CartConversionIntent.OnlinePurchase, CancellationToken.None);
-        Assert.Equal(CartStatus.Converted, marked.Status);
-        Assert.Equal(CartConversionIntent.OnlinePurchase, marked.ConversionIntent);
+        var marked = await cartDirA.ConvertAsync(converted.CartId, authAccess, converted.Version, ContractCartConversionIntent.OnlinePurchase, CancellationToken.None);
+        Assert.Equal(ContractCartStatus.Converted, marked.Status);
+        Assert.Equal(ContractCartConversionIntent.OnlinePurchase, marked.ConversionIntent);
 
         var requestCart = await cartDirA.CreateAuthenticatedAsync(userId, "IR", "IRR", SalesChannel.Marketplace, CancellationToken.None);
         var requestMarked = await cartDirA.ConvertAsync(
             requestCart.CartId,
             authAccess,
             requestCart.Version,
-            CartConversionIntent.RequestToReserve,
+            ContractCartConversionIntent.RequestToReserve,
             CancellationToken.None);
-        Assert.Equal(CartConversionIntent.RequestToReserve, requestMarked.ConversionIntent);
+        Assert.Equal(ContractCartConversionIntent.RequestToReserve, requestMarked.ConversionIntent);
 
         var shortHold = await cartDirA.CreateGuestAsync("IR", "IRR", SalesChannel.Marketplace, CancellationToken.None);
         var shortAccess = new CartAccess(null, shortHold.GuestSecret);
@@ -280,7 +284,7 @@ public sealed class CartFoundationTests : IAsyncLifetime
         persisted.GetType().GetProperty("ExpiresAt")!.SetValue(persisted, DateTimeOffset.UtcNow.AddMinutes(-1));
         await cartA.SaveChangesAsync();
         await cartDirA.ExpireDueCartsAsync(DateTimeOffset.UtcNow, 20, CancellationToken.None);
-        Assert.Equal(CartStatus.Expired, (await cartDirA.GetCartAsync(withLine.CartId, shortAccess, CancellationToken.None))!.Status);
+        Assert.Equal(ContractCartStatus.Expired, (await cartDirA.GetCartAsync(withLine.CartId, shortAccess, CancellationToken.None))!.Status);
         Assert.Equal(5, (await inventoryDirA.GetAvailabilityAsync(offer2.OfferId, CancellationToken.None))!.Available);
         Assert.Null(withLine.Lines.Single().ReservationId);
 

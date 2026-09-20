@@ -1,75 +1,12 @@
-using Tooba.Cart.Domain;
+﻿using Tooba.Cart.Contracts;
 using Tooba.Offer.Domain;
 
 namespace Tooba.Cart.Application;
 
 /// <summary>
-/// دسترسی به سبد. CartId به‌تنهایی Bearer نیست.
-/// </summary>
-public sealed record CartAccess(Guid? UserId, string? GuestSecret);
-
-/// <summary>
-/// دسترس‌پذیری کسب‌وکاری خط سبد. مفاهیم تأمین سفارش (Reserved/AvailableForReacquire) نیست.
-/// </summary>
-public enum CartLineAvailabilityKind
-{
-    /// <summary>موجودی خط را پوشش می‌دهد.</summary>
-    Available = 0,
-    /// <summary>موجودی مثبت است ولی کمتر از تعداد سبد.</summary>
-    LimitedQuantity = 1,
-    /// <summary>موجودی قابل‌فروش صفر است.</summary>
-    Unavailable = 2,
-}
-
-/// <summary>
-/// خط سبد برای خواندن و درز Checkout آینده. موجودیت EF نیست.
-/// </summary>
-public sealed record CartLineSnapshot(
-    Guid LineId,
-    Guid OfferId,
-    Guid CatalogVariantId,
-    Guid SellerPartyId,
-    decimal Quantity,
-    Guid? ReservationId,
-    decimal? QuotedAmount,
-    string? QuotedCurrency,
-    bool QuotedTaxExclusive,
-    Guid? PriceId,
-    DateTimeOffset QuotedAt,
-    CartLineAvailabilityKind Availability = CartLineAvailabilityKind.Available,
-    Guid? MerchandisingCampaignId = null);
-
-/// <summary>
-/// نمای سبد بدون نشت EF. حقیقت تسویه یا سفارش نیست.
-/// </summary>
-public sealed record CartSnapshot(
-    Guid CartId,
-    CartStatus Status,
-    CartAccessKind AccessKind,
-    Guid? OwnerUserId,
-    string Market,
-    string Currency,
-    SalesChannel Channel,
-    DateTimeOffset? ExpiresAt,
-    CartConversionIntent ConversionIntent,
-    int Version,
-    IReadOnlyList<CartLineSnapshot> Lines);
-
-/// <summary>
 /// نتیجهٔ ساخت سبد مهمان؛ راز خام فقط یک‌بار برمی‌گردد.
 /// </summary>
 public sealed record GuestCartCreated(CartSnapshot Cart, string GuestSecret);
-
-/// <summary>
-/// درز خواندن سبد برای Checkout آینده بدون نشت EF.
-/// </summary>
-public interface ICartQueryGateway
-{
-    /// <summary>
-    /// سبد را پس از احراز دسترسی برمی‌گرداند. CartId تنها کافی نیست.
-    /// </summary>
-    Task<CartSnapshot?> GetCartAsync(Guid cartId, CartAccess access, CancellationToken cancellationToken);
-}
 
 /// <summary>
 /// درز نگهبان مجوز Cart. ماتریس نهایی هویت اینجا نیست.
@@ -108,7 +45,6 @@ public interface ICartDirectory
 
     /// <summary>
     /// خط Offer اضافه یا ادغام می‌کند پس از اعتبارسنجی موجودی؛ رزرو سخت نمی‌سازد.
-    /// merchandisingCampaignId فقط زمینهٔ واجدشرایطی است؛ مبلغ از Pricing canonical حل می‌شود.
     /// </summary>
     Task<CartSnapshot> AddOrIncreaseLineAsync(
         Guid cartId,
@@ -148,7 +84,6 @@ public interface ICartDirectory
     /// <summary>
     /// سبدهای سررسیدشده را به‌صورت batch با SKIP LOCKED منقضی و رزرو منقضی Inventory را آزاد می‌کند.
     /// </summary>
-    /// <returns>تعداد سبدهای منقضی‌شده.</returns>
     Task<int> ExpireDueCartsAsync(DateTimeOffset utcNow, int batchSize, CancellationToken cancellationToken);
 
     /// <summary>
@@ -162,7 +97,7 @@ public interface ICartDirectory
         CancellationToken cancellationToken);
 
     /// <summary>
-    /// سبد مهمان اثبات‌شده را پس از ورود با سبد احرازشده ادغام می‌کند. رزرو/سفارش/پرداخت ساخته نمی‌شود.
+    /// سبد مهمان اثبات‌شده را پس از ورود با سبد احرازشده ادغام می‌کند.
     /// </summary>
     Task<CartMergeResult> MergeAnonymousAfterLoginAsync(
         Guid userId,

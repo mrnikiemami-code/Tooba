@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Testcontainers.PostgreSql;
 using Tooba.BuildingBlocks;
 using Tooba.Cart.Application;
+using Tooba.Cart.Contracts;
 using Tooba.Cart.Infrastructure;
 using Tooba.Cart.Infrastructure.Persistence;
 using Tooba.Catalog.Application;

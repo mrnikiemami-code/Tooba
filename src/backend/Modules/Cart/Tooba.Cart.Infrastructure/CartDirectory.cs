@@ -3,6 +3,7 @@ using Microsoft.Extensions.Options;
 using Tooba.BuildingBlocks;
 using Tooba.Cart.Application;
 using Tooba.Cart.Domain;
+using CartContract = Tooba.Cart.Contracts;
 using Tooba.Cart.Infrastructure.Persistence;
 using Tooba.Catalog.Application;
 using Tooba.Inventory.Application;
@@ -26,7 +27,7 @@ public sealed class OpenCartUseCaseGuard : ICartUseCaseGuard
 /// نوشتن سبد با قرارداد Offer/Pricing/Inventory. DbContext آن ماژول‌ها لمس نمی‌شود و تراکنش توزیع‌شده نیست.
 /// سیاست شکست: اعتبارسنجی موجودی بدون رزرو سخت. رزرو تاریخی سبد فقط آزاد می‌شود و تمدید نمی‌شود.
 /// </summary>
-public sealed class CartDirectory : ICartDirectory, ICartQueryGateway
+public sealed class CartDirectory : ICartDirectory, CartContract.ICartQueryGateway
 {
     private readonly TimeSpan _persistenceTtl;
     private readonly CartDbContext _db;
@@ -71,7 +72,7 @@ public sealed class CartDirectory : ICartDirectory, ICartQueryGateway
     }
 
     /// <inheritdoc />
-    public async Task<CartSnapshot?> GetCartAsync(Guid cartId, CartAccess access, CancellationToken cancellationToken)
+    public async Task<CartContract.CartSnapshot?> GetCartAsync(Guid cartId, CartContract.CartAccess access, CancellationToken cancellationToken)
     {
         var cart = await LoadAsync(cartId, cancellationToken);
         if (cart is null)
@@ -85,7 +86,7 @@ public sealed class CartDirectory : ICartDirectory, ICartQueryGateway
     }
 
     /// <inheritdoc />
-    public async Task<CartSnapshot> CreateAuthenticatedAsync(
+    public async Task<CartContract.CartSnapshot> CreateAuthenticatedAsync(
         Guid userId,
         string market,
         string currency,
@@ -119,9 +120,9 @@ public sealed class CartDirectory : ICartDirectory, ICartQueryGateway
     }
 
     /// <inheritdoc />
-    public async Task<CartSnapshot> AddOrIncreaseLineAsync(
+    public async Task<CartContract.CartSnapshot> AddOrIncreaseLineAsync(
         Guid cartId,
-        CartAccess access,
+        CartContract.CartAccess access,
         int expectedVersion,
         Guid offerId,
         decimal quantity,
@@ -171,9 +172,9 @@ public sealed class CartDirectory : ICartDirectory, ICartQueryGateway
     }
 
     /// <inheritdoc />
-    public async Task<CartSnapshot> ChangeLineQuantityAsync(
+    public async Task<CartContract.CartSnapshot> ChangeLineQuantityAsync(
         Guid cartId,
-        CartAccess access,
+        CartContract.CartAccess access,
         int expectedVersion,
         Guid lineId,
         decimal quantity,
@@ -193,9 +194,9 @@ public sealed class CartDirectory : ICartDirectory, ICartQueryGateway
     }
 
     /// <inheritdoc />
-    public async Task<CartSnapshot> RemoveLineAsync(
+    public async Task<CartContract.CartSnapshot> RemoveLineAsync(
         Guid cartId,
-        CartAccess access,
+        CartContract.CartAccess access,
         int expectedVersion,
         Guid lineId,
         CancellationToken cancellationToken)
@@ -208,7 +209,7 @@ public sealed class CartDirectory : ICartDirectory, ICartQueryGateway
     }
 
     /// <inheritdoc />
-    public async Task AbandonAsync(Guid cartId, CartAccess access, int expectedVersion, CancellationToken cancellationToken)
+    public async Task AbandonAsync(Guid cartId, CartContract.CartAccess access, int expectedVersion, CancellationToken cancellationToken)
     {
         await _guard.EnsureCanMutateAsync(cancellationToken);
         var cart = await LoadRequiredAsync(cartId, cancellationToken);
@@ -310,7 +311,7 @@ public sealed class CartDirectory : ICartDirectory, ICartQueryGateway
                 return new CartMergeResult(await ToSnapshotAsync(guest, cancellationToken), false, (await ToSnapshotAsync(guest, cancellationToken)).Lines);
             }
 
-            EnsureAccess(guest, new CartAccess(null, guestSecret));
+            EnsureAccess(guest, new CartContract.CartAccess(null, guestSecret));
         }
 
         var authenticated = await _db.Carts
@@ -356,7 +357,7 @@ public sealed class CartDirectory : ICartDirectory, ICartQueryGateway
     }
 
     /// <inheritdoc />
-    public async Task<CartSnapshot?> FindActiveAuthenticatedAsync(Guid userId, CancellationToken cancellationToken)
+    public async Task<CartContract.CartSnapshot?> FindActiveAuthenticatedAsync(Guid userId, CancellationToken cancellationToken)
     {
         if (userId == Guid.Empty)
         {
@@ -372,11 +373,11 @@ public sealed class CartDirectory : ICartDirectory, ICartQueryGateway
     }
 
     /// <inheritdoc />
-    public async Task<CartSnapshot> ConvertAsync(
+    public async Task<CartContract.CartSnapshot> ConvertAsync(
         Guid cartId,
-        CartAccess access,
+        CartContract.CartAccess access,
         int expectedVersion,
-        CartConversionIntent intent,
+        CartContract.CartConversionIntent intent,
         CancellationToken cancellationToken)
     {
         await _guard.EnsureCanMutateAsync(cancellationToken);
@@ -388,12 +389,12 @@ public sealed class CartDirectory : ICartDirectory, ICartQueryGateway
         }
 
         cart.EnsureVersion(expectedVersion);
-        cart.MarkConverted(intent, DateTimeOffset.UtcNow);
+        cart.MarkConverted((CartConversionIntent)(int)intent, DateTimeOffset.UtcNow);
         await SaveCartAsync(cancellationToken);
         return await ToSnapshotAsync(cart, cancellationToken);
     }
 
-    private async Task<CartSnapshot> ChangeLineCoreAsync(ShoppingCart cart, CartLine line, decimal quantity, CancellationToken cancellationToken)
+    private async Task<CartContract.CartSnapshot> ChangeLineCoreAsync(ShoppingCart cart, CartLine line, decimal quantity, CancellationToken cancellationToken)
     {
         var now = DateTimeOffset.UtcNow;
         var (_, quote, normalized, effectiveCampaignId) = await ValidateOfferAndQuoteAsync(
@@ -426,7 +427,7 @@ public sealed class CartDirectory : ICartDirectory, ICartQueryGateway
         return await ToSnapshotAsync(cart, cancellationToken);
     }
 
-    private async Task<CartSnapshot> RemoveLineCoreAsync(ShoppingCart cart, CartLine line, CancellationToken cancellationToken)
+    private async Task<CartContract.CartSnapshot> RemoveLineCoreAsync(ShoppingCart cart, CartLine line, CancellationToken cancellationToken)
     {
         if (line.ReservationId is { } reservationId)
         {
@@ -639,7 +640,7 @@ public sealed class CartDirectory : ICartDirectory, ICartQueryGateway
     private async Task<ShoppingCart> LoadRequiredAsync(Guid cartId, CancellationToken cancellationToken) =>
         await LoadAsync(cartId, cancellationToken) ?? throw new InvalidOperationException("سبد پیدا نشد.");
 
-    private static void EnsureAccess(ShoppingCart cart, CartAccess access)
+    private static void EnsureAccess(ShoppingCart cart, CartContract.CartAccess access)
     {
         if (cart.AccessKind == CartAccessKind.Authenticated)
         {
@@ -671,33 +672,33 @@ public sealed class CartDirectory : ICartDirectory, ICartQueryGateway
         }
     }
 
-    private async Task<CartSnapshot> ToSnapshotAsync(ShoppingCart cart, CancellationToken cancellationToken)
+    private async Task<CartContract.CartSnapshot> ToSnapshotAsync(ShoppingCart cart, CancellationToken cancellationToken)
     {
         var offerIds = cart.Lines.Select(x => x.OfferId).Distinct().ToArray();
         var availability = offerIds.Length == 0
             ? new Dictionary<Guid, InventoryAvailability>()
             : await _availability.GetAvailabilityBatchAsync(offerIds, cancellationToken);
-        return new CartSnapshot(
+        return new CartContract.CartSnapshot(
             cart.CartId,
-            cart.Status,
-            cart.AccessKind,
+            (CartContract.CartStatus)(int)cart.Status,
+            (CartContract.CartAccessKind)(int)cart.AccessKind,
             cart.OwnerUserId,
             cart.Market,
             cart.Currency,
             cart.Channel,
             cart.ExpiresAt,
-            cart.ConversionIntent,
+            (CartContract.CartConversionIntent)(int)cart.ConversionIntent,
             cart.Version,
             cart.Lines.Select(line =>
             {
                 availability.TryGetValue(line.OfferId, out var stock);
                 var available = stock?.Available ?? 0;
                 var kind = available >= line.Quantity
-                    ? CartLineAvailabilityKind.Available
+                    ? CartContract.CartLineAvailabilityKind.Available
                     : available > 0
-                        ? CartLineAvailabilityKind.LimitedQuantity
-                        : CartLineAvailabilityKind.Unavailable;
-                return new CartLineSnapshot(
+                        ? CartContract.CartLineAvailabilityKind.LimitedQuantity
+                        : CartContract.CartLineAvailabilityKind.Unavailable;
+                return new CartContract.CartLineSnapshot(
                     line.LineId,
                     line.OfferId,
                     line.CatalogVariantId,

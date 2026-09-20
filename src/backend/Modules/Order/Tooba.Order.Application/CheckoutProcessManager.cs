@@ -1,7 +1,6 @@
-using System.Transactions;
+﻿using System.Transactions;
 using Tooba.BuildingBlocks;
-using Tooba.Cart.Application;
-using Tooba.Cart.Domain;
+using Tooba.Cart.Contracts;
 using Tooba.Inventory.Contracts;
 using Tooba.Order.Domain;
 
@@ -15,16 +14,19 @@ public sealed class CheckoutProcessManager : ICheckoutProcessManager
 {
     private readonly ICheckoutSubmitHost _host;
     private readonly ICheckoutInventoryReservationPort _inventory;
+    private readonly ICartConversionPort _cartConversion;
     private readonly ICheckoutProcessTracker? _processes;
 
     /// <summary>Process Manager را می‌سازد.</summary>
     public CheckoutProcessManager(
         ICheckoutSubmitHost host,
         ICheckoutInventoryReservationPort inventory,
+        ICartConversionPort cartConversion,
         ICheckoutProcessTracker? processes = null)
     {
         _host = host;
         _inventory = inventory;
+        _cartConversion = cartConversion;
         _processes = processes;
     }
 
@@ -125,7 +127,15 @@ public sealed class CheckoutProcessManager : ICheckoutProcessManager
                 : CartConversionIntent.OnlinePurchase;
             try
             {
-                await _host.ConvertCartAsync(group.CartId, command.CartAccess, cart.Version, intent, cancellationToken);
+                await _cartConversion.ConvertForCheckoutAsync(
+                    new CartConversionRequest(
+                        group.CartId,
+                        command.CartAccess,
+                        cart.Version,
+                        intent,
+                        process?.ProcessId,
+                        correlationId),
+                    cancellationToken);
             }
             catch (InvalidOperationException)
             {
@@ -264,13 +274,6 @@ public interface ICheckoutSubmitHost
     /// <summary>ذخیرهٔ milestone فرآیند.</summary>
     Task SaveProcessMilestonesAsync(CancellationToken cancellationToken);
 
-    /// <summary>تبدیل سبد.</summary>
-    Task ConvertCartAsync(
-        Guid cartId,
-        CartAccess access,
-        int expectedVersion,
-        CartConversionIntent intent,
-        CancellationToken cancellationToken);
 
     /// <summary>پس از تبدیل سبد.</summary>
     Task OnAfterCartConvertedWriteAsync(CancellationToken cancellationToken);

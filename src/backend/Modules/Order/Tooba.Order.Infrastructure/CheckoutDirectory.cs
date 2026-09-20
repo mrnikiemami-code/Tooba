@@ -1,9 +1,9 @@
-using System.Linq.Expressions;
+﻿using System.Linq.Expressions;
 using System.Transactions;
 using Microsoft.EntityFrameworkCore;
 using Tooba.BuildingBlocks;
 using Tooba.Cart.Application;
-using Tooba.Cart.Domain;
+using Tooba.Cart.Contracts;
 using Tooba.Catalog.Application;
 using Tooba.Inventory.Application;
 using Tooba.Inventory.Contracts;
@@ -45,6 +45,7 @@ public sealed partial class CheckoutDirectory : ICheckoutDirectory
     internal readonly ICampaignCartPriceAuthority? _campaignPrices;
     internal readonly ICheckoutProcessTracker? _processes;
     internal readonly ICheckoutInventoryReservationPort _inventoryReservation;
+    internal readonly ICartConversionPort _cartConversion;
 
     /// <summary>
     /// دایرکتوری را به schema order و درزهای ماژول‌های دیگر وصل می‌کند.
@@ -70,7 +71,7 @@ public sealed partial class CheckoutDirectory : ICheckoutDirectory
         ICheckoutAbuseGate? abuseGate = null,
         ICampaignCartPriceAuthority? campaignPrices = null,
         ICheckoutProcessTracker? processes = null,
-        ICheckoutInventoryReservationPort? inventoryReservation = null)
+        ICheckoutInventoryReservationPort? inventoryReservation = null, ICartConversionPort? cartConversion = null)
     {
         _db = db;
         _guard = guard;
@@ -94,14 +95,13 @@ public sealed partial class CheckoutDirectory : ICheckoutDirectory
             ?? throw new InvalidOperationException("درز موجودی برای commit سفارش لازم است.");
         _campaignPrices = campaignPrices;
         _processes = processes;
-        _inventoryReservation = inventoryReservation
-            ?? new CheckoutInventoryReservationAdapter(_inventory, _availability);
+        _inventoryReservation = inventoryReservation ?? new CheckoutInventoryReservationAdapter(_inventory, _availability);
+        _cartConversion = cartConversion ?? new CartConversionAdapter(_cartMutations);
     }
 
     /// <inheritdoc />
     public Task<CheckoutSnapshot> SubmitAsync(SubmitCheckoutCommand command, CancellationToken cancellationToken)
-        => new CheckoutProcessManager(this, _inventoryReservation, _processes)
-            .SubmitAsync(command, cancellationToken);
+        => new CheckoutProcessManager(this, _inventoryReservation, _cartConversion, _processes).SubmitAsync(command, cancellationToken);
 
     /// <inheritdoc />
     public async Task<CheckoutSnapshot> PreviewAsync(SubmitCheckoutCommand command, CancellationToken cancellationToken)

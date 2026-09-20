@@ -1,0 +1,11 @@
+# Cart conversion usage (pre-W3)
+- Interface: ICartDirectory.ConvertAsync(cartId, CartAccess, expectedVersion, CartConversionIntent)
+- Caller: CheckoutProcessManager via ICheckoutSubmitHost.ConvertCartAsync
+- Also: CheckoutDirectory.ReconcileCartConversionAsync → _cartMutations.ConvertAsync
+- Transaction: inside ambient TransactionScope with Order + Inventory
+- Write: Cart status → Converted; version bump; no Order table writes from Cart
+- Idempotency: Converted cart returns snapshot; race → TryResolveConvertedCartWinnerAsync
+- Result: CartSnapshot
+- Errors: InvalidOperationException (version/access/state)
+- One-way in W3 (no restore/compensation activation)
+- Unrelated Cart.Application deps (lines/merge/expiry) remain outside Order.Application

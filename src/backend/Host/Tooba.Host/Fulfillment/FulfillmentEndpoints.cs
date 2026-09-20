@@ -3,6 +3,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Tooba.BuildingBlocks;
 using Tooba.BuildingBlocks.Grid;
 using Tooba.Cart.Application;
+using Tooba.Cart.Contracts;
 using Tooba.Fulfillment.Application;
 using Tooba.Host.Admin;
 using Tooba.Host.Seller;

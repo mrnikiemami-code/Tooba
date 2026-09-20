@@ -165,7 +165,7 @@ builder.Services.AddScoped(sp =>
 builder.Services.AddScoped(sp =>
     new StorefrontCartComposer(
         sp.GetRequiredService<Tooba.Cart.Application.ICartDirectory>(),
-        sp.GetRequiredService<Tooba.Cart.Application.ICartQueryGateway>(),
+        sp.GetRequiredService<Tooba.Cart.Contracts.ICartQueryGateway>(),
         sp.GetRequiredService<Tooba.Catalog.Infrastructure.Persistence.CatalogDbContext>(),
         sp.GetRequiredService<Tooba.Party.Application.IPartyLookupGateway>(),
         sp.GetRequiredService<Tooba.Catalog.Application.ICatalogLookupGateway>(),

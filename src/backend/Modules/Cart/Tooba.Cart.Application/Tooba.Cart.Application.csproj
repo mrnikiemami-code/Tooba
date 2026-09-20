@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
@@ -7,6 +7,7 @@
     <AssemblyName>Tooba.Cart.Application</AssemblyName>
   </PropertyGroup>
   <ItemGroup>
+    <ProjectReference Include="..\Tooba.Cart.Contracts\Tooba.Cart.Contracts.csproj" />
     <ProjectReference Include="..\Tooba.Cart.Domain\Tooba.Cart.Domain.csproj" />
     <ProjectReference Include="..\..\Catalog\Tooba.Catalog.Application\Tooba.Catalog.Application.csproj" />
     <ProjectReference Include="..\..\Offer\Tooba.Offer.Contracts\Tooba.Offer.Contracts.csproj" />

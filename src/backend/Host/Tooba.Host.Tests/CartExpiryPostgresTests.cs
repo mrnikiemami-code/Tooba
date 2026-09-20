@@ -3,6 +3,8 @@ using Microsoft.EntityFrameworkCore;
 using Testcontainers.PostgreSql;
 using Tooba.BuildingBlocks;
 using Tooba.Cart.Application;
+using CartAccess = Tooba.Cart.Contracts.CartAccess;
+using CartSnapshot = Tooba.Cart.Contracts.CartSnapshot;
 using Tooba.Cart.Domain;
 using Tooba.Cart.Infrastructure;
 using Tooba.Cart.Infrastructure.Persistence;

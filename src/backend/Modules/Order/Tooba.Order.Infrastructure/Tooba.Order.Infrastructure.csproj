@@ -14,6 +14,8 @@
   </ItemGroup>
     <ItemGroup>
     <ProjectReference Include="..\Tooba.Order.Application\Tooba.Order.Application.csproj" />
+    <ProjectReference Include="..\..\Cart\Tooba.Cart.Application\Tooba.Cart.Application.csproj" />
+    <ProjectReference Include="..\..\Cart\Tooba.Cart.Contracts\Tooba.Cart.Contracts.csproj" />
     <ProjectReference Include="..\..\Catalog\Tooba.Catalog.Application\Tooba.Catalog.Application.csproj" />
     <ProjectReference Include="..\..\Inventory\Tooba.Inventory.Application\Tooba.Inventory.Application.csproj" />
     <ProjectReference Include="..\..\Inventory\Tooba.Inventory.Contracts\Tooba.Inventory.Contracts.csproj" />

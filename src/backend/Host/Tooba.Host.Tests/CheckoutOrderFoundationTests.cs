@@ -1,9 +1,9 @@
-using System.Reflection;
+﻿using System.Reflection;
 using Microsoft.EntityFrameworkCore;
 using Testcontainers.PostgreSql;
 using Tooba.BuildingBlocks;
 using Tooba.Cart.Application;
-using Tooba.Cart.Domain;
+using Tooba.Cart.Contracts;
 using Tooba.Cart.Infrastructure;
 using Tooba.Cart.Infrastructure.Persistence;
 using Tooba.Catalog.Application;
@@ -87,8 +87,8 @@ public sealed class CheckoutOrderFoundationTests : IAsyncLifetime
     [Fact]
     public void Cart_is_not_order_and_order_is_not_payment_or_inventory()
     {
-        Assert.NotEqual(typeof(ShoppingCart), typeof(CheckoutGroup));
-        Assert.DoesNotContain("OrderId", typeof(ShoppingCart).GetProperties().Select(p => p.Name));
+        Assert.NotEqual(typeof(Tooba.Cart.Domain.ShoppingCart), typeof(CheckoutGroup));
+        Assert.DoesNotContain("OrderId", typeof(Tooba.Cart.Domain.ShoppingCart).GetProperties().Select(p => p.Name));
         Assert.DoesNotContain("Paid", typeof(SellerOrder).GetProperties().Select(p => p.Name));
         Assert.DoesNotContain("PaymentId", typeof(CheckoutGroup).GetProperties().Select(p => p.Name));
         Assert.Contains("BuyerPartyId", typeof(CheckoutGroup).GetProperties().Select(p => p.Name));
@@ -128,7 +128,8 @@ public sealed class CheckoutOrderFoundationTests : IAsyncLifetime
         }
 
         var application = File.ReadAllText(Path.Combine(root, "src", "backend", "Modules", "Order", "Tooba.Order.Application", "Tooba.Order.Application.csproj"));
-        Assert.Contains("Tooba.Cart.Application", application);
+        Assert.Contains("Tooba.Cart.Contracts", application);
+        Assert.DoesNotContain("Tooba.Cart.Application", application);
         Assert.Contains("Tooba.Offer.Contracts", application);
         Assert.Contains("Tooba.Pricing.Contracts", application);
         Assert.Contains("Tooba.Inventory.Contracts", application);

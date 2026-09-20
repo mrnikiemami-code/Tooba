@@ -5,6 +5,7 @@ using Microsoft.Extensions.Hosting;
 using Tooba.BuildingBlocks;
 using Tooba.ModuleContracts;
 using Tooba.Cart.Application;
+using Tooba.Cart.Contracts;
 using Tooba.Cart.Infrastructure.Persistence;
 using Tooba.Persistence;
 
@@ -28,6 +29,7 @@ public sealed class CartModule : IToobaModule
         services.AddSingleton<IOutboxModuleRegistration, CartOutboxRegistration>();
         services.AddScoped<ICartUseCaseGuard, OpenCartUseCaseGuard>();
         services.AddScoped<ICartDirectory, CartDirectory>();
+        services.AddScoped<ICartConversionPort, CartConversionAdapter>();
         services.AddScoped<ICartQueryGateway>(sp => (CartDirectory)sp.GetRequiredService<ICartDirectory>());
         services.AddDbContext<CartDbContext>((sp, options) =>
         {
