@@ -89,6 +89,9 @@ event-driven coordination through Outbox/Integration Events
 Do NOT implement the Saga prematurely.
 First document the invariants and workflow.
 
+Status after TB-TMAR-CHECKOUT-CONSISTENCY-DESIGN:
+Design + ARCH-CHECKOUT-001…005 locks landed. Chosen model: Order-owned Process Manager (orchestrated Saga) with local ACID + Outbox per participant. Checkout-Point-Of-No-Return = MULTI_STAGE. Implementation readiness = READY_FOR_IMPLEMENTATION_W1 (next TB-TMAR-CHECKOUT-IMPL-W1). No Saga/Process Manager code in the design task.
+
 Cross-module transaction lock
 
 Architectural rule to canonicalize:

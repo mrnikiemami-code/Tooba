@@ -1,0 +1,101 @@
+{
+  "taskId": "TB-TMAR-CHECKOUT-CONSISTENCY-DESIGN",
+  "entry": [
+    "POST /v1/storefront/checkout",
+    "StorefrontShippingComposer→SubmitAsync"
+  ],
+  "application": "ICheckoutDirectory.SubmitAsync",
+  "transaction": {
+    "mechanism": "TransactionScope",
+    "isolation": "ReadCommitted",
+    "file": "CheckoutDirectory.cs",
+    "classification": "CROSS_CONTEXT_SHARED_ACID"
+  },
+  "orderedSteps": [
+    {
+      "seq": 1,
+      "phase": "pre",
+      "name": "idempotency_lookup",
+      "owner": "Order",
+      "kind": "read"
+    },
+    {
+      "seq": 2,
+      "phase": "pre",
+      "name": "cart_read_validate",
+      "owner": "Cart",
+      "kind": "SYNC_QUERY"
+    },
+    {
+      "seq": 3,
+      "phase": "pre",
+      "name": "quote_offer_price_promo_tax",
+      "owner": "Order+Offer+Pricing+Promotion+Tax+Catalog",
+      "kind": "SYNC_QUERY"
+    },
+    {
+      "seq": 4,
+      "phase": "tx",
+      "name": "abuse_gate_start",
+      "owner": "Order/Host gate",
+      "kind": "SYNC_COMMAND"
+    },
+    {
+      "seq": 5,
+      "phase": "tx",
+      "name": "inventory_reserve",
+      "owner": "Inventory",
+      "kind": "SYNC_COMMAND_WRITE"
+    },
+    {
+      "seq": 6,
+      "phase": "tx",
+      "name": "order_checkout_persist",
+      "owner": "Order",
+      "kind": "SYNC_COMMAND_WRITE"
+    },
+    {
+      "seq": 7,
+      "phase": "tx",
+      "name": "cart_convert",
+      "owner": "Cart",
+      "kind": "SYNC_COMMAND_WRITE"
+    },
+    {
+      "seq": 8,
+      "phase": "post",
+      "name": "payment_initiate",
+      "owner": "Payment/Wallet",
+      "kind": "SYNC_COMMAND",
+      "note": "separate Host call"
+    },
+    {
+      "seq": 9,
+      "phase": "post",
+      "name": "payment_succeeded_fulfillment",
+      "owner": "Fulfillment",
+      "kind": "INTEGRATION_EVENT"
+    }
+  ],
+  "participants": {
+    "insideSharedTx": [
+      "Order",
+      "Inventory",
+      "Cart"
+    ],
+    "syncQueriesOutsideTx": [
+      "Cart",
+      "Offer",
+      "Pricing",
+      "Promotion",
+      "Tax",
+      "Catalog"
+    ],
+    "postCheckout": [
+      "Payment",
+      "Wallet",
+      "Fulfillment",
+      "Settlement"
+    ]
+  }
+}

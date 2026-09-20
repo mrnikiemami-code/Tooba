@@ -58,6 +58,21 @@ Critical giant-file decomposition requires characterization tests around the tou
 ## ARCH-TX-001
 No NEW business workflow may rely on a single ACID transaction spanning multiple bounded contexts. Existing confirmed cross-context/shared-database transactions are explicit migration debt (baseline `tmar-cross-context-transaction-files.json`). Future extraction requires an explicit distributed-consistency design (see TB-TMAR-CHECKOUT-CONSISTENCY-DESIGN). Do not add a global MediatR TransactionBehavior.
 
+## ARCH-CHECKOUT-001
+No new checkout step may rely on cross-bounded-context shared ACID. Existing `CheckoutDirectory` TransactionScope is migration debt only.
+
+## ARCH-CHECKOUT-002
+All future checkout participant operations must be idempotency-designable and retry-safe at the contract boundary.
+
+## ARCH-CHECKOUT-003
+Irreversible external side effects (payment capture, wallet debit, fulfillment dispatch) must occur only after required preconditions and documented point-of-no-return rules are explicitly satisfied.
+
+## ARCH-CHECKOUT-004
+Cross-context checkout integration must use owned Contracts/Commands/Events; no new foreign Application/Domain coupling for checkout participants.
+
+## ARCH-CHECKOUT-005
+Checkout workflow state must be recoverable after process crash/restart; no in-memory-only authoritative workflow state.
+
 ## FE-ARCH-001
 New App Router route files (`page`/`layout`/route composition) should remain thin composition/transport layers; business feature UI must not accumulate directly in route files. Canonical frontend root: `src/frontend`.
 

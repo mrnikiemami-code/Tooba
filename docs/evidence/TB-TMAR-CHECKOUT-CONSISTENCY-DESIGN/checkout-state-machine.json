@@ -1,0 +1,16 @@
+{
+  "states": [
+    "Started",
+    "Validating",
+    "InventoryReserving",
+    "OrderPersisting",
+    "CartCommitting",
+    "PaymentPending",
+    "PaymentAuthorized",
+    "Completed",
+    "Compensating",
+    "Failed",
+    "ManualReview"
+  ],
+  "pointOfNoReturn": "MULTI_STAGE"
+}

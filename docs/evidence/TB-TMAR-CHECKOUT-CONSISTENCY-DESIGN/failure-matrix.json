@@ -1,0 +1,108 @@
+{
+  "steps": [
+    {
+      "step": "inventory_reserve",
+      "participant": "Inventory",
+      "beforeCommit": "TX aborts; no order/cart write",
+      "afterLocalCommit": "N/A inside ambient TX until Complete",
+      "timeout": "abort + ReleaseAcquiredAsync",
+      "duplicate": "idempotency key on reserve client key cc-{cart}-{line}",
+      "retry": "safe if release/dedupe",
+      "partial": "ReleaseAcquiredAsync",
+      "compensation": "ReleaseAsync",
+      "manual": false,
+      "userVisible": "inventory.supply.unavailable / reservation.conflict"
+    },
+    {
+      "step": "order_persist",
+      "participant": "Order",
+      "beforeCommit": "abort; release reserves",
+      "afterLocalCommit": "still before Complete — ambient rollback if !Complete",
+      "timeout": "abort",
+      "duplicate": "checkout.conflict → winner reconcile",
+      "retry": "return existing",
+      "partial": "release reserves",
+      "compensation": "ReleaseAcquiredAsync",
+      "manual": false,
+      "userVisible": "checkout.conflict"
+    },
+    {
+      "step": "cart_convert",
+      "participant": "Cart",
+      "beforeCommit": "order write may have SaveChanges; if Convert fails before Complete ambient TX should rollback Order+Inventory if enlisted",
+      "afterLocalCommit": "if Convert committed then Complete — durable triple",
+      "timeout": "risk of partial if enlistment fails (extraction risk)",
+      "duplicate": "ReconcileCartConversionAsync",
+      "retry": "reconcile",
+      "partial": "CRITICAL shared-ACID debt",
+      "compensation": "convert reconcile / cancel",
+      "manual": true,
+      "userVisible": "error or existing checkout"
+    },
+    {
+      "step": "pricing_revalidation",
+      "participant": "Pricing",
+      "beforeCommit": "reject PRICE_CHANGED; no TX",
+      "afterLocalCommit": "n/a",
+      "timeout": "reject",
+      "duplicate": "n/a",
+      "retry": "client refresh cart",
+      "partial": "n/a",
+      "compensation": "none",
+      "manual": false,
+      "userVisible": "PRICE_CHANGED"
+    },
+    {
+      "step": "promotion_eval",
+      "participant": "Promotion",
+      "beforeCommit": "fail quote; no TX",
+      "afterLocalCommit": "n/a",
+      "timeout": "reject",
+      "duplicate": "n/a",
+      "retry": "yes",
+      "partial": "n/a",
+      "compensation": "none",
+      "manual": false,
+      "userVisible": "promotion error"
+    },
+    {
+      "step": "payment_initiate",
+      "participant": "Payment/Wallet",
+      "beforeCommit": "order already exists unpaid",
+      "afterLocalCommit": "payment attempt row",
+      "timeout": "unpaid expiry policies",
+      "duplicate": "payment idempotency / webhook inbox",
+      "retry": "careful",
+      "partial": "pending payment",
+      "compensation": "cancel/expire unpaid; refund if captured",
+      "manual": true,
+      "userVisible": "payment pending/failed"
+    },
+    {
+      "step": "event_publish",
+      "participant": "Outbox",
+      "beforeCommit": "n/a at submit (module SaveChanges + interceptor)",
+      "afterLocalCommit": "at-least-once dispatch",
+      "timeout": "dispatcher retry",
+      "duplicate": "consumer inbox where present",
+      "retry": "dispatcher",
+      "partial": "delayed fulfillment",
+      "compensation": "replay",
+      "manual": true,
+      "userVisible": "delayed ship"
+    },
+    {
+      "step": "compensation_failure",
+      "participant": "Inventory release",
+      "beforeCommit": "n/a",
+      "afterLocalCommit": "orphan Held reservation until expiry/manual",
+      "timeout": "held until ExpiresAt",
+      "duplicate": "release idempotent-ish",
+      "retry": "yes",
+      "partial": "stock locked",
+      "compensation": "ReleaseExpiredBatch / manual",
+      "manual": true,
+      "userVisible": "stock unavailable elsewhere"
+    }
+  ]
+}

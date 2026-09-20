@@ -1,0 +1,94 @@
+{
+  "interactions": [
+    {
+      "name": "ReserveInventory",
+      "class": "SYNC_COMMAND",
+      "owner": "Inventory",
+      "producer": "CheckoutPM",
+      "consumer": "Inventory",
+      "corr": "checkoutId",
+      "idemp": "cc-cart-line"
+    },
+    {
+      "name": "ReleaseInventory",
+      "class": "SYNC_COMMAND",
+      "owner": "Inventory",
+      "producer": "CheckoutPM",
+      "consumer": "Inventory",
+      "corr": "checkoutId",
+      "idemp": "reservationId"
+    },
+    {
+      "name": "CreateCheckoutOrder",
+      "class": "SYNC_COMMAND",
+      "owner": "Order",
+      "producer": "CheckoutPM",
+      "consumer": "Order",
+      "corr": "checkoutId",
+      "idemp": "IdempotencyKey"
+    },
+    {
+      "name": "ConvertCart",
+      "class": "SYNC_COMMAND",
+      "owner": "Cart",
+      "producer": "CheckoutPM",
+      "consumer": "Cart",
+      "corr": "cartId",
+      "idemp": "cartId+version"
+    },
+    {
+      "name": "CancelUnpaidCheckout",
+      "class": "SYNC_COMMAND",
+      "owner": "Order",
+      "producer": "CheckoutPM/Host",
+      "consumer": "Order",
+      "corr": "checkoutId",
+      "idemp": "checkoutId+cancel"
+    },
+    {
+      "name": "AuthorizePayment",
+      "class": "SYNC_COMMAND",
+      "owner": "Payment",
+      "producer": "Host/Payment",
+      "consumer": "Payment",
+      "corr": "checkoutId",
+      "idemp": "attemptId"
+    },
+    {
+      "name": "CheckoutCompleted",
+      "class": "INTEGRATION_EVENT",
+      "owner": "Order/Payment",
+      "producer": "Outbox",
+      "consumer": "Fulfillment/Settlement",
+      "corr": "checkoutId",
+      "idemp": "inbox"
+    },
+    {
+      "name": "CheckoutFailed",
+      "class": "INTEGRATION_EVENT",
+      "owner": "Order",
+      "producer": "Outbox",
+      "consumer": "observers",
+      "corr": "checkoutId",
+      "idemp": "inbox"
+    },
+    {
+      "name": "GetCart",
+      "class": "SYNC_QUERY",
+      "owner": "Cart",
+      "producer": "CheckoutPM",
+      "consumer": "Cart",
+      "corr": "cartId",
+      "idemp": "n/a"
+    },
+    {
+      "name": "LookupOffer/Price/Tax/Promo",
+      "class": "SYNC_QUERY",
+      "owner": "Offer/Pricing/Tax/Promotion",
+      "producer": "CheckoutPM",
+      "consumer": "gateways",
+      "corr": "checkoutId",
+      "idemp": "n/a"
+    }
+  ]
+}
