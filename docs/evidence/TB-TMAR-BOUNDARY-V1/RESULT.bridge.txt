@@ -1,4 +1,4 @@
-PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+﻿PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
 
 BEGIN_TOOBA_WORKER_RESULT
 
@@ -52,7 +52,7 @@ Recovery-SoT:
 docs/evidence/TB-TMAR-BOUNDARY-V1/recovery-sot.md
 
 Git:
-branch main; tip PLACEHOLDER_SHA; pushed origin/main; HEAD==origin/main; 18ca10c9 ancestor
+branch main; tip 199e9fd69bfc3d2bd3900d6049123f4d8d8e9a31; pushed origin/main; HEAD==origin/main; 18ca10c9 ancestor
 
 Architectural-Concerns:
 Dead Domain→Offer refs should be deleted in BOUNDARY-R1 or Contracts prep; Payment→Wallet Domain helper needs Contracts/ACL; Infra→foreign Application still unfrozen
