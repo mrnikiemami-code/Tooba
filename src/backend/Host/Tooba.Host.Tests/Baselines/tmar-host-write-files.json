@@ -23,7 +23,6 @@
     "Admin/ProductWorkspaceDevelopmentBootstrap.cs",
     "Admin/ReservationPolicyAdminComposer.cs",
     "Admin/ReservationPolicyAdminEndpoints.cs",
-    "Admin/ShippingServiceEndpoints.cs",
     "Customer/CustomerPanelComposer.cs",
     "CustomerProfile/CustomerProfileDevelopmentSeed.cs",
     "Grid/AdminContentGridQueryEngine.cs",

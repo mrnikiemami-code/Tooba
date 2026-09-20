@@ -1,10 +1,10 @@
 using System.Security.Cryptography;
 using System.Text;
+using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Tooba.AddressBook.Application;
 using Tooba.Fulfillment.Application;
 using Tooba.Fulfillment.Infrastructure.Persistence;
-using Tooba.Host.Admin;
 using Tooba.Localization.Application;
 using Tooba.Order.Application;
 using Tooba.Order.Domain;
@@ -24,6 +24,7 @@ public sealed class StorefrontShippingComposer
     private readonly OrderDbContext _orders;
     private readonly ILanguageDirectory _languages;
     private readonly ShippingMethodsOptions _shippingOptions;
+    private readonly ISender _sender;
     private readonly CurrentAuthenticatedSession _session;
     private readonly IHostEnvironment _environment;
     private readonly IHttpContextAccessor _http;
@@ -37,6 +38,7 @@ public sealed class StorefrontShippingComposer
         OrderDbContext orders,
         ILanguageDirectory languages,
         ShippingMethodsOptions shippingOptions,
+        ISender sender,
         CurrentAuthenticatedSession session,
         IHostEnvironment environment,
         IHttpContextAccessor http)
@@ -48,6 +50,7 @@ public sealed class StorefrontShippingComposer
         _orders = orders;
         _languages = languages;
         _shippingOptions = shippingOptions;
+        _sender = sender;
         _session = session;
         _environment = environment;
         _http = http;
@@ -329,7 +332,7 @@ public sealed class StorefrontShippingComposer
         string? language,
         CancellationToken cancellationToken)
     {
-        await ShippingServiceEndpoints.EnsureSeedAsync(_fulfillment, _languages, cancellationToken);
+        await _sender.Send(new EnsureShippingCatalogSeedCommand(), cancellationToken);
         var enabled = ShippingMethodRegistry.Enabled(_shippingOptions)
             .Select(x => x.Code)
             .ToHashSet(StringComparer.OrdinalIgnoreCase);

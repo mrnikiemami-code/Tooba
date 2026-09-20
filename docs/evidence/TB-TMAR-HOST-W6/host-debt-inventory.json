@@ -1,0 +1,49 @@
+﻿{
+    "readDebtExamples":  [
+                             "ShippingServiceEndpoints List/Get/tree",
+                             "UnitOfMeasureEndpoints List/Get",
+                             "Admin Grid engines"
+                         ],
+    "remainingLiveWriteSites":  [
+                                    "AddressBook/AddressBookDevelopmentSeed.cs",
+                                    "Admin/AdminPanelComposer.cs",
+                                    "Admin/CatalogDemo/CatalogDemoAssignmentIntegrityService.cs",
+                                    "Admin/CatalogDemo/CatalogDemoResetService.cs",
+                                    "Admin/CheckoutAbuseSettingsEndpoints.cs",
+                                    "Admin/CheckoutIdentitySettingsEndpoints.cs",
+                                    "Admin/FashionTemplateCatalogSeed.cs",
+                                    "Admin/HoldPolicySettingsEndpoints.cs",
+                                    "Admin/IndustryBatchATemplateCatalogSeed.cs",
+                                    "Admin/IndustryBatchBTemplateCatalogSeed.cs",
+                                    "Admin/IndustryBatchCTemplateCatalogSeed.cs",
+                                    "Admin/MerchandisingCampaignDevelopmentSeed.cs",
+                                    "Admin/OrderInventoryRecoveryComposer.cs",
+                                    "Admin/OrderSupplyComposer.cs",
+                                    "Admin/ProductWorkspaceComposer.cs",
+                                    "Admin/ProductWorkspaceDevelopmentBootstrap.cs",
+                                    "Admin/ReservationPolicyAdminComposer.cs",
+                                    "Admin/ReservationPolicyAdminEndpoints.cs",
+                                    "CustomerProfile/CustomerProfileDevelopmentSeed.cs",
+                                    "Program.cs",
+                                    "Seller/SellerPanelComposer.cs",
+                                    "Storefront/CheckoutAbuseGate.cs",
+                                    "Storefront/StorefrontComposer.cs",
+                                    "Storefront/StorefrontDemoCatalogBootstrap.cs",
+                                    "Storefront/StorefrontPendingPaymentComposer.cs",
+                                    "Storefront/StorefrontPendingPaymentProjector.cs",
+                                    "Storefront/StorefrontShippingComposer.cs",
+                                    "Wishlist/WishlistDevelopmentSeed.cs"
+                                ],
+    "selected":  {
+                     "risk":  "SAFE_LOCAL_SLICE",
+                     "file":  "Admin/ShippingServiceEndpoints.cs",
+                     "writes":  [
+                                    "Create",
+                                    "Update",
+                                    "Deactivate",
+                                    "EnsureSeed"
+                                ],
+                     "owner":  "Fulfillment"
+                 },
+    "taskId":  "TB-TMAR-HOST-W6"
+}

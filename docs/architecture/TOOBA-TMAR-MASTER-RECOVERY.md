@@ -153,6 +153,8 @@ TB-TMAR-HOST-W4
 
 TB-TMAR-HOST-W5
 
+TB-TMAR-HOST-W6
+
 Current Product Resume Gate:
 SAFE_WITH_TMAR_PARALLEL
 
@@ -160,7 +162,10 @@ User choice:
 Continue TMAR for now until user explicitly says to return to product feature work.
 
 Next TMAR task:
-TB-TMAR-HOST-W6
+TB-TMAR-CHECKOUT-CONSISTENCY-DESIGN
+
+Host W6:
+TB-TMAR-HOST-W6 — ShippingService Create/Update/Deactivate/EnsureSeed → Fulfillment Application/Directory; Host-Exit-State READY_TO_PIVOT; Architecture-Priority CHECKOUT_DESIGN; Checkout design READY. Evidence: `docs/evidence/TB-TMAR-HOST-W6/`.
 
 Host W5:
 TB-TMAR-HOST-W5 — UnitOfMeasure Host writes → Catalog Application/Directory; Host-Exit-State NOT_READY; CONTINUE_HOST. Evidence: `docs/evidence/TB-TMAR-HOST-W5/`.

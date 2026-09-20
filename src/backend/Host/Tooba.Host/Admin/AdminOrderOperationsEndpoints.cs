@@ -51,11 +51,12 @@ public static class AdminOrderOperationsEndpoints
         FulfillmentDbContext db,
         ILanguageDirectory languages,
         ShippingMethodsOptions options,
+        MediatR.ISender sender,
         string? language,
         CancellationToken cancellationToken)
     {
         var tree = await ShippingServiceEndpoints.ListEnabledMethodsTreeAsync(
-            db, languages, options, language, cancellationToken);
+            db, languages, options, sender, language, cancellationToken);
         return Results.Json(tree);
     }
 

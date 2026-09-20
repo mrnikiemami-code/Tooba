@@ -47,6 +47,7 @@ Frontend ADMIN-W6 (TB-TMAR-FE-ADMIN-W6) PASS — admin-dashboard migrated; admin
 Host W3 (TB-TMAR-HOST-W3) PASS — StoreAppearanceSettings write → Catalog CQRS Directory; Host-write baseline shrink; CONTINUE_HOST; next HOST-W4.
 Host W4 (TB-TMAR-HOST-W4) PASS — QuantitySettings write → Catalog CQRS Directory; Host-write baseline shrink; CONTINUE_HOST; next HOST-W5.
 Host W5 (TB-TMAR-HOST-W5) PASS — UnitOfMeasure writes → Catalog CQRS Directory; Host-Exit-State NOT_READY; CONTINUE_HOST; next HOST-W6.
+Host W6 (TB-TMAR-HOST-W6) PASS — ShippingService Create/Update/Deactivate/EnsureSeed → Fulfillment CQRS Directory; Host-Exit-State READY_TO_PIVOT; Architecture-Priority CHECKOUT_DESIGN; next CHECKOUT-CONSISTENCY-DESIGN.
 Product-Resume-Safety = SAFE_WITH_TMAR_PARALLEL (Order hub still frozen; do not expand App→App / Infra→App; no NEW cross-context ACID).
 Last Product Task = TB-P10-T022-R21.
 Architecture Baseline = TB-TMAR-ARCH-BASELINE.
@@ -445,7 +446,8 @@ fe-admin-w6 = TB-TMAR-FE-ADMIN-W6 PASS (admin-dashboard feature; screens→810; 
 host-w3 = TB-TMAR-HOST-W3 PASS (StoreAppearanceSettings CQRS; Host-write baseline shrink; CONTINUE_HOST)
 host-w4 = TB-TMAR-HOST-W4 PASS (QuantitySettings CQRS; Host-write baseline shrink; CONTINUE_HOST)
 host-w5 = TB-TMAR-HOST-W5 PASS (UnitOfMeasure CQRS; Host exit NOT_READY; CONTINUE_HOST)
-next task = TB-TMAR-HOST-W6 unless Recovery SoT says otherwise
+host-w6 = TB-TMAR-HOST-W6 PASS (ShippingService CQRS; Host exit READY_TO_PIVOT; Priority CHECKOUT_DESIGN)
+next task = TB-TMAR-CHECKOUT-CONSISTENCY-DESIGN unless Recovery SoT says otherwise
 
 primary goal = painless future Microservice migration
 

@@ -54,6 +54,7 @@ Evidence files remain the deep-detail source; this map is the quick index.
 | Host W3 | StoreAppearanceSettings Host write → Catalog CQRS Directory; Host-write baseline shrink; CONTINUE_HOST | TB-TMAR-HOST-W3 |
 | Host W4 | QuantitySettings Host write → Catalog CQRS Directory; Host-write baseline shrink; CONTINUE_HOST | TB-TMAR-HOST-W4 |
 | Host W5 | UnitOfMeasure Host writes → Catalog CQRS Directory; Host-Exit-State NOT_READY; CONTINUE_HOST | TB-TMAR-HOST-W5 |
-| Next | Continue Host direct-write reduction | TB-TMAR-HOST-W6 |
+| Host W6 | ShippingService Host writes → Fulfillment CQRS Directory; Host-Exit-State READY_TO_PIVOT; Priority CHECKOUT_DESIGN | TB-TMAR-HOST-W6 |
+| Next | Checkout consistency design (shared-ACID chain) | TB-TMAR-CHECKOUT-CONSISTENCY-DESIGN |
 
-Last Verified Task = TB-TMAR-HOST-W5
+Last Verified Task = TB-TMAR-HOST-W6

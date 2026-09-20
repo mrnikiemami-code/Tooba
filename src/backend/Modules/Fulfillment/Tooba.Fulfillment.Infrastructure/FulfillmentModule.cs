@@ -85,6 +85,7 @@ public sealed class FulfillmentModule : IToobaModule
         services.AddScoped<IFulfillmentUseCaseGuard, OpenFulfillmentUseCaseGuard>();
         services.AddScoped<FulfillmentDirectory>();
         services.AddScoped<IFulfillmentDirectory>(sp => sp.GetRequiredService<FulfillmentDirectory>());
+        services.AddScoped<IShippingServiceDirectory, ShippingServiceDirectory>();
         services.AddScoped<IFulfillmentInventoryGateway, FulfillmentInventoryGateway>();
         services.AddScoped<IFulfillmentReturnReader, FulfillmentReturnBridge>();
         services.AddScoped<ISellerOrderCancelFulfillmentGate, FulfillmentSellerOrderCancelGate>();

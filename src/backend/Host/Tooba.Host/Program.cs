@@ -113,9 +113,12 @@ builder.Services.AddHostedService<OutboxDispatcherHostedService>();
 builder.Services.AddHostedService<CartExpiryHostedService>();
 builder.Services.AddHostedService<PaymentReconciliationHostedService>();
 builder.Services.AddHostedService<UnpaidOrderExpiryHostedService>();
-builder.Services.AddToobaCqrsFoundation(typeof(Tooba.Catalog.Application.CreateStoreLandingPageCommand).Assembly);
+builder.Services.AddToobaCqrsFoundation(
+    typeof(Tooba.Catalog.Application.CreateStoreLandingPageCommand).Assembly,
+    typeof(Tooba.Fulfillment.Application.CreateShippingServiceCommand).Assembly);
 builder.Services.AddScoped<Tooba.Catalog.Application.IStoreLandingExternalReferenceGate, Tooba.Host.Admin.MerchandisingStoreLandingReferenceGate>();
 builder.Services.AddScoped<Tooba.Catalog.Application.IUnitOfMeasureLanguageGate, Tooba.Host.Admin.HostUnitOfMeasureLanguageGate>();
+builder.Services.AddScoped<Tooba.Fulfillment.Application.IShippingServiceLanguageGate, Tooba.Host.Admin.HostShippingServiceLanguageGate>();
 builder.Services.AddToobaModules(builder.Configuration, builder.Environment);
 builder.Services.Configure<Tooba.Cart.Application.CartLifetimeOptions>(
     builder.Configuration.GetSection(Tooba.Cart.Application.CartLifetimeOptions.SectionName));
@@ -184,6 +187,7 @@ builder.Services.AddScoped<Tooba.Host.Storefront.StorefrontShippingComposer>(sp 
         sp.GetRequiredService<Tooba.Order.Infrastructure.Persistence.OrderDbContext>(),
         sp.GetRequiredService<Tooba.Localization.Application.ILanguageDirectory>(),
         sp.GetRequiredService<Tooba.Fulfillment.Application.ShippingMethodsOptions>(),
+        sp.GetRequiredService<MediatR.ISender>(),
         sp.GetRequiredService<CurrentAuthenticatedSession>(),
         sp.GetRequiredService<IHostEnvironment>(),
         sp.GetRequiredService<IHttpContextAccessor>()));
