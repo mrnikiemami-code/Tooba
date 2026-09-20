@@ -1,0 +1,288 @@
+{
+  "generatedAt": "2026-09-20T07:04:23.288Z",
+  "frontendRoot": "src/frontend",
+  "note": "Task text referred to src/Web; repository canonical frontend root is src/frontend.",
+  "totals": {
+    "allFilesUnderFrontend": 971,
+    "sourceTsJs": 710,
+    "testFiles": 167,
+    "cssFiles": 5,
+    "routeCompositionFiles": 152,
+    "useClientFiles": 253,
+    "oversizedOrCritical": 26,
+    "pageFiles": 144,
+    "layoutFiles": 6,
+    "watchFiles": 39,
+    "criticalGodFiles": 10
+  },
+  "appTopLevel": [
+    "[slug]",
+    "access-control",
+    "admin",
+    "api",
+    "best-seller",
+    "blogs",
+    "brand",
+    "brands",
+    "cart",
+    "category",
+    "checkout",
+    "composition",
+    "content",
+    "customer-panel",
+    "design-system",
+    "evidence",
+    "fulfillment",
+    "landing",
+    "login",
+    "most-viewed",
+    "new-products",
+    "offers",
+    "order",
+    "payment",
+    "products",
+    "returns",
+    "sale",
+    "seller-profile",
+    "sellers",
+    "settlement",
+    "shipping",
+    "storefront",
+    "stories",
+    "support",
+    "template-preview",
+    "trending",
+    "vendor-panel",
+    "wallet"
+  ],
+  "ownershipCounts": {
+    "admin": 268,
+    "app-other": 87,
+    "seller": 38,
+    "design-system": 94,
+    "ops": 11,
+    "storefront": 76,
+    "lib": 74,
+    "content": 22,
+    "other": 10,
+    "customer": 30
+  },
+  "topOversized": [
+    {
+      "path": "src/frontend/app/admin/category-admin-screen.tsx",
+      "language": "tsx",
+      "physicalLoc": 2215,
+      "classification": "CRITICAL",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/admin/product-workspace-screen.tsx",
+      "language": "tsx",
+      "physicalLoc": 1570,
+      "classification": "CRITICAL",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/admin/content-article-admin-screen.tsx",
+      "language": "tsx",
+      "physicalLoc": 1528,
+      "classification": "CRITICAL",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/admin/landing-pages/admin-landing-page-composer.tsx",
+      "language": "tsx",
+      "physicalLoc": 1440,
+      "classification": "CRITICAL",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/admin/admin-api.ts",
+      "language": "ts",
+      "physicalLoc": 1326,
+      "classification": "CRITICAL",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/admin/catalog-attribute-api.ts",
+      "language": "ts",
+      "physicalLoc": 1259,
+      "classification": "CRITICAL",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/admin/host-client.ts",
+      "language": "ts",
+      "physicalLoc": 1254,
+      "classification": "CRITICAL",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/access-control/access-control-center.tsx",
+      "language": "tsx",
+      "physicalLoc": 1248,
+      "classification": "CRITICAL",
+      "ownership": "app-other"
+    },
+    {
+      "path": "src/frontend/app/admin/admin-screens.tsx",
+      "language": "tsx",
+      "physicalLoc": 1230,
+      "classification": "CRITICAL",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/vendor-panel/seller-api.ts",
+      "language": "ts",
+      "physicalLoc": 1211,
+      "classification": "CRITICAL",
+      "ownership": "seller"
+    },
+    {
+      "path": "src/frontend/app/admin/category-attributes-panel.tsx",
+      "language": "tsx",
+      "physicalLoc": 1190,
+      "classification": "OVERSIZED",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/admin/admin-order-detail-screen.tsx",
+      "language": "tsx",
+      "physicalLoc": 1096,
+      "classification": "OVERSIZED",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/design-system/app-data-grid/AppDataGrid.tsx",
+      "language": "tsx",
+      "physicalLoc": 1086,
+      "classification": "OVERSIZED",
+      "ownership": "design-system"
+    },
+    {
+      "path": "src/frontend/app/admin/catalog-attribute-ui.tsx",
+      "language": "tsx",
+      "physicalLoc": 1062,
+      "classification": "OVERSIZED",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/wallet/wallet-ui.tsx",
+      "language": "tsx",
+      "physicalLoc": 1053,
+      "classification": "OVERSIZED",
+      "ownership": "ops"
+    },
+    {
+      "path": "src/frontend/app/admin/landing-pages/admin-resource-selector.tsx",
+      "language": "tsx",
+      "physicalLoc": 1045,
+      "classification": "OVERSIZED",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/storefront/storefront-product-showcase-embla-rails.tsx",
+      "language": "tsx",
+      "physicalLoc": 1028,
+      "classification": "OVERSIZED",
+      "ownership": "storefront"
+    },
+    {
+      "path": "src/frontend/app/storefront/storefront-landing-blocks.tsx",
+      "language": "tsx",
+      "physicalLoc": 1026,
+      "classification": "OVERSIZED",
+      "ownership": "storefront"
+    },
+    {
+      "path": "src/frontend/app/admin/admin-error-map.ts",
+      "language": "ts",
+      "physicalLoc": 1002,
+      "classification": "OVERSIZED",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/storefront/storefront-api.ts",
+      "language": "ts",
+      "physicalLoc": 978,
+      "classification": "OVERSIZED",
+      "ownership": "storefront"
+    },
+    {
+      "path": "src/frontend/app/storefront/storefront-shipping.tsx",
+      "language": "tsx",
+      "physicalLoc": 945,
+      "classification": "OVERSIZED",
+      "ownership": "storefront"
+    },
+    {
+      "path": "src/frontend/app/admin/category-products-panel.tsx",
+      "language": "tsx",
+      "physicalLoc": 926,
+      "classification": "OVERSIZED",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/admin/settings/page.tsx",
+      "language": "tsx",
+      "physicalLoc": 910,
+      "classification": "OVERSIZED",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/lib/storefront-composition/shared-composition-renderer.tsx",
+      "language": "tsx",
+      "physicalLoc": 907,
+      "classification": "OVERSIZED",
+      "ownership": "lib"
+    },
+    {
+      "path": "src/frontend/app/admin/admin-order-items-shipping-panel.tsx",
+      "language": "tsx",
+      "physicalLoc": 884,
+      "classification": "OVERSIZED",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/admin/campaigns/admin-campaign-workspace.tsx",
+      "language": "tsx",
+      "physicalLoc": 826,
+      "classification": "OVERSIZED",
+      "ownership": "admin"
+    }
+  ],
+  "routeSamples": {
+    "storefrontish": [
+      "src/frontend/app/[slug]/page.tsx",
+      "src/frontend/app/best-seller/page.tsx",
+      "src/frontend/app/blogs/[slug]/page.tsx",
+      "src/frontend/app/blogs/author/[slug]/page.tsx",
+      "src/frontend/app/blogs/category/[slug]/page.tsx",
+      "src/frontend/app/blogs/page.tsx",
+      "src/frontend/app/brand/[slug]/page.tsx",
+      "src/frontend/app/brands/page.tsx",
+      "src/frontend/app/cart/page.tsx",
+      "src/frontend/app/category/[slug]/page.tsx",
+      "src/frontend/app/checkout/page.tsx",
+      "src/frontend/app/design-system/page.tsx",
+      "src/frontend/app/landing/[slug]/page.tsx",
+      "src/frontend/app/login/page.tsx",
+      "src/frontend/app/most-viewed/page.tsx",
+      "src/frontend/app/new-products/page.tsx",
+      "src/frontend/app/offers/page.tsx",
+      "src/frontend/app/order/confirmation/page.tsx",
+      "src/frontend/app/page.tsx",
+      "src/frontend/app/payment/page.tsx",
+      "src/frontend/app/payment/result/page.tsx",
+      "src/frontend/app/payment/sandbox/page.tsx",
+      "src/frontend/app/products/[slug]/page.tsx",
+      "src/frontend/app/products/page.tsx",
+      "src/frontend/app/sale/page.tsx",
+      "src/frontend/app/seller-profile/[publicId]/page.tsx",
+      "src/frontend/app/sellers/page.tsx",
+      "src/frontend/app/shipping/page.tsx",
+      "src/frontend/app/trending/page.tsx"
+    ],
+    "adminPageCount": 55
+  }
+}

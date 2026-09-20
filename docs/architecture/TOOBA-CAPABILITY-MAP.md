@@ -43,6 +43,7 @@ Evidence files remain the deep-detail source; this map is the quick index.
 | Contracts W4 | Cart.App→Offer.Contracts; Tax.Contracts (ITaxCalculator/TaxOutcome); Order.App→Tax.Contracts; App→App 14→12 | TB-TMAR-CONTRACTS-W4 |
 | Contracts W5 | Inventory.App→Offer.Contracts; Pricing.Contracts (IPriceLookupGateway); Order.App→Pricing.Contracts; App→App 12→10 | TB-TMAR-CONTRACTS-W5 |
 | Contracts W6 | Promotion.App→Offer.Contracts; Cart.App→Pricing.Contracts (+ campaign authority/CurrencyCode/ReturnPolicy in Contracts); App→App 10→8; FE READY | TB-TMAR-CONTRACTS-W6 |
-| Next | Frontend architecture baseline (parallel recovery) | TB-TMAR-CONTRACTS-W6 |
+| Frontend baseline | Canonical root `src/frontend`; FE-ARCH/SIZE/SEO/BOUNDARY locks; size+import+SEO guards; flat admin debt documented; no broad refactor | TB-TMAR-FE-BASELINE |
+| Next | FE-F1 low-risk shared structure fixes | TB-TMAR-FE-BASELINE |
 
-Last Verified Task = TB-TMAR-CONTRACTS-W6
+Last Verified Task = TB-TMAR-FE-BASELINE

@@ -1,0 +1,105 @@
+{
+  "rule": "FrontendImportBoundaries",
+  "generatedAt": "2026-09-20T07:04:23.291Z",
+  "totalRelativeOrAliasImports": 1686,
+  "suspiciousSharedToFeatureCount": 24,
+  "suspiciousSharedToFeature": [
+    {
+      "from": "src/frontend/design-system/app-category-tree/app-category-tree.contract.test.ts",
+      "to": "../../app/admin/catalog-category-api.ts"
+    },
+    {
+      "from": "src/frontend/design-system/app-data-grid/product-grid-filter-matrix.test.ts",
+      "to": "../../app/admin/product-grid-filter-matrix.ts"
+    },
+    {
+      "from": "src/frontend/lib/storefront-appearance/storefront-appearance-context.tsx",
+      "to": "../../app/storefront/storefront-appearance-api.ts"
+    },
+    {
+      "from": "src/frontend/lib/storefront-appearance/storefront-appearance-context.tsx",
+      "to": "../../app/storefront/storefront-appearance-api.ts"
+    },
+    {
+      "from": "src/frontend/lib/storefront-composition/composition-registry.guard.test.ts",
+      "to": "../../app/admin/landing-pages/landing-section-catalog.ts"
+    },
+    {
+      "from": "src/frontend/lib/storefront-composition/fashion-demo-preview.ts",
+      "to": "../../app/storefront/storefront-api.ts"
+    },
+    {
+      "from": "src/frontend/lib/storefront-composition/fashion-demo-preview.ts",
+      "to": "../../app/storefront/storefront-landing-api.ts"
+    },
+    {
+      "from": "src/frontend/lib/storefront-composition/fashion-demo-preview.ts",
+      "to": "../../app/storefront/storefront-model.ts"
+    },
+    {
+      "from": "src/frontend/lib/storefront-composition/industry-template-preview.ts",
+      "to": "../../app/storefront/storefront-api.ts"
+    },
+    {
+      "from": "src/frontend/lib/storefront-composition/industry-template-preview.ts",
+      "to": "../../app/storefront/storefront-landing-api.ts"
+    },
+    {
+      "from": "src/frontend/lib/storefront-composition/industry-template-preview.ts",
+      "to": "../../app/storefront/storefront-model.ts"
+    },
+    {
+      "from": "src/frontend/lib/storefront-composition/preview-fake-data.ts",
+      "to": "../../app/storefront/storefront-model.ts"
+    },
+    {
+      "from": "src/frontend/lib/storefront-composition/shared-composition-renderer.guard.test.ts",
+      "to": "../../app/admin/landing-pages/admin-composition-catalog.ts"
+    },
+    {
+      "from": "src/frontend/lib/storefront-composition/shared-composition-renderer.tsx",
+      "to": "../../app/storefront/storefront-model.ts"
+    },
+    {
+      "from": "src/frontend/lib/storefront-composition/shared-composition-renderer.tsx",
+      "to": "../../app/storefront/storefront-landing-api.ts"
+    },
+    {
+      "from": "src/frontend/lib/storefront-composition/shared-composition-renderer.tsx",
+      "to": "../../app/storefront/storefront-home-repair-sections.tsx"
+    },
+    {
+      "from": "src/frontend/lib/storefront-composition/shared-composition-renderer.tsx",
+      "to": "../../app/storefront/storefront-home-shopeiva-product-layouts.tsx"
+    },
+    {
+      "from": "src/frontend/lib/storefront-composition/shared-composition-renderer.tsx",
+      "to": "../../app/storefront/storefront-product-showcase-embla-rails.tsx"
+    },
+    {
+      "from": "src/frontend/lib/storefront-composition/shared-composition-renderer.tsx",
+      "to": "../../app/storefront/stories/home-stories.tsx"
+    },
+    {
+      "from": "src/frontend/lib/storefront-composition/shared-composition-renderer.tsx",
+      "to": "../../app/storefront/storefront-home-blocks.tsx"
+    },
+    {
+      "from": "src/frontend/lib/storefront-composition/shared-composition-renderer.tsx",
+      "to": "../../app/storefront/storefront-landing-blocks.tsx"
+    },
+    {
+      "from": "src/frontend/lib/storefront-composition/shared-composition-renderer.tsx",
+      "to": "../../app/storefront/storefront-api.ts"
+    },
+    {
+      "from": "src/frontend/lib/storefront-composition/shared-composition-renderer.tsx",
+      "to": "../../app/storefront/storefront-landing-blocks.tsx"
+    },
+    {
+      "from": "src/frontend/lib/storefront-composition/variant-live-preview.tsx",
+      "to": "../../app/storefront/storefront-landing-api.ts"
+    }
+  ],
+  "note": "Baseline of known reverse edges; new shared→feature imports must not grow beyond this set (path-normalized)."
+}

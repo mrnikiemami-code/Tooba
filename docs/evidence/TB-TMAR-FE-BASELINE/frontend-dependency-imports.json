@@ -1,0 +1,188 @@
+{
+  "generatedAt": "2026-09-20T07:04:23.292Z",
+  "packages": {
+    "antd": {
+      "importSites": 1,
+      "files": 1,
+      "sampleFiles": [
+        "src/frontend/design-system/app-category-tree/AppCategoryTree.tsx"
+      ]
+    },
+    "swiper": {
+      "importSites": 10,
+      "files": 5,
+      "sampleFiles": [
+        "src/frontend/app/blogs/blogs-ui.tsx",
+        "src/frontend/app/storefront/storefront-home-repair-sections.tsx",
+        "src/frontend/app/storefront/storefront-home-shopeiva-product-layouts.tsx",
+        "src/frontend/app/storefront/storefront-landing-blocks.tsx",
+        "src/frontend/app/storefront/stories/home-stories.tsx"
+      ]
+    },
+    "embla-carousel-react": {
+      "importSites": 1,
+      "files": 1,
+      "sampleFiles": [
+        "src/frontend/app/storefront/storefront-product-showcase-embla-rails.tsx"
+      ]
+    },
+    "embla-carousel-autoplay": {
+      "importSites": 1,
+      "files": 1,
+      "sampleFiles": [
+        "src/frontend/app/storefront/storefront-product-showcase-embla-rails.tsx"
+      ]
+    },
+    "@ckeditor/ckeditor5-react": {
+      "importSites": 1,
+      "files": 1,
+      "sampleFiles": [
+        "src/frontend/app/admin/content-article-ckeditor.tsx"
+      ]
+    },
+    "ckeditor5": {
+      "importSites": 2,
+      "files": 1,
+      "sampleFiles": [
+        "src/frontend/app/admin/content-article-ckeditor.tsx"
+      ]
+    },
+    "@tiptap/react": {
+      "importSites": 1,
+      "files": 1,
+      "sampleFiles": [
+        "src/frontend/app/admin/product-rich-text-editor.tsx"
+      ]
+    },
+    "@tiptap/starter-kit": {
+      "importSites": 1,
+      "files": 1,
+      "sampleFiles": [
+        "src/frontend/app/admin/product-rich-text-editor.tsx"
+      ]
+    },
+    "ag-grid-react": {
+      "importSites": 1,
+      "files": 1,
+      "sampleFiles": [
+        "src/frontend/design-system/app-data-grid/AppDataGrid.tsx"
+      ]
+    },
+    "ag-grid-community": {
+      "importSites": 18,
+      "files": 17,
+      "sampleFiles": [
+        "src/frontend/app/admin/additional-category-list-cell.tsx",
+        "src/frontend/app/admin/category-products-panel.tsx",
+        "src/frontend/app/admin/content-author-list.tsx",
+        "src/frontend/app/admin/content-list.tsx",
+        "src/frontend/app/admin/product-grid-filter-matrix.ts",
+        "src/frontend/app/admin/product-list.tsx",
+        "src/frontend/design-system/app-data-grid/ag-filter-mapper.ts",
+        "src/frontend/design-system/app-data-grid/app-column-header.tsx",
+        "src/frontend/design-system/app-data-grid/app-grid-cells.tsx",
+        "src/frontend/design-system/app-data-grid/app-grid-filter-header.ts",
+        "src/frontend/design-system/app-data-grid/app-grid-pinned-actions.ts",
+        "src/frontend/design-system/app-data-grid/AppDataGrid.tsx"
+      ]
+    },
+    "lucide-react": {
+      "importSites": 93,
+      "files": 93,
+      "sampleFiles": [
+        "src/frontend/app/access-control/access-control-center.tsx",
+        "src/frontend/app/access-control/scope-editor.tsx",
+        "src/frontend/app/admin/admin-create-shipment-modal.tsx",
+        "src/frontend/app/admin/admin-fulfillment-work-queue-screen.tsx",
+        "src/frontend/app/admin/admin-order-detail-screen.tsx",
+        "src/frontend/app/admin/admin-order-items-shipping-panel.tsx",
+        "src/frontend/app/admin/admin-order-operations-menu.tsx",
+        "src/frontend/app/admin/admin-returns-work-queue-screen.tsx",
+        "src/frontend/app/admin/admin-screens.tsx",
+        "src/frontend/app/admin/admin-shell.tsx",
+        "src/frontend/app/admin/campaigns/admin-campaign-workspace.tsx",
+        "src/frontend/app/admin/campaigns/admin-campaigns-screen.tsx"
+      ]
+    },
+    "react-toastify": {
+      "importSites": 33,
+      "files": 33,
+      "sampleFiles": [
+        "src/frontend/app/admin/admin-consolidated-package-section.tsx",
+        "src/frontend/app/admin/admin-create-shipment-modal.tsx",
+        "src/frontend/app/admin/admin-fulfillment-work-queue-screen.tsx",
+        "src/frontend/app/admin/admin-order-items-shipping-panel.tsx",
+        "src/frontend/app/admin/admin-order-operations-menu.tsx",
+        "src/frontend/app/admin/admin-tags-panel.tsx",
+        "src/frontend/app/admin/category-admin-screen.tsx",
+        "src/frontend/app/admin/category-attributes-panel.tsx",
+        "src/frontend/app/admin/category-facets-panel.tsx",
+        "src/frontend/app/admin/category-mega-menu-panel.tsx",
+        "src/frontend/app/admin/category-products-panel.tsx",
+        "src/frontend/app/admin/content-article-admin-screen.tsx"
+      ]
+    },
+    "react-hook-form": {
+      "importSites": 3,
+      "files": 3,
+      "sampleFiles": [
+        "src/frontend/app/customer-panel/profile/page.tsx",
+        "src/frontend/app/design-system/showcase.tsx",
+        "src/frontend/app/storefront/storefront-pdp-bulk.tsx"
+      ]
+    },
+    "zod": {
+      "importSites": 4,
+      "files": 4,
+      "sampleFiles": [
+        "src/frontend/app/customer-panel/profile/page.tsx",
+        "src/frontend/app/design-system/showcase.tsx",
+        "src/frontend/app/storefront/storefront-pdp-bulk.tsx",
+        "src/frontend/design-system/invariants.ts"
+      ]
+    },
+    "dayjs": {
+      "importSites": 3,
+      "files": 3,
+      "sampleFiles": [
+        "src/frontend/app/admin/content-article-publish-date-field.tsx",
+        "src/frontend/design-system/app-data-grid/jalali-date-picker.tsx",
+        "src/frontend/design-system/app-data-grid/jalali.ts"
+      ]
+    },
+    "jalaliday": {
+      "importSites": 2,
+      "files": 2,
+      "sampleFiles": [
+        "src/frontend/app/admin/content-article-publish-date-field.tsx",
+        "src/frontend/design-system/app-data-grid/jalali.ts"
+      ]
+    },
+    "next": {
+      "importSites": 189,
+      "files": 145,
+      "sampleFiles": [
+        "src/frontend/app/admin/admin-order-detail-screen.tsx",
+        "src/frontend/app/admin/admin-screens.tsx",
+        "src/frontend/app/admin/admin-shell.tsx",
+        "src/frontend/app/admin/campaigns/admin-campaign-workspace.tsx",
+        "src/frontend/app/admin/campaigns/admin-campaigns-screen.tsx",
+        "src/frontend/app/admin/catalog-attribute-ui.tsx",
+        "src/frontend/app/admin/category-admin-screen.tsx",
+        "src/frontend/app/admin/content/articles/[articleId]/preview/page.tsx",
+        "src/frontend/app/admin/content-article-admin-screen.tsx",
+        "src/frontend/app/admin/content-article-editor.tsx",
+        "src/frontend/app/admin/content-article-new-screen.tsx",
+        "src/frontend/app/admin/content-author-admin-screen.tsx"
+      ]
+    },
+    "isomorphic-dompurify": {
+      "importSites": 2,
+      "files": 2,
+      "sampleFiles": [
+        "src/frontend/app/admin/article-rich-html.ts",
+        "src/frontend/app/admin/product-rich-html.ts"
+      ]
+    }
+  }
+}

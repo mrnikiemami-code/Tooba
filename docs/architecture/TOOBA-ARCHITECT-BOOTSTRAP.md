@@ -22,7 +22,7 @@ Accepted architecture baseline:
 TB-TMAR-ARCH-BASELINE
 
 Current next task:
-(none — Contracts W6 complete; next = TB-TMAR-FE-BASELINE per Result)
+TB-TMAR-FE-F1 (frontend low-risk shared structure fixes after FE-BASELINE)
 
 Product development rule:
 Foundation (TB-TMAR-FND-001) is ACCEPTED.
@@ -36,6 +36,7 @@ Contracts Wave 3 (TB-TMAR-CONTRACTS-W3) PASS — Returns→Wallet.Contracts refu
 Contracts Wave 4 (TB-TMAR-CONTRACTS-W4) PASS — Cart→Offer.Contracts; Tax.Contracts calculator; Order.App→Tax.Contracts.
 Contracts Wave 5 (TB-TMAR-CONTRACTS-W5) PASS — Inventory→Offer.Contracts; Pricing.Contracts lookup; Order.App→Pricing.Contracts.
 Contracts Wave 6 (TB-TMAR-CONTRACTS-W6) PASS — Promotion→Offer.Contracts; Cart→Pricing.Contracts; FE READY.
+Frontend Baseline (TB-TMAR-FE-BASELINE) PASS — inventory/ownership/target arch; FE-SIZE/SEO/BOUNDARY locks+guards; root `src/frontend`; no broad refactor.
 Product-Resume-Safety = SAFE_WITH_TMAR_PARALLEL (Order hub still frozen; do not expand App→App / Infra→App; no NEW cross-context ACID).
 Last Product Task = TB-P10-T022-R21.
 Architecture Baseline = TB-TMAR-ARCH-BASELINE.
@@ -423,8 +424,8 @@ contracts-w4 = TB-TMAR-CONTRACTS-W4 PASS (Cart→Offer.Contracts + Tax.Contracts
 contracts-w5 = TB-TMAR-CONTRACTS-W5 PASS (Inventory→Offer.Contracts + Pricing.Contracts lookup)
 
 contracts-w6 = TB-TMAR-CONTRACTS-W6 PASS (Promotion→Offer.Contracts + Cart→Pricing.Contracts; FE READY)
-
-next task = TB-TMAR-FE-BASELINE unless Recovery SoT says otherwise
+fe-baseline = TB-TMAR-FE-BASELINE PASS (FE architecture baseline + guards; locks FE-ARCH/SIZE/SEO/BOUNDARY)
+next task = TB-TMAR-FE-F1 unless Recovery SoT says otherwise
 
 primary goal = painless future Microservice migration
 

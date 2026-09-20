@@ -57,3 +57,21 @@ Critical giant-file decomposition requires characterization tests around the tou
 
 ## ARCH-TX-001
 No NEW business workflow may rely on a single ACID transaction spanning multiple bounded contexts. Existing confirmed cross-context/shared-database transactions are explicit migration debt (baseline `tmar-cross-context-transaction-files.json`). Future extraction requires an explicit distributed-consistency design (see TB-TMAR-CHECKOUT-CONSISTENCY-DESIGN). Do not add a global MediatR TransactionBehavior.
+
+## FE-ARCH-001
+New App Router route files (`page`/`layout`/route composition) should remain thin composition/transport layers; business feature UI must not accumulate directly in route files. Canonical frontend root: `src/frontend`.
+
+## FE-SIZE-001
+No new hand-written frontend source file may exceed 800 physical LOC without explicit architecture approval. Guard: `docs/evidence/TB-TMAR-FE-BASELINE/frontend-source-size-baseline.json` + `src/frontend/lib/architecture/frontend-source-size.guard.test.ts` (also covered by repo-wide `tmar-source-size-baseline.json`).
+
+## FE-SIZE-002
+Existing oversized frontend files are shrink-only against their recorded baseline LOC. Baselines never auto-raise; entries reduce/remove when files shrink or split.
+
+## FE-SEO-001
+New storefront implementation must not make primary indexable content client-only without explicit architectural justification. Route metadata and canonical product/category/article/store content must remain server-capable. Guard: `seo-rendering.guard.test.ts` + `npm run test:critical-storefront`.
+
+## FE-BOUNDARY-001
+Shared UI (`design-system`) and technical libraries (`lib`) must not gain new dependencies on business feature modules under `app/admin` or `app/storefront`. Existing reverse edges are baselined shrink-only (`frontend-import-boundary-baseline.json`).
+
+## FE-BOUNDARY-002
+New cross-feature imports must use an approved public feature boundary rather than deep internal imports. Do not introduce a giant barrel-file architecture; deepen enforcement during FE-F2+ feature extraction.

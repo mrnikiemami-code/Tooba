@@ -1,0 +1,445 @@
+{
+  "generatedAt": "2026-09-20T07:04:23.290Z",
+  "useClientCount": 253,
+  "useClientByOwnership": {
+    "app-other": 38,
+    "admin": 98,
+    "content": 6,
+    "customer": 16,
+    "ops": 3,
+    "storefront": 34,
+    "seller": 26,
+    "design-system": 25,
+    "lib": 7
+  },
+  "storefrontLikelyClientFiles": [
+    {
+      "path": "src/frontend/app/admin/additional-category-chips-cell.tsx",
+      "ownership": "admin",
+      "loc": 65
+    },
+    {
+      "path": "src/frontend/app/admin/additional-category-list-cell.tsx",
+      "ownership": "admin",
+      "loc": 25
+    },
+    {
+      "path": "src/frontend/app/admin/admin-searchable-combobox.tsx",
+      "ownership": "admin",
+      "loc": 141
+    },
+    {
+      "path": "src/frontend/app/admin/campaigns/admin-campaign-workspace.tsx",
+      "ownership": "admin",
+      "loc": 826
+    },
+    {
+      "path": "src/frontend/app/admin/campaigns/admin-campaigns-screen.tsx",
+      "ownership": "admin",
+      "loc": 435
+    },
+    {
+      "path": "src/frontend/app/admin/catalog/categories/[categoryId]/page.tsx",
+      "ownership": "admin",
+      "loc": 16
+    },
+    {
+      "path": "src/frontend/app/admin/catalog/categories/[categoryId]/[tab]/page.tsx",
+      "ownership": "admin",
+      "loc": 16
+    },
+    {
+      "path": "src/frontend/app/admin/catalog/category-schema/page.tsx",
+      "ownership": "admin",
+      "loc": 16
+    },
+    {
+      "path": "src/frontend/app/admin/catalog/products/[productId]/attributes/page.tsx",
+      "ownership": "admin",
+      "loc": 27
+    },
+    {
+      "path": "src/frontend/app/admin/category-admin-screen.tsx",
+      "ownership": "admin",
+      "loc": 2215
+    },
+    {
+      "path": "src/frontend/app/admin/category-attributes-panel.tsx",
+      "ownership": "admin",
+      "loc": 1190
+    },
+    {
+      "path": "src/frontend/app/admin/category-facets-panel.tsx",
+      "ownership": "admin",
+      "loc": 549
+    },
+    {
+      "path": "src/frontend/app/admin/category-mega-menu-panel.tsx",
+      "ownership": "admin",
+      "loc": 304
+    },
+    {
+      "path": "src/frontend/app/admin/category-products-panel.tsx",
+      "ownership": "admin",
+      "loc": 926
+    },
+    {
+      "path": "src/frontend/app/admin/category-reservation-panel.tsx",
+      "ownership": "admin",
+      "loc": 88
+    },
+    {
+      "path": "src/frontend/app/admin/content/categories/[categoryId]/page.tsx",
+      "ownership": "admin",
+      "loc": 15
+    },
+    {
+      "path": "src/frontend/app/admin/content-article-category-picker.tsx",
+      "ownership": "admin",
+      "loc": 241
+    },
+    {
+      "path": "src/frontend/app/admin/content-category-admin-screen.tsx",
+      "ownership": "admin",
+      "loc": 586
+    },
+    {
+      "path": "src/frontend/app/admin/landing-pages/admin-banner-slider-settings.tsx",
+      "ownership": "admin",
+      "loc": 443
+    },
+    {
+      "path": "src/frontend/app/admin/landing-pages/admin-hero-slider-settings.tsx",
+      "ownership": "admin",
+      "loc": 754
+    },
+    {
+      "path": "src/frontend/app/admin/landing-pages/admin-landing-page-composer.tsx",
+      "ownership": "admin",
+      "loc": 1440
+    },
+    {
+      "path": "src/frontend/app/admin/landing-pages/admin-landing-page-readiness-ui.tsx",
+      "ownership": "admin",
+      "loc": 210
+    },
+    {
+      "path": "src/frontend/app/admin/landing-pages/admin-landing-pages-screen.tsx",
+      "ownership": "admin",
+      "loc": 511
+    },
+    {
+      "path": "src/frontend/app/admin/landing-pages/admin-landing-section-forms.tsx",
+      "ownership": "admin",
+      "loc": 667
+    },
+    {
+      "path": "src/frontend/app/admin/landing-pages/admin-resource-selector.tsx",
+      "ownership": "admin",
+      "loc": 1045
+    },
+    {
+      "path": "src/frontend/app/admin/landing-pages/admin-section-wizard.tsx",
+      "ownership": "admin",
+      "loc": 572
+    },
+    {
+      "path": "src/frontend/app/admin/landing-pages/admin-template-selection-workspace.tsx",
+      "ownership": "admin",
+      "loc": 489
+    },
+    {
+      "path": "src/frontend/app/admin/landing-pages/layout-aware-previews.tsx",
+      "ownership": "admin",
+      "loc": 398
+    },
+    {
+      "path": "src/frontend/app/admin/landing-pages/[pageId]/preview/page.tsx",
+      "ownership": "admin",
+      "loc": 62
+    },
+    {
+      "path": "src/frontend/app/admin/primary-category-migration-wizard.tsx",
+      "ownership": "admin",
+      "loc": 342
+    },
+    {
+      "path": "src/frontend/app/admin/product-attributes-panel.tsx",
+      "ownership": "admin",
+      "loc": 482
+    },
+    {
+      "path": "src/frontend/app/admin/product-category-picker.tsx",
+      "ownership": "admin",
+      "loc": 333
+    },
+    {
+      "path": "src/frontend/app/admin/product-create-screen.tsx",
+      "ownership": "admin",
+      "loc": 645
+    },
+    {
+      "path": "src/frontend/app/admin/product-history-panel.tsx",
+      "ownership": "admin",
+      "loc": 166
+    },
+    {
+      "path": "src/frontend/app/admin/product-list.tsx",
+      "ownership": "admin",
+      "loc": 318
+    },
+    {
+      "path": "src/frontend/app/admin/product-media-panel.tsx",
+      "ownership": "admin",
+      "loc": 395
+    },
+    {
+      "path": "src/frontend/app/admin/product-publishing-panel.tsx",
+      "ownership": "admin",
+      "loc": 241
+    },
+    {
+      "path": "src/frontend/app/admin/product-rich-text-editor.tsx",
+      "ownership": "admin",
+      "loc": 395
+    },
+    {
+      "path": "src/frontend/app/admin/product-seo-panel.tsx",
+      "ownership": "admin",
+      "loc": 255
+    },
+    {
+      "path": "src/frontend/app/admin/product-translations-panel.tsx",
+      "ownership": "admin",
+      "loc": 337
+    },
+    {
+      "path": "src/frontend/app/admin/product-variants-panel.tsx",
+      "ownership": "admin",
+      "loc": 730
+    },
+    {
+      "path": "src/frontend/app/admin/product-workspace-dirty-context.tsx",
+      "ownership": "admin",
+      "loc": 59
+    },
+    {
+      "path": "src/frontend/app/admin/product-workspace-screen.tsx",
+      "ownership": "admin",
+      "loc": 1570
+    },
+    {
+      "path": "src/frontend/app/blogs/blogs-taxonomy-ui.tsx",
+      "ownership": "content",
+      "loc": 183
+    },
+    {
+      "path": "src/frontend/app/blogs/blogs-ui.tsx",
+      "ownership": "content",
+      "loc": 221
+    },
+    {
+      "path": "src/frontend/app/blogs/[slug]/blog-detail-ui.tsx",
+      "ownership": "content",
+      "loc": 112
+    },
+    {
+      "path": "src/frontend/app/login/storefront-login.tsx",
+      "ownership": "app-other",
+      "loc": 220
+    },
+    {
+      "path": "src/frontend/app/order/confirmation/storefront-order-confirmation.tsx",
+      "ownership": "app-other",
+      "loc": 284
+    },
+    {
+      "path": "src/frontend/app/payment/result/storefront-payment-result.tsx",
+      "ownership": "app-other",
+      "loc": 374
+    },
+    {
+      "path": "src/frontend/app/payment/sandbox/storefront-payment-sandbox.tsx",
+      "ownership": "app-other",
+      "loc": 119
+    },
+    {
+      "path": "src/frontend/app/payment/storefront-payment-handoff.tsx",
+      "ownership": "app-other",
+      "loc": 267
+    },
+    {
+      "path": "src/frontend/app/storefront/preview-placeholder-surface.tsx",
+      "ownership": "storefront",
+      "loc": 47
+    },
+    {
+      "path": "src/frontend/app/storefront/preview-sample-badge.tsx",
+      "ownership": "storefront",
+      "loc": 22
+    },
+    {
+      "path": "src/frontend/app/storefront/storefront-account-menu.tsx",
+      "ownership": "storefront",
+      "loc": 247
+    },
+    {
+      "path": "src/frontend/app/storefront/storefront-buy-box.tsx",
+      "ownership": "storefront",
+      "loc": 71
+    },
+    {
+      "path": "src/frontend/app/storefront/storefront-cart.tsx",
+      "ownership": "storefront",
+      "loc": 653
+    },
+    {
+      "path": "src/frontend/app/storefront/storefront-category-plp.tsx",
+      "ownership": "storefront",
+      "loc": 363
+    },
+    {
+      "path": "src/frontend/app/storefront/storefront-checkout-limit-notice.tsx",
+      "ownership": "storefront",
+      "loc": 33
+    },
+    {
+      "path": "src/frontend/app/storefront/storefront-checkout.tsx",
+      "ownership": "storefront",
+      "loc": 502
+    },
+    {
+      "path": "src/frontend/app/storefront/storefront-footer.tsx",
+      "ownership": "storefront",
+      "loc": 175
+    },
+    {
+      "path": "src/frontend/app/storefront/storefront-header.tsx",
+      "ownership": "storefront",
+      "loc": 614
+    },
+    {
+      "path": "src/frontend/app/storefront/storefront-home-blocks.tsx",
+      "ownership": "storefront",
+      "loc": 728
+    },
+    {
+      "path": "src/frontend/app/storefront/storefront-home-repair-sections.tsx",
+      "ownership": "storefront",
+      "loc": 620
+    },
+    {
+      "path": "src/frontend/app/storefront/storefront-home-shopeiva-product-layouts.tsx",
+      "ownership": "storefront",
+      "loc": 386
+    },
+    {
+      "path": "src/frontend/app/storefront/storefront-home.tsx",
+      "ownership": "storefront",
+      "loc": 124
+    },
+    {
+      "path": "src/frontend/app/storefront/storefront-landing-blocks.tsx",
+      "ownership": "storefront",
+      "loc": 1026
+    },
+    {
+      "path": "src/frontend/app/storefront/storefront-landing-sections.tsx",
+      "ownership": "storefront",
+      "loc": 109
+    },
+    {
+      "path": "src/frontend/app/storefront/storefront-listing.tsx",
+      "ownership": "storefront",
+      "loc": 370
+    },
+    {
+      "path": "src/frontend/app/storefront/storefront-menu-tree.tsx",
+      "ownership": "storefront",
+      "loc": 46
+    },
+    {
+      "path": "src/frontend/app/storefront/storefront-mini-cart.tsx",
+      "ownership": "storefront",
+      "loc": 243
+    },
+    {
+      "path": "src/frontend/app/storefront/storefront-payment-methods.tsx",
+      "ownership": "storefront",
+      "loc": 207
+    },
+    {
+      "path": "src/frontend/app/storefront/storefront-pdp-bulk.tsx",
+      "ownership": "storefront",
+      "loc": 176
+    },
+    {
+      "path": "src/frontend/app/storefront/storefront-pdp-qa.tsx",
+      "ownership": "storefront",
+      "loc": 124
+    },
+    {
+      "path": "src/frontend/app/storefront/storefront-pdp-reviews.tsx",
+      "ownership": "storefront",
+      "loc": 93
+    },
+    {
+      "path": "src/frontend/app/storefront/storefront-pdp.tsx",
+      "ownership": "storefront",
+      "loc": 556
+    },
+    {
+      "path": "src/frontend/app/storefront/storefront-pending-payments.tsx",
+      "ownership": "storefront",
+      "loc": 307
+    },
+    {
+      "path": "src/frontend/app/storefront/storefront-product-card.tsx",
+      "ownership": "storefront",
+      "loc": 220
+    },
+    {
+      "path": "src/frontend/app/storefront/storefront-product-showcase-embla-rails.tsx",
+      "ownership": "storefront",
+      "loc": 1028
+    },
+    {
+      "path": "src/frontend/app/storefront/storefront-shipping.tsx",
+      "ownership": "storefront",
+      "loc": 945
+    },
+    {
+      "path": "src/frontend/app/storefront/storefront-theme-toggle.tsx",
+      "ownership": "storefront",
+      "loc": 86
+    }
+  ],
+  "classificationNote": "Automated scan marks 'use client' presence only. REQUIRED_INTERACTIVE vs LIKELY_SERVER_CANDIDATE requires human review in client-server-boundaries.md.",
+  "criticalRouteNotes": [
+    {
+      "route": "/",
+      "status": "server_entry_with_nested_clients",
+      "seo": "primary_content_ssr"
+    },
+    {
+      "route": "/category/[slug]",
+      "status": "server_entry_with_interactive_filters",
+      "seo": "listing_must_ssr"
+    },
+    {
+      "route": "/products|/[slug] PDP",
+      "status": "server_entry_with_interactive_atc",
+      "seo": "pdp_must_ssr"
+    },
+    {
+      "route": "/blogs/[slug]",
+      "status": "server_entry",
+      "seo": "article_must_ssr"
+    },
+    {
+      "route": "/cart",
+      "status": "server_shell_client_cart",
+      "seo": "noindex"
+    }
+  ]
+}

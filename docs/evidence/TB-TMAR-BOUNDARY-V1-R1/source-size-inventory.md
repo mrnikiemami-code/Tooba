@@ -8,15 +8,15 @@ Excluded: `node_modules`, `bin`, `obj`, `dist`, `tmp`, build, lockfiles, EF Migr
 
 | Metric | Count |
 |---|---|
-| Files scanned | 1717 |
+| Files scanned | 1741 |
 | CRITICAL_GOD_FILE | 15 |
 | OVERSIZED_LEGACY | 40 |
-| WATCH | 89 |
-| NORMAL | 1573 |
+| WATCH | 88 |
+| NORMAL | 1598 |
 
 ## By language (included)
 
-cs 788 · tsx 332 · ts 372 · mjs 193 · cjs 13 · js 15 · ps1 3 · sql 1
+cs 808 · tsx 332 · ts 376 · mjs 193 · cjs 13 · js 15 · ps1 3 · sql 1
 
 ## Classification thresholds
 
@@ -27,6 +27,8 @@ Frontend TS/TSX/JS: NORMAL ≤500 · WATCH >500 · OVERSIZED_LEGACY >800 · CRIT
 ## Machine-readable
 
 `docs/evidence/TB-TMAR-BOUNDARY-V1-R1/source-size-inventory.json`
+
+Refreshed by TB-TMAR-FE-BASELINE (architecture baseline; no oversized growth).
 
 ## Top physical LOC (verified)
 

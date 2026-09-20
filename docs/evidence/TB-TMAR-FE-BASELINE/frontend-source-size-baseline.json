@@ -1,0 +1,4981 @@
+{
+  "rule": "FrontendSourceSize",
+  "thresholdNewFileLoc": 800,
+  "watchLoc": 500,
+  "criticalLoc": 1200,
+  "generatedAt": "2026-09-20T07:04:23.289Z",
+  "fileCount": 710,
+  "oversizedCount": 26,
+  "files": [
+    {
+      "path": "src/frontend/app/admin/category-admin-screen.tsx",
+      "language": "tsx",
+      "loc": 2215,
+      "classification": "CRITICAL_GOD_FILE",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/admin/product-workspace-screen.tsx",
+      "language": "tsx",
+      "loc": 1570,
+      "classification": "CRITICAL_GOD_FILE",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/admin/content-article-admin-screen.tsx",
+      "language": "tsx",
+      "loc": 1528,
+      "classification": "CRITICAL_GOD_FILE",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/admin/landing-pages/admin-landing-page-composer.tsx",
+      "language": "tsx",
+      "loc": 1440,
+      "classification": "CRITICAL_GOD_FILE",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/admin/admin-api.ts",
+      "language": "ts",
+      "loc": 1326,
+      "classification": "CRITICAL_GOD_FILE",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/admin/catalog-attribute-api.ts",
+      "language": "ts",
+      "loc": 1259,
+      "classification": "CRITICAL_GOD_FILE",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/admin/host-client.ts",
+      "language": "ts",
+      "loc": 1254,
+      "classification": "CRITICAL_GOD_FILE",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/access-control/access-control-center.tsx",
+      "language": "tsx",
+      "loc": 1248,
+      "classification": "CRITICAL_GOD_FILE",
+      "ownership": "app-other"
+    },
+    {
+      "path": "src/frontend/app/admin/admin-screens.tsx",
+      "language": "tsx",
+      "loc": 1230,
+      "classification": "CRITICAL_GOD_FILE",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/vendor-panel/seller-api.ts",
+      "language": "ts",
+      "loc": 1211,
+      "classification": "CRITICAL_GOD_FILE",
+      "ownership": "seller"
+    },
+    {
+      "path": "src/frontend/app/admin/category-attributes-panel.tsx",
+      "language": "tsx",
+      "loc": 1190,
+      "classification": "OVERSIZED_LEGACY",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/admin/admin-order-detail-screen.tsx",
+      "language": "tsx",
+      "loc": 1096,
+      "classification": "OVERSIZED_LEGACY",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/design-system/app-data-grid/AppDataGrid.tsx",
+      "language": "tsx",
+      "loc": 1086,
+      "classification": "OVERSIZED_LEGACY",
+      "ownership": "design-system"
+    },
+    {
+      "path": "src/frontend/app/admin/catalog-attribute-ui.tsx",
+      "language": "tsx",
+      "loc": 1062,
+      "classification": "OVERSIZED_LEGACY",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/wallet/wallet-ui.tsx",
+      "language": "tsx",
+      "loc": 1053,
+      "classification": "OVERSIZED_LEGACY",
+      "ownership": "ops"
+    },
+    {
+      "path": "src/frontend/app/admin/landing-pages/admin-resource-selector.tsx",
+      "language": "tsx",
+      "loc": 1045,
+      "classification": "OVERSIZED_LEGACY",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/storefront/storefront-product-showcase-embla-rails.tsx",
+      "language": "tsx",
+      "loc": 1028,
+      "classification": "OVERSIZED_LEGACY",
+      "ownership": "storefront"
+    },
+    {
+      "path": "src/frontend/app/storefront/storefront-landing-blocks.tsx",
+      "language": "tsx",
+      "loc": 1026,
+      "classification": "OVERSIZED_LEGACY",
+      "ownership": "storefront"
+    },
+    {
+      "path": "src/frontend/app/admin/admin-error-map.ts",
+      "language": "ts",
+      "loc": 1002,
+      "classification": "OVERSIZED_LEGACY",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/storefront/storefront-api.ts",
+      "language": "ts",
+      "loc": 978,
+      "classification": "OVERSIZED_LEGACY",
+      "ownership": "storefront"
+    },
+    {
+      "path": "src/frontend/app/storefront/storefront-shipping.tsx",
+      "language": "tsx",
+      "loc": 945,
+      "classification": "OVERSIZED_LEGACY",
+      "ownership": "storefront"
+    },
+    {
+      "path": "src/frontend/app/admin/category-products-panel.tsx",
+      "language": "tsx",
+      "loc": 926,
+      "classification": "OVERSIZED_LEGACY",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/admin/settings/page.tsx",
+      "language": "tsx",
+      "loc": 910,
+      "classification": "OVERSIZED_LEGACY",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/lib/storefront-composition/shared-composition-renderer.tsx",
+      "language": "tsx",
+      "loc": 907,
+      "classification": "OVERSIZED_LEGACY",
+      "ownership": "lib"
+    },
+    {
+      "path": "src/frontend/app/admin/admin-order-items-shipping-panel.tsx",
+      "language": "tsx",
+      "loc": 884,
+      "classification": "OVERSIZED_LEGACY",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/admin/campaigns/admin-campaign-workspace.tsx",
+      "language": "tsx",
+      "loc": 826,
+      "classification": "OVERSIZED_LEGACY",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/storefront/storefront-cart-api.ts",
+      "language": "ts",
+      "loc": 789,
+      "classification": "WATCH",
+      "ownership": "storefront"
+    },
+    {
+      "path": "src/frontend/app/support/support-ui.tsx",
+      "language": "tsx",
+      "loc": 788,
+      "classification": "WATCH",
+      "ownership": "app-other"
+    },
+    {
+      "path": "src/frontend/app/content/content-api.ts",
+      "language": "ts",
+      "loc": 784,
+      "classification": "WATCH",
+      "ownership": "content"
+    },
+    {
+      "path": "src/frontend/lib/storefront-composition/fashion-demo-preview.ts",
+      "language": "ts",
+      "loc": 755,
+      "classification": "WATCH",
+      "ownership": "lib"
+    },
+    {
+      "path": "src/frontend/app/admin/landing-pages/admin-hero-slider-settings.tsx",
+      "language": "tsx",
+      "loc": 754,
+      "classification": "WATCH",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/stories/story-api.ts",
+      "language": "ts",
+      "loc": 741,
+      "classification": "WATCH",
+      "ownership": "content"
+    },
+    {
+      "path": "src/frontend/design-system/data-grid/DataGrid.tsx",
+      "language": "tsx",
+      "loc": 740,
+      "classification": "WATCH",
+      "ownership": "design-system"
+    },
+    {
+      "path": "src/frontend/app/support/support-api.ts",
+      "language": "ts",
+      "loc": 733,
+      "classification": "WATCH",
+      "ownership": "app-other"
+    },
+    {
+      "path": "src/frontend/lib/storefront-composition/industry-template-preview.ts",
+      "language": "ts",
+      "loc": 731,
+      "classification": "WATCH",
+      "ownership": "lib"
+    },
+    {
+      "path": "src/frontend/app/admin/product-variants-panel.tsx",
+      "language": "tsx",
+      "loc": 730,
+      "classification": "WATCH",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/lib/storefront-composition/hero-slider-config.ts",
+      "language": "ts",
+      "loc": 730,
+      "classification": "WATCH",
+      "ownership": "lib"
+    },
+    {
+      "path": "src/frontend/app/storefront/storefront-home-blocks.tsx",
+      "language": "tsx",
+      "loc": 728,
+      "classification": "WATCH",
+      "ownership": "storefront"
+    },
+    {
+      "path": "src/frontend/app/fulfillment/fulfillment-api.ts",
+      "language": "ts",
+      "loc": 693,
+      "classification": "WATCH",
+      "ownership": "ops"
+    },
+    {
+      "path": "src/frontend/app/admin/media-library-dialog.tsx",
+      "language": "tsx",
+      "loc": 683,
+      "classification": "WATCH",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/admin/landing-pages/admin-landing-section-forms.tsx",
+      "language": "tsx",
+      "loc": 667,
+      "classification": "WATCH",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/wallet/wallet-api.ts",
+      "language": "ts",
+      "loc": 664,
+      "classification": "WATCH",
+      "ownership": "ops"
+    },
+    {
+      "path": "src/frontend/app/admin/admin-consolidated-package-section.tsx",
+      "language": "tsx",
+      "loc": 661,
+      "classification": "WATCH",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/storefront/storefront-cart.tsx",
+      "language": "tsx",
+      "loc": 653,
+      "classification": "WATCH",
+      "ownership": "storefront"
+    },
+    {
+      "path": "src/frontend/app/admin/product-create-screen.tsx",
+      "language": "tsx",
+      "loc": 645,
+      "classification": "WATCH",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/storefront/storefront-payment-api.ts",
+      "language": "ts",
+      "loc": 643,
+      "classification": "WATCH",
+      "ownership": "storefront"
+    },
+    {
+      "path": "src/frontend/app/admin/admin-create-shipment-modal.tsx",
+      "language": "tsx",
+      "loc": 639,
+      "classification": "WATCH",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/stories/management/StoryManagementScreen.tsx",
+      "language": "tsx",
+      "loc": 636,
+      "classification": "WATCH",
+      "ownership": "content"
+    },
+    {
+      "path": "src/frontend/app/admin/content-article-ckeditor.tsx",
+      "language": "tsx",
+      "loc": 635,
+      "classification": "WATCH",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/storefront/storefront-home-repair-sections.tsx",
+      "language": "tsx",
+      "loc": 620,
+      "classification": "WATCH",
+      "ownership": "storefront"
+    },
+    {
+      "path": "src/frontend/design-system/app-category-tree/AppCategoryTree.tsx",
+      "language": "tsx",
+      "loc": 620,
+      "classification": "WATCH",
+      "ownership": "design-system"
+    },
+    {
+      "path": "src/frontend/app/storefront/storefront-header.tsx",
+      "language": "tsx",
+      "loc": 614,
+      "classification": "WATCH",
+      "ownership": "storefront"
+    },
+    {
+      "path": "src/frontend/app/admin/content-list.tsx",
+      "language": "tsx",
+      "loc": 590,
+      "classification": "WATCH",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/returns/return-api.ts",
+      "language": "ts",
+      "loc": 588,
+      "classification": "WATCH",
+      "ownership": "ops"
+    },
+    {
+      "path": "src/frontend/app/admin/content-category-admin-screen.tsx",
+      "language": "tsx",
+      "loc": 586,
+      "classification": "WATCH",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/admin/landing-pages/admin-section-wizard.tsx",
+      "language": "tsx",
+      "loc": 572,
+      "classification": "WATCH",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/storefront/stories/story-modal.tsx",
+      "language": "tsx",
+      "loc": 570,
+      "classification": "WATCH",
+      "ownership": "storefront"
+    },
+    {
+      "path": "src/frontend/app/returns/return-ui.tsx",
+      "language": "tsx",
+      "loc": 568,
+      "classification": "WATCH",
+      "ownership": "ops"
+    },
+    {
+      "path": "src/frontend/app/admin/shipping-services-screen.tsx",
+      "language": "tsx",
+      "loc": 562,
+      "classification": "WATCH",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/lib/storefront-composition/registry.ts",
+      "language": "ts",
+      "loc": 558,
+      "classification": "WATCH",
+      "ownership": "lib"
+    },
+    {
+      "path": "src/frontend/app/storefront/storefront-pdp.tsx",
+      "language": "tsx",
+      "loc": 556,
+      "classification": "WATCH",
+      "ownership": "storefront"
+    },
+    {
+      "path": "src/frontend/app/admin/category-facets-panel.tsx",
+      "language": "tsx",
+      "loc": 549,
+      "classification": "WATCH",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/admin/landing-pages/admin-landing-pages-screen.tsx",
+      "language": "tsx",
+      "loc": 511,
+      "classification": "WATCH",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/admin/catalog-category-api.ts",
+      "language": "ts",
+      "loc": 509,
+      "classification": "WATCH",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/storefront/storefront-checkout.tsx",
+      "language": "tsx",
+      "loc": 502,
+      "classification": "WATCH",
+      "ownership": "storefront"
+    },
+    {
+      "path": "src/frontend/app/admin/campaigns/admin-campaigns-api.ts",
+      "language": "ts",
+      "loc": 497,
+      "classification": "NORMAL",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/admin/landing-pages/admin-template-selection-workspace.tsx",
+      "language": "tsx",
+      "loc": 489,
+      "classification": "NORMAL",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/admin/product-attributes-panel.tsx",
+      "language": "tsx",
+      "loc": 482,
+      "classification": "NORMAL",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/vendor-panel/page.tsx",
+      "language": "tsx",
+      "loc": 481,
+      "classification": "NORMAL",
+      "ownership": "seller"
+    },
+    {
+      "path": "src/frontend/app/storefront/storefront-cart-api.test.ts",
+      "language": "ts",
+      "loc": 477,
+      "classification": "NORMAL",
+      "ownership": "storefront"
+    },
+    {
+      "path": "src/frontend/scripts/storefront-theme-coverage.mjs",
+      "language": "mjs",
+      "loc": 470,
+      "classification": "NORMAL",
+      "ownership": "other"
+    },
+    {
+      "path": "src/frontend/app/admin/landing-pages/admin-banner-slider-settings.tsx",
+      "language": "tsx",
+      "loc": 443,
+      "classification": "NORMAL",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/admin/campaigns/admin-campaigns-screen.tsx",
+      "language": "tsx",
+      "loc": 435,
+      "classification": "NORMAL",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/vendor-panel/coupons/coupons-list.tsx",
+      "language": "tsx",
+      "loc": 429,
+      "classification": "NORMAL",
+      "ownership": "seller"
+    },
+    {
+      "path": "src/frontend/app/admin/landing-pages/admin-landing-pages-api.ts",
+      "language": "ts",
+      "loc": 427,
+      "classification": "NORMAL",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/customer-panel/notification-inbox.tsx",
+      "language": "tsx",
+      "loc": 417,
+      "classification": "NORMAL",
+      "ownership": "customer"
+    },
+    {
+      "path": "src/frontend/app/vendor-panel/vendor-reviews-ui.tsx",
+      "language": "tsx",
+      "loc": 414,
+      "classification": "NORMAL",
+      "ownership": "seller"
+    },
+    {
+      "path": "src/frontend/design-system/app-data-grid/AdvancedFilterBuilder.tsx",
+      "language": "tsx",
+      "loc": 412,
+      "classification": "NORMAL",
+      "ownership": "design-system"
+    },
+    {
+      "path": "src/frontend/app/admin/content-author-admin-screen.tsx",
+      "language": "tsx",
+      "loc": 411,
+      "classification": "NORMAL",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/admin/content-article-comments-panel.tsx",
+      "language": "tsx",
+      "loc": 403,
+      "classification": "NORMAL",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/access-control/access-control-api.ts",
+      "language": "ts",
+      "loc": 401,
+      "classification": "NORMAL",
+      "ownership": "app-other"
+    },
+    {
+      "path": "src/frontend/lib/storefront-composition/responsive-contracts.ts",
+      "language": "ts",
+      "loc": 399,
+      "classification": "NORMAL",
+      "ownership": "lib"
+    },
+    {
+      "path": "src/frontend/app/admin/landing-pages/layout-aware-previews.tsx",
+      "language": "tsx",
+      "loc": 398,
+      "classification": "NORMAL",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/admin/admin-shell.tsx",
+      "language": "tsx",
+      "loc": 395,
+      "classification": "NORMAL",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/admin/product-media-panel.tsx",
+      "language": "tsx",
+      "loc": 395,
+      "classification": "NORMAL",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/admin/product-rich-text-editor.tsx",
+      "language": "tsx",
+      "loc": 395,
+      "classification": "NORMAL",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/storefront/storefront-shipping-api.ts",
+      "language": "ts",
+      "loc": 391,
+      "classification": "NORMAL",
+      "ownership": "storefront"
+    },
+    {
+      "path": "src/frontend/app/vendor-panel/products/[offerId]/page.tsx",
+      "language": "tsx",
+      "loc": 391,
+      "classification": "NORMAL",
+      "ownership": "seller"
+    },
+    {
+      "path": "src/frontend/design-system/app-category-tree/tree-model.ts",
+      "language": "ts",
+      "loc": 388,
+      "classification": "NORMAL",
+      "ownership": "design-system"
+    },
+    {
+      "path": "src/frontend/app/storefront/storefront-home-shopeiva-product-layouts.tsx",
+      "language": "tsx",
+      "loc": 386,
+      "classification": "NORMAL",
+      "ownership": "storefront"
+    },
+    {
+      "path": "src/frontend/app/admin/admin-order-items-shipping.test.ts",
+      "language": "ts",
+      "loc": 385,
+      "classification": "NORMAL",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/design-system/app-data-grid/ag-filter-mapper.ts",
+      "language": "ts",
+      "loc": 385,
+      "classification": "NORMAL",
+      "ownership": "design-system"
+    },
+    {
+      "path": "src/frontend/app/vendor-panel/vendor-shell.tsx",
+      "language": "tsx",
+      "loc": 384,
+      "classification": "NORMAL",
+      "ownership": "seller"
+    },
+    {
+      "path": "src/frontend/app/storefront/storefront-model.ts",
+      "language": "ts",
+      "loc": 382,
+      "classification": "NORMAL",
+      "ownership": "storefront"
+    },
+    {
+      "path": "src/frontend/app/admin/admin-fulfillment-work-queue-screen.tsx",
+      "language": "tsx",
+      "loc": 376,
+      "classification": "NORMAL",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/payment/result/storefront-payment-result.tsx",
+      "language": "tsx",
+      "loc": 374,
+      "classification": "NORMAL",
+      "ownership": "app-other"
+    },
+    {
+      "path": "src/frontend/design-system/workspace/WorkspaceShell.tsx",
+      "language": "tsx",
+      "loc": 374,
+      "classification": "NORMAL",
+      "ownership": "design-system"
+    },
+    {
+      "path": "src/frontend/app/customer-panel/addresses/page.tsx",
+      "language": "tsx",
+      "loc": 372,
+      "classification": "NORMAL",
+      "ownership": "customer"
+    },
+    {
+      "path": "src/frontend/app/storefront/storefront-listing.tsx",
+      "language": "tsx",
+      "loc": 370,
+      "classification": "NORMAL",
+      "ownership": "storefront"
+    },
+    {
+      "path": "src/frontend/app/admin/category-admin-form.test.ts",
+      "language": "ts",
+      "loc": 369,
+      "classification": "NORMAL",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/admin/catalog-units-screen.tsx",
+      "language": "tsx",
+      "loc": 367,
+      "classification": "NORMAL",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/customer-panel/customer-api.ts",
+      "language": "ts",
+      "loc": 365,
+      "classification": "NORMAL",
+      "ownership": "customer"
+    },
+    {
+      "path": "src/frontend/app/storefront/storefront-category-plp.tsx",
+      "language": "tsx",
+      "loc": 363,
+      "classification": "NORMAL",
+      "ownership": "storefront"
+    },
+    {
+      "path": "src/frontend/app/storefront/storefront-checkout-api.ts",
+      "language": "ts",
+      "loc": 354,
+      "classification": "NORMAL",
+      "ownership": "storefront"
+    },
+    {
+      "path": "src/frontend/app/admin/article-rich-html.ts",
+      "language": "ts",
+      "loc": 352,
+      "classification": "NORMAL",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/admin/language-list.tsx",
+      "language": "tsx",
+      "loc": 350,
+      "classification": "NORMAL",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/admin/content-author-list.tsx",
+      "language": "tsx",
+      "loc": 348,
+      "classification": "NORMAL",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/storefront/storefront-pending-payment-api.ts",
+      "language": "ts",
+      "loc": 348,
+      "classification": "NORMAL",
+      "ownership": "storefront"
+    },
+    {
+      "path": "src/frontend/app/composition/composition-api.ts",
+      "language": "ts",
+      "loc": 347,
+      "classification": "NORMAL",
+      "ownership": "app-other"
+    },
+    {
+      "path": "src/frontend/lib/storefront-composition/variant-design-names.ts",
+      "language": "ts",
+      "loc": 345,
+      "classification": "NORMAL",
+      "ownership": "lib"
+    },
+    {
+      "path": "src/frontend/app/admin/primary-category-migration-wizard.tsx",
+      "language": "tsx",
+      "loc": 342,
+      "classification": "NORMAL",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/admin/shipping-services-api.ts",
+      "language": "ts",
+      "loc": 338,
+      "classification": "NORMAL",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/admin/product-translations-panel.tsx",
+      "language": "tsx",
+      "loc": 337,
+      "classification": "NORMAL",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/admin/product-category-picker.tsx",
+      "language": "tsx",
+      "loc": 333,
+      "classification": "NORMAL",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/admin/admin-order-operations.test.ts",
+      "language": "ts",
+      "loc": 327,
+      "classification": "NORMAL",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/storefront/storefront-landing-api.ts",
+      "language": "ts",
+      "loc": 326,
+      "classification": "NORMAL",
+      "ownership": "storefront"
+    },
+    {
+      "path": "src/frontend/app/admin/admin-order-operations-menu.tsx",
+      "language": "tsx",
+      "loc": 325,
+      "classification": "NORMAL",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/admin/admin-returns-work-queue-screen.tsx",
+      "language": "tsx",
+      "loc": 325,
+      "classification": "NORMAL",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/admin/media-api.ts",
+      "language": "ts",
+      "loc": 324,
+      "classification": "NORMAL",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/settlement/settlement-api.ts",
+      "language": "ts",
+      "loc": 324,
+      "classification": "NORMAL",
+      "ownership": "ops"
+    },
+    {
+      "path": "src/frontend/app/vendor-panel/vendor-wallet-ui.tsx",
+      "language": "tsx",
+      "loc": 323,
+      "classification": "NORMAL",
+      "ownership": "seller"
+    },
+    {
+      "path": "src/frontend/app/admin/product-list.tsx",
+      "language": "tsx",
+      "loc": 318,
+      "classification": "NORMAL",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/admin/admin-order-operations.ts",
+      "language": "ts",
+      "loc": 317,
+      "classification": "NORMAL",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/admin/admin-tags-panel.tsx",
+      "language": "tsx",
+      "loc": 317,
+      "classification": "NORMAL",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/admin/content-author-api.ts",
+      "language": "ts",
+      "loc": 309,
+      "classification": "NORMAL",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/storefront/storefront-pending-payments.tsx",
+      "language": "tsx",
+      "loc": 307,
+      "classification": "NORMAL",
+      "ownership": "storefront"
+    },
+    {
+      "path": "src/frontend/app/admin/category-mega-menu-panel.tsx",
+      "language": "tsx",
+      "loc": 304,
+      "classification": "NORMAL",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/admin/content-article-media-panel.tsx",
+      "language": "tsx",
+      "loc": 304,
+      "classification": "NORMAL",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/admin/content-category-api.ts",
+      "language": "ts",
+      "loc": 298,
+      "classification": "NORMAL",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/admin/workspace-model.ts",
+      "language": "ts",
+      "loc": 297,
+      "classification": "NORMAL",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/vendor-panel/settings/page.tsx",
+      "language": "tsx",
+      "loc": 294,
+      "classification": "NORMAL",
+      "ownership": "seller"
+    },
+    {
+      "path": "src/frontend/design-system/data-grid/FilterControl.tsx",
+      "language": "tsx",
+      "loc": 290,
+      "classification": "NORMAL",
+      "ownership": "design-system"
+    },
+    {
+      "path": "src/frontend/app/storefront/storefront-api.test.ts",
+      "language": "ts",
+      "loc": 289,
+      "classification": "NORMAL",
+      "ownership": "storefront"
+    },
+    {
+      "path": "src/frontend/app/order/confirmation/storefront-order-confirmation.tsx",
+      "language": "tsx",
+      "loc": 284,
+      "classification": "NORMAL",
+      "ownership": "app-other"
+    },
+    {
+      "path": "src/frontend/app/customer-panel/customer-address-api.ts",
+      "language": "ts",
+      "loc": 282,
+      "classification": "NORMAL",
+      "ownership": "customer"
+    },
+    {
+      "path": "src/frontend/app/admin/content-help-content.ts",
+      "language": "ts",
+      "loc": 278,
+      "classification": "NORMAL",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/admin/catalog-tag-api.ts",
+      "language": "ts",
+      "loc": 272,
+      "classification": "NORMAL",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/design-system/app-data-grid/jalali-date-picker.tsx",
+      "language": "tsx",
+      "loc": 271,
+      "classification": "NORMAL",
+      "ownership": "design-system"
+    },
+    {
+      "path": "src/frontend/app/payment/storefront-payment-handoff.tsx",
+      "language": "tsx",
+      "loc": 267,
+      "classification": "NORMAL",
+      "ownership": "app-other"
+    },
+    {
+      "path": "src/frontend/app/admin/admin-order-completeness.ts",
+      "language": "ts",
+      "loc": 266,
+      "classification": "NORMAL",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/vendor-panel/coupons/coupon-form.tsx",
+      "language": "tsx",
+      "loc": 266,
+      "classification": "NORMAL",
+      "ownership": "seller"
+    },
+    {
+      "path": "src/frontend/design-system/primitives/core.tsx",
+      "language": "tsx",
+      "loc": 256,
+      "classification": "NORMAL",
+      "ownership": "design-system"
+    },
+    {
+      "path": "src/frontend/app/admin/admin-appearance-settings.tsx",
+      "language": "tsx",
+      "loc": 255,
+      "classification": "NORMAL",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/admin/product-seo-panel.tsx",
+      "language": "tsx",
+      "loc": 255,
+      "classification": "NORMAL",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/lib/storefront-composition/preview-fake-data.ts",
+      "language": "ts",
+      "loc": 253,
+      "classification": "NORMAL",
+      "ownership": "lib"
+    },
+    {
+      "path": "src/frontend/app/storefront/stories/home-stories.tsx",
+      "language": "tsx",
+      "loc": 252,
+      "classification": "NORMAL",
+      "ownership": "storefront"
+    },
+    {
+      "path": "src/frontend/app/admin/menus/admin-menu-editor.tsx",
+      "language": "tsx",
+      "loc": 251,
+      "classification": "NORMAL",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/vendor-panel/fulfillments/[fulfillmentId]/page.tsx",
+      "language": "tsx",
+      "loc": 250,
+      "classification": "NORMAL",
+      "ownership": "seller"
+    },
+    {
+      "path": "src/frontend/app/customer-panel/page.tsx",
+      "language": "tsx",
+      "loc": 249,
+      "classification": "NORMAL",
+      "ownership": "customer"
+    },
+    {
+      "path": "src/frontend/app/storefront/storefront-account-menu.tsx",
+      "language": "tsx",
+      "loc": 247,
+      "classification": "NORMAL",
+      "ownership": "storefront"
+    },
+    {
+      "path": "src/frontend/design-system/app-data-grid/locale-text.ts",
+      "language": "ts",
+      "loc": 246,
+      "classification": "NORMAL",
+      "ownership": "design-system"
+    },
+    {
+      "path": "src/frontend/app/admin/landing-pages/admin-composition-catalog.ts",
+      "language": "ts",
+      "loc": 245,
+      "classification": "NORMAL",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/admin/content-article-tags-panel.tsx",
+      "language": "tsx",
+      "loc": 244,
+      "classification": "NORMAL",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/storefront/storefront-mini-cart.tsx",
+      "language": "tsx",
+      "loc": 243,
+      "classification": "NORMAL",
+      "ownership": "storefront"
+    },
+    {
+      "path": "src/frontend/app/admin/content-article-category-picker.tsx",
+      "language": "tsx",
+      "loc": 241,
+      "classification": "NORMAL",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/admin/product-publishing-panel.tsx",
+      "language": "tsx",
+      "loc": 241,
+      "classification": "NORMAL",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/customer-panel/orders/[checkoutId]/page.tsx",
+      "language": "tsx",
+      "loc": 240,
+      "classification": "NORMAL",
+      "ownership": "customer"
+    },
+    {
+      "path": "src/frontend/app/customer-panel/profile/page.tsx",
+      "language": "tsx",
+      "loc": 240,
+      "classification": "NORMAL",
+      "ownership": "customer"
+    },
+    {
+      "path": "src/frontend/app/admin/catalog-facet-api.ts",
+      "language": "ts",
+      "loc": 238,
+      "classification": "NORMAL",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/admin/landing-pages/admin-builder-ux-r8.guard.test.ts",
+      "language": "ts",
+      "loc": 237,
+      "classification": "NORMAL",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/admin/content-article-comments-api.ts",
+      "language": "ts",
+      "loc": 233,
+      "classification": "NORMAL",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/vendor-panel/analytics/page.tsx",
+      "language": "tsx",
+      "loc": 232,
+      "classification": "NORMAL",
+      "ownership": "seller"
+    },
+    {
+      "path": "src/frontend/design-system/app-data-grid/SavedViewsToolbar.tsx",
+      "language": "tsx",
+      "loc": 231,
+      "classification": "NORMAL",
+      "ownership": "design-system"
+    },
+    {
+      "path": "src/frontend/app/admin/admin-api.test.ts",
+      "language": "ts",
+      "loc": 230,
+      "classification": "NORMAL",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/lib/storefront-composition/industry-templates.ts",
+      "language": "ts",
+      "loc": 230,
+      "classification": "NORMAL",
+      "ownership": "lib"
+    },
+    {
+      "path": "src/frontend/app/vendor-panel/products/page.tsx",
+      "language": "tsx",
+      "loc": 229,
+      "classification": "NORMAL",
+      "ownership": "seller"
+    },
+    {
+      "path": "src/frontend/app/customer-panel/customer-panel-shell.tsx",
+      "language": "tsx",
+      "loc": 228,
+      "classification": "NORMAL",
+      "ownership": "customer"
+    },
+    {
+      "path": "src/frontend/app/vendor-panel/products/new/page.tsx",
+      "language": "tsx",
+      "loc": 228,
+      "classification": "NORMAL",
+      "ownership": "seller"
+    },
+    {
+      "path": "src/frontend/app/admin/catalog-mega-menu-api.ts",
+      "language": "ts",
+      "loc": 225,
+      "classification": "NORMAL",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/admin/menus/admin-menus-api.ts",
+      "language": "ts",
+      "loc": 223,
+      "classification": "NORMAL",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/customer-panel/settings/page.tsx",
+      "language": "tsx",
+      "loc": 223,
+      "classification": "NORMAL",
+      "ownership": "customer"
+    },
+    {
+      "path": "src/frontend/app/blogs/blogs-ui.tsx",
+      "language": "tsx",
+      "loc": 221,
+      "classification": "NORMAL",
+      "ownership": "content"
+    },
+    {
+      "path": "src/frontend/lib/storefront-composition/preview-fake-locale.ts",
+      "language": "ts",
+      "loc": 221,
+      "classification": "NORMAL",
+      "ownership": "lib"
+    },
+    {
+      "path": "src/frontend/app/login/storefront-login.tsx",
+      "language": "tsx",
+      "loc": 220,
+      "classification": "NORMAL",
+      "ownership": "app-other"
+    },
+    {
+      "path": "src/frontend/app/storefront/storefront-product-card.tsx",
+      "language": "tsx",
+      "loc": 220,
+      "classification": "NORMAL",
+      "ownership": "storefront"
+    },
+    {
+      "path": "src/frontend/app/admin/content-article-media-api.ts",
+      "language": "ts",
+      "loc": 217,
+      "classification": "NORMAL",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/design-system/app-data-grid/saved-view-state.ts",
+      "language": "ts",
+      "loc": 217,
+      "classification": "NORMAL",
+      "ownership": "design-system"
+    },
+    {
+      "path": "src/frontend/app/admin/content-article-publication-model.ts",
+      "language": "ts",
+      "loc": 214,
+      "classification": "NORMAL",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/admin/content-article-destructive-dialog.tsx",
+      "language": "tsx",
+      "loc": 213,
+      "classification": "NORMAL",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/vendor-panel/orders/page.tsx",
+      "language": "tsx",
+      "loc": 213,
+      "classification": "NORMAL",
+      "ownership": "seller"
+    },
+    {
+      "path": "src/frontend/app/access-control/permission-labels.ts",
+      "language": "ts",
+      "loc": 212,
+      "classification": "NORMAL",
+      "ownership": "app-other"
+    },
+    {
+      "path": "src/frontend/app/admin/landing-pages/admin-landing-page-readiness-ui.tsx",
+      "language": "tsx",
+      "loc": 210,
+      "classification": "NORMAL",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/customer-panel/customer-address-api.test.ts",
+      "language": "ts",
+      "loc": 210,
+      "classification": "NORMAL",
+      "ownership": "customer"
+    },
+    {
+      "path": "src/frontend/app/admin/catalog-units-api.ts",
+      "language": "ts",
+      "loc": 209,
+      "classification": "NORMAL",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/lib/storefront-composition/variant-live-preview.tsx",
+      "language": "tsx",
+      "loc": 209,
+      "classification": "NORMAL",
+      "ownership": "lib"
+    },
+    {
+      "path": "src/frontend/app/storefront/storefront-payment-methods.tsx",
+      "language": "tsx",
+      "loc": 207,
+      "classification": "NORMAL",
+      "ownership": "storefront"
+    },
+    {
+      "path": "src/frontend/app/vendor-panel/seller-api.test.ts",
+      "language": "ts",
+      "loc": 207,
+      "classification": "NORMAL",
+      "ownership": "seller"
+    },
+    {
+      "path": "src/frontend/design-system/primitives/overlays.tsx",
+      "language": "tsx",
+      "loc": 205,
+      "classification": "NORMAL",
+      "ownership": "design-system"
+    },
+    {
+      "path": "src/frontend/app/admin/landing-pages/landing-section-catalog.ts",
+      "language": "ts",
+      "loc": 203,
+      "classification": "NORMAL",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/design-system/app-category-tree/tree-model.test.ts",
+      "language": "ts",
+      "loc": 198,
+      "classification": "NORMAL",
+      "ownership": "design-system"
+    },
+    {
+      "path": "src/frontend/app/admin/landing-pages/admin-hero-slider-r13r1.guard.test.ts",
+      "language": "ts",
+      "loc": 196,
+      "classification": "NORMAL",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/design-system/data-grid/types.ts",
+      "language": "ts",
+      "loc": 196,
+      "classification": "NORMAL",
+      "ownership": "design-system"
+    },
+    {
+      "path": "src/frontend/app/admin/admin-nav-integrity.test.ts",
+      "language": "ts",
+      "loc": 194,
+      "classification": "NORMAL",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/lib/storefront-appearance/derived-surface.ts",
+      "language": "ts",
+      "loc": 194,
+      "classification": "NORMAL",
+      "ownership": "lib"
+    },
+    {
+      "path": "src/frontend/lib/storefront-composition/shared-composition-renderer.guard.test.ts",
+      "language": "ts",
+      "loc": 194,
+      "classification": "NORMAL",
+      "ownership": "lib"
+    },
+    {
+      "path": "src/frontend/app/storefront/storefront-pending-payment-api.test.ts",
+      "language": "ts",
+      "loc": 192,
+      "classification": "NORMAL",
+      "ownership": "storefront"
+    },
+    {
+      "path": "src/frontend/app/admin/reservation-policy-editor.tsx",
+      "language": "tsx",
+      "loc": 190,
+      "classification": "NORMAL",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/storefront/storefront-payment-api.test.ts",
+      "language": "ts",
+      "loc": 186,
+      "classification": "NORMAL",
+      "ownership": "storefront"
+    },
+    {
+      "path": "src/frontend/app/admin/admin-order-line-actions.ts",
+      "language": "ts",
+      "loc": 185,
+      "classification": "NORMAL",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/storefront/storefront-identity-api.ts",
+      "language": "ts",
+      "loc": 185,
+      "classification": "NORMAL",
+      "ownership": "storefront"
+    },
+    {
+      "path": "src/frontend/app/wallet/wallet-api.test.ts",
+      "language": "ts",
+      "loc": 184,
+      "classification": "NORMAL",
+      "ownership": "ops"
+    },
+    {
+      "path": "src/frontend/design-system/app-data-grid/jalali-date-column-filter.tsx",
+      "language": "tsx",
+      "loc": 184,
+      "classification": "NORMAL",
+      "ownership": "design-system"
+    },
+    {
+      "path": "src/frontend/app/admin/admin-reservation-cycle.test.ts",
+      "language": "ts",
+      "loc": 183,
+      "classification": "NORMAL",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/blogs/blogs-taxonomy-ui.tsx",
+      "language": "tsx",
+      "loc": 183,
+      "classification": "NORMAL",
+      "ownership": "content"
+    },
+    {
+      "path": "src/frontend/app/template-preview/_shared/industry-template-preview-view.tsx",
+      "language": "tsx",
+      "loc": 182,
+      "classification": "NORMAL",
+      "ownership": "app-other"
+    },
+    {
+      "path": "src/frontend/app/admin/reservation-policy-api.ts",
+      "language": "ts",
+      "loc": 181,
+      "classification": "NORMAL",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/storefront/storefront-wishlist-api.ts",
+      "language": "ts",
+      "loc": 178,
+      "classification": "NORMAL",
+      "ownership": "storefront"
+    },
+    {
+      "path": "src/frontend/app/admin/menus/admin-menus-screen.tsx",
+      "language": "tsx",
+      "loc": 177,
+      "classification": "NORMAL",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/storefront/storefront-pdp-bulk.tsx",
+      "language": "tsx",
+      "loc": 176,
+      "classification": "NORMAL",
+      "ownership": "storefront"
+    },
+    {
+      "path": "src/frontend/lib/storefront-composition/types.ts",
+      "language": "ts",
+      "loc": 176,
+      "classification": "NORMAL",
+      "ownership": "lib"
+    },
+    {
+      "path": "src/frontend/app/storefront/storefront-footer.tsx",
+      "language": "tsx",
+      "loc": 175,
+      "classification": "NORMAL",
+      "ownership": "storefront"
+    },
+    {
+      "path": "src/frontend/app/admin/menus/admin-menu-pickers.tsx",
+      "language": "tsx",
+      "loc": 174,
+      "classification": "NORMAL",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/vendor-panel/returns/page.tsx",
+      "language": "tsx",
+      "loc": 174,
+      "classification": "NORMAL",
+      "ownership": "seller"
+    },
+    {
+      "path": "src/frontend/app/vendor-panel/fulfillments/page.tsx",
+      "language": "tsx",
+      "loc": 173,
+      "classification": "NORMAL",
+      "ownership": "seller"
+    },
+    {
+      "path": "src/frontend/design-system/admin-form-mode/use-admin-form-mode.ts",
+      "language": "ts",
+      "loc": 172,
+      "classification": "NORMAL",
+      "ownership": "design-system"
+    },
+    {
+      "path": "src/frontend/app/admin/landing-pages/admin-builder-hardening-r13.guard.test.ts",
+      "language": "ts",
+      "loc": 169,
+      "classification": "NORMAL",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/admin/operator-settings-api.ts",
+      "language": "ts",
+      "loc": 168,
+      "classification": "NORMAL",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/access-control/scope-editor.tsx",
+      "language": "tsx",
+      "loc": 167,
+      "classification": "NORMAL",
+      "ownership": "app-other"
+    },
+    {
+      "path": "src/frontend/app/admin/product-history-panel.tsx",
+      "language": "tsx",
+      "loc": 166,
+      "classification": "NORMAL",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/customer-panel/customer-api.test.ts",
+      "language": "ts",
+      "loc": 166,
+      "classification": "NORMAL",
+      "ownership": "customer"
+    },
+    {
+      "path": "src/frontend/app/design-system/workspace-showcase.tsx",
+      "language": "tsx",
+      "loc": 165,
+      "classification": "NORMAL",
+      "ownership": "app-other"
+    },
+    {
+      "path": "src/frontend/app/admin/content-article-admin-screen.test.ts",
+      "language": "ts",
+      "loc": 164,
+      "classification": "NORMAL",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/admin/content-tag-api.ts",
+      "language": "ts",
+      "loc": 164,
+      "classification": "NORMAL",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/admin/product-attributes-panel.test.ts",
+      "language": "ts",
+      "loc": 164,
+      "classification": "NORMAL",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/vendor-panel/orders/[sellerOrderId]/page.tsx",
+      "language": "tsx",
+      "loc": 164,
+      "classification": "NORMAL",
+      "ownership": "seller"
+    },
+    {
+      "path": "src/frontend/design-system/app-data-grid/grid-query-mapper.ts",
+      "language": "ts",
+      "loc": 164,
+      "classification": "NORMAL",
+      "ownership": "design-system"
+    },
+    {
+      "path": "src/frontend/app/admin/product-attributes-panel-model.ts",
+      "language": "ts",
+      "loc": 163,
+      "classification": "NORMAL",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/customer-panel/notification-api.ts",
+      "language": "ts",
+      "loc": 163,
+      "classification": "NORMAL",
+      "ownership": "customer"
+    },
+    {
+      "path": "src/frontend/app/admin/admin-chrome-messages.ts",
+      "language": "ts",
+      "loc": 161,
+      "classification": "NORMAL",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/admin/landing-pages/admin-landing-page-readiness.ts",
+      "language": "ts",
+      "loc": 161,
+      "classification": "NORMAL",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/admin/product-catalog-admin.test.ts",
+      "language": "ts",
+      "loc": 159,
+      "classification": "NORMAL",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/admin/admin-fulfillment-work-queue.test.ts",
+      "language": "ts",
+      "loc": 158,
+      "classification": "NORMAL",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/design-system/app-data-grid/JalaliDateFilterControl.tsx",
+      "language": "tsx",
+      "loc": 157,
+      "classification": "NORMAL",
+      "ownership": "design-system"
+    },
+    {
+      "path": "src/frontend/design-system/data-grid/messages.ts",
+      "language": "ts",
+      "loc": 156,
+      "classification": "NORMAL",
+      "ownership": "design-system"
+    },
+    {
+      "path": "src/frontend/lib/i18n/routing.ts",
+      "language": "ts",
+      "loc": 155,
+      "classification": "NORMAL",
+      "ownership": "lib"
+    },
+    {
+      "path": "src/frontend/app/admin/admin-error-map.test.ts",
+      "language": "ts",
+      "loc": 154,
+      "classification": "NORMAL",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/admin/tickets/[id]/page.tsx",
+      "language": "tsx",
+      "loc": 154,
+      "classification": "NORMAL",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/design-system/app-category-tree/app-category-tree.contract.test.ts",
+      "language": "ts",
+      "loc": 154,
+      "classification": "NORMAL",
+      "ownership": "design-system"
+    },
+    {
+      "path": "src/frontend/app/design-system/showcase.tsx",
+      "language": "tsx",
+      "loc": 152,
+      "classification": "NORMAL",
+      "ownership": "app-other"
+    },
+    {
+      "path": "src/frontend/app/admin/appearance-settings-api.ts",
+      "language": "ts",
+      "loc": 151,
+      "classification": "NORMAL",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/admin/content-article-new-screen.tsx",
+      "language": "tsx",
+      "loc": 151,
+      "classification": "NORMAL",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/storefront/storefront-checkout-api.test.ts",
+      "language": "ts",
+      "loc": 150,
+      "classification": "NORMAL",
+      "ownership": "storefront"
+    },
+    {
+      "path": "src/frontend/app/template-preview/fashion/fashion-template-preview-view.tsx",
+      "language": "tsx",
+      "loc": 150,
+      "classification": "NORMAL",
+      "ownership": "app-other"
+    },
+    {
+      "path": "src/frontend/design-system/data-grid/serialize.ts",
+      "language": "ts",
+      "loc": 150,
+      "classification": "NORMAL",
+      "ownership": "design-system"
+    },
+    {
+      "path": "src/frontend/lib/storefront-appearance/palette-registry.ts",
+      "language": "ts",
+      "loc": 150,
+      "classification": "NORMAL",
+      "ownership": "lib"
+    },
+    {
+      "path": "src/frontend/design-system/app-data-grid/number-header-filter-panel.tsx",
+      "language": "tsx",
+      "loc": 149,
+      "classification": "NORMAL",
+      "ownership": "design-system"
+    },
+    {
+      "path": "src/frontend/design-system/data-grid/demo-data.ts",
+      "language": "ts",
+      "loc": 148,
+      "classification": "NORMAL",
+      "ownership": "design-system"
+    },
+    {
+      "path": "src/frontend/app/stories/story-api.test.ts",
+      "language": "ts",
+      "loc": 146,
+      "classification": "NORMAL",
+      "ownership": "content"
+    },
+    {
+      "path": "src/frontend/design-system/data-grid/query-engine.ts",
+      "language": "ts",
+      "loc": 145,
+      "classification": "NORMAL",
+      "ownership": "design-system"
+    },
+    {
+      "path": "src/frontend/app/admin/landing-pages/admin-builder-ux-r4.guard.test.ts",
+      "language": "ts",
+      "loc": 144,
+      "classification": "NORMAL",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/admin/category-products-panel.test.ts",
+      "language": "ts",
+      "loc": 143,
+      "classification": "NORMAL",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/lib/storefront-composition/composition-registry.guard.test.ts",
+      "language": "ts",
+      "loc": 143,
+      "classification": "NORMAL",
+      "ownership": "lib"
+    },
+    {
+      "path": "src/frontend/app/admin/admin-order-operations-scope.ts",
+      "language": "ts",
+      "loc": 142,
+      "classification": "NORMAL",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/admin/product-workspace-dirty.test.ts",
+      "language": "ts",
+      "loc": 142,
+      "classification": "NORMAL",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/admin/admin-searchable-combobox.tsx",
+      "language": "tsx",
+      "loc": 141,
+      "classification": "NORMAL",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/admin/product-workspace-polish.test.ts",
+      "language": "ts",
+      "loc": 139,
+      "classification": "NORMAL",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/admin/admin-reservation-cycle.ts",
+      "language": "ts",
+      "loc": 138,
+      "classification": "NORMAL",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/admin/content-article-media.test.ts",
+      "language": "ts",
+      "loc": 136,
+      "classification": "NORMAL",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/scripts/gen-industry-thumbs.mjs",
+      "language": "mjs",
+      "loc": 136,
+      "classification": "NORMAL",
+      "ownership": "other"
+    },
+    {
+      "path": "src/frontend/app/admin/content/articles/[articleId]/preview/page.tsx",
+      "language": "tsx",
+      "loc": 134,
+      "classification": "NORMAL",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/design-system/app-data-grid/column-filter-popover.tsx",
+      "language": "tsx",
+      "loc": 134,
+      "classification": "NORMAL",
+      "ownership": "design-system"
+    },
+    {
+      "path": "src/frontend/app/admin/hold-policy-settings-api.ts",
+      "language": "ts",
+      "loc": 133,
+      "classification": "NORMAL",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/admin/product-seo-panel.test.ts",
+      "language": "ts",
+      "loc": 133,
+      "classification": "NORMAL",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/admin/product-history-panel.test.ts",
+      "language": "ts",
+      "loc": 131,
+      "classification": "NORMAL",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/admin/product-history-panel-model.ts",
+      "language": "ts",
+      "loc": 128,
+      "classification": "NORMAL",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/fulfillment/fulfillment-api.test.ts",
+      "language": "ts",
+      "loc": 128,
+      "classification": "NORMAL",
+      "ownership": "ops"
+    },
+    {
+      "path": "src/frontend/lib/storefront-composition/landing-adapter.ts",
+      "language": "ts",
+      "loc": 128,
+      "classification": "NORMAL",
+      "ownership": "lib"
+    },
+    {
+      "path": "src/frontend/lib/storefront-composition/template-preview-context.ts",
+      "language": "ts",
+      "loc": 128,
+      "classification": "NORMAL",
+      "ownership": "lib"
+    },
+    {
+      "path": "src/frontend/app/storefront/storefront-identity-api.test.ts",
+      "language": "ts",
+      "loc": 127,
+      "classification": "NORMAL",
+      "ownership": "storefront"
+    },
+    {
+      "path": "src/frontend/design-system/app-data-grid/app-column-header.tsx",
+      "language": "tsx",
+      "loc": 127,
+      "classification": "NORMAL",
+      "ownership": "design-system"
+    },
+    {
+      "path": "src/frontend/app/admin/admin-assign-shipment-tracking-modal.tsx",
+      "language": "tsx",
+      "loc": 126,
+      "classification": "NORMAL",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/storefront/storefront-home.tsx",
+      "language": "tsx",
+      "loc": 124,
+      "classification": "NORMAL",
+      "ownership": "storefront"
+    },
+    {
+      "path": "src/frontend/app/storefront/storefront-pdp-qa.tsx",
+      "language": "tsx",
+      "loc": 124,
+      "classification": "NORMAL",
+      "ownership": "storefront"
+    },
+    {
+      "path": "src/frontend/app/admin/admin-returns-work-queue.test.ts",
+      "language": "ts",
+      "loc": 122,
+      "classification": "NORMAL",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/design-system/app-data-grid/ColumnManagerDrawer.tsx",
+      "language": "tsx",
+      "loc": 122,
+      "classification": "NORMAL",
+      "ownership": "design-system"
+    },
+    {
+      "path": "src/frontend/design-system/app-data-grid/legacy-grid-bridge.ts",
+      "language": "ts",
+      "loc": 122,
+      "classification": "NORMAL",
+      "ownership": "design-system"
+    },
+    {
+      "path": "src/frontend/app/storefront/storefront-store-page-resolver.ts",
+      "language": "ts",
+      "loc": 121,
+      "classification": "NORMAL",
+      "ownership": "storefront"
+    },
+    {
+      "path": "src/frontend/app/admin/landing-pages/admin-store-pages-r10.guard.test.ts",
+      "language": "ts",
+      "loc": 120,
+      "classification": "NORMAL",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/admin/product-publishing-panel-model.ts",
+      "language": "ts",
+      "loc": 120,
+      "classification": "NORMAL",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/admin/product-variants-panel-model.ts",
+      "language": "ts",
+      "loc": 120,
+      "classification": "NORMAL",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/admin/saved-view-store.ts",
+      "language": "ts",
+      "loc": 120,
+      "classification": "NORMAL",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/admin/category-facets-panel.test.ts",
+      "language": "ts",
+      "loc": 119,
+      "classification": "NORMAL",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/payment/sandbox/storefront-payment-sandbox.tsx",
+      "language": "tsx",
+      "loc": 119,
+      "classification": "NORMAL",
+      "ownership": "app-other"
+    },
+    {
+      "path": "src/frontend/app/category/[slug]/page.tsx",
+      "language": "tsx",
+      "loc": 118,
+      "classification": "NORMAL",
+      "ownership": "app-other"
+    },
+    {
+      "path": "src/frontend/app/returns/return-api.test.ts",
+      "language": "ts",
+      "loc": 118,
+      "classification": "NORMAL",
+      "ownership": "ops"
+    },
+    {
+      "path": "src/frontend/app/admin/content-article-publish-date-field.tsx",
+      "language": "tsx",
+      "loc": 117,
+      "classification": "NORMAL",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/fulfillment/fulfillment-ui.tsx",
+      "language": "tsx",
+      "loc": 117,
+      "classification": "NORMAL",
+      "ownership": "ops"
+    },
+    {
+      "path": "src/frontend/design-system/app-data-grid/saved-view-state.test.ts",
+      "language": "ts",
+      "loc": 116,
+      "classification": "NORMAL",
+      "ownership": "design-system"
+    },
+    {
+      "path": "src/frontend/app/admin/landing-pages/admin-builder-ux-r7.guard.test.ts",
+      "language": "ts",
+      "loc": 115,
+      "classification": "NORMAL",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/admin/product-seo-panel-model.ts",
+      "language": "ts",
+      "loc": 115,
+      "classification": "NORMAL",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/storefront/storefront-appearance-api.ts",
+      "language": "ts",
+      "loc": 114,
+      "classification": "NORMAL",
+      "ownership": "storefront"
+    },
+    {
+      "path": "src/frontend/app/admin/landing-pages/admin-variant-picker-r11.guard.test.ts",
+      "language": "ts",
+      "loc": 113,
+      "classification": "NORMAL",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/customer-panel/orders/page.tsx",
+      "language": "tsx",
+      "loc": 113,
+      "classification": "NORMAL",
+      "ownership": "customer"
+    },
+    {
+      "path": "src/frontend/app/blogs/[slug]/blog-detail-ui.tsx",
+      "language": "tsx",
+      "loc": 112,
+      "classification": "NORMAL",
+      "ownership": "content"
+    },
+    {
+      "path": "src/frontend/design-system/primitives/commerce.tsx",
+      "language": "tsx",
+      "loc": 112,
+      "classification": "NORMAL",
+      "ownership": "design-system"
+    },
+    {
+      "path": "src/frontend/lib/storefront-composition/preview-fill-policy.ts",
+      "language": "ts",
+      "loc": 112,
+      "classification": "NORMAL",
+      "ownership": "lib"
+    },
+    {
+      "path": "src/frontend/app/admin/content-article-crud.test.ts",
+      "language": "ts",
+      "loc": 111,
+      "classification": "NORMAL",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/sitemap.ts",
+      "language": "ts",
+      "loc": 111,
+      "classification": "NORMAL",
+      "ownership": "app-other"
+    },
+    {
+      "path": "src/frontend/design-system/workspace/types.ts",
+      "language": "ts",
+      "loc": 111,
+      "classification": "NORMAL",
+      "ownership": "design-system"
+    },
+    {
+      "path": "src/frontend/app/storefront/storefront-landing-sections.tsx",
+      "language": "tsx",
+      "loc": 109,
+      "classification": "NORMAL",
+      "ownership": "storefront"
+    },
+    {
+      "path": "src/frontend/design-system/data-grid/grid-state.test.ts",
+      "language": "ts",
+      "loc": 108,
+      "classification": "NORMAL",
+      "ownership": "design-system"
+    },
+    {
+      "path": "src/frontend/lib/storefront-composition/source-capability.ts",
+      "language": "ts",
+      "loc": 107,
+      "classification": "NORMAL",
+      "ownership": "lib"
+    },
+    {
+      "path": "src/frontend/app/admin/content-article-publication.test.ts",
+      "language": "ts",
+      "loc": 106,
+      "classification": "NORMAL",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/blogs/blogs-public-routing.test.ts",
+      "language": "ts",
+      "loc": 106,
+      "classification": "NORMAL",
+      "ownership": "content"
+    },
+    {
+      "path": "src/frontend/app/admin/catalog-tag-api.test.ts",
+      "language": "ts",
+      "loc": 105,
+      "classification": "NORMAL",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/admin/language-api.ts",
+      "language": "ts",
+      "loc": 105,
+      "classification": "NORMAL",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/products/page.tsx",
+      "language": "tsx",
+      "loc": 105,
+      "classification": "NORMAL",
+      "ownership": "app-other"
+    },
+    {
+      "path": "src/frontend/lib/storefront-composition/preview-fake-media.ts",
+      "language": "ts",
+      "loc": 105,
+      "classification": "NORMAL",
+      "ownership": "lib"
+    },
+    {
+      "path": "src/frontend/design-system/app-data-grid/app-grid-cells.tsx",
+      "language": "tsx",
+      "loc": 104,
+      "classification": "NORMAL",
+      "ownership": "design-system"
+    },
+    {
+      "path": "src/frontend/app/admin/content-article-readiness-summary.tsx",
+      "language": "tsx",
+      "loc": 103,
+      "classification": "NORMAL",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/admin/host-client.test.ts",
+      "language": "ts",
+      "loc": 103,
+      "classification": "NORMAL",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/page.tsx",
+      "language": "tsx",
+      "loc": 103,
+      "classification": "NORMAL",
+      "ownership": "app-other"
+    },
+    {
+      "path": "src/frontend/design-system/app-data-grid/advanced-filter-expression.ts",
+      "language": "ts",
+      "loc": 103,
+      "classification": "NORMAL",
+      "ownership": "design-system"
+    },
+    {
+      "path": "src/frontend/design-system/app-data-grid/app-grid-row-actions.tsx",
+      "language": "tsx",
+      "loc": 103,
+      "classification": "NORMAL",
+      "ownership": "design-system"
+    },
+    {
+      "path": "src/frontend/lib/storefront-composition/industry-demo-media.ts",
+      "language": "ts",
+      "loc": 101,
+      "classification": "NORMAL",
+      "ownership": "lib"
+    },
+    {
+      "path": "src/frontend/lib/storefront-composition/size-presets.ts",
+      "language": "ts",
+      "loc": 101,
+      "classification": "NORMAL",
+      "ownership": "lib"
+    },
+    {
+      "path": "src/frontend/design-system/app-data-grid/saved-view-dirty.ts",
+      "language": "ts",
+      "loc": 100,
+      "classification": "NORMAL",
+      "ownership": "design-system"
+    },
+    {
+      "path": "src/frontend/lib/storefront-appearance/palette-registry.test.ts",
+      "language": "ts",
+      "loc": 100,
+      "classification": "NORMAL",
+      "ownership": "lib"
+    },
+    {
+      "path": "src/frontend/app/admin/admin-order-detail-visual.test.ts",
+      "language": "ts",
+      "loc": 99,
+      "classification": "NORMAL",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/admin/product-media-panel.test.ts",
+      "language": "ts",
+      "loc": 98,
+      "classification": "NORMAL",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/content/content-api.test.ts",
+      "language": "ts",
+      "loc": 97,
+      "classification": "NORMAL",
+      "ownership": "content"
+    },
+    {
+      "path": "src/frontend/design-system/app-data-grid/AdvancedFilterDrawer.tsx",
+      "language": "tsx",
+      "loc": 97,
+      "classification": "NORMAL",
+      "ownership": "design-system"
+    },
+    {
+      "path": "src/frontend/design-system/workspace/state.ts",
+      "language": "ts",
+      "loc": 97,
+      "classification": "NORMAL",
+      "ownership": "design-system"
+    },
+    {
+      "path": "src/frontend/app/admin/content-article-comments-help.test.ts",
+      "language": "ts",
+      "loc": 96,
+      "classification": "NORMAL",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/design-system/index.ts",
+      "language": "ts",
+      "loc": 96,
+      "classification": "NORMAL",
+      "ownership": "design-system"
+    },
+    {
+      "path": "src/frontend/app/admin/offer-reservation-panel.tsx",
+      "language": "tsx",
+      "loc": 95,
+      "classification": "NORMAL",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/storefront/home-structure.guard.test.ts",
+      "language": "ts",
+      "loc": 95,
+      "classification": "NORMAL",
+      "ownership": "storefront"
+    },
+    {
+      "path": "src/frontend/lib/i18n/supported-locales.ts",
+      "language": "ts",
+      "loc": 95,
+      "classification": "NORMAL",
+      "ownership": "lib"
+    },
+    {
+      "path": "src/frontend/app/admin/admin-appearance-settings.test.ts",
+      "language": "ts",
+      "loc": 94,
+      "classification": "NORMAL",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/admin/landing-pages/admin-product-showcase-r13r2.guard.test.ts",
+      "language": "ts",
+      "loc": 94,
+      "classification": "NORMAL",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/admin/product-variants-panel.test.ts",
+      "language": "ts",
+      "loc": 94,
+      "classification": "NORMAL",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/composition/composition-api.test.ts",
+      "language": "ts",
+      "loc": 94,
+      "classification": "NORMAL",
+      "ownership": "app-other"
+    },
+    {
+      "path": "src/frontend/design-system/app-data-grid/saved-view-multiplicity.test.ts",
+      "language": "ts",
+      "loc": 94,
+      "classification": "NORMAL",
+      "ownership": "design-system"
+    },
+    {
+      "path": "src/frontend/lib/storefront-appearance/product-card-skin.ts",
+      "language": "ts",
+      "loc": 94,
+      "classification": "NORMAL",
+      "ownership": "lib"
+    },
+    {
+      "path": "src/frontend/app/admin/product-media-panel-model.ts",
+      "language": "ts",
+      "loc": 93,
+      "classification": "NORMAL",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/storefront/storefront-pdp-reviews.tsx",
+      "language": "tsx",
+      "loc": 93,
+      "classification": "NORMAL",
+      "ownership": "storefront"
+    },
+    {
+      "path": "src/frontend/design-system/app-data-grid/advanced-filter-expression.test.ts",
+      "language": "ts",
+      "loc": 93,
+      "classification": "NORMAL",
+      "ownership": "design-system"
+    },
+    {
+      "path": "src/frontend/app/admin/landing-pages/admin-builder-ux-r2.guard.test.ts",
+      "language": "ts",
+      "loc": 91,
+      "classification": "NORMAL",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/customer-panel/customer-profile-api.ts",
+      "language": "ts",
+      "loc": 90,
+      "classification": "NORMAL",
+      "ownership": "customer"
+    },
+    {
+      "path": "src/frontend/design-system/app-data-grid/jalali-header-filter-panel.tsx",
+      "language": "tsx",
+      "loc": 90,
+      "classification": "NORMAL",
+      "ownership": "design-system"
+    },
+    {
+      "path": "src/frontend/app/admin/tickets/page.tsx",
+      "language": "tsx",
+      "loc": 89,
+      "classification": "NORMAL",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/storefront/storefront-cart-ui.guard.test.ts",
+      "language": "ts",
+      "loc": 89,
+      "classification": "NORMAL",
+      "ownership": "storefront"
+    },
+    {
+      "path": "src/frontend/app/storefront/storefront-page-seo.ts",
+      "language": "ts",
+      "loc": 89,
+      "classification": "NORMAL",
+      "ownership": "storefront"
+    },
+    {
+      "path": "src/frontend/app/vendor-panel/panel-nav-integrity.test.ts",
+      "language": "ts",
+      "loc": 89,
+      "classification": "NORMAL",
+      "ownership": "seller"
+    },
+    {
+      "path": "src/frontend/design-system/app-data-grid/legacy-grid-adapters.ts",
+      "language": "ts",
+      "loc": 89,
+      "classification": "NORMAL",
+      "ownership": "design-system"
+    },
+    {
+      "path": "src/frontend/scripts/gen-batch-a-template-media.mjs",
+      "language": "mjs",
+      "loc": 89,
+      "classification": "NORMAL",
+      "ownership": "other"
+    },
+    {
+      "path": "src/frontend/app/admin/category-reservation-panel.tsx",
+      "language": "tsx",
+      "loc": 88,
+      "classification": "NORMAL",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/storefront/storefront-shipping-api.test.ts",
+      "language": "ts",
+      "loc": 88,
+      "classification": "NORMAL",
+      "ownership": "storefront"
+    },
+    {
+      "path": "src/frontend/app/admin/landing-pages/admin-builder-ux-r12c.guard.test.ts",
+      "language": "ts",
+      "loc": 87,
+      "classification": "NORMAL",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/admin/product-publishing-panel.test.ts",
+      "language": "ts",
+      "loc": 87,
+      "classification": "NORMAL",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/storefront/storefront-wishlist-provider.tsx",
+      "language": "tsx",
+      "loc": 87,
+      "classification": "NORMAL",
+      "ownership": "storefront"
+    },
+    {
+      "path": "src/frontend/scripts/gen-batch-b-template-media.mjs",
+      "language": "mjs",
+      "loc": 87,
+      "classification": "NORMAL",
+      "ownership": "other"
+    },
+    {
+      "path": "src/frontend/app/admin/content-help-affordance.tsx",
+      "language": "tsx",
+      "loc": 86,
+      "classification": "NORMAL",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/admin/content-help-page-screen.tsx",
+      "language": "tsx",
+      "loc": 86,
+      "classification": "NORMAL",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/storefront/storefront-theme-toggle.tsx",
+      "language": "tsx",
+      "loc": 86,
+      "classification": "NORMAL",
+      "ownership": "storefront"
+    },
+    {
+      "path": "src/frontend/design-system/app-data-grid/text-header-filter-panel.tsx",
+      "language": "tsx",
+      "loc": 86,
+      "classification": "NORMAL",
+      "ownership": "design-system"
+    },
+    {
+      "path": "src/frontend/app/customer-panel/customer-preferences-api.ts",
+      "language": "ts",
+      "loc": 85,
+      "classification": "NORMAL",
+      "ownership": "customer"
+    },
+    {
+      "path": "src/frontend/app/layout.tsx",
+      "language": "tsx",
+      "loc": 85,
+      "classification": "NORMAL",
+      "ownership": "app-other"
+    },
+    {
+      "path": "src/frontend/design-system/app-data-grid/filter-commit.test.ts",
+      "language": "ts",
+      "loc": 85,
+      "classification": "NORMAL",
+      "ownership": "design-system"
+    },
+    {
+      "path": "src/frontend/design-system/app-data-grid/legacy-grid-bridge.test.ts",
+      "language": "ts",
+      "loc": 85,
+      "classification": "NORMAL",
+      "ownership": "design-system"
+    },
+    {
+      "path": "src/frontend/app/admin/landing-pages/admin-builder-ux-r1.guard.test.ts",
+      "language": "ts",
+      "loc": 84,
+      "classification": "NORMAL",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/admin/landing-pages/admin-builder-ux-r12a.guard.test.ts",
+      "language": "ts",
+      "loc": 84,
+      "classification": "NORMAL",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/design-system/app-data-grid/saved-view-dirty.test.ts",
+      "language": "ts",
+      "loc": 84,
+      "classification": "NORMAL",
+      "ownership": "design-system"
+    },
+    {
+      "path": "src/frontend/app/admin/landing-pages/admin-store-pages-r9.guard.test.ts",
+      "language": "ts",
+      "loc": 83,
+      "classification": "NORMAL",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/lib/storefront-appearance/component-compliance.guard.test.ts",
+      "language": "ts",
+      "loc": 83,
+      "classification": "NORMAL",
+      "ownership": "lib"
+    },
+    {
+      "path": "src/frontend/app/admin/reservation-policy-admin.test.ts",
+      "language": "ts",
+      "loc": 82,
+      "classification": "NORMAL",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/support/support-api.test.ts",
+      "language": "ts",
+      "loc": 82,
+      "classification": "NORMAL",
+      "ownership": "app-other"
+    },
+    {
+      "path": "src/frontend/lib/storefront-composition/settings.ts",
+      "language": "ts",
+      "loc": 82,
+      "classification": "NORMAL",
+      "ownership": "lib"
+    },
+    {
+      "path": "src/frontend/app/admin/landing-pages/admin-builder-ux-r12b.guard.test.ts",
+      "language": "ts",
+      "loc": 81,
+      "classification": "NORMAL",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/admin/checkout-abuse-settings-api.ts",
+      "language": "ts",
+      "loc": 80,
+      "classification": "NORMAL",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/admin/admin-appearance-settings.helpers.ts",
+      "language": "ts",
+      "loc": 79,
+      "classification": "NORMAL",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/storefront/storefront-home.test.ts",
+      "language": "ts",
+      "loc": 79,
+      "classification": "NORMAL",
+      "ownership": "storefront"
+    },
+    {
+      "path": "src/frontend/lib/storefront-appearance/storefront-route-inventory.ts",
+      "language": "ts",
+      "loc": 79,
+      "classification": "NORMAL",
+      "ownership": "lib"
+    },
+    {
+      "path": "src/frontend/app/vendor-panel/tickets/[id]/page.tsx",
+      "language": "tsx",
+      "loc": 78,
+      "classification": "NORMAL",
+      "ownership": "seller"
+    },
+    {
+      "path": "src/frontend/lib/storefront-composition/completeness-matrix.guard.test.ts",
+      "language": "ts",
+      "loc": 78,
+      "classification": "NORMAL",
+      "ownership": "lib"
+    },
+    {
+      "path": "src/frontend/app/storefront/storefront-menu-api.ts",
+      "language": "ts",
+      "loc": 76,
+      "classification": "NORMAL",
+      "ownership": "storefront"
+    },
+    {
+      "path": "src/frontend/design-system/app-data-grid/grid-overlay.test.ts",
+      "language": "ts",
+      "loc": 76,
+      "classification": "NORMAL",
+      "ownership": "design-system"
+    },
+    {
+      "path": "src/frontend/lib/storefront-appearance/semantic-wrapper.guard.test.ts",
+      "language": "ts",
+      "loc": 76,
+      "classification": "NORMAL",
+      "ownership": "lib"
+    },
+    {
+      "path": "src/frontend/app/design-system/grid-showcase.tsx",
+      "language": "tsx",
+      "loc": 75,
+      "classification": "NORMAL",
+      "ownership": "app-other"
+    },
+    {
+      "path": "src/frontend/app/storefront/storefront-ssr-perf-r9r1.guard.test.ts",
+      "language": "ts",
+      "loc": 75,
+      "classification": "NORMAL",
+      "ownership": "storefront"
+    },
+    {
+      "path": "src/frontend/lib/i18n/LocaleSwitcher.tsx",
+      "language": "tsx",
+      "loc": 74,
+      "classification": "NORMAL",
+      "ownership": "lib"
+    },
+    {
+      "path": "src/frontend/app/admin/category-attributes-panel.test.ts",
+      "language": "ts",
+      "loc": 73,
+      "classification": "NORMAL",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/blogs/blogs-copy.ts",
+      "language": "ts",
+      "loc": 73,
+      "classification": "NORMAL",
+      "ownership": "content"
+    },
+    {
+      "path": "src/frontend/app/customer-panel/panel-nav-integrity.test.ts",
+      "language": "ts",
+      "loc": 73,
+      "classification": "NORMAL",
+      "ownership": "customer"
+    },
+    {
+      "path": "src/frontend/design-system/app-data-grid/text-filter-operators.test.ts",
+      "language": "ts",
+      "loc": 73,
+      "classification": "NORMAL",
+      "ownership": "design-system"
+    },
+    {
+      "path": "src/frontend/app/vendor-panel/returns/[returnRequestId]/page.tsx",
+      "language": "tsx",
+      "loc": 72,
+      "classification": "NORMAL",
+      "ownership": "seller"
+    },
+    {
+      "path": "src/frontend/lib/i18n/middleware-locale.test.ts",
+      "language": "ts",
+      "loc": 72,
+      "classification": "NORMAL",
+      "ownership": "lib"
+    },
+    {
+      "path": "src/frontend/app/api/seller/[...path]/route.ts",
+      "language": "ts",
+      "loc": 71,
+      "classification": "NORMAL",
+      "ownership": "app-other"
+    },
+    {
+      "path": "src/frontend/app/storefront/storefront-buy-box.tsx",
+      "language": "tsx",
+      "loc": 71,
+      "classification": "NORMAL",
+      "ownership": "storefront"
+    },
+    {
+      "path": "src/frontend/app/admin/quantity-settings-api.ts",
+      "language": "ts",
+      "loc": 70,
+      "classification": "NORMAL",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/lib/storefront-appearance/surface-role.ts",
+      "language": "ts",
+      "loc": 70,
+      "classification": "NORMAL",
+      "ownership": "lib"
+    },
+    {
+      "path": "src/frontend/app/admin/product-workspace-dirty.ts",
+      "language": "ts",
+      "loc": 69,
+      "classification": "NORMAL",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/vendor-panel/tickets/page.tsx",
+      "language": "tsx",
+      "loc": 69,
+      "classification": "NORMAL",
+      "ownership": "seller"
+    },
+    {
+      "path": "src/frontend/design-system/app-data-grid/status-header-filter-panel.tsx",
+      "language": "tsx",
+      "loc": 69,
+      "classification": "NORMAL",
+      "ownership": "design-system"
+    },
+    {
+      "path": "src/frontend/lib/i18n/locale-context.tsx",
+      "language": "tsx",
+      "loc": 69,
+      "classification": "NORMAL",
+      "ownership": "lib"
+    },
+    {
+      "path": "src/frontend/app/admin/content-taxonomy-tags.test.ts",
+      "language": "ts",
+      "loc": 68,
+      "classification": "NORMAL",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/admin/admin-order-status-cards.ts",
+      "language": "ts",
+      "loc": 67,
+      "classification": "NORMAL",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/api/customer/[...path]/route.ts",
+      "language": "ts",
+      "loc": 67,
+      "classification": "NORMAL",
+      "ownership": "app-other"
+    },
+    {
+      "path": "src/frontend/design-system/app-data-grid/admin-grid-query-client.ts",
+      "language": "ts",
+      "loc": 67,
+      "classification": "NORMAL",
+      "ownership": "design-system"
+    },
+    {
+      "path": "src/frontend/app/admin/landing-pages/admin-builder-ux-r3.guard.test.ts",
+      "language": "ts",
+      "loc": 66,
+      "classification": "NORMAL",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/admin/additional-category-chips-cell.tsx",
+      "language": "tsx",
+      "loc": 65,
+      "classification": "NORMAL",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/admin/media-api.test.ts",
+      "language": "ts",
+      "loc": 65,
+      "classification": "NORMAL",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/blogs/author/[slug]/page.tsx",
+      "language": "tsx",
+      "loc": 65,
+      "classification": "NORMAL",
+      "ownership": "content"
+    },
+    {
+      "path": "src/frontend/app/blogs/category/[slug]/page.tsx",
+      "language": "tsx",
+      "loc": 65,
+      "classification": "NORMAL",
+      "ownership": "content"
+    },
+    {
+      "path": "src/frontend/app/storefront/pdp-structure.guard.test.ts",
+      "language": "ts",
+      "loc": 65,
+      "classification": "NORMAL",
+      "ownership": "storefront"
+    },
+    {
+      "path": "src/frontend/app/admin/product-rich-html.ts",
+      "language": "ts",
+      "loc": 64,
+      "classification": "NORMAL",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/lib/i18n/language-identity-lock.test.ts",
+      "language": "ts",
+      "loc": 64,
+      "classification": "NORMAL",
+      "ownership": "lib"
+    },
+    {
+      "path": "src/frontend/app/customer-panel/tickets/[id]/page.tsx",
+      "language": "tsx",
+      "loc": 63,
+      "classification": "NORMAL",
+      "ownership": "customer"
+    },
+    {
+      "path": "src/frontend/lib/i18n/locale.ts",
+      "language": "ts",
+      "loc": 63,
+      "classification": "NORMAL",
+      "ownership": "lib"
+    },
+    {
+      "path": "src/frontend/app/admin/landing-pages/[pageId]/preview/page.tsx",
+      "language": "tsx",
+      "loc": 62,
+      "classification": "NORMAL",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/customer-panel/wishlist/page.tsx",
+      "language": "tsx",
+      "loc": 62,
+      "classification": "NORMAL",
+      "ownership": "customer"
+    },
+    {
+      "path": "src/frontend/app/admin/admin-order-supply.ts",
+      "language": "ts",
+      "loc": 61,
+      "classification": "NORMAL",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/design-system/app-data-grid/use-overflow-tooltip.ts",
+      "language": "ts",
+      "loc": 61,
+      "classification": "NORMAL",
+      "ownership": "design-system"
+    },
+    {
+      "path": "src/frontend/lib/storefront-appearance/surface-role.test.ts",
+      "language": "ts",
+      "loc": 61,
+      "classification": "NORMAL",
+      "ownership": "lib"
+    },
+    {
+      "path": "src/frontend/lib/storefront-appearance/derived-surface.test.ts",
+      "language": "ts",
+      "loc": 60,
+      "classification": "NORMAL",
+      "ownership": "lib"
+    },
+    {
+      "path": "src/frontend/app/admin/admin-nav-active.ts",
+      "language": "ts",
+      "loc": 59,
+      "classification": "NORMAL",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/admin/content-article-history-timeline.tsx",
+      "language": "tsx",
+      "loc": 59,
+      "classification": "NORMAL",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/admin/product-workspace-dirty-context.tsx",
+      "language": "tsx",
+      "loc": 59,
+      "classification": "NORMAL",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/admin/variant-axis-capability.test.ts",
+      "language": "ts",
+      "loc": 59,
+      "classification": "NORMAL",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/customer-panel/customer-profile-api.test.ts",
+      "language": "ts",
+      "loc": 59,
+      "classification": "NORMAL",
+      "ownership": "customer"
+    },
+    {
+      "path": "src/frontend/app/settlement/settlement-api.test.ts",
+      "language": "ts",
+      "loc": 59,
+      "classification": "NORMAL",
+      "ownership": "ops"
+    },
+    {
+      "path": "src/frontend/design-system/theme/ThemeProvider.tsx",
+      "language": "tsx",
+      "loc": 59,
+      "classification": "NORMAL",
+      "ownership": "design-system"
+    },
+    {
+      "path": "src/frontend/app/admin/landing-pages/admin-landing-pages.guard.test.ts",
+      "language": "ts",
+      "loc": 58,
+      "classification": "NORMAL",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/admin/landing-pages/admin-section-wizard-logic.ts",
+      "language": "ts",
+      "loc": 58,
+      "classification": "NORMAL",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/storefront/storefront-token-completion.test.ts",
+      "language": "ts",
+      "loc": 58,
+      "classification": "NORMAL",
+      "ownership": "storefront"
+    },
+    {
+      "path": "src/frontend/lib/i18n/locale.test.ts",
+      "language": "ts",
+      "loc": 58,
+      "classification": "NORMAL",
+      "ownership": "lib"
+    },
+    {
+      "path": "src/frontend/app/storefront/storefront-surface.tsx",
+      "language": "tsx",
+      "loc": 57,
+      "classification": "NORMAL",
+      "ownership": "storefront"
+    },
+    {
+      "path": "src/frontend/design-system/app-data-grid/pinned-column.test.ts",
+      "language": "ts",
+      "loc": 57,
+      "classification": "NORMAL",
+      "ownership": "design-system"
+    },
+    {
+      "path": "src/frontend/app/admin/product-category-level.ts",
+      "language": "ts",
+      "loc": 56,
+      "classification": "NORMAL",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/products/[slug]/page.tsx",
+      "language": "tsx",
+      "loc": 56,
+      "classification": "NORMAL",
+      "ownership": "app-other"
+    },
+    {
+      "path": "src/frontend/app/storefront/storefront-product-card-skin.guard.test.ts",
+      "language": "ts",
+      "loc": 56,
+      "classification": "NORMAL",
+      "ownership": "storefront"
+    },
+    {
+      "path": "src/frontend/app/stories/management/story-management-copy.ts",
+      "language": "ts",
+      "loc": 56,
+      "classification": "NORMAL",
+      "ownership": "content"
+    },
+    {
+      "path": "src/frontend/design-system/app-data-grid/filter-icon-system.test.ts",
+      "language": "ts",
+      "loc": 56,
+      "classification": "NORMAL",
+      "ownership": "design-system"
+    },
+    {
+      "path": "src/frontend/design-system/app-data-grid/product-grid-filter-matrix.test.ts",
+      "language": "ts",
+      "loc": 56,
+      "classification": "NORMAL",
+      "ownership": "design-system"
+    },
+    {
+      "path": "src/frontend/lib/auth/login-return-to.ts",
+      "language": "ts",
+      "loc": 56,
+      "classification": "NORMAL",
+      "ownership": "lib"
+    },
+    {
+      "path": "src/frontend/lib/server/session-cookies.ts",
+      "language": "ts",
+      "loc": 56,
+      "classification": "NORMAL",
+      "ownership": "lib"
+    },
+    {
+      "path": "src/frontend/middleware.ts",
+      "language": "ts",
+      "loc": 56,
+      "classification": "NORMAL",
+      "ownership": "other"
+    },
+    {
+      "path": "src/frontend/app/admin/admin-grid-migration.test.ts",
+      "language": "ts",
+      "loc": 55,
+      "classification": "NORMAL",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/admin/checkout-identity-settings-api.ts",
+      "language": "ts",
+      "loc": 55,
+      "classification": "NORMAL",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/storefront/storefront-merchandising.tsx",
+      "language": "tsx",
+      "loc": 55,
+      "classification": "NORMAL",
+      "ownership": "storefront"
+    },
+    {
+      "path": "src/frontend/app/storefront/storefront-theme.test.ts",
+      "language": "ts",
+      "loc": 55,
+      "classification": "NORMAL",
+      "ownership": "storefront"
+    },
+    {
+      "path": "src/frontend/design-system/app-data-grid/app-grid-canonical.test.ts",
+      "language": "ts",
+      "loc": 55,
+      "classification": "NORMAL",
+      "ownership": "design-system"
+    },
+    {
+      "path": "src/frontend/app/admin/admin-operational-history-presentation.test.ts",
+      "language": "ts",
+      "loc": 54,
+      "classification": "NORMAL",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/landing/[slug]/page.tsx",
+      "language": "tsx",
+      "loc": 54,
+      "classification": "NORMAL",
+      "ownership": "app-other"
+    },
+    {
+      "path": "src/frontend/lib/i18n/routing.test.ts",
+      "language": "ts",
+      "loc": 54,
+      "classification": "NORMAL",
+      "ownership": "lib"
+    },
+    {
+      "path": "src/frontend/lib/server/host-client.ts",
+      "language": "ts",
+      "loc": 54,
+      "classification": "NORMAL",
+      "ownership": "lib"
+    },
+    {
+      "path": "src/frontend/app/admin/catalog-tags-card.tsx",
+      "language": "tsx",
+      "loc": 53,
+      "classification": "NORMAL",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/blogs/[slug]/page.tsx",
+      "language": "tsx",
+      "loc": 53,
+      "classification": "NORMAL",
+      "ownership": "content"
+    },
+    {
+      "path": "src/frontend/design-system/app-data-grid/jalali.ts",
+      "language": "ts",
+      "loc": 53,
+      "classification": "NORMAL",
+      "ownership": "design-system"
+    },
+    {
+      "path": "src/frontend/app/admin/admin-operational-history-presentation.ts",
+      "language": "ts",
+      "loc": 52,
+      "classification": "NORMAL",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/admin/catalog-category-api.test.ts",
+      "language": "ts",
+      "loc": 52,
+      "classification": "NORMAL",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/admin/category-mega-menu-panel.test.ts",
+      "language": "ts",
+      "loc": 52,
+      "classification": "NORMAL",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/design-system/app-data-grid/app-grid-pinned-actions.ts",
+      "language": "ts",
+      "loc": 52,
+      "classification": "NORMAL",
+      "ownership": "design-system"
+    },
+    {
+      "path": "src/frontend/design-system/workspace/state.test.ts",
+      "language": "ts",
+      "loc": 52,
+      "classification": "NORMAL",
+      "ownership": "design-system"
+    },
+    {
+      "path": "src/frontend/lib/i18n/middleware-locale.ts",
+      "language": "ts",
+      "loc": 52,
+      "classification": "NORMAL",
+      "ownership": "lib"
+    },
+    {
+      "path": "src/frontend/scripts/gen-batch-c-template-media.mjs",
+      "language": "mjs",
+      "loc": 52,
+      "classification": "NORMAL",
+      "ownership": "other"
+    },
+    {
+      "path": "src/frontend/app/storefront/storefront-appearance-api.test.ts",
+      "language": "ts",
+      "loc": 51,
+      "classification": "NORMAL",
+      "ownership": "storefront"
+    },
+    {
+      "path": "src/frontend/app/stories/management/story-capabilities.ts",
+      "language": "ts",
+      "loc": 51,
+      "classification": "NORMAL",
+      "ownership": "content"
+    },
+    {
+      "path": "src/frontend/app/admin/admin-t007-history.test.ts",
+      "language": "ts",
+      "loc": 50,
+      "classification": "NORMAL",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/admin/product-create-flow.test.ts",
+      "language": "ts",
+      "loc": 50,
+      "classification": "NORMAL",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/storefront/storefront-store-page-cache.ts",
+      "language": "ts",
+      "loc": 50,
+      "classification": "NORMAL",
+      "ownership": "storefront"
+    },
+    {
+      "path": "src/frontend/app/admin/landing-pages/admin-amazing-source-r21.guard.test.ts",
+      "language": "ts",
+      "loc": 49,
+      "classification": "NORMAL",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/api/auth/login/route.ts",
+      "language": "ts",
+      "loc": 49,
+      "classification": "NORMAL",
+      "ownership": "app-other"
+    },
+    {
+      "path": "src/frontend/app/api/auth/otp-complete/route.ts",
+      "language": "ts",
+      "loc": 49,
+      "classification": "NORMAL",
+      "ownership": "app-other"
+    },
+    {
+      "path": "src/frontend/app/evidence/tb-p10-t022-r13-r2/page.tsx",
+      "language": "tsx",
+      "loc": 49,
+      "classification": "NORMAL",
+      "ownership": "app-other"
+    },
+    {
+      "path": "src/frontend/app/admin/variant-axis-messages.ts",
+      "language": "ts",
+      "loc": 48,
+      "classification": "NORMAL",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/api/auth/refresh/route.ts",
+      "language": "ts",
+      "loc": 48,
+      "classification": "NORMAL",
+      "ownership": "app-other"
+    },
+    {
+      "path": "src/frontend/design-system/admin-form-mode/use-admin-form-mode.test.ts",
+      "language": "ts",
+      "loc": 48,
+      "classification": "NORMAL",
+      "ownership": "design-system"
+    },
+    {
+      "path": "src/frontend/tailwind.config.ts",
+      "language": "ts",
+      "loc": 48,
+      "classification": "NORMAL",
+      "ownership": "other"
+    },
+    {
+      "path": "src/frontend/app/admin/admin-order-status-cards.test.ts",
+      "language": "ts",
+      "loc": 47,
+      "classification": "NORMAL",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/storefront/preview-placeholder-surface.tsx",
+      "language": "tsx",
+      "loc": 47,
+      "classification": "NORMAL",
+      "ownership": "storefront"
+    },
+    {
+      "path": "src/frontend/design-system/app-data-grid/filter-column-def.ts",
+      "language": "ts",
+      "loc": 47,
+      "classification": "NORMAL",
+      "ownership": "design-system"
+    },
+    {
+      "path": "src/frontend/lib/storefront-composition/industry-templates.guard.test.ts",
+      "language": "ts",
+      "loc": 47,
+      "classification": "NORMAL",
+      "ownership": "lib"
+    },
+    {
+      "path": "src/frontend/app/customer-panel/customer-capability-shell.tsx",
+      "language": "tsx",
+      "loc": 46,
+      "classification": "NORMAL",
+      "ownership": "customer"
+    },
+    {
+      "path": "src/frontend/app/customer-panel/tickets/page.tsx",
+      "language": "tsx",
+      "loc": 46,
+      "classification": "NORMAL",
+      "ownership": "customer"
+    },
+    {
+      "path": "src/frontend/app/storefront/listing-structure.guard.test.ts",
+      "language": "ts",
+      "loc": 46,
+      "classification": "NORMAL",
+      "ownership": "storefront"
+    },
+    {
+      "path": "src/frontend/app/storefront/storefront-menu-tree.tsx",
+      "language": "tsx",
+      "loc": 46,
+      "classification": "NORMAL",
+      "ownership": "storefront"
+    },
+    {
+      "path": "src/frontend/app/template-preview/fashion/full/page.tsx",
+      "language": "tsx",
+      "loc": 46,
+      "classification": "NORMAL",
+      "ownership": "app-other"
+    },
+    {
+      "path": "src/frontend/app/admin/admin-order-completeness.test.ts",
+      "language": "ts",
+      "loc": 45,
+      "classification": "NORMAL",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/admin/admin-t006-return-shipping.test.ts",
+      "language": "ts",
+      "loc": 45,
+      "classification": "NORMAL",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/template-preview/fashion/page.tsx",
+      "language": "tsx",
+      "loc": 45,
+      "classification": "NORMAL",
+      "ownership": "app-other"
+    },
+    {
+      "path": "src/frontend/design-system/app-data-grid/locale-text.test.ts",
+      "language": "ts",
+      "loc": 45,
+      "classification": "NORMAL",
+      "ownership": "design-system"
+    },
+    {
+      "path": "src/frontend/lib/reservation-countdown.ts",
+      "language": "ts",
+      "loc": 45,
+      "classification": "NORMAL",
+      "ownership": "lib"
+    },
+    {
+      "path": "src/frontend/app/admin/t038-category-grid-ux.test.ts",
+      "language": "ts",
+      "loc": 44,
+      "classification": "NORMAL",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/api/customer/support/tickets/route.ts",
+      "language": "ts",
+      "loc": 44,
+      "classification": "NORMAL",
+      "ownership": "app-other"
+    },
+    {
+      "path": "src/frontend/app/template-preview/beauty/full/page.tsx",
+      "language": "tsx",
+      "loc": 44,
+      "classification": "NORMAL",
+      "ownership": "app-other"
+    },
+    {
+      "path": "src/frontend/app/template-preview/home-appliances/full/page.tsx",
+      "language": "tsx",
+      "loc": 44,
+      "classification": "NORMAL",
+      "ownership": "app-other"
+    },
+    {
+      "path": "src/frontend/app/template-preview/interior-decor/full/page.tsx",
+      "language": "tsx",
+      "loc": 44,
+      "classification": "NORMAL",
+      "ownership": "app-other"
+    },
+    {
+      "path": "src/frontend/app/template-preview/plants/full/page.tsx",
+      "language": "tsx",
+      "loc": 44,
+      "classification": "NORMAL",
+      "ownership": "app-other"
+    },
+    {
+      "path": "src/frontend/app/template-preview/shoes/full/page.tsx",
+      "language": "tsx",
+      "loc": 44,
+      "classification": "NORMAL",
+      "ownership": "app-other"
+    },
+    {
+      "path": "src/frontend/app/template-preview/tile-ceramic/full/page.tsx",
+      "language": "tsx",
+      "loc": 44,
+      "classification": "NORMAL",
+      "ownership": "app-other"
+    },
+    {
+      "path": "src/frontend/design-system/app-data-grid/app-grid-filter-header.ts",
+      "language": "ts",
+      "loc": 44,
+      "classification": "NORMAL",
+      "ownership": "design-system"
+    },
+    {
+      "path": "src/frontend/lib/storefront-appearance/product-card-skin.test.ts",
+      "language": "ts",
+      "loc": 44,
+      "classification": "NORMAL",
+      "ownership": "lib"
+    },
+    {
+      "path": "src/frontend/lib/storefront-appearance/route-inventory.guard.test.ts",
+      "language": "ts",
+      "loc": 44,
+      "classification": "NORMAL",
+      "ownership": "lib"
+    },
+    {
+      "path": "src/frontend/app/cart/page.tsx",
+      "language": "tsx",
+      "loc": 43,
+      "classification": "NORMAL",
+      "ownership": "app-other"
+    },
+    {
+      "path": "src/frontend/app/stories/management/story-capabilities.test.ts",
+      "language": "ts",
+      "loc": 43,
+      "classification": "NORMAL",
+      "ownership": "content"
+    },
+    {
+      "path": "src/frontend/app/template-preview/auto-parts/full/page.tsx",
+      "language": "tsx",
+      "loc": 43,
+      "classification": "NORMAL",
+      "ownership": "app-other"
+    },
+    {
+      "path": "src/frontend/app/template-preview/beauty/page.tsx",
+      "language": "tsx",
+      "loc": 43,
+      "classification": "NORMAL",
+      "ownership": "app-other"
+    },
+    {
+      "path": "src/frontend/app/template-preview/building-materials/full/page.tsx",
+      "language": "tsx",
+      "loc": 43,
+      "classification": "NORMAL",
+      "ownership": "app-other"
+    },
+    {
+      "path": "src/frontend/app/template-preview/home-appliances/page.tsx",
+      "language": "tsx",
+      "loc": 43,
+      "classification": "NORMAL",
+      "ownership": "app-other"
+    },
+    {
+      "path": "src/frontend/app/template-preview/interior-decor/page.tsx",
+      "language": "tsx",
+      "loc": 43,
+      "classification": "NORMAL",
+      "ownership": "app-other"
+    },
+    {
+      "path": "src/frontend/app/template-preview/plants/page.tsx",
+      "language": "tsx",
+      "loc": 43,
+      "classification": "NORMAL",
+      "ownership": "app-other"
+    },
+    {
+      "path": "src/frontend/app/template-preview/shoes/page.tsx",
+      "language": "tsx",
+      "loc": 43,
+      "classification": "NORMAL",
+      "ownership": "app-other"
+    },
+    {
+      "path": "src/frontend/app/template-preview/tile-ceramic/page.tsx",
+      "language": "tsx",
+      "loc": 43,
+      "classification": "NORMAL",
+      "ownership": "app-other"
+    },
+    {
+      "path": "src/frontend/app/template-preview/tools-hardware/full/page.tsx",
+      "language": "tsx",
+      "loc": 43,
+      "classification": "NORMAL",
+      "ownership": "app-other"
+    },
+    {
+      "path": "src/frontend/design-system/app-data-grid/types.ts",
+      "language": "ts",
+      "loc": 43,
+      "classification": "NORMAL",
+      "ownership": "design-system"
+    },
+    {
+      "path": "src/frontend/lib/storefront-appearance/theme-mode.ts",
+      "language": "ts",
+      "loc": 43,
+      "classification": "NORMAL",
+      "ownership": "lib"
+    },
+    {
+      "path": "src/frontend/app/admin/product-category-level.test.ts",
+      "language": "ts",
+      "loc": 42,
+      "classification": "NORMAL",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/template-preview/auto-parts/page.tsx",
+      "language": "tsx",
+      "loc": 42,
+      "classification": "NORMAL",
+      "ownership": "app-other"
+    },
+    {
+      "path": "src/frontend/app/template-preview/building-materials/page.tsx",
+      "language": "tsx",
+      "loc": 42,
+      "classification": "NORMAL",
+      "ownership": "app-other"
+    },
+    {
+      "path": "src/frontend/app/template-preview/tools-hardware/page.tsx",
+      "language": "tsx",
+      "loc": 42,
+      "classification": "NORMAL",
+      "ownership": "app-other"
+    },
+    {
+      "path": "src/frontend/design-system/app-data-grid/export.ts",
+      "language": "ts",
+      "loc": 42,
+      "classification": "NORMAL",
+      "ownership": "design-system"
+    },
+    {
+      "path": "src/frontend/design-system/app-data-grid/text-filter-operators.ts",
+      "language": "ts",
+      "loc": 42,
+      "classification": "NORMAL",
+      "ownership": "design-system"
+    },
+    {
+      "path": "src/frontend/lib/i18n/resolve-request-locale.ts",
+      "language": "ts",
+      "loc": 42,
+      "classification": "NORMAL",
+      "ownership": "lib"
+    },
+    {
+      "path": "src/frontend/lib/storefront-composition/fashion-demo-media.ts",
+      "language": "ts",
+      "loc": 42,
+      "classification": "NORMAL",
+      "ownership": "lib"
+    },
+    {
+      "path": "src/frontend/app/admin/content-author-admin-screen.test.ts",
+      "language": "ts",
+      "loc": 41,
+      "classification": "NORMAL",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/vendor-panel/vendor-capability-shell.tsx",
+      "language": "tsx",
+      "loc": 41,
+      "classification": "NORMAL",
+      "ownership": "seller"
+    },
+    {
+      "path": "src/frontend/design-system/app-data-grid/filter-commit.ts",
+      "language": "ts",
+      "loc": 41,
+      "classification": "NORMAL",
+      "ownership": "design-system"
+    },
+    {
+      "path": "src/frontend/lib/i18n/locale-cookie.ts",
+      "language": "ts",
+      "loc": 41,
+      "classification": "NORMAL",
+      "ownership": "lib"
+    },
+    {
+      "path": "src/frontend/app/admin/content-list.test.ts",
+      "language": "ts",
+      "loc": 40,
+      "classification": "NORMAL",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/blogs/blogs-copy.test.ts",
+      "language": "ts",
+      "loc": 40,
+      "classification": "NORMAL",
+      "ownership": "content"
+    },
+    {
+      "path": "src/frontend/design-system/workspace/messages.ts",
+      "language": "ts",
+      "loc": 40,
+      "classification": "NORMAL",
+      "ownership": "design-system"
+    },
+    {
+      "path": "src/frontend/lib/i18n/messages.ts",
+      "language": "ts",
+      "loc": 40,
+      "classification": "NORMAL",
+      "ownership": "lib"
+    },
+    {
+      "path": "src/frontend/app/admin/primary-category-migration-wizard.test.ts",
+      "language": "ts",
+      "loc": 39,
+      "classification": "NORMAL",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/stories/management/StoryStatusBadge.tsx",
+      "language": "tsx",
+      "loc": 39,
+      "classification": "NORMAL",
+      "ownership": "content"
+    },
+    {
+      "path": "src/frontend/design-system/app-data-grid/search-commit.test.ts",
+      "language": "ts",
+      "loc": 39,
+      "classification": "NORMAL",
+      "ownership": "design-system"
+    },
+    {
+      "path": "src/frontend/design-system/data-grid/index.ts",
+      "language": "ts",
+      "loc": 39,
+      "classification": "NORMAL",
+      "ownership": "design-system"
+    },
+    {
+      "path": "src/frontend/app/admin/catalog-units-screen.test.ts",
+      "language": "ts",
+      "loc": 38,
+      "classification": "NORMAL",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/admin/content-category-admin-screen.test.ts",
+      "language": "ts",
+      "loc": 37,
+      "classification": "NORMAL",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/admin/operator-settings-api.test.ts",
+      "language": "ts",
+      "loc": 37,
+      "classification": "NORMAL",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/payment/storefront-payment-page.test.ts",
+      "language": "ts",
+      "loc": 37,
+      "classification": "NORMAL",
+      "ownership": "app-other"
+    },
+    {
+      "path": "src/frontend/app/storefront/storefront-landing.guard.test.ts",
+      "language": "ts",
+      "loc": 37,
+      "classification": "NORMAL",
+      "ownership": "storefront"
+    },
+    {
+      "path": "src/frontend/design-system/app-data-grid/jalali-date-ui.test.ts",
+      "language": "ts",
+      "loc": 37,
+      "classification": "NORMAL",
+      "ownership": "design-system"
+    },
+    {
+      "path": "src/frontend/app/admin/admin-product-card-skin-preview.tsx",
+      "language": "tsx",
+      "loc": 36,
+      "classification": "NORMAL",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/admin/product-grid-filter-matrix.ts",
+      "language": "ts",
+      "loc": 36,
+      "classification": "NORMAL",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/design-system/app-category-tree/index.ts",
+      "language": "ts",
+      "loc": 36,
+      "classification": "NORMAL",
+      "ownership": "design-system"
+    },
+    {
+      "path": "src/frontend/lib/auth/login-return-to.test.ts",
+      "language": "ts",
+      "loc": 36,
+      "classification": "NORMAL",
+      "ownership": "lib"
+    },
+    {
+      "path": "src/frontend/app/admin/product-translations-panel.test.ts",
+      "language": "ts",
+      "loc": 35,
+      "classification": "NORMAL",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/blogs/page.tsx",
+      "language": "tsx",
+      "loc": 35,
+      "classification": "NORMAL",
+      "ownership": "content"
+    },
+    {
+      "path": "src/frontend/app/storefront/storefront-product-card-dark.guard.test.ts",
+      "language": "ts",
+      "loc": 35,
+      "classification": "NORMAL",
+      "ownership": "storefront"
+    },
+    {
+      "path": "src/frontend/lib/storefront-composition/resolve-variant.ts",
+      "language": "ts",
+      "loc": 35,
+      "classification": "NORMAL",
+      "ownership": "lib"
+    },
+    {
+      "path": "src/frontend/app/admin/admin-order-supply.test.ts",
+      "language": "ts",
+      "loc": 34,
+      "classification": "NORMAL",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/admin/menus/admin-menus.guard.test.ts",
+      "language": "ts",
+      "loc": 34,
+      "classification": "NORMAL",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/api/customer/support/tickets/[id]/replies/route.ts",
+      "language": "ts",
+      "loc": 34,
+      "classification": "NORMAL",
+      "ownership": "app-other"
+    },
+    {
+      "path": "src/frontend/app/customer-panel/customer-panel-theme.guard.test.ts",
+      "language": "ts",
+      "loc": 34,
+      "classification": "NORMAL",
+      "ownership": "customer"
+    },
+    {
+      "path": "src/frontend/app/providers.tsx",
+      "language": "tsx",
+      "loc": 34,
+      "classification": "NORMAL",
+      "ownership": "app-other"
+    },
+    {
+      "path": "src/frontend/design-system/app-data-grid/column-manager.test.ts",
+      "language": "ts",
+      "loc": 34,
+      "classification": "NORMAL",
+      "ownership": "design-system"
+    },
+    {
+      "path": "src/frontend/design-system/app-data-grid/index.ts",
+      "language": "ts",
+      "loc": 34,
+      "classification": "NORMAL",
+      "ownership": "design-system"
+    },
+    {
+      "path": "src/frontend/app/storefront/storefront-checkout-limit-notice.tsx",
+      "language": "tsx",
+      "loc": 33,
+      "classification": "NORMAL",
+      "ownership": "storefront"
+    },
+    {
+      "path": "src/frontend/lib/storefront-appearance/storefront-appearance-context.tsx",
+      "language": "tsx",
+      "loc": 33,
+      "classification": "NORMAL",
+      "ownership": "lib"
+    },
+    {
+      "path": "src/frontend/design-system/app-data-grid/ag-filter-mapper.test.ts",
+      "language": "ts",
+      "loc": 32,
+      "classification": "NORMAL",
+      "ownership": "design-system"
+    },
+    {
+      "path": "src/frontend/lib/storefront-appearance/section-context.guard.test.ts",
+      "language": "ts",
+      "loc": 32,
+      "classification": "NORMAL",
+      "ownership": "lib"
+    },
+    {
+      "path": "src/frontend/lib/storefront-appearance/theme-mode.test.ts",
+      "language": "ts",
+      "loc": 32,
+      "classification": "NORMAL",
+      "ownership": "lib"
+    },
+    {
+      "path": "src/frontend/app/admin/content-article-editor.tsx",
+      "language": "tsx",
+      "loc": 31,
+      "classification": "NORMAL",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/storefront/storefront-product-seo.ts",
+      "language": "ts",
+      "loc": 31,
+      "classification": "NORMAL",
+      "ownership": "storefront"
+    },
+    {
+      "path": "src/frontend/app/storefront/storefront-shell.tsx",
+      "language": "tsx",
+      "loc": 31,
+      "classification": "NORMAL",
+      "ownership": "storefront"
+    },
+    {
+      "path": "src/frontend/lib/i18n/language-identity-lock.ts",
+      "language": "ts",
+      "loc": 31,
+      "classification": "NORMAL",
+      "ownership": "lib"
+    },
+    {
+      "path": "src/frontend/app/storefront/storefront-merchandising-page.tsx",
+      "language": "tsx",
+      "loc": 30,
+      "classification": "NORMAL",
+      "ownership": "storefront"
+    },
+    {
+      "path": "src/frontend/app/vendor-panel/access-control/page.tsx",
+      "language": "tsx",
+      "loc": 30,
+      "classification": "NORMAL",
+      "ownership": "seller"
+    },
+    {
+      "path": "src/frontend/lib/auth/browser-session.ts",
+      "language": "ts",
+      "loc": 30,
+      "classification": "NORMAL",
+      "ownership": "lib"
+    },
+    {
+      "path": "src/frontend/next.config.ts",
+      "language": "ts",
+      "loc": 30,
+      "classification": "NORMAL",
+      "ownership": "other"
+    },
+    {
+      "path": "src/frontend/app/storefront/storefront-themed-canvas.tsx",
+      "language": "tsx",
+      "loc": 29,
+      "classification": "NORMAL",
+      "ownership": "storefront"
+    },
+    {
+      "path": "src/frontend/design-system/workspace/index.ts",
+      "language": "ts",
+      "loc": 29,
+      "classification": "NORMAL",
+      "ownership": "design-system"
+    },
+    {
+      "path": "src/frontend/app/admin/admin-theme-isolation.guard.test.ts",
+      "language": "ts",
+      "loc": 28,
+      "classification": "NORMAL",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/admin/layout.tsx",
+      "language": "tsx",
+      "loc": 28,
+      "classification": "NORMAL",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/api/auth/logout/route.ts",
+      "language": "ts",
+      "loc": 28,
+      "classification": "NORMAL",
+      "ownership": "app-other"
+    },
+    {
+      "path": "src/frontend/app/api/customer/support/tickets/[id]/close/route.ts",
+      "language": "ts",
+      "loc": 28,
+      "classification": "NORMAL",
+      "ownership": "app-other"
+    },
+    {
+      "path": "src/frontend/app/api/customer/support/tickets/[id]/reopen/route.ts",
+      "language": "ts",
+      "loc": 28,
+      "classification": "NORMAL",
+      "ownership": "app-other"
+    },
+    {
+      "path": "src/frontend/app/api/storefront/revalidate/route.ts",
+      "language": "ts",
+      "loc": 28,
+      "classification": "NORMAL",
+      "ownership": "app-other"
+    },
+    {
+      "path": "src/frontend/app/global-error.tsx",
+      "language": "tsx",
+      "loc": 28,
+      "classification": "NORMAL",
+      "ownership": "app-other"
+    },
+    {
+      "path": "src/frontend/app/login/storefront-login.guard.test.ts",
+      "language": "ts",
+      "loc": 28,
+      "classification": "NORMAL",
+      "ownership": "app-other"
+    },
+    {
+      "path": "src/frontend/design-system/app-data-grid/use-overflow-tooltip.test.ts",
+      "language": "ts",
+      "loc": 28,
+      "classification": "NORMAL",
+      "ownership": "design-system"
+    },
+    {
+      "path": "src/frontend/app/admin/catalog/products/[productId]/attributes/page.tsx",
+      "language": "tsx",
+      "loc": 27,
+      "classification": "NORMAL",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/admin/menus/admin-menu-destination.ts",
+      "language": "ts",
+      "loc": 27,
+      "classification": "NORMAL",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/admin/product-translations-readiness.ts",
+      "language": "ts",
+      "loc": 27,
+      "classification": "NORMAL",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/storefront/pdp-component-surface.guard.test.ts",
+      "language": "ts",
+      "loc": 27,
+      "classification": "NORMAL",
+      "ownership": "storefront"
+    },
+    {
+      "path": "src/frontend/lib/i18n/LocalizedLink.tsx",
+      "language": "tsx",
+      "loc": 27,
+      "classification": "NORMAL",
+      "ownership": "lib"
+    },
+    {
+      "path": "src/frontend/app/api/auth/otp-request/route.ts",
+      "language": "ts",
+      "loc": 26,
+      "classification": "NORMAL",
+      "ownership": "app-other"
+    },
+    {
+      "path": "src/frontend/app/storefront/storefront-menu.guard.test.ts",
+      "language": "ts",
+      "loc": 26,
+      "classification": "NORMAL",
+      "ownership": "storefront"
+    },
+    {
+      "path": "src/frontend/design-system/app-data-grid/app-grid-capabilities.ts",
+      "language": "ts",
+      "loc": 26,
+      "classification": "NORMAL",
+      "ownership": "design-system"
+    },
+    {
+      "path": "src/frontend/design-system/app-data-grid/clear-all-filters.test.ts",
+      "language": "ts",
+      "loc": 26,
+      "classification": "NORMAL",
+      "ownership": "design-system"
+    },
+    {
+      "path": "src/frontend/app/admin/additional-category-list-cell.tsx",
+      "language": "tsx",
+      "loc": 25,
+      "classification": "NORMAL",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/admin/products/[productId]/page.tsx",
+      "language": "tsx",
+      "loc": 25,
+      "classification": "NORMAL",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/customer-panel/dev/wallet-checkout/page.tsx",
+      "language": "tsx",
+      "loc": 25,
+      "classification": "NORMAL",
+      "ownership": "customer"
+    },
+    {
+      "path": "src/frontend/app/error.tsx",
+      "language": "tsx",
+      "loc": 25,
+      "classification": "NORMAL",
+      "ownership": "app-other"
+    },
+    {
+      "path": "src/frontend/app/login/page.tsx",
+      "language": "tsx",
+      "loc": 25,
+      "classification": "NORMAL",
+      "ownership": "app-other"
+    },
+    {
+      "path": "src/frontend/app/payment/page.tsx",
+      "language": "tsx",
+      "loc": 25,
+      "classification": "NORMAL",
+      "ownership": "app-other"
+    },
+    {
+      "path": "src/frontend/app/storefront/category-plp.guard.test.ts",
+      "language": "ts",
+      "loc": 25,
+      "classification": "NORMAL",
+      "ownership": "storefront"
+    },
+    {
+      "path": "src/frontend/app/storefront/use-checkout-auth-gate.ts",
+      "language": "ts",
+      "loc": 25,
+      "classification": "NORMAL",
+      "ownership": "storefront"
+    },
+    {
+      "path": "src/frontend/design-system/invariants.ts",
+      "language": "ts",
+      "loc": 25,
+      "classification": "NORMAL",
+      "ownership": "design-system"
+    },
+    {
+      "path": "src/frontend/lib/auth/constants.ts",
+      "language": "ts",
+      "loc": 25,
+      "classification": "NORMAL",
+      "ownership": "lib"
+    },
+    {
+      "path": "src/frontend/lib/auth/csrf.ts",
+      "language": "ts",
+      "loc": 25,
+      "classification": "NORMAL",
+      "ownership": "lib"
+    },
+    {
+      "path": "src/frontend/lib/storefront-appearance/product-card-skin-context.tsx",
+      "language": "tsx",
+      "loc": 25,
+      "classification": "NORMAL",
+      "ownership": "lib"
+    },
+    {
+      "path": "src/frontend/app/[slug]/page.tsx",
+      "language": "tsx",
+      "loc": 24,
+      "classification": "NORMAL",
+      "ownership": "app-other"
+    },
+    {
+      "path": "src/frontend/lib/quantity-display.ts",
+      "language": "ts",
+      "loc": 24,
+      "classification": "NORMAL",
+      "ownership": "lib"
+    },
+    {
+      "path": "src/frontend/app/brands/page.tsx",
+      "language": "tsx",
+      "loc": 23,
+      "classification": "NORMAL",
+      "ownership": "app-other"
+    },
+    {
+      "path": "src/frontend/app/sellers/page.tsx",
+      "language": "tsx",
+      "loc": 23,
+      "classification": "NORMAL",
+      "ownership": "seller"
+    },
+    {
+      "path": "src/frontend/lib/i18n/supported-locales.test.ts",
+      "language": "ts",
+      "loc": 23,
+      "classification": "NORMAL",
+      "ownership": "lib"
+    },
+    {
+      "path": "src/frontend/app/admin/admin-product-card-skin-preview.test.ts",
+      "language": "ts",
+      "loc": 22,
+      "classification": "NORMAL",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/admin/sellers/[sellerId]/access-control/page.tsx",
+      "language": "tsx",
+      "loc": 22,
+      "classification": "NORMAL",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/customer-panel/customer-composition.guard.test.ts",
+      "language": "ts",
+      "loc": 22,
+      "classification": "NORMAL",
+      "ownership": "customer"
+    },
+    {
+      "path": "src/frontend/app/customer-panel/customer-preferences-api.test.ts",
+      "language": "ts",
+      "loc": 22,
+      "classification": "NORMAL",
+      "ownership": "customer"
+    },
+    {
+      "path": "src/frontend/app/order/confirmation/page.tsx",
+      "language": "tsx",
+      "loc": 22,
+      "classification": "NORMAL",
+      "ownership": "app-other"
+    },
+    {
+      "path": "src/frontend/app/payment/result/page.tsx",
+      "language": "tsx",
+      "loc": 22,
+      "classification": "NORMAL",
+      "ownership": "app-other"
+    },
+    {
+      "path": "src/frontend/app/payment/sandbox/page.tsx",
+      "language": "tsx",
+      "loc": 22,
+      "classification": "NORMAL",
+      "ownership": "app-other"
+    },
+    {
+      "path": "src/frontend/app/shipping/page.tsx",
+      "language": "tsx",
+      "loc": 22,
+      "classification": "NORMAL",
+      "ownership": "app-other"
+    },
+    {
+      "path": "src/frontend/app/storefront/preview-sample-badge.tsx",
+      "language": "tsx",
+      "loc": 22,
+      "classification": "NORMAL",
+      "ownership": "storefront"
+    },
+    {
+      "path": "src/frontend/app/vendor-panel/seller-theme-isolation.guard.test.ts",
+      "language": "ts",
+      "loc": 22,
+      "classification": "NORMAL",
+      "ownership": "seller"
+    },
+    {
+      "path": "src/frontend/app/vendor-panel/tickets/new/page.tsx",
+      "language": "tsx",
+      "loc": 22,
+      "classification": "NORMAL",
+      "ownership": "seller"
+    },
+    {
+      "path": "src/frontend/app/brand/[slug]/page.tsx",
+      "language": "tsx",
+      "loc": 20,
+      "classification": "NORMAL",
+      "ownership": "app-other"
+    },
+    {
+      "path": "src/frontend/app/seller-profile/[publicId]/page.tsx",
+      "language": "tsx",
+      "loc": 20,
+      "classification": "NORMAL",
+      "ownership": "seller"
+    },
+    {
+      "path": "src/frontend/app/vendor-panel/layout.tsx",
+      "language": "tsx",
+      "loc": 20,
+      "classification": "NORMAL",
+      "ownership": "seller"
+    },
+    {
+      "path": "src/frontend/design-system/app-data-grid/column-labels.ts",
+      "language": "ts",
+      "loc": 20,
+      "classification": "NORMAL",
+      "ownership": "design-system"
+    },
+    {
+      "path": "src/frontend/design-system/primitives/Portal.tsx",
+      "language": "tsx",
+      "loc": 20,
+      "classification": "NORMAL",
+      "ownership": "design-system"
+    },
+    {
+      "path": "src/frontend/design-system/theme/types.ts",
+      "language": "ts",
+      "loc": 20,
+      "classification": "NORMAL",
+      "ownership": "design-system"
+    },
+    {
+      "path": "src/frontend/app/admin/gift-cards/[id]/page.tsx",
+      "language": "tsx",
+      "loc": 19,
+      "classification": "NORMAL",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/admin/workspace-model.test.ts",
+      "language": "ts",
+      "loc": 19,
+      "classification": "NORMAL",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/api/customer/support/tickets/[id]/route.ts",
+      "language": "ts",
+      "loc": 19,
+      "classification": "NORMAL",
+      "ownership": "app-other"
+    },
+    {
+      "path": "src/frontend/app/content/article-body-html.tsx",
+      "language": "tsx",
+      "loc": 19,
+      "classification": "NORMAL",
+      "ownership": "content"
+    },
+    {
+      "path": "src/frontend/app/customer-panel/tickets/new/page.tsx",
+      "language": "tsx",
+      "loc": 19,
+      "classification": "NORMAL",
+      "ownership": "customer"
+    },
+    {
+      "path": "src/frontend/design-system/app-data-grid/grid-query-mapper.test.ts",
+      "language": "ts",
+      "loc": 19,
+      "classification": "NORMAL",
+      "ownership": "design-system"
+    },
+    {
+      "path": "src/frontend/lib/storefront-landing/reserved-slugs.test.ts",
+      "language": "ts",
+      "loc": 19,
+      "classification": "NORMAL",
+      "ownership": "lib"
+    },
+    {
+      "path": "src/frontend/lib/auth/csrf.test.ts",
+      "language": "ts",
+      "loc": 18,
+      "classification": "NORMAL",
+      "ownership": "lib"
+    },
+    {
+      "path": "src/frontend/lib/quantity-display.test.ts",
+      "language": "ts",
+      "loc": 18,
+      "classification": "NORMAL",
+      "ownership": "lib"
+    },
+    {
+      "path": "src/frontend/app/template-preview/layout.tsx",
+      "language": "tsx",
+      "loc": 17,
+      "classification": "NORMAL",
+      "ownership": "app-other"
+    },
+    {
+      "path": "src/frontend/app/admin/catalog/attributes/page.tsx",
+      "language": "tsx",
+      "loc": 16,
+      "classification": "NORMAL",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/admin/catalog/categories/[categoryId]/[tab]/page.tsx",
+      "language": "tsx",
+      "loc": 16,
+      "classification": "NORMAL",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/admin/catalog/categories/[categoryId]/page.tsx",
+      "language": "tsx",
+      "loc": 16,
+      "classification": "NORMAL",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/admin/catalog/categories/page.tsx",
+      "language": "tsx",
+      "loc": 16,
+      "classification": "NORMAL",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/admin/catalog/category-schema/page.tsx",
+      "language": "tsx",
+      "loc": 16,
+      "classification": "NORMAL",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/admin/catalog/units/page.tsx",
+      "language": "tsx",
+      "loc": 16,
+      "classification": "NORMAL",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/admin/shipping-services/page.tsx",
+      "language": "tsx",
+      "loc": 16,
+      "classification": "NORMAL",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/customer-panel/layout.tsx",
+      "language": "tsx",
+      "loc": 16,
+      "classification": "NORMAL",
+      "ownership": "customer"
+    },
+    {
+      "path": "src/frontend/design-system/admin-form-mode/index.ts",
+      "language": "ts",
+      "loc": 16,
+      "classification": "NORMAL",
+      "ownership": "design-system"
+    },
+    {
+      "path": "src/frontend/app/admin/content/authors/[authorId]/page.tsx",
+      "language": "tsx",
+      "loc": 15,
+      "classification": "NORMAL",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/admin/content/authors/page.tsx",
+      "language": "tsx",
+      "loc": 15,
+      "classification": "NORMAL",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/admin/content/categories/[categoryId]/page.tsx",
+      "language": "tsx",
+      "loc": 15,
+      "classification": "NORMAL",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/admin/content/categories/page.tsx",
+      "language": "tsx",
+      "loc": 15,
+      "classification": "NORMAL",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/design-system/page.tsx",
+      "language": "tsx",
+      "loc": 15,
+      "classification": "NORMAL",
+      "ownership": "app-other"
+    },
+    {
+      "path": "src/frontend/app/vendor-panel/coupons/[id]/edit/page.tsx",
+      "language": "tsx",
+      "loc": 15,
+      "classification": "NORMAL",
+      "ownership": "seller"
+    },
+    {
+      "path": "src/frontend/design-system/app-data-grid/column-filter-icon.tsx",
+      "language": "tsx",
+      "loc": 15,
+      "classification": "NORMAL",
+      "ownership": "design-system"
+    },
+    {
+      "path": "src/frontend/design-system/tokens/roles.ts",
+      "language": "ts",
+      "loc": 15,
+      "classification": "NORMAL",
+      "ownership": "design-system"
+    },
+    {
+      "path": "src/frontend/app/admin/products/page.tsx",
+      "language": "tsx",
+      "loc": 14,
+      "classification": "NORMAL",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/customer-panel/notifications/page.tsx",
+      "language": "tsx",
+      "loc": 14,
+      "classification": "NORMAL",
+      "ownership": "customer"
+    },
+    {
+      "path": "src/frontend/app/vendor-panel/notifications/page.tsx",
+      "language": "tsx",
+      "loc": 14,
+      "classification": "NORMAL",
+      "ownership": "seller"
+    },
+    {
+      "path": "src/frontend/design-system/app-data-grid/search-commit.ts",
+      "language": "ts",
+      "loc": 14,
+      "classification": "NORMAL",
+      "ownership": "design-system"
+    },
+    {
+      "path": "src/frontend/lib/storefront-appearance/background-style.ts",
+      "language": "ts",
+      "loc": 14,
+      "classification": "NORMAL",
+      "ownership": "lib"
+    },
+    {
+      "path": "src/frontend/app/vendor-panel/customers/page.tsx",
+      "language": "tsx",
+      "loc": 13,
+      "classification": "NORMAL",
+      "ownership": "seller"
+    },
+    {
+      "path": "src/frontend/app/vendor-panel/gift-cards/page.tsx",
+      "language": "tsx",
+      "loc": 13,
+      "classification": "NORMAL",
+      "ownership": "seller"
+    },
+    {
+      "path": "src/frontend/lib/storefront-landing/reserved-slugs.ts",
+      "language": "ts",
+      "loc": 13,
+      "classification": "NORMAL",
+      "ownership": "lib"
+    },
+    {
+      "path": "src/frontend/app/admin/access-control/page.tsx",
+      "language": "tsx",
+      "loc": 12,
+      "classification": "NORMAL",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/admin/campaigns/[campaignId]/page.tsx",
+      "language": "tsx",
+      "loc": 12,
+      "classification": "NORMAL",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/admin/landing-pages/[pageId]/page.tsx",
+      "language": "tsx",
+      "loc": 12,
+      "classification": "NORMAL",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/admin/menus/[menuId]/page.tsx",
+      "language": "tsx",
+      "loc": 12,
+      "classification": "NORMAL",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/api/auth/csrf/route.ts",
+      "language": "ts",
+      "loc": 12,
+      "classification": "NORMAL",
+      "ownership": "app-other"
+    },
+    {
+      "path": "src/frontend/app/blogs/layout.tsx",
+      "language": "tsx",
+      "loc": 12,
+      "classification": "NORMAL",
+      "ownership": "content"
+    },
+    {
+      "path": "src/frontend/app/not-found.tsx",
+      "language": "tsx",
+      "loc": 12,
+      "classification": "NORMAL",
+      "ownership": "app-other"
+    },
+    {
+      "path": "src/frontend/app/stories/management/index.ts",
+      "language": "ts",
+      "loc": 12,
+      "classification": "NORMAL",
+      "ownership": "content"
+    },
+    {
+      "path": "src/frontend/design-system/app-data-grid/community-filter-audit.test.ts",
+      "language": "ts",
+      "loc": 12,
+      "classification": "NORMAL",
+      "ownership": "design-system"
+    },
+    {
+      "path": "src/frontend/app/vendor-panel/stories/page.tsx",
+      "language": "tsx",
+      "loc": 11,
+      "classification": "NORMAL",
+      "ownership": "seller"
+    },
+    {
+      "path": "src/frontend/app/best-seller/page.tsx",
+      "language": "tsx",
+      "loc": 10,
+      "classification": "NORMAL",
+      "ownership": "app-other"
+    },
+    {
+      "path": "src/frontend/app/most-viewed/page.tsx",
+      "language": "tsx",
+      "loc": 10,
+      "classification": "NORMAL",
+      "ownership": "app-other"
+    },
+    {
+      "path": "src/frontend/app/new-products/page.tsx",
+      "language": "tsx",
+      "loc": 10,
+      "classification": "NORMAL",
+      "ownership": "app-other"
+    },
+    {
+      "path": "src/frontend/app/offers/page.tsx",
+      "language": "tsx",
+      "loc": 10,
+      "classification": "NORMAL",
+      "ownership": "app-other"
+    },
+    {
+      "path": "src/frontend/app/sale/page.tsx",
+      "language": "tsx",
+      "loc": 10,
+      "classification": "NORMAL",
+      "ownership": "app-other"
+    },
+    {
+      "path": "src/frontend/app/trending/page.tsx",
+      "language": "tsx",
+      "loc": 10,
+      "classification": "NORMAL",
+      "ownership": "app-other"
+    },
+    {
+      "path": "src/frontend/app/admin/gift-cards/page.tsx",
+      "language": "tsx",
+      "loc": 9,
+      "classification": "NORMAL",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/admin/wallets/page.tsx",
+      "language": "tsx",
+      "loc": 9,
+      "classification": "NORMAL",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/api/auth/me/route.ts",
+      "language": "ts",
+      "loc": 9,
+      "classification": "NORMAL",
+      "ownership": "app-other"
+    },
+    {
+      "path": "src/frontend/app/checkout/page.tsx",
+      "language": "tsx",
+      "loc": 9,
+      "classification": "NORMAL",
+      "ownership": "app-other"
+    },
+    {
+      "path": "src/frontend/app/customer-panel/gift-cards/page.tsx",
+      "language": "tsx",
+      "loc": 9,
+      "classification": "NORMAL",
+      "ownership": "customer"
+    },
+    {
+      "path": "src/frontend/app/customer-panel/wallet/page.tsx",
+      "language": "tsx",
+      "loc": 9,
+      "classification": "NORMAL",
+      "ownership": "customer"
+    },
+    {
+      "path": "src/frontend/app/vendor-panel/coupons/new/page.tsx",
+      "language": "tsx",
+      "loc": 9,
+      "classification": "NORMAL",
+      "ownership": "seller"
+    },
+    {
+      "path": "src/frontend/app/vendor-panel/coupons/page.tsx",
+      "language": "tsx",
+      "loc": 9,
+      "classification": "NORMAL",
+      "ownership": "seller"
+    },
+    {
+      "path": "src/frontend/lib/storefront-composition/index.ts",
+      "language": "ts",
+      "loc": 9,
+      "classification": "NORMAL",
+      "ownership": "lib"
+    },
+    {
+      "path": "src/frontend/app/admin/fulfillments/[fulfillmentId]/page.tsx",
+      "language": "tsx",
+      "loc": 8,
+      "classification": "NORMAL",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/admin/orders/[checkoutId]/page.tsx",
+      "language": "tsx",
+      "loc": 8,
+      "classification": "NORMAL",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/admin/returns/[returnRequestId]/page.tsx",
+      "language": "tsx",
+      "loc": 8,
+      "classification": "NORMAL",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/admin/campaigns/new/page.tsx",
+      "language": "tsx",
+      "loc": 7,
+      "classification": "NORMAL",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/admin/campaigns/page.tsx",
+      "language": "tsx",
+      "loc": 7,
+      "classification": "NORMAL",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/admin/content/articles/[articleId]/page.tsx",
+      "language": "tsx",
+      "loc": 7,
+      "classification": "NORMAL",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/admin/content/articles/new/page.tsx",
+      "language": "tsx",
+      "loc": 7,
+      "classification": "NORMAL",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/admin/content/page.tsx",
+      "language": "tsx",
+      "loc": 7,
+      "classification": "NORMAL",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/admin/customers/page.tsx",
+      "language": "tsx",
+      "loc": 7,
+      "classification": "NORMAL",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/admin/fulfillments/page.tsx",
+      "language": "tsx",
+      "loc": 7,
+      "classification": "NORMAL",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/admin/landing-pages/new/page.tsx",
+      "language": "tsx",
+      "loc": 7,
+      "classification": "NORMAL",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/admin/landing-pages/page.tsx",
+      "language": "tsx",
+      "loc": 7,
+      "classification": "NORMAL",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/admin/menus/new/page.tsx",
+      "language": "tsx",
+      "loc": 7,
+      "classification": "NORMAL",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/admin/menus/page.tsx",
+      "language": "tsx",
+      "loc": 7,
+      "classification": "NORMAL",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/admin/orders/page.tsx",
+      "language": "tsx",
+      "loc": 7,
+      "classification": "NORMAL",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/admin/page-composition/page.tsx",
+      "language": "tsx",
+      "loc": 7,
+      "classification": "NORMAL",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/admin/page.tsx",
+      "language": "tsx",
+      "loc": 7,
+      "classification": "NORMAL",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/admin/payouts/page.tsx",
+      "language": "tsx",
+      "loc": 7,
+      "classification": "NORMAL",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/admin/products/new/page.tsx",
+      "language": "tsx",
+      "loc": 7,
+      "classification": "NORMAL",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/admin/promotions/page.tsx",
+      "language": "tsx",
+      "loc": 7,
+      "classification": "NORMAL",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/admin/receipts/page.tsx",
+      "language": "tsx",
+      "loc": 7,
+      "classification": "NORMAL",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/admin/returns/page.tsx",
+      "language": "tsx",
+      "loc": 7,
+      "classification": "NORMAL",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/admin/reviews/page.tsx",
+      "language": "tsx",
+      "loc": 7,
+      "classification": "NORMAL",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/admin/sellers/page.tsx",
+      "language": "tsx",
+      "loc": 7,
+      "classification": "NORMAL",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/admin/settlement/page.tsx",
+      "language": "tsx",
+      "loc": 7,
+      "classification": "NORMAL",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/admin/stories/page.tsx",
+      "language": "tsx",
+      "loc": 7,
+      "classification": "NORMAL",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/vendor-panel/reviews/page.tsx",
+      "language": "tsx",
+      "loc": 7,
+      "classification": "NORMAL",
+      "ownership": "seller"
+    },
+    {
+      "path": "src/frontend/app/vendor-panel/wallet/page.tsx",
+      "language": "tsx",
+      "loc": 7,
+      "classification": "NORMAL",
+      "ownership": "seller"
+    },
+    {
+      "path": "src/frontend/design-system/cn.ts",
+      "language": "ts",
+      "loc": 7,
+      "classification": "NORMAL",
+      "ownership": "design-system"
+    },
+    {
+      "path": "src/frontend/next-env.d.ts",
+      "language": "ts",
+      "loc": 7,
+      "classification": "NORMAL",
+      "ownership": "other"
+    },
+    {
+      "path": "src/frontend/postcss.config.js",
+      "language": "js",
+      "loc": 7,
+      "classification": "NORMAL",
+      "ownership": "other"
+    },
+    {
+      "path": "src/frontend/app/admin/content/help/page.tsx",
+      "language": "tsx",
+      "loc": 6,
+      "classification": "NORMAL",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/app/admin/languages/page.tsx",
+      "language": "tsx",
+      "loc": 6,
+      "classification": "NORMAL",
+      "ownership": "admin"
+    },
+    {
+      "path": "src/frontend/design-system/app-data-grid/grid-direction.ts",
+      "language": "ts",
+      "loc": 5,
+      "classification": "NORMAL",
+      "ownership": "design-system"
+    },
+    {
+      "path": "src/frontend/app/admin/landing-pages/admin-landing-section-forms-types.ts",
+      "language": "ts",
+      "loc": 2,
+      "classification": "NORMAL",
+      "ownership": "admin"
+    }
+  ]
+}
