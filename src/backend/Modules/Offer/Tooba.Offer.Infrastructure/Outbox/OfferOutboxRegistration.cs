@@ -1,10 +1,11 @@
+using Tooba.Offer.Domain.Events;
+using Tooba.Offer.Domain.Aggregates;
 using Tooba.BuildingBlocks;
-using Tooba.Offer.Domain;
 using Tooba.Offer.Infrastructure.Events;
 using Tooba.Offer.Infrastructure.Persistence;
 using Tooba.Persistence;
 
-namespace Tooba.Offer.Infrastructure;
+namespace Tooba.Offer.Infrastructure.Outbox;
 
 /// <summary>
 /// ثبت Outbox ماژول Offer. ترجمه فقط رویدادهای صریح listing است.

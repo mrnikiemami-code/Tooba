@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Http;
 
-namespace Tooba.Offer.Endpoints;
+namespace Tooba.Offer.Endpoints.Seller;
 
 /// <summary>
 /// احراز Actor/Seller برای مسیرهای Offer؛ پیاده‌سازی در Host.

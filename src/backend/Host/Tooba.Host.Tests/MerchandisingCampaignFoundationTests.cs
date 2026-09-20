@@ -3,6 +3,7 @@ using Testcontainers.PostgreSql;
 using Tooba.BuildingBlocks;
 using Tooba.Inventory.Domain;
 using Tooba.Offer.Domain;
+using Tooba.Offer.Domain.Aggregates;
 using Tooba.Persistence;
 using Tooba.Pricing.Domain;
 using Tooba.Promotion.Application;

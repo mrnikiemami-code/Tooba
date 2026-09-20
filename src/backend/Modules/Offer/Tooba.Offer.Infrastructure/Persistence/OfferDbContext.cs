@@ -1,3 +1,4 @@
+using Tooba.Offer.Domain.Aggregates;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
 using Tooba.Offer.Domain;

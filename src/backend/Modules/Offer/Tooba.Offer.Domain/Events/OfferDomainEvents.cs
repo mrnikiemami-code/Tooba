@@ -1,6 +1,7 @@
+using Tooba.Offer.Domain.Aggregates;
 using Tooba.BuildingBlocks;
 
-namespace Tooba.Offer.Domain;
+namespace Tooba.Offer.Domain.Events;
 
 /// <summary>
 /// رویداد ایجاد Offer.

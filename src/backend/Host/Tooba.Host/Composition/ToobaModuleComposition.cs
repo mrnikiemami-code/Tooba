@@ -2,6 +2,7 @@ using Tooba.Catalog.Infrastructure;
 using Tooba.Identity.Infrastructure;
 using Tooba.ModuleContracts;
 using Tooba.Offer.Infrastructure;
+using Tooba.Offer.Infrastructure.DependencyInjection;
 using Tooba.Party.Infrastructure;
 using Tooba.PlatformProbe.Infrastructure;
 using Tooba.Pricing.Infrastructure;

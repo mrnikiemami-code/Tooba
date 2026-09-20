@@ -1,3 +1,4 @@
+using Tooba.Offer.Endpoints.Seller;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Routing;
 

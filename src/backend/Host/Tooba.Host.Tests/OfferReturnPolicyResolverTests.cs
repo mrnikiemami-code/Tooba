@@ -1,5 +1,6 @@
-using Tooba.Offer.Application;
-using Tooba.Offer.Contracts;
+using Tooba.Offer.Application.Ports;
+using Tooba.Offer.Contracts.Dtos;
+using Tooba.Offer.Contracts.Ports;
 using Xunit;
 
 namespace Tooba.Host.Tests;

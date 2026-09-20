@@ -169,6 +169,8 @@ TB-TMAR-CHECKOUT-IMPL-W5
 
 TB-TMAR-OFFER-REFERENCE-W1
 
+TB-TMAR-OFFER-REFERENCE-W1-R1
+
 TB-TMAR-TAX-REFERENCE-W1
 
 TB-TMAR-PRICING-REFERENCE-W1
@@ -185,13 +187,16 @@ User choice:
 Continue TMAR for now until user explicitly says to return to product feature work.
 
 Next TMAR task:
-TB-TMAR-PRICING-REFERENCE-W1 complete — next candidates Inventory / Cart / Returns (Architect chooses). Checkout remains PAUSED_AT_SAFE_W5_CHECKPOINT; W6 deferred.
+Offer physical repair R1 complete — Pricing remains gated as NOT_STARTED_UNTIL_OFFER_REPAIR_ACCEPTED until Architect ACCEPT of R1; Tax/Pricing physical recheck independent later. Checkout remains PAUSED_AT_SAFE_W5_CHECKPOINT; W6 deferred.
+
+Offer Reference Module W1-R1:
+TB-TMAR-OFFER-REFERENCE-W1-R1 — prior Offer COMPLETE REOPENED on visual evidence; physical folders/namespaces aligned; ARCH-MODULE-PHYSICAL-001; Physical-Structure-State VERIFIED_ON_DISK; COMPLETE_REFERENCE_PATTERN revalidated. Evidence: docs/evidence/TB-TMAR-OFFER-REFERENCE-W1-R1/.
 
 Pricing Reference Module W1:
-TB-TMAR-PRICING-REFERENCE-W1 — COMPLETE_REFERENCE_PATTERN; Offer/Tax pattern reused (PROVEN_ON_3_MODULES); Tooba.Pricing.Endpoints + Tests; MapPricingModule; FE freeze intact. Evidence: docs/evidence/TB-TMAR-PRICING-REFERENCE-W1/.
+TB-TMAR-PRICING-REFERENCE-W1 — historically shipped COMPLETE_REFERENCE_PATTERN; Offer R1 repair requires Architect ACCEPT before treating Pricing as active next work (Worker reports Pricing-Reference-State NOT_STARTED_UNTIL_OFFER_REPAIR_ACCEPTED). Evidence: docs/evidence/TB-TMAR-PRICING-REFERENCE-W1/.
 
 Tax Reference Module W1:
-TB-TMAR-TAX-REFERENCE-W1 — COMPLETE_REFERENCE_PATTERN; Offer pattern reused (PROVEN_ON_2_MODULES); Tooba.Tax.Endpoints + Tests; MapTaxModule; FE freeze intact. Evidence: docs/evidence/TB-TMAR-TAX-REFERENCE-W1/.
+TB-TMAR-TAX-REFERENCE-W1 — COMPLETE_REFERENCE_PATTERN historically; physical recheck pending after Offer R1 lock. Evidence: docs/evidence/TB-TMAR-TAX-REFERENCE-W1/.
 
 Checkout Implementation W5:
 TB-TMAR-CHECKOUT-IMPL-W5 — Promotion checkout seam (ICheckoutPromotionPort); Order.Application↛Promotion.Application; TX preserved; W6 READY (intentionally paused); FE freeze intact. Evidence: docs/evidence/TB-TMAR-CHECKOUT-IMPL-W5/.

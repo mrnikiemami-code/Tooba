@@ -39,6 +39,7 @@ using Tooba.Host.Promotion;
 using Tooba.Host.Support;
 using Tooba.Host.Wallet;
 using Tooba.Offer.Endpoints;
+using Tooba.Offer.Endpoints.Seller;
 using Tooba.Tax.Endpoints;
 using Tooba.Pricing.Endpoints;
 using Tooba.Persistence;
@@ -226,9 +227,9 @@ builder.Services.AddScoped<Tooba.Host.Storefront.StorefrontPaymentComposer>(sp =
         sp.GetRequiredService<Tooba.Payment.Application.IPaymentExpiryDirectory>(),
         sp.GetRequiredService<ReservationCycleCoordinator>()));
 builder.Services.AddScoped<Tooba.Host.Seller.SellerPanelComposer>();
-builder.Services.AddScoped<Tooba.Offer.Application.IOfferSellerPanel>(sp =>
+builder.Services.AddScoped<Tooba.Offer.Application.Ports.IOfferSellerPanel>(sp =>
     sp.GetRequiredService<Tooba.Host.Seller.SellerPanelComposer>());
-builder.Services.AddScoped<Tooba.Offer.Endpoints.IOfferSellerAuthorizer, Tooba.Host.Seller.HostOfferSellerAuthorizer>();
+builder.Services.AddScoped<Tooba.Offer.Endpoints.Seller.IOfferSellerAuthorizer, Tooba.Host.Seller.HostOfferSellerAuthorizer>();
 builder.Services.AddScoped<Tooba.Host.Customer.CustomerPanelComposer>();
 builder.Services.AddScoped<Tooba.Host.Admin.AdminPanelComposer>();
 builder.Services.AddScoped<Tooba.Host.Admin.AdminOrderOperationsComposer>();

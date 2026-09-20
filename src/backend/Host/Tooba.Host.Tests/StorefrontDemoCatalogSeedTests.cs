@@ -10,6 +10,8 @@ using Tooba.Inventory.Infrastructure;
 using Tooba.Inventory.Infrastructure.Persistence;
 using Tooba.Offer.Domain;
 using Tooba.Offer.Infrastructure;
+using Tooba.Offer.Infrastructure.Outbox;
+using Tooba.Offer.Infrastructure.Adapters;
 using Tooba.Offer.Infrastructure.Persistence;
 using Tooba.Party.Infrastructure;
 using Tooba.Party.Infrastructure.Persistence;

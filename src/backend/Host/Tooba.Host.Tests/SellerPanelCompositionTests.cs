@@ -1,6 +1,7 @@
 ﻿using System.Text.Json;
 using Tooba.Host.Seller;
-using Tooba.Offer.Contracts;
+using Tooba.Offer.Contracts.Dtos;
+using Tooba.Offer.Contracts.Ports;
 using Xunit;
 
 namespace Tooba.Host.Tests;

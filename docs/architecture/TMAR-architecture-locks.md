@@ -95,6 +95,9 @@ Existing oversized legacy / critical god files may only stay equal or shrink; gr
 ## ARCH-MODULE-FILE-001
 No new multi-responsibility module god-files. New production files must have one cohesive responsibility and obey source-size guards. Prefer split before 800 LOC. Proven by Offer reference module (`TB-TMAR-OFFER-REFERENCE-W1`).
 
+## ARCH-MODULE-PHYSICAL-001
+A reference-complete module must place production source files under the approved module/project responsibility folders on disk. Namespace alignment and documentation alone are insufficient for `COMPLETE_REFERENCE_PATTERN`. Empty ceremonial folders are forbidden. Guard: `OfferPhysicalStructureGuardTests` (Offer; extend per module). Proven by `TB-TMAR-OFFER-REFERENCE-W1-R1` after prior COMPLETE was reopened on visual evidence.
+
 ## HOST-MODULE-ENDPOINT-001
 New module-owned HTTP endpoints must live in the module `Tooba.*.Endpoints` project, not `Tooba.Host`, except truly cross-cutting Host endpoints (health/readiness/platform). Host maps via `Map*Module()` only. Guard: `HostModuleEndpointOwnershipTests` + module architecture tests.
 

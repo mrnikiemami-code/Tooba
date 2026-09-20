@@ -1,4 +1,6 @@
-namespace Tooba.Offer.Contracts;
+using Tooba.Offer.Contracts.Dtos;
+
+namespace Tooba.Offer.Contracts.Ports;
 
 /// <summary>
 /// درز خواندن Offer برای Pricing/Inventory/Cart/Order/Promotion.

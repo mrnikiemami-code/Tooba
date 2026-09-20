@@ -1,4 +1,4 @@
-namespace Tooba.Offer.Contracts;
+namespace Tooba.Offer.Contracts.Dtos;
 
 /// <summary>
 /// ردیف فهرست Offer فروشنده. Product.Price و Product.Stock ندارد.

@@ -1,6 +1,6 @@
 using Tooba.Offer.Domain;
 
-namespace Tooba.Offer.Contracts;
+namespace Tooba.Offer.Contracts.Dtos;
 
 /// <summary>
 /// مرجع پایدار Offer بدون نشت EF. مبلغ و موجودی ندارد.

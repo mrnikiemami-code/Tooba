@@ -1,6 +1,8 @@
+using Tooba.Offer.Domain.Events;
 using Tooba.BuildingBlocks;
+using Tooba.Offer.Domain;
 
-namespace Tooba.Offer.Domain;
+namespace Tooba.Offer.Domain.Aggregates;
 
 /// <summary>
 /// listing تجاری فروشنده روی یک Variant Catalog. قیمت و موجودی ندارد.

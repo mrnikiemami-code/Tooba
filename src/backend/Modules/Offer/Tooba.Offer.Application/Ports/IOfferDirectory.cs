@@ -1,7 +1,7 @@
-using Tooba.Offer.Contracts;
+using Tooba.Offer.Contracts.Dtos;
 using Tooba.Offer.Domain;
 
-namespace Tooba.Offer.Application;
+namespace Tooba.Offer.Application.Ports;
 
 /// <summary>
 /// درز نگهبان مجوز موردکاربرد Offer. ماتریس نهایی Seller Portal و SDK اسپایس‌دی‌بی اینجا نیست.

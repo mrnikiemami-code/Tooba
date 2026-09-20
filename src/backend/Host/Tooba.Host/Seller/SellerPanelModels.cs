@@ -1,9 +1,9 @@
-global using SellerOfferListItem = Tooba.Offer.Contracts.SellerOfferListItem;
-global using SellerOfferDetailPage = Tooba.Offer.Contracts.SellerOfferDetailPage;
-global using SellerOfferPatchRequest = Tooba.Offer.Contracts.SellerOfferPatchRequest;
-global using SellerOfferCreateRequest = Tooba.Offer.Contracts.SellerOfferCreateRequest;
-global using SellerOfferPriceWriteRequest = Tooba.Offer.Contracts.SellerOfferPriceWriteRequest;
-global using SellerOfferInventoryWriteRequest = Tooba.Offer.Contracts.SellerOfferInventoryWriteRequest;
+global using SellerOfferListItem = Tooba.Offer.Contracts.Dtos.SellerOfferListItem;
+global using SellerOfferDetailPage = Tooba.Offer.Contracts.Dtos.SellerOfferDetailPage;
+global using SellerOfferPatchRequest = Tooba.Offer.Contracts.Dtos.SellerOfferPatchRequest;
+global using SellerOfferCreateRequest = Tooba.Offer.Contracts.Dtos.SellerOfferCreateRequest;
+global using SellerOfferPriceWriteRequest = Tooba.Offer.Contracts.Dtos.SellerOfferPriceWriteRequest;
+global using SellerOfferInventoryWriteRequest = Tooba.Offer.Contracts.Dtos.SellerOfferInventoryWriteRequest;
 
 namespace Tooba.Host.Seller;
 

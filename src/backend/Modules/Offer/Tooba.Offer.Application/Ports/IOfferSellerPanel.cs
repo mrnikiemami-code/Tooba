@@ -1,6 +1,6 @@
-using Tooba.Offer.Contracts;
+using Tooba.Offer.Contracts.Dtos;
 
-namespace Tooba.Offer.Application;
+namespace Tooba.Offer.Application.Ports;
 
 /// <summary>
 /// درز پنل فروشنده برای Offer. پیاده‌سازی Host BFF باقی‌ماندهٔ enrichment بین‌ماژولی را نگه می‌دارد.

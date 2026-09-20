@@ -1,3 +1,8 @@
+using Tooba.Offer.Contracts.Ports;
+using Tooba.Offer.Contracts.Dtos;
+using Tooba.Offer.Domain.Events;
+using Tooba.Offer.Domain.Aggregates;
+
 ﻿using Xunit;
 using Tooba.Offer.Domain;
 using Tooba.Offer.Contracts;

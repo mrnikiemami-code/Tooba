@@ -1,6 +1,7 @@
 using Tooba.BuildingBlocks;
-using Tooba.Offer.Application;
+using Tooba.Offer.Application.Ports;
 using Tooba.Offer.Endpoints;
+using Tooba.Offer.Endpoints.Seller;
 
 namespace Tooba.Host.Seller;
 

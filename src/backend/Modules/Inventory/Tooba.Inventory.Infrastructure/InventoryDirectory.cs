@@ -4,7 +4,8 @@ using Tooba.Catalog.Application;
 using Tooba.Inventory.Application;
 using Tooba.Inventory.Domain;
 using Tooba.Inventory.Infrastructure.Persistence;
-using Tooba.Offer.Contracts;
+using Tooba.Offer.Contracts.Dtos;
+using Tooba.Offer.Contracts.Ports;
 
 namespace Tooba.Inventory.Infrastructure;
 

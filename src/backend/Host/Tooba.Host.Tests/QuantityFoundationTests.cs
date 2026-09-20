@@ -1,6 +1,7 @@
 using Tooba.BuildingBlocks;
 using Tooba.Catalog.Domain;
 using Tooba.Offer.Domain;
+using Tooba.Offer.Domain.Aggregates;
 using Xunit;
 
 namespace Tooba.Host.Tests;

@@ -1,15 +1,17 @@
+using Tooba.Offer.Infrastructure.Outbox;
+using Tooba.Offer.Infrastructure.Adapters;
+using Tooba.Offer.Contracts.Ports;
+using Tooba.Offer.Application.Ports;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Tooba.BuildingBlocks;
 using Tooba.ModuleContracts;
-using Tooba.Offer.Application;
-using Tooba.Offer.Contracts;
 using Tooba.Offer.Infrastructure.Persistence;
 using Tooba.Persistence;
 
-namespace Tooba.Offer.Infrastructure;
+namespace Tooba.Offer.Infrastructure.DependencyInjection;
 
 /// <summary>
 /// ماژول Offer: listing تجاری فروشنده روی Variant. قیمت، موجودی، Catalog persistence و UI فروشنده اینجا نیست.

@@ -1,13 +1,15 @@
+using Tooba.Offer.Domain.Aggregates;
+using Tooba.Offer.Contracts.Ports;
+using Tooba.Offer.Contracts.Dtos;
+using Tooba.Offer.Application.Ports;
 using Microsoft.EntityFrameworkCore;
 using Tooba.Catalog.Application;
-using Tooba.Offer.Application;
-using Tooba.Offer.Contracts;
 using Tooba.Offer.Domain;
 using Tooba.Offer.Infrastructure.Persistence;
 using Tooba.Party.Application;
 using Tooba.Party.Domain;
 
-namespace Tooba.Offer.Infrastructure;
+namespace Tooba.Offer.Infrastructure.Adapters;
 
 /// <summary>
 /// نگهبان باز موردکاربرد. ماتریس Seller Portal اینجا نیست.

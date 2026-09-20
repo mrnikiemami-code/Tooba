@@ -1,11 +1,11 @@
+using Tooba.Offer.Contracts.Dtos;
+using Tooba.Offer.Application.Ports;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using Tooba.BuildingBlocks;
-using Tooba.Offer.Application;
-using Tooba.Offer.Contracts;
 
-namespace Tooba.Offer.Endpoints;
+namespace Tooba.Offer.Endpoints.Seller;
 
 /// <summary>
 /// نگاشت HTTP مسیرهای Offer پنل فروشنده؛ تصمیم تجاری و persistence ندارد.

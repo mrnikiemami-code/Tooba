@@ -4,6 +4,7 @@ using Testcontainers.PostgreSql;
 using Tooba.BuildingBlocks;
 using Tooba.Catalog.Domain;
 using Tooba.Offer.Domain;
+using Tooba.Offer.Domain.Aggregates;
 using Tooba.Order.Domain;
 using Tooba.Persistence;
 using Tooba.Pricing.Domain;

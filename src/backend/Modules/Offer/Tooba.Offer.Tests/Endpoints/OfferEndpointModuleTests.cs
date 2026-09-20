@@ -1,5 +1,10 @@
-﻿using Xunit;
+using Xunit;
+using Tooba.Offer.Contracts.Ports;
+using Tooba.Offer.Contracts.Dtos;
+using Tooba.Offer.Domain.Events;
+using Tooba.Offer.Domain.Aggregates;
 using Tooba.Offer.Endpoints;
+using Tooba.Offer.Endpoints.Seller;
 
 namespace Tooba.Offer.Tests.Endpoints;
 

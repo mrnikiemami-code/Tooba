@@ -5,6 +5,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Npgsql;
 using Testcontainers.PostgreSql;
 using Tooba.Offer.Domain;
+using Tooba.Offer.Domain.Aggregates;
 using Tooba.Offer.Infrastructure.Persistence;
 using Tooba.Persistence;
 using Xunit;

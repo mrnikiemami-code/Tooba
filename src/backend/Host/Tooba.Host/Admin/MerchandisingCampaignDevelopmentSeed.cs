@@ -5,6 +5,7 @@ using Tooba.Inventory.Application;
 using Tooba.Inventory.Domain;
 using Tooba.Inventory.Infrastructure.Persistence;
 using Tooba.Offer.Domain;
+using Tooba.Offer.Domain.Aggregates;
 using Tooba.Offer.Infrastructure.Persistence;
 using Tooba.Party.Application;
 using Tooba.Party.Infrastructure.Persistence;
