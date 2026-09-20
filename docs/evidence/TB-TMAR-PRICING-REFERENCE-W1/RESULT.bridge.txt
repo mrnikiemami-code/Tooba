@@ -1,4 +1,4 @@
-PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+﻿PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
 
 BEGIN_TOOBA_WORKER_RESULT
 
@@ -100,7 +100,7 @@ Recovery-SoT:
 docs/evidence/TB-TMAR-PRICING-REFERENCE-W1/recovery-sot.md
 
 Git:
-tip PLACEHOLDER_SHA
+tip ccc90672ddede1d2d1ffbc3b9245967e14ebcdf6
 
 Architectural-Concerns:
 Host composers/admin/bootstrap still use IPriceDirectory/PricingDbContext as BFF/library consumers. Seller offer price HTTP remains Offer.Endpoints (correct ownership).
