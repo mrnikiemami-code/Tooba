@@ -1,0 +1,63 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+
+BEGIN_TOOBA_WORKER_RESULT
+
+Task-ID: TB-TMAR-RECOVERY-RESYNC-01
+Parent-Task: TB-TMAR-OFFER-REF-W1
+Channel: tooba-main
+WorkerId: tooba-worker-01
+AgentType: cursor
+Status: PASS
+
+Summary:
+RECOVERY-RESYNC-01 PASS (read-only). Reconstructed accepted lineage from Checkout W4 through HEAD. Checkout is PAUSED_AT_SAFE_W5_CHECKPOINT (W5 Completed; W6 deferred). Offer is COMPLETE_REFERENCE_PATTERN after OFFER-REFERENCE-W1 + W1-R1 (VERIFIED_ON_DISK / ARCH-MODULE-PHYSICAL-001). Tax then Pricing historically reused the golden pattern (COMPLETE). Durable Master/Bootstrap still phrase Offer R1 Architect ACCEPT / Pricing gate — reported as documentation lag, not rewritten. Next-Recommended-Task: USER_REVIEW_OFFER. No production/frontend changes.
+
+Program-Name:
+TMAR — Tooba Microservice-Ready Architecture Recovery
+
+Track:
+OFFER_REFERENCE_MODULE_RESYNC
+
+Recovery-Start:
+docs/evidence/TB-TMAR-RECOVERY-RESYNC-01/recovery-start.md
+
+TMAR-Execution-Mode:
+BACKEND_ONLY_UNTIL_EXPLICIT_RELEASE
+
+Frontend-Production-Changes:
+NONE
+
+Accepted-Lineage:
+docs/evidence/TB-TMAR-RECOVERY-RESYNC-01/accepted-lineage.md
+
+Checkout-State:
+docs/evidence/TB-TMAR-RECOVERY-RESYNC-01/checkout-state.md — PAUSED_AT_SAFE_W5_CHECKPOINT
+
+Offer-State:
+docs/evidence/TB-TMAR-RECOVERY-RESYNC-01/offer-state.md
+
+Offer-Module-Recovery-State:
+COMPLETE_REFERENCE_PATTERN
+
+Reference-Module-Lineage:
+docs/evidence/TB-TMAR-RECOVERY-RESYNC-01/reference-module-lineage.md
+
+Durable-State-Consistency:
+docs/evidence/TB-TMAR-RECOVERY-RESYNC-01/durable-state-consistency.md — RECOVERY_STATE_DIVERGENCE (docs lag Architect ACCEPT wording only)
+
+Git:
+tip 53f55e2750834297002943154a4ff8a51ec1d9e5
+
+Architectural-Concerns:
+Host SellerPanelComposer residual IOfferSellerPanel BFF; Offer.Infrastructure→Catalog/Party.Application grandfathered; Tax/Pricing physical recheck vs ARCH-MODULE-PHYSICAL-001 still Architect-independent later; Master/Bootstrap ACCEPT language lag.
+
+Blockers:
+NONE
+
+Product-Resume-Safety:
+SAFE_WITH_TMAR_PARALLEL
+
+Next-Recommended-Task:
+USER_REVIEW_OFFER
+
+END_TOOBA_WORKER_RESULT
