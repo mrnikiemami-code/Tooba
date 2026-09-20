@@ -26,4 +26,12 @@ Evidence files remain the deep-detail source; this map is the quick index.
 - Explicit Builder campaignId picker
 - P11 Access Control repair
 
-Last Verified Task = TB-P10-T022-R20
+## TMAR / Architecture Recovery
+| Item | Fact | Verified |
+|---|---|---|
+| Strengths | Per-module schema/DbContext/migrations; no cross-schema FK/JOIN; ArchitectureBoundaryTests; Directory/Gateway write seams; Outbox/events; ICache foundation | TB-TMAR-ARCH-BASELINE |
+| Debt | Host DbContext writes/decisions; no MediatR; Contracts live in Application; Catalog convenience storefront/settings/template types; IMemoryCache bypasses; Domain localized errors | TB-TMAR-ARCH-BASELINE |
+| Target | Modular Monolith now → low-friction microservices; CQRS + MediatR 12.5.0; per-module Contracts; Host transport-only; strangler not Big Bang | TB-TMAR-ARCH-BASELINE |
+| Next | TB-TMAR-FND-001 Architecture Foundation | TB-TMAR-ARCH-BASELINE |
+
+Last Verified Task = TB-TMAR-ARCH-BASELINE

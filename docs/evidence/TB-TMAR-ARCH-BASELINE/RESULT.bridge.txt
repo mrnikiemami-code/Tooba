@@ -1,0 +1,117 @@
+﻿PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+
+BEGIN_TOOBA_WORKER_RESULT
+
+Task-ID: TB-TMAR-ARCH-BASELINE
+Parent-Task: TB-P10-T022-R21
+Channel: tooba-main
+WorkerId: tooba-worker-01
+AgentType: cursor
+Status: PASS
+
+Summary:
+Repository-wide TMAR Phase 1 planning/audit only. Documented current Modular Monolith (31 Domain / 31 Application / 32 Infrastructure; 0 per-module Contracts projects), per-schema DbContexts, ArchitectureBoundaryTests strengths, App→App contract leakage (16 edges), Host debt (216 files; 53 write/SaveChanges-tagged; buy-box/campaign decisions in Host), Catalog convenience ownership candidates (17 Move/Needs-design), CQRS+MediatR 12.5.0 strangler plan, Host freeze+cleanup waves, Contracts/read-gateway/clock/id/error/locale/cache/CI plans, proposed ARCH-* locks, priority matrix, next tasks starting TB-TMAR-FND-001. ZERO production implementation / packages / runtime / schema / folder moves.
+
+Program-Name:
+TMAR — Tooba Microservice-Ready Architecture Recovery / برنامه بازیابی معماری توبا برای آمادگی مهاجرت بدون‌درد به میکروسرویس
+
+Applicable-Locks:
+Existing LOCK-SF-* retained. Proposed ARCH-* locks in docs/evidence/TB-TMAR-ARCH-BASELINE/proposed-locks.md (NOT canonicalized this task).
+
+Recovery-Start:
+docs/evidence/TB-TMAR-ARCH-BASELINE/recovery-start.md
+
+Current-State:
+docs/evidence/TB-TMAR-ARCH-BASELINE/current-state.md
+
+Module-Topology:
+31 Domain, 31 Application, 32 Infrastructure, 0 *.Contracts.csproj; Tooba.ModuleContracts + Host + BuildingBlocks — current-state.md
+
+Persistence-Boundaries:
+Per-module schema/DbContext/migrations; no mega DbContext; no cross-schema FK/JOIN pattern — current-state.md
+
+Dependency-Map:
+App→App 16; App→Infra 0; Infra→Infra foreign 0; Domain bad 0 — current-state.md / .tmp-tmar-deps.json
+
+CQRS-MediatR-Plan:
+docs/evidence/TB-TMAR-ARCH-BASELINE/cqrs-mediatr-plan.md — MediatR 12.5.0; Stage A/B/C strangler; FluentValidation pipeline
+
+Directory-Classification:
+cqrs-mediatr-plan.md (Keep / Wrap First / Split / Replace Later)
+
+Host-Audit:
+docs/evidence/TB-TMAR-ARCH-BASELINE/host-audit.md
+
+Host-Freeze:
+docs/evidence/TB-TMAR-ARCH-BASELINE/host-freeze.md
+
+Host-Cleanup-Waves:
+docs/evidence/TB-TMAR-ARCH-BASELINE/host-cleanup-waves.md
+
+Domain-Ownership-Map:
+docs/evidence/TB-TMAR-ARCH-BASELINE/domain-ownership-map.md — 322 types; 17 Move/Needs-design
+
+Domain-Purity:
+docs/evidence/TB-TMAR-ARCH-BASELINE/domain-purity.md
+
+Ownership-Registry:
+docs/evidence/TB-TMAR-ARCH-BASELINE/ownership-registry-design.md
+
+Module-Layout-Target:
+docs/evidence/TB-TMAR-ARCH-BASELINE/module-layout-target.md — no physical move
+
+Contracts-Plan:
+docs/evidence/TB-TMAR-ARCH-BASELINE/contracts-plan.md
+
+Read-Gateway-Plan:
+docs/evidence/TB-TMAR-ARCH-BASELINE/read-gateway-plan.md
+
+Clock-Plan:
+docs/evidence/TB-TMAR-ARCH-BASELINE/clock-plan.md
+
+Id-Generation-Plan:
+docs/evidence/TB-TMAR-ARCH-BASELINE/id-generation-plan.md
+
+Error-Localization-Plan:
+docs/evidence/TB-TMAR-ARCH-BASELINE/error-localization-plan.md
+
+Locale-Policy:
+docs/evidence/TB-TMAR-ARCH-BASELINE/locale-policy.md
+
+Cache-Plan:
+docs/evidence/TB-TMAR-ARCH-BASELINE/cache-plan.md
+
+Architecture-Tests-Plan:
+docs/evidence/TB-TMAR-ARCH-BASELINE/architecture-tests-plan.md
+
+Proposed-Locks:
+docs/evidence/TB-TMAR-ARCH-BASELINE/proposed-locks.md
+
+Migration-Roadmap:
+docs/evidence/TB-TMAR-ARCH-BASELINE/migration-roadmap.md
+
+Priority-Matrix:
+docs/evidence/TB-TMAR-ARCH-BASELINE/priority-matrix.md
+
+Next-Tasks:
+docs/evidence/TB-TMAR-ARCH-BASELINE/next-tasks.md — first TB-TMAR-FND-001
+
+Capability-Map:
+docs/architecture/TOOBA-CAPABILITY-MAP.md — TMAR section added
+
+AntiPattern-Scan:
+docs/evidence/TB-TMAR-ARCH-BASELINE/antipattern-scan.md
+
+Recovery-SoT:
+docs/evidence/TB-TMAR-ARCH-BASELINE/recovery-sot.md
+
+Git:
+branch main; tip 445884053c54931bc5dd68fcf1976ae2f85de400; pushed origin/main; HEAD==origin/main; 18ca10c9 ancestor; user work preserved; production code unchanged
+
+Architectural-Concerns:
+Host remains high-risk until Wave 1 freeze + Wave 2 write removal; Catalog storefront/settings ownership moves must not be Big-Bang.
+
+Blockers:
+(none for planning PASS)
+
+END_TOOBA_WORKER_RESULT
