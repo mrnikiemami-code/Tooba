@@ -1,0 +1,81 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+
+BEGIN_TOOBA_WORKER_RESULT
+
+Task-ID: TB-TMAR-CONTRACTS-W5
+Parent-Task: TB-TMAR-CONTRACTS-W4
+Channel: tooba-main
+WorkerId: tooba-worker-01
+AgentType: cursor
+Status: PASS
+
+Summary:
+CONTRACTS-W5 PASS. Removed Inventory.Application→Offer.Application via Offer.Contracts. Created Tooba.Pricing.Contracts (IPriceLookupGateway/PriceQuote/PriceResolutionQuery); replaced Order.Application→Pricing.Application. App→App baseline 12→10. Checkout/transaction semantics unchanged. Frontend-Recovery-Readiness DEFER. Product-Resume-Safety SAFE_WITH_TMAR_PARALLEL. Next: TB-TMAR-CONTRACTS-W6.
+
+Program-Name:
+TMAR — Tooba Microservice-Ready Architecture Recovery
+
+Recovery-Start:
+docs/evidence/TB-TMAR-CONTRACTS-W5/recovery-start.md
+
+Inventory-Offer-Contract:
+docs/evidence/TB-TMAR-CONTRACTS-W5/inventory-offer-contract.md
+
+Order-Slice-Selection:
+docs/evidence/TB-TMAR-CONTRACTS-W5/order-slice-selection.md — Order.App→Pricing.App lookup
+
+Order-Contract-Extraction:
+docs/evidence/TB-TMAR-CONTRACTS-W5/order-contract-extraction.md
+
+Dependency-Changes:
+− Inventory.App→Offer.App; − Order.App→Pricing.App
+
+Transaction-Semantics:
+unchanged — CheckoutDirectory TransactionScope not redesigned
+
+Architecture-Guards:
+docs/evidence/TB-TMAR-CONTRACTS-W5/architecture-guards.md
+
+Contracts-Guard:
+docs/evidence/TB-TMAR-CONTRACTS-W5/contracts-guard.md
+
+Characterization-Tests:
+ContractsW5CharacterizationTests
+
+Tests:
+docs/evidence/TB-TMAR-CONTRACTS-W5/tests.md — 38 passed focused suite
+
+Source-Size-Compliance:
+docs/evidence/TB-TMAR-CONTRACTS-W5/source-size-compliance.md; inventory refreshed; oversized LOC neutralized
+
+Frontend-Recovery-Readiness:
+DEFER — docs/evidence/TB-TMAR-CONTRACTS-W5/frontend-readiness.md
+
+Capability-Map:
+docs/architecture/TOOBA-CAPABILITY-MAP.md — Last Verified = TB-TMAR-CONTRACTS-W5
+
+Bootstrap:
+docs/architecture/TOOBA-ARCHITECT-BOOTSTRAP.md — contracts-w5 PASS; next CONTRACTS-W6
+
+Master-Recovery-State:
+docs/architecture/TOOBA-TMAR-MASTER-RECOVERY.md — W5 accepted; next W6; SAFE_WITH_TMAR_PARALLEL
+
+Recovery-SoT:
+docs/evidence/TB-TMAR-CONTRACTS-W5/recovery-sot.md
+
+Git:
+branch main; tip PLACEHOLDER_SHA; pushed origin/main; HEAD==origin/main; 18ca10c9 ancestor; user work preserved
+
+Architectural-Concerns:
+Checkout shared-ACID remains; Order hub still has Cart/Inventory/Promotion App edges; Promotion→Offer.App and Cart→Pricing.App remain; FE deferred
+
+Blockers:
+(none)
+
+Product-Resume-Safety:
+SAFE_WITH_TMAR_PARALLEL
+
+Next-Recommended-Task:
+TB-TMAR-CONTRACTS-W6
+
+END_TOOBA_WORKER_RESULT

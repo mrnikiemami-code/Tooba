@@ -41,6 +41,7 @@ Evidence files remain the deep-detail source; this map is the quick index.
 | Contracts W2 | Wallet order-payment port; Offer lookup gateway in Contracts; Infra/App baselines shrunk; ARCH-TX-001 + TransactionScope freeze; migration notes imported | TB-TMAR-CONTRACTS-W2 |
 | Contracts W3 | Returns.Infra→Wallet.Contracts (IWalletRefundCreditPort); Order.App→Offer.Contracts (SalesChannel); Infra/App baselines shrunk | TB-TMAR-CONTRACTS-W3 |
 | Contracts W4 | Cart.App→Offer.Contracts; Tax.Contracts (ITaxCalculator/TaxOutcome); Order.App→Tax.Contracts; App→App 14→12 | TB-TMAR-CONTRACTS-W4 |
-| Next | Contracts W5 — continue App→App extraction (Order hub Pricing/Inventory/Promotion/Cart; Inventory→Offer.App) | TB-TMAR-CONTRACTS-W4 |
+| Contracts W5 | Inventory.App→Offer.Contracts; Pricing.Contracts (IPriceLookupGateway); Order.App→Pricing.Contracts; App→App 12→10 | TB-TMAR-CONTRACTS-W5 |
+| Next | Contracts W6 — continue App→App (Order Cart/Inventory/Promotion; Promotion→Offer; Cart→Pricing) | TB-TMAR-CONTRACTS-W5 |
 
-Last Verified Task = TB-TMAR-CONTRACTS-W4
+Last Verified Task = TB-TMAR-CONTRACTS-W5

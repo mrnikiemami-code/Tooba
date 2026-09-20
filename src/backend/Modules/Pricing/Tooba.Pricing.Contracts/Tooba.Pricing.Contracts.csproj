@@ -3,12 +3,10 @@
     <TargetFramework>net8.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-    <RootNamespace>Tooba.Inventory.Application</RootNamespace>
-    <AssemblyName>Tooba.Inventory.Application</AssemblyName>
+    <RootNamespace>Tooba.Pricing.Contracts</RootNamespace>
+    <AssemblyName>Tooba.Pricing.Contracts</AssemblyName>
   </PropertyGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Tooba.Inventory.Domain\Tooba.Inventory.Domain.csproj" />
     <ProjectReference Include="..\..\Offer\Tooba.Offer.Contracts\Tooba.Offer.Contracts.csproj" />
-    <ProjectReference Include="..\..\Catalog\Tooba.Catalog.Application\Tooba.Catalog.Application.csproj" />
   </ItemGroup>
 </Project>

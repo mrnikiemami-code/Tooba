@@ -1,8 +1,9 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Tooba.Inventory.Application;
 using Tooba.Offer.Contracts;
 using Tooba.Offer.Domain;
 using Tooba.Pricing.Application;
+using Tooba.Pricing.Contracts;
 using Tooba.Promotion.Application;
 using Tooba.Promotion.Domain;
 using Tooba.Promotion.Infrastructure.Persistence;

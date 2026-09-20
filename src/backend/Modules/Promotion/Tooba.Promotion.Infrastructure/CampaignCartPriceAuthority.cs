@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Tooba.BuildingBlocks;
 using Tooba.Offer.Domain;
 using Tooba.Pricing.Application;
+using Tooba.Pricing.Contracts;
 using Tooba.Promotion.Domain;
 using Tooba.Promotion.Infrastructure.Persistence;
 

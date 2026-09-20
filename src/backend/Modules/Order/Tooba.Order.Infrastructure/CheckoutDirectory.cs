@@ -13,12 +13,12 @@ using Tooba.Order.Application;
 using Tooba.Order.Domain;
 using Tooba.Order.Infrastructure.Persistence;
 using Tooba.Pricing.Application;
+using Tooba.Pricing.Contracts;
 using Tooba.Promotion.Application;
 using Tooba.Promotion.Domain;
 using Tooba.Tax.Contracts;
 using Tooba.Tax.Domain;
 namespace Tooba.Order.Infrastructure;
-
 /// <summary>
 /// نگهبان باز موردکاربرد Order. ماتریس هویت اینجا نیست.
 /// </summary>

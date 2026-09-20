@@ -5,6 +5,7 @@ using Microsoft.Extensions.Hosting;
 using Tooba.BuildingBlocks;
 using Tooba.ModuleContracts;
 using Tooba.Pricing.Application;
+using Tooba.Pricing.Contracts;
 using Tooba.Pricing.Infrastructure.Persistence;
 using Tooba.Persistence;
 

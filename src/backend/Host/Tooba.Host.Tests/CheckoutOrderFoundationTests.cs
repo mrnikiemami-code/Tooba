@@ -1,4 +1,4 @@
-﻿using System.Reflection;
+using System.Reflection;
 using Microsoft.EntityFrameworkCore;
 using Testcontainers.PostgreSql;
 using Tooba.BuildingBlocks;
@@ -27,6 +27,7 @@ using Tooba.Party.Infrastructure;
 using Tooba.Party.Infrastructure.Persistence;
 using Tooba.Persistence;
 using Tooba.Pricing.Application;
+using Tooba.Pricing.Contracts;
 using Tooba.Pricing.Infrastructure;
 using Tooba.Pricing.Infrastructure.Persistence;
 using Tooba.Tax.Application;

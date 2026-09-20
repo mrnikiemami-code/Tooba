@@ -2,6 +2,7 @@
 using Tooba.Offer.Contracts;
 using Tooba.Offer.Domain;
 using Tooba.Pricing.Application;
+using Tooba.Pricing.Contracts;
 using Tooba.Pricing.Domain;
 using Tooba.Pricing.Infrastructure.Persistence;
 

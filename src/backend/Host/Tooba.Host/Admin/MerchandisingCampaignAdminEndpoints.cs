@@ -8,9 +8,9 @@ using Tooba.Offer.Domain;
 using Tooba.Offer.Infrastructure.Persistence;
 using Tooba.Party.Infrastructure.Persistence;
 using Tooba.Pricing.Application;
+using Tooba.Pricing.Contracts;
 using Tooba.Promotion.Application;
 using Tooba.Promotion.Domain;
-
 namespace Tooba.Host.Admin;
 
 #pragma warning disable CS1591
