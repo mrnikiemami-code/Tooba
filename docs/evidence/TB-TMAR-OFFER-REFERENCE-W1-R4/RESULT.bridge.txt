@@ -1,7 +1,7 @@
 BEGIN_TOOBA_WORKER_RESULT
 task_id: TB-TMAR-OFFER-REFERENCE-W1-R4
 status: PASS
-commit: 0cce87652d4b542ae3ba0502f1ae10ee445af6d6
+commit: 2c0fff17c8adfe003d42e3edc17f128c66b29ba1
 branch: main
 summary: Offer R4 restored real CQRS. List/Get/Create/Patch return Application read models via Catalog/Pricing/Inventory Contracts. IOfferSellerPanel deleted. Price/Inventory set via Pricing/Inventory Contracts gates. Module-Recovery-State READY_FOR_FINAL_VERIFICATION; next TB-TMAR-OFFER-REFERENCE-W1-R5.
 evidence_dir: docs/evidence/TB-TMAR-OFFER-REFERENCE-W1-R4
