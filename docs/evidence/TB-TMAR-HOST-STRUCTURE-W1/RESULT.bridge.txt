@@ -70,7 +70,7 @@ Recovery-SoT:
 docs/evidence/TB-TMAR-HOST-STRUCTURE-W1/recovery-sot.md
 
 Git:
-branch main; tip PLACEHOLDER; pushed origin/main; HEAD==origin/main; 18ca10c9 ancestor; user work preserved
+branch main; tip f9cae65c37baaaeda0266d5b15b642e7f8d7bb72; pushed origin/main; HEAD==origin/main; 18ca10c9 ancestor; user work preserved
 
 Architectural-Concerns:
 Deferred Host root leftovers remain for checkout/order/payment jobs/policies until semantic extraction; not hidden under Jobs folders in W1
