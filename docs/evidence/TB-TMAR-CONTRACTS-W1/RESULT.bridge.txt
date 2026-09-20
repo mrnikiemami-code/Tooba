@@ -57,7 +57,7 @@ Recovery-SoT:
 docs/evidence/TB-TMAR-CONTRACTS-W1/recovery-sot.md
 
 Git:
-branch main; tip PLACEHOLDER_SHA; pushed origin/main; HEAD==origin/main; 18ca10c9 ancestor; user work preserved
+branch main; tip d7a70a8618ee599d7be47816651329382c107ab1; pushed origin/main; HEAD==origin/main; 18ca10c9 ancestor; user work preserved
 
 Architectural-Concerns:
 Order.Application hub still App→App coupled; Payment still Infra→Wallet.Application; SalesChannel namespace remains Tooba.Offer.Domain inside Contracts assembly for TypeForward compatibility
