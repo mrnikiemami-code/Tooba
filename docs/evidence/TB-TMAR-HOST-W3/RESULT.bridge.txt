@@ -76,7 +76,7 @@ Recovery-SoT:
 docs/evidence/TB-TMAR-HOST-W3/recovery-sot.md
 
 Git:
-branch main; tip 02dd0c29b5df07959d0d9f994852eef363406f71; pushed origin/main; HEAD==origin/main; 18ca10c9 ancestor; user work preserved
+branch main; tip 10070277fe05f9defef25eb6f5d3620cd103be14; pushed origin/main; HEAD==origin/main; 18ca10c9 ancestor; user work preserved
 
 Architectural-Concerns:
 Residual Host writes remain (Quantity/UoM/Shipping/Seller/ProductWorkspace/Order-adjacent); Checkout shared-ACID still deferred; Appearance Catalog ownership transitional
