@@ -70,7 +70,7 @@ Recovery-SoT:
 docs/evidence/TB-TMAR-CONTRACTS-W6/recovery-sot.md
 
 Git:
-branch main; tip 46a7fbdd7d6baae15d9ed050a6ac9a2b83cebcea; pushed origin/main; HEAD==origin/main; 18ca10c9 ancestor; user work preserved
+branch main; tip 2a4617886d9625aa9137b1db38c3812b86db5922; pushed origin/main; HEAD==origin/main; 18ca10c9 ancestor; user work preserved
 
 Architectural-Concerns:
 Order hub still has Cart/Inventory/Promotion App edges; Promotion→Pricing/Inventory and Cart→Catalog/Inventory remain frozen; Checkout shared-ACID deferred
