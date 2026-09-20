@@ -1,0 +1,99 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+
+BEGIN_TOOBA_WORKER_RESULT
+
+Task-ID: TB-TMAR-OFFER-REFERENCE-W1-R1
+Parent-Task: TB-TMAR-OFFER-REFERENCE-W1
+Channel: tooba-main
+WorkerId: tooba-worker-01
+AgentType: cursor
+Status: PASS
+
+Summary:
+OFFER-REFERENCE-W1-R1 PASS. Prior Offer COMPLETE_REFERENCE_PATTERN REOPENED on user visual evidence. Aligned Offer namespaces to on-disk Aggregates/Events/Ports/Dtos/Adapters/Outbox/DependencyInjection/Seller folders; removed empty UseCases/artifacts; moved Domain TypeForwarders into Aggregates; added ARCH-MODULE-PHYSICAL-001 physical-folder guard. Host keeps thin MapOfferModule + auth/BFF adapters only. Offer-Oversized-Files 0. Physical-Structure-State VERIFIED_ON_DISK. Pricing not executed. Checkout remains PAUSED_AT_SAFE_W5_CHECKPOINT. Frontend production untouched.
+
+Program-Name:
+TMAR — Tooba Microservice-Ready Architecture Recovery
+
+Recovery-Start:
+docs/evidence/TB-TMAR-OFFER-REFERENCE-W1-R1/physical-tree-before.md
+
+TMAR-Execution-Mode:
+BACKEND_ONLY_UNTIL_EXPLICIT_RELEASE
+
+Frontend-Production-Changes:
+NONE
+
+Physical-Tree-Before:
+docs/evidence/TB-TMAR-OFFER-REFERENCE-W1-R1/physical-tree-before.txt
+
+Move-Manifest:
+docs/evidence/TB-TMAR-OFFER-REFERENCE-W1-R1/move-manifest.md
+
+Project-Layout:
+docs/evidence/TB-TMAR-OFFER-REFERENCE-W1-R1/project-layout.md
+
+Namespace-Alignment:
+docs/evidence/TB-TMAR-OFFER-REFERENCE-W1-R1/namespace-alignment.md
+
+Host-Offer-Files:
+docs/evidence/TB-TMAR-OFFER-REFERENCE-W1-R1/host-offer-files.md
+
+Physical-Tree-After:
+docs/evidence/TB-TMAR-OFFER-REFERENCE-W1-R1/physical-tree-after.txt
+
+Folder-Compliance:
+docs/evidence/TB-TMAR-OFFER-REFERENCE-W1-R1/folder-compliance.md
+
+Guard-Root-Cause:
+docs/evidence/TB-TMAR-OFFER-REFERENCE-W1-R1/guard-root-cause.md — prior guards checked csproj/Host routes/size only, not on-disk folders
+
+Architecture-Guards:
+ARCH-MODULE-PHYSICAL-001 added; ARCH-MODULE-FILE-001; HOST-MODULE-ENDPOINT-001; ARCH-SIZE-001
+
+Source-Size:
+docs/evidence/TB-TMAR-OFFER-REFERENCE-W1-R1/source-size.md — Offer-Oversized-Files: 0
+
+Tests:
+docs/evidence/TB-TMAR-OFFER-REFERENCE-W1-R1/tests.md — Offer.Tests 18 PASS; Host Offer/architecture focused PASS; NEW_FAILURES=0
+
+Physical-Structure-State:
+VERIFIED_ON_DISK
+
+Module-Recovery-State:
+COMPLETE_REFERENCE_PATTERN
+
+Reference-Pattern-State:
+REVALIDATED_WITH_PHYSICAL_STRUCTURE
+
+Checkout-Recovery-State:
+PAUSED_AT_SAFE_W5_CHECKPOINT
+
+Pricing-Reference-State:
+NOT_STARTED_UNTIL_OFFER_REPAIR_ACCEPTED
+
+Bootstrap:
+docs/architecture/TOOBA-ARCHITECT-BOOTSTRAP.md
+
+Master-Recovery-State:
+docs/architecture/TOOBA-TMAR-MASTER-RECOVERY.md
+
+Recovery-SoT:
+docs/evidence/TB-TMAR-OFFER-REFERENCE-W1-R1/recovery-sot.md
+
+Git:
+tip 8d316234074b84ef8f1a8cac622cfbbec015a4f4
+
+Architectural-Concerns:
+Host SellerPanelComposer remains residual BFF for IOfferSellerPanel enrichment. Tax/Pricing physical recheck independent later.
+
+Blockers:
+NONE
+
+Product-Resume-Safety:
+SAFE_WITH_TMAR_PARALLEL
+
+Next-Recommended-Task:
+Architect ACCEPT of Offer R1; then sequence Pricing physical revalidation or next module; Checkout remains paused at W5.
+
+END_TOOBA_WORKER_RESULT
