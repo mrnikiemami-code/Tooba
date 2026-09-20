@@ -1,0 +1,10 @@
+﻿{
+  "mode": "BACKEND_ONLY_UNTIL_EXPLICIT_RELEASE",
+  "frontendFreeze": true,
+  "releaseRequires": [
+    "Explicit Architect/User release",
+    "Update docs/architecture/tmar-execution-mode.json mode away from BACKEND_ONLY_UNTIL_EXPLICIT_RELEASE",
+    "Update ARCH-FE-FREEZE-001 status in TMAR-architecture-locks.md"
+  ],
+  "notes": "Frontend remains frozen until explicit Architect/User release. Do not modify production frontend code."
+}

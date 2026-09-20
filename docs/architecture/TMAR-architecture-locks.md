@@ -28,6 +28,40 @@ New Host production `.cs` source must live under an approved responsibility fold
 ## HOST-HYGIENE-001
 Host runtime log artifacts (`*.log` / `*.err.log` under `Tooba.Host`) must not be tracked in source control. `.gitignore` covers Host log paths; local diagnostics remain untracked.
 
+
+## ARCH-FE-FREEZE-001
+Until explicit Architect/User release (`TMAR-Execution-Mode` must change from `BACKEND_ONLY_UNTIL_EXPLICIT_RELEASE`):
+no production modification under `src/frontend/**`; no frontend refactor/package/dependency/folder migration; no frontend Orders or god-file work.
+Backend tasks may READ frontend only for compatibility evidence.
+Machine guard: `TmarDurableGuardTests` + `docs/architecture/tmar-execution-mode.json`. Accidental bypass is forbidden; release requires deliberate architecture update of that mode file and this lock.
+
+## ARCH-FOLDER-OWNERSHIP-001
+No new production source may be placed in a project/module root when it belongs to an identifiable responsibility/capability.
+Small explicit root allowlists only; existing flat debt is shrink-only; no Common/Misc/Helpers dumping grounds when ownership is knowable; baselines must not widen to absorb new root dumping.
+Host enforcement: `HOST-FOLDER-001` / `HostFolderStructureTests`.
+
+## ARCH-RECOVERY-001
+TMAR is incremental recovery, not rewrite.
+No Big Bang rewrite; no broad replacement of working subsystems; characterization/evidence before risky extraction; behavior preserved unless an explicit product-change task says otherwise; cosmetic relocation must not hide unresolved ownership.
+
+## ARCH-USERWORK-001
+Protect user-authored/local work.
+Destructive git operations prohibited; conflict => `RECOVERY_CONFLICT`; protected commit `18ca10c9` remains ancestor; every Result reports user work preserved.
+
+## ARCH-BASELINE-001
+Architecture baselines are shrink-only.
+No widening to pass tests; no wildcard suppression; removed debt must shrink baseline in the same task; a new violation is failure, not baseline addition.
+Machine guard: `TmarDurableGuardTests` baseline integrity checks.
+
+## ARCH-NOWORKAROUND-001
+No temporary/dirty workaround without architectural justification.
+Explicitly prohibit: polling loops; magic sleeps/timeouts/intervals; silent catch-and-ignore; suppressing errors; hardcoded business shortcuts; first-item/first-seller shortcuts; test-only branches; duplicated fallback logic instead of fixing ownership/boundary.
+
+## ARCH-DATA-001
+Safe incremental data evolution.
+No destructive migration without explicit dedicated approval; schema/migration owned by module; no new cross-module DB FK; no shared mega-DbContext expansion; additive migration preferred; rollback/compatibility documented.
+
+
 ## ARCH-READ-001
 NEW cross-module read composition uses declared read contracts/gateways; direct foreign DbContext composition is legacy-only and must not expand.
 

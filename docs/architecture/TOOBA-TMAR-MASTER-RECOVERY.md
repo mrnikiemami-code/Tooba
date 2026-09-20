@@ -161,6 +161,11 @@ TB-TMAR-CHECKOUT-IMPL-W1
 
 TB-TMAR-CHECKOUT-IMPL-W2
 
+TMAR-Execution-Mode: BACKEND_ONLY_UNTIL_EXPLICIT_RELEASE
+
+Frontend remains frozen until explicit Architect/User release.
+Do not modify production frontend code.
+
 Current Product Resume Gate:
 SAFE_WITH_TMAR_PARALLEL
 

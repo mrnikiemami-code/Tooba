@@ -1,8 +1,8 @@
 {
   "rule": "SourceSizeInventory",
   "generatedAt": "2026-09-20T11:51:21.594Z",
-  "refreshedBy": "TB-TMAR-HOST-STRUCTURE-W1",
-  "fileCount": 1798,
+  "refreshedBy": "TB-TMAR-HOST-STRUCTURE-W1-R1",
+  "fileCount": 1799,
   "files": [
     {
       "path": ".tmp-bridge-live-copy/Program.cs",
@@ -2564,6 +2564,12 @@
       "path": "src/backend/Host/Tooba.Host.Tests/TenantResolutionTests.cs",
       "language": "cs",
       "loc": 271,
+      "classification": "NORMAL"
+    },
+    {
+      "path": "src/backend/Host/Tooba.Host.Tests/TmarDurableGuardTests.cs",
+      "language": "cs",
+      "loc": 169,
       "classification": "NORMAL"
     },
     {

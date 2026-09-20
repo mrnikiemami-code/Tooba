@@ -15,6 +15,10 @@ Every architecture decision must be evaluated against this goal.
 Program:
 TMAR — Tooba Microservice-Ready Architecture Recovery
 
+TMAR-Execution-Mode: BACKEND_ONLY_UNTIL_EXPLICIT_RELEASE
+Frontend remains frozen until explicit Architect/User release.
+Do not modify production frontend code.
+
 Last accepted Product task:
 TB-P10-T022-R21
 
@@ -457,6 +461,7 @@ checkout-impl-w1 = TB-TMAR-CHECKOUT-IMPL-W1 PASS (process state + idempotency; T
 checkout-impl-w2 = TB-TMAR-CHECKOUT-IMPL-W2 PASS (PM + Inventory.Contracts; TX preserved; W3 READY)
 checkout-impl-w3 = TB-TMAR-CHECKOUT-IMPL-W3 PASS (Cart.Contracts conversion; TX preserved; W4 READY)
 host-structure-w1 = TB-TMAR-HOST-STRUCTURE-W1 PASS (folder map + guards; READY_TO_PAUSE; next CHECKOUT-IMPL-W4)
+host-structure-w1-r1 = TB-TMAR-HOST-STRUCTURE-W1-R1 PASS (durable locks + FE freeze; BACKEND_ONLY; next CHECKOUT-IMPL-W4)
 next task = TB-TMAR-CHECKOUT-IMPL-W3 unless Recovery SoT says otherwise
 
 primary goal = painless future Microservice migration
