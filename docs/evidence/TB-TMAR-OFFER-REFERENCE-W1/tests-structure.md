@@ -1,0 +1,1 @@
+# tests-structure\n\nTooba.Offer.Tests: Domain invariants, Contracts JSON shape, Infrastructure ownership, Endpoints characterization, Architecture guards. Host.Tests endpoint ownership + route characterization updated.\n

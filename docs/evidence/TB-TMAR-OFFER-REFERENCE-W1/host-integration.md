@@ -1,0 +1,1 @@
+# host-integration\n\nHOST-MODULE-ENDPOINT-001 enforced. Host registers IOfferSellerPanel/IOfferSellerAuthorizer adapters and MapOfferModule. Thin composition.\n

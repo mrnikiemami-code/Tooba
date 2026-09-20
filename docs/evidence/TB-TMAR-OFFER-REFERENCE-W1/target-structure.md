@@ -1,0 +1,1 @@
+# target-structure\n\nCompleted Offer project shape with Domain Aggregates/Events, Application Ports, Contracts Ports/Dtos, Infrastructure Persistence/Adapters/Outbox/DependencyInjection, Endpoints Seller + OfferEndpointModule, Tests Domain/Contracts/Infrastructure/Endpoints/Architecture.\n

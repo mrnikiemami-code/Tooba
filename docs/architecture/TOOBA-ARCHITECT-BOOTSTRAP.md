@@ -26,7 +26,7 @@ Accepted architecture baseline:
 TB-TMAR-ARCH-BASELINE
 
 Current next task:
-TB-TMAR-HOST-W6 (continue Host direct-write reduction; UoM PASS; Host exit NOT_READY)
+Architect chooses next reference-module candidate (Pricing / Inventory / Tax) OR resume TB-TMAR-CHECKOUT-IMPL-W6. Checkout remains PAUSED_AT_SAFE_W5_CHECKPOINT after Offer reference PASS.
 
 Product development rule:
 Foundation (TB-TMAR-FND-001) is ACCEPTED.
@@ -59,6 +59,7 @@ Checkout Implementation W3 (TB-TMAR-CHECKOUT-IMPL-W3) PASS — Cart.Contracts IC
 Host Structure W1 (TB-TMAR-HOST-STRUCTURE-W1) PASS — Host folder reorganization; HOST-FOLDER-001; READY_TO_PAUSE; next CHECKOUT-IMPL-W4.
 Checkout Implementation W4 (TB-TMAR-CHECKOUT-IMPL-W4) PASS — IOrderInventoryLifecyclePort; Order.Infrastructure↛Inventory.Application; TX preserved; W5 READY; next CHECKOUT-IMPL-W5.
 Checkout Implementation W5 (TB-TMAR-CHECKOUT-IMPL-W5) PASS — ICheckoutPromotionPort; Order.Application↛Promotion.Application; TX preserved; W6 READY; next CHECKOUT-IMPL-W6.
+Offer Reference Module W1 (TB-TMAR-OFFER-REFERENCE-W1) PASS — COMPLETE_REFERENCE_PATTERN; Endpoints+Tests; Host MapOfferModule; ARCH-MODULE-FILE-001 + HOST-MODULE-ENDPOINT-001; Checkout paused at W5.
 Product-Resume-Safety = SAFE_WITH_TMAR_PARALLEL (Order hub still frozen; do not expand App→App / Infra→App; no NEW cross-context ACID).
 Last Product Task = TB-P10-T022-R21.
 Architecture Baseline = TB-TMAR-ARCH-BASELINE.
@@ -466,7 +467,8 @@ host-structure-w1 = TB-TMAR-HOST-STRUCTURE-W1 PASS (folder map + guards; READY_T
 host-structure-w1-r1 = TB-TMAR-HOST-STRUCTURE-W1-R1 PASS (durable locks + FE freeze; BACKEND_ONLY; next CHECKOUT-IMPL-W4)
 checkout-impl-w4 = TB-TMAR-CHECKOUT-IMPL-W4 PASS (Order.Infra Inventory lifecycle Contracts; Infra→Inventory.Application removed; W5 READY)
 checkout-impl-w5 = TB-TMAR-CHECKOUT-IMPL-W5 PASS (Promotion checkout Contracts; Order.App→Promotion.Application removed; W6 READY)
-next task = TB-TMAR-CHECKOUT-IMPL-W6 unless Recovery SoT says otherwise
+offer-reference-w1 = TB-TMAR-OFFER-REFERENCE-W1 PASS (COMPLETE_REFERENCE_PATTERN; Endpoints+Tests; MapOfferModule; ARCH-MODULE-FILE-001; HOST-MODULE-ENDPOINT-001; Checkout paused at W5)
+next task = next reference-module candidate (Pricing/Inventory/Tax) OR TB-TMAR-CHECKOUT-IMPL-W6 per Architect; Checkout remains PAUSED_AT_SAFE_W5_CHECKPOINT
 
 primary goal = painless future Microservice migration
 

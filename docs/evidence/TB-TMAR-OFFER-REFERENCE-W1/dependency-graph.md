@@ -1,0 +1,1 @@
+# dependency-graph\n\nDomain <- Application <- Endpoints\nContracts <- consumers\nInfrastructure implements ports\nHost composition only (+ residual IOfferSellerPanel adapter)\nNo cycles.\n

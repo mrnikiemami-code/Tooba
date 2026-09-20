@@ -27,7 +27,7 @@ namespace Tooba.Host.Seller;
 /// <summary>
 /// ترکیب HTTP پنل فروشنده. هر DbContext جدا پرس‌وجو می‌شود؛ فیلتر Seller در سرور است نه در UI.
 /// </summary>
-public sealed class SellerPanelComposer
+public sealed class SellerPanelComposer : IOfferSellerPanel
 {
     /// <summary>بازار پیش‌فرض store-alpha / دمو ایران.</summary>
     public const string DefaultMarket = "IR";

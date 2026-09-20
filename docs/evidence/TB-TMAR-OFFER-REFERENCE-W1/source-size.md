@@ -1,0 +1,1 @@
+# source-size\n\nOffer-Oversized-Files: 0\nSellerPanelComposer unchanged at baseline 934 (shrink-only).\n

@@ -1,0 +1,1 @@
+# reference-pattern\n\nCreated docs/architecture/TOOBA-REFERENCE-MODULE-PATTERN.md from proven Offer structure.\n

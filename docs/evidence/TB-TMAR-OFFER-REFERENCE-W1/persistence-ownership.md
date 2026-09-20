@@ -1,0 +1,1 @@
+# persistence-ownership\n\nSchema offer owned by OfferDbContext. Migrations Offer-owned. No foreign entity mapping / cross-module FK.\n

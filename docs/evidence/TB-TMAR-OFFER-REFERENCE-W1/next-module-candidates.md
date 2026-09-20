@@ -1,0 +1,1 @@
+# next-module-candidates\n\nNext-Module-Candidates: Pricing; Inventory; Tax\nReasons: Host enrichment debt, clear schema ownership, medium size vs Catalog/Order giants.\n

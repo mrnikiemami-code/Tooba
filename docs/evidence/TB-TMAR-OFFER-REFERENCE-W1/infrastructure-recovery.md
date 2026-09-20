@@ -1,0 +1,1 @@
+# infrastructure-recovery\n\nOfferDbContext + SellerOfferConfiguration; OfferDirectory adapter; OfferOutboxRegistration; OfferModule DI. Grandfathered Catalog.Application/Party.Application lookup refs documented.\n

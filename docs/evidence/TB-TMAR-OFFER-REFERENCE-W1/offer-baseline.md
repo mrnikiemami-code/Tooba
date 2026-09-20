@@ -1,0 +1,1 @@
+# offer-baseline\n\nOffer-Reference-Suitability: CONFIRMED\n\nProjects: Domain, Application, Contracts, Infrastructure, Endpoints, Tests\n\nSee offer-baseline.json for LOC inventory.\n\nHost residual: SellerPanelComposer implements IOfferSellerPanel (cross-module enrichment BFF).\n

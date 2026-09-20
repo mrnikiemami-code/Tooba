@@ -1,0 +1,1 @@
+# endpoints-extraction\n\nTooba.Offer.Endpoints owns /v1/seller/offers* including price/inventory writes. Host SellerPanelEndpoints no longer maps those routes. MapOfferModule() from Program.\n

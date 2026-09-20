@@ -1,0 +1,1 @@
+# architecture-guards\n\nOfferArchitectureGuardTests + HostModuleEndpointOwnershipTests + source-size baseline. Locks ARCH-MODULE-FILE-001 and HOST-MODULE-ENDPOINT-001 added.\n

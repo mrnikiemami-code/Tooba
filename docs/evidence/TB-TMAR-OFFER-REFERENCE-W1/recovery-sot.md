@@ -1,0 +1,1 @@
+# recovery-sot\n\nTask TB-TMAR-OFFER-REFERENCE-W1\nModule-Recovery-State: COMPLETE_REFERENCE_PATTERN\nTMAR-Execution-Mode: BACKEND_ONLY_UNTIL_EXPLICIT_RELEASE\nCheckout-Recovery-State: PAUSED_AT_SAFE_W5_CHECKPOINT\nProduct-Resume-Safety: SAFE_WITH_TMAR_PARALLEL\nFrontend-Production-Changes: NONE\n

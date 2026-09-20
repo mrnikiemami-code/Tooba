@@ -1,0 +1,1 @@
+# checkout-pause\n\nCheckout-Recovery-State: PAUSED_AT_SAFE_W5_CHECKPOINT\nW6 candidate deferred: Order.Infrastructure → Cart.Contracts cleanup\n

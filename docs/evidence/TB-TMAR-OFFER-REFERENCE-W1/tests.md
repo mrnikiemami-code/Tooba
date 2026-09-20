@@ -1,0 +1,1 @@
+# tests\n\ndotnet test Tooba.Offer.Tests PASS (12)\nFocused Host guards PASS (HostModuleEndpointOwnership, SellerPanelComposition, SellerOfferSaleWrite route, TmarSourceSize)\nNEW_FAILURES=0\n

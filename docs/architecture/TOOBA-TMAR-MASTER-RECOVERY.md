@@ -161,6 +161,14 @@ TB-TMAR-CHECKOUT-IMPL-W1
 
 TB-TMAR-CHECKOUT-IMPL-W2
 
+TB-TMAR-CHECKOUT-IMPL-W3
+
+TB-TMAR-CHECKOUT-IMPL-W4
+
+TB-TMAR-CHECKOUT-IMPL-W5
+
+TB-TMAR-OFFER-REFERENCE-W1
+
 TMAR-Execution-Mode: BACKEND_ONLY_UNTIL_EXPLICIT_RELEASE
 
 Frontend remains frozen until explicit Architect/User release.
@@ -173,10 +181,13 @@ User choice:
 Continue TMAR for now until user explicitly says to return to product feature work.
 
 Next TMAR task:
-TB-TMAR-CHECKOUT-IMPL-W6
+TB-TMAR-OFFER-REFERENCE-W1 complete — next candidates Pricing / Inventory / Tax (Architect chooses). Checkout remains PAUSED_AT_SAFE_W5_CHECKPOINT; W6 deferred.
+
+Offer Reference Module W1:
+TB-TMAR-OFFER-REFERENCE-W1 — COMPLETE_REFERENCE_PATTERN; Tooba.Offer.Endpoints + Tests; Host MapOfferModule; ARCH-MODULE-FILE-001 + HOST-MODULE-ENDPOINT-001; FE freeze intact. Evidence: docs/evidence/TB-TMAR-OFFER-REFERENCE-W1/. Pattern: docs/architecture/TOOBA-REFERENCE-MODULE-PATTERN.md.
 
 Checkout Implementation W5:
-TB-TMAR-CHECKOUT-IMPL-W5 — Promotion checkout seam (ICheckoutPromotionPort); Order.Application↛Promotion.Application; TX preserved; W6 READY; FE freeze intact. Evidence: docs/evidence/TB-TMAR-CHECKOUT-IMPL-W5/.
+TB-TMAR-CHECKOUT-IMPL-W5 — Promotion checkout seam (ICheckoutPromotionPort); Order.Application↛Promotion.Application; TX preserved; W6 READY (intentionally paused); FE freeze intact. Evidence: docs/evidence/TB-TMAR-CHECKOUT-IMPL-W5/.
 
 Checkout Implementation W4:
 TB-TMAR-CHECKOUT-IMPL-W4 — Order.Infrastructure Cancel/Restore/PaymentBridge behind Inventory.Contracts (IOrderInventoryLifecyclePort); Infra→Inventory.Application removed; TX preserved; W5 READY; FE freeze intact. Evidence: docs/evidence/TB-TMAR-CHECKOUT-IMPL-W4/.

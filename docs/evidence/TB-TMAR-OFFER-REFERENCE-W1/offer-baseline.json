@@ -1,0 +1,187 @@
+{
+  "generatedAtUtc": "2026-09-20T12:42:14.664Z",
+  "OfferReferenceSuitability": "CONFIRMED",
+  "files": [
+    {
+      "path": "src/backend/Modules/Offer/Tooba.Offer.Infrastructure/Persistence/Migrations/OfferDbContextModelSnapshot.cs",
+      "loc": 186,
+      "oversized": false
+    },
+    {
+      "path": "src/backend/Modules/Offer/Tooba.Offer.Infrastructure/Adapters/OfferDirectory.cs",
+      "loc": 182,
+      "oversized": false
+    },
+    {
+      "path": "src/backend/Modules/Offer/Tooba.Offer.Contracts/Ports/ReturnPolicyContracts.cs",
+      "loc": 176,
+      "oversized": false
+    },
+    {
+      "path": "src/backend/Modules/Offer/Tooba.Offer.Domain/Aggregates/SellerOffer.cs",
+      "loc": 175,
+      "oversized": false
+    },
+    {
+      "path": "src/backend/Modules/Offer/Tooba.Offer.Infrastructure/Persistence/Migrations/20260823082919_InitialOffer.Designer.cs",
+      "loc": 169,
+      "oversized": false
+    },
+    {
+      "path": "src/backend/Modules/Offer/Tooba.Offer.Endpoints/Seller/OfferSellerEndpoints.cs",
+      "loc": 152,
+      "oversized": false
+    },
+    {
+      "path": "src/backend/Modules/Offer/Tooba.Offer.Tests/Architecture/OfferArchitectureGuardTests.cs",
+      "loc": 113,
+      "oversized": false
+    },
+    {
+      "path": "src/backend/Modules/Offer/Tooba.Offer.Domain/Events/OfferDomainEvents.cs",
+      "loc": 112,
+      "oversized": false
+    },
+    {
+      "path": "src/backend/Modules/Offer/Tooba.Offer.Infrastructure/Outbox/OfferOutboxRegistration.cs",
+      "loc": 107,
+      "oversized": false
+    },
+    {
+      "path": "src/backend/Modules/Offer/Tooba.Offer.Infrastructure/Persistence/Migrations/20260823082919_InitialOffer.cs",
+      "loc": 99,
+      "oversized": false
+    },
+    {
+      "path": "src/backend/Modules/Offer/Tooba.Offer.Infrastructure/Events/OfferEvents.cs",
+      "loc": 94,
+      "oversized": false
+    },
+    {
+      "path": "src/backend/Modules/Offer/Tooba.Offer.Contracts/Dtos/SellerOfferPanelDtos.cs",
+      "loc": 86,
+      "oversized": false
+    },
+    {
+      "path": "src/backend/Modules/Offer/Tooba.Offer.Infrastructure/DependencyInjection/OfferModule.cs",
+      "loc": 65,
+      "oversized": false
+    },
+    {
+      "path": "src/backend/Modules/Offer/Tooba.Offer.Infrastructure/Persistence/OfferDbContext.cs",
+      "loc": 63,
+      "oversized": false
+    },
+    {
+      "path": "src/backend/Modules/Offer/Tooba.Offer.Application/Ports/IOfferDirectory.cs",
+      "loc": 47,
+      "oversized": false
+    },
+    {
+      "path": "src/backend/Modules/Offer/Tooba.Offer.Infrastructure/Persistence/Migrations/20260907120000_AddOfferReturnPolicy.cs",
+      "loc": 43,
+      "oversized": false
+    },
+    {
+      "path": "src/backend/Modules/Offer/Tooba.Offer.Infrastructure/Persistence/Migrations/20260909130100_AddOfferQuantityLimits.cs",
+      "loc": 40,
+      "oversized": false
+    },
+    {
+      "path": "src/backend/Modules/Offer/Tooba.Offer.Infrastructure/Persistence/Configurations/SellerOfferConfiguration.cs",
+      "loc": 34,
+      "oversized": false
+    },
+    {
+      "path": "src/backend/Modules/Offer/Tooba.Offer.Tests/Domain/SellerOfferInvariantTests.cs",
+      "loc": 33,
+      "oversized": false
+    },
+    {
+      "path": "src/backend/Modules/Offer/Tooba.Offer.Tests/Contracts/OfferReferenceShapeTests.cs",
+      "loc": 30,
+      "oversized": false
+    },
+    {
+      "path": "src/backend/Modules/Offer/Tooba.Offer.Application/Ports/IOfferSellerPanel.cs",
+      "loc": 28,
+      "oversized": false
+    },
+    {
+      "path": "src/backend/Modules/Offer/Tooba.Offer.Contracts/Dtos/SalesChannel.cs",
+      "loc": 27,
+      "oversized": false
+    },
+    {
+      "path": "src/backend/Modules/Offer/Tooba.Offer.Tests/Tooba.Offer.Tests.csproj",
+      "loc": 27,
+      "oversized": false
+    },
+    {
+      "path": "src/backend/Modules/Offer/Tooba.Offer.Infrastructure/Tooba.Offer.Infrastructure.csproj",
+      "loc": 23,
+      "oversized": false
+    },
+    {
+      "path": "src/backend/Modules/Offer/Tooba.Offer.Tests/Endpoints/OfferEndpointModuleTests.cs",
+      "loc": 23,
+      "oversized": false
+    },
+    {
+      "path": "src/backend/Modules/Offer/Tooba.Offer.Tests/Infrastructure/OfferDbContextOwnershipTests.cs",
+      "loc": 23,
+      "oversized": false
+    },
+    {
+      "path": "src/backend/Modules/Offer/Tooba.Offer.Endpoints/OfferEndpointModule.cs",
+      "loc": 22,
+      "oversized": false
+    },
+    {
+      "path": "src/backend/Modules/Offer/Tooba.Offer.Contracts/Dtos/OfferStatus.cs",
+      "loc": 21,
+      "oversized": false
+    },
+    {
+      "path": "src/backend/Modules/Offer/Tooba.Offer.Contracts/Ports/IOfferLookupGateway.cs",
+      "loc": 21,
+      "oversized": false
+    },
+    {
+      "path": "src/backend/Modules/Offer/Tooba.Offer.Contracts/Dtos/OfferReference.cs",
+      "loc": 19,
+      "oversized": false
+    },
+    {
+      "path": "src/backend/Modules/Offer/Tooba.Offer.Endpoints/Tooba.Offer.Endpoints.csproj",
+      "loc": 18,
+      "oversized": false
+    },
+    {
+      "path": "src/backend/Modules/Offer/Tooba.Offer.Endpoints/Seller/IOfferSellerAuthorizer.cs",
+      "loc": 15,
+      "oversized": false
+    },
+    {
+      "path": "src/backend/Modules/Offer/Tooba.Offer.Application/Tooba.Offer.Application.csproj",
+      "loc": 14,
+      "oversized": false
+    },
+    {
+      "path": "src/backend/Modules/Offer/Tooba.Offer.Domain/Tooba.Offer.Domain.csproj",
+      "loc": 14,
+      "oversized": false
+    },
+    {
+      "path": "src/backend/Modules/Offer/Tooba.Offer.Contracts/Tooba.Offer.Contracts.csproj",
+      "loc": 10,
+      "oversized": false
+    },
+    {
+      "path": "src/backend/Modules/Offer/Tooba.Offer.Domain/TypeForwarders.cs",
+      "loc": 6,
+      "oversized": false
+    }
+  ],
+  "oversizedCount": 0
+}

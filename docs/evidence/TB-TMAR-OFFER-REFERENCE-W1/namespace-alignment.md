@@ -1,0 +1,1 @@
+# namespace-alignment\n\nNamespaces remain Tooba.Offer.*; folders align with responsibility. No gratuitous churn outside Offer.\n

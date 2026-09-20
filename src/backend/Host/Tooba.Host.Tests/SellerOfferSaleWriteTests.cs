@@ -72,17 +72,23 @@ public sealed class SellerOfferSaleWriteTests : IAsyncLifetime
     public void Host_registers_seller_offer_price_inventory_write_routes()
     {
         var root = FindRepoRoot();
-        var endpoints = File.ReadAllText(Path.Combine(
+        var offerEndpoints = File.ReadAllText(Path.Combine(
+            root, "src", "backend", "Modules", "Offer", "Tooba.Offer.Endpoints", "Seller", "OfferSellerEndpoints.cs"));
+        var hostSellerEndpoints = File.ReadAllText(Path.Combine(
             root, "src", "backend", "Host", "Tooba.Host", "Seller", "SellerPanelEndpoints.cs"));
         var composer = File.ReadAllText(Path.Combine(
             root, "src", "backend", "Host", "Tooba.Host", "Seller", "SellerPanelComposer.cs"));
         var admin = File.ReadAllText(Path.Combine(
             root, "src", "backend", "Host", "Tooba.Host", "Admin", "ProductWorkspaceEndpoints.cs"));
+        var program = File.ReadAllText(Path.Combine(
+            root, "src", "backend", "Host", "Tooba.Host", "Program.cs"));
 
-        Assert.Contains("MapPost(\"/offers\"", endpoints, StringComparison.Ordinal);
-        Assert.Contains("/offers/{offerId:guid}/price", endpoints, StringComparison.Ordinal);
-        Assert.Contains("/offers/{offerId:guid}/inventory", endpoints, StringComparison.Ordinal);
-        Assert.Contains("RequireAuthorizedAsync", endpoints, StringComparison.Ordinal);
+        Assert.Contains("MapPost(\"/offers\"", offerEndpoints, StringComparison.Ordinal);
+        Assert.Contains("/offers/{offerId:guid}/price", offerEndpoints, StringComparison.Ordinal);
+        Assert.Contains("/offers/{offerId:guid}/inventory", offerEndpoints, StringComparison.Ordinal);
+        Assert.Contains("IOfferSellerAuthorizer", offerEndpoints, StringComparison.Ordinal);
+        Assert.DoesNotContain("MapPost(\"/offers\"", hostSellerEndpoints, StringComparison.Ordinal);
+        Assert.Contains("MapOfferModule()", program, StringComparison.Ordinal);
         Assert.Contains("RequireOwnedOfferAsync", composer, StringComparison.Ordinal);
         Assert.Contains("IPriceDirectory", composer, StringComparison.Ordinal);
         Assert.Contains("IInventoryDirectory", composer, StringComparison.Ordinal);

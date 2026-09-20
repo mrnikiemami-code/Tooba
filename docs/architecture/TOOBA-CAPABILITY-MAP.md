@@ -61,6 +61,7 @@ Evidence files remain the deep-detail source; this map is the quick index.
 | Checkout Implementation W3 | Cart.Contracts conversion; Order.Application↛Cart.Application; TX preserved; W4 READY | TB-TMAR-CHECKOUT-IMPL-W3 |
 | Checkout Implementation W4 | Order.Infrastructure lifecycle via IOrderInventoryLifecyclePort; Infra↛Inventory.Application; TX preserved; W5 READY | TB-TMAR-CHECKOUT-IMPL-W4 |
 | Checkout Implementation W5 | Promotion checkout via ICheckoutPromotionPort; Order.Application↛Promotion.Application; TX preserved; W6 READY | TB-TMAR-CHECKOUT-IMPL-W5 |
-| Next | Checkout implementation Stage 6 (Order.Infra Cart.Contracts cleanup) | TB-TMAR-CHECKOUT-IMPL-W6 |
+| Offer Reference Module W1 | COMPLETE_REFERENCE_PATTERN; Endpoints+Tests; Host MapOfferModule; ARCH-MODULE-FILE-001 + HOST-MODULE-ENDPOINT-001; Checkout paused at W5 | TB-TMAR-OFFER-REFERENCE-W1 |
+| Next | Apply Offer reference pattern to next candidate (Pricing/Inventory/Tax) OR resume Checkout W6 after Architect choice | — |
 
-Last Verified Task = TB-TMAR-CHECKOUT-IMPL-W5
+Last Verified Task = TB-TMAR-OFFER-REFERENCE-W1

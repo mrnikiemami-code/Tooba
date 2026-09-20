@@ -1,0 +1,1 @@
+# domain-recovery\n\nSellerOffer aggregate + domain events under Domain. No Infra/foreign Domain deps. Enums remain Contracts-owned with Domain namespace + TypeForwarders.\n

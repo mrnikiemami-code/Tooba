@@ -92,6 +92,12 @@ No new hand-written source file may exceed the approved oversized-file threshold
 ## ARCH-SIZE-002
 Existing oversized legacy / critical god files may only stay equal or shrink; growth above their recorded baseline LOC is forbidden. Baseline entries must be removed or reduced when files are split or deleted; baselines never auto-raise.
 
+## ARCH-MODULE-FILE-001
+No new multi-responsibility module god-files. New production files must have one cohesive responsibility and obey source-size guards. Prefer split before 800 LOC. Proven by Offer reference module (`TB-TMAR-OFFER-REFERENCE-W1`).
+
+## HOST-MODULE-ENDPOINT-001
+New module-owned HTTP endpoints must live in the module `Tooba.*.Endpoints` project, not `Tooba.Host`, except truly cross-cutting Host endpoints (health/readiness/platform). Host maps via `Map*Module()` only. Guard: `HostModuleEndpointOwnershipTests` + module architecture tests.
+
 ## ARCH-REFACTOR-001
 Critical giant-file decomposition requires characterization tests around the touched slice before structural splitting. Preserve public behavior; split incrementally by capability/use-case; keep architecture guards green; do not rely only on AI-generated diff inspection.
 

@@ -1,0 +1,1 @@
+# file-cohesion\n\nARCH-MODULE-FILE-001 applied: OfferDomain split to Aggregates/SellerOffer + Events; EF config extracted; Endpoints isolated; no Offer production file >800.\n

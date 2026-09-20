@@ -1,0 +1,1 @@
+# application-recovery\n\nIOfferDirectory/IOfferUseCaseGuard + IOfferSellerPanel ports. Directory remains strangler write seam in Infrastructure.Adapters. Seller panel use-case orchestration residual in Host adapter.\n
