@@ -137,7 +137,7 @@
     {
       "path": "src/backend/Modules/Order/Tooba.Order.Infrastructure/CheckoutDirectory.cs",
       "language": "cs",
-      "loc": 1102,
+      "loc": 946,
       "classification": "OVERSIZED_LEGACY"
     },
     {

@@ -157,6 +157,8 @@ TB-TMAR-HOST-W6
 
 TB-TMAR-CHECKOUT-CONSISTENCY-DESIGN
 
+TB-TMAR-CHECKOUT-IMPL-W1
+
 Current Product Resume Gate:
 SAFE_WITH_TMAR_PARALLEL
 
@@ -164,7 +166,10 @@ User choice:
 Continue TMAR for now until user explicitly says to return to product feature work.
 
 Next TMAR task:
-TB-TMAR-CHECKOUT-IMPL-W1
+TB-TMAR-CHECKOUT-IMPL-W2
+
+Checkout Implementation W1:
+TB-TMAR-CHECKOUT-IMPL-W1 — durable Order-owned checkout process state + submission idempotency; TransactionScope preserved; no Saga runtime; W2 READY; Orders FE STILL_WAITING_FOR_BACKEND_W2; Architecture-Priority CHECKOUT_IMPLEMENTATION. Evidence: `docs/evidence/TB-TMAR-CHECKOUT-IMPL-W1/`.
 
 Checkout Consistency Design:
 TB-TMAR-CHECKOUT-CONSISTENCY-DESIGN — design+locks only; Order-owned Process Manager; Checkout-Point-Of-No-Return MULTI_STAGE; READY_FOR_IMPLEMENTATION_W1; Architecture-Priority CHECKOUT_IMPLEMENTATION. Evidence: `docs/evidence/TB-TMAR-CHECKOUT-CONSISTENCY-DESIGN/`.

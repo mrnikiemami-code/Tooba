@@ -1,8 +1,8 @@
 {
   "rule": "SourceSizeInventory",
-  "generatedAt": "2026-09-20T07:24:40.361Z",
+  "generatedAt": "2026-09-20T09:18:31.779Z",
   "refreshedBy": "TB-TMAR-FE-BASELINE",
-  "fileCount": 1751,
+  "fileCount": 1792,
   "files": [
     {
       "path": "src/backend/Modules/Catalog/Tooba.Catalog.Infrastructure/CatalogDirectory.cs",
@@ -101,12 +101,6 @@
       "classification": "OVERSIZED_LEGACY"
     },
     {
-      "path": "src/frontend/app/admin/admin-api.ts",
-      "language": "ts",
-      "loc": 1234,
-      "classification": "CRITICAL_GOD_FILE"
-    },
-    {
       "path": "src/frontend/app/vendor-panel/seller-api.ts",
       "language": "ts",
       "loc": 1211,
@@ -128,18 +122,6 @@
       "path": "src/frontend/app/admin/category-attributes-panel.tsx",
       "language": "tsx",
       "loc": 1190,
-      "classification": "OVERSIZED_LEGACY"
-    },
-    {
-      "path": "src/frontend/app/admin/admin-screens.tsx",
-      "language": "tsx",
-      "loc": 1120,
-      "classification": "OVERSIZED_LEGACY"
-    },
-    {
-      "path": "src/backend/Modules/Order/Tooba.Order.Infrastructure/CheckoutDirectory.cs",
-      "language": "cs",
-      "loc": 1100,
       "classification": "OVERSIZED_LEGACY"
     },
     {
@@ -203,6 +185,12 @@
       "classification": "OVERSIZED_LEGACY"
     },
     {
+      "path": "src/frontend/app/admin/admin-api.ts",
+      "language": "ts",
+      "loc": 1002,
+      "classification": "OVERSIZED_LEGACY"
+    },
+    {
       "path": "src/frontend/app/admin/admin-error-map.ts",
       "language": "ts",
       "loc": 1002,
@@ -230,6 +218,12 @@
       "path": "src/backend/Modules/AccessControl/Tooba.AccessControl.Infrastructure/AccessControlDirectory.cs",
       "language": "cs",
       "loc": 957,
+      "classification": "OVERSIZED_LEGACY"
+    },
+    {
+      "path": "src/backend/Modules/Order/Tooba.Order.Infrastructure/CheckoutDirectory.cs",
+      "language": "cs",
+      "loc": 946,
       "classification": "OVERSIZED_LEGACY"
     },
     {
@@ -332,6 +326,12 @@
       "path": "src/backend/Modules/Catalog/Tooba.Catalog.Domain/StoreLandingPageSectionConfig.cs",
       "language": "cs",
       "loc": 814,
+      "classification": "OVERSIZED_LEGACY"
+    },
+    {
+      "path": "src/frontend/app/admin/admin-screens.tsx",
+      "language": "tsx",
+      "loc": 810,
       "classification": "OVERSIZED_LEGACY"
     },
     {
@@ -593,12 +593,6 @@
       "classification": "WATCH"
     },
     {
-      "path": "src/backend/Host/Tooba.Host/Admin/ShippingServiceEndpoints.cs",
-      "language": "cs",
-      "loc": 643,
-      "classification": "WATCH"
-    },
-    {
       "path": "src/frontend/app/storefront/storefront-payment-api.ts",
       "language": "ts",
       "loc": 643,
@@ -719,6 +713,12 @@
       "classification": "WATCH"
     },
     {
+      "path": "src/backend/Host/Tooba.Host/Program.cs",
+      "language": "cs",
+      "loc": 570,
+      "classification": "WATCH"
+    },
+    {
       "path": "src/frontend/app/storefront/stories/story-modal.tsx",
       "language": "tsx",
       "loc": 570,
@@ -734,12 +734,6 @@
       "path": "scripts/capture-t014-evidence.mjs",
       "language": "mjs",
       "loc": 567,
-      "classification": "WATCH"
-    },
-    {
-      "path": "src/backend/Host/Tooba.Host/Program.cs",
-      "language": "cs",
-      "loc": 565,
       "classification": "WATCH"
     },
     {
@@ -817,7 +811,7 @@
     {
       "path": "src/backend/Host/Tooba.Host/Storefront/StorefrontShippingComposer.cs",
       "language": "cs",
-      "loc": 530,
+      "loc": 533,
       "classification": "WATCH"
     },
     {
@@ -931,6 +925,12 @@
     {
       "path": "docs/evidence/TB-P10-T004/_r24-r1-r4-runtime.mjs",
       "language": "mjs",
+      "loc": 485,
+      "classification": "NORMAL"
+    },
+    {
+      "path": "src/backend/Host/Tooba.Host/Admin/ShippingServiceEndpoints.cs",
+      "language": "cs",
       "loc": 485,
       "classification": "NORMAL"
     },
@@ -1955,6 +1955,12 @@
       "classification": "NORMAL"
     },
     {
+      "path": "src/backend/Modules/Order/Tooba.Order.Infrastructure/Persistence/OrderDbContext.cs",
+      "language": "cs",
+      "loc": 312,
+      "classification": "NORMAL"
+    },
+    {
       "path": "src/backend/Modules/Returns/Tooba.Returns.Application/ReturnsContracts.cs",
       "language": "cs",
       "loc": 312,
@@ -2012,12 +2018,6 @@
       "path": "src/backend/Host/Tooba.Host/Admin/AdminFulfillmentWorkQueueModels.cs",
       "language": "cs",
       "loc": 305,
-      "classification": "NORMAL"
-    },
-    {
-      "path": "src/backend/Host/Tooba.Host/Admin/UnitOfMeasureEndpoints.cs",
-      "language": "cs",
-      "loc": 304,
       "classification": "NORMAL"
     },
     {
@@ -2099,12 +2099,6 @@
       "classification": "NORMAL"
     },
     {
-      "path": "src/backend/Modules/Order/Tooba.Order.Infrastructure/Persistence/OrderDbContext.cs",
-      "language": "cs",
-      "loc": 295,
-      "classification": "NORMAL"
-    },
-    {
       "path": "src/frontend/app/vendor-panel/settings/page.tsx",
       "language": "tsx",
       "loc": 294,
@@ -2124,6 +2118,12 @@
     },
     {
       "path": "src/backend/Host/Tooba.Host.Tests/OfferFoundationTests.cs",
+      "language": "cs",
+      "loc": 292,
+      "classification": "NORMAL"
+    },
+    {
+      "path": "src/backend/Host/Tooba.Host.Tests/StoreAppearanceAdminTests.cs",
       "language": "cs",
       "loc": 292,
       "classification": "NORMAL"
@@ -2297,12 +2297,6 @@
       "classification": "NORMAL"
     },
     {
-      "path": "src/backend/Host/Tooba.Host.Tests/StoreAppearanceAdminTests.cs",
-      "language": "cs",
-      "loc": 272,
-      "classification": "NORMAL"
-    },
-    {
       "path": "src/frontend/app/admin/catalog-tag-api.ts",
       "language": "ts",
       "loc": 272,
@@ -2377,6 +2371,12 @@
     {
       "path": "docs/evidence/TB-P10-T004/_r14_runtime.mjs",
       "language": "mjs",
+      "loc": 266,
+      "classification": "NORMAL"
+    },
+    {
+      "path": "src/backend/Host/Tooba.Host/Admin/UnitOfMeasureEndpoints.cs",
+      "language": "cs",
       "loc": 266,
       "classification": "NORMAL"
     },
@@ -2591,6 +2591,12 @@
       "classification": "NORMAL"
     },
     {
+      "path": "src/frontend/features/admin-receipts/components/receipts-screen.tsx",
+      "language": "tsx",
+      "loc": 245,
+      "classification": "NORMAL"
+    },
+    {
       "path": "src/frontend/app/admin/content-article-tags-panel.tsx",
       "language": "tsx",
       "loc": 244,
@@ -2783,12 +2789,6 @@
       "classification": "NORMAL"
     },
     {
-      "path": "src/frontend/app/admin/admin-api.test.ts",
-      "language": "ts",
-      "loc": 230,
-      "classification": "NORMAL"
-    },
-    {
       "path": "src/frontend/lib/storefront-composition/industry-templates.ts",
       "language": "ts",
       "loc": 230,
@@ -2927,6 +2927,12 @@
       "classification": "NORMAL"
     },
     {
+      "path": "src/backend/Modules/Fulfillment/Tooba.Fulfillment.Infrastructure/ShippingServiceDirectory.cs",
+      "language": "cs",
+      "loc": 222,
+      "classification": "NORMAL"
+    },
+    {
       "path": "src/frontend/app/blogs/blogs-ui.tsx",
       "language": "tsx",
       "loc": 221,
@@ -2995,6 +3001,12 @@
     {
       "path": "docs/evidence/TB-P09-T022/_r4_complete_dispatch.mjs",
       "language": "mjs",
+      "loc": 218,
+      "classification": "NORMAL"
+    },
+    {
+      "path": "src/backend/Modules/Order/Tooba.Order.Infrastructure/CheckoutSubmitExecutor.cs",
+      "language": "cs",
       "loc": 218,
       "classification": "NORMAL"
     },
@@ -3116,12 +3128,6 @@
       "path": "src/frontend/app/customer-panel/customer-address-api.test.ts",
       "language": "ts",
       "loc": 210,
-      "classification": "NORMAL"
-    },
-    {
-      "path": "src/backend/Host/Tooba.Host/Admin/StoreAppearanceSettingsComposer.cs",
-      "language": "cs",
-      "loc": 209,
       "classification": "NORMAL"
     },
     {
@@ -3377,6 +3383,12 @@
       "classification": "NORMAL"
     },
     {
+      "path": "src/frontend/app/admin/admin-api.test.ts",
+      "language": "ts",
+      "loc": 192,
+      "classification": "NORMAL"
+    },
+    {
       "path": "src/frontend/app/storefront/storefront-pending-payment-api.test.ts",
       "language": "ts",
       "loc": 192,
@@ -3545,12 +3557,6 @@
       "classification": "NORMAL"
     },
     {
-      "path": "src/frontend/app/admin/admin-reservation-cycle.test.ts",
-      "language": "ts",
-      "loc": 183,
-      "classification": "NORMAL"
-    },
-    {
       "path": "src/frontend/app/blogs/blogs-taxonomy-ui.tsx",
       "language": "tsx",
       "loc": 183,
@@ -3587,6 +3593,12 @@
       "classification": "NORMAL"
     },
     {
+      "path": "src/backend/Host/Tooba.Host.Tests/ShippingServiceAdminTests.cs",
+      "language": "cs",
+      "loc": 180,
+      "classification": "NORMAL"
+    },
+    {
       "path": "src/backend/Modules/AccessControl/Tooba.AccessControl.Domain/AccessControlDomain.cs",
       "language": "cs",
       "loc": 180,
@@ -3607,6 +3619,12 @@
     {
       "path": "src/backend/Modules/Settlement/Tooba.Settlement.Infrastructure/Persistence/SettlementDbContext.cs",
       "language": "cs",
+      "loc": 179,
+      "classification": "NORMAL"
+    },
+    {
+      "path": "src/frontend/app/admin/admin-reservation-cycle.test.ts",
+      "language": "ts",
       "loc": 179,
       "classification": "NORMAL"
     },
@@ -3821,6 +3839,12 @@
       "classification": "NORMAL"
     },
     {
+      "path": "src/backend/Modules/Order/Tooba.Order.Domain/CheckoutProcess.cs",
+      "language": "cs",
+      "loc": 168,
+      "classification": "NORMAL"
+    },
+    {
       "path": "src/frontend/app/admin/operator-settings-api.ts",
       "language": "ts",
       "loc": 168,
@@ -3965,6 +3989,12 @@
       "classification": "NORMAL"
     },
     {
+      "path": "src/backend/Host/Tooba.Host/Admin/StoreAppearanceSettingsComposer.cs",
+      "language": "cs",
+      "loc": 163,
+      "classification": "NORMAL"
+    },
+    {
       "path": "src/backend/Modules/Notification/Tooba.Notification.Domain/NotificationDomain.cs",
       "language": "cs",
       "loc": 163,
@@ -4097,6 +4127,12 @@
       "classification": "NORMAL"
     },
     {
+      "path": "src/frontend/features/admin-reviews/api/reviews-api.ts",
+      "language": "ts",
+      "loc": 157,
+      "classification": "NORMAL"
+    },
+    {
       "path": "docs/evidence/TB-P09-T013/_r1-runtime.mjs",
       "language": "mjs",
       "loc": 156,
@@ -4134,6 +4170,12 @@
     },
     {
       "path": "src/backend/BuildingBlocks/Tooba.Persistence/OutboxSaveChangesInterceptor.cs",
+      "language": "cs",
+      "loc": 155,
+      "classification": "NORMAL"
+    },
+    {
+      "path": "src/backend/Host/Tooba.Host.Tests/UnitOfMeasureAdminTests.cs",
       "language": "cs",
       "loc": 155,
       "classification": "NORMAL"
@@ -4319,6 +4361,12 @@
       "classification": "NORMAL"
     },
     {
+      "path": "src/backend/Host/Tooba.Host.Tests/CheckoutProcessFoundationTests.cs",
+      "language": "cs",
+      "loc": 148,
+      "classification": "NORMAL"
+    },
+    {
       "path": "src/backend/Host/Tooba.Host.Tests/IndustryBatchBTemplateCatalogT022R12BTests.cs",
       "language": "cs",
       "loc": 148,
@@ -4361,6 +4409,12 @@
       "classification": "NORMAL"
     },
     {
+      "path": "src/backend/Host/Tooba.Host/Admin/AdminOrderOperationsEndpoints.cs",
+      "language": "cs",
+      "loc": 146,
+      "classification": "NORMAL"
+    },
+    {
       "path": "src/backend/Host/Tooba.Host/Grid/AdminPayoutGridQueryEngine.cs",
       "language": "cs",
       "loc": 146,
@@ -4385,13 +4439,13 @@
       "classification": "NORMAL"
     },
     {
-      "path": "src/backend/Host/Tooba.Host.Tests/MediaDamTests.cs",
-      "language": "cs",
-      "loc": 145,
+      "path": "src/frontend/features/admin-reviews/components/reviews-screen.tsx",
+      "language": "tsx",
+      "loc": 146,
       "classification": "NORMAL"
     },
     {
-      "path": "src/backend/Host/Tooba.Host/Admin/AdminOrderOperationsEndpoints.cs",
+      "path": "src/backend/Host/Tooba.Host.Tests/MediaDamTests.cs",
       "language": "cs",
       "loc": 145,
       "classification": "NORMAL"
@@ -4979,6 +5033,12 @@
       "classification": "NORMAL"
     },
     {
+      "path": "src/backend/Host/Tooba.Host.Tests/QuantitySettingsAdminTests.cs",
+      "language": "cs",
+      "loc": 118,
+      "classification": "NORMAL"
+    },
+    {
       "path": "src/backend/Host/Tooba.Host/Seller/SellerPanelAccess.cs",
       "language": "cs",
       "loc": 118,
@@ -4999,6 +5059,18 @@
     {
       "path": "src/frontend/app/returns/return-api.test.ts",
       "language": "ts",
+      "loc": 118,
+      "classification": "NORMAL"
+    },
+    {
+      "path": "src/frontend/features/admin-customers/components/customers-screen.tsx",
+      "language": "tsx",
+      "loc": 118,
+      "classification": "NORMAL"
+    },
+    {
+      "path": "src/frontend/features/admin-sellers/components/sellers-screen.tsx",
+      "language": "tsx",
       "loc": 118,
       "classification": "NORMAL"
     },
@@ -5201,6 +5273,12 @@
       "classification": "NORMAL"
     },
     {
+      "path": "src/backend/Modules/Catalog/Tooba.Catalog.Infrastructure/UnitOfMeasureDirectory.cs",
+      "language": "cs",
+      "loc": 112,
+      "classification": "NORMAL"
+    },
+    {
       "path": "src/frontend/app/blogs/[slug]/blog-detail-ui.tsx",
       "language": "tsx",
       "loc": 112,
@@ -5251,6 +5329,24 @@
     {
       "path": "src/backend/Host/Tooba.Host/Grid/AdminContentAuthorGridQueryEngine.cs",
       "language": "cs",
+      "loc": 110,
+      "classification": "NORMAL"
+    },
+    {
+      "path": "src/frontend/features/admin-customers/api/customers-api.ts",
+      "language": "ts",
+      "loc": 110,
+      "classification": "NORMAL"
+    },
+    {
+      "path": "src/frontend/features/admin-receipts/api/receipts-api.ts",
+      "language": "ts",
+      "loc": 110,
+      "classification": "NORMAL"
+    },
+    {
+      "path": "src/frontend/features/admin-sellers/api/sellers-api.ts",
+      "language": "ts",
       "loc": 110,
       "classification": "NORMAL"
     },
@@ -5309,6 +5405,12 @@
       "classification": "NORMAL"
     },
     {
+      "path": "src/backend/Modules/Fulfillment/Tooba.Fulfillment.Infrastructure/FulfillmentModule.cs",
+      "language": "cs",
+      "loc": 107,
+      "classification": "NORMAL"
+    },
+    {
       "path": "src/backend/Modules/Offer/Tooba.Offer.Infrastructure/OfferOutboxRegistration.cs",
       "language": "cs",
       "loc": 107,
@@ -5340,12 +5442,6 @@
     },
     {
       "path": "src/backend/Modules/Catalog/Tooba.Catalog.Infrastructure/CatalogOutboxRegistration.cs",
-      "language": "cs",
-      "loc": 106,
-      "classification": "NORMAL"
-    },
-    {
-      "path": "src/backend/Modules/Fulfillment/Tooba.Fulfillment.Infrastructure/FulfillmentModule.cs",
       "language": "cs",
       "loc": 106,
       "classification": "NORMAL"
@@ -5388,6 +5484,12 @@
     },
     {
       "path": "src/frontend/app/products/page.tsx",
+      "language": "tsx",
+      "loc": 105,
+      "classification": "NORMAL"
+    },
+    {
+      "path": "src/frontend/features/admin-dashboard/components/dashboard-screen.tsx",
       "language": "tsx",
       "loc": 105,
       "classification": "NORMAL"
@@ -5531,12 +5633,6 @@
       "classification": "NORMAL"
     },
     {
-      "path": "src/backend/Host/Tooba.Host/Admin/QuantitySettingsEndpoints.cs",
-      "language": "cs",
-      "loc": 100,
-      "classification": "NORMAL"
-    },
-    {
       "path": "src/backend/Modules/Media/Tooba.Media.Infrastructure/LocalFileMediaStore.cs",
       "language": "cs",
       "loc": 100,
@@ -5658,6 +5754,12 @@
     },
     {
       "path": "src/backend/Host/Tooba.Host.Tests/PaidProjectionFinancialTests.cs",
+      "language": "cs",
+      "loc": 96,
+      "classification": "NORMAL"
+    },
+    {
+      "path": "src/backend/Modules/Order/Tooba.Order.Infrastructure/CheckoutProcessTracker.cs",
       "language": "cs",
       "loc": 96,
       "classification": "NORMAL"
@@ -5802,6 +5904,12 @@
     },
     {
       "path": "src/backend/Host/Tooba.Host.Tests/FashionTemplateCatalogT022R6Tests.cs",
+      "language": "cs",
+      "loc": 92,
+      "classification": "NORMAL"
+    },
+    {
+      "path": "src/backend/Modules/Fulfillment/Tooba.Fulfillment.Application/ShippingServiceWriteContracts.cs",
       "language": "cs",
       "loc": 92,
       "classification": "NORMAL"
@@ -5970,6 +6078,12 @@
     },
     {
       "path": "src/frontend/app/storefront/storefront-shipping-api.test.ts",
+      "language": "ts",
+      "loc": 88,
+      "classification": "NORMAL"
+    },
+    {
+      "path": "src/frontend/features/admin-dashboard/api/dashboard-api.ts",
       "language": "ts",
       "loc": 88,
       "classification": "NORMAL"
@@ -6161,6 +6275,12 @@
       "classification": "NORMAL"
     },
     {
+      "path": "src/backend/Host/Tooba.Host/Admin/QuantitySettingsEndpoints.cs",
+      "language": "cs",
+      "loc": 82,
+      "classification": "NORMAL"
+    },
+    {
       "path": "src/backend/Modules/Content/Tooba.Content.Domain/ContentArticleMediaItem.cs",
       "language": "cs",
       "loc": 82,
@@ -6239,6 +6359,12 @@
       "classification": "NORMAL"
     },
     {
+      "path": "src/backend/Modules/Catalog/Tooba.Catalog.Infrastructure/StoreAppearanceSettingsDirectory.cs",
+      "language": "cs",
+      "loc": 79,
+      "classification": "NORMAL"
+    },
+    {
       "path": "src/frontend/app/admin/admin-appearance-settings.helpers.ts",
       "language": "ts",
       "loc": 79,
@@ -6246,6 +6372,12 @@
     },
     {
       "path": "src/frontend/app/storefront/storefront-home.test.ts",
+      "language": "ts",
+      "loc": 79,
+      "classification": "NORMAL"
+    },
+    {
+      "path": "src/frontend/features/admin-reviews/admin-reviews.characterization.test.ts",
       "language": "ts",
       "loc": 79,
       "classification": "NORMAL"
@@ -6641,6 +6773,12 @@
       "classification": "NORMAL"
     },
     {
+      "path": "src/frontend/features/admin-dashboard/admin-dashboard.characterization.test.ts",
+      "language": "ts",
+      "loc": 68,
+      "classification": "NORMAL"
+    },
+    {
       "path": "src/backend/Host/Tooba.Host.Tests/OrderInventoryRecoveryTests.cs",
       "language": "cs",
       "loc": 67,
@@ -7013,6 +7151,18 @@
       "classification": "NORMAL"
     },
     {
+      "path": "src/frontend/features/admin-customers/admin-customers.characterization.test.ts",
+      "language": "ts",
+      "loc": 60,
+      "classification": "NORMAL"
+    },
+    {
+      "path": "src/frontend/features/admin-sellers/admin-sellers.characterization.test.ts",
+      "language": "ts",
+      "loc": 60,
+      "classification": "NORMAL"
+    },
+    {
       "path": "src/frontend/lib/storefront-appearance/derived-surface.test.ts",
       "language": "ts",
       "loc": 60,
@@ -7151,6 +7301,12 @@
       "classification": "NORMAL"
     },
     {
+      "path": "src/frontend/features/admin-receipts/admin-receipts.characterization.test.ts",
+      "language": "ts",
+      "loc": 58,
+      "classification": "NORMAL"
+    },
+    {
       "path": "src/frontend/lib/i18n/locale.test.ts",
       "language": "ts",
       "loc": 58,
@@ -7170,6 +7326,12 @@
     },
     {
       "path": "src/backend/Modules/BulkInquiry/Tooba.BulkInquiry.Infrastructure/Persistence/BulkInquiryDbContext.cs",
+      "language": "cs",
+      "loc": 57,
+      "classification": "NORMAL"
+    },
+    {
+      "path": "src/backend/Modules/Catalog/Tooba.Catalog.Application/UnitOfMeasureWriteContracts.cs",
       "language": "cs",
       "loc": 57,
       "classification": "NORMAL"
@@ -7206,6 +7368,18 @@
     },
     {
       "path": "src/backend/Modules/AddressBook/Tooba.AddressBook.Infrastructure/AddressBookModule.cs",
+      "language": "cs",
+      "loc": 56,
+      "classification": "NORMAL"
+    },
+    {
+      "path": "src/backend/Modules/Catalog/Tooba.Catalog.Infrastructure/CatalogModule.cs",
+      "language": "cs",
+      "loc": 56,
+      "classification": "NORMAL"
+    },
+    {
+      "path": "src/backend/Modules/Fulfillment/Tooba.Fulfillment.Application/ShippingServiceWriteHandlers.cs",
       "language": "cs",
       "loc": 56,
       "classification": "NORMAL"
@@ -7295,6 +7469,12 @@
       "classification": "NORMAL"
     },
     {
+      "path": "src/backend/Modules/Order/Tooba.Order.Infrastructure/OrderModule.cs",
+      "language": "cs",
+      "loc": 55,
+      "classification": "NORMAL"
+    },
+    {
       "path": "src/backend/Modules/Order/Tooba.Order.Infrastructure/OrderNotificationBridge.cs",
       "language": "cs",
       "loc": 55,
@@ -7367,12 +7547,6 @@
       "classification": "NORMAL"
     },
     {
-      "path": "src/backend/Modules/Order/Tooba.Order.Infrastructure/OrderModule.cs",
-      "language": "cs",
-      "loc": 54,
-      "classification": "NORMAL"
-    },
-    {
       "path": "src/backend/Modules/Payment/Tooba.Payment.Infrastructure/Events/PaymentEvents.cs",
       "language": "cs",
       "loc": 54,
@@ -7416,12 +7590,6 @@
     },
     {
       "path": "src/backend/Host/Tooba.Host.Tests/ContractsW5CharacterizationTests.cs",
-      "language": "cs",
-      "loc": 53,
-      "classification": "NORMAL"
-    },
-    {
-      "path": "src/backend/Modules/Catalog/Tooba.Catalog.Infrastructure/CatalogModule.cs",
       "language": "cs",
       "loc": 53,
       "classification": "NORMAL"
@@ -7991,6 +8159,12 @@
       "classification": "NORMAL"
     },
     {
+      "path": "src/backend/Modules/Catalog/Tooba.Catalog.Infrastructure/StoreQuantitySettingsDirectory.cs",
+      "language": "cs",
+      "loc": 45,
+      "classification": "NORMAL"
+    },
+    {
       "path": "src/frontend/app/admin/admin-order-completeness.test.ts",
       "language": "ts",
       "loc": 45,
@@ -8100,6 +8274,12 @@
     },
     {
       "path": "src/backend/Host/Tooba.Host.Tests/FulfillmentShipmentAllocationTests.cs",
+      "language": "cs",
+      "loc": 43,
+      "classification": "NORMAL"
+    },
+    {
+      "path": "src/backend/Modules/Catalog/Tooba.Catalog.Application/UnitOfMeasureWriteHandlers.cs",
       "language": "cs",
       "loc": 43,
       "classification": "NORMAL"
@@ -8663,6 +8843,12 @@
       "classification": "NORMAL"
     },
     {
+      "path": "src/backend/Modules/Order/Tooba.Order.Application/CheckoutProcessContracts.cs",
+      "language": "cs",
+      "loc": 36,
+      "classification": "NORMAL"
+    },
+    {
       "path": "src/backend/Modules/Party/Tooba.Party.Infrastructure/PartyMembershipProjectionHandler.cs",
       "language": "cs",
       "loc": 36,
@@ -9197,6 +9383,12 @@
       "classification": "NORMAL"
     },
     {
+      "path": "src/backend/Modules/Catalog/Tooba.Catalog.Application/StoreAppearanceSettingsWriteContracts.cs",
+      "language": "cs",
+      "loc": 27,
+      "classification": "NORMAL"
+    },
+    {
       "path": "src/backend/Modules/Offer/Tooba.Offer.Contracts/SalesChannel.cs",
       "language": "cs",
       "loc": 27,
@@ -9635,6 +9827,12 @@
       "classification": "NORMAL"
     },
     {
+      "path": "src/backend/Modules/Catalog/Tooba.Catalog.Application/StoreAppearanceSettingsWriteHandlers.cs",
+      "language": "cs",
+      "loc": 20,
+      "classification": "NORMAL"
+    },
+    {
       "path": "src/backend/Modules/Inventory/Tooba.Inventory.Infrastructure/Persistence/ReturnRestockInboxRecord.cs",
       "language": "cs",
       "loc": 20,
@@ -9743,6 +9941,12 @@
       "classification": "NORMAL"
     },
     {
+      "path": "src/backend/Modules/Catalog/Tooba.Catalog.Application/StoreQuantitySettingsWriteHandlers.cs",
+      "language": "cs",
+      "loc": 18,
+      "classification": "NORMAL"
+    },
+    {
       "path": "src/backend/Modules/Content/Tooba.Content.Domain/ContentArticleLifecycleRules.cs",
       "language": "cs",
       "loc": 18,
@@ -9811,6 +10015,12 @@
     {
       "path": "docs/evidence/TB-P08-T001/post-r2-result.mjs",
       "language": "mjs",
+      "loc": 16,
+      "classification": "NORMAL"
+    },
+    {
+      "path": "src/backend/Modules/Catalog/Tooba.Catalog.Application/StoreQuantitySettingsWriteContracts.cs",
+      "language": "cs",
       "loc": 16,
       "classification": "NORMAL"
     },
@@ -9989,6 +10199,12 @@
       "classification": "NORMAL"
     },
     {
+      "path": "src/backend/Modules/Order/Tooba.Order.Infrastructure/OpenOrderUseCaseGuard.cs",
+      "language": "cs",
+      "loc": 13,
+      "classification": "NORMAL"
+    },
+    {
       "path": "src/frontend/app/vendor-panel/customers/page.tsx",
       "language": "tsx",
       "loc": 13,
@@ -9997,6 +10213,12 @@
     {
       "path": "src/frontend/app/vendor-panel/gift-cards/page.tsx",
       "language": "tsx",
+      "loc": 13,
+      "classification": "NORMAL"
+    },
+    {
+      "path": "src/frontend/features/admin-reviews/index.ts",
+      "language": "ts",
       "loc": 13,
       "classification": "NORMAL"
     },
@@ -10127,6 +10349,12 @@
       "classification": "NORMAL"
     },
     {
+      "path": "src/frontend/features/admin-customers/index.ts",
+      "language": "ts",
+      "loc": 11,
+      "classification": "NORMAL"
+    },
+    {
       "path": "src/frontend/features/admin-languages/index.ts",
       "language": "ts",
       "loc": 11,
@@ -10134,6 +10362,12 @@
     },
     {
       "path": "src/frontend/features/admin-promotions/index.ts",
+      "language": "ts",
+      "loc": 11,
+      "classification": "NORMAL"
+    },
+    {
+      "path": "src/frontend/features/admin-sellers/index.ts",
       "language": "ts",
       "loc": 11,
       "classification": "NORMAL"
@@ -10195,6 +10429,18 @@
     {
       "path": "src/frontend/app/trending/page.tsx",
       "language": "tsx",
+      "loc": 10,
+      "classification": "NORMAL"
+    },
+    {
+      "path": "src/frontend/features/admin-dashboard/index.ts",
+      "language": "ts",
+      "loc": 10,
+      "classification": "NORMAL"
+    },
+    {
+      "path": "src/frontend/features/admin-receipts/index.ts",
+      "language": "ts",
       "loc": 10,
       "classification": "NORMAL"
     },

@@ -17,40 +17,32 @@ using Tooba.Promotion.Domain;
 using Tooba.Tax.Contracts;
 using Tooba.Tax.Domain;
 namespace Tooba.Order.Infrastructure;
-/// <summary>
-/// نگهبان باز موردکاربرد Order. ماتریس هویت اینجا نیست.
-/// </summary>
-public sealed class OpenOrderUseCaseGuard : IOrderUseCaseGuard
-{
-    /// <inheritdoc />
-    public Task EnsureCanMutateAsync(CancellationToken cancellationToken) => Task.CompletedTask;
-}
 
 /// <summary>
 /// ارکستراسیون checkout: سبد از قرارداد Cart، قیمت از Pricing، Offer از Lookup، رزرو از Inventory.
-/// رزرو موجودی، سفارش، چرخهٔ اول و تبدیل سبد در یک تراکنش اتمی commit می‌شوند.
 /// </summary>
 public sealed class CheckoutDirectory : ICheckoutDirectory
 {
-    private readonly OrderDbContext _db;
-    private readonly IOrderUseCaseGuard _guard;
-    private readonly ICartQueryGateway _carts;
-    private readonly ICartDirectory _cartMutations;
-    private readonly IOfferLookupGateway _offers;
-    private readonly IPriceLookupGateway _prices;
-    private readonly IInventoryDirectory _inventory;
-    private readonly ITaxCalculator _taxes;
-    private readonly IPromotionEvaluator _promotions;
-    private readonly ICatalogLookupGateway _catalog;
-    private readonly ISellerOrderCancelFulfillmentGate _cancelFulfillmentGate;
-    private readonly IReturnPolicyResolver _returnPolicies;
-    private readonly ICheckoutReservationHoldPolicy? _holdPolicy;
-    private readonly IReservationCycleDirectory? _cycles;
-    private readonly IReservationCyclePolicyResolver? _cyclePolicy;
-    private readonly IInventoryAvailabilityGateway _availability;
-    private readonly ICheckoutCommitBarrier _commitBarrier;
-    private readonly ICheckoutAbuseGate _abuseGate;
-    private readonly ICampaignCartPriceAuthority? _campaignPrices;
+    internal readonly OrderDbContext _db;
+    internal readonly IOrderUseCaseGuard _guard;
+    internal readonly ICartQueryGateway _carts;
+    internal readonly ICartDirectory _cartMutations;
+    internal readonly IOfferLookupGateway _offers;
+    internal readonly IPriceLookupGateway _prices;
+    internal readonly IInventoryDirectory _inventory;
+    internal readonly ITaxCalculator _taxes;
+    internal readonly IPromotionEvaluator _promotions;
+    internal readonly ICatalogLookupGateway _catalog;
+    internal readonly ISellerOrderCancelFulfillmentGate _cancelFulfillmentGate;
+    internal readonly IReturnPolicyResolver _returnPolicies;
+    internal readonly ICheckoutReservationHoldPolicy? _holdPolicy;
+    internal readonly IReservationCycleDirectory? _cycles;
+    internal readonly IReservationCyclePolicyResolver? _cyclePolicy;
+    internal readonly IInventoryAvailabilityGateway _availability;
+    internal readonly ICheckoutCommitBarrier _commitBarrier;
+    internal readonly ICheckoutAbuseGate _abuseGate;
+    internal readonly ICampaignCartPriceAuthority? _campaignPrices;
+    internal readonly ICheckoutProcessTracker? _processes;
 
     /// <summary>
     /// دایرکتوری را به schema order و درزهای ماژول‌های دیگر وصل می‌کند.
@@ -74,7 +66,8 @@ public sealed class CheckoutDirectory : ICheckoutDirectory
         IReservationCyclePolicyResolver? cyclePolicy = null,
         ICheckoutCommitBarrier? commitBarrier = null,
         ICheckoutAbuseGate? abuseGate = null,
-        ICampaignCartPriceAuthority? campaignPrices = null)
+        ICampaignCartPriceAuthority? campaignPrices = null,
+        ICheckoutProcessTracker? processes = null)
     {
         _db = db;
         _guard = guard;
@@ -97,159 +90,12 @@ public sealed class CheckoutDirectory : ICheckoutDirectory
             ?? inventory as IInventoryAvailabilityGateway
             ?? throw new InvalidOperationException("درز موجودی برای commit سفارش لازم است.");
         _campaignPrices = campaignPrices;
+        _processes = processes;
     }
 
     /// <inheritdoc />
-    public async Task<CheckoutSnapshot> SubmitAsync(SubmitCheckoutCommand command, CancellationToken cancellationToken)
-    {
-        await _guard.EnsureCanMutateAsync(cancellationToken);
-        var existing = await FindCheckoutAsync(
-            x => x.IdempotencyKey == command.IdempotencyKey.Trim() || x.CartId == command.CartId,
-            cancellationToken);
-        if (existing is not null)
-        {
-            EnsureAccess(existing, new OrderAccess(command.BuyerPartyId, command.PlacedByUserId));
-            await ReconcileCartConversionAsync(existing, command, cancellationToken);
-            return ToSnapshot(existing);
-        }
-
-        var cart = await _carts.GetCartAsync(command.CartId, command.CartAccess, cancellationToken)
-            ?? throw new InvalidOperationException("سبد برای checkout پیدا نشد؛ CartId Bearer نیست.");
-        if (cart.Status != CartStatus.Active)
-        {
-            throw new InvalidOperationException("فقط سبد Active به سفارش تبدیل می‌شود.");
-        }
-
-        if (cart.Version != command.ExpectedCartVersion)
-        {
-            throw new InvalidOperationException("نسخهٔ سبد کهنه است؛ checkout همزمان رد شد.");
-        }
-
-        if (cart.Lines.Count == 0)
-        {
-            throw new InvalidOperationException("سبد خالی به سفارش تبدیل نمی‌شود.");
-        }
-
-        var now = DateTimeOffset.UtcNow;
-        var checkoutId = UuidV7.New();
-        var sellerOrders = await QuoteSellerOrdersAsync(
-            cart,
-            command,
-            checkoutId,
-            now,
-            new Dictionary<Guid, Guid>(),
-            requireReservation: false,
-            cancellationToken);
-
-        Dictionary<Guid, Guid>? reservations = null;
-        var abuseSettings = await _abuseGate.LoadSettingsAsync(cancellationToken);
-        try
-        {
-            using var scope = new TransactionScope(
-                TransactionScopeOption.Required,
-                new TransactionOptions { IsolationLevel = IsolationLevel.ReadCommitted },
-                TransactionScopeAsyncFlowOption.Enabled);
-
-            await _abuseGate.EnsureCanStartInitialReservationAsync(
-                command.PlacedByUserId,
-                abuseSettings,
-                cancellationToken);
-            reservations = await ReserveCartLinesForOrderAsync(cart, now, cancellationToken);
-            await _commitBarrier.OnAfterReserveAsync(cancellationToken);
-
-            var group = CheckoutGroup.Submit(
-                checkoutId,
-                command.IdempotencyKey,
-                cart.CartId,
-                command.Mode,
-                command.BuyerPartyId,
-                command.PlacedByUserId,
-                cart.Market,
-                cart.Currency,
-                cart.Channel,
-                sellerOrders,
-                now,
-                command.RecipientName,
-                command.ContactMobile,
-                command.ProvinceName,
-                command.CityName,
-                command.PostalAddress,
-                command.PostalCode,
-                command.ShippingMethodCode,
-                command.ShippingMethodLabel,
-                command.ShippingAmount,
-                command.MinimumDeliveryDate,
-                command.RequestedDeliveryDate,
-                command.RequestedDeliveryTimeWindow,
-                command.CustomerNote,
-                command.RecipientFirstName,
-                command.RecipientLastName);
-            BindReservationsToOrders(group, cart, reservations);
-            _db.Checkouts.Add(group);
-            await PrepareInitialCycleAsync(group, command.Mode, reservations.Values, now, cancellationToken);
-            var primaryOrderId = group.SellerOrders.Select(x => x.SellerOrderId).First();
-            _abuseGate.PrepareInitialCommit(
-                command.PlacedByUserId,
-                group.CheckoutId,
-                primaryOrderId,
-                abuseSettings,
-                now);
-            try
-            {
-                await _db.SaveChangesAsync(cancellationToken);
-            }
-            catch (DbUpdateException)
-            {
-                _db.ChangeTracker.Clear();
-                throw new InvalidOperationException("checkout.conflict");
-            }
-
-            await _commitBarrier.OnAfterOrderWriteAsync(cancellationToken);
-
-            var intent = command.Mode == OrderMode.RequestToReserve
-                ? CartConversionIntent.RequestToReserve
-                : CartConversionIntent.OnlinePurchase;
-            await _cartMutations.ConvertAsync(group.CartId, command.CartAccess, cart.Version, intent, cancellationToken);
-            await _commitBarrier.OnAfterCartConvertedWriteAsync(cancellationToken);
-            scope.Complete();
-            return ToSnapshot(group);
-        }
-        catch (InvalidOperationException ex) when (ex.Message is "checkout.conflict" or "inventory.reservation.conflict")
-        {
-            _db.ChangeTracker.Clear();
-            await _db.Database.CloseConnectionAsync();
-            var winner = await _db.Checkouts
-                .AsNoTracking()
-                .Include(x => x.SellerOrders)
-                .ThenInclude(x => x.Lines)
-                .Where(x => x.CartId == command.CartId)
-                .OrderBy(x => x.SubmittedAt)
-                .FirstOrDefaultAsync(cancellationToken);
-            if (winner is null)
-            {
-                throw new InvalidOperationException("checkout تکراری سبد ذخیره شد ولی خوانده نشد.");
-            }
-
-            EnsureAccess(winner, new OrderAccess(command.BuyerPartyId, command.PlacedByUserId));
-            await ReconcileCartConversionAsync(winner, command, cancellationToken);
-            return ToSnapshot(winner);
-        }
-        catch
-        {
-            if (reservations is { Count: > 0 })
-            {
-                try
-                {
-                    await ReleaseAcquiredAsync(reservations.Values, cancellationToken);
-                }
-                catch (InvalidOperationException)
-                {
-                }
-            }
-
-            throw;
-        }
-    }
+    public Task<CheckoutSnapshot> SubmitAsync(SubmitCheckoutCommand command, CancellationToken cancellationToken)
+        => CheckoutSubmitExecutor.ExecuteAsync(this, command, cancellationToken);
 
     /// <inheritdoc />
     public async Task<CheckoutSnapshot> PreviewAsync(SubmitCheckoutCommand command, CancellationToken cancellationToken)
@@ -614,7 +460,7 @@ public sealed class CheckoutDirectory : ICheckoutDirectory
         await _db.SaveChangesAsync(cancellationToken);
     }
 
-    private async Task<Dictionary<Guid, Guid>> ReserveCartLinesForOrderAsync(
+    internal async Task<Dictionary<Guid, Guid>> ReserveCartLinesForOrderAsync(
         CartSnapshot cart,
         DateTimeOffset now,
         CancellationToken cancellationToken)
@@ -672,7 +518,7 @@ public sealed class CheckoutDirectory : ICheckoutDirectory
         }
     }
 
-    private static void BindReservationsToOrders(
+    internal static void BindReservationsToOrders(
         CheckoutGroup group,
         CartSnapshot cart,
         IReadOnlyDictionary<Guid, Guid> reservationsByCartLineId)
@@ -696,7 +542,7 @@ public sealed class CheckoutDirectory : ICheckoutDirectory
         }
     }
 
-    private async Task PrepareInitialCycleAsync(
+    internal async Task PrepareInitialCycleAsync(
         CheckoutGroup group,
         OrderMode mode,
         IEnumerable<Guid> reservationIds,
@@ -760,7 +606,7 @@ public sealed class CheckoutDirectory : ICheckoutDirectory
         return new ReservationCyclePolicySnapshot(120, 120, 3, "platform");
     }
 
-    private async Task ReleaseAcquiredAsync(IEnumerable<Guid> reservationIds, CancellationToken cancellationToken)
+    internal async Task ReleaseAcquiredAsync(IEnumerable<Guid> reservationIds, CancellationToken cancellationToken)
     {
         foreach (var reservationId in reservationIds.Distinct())
         {
@@ -778,7 +624,7 @@ public sealed class CheckoutDirectory : ICheckoutDirectory
     /// <summary>
     /// قیمت، ترویج و مالیات را روی خطوط سبد دوباره ارزیابی می‌کند. نتیجه هنوز سفارش پایدار نیست.
     /// </summary>
-    private async Task<List<SellerOrder>> QuoteSellerOrdersAsync(
+    internal async Task<List<SellerOrder>> QuoteSellerOrdersAsync(
         CartSnapshot cart,
         SubmitCheckoutCommand command,
         Guid checkoutId,
@@ -940,7 +786,7 @@ public sealed class CheckoutDirectory : ICheckoutDirectory
     /// <summary>
     /// checkout موجود را با کلید idempotency یا CartId پیدا می‌کند تا سبد یک‌بار بیشتر سفارش نشود.
     /// </summary>
-    private Task<CheckoutGroup?> FindCheckoutAsync(
+    internal Task<CheckoutGroup?> FindCheckoutAsync(
         Expression<Func<CheckoutGroup, bool>> predicate,
         CancellationToken cancellationToken) =>
         _db.Checkouts
@@ -952,7 +798,7 @@ public sealed class CheckoutDirectory : ICheckoutDirectory
     /// اگر Order ذخیره شده و Cart هنوز Active است، تبدیل سبد را بدون تراکنش توزیع‌شده و بدون قیمت‌گذاری دوباره تکرار می‌کند.
     /// شکست موقت تبدیل، checkout ذخیره‌شده را حذف نمی‌کند.
     /// </summary>
-    private async Task ReconcileCartConversionAsync(
+    internal async Task ReconcileCartConversionAsync(
         CheckoutGroup group,
         SubmitCheckoutCommand command,
         CancellationToken cancellationToken)
@@ -976,7 +822,7 @@ public sealed class CheckoutDirectory : ICheckoutDirectory
         }
     }
 
-    private static void EnsureAccess(CheckoutGroup group, OrderAccess access)
+    internal static void EnsureAccess(CheckoutGroup group, OrderAccess access)
     {
         if (!group.CanBeViewedBy(access.BuyerPartyId, access.PlacedByUserId))
         {
@@ -987,7 +833,7 @@ public sealed class CheckoutDirectory : ICheckoutDirectory
     private static string BuildOrderNumber(DateTimeOffset now, int sequence) =>
         $"TB-{now.UtcDateTime:yyyyMMddHHmmss}-{sequence:D2}-{Guid.NewGuid().ToString("N")[..6]}";
 
-    private static CheckoutSnapshot ToSnapshot(CheckoutGroup group) =>
+    internal static CheckoutSnapshot ToSnapshot(CheckoutGroup group) =>
         new(
             group.CheckoutId,
             group.CartId,

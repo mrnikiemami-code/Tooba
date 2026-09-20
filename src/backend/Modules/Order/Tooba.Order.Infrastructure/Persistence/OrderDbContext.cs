@@ -73,6 +73,9 @@ public sealed class OrderDbContext : DbContext
     /// <summary>قفل سطری سقف سفارش/سهمیه رزرو برای هر مشتری.</summary>
     public DbSet<CheckoutAbuseCustomerLock> CheckoutAbuseCustomerLocks => Set<CheckoutAbuseCustomerLock>();
 
+    /// <summary>فرآیند پایدار checkout (idempotency + milestones؛ موتور Saga نیست).</summary>
+    public DbSet<CheckoutProcess> CheckoutProcesses => Set<CheckoutProcess>();
+
     /// <summary>رویداد تغییرناپذیر شروع رزرو Cycle #1.</summary>
     public DbSet<CheckoutReservationCommit> CheckoutReservationCommits => Set<CheckoutReservationCommit>();
 
@@ -270,6 +273,20 @@ public sealed class OrderDbContext : DbContext
             entity.Property(x => x.EventId).ValueGeneratedNever();
             entity.Property(x => x.Kind).HasMaxLength(32);
             entity.HasIndex(x => new { x.CustomerId, x.OccurredAt });
+        });
+        modelBuilder.Entity<CheckoutProcess>(entity =>
+        {
+            entity.ToTable("checkout_processes");
+            entity.HasKey(x => x.ProcessId);
+            entity.Property(x => x.ProcessId).ValueGeneratedNever();
+            entity.Property(x => x.SubmissionIdempotencyKey).HasMaxLength(128);
+            entity.Property(x => x.CorrelationId).HasMaxLength(128);
+            entity.Property(x => x.Status).HasConversion<string>().HasMaxLength(32);
+            entity.Property(x => x.FailureCode).HasMaxLength(128);
+            entity.HasIndex(x => x.SubmissionIdempotencyKey).IsUnique();
+            entity.HasIndex(x => x.CartId);
+            entity.HasIndex(x => x.CheckoutId);
+            entity.HasIndex(x => x.CorrelationId);
         });
         OutboxMessageMapping.Map(modelBuilder, Schema);
     }

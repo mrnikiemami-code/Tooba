@@ -49,6 +49,7 @@ Host W4 (TB-TMAR-HOST-W4) PASS — QuantitySettings write → Catalog CQRS Direc
 Host W5 (TB-TMAR-HOST-W5) PASS — UnitOfMeasure writes → Catalog CQRS Directory; Host-Exit-State NOT_READY; CONTINUE_HOST; next HOST-W6.
 Host W6 (TB-TMAR-HOST-W6) PASS — ShippingService Create/Update/Deactivate/EnsureSeed → Fulfillment CQRS Directory; Host-Exit-State READY_TO_PIVOT; Architecture-Priority CHECKOUT_DESIGN; next CHECKOUT-CONSISTENCY-DESIGN.
 Checkout Consistency Design (TB-TMAR-CHECKOUT-CONSISTENCY-DESIGN) PASS — design+locks only; Process Manager owned by Order; PONR MULTI_STAGE; READY_FOR_IMPLEMENTATION_W1; Architecture-Priority CHECKOUT_IMPLEMENTATION; next CHECKOUT-IMPL-W1.
+Checkout Implementation W1 (TB-TMAR-CHECKOUT-IMPL-W1) PASS — durable process state + idempotency foundation; TransactionScope preserved; no Saga runtime; W2 READY; Orders FE STILL_WAITING_FOR_BACKEND_W2; Architecture-Priority CHECKOUT_IMPLEMENTATION; next CHECKOUT-IMPL-W2.
 Product-Resume-Safety = SAFE_WITH_TMAR_PARALLEL (Order hub still frozen; do not expand App→App / Infra→App; no NEW cross-context ACID).
 Last Product Task = TB-P10-T022-R21.
 Architecture Baseline = TB-TMAR-ARCH-BASELINE.
@@ -449,7 +450,8 @@ host-w4 = TB-TMAR-HOST-W4 PASS (QuantitySettings CQRS; Host-write baseline shrin
 host-w5 = TB-TMAR-HOST-W5 PASS (UnitOfMeasure CQRS; Host exit NOT_READY; CONTINUE_HOST)
 host-w6 = TB-TMAR-HOST-W6 PASS (ShippingService CQRS; Host exit READY_TO_PIVOT; Priority CHECKOUT_DESIGN)
 checkout-consistency-design = TB-TMAR-CHECKOUT-CONSISTENCY-DESIGN PASS (design+locks; READY_FOR_IMPLEMENTATION_W1; Priority CHECKOUT_IMPLEMENTATION)
-next task = TB-TMAR-CHECKOUT-IMPL-W1 unless Recovery SoT says otherwise
+checkout-impl-w1 = TB-TMAR-CHECKOUT-IMPL-W1 PASS (process state + idempotency; TX preserved; W2 READY; Priority CHECKOUT_IMPLEMENTATION)
+next task = TB-TMAR-CHECKOUT-IMPL-W2 unless Recovery SoT says otherwise
 
 primary goal = painless future Microservice migration
 
