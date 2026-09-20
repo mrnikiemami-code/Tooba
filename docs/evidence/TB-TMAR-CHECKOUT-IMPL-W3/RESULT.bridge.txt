@@ -1,4 +1,4 @@
-﻿PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
 
 BEGIN_TOOBA_WORKER_RESULT
 
@@ -97,7 +97,7 @@ Recovery-SoT:
 docs/evidence/TB-TMAR-CHECKOUT-IMPL-W3/recovery-sot.md
 
 Git:
-branch main; tip ee95e7dd482a9b636c4eb41e4c8874b7ae5cf18e; pushed origin/main; HEAD==origin/main; 18ca10c9 ancestor; user work preserved
+branch main; tip 59c36ea34b4854869bf882f10e56c1a676063517; pushed origin/main; HEAD==origin/main; 18ca10c9 ancestor; user work preserved
 
 Architectural-Concerns:
 Shared TransactionScope remains until later IMPL stages; residual Order.Infrastructure→Inventory.Application (Cancel/Restore/PaymentBridge); residual Order.Infrastructure→Cart.Application (ICartDirectory/reconcile); Order.Application→Promotion.Application remains
