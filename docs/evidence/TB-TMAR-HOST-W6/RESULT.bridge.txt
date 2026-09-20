@@ -79,7 +79,7 @@ Recovery-SoT:
 docs/evidence/TB-TMAR-HOST-W6/recovery-sot.md
 
 Git:
-branch main; tip b115f2757eee3bf37cb3acd017be96c2d3da749b; pushed origin/main; HEAD==origin/main; 18ca10c9 ancestor; user work preserved
+branch main; tip 1714868d45bfd4cfce67c1edff67402278bfae6b; pushed origin/main; HEAD==origin/main; 18ca10c9 ancestor; user work preserved
 
 Architectural-Concerns:
 Residual Host writes are mostly order/checkout-adjacent, ownership-ambiguous (Seller/ProductWorkspace), or seeds; Shipping List/Get remains FulfillmentDbContext read composition; Checkout shared-ACID design is next
