@@ -32,4 +32,13 @@ src/backend/Host/Tooba.Host/**/*.err.log
 src/frontend/next-dev*.log
 src/frontend/next-dev*.err.log
 
-.tmp-t014-test-out/
+# Local agent/test/build artifacts (repo-root dumps only; not product source)
+.tmp*/
+.tmp-*
+
+# Local Cursor bridge database
+cursor-chat-bridge.db
+cursor-chat-bridge.db-*
+
+# Local Visual Studio metadata
+src/backend/.vs/
