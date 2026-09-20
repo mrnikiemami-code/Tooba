@@ -59,7 +59,7 @@
     {
       "path": "src/frontend/app/admin/admin-api.ts",
       "language": "ts",
-      "loc": 1234,
+      "loc": 1145,
       "classification": "CRITICAL_GOD_FILE"
     },
     {
@@ -107,7 +107,7 @@
     {
       "path": "src/frontend/app/admin/admin-screens.tsx",
       "language": "tsx",
-      "loc": 1120,
+      "loc": 1078,
       "classification": "OVERSIZED_LEGACY"
     },
     {

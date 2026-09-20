@@ -36,7 +36,8 @@
     "test:admin-languages": "node --experimental-strip-types --test features/admin-languages/admin-languages.characterization.test.ts lib/i18n/language-identity-lock.test.ts",
     "test:discovered": "node scripts/run-discovered-tests.mjs",
     "test": "npm run test:discovered",
-    "test:admin-promotions": "node --experimental-strip-types --test features/admin-promotions/admin-promotions.characterization.test.ts"
+    "test:admin-promotions": "node --experimental-strip-types --test features/admin-promotions/admin-promotions.characterization.test.ts",
+    "test:admin-reviews": "node --experimental-strip-types --test features/admin-reviews/admin-reviews.characterization.test.ts"
   },
   "dependencies": {
     "@ckeditor/ckeditor5-react": "^11.2.0",

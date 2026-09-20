@@ -46,6 +46,7 @@ Evidence files remain the deep-detail source; this map is the quick index.
 | Frontend baseline | Canonical root `src/frontend`; FE-ARCH/SIZE/SEO/BOUNDARY locks; size+import+SEO guards; flat admin debt documented; no broad refactor | TB-TMAR-FE-BASELINE |
 | Frontend F1 | FE-FOLDER-001/002 freezes; canonical test discovery (174); admin-languages → features/admin-languages | TB-TMAR-FE-F1 |
 | Frontend ADMIN-W1 | admin-promotions → features/admin-promotions; admin-api 1321→1234; admin-screens 1230→1120 | TB-TMAR-FE-ADMIN-W1 |
-| Next | Continue admin capability migration (catalog-units / shipping-services / reviews candidates) | TB-TMAR-FE-ADMIN-W1 |
+| Frontend ADMIN-W2 | admin-reviews → features/admin-reviews; admin-api 1234→1145; exports 55→49; admin-screens 1120→1078; pattern PROVEN | TB-TMAR-FE-ADMIN-W2 |
+| Next | Continue admin capability migration (sellers / customers / receipts candidates) | TB-TMAR-FE-ADMIN-W2 |
 
-Last Verified Task = TB-TMAR-FE-ADMIN-W1
+Last Verified Task = TB-TMAR-FE-ADMIN-W2

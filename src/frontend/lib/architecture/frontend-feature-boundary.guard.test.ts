@@ -26,7 +26,7 @@ function repoRel(abs: string): string {
 }
 
 test("FE-BOUNDARY: external code must not deep-import migrated feature internals", () => {
-  const features = ["admin-languages", "admin-promotions"];
+  const features = ["admin-languages", "admin-promotions", "admin-reviews"];
   const violations: string[] = [];
   for (const abs of walk(feRoot).filter((f) => EXT.has(path.extname(f).toLowerCase()))) {
     const rel = repoRel(abs);
