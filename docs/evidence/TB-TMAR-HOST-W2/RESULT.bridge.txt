@@ -1,4 +1,4 @@
-PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+﻿PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
 
 BEGIN_TOOBA_WORKER_RESULT
 
@@ -73,7 +73,7 @@ Changed-Files:
 StoreMenuWriteContracts/Handlers (Application); StoreMenuDirectory + CatalogModule; Host StoreMenuComposer; tests/factory; baseline; evidence/docs
 
 Git:
-branch main; tip PLACEHOLDER_SHA; pushed origin/main; HEAD==origin/main; 18ca10c9 ancestor
+branch main; tip 3cde812947ddaa55c5ae1fbdb1fefce61c8ef8f8; pushed origin/main; HEAD==origin/main; 18ca10c9 ancestor
 
 Architectural-Concerns:
 StoreMenu* still transitional in Catalog.Domain; many Host write sites remain
