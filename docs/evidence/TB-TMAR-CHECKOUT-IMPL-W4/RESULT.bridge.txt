@@ -1,0 +1,111 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+
+BEGIN_TOOBA_WORKER_RESULT
+
+Task-ID: TB-TMAR-CHECKOUT-IMPL-W4
+Parent-Task: TB-TMAR-HOST-STRUCTURE-W1-R1
+Channel: tooba-main
+WorkerId: tooba-worker-01
+AgentType: cursor
+Status: PASS
+
+Summary:
+CHECKOUT-IMPL-W4 PASS. Extracted Cancel/Restore/PaymentBridge inventory interactions to Tooba.Inventory.Contracts (IOrderInventoryLifecyclePort) with Inventory-owned OrderInventoryLifecycleAdapter. Removed Order.Infrastructure→Inventory.Application (Infra→foreign Application baseline shrunk). Shared TransactionScope preserved. No async Saga/compensation. Frontend production untouched (ARCH-FE-FREEZE-001). TMAR-Execution-Mode BACKEND_ONLY_UNTIL_EXPLICIT_RELEASE. Checkout-Implementation-W5-Readiness READY. W5-Candidate: Promotion contract seam. Architecture-Priority CHECKOUT_IMPLEMENTATION. Next: TB-TMAR-CHECKOUT-IMPL-W5. Product-Resume-Safety SAFE_WITH_TMAR_PARALLEL.
+
+Program-Name:
+TMAR — Tooba Microservice-Ready Architecture Recovery
+
+Recovery-Start:
+docs/evidence/TB-TMAR-CHECKOUT-IMPL-W4/recovery-start.md
+
+TMAR-Execution-Mode:
+BACKEND_ONLY_UNTIL_EXPLICIT_RELEASE
+
+Frontend-Production-Changes:
+NONE
+
+Order-Infra-Inventory-Usage:
+docs/evidence/TB-TMAR-CHECKOUT-IMPL-W4/order-infra-inventory-usage.md
+
+Scope-Selection:
+docs/evidence/TB-TMAR-CHECKOUT-IMPL-W4/scope-selection.md
+
+Inventory-Contract-Extension:
+docs/evidence/TB-TMAR-CHECKOUT-IMPL-W4/inventory-contract-extension.md
+
+Order-Infra-Dependency:
+docs/evidence/TB-TMAR-CHECKOUT-IMPL-W4/order-infra-dependency.md
+
+Inventory-Adapter:
+docs/evidence/TB-TMAR-CHECKOUT-IMPL-W4/inventory-adapter.md
+
+Behavior-Preservation:
+docs/evidence/TB-TMAR-CHECKOUT-IMPL-W4/behavior-preservation.md
+
+Transaction-Preservation:
+docs/evidence/TB-TMAR-CHECKOUT-IMPL-W4/transaction-preservation.md
+
+Compensation-Scope:
+docs/evidence/TB-TMAR-CHECKOUT-IMPL-W4/compensation-scope.md
+
+Idempotency-Correlation:
+docs/evidence/TB-TMAR-CHECKOUT-IMPL-W4/idempotency-correlation.md
+
+Layering:
+docs/evidence/TB-TMAR-CHECKOUT-IMPL-W4/layering.md
+
+No-Workaround-Compliance:
+docs/evidence/TB-TMAR-CHECKOUT-IMPL-W4/no-workaround-compliance.md
+
+Data-Safety:
+docs/evidence/TB-TMAR-CHECKOUT-IMPL-W4/data-safety.md
+
+Source-Structure-Compliance:
+docs/evidence/TB-TMAR-CHECKOUT-IMPL-W4/source-structure-compliance.md
+
+Architecture-Guards:
+docs/evidence/TB-TMAR-CHECKOUT-IMPL-W4/architecture-guards.md
+
+Tests:
+docs/evidence/TB-TMAR-CHECKOUT-IMPL-W4/tests.md — focused suite PASS; NEW_FAILURES=0
+
+Residual-Dependencies:
+docs/evidence/TB-TMAR-CHECKOUT-IMPL-W4/residual-dependencies.md
+
+Checkout-Implementation-W5-Readiness:
+READY
+
+W5-Candidate:
+Promotion contract seam (Order.Application → Promotion.Contracts)
+
+Architecture-Priority:
+CHECKOUT_IMPLEMENTATION
+
+Capability-Map:
+docs/architecture/TOOBA-CAPABILITY-MAP.md
+
+Bootstrap:
+docs/architecture/TOOBA-ARCHITECT-BOOTSTRAP.md
+
+Master-Recovery-State:
+docs/architecture/TOOBA-TMAR-MASTER-RECOVERY.md
+
+Recovery-SoT:
+docs/evidence/TB-TMAR-CHECKOUT-IMPL-W4/recovery-sot.md
+
+Git:
+branch main; tip b4fb7702a6d6856955f42868c94d775b3acbe510; HEAD == origin/main
+
+Architectural-Concerns:
+Order.Infrastructure still references Cart.Application (ICartDirectory / conversion adapter fallback) and Catalog/Payment Application; Order.Application still references Promotion.Application — next W5 candidate.
+
+Blockers:
+none
+
+Product-Resume-Safety:
+SAFE_WITH_TMAR_PARALLEL
+
+Next-Recommended-Task:
+TB-TMAR-CHECKOUT-IMPL-W5
+
+END_TOOBA_WORKER_RESULT
