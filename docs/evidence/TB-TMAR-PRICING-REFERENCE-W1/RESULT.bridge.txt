@@ -1,0 +1,117 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+
+BEGIN_TOOBA_WORKER_RESULT
+
+Task-ID: TB-TMAR-PRICING-REFERENCE-W1
+Parent-Task: TB-TMAR-TAX-REFERENCE-W1
+Channel: tooba-main
+WorkerId: tooba-worker-01
+AgentType: cursor
+Status: PASS
+
+Summary:
+PRICING-REFERENCE-W1 PASS. Applied Offer/Tax golden pattern to Pricing: Domain Enums/ValueObjects/Aggregates/Events, Application Ports, Contracts Ports/Dtos, Infrastructure Persistence/Configurations/Adapters/Outbox/DI, Tooba.Pricing.Endpoints + Tests. No Pricing-owned Host HTTP routes; MapPricingModule composition point added. Infra keeps Offer.Contracts lookup only. Pricing-Oversized-Files 0. Reference-Pattern-Reuse-State PROVEN_ON_3_MODULES. Checkout remains PAUSED_AT_SAFE_W5_CHECKPOINT. Frontend production untouched.
+
+Program-Name:
+TMAR — Tooba Microservice-Ready Architecture Recovery
+
+Recovery-Start:
+docs/evidence/TB-TMAR-PRICING-REFERENCE-W1/recovery-start.md
+
+TMAR-Execution-Mode:
+BACKEND_ONLY_UNTIL_EXPLICIT_RELEASE
+
+Frontend-Production-Changes:
+NONE
+
+Pricing-Reference-Suitability:
+CONFIRMED
+
+Pricing-Baseline:
+docs/evidence/TB-TMAR-PRICING-REFERENCE-W1/pricing-baseline.md
+
+Target-Structure:
+docs/evidence/TB-TMAR-PRICING-REFERENCE-W1/target-structure.md
+
+Domain-Recovery:
+docs/evidence/TB-TMAR-PRICING-REFERENCE-W1/domain-recovery.md
+
+Application-Recovery:
+docs/evidence/TB-TMAR-PRICING-REFERENCE-W1/application-recovery.md
+
+Contracts-Recovery:
+docs/evidence/TB-TMAR-PRICING-REFERENCE-W1/contracts-recovery.md
+
+Infrastructure-Recovery:
+docs/evidence/TB-TMAR-PRICING-REFERENCE-W1/infrastructure-recovery.md
+
+Persistence-Ownership:
+docs/evidence/TB-TMAR-PRICING-REFERENCE-W1/persistence-ownership.md
+
+Endpoints-Extraction:
+docs/evidence/TB-TMAR-PRICING-REFERENCE-W1/endpoints-extraction.md
+
+Host-Integration:
+docs/evidence/TB-TMAR-PRICING-REFERENCE-W1/host-integration.md
+
+Tests-Structure:
+docs/evidence/TB-TMAR-PRICING-REFERENCE-W1/tests-structure.md
+
+Namespace-Alignment:
+docs/evidence/TB-TMAR-PRICING-REFERENCE-W1/namespace-alignment.md
+
+Source-Size:
+docs/evidence/TB-TMAR-PRICING-REFERENCE-W1/source-size.md — Pricing-Oversized-Files: 0
+
+Dependency-Cleanup:
+docs/evidence/TB-TMAR-PRICING-REFERENCE-W1/dependency-cleanup.md
+
+Architecture-Guards:
+docs/evidence/TB-TMAR-PRICING-REFERENCE-W1/architecture-guards.md
+
+Dependency-Graph:
+docs/evidence/TB-TMAR-PRICING-REFERENCE-W1/dependency-graph.md
+
+Tests:
+docs/evidence/TB-TMAR-PRICING-REFERENCE-W1/tests.md — Pricing.Tests 11 PASS; Host guards PASS; NEW_FAILURES=0
+
+Module-Recovery-State:
+COMPLETE_REFERENCE_PATTERN
+
+Checkout-Recovery-State:
+PAUSED_AT_SAFE_W5_CHECKPOINT
+
+Reference-Pattern-Reuse-State:
+PROVEN_ON_3_MODULES
+
+Next-Module-Candidates:
+Inventory; Cart; Returns
+
+Capability-Map:
+docs/architecture/TOOBA-CAPABILITY-MAP.md
+
+Bootstrap:
+docs/architecture/TOOBA-ARCHITECT-BOOTSTRAP.md
+
+Master-Recovery-State:
+docs/architecture/TOOBA-TMAR-MASTER-RECOVERY.md
+
+Recovery-SoT:
+docs/evidence/TB-TMAR-PRICING-REFERENCE-W1/recovery-sot.md
+
+Git:
+tip PLACEHOLDER_SHA
+
+Architectural-Concerns:
+Host composers/admin/bootstrap still use IPriceDirectory/PricingDbContext as BFF/library consumers. Seller offer price HTTP remains Offer.Endpoints (correct ownership).
+
+Blockers:
+NONE
+
+Product-Resume-Safety:
+SAFE_WITH_TMAR_PARALLEL
+
+Next-Recommended-Task:
+Architect choice — Inventory reference module (or Cart/Returns), or resume Checkout W6; Checkout remains paused at W5.
+
+END_TOOBA_WORKER_RESULT

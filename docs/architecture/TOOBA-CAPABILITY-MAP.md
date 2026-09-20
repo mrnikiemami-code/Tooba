@@ -63,6 +63,7 @@ Evidence files remain the deep-detail source; this map is the quick index.
 | Checkout Implementation W5 | Promotion checkout via ICheckoutPromotionPort; Order.Application↛Promotion.Application; TX preserved; W6 READY | TB-TMAR-CHECKOUT-IMPL-W5 |
 | Offer Reference Module W1 | COMPLETE_REFERENCE_PATTERN; Endpoints+Tests; Host MapOfferModule; ARCH-MODULE-FILE-001 + HOST-MODULE-ENDPOINT-001; Checkout paused at W5 | TB-TMAR-OFFER-REFERENCE-W1 |
 | Tax Reference Module W1 | COMPLETE_REFERENCE_PATTERN; Offer pattern reused; Endpoints composition point; PROVEN_ON_2_MODULES; Checkout paused at W5 | TB-TMAR-TAX-REFERENCE-W1 |
-| Next | Apply reference pattern to Pricing or Inventory (or Cart) OR resume Checkout W6 after Architect choice | — |
+| Pricing Reference Module W1 | COMPLETE_REFERENCE_PATTERN; medium module; Offer.Contracts lookup; MapPricingModule; PROVEN_ON_3_MODULES; Checkout paused at W5 | TB-TMAR-PRICING-REFERENCE-W1 |
+| Next | Apply reference pattern to Inventory (or Cart/Returns) OR resume Checkout W6 after Architect choice | — |
 
-Last Verified Task = TB-TMAR-TAX-REFERENCE-W1
+Last Verified Task = TB-TMAR-PRICING-REFERENCE-W1

@@ -32,6 +32,7 @@ public sealed class HostModuleEndpointOwnershipTests
         var text = File.ReadAllText(path);
         Assert.Contains("MapOfferModule()", text, StringComparison.Ordinal);
         Assert.Contains("MapTaxModule()", text, StringComparison.Ordinal);
+        Assert.Contains("MapPricingModule()", text, StringComparison.Ordinal);
     }
 
     private static string FindRepoRoot()

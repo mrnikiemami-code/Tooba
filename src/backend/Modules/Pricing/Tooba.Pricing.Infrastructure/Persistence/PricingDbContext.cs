@@ -1,7 +1,8 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
-using Tooba.Pricing.Domain;
 using Tooba.Persistence;
+using Tooba.Pricing.Domain;
+using Tooba.Pricing.Infrastructure.Persistence.Configurations;
 
 namespace Tooba.Pricing.Infrastructure.Persistence;
 
@@ -37,21 +38,7 @@ public sealed class PricingDbContext : DbContext
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.HasDefaultSchema(Schema);
-        modelBuilder.Entity<AuthoredPrice>(entity =>
-        {
-            entity.ToTable("prices");
-            entity.HasKey(x => x.PriceId);
-            entity.Property(x => x.PriceId).ValueGeneratedNever();
-            entity.Property(x => x.Market).HasMaxLength(16);
-            entity.Property(x => x.Currency).HasMaxLength(3);
-            entity.Property(x => x.Amount).HasPrecision(19, 4);
-            entity.Property(x => x.Status).HasConversion<string>().HasMaxLength(32);
-            entity.Property(x => x.Channel).HasConversion<string>().HasMaxLength(32);
-            entity.Property(x => x.QualifierKind).HasConversion<string>().HasMaxLength(32);
-            entity.Property(x => x.QualifierKey).HasMaxLength(64);
-            entity.Ignore(x => x.DomainEvents);
-            entity.HasIndex(x => new { x.OfferId, x.Market, x.Channel, x.Currency, x.QualifierKind, x.ValidFrom });
-        });
+        modelBuilder.ApplyConfiguration(new AuthoredPriceConfiguration());
         OutboxMessageMapping.Map(modelBuilder, Schema);
     }
 }

@@ -104,7 +104,7 @@ Architecture guards live in the module Tests project and, where Host-facing, in 
 8. Update reference docs + recovery SoT
 9. Stop; do not start the next module in the same task
 
-Proven modules: Offer, Tax (`Reference-Pattern-Reuse-State: PROVEN_ON_2_MODULES`).
+Proven modules: Offer, Tax, Pricing (`Reference-Pattern-Reuse-State: PROVEN_ON_3_MODULES`).
 
 ## Anti-patterns
 

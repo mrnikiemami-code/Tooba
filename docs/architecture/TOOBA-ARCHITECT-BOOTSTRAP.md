@@ -26,7 +26,7 @@ Accepted architecture baseline:
 TB-TMAR-ARCH-BASELINE
 
 Current next task:
-Architect chooses next reference-module candidate (Pricing / Inventory / Cart) OR resume TB-TMAR-CHECKOUT-IMPL-W6. Checkout remains PAUSED_AT_SAFE_W5_CHECKPOINT after Tax reference PASS.
+Architect chooses next reference-module candidate (Inventory / Cart / Returns) OR resume TB-TMAR-CHECKOUT-IMPL-W6. Checkout remains PAUSED_AT_SAFE_W5_CHECKPOINT after Pricing reference PASS.
 
 Product development rule:
 Foundation (TB-TMAR-FND-001) is ACCEPTED.
@@ -61,6 +61,7 @@ Checkout Implementation W4 (TB-TMAR-CHECKOUT-IMPL-W4) PASS — IOrderInventoryLi
 Checkout Implementation W5 (TB-TMAR-CHECKOUT-IMPL-W5) PASS — ICheckoutPromotionPort; Order.Application↛Promotion.Application; TX preserved; W6 READY; next CHECKOUT-IMPL-W6.
 Offer Reference Module W1 (TB-TMAR-OFFER-REFERENCE-W1) PASS — COMPLETE_REFERENCE_PATTERN; Endpoints+Tests; Host MapOfferModule; ARCH-MODULE-FILE-001 + HOST-MODULE-ENDPOINT-001; Checkout paused at W5.
 Tax Reference Module W1 (TB-TMAR-TAX-REFERENCE-W1) PASS — COMPLETE_REFERENCE_PATTERN; Offer pattern reused; PROVEN_ON_2_MODULES; Checkout paused at W5.
+Pricing Reference Module W1 (TB-TMAR-PRICING-REFERENCE-W1) PASS — COMPLETE_REFERENCE_PATTERN; medium module; PROVEN_ON_3_MODULES; Checkout paused at W5.
 Product-Resume-Safety = SAFE_WITH_TMAR_PARALLEL (Order hub still frozen; do not expand App→App / Infra→App; no NEW cross-context ACID).
 Last Product Task = TB-P10-T022-R21.
 Architecture Baseline = TB-TMAR-ARCH-BASELINE.
@@ -470,7 +471,8 @@ checkout-impl-w4 = TB-TMAR-CHECKOUT-IMPL-W4 PASS (Order.Infra Inventory lifecycl
 checkout-impl-w5 = TB-TMAR-CHECKOUT-IMPL-W5 PASS (Promotion checkout Contracts; Order.App→Promotion.Application removed; W6 READY)
 offer-reference-w1 = TB-TMAR-OFFER-REFERENCE-W1 PASS (COMPLETE_REFERENCE_PATTERN; Endpoints+Tests; MapOfferModule; ARCH-MODULE-FILE-001; HOST-MODULE-ENDPOINT-001; Checkout paused at W5)
 tax-reference-w1 = TB-TMAR-TAX-REFERENCE-W1 PASS (COMPLETE_REFERENCE_PATTERN; Offer pattern reused; PROVEN_ON_2_MODULES; Checkout paused at W5)
-next task = next reference-module candidate (Pricing/Inventory/Cart) OR TB-TMAR-CHECKOUT-IMPL-W6 per Architect; Checkout remains PAUSED_AT_SAFE_W5_CHECKPOINT
+pricing-reference-w1 = TB-TMAR-PRICING-REFERENCE-W1 PASS (COMPLETE_REFERENCE_PATTERN; medium module; PROVEN_ON_3_MODULES; Checkout paused at W5)
+next task = next reference-module candidate (Inventory/Cart/Returns) OR TB-TMAR-CHECKOUT-IMPL-W6 per Architect; Checkout remains PAUSED_AT_SAFE_W5_CHECKPOINT
 
 primary goal = painless future Microservice migration
 

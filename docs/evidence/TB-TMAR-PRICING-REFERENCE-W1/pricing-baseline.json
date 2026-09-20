@@ -1,0 +1,162 @@
+{
+  "generatedAtUtc": "2026-09-20T12:55:00.186Z",
+  "PricingReferenceSuitability": "CONFIRMED",
+  "files": [
+    {
+      "path": "src/backend/Modules/Pricing/Tooba.Pricing.Infrastructure/Adapters/PriceDirectory.cs",
+      "loc": 270,
+      "oversized": false
+    },
+    {
+      "path": "src/backend/Modules/Pricing/Tooba.Pricing.Domain/Aggregates/AuthoredPrice.cs",
+      "loc": 250,
+      "oversized": false
+    },
+    {
+      "path": "src/backend/Modules/Pricing/Tooba.Pricing.Infrastructure/Persistence/Migrations/20260823085546_InitialPricing.Designer.cs",
+      "loc": 189,
+      "oversized": false
+    },
+    {
+      "path": "src/backend/Modules/Pricing/Tooba.Pricing.Infrastructure/Persistence/Migrations/PricingDbContextModelSnapshot.cs",
+      "loc": 186,
+      "oversized": false
+    },
+    {
+      "path": "src/backend/Modules/Pricing/Tooba.Pricing.Domain/Events/PricingDomainEvents.cs",
+      "loc": 106,
+      "oversized": false
+    },
+    {
+      "path": "src/backend/Modules/Pricing/Tooba.Pricing.Infrastructure/Outbox/PricingOutboxRegistration.cs",
+      "loc": 106,
+      "oversized": false
+    },
+    {
+      "path": "src/backend/Modules/Pricing/Tooba.Pricing.Infrastructure/Persistence/Migrations/20260823085546_InitialPricing.cs",
+      "loc": 94,
+      "oversized": false
+    },
+    {
+      "path": "src/backend/Modules/Pricing/Tooba.Pricing.Infrastructure/Events/PricingEvents.cs",
+      "loc": 89,
+      "oversized": false
+    },
+    {
+      "path": "src/backend/Modules/Pricing/Tooba.Pricing.Tests/Architecture/PricingArchitectureGuardTests.cs",
+      "loc": 88,
+      "oversized": false
+    },
+    {
+      "path": "src/backend/Modules/Pricing/Tooba.Pricing.Application/Ports/IPriceDirectory.cs",
+      "loc": 64,
+      "oversized": false
+    },
+    {
+      "path": "src/backend/Modules/Pricing/Tooba.Pricing.Contracts/Ports/PriceLookupContracts.cs",
+      "loc": 64,
+      "oversized": false
+    },
+    {
+      "path": "src/backend/Modules/Pricing/Tooba.Pricing.Infrastructure/Persistence/PricingDbContext.cs",
+      "loc": 63,
+      "oversized": false
+    },
+    {
+      "path": "src/backend/Modules/Pricing/Tooba.Pricing.Contracts/Dtos/CurrencyCode.cs",
+      "loc": 48,
+      "oversized": false
+    },
+    {
+      "path": "src/backend/Modules/Pricing/Tooba.Pricing.Infrastructure/DependencyInjection/PricingModule.cs",
+      "loc": 47,
+      "oversized": false
+    },
+    {
+      "path": "src/backend/Modules/Pricing/Tooba.Pricing.Domain/ValueObjects/Money.cs",
+      "loc": 46,
+      "oversized": false
+    },
+    {
+      "path": "src/backend/Modules/Pricing/Tooba.Pricing.Domain/Enums/PriceEnums.cs",
+      "loc": 41,
+      "oversized": false
+    },
+    {
+      "path": "src/backend/Modules/Pricing/Tooba.Pricing.Domain/ValueObjects/MarketCode.cs",
+      "loc": 39,
+      "oversized": false
+    },
+    {
+      "path": "src/backend/Modules/Pricing/Tooba.Pricing.Tests/Domain/AuthoredPriceInvariantTests.cs",
+      "loc": 39,
+      "oversized": false
+    },
+    {
+      "path": "src/backend/Modules/Pricing/Tooba.Pricing.Infrastructure/Persistence/Configurations/AuthoredPriceConfiguration.cs",
+      "loc": 29,
+      "oversized": false
+    },
+    {
+      "path": "src/backend/Modules/Pricing/Tooba.Pricing.Tests/Contracts/PriceQuoteShapeTests.cs",
+      "loc": 28,
+      "oversized": false
+    },
+    {
+      "path": "src/backend/Modules/Pricing/Tooba.Pricing.Tests/Tooba.Pricing.Tests.csproj",
+      "loc": 27,
+      "oversized": false
+    },
+    {
+      "path": "src/backend/Modules/Pricing/Tooba.Pricing.Contracts/Ports/CampaignCartPriceAuthority.cs",
+      "loc": 23,
+      "oversized": false
+    },
+    {
+      "path": "src/backend/Modules/Pricing/Tooba.Pricing.Endpoints/PricingEndpointModule.cs",
+      "loc": 22,
+      "oversized": false
+    },
+    {
+      "path": "src/backend/Modules/Pricing/Tooba.Pricing.Infrastructure/Tooba.Pricing.Infrastructure.csproj",
+      "loc": 22,
+      "oversized": false
+    },
+    {
+      "path": "src/backend/Modules/Pricing/Tooba.Pricing.Tests/Infrastructure/PricingDbContextOwnershipTests.cs",
+      "loc": 21,
+      "oversized": false
+    },
+    {
+      "path": "src/backend/Modules/Pricing/Tooba.Pricing.Endpoints/Tooba.Pricing.Endpoints.csproj",
+      "loc": 18,
+      "oversized": false
+    },
+    {
+      "path": "src/backend/Modules/Pricing/Tooba.Pricing.Tests/Endpoints/PricingEndpointModuleTests.cs",
+      "loc": 16,
+      "oversized": false
+    },
+    {
+      "path": "src/backend/Modules/Pricing/Tooba.Pricing.Application/Tooba.Pricing.Application.csproj",
+      "loc": 15,
+      "oversized": false
+    },
+    {
+      "path": "src/backend/Modules/Pricing/Tooba.Pricing.Domain/Tooba.Pricing.Domain.csproj",
+      "loc": 15,
+      "oversized": false
+    },
+    {
+      "path": "src/backend/Modules/Pricing/Tooba.Pricing.Contracts/Tooba.Pricing.Contracts.csproj",
+      "loc": 13,
+      "oversized": false
+    },
+    {
+      "path": "src/backend/Modules/Pricing/Tooba.Pricing.Domain/TypeForwarders.cs",
+      "loc": 5,
+      "oversized": false
+    }
+  ],
+  "oversizedCount": 0
+}
