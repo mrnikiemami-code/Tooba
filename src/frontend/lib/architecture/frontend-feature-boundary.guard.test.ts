@@ -25,25 +25,27 @@ function repoRel(abs: string): string {
   return path.relative(repoRoot, abs).replace(/\\/g, "/");
 }
 
-test("FE-BOUNDARY: external code must not deep-import admin-languages internals", () => {
-  const deepRe = /features\/admin-languages\/(api|components)\//;
-  const publicRe = /features\/admin-languages(?:\/index)?(?:\.ts)?['"]/;
+test("FE-BOUNDARY: external code must not deep-import migrated feature internals", () => {
+  const features = ["admin-languages", "admin-promotions"];
   const violations: string[] = [];
   for (const abs of walk(feRoot).filter((f) => EXT.has(path.extname(f).toLowerCase()))) {
     const rel = repoRel(abs);
-    if (rel.startsWith("src/frontend/features/admin-languages/")) continue;
+    if (features.some((f) => rel.startsWith(`src/frontend/features/${f}/`))) continue;
     const text = fs.readFileSync(abs, "utf8");
     const importRe = /(?:from\s+|require\s*\(\s*)['"]([^'"]+)['"]/g;
     let m: RegExpExecArray | null;
     while ((m = importRe.exec(text))) {
       const spec = m[1].replace(/\\/g, "/");
-      if (deepRe.test(spec)) {
-        violations.push(`${rel} -> ${spec}`);
+      for (const feature of features) {
+        const deepRe = new RegExp(`features/${feature}/(api|components)/`);
+        if (deepRe.test(spec)) {
+          violations.push(`${rel} -> ${spec}`);
+        }
       }
     }
   }
   assert.equal(violations.length, 0, violations.join("\n"));
-  // public boundary itself must exist
-  assert.ok(fs.existsSync(path.join(feRoot, "features/admin-languages/index.ts")));
-  assert.ok(publicRe);
+  for (const feature of features) {
+    assert.ok(fs.existsSync(path.join(feRoot, `features/${feature}/index.ts`)));
+  }
 });

@@ -135,6 +135,8 @@ TB-TMAR-FE-BASELINE
 
 TB-TMAR-FE-F1
 
+TB-TMAR-FE-ADMIN-W1
+
 Current Product Resume Gate:
 SAFE_WITH_TMAR_PARALLEL
 
@@ -142,10 +144,10 @@ User choice:
 Continue TMAR for now until user explicitly says to return to product feature work.
 
 Next TMAR task:
-TB-TMAR-FE-ADMIN-W1
+TB-TMAR-FE-ADMIN-W2
 
-Frontend F1:
-TB-TMAR-FE-F1 — flat/admin-api freezes; canonical test discovery; migrated admin-languages feature slice. Evidence: `docs/evidence/TB-TMAR-FE-F1/`.
+Frontend ADMIN-W1:
+TB-TMAR-FE-ADMIN-W1 — admin-promotions migrated; admin-api 1321→1234; admin-screens 1230→1120. Evidence: `docs/evidence/TB-TMAR-FE-ADMIN-W1/`.
 
 Confirmed Architecture Facts
 

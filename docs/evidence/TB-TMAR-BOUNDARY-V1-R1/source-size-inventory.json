@@ -1,8 +1,8 @@
 {
   "rule": "SourceSizeInventory",
-  "generatedAt": "2026-09-20T07:17:31.818Z",
+  "generatedAt": "2026-09-20T07:24:40.361Z",
   "refreshedBy": "TB-TMAR-FE-BASELINE",
-  "fileCount": 1747,
+  "fileCount": 1751,
   "files": [
     {
       "path": "src/backend/Modules/Catalog/Tooba.Catalog.Infrastructure/CatalogDirectory.cs",
@@ -59,12 +59,6 @@
       "classification": "CRITICAL_GOD_FILE"
     },
     {
-      "path": "src/frontend/app/admin/admin-api.ts",
-      "language": "ts",
-      "loc": 1321,
-      "classification": "CRITICAL_GOD_FILE"
-    },
-    {
       "path": "src/backend/Modules/Catalog/Tooba.Catalog.Application/CatalogContracts.cs",
       "language": "cs",
       "loc": 1303,
@@ -107,9 +101,9 @@
       "classification": "OVERSIZED_LEGACY"
     },
     {
-      "path": "src/frontend/app/admin/admin-screens.tsx",
-      "language": "tsx",
-      "loc": 1230,
+      "path": "src/frontend/app/admin/admin-api.ts",
+      "language": "ts",
+      "loc": 1234,
       "classification": "CRITICAL_GOD_FILE"
     },
     {
@@ -134,6 +128,12 @@
       "path": "src/frontend/app/admin/category-attributes-panel.tsx",
       "language": "tsx",
       "loc": 1190,
+      "classification": "OVERSIZED_LEGACY"
+    },
+    {
+      "path": "src/frontend/app/admin/admin-screens.tsx",
+      "language": "tsx",
+      "loc": 1120,
       "classification": "OVERSIZED_LEGACY"
     },
     {
@@ -3047,6 +3047,12 @@
       "classification": "NORMAL"
     },
     {
+      "path": "src/frontend/features/admin-promotions/components/promotions-screen.tsx",
+      "language": "tsx",
+      "loc": 214,
+      "classification": "NORMAL"
+    },
+    {
       "path": "docs/evidence/TB-P10-T012/capture.mjs",
       "language": "mjs",
       "loc": 213,
@@ -5041,6 +5047,12 @@
     {
       "path": "src/frontend/app/fulfillment/fulfillment-ui.tsx",
       "language": "tsx",
+      "loc": 117,
+      "classification": "NORMAL"
+    },
+    {
+      "path": "src/frontend/features/admin-promotions/api/promotions-api.ts",
+      "language": "ts",
       "loc": 117,
       "classification": "NORMAL"
     },
@@ -7085,6 +7097,12 @@
       "classification": "NORMAL"
     },
     {
+      "path": "src/frontend/features/admin-promotions/admin-promotions.characterization.test.ts",
+      "language": "ts",
+      "loc": 59,
+      "classification": "NORMAL"
+    },
+    {
       "path": "docs/evidence/TB-P10-T022-R17/debug-preview.mjs",
       "language": "mjs",
       "loc": 58,
@@ -7463,6 +7481,12 @@
       "classification": "NORMAL"
     },
     {
+      "path": "src/frontend/lib/architecture/frontend-feature-boundary.guard.test.ts",
+      "language": "ts",
+      "loc": 52,
+      "classification": "NORMAL"
+    },
+    {
       "path": "src/frontend/lib/i18n/middleware-locale.ts",
       "language": "ts",
       "loc": 52,
@@ -7578,12 +7602,6 @@
     },
     {
       "path": "src/frontend/app/storefront/storefront-store-page-cache.ts",
-      "language": "ts",
-      "loc": 50,
-      "classification": "NORMAL"
-    },
-    {
-      "path": "src/frontend/lib/architecture/frontend-feature-boundary.guard.test.ts",
       "language": "ts",
       "loc": 50,
       "classification": "NORMAL"
@@ -10110,6 +10128,12 @@
     },
     {
       "path": "src/frontend/features/admin-languages/index.ts",
+      "language": "ts",
+      "loc": 11,
+      "classification": "NORMAL"
+    },
+    {
+      "path": "src/frontend/features/admin-promotions/index.ts",
       "language": "ts",
       "loc": 11,
       "classification": "NORMAL"

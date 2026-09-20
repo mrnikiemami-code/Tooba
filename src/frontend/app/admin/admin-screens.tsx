@@ -15,8 +15,6 @@ import {
   formatOrderSellerLabel,
   loadAdminDashboard,
   moderateAdminReview,
-  loadAdminPromotions,
-  deactivateAdminPromotion,
   queryAdminOrdersGrid,
   queryAdminSellersGrid,
   queryAdminCustomersGrid,
@@ -29,7 +27,6 @@ import {
   type AdminResult,
   type AdminSellerRow,
   type AdminReviewRow,
-  type AdminPromotionRow,
   type AdminReceiptRow,
 } from "./admin-api";
 import { adminSupplyBadgeClass, formatAdminSupplyStatus, supplyStatusEnumOptions } from "./admin-order-supply";
@@ -630,113 +627,6 @@ export function AdminReviewsScreen() {
       columns={columns}
       gridId={ADMIN_REVIEW_GRID_VIEW_KEY}
       testId="admin-reviews"
-    />
-  );
-}
-
-const promotionColumns = (deactivate: (id: string) => void): GridColumnDef<AdminPromotionRow>[] => [
-  {
-    id: "code",
-    header: "کد",
-    accessor: (row) => row.couponCode ?? "",
-    cell: (row) => <strong className="font-mono" dir="ltr">{row.couponCode ?? "—"}</strong>,
-    width: 140,
-    minWidth: 110,
-    maxWidth: 200,
-    sticky: "start",
-  },
-  { id: "name", header: "نام", accessor: (row) => row.name, width: 180, minWidth: 130, maxWidth: 260 },
-  {
-    id: "discount",
-    header: "تخفیف",
-    accessor: (row) =>
-      row.discountKind === "FixedAmountOff"
-        ? row.fixedAmount
-        : Math.round(row.percentageRate * 100),
-    cell: (row) =>
-      row.discountKind === "FixedAmountOff"
-        ? formatAdminMoney(row.fixedAmount, "IRR")
-        : `${Math.round(row.percentageRate * 100).toLocaleString("fa-IR")}٪`,
-    width: 120,
-    minWidth: 100,
-    maxWidth: 160,
-  },
-  {
-    id: "seller",
-    header: "فروشنده",
-    accessor: (row) => row.sellerPartyId ?? "",
-    cell: (row) => (
-      <span className="font-mono text-xs" dir="ltr">
-        {row.sellerPartyId ? `${row.sellerPartyId.slice(0, 8)}…` : "—"}
-      </span>
-    ),
-    width: 130,
-    minWidth: 110,
-    maxWidth: 180,
-  },
-  {
-    id: "status",
-    header: "وضعیت",
-    accessor: (row) => row.status,
-    cell: (row) => <Status value={row.status} />,
-    width: 110,
-    minWidth: 90,
-    maxWidth: 150,
-  },
-  {
-    id: "expires",
-    header: "انقضا",
-    accessor: (row) => row.effectiveTo ?? "",
-    cell: (row) => (row.effectiveTo ? formatAdminDate(row.effectiveTo) : "باز"),
-    width: 120,
-    minWidth: 100,
-    maxWidth: 150,
-  },
-  {
-    id: "actions",
-    header: "عملیات",
-    accessor: () => "",
-    cell: (row) =>
-      row.status === "Active" ? (
-        <button
-          type="button"
-          onClick={() => deactivate(row.promotionId)}
-          className="rounded-lg bg-red-600 px-3 py-1.5 text-xs text-white"
-        >
-          غیرفعال
-        </button>
-      ) : (
-        "—"
-      ),
-    width: 120,
-    minWidth: 100,
-    maxWidth: 150,
-  },
-];
-
-/** نظارت ادمین بر پروموشن/کوپن فروشندگان — bounded client grid. */
-export function AdminPromotionsScreen() {
-  const [reloadToken, setReloadToken] = useState(0);
-  const loader = useCallback(async () => {
-    void reloadToken;
-    return loadAdminPromotions();
-  }, [reloadToken]);
-  const deactivate = useCallback(
-    (id: string) =>
-      void deactivateAdminPromotion(id).then((result) => {
-        if (result.state === "ok") setReloadToken((value) => value + 1);
-      }),
-    [],
-  );
-  const columns = useMemo(() => promotionColumns(deactivate), [deactivate]);
-  return (
-    <ClientGridPage
-      title="نظارت پروموشن‌ها"
-      description="فهرست و غیرفعال‌سازی نظارتی کدهای تخفیف فروشندگان"
-      loader={loader}
-      columns={columns}
-      gridId={ADMIN_PROMOTION_GRID_VIEW_KEY}
-      boundedReason="SMALL_BOUNDED_CLIENT_SAFE — bounded by active seller promotions"
     />
   );
 }

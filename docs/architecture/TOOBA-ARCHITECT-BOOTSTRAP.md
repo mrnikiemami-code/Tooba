@@ -22,7 +22,7 @@ Accepted architecture baseline:
 TB-TMAR-ARCH-BASELINE
 
 Current next task:
-TB-TMAR-FE-ADMIN-W1 (next admin capability migration after FE-F1 pattern proof)
+TB-TMAR-FE-ADMIN-W2 (continue admin capability migration)
 
 Product development rule:
 Foundation (TB-TMAR-FND-001) is ACCEPTED.
@@ -38,6 +38,7 @@ Contracts Wave 5 (TB-TMAR-CONTRACTS-W5) PASS — Inventory→Offer.Contracts; Pr
 Contracts Wave 6 (TB-TMAR-CONTRACTS-W6) PASS — Promotion→Offer.Contracts; Cart→Pricing.Contracts; FE READY.
 Frontend Baseline (TB-TMAR-FE-BASELINE) PASS — inventory/ownership/target arch; FE-SIZE/SEO/BOUNDARY locks+guards; root `src/frontend`; no broad refactor.
 Frontend F1 (TB-TMAR-FE-F1) PASS — FE-FOLDER freezes; canonical test discovery; admin-languages migrated to features/.
+Frontend ADMIN-W1 (TB-TMAR-FE-ADMIN-W1) PASS — admin-promotions migrated; admin-api/screens shrink.
 Product-Resume-Safety = SAFE_WITH_TMAR_PARALLEL (Order hub still frozen; do not expand App→App / Infra→App; no NEW cross-context ACID).
 Last Product Task = TB-P10-T022-R21.
 Architecture Baseline = TB-TMAR-ARCH-BASELINE.

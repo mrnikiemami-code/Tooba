@@ -8,7 +8,7 @@ Excluded: `node_modules`, `bin`, `obj`, `dist`, `tmp`, build, lockfiles, EF Migr
 
 | Metric | Count |
 |---|---|
-| Files scanned | 1747 |
+| Files scanned | 1751 |
 | CRITICAL_GOD_FILE | 15 |
 | OVERSIZED_LEGACY | 40 |
 | WATCH | 88 |

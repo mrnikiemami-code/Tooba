@@ -45,6 +45,7 @@ Evidence files remain the deep-detail source; this map is the quick index.
 | Contracts W6 | Promotion.App→Offer.Contracts; Cart.App→Pricing.Contracts (+ campaign authority/CurrencyCode/ReturnPolicy in Contracts); App→App 10→8; FE READY | TB-TMAR-CONTRACTS-W6 |
 | Frontend baseline | Canonical root `src/frontend`; FE-ARCH/SIZE/SEO/BOUNDARY locks; size+import+SEO guards; flat admin debt documented; no broad refactor | TB-TMAR-FE-BASELINE |
 | Frontend F1 | FE-FOLDER-001/002 freezes; canonical test discovery (174); admin-languages → features/admin-languages | TB-TMAR-FE-F1 |
-| Next | Admin capability migration wave (catalog-units / shipping-services / content-authors candidates) | TB-TMAR-FE-F1 |
+| Frontend ADMIN-W1 | admin-promotions → features/admin-promotions; admin-api 1321→1234; admin-screens 1230→1120 | TB-TMAR-FE-ADMIN-W1 |
+| Next | Continue admin capability migration (catalog-units / shipping-services / reviews candidates) | TB-TMAR-FE-ADMIN-W1 |
 
-Last Verified Task = TB-TMAR-FE-F1
+Last Verified Task = TB-TMAR-FE-ADMIN-W1
