@@ -1,0 +1,99 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+
+BEGIN_TOOBA_WORKER_RESULT
+
+Task-ID: TB-TMAR-HOST-W5
+Parent-Task: TB-TMAR-HOST-W4
+Channel: tooba-main
+WorkerId: tooba-worker-01
+AgentType: cursor
+Status: PASS
+
+Summary:
+HOST-W5 PASS. Migrated UnitOfMeasure Create/Update/Deactivate Host writes to Catalog CQRS (Commands → Directory + language gate). Host endpoints no longer SaveChanges/Add for writes. Host-write baseline removed Admin/UnitOfMeasureEndpoints.cs. UnitOfMeasureAdminTests 6/6 + TmarFoundationTests 13/13. Host-Exit-State NOT_READY. Host-Recovery-State CONTINUE_HOST. Architecture-Priority HOST. Orders-Frontend-Readiness UNCHANGED. Next: TB-TMAR-HOST-W6. Product-Resume-Safety SAFE_WITH_TMAR_PARALLEL.
+
+Program-Name:
+TMAR — Tooba Microservice-Ready Architecture Recovery
+
+Recovery-Start:
+docs/evidence/TB-TMAR-HOST-W5/recovery-start.md
+
+Host-Write-Inventory:
+docs/evidence/TB-TMAR-HOST-W5/host-write-inventory.md
+
+Slice-Selection:
+docs/evidence/TB-TMAR-HOST-W5/slice-selection.md — UnitOfMeasureEndpoints writes
+
+Characterization-Tests:
+docs/evidence/TB-TMAR-HOST-W5/characterization-tests.md
+
+Target-Shape:
+docs/evidence/TB-TMAR-HOST-W5/target-shape.md
+
+Host-Write-Removal:
+docs/evidence/TB-TMAR-HOST-W5/host-write-removal.md
+
+Business-Decision-Removal:
+docs/evidence/TB-TMAR-HOST-W5/business-decision-removal.md
+
+Transaction-Semantics:
+docs/evidence/TB-TMAR-HOST-W5/transaction-semantics.md
+
+Cache-Compliance:
+docs/evidence/TB-TMAR-HOST-W5/cache-compliance.md
+
+Foundation-Compliance:
+docs/evidence/TB-TMAR-HOST-W5/foundation-compliance.md
+
+Architecture-Guards:
+docs/evidence/TB-TMAR-HOST-W5/architecture-guards.md
+
+Source-Size-Compliance:
+docs/evidence/TB-TMAR-HOST-W5/source-size-compliance.md
+
+Tests:
+docs/evidence/TB-TMAR-HOST-W5/tests.md
+
+Host-Exit-Criteria:
+docs/evidence/TB-TMAR-HOST-W5/host-exit-criteria.md — Host-Exit-State NOT_READY
+
+Orders-Frontend-Readiness:
+UNCHANGED
+
+Host-Recovery-State:
+CONTINUE_HOST
+
+Host-Exit-State:
+NOT_READY
+
+Architecture-Priority:
+HOST
+
+Capability-Map:
+docs/architecture/TOOBA-CAPABILITY-MAP.md — Last Verified = TB-TMAR-HOST-W5
+
+Bootstrap:
+docs/architecture/TOOBA-ARCHITECT-BOOTSTRAP.md — host-w5 PASS; next TB-TMAR-HOST-W6
+
+Master-Recovery-State:
+docs/architecture/TOOBA-TMAR-MASTER-RECOVERY.md — HOST-W5 listed; next HOST-W6; SAFE_WITH_TMAR_PARALLEL
+
+Recovery-SoT:
+docs/evidence/TB-TMAR-HOST-W5/recovery-sot.md
+
+Git:
+branch main; tip 47508870b619dff0c0e15c3979a2da48f2234fa4; pushed origin/main; HEAD==origin/main; 18ca10c9 ancestor; user work preserved
+
+Architectural-Concerns:
+Residual Host writes remain (Shipping/Seller/ProductWorkspace/Order-adjacent); List/Get UoM still CatalogDbContext read composition; Checkout shared-ACID deferred
+
+Blockers:
+(none)
+
+Product-Resume-Safety:
+SAFE_WITH_TMAR_PARALLEL
+
+Next-Recommended-Task:
+TB-TMAR-HOST-W6
+
+END_TOOBA_WORKER_RESULT
