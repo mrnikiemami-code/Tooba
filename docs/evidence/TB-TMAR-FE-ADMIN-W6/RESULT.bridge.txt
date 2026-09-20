@@ -1,0 +1,105 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+
+BEGIN_TOOBA_WORKER_RESULT
+
+Task-ID: TB-TMAR-FE-ADMIN-W6
+Parent-Task: TB-TMAR-FE-ADMIN-W5
+Channel: tooba-main
+WorkerId: tooba-worker-01
+AgentType: cursor
+Status: PASS
+
+Summary:
+ADMIN-W6 PASS. Migrated admin-dashboard to features/admin-dashboard. admin-api LOC 1022→1002 (exports 38→35); admin-screens 894→810. Architecture 11/11 + dashboard characterization 6/6. Flat-Admin-Exit-State READY_TO_PIVOT. Architecture-Priority HOST. God DEFER. Orders NEEDS_BACKEND/WORKFLOW_BOUNDARY_FIRST. Pattern PROVEN. Next: TB-TMAR-HOST-W3. Product-Resume-Safety SAFE_WITH_TMAR_PARALLEL.
+
+Program-Name:
+TMAR — Tooba Microservice-Ready Architecture Recovery
+
+Recovery-Start:
+docs/evidence/TB-TMAR-FE-ADMIN-W6/recovery-start.md
+
+Slice-Selection:
+docs/evidence/TB-TMAR-FE-ADMIN-W6/slice-selection.md — admin-dashboard
+
+Characterization-Tests:
+docs/evidence/TB-TMAR-FE-ADMIN-W6/characterization-tests.md — 6/6 PASS
+
+Migration:
+docs/evidence/TB-TMAR-FE-ADMIN-W6/migration.md
+
+Admin-Api-Shrink:
+docs/evidence/TB-TMAR-FE-ADMIN-W6/admin-api-shrink.md — LOC 1022→1002; exports 38→35
+
+Flat-Admin-Shrink:
+docs/evidence/TB-TMAR-FE-ADMIN-W6/flat-admin-shrink.md — admin-screens 894→810
+
+Flat-Admin-Exit-Criteria:
+docs/evidence/TB-TMAR-FE-ADMIN-W6/flat-admin-exit.md — Flat-Admin-Exit-State READY_TO_PIVOT
+
+Feature-Boundary:
+docs/evidence/TB-TMAR-FE-ADMIN-W6/feature-boundary.md
+
+Architecture-Guards:
+docs/evidence/TB-TMAR-FE-ADMIN-W6/architecture-guards.md
+
+Client-Boundary:
+docs/evidence/TB-TMAR-FE-ADMIN-W6/client-boundary.md
+
+Source-Size-Compliance:
+docs/evidence/TB-TMAR-FE-ADMIN-W6/source-size-compliance.md
+
+Test-Discovery:
+docs/evidence/TB-TMAR-FE-ADMIN-W6/test-discovery.md
+
+Legacy-Failures:
+docs/evidence/TB-TMAR-FE-ADMIN-W6/legacy-failures.md — NEW_FAILURES=0
+
+Tests:
+docs/evidence/TB-TMAR-FE-ADMIN-W6/tests.md — architecture 11/11; dashboard 6/6
+
+Orders-Admin-Risk:
+docs/evidence/TB-TMAR-FE-ADMIN-W6/orders-admin-risk.md — NEEDS_BACKEND/WORKFLOW_BOUNDARY_FIRST
+
+God-Component-Recovery-Readiness:
+DEFER
+
+Flat-Admin-Recovery-State:
+PIVOT_AWAY_FROM_LOW_RISK_WAVES
+
+Flat-Admin-Exit-State:
+READY_TO_PIVOT
+
+Architecture-Priority:
+HOST
+
+Admin-Migration-Pattern:
+PROVEN
+
+Capability-Map:
+docs/architecture/TOOBA-CAPABILITY-MAP.md — Last Verified = TB-TMAR-FE-ADMIN-W6
+
+Bootstrap:
+docs/architecture/TOOBA-ARCHITECT-BOOTSTRAP.md — fe-admin-w6 PASS; next TB-TMAR-HOST-W3
+
+Master-Recovery-State:
+docs/architecture/TOOBA-TMAR-MASTER-RECOVERY.md — ADMIN-W6 listed; next HOST-W3; SAFE_WITH_TMAR_PARALLEL
+
+Recovery-SoT:
+docs/evidence/TB-TMAR-FE-ADMIN-W6/recovery-sot.md
+
+Git:
+branch main; tip a6939215a54625a5b2467f7d1de8cd4bb6d50cc0; pushed origin/main; HEAD==origin/main; 18ca10c9 ancestor; user work preserved
+
+Architectural-Concerns:
+Residual admin-api is Orders + SHARED formatters; admin-screens still >800 (Orders-coupled); low-risk FE admin waves exhausted; Host outranks further ADMIN-Wx; godfile deferred
+
+Blockers:
+(none)
+
+Product-Resume-Safety:
+SAFE_WITH_TMAR_PARALLEL
+
+Next-Recommended-Task:
+TB-TMAR-HOST-W3
+
+END_TOOBA_WORKER_RESULT
