@@ -88,7 +88,7 @@ Recovery-SoT:
 docs/evidence/TB-TMAR-CHECKOUT-CONSISTENCY-DESIGN/recovery-sot.md
 
 Git:
-branch main; tip 4a3b91b15b2d2c0c4fef0acdd1dad995a2feb409; pushed origin/main; HEAD==origin/main; 18ca10c9 ancestor; user work preserved
+branch main; tip e27fd0283154a59c4756a74d1240427148f00a7b; pushed origin/main; HEAD==origin/main; 18ca10c9 ancestor; user work preserved
 
 Architectural-Concerns:
 Shared TransactionScope remains until IMPL stages; Order→Cart/Inventory/Promotion App edges staged for contract reduction; Payment/Wallet/Fulfillment already post-submit
