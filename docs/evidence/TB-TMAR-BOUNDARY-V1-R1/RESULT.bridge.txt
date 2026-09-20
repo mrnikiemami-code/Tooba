@@ -49,7 +49,7 @@ Recovery-SoT:
 docs/evidence/TB-TMAR-BOUNDARY-V1-R1/recovery-sot.md
 
 Git:
-branch main; tip PLACEHOLDER_SHA; pushed origin/main; HEAD==origin/main; 18ca10c9 ancestor; user work preserved
+branch main; tip 2056f42081fe440167ec8b5d7d5d07f98f7d5003; pushed origin/main; HEAD==origin/main; 18ca10c9 ancestor; user work preserved
 
 Architectural-Concerns:
 Oversized files remain frozen-not-split; Contracts still required before safe product resume; dead Domain→Offer refs still present (deferred)
