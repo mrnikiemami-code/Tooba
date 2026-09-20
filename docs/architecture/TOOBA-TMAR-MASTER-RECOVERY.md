@@ -169,6 +169,8 @@ TB-TMAR-CHECKOUT-IMPL-W5
 
 TB-TMAR-OFFER-REFERENCE-W1
 
+TB-TMAR-TAX-REFERENCE-W1
+
 TMAR-Execution-Mode: BACKEND_ONLY_UNTIL_EXPLICIT_RELEASE
 
 Frontend remains frozen until explicit Architect/User release.
@@ -181,7 +183,10 @@ User choice:
 Continue TMAR for now until user explicitly says to return to product feature work.
 
 Next TMAR task:
-TB-TMAR-OFFER-REFERENCE-W1 complete — next candidates Pricing / Inventory / Tax (Architect chooses). Checkout remains PAUSED_AT_SAFE_W5_CHECKPOINT; W6 deferred.
+TB-TMAR-TAX-REFERENCE-W1 complete — next candidates Pricing / Inventory / Cart (Architect chooses). Checkout remains PAUSED_AT_SAFE_W5_CHECKPOINT; W6 deferred.
+
+Tax Reference Module W1:
+TB-TMAR-TAX-REFERENCE-W1 — COMPLETE_REFERENCE_PATTERN; Offer pattern reused (PROVEN_ON_2_MODULES); Tooba.Tax.Endpoints + Tests; MapTaxModule; FE freeze intact. Evidence: docs/evidence/TB-TMAR-TAX-REFERENCE-W1/.
 
 Offer Reference Module W1:
 TB-TMAR-OFFER-REFERENCE-W1 — COMPLETE_REFERENCE_PATTERN; Tooba.Offer.Endpoints + Tests; Host MapOfferModule; ARCH-MODULE-FILE-001 + HOST-MODULE-ENDPOINT-001; FE freeze intact. Evidence: docs/evidence/TB-TMAR-OFFER-REFERENCE-W1/. Pattern: docs/architecture/TOOBA-REFERENCE-MODULE-PATTERN.md.

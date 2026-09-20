@@ -1,0 +1,26 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <IsPackable>false</IsPackable>
+    <RootNamespace>Tooba.Tax.Tests</RootNamespace>
+    <AssemblyName>Tooba.Tax.Tests</AssemblyName>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.11.1" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="8.0.11" />
+    <PackageReference Include="xunit" Version="2.9.2" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="2.8.2">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Tooba.Tax.Domain\Tooba.Tax.Domain.csproj" />
+    <ProjectReference Include="..\Tooba.Tax.Application\Tooba.Tax.Application.csproj" />
+    <ProjectReference Include="..\Tooba.Tax.Contracts\Tooba.Tax.Contracts.csproj" />
+    <ProjectReference Include="..\Tooba.Tax.Infrastructure\Tooba.Tax.Infrastructure.csproj" />
+    <ProjectReference Include="..\Tooba.Tax.Endpoints\Tooba.Tax.Endpoints.csproj" />
+  </ItemGroup>
+</Project>

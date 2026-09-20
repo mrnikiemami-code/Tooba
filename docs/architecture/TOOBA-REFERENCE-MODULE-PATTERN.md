@@ -98,10 +98,13 @@ Architecture guards live in the module Tests project and, where Host-facing, in 
 3. Create Endpoints + Tests projects if missing
 4. Normalize Domain/Application/Contracts/Infrastructure folders
 5. Extract Host endpoints → module Endpoints; Host Map*Module only
+   - If no Host HTTP routes exist for the module, still create Endpoints + `Map*Module()` composition point (proven by Tax)
 6. Add architecture + source-size guards
 7. Preserve routes/behavior; NEW_FAILURES=0
 8. Update reference docs + recovery SoT
 9. Stop; do not start the next module in the same task
+
+Proven modules: Offer, Tax (`Reference-Pattern-Reuse-State: PROVEN_ON_2_MODULES`).
 
 ## Anti-patterns
 

@@ -31,6 +31,7 @@ public sealed class HostModuleEndpointOwnershipTests
         var path = Path.Combine(FindRepoRoot(), "src", "backend", "Host", "Tooba.Host", "Program.cs");
         var text = File.ReadAllText(path);
         Assert.Contains("MapOfferModule()", text, StringComparison.Ordinal);
+        Assert.Contains("MapTaxModule()", text, StringComparison.Ordinal);
     }
 
     private static string FindRepoRoot()

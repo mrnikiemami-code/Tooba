@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
 using Tooba.Persistence;
 using Tooba.Tax.Domain;
+using Tooba.Tax.Infrastructure.Persistence.Configurations;
 
 namespace Tooba.Tax.Infrastructure.Persistence;
 
@@ -47,35 +48,9 @@ public sealed class TaxDbContext : DbContext
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.HasDefaultSchema(Schema);
-        modelBuilder.Entity<TaxCategory>(entity =>
-        {
-            entity.ToTable("categories");
-            entity.HasKey(x => x.CategoryId);
-            entity.Property(x => x.CategoryId).ValueGeneratedNever();
-            entity.Property(x => x.Code).HasMaxLength(64);
-            entity.Property(x => x.DisplayName).HasMaxLength(256);
-            entity.HasIndex(x => x.Code).IsUnique();
-        });
-        modelBuilder.Entity<TaxOfferClassification>(entity =>
-        {
-            entity.ToTable("offer_classifications");
-            entity.HasKey(x => x.OfferId);
-            entity.Property(x => x.OfferId).ValueGeneratedNever();
-        });
-        modelBuilder.Entity<TaxRule>(entity =>
-        {
-            entity.ToTable("rules");
-            entity.HasKey(x => x.RuleId);
-            entity.Property(x => x.RuleId).ValueGeneratedNever();
-            entity.Property(x => x.Jurisdiction).HasMaxLength(64);
-            entity.Property(x => x.Market).HasMaxLength(16);
-            entity.Property(x => x.Kind).HasConversion<string>().HasMaxLength(32);
-            entity.Property(x => x.Status).HasConversion<string>().HasMaxLength(32);
-            entity.Property(x => x.OverridePolicy).HasConversion<string>().HasMaxLength(32);
-            entity.Property(x => x.Rate).HasPrecision(19, 8);
-            entity.Ignore(x => x.DomainEvents);
-            entity.HasIndex(x => new { x.Jurisdiction, x.Market, x.CategoryId, x.EffectiveFrom });
-        });
+        modelBuilder.ApplyConfiguration(new TaxCategoryConfiguration());
+        modelBuilder.ApplyConfiguration(new TaxOfferClassificationConfiguration());
+        modelBuilder.ApplyConfiguration(new TaxRuleConfiguration());
         OutboxMessageMapping.Map(modelBuilder, Schema);
     }
 }

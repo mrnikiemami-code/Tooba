@@ -1,0 +1,172 @@
+{
+  "generatedAtUtc": "2026-09-20T12:49:06.482Z",
+  "TaxReferenceSuitability": "CONFIRMED",
+  "files": [
+    {
+      "path": "src/backend/Modules/Tax/Tooba.Tax.Infrastructure/Adapters/TaxDirectory.cs",
+      "loc": 231,
+      "oversized": false
+    },
+    {
+      "path": "src/backend/Modules/Tax/Tooba.Tax.Domain/Aggregates/TaxRule.cs",
+      "loc": 188,
+      "oversized": false
+    },
+    {
+      "path": "src/backend/Modules/Tax/Tooba.Tax.Infrastructure/Persistence/Migrations/20260823190000_InitialTax.cs",
+      "loc": 125,
+      "oversized": false
+    },
+    {
+      "path": "src/backend/Modules/Tax/Tooba.Tax.Tests/Architecture/TaxArchitectureGuardTests.cs",
+      "loc": 108,
+      "oversized": false
+    },
+    {
+      "path": "src/backend/Modules/Tax/Tooba.Tax.Domain/Events/TaxDomainEvents.cs",
+      "loc": 96,
+      "oversized": false
+    },
+    {
+      "path": "src/backend/Modules/Tax/Tooba.Tax.Infrastructure/Outbox/TaxOutboxRegistration.cs",
+      "loc": 89,
+      "oversized": false
+    },
+    {
+      "path": "src/backend/Modules/Tax/Tooba.Tax.Infrastructure/Events/TaxEvents.cs",
+      "loc": 85,
+      "oversized": false
+    },
+    {
+      "path": "src/backend/Modules/Tax/Tooba.Tax.Application/Ports/ITaxDirectory.cs",
+      "loc": 77,
+      "oversized": false
+    },
+    {
+      "path": "src/backend/Modules/Tax/Tooba.Tax.Infrastructure/Persistence/TaxDbContext.cs",
+      "loc": 75,
+      "oversized": false
+    },
+    {
+      "path": "src/backend/Modules/Tax/Tooba.Tax.Domain/Enums/TaxRuleEnums.cs",
+      "loc": 62,
+      "oversized": false
+    },
+    {
+      "path": "src/backend/Modules/Tax/Tooba.Tax.Domain/Aggregates/TaxCategory.cs",
+      "loc": 56,
+      "oversized": false
+    },
+    {
+      "path": "src/backend/Modules/Tax/Tooba.Tax.Tests/Domain/TaxRuleInvariantTests.cs",
+      "loc": 48,
+      "oversized": false
+    },
+    {
+      "path": "src/backend/Modules/Tax/Tooba.Tax.Infrastructure/DependencyInjection/TaxModule.cs",
+      "loc": 47,
+      "oversized": false
+    },
+    {
+      "path": "src/backend/Modules/Tax/Tooba.Tax.Contracts/Ports/TaxCalculatorContracts.cs",
+      "loc": 46,
+      "oversized": false
+    },
+    {
+      "path": "src/backend/Modules/Tax/Tooba.Tax.Domain/Aggregates/TaxOfferClassification.cs",
+      "loc": 37,
+      "oversized": false
+    },
+    {
+      "path": "src/backend/Modules/Tax/Tooba.Tax.Contracts/Dtos/TaxOutcome.cs",
+      "loc": 34,
+      "oversized": false
+    },
+    {
+      "path": "src/backend/Modules/Tax/Tooba.Tax.Domain/Policies/TaxRounding.cs",
+      "loc": 34,
+      "oversized": false
+    },
+    {
+      "path": "src/backend/Modules/Tax/Tooba.Tax.Tests/Contracts/TaxCalculationShapeTests.cs",
+      "loc": 29,
+      "oversized": false
+    },
+    {
+      "path": "src/backend/Modules/Tax/Tooba.Tax.Infrastructure/Persistence/Configurations/TaxRuleConfiguration.cs",
+      "loc": 28,
+      "oversized": false
+    },
+    {
+      "path": "src/backend/Modules/Tax/Tooba.Tax.Tests/Tooba.Tax.Tests.csproj",
+      "loc": 27,
+      "oversized": false
+    },
+    {
+      "path": "src/backend/Modules/Tax/Tooba.Tax.Endpoints/TaxEndpointModule.cs",
+      "loc": 24,
+      "oversized": false
+    },
+    {
+      "path": "src/backend/Modules/Tax/Tooba.Tax.Infrastructure/Persistence/Configurations/TaxCategoryConfiguration.cs",
+      "loc": 23,
+      "oversized": false
+    },
+    {
+      "path": "src/backend/Modules/Tax/Tooba.Tax.Tests/Infrastructure/TaxDbContextOwnershipTests.cs",
+      "loc": 23,
+      "oversized": false
+    },
+    {
+      "path": "src/backend/Modules/Tax/Tooba.Tax.Infrastructure/Persistence/Migrations/20260823190000_InitialTax.Designer.cs",
+      "loc": 21,
+      "oversized": false
+    },
+    {
+      "path": "src/backend/Modules/Tax/Tooba.Tax.Infrastructure/Tooba.Tax.Infrastructure.csproj",
+      "loc": 21,
+      "oversized": false
+    },
+    {
+      "path": "src/backend/Modules/Tax/Tooba.Tax.Infrastructure/Persistence/Configurations/TaxOfferClassificationConfiguration.cs",
+      "loc": 20,
+      "oversized": false
+    },
+    {
+      "path": "src/backend/Modules/Tax/Tooba.Tax.Endpoints/Tooba.Tax.Endpoints.csproj",
+      "loc": 18,
+      "oversized": false
+    },
+    {
+      "path": "src/backend/Modules/Tax/Tooba.Tax.Infrastructure/Persistence/Migrations/TaxDbContextModelSnapshot.cs",
+      "loc": 18,
+      "oversized": false
+    },
+    {
+      "path": "src/backend/Modules/Tax/Tooba.Tax.Tests/Endpoints/TaxEndpointModuleTests.cs",
+      "loc": 16,
+      "oversized": false
+    },
+    {
+      "path": "src/backend/Modules/Tax/Tooba.Tax.Application/Tooba.Tax.Application.csproj",
+      "loc": 15,
+      "oversized": false
+    },
+    {
+      "path": "src/backend/Modules/Tax/Tooba.Tax.Domain/Tooba.Tax.Domain.csproj",
+      "loc": 14,
+      "oversized": false
+    },
+    {
+      "path": "src/backend/Modules/Tax/Tooba.Tax.Contracts/Tooba.Tax.Contracts.csproj",
+      "loc": 13,
+      "oversized": false
+    },
+    {
+      "path": "src/backend/Modules/Tax/Tooba.Tax.Domain/TypeForwarders.cs",
+      "loc": 5,
+      "oversized": false
+    }
+  ],
+  "oversizedCount": 0
+}

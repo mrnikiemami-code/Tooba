@@ -39,6 +39,7 @@ using Tooba.Host.Promotion;
 using Tooba.Host.Support;
 using Tooba.Host.Wallet;
 using Tooba.Offer.Endpoints;
+using Tooba.Tax.Endpoints;
 using Tooba.Persistence;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -508,6 +509,7 @@ app.MapStorefrontEndpoints();
 app.MapPaymentWebhookEndpoints();
 app.MapSellerPanelEndpoints();
 app.MapOfferModule();
+app.MapTaxModule();
 app.MapSellerSettingsEndpoints();
 app.MapCustomerPanelEndpoints();
 app.MapUserPreferenceEndpoints();
