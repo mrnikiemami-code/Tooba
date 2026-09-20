@@ -171,6 +171,16 @@ public sealed class OfferArchitectureGuardTests
     }
 
     [Fact]
+    public void Offer_endpoints_do_not_string_match_expected_exceptions()
+    {
+        var endpoint = File.ReadAllText(Path.Combine(
+            OfferRoot(), "Tooba.Offer.Endpoints", "Seller", "OfferSellerEndpoints.cs"));
+        Assert.DoesNotContain("ex.Message is", endpoint, StringComparison.Ordinal);
+        Assert.DoesNotContain("InvalidOperationException", endpoint, StringComparison.Ordinal);
+        Assert.DoesNotContain("when (ex.Message", endpoint, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public void Offer_domain_and_application_have_no_persian_prose()
     {
         var violations = Sources("Tooba.Offer.Domain")

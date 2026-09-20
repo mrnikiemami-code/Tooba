@@ -39,6 +39,7 @@ public static class OfferSellerEndpoints
             OfferErrorCodes.NotFound => StatusCodes.Status404NotFound,
             OfferErrorCodes.DuplicateActiveListing or OfferErrorCodes.DuplicateSellerSku
                 or OfferErrorCodes.ArchivedCannotActivate => StatusCodes.Status409Conflict,
+            PricingErrorCodes.AmountInvalid or InventoryErrorCodes.QuantityInvalid => StatusCodes.Status400BadRequest,
             _ => StatusCodes.Status400BadRequest,
         };
         return Results.Json(
@@ -51,10 +52,6 @@ public static class OfferSellerEndpoints
         try { return await action(); }
         catch (PlatformHttpException ex) { return ToError(ex); }
         catch (SemanticException ex) { return ToSemanticError(ex, context); }
-        catch (InvalidOperationException ex) when (ex.Message is "offer.not_found")
-        {
-            return ToSemanticError(new SemanticException(new SemanticError(OfferErrorCodes.NotFound)), context);
-        }
     }
 
     private static Task<IResult> ListOffersAsync(

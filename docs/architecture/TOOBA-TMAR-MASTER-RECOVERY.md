@@ -204,6 +204,9 @@ TB-TMAR-TAX-REFERENCE-W1 — COMPLETE_REFERENCE_PATTERN historically; physical r
 Offer Reference Repair R4:
 TB-TMAR-OFFER-REFERENCE-W1-R4 — fake CQRS and Host Offer BFF removed; owner contract gates established; Module-Recovery-State READY_FOR_FINAL_VERIFICATION; next TB-TMAR-OFFER-REFERENCE-W1-R5. Evidence: docs/evidence/TB-TMAR-OFFER-REFERENCE-W1-R4/.
 
+Offer Reference Final Verification R5:
+TB-TMAR-OFFER-REFERENCE-W1-R5 — magic offer.not_found exception seam repaired (SemanticException); seller Offer CQRS/guards green; Host Admin/Storefront OfferDbContext residual blocks COMPLETE. Module-Recovery-State: INCOMPLETE. Next: TB-TMAR-OFFER-REFERENCE-W1-R6. Evidence: docs/evidence/TB-TMAR-OFFER-REFERENCE-W1-R5/.
+
 Checkout Implementation W5:
 TB-TMAR-CHECKOUT-IMPL-W5 — Promotion checkout seam (ICheckoutPromotionPort); Order.Application↛Promotion.Application; TX preserved; W6 READY (intentionally paused); FE freeze intact. Evidence: docs/evidence/TB-TMAR-CHECKOUT-IMPL-W5/.
 

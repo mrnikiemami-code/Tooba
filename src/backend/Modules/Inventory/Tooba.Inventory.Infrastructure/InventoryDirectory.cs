@@ -1,10 +1,12 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Npgsql;
+using Tooba.BuildingBlocks;
 using Tooba.Catalog.Application;
 using Tooba.Inventory.Application;
 using Tooba.Inventory.Contracts;
 using Tooba.Inventory.Domain;
 using Tooba.Inventory.Infrastructure.Persistence;
+using Tooba.Offer.Contracts;
 using Tooba.Offer.Contracts.Dtos;
 using Tooba.Offer.Contracts.Ports;
 
@@ -89,10 +91,10 @@ public sealed class InventoryDirectory : IInventoryDirectory, IInventoryAvailabi
     {
         ArgumentNullException.ThrowIfNull(request);
         if (request.OnHand < 0)
-            throw new InvalidOperationException("inventory.quantity.invalid");
+            throw new SemanticException(new SemanticError(InventoryErrorCodes.QuantityInvalid));
         var offer = await _offers.FindOfferAsync(request.OfferId, cancellationToken);
         if (offer is null || offer.SellerPartyId != request.SellerPartyId)
-            throw new InvalidOperationException("offer.not_found");
+            throw new SemanticException(new SemanticError(OfferErrorCodes.NotFound));
         var position = await _db.Positions.AsNoTracking()
             .Where(x => x.OfferId == request.OfferId)
             .OrderBy(x => x.StockItemId)

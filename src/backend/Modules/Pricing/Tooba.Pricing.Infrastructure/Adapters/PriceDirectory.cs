@@ -1,7 +1,8 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Tooba.BuildingBlocks;
+using Tooba.Offer.Contracts;
 using Tooba.Offer.Contracts.Dtos;
 using Tooba.Offer.Contracts.Ports;
-using Tooba.Offer.Contracts.Dtos;
 using Tooba.Pricing.Application;
 using Tooba.Pricing.Contracts;
 using Tooba.Pricing.Domain;
@@ -65,10 +66,10 @@ public sealed class PriceDirectory : IPriceDirectory, IPriceLookupGateway, ISell
     {
         ArgumentNullException.ThrowIfNull(request);
         if (request.Amount < 0)
-            throw new InvalidOperationException("pricing.amount.invalid");
+            throw new SemanticException(new SemanticError(PricingErrorCodes.AmountInvalid));
         var offer = await _offers.FindOfferAsync(request.OfferId, cancellationToken);
         if (offer is null || offer.SellerPartyId != request.SellerPartyId)
-            throw new InvalidOperationException("offer.not_found");
+            throw new SemanticException(new SemanticError(OfferErrorCodes.NotFound));
         var market = string.IsNullOrWhiteSpace(request.Market) ? "IR" : request.Market.Trim();
         var currency = string.IsNullOrWhiteSpace(request.Currency) ? "IRR" : request.Currency.Trim();
         var existing = await _db.Prices.AsNoTracking()
