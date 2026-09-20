@@ -1,0 +1,105 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+
+BEGIN_TOOBA_WORKER_RESULT
+
+Task-ID: TB-TMAR-OFFER-REF-W1
+Parent-Task: TB-TMAR-CHECKOUT-IMPL-W4
+Channel: tooba-main
+WorkerId: tooba-worker-01
+AgentType: cursor
+Status: BLOCK
+
+Summary:
+RECOVERY_CONFLICT. Claimed TB-TMAR-OFFER-REF-W1 discovery task assumes Checkout paused at accepted W4 and that TB-TMAR-CHECKOUT-IMPL-W5 is unexecuted/superseded. Bridge + main history contradict that: TB-TMAR-CHECKOUT-IMPL-W5 is Completed (7dc50888…; commits d73d2aae/af08138a), and Offer already progressed through TB-TMAR-OFFER-REFERENCE-W1 + W1-R1 (Completed), with Tax/Pricing reference waves also Completed. Worker stopped without Offer discovery/refactor. Frontend untouched. Evidence: docs/evidence/TB-TMAR-OFFER-REF-W1/recovery-start.md.
+
+Program-Name:
+TMAR — Tooba Microservice-Ready Architecture Recovery
+
+Track:
+OFFER_REFERENCE_MODULE
+
+Recovery-Start:
+docs/evidence/TB-TMAR-OFFER-REF-W1/recovery-start.md
+
+TMAR-Execution-Mode:
+BACKEND_ONLY_UNTIL_EXPLICIT_RELEASE
+
+Frontend-Production-Changes:
+NONE
+
+Offer-Surface-Inventory:
+NOT_PRODUCED — RECOVERY_CONFLICT stop before discovery scope
+
+Current-Topology:
+NOT_PRODUCED — RECOVERY_CONFLICT
+
+Ownership-Map:
+NOT_PRODUCED — RECOVERY_CONFLICT
+
+Domain-Audit:
+NOT_PRODUCED — RECOVERY_CONFLICT
+
+Application-Audit:
+NOT_PRODUCED — RECOVERY_CONFLICT
+
+Contracts-Audit:
+NOT_PRODUCED — RECOVERY_CONFLICT
+
+Infrastructure-Audit:
+NOT_PRODUCED — RECOVERY_CONFLICT
+
+Endpoints-Audit:
+NOT_PRODUCED — RECOVERY_CONFLICT
+
+Tests-Audit:
+NOT_PRODUCED — RECOVERY_CONFLICT
+
+Dependency-Graph:
+NOT_PRODUCED — RECOVERY_CONFLICT
+
+Target-Structure:
+NOT_PRODUCED — RECOVERY_CONFLICT
+
+File-Granularity:
+NOT_PRODUCED — RECOVERY_CONFLICT
+
+Completion-Criteria:
+NOT_PRODUCED — RECOVERY_CONFLICT
+
+Migration-Plan:
+NOT_PRODUCED — RECOVERY_CONFLICT
+
+Git-Hygiene:
+docs/evidence/TB-TMAR-OFFER-REF-W1/git-hygiene.md — claim tree clean; conflict evidence committed
+
+Offer-Reference-Readiness:
+NEEDS_ARCHITECT_RESYNC — stale task vs accepted Offer COMPLETE lineage
+
+Capability-Map:
+UNCHANGED
+
+Bootstrap:
+UNCHANGED — not rewritten (would falsify current Checkout/Offer state)
+
+Master-Recovery-State:
+UNCHANGED — not rewritten under conflict
+
+Recovery-SoT:
+docs/evidence/TB-TMAR-OFFER-REF-W1/recovery-sot.md
+
+Git:
+tip 0ba40d7303ee315b68e7fc35ac763559b234f4f2
+
+Architectural-Concerns:
+Downloadable task TB-TMAR-OFFER-REF-W1 is stale relative to accepted TB-TMAR-CHECKOUT-IMPL-W5 and TB-TMAR-OFFER-REFERENCE-W1/W1-R1. Architect should cancel/supersede this claim and issue next Task from current SoT.
+
+Blockers:
+RECOVERY_CONFLICT — TB-TMAR-CHECKOUT-IMPL-W5 already executed/Completed; Offer reference track already advanced past this discovery wave
+
+Product-Resume-Safety:
+SAFE_WITH_TMAR_PARALLEL
+
+Next-Recommended-Task:
+Architect resync — issue correct next Task from current Master Recovery (Offer already reference-complete lineage; do not re-run OFFER-REF-W1 discovery as written)
+
+END_TOOBA_WORKER_RESULT
