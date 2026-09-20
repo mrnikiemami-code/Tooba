@@ -1,0 +1,85 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+
+BEGIN_TOOBA_TASK_RESULT
+
+Task-ID:
+TB-P10-T004-R3
+
+Parent-Task:
+TB-P10-T004-R2
+
+Channel:
+tooba-main
+
+WorkerId:
+tooba-worker-01
+
+Status:
+PASS
+
+USER_VISUAL_ACCEPTED=NO
+
+Summary:
+Real runtime A–J payment-completion proof PASS on Host :5088 + FE :3000. Minimal defect fixed: StorefrontCheckoutComposer.GetAsync no longer rejects Converted empty-line carts, so payment initiate/sandbox/manual/admin flows work after shipping commit. Sandbox success/failure+retry, manual tracking, proof Required, admin confirm/reject+history, guest/auth ownership, foreign media deny, Mode=Disabled simulator unavailable, financial StoreShipping exact. Focused Host 12 + FE storefront 30 + payment-page 4 + critical-storefront green. Migration AddManualPaymentEvidence applied to local DB. HEAD==origin/main. Worker IDLE. No TB-P10-T005.
+
+Applicable-Locks:
+LOCK-SF-001…018 preserved; sandbox Dev/Sandbox only; Production/unconfigured fail-closed; manual tracking mandatory; proof Configurable; manual stays Pending; no card PAN/CVV; ownership strict.
+
+Recovery-Start:
+docs/evidence/TB-P10-T004/r3-recovery-start.md — start HEAD cfb4e822; Postgres docker postgres-db revived; Host/FE READY.
+
+Runtime-A-Sandbox-Success:
+docs/evidence/TB-P10-T004/r3-sandbox-success-runtime.md + r3-runtime-raw.json A PASS.
+
+Runtime-B-Sandbox-Failure-Retry:
+docs/evidence/TB-P10-T004/r3-sandbox-failure-retry-runtime.md B PASS (same PaymentId, new AttemptId).
+
+Runtime-C-Manual:
+docs/evidence/TB-P10-T004/r3-manual-runtime.md C PASS.
+
+Runtime-D-Proof-Required:
+docs/evidence/TB-P10-T004/r3-proof-required-runtime.md + r3-proof-required-raw.json PASS.
+
+Runtime-E-Admin-Confirm:
+docs/evidence/TB-P10-T004/r3-admin-confirm-runtime.md E PASS (confirm_deposit Succeeded).
+
+Runtime-F-Admin-Reject-Retry:
+docs/evidence/TB-P10-T004/r3-admin-reject-retry-runtime.md F PASS (OLD+NEW history).
+
+Runtime-G-Guest:
+docs/evidence/TB-P10-T004/r3-guest-runtime.md G PASS.
+
+Runtime-H-Authenticated:
+docs/evidence/TB-P10-T004/r3-auth-runtime.md H PASS (tooba_session).
+
+Runtime-I-Security:
+docs/evidence/TB-P10-T004/r3-security-runtime.md + r3-sandbox-disabled-raw.json PASS (foreign media 403; Mode=Disabled sandbox unavailable).
+
+Runtime-J-Financial:
+docs/evidence/TB-P10-T004/r3-financial-runtime.md J PASS.
+
+Visual-Smoke:
+docs/evidence/TB-P10-T004/r3-visual-smoke.md — browser sandbox RTL/SANDBOX CTAs; no card fields; USER_VISUAL_ACCEPTED=NO.
+
+Focused-Validation:
+Host 12 green; FE storefront 30; payment-page 4; critical-storefront green; git diff --check clean.
+
+Temp-Cleanup:
+R3-created cookie/log temps removed. Historical unrelated .tmp-* leftovers remain untracked (not task-owned). RESULT.r2.bridge.txt leftover untracked not committed.
+
+Recovery-SoT:
+Last Architect-accepted: TB-P10-T004-R1. Last Implementation: TB-P10-T004-R3. Issued/Repair: none. USER_VISUAL_ACCEPTED=NO. Worker IDLE. No TB-P10-T005.
+
+Git:
+branch main; HEAD 1ccf078f0877155f9709d525becdefa6ed4fdb32; HEAD==origin/main yes; tracked task tree clean.
+
+Architectural-Concerns:
+none for this repair; R2 empty-cart finalization needed GetAsync exception for payment path (fixed).
+
+Visual-Concerns:
+USER_VISUAL_ACCEPTED=NO.
+
+Blockers:
+none
+
+END_TOOBA_TASK_RESULT

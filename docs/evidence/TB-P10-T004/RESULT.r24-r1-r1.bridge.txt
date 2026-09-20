@@ -1,0 +1,76 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+
+BEGIN_TOOBA_WORKER_RESULT
+
+Task-ID:
+TB-P10-T004-R24-R1-R1
+
+Parent-Task:
+TB-P10-T004-R24-R1
+
+Channel:
+tooba-main
+
+WorkerId:
+tooba-worker-01
+
+Status:
+PASS
+
+USER_VISUAL_ACCEPTED=NO
+
+Summary:
+Recipient canonicalization repair PASS. Saved-address checkout no longer snapshots stale AddressBook RecipientName after explicit FirstName/LastName. One Host rule (StorefrontRecipientNames) wins: non-empty First+Last display as FirstName + " " + LastName; legacy RecipientName is fallback only and is never guessed-split. Runtime checkout 01a09aae-37d0-7000-89cd-a22cebf0a90f Payment/Customer/Admin all show محمد امامی (not محمد لمامی). Historical checkout 01a09a9b-3880-7000-af7a-0a21d7de6ac7 still shows محمد لمامی. LOCK-SF-122 added. No TB-P10-T005. Worker IDLE.
+
+Applicable-Locks:
+LOCK-SF-001…122 preserved. Especially LOCK-SF-103 atomic checkout; LOCK-SF-117 Cart != Session; LOCK-SF-118 Cart survives login until COMMIT; LOCK-SF-119 canonical shared account header; LOCK-SF-120 canonical logout; LOCK-SF-121 new addresses store FirstName/LastName separately; LOCK-SF-122 explicit FirstName/LastName canonical, RecipientName fallback only, no guessed split.
+
+Recovery-Start:
+Phase P10; Last Architect-accepted TB-P10-T004-R24; Last Implementation at start TB-P10-T004-R24-R1; Current Repair TB-P10-T004-R24-R1-R1; Worker tooba-worker-01; branch main; start HEAD==origin/main 9f7917795510c5d4a7a86d16ea2f5d087d1b825b (R24-R1 evidence on implementation 6dd584f1); expected previous HEAD 6dd584f1 is ancestor, tree known/safe; tracked dirty clean; task-owned untracked claimed artifact only. Evidence docs/evidence/TB-P10-T004/r24-r1-r1-recovery-start.md
+
+Recipient-Discovery:
+AddressBook, Shipping form, saved-address projection, checkout draft, shipping commit DTO, Order snapshot, Payment page, Customer Order, Admin Order all traced. Defect path: PrepareShippingAsync replaced the whole shipping snapshot from AddressBook whenever SavedAddressId was set, then SubmitAsync re-prepared and discarded request First/Last. Required precedence is now one Host Display/ResolveExplicitOverLegacy. Evidence r24-r1-r1-recipient-discovery.md
+
+Recipient-Canonicalization:
+If FirstName and LastName both non-empty → FirstName + " " + LastName. Else if legacy RecipientName non-empty → that RecipientName unsplit. Else existing empty/unknown. Request RecipientName-alone never overrides the book. New addresses still require First/Last independently; RecipientName is a deterministic first+last compatibility mirror only. No parse/split. Evidence r24-r1-r1-recipient-canonicalization.md
+
+Order-Snapshot:
+Commit stores RecipientFirstName, RecipientLastName, and compatibility RecipientName independently. Runtime SQL محمد امامی|محمد|امامی. Payment/Customer/Admin read committed snapshot Display, not AddressBook. Historical First/Last-absent rows fall back to RecipientName. Evidence r24-r1-r1-order-snapshot.md
+
+Payment-Summary:
+Legacy book محمد لمامی + explicit محمد / امامی → page.recipientName محمد امامی on commit and GET. Must-not محمد لمامی. MapPage uses snapshot Display; FE still prints page.recipientName only. Evidence r24-r1-r1-payment-summary.md
+
+Focused-Validation:
+StorefrontRecipientCanonicalizationTests 8/8; AddressBook legacy/explicit/snapshot Facts PASS; cart-merge + AtomicCheckoutCommitTests PASS; test:storefront 56/56; test:critical-storefront 16/16; test:customer 34/34; login guard PASS; recovery-staleness.guard 4/4; git diff --check PASS. No unrelated full suites. Evidence r24-r1-r1-focused-validation.md
+
+Runtime:
+Host :5088 + FE :3000. A–K PASS. Login OTP 09111111111; cart merge lines=1; legacy address 01a09a72-0fd0-7000-b93f-907016579c4a; commit 01a09aae-37d0-7000-89cd-a22cebf0a90f; Payment/Customer/Admin محمد امامی; historical 01a09a9b-3880-7000-af7a-0a21d7de6ac7 محمد لمامی; cart 404 after COMMIT. Screenshots: r24-r1-r1-shipping-fields.png, r24-r1-r1-customer-order-recipient.png, r24-r1-r1-historical-legacy-recipient.png. Admin browser shell denied under customer cookie; Host /v1/admin/orders/{id} is SoT. Evidence r24-r1-r1-runtime.md + _r24-r1-r1-runtime-raw.json
+
+AntiPattern-Scan:
+CLEAN. No guessed split, no frontend-only Payment precedence, no stale AddressBook re-read, no destructive name migration, no combined-only storage regression. Evidence r24-r1-r1-antipattern-scan.md
+
+Lock-Registry:
+LOCK-SF-122 added in docs/architecture/TOOBA-LOCKS.md. LOCK-SF-001…121 unchanged.
+
+Recovery-SoT:
+Phase P10; Last Architect-accepted before review TB-P10-T004-R24; Last Implementation TB-P10-T004-R24-R1-R1; Current Issued/Repair (none); USER_VISUAL_ACCEPTED=NO; Worker tooba-worker-01 IDLE; branch main; HEAD==origin/main; no TB-P10-T005. CURRENT_TASK_ID=TB-P10-T004-R24-R1-R1; STALE includes R24-R1. Guard 4/4. Evidence r24-r1-r1-recovery-sot.md
+
+Git:
+implementation HEAD fc25565208bbeb9d04cff62ef65fc047c0207ccd
+ending HEAD cfb189ef3e95e923737ee3984c7a114d8d8f73b3
+origin/main cfb189ef3e95e923737ee3984c7a114d8d8f73b3
+HEAD==origin/main yes
+branch main
+task-owned worktree clean
+no TB-P10-T005
+
+Architectural-Concerns:
+None. SavedAddressId remains a request-only selector; it is not stored on the committed shipping snapshot (existing address-ownership Facts). Compatibility RecipientName on new/updated rows is a deterministic first+last mirror only.
+
+Visual-Concerns:
+USER_VISUAL_ACCEPTED=NO. No address UI redesign. Payment/Admin browser screenshots not captured: admin shell denies while a customer session cookie is present; Payment FE without that cart can show ownership failure. Host GET checkout / customer / admin projections are the SoT and agree on محمد امامی.
+
+Blockers:
+None.
+
+END_TOOBA_WORKER_RESULT

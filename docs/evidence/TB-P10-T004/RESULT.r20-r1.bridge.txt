@@ -1,0 +1,71 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+
+BEGIN_TOOBA_WORKER_RESULT
+
+Task-ID:
+TB-P10-T004-R20-R1
+
+Parent-Task:
+TB-P10-T004-R20
+
+Channel:
+tooba-main
+
+WorkerId:
+tooba-worker-01
+
+Status:
+PASS
+
+USER_VISUAL_ACCEPTED=NO
+
+Summary:
+Visual Gate Repair PASS. Long holds now use shared hour-aware HH:MM:SS (23:47:20) instead of 1439:18; accessible minute-resolution labels in FA/EN. Admin operational history maps GATEWAY_REJECTED to ردشده توسط درگاه پرداخت / Rejected by payment gateway; Host audit JSON unchanged. Real browser A–E PASS on Host :5088 + FE :3000. No lifecycle/TTL/polling change. No TB-P10-T005. Worker IDLE.
+
+Applicable-Locks:
+LOCK-SF-001…102 preserved. No new lock required; LOCK-SF-001…102 sufficient.
+
+Recovery-Start:
+Phase P10; Architect-accepted R19; start HEAD==origin/main e22ffdbdd59fbd216e7fc9993829bf09e3af2ef2; expected previous HEAD match; tracked clean; USER_VISUAL_ACCEPTED=NO. Evidence r20-r1-recovery-start.md
+
+Operational-History-Discovery:
+Renderer shows label/summary from Host operational-history. Raw fall-throughs: payment_failed and payment_refund_failed summaries = LastFailureCode. Live GET still returns GATEWAY_REJECTED in summary fields. Other known codes mapped; unknown SCREAMING_SNAKE uses human fallback. Evidence r20-r1-operational-history-discovery.md
+
+Countdown-Format:
+Shared lib/reservation-countdown.ts: <1h MM:SS; >=1h HH:MM:SS; 24h+ is 24:00:00 not 1440. Cart + Admin reuse it. FA cart manual review 23:47:20 + aria ۲۳ ساعت و ۴۷ دقیقه تا پایان مهلت رزرو. Admin 23:46:49. Server ExpiresAt unchanged. Evidence r20-r1-countdown-format.md
+
+Admin-History-Localization:
+FA: پرداخت ناموفق / ردشده توسط درگاه پرداخت. EN /en/admin: Payment failed / Rejected by payment gateway. GATEWAY_REJECTED never in normal UX. Stored audit unchanged. Evidence r20-r1-admin-history-localization.md
+
+Focused-Validation:
+22 frontend + 4 recovery PASS. Countdown cases 09:30 / 59:59 / 01:00:00 / 23:59:00 / 24:00:00; GATEWAY_REJECTED FA+EN; unknown fallback; R16/R17/R18 source tests; git diff --check clean. Evidence r20-r1-focused-validation.md
+
+Runtime:
+A–E PASS. Evidence r20-r1-runtime.md. Screenshot docs/evidence/TB-P10-T004/r20-r1-cart-fa-manual-countdown.png
+
+AntiPattern-Scan:
+CLEAN. One formatter; no polling; no FE lifecycle from formatted text; no raw-enum renderer fallback; no Status.ToString() parse. Evidence r20-r1-antipattern-scan.md
+
+Lock-Registry:
+No new lock required; LOCK-SF-001…102 sufficient.
+
+Recovery-SoT:
+Phase P10; Last Architect-accepted before review TB-P10-T004-R19; Last Implementation TB-P10-T004-R20-R1; Issued/Repair none; USER_VISUAL_ACCEPTED=NO; Worker IDLE; no TB-P10-T005. Guard CURRENT_TASK_ID=R20-R1, STALE includes R20. Evidence r20-r1-recovery-sot.md
+
+Git:
+impl 99c6641366a7bb25eaf434edbf51a3a3aae1a35a fix(storefront): format long reservation holds and localize admin payment history.
+docs d5fdd5e1b1bd067a7c45fb282a8055159a71c8d9 docs(evidence): record TB-P10-T004-R20-R1 visual gate repair.
+ending HEAD d5fdd5e1b1bd067a7c45fb282a8055159a71c8d9
+HEAD==origin/main yes
+task-owned worktree clean (historical .tmp-* ignored)
+
+Architectural-Concerns:
+Host operational-history projection still copies LastFailureCode into summary fields; frontend maps for display. Coordinator reacquire-fail Status.ToString() note from R19 remains unused by Admin UI.
+
+Visual-Concerns:
+USER_VISUAL_ACCEPTED=NO. Screenshot capture can still mirror RTL. /en/admin html lang may stay fa; presentation now also uses /en pathname.
+
+Blockers:
+none
+
+END_TOOBA_WORKER_RESULT

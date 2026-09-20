@@ -1,0 +1,76 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+
+BEGIN_TOOBA_TASK_RESULT
+
+Task-ID:
+TB-P10-T004-R4
+
+Parent-Task:
+TB-P10-T004-R3
+
+Channel:
+tooba-main
+
+WorkerId:
+tooba-worker-01
+
+Status:
+PASS
+
+USER_VISUAL_ACCEPTED=NO
+
+Summary:
+Payment-result 401 loop after Cart finalization repaired. Ownership now uses authenticated session or committed guest Order/Payment proof via GetOwnedForPaymentResultAsync (active cartId ignored for ownership). FE retains narrow paymentResultProof across clearCartSession; load/upload/manual/sandbox APIs resolve via resolvePaymentResultAccess. Result polling is state-aware (shouldPollStorefrontPayment + inFlight): AwaitingAdmin/Succeeded/Failed/Cancelled do not rapid-poll; transient online Pending/Processing/Verifying bounded ≤20s. Runtime A–H PASS on Host :5088 (r4-runtime-raw.json ok=true). Focused Host 9 + FE storefront 33 + payment-page 4 + critical-storefront + recovery guard green. Locks SF-019…022 added. HEAD==origin/main. Worker IDLE. No TB-P10-T005.
+
+Applicable-Locks:
+LOCK-SF-001…018 preserved; LOCK-SF-019 ownership independent of active Cart; LOCK-SF-020 state-aware polling; LOCK-SF-021 AwaitingAdmin no rapid-poll; LOCK-SF-022 guest committed proof survives Cart finalization.
+
+Recovery-Start:
+docs/evidence/TB-P10-T004/r4-recovery-start.md — claim HEAD 1ccf078f; branch main; HEAD==origin/main.
+
+Discovery:
+docs/evidence/TB-P10-T004/r4-payment-result-discovery.md — root cause: unconditional 1.5s×20s poll + clearCartSession → new cart ownership → Host 401.
+
+Ownership-Model:
+docs/evidence/TB-P10-T004/r4-ownership-model.md — auth session; guest committed cartId+secret; new empty Cart / paymentId alone / wrong secret denied.
+
+Polling-State-Machine:
+docs/evidence/TB-P10-T004/r4-polling-state-machine.md — poll only transient online; stop AwaitingAdmin/terminal/401/unmount; no overlapping GETs.
+
+Manual-Runtime:
+docs/evidence/TB-P10-T004/r4-manual-runtime.md + r4-runtime-raw.json A/B/C PASS (committed proof 200×8, fresh cart 401, admin confirm Succeeded).
+
+Sandbox-Runtime:
+docs/evidence/TB-P10-T004/r4-sandbox-runtime.md + D/E PASS (success owned; failure/retry same checkout Succeeded; fail owned 200).
+
+Guest-Runtime:
+docs/evidence/TB-P10-T004/r4-guest-runtime.md G PASS (good 200 / wrong 401).
+
+Authenticated-Runtime:
+docs/evidence/TB-P10-T004/r4-auth-runtime.md F PASS (Bearer owner GET after new cartId 200).
+
+Security:
+docs/evidence/TB-P10-T004/r4-security.md H PASS (foreign 401; paymentId alone 400; bogus cart 401; new empty Cart 401).
+
+Performance:
+docs/evidence/TB-P10-T004/r4-performance.md — AwaitingAdmin/terminal no rapid-poll; inFlight; polling-contract PASS.
+
+Focused-Validation:
+docs/evidence/TB-P10-T004/r4-focused-validation.md — Host 9; FE storefront 33; payment-page 4; critical-storefront; recovery-staleness 4; git diff --check clean.
+
+Recovery-SoT:
+docs/evidence/TB-P10-T004/r4-recovery-sot.md — Phase P10; Last Architect-accepted TB-P10-T004-R3; Last Implementation TB-P10-T004-R4; Issued/Repair none; USER_VISUAL_ACCEPTED=NO; Worker IDLE; no TB-P10-T005.
+
+Git:
+branch main; HEAD b8d411e762a1a8c3f48d3dccfcc902c949992b93; HEAD==origin/main yes; tracked task tree clean (historical .tmp-* leftovers untracked).
+
+Architectural-Concerns:
+none for this repair; FE still sends cartId query for compatibility but Host ignores it for ownership after Order commit.
+
+Visual-Concerns:
+USER_VISUAL_ACCEPTED=NO; no checkout/result redesign.
+
+Blockers:
+none.
+
+END_TOOBA_TASK_RESULT

@@ -1,0 +1,104 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+
+BEGIN_TOOBA_WORKER_RESULT
+
+Task-ID:
+TB-P10-T022-R12A
+
+Parent-Task:
+TB-P10-T022-R11
+
+Channel:
+tooba-main
+
+WorkerId:
+tooba-worker-01
+
+AgentType:
+cursor
+
+Status:
+PASS
+
+Appearance-USER_VISUAL_ACCEPTED=YES
+Builder-USER_VISUAL_ACCEPTED=NO
+
+Summary:
+Industry Template Catalog Batch A PASS. Fashion-parity persistent packs for auto-parts, building-materials, tools-hardware: each 1 StoreTemplate, 8 three-level category roots, 15 TemplateProducts, brands/banners/media, Persian translations, /template-preview/{key}, selector + Template Apply materialization. Sample/Store isolation preserved. LOCK-SF-342…347. No cloning. No R12B/T023. Worker IDLE.
+
+Applicable-Locks:
+LOCK-SF-001…341 preserved. Added LOCK-SF-342…347.
+
+Recovery-Start:
+branch=main expected HEAD 9baccae6c0a0a2d9f98a4ca3e786ea0b37906ead == origin/main. docs/evidence/TB-P10-T022-R12A/recovery-start.md
+
+Batch-A-Templates:
+auto-parts, building-materials, tools-hardware — three durable Template Catalog packs with Fashion schema parity; no alternate schema; no operational Catalog columns.
+
+Auto-Parts-Pack:
+8 three-level roots + 15 products + brands/media/banners; key auto-parts; preview /template-preview/auto-parts.
+
+Building-Materials-Pack:
+8 three-level roots + 15 products + brands/media/banners; key building-materials (selector building-supplies→building-materials); preview /template-preview/building-materials.
+
+Tools-Hardware-Pack:
+8 three-level roots + 15 products + brands/media/banners; key tools-hardware; preview /template-preview/tools-hardware.
+
+Translation:
+Persian mandatory via existing Template translation architecture; no hardcoded language list.
+
+Media:
+/images/template-auto-parts|building-materials|tools-hardware/; no Fashion reuse; no hotlinks; focal where needed.
+
+Template-Compositions:
+Distinct composition recipes per industry via existing composition variants; shared composition engine only.
+
+Template-Selector:
+Industry packs appear in Template selector with live iframe Desktop/Tablet/Mobile + language + Use Template; shared engine; no Admin chrome.
+
+Preview-Routes:
+Dedicated /template-preview/{key} for all three; shared renderer + canonical preview context.
+
+Source-Isolation:
+Sample=Template Catalog; Store=operational+PreviewFake only; published=Store only; purity proven for all 3 packs.
+
+Template-Apply:
+Materializes full ordered composition into Page Draft for all 3; opens R10 editor; no Catalog mutation.
+
+Seed-Idempotency:
+Deterministic idempotent Industry Batch A seed; re-run safe; no operational Catalog writes.
+
+Performance:
+Fashion query path reused; no N+1/preview waterfalls.
+
+Focused-Validation:
+Host IndustryBatchATemplateCatalogT022R12ATests 8 PASS; FE r12a/r4/industry guards 18 PASS; critical-storefront PASS; recovery-staleness PASS; runtime API 15/8/pure each pack. docs/evidence/TB-P10-T022-R12A/
+
+Runtime:
+Host :5088 + FE :3000 scenarios A–O per template exercised. docs/evidence/TB-P10-T022-R12A/
+
+Visual-Evidence:
+11 required PNGs under docs/evidence/TB-P10-T022-R12A/screenshots/.
+
+AntiPattern-Scan:
+CLEAN — no schema fork; no Fashion media reuse; no Catalog mutation; no silent empty Apply; no R12B.
+
+Lock-Registry:
+LOCK-SF-001…347. New 342–347 only.
+
+Recovery-SoT:
+Phase P10; Last Architect-accepted before review TB-P10-T022-R11; Last Implementation TB-P10-T022-R12A; Issued/Repair none; Appearance YES; Builder NO; Worker IDLE; do NOT invent TB-P10-T023; remaining industry batches await next issue.
+
+Git:
+SHA=8c3732e17ba0eacccf9dee1d4fb3dcd40e3690ea HEAD==origin/main after push.
+
+Architectural-Concerns:
+none material; Batch B+ industries deferred.
+
+Visual-Concerns:
+Builder USER_VISUAL_ACCEPTED=NO — Architect visual review of Batch A packs still required.
+
+Blockers:
+none
+
+END_TOOBA_WORKER_RESULT

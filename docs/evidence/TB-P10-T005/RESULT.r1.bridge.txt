@@ -1,0 +1,76 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+
+BEGIN_TOOBA_WORKER_RESULT
+
+Task-ID:
+TB-P10-T005-R1
+
+Parent-Task:
+TB-P10-T005
+
+Channel:
+tooba-main
+
+WorkerId:
+tooba-worker-01
+
+Status:
+PASS
+
+USER_VISUAL_ACCEPTED=NO
+
+Summary:
+Appearance foundation runtime + recovery repair PASS. Last Architect-accepted corrected to TB-P10-T004-R24-R1-R4. Host :5088 recycled onto current binaries (PID 3732). EF applied 20260914010000_AddStoreAppearanceSettings. GET /v1/storefront/appearance is 200 tooba-blue on tenant:store-alpha. SSR first HTML has data-storefront-scope=tenant:store-alpha (not fallback default). Fallback remains safe on dead origin. Disabled host 404 does not leak alpha. R4 storefront tests 67/67. Full tsc still 107 pre-existing Admin/grid errors; none in T005/R1 files. Unrelated local login/account UX preserved. No TB-P10-T006. Worker IDLE.
+
+Applicable-Locks:
+LOCK-SF-001…138 preserved. No new locks.
+
+Recovery-Start:
+Phase P10; stale SoT Last Architect-accepted TB-P10-T004-R24; HEAD==origin/main 92f9f465; Host PID 18068 pre-T005 (appearance 404). Unrelated login/account dirty preserved. Evidence r1-recovery-start.md
+
+Recovery-Correction:
+Last Architect-accepted now TB-P10-T004-R24-R1-R4. T005 not self-accepted. Evidence r1-recovery-sot.md
+
+Host-Current-Head:
+Recycled :5088 via launch-profile Tooba.Host. New PID 3732, binaries 2026-09-14 04:16:39 after 92f9f465. Appearance 404→200. Evidence r1-host-current-head.md
+
+Migration-Runtime:
+Host startup Database.MigrateAsync applied catalog.store_appearance_settings + history row. 0 data rows; default projection reads. Evidence r1-migration-runtime.md
+
+Appearance-API-Runtime:
+http://127.0.0.1:5088/v1/storefront/appearance 200 storeScope=tenant:store-alpha palette=tooba-blue tokens 37 99 235 / 29 78 216. Host:disabled.localhost 404 platform.resolution.failed. Evidence r1-appearance-api-runtime.md
+
+SSR-Runtime:
+A live: data-storefront-palette=tooba-blue data-storefront-scope=tenant:store-alpha CSS vars on first /fa HTML. B fallback: dead :59999 → default tooba-blue. Evidence r1-ssr-runtime.md
+
+Runtime-Regression:
+Home/PLP/PDP/Cart/Shipping 200; default blue preserved; shipping #E53935 pre-existing; R4 identity/cart tests 67/67. Evidence r1-runtime-regression.md
+
+Validation:
+recovery 4/4; appearance 3/3 + palette 3/3; test:storefront 67/67; critical-storefront 16/16; Host appearance 4/4; typecheck not PASS (107 pre-existing Admin/grid); zero new T005/R1 tsc errors. Evidence r1-validation.md
+
+AntiPattern-Scan:
+CLEAN. Evidence r1-antipattern-scan.md
+
+Recovery-SoT:
+Phase P10; Last Architect-accepted TB-P10-T004-R24-R1-R4; Last Implementation TB-P10-T005-R1; Current Issued/Repair (none); USER_VISUAL_ACCEPTED=NO; Worker IDLE; no TB-P10-T006. Evidence r1-recovery-sot.md
+
+Git:
+ending HEAD 29ca9f0f66103af19283a84f2ef98bfffcf34bb8
+origin/main 29ca9f0f66103af19283a84f2ef98bfffcf34bb8
+HEAD==origin/main yes
+branch main
+task-owned worktree clean
+unrelated local login/account UX preserved unstaged
+no TB-P10-T006
+
+Architectural-Concerns:
+Dark ThemeMode still persisted not painted. Host: header disabled.localhost correctly fails platform resolution rather than returning another store's appearance.
+
+Visual-Concerns:
+USER_VISUAL_ACCEPTED=NO. Shipping pre-existing Shopeiva red unchanged.
+
+Blockers:
+None.
+
+END_TOOBA_WORKER_RESULT

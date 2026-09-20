@@ -1,0 +1,89 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+
+BEGIN_TOOBA_WORKER_RESULT
+
+Task-ID:
+TB-P10-T022-R8-R1
+
+Parent-Task:
+TB-P10-T022-R8
+
+Channel:
+tooba-main
+
+WorkerId:
+tooba-worker-01
+
+AgentType:
+cursor
+
+Status:
+PASS
+
+Appearance-USER_VISUAL_ACCEPTED=YES
+Builder-USER_VISUAL_ACCEPTED=NO
+
+Summary:
+R8 Runtime Visual Closure PASS. Host :5088 + FE :3000 restored; all 17 required PNG evidence captures produced. Store-empty/partial paths exercise real Section Variants with PreviewFillPolicy fake fill (not generic placeholder boxes); Sample remains Template Catalog; published Storefront has no fake markers. One visual repair: PreviewSampleBadge on magazine-rail/featured-plus-list article cards for previewFake. No TB-P10-T023. Worker IDLE.
+
+Applicable-Locks:
+LOCK-SF-001…311 preserved. No new locks required.
+
+Recovery-Start:
+branch=main expected HEAD e535e3cfd154aa77ba72779e0587c822893a0b03 == origin/main at claim. Unrelated stash unrelated-user-r8r1-preflight preserved. docs/evidence/TB-P10-T022-R8-R1/recovery-start.md
+
+Runtime-Availability:
+Host :5088 + FE :3000 reachable; /admin/landing-pages/new, /template-preview/fashion, Store preview routes exercised. docs/evidence/TB-P10-T022-R8-R1/runtime.md ; runtime-report.json ok=true
+
+Reviews-Visual-Proof:
+docs/evidence/TB-P10-T022-R8-R1/reviews-visual-proof.md — sample-reviews.png store-reviews-zero-filled.png store-reviews-partial-filled.png sample-vs-store-reviews-geometry.png
+
+Articles-Visual-Proof:
+docs/evidence/TB-P10-T022-R8-R1/articles-visual-proof.md — sample-articles.png store-articles-zero-filled.png store-articles-partial-filled.png sample-vs-store-articles-geometry.png; article sample-marker repair included
+
+Banner-Visual-Proof:
+docs/evidence/TB-P10-T022-R8-R1/banner-visual-proof.md — store-banner-zero-filled.png store-banner-iframe.png store-banner-fullpage.png
+
+Product-Category-Brand-Proof:
+docs/evidence/TB-P10-T022-R8-R1/product-category-brand-proof.md — store-products/categories/brands-zero-filled.png
+
+Locale-Proof:
+docs/evidence/TB-P10-T022-R8-R1/locale-proof.md — store-preview-localized-fake-items.png preview-language-selector-r8r1.png
+
+Published-Storefront-Safety:
+docs/evidence/TB-P10-T022-R8-R1/published-storefront-safety.md — published-storefront-no-preview-fake.png
+
+Geometry-Fidelity:
+docs/evidence/TB-P10-T022-R8-R1/geometry-fidelity.md — Sample vs Store-empty material equivalence for Reviews/Articles Variants
+
+Source-Purity:
+docs/evidence/TB-P10-T022-R8-R1/source-purity.md — Store fill in-memory only; no Template Catalog fallback; Sample fill disabled
+
+Focused-Validation:
+R8 guards PASS; recovery-staleness PASS; critical-storefront PASS; git diff --check PASS. docs/evidence/TB-P10-T022-R8-R1/focused-validation.md
+
+Visual-Evidence:
+17/17 required PNGs under docs/evidence/TB-P10-T022-R8-R1/screenshots/. docs/evidence/TB-P10-T022-R8-R1/visual-evidence.md
+
+AntiPattern-Scan:
+CLEAN. docs/evidence/TB-P10-T022-R8-R1/antipattern-scan.md
+
+Lock-Registry:
+LOCK-SF-001…311; no additions. docs/evidence/TB-P10-T022-R8-R1/lock-registry.md
+
+Recovery-SoT:
+Phase P10; Last Architect-accepted before review TB-P10-T022-R7; Last Implementation TB-P10-T022-R8-R1; Issued/Repair none; Appearance YES; Builder NO; Worker IDLE; do NOT invent TB-P10-T023. docs/evidence/TB-P10-T022-R8-R1/recovery-sot.md
+
+Git:
+SHA=bef0932b460a87a5f37e7738981c9c688d9f2b5b HEAD==origin/main after push. Unrelated stash unrelated-user-r8r1-preflight preserved.
+
+Architectural-Concerns:
+none material.
+
+Visual-Concerns:
+Builder USER_VISUAL_ACCEPTED=NO — Architect visual review of PNG pack still required for ACCEPT.
+
+Blockers:
+none
+
+END_TOOBA_WORKER_RESULT

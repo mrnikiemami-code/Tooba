@@ -1,0 +1,101 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+
+BEGIN_TOOBA_WORKER_RESULT
+
+Task-ID:
+TB-P10-T004-R19
+
+Parent-Task:
+TB-P10-T004-R18
+
+Channel:
+tooba-main
+
+WorkerId:
+tooba-worker-01
+
+Status:
+PASS
+
+USER_VISUAL_ACCEPTED=NO
+
+Summary:
+Reservation Lifecycle Final Integration Gate PASS. R13–R18 lifecycle is contradiction-free after one minimal fix: commit-time inventory hold TTL now resolves primary category so Offer > Category > Store > Platform applies to both hold and Cycle #1. Flash-sale mixed Order uses 3 min then 1 min and blocks Cycle #3. Manual review stays same cycle; seller mutate still denied; Settings future-only; no polling/N+1; no TB-P10-T005. Worker IDLE.
+
+Applicable-Locks:
+LOCK-SF-001…102 preserved. No new lock required; LOCK-SF-001…102 sufficient.
+
+Recovery-Start:
+Phase P10; Architect-accepted R18; start HEAD==origin/main d7dfc2e3ea7eae0ed57876cf93101021e4e9c0ad; expected previous HEAD match; tracked clean; USER_VISUAL_ACCEPTED=NO. Evidence: docs/evidence/TB-P10-T004/r19-recovery-start.md
+
+Integration-Discovery:
+Cart → Shipping → Commit Cycle #1 → Payment fail/retry (same ExpiresAt) → Expiry → Reacquire Cycle #2+ → Success/Cancel/Manual. Guest proof vs Active Cart; auth PlacedByUserId; multi-seller min TTL + strictest max. Contradiction: CategoryId=null on commit hold — fixed. Table in r19-integration-discovery.md
+
+Lifecycle-Matrix:
+Contradiction-free CTAs for cart-only, Cycle #1, fail-same-cycle, expiry, reacquire, unavailable, max, manual AwaitingAdmin, confirm paths, paid, cancel, new Active Cart + old pending. Evidence r19-lifecycle-matrix.md
+
+Customer-UX:
+Pending section independent of Active Cart; server ExpiresAt countdown; one refresh at zero; no fetch interval; same Order retry; max/unavailable localized; Succeeded drops pending card.
+
+Admin-UX:
+Batched grid projections; immutable history + stored policy; shortages without parsing Status.ToString(); no timer extend; Settings/Category/Offer inherit-override; Seller read-only.
+
+Policy-Crosscheck:
+Offer > Category > Store > Platform; multi-line min TTL + min max; snapshot stored; Settings do not change active ExpiresAt; next cycle uses new policy; no FE precedence.
+
+Flash-Sale:
+Offer A 3/1/2 + Offer B inherit Store 10/5/3 → Order 3/1/2; Cycle #1 3m; fail does not extend; Cycle #2 1m; no Cycle #3.
+
+Manual-Payment:
+Same-cycle ManualReview; AwaitingAdmin has no pay-again; confirm with active hold Succeeded; expired+stock reacquire; expired+no stock not Succeeded; no resurrection.
+
+Concurrency:
+Double start/retry idempotent; retry vs expiry/cancel/success safe; duplicate paid/manual/admin confirm terminal; settings edit does not rewrite ExpiresAt; no duplicate Order/Cycle/stock.
+
+Financial-Invariants:
+Payable = merchandise + StoreShipping; shipping excluded from payout; paid projection idempotent; decimal 1.25 exact; R11 single/multi-seller PASS.
+
+Security:
+Guest committed proof only; wrong proof omitted; auth customer-only; Admin mutate authorized; Seller 403 without reservation.policy.mutate.
+
+Network-Performance:
+No per-second polling; grids/pending batched; countdown local; one expiry refresh; Settings not looped.
+
+Deployment-Readiness:
+R15–R18 migrations deterministic; unique cycle numbers; nullable inherit; old Orders without cycles do not crash; platform default in appsettings; no startup mass mutation.
+
+Focused-Validation:
+Host R10–R19 filter 66/66 PASS including ReservationLifecycleIntegrationGateTests 5/5; FE reservation/pending/admin-cycle 15/15; recovery guard 4/4; git diff --check clean.
+
+Runtime:
+A–R PASS via Host directory/resolver/projector proofs. Evidence r19-runtime.md
+
+Visual-Smoke:
+Source contracts for Cart/Admin/Settings/Category/Offer FA RTL and EN LTR. No live screenshot capture. USER_VISUAL_ACCEPTED=NO.
+
+AntiPattern-Scan:
+CLEAN after category-hold fix. No timer reset, FE retry, polling, resurrection, Settings rewrite, N+1, or FE precedence.
+
+Lock-Registry:
+No new lock required; LOCK-SF-001…102 sufficient.
+
+Recovery-SoT:
+Phase P10; Last Architect-accepted before review TB-P10-T004-R18; Last Implementation TB-P10-T004-R19; Issued/Repair none; USER_VISUAL_ACCEPTED=NO; Worker IDLE; no TB-P10-T005. Guard CURRENT_TASK_ID=R19, STALE includes R18.
+
+Git:
+impl af510644 feat(order): apply category reservation policy to commit-time hold TTL.
+docs bf0f29dd docs(evidence): record TB-P10-T004-R19 reservation lifecycle integration gate.
+ending HEAD bf0f29ddb22001c02d83c22b1d9e84c8246e1e1b
+HEAD==origin/main yes
+task-owned worktree clean (historical .tmp-* ignored)
+
+Architectural-Concerns:
+Coordinator still stores reacquire-fail detail as Status.ToString(); Admin does not parse it.
+
+Visual-Concerns:
+USER_VISUAL_ACCEPTED=NO. Cart pending, Admin audit, and Settings/Category/Offer reservation sections still need Architect visual review.
+
+Blockers:
+none
+
+END_TOOBA_WORKER_RESULT

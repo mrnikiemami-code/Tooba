@@ -1,0 +1,60 @@
+﻿PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+
+BEGIN_TOOBA_WORKER_RESULT
+
+Task-ID: TB-P10-T022-R19
+Parent-Task: TB-P10-T022-R18
+Channel: tooba-main
+WorkerId: tooba-worker-01
+AgentType: cursor
+Status: PASS
+
+Summary:
+Campaign-aware Cart/Checkout quote integrity. Nullable CartLine.MerchandisingCampaignId carries pricing context only; ICampaignCartPriceAuthority validates Store/active/member then resolves campaign AuthoredPrice (Base fallback on ineligibility). ATC from PromotionCampaign ProductCards passes campaignId hint (never amount). GetCart/qty/merge revalidate; Checkout ResolveCheckoutLineQuoteAsync + PRICE_CHANGED before commit; Order snapshots accepted PriceId/unit. Locks 417–421; capability map updated. Appearance YES; Builder NO.
+
+Applicable-Locks:
+LOCK-SF-001…416 retained; LOCK-SF-417…421 added.
+
+Recovery-Start:
+docs/evidence/TB-P10-T022-R19/recovery-start.md
+
+Cart-Pricing-Discovery:
+docs/evidence/TB-P10-T022-R19/cart-pricing-discovery.md
+
+Expiry-Policy:
+docs/evidence/TB-P10-T022-R19/expiry-policy.md
+
+Cart-Merge:
+docs/evidence/TB-P10-T022-R19/cart-merge.md
+
+Checkout-Revalidation:
+docs/evidence/TB-P10-T022-R19/checkout-revalidation.md
+
+Focused-Validation:
+docs/evidence/TB-P10-T022-R19/focused-validation.md — CampaignCartPriceIntegrityTests PASS; MerchandisingCampaignRuntimeTests PASS; FE cart-ui guard PASS; recovery-staleness PASS; 18ca10c9 ancestor PASS
+
+Runtime-Proof:
+docs/evidence/TB-P10-T022-R19/runtime-proof.md — probe.mjs EXIT 0 (A–F,P,Q); probe-report.json
+
+AntiPattern-Scan:
+docs/evidence/TB-P10-T022-R19/antipattern-scan.md
+
+Capability-Map:
+docs/architecture/TOOBA-CAPABILITY-MAP.md — Last Verified Task TB-P10-T022-R19
+
+Lock-Registry:
+docs/architecture/TOOBA-LOCKS.md — LOCK-SF-417…421
+
+Recovery-SoT:
+docs/PROJECT-STATE.md + docs/ai/TOOBA-RECOVERY-CONTEXT.md — Last Architect-accepted TB-P10-T022-R18; Last Implementation TB-P10-T022-R19
+
+Git:
+branch main; tip 5ea60ab714fcc684e69b138b52590c1f3f735737; pushed origin/main; HEAD==origin/main; 18ca10c9 ancestor
+
+Architectural-Concerns:
+(none for this scope)
+
+Blockers:
+(none)
+
+END_TOOBA_WORKER_RESULT

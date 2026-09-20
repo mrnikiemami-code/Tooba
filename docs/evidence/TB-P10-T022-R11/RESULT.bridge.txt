@@ -1,0 +1,89 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+
+BEGIN_TOOBA_WORKER_RESULT
+
+Task-ID:
+TB-P10-T022-R11
+
+Parent-Task:
+TB-P10-T022-R10
+
+Channel:
+tooba-main
+
+WorkerId:
+tooba-worker-01
+
+AgentType:
+cursor
+
+Status:
+PASS
+
+Appearance-USER_VISUAL_ACCEPTED=YES
+Builder-USER_VISUAL_ACCEPTED=NO
+
+Summary:
+Variant Picker V2 PASS. Geometric Variant cards removed. Every registered Variant has human-friendly Persian design names («طرح …»). Appearance and Review steps render actual production Section components via PreviewFakeData with live interactive carousel/tab behavior. Preview shells suppress business mutations. Locks LOCK-SF-335…341. Industry packs/R12 and cloning not started. No TB-P10-T023. Worker IDLE.
+
+Applicable-Locks:
+LOCK-SF-001…334 preserved. Added LOCK-SF-335…341 (human design metadata; production components in picker/review; design names presentation-only; interactive previews stay interactive; PreviewFakeData for picker; suppress mutations; picker performance).
+
+Recovery-Start:
+branch=main expected HEAD 701966357fb48815359dc280f5163ccb6df4c481 == origin/main. docs/evidence/TB-P10-T022-R11/recovery-start.md
+
+Variant-Name-Map:
+docs/evidence/TB-P10-T022-R11/variant-name-map.md — complete Persian design name/description mapping for all current Variants.
+
+Coverage:
+All current registered Variants covered (Hero/Story/Product/Banner/Category/Brand/Reviews/Article/Ranked and remaining families).
+
+Live-Component-Preview:
+variant-live-preview.tsx uses production renderSharedLandingSection + PreviewFakeData; Appearance step no geometric canvas.
+
+Interactive-Behavior:
+Swiper carousels slide; TabbedProducts switches; arrows/dots per production contract; not static screenshots.
+
+PreviewFakeData:
+In-memory preview-only; not DB/Store/Template Catalog.
+
+Review-Step:
+Renders selected real component/Variant again with human design name + source/settings summary.
+
+Picker-Layout:
+Name + short description + actual preview + selected state; constrained frames without misleading CSS zoom.
+
+Mutation-Safety:
+Preview shells no-op add-to-cart/navigation/business mutations.
+
+Focused-Validation:
+R11/R1/R2/R8/R10/completeness/registry + recovery-staleness PASS; critical-storefront PASS; git diff --check PASS. docs/evidence/TB-P10-T022-R11/
+
+Runtime:
+Host :5088 + FE :3000 exercised for picker/review live previews. docs/evidence/TB-P10-T022-R11/
+
+Visual-Evidence:
+13 required PNGs under docs/evidence/TB-P10-T022-R11/.
+
+AntiPattern-Scan:
+CLEAN — no geometric Variant cards; no static fake interactivity; no Catalog mutation; no R12 industry packs.
+
+Lock-Registry:
+LOCK-SF-001…341. New 335–341 only.
+
+Recovery-SoT:
+Phase P10; Last Architect-accepted before review TB-P10-T022-R10; Last Implementation TB-P10-T022-R11; Issued/Repair none; Appearance YES; Builder NO; Worker IDLE; do NOT start R12 industry packs; do NOT invent TB-P10-T023.
+
+Git:
+SHA=9baccae6c0a0a2d9f98a4ca3e786ea0b37906ead HEAD==origin/main after push.
+
+Architectural-Concerns:
+none material; R12+ industry Template Catalog packs deferred per roadmap.
+
+Visual-Concerns:
+Builder USER_VISUAL_ACCEPTED=NO — Architect visual review of Variant Picker V2 still required.
+
+Blockers:
+none
+
+END_TOOBA_WORKER_RESULT

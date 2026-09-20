@@ -1,0 +1,104 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+
+BEGIN_TOOBA_WORKER_RESULT
+
+Task-ID:
+TB-P10-T022-R10
+
+Parent-Task:
+TB-P10-T022-R9-R1
+
+Channel:
+tooba-main
+
+WorkerId:
+tooba-worker-01
+
+AgentType:
+cursor
+
+Status:
+PASS
+
+Appearance-USER_VISUAL_ACCEPTED=YES
+Builder-USER_VISUAL_ACCEPTED=NO
+
+Summary:
+Store Page Editor Workspace PASS. «استفاده از این قالب» materializes full ordered Template composition into Page Draft (not empty). Geometric composition preview removed. Unified Section workspace with edit/enable-disable/delete/up/down/drag; arrows and drag/drop share SortOrder persistence; insert before/between/after; Template Apply replaces only composition with explicit confirm; Home and Landing share editor. Locks LOCK-SF-328…334. R11 not started. No TB-P10-T023. Worker IDLE.
+
+Applicable-Locks:
+LOCK-SF-001…327 preserved. Added LOCK-SF-328…334 (Template Apply full composition; one Section workspace/order; arrows+drag same order; insert any index; delete/disable never Catalog/content; disabled preserve config/off Storefront; shared Home/Landing editor).
+
+Recovery-Start:
+branch=main expected HEAD 94391f5d7353f44c94b71c72c74151d680df6fee == origin/main. docs/evidence/TB-P10-T022-R10/recovery-start.md
+
+Template-Apply-Materialization:
+Apply creates/reuses Draft and materializes every Template Section with Type/Variant/Source/Settings/enabled/order; lands in Editor with all sections visible; no Catalog mutation.
+
+Repeat-Apply-Behavior:
+Explicit confirmation to replace composition or cancel; no silent append/merge.
+
+Unified-Section-Workspace:
+Single Section list shows position/label/variant/source/enabled/warnings and ops; geometric mini-preview removed.
+
+DragDrop-Reorder:
+HTML5 drag with handle; persists via same reorder API; RTL-safe; failure rollback where optimistic.
+
+Arrow-Reorder:
+Same persisted path; Up/Down disabled at ends.
+
+Canonical-Order-Model:
+SortOrder persisted; stable across refresh/edit/disable/insert/delete.
+
+Insert-Between:
+Insert affordances before first / between / after last; wizard inserts at requested index (InsertAt Host API).
+
+Delete-Section:
+Deletes Page Section config only; never business data; order compacted.
+
+Disable-Section:
+Disabled stays in workspace, distinct, excluded from published Storefront, config/order preserved, re-enable restores.
+
+Template-Source-Materialization:
+docs/evidence/TB-P10-T022-R10/template-source-materialization.md — Template sources mapped to Page Section semantics without permanent Template Catalog sample ID binding for Store contract.
+
+Home-Landing-Compatibility:
+Same composer for Home and Landing; type/SEO/routing differ only.
+
+Save-Model:
+No data loss across reorder↔edit, disable↔refresh, insert↔refresh.
+
+Admin-UX:
+Page header/actions, collapsible SEO/metadata, main Section workspace, Add Section affordances; no geometric mini-preview.
+
+Focused-Validation:
+FE R10/R9/R2 guards PASS; Host StoreLandingPageSectionTests InsertAt+ReplaceComposition PASS; critical-storefront PASS; recovery-staleness PASS; git diff --check PASS. docs/evidence/TB-P10-T022-R10/focused-validation.md
+
+Runtime:
+Host :5088 + FE :3000 scenarios A–R exercised. docs/evidence/TB-P10-T022-R10/runtime.md
+
+Visual-Evidence:
+Required PNGs under docs/evidence/TB-P10-T022-R10/ (template-applied-sections, editor-unified-workspace, section-drag-handle, section-arrow-reorder, insert-between-sections, section-disabled-state, delete-section-confirm, template-replace-confirm, home-editor-workspace, landing-editor-workspace). docs/evidence/TB-P10-T022-R10/visual-evidence.md
+
+AntiPattern-Scan:
+CLEAN. docs/evidence/TB-P10-T022-R10/antipattern-scan.md
+
+Lock-Registry:
+LOCK-SF-001…334. New 328–334 only. docs/evidence/TB-P10-T022-R10/lock-registry.md
+
+Recovery-SoT:
+Phase P10; Last Architect-accepted before review TB-P10-T022-R9-R1; Last Implementation TB-P10-T022-R10; Issued/Repair none; Appearance YES; Builder NO; Worker IDLE; do NOT start R11; do NOT invent TB-P10-T023. docs/evidence/TB-P10-T022-R10/recovery-sot.md
+
+Git:
+SHA=701966357fb48815359dc280f5163ccb6df4c481 HEAD==origin/main after push.
+
+Architectural-Concerns:
+none material; R11 Variant Picker V2 deferred per roadmap.
+
+Visual-Concerns:
+Builder USER_VISUAL_ACCEPTED=NO — Architect visual review of editor workspace still required.
+
+Blockers:
+none
+
+END_TOOBA_WORKER_RESULT

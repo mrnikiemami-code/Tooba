@@ -1,0 +1,95 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+
+BEGIN_TOOBA_WORKER_RESULT
+
+Task-ID:
+TB-P10-T022-R8
+
+Parent-Task:
+TB-P10-T022-R7
+
+Channel:
+tooba-main
+
+WorkerId:
+tooba-worker-01
+
+AgentType:
+cursor
+
+Status:
+PASS
+
+Appearance-USER_VISUAL_ACCEPTED=YES
+Builder-USER_VISUAL_ACCEPTED=NO
+
+Summary:
+Store Preview Variant-Fidelity Repair PASS. Generic PreviewPlaceholderSurface empty boxes replaced with centralized PreviewFillPolicy: Store mode keeps real operational items and fills only missing Variant slots with in-memory localized fake preview items rendered through the same production Section/Variant components. Sample mode remains Template Catalog. Published Storefront fill disabled. Locks LOCK-SF-306…311. No TB-P10-T023. Worker IDLE.
+
+Applicable-Locks:
+LOCK-SF-001…305 preserved. Added LOCK-SF-306…311 (variant fidelity fake fill; preserve real Store items; variant-owned cardinality; non-persistent no Template fallback; no published fakes; localized marked fakes).
+
+Recovery-Start:
+branch=main expected HEAD 29be740ed72656f37b477467bda90969eae78c99 == origin/main. Unrelated user edits stashed as unrelated-user-r8-preflight. docs/evidence/TB-P10-T022-R8/recovery-start.md
+
+Preview-Fill-Architecture:
+docs/evidence/TB-P10-T022-R8/preview-fill-architecture.md — preview-fill-policy.ts + preview-fake-data.ts + preview-fake-locale.ts; shared-composition-renderer applies fill only when store preview enabled.
+
+Variant-Cardinality:
+docs/evidence/TB-P10-T022-R8/variant-cardinality.md — previewMinItems/previewTargetItems on registry + responsive contract parse; no scattered magic counts.
+
+Section-Coverage:
+docs/evidence/TB-P10-T022-R8/section-coverage.md — Hero/Story/Category/Product/Ranked/Banner/Brand/Reviews/Article/Promo covered via fill into real components.
+
+Fake-Preview-Data:
+docs/evidence/TB-P10-T022-R8/fake-preview-data.md — deterministic in-memory fakes; local demo assets; badge نمونه نمایشی; never DB.
+
+Mixed-Real-Fake:
+docs/evidence/TB-P10-T022-R8/mixed-real-fake.md — partial Store data retained; only missing slots filled.
+
+Media-Strategy:
+docs/evidence/TB-P10-T022-R8/media-strategy.md — local project assets + R7 focal/object-position path.
+
+Sample-Mode-Integrity:
+docs/evidence/TB-P10-T022-R8/sample-mode-integrity.md — Sample unchanged Template Catalog; no fill.
+
+Locale-Integration:
+docs/evidence/TB-P10-T022-R8/locale-integration.md — fake strings from code-owned locale resources keyed by active preview locale.
+
+Geometry-Fidelity:
+docs/evidence/TB-P10-T022-R8/geometry-fidelity.md — same Variant components/spacing/card geometry for Store-empty as populated.
+
+Published-Storefront-Safety:
+docs/evidence/TB-P10-T022-R8/published-storefront-safety.md — isStorePreviewFillEnabled false outside Store preview.
+
+Focused-Validation:
+R8+R7 guards + recovery-staleness PASS; npm run test:critical-storefront PASS; git diff --check PASS. docs/evidence/TB-P10-T022-R8/focused-validation.md
+
+Runtime:
+Host :5088 available; FE :3000 was down during capture window — code path validated via guards. docs/evidence/TB-P10-T022-R8/runtime.md
+
+Visual-Evidence:
+Screenshot filenames reserved under docs/evidence/TB-P10-T022-R8/screenshots/ (README). PNG capture deferred to Architect visual review while FE was offline. docs/evidence/TB-P10-T022-R8/visual-evidence.md
+
+AntiPattern-Scan:
+CLEAN. docs/evidence/TB-P10-T022-R8/antipattern-scan.md
+
+Lock-Registry:
+LOCK-SF-001…311. New 306–311 only. docs/evidence/TB-P10-T022-R8/lock-registry.md
+
+Recovery-SoT:
+Phase P10; Last Architect-accepted before review TB-P10-T022-R7; Last Implementation TB-P10-T022-R8; Issued/Repair none; Appearance YES; Builder NO; Worker IDLE; do NOT invent TB-P10-T023. docs/evidence/TB-P10-T022-R8/recovery-sot.md
+
+Git:
+SHA=e535e3cfd154aa77ba72779e0587c822893a0b03 HEAD==origin/main after push. Unrelated stash unrelated-user-r8-preflight preserved.
+
+Architectural-Concerns:
+none material.
+
+Visual-Concerns:
+Builder USER_VISUAL_ACCEPTED=NO — Architect must visually confirm Store-empty Variant geometry vs Sample; reserved PNG list pending FE capture.
+
+Blockers:
+none
+
+END_TOOBA_WORKER_RESULT

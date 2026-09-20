@@ -1,0 +1,76 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+
+BEGIN_TOOBA_WORKER_RESULT
+
+Task-ID:
+TB-P10-T004-R24-R1-R2
+
+Parent-Task:
+TB-P10-T004-R24-R1-R1
+
+Channel:
+tooba-main
+
+WorkerId:
+tooba-worker-01
+
+Status:
+PASS
+
+USER_VISUAL_ACCEPTED=NO
+
+Summary:
+Recipient visual verification gate PASS. Isolated customer and Admin browser contexts. Real OTP login + Shipping (legacy saved address + explicit محمد / امامی) → Payment shows گیرنده: محمد امامی. Customer Order and Admin Order show the same. Historical checkout 01a09a9b-3880-7000-af7a-0a21d7de6ac7 still shows محمد لمامی. No product precedence change. No TB-P10-T005. Worker IDLE.
+
+Applicable-Locks:
+LOCK-SF-001…122 preserved. Especially LOCK-SF-121 FirstName/LastName separate; LOCK-SF-122 explicit FirstName/LastName canonical, RecipientName fallback only. No new lock.
+
+Recovery-Start:
+Phase P10; Last Architect-accepted TB-P10-T004-R24; Last Implementation at start TB-P10-T004-R24-R1-R1; Current Repair TB-P10-T004-R24-R1-R2; Worker tooba-worker-01; branch main; start HEAD==origin/main cfb189ef3e95e923737ee3984c7a114d8d8f73b3 matches expected previous HEAD; tracked dirty clean. Evidence r24-r1-r2-recovery-start.md
+
+Browser-Contexts:
+Two Playwright Chromium contexts. Customer: OTP UI on /fa/login (tooba_session only there). Admin: existing Development prepareAdminDevActor storage key, no customer cookie. No auth architecture change. Evidence r24-r1-r2-browser-contexts.md
+
+Payment-Visual:
+Checkout 01a09ac4-0a4e-7000-bb69-b03547125a1b. /fa/payment shows گیرنده: محمد امامی — تهران. Stale محمد لمامی not shown. Screenshot r24-r1-r2-payment-recipient.png
+
+Customer-Order-Visual:
+Same checkout /fa/customer-panel/orders/{id} shows محمد امامی. Matches Payment. Screenshot r24-r1-r2-customer-order-recipient.png
+
+Admin-Order-Visual:
+Isolated Admin /admin/orders/{id} shows محمد امامی. Shell not denied. Matches Payment + Customer. Screenshot r24-r1-r2-admin-order-recipient.png
+
+Historical-Legacy-Visual:
+Admin opened 01a09a9b-3880-7000-af7a-0a21d7de6ac7. Recipient محمد لمامی still renders; no blank; no guessed split. Screenshot r24-r1-r2-historical-legacy-recipient.png
+
+Focused-Validation:
+Payment/Customer/Admin/historical visuals PASS. FA /fa 200 RTL; EN /en 200. Login guard PASS. test:critical-storefront 16/16. recovery-staleness.guard 4/4. git diff --check PASS. No unrelated full suites. Evidence r24-r1-r2-focused-validation.md
+
+AntiPattern-Scan:
+CLEAN. No new precedence, no guessed split, no cookie contamination, no screenshot-only auth hack, no duplicated formatter. Evidence r24-r1-r2-antipattern-scan.md
+
+Lock-Registry:
+No new lock required; LOCK-SF-001…122 sufficient.
+
+Recovery-SoT:
+Phase P10; Last Architect-accepted before review TB-P10-T004-R24; Last Implementation TB-P10-T004-R24-R1-R2; Current Issued/Repair (none); USER_VISUAL_ACCEPTED=NO; Worker IDLE; branch main; HEAD==origin/main; no TB-P10-T005. CURRENT_TASK_ID=TB-P10-T004-R24-R1-R2; STALE includes R24-R1-R1. Guard 4/4. Evidence r24-r1-r2-recovery-sot.md
+
+Git:
+visual evidence HEAD ed502eef42f503eeedcbd3c0839c3a71fe14cfad
+ending HEAD 6ca66a7271bc4ae3a0879dca04f134b6ba4a4647
+origin/main 6ca66a7271bc4ae3a0879dca04f134b6ba4a4647
+HEAD==origin/main yes
+branch main
+task-owned worktree clean
+no TB-P10-T005
+
+Architectural-Concerns:
+None. Payment router briefly lands on localhost; visual proof used the same checkout on 127.0.0.1 so the customer session cookie is sent. No product change.
+
+Visual-Concerns:
+USER_VISUAL_ACCEPTED=NO (Architect/user). Worker captured the three required surfaces plus historical fallback. Street text نشانی قدیمی لمامی remains on the address line and is not the recipient name.
+
+Blockers:
+None.
+
+END_TOOBA_WORKER_RESULT

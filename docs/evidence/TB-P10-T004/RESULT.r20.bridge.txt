@@ -1,0 +1,89 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+
+BEGIN_TOOBA_WORKER_RESULT
+
+Task-ID:
+TB-P10-T004-R20
+
+Parent-Task:
+TB-P10-T004-R19
+
+Channel:
+tooba-main
+
+WorkerId:
+tooba-worker-01
+
+Status:
+PASS
+
+USER_VISUAL_ACCEPTED=NO
+
+Summary:
+Reservation UX Visual Runtime Gate PASS on real Host :5088 + FE :3000 + Cursor browser. Cart FA desktop/mobile pending section, server ExpiresAt countdown, customer states A–I, Admin reservation audit, Orders/Receipts grids, Store/Category/Offer policy UX, Seller read-only, FA RTL / EN LTR, and no-polling network were verified. Minimal repairs only: hide technical cart exception copy; keep retry CTA on Failed+held; reopen payment only when Expired; FA effective captions بازنویسی‌شده / ارث از; Host MigrateSchemaOnlyAsync when legacy bootstraps are skipped. No new lock. No TB-P10-T005. Worker IDLE. Host and FE left running for review.
+
+Applicable-Locks:
+LOCK-SF-001…102 preserved. No new lock required; LOCK-SF-001…102 sufficient.
+
+Recovery-Start:
+Phase P10; Architect-accepted R19; start HEAD==origin/main bf0f29ddb22001c02d83c22b1d9e84c8246e1e1b; expected previous HEAD match; tracked clean; USER_VISUAL_ACCEPTED=NO. Evidence: docs/evidence/TB-P10-T004/r20-recovery-start.md
+
+Runtime-URLs:
+Host http://127.0.0.1:5088 kept running. FE http://127.0.0.1:3000 (TOOBA_HOST_ORIGIN=http://127.0.0.1:5088) kept running. Postgres 127.0.0.1:5432 / tooba_alpha. Host header alpha.localhost. Cart FA http://127.0.0.1:3000/fa/cart ; Cart EN http://127.0.0.1:3000/en/cart ; Admin orders http://127.0.0.1:3000/fa/admin/orders ; Order detail http://127.0.0.1:3000/fa/admin/orders/01a098eb-7669-7000-9fc2-1654986b455b ; Receipts http://127.0.0.1:3000/fa/admin/receipts ; Settings مهلت‌ها http://127.0.0.1:3000/fa/admin/settings ; Category reservation http://127.0.0.1:3000/fa/admin/catalog/categories/01a05387-e545-7000-bc52-64f4c8f82baa/reservation ; Seller RO http://127.0.0.1:3000/fa/vendor-panel/products/47801c5c-7490-4782-912f-5c6cd5f3f879 . Existing Dev creds only (appsettings.Development.json Username=admin;Password=123456; actor 01a036c2-970e-7000-8eb7-94bf5cc2d8db). Evidence r20-runtime-urls.md
+
+Cart-Visual:
+Real browser /fa/cart: Shopeiva chrome + «در انتظار پرداخت» independent of Active Cart; storefront cards; product title; ۹٬۴۸۵٬۷۷۱ ریال; countdown; Pay/retry. Empty cart keeps pending prominent. State I: active line + pending cards. Mobile 390×844: منوی موبایل + same pending. EN heading «Awaiting payment» (chrome still mixed FA, pre-existing). Screenshot tool mirrors RTL; live dir=rtl. Evidence r20-cart-visual.md ; screenshot docs/evidence/TB-P10-T004/r20-cart-fa-desktop-expired.png
+
+Countdown-Browser:
+Display from server holdEndsAt/serverTime; local 1s tick; no fetch in timer. Cycle #1 00:17→00:16 no jump. Sandbox fail while held did not reset ExpiresAt. At zero: one refresh + expired + retry CTA. Cycle #2 00:49 «مهلت رزرو مجدد». pendingFetches=1. Manual review 1439:18 (24h minutes as MM:SS). Settings 1/1/2 future-only. Evidence r20-countdown-browser.md
+
+Customer-State-Matrix:
+A Cycle #1 countdown + پرداخت. B fail-while-held: «پرداخت ناموفق بود؛ تا پایان مهلت رزرو می‌توانید دوباره تلاش کنید.» + Pay. C expired + retry CTA. D Cycle #2 «مهلت رزرو مجدد». E unpaid-retry 409 payment.unpaid.supply_unavailable / «این سفارش در حال حاضر قابل تأمین نیست.» then stock restored. F max 2/2 action none. G manual AwaitingAdmin + review countdown no Pay. H sandbox success omitted from pending. I new cart + old pending. Evidence r20-customer-state-matrix.md
+
+Admin-Detail-Visual:
+/fa/admin/orders/01a098eb-7669-7000-9fc2-1654986b455b : «رزرو موجودی» separate from «وضعیت تأمین سفارش»; cycles #1/#2 Persian; store · 1 دقیقه · max 2; retry-limit sentence; no raw cycle enums. Operations history can still show GATEWAY_REJECTED (pre-existing; Admin reservation UI does not parse it). Evidence r20-admin-detail-visual.md
+
+Grid-Visual:
+Orders AppDataGrid search/columns/CSV/Excel/saved view/pagination; مشاهده/عملیات intact. Receipts «دریافت‌ها» موفق/در انتظار/ناموفق; order links; no duplicated full reservation audit. Evidence r20-grid-visual.md
+
+Settings-Visual:
+Store مهلت‌ها reservation editor + inherit + Save/Cancel; store 1/1/2 future-only. Category initial override مؤثر: 2 دقیقه — بازنویسی‌شده; retry/max inherit store. Offer 3/1/2. Seller vendor-panel inputs disabled; no reservation save. FA captions no longer English overridden/inherited from. Evidence r20-settings-visual.md
+
+Accessibility:
+Pay/retry named buttons; countdown numeric + sentence not color-only; native buttons; touch-sized CTAs; pending dir rtl/ltr; no new focus traps. Evidence r20-accessibility.md
+
+Browser-Network:
+pendingFetches=1 cartFetches=2; countdown local; no interval fetch; no new 401/media 404; retry button disabled while busy. Guest cart 500 was missing reservation columns; authored migrations applied → POST /v1/storefront/cart 200. Evidence r20-browser-network.md
+
+Focused-Validation:
+24 frontend + 4 recovery guard PASS. Files: storefront-pending-payment-api, admin-reservation-cycle, reservation-policy-admin, storefront-cart-api exception copy, recovery-staleness.guard. git diff --check clean. R19 Host gate not re-run (no reservation contract change beyond Host retry reopen guard). Evidence r20-focused-validation.md
+
+Runtime:
+A–R PASS in real browser/API. Customer E also PASS via temporary on_hand=0. Evidence r20-runtime.md
+
+AntiPattern-Scan:
+CLEAN. No FE policy precedence, hardcoded timers, polling, overflow-hide, optimistic cycle increment, or raw exception UX. Notes: GATEWAY_REJECTED in ops history; screenshot RTL mirror. Evidence r20-antipattern-scan.md
+
+Lock-Registry:
+No new lock required; LOCK-SF-001…102 sufficient.
+
+Recovery-SoT:
+Phase P10; Last Architect-accepted before review TB-P10-T004-R19; Last Implementation TB-P10-T004-R20; Issued/Repair none; USER_VISUAL_ACCEPTED=NO; Worker IDLE; no TB-P10-T005. Guard CURRENT_TASK_ID=R20, STALE includes R19. Evidence r20-recovery-sot.md
+
+Git:
+impl 11b385d0fd2ef8c8d3471b98ca8b535228e0815a fix(storefront): keep reservation retry after failed payment and hide technical cart errors.
+docs e22ffdbdd59fbd216e7fc9993829bf09e3af2ef2 docs(evidence): record TB-P10-T004-R20 reservation UX visual runtime gate.
+ending HEAD e22ffdbdd59fbd216e7fc9993829bf09e3af2ef2
+HEAD==origin/main yes
+task-owned worktree clean (historical .tmp-* ignored)
+
+Architectural-Concerns:
+Host skipped commerce EF migrate when RunLegacyBootstraps=false; schema now applied and MigrateSchemaOnlyAsync added for Development skip path. Failed payment + reservation expiry previously threw payment.unpaid.retry.invalid after successful reacquire; RetryUnpaidCoreAsync now reopens only when payment is Expired. Coordinator still stores reacquire-fail detail as Status.ToString(); Admin does not parse it.
+
+Visual-Concerns:
+USER_VISUAL_ACCEPTED=NO. Screenshot capture mirrors RTL pixels while live dir=rtl. EN chrome still mixed FA (pre-existing i18n). Manual review countdown shows 1439:mm (minutes as MM:SS). Admin ops history can show GATEWAY_REJECTED.
+
+Blockers:
+none
+
+END_TOOBA_WORKER_RESULT

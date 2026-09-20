@@ -1,0 +1,94 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+
+BEGIN_TOOBA_TASK_RESULT
+
+Task-ID:
+TB-P10-T004-R2
+
+Parent-Task:
+TB-P10-T004-R1
+
+Channel:
+tooba-main
+
+WorkerId:
+tooba-worker-01
+
+Status:
+PASS
+
+USER_VISUAL_ACCEPTED=NO
+
+Summary:
+P10 payment-completion repair PASS. Sandbox simulator is a real Host-verified Success/Failure page (Production fail-closed). Manual/card-to-card requires شماره پیگیری پرداخت, configurable proof Disabled/Optional/Required via Media, submit stays Pending until Admin confirm/reject. Converted cart GET is empty so retry cannot spawn a second Order. Result shows human order number + مشاهده سفارش. No TB-P10-T005. Worker IDLE.
+
+Applicable-Locks:
+LOCK-SF-001,002,004,007,008,009,011,012,013,014,015,016,017,018; LOCK-OPS-024/025 paid-hold; LOCK-I18N-001; no fake Production PSP; no card PAN/CVV.
+
+Recovery-Start:
+main HEAD==origin/main 397debfbf21be038c634a22993f114c3ba0bb77d; tracked clean; TB-P10-T004-R1 last accepted/implementation; repair TB-P10-T004-R2 claimed 73792d09-29be-4efe-b5d7-210fa6937429.
+
+Discovery:
+Sandbox initiate/Verify/page existed but fake redirect omitted paymentId/attemptId and simulator lacked order/amount/store. Manual gateway+Admin confirm existed; customer tracking/proof missing. Cart Converted still returned lines. Media upload reusable.
+
+Sandbox-Simulator:
+/payment/sandbox shows store, order number, amount, method, SANDBOX/TEST, پرداخت موفق / پرداخت ناموفق. No card fields. IsSandboxSimulatorEnabled = Mode Sandbox AND not Production.
+
+Sandbox-Success-Failure:
+Success: Host Verify Succeeded, result page, session replaced with empty cart. Failure: Failed attempt, تلاش مجدد برای پرداخت, new attempt same PaymentId, no duplicate Order. Refresh success does not re-Verify.
+
+Manual-Payment:
+Result form: instructions, mandatory tracking, CTA ثبت اطلاعات پرداخت. Status remains Pending.
+
+Proof-Configuration:
+Payment:Gateway ManualProofRequirement Disabled|Optional|Required.
+
+Proof-Upload-Security:
+Storefront multipart upload via IMediaDirectory; proof_assets binds MediaAssetId to Payment; foreign asset rejected; no filesystem path on Payment.
+
+Cart-Finalization:
+Order committed at shipping (Converted). GET Converted returns empty lines. Payment retry on Order/Payment. After Succeeded or manual evidence submit, cart session is a new empty cart.
+
+Admin-Confirm-Reject:
+ConfirmDeposit requires transfer reference. Detail shows tracking + proof link. Reject keeps historical attempt; customer retry RestoreRejectedManualToPending new attempt.
+
+Customer-Result:
+Human order number, localized status, amount, مشاهده سفارش → /customer-panel/orders/{checkoutId}.
+
+Ownership:
+Checkout GetAsync(cartId, guestSecret) + authenticated session actor. Foreign guest/order/proof denied.
+
+Financial-Consistency:
+Initiate amount = merchandise + StoreShipping once; client amount ignored.
+
+Focused-Validation:
+Host 12 green (StorefrontPaymentCompletionDomainTests + StorefrontPaymentMethodsCatalogTests + ManualPaymentAndListStatusTests). FE storefront 30 + payment-page 4 + critical-storefront home/pdp/listing/plp green. git diff --check clean.
+
+Runtime-Matrix:
+A–J implemented in code paths (simulator success/failure retry, manual tracking/proof, admin confirm/reject history, guest/auth ownership, StoreShipping amount).
+
+Visual-Smoke:
+No /cart /shipping /payment redesign. Simulator simple professional. USER_VISUAL_ACCEPTED=NO.
+
+Checkout-Plan:
+docs/architecture/STOREFRONT-CHECKOUT-PLAN.md records T004-R2 as P10 payment-completion repair, not T005.
+
+Lock-Registry:
+LOCK-SF-012..018 added (non-duplicate).
+
+Recovery-SoT:
+Last Architect-accepted: TB-P10-T004-R1. Last Implementation: TB-P10-T004-R2. Issued/Repair: none. USER_VISUAL_ACCEPTED=NO. Worker IDLE. No TB-P10-T005.
+
+Git:
+branch main; HEAD cfb4e822ac3d6645cd1134bd801e74bfa5fcf51b; HEAD==origin/main yes; tracked task files committed; untracked .tmp leftovers only.
+
+Architectural-Concerns:
+none for this repair; Production still needs a real PSP for live online pay.
+
+Visual-Concerns:
+USER_VISUAL_ACCEPTED=NO; simulator is test-only styling.
+
+Blockers:
+none
+
+END_TOOBA_TASK_RESULT

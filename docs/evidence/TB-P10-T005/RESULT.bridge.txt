@@ -1,0 +1,90 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+
+BEGIN_TOOBA_WORKER_RESULT
+
+Task-ID:
+TB-P10-T005
+
+Parent-Task:
+TB-P10-T004-R24-R1-R4
+
+Channel:
+tooba-main
+
+WorkerId:
+tooba-worker-01
+
+Status:
+PASS
+
+USER_VISUAL_ACCEPTED=NO
+
+Summary:
+Store appearance foundation PASS. Canonical Catalog StoreAppearanceSettings (PaletteKey + ThemeMode) with curated tooba-blue registry (#2563EB / #1d4ed8). SSR root applies CSS variables; unknown PaletteKey falls back. Brand tokens do not touch danger/success/warning. Header/card/mini-cart/cart CTA migrated to tokens with visual equivalence. Home/PDP/shipping remaining hex deferred. Future custom theme and Landing/Home/Page contracts documented only. Locks LOCK-SF-127…138. No Admin picker, no skins, no page builder, no TB-P10-T006. Worker IDLE.
+
+Applicable-Locks:
+LOCK-SF-001…126 preserved. Added LOCK-SF-127…138 (declarative Store-scoped appearance; curated now / validated tokens later; brand vs status; no per-store build; one Product Card; future DB pages/sections; no redeploy; one HomePageId; approved data sources; independent menu; no reserved-route shadow; no free-form builder JS/HTML/CSS).
+
+Recovery-Start:
+Phase P10; Last Architect-accepted TB-P10-T004-R24; start HEAD==origin/main bda1041a25fa2a5cf607ed1e412a02f0a1ef2211; Bridge claimed TB-P10-T005 2ec3e3ea-9126-478a-99c5-926cbafa3508. Unrelated local login/account UX left unstaged. Evidence docs/evidence/TB-P10-T005/recovery-start.md
+
+Appearance-Discovery:
+ThemeProvider + CSS tokens exist; storefront mostly hard-coded #2563EB; ThemeReference unused; Store settings family in Catalog is the owner. Evidence appearance-discovery.md
+
+Appearance-Architecture:
+One StoreAppearanceSettings singleton per Store DB. Projection + IMemoryCache keyed tenant:{id} or marketplace:{connection}. Evidence appearance-architecture.md
+
+Semantic-Tokens:
+primary / primary-strong / on-primary / focus overridable; danger/success/warning independent. Evidence semantic-token-mapping.md
+
+Default-Visual-Equivalence:
+tooba-blue RGB == #2563EB / #1d4ed8. Tests pass. Shopeiva red not reintroduced on migrated surfaces. Evidence default-visual-equivalence.md + palette-registry.test.ts
+
+Palette-Registry:
+Typed registry with one curated key; unknown falls back. No Admin picker. Evidence palette-registry.md
+
+Runtime-Theme-Strategy:
+Host GET /v1/storefront/appearance → SSR html style + data-storefront-palette. Cache 5m. Failed fetch uses identical default (no FOUC). Dark ThemeMode reserved, not painted. Evidence runtime-theme-strategy.md
+
+Store-Isolation:
+Store A cache cannot be read as Store B. Host tests 4/4. Evidence store-isolation.md
+
+Future-Custom-Theme:
+Documented only. docs/architecture/storefront-appearance-extension.md
+
+Future-Pages-Home:
+Documented only. docs/architecture/storefront-pages-extension.md
+
+Focused-Validation:
+recovery 4/4; palette 3/3; appearance API 3/3; test:storefront 67/67; test:critical-storefront pass; Host StoreAppearanceFoundationTests 4/4; git diff --check clean. Full tsc still has pre-existing Admin/grid errors unrelated to T005. Evidence focused-validation.md
+
+Runtime-Smoke:
+FE Home/PLP/Cart 200 palette=tooba-blue. Host /appearance 404 until process recycle; FE fallback matches default. Shipping #E53935 is pre-existing deferred chrome. Evidence runtime-smoke.md
+
+AntiPattern-Scan:
+CLEAN. Evidence antipattern-scan.md
+
+Lock-Registry:
+LOCK-SF-127 through LOCK-SF-138 appended after 126. No renumber.
+
+Recovery-SoT:
+Phase P10; Last Architect-accepted TB-P10-T004-R24; Last Implementation TB-P10-T005; Current Issued/Repair (none); USER_VISUAL_ACCEPTED=NO; Worker IDLE; no TB-P10-T006. Evidence recovery-sot.md
+
+Git:
+ending HEAD 92f9f4657678e7ffdcfed5a7bcfc525f0a93f79b
+origin/main 92f9f4657678e7ffdcfed5a7bcfc525f0a93f79b
+HEAD==origin/main yes
+branch main
+task-owned worktree clean (unrelated login/account local UX left unstaged)
+no TB-P10-T006
+
+Architectural-Concerns:
+Live Host must recycle to serve /v1/storefront/appearance and apply catalog.store_appearance_settings migration. Dark ThemeMode is persisted but not applied because storefront chrome is still light-first.
+
+Visual-Concerns:
+USER_VISUAL_ACCEPTED=NO. Home/PDP hex deferred. Shipping still uses pre-existing Shopeiva red.
+
+Blockers:
+None.
+
+END_TOOBA_WORKER_RESULT

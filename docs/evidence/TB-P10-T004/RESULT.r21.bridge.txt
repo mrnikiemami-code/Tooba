@@ -1,0 +1,78 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+
+BEGIN_TOOBA_WORKER_RESULT
+
+Task-ID:
+TB-P10-T004-R21
+
+Parent-Task:
+TB-P10-T004-R20-R1
+
+Channel:
+tooba-main
+
+WorkerId:
+tooba-worker-01
+
+Status:
+BLOCK
+
+USER_VISUAL_ACCEPTED=YES
+
+Summary:
+Recovery preflight BLOCK. Unexpected tracked divergence. Expected previous HEAD d5fdd5e1b1bd067a7c45fb282a8055159a71c8d9; actual HEAD/origin/main 9bec2e62f611b931635004040a818ff7f3221825 (extra commit: feat(storefront): let customers hide a pending-payment card permanently.). Plus 14 tracked dirty files of in-progress customer cart cancel-order work (+432/−47), not this Task. Protocol forbids silently stashing or destroying unrelated work. R21 atomic-commit implementation not started. No TB-P10-T005. Worker IDLE.
+
+Applicable-Locks:
+LOCK-SF-001…102 preserved. No lock added. Checkout-commit atomicity lock not written.
+
+Recovery-Start:
+Phase P10; Architect-accepted/Last Implementation TB-P10-T004-R20-R1; Current Repair TB-P10-T004-R21; Worker tooba-worker-01; branch main; HEAD==origin/main yes at 9bec2e62; expected previous HEAD mismatch; tracked dirty 14 files (cancel-order, not R21); task-owned evidence written locally; USER_VISUAL_ACCEPTED=YES (task flag). Evidence docs/evidence/TB-P10-T004/r21-recovery-start.md
+
+Transaction-Boundary:
+Not executed. BLOCK at recovery preflight.
+
+Fault-Injection:
+Not executed. BLOCK at recovery preflight.
+
+Payment-Boundary:
+Not executed. BLOCK at recovery preflight.
+
+Concurrency:
+Not executed. BLOCK at recovery preflight.
+
+Focused-Validation:
+Not executed. BLOCK at recovery preflight.
+
+Runtime:
+Not executed. BLOCK at recovery preflight.
+
+AntiPattern-Scan:
+No R21 code touched. Scan N/A beyond preflight. Evidence r21-antipattern-scan.md
+
+Lock-Registry:
+No new lock. Existing LOCK-SF-001…102 unchanged.
+
+Recovery-SoT:
+Phase P10; Last Architect-accepted before review TB-P10-T004-R20-R1; Last Implementation TB-P10-T004-R20-R1; Current Issued/Repair TB-P10-T004-R21 BLOCKED at preflight; USER_VISUAL_ACCEPTED=YES (task flag only); Worker IDLE; no TB-P10-T005. Evidence r21-recovery-sot.md
+
+Git:
+ending HEAD 9bec2e62f611b931635004040a818ff7f3221825
+origin/main 9bec2e62f611b931635004040a818ff7f3221825
+HEAD==origin/main yes
+expected previous HEAD d5fdd5e1b1bd067a7c45fb282a8055159a71c8d9 — MISMATCH
+unrelated extra commit 9bec2e62
+tracked dirty preserved (not destroyed, not mixed into R21)
+no R21 implementation commit
+
+Architectural-Concerns:
+R21 cannot be proven on a mixed tree. Architect/user must isolate or land the cancel-order work (or revert the unexpected hide-card commit if R21 must start from d5fdd5e1) before re-issue.
+
+Visual-Concerns:
+None from this Worker. No UX change. USER_VISUAL_ACCEPTED=YES is a task flag only.
+
+Blockers:
+1. Expected previous HEAD != actual HEAD (d5fdd5e1 vs 9bec2e62).
+2. Unexpected tracked dirty: 14 files of customer pending-payment cancel-order work in progress.
+3. Task rule: unexpected tracked divergence => BLOCK.
+
+END_TOOBA_WORKER_RESULT

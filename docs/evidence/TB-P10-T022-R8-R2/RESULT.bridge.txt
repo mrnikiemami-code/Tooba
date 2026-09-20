@@ -1,0 +1,86 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+
+BEGIN_TOOBA_WORKER_RESULT
+
+Task-ID:
+TB-P10-T022-R8-R2
+
+Parent-Task:
+TB-P10-T022-R8-R1
+
+Channel:
+tooba-main
+
+WorkerId:
+tooba-worker-01
+
+AgentType:
+cursor
+
+Status:
+PASS
+
+Appearance-USER_VISUAL_ACCEPTED=YES
+Builder-USER_VISUAL_ACCEPTED=NO
+
+Summary:
+Store Preview Asset Isolation Repair PASS. PreviewFillPolicy fake fill no longer reuses FASHION_IMAGES or Template Catalog media/copy. Dedicated /images/preview-placeholder/* assets + independent localized Preview-Fake content. Sample mode remains Template Catalog only. Published Storefront never activates Preview-Fake. Locks LOCK-SF-312…315. Required screenshots captured. No TB-P10-T023. Worker IDLE.
+
+Applicable-Locks:
+LOCK-SF-001…311 preserved. Added LOCK-SF-312…315 (Preview-Fake independent of Template media; no Template IDs/URLs in Store fill; Preview-Fake never persisted; Sample keeps Template Catalog / Preview-Fake Store-preview only).
+
+Recovery-Start:
+branch=main expected HEAD bef0932b460a87a5f37e7738981c9c688d9f2b5b == origin/main at claim. Unrelated stash unrelated-user-r8r2-preflight preserved. docs/evidence/TB-P10-T022-R8-R2/recovery-start.md
+
+Asset-Isolation:
+preview-fake-data.ts no longer imports FASHION_IMAGES; media via preview-fake-media.ts under /images/preview-placeholder/. Store fill Template/Fashion media hits = 0.
+
+Dedicated-Preview-Fake-Assets:
+Hero/Banner/Product/Category/Brand/Article/Story(+review avatar) dedicated local assets. docs/evidence/TB-P10-T022-R8-R2/
+
+Dedicated-Preview-Fake-Content:
+Independent generic locale strings (محصول نمونه / دسته‌بندی نمونه / …) — not Fashion sample copy.
+
+Store-Fill-Semantics:
+R8 rules preserved: real Store first; fill missing slots only; same Variant renderer/cardinality/geometry; no DB; no Template fallback.
+
+Sample-Mode-Integrity:
+Sample unchanged Template Catalog + Fashion media; Preview-Fake disabled in Sample.
+
+Visual-Distinction:
+Localized «نمونه نمایشی» badge on Preview-Fake items only.
+
+Banner-Hero-Special:
+Store-empty banner/hero uses dedicated Preview-Fake media — not Fashion woman/shopping-bags Template hero.
+
+Source-Boundary:
+previewFake / preview-fake- id markers in memory for guards; not developer UI leakage.
+
+Focused-Validation:
+R8 guards 14/14 PASS; recovery-staleness 4/4 PASS; critical-storefront PASS; runtime store fashionHits=0 previewFakeHits=22; git diff --check PASS. docs/evidence/TB-P10-T022-R8-R2/
+
+Visual-Evidence:
+11 required PNGs under docs/evidence/TB-P10-T022-R8-R2/screenshots/.
+
+AntiPattern-Scan:
+CLEAN — no FASHION_IMAGES reuse in Store fill; no Template ID/URL leakage; no published fake.
+
+Lock-Registry:
+LOCK-SF-001…315. New 312–315 only.
+
+Recovery-SoT:
+Phase P10; Last Architect-accepted before review TB-P10-T022-R8-R1; Last Implementation TB-P10-T022-R8-R2; Issued/Repair none; Appearance YES; Builder NO; Worker IDLE; do NOT invent TB-P10-T023.
+
+Git:
+SHA=3f6499da6819bda3dbdb1f303a8655c18f1195b6 HEAD==origin/main after push. Unrelated stash unrelated-user-r8r2-preflight preserved.
+
+Architectural-Concerns:
+none material.
+
+Visual-Concerns:
+Builder USER_VISUAL_ACCEPTED=NO — Architect visual review of isolated Preview-Fake assets vs Sample still required.
+
+Blockers:
+none
+
+END_TOOBA_WORKER_RESULT

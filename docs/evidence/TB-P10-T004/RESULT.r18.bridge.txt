@@ -1,0 +1,89 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+
+BEGIN_TOOBA_WORKER_RESULT
+
+Task-ID:
+TB-P10-T004-R18
+
+Parent-Task:
+TB-P10-T004-R17
+
+Channel:
+tooba-main
+
+WorkerId:
+tooba-worker-01
+
+Status:
+PASS
+
+USER_VISUAL_ACCEPTED=NO
+
+Summary:
+Reservation Policy Admin UX PASS. Store Settings مهلت‌ها, Category workspace tab, and Offer workspace expose Initial/Retry/Max with inherit vs override vs backend-resolved effective source. Precedence remains Offer > Category > Store > Platform. Clearing an override stores null and restores inheritance. Settings do not mutate active/historical cycle snapshots. Seller Offer policy is read-only; PUT is 403 because reservation.policy.mutate is absent. No Product-level policy. No TB-P10-T005. Worker IDLE.
+
+Applicable-Locks:
+LOCK-SF-001…096 preserved. Added LOCK-SF-097…102 (Store/Category/Offer configurable; Offer>Category>Store>Platform; clear restores inherit; backend-resolved effective; Settings affect future cycles only; Seller mutation requires explicit permission).
+
+Recovery-Start:
+Phase P10; Architect-accepted R17; start HEAD==origin/main 67cb63e2808b467bf0e7afdba85224d52e7efefc; expected previous HEAD match; tracked clean; USER_VISUAL_ACCEPTED=NO. Evidence: docs/evidence/TB-P10-T004/r18-recovery-start.md
+
+Discovery:
+Platform appsettings ReservationCycle; StoreHoldPolicySettings; Category/Offer ReservationCyclePolicyOverrides (R15); R10 hold-policy Settings tab; Product publication commercial + vendor Offer; no seller mutate permission. Table in r18-policy-admin-discovery.md
+
+Store-Settings:
+سیاست رزرو موجودی on existing holds Save/Cancel. Empty inherit = platform. Dedicated /v1/admin/settings/reservation-policy/store also available.
+
+Category-Override:
+Tab سیاست رزرو. ارث‌بری از فروشگاه vs override + effective. No parent-tree walk. Null PUT deletes override row.
+
+Offer-Override:
+Product publication OfferReservationPanel + batched GET. Flash-sale help and stricter/long-hold notes from backend flags. Vendor page read-only.
+
+Permissions:
+Admin can edit. Seller GET read-only; Seller PUT 403 reservation.policy.seller.denied. Permission key reservation.policy.mutate is not in Access Control catalog.
+
+Validation:
+Admin rejects Initial/Retry <=0 and Max <1 or >20 and minutes >43200 before domain clamp. Empty = inherit. Integer-only frontend parse. Localized titles.
+
+Policy-Snapshot-Integrity:
+Active ExpiresAt/hold/max/source unchanged after Settings. Historical cycle snapshot unchanged. Next StartAsync uses updated policy.
+
+Audit:
+catalog.reservation_policy_audit_events: level, field, old/new override, actor, timestamp. Cycle events not rewritten. GET /audit.
+
+Performance:
+Store rides hold-policy GET. Category one GET. Offer batch PreviewManyAsync + three lookup queries. No supply/reservation runtime queries. No polling.
+
+Focused-Validation:
+ReservationPolicyAdminUxTests 8/8 PASS; ReservationCycleFoundationTests PASS; AdminReservationCycleAuditTests PASS; reservation-policy-admin.test.ts 6/6 PASS; recovery-staleness.guard.test.mjs 4/4 PASS; git diff --check clean.
+
+Runtime:
+A–J PASS via in-memory Host proofs (store save, category/offer override, clear inherit, snapshot immutability, future cycle, flash-sale retry=2, seller deny, audit rows). Evidence r18-runtime.md
+
+AntiPattern-Scan:
+CLEAN. No frontend precedence solver, no Product override, no seller mutation, no ExpiresAt rewrite, no copied inherit persist, no raw config keys, no polling.
+
+Lock-Registry:
+LOCK-SF-097 Store/Category/Offer configurable; LOCK-SF-098 Offer>Category>Store>Platform; LOCK-SF-099 clear restores inherit; LOCK-SF-100 backend-resolved effective; LOCK-SF-101 Settings future-only; LOCK-SF-102 Seller mutate needs explicit permission.
+
+Recovery-SoT:
+Phase P10; Last Architect-accepted before review TB-P10-T004-R17; Last Implementation TB-P10-T004-R18; Issued/Repair none; USER_VISUAL_ACCEPTED=NO; Worker IDLE; no TB-P10-T005. Guard CURRENT_TASK_ID=R18, STALE includes R17.
+
+Git:
+impl 10f31288 feat(admin): expose reservation policy overrides on Store, Category, and Offer.
+docs d7dfc2e3 docs(evidence): record TB-P10-T004-R18 reservation policy Admin UX.
+ending HEAD d7dfc2e3ea7eae0ed57876cf93101021e4e9c0ad
+HEAD==origin/main yes
+task-owned worktree clean (historical .tmp-* ignored)
+
+Architectural-Concerns:
+Coordinator still stores reacquire-fail detail as Status.ToString(); left internal; Admin does not parse it.
+
+Visual-Concerns:
+USER_VISUAL_ACCEPTED=NO. New Settings/Category/Offer reservation sections need Architect visual review.
+
+Blockers:
+none
+
+END_TOOBA_WORKER_RESULT

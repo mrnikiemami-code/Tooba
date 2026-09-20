@@ -1,0 +1,88 @@
+﻿PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+
+BEGIN_TOOBA_WORKER_RESULT
+
+Task-ID:
+TB-P10-T006
+
+Parent-Task:
+TB-P10-T005-R1
+
+Channel:
+tooba-main
+
+WorkerId:
+tooba-worker-01
+
+Status:
+PASS
+
+USER_VISUAL_ACCEPTED=NO
+
+Summary:
+Store Appearance Admin PASS. Existing /admin/settings tab «ظاهر» selects one of 7 curated palettes (tooba-blue default). Preview uses the same registry tokens as Storefront. Save writes PaletteKey only; invalid/hex rejected 400; unauthorized 401. Cache invalidates the changed Store immediately; /fa SSR shows forest-green then restored tooba-blue. Home/PDP/Shipping leftover hexes inventoried, not migrated. No TB-P10-T007. Worker IDLE.
+
+Applicable-Locks:
+LOCK-SF-001…138 preserved. Added LOCK-SF-139 PaletteKey only; 140 code-owned registry; 141 one-Store cache invalidate; 142 shared preview/runtime registry; 143 status colors untouched; 144 backend-authoritative write/isolation.
+
+Recovery-Start:
+Phase P10; Architect-accepted/Last Implementation at claim TB-P10-T005-R1; Current Task TB-P10-T006; branch main; HEAD==origin/main 29ca9f0f; unrelated login/account UX left dirty. Evidence docs/evidence/TB-P10-T006/recovery-start.md
+
+Admin-Appearance-Discovery:
+Canonical /admin/settings reused; new appearance tab; AdminPanelAccess; GET/PUT /v1/admin/settings/appearance. Evidence admin-appearance-discovery.md
+
+Palette-Set:
+7 keys: tooba-blue, forest-green, wine-burgundy, slate-navy, amber-gold, teal-lagoon, violet-royal. wine-burgundy != #E53935. Evidence palette-set.md
+
+Admin-Appearance-UI:
+Preset cards, preview CTA/link/card/muted + status chips, dirty Save/Cancel, unknown-key banner, no type=color. Evidence admin-appearance-ui.md
+
+Persistence-API:
+PUT {paletteKey}; ThemeMode preserved; upsert singleton; 400 appearance.palette.invalid. Evidence persistence-api.md
+
+Permissions:
+AdminPanelAccess.RequireAuthorizedAsync. PUT without actor 401. No StoreId in body. Evidence permissions.md
+
+Cache-Invalidation:
+Invalidate current scope only; next GET/SSR is new palette without TTL/restart/redeploy. Host test keeps Store B cache. Evidence cache-invalidation.md
+
+Live-Apply:
+/fa first HTML data-storefront-palette=forest-green --color-primary:21 128 61; restore tooba-blue 37 99 235. Evidence live-apply.md
+
+Store-Isolation:
+Runtime one store tenant:store-alpha; second scope Host tests A amber-gold / B tooba-blue. Evidence store-isolation.md
+
+Deferred-Token-Inventory:
+Home/PDP leftover #2563EB; Shipping leftover #E53935; tokenized header/card/mini-cart/cart CTA already use bg-primary. Evidence deferred-token-inventory.md
+
+Focused-Validation:
+recovery 4/4; Host StoreAppearance 10/10; FE appearance+settings 18/18; test:storefront 67/67; test:critical-storefront green; git diff --check clean. Full tsc not PASS (pre-existing Admin/grid). Evidence focused-validation.md
+
+Runtime:
+A–O green on Host :5088 + FE :3000. GET appearance tooba-blue; PUT forest-green 200 once; SSR forest-green; Admin persist; restore tooba-blue. Unauthorized 401; invalid 400. Evidence runtime.md
+
+AntiPattern-Scan:
+CLEAN — no color builder, no hex persist, no localStorage SoT, no global flush, no dark mode/skins/page builder. Evidence antipattern-scan.md
+
+Lock-Registry:
+LOCK-SF-139…144 appended after 138. No renumber.
+
+Recovery-SoT:
+Architect TB-P10-T005-R1; Impl TB-P10-T006; Issued/Repair none; USER_VISUAL_ACCEPTED=NO; do NOT invent TB-P10-T007. Evidence recovery-sot.md
+
+Git:
+ending HEAD 10d4b3450573c1667b447aff21fad61cfd177e54
+origin/main 10d4b3450573c1667b447aff21fad61cfd177e54
+HEAD==origin/main yes
+unrelated login/account UX preserved unstaged
+
+Architectural-Concerns:
+Home/PDP/Shipping leftover hexes will not follow palette until a later token-completion task. Cancel preview is client draft reset (does not mutate live Storefront).
+
+Visual-Concerns:
+USER_VISUAL_ACCEPTED=NO. Alternate palette changes tokenized brand surfaces only; deferred hex surfaces stay default blue/red.
+
+Blockers:
+none
+
+END_TOOBA_WORKER_RESULT

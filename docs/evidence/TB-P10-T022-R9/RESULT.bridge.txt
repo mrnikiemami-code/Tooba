@@ -1,0 +1,116 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+
+BEGIN_TOOBA_WORKER_RESULT
+
+Task-ID:
+TB-P10-T022-R9
+
+Parent-Task:
+TB-P10-T022-R8-R2
+
+Channel:
+tooba-main
+
+WorkerId:
+tooba-worker-01
+
+AgentType:
+cursor
+
+Status:
+PASS
+
+Appearance-USER_VISUAL_ACCEPTED=YES
+Builder-USER_VISUAL_ACCEPTED=NO
+
+Summary:
+Store Pages Foundation PASS. Explicit Home/Landing PageType with safe Landing migration; one active Home per Store via atomic set/replace; Landing at /landing/{slug}; Home at / with custom-or-default resolution; Admin «تنظیم به عنوان صفحه اصلی» / «بازگردانی صفحه اصلی پیش‌فرض» without Catalog mutation; IA rename to «صفحات فروشگاه»; page-level SEO (title/description/canonical/robots/OG/hreflang/H1/typed structured data) reusing existing translation infrastructure; sitemap inclusion rules; AppDataGrid listing. Locks LOCK-SF-316…324. Sequential R10+ not started. No TB-P10-T023. Worker IDLE.
+
+Applicable-Locks:
+LOCK-SF-001…315 preserved. Added LOCK-SF-316…324 (Store Pages Home+Landing; explicit type + one Home; canonical routes; selection-only Home restore; page SEO via existing i18n; conditional section SEO; AppDataGrid; typed structured data; page-level language).
+
+Recovery-Start:
+Claim HEAD 4485e3e9 (admin UX commit after expected pin 3f6499da) == origin/main; not RECOVERY_CONFLICT. docs/evidence/TB-P10-T022-R9/recovery-start.md
+
+Store-Page-Type:
+Persisted explicit Home|Landing; existing pages migrated to Landing; no null/ambiguous type.
+
+Home-Invariant:
+Race-safe atomic one active Home per Store; no delete/recreate workaround.
+
+Landing-Routing:
+Canonical /landing/{slug}; store-scoped; uniqueness/reserved-route guards; safe 404; legacy slug redirect where needed.
+
+Home-Routing:
+/ resolves custom active Home else system default.
+
+Set-As-Home:
+Admin action with current-Home indicator; Persian copy; confirmation; no Catalog/content mutation.
+
+Restore-Default-Home:
+Selection/composition reset only; never deletes Product/Category/Brand/Banner/Article/Story/Review/Template Catalog.
+
+Module-Rename:
+Admin menu/labels «صفحات فروشگاه» with route compatibility preserved.
+
+SEO-Audit:
+Existing SEO/translation/sitemap infrastructure audited and reused — no duplicate SEO framework.
+
+Page-SEO-Model:
+SEO Title, Meta Description, Canonical, Index/NoIndex, Follow/NoFollow, OG title/description/image, H1 policy, hreflang, robots, Landing slug.
+
+SEO-Translation:
+Language-dependent SEO via existing translation tables; no SeoTitleFa/En columns.
+
+H1-Policy:
+docs/evidence/TB-P10-T022-R9/h1-policy.md — single primary H1 strategy.
+
+Structured-Data:
+Typed/code-owned WebPage/WebSite/BreadcrumbList where supported; no raw JSON Admin editor.
+
+Section-SEO-Boundary:
+No permanent SEO wizard step on every Section; only conditional Settings controls.
+
+SEO-Admin-UX:
+Grouped page info / SEO sharing / composition; snippet/URL/OG preview where feasible.
+
+SEO-Runtime:
+SSR title/description/canonical/robots/OG/hreflang/H1/structured-data verified in runtime evidence.
+
+Sitemap:
+Indexable Landing included; NoIndex excluded; Home root not duplicated; multilingual alternates follow existing policy.
+
+Admin-Listing:
+Canonical AppDataGrid with title/type/language/status/slug/indexability/Home indicator/updated/pinned ops.
+
+Focused-Validation:
+Host StoreLanding/StorePages tests PASS; FE R9/guards + reserved-slugs + recovery-staleness PASS; critical-storefront 20/20 PASS; git diff --check PASS. docs/evidence/TB-P10-T022-R9/focused-validation.md
+
+Runtime:
+Host :5088 + FE :3000 exercised. docs/evidence/TB-P10-T022-R9/runtime.md ; runtime-report.json
+
+Visual-Evidence:
+11 required PNGs under docs/evidence/TB-P10-T022-R9/screenshots/. docs/evidence/TB-P10-T022-R9/visual-evidence.md
+
+AntiPattern-Scan:
+CLEAN. docs/evidence/TB-P10-T022-R9/antipattern-scan.md
+
+Lock-Registry:
+LOCK-SF-001…324. New 316–324 only. docs/evidence/TB-P10-T022-R9/lock-registry.md
+
+Recovery-SoT:
+Phase P10; Last Architect-accepted before review TB-P10-T022-R8-R2; Last Implementation TB-P10-T022-R9; Issued/Repair none; Appearance YES; Builder NO; Worker IDLE; do NOT invent TB-P10-T023; R10+ not started. docs/evidence/TB-P10-T022-R9/recovery-sot.md
+
+Git:
+SHA=28b000ebd571e12bc76d25042daa2fa9fa8463bb HEAD==origin/main after push.
+
+Architectural-Concerns:
+FE /landing/{slug} SSR can be slow under load (~90–120s observed during capture); Host resolve remains fast. Foundation scope complete.
+
+Visual-Concerns:
+Builder USER_VISUAL_ACCEPTED=NO — Architect visual review still required. Sequential wave continues with R10 after ACCEPT/next issue.
+
+Blockers:
+none
+
+END_TOOBA_WORKER_RESULT

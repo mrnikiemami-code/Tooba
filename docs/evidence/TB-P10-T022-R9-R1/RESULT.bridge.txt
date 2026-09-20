@@ -1,0 +1,89 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+
+BEGIN_TOOBA_WORKER_RESULT
+
+Task-ID:
+TB-P10-T022-R9-R1
+
+Parent-Task:
+TB-P10-T022-R9
+
+Channel:
+tooba-main
+
+WorkerId:
+tooba-worker-01
+
+AgentType:
+cursor
+
+Status:
+PASS
+
+Appearance-USER_VISUAL_ACCEPTED=YES
+Builder-USER_VISUAL_ACCEPTED=NO
+
+Summary:
+Store Pages SSR Performance Repair PASS. Eliminated ~90–120s /landing/{slug} application SSR stalls via React cache() canonical page+SEO resolver, Host section-scoped shell embed (no /home waterfall), Status-filtered resolve, and Store+locale+page cache tags with revalidate. Warm Landing SSR measured ~248–325ms (was multi-second healthy / ~90–180s stall). Locks LOCK-SF-325…327. R10 not started. No TB-P10-T023. Worker IDLE.
+
+Applicable-Locks:
+LOCK-SF-001…324 preserved. Added LOCK-SF-325…327 (canonical SSR resolver dedupe; Store+locale+page cache/invalidation; performance must not weaken SEO/isolation).
+
+Recovery-Start:
+branch=main expected HEAD 28b000ebd571e12bc76d25042daa2fa9fa8463bb == origin/main at claim. WIP repair changes completed. Unrelated stash unrelated-pre-r9r1 preserved. docs/evidence/TB-P10-T022-R9-R1/recovery-start.md
+
+Performance-Baseline:
+Warm Landing previously healthy ~2.3–2.8s with observed stalls ~90–180s during capture; Host resolve remained fast. docs/evidence/TB-P10-T022-R9-R1/performance-baseline.md
+
+Root-Cause:
+Duplicate/waterfall FE work: metadata+page duplicate resolve paths and public FE self-fetch /home composition waterfall for Landing SSR rather than Host-embedded shell; sequential expensive work under load.
+
+Shared-Resolver:
+storefront-store-page-resolver.ts — React cache() request-scoped dedupe for page+SEO; Store/locale isolation.
+
+Backend-Query-Efficiency:
+StoreLandingPageComposer Status filter + section-scoped product/shell embed; no full Catalog for metadata/shell; warm Host page resolve ~42ms.
+
+Metadata-Performance:
+Metadata uses canonical resolver; does not rebuild full composition graph independently.
+
+Composition-Loading:
+Landing page uses Host embed; no per-section HTTP waterfall to /home; R9 rendering correctness preserved.
+
+Caching-Revalidation:
+storefront-store-page-cache.ts + api/storefront/revalidate — Store+locale+page tags; invalidates on publish/Home selection; no private Admin preview public cache.
+
+Performance-Result:
+Warm Landing 251/325/248 ms; cold Landing ~5485 ms (compile ~4.1s documented separately); Home / ~1949 ms. Application 90–120s stall eliminated.
+
+SEO-Regression:
+title/description/canonical/robots/OG/hreflang/H1/structured-data/sitemap rules rechecked — no intentional SEO weakening.
+
+Focused-Validation:
+R9-R1 guards PASS; landing/admin guards PASS; recovery-staleness PASS; critical-storefront 20/20 PASS; git diff --check PASS. docs/evidence/TB-P10-T022-R9-R1/
+
+Runtime:
+Host :5088 + FE :3000 exercised (cold/warm Landing, Home, invalidation). docs/evidence/TB-P10-T022-R9-R1/runtime.md
+
+AntiPattern-Scan:
+CLEAN — no timeout increase, spinner hide, polling/retries, SEO disable, global tenant cache, N+1, duplicate metadata/page chain. docs/evidence/TB-P10-T022-R9-R1/antipattern-scan.md
+
+Lock-Registry:
+LOCK-SF-001…327. New 325–327 only.
+
+Recovery-SoT:
+Phase P10; Last Architect-accepted before review TB-P10-T022-R8-R2; Last Implementation TB-P10-T022-R9-R1; Issued/Repair none; Appearance YES; Builder NO; Worker IDLE; do NOT start R10; do NOT invent TB-P10-T023.
+
+Git:
+SHA=94391f5d7353f44c94b71c72c74151d680df6fee HEAD==origin/main after push. Unrelated stash unrelated-pre-r9r1 preserved.
+
+Architectural-Concerns:
+Cold first request still includes Next compile overhead (~4s) — documented separately from application SSR stall.
+
+Visual-Concerns:
+Builder USER_VISUAL_ACCEPTED=NO — Architect visual/accept gate unchanged; R10 awaits next issue.
+
+Blockers:
+none
+
+END_TOOBA_WORKER_RESULT
