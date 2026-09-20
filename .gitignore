@@ -50,6 +50,9 @@ docs/ai/tasks/_bridge-*.json
 docs/ai/tasks/_wake-*
 docs/ai/tasks/*.bridge-meta.json
 docs/ai/tasks/*.claim.json
+docs/ai/tasks/*.task.raw.json
+docs/ai/tasks/*bridge-raw*.json
+docs/ai/tasks/*_next.json
 
 # Transient evidence diagnostics (untracked only; tracked files stay tracked)
 docs/evidence/**/screenshots/**/failures/**
@@ -60,3 +63,6 @@ docs/evidence/**/_*.mjs
 docs/evidence/**/*.ps1
 docs/evidence/**/*fail*.png
 docs/evidence/**/capture-error.png
+docs/evidence/**/r*-console-probe.mjs
+docs/evidence/**/r*-console-stack.mjs
+docs/evidence/GIT-DOCS-TRIAGE/
