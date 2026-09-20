@@ -1,4 +1,4 @@
-﻿PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
 
 BEGIN_TOOBA_WORKER_RESULT
 
@@ -106,7 +106,7 @@ Recovery-SoT:
 docs/evidence/TB-TMAR-ARCH-BASELINE/recovery-sot.md
 
 Git:
-branch main; tip 445884053c54931bc5dd68fcf1976ae2f85de400; pushed origin/main; HEAD==origin/main; 18ca10c9 ancestor; user work preserved; production code unchanged
+branch main; tip c486db96ece53bf15bdf6e44aaf7160cd231b028; pushed origin/main; HEAD==origin/main; 18ca10c9 ancestor; user work preserved; production code unchanged
 
 Architectural-Concerns:
 Host remains high-risk until Wave 1 freeze + Wave 2 write removal; Catalog storefront/settings ownership moves must not be Big-Bang.
