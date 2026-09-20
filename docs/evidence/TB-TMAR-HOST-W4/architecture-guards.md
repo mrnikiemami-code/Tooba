@@ -1,0 +1,1 @@
+# Architecture guards — TB-TMAR-HOST-W4\n\nHost-write baseline removed Admin/QuantitySettingsEndpoints.cs. TmarFoundationTests.Host_write PASS.\n

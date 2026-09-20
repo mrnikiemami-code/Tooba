@@ -1,0 +1,1 @@
+# Foundation compliance — TB-TMAR-HOST-W4\n\nIClock for UpdatedAt; stable error quantity.rounding.invalid preserved.\n

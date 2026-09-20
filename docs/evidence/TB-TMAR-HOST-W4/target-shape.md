@@ -1,0 +1,1 @@
+# Target shape — TB-TMAR-HOST-W4\n\nGET → ICatalogLookupGateway.GetGlobalRoundingModeAsync\nPUT → ISender → SaveStoreQuantitySettingsCommand → Handler → IStoreQuantitySettingsDirectory → CatalogDbContext.SaveChangesAsync\nHost ToView labels remain presentation-only.\n

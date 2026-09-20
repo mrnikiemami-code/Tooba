@@ -1,0 +1,1 @@
+# Host write removal — TB-TMAR-HOST-W4\n\nRemoved CatalogDbContext/SaveChanges/Add from QuantitySettingsEndpoints. Validation + persistence in Catalog Directory.\n

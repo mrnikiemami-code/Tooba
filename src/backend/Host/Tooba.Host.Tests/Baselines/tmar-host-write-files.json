@@ -21,7 +21,6 @@
     "Admin/OrderSupplyComposer.cs",
     "Admin/ProductWorkspaceComposer.cs",
     "Admin/ProductWorkspaceDevelopmentBootstrap.cs",
-    "Admin/QuantitySettingsEndpoints.cs",
     "Admin/ReservationPolicyAdminComposer.cs",
     "Admin/ReservationPolicyAdminEndpoints.cs",
     "Admin/ShippingServiceEndpoints.cs",

@@ -1,0 +1,1 @@
+# Cache compliance — TB-TMAR-HOST-W4\n\nNo cache touched by quantity-rounding settings slice.\n

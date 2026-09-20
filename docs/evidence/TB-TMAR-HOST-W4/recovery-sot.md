@@ -1,0 +1,1 @@
+# Recovery SoT — TB-TMAR-HOST-W4\n\n- Slice: QuantitySettingsEndpoints → Catalog CQRS Directory\n- Baseline: removed Admin/QuantitySettingsEndpoints.cs\n- Orders-Frontend-Readiness: UNCHANGED\n- Host-Recovery-State: CONTINUE_HOST\n- Architecture-Priority: HOST\n- Next: TB-TMAR-HOST-W5\n- Product-Resume-Safety: SAFE_WITH_TMAR_PARALLEL\n

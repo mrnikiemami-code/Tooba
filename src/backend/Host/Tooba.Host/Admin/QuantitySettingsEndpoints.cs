@@ -1,7 +1,7 @@
-using Microsoft.EntityFrameworkCore;
+using MediatR;
 using Tooba.BuildingBlocks;
+using Tooba.Catalog.Application;
 using Tooba.Catalog.Domain;
-using Tooba.Catalog.Infrastructure.Persistence;
 
 namespace Tooba.Host.Admin;
 
@@ -15,7 +15,7 @@ public sealed record StoreQuantitySettingsView(
 public sealed record StoreQuantitySettingsWriteRequest(string GlobalRoundingMode);
 
 /// <summary>
-/// تنظیم سراسری گرد کردن مقدار — یک ردیف store_quantity_settings، بدون سیستم موازی.
+/// تنظیم سراسری گرد کردن مقدار — خواندن از Catalog lookup؛ نوشتن از طریق CQRS.
 /// </summary>
 public static class QuantitySettingsEndpoints
 {
@@ -28,7 +28,7 @@ public static class QuantitySettingsEndpoints
     }
 
     private static async Task<IResult> GetAsync(
-        CatalogDbContext catalog,
+        ICatalogLookupGateway catalogLookup,
         HttpRequest request,
         CurrentAuthenticatedSession session,
         ICurrentTenant tenant,
@@ -40,9 +40,7 @@ public static class QuantitySettingsEndpoints
         {
             await AdminPanelAccess.RequireAuthorizedAsync(
                 request, session, tenant, guard, environment, cancellationToken);
-            var row = await catalog.StoreQuantitySettings.AsNoTracking()
-                .SingleOrDefaultAsync(x => x.SettingsId == StoreQuantitySettings.SingletonId, cancellationToken);
-            var mode = row?.RoundingMode ?? QuantityRoundingMode.Nearest;
+            var mode = await catalogLookup.GetGlobalRoundingModeAsync(cancellationToken);
             return Results.Json(ToView(mode));
         }
         catch (PlatformHttpException ex)
@@ -53,7 +51,7 @@ public static class QuantitySettingsEndpoints
 
     private static async Task<IResult> PutAsync(
         StoreQuantitySettingsWriteRequest body,
-        CatalogDbContext catalog,
+        ISender sender,
         HttpRequest request,
         CurrentAuthenticatedSession session,
         ICurrentTenant tenant,
@@ -65,23 +63,7 @@ public static class QuantitySettingsEndpoints
         {
             await AdminPanelAccess.RequireAuthorizedAsync(
                 request, session, tenant, guard, environment, cancellationToken);
-            if (!Enum.TryParse<QuantityRoundingMode>(body.GlobalRoundingMode, ignoreCase: true, out var mode)
-                || mode is not (QuantityRoundingMode.Floor or QuantityRoundingMode.Ceiling or QuantityRoundingMode.Nearest))
-            {
-                throw new PlatformHttpException(400, "حالت گرد کردن نامعتبر است.", "quantity.rounding.invalid");
-            }
-
-            var now = DateTimeOffset.UtcNow;
-            var row = await catalog.StoreQuantitySettings
-                .SingleOrDefaultAsync(x => x.SettingsId == StoreQuantitySettings.SingletonId, cancellationToken);
-            if (row is null)
-            {
-                row = StoreQuantitySettings.CreateDefault(now);
-                catalog.StoreQuantitySettings.Add(row);
-            }
-
-            row.SetRoundingMode(mode, now);
-            await catalog.SaveChangesAsync(cancellationToken);
+            var mode = await sender.Send(new SaveStoreQuantitySettingsCommand(body.GlobalRoundingMode), cancellationToken);
             return Results.Json(ToView(mode));
         }
         catch (PlatformHttpException ex)

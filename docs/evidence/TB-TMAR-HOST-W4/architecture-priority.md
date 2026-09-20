@@ -1,0 +1,1 @@
+# Architecture priority — TB-TMAR-HOST-W4\n\nArchitecture-Priority: HOST\n\nSafe Catalog/Fulfillment settings writes remain before Checkout design must dominate.\n

@@ -1,0 +1,35 @@
+{
+  "generatedAt": "2026-09-20T08:25:19.828Z",
+  "taskId": "TB-TMAR-HOST-W4",
+  "selectedSlice": "Admin/QuantitySettingsEndpoints.PutAsync",
+  "candidates": [
+    {
+      "path": "Admin/QuantitySettingsEndpoints.cs",
+      "classification": "DIRECT_DB_WRITE",
+      "selected": true
+    },
+    {
+      "path": "Admin/UnitOfMeasureEndpoints.cs",
+      "classification": "DIRECT_DB_WRITE"
+    },
+    {
+      "path": "Admin/ShippingServiceEndpoints.cs",
+      "classification": "DIRECT_DB_WRITE"
+    },
+    {
+      "path": "Admin/HoldPolicySettingsEndpoints.cs",
+      "classification": "DIRECT_DB_WRITE",
+      "note": "dual-context reject"
+    },
+    {
+      "path": "Admin/ProductWorkspaceComposer.cs",
+      "classification": "DIRECT_DB_WRITE",
+      "note": "giant reject"
+    },
+    {
+      "path": "Seller/SellerPanelComposer.cs",
+      "classification": "DIRECT_DB_WRITE"
+    }
+  ],
+  "baselineRemoved": "Admin/QuantitySettingsEndpoints.cs"
+}\n

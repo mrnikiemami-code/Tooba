@@ -1,0 +1,1 @@
+# Characterization — TB-TMAR-HOST-W4\n\nQuantitySettingsAdminTests — 6/6 PASS (default Nearest, Floor/Ceiling persist, invalid reject, singleton update, endpoints CQRS/auth).\n

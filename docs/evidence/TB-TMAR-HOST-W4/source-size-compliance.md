@@ -1,0 +1,1 @@
+# Source-size compliance — TB-TMAR-HOST-W4\n\nNew contracts/handler/directory small. No new >800 LOC file.\n

@@ -1,0 +1,1 @@
+# Business decision removal — TB-TMAR-HOST-W4\n\nAllowed Floor/Ceiling/Nearest enum allow-list moved to StoreQuantitySettingsDirectory.\n

@@ -35,6 +35,7 @@ public sealed class CatalogModule : IToobaModule
         services.AddScoped<IStoreLandingPageDirectory, StoreLandingPageDirectory>();
         services.AddScoped<IStoreMenuDirectory, StoreMenuDirectory>();
         services.AddScoped<IStoreAppearanceSettingsDirectory, StoreAppearanceSettingsDirectory>();
+        services.AddScoped<IStoreQuantitySettingsDirectory, StoreQuantitySettingsDirectory>();
         services.AddSingleton<IQuantityNormalizer, QuantityNormalizer>();
         services.AddValidatorsFromAssembly(typeof(CreateStoreLandingPageCommand).Assembly);
         services.AddDbContext<CatalogDbContext>((sp, options) =>

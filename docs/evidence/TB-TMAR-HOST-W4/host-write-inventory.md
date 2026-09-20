@@ -1,0 +1,1 @@
+# Host write inventory — TB-TMAR-HOST-W4\n\nSelected: QuantitySettingsEndpoints PutAsync (Catalog StoreQuantitySettings).\nDeferred: UoM CRUD, ShippingService, SellerPanel, ProductWorkspace, HoldPolicy, Order-adjacent.\n
