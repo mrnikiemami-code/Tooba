@@ -50,6 +50,7 @@ Evidence files remain the deep-detail source; this map is the quick index.
 | Frontend ADMIN-W3 | admin-sellers → features/admin-sellers; admin-api 1145→1107; exports 49→45; admin-screens 1078→1057 | TB-TMAR-FE-ADMIN-W3 |
 | Frontend ADMIN-W4 | admin-customers → features/admin-customers; admin-api 1107→1069; exports 45→41; admin-screens 1057→1036 | TB-TMAR-FE-ADMIN-W4 |
 | Frontend ADMIN-W5 | admin-receipts → features/admin-receipts; admin-api 1069→1022; exports 41→38; admin-screens 1036→894; Flat exit NOT_READY | TB-TMAR-FE-ADMIN-W5 |
-| Next | Continue admin capability migration (dashboard candidate; orders deferred) | TB-TMAR-FE-ADMIN-W5 |
+| Frontend ADMIN-W6 | admin-dashboard → features/admin-dashboard; admin-api 1022→1002; exports 38→35; admin-screens 894→810; Flat exit READY_TO_PIVOT; Priority HOST | TB-TMAR-FE-ADMIN-W6 |
+| Next | Pivot to Host residual debt (Orders admin deferred — workflow-coupled) | TB-TMAR-HOST-W3 |
 
-Last Verified Task = TB-TMAR-FE-ADMIN-W5
+Last Verified Task = TB-TMAR-FE-ADMIN-W6

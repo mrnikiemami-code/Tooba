@@ -7,7 +7,6 @@ import {
   formatAdminPaymentReference,
   formatAdminStatus,
   loadAdminOrders,
-  mapAdminDashboard,
   mapAdminOrder,
   formatOrderSellerLabel,
   enrichAdminOrderDetail,
@@ -15,10 +14,6 @@ import {
 } from "./admin-api.ts";
 
 test("maps live dashboard, order, seller and customer DTOs", () => {
-  const dashboard = mapAdminDashboard({ ActiveProducts: 2, ActiveOffers: 3, OpenOrders: 4, PaidOrders: 1, PendingOrders: 3, SellersCount: 5, CustomersCount: 6 });
-  assert.equal(dashboard?.activeOffers, 3);
-  assert.equal(dashboard?.customersCount, 6);
-
   const order = mapAdminOrder({ CheckoutId: "c1", Reference: "TOOBA-101", RecipientName: "سارا", SellerCount: 2, SellerDisplayNames: "فروشگاه آرمان", ItemCount: 3, PayableAmount: 1200, Currency: "IRR", PaymentState: "Paid", Status: "Submitted" });
   assert.equal(order?.reference, "TOOBA-101");
   assert.equal(order?.sellerDisplayNames, "فروشگاه آرمان");

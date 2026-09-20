@@ -11,23 +11,21 @@ import {
   type AdminReservationCycleSummary,
   type AdminReservationShortageLine,
 } from "./admin-reservation-cycle.ts";
-export {
+import {
   ADMIN_DEV_ACTOR_HEADER,
   ADMIN_ACTOR_STORAGE_KEY,
   DEFAULT_ADMIN_ACTOR_ID,
   type AdminLoadState,
   type AdminResult,
 } from "../../lib/admin/admin-result.ts";
+export {
+  ADMIN_DEV_ACTOR_HEADER,
+  ADMIN_ACTOR_STORAGE_KEY,
+  DEFAULT_ADMIN_ACTOR_ID,
+  type AdminLoadState,
+  type AdminResult,
+};
 
-export interface AdminDashboard {
-  activeProducts: number;
-  activeOffers: number;
-  openOrders: number;
-  paidOrders: number;
-  pendingOrders: number;
-  sellersCount: number;
-  customersCount: number;
-}
 
 export interface AdminOrderRow {
   id: string;
@@ -498,20 +496,6 @@ export function formatAdminDate(value: string | null | undefined): string {
     : new Intl.DateTimeFormat("fa-IR", { year: "numeric", month: "2-digit", day: "2-digit" }).format(date);
 }
 
-/** خلاصهٔ زندهٔ داشبورد را از DTO با casing رایج Host نگاشت می‌کند. */
-export function mapAdminDashboard(value: unknown): AdminDashboard | null {
-  const item = record(value);
-  if (!item) return null;
-  return {
-    activeProducts: number(prop(item, "activeProducts", "ActiveProducts") ?? prop(item, "publishedProducts", "PublishedProducts")),
-    activeOffers: number(prop(item, "activeOffers", "ActiveOffers")),
-    openOrders: number(prop(item, "openOrders", "OpenOrders")),
-    paidOrders: number(prop(item, "paidOrders", "PaidOrders")),
-    pendingOrders: number(prop(item, "pendingOrders", "PendingOrders")),
-    sellersCount: number(prop(item, "sellersCount", "SellersCount") ?? prop(item, "sellers", "Sellers")),
-    customersCount: number(prop(item, "customersCount", "CustomersCount") ?? prop(item, "customers", "Customers")),
-  };
-}
 
 /** برچسب ستون فروشنده: یک فروشنده → نام؛ چند فروشنده → «N فروشنده». */
 export function formatOrderSellerLabel(row: Pick<AdminOrderRow, "sellerCount" | "sellerDisplayNames">): string {
@@ -929,10 +913,6 @@ async function mapped<T>(path: string, mapper: (value: unknown) => T | null): Pr
   return data == null ? { state: "error", data: null, status: response.status, message: "admin.invalid-response" } : { ...response, data };
 }
 
-/** داشبورد عملیاتی را از Host می‌خواند. */
-export function loadAdminDashboard(): Promise<AdminResult<AdminDashboard>> {
-  return mapped("/v1/admin/dashboard", mapAdminDashboard);
-}
 
 /** فهرست سفارش‌های همهٔ فروشندگان را از Host می‌خواند. */
 export function loadAdminOrders(): Promise<AdminResult<AdminOrderRow[]>> {
