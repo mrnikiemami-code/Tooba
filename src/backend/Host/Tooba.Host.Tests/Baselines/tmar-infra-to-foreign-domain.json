@@ -1,6 +1,4 @@
 {
   "rule": "InfraToForeignDomain",
-  "edges": [
-    "Tooba.Payment.Infrastructure -> Tooba.Wallet.Domain"
-  ]
+  "edges": []
 }

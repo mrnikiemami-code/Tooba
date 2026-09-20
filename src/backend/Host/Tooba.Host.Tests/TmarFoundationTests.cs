@@ -248,6 +248,49 @@ public sealed class TmarFoundationTests
         Assert.True(extra.Length == 0, "NEW Host IMemoryCache sites: " + string.Join("; ", extra));
     }
 
+    [Fact]
+    public void Module_Contracts_projects_do_not_reference_Domain_Infrastructure_or_Host()
+    {
+        var backend = Path.Combine(FindRepoRoot(), "src", "backend");
+        foreach (var path in Directory.GetFiles(backend, "*.Contracts.csproj", SearchOption.AllDirectories))
+        {
+            if (path.Contains($"{Path.DirectorySeparatorChar}obj{Path.DirectorySeparatorChar}", StringComparison.Ordinal))
+            {
+                continue;
+            }
+
+            var name = Path.GetFileNameWithoutExtension(path);
+            var xml = XDocument.Load(path);
+            foreach (var include in xml.Descendants().Where(e => e.Name.LocalName == "ProjectReference")
+                         .Select(e => e.Attribute("Include")?.Value)
+                         .Where(v => !string.IsNullOrWhiteSpace(v)))
+            {
+                var refName = Path.GetFileNameWithoutExtension(include!);
+                Assert.False(
+                    refName.Contains(".Domain", StringComparison.Ordinal)
+                    || refName.Contains(".Infrastructure", StringComparison.Ordinal)
+                    || refName.Equals("Tooba.Host", StringComparison.Ordinal)
+                    || refName.Equals("Tooba.Persistence", StringComparison.Ordinal),
+                    $"{name} must not reference {refName}");
+            }
+        }
+    }
+
+    [Fact]
+    public void Payment_Infrastructure_does_not_reference_Wallet_Domain()
+    {
+        var path = Path.Combine(
+            FindRepoRoot(),
+            "src", "backend", "Modules", "Payment", "Tooba.Payment.Infrastructure",
+            "Tooba.Payment.Infrastructure.csproj");
+        var xml = XDocument.Load(path);
+        var refs = xml.Descendants().Where(e => e.Name.LocalName == "ProjectReference")
+            .Select(e => Path.GetFileNameWithoutExtension(e.Attribute("Include")!.Value))
+            .ToArray();
+        Assert.DoesNotContain("Tooba.Wallet.Domain", refs);
+        Assert.Contains("Tooba.Wallet.Contracts", refs);
+    }
+
     private static JsonElement LoadJsonBaseline(string fileName)
     {
         var path = Path.Combine(FindRepoRoot(), "src", "backend", "Host", "Tooba.Host.Tests", "Baselines", fileName);

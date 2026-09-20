@@ -1,8 +1,4 @@
 {
   "rule": "DomainToForeignDomain",
-  "edges": [
-    "Tooba.Cart.Domain -> Tooba.Offer.Domain",
-    "Tooba.Order.Domain -> Tooba.Offer.Domain",
-    "Tooba.Pricing.Domain -> Tooba.Offer.Domain"
-  ]
+  "edges": []
 }

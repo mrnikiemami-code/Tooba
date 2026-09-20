@@ -123,16 +123,9 @@ public sealed class WalletAccount
     /// <summary>آیا حساب برای اعتبار/بدهکار باز است.</summary>
     public bool CanMutateLedger => Status == WalletAccountStatus.Active;
 
-    /// <summary>ارز را نرمال و اعتبارسنجی می‌کند.</summary>
-    public static string NormalizeCurrency(string currency)
-    {
-        if (string.IsNullOrWhiteSpace(currency))
-            throw new InvalidOperationException("ارز الزامی است.");
-        var trimmed = currency.Trim().ToUpperInvariant();
-        if (trimmed.Length is < 3 or > 8)
-            throw new InvalidOperationException("ارز نامعتبر است.");
-        return trimmed;
-    }
+    /// <summary>ارز را نرمال و اعتبارسنجی می‌کند (delegate به Wallet.Contracts).</summary>
+    public static string NormalizeCurrency(string currency) =>
+        Tooba.Wallet.Contracts.WalletCurrency.Normalize(currency);
 }
 
 /// <summary>سطر immutable دفتر کیف پول؛ موجودی فقط از مجموع این سطرها مشتق می‌شود.</summary>

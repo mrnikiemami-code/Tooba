@@ -1,6 +1,6 @@
 using Tooba.Payment.Application;
 using Tooba.Wallet.Application;
-using Tooba.Wallet.Domain;
+using Tooba.Wallet.Contracts;
 
 namespace Tooba.Payment.Infrastructure;
 
@@ -43,7 +43,7 @@ public sealed class WalletPaymentGateway : IPaymentGateway
             throw new InvalidOperationException("موجودی کیف پول کافی نیست.");
 
         // مرجع پایدار شامل actor/amount/currency برای Verify پس از restart.
-        var reference = ComposeReference(paymentId, actorUserId, amount, WalletAccount.NormalizeCurrency(currency));
+        var reference = ComposeReference(paymentId, actorUserId, amount, WalletCurrency.Normalize(currency));
         // Redirect خالی → PaymentDirectory مسیر /payment/result را می‌سازد (بدون sandbox).
         return new GatewayInitiation(reference, null, DateTimeOffset.UtcNow.AddMinutes(15));
     }

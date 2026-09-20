@@ -1,4 +1,4 @@
-using Tooba.BuildingBlocks;
+﻿using Tooba.BuildingBlocks;
 using Tooba.Offer.Domain;
 
 namespace Tooba.Order.Domain;

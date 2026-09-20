@@ -1,0 +1,74 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+
+BEGIN_TOOBA_WORKER_RESULT
+
+Task-ID: TB-TMAR-CONTRACTS-W1
+Parent-Task: TB-TMAR-BOUNDARY-V1-R1
+Channel: tooba-main
+WorkerId: tooba-worker-01
+AgentType: cursor
+Status: PASS
+
+Summary:
+Contracts Wave 1 PASS. Removed Cart/Order/Pricing.Domain→Offer.Domain by extracting SalesChannel into Tooba.Offer.Contracts. Created Tooba.Wallet.Contracts (WalletCurrency.Normalize) and removed Payment.Infrastructure→Wallet.Domain. Domain→foreign Domain and Infra→foreign Domain baselines shrunk to empty. No Order hub redesign. No App→App / Infra→App expansion. Product-Resume-Safety SAFE_WITH_TMAR_PARALLEL. Next: TB-TMAR-CONTRACTS-W2.
+
+Program-Name:
+TMAR — Tooba Microservice-Ready Architecture Recovery
+
+Recovery-Start:
+docs/evidence/TB-TMAR-CONTRACTS-W1/recovery-start.md
+
+Dead-Domain-Offer-Refs:
+docs/evidence/TB-TMAR-CONTRACTS-W1/dead-domain-offer-removal.md — 3 ProjectReferences removed; SalesChannel moved to Offer.Contracts
+
+Offer-Contracts:
+docs/evidence/TB-TMAR-CONTRACTS-W1/offer-contracts.md — Tooba.Offer.Contracts created (SalesChannel only)
+
+Wallet-Contracts:
+docs/evidence/TB-TMAR-CONTRACTS-W1/wallet-contracts.md — Tooba.Wallet.Contracts + Payment gateway switched off Wallet.Domain
+
+Currency-Ownership:
+docs/evidence/TB-TMAR-CONTRACTS-W1/currency-ownership.md — Wallet-owned ledger normalize; not BuildingBlocks/Pricing CurrencyCode
+
+Dependency-Changes:
+- Domain→Offer.Domain removed (Cart/Order/Pricing now → Offer.Contracts)
+- Payment.Infrastructure→Wallet.Domain removed (→ Wallet.Contracts)
+- Payment.Infrastructure→Wallet.Application retained (baselined; W2)
+
+Architecture-Guards:
+docs/evidence/TB-TMAR-CONTRACTS-W1/architecture-guards.md — baselines empty; Contracts cleanliness + Payment no Wallet.Domain tests
+
+Characterization-Tests:
+WalletCurrencyContractsTests — normalize + Domain facade parity + gateway compose
+
+Tests:
+docs/evidence/TB-TMAR-CONTRACTS-W1/tests.md — 49 passed (TMAR + Wallet/Offer/Pricing foundation)
+
+Source-Size-Compliance:
+inventory refreshed to 1721; oversized baseline 55 unchanged (no growth)
+
+Capability-Map:
+docs/architecture/TOOBA-CAPABILITY-MAP.md — Last Verified = TB-TMAR-CONTRACTS-W1
+
+Bootstrap:
+docs/architecture/TOOBA-ARCHITECT-BOOTSTRAP.md — contracts-w1 PASS; next CONTRACTS-W2
+
+Recovery-SoT:
+docs/evidence/TB-TMAR-CONTRACTS-W1/recovery-sot.md
+
+Git:
+branch main; tip PLACEHOLDER_SHA; pushed origin/main; HEAD==origin/main; 18ca10c9 ancestor; user work preserved
+
+Architectural-Concerns:
+Order.Application hub still App→App coupled; Payment still Infra→Wallet.Application; SalesChannel namespace remains Tooba.Offer.Domain inside Contracts assembly for TypeForward compatibility
+
+Blockers:
+(none)
+
+Product-Resume-Safety:
+SAFE_WITH_TMAR_PARALLEL
+
+Next-Recommended-Task:
+TB-TMAR-CONTRACTS-W2
+
+END_TOOBA_WORKER_RESULT
