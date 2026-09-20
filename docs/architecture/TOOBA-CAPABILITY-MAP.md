@@ -53,6 +53,7 @@ Evidence files remain the deep-detail source; this map is the quick index.
 | Frontend ADMIN-W6 | admin-dashboard → features/admin-dashboard; admin-api 1022→1002; exports 38→35; admin-screens 894→810; Flat exit READY_TO_PIVOT; Priority HOST | TB-TMAR-FE-ADMIN-W6 |
 | Host W3 | StoreAppearanceSettings Host write → Catalog CQRS Directory; Host-write baseline shrink; CONTINUE_HOST | TB-TMAR-HOST-W3 |
 | Host W4 | QuantitySettings Host write → Catalog CQRS Directory; Host-write baseline shrink; CONTINUE_HOST | TB-TMAR-HOST-W4 |
-| Next | Continue Host direct-write reduction | TB-TMAR-HOST-W5 |
+| Host W5 | UnitOfMeasure Host writes → Catalog CQRS Directory; Host-Exit-State NOT_READY; CONTINUE_HOST | TB-TMAR-HOST-W5 |
+| Next | Continue Host direct-write reduction | TB-TMAR-HOST-W6 |
 
-Last Verified Task = TB-TMAR-HOST-W4
+Last Verified Task = TB-TMAR-HOST-W5

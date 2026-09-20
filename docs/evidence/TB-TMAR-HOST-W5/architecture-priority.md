@@ -1,0 +1,1 @@
+# Architecture priority — TB-TMAR-HOST-W5\n\nArchitecture-Priority: HOST\n\nAnother safe Host write slice (ShippingService Catalog-local Fulfillment) remains before Checkout design must dominate.\n

@@ -1,0 +1,1 @@
+# Architecture guards — TB-TMAR-HOST-W5\n\nHost-write baseline removed Admin/UnitOfMeasureEndpoints.cs. No App→App growth (language gate interface in Catalog.Application; Host adapter).\n

@@ -1,0 +1,31 @@
+{
+  "generatedAt": "2026-09-20T08:36:50.199Z",
+  "taskId": "TB-TMAR-HOST-W5",
+  "selectedSlice": "Admin/UnitOfMeasureEndpoints Create/Update/Deactivate",
+  "candidates": [
+    {
+      "path": "Admin/UnitOfMeasureEndpoints.cs",
+      "classification": "DIRECT_DB_WRITE",
+      "selected": true
+    },
+    {
+      "path": "Admin/ShippingServiceEndpoints.cs",
+      "classification": "DIRECT_DB_WRITE"
+    },
+    {
+      "path": "Seller/SellerPanelComposer.cs",
+      "classification": "DIRECT_DB_WRITE"
+    },
+    {
+      "path": "Admin/ProductWorkspaceComposer.cs",
+      "classification": "DIRECT_DB_WRITE",
+      "note": "giant"
+    },
+    {
+      "path": "Admin/HoldPolicySettingsEndpoints.cs",
+      "classification": "DIRECT_DB_WRITE",
+      "note": "dual-context"
+    }
+  ],
+  "baselineRemoved": "Admin/UnitOfMeasureEndpoints.cs"
+}\n

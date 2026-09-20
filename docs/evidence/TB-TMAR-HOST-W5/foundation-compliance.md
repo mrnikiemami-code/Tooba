@@ -1,0 +1,1 @@
+# Foundation compliance — TB-TMAR-HOST-W5\n\nIClock + IIdGenerator in Directory. Error codes unit.* preserved.\n

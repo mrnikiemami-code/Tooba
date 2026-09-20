@@ -151,6 +151,8 @@ TB-TMAR-HOST-W3
 
 TB-TMAR-HOST-W4
 
+TB-TMAR-HOST-W5
+
 Current Product Resume Gate:
 SAFE_WITH_TMAR_PARALLEL
 
@@ -158,7 +160,10 @@ User choice:
 Continue TMAR for now until user explicitly says to return to product feature work.
 
 Next TMAR task:
-TB-TMAR-HOST-W5
+TB-TMAR-HOST-W6
+
+Host W5:
+TB-TMAR-HOST-W5 — UnitOfMeasure Host writes → Catalog Application/Directory; Host-Exit-State NOT_READY; CONTINUE_HOST. Evidence: `docs/evidence/TB-TMAR-HOST-W5/`.
 
 Host W4:
 TB-TMAR-HOST-W4 — QuantitySettings Host write → Catalog Application/Directory; Host-write baseline shrink; CONTINUE_HOST. Evidence: `docs/evidence/TB-TMAR-HOST-W4/`.

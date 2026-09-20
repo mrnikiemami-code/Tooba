@@ -1,0 +1,1 @@
+# Host write inventory — TB-TMAR-HOST-W5\n\nSelected: UnitOfMeasureEndpoints Create/Update/Deactivate (Catalog).\nDeferred: ShippingService, SellerPanel, ProductWorkspace, HoldPolicy, Order-adjacent.\n

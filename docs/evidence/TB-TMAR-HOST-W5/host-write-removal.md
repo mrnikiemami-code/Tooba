@@ -1,0 +1,1 @@
+# Host write removal — TB-TMAR-HOST-W5\n\nRemoved SaveChanges/Add from UnitOfMeasure write endpoints. Reads remain presentation composition on CatalogDbContext.\n

@@ -1,0 +1,1 @@
+# Recovery SoT — TB-TMAR-HOST-W5\n\n- Slice: UnitOfMeasureEndpoints writes → Catalog CQRS Directory\n- Baseline: removed Admin/UnitOfMeasureEndpoints.cs\n- Host-Exit-State: NOT_READY\n- Host-Recovery-State: CONTINUE_HOST\n- Architecture-Priority: HOST\n- Orders-Frontend-Readiness: UNCHANGED\n- Next: TB-TMAR-HOST-W6\n- Product-Resume-Safety: SAFE_WITH_TMAR_PARALLEL\n

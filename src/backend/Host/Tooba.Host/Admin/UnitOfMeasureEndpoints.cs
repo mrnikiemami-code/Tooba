@@ -1,5 +1,7 @@
+using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Tooba.BuildingBlocks;
+using Tooba.Catalog.Application;
 using Tooba.Catalog.Domain;
 using Tooba.Catalog.Infrastructure.Persistence;
 using Tooba.Localization.Application;
@@ -38,7 +40,7 @@ public sealed record UnitOfMeasureDetail(
     bool IsReferenced,
     IReadOnlyList<UnitTranslationWrite> Translations);
 
-/// <summary>CRUD واحد اندازه‌گیری کاتالوگ.</summary>
+/// <summary>خواندن واحد از Catalog؛ نوشتن از طریق CQRS.</summary>
 public static class UnitOfMeasureEndpoints
 {
     /// <summary>مسیرهای Admin واحد را ثبت می‌کند.</summary>
@@ -138,8 +140,7 @@ public static class UnitOfMeasureEndpoints
 
     private static async Task<IResult> CreateAsync(
         UnitOfMeasureWriteRequest body,
-        CatalogDbContext catalog,
-        ILanguageDirectory languages,
+        ISender sender,
         HttpRequest request,
         CurrentAuthenticatedSession session,
         ICurrentTenant tenant,
@@ -151,19 +152,8 @@ public static class UnitOfMeasureEndpoints
         {
             await AdminPanelAccess.RequireAuthorizedAsync(
                 request, session, tenant, guard, environment, cancellationToken);
-            var now = DateTimeOffset.UtcNow;
-            var dimension = ParseDimension(body.Dimension);
-            var unit = UnitOfMeasure.Create(UuidV7.New(), body.Code, dimension, body.IsActive, body.SortOrder, now);
-            await EnsureUniqueCodeAsync(catalog, unit.Code, null, cancellationToken);
-            await ValidateTranslationsAsync(languages, body.Translations, cancellationToken);
-            catalog.UnitsOfMeasure.Add(unit);
-            foreach (var t in body.Translations)
-            {
-                catalog.UnitOfMeasureTranslations.Add(UnitOfMeasureTranslation.Create(unit.UnitOfMeasureId, t.LanguageId, t.Name, t.ShortName));
-            }
-
-            await catalog.SaveChangesAsync(cancellationToken);
-            return Results.Json(new { unit.UnitOfMeasureId });
+            var unitId = await sender.Send(new CreateUnitOfMeasureCommand(ToModel(body)), cancellationToken);
+            return Results.Json(new { UnitOfMeasureId = unitId });
         }
         catch (InvalidOperationException ex)
         {
@@ -178,8 +168,7 @@ public static class UnitOfMeasureEndpoints
     private static async Task<IResult> UpdateAsync(
         Guid unitId,
         UnitOfMeasureWriteRequest body,
-        CatalogDbContext catalog,
-        ILanguageDirectory languages,
+        ISender sender,
         HttpRequest request,
         CurrentAuthenticatedSession session,
         ICurrentTenant tenant,
@@ -191,30 +180,8 @@ public static class UnitOfMeasureEndpoints
         {
             await AdminPanelAccess.RequireAuthorizedAsync(
                 request, session, tenant, guard, environment, cancellationToken);
-            var unit = await catalog.UnitsOfMeasure.SingleOrDefaultAsync(x => x.UnitOfMeasureId == unitId, cancellationToken)
-                ?? throw new PlatformHttpException(404, "Not Found", "unit.missing");
-            var dimension = ParseDimension(body.Dimension);
-            var code = body.Code.Trim().ToLowerInvariant();
-            await EnsureUniqueCodeAsync(catalog, code, unitId, cancellationToken);
-            await ValidateTranslationsAsync(languages, body.Translations, cancellationToken);
-            unit.Update(code, dimension, body.SortOrder, DateTimeOffset.UtcNow);
-            unit.SetActive(body.IsActive, DateTimeOffset.UtcNow);
-            var existing = await catalog.UnitOfMeasureTranslations.Where(x => x.UnitOfMeasureId == unitId).ToListAsync(cancellationToken);
-            foreach (var t in body.Translations)
-            {
-                var row = existing.FirstOrDefault(x => x.LanguageId == t.LanguageId);
-                if (row is null)
-                {
-                    catalog.UnitOfMeasureTranslations.Add(UnitOfMeasureTranslation.Create(unitId, t.LanguageId, t.Name, t.ShortName));
-                }
-                else
-                {
-                    row.SetText(t.Name, t.ShortName);
-                }
-            }
-
-            await catalog.SaveChangesAsync(cancellationToken);
-            return Results.Json(new { unit.UnitOfMeasureId });
+            var id = await sender.Send(new UpdateUnitOfMeasureCommand(unitId, ToModel(body)), cancellationToken);
+            return Results.Json(new { UnitOfMeasureId = id });
         }
         catch (InvalidOperationException ex)
         {
@@ -228,7 +195,7 @@ public static class UnitOfMeasureEndpoints
 
     private static async Task<IResult> DeactivateAsync(
         Guid unitId,
-        CatalogDbContext catalog,
+        ISender sender,
         HttpRequest request,
         CurrentAuthenticatedSession session,
         ICurrentTenant tenant,
@@ -240,11 +207,8 @@ public static class UnitOfMeasureEndpoints
         {
             await AdminPanelAccess.RequireAuthorizedAsync(
                 request, session, tenant, guard, environment, cancellationToken);
-            var unit = await catalog.UnitsOfMeasure.SingleOrDefaultAsync(x => x.UnitOfMeasureId == unitId, cancellationToken)
-                ?? throw new PlatformHttpException(404, "Not Found", "unit.missing");
-            unit.SetActive(false, DateTimeOffset.UtcNow);
-            await catalog.SaveChangesAsync(cancellationToken);
-            return Results.Json(new { unit.UnitOfMeasureId, unit.IsActive });
+            var result = await sender.Send(new DeactivateUnitOfMeasureCommand(unitId), cancellationToken);
+            return Results.Json(new { UnitOfMeasureId = result.UnitId, IsActive = result.IsActive });
         }
         catch (PlatformHttpException ex)
         {
@@ -252,34 +216,13 @@ public static class UnitOfMeasureEndpoints
         }
     }
 
-    private static UnitOfMeasureDimension ParseDimension(string raw) =>
-        Enum.TryParse<UnitOfMeasureDimension>(raw, true, out var d) ? d : throw new InvalidOperationException("unit.dimension.invalid");
-
-    private static async Task EnsureUniqueCodeAsync(
-        CatalogDbContext catalog,
-        string code,
-        Guid? exceptId,
-        CancellationToken cancellationToken)
-    {
-        var clash = await catalog.UnitsOfMeasure.AsNoTracking()
-            .AnyAsync(x => x.Code == code && (!exceptId.HasValue || x.UnitOfMeasureId != exceptId), cancellationToken);
-        if (clash)
-        {
-            throw new InvalidOperationException("unit.code.duplicate");
-        }
-    }
-
-    private static async Task ValidateTranslationsAsync(
-        ILanguageDirectory languages,
-        IReadOnlyList<UnitTranslationWrite> translations,
-        CancellationToken cancellationToken)
-    {
-        var known = (await languages.ListAsync(cancellationToken)).Select(x => x.LanguageId).ToHashSet();
-        if (translations.Any(t => !known.Contains(t.LanguageId)))
-        {
-            throw new InvalidOperationException("unit.language.unknown");
-        }
-    }
+    private static UnitOfMeasureWriteModel ToModel(UnitOfMeasureWriteRequest body) =>
+        new(
+            body.Code,
+            body.Dimension,
+            body.IsActive,
+            body.SortOrder,
+            body.Translations.Select(t => new UnitOfMeasureTranslationWriteModel(t.LanguageId, t.Name, t.ShortName)).ToList());
 
     private static async Task<Guid> ResolveLanguageIdAsync(
         ILanguageDirectory languages,
@@ -299,5 +242,24 @@ public static class UnitOfMeasureEndpoints
         }
 
         return (list.FirstOrDefault(x => x.IsDefault) ?? list.FirstOrDefault())?.LanguageId ?? Guid.Empty;
+    }
+}
+
+/// <summary>Adapter Host برای اعتبار LanguageId واحدها.</summary>
+public sealed class HostUnitOfMeasureLanguageGate : IUnitOfMeasureLanguageGate
+{
+    private readonly ILanguageDirectory _languages;
+
+    /// <summary>Gate را می‌سازد.</summary>
+    public HostUnitOfMeasureLanguageGate(ILanguageDirectory languages) => _languages = languages;
+
+    /// <inheritdoc />
+    public async Task EnsureKnownAsync(IReadOnlyList<Guid> languageIds, CancellationToken cancellationToken)
+    {
+        var known = (await _languages.ListAsync(cancellationToken)).Select(x => x.LanguageId).ToHashSet();
+        if (languageIds.Any(id => !known.Contains(id)))
+        {
+            throw new InvalidOperationException("unit.language.unknown");
+        }
     }
 }

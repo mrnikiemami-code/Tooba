@@ -1,0 +1,1 @@
+# Target shape — TB-TMAR-HOST-W5\n\nHost auth → ISender → Commands → Handlers → UnitOfMeasureDirectory → CatalogDbContext.SaveChangesAsync.\nLanguage gate: HostUnitOfMeasureLanguageGate via ILanguageDirectory.\n

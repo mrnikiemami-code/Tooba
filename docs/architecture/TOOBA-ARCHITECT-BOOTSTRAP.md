@@ -22,7 +22,7 @@ Accepted architecture baseline:
 TB-TMAR-ARCH-BASELINE
 
 Current next task:
-TB-TMAR-HOST-W5 (continue Host direct-write reduction; Quantity PASS)
+TB-TMAR-HOST-W6 (continue Host direct-write reduction; UoM PASS; Host exit NOT_READY)
 
 Product development rule:
 Foundation (TB-TMAR-FND-001) is ACCEPTED.
@@ -46,6 +46,7 @@ Frontend ADMIN-W5 (TB-TMAR-FE-ADMIN-W5) PASS — admin-receipts migrated; admin-
 Frontend ADMIN-W6 (TB-TMAR-FE-ADMIN-W6) PASS — admin-dashboard migrated; admin-api 1022→1002; exports 38→35; admin-screens 894→810; Flat exit READY_TO_PIVOT; Architecture-Priority HOST.
 Host W3 (TB-TMAR-HOST-W3) PASS — StoreAppearanceSettings write → Catalog CQRS Directory; Host-write baseline shrink; CONTINUE_HOST; next HOST-W4.
 Host W4 (TB-TMAR-HOST-W4) PASS — QuantitySettings write → Catalog CQRS Directory; Host-write baseline shrink; CONTINUE_HOST; next HOST-W5.
+Host W5 (TB-TMAR-HOST-W5) PASS — UnitOfMeasure writes → Catalog CQRS Directory; Host-Exit-State NOT_READY; CONTINUE_HOST; next HOST-W6.
 Product-Resume-Safety = SAFE_WITH_TMAR_PARALLEL (Order hub still frozen; do not expand App→App / Infra→App; no NEW cross-context ACID).
 Last Product Task = TB-P10-T022-R21.
 Architecture Baseline = TB-TMAR-ARCH-BASELINE.
@@ -443,7 +444,8 @@ fe-admin-w5 = TB-TMAR-FE-ADMIN-W5 PASS (admin-receipts feature; screens→894; F
 fe-admin-w6 = TB-TMAR-FE-ADMIN-W6 PASS (admin-dashboard feature; screens→810; Flat exit READY_TO_PIVOT; Priority HOST)
 host-w3 = TB-TMAR-HOST-W3 PASS (StoreAppearanceSettings CQRS; Host-write baseline shrink; CONTINUE_HOST)
 host-w4 = TB-TMAR-HOST-W4 PASS (QuantitySettings CQRS; Host-write baseline shrink; CONTINUE_HOST)
-next task = TB-TMAR-HOST-W5 unless Recovery SoT says otherwise
+host-w5 = TB-TMAR-HOST-W5 PASS (UnitOfMeasure CQRS; Host exit NOT_READY; CONTINUE_HOST)
+next task = TB-TMAR-HOST-W6 unless Recovery SoT says otherwise
 
 primary goal = painless future Microservice migration
 

@@ -1,0 +1,1 @@
+# Transaction semantics — TB-TMAR-HOST-W5\n\nPer-operation single SaveChangesAsync; module-local; no BeginTransaction; no cross-context ACID.\n
