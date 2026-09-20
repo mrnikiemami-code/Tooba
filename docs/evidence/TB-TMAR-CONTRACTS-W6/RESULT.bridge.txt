@@ -1,0 +1,87 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+
+BEGIN_TOOBA_WORKER_RESULT
+
+Task-ID: TB-TMAR-CONTRACTS-W6
+Parent-Task: TB-TMAR-CONTRACTS-W5
+Channel: tooba-main
+WorkerId: tooba-worker-01
+AgentType: cursor
+Status: PASS
+
+Summary:
+CONTRACTS-W6 PASS. Removed Promotion.Application→Offer.Application and Cart.Application→Pricing.Application. Extended Pricing.Contracts with ICampaignCartPriceAuthority + CurrencyCode; Offer.Contracts with return-policy boundary. App→App 10→8. Pricing authority preserved. Backend STABLE_FOR_PARALLEL_RECOVERY; Frontend-Recovery-Readiness READY. Product-Resume-Safety SAFE_WITH_TMAR_PARALLEL. Next: TB-TMAR-FE-BASELINE.
+
+Program-Name:
+TMAR — Tooba Microservice-Ready Architecture Recovery
+
+Recovery-Start:
+docs/evidence/TB-TMAR-CONTRACTS-W6/recovery-start.md
+
+Promotion-Offer-Contract:
+docs/evidence/TB-TMAR-CONTRACTS-W6/promotion-offer-contract.md
+
+Cart-Pricing-Contract:
+docs/evidence/TB-TMAR-CONTRACTS-W6/cart-pricing-contract.md
+
+Pricing-Authority:
+docs/evidence/TB-TMAR-CONTRACTS-W6/pricing-authority.md
+
+Promotion-Offer-Boundary:
+docs/evidence/TB-TMAR-CONTRACTS-W6/promotion-offer-boundary.md
+
+Dependency-Changes:
+− Promotion.App→Offer.App; − Cart.App→Pricing.App
+
+Transaction-Semantics:
+unchanged — no CheckoutDirectory TransactionScope redesign
+
+Architecture-Guards:
+docs/evidence/TB-TMAR-CONTRACTS-W6/architecture-guards.md
+
+Contracts-Guard:
+docs/evidence/TB-TMAR-CONTRACTS-W6/contracts-guard.md
+
+Characterization-Tests:
+ContractsW6CharacterizationTests
+
+Tests:
+docs/evidence/TB-TMAR-CONTRACTS-W6/tests.md — 40 passed focused suite
+
+Source-Size-Compliance:
+docs/evidence/TB-TMAR-CONTRACTS-W6/source-size-compliance.md; inventory refreshed
+
+Backend-Structural-Readiness:
+STABLE_FOR_PARALLEL_RECOVERY — docs/evidence/TB-TMAR-CONTRACTS-W6/backend-readiness.md
+
+Frontend-Recovery-Readiness:
+READY — docs/evidence/TB-TMAR-CONTRACTS-W6/frontend-readiness.md
+
+Capability-Map:
+docs/architecture/TOOBA-CAPABILITY-MAP.md — Last Verified = TB-TMAR-CONTRACTS-W6
+
+Bootstrap:
+docs/architecture/TOOBA-ARCHITECT-BOOTSTRAP.md — contracts-w6 PASS; next FE-BASELINE
+
+Master-Recovery-State:
+docs/architecture/TOOBA-TMAR-MASTER-RECOVERY.md — W6 accepted; next FE-BASELINE; SAFE_WITH_TMAR_PARALLEL
+
+Recovery-SoT:
+docs/evidence/TB-TMAR-CONTRACTS-W6/recovery-sot.md
+
+Git:
+branch main; tip 46a7fbdd7d6baae15d9ed050a6ac9a2b83cebcea; pushed origin/main; HEAD==origin/main; 18ca10c9 ancestor; user work preserved
+
+Architectural-Concerns:
+Order hub still has Cart/Inventory/Promotion App edges; Promotion→Pricing/Inventory and Cart→Catalog/Inventory remain frozen; Checkout shared-ACID deferred
+
+Blockers:
+(none)
+
+Product-Resume-Safety:
+SAFE_WITH_TMAR_PARALLEL
+
+Next-Recommended-Task:
+TB-TMAR-FE-BASELINE
+
+END_TOOBA_WORKER_RESULT
