@@ -1,8 +1,8 @@
 /**
  * Admin client for canonical Language/Locale registry.
  */
-import { ADMIN_DEV_ACTOR_HEADER, type AdminResult } from "./admin-api.ts";
-import { mapSupportedLocale, type SupportedLocaleDefinition } from "../../lib/i18n/supported-locales.ts";
+import { ADMIN_DEV_ACTOR_HEADER, type AdminResult } from "../../../lib/admin/admin-result.ts";
+import { mapSupportedLocale, type SupportedLocaleDefinition } from "../../../lib/i18n/supported-locales.ts";
 
 function actorId(): string {
   if (typeof window === "undefined") return "";

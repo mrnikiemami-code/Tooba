@@ -8,17 +8,17 @@ import {
   faWorkspaceMessages,
   createClientGridQueryAdapter,
   useLegacyAdminGridDirectProps,
-} from "../../design-system";
-import type { GridColumnDef, GridServerQuery } from "../../design-system/data-grid";
-import type { SupportedLocaleDefinition } from "../../lib/i18n/supported-locales.ts";
+} from "../../../design-system";
+import type { GridColumnDef, GridServerQuery } from "../../../design-system/data-grid";
+import type { SupportedLocaleDefinition } from "../../../lib/i18n/supported-locales.ts";
 import {
   codeLockExplanation,
   isIdentityFieldLocked,
   storefrontLocalePrefixDeployNote,
   urlPrefixLockExplanation,
-} from "../../lib/i18n/language-identity-lock.ts";
-import { loadAdminLanguages, updateAdminLanguage } from "./language-api";
-import { createHostSavedViewStore } from "./saved-view-store";
+} from "../../../lib/i18n/language-identity-lock.ts";
+import { loadAdminLanguages, updateAdminLanguage } from "../api/language-api.ts";
+import { createHostSavedViewStore } from "../../../app/admin/saved-view-store.ts";
 
 type AdminLanguageRow = SupportedLocaleDefinition & { id: string };
 

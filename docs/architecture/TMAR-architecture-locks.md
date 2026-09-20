@@ -75,3 +75,9 @@ Shared UI (`design-system`) and technical libraries (`lib`) must not gain new de
 
 ## FE-BOUNDARY-002
 New cross-feature imports must use an approved public feature boundary rather than deep internal imports. Do not introduce a giant barrel-file architecture; deepen enforcement during FE-F2+ feature extraction.
+
+## FE-FOLDER-001
+No NEW business-feature implementation file may be added directly under the baselined flat admin accumulation directory (`src/frontend/app/admin/*` files). App Router convention files (`page`/`layout`/`loading`/`error`/`not-found`/`route`/…) remain allowed when they belong in App Router. Baseline: `docs/evidence/TB-TMAR-FE-F1/frontend-flat-folder-baseline.json`. Guard: `frontend-flat-folder.guard.test.ts`.
+
+## FE-FOLDER-002
+No NEW capability-specific API client/service export may be added to the generic `admin-api.ts` dumping-ground path. Existing exports are shrink-only against the FE-F1 baseline. Shared technical primitives belong under `lib/admin/` (or equivalent), not new capability methods on `admin-api.ts`.

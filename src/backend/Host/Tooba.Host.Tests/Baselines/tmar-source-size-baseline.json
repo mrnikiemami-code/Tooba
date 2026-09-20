@@ -59,7 +59,7 @@
     {
       "path": "src/frontend/app/admin/admin-api.ts",
       "language": "ts",
-      "loc": 1326,
+      "loc": 1321,
       "classification": "CRITICAL_GOD_FILE"
     },
     {

@@ -6,7 +6,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "react-toastify";
 import { prepareAdminDevActor } from "./admin-api.ts";
 import { mapAdminErrorMessage, normalizeAdminClientError } from "./admin-error-map.ts";
-import { loadAdminLanguages } from "./language-api.ts";
+import { loadAdminLanguages } from "../../features/admin-languages";
 import { createAdminArticle } from "../content/content-api.ts";
 import type { SupportedLocaleDefinition } from "../../lib/i18n/supported-locales.ts";
 

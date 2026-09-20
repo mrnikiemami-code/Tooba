@@ -56,7 +56,7 @@ test("storefront locale prefix deploy note stays concise", () => {
 });
 
 test("language list banner uses Persian human copy without jargon", () => {
-  const list = readFileSync(new URL("../../app/admin/language-list.tsx", import.meta.url), "utf8");
+  const list = readFileSync(new URL("../../features/admin-languages/components/language-list.tsx", import.meta.url), "utf8");
   assert.match(list, /فهرست محدود زبان‌های فعال/);
   assert.doesNotMatch(list, /SMALL_BOUNDED_CLIENT_SAFE/);
   assert.match(list, /storefrontLocalePrefixDeployNote\(\)\.fa/);

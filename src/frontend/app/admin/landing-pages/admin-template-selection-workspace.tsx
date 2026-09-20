@@ -18,7 +18,7 @@ import {
   isIndustryCatalogTemplateKey,
 } from "../../../lib/storefront-composition/industry-demo-media.ts";
 import { industryTemplatePreviewPath } from "../../../lib/storefront-composition/template-preview-context.ts";
-import { loadAdminLanguages } from "../language-api.ts";
+import { loadAdminLanguages } from "../../../features/admin-languages";
 import type { SupportedLocaleDefinition } from "../../../lib/i18n/supported-locales.ts";
 import { layoutAwareTemplatePreview } from "./layout-aware-previews.tsx";
 

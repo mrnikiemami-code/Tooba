@@ -44,7 +44,7 @@ import {
 import type { SupportedLocaleDefinition } from "../../lib/i18n/supported-locales.ts";
 import { prepareAdminDevActor } from "./admin-api";
 import { mapAdminErrorMessage } from "./admin-error-map.ts";
-import { loadAdminLanguages } from "./language-api.ts";
+import { loadAdminLanguages } from "../../features/admin-languages";
 import {
   ContentArticleDestructiveDialog,
   type ArticleDestructiveKind,

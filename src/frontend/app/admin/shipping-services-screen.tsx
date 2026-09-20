@@ -21,7 +21,7 @@ import {
 } from "../../design-system";
 import type { GridColumnDef, GridServerQuery } from "../../design-system/data-grid";
 import { resolveAdminChromeLocale } from "./admin-chrome-messages.ts";
-import { loadAdminLanguages } from "./language-api.ts";
+import { loadAdminLanguages } from "../../features/admin-languages";
 import {
   deactivateAdminShippingService,
   loadAdminShippingService,

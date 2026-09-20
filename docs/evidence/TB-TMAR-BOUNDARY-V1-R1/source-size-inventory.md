@@ -1,4 +1,4 @@
-# Source-size inventory — TB-TMAR-BOUNDARY-V1-R1
+﻿# Source-size inventory — TB-TMAR-BOUNDARY-V1-R1
 
 Scan: repository-wide hand-written sources (`.cs`, `.ts`, `.tsx`, `.js`, `.jsx`, `.mjs`, `.cjs`, `.sql`, `.ps1`, …)
 
@@ -8,15 +8,15 @@ Excluded: `node_modules`, `bin`, `obj`, `dist`, `tmp`, build, lockfiles, EF Migr
 
 | Metric | Count |
 |---|---|
-| Files scanned | 1741 |
+| Files scanned | 1747 |
 | CRITICAL_GOD_FILE | 15 |
 | OVERSIZED_LEGACY | 40 |
 | WATCH | 88 |
-| NORMAL | 1598 |
+| NORMAL | 1604 |
 
 ## By language (included)
 
-cs 808 · tsx 332 · ts 376 · mjs 193 · cjs 13 · js 15 · ps1 3 · sql 1
+cs 808 · tsx 333 · ts 381 · mjs 193 · cjs 13 · js 15 · ps1 3 · sql 1
 
 ## Classification thresholds
 

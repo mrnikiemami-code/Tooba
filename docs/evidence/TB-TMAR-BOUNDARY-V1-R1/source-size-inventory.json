@@ -1,8 +1,8 @@
 {
   "rule": "SourceSizeInventory",
-  "generatedAt": "2026-09-20T07:09:44.760Z",
+  "generatedAt": "2026-09-20T07:17:31.818Z",
   "refreshedBy": "TB-TMAR-FE-BASELINE",
-  "fileCount": 1741,
+  "fileCount": 1747,
   "files": [
     {
       "path": "src/backend/Modules/Catalog/Tooba.Catalog.Infrastructure/CatalogDirectory.cs",
@@ -61,7 +61,7 @@
     {
       "path": "src/frontend/app/admin/admin-api.ts",
       "language": "ts",
-      "loc": 1326,
+      "loc": 1321,
       "classification": "CRITICAL_GOD_FILE"
     },
     {
@@ -1625,7 +1625,7 @@
       "classification": "NORMAL"
     },
     {
-      "path": "src/frontend/app/admin/language-list.tsx",
+      "path": "src/frontend/features/admin-languages/components/language-list.tsx",
       "language": "tsx",
       "loc": 350,
       "classification": "NORMAL"
@@ -5375,14 +5375,14 @@
       "classification": "NORMAL"
     },
     {
-      "path": "src/frontend/app/admin/language-api.ts",
-      "language": "ts",
+      "path": "src/frontend/app/products/page.tsx",
+      "language": "tsx",
       "loc": 105,
       "classification": "NORMAL"
     },
     {
-      "path": "src/frontend/app/products/page.tsx",
-      "language": "tsx",
+      "path": "src/frontend/features/admin-languages/api/language-api.ts",
+      "language": "ts",
       "loc": 105,
       "classification": "NORMAL"
     },
@@ -6263,6 +6263,12 @@
       "classification": "NORMAL"
     },
     {
+      "path": "src/frontend/lib/architecture/frontend-flat-folder.guard.test.ts",
+      "language": "ts",
+      "loc": 78,
+      "classification": "NORMAL"
+    },
+    {
       "path": "src/frontend/lib/storefront-composition/completeness-matrix.guard.test.ts",
       "language": "ts",
       "loc": 78,
@@ -6462,6 +6468,12 @@
     },
     {
       "path": "src/frontend/design-system/app-data-grid/text-filter-operators.test.ts",
+      "language": "ts",
+      "loc": 73,
+      "classification": "NORMAL"
+    },
+    {
+      "path": "src/frontend/lib/architecture/frontend-test-discovery.guard.test.ts",
       "language": "ts",
       "loc": 73,
       "classification": "NORMAL"
@@ -7571,6 +7583,18 @@
       "classification": "NORMAL"
     },
     {
+      "path": "src/frontend/lib/architecture/frontend-feature-boundary.guard.test.ts",
+      "language": "ts",
+      "loc": 50,
+      "classification": "NORMAL"
+    },
+    {
+      "path": "src/frontend/scripts/run-discovered-tests.mjs",
+      "language": "mjs",
+      "loc": 50,
+      "classification": "NORMAL"
+    },
+    {
       "path": "docs/evidence/TB-P09-T022/_r1_http_smoke.mjs",
       "language": "mjs",
       "loc": 49,
@@ -7621,6 +7645,12 @@
     {
       "path": "src/frontend/app/evidence/tb-p10-t022-r13-r2/page.tsx",
       "language": "tsx",
+      "loc": 49,
+      "classification": "NORMAL"
+    },
+    {
+      "path": "src/frontend/features/admin-languages/admin-languages.characterization.test.ts",
+      "language": "ts",
       "loc": 49,
       "classification": "NORMAL"
     },
@@ -8484,12 +8514,6 @@
     },
     {
       "path": "src/frontend/app/admin/catalog-units-screen.test.ts",
-      "language": "ts",
-      "loc": 38,
-      "classification": "NORMAL"
-    },
-    {
-      "path": "src/frontend/lib/architecture/frontend-test-discovery.guard.test.ts",
       "language": "ts",
       "loc": 38,
       "classification": "NORMAL"
@@ -9827,6 +9851,12 @@
       "classification": "NORMAL"
     },
     {
+      "path": "src/frontend/lib/admin/admin-result.ts",
+      "language": "ts",
+      "loc": 16,
+      "classification": "NORMAL"
+    },
+    {
       "path": "src/backend/Host/Tooba.Host/UnpaidOrderExpiryHostOptions.cs",
       "language": "cs",
       "loc": 15,
@@ -10075,6 +10105,12 @@
     {
       "path": "src/frontend/app/vendor-panel/stories/page.tsx",
       "language": "tsx",
+      "loc": 11,
+      "classification": "NORMAL"
+    },
+    {
+      "path": "src/frontend/features/admin-languages/index.ts",
+      "language": "ts",
       "loc": 11,
       "classification": "NORMAL"
     },

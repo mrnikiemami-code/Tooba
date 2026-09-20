@@ -30,7 +30,7 @@ import {
   type ContentCategoryTreeNodeDto,
   type ContentCategoryWorkspaceDto,
 } from "./content-category-api.ts";
-import { loadAdminLanguages } from "./language-api.ts";
+import { loadAdminLanguages } from "../../features/admin-languages";
 import type { SupportedLocaleDefinition } from "../../lib/i18n/supported-locales.ts";
 import { MediaLibraryDialog } from "./media-library-dialog.tsx";
 import { mediaPreviewUrl, type MediaAssetDto } from "./media-api.ts";

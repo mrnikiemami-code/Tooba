@@ -39,7 +39,7 @@ import {
   type ArticleMediaWorkspaceDto,
 } from "./content-article-media-api.ts";
 import { mapAdminErrorMessage } from "./admin-error-map.ts";
-import { loadAdminLanguages } from "./language-api.ts";
+import { loadAdminLanguages } from "../../features/admin-languages";
 import type { SupportedLocaleDefinition } from "../../lib/i18n/supported-locales.ts";
 import {
   articleEditorDirection,

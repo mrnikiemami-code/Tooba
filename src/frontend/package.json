@@ -32,8 +32,10 @@
     "test:category-plp-guard": "node --experimental-strip-types --test app/storefront/category-plp.guard.test.ts",
     "test:surface-coverage": "node --experimental-strip-types --test lib/storefront-appearance/surface-role.test.ts lib/storefront-appearance/route-inventory.guard.test.ts lib/storefront-appearance/semantic-wrapper.guard.test.ts lib/storefront-appearance/derived-surface.test.ts lib/storefront-appearance/component-compliance.guard.test.ts lib/storefront-appearance/section-context.guard.test.ts app/customer-panel/customer-panel-theme.guard.test.ts app/customer-panel/customer-composition.guard.test.ts app/storefront/pdp-component-surface.guard.test.ts",
     "test:critical-storefront": "npm run test:home && npm run test:pdp-guard && npm run test:listing-guard && npm run test:category-plp-guard && npm run test:surface-coverage",
-    "test:architecture": "node --experimental-strip-types --test lib/architecture/frontend-source-size.guard.test.ts lib/architecture/frontend-import-boundary.guard.test.ts lib/architecture/frontend-test-discovery.guard.test.ts lib/architecture/seo-rendering.guard.test.ts",
-    "test": "npm run test:grid && npm run test:workspace && npm run test:category-tree && npm run test:product-workspace && npm run test:admin && npm run test:seller && npm run test:fulfillment && npm run test:returns && npm run test:settlement && npm run test:content && npm run test:stories && npm run test:composition && npm run test:i18n && npm run test:customer && npm run test:storefront && npm run test:critical-storefront && npm run test:architecture"
+    "test:architecture": "node --experimental-strip-types --test lib/architecture/frontend-source-size.guard.test.ts lib/architecture/frontend-import-boundary.guard.test.ts lib/architecture/frontend-flat-folder.guard.test.ts lib/architecture/frontend-feature-boundary.guard.test.ts lib/architecture/frontend-test-discovery.guard.test.ts lib/architecture/seo-rendering.guard.test.ts",
+    "test:admin-languages": "node --experimental-strip-types --test features/admin-languages/admin-languages.characterization.test.ts lib/i18n/language-identity-lock.test.ts",
+    "test:discovered": "node scripts/run-discovered-tests.mjs",
+    "test": "npm run test:discovered"
   },
   "dependencies": {
     "@ckeditor/ckeditor5-react": "^11.2.0",
