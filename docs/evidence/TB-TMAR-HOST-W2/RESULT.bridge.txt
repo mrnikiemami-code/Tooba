@@ -1,0 +1,90 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+
+BEGIN_TOOBA_WORKER_RESULT
+
+Task-ID: TB-TMAR-HOST-W2
+Parent-Task: TB-TMAR-HOST-W1-R1
+Channel: tooba-main
+WorkerId: tooba-worker-01
+AgentType: cursor
+Status: PASS
+
+Summary:
+Selected next Host write slice by evidence: StoreMenuComposer (CatalogDbContext; 10 SaveChanges; Wave-1 candidate after Landing). Migrated writes to ISender → Application handlers → IStoreMenuDirectory → StoreMenuDirectory/EF. Host composer is read+cache+dispatch only for writes. Baseline removed Admin/StoreMenuComposer.cs. No Domain move, Contracts, Redis, App→App edge, or behavior change. Focused tests PASS.
+
+Program-Name:
+TMAR — Tooba Microservice-Ready Architecture Recovery
+
+Applicable-Locks:
+docs/architecture/TMAR-architecture-locks.md; TOOBA-ARCHITECT-BOOTSTRAP.md
+
+Recovery-Start:
+docs/evidence/TB-TMAR-HOST-W2/recovery-start.md
+
+Slice-Selection:
+docs/evidence/TB-TMAR-HOST-W2/slice-selection.md — StoreMenuComposer
+
+Before-Write-Path:
+Host StoreMenuComposer → CatalogDbContext Add/Remove/SaveChanges
+
+After-Write-Path:
+Host StoreMenuComposer → ISender → Application Handler → IStoreMenuDirectory → StoreMenuDirectory → CatalogDbContext
+
+Commands:
+Create/Update/SetEnabled/Delete StoreMenu; Add/Update/SetEnabled/Delete/Reorder items; SetStoreHeaderMenu
+
+Handlers:
+Catalog.Application StoreMenuWriteHandlers.cs
+
+Validation:
+CreateStoreMenuCommandValidator (FluentValidation); existing semantic PlatformHttpException codes preserved in Directory
+
+Transaction-Boundary:
+docs/evidence/TB-TMAR-HOST-W2/transaction-boundary.md — no Host tx; SaveChanges in Directory
+
+Error-Localization:
+docs/evidence/TB-TMAR-HOST-W2/error-localization.md
+
+Clock-Id:
+StoreMenuDirectory uses IClock.UtcNow; no new Guid.NewGuid/DateTime.UtcNow in Application handlers
+
+Cross-Module-Dependencies:
+none new; Catalog-only
+
+Host-Debt-Removed:
+StoreMenuComposer direct business writes/SaveChanges
+
+Architecture-Guards:
+docs/evidence/TB-TMAR-HOST-W2/architecture-guards.md — baseline shrink
+
+Tests:
+docs/evidence/TB-TMAR-HOST-W2/tests.md
+
+Capability-Map:
+docs/architecture/TOOBA-CAPABILITY-MAP.md — Last Verified = TB-TMAR-HOST-W2
+
+Bootstrap:
+docs/architecture/TOOBA-ARCHITECT-BOOTSTRAP.md — HOST-W2 recorded
+
+Recovery-SoT:
+docs/evidence/TB-TMAR-HOST-W2/recovery-sot.md
+
+Changed-Files:
+StoreMenuWriteContracts/Handlers (Application); StoreMenuDirectory + CatalogModule; Host StoreMenuComposer; tests/factory; baseline; evidence/docs
+
+Git:
+branch main; tip PLACEHOLDER_SHA; pushed origin/main; HEAD==origin/main; 18ca10c9 ancestor
+
+Architectural-Concerns:
+StoreMenu* still transitional in Catalog.Domain; many Host write sites remain
+
+Blockers:
+(none)
+
+Product-Resume-Safety:
+NOT_YET
+
+Next-Recommended-Task:
+TB-TMAR-HOST-W3 — next evidence-selected Host write slice (e.g. StoreAppearanceSettingsComposer or isolated settings endpoint)
+
+END_TOOBA_WORKER_RESULT

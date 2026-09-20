@@ -1,6 +1,8 @@
 using Microsoft.EntityFrameworkCore;
+using MediatR;
 using Microsoft.Extensions.Caching.Memory;
 using Tooba.BuildingBlocks;
+using Tooba.Catalog.Application;
 using Tooba.Catalog.Domain;
 using Tooba.Catalog.Infrastructure.Persistence;
 using Tooba.Host.Storefront;
@@ -16,13 +18,15 @@ public sealed class StoreMenuComposer
     private readonly CatalogDbContext _catalog;
     private readonly ICurrentCommerceContext _commerce;
     private readonly IMemoryCache _cache;
+    private readonly ISender _sender;
 
-    /// <summary>Composer را با Catalog و کش تصویر می‌سازد.</summary>
-    public StoreMenuComposer(CatalogDbContext catalog, ICurrentCommerceContext commerce, IMemoryCache cache)
+    /// <summary>خواندن از Catalog؛ نوشتن از طریق ISender → Command.</summary>
+    public StoreMenuComposer(CatalogDbContext catalog, ICurrentCommerceContext commerce, IMemoryCache cache, ISender sender)
     {
         _catalog = catalog;
         _commerce = commerce;
         _cache = cache;
+        _sender = sender;
     }
 
     /// <summary>فهرست منوها با شمار آیتم.</summary>
@@ -49,15 +53,7 @@ public sealed class StoreMenuComposer
     /// <summary>منوی جدید.</summary>
     public async Task<StoreMenuDetailView> CreateAsync(StoreMenuWriteRequest request, CancellationToken cancellationToken)
     {
-        var now = DateTimeOffset.UtcNow;
-        var menu = StoreMenu.Create(request.Title, request.Locale, request.MenuKey, now);
-        if (await _catalog.StoreMenus.AnyAsync(x => x.Locale == menu.Locale && x.MenuKey == menu.MenuKey, cancellationToken))
-        {
-            throw new PlatformHttpException(409, "کلید منو تکراری است.", "menu.key.duplicate");
-        }
-
-        _catalog.StoreMenus.Add(menu);
-        await _catalog.SaveChangesAsync(cancellationToken);
+        var menu = await _sender.Send(new CreateStoreMenuCommand(ToWriteModel(request)), cancellationToken);
         Invalidate(menu.MenuId);
         return ToDetail(menu, []);
     }
@@ -65,42 +61,23 @@ public sealed class StoreMenuComposer
     /// <summary>عنوان و زبان.</summary>
     public async Task<StoreMenuDetailView> UpdateAsync(Guid menuId, StoreMenuWriteRequest request, CancellationToken cancellationToken)
     {
-        var menu = await RequireMenuAsync(menuId, cancellationToken);
-        menu.Update(request.Title, request.Locale, DateTimeOffset.UtcNow);
-        await _catalog.SaveChangesAsync(cancellationToken);
-        Invalidate(menu.MenuId);
+        await _sender.Send(new UpdateStoreMenuCommand(menuId, ToWriteModel(request)), cancellationToken);
+        Invalidate(menuId);
         return await GetAsync(menuId, cancellationToken);
     }
 
     /// <summary>فعال/غیرفعال منو.</summary>
     public async Task<StoreMenuDetailView> SetEnabledAsync(Guid menuId, bool enabled, CancellationToken cancellationToken)
     {
-        var menu = await RequireMenuAsync(menuId, cancellationToken);
-        menu.SetEnabled(enabled, DateTimeOffset.UtcNow);
-        if (!enabled)
-        {
-            await ClearHeaderIfMatchAsync(menuId, cancellationToken);
-        }
-
-        await _catalog.SaveChangesAsync(cancellationToken);
-        Invalidate(menu.MenuId);
+        await _sender.Send(new SetStoreMenuEnabledCommand(menuId, enabled), cancellationToken);
+        Invalidate(menuId);
         return await GetAsync(menuId, cancellationToken);
     }
 
     /// <summary>حذف وقتی ارجاعی نیست.</summary>
     public async Task DeleteAsync(Guid menuId, CancellationToken cancellationToken)
     {
-        var usage = await FindUsageAsync(menuId, cancellationToken);
-        if (usage.Count > 0)
-        {
-            throw new PlatformHttpException(409, "این منو در حال استفاده است.", "menu.delete.referenced");
-        }
-
-        var items = await _catalog.StoreMenuItems.Where(x => x.MenuId == menuId).ToListAsync(cancellationToken);
-        _catalog.StoreMenuItems.RemoveRange(items);
-        var menu = await RequireMenuAsync(menuId, cancellationToken);
-        _catalog.StoreMenus.Remove(menu);
-        await _catalog.SaveChangesAsync(cancellationToken);
+        await _sender.Send(new DeleteStoreMenuCommand(menuId), cancellationToken);
         Invalidate(menuId);
     }
 
@@ -111,26 +88,7 @@ public sealed class StoreMenuComposer
     /// <summary>افزودن آیتم با عمق و چرخهٔ امن.</summary>
     public async Task<StoreMenuItemAdminView> AddItemAsync(Guid menuId, StoreMenuItemWriteRequest request, CancellationToken cancellationToken)
     {
-        var menu = await RequireMenuAsync(menuId, cancellationToken);
-        var items = await LoadItemsAsync(menuId, cancellationToken);
-        var parentId = request.ParentMenuItemId;
-        EnsureParent(items, menuId, parentId);
-        EnsureDepth(items, parentId, addedLevels: 1);
-        var linkType = StoreMenuItem.ParseLinkType(request.LinkType);
-        await EnsureTargetAsync(menu, linkType, request.TargetId, cancellationToken);
-        var sort = request.SortOrder ?? NextSort(items, parentId);
-        var item = StoreMenuItem.Create(
-            menuId,
-            parentId,
-            request.Label,
-            linkType,
-            request.TargetId,
-            request.ExternalUrl,
-            sort,
-            DateTimeOffset.UtcNow);
-        _catalog.StoreMenuItems.Add(item);
-        menu.Touch(item.UpdatedAt);
-        await _catalog.SaveChangesAsync(cancellationToken);
+        var item = await _sender.Send(new AddStoreMenuItemCommand(menuId, ToItemModel(request)), cancellationToken);
         Invalidate(menuId);
         return ToItem(item);
     }
@@ -138,23 +96,7 @@ public sealed class StoreMenuComposer
     /// <summary>ویرایش آیتم.</summary>
     public async Task<StoreMenuItemAdminView> UpdateItemAsync(Guid menuId, Guid menuItemId, StoreMenuItemWriteRequest request, CancellationToken cancellationToken)
     {
-        var menu = await RequireMenuAsync(menuId, cancellationToken);
-        var items = await LoadItemsAsync(menuId, cancellationToken);
-        var item = items.SingleOrDefault(x => x.MenuItemId == menuItemId)
-            ?? throw new PlatformHttpException(404, "آیتم منو یافت نشد.", "menu.item.missing");
-        var parentId = request.ParentMenuItemId;
-        if (parentId is { } nextParent)
-        {
-            EnsureParent(items, menuId, nextParent);
-            EnsureNoCycle(items, menuItemId, nextParent);
-            EnsureDepth(items, nextParent, addedLevels: SubtreeHeight(items, menuItemId));
-        }
-
-        var linkType = StoreMenuItem.ParseLinkType(request.LinkType);
-        await EnsureTargetAsync(menu, linkType, request.TargetId, cancellationToken);
-        item.Apply(parentId, request.Label, linkType, request.TargetId, request.ExternalUrl, request.SortOrder ?? item.SortOrder, request.IsEnabled ?? item.IsEnabled, DateTimeOffset.UtcNow);
-        menu.Touch(item.UpdatedAt);
-        await _catalog.SaveChangesAsync(cancellationToken);
+        var item = await _sender.Send(new UpdateStoreMenuItemCommand(menuId, menuItemId, ToItemModel(request)), cancellationToken);
         Invalidate(menuId);
         return ToItem(item);
     }
@@ -162,12 +104,7 @@ public sealed class StoreMenuComposer
     /// <summary>فعال/غیرفعال آیتم.</summary>
     public async Task<StoreMenuItemAdminView> SetItemEnabledAsync(Guid menuId, Guid menuItemId, bool enabled, CancellationToken cancellationToken)
     {
-        var menu = await RequireMenuAsync(menuId, cancellationToken);
-        var item = await _catalog.StoreMenuItems.SingleOrDefaultAsync(x => x.MenuId == menuId && x.MenuItemId == menuItemId, cancellationToken)
-            ?? throw new PlatformHttpException(404, "آیتم منو یافت نشد.", "menu.item.missing");
-        item.SetEnabled(enabled, DateTimeOffset.UtcNow);
-        menu.Touch(item.UpdatedAt);
-        await _catalog.SaveChangesAsync(cancellationToken);
+        var item = await _sender.Send(new SetStoreMenuItemEnabledCommand(menuId, menuItemId, enabled), cancellationToken);
         Invalidate(menuId);
         return ToItem(item);
     }
@@ -175,54 +112,14 @@ public sealed class StoreMenuComposer
     /// <summary>حذف آیتم و فرزندان.</summary>
     public async Task DeleteItemAsync(Guid menuId, Guid menuItemId, CancellationToken cancellationToken)
     {
-        var menu = await RequireMenuAsync(menuId, cancellationToken);
-        var items = await LoadItemsAsync(menuId, cancellationToken);
-        if (items.All(x => x.MenuItemId != menuItemId))
-        {
-            throw new PlatformHttpException(404, "آیتم منو یافت نشد.", "menu.item.missing");
-        }
-
-        var remove = CollectSubtree(items, menuItemId);
-        _catalog.StoreMenuItems.RemoveRange(remove);
-        menu.Touch(DateTimeOffset.UtcNow);
-        await _catalog.SaveChangesAsync(cancellationToken);
+        await _sender.Send(new DeleteStoreMenuItemCommand(menuId, menuItemId), cancellationToken);
         Invalidate(menuId);
     }
 
     /// <summary>ترتیب پایدار با حفظ شناسه.</summary>
     public async Task<StoreMenuDetailView> ReorderItemsAsync(Guid menuId, IReadOnlyList<Guid>? orderedIds, CancellationToken cancellationToken)
     {
-        var menu = await RequireMenuAsync(menuId, cancellationToken);
-        var items = await LoadItemsAsync(menuId, cancellationToken);
-        if (orderedIds is null || orderedIds.Count == 0 || orderedIds.Count != items.Count || orderedIds.Distinct().Count() != items.Count)
-        {
-            throw new PlatformHttpException(400, "ترتیب آیتم‌ها کامل نیست.", "menu.item.reorder.invalid");
-        }
-
-        var byId = items.ToDictionary(x => x.MenuItemId);
-        foreach (var id in orderedIds)
-        {
-            if (!byId.ContainsKey(id))
-            {
-                throw new PlatformHttpException(400, "ترتیب آیتم‌ها کامل نیست.", "menu.item.reorder.invalid");
-            }
-        }
-
-        var groups = orderedIds
-            .Select(id => byId[id])
-            .GroupBy(x => x.ParentMenuItemId);
-        var now = DateTimeOffset.UtcNow;
-        foreach (var group in groups)
-        {
-            var sort = 0;
-            foreach (var item in group)
-            {
-                item.SetSortOrder(sort++, now);
-            }
-        }
-
-        menu.Touch(now);
-        await _catalog.SaveChangesAsync(cancellationToken);
+        await _sender.Send(new ReorderStoreMenuItemsCommand(menuId, orderedIds ?? []), cancellationToken);
         Invalidate(menuId);
         return await GetAsync(menuId, cancellationToken);
     }
@@ -238,19 +135,7 @@ public sealed class StoreMenuComposer
     /// <summary>نوشتن ارجاع هدر؛ null یعنی fallback.</summary>
     public async Task<StoreHeaderMenuSelectionView> SetHeaderAsync(Guid? headerMenuId, CancellationToken cancellationToken)
     {
-        var now = DateTimeOffset.UtcNow;
-        if (headerMenuId is { } menuId)
-        {
-            var menu = await RequireMenuAsync(menuId, cancellationToken);
-            if (!menu.IsEnabled)
-            {
-                throw new PlatformHttpException(400, "فقط منوی فعال قابل انتخاب است.", "menu.header.ineligible");
-            }
-        }
-
-        var settings = await RequireSettingsAsync(now, cancellationToken);
-        settings.SetHeaderMenu(headerMenuId, now);
-        await _catalog.SaveChangesAsync(cancellationToken);
+        await _sender.Send(new SetStoreHeaderMenuCommand(headerMenuId), cancellationToken);
         InvalidateHeader();
         return await ResolveHeaderAsync(headerMenuId, includeTree: false, cancellationToken);
     }
@@ -323,37 +208,6 @@ public sealed class StoreMenuComposer
         return new StoreHeaderMenuSelectionView(Scope(), null, null, UsesFallback: true, []);
     }
 
-    private async Task EnsureTargetAsync(StoreMenu menu, StoreMenuLinkType linkType, Guid? targetId, CancellationToken cancellationToken)
-    {
-        if (linkType is StoreMenuLinkType.Home or StoreMenuLinkType.Group or StoreMenuLinkType.External)
-        {
-            return;
-        }
-
-        if (targetId is not { } id)
-        {
-            throw new PlatformHttpException(400, "مقصد داخلی را از فهرست انتخاب کنید.", "menu.target.required");
-        }
-
-        var ok = linkType switch
-        {
-            StoreMenuLinkType.LandingPage => await _catalog.StoreLandingPages.AnyAsync(
-                x => x.PageId == id && x.Status == StoreLandingPageStatus.Published && x.Locale == menu.Locale,
-                cancellationToken),
-            StoreMenuLinkType.Product => await _catalog.Products.AnyAsync(
-                x => x.ProductId == id && x.Status == CatalogPublicationStatus.Published,
-                cancellationToken),
-            StoreMenuLinkType.Category => await _catalog.Categories.AnyAsync(x => x.CategoryId == id, cancellationToken),
-            StoreMenuLinkType.Brand => await _catalog.Brands.AnyAsync(x => x.BrandId == id, cancellationToken),
-            StoreMenuLinkType.Article => true,
-            _ => false,
-        };
-        if (!ok)
-        {
-            throw new PlatformHttpException(400, "مقصد انتخاب‌شده در این فروشگاه نیست.", "menu.target.missing");
-        }
-    }
-
     private async Task<string?> ResolveHrefAsync(string locale, StoreMenuItem item, CancellationToken cancellationToken)
     {
         switch (item.LinkType)
@@ -424,54 +278,6 @@ public sealed class StoreMenuComposer
         return items.Where(Visible).ToList();
     }
 
-    private static void EnsureParent(IReadOnlyList<StoreMenuItem> items, Guid menuId, Guid? parentId)
-    {
-        if (parentId is null)
-        {
-            return;
-        }
-
-        var parent = items.SingleOrDefault(x => x.MenuItemId == parentId);
-        if (parent is null || parent.MenuId != menuId)
-        {
-            throw new PlatformHttpException(400, "والد باید در همین منو باشد.", "menu.item.parent.invalid");
-        }
-    }
-
-    private static void EnsureNoCycle(IReadOnlyList<StoreMenuItem> items, Guid itemId, Guid parentId)
-    {
-        var byId = items.ToDictionary(x => x.MenuItemId);
-        var current = parentId;
-        var guard = 0;
-        while (true)
-        {
-            if (current == itemId)
-            {
-                throw new PlatformHttpException(400, "چرخه در درخت منو مجاز نیست.", "menu.item.cycle");
-            }
-
-            if (!byId.TryGetValue(current, out var row) || row.ParentMenuItemId is not { } next)
-            {
-                return;
-            }
-
-            current = next;
-            if (++guard > StoreMenuItem.MaxDepth + 2)
-            {
-                throw new PlatformHttpException(400, "چرخه در درخت منو مجاز نیست.", "menu.item.cycle");
-            }
-        }
-    }
-
-    private static void EnsureDepth(IReadOnlyList<StoreMenuItem> items, Guid? parentId, int addedLevels)
-    {
-        var parentDepth = parentId is null ? 0 : DepthOf(items, parentId.Value);
-        if (parentDepth + addedLevels > StoreMenuItem.MaxDepth)
-        {
-            throw new PlatformHttpException(400, "حداکثر سه سطح تو در تو مجاز است.", "menu.item.depth");
-        }
-    }
-
     private static int DepthOf(IReadOnlyList<StoreMenuItem> items, Guid itemId)
     {
         var byId = items.ToDictionary(x => x.MenuItemId);
@@ -494,38 +300,6 @@ public sealed class StoreMenuComposer
 
         return depth;
     }
-
-    private static int SubtreeHeight(IReadOnlyList<StoreMenuItem> items, Guid rootId)
-    {
-        int Height(Guid id)
-        {
-            var children = items.Where(x => x.ParentMenuItemId == id).Select(x => Height(x.MenuItemId)).DefaultIfEmpty(0).Max();
-            return 1 + children;
-        }
-
-        return Height(rootId);
-    }
-
-    private static List<StoreMenuItem> CollectSubtree(IReadOnlyList<StoreMenuItem> items, Guid rootId)
-    {
-        var result = new List<StoreMenuItem>();
-        void Walk(Guid id)
-        {
-            foreach (var child in items.Where(x => x.ParentMenuItemId == id))
-            {
-                Walk(child.MenuItemId);
-            }
-
-            var row = items.Single(x => x.MenuItemId == id);
-            result.Add(row);
-        }
-
-        Walk(rootId);
-        return result;
-    }
-
-    private static int NextSort(IReadOnlyList<StoreMenuItem> items, Guid? parentId) =>
-        items.Where(x => x.ParentMenuItemId == parentId).Select(x => x.SortOrder).DefaultIfEmpty(-1).Max() + 1;
 
     private async Task<IReadOnlyList<StoreMenuUsageView>> FindUsageAsync(Guid menuId, CancellationToken cancellationToken)
     {
@@ -555,16 +329,6 @@ public sealed class StoreMenuComposer
         return usage;
     }
 
-    private async Task ClearHeaderIfMatchAsync(Guid menuId, CancellationToken cancellationToken)
-    {
-        var settings = await _catalog.StoreAppearanceSettings
-            .SingleOrDefaultAsync(x => x.SettingsId == StoreAppearanceSettings.SingletonId, cancellationToken);
-        if (settings?.HeaderMenuId == menuId)
-        {
-            settings.SetHeaderMenu(null, DateTimeOffset.UtcNow);
-        }
-    }
-
     private async Task<StoreMenu> RequireMenuAsync(Guid menuId, CancellationToken cancellationToken)
     {
         return await _catalog.StoreMenus.SingleOrDefaultAsync(x => x.MenuId == menuId, cancellationToken)
@@ -577,20 +341,6 @@ public sealed class StoreMenuComposer
             .OrderBy(x => x.SortOrder)
             .ThenBy(x => x.MenuItemId)
             .ToListAsync(cancellationToken);
-
-    private async Task<StoreAppearanceSettings> RequireSettingsAsync(DateTimeOffset now, CancellationToken cancellationToken)
-    {
-        var row = await _catalog.StoreAppearanceSettings
-            .SingleOrDefaultAsync(x => x.SettingsId == StoreAppearanceSettings.SingletonId, cancellationToken);
-        if (row is not null)
-        {
-            return row;
-        }
-
-        row = StoreAppearanceSettings.CreateDefault(now);
-        _catalog.StoreAppearanceSettings.Add(row);
-        return row;
-    }
 
     private void Invalidate(Guid menuId)
     {
@@ -605,6 +355,18 @@ public sealed class StoreMenuComposer
     private static string MenuCacheKey(string scope, Guid menuId) => $"{MenuCachePrefix}{scope}:{menuId:N}";
 
     private static string HeaderCacheKey(string scope) => $"{HeaderCachePrefix}{scope}";
+
+    private static StoreMenuWriteModel ToWriteModel(StoreMenuWriteRequest request) =>
+        new(request.Title, request.Locale, request.MenuKey, request.IsEnabled);
+
+    private static StoreMenuItemWriteModel ToItemModel(StoreMenuItemWriteRequest request) => new(
+        request.Label,
+        request.LinkType,
+        request.ParentMenuItemId,
+        request.TargetId,
+        request.ExternalUrl,
+        request.SortOrder,
+        request.IsEnabled);
 
     private static StoreMenuListView ToList(StoreMenu menu, int itemCount) =>
         new(menu.MenuId, menu.Title, menu.Locale, menu.IsEnabled, itemCount, menu.UpdatedAt);

@@ -128,19 +128,6 @@ public sealed class StoreMenuComposerT013Tests
         Assert.Equal("menu.target.missing", missingTarget.ErrorCode);
     }
 
-    private static StoreMenuComposer CreateComposer(out CatalogDbContext catalog)
-    {
-        catalog = new CatalogDbContext(new DbContextOptionsBuilder<CatalogDbContext>()
-            .UseInMemoryDatabase(Guid.NewGuid().ToString("N"))
-            .Options);
-        var context = OutboxTestContextFactory.SingleStore("store-a", "conn-a");
-        return new StoreMenuComposer(catalog, new FixedCommerce(context), new MemoryCache(new MemoryCacheOptions()));
-    }
-
-    private sealed class FixedCommerce : ICurrentCommerceContext
-    {
-        public FixedCommerce(CommerceContext current) => Current = current;
-
-        public CommerceContext? Current { get; }
-    }
+    private static StoreMenuComposer CreateComposer(out CatalogDbContext catalog) =>
+        StoreMenuComposerTestFactory.Create(out catalog);
 }
