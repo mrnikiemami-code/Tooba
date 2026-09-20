@@ -64,7 +64,7 @@ Host may:
 
 Host must not own module route maps or grow new Offer/module business endpoints.
 
-Residual Offer BFF enrichment currently remains in `SellerPanelComposer` implementing `IOfferSellerPanel` until Catalog/Pricing/Inventory enrichment ports fully displace Host DbContext reads. Document residuals; do not silently expand them.
+Offer seller read enrichment is owned by Offer Application read-model composition through Catalog/Pricing/Inventory Contracts gates (R4). IOfferSellerPanel removed.
 
 ## Contracts boundary
 

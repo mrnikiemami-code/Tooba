@@ -2,6 +2,7 @@
 using Npgsql;
 using Tooba.Catalog.Application;
 using Tooba.Inventory.Application;
+using Tooba.Inventory.Contracts;
 using Tooba.Inventory.Domain;
 using Tooba.Inventory.Infrastructure.Persistence;
 using Tooba.Offer.Contracts.Dtos;
@@ -22,7 +23,7 @@ public sealed class OpenInventoryUseCaseGuard : IInventoryUseCaseGuard
 /// نوشتن و خواندن موجودی با قرارداد Offer. DbContext کاتالوگ و Offer لمس نمی‌شود.
 /// رزرو با UPDATE اتمی PostgreSQL است تا آخرین واحد دو بار فروخته نشود.
 /// </summary>
-public sealed class InventoryDirectory : IInventoryDirectory, IInventoryAvailabilityGateway
+public sealed class InventoryDirectory : IInventoryDirectory, IInventoryAvailabilityGateway, ISellerOfferInventoryGateway
 {
     private readonly InventoryDbContext _db;
     private readonly IInventoryUseCaseGuard _guard;
@@ -71,6 +72,47 @@ public sealed class InventoryDirectory : IInventoryDirectory, IInventoryAvailabi
             locations.Sum(x => x.Reserved),
             locations.Sum(x => x.Available),
             locations);
+    }
+
+    async Task<IReadOnlyDictionary<Guid, OfferInventorySummary>> ISellerOfferInventoryGateway.GetAvailabilityAsync(
+        IReadOnlyCollection<Guid> offerIds,
+        CancellationToken cancellationToken)
+    {
+        var values = await GetAvailabilityBatchAsync(offerIds, cancellationToken);
+        return values.ToDictionary(
+            x => x.Key,
+            x => new OfferInventorySummary(x.Key, x.Value.OnHand, x.Value.Reserved, Math.Max(0, x.Value.Available)));
+    }
+
+    /// <inheritdoc />
+    public async Task SetInventoryAsync(SetSellerOfferInventory request, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(request);
+        if (request.OnHand < 0)
+            throw new InvalidOperationException("inventory.quantity.invalid");
+        var offer = await _offers.FindOfferAsync(request.OfferId, cancellationToken);
+        if (offer is null || offer.SellerPartyId != request.SellerPartyId)
+            throw new InvalidOperationException("offer.not_found");
+        var position = await _db.Positions.AsNoTracking()
+            .Where(x => x.OfferId == request.OfferId)
+            .OrderBy(x => x.StockItemId)
+            .FirstOrDefaultAsync(cancellationToken);
+        var stockItemId = position?.StockItemId;
+        if (stockItemId is null)
+        {
+            var locationId = await _db.Locations.AsNoTracking()
+                .Where(x => x.Status == InventoryLocationStatus.Active)
+                .OrderBy(x => x.Code)
+                .Select(x => (Guid?)x.LocationId)
+                .FirstOrDefaultAsync(cancellationToken);
+            locationId ??= await CreateLocationAsync("SELLER-DEFAULT", "Default seller warehouse", cancellationToken);
+            stockItemId = await OpenPositionAsync(request.OfferId, locationId.Value, cancellationToken);
+        }
+
+        await AdjustAsync(
+            stockItemId.Value, StockAdjustmentKind.Set, request.OnHand,
+            string.IsNullOrWhiteSpace(request.Reason) ? "seller-panel-adjust" : request.Reason.Trim(),
+            null, cancellationToken);
     }
 
     /// <inheritdoc />

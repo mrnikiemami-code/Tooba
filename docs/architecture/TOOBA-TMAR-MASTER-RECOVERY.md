@@ -201,6 +201,9 @@ TB-TMAR-PRICING-REFERENCE-W1 — historically shipped COMPLETE_REFERENCE_PATTERN
 Tax Reference Module W1:
 TB-TMAR-TAX-REFERENCE-W1 — COMPLETE_REFERENCE_PATTERN historically; physical recheck pending after Offer R1 lock. Evidence: docs/evidence/TB-TMAR-TAX-REFERENCE-W1/.
 
+Offer Reference Repair R4:
+TB-TMAR-OFFER-REFERENCE-W1-R4 — fake CQRS and Host Offer BFF removed; owner contract gates established; Module-Recovery-State READY_FOR_FINAL_VERIFICATION; next TB-TMAR-OFFER-REFERENCE-W1-R5. Evidence: docs/evidence/TB-TMAR-OFFER-REFERENCE-W1-R4/.
+
 Checkout Implementation W5:
 TB-TMAR-CHECKOUT-IMPL-W5 — Promotion checkout seam (ICheckoutPromotionPort); Order.Application↛Promotion.Application; TX preserved; W6 READY (intentionally paused); FE freeze intact. Evidence: docs/evidence/TB-TMAR-CHECKOUT-IMPL-W5/.
 

@@ -10,13 +10,6 @@ using DomainOfferStatus = Tooba.Offer.Domain.ValueObjects.OfferStatus;
 
 namespace Tooba.Offer.Infrastructure.Adapters;
 
-/// <summary>Open mutation guard used until authorization policy is connected.</summary>
-public sealed class OpenOfferUseCaseGuard : IOfferUseCaseGuard
-{
-    /// <inheritdoc />
-    public Task EnsureCanMutateAsync(CancellationToken cancellationToken) => Task.CompletedTask;
-}
-
 /// <summary>EF-backed persistence adapter for Offer aggregates.</summary>
 public sealed class OfferStore(OfferDbContext db) : IOfferStore, IOfferLookupGateway
 {

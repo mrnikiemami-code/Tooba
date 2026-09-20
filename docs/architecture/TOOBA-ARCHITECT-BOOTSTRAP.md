@@ -62,6 +62,7 @@ Checkout Implementation W5 (TB-TMAR-CHECKOUT-IMPL-W5) PASS — ICheckoutPromotio
 Offer Reference Module W1 (TB-TMAR-OFFER-REFERENCE-W1) PASS then REOPENED — physical structure mismatch found by user visual inspection.
 Offer Reference Module Repair R1 (TB-TMAR-OFFER-REFERENCE-W1-R1) PASS — Physical-Structure-State VERIFIED_ON_DISK; ARCH-MODULE-PHYSICAL-001; COMPLETE_REFERENCE_PATTERN revalidated; Checkout paused at W5; Pricing gated until Architect ACCEPT.
 Offer Reference Repair R3 (TB-TMAR-OFFER-REFERENCE-W1-R3) — Module-Recovery-State IN_PROGRESS_REFERENCE_REPAIR; CQRS and contract-boundary repair; Checkout paused; next TB-TMAR-OFFER-REFERENCE-W1-R4.
+Offer Reference Repair R4 (TB-TMAR-OFFER-REFERENCE-W1-R4) — Module-Recovery-State READY_FOR_FINAL_VERIFICATION; real CQRS reads, Host BFF removal, and Pricing/Inventory owner gates; next TB-TMAR-OFFER-REFERENCE-W1-R5.
 Tax Reference Module W1 (TB-TMAR-TAX-REFERENCE-W1) PASS — COMPLETE_REFERENCE_PATTERN historically; physical recheck pending after Offer R1.
 Pricing Reference Module W1 (TB-TMAR-PRICING-REFERENCE-W1) PASS historically — gated NOT_STARTED_UNTIL_OFFER_REPAIR_ACCEPTED for next Architect sequencing after Offer R1.
 Product-Resume-Safety = SAFE_WITH_TMAR_PARALLEL (Order hub still frozen; do not expand App→App / Infra→App; no NEW cross-context ACID).

@@ -1,5 +1,5 @@
 using Xunit;
-using Tooba.Offer.Domain;
+using Tooba.Offer.Contracts.Dtos;
 using Tooba.Pricing.Domain;
 
 namespace Tooba.Pricing.Tests.Domain;

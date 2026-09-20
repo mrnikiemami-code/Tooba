@@ -9,6 +9,7 @@ using Microsoft.Extensions.Hosting;
 using Tooba.BuildingBlocks;
 using Tooba.ModuleContracts;
 using Tooba.Offer.Infrastructure.Persistence;
+using Tooba.Offer.Application.ReadModels;
 using Tooba.Persistence;
 
 namespace Tooba.Offer.Infrastructure.DependencyInjection;
@@ -46,8 +47,8 @@ public sealed class OfferModule : IToobaModule
             };
             return new ReturnPolicyResolver(opts);
         });
-        services.AddScoped<IOfferUseCaseGuard, OpenOfferUseCaseGuard>();
         services.AddScoped<IOfferStore, OfferStore>();
+        services.AddScoped<OfferReadModelComposer>();
         services.AddScoped<IOfferLookupGateway>(sp => (OfferStore)sp.GetRequiredService<IOfferStore>());
         services.AddDbContext<OfferDbContext>((sp, options) =>
         {

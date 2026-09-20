@@ -226,10 +226,10 @@ internal static class ProductWorkspaceDevelopmentBootstrap
 
         var sellerA = await parties.CreateOrganizationAsync("فروشگاه آرمان", "Arman Store Legal", cancellation);
         var sellerB = await parties.CreateOrganizationAsync("دیجی‌استایل نمونه", "Digistyle Sample Legal", cancellation);
-        var offerA = await offers.Send(new Tooba.Offer.Application.CreateOfferCommand(variant.VariantId, sellerA.PartyId, SalesChannel.Marketplace, "ARM-LN-01"), cancellation);
-        var offerB = await offers.Send(new Tooba.Offer.Application.CreateOfferCommand(variant.VariantId, sellerB.PartyId, SalesChannel.Marketplace, "DGS-LN-01"), cancellation);
-        await offers.Send(new Tooba.Offer.Application.ActivateOfferCommand(offerA.OfferId), cancellation);
-        await offers.Send(new Tooba.Offer.Application.ActivateOfferCommand(offerB.OfferId), cancellation);
+        var offerA = await offers.Send(new Tooba.Offer.Application.Commands.CreateOffer.CreateOfferCommand(variant.VariantId, sellerA.PartyId, SalesChannel.Marketplace, "ARM-LN-01"), cancellation);
+        var offerB = await offers.Send(new Tooba.Offer.Application.Commands.CreateOffer.CreateOfferCommand(variant.VariantId, sellerB.PartyId, SalesChannel.Marketplace, "DGS-LN-01"), cancellation);
+        await offers.Send(new Tooba.Offer.Application.Commands.ActivateOffer.ActivateOfferCommand(offerA.OfferId, sellerA.PartyId), cancellation);
+        await offers.Send(new Tooba.Offer.Application.Commands.ActivateOffer.ActivateOfferCommand(offerB.OfferId, sellerB.PartyId), cancellation);
 
         var start = DateTimeOffset.Parse("2026-01-01T00:00:00Z");
         var priceA = await prices.CreatePriceAsync(offerA.OfferId, "IR", SalesChannel.Marketplace, 1850000, "IRR", start, null, cancellation);

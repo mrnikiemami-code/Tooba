@@ -436,9 +436,10 @@ internal static class StorefrontDemoCatalogBootstrap
         int quantity,
         CancellationToken cancellationToken)
     {
-        var offer = await offers.Send(new Tooba.Offer.Application.CreateOfferCommand(
+        var offer = await offers.Send(new Tooba.Offer.Application.Commands.CreateOffer.CreateOfferCommand(
             variantId, sellerPartyId, SalesChannel.Marketplace, $"DEMO-{skuSuffix}"), cancellationToken);
-        await offers.Send(new Tooba.Offer.Application.ActivateOfferCommand(offer.OfferId), cancellationToken);
+        await offers.Send(new Tooba.Offer.Application.Commands.ActivateOffer.ActivateOfferCommand(
+            offer.OfferId, sellerPartyId), cancellationToken);
 
         var price = await prices.CreatePriceAsync(
             offer.OfferId,

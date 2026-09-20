@@ -30,6 +30,7 @@ public sealed class PricingModule : IToobaModule
         services.AddScoped<IPricingUseCaseGuard, OpenPricingUseCaseGuard>();
         services.AddScoped<IPriceDirectory, PriceDirectory>();
         services.AddScoped<IPriceLookupGateway>(sp => (PriceDirectory)sp.GetRequiredService<IPriceDirectory>());
+        services.AddScoped<ISellerOfferPricingGateway>(sp => (PriceDirectory)sp.GetRequiredService<IPriceDirectory>());
         services.AddDbContext<PricingDbContext>((sp, options) =>
         {
             var connectionString = ToobaNpgsql.ResolveForContext(

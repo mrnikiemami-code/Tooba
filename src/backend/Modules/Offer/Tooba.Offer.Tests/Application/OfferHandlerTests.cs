@@ -2,14 +2,21 @@ using MediatR;
 using Microsoft.Extensions.DependencyInjection;
 using Tooba.BuildingBlocks;
 using Tooba.Catalog.Contracts;
-using Tooba.Offer.Application;
+using Tooba.Inventory.Contracts;
+using Tooba.Offer.Application.Commands.ActivateOffer;
+using Tooba.Offer.Application.Commands.CreateOffer;
+using Tooba.Offer.Application.Commands.UpdateOffer;
 using Tooba.Offer.Application.Ports;
+using Tooba.Offer.Application.Queries.GetOffer;
+using Tooba.Offer.Application.Queries.ListSellerOffers;
+using Tooba.Offer.Application.ReadModels;
 using Tooba.Offer.Contracts;
 using Tooba.Offer.Contracts.Dtos;
 using Tooba.Offer.Contracts.Ports;
 using Tooba.Offer.Domain.Aggregates;
 using Tooba.Offer.Domain.ValueObjects;
 using Tooba.Party.Contracts;
+using Tooba.Pricing.Contracts;
 using Xunit;
 using ContractChannel = Tooba.Offer.Contracts.Dtos.SalesChannel;
 using ContractStatus = Tooba.Offer.Contracts.Dtos.OfferStatus;
@@ -52,12 +59,12 @@ public sealed class OfferHandlerTests
         Assert.Equal(OfferId, created.OfferId);
         Assert.Equal(Now, store.Items.Single().CreatedAt);
 
-        var active = await sender.Send(new ActivateOfferCommand(OfferId));
+        var active = await sender.Send(new ActivateOfferCommand(OfferId, SellerId));
         Assert.Equal(ContractStatus.Active, active.Status);
         var updated = await sender.Send(new UpdateOfferCommand(OfferId, SellerId, "SKU-2", nameof(ContractStatus.Suspended)));
-        Assert.Equal(ContractStatus.Suspended, updated.Status);
+        Assert.Equal(nameof(ContractStatus.Suspended), updated.Status);
         Assert.Equal("SKU-2", updated.SellerSku);
-        Assert.Equal(OfferId, (await sender.Send(new GetOfferQuery(OfferId)))!.OfferId);
+        Assert.Equal(OfferId, (await sender.Send(new GetOfferQuery(OfferId, SellerId))).OfferId);
         Assert.Single(await sender.Send(new ListSellerOffersQuery(SellerId)));
     }
 
@@ -68,9 +75,12 @@ public sealed class OfferHandlerTests
         services.AddLogging();
         services.AddToobaCqrsFoundation(typeof(CreateOfferCommand).Assembly);
         services.AddSingleton<IOfferStore>(store);
-        services.AddSingleton<IOfferUseCaseGuard, AllowGuard>();
         services.AddSingleton(catalog);
         services.AddSingleton(party);
+        services.AddSingleton<ICatalogOfferReadGateway, FakeCatalogReads>();
+        services.AddSingleton<IPriceLookupGateway, FakePrices>();
+        services.AddSingleton<ISellerOfferInventoryGateway, FakeInventory>();
+        services.AddSingleton<OfferReadModelComposer>();
         services.AddSingleton<IClock>(new FixedClock(Now));
         services.AddSingleton<IIdGenerator>(new FixedIds(OfferId));
         services.AddSingleton<IReturnPolicyResolver>(new ReturnPolicyResolver(new ReturnPolicyOptions()));
@@ -92,8 +102,24 @@ public sealed class OfferHandlerTests
     { public Task<CatalogVariantLookupResult?> FindVariantAsync(Guid id, CancellationToken token) => Task.FromResult(result); }
     private sealed class FakeParty(PartyLookupResult? result) : IPartyLookup
     { public Task<PartyLookupResult?> FindByIdAsync(Guid id, CancellationToken token) => Task.FromResult(result); }
-    private sealed class AllowGuard : IOfferUseCaseGuard
-    { public Task EnsureCanMutateAsync(CancellationToken token) => Task.CompletedTask; }
+    private sealed class FakeCatalogReads : ICatalogOfferReadGateway
+    {
+        public Task<IReadOnlyDictionary<Guid, CatalogOfferPresentation>> GetOfferPresentationsAsync(
+            IReadOnlyCollection<Guid> ids, CancellationToken token) =>
+            Task.FromResult<IReadOnlyDictionary<Guid, CatalogOfferPresentation>>(
+                ids.ToDictionary(x => x, x => new CatalogOfferPresentation(x, Guid.NewGuid(), "Product", null, null, null, null)));
+    }
+    private sealed class FakePrices : IPriceLookupGateway
+    {
+        public Task<PriceQuote?> ResolvePriceAsync(PriceResolutionQuery query, CancellationToken token) => Task.FromResult<PriceQuote?>(null);
+        public Task<IReadOnlyDictionary<Guid, PriceQuote>> ResolvePricesBatchAsync(IReadOnlyCollection<Guid> ids, string market, ContractChannel channel, string currency, DateTimeOffset at, CancellationToken token) => Task.FromResult<IReadOnlyDictionary<Guid, PriceQuote>>(new Dictionary<Guid, PriceQuote>());
+        public Task<IReadOnlyDictionary<Guid, PriceQuote>> ResolveCampaignPricesBatchAsync(IReadOnlyCollection<Guid> ids, Guid campaignId, string market, ContractChannel channel, string currency, DateTimeOffset at, CancellationToken token) => Task.FromResult<IReadOnlyDictionary<Guid, PriceQuote>>(new Dictionary<Guid, PriceQuote>());
+    }
+    private sealed class FakeInventory : ISellerOfferInventoryGateway
+    {
+        public Task<IReadOnlyDictionary<Guid, OfferInventorySummary>> GetAvailabilityAsync(IReadOnlyCollection<Guid> ids, CancellationToken token) => Task.FromResult<IReadOnlyDictionary<Guid, OfferInventorySummary>>(new Dictionary<Guid, OfferInventorySummary>());
+        public Task SetInventoryAsync(SetSellerOfferInventory request, CancellationToken token) => Task.CompletedTask;
+    }
     private sealed class FixedIds(Guid id) : IIdGenerator
     { public Guid NewId() => id; }
 }

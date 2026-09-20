@@ -16,7 +16,7 @@ public sealed class OfferPhysicalStructureGuardTests
 
     private static readonly string[] AllowedApplicationFolders =
     [
-        "UseCases", "Commands", "Queries", "Mappings", "Ports", "Validators", "Dtos"
+        "UseCases", "Commands", "Queries", "Mappings", "Ports", "Validators", "Dtos", "ReadModels"
     ];
 
     private static readonly string[] AllowedContractsFolders =

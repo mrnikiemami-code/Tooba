@@ -68,7 +68,7 @@ public static class ReviewEndpoints
         CurrentAuthenticatedSession session,
         IAuthorizationGuard guard,
         IHostEnvironment environment,
-        SellerPanelComposer composer,
+        MediatR.ISender sender,
         IReviewDirectory reviews,
         ICatalogLookupGateway catalog,
         string? status = null,
@@ -80,7 +80,10 @@ public static class ReviewEndpoints
         {
             var (_, sellerPartyId) = await SellerPanelAccess.RequireAuthorizedAsync(
                 request, session, guard, environment, cancellationToken);
-            var productIds = await composer.ListOwnedProductIdsAsync(sellerPartyId, cancellationToken);
+            var offers = await sender.Send(
+                new Tooba.Offer.Application.Queries.ListSellerOffers.ListSellerOffersQuery(sellerPartyId),
+                cancellationToken);
+            var productIds = offers.Where(x => x.ProductId is not null).Select(x => x.ProductId!.Value).Distinct().ToArray();
             var statusFilter = ParseSellerStatus(status);
             var scoped = await reviews.ListForProductsAsync(productIds, statusFilter, page, pageSize, cancellationToken);
             var titles = await catalog.GetProductTitlesAsync(

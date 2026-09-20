@@ -2,6 +2,8 @@ using Microsoft.EntityFrameworkCore;
 using Tooba.BuildingBlocks;
 using Tooba.Catalog.Application;
 using Tooba.Offer.Application;
+using Tooba.Offer.Application.Commands.ActivateOffer;
+using Tooba.Offer.Application.Commands.CreateOffer;
 using Tooba.Offer.Application.Ports;
 using Tooba.Offer.Contracts;
 using Tooba.Offer.Contracts.Dtos;
@@ -12,6 +14,11 @@ using Tooba.Party.Application;
 using Tooba.Party.Domain;
 
 namespace Tooba.Offer.Infrastructure.Adapters;
+
+internal sealed class OpenOfferUseCaseGuard : IOfferUseCaseGuard
+{
+    public Task EnsureCanMutateAsync(CancellationToken cancellationToken) => Task.CompletedTask;
+}
 
 /// <summary>Legacy test fixture helper; production use cases dispatch through MediatR.</summary>
 internal sealed class OfferDirectory : IOfferLookupGateway

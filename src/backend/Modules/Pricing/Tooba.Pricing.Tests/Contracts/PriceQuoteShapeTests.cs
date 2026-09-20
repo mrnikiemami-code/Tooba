@@ -1,6 +1,6 @@
 using System.Text.Json;
 using Xunit;
-using Tooba.Offer.Domain;
+using Tooba.Offer.Contracts.Dtos;
 using Tooba.Pricing.Contracts;
 
 namespace Tooba.Pricing.Tests.Contracts;

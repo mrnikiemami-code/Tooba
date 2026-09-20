@@ -5,737 +5,164 @@ using Tooba.BuildingBlocks;
 using Tooba.Catalog.Application;
 using Tooba.Catalog.Domain;
 using Tooba.Catalog.Infrastructure.Persistence;
-using Tooba.Inventory.Application;
-using Tooba.Inventory.Domain;
-using Tooba.Inventory.Infrastructure.Persistence;
-using Tooba.Offer.Application.Ports;
-using Tooba.Offer.Contracts.Dtos;
-using Tooba.Offer.Contracts.Ports;
-using Tooba.Offer.Domain;
-using Tooba.Offer.Domain.Aggregates;
-using Tooba.Offer.Infrastructure.Persistence;
 using Tooba.Order.Domain;
 using Tooba.Order.Infrastructure.Persistence;
 using Tooba.Party.Application;
-using Tooba.Pricing.Application;
-using Tooba.Pricing.Domain;
-using Tooba.Pricing.Infrastructure.Persistence;
 
 namespace Tooba.Host.Seller;
 
-/// <summary>
-/// ترکیب HTTP پنل فروشنده. هر DbContext جدا پرس‌وجو می‌شود؛ فیلتر Seller در سرور است نه در UI.
-/// </summary>
-public sealed class SellerPanelComposer : IOfferSellerPanel
+/// <summary>Composes the remaining non-Offer seller dashboard and order views.</summary>
+public sealed class SellerPanelComposer(
+    CatalogDbContext catalog,
+    OrderDbContext orders,
+    IPartyLookupGateway parties,
+    IAccessControlDirectory access,
+    ICatalogLookupGateway catalogLookup)
 {
-    /// <summary>بازار پیش‌فرض store-alpha / دمو ایران.</summary>
-    public const string DefaultMarket = "IR";
-    /// <summary>ارز نوشته‌شدهٔ پیش‌فرض؛ تومان نمایشی نیست.</summary>
-    public const string DefaultCurrency = "IRR";
-
-    private readonly OfferDbContext _offers;
-    private readonly CatalogDbContext _catalog;
-    private readonly PricingDbContext _prices;
-    private readonly InventoryDbContext _inventory;
-    private readonly OrderDbContext _orders;
-    private readonly IPartyLookupGateway _parties;
-    private readonly IPriceDirectory _priceDirectory;
-    private readonly IInventoryDirectory _inventoryDirectory;
-    private readonly IAccessControlDirectory _access;
-    private readonly ICatalogLookupGateway _catalogLookup;
-    private readonly IReturnPolicyResolver _returnPolicies;
-    private readonly IClock _clock;
-
-    /// <summary>
-    /// سازندهٔ ترکیب فروشنده بدون JOIN بین‌schema؛ نوشتن تجاری از دایرکتوری‌های مالک.
-    /// </summary>
-    public SellerPanelComposer(
-        OfferDbContext offers,
-        CatalogDbContext catalog,
-        PricingDbContext prices,
-        InventoryDbContext inventory,
-        OrderDbContext orders,
-        IPartyLookupGateway parties,
-        IPriceDirectory priceDirectory,
-        IInventoryDirectory inventoryDirectory,
-        IAccessControlDirectory access,
-        ICatalogLookupGateway catalogLookup,
-        IReturnPolicyResolver returnPolicies,
-        IClock clock)
-    {
-        _offers = offers;
-        _catalog = catalog;
-        _prices = prices;
-        _inventory = inventory;
-        _orders = orders;
-        _parties = parties;
-        _priceDirectory = priceDirectory;
-        _inventoryDirectory = inventoryDirectory;
-        _access = access;
-        _catalogLookup = catalogLookup;
-        _returnPolicies = returnPolicies;
-        _clock = clock;
-    }
-
-    /// <summary>
-    /// خلاصهٔ داشبورد واقعی برای همان SellerPartyId با رعایت scope سفارش.
-    /// </summary>
+    /// <summary>Builds the seller dashboard from Party and Order owner boundaries.</summary>
     public async Task<SellerDashboardSummary> GetDashboardAsync(
-        Guid sellerPartyId,
-        Guid actorUserId,
-        CancellationToken cancellationToken)
+        Guid sellerPartyId, Guid actorUserId, CancellationToken cancellationToken)
     {
-        await EnsureSellerAsync(sellerPartyId, cancellationToken);
-        var seller = await _parties.FindByIdAsync(sellerPartyId, cancellationToken)
-            ?? throw new PlatformHttpException(404, "فروشنده پیدا نشد.", "seller.missing");
-        var activeOffers = await _offers.Offers.AsNoTracking()
-            .CountAsync(x => x.SellerPartyId == sellerPartyId && x.Status == OfferStatus.Active, cancellationToken);
-        var orders = await _orders.SellerOrders.AsNoTracking()
-            .Include(x => x.Lines)
-            .Where(x => x.SellerPartyId == sellerPartyId)
-            .ToListAsync(cancellationToken);
+        var seller = await parties.FindByIdAsync(sellerPartyId, cancellationToken)
+            ?? throw new PlatformHttpException(404, "Seller was not found.", "seller.missing");
+        var rows = await orders.SellerOrders.AsNoTracking().Include(x => x.Lines)
+            .Where(x => x.SellerPartyId == sellerPartyId).ToListAsync(cancellationToken);
         var scope = await ResolveOrderViewScopeAsync(sellerPartyId, actorUserId, cancellationToken);
-        var visible = await FilterOrdersByScopeAsync(orders, scope, cancellationToken);
-        var open = visible.Count(x =>
-            x.Status is SellerOrderStatus.Submitted
-                or SellerOrderStatus.PendingPayment
-                or SellerOrderStatus.ReservationRequested);
-        var paid = visible.Count(x => x.Status == SellerOrderStatus.Paid);
-        return new SellerDashboardSummary(sellerPartyId, seller.DisplayName, activeOffers, open, paid);
+        var visible = await FilterOrdersByScopeAsync(rows, scope, cancellationToken);
+        var open = visible.Count(x => x.Status is SellerOrderStatus.Submitted
+            or SellerOrderStatus.PendingPayment or SellerOrderStatus.ReservationRequested);
+        return new SellerDashboardSummary(
+            sellerPartyId, seller.DisplayName, 0, open,
+            visible.Count(x => x.Status == SellerOrderStatus.Paid));
     }
 
-    /// <summary>
-    /// فهرست Offerهای همان فروشنده با قیمت/موجودی جداگانه.
-    /// </summary>
-    public async Task<IReadOnlyList<SellerOfferListItem>> ListOffersAsync(Guid sellerPartyId, CancellationToken cancellationToken)
-    {
-        await EnsureSellerAsync(sellerPartyId, cancellationToken);
-        var offers = await _offers.Offers.AsNoTracking()
-            .Where(x => x.SellerPartyId == sellerPartyId && x.Status != OfferStatus.Archived)
-            .OrderByDescending(x => x.OfferId)
-            .Take(200)
-            .ToListAsync(cancellationToken);
-        return await PresentOffersAsync(offers, cancellationToken);
-    }
-
-    /// <summary>
-    /// شناسهٔ محصولات Catalog متعلق به Offerهای غیرآرشیو همین فروشنده را بدون JOIN بین‌schema برمی‌گرداند.
-    /// </summary>
-    public async Task<IReadOnlyList<Guid>> ListOwnedProductIdsAsync(Guid sellerPartyId, CancellationToken cancellationToken)
-    {
-        await EnsureSellerAsync(sellerPartyId, cancellationToken);
-        var variantIds = await _offers.Offers.AsNoTracking()
-            .Where(x => x.SellerPartyId == sellerPartyId && x.Status != OfferStatus.Archived)
-            .Select(x => x.CatalogVariantId)
-            .Distinct()
-            .ToListAsync(cancellationToken);
-        if (variantIds.Count == 0)
-        {
-            return [];
-        }
-
-        return await _catalog.Variants.AsNoTracking()
-            .Where(x => variantIds.Contains(x.VariantId))
-            .Select(x => x.ProductId)
-            .Distinct()
-            .ToListAsync(cancellationToken);
-    }
-
-    /// <summary>
-    /// جزئیات Offer فقط اگر متعلق به فروشندهٔ جاری باشد.
-    /// </summary>
-    public async Task<SellerOfferDetailPage?> GetOfferAsync(Guid sellerPartyId, Guid offerId, CancellationToken cancellationToken)
-    {
-        await EnsureSellerAsync(sellerPartyId, cancellationToken);
-        var offer = await _offers.Offers.AsNoTracking()
-            .SingleOrDefaultAsync(x => x.OfferId == offerId && x.SellerPartyId == sellerPartyId, cancellationToken);
-        if (offer is null)
-        {
-            return null;
-        }
-
-        var items = await PresentOffersAsync([offer], cancellationToken);
-        var row = items[0];
-        var seller = await _parties.FindByIdAsync(sellerPartyId, cancellationToken);
-        var price = await _prices.Prices.AsNoTracking()
-            .Where(x => x.OfferId == offerId)
-            .OrderByDescending(x => x.PriceId)
-            .Select(x => new { x.Amount, x.Currency })
-            .FirstOrDefaultAsync(cancellationToken);
-        var stock = await _inventory.Positions.AsNoTracking()
-            .Where(x => x.OfferId == offerId)
-            .Select(x => new { x.OnHand, x.Reserved })
-            .FirstOrDefaultAsync(cancellationToken);
-        string? brand = null;
-        string? productUnitCode = null;
-        string? productUnitName = null;
-        string? productUnitShortName = null;
-        if (row.ProductId is Guid productId)
-        {
-            var productRow = await _catalog.Products.AsNoTracking()
-                .Where(x => x.ProductId == productId)
-                .Select(x => new { x.BrandId, x.UnitOfMeasureId })
-                .FirstOrDefaultAsync(cancellationToken);
-            if (productRow?.BrandId is Guid bid)
-            {
-                brand = await _catalog.LocalizedTexts.AsNoTracking()
-                    .Where(x => x.OwnerKind == CatalogLocalizedOwnerKind.Brand && x.OwnerId == bid && x.FieldKey == "name")
-                    .OrderBy(x => x.Locale)
-                    .Select(x => x.Value)
-                    .FirstOrDefaultAsync(cancellationToken);
-            }
-
-            if (productRow is not null && productRow.UnitOfMeasureId != Guid.Empty)
-            {
-                var unit = await _catalog.UnitsOfMeasure.AsNoTracking()
-                    .SingleOrDefaultAsync(x => x.UnitOfMeasureId == productRow.UnitOfMeasureId, cancellationToken);
-                var translation = await _catalog.UnitOfMeasureTranslations.AsNoTracking()
-                    .Where(x => x.UnitOfMeasureId == productRow.UnitOfMeasureId)
-                    .FirstOrDefaultAsync(cancellationToken);
-                productUnitCode = unit?.Code;
-                productUnitName = translation?.Name ?? unit?.Code;
-                productUnitShortName = translation?.ShortName ?? unit?.Code;
-            }
-        }
-
-        var onHand = stock?.OnHand ?? 0;
-        var reserved = stock?.Reserved ?? 0;
-        var opts = _returnPolicies.Options;
-        return new SellerOfferDetailPage(
-            offer.OfferId,
-            sellerPartyId,
-            seller?.DisplayName ?? string.Empty,
-            offer.CatalogVariantId,
-            row.ProductId,
-            row.ProductTitle,
-            brand,
-            offer.SellerSku,
-            offer.Status.ToString(),
-            offer.Channel.ToString(),
-            price?.Amount,
-            price?.Currency ?? row.Currency,
-            onHand,
-            reserved,
-            Math.Max(0, onHand - reserved),
-            CatalogReadOnly: true,
-            offer.ReturnPolicyChoice,
-            offer.CustomReturnWindowDays,
-            opts.DefaultReturnWindowDays,
-            opts.SellerCanOverrideReturnPolicy,
-            opts.MinReturnWindowDays,
-            opts.MaxReturnWindowDays,
-            opts.AllowNonReturnableOffers,
-            offer.MinimumOrderQuantity,
-            offer.MaximumOrderQuantity,
-            productUnitCode,
-            productUnitName,
-            productUnitShortName);
-    }
-
-    /// <summary>
-    /// گونه‌های Catalog منتشرشده را برای انتخاب Offer برمی‌گرداند؛ نوشتن Catalog نیست.
-    /// </summary>
+    /// <summary>Lists published Catalog variants available for seller selection.</summary>
     public async Task<IReadOnlyList<SellerCatalogVariantOption>> ListCatalogVariantsAsync(
-        Guid sellerPartyId,
-        CancellationToken cancellationToken)
+        Guid sellerPartyId, CancellationToken cancellationToken)
     {
         await EnsureSellerAsync(sellerPartyId, cancellationToken);
-        var products = await _catalog.Products.AsNoTracking()
+        var products = await catalog.Products.AsNoTracking()
             .Where(x => x.Status == CatalogPublicationStatus.Published)
-            .OrderByDescending(x => x.UpdatedAt)
-            .Take(100)
-            .ToListAsync(cancellationToken);
-        if (products.Count == 0)
-        {
-            return [];
-        }
-
-        var productIds = products.Select(x => x.ProductId).ToList();
-        var names = await _catalog.LocalizedTexts.AsNoTracking()
+            .OrderByDescending(x => x.UpdatedAt).Take(100).ToListAsync(cancellationToken);
+        var ids = products.Select(x => x.ProductId).ToArray();
+        var names = await catalog.LocalizedTexts.AsNoTracking()
             .Where(x => x.OwnerKind == CatalogLocalizedOwnerKind.Product
-                        && productIds.Contains(x.OwnerId)
-                        && x.FieldKey == "name")
+                        && ids.Contains(x.OwnerId) && x.FieldKey == "name")
             .ToListAsync(cancellationToken);
-        var nameMap = names
-            .GroupBy(x => x.OwnerId)
-            .ToDictionary(
-                g => g.Key,
-                g => g.OrderBy(x => x.Locale.StartsWith("fa", StringComparison.OrdinalIgnoreCase) ? 0 : 1).First().Value);
-        var variants = await _catalog.Variants.AsNoTracking()
-            .Where(x => productIds.Contains(x.ProductId))
-            .OrderBy(x => x.CatalogCodeSeam)
-            .ToListAsync(cancellationToken);
-        var productStatus = products.ToDictionary(x => x.ProductId, x => x.Status.ToString());
-        return variants.Select(variant => new SellerCatalogVariantOption(
-            variant.VariantId,
-            variant.ProductId,
-            nameMap.GetValueOrDefault(variant.ProductId) ?? "بدون عنوان",
-            variant.CatalogCodeSeam,
-            productStatus.GetValueOrDefault(variant.ProductId) ?? "Published")).ToList();
+        var nameMap = names.GroupBy(x => x.OwnerId).ToDictionary(
+            x => x.Key, x => x.OrderBy(y => y.Locale.StartsWith("fa") ? 0 : 1).First().Value);
+        var variants = await catalog.Variants.AsNoTracking()
+            .Where(x => ids.Contains(x.ProductId)).OrderBy(x => x.CatalogCodeSeam).ToListAsync(cancellationToken);
+        var statuses = products.ToDictionary(x => x.ProductId, x => x.Status.ToString());
+        return variants.Select(x => new SellerCatalogVariantOption(
+            x.VariantId, x.ProductId, nameMap.GetValueOrDefault(x.ProductId) ?? string.Empty,
+            x.CatalogCodeSeam, statuses.GetValueOrDefault(x.ProductId) ?? "Published")).ToArray();
     }
 
-    /// <summary>
-    /// مبلغ بدون مالیات Offer خود فروشنده را از طریق IPriceDirectory می‌نویسد؛ Offer خارجی رد می‌شود.
-    /// </summary>
-    public async Task<SellerOfferDetailPage> SetOfferPriceAsync(
-        Guid sellerPartyId,
-        Guid offerId,
-        SellerOfferPriceWriteRequest request,
-        CancellationToken cancellationToken)
-    {
-        var offer = await RequireOwnedOfferAsync(sellerPartyId, offerId, cancellationToken);
-        if (request.Amount < 0)
-        {
-            throw new PlatformHttpException(400, "مبلغ منفی مجاز نیست.", "seller.price.amount.invalid");
-        }
-
-        var market = string.IsNullOrWhiteSpace(request.Market) ? DefaultMarket : request.Market.Trim();
-        var currency = string.IsNullOrWhiteSpace(request.Currency) ? DefaultCurrency : request.Currency.Trim();
-
-        try
-        {
-            var existing = await _prices.Prices
-                .AsNoTracking()
-                .Where(x => x.OfferId == offerId
-                            && x.Market == market
-                            && x.Channel == (Tooba.Offer.Contracts.Dtos.SalesChannel)(int)offer.Channel
-                            && x.Currency == currency)
-                .OrderByDescending(x => x.PriceId)
-                .FirstOrDefaultAsync(cancellationToken);
-
-            if (existing is null || existing.Status == PriceStatus.Retired)
-            {
-                var created = await _priceDirectory.CreatePriceAsync(
-                    offerId,
-                    market,
-                    (Tooba.Offer.Contracts.Dtos.SalesChannel)(int)offer.Channel,
-                    request.Amount,
-                    currency,
-                    _clock.UtcNow.AddYears(-1),
-                    null,
-                    cancellationToken);
-                await _priceDirectory.ActivateAsync(created.PriceId, cancellationToken);
-            }
-            else
-            {
-                await _priceDirectory.ChangeAmountAsync(existing.PriceId, request.Amount, currency, cancellationToken);
-                if (existing.Status != PriceStatus.Active)
-                {
-                    await _priceDirectory.ActivateAsync(existing.PriceId, cancellationToken);
-                }
-            }
-        }
-        catch (InvalidOperationException ex)
-        {
-            throw new PlatformHttpException(400, ex.Message, "seller.price.write.rejected");
-        }
-
-        return (await GetOfferAsync(sellerPartyId, offerId, cancellationToken))!;
-    }
-
-    /// <summary>
-    /// موجودی روی‌دست Offer خود فروشنده را از طریق IInventoryDirectory تنظیم می‌کند؛ Offer خارجی رد می‌شود.
-    /// </summary>
-    public async Task<SellerOfferDetailPage> SetOfferInventoryAsync(
-        Guid sellerPartyId,
-        Guid offerId,
-        SellerOfferInventoryWriteRequest request,
-        CancellationToken cancellationToken)
-    {
-        await RequireOwnedOfferAsync(sellerPartyId, offerId, cancellationToken);
-        if (request.OnHand < 0)
-        {
-            throw new PlatformHttpException(400, "موجودی منفی مجاز نیست.", "seller.inventory.quantity.invalid");
-        }
-
-        var reason = string.IsNullOrWhiteSpace(request.Reason) ? "seller-panel-adjust" : request.Reason.Trim();
-        try
-        {
-            var position = await _inventory.Positions.AsNoTracking()
-                .Where(x => x.OfferId == offerId)
-                .OrderBy(x => x.StockItemId)
-                .FirstOrDefaultAsync(cancellationToken);
-            Guid stockItemId;
-            if (position is null)
-            {
-                var locationId = await ResolveDefaultLocationIdAsync(cancellationToken);
-                stockItemId = await _inventoryDirectory.OpenPositionAsync(offerId, locationId, cancellationToken);
-            }
-            else
-            {
-                stockItemId = position.StockItemId;
-            }
-
-            await _inventoryDirectory.AdjustAsync(
-                stockItemId,
-                StockAdjustmentKind.Set,
-                request.OnHand,
-                reason,
-                null,
-                cancellationToken);
-        }
-        catch (InvalidOperationException ex)
-        {
-            throw new PlatformHttpException(400, ex.Message, "seller.inventory.write.rejected");
-        }
-
-        return (await GetOfferAsync(sellerPartyId, offerId, cancellationToken))!;
-    }
-
-    /// <summary>
-    /// فهرست سفارش‌های فقط همین فروشنده با فیلتر scope سفارش بازیگر.
-    /// </summary>
+    /// <summary>Lists seller orders permitted by the actor's order scope.</summary>
     public async Task<IReadOnlyList<SellerOrderListItem>> ListOrdersAsync(
-        Guid sellerPartyId,
-        Guid actorUserId,
-        CancellationToken cancellationToken)
+        Guid sellerPartyId, Guid actorUserId, CancellationToken cancellationToken)
     {
         await EnsureSellerAsync(sellerPartyId, cancellationToken);
         var scope = await ResolveOrderViewScopeAsync(sellerPartyId, actorUserId, cancellationToken);
-        if (scope.Denied)
-        {
-            return [];
-        }
-
-        var orders = await _orders.SellerOrders.AsNoTracking()
-            .Include(x => x.Lines)
+        if (scope.Denied) return [];
+        var rows = await orders.SellerOrders.AsNoTracking().Include(x => x.Lines)
             .Where(x => x.SellerPartyId == sellerPartyId)
-            .OrderByDescending(x => x.SellerOrderId)
-            .Take(200)
-            .ToListAsync(cancellationToken);
-        var allLines = orders.SelectMany(o => o.Lines).ToList();
+            .OrderByDescending(x => x.SellerOrderId).Take(200).ToListAsync(cancellationToken);
         var resolved = scope.Global
-            ? (IReadOnlyDictionary<Guid, Guid?>)new Dictionary<Guid, Guid?>()
-            : await ResolveLineCategoriesAsync(allLines, cancellationToken);
-        var visible = scope.Global
-            ? orders
-            : orders.Where(order =>
-                order.Lines.Any(line =>
-                {
-                    var categoryId = line.CategoryIdSnapshot ?? resolved.GetValueOrDefault(line.CatalogVariantId);
-                    return categoryId is Guid cid && scope.AllowedCategoryIds.Contains(cid);
-                })).ToList();
-        var checkoutIds = visible.Select(x => x.CheckoutId).Distinct().ToList();
-        var checkouts = checkoutIds.Count == 0
-            ? []
-            : await _orders.Checkouts.AsNoTracking()
-                .Where(x => checkoutIds.Contains(x.CheckoutId))
-                .ToListAsync(cancellationToken);
-        var checkoutMap = checkouts.ToDictionary(x => x.CheckoutId);
+            ? new Dictionary<Guid, Guid?>()
+            : await ResolveLineCategoriesAsync(rows.SelectMany(x => x.Lines).ToList(), cancellationToken);
+        var visible = scope.Global ? rows : rows.Where(order =>
+            order.Lines.Any(line => IsAllowed(line, scope.AllowedCategoryIds, resolved))).ToList();
+        var checkoutIds = visible.Select(x => x.CheckoutId).Distinct().ToArray();
+        var checkouts = await orders.Checkouts.AsNoTracking()
+            .Where(x => checkoutIds.Contains(x.CheckoutId)).ToDictionaryAsync(x => x.CheckoutId, cancellationToken);
         return visible.Select(order =>
         {
-            checkoutMap.TryGetValue(order.CheckoutId, out var checkout);
-            var lineCount = scope.Global
-                ? order.Lines.Count
-                : CountAuthorizedLines(order.Lines, scope.AllowedCategoryIds, resolved);
+            checkouts.TryGetValue(order.CheckoutId, out var checkout);
+            var count = scope.Global ? order.Lines.Count : order.Lines.Count(x => IsAllowed(x, scope.AllowedCategoryIds, resolved));
             return new SellerOrderListItem(
-                order.SellerOrderId,
-                order.OrderNumber,
-                checkout?.SubmittedAt ?? default,
-                checkout?.RecipientName ?? string.Empty,
-                lineCount,
-                order.GrandTotalSnapshot,
-                order.Currency,
-                order.Status.ToString(),
-                order.Status.ToString());
-        }).ToList();
+                order.SellerOrderId, order.OrderNumber, checkout?.SubmittedAt ?? default,
+                checkout?.RecipientName ?? string.Empty, count, order.GrandTotalSnapshot,
+                order.Currency, order.Status.ToString(), order.Status.ToString());
+        }).ToArray();
     }
 
-    /// <summary>
-    /// جزئیات سفارش فقط اگر SellerPartyId مطابقت کند؛ خطوط خارج از scope برنمی‌گردد.
-    /// </summary>
+    /// <summary>Gets a seller order permitted by the actor's order scope.</summary>
     public async Task<SellerOrderDetailPage?> GetOrderAsync(
-        Guid sellerPartyId,
-        Guid actorUserId,
-        Guid sellerOrderId,
-        CancellationToken cancellationToken)
+        Guid sellerPartyId, Guid actorUserId, Guid sellerOrderId, CancellationToken cancellationToken)
     {
         await EnsureSellerAsync(sellerPartyId, cancellationToken);
         var scope = await ResolveOrderViewScopeAsync(sellerPartyId, actorUserId, cancellationToken);
-        if (scope.Denied)
-        {
-            throw new PlatformHttpException(403, "مجوز مشاهدهٔ سفارش وجود ندارد.", "seller.order.view.denied");
-        }
-
-        var order = await _orders.SellerOrders.AsNoTracking()
-            .Include(x => x.Lines)
+        if (scope.Denied) throw new PlatformHttpException(403, "Order access denied.", "seller.order.view.denied");
+        var order = await orders.SellerOrders.AsNoTracking().Include(x => x.Lines)
             .SingleOrDefaultAsync(x => x.SellerOrderId == sellerOrderId && x.SellerPartyId == sellerPartyId, cancellationToken);
-        if (order is null)
-        {
-            return null;
-        }
-
+        if (order is null) return null;
         var resolved = await ResolveLineCategoriesAsync(order.Lines, cancellationToken);
-        var authorizedLines = scope.Global
-            ? order.Lines.ToList()
-            : order.Lines.Where(line =>
-            {
-                var categoryId = line.CategoryIdSnapshot ?? resolved.GetValueOrDefault(line.CatalogVariantId);
-                return categoryId is Guid cid && scope.AllowedCategoryIds.Contains(cid);
-            }).ToList();
-
-        if (authorizedLines.Count == 0)
-        {
-            throw new PlatformHttpException(403, "مجوز مشاهدهٔ این سفارش وجود ندارد.", "seller.order.view.denied");
-        }
-
-        var checkout = await _orders.Checkouts.AsNoTracking()
+        var visible = scope.Global ? order.Lines.ToList()
+            : order.Lines.Where(x => IsAllowed(x, scope.AllowedCategoryIds, resolved)).ToList();
+        if (visible.Count == 0) throw new PlatformHttpException(403, "Order access denied.", "seller.order.view.denied");
+        var checkout = await orders.Checkouts.AsNoTracking()
             .SingleOrDefaultAsync(x => x.CheckoutId == order.CheckoutId, cancellationToken);
-        var offerIds = authorizedLines.Select(x => x.OfferId).Distinct().ToList();
-        var offers = offerIds.Count == 0
-            ? []
-            : await _offers.Offers.AsNoTracking().Where(x => offerIds.Contains(x.OfferId)).ToListAsync(cancellationToken);
-        var titles = await ResolveTitlesAsync(offers, cancellationToken);
-        var lines = authorizedLines.Select(line =>
-        {
-            titles.TryGetValue(line.OfferId, out var title);
-            return new SellerOrderLineView(
-                line.OfferId,
-                string.IsNullOrWhiteSpace(title) ? "کالای سفارش" : title,
-                line.Quantity,
-                line.UnitPriceSnapshot,
-                line.LineTotalSnapshot + line.TaxAmountSnapshot - line.DiscountAmountSnapshot,
-                line.Currency);
-        }).ToList();
-
-        var subtotal = authorizedLines.Sum(x => x.PostDiscountTaxExclusiveSnapshot);
-        var tax = authorizedLines.Sum(x => x.TaxAmountSnapshot);
-        var discount = authorizedLines.Sum(x => x.DiscountAmountSnapshot);
-        var grand = subtotal + tax;
-
+        var lines = visible.Select(x => new SellerOrderLineView(
+            x.OfferId, "Order item", x.Quantity, x.UnitPriceSnapshot,
+            x.LineTotalSnapshot + x.TaxAmountSnapshot - x.DiscountAmountSnapshot, x.Currency)).ToArray();
+        var subtotal = visible.Sum(x => x.PostDiscountTaxExclusiveSnapshot);
+        var tax = visible.Sum(x => x.TaxAmountSnapshot);
+        var discount = visible.Sum(x => x.DiscountAmountSnapshot);
         return new SellerOrderDetailPage(
-            order.SellerOrderId,
-            order.OrderNumber,
-            order.SellerPartyId,
-            checkout?.SubmittedAt ?? default,
-            order.Status.ToString(),
-            order.Status.ToString(),
-            subtotal,
-            tax,
-            discount,
-            grand,
-            order.Currency,
-            checkout?.RecipientName ?? string.Empty,
-            checkout?.ContactMobile ?? string.Empty,
-            checkout?.ProvinceName ?? string.Empty,
-            checkout?.CityName ?? string.Empty,
-            checkout?.PostalAddress ?? string.Empty,
-            checkout?.PostalCode ?? string.Empty,
-            checkout?.ShippingMethodLabel ?? string.Empty,
-            lines);
+            order.SellerOrderId, order.OrderNumber, order.SellerPartyId, checkout?.SubmittedAt ?? default,
+            order.Status.ToString(), order.Status.ToString(), subtotal, tax, discount, subtotal + tax,
+            order.Currency, checkout?.RecipientName ?? string.Empty, checkout?.ContactMobile ?? string.Empty,
+            checkout?.ProvinceName ?? string.Empty, checkout?.CityName ?? string.Empty,
+            checkout?.PostalAddress ?? string.Empty, checkout?.PostalCode ?? string.Empty,
+            checkout?.ShippingMethodLabel ?? string.Empty, lines);
     }
 
-    private sealed record OrderViewScope(
-        bool Denied,
-        bool Global,
-        HashSet<Guid> AllowedCategoryIds);
+    private sealed record OrderViewScope(bool Denied, bool Global, HashSet<Guid> AllowedCategoryIds);
 
     private async Task<OrderViewScope> ResolveOrderViewScopeAsync(
-        Guid sellerPartyId,
-        Guid actorUserId,
-        CancellationToken cancellationToken)
+        Guid sellerPartyId, Guid actorUserId, CancellationToken cancellationToken)
     {
-        var effective = await _access.GetEffectiveAccessAsync(
-            actorUserId,
-            new AccessOwnerScope(AccessOwnerScopeKind.Seller, sellerPartyId),
-            cancellationToken);
-        var orderViews = effective.Permissions
-            .Where(p => p.PermissionId == "order.view" && !p.DeniedByCeiling)
-            .ToList();
-        if (orderViews.Count == 0)
-        {
-            return new OrderViewScope(true, false, []);
-        }
-
-        if (orderViews.Any(p => p.ScopeKind == AccessScopeKind.GlobalWithinOwner))
-        {
-            return new OrderViewScope(false, true, []);
-        }
-
-        var allowed = orderViews
-            .Where(p => p.ScopeKind == AccessScopeKind.Category && p.ScopeResourceId is not null)
-            .Select(p => p.ScopeResourceId!.Value)
-            .ToHashSet();
-        if (allowed.Count == 0)
-        {
-            return new OrderViewScope(true, false, []);
-        }
-
-        return new OrderViewScope(false, false, allowed);
+        var effective = await access.GetEffectiveAccessAsync(
+            actorUserId, new AccessOwnerScope(AccessOwnerScopeKind.Seller, sellerPartyId), cancellationToken);
+        var permissions = effective.Permissions.Where(x => x.PermissionId == "order.view" && !x.DeniedByCeiling).ToList();
+        if (permissions.Count == 0) return new(true, false, []);
+        if (permissions.Any(x => x.ScopeKind == AccessScopeKind.GlobalWithinOwner)) return new(false, true, []);
+        var allowed = permissions.Where(x => x.ScopeKind == AccessScopeKind.Category && x.ScopeResourceId != null)
+            .Select(x => x.ScopeResourceId!.Value).ToHashSet();
+        return new(allowed.Count == 0, false, allowed);
     }
 
     private async Task<IReadOnlyList<SellerOrder>> FilterOrdersByScopeAsync(
-        IReadOnlyList<SellerOrder> orders,
-        OrderViewScope scope,
-        CancellationToken cancellationToken)
+        IReadOnlyList<SellerOrder> rows, OrderViewScope scope, CancellationToken cancellationToken)
     {
-        if (scope.Denied)
-        {
-            return [];
-        }
-
-        if (scope.Global)
-        {
-            return orders;
-        }
-
-        var resolved = await ResolveLineCategoriesAsync(orders.SelectMany(o => o.Lines).ToList(), cancellationToken);
-        return orders.Where(order =>
-            order.Lines.Any(line =>
-            {
-                var categoryId = line.CategoryIdSnapshot ?? resolved.GetValueOrDefault(line.CatalogVariantId);
-                return categoryId is Guid cid && scope.AllowedCategoryIds.Contains(cid);
-            })).ToList();
+        if (scope.Denied) return [];
+        if (scope.Global) return rows;
+        var resolved = await ResolveLineCategoriesAsync(rows.SelectMany(x => x.Lines).ToList(), cancellationToken);
+        return rows.Where(x => x.Lines.Any(line => IsAllowed(line, scope.AllowedCategoryIds, resolved))).ToArray();
     }
 
     private async Task<IReadOnlyDictionary<Guid, Guid?>> ResolveLineCategoriesAsync(
-        IReadOnlyCollection<OrderLine> lines,
-        CancellationToken cancellationToken)
+        IReadOnlyCollection<OrderLine> lines, CancellationToken cancellationToken)
     {
-        var missing = lines
-            .Where(l => l.CategoryIdSnapshot is null)
-            .Select(l => l.CatalogVariantId)
-            .Distinct()
-            .ToArray();
-        if (missing.Length == 0)
-        {
-            return new Dictionary<Guid, Guid?>();
-        }
-
-        return await _catalogLookup.GetPrimaryCategoryIdsByVariantIdsAsync(missing, cancellationToken);
+        var missing = lines.Where(x => x.CategoryIdSnapshot is null)
+            .Select(x => x.CatalogVariantId).Distinct().ToArray();
+        return missing.Length == 0
+            ? new Dictionary<Guid, Guid?>()
+            : await catalogLookup.GetPrimaryCategoryIdsByVariantIdsAsync(missing, cancellationToken);
     }
 
-    private static int CountAuthorizedLines(
-        IEnumerable<OrderLine> lines,
-        HashSet<Guid> allowed,
-        IReadOnlyDictionary<Guid, Guid?> resolved) =>
-        lines.Count(line =>
-        {
-            var categoryId = line.CategoryIdSnapshot ?? resolved.GetValueOrDefault(line.CatalogVariantId);
-            return categoryId is Guid cid && allowed.Contains(cid);
-        });
+    private static bool IsAllowed(
+        OrderLine line, HashSet<Guid> allowed, IReadOnlyDictionary<Guid, Guid?> resolved)
+    {
+        var category = line.CategoryIdSnapshot ?? resolved.GetValueOrDefault(line.CatalogVariantId);
+        return category is Guid id && allowed.Contains(id);
+    }
 
     private async Task EnsureSellerAsync(Guid sellerPartyId, CancellationToken cancellationToken)
     {
-        var seller = await _parties.FindByIdAsync(sellerPartyId, cancellationToken);
-        if (seller is null)
-        {
-            throw new PlatformHttpException(404, "فروشنده پیدا نشد.", "seller.missing");
-        }
-    }
-
-    /// <summary>
-    /// Offer را فقط اگر متعلق به فروشندهٔ جاری باشد برمی‌گرداند؛ در غیر این صورت fail-closed است.
-    /// </summary>
-    private async Task<SellerOffer> RequireOwnedOfferAsync(
-        Guid sellerPartyId,
-        Guid offerId,
-        CancellationToken cancellationToken)
-    {
-        await EnsureSellerAsync(sellerPartyId, cancellationToken);
-        var offer = await _offers.Offers.AsNoTracking()
-            .SingleOrDefaultAsync(x => x.OfferId == offerId && x.SellerPartyId == sellerPartyId, cancellationToken);
-        if (offer is null)
-        {
-            throw new PlatformHttpException(404, "پیشنهاد فروشنده پیدا نشد.", "seller.offer.missing");
-        }
-
-        return offer;
-    }
-
-    /// <summary>
-    /// محل نگهداری پیش‌فرض را پیدا یا می‌سازد تا موقعیت موجودی Offer باز شود.
-    /// </summary>
-    private async Task<Guid> ResolveDefaultLocationIdAsync(CancellationToken cancellationToken)
-    {
-        var existing = await _inventory.Locations.AsNoTracking()
-            .Where(x => x.Status == InventoryLocationStatus.Active)
-            .OrderBy(x => x.Code)
-            .Select(x => x.LocationId)
-            .FirstOrDefaultAsync(cancellationToken);
-        if (existing != Guid.Empty)
-        {
-            return existing;
-        }
-
-        return await _inventoryDirectory.CreateLocationAsync("SELLER-DEFAULT", "انبار پیش‌فرض فروشنده", cancellationToken);
-    }
-
-    private async Task<IReadOnlyList<SellerOfferListItem>> PresentOffersAsync(
-        IReadOnlyList<SellerOffer> offers,
-        CancellationToken cancellationToken)
-    {
-        if (offers.Count == 0)
-        {
-            return [];
-        }
-
-        var offerIds = offers.Select(x => x.OfferId).ToList();
-        var variantIds = offers.Select(x => x.CatalogVariantId).Distinct().ToList();
-        var variants = await _catalog.Variants.AsNoTracking()
-            .Where(x => variantIds.Contains(x.VariantId))
-            .Select(x => new { x.VariantId, x.ProductId })
-            .ToListAsync(cancellationToken);
-        var productIds = variants.Select(x => x.ProductId).Distinct().ToList();
-        var names = new Dictionary<Guid, string>();
-        if (productIds.Count > 0)
-        {
-            var nameRows = await _catalog.LocalizedTexts.AsNoTracking()
-                .Where(x => x.OwnerKind == CatalogLocalizedOwnerKind.Product && productIds.Contains(x.OwnerId) && x.FieldKey == "name")
-                .ToListAsync(cancellationToken);
-            names = nameRows
-                .GroupBy(x => x.OwnerId)
-                .ToDictionary(
-                    g => g.Key,
-                    g => g.OrderBy(x => x.Locale.StartsWith("fa", StringComparison.OrdinalIgnoreCase) ? 0 : 1).First().Value);
-        }
-        var amounts = await _prices.Prices.AsNoTracking()
-            .Where(x => offerIds.Contains(x.OfferId))
-            .Select(x => new { x.OfferId, x.Amount, x.Currency, x.PriceId })
-            .ToListAsync(cancellationToken);
-        var amountMap = amounts
-            .GroupBy(x => x.OfferId)
-            .ToDictionary(g => g.Key, g => g.OrderByDescending(x => x.PriceId).First());
-        var stocks = await _inventory.Positions.AsNoTracking()
-            .Where(x => offerIds.Contains(x.OfferId))
-            .Select(x => new { x.OfferId, x.OnHand, x.Reserved })
-            .ToListAsync(cancellationToken);
-        var stockMap = stocks
-            .GroupBy(x => x.OfferId)
-            .ToDictionary(g => g.Key, g => g.First());
-        var variantMap = variants.ToDictionary(x => x.VariantId, x => x.ProductId);
-
-        return offers.Select(offer =>
-        {
-            variantMap.TryGetValue(offer.CatalogVariantId, out var productId);
-            names.TryGetValue(productId, out var title);
-            amountMap.TryGetValue(offer.OfferId, out var price);
-            stockMap.TryGetValue(offer.OfferId, out var stock);
-            var available = stock is null ? 0 : Math.Max(0, stock.OnHand - stock.Reserved);
-            return new SellerOfferListItem(
-                offer.OfferId,
-                offer.CatalogVariantId,
-                productId == Guid.Empty ? null : productId,
-                string.IsNullOrWhiteSpace(title) ? "بدون عنوان" : title,
-                offer.SellerSku,
-                offer.Status.ToString(),
-                price?.Amount,
-                price?.Currency ?? "IRR",
-                available,
-                null);
-        }).ToList();
-    }
-
-    private async Task<Dictionary<Guid, string>> ResolveTitlesAsync(
-        IReadOnlyList<SellerOffer> offers,
-        CancellationToken cancellationToken)
-    {
-        if (offers.Count == 0)
-        {
-            return new Dictionary<Guid, string>();
-        }
-
-        var presented = await PresentOffersAsync(offers, cancellationToken);
-        return presented.ToDictionary(x => x.OfferId, x => x.ProductTitle);
+        if (await parties.FindByIdAsync(sellerPartyId, cancellationToken) is null)
+            throw new PlatformHttpException(404, "Seller was not found.", "seller.missing");
     }
 }

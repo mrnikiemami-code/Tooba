@@ -1,0 +1,8 @@
+{
+  "task": "TB-TMAR-OFFER-REFERENCE-W1-R4",
+  "moduleRecoveryState": "READY_FOR_FINAL_VERIFICATION",
+  "nextRecommendedTask": "TB-TMAR-OFFER-REFERENCE-W1-R5",
+  "mandatoryProductionDefects": [],
+  "protectedArchivesTouched": false,
+  "frontendChanges": false
+}

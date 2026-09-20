@@ -148,6 +148,29 @@ public sealed class OfferArchitectureGuardTests
     }
 
     [Fact]
+    public void Seller_offer_path_has_real_cqrs_and_owner_boundaries()
+    {
+        var endpoint = File.ReadAllText(Path.Combine(
+            OfferRoot(), "Tooba.Offer.Endpoints", "Seller", "OfferSellerEndpoints.cs"));
+        Assert.DoesNotContain("IOfferSellerPanel", string.Join('\n', AllOfferSources().Select(x => x.Text)), StringComparison.Ordinal);
+        Assert.Contains("return Results.Json(await sender.Send(new ListSellerOffersQuery", endpoint, StringComparison.Ordinal);
+        Assert.Contains("return Results.Json(await sender.Send(new GetOfferQuery", endpoint, StringComparison.Ordinal);
+        Assert.DoesNotContain("await sender.Send(new ListSellerOffersQuery", endpoint.Replace(
+            "return Results.Json(await sender.Send(new ListSellerOffersQuery", string.Empty), StringComparison.Ordinal);
+        foreach (var obsolete in new[] { "OfferRequests.cs", "OfferHandlers.cs", "OfferQueries.cs", "OfferQueryHandlers.cs" })
+            Assert.False(File.Exists(Path.Combine(OfferRoot(), "Tooba.Offer.Application", "Commands", obsolete))
+                         || File.Exists(Path.Combine(OfferRoot(), "Tooba.Offer.Application", "Queries", obsolete)));
+
+        var composer = File.ReadAllText(Path.Combine(
+            RepoRoot(), "src", "backend", "Host", "Tooba.Host", "Seller", "SellerPanelComposer.cs"));
+        Assert.DoesNotContain("OfferDbContext", composer, StringComparison.Ordinal);
+        Assert.DoesNotContain("SellerOfferListItem", composer, StringComparison.Ordinal);
+        Assert.DoesNotContain("SellerOfferDetailPage", composer, StringComparison.Ordinal);
+        Assert.DoesNotContain("PricingDbContext", composer, StringComparison.Ordinal);
+        Assert.DoesNotContain("InventoryDbContext", composer, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public void Offer_domain_and_application_have_no_persian_prose()
     {
         var violations = Sources("Tooba.Offer.Domain")

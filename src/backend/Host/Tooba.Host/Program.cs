@@ -120,7 +120,7 @@ builder.Services.AddHostedService<UnpaidOrderExpiryHostedService>();
 builder.Services.AddToobaCqrsFoundation(
     typeof(Tooba.Catalog.Application.CreateStoreLandingPageCommand).Assembly,
     typeof(Tooba.Fulfillment.Application.CreateShippingServiceCommand).Assembly,
-    typeof(Tooba.Offer.Application.CreateOfferCommand).Assembly);
+    typeof(Tooba.Offer.Application.Commands.CreateOffer.CreateOfferCommand).Assembly);
 builder.Services.AddScoped<Tooba.Catalog.Application.IStoreLandingExternalReferenceGate, Tooba.Host.Admin.MerchandisingStoreLandingReferenceGate>();
 builder.Services.AddScoped<Tooba.Catalog.Application.IUnitOfMeasureLanguageGate, Tooba.Host.Admin.HostUnitOfMeasureLanguageGate>();
 builder.Services.AddScoped<Tooba.Fulfillment.Application.IShippingServiceLanguageGate, Tooba.Host.Admin.HostShippingServiceLanguageGate>();
@@ -228,8 +228,6 @@ builder.Services.AddScoped<Tooba.Host.Storefront.StorefrontPaymentComposer>(sp =
         sp.GetRequiredService<Tooba.Payment.Application.IPaymentExpiryDirectory>(),
         sp.GetRequiredService<ReservationCycleCoordinator>()));
 builder.Services.AddScoped<Tooba.Host.Seller.SellerPanelComposer>();
-builder.Services.AddScoped<Tooba.Offer.Application.Ports.IOfferSellerPanel>(sp =>
-    sp.GetRequiredService<Tooba.Host.Seller.SellerPanelComposer>());
 builder.Services.AddScoped<Tooba.Offer.Endpoints.Seller.IOfferSellerAuthorizer, Tooba.Host.Seller.HostOfferSellerAuthorizer>();
 builder.Services.AddScoped<Tooba.Host.Customer.CustomerPanelComposer>();
 builder.Services.AddScoped<Tooba.Host.Admin.AdminPanelComposer>();

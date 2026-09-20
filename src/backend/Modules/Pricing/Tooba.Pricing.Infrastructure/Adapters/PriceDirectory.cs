@@ -21,7 +21,7 @@ public sealed class OpenPricingUseCaseGuard : IPricingUseCaseGuard
 /// <summary>
 /// نوشتن و انتخاب قیمت با قرارداد Offer. DbContext کاتالوگ و Offer لمس نمی‌شود.
 /// </summary>
-public sealed class PriceDirectory : IPriceDirectory, IPriceLookupGateway
+public sealed class PriceDirectory : IPriceDirectory, IPriceLookupGateway, ISellerOfferPricingGateway
 {
     private readonly PricingDbContext _db;
     private readonly IPricingUseCaseGuard _guard;
@@ -58,6 +58,36 @@ public sealed class PriceDirectory : IPriceDirectory, IPriceLookupGateway
         }
 
         return effective.Count == 0 ? null : ToQuote(effective[0]);
+    }
+
+    /// <inheritdoc />
+    public async Task SetPriceAsync(SetSellerOfferPrice request, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(request);
+        if (request.Amount < 0)
+            throw new InvalidOperationException("pricing.amount.invalid");
+        var offer = await _offers.FindOfferAsync(request.OfferId, cancellationToken);
+        if (offer is null || offer.SellerPartyId != request.SellerPartyId)
+            throw new InvalidOperationException("offer.not_found");
+        var market = string.IsNullOrWhiteSpace(request.Market) ? "IR" : request.Market.Trim();
+        var currency = string.IsNullOrWhiteSpace(request.Currency) ? "IRR" : request.Currency.Trim();
+        var existing = await _db.Prices.AsNoTracking()
+            .Where(x => x.OfferId == request.OfferId && x.Market == market
+                        && x.Channel == offer.Channel && x.Currency == currency)
+            .OrderByDescending(x => x.PriceId)
+            .FirstOrDefaultAsync(cancellationToken);
+        if (existing is null || existing.Status == PriceStatus.Retired)
+        {
+            var created = await CreatePriceAsync(
+                request.OfferId, market, offer.Channel, request.Amount, currency,
+                DateTimeOffset.UtcNow.AddYears(-1), null, cancellationToken);
+            await ActivateAsync(created.PriceId, cancellationToken);
+            return;
+        }
+
+        await ChangeAmountAsync(existing.PriceId, request.Amount, currency, cancellationToken);
+        if (existing.Status != PriceStatus.Active)
+            await ActivateAsync(existing.PriceId, cancellationToken);
     }
 
     /// <inheritdoc />

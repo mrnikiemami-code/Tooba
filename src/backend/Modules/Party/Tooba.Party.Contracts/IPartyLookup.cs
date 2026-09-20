@@ -8,4 +8,4 @@ public interface IPartyLookup
 }
 
 /// <summary>Minimal Party identity required by consumers.</summary>
-public sealed record PartyLookupResult(Guid PartyId, string Kind);
+public sealed record PartyLookupResult(Guid PartyId, string Kind, string? DisplayName = null);

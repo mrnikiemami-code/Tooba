@@ -440,15 +440,21 @@ internal static class AccessControlDevelopmentSeed
             variantRef = new VariantReference(variant.VariantId, variant.ProductId, variant.CombinationFingerprint, variant.Status);
         }
 
-        var offer = await offers.Send(new Tooba.Offer.Application.CreateOfferCommand(
+        var offer = await offers.Send(new Tooba.Offer.Application.Commands.CreateOffer.CreateOfferCommand(
             variantRef.VariantId, sellerPartyId, SalesChannel.Marketplace, slug.ToUpperInvariant()), cancellationToken);
-        await offers.Send(new Tooba.Offer.Application.ActivateOfferCommand(offer.OfferId), cancellationToken);
+        await offers.Send(new Tooba.Offer.Application.Commands.ActivateOffer.ActivateOfferCommand(
+            offer.OfferId, sellerPartyId), cancellationToken);
         var start = DateTimeOffset.Parse("2026-01-01T00:00:00Z");
         var price = await prices.CreatePriceAsync(offer.OfferId, "IR", SalesChannel.Marketplace, amount, "IRR", start, null, cancellationToken);
         await prices.ActivateAsync(price.PriceId, cancellationToken);
         await tax.AssignOfferCategoryAsync(offer.OfferId, taxCategory.CategoryId, cancellationToken);
         await EnsureOfferStockAsync(inventory, inventoryDb, offer.OfferId, locationCode, cancellationToken);
-        return offer;
+        return new OfferReference(
+            offer.OfferId, offer.CatalogVariantId, offer.SellerPartyId,
+            Enum.Parse<SalesChannel>(offer.Channel),
+            Enum.Parse<Tooba.Offer.Contracts.Dtos.OfferStatus>(offer.Status),
+            offer.SellerSku, offer.ReturnPolicyChoice, offer.CustomReturnWindowDays,
+            offer.MinimumOrderQuantity, offer.MaximumOrderQuantity);
     }
 
     private static async Task EnsureOfferStockAsync(

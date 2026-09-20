@@ -1,22 +1,23 @@
-using Tooba.Offer.Contracts.Dtos;
-using Tooba.Offer.Application.Ports;
-using Tooba.Offer.Application;
 using MediatR;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using Tooba.BuildingBlocks;
+using Tooba.Inventory.Contracts;
+using Tooba.Offer.Application.Commands.CreateOffer;
+using Tooba.Offer.Application.Commands.UpdateOffer;
+using Tooba.Offer.Application.Queries.GetOffer;
+using Tooba.Offer.Application.Queries.ListSellerOffers;
+using Tooba.Offer.Contracts;
+using Tooba.Offer.Contracts.Dtos;
+using Tooba.Pricing.Contracts;
 
 namespace Tooba.Offer.Endpoints.Seller;
 
-/// <summary>
-/// Maps seller Offer HTTP routes without business or persistence decisions.
-/// </summary>
+/// <summary>Maps thin seller Offer HTTP routes.</summary>
 public static class OfferSellerEndpoints
 {
-    /// <summary>
-    /// Maps Offer routes on the seller route group.
-    /// </summary>
+    /// <summary>Maps Offer routes on the seller route group.</summary>
     public static void Map(RouteGroupBuilder group)
     {
         ArgumentNullException.ThrowIfNull(group);
@@ -24,181 +25,97 @@ public static class OfferSellerEndpoints
         group.MapPost("/offers", CreateOfferAsync);
         group.MapGet("/offers/{offerId:guid}", GetOfferAsync);
         group.MapPatch("/offers/{offerId:guid}", PatchOfferAsync);
-        group.MapPost("/offers/{offerId:guid}/price", WriteOfferPriceAsync);
-        group.MapPut("/offers/{offerId:guid}/price", WriteOfferPriceAsync);
-        group.MapPost("/offers/{offerId:guid}/inventory", WriteOfferInventoryAsync);
-        group.MapPut("/offers/{offerId:guid}/inventory", WriteOfferInventoryAsync);
+        group.MapMethods("/offers/{offerId:guid}/price", ["POST", "PUT"], WriteOfferPriceAsync);
+        group.MapMethods("/offers/{offerId:guid}/inventory", ["POST", "PUT"], WriteOfferInventoryAsync);
     }
 
     private static IResult ToError(PlatformHttpException ex) =>
         Results.Json(new { title = ex.Title, errorCode = ex.ErrorCode }, statusCode: ex.StatusCode);
 
-    private static IResult ToSemanticError(SemanticException ex, HttpContext httpContext)
+    private static IResult ToSemanticError(SemanticException ex, HttpContext context)
     {
-        var culture = httpContext.Request.Headers.AcceptLanguage.ToString();
-        var title = OfferEndpointLocalizer.Title(ex.Error, culture);
-        return Results.Json(new { title, errorCode = ex.Error.Code }, statusCode: StatusCodes.Status400BadRequest);
+        var status = ex.Error.Code switch
+        {
+            OfferErrorCodes.NotFound => StatusCodes.Status404NotFound,
+            OfferErrorCodes.DuplicateActiveListing or OfferErrorCodes.DuplicateSellerSku
+                or OfferErrorCodes.ArchivedCannotActivate => StatusCodes.Status409Conflict,
+            _ => StatusCodes.Status400BadRequest,
+        };
+        return Results.Json(
+            new { title = OfferEndpointLocalizer.Title(ex.Error, context.Request.Headers.AcceptLanguage), errorCode = ex.Error.Code },
+            statusCode: status);
     }
 
-    private static async Task<IResult> ListOffersAsync(
-        ISender sender,
-        IOfferSellerPanel panel,
-        IOfferSellerAuthorizer authorizer,
-        HttpContext httpContext,
-        CancellationToken cancellationToken)
+    private static async Task<IResult> ExecuteAsync(Func<Task<IResult>> action, HttpContext context)
     {
-        try
+        try { return await action(); }
+        catch (PlatformHttpException ex) { return ToError(ex); }
+        catch (SemanticException ex) { return ToSemanticError(ex, context); }
+        catch (InvalidOperationException ex) when (ex.Message is "offer.not_found")
         {
-            var (_, sellerPartyId) = await authorizer.RequireAuthorizedAsync(httpContext, cancellationToken);
-            await sender.Send(new ListSellerOffersQuery(sellerPartyId), cancellationToken);
-            var items = await panel.ListOffersAsync(sellerPartyId, cancellationToken);
-            return Results.Json(items);
-        }
-        catch (PlatformHttpException ex)
-        {
-            return ToError(ex);
-        }
-        catch (SemanticException ex)
-        {
-            return ToSemanticError(ex, httpContext);
+            return ToSemanticError(new SemanticException(new SemanticError(OfferErrorCodes.NotFound)), context);
         }
     }
 
-    private static async Task<IResult> CreateOfferAsync(
-        SellerOfferCreateRequest body,
-        ISender sender,
-        IOfferSellerPanel panel,
-        IOfferSellerAuthorizer authorizer,
-        HttpContext httpContext,
-        CancellationToken cancellationToken)
-    {
-        try
+    private static Task<IResult> ListOffersAsync(
+        ISender sender, IOfferSellerAuthorizer authorizer, HttpContext context, CancellationToken token) =>
+        ExecuteAsync(async () =>
         {
-            var (_, sellerPartyId) = await authorizer.RequireAuthorizedAsync(httpContext, cancellationToken);
-            var created = await sender.Send(
-                new CreateOfferCommand(body.CatalogVariantId, sellerPartyId, SalesChannel.Marketplace, body.SellerSku),
-                cancellationToken);
-            if (string.Equals(body.Status, nameof(OfferStatus.Active), StringComparison.OrdinalIgnoreCase))
-                await sender.Send(new ActivateOfferCommand(created.OfferId), cancellationToken);
-            if (body.ReturnPolicyChoice is not null || body.CustomReturnWindowDays is not null)
-                await sender.Send(new SetReturnPolicyCommand(created.OfferId, body.ReturnPolicyChoice ?? "Default", body.CustomReturnWindowDays), cancellationToken);
-            var page = await panel.GetOfferAsync(sellerPartyId, created.OfferId, cancellationToken);
-            return Results.Json(page, statusCode: StatusCodes.Status201Created);
-        }
-        catch (PlatformHttpException ex)
-        {
-            return ToError(ex);
-        }
-        catch (SemanticException ex)
-        {
-            return ToSemanticError(ex, httpContext);
-        }
-    }
+            var (_, sellerId) = await authorizer.RequireAuthorizedAsync(context, token);
+            return Results.Json(await sender.Send(new ListSellerOffersQuery(sellerId), token));
+        }, context);
 
-    private static async Task<IResult> GetOfferAsync(
-        Guid offerId,
-        ISender sender,
-        IOfferSellerPanel panel,
-        IOfferSellerAuthorizer authorizer,
-        HttpContext httpContext,
-        CancellationToken cancellationToken)
-    {
-        try
+    private static Task<IResult> CreateOfferAsync(
+        SellerOfferCreateRequest body, ISender sender, IOfferSellerAuthorizer authorizer,
+        HttpContext context, CancellationToken token) =>
+        ExecuteAsync(async () =>
         {
-            var (_, sellerPartyId) = await authorizer.RequireAuthorizedAsync(httpContext, cancellationToken);
-            var offer = await sender.Send(new GetOfferQuery(offerId), cancellationToken);
-            if (offer is null || offer.SellerPartyId != sellerPartyId)
-                return Results.Json(new { title = "Offer not found.", errorCode = "seller.offer.missing" }, statusCode: StatusCodes.Status404NotFound);
-            var page = await panel.GetOfferAsync(sellerPartyId, offerId, cancellationToken);
-            return page is null
-                ? Results.Json(new { title = "Offer not found.", errorCode = "seller.offer.missing" }, statusCode: StatusCodes.Status404NotFound)
-                : Results.Json(page);
-        }
-        catch (PlatformHttpException ex)
-        {
-            return ToError(ex);
-        }
-        catch (SemanticException ex)
-        {
-            return ToSemanticError(ex, httpContext);
-        }
-    }
+            var (_, sellerId) = await authorizer.RequireAuthorizedAsync(context, token);
+            var result = await sender.Send(new CreateOfferCommand(
+                body.CatalogVariantId, sellerId, SalesChannel.Marketplace, body.SellerSku,
+                body.Status, body.ReturnPolicyChoice, body.CustomReturnWindowDays), token);
+            return Results.Json(result, statusCode: StatusCodes.Status201Created);
+        }, context);
 
-    private static async Task<IResult> PatchOfferAsync(
-        Guid offerId,
-        SellerOfferPatchRequest body,
-        ISender sender,
-        IOfferSellerPanel panel,
-        IOfferSellerAuthorizer authorizer,
-        HttpContext httpContext,
-        CancellationToken cancellationToken)
-    {
-        try
+    private static Task<IResult> GetOfferAsync(
+        Guid offerId, ISender sender, IOfferSellerAuthorizer authorizer,
+        HttpContext context, CancellationToken token) =>
+        ExecuteAsync(async () =>
         {
-            var (_, sellerPartyId) = await authorizer.RequireAuthorizedAsync(httpContext, cancellationToken);
-            await sender.Send(new UpdateOfferCommand(offerId, sellerPartyId, body.SellerSku, body.Status), cancellationToken);
-            if (body.ReturnPolicyChoice is not null || body.CustomReturnWindowDays is not null)
-                await sender.Send(new SetReturnPolicyCommand(offerId, body.ReturnPolicyChoice ?? "Default", body.CustomReturnWindowDays), cancellationToken);
-            if (body.MinimumOrderQuantity is not null || body.MaximumOrderQuantity is not null)
-                await sender.Send(new SetOrderQuantityLimitsCommand(offerId, body.MinimumOrderQuantity, body.MaximumOrderQuantity), cancellationToken);
-            var page = await panel.GetOfferAsync(sellerPartyId, offerId, cancellationToken);
-            return Results.Json(page);
-        }
-        catch (PlatformHttpException ex)
-        {
-            return ToError(ex);
-        }
-        catch (SemanticException ex)
-        {
-            return ToSemanticError(ex, httpContext);
-        }
-    }
+            var (_, sellerId) = await authorizer.RequireAuthorizedAsync(context, token);
+            return Results.Json(await sender.Send(new GetOfferQuery(offerId, sellerId), token));
+        }, context);
 
-    private static async Task<IResult> WriteOfferPriceAsync(
-        Guid offerId,
-        SellerOfferPriceWriteRequest body,
-        IOfferSellerPanel panel,
-        IOfferSellerAuthorizer authorizer,
-        HttpContext httpContext,
-        CancellationToken cancellationToken)
-    {
-        try
+    private static Task<IResult> PatchOfferAsync(
+        Guid offerId, SellerOfferPatchRequest body, ISender sender, IOfferSellerAuthorizer authorizer,
+        HttpContext context, CancellationToken token) =>
+        ExecuteAsync(async () =>
         {
-            var (_, sellerPartyId) = await authorizer.RequireAuthorizedAsync(httpContext, cancellationToken);
-            var page = await panel.SetOfferPriceAsync(sellerPartyId, offerId, body, cancellationToken);
-            return Results.Json(page);
-        }
-        catch (PlatformHttpException ex)
-        {
-            return ToError(ex);
-        }
-        catch (SemanticException ex)
-        {
-            return ToSemanticError(ex, httpContext);
-        }
-    }
+            var (_, sellerId) = await authorizer.RequireAuthorizedAsync(context, token);
+            return Results.Json(await sender.Send(new UpdateOfferCommand(
+                offerId, sellerId, body.SellerSku, body.Status, body.ReturnPolicyChoice,
+                body.CustomReturnWindowDays, body.MinimumOrderQuantity, body.MaximumOrderQuantity), token));
+        }, context);
 
-    private static async Task<IResult> WriteOfferInventoryAsync(
-        Guid offerId,
-        SellerOfferInventoryWriteRequest body,
-        IOfferSellerPanel panel,
-        IOfferSellerAuthorizer authorizer,
-        HttpContext httpContext,
-        CancellationToken cancellationToken)
-    {
-        try
+    private static Task<IResult> WriteOfferPriceAsync(
+        Guid offerId, SellerOfferPriceWriteRequest body, ISellerOfferPricingGateway pricing,
+        ISender sender, IOfferSellerAuthorizer authorizer, HttpContext context, CancellationToken token) =>
+        ExecuteAsync(async () =>
         {
-            var (_, sellerPartyId) = await authorizer.RequireAuthorizedAsync(httpContext, cancellationToken);
-            var page = await panel.SetOfferInventoryAsync(sellerPartyId, offerId, body, cancellationToken);
-            return Results.Json(page);
-        }
-        catch (PlatformHttpException ex)
+            var (_, sellerId) = await authorizer.RequireAuthorizedAsync(context, token);
+            await pricing.SetPriceAsync(new SetSellerOfferPrice(
+                offerId, sellerId, body.Amount, body.Currency, body.Market), token);
+            return Results.Json(await sender.Send(new GetOfferQuery(offerId, sellerId), token));
+        }, context);
+
+    private static Task<IResult> WriteOfferInventoryAsync(
+        Guid offerId, SellerOfferInventoryWriteRequest body, ISellerOfferInventoryGateway inventory,
+        ISender sender, IOfferSellerAuthorizer authorizer, HttpContext context, CancellationToken token) =>
+        ExecuteAsync(async () =>
         {
-            return ToError(ex);
-        }
-        catch (SemanticException ex)
-        {
-            return ToSemanticError(ex, httpContext);
-        }
-    }
+            var (_, sellerId) = await authorizer.RequireAuthorizedAsync(context, token);
+            await inventory.SetInventoryAsync(new SetSellerOfferInventory(
+                offerId, sellerId, body.OnHand, body.Reason), token);
+            return Results.Json(await sender.Send(new GetOfferQuery(offerId, sellerId), token));
+        }, context);
 }

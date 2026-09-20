@@ -3,10 +3,10 @@ using Tooba.Offer.Domain.ValueObjects;
 
 namespace Tooba.Offer.Application.Ports;
 
-/// <summary>Guards Offer mutation use cases.</summary>
+/// <summary>Optional mutation authorization boundary for non-seller administrative use cases.</summary>
 public interface IOfferUseCaseGuard
 {
-    /// <summary>Ensures that the current context can mutate offers.</summary>
+    /// <summary>Ensures the current context can mutate offers.</summary>
     Task EnsureCanMutateAsync(CancellationToken cancellationToken);
 }
 
