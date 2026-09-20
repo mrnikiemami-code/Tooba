@@ -3,11 +3,10 @@
     <TargetFramework>net8.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-    <RootNamespace>Tooba.Tax.Domain</RootNamespace>
-    <AssemblyName>Tooba.Tax.Domain</AssemblyName>
+    <RootNamespace>Tooba.Tax.Contracts</RootNamespace>
+    <AssemblyName>Tooba.Tax.Contracts</AssemblyName>
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\..\BuildingBlocks\Tooba.BuildingBlocks\Tooba.BuildingBlocks.csproj" />
-    <ProjectReference Include="..\Tooba.Tax.Contracts\Tooba.Tax.Contracts.csproj" />
   </ItemGroup>
 </Project>

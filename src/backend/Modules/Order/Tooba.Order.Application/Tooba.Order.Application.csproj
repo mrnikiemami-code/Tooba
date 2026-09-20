@@ -12,7 +12,7 @@
     <ProjectReference Include="..\..\Offer\Tooba.Offer.Contracts\Tooba.Offer.Contracts.csproj" />
     <ProjectReference Include="..\..\Pricing\Tooba.Pricing.Application\Tooba.Pricing.Application.csproj" />
     <ProjectReference Include="..\..\Inventory\Tooba.Inventory.Application\Tooba.Inventory.Application.csproj" />
-    <ProjectReference Include="..\..\Tax\Tooba.Tax.Application\Tooba.Tax.Application.csproj" />
+    <ProjectReference Include="..\..\Tax\Tooba.Tax.Contracts\Tooba.Tax.Contracts.csproj" />
     <ProjectReference Include="..\..\Promotion\Tooba.Promotion.Application\Tooba.Promotion.Application.csproj" />
   </ItemGroup>
 </Project>

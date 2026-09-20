@@ -1,6 +1,6 @@
 {
-  "generatedAt": "2026-09-20T06:39:47.909Z",
-  "fileCount": 1728,
+  "generatedAt": "2026-09-20T06:47:32.664Z",
+  "fileCount": 1732,
   "oversizedCount": 55,
   "files": [
     {
@@ -946,12 +946,6 @@
       "classification": "NORMAL"
     },
     {
-      "path": "src/backend/Modules/Tax/Tooba.Tax.Domain/TaxDomain.cs",
-      "language": "cs",
-      "physicalLoc": 484,
-      "classification": "NORMAL"
-    },
-    {
       "path": "src/frontend/app/admin/product-attributes-panel.tsx",
       "language": "tsx",
       "physicalLoc": 482,
@@ -1015,6 +1009,12 @@
       "path": "src/backend/Modules/Identity/Tooba.Identity.Infrastructure/IdentityServices.cs",
       "language": "cs",
       "physicalLoc": 455,
+      "classification": "NORMAL"
+    },
+    {
+      "path": "src/backend/Modules/Tax/Tooba.Tax.Domain/TaxDomain.cs",
+      "language": "cs",
+      "physicalLoc": 453,
       "classification": "NORMAL"
     },
     {
@@ -1342,6 +1342,12 @@
       "classification": "NORMAL"
     },
     {
+      "path": "src/backend/Host/Tooba.Host.Tests/TmarFoundationTests.cs",
+      "language": "cs",
+      "physicalLoc": 387,
+      "classification": "NORMAL"
+    },
+    {
       "path": "src/backend/Host/Tooba.Host/Seller/SellerPanelEndpoints.cs",
       "language": "cs",
       "physicalLoc": 387,
@@ -1429,12 +1435,6 @@
       "path": "docs/evidence/TB-P10-T004/_r5_runtime.mjs",
       "language": "mjs",
       "physicalLoc": 377,
-      "classification": "NORMAL"
-    },
-    {
-      "path": "src/backend/Host/Tooba.Host.Tests/TmarFoundationTests.cs",
-      "language": "cs",
-      "physicalLoc": 376,
       "classification": "NORMAL"
     },
     {
@@ -2770,15 +2770,15 @@
       "classification": "NORMAL"
     },
     {
-      "path": "src/frontend/design-system/app-data-grid/SavedViewsToolbar.tsx",
-      "language": "tsx",
+      "path": "src/backend/Modules/Tax/Tooba.Tax.Infrastructure/TaxDirectory.cs",
+      "language": "cs",
       "physicalLoc": 231,
       "classification": "NORMAL"
     },
     {
-      "path": "src/backend/Modules/Tax/Tooba.Tax.Infrastructure/TaxDirectory.cs",
-      "language": "cs",
-      "physicalLoc": 230,
+      "path": "src/frontend/design-system/app-data-grid/SavedViewsToolbar.tsx",
+      "language": "tsx",
+      "physicalLoc": 231,
       "classification": "NORMAL"
     },
     {
@@ -3406,6 +3406,12 @@
       "classification": "NORMAL"
     },
     {
+      "path": "src/backend/Host/Tooba.Host.Tests/TaxFoundationTests.cs",
+      "language": "cs",
+      "physicalLoc": 189,
+      "classification": "NORMAL"
+    },
+    {
       "path": "src/backend/Host/Tooba.Host/Localization/LocaleAdminEndpoints.cs",
       "language": "cs",
       "physicalLoc": 189,
@@ -3415,12 +3421,6 @@
       "path": "src/backend/Modules/Catalog/Tooba.Catalog.Domain/QuantityPolicy.cs",
       "language": "cs",
       "physicalLoc": 189,
-      "classification": "NORMAL"
-    },
-    {
-      "path": "src/backend/Host/Tooba.Host.Tests/TaxFoundationTests.cs",
-      "language": "cs",
-      "physicalLoc": 188,
       "classification": "NORMAL"
     },
     {
@@ -4990,12 +4990,6 @@
       "classification": "NORMAL"
     },
     {
-      "path": "src/backend/Modules/Tax/Tooba.Tax.Application/TaxContracts.cs",
-      "language": "cs",
-      "physicalLoc": 118,
-      "classification": "NORMAL"
-    },
-    {
       "path": "src/frontend/app/category/[slug]/page.tsx",
       "language": "tsx",
       "physicalLoc": 118,
@@ -6292,6 +6286,12 @@
       "classification": "NORMAL"
     },
     {
+      "path": "src/backend/Modules/Tax/Tooba.Tax.Application/TaxContracts.cs",
+      "language": "cs",
+      "physicalLoc": 77,
+      "classification": "NORMAL"
+    },
+    {
       "path": "docs/evidence/TB-P09-T022/_r2_rebuild.mjs",
       "language": "mjs",
       "physicalLoc": 76,
@@ -7210,6 +7210,12 @@
       "classification": "NORMAL"
     },
     {
+      "path": "src/backend/Host/Tooba.Host.Tests/ContractsW4CharacterizationTests.cs",
+      "language": "cs",
+      "physicalLoc": 55,
+      "classification": "NORMAL"
+    },
+    {
       "path": "src/backend/Host/Tooba.Host/AccessControl/AccessControlDemoSnapshot.cs",
       "language": "cs",
       "physicalLoc": 55,
@@ -7720,6 +7726,12 @@
       "classification": "NORMAL"
     },
     {
+      "path": "src/backend/Modules/Tax/Tooba.Tax.Infrastructure/TaxModule.cs",
+      "language": "cs",
+      "physicalLoc": 47,
+      "classification": "NORMAL"
+    },
+    {
       "path": "src/backend/Modules/Wishlist/Tooba.Wishlist.Infrastructure/Persistence/WishlistDbContext.cs",
       "language": "cs",
       "physicalLoc": 47,
@@ -7828,7 +7840,7 @@
       "classification": "NORMAL"
     },
     {
-      "path": "src/backend/Modules/Tax/Tooba.Tax.Infrastructure/TaxModule.cs",
+      "path": "src/backend/Modules/Tax/Tooba.Tax.Contracts/TaxCalculatorContracts.cs",
       "language": "cs",
       "physicalLoc": 46,
       "classification": "NORMAL"
@@ -8711,6 +8723,12 @@
     },
     {
       "path": "src/backend/Modules/Settlement/Tooba.Settlement.Infrastructure/FailClosedPayoutGateway.cs",
+      "language": "cs",
+      "physicalLoc": 34,
+      "classification": "NORMAL"
+    },
+    {
+      "path": "src/backend/Modules/Tax/Tooba.Tax.Contracts/TaxOutcome.cs",
       "language": "cs",
       "physicalLoc": 34,
       "classification": "NORMAL"
@@ -10356,6 +10374,12 @@
     {
       "path": ".tmp-pg-del/verify-fa.mjs",
       "language": "mjs",
+      "physicalLoc": 5,
+      "classification": "NORMAL"
+    },
+    {
+      "path": "src/backend/Modules/Tax/Tooba.Tax.Domain/TypeForwarders.cs",
+      "language": "cs",
       "physicalLoc": 5,
       "classification": "NORMAL"
     },

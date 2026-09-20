@@ -269,9 +269,20 @@ public sealed class TmarFoundationTests
                 Assert.False(
                     refName.Contains(".Domain", StringComparison.Ordinal)
                     || refName.Contains(".Infrastructure", StringComparison.Ordinal)
+                    || refName.Contains(".Application", StringComparison.Ordinal)
                     || refName.Equals("Tooba.Host", StringComparison.Ordinal)
                     || refName.Equals("Tooba.Persistence", StringComparison.Ordinal),
                     $"{name} must not reference {refName}");
+            }
+
+            // EF packages are forbidden on Contracts projects.
+            foreach (var pkg in xml.Descendants().Where(e => e.Name.LocalName == "PackageReference")
+                         .Select(e => e.Attribute("Include")?.Value)
+                         .Where(v => !string.IsNullOrWhiteSpace(v)))
+            {
+                Assert.False(
+                    pkg!.Contains("EntityFramework", StringComparison.OrdinalIgnoreCase),
+                    $"{name} must not reference EF package {pkg}");
             }
         }
     }

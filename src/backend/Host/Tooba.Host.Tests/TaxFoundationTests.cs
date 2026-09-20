@@ -8,6 +8,7 @@ using Tooba.Order.Domain;
 using Tooba.Persistence;
 using Tooba.Pricing.Domain;
 using Tooba.Tax.Application;
+using Tooba.Tax.Contracts;
 using Tooba.Tax.Domain;
 using Tooba.Tax.Infrastructure;
 using Tooba.Tax.Infrastructure.Persistence;

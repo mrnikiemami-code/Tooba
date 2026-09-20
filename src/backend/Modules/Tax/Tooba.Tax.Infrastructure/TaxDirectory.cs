@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Tooba.Tax.Application;
+using Tooba.Tax.Contracts;
 using Tooba.Tax.Domain;
 using Tooba.Tax.Infrastructure.Persistence;
 

@@ -3,37 +3,6 @@ using Tooba.BuildingBlocks;
 namespace Tooba.Tax.Domain;
 
 /// <summary>
-/// نتیجهٔ محاسبهٔ مالیات. معافیت، نرخ صفر، نبودن قاعده و خطای محاسبه یکی نیستند.
-/// </summary>
-public enum TaxOutcome
-{
-    /// <summary>
-    /// قاعدهٔ درصدی اعمال شد و مبلغ مالیات جدا از قیمت پایه است.
-    /// </summary>
-    Taxable = 0,
-
-    /// <summary>
-    /// معافیت صریح؛ صفر شدن مبلغ به‌معنای نرخ صفر یا نبودن قاعده نیست.
-    /// </summary>
-    Exempt = 1,
-
-    /// <summary>
-    /// قاعدهٔ قابل‌اعمال با نرخ صفر؛ معافیت یا خطای پیکربندی نیست.
-    /// </summary>
-    ZeroRated = 2,
-
-    /// <summary>
-    /// هیچ قاعدهٔ قابل‌اعمالی برای حوزه/بازار/طبقه در زمان محاسبات پیدا نشد.
-    /// </summary>
-    NoApplicableRule = 3,
-
-    /// <summary>
-    /// محاسبه به‌خاطر ابهام قاعده، ارز ناسازگار یا دادهٔ نامعتبر شکست خورد.
-    /// </summary>
-    CalculationError = 4,
-}
-
-/// <summary>
 /// گونهٔ قاعده. نرخ درصد در کد حوزهٔ مالیاتی قفل نمی‌شود.
 /// </summary>
 public enum TaxRuleKind

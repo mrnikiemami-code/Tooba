@@ -6,6 +6,7 @@ using Tooba.BuildingBlocks;
 using Tooba.ModuleContracts;
 using Tooba.Persistence;
 using Tooba.Tax.Application;
+using Tooba.Tax.Contracts;
 using Tooba.Tax.Infrastructure.Persistence;
 
 namespace Tooba.Tax.Infrastructure;

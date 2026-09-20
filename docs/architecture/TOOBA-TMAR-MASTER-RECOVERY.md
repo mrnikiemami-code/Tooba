@@ -125,6 +125,8 @@ TB-TMAR-CONTRACTS-W2
 
 TB-TMAR-CONTRACTS-W3
 
+TB-TMAR-CONTRACTS-W4
+
 Current Product Resume Gate:
 SAFE_WITH_TMAR_PARALLEL
 
@@ -132,7 +134,7 @@ User choice:
 Continue TMAR for now until user explicitly says to return to product feature work.
 
 Next TMAR task:
-TB-TMAR-CONTRACTS-W4
+TB-TMAR-CONTRACTS-W5
 
 Confirmed Architecture Facts
 
@@ -165,6 +167,10 @@ Payment.Infrastructure → Wallet.Application: removed in CONTRACTS-W2 (IWalletO
 Returns.Infrastructure → Wallet.Application: removed in CONTRACTS-W3 (IWalletRefundCreditPort)
 
 Order.Application → Offer.Application: removed in CONTRACTS-W3 (SalesChannel via Offer.Contracts)
+
+Cart.Application → Offer.Application: removed in CONTRACTS-W4 (SalesChannel via Offer.Contracts)
+
+Order.Application → Tax.Application: removed in CONTRACTS-W4 (ITaxCalculator via Tax.Contracts)
 
 Order.Application is a synchronous hub with remaining foreign Application dependencies
 
