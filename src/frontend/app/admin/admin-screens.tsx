@@ -15,9 +15,7 @@ import {
   formatOrderSellerLabel,
   loadAdminDashboard,
   queryAdminOrdersGrid,
-  queryAdminCustomersGrid,
   queryAdminReceiptsGrid,
-  type AdminCustomerRow,
   type AdminDashboard,
   type AdminLoadState,
   type AdminOrderRow,
@@ -29,7 +27,7 @@ import { reservationBadgeClass, reservationStateEnumOptions } from "./admin-rese
 export { AdminOrderDetailScreen } from "./admin-order-detail-screen";
 export { AdminContentScreen } from "./content-list";
 import {
-  ADMIN_ORDER_GRID_VIEW_KEY, createHostSavedViewStore, ADMIN_CUSTOMER_GRID_VIEW_KEY, ADMIN_SETTLEMENT_GRID_VIEW_KEY, ADMIN_PAYOUT_GRID_VIEW_KEY, ADMIN_RECEIPT_GRID_VIEW_KEY,
+  ADMIN_ORDER_GRID_VIEW_KEY, createHostSavedViewStore, ADMIN_SETTLEMENT_GRID_VIEW_KEY, ADMIN_PAYOUT_GRID_VIEW_KEY, ADMIN_RECEIPT_GRID_VIEW_KEY,
 } from "./saved-view-store";
 import {
   formatFulfillmentStatus,
@@ -428,13 +426,6 @@ function createOrderColumns(onOperationCompleted?: () => void): GridColumnDef<Ad
 const orderColumns = createOrderColumns();
 
 
-const customerColumns: GridColumnDef<AdminCustomerRow>[] = [
-  { id: "name", header: "مشتری", accessor: (row) => row.displayName, cell: (row) => <strong>{row.displayName}</strong>, width: 220, minWidth: 150, maxWidth: 300, sticky: "start", filterKind: "text", sortable: true },
-  { id: "contact", header: "راه ارتباطی", accessor: (row) => row.contact, width: 160, minWidth: 120, maxWidth: 220, filterKind: "text" },
-  { id: "orders", header: "تعداد سفارش", accessor: (row) => row.orderCount, cell: (row) => row.orderCount.toLocaleString("fa-IR"), width: 120, minWidth: 95, maxWidth: 150, sortable: true },
-  { id: "activity", header: "آخرین فعالیت", accessor: (row) => row.lastActivityAt ?? "", cell: (row) => formatAdminDate(row.lastActivityAt), width: 130, minWidth: 105, maxWidth: 170, sortable: true },
-  { id: "status", header: "وضعیت", accessor: (row) => row.status, cell: (row) => <Status value={row.status} />, width: 110, minWidth: 90, maxWidth: 150, filterKind: "status" },
-];
 
 
 function Status({ value }: { value: string }) {
@@ -554,18 +545,6 @@ export function AdminReturnDetailScreen({ returnRequestId }: { returnRequestId: 
 }
 
 
-/** فهرست صادقانهٔ خریداران شناخته‌شده؛ نه CRM. */
-export function AdminCustomersScreen() {
-  return (
-    <ServerGridPage
-      title="مشتریان"
-      description="خریداران شناخته‌شده از سفارش‌های زنده"
-      queryFn={queryAdminCustomersGrid}
-      columns={customerColumns}
-      gridId={ADMIN_CUSTOMER_GRID_VIEW_KEY}
-    />
-  );
-}
 
 
 /** جزئیات checkout — re-export از admin-order-detail-screen. */

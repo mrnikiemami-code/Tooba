@@ -38,7 +38,7 @@
     {
       "path": "src/frontend/app/admin/admin-api.ts",
       "language": "ts",
-      "loc": 1107,
+      "loc": 1069,
       "classification": "CRITICAL_GOD_FILE",
       "ownership": "admin"
     },
@@ -66,7 +66,7 @@
     {
       "path": "src/frontend/app/admin/admin-screens.tsx",
       "language": "tsx",
-      "loc": 1057,
+      "loc": 1036,
       "classification": "OVERSIZED_LEGACY",
       "ownership": "admin"
     },

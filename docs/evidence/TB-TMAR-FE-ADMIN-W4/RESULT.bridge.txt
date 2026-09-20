@@ -1,0 +1,90 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+
+BEGIN_TOOBA_WORKER_RESULT
+
+Task-ID: TB-TMAR-FE-ADMIN-W4
+Parent-Task: TB-TMAR-FE-ADMIN-W3
+Channel: tooba-main
+WorkerId: tooba-worker-01
+AgentType: cursor
+Status: PASS
+
+Summary:
+ADMIN-W4 PASS. Migrated admin-customers to features/admin-customers (API+screen+public boundary). admin-api LOC 1107→1069 and export freeze 45→41; admin-screens 1057→1036. Architecture 11/11 + customers characterization 6/6. Admin-Migration-Pattern PROVEN. God-Component-Recovery-Readiness DEFER. Flat-Admin-Recovery-State CONTINUE_FEATURE_MIGRATION. Next: TB-TMAR-FE-ADMIN-W5. Product-Resume-Safety SAFE_WITH_TMAR_PARALLEL.
+
+Program-Name:
+TMAR — Tooba Microservice-Ready Architecture Recovery
+
+Recovery-Start:
+docs/evidence/TB-TMAR-FE-ADMIN-W4/recovery-start.md
+
+Slice-Selection:
+docs/evidence/TB-TMAR-FE-ADMIN-W4/slice-selection.md — admin-customers
+
+Characterization-Tests:
+docs/evidence/TB-TMAR-FE-ADMIN-W4/characterization-tests.md — 6/6 PASS
+
+Migration:
+docs/evidence/TB-TMAR-FE-ADMIN-W4/migration.md
+
+Admin-Api-Shrink:
+docs/evidence/TB-TMAR-FE-ADMIN-W4/admin-api-shrink.md — LOC 1107→1069; exports 45→41
+
+Flat-Admin-Shrink:
+docs/evidence/TB-TMAR-FE-ADMIN-W4/flat-admin-shrink.md — admin-screens 1057→1036
+
+Feature-Boundary:
+docs/evidence/TB-TMAR-FE-ADMIN-W4/feature-boundary.md
+
+Architecture-Guards:
+docs/evidence/TB-TMAR-FE-ADMIN-W4/architecture-guards.md
+
+Client-Boundary:
+docs/evidence/TB-TMAR-FE-ADMIN-W4/client-boundary.md
+
+Test-Discovery:
+docs/evidence/TB-TMAR-FE-ADMIN-W4/test-discovery.md
+
+Legacy-Failures:
+docs/evidence/TB-TMAR-FE-ADMIN-W4/legacy-failures.md — NEW_FAILURES=0
+
+Tests:
+docs/evidence/TB-TMAR-FE-ADMIN-W4/tests.md — architecture 11/11; customers 6/6
+
+God-Component-Recovery-Readiness:
+DEFER
+
+Flat-Admin-Recovery-State:
+CONTINUE_FEATURE_MIGRATION
+
+Admin-Migration-Pattern:
+PROVEN
+
+Capability-Map:
+docs/architecture/TOOBA-CAPABILITY-MAP.md — Last Verified = TB-TMAR-FE-ADMIN-W4
+
+Bootstrap:
+docs/architecture/TOOBA-ARCHITECT-BOOTSTRAP.md — fe-admin-w4 PASS; next FE-ADMIN-W5
+
+Master-Recovery-State:
+docs/architecture/TOOBA-TMAR-MASTER-RECOVERY.md — ADMIN-W4 listed; next FE-ADMIN-W5; SAFE_WITH_TMAR_PARALLEL
+
+Recovery-SoT:
+docs/evidence/TB-TMAR-FE-ADMIN-W4/recovery-sot.md
+
+Git:
+branch main; tip PLACEHOLDER_SHA; pushed origin/main; HEAD==origin/main; 18ca10c9 ancestor; user work preserved
+
+Architectural-Concerns:
+Remaining admin-api capability debt (receipts/orders/dashboard/…); formatters SHARED; giants deferred; Flat CONTINUE_FEATURE_MIGRATION
+
+Blockers:
+(none)
+
+Product-Resume-Safety:
+SAFE_WITH_TMAR_PARALLEL
+
+Next-Recommended-Task:
+TB-TMAR-FE-ADMIN-W5
+
+END_TOOBA_WORKER_RESULT

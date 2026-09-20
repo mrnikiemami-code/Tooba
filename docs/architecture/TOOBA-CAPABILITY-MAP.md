@@ -48,6 +48,7 @@ Evidence files remain the deep-detail source; this map is the quick index.
 | Frontend ADMIN-W1 | admin-promotions → features/admin-promotions; admin-api 1321→1234; admin-screens 1230→1120 | TB-TMAR-FE-ADMIN-W1 |
 | Frontend ADMIN-W2 | admin-reviews → features/admin-reviews; admin-api 1234→1145; exports 55→49; admin-screens 1120→1078; pattern PROVEN | TB-TMAR-FE-ADMIN-W2 |
 | Frontend ADMIN-W3 | admin-sellers → features/admin-sellers; admin-api 1145→1107; exports 49→45; admin-screens 1078→1057 | TB-TMAR-FE-ADMIN-W3 |
-| Next | Continue admin capability migration (customers / receipts candidates) | TB-TMAR-FE-ADMIN-W3 |
+| Frontend ADMIN-W4 | admin-customers → features/admin-customers; admin-api 1107→1069; exports 45→41; admin-screens 1057→1036 | TB-TMAR-FE-ADMIN-W4 |
+| Next | Continue admin capability migration (receipts / dashboard candidates) | TB-TMAR-FE-ADMIN-W4 |
 
-Last Verified Task = TB-TMAR-FE-ADMIN-W3
+Last Verified Task = TB-TMAR-FE-ADMIN-W4

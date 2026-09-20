@@ -22,7 +22,7 @@ Accepted architecture baseline:
 TB-TMAR-ARCH-BASELINE
 
 Current next task:
-TB-TMAR-FE-ADMIN-W4 (continue admin capability migration)
+TB-TMAR-FE-ADMIN-W5 (continue admin capability migration)
 
 Product development rule:
 Foundation (TB-TMAR-FND-001) is ACCEPTED.
@@ -41,6 +41,7 @@ Frontend F1 (TB-TMAR-FE-F1) PASS — FE-FOLDER freezes; canonical test discovery
 Frontend ADMIN-W1 (TB-TMAR-FE-ADMIN-W1) PASS — admin-promotions migrated; admin-api/screens shrink.
 Frontend ADMIN-W2 (TB-TMAR-FE-ADMIN-W2) PASS — admin-reviews migrated; admin-api/screens shrink; Admin-Migration-Pattern PROVEN.
 Frontend ADMIN-W3 (TB-TMAR-FE-ADMIN-W3) PASS — admin-sellers migrated; admin-api/screens shrink; Flat CONTINUE_FEATURE_MIGRATION.
+Frontend ADMIN-W4 (TB-TMAR-FE-ADMIN-W4) PASS — admin-customers migrated; admin-api/screens shrink; Flat CONTINUE_FEATURE_MIGRATION.
 Product-Resume-Safety = SAFE_WITH_TMAR_PARALLEL (Order hub still frozen; do not expand App→App / Infra→App; no NEW cross-context ACID).
 Last Product Task = TB-P10-T022-R21.
 Architecture Baseline = TB-TMAR-ARCH-BASELINE.
@@ -433,7 +434,8 @@ fe-f1 = TB-TMAR-FE-F1 PASS (flat freezes + discovery + admin-languages feature s
 fe-admin-w1 = TB-TMAR-FE-ADMIN-W1 PASS (admin-promotions feature; admin-api shrink)
 fe-admin-w2 = TB-TMAR-FE-ADMIN-W2 PASS (admin-reviews feature; admin-api shrink; pattern PROVEN)
 fe-admin-w3 = TB-TMAR-FE-ADMIN-W3 PASS (admin-sellers feature; admin-api shrink; Flat CONTINUE)
-next task = TB-TMAR-FE-ADMIN-W4 unless Recovery SoT says otherwise
+fe-admin-w4 = TB-TMAR-FE-ADMIN-W4 PASS (admin-customers feature; admin-api shrink; Flat CONTINUE)
+next task = TB-TMAR-FE-ADMIN-W5 unless Recovery SoT says otherwise
 
 primary goal = painless future Microservice migration
 

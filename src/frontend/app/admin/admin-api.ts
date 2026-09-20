@@ -248,15 +248,6 @@ export interface AdminPaymentOps {
 }
 
 
-export interface AdminCustomerRow {
-  id: string;
-  actorUserId: string;
-  displayName: string;
-  contact: string;
-  orderCount: number;
-  lastActivityAt: string | null;
-  status: string;
-}
 
 
 function record(value: unknown): Record<string, unknown> | null {
@@ -932,24 +923,6 @@ function optionalNumber(value: unknown): number | null {
 }
 
 
-/** فهرست خریداران شناخته‌شده از سفارش‌ها را نگاشت می‌کند؛ این مدل CRM نیست. */
-export function mapAdminCustomers(value: unknown): AdminCustomerRow[] {
-  return array(value).flatMap((raw): AdminCustomerRow[] => {
-    const item = record(raw);
-    if (!item) return [];
-    const actorUserId = text(prop(item, "actorUserId", "ActorUserId"), text(prop(item, "customerUserId", "CustomerUserId"), text(prop(item, "customerId", "CustomerId"))));
-    if (!actorUserId) return [];
-    return [{
-      id: actorUserId,
-      actorUserId,
-      displayName: text(prop(item, "displayName", "DisplayName"), text(prop(item, "customerDisplayName", "CustomerDisplayName"), "مشتری")),
-      contact: text(prop(item, "contact", "Contact"), text(prop(item, "contactMobile", "ContactMobile"), "—")),
-      orderCount: number(prop(item, "orderCount", "OrderCount")),
-      lastActivityAt: text(prop(item, "lastActivityAt", "LastActivityAt"), text(prop(item, "lastOrderAt", "LastOrderAt"))) || null,
-      status: text(prop(item, "status", "Status"), "Active"),
-    }];
-  });
-}
 
 
 function actorId(): string {
@@ -1015,10 +988,6 @@ export function loadAdminOrderDetail(checkoutId: string): Promise<AdminResult<Ad
 }
 
 
-/** خریداران شناخته‌شده را از read composition زنده می‌خواند. */
-export function loadAdminCustomers(): Promise<AdminResult<AdminCustomerRow[]>> {
-  return mapped("/v1/admin/customers", (value) => Array.isArray(value) ? mapAdminCustomers(value) : null);
-}
 
 
 
@@ -1086,13 +1055,6 @@ export function queryAdminOrdersGrid(query: GridServerQuery): Promise<AdminGridQ
 }
 
 
-/** Server GridQuery — مشتریان Admin. */
-export function queryAdminCustomersGrid(query: GridServerQuery): Promise<AdminGridQueryResult<AdminCustomerRow>> {
-  return postAdminGridQuery("/v1/admin/customers/query", query, adminHeaders(), (item) => {
-    const rows = mapAdminCustomers([item]);
-    return rows[0] ?? null;
-  });
-}
 
 /** Server GridQuery — دریافت‌های Admin. */
 export function queryAdminReceiptsGrid(query: GridServerQuery): Promise<AdminGridQueryResult<AdminReceiptRow>> {

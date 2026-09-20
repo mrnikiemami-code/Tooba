@@ -141,6 +141,8 @@ TB-TMAR-FE-ADMIN-W2
 
 TB-TMAR-FE-ADMIN-W3
 
+TB-TMAR-FE-ADMIN-W4
+
 Current Product Resume Gate:
 SAFE_WITH_TMAR_PARALLEL
 
@@ -148,7 +150,10 @@ User choice:
 Continue TMAR for now until user explicitly says to return to product feature work.
 
 Next TMAR task:
-TB-TMAR-FE-ADMIN-W4
+TB-TMAR-FE-ADMIN-W5
+
+Frontend ADMIN-W4:
+TB-TMAR-FE-ADMIN-W4 — admin-customers migrated; admin-api 1107→1069; admin-screens 1057→1036. Evidence: `docs/evidence/TB-TMAR-FE-ADMIN-W4/`.
 
 Frontend ADMIN-W3:
 TB-TMAR-FE-ADMIN-W3 — admin-sellers migrated; admin-api 1145→1107; admin-screens 1078→1057. Evidence: `docs/evidence/TB-TMAR-FE-ADMIN-W3/`.

@@ -7,7 +7,6 @@ import {
   formatAdminPaymentReference,
   formatAdminStatus,
   loadAdminOrders,
-  mapAdminCustomers,
   mapAdminDashboard,
   mapAdminOrder,
   formatOrderSellerLabel,
@@ -26,8 +25,6 @@ test("maps live dashboard, order, seller and customer DTOs", () => {
   assert.equal(formatOrderSellerLabel({ sellerCount: 1, sellerDisplayNames: "فروشگاه آرمان" }), "فروشگاه آرمان");
   assert.equal(formatOrderSellerLabel({ sellerCount: 3, sellerDisplayNames: "3 فروشنده" }), "۳ فروشنده");
   assert.equal(order?.lineCount, 3);
-
-  assert.equal(mapAdminCustomers([{ ActorUserId: "u1", DisplayName: "مینا", OrderCount: 4, LastOrderAt: "2026-08-25T00:00:00Z" }])[0]?.orderCount, 4);
 });
 
 test("maps admin order detail seller snapshots", () => {
