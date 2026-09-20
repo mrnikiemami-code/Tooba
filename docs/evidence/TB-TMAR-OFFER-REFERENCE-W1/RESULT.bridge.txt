@@ -1,4 +1,4 @@
-PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+﻿PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
 
 BEGIN_TOOBA_WORKER_RESULT
 
@@ -97,7 +97,7 @@ Recovery-SoT:
 docs/evidence/TB-TMAR-OFFER-REFERENCE-W1/recovery-sot.md
 
 Git:
-tip PLACEHOLDER_SHA
+tip a9e6ee4f1aa69cf4e6a5db17a95f0f8c42264f9f
 
 Architectural-Concerns:
 Host SellerPanelComposer remains IOfferSellerPanel adapter for Catalog/Pricing/Inventory/Tax enrichment reads until those Contracts cover seller-panel presentation. Offer.Infrastructure still references Catalog.Application + Party.Application lookups (grandfathered).
