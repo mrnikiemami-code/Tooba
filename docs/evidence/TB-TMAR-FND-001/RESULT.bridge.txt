@@ -1,0 +1,81 @@
+﻿PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+
+BEGIN_TOOBA_WORKER_RESULT
+
+Task-ID: TB-TMAR-FND-001
+Parent-Task: TB-TMAR-ARCH-BASELINE
+Channel: tooba-main
+WorkerId: tooba-worker-01
+AgentType: cursor
+Status: PASS
+
+Summary:
+TMAR Foundation only: MediatR exactly 12.5.0 + FluentValidation pipeline in BuildingBlocks; IClock (SystemUtcClock/FixedClock); IIdGenerator (UuidV7/Fixed); SemanticError; ValidationBehavior+LoggingBehavior; Host AddToobaCqrsFoundation; test-only FoundationPing proof; architecture freeze baselines for Host writes / App→App / IMemoryCache; canonical docs/architecture/TMAR-architecture-locks.md. No mass CQRS migration, Host cleanup, Contracts projects, Domain moves, folder moves, or Redis. Tests: 15/15 PASS (TmarFoundation + ArchitectureBoundary).
+
+Program-Name:
+TMAR — Tooba Microservice-Ready Architecture Recovery
+
+Applicable-Locks:
+docs/architecture/TMAR-architecture-locks.md (ARCH-*); existing LOCK-SF-* intact
+
+Recovery-Start:
+docs/evidence/TB-TMAR-FND-001/recovery-start.md
+
+Git-Baseline:
+docs/evidence/TB-TMAR-FND-001/recovery-start.md — exact HEAD/origin recorded; tip undefined eliminated
+
+MediatR:
+docs/evidence/TB-TMAR-FND-001/mediatr-install.md — 12.5.0
+
+FluentValidation:
+docs/evidence/TB-TMAR-FND-001/validation-foundation.md
+
+Clock-Foundation:
+docs/evidence/TB-TMAR-FND-001/clock-foundation.md
+
+Id-Foundation:
+docs/evidence/TB-TMAR-FND-001/id-foundation.md
+
+Error-Foundation:
+docs/evidence/TB-TMAR-FND-001/error-foundation.md
+
+Pipeline-Foundation:
+docs/evidence/TB-TMAR-FND-001/pipeline-foundation.md
+
+MediatR-Proof:
+docs/evidence/TB-TMAR-FND-001/mediatr-proof.md
+
+Architecture-Freeze-Guards:
+docs/evidence/TB-TMAR-FND-001/architecture-freeze-guards.md
+
+Legacy-Debt-Baseline:
+src/backend/Host/Tooba.Host.Tests/Baselines/*.json
+
+Tests:
+docs/evidence/TB-TMAR-FND-001/tests.md — 15 passed
+
+Capability-Map:
+docs/architecture/TOOBA-CAPABILITY-MAP.md — TMAR Foundation row; Last Verified = TB-TMAR-FND-001
+
+Recovery-SoT:
+docs/evidence/TB-TMAR-FND-001/recovery-sot.md
+
+AntiPattern-Scan:
+docs/evidence/TB-TMAR-FND-001/antipattern-scan.md
+
+Changed-Files:
+BuildingBlocks TmarFoundation.cs + csproj packages; Host Program.cs AddToobaCqrsFoundation; Host.Tests TmarFoundationTests + Baselines; TMAR-architecture-locks.md; capability map; evidence/*
+
+Git:
+branch main; tip b1afc45667edcd12471a51a5861f9e6b534cd557; pushed origin/main; HEAD==origin/main; 18ca10c9 ancestor
+
+Architectural-Concerns:
+Transaction MediatR behavior deferred; Domain UuidV7/clock mass replace deferred; Host write removal next wave.
+
+Blockers:
+(none)
+
+Next-Recommended-Task:
+TB-TMAR-HOST-W1 — Host dangerous-write removal (slice 1)
+
+END_TOOBA_WORKER_RESULT

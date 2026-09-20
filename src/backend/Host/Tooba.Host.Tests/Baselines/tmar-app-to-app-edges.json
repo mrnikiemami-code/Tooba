@@ -1,0 +1,21 @@
+{
+  "rule": "AppToApp",
+  "edges": [
+    "Tooba.Cart.Application -> Tooba.Catalog.Application",
+    "Tooba.Cart.Application -> Tooba.Inventory.Application",
+    "Tooba.Cart.Application -> Tooba.Offer.Application",
+    "Tooba.Cart.Application -> Tooba.Pricing.Application",
+    "Tooba.Inventory.Application -> Tooba.Catalog.Application",
+    "Tooba.Inventory.Application -> Tooba.Offer.Application",
+    "Tooba.Order.Application -> Tooba.Cart.Application",
+    "Tooba.Order.Application -> Tooba.Inventory.Application",
+    "Tooba.Order.Application -> Tooba.Offer.Application",
+    "Tooba.Order.Application -> Tooba.Pricing.Application",
+    "Tooba.Order.Application -> Tooba.Promotion.Application",
+    "Tooba.Order.Application -> Tooba.Tax.Application",
+    "Tooba.Pricing.Application -> Tooba.Offer.Application",
+    "Tooba.Promotion.Application -> Tooba.Inventory.Application",
+    "Tooba.Promotion.Application -> Tooba.Offer.Application",
+    "Tooba.Promotion.Application -> Tooba.Pricing.Application"
+  ]
+}

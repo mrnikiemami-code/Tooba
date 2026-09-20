@@ -1,0 +1,11 @@
+{
+  "rule": "HostIMemoryCache",
+  "files": [
+    "Admin/StoreLandingPageComposer.cs",
+    "Admin/StoreMenuComposer.cs",
+    "CacheRegistration.cs",
+    "MemoryToobaCache.cs",
+    "Program.cs",
+    "Storefront/StoreAppearanceProjection.cs"
+  ]
+}
