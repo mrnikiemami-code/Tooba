@@ -1,12 +1,13 @@
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using FluentValidation;
 using Tooba.BuildingBlocks;
 using Tooba.Catalog.Application;
 using Tooba.Catalog.Infrastructure.Persistence;
 using Tooba.ModuleContracts;
 using Tooba.Persistence;
+using Microsoft.EntityFrameworkCore;
 
 namespace Tooba.Catalog.Infrastructure;
 
@@ -31,7 +32,9 @@ public sealed class CatalogModule : IToobaModule
         services.AddScoped<ICatalogActorContext, CatalogActorContext>();
         services.AddScoped<ICatalogDirectory, CatalogDirectory>();
         services.AddScoped<ICatalogLookupGateway>(sp => (CatalogDirectory)sp.GetRequiredService<ICatalogDirectory>());
+        services.AddScoped<IStoreLandingPageDirectory, StoreLandingPageDirectory>();
         services.AddSingleton<IQuantityNormalizer, QuantityNormalizer>();
+        services.AddValidatorsFromAssembly(typeof(CreateStoreLandingPageCommand).Assembly);
         services.AddDbContext<CatalogDbContext>((sp, options) =>
         {
             var connectionString = ToobaNpgsql.ResolveForContext(

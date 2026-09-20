@@ -26,7 +26,6 @@
     "Admin/ReservationPolicyAdminEndpoints.cs",
     "Admin/ShippingServiceEndpoints.cs",
     "Admin/StoreAppearanceSettingsComposer.cs",
-    "Admin/StoreLandingPageComposer.cs",
     "Admin/StoreMenuComposer.cs",
     "Admin/UnitOfMeasureEndpoints.cs",
     "Customer/CustomerPanelComposer.cs",

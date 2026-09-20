@@ -87,19 +87,6 @@ public sealed class StoreLandingPageTests
         Assert.Equal("landing.page.missing", missing.ErrorCode);
     }
 
-    private static StoreLandingPageComposer CreateComposer(out CatalogDbContext catalog)
-    {
-        catalog = new CatalogDbContext(new DbContextOptionsBuilder<CatalogDbContext>()
-            .UseInMemoryDatabase(Guid.NewGuid().ToString("N"))
-            .Options);
-        var context = OutboxTestContextFactory.SingleStore("store-a", "conn-a");
-        return new StoreLandingPageComposer(catalog, new FixedCommerce(context), new MemoryCache(new MemoryCacheOptions()), new EmptyMerchandisingCampaignQuery());
-    }
-
-    private sealed class FixedCommerce : ICurrentCommerceContext
-    {
-        public FixedCommerce(CommerceContext current) => Current = current;
-
-        public CommerceContext? Current { get; }
-    }
+    private static StoreLandingPageComposer CreateComposer(out CatalogDbContext catalog) =>
+        StoreLandingPageComposerTestFactory.Create(out catalog);
 }

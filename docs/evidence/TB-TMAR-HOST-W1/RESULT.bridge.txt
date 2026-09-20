@@ -1,0 +1,84 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+
+BEGIN_TOOBA_WORKER_RESULT
+
+Task-ID: TB-TMAR-HOST-W1
+Parent-Task: TB-TMAR-FND-001
+Channel: tooba-main
+WorkerId: tooba-worker-01
+AgentType: cursor
+Status: PASS
+
+Summary:
+Host Wave 1 Slice 1 only: Store Landing/Page Composition direct Host writes removed. Flow is Endpoint/Composer → ISender → Command → Handler → IStoreLandingPageDirectory → CatalogDbContext. SetHome transaction moved into Directory (same IsRelational semantics). FluentValidation on Create. New code uses IClock. Host composer is thin dispatch + read composition; tmar-host-write-files.json SHRINK (removed StoreLandingPageComposer). No Domain ownership move, Contracts wave, folder move, or Redis. Focused tests 42/42 PASS.
+
+Program-Name:
+TMAR — Tooba Microservice-Ready Architecture Recovery
+
+Applicable-Locks:
+docs/architecture/TMAR-architecture-locks.md; docs/architecture/TOOBA-ARCHITECT-BOOTSTRAP.md
+
+Recovery-Start:
+docs/evidence/TB-TMAR-HOST-W1/recovery-start.md
+
+Bootstrap:
+docs/evidence/TB-TMAR-HOST-W1/bootstrap.md — external bootstrap copied; current-state updated
+
+Scope:
+docs/evidence/TB-TMAR-HOST-W1/scope.md — StoreLandingPageComposer write methods only
+
+Before-Write-Path:
+Host StoreLandingPageComposer → CatalogDbContext Add/Remove/SaveChanges/BeginTransaction
+
+After-Write-Path:
+Host StoreLandingPageComposer → ISender → Command → Handler → StoreLandingPageDirectory → CatalogDbContext
+
+Commands:
+Create/Update/SetStatus/SetHome/AddSection/ReplaceComposition/UpdateSection/SetSectionEnabled/Reorder/DeletePage/DeleteSection (Catalog.Application)
+
+Handlers:
+StoreLandingPageWriteHandlers.cs (Catalog.Infrastructure) → IStoreLandingPageDirectory
+
+Validation:
+CreateStoreLandingPageCommandValidator (FluentValidation); existing PlatformHttpException semantic codes preserved in Directory
+
+Transaction-Boundary:
+docs/evidence/TB-TMAR-HOST-W1/transaction-boundary.md — SetHome tx owned by Directory
+
+Error-Localization:
+No new Domain localized strings; legacy PlatformHttpException codes unchanged in slice
+
+Clock-Id:
+Directory uses IClock.UtcNow for orchestration time; no new Guid.NewGuid/DateTime.UtcNow in protected Application paths for this slice
+
+Host-Debt-Removed:
+StoreLandingPageComposer no longer owns business SaveChanges/transaction/entity writes
+
+Architecture-Guards:
+docs/evidence/TB-TMAR-HOST-W1/architecture-guards.md — baseline shrink removes Admin/StoreLandingPageComposer.cs
+
+Tests:
+docs/evidence/TB-TMAR-HOST-W1/tests.md — 42 passed (Landing + TmarFoundation + ArchitectureBoundary + StorePagesFoundation)
+
+Capability-Map:
+docs/architecture/TOOBA-CAPABILITY-MAP.md — Host Wave 1 Slice 1 row; Last Verified = TB-TMAR-HOST-W1
+
+Recovery-SoT:
+docs/evidence/TB-TMAR-HOST-W1/recovery-sot.md
+
+Changed-Files:
+Catalog Application StoreLandingPageWriteContracts; Infrastructure Directory+Handlers+CatalogModule; BuildingBlocks AddToobaCqrsFoundation assemblies; Host Composer/Program/MerchandisingStoreLandingReferenceGate; Host.Tests factory+CreateComposer+baseline shrink; bootstrap/capability/evidence
+
+Git:
+branch main; tip TBD_AFTER_PUSH; pushed origin/main; HEAD==origin/main; 18ca10c9 ancestor
+
+Architectural-Concerns:
+StoreLandingPage* remains temporarily in Catalog (documented); campaign gate Host adapter transitional; remaining ~52 Host write sites deferred
+
+Blockers:
+(none)
+
+Next-Recommended-Task:
+TB-TMAR-HOST-W2 — next Host dangerous-write slice from host-cleanup-waves.md (Architect chooses exact target)
+
+END_TOOBA_WORKER_RESULT

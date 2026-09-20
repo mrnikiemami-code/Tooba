@@ -33,6 +33,7 @@ Evidence files remain the deep-detail source; this map is the quick index.
 | Debt | Host DbContext writes/decisions; Contracts live in Application; Catalog convenience storefront/settings/template types; IMemoryCache bypasses; Domain localized errors; legacy Directories | TB-TMAR-ARCH-BASELINE / FND-001 baselined |
 | Target | Modular Monolith now → low-friction microservices; CQRS + MediatR 12.5.0; per-module Contracts; Host transport-only; strangler not Big Bang | TB-TMAR-ARCH-BASELINE |
 | Foundation | MediatR 12.5.0 + FluentValidation pipeline; IClock; IIdGenerator; SemanticError; freeze guards (Host write / App→App / IMemoryCache) | TB-TMAR-FND-001 |
-| Next | Host dangerous-write removal (TB-TMAR-HOST-W1) | TB-TMAR-FND-001 |
+| Host Wave 1 Slice 1 | Store Landing/Page Composition writes behind CQRS (ISender→Command→Handler→Directory); Host no longer owns SaveChanges/transaction for this slice; baseline shrunk; no BC ownership move | TB-TMAR-HOST-W1 |
+| Next | Continue Host dangerous-write removal (next slice from audit) | TB-TMAR-HOST-W1 |
 
-Last Verified Task = TB-TMAR-FND-001
+Last Verified Task = TB-TMAR-HOST-W1

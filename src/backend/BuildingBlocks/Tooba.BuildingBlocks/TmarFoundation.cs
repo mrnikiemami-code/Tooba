@@ -191,12 +191,23 @@ public static class ToobaCqrsRegistration
     /// <summary>
     /// MediatR 12.5.0، FluentValidation، IClock، IIdGenerator و pipelineهای validation/logging را ثبت می‌کند.
     /// </summary>
-    public static IServiceCollection AddToobaCqrsFoundation(this IServiceCollection services)
+    /// <param name="services">DI.</param>
+    /// <param name="additionalHandlerAssemblies">اسمبلی Handler ماژول‌ها.</param>
+    public static IServiceCollection AddToobaCqrsFoundation(
+        this IServiceCollection services,
+        params System.Reflection.Assembly[] additionalHandlerAssemblies)
     {
         services.AddSingleton<IClock, SystemUtcClock>();
         services.AddSingleton<IIdGenerator, UuidV7IdGenerator>();
         services.AddValidatorsFromAssembly(typeof(FoundationPingCommand).Assembly);
-        services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(FoundationPingCommand).Assembly));
+        services.AddMediatR(cfg =>
+        {
+            cfg.RegisterServicesFromAssembly(typeof(FoundationPingCommand).Assembly);
+            foreach (var assembly in additionalHandlerAssemblies)
+            {
+                cfg.RegisterServicesFromAssembly(assembly);
+            }
+        });
         services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
         services.AddTransient(typeof(IPipelineBehavior<,>), typeof(LoggingBehavior<,>));
         return services;

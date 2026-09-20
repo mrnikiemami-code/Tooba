@@ -1,6 +1,8 @@
 using Microsoft.EntityFrameworkCore;
+using MediatR;
 using Microsoft.Extensions.Caching.Memory;
 using Tooba.BuildingBlocks;
+using Tooba.Catalog.Application;
 using Tooba.Catalog.Domain;
 using Tooba.Catalog.Infrastructure.Persistence;
 using Tooba.Content.Domain;
@@ -21,19 +23,22 @@ public sealed class StoreLandingPageComposer
     private readonly IMemoryCache _cache;
     private readonly StorefrontComposer? _storefront;
     private readonly IMerchandisingCampaignQuery _campaignQuery;
+    private readonly ISender _sender;
 
-    /// <summary>نویسنده صفحه را به Catalog همین Store وصل می‌کند.</summary>
+    /// <summary>خواندن از Catalog؛ نوشتن از طریق ISender → Command.</summary>
     public StoreLandingPageComposer(
         CatalogDbContext catalog,
         ICurrentCommerceContext commerce,
         IMemoryCache cache,
         IMerchandisingCampaignQuery campaignQuery,
+        ISender sender,
         StorefrontComposer? storefront = null)
     {
         _catalog = catalog;
         _commerce = commerce;
         _cache = cache;
         _campaignQuery = campaignQuery;
+        _sender = sender;
         _storefront = storefront;
     }
 
@@ -60,25 +65,9 @@ public sealed class StoreLandingPageComposer
     /// <summary>صفحهٔ پیش‌نویس می‌سازد.</summary>
     public async Task<StoreLandingPageAdminView> CreateAsync(StoreLandingPageWriteRequest body, CancellationToken cancellationToken)
     {
-        var now = DateTimeOffset.UtcNow;
-        var page = StoreLandingPage.Create(
-            body.Locale,
-            body.Slug,
-            body.Title,
-            body.SeoTitle,
-            body.SeoDescription,
-            now,
-            body.PageType,
-            body.RobotsIndex,
-            body.RobotsFollow,
-            body.CanonicalUrl,
-            body.OgTitle,
-            body.OgDescription,
-            body.OgImageUrl,
-            body.PrimaryH1);
-        await EnsureUniqueSlugAsync(page.Locale, page.Slug, exceptPageId: null, cancellationToken);
-        _catalog.StoreLandingPages.Add(page);
-        await _catalog.SaveChangesAsync(cancellationToken);
+        var page = await _sender.Send(
+            new CreateStoreLandingPageCommand(ToWriteModel(body)),
+            cancellationToken);
         Invalidate(page.Locale, page.Slug);
         return ToAdmin(page);
     }
@@ -86,24 +75,12 @@ public sealed class StoreLandingPageComposer
     /// <summary>صفحه را به‌روز می‌کند.</summary>
     public async Task<StoreLandingPageAdminView> UpdateAsync(Guid pageId, StoreLandingPageWriteRequest body, CancellationToken cancellationToken)
     {
-        var page = await RequirePageAsync(pageId, cancellationToken);
-        var previousLocale = page.Locale;
-        var previousSlug = page.Slug;
-        page.Update(
-            body.Slug,
-            body.Title,
-            body.SeoTitle,
-            body.SeoDescription,
-            DateTimeOffset.UtcNow,
-            body.RobotsIndex,
-            body.RobotsFollow,
-            body.CanonicalUrl,
-            body.OgTitle,
-            body.OgDescription,
-            body.OgImageUrl,
-            body.PrimaryH1);
-        await EnsureUniqueSlugAsync(page.Locale, page.Slug, page.PageId, cancellationToken);
-        await _catalog.SaveChangesAsync(cancellationToken);
+        var existing = await RequirePageAsync(pageId, cancellationToken);
+        var previousLocale = existing.Locale;
+        var previousSlug = existing.Slug;
+        var page = await _sender.Send(
+            new UpdateStoreLandingPageCommand(pageId, ToWriteModel(body)),
+            cancellationToken);
         Invalidate(previousLocale, previousSlug);
         Invalidate(page.Locale, page.Slug);
         return ToAdmin(page);
@@ -112,22 +89,9 @@ public sealed class StoreLandingPageComposer
     /// <summary>انتشار یا برگشت به پیش‌نویس.</summary>
     public async Task<StoreLandingPageAdminView> SetStatusAsync(Guid pageId, string? status, CancellationToken cancellationToken)
     {
-        var page = await RequirePageAsync(pageId, cancellationToken);
-        if (string.Equals(status, "Published", StringComparison.OrdinalIgnoreCase))
-        {
-            page.Publish(DateTimeOffset.UtcNow);
-        }
-        else if (string.Equals(status, "Draft", StringComparison.OrdinalIgnoreCase))
-        {
-            page.Unpublish(DateTimeOffset.UtcNow);
-            await ClearHomeIfMatchesAsync(page.PageId, cancellationToken);
-        }
-        else
-        {
-            throw new PlatformHttpException(400, "وضعیت انتشار معتبر نیست.", "landing.status.invalid");
-        }
-
-        await _catalog.SaveChangesAsync(cancellationToken);
+        var page = await _sender.Send(
+            new SetStoreLandingPageStatusCommand(pageId, status),
+            cancellationToken);
         Invalidate(page.Locale, page.Slug);
         return ToAdmin(page);
     }
@@ -135,65 +99,17 @@ public sealed class StoreLandingPageComposer
     /// <summary>ارجاع خانه را اتمیک روی همین Store می‌نویسد؛ نوع صفحه را هم‌زمان عوض می‌کند.</summary>
     public async Task<StoreHomeSelectionView> SetHomeAsync(Guid? pageId, CancellationToken cancellationToken)
     {
-        var now = DateTimeOffset.UtcNow;
-        var useTx = _catalog.Database.IsRelational();
-        await using var tx = useTx
-            ? await _catalog.Database.BeginTransactionAsync(cancellationToken)
-            : null;
-        var settings = await RequireSettingsAsync(now, cancellationToken);
-
-        if (settings.HomePageId is { } previousHomeId)
+        var result = await _sender.Send(new SetStoreHomePageCommand(pageId), cancellationToken);
+        if (result.InvalidateLocale is not null && result.InvalidateSlug is not null)
         {
-            var previous = await _catalog.StoreLandingPages
-                .SingleOrDefaultAsync(x => x.PageId == previousHomeId, cancellationToken);
-            if (previous is not null && previous.PageType == StorePageType.Home)
-            {
-                previous.SetPageType(StorePageType.Landing, now);
-                Invalidate(previous.Locale, previous.Slug);
-            }
+            Invalidate(result.InvalidateLocale, result.InvalidateSlug);
         }
 
-            if (pageId is null)
-            {
-                // بازگردانی خانهٔ پیش‌فرض: home_page_id=null → StorefrontShopeivaHome canonical در FE.
-                // Catalog/Template و Store Pages دیگر لمس نمی‌شوند.
-                settings.SetHomePage(null, now);
-            }
-        else
-        {
-            var page = await RequirePageAsync(pageId.Value, cancellationToken);
-            if (!page.IsEligibleHome)
-            {
-                throw new PlatformHttpException(400, "فقط صفحهٔ فرود منتشرشده را می‌توان خانه کرد.", "landing.home.ineligible");
-            }
-
-            page.SetPageType(StorePageType.Home, now);
-            settings.SetHomePage(page.PageId, now);
-        }
-
-        await _catalog.SaveChangesAsync(cancellationToken);
-        if (tx is not null)
-        {
-            await tx.CommitAsync(cancellationToken);
-        }
-
-        // پس از Persist، کش عمومی صفحه/خانه را خالی کن تا PageType جدید دیده شود.
-        if (settings.HomePageId is { } activeHomeId)
-        {
-            var active = await _catalog.StoreLandingPages.AsNoTracking()
-                .SingleOrDefaultAsync(x => x.PageId == activeHomeId, cancellationToken);
-            if (active is not null)
-            {
-                Invalidate(active.Locale, active.Slug);
-            }
-        }
-        else if (pageId is null)
+        if (result.InvalidateHome)
         {
             InvalidateHome();
         }
 
-        // demoted previous already invalidated above when type flipped
-        InvalidateHome();
         return await GetHomeSelectionAsync(cancellationToken);
     }
 
@@ -259,37 +175,9 @@ public sealed class StoreLandingPageComposer
     public async Task<StoreLandingPageSectionAdminView> AddSectionAsync(Guid pageId, StoreLandingPageSectionWriteRequest body, CancellationToken cancellationToken)
     {
         var page = await RequirePageAsync(pageId, cancellationToken);
-        var existing = await LoadSectionsAsync(pageId, cancellationToken);
-        if (existing.Count >= StoreLandingPageSectionRegistry.MaxSectionsPerPage)
-        {
-            throw new PlatformHttpException(400, "تعداد بخش‌های صفحه به سقف رسیده است.", "landing.section.limit");
-        }
-
-        var now = DateTimeOffset.UtcNow;
-        var insertAt = body.InsertAt;
-        int targetOrder;
-        if (insertAt is null)
-        {
-            targetOrder = existing.Count == 0 ? 0 : existing.Max(x => x.SortOrder) + 1;
-        }
-        else
-        {
-            if (insertAt < 0 || insertAt > existing.Count)
-            {
-                throw new PlatformHttpException(400, "موقعیت درج بخش نامعتبر است.", "landing.section.insert.invalid");
-            }
-
-            targetOrder = insertAt.Value;
-            for (var i = existing.Count - 1; i >= targetOrder; i--)
-            {
-                existing[i].SetSortOrder(i + 1, now);
-            }
-        }
-
-        var section = StoreLandingPageSection.Create(pageId, body.SectionType, body.ConfigJson ?? body.Config, targetOrder, now);
-        await EnsureReferencedEntitiesAsync(section, cancellationToken);
-        _catalog.StoreLandingPageSections.Add(section);
-        await _catalog.SaveChangesAsync(cancellationToken);
+        var section = await _sender.Send(
+            new AddStoreLandingPageSectionCommand(pageId, ToSectionModel(body)),
+            cancellationToken);
         Invalidate(page.Locale, page.Slug);
         return ToAdminSection(section);
     }
@@ -301,36 +189,10 @@ public sealed class StoreLandingPageComposer
         CancellationToken cancellationToken)
     {
         var page = await RequirePageAsync(pageId, cancellationToken);
-        var payloads = sections ?? [];
-        if (payloads.Count > StoreLandingPageSectionRegistry.MaxSectionsPerPage)
-        {
-            throw new PlatformHttpException(400, "تعداد بخش‌های صفحه به سقف رسیده است.", "landing.section.limit");
-        }
-
-        var existing = await LoadSectionsAsync(pageId, cancellationToken);
-        if (existing.Count > 0)
-        {
-            _catalog.StoreLandingPageSections.RemoveRange(existing);
-            await _catalog.SaveChangesAsync(cancellationToken);
-        }
-
-        var now = DateTimeOffset.UtcNow;
-        var created = new List<StoreLandingPageSection>(payloads.Count);
-        for (var i = 0; i < payloads.Count; i++)
-        {
-            var body = payloads[i];
-            var section = StoreLandingPageSection.Create(pageId, body.SectionType, body.ConfigJson ?? body.Config, i, now);
-            if (body.IsEnabled is { } enabled)
-            {
-                section.SetEnabled(enabled, now);
-            }
-
-            await EnsureReferencedEntitiesAsync(section, cancellationToken);
-            _catalog.StoreLandingPageSections.Add(section);
-            created.Add(section);
-        }
-
-        await _catalog.SaveChangesAsync(cancellationToken);
+        var payloads = (sections ?? []).Select(ToSectionModel).ToList();
+        var created = await _sender.Send(
+            new ReplaceStoreLandingPageCompositionCommand(pageId, payloads),
+            cancellationToken);
         Invalidate(page.Locale, page.Slug);
         return created.OrderBy(x => x.SortOrder).Select(ToAdminSection).ToList();
     }
@@ -339,15 +201,9 @@ public sealed class StoreLandingPageComposer
     public async Task<StoreLandingPageSectionAdminView> UpdateSectionAsync(Guid pageId, Guid sectionId, StoreLandingPageSectionWriteRequest body, CancellationToken cancellationToken)
     {
         var page = await RequirePageAsync(pageId, cancellationToken);
-        var section = await RequireSectionAsync(pageId, sectionId, cancellationToken);
-        section.UpdateConfig(body.ConfigJson ?? body.Config, DateTimeOffset.UtcNow);
-        if (body.IsEnabled is { } enabled)
-        {
-            section.SetEnabled(enabled, DateTimeOffset.UtcNow);
-        }
-
-        await EnsureReferencedEntitiesAsync(section, cancellationToken);
-        await _catalog.SaveChangesAsync(cancellationToken);
+        var section = await _sender.Send(
+            new UpdateStoreLandingPageSectionCommand(pageId, sectionId, ToSectionModel(body)),
+            cancellationToken);
         Invalidate(page.Locale, page.Slug);
         return ToAdminSection(section);
     }
@@ -356,9 +212,9 @@ public sealed class StoreLandingPageComposer
     public async Task<StoreLandingPageSectionAdminView> SetSectionEnabledAsync(Guid pageId, Guid sectionId, bool enabled, CancellationToken cancellationToken)
     {
         var page = await RequirePageAsync(pageId, cancellationToken);
-        var section = await RequireSectionAsync(pageId, sectionId, cancellationToken);
-        section.SetEnabled(enabled, DateTimeOffset.UtcNow);
-        await _catalog.SaveChangesAsync(cancellationToken);
+        var section = await _sender.Send(
+            new SetStoreLandingPageSectionEnabledCommand(pageId, sectionId, enabled),
+            cancellationToken);
         Invalidate(page.Locale, page.Slug);
         return ToAdminSection(section);
     }
@@ -367,20 +223,9 @@ public sealed class StoreLandingPageComposer
     public async Task<IReadOnlyList<StoreLandingPageSectionAdminView>> ReorderSectionsAsync(Guid pageId, IReadOnlyList<Guid>? sectionIds, CancellationToken cancellationToken)
     {
         var page = await RequirePageAsync(pageId, cancellationToken);
-        var rows = await LoadSectionsAsync(pageId, cancellationToken);
-        var ids = sectionIds ?? [];
-        if (ids.Count != rows.Count || ids.Distinct().Count() != ids.Count || ids.Any(id => rows.All(x => x.PageSectionId != id)))
-        {
-            throw new PlatformHttpException(400, "ترتیب بخش‌ها کامل نیست.", "landing.section.reorder.invalid");
-        }
-
-        var now = DateTimeOffset.UtcNow;
-        for (var i = 0; i < ids.Count; i++)
-        {
-            rows.Single(x => x.PageSectionId == ids[i]).SetSortOrder(i, now);
-        }
-
-        await _catalog.SaveChangesAsync(cancellationToken);
+        var rows = await _sender.Send(
+            new ReorderStoreLandingPageSectionsCommand(pageId, sectionIds ?? []),
+            cancellationToken);
         Invalidate(page.Locale, page.Slug);
         return rows.OrderBy(x => x.SortOrder).Select(ToAdminSection).ToList();
     }
@@ -388,18 +233,7 @@ public sealed class StoreLandingPageComposer
     /// <summary>صفحه و بخش‌هایش را حذف می‌کند؛ اگر خانه بود ارجاع را پاک می‌کند.</summary>
     public async Task DeletePageAsync(Guid pageId, CancellationToken cancellationToken)
     {
-        var page = await RequirePageAsync(pageId, cancellationToken);
-        await ClearHomeIfMatchesAsync(page.PageId, cancellationToken);
-        var sections = await _catalog.StoreLandingPageSections
-            .Where(x => x.PageId == pageId)
-            .ToListAsync(cancellationToken);
-        if (sections.Count > 0)
-        {
-            _catalog.StoreLandingPageSections.RemoveRange(sections);
-        }
-
-        _catalog.StoreLandingPages.Remove(page);
-        await _catalog.SaveChangesAsync(cancellationToken);
+        var page = await _sender.Send(new DeleteStoreLandingPageCommand(pageId), cancellationToken);
         Invalidate(page.Locale, page.Slug);
         if (page.PageType == StorePageType.Home)
         {
@@ -411,17 +245,7 @@ public sealed class StoreLandingPageComposer
     public async Task DeleteSectionAsync(Guid pageId, Guid sectionId, CancellationToken cancellationToken)
     {
         var page = await RequirePageAsync(pageId, cancellationToken);
-        var section = await RequireSectionAsync(pageId, sectionId, cancellationToken);
-        _catalog.StoreLandingPageSections.Remove(section);
-        await _catalog.SaveChangesAsync(cancellationToken);
-        var remaining = await LoadSectionsAsync(pageId, cancellationToken);
-        var now = DateTimeOffset.UtcNow;
-        for (var i = 0; i < remaining.Count; i++)
-        {
-            remaining[i].SetSortOrder(i, now);
-        }
-
-        await _catalog.SaveChangesAsync(cancellationToken);
+        await _sender.Send(new DeleteStoreLandingPageSectionCommand(pageId, sectionId), cancellationToken);
         Invalidate(page.Locale, page.Slug);
     }
 
@@ -452,131 +276,12 @@ public sealed class StoreLandingPageComposer
         return view;
     }
 
-    private async Task EnsureUniqueSlugAsync(string locale, string slug, Guid? exceptPageId, CancellationToken cancellationToken)
-    {
-        var exists = await _catalog.StoreLandingPages
-            .AnyAsync(x => x.Locale == locale && x.Slug == slug && x.PageId != exceptPageId, cancellationToken);
-        if (exists)
-        {
-            throw new PlatformHttpException(409, "این آدرس در همین زبان قبلاً ثبت شده است.", "landing.slug.duplicate");
-        }
-    }
-
-    private async Task<StoreLandingPageSection> RequireSectionAsync(Guid pageId, Guid sectionId, CancellationToken cancellationToken)
-    {
-        var section = await _catalog.StoreLandingPageSections
-            .SingleOrDefaultAsync(x => x.PageId == pageId && x.PageSectionId == sectionId, cancellationToken);
-        if (section is null)
-        {
-            throw new PlatformHttpException(404, "بخش یافت نشد.", "landing.section.missing");
-        }
-
-        return section;
-    }
-
     private async Task<List<StoreLandingPageSection>> LoadSectionsAsync(Guid pageId, CancellationToken cancellationToken) =>
         await _catalog.StoreLandingPageSections
             .Where(x => x.PageId == pageId)
             .OrderBy(x => x.SortOrder)
             .ThenBy(x => x.PageSectionId)
             .ToListAsync(cancellationToken);
-
-    private async Task EnsureReferencedEntitiesAsync(StoreLandingPageSection section, CancellationToken cancellationToken)
-    {
-        using var doc = System.Text.Json.JsonDocument.Parse(section.ConfigurationJson);
-        var root = doc.RootElement;
-        if (section.SectionType == StoreLandingPageSectionRegistry.ProductCollection)
-        {
-            var source = root.TryGetProperty("source", out var sourceEl) ? sourceEl.GetString() : null;
-            if (string.Equals(source, "Category", StringComparison.Ordinal) && root.TryGetProperty("categoryId", out var categoryEl))
-            {
-                await EnsureCategoryAsync(categoryEl.GetGuid(), cancellationToken);
-            }
-            else if (string.Equals(source, "Brand", StringComparison.Ordinal) && root.TryGetProperty("brandId", out var brandEl))
-            {
-                await EnsureBrandAsync(brandEl.GetGuid(), cancellationToken);
-            }
-            else if (string.Equals(source, "Manual", StringComparison.Ordinal) && root.TryGetProperty("productIds", out var idsEl))
-            {
-                var ids = idsEl.EnumerateArray().Select(x => x.GetGuid()).ToList();
-                var found = await _catalog.Products.CountAsync(x => ids.Contains(x.ProductId), cancellationToken);
-                if (found != ids.Count)
-                {
-                    throw new PlatformHttpException(400, "محصول انتخاب‌شده در این فروشگاه نیست.", "landing.section.ref.missing");
-                }
-            }
-            else if (string.Equals(source, "PromotionCampaign", StringComparison.OrdinalIgnoreCase)
-                     && root.TryGetProperty("campaignId", out var campaignEl)
-                     && campaignEl.ValueKind is not System.Text.Json.JsonValueKind.Null
-                     && campaignEl.ValueKind is not System.Text.Json.JsonValueKind.Undefined
-                     && Guid.TryParse(campaignEl.ToString(), out var campaignId)
-                     && campaignId != Guid.Empty)
-            {
-                var storeId = ResolveMerchandisingStoreId();
-                if (storeId is null)
-                {
-                    throw new PlatformHttpException(400, "کمپین انتخاب‌شده در این فروشگاه نیست.", "landing.section.ref.missing");
-                }
-
-                var belongs = await _campaignQuery.CampaignBelongsToStoreAsync(campaignId, storeId.Value, cancellationToken);
-                if (!belongs)
-                {
-                    throw new PlatformHttpException(400, "کمپین انتخاب‌شده در این فروشگاه نیست.", "landing.section.ref.missing");
-                }
-            }
-
-            return;
-        }
-
-        if ((section.SectionType == StoreLandingPageSectionRegistry.CategoryGrid
-                || section.SectionType == StoreLandingPageSectionRegistry.BrandStrip)
-            && root.TryGetProperty("ids", out var listEl)
-            && listEl.ValueKind == System.Text.Json.JsonValueKind.Array)
-        {
-            var ids = listEl.EnumerateArray().Select(x => x.GetGuid()).ToList();
-            if (section.SectionType == StoreLandingPageSectionRegistry.CategoryGrid)
-            {
-                foreach (var id in ids)
-                {
-                    await EnsureCategoryAsync(id, cancellationToken);
-                }
-            }
-            else
-            {
-                foreach (var id in ids)
-                {
-                    await EnsureBrandAsync(id, cancellationToken);
-                }
-            }
-        }
-
-        if (section.SectionType == StoreLandingPageSectionRegistry.NavigationMenu
-            && root.TryGetProperty("menuId", out var menuEl)
-            && menuEl.ValueKind == System.Text.Json.JsonValueKind.String
-            && Guid.TryParse(menuEl.GetString(), out var menuId))
-        {
-            if (!await _catalog.StoreMenus.AnyAsync(x => x.MenuId == menuId && x.IsEnabled, cancellationToken))
-            {
-                throw new PlatformHttpException(400, "منوی انتخاب‌شده در این فروشگاه فعال نیست.", "landing.section.ref.missing");
-            }
-        }
-    }
-
-    private async Task EnsureCategoryAsync(Guid categoryId, CancellationToken cancellationToken)
-    {
-        if (!await _catalog.Categories.AnyAsync(x => x.CategoryId == categoryId, cancellationToken))
-        {
-            throw new PlatformHttpException(400, "رده در این فروشگاه نیست.", "landing.section.ref.missing");
-        }
-    }
-
-    private async Task EnsureBrandAsync(Guid brandId, CancellationToken cancellationToken)
-    {
-        if (!await _catalog.Brands.AnyAsync(x => x.BrandId == brandId, cancellationToken))
-        {
-            throw new PlatformHttpException(400, "برند در این فروشگاه نیست.", "landing.section.ref.missing");
-        }
-    }
 
     private async Task<StoreLandingPage> RequirePageAsync(Guid pageId, CancellationToken cancellationToken)
     {
@@ -587,37 +292,6 @@ public sealed class StoreLandingPageComposer
         }
 
         return page;
-    }
-
-    private async Task<StoreAppearanceSettings> RequireSettingsAsync(DateTimeOffset now, CancellationToken cancellationToken)
-    {
-        var row = await _catalog.StoreAppearanceSettings
-            .SingleOrDefaultAsync(x => x.SettingsId == StoreAppearanceSettings.SingletonId, cancellationToken);
-        if (row is not null)
-        {
-            return row;
-        }
-
-        row = StoreAppearanceSettings.CreateDefault(now);
-        _catalog.StoreAppearanceSettings.Add(row);
-        return row;
-    }
-
-    private async Task ClearHomeIfMatchesAsync(Guid pageId, CancellationToken cancellationToken)
-    {
-        var settings = await _catalog.StoreAppearanceSettings
-            .SingleOrDefaultAsync(x => x.SettingsId == StoreAppearanceSettings.SingletonId, cancellationToken);
-        if (settings?.HomePageId == pageId)
-        {
-            var page = await _catalog.StoreLandingPages.SingleOrDefaultAsync(x => x.PageId == pageId, cancellationToken);
-            if (page is not null && page.PageType == StorePageType.Home)
-            {
-                page.SetPageType(StorePageType.Landing, DateTimeOffset.UtcNow);
-            }
-
-            settings.SetHomePage(null, DateTimeOffset.UtcNow);
-            InvalidateHome();
-        }
     }
 
     private void Invalidate(string locale, string slug)
@@ -634,6 +308,28 @@ public sealed class StoreLandingPageComposer
         $"{PageCachePrefix}{scope}:{locale}:{slug}";
 
     private static string HomeCacheKey(string scope) => $"{HomeCachePrefix}{scope}";
+
+    private static StoreLandingPageWriteModel ToWriteModel(StoreLandingPageWriteRequest body) => new(
+        body.Title,
+        body.Slug,
+        body.Locale,
+        body.SeoTitle,
+        body.SeoDescription,
+        body.PageType,
+        body.RobotsIndex,
+        body.RobotsFollow,
+        body.CanonicalUrl,
+        body.OgTitle,
+        body.OgDescription,
+        body.OgImageUrl,
+        body.PrimaryH1);
+
+    private static StoreLandingPageSectionWriteModel ToSectionModel(StoreLandingPageSectionWriteRequest body) => new(
+        body.SectionType,
+        body.ConfigJson,
+        body.Config,
+        body.IsEnabled,
+        body.InsertAt);
 
     private static StoreLandingPageAdminView ToAdmin(StoreLandingPage page) => new(
         page.PageId,
