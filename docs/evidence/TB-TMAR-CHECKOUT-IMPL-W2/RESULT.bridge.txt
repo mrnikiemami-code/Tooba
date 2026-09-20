@@ -94,7 +94,7 @@ Recovery-SoT:
 docs/evidence/TB-TMAR-CHECKOUT-IMPL-W2/recovery-sot.md
 
 Git:
-branch main; tip 90231cf7d27f197b2ee6e9a3d126906ec9a706a4; pushed origin/main; HEAD==origin/main; 18ca10c9 ancestor; user work preserved
+branch main; tip 34344a40801537791d25ea91380550f015704756; pushed origin/main; HEAD==origin/main; 18ca10c9 ancestor; user work preserved
 
 Architectural-Concerns:
 Shared TransactionScope remains until later IMPL stages; residual Order.Infrastructure→Inventory.Application for Cancel/Restore/PaymentBridge; Cart conversion still Application-coupled
