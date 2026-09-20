@@ -155,7 +155,7 @@ public sealed class PaidOrderReservationLifecycleTests : IAsyncLifetime
 
         var catalogDir = new CatalogDirectory(catalog, new OpenCatalogUseCaseGuard());
         var partyDir = new PartyDirectory(party);
-        var offerDir = new OfferDirectory(offer, new OpenOfferUseCaseGuard(), catalogDir, partyDir);
+        var offerDir = new OfferDirectory(offer, new OpenOfferUseCaseGuard(), catalogDir, partyDir, new SystemUtcClock(), new UuidV7IdGenerator());
         var inventoryDir = new InventoryDirectory(inventory, new OpenInventoryUseCaseGuard(), offerDir, catalogDir);
 
         var names = new Dictionary<string, string> { ["fa-IR"] = "کالا", ["en-US"] = "Item" };
@@ -232,7 +232,7 @@ public sealed class PaidOrderReservationLifecycleTests : IAsyncLifetime
 
         var catalogDir = new CatalogDirectory(catalog, new OpenCatalogUseCaseGuard());
         var partyDir = new PartyDirectory(party);
-        var offerDir = new OfferDirectory(offer, new OpenOfferUseCaseGuard(), catalogDir, partyDir);
+        var offerDir = new OfferDirectory(offer, new OpenOfferUseCaseGuard(), catalogDir, partyDir, new SystemUtcClock(), new UuidV7IdGenerator());
         var inventoryDir = new InventoryDirectory(inventory, new OpenInventoryUseCaseGuard(), offerDir, catalogDir);
 
         var names = new Dictionary<string, string> { ["fa-IR"] = "کالا", ["en-US"] = "Item" };
@@ -310,7 +310,7 @@ public sealed class PaidOrderReservationLifecycleTests : IAsyncLifetime
 
         var catalogDir = new CatalogDirectory(catalog, new OpenCatalogUseCaseGuard());
         var partyDir = new PartyDirectory(party);
-        var offerDir = new OfferDirectory(offer, new OpenOfferUseCaseGuard(), catalogDir, partyDir);
+        var offerDir = new OfferDirectory(offer, new OpenOfferUseCaseGuard(), catalogDir, partyDir, new SystemUtcClock(), new UuidV7IdGenerator());
         var inventoryDir = new InventoryDirectory(inventory, new OpenInventoryUseCaseGuard(), offerDir, catalogDir);
 
         var names = new Dictionary<string, string> { ["fa-IR"] = "کالا۲", ["en-US"] = "Item2" };

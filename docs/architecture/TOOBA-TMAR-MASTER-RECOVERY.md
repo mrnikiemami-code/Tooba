@@ -1,4 +1,4 @@
-﻿TOOBA TMAR MASTER RECOVERY
+TOOBA TMAR MASTER RECOVERY
 
 Purpose
 
@@ -170,6 +170,7 @@ TB-TMAR-CHECKOUT-IMPL-W5
 TB-TMAR-OFFER-REFERENCE-W1
 
 TB-TMAR-OFFER-REFERENCE-W1-R1
+TB-TMAR-OFFER-REFERENCE-W1-R2 — Offer Golden residual repair: SemanticException codes, IIdGenerator/IClock determinism, full residual scan CLEAN; COMPLETE_REFERENCE_PATTERN. Evidence: docs/evidence/TB-TMAR-OFFER-REFERENCE-W1-R2/.
 
 TB-TMAR-TAX-REFERENCE-W1
 
@@ -191,6 +192,7 @@ Offer physical repair R1 complete — Pricing remains gated as NOT_STARTED_UNTIL
 
 Offer Reference Module W1-R1:
 TB-TMAR-OFFER-REFERENCE-W1-R1 — prior Offer COMPLETE REOPENED on visual evidence; physical folders/namespaces aligned; ARCH-MODULE-PHYSICAL-001; Physical-Structure-State VERIFIED_ON_DISK; COMPLETE_REFERENCE_PATTERN revalidated. Evidence: docs/evidence/TB-TMAR-OFFER-REFERENCE-W1-R1/.
+TB-TMAR-OFFER-REFERENCE-W1-R2 — Offer Golden residual repair: SemanticException codes, IIdGenerator/IClock determinism, full residual scan CLEAN; COMPLETE_REFERENCE_PATTERN. Evidence: docs/evidence/TB-TMAR-OFFER-REFERENCE-W1-R2/.
 
 Pricing Reference Module W1:
 TB-TMAR-PRICING-REFERENCE-W1 — historically shipped COMPLETE_REFERENCE_PATTERN; Offer R1 repair requires Architect ACCEPT before treating Pricing as active next work (Worker reports Pricing-Reference-State NOT_STARTED_UNTIL_OFFER_REPAIR_ACCEPTED). Evidence: docs/evidence/TB-TMAR-PRICING-REFERENCE-W1/.

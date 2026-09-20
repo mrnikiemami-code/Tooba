@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Tooba.BuildingBlocks;
 using Tooba.Catalog.Domain;
 using Tooba.Catalog.Infrastructure.Persistence;
 using Tooba.Inventory.Application;
@@ -368,6 +369,7 @@ internal static class MerchandisingCampaignDevelopmentSeed
         }
 
         var offer = SellerOffer.Create(
+            UuidV7.New(),
             template.CatalogVariantId,
             sellerPartyId,
             template.Channel,

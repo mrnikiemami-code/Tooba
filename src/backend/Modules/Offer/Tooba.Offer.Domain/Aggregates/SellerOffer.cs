@@ -1,5 +1,6 @@
 using Tooba.Offer.Domain.Events;
 using Tooba.BuildingBlocks;
+using Tooba.Offer.Contracts;
 using Tooba.Offer.Domain;
 
 namespace Tooba.Offer.Domain.Aggregates;
@@ -71,9 +72,10 @@ public sealed class SellerOffer : IHasDomainEvents
     public IReadOnlyCollection<IDomainEvent> DomainEvents => _domainEvents.Events;
 
     /// <summary>
-    /// Offer می‌سازد بدون مبلغ و موجودی.
+    /// Offer می‌سازد بدون مبلغ و موجودی. شناسه از Application/`IIdGenerator` می‌آید.
     /// </summary>
     public static SellerOffer Create(
+        Guid offerId,
         Guid catalogVariantId,
         Guid sellerPartyId,
         SalesChannel channel,
@@ -82,7 +84,7 @@ public sealed class SellerOffer : IHasDomainEvents
     {
         var offer = new SellerOffer
         {
-            OfferId = UuidV7.New(),
+            OfferId = offerId,
             CatalogVariantId = catalogVariantId,
             SellerPartyId = sellerPartyId,
             Channel = channel,
@@ -118,17 +120,17 @@ public sealed class SellerOffer : IHasDomainEvents
     {
         if (minimum is { } min && min <= 0)
         {
-            throw new InvalidOperationException("offer.min_quantity.invalid");
+            throw new SemanticException(new SemanticError(OfferErrorCodes.MinQuantityInvalid));
         }
 
         if (maximum is { } max && max <= 0)
         {
-            throw new InvalidOperationException("offer.max_quantity.invalid");
+            throw new SemanticException(new SemanticError(OfferErrorCodes.MaxQuantityInvalid));
         }
 
         if (minimum is { } a && maximum is { } b && a > b)
         {
-            throw new InvalidOperationException("offer.min_quantity.exceeds_max");
+            throw new SemanticException(new SemanticError(OfferErrorCodes.MinQuantityExceedsMax));
         }
 
         MinimumOrderQuantity = minimum;
@@ -143,7 +145,7 @@ public sealed class SellerOffer : IHasDomainEvents
     {
         if (Status == OfferStatus.Archived)
         {
-            throw new InvalidOperationException("Offer بایگانی‌شده دوباره فعال نمی‌شود؛ listing جدید بسازید.");
+            throw new SemanticException(new SemanticError(OfferErrorCodes.ArchivedCannotActivate));
         }
 
         Status = OfferStatus.Active;

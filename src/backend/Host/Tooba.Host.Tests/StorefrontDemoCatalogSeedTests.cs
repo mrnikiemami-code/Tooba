@@ -143,7 +143,7 @@ public sealed class StorefrontDemoCatalogSeedTests : IAsyncLifetime
 
         var catalogDirectory = new CatalogDirectory(catalogDb, new OpenCatalogUseCaseGuard());
         var partyDirectory = new PartyDirectory(partyDb);
-        var offerDirectory = new OfferDirectory(offerDb, new OpenOfferUseCaseGuard(), catalogDirectory, partyDirectory);
+        var offerDirectory = new OfferDirectory(offerDb, new OpenOfferUseCaseGuard(), catalogDirectory, partyDirectory, new SystemUtcClock(), new UuidV7IdGenerator());
         var priceDirectory = new PriceDirectory(pricingDb, new OpenPricingUseCaseGuard(), offerDirectory);
         var inventoryDirectory = new InventoryDirectory(inventoryDb, new OpenInventoryUseCaseGuard(), offerDirectory, catalogDirectory);
         var taxDirectory = new TaxDirectory(taxDb, new OpenTaxUseCaseGuard());

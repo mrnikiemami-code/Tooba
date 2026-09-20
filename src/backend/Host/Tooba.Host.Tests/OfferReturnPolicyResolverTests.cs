@@ -1,3 +1,4 @@
+using Tooba.BuildingBlocks;
 using Tooba.Offer.Application.Ports;
 using Tooba.Offer.Contracts.Dtos;
 using Tooba.Offer.Contracts.Ports;
@@ -41,7 +42,7 @@ public sealed class OfferReturnPolicyResolverTests
             SellerCanOverrideReturnPolicy = false,
             DefaultReturnWindowDays = 7,
         });
-        Assert.Throws<InvalidOperationException>(() =>
+        Assert.Throws<SemanticException>(() =>
             resolver.ValidateOfferChoice(OfferReturnPolicyChoices.Custom, 10));
         var resolved = resolver.ResolveForCheckout(OfferReturnPolicyChoices.Custom, 10);
         Assert.Equal(7, resolved.WindowDays);
@@ -56,9 +57,9 @@ public sealed class OfferReturnPolicyResolverTests
             MinReturnWindowDays = 3,
             MaxReturnWindowDays = 10,
         });
-        Assert.Throws<InvalidOperationException>(() =>
+        Assert.Throws<SemanticException>(() =>
             resolver.ValidateOfferChoice(OfferReturnPolicyChoices.Custom, 2));
-        Assert.Throws<InvalidOperationException>(() =>
+        Assert.Throws<SemanticException>(() =>
             resolver.ValidateOfferChoice(OfferReturnPolicyChoices.Custom, 11));
     }
 
@@ -71,7 +72,7 @@ public sealed class OfferReturnPolicyResolverTests
         Assert.Equal("غیرقابل مرجوعی", ok.LabelFa);
 
         var denied = new ReturnPolicyResolver(new ReturnPolicyOptions { AllowNonReturnableOffers = false });
-        Assert.Throws<InvalidOperationException>(() =>
+        Assert.Throws<SemanticException>(() =>
             denied.ValidateOfferChoice(OfferReturnPolicyChoices.NonReturnable, null));
     }
 

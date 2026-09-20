@@ -50,6 +50,7 @@ public sealed class SellerPanelComposer : IOfferSellerPanel
     private readonly IAccessControlDirectory _access;
     private readonly ICatalogLookupGateway _catalogLookup;
     private readonly IReturnPolicyResolver _returnPolicies;
+    private readonly IClock _clock;
 
     /// <summary>
     /// سازندهٔ ترکیب فروشنده بدون JOIN بین‌schema؛ نوشتن تجاری از دایرکتوری‌های مالک.
@@ -68,7 +69,8 @@ public sealed class SellerPanelComposer : IOfferSellerPanel
         TaxDbContext tax,
         IAccessControlDirectory access,
         ICatalogLookupGateway catalogLookup,
-        IReturnPolicyResolver returnPolicies)
+        IReturnPolicyResolver returnPolicies,
+        IClock clock)
     {
         _offers = offers;
         _catalog = catalog;
@@ -84,6 +86,7 @@ public sealed class SellerPanelComposer : IOfferSellerPanel
         _access = access;
         _catalogLookup = catalogLookup;
         _returnPolicies = returnPolicies;
+        _clock = clock;
     }
 
     /// <summary>
@@ -270,18 +273,18 @@ public sealed class SellerPanelComposer : IOfferSellerPanel
             }
 
             offer.SellerSku = string.IsNullOrWhiteSpace(sku) ? null : sku;
-            offer.UpdatedAt = DateTimeOffset.UtcNow;
+            offer.UpdatedAt = _clock.UtcNow;
         }
 
         if (!string.IsNullOrWhiteSpace(patch.Status))
         {
             if (string.Equals(patch.Status, nameof(OfferStatus.Active), StringComparison.OrdinalIgnoreCase))
             {
-                offer.Activate(DateTimeOffset.UtcNow);
+                offer.Activate(_clock.UtcNow);
             }
             else if (string.Equals(patch.Status, nameof(OfferStatus.Suspended), StringComparison.OrdinalIgnoreCase))
             {
-                offer.Suspend(DateTimeOffset.UtcNow);
+                offer.Suspend(_clock.UtcNow);
             }
             else
             {
@@ -297,23 +300,23 @@ public sealed class SellerPanelComposer : IOfferSellerPanel
             {
                 _returnPolicies.ValidateOfferChoice(choice, days);
             }
-            catch (InvalidOperationException ex)
+            catch (SemanticException ex)
             {
-                throw new PlatformHttpException(400, ex.Message, "seller.offer.return_policy.rejected");
+                throw new PlatformHttpException(400, OfferSemanticLocalizer.Title(ex.Error), ex.Error.Code);
             }
 
-            offer.SetReturnPolicy(choice, days, DateTimeOffset.UtcNow);
+            offer.SetReturnPolicy(choice, days, _clock.UtcNow);
         }
 
         if (patch.MinimumOrderQuantity is not null || patch.MaximumOrderQuantity is not null)
         {
             try
             {
-                offer.SetOrderQuantityLimits(patch.MinimumOrderQuantity, patch.MaximumOrderQuantity, DateTimeOffset.UtcNow);
+                offer.SetOrderQuantityLimits(patch.MinimumOrderQuantity, patch.MaximumOrderQuantity, _clock.UtcNow);
             }
-            catch (InvalidOperationException ex)
+            catch (SemanticException ex)
             {
-                throw new PlatformHttpException(400, ex.Message, "seller.offer.quantity.rejected");
+                throw new PlatformHttpException(400, OfferSemanticLocalizer.Title(ex.Error), ex.Error.Code);
             }
         }
 
@@ -405,19 +408,19 @@ public sealed class SellerPanelComposer : IOfferSellerPanel
                 {
                     _returnPolicies.ValidateOfferChoice(choice, request.CustomReturnWindowDays);
                 }
-                catch (InvalidOperationException ex)
+                catch (SemanticException ex)
                 {
-                    throw new PlatformHttpException(400, ex.Message, "seller.offer.return_policy.rejected");
+                    throw new PlatformHttpException(400, OfferSemanticLocalizer.Title(ex.Error), ex.Error.Code);
                 }
 
                 var entity = await _offers.Offers.SingleAsync(x => x.OfferId == created.OfferId, cancellationToken);
-                entity.SetReturnPolicy(choice, request.CustomReturnWindowDays, DateTimeOffset.UtcNow);
+                entity.SetReturnPolicy(choice, request.CustomReturnWindowDays, _clock.UtcNow);
                 await _offers.SaveChangesAsync(cancellationToken);
             }
         }
-        catch (InvalidOperationException ex)
+        catch (SemanticException ex)
         {
-            throw new PlatformHttpException(400, ex.Message, "seller.offer.create.rejected");
+            throw new PlatformHttpException(400, OfferSemanticLocalizer.Title(ex.Error), ex.Error.Code);
         }
 
         return (await GetOfferAsync(sellerPartyId, created.OfferId, cancellationToken))!;
@@ -457,7 +460,7 @@ public sealed class SellerPanelComposer : IOfferSellerPanel
                 categoryRef.CategoryId,
                 TaxRuleKind.Percentage,
                 0.09m,
-                DateTimeOffset.UtcNow.AddYears(-1),
+                _clock.UtcNow.AddYears(-1),
                 null,
                 100,
                 TaxOverridePolicy.Disabled,
@@ -505,7 +508,7 @@ public sealed class SellerPanelComposer : IOfferSellerPanel
                     offer.Channel,
                     request.Amount,
                     currency,
-                    DateTimeOffset.UtcNow.AddYears(-1),
+                    _clock.UtcNow.AddYears(-1),
                     null,
                     cancellationToken);
                 await _priceDirectory.ActivateAsync(created.PriceId, cancellationToken);

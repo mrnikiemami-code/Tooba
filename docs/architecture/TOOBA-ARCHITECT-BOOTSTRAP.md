@@ -1,4 +1,4 @@
-﻿Tooba Architect Bootstrap
+Tooba Architect Bootstrap
 
 Canonical bootstrap for recovering the Tooba architecture context after chat/session loss.
 
@@ -61,6 +61,7 @@ Checkout Implementation W4 (TB-TMAR-CHECKOUT-IMPL-W4) PASS — IOrderInventoryLi
 Checkout Implementation W5 (TB-TMAR-CHECKOUT-IMPL-W5) PASS — ICheckoutPromotionPort; Order.Application↛Promotion.Application; TX preserved; W6 READY; next CHECKOUT-IMPL-W6.
 Offer Reference Module W1 (TB-TMAR-OFFER-REFERENCE-W1) PASS then REOPENED — physical structure mismatch found by user visual inspection.
 Offer Reference Module Repair R1 (TB-TMAR-OFFER-REFERENCE-W1-R1) PASS — Physical-Structure-State VERIFIED_ON_DISK; ARCH-MODULE-PHYSICAL-001; COMPLETE_REFERENCE_PATTERN revalidated; Checkout paused at W5; Pricing gated until Architect ACCEPT.
+Offer Reference Residual Repair R2 (TB-TMAR-OFFER-REFERENCE-W1-R2) PASS — SemanticError/SemanticException + IIdGenerator/IClock; COMPLETE_REFERENCE_PATTERN; Next USER_REVIEW_OFFER.
 Tax Reference Module W1 (TB-TMAR-TAX-REFERENCE-W1) PASS — COMPLETE_REFERENCE_PATTERN historically; physical recheck pending after Offer R1.
 Pricing Reference Module W1 (TB-TMAR-PRICING-REFERENCE-W1) PASS historically — gated NOT_STARTED_UNTIL_OFFER_REPAIR_ACCEPTED for next Architect sequencing after Offer R1.
 Product-Resume-Safety = SAFE_WITH_TMAR_PARALLEL (Order hub still frozen; do not expand App→App / Infra→App; no NEW cross-context ACID).
@@ -472,6 +473,7 @@ checkout-impl-w4 = TB-TMAR-CHECKOUT-IMPL-W4 PASS (Order.Infra Inventory lifecycl
 checkout-impl-w5 = TB-TMAR-CHECKOUT-IMPL-W5 PASS (Promotion checkout Contracts; Order.App→Promotion.Application removed; W6 READY)
 offer-reference-w1 = TB-TMAR-OFFER-REFERENCE-W1 PASS then REOPENED (physical mismatch)
 offer-reference-w1-r1 = TB-TMAR-OFFER-REFERENCE-W1-R1 PASS (Physical VERIFIED_ON_DISK; ARCH-MODULE-PHYSICAL-001; COMPLETE_REFERENCE_PATTERN revalidated; Checkout paused at W5; Pricing gated)
+offer-reference-w1-r2 = TB-TMAR-OFFER-REFERENCE-W1-R2 PASS (semantic/determinism residual repair; COMPLETE_REFERENCE_PATTERN)
 tax-reference-w1 = TB-TMAR-TAX-REFERENCE-W1 PASS (COMPLETE_REFERENCE_PATTERN historically; physical recheck pending)
 pricing-reference-w1 = TB-TMAR-PRICING-REFERENCE-W1 PASS historically (gated until Offer R1 Architect ACCEPT)
 next task = next reference-module candidate (Inventory/Cart/Returns) OR TB-TMAR-CHECKOUT-IMPL-W6 per Architect; Checkout remains PAUSED_AT_SAFE_W5_CHECKPOINT

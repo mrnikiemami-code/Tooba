@@ -21,7 +21,7 @@ public sealed class OfferPhysicalStructureGuardTests
 
     private static readonly string[] AllowedContractsFolders =
     [
-        "Ports", "Commands", "Events", "Dtos"
+        "Ports", "Commands", "Events", "Dtos", "Errors"
     ];
 
     private static readonly string[] AllowedInfrastructureFolders =

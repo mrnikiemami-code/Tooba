@@ -27,6 +27,10 @@ internal static class PlatformExceptionMapper
                 platform.StatusCode,
                 platform.Title,
                 platform.ErrorCode),
+            SemanticException semantic => new MappedPlatformError(
+                StatusCodes.Status400BadRequest,
+                semantic.Error.Code,
+                semantic.Error.Code),
             BadHttpRequestException => new MappedPlatformError(
                 StatusCodes.Status400BadRequest,
                 "Bad Request",

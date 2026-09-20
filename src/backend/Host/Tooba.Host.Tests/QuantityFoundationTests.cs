@@ -71,12 +71,12 @@ public sealed class QuantityFoundationTests
     public void Offer_min_max_rules()
     {
         var now = DateTimeOffset.UtcNow;
-        var offer = SellerOffer.Create(Guid.NewGuid(), Guid.NewGuid(), SalesChannel.Direct, "sku", now);
+        var offer = SellerOffer.Create(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), SalesChannel.Direct, "sku", now);
         offer.SetOrderQuantityLimits(0.25m, 2.50m, now);
         Assert.Equal(0.25m, offer.MinimumOrderQuantity);
         Assert.Equal(2.50m, offer.MaximumOrderQuantity);
-        Assert.Throws<InvalidOperationException>(() => offer.SetOrderQuantityLimits(3m, 1m, now));
-        Assert.Throws<InvalidOperationException>(() => offer.SetOrderQuantityLimits(0m, 1m, now));
+        Assert.Throws<SemanticException>(() => offer.SetOrderQuantityLimits(3m, 1m, now));
+        Assert.Throws<SemanticException>(() => offer.SetOrderQuantityLimits(0m, 1m, now));
     }
 
     [Fact]

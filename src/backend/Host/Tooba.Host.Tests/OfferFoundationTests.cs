@@ -1,4 +1,4 @@
-﻿using System.Reflection;
+using System.Reflection;
 using Microsoft.EntityFrameworkCore;
 using Testcontainers.PostgreSql;
 using Tooba.BuildingBlocks;
@@ -162,10 +162,10 @@ public sealed class OfferFoundationTests : IAsyncLifetime
 
         var catalogDirA = new CatalogDirectory(catalogA, new OpenCatalogUseCaseGuard());
         var partyDirA = new PartyDirectory(partyA);
-        var offerDirA = new OfferDirectory(offerA, new OpenOfferUseCaseGuard(), catalogDirA, partyDirA);
+        var offerDirA = new OfferDirectory(offerA, new OpenOfferUseCaseGuard(), catalogDirA, partyDirA, new SystemUtcClock(), new UuidV7IdGenerator());
         var catalogDirB = new CatalogDirectory(catalogB, new OpenCatalogUseCaseGuard());
         var partyDirB = new PartyDirectory(partyB);
-        var offerDirB = new OfferDirectory(offerB, new OpenOfferUseCaseGuard(), catalogDirB, partyDirB);
+        var offerDirB = new OfferDirectory(offerB, new OpenOfferUseCaseGuard(), catalogDirB, partyDirB, new SystemUtcClock(), new UuidV7IdGenerator());
 
         var names = new Dictionary<string, string> { ["fa-IR"] = "پیراهن", ["en-US"] = "Shirt" };
         var product = await catalogDirA.CreateProductAsync(CatalogProductKind.PhysicalGood, "shirt-x", null, names, CancellationToken.None);

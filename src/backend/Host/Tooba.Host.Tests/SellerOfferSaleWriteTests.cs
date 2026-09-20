@@ -129,7 +129,7 @@ public sealed class SellerOfferSaleWriteTests : IAsyncLifetime
 
         var catalogDir = new CatalogDirectory(catalog, new OpenCatalogUseCaseGuard());
         var partyDir = new PartyDirectory(party);
-        var offerDir = new OfferDirectory(offer, new OpenOfferUseCaseGuard(), catalogDir, partyDir);
+        var offerDir = new OfferDirectory(offer, new OpenOfferUseCaseGuard(), catalogDir, partyDir, new SystemUtcClock(), new UuidV7IdGenerator());
         var priceDir = new PriceDirectory(pricing, new OpenPricingUseCaseGuard(), offerDir);
         var inventoryDir = new InventoryDirectory(inventory, new OpenInventoryUseCaseGuard(), offerDir, catalogDir);
         var taxDir = new TaxDirectory(tax, new OpenTaxUseCaseGuard());
@@ -148,7 +148,8 @@ public sealed class SellerOfferSaleWriteTests : IAsyncLifetime
             tax,
             new FakeAccessControlDirectory(),
             catalogDir,
-            new ReturnPolicyResolver(new ReturnPolicyOptions()));
+            new ReturnPolicyResolver(new ReturnPolicyOptions()),
+            new SystemUtcClock());
 
         var names = new Dictionary<string, string> { ["fa-IR"] = "کالای فروش", ["en-US"] = "Sale item" };
         var l1 = await catalogDir.CreateCategoryAsync(
@@ -205,7 +206,7 @@ public sealed class SellerOfferSaleWriteTests : IAsyncLifetime
                 new SellerOfferCreateRequest(variant.VariantId, "SKU-A-2", nameof(OfferStatus.Active)),
                 CancellationToken.None));
         Assert.Equal(400, duplicateOwn.StatusCode);
-        Assert.Equal("seller.offer.create.rejected", duplicateOwn.ErrorCode);
+        Assert.Equal("offer.listing.duplicate_active", duplicateOwn.ErrorCode);
 
         var createShape = typeof(SellerOfferCreateRequest).GetProperties().Select(p => p.Name).ToHashSet(StringComparer.Ordinal);
         Assert.DoesNotContain("SellerPartyId", createShape);

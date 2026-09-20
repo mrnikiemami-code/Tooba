@@ -1,3 +1,6 @@
+using Tooba.BuildingBlocks;
+using Tooba.Offer.Contracts;
+
 namespace Tooba.Offer.Contracts.Ports;
 
 /// <summary>
@@ -97,14 +100,14 @@ public sealed class ReturnPolicyResolver : IReturnPolicyResolver
 
         if (!_options.SellerCanOverrideReturnPolicy)
         {
-            throw new InvalidOperationException("تغییر سیاست مرجوعی برای فروشنده مجاز نیست.");
+            throw new SemanticException(new SemanticError(OfferErrorCodes.ReturnPolicyOverrideDenied));
         }
 
         if (normalized == OfferReturnPolicyChoices.NonReturnable)
         {
             if (!_options.AllowNonReturnableOffers)
             {
-                throw new InvalidOperationException("ثبت پیشنهاد غیرقابل مرجوعی مجاز نیست.");
+                throw new SemanticException(new SemanticError(OfferErrorCodes.NonReturnableDenied));
             }
 
             return;
@@ -114,14 +117,19 @@ public sealed class ReturnPolicyResolver : IReturnPolicyResolver
         {
             if (customReturnWindowDays is null)
             {
-                throw new InvalidOperationException("مهلت اختصاصی مرجوعی الزامی است.");
+                throw new SemanticException(new SemanticError(OfferErrorCodes.CustomReturnWindowRequired));
             }
 
             if (customReturnWindowDays < _options.MinReturnWindowDays
                 || customReturnWindowDays > _options.MaxReturnWindowDays)
             {
-                throw new InvalidOperationException(
-                    $"مهلت مرجوعی باید بین {_options.MinReturnWindowDays} و {_options.MaxReturnWindowDays} روز باشد.");
+                throw new SemanticException(new SemanticError(
+                    OfferErrorCodes.CustomReturnWindowOutOfRange,
+                    new Dictionary<string, string?>
+                    {
+                        ["min"] = _options.MinReturnWindowDays.ToString(),
+                        ["max"] = _options.MaxReturnWindowDays.ToString(),
+                    }));
             }
         }
     }
@@ -142,7 +150,7 @@ public sealed class ReturnPolicyResolver : IReturnPolicyResolver
         {
             ValidateOfferChoice(normalized, customReturnWindowDays);
         }
-        catch (InvalidOperationException)
+        catch (SemanticException)
         {
             // انتخاب نامعتبر فروشنده در checkout به پیش‌فرض امن فروشگاه می‌افتد.
             normalized = OfferReturnPolicyChoices.Default;

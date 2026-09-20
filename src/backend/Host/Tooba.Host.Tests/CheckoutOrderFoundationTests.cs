@@ -1,4 +1,4 @@
-﻿using System.Reflection;
+using System.Reflection;
 using Microsoft.EntityFrameworkCore;
 using Testcontainers.PostgreSql;
 using Tooba.BuildingBlocks;
@@ -223,7 +223,7 @@ public sealed class CheckoutOrderFoundationTests : IAsyncLifetime
 
         var catalogDirA = new CatalogDirectory(catalogA, new OpenCatalogUseCaseGuard());
         var partyDirA = new PartyDirectory(partyA);
-        var offerDirA = new OfferDirectory(offerA, new OpenOfferUseCaseGuard(), catalogDirA, partyDirA);
+        var offerDirA = new OfferDirectory(offerA, new OpenOfferUseCaseGuard(), catalogDirA, partyDirA, new SystemUtcClock(), new UuidV7IdGenerator());
         var priceDirA = new PriceDirectory(pricingA, new OpenPricingUseCaseGuard(), offerDirA);
         var inventoryDirA = new InventoryDirectory(inventoryA, new OpenInventoryUseCaseGuard(), offerDirA, catalogDirA);
         var cartDirA = new CartDirectory(cartA, new OpenCartUseCaseGuard(), offerDirA, priceDirA, inventoryDirA, inventoryDirA);
@@ -384,7 +384,7 @@ public sealed class CheckoutOrderFoundationTests : IAsyncLifetime
 
         var catalogDirB = new CatalogDirectory(catalogB, new OpenCatalogUseCaseGuard());
         var partyDirB = new PartyDirectory(partyB);
-        var offerDirB = new OfferDirectory(offerB, new OpenOfferUseCaseGuard(), catalogDirB, partyDirB);
+        var offerDirB = new OfferDirectory(offerB, new OpenOfferUseCaseGuard(), catalogDirB, partyDirB, new SystemUtcClock(), new UuidV7IdGenerator());
         var priceDirB = new PriceDirectory(pricingB, new OpenPricingUseCaseGuard(), offerDirB);
         var inventoryDirB = new InventoryDirectory(inventoryB, new OpenInventoryUseCaseGuard(), offerDirB, catalogDirB);
         var cartDirB = new CartDirectory(cartB, new OpenCartUseCaseGuard(), offerDirB, priceDirB, inventoryDirB, inventoryDirB);
@@ -434,7 +434,7 @@ public sealed class CheckoutOrderFoundationTests : IAsyncLifetime
         await using var inventoryA2 = CreateInventoryDb(csA, commerceA);
         var catalogDirA2 = new CatalogDirectory(catalogA2, new OpenCatalogUseCaseGuard());
         var partyDirA2 = new PartyDirectory(partyA2);
-        var offerDirA2 = new OfferDirectory(offerA2, new OpenOfferUseCaseGuard(), catalogDirA2, partyDirA2);
+        var offerDirA2 = new OfferDirectory(offerA2, new OpenOfferUseCaseGuard(), catalogDirA2, partyDirA2, new SystemUtcClock(), new UuidV7IdGenerator());
         var priceDirA2 = new PriceDirectory(pricingA2, new OpenPricingUseCaseGuard(), offerDirA2);
         var inventoryDirA2 = new InventoryDirectory(inventoryA2, new OpenInventoryUseCaseGuard(), offerDirA2, catalogDirA2);
         var cartDirA2 = new CartDirectory(cartA2, new OpenCartUseCaseGuard(), offerDirA2, priceDirA2, inventoryDirA2, inventoryDirA2);

@@ -147,7 +147,7 @@ public sealed class CartExpiryPostgresTests : IAsyncLifetime
 
         var catalogDir = new CatalogDirectory(catalogDb, new OpenCatalogUseCaseGuard());
         var partyDir = new PartyDirectory(partyDb);
-        var offerDir = new OfferDirectory(offerDb, new OpenOfferUseCaseGuard(), catalogDir, partyDir);
+        var offerDir = new OfferDirectory(offerDb, new OpenOfferUseCaseGuard(), catalogDir, partyDir, new SystemUtcClock(), new UuidV7IdGenerator());
         var priceDir = new PriceDirectory(pricingDb, new OpenPricingUseCaseGuard(), offerDir);
         var inventoryDir = new InventoryDirectory(inventoryDb, new OpenInventoryUseCaseGuard(), offerDir, catalogDir);
         var cartDir = new CartDirectory(cartDb, new OpenCartUseCaseGuard(), offerDir, priceDir, inventoryDir, inventoryDir);

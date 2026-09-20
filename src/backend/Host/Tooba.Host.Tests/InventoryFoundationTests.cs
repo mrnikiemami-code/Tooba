@@ -160,11 +160,11 @@ public sealed class InventoryFoundationTests : IAsyncLifetime
 
         var catalogDirA = new CatalogDirectory(catalogA, new OpenCatalogUseCaseGuard());
         var partyDirA = new PartyDirectory(partyA);
-        var offerDirA = new OfferDirectory(offerA, new OpenOfferUseCaseGuard(), catalogDirA, partyDirA);
+        var offerDirA = new OfferDirectory(offerA, new OpenOfferUseCaseGuard(), catalogDirA, partyDirA, new SystemUtcClock(), new UuidV7IdGenerator());
         var inventoryDirA = new InventoryDirectory(inventoryA, new OpenInventoryUseCaseGuard(), offerDirA, catalogDirA);
         var catalogDirB = new CatalogDirectory(catalogB, new OpenCatalogUseCaseGuard());
         var partyDirB = new PartyDirectory(partyB);
-        var offerDirB = new OfferDirectory(offerB, new OpenOfferUseCaseGuard(), catalogDirB, partyDirB);
+        var offerDirB = new OfferDirectory(offerB, new OpenOfferUseCaseGuard(), catalogDirB, partyDirB, new SystemUtcClock(), new UuidV7IdGenerator());
         var inventoryDirB = new InventoryDirectory(inventoryB, new OpenInventoryUseCaseGuard(), offerDirB, catalogDirB);
 
         var names = new Dictionary<string, string> { ["fa-IR"] = "پیراهن", ["en-US"] = "Shirt" };
@@ -275,7 +275,7 @@ public sealed class InventoryFoundationTests : IAsyncLifetime
 
         var catalogDir = new CatalogDirectory(catalog, new OpenCatalogUseCaseGuard());
         var partyDir = new PartyDirectory(party);
-        var offerDir = new OfferDirectory(offer, new OpenOfferUseCaseGuard(), catalogDir, partyDir);
+        var offerDir = new OfferDirectory(offer, new OpenOfferUseCaseGuard(), catalogDir, partyDir, new SystemUtcClock(), new UuidV7IdGenerator());
         var inventoryDir = new InventoryDirectory(inventory, new OpenInventoryUseCaseGuard(), offerDir, catalogDir);
         var returnGateway = new InventoryReturnGateway(inventory, new OpenInventoryUseCaseGuard(), inventoryDir);
 

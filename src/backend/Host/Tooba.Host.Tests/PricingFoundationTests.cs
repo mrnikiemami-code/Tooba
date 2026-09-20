@@ -157,11 +157,11 @@ public sealed class PricingFoundationTests : IAsyncLifetime
 
         var catalogDirA = new CatalogDirectory(catalogA, new OpenCatalogUseCaseGuard());
         var partyDirA = new PartyDirectory(partyA);
-        var offerDirA = new OfferDirectory(offerA, new OpenOfferUseCaseGuard(), catalogDirA, partyDirA);
+        var offerDirA = new OfferDirectory(offerA, new OpenOfferUseCaseGuard(), catalogDirA, partyDirA, new SystemUtcClock(), new UuidV7IdGenerator());
         var priceDirA = new PriceDirectory(pricingA, new OpenPricingUseCaseGuard(), offerDirA);
         var catalogDirB = new CatalogDirectory(catalogB, new OpenCatalogUseCaseGuard());
         var partyDirB = new PartyDirectory(partyB);
-        var offerDirB = new OfferDirectory(offerB, new OpenOfferUseCaseGuard(), catalogDirB, partyDirB);
+        var offerDirB = new OfferDirectory(offerB, new OpenOfferUseCaseGuard(), catalogDirB, partyDirB, new SystemUtcClock(), new UuidV7IdGenerator());
         var priceDirB = new PriceDirectory(pricingB, new OpenPricingUseCaseGuard(), offerDirB);
 
         var names = new Dictionary<string, string> { ["fa-IR"] = "پیراهن", ["en-US"] = "Shirt" };

@@ -1,8 +1,10 @@
 using Tooba.Offer.Domain.Aggregates;
 using Tooba.Offer.Contracts.Ports;
 using Tooba.Offer.Contracts.Dtos;
+using Tooba.Offer.Contracts;
 using Tooba.Offer.Application.Ports;
 using Microsoft.EntityFrameworkCore;
+using Tooba.BuildingBlocks;
 using Tooba.Catalog.Application;
 using Tooba.Offer.Domain;
 using Tooba.Offer.Infrastructure.Persistence;
@@ -29,6 +31,8 @@ public sealed class OfferDirectory : IOfferDirectory, IOfferLookupGateway
     private readonly IOfferUseCaseGuard _guard;
     private readonly ICatalogLookupGateway _catalog;
     private readonly IPartyLookupGateway _party;
+    private readonly IClock _clock;
+    private readonly IIdGenerator _ids;
 
     /// <summary>
     /// دایرکتوری را به schema Offer و درزهای قرارداد وصل می‌کند نه به join بین‌schema.
@@ -37,12 +41,16 @@ public sealed class OfferDirectory : IOfferDirectory, IOfferLookupGateway
         OfferDbContext db,
         IOfferUseCaseGuard guard,
         ICatalogLookupGateway catalog,
-        IPartyLookupGateway party)
+        IPartyLookupGateway party,
+        IClock clock,
+        IIdGenerator ids)
     {
         _db = db;
         _guard = guard;
         _catalog = catalog;
         _party = party;
+        _clock = clock;
+        _ids = ids;
     }
 
     /// <inheritdoc />
@@ -108,14 +116,14 @@ public sealed class OfferDirectory : IOfferDirectory, IOfferLookupGateway
         await _guard.EnsureCanMutateAsync(cancellationToken);
         if (await _catalog.FindVariantAsync(catalogVariantId, cancellationToken) is null)
         {
-            throw new InvalidOperationException("Variant Catalog از قرارداد Lookup پیدا نشد؛ DbContext کاتالوگ خوانده نشد.");
+            throw new SemanticException(new SemanticError(OfferErrorCodes.CatalogVariantMissing));
         }
 
         var seller = await _party.FindByIdAsync(sellerPartyId, cancellationToken)
-            ?? throw new InvalidOperationException("فروشنده از قرارداد Party پیدا نشد؛ جدول party مستقیم خوانده نشد.");
+            ?? throw new SemanticException(new SemanticError(OfferErrorCodes.SellerMissing));
         if (seller.Kind != PartyKind.Organization)
         {
-            throw new InvalidOperationException("فروشنده باید Organization باشد؛ User ورود فروشنده نیست.");
+            throw new SemanticException(new SemanticError(OfferErrorCodes.SellerNotOrganization));
         }
 
         var exists = await _db.Offers.AnyAsync(
@@ -126,16 +134,17 @@ public sealed class OfferDirectory : IOfferDirectory, IOfferLookupGateway
             cancellationToken);
         if (exists)
         {
-            throw new InvalidOperationException("برای این فروشنده و Variant و کانال یک Offer غیرآرشیو وجود دارد.");
+            throw new SemanticException(new SemanticError(OfferErrorCodes.DuplicateActiveListing));
         }
 
         if (!string.IsNullOrWhiteSpace(sellerSku)
             && await _db.Offers.AnyAsync(x => x.SellerPartyId == sellerPartyId && x.SellerSku == sellerSku.Trim(), cancellationToken))
         {
-            throw new InvalidOperationException("SKU فروشنده داخل همان فروشنده تکراری است؛ شناسهٔ جهانی Catalog نیست.");
+            throw new SemanticException(new SemanticError(OfferErrorCodes.DuplicateSellerSku));
         }
 
-        var offer = SellerOffer.Create(catalogVariantId, sellerPartyId, channel, sellerSku, DateTimeOffset.UtcNow);
+        var now = _clock.UtcNow;
+        var offer = SellerOffer.Create(_ids.NewId(), catalogVariantId, sellerPartyId, channel, sellerSku, now);
         _db.Offers.Add(offer);
         await _db.SaveChangesAsync(cancellationToken);
         return ToReference(offer);
@@ -146,7 +155,7 @@ public sealed class OfferDirectory : IOfferDirectory, IOfferLookupGateway
     {
         await _guard.EnsureCanMutateAsync(cancellationToken);
         var offer = await _db.Offers.SingleAsync(x => x.OfferId == offerId, cancellationToken);
-        offer.Activate(DateTimeOffset.UtcNow);
+        offer.Activate(_clock.UtcNow);
         await _db.SaveChangesAsync(cancellationToken);
     }
 
@@ -155,7 +164,7 @@ public sealed class OfferDirectory : IOfferDirectory, IOfferLookupGateway
     {
         await _guard.EnsureCanMutateAsync(cancellationToken);
         var offer = await _db.Offers.SingleAsync(x => x.OfferId == offerId, cancellationToken);
-        offer.Suspend(DateTimeOffset.UtcNow);
+        offer.Suspend(_clock.UtcNow);
         await _db.SaveChangesAsync(cancellationToken);
     }
 
@@ -164,7 +173,7 @@ public sealed class OfferDirectory : IOfferDirectory, IOfferLookupGateway
     {
         await _guard.EnsureCanMutateAsync(cancellationToken);
         var offer = await _db.Offers.SingleAsync(x => x.OfferId == offerId, cancellationToken);
-        offer.Archive(DateTimeOffset.UtcNow);
+        offer.Archive(_clock.UtcNow);
         await _db.SaveChangesAsync(cancellationToken);
     }
 

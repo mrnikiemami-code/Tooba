@@ -31,6 +31,13 @@ public static class OfferSellerEndpoints
     private static IResult ToError(PlatformHttpException ex) =>
         Results.Json(new { title = ex.Title, errorCode = ex.ErrorCode }, statusCode: ex.StatusCode);
 
+    private static IResult ToSemanticError(SemanticException ex, HttpContext httpContext)
+    {
+        var culture = httpContext.Request.Headers.AcceptLanguage.ToString();
+        var title = OfferEndpointLocalizer.Title(ex.Error, culture);
+        return Results.Json(new { title, errorCode = ex.Error.Code }, statusCode: StatusCodes.Status400BadRequest);
+    }
+
     private static async Task<IResult> ListOffersAsync(
         IOfferSellerPanel panel,
         IOfferSellerAuthorizer authorizer,
@@ -46,6 +53,10 @@ public static class OfferSellerEndpoints
         catch (PlatformHttpException ex)
         {
             return ToError(ex);
+        }
+        catch (SemanticException ex)
+        {
+            return ToSemanticError(ex, httpContext);
         }
     }
 
@@ -65,6 +76,10 @@ public static class OfferSellerEndpoints
         catch (PlatformHttpException ex)
         {
             return ToError(ex);
+        }
+        catch (SemanticException ex)
+        {
+            return ToSemanticError(ex, httpContext);
         }
     }
 
@@ -87,6 +102,10 @@ public static class OfferSellerEndpoints
         {
             return ToError(ex);
         }
+        catch (SemanticException ex)
+        {
+            return ToSemanticError(ex, httpContext);
+        }
     }
 
     private static async Task<IResult> PatchOfferAsync(
@@ -106,6 +125,10 @@ public static class OfferSellerEndpoints
         catch (PlatformHttpException ex)
         {
             return ToError(ex);
+        }
+        catch (SemanticException ex)
+        {
+            return ToSemanticError(ex, httpContext);
         }
     }
 
@@ -127,6 +150,10 @@ public static class OfferSellerEndpoints
         {
             return ToError(ex);
         }
+        catch (SemanticException ex)
+        {
+            return ToSemanticError(ex, httpContext);
+        }
     }
 
     private static async Task<IResult> WriteOfferInventoryAsync(
@@ -146,6 +173,10 @@ public static class OfferSellerEndpoints
         catch (PlatformHttpException ex)
         {
             return ToError(ex);
+        }
+        catch (SemanticException ex)
+        {
+            return ToSemanticError(ex, httpContext);
         }
     }
 }
