@@ -22,11 +22,11 @@ Accepted architecture baseline:
 TB-TMAR-ARCH-BASELINE
 
 Current next task:
-(none — Host Wave 1 Slice 1 complete; next derived from Result)
+(none — Host Wave 1 Slice 1 accepted after layering repair TB-TMAR-HOST-W1-R1)
 
 Product development rule:
 Foundation (TB-TMAR-FND-001) is ACCEPTED.
-Host Wave 1 Slice 1 (TB-TMAR-HOST-W1) PASS — Store Landing/Page Composition direct writes behind CQRS.
+Host Wave 1 Slice 1 accepted only after TB-TMAR-HOST-W1 + TB-TMAR-HOST-W1-R1 (handlers in Application).
 Last Product Task = TB-P10-T022-R21.
 Architecture Baseline = TB-TMAR-ARCH-BASELINE.
 Primary goal = painless future Microservice migration.
@@ -394,9 +394,9 @@ baseline = TB-TMAR-ARCH-BASELINE
 
 foundation = TB-TMAR-FND-001 ACCEPTED
 
-host-wave-1-slice-1 = TB-TMAR-HOST-W1 PASS
+host-wave-1-slice-1 = TB-TMAR-HOST-W1 + TB-TMAR-HOST-W1-R1 PASS (handlers in Application)
 
-next task = derived from TB-TMAR-HOST-W1 Result (Architect)
+next task = derived from TB-TMAR-HOST-W1-R1 Result (Architect)
 
 primary goal = painless future Microservice migration
 

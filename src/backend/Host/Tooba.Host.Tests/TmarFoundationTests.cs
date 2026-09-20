@@ -105,6 +105,37 @@ public sealed class TmarFoundationTests
     }
 
     [Fact]
+    public void Module_business_MediatR_handlers_do_not_live_in_Infrastructure()
+    {
+        var backend = Path.Combine(FindRepoRoot(), "src", "backend", "Modules");
+        var offenders = new List<string>();
+        foreach (var file in Directory.GetFiles(backend, "*.cs", SearchOption.AllDirectories))
+        {
+            var normalized = file.Replace('\\', '/');
+            if (normalized.Contains("/obj/", StringComparison.OrdinalIgnoreCase)
+                || normalized.Contains("/bin/", StringComparison.OrdinalIgnoreCase))
+            {
+                continue;
+            }
+
+            if (!Regex.IsMatch(normalized, @"/[^/]+\.Infrastructure/", RegexOptions.IgnoreCase))
+            {
+                continue;
+            }
+
+            var text = File.ReadAllText(file);
+            if (!Regex.IsMatch(text, @"IRequestHandler\s*<"))
+            {
+                continue;
+            }
+
+            offenders.Add(Path.GetRelativePath(FindRepoRoot(), file).Replace('\\', '/'));
+        }
+
+        Assert.True(offenders.Count == 0, "Business MediatR handlers in Infrastructure: " + string.Join("; ", offenders));
+    }
+
+    [Fact]
     public void Host_IMemoryCache_sites_do_not_expand_beyond_baseline()
     {
         var baseline = LoadJsonBaseline("tmar-host-imemory-files.json");

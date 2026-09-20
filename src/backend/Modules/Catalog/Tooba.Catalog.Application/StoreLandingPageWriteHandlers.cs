@@ -1,10 +1,9 @@
 using MediatR;
-using Tooba.Catalog.Application;
 using Tooba.Catalog.Domain;
 
-namespace Tooba.Catalog.Infrastructure;
+namespace Tooba.Catalog.Application;
 
-/// <summary>Handlerهای CQRS نوشتن Landing — Stage A: Command → Directory.</summary>
+/// <summary>Handlerهای CQRS نوشتن Landing — Command → Directory (مالک فعلی Catalog).</summary>
 public sealed class CreateStoreLandingPageHandler : IRequestHandler<CreateStoreLandingPageCommand, StoreLandingPage>
 {
     private readonly IStoreLandingPageDirectory _directory;

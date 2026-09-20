@@ -31,7 +31,7 @@ internal static class StoreLandingPageComposerTestFactory
         services.AddSingleton<IStoreLandingPageDirectory>(directory);
         services.AddSingleton<IStoreLandingExternalReferenceGate>(gate);
         services.AddValidatorsFromAssembly(typeof(CreateStoreLandingPageCommand).Assembly);
-        services.AddToobaCqrsFoundation(typeof(StoreLandingPageDirectory).Assembly);
+        services.AddToobaCqrsFoundation(typeof(CreateStoreLandingPageCommand).Assembly);
         var provider = services.BuildServiceProvider();
         var sender = provider.GetRequiredService<ISender>();
         return new StoreLandingPageComposer(catalog, commerce, new MemoryCache(new MemoryCacheOptions()), campaigns, sender);
