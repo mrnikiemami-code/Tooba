@@ -1,0 +1,93 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+
+BEGIN_TOOBA_WORKER_RESULT
+
+Task-ID: TB-TMAR-FE-BASELINE
+Parent-Task: TB-TMAR-CONTRACTS-W6
+Channel: tooba-main
+WorkerId: tooba-worker-01
+AgentType: cursor
+Status: PASS
+
+Summary:
+FE-BASELINE PASS. Canonical frontend root is src/frontend (task text src/Web absent). Full inventory/ownership/target architecture documented. Source-size + import-boundary + SEO characterization guards added (npm run test:architecture 7/7). Locks FE-ARCH-001, FE-SIZE-001/002, FE-SEO-001, FE-BOUNDARY-001/002 recorded. No broad FE refactor, no folder moves, no product behavior change. Repo source-size inventory refreshed (1741). Product-Resume-Safety SAFE_WITH_TMAR_PARALLEL. Next: TB-TMAR-FE-F1.
+
+Program-Name:
+TMAR — Tooba Microservice-Ready Architecture Recovery
+
+Recovery-Start:
+docs/evidence/TB-TMAR-FE-BASELINE/recovery-start.md
+
+Frontend-Inventory:
+docs/evidence/TB-TMAR-FE-BASELINE/frontend-inventory.md + frontend-inventory.json — 710 TS/JS sources; 167 tests; 253 use client; 26 oversized/critical; root src/frontend
+
+Folder-Ownership:
+docs/evidence/TB-TMAR-FE-BASELINE/folder-ownership.md — flat admin accumulation + admin-api dumping ground primary debt
+
+Target-Folder-Architecture:
+docs/evidence/TB-TMAR-FE-BASELINE/target-folder-architecture.md — thin App Router + features/ + design-system + lib
+
+Source-Size-Baseline:
+docs/evidence/TB-TMAR-FE-BASELINE/frontend-source-size-baseline.json; aligned with tmar-source-size-baseline.json FE entries; guard frontend-source-size.guard.test.ts
+
+God-Component-Plan:
+docs/evidence/TB-TMAR-FE-BASELINE/god-component-plan.md — no splits this task
+
+Client-Server-Boundaries:
+docs/evidence/TB-TMAR-FE-BASELINE/client-server-boundaries.md + .json — SEO-critical routes audited; no conversions
+
+SEO-Rendering-Baseline:
+docs/evidence/TB-TMAR-FE-BASELINE/seo-rendering-baseline.md + FE-SEO-001 + seo-rendering.guard.test.ts
+
+Import-Boundaries:
+docs/evidence/TB-TMAR-FE-BASELINE/frontend-import-boundaries.md + frontend-import-boundary-baseline.json (shrink-only shared→feature)
+
+Data-Access-Audit:
+docs/evidence/TB-TMAR-FE-BASELINE/data-access-audit.md — MIXED_STRATEGY_RECOMMENDED; no TanStack/SWR install
+
+Frontend-Dependencies:
+docs/evidence/TB-TMAR-FE-BASELINE/frontend-dependencies.md — Swiper/Embla + CKEditor/TipTap dualities documented; no uninstalls
+
+Frontend-Tests:
+docs/evidence/TB-TMAR-FE-BASELINE/frontend-tests.md — test:architecture added; discovery remains npm-script enumerated
+
+Frontend-Recovery-Roadmap:
+docs/evidence/TB-TMAR-FE-BASELINE/frontend-recovery-roadmap.md — FE-F1…F6
+
+Frontend-Locks:
+docs/evidence/TB-TMAR-FE-BASELINE/frontend-locks.md; docs/architecture/TMAR-architecture-locks.md
+
+Characterization-Plan:
+docs/evidence/TB-TMAR-FE-BASELINE/characterization-plan.md — top-5 giants planned for later
+
+Build-Validation:
+docs/evidence/TB-TMAR-FE-BASELINE/tests.md — architecture 7/7 PASS; TmarSourceSize 6/6 PASS; critical-storefront 1 pre-existing bg-white FAIL untouched; typecheck legacy FAIL untouched
+
+Capability-Map:
+docs/architecture/TOOBA-CAPABILITY-MAP.md — Last Verified = TB-TMAR-FE-BASELINE
+
+Bootstrap:
+docs/architecture/TOOBA-ARCHITECT-BOOTSTRAP.md — fe-baseline PASS; next FE-F1
+
+Master-Recovery-State:
+docs/architecture/TOOBA-TMAR-MASTER-RECOVERY.md — FE-BASELINE accepted in program list; next TB-TMAR-FE-F1; SAFE_WITH_TMAR_PARALLEL
+
+Recovery-SoT:
+docs/evidence/TB-TMAR-FE-BASELINE/recovery-sot.md
+
+Git:
+branch main; tip TIP_PLACEHOLDER; pushed origin/main; HEAD==origin/main; 18ca10c9 ancestor; user work preserved
+
+Architectural-Concerns:
+Flat admin giants + admin-api remain; shared→feature reverse edges baselined; dual carousel/editor deps deferred to FE-F6; Order-hub App→App still frozen; Checkout shared-ACID deferred
+
+Blockers:
+(none)
+
+Product-Resume-Safety:
+SAFE_WITH_TMAR_PARALLEL
+
+Next-Recommended-Task:
+TB-TMAR-FE-F1
+
+END_TOOBA_WORKER_RESULT
