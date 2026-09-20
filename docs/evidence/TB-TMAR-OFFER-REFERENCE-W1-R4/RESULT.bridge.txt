@@ -1,11 +1,117 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+
 BEGIN_TOOBA_WORKER_RESULT
-task_id: TB-TMAR-OFFER-REFERENCE-W1-R4
-status: PASS
-commit: 2c0fff17c8adfe003d42e3edc17f128c66b29ba1
+
+Task-ID: TB-TMAR-OFFER-REFERENCE-W1-R4
+Parent-Task: TB-TMAR-OFFER-REFERENCE-W1-R3
+Channel: tooba-main
+WorkerId: tooba-worker-01
+AgentType: cursor
+Status: PASS
+
+Summary:
+OFFER-REFERENCE-W1-R4 PASS. Restored real Offer CQRS: List/Get/Create/Patch return Application read models via Catalog/Pricing/Inventory Contracts gates (no Host BFF send-and-ignore). Per-use-case Application folders; deleted IOfferSellerPanel; SellerPanelComposer Offer strip. Price/Inventory HTTP remain on Offer.Endpoints but mutate only through Pricing/Inventory Contracts. Module-Recovery-State READY_FOR_FINAL_VERIFICATION. Next TB-TMAR-OFFER-REFERENCE-W1-R5. Frontend untouched. User .rar archives preserved untracked.
+
+Program-Name:
+TMAR — Tooba Microservice-Ready Architecture Recovery
+
+Track:
+OFFER_REFERENCE_MODULE
+
+Recovery-Start:
+docs/evidence/TB-TMAR-OFFER-REFERENCE-W1-R4/recovery-start.md
+
+Architect-Verified-Baseline:
+86d40bb9
+
+TMAR-Execution-Mode:
+BACKEND_ONLY_UNTIL_EXPLICIT_RELEASE
+
+Frontend-Production-Changes:
+NONE
+
+Implementation-Commit:
+13b536f295d747637ee19b852e8d737b5574c7f5
+
+Read-Path:
+docs/evidence/TB-TMAR-OFFER-REFERENCE-W1-R4/read-path.md
+
+Read-Model-Boundaries:
+docs/evidence/TB-TMAR-OFFER-REFERENCE-W1-R4/read-model-boundaries.md
+
+UseCase-Foldering:
+docs/evidence/TB-TMAR-OFFER-REFERENCE-W1-R4/usecase-foldering.md
+
+Cohesive-UseCases:
+docs/evidence/TB-TMAR-OFFER-REFERENCE-W1-R4/cohesive-usecases.md
+
+Host-Offer-Removal:
+docs/evidence/TB-TMAR-OFFER-REFERENCE-W1-R4/host-offer-removal.md
+
+Pricing-Boundary:
+docs/evidence/TB-TMAR-OFFER-REFERENCE-W1-R4/pricing-boundary.md
+
+Inventory-Boundary:
+docs/evidence/TB-TMAR-OFFER-REFERENCE-W1-R4/inventory-boundary.md
+
+Access-Boundary:
+docs/evidence/TB-TMAR-OFFER-REFERENCE-W1-R4/access-boundary.md
+
+Error-Boundary:
+docs/evidence/TB-TMAR-OFFER-REFERENCE-W1-R4/error-boundary.md
+
+Language-Namespace-Scan:
+docs/evidence/TB-TMAR-OFFER-REFERENCE-W1-R4/language-namespace-scan.md
+
+Source-Size:
+docs/evidence/TB-TMAR-OFFER-REFERENCE-W1-R4/source-size.md
+
+Residual-Scan:
+docs/evidence/TB-TMAR-OFFER-REFERENCE-W1-R4/residual-scan.md
+
+Focused-Validation:
+docs/evidence/TB-TMAR-OFFER-REFERENCE-W1-R4/focused-validation.md
+Offer.Tests 29/29; Pricing.Tests 11/11; Host focused seller offer 22/22; solution build succeeded
+
+IOfferSellerPanel:
+DELETED
+
+Endpoint-Flow:
+ISender for List/Get/Create/Patch; responses are MediatR results; price/inventory set via owner Contracts
+
+AntiPattern-Gate:
+CLEAN
+
+Capability-Map:
+narrow reference-pattern residual note updated
+
+Bootstrap:
+Updated READY_FOR_FINAL_VERIFICATION
+
+Master-Recovery-State:
+Updated READY_FOR_FINAL_VERIFICATION
+
+Recovery-SoT:
+docs/evidence/TB-TMAR-OFFER-REFERENCE-W1-R4/recovery-sot.md
+
+Git:
+TIP_SHA_PLACEHOLDER
+HEAD==origin/main: YES
 branch: main
-summary: Offer R4 restored real CQRS. List/Get/Create/Patch return Application read models via Catalog/Pricing/Inventory Contracts. IOfferSellerPanel deleted. Price/Inventory set via Pricing/Inventory Contracts gates. Module-Recovery-State READY_FOR_FINAL_VERIFICATION; next TB-TMAR-OFFER-REFERENCE-W1-R5.
-evidence_dir: docs/evidence/TB-TMAR-OFFER-REFERENCE-W1-R4
-tests: Offer.Tests 29/29; Pricing.Tests 11/11; Host focused seller offer 22/22; solution build succeeded.
-Module-Recovery-State: READY_FOR_FINAL_VERIFICATION
-Next-Task: TB-TMAR-OFFER-REFERENCE-W1-R5
+
+Architectural-Concerns:
+Checkout remains PAUSED_AT_SAFE_W5_CHECKPOINT. Price/Inventory route URLs remain under Offer.Endpoints as Contracts-gated owner writes (acceptable R4 alternative). Tax/Order enrichment outside Offer read models not in R4 scope.
+
+Blockers:
+NONE
+
+Product-Resume-Safety:
+SAFE_WITH_TMAR_PARALLEL
+
+Module-Recovery-State:
+READY_FOR_FINAL_VERIFICATION
+
+Next-Recommended-Task:
+TB-TMAR-OFFER-REFERENCE-W1-R5
+
 END_TOOBA_WORKER_RESULT
