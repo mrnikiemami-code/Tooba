@@ -1,7 +1,12 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.DependencyInjection;
+using FluentValidation;
+using MediatR;
 using Tooba.BuildingBlocks;
+using Tooba.Catalog.Application;
 using Tooba.Catalog.Domain;
+using Tooba.Catalog.Infrastructure;
 using Tooba.Catalog.Infrastructure.Persistence;
 using Tooba.Host.Admin;
 using Tooba.Host.Storefront;
@@ -101,7 +106,7 @@ public sealed class StoreAppearanceAdminTests
         await catalogB.SaveChangesAsync();
         await projectorA.GetEffectiveAsync(storeA, CancellationToken.None);
         await projectorB.GetEffectiveAsync(storeB, CancellationToken.None);
-        var composerA = new StoreAppearanceSettingsComposer(catalogA, new FixedCommerce(storeA), projectorA);
+        var composerA = CreateComposerFor(catalogA, storeA, projectorA);
         await composerA.SaveAsync("amber-gold", CancellationToken.None);
 
         Assert.True(cache.TryGetValue(StoreAppearanceProjector.CacheKeyPrefix + "tenant:store-b", out StoreAppearanceProjection? cachedB));
@@ -229,7 +234,22 @@ public sealed class StoreAppearanceAdminTests
         catalog = CreateCatalog();
         var context = OutboxTestContextFactory.SingleStore("store-a", "conn-a");
         var projector = CreateProjector(catalog, context, new MemoryCache(new MemoryCacheOptions()));
-        return new StoreAppearanceSettingsComposer(catalog, new FixedCommerce(context), projector);
+        return CreateComposerFor(catalog, context, projector);
+    }
+
+    private static StoreAppearanceSettingsComposer CreateComposerFor(
+        CatalogDbContext catalog,
+        CommerceContext context,
+        StoreAppearanceProjector projector)
+    {
+        var directory = new StoreAppearanceSettingsDirectory(catalog, new SystemUtcClock());
+        var services = new ServiceCollection();
+        services.AddLogging();
+        services.AddSingleton<IStoreAppearanceSettingsDirectory>(directory);
+        services.AddValidatorsFromAssembly(typeof(SaveStoreAppearanceSettingsCommand).Assembly);
+        services.AddToobaCqrsFoundation(typeof(SaveStoreAppearanceSettingsCommand).Assembly);
+        var provider = services.BuildServiceProvider();
+        return new StoreAppearanceSettingsComposer(new FixedCommerce(context), projector, provider.GetRequiredService<ISender>());
     }
 
     private static CatalogDbContext CreateCatalog()

@@ -1,27 +1,27 @@
-using Microsoft.EntityFrameworkCore;
+using MediatR;
 using Tooba.BuildingBlocks;
+using Tooba.Catalog.Application;
 using Tooba.Catalog.Domain;
-using Tooba.Catalog.Infrastructure.Persistence;
 using Tooba.Host.Storefront;
 
 namespace Tooba.Host.Admin;
 
-/// <summary>ذخیره PaletteKey تأییدشده و باطل‌کردن cache همان Store.</summary>
+/// <summary>خواندن ظاهر Store و ارسال فرمان نوشتن از طریق CQRS.</summary>
 public sealed class StoreAppearanceSettingsComposer
 {
-    private readonly CatalogDbContext _catalog;
     private readonly ICurrentCommerceContext _commerce;
     private readonly StoreAppearanceProjector _projector;
+    private readonly ISender _sender;
 
-    /// <summary>نویسنده ظاهر Store را به Catalog و پروژکتور وصل می‌کند.</summary>
+    /// <summary>نویسنده ظاهر Store را به پروژکتور و ISender وصل می‌کند.</summary>
     public StoreAppearanceSettingsComposer(
-        CatalogDbContext catalog,
         ICurrentCommerceContext commerce,
-        StoreAppearanceProjector projector)
+        StoreAppearanceProjector projector,
+        ISender sender)
     {
-        _catalog = catalog;
         _commerce = commerce;
         _projector = projector;
+        _sender = sender;
     }
 
     /// <summary>ظاهر مؤثر و فهرست پالت‌های مجاز را برمی‌گرداند.</summary>
@@ -43,7 +43,7 @@ public sealed class StoreAppearanceSettingsComposer
     public Task<StoreAppearanceAdminView> SaveAsync(string? paletteKey, string? themeMode, string? productCardSkin, CancellationToken cancellationToken)
         => SaveAsync(paletteKey, themeMode, productCardSkin, backgroundStyle: null, cancellationToken);
 
-    /// <summary>PaletteKey و ThemeMode و پوستهٔ کارت و پس‌زمینه را اتمیک می‌نویسد.</summary>
+    /// <summary>PaletteKey و ThemeMode و پوستهٔ کارت و پس‌زمینه را از طریق Command می‌نویسد.</summary>
     public async Task<StoreAppearanceAdminView> SaveAsync(
         string? paletteKey,
         string? themeMode,
@@ -51,56 +51,10 @@ public sealed class StoreAppearanceSettingsComposer
         string? backgroundStyle,
         CancellationToken cancellationToken)
     {
-        if (!StoreAppearancePaletteRegistry.IsKnown(paletteKey))
-        {
-            throw new PlatformHttpException(400, "پالت انتخاب‌شده مجاز نیست.", "appearance.palette.invalid");
-        }
-
-        StoreAppearanceThemeMode? parsedTheme = null;
-        if (themeMode is not null)
-        {
-            if (!StoreAppearanceSettings.TryParseThemeMode(themeMode, out var parsed))
-            {
-                throw new PlatformHttpException(400, "حالت تم انتخاب‌شده مجاز نیست.", "appearance.theme.invalid");
-            }
-
-            parsedTheme = parsed;
-        }
-
-        string? canonicalSkin = null;
-        if (productCardSkin is not null)
-        {
-            if (!StoreAppearanceProductCardSkinRegistry.IsKnown(productCardSkin))
-            {
-                throw new PlatformHttpException(400, "پوستهٔ کارت انتخاب‌شده مجاز نیست.", "appearance.skin.invalid");
-            }
-
-            canonicalSkin = StoreAppearanceProductCardSkinRegistry.ResolveKey(productCardSkin);
-        }
-
-        StoreAppearanceBackgroundStyle? parsedBackground = null;
-        if (backgroundStyle is not null)
-        {
-            if (!StoreAppearanceSettings.TryParseBackgroundStyle(backgroundStyle, out var parsed))
-            {
-                throw new PlatformHttpException(400, "پس‌زمینهٔ انتخاب‌شده مجاز نیست.", "appearance.background.invalid");
-            }
-
-            parsedBackground = parsed;
-        }
-
-        var canonical = StoreAppearancePaletteRegistry.ResolveKey(paletteKey);
-        var now = DateTimeOffset.UtcNow;
-        var row = await _catalog.StoreAppearanceSettings
-            .SingleOrDefaultAsync(x => x.SettingsId == StoreAppearanceSettings.SingletonId, cancellationToken);
-        if (row is null)
-        {
-            row = StoreAppearanceSettings.CreateDefault(now);
-            _catalog.StoreAppearanceSettings.Add(row);
-        }
-
-        row.Replace(canonical, parsedTheme ?? row.ThemeMode, canonicalSkin, parsedBackground, now);
-        await _catalog.SaveChangesAsync(cancellationToken);
+        await _sender.Send(
+            new SaveStoreAppearanceSettingsCommand(
+                new StoreAppearanceSettingsWriteModel(paletteKey, themeMode, productCardSkin, backgroundStyle)),
+            cancellationToken);
         _projector.Invalidate(_commerce.Current);
         return ToView(await _projector.GetEffectiveAsync(cancellationToken));
     }

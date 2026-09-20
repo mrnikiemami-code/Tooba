@@ -1,0 +1,69 @@
+{
+  "generatedAt": "2026-09-20T08:11:14.594Z",
+  "taskId": "TB-TMAR-HOST-W3",
+  "selectedSlice": "Admin/StoreAppearanceSettingsComposer.SaveAsync",
+  "candidates": [
+    {
+      "path": "Admin/StoreAppearanceSettingsComposer.cs",
+      "classification": "DIRECT_DB_WRITE",
+      "selected": true
+    },
+    {
+      "path": "Admin/QuantitySettingsEndpoints.cs",
+      "classification": "DIRECT_DB_WRITE",
+      "selected": false
+    },
+    {
+      "path": "Admin/UnitOfMeasureEndpoints.cs",
+      "classification": "DIRECT_DB_WRITE",
+      "selected": false
+    },
+    {
+      "path": "Admin/CheckoutAbuseSettingsEndpoints.cs",
+      "classification": "DIRECT_DB_WRITE",
+      "selected": false
+    },
+    {
+      "path": "Admin/CheckoutIdentitySettingsEndpoints.cs",
+      "classification": "DIRECT_DB_WRITE",
+      "selected": false
+    },
+    {
+      "path": "Admin/ReservationPolicyAdminEndpoints.cs",
+      "classification": "DIRECT_DB_WRITE",
+      "selected": false
+    },
+    {
+      "path": "Admin/HoldPolicySettingsEndpoints.cs",
+      "classification": "DIRECT_DB_WRITE",
+      "note": "dual Catalog+Payment — reject"
+    },
+    {
+      "path": "Admin/ProductWorkspaceComposer.cs",
+      "classification": "DIRECT_DB_WRITE",
+      "note": "too large — reject"
+    },
+    {
+      "path": "Admin/ShippingServiceEndpoints.cs",
+      "classification": "DIRECT_DB_WRITE",
+      "selected": false
+    },
+    {
+      "path": "Seller/SellerPanelComposer.cs",
+      "classification": "DIRECT_DB_WRITE",
+      "selected": false
+    },
+    {
+      "path": "Storefront/CheckoutAbuseGate.cs",
+      "classification": "DIRECT_DB_WRITE",
+      "note": "checkout/order — reject"
+    },
+    {
+      "path": "Admin/CatalogDemo/CatalogDemoResetService.cs",
+      "classification": "DIRECT_TRANSACTION",
+      "note": "dev/demo"
+    }
+  ],
+  "baselineBefore": "includes Admin/StoreAppearanceSettingsComposer.cs",
+  "baselineAfter": "removed Admin/StoreAppearanceSettingsComposer.cs"
+}

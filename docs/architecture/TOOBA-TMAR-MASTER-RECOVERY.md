@@ -147,6 +147,8 @@ TB-TMAR-FE-ADMIN-W5
 
 TB-TMAR-FE-ADMIN-W6
 
+TB-TMAR-HOST-W3
+
 Current Product Resume Gate:
 SAFE_WITH_TMAR_PARALLEL
 
@@ -154,7 +156,10 @@ User choice:
 Continue TMAR for now until user explicitly says to return to product feature work.
 
 Next TMAR task:
-TB-TMAR-HOST-W3
+TB-TMAR-HOST-W4
+
+Host W3:
+TB-TMAR-HOST-W3 — StoreAppearanceSettings Host write → Catalog Application/Directory; Host-write baseline shrink; CONTINUE_HOST. Evidence: `docs/evidence/TB-TMAR-HOST-W3/`.
 
 Frontend ADMIN-W6:
 TB-TMAR-FE-ADMIN-W6 — admin-dashboard migrated; admin-api 1022→1002; exports 38→35; admin-screens 894→810; Flat exit READY_TO_PIVOT; Architecture-Priority HOST. Evidence: `docs/evidence/TB-TMAR-FE-ADMIN-W6/`.
