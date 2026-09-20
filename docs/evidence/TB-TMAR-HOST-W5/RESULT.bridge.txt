@@ -82,7 +82,7 @@ Recovery-SoT:
 docs/evidence/TB-TMAR-HOST-W5/recovery-sot.md
 
 Git:
-branch main; tip 47508870b619dff0c0e15c3979a2da48f2234fa4; pushed origin/main; HEAD==origin/main; 18ca10c9 ancestor; user work preserved
+branch main; tip 4eebcc539de1e2566260ef9c3b85ea00b5cea6c2; pushed origin/main; HEAD==origin/main; 18ca10c9 ancestor; user work preserved
 
 Architectural-Concerns:
 Residual Host writes remain (Shipping/Seller/ProductWorkspace/Order-adjacent); List/Get UoM still CatalogDbContext read composition; Checkout shared-ACID deferred
