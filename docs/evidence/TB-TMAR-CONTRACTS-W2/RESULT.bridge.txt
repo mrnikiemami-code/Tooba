@@ -1,4 +1,4 @@
-PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+﻿PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
 
 BEGIN_TOOBA_WORKER_RESULT
 
@@ -64,7 +64,7 @@ Recovery-SoT:
 docs/evidence/TB-TMAR-CONTRACTS-W2/recovery-sot.md
 
 Git:
-branch main; tip PLACEHOLDER_SHA; pushed origin/main; HEAD==origin/main; 18ca10c9 ancestor; user work preserved
+branch main; tip b2742d3b62c3db8c06e41a975df569b12745b0db; pushed origin/main; HEAD==origin/main; 18ca10c9 ancestor; user work preserved
 
 Architectural-Concerns:
 Checkout TransactionScope shared-ACID remains; Order.Application hub App→App edges remain; Returns.Infra→Wallet.Application still present
