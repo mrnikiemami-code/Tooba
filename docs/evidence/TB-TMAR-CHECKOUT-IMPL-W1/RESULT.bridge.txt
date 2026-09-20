@@ -88,7 +88,7 @@ Recovery-SoT:
 docs/evidence/TB-TMAR-CHECKOUT-IMPL-W1/recovery-sot.md
 
 Git:
-branch main; tip 9c1ebd10f0941e809f8f1cd5313d30e579fea68b; pushed origin/main; HEAD==origin/main; 18ca10c9 ancestor; user work preserved
+branch main; tip e333b8e14a19556b9cc0214f637ca0e0a3b1ce5f; pushed origin/main; HEAD==origin/main; 18ca10c9 ancestor; user work preserved
 
 Architectural-Concerns:
 Shared TransactionScope remains until later IMPL stages; Process Manager runtime deferred to W2; Orders FE still waiting for backend W2
