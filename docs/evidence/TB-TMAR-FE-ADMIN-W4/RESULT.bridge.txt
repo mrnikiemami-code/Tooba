@@ -73,7 +73,7 @@ Recovery-SoT:
 docs/evidence/TB-TMAR-FE-ADMIN-W4/recovery-sot.md
 
 Git:
-branch main; tip PLACEHOLDER_SHA; pushed origin/main; HEAD==origin/main; 18ca10c9 ancestor; user work preserved
+branch main; tip 3c9ad90055cc4a8661224d71b924be58c214db45; pushed origin/main; HEAD==origin/main; 18ca10c9 ancestor; user work preserved
 
 Architectural-Concerns:
 Remaining admin-api capability debt (receipts/orders/dashboard/…); formatters SHARED; giants deferred; Flat CONTINUE_FEATURE_MIGRATION
