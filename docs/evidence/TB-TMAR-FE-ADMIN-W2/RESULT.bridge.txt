@@ -70,7 +70,7 @@ Recovery-SoT:
 docs/evidence/TB-TMAR-FE-ADMIN-W2/recovery-sot.md
 
 Git:
-branch main; tip 668d5d431f0dd1b648cd1442cfb57a59a0120909; pushed origin/main; HEAD==origin/main; 18ca10c9 ancestor; user work preserved
+branch main; tip 064f9bae90e5a950c19dc46a62093a6875eeca9e; pushed origin/main; HEAD==origin/main; 18ca10c9 ancestor; user work preserved
 
 Architectural-Concerns:
 Remaining admin-api capability debt (orders/sellers/customers/receipts/…); formatters still SHARED on admin-api; giants deferred (God DEFER); Order-hub App→App frozen; Checkout shared-ACID deferred
