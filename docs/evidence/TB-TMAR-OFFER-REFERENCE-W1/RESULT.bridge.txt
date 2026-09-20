@@ -97,7 +97,7 @@ Recovery-SoT:
 docs/evidence/TB-TMAR-OFFER-REFERENCE-W1/recovery-sot.md
 
 Git:
-tip 6b029e60e2939f6e85e5c412bc1c6ac24503d5b4
+tip aee767f63c6403fcad606e2865ba47bff566be11
 
 Architectural-Concerns:
 Host SellerPanelComposer remains IOfferSellerPanel adapter for Catalog/Pricing/Inventory/Tax enrichment reads until those Contracts cover seller-panel presentation. Offer.Infrastructure still references Catalog.Application + Party.Application lookups (grandfathered).
