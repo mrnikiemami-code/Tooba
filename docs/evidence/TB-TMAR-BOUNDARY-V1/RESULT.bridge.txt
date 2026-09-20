@@ -1,0 +1,69 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+
+BEGIN_TOOBA_WORKER_RESULT
+
+Task-ID: TB-TMAR-BOUNDARY-V1
+Parent-Task: TB-TMAR-HOST-W2
+Channel: tooba-main
+WorkerId: tooba-worker-01
+AgentType: cursor
+Status: PASS
+
+Summary:
+Verified independent-review boundary claims against repository ProjectReferences and source. All four reported edges CONFIRMED. Cart/Order/Pricing.Domain→Offer.Domain are structural but currently unused type symbols (dead ProjectReferences). Payment.Infrastructure→Wallet.Domain is live (WalletAccount.NormalizeCurrency). Order.Application is a sync checkout hub (6 foreign Application refs; already App→App baselined). Explained ArchitectureBoundaryTests false negatives; added exact shrinkable baselines+tests for Domain→foreign Domain and Infrastructure→foreign Domain. Produced Contracts extraction sequence. No broad refactor. Product-Resume-Safety NOT_YET. Next: TB-TMAR-CONTRACTS-W1.
+
+Program-Name:
+TMAR — Tooba Microservice-Ready Architecture Recovery
+
+Recovery-Start:
+docs/evidence/TB-TMAR-BOUNDARY-V1/recovery-start.md
+
+Dependency-Graph:
+docs/evidence/TB-TMAR-BOUNDARY-V1/dependency-graph.json
+
+Claim-Verification:
+docs/evidence/TB-TMAR-BOUNDARY-V1/dependency-verification.md — all 4 claims CONFIRMED
+
+Source-Coupling:
+docs/evidence/TB-TMAR-BOUNDARY-V1/source-coupling.md
+
+Order-Application-Hub:
+docs/evidence/TB-TMAR-BOUNDARY-V1/order-hub-analysis.md — both legitimate orchestrator and over-coupled hub
+
+Architecture-Test-Gaps:
+docs/evidence/TB-TMAR-BOUNDARY-V1/architecture-test-gap.md
+
+Architecture-Guards:
+Baselines tmar-domain-to-foreign-domain.json + tmar-infra-to-foreign-domain.json; TmarFoundationTests guards (no wildcards)
+
+Contracts-Sequence:
+docs/evidence/TB-TMAR-BOUNDARY-V1/contracts-sequence.md — Offer.Contracts → Wallet.Contracts → Inventory/Pricing/Tax → Cart → Promotion
+
+Tests:
+docs/evidence/TB-TMAR-BOUNDARY-V1/tests.md
+
+Capability-Map:
+docs/architecture/TOOBA-CAPABILITY-MAP.md — Last Verified = TB-TMAR-BOUNDARY-V1
+
+Bootstrap:
+docs/architecture/TOOBA-ARCHITECT-BOOTSTRAP.md
+
+Recovery-SoT:
+docs/evidence/TB-TMAR-BOUNDARY-V1/recovery-sot.md
+
+Git:
+branch main; tip PLACEHOLDER_SHA; pushed origin/main; HEAD==origin/main; 18ca10c9 ancestor
+
+Architectural-Concerns:
+Dead Domain→Offer refs should be deleted in BOUNDARY-R1 or Contracts prep; Payment→Wallet Domain helper needs Contracts/ACL; Infra→foreign Application still unfrozen
+
+Blockers:
+(none)
+
+Product-Resume-Safety:
+NOT_YET
+
+Next-Recommended-Task:
+TB-TMAR-CONTRACTS-W1
+
+END_TOOBA_WORKER_RESULT

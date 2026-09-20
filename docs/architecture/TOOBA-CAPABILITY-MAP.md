@@ -34,7 +34,8 @@ Evidence files remain the deep-detail source; this map is the quick index.
 | Target | Modular Monolith now → low-friction microservices; CQRS + MediatR 12.5.0; per-module Contracts; Host transport-only; strangler not Big Bang | TB-TMAR-ARCH-BASELINE |
 | Foundation | MediatR 12.5.0 + FluentValidation pipeline; IClock; IIdGenerator; SemanticError; freeze guards (Host write / App→App / IMemoryCache) | TB-TMAR-FND-001 |
 | Host Wave 1 Slice 1 | Store Landing CQRS; handlers in Application; Infrastructure Directory/EF | TB-TMAR-HOST-W1-R1 |
-| Host Wave 2 | Store Menu Host writes behind CQRS (ISender→Application handlers→Directory); baseline shrunk further | TB-TMAR-HOST-W2 |
-| Next | Continue Host dangerous-write removal (next evidence-selected slice) | TB-TMAR-HOST-W2 |
+| Host Wave 2 | Store Menu Host writes behind CQRS; baseline shrunk | TB-TMAR-HOST-W2 |
+| Boundary V1 | Independent review claims verified: Domain→Offer (3) + Payment.Infra→Wallet.Domain CONFIRMED; Order.Application hub mapped; Domain/Infra foreign Domain edges frozen with exact baselines | TB-TMAR-BOUNDARY-V1 |
+| Next | Contracts extraction wave 1 (Offer/Wallet ports) — higher priority than next Host slice | TB-TMAR-BOUNDARY-V1 |
 
-Last Verified Task = TB-TMAR-HOST-W2
+Last Verified Task = TB-TMAR-BOUNDARY-V1

@@ -136,6 +136,88 @@ public sealed class TmarFoundationTests
     }
 
     [Fact]
+    public void Domain_to_foreign_Domain_edges_do_not_expand_beyond_baseline()
+    {
+        var baseline = LoadJsonBaseline("tmar-domain-to-foreign-domain.json");
+        var allowed = baseline.GetProperty("edges").EnumerateArray().Select(e => e.GetString()!).ToHashSet(StringComparer.Ordinal);
+        var actual = ScanProjectEdges(
+                fromSuffix: ".Domain",
+                toSuffix: ".Domain",
+                foreignModulesOnly: true)
+            .ToHashSet(StringComparer.Ordinal);
+        var extra = actual.Except(allowed).OrderBy(x => x).ToArray();
+        Assert.True(extra.Length == 0, "NEW Domain→foreign Domain edges: " + string.Join("; ", extra));
+        var missing = allowed.Except(actual).OrderBy(x => x).ToArray();
+        Assert.True(missing.Length == 0, "Baseline Domain→foreign Domain edges missing from repo (shrink required via explicit edit): " + string.Join("; ", missing));
+    }
+
+    [Fact]
+    public void Infrastructure_to_foreign_Domain_edges_do_not_expand_beyond_baseline()
+    {
+        var baseline = LoadJsonBaseline("tmar-infra-to-foreign-domain.json");
+        var allowed = baseline.GetProperty("edges").EnumerateArray().Select(e => e.GetString()!).ToHashSet(StringComparer.Ordinal);
+        var actual = ScanProjectEdges(
+                fromSuffix: ".Infrastructure",
+                toSuffix: ".Domain",
+                foreignModulesOnly: true)
+            .ToHashSet(StringComparer.Ordinal);
+        var extra = actual.Except(allowed).OrderBy(x => x).ToArray();
+        Assert.True(extra.Length == 0, "NEW Infrastructure→foreign Domain edges: " + string.Join("; ", extra));
+        var missing = allowed.Except(actual).OrderBy(x => x).ToArray();
+        Assert.True(missing.Length == 0, "Baseline Infrastructure→foreign Domain edges missing from repo (shrink required via explicit edit): " + string.Join("; ", missing));
+    }
+
+    private static IEnumerable<string> ScanProjectEdges(string fromSuffix, string toSuffix, bool foreignModulesOnly)
+    {
+        var backend = Path.Combine(FindRepoRoot(), "src", "backend");
+        foreach (var path in Directory.GetFiles(backend, "*.csproj", SearchOption.AllDirectories))
+        {
+            if (path.Contains($"{Path.DirectorySeparatorChar}obj{Path.DirectorySeparatorChar}", StringComparison.Ordinal))
+            {
+                continue;
+            }
+
+            var fromName = Path.GetFileNameWithoutExtension(path);
+            if (!fromName.EndsWith(fromSuffix, StringComparison.Ordinal))
+            {
+                continue;
+            }
+
+            var fromModule = ModuleNameOf(fromName);
+            var xml = XDocument.Load(path);
+            foreach (var include in xml.Descendants().Where(e => e.Name.LocalName == "ProjectReference")
+                         .Select(e => e.Attribute("Include")?.Value)
+                         .Where(v => !string.IsNullOrWhiteSpace(v)))
+            {
+                var toName = Path.GetFileNameWithoutExtension(include!);
+                if (!toName.EndsWith(toSuffix, StringComparison.Ordinal))
+                {
+                    continue;
+                }
+
+                if (foreignModulesOnly && ModuleNameOf(fromName) == ModuleNameOf(toName))
+                {
+                    continue;
+                }
+
+                if (foreignModulesOnly && fromModule is null)
+                {
+                    continue;
+                }
+
+                yield return $"{fromName} -> {toName}";
+            }
+        }
+    }
+
+    private static string? ModuleNameOf(string projectName)
+    {
+        // Tooba.Cart.Domain → Cart
+        var parts = projectName.Split('.', StringSplitOptions.RemoveEmptyEntries);
+        return parts.Length >= 2 && parts[0] == "Tooba" ? parts[1] : null;
+    }
+
+    [Fact]
     public void Host_IMemoryCache_sites_do_not_expand_beyond_baseline()
     {
         var baseline = LoadJsonBaseline("tmar-host-imemory-files.json");

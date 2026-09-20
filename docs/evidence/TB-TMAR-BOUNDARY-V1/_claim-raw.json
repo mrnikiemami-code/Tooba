@@ -1,0 +1,392 @@
+{
+  "claimResults": {
+    "Tooba.Cart.Domain -> Tooba.Offer.Domain": {
+      "status": "CONFIRMED",
+      "edges": [
+        {
+          "from": "Tooba.Cart.Domain",
+          "to": "Tooba.Offer.Domain",
+          "fromPath": "src/backend/Modules/Cart/Tooba.Cart.Domain/Tooba.Cart.Domain.csproj",
+          "toHint": "../../Offer/Tooba.Offer.Domain/Tooba.Offer.Domain.csproj",
+          "fromLayer": "Domain",
+          "toLayer": "Domain",
+          "fromModule": "Cart",
+          "toModule": "Offer",
+          "foreign": true,
+          "kind": "Domain → foreign Domain"
+        }
+      ]
+    },
+    "Tooba.Order.Domain -> Tooba.Offer.Domain": {
+      "status": "CONFIRMED",
+      "edges": [
+        {
+          "from": "Tooba.Order.Domain",
+          "to": "Tooba.Offer.Domain",
+          "fromPath": "src/backend/Modules/Order/Tooba.Order.Domain/Tooba.Order.Domain.csproj",
+          "toHint": "../../Offer/Tooba.Offer.Domain/Tooba.Offer.Domain.csproj",
+          "fromLayer": "Domain",
+          "toLayer": "Domain",
+          "fromModule": "Order",
+          "toModule": "Offer",
+          "foreign": true,
+          "kind": "Domain → foreign Domain"
+        }
+      ]
+    },
+    "Tooba.Pricing.Domain -> Tooba.Offer.Domain": {
+      "status": "CONFIRMED",
+      "edges": [
+        {
+          "from": "Tooba.Pricing.Domain",
+          "to": "Tooba.Offer.Domain",
+          "fromPath": "src/backend/Modules/Pricing/Tooba.Pricing.Domain/Tooba.Pricing.Domain.csproj",
+          "toHint": "../../Offer/Tooba.Offer.Domain/Tooba.Offer.Domain.csproj",
+          "fromLayer": "Domain",
+          "toLayer": "Domain",
+          "fromModule": "Pricing",
+          "toModule": "Offer",
+          "foreign": true,
+          "kind": "Domain → foreign Domain"
+        }
+      ]
+    },
+    "Tooba.Payment.Infrastructure -> Tooba.Wallet.Domain": {
+      "status": "CONFIRMED",
+      "edges": [
+        {
+          "from": "Tooba.Payment.Infrastructure",
+          "to": "Tooba.Wallet.Domain",
+          "fromPath": "src/backend/Modules/Payment/Tooba.Payment.Infrastructure/Tooba.Payment.Infrastructure.csproj",
+          "toHint": "../../Wallet/Tooba.Wallet.Domain/Tooba.Wallet.Domain.csproj",
+          "fromLayer": "Infrastructure",
+          "toLayer": "Domain",
+          "fromModule": "Payment",
+          "toModule": "Wallet",
+          "foreign": true,
+          "kind": "Infrastructure → foreign Domain"
+        }
+      ]
+    }
+  },
+  "orderApp": [
+    {
+      "from": "Tooba.Order.Application",
+      "to": "Tooba.Cart.Application",
+      "fromPath": "src/backend/Modules/Order/Tooba.Order.Application/Tooba.Order.Application.csproj",
+      "toHint": "../../Cart/Tooba.Cart.Application/Tooba.Cart.Application.csproj",
+      "fromLayer": "Application",
+      "toLayer": "Application",
+      "fromModule": "Order",
+      "toModule": "Cart",
+      "foreign": true,
+      "kind": "Application → foreign Application"
+    },
+    {
+      "from": "Tooba.Order.Application",
+      "to": "Tooba.Offer.Application",
+      "fromPath": "src/backend/Modules/Order/Tooba.Order.Application/Tooba.Order.Application.csproj",
+      "toHint": "../../Offer/Tooba.Offer.Application/Tooba.Offer.Application.csproj",
+      "fromLayer": "Application",
+      "toLayer": "Application",
+      "fromModule": "Order",
+      "toModule": "Offer",
+      "foreign": true,
+      "kind": "Application → foreign Application"
+    },
+    {
+      "from": "Tooba.Order.Application",
+      "to": "Tooba.Pricing.Application",
+      "fromPath": "src/backend/Modules/Order/Tooba.Order.Application/Tooba.Order.Application.csproj",
+      "toHint": "../../Pricing/Tooba.Pricing.Application/Tooba.Pricing.Application.csproj",
+      "fromLayer": "Application",
+      "toLayer": "Application",
+      "fromModule": "Order",
+      "toModule": "Pricing",
+      "foreign": true,
+      "kind": "Application → foreign Application"
+    },
+    {
+      "from": "Tooba.Order.Application",
+      "to": "Tooba.Inventory.Application",
+      "fromPath": "src/backend/Modules/Order/Tooba.Order.Application/Tooba.Order.Application.csproj",
+      "toHint": "../../Inventory/Tooba.Inventory.Application/Tooba.Inventory.Application.csproj",
+      "fromLayer": "Application",
+      "toLayer": "Application",
+      "fromModule": "Order",
+      "toModule": "Inventory",
+      "foreign": true,
+      "kind": "Application → foreign Application"
+    },
+    {
+      "from": "Tooba.Order.Application",
+      "to": "Tooba.Tax.Application",
+      "fromPath": "src/backend/Modules/Order/Tooba.Order.Application/Tooba.Order.Application.csproj",
+      "toHint": "../../Tax/Tooba.Tax.Application/Tooba.Tax.Application.csproj",
+      "fromLayer": "Application",
+      "toLayer": "Application",
+      "fromModule": "Order",
+      "toModule": "Tax",
+      "foreign": true,
+      "kind": "Application → foreign Application"
+    },
+    {
+      "from": "Tooba.Order.Application",
+      "to": "Tooba.Promotion.Application",
+      "fromPath": "src/backend/Modules/Order/Tooba.Order.Application/Tooba.Order.Application.csproj",
+      "toHint": "../../Promotion/Tooba.Promotion.Application/Tooba.Promotion.Application.csproj",
+      "fromLayer": "Application",
+      "toLayer": "Application",
+      "fromModule": "Order",
+      "toModule": "Promotion",
+      "foreign": true,
+      "kind": "Application → foreign Application"
+    }
+  ],
+  "foreignDomain": [
+    {
+      "from": "Tooba.Cart.Domain",
+      "to": "Tooba.Offer.Domain",
+      "fromPath": "src/backend/Modules/Cart/Tooba.Cart.Domain/Tooba.Cart.Domain.csproj",
+      "toHint": "../../Offer/Tooba.Offer.Domain/Tooba.Offer.Domain.csproj",
+      "fromLayer": "Domain",
+      "toLayer": "Domain",
+      "fromModule": "Cart",
+      "toModule": "Offer",
+      "foreign": true,
+      "kind": "Domain → foreign Domain"
+    },
+    {
+      "from": "Tooba.Order.Domain",
+      "to": "Tooba.Offer.Domain",
+      "fromPath": "src/backend/Modules/Order/Tooba.Order.Domain/Tooba.Order.Domain.csproj",
+      "toHint": "../../Offer/Tooba.Offer.Domain/Tooba.Offer.Domain.csproj",
+      "fromLayer": "Domain",
+      "toLayer": "Domain",
+      "fromModule": "Order",
+      "toModule": "Offer",
+      "foreign": true,
+      "kind": "Domain → foreign Domain"
+    },
+    {
+      "from": "Tooba.Pricing.Domain",
+      "to": "Tooba.Offer.Domain",
+      "fromPath": "src/backend/Modules/Pricing/Tooba.Pricing.Domain/Tooba.Pricing.Domain.csproj",
+      "toHint": "../../Offer/Tooba.Offer.Domain/Tooba.Offer.Domain.csproj",
+      "fromLayer": "Domain",
+      "toLayer": "Domain",
+      "fromModule": "Pricing",
+      "toModule": "Offer",
+      "foreign": true,
+      "kind": "Domain → foreign Domain"
+    }
+  ],
+  "infraForeignDomain": [
+    {
+      "from": "Tooba.Payment.Infrastructure",
+      "to": "Tooba.Wallet.Domain",
+      "fromPath": "src/backend/Modules/Payment/Tooba.Payment.Infrastructure/Tooba.Payment.Infrastructure.csproj",
+      "toHint": "../../Wallet/Tooba.Wallet.Domain/Tooba.Wallet.Domain.csproj",
+      "fromLayer": "Infrastructure",
+      "toLayer": "Domain",
+      "fromModule": "Payment",
+      "toModule": "Wallet",
+      "foreign": true,
+      "kind": "Infrastructure → foreign Domain"
+    }
+  ],
+  "appApp": [
+    {
+      "from": "Tooba.Cart.Application",
+      "to": "Tooba.Catalog.Application",
+      "fromPath": "src/backend/Modules/Cart/Tooba.Cart.Application/Tooba.Cart.Application.csproj",
+      "toHint": "../../Catalog/Tooba.Catalog.Application/Tooba.Catalog.Application.csproj",
+      "fromLayer": "Application",
+      "toLayer": "Application",
+      "fromModule": "Cart",
+      "toModule": "Catalog",
+      "foreign": true,
+      "kind": "Application → foreign Application"
+    },
+    {
+      "from": "Tooba.Cart.Application",
+      "to": "Tooba.Offer.Application",
+      "fromPath": "src/backend/Modules/Cart/Tooba.Cart.Application/Tooba.Cart.Application.csproj",
+      "toHint": "../../Offer/Tooba.Offer.Application/Tooba.Offer.Application.csproj",
+      "fromLayer": "Application",
+      "toLayer": "Application",
+      "fromModule": "Cart",
+      "toModule": "Offer",
+      "foreign": true,
+      "kind": "Application → foreign Application"
+    },
+    {
+      "from": "Tooba.Cart.Application",
+      "to": "Tooba.Pricing.Application",
+      "fromPath": "src/backend/Modules/Cart/Tooba.Cart.Application/Tooba.Cart.Application.csproj",
+      "toHint": "../../Pricing/Tooba.Pricing.Application/Tooba.Pricing.Application.csproj",
+      "fromLayer": "Application",
+      "toLayer": "Application",
+      "fromModule": "Cart",
+      "toModule": "Pricing",
+      "foreign": true,
+      "kind": "Application → foreign Application"
+    },
+    {
+      "from": "Tooba.Cart.Application",
+      "to": "Tooba.Inventory.Application",
+      "fromPath": "src/backend/Modules/Cart/Tooba.Cart.Application/Tooba.Cart.Application.csproj",
+      "toHint": "../../Inventory/Tooba.Inventory.Application/Tooba.Inventory.Application.csproj",
+      "fromLayer": "Application",
+      "toLayer": "Application",
+      "fromModule": "Cart",
+      "toModule": "Inventory",
+      "foreign": true,
+      "kind": "Application → foreign Application"
+    },
+    {
+      "from": "Tooba.Inventory.Application",
+      "to": "Tooba.Offer.Application",
+      "fromPath": "src/backend/Modules/Inventory/Tooba.Inventory.Application/Tooba.Inventory.Application.csproj",
+      "toHint": "../../Offer/Tooba.Offer.Application/Tooba.Offer.Application.csproj",
+      "fromLayer": "Application",
+      "toLayer": "Application",
+      "fromModule": "Inventory",
+      "toModule": "Offer",
+      "foreign": true,
+      "kind": "Application → foreign Application"
+    },
+    {
+      "from": "Tooba.Inventory.Application",
+      "to": "Tooba.Catalog.Application",
+      "fromPath": "src/backend/Modules/Inventory/Tooba.Inventory.Application/Tooba.Inventory.Application.csproj",
+      "toHint": "../../Catalog/Tooba.Catalog.Application/Tooba.Catalog.Application.csproj",
+      "fromLayer": "Application",
+      "toLayer": "Application",
+      "fromModule": "Inventory",
+      "toModule": "Catalog",
+      "foreign": true,
+      "kind": "Application → foreign Application"
+    },
+    {
+      "from": "Tooba.Order.Application",
+      "to": "Tooba.Cart.Application",
+      "fromPath": "src/backend/Modules/Order/Tooba.Order.Application/Tooba.Order.Application.csproj",
+      "toHint": "../../Cart/Tooba.Cart.Application/Tooba.Cart.Application.csproj",
+      "fromLayer": "Application",
+      "toLayer": "Application",
+      "fromModule": "Order",
+      "toModule": "Cart",
+      "foreign": true,
+      "kind": "Application → foreign Application"
+    },
+    {
+      "from": "Tooba.Order.Application",
+      "to": "Tooba.Offer.Application",
+      "fromPath": "src/backend/Modules/Order/Tooba.Order.Application/Tooba.Order.Application.csproj",
+      "toHint": "../../Offer/Tooba.Offer.Application/Tooba.Offer.Application.csproj",
+      "fromLayer": "Application",
+      "toLayer": "Application",
+      "fromModule": "Order",
+      "toModule": "Offer",
+      "foreign": true,
+      "kind": "Application → foreign Application"
+    },
+    {
+      "from": "Tooba.Order.Application",
+      "to": "Tooba.Pricing.Application",
+      "fromPath": "src/backend/Modules/Order/Tooba.Order.Application/Tooba.Order.Application.csproj",
+      "toHint": "../../Pricing/Tooba.Pricing.Application/Tooba.Pricing.Application.csproj",
+      "fromLayer": "Application",
+      "toLayer": "Application",
+      "fromModule": "Order",
+      "toModule": "Pricing",
+      "foreign": true,
+      "kind": "Application → foreign Application"
+    },
+    {
+      "from": "Tooba.Order.Application",
+      "to": "Tooba.Inventory.Application",
+      "fromPath": "src/backend/Modules/Order/Tooba.Order.Application/Tooba.Order.Application.csproj",
+      "toHint": "../../Inventory/Tooba.Inventory.Application/Tooba.Inventory.Application.csproj",
+      "fromLayer": "Application",
+      "toLayer": "Application",
+      "fromModule": "Order",
+      "toModule": "Inventory",
+      "foreign": true,
+      "kind": "Application → foreign Application"
+    },
+    {
+      "from": "Tooba.Order.Application",
+      "to": "Tooba.Tax.Application",
+      "fromPath": "src/backend/Modules/Order/Tooba.Order.Application/Tooba.Order.Application.csproj",
+      "toHint": "../../Tax/Tooba.Tax.Application/Tooba.Tax.Application.csproj",
+      "fromLayer": "Application",
+      "toLayer": "Application",
+      "fromModule": "Order",
+      "toModule": "Tax",
+      "foreign": true,
+      "kind": "Application → foreign Application"
+    },
+    {
+      "from": "Tooba.Order.Application",
+      "to": "Tooba.Promotion.Application",
+      "fromPath": "src/backend/Modules/Order/Tooba.Order.Application/Tooba.Order.Application.csproj",
+      "toHint": "../../Promotion/Tooba.Promotion.Application/Tooba.Promotion.Application.csproj",
+      "fromLayer": "Application",
+      "toLayer": "Application",
+      "fromModule": "Order",
+      "toModule": "Promotion",
+      "foreign": true,
+      "kind": "Application → foreign Application"
+    },
+    {
+      "from": "Tooba.Pricing.Application",
+      "to": "Tooba.Offer.Application",
+      "fromPath": "src/backend/Modules/Pricing/Tooba.Pricing.Application/Tooba.Pricing.Application.csproj",
+      "toHint": "../../Offer/Tooba.Offer.Application/Tooba.Offer.Application.csproj",
+      "fromLayer": "Application",
+      "toLayer": "Application",
+      "fromModule": "Pricing",
+      "toModule": "Offer",
+      "foreign": true,
+      "kind": "Application → foreign Application"
+    },
+    {
+      "from": "Tooba.Promotion.Application",
+      "to": "Tooba.Offer.Application",
+      "fromPath": "src/backend/Modules/Promotion/Tooba.Promotion.Application/Tooba.Promotion.Application.csproj",
+      "toHint": "../../Offer/Tooba.Offer.Application/Tooba.Offer.Application.csproj",
+      "fromLayer": "Application",
+      "toLayer": "Application",
+      "fromModule": "Promotion",
+      "toModule": "Offer",
+      "foreign": true,
+      "kind": "Application → foreign Application"
+    },
+    {
+      "from": "Tooba.Promotion.Application",
+      "to": "Tooba.Pricing.Application",
+      "fromPath": "src/backend/Modules/Promotion/Tooba.Promotion.Application/Tooba.Promotion.Application.csproj",
+      "toHint": "../../Pricing/Tooba.Pricing.Application/Tooba.Pricing.Application.csproj",
+      "fromLayer": "Application",
+      "toLayer": "Application",
+      "fromModule": "Promotion",
+      "toModule": "Pricing",
+      "foreign": true,
+      "kind": "Application → foreign Application"
+    },
+    {
+      "from": "Tooba.Promotion.Application",
+      "to": "Tooba.Inventory.Application",
+      "fromPath": "src/backend/Modules/Promotion/Tooba.Promotion.Application/Tooba.Promotion.Application.csproj",
+      "toHint": "../../Inventory/Tooba.Inventory.Application/Tooba.Inventory.Application.csproj",
+      "fromLayer": "Application",
+      "toLayer": "Application",
+      "fromModule": "Promotion",
+      "toModule": "Inventory",
+      "foreign": true,
+      "kind": "Application → foreign Application"
+    }
+  ]
+}
