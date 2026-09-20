@@ -82,7 +82,7 @@ Recovery-SoT:
 docs/evidence/TB-TMAR-FE-ADMIN-W5/recovery-sot.md
 
 Git:
-branch main; tip PLACEHOLDER_SHA; pushed origin/main; HEAD==origin/main; 18ca10c9 ancestor; user work preserved
+branch main; tip d4eaee9e19f90b6e099391e6a2b95892cbc3eaeb; pushed origin/main; HEAD==origin/main; 18ca10c9 ancestor; user work preserved
 
 Architectural-Concerns:
 Residual admin-api mostly orders+dashboard; admin-screens still >800; giants deferred; Host/Checkout deferred while Flat exit NOT_READY
