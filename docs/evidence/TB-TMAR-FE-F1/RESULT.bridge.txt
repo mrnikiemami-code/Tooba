@@ -1,4 +1,4 @@
-﻿PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
 
 BEGIN_TOOBA_WORKER_RESULT
 
@@ -73,7 +73,7 @@ Recovery-SoT:
 docs/evidence/TB-TMAR-FE-F1/recovery-sot.md
 
 Git:
-branch main; tip TIP_PLACEHOLDER; pushed origin/main; HEAD==origin/main; 18ca10c9 ancestor; user work preserved
+branch main; tip 062eaead6037a42d0da7a1059b1a429eee553a62; pushed origin/main; HEAD==origin/main; 18ca10c9 ancestor; user work preserved
 
 Architectural-Concerns:
 Flat admin debt remains for other capabilities; admin-api capability methods still CAPABILITY_SPECIFIC_DEBT; giants deferred; Order-hub App→App frozen; Checkout shared-ACID deferred
