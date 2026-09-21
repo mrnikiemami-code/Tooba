@@ -1,3 +1,4 @@
+using Tooba.Payment.Contracts.Events;
 using Tooba.Payment.Application.Ports;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;

@@ -8,6 +8,7 @@
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\..\BuildingBlocks\Tooba.BuildingBlocks\Tooba.BuildingBlocks.csproj" />
+    <ProjectReference Include="..\Tooba.Returns.Contracts\Tooba.Returns.Contracts.csproj" />
     <ProjectReference Include="..\Tooba.Returns.Domain\Tooba.Returns.Domain.csproj" />
   </ItemGroup>
 </Project>

@@ -1,3 +1,4 @@
+using Tooba.Fulfillment.Contracts.Events;
 using Tooba.BuildingBlocks;
 using Tooba.Fulfillment.Application;
 using Tooba.Fulfillment.Domain;

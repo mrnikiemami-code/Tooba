@@ -1,13 +1,20 @@
+using Tooba.Payment.Contracts.Events;
 using Microsoft.EntityFrameworkCore;
 using Testcontainers.PostgreSql;
 using Tooba.BuildingBlocks;
-using Tooba.Notification.Application;
+using Tooba.Notification.Application.Models;
+using Tooba.Notification.Application.Ports;
+using Tooba.Notification.Application.Rendering;
 using Tooba.Notification.Contracts.Commands;
 using Tooba.Notification.Contracts.Dtos;
 using Tooba.Notification.Contracts.Routes;
-using Tooba.Notification.Domain;
-using Tooba.Notification.Infrastructure;
+using Tooba.Notification.Domain.Aggregates;
+using Tooba.Notification.Infrastructure.DependencyInjection;
+using Tooba.Notification.Infrastructure.Directories;
+using Tooba.Notification.Infrastructure.Handlers;
+using Tooba.Notification.Infrastructure.Observability;
 using Tooba.Notification.Infrastructure.Persistence;
+using Tooba.Notification.Infrastructure.Projectors;
 using Tooba.Offer.Domain;
 using Tooba.Order.Domain;
 using Tooba.Order.Infrastructure;
@@ -85,7 +92,7 @@ public sealed class NotificationFoundationTests : IAsyncLifetime
 
         await using var db = CreateDb(_container.GetConnectionString());
         await db.Database.MigrateAsync();
-        var directory = new NotificationDirectory(db, new NotificationInstrumentation());
+        var directory = new NotificationDirectory(db, new NotificationInstrumentation(), new SystemUtcClock(), new UuidV7IdGenerator());
 
         var sellerA = Guid.Parse("01a030d1-40cb-7000-8abe-6d31739956c5");
         var sellerB = Guid.Parse("01a030d1-40db-7000-b90c-a0705133f0eb");
@@ -252,7 +259,7 @@ public sealed class NotificationFoundationTests : IAsyncLifetime
         await orderDb.SaveChangesAsync();
         var sellerOrderId = checkout.SellerOrders.Single().SellerOrderId;
 
-        var directory = new NotificationDirectory(notificationDb, new NotificationInstrumentation());
+        var directory = new NotificationDirectory(notificationDb, new NotificationInstrumentation(), new SystemUtcClock(), new UuidV7IdGenerator());
         var projector = new NotificationProjector(directory, new OrderNotificationBridge(orderDb));
         var handler = new NotificationPaymentSucceededHandler(projector);
         var eventId = Guid.Parse("01a030d1-40eb-7000-8000-000000000001");

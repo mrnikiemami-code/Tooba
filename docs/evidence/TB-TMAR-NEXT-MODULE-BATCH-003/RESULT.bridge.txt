@@ -1,0 +1,176 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+
+BEGIN_TOOBA_WORKER_RESULT
+
+Task-ID:
+TB-TMAR-NEXT-MODULE-BATCH-003
+
+Parent-Task:
+TB-TMAR-NEXT-MODULE-BATCH-002-R1
+
+Channel:
+tooba-main
+
+WorkerId:
+tooba-worker-01
+
+AgentType:
+cursor
+
+Status:
+PASS
+
+Summary:
+Notification+Support golden recovery complete. Domain→Contracts inversion closed; Payment/Fulfillment/Returns integration events extracted to Contracts; Notification.Infra consumes Contracts only; Support→Notification.Contracts only; physical folders+namespaces verified; IClock/IIdGenerator; stable exception codes; SoftDelete already-deleted idempotency aligned with MarkRead; accidental behavior changes=0. Tax/Pricing/Checkout/frontend untouched.
+
+Program-Name:
+TMAR — Tooba Microservice-Ready Architecture Recovery
+
+Track:
+NEXT_REFERENCE_MODULE_BATCH
+
+Recovery-Start:
+docs/evidence/TB-TMAR-NEXT-MODULE-BATCH-003/recovery-start.md — Claim e50b5d48-b7ef-4c95-81bc-20812378cde0; baseline tip 8f374759
+
+Notification-Audit:
+docs/evidence/TB-TMAR-NEXT-MODULE-BATCH-003/notification-audit.md
+
+Notification-Physical-Tree:
+docs/evidence/TB-TMAR-NEXT-MODULE-BATCH-003/notification-physical-tree.md
+
+Notification-Repairs:
+Domain recipient kind + App mapping; IClock/IIdGenerator; Contracts event consumers; folder/namespace split; exception codes; SoftDelete idempotent already-deleted
+
+Notification-Public-Boundary:
+CONTRACTS_ONLY
+
+Notification-CQRS-State:
+DIRECTORY_PORTS — no ceremonial MediatR
+
+Notification-Endpoint-State:
+NOT_APPLICABLE — Host owns HTTP NotificationEndpoints
+
+Notification-Foundation-Adoption:
+docs/evidence/TB-TMAR-NEXT-MODULE-BATCH-003/foundation-adoption-scan.md — IClock/IIdGenerator/codes/no fallbacks
+
+Notification-Behavior-Parity:
+CreateIfAbsent/filters/MarkRead/MarkAllRead/SoftDelete/routes/Wallet types/payment.succeeded projection PRESERVED
+
+Notification-Guards:
+Tooba.Notification.Tests Architecture+Behavior
+
+Notification-Validation:
+dotnet test Tooba.Notification.Tests → 10 passed
+
+Notification-State:
+COMPLETE_REFERENCE_PATTERN
+
+Notification-Physical-State:
+VERIFIED_ON_DISK_AND_NAMESPACE
+
+Support-Audit:
+docs/evidence/TB-TMAR-NEXT-MODULE-BATCH-003/support-audit.md
+
+Support-Physical-Tree:
+docs/evidence/TB-TMAR-NEXT-MODULE-BATCH-003/support-physical-tree.md
+
+Support-Repairs:
+Aggregates/Entities/ValueObjects split; Directory IClock/IIdGenerator; Notification.Contracts port; exception codes
+
+Support-Notification-Boundary:
+CONTRACTS_ONLY
+
+Support-CQRS-State:
+DIRECTORY_PORTS — no ceremonial MediatR
+
+Support-Endpoint-State:
+NOT_APPLICABLE — Host owns HTTP SupportEndpoints
+
+Support-Foundation-Adoption:
+IClock/IIdGenerator/codes/Contracts-only Notification
+
+Support-Behavior-Parity:
+ticket create/reply/status/admin notification SourceEventId/SourceType PRESERVED
+
+Support-Guards:
+Tooba.Support.Tests Architecture+Behavior
+
+Support-Validation:
+dotnet test Tooba.Support.Tests → 3 passed
+
+Cross-Module-Boundary-Audit:
+docs/evidence/TB-TMAR-NEXT-MODULE-BATCH-003/cross-module-boundary-audit.md — Payment/Fulfillment/Returns.Contracts events; Support Contracts-only
+
+Host-Leak-Scan:
+docs/evidence/TB-TMAR-NEXT-MODULE-BATCH-003/host-leak-scan.md — no Host DbContext authority beyond bootstrap
+
+Foundation-Adoption-Scan:
+docs/evidence/TB-TMAR-NEXT-MODULE-BATCH-003/foundation-adoption-scan.md
+
+Focused-Validation:
+Notification.Tests 10/10; Support.Tests 3/3; Payment.Tests 9/9; Wallet Architecture 7/7
+
+Skipped-Validation:
+Broad Host suite; Tax/Pricing; Checkout; frontend
+
+Full-Validation:
+dotnet build src/backend/Tooba.slnx → succeeded
+
+AntiPattern-Gate:
+CLEAN — Domain↔Contracts inversion closed; no foreign Application refs from Notification.Infra for Payment/Fulfillment/Returns; root dump=0; TypeForwardedTo=0; no clock/id bypass; no DI fallbacks; no localized exception prose; SoftDelete idempotent; notification side effects retained
+
+Residual-Defects:
+NONE for BATCH-003 scope. Tax/Pricing deferred. Checkout paused W5.
+
+Behavior-Preservation:
+VERIFIED
+
+Wallet-State:
+COMPLETE_REFERENCE_PATTERN
+
+Payment-State:
+COMPLETE_REFERENCE_PATTERN
+
+Foundation-State:
+RESULT_PATTERN_FOUNDATION_COMPLETE
+
+Offer-State:
+COMPLETE_REFERENCE_PATTERN
+
+Inventory-State:
+COMPLETE_REFERENCE_PATTERN
+
+Promotion-State:
+COMPLETE_REFERENCE_PATTERN
+
+Tax-State:
+DEFERRED_PHYSICAL_REVIEW_BY_USER
+
+Pricing-State:
+DEFERRED_PHYSICAL_REVIEW_BY_USER
+
+Checkout-State:
+PAUSED_AT_SAFE_W5_CHECKPOINT
+
+Frontend-Production-Changes:
+NONE
+
+Batch-State:
+COMPLETE
+
+Git:
+SHA=f5dc8d6bdc5b9e42751ed2db7bd47c5ee6c641f8 HEAD==origin/main after push.
+
+Blockers:
+NONE
+
+User-Work-Preserved:
+YES — no stash/force-push; Tax/Pricing/Checkout/frontend untouched
+
+Module-Recovery-State:
+NEXT_REFERENCE_BATCH_003_COMPLETE
+
+Next-Recommended-Task:
+TB-TMAR-NEXT-MODULE-BATCH-004
+
+END_TOOBA_WORKER_RESULT

@@ -74,22 +74,27 @@ Current Repair Task:
 TMAR Module Recovery (Worker PASS — awaiting Architect):
 
 ```text
-TB-TMAR-NEXT-MODULE-BATCH-002-R1 — Wallet Notification Boundary + Financial Behavior Preservation Closure
+TB-TMAR-NEXT-MODULE-BATCH-003 — Notification + Support Golden Recovery Batch
+Notification-State: COMPLETE_REFERENCE_PATTERN
+Notification-Physical-State: VERIFIED_ON_DISK_AND_NAMESPACE
+Notification-Public-Boundary: CONTRACTS_ONLY
+Support-State: COMPLETE_REFERENCE_PATTERN
+Support-Physical-State: VERIFIED_ON_DISK_AND_NAMESPACE
+Support-Notification-Boundary: CONTRACTS_ONLY
+Behavior-Preservation: VERIFIED
 Wallet-State: COMPLETE_REFERENCE_PATTERN
-Wallet-Physical-State: VERIFIED_ON_DISK_AND_NAMESPACE
-Wallet-Notification-Boundary: CONTRACTS_ONLY
 Payment-State: COMPLETE_REFERENCE_PATTERN
-Payment-Physical-State: VERIFIED_ON_DISK_AND_NAMESPACE
-Financial-Behavior-Preservation: VERIFIED
+Foundation-State: RESULT_PATTERN_FOUNDATION_COMPLETE
+Offer-State: COMPLETE_REFERENCE_PATTERN
 Inventory-State: COMPLETE_REFERENCE_PATTERN
-Inventory-Physical-State: VERIFIED_ON_DISK_AND_NAMESPACE
 Promotion-State: COMPLETE_REFERENCE_PATTERN
-Promotion-Physical-State: VERIFIED_ON_DISK_AND_NAMESPACE
 Tax-State: DEFERRED_PHYSICAL_REVIEW_BY_USER
 Pricing-State: DEFERRED_PHYSICAL_REVIEW_BY_USER
+Checkout-State: PAUSED_AT_SAFE_W5_CHECKPOINT
+Frontend-Production-Changes: NONE
 Batch-State: COMPLETE
-Module-Recovery-State: NEXT_REFERENCE_BATCH_002_COMPLETE
-Next-Recommended-Task: TB-TMAR-NEXT-MODULE-BATCH-003
+Module-Recovery-State: NEXT_REFERENCE_BATCH_003_COMPLETE
+Next-Recommended-Task: TB-TMAR-NEXT-MODULE-BATCH-004
 ```
 
 Implemented Under Review:

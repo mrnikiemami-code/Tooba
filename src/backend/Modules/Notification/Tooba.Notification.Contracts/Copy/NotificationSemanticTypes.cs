@@ -1,4 +1,4 @@
-namespace Tooba.Notification.Contracts.Copy;
+﻿namespace Tooba.Notification.Contracts.Copy;
 
 /// <summary>
 /// انواع معنایی اعلان که Wallet (و سایر مصرف‌کنندگان Contracts) برای Type استفاده می‌کنند.
@@ -17,4 +17,7 @@ public static class NotificationSemanticTypes
 
     /// <summary>اعتبار refund به کیف پول.</summary>
     public const string WalletRefundCredited = "wallet.refund.credited";
+
+    /// <summary>پاسخ عمومی پشتیبانی از Admin.</summary>
+    public const string SupportAdminReply = "support.admin_reply";
 }

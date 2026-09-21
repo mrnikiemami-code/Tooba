@@ -18,9 +18,7 @@ public static class NotificationTargetRoutes
     public static string RequireAllowed(string route)
     {
         if (string.IsNullOrWhiteSpace(route))
-        {
-            throw new InvalidOperationException("TargetRoute خالی است.");
-        }
+            throw new InvalidOperationException("notification.target_route.empty");
 
         var trimmed = route.Trim();
         if (!trimmed.StartsWith('/')
@@ -33,14 +31,14 @@ public static class NotificationTargetRoutes
             || trimmed.Contains('\'', StringComparison.Ordinal)
             || trimmed.Contains("javascript", StringComparison.OrdinalIgnoreCase))
         {
-            throw new InvalidOperationException("TargetRoute ناامن است.");
+            throw new InvalidOperationException("notification.target_route.unsafe");
         }
 
         if (!AllowedPrefixes.Any(prefix =>
                 trimmed.Equals(prefix, StringComparison.OrdinalIgnoreCase)
                 || trimmed.StartsWith(prefix + "/", StringComparison.OrdinalIgnoreCase)))
         {
-            throw new InvalidOperationException("TargetRoute خارج از allowlist است.");
+            throw new InvalidOperationException("notification.target_route.not_allowed");
         }
 
         return trimmed;

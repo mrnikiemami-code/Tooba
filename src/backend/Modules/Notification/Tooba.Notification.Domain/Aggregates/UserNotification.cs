@@ -1,0 +1,130 @@
+using Tooba.Notification.Domain.ValueObjects;
+
+namespace Tooba.Notification.Domain.Aggregates;
+
+/// <summary>
+/// اعلان پایدار تراکنشی. لاگ فنی، audit یا analytics نیست.
+/// Tenant از اتصال commerce محیط جاری جدا می‌شود؛ ردیف TenantId نگه نمی‌دارد
+/// (هم‌تراز Reviews/Settlement؛ Story استثنا است).
+/// </summary>
+public sealed class UserNotification
+{
+    private UserNotification()
+    {
+    }
+
+    /// <summary>شناسهٔ پایدار اعلان.</summary>
+    public Guid NotificationId { get; init; }
+
+    /// <summary>نوع گیرنده.</summary>
+    public NotificationRecipientKind RecipientKind { get; init; }
+
+    /// <summary>
+    /// کلید اصلی گیرنده: Party خریدار (یا surrogate بازیگر وقتی BuyerPartyId خالی است)
+    /// یا Party فروشنده.
+    /// </summary>
+    public Guid RecipientPartyId { get; init; }
+
+    /// <summary>Actor اختیاری برای فیلتر پنل مشتری.</summary>
+    public Guid? RecipientActorUserId { get; init; }
+
+    /// <summary>نوع معنایی پایدار (مثلاً payment.succeeded).</summary>
+    public string Type { get; init; } = string.Empty;
+
+    /// <summary>JSON ساختاریافتهٔ امن بدون HTML.</summary>
+    public string PayloadJson { get; init; } = "{}";
+
+    /// <summary>مسیر نسبی allowlist‌شده.</summary>
+    public string TargetRoute { get; init; } = string.Empty;
+
+    /// <summary>آیا خوانده شده.</summary>
+    public bool IsRead { get; private set; }
+
+    /// <summary>زمان خواندن.</summary>
+    public DateTimeOffset? ReadAt { get; private set; }
+
+    /// <summary>زمان ایجاد.</summary>
+    public DateTimeOffset CreatedAt { get; init; }
+
+    /// <summary>کلید idempotency از EventId منبع.</summary>
+    public string SourceEventId { get; init; } = string.Empty;
+
+    /// <summary>نوع قرارداد Integration منبع.</summary>
+    public string SourceType { get; init; } = string.Empty;
+
+    /// <summary>حذف نرم.</summary>
+    public bool IsDeleted { get; private set; }
+
+    /// <summary>زمان حذف نرم.</summary>
+    public DateTimeOffset? DeletedAt { get; private set; }
+
+    /// <summary>اعلان خوانده‌نشدهٔ جدید می‌سازد.</summary>
+    public static UserNotification Create(
+        Guid notificationId,
+        NotificationRecipientKind recipientKind,
+        Guid recipientPartyId,
+        Guid? recipientActorUserId,
+        string type,
+        string payloadJson,
+        string targetRoute,
+        string sourceEventId,
+        string sourceType,
+        DateTimeOffset now)
+    {
+        if (notificationId == Guid.Empty)
+            throw new InvalidOperationException("notification.id_required");
+        if (recipientPartyId == Guid.Empty)
+            throw new InvalidOperationException("notification.recipient_required");
+        if (string.IsNullOrWhiteSpace(type))
+            throw new InvalidOperationException("notification.type_required");
+        if (string.IsNullOrWhiteSpace(sourceEventId))
+            throw new InvalidOperationException("notification.source_event_id_required");
+        if (string.IsNullOrWhiteSpace(sourceType))
+            throw new InvalidOperationException("notification.source_type_required");
+        if (string.IsNullOrWhiteSpace(targetRoute) || !targetRoute.StartsWith('/'))
+            throw new InvalidOperationException("notification.target_route_invalid");
+
+        return new UserNotification
+        {
+            NotificationId = notificationId,
+            RecipientKind = recipientKind,
+            RecipientPartyId = recipientPartyId,
+            RecipientActorUserId = recipientActorUserId,
+            Type = type.Trim(),
+            PayloadJson = string.IsNullOrWhiteSpace(payloadJson) ? "{}" : payloadJson.Trim(),
+            TargetRoute = targetRoute.Trim(),
+            IsRead = false,
+            CreatedAt = now,
+            SourceEventId = sourceEventId.Trim(),
+            SourceType = sourceType.Trim(),
+        };
+    }
+
+    /// <summary>خوانده‌شدن را به‌صورت idempotent علامت می‌زند.</summary>
+    public bool MarkRead(DateTimeOffset now)
+    {
+        if (IsDeleted)
+            return false;
+        if (IsRead)
+            return false;
+        IsRead = true;
+        ReadAt = now;
+        return true;
+    }
+
+    /// <summary>حذف نرم idempotent.</summary>
+    public bool SoftDelete(DateTimeOffset now)
+    {
+        if (IsDeleted)
+            return false;
+        IsDeleted = true;
+        DeletedAt = now;
+        if (!IsRead)
+        {
+            IsRead = true;
+            ReadAt = now;
+        }
+
+        return true;
+    }
+}

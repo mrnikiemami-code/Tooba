@@ -1,6 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
-using Tooba.Notification.Domain;
+using Tooba.Notification.Domain.Aggregates;
 using Tooba.Persistence;
 
 namespace Tooba.Notification.Infrastructure.Persistence;
@@ -40,7 +40,6 @@ public sealed class NotificationDbContext : DbContext
             entity.Property(x => x.TargetRoute).HasMaxLength(512).IsRequired();
             entity.Property(x => x.SourceEventId).HasMaxLength(128).IsRequired();
             entity.Property(x => x.SourceType).HasMaxLength(128).IsRequired();
-            // یک رویداد می‌تواند چند گیرنده داشته باشد؛ idempotency per-recipient است.
             entity.HasIndex(x => new { x.RecipientKind, x.RecipientPartyId, x.SourceEventId }).IsUnique();
             entity.HasIndex(x => new { x.RecipientKind, x.RecipientPartyId, x.CreatedAt });
             entity.HasIndex(x => new { x.RecipientKind, x.RecipientActorUserId, x.CreatedAt });

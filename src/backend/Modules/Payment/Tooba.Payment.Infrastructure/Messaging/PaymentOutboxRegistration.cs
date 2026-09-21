@@ -1,3 +1,4 @@
+using Tooba.Payment.Contracts.Events;
 using Tooba.BuildingBlocks;
 using Tooba.Payment.Application.Models;
 using Tooba.Payment.Application.Ports;

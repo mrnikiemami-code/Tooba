@@ -1,6 +1,7 @@
 using Tooba.BuildingBlocks;
 using Tooba.Host.Storefront;
-using Tooba.Notification.Application;
+using Tooba.Notification.Application.Models;
+using Tooba.Notification.Application.Ports;
 using Tooba.Notification.Contracts.Dtos;
 
 namespace Tooba.Host.Notifications;

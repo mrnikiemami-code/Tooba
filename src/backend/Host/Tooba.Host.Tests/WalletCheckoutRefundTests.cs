@@ -1,3 +1,4 @@
+using Tooba.Payment.Contracts.Events;
 using Tooba.BuildingBlocks;
 using Tooba.BuildingBlocks.Observability.Tracing;
 using Tooba.Promotion.Application.Ports;

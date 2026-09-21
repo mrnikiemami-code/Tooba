@@ -8,6 +8,7 @@ public sealed class PaymentArchitectureGuardTests
 {
     private static readonly string[] AllowedDomainFolders = ["Aggregates", "Entities", "ValueObjects", "Events", "Policies"];
     private static readonly string[] AllowedApplicationFolders = ["Ports", "Models", "Commands", "Queries", "Handlers"];
+    private static readonly string[] AllowedContractsFolders = ["Events", "Dtos", "Ports"];
     private static readonly string[] AllowedInfrastructureFolders =
         ["Persistence", "Directories", "Adapters", "Providers", "Events", "Messaging", "DependencyInjection", "Gateways", "Migrations"];
 
@@ -71,7 +72,7 @@ public sealed class PaymentArchitectureGuardTests
     [Fact]
     public void Payment_golden_boundaries_and_physical_layout_remain_clean()
     {
-        Assert.False(Directory.Exists(Path.Combine(PaymentRoot(), "Tooba.Payment.Contracts")));
+        Assert.True(Directory.Exists(Path.Combine(PaymentRoot(), "Tooba.Payment.Contracts")));
         Assert.False(Directory.Exists(Path.Combine(PaymentRoot(), "Tooba.Payment.Endpoints")));
         Assert.DoesNotContain(AllProductionSources(), x => x.Text.Contains("TypeForwardedTo", StringComparison.Ordinal));
 
@@ -90,9 +91,11 @@ public sealed class PaymentArchitectureGuardTests
 
         AssertNoRootDump("Tooba.Payment.Domain", AllowedDomainFolders);
         AssertNoRootDump("Tooba.Payment.Application", AllowedApplicationFolders);
+        AssertNoRootDump("Tooba.Payment.Contracts", AllowedContractsFolders);
         AssertNoRootDump("Tooba.Payment.Infrastructure", AllowedInfrastructureFolders);
         AssertNamespacesAlign("Tooba.Payment.Domain", "Tooba.Payment.Domain");
         AssertNamespacesAlign("Tooba.Payment.Application", "Tooba.Payment.Application");
+        AssertNamespacesAlign("Tooba.Payment.Contracts", "Tooba.Payment.Contracts");
         AssertNamespacesAlign("Tooba.Payment.Infrastructure", "Tooba.Payment.Infrastructure");
 
         var hostRoot = Path.Combine(RepoRoot(), "src", "backend", "Host", "Tooba.Host");
@@ -142,7 +145,7 @@ public sealed class PaymentArchitectureGuardTests
         foreach (var dir in Directory.EnumerateDirectories(root))
         {
             var name = Path.GetFileName(dir);
-            if (name is "bin" or "obj") continue;
+            if (name is "bin" or "obj" || name.StartsWith('.')) continue;
             Assert.Contains(name, allowedFolders);
         }
     }
@@ -177,6 +180,7 @@ public sealed class PaymentArchitectureGuardTests
     private static IEnumerable<(string Path, string Text)> AllProductionSources() =>
         Sources("Tooba.Payment.Domain")
             .Concat(Sources("Tooba.Payment.Application"))
+            .Concat(Sources("Tooba.Payment.Contracts"))
             .Concat(Sources("Tooba.Payment.Infrastructure"));
 
     private static IEnumerable<(string Path, string Text)> Sources(string projectFolder)

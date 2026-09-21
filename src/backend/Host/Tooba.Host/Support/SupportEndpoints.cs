@@ -3,8 +3,10 @@ using Tooba.AccessControl.Domain;
 using Tooba.BuildingBlocks;
 using Tooba.Host.Admin;
 using Tooba.Host.Seller;
-using Tooba.Support.Application;
-using Tooba.Support.Infrastructure;
+using Tooba.Support.Application.Commands;
+using Tooba.Support.Application.Ports;
+using Tooba.Support.Application.Queries;
+using Tooba.Support.Infrastructure.Adapters;
 
 namespace Tooba.Host.Support;
 

@@ -4,8 +4,9 @@ using Tooba.BuildingBlocks;
 using Tooba.Host.Admin;
 using Tooba.Host.Seller;
 using Tooba.Host.Storefront;
-using Tooba.Support.Infrastructure;
+using Tooba.Support.Infrastructure.Adapters;
 using Tooba.Support.Infrastructure.Persistence;
+using Tooba.Support.Infrastructure.Seeds;
 
 namespace Tooba.Host.Support;
 

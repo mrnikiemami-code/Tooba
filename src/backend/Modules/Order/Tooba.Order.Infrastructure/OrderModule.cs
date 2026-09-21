@@ -1,3 +1,4 @@
+using Tooba.Payment.Contracts.Events;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
