@@ -1,0 +1,207 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+
+BEGIN_TOOBA_WORKER_RESULT
+
+Task-ID:
+TB-TMAR-NEXT-MODULE-BATCH-005
+
+Parent-Task:
+TB-TMAR-NEXT-MODULE-BATCH-004-R4
+
+Channel:
+tooba-main
+
+WorkerId:
+tooba-worker-01
+
+AgentType:
+cursor
+
+Status:
+INCOMPLETE
+
+Summary:
+Cart + Settlement physical/namespace recovery and Contracts-only module boundaries landed with IClock/IIdGenerator foundation adoption. Host Settlement remains thick (SettlementDbContext + PartyDbContext in AdminPayoutGridQueryEngine/SettlementPanelComposer; manual Results.Json/ex.Message). Dedicated ArchitectureGuard projects not added. Batch incomplete; recommend focused R1 for Host Settlement thin transport only. Tax/Pricing/Checkout resume/frontend untouched. BATCH-006 not started.
+
+Program-Name:
+TMAR — Tooba Microservice-Ready Architecture Recovery
+
+Track:
+NEXT_REFERENCE_MODULE_BATCH
+
+Recovery-Start:
+docs/evidence/TB-TMAR-NEXT-MODULE-BATCH-005/recovery-start.md — Claim 6d383a9a-c3e2-4f62-9e04-a0c3fab82721; baseline d04343601ad6d9d59911d9ded163afd24e16944f
+
+Cart-Audit:
+docs/evidence/TB-TMAR-NEXT-MODULE-BATCH-005/cart-audit.md — Application/Infrastructure Contracts-only; Domain/App/Infra physical split; clock/id adopted
+
+Cart-Physical-Tree:
+docs/evidence/TB-TMAR-NEXT-MODULE-BATCH-005/cart-physical-tree.md — 26 handwritten production .cs; path↔namespace aligned; root dump=0
+
+Cart-Repairs:
+god-file CartDomain split; Catalog/Inventory contract extraction; CartDirectory required normalizer/clock/ids; Host.Tests path/ctor seams
+
+Cart-CrossModule-Boundary:
+CONTRACTS_ONLY
+
+Cart-Result-Adoption:
+PARTIAL — directories/ports preserved; Host Cart HTTP not reworked this batch
+
+Cart-CQRS-State:
+DIRECTORY_PORTS_PRESERVED
+
+Cart-Endpoint-State:
+UNCHANGED_HOST_SEAM
+
+Cart-Foundation-Adoption:
+ADOPTED — IClock/IIdGenerator/IQuantityNormalizer required; Domain factories explicit Guid ids; no UtcNow/Guid.NewGuid/UuidV7.New in Cart production
+
+Cart-Behavior-Parity:
+VERIFIED for focused Host Cart/Settlement characterization suite (18/18)
+
+Cart-Guards:
+Host.Tests CartFoundation/CampaignCart/CheckoutIdentity path+csproj characterization updated; dedicated Cart.Tests ArchitectureGuard NOT added
+
+Cart-Validation:
+dotnet test Host.Tests filter CartFoundation|SettlementFoundation|CheckoutIdentity|QuantityDecimal|CampaignCart → 18 passed
+
+Cart-State:
+NEAR_COMPLETE_REFERENCE_PATTERN — physical+boundary+foundation yes; dedicated architecture guard project residual
+
+Cart-Physical-State:
+VERIFIED_ON_DISK_AND_NAMESPACE
+
+Settlement-Audit:
+docs/evidence/TB-TMAR-NEXT-MODULE-BATCH-005/settlement-audit.md — Order/Payment/Returns Contracts-only; Domain split; clock/id adopted; Host thin residual
+
+Settlement-Physical-Tree:
+docs/evidence/TB-TMAR-NEXT-MODULE-BATCH-005/settlement-physical-tree.md — 31 handwritten production .cs; path↔namespace aligned; root dump=0
+
+Settlement-Repairs:
+god-file SettlementDomain split; Payment settlement reader → Payment.Contracts; SettlementDirectory clock/ids; Domain explicit Guid factories; baseline foreign-application edges removed
+
+Settlement-CrossModule-Boundary:
+CONTRACTS_ONLY
+
+Settlement-Result-Adoption:
+PARTIAL — directory ports preserved; HTTP edge still catch/InvalidOperationException→ex.Message
+
+Settlement-CQRS-State:
+DIRECTORY_PORTS_PRESERVED
+
+Settlement-Endpoint-State:
+HOST_THICK_TRANSPORT — SettlementPanelComposer+AdminPayoutGridQueryEngine still Host-owned with SettlementDbContext
+
+Settlement-Foundation-Adoption:
+ADOPTED in module — IClock/IIdGenerator; Domain factories explicit ids; no Guid.NewGuid/UtcNow in Settlement production
+
+Settlement-Behavior-Parity:
+VERIFIED for focused characterization; Host thin not delivered
+
+Settlement-Host-DbAuthority:
+PRESENT — SettlementDbContext in Host SettlementPanelComposer + AdminPayoutGridQueryEngine (blocking)
+
+Settlement-Guards:
+SettlementFoundation boundary assert updated to Order/Payment Contracts; dedicated Settlement.Tests ArchitectureGuard NOT added
+
+Settlement-Validation:
+same focused Host.Tests filter 18/18; Settlement Host thin not validated as CLEAN
+
+Cross-Module-Boundary-Audit:
+docs/evidence/TB-TMAR-NEXT-MODULE-BATCH-005/cross-module-boundary-audit.md — Cart+Settlement module refs CONTRACTS_ONLY; Host Settlement query authority residual
+
+Host-Authority-Audit:
+docs/evidence/TB-TMAR-NEXT-MODULE-BATCH-005/host-authority-audit.md — Settlement Host thick
+
+Host-DbContext-Scan:
+docs/evidence/TB-TMAR-NEXT-MODULE-BATCH-005/host-dbcontext-scan.md — SettlementDbContext production query authority still in Host
+
+Foundation-Adoption-Scan:
+docs/evidence/TB-TMAR-NEXT-MODULE-BATCH-005/foundation-adoption-scan.md — module foundation adopted; Host Settlement HTTP residual
+
+Behavior-Preservation-Audit:
+docs/evidence/TB-TMAR-NEXT-MODULE-BATCH-005/behavior-preservation-audit.md — structural/boundary only for delivered scope; accidental=0 observed in focused suite
+
+Focused-Validation:
+Host.Tests CartFoundation|SettlementFoundation|CheckoutIdentity|QuantityDecimal|CampaignCart → 18 passed
+
+Skipped-Validation:
+Broad Host suite; full Checkout workflow; Tax/Pricing; frontend; Docker live Settlement smoke not required for this Result; dedicated Cart/Settlement ArchitectureGuard projects absent
+
+Full-Validation:
+dotnet build src/backend/Tooba.slnx → succeeded 0 errors
+
+AntiPattern-Gate:
+PARTIAL_CLEAN — module foreign Application/Domain/Infrastructure refs cleared for Cart+Settlement; Host SettlementDbContext query authority + manual Results.Json/ex.Message remain; Tax/Pricing/frontend untouched
+
+Residual-Defects:
+1) Host SettlementPanelComposer injects SettlementDbContext for AdminPayoutGridQueryEngine
+2) Host Grid/AdminPayoutGridQueryEngine owns Settlement+Party DbContext query authority
+3) SettlementEndpoints manual Results.Json + ex.Message (not ApiResponseFactory/Result)
+4) Dedicated Cart/Settlement ArchitectureGuard test projects not created
+5) Cart-State/Settlement-State cannot claim COMPLETE_REFERENCE_PATTERN until (1)-(4) closed for Settlement Host thin + guards
+
+Behavior-Preservation:
+VERIFIED for delivered structural/boundary/foundation scope
+
+Fulfillment-State:
+COMPLETE_REFERENCE_PATTERN
+
+Returns-State:
+COMPLETE_REFERENCE_PATTERN
+
+Notification-State:
+COMPLETE_REFERENCE_PATTERN
+
+Support-State:
+COMPLETE_REFERENCE_PATTERN
+
+Wallet-State:
+COMPLETE_REFERENCE_PATTERN
+
+Payment-State:
+COMPLETE_REFERENCE_PATTERN
+
+Inventory-State:
+COMPLETE_REFERENCE_PATTERN
+
+Promotion-State:
+COMPLETE_REFERENCE_PATTERN
+
+Offer-State:
+COMPLETE_REFERENCE_PATTERN
+
+Foundation-State:
+RESULT_PATTERN_FOUNDATION_COMPLETE
+
+Tax-State:
+DEFERRED_PHYSICAL_REVIEW_BY_USER
+
+Pricing-State:
+DEFERRED_PHYSICAL_REVIEW_BY_USER
+
+Checkout-State:
+PAUSED_AT_SAFE_W5_CHECKPOINT
+
+Frontend-Production-Changes:
+NONE
+
+Batch-State:
+INCOMPLETE
+
+Git:
+TIP_SHA_PLACEHOLDER
+
+Blockers:
+Host Settlement thin transport (SettlementDbContext/PartyDbContext query authority in Host; manual semantic envelopes); ArchitectureGuard projects absent
+
+User-Work-Preserved:
+YES — stashes preserved; .rar untouched
+
+Module-Recovery-State:
+NEXT_REFERENCE_BATCH_005_INCOMPLETE
+
+Next-Recommended-Task:
+TB-TMAR-NEXT-MODULE-BATCH-005-R1
+
+END_TOOBA_WORKER_RESULT
