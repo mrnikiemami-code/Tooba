@@ -1,0 +1,125 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+
+BEGIN_TOOBA_WORKER_RESULT
+
+Task-ID:
+TB-TMAR-NEXT-MODULE-BATCH-001-R1
+
+Parent-Task:
+TB-TMAR-NEXT-MODULE-BATCH-001
+
+Channel:
+tooba-main
+
+WorkerId:
+tooba-worker-01
+
+AgentType:
+cursor
+
+Status:
+PASS
+
+Summary:
+Inventory+Promotion physical folder/namespace/anti-workaround closure PASS. Root dumps cleared; Domain god-files split; required IClock/IIdGenerator/IModuleCallTracer; ReleaseAsync Released|Consumed idempotent no-op; silent catch removed; localized exception prose scrubbed to stable codes; architecture guards + release behavior tests green; Tax/Pricing untouched. Batch COMPLETE; next TB-TMAR-NEXT-MODULE-BATCH-002.
+
+Program-Name:
+TMAR — Tooba Microservice-Ready Architecture Recovery
+
+Track:
+NEXT_REFERENCE_MODULE_PHYSICAL_REPAIR
+
+Recovery-Start:
+docs/evidence/TB-TMAR-NEXT-MODULE-BATCH-001-R1/recovery-start.md — Claim f9b52ef8-c2ee-48af-9b66-950390556169
+
+Inventory-Physical-Tree:
+docs/evidence/TB-TMAR-NEXT-MODULE-BATCH-001-R1/inventory-physical-tree.md — 33 handwritten production .cs; path↔namespace aligned; root-dump=0
+
+Inventory-Namespace-Audit:
+docs/evidence/TB-TMAR-NEXT-MODULE-BATCH-001-R1/namespace-audit.md — Inventory mismatches=0; TypeForwardedTo=0
+
+Inventory-Antiworkaround-Repairs:
+Required directory ctor deps (no ?? new SystemUtcClock/UuidV7/ModuleCallTracer); CheckoutInventoryReservationAdapter silent catch removed; EnsureOrderSupply no catch(Exception)/empty rollback; ReleaseAsync terminal no-op; outbox code inventory.outbox.unmapped_event_type
+
+Inventory-Validation:
+Tooba.Inventory.Tests 6/6 passed (architecture + Release idempotency)
+
+Inventory-State:
+COMPLETE_REFERENCE_PATTERN
+
+Inventory-Physical-State:
+VERIFIED_ON_DISK_AND_NAMESPACE
+
+Promotion-Physical-Tree:
+docs/evidence/TB-TMAR-NEXT-MODULE-BATCH-001-R1/promotion-physical-tree.md — 34 handwritten production .cs; path↔namespace aligned; root-dump=0
+
+Promotion-Namespace-Audit:
+docs/evidence/TB-TMAR-NEXT-MODULE-BATCH-001-R1/namespace-audit.md — Promotion mismatches=0; TypeForwardedTo=0
+
+Promotion-Antiworkaround-Repairs:
+Required PromotionDirectory/MerchandisingCampaignDirectory IClock/IIdGenerator; store-mismatch → merchandising.campaign.store_mismatch; seller/not-found codes; outbox promotion.outbox.unmapped_event_type
+
+Promotion-Validation:
+Tooba.Promotion.Tests 3/3 passed
+
+Promotion-State:
+COMPLETE_REFERENCE_PATTERN
+
+Promotion-Physical-State:
+VERIFIED_ON_DISK_AND_NAMESPACE
+
+Architecture-Guards:
+InventoryArchitectureGuardTests + PromotionArchitectureGuardTests — physical root-dump, namespace alignment, no TypeForwardedTo, no DI fallbacks, no silent catch, no localized exception prose, Host DbContext leak checks
+
+Focused-Validation:
+Inventory.Tests 6/6; Promotion.Tests 3/3; Host.Tests compile/ctor explicit fakes for Inventory/Promotion directories; dotnet build src/backend/Tooba.slnx 0 errors
+
+Skipped-Validation:
+Full Host integration suite; Cart/Order full suites beyond compile consumer usings; Offer full tests; Tax/Pricing (deferred by user); frontend; BuildingBlocks
+
+Full-Validation:
+dotnet build src/backend/Tooba.slnx — 0 errors
+
+AntiPattern-Gate:
+CLEAN — root dumping; namespace masquerading; TypeForwardedTo; hidden DI fallbacks; catch-and-ignore; localized exception prose; Host DbContext leak; direct clock/id bypass; raw StartActivity; frontend change; Checkout resume; fake/ceremonial folders
+
+Residual-Defects:
+XML/doc comments may retain Persian narrative (not throw prose). Tax/Pricing physical repair deferred by user.
+
+Batch-State:
+COMPLETE
+
+Foundation-State:
+RESULT_PATTERN_FOUNDATION_COMPLETE
+
+Offer-State:
+COMPLETE_REFERENCE_PATTERN
+
+Tax-State:
+DEFERRED_PHYSICAL_REVIEW_BY_USER
+
+Pricing-State:
+DEFERRED_PHYSICAL_REVIEW_BY_USER
+
+Checkout-State:
+PAUSED_AT_SAFE_W5_CHECKPOINT
+
+Frontend-Production-Changes:
+NONE
+
+Git:
+SHA=1d064a9e030af41b46fddaed10fa8fb474f73e59 HEAD==origin/main after push.
+
+Blockers:
+NONE
+
+User-Work-Preserved:
+stashes untouched; user .rar untouched; Tax/Pricing production not modified
+
+Module-Recovery-State:
+NEXT_REFERENCE_BATCH_001_PHYSICAL_COMPLETE
+
+Next-Recommended-Task:
+TB-TMAR-NEXT-MODULE-BATCH-002
+
+END_TOOBA_WORKER_RESULT
