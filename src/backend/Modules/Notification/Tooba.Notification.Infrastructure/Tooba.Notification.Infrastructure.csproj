@@ -18,7 +18,7 @@
     <ProjectReference Include="..\Tooba.Notification.Domain\Tooba.Notification.Domain.csproj" />
     <ProjectReference Include="..\..\Tooba.ModuleContracts\Tooba.ModuleContracts.csproj" />
     <ProjectReference Include="..\..\..\BuildingBlocks\Tooba.Persistence\Tooba.Persistence.csproj" />
-    <ProjectReference Include="..\..\Order\Tooba.Order.Application\Tooba.Order.Application.csproj" />
+    <ProjectReference Include="..\..\Order\Tooba.Order.Contracts\Tooba.Order.Contracts.csproj" />
     <ProjectReference Include="..\..\Payment\Tooba.Payment.Contracts\Tooba.Payment.Contracts.csproj" />
     <ProjectReference Include="..\..\Fulfillment\Tooba.Fulfillment.Contracts\Tooba.Fulfillment.Contracts.csproj" />
     <ProjectReference Include="..\..\Returns\Tooba.Returns.Contracts\Tooba.Returns.Contracts.csproj" />

@@ -34,6 +34,7 @@
     <Project Path="Modules/Cart/Tooba.Cart.Application/Tooba.Cart.Application.csproj" />
     <Project Path="Modules/Cart/Tooba.Cart.Infrastructure/Tooba.Cart.Infrastructure.csproj" />
     <Project Path="Modules/Order/Tooba.Order.Domain/Tooba.Order.Domain.csproj" />
+    <Project Path="Modules/Order/Tooba.Order.Contracts/Tooba.Order.Contracts.csproj" />
     <Project Path="Modules/Order/Tooba.Order.Application/Tooba.Order.Application.csproj" />
     <Project Path="Modules/Order/Tooba.Order.Infrastructure/Tooba.Order.Infrastructure.csproj" />
     <Project Path="Modules/Promotion/Tooba.Promotion.Domain/Tooba.Promotion.Domain.csproj" />

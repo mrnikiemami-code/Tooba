@@ -70,12 +70,64 @@ public sealed class NotificationArchitectureGuardTests
         Assert.Contains(refs, r => r.Contains("Payment.Contracts", StringComparison.Ordinal));
         Assert.Contains(refs, r => r.Contains("Fulfillment.Contracts", StringComparison.Ordinal));
         Assert.Contains(refs, r => r.Contains("Returns.Contracts", StringComparison.Ordinal));
+        Assert.Contains(refs, r => r.Contains("Order.Contracts", StringComparison.Ordinal));
+
+        Assert.DoesNotContain(refs, r => r.Contains("Order.Application", StringComparison.OrdinalIgnoreCase));
+        Assert.DoesNotContain(refs, r => r.Contains("Order.Domain", StringComparison.OrdinalIgnoreCase));
+        Assert.DoesNotContain(refs, r => r.Contains("Order.Infrastructure", StringComparison.OrdinalIgnoreCase));
         Assert.DoesNotContain(refs, r => r.Contains("Payment.Application", StringComparison.OrdinalIgnoreCase));
         Assert.DoesNotContain(refs, r => r.Contains("Fulfillment.Application", StringComparison.OrdinalIgnoreCase));
         Assert.DoesNotContain(refs, r => r.Contains("Returns.Application", StringComparison.OrdinalIgnoreCase));
         Assert.DoesNotContain(refs, r => r.Contains("Payment.Domain", StringComparison.OrdinalIgnoreCase));
         Assert.DoesNotContain(refs, r => r.Contains("Fulfillment.Domain", StringComparison.OrdinalIgnoreCase));
         Assert.DoesNotContain(refs, r => r.Contains("Returns.Domain", StringComparison.OrdinalIgnoreCase));
+        Assert.DoesNotContain(refs, r => r.Contains("Payment.Infrastructure", StringComparison.OrdinalIgnoreCase));
+        Assert.DoesNotContain(refs, r => r.Contains("Fulfillment.Infrastructure", StringComparison.OrdinalIgnoreCase));
+        Assert.DoesNotContain(refs, r => r.Contains("Returns.Infrastructure", StringComparison.OrdinalIgnoreCase));
+
+        Assert.DoesNotContain(AllProductionSources(), x => x.Text.Contains("using Tooba.Order.Application", StringComparison.Ordinal));
+        Assert.DoesNotContain(AllProductionSources(), x => x.Text.Contains("OrderDbContext", StringComparison.Ordinal));
+        Assert.DoesNotContain(AllProductionSources(), x => x.Text.Contains("PaymentDbContext", StringComparison.Ordinal));
+        Assert.DoesNotContain(AllProductionSources(), x => x.Text.Contains("FulfillmentDbContext", StringComparison.Ordinal));
+        Assert.DoesNotContain(AllProductionSources(), x => x.Text.Contains("ReturnsDbContext", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public void Order_Contracts_notification_surface_is_clean()
+    {
+        var orderContractsRoot = Path.Combine(RepoRoot(), "src", "backend", "Modules", "Order", "Tooba.Order.Contracts");
+        Assert.True(Directory.Exists(orderContractsRoot));
+
+        var csproj = Path.Combine(orderContractsRoot, "Tooba.Order.Contracts.csproj");
+        var doc = XDocument.Load(csproj);
+        var refs = doc.Descendants("ProjectReference")
+            .Select(x => (string?)x.Attribute("Include") ?? string.Empty)
+            .Where(x => x.Length > 0)
+            .ToArray();
+        Assert.DoesNotContain(refs, r => r.Contains("Domain", StringComparison.OrdinalIgnoreCase));
+        Assert.DoesNotContain(refs, r => r.Contains("Application", StringComparison.OrdinalIgnoreCase));
+        Assert.DoesNotContain(refs, r => r.Contains("Infrastructure", StringComparison.OrdinalIgnoreCase));
+        Assert.DoesNotContain(refs, r => r.Contains("Host", StringComparison.OrdinalIgnoreCase));
+
+        var rootCs = Directory.EnumerateFiles(orderContractsRoot, "*.cs", SearchOption.TopDirectoryOnly).Select(Path.GetFileName).ToArray();
+        Assert.True(rootCs.Length == 0, "Order.Contracts root dumping-ground: " + string.Join(", ", rootCs));
+
+        var sources = Directory.EnumerateFiles(orderContractsRoot, "*.cs", SearchOption.AllDirectories)
+            .Where(f =>
+            {
+                var n = f.Replace('\\', '/');
+                return !n.Contains("/bin/", StringComparison.Ordinal) && !n.Contains("/obj/", StringComparison.Ordinal);
+            })
+            .Select(f => (Path: Path.GetRelativePath(RepoRoot(), f), Text: File.ReadAllText(f)))
+            .ToArray();
+
+        Assert.DoesNotContain(sources, x => x.Text.Contains("TypeForwardedTo", StringComparison.Ordinal));
+        Assert.Contains(sources, x => x.Path.Replace('\\', '/').Contains("/Notifications/", StringComparison.Ordinal));
+        Assert.All(sources, x =>
+        {
+            var ns = Regex.Match(x.Text, @"^namespace\s+([\w.]+)", RegexOptions.Multiline).Groups[1].Value;
+            Assert.StartsWith("Tooba.Order.Contracts.Notifications", ns, StringComparison.Ordinal);
+        });
     }
 
     [Fact]

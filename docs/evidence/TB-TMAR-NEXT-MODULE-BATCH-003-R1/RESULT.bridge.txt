@@ -1,0 +1,137 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+
+BEGIN_TOOBA_WORKER_RESULT
+
+Task-ID:
+TB-TMAR-NEXT-MODULE-BATCH-003-R1
+
+Parent-Task:
+TB-TMAR-NEXT-MODULE-BATCH-003
+
+Channel:
+tooba-main
+
+WorkerId:
+tooba-worker-01
+
+AgentType:
+cursor
+
+Status:
+PASS
+
+Summary:
+Closed Notification.Infrastructure → Order.Application boundary. Extracted IOrderNotificationReader + recipient snapshots into Tooba.Order.Contracts/Notifications. Notification.Infra now references Order.Contracts only. Architecture guards reject Order.Application/Domain/Infrastructure and foreign DbContexts. Projector recipient logic unchanged (parity tests added). Tax/Pricing/Checkout/frontend/BATCH-004 untouched.
+
+Program-Name:
+TMAR — Tooba Microservice-Ready Architecture Recovery
+
+Track:
+REFERENCE_BATCH_REPAIR
+
+Recovery-Start:
+docs/evidence/TB-TMAR-NEXT-MODULE-BATCH-003-R1/recovery-start.md — Claim c9bbe36f-a111-440e-88af-177ebaa94b33; baseline tip 435f4c8b
+
+Order-Boundary-Audit:
+docs/evidence/TB-TMAR-NEXT-MODULE-BATCH-003-R1/order-boundary-audit.md — before Order.Application; after Order.Contracts only
+
+Order-Contract-Repair:
+Created Tooba.Order.Contracts/Notifications (OrderNotificationRecipientSnapshot, OrderNotificationSellerSnapshot, IOrderNotificationReader); removed types from Order.Application; OrderNotificationBridge + OrderModule DI retargeted; Notification.Infrastructure ProjectReference swapped; slnx entry added
+
+Notification-Order-Parity:
+docs/evidence/TB-TMAR-NEXT-MODULE-BATCH-003-R1/notification-order-parity.md — notification-recipient logic change count=0
+
+Guard-Delta:
+docs/evidence/TB-TMAR-NEXT-MODULE-BATCH-003-R1/guard-delta.md — Order.Application/Domain/Infrastructure rejected; Order.Contracts path/namespace/TypeForwardedTo guard added
+
+Notification-Validation:
+dotnet test Tooba.Notification.Tests → 13 passed
+
+Order-Validation:
+dotnet build Tooba.Order.Infrastructure → succeeded; Contracts compile via solution
+
+Focused-Validation:
+Notification.Tests 13/13 (architecture + behavior + projector parity checkout/seller-fallback)
+
+Full-Validation:
+dotnet build src/backend/Tooba.slnx → succeeded
+
+AntiPattern-Gate:
+CLEAN — Notification.Infra → Order.Contracts only; no Order.Application using; no foreign DbContext; no TypeForwardedTo; Host not used as intermediary
+
+Residual-Defects:
+NONE for R1 scope. Host baseline tmar-infra-to-foreign-application.json still lists historical edges (including already-closed Notification→Payment/Fulfillment/Returns.Application from parent BATCH-003); not edited here (Host suite out of R1 validation). Tax/Pricing deferred. Checkout paused W5.
+
+Notification-State:
+COMPLETE_REFERENCE_PATTERN
+
+Notification-Physical-State:
+VERIFIED_ON_DISK_AND_NAMESPACE
+
+Notification-Public-Boundary:
+CONTRACTS_ONLY
+
+Notification-Order-Boundary:
+CONTRACTS_ONLY
+
+Support-State:
+COMPLETE_REFERENCE_PATTERN
+
+Support-Physical-State:
+VERIFIED_ON_DISK_AND_NAMESPACE
+
+Support-Notification-Boundary:
+CONTRACTS_ONLY
+
+Behavior-Preservation:
+VERIFIED
+
+Wallet-State:
+COMPLETE_REFERENCE_PATTERN
+
+Payment-State:
+COMPLETE_REFERENCE_PATTERN
+
+Foundation-State:
+RESULT_PATTERN_FOUNDATION_COMPLETE
+
+Offer-State:
+COMPLETE_REFERENCE_PATTERN
+
+Inventory-State:
+COMPLETE_REFERENCE_PATTERN
+
+Promotion-State:
+COMPLETE_REFERENCE_PATTERN
+
+Tax-State:
+DEFERRED_PHYSICAL_REVIEW_BY_USER
+
+Pricing-State:
+DEFERRED_PHYSICAL_REVIEW_BY_USER
+
+Checkout-State:
+PAUSED_AT_SAFE_W5_CHECKPOINT
+
+Frontend-Production-Changes:
+NONE
+
+Batch-State:
+COMPLETE
+
+Git:
+SHA=PLACEHOLDER_SHA HEAD==origin/main after push.
+
+Blockers:
+NONE
+
+User-Work-Preserved:
+YES — no stash/force-push; Tax/Pricing/Checkout/frontend untouched; BATCH-004 not started
+
+Module-Recovery-State:
+NEXT_REFERENCE_BATCH_003_COMPLETE
+
+Next-Recommended-Task:
+TB-TMAR-NEXT-MODULE-BATCH-004
+
+END_TOOBA_WORKER_RESULT

@@ -74,10 +74,11 @@ Current Repair Task:
 TMAR Module Recovery (Worker PASS — awaiting Architect):
 
 ```text
-TB-TMAR-NEXT-MODULE-BATCH-003 — Notification + Support Golden Recovery Batch
+TB-TMAR-NEXT-MODULE-BATCH-003-R1 — Notification Order Boundary Closure + Guard Correction
 Notification-State: COMPLETE_REFERENCE_PATTERN
 Notification-Physical-State: VERIFIED_ON_DISK_AND_NAMESPACE
 Notification-Public-Boundary: CONTRACTS_ONLY
+Notification-Order-Boundary: CONTRACTS_ONLY
 Support-State: COMPLETE_REFERENCE_PATTERN
 Support-Physical-State: VERIFIED_ON_DISK_AND_NAMESPACE
 Support-Notification-Boundary: CONTRACTS_ONLY

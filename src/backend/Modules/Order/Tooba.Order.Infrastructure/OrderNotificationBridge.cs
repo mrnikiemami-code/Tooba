@@ -1,5 +1,5 @@
 using Microsoft.EntityFrameworkCore;
-using Tooba.Order.Application;
+using Tooba.Order.Contracts.Notifications;
 using Tooba.Order.Infrastructure.Persistence;
 
 namespace Tooba.Order.Infrastructure;

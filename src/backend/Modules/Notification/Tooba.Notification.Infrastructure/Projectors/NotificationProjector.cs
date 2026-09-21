@@ -4,7 +4,7 @@ using Tooba.Notification.Application.Rendering;
 using Tooba.Notification.Contracts.Commands;
 using Tooba.Notification.Contracts.Dtos;
 using Tooba.Notification.Contracts.Routes;
-using Tooba.Order.Application;
+using Tooba.Order.Contracts.Notifications;
 
 namespace Tooba.Notification.Infrastructure.Projectors;
 
