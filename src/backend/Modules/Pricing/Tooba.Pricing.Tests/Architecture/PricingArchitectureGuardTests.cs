@@ -111,6 +111,41 @@ public sealed class PricingArchitectureGuardTests
         Assert.True(bypass.Count == 0, string.Join("; ", bypass));
     }
 
+    [Fact]
+    public void Seller_price_write_uses_result_not_expected_semantic_exception_control_flow()
+    {
+        var contracts = File.ReadAllText(Path.Combine(
+            PricingRoot(), "Tooba.Pricing.Contracts", "SellerOfferPricingContracts.cs"));
+        Assert.Contains("Task<Result> SetPriceAsync", contracts, StringComparison.Ordinal);
+
+        var directory = File.ReadAllText(Path.Combine(
+            PricingRoot(), "Tooba.Pricing.Infrastructure", "Adapters", "PriceDirectory.cs"));
+        var methodStart = directory.IndexOf("public async Task<Result> SetPriceAsync", StringComparison.Ordinal);
+        Assert.True(methodStart >= 0, "SetPriceAsync Result signature missing");
+        var methodEnd = directory.IndexOf("public async Task<IReadOnlyDictionary<Guid, PriceQuote>> ResolvePricesBatchAsync", methodStart, StringComparison.Ordinal);
+        Assert.True(methodEnd > methodStart, "SetPriceAsync method body not bounded");
+        var setPriceBody = directory[methodStart..methodEnd];
+        Assert.Contains("Result.Failure", setPriceBody, StringComparison.Ordinal);
+        Assert.Contains("Result.Success()", setPriceBody, StringComparison.Ordinal);
+        Assert.Contains("MarketCode.TryParse", setPriceBody, StringComparison.Ordinal);
+        Assert.Contains("CurrencyCode.TryParse", setPriceBody, StringComparison.Ordinal);
+        Assert.DoesNotContain("throw new SemanticException", setPriceBody, StringComparison.Ordinal);
+        Assert.DoesNotContain("catch (", setPriceBody, StringComparison.Ordinal);
+
+        var offerEndpoint = File.ReadAllText(Path.Combine(
+            RepoRoot(),
+            "src",
+            "backend",
+            "Modules",
+            "Offer",
+            "Tooba.Offer.Endpoints",
+            "Seller",
+            "OfferSellerEndpoints.cs"));
+        Assert.Contains("pricing.SetPriceAsync", offerEndpoint, StringComparison.Ordinal);
+        Assert.Contains("api.From(write)", offerEndpoint, StringComparison.Ordinal);
+        Assert.DoesNotContain("Results.Json(new { title", offerEndpoint, StringComparison.Ordinal);
+    }
+
     private static IEnumerable<(string Path, string Text)> AllProductionSources() =>
         Sources("Tooba.Pricing.Domain")
             .Concat(Sources("Tooba.Pricing.Application"))

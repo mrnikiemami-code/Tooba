@@ -1,0 +1,95 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+
+BEGIN_TOOBA_WORKER_RESULT
+
+Task-ID:
+TB-TMAR-REFBATCH-TP-RESULT-001
+
+Parent-Task:
+TB-TMAR-FND-RESULT-001-R1
+
+Channel:
+tooba-main
+
+WorkerId:
+tooba-worker-01
+
+AgentType:
+cursor
+
+Status:
+PASS
+
+Summary:
+Tax+Pricing Result Pattern delta PASS. Pricing SetPriceAsync returns Result.Failure for expected seller-write failures (amount, offer/seller, market, currency, overlap) without SemanticException control flow on that path. Tax RESULT_DELTA_NOT_APPLICABLE (TaxOutcome remains canonical). Foundation untouched. Module-Recovery-State REFERENCE_RESULT_DELTA_COMPLETE.
+
+Program-Name:
+TMAR — Tooba Microservice-Ready Architecture Recovery
+
+Track:
+REFERENCE_MODULE_RESULT_DELTA
+
+Recovery-Start:
+docs/evidence/TB-TMAR-REFBATCH-TP-RESULT-001/recovery-start.md — Claim dcbd0880-fb80-4d6b-a30c-6e8fcbdef188; baseline HEAD 50a02af4cef7bc836e4606f935a57ae2d643d736
+
+Pricing-Result-Delta:
+PriceDirectory.SetPriceAsync: MarketCode/CurrencyCode TryParse + active-base overlap preflight to Result.Failure; AmountInvalid/OfferErrorCodes.NotFound preserved; Result.Success on write; Offer seller endpoint still api.From(write). Evidence: docs/evidence/TB-TMAR-REFBATCH-TP-RESULT-001/result-delta.md
+
+Tax-Result-Delta:
+RESULT_DELTA_NOT_APPLICABLE — no Tax HTTP/Application expected-failure exception surface; TaxOutcome canonical; zero Tax production changes.
+
+Foundation-Compatibility:
+ZERO BuildingBlocks production changes; Pricing ErrorDescriptor/resx catalog covers new Result failures; correlation/locale remain central.
+
+Observability:
+Existing TracingBehavior IResultStatus / result.status=business_failure path; no extra spans/ActivitySource.
+
+Architecture-Guards:
+PricingArchitectureGuardTests.Seller_price_write_uses_result_not_expected_semantic_exception_control_flow — Task<Result>, Result.Failure/Success, TryParse, no throw/catch in SetPriceAsync body; Offer endpoint api.From(write).
+
+Focused-Validation:
+Tooba.Pricing.Tests 14/14; dotnet build src/backend/Tooba.slnx 0 errors.
+
+Skipped-Validation:
+Tax.Tests (no Tax code change); Offer/BuildingBlocks/Host full suites (no shared Result/API production change; task budget).
+
+AntiPattern-Gate:
+CLEAN — no catch-all Exception→Result; no duplicate Error model; no endpoint-local Results.Json mapping; no Host PricingDbContext; no ceremonial Tax Result.
+
+Residual-Defects:
+NONE for this delta. FluentValidation remains exception-based globally (pre-existing, out of scope).
+
+Tax-State:
+COMPLETE_REFERENCE_PATTERN
+
+Pricing-State:
+COMPLETE_REFERENCE_PATTERN
+
+Foundation-State:
+RESULT_PATTERN_FOUNDATION_COMPLETE
+
+Offer-State:
+COMPLETE_REFERENCE_PATTERN
+
+Frontend-Production-Changes:
+NONE
+
+Checkout-State:
+PAUSED_AT_SAFE_W5_CHECKPOINT
+
+Git:
+TIP_SHA_PLACEHOLDER
+
+Blockers:
+NONE
+
+User-Work-Preserved:
+YES — stashes untouched; .rar untouched; protected 18ca10c9 ancestor; no destructive git
+
+Module-Recovery-State:
+REFERENCE_RESULT_DELTA_COMPLETE
+
+Next-Recommended-Task:
+TB-TMAR-NEXT-MODULE-BATCH-001
+
+END_TOOBA_WORKER_RESULT

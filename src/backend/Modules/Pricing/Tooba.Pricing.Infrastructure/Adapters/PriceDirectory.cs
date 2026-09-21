@@ -89,6 +89,18 @@ public sealed class PriceDirectory : IPriceDirectory, IPriceLookupGateway, ISell
 
         var market = string.IsNullOrWhiteSpace(request.Market) ? "IR" : request.Market.Trim();
         var currency = string.IsNullOrWhiteSpace(request.Currency) ? "IRR" : request.Currency.Trim();
+        if (!MarketCode.TryParse(market, out var marketCode, out var marketError))
+        {
+            return Result.Failure(marketError!);
+        }
+
+        if (!CurrencyCode.TryParse(currency, out var currencyCode, out var currencyError))
+        {
+            return Result.Failure(currencyError!);
+        }
+
+        market = marketCode.Value;
+        currency = currencyCode.Value;
         var channel = ToPriceChannel(offer.Channel);
         var existing = await _db.Prices.AsNoTracking()
             .Where(x => x.OfferId == request.OfferId && x.Market == market
@@ -98,6 +110,11 @@ public sealed class PriceDirectory : IPriceDirectory, IPriceLookupGateway, ISell
             .FirstOrDefaultAsync(cancellationToken);
         if (existing is null || existing.Status == PriceStatus.Retired)
         {
+            if (await HasActiveBaseOverlapAsync(request.OfferId, market, channel, currency, Guid.Empty, cancellationToken))
+            {
+                return Result.Failure(new SemanticError(PricingErrorCodes.Overlap));
+            }
+
             var created = await CreatePriceAsync(
                 request.OfferId, market, offer.Channel, request.Amount, currency,
                 _clock.UtcNow.AddYears(-1), null, cancellationToken);
@@ -108,6 +125,11 @@ public sealed class PriceDirectory : IPriceDirectory, IPriceLookupGateway, ISell
         await ChangeAmountAsync(existing.PriceId, request.Amount, currency, cancellationToken);
         if (existing.Status != PriceStatus.Active)
         {
+            if (await HasActiveBaseOverlapAsync(request.OfferId, market, channel, currency, existing.PriceId, cancellationToken))
+            {
+                return Result.Failure(new SemanticError(PricingErrorCodes.Overlap));
+            }
+
             await ActivateAsync(existing.PriceId, cancellationToken);
         }
 
@@ -356,6 +378,32 @@ public sealed class PriceDirectory : IPriceDirectory, IPriceLookupGateway, ISell
             trace.SetError(ex);
             throw;
         }
+    }
+
+    private async Task<bool> HasActiveBaseOverlapAsync(
+        Guid offerId,
+        string market,
+        PriceChannel channel,
+        string currency,
+        Guid excludePriceId,
+        CancellationToken cancellationToken)
+    {
+        var siblings = await _db.Prices.AsNoTracking()
+            .Where(x => x.OfferId == offerId
+                        && x.Market == market
+                        && x.Channel == channel
+                        && x.Currency == currency
+                        && x.QualifierKind == PriceQualifierKind.Base
+                        && x.Status == PriceStatus.Active
+                        && x.PriceId != excludePriceId)
+            .ToListAsync(cancellationToken);
+        var windowStart = _clock.UtcNow.AddYears(-1);
+        var windowEnd = DateTimeOffset.MaxValue;
+        return siblings.Any(x =>
+        {
+            var otherEnd = x.ValidTo ?? DateTimeOffset.MaxValue;
+            return windowStart < otherEnd && x.ValidFrom < windowEnd;
+        });
     }
 
     private async Task EnsureNoOverlapAsync(AuthoredPrice candidate, Guid excludePriceId, CancellationToken cancellationToken)

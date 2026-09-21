@@ -18,25 +18,39 @@ public readonly record struct CurrencyCode
     /// <summary>
     /// کد ارز را نرمال می‌کند. تومان/IRT ممنوع است چون منبع حقیقت ریال (IRR) است.
     /// </summary>
-    public static CurrencyCode Parse(string raw)
+    public static CurrencyCode Parse(string raw) =>
+        TryParse(raw, out var code, out var error)
+            ? code
+            : throw new SemanticException(error!);
+
+    /// <summary>Normalizes a currency code or returns the stable business error.</summary>
+    public static bool TryParse(string raw, out CurrencyCode code, out SemanticError? error)
     {
         if (string.IsNullOrWhiteSpace(raw))
         {
-            throw new SemanticException(new SemanticError(PricingErrorCodes.CurrencyInvalid));
+            code = default;
+            error = new SemanticError(PricingErrorCodes.CurrencyInvalid);
+            return false;
         }
 
-        var code = raw.Trim().ToUpperInvariant();
-        if (code is "TMN" or "IRT" or "TOMAN")
+        var normalized = raw.Trim().ToUpperInvariant();
+        if (normalized is "TMN" or "IRT" or "TOMAN")
         {
-            throw new SemanticException(new SemanticError(PricingErrorCodes.CurrencyDisplayUnit));
+            code = default;
+            error = new SemanticError(PricingErrorCodes.CurrencyDisplayUnit);
+            return false;
         }
 
-        if (code.Length != 3 || !code.All(char.IsAsciiLetter))
+        if (normalized.Length != 3 || !normalized.All(char.IsAsciiLetter))
         {
-            throw new SemanticException(new SemanticError(PricingErrorCodes.CurrencyInvalid));
+            code = default;
+            error = new SemanticError(PricingErrorCodes.CurrencyInvalid);
+            return false;
         }
 
-        return new CurrencyCode(code);
+        code = new CurrencyCode(normalized);
+        error = null;
+        return true;
     }
 
     /// <summary>

@@ -188,13 +188,16 @@ User choice:
 Continue TMAR for now until user explicitly says to return to product feature work.
 
 Next TMAR task:
-TB-TMAR-REFBATCH-TP-001 (resume for bounded Tax/Pricing Result-pattern delta only). TB-TMAR-FND-RESULT-001-R1 completed Result Pattern foundation and Offer Golden adoption. Offer COMPLETE_REFERENCE_PATTERN now includes Result/ApiResponseFactory mapping. Prior REFERENCE_BATCH_COMPLETE for Tax/Pricing is provisional until that delta. Checkout remains PAUSED_AT_SAFE_W5_CHECKPOINT. Frontend remains frozen. Do NOT start TB-TMAR-NEXT-MODULE-BATCH-001 yet.
+TB-TMAR-NEXT-MODULE-BATCH-001. TB-TMAR-REFBATCH-TP-RESULT-001 completed Tax/Pricing Result Pattern delta. Module-Recovery-State REFERENCE_RESULT_DELTA_COMPLETE. Checkout remains PAUSED_AT_SAFE_W5_CHECKPOINT. Frontend remains frozen.
+
+Tax + Pricing Result Pattern delta:
+TB-TMAR-REFBATCH-TP-RESULT-001 — Pricing seller-write expected failures return Result.Failure (amount/offer/market/currency/overlap); Tax RESULT_DELTA_NOT_APPLICABLE (TaxOutcome remains canonical); Module-Recovery-State REFERENCE_RESULT_DELTA_COMPLETE; Tax/Pricing COMPLETE_REFERENCE_PATTERN. Evidence: docs/evidence/TB-TMAR-REFBATCH-TP-RESULT-001/. Next: TB-TMAR-NEXT-MODULE-BATCH-001.
 
 Result Pattern Foundation + Offer Golden:
-TB-TMAR-FND-RESULT-001-R1 — Offer COMPLETE was REOPENED for missing Result pattern; BuildingBlocks Result/Result&lt;T&gt; + ApiResponseFactory success/failure mapping; Offer seller CQRS/endpoints adopted; Pricing/Inventory seller-write gateways return Result; Module-Recovery-State RESULT_PATTERN_FOUNDATION_COMPLETE; Offer-State COMPLETE_REFERENCE_PATTERN. Evidence: docs/evidence/TB-TMAR-FND-RESULT-001-R1/. Next: TB-TMAR-REFBATCH-TP-001 (Result delta on Tax/Pricing only).
+TB-TMAR-FND-RESULT-001-R1 — Offer COMPLETE was REOPENED for missing Result pattern; BuildingBlocks Result/Result&lt;T&gt; + ApiResponseFactory success/failure mapping; Offer seller CQRS/endpoints adopted; Pricing/Inventory seller-write gateways return Result; Module-Recovery-State RESULT_PATTERN_FOUNDATION_COMPLETE; Offer-State COMPLETE_REFERENCE_PATTERN. Evidence: docs/evidence/TB-TMAR-FND-RESULT-001-R1/.
 
 Tax + Pricing reference revalidation:
-TB-TMAR-REFBATCH-TP-001 — historically REFERENCE_BATCH_COMPLETE before Result Pattern Golden; Tax/Pricing COMPLETE_REFERENCE_PATTERN remain provisional pending Result/API response delta. Evidence: docs/evidence/TB-TMAR-REFBATCH-TP-001/.
+TB-TMAR-REFBATCH-TP-001 — REFERENCE_BATCH_COMPLETE architecture cleanup; Result Golden delta closed by TB-TMAR-REFBATCH-TP-RESULT-001. Evidence: docs/evidence/TB-TMAR-REFBATCH-TP-001/.
 
 Foundation Observability/Error Presentation R4:
 TB-TMAR-FND-OBSERR-001-R4 — Final integrated verification. Module-Recovery-State FOUNDATION_COMPLETE (observability/error). Offer historically COMPLETE then REOPENED by Result gap. Evidence: docs/evidence/TB-TMAR-FND-OBSERR-001-R4/.

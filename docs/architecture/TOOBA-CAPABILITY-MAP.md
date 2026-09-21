@@ -62,11 +62,12 @@ Evidence files remain the deep-detail source; this map is the quick index.
 | Checkout Implementation W4 | Order.Infrastructure lifecycle via IOrderInventoryLifecyclePort; Infra↛Inventory.Application; TX preserved; W5 READY | TB-TMAR-CHECKOUT-IMPL-W4 |
 | Checkout Implementation W5 | Promotion checkout via ICheckoutPromotionPort; Order.Application↛Promotion.Application; TX preserved; W6 READY | TB-TMAR-CHECKOUT-IMPL-W5 |
 | Offer Reference Module W1 | COMPLETE_REFERENCE_PATTERN; Endpoints+Tests; Host MapOfferModule; ARCH-MODULE-FILE-001 + HOST-MODULE-ENDPOINT-001; Checkout paused at W5 | TB-TMAR-OFFER-REFERENCE-W1 |
-| Tax Reference Module W1 | COMPLETE_REFERENCE_PATTERN revalidated by TB-TMAR-REFBATCH-TP-001; Checkout paused at W5 | TB-TMAR-TAX-REFERENCE-W1 |
-| Pricing Reference Module W1 | COMPLETE_REFERENCE_PATTERN revalidated by TB-TMAR-REFBATCH-TP-001; USER_REVIEW_OFFER gate removed; Checkout paused at W5 | TB-TMAR-PRICING-REFERENCE-W1 |
+| Tax Reference Module W1 | COMPLETE_REFERENCE_PATTERN (TaxOutcome canonical; Result delta N/A) | TB-TMAR-TAX-REFERENCE-W1 / TB-TMAR-REFBATCH-TP-RESULT-001 |
+| Pricing Reference Module W1 | COMPLETE_REFERENCE_PATTERN; seller SetPriceAsync Result failures aligned | TB-TMAR-PRICING-REFERENCE-W1 / TB-TMAR-REFBATCH-TP-RESULT-001 |
 | Foundation Observability R4 | FOUNDATION_COMPLETE (obs/error); Offer later REOPENED for Result gap | TB-TMAR-FND-OBSERR-001-R4 |
-| Tax + Pricing reference batch | REFERENCE_BATCH_COMPLETE (provisional vs Result Golden) | TB-TMAR-REFBATCH-TP-001 |
+| Tax + Pricing reference batch | REFERENCE_BATCH_COMPLETE | TB-TMAR-REFBATCH-TP-001 |
 | Result Pattern Foundation + Offer Golden | RESULT_PATTERN_FOUNDATION_COMPLETE; Offer COMPLETE_REFERENCE_PATTERN with Result/ApiResponseFactory | TB-TMAR-FND-RESULT-001-R1 |
+| Tax + Pricing Result delta | REFERENCE_RESULT_DELTA_COMPLETE; Tax/Pricing COMPLETE_REFERENCE_PATTERN | TB-TMAR-REFBATCH-TP-RESULT-001 |
 | Next | TB-TMAR-NEXT-MODULE-BATCH-001. Checkout remains PAUSED_AT_SAFE_W5_CHECKPOINT. Frontend frozen. | — |
 
-Last Verified Task = TB-TMAR-FND-OBSERR-001-R4
+Last Verified Task = TB-TMAR-REFBATCH-TP-RESULT-001

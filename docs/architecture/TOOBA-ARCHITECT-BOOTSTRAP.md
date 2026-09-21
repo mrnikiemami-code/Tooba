@@ -26,7 +26,7 @@ Accepted architecture baseline:
 TB-TMAR-ARCH-BASELINE
 
 Current next task:
-TB-TMAR-REFBATCH-TP-001 after TB-TMAR-FND-RESULT-001-R1. Offer is COMPLETE_REFERENCE_PATTERN with Result Pattern Golden. Foundation is RESULT_PATTERN_FOUNDATION_COMPLETE. Tax/Pricing COMPLETE claims are provisional until a bounded Result/API response delta on TB-TMAR-REFBATCH-TP-001. Do not start TB-TMAR-NEXT-MODULE-BATCH-001 yet. Checkout remains PAUSED_AT_SAFE_W5_CHECKPOINT.
+TB-TMAR-NEXT-MODULE-BATCH-001 after TB-TMAR-REFBATCH-TP-RESULT-001. Offer/Tax/Pricing are COMPLETE_REFERENCE_PATTERN. Foundation is RESULT_PATTERN_FOUNDATION_COMPLETE. Module-Recovery-State REFERENCE_RESULT_DELTA_COMPLETE. Checkout remains PAUSED_AT_SAFE_W5_CHECKPOINT.
 
 Product development rule:
 Foundation (TB-TMAR-FND-001) is ACCEPTED.
@@ -487,9 +487,10 @@ fnd-obserr-001-r3 = TB-TMAR-FND-OBSERR-001-R3 FOUNDATION_ERROR_LOCALIZATION_COMP
 fnd-obserr-001-r4 = TB-TMAR-FND-OBSERR-001-R4 FOUNDATION_COMPLETE (integrated verification + Offer Golden reverify)
 tax-reference-w1 = TB-TMAR-TAX-REFERENCE-W1 PASS, revalidated COMPLETE_REFERENCE_PATTERN by TB-TMAR-REFBATCH-TP-001
 pricing-reference-w1 = TB-TMAR-PRICING-REFERENCE-W1 PASS, revalidated COMPLETE_REFERENCE_PATTERN by TB-TMAR-REFBATCH-TP-001 (USER_REVIEW_OFFER gate removed)
-refbatch-tp-001 = TB-TMAR-REFBATCH-TP-001 REFERENCE_BATCH_COMPLETE (provisional vs Result Pattern Golden)
+refbatch-tp-001 = TB-TMAR-REFBATCH-TP-001 REFERENCE_BATCH_COMPLETE (architecture cleanup)
 fnd-result-001-r1 = TB-TMAR-FND-RESULT-001-R1 RESULT_PATTERN_FOUNDATION_COMPLETE; Offer COMPLETE_REFERENCE_PATTERN with Result/ApiResponseFactory
-next task = TB-TMAR-REFBATCH-TP-001 (bounded Tax/Pricing Result delta only); Checkout remains PAUSED_AT_SAFE_W5_CHECKPOINT; Frontend frozen; do not start next module batch yet
+refbatch-tp-result-001 = TB-TMAR-REFBATCH-TP-RESULT-001 REFERENCE_RESULT_DELTA_COMPLETE; Tax/Pricing COMPLETE_REFERENCE_PATTERN vs Result Golden
+next task = TB-TMAR-NEXT-MODULE-BATCH-001; Checkout remains PAUSED_AT_SAFE_W5_CHECKPOINT; Frontend frozen
 
 primary goal = painless future Microservice migration
 

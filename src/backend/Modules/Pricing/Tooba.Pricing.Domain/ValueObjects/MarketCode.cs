@@ -17,20 +17,32 @@ public readonly record struct MarketCode
     /// <summary>
     /// کد بازار را نرمال می‌کند. فقط ایران در schema قفل نمی‌شود.
     /// </summary>
-    public static MarketCode Parse(string raw)
+    public static MarketCode Parse(string raw) =>
+        TryParse(raw, out var code, out var error)
+            ? code
+            : throw new SemanticException(error!);
+
+    /// <summary>Normalizes a market code or returns the stable business error.</summary>
+    public static bool TryParse(string raw, out MarketCode code, out SemanticError? error)
     {
         if (string.IsNullOrWhiteSpace(raw))
         {
-            throw new SemanticException(new SemanticError(PricingErrorCodes.MarketInvalid));
+            code = default;
+            error = new SemanticError(PricingErrorCodes.MarketInvalid);
+            return false;
         }
 
-        var code = raw.Trim().ToUpperInvariant();
-        if (code.Length is < 2 or > 16 || !code.All(ch => char.IsAsciiLetterOrDigit(ch) || ch is '-' or '_'))
+        var normalized = raw.Trim().ToUpperInvariant();
+        if (normalized.Length is < 2 or > 16 || !normalized.All(ch => char.IsAsciiLetterOrDigit(ch) || ch is '-' or '_'))
         {
-            throw new SemanticException(new SemanticError(PricingErrorCodes.MarketInvalid));
+            code = default;
+            error = new SemanticError(PricingErrorCodes.MarketInvalid);
+            return false;
         }
 
-        return new MarketCode(code);
+        code = new MarketCode(normalized);
+        error = null;
+        return true;
     }
 
     /// <inheritdoc />
