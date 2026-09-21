@@ -79,7 +79,7 @@ Frontend-Production-Changes:
 NONE
 
 Git:
-TIP_SHA_PLACEHOLDER
+20b987825cb1aaa754f699c79b7c5ed599198714
 HEAD==origin/main: YES
 branch: main
 
