@@ -134,14 +134,14 @@ builder.Services.AddScoped<Tooba.Catalog.Application.IStoreLandingExternalRefere
 builder.Services.AddScoped<Tooba.Catalog.Application.IUnitOfMeasureLanguageGate, Tooba.Host.Admin.HostUnitOfMeasureLanguageGate>();
 builder.Services.AddToobaModules(builder.Configuration, builder.Environment);
 builder.Services.AddOfferModuleCallTracing();
-builder.Services.Configure<Tooba.Cart.Application.CartLifetimeOptions>(
-    builder.Configuration.GetSection(Tooba.Cart.Application.CartLifetimeOptions.SectionName));
+builder.Services.Configure<Tooba.Cart.Application.Lifetime.CartLifetimeOptions>(
+    builder.Configuration.GetSection(Tooba.Cart.Application.Lifetime.CartLifetimeOptions.SectionName));
 builder.Services.Configure<Tooba.Order.Application.ReservationCycleOptions>(
     builder.Configuration.GetSection(Tooba.Order.Application.ReservationCycleOptions.SectionName));
 builder.Services.AddScoped<CommerceHoldPolicy>();
 builder.Services.AddScoped<Tooba.Payment.Application.Ports.ICommerceHoldPolicy>(sp => sp.GetRequiredService<CommerceHoldPolicy>());
 builder.Services.AddScoped<Tooba.Order.Application.ICheckoutReservationHoldPolicy>(sp => sp.GetRequiredService<CommerceHoldPolicy>());
-builder.Services.AddScoped<Tooba.Cart.Application.ICartPersistenceHoursSource>(sp => sp.GetRequiredService<CommerceHoldPolicy>());
+builder.Services.AddScoped<Tooba.Cart.Application.Ports.ICartPersistenceHoursSource>(sp => sp.GetRequiredService<CommerceHoldPolicy>());
 builder.Services.AddScoped<Tooba.Order.Application.IReservationCyclePolicyResolver, ReservationCyclePolicyResolver>();
 builder.Services.AddScoped<ReservationCycleCoordinator>();
 builder.Services.AddScoped<Tooba.Host.Admin.ProductWorkspaceComposer>();
@@ -176,7 +176,7 @@ builder.Services.AddScoped(sp =>
         sp.GetRequiredService<CurrentAuthenticatedSession>()));
 builder.Services.AddScoped(sp =>
     new StorefrontCartComposer(
-        sp.GetRequiredService<Tooba.Cart.Application.ICartDirectory>(),
+        sp.GetRequiredService<Tooba.Cart.Application.Ports.ICartDirectory>(),
         sp.GetRequiredService<Tooba.Cart.Contracts.ICartQueryGateway>(),
         sp.GetRequiredService<Tooba.Catalog.Infrastructure.Persistence.CatalogDbContext>(),
         sp.GetRequiredService<Tooba.Party.Application.IPartyLookupGateway>(),
@@ -216,7 +216,7 @@ builder.Services.AddScoped<Tooba.Host.Storefront.StorefrontPendingPaymentCompose
         sp.GetRequiredService<Tooba.Order.Application.ICheckoutDirectory>(),
         sp.GetRequiredService<Tooba.Fulfillment.Application.Ports.IFulfillmentDirectory>(),
         sp.GetRequiredService<Tooba.Payment.Application.Ports.IPaymentAdminDirectory>(),
-        sp.GetRequiredService<Tooba.Settlement.Application.ISettlementDirectory>(),
+        sp.GetRequiredService<Tooba.Settlement.Application.Ports.ISettlementDirectory>(),
         sp.GetRequiredService<CurrentAuthenticatedSession>(),
         sp.GetRequiredService<IHostEnvironment>(),
         sp.GetRequiredService<IHttpContextAccessor>()));

@@ -37,9 +37,15 @@ public sealed class AdminOrderFinancialHistoryTests
 
         var policy = new CommissionPolicySnapshot { PolicyId = Guid.NewGuid(), PolicyName = "default", Rate = 0.1m };
         var credit = MapEntry(SettlementEntry.PostCreditFromPayment(
-            Guid.NewGuid(), order.SellerPartyId, paymentId, order.SellerOrderId, 200_000m, "IRR", policy, "pay-1", now.AddMinutes(-15)));
+            Guid.NewGuid(),
+            Guid.NewGuid(),
+            order.SellerPartyId, paymentId, order.SellerOrderId, 200_000m, "IRR", policy, "pay-1", now.AddMinutes(-15)));
         var debit = MapEntry(SettlementEntry.PostDebitFromRefund(
-            Guid.NewGuid(), order.SellerPartyId, Guid.NewGuid(), order.SellerOrderId, 50_000m, "IRR", policy, "ref-1", now.AddMinutes(-5)));
+            Guid.NewGuid(),
+            Guid.NewGuid(),
+            order.SellerPartyId,
+            Guid.NewGuid(),
+            order.SellerOrderId, 50_000m, "IRR", policy, "ref-1", now.AddMinutes(-5)));
 
         var returnId = Guid.NewGuid();
         var refunds = new[]
@@ -82,7 +88,9 @@ public sealed class AdminOrderFinancialHistoryTests
         var policy = new CommissionPolicySnapshot { PolicyId = Guid.NewGuid(), PolicyName = "default", Rate = 0m };
         var orderNet = 80_000m;
         var credit = MapEntry(SettlementEntry.PostCreditFromPayment(
-            Guid.NewGuid(), order.SellerPartyId, Guid.NewGuid(), order.SellerOrderId, orderNet, "IRR", policy, "pay-order", DateTimeOffset.UtcNow));
+            Guid.NewGuid(),
+            Guid.NewGuid(),
+            order.SellerPartyId, Guid.NewGuid(), order.SellerOrderId, orderNet, "IRR", policy, "pay-order", DateTimeOffset.UtcNow));
 
         // Fake "batch total" must never appear — projection only sees this SellerOrder's entry NetAmount.
         const decimal batchTotal = 500_000m;
@@ -108,7 +116,9 @@ public sealed class AdminOrderFinancialHistoryTests
         var policy = new CommissionPolicySnapshot { PolicyId = Guid.NewGuid(), PolicyName = "default", Rate = 0.05m };
         var postedAt = DateTimeOffset.Parse("2026-08-01T12:00:00Z");
         var credit = MapEntry(SettlementEntry.PostCreditFromPayment(
-            Guid.NewGuid(), order.SellerPartyId, Guid.NewGuid(), order.SellerOrderId, 20_000m, "IRR", policy, "imm-1", postedAt));
+            Guid.NewGuid(),
+            Guid.NewGuid(),
+            order.SellerPartyId, Guid.NewGuid(), order.SellerOrderId, 20_000m, "IRR", policy, "imm-1", postedAt));
         var settlement = new Dictionary<Guid, IReadOnlyList<SettlementEntrySnapshot>> { [order.SellerOrderId] = [credit] };
         var first = AdminPanelComposer.BuildFinancialEvents(
             group, sellerNames, null, settlement, Array.Empty<AdminPanelComposer.OrderFinancialRefundInput>());

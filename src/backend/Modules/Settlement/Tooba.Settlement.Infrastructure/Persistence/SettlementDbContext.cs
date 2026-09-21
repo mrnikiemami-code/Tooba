@@ -1,7 +1,10 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
 using Tooba.Persistence;
-using Tooba.Settlement.Domain;
+using Tooba.Settlement.Domain.Aggregates;
+using Tooba.Settlement.Domain.Entities;
+using Tooba.Settlement.Domain.Events;
+using Tooba.Settlement.Domain.ValueObjects;
 
 namespace Tooba.Settlement.Infrastructure.Persistence;
 

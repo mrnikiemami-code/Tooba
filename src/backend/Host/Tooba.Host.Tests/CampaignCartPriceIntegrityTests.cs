@@ -93,10 +93,10 @@ public sealed class CampaignCartPriceIntegrityTests : IAsyncLifetime
     [Fact]
     public void Cart_line_carries_merchandising_campaign_context_not_client_price()
     {
-        Assert.Contains(nameof(Tooba.Cart.Domain.CartLine.MerchandisingCampaignId), typeof(Tooba.Cart.Domain.CartLine).GetProperties().Select(p => p.Name));
-        Assert.DoesNotContain("DiscountPercent", typeof(Tooba.Cart.Domain.CartLine).GetProperties().Select(p => p.Name));
-        Assert.DoesNotContain("PromoAmount", typeof(Tooba.Cart.Domain.CartLine).GetProperties().Select(p => p.Name));
-        Assert.Contains("ICampaignCartPriceAuthority", File.ReadAllText(Path.Combine(FindRepoRoot(), "src", "backend", "Modules", "Pricing", "Tooba.Pricing.Contracts", "CampaignCartPriceAuthority.cs")));
+        Assert.Contains(nameof(Tooba.Cart.Domain.Entities.CartLine.MerchandisingCampaignId), typeof(Tooba.Cart.Domain.Entities.CartLine).GetProperties().Select(p => p.Name));
+        Assert.DoesNotContain("DiscountPercent", typeof(Tooba.Cart.Domain.Entities.CartLine).GetProperties().Select(p => p.Name));
+        Assert.DoesNotContain("PromoAmount", typeof(Tooba.Cart.Domain.Entities.CartLine).GetProperties().Select(p => p.Name));
+        Assert.Contains("ICampaignCartPriceAuthority", File.ReadAllText(Path.Combine(FindRepoRoot(), "src", "backend", "Modules", "Pricing", "Tooba.Pricing.Contracts", "Ports", "CampaignCartPriceAuthority.cs")));
         Assert.Contains("Tooba.Pricing.Contracts", File.ReadAllText(Path.Combine(FindRepoRoot(), "src", "backend", "Modules", "Cart", "Tooba.Cart.Application", "Tooba.Cart.Application.csproj")));
         Assert.DoesNotContain("Tooba.Pricing.Application", File.ReadAllText(Path.Combine(FindRepoRoot(), "src", "backend", "Modules", "Cart", "Tooba.Cart.Application", "Tooba.Cart.Application.csproj")));
     }
@@ -139,6 +139,9 @@ public sealed class CampaignCartPriceIntegrityTests : IAsyncLifetime
             priceDir,
             inventoryDir,
             inventoryDir,
+            new QuantityNormalizer(),
+            new SystemUtcClock(),
+            new UuidV7IdGenerator(),
             campaignPrices: campaignPrices);
 
         var storeId = Guid.Parse("aaaaaaaa-aaaa-7aaa-8aaa-aaaaaaaaaaa1");

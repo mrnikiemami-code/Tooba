@@ -15,6 +15,8 @@ using Tooba.Cart.Application;
 using CartAccess = Tooba.Cart.Contracts.CartAccess;
 using CartSnapshot = Tooba.Cart.Contracts.CartSnapshot;
 using Tooba.Cart.Domain;
+using DomainCartStatus = Tooba.Cart.Domain.ValueObjects.CartStatus;
+using DomainCartAccessKind = Tooba.Cart.Domain.ValueObjects.CartAccessKind;
 using Tooba.Cart.Infrastructure;
 using Tooba.Cart.Infrastructure.Persistence;
 using Tooba.Catalog.Application;
@@ -107,7 +109,7 @@ public sealed class CartExpiryPostgresTests : IAsyncLifetime
 
         Assert.Equal(1, first);
         Assert.Equal(0, second);
-        Assert.Equal(CartStatus.Expired, (await stack.CartDb.Carts.SingleAsync(x => x.CartId == withLine.CartId)).Status);
+        Assert.Equal(DomainCartStatus.Expired, (await stack.CartDb.Carts.SingleAsync(x => x.CartId == withLine.CartId)).Status);
     }
 
     [SkippableFact]
@@ -131,7 +133,7 @@ public sealed class CartExpiryPostgresTests : IAsyncLifetime
 
         Assert.Equal(2, await stack.Carts.ExpireDueCartsAsync(DateTimeOffset.UtcNow, 10, CancellationToken.None));
         Assert.Equal(0, await stack.Carts.ExpireDueCartsAsync(DateTimeOffset.UtcNow, 10, CancellationToken.None));
-        Assert.Equal(2, await stack.CartDb.Carts.CountAsync(x => x.Status == CartStatus.Expired));
+        Assert.Equal(2, await stack.CartDb.Carts.CountAsync(x => x.Status == DomainCartStatus.Expired));
     }
 
     private static async Task ForceExpiredAsync(CartDbContext cartDb, Guid cartId)
@@ -164,7 +166,10 @@ public sealed class CartExpiryPostgresTests : IAsyncLifetime
         var offerDir = new OfferDirectory(offerDb, new OpenOfferUseCaseGuard(), catalogDir, partyDir, new SystemUtcClock(), new UuidV7IdGenerator());
         var priceDir = new PriceDirectory(pricingDb, new OpenPricingUseCaseGuard(), offerDir);
         var inventoryDir = new InventoryDirectory(inventoryDb, new OpenInventoryUseCaseGuard(), offerDir, catalogDir, new SystemUtcClock(), new UuidV7IdGenerator(), new ModuleCallTracer());
-        var cartDir = new CartDirectory(cartDb, new OpenCartUseCaseGuard(), offerDir, priceDir, inventoryDir, inventoryDir);
+        var cartDir = new CartDirectory(cartDb, new OpenCartUseCaseGuard(), offerDir, priceDir, inventoryDir, inventoryDir,
+            new QuantityNormalizer(),
+            new SystemUtcClock(),
+            new UuidV7IdGenerator());
 
         var names = new Dictionary<string, string> { ["fa-IR"] = "کالای انقضا", ["en-US"] = "Expiry Item" };
         var product = await catalogDir.CreateProductAsync(CatalogProductKind.PhysicalGood, "expiry-item", null, names, CancellationToken.None);

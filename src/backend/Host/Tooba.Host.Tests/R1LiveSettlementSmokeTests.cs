@@ -161,7 +161,9 @@ public sealed class R1LiveSettlementSmokeTests
             new SettlementPaymentBridge(new PaymentSettlementBridge(paymentDb)),
             new SettlementReturnsBridge(new ReturnSettlementBridge(returnsDb)),
             new FakePayoutGateway(),
-            new SettlementInstrumentation());
+            new SettlementInstrumentation(),
+            new SystemUtcClock(),
+            new UuidV7IdGenerator());
 
     private static OrderDbContext CreateOrderDb(string connectionString, ICurrentCommerceContext commerce)
     {

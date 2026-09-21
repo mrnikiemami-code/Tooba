@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Tooba.Catalog.Domain;
 using Tooba.Catalog.Infrastructure.Persistence;
@@ -211,7 +211,7 @@ public sealed class ReservationCycleFoundationTests
         var dir = Read("src/backend/Modules/Order/Tooba.Order.Infrastructure/ReservationCycleDirectory.cs");
         var checkout = Read("src/backend/Modules/Order/Tooba.Order.Infrastructure/CheckoutDirectory.cs");
         var composer = Read("src/backend/Host/Tooba.Host/Storefront/StorefrontPaymentComposer.cs");
-        var cart = Read("src/backend/Modules/Cart/Tooba.Cart.Infrastructure/CartDirectory.cs");
+        var cart = Read("src/backend/Modules/Cart/Tooba.Cart.Infrastructure/Directories/CartDirectory.cs");
         Assert.Contains("CorrelatePaymentAttempt", dir, StringComparison.Ordinal);
         Assert.Contains("PrepareStart", checkout, StringComparison.Ordinal);
         Assert.Contains("EnsureRetryAfterExpiryAsync", composer, StringComparison.Ordinal);

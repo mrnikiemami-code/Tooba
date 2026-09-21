@@ -1,5 +1,7 @@
 using System.Reflection;
 using Tooba.Cart.Domain;
+using DomainCartStatus = Tooba.Cart.Domain.ValueObjects.CartStatus;
+using DomainCartAccessKind = Tooba.Cart.Domain.ValueObjects.CartAccessKind;
 using Tooba.Catalog.Domain;
 using Tooba.Offer.Domain;
 using Xunit;
@@ -24,20 +26,20 @@ public sealed class CheckoutIdentityContractTests
     public void Guest_cart_can_be_adopted_without_reservation_or_order()
     {
         var now = DateTimeOffset.UtcNow;
-        var cart = ShoppingCart.CreateGuest("hash", "IR", "IRR", SalesChannel.Marketplace, now, now.AddHours(2));
+        var cart = ShoppingCart.CreateGuest(Guid.NewGuid(), "hash", "IR", "IRR", SalesChannel.Marketplace, now, now.AddHours(2));
         var userId = Guid.NewGuid();
         cart.AdoptAuthenticatedOwner(userId, now.AddMinutes(1));
-        Assert.Equal(CartAccessKind.Authenticated, cart.AccessKind);
+        Assert.Equal(DomainCartAccessKind.Authenticated, cart.AccessKind);
         Assert.Equal(userId, cart.OwnerUserId);
         Assert.Null(cart.GuestCredentialHash);
-        Assert.Equal(CartStatus.Active, cart.Status);
+        Assert.Equal(DomainCartStatus.Active, cart.Status);
         Assert.DoesNotContain("Reservation", typeof(ShoppingCart).GetMethod(nameof(ShoppingCart.AdoptAuthenticatedOwner))!.Name);
     }
 
     [Fact]
     public void Storefront_and_auth_boundaries_expose_otp_login_and_merge()
     {
-        var auth = File.ReadAllText(Path.Combine(FindRepoRoot(), "src", "backend", "Host", "Tooba.Host", "AuthenticationHttpBoundary.cs"));
+        var auth = File.ReadAllText(Path.Combine(FindRepoRoot(), "src", "backend", "Host", "Tooba.Host", "Authentication", "AuthenticationHttpBoundary.cs"));
         var endpoints = File.ReadAllText(Path.Combine(FindRepoRoot(), "src", "backend", "Host", "Tooba.Host", "Storefront", "StorefrontEndpoints.cs"));
         var checkout = File.ReadAllText(Path.Combine(FindRepoRoot(), "src", "backend", "Host", "Tooba.Host", "Storefront", "StorefrontCheckoutComposer.cs"));
         var login = File.ReadAllText(Path.Combine(FindRepoRoot(), "src", "frontend", "app", "login", "storefront-login.tsx"));

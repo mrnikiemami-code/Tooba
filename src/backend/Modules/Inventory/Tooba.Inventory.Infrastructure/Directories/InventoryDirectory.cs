@@ -37,7 +37,7 @@ public sealed class OpenInventoryUseCaseGuard : IInventoryUseCaseGuard
 /// نوشتن و خواندن موجودی با قرارداد Offer. DbContext کاتالوگ و Offer لمس نمی‌شود.
 /// رزرو با UPDATE اتمی PostgreSQL است تا آخرین واحد دو بار فروخته نشود.
 /// </summary>
-public sealed class InventoryDirectory : IInventoryDirectory, IInventoryAvailabilityGateway, ISellerOfferInventoryGateway, IFulfillmentInventoryLifecyclePort
+public sealed class InventoryDirectory : IInventoryDirectory, IInventoryAvailabilityGateway, ISellerOfferInventoryGateway, IFulfillmentInventoryLifecyclePort, Tooba.Inventory.Contracts.Cart.ICartInventoryHoldPort
 {
     private readonly InventoryDbContext _db;
     private readonly IInventoryUseCaseGuard _guard;
@@ -864,3 +864,4 @@ public sealed class InventoryDirectory : IInventoryDirectory, IInventoryAvailabi
         }
     }
 }
+

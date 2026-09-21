@@ -103,8 +103,10 @@ public sealed class SettlementFoundationTests : IAsyncLifetime
             root, "src", "backend", "Modules", "Settlement", "Tooba.Settlement.Infrastructure", "Tooba.Settlement.Infrastructure.csproj"));
         Assert.DoesNotContain("Tooba.Order.Infrastructure", infraCsproj, StringComparison.Ordinal);
         Assert.DoesNotContain("Tooba.Payment.Infrastructure", infraCsproj, StringComparison.Ordinal);
-        Assert.Contains("Tooba.Order.Application", infraCsproj, StringComparison.Ordinal);
-        Assert.Contains("Tooba.Payment.Application", infraCsproj, StringComparison.Ordinal);
+        Assert.Contains("Tooba.Order.Contracts", infraCsproj, StringComparison.Ordinal);
+        Assert.Contains("Tooba.Payment.Contracts", infraCsproj, StringComparison.Ordinal);
+        Assert.DoesNotContain("Tooba.Order.Application", infraCsproj, StringComparison.Ordinal);
+        Assert.DoesNotContain("Tooba.Payment.Application", infraCsproj, StringComparison.Ordinal);
     }
 
     /// <summary>
@@ -314,7 +316,9 @@ public sealed class SettlementFoundationTests : IAsyncLifetime
             new SettlementPaymentBridge(new PaymentSettlementBridge(paymentDb)),
             new SettlementReturnsBridge(new ReturnSettlementBridge(returnsDb)),
             new FakePayoutGateway(),
-            new SettlementInstrumentation());
+            new SettlementInstrumentation(),
+            new SystemUtcClock(),
+            new UuidV7IdGenerator());
 
     private static CheckoutGroup SeedCheckout(
         OrderDbContext db,

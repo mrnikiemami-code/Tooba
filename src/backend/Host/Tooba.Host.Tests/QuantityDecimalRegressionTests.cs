@@ -1,5 +1,7 @@
 using Tooba.BuildingBlocks;
 using Tooba.Cart.Domain;
+using DomainCartStatus = Tooba.Cart.Domain.ValueObjects.CartStatus;
+using DomainCartAccessKind = Tooba.Cart.Domain.ValueObjects.CartAccessKind;
 using Tooba.Catalog.Domain;
 using Tooba.Fulfillment.Domain.Aggregates;
 using Tooba.Fulfillment.Domain.ValueObjects;
@@ -32,6 +34,7 @@ public sealed class QuantityDecimalRegressionTests
     {
         CartLine.EnsureQuantity(1.25m);
         var cartLine = CartLine.Open(
+            Guid.NewGuid(),
             Guid.NewGuid(),
             Guid.NewGuid(),
             Guid.NewGuid(),

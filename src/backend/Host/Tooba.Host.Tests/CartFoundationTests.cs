@@ -129,7 +129,7 @@ public sealed class CartFoundationTests : IAsyncLifetime
         Assert.Contains("Tooba.Offer.Contracts", File.ReadAllText(Path.Combine(root, "src", "backend", "Modules", "Cart", "Tooba.Cart.Application", "Tooba.Cart.Application.csproj")));
         Assert.Contains("Tooba.Pricing.Contracts", File.ReadAllText(Path.Combine(root, "src", "backend", "Modules", "Cart", "Tooba.Cart.Application", "Tooba.Cart.Application.csproj")));
         Assert.DoesNotContain("Tooba.Pricing.Application", File.ReadAllText(Path.Combine(root, "src", "backend", "Modules", "Cart", "Tooba.Cart.Application", "Tooba.Cart.Application.csproj")));
-        Assert.Contains("Tooba.Inventory.Application", File.ReadAllText(Path.Combine(root, "src", "backend", "Modules", "Cart", "Tooba.Cart.Application", "Tooba.Cart.Application.csproj")));
+        Assert.Contains("Tooba.Inventory.Contracts", File.ReadAllText(Path.Combine(root, "src", "backend", "Modules", "Cart", "Tooba.Cart.Application", "Tooba.Cart.Application.csproj")));
         Assert.Equal("cart", CartDbContext.Schema);
         Assert.DoesNotContain("MassTransit", typeof(ShoppingCart).Assembly.GetReferencedAssemblies().Select(a => a.Name));
         Assert.DoesNotContain("MassTransit", typeof(ICartDirectory).Assembly.GetReferencedAssemblies().Select(a => a.Name));
@@ -139,7 +139,7 @@ public sealed class CartFoundationTests : IAsyncLifetime
     public void Login_merge_adopts_guest_when_leftover_authenticated_cart_is_empty()
     {
         var root = FindRepoRoot();
-        var directory = File.ReadAllText(Path.Combine(root, "src", "backend", "Modules", "Cart", "Tooba.Cart.Infrastructure", "CartDirectory.cs"));
+        var directory = File.ReadAllText(Path.Combine(root, "src", "backend", "Modules", "Cart", "Tooba.Cart.Infrastructure", "Directories", "CartDirectory.cs"));
         Assert.Contains("authenticated.Lines.Count == 0 && guest.Lines.Count > 0", directory, StringComparison.Ordinal);
         Assert.Contains("authenticated.Abandon", directory, StringComparison.Ordinal);
         Assert.Contains("AdoptAuthenticatedOwner", directory, StringComparison.Ordinal);
@@ -201,7 +201,10 @@ public sealed class CartFoundationTests : IAsyncLifetime
         var offerDirA = new OfferDirectory(offerA, new OpenOfferUseCaseGuard(), catalogDirA, partyDirA, new SystemUtcClock(), new UuidV7IdGenerator());
         var priceDirA = new PriceDirectory(pricingA, new OpenPricingUseCaseGuard(), offerDirA);
         var inventoryDirA = new InventoryDirectory(inventoryA, new OpenInventoryUseCaseGuard(), offerDirA, catalogDirA, new SystemUtcClock(), new UuidV7IdGenerator(), new ModuleCallTracer());
-        var cartDirA = new CartDirectory(cartA, new OpenCartUseCaseGuard(), offerDirA, priceDirA, inventoryDirA, inventoryDirA);
+        var cartDirA = new CartDirectory(cartA, new OpenCartUseCaseGuard(), offerDirA, priceDirA, inventoryDirA, inventoryDirA,
+            new QuantityNormalizer(),
+            new SystemUtcClock(),
+            new UuidV7IdGenerator());
 
         var names = new Dictionary<string, string> { ["fa-IR"] = "پیراهن", ["en-US"] = "Shirt" };
         var product = await catalogDirA.CreateProductAsync(CatalogProductKind.PhysicalGood, "shirt-cart", null, names, CancellationToken.None);
@@ -272,7 +275,10 @@ public sealed class CartFoundationTests : IAsyncLifetime
         var auth = await cartDirA.CreateAuthenticatedAsync(userId, "IR", "IRR", SalesChannel.Marketplace, CancellationToken.None);
         var authAccess = new CartAccess(userId, null);
         await using var cartA2 = CreateCartDb(csA, commerceA);
-        var cartDirA2 = new CartDirectory(cartA2, new OpenCartUseCaseGuard(), offerDirA, priceDirA, inventoryDirA, inventoryDirA);
+        var cartDirA2 = new CartDirectory(cartA2, new OpenCartUseCaseGuard(), offerDirA, priceDirA, inventoryDirA, inventoryDirA,
+            new QuantityNormalizer(),
+            new SystemUtcClock(),
+            new UuidV7IdGenerator());
         var first = cartDirA.AddOrIncreaseLineAsync(auth.CartId, authAccess, auth.Version, offer1.OfferId, 1, CancellationToken.None);
         var second = cartDirA2.AddOrIncreaseLineAsync(auth.CartId, authAccess, auth.Version, offer1.OfferId, 1, CancellationToken.None);
         var race = await Task.WhenAll(
@@ -317,7 +323,10 @@ public sealed class CartFoundationTests : IAsyncLifetime
         var offerDirB = new OfferDirectory(offerB, new OpenOfferUseCaseGuard(), catalogDirB, partyDirB, new SystemUtcClock(), new UuidV7IdGenerator());
         var priceDirB = new PriceDirectory(pricingB, new OpenPricingUseCaseGuard(), offerDirB);
         var inventoryDirB = new InventoryDirectory(inventoryB, new OpenInventoryUseCaseGuard(), offerDirB, catalogDirB, new SystemUtcClock(), new UuidV7IdGenerator(), new ModuleCallTracer());
-        var cartDirB = new CartDirectory(cartB, new OpenCartUseCaseGuard(), offerDirB, priceDirB, inventoryDirB, inventoryDirB);
+        var cartDirB = new CartDirectory(cartB, new OpenCartUseCaseGuard(), offerDirB, priceDirB, inventoryDirB, inventoryDirB,
+            new QuantityNormalizer(),
+            new SystemUtcClock(),
+            new UuidV7IdGenerator());
         var guestB = await cartDirB.CreateGuestAsync("UK", "GBP", SalesChannel.Direct, CancellationToken.None);
         Assert.Null(await cartDirB.GetCartAsync(guest.Cart.CartId, new CartAccess(null, guestB.GuestSecret), CancellationToken.None));
         Assert.Null(await cartDirA.GetCartAsync(guestB.Cart.CartId, guestAccess, CancellationToken.None));

@@ -221,7 +221,9 @@ public sealed class R2LiveMarketplaceSmokeTests
             new SettlementPaymentBridge(new PaymentSettlementBridge(paymentDb)),
             new SettlementReturnsBridge(new ReturnSettlementBridge(returnsDb)),
             new FakePayoutGateway(),
-            new SettlementInstrumentation());
+            new SettlementInstrumentation(),
+            new SystemUtcClock(),
+            new UuidV7IdGenerator());
 
     private static CheckoutGroup SeedCheckout(
         OrderDbContext db,

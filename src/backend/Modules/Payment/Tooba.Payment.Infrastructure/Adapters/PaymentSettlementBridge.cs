@@ -1,11 +1,8 @@
 using Microsoft.EntityFrameworkCore;
-using Tooba.Payment.Application.Models;
-using Tooba.Payment.Application.Ports;
-using Tooba.Payment.Domain.Aggregates;
+using Tooba.Payment.Contracts.Settlement;
 using Tooba.Payment.Domain.ValueObjects;
 using Tooba.Payment.Infrastructure.Persistence;
 
-using Tooba.Payment.Infrastructure.Providers;
 namespace Tooba.Payment.Infrastructure.Adapters;
 
 /// <summary>
@@ -30,7 +27,7 @@ public sealed class PaymentSettlementBridge : IPaymentSettlementReader
                 payment.CheckoutId,
                 payment.Amount,
                 payment.Currency,
-                payment.Status);
+                payment.Status == PaymentStatus.Succeeded);
     }
 
     /// <inheritdoc />

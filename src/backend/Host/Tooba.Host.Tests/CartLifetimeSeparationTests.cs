@@ -1,4 +1,4 @@
-using Tooba.Cart.Application;
+﻿using Tooba.Cart.Application;
 using Tooba.Cart.Contracts;
 using Tooba.Order.Application;
 using Tooba.Payment.Infrastructure.Adapters;
@@ -18,7 +18,7 @@ public sealed class CartLifetimeSeparationTests
     [Fact]
     public void Cart_add_does_not_call_ReserveAsync()
     {
-        var cartDir = Read("src/backend/Modules/Cart/Tooba.Cart.Infrastructure/CartDirectory.cs");
+        var cartDir = Read("src/backend/Modules/Cart/Tooba.Cart.Infrastructure/Directories/CartDirectory.cs");
         Assert.DoesNotContain("ReserveAsync", cartDir, StringComparison.Ordinal);
         Assert.Contains("EnsureSellableAsync", cartDir, StringComparison.Ordinal);
         Assert.Contains("_persistenceTtl", cartDir, StringComparison.Ordinal);

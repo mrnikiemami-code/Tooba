@@ -115,8 +115,8 @@ public sealed class CheckoutOrderFoundationTests : IAsyncLifetime
     [Fact]
     public void Cart_is_not_order_and_order_is_not_payment_or_inventory()
     {
-        Assert.NotEqual(typeof(Tooba.Cart.Domain.ShoppingCart), typeof(CheckoutGroup));
-        Assert.DoesNotContain("OrderId", typeof(Tooba.Cart.Domain.ShoppingCart).GetProperties().Select(p => p.Name));
+        Assert.NotEqual(typeof(Tooba.Cart.Domain.Aggregates.ShoppingCart), typeof(CheckoutGroup));
+        Assert.DoesNotContain("OrderId", typeof(Tooba.Cart.Domain.Aggregates.ShoppingCart).GetProperties().Select(p => p.Name));
         Assert.DoesNotContain("Paid", typeof(SellerOrder).GetProperties().Select(p => p.Name));
         Assert.DoesNotContain("PaymentId", typeof(CheckoutGroup).GetProperties().Select(p => p.Name));
         Assert.Contains("BuyerPartyId", typeof(CheckoutGroup).GetProperties().Select(p => p.Name));
@@ -250,7 +250,10 @@ public sealed class CheckoutOrderFoundationTests : IAsyncLifetime
         var offerDirA = new OfferDirectory(offerA, new OpenOfferUseCaseGuard(), catalogDirA, partyDirA, new SystemUtcClock(), new UuidV7IdGenerator());
         var priceDirA = new PriceDirectory(pricingA, new OpenPricingUseCaseGuard(), offerDirA);
         var inventoryDirA = new InventoryDirectory(inventoryA, new OpenInventoryUseCaseGuard(), offerDirA, catalogDirA, new SystemUtcClock(), new UuidV7IdGenerator(), new ModuleCallTracer());
-        var cartDirA = new CartDirectory(cartA, new OpenCartUseCaseGuard(), offerDirA, priceDirA, inventoryDirA, inventoryDirA);
+        var cartDirA = new CartDirectory(cartA, new OpenCartUseCaseGuard(), offerDirA, priceDirA, inventoryDirA, inventoryDirA,
+            new QuantityNormalizer(),
+            new SystemUtcClock(),
+            new UuidV7IdGenerator());
         var taxDirA = new TaxDirectory(taxA, new OpenTaxUseCaseGuard());
         var promoDirA = new PromotionDirectory(promotionA, new OpenPromotionUseCaseGuard(), new DeferredPromotionRedemptionLedger(), new SystemUtcClock(), new UuidV7IdGenerator());
         var checkoutA = new CheckoutDirectory(orderA, new OpenOrderUseCaseGuard(), cartDirA, cartDirA, offerDirA, priceDirA, new OrderInventoryLifecycleAdapter(inventoryDirA), taxDirA, new CheckoutPromotionAdapter(promoDirA), catalogDirA, new NullCancelGate(), inventoryReservation: new CheckoutInventoryReservationAdapter(inventoryDirA, inventoryDirA), cartConversion: new CartConversionAdapter(cartDirA));
@@ -411,7 +414,10 @@ public sealed class CheckoutOrderFoundationTests : IAsyncLifetime
         var offerDirB = new OfferDirectory(offerB, new OpenOfferUseCaseGuard(), catalogDirB, partyDirB, new SystemUtcClock(), new UuidV7IdGenerator());
         var priceDirB = new PriceDirectory(pricingB, new OpenPricingUseCaseGuard(), offerDirB);
         var inventoryDirB = new InventoryDirectory(inventoryB, new OpenInventoryUseCaseGuard(), offerDirB, catalogDirB, new SystemUtcClock(), new UuidV7IdGenerator(), new ModuleCallTracer());
-        var cartDirB = new CartDirectory(cartB, new OpenCartUseCaseGuard(), offerDirB, priceDirB, inventoryDirB, inventoryDirB);
+        var cartDirB = new CartDirectory(cartB, new OpenCartUseCaseGuard(), offerDirB, priceDirB, inventoryDirB, inventoryDirB,
+            new QuantityNormalizer(),
+            new SystemUtcClock(),
+            new UuidV7IdGenerator());
         var taxDirB = new TaxDirectory(taxB, new OpenTaxUseCaseGuard());
         var promoDirB = new PromotionDirectory(promotionB, new OpenPromotionUseCaseGuard(), new DeferredPromotionRedemptionLedger(), new SystemUtcClock(), new UuidV7IdGenerator());
         var checkoutB = new CheckoutDirectory(orderB, new OpenOrderUseCaseGuard(), cartDirB, cartDirB, offerDirB, priceDirB, new OrderInventoryLifecycleAdapter(inventoryDirB), taxDirB, new CheckoutPromotionAdapter(promoDirB), catalogDirB, new NullCancelGate(), inventoryReservation: new CheckoutInventoryReservationAdapter(inventoryDirB, inventoryDirB), cartConversion: new CartConversionAdapter(cartDirB));
@@ -461,7 +467,10 @@ public sealed class CheckoutOrderFoundationTests : IAsyncLifetime
         var offerDirA2 = new OfferDirectory(offerA2, new OpenOfferUseCaseGuard(), catalogDirA2, partyDirA2, new SystemUtcClock(), new UuidV7IdGenerator());
         var priceDirA2 = new PriceDirectory(pricingA2, new OpenPricingUseCaseGuard(), offerDirA2);
         var inventoryDirA2 = new InventoryDirectory(inventoryA2, new OpenInventoryUseCaseGuard(), offerDirA2, catalogDirA2, new SystemUtcClock(), new UuidV7IdGenerator(), new ModuleCallTracer());
-        var cartDirA2 = new CartDirectory(cartA2, new OpenCartUseCaseGuard(), offerDirA2, priceDirA2, inventoryDirA2, inventoryDirA2);
+        var cartDirA2 = new CartDirectory(cartA2, new OpenCartUseCaseGuard(), offerDirA2, priceDirA2, inventoryDirA2, inventoryDirA2,
+            new QuantityNormalizer(),
+            new SystemUtcClock(),
+            new UuidV7IdGenerator());
         var taxDirA2 = new TaxDirectory(taxA2, new OpenTaxUseCaseGuard());
         var promoDirA2 = new PromotionDirectory(promotionA2, new OpenPromotionUseCaseGuard(), new DeferredPromotionRedemptionLedger(), new SystemUtcClock(), new UuidV7IdGenerator());
         var checkoutA2 = new CheckoutDirectory(orderA2, new OpenOrderUseCaseGuard(), cartDirA2, cartDirA2, offerDirA2, priceDirA2, new OrderInventoryLifecycleAdapter(inventoryDirA2), taxDirA2, new CheckoutPromotionAdapter(promoDirA2), catalogDirA2, new NullCancelGate(), inventoryReservation: new CheckoutInventoryReservationAdapter(inventoryDirA2, inventoryDirA2), cartConversion: new CartConversionAdapter(cartDirA2));

@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Tooba.BuildingBlocks;
 using Tooba.Catalog.Application;
 using Tooba.Catalog.Contracts;
@@ -19,7 +19,7 @@ public sealed class OpenCatalogUseCaseGuard : ICatalogUseCaseGuard
 /// <summary>
 /// پیاده‌سازی نوشتن/خواندن Catalog روی schema همین ماژول. Host و Search را parse/ایندکس نمی‌کند.
 /// </summary>
-public sealed class CatalogDirectory : ICatalogDirectory, ICatalogLookupGateway, ICatalogVariantLookup
+public sealed class CatalogDirectory : ICatalogDirectory, ICatalogLookupGateway, ICatalogVariantLookup, ICatalogCartQuantityPolicyGateway
 {
     private readonly CatalogDbContext _db;
     private readonly ICatalogUseCaseGuard _guard;
@@ -5163,3 +5163,4 @@ public sealed class CatalogDirectory : ICatalogDirectory, ICatalogLookupGateway,
         return $"/{MapUiLocaleSegment(locale)}/category/{clean}";
     }
 }
+
