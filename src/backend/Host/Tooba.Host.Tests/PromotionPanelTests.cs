@@ -1,10 +1,22 @@
+using Tooba.Promotion.Infrastructure.Queries;
+using Tooba.Promotion.Infrastructure.Messaging;
+using Tooba.Promotion.Infrastructure.Adapters;
+using Tooba.Promotion.Infrastructure.Directories;
+using Tooba.Inventory.Infrastructure.Messaging;
+using Tooba.Inventory.Infrastructure.Adapters;
+using Tooba.Inventory.Infrastructure.Directories;
 using Microsoft.EntityFrameworkCore;
 using Testcontainers.PostgreSql;
 using Tooba.BuildingBlocks;
 using Tooba.Persistence;
-using Tooba.Promotion.Application;
-using Tooba.Promotion.Domain;
-using Tooba.Promotion.Infrastructure;
+using Tooba.Promotion.Application.Ports;
+using Tooba.Promotion.Application.Checkout;
+using Tooba.Promotion.Application.Merchandising;
+using Tooba.Promotion.Domain.Aggregates;
+using Tooba.Promotion.Domain.ValueObjects;
+using Tooba.Promotion.Domain.Events;
+using Tooba.Promotion.Domain.Merchandising;
+using Tooba.Promotion.Infrastructure.DependencyInjection;
 using Tooba.Promotion.Infrastructure.Persistence;
 using Xunit;
 
@@ -59,7 +71,7 @@ public sealed class PromotionPanelTests : IAsyncLifetime
         commerce.Assign(OutboxTestContextFactory.SingleStore("tenant-promo-panel", "tenant-promo-panel"));
         await using var db = CreateDb(_container.GetConnectionString(), commerce);
         await db.Database.MigrateAsync();
-        var dir = new PromotionDirectory(db, new OpenPromotionUseCaseGuard(), new DeferredPromotionRedemptionLedger());
+        var dir = new PromotionDirectory(db, new OpenPromotionUseCaseGuard(), new DeferredPromotionRedemptionLedger(), new SystemUtcClock(), new UuidV7IdGenerator());
 
         var sellerA = Guid.Parse("01a030d1-40cb-7000-8abe-6d31739956c5");
         var sellerB = Guid.Parse("01a030d1-40cb-7000-8abe-6d31739956c6");

@@ -1,5 +1,6 @@
+using Tooba.Promotion.Contracts.Merchandising;
 using Microsoft.EntityFrameworkCore;
-using Tooba.Promotion.Contracts;
+using Tooba.Promotion.Contracts.Checkout;
 using Tooba.Promotion.Infrastructure.Persistence;
 
 namespace Tooba.Promotion.Infrastructure.Adapters;

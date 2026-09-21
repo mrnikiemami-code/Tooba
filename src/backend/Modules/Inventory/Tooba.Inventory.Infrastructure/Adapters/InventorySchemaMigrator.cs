@@ -1,5 +1,9 @@
+using Tooba.Inventory.Contracts.Availability;
 using Microsoft.EntityFrameworkCore;
-using Tooba.Inventory.Contracts;
+using Tooba.Inventory.Contracts.Checkout;
+using Tooba.Inventory.Contracts.Errors;
+using Tooba.Inventory.Contracts.Orders;
+using Tooba.Inventory.Contracts.Seller;
 using Tooba.Inventory.Infrastructure.Persistence;
 
 namespace Tooba.Inventory.Infrastructure.Adapters;

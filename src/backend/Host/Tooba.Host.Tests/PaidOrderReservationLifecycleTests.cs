@@ -1,13 +1,27 @@
+using Tooba.Promotion.Application.Ports;
+using Tooba.Promotion.Infrastructure.Queries;
+using Tooba.Promotion.Infrastructure.Messaging;
+using Tooba.Promotion.Infrastructure.Adapters;
+using Tooba.Promotion.Infrastructure.Directories;
+using Tooba.Inventory.Infrastructure.Messaging;
+using Tooba.Inventory.Infrastructure.Adapters;
+using Tooba.Inventory.Infrastructure.Directories;
 using Microsoft.EntityFrameworkCore;
 using Testcontainers.PostgreSql;
 using Tooba.BuildingBlocks;
+using Tooba.BuildingBlocks.Observability.Tracing;
 using Tooba.Catalog.Application;
 using Tooba.Catalog.Domain;
 using Tooba.Catalog.Infrastructure;
 using Tooba.Catalog.Infrastructure.Persistence;
-using Tooba.Inventory.Application;
-using Tooba.Inventory.Domain;
-using Tooba.Inventory.Infrastructure;
+using Tooba.Inventory.Application.Ports;
+using Tooba.Inventory.Application.Checkout;
+using Tooba.Inventory.Application.Orders;
+using Tooba.Inventory.Application.Returns;
+using Tooba.Inventory.Domain.Aggregates;
+using Tooba.Inventory.Domain.ValueObjects;
+using Tooba.Inventory.Domain.Events;
+using Tooba.Inventory.Infrastructure.DependencyInjection;
 using Tooba.Inventory.Infrastructure.Persistence;
 using Tooba.Offer.Application.Ports;
 using Tooba.Offer.Domain;
@@ -156,7 +170,7 @@ public sealed class PaidOrderReservationLifecycleTests : IAsyncLifetime
         var catalogDir = new CatalogDirectory(catalog, new OpenCatalogUseCaseGuard());
         var partyDir = new PartyDirectory(party);
         var offerDir = new OfferDirectory(offer, new OpenOfferUseCaseGuard(), catalogDir, partyDir, new SystemUtcClock(), new UuidV7IdGenerator());
-        var inventoryDir = new InventoryDirectory(inventory, new OpenInventoryUseCaseGuard(), offerDir, catalogDir);
+        var inventoryDir = new InventoryDirectory(inventory, new OpenInventoryUseCaseGuard(), offerDir, catalogDir, new SystemUtcClock(), new UuidV7IdGenerator(), new ModuleCallTracer());
 
         var names = new Dictionary<string, string> { ["fa-IR"] = "کالا", ["en-US"] = "Item" };
         var product = await catalogDir.CreateProductAsync(CatalogProductKind.PhysicalGood, "paid-res", null, names, CancellationToken.None);
@@ -233,7 +247,7 @@ public sealed class PaidOrderReservationLifecycleTests : IAsyncLifetime
         var catalogDir = new CatalogDirectory(catalog, new OpenCatalogUseCaseGuard());
         var partyDir = new PartyDirectory(party);
         var offerDir = new OfferDirectory(offer, new OpenOfferUseCaseGuard(), catalogDir, partyDir, new SystemUtcClock(), new UuidV7IdGenerator());
-        var inventoryDir = new InventoryDirectory(inventory, new OpenInventoryUseCaseGuard(), offerDir, catalogDir);
+        var inventoryDir = new InventoryDirectory(inventory, new OpenInventoryUseCaseGuard(), offerDir, catalogDir, new SystemUtcClock(), new UuidV7IdGenerator(), new ModuleCallTracer());
 
         var names = new Dictionary<string, string> { ["fa-IR"] = "کالا", ["en-US"] = "Item" };
         var product = await catalogDir.CreateProductAsync(CatalogProductKind.PhysicalGood, "manual-rev", null, names, CancellationToken.None);
@@ -311,7 +325,7 @@ public sealed class PaidOrderReservationLifecycleTests : IAsyncLifetime
         var catalogDir = new CatalogDirectory(catalog, new OpenCatalogUseCaseGuard());
         var partyDir = new PartyDirectory(party);
         var offerDir = new OfferDirectory(offer, new OpenOfferUseCaseGuard(), catalogDir, partyDir, new SystemUtcClock(), new UuidV7IdGenerator());
-        var inventoryDir = new InventoryDirectory(inventory, new OpenInventoryUseCaseGuard(), offerDir, catalogDir);
+        var inventoryDir = new InventoryDirectory(inventory, new OpenInventoryUseCaseGuard(), offerDir, catalogDir, new SystemUtcClock(), new UuidV7IdGenerator(), new ModuleCallTracer());
 
         var names = new Dictionary<string, string> { ["fa-IR"] = "کالا۲", ["en-US"] = "Item2" };
         var product = await catalogDir.CreateProductAsync(CatalogProductKind.PhysicalGood, "paid-res-2", null, names, CancellationToken.None);

@@ -1,3 +1,4 @@
+using Tooba.Inventory.Contracts.Availability;
 using Microsoft.EntityFrameworkCore;
 using Tooba.Inventory.Infrastructure.Persistence;
 using Tooba.Persistence;

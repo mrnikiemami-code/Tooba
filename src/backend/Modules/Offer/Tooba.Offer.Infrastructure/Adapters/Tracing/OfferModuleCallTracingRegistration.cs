@@ -1,7 +1,11 @@
 using Microsoft.Extensions.DependencyInjection;
 using Tooba.BuildingBlocks.Observability.Tracing;
 using Tooba.Catalog.Contracts;
-using Tooba.Inventory.Contracts;
+using Tooba.Inventory.Contracts.Availability;
+using Tooba.Inventory.Contracts.Checkout;
+using Tooba.Inventory.Contracts.Errors;
+using Tooba.Inventory.Contracts.Orders;
+using Tooba.Inventory.Contracts.Seller;
 using Tooba.Party.Contracts;
 using Tooba.Pricing.Contracts;
 

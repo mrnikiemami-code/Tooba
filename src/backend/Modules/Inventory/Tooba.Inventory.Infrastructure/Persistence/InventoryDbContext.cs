@@ -1,6 +1,7 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
-using Tooba.Inventory.Domain;
+using Tooba.Inventory.Domain.Aggregates;
+using Tooba.Inventory.Domain.ValueObjects;
 using Tooba.Persistence;
 
 namespace Tooba.Inventory.Infrastructure.Persistence;

@@ -2,7 +2,9 @@ using Tooba.BuildingBlocks;
 using Tooba.Cart.Domain;
 using Tooba.Catalog.Domain;
 using Tooba.Fulfillment.Domain;
-using Tooba.Inventory.Domain;
+using Tooba.Inventory.Domain.Aggregates;
+using Tooba.Inventory.Domain.ValueObjects;
+using Tooba.Inventory.Domain.Events;
 using Tooba.Order.Domain;
 using Xunit;
 

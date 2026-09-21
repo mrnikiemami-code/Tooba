@@ -1,12 +1,21 @@
+using Tooba.Promotion.Application.Ports;
+using Tooba.Promotion.Infrastructure.Queries;
+using Tooba.Promotion.Infrastructure.Messaging;
+using Tooba.Promotion.Infrastructure.Adapters;
+using Tooba.Promotion.Infrastructure.Directories;
+using Tooba.Inventory.Infrastructure.Messaging;
+using Tooba.Inventory.Infrastructure.Adapters;
+using Tooba.Inventory.Infrastructure.Directories;
 using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 using Testcontainers.PostgreSql;
 using Tooba.BuildingBlocks;
+using Tooba.BuildingBlocks.Observability.Tracing;
 using Tooba.Catalog.Domain;
 using Tooba.Catalog.Infrastructure;
 using Tooba.Catalog.Infrastructure.Persistence;
 using Tooba.Host.Storefront;
-using Tooba.Inventory.Infrastructure;
+using Tooba.Inventory.Infrastructure.DependencyInjection;
 using Tooba.Inventory.Infrastructure.Persistence;
 using Tooba.Offer.Domain;
 using Tooba.Offer.Infrastructure;
@@ -145,7 +154,7 @@ public sealed class StorefrontDemoCatalogSeedTests : IAsyncLifetime
         var partyDirectory = new PartyDirectory(partyDb);
         var offerDirectory = new OfferDirectory(offerDb, new OpenOfferUseCaseGuard(), catalogDirectory, partyDirectory, new SystemUtcClock(), new UuidV7IdGenerator());
         var priceDirectory = new PriceDirectory(pricingDb, new OpenPricingUseCaseGuard(), offerDirectory);
-        var inventoryDirectory = new InventoryDirectory(inventoryDb, new OpenInventoryUseCaseGuard(), offerDirectory, catalogDirectory);
+        var inventoryDirectory = new InventoryDirectory(inventoryDb, new OpenInventoryUseCaseGuard(), offerDirectory, catalogDirectory, new SystemUtcClock(), new UuidV7IdGenerator(), new ModuleCallTracer());
         var taxDirectory = new TaxDirectory(taxDb, new OpenTaxUseCaseGuard());
 
         var first = await StorefrontDemoCatalogBootstrap.SeedAsync(

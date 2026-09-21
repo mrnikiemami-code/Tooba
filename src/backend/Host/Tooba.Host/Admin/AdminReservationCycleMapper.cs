@@ -1,4 +1,7 @@
-using Tooba.Inventory.Application;
+using Tooba.Inventory.Application.Ports;
+using Tooba.Inventory.Application.Checkout;
+using Tooba.Inventory.Application.Orders;
+using Tooba.Inventory.Application.Returns;
 using Tooba.Order.Application;
 using Tooba.Order.Domain;
 

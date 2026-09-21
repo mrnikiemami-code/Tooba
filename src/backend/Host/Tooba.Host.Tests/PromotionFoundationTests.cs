@@ -1,11 +1,23 @@
+using Tooba.Promotion.Infrastructure.Queries;
+using Tooba.Promotion.Infrastructure.Messaging;
+using Tooba.Promotion.Infrastructure.Adapters;
+using Tooba.Promotion.Infrastructure.Directories;
+using Tooba.Inventory.Infrastructure.Messaging;
+using Tooba.Inventory.Infrastructure.Adapters;
+using Tooba.Inventory.Infrastructure.Directories;
 using Microsoft.EntityFrameworkCore;
 using Testcontainers.PostgreSql;
 using Tooba.BuildingBlocks;
 using Tooba.Persistence;
 using Tooba.Pricing.Domain;
-using Tooba.Promotion.Application;
-using Tooba.Promotion.Domain;
-using Tooba.Promotion.Infrastructure;
+using Tooba.Promotion.Application.Ports;
+using Tooba.Promotion.Application.Checkout;
+using Tooba.Promotion.Application.Merchandising;
+using Tooba.Promotion.Domain.Aggregates;
+using Tooba.Promotion.Domain.ValueObjects;
+using Tooba.Promotion.Domain.Events;
+using Tooba.Promotion.Domain.Merchandising;
+using Tooba.Promotion.Infrastructure.DependencyInjection;
 using Tooba.Promotion.Infrastructure.Persistence;
 using Xunit;
 
@@ -106,8 +118,8 @@ public sealed class PromotionFoundationTests : IAsyncLifetime
         await using var dbB = CreateDb(csB, commerceB);
         await dbA.Database.MigrateAsync();
         await dbB.Database.MigrateAsync();
-        var dirA = new PromotionDirectory(dbA, new OpenPromotionUseCaseGuard(), new DeferredPromotionRedemptionLedger());
-        var dirB = new PromotionDirectory(dbB, new OpenPromotionUseCaseGuard(), new DeferredPromotionRedemptionLedger());
+        var dirA = new PromotionDirectory(dbA, new OpenPromotionUseCaseGuard(), new DeferredPromotionRedemptionLedger(), new SystemUtcClock(), new UuidV7IdGenerator());
+        var dirB = new PromotionDirectory(dbB, new OpenPromotionUseCaseGuard(), new DeferredPromotionRedemptionLedger(), new SystemUtcClock(), new UuidV7IdGenerator());
         var at = DateTimeOffset.Parse("2026-06-01T00:00:00Z");
         var offer = Guid.Parse("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa1");
         var variant = Guid.Parse("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbb1");

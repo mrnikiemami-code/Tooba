@@ -1,14 +1,28 @@
+using Tooba.Promotion.Infrastructure.Queries;
+using Tooba.Promotion.Infrastructure.Messaging;
+using Tooba.Promotion.Infrastructure.Adapters;
+using Tooba.Promotion.Infrastructure.Directories;
+using Tooba.Inventory.Infrastructure.Messaging;
+using Tooba.Inventory.Infrastructure.Adapters;
+using Tooba.Inventory.Infrastructure.Directories;
 using Microsoft.EntityFrameworkCore;
 using Testcontainers.PostgreSql;
 using Tooba.BuildingBlocks;
-using Tooba.Inventory.Domain;
+using Tooba.Inventory.Domain.Aggregates;
+using Tooba.Inventory.Domain.ValueObjects;
+using Tooba.Inventory.Domain.Events;
 using Tooba.Offer.Domain;
 using Tooba.Offer.Domain.Aggregates;
 using Tooba.Persistence;
 using Tooba.Pricing.Domain;
-using Tooba.Promotion.Application;
-using Tooba.Promotion.Domain;
-using Tooba.Promotion.Infrastructure;
+using Tooba.Promotion.Application.Ports;
+using Tooba.Promotion.Application.Checkout;
+using Tooba.Promotion.Application.Merchandising;
+using Tooba.Promotion.Domain.Aggregates;
+using Tooba.Promotion.Domain.ValueObjects;
+using Tooba.Promotion.Domain.Events;
+using Tooba.Promotion.Domain.Merchandising;
+using Tooba.Promotion.Infrastructure.DependencyInjection;
 using Tooba.Promotion.Infrastructure.Persistence;
 using Xunit;
 
@@ -62,8 +76,8 @@ public sealed class MerchandisingCampaignFoundationTests : IAsyncLifetime
 
         await using var db = CreateDb(_container.GetConnectionString());
         await db.Database.MigrateAsync();
-        var dir = new MerchandisingCampaignDirectory(db);
-        var checkout = new PromotionDirectory(db, new OpenPromotionUseCaseGuard(), new DeferredPromotionRedemptionLedger());
+        var dir = new MerchandisingCampaignDirectory(db, new SystemUtcClock(), new UuidV7IdGenerator());
+        var checkout = new PromotionDirectory(db, new OpenPromotionUseCaseGuard(), new DeferredPromotionRedemptionLedger(), new SystemUtcClock(), new UuidV7IdGenerator());
         var storeA = Guid.Parse("aaaaaaaa-aaaa-7aaa-8aaa-aaaaaaaaaaa1");
         var storeB = Guid.Parse("bbbbbbbb-bbbb-7bbb-8bbb-bbbbbbbbbbb1");
         var now = DateTimeOffset.Parse("2026-09-19T12:00:00Z");

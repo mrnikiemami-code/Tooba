@@ -2,7 +2,11 @@
 using Microsoft.EntityFrameworkCore;
 using Tooba.Catalog.Domain;
 using Tooba.Catalog.Infrastructure.Persistence;
-using Tooba.Inventory.Contracts;
+using Tooba.Inventory.Contracts.Availability;
+using Tooba.Inventory.Contracts.Checkout;
+using Tooba.Inventory.Contracts.Errors;
+using Tooba.Inventory.Contracts.Orders;
+using Tooba.Inventory.Contracts.Seller;
 using Tooba.Offer.Contracts.Ports;
 using Tooba.Pricing.Contracts;
 

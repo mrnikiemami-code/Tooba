@@ -1,7 +1,10 @@
 #pragma warning disable CS1591
 using Microsoft.EntityFrameworkCore;
 using Tooba.Host.Admin;
-using Tooba.Inventory.Application;
+using Tooba.Inventory.Application.Ports;
+using Tooba.Inventory.Application.Checkout;
+using Tooba.Inventory.Application.Orders;
+using Tooba.Inventory.Application.Returns;
 using Tooba.Order.Application;
 using Tooba.Order.Domain;
 using Tooba.Order.Infrastructure.Persistence;

@@ -8,7 +8,9 @@ using Tooba.Catalog.Application;
 using Tooba.Catalog.Infrastructure;
 using Tooba.Catalog.Infrastructure.Persistence;
 using Tooba.Host.Admin;
-using Tooba.Promotion.Application;
+using Tooba.Promotion.Application.Ports;
+using Tooba.Promotion.Application.Checkout;
+using Tooba.Promotion.Application.Merchandising;
 
 namespace Tooba.Host.Tests;
 

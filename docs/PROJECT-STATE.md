@@ -83,6 +83,21 @@ Current Repair Task:
 (none)
 ```
 
+TMAR Module Recovery (Worker PASS — awaiting Architect):
+
+```text
+TB-TMAR-NEXT-MODULE-BATCH-001-R1 — Inventory+Promotion physical/namespace/anti-workaround closure
+Inventory-State: COMPLETE_REFERENCE_PATTERN
+Inventory-Physical-State: VERIFIED_ON_DISK_AND_NAMESPACE
+Promotion-State: COMPLETE_REFERENCE_PATTERN
+Promotion-Physical-State: VERIFIED_ON_DISK_AND_NAMESPACE
+Tax-State: DEFERRED_PHYSICAL_REVIEW_BY_USER
+Pricing-State: DEFERRED_PHYSICAL_REVIEW_BY_USER
+Batch-State: COMPLETE
+Module-Recovery-State: NEXT_REFERENCE_BATCH_001_PHYSICAL_COMPLETE
+Next-Recommended-Task: TB-TMAR-NEXT-MODULE-BATCH-002
+```
+
 Implemented Under Review:
 
 ```text

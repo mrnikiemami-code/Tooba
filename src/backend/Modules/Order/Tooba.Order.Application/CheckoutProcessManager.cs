@@ -1,7 +1,11 @@
 ﻿using System.Transactions;
 using Tooba.BuildingBlocks;
 using Tooba.Cart.Contracts;
-using Tooba.Inventory.Contracts;
+using Tooba.Inventory.Contracts.Availability;
+using Tooba.Inventory.Contracts.Checkout;
+using Tooba.Inventory.Contracts.Errors;
+using Tooba.Inventory.Contracts.Orders;
+using Tooba.Inventory.Contracts.Seller;
 using Tooba.Order.Domain;
 
 namespace Tooba.Order.Application;

@@ -1,7 +1,10 @@
+﻿using Tooba.Promotion.Domain.Aggregates;
+using Tooba.Promotion.Domain.ValueObjects;
+using Tooba.Promotion.Domain.Merchandising;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
 using Tooba.Persistence;
-using Tooba.Promotion.Domain;
+
 
 namespace Tooba.Promotion.Infrastructure.Persistence;
 

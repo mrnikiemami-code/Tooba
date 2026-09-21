@@ -200,7 +200,7 @@ public sealed class ReservationCycleFoundationTests
     public void Decimal_quantity_is_numeric_not_float()
     {
         var now = DateTimeOffset.UtcNow;
-        var hold = Tooba.Inventory.Domain.StockReservation.Hold(Guid.NewGuid(), Guid.NewGuid(), 1.25m, "order", null, now, now.AddMinutes(10));
+        var hold = Tooba.Inventory.Domain.Aggregates.StockReservation.Hold(Guid.NewGuid(), Guid.NewGuid(), 1.25m, "order", null, now, now.AddMinutes(10));
         Assert.Equal(1.25m, hold.Quantity);
         Assert.Equal(0, 1.25m.CompareTo(hold.Quantity));
     }

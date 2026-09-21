@@ -1,14 +1,28 @@
+using Tooba.Promotion.Application.Ports;
+using Tooba.Promotion.Infrastructure.Queries;
+using Tooba.Promotion.Infrastructure.Messaging;
+using Tooba.Promotion.Infrastructure.Adapters;
+using Tooba.Promotion.Infrastructure.Directories;
+using Tooba.Inventory.Infrastructure.Messaging;
+using Tooba.Inventory.Infrastructure.Adapters;
+using Tooba.Inventory.Infrastructure.Directories;
 using System.Reflection;
 using Microsoft.EntityFrameworkCore;
 using Testcontainers.PostgreSql;
 using Tooba.BuildingBlocks;
+using Tooba.BuildingBlocks.Observability.Tracing;
 using Tooba.Catalog.Application;
 using Tooba.Catalog.Domain;
 using Tooba.Catalog.Infrastructure;
 using Tooba.Catalog.Infrastructure.Persistence;
-using Tooba.Inventory.Application;
-using Tooba.Inventory.Domain;
-using Tooba.Inventory.Infrastructure;
+using Tooba.Inventory.Application.Ports;
+using Tooba.Inventory.Application.Checkout;
+using Tooba.Inventory.Application.Orders;
+using Tooba.Inventory.Application.Returns;
+using Tooba.Inventory.Domain.Aggregates;
+using Tooba.Inventory.Domain.ValueObjects;
+using Tooba.Inventory.Domain.Events;
+using Tooba.Inventory.Infrastructure.DependencyInjection;
 using Tooba.Inventory.Infrastructure.Events;
 using Tooba.Inventory.Infrastructure.Persistence;
 using Tooba.Offer.Application.Ports;
@@ -161,11 +175,11 @@ public sealed class InventoryFoundationTests : IAsyncLifetime
         var catalogDirA = new CatalogDirectory(catalogA, new OpenCatalogUseCaseGuard());
         var partyDirA = new PartyDirectory(partyA);
         var offerDirA = new OfferDirectory(offerA, new OpenOfferUseCaseGuard(), catalogDirA, partyDirA, new SystemUtcClock(), new UuidV7IdGenerator());
-        var inventoryDirA = new InventoryDirectory(inventoryA, new OpenInventoryUseCaseGuard(), offerDirA, catalogDirA);
+        var inventoryDirA = new InventoryDirectory(inventoryA, new OpenInventoryUseCaseGuard(), offerDirA, catalogDirA, new SystemUtcClock(), new UuidV7IdGenerator(), new ModuleCallTracer());
         var catalogDirB = new CatalogDirectory(catalogB, new OpenCatalogUseCaseGuard());
         var partyDirB = new PartyDirectory(partyB);
         var offerDirB = new OfferDirectory(offerB, new OpenOfferUseCaseGuard(), catalogDirB, partyDirB, new SystemUtcClock(), new UuidV7IdGenerator());
-        var inventoryDirB = new InventoryDirectory(inventoryB, new OpenInventoryUseCaseGuard(), offerDirB, catalogDirB);
+        var inventoryDirB = new InventoryDirectory(inventoryB, new OpenInventoryUseCaseGuard(), offerDirB, catalogDirB, new SystemUtcClock(), new UuidV7IdGenerator(), new ModuleCallTracer());
 
         var names = new Dictionary<string, string> { ["fa-IR"] = "پیراهن", ["en-US"] = "Shirt" };
         var product = await catalogDirA.CreateProductAsync(CatalogProductKind.PhysicalGood, "shirt-inv", null, names, CancellationToken.None);
@@ -194,7 +208,7 @@ public sealed class InventoryFoundationTests : IAsyncLifetime
             inventoryDirA.AdjustAsync(stock1, StockAdjustmentKind.Decrease, 50, "کاهش غیرمجاز", null, CancellationToken.None));
 
         await using var inventoryA2 = CreateInventoryDb(csA, commerceA);
-        var inventoryDirA2 = new InventoryDirectory(inventoryA2, new OpenInventoryUseCaseGuard(), offerDirA, catalogDirA);
+        var inventoryDirA2 = new InventoryDirectory(inventoryA2, new OpenInventoryUseCaseGuard(), offerDirA, catalogDirA, new SystemUtcClock(), new UuidV7IdGenerator(), new ModuleCallTracer());
         var first = inventoryDirA.ReserveAsync(stock1, 1, "cart-1", null, null, CancellationToken.None);
         var second = inventoryDirA2.ReserveAsync(stock1, 1, "cart-2", null, null, CancellationToken.None);
         var results = await Task.WhenAll(
@@ -276,8 +290,8 @@ public sealed class InventoryFoundationTests : IAsyncLifetime
         var catalogDir = new CatalogDirectory(catalog, new OpenCatalogUseCaseGuard());
         var partyDir = new PartyDirectory(party);
         var offerDir = new OfferDirectory(offer, new OpenOfferUseCaseGuard(), catalogDir, partyDir, new SystemUtcClock(), new UuidV7IdGenerator());
-        var inventoryDir = new InventoryDirectory(inventory, new OpenInventoryUseCaseGuard(), offerDir, catalogDir);
-        var returnGateway = new InventoryReturnGateway(inventory, new OpenInventoryUseCaseGuard(), inventoryDir);
+        var inventoryDir = new InventoryDirectory(inventory, new OpenInventoryUseCaseGuard(), offerDir, catalogDir, new SystemUtcClock(), new UuidV7IdGenerator(), new ModuleCallTracer());
+        var returnGateway = new InventoryReturnGateway(inventory, new OpenInventoryUseCaseGuard(), inventoryDir, new SystemUtcClock());
 
         var names = new Dictionary<string, string> { ["fa-IR"] = "کالا", ["en-US"] = "Item" };
         var product = await catalogDir.CreateProductAsync(CatalogProductKind.PhysicalGood, "restock-item", null, names, CancellationToken.None);

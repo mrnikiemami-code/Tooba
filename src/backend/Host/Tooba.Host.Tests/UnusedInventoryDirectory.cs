@@ -1,5 +1,18 @@
-using Tooba.Inventory.Application;
-using Tooba.Inventory.Domain;
+using Tooba.Promotion.Application.Ports;
+using Tooba.Promotion.Infrastructure.Queries;
+using Tooba.Promotion.Infrastructure.Messaging;
+using Tooba.Promotion.Infrastructure.Adapters;
+using Tooba.Promotion.Infrastructure.Directories;
+using Tooba.Inventory.Infrastructure.Messaging;
+using Tooba.Inventory.Infrastructure.Adapters;
+using Tooba.Inventory.Infrastructure.Directories;
+using Tooba.Inventory.Application.Ports;
+using Tooba.Inventory.Application.Checkout;
+using Tooba.Inventory.Application.Orders;
+using Tooba.Inventory.Application.Returns;
+using Tooba.Inventory.Domain.Aggregates;
+using Tooba.Inventory.Domain.ValueObjects;
+using Tooba.Inventory.Domain.Events;
 
 namespace Tooba.Host.Tests;
 

@@ -91,7 +91,7 @@ public sealed class QuantityFoundationTests
     public void Inventory_available_is_exact_decimal()
     {
         var now = DateTimeOffset.UtcNow;
-        var position = Tooba.Inventory.Domain.StockPosition.Open(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), now);
+        var position = Tooba.Inventory.Domain.Aggregates.StockPosition.Open(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), now);
         position.SyncQuantities(100.000m, 1.250m, now);
         Assert.Equal(98.750m, position.Available);
         position.SyncQuantities(100.000m, 0m, now);

@@ -1,6 +1,10 @@
 using Tooba.BuildingBlocks;
 using Tooba.Catalog.Contracts;
-using Tooba.Inventory.Contracts;
+using Tooba.Inventory.Contracts.Availability;
+using Tooba.Inventory.Contracts.Checkout;
+using Tooba.Inventory.Contracts.Errors;
+using Tooba.Inventory.Contracts.Orders;
+using Tooba.Inventory.Contracts.Seller;
 using Tooba.Offer.Application.Ports;
 using Tooba.Offer.Contracts;
 using Tooba.Offer.Contracts.Dtos;

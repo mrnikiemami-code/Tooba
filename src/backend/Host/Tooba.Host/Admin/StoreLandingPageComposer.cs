@@ -7,8 +7,13 @@ using Tooba.Catalog.Domain;
 using Tooba.Catalog.Infrastructure.Persistence;
 using Tooba.Content.Domain;
 using Tooba.Host.Storefront;
-using Tooba.Promotion.Application;
-using Tooba.Promotion.Domain;
+using Tooba.Promotion.Application.Ports;
+using Tooba.Promotion.Application.Checkout;
+using Tooba.Promotion.Application.Merchandising;
+using Tooba.Promotion.Domain.Aggregates;
+using Tooba.Promotion.Domain.ValueObjects;
+using Tooba.Promotion.Domain.Events;
+using Tooba.Promotion.Domain.Merchandising;
 
 namespace Tooba.Host.Admin;
 
