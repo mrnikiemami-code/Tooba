@@ -1,0 +1,176 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+
+BEGIN_TOOBA_WORKER_RESULT
+
+Task-ID:
+TB-TMAR-NEXT-MODULE-BATCH-004-R4
+
+Parent-Task:
+TB-TMAR-NEXT-MODULE-BATCH-004-R3
+
+Channel:
+tooba-main
+
+WorkerId:
+tooba-worker-01
+
+AgentType:
+cursor
+
+Status:
+PASS
+
+Summary:
+Closed remaining R3 anti-patterns. IShippingServiceLanguageGate moved to Fulfillment.Infrastructure.Shipping.ShippingServiceLanguageGate (Localization.Contracts ILanguageLookup); HostShippingServiceLanguageGate deleted and Host Program registration removed. AdminOrderFulfillmentOperations now returns stable outcome codes without PlatformHttpException, Persian prose, or prose message-switch mapping; unexpected InvalidOperationException propagates. Architecture guards + focused tests green. Tax/Pricing/Checkout/frontend untouched. BATCH-005 not started.
+
+Program-Name:
+TMAR — Tooba Microservice-Ready Architecture Recovery
+
+Track:
+REFERENCE_BATCH_REPAIR
+
+Recovery-Start:
+docs/evidence/TB-TMAR-NEXT-MODULE-BATCH-004-R4/recovery-start.md — Claim d912b692-09ce-4190-bdeb-f657a8b1988d; baseline 42fd5f432936fe44c314021514932d8c263f3bd4
+
+Host-Language-Gate-Audit:
+docs/evidence/TB-TMAR-NEXT-MODULE-BATCH-004-R4/host-language-gate-audit.md — Host gate deleted; Infrastructure ShippingServiceLanguageGate registered in FulfillmentModule
+
+Fulfillment-LanguageGate-Implementation:
+INFRASTRUCTURE_OWNED
+
+Order-Adapter-AntiPattern-Audit:
+docs/evidence/TB-TMAR-NEXT-MODULE-BATCH-004-R4/order-adapter-antipattern-audit.md — PlatformHttpException=0; Persian prose=0; MapFulfillmentException deleted; stable-code outcomes only
+
+Order-Fulfillment-Operations-Implementation:
+ORDER_OWNED
+
+Order-Fulfillment-Adapter-AntiPattern:
+CLEAN
+
+Behavior-Preservation-Audit:
+docs/evidence/TB-TMAR-NEXT-MODULE-BATCH-004-R4/behavior-preservation-audit.md — cancelled/permission/linkage/ops codes and language_invalid preserved
+
+AntiPattern-Scan:
+docs/evidence/TB-TMAR-NEXT-MODULE-BATCH-004-R4/antipattern-scan.md — Host IShippingServiceLanguageGate=0; Host IAdminOrderFulfillmentOperations=0; PlatformHttpException in adapter=0; prose switch=0
+
+Architecture-Guards:
+FulfillmentArchitectureGuardTests + ShippingServiceLanguageGateTests + Host ShippingServiceAdminTests + AdminOrderFulfillmentOperationsTests enforce Host gate absence, Infrastructure ownership, adapter CLEAN
+
+Fulfillment-Validation:
+dotnet test Tooba.Fulfillment.Tests filter Architecture|AdminFulfillmentBulk|ShippingMethodsTree|ShippingServiceLanguageGate → 18 passed
+
+Order-Validation:
+Host AdminOrderFulfillmentOperationsTests (success, denied, cancelled, stable map, unexpected propagate, antipattern scan) → 6 passed; Order.Infrastructure build OK
+
+Focused-Validation:
+Fulfillment.Tests 18/18; Host AdminOrderFulfillmentOperationsTests + AdminFulfillmentWorkQueueTests + ShippingServiceAdminTests 34/34
+
+Skipped-Validation:
+Broad Host suite; broad Order suite; Returns full suite; Checkout workflow; Tax/Pricing; frontend
+
+Full-Validation:
+dotnet build src/backend/Tooba.slnx → succeeded 0 errors
+
+AntiPattern-Gate:
+CLEAN — no Host IShippingServiceLanguageGate; no Host IAdminOrderFulfillmentOperations; no PlatformHttpException/prose switch in Order adapter; no BATCH-005
+
+Residual-Defects:
+NONE for R4 scope.
+
+Fulfillment-State:
+COMPLETE_REFERENCE_PATTERN
+
+Fulfillment-Physical-State:
+VERIFIED_ON_DISK_AND_NAMESPACE
+
+Fulfillment-CrossModule-Boundary:
+CONTRACTS_ONLY
+
+Fulfillment-Endpoint-State:
+HOST_THIN_TRANSPORT
+
+Fulfillment-Host-DbAuthority:
+NONE
+
+Fulfillment-Shipping-Presentation:
+CENTRALIZED
+
+Fulfillment-WorkQueue-Authority:
+APPLICATION_OWNED
+
+Fulfillment-ShippingTree-Authority:
+APPLICATION_OWNED
+
+Host-Fulfillment-Business-Adapter:
+NONE
+
+Returns-State:
+COMPLETE_REFERENCE_PATTERN
+
+Returns-Endpoint-State:
+HOST_THIN_TRANSPORT
+
+Returns-Host-DbAuthority:
+NONE
+
+Returns-Error-Presentation:
+CENTRALIZED
+
+Behavior-Preservation:
+VERIFIED
+
+Notification-State:
+COMPLETE_REFERENCE_PATTERN
+
+Support-State:
+COMPLETE_REFERENCE_PATTERN
+
+Wallet-State:
+COMPLETE_REFERENCE_PATTERN
+
+Payment-State:
+COMPLETE_REFERENCE_PATTERN
+
+Inventory-State:
+COMPLETE_REFERENCE_PATTERN
+
+Promotion-State:
+COMPLETE_REFERENCE_PATTERN
+
+Offer-State:
+COMPLETE_REFERENCE_PATTERN
+
+Foundation-State:
+RESULT_PATTERN_FOUNDATION_COMPLETE
+
+Tax-State:
+DEFERRED_PHYSICAL_REVIEW_BY_USER
+
+Pricing-State:
+DEFERRED_PHYSICAL_REVIEW_BY_USER
+
+Checkout-State:
+PAUSED_AT_SAFE_W5_CHECKPOINT
+
+Frontend-Production-Changes:
+NONE
+
+Batch-State:
+COMPLETE
+
+Git:
+608a36a1dbb5da416f28aa70786b89b0191bf4a0
+
+Blockers:
+NONE
+
+User-Work-Preserved:
+YES
+
+Module-Recovery-State:
+NEXT_REFERENCE_BATCH_004_COMPLETE
+
+Next-Recommended-Task:
+TB-TMAR-NEXT-MODULE-BATCH-005
+
+END_TOOBA_WORKER_RESULT
