@@ -1,9 +1,13 @@
-using Tooba.Fulfillment.Application;
-using Tooba.Fulfillment.Domain;
+using Tooba.Fulfillment.Application.Ports;
+using Tooba.Fulfillment.Application.Models;
+using Tooba.Fulfillment.Application.Shipping;
+using Tooba.Fulfillment.Domain.Aggregates;
+using Tooba.Fulfillment.Domain.ValueObjects;
 using Tooba.Host.Admin;
 using Tooba.Order.Application;
 using Tooba.Order.Domain;
 using Xunit;
+using Tooba.Order.Contracts.Fulfillment;
 
 namespace Tooba.Host.Tests;
 
@@ -105,7 +109,7 @@ public sealed class WholeOrderCancelUntilDispatchTests
         var unit = CreateUnit(lineId, 1.25m, now);
         unit.MarkProcessing(now);
         unit.PackSelections([(lineId, 0.50m)], now);
-        var shipment = unit.CreateShipment("پست", [(lineId, 0.50m)], now);
+        var shipment = unit.CreateShipment(Guid.NewGuid(), () => Guid.NewGuid(), "پست", [(lineId, 0.50m)], now);
         unit.AssignTracking(shipment.ShipmentId, "TRK-T016", now);
         Assert.False(unit.HasDispatchedQuantity());
         unit.AbortForOrderCancel(now.AddMinutes(1));
@@ -124,7 +128,7 @@ public sealed class WholeOrderCancelUntilDispatchTests
         var dispatched = CreateUnit(lineId, 1.25m, now);
         dispatched.MarkProcessing(now);
         dispatched.PackSelections([(lineId, 0.50m)], now);
-        var shipped = dispatched.CreateShipment("پست", [(lineId, 0.50m)], now);
+        var shipped = dispatched.CreateShipment(Guid.NewGuid(), () => Guid.NewGuid(), "پست", [(lineId, 0.50m)], now);
         dispatched.AssignTracking(shipped.ShipmentId, "TRK-D", now);
         dispatched.ApplyShipmentDispatched(shipped.ShipmentId, now);
         var ex = Assert.Throws<InvalidOperationException>(() => dispatched.AbortForOrderCancel(now));
@@ -249,8 +253,7 @@ public sealed class WholeOrderCancelUntilDispatchTests
             ]);
 
     private static FulfillmentUnit CreateUnit(Guid lineId, decimal qty, DateTimeOffset now) =>
-        FulfillmentUnit.CreateFromPaidOrder(
-            Guid.NewGuid(),
+        FulfillmentUnit.CreateFromPaidOrder(Guid.NewGuid(), () => Guid.NewGuid(), Guid.NewGuid(),
             Guid.NewGuid(),
             Guid.NewGuid(),
             Guid.NewGuid(),

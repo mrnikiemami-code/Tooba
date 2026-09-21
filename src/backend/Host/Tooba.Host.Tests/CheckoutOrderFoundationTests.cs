@@ -21,7 +21,7 @@ using Tooba.Catalog.Infrastructure.Persistence;
 using Tooba.Inventory.Application.Ports;
 using Tooba.Inventory.Application.Checkout;
 using Tooba.Inventory.Application.Orders;
-using Tooba.Inventory.Application.Returns;
+using Tooba.Inventory.Contracts.Returns;
 using Tooba.Inventory.Contracts.Availability;
 using Tooba.Inventory.Contracts.Checkout;
 using Tooba.Inventory.Contracts.Errors;
@@ -66,6 +66,7 @@ using Tooba.Promotion.Domain.Merchandising;
 using Tooba.Promotion.Infrastructure.DependencyInjection;
 using Tooba.Promotion.Infrastructure.Persistence;
 using Xunit;
+using Tooba.Order.Contracts.Fulfillment;
 
 namespace Tooba.Host.Tests;
 
@@ -668,11 +669,11 @@ public sealed class CheckoutOrderFoundationTests : IAsyncLifetime
         }
     }
 
-    private sealed class NullCancelGate : Tooba.Order.Application.ISellerOrderCancelFulfillmentGate
+    private sealed class NullCancelGate : ISellerOrderCancelFulfillmentGate
     {
-        public Task<Tooba.Order.Application.SellerOrderCancelFulfillmentSnapshot?> GetAsync(
+        public Task<SellerOrderCancelFulfillmentSnapshot?> GetAsync(
             Guid sellerOrderId,
             CancellationToken cancellationToken) =>
-            Task.FromResult<Tooba.Order.Application.SellerOrderCancelFulfillmentSnapshot?>(null);
+            Task.FromResult<SellerOrderCancelFulfillmentSnapshot?>(null);
     }
 }

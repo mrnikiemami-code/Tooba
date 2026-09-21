@@ -1,7 +1,8 @@
 using Tooba.BuildingBlocks.Grid;
 using Tooba.Host.Admin;
 using Tooba.Host.Grid;
-using Tooba.Returns.Application;
+using Tooba.Returns.Application.Ports;
+using Tooba.Returns.Application.Models;
 using Tooba.Returns.Infrastructure.Persistence;
 
 namespace Tooba.Host.Returns;
@@ -144,11 +145,11 @@ public sealed class ReturnPanelComposer
     public Task<ReturnSnapshot> RetryRefundAsync(Guid returnRequestId, Guid actorUserId, CancellationToken cancellationToken) =>
         _returns.RetryRefundAsync(new RetryRefundCommand(returnRequestId, actorUserId), cancellationToken);
 
-    private static Tooba.Returns.Domain.RefundDestination ParseDestination(string? value)
+    private static Tooba.Returns.Domain.ValueObjects.RefundDestination ParseDestination(string? value)
     {
         if (string.IsNullOrWhiteSpace(value))
-            return Tooba.Returns.Domain.RefundDestination.OriginalPayment;
-        return Enum.TryParse<Tooba.Returns.Domain.RefundDestination>(value, ignoreCase: true, out var parsed)
+            return Tooba.Returns.Domain.ValueObjects.RefundDestination.OriginalPayment;
+        return Enum.TryParse<Tooba.Returns.Domain.ValueObjects.RefundDestination>(value, ignoreCase: true, out var parsed)
             ? parsed
             : throw new InvalidOperationException("مقصد بازگشت وجه نامعتبر است.");
     }

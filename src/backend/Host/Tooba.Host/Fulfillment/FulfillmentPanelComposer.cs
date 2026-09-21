@@ -1,5 +1,7 @@
-﻿using Tooba.BuildingBlocks.Grid;
-using Tooba.Fulfillment.Application;
+using Tooba.BuildingBlocks.Grid;
+using Tooba.Fulfillment.Application.Ports;
+using Tooba.Fulfillment.Application.Models;
+using Tooba.Fulfillment.Application.Shipping;
 using Tooba.Fulfillment.Infrastructure.Persistence;
 using Tooba.Host.Admin;
 using Tooba.Host.Grid;
@@ -87,13 +89,13 @@ public sealed class FulfillmentPanelComposer
     /// <summary>
     /// بسته فعال (Created/Dispatched/Delivered) برای رهگیری اصلی مشتری؛ Cancelled هرگز primary نیست.
     /// </summary>
-    public static Tooba.Fulfillment.Application.ConsolidatedPackageSnapshot? SelectPreferredCustomerPackage(
-        IReadOnlyList<Tooba.Fulfillment.Application.ConsolidatedPackageSnapshot> packages)
+    public static Tooba.Fulfillment.Application.Models.ConsolidatedPackageSnapshot? SelectPreferredCustomerPackage(
+        IReadOnlyList<Tooba.Fulfillment.Application.Models.ConsolidatedPackageSnapshot> packages)
     {
         var active = packages
-            .Where(p => p.Status is Tooba.Fulfillment.Domain.ConsolidatedPackageStatus.Created
-                or Tooba.Fulfillment.Domain.ConsolidatedPackageStatus.Dispatched
-                or Tooba.Fulfillment.Domain.ConsolidatedPackageStatus.Delivered)
+            .Where(p => p.Status is Tooba.Fulfillment.Domain.ValueObjects.ConsolidatedPackageStatus.Created
+                or Tooba.Fulfillment.Domain.ValueObjects.ConsolidatedPackageStatus.Dispatched
+                or Tooba.Fulfillment.Domain.ValueObjects.ConsolidatedPackageStatus.Delivered)
             .OrderByDescending(p => p.UpdatedAt)
             .ThenByDescending(p => p.CreatedAt)
             .ToList();

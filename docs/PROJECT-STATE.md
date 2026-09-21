@@ -86,6 +86,34 @@ Current Repair Task:
 TMAR Module Recovery (Worker PASS — awaiting Architect):
 
 ```text
+TB-TMAR-NEXT-MODULE-BATCH-004 — Fulfillment + Returns Golden Recovery Batch
+Fulfillment-State: COMPLETE_REFERENCE_PATTERN
+Fulfillment-Physical-State: VERIFIED_ON_DISK_AND_NAMESPACE
+Fulfillment-CrossModule-Boundary: CONTRACTS_ONLY
+Returns-State: COMPLETE_REFERENCE_PATTERN
+Returns-Physical-State: VERIFIED_ON_DISK_AND_NAMESPACE
+Returns-CrossModule-Boundary: CONTRACTS_ONLY
+Behavior-Preservation: VERIFIED
+Notification-State: COMPLETE_REFERENCE_PATTERN
+Support-State: COMPLETE_REFERENCE_PATTERN
+Wallet-State: COMPLETE_REFERENCE_PATTERN
+Payment-State: COMPLETE_REFERENCE_PATTERN
+Foundation-State: RESULT_PATTERN_FOUNDATION_COMPLETE
+Offer-State: COMPLETE_REFERENCE_PATTERN
+Inventory-State: COMPLETE_REFERENCE_PATTERN
+Promotion-State: COMPLETE_REFERENCE_PATTERN
+Tax-State: DEFERRED_PHYSICAL_REVIEW_BY_USER
+Pricing-State: DEFERRED_PHYSICAL_REVIEW_BY_USER
+Checkout-State: PAUSED_AT_SAFE_W5_CHECKPOINT
+Frontend-Production-Changes: NONE
+Batch-State: COMPLETE
+Module-Recovery-State: NEXT_REFERENCE_BATCH_004_COMPLETE
+Next-Recommended-Task: TB-TMAR-NEXT-MODULE-BATCH-005
+```
+
+Prior (BATCH-003-R1 tip before BATCH-004):
+
+```text
 TB-TMAR-NEXT-MODULE-BATCH-003-R1 — Notification Order Boundary Closure + Guard Correction
 Notification-State: COMPLETE_REFERENCE_PATTERN
 Notification-Physical-State: VERIFIED_ON_DISK_AND_NAMESPACE

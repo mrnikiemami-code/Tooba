@@ -1,12 +1,14 @@
-﻿#pragma warning disable CS1591
+#pragma warning disable CS1591
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Tooba.BuildingBlocks;
-using Tooba.Fulfillment.Application;
+using Tooba.Fulfillment.Application.Ports;
+using Tooba.Fulfillment.Application.Models;
+using Tooba.Fulfillment.Application.Shipping;
 using Tooba.Inventory.Application.Ports;
 using Tooba.Inventory.Application.Checkout;
 using Tooba.Inventory.Application.Orders;
-using Tooba.Inventory.Application.Returns;
+using Tooba.Inventory.Contracts.Returns;
 using Tooba.Inventory.Domain.Aggregates;
 using Tooba.Inventory.Domain.ValueObjects;
 using Tooba.Inventory.Domain.Events;

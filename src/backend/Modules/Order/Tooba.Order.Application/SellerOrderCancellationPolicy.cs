@@ -1,24 +1,7 @@
+using Tooba.Order.Contracts.Fulfillment;
 using Tooba.Order.Domain;
 
 namespace Tooba.Order.Application;
-
-/// <summary>
-/// snapshot سبک وضعیت fulfillment برای تصمیم لغو؛ بدون وابستگی به DbContext Fulfillment.
-/// خط قرمز لغو کل سفارش، اولین quantity واقعی Dispatch است نه ایجاد مرسوله یا Packed.
-/// </summary>
-public sealed record SellerOrderCancelFulfillmentSnapshot(
-    string Status,
-    int ShipmentCount,
-    bool HasDispatchedQuantity = false);
-
-/// <summary>
-/// درز خواندن وضعیت ارسال برای لغو Paid پیش از محموله.
-/// </summary>
-public interface ISellerOrderCancelFulfillmentGate
-{
-    /// <summary>وضعیت fulfillment سفارش فروشنده را برمی‌گرداند.</summary>
-    Task<SellerOrderCancelFulfillmentSnapshot?> GetAsync(Guid sellerOrderId, CancellationToken cancellationToken);
-}
 
 /// <summary>
 /// قاعدهٔ واحد لغو SellerOrder — منبع authoritative برای دامنه/اپلیکیشن/projection.

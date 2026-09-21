@@ -1,4 +1,4 @@
-using System.Text.RegularExpressions;
+﻿using System.Text.RegularExpressions;
 using System.Xml.Linq;
 using Xunit;
 
@@ -7,8 +7,8 @@ namespace Tooba.Inventory.Tests.Architecture;
 public sealed class InventoryArchitectureGuardTests
 {
     private static readonly string[] AllowedDomainFolders = ["Aggregates", "Entities", "ValueObjects", "Events", "Policies"];
-    private static readonly string[] AllowedApplicationFolders = ["Ports", "Models", "Checkout", "Orders", "Returns"];
-    private static readonly string[] AllowedContractsFolders = ["Seller", "Checkout", "Orders", "Availability", "Errors"];
+    private static readonly string[] AllowedApplicationFolders = ["Ports", "Models", "Checkout", "Orders"];
+    private static readonly string[] AllowedContractsFolders = ["Seller", "Checkout", "Orders", "Availability", "Errors", "Fulfillment", "Returns"];
     private static readonly string[] AllowedInfrastructureFolders =
         ["Persistence", "Directories", "Adapters", "Events", "Messaging", "DependencyInjection"];
 

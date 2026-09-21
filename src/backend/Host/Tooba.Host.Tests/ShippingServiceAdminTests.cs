@@ -3,8 +3,13 @@ using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Tooba.BuildingBlocks;
-using Tooba.Fulfillment.Application;
-using Tooba.Fulfillment.Infrastructure;
+using Tooba.Fulfillment.Application.Ports;
+using Tooba.Fulfillment.Application.Models;
+using Tooba.Fulfillment.Application.Shipping;
+using Tooba.Fulfillment.Infrastructure.Directories;
+using Tooba.Fulfillment.Infrastructure.Observability;
+using Tooba.Fulfillment.Infrastructure.Shipping;
+using Tooba.Fulfillment.Infrastructure.Gateways;
 using Tooba.Fulfillment.Infrastructure.Persistence;
 using Xunit;
 

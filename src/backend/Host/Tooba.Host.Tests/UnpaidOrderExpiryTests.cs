@@ -1,4 +1,4 @@
-﻿using Tooba.Promotion.Application.Ports;
+using Tooba.Promotion.Application.Ports;
 using Tooba.Promotion.Infrastructure.Queries;
 using Tooba.Promotion.Infrastructure.Messaging;
 using Tooba.Promotion.Infrastructure.Adapters;
@@ -10,7 +10,7 @@ using Tooba.Cart.Application;
 using Tooba.Inventory.Application.Ports;
 using Tooba.Inventory.Application.Checkout;
 using Tooba.Inventory.Application.Orders;
-using Tooba.Inventory.Application.Returns;
+using Tooba.Inventory.Contracts.Returns;
 using Tooba.Order.Application;
 using Tooba.Payment.Application.Models;
 using Tooba.Payment.Application.Ports;

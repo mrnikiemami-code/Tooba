@@ -1,7 +1,10 @@
 using Tooba.AccessControl.Application;
 using Tooba.AccessControl.Domain;
-using Tooba.Fulfillment.Application;
-using Tooba.Fulfillment.Domain;
+using Tooba.Fulfillment.Application.Ports;
+using Tooba.Fulfillment.Application.Models;
+using Tooba.Fulfillment.Application.Shipping;
+using Tooba.Fulfillment.Domain.Aggregates;
+using Tooba.Fulfillment.Domain.ValueObjects;
 using Tooba.Host.Admin;
 using Tooba.Order.Domain;
 using Xunit;

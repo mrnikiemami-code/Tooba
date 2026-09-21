@@ -1,7 +1,8 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
 using Tooba.Persistence;
-using Tooba.Returns.Domain;
+using Tooba.Returns.Domain.Aggregates;
+using Tooba.Returns.Domain.ValueObjects;
 
 namespace Tooba.Returns.Infrastructure.Persistence;
 

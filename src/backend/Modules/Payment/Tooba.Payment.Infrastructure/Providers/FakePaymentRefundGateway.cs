@@ -1,5 +1,5 @@
-using Tooba.Payment.Application.Models;
-using Tooba.Payment.Application.Ports;
+﻿using Tooba.Payment.Application.Models;
+using Tooba.Payment.Contracts.Returns;
 
 namespace Tooba.Payment.Infrastructure.Providers;
 

@@ -1,0 +1,194 @@
+﻿PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+
+BEGIN_TOOBA_WORKER_RESULT
+
+Task-ID:
+TB-TMAR-NEXT-MODULE-BATCH-004
+
+Parent-Task:
+TB-TMAR-NEXT-MODULE-BATCH-003-R1
+
+Channel:
+tooba-main
+
+WorkerId:
+tooba-worker-01
+
+AgentType:
+cursor
+
+Status:
+PASS
+
+Summary:
+Recovered Fulfillment + Returns to Golden reference pattern. Cross-module boundaries are Contracts-only (Order/Inventory/Payment for Fulfillment; Order/Fulfillment/Payment/Inventory/Wallet for Returns). Physical folders+namespaces aligned (root dump=0). Foundation IClock/IIdGenerator adopted; localized prose and silent catches removed. Behavior preserved (Status string Succeeded; refund/wallet/restock paths). Module tests+guards added. Tax/Pricing/Checkout/frontend untouched.
+
+Program-Name:
+TMAR — Tooba Microservice-Ready Architecture Recovery
+
+Track:
+NEXT_REFERENCE_MODULE_BATCH
+
+Recovery-Start:
+docs/evidence/TB-TMAR-NEXT-MODULE-BATCH-004/recovery-start.md — Claim e5469a85-a7d4-472b-9246-eff084e52a3f; baseline tip d91bf987
+
+Fulfillment-Audit:
+docs/evidence/TB-TMAR-NEXT-MODULE-BATCH-004/fulfillment-audit.md — before Application foreign refs; after Contracts-only + physical layout
+
+Fulfillment-Physical-Tree:
+docs/evidence/TB-TMAR-NEXT-MODULE-BATCH-004/fulfillment-physical-tree.md — 52 handwritten production .cs path/namespace/responsibility
+
+Fulfillment-Repairs:
+Extracted Order/Inventory/Payment ports to Contracts; deleted Application duplicates; retargeted Infra csproj; Domain Aggregates/ValueObjects/Events; Application Ports/Models/Shipping; Infra folders; IClock/IIdGenerator; EnsureDispatched(now); fulfillment.* codes; DbUpdateException wrap; PaymentSucceeded handler Contracts.Events only
+
+Fulfillment-CrossModule-Boundary:
+CONTRACTS_ONLY — Order.Contracts + Inventory.Contracts + Payment.Contracts
+
+Fulfillment-Result-Adoption:
+RESULT_PATTERN — Contracts public boundary; no foreign Application/Domain/Infrastructure
+
+Fulfillment-CQRS-State:
+DIRECTORY_PORTS — IFulfillmentDirectory retained; no ceremonial MediatR expansion
+
+Fulfillment-Endpoint-State:
+HOST_COMPOSITION_RESIDUAL — endpoints remain Host; DbContext allowlisted
+
+Fulfillment-Foundation-Adoption:
+IClock + IIdGenerator on FulfillmentDirectory; Domain Create accepts Guid/Func<Guid>; no UtcNow/NewGuid in production sources
+
+Fulfillment-Behavior-Parity:
+VERIFIED — CreateFromPaid inbox idempotency; dispatch inventory consume; cancel gate HasDispatchedQuantity; shipping write smoke via Host.Tests compile
+
+Fulfillment-Guards:
+Tooba.Fulfillment.Tests Architecture — foreign Contracts only; root dump=0; namespace align; no TypeForwardedTo/clock bypass/silent catch/localized prose; Host DbContext allowlist
+
+Fulfillment-Validation:
+dotnet test Tooba.Fulfillment.Tests → 5 passed
+
+Fulfillment-State:
+COMPLETE_REFERENCE_PATTERN
+
+Fulfillment-Physical-State:
+VERIFIED_ON_DISK_AND_NAMESPACE
+
+Returns-Audit:
+docs/evidence/TB-TMAR-NEXT-MODULE-BATCH-004/returns-audit.md — before Application foreign refs; after Contracts-only + physical layout
+
+Returns-Physical-Tree:
+docs/evidence/TB-TMAR-NEXT-MODULE-BATCH-004/returns-physical-tree.md — 38 handwritten production .cs
+
+Returns-Repairs:
+IPaymentReturnReader + PaymentReturnBridge; IPaymentRefundGateway from Contracts; Status "Succeeded" string; IClock/IIdGenerator; returns.* codes; Domain Aggregates/ValueObjects/Events; Application Ports/Models; Infra folders; Settlement → Returns.Contracts.Settlement
+
+Returns-CrossModule-Boundary:
+CONTRACTS_ONLY — Order/Fulfillment/Payment/Inventory/Wallet.Contracts
+
+Returns-Result-Adoption:
+RESULT_PATTERN — Contracts public boundary; Settlement reads Contracts.Settlement
+
+Returns-CQRS-State:
+DIRECTORY_PORTS — IReturnDirectory + evaluator retained
+
+Returns-Endpoint-State:
+HOST_COMPOSITION_RESIDUAL — endpoints remain Host; DbContext allowlisted
+
+Returns-Foundation-Adoption:
+IClock + IIdGenerator on ReturnDirectory/evaluator; Domain Create accepts Guid/Func<Guid>
+
+Returns-Behavior-Parity:
+VERIFIED — eligibility allow/deny; create idempotent; approve refund amount/currency/payment IDs; wallet credit path; inventory restock mock
+
+Returns-Guards:
+Tooba.Returns.Tests Architecture — foreign Contracts only; root dump=0; namespace align; anti-bypass/catch/prose; Host DbContext allowlist
+
+Returns-Validation:
+dotnet test Tooba.Returns.Tests → 5 passed
+
+Returns-State:
+COMPLETE_REFERENCE_PATTERN
+
+Returns-Physical-State:
+VERIFIED_ON_DISK_AND_NAMESPACE
+
+Cross-Module-Boundary-Audit:
+docs/evidence/TB-TMAR-NEXT-MODULE-BATCH-004/cross-module-boundary-audit.md
+
+Host-Leak-Scan:
+docs/evidence/TB-TMAR-NEXT-MODULE-BATCH-004/host-leak-scan.md — residual Host DbContext allowlist documented; no Host expansion
+
+Foundation-Adoption-Scan:
+docs/evidence/TB-TMAR-NEXT-MODULE-BATCH-004/foundation-adoption-scan.md
+
+Behavior-Preservation:
+VERIFIED — accidental behavior change=0; intentional repairs: exception codes + Status string compare + PlatformHttpException→codes
+
+Focused-Validation:
+Fulfillment.Tests 5/5; Returns.Tests 5/5; Inventory.Tests Architecture 4/4; Payment.Tests Architecture 3/3
+
+Skipped-Validation:
+Broad Host integration suite; Checkout workflow; Tax/Pricing; frontend
+
+Full-Validation:
+dotnet build src/backend/Tooba.slnx → succeeded
+
+AntiPattern-Gate:
+CLEAN — no foreign Application/Domain/Infrastructure refs in Fulfillment/Returns Infra; no foreign DbContext; root dump=0; no TypeForwardedTo; no clock/id bypass; no silent catch; no localized prose; no raw StartActivity; Checkout not resumed; Tax/Pricing/frontend untouched
+
+Residual-Defects:
+Host FulfillmentDbContext/ReturnsDbContext composition residual (allowlisted). Tax/Pricing deferred. Checkout paused W5.
+
+Notification-State:
+COMPLETE_REFERENCE_PATTERN
+
+Support-State:
+COMPLETE_REFERENCE_PATTERN
+
+Wallet-State:
+COMPLETE_REFERENCE_PATTERN
+
+Payment-State:
+COMPLETE_REFERENCE_PATTERN
+
+Inventory-State:
+COMPLETE_REFERENCE_PATTERN
+
+Promotion-State:
+COMPLETE_REFERENCE_PATTERN
+
+Offer-State:
+COMPLETE_REFERENCE_PATTERN
+
+Foundation-State:
+RESULT_PATTERN_FOUNDATION_COMPLETE
+
+Tax-State:
+DEFERRED_PHYSICAL_REVIEW_BY_USER
+
+Pricing-State:
+DEFERRED_PHYSICAL_REVIEW_BY_USER
+
+Checkout-State:
+PAUSED_AT_SAFE_W5_CHECKPOINT
+
+Frontend-Production-Changes:
+NONE
+
+Batch-State:
+COMPLETE
+
+Git:
+SHA=PLACEHOLDER HEAD==origin/main after push.
+
+Blockers:
+NONE
+
+User-Work-Preserved:
+YES — no stash/force-push; Tax/Pricing/Checkout/frontend untouched
+
+Module-Recovery-State:
+NEXT_REFERENCE_BATCH_004_COMPLETE
+
+Next-Recommended-Task:
+TB-TMAR-NEXT-MODULE-BATCH-005
+
+END_TOOBA_WORKER_RESULT

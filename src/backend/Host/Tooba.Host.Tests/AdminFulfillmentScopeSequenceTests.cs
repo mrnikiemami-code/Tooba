@@ -1,5 +1,8 @@
-using Tooba.Fulfillment.Application;
-using Tooba.Fulfillment.Domain;
+using Tooba.Fulfillment.Application.Ports;
+using Tooba.Fulfillment.Application.Models;
+using Tooba.Fulfillment.Application.Shipping;
+using Tooba.Fulfillment.Domain.Aggregates;
+using Tooba.Fulfillment.Domain.ValueObjects;
 using Tooba.Host.Admin;
 using Tooba.Order.Domain;
 using Xunit;
@@ -201,8 +204,7 @@ public sealed class AdminFulfillmentScopeSequenceTests
         CreateReady([(lineId, qty)], now);
 
     private static FulfillmentUnit CreateReady(IReadOnlyList<(Guid LineId, decimal Qty)> lines, DateTimeOffset now) =>
-        FulfillmentUnit.CreateFromPaidOrder(
-            Guid.NewGuid(),
+        FulfillmentUnit.CreateFromPaidOrder(Guid.NewGuid(), () => Guid.NewGuid(), Guid.NewGuid(),
             Guid.NewGuid(),
             Guid.NewGuid(),
             Guid.NewGuid(),

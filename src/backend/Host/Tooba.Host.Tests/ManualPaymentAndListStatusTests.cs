@@ -7,7 +7,8 @@ using Tooba.Payment.Infrastructure.DependencyInjection;
 using Tooba.Payment.Infrastructure.Directories;
 using Tooba.Payment.Infrastructure.Messaging;
 using Tooba.Payment.Infrastructure.Providers;
-using Tooba.Returns.Domain;
+using Tooba.Returns.Domain.Aggregates;
+using Tooba.Returns.Domain.ValueObjects;
 using Xunit;
 
 namespace Tooba.Host.Tests;

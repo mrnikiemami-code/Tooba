@@ -1,7 +1,8 @@
 using Tooba.BuildingBlocks;
 using Tooba.Cart.Domain;
 using Tooba.Catalog.Domain;
-using Tooba.Fulfillment.Domain;
+using Tooba.Fulfillment.Domain.Aggregates;
+using Tooba.Fulfillment.Domain.ValueObjects;
 using Tooba.Inventory.Domain.Aggregates;
 using Tooba.Inventory.Domain.ValueObjects;
 using Tooba.Inventory.Domain.Events;
@@ -80,8 +81,7 @@ public sealed class QuantityDecimalRegressionTests
     {
         var lineId = Guid.NewGuid();
         var now = DateTimeOffset.UtcNow;
-        var unit = FulfillmentUnit.CreateFromPaidOrder(
-            Guid.NewGuid(),
+        var unit = FulfillmentUnit.CreateFromPaidOrder(Guid.NewGuid(), () => Guid.NewGuid(), Guid.NewGuid(),
             Guid.NewGuid(),
             Guid.NewGuid(),
             Guid.NewGuid(),

@@ -2,7 +2,8 @@ using Tooba.Host.Admin;
 using Tooba.Host.Grid;
 using Tooba.Offer.Domain;
 using Tooba.Order.Domain;
-using Tooba.Returns.Domain;
+using Tooba.Returns.Domain.Aggregates;
+using Tooba.Returns.Domain.ValueObjects;
 using Xunit;
 
 namespace Tooba.Host.Tests;

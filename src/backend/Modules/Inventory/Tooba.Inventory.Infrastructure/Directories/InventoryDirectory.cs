@@ -1,4 +1,4 @@
-using Tooba.Inventory.Domain.ValueObjects;
+﻿using Tooba.Inventory.Domain.ValueObjects;
 using Tooba.Inventory.Domain.Aggregates;
 using Tooba.Inventory.Contracts.Seller;
 using Tooba.Inventory.Contracts.Errors;
@@ -12,9 +12,10 @@ using Tooba.BuildingBlocks.Observability.Tracing;
 using Tooba.Catalog.Contracts;
 using Tooba.Inventory.Application.Checkout;
 using Tooba.Inventory.Application.Orders;
-using Tooba.Inventory.Application.Returns;
 using Tooba.Inventory.Contracts.Checkout;
 using Tooba.Inventory.Contracts.Orders;
+using Tooba.Inventory.Contracts.Fulfillment;
+using Tooba.Inventory.Contracts.Returns;
 using Tooba.Inventory.Domain.Events;
 using Tooba.Inventory.Infrastructure.Persistence;
 using Tooba.Offer.Contracts;
@@ -36,7 +37,7 @@ public sealed class OpenInventoryUseCaseGuard : IInventoryUseCaseGuard
 /// نوشتن و خواندن موجودی با قرارداد Offer. DbContext کاتالوگ و Offer لمس نمی‌شود.
 /// رزرو با UPDATE اتمی PostgreSQL است تا آخرین واحد دو بار فروخته نشود.
 /// </summary>
-public sealed class InventoryDirectory : IInventoryDirectory, IInventoryAvailabilityGateway, ISellerOfferInventoryGateway
+public sealed class InventoryDirectory : IInventoryDirectory, IInventoryAvailabilityGateway, ISellerOfferInventoryGateway, IFulfillmentInventoryLifecyclePort
 {
     private readonly InventoryDbContext _db;
     private readonly IInventoryUseCaseGuard _guard;
@@ -455,6 +456,12 @@ public sealed class InventoryDirectory : IInventoryDirectory, IInventoryAvailabi
         position.SyncQuantities(position.OnHand, position.Reserved, now);
         await _db.SaveChangesAsync(cancellationToken);
     }
+
+    /// <inheritdoc />
+    Task IFulfillmentInventoryLifecyclePort.CommitReservationForPaidOrderAsync(
+        Guid reservationId,
+        CancellationToken cancellationToken) =>
+        CommitReservationForPaidOrderAsync(reservationId, cancellationToken);
 
     /// <inheritdoc />
     public async Task<ReservationReceipt> CommitReservationForPaidOrderAsync(

@@ -1,12 +1,16 @@
-using Tooba.Fulfillment.Application;
-using Tooba.Fulfillment.Domain;
+using Tooba.Fulfillment.Application.Ports;
+using Tooba.Fulfillment.Application.Models;
+using Tooba.Fulfillment.Application.Shipping;
+using Tooba.Fulfillment.Domain.Aggregates;
+using Tooba.Fulfillment.Domain.ValueObjects;
 using Tooba.Host.Admin;
 using Tooba.Offer.Domain;
 using Tooba.Order.Domain;
 using Tooba.Payment.Domain.Aggregates;
 using Tooba.Payment.Domain.ValueObjects;
 using Tooba.Payment.Domain.Events;
-using Tooba.Returns.Domain;
+using Tooba.Returns.Domain.Aggregates;
+using Tooba.Returns.Domain.ValueObjects;
 using Tooba.Settlement.Application;
 using Tooba.Settlement.Domain;
 using Xunit;
@@ -192,13 +196,13 @@ public sealed class AdminOrderCorrectiveActionsTests
         var now = DateTimeOffset.UtcNow;
         var unit = CreateUnit(lineId, 2, now);
         unit.PackSelections([(lineId, 2)], now);
-        var shipment = unit.CreateShipment("پست", [(lineId, 2)], now);
+        var shipment = unit.CreateShipment(Guid.NewGuid(), () => Guid.NewGuid(), "پست", [(lineId, 2)], now);
         unit.AssignTracking(shipment.ShipmentId, "TRK-OLD", now);
         unit.CancelShipment(shipment.ShipmentId, now.AddMinutes(1));
         Assert.Equal(ShipmentStatus.Cancelled, unit.Shipments.Single().Status);
         Assert.Equal("TRK-OLD", unit.Shipments.Single().TrackingReference);
         Assert.Equal(0, unit.OpenAllocatedQuantity(lineId));
-        var replacement = unit.CreateShipment("تیپاکس", [(lineId, 2)], now.AddMinutes(2));
+        var replacement = unit.CreateShipment(Guid.NewGuid(), () => Guid.NewGuid(), "تیپاکس", [(lineId, 2)], now.AddMinutes(2));
         Assert.Equal(ShipmentStatus.Created, replacement.Status);
         Assert.Equal(2, unit.OpenAllocatedQuantity(lineId));
     }
@@ -210,7 +214,7 @@ public sealed class AdminOrderCorrectiveActionsTests
         var now = DateTimeOffset.UtcNow;
         var unit = CreateUnit(lineId, 1, now);
         unit.PackSelections([(lineId, 1)], now);
-        var shipment = unit.CreateShipment("پست", [(lineId, 1)], now);
+        var shipment = unit.CreateShipment(Guid.NewGuid(), () => Guid.NewGuid(), "پست", [(lineId, 1)], now);
         unit.AssignTracking(shipment.ShipmentId, "TRK-OLD", now);
         unit.CorrectTracking(shipment.ShipmentId, "TRK-NEW", now.AddMinutes(1));
         Assert.Equal("TRK-NEW", unit.Shipments.Single().TrackingReference);
@@ -256,8 +260,7 @@ public sealed class AdminOrderCorrectiveActionsTests
             "order.restore.dispatched",
             AdminOrderOperationsComposer.RestoreForbiddenCode(group, [dispatched], []));
 
-        var refunded = ReturnRequest.Create(
-            group.SellerOrders[0].SellerOrderId,
+        var refunded = ReturnRequest.Create(Guid.NewGuid(), () => Guid.NewGuid(), group.SellerOrders[0].SellerOrderId,
             group.CheckoutId,
             group.SellerOrders[0].SellerPartyId,
             Guid.NewGuid(),
@@ -455,8 +458,7 @@ public sealed class AdminOrderCorrectiveActionsTests
             "order.restore.dispatched",
             AdminOrderOperationsComposer.RestoreForbiddenCode(group, [dispatched], [], blockedBySellerPayout: true));
 
-        var refunded = ReturnRequest.Create(
-            group.SellerOrders[0].SellerOrderId,
+        var refunded = ReturnRequest.Create(Guid.NewGuid(), () => Guid.NewGuid(), group.SellerOrders[0].SellerOrderId,
             group.CheckoutId,
             group.SellerOrders[0].SellerPartyId,
             Guid.NewGuid(),
@@ -634,8 +636,7 @@ public sealed class AdminOrderCorrectiveActionsTests
 
     private static FulfillmentUnit CreateUnit(Guid orderLineId, decimal quantity, DateTimeOffset now)
     {
-        var unit = FulfillmentUnit.CreateFromPaidOrder(
-            Guid.NewGuid(),
+        var unit = FulfillmentUnit.CreateFromPaidOrder(Guid.NewGuid(), () => Guid.NewGuid(), Guid.NewGuid(),
             Guid.NewGuid(),
             Guid.NewGuid(),
             Guid.NewGuid(),

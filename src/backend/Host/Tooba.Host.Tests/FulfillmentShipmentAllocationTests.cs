@@ -1,4 +1,5 @@
-using Tooba.Fulfillment.Domain;
+using Tooba.Fulfillment.Domain.Aggregates;
+using Tooba.Fulfillment.Domain.ValueObjects;
 using Xunit;
 
 namespace Tooba.Host.Tests;
@@ -14,8 +15,7 @@ public sealed class FulfillmentShipmentAllocationTests
         var sellerPartyId = Guid.NewGuid();
         var orderLineId = Guid.NewGuid();
         var now = DateTimeOffset.Parse("2026-09-06T22:00:00Z");
-        var unit = FulfillmentUnit.CreateFromPaidOrder(
-            sellerOrderId,
+        var unit = FulfillmentUnit.CreateFromPaidOrder(Guid.NewGuid(), () => Guid.NewGuid(), sellerOrderId,
             checkoutId,
             sellerPartyId,
             Guid.NewGuid(),
@@ -32,10 +32,10 @@ public sealed class FulfillmentShipmentAllocationTests
 
         unit.MarkProcessing(now);
         unit.MarkPacked(now);
-        _ = unit.CreateShipment("Carrier A", [(orderLineId, 1)], now);
+        _ = unit.CreateShipment(Guid.NewGuid(), () => Guid.NewGuid(), "Carrier A", [(orderLineId, 1)], now);
 
         var ex = Assert.Throws<InvalidOperationException>(() =>
-            unit.CreateShipment("Carrier B", [(orderLineId, 1)], now));
+            unit.CreateShipment(Guid.NewGuid(), () => Guid.NewGuid(), "Carrier B", [(orderLineId, 1)], now));
         Assert.Contains("باقیمانده", ex.Message, StringComparison.Ordinal);
         Assert.Single(unit.Shipments);
     }

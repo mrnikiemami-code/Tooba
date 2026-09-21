@@ -1,11 +1,12 @@
-using Tooba.Inventory.Infrastructure.Messaging;
+﻿using Tooba.Inventory.Infrastructure.Messaging;
 using Tooba.Inventory.Infrastructure.Adapters;
 using Tooba.Inventory.Infrastructure.Directories;
 using Tooba.Inventory.Contracts.Seller;
 using Tooba.Inventory.Contracts.Orders;
 using Tooba.Inventory.Contracts.Checkout;
 using Tooba.Inventory.Contracts.Availability;
-using Tooba.Inventory.Application.Returns;
+using Tooba.Inventory.Contracts.Returns;
+using Tooba.Inventory.Contracts.Fulfillment;
 using Tooba.Inventory.Application.Orders;
 using Tooba.Inventory.Application.Checkout;
 using Tooba.Inventory.Application.Ports;
@@ -42,6 +43,7 @@ public sealed class InventoryModule : IToobaModule
         services.AddScoped<IInventoryReturnGateway, InventoryReturnGateway>();
         services.AddScoped<IInventoryAvailabilityGateway>(sp => (InventoryDirectory)sp.GetRequiredService<IInventoryDirectory>());
         services.AddScoped<ISellerOfferInventoryGateway>(sp => (InventoryDirectory)sp.GetRequiredService<IInventoryDirectory>());
+        services.AddScoped<IFulfillmentInventoryLifecyclePort>(sp => (InventoryDirectory)sp.GetRequiredService<IInventoryDirectory>());
         services.AddScoped<IInventoryQueryGateway, Adapters.InventoryQueryGateway>();
         services.AddScoped<IInventorySchemaMigrator, Adapters.InventorySchemaMigrator>();
         services.AddScoped<ICheckoutInventoryReservationPort, CheckoutInventoryReservationAdapter>();

@@ -1,4 +1,4 @@
-using Tooba.Returns.Contracts.Events;
+﻿using Tooba.Returns.Contracts.Events;
 using Tooba.Payment.Contracts.Events;
 using Tooba.Payment.Application.Ports;
 using Microsoft.EntityFrameworkCore;
@@ -7,7 +7,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Tooba.BuildingBlocks;
 using Tooba.ModuleContracts;
-using Tooba.Returns.Application;
+using Tooba.Returns.Contracts.Settlement;
 using Tooba.Settlement.Application;
 using Tooba.Settlement.Infrastructure.Persistence;
 using Tooba.Persistence;

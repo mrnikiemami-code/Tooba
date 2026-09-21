@@ -1,4 +1,4 @@
-using Tooba.Payment.Contracts.Events;
+﻿using Tooba.Payment.Contracts.Events;
 using Tooba.Promotion.Application.Ports;
 using Tooba.Promotion.Infrastructure.Queries;
 using Tooba.Promotion.Infrastructure.Messaging;
@@ -7,20 +7,30 @@ using Tooba.Promotion.Infrastructure.Directories;
 using Tooba.Inventory.Infrastructure.Messaging;
 using Tooba.Inventory.Infrastructure.Adapters;
 using Tooba.Inventory.Infrastructure.Directories;
+using Tooba.Order.Contracts.Fulfillment;
+using Tooba.Order.Contracts.Returns;
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging.Abstractions;
 using Testcontainers.PostgreSql;
 using Tooba.BuildingBlocks;
-using Tooba.Fulfillment.Application;
-using Tooba.Fulfillment.Domain;
-using Tooba.Fulfillment.Infrastructure;
+using Tooba.Fulfillment.Application.Ports;
+using Tooba.Fulfillment.Application.Models;
+using Tooba.Fulfillment.Application.Shipping;
+using Tooba.Fulfillment.Domain.Aggregates;
+using Tooba.Fulfillment.Domain.ValueObjects;
+using Tooba.Fulfillment.Infrastructure.Directories;
+using Tooba.Fulfillment.Infrastructure.Messaging;
+using Tooba.Fulfillment.Infrastructure.Observability;
+using Tooba.Fulfillment.Infrastructure.Shipping;
+using Tooba.Fulfillment.Infrastructure.Gateways;
+using Tooba.Fulfillment.Infrastructure.Bridges;
 using Tooba.Fulfillment.Infrastructure.Persistence;
 using Tooba.Offer.Domain;
 using Tooba.Order.Domain;
 using Tooba.Inventory.Application.Ports;
 using Tooba.Inventory.Application.Checkout;
 using Tooba.Inventory.Application.Orders;
-using Tooba.Inventory.Application.Returns;
+using Tooba.Inventory.Contracts.Returns;
 using Tooba.Order.Infrastructure;
 using Tooba.Order.Infrastructure.Persistence;
 using Tooba.Payment.Application.Models;
@@ -34,9 +44,15 @@ using Tooba.Payment.Infrastructure.Messaging;
 using Tooba.Payment.Infrastructure.Providers;
 using Tooba.Payment.Infrastructure.Persistence;
 using Tooba.Persistence;
-using Tooba.Returns.Application;
-using Tooba.Returns.Domain;
-using Tooba.Returns.Infrastructure;
+using Tooba.Returns.Application.Ports;
+using Tooba.Returns.Application.Models;
+using Tooba.Returns.Domain.Aggregates;
+using Tooba.Returns.Domain.ValueObjects;
+using Tooba.Returns.Infrastructure.Directories;
+using Tooba.Returns.Infrastructure.Messaging;
+using Tooba.Returns.Infrastructure.Evaluators;
+using Tooba.Returns.Infrastructure.Observability;
+using Tooba.Returns.Infrastructure.Bridges;
 using Tooba.Returns.Infrastructure.Persistence;
 using Xunit;
 
@@ -179,12 +195,10 @@ public sealed class ReturnFoundationTests : IAsyncLifetime
         orderDb.ChangeTracker.Clear();
 
         var orderBridge = new OrderFulfillmentBridge(orderDb);
-        var fulfillmentDirectory = new FulfillmentDirectory(
-            fulfillmentDb,
+        var fulfillmentDirectory = new FulfillmentDirectory(fulfillmentDb,
             new OpenFulfillmentUseCaseGuard(),
             orderBridge,
-            new RecordingInventoryGateway(),
-            new FulfillmentInstrumentation());
+            new RecordingInventoryGateway(), new FulfillmentInstrumentation(), new SystemUtcClock(), new UuidV7IdGenerator());
         await fulfillmentDirectory.CreateFromPaidSellerOrdersAsync(
             Guid.NewGuid(),
             Guid.NewGuid(),
@@ -219,21 +233,16 @@ public sealed class ReturnFoundationTests : IAsyncLifetime
             actor,
             CancellationToken.None);
 
-        var eligibility = new ReturnEligibilityEvaluator(
-            new OrderReturnBridge(orderDb),
-            new FulfillmentReturnBridge(fulfillmentDb),
-            returnsDb);
-        var returnDirectory = new ReturnDirectory(
-            returnsDb,
+        var eligibility = new ReturnEligibilityEvaluator(new OrderReturnBridge(orderDb), new FulfillmentReturnBridge(fulfillmentDb), returnsDb, new SystemUtcClock());
+        var returnDirectory = new ReturnDirectory(returnsDb,
             new OpenReturnUseCaseGuard(),
             new OrderReturnBridge(orderDb),
             eligibility,
-            paymentDirectory,
+            new PaymentReturnBridge(paymentDirectory),
             new FakePaymentRefundGateway(),
             new UnusedWalletDirectoryStub(),
             new RecordingReturnInventoryGateway(),
-            new ReturnsInstrumentation(),
-            NullLogger<ReturnDirectory>.Instance);
+            new ReturnsInstrumentation(), NullLogger<ReturnDirectory>.Instance, new SystemUtcClock(), new UuidV7IdGenerator());
 
         var created = await returnDirectory.CreateAsync(
             new CreateReturnCommand(
@@ -288,17 +297,15 @@ public sealed class ReturnFoundationTests : IAsyncLifetime
         Assert.Equal(RefundAttemptStatus.Succeeded, approved.RefundAttempts[0].Status);
         Assert.NotNull(approved.PaymentId);
 
-        var failGateway = new ReturnDirectory(
-            returnsDb,
+        var failGateway = new ReturnDirectory(returnsDb,
             new OpenReturnUseCaseGuard(),
             new OrderReturnBridge(orderDb),
             eligibility,
-            paymentDirectory,
+            new PaymentReturnBridge(paymentDirectory),
             new FakePaymentRefundGateway(),
             new UnusedWalletDirectoryStub(),
             new RecordingReturnInventoryGateway(),
-            new ReturnsInstrumentation(),
-            NullLogger<ReturnDirectory>.Instance);
+            new ReturnsInstrumentation(), NullLogger<ReturnDirectory>.Instance, new SystemUtcClock(), new UuidV7IdGenerator());
         await Assert.ThrowsAsync<InvalidOperationException>(() =>
             failGateway.CreateAsync(
                 new CreateReturnCommand(

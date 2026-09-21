@@ -1,5 +1,8 @@
-using Tooba.Fulfillment.Application;
-using Tooba.Fulfillment.Domain;
+using Tooba.Fulfillment.Application.Ports;
+using Tooba.Fulfillment.Application.Models;
+using Tooba.Fulfillment.Application.Shipping;
+using Tooba.Fulfillment.Domain.Aggregates;
+using Tooba.Fulfillment.Domain.ValueObjects;
 
 namespace Tooba.Host.Admin;
 

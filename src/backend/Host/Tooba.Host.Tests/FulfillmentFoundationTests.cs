@@ -1,9 +1,16 @@
 using Microsoft.EntityFrameworkCore;
 using Testcontainers.PostgreSql;
 using Tooba.BuildingBlocks;
-using Tooba.Fulfillment.Application;
-using Tooba.Fulfillment.Domain;
-using Tooba.Fulfillment.Infrastructure;
+using Tooba.Fulfillment.Application.Ports;
+using Tooba.Fulfillment.Application.Models;
+using Tooba.Fulfillment.Application.Shipping;
+using Tooba.Fulfillment.Domain.Aggregates;
+using Tooba.Fulfillment.Domain.ValueObjects;
+using Tooba.Fulfillment.Infrastructure.Directories;
+using Tooba.Fulfillment.Infrastructure.Messaging;
+using Tooba.Fulfillment.Infrastructure.Observability;
+using Tooba.Fulfillment.Infrastructure.Shipping;
+using Tooba.Fulfillment.Infrastructure.Gateways;
 using Tooba.Fulfillment.Infrastructure.Persistence;
 using Tooba.Offer.Domain;
 using Tooba.Order.Domain;
@@ -136,12 +143,10 @@ public sealed class FulfillmentFoundationTests : IAsyncLifetime
 
         var inventory = new RecordingInventoryGateway();
         var bridge = new OrderFulfillmentBridge(orderDb);
-        var directory = new FulfillmentDirectory(
-            fulfillmentDb,
+        var directory = new FulfillmentDirectory(fulfillmentDb,
             new OpenFulfillmentUseCaseGuard(),
             bridge,
-            inventory,
-            new FulfillmentInstrumentation());
+            inventory, new FulfillmentInstrumentation(), new SystemUtcClock(), new UuidV7IdGenerator());
 
         var paymentId = Guid.NewGuid();
         var eventId = Guid.NewGuid();
@@ -300,12 +305,10 @@ public sealed class FulfillmentFoundationTests : IAsyncLifetime
         await orderDb.SaveChangesAsync();
 
         var bridge = new OrderFulfillmentBridge(orderDb);
-        var directory = new FulfillmentDirectory(
-            fulfillmentDb,
+        var directory = new FulfillmentDirectory(fulfillmentDb,
             new OpenFulfillmentUseCaseGuard(),
             bridge,
-            new RecordingInventoryGateway(),
-            new FulfillmentInstrumentation());
+            new RecordingInventoryGateway(), new FulfillmentInstrumentation(), new SystemUtcClock(), new UuidV7IdGenerator());
 
         await directory.CreateFromPaidSellerOrdersAsync(
             Guid.NewGuid(),

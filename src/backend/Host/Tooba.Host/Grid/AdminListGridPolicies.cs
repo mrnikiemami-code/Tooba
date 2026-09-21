@@ -1,8 +1,11 @@
 using Tooba.Content.Application;
-using Tooba.Fulfillment.Application;
+using Tooba.Fulfillment.Application.Ports;
+using Tooba.Fulfillment.Application.Models;
+using Tooba.Fulfillment.Application.Shipping;
 using Tooba.Host.Admin;
 using Tooba.Host.Reviews;
-using Tooba.Returns.Application;
+using Tooba.Returns.Application.Ports;
+using Tooba.Returns.Application.Models;
 using Tooba.Settlement.Application;
 using Tooba.Story.Application;
 

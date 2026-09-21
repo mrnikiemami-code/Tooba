@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Tooba.AccessControl.Application;
 using Tooba.AccessControl.Domain;
 using Tooba.BuildingBlocks;
@@ -16,7 +16,7 @@ using Tooba.Identity.Infrastructure;
 using Tooba.Inventory.Application.Ports;
 using Tooba.Inventory.Application.Checkout;
 using Tooba.Inventory.Application.Orders;
-using Tooba.Inventory.Application.Returns;
+using Tooba.Inventory.Contracts.Returns;
 using Tooba.Inventory.Contracts.Availability;
 using Tooba.Inventory.Contracts.Checkout;
 using Tooba.Inventory.Contracts.Errors;

@@ -20,7 +20,7 @@ using Tooba.Order.Domain;
 using Tooba.Inventory.Application.Ports;
 using Tooba.Inventory.Application.Checkout;
 using Tooba.Inventory.Application.Orders;
-using Tooba.Inventory.Application.Returns;
+using Tooba.Inventory.Contracts.Returns;
 using Tooba.Order.Infrastructure;
 using Tooba.Order.Infrastructure.Persistence;
 using Tooba.Payment.Application.Models;
@@ -34,9 +34,15 @@ using Tooba.Payment.Infrastructure.Messaging;
 using Tooba.Payment.Infrastructure.Providers;
 using Tooba.Payment.Infrastructure.Persistence;
 using Tooba.Persistence;
-using Tooba.Returns.Application;
-using Tooba.Returns.Domain;
-using Tooba.Returns.Infrastructure;
+using Tooba.Returns.Application.Ports;
+using Tooba.Returns.Application.Models;
+using Tooba.Returns.Domain.Aggregates;
+using Tooba.Returns.Domain.ValueObjects;
+using Tooba.Returns.Infrastructure.Directories;
+using Tooba.Returns.Infrastructure.Messaging;
+using Tooba.Returns.Infrastructure.Evaluators;
+using Tooba.Returns.Infrastructure.Observability;
+using Tooba.Returns.Infrastructure.Bridges;
 using Tooba.Returns.Infrastructure.Persistence;
 using Tooba.Settlement.Application;
 using Tooba.Settlement.Domain;
@@ -232,8 +238,7 @@ public sealed class MarketplaceSettlementEventPathTests : IAsyncLifetime
         var balanceBefore = await settlementDirectory.GetBalanceAsync(seller, CancellationToken.None);
         Assert.Equal(credit.NetAmount, balanceBefore!.AvailableBalance);
 
-        var returnRequest = ReturnRequest.Create(
-            sellerOrderId,
+        var returnRequest = ReturnRequest.Create(Guid.NewGuid(), () => Guid.NewGuid(), sellerOrderId,
             checkout.CheckoutId,
             seller,
             actor,

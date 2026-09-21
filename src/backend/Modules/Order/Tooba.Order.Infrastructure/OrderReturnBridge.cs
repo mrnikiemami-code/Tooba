@@ -1,5 +1,5 @@
 using Microsoft.EntityFrameworkCore;
-using Tooba.Order.Application;
+using Tooba.Order.Contracts.Returns;
 using Tooba.Order.Domain;
 using Tooba.Order.Infrastructure.Persistence;
 

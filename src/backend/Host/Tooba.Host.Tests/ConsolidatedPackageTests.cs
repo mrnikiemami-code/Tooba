@@ -1,9 +1,16 @@
 using Microsoft.EntityFrameworkCore;
 using Testcontainers.PostgreSql;
 using Tooba.BuildingBlocks;
-using Tooba.Fulfillment.Application;
-using Tooba.Fulfillment.Domain;
-using Tooba.Fulfillment.Infrastructure;
+using Tooba.Fulfillment.Application.Ports;
+using Tooba.Fulfillment.Application.Models;
+using Tooba.Fulfillment.Application.Shipping;
+using Tooba.Fulfillment.Domain.Aggregates;
+using Tooba.Fulfillment.Domain.ValueObjects;
+using Tooba.Fulfillment.Infrastructure.Directories;
+using Tooba.Fulfillment.Infrastructure.Messaging;
+using Tooba.Fulfillment.Infrastructure.Observability;
+using Tooba.Fulfillment.Infrastructure.Shipping;
+using Tooba.Fulfillment.Infrastructure.Gateways;
 using Tooba.Fulfillment.Infrastructure.Persistence;
 using Tooba.Offer.Domain;
 using Tooba.Order.Domain;
@@ -58,8 +65,7 @@ public sealed class ConsolidatedPackageTests : IAsyncLifetime
         var now = DateTimeOffset.UtcNow;
         var sellerA = Guid.NewGuid();
         var sellerB = Guid.NewGuid();
-        var package = ConsolidatedPackage.Create(
-            Guid.NewGuid(),
+        var package = ConsolidatedPackage.Create(Guid.NewGuid(), () => Guid.NewGuid(), Guid.NewGuid(),
             [
                 (Guid.NewGuid(), sellerA, Guid.NewGuid()),
                 (Guid.NewGuid(), sellerB, Guid.NewGuid()),
@@ -75,8 +81,7 @@ public sealed class ConsolidatedPackageTests : IAsyncLifetime
         Assert.Equal(2, package.Members.Count);
 
         var singleSeller = Assert.Throws<InvalidOperationException>(() =>
-            ConsolidatedPackage.Create(
-                Guid.NewGuid(),
+            ConsolidatedPackage.Create(Guid.NewGuid(), () => Guid.NewGuid(), Guid.NewGuid(),
                 [
                     (Guid.NewGuid(), sellerA, Guid.NewGuid()),
                     (Guid.NewGuid(), sellerA, Guid.NewGuid()),
@@ -96,8 +101,7 @@ public sealed class ConsolidatedPackageTests : IAsyncLifetime
         var now = DateTimeOffset.UtcNow;
         var s1 = Guid.NewGuid();
         var s2 = Guid.NewGuid();
-        var package = ConsolidatedPackage.Create(
-            Guid.NewGuid(),
+        var package = ConsolidatedPackage.Create(Guid.NewGuid(), () => Guid.NewGuid(), Guid.NewGuid(),
             [(s1, Guid.NewGuid(), Guid.NewGuid()), (s2, Guid.NewGuid(), Guid.NewGuid())],
             "post",
             "پست",
@@ -109,8 +113,7 @@ public sealed class ConsolidatedPackageTests : IAsyncLifetime
         Assert.Equal(ConsolidatedPackageStatus.Cancelled, package.Status);
         Assert.All(package.Members, m => Assert.NotNull(m.ReleasedAt));
 
-        var again = ConsolidatedPackage.Create(
-            Guid.NewGuid(),
+        var again = ConsolidatedPackage.Create(Guid.NewGuid(), () => Guid.NewGuid(), Guid.NewGuid(),
             [(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid()), (Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid())],
             "tipax",
             "تیپاکس",
@@ -193,12 +196,10 @@ public sealed class ConsolidatedPackageTests : IAsyncLifetime
         var commerce = new FixedCommerceContext();
         commerce.Assign(OutboxTestContextFactory.SingleStore("store-pkg-race", "tenant-pkg-race"));
         var dbB = CreateFulfillmentDb(cs, commerce);
-        var directoryB = new FulfillmentDirectory(
-            dbB,
+        var directoryB = new FulfillmentDirectory(dbB,
             new OpenFulfillmentUseCaseGuard(),
             new OrderFulfillmentBridge(CreateOrderDb(cs, commerce)),
-            new NoopInventoryGateway(),
-            new FulfillmentInstrumentation());
+            new NoopInventoryGateway(), new FulfillmentInstrumentation(), new SystemUtcClock(), new UuidV7IdGenerator());
 
         var shipmentIds = new[] { ready[0].ShipmentId, ready[1].ShipmentId };
         var results = await Task.WhenAll(
@@ -441,12 +442,10 @@ public sealed class ConsolidatedPackageTests : IAsyncLifetime
         orderDb.Checkouts.Add(group);
         await orderDb.SaveChangesAsync();
 
-        var directory = new FulfillmentDirectory(
-            fulfillmentDb,
+        var directory = new FulfillmentDirectory(fulfillmentDb,
             new OpenFulfillmentUseCaseGuard(),
             new OrderFulfillmentBridge(orderDb),
-            new NoopInventoryGateway(),
-            new FulfillmentInstrumentation());
+            new NoopInventoryGateway(), new FulfillmentInstrumentation(), new SystemUtcClock(), new UuidV7IdGenerator());
 
         await directory.CreateFromPaidSellerOrdersAsync(
             Guid.NewGuid(),
@@ -547,8 +546,7 @@ public sealed class ConsolidatedPackageTests : IAsyncLifetime
     public void Domain_assign_tracking_only_while_created()
     {
         var now = DateTimeOffset.UtcNow;
-        var package = ConsolidatedPackage.Create(
-            Guid.NewGuid(),
+        var package = ConsolidatedPackage.Create(Guid.NewGuid(), () => Guid.NewGuid(), Guid.NewGuid(),
             [(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid()), (Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid())],
             "post",
             "پست",

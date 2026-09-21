@@ -1,7 +1,7 @@
-using Tooba.Inventory.Infrastructure.Directories;
+﻿using Tooba.Inventory.Infrastructure.Directories;
 using Tooba.Inventory.Domain.ValueObjects;
 using Tooba.Inventory.Domain.Aggregates;
-using Tooba.Inventory.Application.Returns;
+using Tooba.Inventory.Contracts.Returns;
 using Tooba.Inventory.Application.Ports;
 using Microsoft.EntityFrameworkCore;
 using Tooba.BuildingBlocks;

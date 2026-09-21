@@ -1,6 +1,7 @@
-using Tooba.Order.Application;
+﻿using Tooba.Order.Application;
 using Tooba.Order.Domain;
 using Xunit;
+using Tooba.Order.Contracts.Fulfillment;
 
 namespace Tooba.Host.Tests;
 
@@ -85,7 +86,7 @@ public sealed class SellerOrderCancellationGuardTests
             "Modules",
             "Returns",
             "Tooba.Returns.Infrastructure",
-            "ReturnEligibilityEvaluator.cs"));
+            "Evaluators", "ReturnEligibilityEvaluator.cs"));
         Assert.DoesNotContain("Settlement", src, StringComparison.OrdinalIgnoreCase);
         Assert.DoesNotContain("AdjustFromRefund", src, StringComparison.Ordinal);
     }

@@ -1,4 +1,4 @@
-using Tooba.Payment.Contracts.Events;
+﻿using Tooba.Payment.Contracts.Events;
 using Tooba.BuildingBlocks;
 using Tooba.BuildingBlocks.Observability.Tracing;
 using Tooba.Promotion.Application.Ports;
@@ -20,7 +20,7 @@ using Tooba.Order.Domain;
 using Tooba.Inventory.Application.Ports;
 using Tooba.Inventory.Application.Checkout;
 using Tooba.Inventory.Application.Orders;
-using Tooba.Inventory.Application.Returns;
+using Tooba.Inventory.Contracts.Returns;
 using Tooba.Order.Infrastructure;
 using Tooba.Order.Infrastructure.Persistence;
 using Tooba.Payment.Application.Models;
@@ -34,7 +34,8 @@ using Tooba.Payment.Infrastructure.Messaging;
 using Tooba.Payment.Infrastructure.Providers;
 using Tooba.Payment.Infrastructure.Persistence;
 using Tooba.Persistence;
-using Tooba.Returns.Domain;
+using Tooba.Returns.Domain.Aggregates;
+using Tooba.Returns.Domain.ValueObjects;
 using Tooba.Wallet.Application.Models;
 using Tooba.Wallet.Application.Ports;
 using Tooba.Wallet.Domain.Aggregates;
@@ -252,7 +253,7 @@ public sealed class WalletCheckoutRefundTests : IAsyncLifetime
         Assert.Contains("wallet-seed-admin-credit-v1", File.ReadAllText(Path.Combine(FindRepoRoot(),
             "src", "backend", "Modules", "Wallet", "Tooba.Wallet.Infrastructure", "Adapters", "WalletDevelopmentSeed.cs")), StringComparison.Ordinal);
         Assert.Contains("wallet-refund-credit:", File.ReadAllText(Path.Combine(FindRepoRoot(),
-            "src", "backend", "Modules", "Returns", "Tooba.Returns.Infrastructure", "ReturnDirectory.cs")), StringComparison.Ordinal);
+            "src", "backend", "Modules", "Returns", "Tooba.Returns.Infrastructure", "Directories", "ReturnDirectory.cs")), StringComparison.Ordinal);
     }
 
     private static async Task<bool> Wrap(Task task)

@@ -1,4 +1,4 @@
-<Solution>
+﻿<Solution>
   <Folder Name="/BuildingBlocks/">
     <Project Path="BuildingBlocks/Tooba.BuildingBlocks/Tooba.BuildingBlocks.csproj" />
     <Project Path="BuildingBlocks/Tooba.BuildingBlocks.Tests/Tooba.BuildingBlocks.Tests.csproj" />
@@ -51,10 +51,12 @@
     <Project Path="Modules/Fulfillment/Tooba.Fulfillment.Contracts/Tooba.Fulfillment.Contracts.csproj" />
     <Project Path="Modules/Fulfillment/Tooba.Fulfillment.Application/Tooba.Fulfillment.Application.csproj" />
     <Project Path="Modules/Fulfillment/Tooba.Fulfillment.Infrastructure/Tooba.Fulfillment.Infrastructure.csproj" />
+    <Project Path="Modules/Fulfillment/Tooba.Fulfillment.Tests/Tooba.Fulfillment.Tests.csproj" />
     <Project Path="Modules/Returns/Tooba.Returns.Domain/Tooba.Returns.Domain.csproj" />
     <Project Path="Modules/Returns/Tooba.Returns.Contracts/Tooba.Returns.Contracts.csproj" />
     <Project Path="Modules/Returns/Tooba.Returns.Application/Tooba.Returns.Application.csproj" />
     <Project Path="Modules/Returns/Tooba.Returns.Infrastructure/Tooba.Returns.Infrastructure.csproj" />
+    <Project Path="Modules/Returns/Tooba.Returns.Tests/Tooba.Returns.Tests.csproj" />
     <Project Path="Modules/Settlement/Tooba.Settlement.Domain/Tooba.Settlement.Domain.csproj" />
     <Project Path="Modules/Settlement/Tooba.Settlement.Application/Tooba.Settlement.Application.csproj" />
     <Project Path="Modules/Settlement/Tooba.Settlement.Infrastructure/Tooba.Settlement.Infrastructure.csproj" />

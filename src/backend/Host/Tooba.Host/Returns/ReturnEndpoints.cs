@@ -176,7 +176,7 @@ public static class ReturnEndpoints
         IHostEnvironment environment,
         Guid returnRequestId,
         ReturnPanelComposer composer,
-        Func<Guid, Guid, CancellationToken, Task<Tooba.Returns.Application.ReturnSnapshot>> action,
+        Func<Guid, Guid, CancellationToken, Task<Tooba.Returns.Application.Models.ReturnSnapshot>> action,
         CancellationToken cancellationToken)
     {
         try

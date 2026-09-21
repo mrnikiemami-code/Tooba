@@ -13,7 +13,7 @@ namespace Tooba.Fulfillment.Infrastructure.Persistence.Migrations
         {
             modelBuilder.HasDefaultSchema("fulfillment");
 
-            modelBuilder.Entity("Tooba.Fulfillment.Domain.ConsolidatedPackage", b =>
+            modelBuilder.Entity("Tooba.Fulfillment.Domain.Aggregates.ConsolidatedPackage", b =>
                 {
                     b.Property<Guid>("ConsolidatedPackageId")
                         .HasColumnType("uuid");
@@ -77,7 +77,7 @@ namespace Tooba.Fulfillment.Infrastructure.Persistence.Migrations
                     b.ToTable("consolidated_packages", "fulfillment");
                 });
 
-            modelBuilder.Entity("Tooba.Fulfillment.Domain.ConsolidatedPackageMember", b =>
+            modelBuilder.Entity("Tooba.Fulfillment.Domain.Aggregates.ConsolidatedPackageMember", b =>
                 {
                     b.Property<Guid>("ConsolidatedPackageMemberId")
                         .HasColumnType("uuid");

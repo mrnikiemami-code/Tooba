@@ -11,6 +11,8 @@ using Tooba.Payment.Application.Models;
 using Tooba.Payment.Application.Ports;
 using Tooba.Order.Infrastructure.Persistence;
 using Tooba.Persistence;
+using Tooba.Order.Contracts.Fulfillment;
+using Tooba.Order.Contracts.Returns;
 
 namespace Tooba.Order.Infrastructure;
 

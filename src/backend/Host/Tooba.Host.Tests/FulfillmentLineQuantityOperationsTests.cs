@@ -1,4 +1,5 @@
-using Tooba.Fulfillment.Domain;
+using Tooba.Fulfillment.Domain.Aggregates;
+using Tooba.Fulfillment.Domain.ValueObjects;
 using Xunit;
 
 namespace Tooba.Host.Tests;
@@ -9,8 +10,7 @@ public sealed class FulfillmentLineQuantityOperationsTests
     private static FulfillmentUnit CreateUnit(params (Guid LineId, decimal Qty)[] lines)
     {
         var now = DateTimeOffset.Parse("2026-09-07T06:00:00Z");
-        var unit = FulfillmentUnit.CreateFromPaidOrder(
-            Guid.NewGuid(),
+        var unit = FulfillmentUnit.CreateFromPaidOrder(Guid.NewGuid(), () => Guid.NewGuid(), Guid.NewGuid(),
             Guid.NewGuid(),
             Guid.NewGuid(),
             Guid.NewGuid(),
@@ -71,7 +71,7 @@ public sealed class FulfillmentLineQuantityOperationsTests
         var unit = CreateUnit((line, 3));
         var now = DateTimeOffset.UtcNow;
         unit.PackSelections([(line, 3)], now);
-        _ = unit.CreateShipment("پست", [(line, 2)], now);
+        _ = unit.CreateShipment(Guid.NewGuid(), () => Guid.NewGuid(), "پست", [(line, 2)], now);
         var ex = Assert.Throws<InvalidOperationException>(() => unit.UnpackSelections([(line, 2)], now));
         Assert.Contains("تخصیص", ex.Message, StringComparison.Ordinal);
         Assert.Equal(3, unit.Items.Single().QuantityPacked);
@@ -84,8 +84,8 @@ public sealed class FulfillmentLineQuantityOperationsTests
         var unit = CreateUnit((line, 5));
         var now = DateTimeOffset.UtcNow;
         unit.PackSelections([(line, 5)], now);
-        var s1 = unit.CreateShipment("پست", [(line, 2)], now);
-        var s2 = unit.CreateShipment("تیپاکس", [(line, 3)], now);
+        var s1 = unit.CreateShipment(Guid.NewGuid(), () => Guid.NewGuid(), "پست", [(line, 2)], now);
+        var s2 = unit.CreateShipment(Guid.NewGuid(), () => Guid.NewGuid(), "تیپاکس", [(line, 3)], now);
         Assert.Equal(2, unit.Shipments.Count);
         Assert.Equal(2, s1.Items.Single().Quantity);
         Assert.Equal(3, s2.Items.Single().Quantity);
@@ -98,8 +98,8 @@ public sealed class FulfillmentLineQuantityOperationsTests
         var unit = CreateUnit((line, 2));
         var now = DateTimeOffset.UtcNow;
         unit.PackSelections([(line, 2)], now);
-        _ = unit.CreateShipment("A", [(line, 2)], now);
-        var ex = Assert.Throws<InvalidOperationException>(() => unit.CreateShipment("B", [(line, 1)], now));
+        _ = unit.CreateShipment(Guid.NewGuid(), () => Guid.NewGuid(), "A", [(line, 2)], now);
+        var ex = Assert.Throws<InvalidOperationException>(() => unit.CreateShipment(Guid.NewGuid(), () => Guid.NewGuid(), "B", [(line, 1)], now));
         Assert.Contains("باقیمانده", ex.Message, StringComparison.Ordinal);
     }
 
@@ -110,10 +110,10 @@ public sealed class FulfillmentLineQuantityOperationsTests
         var unit = CreateUnit((line, 2));
         var now = DateTimeOffset.UtcNow;
         unit.PackSelections([(line, 2)], now);
-        var shipment = unit.CreateShipment("A", [(line, 2)], now);
+        var shipment = unit.CreateShipment(Guid.NewGuid(), () => Guid.NewGuid(), "A", [(line, 2)], now);
         unit.CancelShipment(shipment.ShipmentId, now);
         Assert.Equal(ShipmentStatus.Cancelled, unit.Shipments.Single().Status);
-        var again = unit.CreateShipment("B", [(line, 2)], now);
+        var again = unit.CreateShipment(Guid.NewGuid(), () => Guid.NewGuid(), "B", [(line, 2)], now);
         Assert.Equal(ShipmentStatus.Created, again.Status);
     }
 
@@ -124,7 +124,7 @@ public sealed class FulfillmentLineQuantityOperationsTests
         var unit = CreateUnit((line, 1));
         var now = DateTimeOffset.UtcNow;
         unit.PackSelections([(line, 1)], now);
-        var shipment = unit.CreateShipment("A", [(line, 1)], now);
+        var shipment = unit.CreateShipment(Guid.NewGuid(), () => Guid.NewGuid(), "A", [(line, 1)], now);
         unit.AssignTracking(shipment.ShipmentId, "TRK-1", now);
         unit.ApplyShipmentDispatched(shipment.ShipmentId, now);
         var ex = Assert.Throws<InvalidOperationException>(() => unit.CancelShipment(shipment.ShipmentId, now));

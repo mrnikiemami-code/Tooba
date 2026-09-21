@@ -1,10 +1,10 @@
-using Tooba.Returns.Application;
+using Tooba.Returns.Contracts.Settlement;
 using Tooba.Settlement.Application;
 
 namespace Tooba.Settlement.Infrastructure;
 
 /// <summary>
-/// پل snapshot refund برای Settlement از درز Returns.Application.
+/// پل snapshot refund برای Settlement از درز Returns.Contracts.Settlement.
 /// </summary>
 public sealed class SettlementReturnsBridge : ISettlementReturnsReader
 {

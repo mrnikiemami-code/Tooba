@@ -1,4 +1,6 @@
-using Tooba.Fulfillment.Application;
+using Tooba.Fulfillment.Application.Ports;
+using Tooba.Fulfillment.Application.Models;
+using Tooba.Fulfillment.Application.Shipping;
 
 namespace Tooba.Host.Storefront;
 

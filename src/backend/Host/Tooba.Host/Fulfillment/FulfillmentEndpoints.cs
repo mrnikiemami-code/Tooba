@@ -4,7 +4,9 @@ using Tooba.BuildingBlocks;
 using Tooba.BuildingBlocks.Grid;
 using Tooba.Cart.Application;
 using Tooba.Cart.Contracts;
-using Tooba.Fulfillment.Application;
+using Tooba.Fulfillment.Application.Ports;
+using Tooba.Fulfillment.Application.Models;
+using Tooba.Fulfillment.Application.Shipping;
 using Tooba.Host.Admin;
 using Tooba.Host.Seller;
 using Tooba.Host.Storefront;
@@ -169,7 +171,7 @@ public static class FulfillmentEndpoints
         IHostEnvironment environment,
         Guid fulfillmentId,
         FulfillmentPanelComposer composer,
-        Func<Guid, Guid, CancellationToken, Task<Tooba.Fulfillment.Application.FulfillmentSnapshot>> action,
+        Func<Guid, Guid, CancellationToken, Task<Tooba.Fulfillment.Application.Models.FulfillmentSnapshot>> action,
         CancellationToken cancellationToken)
     {
         try

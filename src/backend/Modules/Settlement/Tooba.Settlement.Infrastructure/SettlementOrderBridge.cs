@@ -1,10 +1,10 @@
-using Tooba.Order.Application;
+using Tooba.Order.Contracts.Returns;
 using Tooba.Settlement.Application;
 
 namespace Tooba.Settlement.Infrastructure;
 
 /// <summary>
-/// پل snapshot سفارش برای Settlement از درز Order.Application.
+/// پل snapshot سفارش برای Settlement از درز Order.Contracts.Returns.
 /// </summary>
 public sealed class SettlementOrderBridge : ISettlementOrderReader
 {

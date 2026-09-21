@@ -1,7 +1,9 @@
 using Tooba.Host.Admin;
 using Tooba.Host.Returns;
-using Tooba.Returns.Application;
-using Tooba.Returns.Domain;
+using Tooba.Returns.Application.Ports;
+using Tooba.Returns.Application.Models;
+using Tooba.Returns.Domain.Aggregates;
+using Tooba.Returns.Domain.ValueObjects;
 using Xunit;
 
 namespace Tooba.Host.Tests;

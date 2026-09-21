@@ -2,8 +2,11 @@ using Microsoft.EntityFrameworkCore;
 using Tooba.BuildingBlocks.Grid;
 using Tooba.Catalog.Domain;
 using Tooba.Catalog.Infrastructure.Persistence;
-using Tooba.Fulfillment.Application;
-using Tooba.Fulfillment.Domain;
+using Tooba.Fulfillment.Application.Ports;
+using Tooba.Fulfillment.Application.Models;
+using Tooba.Fulfillment.Application.Shipping;
+using Tooba.Fulfillment.Domain.Aggregates;
+using Tooba.Fulfillment.Domain.ValueObjects;
 using Tooba.Host.Grid;
 using Tooba.Offer.Contracts.Dtos;
 using Tooba.Offer.Contracts.Ports;
@@ -12,7 +15,8 @@ using Tooba.Order.Domain;
 using Tooba.Order.Infrastructure.Persistence;
 using Tooba.Party.Infrastructure.Persistence;
 using Tooba.Payment.Application.Ports;
-using Tooba.Returns.Domain;
+using Tooba.Returns.Domain.Aggregates;
+using Tooba.Returns.Domain.ValueObjects;
 using Tooba.Returns.Infrastructure.Persistence;
 using Tooba.Settlement.Application;
 using Tooba.Settlement.Domain;
@@ -166,8 +170,8 @@ public sealed class AdminPanelComposer
         var allShipmentIds = fulfillments.SelectMany(f => f.Shipments.Select(s => s.ShipmentId)).Distinct().ToArray();
         var memberships = await _fulfillment.GetActiveMembershipByShipmentIdsAsync(allShipmentIds, cancellationToken);
         var membershipByShipment = memberships
-            .Where(m => m.PackageStatus is Tooba.Fulfillment.Domain.ConsolidatedPackageStatus.Created
-                or Tooba.Fulfillment.Domain.ConsolidatedPackageStatus.Dispatched)
+            .Where(m => m.PackageStatus is Tooba.Fulfillment.Domain.ValueObjects.ConsolidatedPackageStatus.Created
+                or Tooba.Fulfillment.Domain.ValueObjects.ConsolidatedPackageStatus.Dispatched)
             .ToDictionary(m => m.ShipmentId);
         var memberOfAnyPackage = memberships.ToDictionary(m => m.ShipmentId);
         var multiSeller = group.SellerOrders.Select(x => x.SellerPartyId).Distinct().Count() >= 2;
@@ -193,7 +197,7 @@ public sealed class AdminPanelComposer
                 packedByLine.TryGetValue(line.LineId, out var packed);
                 processingByLine.TryGetValue(line.LineId, out var processing);
                 var openAllocated = fulfillment?.Shipments
-                    .Where(s => s.Status == Tooba.Fulfillment.Domain.ShipmentStatus.Created)
+                    .Where(s => s.Status == Tooba.Fulfillment.Domain.ValueObjects.ShipmentStatus.Created)
                     .SelectMany(s => s.Items)
                     .Where(i => i.OrderLineId == line.LineId)
                     .Sum(i => i.Quantity) ?? 0;
@@ -234,7 +238,7 @@ public sealed class AdminPanelComposer
             {
                 membershipByShipment.TryGetValue(s.ShipmentId, out var membership);
                 var canAdd = multiSeller
-                    && s.Status == Tooba.Fulfillment.Domain.ShipmentStatus.Created
+                    && s.Status == Tooba.Fulfillment.Domain.ValueObjects.ShipmentStatus.Created
                     && s.DispatchedAt is null
                     && !string.IsNullOrWhiteSpace(s.ShippingMethodCode)
                     && !memberOfAnyPackage.ContainsKey(s.ShipmentId);

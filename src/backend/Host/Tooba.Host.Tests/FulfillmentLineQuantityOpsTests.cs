@@ -1,5 +1,6 @@
 using System.Collections.Generic;
-using Tooba.Fulfillment.Domain;
+using Tooba.Fulfillment.Domain.Aggregates;
+using Tooba.Fulfillment.Domain.ValueObjects;
 using Xunit;
 
 namespace Tooba.Host.Tests;
@@ -9,8 +10,7 @@ public sealed class FulfillmentLineQuantityOpsTests
 {
     private static FulfillmentUnit CreateUnit(Guid orderLineId, decimal quantity, DateTimeOffset now)
     {
-        var unit = FulfillmentUnit.CreateFromPaidOrder(
-            Guid.NewGuid(),
+        var unit = FulfillmentUnit.CreateFromPaidOrder(Guid.NewGuid(), () => Guid.NewGuid(), Guid.NewGuid(),
             Guid.NewGuid(),
             Guid.NewGuid(),
             Guid.NewGuid(),
@@ -81,7 +81,7 @@ public sealed class FulfillmentLineQuantityOpsTests
         var now = DateTimeOffset.UtcNow;
         var unit = CreateUnit(lineId, 3, now);
         unit.PackSelections([(lineId, 3)], now);
-        _ = unit.CreateShipment("پست", [(lineId, 2)], now);
+        _ = unit.CreateShipment(Guid.NewGuid(), () => Guid.NewGuid(), "پست", [(lineId, 2)], now);
         var ex = Assert.Throws<InvalidOperationException>(() => unit.UnpackSelections([(lineId, 2)], now));
         Assert.Contains("تخصیص", ex.Message, StringComparison.Ordinal);
         Assert.Equal(3, unit.Items.Single().QuantityPacked);
@@ -94,13 +94,13 @@ public sealed class FulfillmentLineQuantityOpsTests
         var now = DateTimeOffset.UtcNow;
         var unit = CreateUnit(lineId, 5, now);
         unit.PackSelections([(lineId, 5)], now);
-        var first = unit.CreateShipment("پست", [(lineId, 2)], now);
-        var second = unit.CreateShipment("تیپاکس", [(lineId, 3)], now);
+        var first = unit.CreateShipment(Guid.NewGuid(), () => Guid.NewGuid(), "پست", [(lineId, 2)], now);
+        var second = unit.CreateShipment(Guid.NewGuid(), () => Guid.NewGuid(), "تیپاکس", [(lineId, 3)], now);
         Assert.Equal(2, unit.Shipments.Count);
         unit.CancelShipment(first.ShipmentId, now);
         Assert.Equal(ShipmentStatus.Cancelled, first.Status);
         Assert.Equal(ShipmentStatus.Created, second.Status);
-        var again = unit.CreateShipment("پیک", [(lineId, 2)], now);
+        var again = unit.CreateShipment(Guid.NewGuid(), () => Guid.NewGuid(), "پیک", [(lineId, 2)], now);
         Assert.Equal(3, unit.Shipments.Count);
         Assert.Equal(2, again.Items.Single().Quantity);
     }
@@ -112,7 +112,7 @@ public sealed class FulfillmentLineQuantityOpsTests
         var now = DateTimeOffset.UtcNow;
         var unit = CreateUnit(lineId, 1, now);
         unit.PackSelections([(lineId, 1)], now);
-        var shipment = unit.CreateShipment("پست", [(lineId, 1)], now);
+        var shipment = unit.CreateShipment(Guid.NewGuid(), () => Guid.NewGuid(), "پست", [(lineId, 1)], now);
         unit.AssignTracking(shipment.ShipmentId, "TRK-1", now);
         unit.ApplyShipmentDispatched(shipment.ShipmentId, now);
         var ex = Assert.Throws<InvalidOperationException>(() => unit.CancelShipment(shipment.ShipmentId, now));
@@ -126,7 +126,7 @@ public sealed class FulfillmentLineQuantityOpsTests
         var now = DateTimeOffset.UtcNow;
         var unit = CreateUnit(lineId, 2, now);
         var ex = Assert.Throws<InvalidOperationException>(() =>
-            unit.CreateShipment("پست", [(lineId, 1)], now));
+            unit.CreateShipment(Guid.NewGuid(), () => Guid.NewGuid(), "پست", [(lineId, 1)], now));
         Assert.Contains("بسته‌بندی", ex.Message, StringComparison.Ordinal);
     }
 
@@ -149,7 +149,7 @@ public sealed class FulfillmentLineQuantityOpsTests
         var now = DateTimeOffset.UtcNow;
         var unit = CreateUnit(lineId, 2, now);
         unit.PackSelections([(lineId, 2)], now);
-        var shipment = unit.CreateShipment("پست", [(lineId, 2)], now);
+        var shipment = unit.CreateShipment(Guid.NewGuid(), () => Guid.NewGuid(), "پست", [(lineId, 2)], now);
         unit.AssignTracking(shipment.ShipmentId, "TRK-1", now);
         unit.AbortForOrderCancel(now);
         Assert.Equal(FulfillmentStatus.Cancelled, unit.Status);
@@ -170,7 +170,7 @@ public sealed class FulfillmentLineQuantityOpsTests
         Assert.Equal(replacementReservation, unit.Items.Single().ReservationId);
         unit.MarkProcessing(now.AddMinutes(3));
         unit.PackSelections([(lineId, 2)], now.AddMinutes(3));
-        var replacement = unit.CreateShipment("پست", [(lineId, 2)], now.AddMinutes(4));
+        var replacement = unit.CreateShipment(Guid.NewGuid(), () => Guid.NewGuid(), "پست", [(lineId, 2)], now.AddMinutes(4));
         Assert.Equal(ShipmentStatus.Created, replacement.Status);
         Assert.Equal(2, unit.Shipments.Count);
     }
@@ -182,7 +182,7 @@ public sealed class FulfillmentLineQuantityOpsTests
         var now = DateTimeOffset.UtcNow;
         var unit = CreateUnit(lineId, 1, now);
         unit.PackSelections([(lineId, 1)], now);
-        var shipment = unit.CreateShipment("پست", [(lineId, 1)], now);
+        var shipment = unit.CreateShipment(Guid.NewGuid(), () => Guid.NewGuid(), "پست", [(lineId, 1)], now);
         unit.AssignTracking(shipment.ShipmentId, "TRK-1", now);
         unit.ApplyShipmentDispatched(shipment.ShipmentId, now);
         var ex = Assert.Throws<InvalidOperationException>(() => unit.AbortForOrderCancel(now));
@@ -197,7 +197,7 @@ public sealed class FulfillmentLineQuantityOpsTests
         var now = DateTimeOffset.UtcNow;
         var unit = CreateUnit(lineId, 1.25m, now);
         unit.PackSelections([(lineId, 0.50m)], now);
-        var first = unit.CreateShipment("پست", [(lineId, 0.50m)], now);
+        var first = unit.CreateShipment(Guid.NewGuid(), () => Guid.NewGuid(), "پست", [(lineId, 0.50m)], now);
         unit.AssignTracking(first.ShipmentId, "TRK-A", now);
         unit.ApplyShipmentDispatched(first.ShipmentId, now);
         Assert.Equal(FulfillmentStatus.Dispatched, unit.Status);
@@ -205,7 +205,7 @@ public sealed class FulfillmentLineQuantityOpsTests
 
         unit.PackSelections([(lineId, 0.75m)], now);
         Assert.Equal(1.25m, unit.Items.Single().QuantityPacked);
-        var second = unit.CreateShipment("پست", [(lineId, 0.75m)], now);
+        var second = unit.CreateShipment(Guid.NewGuid(), () => Guid.NewGuid(), "پست", [(lineId, 0.75m)], now);
         Assert.Equal(2, unit.Shipments.Count);
         unit.AssignTracking(second.ShipmentId, "TRK-B", now);
         unit.ApplyShipmentDispatched(second.ShipmentId, now);

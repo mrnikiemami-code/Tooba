@@ -1,9 +1,17 @@
-using Tooba.Fulfillment.Application;
-using Tooba.Fulfillment.Domain;
+using Tooba.Fulfillment.Application.Ports;
+using Tooba.Fulfillment.Application.Models;
+using Tooba.Fulfillment.Application.Shipping;
+using Tooba.Fulfillment.Domain.Aggregates;
+using Tooba.Fulfillment.Domain.ValueObjects;
 using Tooba.Order.Domain;
-using Tooba.Returns.Application;
-using Tooba.Returns.Infrastructure;
+using Tooba.Returns.Application.Ports;
+using Tooba.Returns.Application.Models;
+using Tooba.Returns.Infrastructure.Directories;
+using Tooba.Returns.Infrastructure.Evaluators;
+using Tooba.Returns.Infrastructure.Observability;
+using Tooba.Returns.Infrastructure.Bridges;
 using Xunit;
+using Tooba.Fulfillment.Contracts.Returns;
 
 namespace Tooba.Host.Tests;
 
@@ -67,8 +75,7 @@ public sealed class SplitDeliveryReturnClockTests
     {
         var now = DateTimeOffset.UtcNow;
         var lineId = Guid.NewGuid();
-        var unit = FulfillmentUnit.CreateFromPaidOrder(
-            Guid.NewGuid(),
+        var unit = FulfillmentUnit.CreateFromPaidOrder(Guid.NewGuid(), () => Guid.NewGuid(), Guid.NewGuid(),
             Guid.NewGuid(),
             Guid.NewGuid(),
             Guid.NewGuid(),
@@ -87,7 +94,7 @@ public sealed class SplitDeliveryReturnClockTests
         var meta = ShippingProviderMetadataValidator.ValidateAndNormalize(
             "post",
             """{"recipientName":"گیرنده","destinationAddress":"آدرس","recipientPhone":"09120000000","postalCode":"1234567890"}""");
-        var shipment = unit.CreateShipment("پست", [(lineId, 2)], now, "post", "پست", meta, 1);
+        var shipment = unit.CreateShipment(Guid.NewGuid(), () => Guid.NewGuid(), "پست", [(lineId, 2)], now, "post", "پست", meta, 1);
         Assert.Equal("post", shipment.ShippingMethodCode);
         Assert.Equal("پست", shipment.ShippingMethodLabel);
         Assert.Contains("گیرنده", shipment.ProviderMetadataJson);

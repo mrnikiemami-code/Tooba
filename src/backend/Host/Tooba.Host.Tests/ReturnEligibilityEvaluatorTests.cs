@@ -1,8 +1,11 @@
+using Tooba.BuildingBlocks;
 using Microsoft.EntityFrameworkCore;
-using Tooba.Fulfillment.Application;
-using Tooba.Order.Application;
-using Tooba.Returns.Application;
-using Tooba.Returns.Infrastructure;
+using Tooba.Fulfillment.Contracts.Returns;
+using Tooba.Order.Contracts.Returns;
+using Tooba.Returns.Application.Models;
+using Tooba.Returns.Application.Ports;
+using Tooba.Returns.Infrastructure.Evaluators;
+using Tooba.Returns.Infrastructure.Persistence;
 using Xunit;
 
 namespace Tooba.Host.Tests;
@@ -32,7 +35,8 @@ public sealed class ReturnEligibilityEvaluatorTests
                 sellerOrderId,
                 new Dictionary<Guid, decimal> { [lineId] = 2 },
                 deliveredAt)),
-            CreateEmptyReturnsDb());
+            CreateEmptyReturnsDb(),
+            new SystemUtcClock());
 
         var result = await evaluator.EvaluateAsync(sellerOrderId, CancellationToken.None);
         Assert.True(result.Eligible);
@@ -61,7 +65,8 @@ public sealed class ReturnEligibilityEvaluatorTests
                 sellerOrderId,
                 new Dictionary<Guid, decimal> { [lineId] = 1 },
                 deliveredAt)),
-            CreateEmptyReturnsDb());
+            CreateEmptyReturnsDb(),
+            new SystemUtcClock());
 
         var result = await evaluator.EvaluateAsync(sellerOrderId, CancellationToken.None);
         Assert.False(result.Eligible);
@@ -88,7 +93,8 @@ public sealed class ReturnEligibilityEvaluatorTests
                 sellerOrderId,
                 new Dictionary<Guid, decimal> { [lineId] = 1 },
                 deliveredAt)),
-            CreateEmptyReturnsDb());
+            CreateEmptyReturnsDb(),
+            new SystemUtcClock());
 
         var result = await evaluator.EvaluateAsync(sellerOrderId, CancellationToken.None);
         Assert.False(result.Eligible);
@@ -107,6 +113,7 @@ public sealed class ReturnEligibilityEvaluatorTests
             "Modules",
             "Returns",
             "Tooba.Returns.Infrastructure",
+            "Evaluators",
             "ReturnEligibilityEvaluator.cs"));
         Assert.DoesNotContain("ISettlement", source, StringComparison.OrdinalIgnoreCase);
         Assert.DoesNotContain("SettlementDirectory", source, StringComparison.OrdinalIgnoreCase);
@@ -114,12 +121,12 @@ public sealed class ReturnEligibilityEvaluatorTests
         Assert.Contains("ReturnWindow", source, StringComparison.Ordinal);
     }
 
-    private static Tooba.Returns.Infrastructure.Persistence.ReturnsDbContext CreateEmptyReturnsDb()
+    private static ReturnsDbContext CreateEmptyReturnsDb()
     {
-        var options = new Microsoft.EntityFrameworkCore.DbContextOptionsBuilder<Tooba.Returns.Infrastructure.Persistence.ReturnsDbContext>()
+        var options = new DbContextOptionsBuilder<ReturnsDbContext>()
             .UseInMemoryDatabase(Guid.NewGuid().ToString("N"))
             .Options;
-        return new Tooba.Returns.Infrastructure.Persistence.ReturnsDbContext(options);
+        return new ReturnsDbContext(options);
     }
 
     private static string FindRepoRoot()

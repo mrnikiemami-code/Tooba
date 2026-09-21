@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -6,6 +6,7 @@ using Tooba.BuildingBlocks;
 using Tooba.ModuleContracts;
 using Tooba.Payment.Application.Models;
 using Tooba.Payment.Application.Ports;
+using Tooba.Payment.Contracts.Returns;
 using Tooba.Payment.Infrastructure.Persistence;
 using Tooba.Persistence;
 
@@ -44,6 +45,7 @@ public sealed class PaymentModule : IToobaModule
         services.AddScoped<IPaymentWebhookHandler, PaymentWebhookHandler>();
         services.AddScoped<IPaymentHoldSettingsDirectory, PaymentHoldSettingsDirectory>();
         services.AddScoped<IPaymentQueryDirectory, PaymentQueryDirectory>();
+        services.AddScoped<IPaymentReturnReader, PaymentReturnBridge>();
 
         if (environment.IsProduction())
         {
