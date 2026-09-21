@@ -31,7 +31,7 @@ Checkout-State: PAUSED_AT_SAFE_W5_CHECKPOINT
 Capability-Map: docs/architecture/TOOBA-CAPABILITY-MAP.md updated; next is TB-TMAR-NEXT-MODULE-BATCH-001
 Master-Recovery-State: docs/architecture/TOOBA-TMAR-MASTER-RECOVERY.md updated; USER_REVIEW_OFFER pricing gate removed
 Recovery-SoT: docs/evidence/TB-TMAR-REFBATCH-TP-001/recovery-sot.md
-Git: becd879810cab404d9b4019c52f9fecb1c253748
+Git: b197f531696a80a0dd091b19db12bd8bb7262c39
 Blockers:
 User-Work-Preserved: yes — stashes untouched, .rar untouched, no reset/clean
 Module-Recovery-State: REFERENCE_BATCH_COMPLETE
