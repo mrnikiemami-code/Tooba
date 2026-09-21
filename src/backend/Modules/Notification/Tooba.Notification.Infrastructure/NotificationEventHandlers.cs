@@ -2,7 +2,9 @@ using Tooba.Payment.Application.Ports;
 using Tooba.BuildingBlocks;
 using Tooba.Fulfillment.Application;
 using Tooba.Notification.Application;
-using Tooba.Notification.Domain;
+using Tooba.Notification.Contracts.Commands;
+using Tooba.Notification.Contracts.Dtos;
+using Tooba.Notification.Contracts.Routes;
 using Tooba.Order.Application;
 using Tooba.Returns.Application;
 

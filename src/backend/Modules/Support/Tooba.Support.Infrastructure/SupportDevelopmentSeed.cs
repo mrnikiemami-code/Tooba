@@ -1,7 +1,9 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Tooba.Notification.Application;
-using Tooba.Notification.Domain;
+using Tooba.Notification.Contracts.Commands;
+using Tooba.Notification.Contracts.Dtos;
+using Tooba.Notification.Contracts.Routes;
 using Tooba.Support.Domain;
 using Tooba.Support.Infrastructure.Persistence;
 

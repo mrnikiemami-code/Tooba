@@ -1,18 +1,7 @@
 using Tooba.BuildingBlocks;
+using Tooba.Notification.Contracts.Dtos;
 
 namespace Tooba.Notification.Domain;
-
-/// <summary>
-/// نوع گیرندهٔ اعلان تراکنشی. با نقش Identity یکی نیست.
-/// </summary>
-public enum NotificationRecipientKind
-{
-    /// <summary>خریدار / مشتری.</summary>
-    Customer = 1,
-
-    /// <summary>فروشندهٔ مالک سفارش یا رویداد.</summary>
-    Seller = 2,
-}
 
 /// <summary>
 /// اعلان پایدار تراکنشی. لاگ فنی، audit یا analytics نیست.

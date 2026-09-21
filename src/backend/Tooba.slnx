@@ -54,6 +54,7 @@
     <Project Path="Modules/Settlement/Tooba.Settlement.Domain/Tooba.Settlement.Domain.csproj" />
     <Project Path="Modules/Settlement/Tooba.Settlement.Application/Tooba.Settlement.Application.csproj" />
     <Project Path="Modules/Settlement/Tooba.Settlement.Infrastructure/Tooba.Settlement.Infrastructure.csproj" />
+    <Project Path="Modules/Notification/Tooba.Notification.Contracts/Tooba.Notification.Contracts.csproj" />
     <Project Path="Modules/Notification/Tooba.Notification.Domain/Tooba.Notification.Domain.csproj" />
     <Project Path="Modules/Notification/Tooba.Notification.Application/Tooba.Notification.Application.csproj" />
     <Project Path="Modules/Notification/Tooba.Notification.Infrastructure/Tooba.Notification.Infrastructure.csproj" />

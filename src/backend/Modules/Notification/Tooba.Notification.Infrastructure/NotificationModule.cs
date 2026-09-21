@@ -7,6 +7,7 @@ using Tooba.BuildingBlocks;
 using Tooba.Fulfillment.Application;
 using Tooba.ModuleContracts;
 using Tooba.Notification.Application;
+using Tooba.Notification.Contracts.Ports;
 using Tooba.Notification.Infrastructure.Persistence;
 using Tooba.Persistence;
 using Tooba.Returns.Application;
@@ -32,6 +33,7 @@ public sealed class NotificationModule : IToobaModule
         services.AddSingleton<IOutboxModuleRegistration, NotificationOutboxRegistration>();
         services.AddScoped<NotificationDirectory>();
         services.AddScoped<INotificationDirectory>(sp => sp.GetRequiredService<NotificationDirectory>());
+        services.AddScoped<INotificationCreationPort>(sp => sp.GetRequiredService<NotificationDirectory>());
         services.AddScoped<NotificationProjector>();
 
         services.AddScoped<IIntegrationEventHandler<PaymentSucceededIntegrationEvent>, NotificationPaymentSucceededHandler>();

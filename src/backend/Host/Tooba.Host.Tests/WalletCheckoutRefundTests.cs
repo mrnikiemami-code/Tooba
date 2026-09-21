@@ -8,12 +8,12 @@ using Tooba.Promotion.Infrastructure.Directories;
 using Tooba.Inventory.Infrastructure.Messaging;
 using Tooba.Inventory.Infrastructure.Adapters;
 using Tooba.Inventory.Infrastructure.Directories;
-﻿using System.Collections.Concurrent;
+using System.Collections.Concurrent;
 using Microsoft.EntityFrameworkCore;
 using Testcontainers.PostgreSql;
-using Tooba.BuildingBlocks;
-using Tooba.Notification.Application;
-using Tooba.Notification.Domain;
+using Tooba.Notification.Contracts.Commands;
+using Tooba.Notification.Contracts.Copy;
+using Tooba.Notification.Contracts.Ports;
 using Tooba.Offer.Domain;
 using Tooba.Order.Domain;
 using Tooba.Inventory.Application.Ports;
@@ -100,9 +100,11 @@ public sealed class WalletCheckoutRefundTests : IAsyncLifetime
         Assert.Contains("WALLET_MIXED_TENDER", File.ReadAllText(Path.Combine(FindRepoRoot(),
             "src", "backend", "Host", "Tooba.Host", "Storefront", "StorefrontPaymentComposer.cs")), StringComparison.Ordinal);
         Assert.Contains("WalletPaymentSucceeded", File.ReadAllText(Path.Combine(FindRepoRoot(),
-            "src", "backend", "Modules", "Notification", "Tooba.Notification.Application", "NotificationContracts.cs")), StringComparison.Ordinal);
+            "src", "backend", "Modules", "Notification", "Tooba.Notification.Contracts", "Copy",
+            "NotificationSemanticTypes.cs")), StringComparison.Ordinal);
         Assert.Contains("WalletRefundCredited", File.ReadAllText(Path.Combine(FindRepoRoot(),
-            "src", "backend", "Modules", "Notification", "Tooba.Notification.Application", "NotificationContracts.cs")), StringComparison.Ordinal);
+            "src", "backend", "Modules", "Notification", "Tooba.Notification.Contracts", "Copy",
+            "NotificationSemanticTypes.cs")), StringComparison.Ordinal);
         Assert.Contains("refund_destination", File.ReadAllText(Path.Combine(FindRepoRoot(),
             "src", "backend", "Modules", "Returns", "Tooba.Returns.Infrastructure", "Persistence", "Migrations",
             "20260827200000_AddRefundDestination.cs")), StringComparison.Ordinal);
@@ -156,10 +158,10 @@ public sealed class WalletCheckoutRefundTests : IAsyncLifetime
         Assert.Equal(spend.Entry.EntryId, replay.Entry.EntryId);
         Assert.Equal(1, await walletDb.LedgerEntries.CountAsync(x => x.Type == LedgerEntryType.OrderPaymentDebit));
 
-        Assert.Contains(notifications.Commands, c => c.Type == NotificationCopy.WalletPaymentSucceeded);
-        var firstPayNote = notifications.Commands.First(c => c.Type == NotificationCopy.WalletPaymentSucceeded);
+        Assert.Contains(notifications.Commands, c => c.Type == NotificationSemanticTypes.WalletPaymentSucceeded);
+        var firstPayNote = notifications.Commands.First(c => c.Type == NotificationSemanticTypes.WalletPaymentSucceeded);
         var secondCreate = await notifications.CreateIfAbsentAsync(firstPayNote, CancellationToken.None);
-        Assert.Null(secondCreate);
+        Assert.False(secondCreate);
         Assert.Equal(1, notifications.Commands.Count(c => c.SourceEventId == firstPayNote.SourceEventId));
 
         await wallets.AdjustWalletForAdminAsync(
@@ -235,7 +237,7 @@ public sealed class WalletCheckoutRefundTests : IAsyncLifetime
             actor, 30_000m, "IRR", returnRequestId, $"wallet-refund-credit:{returnRequestId:D}", CancellationToken.None);
         Assert.True(creditReplay.IdempotentReplay);
         Assert.Equal(1, await walletDb.LedgerEntries.CountAsync(x => x.Type == LedgerEntryType.RefundCredit && x.SourceId == returnRequestId));
-        Assert.Contains(notifications.Commands, c => c.Type == NotificationCopy.WalletRefundCredited);
+        Assert.Contains(notifications.Commands, c => c.Type == NotificationSemanticTypes.WalletRefundCredited);
 
         var partialId = Guid.Parse("01900000-0000-7000-8000-000000000202");
         var partial = await wallets.CreditRefundAsync(
@@ -362,28 +364,17 @@ public sealed class WalletCheckoutRefundTests : IAsyncLifetime
         throw new InvalidOperationException("Repository root not found.");
     }
 
-    private sealed class RecordingNotifications : INotificationDirectory
+    private sealed class RecordingNotifications : INotificationCreationPort
     {
         public List<CreateNotificationCommand> Commands { get; } = [];
         private readonly ConcurrentDictionary<string, byte> _seen = new(StringComparer.Ordinal);
 
-        public Task<UserNotification?> CreateIfAbsentAsync(CreateNotificationCommand command, CancellationToken cancellationToken)
+        public Task<bool> CreateIfAbsentAsync(CreateNotificationCommand command, CancellationToken cancellationToken)
         {
             if (!_seen.TryAdd(command.SourceEventId, 1))
-                return Task.FromResult<UserNotification?>(null);
+                return Task.FromResult(false);
             Commands.Add(command);
-            return Task.FromResult<UserNotification?>(null);
+            return Task.FromResult(true);
         }
-
-        public Task<NotificationListPage> ListAsync(NotificationRecipientQuery query, CancellationToken cancellationToken) =>
-            throw new NotSupportedException();
-        public Task<long> UnreadCountAsync(NotificationRecipientKind recipientKind, Guid recipientPartyId, Guid? recipientActorUserId, CancellationToken cancellationToken) =>
-            throw new NotSupportedException();
-        public Task<bool> MarkReadAsync(Guid notificationId, NotificationRecipientKind recipientKind, Guid recipientPartyId, Guid? recipientActorUserId, CancellationToken cancellationToken) =>
-            throw new NotSupportedException();
-        public Task<int> MarkAllReadAsync(NotificationRecipientKind recipientKind, Guid recipientPartyId, Guid? recipientActorUserId, CancellationToken cancellationToken) =>
-            throw new NotSupportedException();
-        public Task<bool> SoftDeleteAsync(Guid notificationId, NotificationRecipientKind recipientKind, Guid recipientPartyId, Guid? recipientActorUserId, CancellationToken cancellationToken) =>
-            throw new NotSupportedException();
     }
 }

@@ -74,11 +74,13 @@ Current Repair Task:
 TMAR Module Recovery (Worker PASS — awaiting Architect):
 
 ```text
-TB-TMAR-NEXT-MODULE-BATCH-002 — Wallet+Payment golden recovery
+TB-TMAR-NEXT-MODULE-BATCH-002-R1 — Wallet Notification Boundary + Financial Behavior Preservation Closure
 Wallet-State: COMPLETE_REFERENCE_PATTERN
 Wallet-Physical-State: VERIFIED_ON_DISK_AND_NAMESPACE
+Wallet-Notification-Boundary: CONTRACTS_ONLY
 Payment-State: COMPLETE_REFERENCE_PATTERN
 Payment-Physical-State: VERIFIED_ON_DISK_AND_NAMESPACE
+Financial-Behavior-Preservation: VERIFIED
 Inventory-State: COMPLETE_REFERENCE_PATTERN
 Inventory-Physical-State: VERIFIED_ON_DISK_AND_NAMESPACE
 Promotion-State: COMPLETE_REFERENCE_PATTERN

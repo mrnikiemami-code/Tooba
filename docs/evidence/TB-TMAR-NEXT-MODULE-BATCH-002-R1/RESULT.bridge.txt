@@ -1,0 +1,137 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+
+BEGIN_TOOBA_WORKER_RESULT
+
+Task-ID:
+TB-TMAR-NEXT-MODULE-BATCH-002-R1
+
+Parent-Task:
+TB-TMAR-NEXT-MODULE-BATCH-002
+
+Channel:
+tooba-main
+
+WorkerId:
+tooba-worker-01
+
+AgentType:
+cursor
+
+Status:
+PASS
+
+Summary:
+Wallet Notification boundary closed: Wallet.Infra → Notification.Contracts only (INotificationCreationPort). Gift/admin/payment/refund notification semantics preserved. Behavior-preservation audit vs 2a7e171 VERIFIED (structural/intentional only; no accidental). Focused Wallet+Payment financial characterization tests green. Guards strengthened. Tax/Pricing/Checkout/frontend/BATCH-003 untouched.
+
+Program-Name:
+TMAR — Tooba Microservice-Ready Architecture Recovery
+
+Track:
+REFERENCE_BATCH_REPAIR
+
+Recovery-Start:
+docs/evidence/TB-TMAR-NEXT-MODULE-BATCH-002-R1/recovery-start.md — Claim f7bd350a-ec1f-4e05-ba31-73780df4d1c3; baseline tip 7557f0e0; pre-BATCH-002 2a7e171e
+
+Notification-Boundary-Audit:
+docs/evidence/TB-TMAR-NEXT-MODULE-BATCH-002-R1/notification-boundary-audit.md — Wallet.Infra no longer refs Notification.Application/Domain/Infrastructure
+
+Notification-Contract-Repair:
+Created Tooba.Notification.Contracts (Commands/Copy/Dtos/Ports/Routes); NotificationDirectory implements INotificationCreationPort; DI registers Contracts port; Application keeps INotificationDirectory + localized NotificationCopy aliases to Contracts semantic types
+
+Wallet-Notification-Behavior:
+Four Wallet CreateIfAbsent paths preserved: gift redeem, admin adjust, payment succeeded, refund credited — same Type strings, Customer recipient, CustomerWallet route, SourceEventId/SourceType patterns
+
+Behavior-Preservation-Audit:
+docs/evidence/TB-TMAR-NEXT-MODULE-BATCH-002-R1/behavior-preservation-audit.md — all listed Wallet/Payment flows PRESERVED; accidental=0
+
+Wallet-Financial-Parity:
+Idempotency, Serializable spend/refund, insufficient-balance code, currency checks, notification side effects — PRESERVED vs 2a7e171 markers
+
+Payment-Financial-Parity:
+Initiate/verify/refund/manual/webhook inbox/hold-query/Wallet gateway ComposeReference+idempotency key/outbox — PRESERVED (structural BATCH-002 + R1 no payment logic edits beyond tests/guards)
+
+Focused-Financial-Tests:
+docs/evidence/TB-TMAR-NEXT-MODULE-BATCH-002-R1/focused-financial-tests.md — Wallet.Tests 13/13; Payment.Tests 9/9
+
+Wallet-Guards:
+WalletArchitectureGuardTests + Infrastructure_references_Notification_Contracts_only
+
+Payment-Guards:
+PaymentArchitectureGuardTests — Wallet.Contracts only (unchanged requirement)
+
+Notification-Guards:
+NotificationContractsArchitectureGuardTests — no App/Domain/Infra refs; Contracts namespace + physical layout
+
+Focused-Validation:
+dotnet test Tooba.Wallet.Tests → 13 passed; dotnet test Tooba.Payment.Tests → 9 passed; Notification.Infrastructure build OK
+
+Skipped-Validation:
+Broad Host suite; Notification full integration suite (DI wiring covered by compile); frontend; Tax/Pricing; Checkout; BATCH-003
+
+Full-Validation:
+dotnet build src/backend/Tooba.slnx → succeeded
+
+AntiPattern-Gate:
+TypeForwardedTo=0; no service locator; no wrapper duplicate types; Wallet→Notification Application/Domain/Infrastructure refs=0
+
+Residual-Defects:
+NONE for R1 scope. Support still may reference Notification.Application (out of R1 Wallet boundary scope). Tax/Pricing deferred. Checkout paused W5.
+
+Wallet-State:
+COMPLETE_REFERENCE_PATTERN
+
+Wallet-Physical-State:
+VERIFIED_ON_DISK_AND_NAMESPACE
+
+Wallet-Notification-Boundary:
+CONTRACTS_ONLY
+
+Payment-State:
+COMPLETE_REFERENCE_PATTERN
+
+Payment-Physical-State:
+VERIFIED_ON_DISK_AND_NAMESPACE
+
+Financial-Behavior-Preservation:
+VERIFIED
+
+Foundation-State:
+RESULT_PATTERN_FOUNDATION_COMPLETE
+
+Offer-State:
+COMPLETE_REFERENCE_PATTERN
+
+Inventory-State:
+COMPLETE_REFERENCE_PATTERN
+
+Promotion-State:
+COMPLETE_REFERENCE_PATTERN
+
+Tax-State:
+DEFERRED_PHYSICAL_REVIEW_BY_USER
+
+Pricing-State:
+DEFERRED_PHYSICAL_REVIEW_BY_USER
+
+Checkout-State:
+PAUSED_AT_SAFE_W5_CHECKPOINT
+
+Frontend-Production-Changes:
+NONE
+
+Git:
+PENDING_TIP_ALIGN
+
+Blockers:
+NONE
+
+User-Work-Preserved:
+YES — no stash/force-push; Tax/Pricing/Checkout/frontend untouched
+
+Module-Recovery-State:
+NEXT_REFERENCE_BATCH_002_COMPLETE
+
+Next-Recommended-Task:
+TB-TMAR-NEXT-MODULE-BATCH-003
+
+END_TOOBA_WORKER_RESULT

@@ -1,5 +1,9 @@
 using Microsoft.EntityFrameworkCore;
 using Tooba.Notification.Application;
+using Tooba.Notification.Contracts.Commands;
+using Tooba.Notification.Contracts.Dtos;
+using Tooba.Notification.Contracts.Ports;
+using Tooba.Notification.Contracts.Routes;
 using Tooba.Notification.Domain;
 using Tooba.Notification.Infrastructure.Persistence;
 
@@ -8,7 +12,7 @@ namespace Tooba.Notification.Infrastructure;
 /// <summary>
 /// پیاده‌سازی دایرکتوری اعلان با idempotency روی SourceEventId.
 /// </summary>
-public sealed class NotificationDirectory : INotificationDirectory
+public sealed class NotificationDirectory : INotificationDirectory, INotificationCreationPort
 {
     private readonly NotificationDbContext _db;
     private readonly NotificationInstrumentation _telemetry;
@@ -18,6 +22,15 @@ public sealed class NotificationDirectory : INotificationDirectory
     {
         _db = db;
         _telemetry = telemetry;
+    }
+
+    /// <inheritdoc />
+    async Task<bool> INotificationCreationPort.CreateIfAbsentAsync(
+        CreateNotificationCommand command,
+        CancellationToken cancellationToken)
+    {
+        var created = await CreateIfAbsentAsync(command, cancellationToken);
+        return created is not null;
     }
 
     /// <inheritdoc />

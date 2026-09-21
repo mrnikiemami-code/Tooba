@@ -1,6 +1,8 @@
 using Microsoft.EntityFrameworkCore;
 using Tooba.Notification.Application;
-using Tooba.Notification.Domain;
+using Tooba.Notification.Contracts.Commands;
+using Tooba.Notification.Contracts.Dtos;
+using Tooba.Notification.Contracts.Routes;
 using Tooba.Support.Application;
 using Tooba.Support.Domain;
 using Tooba.Support.Infrastructure.Persistence;

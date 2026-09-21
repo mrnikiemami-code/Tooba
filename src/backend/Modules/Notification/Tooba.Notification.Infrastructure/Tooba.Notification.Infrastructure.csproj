@@ -13,6 +13,7 @@
     </PackageReference>
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\Tooba.Notification.Contracts\Tooba.Notification.Contracts.csproj" />
     <ProjectReference Include="..\Tooba.Notification.Application\Tooba.Notification.Application.csproj" />
     <ProjectReference Include="..\Tooba.Notification.Domain\Tooba.Notification.Domain.csproj" />
     <ProjectReference Include="..\..\Tooba.ModuleContracts\Tooba.ModuleContracts.csproj" />

@@ -28,7 +28,6 @@
     "Tooba.Settlement.Infrastructure -> Tooba.Payment.Application",
     "Tooba.Settlement.Infrastructure -> Tooba.Returns.Application",
     "Tooba.Support.Infrastructure -> Tooba.Notification.Application",
-    "Tooba.Wallet.Infrastructure -> Tooba.Notification.Application",
     "Tooba.Wishlist.Infrastructure -> Tooba.Catalog.Application"
   ]
 }

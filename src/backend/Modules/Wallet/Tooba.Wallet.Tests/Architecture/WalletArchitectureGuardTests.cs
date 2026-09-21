@@ -61,6 +61,27 @@ public sealed class WalletArchitectureGuardTests
     }
 
     [Fact]
+    public void Infrastructure_references_Notification_Contracts_only()
+    {
+        var refs = ProjectRefs("Tooba.Wallet.Infrastructure");
+        Assert.Contains(refs, r => r.Contains("Notification.Contracts", StringComparison.Ordinal));
+        Assert.DoesNotContain(refs, r => r.Contains("Notification.Application", StringComparison.OrdinalIgnoreCase));
+        Assert.DoesNotContain(refs, r => r.Contains("Notification.Domain", StringComparison.OrdinalIgnoreCase));
+        Assert.DoesNotContain(refs, r => r.Contains("Notification.Infrastructure", StringComparison.OrdinalIgnoreCase));
+
+        Assert.DoesNotContain(
+            Sources("Tooba.Wallet.Infrastructure"),
+            x => x.Text.Contains("using Tooba.Notification.Application", StringComparison.Ordinal)
+                 || x.Text.Contains("using Tooba.Notification.Domain", StringComparison.Ordinal)
+                 || x.Text.Contains("using Tooba.Notification.Infrastructure", StringComparison.Ordinal));
+
+        Assert.Contains(
+            Sources("Tooba.Wallet.Infrastructure"),
+            x => x.Text.Contains("INotificationCreationPort", StringComparison.Ordinal)
+                 && x.Text.Contains("Tooba.Notification.Contracts", StringComparison.Ordinal));
+    }
+
+    [Fact]
     public void Cross_module_payment_refund_ports_live_in_Contracts()
     {
         Assert.True(File.Exists(Path.Combine(WalletRoot(), "Tooba.Wallet.Contracts", "Payments", "WalletOrderPaymentPort.cs")));

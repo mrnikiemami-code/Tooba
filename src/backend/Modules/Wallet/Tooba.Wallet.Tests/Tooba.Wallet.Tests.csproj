@@ -8,6 +8,7 @@
     <AssemblyName>Tooba.Wallet.Tests</AssemblyName>
   </PropertyGroup>
   <ItemGroup>
+    <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="8.0.11" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.11.1" />
     <PackageReference Include="xunit" Version="2.9.2" />
     <PackageReference Include="xunit.runner.visualstudio" Version="2.8.2">
@@ -20,5 +21,6 @@
     <ProjectReference Include="..\Tooba.Wallet.Application\Tooba.Wallet.Application.csproj" />
     <ProjectReference Include="..\Tooba.Wallet.Contracts\Tooba.Wallet.Contracts.csproj" />
     <ProjectReference Include="..\Tooba.Wallet.Infrastructure\Tooba.Wallet.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\Notification\Tooba.Notification.Contracts\Tooba.Notification.Contracts.csproj" />
   </ItemGroup>
 </Project>

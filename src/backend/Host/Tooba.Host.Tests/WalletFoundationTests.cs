@@ -58,7 +58,9 @@ public sealed class WalletFoundationTests
         Assert.DoesNotContain("Tooba.Payment.Infrastructure", text, StringComparison.Ordinal);
         Assert.DoesNotContain("Tooba.Notification.Infrastructure", text, StringComparison.Ordinal);
         Assert.Contains("Tooba.Wallet.Application", text, StringComparison.Ordinal);
-        Assert.Contains("Tooba.Notification.Application", text, StringComparison.Ordinal);
+        Assert.Contains("Tooba.Notification.Contracts", text, StringComparison.Ordinal);
+        Assert.DoesNotContain("Tooba.Notification.Application", text, StringComparison.Ordinal);
+        Assert.DoesNotContain("Tooba.Notification.Domain", text, StringComparison.Ordinal);
     }
 
     /// <summary>schema کیف پول و ثبت migration در Registry.</summary>
@@ -116,13 +118,23 @@ public sealed class WalletFoundationTests
             "backend",
             "Modules",
             "Notification",
-            "Tooba.Notification.Application",
-            "NotificationContracts.cs");
+            "Tooba.Notification.Contracts",
+            "Routes",
+            "NotificationTargetRoutes.cs");
         var source = File.ReadAllText(path);
         Assert.Contains("CustomerWallet", source, StringComparison.Ordinal);
         Assert.Contains("/customer-panel/wallet", source, StringComparison.Ordinal);
-        Assert.Contains("WalletGiftCardRedeemed", source, StringComparison.Ordinal);
-        Assert.Contains("WalletAdminAdjustment", source, StringComparison.Ordinal);
+        var types = File.ReadAllText(Path.Combine(
+            FindRepoRoot(),
+            "src",
+            "backend",
+            "Modules",
+            "Notification",
+            "Tooba.Notification.Contracts",
+            "Copy",
+            "NotificationSemanticTypes.cs"));
+        Assert.Contains("WalletGiftCardRedeemed", types, StringComparison.Ordinal);
+        Assert.Contains("WalletAdminAdjustment", types, StringComparison.Ordinal);
     }
 
     /// <summary>FE ناوبری کیف پول/کارت هدیه را از deferred خارج کرده است.</summary>

@@ -1,21 +1,10 @@
 using System.Text.Json;
-using Tooba.BuildingBlocks;
+using Tooba.Notification.Contracts.Commands;
+using Tooba.Notification.Contracts.Copy;
+using Tooba.Notification.Contracts.Dtos;
 using Tooba.Notification.Domain;
 
 namespace Tooba.Notification.Application;
-
-/// <summary>
-/// فرمان ایجاد idempotent اعلان.
-/// </summary>
-public sealed record CreateNotificationCommand(
-    NotificationRecipientKind RecipientKind,
-    Guid RecipientPartyId,
-    Guid? RecipientActorUserId,
-    string Type,
-    object Payload,
-    string TargetRoute,
-    string SourceEventId,
-    string SourceType);
 
 /// <summary>
 /// فیلتر فهرست اعلان‌های یک گیرنده.
@@ -55,7 +44,8 @@ public sealed record NotificationListPage(
     long UnreadCount);
 
 /// <summary>
-/// دایرکتوری اعلان‌های تراکنشی پایدار.
+/// دایرکتوری اعلان‌های تراکنشی پایدار (سطح Application؛ شامل خواندن/علامت).
+/// ایجاد میان‌ماژولی از طریق <c>INotificationCreationPort</c> در Contracts.
 /// </summary>
 public interface INotificationDirectory
 {
@@ -97,86 +87,8 @@ public interface INotificationDirectory
 }
 
 /// <summary>
-/// مسیرهای نسبی امن برای deep-link اعلان.
-/// </summary>
-public static class NotificationTargetRoutes
-{
-    private static readonly HashSet<string> AllowedPrefixes =
-    [
-        "/customer-panel",
-        "/vendor-panel",
-        "/payment",
-        "/checkout",
-        "/cart",
-    ];
-
-    /// <summary>مسیر نسبی allowlist را اعتبارسنجی و نرمال می‌کند.</summary>
-    public static string RequireAllowed(string route)
-    {
-        if (string.IsNullOrWhiteSpace(route))
-        {
-            throw new InvalidOperationException("TargetRoute خالی است.");
-        }
-
-        var trimmed = route.Trim();
-        if (!trimmed.StartsWith('/')
-            || trimmed.StartsWith("//", StringComparison.Ordinal)
-            || trimmed.Contains('\\', StringComparison.Ordinal)
-            || trimmed.Contains(':', StringComparison.Ordinal)
-            || trimmed.Contains('<', StringComparison.Ordinal)
-            || trimmed.Contains('>', StringComparison.Ordinal)
-            || trimmed.Contains('"', StringComparison.Ordinal)
-            || trimmed.Contains('\'', StringComparison.Ordinal)
-            || trimmed.Contains("javascript", StringComparison.OrdinalIgnoreCase))
-        {
-            throw new InvalidOperationException("TargetRoute ناامن است.");
-        }
-
-        if (!AllowedPrefixes.Any(prefix =>
-                trimmed.Equals(prefix, StringComparison.OrdinalIgnoreCase)
-                || trimmed.StartsWith(prefix + "/", StringComparison.OrdinalIgnoreCase)))
-        {
-            throw new InvalidOperationException("TargetRoute خارج از allowlist است.");
-        }
-
-        return trimmed;
-    }
-
-    /// <summary>مسیر سفارش مشتری.</summary>
-    public static string CustomerOrder(Guid checkoutId) =>
-        RequireAllowed($"/customer-panel/orders/{checkoutId:D}");
-
-    /// <summary>مسیر نتیجهٔ پرداخت مشتری.</summary>
-    public static string CustomerPaymentResult(Guid checkoutId) =>
-        RequireAllowed($"/payment/result?checkoutId={checkoutId:D}");
-
-    /// <summary>مسیر سفارش فروشنده.</summary>
-    public static string SellerOrder(Guid sellerOrderId) =>
-        RequireAllowed($"/vendor-panel/orders/{sellerOrderId:D}");
-
-    /// <summary>مسیر مرجوعی فروشنده.</summary>
-    public static string SellerReturn(Guid returnRequestId) =>
-        RequireAllowed($"/vendor-panel/returns/{returnRequestId:D}");
-
-    /// <summary>مسیر مرجوعی مشتری.</summary>
-    public static string CustomerReturn(Guid returnRequestId) =>
-        RequireAllowed($"/customer-panel/returns/{returnRequestId:D}");
-
-    /// <summary>مسیر تیکت پشتیبانی مشتری.</summary>
-    public static string CustomerTicket(Guid ticketId) =>
-        RequireAllowed($"/customer-panel/tickets/{ticketId:D}");
-
-    /// <summary>مسیر تیکت پشتیبانی فروشنده.</summary>
-    public static string SellerTicket(Guid ticketId) =>
-        RequireAllowed($"/vendor-panel/tickets/{ticketId:D}");
-
-    /// <summary>مسیر کیف پول مشتری.</summary>
-    public static string CustomerWallet() =>
-        RequireAllowed("/customer-panel/wallet");
-}
-
-/// <summary>
 /// انواع معنایی اعلان و کپی محلی در زمان خواندن.
+/// Typeهای Wallet با Contracts هم‌منبع‌اند.
 /// </summary>
 public static class NotificationCopy
 {
@@ -208,16 +120,16 @@ public static class NotificationCopy
     public const string SupportAdminReply = "support.admin_reply";
 
     /// <summary>بازخرید کارت هدیه به کیف پول.</summary>
-    public const string WalletGiftCardRedeemed = "wallet.gift_card.redeemed";
+    public const string WalletGiftCardRedeemed = NotificationSemanticTypes.WalletGiftCardRedeemed;
 
     /// <summary>تعدیل Admin روی کیف پول مشتری.</summary>
-    public const string WalletAdminAdjustment = "wallet.admin_adjustment";
+    public const string WalletAdminAdjustment = NotificationSemanticTypes.WalletAdminAdjustment;
 
     /// <summary>پرداخت موفق سفارش از کیف پول.</summary>
-    public const string WalletPaymentSucceeded = "wallet.payment.succeeded";
+    public const string WalletPaymentSucceeded = NotificationSemanticTypes.WalletPaymentSucceeded;
 
     /// <summary>اعتبار refund به کیف پول.</summary>
-    public const string WalletRefundCredited = "wallet.refund.credited";
+    public const string WalletRefundCredited = NotificationSemanticTypes.WalletRefundCredited;
 
     /// <summary>دستهٔ فیلتر UI (order/offer/ticket) از نوع معنایی.</summary>
     public static string CategoryOf(string type) => type switch

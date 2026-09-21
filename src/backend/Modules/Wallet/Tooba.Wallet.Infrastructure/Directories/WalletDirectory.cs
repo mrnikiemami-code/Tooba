@@ -1,8 +1,11 @@
 using Tooba.BuildingBlocks;
 using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
-using Tooba.Notification.Application;
-using Tooba.Notification.Domain;
+using Tooba.Notification.Contracts.Commands;
+using Tooba.Notification.Contracts.Copy;
+using Tooba.Notification.Contracts.Dtos;
+using Tooba.Notification.Contracts.Ports;
+using Tooba.Notification.Contracts.Routes;
 using Tooba.Wallet.Application.Models;
 using Tooba.Wallet.Application.Ports;
 using Tooba.Wallet.Contracts.Dtos;
@@ -18,12 +21,12 @@ namespace Tooba.Wallet.Infrastructure.Directories;
 public sealed class WalletDirectory : IWalletDirectory, IWalletOrderPaymentPort, IWalletRefundCreditPort
 {
     private readonly WalletDbContext _db;
-    private readonly INotificationDirectory _notifications;
+    private readonly INotificationCreationPort _notifications;
     private readonly IClock _clock;
     private readonly IIdGenerator _ids;
 
     /// <summary>دایرکتوری را می‌سازد.</summary>
-    public WalletDirectory(WalletDbContext db, INotificationDirectory notifications, IClock clock, IIdGenerator ids)
+    public WalletDirectory(WalletDbContext db, INotificationCreationPort notifications, IClock clock, IIdGenerator ids)
     {
         _db = db;
         _notifications = notifications;
@@ -118,7 +121,7 @@ public sealed class WalletDirectory : IWalletDirectory, IWalletOrderPaymentPort,
                 NotificationRecipientKind.Customer,
                 customerActorUserId,
                 customerActorUserId,
-                NotificationCopy.WalletGiftCardRedeemed,
+                NotificationSemanticTypes.WalletGiftCardRedeemed,
                 new { amount, currency = card.Currency, cardId = card.CardId },
                 NotificationTargetRoutes.CustomerWallet(),
                 $"wallet.gift-redeem:{redemption.RedemptionId:D}",
@@ -299,7 +302,7 @@ public sealed class WalletDirectory : IWalletDirectory, IWalletOrderPaymentPort,
                 NotificationRecipientKind.Customer,
                 customerActorUserId,
                 customerActorUserId,
-                NotificationCopy.WalletAdminAdjustment,
+                NotificationSemanticTypes.WalletAdminAdjustment,
                 new { amount = entry.Amount, direction = entry.Direction.ToString(), currency = entry.Currency },
                 NotificationTargetRoutes.CustomerWallet(),
                 $"wallet.admin-adjust:{entry.EntryId:D}",
@@ -390,7 +393,7 @@ public sealed class WalletDirectory : IWalletDirectory, IWalletOrderPaymentPort,
                     NotificationRecipientKind.Customer,
                     customerActorId,
                     customerActorId,
-                    NotificationCopy.WalletPaymentSucceeded,
+                    NotificationSemanticTypes.WalletPaymentSucceeded,
                     new { amount = entry.Amount, currency = entry.Currency, paymentId },
                     NotificationTargetRoutes.CustomerWallet(),
                     $"wallet.payment-succeeded:{paymentId:D}",
@@ -499,7 +502,7 @@ public sealed class WalletDirectory : IWalletDirectory, IWalletOrderPaymentPort,
                     NotificationRecipientKind.Customer,
                     customerActorId,
                     customerActorId,
-                    NotificationCopy.WalletRefundCredited,
+                    NotificationSemanticTypes.WalletRefundCredited,
                     new { amount = entry.Amount, currency = entry.Currency, returnRequestId },
                     NotificationTargetRoutes.CustomerWallet(),
                     $"wallet.refund-credited:{returnRequestId:D}",
