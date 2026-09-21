@@ -24,9 +24,6 @@
     <Project Path="Modules/Catalog/Tooba.Catalog.Contracts/Tooba.Catalog.Contracts.csproj" />
     <Project Path="Modules/Catalog/Tooba.Catalog.Application/Tooba.Catalog.Application.csproj" />
     <Project Path="Modules/Catalog/Tooba.Catalog.Infrastructure/Tooba.Catalog.Infrastructure.csproj" />
-    <Project Path="Modules/Pricing/Tooba.Pricing.Domain/Tooba.Pricing.Domain.csproj" />
-    <Project Path="Modules/Pricing/Tooba.Pricing.Application/Tooba.Pricing.Application.csproj" />
-    <Project Path="Modules/Pricing/Tooba.Pricing.Infrastructure/Tooba.Pricing.Infrastructure.csproj" />
     <Project Path="Modules/Inventory/Tooba.Inventory.Domain/Tooba.Inventory.Domain.csproj" />
     <Project Path="Modules/Inventory/Tooba.Inventory.Application/Tooba.Inventory.Application.csproj" />
     <Project Path="Modules/Inventory/Tooba.Inventory.Infrastructure/Tooba.Inventory.Infrastructure.csproj" />
@@ -37,9 +34,6 @@
     <Project Path="Modules/Order/Tooba.Order.Domain/Tooba.Order.Domain.csproj" />
     <Project Path="Modules/Order/Tooba.Order.Application/Tooba.Order.Application.csproj" />
     <Project Path="Modules/Order/Tooba.Order.Infrastructure/Tooba.Order.Infrastructure.csproj" />
-    <Project Path="Modules/Tax/Tooba.Tax.Domain/Tooba.Tax.Domain.csproj" />
-    <Project Path="Modules/Tax/Tooba.Tax.Application/Tooba.Tax.Application.csproj" />
-    <Project Path="Modules/Tax/Tooba.Tax.Infrastructure/Tooba.Tax.Infrastructure.csproj" />
     <Project Path="Modules/Promotion/Tooba.Promotion.Domain/Tooba.Promotion.Domain.csproj" />
     <Project Path="Modules/Promotion/Tooba.Promotion.Application/Tooba.Promotion.Application.csproj" />
     <Project Path="Modules/Promotion/Tooba.Promotion.Infrastructure/Tooba.Promotion.Infrastructure.csproj" />
@@ -102,5 +96,21 @@
     <Project Path="Modules/Offer/Tooba.Offer.Endpoints/Tooba.Offer.Endpoints.csproj" />
     <Project Path="Modules/Offer/Tooba.Offer.Infrastructure/Tooba.Offer.Infrastructure.csproj" />
     <Project Path="Modules/Offer/Tooba.Offer.Tests/Tooba.Offer.Tests.csproj" />
+  </Folder>
+  <Folder Name="/Modules/Pricing/">
+    <Project Path="Modules/Pricing/Tooba.Pricing.Application/Tooba.Pricing.Application.csproj" />
+    <Project Path="Modules/Pricing/Tooba.Pricing.Contracts/Tooba.Pricing.Contracts.csproj" />
+    <Project Path="Modules/Pricing/Tooba.Pricing.Domain/Tooba.Pricing.Domain.csproj" />
+    <Project Path="Modules/Pricing/Tooba.Pricing.Endpoints/Tooba.Pricing.Endpoints.csproj" />
+    <Project Path="Modules/Pricing/Tooba.Pricing.Infrastructure/Tooba.Pricing.Infrastructure.csproj" />
+    <Project Path="Modules/Pricing/Tooba.Pricing.Tests/Tooba.Pricing.Tests.csproj" />
+  </Folder>
+  <Folder Name="/Modules/Tax/">
+    <Project Path="Modules/Tax/Tooba.Tax.Application/Tooba.Tax.Application.csproj" />
+    <Project Path="Modules/Tax/Tooba.Tax.Contracts/Tooba.Tax.Contracts.csproj" />
+    <Project Path="Modules/Tax/Tooba.Tax.Domain/Tooba.Tax.Domain.csproj" />
+    <Project Path="Modules/Tax/Tooba.Tax.Endpoints/Tooba.Tax.Endpoints.csproj" />
+    <Project Path="Modules/Tax/Tooba.Tax.Infrastructure/Tooba.Tax.Infrastructure.csproj" />
+    <Project Path="Modules/Tax/Tooba.Tax.Tests/Tooba.Tax.Tests.csproj" />
   </Folder>
 </Solution>
