@@ -190,7 +190,7 @@ Batch-State:
 INCOMPLETE
 
 Git:
-89b937a6fd0849cbe6351e76a8ac26e8f51e1a70
+cb290333b1796c53c08e2bd460f66e70afb563bc
 
 Blockers:
 Host Settlement thin transport (SettlementDbContext/PartyDbContext query authority in Host; manual semantic envelopes); ArchitectureGuard projects absent
