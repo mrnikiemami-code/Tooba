@@ -44,4 +44,19 @@ public static class FulfillmentErrorCodes
 
     /// <summary>Shipment missing for bulk dispatch/deliver.</summary>
     public const string WorkQueueShipmentMissing = "fulfillment.work_queue.shipment_missing";
+
+    /// <summary>Shipping service was not found.</summary>
+    public const string ShippingServiceNotFound = "shipping_service.not_found";
+
+    /// <summary>Duplicate shipping service code.</summary>
+    public const string ShippingServiceCodeDuplicate = "shipping_service.code_duplicate";
+
+    /// <summary>Shipping service code required.</summary>
+    public const string ShippingServiceCodeRequired = "shipping_service.code.required";
+
+    /// <summary>Shipping service name required.</summary>
+    public const string ShippingServiceNameRequired = "shipping_service.name.required";
+
+    /// <summary>Unknown language id on shipping write.</summary>
+    public const string ShippingServiceLanguageInvalid = "shipping_service.language_invalid";
 }

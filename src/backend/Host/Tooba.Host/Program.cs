@@ -242,7 +242,7 @@ builder.Services.AddScoped<Tooba.Host.Admin.AdminPanelComposer>();
 builder.Services.AddScoped<Tooba.Host.Admin.AdminOrderOperationsComposer>();
 builder.Services.AddScoped<Tooba.Host.Admin.OrderInventoryRecoveryComposer>();
 builder.Services.AddScoped<Tooba.Host.Admin.OrderSupplyComposer>();
-builder.Services.AddScoped<Tooba.Host.Admin.AdminFulfillmentWorkQueueComposer>();
+builder.Services.AddScoped<Tooba.Order.Contracts.Fulfillment.IAdminOrderFulfillmentOperations, Tooba.Host.Admin.HostAdminOrderFulfillmentOperations>();
 builder.Services.AddScoped<Tooba.Host.Admin.AdminOrderCompletenessComposer>();
 builder.Services.AddScoped<Tooba.Host.Wishlist.WishlistComposer>();
 builder.Services.AddScoped<Tooba.Host.Content.ContentPanelComposer>();

@@ -197,16 +197,20 @@ public sealed class AdminFulfillmentWorkQueueTests
     }
 
     [Fact]
-    public void Work_queue_endpoints_and_composer_are_wired()
+    public void Work_queue_endpoints_are_application_owned_without_host_composer()
     {
         var root = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", "Tooba.Host"));
         var endpoints = File.ReadAllText(Path.Combine(root, "Fulfillment", "FulfillmentEndpoints.cs"));
         var program = File.ReadAllText(Path.Combine(root, "Program.cs"));
         Assert.Contains("/fulfillments/work-queue/query", endpoints, StringComparison.Ordinal);
         Assert.Contains("/fulfillments/work-queue/bulk", endpoints, StringComparison.Ordinal);
-        Assert.Contains("AdminFulfillmentWorkQueueComposer", program, StringComparison.Ordinal);
+        Assert.Contains("ExecuteAdminFulfillmentBulkCommand", endpoints, StringComparison.Ordinal);
         Assert.Contains("ApiResponseFactory", endpoints, StringComparison.Ordinal);
+        Assert.DoesNotContain("AdminFulfillmentWorkQueueComposer", endpoints, StringComparison.Ordinal);
+        Assert.DoesNotContain("AdminFulfillmentWorkQueueComposer", program, StringComparison.Ordinal);
+        Assert.Contains("IAdminOrderFulfillmentOperations", program, StringComparison.Ordinal);
         Assert.DoesNotContain("AdminFulfillmentWorkQueueQueryEngine", program, StringComparison.Ordinal);
+        Assert.False(File.Exists(Path.Combine(root, "Admin", "AdminFulfillmentWorkQueueComposer.cs")));
     }
 
     private static FulfillmentSnapshot Snapshot(

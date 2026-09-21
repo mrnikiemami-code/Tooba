@@ -47,6 +47,10 @@
     <Project Path="Modules/Payment/Tooba.Payment.Application/Tooba.Payment.Application.csproj" />
     <Project Path="Modules/Payment/Tooba.Payment.Infrastructure/Tooba.Payment.Infrastructure.csproj" />
     <Project Path="Modules/Payment/Tooba.Payment.Tests/Tooba.Payment.Tests.csproj" />
+    <Project Path="Modules/Localization/Tooba.Localization.Contracts/Tooba.Localization.Contracts.csproj" />
+    <Project Path="Modules/Localization/Tooba.Localization.Domain/Tooba.Localization.Domain.csproj" />
+    <Project Path="Modules/Localization/Tooba.Localization.Application/Tooba.Localization.Application.csproj" />
+    <Project Path="Modules/Localization/Tooba.Localization.Infrastructure/Tooba.Localization.Infrastructure.csproj" />
     <Project Path="Modules/Fulfillment/Tooba.Fulfillment.Domain/Tooba.Fulfillment.Domain.csproj" />
     <Project Path="Modules/Fulfillment/Tooba.Fulfillment.Contracts/Tooba.Fulfillment.Contracts.csproj" />
     <Project Path="Modules/Fulfillment/Tooba.Fulfillment.Application/Tooba.Fulfillment.Application.csproj" />

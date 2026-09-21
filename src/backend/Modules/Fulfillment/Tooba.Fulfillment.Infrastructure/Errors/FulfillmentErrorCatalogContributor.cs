@@ -39,6 +39,16 @@ public sealed class FulfillmentErrorCatalogContributor : IErrorCatalogContributo
             "Fulfillment work-queue bulk selection is incompatible."),
         D(FulfillmentErrorCodes.WorkQueueShipmentMissing, ErrorClassification.Business, StatusCodes.Status400BadRequest,
             "Fulfillment work-queue shipment is missing."),
+        D(FulfillmentErrorCodes.ShippingServiceNotFound, ErrorClassification.NotFound, StatusCodes.Status404NotFound,
+            "Shipping service was not found."),
+        D(FulfillmentErrorCodes.ShippingServiceCodeDuplicate, ErrorClassification.Business, StatusCodes.Status400BadRequest,
+            "Shipping service code already exists."),
+        D(FulfillmentErrorCodes.ShippingServiceCodeRequired, ErrorClassification.Validation, StatusCodes.Status400BadRequest,
+            "Shipping service code is required."),
+        D(FulfillmentErrorCodes.ShippingServiceNameRequired, ErrorClassification.Validation, StatusCodes.Status400BadRequest,
+            "Shipping service name is required."),
+        D(FulfillmentErrorCodes.ShippingServiceLanguageInvalid, ErrorClassification.Validation, StatusCodes.Status400BadRequest,
+            "Shipping service language is invalid."),
     ];
 
     private static ErrorDescriptor D(

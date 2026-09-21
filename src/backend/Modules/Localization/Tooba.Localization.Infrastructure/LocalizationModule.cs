@@ -3,6 +3,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Tooba.BuildingBlocks;
 using Tooba.Localization.Application;
+using Tooba.Localization.Contracts;
 using Tooba.Localization.Infrastructure.Persistence;
 using Tooba.ModuleContracts;
 using Tooba.Persistence;
@@ -18,6 +19,7 @@ public sealed class LocalizationModule : IToobaModule
     {
         services.AddSingleton<IOutboxModuleRegistration, LocalizationOutboxRegistration>();
         services.AddScoped<ILanguageDirectory, LanguageDirectory>();
+        services.AddScoped<ILanguageLookup, LanguageLookupBridge>();
         services.AddHostedService<LanguageBootstrapHostedService>();
         services.AddDbContext<LocalizationDbContext>((sp, options) =>
         {

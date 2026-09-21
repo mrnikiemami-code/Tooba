@@ -3,19 +3,17 @@ using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Tooba.BuildingBlocks;
-using Tooba.Fulfillment.Application.Ports;
-using Tooba.Fulfillment.Application.Models;
+using Tooba.BuildingBlocks.Results;
 using Tooba.Fulfillment.Application.Shipping;
-using Tooba.Fulfillment.Infrastructure.Directories;
-using Tooba.Fulfillment.Infrastructure.Observability;
-using Tooba.Fulfillment.Infrastructure.Shipping;
-using Tooba.Fulfillment.Infrastructure.Gateways;
+using Tooba.Fulfillment.Contracts.Errors;
 using Tooba.Fulfillment.Infrastructure.Persistence;
+using Tooba.Fulfillment.Infrastructure.Shipping;
+using Tooba.Localization.Contracts;
 using Xunit;
 
 namespace Tooba.Host.Tests;
 
-/// <summary>TB-TMAR-HOST-W6 — characterization for ShippingService write via CQRS Directory.</summary>
+/// <summary>TB-TMAR-NEXT-MODULE-BATCH-004-R2 — ShippingService Application CQRS + Host thin transport.</summary>
 public sealed class ShippingServiceAdminTests
 {
     private static readonly Guid LangA = Guid.Parse("01900000-0000-7000-8000-00000000cc01");
@@ -26,9 +24,10 @@ public sealed class ShippingServiceAdminTests
     {
         await using var db = CreateDb();
         var sender = CreateSender(db, known: [LangA]);
-        var id = await sender.Send(new CreateShippingServiceCommand(Model("post", LangA)), CancellationToken.None);
+        var result = await sender.Send(new CreateShippingServiceCommand(Model("post", LangA)), CancellationToken.None);
+        Assert.True(result.IsSuccess);
         var service = await db.ShippingServices.SingleAsync();
-        Assert.Equal(id, service.ShippingServiceId);
+        Assert.Equal(result.Value.ShippingServiceId, service.ShippingServiceId);
         Assert.Equal("post", service.Code);
         Assert.Single(db.ShippingServiceTranslations);
         Assert.Single(db.ShippingServiceOptions);
@@ -36,26 +35,46 @@ public sealed class ShippingServiceAdminTests
     }
 
     [Fact]
-    public async Task Duplicate_code_is_rejected()
+    public async Task Duplicate_code_is_rejected_as_semantic_result()
     {
         await using var db = CreateDb();
         var sender = CreateSender(db, known: [LangA]);
-        await sender.Send(new CreateShippingServiceCommand(Model("post", LangA)), CancellationToken.None);
-        var ex = await Assert.ThrowsAsync<PlatformHttpException>(
-            () => sender.Send(new CreateShippingServiceCommand(Model("POST", LangA)), CancellationToken.None));
-        Assert.Equal(409, ex.StatusCode);
-        Assert.Equal("shipping_service.code_duplicate", ex.ErrorCode);
+        Assert.True((await sender.Send(new CreateShippingServiceCommand(Model("post", LangA)), CancellationToken.None)).IsSuccess);
+        var result = await sender.Send(new CreateShippingServiceCommand(Model("POST", LangA)), CancellationToken.None);
+        Assert.True(result.IsFailure);
+        Assert.Equal(FulfillmentErrorCodes.ShippingServiceCodeDuplicate, result.FirstError.Code);
     }
 
     [Fact]
-    public async Task Unknown_language_is_rejected()
+    public async Task Unknown_language_is_rejected_as_semantic_result()
     {
         await using var db = CreateDb();
         var sender = CreateSender(db, known: [LangA]);
-        var ex = await Assert.ThrowsAsync<InvalidOperationException>(
-            () => sender.Send(new CreateShippingServiceCommand(Model("tipax", LangUnknown)), CancellationToken.None));
-        Assert.Equal("shipping_service.language_invalid", ex.Message);
+        var result = await sender.Send(new CreateShippingServiceCommand(Model("tipax", LangUnknown)), CancellationToken.None);
+        Assert.True(result.IsFailure);
+        Assert.Equal(FulfillmentErrorCodes.ShippingServiceLanguageInvalid, result.FirstError.Code);
         Assert.Empty(db.ShippingServices);
+    }
+
+    [Fact]
+    public async Task Get_missing_returns_not_found_semantic()
+    {
+        await using var db = CreateDb();
+        var sender = CreateSender(db, known: [LangA]);
+        var result = await sender.Send(new GetShippingServiceQuery(Guid.NewGuid()), CancellationToken.None);
+        Assert.True(result.IsFailure);
+        Assert.Equal(FulfillmentErrorCodes.ShippingServiceNotFound, result.FirstError.Code);
+    }
+
+    [Fact]
+    public async Task List_uses_language_fallback_to_code()
+    {
+        await using var db = CreateDb();
+        var sender = CreateSender(db, known: [LangA]);
+        Assert.True((await sender.Send(new CreateShippingServiceCommand(Model("post", LangA)), CancellationToken.None)).IsSuccess);
+        var list = await sender.Send(new ListShippingServicesQuery("fa"), CancellationToken.None);
+        Assert.True(list.IsSuccess);
+        Assert.Contains(list.Value, x => x.Code == "post" && x.Name == "post");
     }
 
     [Fact]
@@ -63,12 +82,14 @@ public sealed class ShippingServiceAdminTests
     {
         await using var db = CreateDb();
         var sender = CreateSender(db, known: [LangA]);
-        var id = await sender.Send(new CreateShippingServiceCommand(Model("courier", LangA)), CancellationToken.None);
-        await sender.Send(new UpdateShippingServiceCommand(id, Model("store_courier", LangA, sort: 40)), CancellationToken.None);
+        var created = await sender.Send(new CreateShippingServiceCommand(Model("courier", LangA)), CancellationToken.None);
+        Assert.True(created.IsSuccess);
+        var id = created.Value.ShippingServiceId;
+        Assert.True((await sender.Send(new UpdateShippingServiceCommand(id, Model("store_courier", LangA, sort: 40)), CancellationToken.None)).IsSuccess);
         var service = await db.ShippingServices.SingleAsync();
         Assert.Equal("store_courier", service.Code);
         Assert.Equal(40, service.SortOrder);
-        await sender.Send(new DeactivateShippingServiceCommand(id), CancellationToken.None);
+        Assert.True((await sender.Send(new DeactivateShippingServiceCommand(id), CancellationToken.None)).IsSuccess);
         Assert.False((await db.ShippingServices.SingleAsync()).IsActive);
     }
 
@@ -80,23 +101,26 @@ public sealed class ShippingServiceAdminTests
         [
             new ShippingServiceSeedLanguage(LangA, "fa", "fa-IR", true),
         ]);
-        await sender.Send(new EnsureShippingCatalogSeedCommand(), CancellationToken.None);
+        Assert.True((await sender.Send(new EnsureShippingCatalogSeedCommand(), CancellationToken.None)).IsSuccess);
         Assert.Equal(5, await db.ShippingServices.CountAsync());
-        await sender.Send(new EnsureShippingCatalogSeedCommand(), CancellationToken.None);
+        Assert.True((await sender.Send(new EnsureShippingCatalogSeedCommand(), CancellationToken.None)).IsSuccess);
         Assert.Equal(5, await db.ShippingServices.CountAsync());
     }
 
     [Fact]
-    public void Admin_write_endpoints_use_cqrs_without_savechanges()
+    public void Admin_shipping_endpoints_are_host_thin_transport()
     {
         var source = File.ReadAllText(Path.Combine(FindRepoRoot(), "src/backend/Host/Tooba.Host/Admin/ShippingServiceEndpoints.cs"));
+        Assert.Contains("ApiResponseFactory", source, StringComparison.Ordinal);
+        Assert.Contains("ListShippingServicesQuery", source, StringComparison.Ordinal);
+        Assert.Contains("GetShippingServiceQuery", source, StringComparison.Ordinal);
         Assert.Contains("CreateShippingServiceCommand", source, StringComparison.Ordinal);
-        Assert.Contains("UpdateShippingServiceCommand", source, StringComparison.Ordinal);
-        Assert.Contains("DeactivateShippingServiceCommand", source, StringComparison.Ordinal);
-        Assert.Contains("EnsureShippingCatalogSeedCommand", source, StringComparison.Ordinal);
+        Assert.DoesNotContain("Results.Json(new { title", source, StringComparison.Ordinal);
+        Assert.DoesNotContain("errorCode = ex.Message", source, StringComparison.Ordinal);
+        Assert.DoesNotContain("catch (InvalidOperationException ex)", source, StringComparison.Ordinal);
+        Assert.DoesNotContain("Localization.Application", source, StringComparison.Ordinal);
+        Assert.DoesNotContain("LoadDetailAsync", source, StringComparison.Ordinal);
         Assert.DoesNotContain("SaveChangesAsync", source, StringComparison.Ordinal);
-        Assert.DoesNotContain(".Add(", source, StringComparison.Ordinal);
-        Assert.DoesNotContain("RemoveRange", source, StringComparison.Ordinal);
     }
 
     private static ShippingServiceWriteModel Model(string code, Guid lang, int sort = 10) =>
@@ -131,11 +155,15 @@ public sealed class ShippingServiceAdminTests
         IReadOnlyList<ShippingServiceSeedLanguage>? seedLangs = null)
     {
         var gate = new FixedLanguageGate(known, seedLangs);
+        var lookup = new FixedLanguageLookup(known, seedLangs);
         var directory = new ShippingServiceDirectory(db, new SystemUtcClock(), new UuidV7IdGenerator(), gate);
+        var catalog = new ShippingCatalogReader(db);
         var services = new ServiceCollection();
         services.AddLogging();
         services.AddSingleton<IShippingServiceDirectory>(directory);
         services.AddSingleton<IShippingServiceLanguageGate>(gate);
+        services.AddSingleton<IShippingCatalogReader>(catalog);
+        services.AddSingleton<ILanguageLookup>(lookup);
         services.AddValidatorsFromAssembly(typeof(CreateShippingServiceCommand).Assembly);
         services.AddToobaCqrsFoundation(typeof(CreateShippingServiceCommand).Assembly);
         return services.BuildServiceProvider().GetRequiredService<ISender>();
@@ -180,5 +208,20 @@ public sealed class ShippingServiceAdminTests
 
         public Task<IReadOnlyList<ShippingServiceSeedLanguage>> ListForSeedAsync(CancellationToken cancellationToken)
             => Task.FromResult(_seed);
+    }
+
+    private sealed class FixedLanguageLookup : ILanguageLookup
+    {
+        private readonly IReadOnlyList<LanguageLookupSnapshot> _langs;
+
+        public FixedLanguageLookup(IReadOnlyList<Guid> known, IReadOnlyList<ShippingServiceSeedLanguage>? seed)
+        {
+            _langs = (seed ?? known.Select(id => new ShippingServiceSeedLanguage(id, "fa", "fa-IR", true)).ToList())
+                .Select(x => new LanguageLookupSnapshot(x.LanguageId, x.Code, x.Culture, x.Code, x.IsDefault))
+                .ToList();
+        }
+
+        public Task<IReadOnlyList<LanguageLookupSnapshot>> ListAsync(CancellationToken cancellationToken)
+            => Task.FromResult(_langs);
     }
 }

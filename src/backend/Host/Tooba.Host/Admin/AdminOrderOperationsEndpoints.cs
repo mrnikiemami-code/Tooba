@@ -2,7 +2,7 @@ using Tooba.BuildingBlocks;
 using Tooba.Fulfillment.Application.Ports;
 using Tooba.Fulfillment.Application.Models;
 using Tooba.Fulfillment.Application.Shipping;
-using Tooba.Localization.Application;
+using Tooba.Localization.Contracts;
 
 namespace Tooba.Host.Admin;
 
@@ -50,7 +50,7 @@ public static class AdminOrderOperationsEndpoints
 
     private static async Task<IResult> ListShippingMethodsAsync(
         IShippingCatalogReader catalog,
-        ILanguageDirectory languages,
+        ILanguageLookup languages,
         ShippingMethodsOptions options,
         MediatR.ISender sender,
         string? language,

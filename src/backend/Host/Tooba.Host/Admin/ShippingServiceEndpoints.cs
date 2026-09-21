@@ -1,17 +1,16 @@
 using MediatR;
-using Microsoft.EntityFrameworkCore;
 using Tooba.BuildingBlocks;
+using Tooba.BuildingBlocks.Presentation;
+using Tooba.BuildingBlocks.Results;
 using Tooba.Fulfillment.Application.Ports;
-using Tooba.Fulfillment.Application.Models;
 using Tooba.Fulfillment.Application.Shipping;
-
-using Tooba.Localization.Application;
+using Tooba.Localization.Contracts;
 
 namespace Tooba.Host.Admin;
 
 #pragma warning disable CS1591
 
-/// <summary>ترجمهٔ سرویس ارسال والد.</summary>
+/// <summary>ترجمهٔ سرویس ارسال والد (wire-only request DTO).</summary>
 public sealed record ShippingServiceTranslationWrite(Guid LanguageId, string Name, string? Description);
 
 /// <summary>ترجمهٔ نوع سرویس فرزند.</summary>
@@ -25,7 +24,7 @@ public sealed record ShippingServiceOptionWrite(
     int SortOrder,
     IReadOnlyList<ShippingServiceOptionTranslationWrite> Translations);
 
-/// <summary>ایجاد/ویرایش سرویس ارسال دو‌سطحی.</summary>
+/// <summary>ایجاد/ویرایش سرویس ارسال دو‌سطحی (wire-only).</summary>
 public sealed record ShippingServiceWriteRequest(
     string Code,
     string ProviderKind,
@@ -36,40 +35,9 @@ public sealed record ShippingServiceWriteRequest(
     IReadOnlyList<ShippingServiceTranslationWrite> Translations,
     IReadOnlyList<ShippingServiceOptionWrite> Options);
 
-/// <summary>ردیف لیست سرویس ارسال.</summary>
-public sealed record ShippingServiceListItem(
-    Guid ShippingServiceId,
-    string Code,
-    string ProviderKind,
-    string IconKey,
-    string ColorKey,
-    string Name,
-    bool IsActive,
-    int SortOrder,
-    int OptionCount,
-    int ActiveOptionCount);
-
-/// <summary>جزئیات گزینهٔ سطح ۲.</summary>
-public sealed record ShippingServiceOptionDetail(
-    Guid ShippingServiceOptionId,
-    string Code,
-    bool IsActive,
-    int SortOrder,
-    IReadOnlyList<ShippingServiceOptionTranslationWrite> Translations);
-
-/// <summary>جزئیات سرویس ارسال.</summary>
-public sealed record ShippingServiceDetail(
-    Guid ShippingServiceId,
-    string Code,
-    string ProviderKind,
-    string IconKey,
-    string ColorKey,
-    bool IsActive,
-    int SortOrder,
-    IReadOnlyList<ShippingServiceTranslationWrite> Translations,
-    IReadOnlyList<ShippingServiceOptionDetail> Options);
-
-/// <summary>CRUD سرویس ارسال دو‌سطحی + seed اولیه (نوشتن از طریق CQRS).</summary>
+/// <summary>
+/// CRUD سرویس ارسال — HOST_THIN_TRANSPORT: auth + ISender + ApiResponseFactory.
+/// </summary>
 public static class ShippingServiceEndpoints
 {
     /// <summary>مسیرهای Admin سرویس ارسال را ثبت می‌کند.</summary>
@@ -85,9 +53,8 @@ public static class ShippingServiceEndpoints
     }
 
     private static async Task<IResult> ListAsync(
-        IShippingCatalogReader catalog,
-        ILanguageDirectory languages,
         ISender sender,
+        ApiResponseFactory api,
         HttpRequest request,
         CurrentAuthenticatedSession session,
         ICurrentTenant tenant,
@@ -100,36 +67,18 @@ public static class ShippingServiceEndpoints
         {
             await AdminPanelAccess.RequireAuthorizedAsync(
                 request, session, tenant, guard, environment, cancellationToken);
-            await sender.Send(new EnsureShippingCatalogSeedCommand(), cancellationToken);
-            var langId = await ResolveLanguageIdAsync(languages, language, cancellationToken);
-            var services = await catalog.ListAsync(cancellationToken);
-            var items = services.Select(s =>
-            {
-                var picked = s.Translations.FirstOrDefault(r => r.LanguageId == langId)
-                    ?? s.Translations.FirstOrDefault();
-                return new ShippingServiceListItem(
-                    s.ShippingServiceId,
-                    s.Code,
-                    s.ProviderKind,
-                    s.IconKey,
-                    s.ColorKey,
-                    picked?.Name ?? s.Code,
-                    s.IsActive,
-                    s.SortOrder,
-                    s.Options.Count,
-                    s.Options.Count(o => o.IsActive));
-            }).ToList();
-            return Results.Json(items);
+            return api.From(await sender.Send(new ListShippingServicesQuery(language), cancellationToken));
         }
         catch (PlatformHttpException ex)
         {
-            return Results.Json(new { title = ex.Title, errorCode = ex.ErrorCode }, statusCode: ex.StatusCode);
+            return api.FromFailure(new SemanticError(ex.ErrorCode ?? "platform.http"));
         }
     }
 
     private static async Task<IResult> GetAsync(
         Guid serviceId,
-        IShippingCatalogReader catalog,
+        ISender sender,
+        ApiResponseFactory api,
         HttpRequest request,
         CurrentAuthenticatedSession session,
         ICurrentTenant tenant,
@@ -141,21 +90,18 @@ public static class ShippingServiceEndpoints
         {
             await AdminPanelAccess.RequireAuthorizedAsync(
                 request, session, tenant, guard, environment, cancellationToken);
-            var detail = await LoadDetailAsync(catalog, serviceId, cancellationToken);
-            return detail is null
-                ? Results.Json(new { title = "not found", errorCode = "shipping_service.not_found" }, statusCode: 404)
-                : Results.Json(detail);
+            return api.From(await sender.Send(new GetShippingServiceQuery(serviceId), cancellationToken));
         }
         catch (PlatformHttpException ex)
         {
-            return Results.Json(new { title = ex.Title, errorCode = ex.ErrorCode }, statusCode: ex.StatusCode);
+            return api.FromFailure(new SemanticError(ex.ErrorCode ?? "platform.http"));
         }
     }
 
     private static async Task<IResult> CreateAsync(
         ShippingServiceWriteRequest body,
         ISender sender,
-        IShippingCatalogReader catalog,
+        ApiResponseFactory api,
         HttpRequest request,
         CurrentAuthenticatedSession session,
         ICurrentTenant tenant,
@@ -167,16 +113,11 @@ public static class ShippingServiceEndpoints
         {
             await AdminPanelAccess.RequireAuthorizedAsync(
                 request, session, tenant, guard, environment, cancellationToken);
-            var id = await sender.Send(new CreateShippingServiceCommand(ToModel(body)), cancellationToken);
-            return Results.Json(await LoadDetailAsync(catalog, id, cancellationToken));
+            return api.From(await sender.Send(new CreateShippingServiceCommand(ToModel(body)), cancellationToken));
         }
         catch (PlatformHttpException ex)
         {
-            return Results.Json(new { title = ex.Title, errorCode = ex.ErrorCode }, statusCode: ex.StatusCode);
-        }
-        catch (InvalidOperationException ex)
-        {
-            return Results.Json(new { title = ex.Message, errorCode = ex.Message }, statusCode: 400);
+            return api.FromFailure(new SemanticError(ex.ErrorCode ?? "platform.http"));
         }
     }
 
@@ -184,7 +125,7 @@ public static class ShippingServiceEndpoints
         Guid serviceId,
         ShippingServiceWriteRequest body,
         ISender sender,
-        IShippingCatalogReader catalog,
+        ApiResponseFactory api,
         HttpRequest request,
         CurrentAuthenticatedSession session,
         ICurrentTenant tenant,
@@ -196,22 +137,18 @@ public static class ShippingServiceEndpoints
         {
             await AdminPanelAccess.RequireAuthorizedAsync(
                 request, session, tenant, guard, environment, cancellationToken);
-            await sender.Send(new UpdateShippingServiceCommand(serviceId, ToModel(body)), cancellationToken);
-            return Results.Json(await LoadDetailAsync(catalog, serviceId, cancellationToken));
+            return api.From(await sender.Send(new UpdateShippingServiceCommand(serviceId, ToModel(body)), cancellationToken));
         }
         catch (PlatformHttpException ex)
         {
-            return Results.Json(new { title = ex.Title, errorCode = ex.ErrorCode }, statusCode: ex.StatusCode);
-        }
-        catch (InvalidOperationException ex)
-        {
-            return Results.Json(new { title = ex.Message, errorCode = ex.Message }, statusCode: 400);
+            return api.FromFailure(new SemanticError(ex.ErrorCode ?? "platform.http"));
         }
     }
 
     private static async Task<IResult> DeactivateAsync(
         Guid serviceId,
         ISender sender,
+        ApiResponseFactory api,
         HttpRequest request,
         CurrentAuthenticatedSession session,
         ICurrentTenant tenant,
@@ -223,17 +160,18 @@ public static class ShippingServiceEndpoints
         {
             await AdminPanelAccess.RequireAuthorizedAsync(
                 request, session, tenant, guard, environment, cancellationToken);
-            await sender.Send(new DeactivateShippingServiceCommand(serviceId), cancellationToken);
-            return Results.Json(new { ok = true });
+            var result = await sender.Send(new DeactivateShippingServiceCommand(serviceId), cancellationToken);
+            return result.IsFailure ? api.From(result) : Results.Json(new { ok = true });
         }
         catch (PlatformHttpException ex)
         {
-            return Results.Json(new { title = ex.Title, errorCode = ex.ErrorCode }, statusCode: ex.StatusCode);
+            return api.FromFailure(new SemanticError(ex.ErrorCode ?? "platform.http"));
         }
     }
 
     private static async Task<IResult> EnsureSeedHttpAsync(
         ISender sender,
+        ApiResponseFactory api,
         HttpRequest request,
         CurrentAuthenticatedSession session,
         ICurrentTenant tenant,
@@ -245,26 +183,26 @@ public static class ShippingServiceEndpoints
         {
             await AdminPanelAccess.RequireAuthorizedAsync(
                 request, session, tenant, guard, environment, cancellationToken);
-            await sender.Send(new EnsureShippingCatalogSeedCommand(), cancellationToken);
-            return Results.Json(new { ok = true });
+            var result = await sender.Send(new EnsureShippingCatalogSeedCommand(), cancellationToken);
+            return result.IsFailure ? api.From(result) : Results.Json(new { ok = true });
         }
         catch (PlatformHttpException ex)
         {
-            return Results.Json(new { title = ex.Title, errorCode = ex.ErrorCode }, statusCode: ex.StatusCode);
+            return api.FromFailure(new SemanticError(ex.ErrorCode ?? "platform.http"));
         }
     }
 
     /// <summary>پر کردن درخت روش ارسال برای مودال ایجاد مرسوله.</summary>
     public static async Task<IReadOnlyList<object>> ListEnabledMethodsTreeAsync(
         IShippingCatalogReader catalog,
-        ILanguageDirectory languages,
+        ILanguageLookup languages,
         ShippingMethodsOptions options,
         ISender sender,
         string? language,
         CancellationToken cancellationToken)
     {
         await sender.Send(new EnsureShippingCatalogSeedCommand(), cancellationToken);
-        var langId = await ResolveLanguageIdAsync(languages, language, cancellationToken);
+        var langId = await ShippingServiceSemantic.ResolveLanguageIdAsync(languages, language, cancellationToken);
         var enabledCodes = ShippingMethodRegistry.Enabled(options)
             .Select(x => x.Code)
             .ToHashSet(StringComparer.OrdinalIgnoreCase);
@@ -331,63 +269,6 @@ public static class ShippingServiceEndpoints
                 o.SortOrder,
                 o.Translations.Select(t => new ShippingServiceOptionTranslationWriteModel(t.LanguageId, t.Name)).ToList())).ToList());
 
-    private static async Task<ShippingServiceDetail?> LoadDetailAsync(
-        IShippingCatalogReader catalog,
-        Guid serviceId,
-        CancellationToken cancellationToken)
-    {
-        var entity = await catalog.GetAsync(serviceId, cancellationToken);
-        if (entity is null)
-        {
-            return null;
-        }
-
-        return new ShippingServiceDetail(
-            entity.ShippingServiceId,
-            entity.Code,
-            entity.ProviderKind,
-            entity.IconKey,
-            entity.ColorKey,
-            entity.IsActive,
-            entity.SortOrder,
-            entity.Translations.Select(t => new ShippingServiceTranslationWrite(t.LanguageId, t.Name, t.Description)).ToList(),
-            entity.Options.Select(o =>
-                new ShippingServiceOptionDetail(
-                    o.ShippingServiceOptionId,
-                    o.Code,
-                    o.IsActive,
-                    o.SortOrder,
-                    o.Translations.Select(r => new ShippingServiceOptionTranslationWrite(r.LanguageId, r.Name)).ToList())).ToList());
-    }
-
-    private static async Task<Guid> ResolveLanguageIdAsync(
-        ILanguageDirectory languages,
-        string? language,
-        CancellationToken cancellationToken)
-    {
-        var langs = await languages.ListAsync(cancellationToken);
-        if (langs.Count == 0)
-        {
-            return Guid.Empty;
-        }
-
-        if (!string.IsNullOrWhiteSpace(language))
-        {
-            var needle = language.Trim();
-            var hit = langs.FirstOrDefault(x =>
-                x.Code.Equals(needle, StringComparison.OrdinalIgnoreCase)
-                || x.Culture.Equals(needle, StringComparison.OrdinalIgnoreCase)
-                || x.UrlPrefix.Equals(needle, StringComparison.OrdinalIgnoreCase)
-                || x.Culture.StartsWith(needle, StringComparison.OrdinalIgnoreCase));
-            if (hit is not null)
-            {
-                return hit.LanguageId;
-            }
-        }
-
-        return (langs.FirstOrDefault(x => x.IsDefault) ?? langs[0]).LanguageId;
-    }
-
     private static string DefaultColor(string code) => code switch
     {
         "post" => "blue",
@@ -408,13 +289,13 @@ public static class ShippingServiceEndpoints
             : [];
 }
 
-/// <summary>Adapter Host برای اعتبار LanguageId سرویس ارسال و seed.</summary>
+/// <summary>Adapter Host برای اعتبار LanguageId سرویس ارسال و seed — Localization.Contracts only.</summary>
 public sealed class HostShippingServiceLanguageGate : IShippingServiceLanguageGate
 {
-    private readonly ILanguageDirectory _languages;
+    private readonly ILanguageLookup _languages;
 
     /// <summary>Gate را می‌سازد.</summary>
-    public HostShippingServiceLanguageGate(ILanguageDirectory languages) => _languages = languages;
+    public HostShippingServiceLanguageGate(ILanguageLookup languages) => _languages = languages;
 
     /// <inheritdoc />
     public async Task EnsureKnownAsync(IReadOnlyList<Guid> languageIds, CancellationToken cancellationToken)

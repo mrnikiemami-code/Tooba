@@ -98,10 +98,23 @@ public sealed class FulfillmentArchitectureGuardTests
         Assert.DoesNotContain("Results.Json(new { title", fulfillmentEndpoint, StringComparison.Ordinal);
         Assert.DoesNotContain("OrderDbContext", fulfillmentEndpoint, StringComparison.Ordinal);
         Assert.DoesNotContain("FulfillmentDbContext", fulfillmentEndpoint, StringComparison.Ordinal);
+        Assert.Contains("ExecuteAdminFulfillmentBulkCommand", fulfillmentEndpoint, StringComparison.Ordinal);
+        Assert.DoesNotContain("AdminFulfillmentWorkQueueComposer", fulfillmentEndpoint, StringComparison.Ordinal);
 
-        var workQueueComposer = File.ReadAllText(Path.Combine(hostRootForLocator, "Admin", "AdminFulfillmentWorkQueueComposer.cs"));
-        Assert.DoesNotContain("throw new PlatformHttpException", workQueueComposer, StringComparison.Ordinal);
-        Assert.DoesNotContain("FulfillmentDbContext", workQueueComposer, StringComparison.Ordinal);
+        Assert.False(
+            File.Exists(Path.Combine(hostRootForLocator, "Admin", "AdminFulfillmentWorkQueueComposer.cs")),
+            "AdminFulfillmentWorkQueueComposer must be deleted — bulk ownership is Application-owned.");
+
+        var shippingEndpoint = File.ReadAllText(Path.Combine(hostRootForLocator, "Admin", "ShippingServiceEndpoints.cs"));
+        Assert.Contains("ApiResponseFactory", shippingEndpoint, StringComparison.Ordinal);
+        Assert.DoesNotContain("Results.Json(new { title", shippingEndpoint, StringComparison.Ordinal);
+        Assert.DoesNotContain("errorCode = ex.Message", shippingEndpoint, StringComparison.Ordinal);
+        Assert.DoesNotContain("catch (InvalidOperationException ex)", shippingEndpoint, StringComparison.Ordinal);
+        Assert.DoesNotContain("Localization.Application", shippingEndpoint, StringComparison.Ordinal);
+        Assert.DoesNotContain("ILanguageDirectory", shippingEndpoint, StringComparison.Ordinal);
+        Assert.DoesNotContain("LoadDetailAsync", shippingEndpoint, StringComparison.Ordinal);
+        Assert.Contains("ListShippingServicesQuery", shippingEndpoint, StringComparison.Ordinal);
+        Assert.Contains("GetShippingServiceQuery", shippingEndpoint, StringComparison.Ordinal);
 
         var panelComposer = File.ReadAllText(Path.Combine(hostRootForLocator, "Fulfillment", "FulfillmentPanelComposer.cs"));
         Assert.DoesNotContain("FulfillmentDbContext", panelComposer, StringComparison.Ordinal);

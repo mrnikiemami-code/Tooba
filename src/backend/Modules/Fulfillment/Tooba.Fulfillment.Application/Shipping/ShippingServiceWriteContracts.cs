@@ -1,4 +1,4 @@
-using MediatR;
+using Tooba.Fulfillment.Application.Shipping;
 
 namespace Tooba.Fulfillment.Application.Shipping;
 
@@ -73,19 +73,3 @@ public interface IShippingServiceDirectory
     /// <summary>seed اولیهٔ idempotent وقتی جدول خالی است.</summary>
     Task EnsureSeedAsync(CancellationToken cancellationToken);
 }
-
-/// <summary>فرمان ایجاد سرویس ارسال.</summary>
-/// <param name="Model">مدل.</param>
-public sealed record CreateShippingServiceCommand(ShippingServiceWriteModel Model) : IRequest<Guid>;
-
-/// <summary>فرمان ویرایش سرویس ارسال.</summary>
-/// <param name="ServiceId">شناسه.</param>
-/// <param name="Model">مدل.</param>
-public sealed record UpdateShippingServiceCommand(Guid ServiceId, ShippingServiceWriteModel Model) : IRequest<Guid>;
-
-/// <summary>فرمان غیرفعال‌سازی سرویس ارسال.</summary>
-/// <param name="ServiceId">شناسه.</param>
-public sealed record DeactivateShippingServiceCommand(Guid ServiceId) : IRequest;
-
-/// <summary>فرمان seed کاتالوگ ارسال.</summary>
-public sealed record EnsureShippingCatalogSeedCommand : IRequest;

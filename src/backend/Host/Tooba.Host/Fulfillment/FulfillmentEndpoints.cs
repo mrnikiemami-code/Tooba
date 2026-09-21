@@ -299,7 +299,7 @@ public static class FulfillmentEndpoints
 
     private static Task<IResult> AdminWorkQueueQueryAsync(
         GridQueryRequest body,
-        AdminFulfillmentWorkQueueComposer composer,
+        IAdminFulfillmentWorkQueueQuery query,
         HttpRequest request,
         CurrentAuthenticatedSession session,
         ICurrentTenant tenant,
@@ -313,12 +313,16 @@ public static class FulfillmentEndpoints
             tenant,
             guard,
             environment,
-            composer.QueryAsync,
+            async (q, ct) =>
+            {
+                var normalized = AdminListGridPolicies.Fulfillments.Normalize(q);
+                return await query.QueryAsync(normalized, ct);
+            },
             cancellationToken);
 
     private static async Task<IResult> AdminWorkQueueBulkAsync(
         AdminFulfillmentWorkQueueBulkRequest body,
-        AdminFulfillmentWorkQueueComposer composer,
+        ISender sender,
         ApiResponseFactory api,
         HttpRequest request,
         CurrentAuthenticatedSession session,
@@ -331,7 +335,15 @@ public static class FulfillmentEndpoints
         {
             var actor = await AdminPanelAccess.RequireAuthorizedAsync(
                 request, session, tenant, guard, environment, cancellationToken);
-            var result = await composer.ExecuteBulkAsync(actor, body, cancellationToken);
+            var outcome = await sender.Send(
+                new ExecuteAdminFulfillmentBulkCommand(actor, body),
+                cancellationToken);
+            if (outcome.IsFailure)
+            {
+                return api.From(outcome);
+            }
+
+            var result = outcome.Value;
             if (result.ErrorCode is not null)
             {
                 return api.FromFailure(new SemanticError(result.ErrorCode));

@@ -48,8 +48,10 @@
     <ProjectReference Include="..\..\Modules\UserPreference\Tooba.UserPreference.Infrastructure\Tooba.UserPreference.Infrastructure.csproj" />
     <ProjectReference Include="..\..\Modules\OperatorProfile\Tooba.OperatorProfile.Application\Tooba.OperatorProfile.Application.csproj" />
     <ProjectReference Include="..\..\Modules\OperatorProfile\Tooba.OperatorProfile.Infrastructure\Tooba.OperatorProfile.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\Modules\Localization\Tooba.Localization.Contracts\Tooba.Localization.Contracts.csproj" />
     <ProjectReference Include="..\..\Modules\Localization\Tooba.Localization.Application\Tooba.Localization.Application.csproj" />
     <ProjectReference Include="..\..\Modules\Localization\Tooba.Localization.Infrastructure\Tooba.Localization.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\Modules\Order\Tooba.Order.Contracts\Tooba.Order.Contracts.csproj" />
     <ProjectReference Include="..\..\Modules\Content\Tooba.Content.Application\Tooba.Content.Application.csproj" />
     <ProjectReference Include="..\..\Modules\Content\Tooba.Content.Infrastructure\Tooba.Content.Infrastructure.csproj" />
     <ProjectReference Include="..\..\Modules\Media\Tooba.Media.Infrastructure\Tooba.Media.Infrastructure.csproj" />
