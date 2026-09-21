@@ -3,6 +3,9 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using NodaTime;
 using Tooba.BuildingBlocks;
+using Tooba.BuildingBlocks.Observability.Correlation;
+using Tooba.BuildingBlocks.Observability.Messaging;
+using Tooba.BuildingBlocks.Observability.Tracing;
 using Tooba.Persistence;
 
 namespace Tooba.Host;
@@ -113,17 +116,28 @@ internal sealed class OutboxDispatcher
 
             foreach (var message in claimed)
             {
+                var correlationId = MessagingCorrelation.ResolveForPublish(message.CorrelationId, message.Id);
+                using var correlationScope = CorrelationIdContext.BeginScope(correlationId);
                 using var activity = ToobaTelemetry.ActivitySource.StartActivity("tooba.outbox.dispatch");
+                ToobaTraceEnricher.Enrich(activity, correlationId, requestKind: TracingRequestKinds.Message);
                 activity?.SetTag("tooba.event_type", message.EventType);
                 activity?.SetTag("tooba.tenant_id", message.TenantId ?? string.Empty);
                 activity?.SetTag("tooba.module_schema", module.Schema);
 
                 try
                 {
+                    // Ensure deserialized metadata carries durable correlation for delayed publish.
                     var integration = _serializer.Deserialize(message);
+                    var metaProp = integration.GetType().GetProperty(nameof(IIntegrationEvent.Metadata));
+                    if (metaProp?.GetValue(integration) is EventMetadata meta
+                        && string.IsNullOrWhiteSpace(meta.CorrelationId))
+                    {
+                        metaProp.SetValue(integration, meta with { CorrelationId = correlationId });
+                    }
+
                     await using var scope = _scopes.CreateAsyncScope();
                     var assigner = scope.ServiceProvider.GetRequiredService<ICommerceContextAssigner>();
-                    assigner.Assign(_workerContext.FromOutbox(message, message.CorrelationId ?? message.Id.ToString("N")));
+                    assigner.Assign(_workerContext.FromOutbox(message, correlationId));
                     var publisher = scope.ServiceProvider.GetRequiredService<IIntegrationEventPublisher>();
                     await publisher.PublishAsync(integration, cancellationToken).ConfigureAwait(false);
                     await _store.MarkProcessedAsync(

@@ -197,6 +197,63 @@ public sealed class OfferArchitectureGuardTests
     }
 
     [Fact]
+    public void Offer_handlers_and_endpoints_do_not_start_raw_activities_or_parse_traceparent()
+    {
+        var violations = Sources("Tooba.Offer.Application")
+            .Concat(Sources("Tooba.Offer.Endpoints"))
+            .Where(x =>
+                x.Text.Contains("StartActivity(", StringComparison.Ordinal)
+                || x.Text.Contains("traceparent", StringComparison.OrdinalIgnoreCase)
+                || x.Text.Contains("AsyncLocal<", StringComparison.Ordinal))
+            .Select(x => x.Path)
+            .ToList();
+        Assert.True(violations.Count == 0, "raw tracing/correlation in Offer handlers/endpoints: " + string.Join("; ", violations));
+    }
+
+    [Fact]
+    public void Offer_cross_module_gateways_use_module_call_tracer_facade()
+    {
+        var tracing = Path.Combine(OfferRoot(), "Tooba.Offer.Infrastructure", "Adapters", "Tracing");
+        Assert.True(Directory.Exists(tracing));
+        var text = string.Join('\n', Directory.EnumerateFiles(tracing, "*.cs").Select(File.ReadAllText));
+        Assert.Contains("IModuleCallTracer", text, StringComparison.Ordinal);
+        Assert.Contains("TracedCatalogVariantLookup", text, StringComparison.Ordinal);
+        Assert.Contains("TracedPartyLookup", text, StringComparison.Ordinal);
+        Assert.Contains("TracedPriceLookupGateway", text, StringComparison.Ordinal);
+        Assert.Contains("TracedSellerOfferInventoryGateway", text, StringComparison.Ordinal);
+        Assert.DoesNotContain("exception.Message", text, StringComparison.Ordinal);
+        Assert.DoesNotContain("SetTag(\"request", text, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void Host_registers_tracing_behavior_once_and_single_opentelemetry_pipeline()
+    {
+        var tmar = File.ReadAllText(Path.Combine(
+            RepoRoot(), "src", "backend", "BuildingBlocks", "Tooba.BuildingBlocks", "TmarFoundation.cs"));
+        Assert.Equal(1, CountOccurrences(tmar, "typeof(Observability.Tracing.TracingBehavior<,>)"));
+
+        var program = File.ReadAllText(Path.Combine(
+            RepoRoot(), "src", "backend", "Host", "Tooba.Host", "Program.cs"));
+        Assert.Equal(1, CountOccurrences(program, "AddOpenTelemetry()"));
+        Assert.Contains("AddOfferModuleCallTracing()", program, StringComparison.Ordinal);
+        Assert.Contains("UseToobaCorrelationId()", program, StringComparison.Ordinal);
+        Assert.Contains("RequestObservabilityEnrichmentMiddleware", program, StringComparison.Ordinal);
+    }
+
+    private static int CountOccurrences(string text, string needle)
+    {
+        var count = 0;
+        var index = 0;
+        while ((index = text.IndexOf(needle, index, StringComparison.Ordinal)) >= 0)
+        {
+            count++;
+            index += needle.Length;
+        }
+
+        return count;
+    }
+
+    [Fact]
     public void Offer_domain_and_application_have_no_persian_prose()
     {
         var violations = Sources("Tooba.Offer.Domain")

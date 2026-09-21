@@ -56,7 +56,8 @@ public sealed class ProblemDetailsContextProvider : IProblemDetailsContextProvid
         {
             var commerce = httpContext?.RequestServices.GetService<ICurrentCommerceContext>()?.Current;
             tenantId = commerce?.Tenant?.TenantId.Value;
-            storeId = commerce?.Tenant?.TenantId.Value;
+            // Distinct StoreId is not on CommerceContext yet; Single-Store uses TenantId as store identity when present.
+            storeId = tenantId;
         }
         catch
         {

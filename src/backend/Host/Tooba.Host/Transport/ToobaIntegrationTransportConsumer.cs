@@ -3,6 +3,9 @@ using MassTransit;
 using Microsoft.Extensions.DependencyInjection;
 using NodaTime;
 using Tooba.BuildingBlocks;
+using Tooba.BuildingBlocks.Observability.Correlation;
+using Tooba.BuildingBlocks.Observability.Logging;
+using Tooba.BuildingBlocks.Observability.Messaging;
 using Tooba.Persistence;
 
 namespace Tooba.Host;
@@ -39,19 +42,23 @@ internal sealed class ToobaIntegrationTransportConsumer : IConsumer<ToobaIntegra
     {
         ArgumentNullException.ThrowIfNull(context);
         var envelope = context.Message;
-        using var activity = ToobaTelemetry.ActivitySource.StartActivity("tooba.messaging.consume");
-        activity?.SetTag("tooba.event_type", envelope.EventType);
-        activity?.SetTag("tooba.tenant_id", envelope.TenantId ?? string.Empty);
-        activity?.SetTag("tooba.edition", envelope.Edition);
-        activity?.SetTag("tooba.deployment_id", envelope.DeploymentId);
-        activity?.SetTag("tooba.event_id", envelope.EventId.ToString());
-        activity?.SetTag("tooba.endpoint", "tooba-integration");
+        using var correlationScope = MessagingCorrelation.BeginConsumeScope(
+            envelope.CorrelationId,
+            context.CorrelationId,
+            envelope.EventId);
+        var correlationId = CorrelationIdContext.Current ?? envelope.EventId.ToString("N");
 
-        var shape = ToOutboxShape(envelope);
+        using var fallbackActivity = MessagingCorrelation.BeginConsumeActivity(envelope.EventType, correlationId);
+        System.Diagnostics.Activity.Current?.SetTag("tooba.tenant_id", envelope.TenantId ?? string.Empty);
+        System.Diagnostics.Activity.Current?.SetTag("tooba.edition", envelope.Edition);
+        System.Diagnostics.Activity.Current?.SetTag("tooba.deployment_id", envelope.DeploymentId);
+        System.Diagnostics.Activity.Current?.SetTag("tooba.event_id", envelope.EventId.ToString());
+        System.Diagnostics.Activity.Current?.SetTag("tooba.endpoint", "tooba-integration");
+
+        var shape = ToOutboxShape(envelope, correlationId);
         var integration = _serializer.Deserialize(shape);
         var assigner = _services.GetRequiredService<ICommerceContextAssigner>();
-        var traceId = envelope.CorrelationId ?? envelope.EventId.ToString("N");
-        assigner.Assign(_workerContext.FromOutbox(shape, traceId));
+        assigner.Assign(_workerContext.FromOutbox(shape, correlationId));
 
         var currentTenant = _services.GetRequiredService<ICurrentTenant>().Current?.TenantId.Value;
         if (!string.IsNullOrWhiteSpace(envelope.TenantId)
@@ -60,46 +67,50 @@ internal sealed class ToobaIntegrationTransportConsumer : IConsumer<ToobaIntegra
             throw new InvalidOperationException("Consumer tenant context does not match durable TenantId.");
         }
 
-        var handlerType = typeof(IIntegrationEventHandler<>).MakeGenericType(integration.GetType());
-        var handlers = _services.GetServices(handlerType);
-        var any = false;
-        foreach (var handler in handlers)
+        var logState = ObservabilityLogScope.CreateState(correlationId, tenantId: envelope.TenantId);
+        using (ObservabilityLogScope.Begin(_logger, logState))
         {
-            if (handler is null)
+            var handlerType = typeof(IIntegrationEventHandler<>).MakeGenericType(integration.GetType());
+            var handlers = _services.GetServices(handlerType);
+            var any = false;
+            foreach (var handler in handlers)
             {
-                continue;
+                if (handler is null)
+                {
+                    continue;
+                }
+
+                any = true;
+                var method = handlerType.GetMethod(nameof(IIntegrationEventHandler<IIntegrationEvent>.HandleAsync))
+                    ?? throw new InvalidOperationException("Integration handler contract is missing HandleAsync.");
+                var task = (Task?)method.Invoke(handler, [integration, context.CancellationToken])
+                    ?? throw new InvalidOperationException("Integration handler returned no task.");
+                await task.ConfigureAwait(false);
             }
 
-            any = true;
-            var method = handlerType.GetMethod(nameof(IIntegrationEventHandler<IIntegrationEvent>.HandleAsync))
-                ?? throw new InvalidOperationException("Integration handler contract is missing HandleAsync.");
-            var task = (Task?)method.Invoke(handler, [integration, context.CancellationToken])
-                ?? throw new InvalidOperationException("Integration handler returned no task.");
-            await task.ConfigureAwait(false);
+            Consumed.Add(1);
+            _logger.LogInformation(
+                "Integration message consumed. EventType={EventType} TenantId={TenantId} Edition={Edition} DeploymentId={DeploymentId} EventId={EventId} HandlersPresent={HandlersPresent}",
+                envelope.EventType,
+                envelope.TenantId ?? string.Empty,
+                envelope.Edition,
+                envelope.DeploymentId,
+                envelope.EventId,
+                any);
         }
-
-        Consumed.Add(1);
-        _logger.LogInformation(
-            "Integration message consumed. EventType={EventType} TenantId={TenantId} Edition={Edition} DeploymentId={DeploymentId} EventId={EventId} HandlersPresent={HandlersPresent}",
-            envelope.EventType,
-            envelope.TenantId ?? string.Empty,
-            envelope.Edition,
-            envelope.DeploymentId,
-            envelope.EventId,
-            any);
     }
 
     /// <summary>
     /// شکل Outbox را فقط برای deserialize و بازسازی زمینه می‌سازد؛ جدول Outbox را دوباره نمی‌نویسد.
     /// </summary>
-    private static OutboxMessage ToOutboxShape(ToobaIntegrationTransportMessage envelope) =>
+    private static OutboxMessage ToOutboxShape(ToobaIntegrationTransportMessage envelope, string correlationId) =>
         new()
         {
             Id = envelope.EventId,
             OccurredAt = Instant.FromDateTimeOffset(envelope.OccurredAt),
             EventType = envelope.EventType,
             Payload = envelope.PayloadJson,
-            CorrelationId = envelope.CorrelationId,
+            CorrelationId = correlationId,
             Version = envelope.Version,
             TenantId = envelope.TenantId,
             DeploymentId = envelope.DeploymentId,

@@ -2,6 +2,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Tooba.BuildingBlocks.Localization;
 using Tooba.BuildingBlocks.Observability.Correlation;
+using Tooba.BuildingBlocks.Observability.Tracing;
 using Tooba.BuildingBlocks.Presentation;
 using Tooba.BuildingBlocks.Presentation.Errors;
 using Tooba.BuildingBlocks.Presentation.ProblemDetails;
@@ -24,6 +25,7 @@ public static class ObservabilityFoundationRegistration
 
         services.AddSingleton<ICorrelationIdProvider, CorrelationIdProvider>();
         services.AddSingleton<ICorrelationContext, CorrelationContextAdapter>();
+        services.AddSingleton<IModuleCallTracer, ModuleCallTracer>();
         services.AddSingleton<ISafeErrorMapper, SafeErrorMapper>();
         services.AddSingleton<IRequestLocaleResolver, RequestLocaleResolver>();
         services.AddSingleton<IErrorMessageLocalizer, CompositeErrorMessageLocalizer>();

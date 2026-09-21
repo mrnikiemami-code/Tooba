@@ -26,4 +26,10 @@ public static class ObservabilityLogScopeKeys
 
     /// <summary>IP کلاینت (فقط اگر trusted-proxy safe).</summary>
     public const string ClientIp = "ClientIp";
+
+    /// <summary>متد HTTP.</summary>
+    public const string HttpMethod = "HttpMethod";
+
+    /// <summary>مسیر درخواست.</summary>
+    public const string HttpPath = "HttpPath";
 }

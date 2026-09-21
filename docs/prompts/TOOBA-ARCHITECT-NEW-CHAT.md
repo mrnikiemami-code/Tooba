@@ -86,3 +86,12 @@ docs/prompts/START-HERE-IF-CHATGPT-IS-LOST.md
 Current P05 recovery state is recorded in those files. Do not infer acceptance
 or issue the next product Task until the current Worker Result has been
 reviewed.
+
+## Current TMAR foundation tip (after R2 worker)
+
+- Track: `FOUNDATION_OBSERVABILITY_ERROR_PRESENTATION`
+- Module-Recovery-State: `FOUNDATION_RUNTIME_TRACING_COMPLETE` (R2)
+- Offer-State: `REOPENED_WAITING_CENTRAL_FOUNDATION`
+- Next recommended Task: `TB-TMAR-FND-OBSERR-001-R3`
+- Evidence: `docs/evidence/TB-TMAR-FND-OBSERR-001-R2/`
+- Master: `docs/architecture/TOOBA-TMAR-MASTER-RECOVERY.md`

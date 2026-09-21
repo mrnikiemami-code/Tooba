@@ -24,6 +24,8 @@ public static class ObservabilityLogScope
         string? storeId = null,
         string? actorId = null,
         string? clientIp = null,
+        string? httpMethod = null,
+        string? httpPath = null,
         Activity? activity = null)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(correlationId);
@@ -36,7 +38,9 @@ public static class ObservabilityLogScope
             TenantId: tenantId,
             StoreId: storeId,
             ActorId: actorId,
-            ClientIp: clientIp);
+            ClientIp: clientIp,
+            HttpMethod: httpMethod,
+            HttpPath: httpPath);
     }
 
     private sealed class EmptyScope : IDisposable
@@ -57,6 +61,8 @@ public static class ObservabilityLogScope
 /// <param name="StoreId">Store.</param>
 /// <param name="ActorId">Actor.</param>
 /// <param name="ClientIp">IP اختیاری.</param>
+/// <param name="HttpMethod">متد HTTP.</param>
+/// <param name="HttpPath">مسیر HTTP.</param>
 public sealed record ObservabilityLogScopeState(
     string CorrelationId,
     string? TraceId,
@@ -65,12 +71,14 @@ public sealed record ObservabilityLogScopeState(
     string? TenantId,
     string? StoreId,
     string? ActorId,
-    string? ClientIp)
+    string? ClientIp,
+    string? HttpMethod = null,
+    string? HttpPath = null)
 {
     /// <summary>Dictionary برای ILogger.BeginScope.</summary>
     public Dictionary<string, object> ToDictionary()
     {
-        var state = new Dictionary<string, object>(8)
+        var state = new Dictionary<string, object>(12)
         {
             [ObservabilityLogScopeKeys.CorrelationId] = CorrelationId,
         };
@@ -81,6 +89,8 @@ public sealed record ObservabilityLogScopeState(
         Add(state, ObservabilityLogScopeKeys.StoreId, StoreId);
         Add(state, ObservabilityLogScopeKeys.ActorId, ActorId);
         Add(state, ObservabilityLogScopeKeys.ClientIp, ClientIp);
+        Add(state, ObservabilityLogScopeKeys.HttpMethod, HttpMethod);
+        Add(state, ObservabilityLogScopeKeys.HttpPath, HttpPath);
         return state;
     }
 

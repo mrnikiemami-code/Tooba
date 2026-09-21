@@ -42,6 +42,7 @@ using Tooba.Host.Support;
 using Tooba.Host.Wallet;
 using Tooba.Offer.Endpoints;
 using Tooba.Offer.Endpoints.Seller;
+using Tooba.Offer.Infrastructure.Adapters;
 using Tooba.Tax.Endpoints;
 using Tooba.Pricing.Endpoints;
 using Tooba.Persistence;
@@ -129,6 +130,7 @@ builder.Services.AddScoped<Tooba.Catalog.Application.IStoreLandingExternalRefere
 builder.Services.AddScoped<Tooba.Catalog.Application.IUnitOfMeasureLanguageGate, Tooba.Host.Admin.HostUnitOfMeasureLanguageGate>();
 builder.Services.AddScoped<Tooba.Fulfillment.Application.IShippingServiceLanguageGate, Tooba.Host.Admin.HostShippingServiceLanguageGate>();
 builder.Services.AddToobaModules(builder.Configuration, builder.Environment);
+builder.Services.AddOfferModuleCallTracing();
 builder.Services.Configure<Tooba.Cart.Application.CartLifetimeOptions>(
     builder.Configuration.GetSection(Tooba.Cart.Application.CartLifetimeOptions.SectionName));
 builder.Services.Configure<Tooba.Order.Application.ReservationCycleOptions>(
@@ -477,17 +479,20 @@ if (app.Environment.IsDevelopment())
     }
 }
 
-app.UseExceptionHandler();
-app.UseToobaCorrelationId();
+// Forwarded headers before IP-dependent context; correlation wraps exception pipeline so ProblemDetails join works.
 if (trustedProxies.Length > 0)
 {
     app.UseForwardedHeaders();
 }
 
+app.UseToobaCorrelationId();
+app.UseExceptionHandler();
+
 app.UseCors("ToobaCors");
 app.UseMiddleware<SecurityHeadersMiddleware>();
 app.UseMiddleware<TenantResolutionMiddleware>();
 app.UseMiddleware<SessionAuthenticationMiddleware>();
+app.UseMiddleware<RequestObservabilityEnrichmentMiddleware>();
 
 app.MapAuthenticationBoundary(enableCors: true);
 app.MapProductWorkspaceEndpoints();

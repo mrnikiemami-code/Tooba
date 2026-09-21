@@ -1,0 +1,98 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+
+BEGIN_TOOBA_WORKER_RESULT
+
+Task-ID: TB-TMAR-FND-OBSERR-001-R2
+Parent-Task: TB-TMAR-FND-OBSERR-001-R1
+Channel: tooba-main
+WorkerId: tooba-worker-01
+AgentType: cursor
+Status: PASS
+
+Summary:
+R2 wires runtime correlation, nested request log scope (Tenant/Store/Actor when available), MediatR TracingBehavior, IModuleCallTracer facade with Offer golden-path Catalog/Party/Pricing/Inventory gateway decorators, and MassTransit/in-process/outbox CorrelationId propagation with AsyncLocal restore. Visible request path proven via ActivityListener + HTTP ProblemDetails join tests. Offer remains REOPENED_WAITING_CENTRAL_FOUNDATION. Module-Recovery-State FOUNDATION_RUNTIME_TRACING_COMPLETE. HEAD==origin/main after push.
+
+Program-Name:
+TMAR — Tooba Microservice-Ready Architecture Recovery
+
+Track:
+FOUNDATION_OBSERVABILITY_ERROR_PRESENTATION
+
+Recovery-Start:
+docs/evidence/TB-TMAR-FND-OBSERR-001-R2/recovery-start.md
+
+Runtime-Pipeline-Before:
+docs/evidence/TB-TMAR-FND-OBSERR-001-R2/runtime-pipeline-before.md
+
+Correlation-Middleware:
+UseToobaCorrelationId after ForwardedHeaders, wrapping ExceptionHandler; BeginScope restore; X-Correlation-ID in/out; Activity tooba.correlation_id; ProblemDetails join
+
+Request-Log-Scope:
+docs/evidence/TB-TMAR-FND-OBSERR-001-R2/request-log-scope.md
+
+MediatR-Tracing:
+TracingBehavior registered once (outer); mediatr.{module}.{request}; tags module/operation/request_kind/correlation/request_type; Error + exception.type only
+
+MediatR-Logging-Policy:
+docs/evidence/TB-TMAR-FND-OBSERR-001-R2/mediatr-logging-policy.md
+
+Module-Trace-API:
+IModuleCallTracer + ModuleCallTrace; tags source/target/operation/module_call/correlation
+
+Offer-Trace-Topology:
+docs/evidence/TB-TMAR-FND-OBSERR-001-R2/offer-trace-topology.md
+
+MassTransit-Correlation:
+docs/evidence/TB-TMAR-FND-OBSERR-001-R2/messaging-propagation.md
+
+Outbox-Correlation:
+docs/evidence/TB-TMAR-FND-OBSERR-001-R2/outbox-correlation.md
+
+TestDouble-Parity:
+InProcessIntegrationEventPublisher uses same ResolveForPublish + BeginScope + enrich contract
+
+OpenTelemetry-Registration:
+Single AddOpenTelemetry pipeline; Tooba + MassTransit sources unchanged; no second provider
+
+Problem-Log-Trace-Join:
+docs/evidence/TB-TMAR-FND-OBSERR-001-R2/problem-log-trace-join.md
+
+Architecture-Guards:
+OfferArchitectureGuardTests: no raw StartActivity in Offer handlers/endpoints; gateway tracers present; TracingBehavior once; single AddOpenTelemetry
+
+Focused-Validation:
+BuildingBlocks.Tests 29/29; Offer.Tests 41/41; Host CorrelationRuntimeTests 3/3; Host build PASS
+
+Full-Validation:
+docs/evidence/TB-TMAR-FND-OBSERR-001-R2/full-validation.md
+
+AntiPattern-Gate:
+CLEAN
+
+Residual-Foundation-Work:
+R3: remove bilingual OfferEndpointLocalizer → central localization catalog; normalize SafeErrorMapper; migrate ToobaExceptionHandler/endpoints fully onto central factory; repo-wide guards; optional Outbox TraceParent additive columns (deferred)
+
+Offer-State:
+REOPENED_WAITING_CENTRAL_FOUNDATION
+
+Frontend-Production-Changes:
+NONE
+
+Git:
+TIP_SHA_PLACEHOLDER
+HEAD==origin/main: YES
+branch: main
+
+Blockers:
+NONE
+
+User-Work-Preserved:
+YES
+
+Module-Recovery-State:
+FOUNDATION_RUNTIME_TRACING_COMPLETE
+
+Next-Recommended-Task:
+TB-TMAR-FND-OBSERR-001-R3
+
+END_TOOBA_WORKER_RESULT

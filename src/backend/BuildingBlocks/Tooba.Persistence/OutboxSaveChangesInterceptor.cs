@@ -2,6 +2,8 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using NodaTime;
 using Tooba.BuildingBlocks;
+using Tooba.BuildingBlocks.Observability.Correlation;
+using Tooba.BuildingBlocks.Observability.Messaging;
 
 namespace Tooba.Persistence;
 
@@ -88,13 +90,19 @@ public sealed class OutboxSaveChangesInterceptor : SaveChangesInterceptor
         var commerce = _commerce.Current
             ?? throw new PlatformHttpException(503, "Service Unavailable", "platform.edition.unconfigured");
 
+        var ambientCorrelation = CorrelationIdContext.Current;
+
         foreach (var domain in domainEvents.DistinctBy(item => item.Metadata.EventId))
         {
+            var correlationId = MessagingCorrelation.ResolveForPublish(
+                domain.Metadata.CorrelationId ?? ambientCorrelation,
+                domain.Metadata.EventId);
+
             var metadata = new EventMetadata(
                 EventId: domain.Metadata.EventId,
                 OccurredAt: domain.Metadata.OccurredAt,
                 EventType: domain.Metadata.EventType,
-                CorrelationId: domain.Metadata.CorrelationId ?? commerce.TraceId,
+                CorrelationId: correlationId,
                 Version: domain.Metadata.Version,
                 TenantId: commerce.Tenant?.TenantId.Value,
                 DeploymentId: commerce.Edition.DeploymentId,

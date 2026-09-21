@@ -1,6 +1,9 @@
 using System.Diagnostics.Metrics;
 using Microsoft.Extensions.DependencyInjection;
 using Tooba.BuildingBlocks;
+using Tooba.BuildingBlocks.Observability.Correlation;
+using Tooba.BuildingBlocks.Observability.Messaging;
+using Tooba.BuildingBlocks.Observability.Tracing;
 
 namespace Tooba.Host;
 
@@ -24,10 +27,15 @@ internal sealed class InProcessIntegrationEventPublisher : IIntegrationEventPubl
     public async Task PublishAsync(IIntegrationEvent integrationEvent, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(integrationEvent);
+        var meta = integrationEvent.Metadata;
+        var correlationId = MessagingCorrelation.ResolveForPublish(meta.CorrelationId, meta.EventId);
+        using var correlationScope = CorrelationIdContext.BeginScope(correlationId);
+
         using var activity = ToobaTelemetry.ActivitySource.StartActivity("tooba.outbox.publish");
-        activity?.SetTag("tooba.event_type", integrationEvent.Metadata.EventType);
-        activity?.SetTag("tooba.tenant_id", integrationEvent.Metadata.TenantId ?? string.Empty);
-        activity?.SetTag("tooba.edition", integrationEvent.Metadata.Edition.ToString());
+        ToobaTraceEnricher.Enrich(activity, correlationId, requestKind: TracingRequestKinds.Message);
+        activity?.SetTag("tooba.event_type", meta.EventType);
+        activity?.SetTag("tooba.tenant_id", meta.TenantId ?? string.Empty);
+        activity?.SetTag("tooba.edition", meta.Edition.ToString());
 
         var handlerType = typeof(IIntegrationEventHandler<>).MakeGenericType(integrationEvent.GetType());
         var handlers = _services.GetServices(handlerType);

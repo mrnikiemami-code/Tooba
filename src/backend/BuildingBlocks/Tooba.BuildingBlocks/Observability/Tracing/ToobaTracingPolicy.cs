@@ -17,6 +17,18 @@ public static class TracingTagNames
     /// <summary>نوع درخواست (http/message/internal).</summary>
     public const string RequestKind = "tooba.request_kind";
 
+    /// <summary>ماژول مبدأ فراخوانی هم‌فرآیند.</summary>
+    public const string ModuleSource = "tooba.module.source";
+
+    /// <summary>ماژول مقصد فراخوانی هم‌فرآیند.</summary>
+    public const string ModuleTarget = "tooba.module.target";
+
+    /// <summary>نام نوع درخواست MediatR (بدون payload).</summary>
+    public const string RequestType = "tooba.request_type";
+
+    /// <summary>نوع استثنا — نه Message.</summary>
+    public const string ExceptionType = "exception.type";
+
     /// <summary>متد HTTP.</summary>
     public const string HttpMethod = "http.method";
 

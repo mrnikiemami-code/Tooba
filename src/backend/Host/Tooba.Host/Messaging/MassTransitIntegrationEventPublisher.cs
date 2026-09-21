@@ -1,6 +1,10 @@
 using System.Diagnostics.Metrics;
 using MassTransit;
+using System.Diagnostics;
 using Tooba.BuildingBlocks;
+using Tooba.BuildingBlocks.Observability.Correlation;
+using Tooba.BuildingBlocks.Observability.Messaging;
+using Tooba.BuildingBlocks.Observability.Tracing;
 using Tooba.Persistence;
 
 namespace Tooba.Host;
@@ -30,39 +34,69 @@ internal sealed class MassTransitIntegrationEventPublisher : IIntegrationEventPu
     public async Task PublishAsync(IIntegrationEvent integrationEvent, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(integrationEvent);
-        using var activity = ToobaTelemetry.ActivitySource.StartActivity("tooba.messaging.publish");
         var meta = integrationEvent.Metadata;
-        activity?.SetTag("tooba.event_type", meta.EventType);
-        activity?.SetTag("tooba.tenant_id", meta.TenantId ?? string.Empty);
-        activity?.SetTag("tooba.edition", meta.Edition.ToString());
-        activity?.SetTag("tooba.deployment_id", meta.DeploymentId);
-        activity?.SetTag("tooba.event_id", meta.EventId.ToString());
+        var correlationId = MessagingCorrelation.ResolveForPublish(meta.CorrelationId, meta.EventId);
+        using var correlationScope = CorrelationIdContext.BeginScope(correlationId);
 
-        var envelope = new ToobaIntegrationTransportMessage
+        Activity? owned = null;
+        var current = Activity.Current;
+        if (current is null)
         {
-            EventType = meta.EventType,
-            Version = meta.Version,
-            EventId = meta.EventId,
-            OccurredAt = meta.OccurredAt,
-            TenantId = meta.TenantId,
-            Edition = meta.Edition.ToString(),
-            DeploymentId = meta.DeploymentId,
-            CorrelationId = meta.CorrelationId,
-            PayloadJson = _serializer.SerializePayload(integrationEvent),
-        };
+            owned = ToobaTelemetry.ActivitySource.StartActivity("tooba.messaging.publish");
+            current = owned;
+        }
 
-        await _bus.Publish(
-            envelope,
-            context =>
+        using (owned)
+        {
+            ToobaTraceEnricher.Enrich(current, correlationId, requestKind: TracingRequestKinds.Message);
+            current?.SetTag("tooba.event_type", meta.EventType);
+            current?.SetTag("tooba.tenant_id", meta.TenantId ?? string.Empty);
+            current?.SetTag("tooba.edition", meta.Edition.ToString());
+            current?.SetTag("tooba.deployment_id", meta.DeploymentId);
+            current?.SetTag("tooba.event_id", meta.EventId.ToString());
+
+            var envelope = new ToobaIntegrationTransportMessage
             {
-                context.CorrelationId = meta.EventId;
-                context.Headers.Set("tooba.event-type", meta.EventType);
-                context.Headers.Set("tooba.tenant-id", meta.TenantId ?? string.Empty);
-                context.Headers.Set("tooba.edition", meta.Edition.ToString());
-                context.Headers.Set("tooba.deployment-id", meta.DeploymentId);
-                context.Headers.Set("tooba.event-id", meta.EventId.ToString("N"));
-            },
-            cancellationToken).ConfigureAwait(false);
+                EventType = meta.EventType,
+                Version = meta.Version,
+                EventId = meta.EventId,
+                OccurredAt = meta.OccurredAt,
+                TenantId = meta.TenantId,
+                Edition = meta.Edition.ToString(),
+                DeploymentId = meta.DeploymentId,
+                CorrelationId = correlationId,
+                PayloadJson = _serializer.SerializePayload(integrationEvent),
+            };
+
+            await _bus.Publish(
+                envelope,
+                context =>
+                {
+                    if (CorrelationIdContext.TryParseGuid(correlationId, out var corrGuid))
+                    {
+                        context.CorrelationId = corrGuid;
+                    }
+
+                    context.Headers.Set("tooba.event-type", meta.EventType);
+                    context.Headers.Set("tooba.tenant-id", meta.TenantId ?? string.Empty);
+                    context.Headers.Set("tooba.edition", meta.Edition.ToString());
+                    context.Headers.Set("tooba.deployment-id", meta.DeploymentId);
+                    context.Headers.Set("tooba.event-id", meta.EventId.ToString("N"));
+                    context.Headers.Set(CorrelationIdConstants.HeaderName, correlationId);
+                    var traceParent = MessagingCorrelation.CaptureTraceParent();
+                    if (!string.IsNullOrWhiteSpace(traceParent))
+                    {
+                        context.Headers.Set("traceparent", traceParent);
+                    }
+
+                    var traceState = MessagingCorrelation.CaptureTraceState();
+                    if (!string.IsNullOrWhiteSpace(traceState))
+                    {
+                        context.Headers.Set("tracestate", traceState);
+                    }
+                },
+                cancellationToken).ConfigureAwait(false);
+        }
 
         Published.Add(1);
     }

@@ -133,7 +133,10 @@ public sealed class ValidationBehavior<TRequest, TResponse> : IPipelineBehavior<
     }
 }
 
-/// <summary>لاگ سبک اجرای Handler بدون تغییر معنا.</summary>
+/// <summary>
+/// لاگ سبک lifecycle MediatR. خطاهای معنایی/اعتبارسنجی را Error تکراری نمی‌کند؛
+/// شکست‌های غیرمنتظره یک‌بار در مرز exception pipeline لاگ می‌شوند.
+/// </summary>
 public sealed class LoggingBehavior<TRequest, TResponse> : IPipelineBehavior<TRequest, TResponse>
     where TRequest : notnull
 {
@@ -156,12 +159,23 @@ public sealed class LoggingBehavior<TRequest, TResponse> : IPipelineBehavior<TRe
             _logger.LogDebug("MediatR handled {Request}", name);
             return response;
         }
+        catch (Exception ex) when (IsExpectedBusinessFailure(ex))
+        {
+            _logger.LogDebug(ex, "MediatR expected failure {Request} {ErrorType}", name, ex.GetType().Name);
+            throw;
+        }
         catch (Exception ex)
         {
-            _logger.LogWarning(ex, "MediatR failed {Request}", name);
+            // Unexpected: log once here at Debug; Host exception pipeline owns Warning/Error presentation.
+            _logger.LogDebug(ex, "MediatR unexpected failure {Request} {ErrorType}", name, ex.GetType().Name);
             throw;
         }
     }
+
+    private static bool IsExpectedBusinessFailure(Exception ex) =>
+        ex is SemanticException
+        || ex is FluentValidation.ValidationException
+        || ex is PlatformHttpException;
 }
 
 /// <summary>فرمان اثبات foundation (فقط برای تست ثبت pipeline).</summary>
@@ -208,6 +222,7 @@ public static class ToobaCqrsRegistration
                 cfg.RegisterServicesFromAssembly(assembly);
             }
         });
+        services.AddTransient(typeof(IPipelineBehavior<,>), typeof(Observability.Tracing.TracingBehavior<,>));
         services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
         services.AddTransient(typeof(IPipelineBehavior<,>), typeof(LoggingBehavior<,>));
         return services;
