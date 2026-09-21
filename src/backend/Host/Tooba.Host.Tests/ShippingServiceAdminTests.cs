@@ -121,6 +121,24 @@ public sealed class ShippingServiceAdminTests
         Assert.DoesNotContain("Localization.Application", source, StringComparison.Ordinal);
         Assert.DoesNotContain("LoadDetailAsync", source, StringComparison.Ordinal);
         Assert.DoesNotContain("SaveChangesAsync", source, StringComparison.Ordinal);
+        Assert.DoesNotContain("HostShippingServiceLanguageGate", source, StringComparison.Ordinal);
+        Assert.DoesNotContain(": IShippingServiceLanguageGate", source, StringComparison.Ordinal);
+        Assert.DoesNotContain(", IShippingServiceLanguageGate", source, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void Language_gate_implementation_is_fulfillment_infrastructure_owned()
+    {
+        var root = FindRepoRoot();
+        var hostEndpoints = Path.Combine(root, "src/backend/Host/Tooba.Host/Admin/ShippingServiceEndpoints.cs");
+        var gate = Path.Combine(root, "src/backend/Modules/Fulfillment/Tooba.Fulfillment.Infrastructure/Shipping/ShippingServiceLanguageGate.cs");
+        var program = Path.Combine(root, "src/backend/Host/Tooba.Host/Program.cs");
+        Assert.True(File.Exists(gate));
+        Assert.DoesNotContain("HostShippingServiceLanguageGate", File.ReadAllText(hostEndpoints), StringComparison.Ordinal);
+        Assert.DoesNotContain("HostShippingServiceLanguageGate", File.ReadAllText(program), StringComparison.Ordinal);
+        Assert.DoesNotContain("IShippingServiceLanguageGate", File.ReadAllText(program), StringComparison.Ordinal);
+        Assert.Contains("IShippingServiceLanguageGate", File.ReadAllText(gate), StringComparison.Ordinal);
+        Assert.Contains("Localization.Contracts", File.ReadAllText(gate), StringComparison.Ordinal);
     }
 
     private static ShippingServiceWriteModel Model(string code, Guid lang, int sort = 10) =>

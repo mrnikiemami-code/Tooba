@@ -1,4 +1,3 @@
-using Tooba.BuildingBlocks;
 using Tooba.Fulfillment.Application.Models;
 using Tooba.Fulfillment.Application.Ports;
 using Tooba.Fulfillment.Application.Shipping;
@@ -9,6 +8,7 @@ namespace Tooba.Order.Infrastructure.Fulfillment;
 
 /// <summary>
 /// Order-owned <see cref="IAdminOrderFulfillmentOperations"/> — Host-free; reuses IFulfillmentDirectory.
+/// Expected business failures return stable outcome codes (no HTTP exception types / localized prose).
 /// </summary>
 public sealed class AdminOrderFulfillmentOperations : IAdminOrderFulfillmentOperations
 {
@@ -28,7 +28,7 @@ public sealed class AdminOrderFulfillmentOperations : IAdminOrderFulfillmentOper
     private readonly IFulfillmentDirectory _fulfillment;
     private readonly ShippingMethodsOptions _shippingMethods;
 
-    /// <summary>Operations را می‌سازد.</summary>
+    /// <summary>Creates the operations adapter.</summary>
     public AdminOrderFulfillmentOperations(
         IAdminOrderFulfillmentCheckoutReader checkouts,
         IAdminOrderFulfillmentPermissionGate permissions,
@@ -48,119 +48,95 @@ public sealed class AdminOrderFulfillmentOperations : IAdminOrderFulfillmentOper
         AdminOrderFulfillmentOperationRequest request,
         CancellationToken cancellationToken)
     {
-        try
-        {
-            await ExecuteAsync(checkoutId, actorUserId, request, cancellationToken);
-            return new AdminOrderFulfillmentOperationOutcome(true, null);
-        }
-        catch (PlatformHttpException ex)
-        {
-            return new AdminOrderFulfillmentOperationOutcome(false, ex.ErrorCode);
-        }
-        catch (InvalidOperationException)
-        {
-            return new AdminOrderFulfillmentOperationOutcome(false, null);
-        }
-    }
-
-    private async Task ExecuteAsync(
-        Guid checkoutId,
-        Guid actorUserId,
-        AdminOrderFulfillmentOperationRequest request,
-        CancellationToken cancellationToken)
-    {
         if (string.IsNullOrWhiteSpace(request.Code))
         {
-            throw new PlatformHttpException(400, "کد عملیات نامعتبر است.", "order.operation.invalid");
+            return Fail("order.operation.invalid");
         }
 
         var code = request.Code.Trim().ToLowerInvariant();
-        var checkout = await _checkouts.GetAsync(checkoutId, cancellationToken)
-            ?? throw new PlatformHttpException(404, "سفارش پیدا نشد.", "order.operation.invalid");
+        var checkout = await _checkouts.GetAsync(checkoutId, cancellationToken);
+        if (checkout is null)
+        {
+            return Fail("order.operation.invalid");
+        }
 
         if (checkout.IsCancelled && CancelledBlockedCodes.Contains(code))
         {
-            throw new PlatformHttpException(
-                400,
-                "سفارش لغو شده است و این عملیات مجاز نیست.",
-                "order.cancelled.blocks_action");
+            return Fail("order.cancelled.blocks_action");
         }
 
         if (!await _permissions.CanManageFulfillmentAsync(actorUserId, cancellationToken))
         {
-            throw new PlatformHttpException(403, "مجوز انجام این عملیات وجود ندارد.", "order.operation.denied");
+            return Fail("order.operation.denied");
         }
 
         if (request.SellerOrderId is Guid sellerOrderId
             && sellerOrderId != Guid.Empty
             && !checkout.SellerOrderIds.Contains(sellerOrderId))
         {
-            throw new PlatformHttpException(400, "این عملیات در وضعیت فعلی سفارش مجاز نیست.", "order.operation.invalid");
+            return Fail("order.operation.invalid");
         }
 
         try
         {
-            switch (code)
+            return code switch
             {
-                case "mark_processing":
-                    await MarkProcessingAsync(request, actorUserId, cancellationToken);
-                    return;
-                case "mark_packed":
-                    await MarkPackedAsync(request, actorUserId, cancellationToken);
-                    return;
-                case "create_shipment":
-                    await CreateShipmentAsync(request, actorUserId, cancellationToken);
-                    return;
-                case "cancel_shipment":
-                    await CancelShipmentAsync(request, actorUserId, cancellationToken);
-                    return;
-                case "assign_tracking":
-                    await AssignTrackingAsync(request, actorUserId, cancellationToken);
-                    return;
-                case "dispatch_shipment":
-                    await DispatchAsync(request, actorUserId, cancellationToken);
-                    return;
-                case "deliver_shipment":
-                    await DeliverAsync(request, actorUserId, cancellationToken);
-                    return;
-                default:
-                    throw new PlatformHttpException(400, "کد عملیات نامعتبر است.", "order.operation.invalid");
-            }
+                "mark_processing" => await MarkProcessingAsync(request, actorUserId, cancellationToken),
+                "mark_packed" => await MarkPackedAsync(request, actorUserId, cancellationToken),
+                "create_shipment" => await CreateShipmentAsync(request, actorUserId, cancellationToken),
+                "cancel_shipment" => await CancelShipmentAsync(request, actorUserId, cancellationToken),
+                "assign_tracking" => await AssignTrackingAsync(request, actorUserId, cancellationToken),
+                "dispatch_shipment" => await DispatchAsync(request, actorUserId, cancellationToken),
+                "deliver_shipment" => await DeliverAsync(request, actorUserId, cancellationToken),
+                _ => Fail("order.operation.invalid"),
+            };
         }
-        catch (PlatformHttpException)
+        catch (InvalidOperationException ex) when (TryMapStableMachineCode(ex.Message, out var mapped))
         {
-            throw;
-        }
-        catch (InvalidOperationException ex)
-        {
-            var mapped = MapFulfillmentException(ex.Message);
-            throw new PlatformHttpException(400, mapped.Fa, mapped.Code);
+            return Fail(mapped);
         }
     }
 
-    private async Task MarkProcessingAsync(
+    private async Task<AdminOrderFulfillmentOperationOutcome> MarkProcessingAsync(
         AdminOrderFulfillmentOperationRequest request,
         Guid actorUserId,
         CancellationToken cancellationToken)
     {
-        var fulfillmentId = RequireFulfillmentId(request);
-        await EnsureFulfillmentLinkedAsync(fulfillmentId, request.SellerOrderId, cancellationToken);
+        if (request.FulfillmentId is not Guid fulfillmentId)
+        {
+            return Fail("order.operation.invalid");
+        }
+
+        var linked = await EnsureFulfillmentLinkedAsync(fulfillmentId, request.SellerOrderId, cancellationToken);
+        if (linked.ErrorCode is not null)
+        {
+            return Fail(linked.ErrorCode);
+        }
+
         await _fulfillment.MarkProcessingAsync(fulfillmentId, actorUserId, cancellationToken);
+        return Ok();
     }
 
-    private async Task MarkPackedAsync(
+    private async Task<AdminOrderFulfillmentOperationOutcome> MarkPackedAsync(
         AdminOrderFulfillmentOperationRequest request,
         Guid actorUserId,
         CancellationToken cancellationToken)
     {
-        var fulfillmentId = RequireFulfillmentId(request);
-        var snapshot = await EnsureFulfillmentLinkedAsync(fulfillmentId, request.SellerOrderId, cancellationToken);
+        if (request.FulfillmentId is not Guid fulfillmentId)
+        {
+            return Fail("order.operation.invalid");
+        }
+
+        var linked = await EnsureFulfillmentLinkedAsync(fulfillmentId, request.SellerOrderId, cancellationToken);
+        if (linked.ErrorCode is not null)
+        {
+            return Fail(linked.ErrorCode);
+        }
+
+        var snapshot = linked.Snapshot!;
         if (snapshot.Status == FulfillmentStatus.ReadyToFulfill)
         {
-            throw new PlatformHttpException(
-                400,
-                "ابتدا پردازش را شروع کنید.",
-                "fulfillment.pack.requires_processing");
+            return Fail("fulfillment.pack.requires_processing");
         }
 
         var selections = snapshot.Items
@@ -169,30 +145,28 @@ public sealed class AdminOrderFulfillmentOperations : IAdminOrderFulfillmentOper
             .ToArray();
         if (selections.Length == 0)
         {
-            throw new PlatformHttpException(400, "قلم قابل بسته‌بندی باقی نمانده است.", "order.operation.invalid");
+            return Fail("order.operation.invalid");
         }
 
-        try
-        {
-            await _fulfillment.PackSelectionsAsync(fulfillmentId, actorUserId, selections, cancellationToken);
-        }
-        catch (InvalidOperationException ex) when (ex.Message.StartsWith("fulfillment.pack.", StringComparison.Ordinal))
-        {
-            throw new PlatformHttpException(400, ex.Message, ex.Message);
-        }
+        await _fulfillment.PackSelectionsAsync(fulfillmentId, actorUserId, selections, cancellationToken);
+        return Ok();
     }
 
-    private async Task CreateShipmentAsync(
+    private async Task<AdminOrderFulfillmentOperationOutcome> CreateShipmentAsync(
         AdminOrderFulfillmentOperationRequest request,
         Guid actorUserId,
         CancellationToken cancellationToken)
     {
-        var fulfillmentId = RequireFulfillmentId(request);
+        if (request.FulfillmentId is not Guid fulfillmentId)
+        {
+            return Fail("order.operation.invalid");
+        }
+
         var methodCode = request.ShippingMethodCode?.Trim();
         var carrier = request.CarrierDisplayName?.Trim();
         if (string.IsNullOrWhiteSpace(methodCode) && string.IsNullOrWhiteSpace(carrier))
         {
-            throw new PlatformHttpException(400, "روش ارسال الزامی است.", "order.operation.invalid");
+            return Fail("order.operation.invalid");
         }
 
         if (!string.IsNullOrWhiteSpace(methodCode))
@@ -201,111 +175,142 @@ public sealed class AdminOrderFulfillmentOperations : IAdminOrderFulfillmentOper
                 string.Equals(x.Code, methodCode, StringComparison.OrdinalIgnoreCase));
             if (!enabled)
             {
-                throw new PlatformHttpException(400, "روش ارسال برای این فروشگاه فعال نیست.", "order.operation.invalid");
+                return Fail("order.operation.invalid");
             }
 
             carrier = ShippingMethodRegistry.ResolveLabel(methodCode, carrier);
         }
 
-        var snapshot = await EnsureFulfillmentLinkedAsync(fulfillmentId, request.SellerOrderId, cancellationToken);
-        var lines = ResolveShipmentSelections(snapshot);
+        var linked = await EnsureFulfillmentLinkedAsync(fulfillmentId, request.SellerOrderId, cancellationToken);
+        if (linked.ErrorCode is not null)
+        {
+            return Fail(linked.ErrorCode);
+        }
+
+        var lines = ResolveShipmentSelections(linked.Snapshot!);
         if (lines.Length == 0)
         {
-            throw new PlatformHttpException(400, "قلم قابل ارسال باقی نمانده است.", "order.operation.invalid");
+            return Fail("order.operation.invalid");
         }
 
-        try
-        {
-            await _fulfillment.CreateShipmentAsync(
-                fulfillmentId,
-                actorUserId,
-                carrier!,
-                lines,
-                cancellationToken,
-                methodCode);
-        }
-        catch (InvalidOperationException ex)
-        {
-            throw new PlatformHttpException(400, ex.Message, "order.operation.invalid");
-        }
+        await _fulfillment.CreateShipmentAsync(
+            fulfillmentId,
+            actorUserId,
+            carrier!,
+            lines,
+            cancellationToken,
+            methodCode);
+        return Ok();
     }
 
-    private async Task CancelShipmentAsync(
+    private async Task<AdminOrderFulfillmentOperationOutcome> CancelShipmentAsync(
         AdminOrderFulfillmentOperationRequest request,
         Guid actorUserId,
         CancellationToken cancellationToken)
     {
-        var fulfillmentId = RequireFulfillmentId(request);
-        var shipmentId = RequireShipmentId(request);
-        await EnsureFulfillmentLinkedAsync(fulfillmentId, request.SellerOrderId, cancellationToken);
+        if (request.FulfillmentId is not Guid fulfillmentId || request.ShipmentId is not Guid shipmentId)
+        {
+            return Fail("order.operation.invalid");
+        }
+
+        var linked = await EnsureFulfillmentLinkedAsync(fulfillmentId, request.SellerOrderId, cancellationToken);
+        if (linked.ErrorCode is not null)
+        {
+            return Fail(linked.ErrorCode);
+        }
+
         await _fulfillment.CancelShipmentAsync(fulfillmentId, shipmentId, actorUserId, cancellationToken);
+        return Ok();
     }
 
-    private async Task AssignTrackingAsync(
+    private async Task<AdminOrderFulfillmentOperationOutcome> AssignTrackingAsync(
         AdminOrderFulfillmentOperationRequest request,
         Guid actorUserId,
         CancellationToken cancellationToken)
     {
-        var fulfillmentId = RequireFulfillmentId(request);
-        var shipmentId = RequireShipmentId(request);
+        if (request.FulfillmentId is not Guid fulfillmentId || request.ShipmentId is not Guid shipmentId)
+        {
+            return Fail("order.operation.invalid");
+        }
+
         if (string.IsNullOrWhiteSpace(request.TrackingReference))
         {
-            throw new PlatformHttpException(400, "کد پیگیری الزامی است.", "order.operation.invalid");
+            return Fail("order.operation.invalid");
         }
 
-        await EnsureFulfillmentLinkedAsync(fulfillmentId, request.SellerOrderId, cancellationToken);
+        var linked = await EnsureFulfillmentLinkedAsync(fulfillmentId, request.SellerOrderId, cancellationToken);
+        if (linked.ErrorCode is not null)
+        {
+            return Fail(linked.ErrorCode);
+        }
+
         await _fulfillment.AssignTrackingAsync(
             fulfillmentId,
             shipmentId,
             actorUserId,
             request.TrackingReference.Trim(),
             cancellationToken);
+        return Ok();
     }
 
-    private async Task DispatchAsync(
+    private async Task<AdminOrderFulfillmentOperationOutcome> DispatchAsync(
         AdminOrderFulfillmentOperationRequest request,
         Guid actorUserId,
         CancellationToken cancellationToken)
     {
-        var fulfillmentId = RequireFulfillmentId(request);
-        var shipmentId = RequireShipmentId(request);
-        await EnsureFulfillmentLinkedAsync(fulfillmentId, request.SellerOrderId, cancellationToken);
+        if (request.FulfillmentId is not Guid fulfillmentId || request.ShipmentId is not Guid shipmentId)
+        {
+            return Fail("order.operation.invalid");
+        }
+
+        var linked = await EnsureFulfillmentLinkedAsync(fulfillmentId, request.SellerOrderId, cancellationToken);
+        if (linked.ErrorCode is not null)
+        {
+            return Fail(linked.ErrorCode);
+        }
+
         await _fulfillment.DispatchShipmentAsync(fulfillmentId, shipmentId, actorUserId, cancellationToken);
+        return Ok();
     }
 
-    private async Task DeliverAsync(
+    private async Task<AdminOrderFulfillmentOperationOutcome> DeliverAsync(
         AdminOrderFulfillmentOperationRequest request,
         Guid actorUserId,
         CancellationToken cancellationToken)
     {
-        var fulfillmentId = RequireFulfillmentId(request);
-        var shipmentId = RequireShipmentId(request);
-        await EnsureFulfillmentLinkedAsync(fulfillmentId, request.SellerOrderId, cancellationToken);
+        if (request.FulfillmentId is not Guid fulfillmentId || request.ShipmentId is not Guid shipmentId)
+        {
+            return Fail("order.operation.invalid");
+        }
+
+        var linked = await EnsureFulfillmentLinkedAsync(fulfillmentId, request.SellerOrderId, cancellationToken);
+        if (linked.ErrorCode is not null)
+        {
+            return Fail(linked.ErrorCode);
+        }
+
         await _fulfillment.DeliverShipmentAsync(fulfillmentId, shipmentId, actorUserId, cancellationToken);
+        return Ok();
     }
 
-    private async Task<FulfillmentSnapshot> EnsureFulfillmentLinkedAsync(
+    private async Task<(FulfillmentSnapshot? Snapshot, string? ErrorCode)> EnsureFulfillmentLinkedAsync(
         Guid fulfillmentId,
         Guid? sellerOrderId,
         CancellationToken cancellationToken)
     {
-        var snapshot = await _fulfillment.GetAsync(fulfillmentId, cancellationToken)
-            ?? throw new PlatformHttpException(404, "fulfillment پیدا نشد.", "order.operation.invalid");
-        if (sellerOrderId is Guid expected && expected != Guid.Empty && snapshot.SellerOrderId != expected)
+        var snapshot = await _fulfillment.GetAsync(fulfillmentId, cancellationToken);
+        if (snapshot is null)
         {
-            throw new PlatformHttpException(400, "این عملیات در وضعیت فعلی سفارش مجاز نیست.", "order.operation.invalid");
+            return (null, "order.operation.invalid");
         }
 
-        return snapshot;
+        if (sellerOrderId is Guid expected && expected != Guid.Empty && snapshot.SellerOrderId != expected)
+        {
+            return (null, "order.operation.invalid");
+        }
+
+        return (snapshot, null);
     }
-
-    private static Guid RequireFulfillmentId(AdminOrderFulfillmentOperationRequest request) =>
-        request.FulfillmentId
-        ?? throw new PlatformHttpException(400, "شناسه fulfillment الزامی است.", "order.operation.invalid");
-
-    private static Guid RequireShipmentId(AdminOrderFulfillmentOperationRequest request) =>
-        request.ShipmentId
-        ?? throw new PlatformHttpException(400, "شناسه محموله الزامی است.", "order.operation.invalid");
 
     private static ShipmentLineCommand[] ResolveShipmentSelections(FulfillmentSnapshot snapshot) =>
         snapshot.Items
@@ -325,32 +330,37 @@ public sealed class AdminOrderFulfillmentOperations : IAdminOrderFulfillmentOper
             .Cast<ShipmentLineCommand>()
             .ToArray();
 
-    private static (string Code, string Fa) MapFulfillmentException(string message) => message switch
+    /// <summary>
+    /// Maps only known stable machine codes. Persian/English prose is never mapped.
+    /// </summary>
+    private static bool TryMapStableMachineCode(string? message, out string code)
     {
-        "dispatch از این وضعیت مجاز نیست." =>
-            ("fulfillment.dispatch.invalid_state", "ارسال از این وضعیت مجاز نیست."),
-        "dispatch بدون tracking مجاز نیست." =>
-            ("fulfillment.dispatch.tracking_required", "ارسال بدون کد رهگیری مجاز نیست."),
-        "ابطال مرسوله پس از ارسال مجاز نیست." =>
-            ("fulfillment.shipment.void_after_dispatch", "ابطال مرسوله پس از ارسال مجاز نیست."),
-        "ابطال مرسوله از این وضعیت مجاز نیست." =>
-            ("fulfillment.shipment.void_invalid_state", "ابطال مرسوله از این وضعیت مجاز نیست."),
-        "fulfillment.cancel.already_dispatched" =>
-            ("fulfillment.dispatch.already_dispatched", "این مرسوله قبلاً ارسال شده است."),
-        "بسته‌بندی پس از تحویل کامل مجاز نیست." =>
-            ("fulfillment.pack.after_delivered", "بسته‌بندی پس از تحویل کامل مجاز نیست."),
-        "پردازش پس از تحویل کامل مجاز نیست." =>
-            ("fulfillment.process.after_delivered", "پردازش پس از تحویل کامل مجاز نیست."),
-        "بسته‌بندی پس از ارسال مجاز نیست." =>
-            ("fulfillment.pack.after_delivered", "بسته‌بندی پس از ارسال مجاز نیست."),
-        "پردازش پس از ارسال مجاز نیست." =>
-            ("fulfillment.process.after_delivered", "پردازش پس از ارسال مجاز نیست."),
-        "تعداد محموله از باقیمانده بسته‌بندی‌شده بیشتر است." =>
-            ("fulfillment.allocation.conflict", "تعداد محموله از باقیمانده بسته‌بندی‌شده بیشتر است."),
-        "این کد پیگیری قبلاً ثبت شده است." =>
-            ("fulfillment.tracking.duplicate", "این کد پیگیری قبلاً ثبت شده است."),
-        _ when message.StartsWith("fulfillment.", StringComparison.Ordinal) => (message, message),
-        _ when message.StartsWith("inventory.", StringComparison.Ordinal) => (message, message),
-        _ => ("order.operation.failed", message),
-    };
+        code = string.Empty;
+        if (string.IsNullOrWhiteSpace(message))
+        {
+            return false;
+        }
+
+        // Transition remap preserved for Fulfillment bulk consumers.
+        if (string.Equals(message, "fulfillment.cancel.already_dispatched", StringComparison.Ordinal))
+        {
+            code = "fulfillment.dispatch.already_dispatched";
+            return true;
+        }
+
+        if (message.StartsWith("fulfillment.", StringComparison.Ordinal)
+            || message.StartsWith("inventory.", StringComparison.Ordinal)
+            || message.StartsWith("shipping_service.", StringComparison.Ordinal)
+            || message.StartsWith("order.", StringComparison.Ordinal))
+        {
+            code = message;
+            return true;
+        }
+
+        return false;
+    }
+
+    private static AdminOrderFulfillmentOperationOutcome Ok() => new(true, null);
+
+    private static AdminOrderFulfillmentOperationOutcome Fail(string errorCode) => new(false, errorCode);
 }

@@ -99,6 +99,7 @@ public sealed class FulfillmentModule : IToobaModule
         services.AddScoped<IFulfillmentShippedQuantityReader, FulfillmentShippedQuantityReader>();
         services.AddScoped<IAdminFulfillmentWorkQueueQuery, Queries.AdminFulfillmentWorkQueueQueryEngine>();
         services.AddScoped<IShippingServiceDirectory, ShippingServiceDirectory>();
+        services.AddScoped<IShippingServiceLanguageGate, ShippingServiceLanguageGate>();
         services.AddScoped<IShippingCatalogReader, ShippingCatalogReader>();
         services.AddSingleton<IErrorCatalogContributor, Errors.FulfillmentErrorCatalogContributor>();
         services.AddScoped<IFulfillmentInventoryGateway, FulfillmentInventoryGateway>();

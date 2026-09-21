@@ -8,7 +8,7 @@ using Xunit;
 
 namespace Tooba.Host.Tests;
 
-/// <summary>TB-TMAR-NEXT-MODULE-BATCH-004-R3 — Order-owned IAdminOrderFulfillmentOperations.</summary>
+/// <summary>TB-TMAR-NEXT-MODULE-BATCH-004-R4 — Order-owned adapter anti-pattern closure.</summary>
 public sealed class AdminOrderFulfillmentOperationsTests
 {
     [Fact]
@@ -42,7 +42,75 @@ public sealed class AdminOrderFulfillmentOperationsTests
     }
 
     [Fact]
-    public async Task Dispatch_without_tracking_preserves_semantic_error_code()
+    public async Task Denied_permission_preserves_stable_code()
+    {
+        var fulfillmentId = Guid.NewGuid();
+        var sellerOrderId = Guid.NewGuid();
+        var checkoutId = Guid.NewGuid();
+        var ops = new AdminOrderFulfillmentOperations(
+            new StubCheckout(false, [sellerOrderId]),
+            new StubPermissions(false),
+            new StubDirectory(fulfillmentId, sellerOrderId, checkoutId));
+
+        var outcome = await ops.TryExecuteAsync(
+            checkoutId,
+            Guid.NewGuid(),
+            Req("mark_processing", sellerOrderId, fulfillmentId, null),
+            CancellationToken.None);
+
+        Assert.False(outcome.Succeeded);
+        Assert.Equal("order.operation.denied", outcome.ErrorCode);
+    }
+
+    [Fact]
+    public async Task Cancelled_checkout_preserves_stable_code()
+    {
+        var fulfillmentId = Guid.NewGuid();
+        var sellerOrderId = Guid.NewGuid();
+        var checkoutId = Guid.NewGuid();
+        var ops = new AdminOrderFulfillmentOperations(
+            new StubCheckout(true, [sellerOrderId]),
+            new StubPermissions(true),
+            new StubDirectory(fulfillmentId, sellerOrderId, checkoutId));
+
+        var outcome = await ops.TryExecuteAsync(
+            checkoutId,
+            Guid.NewGuid(),
+            Req("mark_processing", sellerOrderId, fulfillmentId, null),
+            CancellationToken.None);
+
+        Assert.False(outcome.Succeeded);
+        Assert.Equal("order.cancelled.blocks_action", outcome.ErrorCode);
+    }
+
+    [Fact]
+    public async Task Downstream_stable_fulfillment_code_preserves_mapping()
+    {
+        var fulfillmentId = Guid.NewGuid();
+        var sellerOrderId = Guid.NewGuid();
+        var checkoutId = Guid.NewGuid();
+        var shipmentId = Guid.NewGuid();
+        var dir = new StubDirectory(fulfillmentId, sellerOrderId, checkoutId)
+        {
+            DispatchThrows = new InvalidOperationException("fulfillment.dispatch.tracking_required"),
+        };
+        var ops = new AdminOrderFulfillmentOperations(
+            new StubCheckout(false, [sellerOrderId]),
+            new StubPermissions(true),
+            dir);
+
+        var outcome = await ops.TryExecuteAsync(
+            checkoutId,
+            Guid.NewGuid(),
+            Req("dispatch_shipment", sellerOrderId, fulfillmentId, shipmentId),
+            CancellationToken.None);
+
+        Assert.False(outcome.Succeeded);
+        Assert.Equal("fulfillment.dispatch.tracking_required", outcome.ErrorCode);
+    }
+
+    [Fact]
+    public async Task Unexpected_exception_is_not_silently_converted_to_generic_failure()
     {
         var fulfillmentId = Guid.NewGuid();
         var sellerOrderId = Guid.NewGuid();
@@ -57,25 +125,17 @@ public sealed class AdminOrderFulfillmentOperationsTests
             new StubPermissions(true),
             dir);
 
-        var outcome = await ops.TryExecuteAsync(
-            checkoutId,
-            Guid.NewGuid(),
-            new AdminOrderFulfillmentOperationRequest(
-                "dispatch_shipment",
-                sellerOrderId,
-                fulfillmentId,
-                shipmentId,
-                null,
-                null,
-                null),
-            CancellationToken.None);
-
-        Assert.False(outcome.Succeeded);
-        Assert.Equal("fulfillment.dispatch.tracking_required", outcome.ErrorCode);
+        var ex = await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            ops.TryExecuteAsync(
+                checkoutId,
+                Guid.NewGuid(),
+                Req("dispatch_shipment", sellerOrderId, fulfillmentId, shipmentId),
+                CancellationToken.None));
+        Assert.Equal("dispatch بدون tracking مجاز نیست.", ex.Message);
     }
 
     [Fact]
-    public void Implementation_lives_in_order_infrastructure_not_host()
+    public void Implementation_lives_in_order_infrastructure_without_antipatterns()
     {
         var root = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", ".."));
         Assert.False(File.Exists(Path.Combine(root, "Host", "Tooba.Host", "Admin", "HostAdminOrderFulfillmentOperations.cs")));
@@ -85,7 +145,17 @@ public sealed class AdminOrderFulfillmentOperationsTests
         Assert.Contains("namespace Tooba.Order.Infrastructure.Fulfillment", text, StringComparison.Ordinal);
         Assert.DoesNotContain("Tooba.Host", text, StringComparison.Ordinal);
         Assert.DoesNotContain("AdminOrderOperationsComposer", text, StringComparison.Ordinal);
+        Assert.DoesNotContain("PlatformHttpException", text, StringComparison.Ordinal);
+        Assert.DoesNotContain("MapFulfillmentException", text, StringComparison.Ordinal);
+        Assert.DoesNotMatch(new System.Text.RegularExpressions.Regex(@"[\u0600-\u06FF]"), text);
     }
+
+    private static AdminOrderFulfillmentOperationRequest Req(
+        string code,
+        Guid sellerOrderId,
+        Guid fulfillmentId,
+        Guid? shipmentId) =>
+        new(code, sellerOrderId, fulfillmentId, shipmentId, null, null, null);
 
     private sealed class StubCheckout(bool cancelled, IReadOnlyList<Guid> sellerOrderIds) : IAdminOrderFulfillmentCheckoutReader
     {

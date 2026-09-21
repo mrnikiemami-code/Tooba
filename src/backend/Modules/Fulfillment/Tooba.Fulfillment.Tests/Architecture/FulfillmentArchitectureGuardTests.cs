@@ -131,6 +131,17 @@ public sealed class FulfillmentArchitectureGuardTests
             hostAdminSources,
             text => text.Contains(": IAdminOrderFulfillmentOperations", StringComparison.Ordinal)
                     || text.Contains(", IAdminOrderFulfillmentOperations", StringComparison.Ordinal));
+        Assert.DoesNotContain(
+            hostAdminSources,
+            text => text.Contains(": IShippingServiceLanguageGate", StringComparison.Ordinal)
+                    || text.Contains(", IShippingServiceLanguageGate", StringComparison.Ordinal));
+        Assert.DoesNotContain(
+            hostAdminSources,
+            text => text.Contains("HostShippingServiceLanguageGate", StringComparison.Ordinal));
+
+        var programCs = File.ReadAllText(Path.Combine(hostRootForLocator, "Program.cs"));
+        Assert.DoesNotContain("HostShippingServiceLanguageGate", programCs, StringComparison.Ordinal);
+        Assert.DoesNotContain("IShippingServiceLanguageGate", programCs, StringComparison.Ordinal);
 
         var orderOps = File.ReadAllText(Path.Combine(
             RepoRoot(),
@@ -138,6 +149,23 @@ public sealed class FulfillmentArchitectureGuardTests
         Assert.Contains("IAdminOrderFulfillmentOperations", orderOps, StringComparison.Ordinal);
         Assert.DoesNotContain("Tooba.Host", orderOps, StringComparison.Ordinal);
         Assert.DoesNotContain("AdminOrderOperationsComposer", orderOps, StringComparison.Ordinal);
+        Assert.DoesNotContain("PlatformHttpException", orderOps, StringComparison.Ordinal);
+        Assert.DoesNotContain("MapFulfillmentException", orderOps, StringComparison.Ordinal);
+        Assert.DoesNotMatch(new Regex(@"[\u0600-\u06FF]"), orderOps);
+
+        var languageGateImpl = Path.Combine(
+            ModuleRoot(), "Tooba.Fulfillment.Infrastructure", "Shipping", "ShippingServiceLanguageGate.cs");
+        Assert.True(File.Exists(languageGateImpl), "IShippingServiceLanguageGate must live in Fulfillment.Infrastructure.");
+        var languageGateText = File.ReadAllText(languageGateImpl);
+        Assert.Contains("IShippingServiceLanguageGate", languageGateText, StringComparison.Ordinal);
+        Assert.Contains("ILanguageLookup", languageGateText, StringComparison.Ordinal);
+        Assert.Contains("namespace Tooba.Fulfillment.Infrastructure.Shipping", languageGateText, StringComparison.Ordinal);
+        Assert.DoesNotContain("ServiceProvider", languageGateText, StringComparison.Ordinal);
+        Assert.DoesNotContain("GetRequiredService", languageGateText, StringComparison.Ordinal);
+
+        var fulfillmentModule = File.ReadAllText(Path.Combine(
+            ModuleRoot(), "Tooba.Fulfillment.Infrastructure", "DependencyInjection", "FulfillmentModule.cs"));
+        Assert.Contains("IShippingServiceLanguageGate, ShippingServiceLanguageGate", fulfillmentModule, StringComparison.Ordinal);
 
         var treeQuery = File.ReadAllText(Path.Combine(
             ModuleRoot(), "Tooba.Fulfillment.Application", "Shipping", "ListEnabledShippingMethodsTreeQuery.cs"));

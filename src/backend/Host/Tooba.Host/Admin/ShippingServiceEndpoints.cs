@@ -3,7 +3,6 @@ using Tooba.BuildingBlocks;
 using Tooba.BuildingBlocks.Presentation;
 using Tooba.BuildingBlocks.Results;
 using Tooba.Fulfillment.Application.Shipping;
-using Tooba.Localization.Contracts;
 
 namespace Tooba.Host.Admin;
 
@@ -206,30 +205,4 @@ public static class ShippingServiceEndpoints
                 o.IsActive,
                 o.SortOrder,
                 o.Translations.Select(t => new ShippingServiceOptionTranslationWriteModel(t.LanguageId, t.Name)).ToList())).ToList());
-}
-
-/// <summary>Adapter Host برای اعتبار LanguageId سرویس ارسال و seed — Localization.Contracts only.</summary>
-public sealed class HostShippingServiceLanguageGate : IShippingServiceLanguageGate
-{
-    private readonly ILanguageLookup _languages;
-
-    /// <summary>Gate را می‌سازد.</summary>
-    public HostShippingServiceLanguageGate(ILanguageLookup languages) => _languages = languages;
-
-    /// <inheritdoc />
-    public async Task EnsureKnownAsync(IReadOnlyList<Guid> languageIds, CancellationToken cancellationToken)
-    {
-        var known = (await _languages.ListAsync(cancellationToken)).Select(x => x.LanguageId).ToHashSet();
-        if (languageIds.Any(id => !known.Contains(id)))
-        {
-            throw new InvalidOperationException("shipping_service.language_invalid");
-        }
-    }
-
-    /// <inheritdoc />
-    public async Task<IReadOnlyList<ShippingServiceSeedLanguage>> ListForSeedAsync(CancellationToken cancellationToken)
-    {
-        var langs = await _languages.ListAsync(cancellationToken);
-        return langs.Select(x => new ShippingServiceSeedLanguage(x.LanguageId, x.Code, x.Culture, x.IsDefault)).ToList();
-    }
 }

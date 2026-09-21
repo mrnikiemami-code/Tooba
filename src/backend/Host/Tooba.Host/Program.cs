@@ -132,7 +132,6 @@ builder.Services.AddToobaCqrsFoundation(
     typeof(Tooba.Offer.Application.Commands.CreateOffer.CreateOfferCommand).Assembly);
 builder.Services.AddScoped<Tooba.Catalog.Application.IStoreLandingExternalReferenceGate, Tooba.Host.Admin.MerchandisingStoreLandingReferenceGate>();
 builder.Services.AddScoped<Tooba.Catalog.Application.IUnitOfMeasureLanguageGate, Tooba.Host.Admin.HostUnitOfMeasureLanguageGate>();
-builder.Services.AddScoped<Tooba.Fulfillment.Application.Shipping.IShippingServiceLanguageGate, Tooba.Host.Admin.HostShippingServiceLanguageGate>();
 builder.Services.AddToobaModules(builder.Configuration, builder.Environment);
 builder.Services.AddOfferModuleCallTracing();
 builder.Services.Configure<Tooba.Cart.Application.CartLifetimeOptions>(
