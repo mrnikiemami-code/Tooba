@@ -1,0 +1,44 @@
+BEGIN_TOOBA_WORKER_RESULT
+
+Task-ID: TB-TMAR-FND-OBSERR-001-R4
+Claim-ID: d71cad90-9bd7-4b15-8190-614dddcfccf7
+WorkerId: tooba-worker-01
+Status: PASS
+
+Summary: Final integrated verification of the observability/error/localization foundation and Offer Golden reverify. Two defects were repaired before accept: Offer development seed now uses IClock, and Host error/correlation WebApplicationFactory fixtures join PostgresSerial after a MassTransit SQL migrator race (XX000 tuple concurrently updated). No ceremonial pass.
+
+Program-Name: TMAR — Tooba Microservice-Ready Architecture Recovery
+Track: FOUNDATION_OBSERVABILITY_ERROR_PRESENTATION
+Recovery-Start: main @ 1623b33886f22aa42c1622766e67cae6ce194321; HEAD==origin/main; ancestor 18ca10c9; stashes untouched
+Architect-Verified-R3-State: FOUNDATION_ERROR_LOCALIZATION_COMPLETE
+Foundation-Structure: PASS — coherent Observability/Presentation/Localization/DI folders; no duplicate SSOT; no file >800 LOC
+Correlation-Final: PASS — HTTP normalize/generate once, messaging propagate/restore, outbox CorrelationId survives delay, no fake parent trace
+Log-Scope-Final: PASS — structured scope; ClientIp only via trusted-proxy RemoteIpAddress; scope active through exception presentation
+Tracing-Final: PASS — one OpenTelemetry provider; MediatR child spans; exception.type only
+Offer-Topology-Final: PASS — List/Get Catalog+Pricing+Inventory; Create Catalog+Party; price/inventory aliases call owners then Get
+Error-Catalog-Final: PASS — foundation + every Offer seller code; duplicate registration fails; unknown semantic is fixed 400, not a name heuristic
+Localization-Final: PASS — single Accept-Language resolver; en/fa resources complete; tr-TR and unknown locales do not become Persian
+ProblemDetails-Final: PASS — mapper once; errorCode/correlationId/traceId; no Production stack or exception.Message
+Exception-Logging-Final: PASS — business Warning, unexpected Error once; MediatR stays Debug
+PlatformHttpException-Final: PASS — none in Offer Domain/Application; legacy Host/modules not migrated
+Offer-Golden-Reverify: PASS — COMPLETE_REFERENCE_PATTERN after IClock seed repair
+Architecture-Guards: PASS — including new direct time/id bypass guard
+Repo-Crosscutting-Scan: PASS — 2903 hits, 0 VIOLATION; see repo-crosscutting-scan.json
+Focused-Validation: BuildingBlocks.Tests 36/36; Offer.Tests 57/57; Host error+correlation+mapper 7/7 after PostgresSerial
+Full-Validation: dotnet build src/backend/Tooba.slnx succeeded, 0 warnings, 0 errors
+AntiPattern-Gate: CLEAN
+Residual-Defects: none mandatory. Legacy PlatformHttpException and ex.Message responses remain in non-Offer Host/modules and were left in place.
+Foundation-State: FOUNDATION_COMPLETE
+Offer-State: COMPLETE_REFERENCE_PATTERN
+Frontend-Production-Changes: NONE
+Capability-Map: updated — Foundation Observability R4 row; Last Verified Task TB-TMAR-FND-OBSERR-001-R4; Next USER_REVIEW_OFFER
+Bootstrap: updated — current next task USER_REVIEW_OFFER; fnd-obserr-001-r4 FOUNDATION_COMPLETE
+Master-Recovery-State: updated — R4 FOUNDATION_COMPLETE; Offer COMPLETE_REFERENCE_PATTERN
+Recovery-SoT: docs/evidence/TB-TMAR-FND-OBSERR-001-R4/recovery-sot.md
+Git: TIP_SHA_PLACEHOLDER
+Blockers:
+User-Work-Preserved: YES — stashes untouched; no .rar staged or deleted; no commit/push/Bridge from this worker
+Module-Recovery-State: FOUNDATION_COMPLETE
+Next-Recommended-Task: USER_REVIEW_OFFER
+
+END_TOOBA_WORKER_RESULT

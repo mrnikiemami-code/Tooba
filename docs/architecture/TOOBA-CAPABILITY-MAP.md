@@ -64,6 +64,7 @@ Evidence files remain the deep-detail source; this map is the quick index.
 | Offer Reference Module W1 | COMPLETE_REFERENCE_PATTERN; Endpoints+Tests; Host MapOfferModule; ARCH-MODULE-FILE-001 + HOST-MODULE-ENDPOINT-001; Checkout paused at W5 | TB-TMAR-OFFER-REFERENCE-W1 |
 | Tax Reference Module W1 | COMPLETE_REFERENCE_PATTERN; Offer pattern reused; Endpoints composition point; PROVEN_ON_2_MODULES; Checkout paused at W5 | TB-TMAR-TAX-REFERENCE-W1 |
 | Pricing Reference Module W1 | COMPLETE_REFERENCE_PATTERN; medium module; Offer.Contracts lookup; MapPricingModule; PROVEN_ON_3_MODULES; Checkout paused at W5 | TB-TMAR-PRICING-REFERENCE-W1 |
-| Next | Apply reference pattern to Inventory (or Cart/Returns) OR resume Checkout W6 after Architect choice | — |
+| Foundation Observability R4 | FOUNDATION_COMPLETE; central correlation/tracing/error catalog/localization; Offer re-verified COMPLETE_REFERENCE_PATTERN as first Golden consumer | TB-TMAR-FND-OBSERR-001-R4 |
+| Next | USER_REVIEW_OFFER. Pricing stays gated until that review. Checkout remains PAUSED_AT_SAFE_W5_CHECKPOINT | — |
 
-Last Verified Task = TB-TMAR-PRICING-REFERENCE-W1
+Last Verified Task = TB-TMAR-FND-OBSERR-001-R4

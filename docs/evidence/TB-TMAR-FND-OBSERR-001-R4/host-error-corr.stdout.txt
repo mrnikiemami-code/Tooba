@@ -1,0 +1,13 @@
+﻿Test run for D:\Users\User\source\repos\SarvNewVer\src\backend\Host\Tooba.Host.Tests\bin\Debug\net8.0\Tooba.Host.Tests.dll (.NETCoreApp,Version=v8.0)
+A total of 1 test files matched the specified pattern.
+dotnet : [xUnit.net 00:00:03.50]     
+Tooba.Host.Tests.ErrorContractTests.Mapped_platform_exception_returns_expected_status [FAIL]
+At C:\Users\User\AppData\Local\Temp\ps-script-68d0767d-9e23-45a2-a815-e9b0030afe5f.ps1:88 char:1
++ dotnet test "src\backend\Host\Tooba.Host.Tests\Tooba.Host.Tests.cspro ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: ([xUnit.net 00:0...d_status [FAIL]:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+Results File: D:\Users\User\source\repos\SarvNewVer\docs\evidence\TB-TMAR-FND-OBSERR-001-R4\host-error-corr.trx
+
+Failed!  - Failed:     1, Passed:     6, Skipped:     0, Total:     7, Duration: 7 s - Tooba.Host.Tests.dll (net8.0)

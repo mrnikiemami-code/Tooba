@@ -11,6 +11,7 @@ namespace Tooba.Host.Tests;
 /// <summary>
 /// قرارداد ProblemDetails پلتفرم: traceId هست، جزئیات پیاده‌سازی و credential نیست.
 /// </summary>
+[Collection("PostgresSerial")]
 public sealed class ErrorContractTests : IClassFixture<WebApplicationFactory<Program>>
 {
     private readonly WebApplicationFactory<Program> _factory;

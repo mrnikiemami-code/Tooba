@@ -10,6 +10,7 @@ using Xunit;
 namespace Tooba.Host.Tests;
 
 /// <summary>HTTP correlation + ProblemDetails join for R2.</summary>
+[Collection("PostgresSerial")]
 public sealed class CorrelationRuntimeTests : IClassFixture<WebApplicationFactory<Program>>
 {
     private readonly WebApplicationFactory<Program> _factory;

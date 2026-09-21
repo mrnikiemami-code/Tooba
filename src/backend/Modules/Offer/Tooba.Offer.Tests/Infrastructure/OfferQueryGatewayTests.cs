@@ -107,7 +107,10 @@ public sealed class OfferQueryGatewayTests
         db.Offers.Add(template);
         await db.SaveChangesAsync();
 
-        var seed = new OfferDevelopmentSeedGateway(db, new FixedIds(Guid.Parse("99999999-9999-4999-8999-999999999999")));
+        var seed = new OfferDevelopmentSeedGateway(
+            db,
+            new FixedIds(Guid.Parse("99999999-9999-4999-8999-999999999999")),
+            new FixedClock(now));
         var seller = Guid.Parse("aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa9");
         var created = await seed.EnsureActiveCloneFromAnyActiveAsync("OOS-SKU", seller, CancellationToken.None);
         Assert.NotNull(created);

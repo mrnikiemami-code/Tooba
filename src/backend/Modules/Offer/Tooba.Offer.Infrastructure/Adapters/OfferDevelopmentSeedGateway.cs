@@ -8,7 +8,7 @@ using DomainOfferStatus = Tooba.Offer.Domain.ValueObjects.OfferStatus;
 namespace Tooba.Offer.Infrastructure.Adapters;
 
 /// <summary>Development-only Offer seed mutations owned by Offer.Infrastructure.</summary>
-public sealed class OfferDevelopmentSeedGateway(OfferDbContext db, IIdGenerator ids) : IOfferDevelopmentSeedGateway
+public sealed class OfferDevelopmentSeedGateway(OfferDbContext db, IIdGenerator ids, IClock clock) : IOfferDevelopmentSeedGateway
 {
     /// <inheritdoc />
     public async Task EnsureActiveAsync(Guid offerId, CancellationToken cancellationToken)
@@ -24,7 +24,7 @@ public sealed class OfferDevelopmentSeedGateway(OfferDbContext db, IIdGenerator 
             return;
         }
 
-        offer.Activate(DateTimeOffset.UtcNow);
+        offer.Activate(clock.UtcNow);
         await db.SaveChangesAsync(cancellationToken);
     }
 
@@ -39,7 +39,7 @@ public sealed class OfferDevelopmentSeedGateway(OfferDbContext db, IIdGenerator 
         {
             if (existing.Status != DomainOfferStatus.Active)
             {
-                existing.Activate(DateTimeOffset.UtcNow);
+                existing.Activate(clock.UtcNow);
                 await db.SaveChangesAsync(cancellationToken);
             }
 
@@ -61,10 +61,10 @@ public sealed class OfferDevelopmentSeedGateway(OfferDbContext db, IIdGenerator 
             sellerPartyId,
             template.Channel,
             sellerSku,
-            DateTimeOffset.UtcNow);
+            clock.UtcNow);
         db.Offers.Add(offer);
         await db.SaveChangesAsync(cancellationToken);
-        offer.Activate(DateTimeOffset.UtcNow);
+        offer.Activate(clock.UtcNow);
         await db.SaveChangesAsync(cancellationToken);
         return offer.OfferId;
     }

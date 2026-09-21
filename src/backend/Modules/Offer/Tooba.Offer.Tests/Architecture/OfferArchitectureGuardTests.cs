@@ -319,6 +319,19 @@ public sealed class OfferArchitectureGuardTests
     }
 
     [Fact]
+    public void Offer_production_sources_do_not_bypass_clock_or_id_generator()
+    {
+        var violations = AllOfferSources()
+            .Where(x =>
+                x.Text.Contains("DateTimeOffset.UtcNow", StringComparison.Ordinal)
+                || x.Text.Contains("DateTime.UtcNow", StringComparison.Ordinal)
+                || x.Text.Contains("Guid.NewGuid()", StringComparison.Ordinal))
+            .Select(x => x.Path)
+            .ToList();
+        Assert.True(violations.Count == 0, "direct time/id bypass in Offer: " + string.Join("; ", violations));
+    }
+
+    [Fact]
     public void Host_production_sources_do_not_reference_offer_persistence()
     {
         var hostRoot = Path.Combine(RepoRoot(), "src", "backend", "Host", "Tooba.Host");

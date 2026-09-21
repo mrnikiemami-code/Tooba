@@ -26,7 +26,7 @@ Accepted architecture baseline:
 TB-TMAR-ARCH-BASELINE
 
 Current next task:
-TB-TMAR-FND-OBSERR-001-R4 after R3 FOUNDATION_ERROR_LOCALIZATION_COMPLETE. Offer is READY_FOR_FINAL_REFERENCE_REVERIFY (not COMPLETE). Pricing gated NOT_STARTED_UNTIL_OFFER_REPAIR_ACCEPTED. Checkout remains PAUSED_AT_SAFE_W5_CHECKPOINT.
+USER_REVIEW_OFFER after TB-TMAR-FND-OBSERR-001-R4 FOUNDATION_COMPLETE. Offer is COMPLETE_REFERENCE_PATTERN (re-verified, not ceremonial). Pricing gated until that user review. Checkout remains PAUSED_AT_SAFE_W5_CHECKPOINT.
 
 Product development rule:
 Foundation (TB-TMAR-FND-001) is ACCEPTED.
@@ -484,9 +484,10 @@ offer-reference-w1-r6 = TB-TMAR-OFFER-REFERENCE-W1-R6 historically COMPLETE then
 fnd-obserr-001-r1 = TB-TMAR-FND-OBSERR-001-R1 FOUNDATION_PHASE1_COMPLETE (Correlation/SafeErrorMapper/ApiResponseFactory/locale)
 fnd-obserr-001-r2 = TB-TMAR-FND-OBSERR-001-R2 FOUNDATION_RUNTIME_TRACING_COMPLETE (runtime tracing/messaging; next R3)
 fnd-obserr-001-r3 = TB-TMAR-FND-OBSERR-001-R3 FOUNDATION_ERROR_LOCALIZATION_COMPLETE (catalog/localization/presentation; next R4)
+fnd-obserr-001-r4 = TB-TMAR-FND-OBSERR-001-R4 FOUNDATION_COMPLETE (integrated verification + Offer Golden reverify; next USER_REVIEW_OFFER)
 tax-reference-w1 = TB-TMAR-TAX-REFERENCE-W1 PASS (COMPLETE_REFERENCE_PATTERN historically; physical recheck pending)
-pricing-reference-w1 = TB-TMAR-PRICING-REFERENCE-W1 PASS historically (gated until Offer foundation repair accepted)
-next task = TB-TMAR-FND-OBSERR-001-R4; Checkout remains PAUSED_AT_SAFE_W5_CHECKPOINT; Offer READY_FOR_FINAL_REFERENCE_REVERIFY
+pricing-reference-w1 = TB-TMAR-PRICING-REFERENCE-W1 PASS historically (gated until USER_REVIEW_OFFER)
+next task = USER_REVIEW_OFFER; Checkout remains PAUSED_AT_SAFE_W5_CHECKPOINT; Offer COMPLETE_REFERENCE_PATTERN; foundation FOUNDATION_COMPLETE
 
 primary goal = painless future Microservice migration
 

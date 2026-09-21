@@ -188,7 +188,10 @@ User choice:
 Continue TMAR for now until user explicitly says to return to product feature work.
 
 Next TMAR task:
-TB-TMAR-FND-OBSERR-001-R3 FOUNDATION_ERROR_LOCALIZATION_COMPLETE — ErrorDescriptor catalog, .resx Offer localization, thin exception presentation, Offer seller pipeline final adoption. Offer-State READY_FOR_FINAL_REFERENCE_REVERIFY. Next: TB-TMAR-FND-OBSERR-001-R4 (final integrated verification). Pricing remains gated; Checkout remains PAUSED_AT_SAFE_W5_CHECKPOINT.
+USER_REVIEW_OFFER. TB-TMAR-FND-OBSERR-001-R4 verified the observability/error/localization foundation as FOUNDATION_COMPLETE and re-verified Offer as COMPLETE_REFERENCE_PATTERN. Pricing remains gated until that review. Checkout remains PAUSED_AT_SAFE_W5_CHECKPOINT.
+
+Foundation Observability/Error Presentation R4:
+TB-TMAR-FND-OBSERR-001-R4 — Final integrated verification. Module-Recovery-State FOUNDATION_COMPLETE. Offer-State COMPLETE_REFERENCE_PATTERN. Canonical foundation pipeline; Offer is the first Golden consumer. Repairs: Offer development seed uses IClock; Host error/correlation fixtures use PostgresSerial after a MassTransit migrator race. Evidence: docs/evidence/TB-TMAR-FND-OBSERR-001-R4/. Next: USER_REVIEW_OFFER.
 
 Foundation Observability/Error Presentation R3:
 TB-TMAR-FND-OBSERR-001-R3 — Error localization/catalog complete; Module-Recovery-State FOUNDATION_ERROR_LOCALIZATION_COMPLETE; Offer-State READY_FOR_FINAL_REFERENCE_REVERIFY. Evidence: docs/evidence/TB-TMAR-FND-OBSERR-001-R3/.
