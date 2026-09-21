@@ -35,7 +35,7 @@ Capability-Map: updated — Foundation Observability R4 row; Last Verified Task 
 Bootstrap: updated — current next task USER_REVIEW_OFFER; fnd-obserr-001-r4 FOUNDATION_COMPLETE
 Master-Recovery-State: updated — R4 FOUNDATION_COMPLETE; Offer COMPLETE_REFERENCE_PATTERN
 Recovery-SoT: docs/evidence/TB-TMAR-FND-OBSERR-001-R4/recovery-sot.md
-Git: bebb7fe0d24f9158a3773eca6029fd2d5fa49108
+Git: 4170195bf28b025befb2388d2c97c0ef32d4308d
 Blockers:
 User-Work-Preserved: YES — stashes untouched; no .rar staged or deleted; no commit/push/Bridge from this worker
 Module-Recovery-State: FOUNDATION_COMPLETE
