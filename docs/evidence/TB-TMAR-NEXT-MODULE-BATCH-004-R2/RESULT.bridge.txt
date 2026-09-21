@@ -1,0 +1,179 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+
+BEGIN_TOOBA_WORKER_RESULT
+
+Task-ID:
+TB-TMAR-NEXT-MODULE-BATCH-004-R2
+
+Parent-Task:
+TB-TMAR-NEXT-MODULE-BATCH-004-R1
+
+Channel:
+tooba-main
+
+WorkerId:
+tooba-worker-01
+
+AgentType:
+cursor
+
+Status:
+PASS
+
+Summary:
+Closed remaining Fulfillment Host authority on Shipping Service admin and work-queue bulk. Shipping endpoints are Host thin transport (ISender + ApiResponseFactory); list/get/create/update/deactivate/ensure-seed owned by Fulfillment Application with Result/SemanticError. Work-queue bulk moved to ExecuteAdminFulfillmentBulkCommand; AdminFulfillmentWorkQueueComposer deleted; Order.Contracts IAdminOrderFulfillmentOperations + Host adapter; Localization.Contracts ILanguageLookup for language fallback. Returns/Tax/Pricing/Checkout/frontend untouched.
+
+Program-Name:
+TMAR — Tooba Microservice-Ready Architecture Recovery
+
+Track:
+REFERENCE_BATCH_REPAIR
+
+Recovery-Start:
+docs/evidence/TB-TMAR-NEXT-MODULE-BATCH-004-R2/recovery-start.md — Claim a847b957-2ca8-4c4d-ae7a-552eb9e5115d; baseline 0f95c8d4f4770d880846042c621301a7fe6baddf
+
+Shipping-Endpoint-Audit:
+docs/evidence/TB-TMAR-NEXT-MODULE-BATCH-004-R2/shipping-endpoint-audit.md — HOST_THIN_TRANSPORT; routes preserved; no Host projection/manual envelopes
+
+Shipping-Application-UseCases:
+ListShippingServicesQuery / GetShippingServiceQuery / Create|Update|DeactivateShippingServiceCommand / EnsureShippingCatalogSeedCommand → Result + shipping_service.* SemanticError
+
+Shipping-Localization-Boundary:
+Localization.Contracts ILanguageLookup + LanguageLookupBridge; HostShippingServiceLanguageGate uses Contracts only; fallback semantics preserved
+
+Shipping-Presentation:
+CENTRALIZED — ApiResponseFactory; FulfillmentErrorCatalogContributor shipping_service.* codes
+
+WorkQueue-Host-Authority-Audit:
+docs/evidence/TB-TMAR-NEXT-MODULE-BATCH-004-R2/workqueue-host-authority-audit.md — AdminFulfillmentWorkQueueComposer deleted
+
+WorkQueue-Application-Ownership:
+ExecuteAdminFulfillmentBulkCommand owns validation/orchestration/partial-success; Host bulk endpoint ISender only
+
+Order-Contract-Seam:
+Order.Contracts IAdminOrderFulfillmentOperations + HostAdminOrderFulfillmentOperations adapter over AdminOrderOperationsComposer (no Fulfillment→Host/Order.Application)
+
+Behavior-Preservation-Audit:
+docs/evidence/TB-TMAR-NEXT-MODULE-BATCH-004-R2/behavior-preservation-audit.md — routes/shapes/counts/safe bulk codes preserved
+
+Presentation-Scan:
+docs/evidence/TB-TMAR-NEXT-MODULE-BATCH-004-R2/presentation-scan.md — ex.Message=0; manual title/errorCode=0; Fulfillment-business PlatformHttpException mapping=0
+
+Architecture-Guards:
+FulfillmentArchitectureGuardTests: shipping Host thin; composer deleted; ExecuteAdminFulfillmentBulkCommand wired; no Localization.Application on shipping surface
+
+Fulfillment-Validation:
+dotnet test Tooba.Fulfillment.Tests → 18 passed (architecture + SellerFulfillmentAuth + AdminFulfillmentBulk)
+
+Focused-Validation:
+Fulfillment.Tests 18/18; Host ShippingServiceAdminTests + AdminFulfillmentWorkQueueTests 27/27
+
+Skipped-Validation:
+Broad Host suite; Returns full suite; Checkout workflow; Tax/Pricing; frontend
+
+Full-Validation:
+dotnet build src/backend/Tooba.slnx → succeeded 0 errors
+
+AntiPattern-Gate:
+CLEAN — no Host shipping business envelopes; no WorkQueue Host composer; no Fulfillment.Application→Order.Application; no Localization.Application from Fulfillment shipping path
+
+Residual-Defects:
+NONE for R2 scope. AdminOrderOperationsComposer remains Host-owned for broader order ops (outside work-queue seam). ListEnabledMethodsTreeAsync remains Host helper for order shipping-methods tree (not shipping-services admin CRUD).
+
+Fulfillment-State:
+COMPLETE_REFERENCE_PATTERN
+
+Fulfillment-Physical-State:
+VERIFIED_ON_DISK_AND_NAMESPACE
+
+Fulfillment-CrossModule-Boundary:
+CONTRACTS_ONLY
+
+Fulfillment-Endpoint-State:
+HOST_THIN_TRANSPORT
+
+Fulfillment-Host-DbAuthority:
+NONE
+
+Fulfillment-Shipping-Presentation:
+CENTRALIZED
+
+Fulfillment-WorkQueue-Authority:
+APPLICATION_OWNED
+
+Returns-State:
+COMPLETE_REFERENCE_PATTERN
+
+Returns-Physical-State:
+VERIFIED_ON_DISK_AND_NAMESPACE
+
+Returns-CrossModule-Boundary:
+CONTRACTS_ONLY
+
+Returns-Endpoint-State:
+HOST_THIN_TRANSPORT
+
+Returns-Host-DbAuthority:
+NONE
+
+Returns-Error-Presentation:
+CENTRALIZED
+
+Behavior-Preservation:
+VERIFIED
+
+Notification-State:
+COMPLETE_REFERENCE_PATTERN
+
+Support-State:
+COMPLETE_REFERENCE_PATTERN
+
+Wallet-State:
+COMPLETE_REFERENCE_PATTERN
+
+Payment-State:
+COMPLETE_REFERENCE_PATTERN
+
+Inventory-State:
+COMPLETE_REFERENCE_PATTERN
+
+Promotion-State:
+COMPLETE_REFERENCE_PATTERN
+
+Offer-State:
+COMPLETE_REFERENCE_PATTERN
+
+Foundation-State:
+RESULT_PATTERN_FOUNDATION_COMPLETE
+
+Tax-State:
+DEFERRED_PHYSICAL_REVIEW_BY_USER
+
+Pricing-State:
+DEFERRED_PHYSICAL_REVIEW_BY_USER
+
+Checkout-State:
+PAUSED_AT_SAFE_W5_CHECKPOINT
+
+Frontend-Production-Changes:
+NONE
+
+Batch-State:
+COMPLETE
+
+Git:
+c421b4725d6be6c49746ad8928374b8cec689940
+
+Blockers:
+NONE
+
+User-Work-Preserved:
+YES
+
+Module-Recovery-State:
+NEXT_REFERENCE_BATCH_004_COMPLETE
+
+Next-Recommended-Task:
+TB-TMAR-NEXT-MODULE-BATCH-005
+
+END_TOOBA_WORKER_RESULT
