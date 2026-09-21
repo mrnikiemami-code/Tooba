@@ -553,7 +553,7 @@ public static class StorefrontEndpoints
         Guid checkoutId,
         Guid cartId,
         StorefrontCheckoutComposer composer,
-        Tooba.Payment.Application.IPaymentDirectory payments,
+        Tooba.Payment.Application.Ports.IPaymentDirectory payments,
         HttpRequest request,
         CancellationToken cancellationToken)
     {
@@ -765,13 +765,16 @@ public static class StorefrontEndpoints
             return (StatusCodes.Status401Unauthorized, "Unauthorized", "checkout.authentication_required");
         }
 
-        if (text.Contains("قبلاً با موفقیت", StringComparison.Ordinal)
+        if (text.Contains("payment.already_succeeded", StringComparison.Ordinal)
+            || text.Contains("قبلاً با موفقیت", StringComparison.Ordinal)
             || text.Contains("قبلاً پرداخت", StringComparison.Ordinal))
         {
             return (StatusCodes.Status409Conflict, "Conflict", "payment.already_succeeded");
         }
 
-        if (text.Contains("پیدا نشد", StringComparison.Ordinal))
+        if (text.Contains("payment.not_found", StringComparison.Ordinal)
+            || text.Contains("payment.missing", StringComparison.Ordinal)
+            || text.Contains("پیدا نشد", StringComparison.Ordinal))
         {
             return (StatusCodes.Status404NotFound, "Not Found", "payment.missing");
         }
@@ -800,7 +803,8 @@ public static class StorefrontEndpoints
             return (StatusCodes.Status400BadRequest, "Bad Request", "payment.method.unavailable");
         }
 
-        if (text.Contains("شماره پیگیری پرداخت الزامی است", StringComparison.Ordinal))
+        if (text.Contains("payment.tracking_reference.required", StringComparison.Ordinal)
+            || text.Contains("شماره پیگیری پرداخت الزامی است", StringComparison.Ordinal))
         {
             return (StatusCodes.Status400BadRequest, "Bad Request", "payment.tracking.required");
         }

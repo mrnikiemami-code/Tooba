@@ -1,7 +1,8 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
 using Tooba.Persistence;
-using Tooba.Wallet.Domain;
+using Tooba.Wallet.Domain.Aggregates;
+using Tooba.Wallet.Domain.ValueObjects;
 
 namespace Tooba.Wallet.Infrastructure.Persistence;
 

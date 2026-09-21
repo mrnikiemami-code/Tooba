@@ -7,9 +7,8 @@ using Tooba.Host.Admin;
 using Tooba.Order.Application;
 using Tooba.Order.Domain;
 using Tooba.Order.Infrastructure.Persistence;
-using Tooba.Payment.Application;
-using Tooba.Payment.Domain;
-using Tooba.Payment.Infrastructure.Persistence;
+using Tooba.Payment.Application.Ports;
+using Tooba.Payment.Domain.ValueObjects;
 using Tooba.Settlement.Application;
 
 namespace Tooba.Host.Storefront;
@@ -22,7 +21,7 @@ public sealed class StorefrontPendingPaymentComposer
     private const string DevActorHeader = "X-Tooba-Dev-Actor-User-Id";
 
     private readonly OrderDbContext _orders;
-    private readonly PaymentDbContext _payments;
+    private readonly IPaymentQueryDirectory _paymentQueries;
     private readonly CatalogDbContext _catalog;
     private readonly StorefrontCartComposer _carts;
     private readonly IReservationCycleDirectory _cycles;
@@ -37,7 +36,7 @@ public sealed class StorefrontPendingPaymentComposer
     /// <summary>ترکیب Host برای فهرست در انتظار پرداخت.</summary>
     internal StorefrontPendingPaymentComposer(
         OrderDbContext orders,
-        PaymentDbContext payments,
+        IPaymentQueryDirectory paymentQueries,
         CatalogDbContext catalog,
         StorefrontCartComposer carts,
         IReservationCycleDirectory cycles,
@@ -50,7 +49,7 @@ public sealed class StorefrontPendingPaymentComposer
         IHttpContextAccessor http)
     {
         _orders = orders;
-        _payments = payments;
+        _paymentQueries = paymentQueries;
         _catalog = catalog;
         _carts = carts;
         _cycles = cycles;
@@ -76,31 +75,14 @@ public sealed class StorefrontPendingPaymentComposer
         }
 
         var checkoutIds = groups.Select(x => x.CheckoutId).ToArray();
-        var paymentRows = await _payments.Payments.AsNoTracking()
-            .Where(x => checkoutIds.Contains(x.CheckoutId))
-            .ToListAsync(cancellationToken);
-        var latestPaymentRows = paymentRows
-            .GroupBy(x => x.CheckoutId)
-            .Select(g => g.OrderByDescending(x => x.CreatedAt).First())
-            .ToList();
-        var latestPaymentIds = latestPaymentRows.Select(x => x.PaymentId).ToArray();
-        var evidenceByPayment = latestPaymentIds.Length == 0
-            ? new Dictionary<Guid, DateTimeOffset?>()
-            : (await _payments.Attempts.AsNoTracking()
-                .Where(x => latestPaymentIds.Contains(x.PaymentId))
-                .Select(x => new { x.PaymentId, x.EvidenceSubmittedAt, x.CreatedAt })
-                .ToListAsync(cancellationToken))
-                .GroupBy(x => x.PaymentId)
-                .ToDictionary(
-                    g => g.Key,
-                    g => g.OrderByDescending(x => x.CreatedAt).First().EvidenceSubmittedAt);
-        var latestPayments = latestPaymentRows.ToDictionary(
+        var paymentRows = await _paymentQueries.GetLatestByCheckoutIdsAsync(checkoutIds, cancellationToken);
+        var latestPayments = paymentRows.ToDictionary(
             row => row.CheckoutId,
             row => new StorefrontPendingPaymentProjector.PaymentInput(
                 row.PaymentId,
-                row.Status,
+                Enum.TryParse<PaymentStatus>(row.Status, true, out var st) ? st : PaymentStatus.Pending,
                 row.ProviderCode,
-                evidenceByPayment.GetValueOrDefault(row.PaymentId),
+                row.EvidenceSubmittedAt,
                 row.Amount,
                 row.Currency));
         var cycleMap = await _cycles.GetProjectionsAsync(checkoutIds, now, null, cancellationToken);

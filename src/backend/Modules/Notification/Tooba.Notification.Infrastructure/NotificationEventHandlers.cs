@@ -1,9 +1,9 @@
+using Tooba.Payment.Application.Ports;
 using Tooba.BuildingBlocks;
 using Tooba.Fulfillment.Application;
 using Tooba.Notification.Application;
 using Tooba.Notification.Domain;
 using Tooba.Order.Application;
-using Tooba.Payment.Application;
 using Tooba.Returns.Application;
 
 namespace Tooba.Notification.Infrastructure;

@@ -2,8 +2,11 @@ using Tooba.AccessControl.Application;
 using Tooba.AccessControl.Domain;
 using Tooba.BuildingBlocks;
 using Tooba.Host.Admin;
-using Tooba.Wallet.Application;
-using Tooba.Wallet.Infrastructure;
+using Tooba.Wallet.Application.Models;
+using Tooba.Wallet.Application.Ports;
+using Tooba.Wallet.Infrastructure.Adapters;
+using Tooba.Wallet.Infrastructure.DependencyInjection;
+using Tooba.Wallet.Infrastructure.Directories;
 
 namespace Tooba.Host.Wallet;
 

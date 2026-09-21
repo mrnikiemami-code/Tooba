@@ -11,8 +11,7 @@ using Tooba.Order.Application;
 using Tooba.Order.Domain;
 using Tooba.Order.Infrastructure.Persistence;
 using Tooba.Party.Infrastructure.Persistence;
-using Tooba.Payment.Application;
-using Tooba.Payment.Infrastructure.Persistence;
+using Tooba.Payment.Application.Ports;
 using Tooba.Returns.Domain;
 using Tooba.Returns.Infrastructure.Persistence;
 using Tooba.Settlement.Application;
@@ -50,7 +49,7 @@ public sealed class AdminPanelComposer
         IOfferQueryGateway offers,
         OrderDbContext orders,
         PartyDbContext parties,
-        PaymentDbContext paymentDb,
+        IPaymentQueryDirectory paymentQueries,
         IPaymentAdminDirectory payments,
         ISettlementDirectory settlement,
         IFulfillmentDirectory fulfillment,
@@ -71,7 +70,7 @@ public sealed class AdminPanelComposer
         _ordersGrid = new AdminOrdersGridQueryEngine(orders, parties, returns, supply, cycles);
         _sellersGrid = new AdminSellersGridQueryEngine(offers, parties, orders);
         _customersGrid = new AdminCustomersGridQueryEngine(orders);
-        _paymentsGrid = new AdminPaymentsGridQueryEngine(paymentDb, orders, supply, cycles);
+        _paymentsGrid = new AdminPaymentsGridQueryEngine(paymentQueries, orders, supply, cycles);
     }
 
     /// <summary>

@@ -1,5 +1,8 @@
-using Tooba.Wallet.Contracts;
-using Tooba.Wallet.Domain;
+using Tooba.Wallet.Contracts.Dtos;
+using Tooba.Wallet.Contracts.Payments;
+using Tooba.Wallet.Contracts.Refunds;
+using Tooba.Wallet.Domain.Aggregates;
+using Tooba.Wallet.Domain.ValueObjects;
 using Xunit;
 
 namespace Tooba.Host.Tests;
@@ -27,9 +30,9 @@ public sealed class WalletCurrencyContractsTests
     public void Normalize_rejects_missing_currency(string? input)
     {
         var ex1 = Assert.Throws<InvalidOperationException>(() => WalletCurrency.Normalize(input!));
-        Assert.Equal("ارز الزامی است.", ex1.Message);
+        Assert.Equal("wallet.currency_required", ex1.Message);
         var ex2 = Assert.Throws<InvalidOperationException>(() => WalletAccount.NormalizeCurrency(input!));
-        Assert.Equal("ارز الزامی است.", ex2.Message);
+        Assert.Equal("wallet.currency_required", ex2.Message);
     }
 
     [Theory]
@@ -38,15 +41,15 @@ public sealed class WalletCurrencyContractsTests
     public void Normalize_rejects_invalid_length(string input)
     {
         var ex1 = Assert.Throws<InvalidOperationException>(() => WalletCurrency.Normalize(input));
-        Assert.Equal("ارز نامعتبر است.", ex1.Message);
+        Assert.Equal("wallet.currency_invalid", ex1.Message);
         var ex2 = Assert.Throws<InvalidOperationException>(() => WalletAccount.NormalizeCurrency(input));
-        Assert.Equal("ارز نامعتبر است.", ex2.Message);
+        Assert.Equal("wallet.currency_invalid", ex2.Message);
     }
 
     [Fact]
     public void Wallet_gateway_compose_uses_normalized_currency()
     {
-        var reference = Tooba.Payment.Infrastructure.WalletPaymentGateway.ComposeReference(
+        var reference = Tooba.Payment.Infrastructure.Providers.WalletPaymentGateway.ComposeReference(
             Guid.Parse("11111111-1111-7111-8111-111111111111"),
             Guid.Parse("22222222-2222-7222-8222-222222222222"),
             1000m,

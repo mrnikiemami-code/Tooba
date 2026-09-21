@@ -1,12 +1,16 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Tooba.Order.Application;
-using Tooba.Payment.Application;
-using Tooba.Payment.Domain;
+using Tooba.Payment.Application.Models;
+using Tooba.Payment.Application.Ports;
+using Tooba.Payment.Domain.Aggregates;
+using Tooba.Payment.Domain.ValueObjects;
 using Tooba.Returns.Application;
 using Tooba.Returns.Domain;
 using Tooba.Returns.Infrastructure.Persistence;
-using Tooba.Wallet.Contracts;
+using Tooba.Wallet.Contracts.Dtos;
+using Tooba.Wallet.Contracts.Payments;
+using Tooba.Wallet.Contracts.Refunds;
 
 namespace Tooba.Returns.Infrastructure;
 

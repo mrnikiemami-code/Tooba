@@ -1,8 +1,13 @@
 using System.Text;
 using System.Text.Json;
 using Microsoft.Extensions.Options;
-using Tooba.Payment.Application;
-using Tooba.Payment.Infrastructure;
+using Tooba.Payment.Application.Models;
+using Tooba.Payment.Application.Ports;
+using Tooba.Payment.Infrastructure.Adapters;
+using Tooba.Payment.Infrastructure.DependencyInjection;
+using Tooba.Payment.Infrastructure.Directories;
+using Tooba.Payment.Infrastructure.Messaging;
+using Tooba.Payment.Infrastructure.Providers;
 
 namespace Tooba.Host.Payments;
 

@@ -1,3 +1,4 @@
+using Tooba.Payment.Application.Ports;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -11,7 +12,6 @@ using Tooba.Inventory.Application.Orders;
 using Tooba.Inventory.Application.Returns;
 using Tooba.ModuleContracts;
 using Tooba.Order.Application;
-using Tooba.Payment.Application;
 using Tooba.Persistence;
 
 namespace Tooba.Fulfillment.Infrastructure;

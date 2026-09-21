@@ -22,9 +22,15 @@ using Tooba.Inventory.Application.Orders;
 using Tooba.Inventory.Application.Returns;
 using Tooba.Order.Infrastructure;
 using Tooba.Order.Infrastructure.Persistence;
-using Tooba.Payment.Application;
-using Tooba.Payment.Domain;
-using Tooba.Payment.Infrastructure;
+using Tooba.Payment.Application.Models;
+using Tooba.Payment.Application.Ports;
+using Tooba.Payment.Domain.Aggregates;
+using Tooba.Payment.Domain.ValueObjects;
+using Tooba.Payment.Infrastructure.Adapters;
+using Tooba.Payment.Infrastructure.DependencyInjection;
+using Tooba.Payment.Infrastructure.Directories;
+using Tooba.Payment.Infrastructure.Messaging;
+using Tooba.Payment.Infrastructure.Providers;
 using Tooba.Payment.Infrastructure.Persistence;
 using Tooba.Persistence;
 using Tooba.Returns.Application;
@@ -144,13 +150,8 @@ public sealed class ReturnFoundationTests : IAsyncLifetime
         var lineUnitPrice = (await orderDb.Lines.AsNoTracking().SingleAsync()).UnitPriceSnapshot;
 
         var paymentBridge = new OrderPaymentBridge(orderDb, new OrderInventoryLifecycleAdapter(new UnusedInventoryDirectory()));
-        var paymentGateways = new PaymentGatewayRegistry([new FakePaymentGateway()]);
-        var paymentDirectory = new PaymentDirectory(
-            paymentDb,
-            new OpenPaymentUseCaseGuard(),
-            paymentBridge,
-            paymentGateways,
-            new PaymentGatewayActorContext());
+        var paymentGateways = new PaymentGatewayRegistry([new FakePaymentGateway(new SystemUtcClock(), new UuidV7IdGenerator())]);
+        var paymentDirectory = new PaymentDirectory(paymentDb, new OpenPaymentUseCaseGuard(), paymentBridge, paymentGateways, new PaymentGatewayActorContext(), new SystemUtcClock(), new UuidV7IdGenerator());
         var initiated = await paymentDirectory.InitiateAsync(
             new InitiatePaymentCommand(checkout.CheckoutId, actor, buyer, "idem-return-pay", "fake"),
             CancellationToken.None);
@@ -443,9 +444,9 @@ public sealed class ReturnFoundationTests : IAsyncLifetime
     }
 
     /// <summary>Stub کیف پول برای مسیر OriginalPayment که Credit را صدا نمی‌زند.</summary>
-    private sealed class UnusedWalletDirectoryStub : Tooba.Wallet.Contracts.IWalletRefundCreditPort
+    private sealed class UnusedWalletDirectoryStub : Tooba.Wallet.Contracts.Refunds.IWalletRefundCreditPort
     {
-        public Task<Tooba.Wallet.Contracts.WalletRefundCreditResultDto> CreditRefundAsync(
+        public Task<Tooba.Wallet.Contracts.Refunds.WalletRefundCreditResultDto> CreditRefundAsync(
             Guid customerActorId,
             decimal amount,
             string currency,

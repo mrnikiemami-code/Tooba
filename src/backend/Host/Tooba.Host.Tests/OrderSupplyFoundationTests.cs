@@ -79,7 +79,7 @@ public sealed class OrderSupplyFoundationTests
         Assert.Contains("CartHoldMinutes", app, StringComparison.Ordinal);
         var opts = File.ReadAllText(Path.GetFullPath(Path.Combine(
             AppContext.BaseDirectory, "..", "..", "..", "..", "..", "Modules", "Payment",
-            "Tooba.Payment.Infrastructure", "PaymentGatewayOptions.cs")));
+            "Tooba.Payment.Infrastructure", "Providers", "PaymentGatewayOptions.cs")));
         Assert.Contains("OrderSupplyHoldOverrides", opts, StringComparison.Ordinal);
     }
 

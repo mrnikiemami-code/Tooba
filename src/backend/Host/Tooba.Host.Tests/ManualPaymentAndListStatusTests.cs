@@ -1,6 +1,12 @@
+using Tooba.BuildingBlocks;
+using Tooba.BuildingBlocks.Observability.Tracing;
 using Tooba.Host.Grid;
 using Tooba.Order.Domain;
-using Tooba.Payment.Infrastructure;
+using Tooba.Payment.Infrastructure.Adapters;
+using Tooba.Payment.Infrastructure.DependencyInjection;
+using Tooba.Payment.Infrastructure.Directories;
+using Tooba.Payment.Infrastructure.Messaging;
+using Tooba.Payment.Infrastructure.Providers;
 using Tooba.Returns.Domain;
 using Xunit;
 
@@ -11,7 +17,7 @@ public sealed class ManualPaymentAndListStatusTests
     [Fact]
     public async Task Manual_gateway_verify_stays_pending_without_admin_confirm()
     {
-        var gateway = new ManualPaymentGateway();
+        var gateway = new ManualPaymentGateway(new SystemUtcClock());
         var pending = await gateway.VerifyAsync($"manual-{Guid.NewGuid():N}", true, CancellationToken.None);
         Assert.False(pending.VerifiedSuccess);
         Assert.Equal("MANUAL_DEPOSIT_PENDING", pending.FailureCode);

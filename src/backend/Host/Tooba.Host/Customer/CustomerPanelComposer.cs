@@ -12,8 +12,10 @@ using Tooba.Inventory.Application.Ports;
 using Tooba.Inventory.Application.Checkout;
 using Tooba.Inventory.Application.Orders;
 using Tooba.Inventory.Application.Returns;
-using Tooba.Payment.Application;
-using Tooba.Payment.Domain;
+using Tooba.Payment.Application.Models;
+using Tooba.Payment.Application.Ports;
+using Tooba.Payment.Domain.Aggregates;
+using Tooba.Payment.Domain.ValueObjects;
 using Tooba.Wishlist.Application;
 using Tooba.Host.Storefront;
 

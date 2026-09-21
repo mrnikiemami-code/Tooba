@@ -1,7 +1,11 @@
 using Tooba.Cart.Application;
 using Tooba.Cart.Contracts;
 using Tooba.Order.Application;
-using Tooba.Payment.Infrastructure;
+using Tooba.Payment.Infrastructure.Adapters;
+using Tooba.Payment.Infrastructure.DependencyInjection;
+using Tooba.Payment.Infrastructure.Directories;
+using Tooba.Payment.Infrastructure.Messaging;
+using Tooba.Payment.Infrastructure.Providers;
 using Xunit;
 
 namespace Tooba.Host.Tests;

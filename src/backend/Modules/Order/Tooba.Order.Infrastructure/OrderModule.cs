@@ -5,7 +5,8 @@ using Microsoft.Extensions.Hosting;
 using Tooba.BuildingBlocks;
 using Tooba.ModuleContracts;
 using Tooba.Order.Application;
-using Tooba.Payment.Application;
+using Tooba.Payment.Application.Models;
+using Tooba.Payment.Application.Ports;
 using Tooba.Order.Infrastructure.Persistence;
 using Tooba.Persistence;
 

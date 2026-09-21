@@ -3,7 +3,9 @@ using Tooba.Fulfillment.Domain;
 using Tooba.Host.Admin;
 using Tooba.Offer.Domain;
 using Tooba.Order.Domain;
-using Tooba.Payment.Domain;
+using Tooba.Payment.Domain.Aggregates;
+using Tooba.Payment.Domain.ValueObjects;
+using Tooba.Payment.Domain.Events;
 using Tooba.Returns.Domain;
 using Tooba.Settlement.Application;
 using Tooba.Settlement.Domain;
@@ -64,23 +66,21 @@ public sealed class AdminOrderCorrectiveActionsTests
     {
         var now = DateTimeOffset.UtcNow;
         var sellerOrderId = Guid.NewGuid();
-        var payment = CustomerPayment.Open(
-            Guid.NewGuid(),
-            1000m,
+        var payment = CustomerPayment.Open(Guid.NewGuid(), Guid.NewGuid(), 1000m,
             "IRR",
             "manual",
             $"idem-{Guid.NewGuid():N}",
-            [(sellerOrderId, 1000m)],
+            [(PaymentAllocationTargetKind.SellerOrder, sellerOrderId, 1000m, Guid.NewGuid())],
             now);
-        var first = payment.RecordInitiation("manual-1", now);
+        var first = payment.RecordInitiation(Guid.NewGuid(), "manual-1", now);
         payment.ApplyVerifiedFailure(first.AttemptId, "MANUAL_DEPOSIT_REJECTED", now.AddMinutes(1));
         Assert.Equal(PaymentStatus.Failed, payment.Status);
-        var restored = payment.RestoreRejectedManualToPending(now.AddMinutes(2));
+        var restored = payment.RestoreRejectedManualToPending(Guid.NewGuid(), now.AddMinutes(2));
         Assert.Equal(PaymentStatus.Pending, payment.Status);
         Assert.Equal(PaymentAttemptStatus.Initiated, restored.Status);
         Assert.DoesNotContain(payment.DomainEvents, e => e is PaymentSucceededDomainEvent);
         Assert.Contains(payment.DomainEvents, e => e is PaymentManualDepositRestoredDomainEvent);
-        var again = payment.RestoreRejectedManualToPending(now.AddMinutes(3));
+        var again = payment.RestoreRejectedManualToPending(Guid.NewGuid(), now.AddMinutes(3));
         Assert.Equal(restored.AttemptId, again.AttemptId);
     }
 
@@ -88,17 +88,15 @@ public sealed class AdminOrderCorrectiveActionsTests
     public void Restore_deposit_forbidden_after_success()
     {
         var now = DateTimeOffset.UtcNow;
-        var payment = CustomerPayment.Open(
-            Guid.NewGuid(),
-            500m,
+        var payment = CustomerPayment.Open(Guid.NewGuid(), Guid.NewGuid(), 500m,
             "IRR",
             "manual",
             $"idem-{Guid.NewGuid():N}",
-            [(Guid.NewGuid(), 500m)],
+            [(PaymentAllocationTargetKind.SellerOrder, Guid.NewGuid(), 500m, Guid.NewGuid())],
             now);
-        var first = payment.RecordInitiation("manual-ok", now);
+        var first = payment.RecordInitiation(Guid.NewGuid(), "manual-ok", now);
         payment.ApplyVerifiedSuccess(first.AttemptId, "manual-confirm", now.AddMinutes(1));
-        var ex = Assert.Throws<InvalidOperationException>(() => payment.RestoreRejectedManualToPending(now.AddMinutes(2)));
+        var ex = Assert.Throws<InvalidOperationException>(() => payment.RestoreRejectedManualToPending(Guid.NewGuid(), now.AddMinutes(2)));
         Assert.Equal("payment.restore.already_succeeded", ex.Message);
     }
 
@@ -106,25 +104,23 @@ public sealed class AdminOrderCorrectiveActionsTests
     public void Unconfirm_deposit_after_success_returns_pending_without_new_success()
     {
         var now = DateTimeOffset.UtcNow;
-        var payment = CustomerPayment.Open(
-            Guid.NewGuid(),
-            800m,
+        var payment = CustomerPayment.Open(Guid.NewGuid(), Guid.NewGuid(), 800m,
             "IRR",
             "manual",
             $"idem-{Guid.NewGuid():N}",
-            [(Guid.NewGuid(), 800m)],
+            [(PaymentAllocationTargetKind.SellerOrder, Guid.NewGuid(), 800m, Guid.NewGuid())],
             now);
-        var first = payment.RecordInitiation("manual-ok", now);
+        var first = payment.RecordInitiation(Guid.NewGuid(), "manual-ok", now);
         payment.ApplyVerifiedSuccess(first.AttemptId, "manual-confirm", now.AddMinutes(1));
         Assert.Equal(PaymentStatus.Succeeded, payment.Status);
         var successEvents = payment.DomainEvents.Count(e => e is PaymentSucceededDomainEvent);
-        var unconfirmed = payment.UnconfirmManualDeposit(now.AddMinutes(2));
+        var unconfirmed = payment.UnconfirmManualDeposit(Guid.NewGuid(), now.AddMinutes(2));
         Assert.Equal(PaymentStatus.Pending, payment.Status);
         Assert.Null(payment.CompletedAt);
         Assert.Equal(PaymentAttemptStatus.Initiated, unconfirmed.Status);
         Assert.Equal(successEvents, payment.DomainEvents.Count(e => e is PaymentSucceededDomainEvent));
         Assert.Contains(payment.DomainEvents, e => e is PaymentManualDepositUnconfirmedDomainEvent);
-        var again = payment.UnconfirmManualDeposit(now.AddMinutes(3));
+        var again = payment.UnconfirmManualDeposit(Guid.NewGuid(), now.AddMinutes(3));
         Assert.Equal(unconfirmed.AttemptId, again.AttemptId);
     }
 
@@ -332,15 +328,13 @@ public sealed class AdminOrderCorrectiveActionsTests
     public void Restore_after_cancel_refund_pending_returns_succeeded_without_success_event()
     {
         var now = DateTimeOffset.UtcNow;
-        var payment = CustomerPayment.Open(
-            Guid.NewGuid(),
-            1000m,
+        var payment = CustomerPayment.Open(Guid.NewGuid(), Guid.NewGuid(), 1000m,
             "IRR",
             "manual",
             $"idem-{Guid.NewGuid():N}",
-            [(Guid.NewGuid(), 1000m)],
+            [(PaymentAllocationTargetKind.SellerOrder, Guid.NewGuid(), 1000m, Guid.NewGuid())],
             now);
-        var attempt = payment.RecordInitiation("req-1", now);
+        var attempt = payment.RecordInitiation(Guid.NewGuid(), "req-1", now);
         payment.ApplyVerifiedSuccess(attempt.AttemptId, "txn-1", now.AddMinutes(1));
         var successEvents = payment.DomainEvents.Count(e => e is PaymentSucceededDomainEvent);
         payment.BeginOrderCancelRefund(now.AddMinutes(2));
@@ -357,15 +351,13 @@ public sealed class AdminOrderCorrectiveActionsTests
     public void Restore_after_cancel_from_pending_returns_pending()
     {
         var now = DateTimeOffset.UtcNow;
-        var payment = CustomerPayment.Open(
-            Guid.NewGuid(),
-            1000m,
+        var payment = CustomerPayment.Open(Guid.NewGuid(), Guid.NewGuid(), 1000m,
             "IRR",
             "manual",
             $"idem-{Guid.NewGuid():N}",
-            [(Guid.NewGuid(), 1000m)],
+            [(PaymentAllocationTargetKind.SellerOrder, Guid.NewGuid(), 1000m, Guid.NewGuid())],
             now);
-        payment.RecordInitiation("req-1", now);
+        payment.RecordInitiation(Guid.NewGuid(), "req-1", now);
         payment.CloseForOrderCancel(now.AddMinutes(1));
         Assert.Equal(PaymentStatus.Cancelled, payment.Status);
         payment.RestoreAfterOrderCancelRestore(now.AddMinutes(2));
@@ -377,15 +369,13 @@ public sealed class AdminOrderCorrectiveActionsTests
     public void Restore_after_cancel_from_rejected_deposit_returns_failed()
     {
         var now = DateTimeOffset.UtcNow;
-        var payment = CustomerPayment.Open(
-            Guid.NewGuid(),
-            1000m,
+        var payment = CustomerPayment.Open(Guid.NewGuid(), Guid.NewGuid(), 1000m,
             "IRR",
             "manual",
             $"idem-{Guid.NewGuid():N}",
-            [(Guid.NewGuid(), 1000m)],
+            [(PaymentAllocationTargetKind.SellerOrder, Guid.NewGuid(), 1000m, Guid.NewGuid())],
             now);
-        var first = payment.RecordInitiation("manual-1", now);
+        var first = payment.RecordInitiation(Guid.NewGuid(), "manual-1", now);
         payment.ApplyVerifiedFailure(first.AttemptId, "MANUAL_DEPOSIT_REJECTED", now.AddMinutes(1));
         payment.CloseForOrderCancel(now.AddMinutes(2));
         Assert.Equal(PaymentStatus.Cancelled, payment.Status);
@@ -397,15 +387,13 @@ public sealed class AdminOrderCorrectiveActionsTests
     public void Restore_after_completed_refund_is_forbidden()
     {
         var now = DateTimeOffset.UtcNow;
-        var payment = CustomerPayment.Open(
-            Guid.NewGuid(),
-            1000m,
+        var payment = CustomerPayment.Open(Guid.NewGuid(), Guid.NewGuid(), 1000m,
             "IRR",
             "manual",
             $"idem-{Guid.NewGuid():N}",
-            [(Guid.NewGuid(), 1000m)],
+            [(PaymentAllocationTargetKind.SellerOrder, Guid.NewGuid(), 1000m, Guid.NewGuid())],
             now);
-        var attempt = payment.RecordInitiation("req-1", now);
+        var attempt = payment.RecordInitiation(Guid.NewGuid(), "req-1", now);
         payment.ApplyVerifiedSuccess(attempt.AttemptId, "txn-1", now.AddMinutes(1));
         payment.BeginOrderCancelRefund(now.AddMinutes(2));
         payment.MarkRefunded(now.AddMinutes(3));
@@ -417,15 +405,13 @@ public sealed class AdminOrderCorrectiveActionsTests
     public void Order_cancel_refund_does_not_un_cancel_payment_until_gateway_succeeds()
     {
         var now = DateTimeOffset.UtcNow;
-        var payment = CustomerPayment.Open(
-            Guid.NewGuid(),
-            1000m,
+        var payment = CustomerPayment.Open(Guid.NewGuid(), Guid.NewGuid(), 1000m,
             "IRR",
             "fake",
             $"idem-{Guid.NewGuid():N}",
-            [(Guid.NewGuid(), 1000m)],
+            [(PaymentAllocationTargetKind.SellerOrder, Guid.NewGuid(), 1000m, Guid.NewGuid())],
             now);
-        var attempt = payment.RecordInitiation("req-1", now);
+        var attempt = payment.RecordInitiation(Guid.NewGuid(), "req-1", now);
         payment.ApplyVerifiedSuccess(attempt.AttemptId, "txn-1", now.AddMinutes(1));
         Assert.Equal(PaymentStatus.Succeeded, payment.Status);
         payment.BeginOrderCancelRefund(now.AddMinutes(2));

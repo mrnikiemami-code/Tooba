@@ -12,20 +12,20 @@ public sealed class StorefrontPaymentSucceededGuardTests
     {
         var root = FindRepoRoot();
         var directory = File.ReadAllText(Path.Combine(
-            root, "src", "backend", "Modules", "Payment", "Tooba.Payment.Infrastructure", "PaymentDirectory.cs"));
+            root, "src", "backend", "Modules", "Payment", "Tooba.Payment.Infrastructure", "Directories", "PaymentDirectory.cs"));
         var composer = File.ReadAllText(Path.Combine(
             root, "src", "backend", "Host", "Tooba.Host", "Storefront", "StorefrontPaymentComposer.cs"));
         var endpoints = File.ReadAllText(Path.Combine(
             root, "src", "backend", "Host", "Tooba.Host", "Storefront", "StorefrontEndpoints.cs"));
         var contracts = File.ReadAllText(Path.Combine(
-            root, "src", "backend", "Modules", "Payment", "Tooba.Payment.Application", "PaymentContracts.cs"));
+            root, "src", "backend", "Modules", "Payment", "Tooba.Payment.Application", "Ports", "PaymentDirectoryPorts.cs"));
 
         Assert.Contains("HasSucceededPaymentForCheckoutAsync", contracts, StringComparison.Ordinal);
         Assert.Contains("HasSucceededPaymentForCheckoutAsync", directory, StringComparison.Ordinal);
         Assert.Contains("HasSucceededPaymentForCheckoutAsync", composer, StringComparison.Ordinal);
         Assert.Contains("AlreadySucceeded()", directory, StringComparison.Ordinal);
         Assert.Contains("payment.already_succeeded", endpoints, StringComparison.Ordinal);
-        Assert.Contains("پرداخت این سفارش قبلاً با موفقیت انجام شده است.", directory, StringComparison.Ordinal);
+        Assert.Contains("payment.already_succeeded", directory, StringComparison.Ordinal);
         Assert.Contains("CanInitiatePayment", File.ReadAllText(Path.Combine(
             root, "src", "backend", "Host", "Tooba.Host", "Storefront", "StorefrontModels.cs")), StringComparison.Ordinal);
     }

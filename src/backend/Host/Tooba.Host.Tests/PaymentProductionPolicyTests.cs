@@ -1,5 +1,11 @@
-using Tooba.Payment.Application;
-using Tooba.Payment.Infrastructure;
+using Tooba.BuildingBlocks;
+using Tooba.Payment.Application.Models;
+using Tooba.Payment.Application.Ports;
+using Tooba.Payment.Infrastructure.Adapters;
+using Tooba.Payment.Infrastructure.DependencyInjection;
+using Tooba.Payment.Infrastructure.Directories;
+using Tooba.Payment.Infrastructure.Messaging;
+using Tooba.Payment.Infrastructure.Providers;
 using Xunit;
 
 namespace Tooba.Host.Tests;
@@ -33,7 +39,8 @@ public sealed class PaymentProductionPolicyTests
         var gateway = new WebhookPaymentGateway(
             new HttpClient(),
             Microsoft.Extensions.Options.Options.Create(new PaymentGatewayOptions()),
-            new PaymentGatewayInstrumentation());
+            new PaymentGatewayInstrumentation(),
+            new SystemUtcClock());
         var ex = await Assert.ThrowsAsync<InvalidOperationException>(() =>
             gateway.InitiateAsync(Guid.NewGuid(), 100m, "IRR", CancellationToken.None));
         Assert.Equal("payment.gateway.unconfigured", ex.Message);
@@ -50,7 +57,7 @@ public sealed class PaymentProductionPolicyTests
                 StatusQueryBaseUrl = "https://payments.example/status",
                 InitiateBaseUrl = "",
             }),
-            new PaymentGatewayInstrumentation());
+            new PaymentGatewayInstrumentation(), new SystemUtcClock());
         var ex = await Assert.ThrowsAsync<InvalidOperationException>(() =>
             gateway.InitiateAsync(Guid.NewGuid(), 100m, "IRR", CancellationToken.None));
         Assert.Equal("payment.gateway.unconfigured", ex.Message);
@@ -67,7 +74,7 @@ public sealed class PaymentProductionPolicyTests
                 StatusQueryBaseUrl = "http://127.0.0.1:9/status",
                 InitiateBaseUrl = "https://payments.example/pay",
             }),
-            new PaymentGatewayInstrumentation());
+            new PaymentGatewayInstrumentation(), new SystemUtcClock());
         var verified = await gateway.VerifyAsync("wh-ref", false, CancellationToken.None);
         Assert.False(verified.VerifiedSuccess);
         Assert.Equal("GATEWAY_MISCONFIGURED", verified.FailureCode);
@@ -90,7 +97,7 @@ public sealed class PaymentProductionPolicyTests
                     InitiateBaseUrl = "https://payments.test/pay",
                     AllowedStatusQueryHosts = ["payments.test"],
                 }),
-                new PaymentGatewayInstrumentation());
+                new PaymentGatewayInstrumentation(), new SystemUtcClock());
             var verified = await gateway.VerifyAsync(reference, callbackClaimsSuccess: false, CancellationToken.None);
             Assert.True(verified.VerifiedSuccess);
             Assert.Equal("txn-override", verified.ProviderTransactionReference);

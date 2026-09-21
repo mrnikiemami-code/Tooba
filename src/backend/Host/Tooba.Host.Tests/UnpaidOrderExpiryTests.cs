@@ -1,4 +1,4 @@
-using Tooba.Promotion.Application.Ports;
+﻿using Tooba.Promotion.Application.Ports;
 using Tooba.Promotion.Infrastructure.Queries;
 using Tooba.Promotion.Infrastructure.Messaging;
 using Tooba.Promotion.Infrastructure.Adapters;
@@ -12,9 +12,15 @@ using Tooba.Inventory.Application.Checkout;
 using Tooba.Inventory.Application.Orders;
 using Tooba.Inventory.Application.Returns;
 using Tooba.Order.Application;
-using Tooba.Payment.Application;
-using Tooba.Payment.Domain;
-using Tooba.Payment.Infrastructure;
+using Tooba.Payment.Application.Models;
+using Tooba.Payment.Application.Ports;
+using Tooba.Payment.Domain.Aggregates;
+using Tooba.Payment.Domain.ValueObjects;
+using Tooba.Payment.Infrastructure.Adapters;
+using Tooba.Payment.Infrastructure.DependencyInjection;
+using Tooba.Payment.Infrastructure.Directories;
+using Tooba.Payment.Infrastructure.Messaging;
+using Tooba.Payment.Infrastructure.Providers;
 using Xunit;
 
 namespace Tooba.Host.Tests;
@@ -68,20 +74,20 @@ public sealed class UnpaidOrderExpiryTests
     {
         var now = DateTimeOffset.Parse("2026-09-12T00:00:00Z");
         var payment = Open("fake", now);
-        var attempt = payment.RecordInitiation("req-1", now);
+        var attempt = payment.RecordInitiation(Guid.NewGuid(), "req-1", now);
         payment.AssignUnpaidTimeout(now.AddHours(-1), now);
         Assert.True(payment.ExpireUnpaidTimeout(now));
         Assert.Equal(PaymentStatus.Expired, payment.Status);
         Assert.False(payment.ExpireUnpaidTimeout(now.AddMinutes(1)));
 
         var paid = Open("fake", now);
-        paid.RecordInitiation("req-2", now);
+        paid.RecordInitiation(Guid.NewGuid(), "req-2", now);
         paid.ApplyVerifiedSuccess(paid.Attempts.Single().AttemptId, "txn", now);
         Assert.False(paid.ExpireUnpaidTimeout(now));
         Assert.Equal(PaymentStatus.Succeeded, paid.Status);
 
         var manual = Open("manual", now);
-        manual.RecordInitiation("req-3", now);
+        manual.RecordInitiation(Guid.NewGuid(), "req-3", now);
         manual.SubmitManualEvidence("TRK-1", null, now);
         Assert.True(manual.HasActiveManualEvidence());
         Assert.False(manual.ExpireUnpaidTimeout(now));
@@ -92,7 +98,7 @@ public sealed class UnpaidOrderExpiryTests
     [Fact]
     public void Worker_is_batched_and_skips_locked_rows()
     {
-        var dir = Read("src/backend/Modules/Payment/Tooba.Payment.Infrastructure/PaymentDirectory.cs");
+        var dir = Read("src/backend/Modules/Payment/Tooba.Payment.Infrastructure/Directories/PaymentDirectory.cs");
         Assert.Contains("ExpireDueUnpaidAsync", dir, StringComparison.Ordinal);
         Assert.Contains("FOR UPDATE SKIP LOCKED", dir, StringComparison.Ordinal);
         Assert.Contains("unpaid_timeout_at", dir, StringComparison.Ordinal);
@@ -111,7 +117,7 @@ public sealed class UnpaidOrderExpiryTests
         var customer = Read("src/backend/Host/Tooba.Host/Customer/CustomerPanelComposer.cs");
         Assert.Contains("RetryUnpaidAsync", customer, StringComparison.Ordinal);
         Assert.Contains("PaymentExpired", customer, StringComparison.Ordinal);
-        var reopen = Read("src/backend/Modules/Payment/Tooba.Payment.Infrastructure/PaymentDirectory.cs");
+        var reopen = Read("src/backend/Modules/Payment/Tooba.Payment.Infrastructure/Directories/PaymentDirectory.cs");
         Assert.Contains("RecordInitiation", reopen, StringComparison.Ordinal);
         Assert.DoesNotContain("new CustomerPayment.Open", reopen, StringComparison.Ordinal);
     }
@@ -121,7 +127,7 @@ public sealed class UnpaidOrderExpiryTests
     {
         var now = DateTimeOffset.Parse("2026-09-12T00:00:00Z");
         var payment = Open("fake", now);
-        var attempt = payment.RecordInitiation("req-late", now);
+        var attempt = payment.RecordInitiation(Guid.NewGuid(), "req-late", now);
         Assert.True(payment.ExpireUnpaidTimeout(now));
         Assert.True(payment.ApplyVerifiedSuccess(attempt.AttemptId, "txn-late", now.AddMinutes(1)));
         Assert.Equal(PaymentStatus.Succeeded, payment.Status);
@@ -168,13 +174,11 @@ public sealed class UnpaidOrderExpiryTests
     }
 
     private static CustomerPayment Open(string provider, DateTimeOffset at) =>
-        CustomerPayment.Open(
-            Guid.NewGuid(),
-            1000m,
+        CustomerPayment.Open(Guid.NewGuid(), Guid.NewGuid(), 1000m,
             "IRR",
             provider,
             Guid.NewGuid().ToString("N"),
-            new[] { (PaymentAllocationTargetKind.SellerOrder, Guid.NewGuid(), 1000m) },
+            new[] { (PaymentAllocationTargetKind.SellerOrder, Guid.NewGuid(), 1000m, Guid.NewGuid()) },
             at);
 
     private static string Read(string relative)

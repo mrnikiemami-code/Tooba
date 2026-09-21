@@ -27,9 +27,15 @@ using Tooba.Offer.Domain;
 using Tooba.Order.Domain;
 using Tooba.Order.Infrastructure;
 using Tooba.Order.Infrastructure.Persistence;
-using Tooba.Payment.Application;
-using Tooba.Payment.Domain;
-using Tooba.Payment.Infrastructure;
+using Tooba.Payment.Application.Models;
+using Tooba.Payment.Application.Ports;
+using Tooba.Payment.Domain.Aggregates;
+using Tooba.Payment.Domain.ValueObjects;
+using Tooba.Payment.Infrastructure.Adapters;
+using Tooba.Payment.Infrastructure.DependencyInjection;
+using Tooba.Payment.Infrastructure.Directories;
+using Tooba.Payment.Infrastructure.Messaging;
+using Tooba.Payment.Infrastructure.Providers;
 using Tooba.Payment.Infrastructure.Persistence;
 using Tooba.Persistence;
 using Xunit;
@@ -82,8 +88,8 @@ public sealed class PaymentFoundationTests : IAsyncLifetime
     {
         Assert.NotEqual(typeof(CustomerPayment), typeof(CheckoutGroup));
         Assert.DoesNotContain("Amount", typeof(InitiatePaymentCommand).GetProperties().Select(p => p.Name));
-        Assert.DoesNotContain("PAN", File.ReadAllText(Path.Combine(FindRepoRoot(), "src", "backend", "Modules", "Payment", "Tooba.Payment.Domain", "PaymentDomain.cs")), StringComparison.OrdinalIgnoreCase);
-        Assert.DoesNotContain("CVV", File.ReadAllText(Path.Combine(FindRepoRoot(), "src", "backend", "Modules", "Payment", "Tooba.Payment.Domain", "PaymentDomain.cs")), StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("PAN", File.ReadAllText(Path.Combine(FindRepoRoot(), "src", "backend", "Modules", "Payment", "Tooba.Payment.Domain", "Aggregates", "CustomerPayment.cs")), StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("CVV", File.ReadAllText(Path.Combine(FindRepoRoot(), "src", "backend", "Modules", "Payment", "Tooba.Payment.Domain", "Aggregates", "CustomerPayment.cs")), StringComparison.OrdinalIgnoreCase);
         Assert.Equal("payment", PaymentDbContext.Schema);
 
         var root = FindRepoRoot();
@@ -159,8 +165,8 @@ public sealed class PaymentFoundationTests : IAsyncLifetime
         await orderA.SaveChangesAsync();
 
         var bridge = new OrderPaymentBridge(orderA, new OrderInventoryLifecycleAdapter(new UnusedInventoryDirectory()));
-        var gateways = new PaymentGatewayRegistry([new FakePaymentGateway(), new FakeFailingPaymentGateway()]);
-        var directory = new PaymentDirectory(paymentA, new OpenPaymentUseCaseGuard(), bridge, gateways, new PaymentGatewayActorContext());
+        var gateways = new PaymentGatewayRegistry([new FakePaymentGateway(new SystemUtcClock(), new UuidV7IdGenerator()), new FakeFailingPaymentGateway(new SystemUtcClock())]);
+        var directory = new PaymentDirectory(paymentA, new OpenPaymentUseCaseGuard(), bridge, gateways, new PaymentGatewayActorContext(), new SystemUtcClock(), new UuidV7IdGenerator());
 
         var reserveEx = await Assert.ThrowsAsync<InvalidOperationException>(() =>
             directory.InitiateAsync(new InitiatePaymentCommand(reserve.CheckoutId, actor, buyer, "idem-reserve", "fake"), CancellationToken.None));
@@ -235,7 +241,7 @@ public sealed class PaymentFoundationTests : IAsyncLifetime
             row => row.EventType.Contains("succeeded", StringComparison.OrdinalIgnoreCase)
                 && row.Payload.Contains(failedInit.PaymentId.ToString(), StringComparison.OrdinalIgnoreCase));
 
-        var isolated = new PaymentDirectory(paymentB, new OpenPaymentUseCaseGuard(), bridge, gateways, new PaymentGatewayActorContext());
+        var isolated = new PaymentDirectory(paymentB, new OpenPaymentUseCaseGuard(), bridge, gateways, new PaymentGatewayActorContext(), new SystemUtcClock(), new UuidV7IdGenerator());
         Assert.Null(await isolated.GetAsync(initiated.PaymentId, actor, buyer, CancellationToken.None));
 
         var mismatch = new StubPayableReader
@@ -246,7 +252,7 @@ public sealed class PaymentFoundationTests : IAsyncLifetime
                 "IRR",
                 [new PayableSellerOrderSnapshot(Guid.NewGuid(), 10m, "USD")]),
         };
-        var mismatchDir = new PaymentDirectory(paymentA, new OpenPaymentUseCaseGuard(), mismatch, gateways, new PaymentGatewayActorContext());
+        var mismatchDir = new PaymentDirectory(paymentA, new OpenPaymentUseCaseGuard(), mismatch, gateways, new PaymentGatewayActorContext(), new SystemUtcClock(), new UuidV7IdGenerator());
         await Assert.ThrowsAsync<InvalidOperationException>(() =>
             mismatchDir.InitiateAsync(new InitiatePaymentCommand(mismatch.Snapshot.CheckoutId, actor, buyer, "idem-fx", "fake"), CancellationToken.None));
 

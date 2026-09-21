@@ -1,6 +1,7 @@
 using Tooba.BuildingBlocks;
 using Tooba.BuildingBlocks.Grid;
-using Tooba.Payment.Application;
+using Tooba.Payment.Application.Models;
+using Tooba.Payment.Application.Ports;
 
 namespace Tooba.Host.Admin;
 

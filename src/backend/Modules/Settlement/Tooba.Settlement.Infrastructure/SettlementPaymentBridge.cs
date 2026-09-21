@@ -1,5 +1,6 @@
-using Tooba.Payment.Application;
-using Tooba.Payment.Domain;
+using Tooba.Payment.Application.Ports;
+using Tooba.Payment.Domain.Aggregates;
+using Tooba.Payment.Domain.ValueObjects;
 using Tooba.Settlement.Application;
 
 namespace Tooba.Settlement.Infrastructure;

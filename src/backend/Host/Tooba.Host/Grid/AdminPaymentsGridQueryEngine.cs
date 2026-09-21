@@ -3,22 +3,21 @@ using Tooba.BuildingBlocks.Grid;
 using Tooba.Host.Admin;
 using Tooba.Order.Application;
 using Tooba.Order.Infrastructure.Persistence;
-using Tooba.Payment.Domain;
-using Tooba.Payment.Infrastructure.Persistence;
+using Tooba.Payment.Application.Ports;
 using Tooba.Host.Storefront;
 
 namespace Tooba.Host.Grid;
 
-/// <summary>پرس‌وجوی DB-native دریافت‌های Admin روی Payment + enrich batch از Order (بدون JOIN بین schema).</summary>
+/// <summary>پرس‌وجوی Admin پرداخت‌ها از طریق IPaymentQueryDirectory + enrich Order (بدون دسترسی مستقیم به schema پرداخت در Host).</summary>
 internal sealed class AdminPaymentsGridQueryEngine
 {
-    private readonly PaymentDbContext _payments;
+    private readonly IPaymentQueryDirectory _payments;
     private readonly OrderDbContext _orders;
     private readonly OrderSupplyComposer _supply;
     private readonly IReservationCycleDirectory _cycles;
 
     public AdminPaymentsGridQueryEngine(
-        PaymentDbContext payments,
+        IPaymentQueryDirectory payments,
         OrderDbContext orders,
         OrderSupplyComposer supply,
         IReservationCycleDirectory cycles)
@@ -33,117 +32,89 @@ internal sealed class AdminPaymentsGridQueryEngine
         GridQueryRequest request,
         CancellationToken cancellationToken)
     {
-        IQueryable<CustomerPayment> q = _payments.Payments.AsNoTracking();
-
+        IReadOnlyList<Guid>? restrict = null;
         if (!string.IsNullOrWhiteSpace(request.Search))
         {
             var term = request.Search.Trim().ToLower();
-            var checkoutIds = await _orders.Checkouts.AsNoTracking()
+            restrict = await _orders.Checkouts.AsNoTracking()
                 .Where(c =>
                     c.RecipientName.ToLower().Contains(term)
                     || c.CheckoutId.ToString().ToLower().Contains(term)
                     || c.SellerOrders.Any(o => o.OrderNumber.ToLower().Contains(term)))
                 .Select(c => c.CheckoutId)
-                .ToListAsync(cancellationToken);
-            q = q.Where(p =>
-                p.PaymentId.ToString().ToLower().Contains(term)
-                || p.CheckoutId.ToString().ToLower().Contains(term)
-                || p.ProviderCode.ToLower().Contains(term)
-                || checkoutIds.Contains(p.CheckoutId));
+                .ToListAsync(cancellationToken)
+                .ConfigureAwait(false);
         }
 
-        foreach (var filter in request.Filters)
+        foreach (var filter in request.Filters.Where(f => f.Field is "supply" or "reservation"))
         {
-            q = filter.Field == "supply"
-                ? await ApplySupplyFilterAsync(q, filter, cancellationToken)
-                : filter.Field == "reservation"
-                    ? await ApplyReservationFilterAsync(q, filter, cancellationToken)
-                    : ApplyFilter(q, filter);
-        }
-
-        var advancedIds = await EvaluateAdvancedAsync(request.AdvancedFilter, cancellationToken);
-        if (advancedIds is not null)
-        {
-            q = q.Where(x => advancedIds.Contains(x.PaymentId));
+            var checkoutIds = await ResolveCheckoutFilterAsync(filter, cancellationToken).ConfigureAwait(false);
+            restrict = restrict is null ? checkoutIds : restrict.Intersect(checkoutIds).ToList();
         }
 
         var sort = request.Sort.FirstOrDefault() ?? new GridSortRequest("created", "desc");
-        return await AdminEfGridQuery.PageAsync(
-            q,
-            request,
-            filtered => Order(filtered, sort),
-            MapPageAsync,
-            cancellationToken);
+        var page = await _payments.QueryAdminGridAsync(
+            new PaymentAdminGridQueryDto(
+                request.Search,
+                request.Filters
+                    .Where(f => f.Field is not ("supply" or "reservation"))
+                    .Select(f => new PaymentAdminGridFilterDto(f.Field, f.Operator, f.Value, f.ValueTo, f.Values))
+                    .ToList(),
+                sort.Field,
+                sort.Direction,
+                request.Page,
+                request.PageSize,
+                restrict),
+            cancellationToken).ConfigureAwait(false);
+
+        var items = await MapPageAsync(page.Items, cancellationToken).ConfigureAwait(false);
+        return new GridPageResponse<AdminReceiptListItem>(items, request.Page, request.PageSize, page.Total);
     }
 
-    private async Task<HashSet<Guid>?> EvaluateAdvancedAsync(
-        GridAdvancedFilterExpression? expression,
+    private async Task<IReadOnlyList<Guid>> ResolveCheckoutFilterAsync(
+        GridFilterRequest filter,
         CancellationToken cancellationToken)
     {
-        if (expression?.Conditions is not { Count: > 0 })
+        var wanted = (filter.Values ?? [])
+            .Concat(string.IsNullOrWhiteSpace(filter.Value) ? [] : [filter.Value!])
+            .Where(v => !string.IsNullOrWhiteSpace(v))
+            .Select(v => v.Trim())
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+        if (wanted.Count == 0)
         {
-            return null;
+            return [];
         }
 
-        var sets = new List<HashSet<Guid>>();
-        foreach (var condition in expression.Conditions)
+        var checkoutIds = await _orders.Checkouts.AsNoTracking()
+            .Select(x => x.CheckoutId)
+            .ToListAsync(cancellationToken)
+            .ConfigureAwait(false);
+        if (filter.Field == "supply")
         {
-            var filter = new GridFilterRequest(
-                condition.Field,
-                condition.Operator,
-                condition.Value,
-                condition.ValueTo,
-                condition.Values);
-            var ids = await ApplyFilter(_payments.Payments.AsNoTracking(), filter)
-                .Select(x => x.PaymentId)
-                .ToListAsync(cancellationToken);
-            sets.Add(ids.ToHashSet());
+            var statuses = await _supply.GetStatusesAsync(checkoutIds, cancellationToken).ConfigureAwait(false);
+            return checkoutIds.Where(id =>
+                    statuses.TryGetValue(id, out var st) && wanted.Contains(st.Status.ToString()))
+                .ToList();
         }
 
-        return GridAdvancedFilterEvaluator.EvaluateLeftToRight(sets, expression.Connectors);
-    }
-
-    private static IQueryable<CustomerPayment> ApplyFilter(IQueryable<CustomerPayment> source, GridFilterRequest filter) =>
-        filter.Field switch
+        var supply = await _supply.GetStatusesAsync(checkoutIds, cancellationToken).ConfigureAwait(false);
+        var supplyByCheckout = supply.ToDictionary(x => x.Key, x => (string?)x.Value.Status.ToString());
+        var cycles = await _cycles.GetProjectionsAsync(
+            checkoutIds,
+            DateTimeOffset.UtcNow,
+            supplyByCheckout,
+            cancellationToken).ConfigureAwait(false);
+        return checkoutIds.Where(id =>
         {
-            "reference" => AdminEfGridQuery.ApplyTextFilter(source, x => x.CheckoutId.ToString(), filter),
-            "customer" => source,
-            "amount" => AdminEfGridQuery.ApplyNumberFilter(source, x => x.Amount, filter),
-            "status" => AdminEfGridQuery.ApplyEnumFilter(source, x => x.Status, filter),
-            "provider" => AdminEfGridQuery.ApplyTextFilter(source, x => x.ProviderCode, filter),
-            "created" => AdminEfGridQuery.ApplyDateFilter(source, x => x.CreatedAt, filter),
-            "completed" => AdminEfGridQuery.ApplyDateFilter(source, x => x.CompletedAt ?? x.CreatedAt, filter),
-            _ => source,
-        };
-
-    private static IOrderedQueryable<CustomerPayment> Order(IQueryable<CustomerPayment> source, GridSortRequest sort)
-    {
-        var asc = sort.Direction == "asc";
-        return sort.Field switch
-        {
-            "reference" => asc
-                ? source.OrderBy(x => x.CheckoutId).ThenBy(x => x.PaymentId)
-                : source.OrderByDescending(x => x.CheckoutId).ThenBy(x => x.PaymentId),
-            "amount" => asc
-                ? source.OrderBy(x => x.Amount).ThenBy(x => x.PaymentId)
-                : source.OrderByDescending(x => x.Amount).ThenBy(x => x.PaymentId),
-            "status" => asc
-                ? source.OrderBy(x => x.Status).ThenBy(x => x.PaymentId)
-                : source.OrderByDescending(x => x.Status).ThenBy(x => x.PaymentId),
-            "provider" => asc
-                ? source.OrderBy(x => x.ProviderCode).ThenBy(x => x.PaymentId)
-                : source.OrderByDescending(x => x.ProviderCode).ThenBy(x => x.PaymentId),
-            "completed" => asc
-                ? source.OrderBy(x => x.CompletedAt ?? x.CreatedAt).ThenBy(x => x.PaymentId)
-                : source.OrderByDescending(x => x.CompletedAt ?? x.CreatedAt).ThenBy(x => x.PaymentId),
-            _ => asc
-                ? source.OrderBy(x => x.CreatedAt).ThenBy(x => x.PaymentId)
-                : source.OrderByDescending(x => x.CreatedAt).ThenBy(x => x.PaymentId),
-        };
+            var summary = cycles.TryGetValue(id, out var projection)
+                ? AdminReservationCycleMapper.ToSummary(projection)
+                : AdminReservationCycleMapper.EmptySummary();
+            return wanted.Contains(summary.State) || wanted.Contains(summary.CompactLabelFa);
+        }).ToList();
     }
 
     private async Task<IReadOnlyList<AdminReceiptListItem>> MapPageAsync(
-        List<CustomerPayment> rows,
+        IReadOnlyList<PaymentCheckoutRowDto> rows,
         CancellationToken cancellationToken)
     {
         if (rows.Count == 0)
@@ -155,17 +126,16 @@ internal sealed class AdminPaymentsGridQueryEngine
         var checkouts = await _orders.Checkouts.AsNoTracking()
             .Include(x => x.SellerOrders)
             .Where(x => checkoutIds.Contains(x.CheckoutId))
-            .ToListAsync(cancellationToken);
+            .ToListAsync(cancellationToken)
+            .ConfigureAwait(false);
         var checkoutMap = checkouts.ToDictionary(x => x.CheckoutId);
-        var supply = await _supply.GetStatusesAsync(checkoutIds, cancellationToken);
-        var supplyByCheckout = supply.ToDictionary(
-            x => x.Key,
-            x => (string?)x.Value.Status.ToString());
+        var supply = await _supply.GetStatusesAsync(checkoutIds, cancellationToken).ConfigureAwait(false);
+        var supplyByCheckout = supply.ToDictionary(x => x.Key, x => (string?)x.Value.Status.ToString());
         var cycles = await _cycles.GetProjectionsAsync(
             checkoutIds,
             DateTimeOffset.UtcNow,
             supplyByCheckout,
-            cancellationToken);
+            cancellationToken).ConfigureAwait(false);
 
         return rows.Select(payment =>
         {
@@ -193,7 +163,7 @@ internal sealed class AdminPaymentsGridQueryEngine
                 customer,
                 payment.Amount,
                 payment.Currency,
-                payment.Status.ToString(),
+                payment.Status,
                 payment.ProviderCode,
                 payment.CreatedAt,
                 payment.CompletedAt,
@@ -206,63 +176,5 @@ internal sealed class AdminPaymentsGridQueryEngine
                 reservation.NeedsReacquire,
                 reservation.RetryLimitReached);
         }).ToList();
-    }
-
-    private async Task<IQueryable<CustomerPayment>> ApplyReservationFilterAsync(
-        IQueryable<CustomerPayment> source,
-        GridFilterRequest filter,
-        CancellationToken cancellationToken)
-    {
-        var wanted = (filter.Values ?? [])
-            .Concat(string.IsNullOrWhiteSpace(filter.Value) ? [] : [filter.Value!])
-            .Where(v => !string.IsNullOrWhiteSpace(v))
-            .Select(v => v.Trim())
-            .ToHashSet(StringComparer.OrdinalIgnoreCase);
-        if (wanted.Count == 0)
-        {
-            return source;
-        }
-
-        var checkoutIds = await source.Select(x => x.CheckoutId).Distinct().ToListAsync(cancellationToken);
-        var supply = await _supply.GetStatusesAsync(checkoutIds, cancellationToken);
-        var supplyByCheckout = supply.ToDictionary(
-            x => x.Key,
-            x => (string?)x.Value.Status.ToString());
-        var cycles = await _cycles.GetProjectionsAsync(
-            checkoutIds,
-            DateTimeOffset.UtcNow,
-            supplyByCheckout,
-            cancellationToken);
-        var match = checkoutIds.Where(id =>
-        {
-            var summary = cycles.TryGetValue(id, out var projection)
-                ? AdminReservationCycleMapper.ToSummary(projection)
-                : AdminReservationCycleMapper.EmptySummary();
-            return wanted.Contains(summary.State) || wanted.Contains(summary.CompactLabelFa);
-        }).ToHashSet();
-        return source.Where(x => match.Contains(x.CheckoutId));
-    }
-
-    private async Task<IQueryable<CustomerPayment>> ApplySupplyFilterAsync(
-        IQueryable<CustomerPayment> source,
-        GridFilterRequest filter,
-        CancellationToken cancellationToken)
-    {
-        var wanted = (filter.Values ?? [])
-            .Concat(string.IsNullOrWhiteSpace(filter.Value) ? [] : [filter.Value!])
-            .Where(v => !string.IsNullOrWhiteSpace(v))
-            .Select(v => v.Trim())
-            .ToHashSet(StringComparer.OrdinalIgnoreCase);
-        if (wanted.Count == 0)
-        {
-            return source;
-        }
-
-        var checkoutIds = await source.Select(x => x.CheckoutId).Distinct().ToListAsync(cancellationToken);
-        var statuses = await _supply.GetStatusesAsync(checkoutIds, cancellationToken);
-        var match = checkoutIds.Where(id =>
-                statuses.TryGetValue(id, out var st) && wanted.Contains(st.Status.ToString()))
-            .ToHashSet();
-        return source.Where(x => match.Contains(x.CheckoutId));
     }
 }

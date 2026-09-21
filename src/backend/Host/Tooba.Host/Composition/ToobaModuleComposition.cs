@@ -11,7 +11,11 @@ using Tooba.Cart.Infrastructure;
 using Tooba.Order.Infrastructure;
 using Tooba.Tax.Infrastructure;
 using Tooba.Promotion.Infrastructure.DependencyInjection;
-using Tooba.Payment.Infrastructure;
+using Tooba.Payment.Infrastructure.Adapters;
+using Tooba.Payment.Infrastructure.DependencyInjection;
+using Tooba.Payment.Infrastructure.Directories;
+using Tooba.Payment.Infrastructure.Messaging;
+using Tooba.Payment.Infrastructure.Providers;
 using Tooba.Reviews.Infrastructure;
 using Tooba.ProductQnA.Infrastructure;
 using Tooba.BulkInquiry.Infrastructure;
@@ -31,7 +35,9 @@ using Tooba.Settlement.Infrastructure;
 using Tooba.Notification.Infrastructure;
 using Tooba.AccessControl.Infrastructure;
 using Tooba.Support.Infrastructure;
-using Tooba.Wallet.Infrastructure;
+using Tooba.Wallet.Infrastructure.Adapters;
+using Tooba.Wallet.Infrastructure.DependencyInjection;
+using Tooba.Wallet.Infrastructure.Directories;
 
 namespace Tooba.Host;
 

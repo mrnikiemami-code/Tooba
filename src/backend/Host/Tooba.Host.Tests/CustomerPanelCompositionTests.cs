@@ -1,3 +1,5 @@
+using Tooba.Payment.Domain.Aggregates;
+using Tooba.Payment.Domain.ValueObjects;
 using Tooba.Host.Customer;
 using Xunit;
 

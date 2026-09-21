@@ -7,7 +7,8 @@ using Tooba.Inventory.Contracts.Seller;
 using Tooba.Order.Application;
 using Tooba.Order.Domain;
 using Tooba.Order.Infrastructure.Persistence;
-using Tooba.Payment.Application;
+using Tooba.Payment.Application.Models;
+using Tooba.Payment.Application.Ports;
 
 namespace Tooba.Order.Infrastructure;
 

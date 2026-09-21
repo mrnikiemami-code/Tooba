@@ -4,10 +4,8 @@ using Tooba.Cart.Application;
 using Tooba.Catalog.Domain;
 using Tooba.Catalog.Infrastructure.Persistence;
 using Tooba.Order.Application;
-using Tooba.Payment.Application;
-using Tooba.Payment.Domain;
-using Tooba.Payment.Infrastructure;
-using Tooba.Payment.Infrastructure.Persistence;
+using Tooba.Payment.Application.Ports;
+using Tooba.Payment.Infrastructure.Providers;
 
 namespace Tooba.Host;
 
@@ -19,22 +17,22 @@ public sealed class CommerceHoldPolicy : ICommerceHoldPolicy, ICheckoutReservati
     private readonly PaymentGatewayOptions _gateway;
     private readonly CartLifetimeOptions _cart;
     private readonly CatalogDbContext _catalog;
-    private readonly PaymentDbContext _payments;
+    private readonly IPaymentHoldSettingsDirectory _paymentHolds;
     private StoreHoldPolicySettings? _store;
-    private Dictionary<string, PaymentMethodHoldOverride>? _methods;
+    private Dictionary<string, PaymentMethodHoldOverrideDto>? _methods;
     private bool _loaded;
 
-    /// <summary>سیاست را به Options و ردیف‌های Settings وصل می‌کند.</summary>
+    /// <summary>سیاست را به Options و درگاه تنظیمات Payment وصل می‌کند.</summary>
     public CommerceHoldPolicy(
         IOptions<PaymentGatewayOptions> gateway,
         IOptions<CartLifetimeOptions> cart,
         CatalogDbContext catalog,
-        PaymentDbContext payments)
+        IPaymentHoldSettingsDirectory paymentHolds)
     {
         _gateway = gateway.Value;
         _cart = cart.Value;
         _catalog = catalog;
-        _payments = payments;
+        _paymentHolds = paymentHolds;
     }
 
     /// <inheritdoc />
@@ -110,12 +108,12 @@ public sealed class CommerceHoldPolicy : ICommerceHoldPolicy, ICheckoutReservati
 
         _store = _catalog.StoreHoldPolicySettings.AsNoTracking()
             .SingleOrDefault(x => x.SettingsId == StoreHoldPolicySettings.SingletonId);
-        _methods = _payments.MethodHoldOverrides.AsNoTracking()
-            .ToDictionary(x => x.ProviderCode, StringComparer.OrdinalIgnoreCase);
+        var methods = _paymentHolds.ListMethodOverridesAsync(CancellationToken.None).GetAwaiter().GetResult();
+        _methods = methods.ToDictionary(x => x.ProviderCode, StringComparer.OrdinalIgnoreCase);
         _loaded = true;
     }
 
-    private PaymentMethodHoldOverride? FindMethod(string? providerCode)
+    private PaymentMethodHoldOverrideDto? FindMethod(string? providerCode)
     {
         if (string.IsNullOrWhiteSpace(providerCode) || _methods is null)
         {

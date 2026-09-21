@@ -4,9 +4,8 @@ using Tooba.Cart.Application;
 using Tooba.Catalog.Domain;
 using Tooba.Catalog.Infrastructure.Persistence;
 using Tooba.Order.Application;
-using Tooba.Payment.Domain;
-using Tooba.Payment.Infrastructure;
-using Tooba.Payment.Infrastructure.Persistence;
+using Tooba.Payment.Application.Ports;
+using Tooba.Payment.Infrastructure.Providers;
 
 namespace Tooba.Host.Admin;
 
@@ -62,7 +61,7 @@ public static class HoldPolicySettingsEndpoints
 
     private static async Task<IResult> GetAsync(
         CatalogDbContext catalog,
-        PaymentDbContext payments,
+        IPaymentHoldSettingsDirectory paymentHolds,
         IReservationCyclePolicyResolver resolver,
         Microsoft.Extensions.Options.IOptions<PaymentGatewayOptions> gateway,
         Microsoft.Extensions.Options.IOptions<CartLifetimeOptions> cart,
@@ -77,7 +76,7 @@ public static class HoldPolicySettingsEndpoints
         {
             await AdminPanelAccess.RequireAuthorizedAsync(
                 request, session, tenant, guard, environment, cancellationToken);
-            return Results.Json(await BuildViewAsync(catalog, payments, resolver, gateway.Value, cart.Value, cancellationToken));
+            return Results.Json(await BuildViewAsync(catalog, paymentHolds, resolver, gateway.Value, cart.Value, cancellationToken));
         }
         catch (PlatformHttpException ex)
         {
@@ -88,7 +87,7 @@ public static class HoldPolicySettingsEndpoints
     private static async Task<IResult> PutAsync(
         HoldPolicySettingsWriteRequest body,
         CatalogDbContext catalog,
-        PaymentDbContext payments,
+        IPaymentHoldSettingsDirectory paymentHolds,
         IReservationCyclePolicyResolver resolver,
         Microsoft.Extensions.Options.IOptions<PaymentGatewayOptions> gateway,
         Microsoft.Extensions.Options.IOptions<CartLifetimeOptions> cart,
@@ -137,30 +136,17 @@ public static class HoldPolicySettingsEndpoints
                 ValidateHours(method.OnlinePaymentHoldHours, 1, 24 * 30, "hold.method.invalid");
                 ValidateHours(method.ManualPaymentInitialHoldHours, 1, 24 * 30, "hold.method.invalid");
                 ValidateHours(method.ManualPaymentReviewHoldHours, 1, 24 * 30, "hold.method.invalid");
-                var code = (method.ProviderCode ?? string.Empty).Trim().ToLowerInvariant();
-                if (code.Length == 0)
-                {
-                    continue;
-                }
-
-                var row = await payments.MethodHoldOverrides
-                    .SingleOrDefaultAsync(x => x.ProviderCode == code, cancellationToken);
-                if (row is null)
-                {
-                    row = PaymentMethodHoldOverride.Create(code, now);
-                    payments.MethodHoldOverrides.Add(row);
-                }
-
-                row.Replace(
+                await paymentHolds.UpsertMethodOverrideAsync(
+                    method.ProviderCode,
                     method.OnlinePaymentHoldHours,
                     method.ManualPaymentInitialHoldHours,
                     method.ManualPaymentReviewHoldHours,
-                    now);
+                    now,
+                    cancellationToken);
             }
 
             await catalog.SaveChangesAsync(cancellationToken);
-            await payments.SaveChangesAsync(cancellationToken);
-            return Results.Json(await BuildViewAsync(catalog, payments, resolver, gateway.Value, cart.Value, cancellationToken));
+            return Results.Json(await BuildViewAsync(catalog, paymentHolds, resolver, gateway.Value, cart.Value, cancellationToken));
         }
         catch (PlatformHttpException ex)
         {
@@ -170,7 +156,7 @@ public static class HoldPolicySettingsEndpoints
 
     private static async Task<HoldPolicySettingsView> BuildViewAsync(
         CatalogDbContext catalog,
-        PaymentDbContext payments,
+        IPaymentHoldSettingsDirectory paymentHolds,
         IReservationCyclePolicyResolver resolver,
         PaymentGatewayOptions gateway,
         CartLifetimeOptions cart,
@@ -178,7 +164,7 @@ public static class HoldPolicySettingsEndpoints
     {
         var store = await catalog.StoreHoldPolicySettings.AsNoTracking()
             .SingleOrDefaultAsync(x => x.SettingsId == StoreHoldPolicySettings.SingletonId, cancellationToken);
-        var methods = await payments.MethodHoldOverrides.AsNoTracking().ToListAsync(cancellationToken);
+        var methods = await paymentHolds.ListMethodOverridesAsync(cancellationToken);
         var reservation = ReservationPolicyAdminComposer.ForStore(
             await resolver.PreviewAsync(null, null, cancellationToken),
             true);
@@ -231,7 +217,7 @@ public static class HoldPolicySettingsEndpoints
         string code,
         string fa,
         string en,
-        IReadOnlyList<PaymentMethodHoldOverride> rows)
+        IReadOnlyList<PaymentMethodHoldOverrideDto> rows)
     {
         var row = rows.FirstOrDefault(x => string.Equals(x.ProviderCode, code, StringComparison.OrdinalIgnoreCase));
         return new PaymentMethodHoldView(

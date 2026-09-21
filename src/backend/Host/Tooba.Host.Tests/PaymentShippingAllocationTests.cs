@@ -1,4 +1,6 @@
-using Tooba.Payment.Domain;
+using Tooba.Payment.Domain.Events;
+using Tooba.Payment.Domain.Aggregates;
+using Tooba.Payment.Domain.ValueObjects;
 using Xunit;
 
 namespace Tooba.Host.Tests;
@@ -13,16 +15,14 @@ public sealed class PaymentShippingAllocationTests
     {
         var sellerA = Guid.Parse("aaaaaaaa-aaaa-4aaa-8aaa-000000000001");
         var sellerB = Guid.Parse("bbbbbbbb-bbbb-4bbb-8bbb-000000000002");
-        var payment = CustomerPayment.Open(
-            Guid.NewGuid(),
-            301_000m,
+        var payment = CustomerPayment.Open(Guid.NewGuid(), Guid.NewGuid(), 301_000m,
             "IRR",
             "manual",
             "idem-1",
             [
-                (PaymentAllocationTargetKind.SellerOrder, sellerA, 100_000m),
-                (PaymentAllocationTargetKind.SellerOrder, sellerB, 1_000m),
-                (PaymentAllocationTargetKind.StoreShipping, PaymentAllocation.StoreShippingTargetId, 200_000m),
+                (PaymentAllocationTargetKind.SellerOrder, sellerA, 100_000m, Guid.NewGuid()),
+                (PaymentAllocationTargetKind.SellerOrder, sellerB, 1_000m, Guid.NewGuid()),
+                (PaymentAllocationTargetKind.StoreShipping, PaymentAllocation.StoreShippingTargetId, 200_000m, Guid.NewGuid()),
             ],
             DateTimeOffset.UtcNow);
 
@@ -39,19 +39,19 @@ public sealed class PaymentShippingAllocationTests
         var sellerB = Guid.Parse("bbbbbbbb-bbbb-4bbb-8bbb-000000000002");
         var rowsForward = new[]
         {
-            (PaymentAllocationTargetKind.SellerOrder, sellerA, 50_000m),
-            (PaymentAllocationTargetKind.SellerOrder, sellerB, 70_000m),
-            (PaymentAllocationTargetKind.StoreShipping, PaymentAllocation.StoreShippingTargetId, 10_000m),
+            (PaymentAllocationTargetKind.SellerOrder, sellerA, 50_000m, Guid.NewGuid()),
+            (PaymentAllocationTargetKind.SellerOrder, sellerB, 70_000m, Guid.NewGuid()),
+            (PaymentAllocationTargetKind.StoreShipping, PaymentAllocation.StoreShippingTargetId, 10_000m, Guid.NewGuid()),
         };
         var rowsReversed = new[]
         {
-            (PaymentAllocationTargetKind.SellerOrder, sellerB, 70_000m),
-            (PaymentAllocationTargetKind.SellerOrder, sellerA, 50_000m),
-            (PaymentAllocationTargetKind.StoreShipping, PaymentAllocation.StoreShippingTargetId, 10_000m),
+            (PaymentAllocationTargetKind.SellerOrder, sellerB, 70_000m, Guid.NewGuid()),
+            (PaymentAllocationTargetKind.SellerOrder, sellerA, 50_000m, Guid.NewGuid()),
+            (PaymentAllocationTargetKind.StoreShipping, PaymentAllocation.StoreShippingTargetId, 10_000m, Guid.NewGuid()),
         };
 
-        var forward = CustomerPayment.Open(Guid.NewGuid(), 130_000m, "IRR", "manual", "idem-f", rowsForward, DateTimeOffset.UtcNow);
-        var reversed = CustomerPayment.Open(Guid.NewGuid(), 130_000m, "IRR", "manual", "idem-r", rowsReversed, DateTimeOffset.UtcNow);
+        var forward = CustomerPayment.Open(Guid.NewGuid(), Guid.NewGuid(), 130_000m, "IRR", "manual", "idem-f", rowsForward, DateTimeOffset.UtcNow);
+        var reversed = CustomerPayment.Open(Guid.NewGuid(), Guid.NewGuid(), 130_000m, "IRR", "manual", "idem-r", rowsReversed, DateTimeOffset.UtcNow);
 
         decimal SellerAmt(CustomerPayment p, Guid id) =>
             p.Allocations.Single(x => x.IsSellerOrder && x.SellerOrderId == id).AllocatedAmount;
@@ -67,18 +67,16 @@ public sealed class PaymentShippingAllocationTests
     public void Succeeded_event_seller_ids_exclude_store_shipping_target()
     {
         var sellerA = Guid.Parse("aaaaaaaa-aaaa-4aaa-8aaa-000000000001");
-        var payment = CustomerPayment.Open(
-            Guid.NewGuid(),
-            120_000m,
+        var payment = CustomerPayment.Open(Guid.NewGuid(), Guid.NewGuid(), 120_000m,
             "IRR",
             "fake",
             "idem-s",
             [
-                (PaymentAllocationTargetKind.SellerOrder, sellerA, 20_000m),
-                (PaymentAllocationTargetKind.StoreShipping, PaymentAllocation.StoreShippingTargetId, 100_000m),
+                (PaymentAllocationTargetKind.SellerOrder, sellerA, 20_000m, Guid.NewGuid()),
+                (PaymentAllocationTargetKind.StoreShipping, PaymentAllocation.StoreShippingTargetId, 100_000m, Guid.NewGuid()),
             ],
             DateTimeOffset.UtcNow);
-        var attempt = payment.RecordInitiation("ref-1", DateTimeOffset.UtcNow);
+        var attempt = payment.RecordInitiation(Guid.NewGuid(), "ref-1", DateTimeOffset.UtcNow);
         payment.ClearDomainEvents();
         Assert.True(payment.ApplyVerifiedSuccess(attempt.AttemptId, "txn-1", DateTimeOffset.UtcNow));
         var succeeded = Assert.Single(payment.DomainEvents.OfType<PaymentSucceededDomainEvent>());

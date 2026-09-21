@@ -1,3 +1,5 @@
+using Tooba.BuildingBlocks;
+using Tooba.BuildingBlocks.Observability.Tracing;
 using Tooba.Promotion.Application.Ports;
 using Tooba.Promotion.Infrastructure.Queries;
 using Tooba.Promotion.Infrastructure.Messaging;
@@ -20,15 +22,25 @@ using Tooba.Inventory.Application.Orders;
 using Tooba.Inventory.Application.Returns;
 using Tooba.Order.Infrastructure;
 using Tooba.Order.Infrastructure.Persistence;
-using Tooba.Payment.Application;
-using Tooba.Payment.Domain;
-using Tooba.Payment.Infrastructure;
+using Tooba.Payment.Application.Models;
+using Tooba.Payment.Application.Ports;
+using Tooba.Payment.Domain.Aggregates;
+using Tooba.Payment.Domain.ValueObjects;
+using Tooba.Payment.Infrastructure.Adapters;
+using Tooba.Payment.Infrastructure.DependencyInjection;
+using Tooba.Payment.Infrastructure.Directories;
+using Tooba.Payment.Infrastructure.Messaging;
+using Tooba.Payment.Infrastructure.Providers;
 using Tooba.Payment.Infrastructure.Persistence;
 using Tooba.Persistence;
 using Tooba.Returns.Domain;
-using Tooba.Wallet.Application;
-using Tooba.Wallet.Domain;
-using Tooba.Wallet.Infrastructure;
+using Tooba.Wallet.Application.Models;
+using Tooba.Wallet.Application.Ports;
+using Tooba.Wallet.Domain.Aggregates;
+using Tooba.Wallet.Domain.ValueObjects;
+using Tooba.Wallet.Infrastructure.Adapters;
+using Tooba.Wallet.Infrastructure.DependencyInjection;
+using Tooba.Wallet.Infrastructure.Directories;
 using Tooba.Wallet.Infrastructure.Persistence;
 using Xunit;
 
@@ -78,11 +90,11 @@ public sealed class WalletCheckoutRefundTests : IAsyncLifetime
         Assert.True(Enum.IsDefined(RefundDestination.OriginalPayment));
         Assert.True(Enum.IsDefined(RefundDestination.Wallet));
         var domain = File.ReadAllText(Path.Combine(FindRepoRoot(),
-            "src", "backend", "Modules", "Wallet", "Tooba.Wallet.Domain", "WalletDomain.cs"));
+            "src", "backend", "Modules", "Wallet", "Tooba.Wallet.Domain", "Aggregates", "WalletLedgerEntry.cs"));
         Assert.Contains("PostOrderPaymentDebit", domain, StringComparison.Ordinal);
         Assert.Contains("PostRefundCredit", domain, StringComparison.Ordinal);
         Assert.Contains("SpendForOrderPaymentAsync", File.ReadAllText(Path.Combine(FindRepoRoot(),
-            "src", "backend", "Modules", "Wallet", "Tooba.Wallet.Application", "WalletContracts.cs")), StringComparison.Ordinal);
+            "src", "backend", "Modules", "Wallet", "Tooba.Wallet.Contracts", "Payments", "WalletOrderPaymentPort.cs")), StringComparison.Ordinal);
         Assert.Contains("wallet-quote", File.ReadAllText(Path.Combine(FindRepoRoot(),
             "src", "backend", "Host", "Tooba.Host", "Storefront", "StorefrontEndpoints.cs")), StringComparison.Ordinal);
         Assert.Contains("WALLET_MIXED_TENDER", File.ReadAllText(Path.Combine(FindRepoRoot(),
@@ -114,7 +126,7 @@ public sealed class WalletCheckoutRefundTests : IAsyncLifetime
         await paymentDb.Database.MigrateAsync();
 
         var notifications = new RecordingNotifications();
-        var wallets = new WalletDirectory(walletDb, notifications);
+        var wallets = new WalletDirectory(walletDb, notifications, new SystemUtcClock(), new UuidV7IdGenerator());
         var actor = Guid.Parse("bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb");
         var stranger = Guid.Parse("cccccccc-cccc-4ccc-8ccc-cccccccccccc");
         var buyer = Guid.Parse("aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa");
@@ -170,8 +182,8 @@ public sealed class WalletCheckoutRefundTests : IAsyncLifetime
         await orderDb.SaveChangesAsync();
         var paymentBridge = new OrderPaymentBridge(orderDb, new OrderInventoryLifecycleAdapter(new UnusedInventoryDirectory()));
         var actorCtx = new PaymentGatewayActorContext();
-        var gateways = new PaymentGatewayRegistry([new FakePaymentGateway(), new WalletPaymentGateway((Tooba.Wallet.Contracts.IWalletOrderPaymentPort)wallets, actorCtx)]);
-        var payments = new PaymentDirectory(paymentDb, new OpenPaymentUseCaseGuard(), paymentBridge, gateways, actorCtx);
+        var gateways = new PaymentGatewayRegistry([new FakePaymentGateway(new SystemUtcClock(), new UuidV7IdGenerator()), new WalletPaymentGateway((Tooba.Wallet.Contracts.Payments.IWalletOrderPaymentPort)wallets, actorCtx, new SystemUtcClock(), new ModuleCallTracer())]);
+        var payments = new PaymentDirectory(paymentDb, new OpenPaymentUseCaseGuard(), paymentBridge, gateways, actorCtx, new SystemUtcClock(), new UuidV7IdGenerator());
 
         var initiated = await payments.InitiateAsync(
             new InitiatePaymentCommand(checkout.CheckoutId, actor, buyer, "idem-wallet-pay", "wallet"),
@@ -235,7 +247,7 @@ public sealed class WalletCheckoutRefundTests : IAsyncLifetime
 
         Assert.True(WalletDemoIds.AccountId != Guid.Empty);
         Assert.Contains("wallet-seed-admin-credit-v1", File.ReadAllText(Path.Combine(FindRepoRoot(),
-            "src", "backend", "Modules", "Wallet", "Tooba.Wallet.Infrastructure", "WalletDevelopmentSeed.cs")), StringComparison.Ordinal);
+            "src", "backend", "Modules", "Wallet", "Tooba.Wallet.Infrastructure", "Adapters", "WalletDevelopmentSeed.cs")), StringComparison.Ordinal);
         Assert.Contains("wallet-refund-credit:", File.ReadAllText(Path.Combine(FindRepoRoot(),
             "src", "backend", "Modules", "Returns", "Tooba.Returns.Infrastructure", "ReturnDirectory.cs")), StringComparison.Ordinal);
     }

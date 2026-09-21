@@ -1,4 +1,5 @@
-using Tooba.Payment.Domain;
+using Tooba.Payment.Domain.Aggregates;
+using Tooba.Payment.Domain.ValueObjects;
 using Xunit;
 
 namespace Tooba.Host.Tests;
@@ -12,12 +13,12 @@ public sealed class StorefrontPaymentCompletionDomainTests
     public void Manual_evidence_requires_trimmed_tracking_and_stays_pending()
     {
         var payment = OpenManual();
-        var attempt = payment.RecordInitiation("manual-ref", DateTimeOffset.UtcNow);
+        var attempt = payment.RecordInitiation(Guid.NewGuid(), "manual-ref", DateTimeOffset.UtcNow);
         Assert.Throws<InvalidOperationException>(() =>
             payment.SubmitManualEvidence("   ", null, DateTimeOffset.UtcNow));
         var missing = Assert.Throws<InvalidOperationException>(() =>
             payment.SubmitManualEvidence("   ", null, DateTimeOffset.UtcNow));
-        Assert.Equal("شماره پیگیری پرداخت الزامی است.", missing.Message);
+        Assert.Equal("payment.tracking_reference.required", missing.Message);
 
         payment.SubmitManualEvidence("  ABC123  ", null, DateTimeOffset.UtcNow);
         Assert.Equal(PaymentStatus.Pending, payment.Status);
@@ -30,14 +31,14 @@ public sealed class StorefrontPaymentCompletionDomainTests
     public void Rejected_manual_retry_creates_new_attempt_and_keeps_old_evidence()
     {
         var payment = OpenManual();
-        var first = payment.RecordInitiation("manual-ref", DateTimeOffset.UtcNow);
+        var first = payment.RecordInitiation(Guid.NewGuid(), "manual-ref", DateTimeOffset.UtcNow);
         payment.SubmitManualEvidence("TRK-1", Guid.NewGuid(), DateTimeOffset.UtcNow);
         payment.ApplyVerifiedFailure(first.AttemptId, "MANUAL_DEPOSIT_REJECTED", DateTimeOffset.UtcNow.AddSeconds(1));
         Assert.Equal(PaymentStatus.Failed, payment.Status);
         Assert.Equal("TRK-1", first.CustomerTransferReference);
         Assert.Equal(PaymentAttemptStatus.VerifiedFailed, first.Status);
 
-        var retry = payment.RestoreRejectedManualToPending(DateTimeOffset.UtcNow.AddSeconds(2));
+        var retry = payment.RestoreRejectedManualToPending(Guid.NewGuid(), DateTimeOffset.UtcNow.AddSeconds(2));
         Assert.NotEqual(first.AttemptId, retry.AttemptId);
         Assert.Equal(PaymentStatus.Pending, payment.Status);
         Assert.Equal("TRK-1", first.CustomerTransferReference);
@@ -47,13 +48,11 @@ public sealed class StorefrontPaymentCompletionDomainTests
     private static CustomerPayment OpenManual()
     {
         var seller = Guid.NewGuid();
-        return CustomerPayment.Open(
-            Guid.NewGuid(),
-            1000m,
+        return CustomerPayment.Open(Guid.NewGuid(), Guid.NewGuid(), 1000m,
             "IRR",
             "manual",
             Guid.NewGuid().ToString("N"),
-            new[] { (PaymentAllocationTargetKind.SellerOrder, seller, 1000m) },
+            new[] { (PaymentAllocationTargetKind.SellerOrder, seller, 1000m, Guid.NewGuid()) },
             DateTimeOffset.UtcNow);
     }
 }

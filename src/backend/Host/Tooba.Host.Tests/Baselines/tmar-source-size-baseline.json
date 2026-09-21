@@ -1,4 +1,4 @@
-{
+﻿{
   "rule": "SourceSize",
   "thresholdNewFileLoc": 800,
   "files": [
@@ -75,10 +75,10 @@
       "classification": "CRITICAL_GOD_FILE"
     },
     {
-      "path": "src/backend/Modules/Payment/Tooba.Payment.Domain/PaymentDomain.cs",
+      "path": "src/backend/Modules/Payment/Tooba.Payment.Domain/Aggregates/CustomerPayment.cs",
       "language": "cs",
-      "loc": 1250,
-      "classification": "OVERSIZED_LEGACY"
+      "loc": 577,
+      "classification": "WATCH"
     },
     {
       "path": "src/frontend/app/access-control/access-control-center.tsx",
@@ -207,9 +207,9 @@
       "classification": "OVERSIZED_LEGACY"
     },
     {
-      "path": "src/backend/Modules/Payment/Tooba.Payment.Infrastructure/PaymentDirectory.cs",
+      "path": "src/backend/Modules/Payment/Tooba.Payment.Infrastructure/Directories/PaymentDirectory.cs",
       "language": "cs",
-      "loc": 963,
+      "loc": 969,
       "classification": "OVERSIZED_LEGACY"
     },
     {

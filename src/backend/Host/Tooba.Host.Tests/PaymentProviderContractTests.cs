@@ -1,5 +1,11 @@
-using Tooba.Payment.Application;
-using Tooba.Payment.Infrastructure;
+using Tooba.BuildingBlocks;
+using Tooba.Payment.Application.Models;
+using Tooba.Payment.Application.Ports;
+using Tooba.Payment.Infrastructure.Adapters;
+using Tooba.Payment.Infrastructure.DependencyInjection;
+using Tooba.Payment.Infrastructure.Directories;
+using Tooba.Payment.Infrastructure.Messaging;
+using Tooba.Payment.Infrastructure.Providers;
 using Xunit;
 
 namespace Tooba.Host.Tests;
@@ -20,7 +26,7 @@ public sealed class PaymentProviderContractTests
                 AllowedStatusQueryHosts = ["psp.example"],
                 VerifyMaxAttempts = 2,
             }),
-            new PaymentGatewayInstrumentation());
+            new PaymentGatewayInstrumentation(), new SystemUtcClock());
 
     [Fact]
     public async Task Initiation_mapping_returns_reference_and_external_redirect()
@@ -108,7 +114,7 @@ public sealed class PaymentProviderContractTests
             {
                 Mode = "Webhook",
             }),
-            new PaymentGatewayInstrumentation());
+            new PaymentGatewayInstrumentation(), new SystemUtcClock());
         var ex = await Assert.ThrowsAsync<InvalidOperationException>(() =>
             gateway.InitiateAsync(Guid.NewGuid(), 1m, "IRR", CancellationToken.None));
         Assert.Equal("payment.gateway.unconfigured", ex.Message);

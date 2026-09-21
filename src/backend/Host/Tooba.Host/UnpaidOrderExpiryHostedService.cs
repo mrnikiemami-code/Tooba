@@ -3,7 +3,8 @@ using Microsoft.Extensions.Options;
 using Tooba.BuildingBlocks;
 using Tooba.Order.Application;
 using Tooba.Order.Domain;
-using Tooba.Payment.Application;
+using Tooba.Payment.Application.Models;
+using Tooba.Payment.Application.Ports;
 using Tooba.Persistence;
 
 namespace Tooba.Host;

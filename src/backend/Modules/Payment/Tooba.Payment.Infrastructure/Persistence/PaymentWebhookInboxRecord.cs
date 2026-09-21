@@ -41,13 +41,14 @@ public sealed class PaymentWebhookInboxRecord
     /// ردیف inbox را می‌سازد.
     /// </summary>
     public static PaymentWebhookInboxRecord Create(
+        Guid inboxId,
         string providerCode,
         string providerEventId,
         Guid paymentId,
         DateTimeOffset receivedAt) =>
         new()
         {
-            InboxId = Guid.NewGuid(),
+            InboxId = inboxId,
             ProviderCode = providerCode.Trim(),
             ProviderEventId = providerEventId.Trim(),
             PaymentId = paymentId,

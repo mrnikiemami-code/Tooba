@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <IsPackable>false</IsPackable>
+    <RootNamespace>Tooba.Wallet.Tests</RootNamespace>
+    <AssemblyName>Tooba.Wallet.Tests</AssemblyName>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.11.1" />
+    <PackageReference Include="xunit" Version="2.9.2" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="2.8.2">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Tooba.Wallet.Domain\Tooba.Wallet.Domain.csproj" />
+    <ProjectReference Include="..\Tooba.Wallet.Application\Tooba.Wallet.Application.csproj" />
+    <ProjectReference Include="..\Tooba.Wallet.Contracts\Tooba.Wallet.Contracts.csproj" />
+    <ProjectReference Include="..\Tooba.Wallet.Infrastructure\Tooba.Wallet.Infrastructure.csproj" />
+  </ItemGroup>
+</Project>

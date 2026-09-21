@@ -8,7 +8,8 @@ using Tooba.Order.Application;
 using Tooba.Order.Domain;
 using Tooba.Order.Infrastructure;
 using Tooba.Order.Infrastructure.Persistence;
-using Tooba.Payment.Domain;
+using Tooba.Payment.Domain.Aggregates;
+using Tooba.Payment.Domain.ValueObjects;
 using Xunit;
 
 namespace Tooba.Host.Tests;

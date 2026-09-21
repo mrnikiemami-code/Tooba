@@ -1,0 +1,158 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+
+BEGIN_TOOBA_WORKER_RESULT
+
+Task-ID:
+TB-TMAR-NEXT-MODULE-BATCH-002
+
+Parent-Task:
+TB-TMAR-NEXT-MODULE-BATCH-001-R1
+
+Channel:
+tooba-main
+
+WorkerId:
+tooba-worker-01
+
+AgentType:
+cursor
+
+Status:
+PASS
+
+Summary:
+Wallet+Payment golden recovery PASS. Physical folder/namespace alignment (Inventory/Offer/Promotion style); god-files split; IClock/IIdGenerator (+tracer on Payment→Wallet); no UtcNow/Guid/UuidV7/DI fallbacks; localized prose→stable codes; Payment→Wallet.Contracts only; Host DbContext production authority absorbed via Application ports; Endpoint-State NOT_APPLICABLE; architecture guards green; Tax/Pricing untouched. Batch COMPLETE; next TB-TMAR-NEXT-MODULE-BATCH-003.
+
+Program-Name:
+TMAR — Tooba Microservice-Ready Architecture Recovery
+
+Track:
+NEXT_REFERENCE_MODULE_BATCH
+
+Recovery-Start:
+docs/evidence/TB-TMAR-NEXT-MODULE-BATCH-002/recovery-start.md — Claim 47bc135f-b796-4eec-91a3-3294068e33b4; baseline tip 2a7e171e
+
+Wallet-Audit:
+docs/evidence/TB-TMAR-NEXT-MODULE-BATCH-002/wallet-audit.md
+
+Wallet-Physical-Tree:
+docs/evidence/TB-TMAR-NEXT-MODULE-BATCH-002/wallet-physical-tree.md — 19 handwritten production .cs; path↔namespace aligned; root-dump=0
+
+Wallet-Repairs:
+Physical Domains/Application/Contracts/Infrastructure folders; Domain no Contracts ref; explicit ids/now factories; WalletDirectory IClock/IIdGenerator; outbox wallet.outbox.unmapped_event_type; payment/refund ports remain in Contracts
+
+Wallet-Result-Adoption:
+Directory-style CQRS retained; Host owns Wallet HTTP; no MediatR ceremony
+
+Wallet-CQRS-State:
+DIRECTORY_STYLE_RETAINED
+
+Wallet-Endpoint-State:
+NOT_APPLICABLE
+
+Wallet-Foundation-Adoption:
+IClock/IIdGenerator required; no UtcNow/Guid/UuidV7/DI fallbacks; stable wallet.* exception codes; silent catch=0
+
+Wallet-Guards:
+Tooba.Wallet.Tests Architecture/WalletArchitectureGuardTests — root-dump, namespace, TypeForwardedTo, Host WalletDbContext allowlist (seed-only), Payment isolation, foundation bypasses
+
+Wallet-Validation:
+Tooba.Wallet.Tests 5/5 passed
+
+Wallet-State:
+COMPLETE_REFERENCE_PATTERN
+
+Wallet-Physical-State:
+VERIFIED_ON_DISK_AND_NAMESPACE
+
+Payment-Audit:
+docs/evidence/TB-TMAR-NEXT-MODULE-BATCH-002/payment-audit.md
+
+Payment-Physical-Tree:
+docs/evidence/TB-TMAR-NEXT-MODULE-BATCH-002/payment-physical-tree.md — 43 handwritten production .cs; path↔namespace aligned; root-dump=0
+
+Payment-Repairs:
+Domain Aggregates/ValueObjects/Events split; Application Ports/Models; Infrastructure Directories/Adapters/Providers/Messaging/DependencyInjection; PaymentHoldSettingsDirectory + PaymentQueryDirectory absorb Host authority; WalletPaymentGateway via Wallet.Contracts + IModuleCallTracer; Persian prose→payment.* codes; OpenPaymentUseCaseGuard extracted
+
+Payment-Result-Adoption:
+Directory-style CQRS retained; Host owns Payment HTTP; no MediatR ceremony; no Payment.Contracts/Endpoints projects
+
+Payment-CQRS-State:
+DIRECTORY_STYLE_RETAINED
+
+Payment-Endpoint-State:
+NOT_APPLICABLE
+
+Payment-Foundation-Adoption:
+IClock/IIdGenerator required; tracer on Wallet gateway call; no UtcNow/Guid/UuidV7/DI fallbacks; stable payment.* codes; silent catch=0
+
+Payment-Guards:
+Tooba.Payment.Tests Architecture/PaymentArchitectureGuardTests — Wallet.Contracts-only, no Wallet App/Domain/Infra, Host PaymentDbContext allowlist (migrate-only), physical/namespace, foundation
+
+Payment-Validation:
+Tooba.Payment.Tests 5/5 passed
+
+Host-Leak-Scan:
+docs/evidence/TB-TMAR-NEXT-MODULE-BATCH-002/host-leak-scan.md — production query/settings authority moved to Payment Application ports; Host retain migrate/seed bootstrap only
+
+Foundation-Adoption-Scan:
+docs/evidence/TB-TMAR-NEXT-MODULE-BATCH-002/foundation-adoption-scan.md
+
+Focused-Validation:
+Wallet.Tests 5/5; Payment.Tests 5/5; Host focused financial seams (StorefrontPaymentSucceeded/Completion, WalletCheckoutRefund, WalletCurrency, WalletOrderPaymentPort, WalletRefundCreditPort) 20/20; dotnet build src/backend/Tooba.slnx 0 errors
+
+Skipped-Validation:
+Full Host integration suite; Inventory/Promotion/Offer full suites; Tax/Pricing; frontend; BuildingBlocks (unchanged)
+
+Full-Validation:
+dotnet build src/backend/Tooba.slnx — 0 errors
+
+AntiPattern-Gate:
+CLEAN — root dumping; namespace masquerading; TypeForwardedTo; hidden DI fallbacks; catch-and-ignore; localized exception prose; Host DbContext production authority; Payment→Wallet non-Contracts; direct clock/id bypass; raw StartActivity; ceremonial Endpoints/Contracts/MediatR; frontend change; Checkout resume; Tax/Pricing touch
+
+Residual-Defects:
+XML/doc comments and Host UI mapping may retain Persian narrative (not Domain/Infra throw prose). Host StorefrontPaymentComposer still throws some Persian strings for legacy map paths (Host transport; module authority clean). PaymentDirectory remains OVERSIZED_LEGACY under source-size baseline (path updated; split partially done).
+
+Batch-State:
+COMPLETE
+
+Foundation-State:
+RESULT_PATTERN_FOUNDATION_COMPLETE
+
+Offer-State:
+COMPLETE_REFERENCE_PATTERN
+
+Inventory-State:
+COMPLETE_REFERENCE_PATTERN
+
+Promotion-State:
+COMPLETE_REFERENCE_PATTERN
+
+Tax-State:
+DEFERRED_PHYSICAL_REVIEW_BY_USER
+
+Pricing-State:
+DEFERRED_PHYSICAL_REVIEW_BY_USER
+
+Checkout-State:
+PAUSED_AT_SAFE_W5_CHECKPOINT
+
+Frontend-Production-Changes:
+NONE
+
+Git:
+SHA=PENDING_TIP_ALIGN HEAD==origin/main after push.
+
+Blockers:
+NONE
+
+User-Work-Preserved:
+stashes untouched; user .rar untouched; Tax/Pricing production not modified
+
+Module-Recovery-State:
+NEXT_REFERENCE_BATCH_002_COMPLETE
+
+Next-Recommended-Task:
+TB-TMAR-NEXT-MODULE-BATCH-003
+
+END_TOOBA_WORKER_RESULT

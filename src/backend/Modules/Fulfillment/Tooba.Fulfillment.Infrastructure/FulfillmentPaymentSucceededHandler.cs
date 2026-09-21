@@ -1,7 +1,7 @@
+using Tooba.Payment.Application.Ports;
 using Microsoft.EntityFrameworkCore;
 using Tooba.BuildingBlocks;
 using Tooba.Fulfillment.Infrastructure.Persistence;
-using Tooba.Payment.Application;
 
 namespace Tooba.Fulfillment.Infrastructure;
 

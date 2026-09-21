@@ -7,10 +7,17 @@ using Tooba.Inventory.Application.Checkout;
 using Tooba.Inventory.Application.Orders;
 using Tooba.Inventory.Application.Returns;
 using Tooba.Media.Application;
-using Tooba.Payment.Application;
-using Tooba.Payment.Domain;
-using Tooba.Payment.Infrastructure;
-using Tooba.Wallet.Application;
+using Tooba.Payment.Application.Models;
+using Tooba.Payment.Application.Ports;
+using Tooba.Payment.Domain.Aggregates;
+using Tooba.Payment.Domain.ValueObjects;
+using Tooba.Payment.Infrastructure.Adapters;
+using Tooba.Payment.Infrastructure.DependencyInjection;
+using Tooba.Payment.Infrastructure.Directories;
+using Tooba.Payment.Infrastructure.Messaging;
+using Tooba.Payment.Infrastructure.Providers;
+using Tooba.Wallet.Application.Models;
+using Tooba.Wallet.Application.Ports;
 
 namespace Tooba.Host.Storefront;
 
@@ -244,7 +251,7 @@ public sealed class StorefrontPaymentComposer
 
         // مسیر full-wallet: Verify بلافاصله؛ بدون redirect به sandbox/PSP.
         if (string.Equals(initiated.ProviderCode, WalletPaymentGateway.ProviderCodeValue, StringComparison.OrdinalIgnoreCase)
-            && initiated.Status != Tooba.Payment.Domain.PaymentStatus.Succeeded)
+            && initiated.Status != Tooba.Payment.Domain.ValueObjects.PaymentStatus.Succeeded)
         {
             var verified = await _payments.VerifyAsync(
                 new VerifyPaymentCommand(

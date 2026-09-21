@@ -1,4 +1,6 @@
-using Tooba.Wallet.Contracts;
+using Tooba.Wallet.Contracts.Dtos;
+using Tooba.Wallet.Contracts.Payments;
+using Tooba.Wallet.Contracts.Refunds;
 using Xunit;
 
 namespace Tooba.Host.Tests;

@@ -16,8 +16,13 @@ using Tooba.Inventory.Application.Orders;
 using Tooba.Inventory.Application.Returns;
 using Tooba.Order.Infrastructure;
 using Tooba.Order.Infrastructure.Persistence;
-using Tooba.Payment.Application;
-using Tooba.Payment.Infrastructure;
+using Tooba.Payment.Application.Models;
+using Tooba.Payment.Application.Ports;
+using Tooba.Payment.Infrastructure.Adapters;
+using Tooba.Payment.Infrastructure.DependencyInjection;
+using Tooba.Payment.Infrastructure.Directories;
+using Tooba.Payment.Infrastructure.Messaging;
+using Tooba.Payment.Infrastructure.Providers;
 using Tooba.Payment.Infrastructure.Persistence;
 using Tooba.Persistence;
 using Tooba.Returns.Application;
@@ -80,8 +85,8 @@ public sealed class R2LiveMarketplaceSmokeTests
             paymentDb,
             new OpenPaymentUseCaseGuard(),
             paymentBridge,
-            new PaymentGatewayRegistry([new FakePaymentGateway()]),
-            new PaymentGatewayActorContext());
+            new PaymentGatewayRegistry([new FakePaymentGateway(new SystemUtcClock(), new UuidV7IdGenerator())]),
+            new PaymentGatewayActorContext(), new SystemUtcClock(), new UuidV7IdGenerator());
         var initiated = await paymentDirectory.InitiateAsync(
             new InitiatePaymentCommand(checkout.CheckoutId, actor, buyer, $"r2-live-{checkout.CheckoutId:N}", "fake"),
             CancellationToken.None);

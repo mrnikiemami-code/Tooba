@@ -9,7 +9,8 @@ using Tooba.Offer.Domain;
 using Tooba.Order.Domain;
 using Tooba.Order.Infrastructure;
 using Tooba.Order.Infrastructure.Persistence;
-using Tooba.Payment.Application;
+using Tooba.Payment.Application.Models;
+using Tooba.Payment.Application.Ports;
 using Tooba.Persistence;
 using Xunit;
 
