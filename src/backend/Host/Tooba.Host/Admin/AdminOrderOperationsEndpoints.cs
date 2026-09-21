@@ -1,8 +1,6 @@
+using MediatR;
 using Tooba.BuildingBlocks;
-using Tooba.Fulfillment.Application.Ports;
-using Tooba.Fulfillment.Application.Models;
 using Tooba.Fulfillment.Application.Shipping;
-using Tooba.Localization.Contracts;
 
 namespace Tooba.Host.Admin;
 
@@ -49,16 +47,12 @@ public static class AdminOrderOperationsEndpoints
         Results.Json(await supply.GetStatusAsync(checkoutId, cancellationToken));
 
     private static async Task<IResult> ListShippingMethodsAsync(
-        IShippingCatalogReader catalog,
-        ILanguageLookup languages,
-        ShippingMethodsOptions options,
-        MediatR.ISender sender,
+        ISender sender,
         string? language,
         CancellationToken cancellationToken)
     {
-        var tree = await ShippingServiceEndpoints.ListEnabledMethodsTreeAsync(
-            catalog, languages, options, sender, language, cancellationToken);
-        return Results.Json(tree);
+        var result = await sender.Send(new ListEnabledShippingMethodsTreeQuery(language), cancellationToken);
+        return Results.Json(result.Value);
     }
 
     private static async Task<IResult> ListOperationsAsync(

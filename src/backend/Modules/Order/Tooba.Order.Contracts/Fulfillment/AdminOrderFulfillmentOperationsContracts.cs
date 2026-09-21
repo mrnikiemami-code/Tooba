@@ -18,7 +18,7 @@ public sealed record AdminOrderFulfillmentOperationOutcome(bool Succeeded, strin
 
 /// <summary>
 /// Execute specific admin fulfillment operations used by work-queue bulk.
-/// Host (or Order infra) adapts the existing order-operations composer.
+/// Owned by Order.Infrastructure — Host must not implement this contract.
 /// </summary>
 public interface IAdminOrderFulfillmentOperations
 {

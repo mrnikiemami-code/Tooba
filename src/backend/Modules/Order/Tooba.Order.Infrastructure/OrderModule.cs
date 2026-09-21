@@ -45,6 +45,9 @@ public sealed class OrderModule : IToobaModule
         services.AddScoped<IOrderGridEnrichmentReader, OrderGridEnrichmentBridge>();
         services.AddScoped<IOrderReturnReader, OrderReturnBridge>();
         services.AddScoped<IOrderNotificationReader, OrderNotificationBridge>();
+        services.AddScoped<Fulfillment.IAdminOrderFulfillmentCheckoutReader, Fulfillment.AdminOrderFulfillmentCheckoutReader>();
+        services.AddScoped<Fulfillment.IAdminOrderFulfillmentPermissionGate, Fulfillment.AdminOrderFulfillmentPermissionGate>();
+        services.AddScoped<IAdminOrderFulfillmentOperations, Fulfillment.AdminOrderFulfillmentOperations>();
         services.AddScoped<IIntegrationEventHandler<PaymentSucceededIntegrationEvent>, OrderPaymentSucceededHandler>();
         services.AddDbContext<OrderDbContext>((sp, options) =>
         {

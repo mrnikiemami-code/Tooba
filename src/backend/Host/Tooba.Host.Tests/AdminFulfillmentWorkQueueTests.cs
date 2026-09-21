@@ -208,9 +208,15 @@ public sealed class AdminFulfillmentWorkQueueTests
         Assert.Contains("ApiResponseFactory", endpoints, StringComparison.Ordinal);
         Assert.DoesNotContain("AdminFulfillmentWorkQueueComposer", endpoints, StringComparison.Ordinal);
         Assert.DoesNotContain("AdminFulfillmentWorkQueueComposer", program, StringComparison.Ordinal);
-        Assert.Contains("IAdminOrderFulfillmentOperations", program, StringComparison.Ordinal);
+        Assert.DoesNotContain("HostAdminOrderFulfillmentOperations", program, StringComparison.Ordinal);
+        Assert.DoesNotContain("IAdminOrderFulfillmentOperations", program, StringComparison.Ordinal);
         Assert.DoesNotContain("AdminFulfillmentWorkQueueQueryEngine", program, StringComparison.Ordinal);
         Assert.False(File.Exists(Path.Combine(root, "Admin", "AdminFulfillmentWorkQueueComposer.cs")));
+        Assert.False(File.Exists(Path.Combine(root, "Admin", "HostAdminOrderFulfillmentOperations.cs")));
+        var orderModule = File.ReadAllText(Path.Combine(
+            root, "..", "..", "Modules", "Order", "Tooba.Order.Infrastructure", "OrderModule.cs"));
+        Assert.Contains("IAdminOrderFulfillmentOperations", orderModule, StringComparison.Ordinal);
+        Assert.Contains("AdminOrderFulfillmentOperations", orderModule, StringComparison.Ordinal);
     }
 
     private static FulfillmentSnapshot Snapshot(

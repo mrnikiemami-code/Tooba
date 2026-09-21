@@ -2,7 +2,6 @@ using MediatR;
 using Tooba.BuildingBlocks;
 using Tooba.BuildingBlocks.Presentation;
 using Tooba.BuildingBlocks.Results;
-using Tooba.Fulfillment.Application.Ports;
 using Tooba.Fulfillment.Application.Shipping;
 using Tooba.Localization.Contracts;
 
@@ -192,67 +191,6 @@ public static class ShippingServiceEndpoints
         }
     }
 
-    /// <summary>پر کردن درخت روش ارسال برای مودال ایجاد مرسوله.</summary>
-    public static async Task<IReadOnlyList<object>> ListEnabledMethodsTreeAsync(
-        IShippingCatalogReader catalog,
-        ILanguageLookup languages,
-        ShippingMethodsOptions options,
-        ISender sender,
-        string? language,
-        CancellationToken cancellationToken)
-    {
-        await sender.Send(new EnsureShippingCatalogSeedCommand(), cancellationToken);
-        var langId = await ShippingServiceSemantic.ResolveLanguageIdAsync(languages, language, cancellationToken);
-        var enabledCodes = ShippingMethodRegistry.Enabled(options)
-            .Select(x => x.Code)
-            .ToHashSet(StringComparer.OrdinalIgnoreCase);
-
-        var catalogRows = await catalog.ListAsync(cancellationToken);
-        var services = catalogRows
-            .Where(x => x.IsActive && enabledCodes.Contains(x.Code))
-            .OrderBy(x => x.SortOrder).ThenBy(x => x.Code)
-            .ToList();
-        if (services.Count == 0)
-        {
-            return ShippingMethodRegistry.Enabled(options)
-                .Select(x => (object)new
-                {
-                    code = x.Code,
-                    labelFa = x.LabelFa,
-                    name = x.LabelFa,
-                    providerKind = x.ProviderKind,
-                    iconKey = x.Code,
-                    colorKey = DefaultColor(x.Code),
-                    options = DefaultOptions(x.Code),
-                })
-                .ToList();
-        }
-
-        return services.Select(s =>
-        {
-            var name = s.Translations.FirstOrDefault(r => r.LanguageId == langId)?.Name
-                ?? s.Translations.FirstOrDefault()?.Name
-                ?? s.Code;
-            var mappedOptions = s.Options.Where(o => o.IsActive).Select(o =>
-            {
-                var optionName = o.Translations.FirstOrDefault(r => r.LanguageId == langId)?.Name
-                    ?? o.Translations.FirstOrDefault()?.Name
-                    ?? o.Code;
-                return new { code = o.Code, labelFa = optionName, name = optionName };
-            }).ToList();
-            return (object)new
-            {
-                code = s.Code,
-                labelFa = name,
-                name,
-                providerKind = s.ProviderKind,
-                iconKey = s.IconKey,
-                colorKey = s.ColorKey,
-                options = mappedOptions,
-            };
-        }).ToList();
-    }
-
     private static ShippingServiceWriteModel ToModel(ShippingServiceWriteRequest body) =>
         new(
             body.Code,
@@ -268,25 +206,6 @@ public static class ShippingServiceEndpoints
                 o.IsActive,
                 o.SortOrder,
                 o.Translations.Select(t => new ShippingServiceOptionTranslationWriteModel(t.LanguageId, t.Name)).ToList())).ToList());
-
-    private static string DefaultColor(string code) => code switch
-    {
-        "post" => "blue",
-        "tipax" => "amber",
-        "snapp_courier" => "emerald",
-        "store_courier" => "violet",
-        "in_person" => "rose",
-        _ => "blue",
-    };
-
-    private static object[] DefaultOptions(string code) =>
-        code is "post" or "tipax"
-            ?
-            [
-                new { code = "express", labelFa = "پیشتاز", name = "پیشتاز" },
-                new { code = "standard", labelFa = "معمولی", name = "معمولی" },
-            ]
-            : [];
 }
 
 /// <summary>Adapter Host برای اعتبار LanguageId سرویس ارسال و seed — Localization.Contracts only.</summary>
