@@ -181,6 +181,22 @@ public sealed class OfferArchitectureGuardTests
     }
 
     [Fact]
+    public void Offer_endpoints_use_central_api_response_factory_not_local_mappers()
+    {
+        var endpoint = File.ReadAllText(Path.Combine(
+            OfferRoot(), "Tooba.Offer.Endpoints", "Seller", "OfferSellerEndpoints.cs"));
+        var localizer = File.ReadAllText(Path.Combine(
+            OfferRoot(), "Tooba.Offer.Endpoints", "Seller", "OfferEndpointLocalizer.cs"));
+        Assert.Contains("ApiResponseFactory", endpoint, StringComparison.Ordinal);
+        Assert.DoesNotContain("ToSemanticError", endpoint, StringComparison.Ordinal);
+        Assert.DoesNotContain("AcceptLanguage.Contains", endpoint, StringComparison.Ordinal);
+        Assert.DoesNotContain("AcceptLanguage.Contains", localizer, StringComparison.Ordinal);
+        Assert.DoesNotContain("Guid.NewGuid()", endpoint, StringComparison.Ordinal);
+        Assert.DoesNotContain("exception.Message", endpoint, StringComparison.Ordinal);
+        Assert.DoesNotContain("ex.Message", endpoint, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public void Offer_domain_and_application_have_no_persian_prose()
     {
         var violations = Sources("Tooba.Offer.Domain")

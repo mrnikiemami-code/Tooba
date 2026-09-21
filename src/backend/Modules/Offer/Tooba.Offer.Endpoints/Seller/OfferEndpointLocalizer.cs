@@ -1,18 +1,44 @@
 using System.Globalization;
-using Tooba.BuildingBlocks;
+using Tooba.BuildingBlocks.Localization;
 using Tooba.Offer.Contracts;
 
 namespace Tooba.Offer.Endpoints.Seller;
 
-/// <summary>محلی‌سازی عنوان خطا در مرز Endpoint Offer.</summary>
+/// <summary>
+/// مشارکت‌کنندهٔ محلی‌سازی عنوان خطای Offer — بدون Accept-Language ad-hoc.
+/// Residual R2/R3: move catalog into Localization SSOT resources when available.
+/// </summary>
+public sealed class OfferErrorMessageContributor : IErrorMessageContributor
+{
+    /// <inheritdoc />
+    public bool TryLocalize(
+        string localizationKey,
+        CultureInfo culture,
+        IReadOnlyDictionary<string, string?> arguments,
+        out string title)
+    {
+        if (!localizationKey.StartsWith("offer.", StringComparison.OrdinalIgnoreCase))
+        {
+            title = string.Empty;
+            return false;
+        }
+
+        title = OfferEndpointLocalizer.Title(
+            new Tooba.BuildingBlocks.SemanticError(localizationKey, arguments),
+            culture);
+        return true;
+    }
+}
+
+/// <summary>محلی‌سازی عنوان خطا در مرز Endpoint Offer بر پایهٔ CultureInfo مرکزی.</summary>
 internal static class OfferEndpointLocalizer
 {
-    public static string Title(SemanticError error, string? acceptLanguage)
+    /// <summary>عنوان محلی‌سازی‌شده برای خطای معنایی Offer.</summary>
+    public static string Title(Tooba.BuildingBlocks.SemanticError error, CultureInfo culture)
     {
         ArgumentNullException.ThrowIfNull(error);
-        var en = !string.IsNullOrWhiteSpace(acceptLanguage)
-            && acceptLanguage.Contains("en", StringComparison.OrdinalIgnoreCase)
-            && !acceptLanguage.TrimStart().StartsWith("fa", StringComparison.OrdinalIgnoreCase);
+        ArgumentNullException.ThrowIfNull(culture);
+        var en = IsEnglishPreferred(culture);
         return error.Code switch
         {
             OfferErrorCodes.MinQuantityInvalid => en
@@ -58,6 +84,19 @@ internal static class OfferEndpointLocalizer
         };
     }
 
-    private static string Arg(SemanticError error, string key) =>
+    private static bool IsEnglishPreferred(CultureInfo culture)
+    {
+        var name = culture.Name;
+        if (name.StartsWith("en", StringComparison.OrdinalIgnoreCase))
+        {
+            return true;
+        }
+
+        // Non-en (including fa and unlimited other locales) use Persian catalog for Offer R1 residual.
+        // Central locale resolver still picks the culture; catalog coverage expands in R2/R3.
+        return false;
+    }
+
+    private static string Arg(Tooba.BuildingBlocks.SemanticError error, string key) =>
         error.Arguments.TryGetValue(key, out var value) && !string.IsNullOrWhiteSpace(value) ? value : "?";
 }

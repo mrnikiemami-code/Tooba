@@ -1,6 +1,8 @@
-using Tooba.Offer.Endpoints.Seller;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Routing;
+using Microsoft.Extensions.DependencyInjection;
+using Tooba.BuildingBlocks.Localization;
+using Tooba.Offer.Endpoints.Seller;
 
 namespace Tooba.Offer.Endpoints;
 
@@ -18,5 +20,13 @@ public static class OfferEndpointModule
         var group = app.MapGroup("/v1/seller");
         OfferSellerEndpoints.Map(group);
         return app;
+    }
+
+    /// <summary>مشارکت‌کنندهٔ محلی‌سازی خطای Offer را ثبت می‌کند.</summary>
+    public static IServiceCollection AddOfferEndpointPresentation(this IServiceCollection services)
+    {
+        ArgumentNullException.ThrowIfNull(services);
+        services.AddSingleton<IErrorMessageContributor, OfferErrorMessageContributor>();
+        return services;
     }
 }

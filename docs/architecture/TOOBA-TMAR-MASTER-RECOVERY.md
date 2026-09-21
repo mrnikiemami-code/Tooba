@@ -188,7 +188,10 @@ User choice:
 Continue TMAR for now until user explicitly says to return to product feature work.
 
 Next TMAR task:
-Offer R6 COMPLETE_REFERENCE_PATTERN — Host OfferDbContext leaks closed; next USER_REVIEW_OFFER. Pricing remains gated as NOT_STARTED_UNTIL_OFFER_REPAIR_ACCEPTED until Architect ACCEPT of Offer Golden; Tax/Pricing physical recheck independent later. Checkout remains PAUSED_AT_SAFE_W5_CHECKPOINT; W6 deferred.
+TB-TMAR-FND-OBSERR-001-R1 FOUNDATION_PHASE1_COMPLETE — central Correlation/SafeErrorMapper/ApiResponseFactory/locale/ProblemDetails context adapted into BuildingBlocks+Host. Offer COMPLETE_REFERENCE_PATTERN is REOPENED_WAITING_CENTRAL_FOUNDATION (cross-cutting observability/error presentation gap). Next: TB-TMAR-FND-OBSERR-001-R2 (request/messaging correlation + log scope + MediatR/module-path tracing). Pricing remains gated; Checkout remains PAUSED_AT_SAFE_W5_CHECKPOINT.
+
+Foundation Observability/Error Presentation R1:
+TB-TMAR-FND-OBSERR-001-R1 — Phase 1 Core observability/error presentation; Module-Recovery-State FOUNDATION_PHASE1_COMPLETE; Offer-State REOPENED_WAITING_CENTRAL_FOUNDATION. Evidence: docs/evidence/TB-TMAR-FND-OBSERR-001-R1/.
 
 Offer Reference Module W1-R1:
 TB-TMAR-OFFER-REFERENCE-W1-R1 — prior Offer COMPLETE REOPENED on visual evidence; physical folders/namespaces aligned; ARCH-MODULE-PHYSICAL-001; Physical-Structure-State VERIFIED_ON_DISK; COMPLETE_REFERENCE_PATTERN revalidated. Evidence: docs/evidence/TB-TMAR-OFFER-REFERENCE-W1-R1/.
@@ -208,7 +211,10 @@ Offer Reference Final Verification R5:
 TB-TMAR-OFFER-REFERENCE-W1-R5 — magic offer.not_found exception seam repaired (SemanticException); seller Offer CQRS/guards green; Host Admin/Storefront OfferDbContext residual blocks COMPLETE. Module-Recovery-State: INCOMPLETE. Next: TB-TMAR-OFFER-REFERENCE-W1-R6. Evidence: docs/evidence/TB-TMAR-OFFER-REFERENCE-W1-R5/.
 
 Offer Reference Host Persistence Closure R6:
-TB-TMAR-OFFER-REFERENCE-W1-R6 — Host/foreign production OfferDbContext leaks removed via IOfferQueryGateway + Offer.Infrastructure adapter; composers/grids/storefront/merch/reservation/seeds rewired; architecture guards green. Module-Recovery-State: COMPLETE_REFERENCE_PATTERN. Next: USER_REVIEW_OFFER. Evidence: docs/evidence/TB-TMAR-OFFER-REFERENCE-W1-R6/.
+TB-TMAR-OFFER-REFERENCE-W1-R6 — Host/foreign production OfferDbContext leaks removed via IOfferQueryGateway + Offer.Infrastructure adapter; composers/grids/storefront/merch/reservation/seeds rewired; architecture guards green. Historically COMPLETE_REFERENCE_PATTERN then REOPENED for cross-cutting observability/error presentation gap. Offer-State: REOPENED_WAITING_CENTRAL_FOUNDATION. Evidence: docs/evidence/TB-TMAR-OFFER-REFERENCE-W1-R6/.
+
+Foundation Observability/Error Presentation R1:
+TB-TMAR-FND-OBSERR-001-R1 — Correlation + SafeErrorMapper + ApiResponseFactory + locale resolver + ProblemDetails context; Host wired; Offer endpoints use central path; Module-Recovery-State FOUNDATION_PHASE1_COMPLETE; next TB-TMAR-FND-OBSERR-001-R2. Evidence: docs/evidence/TB-TMAR-FND-OBSERR-001-R1/.
 
 Checkout Implementation W5:
 TB-TMAR-CHECKOUT-IMPL-W5 — Promotion checkout seam (ICheckoutPromotionPort); Order.Application↛Promotion.Application; TX preserved; W6 READY (intentionally paused); FE freeze intact. Evidence: docs/evidence/TB-TMAR-CHECKOUT-IMPL-W5/.

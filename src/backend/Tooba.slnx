@@ -1,6 +1,7 @@
 <Solution>
   <Folder Name="/BuildingBlocks/">
     <Project Path="BuildingBlocks/Tooba.BuildingBlocks/Tooba.BuildingBlocks.csproj" />
+    <Project Path="BuildingBlocks/Tooba.BuildingBlocks.Tests/Tooba.BuildingBlocks.Tests.csproj" />
     <Project Path="BuildingBlocks/Tooba.Persistence/Tooba.Persistence.csproj" />
   </Folder>
   <Folder Name="/Host/">

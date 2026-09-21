@@ -1,0 +1,98 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+
+BEGIN_TOOBA_WORKER_RESULT
+
+Task-ID: TB-TMAR-FND-OBSERR-001-R1
+Parent-Task: TB-TMAR-OFFER-REFERENCE-W1-R6
+Channel: tooba-main
+WorkerId: tooba-worker-01
+AgentType: cursor
+Status: PASS
+
+Summary:
+Phase 1 Core observability/error presentation foundation adapted from BuildingBlocks mastertest into Tooba BuildingBlocks + Host without duplicating OpenTelemetry. Correlation AsyncLocal SSOT, ProblemDetails context, SafeErrorMapper, request locale resolver, ApiResponseFactory, ObservabilityLogScope, and tracing policy/enricher APIs landed and wired. Offer seller endpoints route Semantic/Platform exceptions through ApiResponseFactory; OfferEndpointLocalizer retained as IErrorMessageContributor residual. Offer remains REOPENED_WAITING_CENTRAL_FOUNDATION.
+
+Program-Name:
+TMAR — Tooba Microservice-Ready Architecture Recovery
+
+Track:
+FOUNDATION_OBSERVABILITY_ERROR_PRESENTATION
+
+Recovery-Start:
+docs/evidence/TB-TMAR-FND-OBSERR-001-R1/recovery-start.md
+
+Reference-Repository:
+github.com/mrnikiemami-code/BuildingBlocks
+
+Reference-Branch:
+mastertest
+
+Reference-Gap-Analysis:
+docs/evidence/TB-TMAR-FND-OBSERR-001-R1/reference-gap-analysis.md
+
+Correlation-Foundation:
+ICorrelationContext + ICorrelationIdProvider + CorrelationIdContext(AsyncLocal) + CorrelationIdMiddleware; tests cover normalize/invalid/generated/nested/async isolation
+
+ProblemDetails-Context:
+IProblemDetailsContextProvider + ToobaProblemDetailsContext; no DB; no secrets; must not throw
+
+SafeErrorMapper:
+SemanticException / FluentValidation / PlatformHttpException / unknown; no Offer switch; no exception.Message to client
+
+Locale-Resolver:
+IRequestLocaleResolver + RequestLocaleOptions; docs/evidence/TB-TMAR-FND-OBSERR-001-R1/locale-foundation.md
+
+ApiResponseFactory:
+ApiResponseFactory + ToobaProblemDetailsFactory; SemanticException seam without forcing Result<T> migration
+
+Observability-Log-Scope:
+ObservabilityLogScope + ObservabilityLogScopeKeys
+
+Tracing-Policy:
+ToobaTracingPolicy + ToobaTraceEnricher + TracingTagNames; keep ToobaTelemetry; health/ready excluded
+
+DI-Registration:
+AddToobaObservabilityFoundation(+ AddOfferEndpointPresentation)
+
+Source-Organization:
+Observability/{Correlation,Tracing,Logging}, Presentation/{ProblemDetails,Errors}, Localization, DependencyInjection
+
+Architecture-Guards:
+OfferArchitectureGuardTests asserts central ApiResponseFactory, no AcceptLanguage.Contains, no local ToSemanticError, no ex.Message
+
+Focused-Validation:
+BuildingBlocks.Tests 22/22; Host ErrorContract 4/4
+
+Offer-Regression-Validation:
+Tooba.Offer.Tests 36/36 PASS
+
+AntiPattern-Gate:
+CLEAN
+
+Residual-Foundation-Work:
+R2 request/messaging correlation + full log scope wiring + MediatR/module-path tracing; OfferEndpointLocalizer bilingual catalog residual; PlatformExceptionMapper transitional; repo-wide endpoint migration deferred
+
+Offer-State:
+REOPENED_WAITING_CENTRAL_FOUNDATION
+
+Frontend-Production-Changes:
+NONE
+
+Git:
+TIP_SHA_PLACEHOLDER
+HEAD==origin/main: YES
+branch: main
+
+Blockers:
+NONE
+
+User-Work-Preserved:
+YES
+
+Module-Recovery-State:
+FOUNDATION_PHASE1_COMPLETE
+
+Next-Recommended-Task:
+TB-TMAR-FND-OBSERR-001-R2
+
+END_TOOBA_WORKER_RESULT

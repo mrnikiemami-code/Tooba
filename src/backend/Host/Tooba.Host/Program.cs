@@ -10,6 +10,8 @@ using OpenTelemetry.Trace;
 using System.Net;
 using System.Text.Json.Serialization;
 using Tooba.BuildingBlocks;
+using Tooba.BuildingBlocks.DependencyInjection;
+using Tooba.BuildingBlocks.Observability.Correlation;
 using Tooba.Host;
 using Tooba.Host.Admin;
 using Tooba.Host.Localization;
@@ -62,6 +64,8 @@ builder.Logging.AddJsonConsole(options =>
 });
 
 builder.Services.AddHttpContextAccessor();
+builder.Services.AddToobaObservabilityFoundation();
+builder.Services.AddOfferEndpointPresentation();
 builder.Services.AddProblemDetails();
 builder.Services.AddExceptionHandler<ToobaExceptionHandler>();
 
@@ -474,6 +478,7 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseExceptionHandler();
+app.UseToobaCorrelationId();
 if (trustedProxies.Length > 0)
 {
     app.UseForwardedHeaders();
