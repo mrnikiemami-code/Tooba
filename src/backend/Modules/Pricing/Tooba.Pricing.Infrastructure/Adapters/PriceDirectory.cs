@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Tooba.BuildingBlocks;
 using Tooba.BuildingBlocks.Observability.Tracing;
+using Tooba.BuildingBlocks.Results;
 using Tooba.Offer.Contracts;
 using Tooba.Offer.Contracts.Dtos;
 using Tooba.Offer.Contracts.Ports;
@@ -72,18 +73,18 @@ public sealed class PriceDirectory : IPriceDirectory, IPriceLookupGateway, ISell
     }
 
     /// <inheritdoc />
-    public async Task SetPriceAsync(SetSellerOfferPrice request, CancellationToken cancellationToken)
+    public async Task<Result> SetPriceAsync(SetSellerOfferPrice request, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(request);
         if (request.Amount < 0)
         {
-            throw new SemanticException(new SemanticError(PricingErrorCodes.AmountInvalid));
+            return Result.Failure(new SemanticError(PricingErrorCodes.AmountInvalid));
         }
 
         var offer = await FindOfferAsync(request.OfferId, cancellationToken);
         if (offer is null || offer.SellerPartyId != request.SellerPartyId)
         {
-            throw new SemanticException(new SemanticError(OfferErrorCodes.NotFound));
+            return Result.Failure(new SemanticError(OfferErrorCodes.NotFound));
         }
 
         var market = string.IsNullOrWhiteSpace(request.Market) ? "IR" : request.Market.Trim();
@@ -101,7 +102,7 @@ public sealed class PriceDirectory : IPriceDirectory, IPriceLookupGateway, ISell
                 request.OfferId, market, offer.Channel, request.Amount, currency,
                 _clock.UtcNow.AddYears(-1), null, cancellationToken);
             await ActivateAsync(created.PriceId, cancellationToken);
-            return;
+            return Result.Success();
         }
 
         await ChangeAmountAsync(existing.PriceId, request.Amount, currency, cancellationToken);
@@ -109,6 +110,8 @@ public sealed class PriceDirectory : IPriceDirectory, IPriceLookupGateway, ISell
         {
             await ActivateAsync(existing.PriceId, cancellationToken);
         }
+
+        return Result.Success();
     }
 
     /// <inheritdoc />

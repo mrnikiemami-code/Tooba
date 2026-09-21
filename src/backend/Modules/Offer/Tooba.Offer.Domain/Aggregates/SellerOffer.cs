@@ -1,5 +1,6 @@
 using Tooba.Offer.Domain.Events;
 using Tooba.BuildingBlocks;
+using Tooba.BuildingBlocks.Results;
 using Tooba.Offer.Domain.Errors;
 using Tooba.Offer.Domain.ValueObjects;
 
@@ -7,6 +8,7 @@ namespace Tooba.Offer.Domain.Aggregates;
 
 /// <summary>
 /// Seller commercial listing for a Catalog variant; price and inventory are separate.
+/// Expected invariant failures return <see cref="Result"/> (strategy A) — not SemanticException control flow.
 /// </summary>
 public sealed class SellerOffer : IHasDomainEvents
 {
@@ -123,41 +125,43 @@ public sealed class SellerOffer : IHasDomainEvents
     }
 
     /// <summary>Sets minimum and maximum order quantities.</summary>
-    public void SetOrderQuantityLimits(decimal? minimum, decimal? maximum, DateTimeOffset now)
+    public Result SetOrderQuantityLimits(decimal? minimum, decimal? maximum, DateTimeOffset now)
     {
         if (minimum is { } min && min <= 0)
         {
-            throw new SemanticException(new SemanticError(OfferErrorCodes.MinQuantityInvalid));
+            return Result.Failure(new SemanticError(OfferErrorCodes.MinQuantityInvalid));
         }
 
         if (maximum is { } max && max <= 0)
         {
-            throw new SemanticException(new SemanticError(OfferErrorCodes.MaxQuantityInvalid));
+            return Result.Failure(new SemanticError(OfferErrorCodes.MaxQuantityInvalid));
         }
 
         if (minimum is { } a && maximum is { } b && a > b)
         {
-            throw new SemanticException(new SemanticError(OfferErrorCodes.MinQuantityExceedsMax));
+            return Result.Failure(new SemanticError(OfferErrorCodes.MinQuantityExceedsMax));
         }
 
         MinimumOrderQuantity = minimum;
         MaximumOrderQuantity = maximum;
         UpdatedAt = now;
+        return Result.Success();
     }
 
     /// <summary>
     /// Activates the listing without asserting price or stock validity.
     /// </summary>
-    public void Activate(DateTimeOffset now)
+    public Result Activate(DateTimeOffset now)
     {
         if (Status == OfferStatus.Archived)
         {
-            throw new SemanticException(new SemanticError(OfferErrorCodes.ArchivedCannotActivate));
+            return Result.Failure(new SemanticError(OfferErrorCodes.ArchivedCannotActivate));
         }
 
         Status = OfferStatus.Active;
         UpdatedAt = now;
         _domainEvents.Add(new OfferActivatedDomainEvent(this));
+        return Result.Success();
     }
 
     /// <summary>

@@ -1,3 +1,5 @@
+using Tooba.BuildingBlocks.Results;
+
 namespace Tooba.Pricing.Contracts;
 
 /// <summary>Pricing-owned seller price write request.</summary>
@@ -12,5 +14,5 @@ public sealed record SetSellerOfferPrice(
 public interface ISellerOfferPricingGateway
 {
     /// <summary>Creates or updates the active base price after seller ownership validation.</summary>
-    Task SetPriceAsync(SetSellerOfferPrice request, CancellationToken cancellationToken);
+    Task<Result> SetPriceAsync(SetSellerOfferPrice request, CancellationToken cancellationToken);
 }

@@ -56,9 +56,18 @@ public sealed record MappedSafeError(
     string SafeTitleFallback,
     IReadOnlyDictionary<string, string[]>? ValidationErrors = null);
 
-/// <summary>قرارداد نگاشت استثنا به payload امن کلاینت.</summary>
+/// <summary>قرارداد نگاشت استثنا / SemanticError به payload امن کلاینت.</summary>
 public interface ISafeErrorMapper
 {
     /// <summary>استثنا را بدون نشت Message خام طبقه‌بندی می‌کند.</summary>
     MappedSafeError Map(Exception exception);
+
+    /// <summary>SemanticError منفرد را از کاتالوگ صریح نگاشت می‌کند (مسیر Result).</summary>
+    MappedSafeError Map(SemanticError error);
+
+    /// <summary>
+    /// چند SemanticError را نگاشت می‌کند؛ وضعیت/کد اولیه از اولین خطا؛
+    /// بقیه به‌صورت جزئیات ساخت‌یافتهٔ امن حفظ می‌شوند.
+    /// </summary>
+    MappedSafeError Map(IReadOnlyList<SemanticError> errors);
 }

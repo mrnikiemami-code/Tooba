@@ -1,4 +1,5 @@
 using Tooba.BuildingBlocks.Observability.Tracing;
+using Tooba.BuildingBlocks.Results;
 using Tooba.Catalog.Contracts;
 using Tooba.Inventory.Contracts;
 using Tooba.Offer.Contracts.Dtos;
@@ -159,13 +160,22 @@ internal sealed class TracedSellerOfferInventoryGateway(ISellerOfferInventoryGat
         }
     }
 
-    public async Task SetInventoryAsync(SetSellerOfferInventory request, CancellationToken cancellationToken)
+    public async Task<Result> SetInventoryAsync(SetSellerOfferInventory request, CancellationToken cancellationToken)
     {
         using var trace = tracer.Begin("Offer", "Inventory", "SetInventory");
         try
         {
-            await inner.SetInventoryAsync(request, cancellationToken).ConfigureAwait(false);
-            trace.SetOk();
+            var result = await inner.SetInventoryAsync(request, cancellationToken).ConfigureAwait(false);
+            if (result.IsFailure)
+            {
+                trace.SetBusinessFailure(result.FirstError.Code);
+            }
+            else
+            {
+                trace.SetOk();
+            }
+
+            return result;
         }
         catch (Exception ex)
         {

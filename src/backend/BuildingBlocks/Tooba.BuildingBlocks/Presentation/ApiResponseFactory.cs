@@ -4,12 +4,14 @@ using Microsoft.AspNetCore.Mvc;
 using Tooba.BuildingBlocks.Localization;
 using Tooba.BuildingBlocks.Presentation.Errors;
 using Tooba.BuildingBlocks.Presentation.ProblemDetails;
+using Tooba.BuildingBlocks.Results;
 
 namespace Tooba.BuildingBlocks.Presentation;
 
 /// <summary>
-/// مرز مرکزی ساخت ProblemDetails / IResult از استثناهای معنایی و پلتفرم.
+/// مرز مرکزی ساخت IResult از Result موفقیت/شکست و از استثناهای معنایی/پلتفرم.
 /// مسیر تولید از culture/context مرکزی استفاده می‌کند — نه Accept-Language خام endpoint.
+/// موفقیت Offer seller به‌صورت raw DTO (سازگاری کلاینت) برمی‌گردد؛ نه envelope اجباری.
 /// </summary>
 public sealed class ApiResponseFactory
 {
@@ -34,11 +36,74 @@ public sealed class ApiResponseFactory
         _httpContextAccessor = httpContextAccessor;
     }
 
+    /// <summary>
+    /// Result بدون مقدار: موفقیت → 204؛ شکست → ProblemDetails مرکزی.
+    /// </summary>
+    public IResult From(Result result)
+    {
+        ArgumentNullException.ThrowIfNull(result);
+        if (result.IsFailure)
+        {
+            return FromFailure(result.Errors);
+        }
+
+        return Microsoft.AspNetCore.Http.Results.NoContent();
+    }
+
+    /// <summary>
+    /// Result&lt;T&gt;: موفقیت → JSON خام مقدار (سازگاری کلاینت)؛ شکست → ProblemDetails.
+    /// </summary>
+    public IResult From<T>(Result<T> result)
+    {
+        ArgumentNullException.ThrowIfNull(result);
+        if (result.IsFailure)
+        {
+            return FromFailure(result.Errors);
+        }
+
+        return Microsoft.AspNetCore.Http.Results.Json(result.Value);
+    }
+
+    /// <summary>
+    /// Created: موفقیت → 201 + Location + JSON خام؛ شکست → ProblemDetails (بدون Location).
+    /// </summary>
+    public IResult Created<T>(string location, Result<T> result)
+    {
+        ArgumentNullException.ThrowIfNull(result);
+        if (string.IsNullOrWhiteSpace(location))
+        {
+            throw new ArgumentException("created_location_required", nameof(location));
+        }
+
+        if (result.IsFailure)
+        {
+            return FromFailure(result.Errors);
+        }
+
+        return Microsoft.AspNetCore.Http.Results.Created(location, result.Value);
+    }
+
+    /// <summary>SemanticError(ها) را به ProblemDetails IResult نگاشت می‌کند.</summary>
+    public IResult FromFailure(IReadOnlyList<SemanticError> errors)
+    {
+        ArgumentNullException.ThrowIfNull(errors);
+        var mapped = _safeErrorMapper.Map(errors);
+        var problem = BuildProblemDetails(mapped, exceptionForUnexpectedDetail: null);
+        return Microsoft.AspNetCore.Http.Results.Json(problem, statusCode: problem.Status ?? StatusCodes.Status500InternalServerError);
+    }
+
+    /// <summary>یک SemanticError را به ProblemDetails IResult نگاشت می‌کند.</summary>
+    public IResult FromFailure(SemanticError error)
+    {
+        ArgumentNullException.ThrowIfNull(error);
+        return FromFailure((IReadOnlyList<SemanticError>)[error]);
+    }
+
     /// <summary>استثنا را به <see cref="IResult"/> ProblemDetails تبدیل می‌کند (context-based).</summary>
     public IResult FromException(Exception exception)
     {
         var problem = CreateProblemDetails(exception);
-        return Results.Json(problem, statusCode: problem.Status ?? StatusCodes.Status500InternalServerError);
+        return Microsoft.AspNetCore.Http.Results.Json(problem, statusCode: problem.Status ?? StatusCodes.Status500InternalServerError);
     }
 
     /// <summary>ProblemDetails MVC را از استثنا می‌سازد (context-based).</summary>
@@ -53,9 +118,13 @@ public sealed class ApiResponseFactory
     /// ساخت ProblemDetails از نگاشت ازپیش‌محاسبه‌شده — برای جلوگیری از Map تکراری در orchestration.
     /// </summary>
     public Microsoft.AspNetCore.Mvc.ProblemDetails CreateFromMapped(MappedSafeError mapped, Exception exception)
+        => BuildProblemDetails(mapped, exception);
+
+    private Microsoft.AspNetCore.Mvc.ProblemDetails BuildProblemDetails(
+        MappedSafeError mapped,
+        Exception? exceptionForUnexpectedDetail)
     {
         ArgumentNullException.ThrowIfNull(mapped);
-        ArgumentNullException.ThrowIfNull(exception);
 
         var context = _contextProvider.GetCurrentContext();
         var culture = ResolveCurrentCulture();
@@ -87,10 +156,11 @@ public sealed class ApiResponseFactory
         }
 
         if (!context.HideExceptionDetails
-            && mapped.Classification == ErrorClassification.Unexpected)
+            && mapped.Classification == ErrorClassification.Unexpected
+            && exceptionForUnexpectedDetail is not null)
         {
             // Controlled Development detail only — never stack trace.
-            problem.Detail = exception.GetType().Name;
+            problem.Detail = exceptionForUnexpectedDetail.GetType().Name;
         }
 
         return problem;

@@ -1,4 +1,4 @@
-using Tooba.BuildingBlocks;
+using Tooba.BuildingBlocks.Results;
 using Tooba.Offer.Contracts;
 using Tooba.Offer.Domain.Aggregates;
 using Tooba.Offer.Domain.Events;
@@ -29,20 +29,22 @@ public sealed class SellerOfferInvariantTests
     }
 
     [Fact]
-    public void Archive_then_Activate_throws_stable_semantic_code()
+    public void Archive_then_Activate_returns_stable_semantic_code()
     {
         var offer = SellerOffer.Create(OfferId, Guid.NewGuid(), Guid.NewGuid(), SalesChannel.Direct, null, Now);
         offer.Archive(Now);
-        var ex = Assert.Throws<SemanticException>(() => offer.Activate(Now));
-        Assert.Equal(OfferErrorCodes.ArchivedCannotActivate, ex.Error.Code);
+        var failed = offer.Activate(Now);
+        Assert.True(failed.IsFailure);
+        Assert.Equal(OfferErrorCodes.ArchivedCannotActivate, failed.FirstError.Code);
     }
 
     [Fact]
     public void SetOrderQuantityLimits_rejects_min_above_max_with_stable_code()
     {
         var offer = SellerOffer.Create(OfferId, Guid.NewGuid(), Guid.NewGuid(), SalesChannel.Direct, null, Now);
-        var ex = Assert.Throws<SemanticException>(() => offer.SetOrderQuantityLimits(5, 2, Now));
-        Assert.Equal(OfferErrorCodes.MinQuantityExceedsMax, ex.Error.Code);
+        var failed = offer.SetOrderQuantityLimits(5, 2, Now);
+        Assert.True(failed.IsFailure);
+        Assert.Equal(OfferErrorCodes.MinQuantityExceedsMax, failed.FirstError.Code);
     }
 
     [Fact]
@@ -51,17 +53,17 @@ public sealed class SellerOfferInvariantTests
         var offer = SellerOffer.Create(OfferId, Guid.NewGuid(), Guid.NewGuid(), SalesChannel.Direct, null, Now);
         Assert.Equal(
             OfferErrorCodes.MinQuantityInvalid,
-            Assert.Throws<SemanticException>(() => offer.SetOrderQuantityLimits(0, 2, Now)).Error.Code);
+            offer.SetOrderQuantityLimits(0, 2, Now).FirstError.Code);
         Assert.Equal(
             OfferErrorCodes.MaxQuantityInvalid,
-            Assert.Throws<SemanticException>(() => offer.SetOrderQuantityLimits(1, 0, Now)).Error.Code);
+            offer.SetOrderQuantityLimits(1, 0, Now).FirstError.Code);
     }
 
     [Fact]
     public void Activate_from_draft_succeeds()
     {
         var offer = SellerOffer.Create(OfferId, Guid.NewGuid(), Guid.NewGuid(), SalesChannel.Direct, null, Now);
-        offer.Activate(Now);
+        Assert.True(offer.Activate(Now).IsSuccess);
         Assert.Equal(OfferStatus.Active, offer.Status);
         Assert.Contains(offer.DomainEvents, e => e is OfferActivatedDomainEvent);
     }

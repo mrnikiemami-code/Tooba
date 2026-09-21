@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Npgsql;
 using Tooba.BuildingBlocks;
+using Tooba.BuildingBlocks.Results;
 using Tooba.Catalog.Application;
 using Tooba.Inventory.Application;
 using Tooba.Inventory.Contracts;
@@ -87,14 +88,14 @@ public sealed class InventoryDirectory : IInventoryDirectory, IInventoryAvailabi
     }
 
     /// <inheritdoc />
-    public async Task SetInventoryAsync(SetSellerOfferInventory request, CancellationToken cancellationToken)
+    public async Task<Result> SetInventoryAsync(SetSellerOfferInventory request, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(request);
         if (request.OnHand < 0)
-            throw new SemanticException(new SemanticError(InventoryErrorCodes.QuantityInvalid));
+            return Result.Failure(new SemanticError(InventoryErrorCodes.QuantityInvalid));
         var offer = await _offers.FindOfferAsync(request.OfferId, cancellationToken);
         if (offer is null || offer.SellerPartyId != request.SellerPartyId)
-            throw new SemanticException(new SemanticError(OfferErrorCodes.NotFound));
+            return Result.Failure(new SemanticError(OfferErrorCodes.NotFound));
         var position = await _db.Positions.AsNoTracking()
             .Where(x => x.OfferId == request.OfferId)
             .OrderBy(x => x.StockItemId)
@@ -115,6 +116,7 @@ public sealed class InventoryDirectory : IInventoryDirectory, IInventoryAvailabi
             stockItemId.Value, StockAdjustmentKind.Set, request.OnHand,
             string.IsNullOrWhiteSpace(request.Reason) ? "seller-panel-adjust" : request.Reason.Trim(),
             null, cancellationToken);
+        return Result.Success();
     }
 
     /// <inheritdoc />

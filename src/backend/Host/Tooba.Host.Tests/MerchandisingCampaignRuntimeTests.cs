@@ -191,7 +191,7 @@ public sealed class MerchandisingCampaignRuntimeTests : IAsyncLifetime
 
         // Order limits on first offer
         var tracked = await offerDb.Offers.SingleAsync(x => x.OfferId == offers[0].OfferId);
-        tracked.SetOrderQuantityLimits(1, 3, now);
+        Assert.True(tracked.SetOrderQuantityLimits(1, 3, now).IsSuccess);
         await offerDb.SaveChangesAsync();
 
         var primary = await merchDir.UpsertSeedCampaignAsync(

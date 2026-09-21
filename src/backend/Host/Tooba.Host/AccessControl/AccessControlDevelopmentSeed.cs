@@ -432,10 +432,15 @@ internal static class AccessControlDevelopmentSeed
             variantRef = new VariantReference(variant.VariantId, variant.ProductId, variant.CombinationFingerprint, variant.Status);
         }
 
-        var offer = await offers.Send(new Tooba.Offer.Application.Commands.CreateOffer.CreateOfferCommand(
+        var created = await offers.Send(new Tooba.Offer.Application.Commands.CreateOffer.CreateOfferCommand(
             variantRef.VariantId, sellerPartyId, SalesChannel.Marketplace, slug.ToUpperInvariant()), cancellationToken);
-        await offers.Send(new Tooba.Offer.Application.Commands.ActivateOffer.ActivateOfferCommand(
+        if (created.IsFailure)
+            throw new InvalidOperationException(created.FirstError.Code);
+        var offer = created.Value;
+        var activated = await offers.Send(new Tooba.Offer.Application.Commands.ActivateOffer.ActivateOfferCommand(
             offer.OfferId, sellerPartyId), cancellationToken);
+        if (activated.IsFailure)
+            throw new InvalidOperationException(activated.FirstError.Code);
         var start = DateTimeOffset.Parse("2026-01-01T00:00:00Z");
         var price = await prices.CreatePriceAsync(offer.OfferId, "IR", SalesChannel.Marketplace, amount, "IRR", start, null, cancellationToken);
         await prices.ActivateAsync(price.PriceId, cancellationToken);

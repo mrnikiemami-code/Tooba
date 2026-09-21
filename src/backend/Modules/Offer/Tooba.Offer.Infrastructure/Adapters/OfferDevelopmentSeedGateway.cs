@@ -24,7 +24,11 @@ public sealed class OfferDevelopmentSeedGateway(OfferDbContext db, IIdGenerator 
             return;
         }
 
-        offer.Activate(clock.UtcNow);
+        if (offer.Activate(clock.UtcNow).IsFailure)
+        {
+            return;
+        }
+
         await db.SaveChangesAsync(cancellationToken);
     }
 
@@ -39,8 +43,10 @@ public sealed class OfferDevelopmentSeedGateway(OfferDbContext db, IIdGenerator 
         {
             if (existing.Status != DomainOfferStatus.Active)
             {
-                existing.Activate(clock.UtcNow);
-                await db.SaveChangesAsync(cancellationToken);
+                if (existing.Activate(clock.UtcNow).IsSuccess)
+                {
+                    await db.SaveChangesAsync(cancellationToken);
+                }
             }
 
             return existing.OfferId;
@@ -64,7 +70,11 @@ public sealed class OfferDevelopmentSeedGateway(OfferDbContext db, IIdGenerator 
             clock.UtcNow);
         db.Offers.Add(offer);
         await db.SaveChangesAsync(cancellationToken);
-        offer.Activate(clock.UtcNow);
+        if (offer.Activate(clock.UtcNow).IsFailure)
+        {
+            return null;
+        }
+
         await db.SaveChangesAsync(cancellationToken);
         return offer.OfferId;
     }

@@ -153,10 +153,10 @@ public sealed class OfferArchitectureGuardTests
         var endpoint = File.ReadAllText(Path.Combine(
             OfferRoot(), "Tooba.Offer.Endpoints", "Seller", "OfferSellerEndpoints.cs"));
         Assert.DoesNotContain("IOfferSellerPanel", string.Join('\n', AllOfferSources().Select(x => x.Text)), StringComparison.Ordinal);
-        Assert.Contains("return Results.Json(await sender.Send(new ListSellerOffersQuery", endpoint, StringComparison.Ordinal);
-        Assert.Contains("return Results.Json(await sender.Send(new GetOfferQuery", endpoint, StringComparison.Ordinal);
-        Assert.DoesNotContain("await sender.Send(new ListSellerOffersQuery", endpoint.Replace(
-            "return Results.Json(await sender.Send(new ListSellerOffersQuery", string.Empty), StringComparison.Ordinal);
+        Assert.Contains("api.From(result)", endpoint, StringComparison.Ordinal);
+        Assert.Contains("api.Created(", endpoint, StringComparison.Ordinal);
+        Assert.DoesNotContain("Results.Json(await sender.Send", endpoint, StringComparison.Ordinal);
+        Assert.DoesNotContain("Results.Json(result, statusCode: StatusCodes.Status201Created)", endpoint, StringComparison.Ordinal);
         foreach (var obsolete in new[] { "OfferRequests.cs", "OfferHandlers.cs", "OfferQueries.cs", "OfferQueryHandlers.cs" })
             Assert.False(File.Exists(Path.Combine(OfferRoot(), "Tooba.Offer.Application", "Commands", obsolete))
                          || File.Exists(Path.Combine(OfferRoot(), "Tooba.Offer.Application", "Queries", obsolete)));
@@ -181,11 +181,12 @@ public sealed class OfferArchitectureGuardTests
     }
 
     [Fact]
-    public void Offer_endpoints_use_global_pipeline_not_local_mappers()
+    public void Offer_endpoints_use_central_api_response_factory_not_local_mappers()
     {
         var endpoint = File.ReadAllText(Path.Combine(
             OfferRoot(), "Tooba.Offer.Endpoints", "Seller", "OfferSellerEndpoints.cs"));
-        Assert.DoesNotContain("ApiResponseFactory", endpoint, StringComparison.Ordinal);
+        Assert.Contains("ApiResponseFactory api", endpoint, StringComparison.Ordinal);
+        Assert.Contains("api.From(", endpoint, StringComparison.Ordinal);
         Assert.DoesNotContain("catch (", endpoint, StringComparison.Ordinal);
         Assert.DoesNotContain("ToSemanticError", endpoint, StringComparison.Ordinal);
         Assert.DoesNotContain("AcceptLanguage", endpoint, StringComparison.Ordinal);
@@ -195,6 +196,32 @@ public sealed class OfferArchitectureGuardTests
         Assert.DoesNotContain("ex.Message", endpoint, StringComparison.Ordinal);
         Assert.DoesNotContain("Results.Json(new ProblemDetails", endpoint, StringComparison.Ordinal);
         Assert.DoesNotContain("StartsWith(\"en\"", endpoint, StringComparison.Ordinal);
+        Assert.DoesNotContain("switch (result.FirstError", endpoint, StringComparison.Ordinal);
+        Assert.DoesNotContain("static IHttpContextAccessor", endpoint, StringComparison.Ordinal);
+        Assert.DoesNotContain("RequestServices.Get", endpoint, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void Offer_application_handlers_return_result_not_expected_semantic_exception()
+    {
+        var application = Sources("Tooba.Offer.Application");
+        Assert.Contains(application, x => x.Text.Contains("IRequest<Result<", StringComparison.Ordinal));
+        var throws = application
+            .Where(x => x.Text.Contains("throw new SemanticException", StringComparison.Ordinal)
+                        || x.Text.Contains("throw OfferReadModelComposer.NotFound()", StringComparison.Ordinal))
+            .Select(x => x.Path)
+            .ToList();
+        Assert.True(throws.Count == 0, "expected SemanticException throws remain: " + string.Join("; ", throws));
+    }
+
+    [Fact]
+    public void Offer_domain_expected_failures_use_result_not_semantic_exception_control_flow()
+    {
+        var domain = File.ReadAllText(Path.Combine(
+            OfferRoot(), "Tooba.Offer.Domain", "Aggregates", "SellerOffer.cs"));
+        Assert.Contains("public Result Activate(", domain, StringComparison.Ordinal);
+        Assert.Contains("public Result SetOrderQuantityLimits(", domain, StringComparison.Ordinal);
+        Assert.DoesNotContain("throw new SemanticException", domain, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -367,6 +394,12 @@ public sealed class OfferArchitectureGuardTests
 
                 if (n.Contains("/Modules/Offer/", StringComparison.OrdinalIgnoreCase)
                     || n.Contains("/Tooba.Offer.", StringComparison.OrdinalIgnoreCase))
+                {
+                    return false;
+                }
+
+                if (n.Contains(".Tests/", StringComparison.OrdinalIgnoreCase)
+                    || n.Contains("/Tests/", StringComparison.OrdinalIgnoreCase))
                 {
                     return false;
                 }

@@ -1,3 +1,5 @@
+using Tooba.BuildingBlocks.Results;
+
 namespace Tooba.Inventory.Contracts;
 
 /// <summary>Inventory-owned availability summary for offer presentation.</summary>
@@ -15,5 +17,5 @@ public interface ISellerOfferInventoryGateway
         CancellationToken cancellationToken);
 
     /// <summary>Sets on-hand stock, creating an owner-selected default location when necessary.</summary>
-    Task SetInventoryAsync(SetSellerOfferInventory request, CancellationToken cancellationToken);
+    Task<Result> SetInventoryAsync(SetSellerOfferInventory request, CancellationToken cancellationToken);
 }

@@ -1,4 +1,5 @@
 using Tooba.BuildingBlocks;
+using Tooba.BuildingBlocks.Results;
 using Tooba.Offer.Contracts;
 
 namespace Tooba.Offer.Contracts.Ports;
@@ -69,7 +70,7 @@ public interface IReturnPolicyResolver
     ReturnPolicyOptions Options { get; }
 
     /// <summary>اعتبارسنجی انتخاب Offer قبل از ذخیره.</summary>
-    void ValidateOfferChoice(string choice, int? customReturnWindowDays);
+    Result ValidateOfferChoice(string choice, int? customReturnWindowDays);
 
     /// <summary>resolve مؤثر برای checkout snapshot.</summary>
     ResolvedReturnPolicy ResolveForCheckout(string choice, int? customReturnWindowDays, bool? categoryForcesNonReturnable = null);
@@ -90,40 +91,40 @@ public sealed class ReturnPolicyResolver : IReturnPolicyResolver
     public ReturnPolicyOptions Options => _options;
 
     /// <inheritdoc />
-    public void ValidateOfferChoice(string choice, int? customReturnWindowDays)
+    public Result ValidateOfferChoice(string choice, int? customReturnWindowDays)
     {
         var normalized = OfferReturnPolicyChoices.Normalize(choice);
         if (normalized == OfferReturnPolicyChoices.Default)
         {
-            return;
+            return Result.Success();
         }
 
         if (!_options.SellerCanOverrideReturnPolicy)
         {
-            throw new SemanticException(new SemanticError(OfferErrorCodes.ReturnPolicyOverrideDenied));
+            return Result.Failure(new SemanticError(OfferErrorCodes.ReturnPolicyOverrideDenied));
         }
 
         if (normalized == OfferReturnPolicyChoices.NonReturnable)
         {
             if (!_options.AllowNonReturnableOffers)
             {
-                throw new SemanticException(new SemanticError(OfferErrorCodes.NonReturnableDenied));
+                return Result.Failure(new SemanticError(OfferErrorCodes.NonReturnableDenied));
             }
 
-            return;
+            return Result.Success();
         }
 
         if (normalized == OfferReturnPolicyChoices.Custom)
         {
             if (customReturnWindowDays is null)
             {
-                throw new SemanticException(new SemanticError(OfferErrorCodes.CustomReturnWindowRequired));
+                return Result.Failure(new SemanticError(OfferErrorCodes.CustomReturnWindowRequired));
             }
 
             if (customReturnWindowDays < _options.MinReturnWindowDays
                 || customReturnWindowDays > _options.MaxReturnWindowDays)
             {
-                throw new SemanticException(new SemanticError(
+                return Result.Failure(new SemanticError(
                     OfferErrorCodes.CustomReturnWindowOutOfRange,
                     new Dictionary<string, string?>
                     {
@@ -132,6 +133,8 @@ public sealed class ReturnPolicyResolver : IReturnPolicyResolver
                     }));
             }
         }
+
+        return Result.Success();
     }
 
     /// <inheritdoc />
@@ -146,13 +149,9 @@ public sealed class ReturnPolicyResolver : IReturnPolicyResolver
         }
 
         var normalized = OfferReturnPolicyChoices.Normalize(choice);
-        try
+        if (ValidateOfferChoice(normalized, customReturnWindowDays).IsFailure)
         {
-            ValidateOfferChoice(normalized, customReturnWindowDays);
-        }
-        catch (SemanticException)
-        {
-            // انتخاب نامعتبر فروشنده در checkout به پیش‌فرض امن فروشگاه می‌افتد.
+            // Invalid seller choice at checkout falls back to the safe store default.
             normalized = OfferReturnPolicyChoices.Default;
             customReturnWindowDays = null;
         }

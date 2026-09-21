@@ -26,12 +26,12 @@ public sealed class OfferQueryGatewayTests
         var now = DateTimeOffset.Parse("2026-09-21T00:00:00Z");
 
         var activeA = SellerOffer.Create(Guid.Parse("aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa2"), variant1, sellerA, DomainChannel.Marketplace, "A-1", now);
-        activeA.Activate(now);
+        Assert.True(activeA.Activate(now).IsSuccess);
         var draftA = SellerOffer.Create(Guid.Parse("aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa3"), variant1, sellerA, DomainChannel.Marketplace, "A-2", now);
         var activeB = SellerOffer.Create(Guid.Parse("bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbb2"), variant2, sellerB, DomainChannel.Marketplace, "B-1", now);
-        activeB.Activate(now);
+        Assert.True(activeB.Activate(now).IsSuccess);
         var archived = SellerOffer.Create(Guid.Parse("cccccccc-cccc-4ccc-8ccc-ccccccccccc1"), variant2, sellerB, DomainChannel.Marketplace, "B-2", now);
-        archived.Activate(now);
+        Assert.True(archived.Activate(now).IsSuccess);
         archived.Archive(now.AddMinutes(1));
 
         db.Offers.AddRange(activeA, draftA, activeB, archived);
@@ -103,7 +103,7 @@ public sealed class OfferQueryGatewayTests
             DomainChannel.Marketplace,
             "TEMPLATE",
             now);
-        template.Activate(now);
+        Assert.True(template.Activate(now).IsSuccess);
         db.Offers.Add(template);
         await db.SaveChangesAsync();
 

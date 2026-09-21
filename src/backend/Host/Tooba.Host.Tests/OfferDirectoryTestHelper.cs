@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Tooba.BuildingBlocks;
+using Tooba.BuildingBlocks.Results;
 using Tooba.Catalog.Application;
 using Tooba.Offer.Application;
 using Tooba.Offer.Application.Commands.ActivateOffer;
@@ -58,7 +59,9 @@ internal sealed class OfferDirectory : IOfferLookupGateway
     public async Task ActivateAsync(Guid id, CancellationToken token)
     {
         var offer = await _db.Offers.SingleAsync(x => x.OfferId == id, token);
-        offer.Activate(_clock.UtcNow);
+        var activated = offer.Activate(_clock.UtcNow);
+        if (activated.IsFailure)
+            throw new SemanticException(activated.FirstError);
         await _db.SaveChangesAsync(token);
     }
 
@@ -122,17 +125,17 @@ internal sealed class OfferTestSender(OfferDirectory offers) : MediatR.ISender
     public IAsyncEnumerable<object?> CreateStream(object request, CancellationToken token = default) =>
         throw new NotSupportedException();
 
-    private async Task<SellerOfferDetailPage> CreateDetailAsync(CreateOfferCommand create, CancellationToken token)
+    private async Task<Result<SellerOfferDetailPage>> CreateDetailAsync(CreateOfferCommand create, CancellationToken token)
     {
         var reference = await offers.CreateOfferAsync(
             create.CatalogVariantId, create.SellerPartyId, create.Channel, create.SellerSku, token);
-        return ToDetail(reference);
+        return Result.Success(ToDetail(reference));
     }
 
-    private async Task<OfferReference> ActivateAsync(Guid id, CancellationToken token)
+    private async Task<Result<OfferReference>> ActivateAsync(Guid id, CancellationToken token)
     {
         await offers.ActivateAsync(id, token);
-        return (await offers.FindOfferAsync(id, token))!;
+        return Result.Success((await offers.FindOfferAsync(id, token))!);
     }
 
     private static SellerOfferDetailPage ToDetail(OfferReference reference) =>

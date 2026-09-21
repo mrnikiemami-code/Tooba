@@ -2,6 +2,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using FluentValidation;
 using MediatR;
+using Tooba.BuildingBlocks.Results;
 
 namespace Tooba.BuildingBlocks;
 
@@ -156,7 +157,16 @@ public sealed class LoggingBehavior<TRequest, TResponse> : IPipelineBehavior<TRe
         try
         {
             var response = await next();
-            _logger.LogDebug("MediatR handled {Request}", name);
+            if (response is IResultStatus { IsFailure: true })
+            {
+                // Business Result failure: Debug only — never Error (presentation owns client response).
+                _logger.LogDebug("MediatR business Result failure {Request}", name);
+            }
+            else
+            {
+                _logger.LogDebug("MediatR handled {Request}", name);
+            }
+
             return response;
         }
         catch (Exception ex) when (IsExpectedBusinessFailure(ex))

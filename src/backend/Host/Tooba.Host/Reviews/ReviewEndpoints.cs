@@ -80,9 +80,15 @@ public static class ReviewEndpoints
         {
             var (_, sellerPartyId) = await SellerPanelAccess.RequireAuthorizedAsync(
                 request, session, guard, environment, cancellationToken);
-            var offers = await sender.Send(
+            var offersResult = await sender.Send(
                 new Tooba.Offer.Application.Queries.ListSellerOffers.ListSellerOffersQuery(sellerPartyId),
                 cancellationToken);
+            if (offersResult.IsFailure)
+            {
+                return Results.Json(new { title = "Request rejected", errorCode = offersResult.FirstError.Code }, statusCode: 400);
+            }
+
+            var offers = offersResult.Value;
             var productIds = offers.Where(x => x.ProductId is not null).Select(x => x.ProductId!.Value).Distinct().ToArray();
             var statusFilter = ParseSellerStatus(status);
             var scoped = await reviews.ListForProductsAsync(productIds, statusFilter, page, pageSize, cancellationToken);

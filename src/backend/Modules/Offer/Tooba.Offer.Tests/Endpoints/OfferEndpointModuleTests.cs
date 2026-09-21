@@ -32,8 +32,12 @@ public sealed class OfferEndpointModuleTests
         var source = File.ReadAllText(Path.Combine(
             root, "src", "backend", "Modules", "Offer", "Tooba.Offer.Endpoints", "Seller", "OfferSellerEndpoints.cs"));
         Assert.Contains("ISender sender", source, StringComparison.Ordinal);
+        Assert.Contains("ApiResponseFactory api", source, StringComparison.Ordinal);
+        Assert.Contains("api.From(", source, StringComparison.Ordinal);
+        Assert.Contains("api.Created(", source, StringComparison.Ordinal);
         Assert.Contains("new CreateOfferCommand", source, StringComparison.Ordinal);
         Assert.Contains("new UpdateOfferCommand", source, StringComparison.Ordinal);
+        Assert.DoesNotContain("Results.Json(await sender.Send", source, StringComparison.Ordinal);
         Assert.DoesNotContain("panel.CreateOfferAsync", source, StringComparison.Ordinal);
         Assert.DoesNotContain("panel.PatchOfferAsync", source, StringComparison.Ordinal);
     }

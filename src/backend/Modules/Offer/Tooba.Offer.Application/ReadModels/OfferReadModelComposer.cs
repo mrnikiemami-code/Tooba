@@ -6,6 +6,7 @@ using Tooba.Offer.Contracts;
 using Tooba.Offer.Contracts.Dtos;
 using Tooba.Offer.Contracts.Ports;
 using Tooba.Offer.Domain.Aggregates;
+using Tooba.BuildingBlocks.Results;
 using Tooba.Party.Contracts;
 using Tooba.Pricing.Contracts;
 
@@ -71,7 +72,11 @@ public sealed class OfferReadModelComposer(
             product?.UnitCode, product?.UnitName, product?.UnitShortName);
     }
 
-    /// <summary>Creates the canonical seller-scoped not-found exception.</summary>
-    public static SemanticException NotFound() =>
-        new(new SemanticError(OfferErrorCodes.NotFound));
+    /// <summary>Creates the canonical seller-scoped not-found failure.</summary>
+    public static Result<T> NotFound<T>() =>
+        Result<T>.Failure(new SemanticError(OfferErrorCodes.NotFound));
+
+    /// <summary>Creates the canonical seller-scoped not-found failure (void Result).</summary>
+    public static Result NotFoundResult() =>
+        Result.Failure(new SemanticError(OfferErrorCodes.NotFound));
 }

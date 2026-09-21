@@ -25,23 +25,25 @@ public sealed class SafeErrorMapper : ISafeErrorMapper
 
         return exception switch
         {
-            SemanticException semantic => MapSemantic(semantic),
+            SemanticException semantic => Map(semantic.Error),
             ValidationException validation => MapValidation(validation),
             PlatformHttpException platform => MapPlatform(platform),
             _ => MapUnexpected(),
         };
     }
 
-    private MappedSafeError MapSemantic(SemanticException semantic)
+    /// <inheritdoc />
+    public MappedSafeError Map(SemanticError error)
     {
-        var code = semantic.Error.Code;
+        ArgumentNullException.ThrowIfNull(error);
+        var code = error.Code;
         if (_catalog.TryGet(code, out var descriptor))
         {
             return new MappedSafeError(
                 StatusCode: descriptor.HttpStatus,
                 ErrorCode: descriptor.Code,
                 LocalizationKey: descriptor.LocalizationKey,
-                Arguments: semantic.Error.Arguments,
+                Arguments: error.Arguments,
                 Classification: descriptor.Classification,
                 Severity: descriptor.Severity,
                 SafeTitleFallback: descriptor.SafeTitleFallback);
@@ -52,10 +54,43 @@ public sealed class SafeErrorMapper : ISafeErrorMapper
             StatusCode: StatusCodes.Status400BadRequest,
             ErrorCode: code,
             LocalizationKey: code,
-            Arguments: semantic.Error.Arguments,
+            Arguments: error.Arguments,
             Classification: ErrorClassification.Business,
             Severity: ErrorSeverity.Warning,
             SafeTitleFallback: "Request rejected.");
+    }
+
+    /// <inheritdoc />
+    public MappedSafeError Map(IReadOnlyList<SemanticError> errors)
+    {
+        ArgumentNullException.ThrowIfNull(errors);
+        if (errors.Count == 0)
+        {
+            throw new ArgumentException("mapped_safe_error_requires_errors", nameof(errors));
+        }
+
+        var primary = Map(errors[0]);
+        if (errors.Count == 1)
+        {
+            return primary;
+        }
+
+        var grouped = errors
+            .GroupBy(e => e.Code, StringComparer.Ordinal)
+            .ToDictionary(
+                g => g.Key,
+                g => g.Select(_ => "semantic.error").Distinct(StringComparer.Ordinal).ToArray(),
+                StringComparer.Ordinal);
+
+        return new MappedSafeError(
+            StatusCode: primary.StatusCode,
+            ErrorCode: primary.ErrorCode,
+            LocalizationKey: primary.LocalizationKey,
+            Arguments: primary.Arguments,
+            Classification: primary.Classification,
+            Severity: primary.Severity,
+            SafeTitleFallback: primary.SafeTitleFallback,
+            ValidationErrors: grouped);
     }
 
     private MappedSafeError MapValidation(ValidationException validation)

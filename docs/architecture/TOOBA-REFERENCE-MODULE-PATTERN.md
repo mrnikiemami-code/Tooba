@@ -1,6 +1,13 @@
 # TOOBA REFERENCE MODULE PATTERN
 
-Canonical golden module: **Offer** (physically revalidated by `TB-TMAR-OFFER-REFERENCE-W1-R1` after `TB-TMAR-OFFER-REFERENCE-W1` was reopened).
+Canonical golden module: **Offer** (Result-pattern Golden revalidated by `TB-TMAR-FND-RESULT-001-R1`).
+
+Golden HTTP contract for expected business outcomes:
+
+- Application/CQRS returns `Result` / `Result<T>` carrying `SemanticError`
+- Endpoints map via `ApiResponseFactory.From` / `Created` (no raw `Results.Json(await sender.Send…)`)
+- Exception pipeline remains for unexpected / FluentValidation / transitional `PlatformHttpException`
+- Offer seller success JSON stays **raw DTO** for shipped client compatibility (see `docs/evidence/TB-TMAR-FND-RESULT-001-R1/api-success-contract.md`)
 
 ## Module top-level projects
 

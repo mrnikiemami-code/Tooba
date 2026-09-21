@@ -1,4 +1,5 @@
 using Tooba.BuildingBlocks;
+using Tooba.BuildingBlocks.Results;
 using Tooba.Catalog.Domain;
 using Tooba.Offer.Domain;
 using Tooba.Offer.Domain.Aggregates;
@@ -72,11 +73,11 @@ public sealed class QuantityFoundationTests
     {
         var now = DateTimeOffset.UtcNow;
         var offer = SellerOffer.Create(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), Tooba.Offer.Domain.ValueObjects.SalesChannel.Direct, "sku", now);
-        offer.SetOrderQuantityLimits(0.25m, 2.50m, now);
+        Assert.True(offer.SetOrderQuantityLimits(0.25m, 2.50m, now).IsSuccess);
         Assert.Equal(0.25m, offer.MinimumOrderQuantity);
         Assert.Equal(2.50m, offer.MaximumOrderQuantity);
-        Assert.Throws<SemanticException>(() => offer.SetOrderQuantityLimits(3m, 1m, now));
-        Assert.Throws<SemanticException>(() => offer.SetOrderQuantityLimits(0m, 1m, now));
+        Assert.True(offer.SetOrderQuantityLimits(3m, 1m, now).IsFailure);
+        Assert.True(offer.SetOrderQuantityLimits(0m, 1m, now).IsFailure);
     }
 
     [Fact]

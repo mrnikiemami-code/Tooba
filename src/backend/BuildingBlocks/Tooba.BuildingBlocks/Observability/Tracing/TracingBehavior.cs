@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using MediatR;
 using Tooba.BuildingBlocks.Observability.Correlation;
+using Tooba.BuildingBlocks.Results;
 
 namespace Tooba.BuildingBlocks.Observability.Tracing;
 
@@ -109,7 +110,21 @@ public sealed class TracingBehavior<TRequest, TResponse> : IPipelineBehavior<TRe
         try
         {
             var response = await next().ConfigureAwait(false);
-            activity?.SetStatus(ActivityStatusCode.Ok);
+            if (response is IResultStatus { IsFailure: true } failure)
+            {
+                // Expected business failure: not a system Error span.
+                activity?.SetStatus(ActivityStatusCode.Ok);
+                activity?.SetTag(TracingTagNames.ResultStatus, "business_failure");
+                if (failure.Errors.Count > 0)
+                {
+                    activity?.SetTag(TracingTagNames.ErrorCode, failure.Errors[0].Code);
+                }
+            }
+            else
+            {
+                activity?.SetStatus(ActivityStatusCode.Ok);
+            }
+
             return response;
         }
         catch (Exception ex)

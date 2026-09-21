@@ -3,6 +3,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Tooba.BuildingBlocks;
 using Tooba.BuildingBlocks.Observability.Correlation;
 using Tooba.BuildingBlocks.Observability.Tracing;
+using Tooba.BuildingBlocks.Results;
 using Tooba.Catalog.Contracts;
 using Tooba.Inventory.Contracts;
 using Tooba.Offer.Application.Commands.CreateOffer;
@@ -19,6 +20,10 @@ using DomainChannel = Tooba.Offer.Domain.ValueObjects.SalesChannel;
 
 namespace Tooba.Offer.Tests.Observability;
 
+[CollectionDefinition(nameof(OfferTraceTopologyCollection), DisableParallelization = true)]
+public sealed class OfferTraceTopologyCollection;
+
+[Collection(nameof(OfferTraceTopologyCollection))]
 public sealed class OfferTraceTopologyTests
 {
     [Fact]
@@ -136,8 +141,8 @@ public sealed class OfferTraceTopologyTests
             => Task.FromResult<IReadOnlyDictionary<Guid, OfferInventorySummary>>(
                 offerIds.ToDictionary(id => id, id => new OfferInventorySummary(id, 0, 0, 0)));
 
-        public Task SetInventoryAsync(SetSellerOfferInventory request, CancellationToken cancellationToken)
-            => Task.CompletedTask;
+        public Task<Result> SetInventoryAsync(SetSellerOfferInventory request, CancellationToken cancellationToken)
+            => Task.FromResult(Result.Success());
     }
 
     private sealed class FakeParty : IPartyLookup

@@ -29,6 +29,12 @@ public static class TracingTagNames
     /// <summary>نوع استثنا — نه Message.</summary>
     public const string ExceptionType = "exception.type";
 
+    /// <summary>وضعیت Result کسب‌وکار (مثلاً business_failure).</summary>
+    public const string ResultStatus = "result.status";
+
+    /// <summary>کد خطای پایدار اولیه — نه message.</summary>
+    public const string ErrorCode = "error.code";
+
     /// <summary>متد HTTP.</summary>
     public const string HttpMethod = "http.method";
 

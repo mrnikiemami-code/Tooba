@@ -2,6 +2,7 @@ using MediatR;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
+using Tooba.BuildingBlocks.Presentation;
 using Tooba.Inventory.Contracts;
 using Tooba.Offer.Application.Commands.CreateOffer;
 using Tooba.Offer.Application.Commands.UpdateOffer;
@@ -13,7 +14,9 @@ using Tooba.Pricing.Contracts;
 
 namespace Tooba.Offer.Endpoints.Seller;
 
-/// <summary>Maps thin seller Offer HTTP routes — errors bubble to global presentation pipeline.</summary>
+/// <summary>
+/// Thin seller Offer HTTP routes — success/failure mapped through <see cref="ApiResponseFactory"/>.
+/// </summary>
 public static class OfferSellerEndpoints
 {
     /// <summary>Maps Offer routes on the seller route group.</summary>
@@ -31,17 +34,20 @@ public static class OfferSellerEndpoints
     private static async Task<IResult> ListOffersAsync(
         ISender sender,
         IOfferSellerAuthorizer authorizer,
+        ApiResponseFactory api,
         HttpContext context,
         CancellationToken token)
     {
         var (_, sellerId) = await authorizer.RequireAuthorizedAsync(context, token);
-        return Results.Json(await sender.Send(new ListSellerOffersQuery(sellerId), token));
+        var result = await sender.Send(new ListSellerOffersQuery(sellerId), token);
+        return api.From(result);
     }
 
     private static async Task<IResult> CreateOfferAsync(
         SellerOfferCreateRequest body,
         ISender sender,
         IOfferSellerAuthorizer authorizer,
+        ApiResponseFactory api,
         HttpContext context,
         CancellationToken token)
     {
@@ -49,18 +55,22 @@ public static class OfferSellerEndpoints
         var result = await sender.Send(new CreateOfferCommand(
             body.CatalogVariantId, sellerId, SalesChannel.Marketplace, body.SellerSku,
             body.Status, body.ReturnPolicyChoice, body.CustomReturnWindowDays), token);
-        return Results.Json(result, statusCode: StatusCodes.Status201Created);
+        if (result.IsFailure)
+            return api.From(result);
+        return api.Created($"/v1/seller/offers/{result.Value.OfferId}", result);
     }
 
     private static async Task<IResult> GetOfferAsync(
         Guid offerId,
         ISender sender,
         IOfferSellerAuthorizer authorizer,
+        ApiResponseFactory api,
         HttpContext context,
         CancellationToken token)
     {
         var (_, sellerId) = await authorizer.RequireAuthorizedAsync(context, token);
-        return Results.Json(await sender.Send(new GetOfferQuery(offerId, sellerId), token));
+        var result = await sender.Send(new GetOfferQuery(offerId, sellerId), token);
+        return api.From(result);
     }
 
     private static async Task<IResult> PatchOfferAsync(
@@ -68,13 +78,15 @@ public static class OfferSellerEndpoints
         SellerOfferPatchRequest body,
         ISender sender,
         IOfferSellerAuthorizer authorizer,
+        ApiResponseFactory api,
         HttpContext context,
         CancellationToken token)
     {
         var (_, sellerId) = await authorizer.RequireAuthorizedAsync(context, token);
-        return Results.Json(await sender.Send(new UpdateOfferCommand(
+        var result = await sender.Send(new UpdateOfferCommand(
             offerId, sellerId, body.SellerSku, body.Status, body.ReturnPolicyChoice,
-            body.CustomReturnWindowDays, body.MinimumOrderQuantity, body.MaximumOrderQuantity), token));
+            body.CustomReturnWindowDays, body.MinimumOrderQuantity, body.MaximumOrderQuantity), token);
+        return api.From(result);
     }
 
     private static async Task<IResult> WriteOfferPriceAsync(
@@ -83,13 +95,17 @@ public static class OfferSellerEndpoints
         ISellerOfferPricingGateway pricing,
         ISender sender,
         IOfferSellerAuthorizer authorizer,
+        ApiResponseFactory api,
         HttpContext context,
         CancellationToken token)
     {
         var (_, sellerId) = await authorizer.RequireAuthorizedAsync(context, token);
-        await pricing.SetPriceAsync(new SetSellerOfferPrice(
+        var write = await pricing.SetPriceAsync(new SetSellerOfferPrice(
             offerId, sellerId, body.Amount, body.Currency, body.Market), token);
-        return Results.Json(await sender.Send(new GetOfferQuery(offerId, sellerId), token));
+        if (write.IsFailure)
+            return api.From(write);
+        var result = await sender.Send(new GetOfferQuery(offerId, sellerId), token);
+        return api.From(result);
     }
 
     private static async Task<IResult> WriteOfferInventoryAsync(
@@ -98,12 +114,16 @@ public static class OfferSellerEndpoints
         ISellerOfferInventoryGateway inventory,
         ISender sender,
         IOfferSellerAuthorizer authorizer,
+        ApiResponseFactory api,
         HttpContext context,
         CancellationToken token)
     {
         var (_, sellerId) = await authorizer.RequireAuthorizedAsync(context, token);
-        await inventory.SetInventoryAsync(new SetSellerOfferInventory(
+        var write = await inventory.SetInventoryAsync(new SetSellerOfferInventory(
             offerId, sellerId, body.OnHand, body.Reason), token);
-        return Results.Json(await sender.Send(new GetOfferQuery(offerId, sellerId), token));
+        if (write.IsFailure)
+            return api.From(write);
+        var result = await sender.Send(new GetOfferQuery(offerId, sellerId), token);
+        return api.From(result);
     }
 }

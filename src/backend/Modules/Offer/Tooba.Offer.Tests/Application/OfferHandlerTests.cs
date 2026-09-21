@@ -1,6 +1,7 @@
 using MediatR;
 using Microsoft.Extensions.DependencyInjection;
 using Tooba.BuildingBlocks;
+using Tooba.BuildingBlocks.Results;
 using Tooba.Catalog.Contracts;
 using Tooba.Inventory.Contracts;
 using Tooba.Offer.Application.Commands.ActivateOffer;
@@ -34,18 +35,18 @@ public sealed class OfferHandlerTests
     public async Task Create_rejects_missing_variant()
     {
         var sender = BuildSender(new FakeCatalog(null), new FakeParty(new PartyLookupResult(SellerId, "Organization")), out _);
-        var error = await Assert.ThrowsAsync<SemanticException>(() =>
-            sender.Send(new CreateOfferCommand(VariantId, SellerId, ContractChannel.Marketplace, "SKU")));
-        Assert.Equal(OfferErrorCodes.CatalogVariantMissing, error.Error.Code);
+        var result = await sender.Send(new CreateOfferCommand(VariantId, SellerId, ContractChannel.Marketplace, "SKU"));
+        Assert.True(result.IsFailure);
+        Assert.Equal(OfferErrorCodes.CatalogVariantMissing, result.FirstError.Code);
     }
 
     [Fact]
     public async Task Create_rejects_missing_seller()
     {
         var sender = BuildSender(new FakeCatalog(new CatalogVariantLookupResult(VariantId, Guid.NewGuid())), new FakeParty(null), out _);
-        var error = await Assert.ThrowsAsync<SemanticException>(() =>
-            sender.Send(new CreateOfferCommand(VariantId, SellerId, ContractChannel.Marketplace, "SKU")));
-        Assert.Equal(OfferErrorCodes.SellerMissing, error.Error.Code);
+        var result = await sender.Send(new CreateOfferCommand(VariantId, SellerId, ContractChannel.Marketplace, "SKU"));
+        Assert.True(result.IsFailure);
+        Assert.Equal(OfferErrorCodes.SellerMissing, result.FirstError.Code);
     }
 
     [Fact]
@@ -56,16 +57,35 @@ public sealed class OfferHandlerTests
             new FakeParty(new PartyLookupResult(SellerId, "Organization")),
             out var store);
         var created = await sender.Send(new CreateOfferCommand(VariantId, SellerId, ContractChannel.Marketplace, " SKU "));
-        Assert.Equal(OfferId, created.OfferId);
+        Assert.True(created.IsSuccess);
+        Assert.Equal(OfferId, created.Value.OfferId);
         Assert.Equal(Now, store.Items.Single().CreatedAt);
 
         var active = await sender.Send(new ActivateOfferCommand(OfferId, SellerId));
-        Assert.Equal(ContractStatus.Active, active.Status);
+        Assert.True(active.IsSuccess);
+        Assert.Equal(ContractStatus.Active, active.Value.Status);
         var updated = await sender.Send(new UpdateOfferCommand(OfferId, SellerId, "SKU-2", nameof(ContractStatus.Suspended)));
-        Assert.Equal(nameof(ContractStatus.Suspended), updated.Status);
-        Assert.Equal("SKU-2", updated.SellerSku);
-        Assert.Equal(OfferId, (await sender.Send(new GetOfferQuery(OfferId, SellerId))).OfferId);
-        Assert.Single(await sender.Send(new ListSellerOffersQuery(SellerId)));
+        Assert.True(updated.IsSuccess);
+        Assert.Equal(nameof(ContractStatus.Suspended), updated.Value.Status);
+        Assert.Equal("SKU-2", updated.Value.SellerSku);
+        var detail = await sender.Send(new GetOfferQuery(OfferId, SellerId));
+        Assert.True(detail.IsSuccess);
+        Assert.Equal(OfferId, detail.Value.OfferId);
+        var list = await sender.Send(new ListSellerOffersQuery(SellerId));
+        Assert.True(list.IsSuccess);
+        Assert.Single(list.Value);
+    }
+
+    [Fact]
+    public async Task Get_returns_not_found_as_result_failure()
+    {
+        var sender = BuildSender(
+            new FakeCatalog(new CatalogVariantLookupResult(VariantId, Guid.NewGuid())),
+            new FakeParty(new PartyLookupResult(SellerId, "Organization")),
+            out _);
+        var result = await sender.Send(new GetOfferQuery(OfferId, SellerId));
+        Assert.True(result.IsFailure);
+        Assert.Equal(OfferErrorCodes.NotFound, result.FirstError.Code);
     }
 
     private static ISender BuildSender(ICatalogVariantLookup catalog, IPartyLookup party, out FakeStore store)
@@ -118,7 +138,7 @@ public sealed class OfferHandlerTests
     private sealed class FakeInventory : ISellerOfferInventoryGateway
     {
         public Task<IReadOnlyDictionary<Guid, OfferInventorySummary>> GetAvailabilityAsync(IReadOnlyCollection<Guid> ids, CancellationToken token) => Task.FromResult<IReadOnlyDictionary<Guid, OfferInventorySummary>>(new Dictionary<Guid, OfferInventorySummary>());
-        public Task SetInventoryAsync(SetSellerOfferInventory request, CancellationToken token) => Task.CompletedTask;
+        public Task<Result> SetInventoryAsync(SetSellerOfferInventory request, CancellationToken token) => Task.FromResult(Result.Success());
     }
     private sealed class FixedIds(Guid id) : IIdGenerator
     { public Guid NewId() => id; }

@@ -70,6 +70,22 @@ public sealed class ModuleCallTrace : IDisposable
         _activity.SetTag(TracingTagNames.ExceptionType, exception.GetType().FullName);
     }
 
+    /// <summary>شکست کسب‌وکار Result — وضعیت Ok با tagهای محدود؛ نه Error سیستم.</summary>
+    public void SetBusinessFailure(string errorCode)
+    {
+        if (_activity is null)
+        {
+            return;
+        }
+
+        _activity.SetStatus(ActivityStatusCode.Ok);
+        _activity.SetTag(TracingTagNames.ResultStatus, "business_failure");
+        if (!string.IsNullOrWhiteSpace(errorCode))
+        {
+            _activity.SetTag(TracingTagNames.ErrorCode, errorCode.Trim());
+        }
+    }
+
     /// <inheritdoc />
     public void Dispose()
     {
