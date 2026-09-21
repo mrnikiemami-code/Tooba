@@ -2,6 +2,9 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
 using Tooba.BuildingBlocks.Localization;
+using Tooba.BuildingBlocks.Presentation.Errors;
+using Tooba.Offer.Endpoints.Errors;
+using Tooba.Offer.Endpoints.Resources;
 using Tooba.Offer.Endpoints.Seller;
 
 namespace Tooba.Offer.Endpoints;
@@ -22,11 +25,12 @@ public static class OfferEndpointModule
         return app;
     }
 
-    /// <summary>مشارکت‌کنندهٔ محلی‌سازی خطای Offer را ثبت می‌کند.</summary>
+    /// <summary>کاتالوگ خطا و منابع محلی‌سازی Offer را ثبت می‌کند.</summary>
     public static IServiceCollection AddOfferEndpointPresentation(this IServiceCollection services)
     {
         ArgumentNullException.ThrowIfNull(services);
-        services.AddSingleton<IErrorMessageContributor, OfferErrorMessageContributor>();
+        services.AddSingleton<IErrorCatalogContributor, OfferErrorCatalogContributor>();
+        services.AddSingleton<IErrorResourceSet, OfferErrorResourceSet>();
         return services;
     }
 }

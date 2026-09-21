@@ -9,6 +9,7 @@ namespace Tooba.BuildingBlocks.Presentation;
 
 /// <summary>
 /// مرز مرکزی ساخت ProblemDetails / IResult از استثناهای معنایی و پلتفرم.
+/// مسیر تولید از culture/context مرکزی استفاده می‌کند — نه Accept-Language خام endpoint.
 /// </summary>
 public sealed class ApiResponseFactory
 {
@@ -33,22 +34,31 @@ public sealed class ApiResponseFactory
         _httpContextAccessor = httpContextAccessor;
     }
 
-    /// <summary>استثنا را به <see cref="IResult"/> ProblemDetails تبدیل می‌کند.</summary>
-    public IResult FromException(Exception exception, string? acceptLanguage = null)
+    /// <summary>استثنا را به <see cref="IResult"/> ProblemDetails تبدیل می‌کند (context-based).</summary>
+    public IResult FromException(Exception exception)
     {
-        var problem = CreateProblemDetails(exception, acceptLanguage);
+        var problem = CreateProblemDetails(exception);
         return Results.Json(problem, statusCode: problem.Status ?? StatusCodes.Status500InternalServerError);
     }
 
-    /// <summary>ProblemDetails MVC را از استثنا می‌سازد.</summary>
-    public Microsoft.AspNetCore.Mvc.ProblemDetails CreateProblemDetails(
-        Exception exception,
-        string? acceptLanguage = null)
+    /// <summary>ProblemDetails MVC را از استثنا می‌سازد (context-based).</summary>
+    public Microsoft.AspNetCore.Mvc.ProblemDetails CreateProblemDetails(Exception exception)
     {
         ArgumentNullException.ThrowIfNull(exception);
         var mapped = _safeErrorMapper.Map(exception);
+        return CreateFromMapped(mapped, exception);
+    }
+
+    /// <summary>
+    /// ساخت ProblemDetails از نگاشت ازپیش‌محاسبه‌شده — برای جلوگیری از Map تکراری در orchestration.
+    /// </summary>
+    public Microsoft.AspNetCore.Mvc.ProblemDetails CreateFromMapped(MappedSafeError mapped, Exception exception)
+    {
+        ArgumentNullException.ThrowIfNull(mapped);
+        ArgumentNullException.ThrowIfNull(exception);
+
         var context = _contextProvider.GetCurrentContext();
-        var culture = ResolveCulture(acceptLanguage);
+        var culture = ResolveCurrentCulture();
         var title = _errorLocalizer.Localize(
             mapped.LocalizationKey,
             culture,
@@ -87,19 +97,53 @@ public sealed class ApiResponseFactory
     }
 
     /// <summary>
+    /// فقط برای تست‌های واحد با override صریح Accept-Language — مسیر تولید از این استفاده نکند.
+    /// </summary>
+    public Microsoft.AspNetCore.Mvc.ProblemDetails CreateProblemDetailsForTests(
+        Exception exception,
+        string? acceptLanguage)
+    {
+        ArgumentNullException.ThrowIfNull(exception);
+        var mapped = _safeErrorMapper.Map(exception);
+        var context = _contextProvider.GetCurrentContext();
+        var culture = _localeResolver.Resolve(acceptLanguage);
+        var title = _errorLocalizer.Localize(
+            mapped.LocalizationKey,
+            culture,
+            mapped.Arguments,
+            mapped.SafeTitleFallback);
+
+        var problem = new Microsoft.AspNetCore.Mvc.ProblemDetails
+        {
+            Type = "about:blank",
+            Title = title,
+            Status = mapped.StatusCode,
+            Instance = context.Path,
+        };
+        problem.Extensions["errorCode"] = mapped.ErrorCode;
+        problem.Extensions["traceId"] = context.TraceId;
+        problem.Extensions["correlationId"] = context.CorrelationId;
+        if (mapped.ValidationErrors is { Count: > 0 })
+        {
+            problem.Extensions["errors"] = mapped.ValidationErrors;
+        }
+
+        return problem;
+    }
+
+    /// <summary>
     /// نگاشت SemanticException جاری به IResult — بدون اجبار مهاجرت Result&lt;T&gt;.
     /// </summary>
-    public IResult FromSemanticException(SemanticException exception, string? acceptLanguage = null)
-        => FromException(exception, acceptLanguage);
+    public IResult FromSemanticException(SemanticException exception)
+        => FromException(exception);
 
     /// <summary>نگاشت PlatformHttpException به IResult.</summary>
-    public IResult FromPlatformException(PlatformHttpException exception, string? acceptLanguage = null)
-        => FromException(exception, acceptLanguage);
+    public IResult FromPlatformException(PlatformHttpException exception)
+        => FromException(exception);
 
-    private CultureInfo ResolveCulture(string? acceptLanguage)
+    private CultureInfo ResolveCurrentCulture()
     {
-        var header = acceptLanguage
-                     ?? _httpContextAccessor.HttpContext?.Request.Headers.AcceptLanguage.ToString();
+        var header = _httpContextAccessor.HttpContext?.Request.Headers.AcceptLanguage.ToString();
         return _localeResolver.Resolve(header);
     }
 }
@@ -113,7 +157,7 @@ public sealed class ToobaProblemDetailsFactory
     public ToobaProblemDetailsFactory(ApiResponseFactory apiResponseFactory)
         => _apiResponseFactory = apiResponseFactory;
 
-    /// <summary>ProblemDetails امن از استثنا.</summary>
-    public Microsoft.AspNetCore.Mvc.ProblemDetails Create(Exception exception, string? acceptLanguage = null)
-        => _apiResponseFactory.CreateProblemDetails(exception, acceptLanguage);
+    /// <summary>ProblemDetails امن از استثنا (context-based).</summary>
+    public Microsoft.AspNetCore.Mvc.ProblemDetails Create(Exception exception)
+        => _apiResponseFactory.CreateProblemDetails(exception);
 }

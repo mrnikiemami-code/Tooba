@@ -31,7 +31,7 @@ public sealed class OfferPhysicalStructureGuardTests
 
     private static readonly string[] AllowedEndpointsFolders =
     [
-        "Admin", "Storefront", "Seller"
+        "Admin", "Storefront", "Seller", "Errors", "Resources"
     ];
 
     private static string RepoRoot()

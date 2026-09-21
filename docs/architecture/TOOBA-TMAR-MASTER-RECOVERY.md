@@ -188,7 +188,10 @@ User choice:
 Continue TMAR for now until user explicitly says to return to product feature work.
 
 Next TMAR task:
-TB-TMAR-FND-OBSERR-001-R2 FOUNDATION_RUNTIME_TRACING_COMPLETE — runtime correlation, request log scope, MediatR TracingBehavior, Offer module-call topology, MassTransit/outbox correlation propagation proven. Offer remains REOPENED_WAITING_CENTRAL_FOUNDATION. Next: TB-TMAR-FND-OBSERR-001-R3 (localization catalog / SafeErrorMapper / exception presentation / repo-wide guards). Pricing remains gated; Checkout remains PAUSED_AT_SAFE_W5_CHECKPOINT.
+TB-TMAR-FND-OBSERR-001-R3 FOUNDATION_ERROR_LOCALIZATION_COMPLETE — ErrorDescriptor catalog, .resx Offer localization, thin exception presentation, Offer seller pipeline final adoption. Offer-State READY_FOR_FINAL_REFERENCE_REVERIFY. Next: TB-TMAR-FND-OBSERR-001-R4 (final integrated verification). Pricing remains gated; Checkout remains PAUSED_AT_SAFE_W5_CHECKPOINT.
+
+Foundation Observability/Error Presentation R3:
+TB-TMAR-FND-OBSERR-001-R3 — Error localization/catalog complete; Module-Recovery-State FOUNDATION_ERROR_LOCALIZATION_COMPLETE; Offer-State READY_FOR_FINAL_REFERENCE_REVERIFY. Evidence: docs/evidence/TB-TMAR-FND-OBSERR-001-R3/.
 
 Foundation Observability/Error Presentation R2:
 TB-TMAR-FND-OBSERR-001-R2 — Runtime tracing complete; Module-Recovery-State FOUNDATION_RUNTIME_TRACING_COMPLETE; Offer-State REOPENED_WAITING_CENTRAL_FOUNDATION. Evidence: docs/evidence/TB-TMAR-FND-OBSERR-001-R2/.
@@ -215,6 +218,9 @@ TB-TMAR-OFFER-REFERENCE-W1-R5 — magic offer.not_found exception seam repaired 
 
 Offer Reference Host Persistence Closure R6:
 TB-TMAR-OFFER-REFERENCE-W1-R6 — Host/foreign production OfferDbContext leaks removed via IOfferQueryGateway + Offer.Infrastructure adapter; composers/grids/storefront/merch/reservation/seeds rewired; architecture guards green. Historically COMPLETE_REFERENCE_PATTERN then REOPENED for cross-cutting observability/error presentation gap. Offer-State: REOPENED_WAITING_CENTRAL_FOUNDATION. Evidence: docs/evidence/TB-TMAR-OFFER-REFERENCE-W1-R6/.
+
+Foundation Observability/Error Presentation R3:
+TB-TMAR-FND-OBSERR-001-R3 — ErrorDescriptor catalog + SafeErrorMapper without naming heuristics; Offer .resx localization; IExceptionPresentationService; Offer seller endpoints bubble to global pipeline; Module-Recovery-State FOUNDATION_ERROR_LOCALIZATION_COMPLETE; next TB-TMAR-FND-OBSERR-001-R4. Evidence: docs/evidence/TB-TMAR-FND-OBSERR-001-R3/.
 
 Foundation Observability/Error Presentation R2:
 TB-TMAR-FND-OBSERR-001-R2 — Correlation middleware + request log enrichment + TracingBehavior + IModuleCallTracer + Offer gateway topology + MassTransit/outbox correlation; Module-Recovery-State FOUNDATION_RUNTIME_TRACING_COMPLETE; next TB-TMAR-FND-OBSERR-001-R3. Evidence: docs/evidence/TB-TMAR-FND-OBSERR-001-R2/.

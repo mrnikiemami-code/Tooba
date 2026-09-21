@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="offer.min_quantity.invalid" xml:space="preserve">
+    <value>Minimum order quantity must be greater than zero.</value>
+  </data>
+  <data name="offer.max_quantity.invalid" xml:space="preserve">
+    <value>Maximum order quantity must be greater than zero.</value>
+  </data>
+  <data name="offer.min_quantity.exceeds_max" xml:space="preserve">
+    <value>Minimum order quantity cannot exceed maximum.</value>
+  </data>
+  <data name="offer.archived.cannot_activate" xml:space="preserve">
+    <value>An archived offer cannot be reactivated; create a new listing.</value>
+  </data>
+  <data name="offer.catalog_variant.missing" xml:space="preserve">
+    <value>Catalog variant was not found.</value>
+  </data>
+  <data name="offer.seller.missing" xml:space="preserve">
+    <value>Seller was not found.</value>
+  </data>
+  <data name="offer.seller.not_organization" xml:space="preserve">
+    <value>Seller must be an Organization party.</value>
+  </data>
+  <data name="offer.listing.duplicate_active" xml:space="preserve">
+    <value>An active offer already exists for this seller, variant, and channel.</value>
+  </data>
+  <data name="offer.seller_sku.duplicate" xml:space="preserve">
+    <value>Seller SKU is already used by this seller.</value>
+  </data>
+  <data name="offer.return_policy.override_denied" xml:space="preserve">
+    <value>Seller cannot override return policy.</value>
+  </data>
+  <data name="offer.return_policy.non_returnable_denied" xml:space="preserve">
+    <value>Non-returnable offers are not allowed.</value>
+  </data>
+  <data name="offer.return_policy.custom_window_required" xml:space="preserve">
+    <value>Custom return window days are required.</value>
+  </data>
+  <data name="offer.return_policy.custom_window_out_of_range" xml:space="preserve">
+    <value>Return window must be between {min} and {max} days.</value>
+  </data>
+  <data name="offer.not_found" xml:space="preserve">
+    <value>Offer was not found.</value>
+  </data>
+  <data name="offer.status.unsupported" xml:space="preserve">
+    <value>Requested offer status is unsupported.</value>
+  </data>
+</root>

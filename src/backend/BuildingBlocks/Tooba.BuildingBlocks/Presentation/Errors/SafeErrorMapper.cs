@@ -5,12 +5,18 @@ namespace Tooba.BuildingBlocks.Presentation.Errors;
 
 /// <summary>
 /// نگاشت مرکزی SemanticException / ValidationException / PlatformHttpException / unknown.
-/// بدون switch ماژول‌محور و بدون ارسال exception.Message به کلاینت.
+/// طبقه‌بندی از کاتالوگ صریح — بدون heuristic روی نام کد.
 /// </summary>
 public sealed class SafeErrorMapper : ISafeErrorMapper
 {
     private static readonly IReadOnlyDictionary<string, string?> EmptyArgs =
         new Dictionary<string, string?>();
+
+    private readonly IErrorDefinitionCatalog _catalog;
+
+    /// <summary>نگاشت‌گر را با کاتالوگ صریح می‌سازد.</summary>
+    public SafeErrorMapper(IErrorDefinitionCatalog catalog)
+        => _catalog = catalog ?? throw new ArgumentNullException(nameof(catalog));
 
     /// <inheritdoc />
     public MappedSafeError Map(Exception exception)
@@ -26,29 +32,33 @@ public sealed class SafeErrorMapper : ISafeErrorMapper
         };
     }
 
-    private static MappedSafeError MapSemantic(SemanticException semantic)
+    private MappedSafeError MapSemantic(SemanticException semantic)
     {
         var code = semantic.Error.Code;
-        var classification = ClassifySemanticCode(code);
-        var status = classification switch
+        if (_catalog.TryGet(code, out var descriptor))
         {
-            ErrorClassification.NotFound => StatusCodes.Status404NotFound,
-            ErrorClassification.Conflict => StatusCodes.Status409Conflict,
-            ErrorClassification.Forbidden => StatusCodes.Status403Forbidden,
-            _ => StatusCodes.Status400BadRequest,
-        };
+            return new MappedSafeError(
+                StatusCode: descriptor.HttpStatus,
+                ErrorCode: descriptor.Code,
+                LocalizationKey: descriptor.LocalizationKey,
+                Arguments: semantic.Error.Arguments,
+                Classification: descriptor.Classification,
+                Severity: descriptor.Severity,
+                SafeTitleFallback: descriptor.SafeTitleFallback);
+        }
 
+        // Unknown semantic code: safe generic business fallback — never guess status from name.
         return new MappedSafeError(
-            StatusCode: status,
+            StatusCode: StatusCodes.Status400BadRequest,
             ErrorCode: code,
             LocalizationKey: code,
             Arguments: semantic.Error.Arguments,
-            Classification: classification,
+            Classification: ErrorClassification.Business,
             Severity: ErrorSeverity.Warning,
             SafeTitleFallback: "Request rejected.");
     }
 
-    private static MappedSafeError MapValidation(ValidationException validation)
+    private MappedSafeError MapValidation(ValidationException validation)
     {
         var grouped = validation.Errors
             .GroupBy(e => string.IsNullOrWhiteSpace(e.PropertyName) ? "request" : e.PropertyName, StringComparer.OrdinalIgnoreCase)
@@ -58,6 +68,19 @@ public sealed class SafeErrorMapper : ISafeErrorMapper
                     .Distinct(StringComparer.Ordinal)
                     .ToArray(),
                 StringComparer.OrdinalIgnoreCase);
+
+        if (_catalog.TryGet("validation.failed", out var descriptor))
+        {
+            return new MappedSafeError(
+                StatusCode: descriptor.HttpStatus,
+                ErrorCode: descriptor.Code,
+                LocalizationKey: descriptor.LocalizationKey,
+                Arguments: EmptyArgs,
+                Classification: descriptor.Classification,
+                Severity: descriptor.Severity,
+                SafeTitleFallback: descriptor.SafeTitleFallback,
+                ValidationErrors: grouped);
+        }
 
         return new MappedSafeError(
             StatusCode: StatusCodes.Status400BadRequest,
@@ -70,12 +93,26 @@ public sealed class SafeErrorMapper : ISafeErrorMapper
             ValidationErrors: grouped);
     }
 
-    private static MappedSafeError MapPlatform(PlatformHttpException platform)
+    private MappedSafeError MapPlatform(PlatformHttpException platform)
     {
+        // Transitional legacy input: HTTP status from exception; prefer catalog when code is registered.
         var code = string.IsNullOrWhiteSpace(platform.ErrorCode)
             ? "platform.error"
             : platform.ErrorCode!;
         var severity = platform.StatusCode >= 500 ? ErrorSeverity.Error : ErrorSeverity.Warning;
+        var safeTitle = string.IsNullOrWhiteSpace(platform.Title) ? "Request failed." : platform.Title;
+
+        if (_catalog.TryGet(code, out var descriptor))
+        {
+            return new MappedSafeError(
+                StatusCode: platform.StatusCode,
+                ErrorCode: descriptor.Code,
+                LocalizationKey: descriptor.LocalizationKey,
+                Arguments: EmptyArgs,
+                Classification: ErrorClassification.Platform,
+                Severity: severity,
+                SafeTitleFallback: safeTitle);
+        }
 
         return new MappedSafeError(
             StatusCode: platform.StatusCode,
@@ -84,12 +121,24 @@ public sealed class SafeErrorMapper : ISafeErrorMapper
             Arguments: EmptyArgs,
             Classification: ErrorClassification.Platform,
             Severity: severity,
-            // Title on PlatformHttpException is already a safe client-facing string by contract.
-            SafeTitleFallback: string.IsNullOrWhiteSpace(platform.Title) ? "Request failed." : platform.Title);
+            SafeTitleFallback: safeTitle);
     }
 
-    private static MappedSafeError MapUnexpected() =>
-        new(
+    private MappedSafeError MapUnexpected()
+    {
+        if (_catalog.TryGet("platform.unexpected", out var descriptor))
+        {
+            return new MappedSafeError(
+                StatusCode: descriptor.HttpStatus,
+                ErrorCode: descriptor.Code,
+                LocalizationKey: descriptor.LocalizationKey,
+                Arguments: EmptyArgs,
+                Classification: descriptor.Classification,
+                Severity: descriptor.Severity,
+                SafeTitleFallback: descriptor.SafeTitleFallback);
+        }
+
+        return new MappedSafeError(
             StatusCode: StatusCodes.Status500InternalServerError,
             ErrorCode: "platform.unexpected",
             LocalizationKey: "platform.unexpected",
@@ -97,34 +146,5 @@ public sealed class SafeErrorMapper : ISafeErrorMapper
             Classification: ErrorClassification.Unexpected,
             Severity: ErrorSeverity.Error,
             SafeTitleFallback: "An unexpected error occurred.");
-
-    /// <summary>
-    /// طبقه‌بندی convention-based روی کد معنایی — بدون نام ماژول خاص.
-    /// </summary>
-    internal static ErrorClassification ClassifySemanticCode(string code)
-    {
-        var c = code.Trim().ToLowerInvariant();
-        if (c.EndsWith(".not_found", StringComparison.Ordinal)
-            || c.EndsWith(".missing", StringComparison.Ordinal))
-        {
-            return ErrorClassification.NotFound;
-        }
-
-        if (c.Contains(".duplicate", StringComparison.Ordinal)
-            || c.Contains("cannot_activate", StringComparison.Ordinal)
-            || c.Contains(".conflict", StringComparison.Ordinal))
-        {
-            return ErrorClassification.Conflict;
-        }
-
-        if (c.Contains(".denied", StringComparison.Ordinal)
-            || c.Contains("_denied", StringComparison.Ordinal)
-            || c.EndsWith(".forbidden", StringComparison.Ordinal)
-            || c.Contains(".forbidden", StringComparison.Ordinal))
-        {
-            return ErrorClassification.Forbidden;
-        }
-
-        return ErrorClassification.Business;
     }
 }

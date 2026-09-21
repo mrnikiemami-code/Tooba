@@ -53,6 +53,44 @@ public sealed class RequestLocaleResolverTests
         Assert.Equal("en", resolver.Resolve("@@@;;;").TwoLetterISOLanguageName);
         Assert.Equal("en", resolver.Resolve(null).TwoLetterISOLanguageName);
     }
+
+    [Fact]
+    public void Parent_culture_fallback_en_US_and_fa_IR()
+    {
+        var resolver = new RequestLocaleResolver(new RequestLocaleOptions
+        {
+            DefaultCulture = "en",
+            FallbackCultures = ["en"],
+            SupportedCultures = ["en", "fa"],
+        });
+        Assert.Equal("en", resolver.Resolve("en-US").TwoLetterISOLanguageName);
+        Assert.Equal("fa", resolver.Resolve("fa-IR").TwoLetterISOLanguageName);
+    }
+}
+
+public sealed class FoundationResourceLocalizerTests
+{
+    [Fact]
+    public void Localizes_en_and_fa_foundation_keys()
+    {
+        var localizer = new ResourceErrorMessageLocalizer(
+            [new FoundationErrorResourceSet()],
+            Array.Empty<IErrorMessageContributor>());
+
+        var en = localizer.Localize("validation.failed", CultureInfo.GetCultureInfo("en"), new Dictionary<string, string?>(), "fallback");
+        var fa = localizer.Localize("validation.failed", CultureInfo.GetCultureInfo("fa"), new Dictionary<string, string?>(), "fallback");
+        Assert.Equal("Validation failed.", en);
+        Assert.Contains("اعتبارسنجی", fa, StringComparison.Ordinal);
+
+        var tr = localizer.Localize(
+            "validation.failed",
+            CultureInfo.GetCultureInfo("tr-TR"),
+            new Dictionary<string, string?>(),
+            "fallback");
+        // Missing tr resource => ResourceManager parent/fallback ends at invariant/default English resource, not Persian.
+        Assert.Equal("Validation failed.", tr);
+        Assert.DoesNotContain("اعتبارسنجی", tr, StringComparison.Ordinal);
+    }
 }
 
 public sealed class ApiResponseFactoryTests
@@ -64,6 +102,10 @@ public sealed class ApiResponseFactoryTests
         services.AddLogging();
         services.AddSingleton<IHostEnvironment>(new StubHostEnvironment(Environments.Production));
         services.AddToobaObservabilityFoundation();
+        services.AddSingleton<IErrorCatalogContributor, DemoNotFoundContributor>();
+        // Rebuild catalog after extra contributor: re-register catalog last
+        services.AddSingleton<IErrorDefinitionCatalog>(sp =>
+            new ErrorDefinitionCatalog(sp.GetServices<IErrorCatalogContributor>()));
         using var sp = services.BuildServiceProvider();
         var factory = sp.GetRequiredService<ApiResponseFactory>();
         var correlation = sp.GetRequiredService<ICorrelationIdProvider>();
@@ -78,6 +120,38 @@ public sealed class ApiResponseFactoryTests
         Assert.False(string.IsNullOrWhiteSpace(problem.Extensions["traceId"]?.ToString()));
         Assert.Null(problem.Detail);
         Assert.DoesNotContain("SemanticException", problem.Title ?? string.Empty, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void Test_override_accept_language_is_separated_from_production_api()
+    {
+        var services = new ServiceCollection();
+        services.AddLogging();
+        services.AddSingleton<IHostEnvironment>(new StubHostEnvironment(Environments.Production));
+        services.AddToobaObservabilityFoundation();
+        using var sp = services.BuildServiceProvider();
+        var factory = sp.GetRequiredService<ApiResponseFactory>();
+        var problem = factory.CreateProblemDetailsForTests(
+            new FluentValidation.ValidationException([
+                new FluentValidation.Results.ValidationFailure("Name", "required") { ErrorCode = "name.required" }
+            ]),
+            "fa");
+        Assert.Equal(400, problem.Status);
+        Assert.Contains("اعتبارسنجی", problem.Title ?? string.Empty, StringComparison.Ordinal);
+    }
+
+    private sealed class DemoNotFoundContributor : IErrorCatalogContributor
+    {
+        public IReadOnlyList<ErrorDescriptor> Contribute() =>
+        [
+            new(
+                "demo.not_found",
+                ErrorClassification.NotFound,
+                StatusCodes.Status404NotFound,
+                "demo.not_found",
+                ErrorSeverity.Warning,
+                "Demo missing."),
+        ];
     }
 
     private sealed class StubHostEnvironment(string name) : IHostEnvironment

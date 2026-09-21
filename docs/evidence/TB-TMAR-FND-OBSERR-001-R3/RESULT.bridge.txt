@@ -1,0 +1,98 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+
+BEGIN_TOOBA_WORKER_RESULT
+
+Task-ID: TB-TMAR-FND-OBSERR-001-R3
+Parent-Task: TB-TMAR-FND-OBSERR-001-R2
+Channel: tooba-main
+WorkerId: tooba-worker-01
+AgentType: cursor
+Status: PASS
+
+Summary:
+R3 replaces SafeErrorMapper naming heuristics with explicit ErrorDescriptor catalog (foundation + Offer contributors), deletes OfferEndpointLocalizer for .resx/IErrorResourceSet localization with unlimited-locale fallback (never non-en=>fa), context-based ApiResponseFactory, thin ToobaExceptionHandler via IExceptionPresentationService (map/log/write once), bounds PlatformHttpException as legacy, and finishes Offer seller endpoints on the global pipeline. Module-Recovery-State FOUNDATION_ERROR_LOCALIZATION_COMPLETE. Offer-State READY_FOR_FINAL_REFERENCE_REVERIFY. Parent ships commit/push/Bridge.
+
+Program-Name:
+TMAR — Tooba Microservice-Ready Architecture Recovery
+
+Track:
+FOUNDATION_OBSERVABILITY_ERROR_PRESENTATION
+
+Recovery-Start:
+docs/evidence/TB-TMAR-FND-OBSERR-001-R3/recovery-start.md
+
+Error-Descriptor-Model:
+docs/evidence/TB-TMAR-FND-OBSERR-001-R3/error-descriptor-model.md
+
+Error-Catalog-Registry:
+docs/evidence/TB-TMAR-FND-OBSERR-001-R3/error-catalog-registry.md
+
+SafeErrorMapper:
+docs/evidence/TB-TMAR-FND-OBSERR-001-R3/safe-error-mapper.md
+
+Locale-Localization:
+docs/evidence/TB-TMAR-FND-OBSERR-001-R3/locale-localization.md
+
+Offer-Localization-Migration:
+docs/evidence/TB-TMAR-FND-OBSERR-001-R3/offer-localization-migration.md
+
+ApiResponseFactory:
+docs/evidence/TB-TMAR-FND-OBSERR-001-R3/api-response-factory.md
+
+Exception-Logging-Orchestration:
+docs/evidence/TB-TMAR-FND-OBSERR-001-R3/exception-logging-orchestration.md
+
+PlatformHttpException-Audit:
+docs/evidence/TB-TMAR-FND-OBSERR-001-R3/platform-http-exception-audit.md
+
+Offer-Error-Pipeline:
+docs/evidence/TB-TMAR-FND-OBSERR-001-R3/offer-error-pipeline-final.md
+
+Validation-Errors:
+docs/evidence/TB-TMAR-FND-OBSERR-001-R3/validation-errors.md
+
+Resource-Organization:
+docs/evidence/TB-TMAR-FND-OBSERR-001-R3/resource-organization.md
+
+Repo-Error-Pipeline-Scan:
+docs/evidence/TB-TMAR-FND-OBSERR-001-R3/repo-error-pipeline-scan.md
+
+Architecture-Guards:
+docs/evidence/TB-TMAR-FND-OBSERR-001-R3/architecture-guards.md
+
+Focused-Validation:
+BuildingBlocks.Tests 36/36; Offer.Tests 56/56; Host CorrelationRuntime 3/3 (alone); Host/Offer/solution build PASS; parallel WebApplicationFactory may flake MassTransit SQL migrator
+
+Full-Validation:
+docs/evidence/TB-TMAR-FND-OBSERR-001-R3/full-validation.md
+
+AntiPattern-Gate:
+CLEAN
+
+Residual-Foundation-Work:
+R4: final integrated verification — end-to-end foundation + Offer Golden reference re-verify + repo-wide architecture guards; Host/other-module PlatformHttpException local ToError migrations remain FUTURE_MIGRATION
+
+Offer-State:
+READY_FOR_FINAL_REFERENCE_REVERIFY
+
+Frontend-Production-Changes:
+NONE
+
+Git:
+TIP_SHA_PLACEHOLDER
+HEAD==origin/main: YES
+branch: main
+
+Blockers:
+NONE
+
+User-Work-Preserved:
+YES
+
+Module-Recovery-State:
+FOUNDATION_ERROR_LOCALIZATION_COMPLETE
+
+Next-Recommended-Task:
+TB-TMAR-FND-OBSERR-001-R4
+
+END_TOOBA_WORKER_RESULT

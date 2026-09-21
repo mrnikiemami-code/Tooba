@@ -181,19 +181,72 @@ public sealed class OfferArchitectureGuardTests
     }
 
     [Fact]
-    public void Offer_endpoints_use_central_api_response_factory_not_local_mappers()
+    public void Offer_endpoints_use_global_pipeline_not_local_mappers()
     {
         var endpoint = File.ReadAllText(Path.Combine(
             OfferRoot(), "Tooba.Offer.Endpoints", "Seller", "OfferSellerEndpoints.cs"));
-        var localizer = File.ReadAllText(Path.Combine(
-            OfferRoot(), "Tooba.Offer.Endpoints", "Seller", "OfferEndpointLocalizer.cs"));
-        Assert.Contains("ApiResponseFactory", endpoint, StringComparison.Ordinal);
+        Assert.DoesNotContain("ApiResponseFactory", endpoint, StringComparison.Ordinal);
+        Assert.DoesNotContain("catch (", endpoint, StringComparison.Ordinal);
         Assert.DoesNotContain("ToSemanticError", endpoint, StringComparison.Ordinal);
+        Assert.DoesNotContain("AcceptLanguage", endpoint, StringComparison.Ordinal);
         Assert.DoesNotContain("AcceptLanguage.Contains", endpoint, StringComparison.Ordinal);
-        Assert.DoesNotContain("AcceptLanguage.Contains", localizer, StringComparison.Ordinal);
         Assert.DoesNotContain("Guid.NewGuid()", endpoint, StringComparison.Ordinal);
         Assert.DoesNotContain("exception.Message", endpoint, StringComparison.Ordinal);
         Assert.DoesNotContain("ex.Message", endpoint, StringComparison.Ordinal);
+        Assert.DoesNotContain("Results.Json(new ProblemDetails", endpoint, StringComparison.Ordinal);
+        Assert.DoesNotContain("StartsWith(\"en\"", endpoint, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void OfferEndpointLocalizer_is_deleted_and_resources_exist()
+    {
+        Assert.False(File.Exists(Path.Combine(
+            OfferRoot(), "Tooba.Offer.Endpoints", "Seller", "OfferEndpointLocalizer.cs")));
+        Assert.True(File.Exists(Path.Combine(
+            OfferRoot(), "Tooba.Offer.Endpoints", "Resources", "OfferErrors.resx")));
+        Assert.True(File.Exists(Path.Combine(
+            OfferRoot(), "Tooba.Offer.Endpoints", "Resources", "OfferErrors.fa.resx")));
+        Assert.True(File.Exists(Path.Combine(
+            OfferRoot(), "Tooba.Offer.Endpoints", "Errors", "OfferErrorCatalogContributor.cs")));
+    }
+
+    [Fact]
+    public void Offer_domain_and_application_do_not_throw_PlatformHttpException()
+    {
+        var violations = Sources("Tooba.Offer.Domain")
+            .Concat(Sources("Tooba.Offer.Application"))
+            .Where(x => x.Text.Contains("PlatformHttpException", StringComparison.Ordinal))
+            .Select(x => x.Path)
+            .ToList();
+        Assert.True(violations.Count == 0, "PlatformHttpException in Offer Domain/Application: " + string.Join("; ", violations));
+    }
+
+    [Fact]
+    public void SafeErrorMapper_has_no_ClassifySemanticCode_heuristic()
+    {
+        var mapper = File.ReadAllText(Path.Combine(
+            RepoRoot(),
+            "src",
+            "backend",
+            "BuildingBlocks",
+            "Tooba.BuildingBlocks",
+            "Presentation",
+            "Errors",
+            "SafeErrorMapper.cs"));
+        Assert.DoesNotContain("ClassifySemanticCode", mapper, StringComparison.Ordinal);
+        Assert.DoesNotContain(".not_found", mapper, StringComparison.Ordinal);
+        Assert.DoesNotContain("cannot_activate", mapper, StringComparison.Ordinal);
+        Assert.Contains("IErrorDefinitionCatalog", mapper, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void Global_handler_uses_central_exception_presentation()
+    {
+        var handler = File.ReadAllText(Path.Combine(
+            RepoRoot(), "src", "backend", "Host", "Tooba.Host", "Errors", "ToobaExceptionHandler.cs"));
+        Assert.Contains("IExceptionPresentationService", handler, StringComparison.Ordinal);
+        Assert.DoesNotContain("ISafeErrorMapper", handler, StringComparison.Ordinal);
+        Assert.DoesNotContain("AcceptLanguage", handler, StringComparison.Ordinal);
     }
 
     [Fact]

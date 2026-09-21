@@ -1,0 +1,8 @@
+﻿# Recovery SoT — TB-TMAR-FND-OBSERR-001-R3
+
+- Module-Recovery-State: `FOUNDATION_ERROR_LOCALIZATION_COMPLETE`
+- Offer-State: `READY_FOR_FINAL_REFERENCE_REVERIFY`
+- Next: `TB-TMAR-FND-OBSERR-001-R4`
+- TMAR-Execution-Mode: `BACKEND_ONLY_UNTIL_EXPLICIT_RELEASE`
+- Frontend-Production-Changes: NONE
+- Evidence: `docs/evidence/TB-TMAR-FND-OBSERR-001-R3/`

@@ -12,6 +12,7 @@ using System.Text.Json.Serialization;
 using Tooba.BuildingBlocks;
 using Tooba.BuildingBlocks.DependencyInjection;
 using Tooba.BuildingBlocks.Observability.Correlation;
+using Tooba.BuildingBlocks.Presentation;
 using Tooba.Host;
 using Tooba.Host.Admin;
 using Tooba.Host.Localization;
@@ -68,6 +69,7 @@ builder.Services.AddHttpContextAccessor();
 builder.Services.AddToobaObservabilityFoundation();
 builder.Services.AddOfferEndpointPresentation();
 builder.Services.AddProblemDetails();
+builder.Services.AddSingleton<IExceptionPresentationService, ExceptionPresentationService>();
 builder.Services.AddExceptionHandler<ToobaExceptionHandler>();
 
 builder.Services.AddOptions<ToobaPlatformOptions>()

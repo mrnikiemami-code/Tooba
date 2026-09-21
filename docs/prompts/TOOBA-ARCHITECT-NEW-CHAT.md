@@ -87,11 +87,11 @@ Current P05 recovery state is recorded in those files. Do not infer acceptance
 or issue the next product Task until the current Worker Result has been
 reviewed.
 
-## Current TMAR foundation tip (after R2 worker)
+## Current TMAR foundation tip (after R3 worker)
 
 - Track: `FOUNDATION_OBSERVABILITY_ERROR_PRESENTATION`
-- Module-Recovery-State: `FOUNDATION_RUNTIME_TRACING_COMPLETE` (R2)
-- Offer-State: `REOPENED_WAITING_CENTRAL_FOUNDATION`
-- Next recommended Task: `TB-TMAR-FND-OBSERR-001-R3`
-- Evidence: `docs/evidence/TB-TMAR-FND-OBSERR-001-R2/`
+- Module-Recovery-State: `FOUNDATION_ERROR_LOCALIZATION_COMPLETE` (R3)
+- Offer-State: `READY_FOR_FINAL_REFERENCE_REVERIFY`
+- Next recommended Task: `TB-TMAR-FND-OBSERR-001-R4`
+- Evidence: `docs/evidence/TB-TMAR-FND-OBSERR-001-R3/`
 - Master: `docs/architecture/TOOBA-TMAR-MASTER-RECOVERY.md`

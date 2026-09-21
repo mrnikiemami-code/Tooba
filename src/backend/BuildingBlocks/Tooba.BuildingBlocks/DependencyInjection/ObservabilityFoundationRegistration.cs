@@ -1,5 +1,4 @@
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
 using Tooba.BuildingBlocks.Localization;
 using Tooba.BuildingBlocks.Observability.Correlation;
 using Tooba.BuildingBlocks.Observability.Tracing;
@@ -26,13 +25,19 @@ public static class ObservabilityFoundationRegistration
         services.AddSingleton<ICorrelationIdProvider, CorrelationIdProvider>();
         services.AddSingleton<ICorrelationContext, CorrelationContextAdapter>();
         services.AddSingleton<IModuleCallTracer, ModuleCallTracer>();
+
+        services.AddSingleton<IErrorCatalogContributor, FoundationErrorCatalogContributor>();
+        services.AddSingleton<IErrorDefinitionCatalog, ErrorDefinitionCatalog>();
         services.AddSingleton<ISafeErrorMapper, SafeErrorMapper>();
+
         services.AddSingleton<IRequestLocaleResolver, RequestLocaleResolver>();
-        services.AddSingleton<IErrorMessageLocalizer, CompositeErrorMessageLocalizer>();
+        services.AddSingleton<IErrorResourceSet, FoundationErrorResourceSet>();
+        services.AddSingleton<IErrorMessageLocalizer, ResourceErrorMessageLocalizer>();
 
         services.AddSingleton<IProblemDetailsContextProvider, ProblemDetailsContextProvider>();
         services.AddSingleton<ApiResponseFactory>();
         services.AddSingleton<ToobaProblemDetailsFactory>();
+        // IExceptionPresentationService is registered by Host after AddProblemDetails().
 
         return services;
     }

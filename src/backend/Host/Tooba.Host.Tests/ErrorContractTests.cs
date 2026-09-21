@@ -3,6 +3,7 @@ using System.Net.Http.Json;
 using System.Text.Json;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.Extensions.Configuration;
 using Xunit;
 
 namespace Tooba.Host.Tests;
@@ -19,6 +20,14 @@ public sealed class ErrorContractTests : IClassFixture<WebApplicationFactory<Pro
         _factory = factory.WithWebHostBuilder(builder =>
         {
             builder.UseEnvironment("Development");
+            builder.ConfigureAppConfiguration((_, config) =>
+            {
+                config.AddInMemoryCollection(new Dictionary<string, string?>
+                {
+                    ["Tooba:Messaging:Enabled"] = "false",
+                    ["Tooba:Outbox:Enabled"] = "false",
+                });
+            });
         });
     }
 

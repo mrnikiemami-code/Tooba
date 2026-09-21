@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="offer.min_quantity.invalid" xml:space="preserve">
+    <value>حداقل مقدار خرید باید بزرگ‌تر از صفر باشد.</value>
+  </data>
+  <data name="offer.max_quantity.invalid" xml:space="preserve">
+    <value>حداکثر مقدار خرید باید بزرگ‌تر از صفر باشد.</value>
+  </data>
+  <data name="offer.min_quantity.exceeds_max" xml:space="preserve">
+    <value>حداقل مقدار خرید نمی‌تواند از حداکثر بیشتر باشد.</value>
+  </data>
+  <data name="offer.archived.cannot_activate" xml:space="preserve">
+    <value>پیشنهاد بایگانی‌شده دوباره فعال نمی‌شود؛ listing جدید بسازید.</value>
+  </data>
+  <data name="offer.catalog_variant.missing" xml:space="preserve">
+    <value>گونهٔ Catalog پیدا نشد.</value>
+  </data>
+  <data name="offer.seller.missing" xml:space="preserve">
+    <value>فروشنده پیدا نشد.</value>
+  </data>
+  <data name="offer.seller.not_organization" xml:space="preserve">
+    <value>فروشنده باید Organization باشد.</value>
+  </data>
+  <data name="offer.listing.duplicate_active" xml:space="preserve">
+    <value>برای این فروشنده و گونه و کانال یک پیشنهاد فعال وجود دارد.</value>
+  </data>
+  <data name="offer.seller_sku.duplicate" xml:space="preserve">
+    <value>SKU فروشنده داخل همین فروشنده تکراری است.</value>
+  </data>
+  <data name="offer.return_policy.override_denied" xml:space="preserve">
+    <value>تغییر سیاست مرجوعی برای فروشنده مجاز نیست.</value>
+  </data>
+  <data name="offer.return_policy.non_returnable_denied" xml:space="preserve">
+    <value>ثبت پیشنهاد غیرقابل مرجوعی مجاز نیست.</value>
+  </data>
+  <data name="offer.return_policy.custom_window_required" xml:space="preserve">
+    <value>مهلت اختصاصی مرجوعی الزامی است.</value>
+  </data>
+  <data name="offer.return_policy.custom_window_out_of_range" xml:space="preserve">
+    <value>مهلت مرجوعی باید بین {min} و {max} روز باشد.</value>
+  </data>
+  <data name="offer.not_found" xml:space="preserve">
+    <value>پیشنهاد پیدا نشد.</value>
+  </data>
+  <data name="offer.status.unsupported" xml:space="preserve">
+    <value>وضعیت درخواست‌شده پشتیبانی نمی‌شود.</value>
+  </data>
+</root>
