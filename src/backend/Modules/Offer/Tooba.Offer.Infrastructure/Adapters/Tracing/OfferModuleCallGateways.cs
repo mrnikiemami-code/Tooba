@@ -30,6 +30,43 @@ internal sealed class TracedCatalogVariantLookup(ICatalogVariantLookup inner, IM
             throw;
         }
     }
+
+    public async Task<IReadOnlyDictionary<Guid, Guid?>> GetPrimaryCategoryIdsByVariantIdsAsync(
+        IReadOnlyList<Guid> variantIds,
+        CancellationToken cancellationToken)
+    {
+        using var trace = tracer.Begin("Offer", "Catalog", "LookupPrimaryCategoryIds");
+        try
+        {
+            var result = await inner.GetPrimaryCategoryIdsByVariantIdsAsync(variantIds, cancellationToken)
+                .ConfigureAwait(false);
+            trace.SetOk();
+            return result;
+        }
+        catch (Exception ex)
+        {
+            trace.SetError(ex);
+            throw;
+        }
+    }
+
+    public async Task<IReadOnlyDictionary<Guid, string>> GetVariantTitlesAsync(
+        IReadOnlyList<Guid> variantIds,
+        CancellationToken cancellationToken)
+    {
+        using var trace = tracer.Begin("Offer", "Catalog", "LookupVariantTitles");
+        try
+        {
+            var result = await inner.GetVariantTitlesAsync(variantIds, cancellationToken).ConfigureAwait(false);
+            trace.SetOk();
+            return result;
+        }
+        catch (Exception ex)
+        {
+            trace.SetError(ex);
+            throw;
+        }
+    }
 }
 
 /// <summary>Traced Offer→Catalog presentation read boundary.</summary>
@@ -63,6 +100,65 @@ internal sealed class TracedPartyLookup(IPartyLookup inner, IModuleCallTracer tr
         try
         {
             var result = await inner.FindByIdAsync(partyId, cancellationToken).ConfigureAwait(false);
+            trace.SetOk();
+            return result;
+        }
+        catch (Exception ex)
+        {
+            trace.SetError(ex);
+            throw;
+        }
+    }
+
+    public async Task<IReadOnlyDictionary<Guid, string>> GetDisplayNamesAsync(
+        IReadOnlyList<Guid> partyIds,
+        CancellationToken cancellationToken)
+    {
+        using var trace = tracer.Begin("Offer", "Party", "LookupDisplayNames");
+        try
+        {
+            var result = await inner.GetDisplayNamesAsync(partyIds, cancellationToken).ConfigureAwait(false);
+            trace.SetOk();
+            return result;
+        }
+        catch (Exception ex)
+        {
+            trace.SetError(ex);
+            throw;
+        }
+    }
+
+    public async Task<IReadOnlyList<Guid>> SearchIdsByDisplayNameAsync(
+        string term,
+        int take,
+        CancellationToken cancellationToken)
+    {
+        using var trace = tracer.Begin("Offer", "Party", "SearchIdsByDisplayName");
+        try
+        {
+            var result = await inner.SearchIdsByDisplayNameAsync(term, take, cancellationToken).ConfigureAwait(false);
+            trace.SetOk();
+            return result;
+        }
+        catch (Exception ex)
+        {
+            trace.SetError(ex);
+            throw;
+        }
+    }
+
+    public async Task<IReadOnlyList<Guid>> FilterIdsByDisplayNameAsync(
+        string? op,
+        string? value,
+        IReadOnlyList<string>? values,
+        int take,
+        CancellationToken cancellationToken)
+    {
+        using var trace = tracer.Begin("Offer", "Party", "FilterIdsByDisplayName");
+        try
+        {
+            var result = await inner.FilterIdsByDisplayNameAsync(op, value, values, take, cancellationToken)
+                .ConfigureAwait(false);
             trace.SetOk();
             return result;
         }

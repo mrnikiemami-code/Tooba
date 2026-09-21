@@ -6,7 +6,7 @@ using Tooba.AddressBook.Application;
 using Tooba.Fulfillment.Application.Ports;
 using Tooba.Fulfillment.Application.Models;
 using Tooba.Fulfillment.Application.Shipping;
-using Tooba.Fulfillment.Infrastructure.Persistence;
+
 using Tooba.Localization.Application;
 using Tooba.Order.Application;
 using Tooba.Order.Domain;
@@ -22,7 +22,7 @@ public sealed class StorefrontShippingComposer
     private readonly StorefrontCartComposer _carts;
     private readonly StorefrontCheckoutComposer _checkouts;
     private readonly IAddressBookDirectory _addresses;
-    private readonly FulfillmentDbContext _fulfillment;
+    private readonly IShippingCatalogReader _shippingCatalog;
     private readonly OrderDbContext _orders;
     private readonly ILanguageDirectory _languages;
     private readonly ShippingMethodsOptions _shippingOptions;
@@ -36,7 +36,7 @@ public sealed class StorefrontShippingComposer
         StorefrontCartComposer carts,
         StorefrontCheckoutComposer checkouts,
         IAddressBookDirectory addresses,
-        FulfillmentDbContext fulfillment,
+        IShippingCatalogReader shippingCatalog,
         OrderDbContext orders,
         ILanguageDirectory languages,
         ShippingMethodsOptions shippingOptions,
@@ -48,7 +48,7 @@ public sealed class StorefrontShippingComposer
         _carts = carts;
         _checkouts = checkouts;
         _addresses = addresses;
-        _fulfillment = fulfillment;
+        _shippingCatalog = shippingCatalog;
         _orders = orders;
         _languages = languages;
         _shippingOptions = shippingOptions;
@@ -339,22 +339,8 @@ public sealed class StorefrontShippingComposer
             .Select(x => x.Code)
             .ToHashSet(StringComparer.OrdinalIgnoreCase);
         var langId = await ResolveLanguageIdAsync(language, cancellationToken);
-        var services = await _fulfillment.ShippingServices.AsNoTracking()
-            .Where(x => x.IsActive)
-            .OrderBy(x => x.SortOrder).ThenBy(x => x.Code)
-            .ToListAsync(cancellationToken);
-        var serviceIds = services.Select(x => x.ShippingServiceId).ToArray();
-        var translations = await _fulfillment.ShippingServiceTranslations.AsNoTracking()
-            .Where(x => serviceIds.Contains(x.ShippingServiceId))
-            .ToListAsync(cancellationToken);
-        var options = await _fulfillment.ShippingServiceOptions.AsNoTracking()
-            .Where(x => serviceIds.Contains(x.ShippingServiceId) && x.IsActive)
-            .OrderBy(x => x.SortOrder).ThenBy(x => x.Code)
-            .ToListAsync(cancellationToken);
-        var optionIds = options.Select(x => x.ShippingServiceOptionId).ToArray();
-        var optionTranslations = await _fulfillment.ShippingServiceOptionTranslations.AsNoTracking()
-            .Where(x => optionIds.Contains(x.ShippingServiceOptionId))
-            .ToListAsync(cancellationToken);
+        var catalog = await _shippingCatalog.ListAsync(cancellationToken);
+        var services = catalog.Where(x => x.IsActive).OrderBy(x => x.SortOrder).ThenBy(x => x.Code).ToList();
 
         var result = new List<StorefrontShippingMethodView>();
         foreach (var service in services)
@@ -364,13 +350,12 @@ public sealed class StorefrontShippingComposer
                 continue;
             }
 
-            var serviceName = translations
-                .Where(t => t.ShippingServiceId == service.ShippingServiceId)
+            var serviceName = service.Translations
                 .OrderByDescending(t => t.LanguageId == langId)
                 .Select(t => t.Name)
                 .FirstOrDefault()
                 ?? ShippingMethodRegistry.ResolveLabel(service.Code, service.Code);
-            var serviceOptions = options.Where(o => o.ShippingServiceId == service.ShippingServiceId).ToList();
+            var serviceOptions = service.Options.Where(o => o.IsActive).ToList();
             if (serviceOptions.Count == 0)
             {
                 TryAddMethod(result, service.Code, serviceName, null, service.IconKey, cartSubtotal, provinceName);
@@ -379,8 +364,7 @@ public sealed class StorefrontShippingComposer
 
             foreach (var option in serviceOptions)
             {
-                var optionName = optionTranslations
-                    .Where(t => t.ShippingServiceOptionId == option.ShippingServiceOptionId)
+                var optionName = option.Translations
                     .OrderByDescending(t => t.LanguageId == langId)
                     .Select(t => t.Name)
                     .FirstOrDefault()

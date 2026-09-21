@@ -1,0 +1,161 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+
+BEGIN_TOOBA_WORKER_RESULT
+
+Task-ID:
+TB-TMAR-NEXT-MODULE-BATCH-004-R1
+
+Parent-Task:
+TB-TMAR-NEXT-MODULE-BATCH-004
+
+Channel:
+tooba-main
+
+WorkerId:
+tooba-worker-01
+
+AgentType:
+cursor
+
+Status:
+PASS
+
+Summary:
+Closed Fulfillment+Returns Host authority/endpoint/presentation leaks. Host endpoints are thin transport (ISender/ApiResponseFactory); seller auth moved behind ISellerFulfillmentAuthorizer + Order.Contracts; work-queue/return grids moved to module Infrastructure query engines; ReturnErrorMapper deleted; expected failures use SemanticError catalogs; architecture guards enforce minimal Host DbContext allowlist. Tax/Pricing/Checkout/frontend untouched.
+
+Program-Name:
+TMAR — Tooba Microservice-Ready Architecture Recovery
+
+Track:
+REFERENCE_BATCH_REPAIR
+
+Recovery-Start:
+docs/evidence/TB-TMAR-NEXT-MODULE-BATCH-004-R1/recovery-start.md — Claim c7d90165-1ec2-46cd-a774-9698acd1f64a; baseline 247865f73d498d6fe3d1857e2007644412524cdc
+
+Host-Authority-Audit:
+docs/evidence/TB-TMAR-NEXT-MODULE-BATCH-004-R1/host-authority-audit.md — Host Fulfillment/Returns DbContext business/query authority removed; composers/endpoints thin
+
+Fulfillment-Endpoint-Boundary:
+docs/evidence/TB-TMAR-NEXT-MODULE-BATCH-004-R1/fulfillment-endpoint-boundary.md — HOST_THIN_TRANSPORT; no service locator; no OrderDbContext; MediatR mutate/list/get
+
+Fulfillment-Host-DbAuthority:
+NONE
+
+Fulfillment-Result-Adoption:
+RESULT_PATTERN — SellerMutate/List/Get via Result&lt;T&gt; + FulfillmentErrorCodes/catalog; work-queue bulk ErrorCode without PlatformHttpException throws
+
+Fulfillment-Validation:
+dotnet test Tooba.Fulfillment.Tests → 9 passed (architecture + SellerFulfillmentAuthTests)
+
+Fulfillment-State:
+COMPLETE_REFERENCE_PATTERN
+
+Fulfillment-Physical-State:
+VERIFIED_ON_DISK_AND_NAMESPACE
+
+Fulfillment-CrossModule-Boundary:
+CONTRACTS_ONLY
+
+Fulfillment-Endpoint-State:
+HOST_THIN_TRANSPORT
+
+Returns-Endpoint-Boundary:
+docs/evidence/TB-TMAR-NEXT-MODULE-BATCH-004-R1/returns-endpoint-boundary.md — HOST_THIN_TRANSPORT; ReturnSemanticMapper; ApiResponseFactory; no ReturnErrorMapper
+
+Returns-Host-DbAuthority:
+NONE
+
+Returns-Error-Presentation:
+CENTRALIZED
+
+Returns-Result-Adoption:
+RESULT_PATTERN — ParseDestination/MapException → SemanticError; ReturnsErrorCatalogContributor
+
+Returns-Validation:
+dotnet test Tooba.Returns.Tests → 9 passed (architecture + ReturnsSemanticPresentationTests)
+
+Presentation-Error-Audit:
+docs/evidence/TB-TMAR-NEXT-MODULE-BATCH-004-R1/presentation-error-audit.md — ReturnErrorMapper deleted; no Persian Host prose; no manual Results.Json error envelopes
+
+Behavior-Preservation-Audit:
+docs/evidence/TB-TMAR-NEXT-MODULE-BATCH-004-R1/behavior-preservation-audit.md — routes + success shapes preserved; central ProblemDetails for expected failures
+
+Host-DbContext-Scan:
+docs/evidence/TB-TMAR-NEXT-MODULE-BATCH-004-R1/host-dbcontext-scan.md — production business/query hits=0; bootstrap ProductWorkspaceDevelopmentBootstrap + ModuleMigrationRegistry only
+
+Architecture-Guards:
+Fulfillment+Returns guards: minimal Host DbContext allowlist; no GetRequiredService in FulfillmentEndpoints; no ReturnErrorMapper; no Results.Json title envelopes; panel composers DbContext-free; work-queue composer no PlatformHttpException throw
+
+Focused-Validation:
+Fulfillment.Tests 9/9; Returns.Tests 9/9; Host focused (AdminFulfillmentWorkQueue/AdminReturnWorkQueue/AdminDbNativeGrid/CustomerFulfillment/ReturnEligibility/AdminOrderCorrective/InvoiceHeader) 73/73; Offer fakes updated for Party/Catalog contract extensions 6/6
+
+Skipped-Validation:
+Broad Host suite; Checkout workflow; Tax/Pricing; frontend
+
+Full-Validation:
+dotnet build src/backend/Tooba.slnx → succeeded 0 errors
+
+AntiPattern-Gate:
+CLEAN — no Host FulfillmentDbContext/ReturnsDbContext query authority; no endpoint service locator; no ReturnErrorMapper; no giant Host DbContext allowlists
+
+Residual-Defects:
+NONE for R1 scope. AdminOrderOperationsComposer still uses PlatformHttpException for broader order ops (outside Fulfillment/Returns endpoint repair). ShippingServiceEndpoints still has legacy PlatformHttpException for shipping admin CRUD (catalog reads now IShippingCatalogReader). Tax/Pricing deferred. Checkout paused W5.
+
+Behavior-Preservation:
+VERIFIED
+
+Notification-State:
+COMPLETE_REFERENCE_PATTERN
+
+Support-State:
+COMPLETE_REFERENCE_PATTERN
+
+Wallet-State:
+COMPLETE_REFERENCE_PATTERN
+
+Payment-State:
+COMPLETE_REFERENCE_PATTERN
+
+Inventory-State:
+COMPLETE_REFERENCE_PATTERN
+
+Promotion-State:
+COMPLETE_REFERENCE_PATTERN
+
+Offer-State:
+COMPLETE_REFERENCE_PATTERN
+
+Foundation-State:
+RESULT_PATTERN_FOUNDATION_COMPLETE
+
+Tax-State:
+DEFERRED_PHYSICAL_REVIEW_BY_USER
+
+Pricing-State:
+DEFERRED_PHYSICAL_REVIEW_BY_USER
+
+Checkout-State:
+PAUSED_AT_SAFE_W5_CHECKPOINT
+
+Frontend-Production-Changes:
+NONE
+
+Batch-State:
+COMPLETE
+
+Git:
+PLACEHOLDER_SHA
+
+Blockers:
+NONE
+
+User-Work-Preserved:
+YES — only Fulfillment/Returns Host-authority repair + required contract/adapter follow-ons; Tax/Pricing/Checkout/frontend untouched
+
+Module-Recovery-State:
+NEXT_REFERENCE_BATCH_004_COMPLETE
+
+Next-Recommended-Task:
+TB-TMAR-NEXT-MODULE-BATCH-005
+
+END_TOOBA_WORKER_RESULT

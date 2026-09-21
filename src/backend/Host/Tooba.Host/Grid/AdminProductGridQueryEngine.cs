@@ -11,6 +11,7 @@ using Tooba.Offer.Contracts.Ports;
 using Tooba.Pricing.Contracts;
 
 using Tooba.BuildingBlocks.Grid;
+using Tooba.Persistence.Grid;
 
 namespace Tooba.Host.Grid;
 

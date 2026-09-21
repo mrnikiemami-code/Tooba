@@ -1,83 +1,61 @@
 using Tooba.BuildingBlocks.Grid;
-using Tooba.Fulfillment.Application.Ports;
 using Tooba.Fulfillment.Application.Models;
-using Tooba.Fulfillment.Application.Shipping;
-using Tooba.Fulfillment.Infrastructure.Persistence;
-using Tooba.Host.Admin;
+using Tooba.Fulfillment.Application.Ports;
+using Tooba.Fulfillment.Domain.ValueObjects;
 using Tooba.Host.Grid;
-using Tooba.Order.Infrastructure.Persistence;
-using Tooba.Party.Infrastructure.Persistence;
 
 namespace Tooba.Host.Fulfillment;
 
-/// <summary>
-/// خط محموله در درخواست HTTP.
-/// </summary>
+/// <summary>خط محموله در درخواست HTTP.</summary>
 public sealed record FulfillmentShipmentLineRequest(Guid OrderLineId, decimal Quantity);
 
-/// <summary>
-/// درخواست ایجاد محموله.
-/// </summary>
+/// <summary>درخواست ایجاد محموله.</summary>
 public sealed record FulfillmentCreateShipmentRequest(
     string CarrierDisplayName,
     IReadOnlyList<FulfillmentShipmentLineRequest> Items,
     string? ShippingMethodCode = null,
     string? ProviderMetadataJson = null);
 
-/// <summary>
-/// درخواست ثبت tracking.
-/// </summary>
+/// <summary>درخواست ثبت tracking.</summary>
 public sealed record FulfillmentAssignTrackingRequest(string TrackingReference);
 
 /// <summary>
-/// ترکیب HTTP fulfillment برای seller/admin/customer.
+/// ترکیب HTTP fulfillment — بدون DbContext؛ گرید از module query port.
 /// </summary>
 public sealed class FulfillmentPanelComposer
 {
     private readonly IFulfillmentDirectory _fulfillment;
-    private readonly AdminFulfillmentWorkQueueQueryEngine _grid;
+    private readonly IAdminFulfillmentWorkQueueQuery _grid;
 
-    /// <summary>
-    /// سازندهٔ ترکیب fulfillment.
-    /// </summary>
+    /// <summary>سازندهٔ ترکیب fulfillment.</summary>
     public FulfillmentPanelComposer(
         IFulfillmentDirectory fulfillment,
-        FulfillmentDbContext db,
-        PartyDbContext parties,
-        OrderDbContext orders)
+        IAdminFulfillmentWorkQueueQuery grid)
     {
         _fulfillment = fulfillment;
-        _grid = new AdminFulfillmentWorkQueueQueryEngine(db, parties, orders);
+        _grid = grid;
     }
 
-    /// <summary>
-    /// fulfillment را می‌خواند.
-    /// </summary>
+    /// <summary>fulfillment را می‌خواند.</summary>
     public Task<FulfillmentSnapshot?> GetAsync(Guid fulfillmentId, CancellationToken cancellationToken) =>
         _fulfillment.GetAsync(fulfillmentId, cancellationToken);
 
-    /// <summary>
-    /// فهرست fulfillment یک فروشنده.
-    /// </summary>
+    /// <summary>فهرست fulfillment یک فروشنده.</summary>
     public Task<IReadOnlyList<FulfillmentSnapshot>> ListForSellerAsync(Guid sellerPartyId, CancellationToken cancellationToken) =>
         _fulfillment.ListForSellerAsync(sellerPartyId, cancellationToken);
 
-    /// <summary>
-    /// fulfillment را برای همان فروشنده می‌خواند؛ در صورت عدم تطابق null برمی‌گرداند.
-    /// </summary>
+    /// <summary>fulfillment را برای همان فروشنده می‌خواند.</summary>
     public async Task<FulfillmentSnapshot?> GetForSellerAsync(Guid sellerPartyId, Guid fulfillmentId, CancellationToken cancellationToken)
     {
         var snapshot = await _fulfillment.GetAsync(fulfillmentId, cancellationToken);
         return snapshot is null || snapshot.SellerPartyId != sellerPartyId ? null : snapshot;
     }
 
-    /// <summary>
-    /// فهرست همه fulfillmentها برای admin.
-    /// </summary>
+    /// <summary>فهرست همه fulfillmentها برای admin.</summary>
     public Task<IReadOnlyList<FulfillmentSnapshot>> ListAllAsync(CancellationToken cancellationToken) =>
         _fulfillment.ListAllAsync(cancellationToken);
 
-    /// <summary>صفحه‌بندی server-side صف کار ارسال و تحویل Admin (DB-native).</summary>
+    /// <summary>صفحه‌بندی server-side صف کار ارسال و تحویل Admin.</summary>
     public Task<GridPageResponse<AdminFulfillmentWorkQueueRow>> QueryGridAsync(
         GridQueryRequest request,
         CancellationToken cancellationToken)
@@ -86,16 +64,14 @@ public sealed class FulfillmentPanelComposer
         return _grid.QueryAsync(q, cancellationToken);
     }
 
-    /// <summary>
-    /// بسته فعال (Created/Dispatched/Delivered) برای رهگیری اصلی مشتری؛ Cancelled هرگز primary نیست.
-    /// </summary>
-    public static Tooba.Fulfillment.Application.Models.ConsolidatedPackageSnapshot? SelectPreferredCustomerPackage(
-        IReadOnlyList<Tooba.Fulfillment.Application.Models.ConsolidatedPackageSnapshot> packages)
+    /// <summary>بسته فعال برای رهگیری اصلی مشتری.</summary>
+    public static ConsolidatedPackageSnapshot? SelectPreferredCustomerPackage(
+        IReadOnlyList<ConsolidatedPackageSnapshot> packages)
     {
         var active = packages
-            .Where(p => p.Status is Tooba.Fulfillment.Domain.ValueObjects.ConsolidatedPackageStatus.Created
-                or Tooba.Fulfillment.Domain.ValueObjects.ConsolidatedPackageStatus.Dispatched
-                or Tooba.Fulfillment.Domain.ValueObjects.ConsolidatedPackageStatus.Delivered)
+            .Where(p => p.Status is ConsolidatedPackageStatus.Created
+                or ConsolidatedPackageStatus.Dispatched
+                or ConsolidatedPackageStatus.Delivered)
             .OrderByDescending(p => p.UpdatedAt)
             .ThenByDescending(p => p.CreatedAt)
             .ToList();
@@ -108,9 +84,7 @@ public sealed class FulfillmentPanelComposer
             ?? active[0];
     }
 
-    /// <summary>
-    /// fulfillmentهای یک checkout؛ رهگیری بسته تجمیعی فعال را به‌عنوان PreferredTrackingReference می‌گذارد.
-    /// </summary>
+    /// <summary>fulfillmentهای یک checkout.</summary>
     public async Task<IReadOnlyList<FulfillmentSnapshot>> ListForCheckoutAsync(
         Guid checkoutId,
         CancellationToken cancellationToken)
@@ -126,21 +100,15 @@ public sealed class FulfillmentPanelComposer
         return list.Select(s => s with { PreferredTrackingReference = preferred }).ToList();
     }
 
-    /// <summary>
-    /// به Processing می‌رود.
-    /// </summary>
+    /// <summary>به Processing می‌رود.</summary>
     public Task<FulfillmentSnapshot> MarkProcessingAsync(Guid fulfillmentId, Guid actorUserId, CancellationToken cancellationToken) =>
         _fulfillment.MarkProcessingAsync(fulfillmentId, actorUserId, cancellationToken);
 
-    /// <summary>
-    /// به Packed می‌رود.
-    /// </summary>
+    /// <summary>به Packed می‌رود.</summary>
     public Task<FulfillmentSnapshot> MarkPackedAsync(Guid fulfillmentId, Guid actorUserId, CancellationToken cancellationToken) =>
         _fulfillment.MarkPackedAsync(fulfillmentId, actorUserId, cancellationToken);
 
-    /// <summary>
-    /// محموله می‌سازد.
-    /// </summary>
+    /// <summary>محموله می‌سازد.</summary>
     public Task<FulfillmentSnapshot> CreateShipmentAsync(
         Guid fulfillmentId,
         Guid actorUserId,
@@ -155,9 +123,7 @@ public sealed class FulfillmentPanelComposer
             request.ShippingMethodCode,
             request.ProviderMetadataJson);
 
-    /// <summary>
-    /// tracking idempotent ثبت می‌کند.
-    /// </summary>
+    /// <summary>tracking ثبت می‌کند.</summary>
     public Task<FulfillmentSnapshot> AssignTrackingAsync(
         Guid fulfillmentId,
         Guid shipmentId,
@@ -166,9 +132,7 @@ public sealed class FulfillmentPanelComposer
         CancellationToken cancellationToken) =>
         _fulfillment.AssignTrackingAsync(fulfillmentId, shipmentId, actorUserId, trackingReference, cancellationToken);
 
-    /// <summary>
-    /// محموله را dispatch می‌کند.
-    /// </summary>
+    /// <summary>محموله را dispatch می‌کند.</summary>
     public Task<FulfillmentSnapshot> DispatchShipmentAsync(
         Guid fulfillmentId,
         Guid shipmentId,
@@ -176,9 +140,7 @@ public sealed class FulfillmentPanelComposer
         CancellationToken cancellationToken) =>
         _fulfillment.DispatchShipmentAsync(fulfillmentId, shipmentId, actorUserId, cancellationToken);
 
-    /// <summary>
-    /// محموله را delivered علامت می‌زند.
-    /// </summary>
+    /// <summary>محموله را delivered علامت می‌زند.</summary>
     public Task<FulfillmentSnapshot> DeliverShipmentAsync(
         Guid fulfillmentId,
         Guid shipmentId,

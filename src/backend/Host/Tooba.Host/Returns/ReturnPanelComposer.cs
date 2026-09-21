@@ -1,97 +1,51 @@
 using Tooba.BuildingBlocks.Grid;
 using Tooba.Host.Admin;
 using Tooba.Host.Grid;
-using Tooba.Returns.Application.Ports;
 using Tooba.Returns.Application.Models;
-using Tooba.Returns.Infrastructure.Persistence;
+using Tooba.Returns.Application.Ports;
+using Tooba.Returns.Domain.ValueObjects;
 
 namespace Tooba.Host.Returns;
 
 /// <summary>
-/// خط مرجوعی در درخواست HTTP.
-/// </summary>
-public sealed record ReturnLineRequest(Guid OrderLineId, decimal Quantity);
-
-/// <summary>
-/// درخواست ایجاد مرجوعی.
-/// </summary>
-public sealed record CreateReturnRequest(
-    Guid SellerOrderId,
-    string IdempotencyKey,
-    string? Reason,
-    IReadOnlyList<ReturnLineRequest> Items,
-    string? RefundDestination = null,
-    string? Destination = null)
-{
-    /// <summary>مقصد بازپرداخت از فیلدهای هم‌نام FE/Host.</summary>
-    public string? EffectiveRefundDestination => RefundDestination ?? Destination;
-}
-
-/// <summary>
-/// درخواست تأیید مرجوعی فروشنده (مقصد اختیاری).
-/// </summary>
-public sealed record ApproveReturnRequest(string? RefundDestination = null, string? Destination = null)
-{
-    /// <summary>مقصد بازپرداخت از فیلدهای هم‌نام FE/Host.</summary>
-    public string? EffectiveRefundDestination => RefundDestination ?? Destination;
-}
-
-/// <summary>
-/// درخواست رد مرجوعی.
-/// </summary>
-public sealed record RejectReturnRequest(string? Reason);
-
-/// <summary>
-/// ترکیب HTTP مرجوعی برای customer/seller/admin.
+/// ترکیب HTTP مرجوعی — بدون Host returns DbContext؛ گرید از module query port.
 /// </summary>
 public sealed class ReturnPanelComposer
 {
     private readonly IReturnDirectory _returns;
-    private readonly AdminReturnGridQueryEngine _grid;
+    private readonly IAdminReturnGridQuery _grid;
 
-    /// <summary>
-    /// سازندهٔ ترکیب مرجوعی.
-    /// </summary>
-    public ReturnPanelComposer(IReturnDirectory returns, AdminReturnGridQueryEngine grid)
+    /// <summary>سازندهٔ ترکیب مرجوعی.</summary>
+    public ReturnPanelComposer(IReturnDirectory returns, IAdminReturnGridQuery grid)
     {
         _returns = returns;
         _grid = grid;
     }
 
-    /// <summary>
-    /// درخواست را می‌خواند.
-    /// </summary>
+    /// <summary>درخواست را می‌خواند.</summary>
     public Task<ReturnSnapshot?> GetAsync(Guid returnRequestId, CancellationToken cancellationToken) =>
         _returns.GetAsync(returnRequestId, cancellationToken);
 
-    /// <summary>
-    /// فهرست درخواست‌های یک مشتری.
-    /// </summary>
+    /// <summary>فهرست درخواست‌های یک مشتری.</summary>
     public Task<IReadOnlyList<ReturnSnapshot>> ListForCustomerAsync(Guid customerUserId, CancellationToken cancellationToken) =>
         _returns.ListForCustomerAsync(customerUserId, cancellationToken);
 
-    /// <summary>
-    /// درخواست را برای همان فروشنده می‌خواند؛ در صورت عدم تطابق null برمی‌گرداند.
-    /// </summary>
+    /// <summary>درخواست را برای همان فروشنده می‌خواند.</summary>
     public async Task<ReturnSnapshot?> GetForSellerAsync(Guid sellerPartyId, Guid returnRequestId, CancellationToken cancellationToken)
     {
         var snapshot = await _returns.GetAsync(returnRequestId, cancellationToken);
         return snapshot is null || snapshot.SellerPartyId != sellerPartyId ? null : snapshot;
     }
 
-    /// <summary>
-    /// فهرست درخواست‌های یک فروشنده.
-    /// </summary>
+    /// <summary>فهرست درخواست‌های یک فروشنده.</summary>
     public Task<IReadOnlyList<ReturnSnapshot>> ListForSellerAsync(Guid sellerPartyId, CancellationToken cancellationToken) =>
         _returns.ListForSellerAsync(sellerPartyId, cancellationToken);
 
-    /// <summary>
-    /// فهرست همه درخواست‌ها برای admin.
-    /// </summary>
+    /// <summary>فهرست همه درخواست‌ها برای admin.</summary>
     public Task<IReadOnlyList<ReturnSnapshot>> ListAllAsync(CancellationToken cancellationToken) =>
         _returns.ListAllAsync(cancellationToken);
 
-    /// <summary>صفحه‌بندی server-side گرید مرجوعی Admin (DB-native).</summary>
+    /// <summary>صفحه‌بندی server-side گرید مرجوعی Admin.</summary>
     public Task<GridPageResponse<AdminReturnWorkQueueRow>> QueryGridAsync(
         GridQueryRequest request,
         CancellationToken cancellationToken)
@@ -100,10 +54,12 @@ public sealed class ReturnPanelComposer
         return _grid.QueryAsync(q, cancellationToken);
     }
 
-    /// <summary>
-    /// درخواست مرجوعی می‌سازد.
-    /// </summary>
-    public Task<ReturnSnapshot> CreateAsync(Guid actorUserId, CreateReturnRequest request, CancellationToken cancellationToken) =>
+    /// <summary>درخواست مرجوعی می‌سازد.</summary>
+    public Task<ReturnSnapshot> CreateAsync(
+        Guid actorUserId,
+        CreateReturnRequest request,
+        RefundDestination destination,
+        CancellationToken cancellationToken) =>
         _returns.CreateAsync(
             new CreateReturnCommand(
                 request.SellerOrderId,
@@ -111,27 +67,20 @@ public sealed class ReturnPanelComposer
                 request.IdempotencyKey,
                 request.Reason,
                 request.Items.Select(x => new ReturnLineCommand(x.OrderLineId, x.Quantity)).ToArray(),
-                ParseDestination(request.EffectiveRefundDestination)),
+                destination),
             cancellationToken);
 
-    /// <summary>
-    /// درخواست را تأیید می‌کند.
-    /// </summary>
+    /// <summary>درخواست را تأیید می‌کند.</summary>
     public Task<ReturnSnapshot> ApproveAsync(
         Guid returnRequestId,
         Guid actorUserId,
-        string? refundDestination,
+        RefundDestination? refundDestination,
         CancellationToken cancellationToken) =>
         _returns.ApproveAsync(
-            new ApproveReturnCommand(
-                returnRequestId,
-                actorUserId,
-                string.IsNullOrWhiteSpace(refundDestination) ? null : ParseDestination(refundDestination)),
+            new ApproveReturnCommand(returnRequestId, actorUserId, refundDestination),
             cancellationToken);
 
-    /// <summary>
-    /// درخواست را رد می‌کند.
-    /// </summary>
+    /// <summary>درخواست را رد می‌کند.</summary>
     public Task<ReturnSnapshot> RejectAsync(
         Guid returnRequestId,
         Guid actorUserId,
@@ -139,18 +88,7 @@ public sealed class ReturnPanelComposer
         CancellationToken cancellationToken) =>
         _returns.RejectAsync(new RejectReturnCommand(returnRequestId, actorUserId, reason), cancellationToken);
 
-    /// <summary>
-    /// refund را دوباره تلاش می‌کند (admin).
-    /// </summary>
+    /// <summary>refund را دوباره تلاش می‌کند (admin).</summary>
     public Task<ReturnSnapshot> RetryRefundAsync(Guid returnRequestId, Guid actorUserId, CancellationToken cancellationToken) =>
         _returns.RetryRefundAsync(new RetryRefundCommand(returnRequestId, actorUserId), cancellationToken);
-
-    private static Tooba.Returns.Domain.ValueObjects.RefundDestination ParseDestination(string? value)
-    {
-        if (string.IsNullOrWhiteSpace(value))
-            return Tooba.Returns.Domain.ValueObjects.RefundDestination.OriginalPayment;
-        return Enum.TryParse<Tooba.Returns.Domain.ValueObjects.RefundDestination>(value, ignoreCase: true, out var parsed)
-            ? parsed
-            : throw new InvalidOperationException("مقصد بازگشت وجه نامعتبر است.");
-    }
 }

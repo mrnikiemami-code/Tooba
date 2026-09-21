@@ -143,15 +143,17 @@ public sealed class AdminFulfillmentWorkQueueTests
     [Fact]
     public void Work_queue_query_engine_filters_order_reference_by_order_number()
     {
-        var root = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", "Tooba.Host"));
-        var engine = File.ReadAllText(Path.Combine(root, "Grid", "AdminFulfillmentWorkQueueQueryEngine.cs"));
+        var root = Path.GetFullPath(Path.Combine(
+            AppContext.BaseDirectory, "..", "..", "..", "..", "..", "Modules", "Fulfillment",
+            "Tooba.Fulfillment.Infrastructure", "Queries"));
+        var engine = File.ReadAllText(Path.Combine(root, "AdminFulfillmentWorkQueueQueryEngine.cs"));
         Assert.Contains("case \"orderReference\"", engine, StringComparison.Ordinal);
-        Assert.Contains("x => x.OrderNumber", engine, StringComparison.Ordinal);
+        Assert.Contains("FilterSellerOrderIdsByOrderNumberAsync", engine, StringComparison.Ordinal);
         Assert.Contains("OrderByOrderNumber", engine, StringComparison.Ordinal);
         Assert.Contains("\"فروشنده\"", engine, StringComparison.Ordinal);
         Assert.Contains("QuantityOrdered > i.QuantityShipped", engine, StringComparison.Ordinal);
         Assert.Contains("PartialDispatched", engine, StringComparison.Ordinal);
-        Assert.DoesNotContain("CheckoutId.ToString(\"N\")", engine, StringComparison.Ordinal);
+        Assert.DoesNotContain("OrderDbContext", engine, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -203,7 +205,8 @@ public sealed class AdminFulfillmentWorkQueueTests
         Assert.Contains("/fulfillments/work-queue/query", endpoints, StringComparison.Ordinal);
         Assert.Contains("/fulfillments/work-queue/bulk", endpoints, StringComparison.Ordinal);
         Assert.Contains("AdminFulfillmentWorkQueueComposer", program, StringComparison.Ordinal);
-        Assert.Contains("AdminFulfillmentWorkQueueQueryEngine", program, StringComparison.Ordinal);
+        Assert.Contains("ApiResponseFactory", endpoints, StringComparison.Ordinal);
+        Assert.DoesNotContain("AdminFulfillmentWorkQueueQueryEngine", program, StringComparison.Ordinal);
     }
 
     private static FulfillmentSnapshot Snapshot(

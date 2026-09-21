@@ -29,4 +29,9 @@ public interface IFulfillmentReturnReader
     Task<FulfillmentReturnEligibilitySnapshot?> GetEligibilityAsync(
         Guid sellerOrderId,
         CancellationToken cancellationToken);
+
+    /// <summary>آخرین DeliveredAt per SellerOrderId برای گرید مرجوعی.</summary>
+    Task<IReadOnlyDictionary<Guid, DateTimeOffset?>> GetLastDeliveredAtBySellerOrderIdsAsync(
+        IReadOnlyList<Guid> sellerOrderIds,
+        CancellationToken cancellationToken);
 }

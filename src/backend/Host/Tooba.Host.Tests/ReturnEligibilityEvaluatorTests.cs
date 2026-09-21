@@ -160,5 +160,17 @@ public sealed class ReturnEligibilityEvaluatorTests
             Guid sellerOrderId,
             CancellationToken cancellationToken) =>
             Task.FromResult(snapshot);
+
+        public Task<IReadOnlyDictionary<Guid, DateTimeOffset?>> GetLastDeliveredAtBySellerOrderIdsAsync(
+            IReadOnlyList<Guid> sellerOrderIds,
+            CancellationToken cancellationToken)
+        {
+            IReadOnlyDictionary<Guid, DateTimeOffset?> map = snapshot is null
+                ? new Dictionary<Guid, DateTimeOffset?>()
+                : sellerOrderIds
+                    .Where(id => id == snapshot.SellerOrderId)
+                    .ToDictionary(id => id, _ => snapshot.LastDeliveredAt);
+            return Task.FromResult(map);
+        }
     }
 }

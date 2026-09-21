@@ -1,5 +1,6 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Tooba.BuildingBlocks.Grid;
+using Tooba.Persistence.Grid;
 using Tooba.Content.Application;
 using Tooba.Content.Domain;
 using Tooba.Content.Infrastructure.Persistence;
@@ -21,7 +22,7 @@ internal sealed class AdminContentGridQueryEngine
 
         if (!string.IsNullOrWhiteSpace(request.Search))
         {
-            q = AdminEfGridQuery.ApplySearchAny(q, request.Search, x => x.Title, x => x.Slug, x => x.Category);
+            q = EfGridQuery.ApplySearchAny(q, request.Search, x => x.Title, x => x.Slug, x => x.Category);
         }
 
         foreach (var filter in request.Filters)
@@ -36,7 +37,7 @@ internal sealed class AdminContentGridQueryEngine
         }
 
         var sort = request.Sort.FirstOrDefault() ?? new GridSortRequest("updated", "desc");
-        return await AdminEfGridQuery.PageAsync(
+        return await EfGridQuery.PageAsync(
             q,
             request,
             filtered => Order(filtered, sort),
@@ -75,14 +76,14 @@ internal sealed class AdminContentGridQueryEngine
         filter.Field switch
         {
             "articleId" => ApplyArticleIdFilter(source, filter),
-            "title" => AdminEfGridQuery.ApplyTextFilter(source, x => x.Title, filter),
-            "slug" => AdminEfGridQuery.ApplyTextFilter(source, x => x.Slug, filter),
-            "category" => AdminEfGridQuery.ApplyTextFilter(source, x => x.Category, filter),
-            "locale" => AdminEfGridQuery.ApplyTextFilter(source, x => x.Locale, filter),
-            "authorDisplayName" => AdminEfGridQuery.ApplyTextFilter(source, x => x.AuthorDisplayName, filter),
+            "title" => EfGridQuery.ApplyTextFilter(source, x => x.Title, filter),
+            "slug" => EfGridQuery.ApplyTextFilter(source, x => x.Slug, filter),
+            "category" => EfGridQuery.ApplyTextFilter(source, x => x.Category, filter),
+            "locale" => EfGridQuery.ApplyTextFilter(source, x => x.Locale, filter),
+            "authorDisplayName" => EfGridQuery.ApplyTextFilter(source, x => x.AuthorDisplayName, filter),
             "authorId" => ApplyAuthorIdFilter(source, filter),
-            "status" => AdminEfGridQuery.ApplyEnumFilter(source, x => x.Status, filter),
-            "updated" => AdminEfGridQuery.ApplyDateFilter(source, x => x.UpdatedAt, filter),
+            "status" => EfGridQuery.ApplyEnumFilter(source, x => x.Status, filter),
+            "updated" => EfGridQuery.ApplyDateFilter(source, x => x.UpdatedAt, filter),
             _ => source,
         };
 

@@ -2,7 +2,7 @@ using Tooba.Host.Admin;
 using Tooba.Host.Grid;
 using Tooba.Offer.Domain;
 using Tooba.Order.Domain;
-using Tooba.Returns.Domain.Aggregates;
+using Tooba.Returns.Application.Models;
 using Tooba.Returns.Domain.ValueObjects;
 using Xunit;
 
@@ -30,7 +30,7 @@ public sealed class InvoiceHeaderSemanticsTests
         var item = AdminOrdersGridQueryEngine.MapOrderListItem(
             group,
             new Dictionary<Guid, string>(),
-            new Dictionary<Guid, IReadOnlyList<ReturnRequest>>());
+            new Dictionary<Guid, IReadOnlyList<ReturnSnapshot>>());
         Assert.Equal(3, item.LineCount);
         Assert.NotEqual(4.25m, item.LineCount);
     }

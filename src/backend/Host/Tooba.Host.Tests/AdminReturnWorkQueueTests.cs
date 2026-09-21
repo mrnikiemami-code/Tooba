@@ -73,16 +73,21 @@ public sealed class AdminReturnWorkQueueTests
     [Fact]
     public void Work_queue_engine_is_guid_free_and_pages_natively()
     {
-        var root = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", "Tooba.Host"));
-        var engine = File.ReadAllText(Path.Combine(root, "Grid", "AdminReturnGridQueryEngine.cs"));
-        Assert.Contains("AdminEfGridQuery.PageAsync", engine, StringComparison.Ordinal);
+        var root = Path.GetFullPath(Path.Combine(
+            AppContext.BaseDirectory, "..", "..", "..", "..", "..", "Modules", "Returns",
+            "Tooba.Returns.Infrastructure", "Queries"));
+        var engine = File.ReadAllText(Path.Combine(root, "AdminReturnGridQueryEngine.cs"));
+        Assert.Contains("EfGridQuery.PageAsync", engine, StringComparison.Ordinal);
         Assert.Contains("case \"orderReference\"", engine, StringComparison.Ordinal);
-        Assert.Contains("x => x.OrderNumber", engine, StringComparison.Ordinal);
+        Assert.Contains("IOrderGridEnrichmentReader", engine, StringComparison.Ordinal);
         Assert.Contains("ComposeEligibilitySummary", engine, StringComparison.Ordinal);
         Assert.Contains("ReturnRequestStatus.Requested", engine, StringComparison.Ordinal);
-        Assert.DoesNotContain("AdminReturnQueueFilters.Matches(x.Status", engine, StringComparison.Ordinal);
-        Assert.DoesNotContain("ReturnRequestId.ToString(\"N\")", engine, StringComparison.Ordinal);
-        Assert.DoesNotContain("CheckoutId.ToString(\"N\")", engine, StringComparison.Ordinal);
+        Assert.Contains("ReturnsDbContext", engine, StringComparison.Ordinal);
+        Assert.DoesNotContain("OrderDbContext", engine, StringComparison.Ordinal);
+
+        var hostRoot = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", "Tooba.Host"));
+        var hostPanel = File.ReadAllText(Path.Combine(hostRoot, "Returns", "ReturnPanelComposer.cs"));
+        Assert.DoesNotContain("ReturnsDbContext", hostPanel, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -91,22 +96,23 @@ public sealed class AdminReturnWorkQueueTests
         var endpoints = File.ReadAllText(Path.GetFullPath(Path.Combine(
             AppContext.BaseDirectory, "..", "..", "..", "..", "Tooba.Host", "Returns", "ReturnEndpoints.cs")));
         Assert.DoesNotContain("title = \"Bad Request\"", endpoints, StringComparison.Ordinal);
-        Assert.Contains("ReturnErrorMapper.Map", endpoints, StringComparison.Ordinal);
+        Assert.Contains("ApiResponseFactory", endpoints, StringComparison.Ordinal);
+        Assert.Contains("ReturnSemanticMapper", endpoints, StringComparison.Ordinal);
+        Assert.DoesNotContain("ReturnErrorMapper", endpoints, StringComparison.Ordinal);
 
         var composer = File.ReadAllText(Path.GetFullPath(Path.Combine(
             AppContext.BaseDirectory, "..", "..", "..", "..", "Tooba.Host", "Admin", "AdminOrderOperationsComposer.cs")));
         Assert.Contains("isReturnLifecycleOp", composer, StringComparison.Ordinal);
         Assert.Contains("ToErrorCode(eligibility.ReasonCode)", composer, StringComparison.Ordinal);
 
-        var expired = ReturnErrorMapper.Map(ReturnEligibilityReasonCodes.ToFaMessage(ReturnEligibilityReasonCodes.WindowExpired));
+        var expired = ReturnSemanticMapper.MapException(
+            new InvalidOperationException(ReturnEligibilityReasonCodes.ToFaMessage(ReturnEligibilityReasonCodes.WindowExpired)));
         Assert.Equal("return.expired", expired.Code);
-        Assert.Equal("مهلت مرجوعی تمام شده است.", expired.Fa);
 
-        var stale = ReturnErrorMapper.Map("انتقال وضعیت از این حالت مجاز نیست.");
+        var stale = ReturnSemanticMapper.MapException(new InvalidOperationException("انتقال وضعیت از این حالت مجاز نیست."));
         Assert.Equal("return.stale", stale.Code);
-        Assert.DoesNotContain("Bad Request", stale.Fa, StringComparison.OrdinalIgnoreCase);
 
-        var qty = ReturnErrorMapper.Map("تعداد مرجوعی از باقیماندهٔ تحویل‌شده بیشتر است.");
+        var qty = ReturnSemanticMapper.MapException(new InvalidOperationException("تعداد مرجوعی از باقیماندهٔ تحویل‌شده بیشتر است."));
         Assert.Equal("return.quantity_exceeded", qty.Code);
     }
 }

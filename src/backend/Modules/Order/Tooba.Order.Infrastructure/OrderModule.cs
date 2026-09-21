@@ -40,6 +40,9 @@ public sealed class OrderModule : IToobaModule
         services.AddScoped<IPayableCheckoutReader, OrderPaymentBridge>();
         services.AddScoped<IOrderPaymentProjection, OrderPaymentBridge>();
         services.AddScoped<IOrderFulfillmentReader, OrderFulfillmentBridge>();
+        services.AddScoped<ISellerOrderAuthReader, SellerOrderAuthBridge>();
+        services.AddScoped<ICustomerCheckoutOwnershipReader, CustomerCheckoutOwnershipBridge>();
+        services.AddScoped<IOrderGridEnrichmentReader, OrderGridEnrichmentBridge>();
         services.AddScoped<IOrderReturnReader, OrderReturnBridge>();
         services.AddScoped<IOrderNotificationReader, OrderNotificationBridge>();
         services.AddScoped<IIntegrationEventHandler<PaymentSucceededIntegrationEvent>, OrderPaymentSucceededHandler>();

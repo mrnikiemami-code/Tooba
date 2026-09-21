@@ -22,9 +22,10 @@ using Tooba.Payment.Application.Models;
 using Tooba.Payment.Application.Ports;
 using Tooba.Payment.Domain.Aggregates;
 using Tooba.Payment.Domain.ValueObjects;
-using Tooba.Returns.Domain.Aggregates;
+
 using Tooba.Returns.Domain.ValueObjects;
-using Tooba.Returns.Infrastructure.Persistence;
+using Tooba.Returns.Application.Ports;
+using Tooba.Returns.Application.Models;
 using Tooba.Settlement.Application;
 using Tooba.Settlement.Domain;
 using Tooba.Host.Storefront;
@@ -37,7 +38,7 @@ namespace Tooba.Host.Admin;
 public sealed class AdminOrderCompletenessComposer
 {
     private readonly OrderDbContext _orders;
-    private readonly ReturnsDbContext _returns;
+    private readonly IReturnDirectory _returns;
     private readonly CatalogDbContext _catalog;
     private readonly ICheckoutDirectory _checkout;
     private readonly IFulfillmentDirectory _fulfillment;
@@ -52,7 +53,7 @@ public sealed class AdminOrderCompletenessComposer
     /// <summary>ترکیب‌گر را به ماژول‌های موجود وصل می‌کند.</summary>
     public AdminOrderCompletenessComposer(
         OrderDbContext orders,
-        ReturnsDbContext returns,
+        IReturnDirectory returns,
         CatalogDbContext catalog,
         ICheckoutDirectory checkout,
         IFulfillmentDirectory fulfillment,
@@ -606,29 +607,18 @@ public sealed class AdminOrderCompletenessComposer
 
         var sellerOrderIds = group.SellerOrders.Select(x => x.SellerOrderId).ToList();
         var orderByReturnSeller = group.SellerOrders.ToDictionary(x => x.SellerOrderId);
-        var returns = await _returns.ReturnRequests.AsNoTracking()
-            .Where(x => sellerOrderIds.Contains(x.SellerOrderId))
+        var returns = (await _returns.ListBySellerOrderIdsAsync(sellerOrderIds, cancellationToken))
             .OrderByDescending(x => x.CreatedAt)
             .Take(200)
-            .ToListAsync(cancellationToken);
-        var returnIds = returns.Select(x => x.ReturnRequestId).ToList();
-        var returnItems = returnIds.Count == 0
-            ? []
-            : await _returns.ReturnItems.AsNoTracking()
-                .Where(x => returnIds.Contains(x.ReturnRequestId))
-                .ToListAsync(cancellationToken);
-        var itemsByReturn = returnItems
-            .GroupBy(x => x.ReturnRequestId)
-            .ToDictionary(g => g.Key, g => (IReadOnlyList<(Guid OrderLineId, decimal Quantity)>)g
+            .ToList();
+        var itemsByReturn = returns.ToDictionary(
+            r => r.ReturnRequestId,
+            r => (IReadOnlyList<(Guid OrderLineId, decimal Quantity)>)r.Items
                 .Select(i => (i.OrderLineId, i.Quantity))
                 .ToList());
-        var refundAttempts = returnIds.Count == 0
-            ? []
-            : await _returns.RefundAttempts.AsNoTracking()
-                .Where(x => returnIds.Contains(x.ReturnRequestId))
-                .ToListAsync(cancellationToken);
-        var attemptsByReturn = refundAttempts.GroupBy(x => x.ReturnRequestId)
-            .ToDictionary(g => g.Key, g => g.ToList());
+        var attemptsByReturn = returns.ToDictionary(
+            r => r.ReturnRequestId,
+            r => r.RefundAttempts.ToList());
 
         foreach (var ret in returns)
         {

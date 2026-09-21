@@ -1,5 +1,6 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Tooba.BuildingBlocks.Grid;
+using Tooba.Persistence.Grid;
 using Tooba.Host.Admin;
 using Tooba.Offer.Contracts.Ports;
 using Tooba.Order.Infrastructure.Persistence;
@@ -40,7 +41,7 @@ internal sealed class AdminSellersGridQueryEngine
 
         if (!string.IsNullOrWhiteSpace(request.Search))
         {
-            parties = AdminEfGridQuery.ApplySearchAny(parties, request.Search, x => x.DisplayName);
+            parties = EfGridQuery.ApplySearchAny(parties, request.Search, x => x.DisplayName);
         }
 
         foreach (var filter in request.Filters.Where(f => f.Field is "name" or "status"))
@@ -165,8 +166,8 @@ internal sealed class AdminSellersGridQueryEngine
         GridFilterRequest filter) =>
         filter.Field switch
         {
-            "name" => AdminEfGridQuery.ApplyTextFilter(source, x => x.DisplayName, filter),
-            "status" => AdminEfGridQuery.ApplyEnumFilter(source, x => x.Status, filter),
+            "name" => EfGridQuery.ApplyTextFilter(source, x => x.DisplayName, filter),
+            "status" => EfGridQuery.ApplyEnumFilter(source, x => x.Status, filter),
             _ => source,
         };
 

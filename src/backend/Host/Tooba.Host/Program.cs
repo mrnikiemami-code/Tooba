@@ -148,8 +148,6 @@ builder.Services.AddScoped<ReservationCycleCoordinator>();
 builder.Services.AddScoped<Tooba.Host.Admin.ProductWorkspaceComposer>();
 builder.Services.AddScoped<Tooba.Host.Grid.AdminContentGridQueryEngine>();
 builder.Services.AddScoped<Tooba.Host.Grid.AdminPayoutGridQueryEngine>();
-builder.Services.AddScoped<Tooba.Host.Grid.AdminReturnGridQueryEngine>();
-builder.Services.AddScoped<Tooba.Host.Grid.AdminFulfillmentWorkQueueQueryEngine>();
 builder.Services.AddScoped<Tooba.Host.Grid.AdminStoryGridQueryEngine>();
 builder.Services.AddScoped<Tooba.Host.Grid.AdminReviewGridQueryEngine>();
 builder.Services.AddScoped<Tooba.Host.Grid.AdminOrdersGridQueryEngine>();
@@ -198,7 +196,7 @@ builder.Services.AddScoped<Tooba.Host.Storefront.StorefrontShippingComposer>(sp 
         sp.GetRequiredService<StorefrontCartComposer>(),
         sp.GetRequiredService<StorefrontCheckoutComposer>(),
         sp.GetRequiredService<Tooba.AddressBook.Application.IAddressBookDirectory>(),
-        sp.GetRequiredService<Tooba.Fulfillment.Infrastructure.Persistence.FulfillmentDbContext>(),
+        sp.GetRequiredService<Tooba.Fulfillment.Application.Shipping.IShippingCatalogReader>(),
         sp.GetRequiredService<Tooba.Order.Infrastructure.Persistence.OrderDbContext>(),
         sp.GetRequiredService<Tooba.Localization.Application.ILanguageDirectory>(),
         sp.GetRequiredService<Tooba.Fulfillment.Application.Shipping.ShippingMethodsOptions>(),

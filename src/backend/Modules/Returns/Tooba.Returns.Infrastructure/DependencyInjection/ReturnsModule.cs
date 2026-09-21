@@ -3,6 +3,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Tooba.BuildingBlocks;
+using Tooba.BuildingBlocks.Presentation.Errors;
 using Tooba.ModuleContracts;
 using Tooba.Returns.Application.Ports;
 using Tooba.Returns.Infrastructure.Persistence;
@@ -12,6 +13,8 @@ using Tooba.Returns.Infrastructure.Gateways;
 using Tooba.Returns.Infrastructure.Bridges;
 using Tooba.Returns.Infrastructure.Messaging;
 using Tooba.Returns.Infrastructure.Observability;
+using Tooba.Returns.Infrastructure.Errors;
+using Tooba.Returns.Infrastructure.Queries;
 using Tooba.Persistence;
 using Tooba.Returns.Contracts.Settlement;
 
@@ -38,6 +41,8 @@ public sealed class ReturnsModule : IToobaModule
         services.AddScoped<IReturnEligibilityEvaluator, ReturnEligibilityEvaluator>();
         services.AddScoped<ReturnDirectory>();
         services.AddScoped<IReturnDirectory>(sp => sp.GetRequiredService<ReturnDirectory>());
+        services.AddScoped<IAdminReturnGridQuery, AdminReturnGridQueryEngine>();
+        services.AddSingleton<IErrorCatalogContributor, ReturnsErrorCatalogContributor>();
         services.AddScoped<IReturnInventoryGateway, ReturnInventoryGateway>();
         services.AddScoped<IReturnSettlementReader, ReturnSettlementBridge>();
         services.AddDbContext<ReturnsDbContext>((sp, options) =>

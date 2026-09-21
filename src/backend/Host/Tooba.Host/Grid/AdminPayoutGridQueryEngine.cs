@@ -1,5 +1,6 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Tooba.BuildingBlocks.Grid;
+using Tooba.Persistence.Grid;
 using Tooba.Host.Admin;
 using Tooba.Party.Infrastructure.Persistence;
 using Tooba.Settlement.Application;
@@ -45,7 +46,7 @@ internal sealed class AdminPayoutGridQueryEngine
         }
 
         var sort = request.Sort.FirstOrDefault() ?? new GridSortRequest("created", "desc");
-        return await AdminEfGridQuery.PageAsync(
+        return await EfGridQuery.PageAsync(
             q,
             request,
             filtered => Order(filtered, sort),
@@ -83,10 +84,10 @@ internal sealed class AdminPayoutGridQueryEngine
     private static IQueryable<PayoutRequest> ApplyFilter(IQueryable<PayoutRequest> source, GridFilterRequest filter) =>
         filter.Field switch
         {
-            "seller" => AdminEfGridQuery.ApplyTextFilter(source, x => x.SellerPartyId.ToString(), filter),
-            "amount" => AdminEfGridQuery.ApplyNumberFilter(source, x => x.Amount, filter),
-            "status" => AdminEfGridQuery.ApplyEnumFilter(source, x => x.Status, filter),
-            "created" => AdminEfGridQuery.ApplyDateFilter(source, x => x.CreatedAt, filter),
+            "seller" => EfGridQuery.ApplyTextFilter(source, x => x.SellerPartyId.ToString(), filter),
+            "amount" => EfGridQuery.ApplyNumberFilter(source, x => x.Amount, filter),
+            "status" => EfGridQuery.ApplyEnumFilter(source, x => x.Status, filter),
+            "created" => EfGridQuery.ApplyDateFilter(source, x => x.CreatedAt, filter),
             _ => source,
         };
 

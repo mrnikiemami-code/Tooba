@@ -197,6 +197,33 @@ public sealed class ReturnDirectory : IReturnDirectory
     }
 
     /// <inheritdoc />
+    public async Task<IReadOnlyList<ReturnSnapshot>> ListBySellerOrderIdsAsync(
+        IReadOnlyList<Guid> sellerOrderIds,
+        CancellationToken cancellationToken)
+    {
+        if (sellerOrderIds.Count == 0)
+        {
+            return [];
+        }
+
+        var requests = await _db.ReturnRequests.AsNoTracking()
+            .Where(x => sellerOrderIds.Contains(x.SellerOrderId))
+            .OrderByDescending(x => x.CreatedAt)
+            .Take(500)
+            .ToListAsync(cancellationToken);
+        return await MapManyAsync(requests, cancellationToken);
+    }
+
+    /// <inheritdoc />
+    public async Task<IReadOnlyList<ReturnStatusOverlayRow>> ListStatusOverlayAsync(CancellationToken cancellationToken)
+    {
+        var rows = await _db.ReturnRequests.AsNoTracking()
+            .Select(r => new { r.SellerOrderId, r.Status })
+            .ToListAsync(cancellationToken);
+        return rows.Select(r => new ReturnStatusOverlayRow(r.SellerOrderId, r.Status)).ToList();
+    }
+
+    /// <inheritdoc />
     public async Task<ReturnSnapshot> ApproveAsync(ApproveReturnCommand command, CancellationToken cancellationToken)
     {
         await _guard.EnsureCanMutateAsync(cancellationToken);

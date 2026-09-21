@@ -3,14 +3,15 @@ using System.Linq.Expressions;
 using Microsoft.EntityFrameworkCore;
 using Tooba.BuildingBlocks.Grid;
 
-namespace Tooba.Host.Grid;
+namespace Tooba.Persistence.Grid;
 
 /// <summary>
 /// کمک‌های مشترک فیلتر/مرتب‌سازی اسکالر روی IQueryable برای گریدهای Admin غیرساده.
 /// فقط عملگرهای قابل‌ترجمه EF؛ بدون ToList قبل از Skip/Take.
 /// </summary>
-internal static class AdminEfGridQuery
+public static class EfGridQuery
 {
+    /// <summary>فیلتر متنی روی یک ستون رشته‌ای.</summary>
     public static IQueryable<T> ApplyTextFilter<T>(
         IQueryable<T> source,
         Expression<Func<T, string?>> selector,
@@ -31,6 +32,7 @@ internal static class AdminEfGridQuery
         };
     }
 
+    /// <summary>جستجوی OR روی چند ستون رشته‌ای.</summary>
     public static IQueryable<T> ApplySearchAny<T>(
         IQueryable<T> source,
         string search,
@@ -57,6 +59,7 @@ internal static class AdminEfGridQuery
         return source.Where(lambda);
     }
 
+    /// <summary>فیلتر enum روی یک ستون.</summary>
     public static IQueryable<T> ApplyEnumFilter<T, TEnum>(
         IQueryable<T> source,
         Expression<Func<T, TEnum>> selector,
@@ -99,6 +102,7 @@ internal static class AdminEfGridQuery
         };
     }
 
+    /// <summary>فیلتر عددی اعشاری.</summary>
     public static IQueryable<T> ApplyNumberFilter<T>(
         IQueryable<T> source,
         Expression<Func<T, decimal>> selector,
@@ -137,6 +141,7 @@ internal static class AdminEfGridQuery
         };
     }
 
+    /// <summary>فیلتر عددی صحیح.</summary>
     public static IQueryable<T> ApplyIntFilter<T>(
         IQueryable<T> source,
         Expression<Func<T, int>> selector,
@@ -148,6 +153,7 @@ internal static class AdminEfGridQuery
         return ApplyNumberFilter(source, asDecimal, filter);
     }
 
+    /// <summary>فیلتر تاریخ روی DateTimeOffset.</summary>
     public static IQueryable<T> ApplyDateFilter<T>(
         IQueryable<T> source,
         Expression<Func<T, DateTimeOffset>> selector,
@@ -183,6 +189,7 @@ internal static class AdminEfGridQuery
         };
     }
 
+    /// <summary>صفحه‌بندی پس از فیلتر با materialize سفارشی.</summary>
     public static async Task<GridPageResponse<TItem>> PageAsync<TRow, TItem>(
         IQueryable<TRow> filtered,
         GridQueryRequest request,

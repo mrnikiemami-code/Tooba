@@ -1,10 +1,8 @@
-using Tooba.Fulfillment.Application.Ports;
-using Tooba.Fulfillment.Application.Models;
 using Tooba.Fulfillment.Application.Shipping;
 using Tooba.Fulfillment.Domain.Aggregates;
 using Tooba.Fulfillment.Domain.ValueObjects;
 
-namespace Tooba.Host.Admin;
+namespace Tooba.Fulfillment.Application.Models;
 
 /// <summary>
 /// ردیف صف کار ارسال و تحویل Admin — fulfillment/seller-group نه Customer Order خام.

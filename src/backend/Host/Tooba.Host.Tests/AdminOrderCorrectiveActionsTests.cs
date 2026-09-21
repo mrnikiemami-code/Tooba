@@ -9,6 +9,7 @@ using Tooba.Order.Domain;
 using Tooba.Payment.Domain.Aggregates;
 using Tooba.Payment.Domain.ValueObjects;
 using Tooba.Payment.Domain.Events;
+using Tooba.Returns.Application.Models;
 using Tooba.Returns.Domain.Aggregates;
 using Tooba.Returns.Domain.ValueObjects;
 using Tooba.Settlement.Application;
@@ -272,10 +273,10 @@ public sealed class AdminOrderCorrectiveActionsTests
         refunded.Approve(Guid.NewGuid(), DateTimeOffset.UtcNow);
         refunded.MarkRefundProcessing(DateTimeOffset.UtcNow);
         refunded.MarkRefundSucceeded(DateTimeOffset.UtcNow);
-        Assert.False(AdminOrderOperationsComposer.CanRestoreCancelledOrder(group, [], [refunded]));
+        Assert.False(AdminOrderOperationsComposer.CanRestoreCancelledOrder(group, [], [Snap(refunded)]));
         Assert.Equal(
             "order.restore.refund_completed",
-            AdminOrderOperationsComposer.RestoreForbiddenCode(group, [], [refunded]));
+            AdminOrderOperationsComposer.RestoreForbiddenCode(group, [], [Snap(refunded)]));
     }
 
     [Fact]
@@ -472,7 +473,7 @@ public sealed class AdminOrderCorrectiveActionsTests
         refunded.MarkRefundSucceeded(DateTimeOffset.UtcNow);
         Assert.Equal(
             "order.restore.refund_completed",
-            AdminOrderOperationsComposer.RestoreForbiddenCode(group, [], [refunded], blockedBySellerPayout: true));
+            AdminOrderOperationsComposer.RestoreForbiddenCode(group, [], [Snap(refunded)], blockedBySellerPayout: true));
     }
 
     [Fact]
@@ -669,4 +670,23 @@ public sealed class AdminOrderCorrectiveActionsTests
 
         throw new InvalidOperationException("repo root not found");
     }
+
+    private static ReturnSnapshot Snap(ReturnRequest r) =>
+        new(
+            r.ReturnRequestId,
+            r.SellerOrderId,
+            r.CheckoutId,
+            r.SellerPartyId,
+            r.RequestedByUserId,
+            r.Status,
+            r.Reason,
+            r.Currency,
+            r.RefundAmount,
+            r.PaymentId,
+            r.RefundDestination,
+            r.CreatedAt,
+            r.UpdatedAt,
+            [],
+            []);
 }
+

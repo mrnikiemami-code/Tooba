@@ -60,6 +60,38 @@ public sealed class CatalogDirectory : ICatalogDirectory, ICatalogLookupGateway,
         return variant is null ? null : new CatalogVariantLookupResult(variant.VariantId, variant.ProductId);
     }
 
+    async Task<IReadOnlyDictionary<Guid, Guid?>> ICatalogVariantLookup.GetPrimaryCategoryIdsByVariantIdsAsync(
+        IReadOnlyList<Guid> variantIds,
+        CancellationToken cancellationToken) =>
+        await GetPrimaryCategoryIdsByVariantIdsAsync(variantIds, cancellationToken);
+
+    async Task<IReadOnlyDictionary<Guid, string>> ICatalogVariantLookup.GetVariantTitlesAsync(
+        IReadOnlyList<Guid> variantIds,
+        CancellationToken cancellationToken)
+    {
+        if (variantIds.Count == 0)
+        {
+            return new Dictionary<Guid, string>();
+        }
+
+        var variants = await _db.Variants.AsNoTracking()
+            .Where(x => variantIds.Contains(x.VariantId))
+            .Select(x => new { x.VariantId, x.ProductId })
+            .ToListAsync(cancellationToken);
+        var productIds = variants.Select(x => x.ProductId).Distinct().ToList();
+        var names = await _db.LocalizedTexts.AsNoTracking()
+            .Where(x => x.OwnerKind == CatalogLocalizedOwnerKind.Product
+                && productIds.Contains(x.OwnerId)
+                && x.FieldKey == "name")
+            .ToListAsync(cancellationToken);
+        var productNames = names.GroupBy(x => x.OwnerId).ToDictionary(
+            x => x.Key,
+            x => x.OrderBy(row => row.Locale.StartsWith("fa", StringComparison.OrdinalIgnoreCase) ? 0 : 1).First().Value);
+        return variants
+            .Where(x => productNames.ContainsKey(x.ProductId))
+            .ToDictionary(x => x.VariantId, x => productNames[x.ProductId]);
+    }
+
     /// <inheritdoc />
     public async Task<CategoryReference?> FindCategoryAsync(Guid categoryId, CancellationToken cancellationToken)
     {

@@ -123,9 +123,27 @@ public sealed class OfferHandlerTests
     }
 
     private sealed class FakeCatalog(CatalogVariantLookupResult? result) : ICatalogVariantLookup
-    { public Task<CatalogVariantLookupResult?> FindVariantAsync(Guid id, CancellationToken token) => Task.FromResult(result); }
+    {
+        public Task<CatalogVariantLookupResult?> FindVariantAsync(Guid id, CancellationToken token) => Task.FromResult(result);
+        public Task<IReadOnlyDictionary<Guid, Guid?>> GetPrimaryCategoryIdsByVariantIdsAsync(
+            IReadOnlyList<Guid> variantIds, CancellationToken token) =>
+            Task.FromResult<IReadOnlyDictionary<Guid, Guid?>>(new Dictionary<Guid, Guid?>());
+        public Task<IReadOnlyDictionary<Guid, string>> GetVariantTitlesAsync(
+            IReadOnlyList<Guid> variantIds, CancellationToken token) =>
+            Task.FromResult<IReadOnlyDictionary<Guid, string>>(new Dictionary<Guid, string>());
+    }
     private sealed class FakeParty(PartyLookupResult? result) : IPartyLookup
-    { public Task<PartyLookupResult?> FindByIdAsync(Guid id, CancellationToken token) => Task.FromResult(result); }
+    {
+        public Task<PartyLookupResult?> FindByIdAsync(Guid id, CancellationToken token) => Task.FromResult(result);
+        public Task<IReadOnlyDictionary<Guid, string>> GetDisplayNamesAsync(
+            IReadOnlyList<Guid> partyIds, CancellationToken token) =>
+            Task.FromResult<IReadOnlyDictionary<Guid, string>>(new Dictionary<Guid, string>());
+        public Task<IReadOnlyList<Guid>> SearchIdsByDisplayNameAsync(string term, int take, CancellationToken token) =>
+            Task.FromResult<IReadOnlyList<Guid>>([]);
+        public Task<IReadOnlyList<Guid>> FilterIdsByDisplayNameAsync(
+            string? op, string? value, IReadOnlyList<string>? values, int take, CancellationToken token) =>
+            Task.FromResult<IReadOnlyList<Guid>>([]);
+    }
     private sealed class FakeCatalogReads : ICatalogOfferReadGateway
     {
         public Task<IReadOnlyDictionary<Guid, CatalogOfferPresentation>> GetOfferPresentationsAsync(

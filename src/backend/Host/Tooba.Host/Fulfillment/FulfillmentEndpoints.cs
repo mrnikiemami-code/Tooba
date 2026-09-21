@@ -1,27 +1,31 @@
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
+﻿using MediatR;
+using Tooba.AccessControl.Application;
+using Tooba.AccessControl.Domain;
 using Tooba.BuildingBlocks;
 using Tooba.BuildingBlocks.Grid;
-using Tooba.Cart.Application;
+using Tooba.BuildingBlocks.Presentation;
+using Tooba.BuildingBlocks.Results;
 using Tooba.Cart.Contracts;
-using Tooba.Fulfillment.Application.Ports;
+using Tooba.Fulfillment.Application.Commands;
 using Tooba.Fulfillment.Application.Models;
-using Tooba.Fulfillment.Application.Shipping;
+using Tooba.Fulfillment.Application.Ports;
+using Tooba.Fulfillment.Application.Queries;
+using Tooba.Fulfillment.Contracts;
+using Tooba.Fulfillment.Contracts.Errors;
 using Tooba.Host.Admin;
+using Tooba.Host.Grid;
 using Tooba.Host.Seller;
 using Tooba.Host.Storefront;
-using AdminFulfillmentWorkQueueBulkRequest = Tooba.Host.Admin.AdminFulfillmentWorkQueueBulkRequest;
+using Tooba.Order.Contracts.Fulfillment;
 
 namespace Tooba.Host.Fulfillment;
 
 /// <summary>
-/// HTTP fulfillment برای seller/admin/customer با فیلتر مجوز در سرور.
+/// Endpoint-State: HOST_THIN_TRANSPORT — auth + ISender/ApiResponseFactory only.
 /// </summary>
 public static class FulfillmentEndpoints
 {
-    /// <summary>
-    /// مسیرهای fulfillment را ثبت می‌کند.
-    /// </summary>
+    /// <summary>مسیرهای fulfillment را ثبت می‌کند.</summary>
     public static void MapFulfillmentEndpoints(this WebApplication app)
     {
         var seller = app.MapGroup("/v1/seller");
@@ -45,11 +49,9 @@ public static class FulfillmentEndpoints
         customer.MapGet("/orders/{checkoutId:guid}/fulfillments", CustomerListAsync);
     }
 
-    private static IResult ToError(PlatformHttpException ex) =>
-        Results.Json(new { title = ex.Title, errorCode = ex.ErrorCode }, statusCode: ex.StatusCode);
-
     private static async Task<IResult> SellerListAsync(
-        FulfillmentPanelComposer composer,
+        ISender sender,
+        ApiResponseFactory api,
         HttpRequest request,
         CurrentAuthenticatedSession session,
         IAuthorizationGuard guard,
@@ -60,15 +62,18 @@ public static class FulfillmentEndpoints
         {
             var (_, sellerPartyId) = await SellerPanelAccess.RequireAuthorizedAsync(
                 request, session, guard, environment, cancellationToken);
-            return Results.Json(await composer.ListForSellerAsync(sellerPartyId, cancellationToken));
+            return api.From(await sender.Send(new ListSellerFulfillmentsQuery(sellerPartyId), cancellationToken));
         }
-        catch (PlatformHttpException ex) { return ToError(ex); }
-        catch (InvalidOperationException ex) { return Results.Json(new { title = "Bad Request", errorCode = "fulfillment.rejected", detail = ex.Message }, statusCode: 400); }
+        catch (PlatformHttpException ex)
+        {
+            return api.FromFailure(new SemanticError(ex.ErrorCode ?? "platform.http"));
+        }
     }
 
     private static async Task<IResult> SellerGetAsync(
         Guid fulfillmentId,
-        FulfillmentPanelComposer composer,
+        ISender sender,
+        ApiResponseFactory api,
         HttpRequest request,
         CurrentAuthenticatedSession session,
         IAuthorizationGuard guard,
@@ -79,187 +84,177 @@ public static class FulfillmentEndpoints
         {
             var (_, sellerPartyId) = await SellerPanelAccess.RequireAuthorizedAsync(
                 request, session, guard, environment, cancellationToken);
-            var page = await composer.GetForSellerAsync(sellerPartyId, fulfillmentId, cancellationToken);
-            return page is null
-                ? Results.Json(new { title = "Not Found", errorCode = "fulfillment.missing" }, statusCode: 404)
-                : Results.Json(page);
+            return api.From(await sender.Send(new GetSellerFulfillmentQuery(sellerPartyId, fulfillmentId), cancellationToken));
         }
-        catch (PlatformHttpException ex) { return ToError(ex); }
+        catch (PlatformHttpException ex)
+        {
+            return api.FromFailure(new SemanticError(ex.ErrorCode ?? "platform.http"));
+        }
     }
 
-    private static async Task<IResult> SellerProcessingAsync(
+    private static Task<IResult> SellerProcessingAsync(
         Guid fulfillmentId,
-        FulfillmentPanelComposer composer,
+        ISender sender,
+        ApiResponseFactory api,
         HttpRequest request,
         CurrentAuthenticatedSession session,
         IAuthorizationGuard guard,
         IHostEnvironment environment,
-        CancellationToken cancellationToken)
-        => await SellerMutateAsync(
-            request, session, guard, environment, fulfillmentId, composer,
-            (actor, id, c) => composer.MarkProcessingAsync(id, actor, c), cancellationToken);
+        IAccessControlDirectory access,
+        CancellationToken cancellationToken) =>
+        SellerMutateAsync(
+            fulfillmentId, sender, api, request, session, guard, environment, access,
+            SellerFulfillmentMutationKind.MarkProcessing, null, null, null, null, null, null, cancellationToken);
 
-    private static async Task<IResult> SellerPackedAsync(
+    private static Task<IResult> SellerPackedAsync(
         Guid fulfillmentId,
-        FulfillmentPanelComposer composer,
+        ISender sender,
+        ApiResponseFactory api,
         HttpRequest request,
         CurrentAuthenticatedSession session,
         IAuthorizationGuard guard,
         IHostEnvironment environment,
-        CancellationToken cancellationToken)
-        => await SellerMutateAsync(
-            request, session, guard, environment, fulfillmentId, composer,
-            (actor, id, c) => composer.MarkPackedAsync(id, actor, c), cancellationToken);
+        IAccessControlDirectory access,
+        CancellationToken cancellationToken) =>
+        SellerMutateAsync(
+            fulfillmentId, sender, api, request, session, guard, environment, access,
+            SellerFulfillmentMutationKind.MarkPacked, null, null, null, null, null, null, cancellationToken);
 
-    private static async Task<IResult> SellerCreateShipmentAsync(
+    private static Task<IResult> SellerCreateShipmentAsync(
         Guid fulfillmentId,
         FulfillmentCreateShipmentRequest body,
-        FulfillmentPanelComposer composer,
+        ISender sender,
+        ApiResponseFactory api,
         HttpRequest request,
         CurrentAuthenticatedSession session,
         IAuthorizationGuard guard,
         IHostEnvironment environment,
-        CancellationToken cancellationToken)
-        => await SellerMutateAsync(
-            request, session, guard, environment, fulfillmentId, composer,
-            (actor, id, c) => composer.CreateShipmentAsync(id, actor, body, c), cancellationToken);
+        IAccessControlDirectory access,
+        CancellationToken cancellationToken) =>
+        SellerMutateAsync(
+            fulfillmentId, sender, api, request, session, guard, environment, access,
+            SellerFulfillmentMutationKind.CreateShipment,
+            body.CarrierDisplayName,
+            body.Items.Select(x => new ShipmentLineCommand(x.OrderLineId, x.Quantity)).ToArray(),
+            null,
+            null,
+            body.ShippingMethodCode,
+            body.ProviderMetadataJson,
+            cancellationToken);
 
-    private static async Task<IResult> SellerTrackingAsync(
+    private static Task<IResult> SellerTrackingAsync(
         Guid fulfillmentId,
         Guid shipmentId,
         FulfillmentAssignTrackingRequest body,
-        FulfillmentPanelComposer composer,
+        ISender sender,
+        ApiResponseFactory api,
         HttpRequest request,
         CurrentAuthenticatedSession session,
         IAuthorizationGuard guard,
         IHostEnvironment environment,
-        CancellationToken cancellationToken)
-        => await SellerMutateAsync(
-            request, session, guard, environment, fulfillmentId, composer,
-            (actor, id, c) => composer.AssignTrackingAsync(id, shipmentId, actor, body.TrackingReference, c), cancellationToken);
+        IAccessControlDirectory access,
+        CancellationToken cancellationToken) =>
+        SellerMutateAsync(
+            fulfillmentId, sender, api, request, session, guard, environment, access,
+            SellerFulfillmentMutationKind.AssignTracking, null, null, shipmentId, body.TrackingReference, null, null, cancellationToken);
 
-    private static async Task<IResult> SellerDispatchAsync(
+    private static Task<IResult> SellerDispatchAsync(
         Guid fulfillmentId,
         Guid shipmentId,
-        FulfillmentPanelComposer composer,
+        ISender sender,
+        ApiResponseFactory api,
         HttpRequest request,
         CurrentAuthenticatedSession session,
         IAuthorizationGuard guard,
         IHostEnvironment environment,
-        CancellationToken cancellationToken)
-        => await SellerMutateAsync(
-            request, session, guard, environment, fulfillmentId, composer,
-            (actor, id, c) => composer.DispatchShipmentAsync(id, shipmentId, actor, c), cancellationToken);
+        IAccessControlDirectory access,
+        CancellationToken cancellationToken) =>
+        SellerMutateAsync(
+            fulfillmentId, sender, api, request, session, guard, environment, access,
+            SellerFulfillmentMutationKind.Dispatch, null, null, shipmentId, null, null, null, cancellationToken);
 
-    private static async Task<IResult> SellerDeliverAsync(
+    private static Task<IResult> SellerDeliverAsync(
         Guid fulfillmentId,
         Guid shipmentId,
-        FulfillmentPanelComposer composer,
+        ISender sender,
+        ApiResponseFactory api,
         HttpRequest request,
         CurrentAuthenticatedSession session,
         IAuthorizationGuard guard,
         IHostEnvironment environment,
-        CancellationToken cancellationToken)
-        => await SellerMutateAsync(
-            request, session, guard, environment, fulfillmentId, composer,
-            (actor, id, c) => composer.DeliverShipmentAsync(id, shipmentId, actor, c), cancellationToken);
+        IAccessControlDirectory access,
+        CancellationToken cancellationToken) =>
+        SellerMutateAsync(
+            fulfillmentId, sender, api, request, session, guard, environment, access,
+            SellerFulfillmentMutationKind.Deliver, null, null, shipmentId, null, null, null, cancellationToken);
 
     private static async Task<IResult> SellerMutateAsync(
+        Guid fulfillmentId,
+        ISender sender,
+        ApiResponseFactory api,
         HttpRequest request,
         CurrentAuthenticatedSession session,
         IAuthorizationGuard guard,
         IHostEnvironment environment,
-        Guid fulfillmentId,
-        FulfillmentPanelComposer composer,
-        Func<Guid, Guid, CancellationToken, Task<Tooba.Fulfillment.Application.Models.FulfillmentSnapshot>> action,
+        IAccessControlDirectory access,
+        SellerFulfillmentMutationKind kind,
+        string? carrier,
+        IReadOnlyList<ShipmentLineCommand>? lines,
+        Guid? shipmentId,
+        string? tracking,
+        string? shippingMethodCode,
+        string? providerMetadataJson,
         CancellationToken cancellationToken)
     {
         try
         {
             var (actorUserId, sellerPartyId) = await SellerPanelAccess.RequireAuthorizedAsync(
                 request, session, guard, environment, cancellationToken);
-            var existing = await composer.GetForSellerAsync(sellerPartyId, fulfillmentId, cancellationToken);
-            if (existing is null)
-            {
-                return Results.Json(new { title = "Not Found", errorCode = "fulfillment.missing" }, statusCode: 404);
-            }
-
-            var access = request.HttpContext.RequestServices.GetRequiredService<Tooba.AccessControl.Application.IAccessControlDirectory>();
-            var orders = request.HttpContext.RequestServices.GetRequiredService<Order.Infrastructure.Persistence.OrderDbContext>();
-            var catalog = request.HttpContext.RequestServices.GetRequiredService<Tooba.Catalog.Application.ICatalogLookupGateway>();
-            await EnsureSellerOrderHandleScopeAsync(
-                actorUserId, sellerPartyId, existing.SellerOrderId, access, orders, catalog, cancellationToken);
-
-            return Results.Json(await action(actorUserId, fulfillmentId, cancellationToken));
+            var permission = await BuildPermissionSnapshotAsync(actorUserId, sellerPartyId, access, cancellationToken);
+            return api.From(await sender.Send(new SellerMutateFulfillmentCommand(
+                fulfillmentId,
+                actorUserId,
+                sellerPartyId,
+                permission,
+                kind,
+                carrier,
+                lines,
+                shipmentId,
+                tracking,
+                shippingMethodCode,
+                providerMetadataJson), cancellationToken));
         }
-        catch (PlatformHttpException ex) { return ToError(ex); }
-        catch (InvalidOperationException ex) { return Results.Json(new { title = "Bad Request", errorCode = "fulfillment.rejected", detail = ex.Message }, statusCode: 400); }
+        catch (PlatformHttpException ex)
+        {
+            return api.FromFailure(new SemanticError(ex.ErrorCode ?? "platform.http"));
+        }
     }
 
-    private static async Task EnsureSellerOrderHandleScopeAsync(
+    private static async Task<SellerHandlePermissionInput> BuildPermissionSnapshotAsync(
         Guid actorUserId,
         Guid sellerPartyId,
-        Guid sellerOrderId,
-        Tooba.AccessControl.Application.IAccessControlDirectory access,
-        Order.Infrastructure.Persistence.OrderDbContext orders,
-        Tooba.Catalog.Application.ICatalogLookupGateway catalog,
+        IAccessControlDirectory access,
         CancellationToken cancellationToken)
     {
         var effective = await access.GetEffectiveAccessAsync(
             actorUserId,
-            new Tooba.AccessControl.Application.AccessOwnerScope(
-                Tooba.AccessControl.Domain.AccessOwnerScopeKind.Seller,
-                sellerPartyId),
+            new AccessOwnerScope(AccessOwnerScopeKind.Seller, sellerPartyId),
             cancellationToken);
         var handles = effective.Permissions
             .Where(p => p.PermissionId == "order.handle" && !p.DeniedByCeiling)
             .ToList();
-        if (handles.Count == 0)
-        {
-            throw new PlatformHttpException(403, "مجوز انجام سفارش وجود ندارد.", "seller.order.handle.denied");
-        }
-
-        if (handles.Any(p => p.ScopeKind == Tooba.AccessControl.Domain.AccessScopeKind.GlobalWithinOwner))
-        {
-            return;
-        }
-
+        var hasGlobal = handles.Any(p => p.ScopeKind == AccessScopeKind.GlobalWithinOwner);
         var allowed = handles
-            .Where(p => p.ScopeKind == Tooba.AccessControl.Domain.AccessScopeKind.Category && p.ScopeResourceId is not null)
+            .Where(p => p.ScopeKind == AccessScopeKind.Category && p.ScopeResourceId is not null)
             .Select(p => p.ScopeResourceId!.Value)
-            .ToHashSet();
-        if (allowed.Count == 0)
-        {
-            throw new PlatformHttpException(403, "مجوز انجام سفارش وجود ندارد.", "seller.order.handle.denied");
-        }
-
-        var order = await orders.SellerOrders.AsNoTracking()
-            .Include(x => x.Lines)
-            .SingleOrDefaultAsync(x => x.SellerOrderId == sellerOrderId && x.SellerPartyId == sellerPartyId, cancellationToken);
-        if (order is null)
-        {
-            throw new PlatformHttpException(404, "سفارش یافت نشد.", "seller.order.missing");
-        }
-
-        var missing = order.Lines.Where(l => l.CategoryIdSnapshot is null).Select(l => l.CatalogVariantId).Distinct().ToArray();
-        var resolved = missing.Length == 0
-            ? new Dictionary<Guid, Guid?>()
-            : await catalog.GetPrimaryCategoryIdsByVariantIdsAsync(missing, cancellationToken);
-
-        // Whole-order fulfillment is unsafe unless every line is authorized.
-        var allAuthorized = order.Lines.All(line =>
-        {
-            var categoryId = line.CategoryIdSnapshot ?? resolved.GetValueOrDefault(line.CatalogVariantId);
-            return categoryId is Guid cid && allowed.Contains(cid);
-        });
-        if (!allAuthorized)
-        {
-            throw new PlatformHttpException(403, "اقدام کل‌سفارش خارج از محدودهٔ مجاز است.", "seller.order.handle.scope_denied");
-        }
+            .Distinct()
+            .ToArray();
+        return new SellerHandlePermissionInput(hasGlobal, allowed);
     }
 
     private static async Task<IResult> AdminListAsync(
-        FulfillmentPanelComposer composer,
+        ISender sender,
+        ApiResponseFactory api,
         HttpRequest request,
         CurrentAuthenticatedSession session,
         ICurrentTenant tenant,
@@ -271,14 +266,17 @@ public static class FulfillmentEndpoints
         {
             await AdminPanelAccess.RequireAuthorizedAsync(
                 request, session, tenant, guard, environment, cancellationToken);
-            return Results.Json(await composer.ListAllAsync(cancellationToken));
+            return api.From(await sender.Send(new ListAdminFulfillmentsQuery(), cancellationToken));
         }
-        catch (PlatformHttpException ex) { return ToError(ex); }
+        catch (PlatformHttpException ex)
+        {
+            return api.FromFailure(new SemanticError(ex.ErrorCode ?? "platform.http"));
+        }
     }
 
     private static Task<IResult> AdminQueryGridAsync(
         GridQueryRequest body,
-        FulfillmentPanelComposer composer,
+        IAdminFulfillmentWorkQueueQuery query,
         HttpRequest request,
         CurrentAuthenticatedSession session,
         ICurrentTenant tenant,
@@ -292,7 +290,11 @@ public static class FulfillmentEndpoints
             tenant,
             guard,
             environment,
-            composer.QueryGridAsync,
+            async (q, ct) =>
+            {
+                var normalized = AdminListGridPolicies.Fulfillments.Normalize(q);
+                return await query.QueryAsync(normalized, ct);
+            },
             cancellationToken);
 
     private static Task<IResult> AdminWorkQueueQueryAsync(
@@ -317,6 +319,7 @@ public static class FulfillmentEndpoints
     private static async Task<IResult> AdminWorkQueueBulkAsync(
         AdminFulfillmentWorkQueueBulkRequest body,
         AdminFulfillmentWorkQueueComposer composer,
+        ApiResponseFactory api,
         HttpRequest request,
         CurrentAuthenticatedSession session,
         ICurrentTenant tenant,
@@ -331,32 +334,25 @@ public static class FulfillmentEndpoints
             var result = await composer.ExecuteBulkAsync(actor, body, cancellationToken);
             if (result.ErrorCode is not null)
             {
-                return Results.Json(
-                    new
-                    {
-                        title = result.ErrorMessage ?? "عملیات گروهی ناموفق بود.",
-                        errorCode = result.ErrorCode,
-                        detail = result.ErrorMessage,
-                        attempted = result.Attempted,
-                        succeeded = result.Succeeded,
-                    },
-                    statusCode: 400);
+                return api.FromFailure(new SemanticError(result.ErrorCode));
             }
 
-            return Results.Json(result);
+            return api.From(Result.Success(result));
         }
-        catch (PlatformHttpException ex) { return ToError(ex); }
-        catch (InvalidOperationException ex)
+        catch (PlatformHttpException ex)
         {
-            return Results.Json(
-                new { title = ex.Message, errorCode = "fulfillment.work_queue.bulk_failed", detail = ex.Message },
-                statusCode: 400);
+            return api.FromFailure(new SemanticError(ex.ErrorCode ?? "platform.http"));
+        }
+        catch (InvalidOperationException)
+        {
+            return api.FromFailure(new SemanticError(FulfillmentErrorCodes.WorkQueueBulkFailed));
         }
     }
 
     private static async Task<IResult> AdminGetAsync(
         Guid fulfillmentId,
-        FulfillmentPanelComposer composer,
+        ISender sender,
+        ApiResponseFactory api,
         HttpRequest request,
         CurrentAuthenticatedSession session,
         ICurrentTenant tenant,
@@ -368,12 +364,12 @@ public static class FulfillmentEndpoints
         {
             await AdminPanelAccess.RequireAuthorizedAsync(
                 request, session, tenant, guard, environment, cancellationToken);
-            var page = await composer.GetAsync(fulfillmentId, cancellationToken);
-            return page is null
-                ? Results.Json(new { title = "Not Found", errorCode = "fulfillment.missing" }, statusCode: 404)
-                : Results.Json(page);
+            return api.From(await sender.Send(new GetAdminFulfillmentQuery(fulfillmentId), cancellationToken));
         }
-        catch (PlatformHttpException ex) { return ToError(ex); }
+        catch (PlatformHttpException ex)
+        {
+            return api.FromFailure(new SemanticError(ex.ErrorCode ?? "platform.http"));
+        }
     }
 
     private static async Task<IResult> CustomerListAsync(
@@ -381,10 +377,11 @@ public static class FulfillmentEndpoints
         FulfillmentPanelComposer composer,
         IFulfillmentDirectory fulfillment,
         ICartQueryGateway carts,
+        ICustomerCheckoutOwnershipReader ownership,
+        ApiResponseFactory api,
         HttpRequest request,
         CurrentAuthenticatedSession session,
         IHostEnvironment environment,
-        Order.Infrastructure.Persistence.OrderDbContext orders,
         CancellationToken cancellationToken)
     {
         try
@@ -393,20 +390,16 @@ public static class FulfillmentEndpoints
             var guestSecret = ReadGuestSecret(request);
             if (actor is null && string.IsNullOrWhiteSpace(guestSecret))
             {
-                return Results.Json(new { title = "Unauthorized", errorCode = "customer.actor.missing" }, statusCode: 401);
+                return api.FromFailure(new SemanticError(FulfillmentErrorCodes.CustomerActorMissing));
             }
 
-            var checkout = await orders.Checkouts.AsNoTracking()
-                .Where(x => x.CheckoutId == checkoutId)
-                .Select(x => new { x.CheckoutId, x.PlacedByUserId, x.CartId })
-                .FirstOrDefaultAsync(cancellationToken);
+            var checkout = await ownership.GetAsync(checkoutId, cancellationToken);
             if (checkout is null)
             {
-                return Results.Json(new { title = "Not Found", errorCode = "customer.order.missing" }, statusCode: 404);
+                return api.FromFailure(new SemanticError(FulfillmentErrorCodes.CustomerOrderMissing));
             }
 
             var ownedByActor = actor is not null && checkout.PlacedByUserId == actor.Value;
-            // Shared StorefrontGuestActorId is not a bearer for every guest checkout.
             if (checkout.PlacedByUserId == StorefrontCheckoutComposer.StorefrontGuestActorId)
             {
                 ownedByActor = false;
@@ -415,7 +408,6 @@ public static class FulfillmentEndpoints
             var ownedByGuest = false;
             if (!ownedByActor && !string.IsNullOrWhiteSpace(guestSecret))
             {
-                // Reuse storefront cart credential proof (CartId alone is not a bearer).
                 try
                 {
                     var cart = await carts.GetCartAsync(
@@ -432,26 +424,26 @@ public static class FulfillmentEndpoints
 
             if (!ownedByActor && !ownedByGuest)
             {
-                return Results.Json(new { title = "Not Found", errorCode = "customer.order.missing" }, statusCode: 404);
+                return api.FromFailure(new SemanticError(FulfillmentErrorCodes.CustomerOrderMissing));
             }
 
             var list = await composer.ListForCheckoutAsync(checkoutId, cancellationToken);
             var packages = await fulfillment.GetPackagesForCheckoutAsync(checkoutId, cancellationToken);
             var preferred = FulfillmentPanelComposer.SelectPreferredCustomerPackage(packages);
-            return Results.Json(new
+            return api.From(Result.Success(new
             {
                 fulfillments = list,
                 preferredCustomerTrackingReference = preferred?.TrackingReference,
                 preferredCustomerTrackingPackageNumber = preferred?.PackageNumber,
                 preferredCustomerPackageStatus = preferred?.Status.ToString(),
-            });
+            }));
         }
-        catch (PlatformHttpException ex) { return ToError(ex); }
+        catch (PlatformHttpException ex)
+        {
+            return api.FromFailure(new SemanticError(ex.ErrorCode ?? "platform.http"));
+        }
     }
 
-    /// <summary>
-    /// Actor مشتری را مثل پنل مشتری Resolve می‌کند: نشست، سپس Dev actor، سپس GuestActor فروشگاه در Dev/Testing.
-    /// </summary>
     private static Guid? ResolveCustomerActor(HttpRequest request, CurrentAuthenticatedSession session, IHostEnvironment environment)
     {
         if (session.IsAuthenticated && session.UserId is { } authenticated)

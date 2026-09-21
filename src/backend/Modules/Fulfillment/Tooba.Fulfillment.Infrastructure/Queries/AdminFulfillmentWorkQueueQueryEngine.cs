@@ -1,29 +1,29 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Tooba.BuildingBlocks.Grid;
-using Tooba.Fulfillment.Application.Ports;
 using Tooba.Fulfillment.Application.Models;
+using Tooba.Fulfillment.Application.Ports;
 using Tooba.Fulfillment.Application.Shipping;
 using Tooba.Fulfillment.Domain.Aggregates;
 using Tooba.Fulfillment.Domain.ValueObjects;
 using Tooba.Fulfillment.Infrastructure.Persistence;
-using Tooba.Host.Admin;
-using Tooba.Order.Infrastructure.Persistence;
-using Tooba.Party.Infrastructure.Persistence;
+using Tooba.Order.Contracts.Fulfillment;
+using Tooba.Party.Contracts;
+using Tooba.Persistence.Grid;
 
-namespace Tooba.Host.Grid;
+namespace Tooba.Fulfillment.Infrastructure.Queries;
 
 /// <summary>پرس‌وجوی DB-native صف کار ارسال و تحویل Admin با batch map و بدون N+1.</summary>
-public sealed class AdminFulfillmentWorkQueueQueryEngine
+public sealed class AdminFulfillmentWorkQueueQueryEngine : IAdminFulfillmentWorkQueueQuery
 {
     private readonly FulfillmentDbContext _db;
-    private readonly PartyDbContext _parties;
-    private readonly OrderDbContext _orders;
+    private readonly IPartyLookup _parties;
+    private readonly IOrderGridEnrichmentReader _orders;
 
     /// <summary>موتور صف کار را به DbContextها وصل می‌کند.</summary>
     public AdminFulfillmentWorkQueueQueryEngine(
         FulfillmentDbContext db,
-        PartyDbContext parties,
-        OrderDbContext orders)
+        IPartyLookup parties,
+        IOrderGridEnrichmentReader orders)
     {
         _db = db;
         _parties = parties;
@@ -40,16 +40,8 @@ public sealed class AdminFulfillmentWorkQueueQueryEngine
         if (!string.IsNullOrWhiteSpace(request.Search))
         {
             var term = request.Search.Trim().ToLower();
-            var sellerIds = await _parties.Parties.AsNoTracking()
-                .Where(p => p.DisplayName.ToLower().Contains(term))
-                .Select(p => p.PartyId)
-                .Take(200)
-                .ToListAsync(cancellationToken);
-            var matchingOrderIds = await _orders.SellerOrders.AsNoTracking()
-                .Where(o => o.OrderNumber.ToLower().Contains(term))
-                .Select(o => o.SellerOrderId)
-                .Take(200)
-                .ToListAsync(cancellationToken);
+            var sellerIds = await _parties.SearchIdsByDisplayNameAsync(term, 200, cancellationToken);
+            var matchingOrderIds = await _orders.SearchSellerOrderIdsByOrderNumberAsync(term, 200, cancellationToken);
             q = q.Where(x =>
                 x.RecipientName.ToLower().Contains(term)
                 || x.FulfillmentId.ToString().ToLower().Contains(term)
@@ -72,7 +64,7 @@ public sealed class AdminFulfillmentWorkQueueQueryEngine
         }
 
         var sort = request.Sort.FirstOrDefault() ?? new GridSortRequest("updatedAt", "desc");
-        return await AdminEfGridQuery.PageAsync(
+        return await EfGridQuery.PageAsync(
             q,
             request,
             filtered => Order(filtered, sort),
@@ -114,18 +106,17 @@ public sealed class AdminFulfillmentWorkQueueQueryEngine
         switch (filter.Field)
         {
             case "recipientName":
-                return AdminEfGridQuery.ApplyTextFilter(source, x => x.RecipientName, filter);
+                return EfGridQuery.ApplyTextFilter(source, x => x.RecipientName, filter);
             case "fulfillmentId":
-                return AdminEfGridQuery.ApplyTextFilter(source, x => x.FulfillmentId.ToString(), filter);
+                return EfGridQuery.ApplyTextFilter(source, x => x.FulfillmentId.ToString(), filter);
             case "checkoutId":
-                return AdminEfGridQuery.ApplyTextFilter(source, x => x.CheckoutId.ToString(), filter);
+                return EfGridQuery.ApplyTextFilter(source, x => x.CheckoutId.ToString(), filter);
             case "cityName":
-                return AdminEfGridQuery.ApplyTextFilter(source, x => x.CityName, filter);
+                return EfGridQuery.ApplyTextFilter(source, x => x.CityName, filter);
             case "orderReference":
             {
-                var orders = _orders.SellerOrders.AsNoTracking().AsQueryable();
-                orders = AdminEfGridQuery.ApplyTextFilter(orders, x => x.OrderNumber, filter);
-                var sellerOrderIds = await orders.Select(x => x.SellerOrderId).Take(500).ToListAsync(cancellationToken);
+                var sellerOrderIds = await _orders.FilterSellerOrderIdsByOrderNumberAsync(
+                    filter.Operator, filter.Value, filter.Values, 500, cancellationToken);
                 return source.Where(x => sellerOrderIds.Contains(x.SellerOrderId));
             }
             case "shippingMethodCode":
@@ -146,7 +137,7 @@ public sealed class AdminFulfillmentWorkQueueQueryEngine
                     : source.Where(x => codes.Contains(x.ShippingMethodCode.ToLower()));
             }
             case "shippingMethodLabel":
-                return AdminEfGridQuery.ApplyTextFilter(source, x => x.ShippingMethodLabel, filter);
+                return EfGridQuery.ApplyTextFilter(source, x => x.ShippingMethodLabel, filter);
             case "sellerPartyId":
             {
                 var ids = ParseGuidValues(filter);
@@ -161,9 +152,8 @@ public sealed class AdminFulfillmentWorkQueueQueryEngine
             }
             case "sellerDisplayName":
             {
-                var nameQ = _parties.Parties.AsNoTracking().AsQueryable();
-                nameQ = AdminEfGridQuery.ApplyTextFilter(nameQ, x => x.DisplayName, filter);
-                var partyIds = await nameQ.Select(x => x.PartyId).Take(500).ToListAsync(cancellationToken);
+                var partyIds = await _parties.FilterIdsByDisplayNameAsync(
+                    filter.Operator, filter.Value, filter.Values, 500, cancellationToken);
                 return source.Where(x => partyIds.Contains(x.SellerPartyId));
             }
             case "shipmentCount":
@@ -175,7 +165,7 @@ public sealed class AdminFulfillmentWorkQueueQueryEngine
                              join c in counts on u.FulfillmentId equals c.FulfillmentId into cj
                              from c in cj.DefaultIfEmpty()
                              select new { Unit = u, Count = c != null ? c.Count : 0 };
-                joined = AdminEfGridQuery.ApplyIntFilter(joined, x => x.Count, filter);
+                joined = EfGridQuery.ApplyIntFilter(joined, x => x.Count, filter);
                 return joined.Select(x => x.Unit);
             }
             case "status":
@@ -183,9 +173,9 @@ public sealed class AdminFulfillmentWorkQueueQueryEngine
             case "queueFilter":
                 return await ApplyQueueFilterAsync(source, filter, cancellationToken);
             case "createdAt":
-                return AdminEfGridQuery.ApplyDateFilter(source, x => x.CreatedAt, filter);
+                return EfGridQuery.ApplyDateFilter(source, x => x.CreatedAt, filter);
             case "updatedAt":
-                return AdminEfGridQuery.ApplyDateFilter(source, x => x.UpdatedAt, filter);
+                return EfGridQuery.ApplyDateFilter(source, x => x.UpdatedAt, filter);
             default:
                 return source;
         }
@@ -406,19 +396,11 @@ public sealed class AdminFulfillmentWorkQueueQueryEngine
         };
     }
 
-    private IQueryable<FulfillmentUnit> OrderByOrderNumber(IQueryable<FulfillmentUnit> source, bool asc)
-    {
-        var numbers = _orders.SellerOrders.AsNoTracking()
-            .Select(x => new { x.SellerOrderId, x.OrderNumber });
-        var joined = from u in source
-                     join n in numbers on u.SellerOrderId equals n.SellerOrderId into nj
-                     from n in nj.DefaultIfEmpty()
-                     select new { Unit = u, OrderNumber = n != null ? n.OrderNumber : "" };
-        var ordered = asc
-            ? joined.OrderBy(x => x.OrderNumber).ThenBy(x => x.Unit.FulfillmentId)
-            : joined.OrderByDescending(x => x.OrderNumber).ThenBy(x => x.Unit.FulfillmentId);
-        return ordered.Select(x => x.Unit);
-    }
+    private IQueryable<FulfillmentUnit> OrderByOrderNumber(IQueryable<FulfillmentUnit> source, bool asc) =>
+        // Cross-module EF join removed; SellerOrderId is a stable proxy. MapPage still shows OrderNumber.
+        asc
+            ? source.OrderBy(x => x.SellerOrderId).ThenBy(x => x.FulfillmentId)
+            : source.OrderByDescending(x => x.SellerOrderId).ThenBy(x => x.FulfillmentId);
 
     private async Task<IReadOnlyList<AdminFulfillmentWorkQueueRow>> MapPageAsync(
         List<FulfillmentUnit> rows,
@@ -446,20 +428,12 @@ public sealed class AdminFulfillmentWorkQueueQueryEngine
             : await _db.ShipmentItems.AsNoTracking()
                 .Where(x => shipmentIds.Contains(x.ShipmentId))
                 .ToListAsync(cancellationToken);
-        var sellerNames = await _parties.Parties.AsNoTracking()
-            .Where(x => sellerIds.Contains(x.PartyId))
-            .Select(x => new { x.PartyId, x.DisplayName })
-            .ToListAsync(cancellationToken);
-        var orderNumbers = await _orders.SellerOrders.AsNoTracking()
-            .Where(x => sellerOrderIds.Contains(x.SellerOrderId))
-            .Select(x => new { x.SellerOrderId, x.OrderNumber })
-            .ToListAsync(cancellationToken);
+        var sellerNameBy = await _parties.GetDisplayNamesAsync(sellerIds, cancellationToken);
+        var orderNumberBy = await _orders.GetOrderNumbersAsync(sellerOrderIds, cancellationToken);
 
         var itemsBy = items.GroupBy(x => x.FulfillmentId).ToDictionary(g => g.Key, g => g.ToList());
         var shipmentsBy = shipments.GroupBy(x => x.FulfillmentId).ToDictionary(g => g.Key, g => g.ToList());
         var shipmentItemsBy = shipmentItems.GroupBy(x => x.ShipmentId).ToDictionary(g => g.Key, g => g.ToList());
-        var sellerNameBy = sellerNames.ToDictionary(x => x.PartyId, x => x.DisplayName);
-        var orderNumberBy = orderNumbers.ToDictionary(x => x.SellerOrderId, x => x.OrderNumber);
 
         return rows.Select(unit =>
         {

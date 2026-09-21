@@ -7,22 +7,15 @@ namespace Tooba.Returns.Tests.Architecture;
 public sealed class ReturnsArchitectureGuardTests
 {
     private static readonly string[] AllowedDomainFolders = ["Aggregates", "Entities", "ValueObjects", "Events", "Policies"];
-    private static readonly string[] AllowedApplicationFolders = ["Ports", "Models"];
-    private static readonly string[] AllowedContractsFolders = ["Events", "Settlement"];
+    private static readonly string[] AllowedApplicationFolders = ["Ports", "Models", "Commands", "Queries"];
+    private static readonly string[] AllowedContractsFolders = ["Events", "Settlement", "Errors"];
     private static readonly string[] AllowedInfrastructureFolders =
         ["Persistence", "Directories", "Adapters", "Events", "Messaging", "DependencyInjection", "Migrations",
-            "Gateways", "Bridges", "Evaluators", "Observability"];
+            "Gateways", "Bridges", "Evaluators", "Observability", "Queries", "Errors"];
 
     private static readonly HashSet<string> HostDbContextAllowlist = new(StringComparer.OrdinalIgnoreCase)
     {
         "Program.cs",
-        "ReturnPanelComposer.cs",
-        "ReturnEndpoints.cs",
-        "AdminReturnGridQueryEngine.cs",
-        "AdminOrderOperationsComposer.cs",
-        "AdminOrderCompletenessComposer.cs",
-        "AdminPanelComposer.cs",
-        "AdminOrdersGridQueryEngine.cs",
         "ModuleMigrationRegistry.cs",
     };
 
@@ -96,6 +89,21 @@ public sealed class ReturnsArchitectureGuardTests
             .Where(path => !HostDbContextAllowlist.Contains(Path.GetFileName(path)))
             .ToList();
         Assert.True(hostHits.Count == 0, "Host ReturnsDbContext allowlist: " + string.Join("; ", hostHits));
+
+        var hostRootForMapper = Path.Combine(RepoRoot(), "src", "backend", "Host", "Tooba.Host");
+        Assert.False(File.Exists(Path.Combine(hostRootForMapper, "Returns", "ReturnErrorMapper.cs")));
+        var returnEndpoint = File.ReadAllText(Path.Combine(hostRootForMapper, "Returns", "ReturnEndpoints.cs"));
+        Assert.Contains("ApiResponseFactory", returnEndpoint, StringComparison.Ordinal);
+        Assert.DoesNotContain("ReturnErrorMapper", returnEndpoint, StringComparison.Ordinal);
+        Assert.DoesNotContain("Results.Json(new { title = mapped.Fa", returnEndpoint, StringComparison.Ordinal);
+        Assert.DoesNotContain("Results.Json(new { title", returnEndpoint, StringComparison.Ordinal);
+        Assert.DoesNotContain("ReturnsDbContext", returnEndpoint, StringComparison.Ordinal);
+        Assert.Contains("ReturnSemanticMapper", returnEndpoint, StringComparison.Ordinal);
+
+        var returnPanel = File.ReadAllText(Path.Combine(hostRootForMapper, "Returns", "ReturnPanelComposer.cs"));
+        Assert.DoesNotContain("ReturnsDbContext", returnPanel, StringComparison.Ordinal);
+        Assert.DoesNotContain("مقصد بازگشت وجه نامعتبر است", returnPanel, StringComparison.Ordinal);
+        Assert.DoesNotContain("throw new", returnPanel, StringComparison.Ordinal);
 
         var bypass = AllProductionSources()
             .Where(x => x.Text.Contains("DateTimeOffset.UtcNow", StringComparison.Ordinal)

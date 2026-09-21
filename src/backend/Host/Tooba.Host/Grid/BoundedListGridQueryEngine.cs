@@ -1,11 +1,12 @@
 using System.Globalization;
 using Tooba.BuildingBlocks.Grid;
+using Tooba.Persistence.Grid;
 
 namespace Tooba.Host.Grid;
 
 /// <summary>
 /// موتور paging/filter/sort برای مجموعه‌های واقعاً bounded در حافظه و تست‌ها.
-/// برای فهرست‌های Admin غیرسادهٔ production استفاده نشود — آن‌ها باید DB-native (AdminEfGridQuery / *GridQueryEngine) باشند.
+/// برای فهرست‌های Admin غیرسادهٔ production استفاده نشود — آن‌ها باید DB-native (EfGridQuery / *GridQueryEngine) باشند.
 /// </summary>
 public static class BoundedListGridQueryEngine
 {

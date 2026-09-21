@@ -15,9 +15,10 @@ using Tooba.Order.Domain;
 using Tooba.Order.Infrastructure.Persistence;
 using Tooba.Party.Infrastructure.Persistence;
 using Tooba.Payment.Application.Ports;
-using Tooba.Returns.Domain.Aggregates;
+
 using Tooba.Returns.Domain.ValueObjects;
-using Tooba.Returns.Infrastructure.Persistence;
+using Tooba.Returns.Application.Ports;
+using Tooba.Returns.Application.Models;
 using Tooba.Settlement.Application;
 using Tooba.Settlement.Domain;
 using Tooba.Host.Storefront;
@@ -37,7 +38,7 @@ public sealed class AdminPanelComposer
     private readonly IPaymentAdminDirectory _payments;
     private readonly ISettlementDirectory _settlement;
     private readonly IFulfillmentDirectory _fulfillment;
-    private readonly ReturnsDbContext _returns;
+    private readonly IReturnDirectory _returns;
     private readonly OrderSupplyComposer _supply;
     private readonly IReservationCycleDirectory _cycles;
     private readonly AdminOrdersGridQueryEngine _ordersGrid;
@@ -57,7 +58,7 @@ public sealed class AdminPanelComposer
         IPaymentAdminDirectory payments,
         ISettlementDirectory settlement,
         IFulfillmentDirectory fulfillment,
-        ReturnsDbContext returns,
+        IReturnDirectory returns,
         OrderSupplyComposer supply,
         IReservationCycleDirectory cycles)
     {
@@ -504,12 +505,10 @@ public sealed class AdminPanelComposer
         CancellationToken cancellationToken)
     {
         var sellerOrderIds = group.SellerOrders.Select(x => x.SellerOrderId).ToList();
-        var returns = await _returns.ReturnRequests.AsNoTracking()
-            .Where(x => sellerOrderIds.Contains(x.SellerOrderId))
-            .ToListAsync(cancellationToken);
+        var returns = await _returns.ListBySellerOrderIdsAsync(sellerOrderIds, cancellationToken);
         var returnsLookup = returns
             .GroupBy(x => x.SellerOrderId)
-            .ToDictionary(g => g.Key, g => (IReadOnlyList<ReturnRequest>)g.ToList());
+            .ToDictionary(g => g.Key, g => (IReadOnlyList<ReturnSnapshot>)g.ToList());
         return AdminOrdersGridQueryEngine.MapOrderListItem(group, sellerNames, returnsLookup);
     }
 
@@ -863,32 +862,20 @@ public sealed class AdminPanelComposer
     {
         var sellerOrderIds = group.SellerOrders.Select(x => x.SellerOrderId).ToList();
         var returns = sellerOrderIds.Count == 0
-            ? []
-            : await _returns.ReturnRequests.AsNoTracking()
-                .Where(x => sellerOrderIds.Contains(x.SellerOrderId))
-                .ToListAsync(cancellationToken);
-        var returnIds = returns.Select(x => x.ReturnRequestId).ToList();
-        var refundAttempts = returnIds.Count == 0
-            ? []
-            : await _returns.RefundAttempts.AsNoTracking()
-                .Where(x => returnIds.Contains(x.ReturnRequestId)
-                            && x.Status == RefundAttemptStatus.Succeeded)
-                .ToListAsync(cancellationToken);
+            ? Array.Empty<ReturnSnapshot>()
+            : await _returns.ListBySellerOrderIdsAsync(sellerOrderIds, cancellationToken);
         var returnById = returns.ToDictionary(x => x.ReturnRequestId);
-        var succeeded = refundAttempts
-            .Where(a => returnById.ContainsKey(a.ReturnRequestId))
-            .Select(a =>
-            {
-                var ret = returnById[a.ReturnRequestId];
-                return new OrderFinancialRefundInput(
+        var succeeded = returns
+            .SelectMany(ret => ret.RefundAttempts
+                .Where(a => a.Status == RefundAttemptStatus.Succeeded)
+                .Select(a => new OrderFinancialRefundInput(
                     ret.ReturnRequestId,
                     a.RefundAttemptId,
                     a.Amount,
                     a.Currency,
                     a.CompletedAt ?? a.CreatedAt,
                     ret.RefundAmount,
-                    string.IsNullOrWhiteSpace(a.ProviderReference) ? null : a.ProviderReference);
-            })
+                    string.IsNullOrWhiteSpace(a.ProviderReference) ? null : a.ProviderReference)))
             .ToList();
         return BuildFinancialEvents(group, sellerNames, payment, settlementByOrder, succeeded);
     }

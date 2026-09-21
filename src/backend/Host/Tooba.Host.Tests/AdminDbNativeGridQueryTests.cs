@@ -117,8 +117,6 @@ public sealed class AdminDbNativeGridQueryTests
             "AdminOrdersGridQueryEngine.cs",
             "AdminCustomersGridQueryEngine.cs",
             "AdminSellersGridQueryEngine.cs",
-            "AdminFulfillmentWorkQueueQueryEngine.cs",
-            "AdminReturnGridQueryEngine.cs",
             "AdminPayoutGridQueryEngine.cs",
             "AdminReviewGridQueryEngine.cs",
             "AdminStoryGridQueryEngine.cs",
@@ -130,16 +128,30 @@ public sealed class AdminDbNativeGridQueryTests
             Assert.True(File.Exists(path), $"missing {path}");
             var text = File.ReadAllText(path);
             Assert.True(
-                text.Contains("AdminEfGridQuery.PageAsync", StringComparison.Ordinal)
+                text.Contains("EfGridQuery.PageAsync", StringComparison.Ordinal)
+                || text.Contains("AdminEfGridQuery.PageAsync", StringComparison.Ordinal)
                 || (text.Contains("CountAsync", StringComparison.Ordinal)
                     && text.Contains("Skip(", StringComparison.Ordinal)
                     && text.Contains("Take(", StringComparison.Ordinal)),
-                $"{name} must page via AdminEfGridQuery.PageAsync or CountAsync+Skip+Take");
+                $"{name} must page via EfGridQuery.PageAsync or CountAsync+Skip+Take");
             Assert.DoesNotContain("BoundedListGridQueryEngine", text);
             Assert.DoesNotContain("InMemoryGridQueryEngine", text);
         }
 
-        var helper = File.ReadAllText(Path.Combine(root, "AdminEfGridQuery.cs"));
+        var moduleEngines = new[]
+        {
+            Path.GetFullPath(Path.Combine(root, "..", "..", "..", "Modules", "Fulfillment", "Tooba.Fulfillment.Infrastructure", "Queries", "AdminFulfillmentWorkQueueQueryEngine.cs")),
+            Path.GetFullPath(Path.Combine(root, "..", "..", "..", "Modules", "Returns", "Tooba.Returns.Infrastructure", "Queries", "AdminReturnGridQueryEngine.cs")),
+        };
+        foreach (var path in moduleEngines)
+        {
+            Assert.True(File.Exists(path), $"missing {path}");
+            var text = File.ReadAllText(path);
+            Assert.Contains("EfGridQuery.PageAsync", text, StringComparison.Ordinal);
+        }
+
+        var helper = File.ReadAllText(Path.GetFullPath(Path.Combine(
+            root, "..", "..", "..", "BuildingBlocks", "Tooba.Persistence", "Grid", "EfGridQuery.cs")));
         Assert.Contains("CountAsync", helper);
         Assert.Contains("Skip(", helper);
         Assert.Contains("Take(", helper);

@@ -204,6 +204,16 @@ public sealed class ReturnsCharacterizationTests
     {
         public Task<FulfillmentReturnEligibilitySnapshot?> GetEligibilityAsync(Guid sellerOrderId, CancellationToken cancellationToken) =>
             Task.FromResult<FulfillmentReturnEligibilitySnapshot?>(snapshot.SellerOrderId == sellerOrderId ? snapshot : null);
+
+        public Task<IReadOnlyDictionary<Guid, DateTimeOffset?>> GetLastDeliveredAtBySellerOrderIdsAsync(
+            IReadOnlyList<Guid> sellerOrderIds,
+            CancellationToken cancellationToken)
+        {
+            IReadOnlyDictionary<Guid, DateTimeOffset?> map = sellerOrderIds
+                .Where(id => id == snapshot.SellerOrderId)
+                .ToDictionary(id => id, _ => snapshot.LastDeliveredAt);
+            return Task.FromResult(map);
+        }
     }
 
     private sealed class FixedPaymentReader(PaymentReturnSnapshot snapshot) : IPaymentReturnReader

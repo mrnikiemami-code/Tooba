@@ -5,7 +5,6 @@ using Tooba.BuildingBlocks;
 using Tooba.Fulfillment.Application.Ports;
 using Tooba.Fulfillment.Application.Models;
 using Tooba.Fulfillment.Application.Shipping;
-using Tooba.Fulfillment.Infrastructure.Persistence;
 using Tooba.Inventory.Application.Ports;
 using Tooba.Inventory.Application.Checkout;
 using Tooba.Inventory.Application.Orders;
@@ -31,7 +30,7 @@ public sealed class OrderSupplyComposer
     private readonly OrderDbContext _orders;
     private readonly IInventoryDirectory _inventory;
     private readonly IFulfillmentDirectory _fulfillment;
-    private readonly FulfillmentDbContext _fulfillmentDb;
+    private readonly IFulfillmentShippedQuantityReader _shipped;
     private readonly PaymentGatewayOptions _paymentGateway;
     private readonly ICommerceHoldPolicy? _holdPolicy;
     private readonly IReservationCyclePolicyResolver? _cyclePolicy;
@@ -40,7 +39,7 @@ public sealed class OrderSupplyComposer
         OrderDbContext orders,
         IInventoryDirectory inventory,
         IFulfillmentDirectory fulfillment,
-        FulfillmentDbContext fulfillmentDb,
+        IFulfillmentShippedQuantityReader shipped,
         IOptions<PaymentGatewayOptions> paymentGateway,
         ICommerceHoldPolicy? holdPolicy = null,
         IReservationCyclePolicyResolver? cyclePolicy = null)
@@ -48,7 +47,7 @@ public sealed class OrderSupplyComposer
         _orders = orders;
         _inventory = inventory;
         _fulfillment = fulfillment;
-        _fulfillmentDb = fulfillmentDb;
+        _shipped = shipped;
         _paymentGateway = paymentGateway.Value;
         _holdPolicy = holdPolicy;
         _cyclePolicy = cyclePolicy;
@@ -255,27 +254,10 @@ public sealed class OrderSupplyComposer
         return lines;
     }
 
-    private async Task<Dictionary<Guid, decimal>> LoadShippedByLineAsync(
+    private Task<IReadOnlyDictionary<Guid, decimal>> LoadShippedByLineAsync(
         IReadOnlyList<Guid> checkoutIds,
-        CancellationToken cancellationToken)
-    {
-        var fulfillmentIds = await _fulfillmentDb.Fulfillments.AsNoTracking()
-            .Where(x => checkoutIds.Contains(x.CheckoutId))
-            .Select(x => x.FulfillmentId)
-            .ToListAsync(cancellationToken);
-        if (fulfillmentIds.Count == 0)
-        {
-            return [];
-        }
-
-        var rows = await _fulfillmentDb.Items.AsNoTracking()
-            .Where(x => fulfillmentIds.Contains(x.FulfillmentId))
-            .Select(x => new { x.OrderLineId, x.QuantityShipped })
-            .ToListAsync(cancellationToken);
-        return rows
-            .GroupBy(x => x.OrderLineId)
-            .ToDictionary(g => g.Key, g => g.Sum(x => x.QuantityShipped));
-    }
+        CancellationToken cancellationToken) =>
+        _shipped.GetShippedByOrderLineIdsForCheckoutsAsync(checkoutIds, cancellationToken);
 
     private async Task<CheckoutGroup?> LoadGroupAsync(Guid checkoutId, CancellationToken cancellationToken) =>
         await _orders.Checkouts

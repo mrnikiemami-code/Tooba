@@ -1,7 +1,6 @@
-using Tooba.Returns.Domain.Aggregates;
 using Tooba.Returns.Domain.ValueObjects;
 
-namespace Tooba.Host.Admin;
+namespace Tooba.Returns.Application.Models;
 
 /// <summary>
 /// ردیف صف کار مرجوعی/بازگشت وجه Admin — همان دامنه Return، بدون lifecycle دوم.

@@ -1,4 +1,4 @@
-namespace Tooba.Host.Grid;
+﻿namespace Tooba.Host.Grid;
 
 /// <summary>تعریف یک فیلد قابل جستجو/فیلتر/مرتب‌سازی برای موتور in-memory.</summary>
 public sealed class InMemoryGridField<T>

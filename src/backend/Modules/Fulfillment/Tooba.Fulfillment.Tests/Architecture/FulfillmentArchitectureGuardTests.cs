@@ -7,26 +7,16 @@ namespace Tooba.Fulfillment.Tests.Architecture;
 public sealed class FulfillmentArchitectureGuardTests
 {
     private static readonly string[] AllowedDomainFolders = ["Aggregates", "Entities", "ValueObjects", "Events", "Policies"];
-    private static readonly string[] AllowedApplicationFolders = ["Ports", "Models", "Shipping"];
-    private static readonly string[] AllowedContractsFolders = ["Events", "Returns"];
+    private static readonly string[] AllowedApplicationFolders = ["Ports", "Models", "Shipping", "Commands", "Queries"];
+    private static readonly string[] AllowedContractsFolders = ["Events", "Returns", "Errors"];
     private static readonly string[] AllowedInfrastructureFolders =
         ["Persistence", "Directories", "Adapters", "Events", "Messaging", "DependencyInjection", "Migrations",
-            "Gateways", "Bridges", "Handlers", "Shipping", "Observability"];
+            "Gateways", "Bridges", "Handlers", "Shipping", "Observability", "Queries", "Errors"];
 
     private static readonly HashSet<string> HostDbContextAllowlist = new(StringComparer.OrdinalIgnoreCase)
     {
         "Program.cs",
-        "FulfillmentPanelComposer.cs",
-        "FulfillmentEndpoints.cs",
-        "AdminFulfillmentWorkQueueQueryEngine.cs",
-        "AdminOrderOperationsComposer.cs",
-        "AdminOrderOperationsEndpoints.cs",
-        "AdminOrderCompletenessComposer.cs",
-        "OrderSupplyComposer.cs",
-        "StorefrontShippingComposer.cs",
-        "ShippingServiceEndpoints.cs",
         "ProductWorkspaceDevelopmentBootstrap.cs",
-        "AdminReturnGridQueryEngine.cs",
         "ModuleMigrationRegistry.cs",
     };
 
@@ -98,6 +88,25 @@ public sealed class FulfillmentArchitectureGuardTests
             .Where(path => !HostDbContextAllowlist.Contains(Path.GetFileName(path)))
             .ToList();
         Assert.True(hostHits.Count == 0, "Host FulfillmentDbContext allowlist: " + string.Join("; ", hostHits));
+
+        var hostRootForLocator = Path.Combine(RepoRoot(), "src", "backend", "Host", "Tooba.Host");
+        var fulfillmentEndpoint = File.ReadAllText(Path.Combine(hostRootForLocator, "Fulfillment", "FulfillmentEndpoints.cs"));
+        Assert.DoesNotContain("RequestServices.GetRequiredService", fulfillmentEndpoint, StringComparison.Ordinal);
+        Assert.Contains("ApiResponseFactory", fulfillmentEndpoint, StringComparison.Ordinal);
+        Assert.DoesNotContain("PlatformHttpException(403", fulfillmentEndpoint, StringComparison.Ordinal);
+        Assert.DoesNotContain("detail = ex.Message", fulfillmentEndpoint, StringComparison.Ordinal);
+        Assert.DoesNotContain("Results.Json(new { title", fulfillmentEndpoint, StringComparison.Ordinal);
+        Assert.DoesNotContain("OrderDbContext", fulfillmentEndpoint, StringComparison.Ordinal);
+        Assert.DoesNotContain("FulfillmentDbContext", fulfillmentEndpoint, StringComparison.Ordinal);
+
+        var workQueueComposer = File.ReadAllText(Path.Combine(hostRootForLocator, "Admin", "AdminFulfillmentWorkQueueComposer.cs"));
+        Assert.DoesNotContain("throw new PlatformHttpException", workQueueComposer, StringComparison.Ordinal);
+        Assert.DoesNotContain("FulfillmentDbContext", workQueueComposer, StringComparison.Ordinal);
+
+        var panelComposer = File.ReadAllText(Path.Combine(hostRootForLocator, "Fulfillment", "FulfillmentPanelComposer.cs"));
+        Assert.DoesNotContain("FulfillmentDbContext", panelComposer, StringComparison.Ordinal);
+        Assert.DoesNotContain("OrderDbContext", panelComposer, StringComparison.Ordinal);
+        Assert.DoesNotContain("PartyDbContext", panelComposer, StringComparison.Ordinal);
 
         var bypass = AllProductionSources()
             .Where(x => x.Text.Contains("DateTimeOffset.UtcNow", StringComparison.Ordinal)

@@ -1,5 +1,6 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Tooba.BuildingBlocks.Grid;
+using Tooba.Persistence.Grid;
 using Tooba.Host.Admin;
 using Tooba.Order.Infrastructure.Persistence;
 
@@ -112,9 +113,9 @@ internal sealed class AdminCustomersGridQueryEngine
                 return source.Where(a => ids.Contains(a.UserId));
             }
             case "orders":
-                return AdminEfGridQuery.ApplyIntFilter(source, x => x.OrderCount, filter);
+                return EfGridQuery.ApplyIntFilter(source, x => x.OrderCount, filter);
             case "activity":
-                return AdminEfGridQuery.ApplyDateFilter(source, x => x.LastOrderAt, filter);
+                return EfGridQuery.ApplyDateFilter(source, x => x.LastOrderAt, filter);
             case "status":
                 // Always Active — equals Active is pass-through; anything else empty.
                 return IsActiveOnlyFilter(filter) ? source : source.Where(_ => false);
@@ -161,8 +162,8 @@ internal sealed class AdminCustomersGridQueryEngine
         var fieldIsName = filter.Field == "name";
         IQueryable<Tooba.Order.Domain.CheckoutGroup> q = _orders.Checkouts.AsNoTracking();
         q = fieldIsName
-            ? AdminEfGridQuery.ApplyTextFilter(q, x => x.RecipientName, filter)
-            : AdminEfGridQuery.ApplyTextFilter(q, x => x.ContactMobile, filter);
+            ? EfGridQuery.ApplyTextFilter(q, x => x.RecipientName, filter)
+            : EfGridQuery.ApplyTextFilter(q, x => x.ContactMobile, filter);
         return (await q.Select(x => x.PlacedByUserId).Distinct().ToListAsync(cancellationToken)).ToHashSet();
     }
 

@@ -2,8 +2,7 @@
 using Tooba.BuildingBlocks.Grid;
 using Tooba.Fulfillment.Application.Ports;
 using Tooba.Fulfillment.Application.Models;
-using Tooba.Fulfillment.Application.Shipping;
-using Tooba.Fulfillment.Domain.Aggregates;
+using Tooba.Fulfillment.Contracts.Errors;
 using Tooba.Fulfillment.Domain.ValueObjects;
 using Tooba.Host.Grid;
 
@@ -11,16 +10,17 @@ namespace Tooba.Host.Admin;
 
 /// <summary>
 /// ترکیب صف کار ارسال و تحویل — همان فرمان‌های Admin Order Operations، بدون lifecycle دوم.
+/// خطاهای مورد انتظار به ErrorCode معنایی برمی‌گردند (بدون PlatformHttpException).
 /// </summary>
 public sealed class AdminFulfillmentWorkQueueComposer
 {
-    private readonly AdminFulfillmentWorkQueueQueryEngine _grid;
+    private readonly IAdminFulfillmentWorkQueueQuery _grid;
     private readonly AdminOrderOperationsComposer _operations;
     private readonly IFulfillmentDirectory _fulfillment;
 
     /// <summary>صف کار را به موتور گرید و عملیات سفارش وصل می‌کند.</summary>
     public AdminFulfillmentWorkQueueComposer(
-        AdminFulfillmentWorkQueueQueryEngine grid,
+        IAdminFulfillmentWorkQueueQuery grid,
         AdminOrderOperationsComposer operations,
         IFulfillmentDirectory fulfillment)
     {
@@ -46,54 +46,49 @@ public sealed class AdminFulfillmentWorkQueueComposer
         var code = (request.ActionCode ?? string.Empty).Trim();
         if (!AdminFulfillmentQueueFilters.SafeBulkActionCodes.Contains(code))
         {
-            throw new PlatformHttpException(
-                400,
-                "این عملیات گروهی پشتیبانی نمی‌شود.",
-                "fulfillment.work_queue.bulk_unsupported");
+            return new AdminFulfillmentWorkQueueBulkResult(
+                0, 0, FulfillmentErrorCodes.WorkQueueBulkUnsupported, null);
         }
 
         var items = request.Items ?? [];
         if (items.Count == 0)
         {
-            throw new PlatformHttpException(
-                400,
-                "هیچ ردیفی برای عملیات گروهی انتخاب نشده است.",
-                "fulfillment.work_queue.bulk_empty");
+            return new AdminFulfillmentWorkQueueBulkResult(
+                0, 0, FulfillmentErrorCodes.WorkQueueBulkEmpty, null);
         }
 
         var snapshots = new List<(AdminFulfillmentWorkQueueBulkItem Item, FulfillmentSnapshot Snapshot)>();
         Guid? sellerPartyId = null;
         foreach (var item in items)
         {
-            var snapshot = await _fulfillment.GetAsync(item.FulfillmentId, cancellationToken)
-                ?? throw new PlatformHttpException(404, "ارسال یافت نشد.", "fulfillment.missing");
+            var snapshot = await _fulfillment.GetAsync(item.FulfillmentId, cancellationToken);
+            if (snapshot is null)
+            {
+                return new AdminFulfillmentWorkQueueBulkResult(
+                    0, 0, FulfillmentErrorCodes.Missing, null);
+            }
+
             if (sellerPartyId is null)
             {
                 sellerPartyId = snapshot.SellerPartyId;
             }
             else if (sellerPartyId != snapshot.SellerPartyId)
             {
-                throw new PlatformHttpException(
-                    400,
-                    "انتخاب چندفروشنده برای عملیات گروهی مجاز نیست.",
-                    "fulfillment.work_queue.cross_seller");
+                return new AdminFulfillmentWorkQueueBulkResult(
+                    0, 0, FulfillmentErrorCodes.WorkQueueCrossSeller, null);
             }
 
             if (snapshot.SellerOrderId != item.SellerOrderId || snapshot.CheckoutId != item.CheckoutId)
             {
-                throw new PlatformHttpException(
-                    400,
-                    "ردیف انتخاب‌شده با دادهٔ سرور هم‌خوان نیست.",
-                    "fulfillment.work_queue.row_mismatch");
+                return new AdminFulfillmentWorkQueueBulkResult(
+                    0, 0, FulfillmentErrorCodes.WorkQueueRowMismatch, null);
             }
 
             var codes = AdminFulfillmentQueueFilters.ProjectActionCodes(snapshot);
             if (!codes.Contains(code, StringComparer.OrdinalIgnoreCase))
             {
-                throw new PlatformHttpException(
-                    400,
-                    "انتخاب ناسازگار است؛ همهٔ ردیف‌ها باید همان عملیات مجاز را داشته باشند.",
-                    "fulfillment.work_queue.incompatible");
+                return new AdminFulfillmentWorkQueueBulkResult(
+                    0, 0, FulfillmentErrorCodes.WorkQueueIncompatible, null);
             }
 
             if (code is "dispatch_shipment" or "deliver_shipment")
@@ -101,10 +96,8 @@ public sealed class AdminFulfillmentWorkQueueComposer
                 var shipmentId = ResolveShipmentId(item, snapshot, code);
                 if (shipmentId is null)
                 {
-                    throw new PlatformHttpException(
-                        400,
-                        "مرسولهٔ معتبر برای این عملیات یافت نشد.",
-                        "fulfillment.work_queue.shipment_missing");
+                    return new AdminFulfillmentWorkQueueBulkResult(
+                        0, 0, FulfillmentErrorCodes.WorkQueueShipmentMissing, null);
                 }
             }
 
@@ -142,16 +135,16 @@ public sealed class AdminFulfillmentWorkQueueComposer
                 return new AdminFulfillmentWorkQueueBulkResult(
                     snapshots.Count,
                     succeeded,
-                    ex.ErrorCode ?? "order.operation.failed",
-                    ex.Title);
+                    ex.ErrorCode ?? FulfillmentErrorCodes.WorkQueueBulkFailed,
+                    null);
             }
-            catch (InvalidOperationException ex)
+            catch (InvalidOperationException)
             {
                 return new AdminFulfillmentWorkQueueBulkResult(
                     snapshots.Count,
                     succeeded,
-                    "order.operation.failed",
-                    ex.Message);
+                    FulfillmentErrorCodes.WorkQueueBulkFailed,
+                    null);
             }
         }
 
@@ -192,4 +185,3 @@ public sealed class AdminFulfillmentWorkQueueComposer
         return active.FirstOrDefault()?.ShipmentId;
     }
 }
-

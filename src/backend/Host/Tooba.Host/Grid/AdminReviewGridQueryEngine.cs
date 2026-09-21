@@ -1,5 +1,6 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Tooba.BuildingBlocks.Grid;
+using Tooba.Persistence.Grid;
 using Tooba.Catalog.Application;
 using Tooba.Catalog.Domain;
 using Tooba.Catalog.Infrastructure.Persistence;
@@ -60,7 +61,7 @@ internal sealed class AdminReviewGridQueryEngine
         }
 
         var sort = request.Sort.FirstOrDefault() ?? new GridSortRequest("created", "desc");
-        return await AdminEfGridQuery.PageAsync(
+        return await EfGridQuery.PageAsync(
             q,
             request,
             filtered => Order(filtered, sort),
@@ -103,22 +104,22 @@ internal sealed class AdminReviewGridQueryEngine
         switch (filter.Field)
         {
             case "reviewer":
-                return AdminEfGridQuery.ApplyTextFilter(source, x => x.AuthorDisplayName, filter);
+                return EfGridQuery.ApplyTextFilter(source, x => x.AuthorDisplayName, filter);
             case "product":
             {
                 var ids = await ResolveProductIdsByTitleFilterAsync(filter, cancellationToken);
                 return source.Where(x => ids.Contains(x.ProductId));
             }
             case "rating":
-                return AdminEfGridQuery.ApplyIntFilter(source, x => x.Rating, filter);
+                return EfGridQuery.ApplyIntFilter(source, x => x.Rating, filter);
             case "excerpt":
-                return AdminEfGridQuery.ApplyTextFilter(source, x => x.Body, filter);
+                return EfGridQuery.ApplyTextFilter(source, x => x.Body, filter);
             case "verified":
                 return ApplyVerifiedFilter(source, filter);
             case "status":
-                return AdminEfGridQuery.ApplyEnumFilter(source, x => x.Status, filter);
+                return EfGridQuery.ApplyEnumFilter(source, x => x.Status, filter);
             case "created":
-                return AdminEfGridQuery.ApplyDateFilter(source, x => x.CreatedAt, filter);
+                return EfGridQuery.ApplyDateFilter(source, x => x.CreatedAt, filter);
             default:
                 return source;
         }

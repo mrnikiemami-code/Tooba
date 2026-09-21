@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Tooba.BuildingBlocks.Grid;
+using Tooba.Persistence.Grid;
 using Tooba.Content.Application;
 using Tooba.Content.Domain;
 using Tooba.Content.Infrastructure.Persistence;
@@ -23,7 +24,7 @@ internal sealed class AdminContentAuthorGridQueryEngine
 
         if (!string.IsNullOrWhiteSpace(request.Search))
         {
-            q = AdminEfGridQuery.ApplySearchAny(q, request.Search, x => x.DisplayName, x => x.Slug);
+            q = EfGridQuery.ApplySearchAny(q, request.Search, x => x.DisplayName, x => x.Slug);
         }
 
         foreach (var filter in request.Filters)
@@ -32,7 +33,7 @@ internal sealed class AdminContentAuthorGridQueryEngine
         }
 
         var sort = request.Sort.FirstOrDefault() ?? new GridSortRequest("updated", "desc");
-        return await AdminEfGridQuery.PageAsync(
+        return await EfGridQuery.PageAsync(
             q,
             request,
             filtered => Order(filtered, sort),
@@ -43,10 +44,10 @@ internal sealed class AdminContentAuthorGridQueryEngine
     private static IQueryable<ContentAuthor> ApplyFilter(IQueryable<ContentAuthor> source, GridFilterRequest filter) =>
         filter.Field switch
         {
-            "displayName" => AdminEfGridQuery.ApplyTextFilter(source, x => x.DisplayName, filter),
-            "slug" => AdminEfGridQuery.ApplyTextFilter(source, x => x.Slug, filter),
+            "displayName" => EfGridQuery.ApplyTextFilter(source, x => x.DisplayName, filter),
+            "slug" => EfGridQuery.ApplyTextFilter(source, x => x.Slug, filter),
             "isActive" => ApplyBoolFilter(source, filter),
-            "updated" => AdminEfGridQuery.ApplyDateFilter(source, x => x.UpdatedAt, filter),
+            "updated" => EfGridQuery.ApplyDateFilter(source, x => x.UpdatedAt, filter),
             _ => source,
         };
 

@@ -78,4 +78,44 @@ public sealed class FulfillmentReturnBridge : IFulfillmentReturnReader
             lineDeliveredAt,
             slices);
     }
+
+    /// <inheritdoc />
+    public async Task<IReadOnlyDictionary<Guid, DateTimeOffset?>> GetLastDeliveredAtBySellerOrderIdsAsync(
+        IReadOnlyList<Guid> sellerOrderIds,
+        CancellationToken cancellationToken)
+    {
+        if (sellerOrderIds.Count == 0)
+        {
+            return new Dictionary<Guid, DateTimeOffset?>();
+        }
+
+        var units = await _db.Fulfillments.AsNoTracking()
+            .Where(x => sellerOrderIds.Contains(x.SellerOrderId))
+            .Select(x => new { x.SellerOrderId, x.FulfillmentId })
+            .ToListAsync(cancellationToken);
+        if (units.Count == 0)
+        {
+            return new Dictionary<Guid, DateTimeOffset?>();
+        }
+
+        var fulfillmentIds = units.Select(x => x.FulfillmentId).ToList();
+        var deliveries = await _db.Shipments.AsNoTracking()
+            .Where(x => fulfillmentIds.Contains(x.FulfillmentId) && x.DeliveredAt != null)
+            .Select(x => new { x.FulfillmentId, x.DeliveredAt })
+            .ToListAsync(cancellationToken);
+        var deliveredByFulfillment = deliveries
+            .GroupBy(x => x.FulfillmentId)
+            .ToDictionary(g => g.Key, g => g.Max(x => x.DeliveredAt));
+        var result = new Dictionary<Guid, DateTimeOffset?>();
+        foreach (var unit in units)
+        {
+            deliveredByFulfillment.TryGetValue(unit.FulfillmentId, out var at);
+            if (!result.TryGetValue(unit.SellerOrderId, out var existing) || (at is not null && (existing is null || at > existing)))
+            {
+                result[unit.SellerOrderId] = at;
+            }
+        }
+
+        return result;
+    }
 }

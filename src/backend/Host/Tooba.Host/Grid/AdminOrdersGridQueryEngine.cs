@@ -1,13 +1,15 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Tooba.BuildingBlocks.Grid;
+using Tooba.Persistence.Grid;
 using Tooba.Host.Admin;
 using Tooba.Order.Application;
 using Tooba.Order.Domain;
 using Tooba.Order.Infrastructure.Persistence;
 using Tooba.Party.Infrastructure.Persistence;
-using Tooba.Returns.Domain.Aggregates;
+
 using Tooba.Returns.Domain.ValueObjects;
-using Tooba.Returns.Infrastructure.Persistence;
+using Tooba.Returns.Application.Ports;
+using Tooba.Returns.Application.Models;
 using Tooba.Host.Storefront;
 
 namespace Tooba.Host.Grid;
@@ -17,14 +19,14 @@ internal sealed class AdminOrdersGridQueryEngine
 {
     private readonly OrderDbContext _orders;
     private readonly PartyDbContext _parties;
-    private readonly ReturnsDbContext _returns;
+    private readonly IReturnDirectory _returns;
     private readonly OrderSupplyComposer _supply;
     private readonly IReservationCycleDirectory _cycles;
 
     public AdminOrdersGridQueryEngine(
         OrderDbContext orders,
         PartyDbContext parties,
-        ReturnsDbContext returns,
+        IReturnDirectory returns,
         OrderSupplyComposer supply,
         IReservationCycleDirectory cycles)
     {
@@ -76,7 +78,7 @@ internal sealed class AdminOrdersGridQueryEngine
         }
 
         var sort = request.Sort.FirstOrDefault() ?? new GridSortRequest("created", "desc");
-        return await AdminEfGridQuery.PageAsync(
+        return await EfGridQuery.PageAsync(
             q,
             request,
             filtered => Order(filtered, sort),
@@ -150,7 +152,7 @@ internal sealed class AdminOrdersGridQueryEngine
                 };
             }
             case "customer":
-                return AdminEfGridQuery.ApplyTextFilter(source, x => x.RecipientName, filter);
+                return EfGridQuery.ApplyTextFilter(source, x => x.RecipientName, filter);
             case "sellers":
                 return source;
             case "lines":
@@ -162,7 +164,7 @@ internal sealed class AdminOrdersGridQueryEngine
             case "amount":
                 return ApplyDecimalAggFilter(source, c => c.SellerOrders.Sum(o => o.GrandTotalSnapshot), filter);
             case "created":
-                return AdminEfGridQuery.ApplyDateFilter(source, x => x.SubmittedAt, filter);
+                return EfGridQuery.ApplyDateFilter(source, x => x.SubmittedAt, filter);
             default:
                 return source;
         }
@@ -238,9 +240,7 @@ internal sealed class AdminOrdersGridQueryEngine
         HashSet<Guid> overlaySellerIds = [];
         if (overlayWanted.Count > 0)
         {
-            var rows = await _returns.ReturnRequests.AsNoTracking()
-                .Select(r => new { r.SellerOrderId, r.Status })
-                .ToListAsync(cancellationToken);
+            var rows = await _returns.ListStatusOverlayAsync(cancellationToken);
             overlaySellerIds = rows
                 .GroupBy(r => r.SellerOrderId)
                 .Where(g => overlayWanted.Contains(
@@ -287,7 +287,7 @@ internal sealed class AdminOrdersGridQueryEngine
         GridFilterRequest filter)
     {
         // Materialize via projection join pattern using EF-translatable Count/Sum already in selector body.
-        return AdminEfGridQuery.ApplyIntFilter(source, selector, filter);
+        return EfGridQuery.ApplyIntFilter(source, selector, filter);
     }
 
     private async Task<IQueryable<CheckoutGroup>> ApplySellerNamesFilterAsync(
@@ -361,7 +361,7 @@ internal sealed class AdminOrdersGridQueryEngine
         IQueryable<CheckoutGroup> source,
         System.Linq.Expressions.Expression<Func<CheckoutGroup, decimal>> selector,
         GridFilterRequest filter) =>
-        AdminEfGridQuery.ApplyNumberFilter(source, selector, filter);
+        EfGridQuery.ApplyNumberFilter(source, selector, filter);
 
     private static IQueryable<CheckoutGroup> Order(IQueryable<CheckoutGroup> source, GridSortRequest sort)
     {
@@ -422,12 +422,10 @@ internal sealed class AdminOrdersGridQueryEngine
         var sellerIds = groups.SelectMany(g => g.SellerOrders.Select(o => o.SellerPartyId)).Distinct().ToList();
         var sellerNames = await LoadSellerNamesAsync(sellerIds, cancellationToken);
         var sellerOrderIds = groups.SelectMany(g => g.SellerOrders.Select(o => o.SellerOrderId)).Distinct().ToList();
-        var returnsBySellerOrder = await _returns.ReturnRequests.AsNoTracking()
-            .Where(x => sellerOrderIds.Contains(x.SellerOrderId))
-            .ToListAsync(cancellationToken);
+        var returnsBySellerOrder = await _returns.ListBySellerOrderIdsAsync(sellerOrderIds, cancellationToken);
         var returnsLookup = returnsBySellerOrder
             .GroupBy(x => x.SellerOrderId)
-            .ToDictionary(g => g.Key, g => (IReadOnlyList<ReturnRequest>)g.ToList());
+            .ToDictionary(g => g.Key, g => (IReadOnlyList<ReturnSnapshot>)g.ToList());
         var supply = await _supply.GetStatusesAsync(ids, cancellationToken);
         var supplyByCheckout = supply.ToDictionary(
             x => x.Key,
@@ -528,7 +526,7 @@ internal sealed class AdminOrdersGridQueryEngine
     internal static AdminOrderListItem MapOrderListItem(
         CheckoutGroup group,
         IReadOnlyDictionary<Guid, string> sellerNames,
-        IReadOnlyDictionary<Guid, IReadOnlyList<ReturnRequest>> returnsBySellerOrder,
+        IReadOnlyDictionary<Guid, IReadOnlyList<ReturnSnapshot>> returnsBySellerOrder,
         string supplyStatus = "NotApplicable",
         AdminReservationCycleSummary? reservation = null)
     {
@@ -537,7 +535,7 @@ internal sealed class AdminOrdersGridQueryEngine
         var references = orders.Select(x => x.OrderNumber).Where(x => !string.IsNullOrWhiteSpace(x)).ToList();
         var statuses = orders.Select(x => x.Status).Distinct().ToList();
         var relatedReturns = orders
-            .SelectMany(o => returnsBySellerOrder.TryGetValue(o.SellerOrderId, out var list) ? list : Array.Empty<ReturnRequest>())
+            .SelectMany(o => returnsBySellerOrder.TryGetValue(o.SellerOrderId, out var list) ? list : Array.Empty<ReturnSnapshot>())
             .Select(r => r.Status)
             .ToList();
         var composedStatus = ComposeOperationalStatus(statuses, relatedReturns);

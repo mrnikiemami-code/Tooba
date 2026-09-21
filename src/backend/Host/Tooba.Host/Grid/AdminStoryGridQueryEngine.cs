@@ -1,5 +1,6 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Tooba.BuildingBlocks.Grid;
+using Tooba.Persistence.Grid;
 using Tooba.Story.Application;
 using Tooba.Story.Domain;
 using Tooba.Story.Infrastructure.Persistence;
@@ -30,7 +31,7 @@ internal sealed class AdminStoryGridQueryEngine
 
         if (!string.IsNullOrWhiteSpace(request.Search))
         {
-            q = AdminEfGridQuery.ApplySearchAny(q, request.Search, x => x.Title);
+            q = EfGridQuery.ApplySearchAny(q, request.Search, x => x.Title);
         }
 
         foreach (var filter in request.Filters)
@@ -45,7 +46,7 @@ internal sealed class AdminStoryGridQueryEngine
         }
 
         var sort = request.Sort.FirstOrDefault() ?? new GridSortRequest("displayOrder", "asc");
-        return await AdminEfGridQuery.PageAsync(
+        return await EfGridQuery.PageAsync(
             q,
             request,
             filtered => Order(filtered, sort),
@@ -91,19 +92,19 @@ internal sealed class AdminStoryGridQueryEngine
         switch (filter.Field)
         {
             case "title":
-                return AdminEfGridQuery.ApplyTextFilter(source, x => x.Title, filter);
+                return EfGridQuery.ApplyTextFilter(source, x => x.Title, filter);
             case "status":
-                return AdminEfGridQuery.ApplyEnumFilter(source, x => x.Status, filter);
+                return EfGridQuery.ApplyEnumFilter(source, x => x.Status, filter);
             case "reviewStatus":
-                return AdminEfGridQuery.ApplyEnumFilter(source, x => x.ReviewStatus, filter);
+                return EfGridQuery.ApplyEnumFilter(source, x => x.ReviewStatus, filter);
             case "origin":
-                return AdminEfGridQuery.ApplyEnumFilter(source, x => x.Origin, filter);
+                return EfGridQuery.ApplyEnumFilter(source, x => x.Origin, filter);
             case "locale":
-                return AdminEfGridQuery.ApplyTextFilter(source, x => x.Locale, filter);
+                return EfGridQuery.ApplyTextFilter(source, x => x.Locale, filter);
             case "market":
-                return AdminEfGridQuery.ApplyTextFilter(source, x => x.Market, filter);
+                return EfGridQuery.ApplyTextFilter(source, x => x.Market, filter);
             case "displayOrder":
-                return AdminEfGridQuery.ApplyIntFilter(source, x => x.DisplayOrder, filter);
+                return EfGridQuery.ApplyIntFilter(source, x => x.DisplayOrder, filter);
             case "items":
             {
                 var counts = _db.StoryItems.AsNoTracking()
@@ -113,7 +114,7 @@ internal sealed class AdminStoryGridQueryEngine
                              join c in counts on s.StoryId equals c.StoryId into cj
                              from c in cj.DefaultIfEmpty()
                              select new { Story = s, Count = c != null ? c.Count : 0 };
-                joined = AdminEfGridQuery.ApplyIntFilter(joined, x => x.Count, filter);
+                joined = EfGridQuery.ApplyIntFilter(joined, x => x.Count, filter);
                 return joined.Select(x => x.Story);
             }
             default:

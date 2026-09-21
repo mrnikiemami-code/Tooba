@@ -153,6 +153,16 @@ public sealed class OfferTraceTopologyTests
     {
         public Task<PartyLookupResult?> FindByIdAsync(Guid partyId, CancellationToken cancellationToken)
             => Task.FromResult<PartyLookupResult?>(new PartyLookupResult(partyId, "Organization", "Seller"));
+        public Task<IReadOnlyDictionary<Guid, string>> GetDisplayNamesAsync(
+            IReadOnlyList<Guid> partyIds, CancellationToken cancellationToken) =>
+            Task.FromResult<IReadOnlyDictionary<Guid, string>>(
+                partyIds.ToDictionary(id => id, id => "Seller"));
+        public Task<IReadOnlyList<Guid>> SearchIdsByDisplayNameAsync(
+            string term, int take, CancellationToken cancellationToken) =>
+            Task.FromResult<IReadOnlyList<Guid>>([]);
+        public Task<IReadOnlyList<Guid>> FilterIdsByDisplayNameAsync(
+            string? op, string? value, IReadOnlyList<string>? values, int take, CancellationToken cancellationToken) =>
+            Task.FromResult<IReadOnlyList<Guid>>([]);
     }
 
     private sealed class FakePartyOrg(Guid id) : IPartyLookup
@@ -160,6 +170,16 @@ public sealed class OfferTraceTopologyTests
         public Task<PartyLookupResult?> FindByIdAsync(Guid partyId, CancellationToken cancellationToken)
             => Task.FromResult<PartyLookupResult?>(
                 partyId == id ? new PartyLookupResult(id, "Organization", "Seller") : null);
+        public Task<IReadOnlyDictionary<Guid, string>> GetDisplayNamesAsync(
+            IReadOnlyList<Guid> partyIds, CancellationToken cancellationToken) =>
+            Task.FromResult<IReadOnlyDictionary<Guid, string>>(
+                partyIds.Where(x => x == id).ToDictionary(x => x, _ => "Seller"));
+        public Task<IReadOnlyList<Guid>> SearchIdsByDisplayNameAsync(
+            string term, int take, CancellationToken cancellationToken) =>
+            Task.FromResult<IReadOnlyList<Guid>>([]);
+        public Task<IReadOnlyList<Guid>> FilterIdsByDisplayNameAsync(
+            string? op, string? value, IReadOnlyList<string>? values, int take, CancellationToken cancellationToken) =>
+            Task.FromResult<IReadOnlyList<Guid>>([]);
     }
 
     private sealed class FakeCatalogVariant(Guid id) : ICatalogVariantLookup
@@ -167,6 +187,14 @@ public sealed class OfferTraceTopologyTests
         public Task<CatalogVariantLookupResult?> FindVariantAsync(Guid variantId, CancellationToken cancellationToken)
             => Task.FromResult<CatalogVariantLookupResult?>(
                 variantId == id ? new CatalogVariantLookupResult(id, Guid.NewGuid()) : null);
+        public Task<IReadOnlyDictionary<Guid, Guid?>> GetPrimaryCategoryIdsByVariantIdsAsync(
+            IReadOnlyList<Guid> variantIds, CancellationToken cancellationToken) =>
+            Task.FromResult<IReadOnlyDictionary<Guid, Guid?>>(
+                variantIds.ToDictionary(x => x, _ => (Guid?)null));
+        public Task<IReadOnlyDictionary<Guid, string>> GetVariantTitlesAsync(
+            IReadOnlyList<Guid> variantIds, CancellationToken cancellationToken) =>
+            Task.FromResult<IReadOnlyDictionary<Guid, string>>(
+                variantIds.ToDictionary(x => x, _ => "Product"));
     }
 
     private sealed class FixedIds(Guid id) : IIdGenerator

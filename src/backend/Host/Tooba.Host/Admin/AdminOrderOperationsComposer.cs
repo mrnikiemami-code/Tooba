@@ -27,9 +27,7 @@ using Tooba.Payment.Infrastructure.Providers;
 using Tooba.Returns.Application.Ports;
 using Tooba.Returns.Application.Models;
 using Tooba.Settlement.Application;
-using Tooba.Returns.Domain.Aggregates;
 using Tooba.Returns.Domain.ValueObjects;
-using Tooba.Returns.Infrastructure.Persistence;
 using Tooba.Host.Returns;
 
 namespace Tooba.Host.Admin;
@@ -79,7 +77,7 @@ public sealed class AdminOrderOperationsComposer
         "با لغو کامل سفارش، مرسوله‌های پیش از ارسال ابطال می‌شوند، موجودی آزاد می‌شود و در صورت پرداخت موفق بازگشت وجه آغاز می‌شود. آیا مطمئن هستید؟";
 
     private readonly OrderDbContext _orders;
-    private readonly ReturnsDbContext _returns;
+    
     private readonly IFulfillmentDirectory _fulfillment;
     private readonly IReturnDirectory _returnDirectory;
     private readonly IReturnEligibilityEvaluator _eligibility;
@@ -96,7 +94,6 @@ public sealed class AdminOrderOperationsComposer
     /// <summary>ترکیب‌گر عملیات را به ماژول‌های موجود وصل می‌کند.</summary>
     public AdminOrderOperationsComposer(
         OrderDbContext orders,
-        ReturnsDbContext returns,
         IFulfillmentDirectory fulfillment,
         IReturnDirectory returnDirectory,
         IReturnEligibilityEvaluator eligibility,
@@ -111,7 +108,6 @@ public sealed class AdminOrderOperationsComposer
         ShippingMethodsOptions? shippingMethods = null)
     {
         _orders = orders;
-        _returns = returns;
         _fulfillment = fulfillment;
         _returnDirectory = returnDirectory;
         _eligibility = eligibility;
@@ -142,11 +138,10 @@ public sealed class AdminOrderOperationsComposer
         var memberships = await _fulfillment.GetActiveMembershipByShipmentIdsAsync(allShipmentIds, cancellationToken);
         var membershipByShipment = memberships.ToDictionary(x => x.ShipmentId);
         var sellerOrderIds = group.SellerOrders.Select(x => x.SellerOrderId).ToList();
-        var returns = await _returns.ReturnRequests.AsNoTracking()
-            .Where(x => sellerOrderIds.Contains(x.SellerOrderId))
+        var returns = (await _returnDirectory.ListBySellerOrderIdsAsync(sellerOrderIds, cancellationToken))
             .OrderByDescending(x => x.CreatedAt)
             .Take(200)
-            .ToListAsync(cancellationToken);
+            .ToList();
 
         var eligibility = new List<ReturnEligibilityResult>();
         var actions = new List<AdminOrderOperationAction>();
@@ -425,7 +420,8 @@ public sealed class AdminOrderOperationsComposer
             var mapped = MapFulfillmentException(ex.Message);
             if (mapped.Code == "order.operation.failed")
             {
-                mapped = ReturnErrorMapper.Map(ex.Message);
+                var semantic = ReturnSemanticMapper.MapException(ex);
+                mapped = (semantic.Code, semantic.Code);
             }
 
             throw new PlatformHttpException(400, mapped.Fa, mapped.Code);
@@ -436,7 +432,7 @@ public sealed class AdminOrderOperationsComposer
         List<AdminOrderOperationAction> actions,
         SellerOrder order,
         FulfillmentSnapshot? fulfillment,
-        IReadOnlyList<ReturnRequest> returns,
+        IReadOnlyList<ReturnSnapshot> returns,
         ReturnEligibilityResult eligibility,
         EffectiveAccessDto effective,
         IReadOnlyDictionary<Guid, ActivePackageMembershipSnapshot> membershipByShipment)
@@ -1318,7 +1314,7 @@ public sealed class AdminOrderOperationsComposer
         List<AdminOrderOperationAction> actions,
         PaymentOperationalSnapshot? payment,
         IReadOnlyList<FulfillmentSnapshot> fulfillments,
-        IReadOnlyList<ReturnRequest> returns,
+        IReadOnlyList<ReturnSnapshot> returns,
         EffectiveAccessDto effective,
         bool blockedBySellerPayout,
         OrderSupplyStatusKind supplyStatus)
@@ -1480,7 +1476,7 @@ public sealed class AdminOrderOperationsComposer
         List<AdminOrderOperationAction> actions,
         CheckoutGroup group,
         IReadOnlyList<FulfillmentSnapshot> fulfillments,
-        IReadOnlyList<ReturnRequest> returns,
+        IReadOnlyList<ReturnSnapshot> returns,
         EffectiveAccessDto effective,
         bool blockedBySellerPayout,
         PaymentStatus? paymentStatus)
@@ -1516,9 +1512,7 @@ public sealed class AdminOrderOperationsComposer
         _ = actorUserId;
         var fulfillments = await _fulfillment.ListForCheckoutAsync(group.CheckoutId, cancellationToken);
         var sellerOrderIds = group.SellerOrders.Select(x => x.SellerOrderId).ToList();
-        var returns = await _returns.ReturnRequests.AsNoTracking()
-            .Where(x => sellerOrderIds.Contains(x.SellerOrderId))
-            .ToListAsync(cancellationToken);
+        var returns = await _returnDirectory.ListBySellerOrderIdsAsync(sellerOrderIds, cancellationToken);
         var blockedBySellerPayout = await HasSellerPayoutRestoreBlockAsync(sellerOrderIds, cancellationToken);
         var payment = await _payments.GetLatestOperationalForCheckoutAsync(group.CheckoutId, cancellationToken);
         if (!CanRestoreCancelledOrder(group, fulfillments, returns, blockedBySellerPayout, payment?.Status))
@@ -1596,9 +1590,9 @@ public sealed class AdminOrderOperationsComposer
         var payment = await _payments.GetLatestOperationalForCheckoutAsync(checkoutId, cancellationToken)
             ?? throw new PlatformHttpException(400, "پرداختی برای بازگردانی پیدا نشد.", "payment.missing");
         var fulfillments = await _fulfillment.ListForCheckoutAsync(checkoutId, cancellationToken);
-        var returns = await _returns.ReturnRequests.AsNoTracking()
-            .Where(x => x.CheckoutId == checkoutId)
-            .ToListAsync(cancellationToken);
+        var sellerOrderIds = (await LoadCheckoutAsync(checkoutId, cancellationToken))?.SellerOrders.Select(x => x.SellerOrderId).ToList()
+            ?? [];
+        var returns = await _returnDirectory.ListBySellerOrderIdsAsync(sellerOrderIds, cancellationToken);
         if (HasIrreversibleFinanceBlock(fulfillments, returns))
         {
             throw new PlatformHttpException(
@@ -1626,9 +1620,7 @@ public sealed class AdminOrderOperationsComposer
             ?? throw new PlatformHttpException(400, "پرداختی برای برگشت تأیید پیدا نشد.", "payment.missing");
         var fulfillments = await _fulfillment.ListForCheckoutAsync(checkoutId, cancellationToken);
         var sellerOrderIds = group.SellerOrders.Select(x => x.SellerOrderId).ToList();
-        var returns = await _returns.ReturnRequests.AsNoTracking()
-            .Where(x => sellerOrderIds.Contains(x.SellerOrderId) || x.CheckoutId == checkoutId)
-            .ToListAsync(cancellationToken);
+        var returns = await _returnDirectory.ListBySellerOrderIdsAsync(sellerOrderIds, cancellationToken);
         if (HasIrreversibleFinanceBlock(fulfillments, returns))
         {
             throw new PlatformHttpException(
@@ -1851,14 +1843,14 @@ public sealed class AdminOrderOperationsComposer
         fulfillments.Any(HasDispatchedQuantity);
 
     internal static bool HasCompletedRefund(
-        IReadOnlyList<ReturnRequest> returns,
+        IReadOnlyList<ReturnSnapshot> returns,
         PaymentStatus? paymentStatus = null) =>
         returns.Any(x => x.Status == ReturnRequestStatus.Completed)
         || paymentStatus == PaymentStatus.Refunded;
 
     internal static bool HasIrreversibleFinanceBlock(
         IReadOnlyList<FulfillmentSnapshot> fulfillments,
-        IReadOnlyList<ReturnRequest> returns,
+        IReadOnlyList<ReturnSnapshot> returns,
         PaymentStatus? paymentStatus = null) =>
         HasDispatchedOrDelivered(fulfillments) || HasCompletedRefund(returns, paymentStatus);
 
@@ -1871,7 +1863,7 @@ public sealed class AdminOrderOperationsComposer
     internal static bool CanRestoreCancelledOrder(
         CheckoutGroup group,
         IReadOnlyList<FulfillmentSnapshot> fulfillments,
-        IReadOnlyList<ReturnRequest> returns,
+        IReadOnlyList<ReturnSnapshot> returns,
         bool blockedBySellerPayout = false,
         PaymentStatus? paymentStatus = null)
     {
@@ -1888,7 +1880,7 @@ public sealed class AdminOrderOperationsComposer
     internal static string RestoreForbiddenCode(
         CheckoutGroup group,
         IReadOnlyList<FulfillmentSnapshot> fulfillments,
-        IReadOnlyList<ReturnRequest> returns,
+        IReadOnlyList<ReturnSnapshot> returns,
         bool blockedBySellerPayout = false,
         PaymentStatus? paymentStatus = null)
     {
@@ -1930,7 +1922,7 @@ public sealed class AdminOrderOperationsComposer
     internal static string RestoreForbiddenMessage(
         CheckoutGroup group,
         IReadOnlyList<FulfillmentSnapshot> fulfillments,
-        IReadOnlyList<ReturnRequest> returns,
+        IReadOnlyList<ReturnSnapshot> returns,
         bool blockedBySellerPayout = false,
         PaymentStatus? paymentStatus = null) =>
         RestoreCodeToFa(RestoreForbiddenCode(group, fulfillments, returns, blockedBySellerPayout, paymentStatus));

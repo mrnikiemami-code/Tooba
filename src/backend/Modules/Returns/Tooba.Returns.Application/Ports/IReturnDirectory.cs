@@ -3,6 +3,8 @@ using Tooba.Returns.Domain.ValueObjects;
 
 namespace Tooba.Returns.Application.Ports;
 
+/// <summary>ردیف سبک وضعیت مرجوعی برای overlay گرید سفارش.</summary>
+public sealed record ReturnStatusOverlayRow(Guid SellerOrderId, ReturnRequestStatus Status);
 
 /// <summary>
 /// ارکستراسیون مرجوعی.
@@ -32,6 +34,14 @@ public interface IReturnDirectory
     /// <summary>فهرست همه درخواست‌ها برای admin.</summary>
     Task<IReadOnlyList<ReturnSnapshot>> ListAllAsync(CancellationToken cancellationToken);
 
+    /// <summary>درخواست‌های چند SellerOrder برای پنل Admin (بدون DbContext در Host).</summary>
+    Task<IReadOnlyList<ReturnSnapshot>> ListBySellerOrderIdsAsync(
+        IReadOnlyList<Guid> sellerOrderIds,
+        CancellationToken cancellationToken);
+
+    /// <summary>وضعیت‌های مرجوعی برای overlay گرید سفارش Admin.</summary>
+    Task<IReadOnlyList<ReturnStatusOverlayRow>> ListStatusOverlayAsync(CancellationToken cancellationToken);
+
     /// <summary>درخواست را تأیید و refund را آغاز می‌کند.</summary>
     Task<ReturnSnapshot> ApproveAsync(ApproveReturnCommand command, CancellationToken cancellationToken);
 
@@ -40,4 +50,13 @@ public interface IReturnDirectory
 
     /// <summary>refund شکست‌خورده را دوباره تلاش می‌کند (admin).</summary>
     Task<ReturnSnapshot> RetryRefundAsync(RetryRefundCommand command, CancellationToken cancellationToken);
+}
+
+/// <summary>Query port صف کار Admin returns (جدا از directory ارکستراسیون).</summary>
+public interface IAdminReturnGridQuery
+{
+    /// <summary>صفحه‌بندی DB-native صف کار مرجوعی.</summary>
+    Task<BuildingBlocks.Grid.GridPageResponse<AdminReturnWorkQueueRow>> QueryAsync(
+        BuildingBlocks.Grid.GridQueryRequest request,
+        CancellationToken cancellationToken);
 }

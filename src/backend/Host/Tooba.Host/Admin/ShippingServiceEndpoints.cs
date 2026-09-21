@@ -4,7 +4,7 @@ using Tooba.BuildingBlocks;
 using Tooba.Fulfillment.Application.Ports;
 using Tooba.Fulfillment.Application.Models;
 using Tooba.Fulfillment.Application.Shipping;
-using Tooba.Fulfillment.Infrastructure.Persistence;
+
 using Tooba.Localization.Application;
 
 namespace Tooba.Host.Admin;
@@ -85,7 +85,7 @@ public static class ShippingServiceEndpoints
     }
 
     private static async Task<IResult> ListAsync(
-        FulfillmentDbContext db,
+        IShippingCatalogReader catalog,
         ILanguageDirectory languages,
         ISender sender,
         HttpRequest request,
@@ -102,26 +102,11 @@ public static class ShippingServiceEndpoints
                 request, session, tenant, guard, environment, cancellationToken);
             await sender.Send(new EnsureShippingCatalogSeedCommand(), cancellationToken);
             var langId = await ResolveLanguageIdAsync(languages, language, cancellationToken);
-            var services = await db.ShippingServices.AsNoTracking()
-                .OrderBy(x => x.SortOrder).ThenBy(x => x.Code)
-                .ToListAsync(cancellationToken);
-            var serviceIds = services.Select(x => x.ShippingServiceId).ToArray();
-            var translations = await db.ShippingServiceTranslations.AsNoTracking()
-                .Where(x => serviceIds.Contains(x.ShippingServiceId))
-                .ToListAsync(cancellationToken);
-            var options = await db.ShippingServiceOptions.AsNoTracking()
-                .Where(x => serviceIds.Contains(x.ShippingServiceId))
-                .ToListAsync(cancellationToken);
-            var byService = translations.GroupBy(x => x.ShippingServiceId)
-                .ToDictionary(g => g.Key, g => g.ToList());
-            var optionsByService = options.GroupBy(x => x.ShippingServiceId)
-                .ToDictionary(g => g.Key, g => g.ToList());
+            var services = await catalog.ListAsync(cancellationToken);
             var items = services.Select(s =>
             {
-                byService.TryGetValue(s.ShippingServiceId, out var rows);
-                var picked = rows?.FirstOrDefault(r => r.LanguageId == langId) ?? rows?.FirstOrDefault();
-                optionsByService.TryGetValue(s.ShippingServiceId, out var opts);
-                opts ??= [];
+                var picked = s.Translations.FirstOrDefault(r => r.LanguageId == langId)
+                    ?? s.Translations.FirstOrDefault();
                 return new ShippingServiceListItem(
                     s.ShippingServiceId,
                     s.Code,
@@ -131,8 +116,8 @@ public static class ShippingServiceEndpoints
                     picked?.Name ?? s.Code,
                     s.IsActive,
                     s.SortOrder,
-                    opts.Count,
-                    opts.Count(o => o.IsActive));
+                    s.Options.Count,
+                    s.Options.Count(o => o.IsActive));
             }).ToList();
             return Results.Json(items);
         }
@@ -144,7 +129,7 @@ public static class ShippingServiceEndpoints
 
     private static async Task<IResult> GetAsync(
         Guid serviceId,
-        FulfillmentDbContext db,
+        IShippingCatalogReader catalog,
         HttpRequest request,
         CurrentAuthenticatedSession session,
         ICurrentTenant tenant,
@@ -156,7 +141,7 @@ public static class ShippingServiceEndpoints
         {
             await AdminPanelAccess.RequireAuthorizedAsync(
                 request, session, tenant, guard, environment, cancellationToken);
-            var detail = await LoadDetailAsync(db, serviceId, cancellationToken);
+            var detail = await LoadDetailAsync(catalog, serviceId, cancellationToken);
             return detail is null
                 ? Results.Json(new { title = "not found", errorCode = "shipping_service.not_found" }, statusCode: 404)
                 : Results.Json(detail);
@@ -170,7 +155,7 @@ public static class ShippingServiceEndpoints
     private static async Task<IResult> CreateAsync(
         ShippingServiceWriteRequest body,
         ISender sender,
-        FulfillmentDbContext db,
+        IShippingCatalogReader catalog,
         HttpRequest request,
         CurrentAuthenticatedSession session,
         ICurrentTenant tenant,
@@ -183,7 +168,7 @@ public static class ShippingServiceEndpoints
             await AdminPanelAccess.RequireAuthorizedAsync(
                 request, session, tenant, guard, environment, cancellationToken);
             var id = await sender.Send(new CreateShippingServiceCommand(ToModel(body)), cancellationToken);
-            return Results.Json(await LoadDetailAsync(db, id, cancellationToken));
+            return Results.Json(await LoadDetailAsync(catalog, id, cancellationToken));
         }
         catch (PlatformHttpException ex)
         {
@@ -199,7 +184,7 @@ public static class ShippingServiceEndpoints
         Guid serviceId,
         ShippingServiceWriteRequest body,
         ISender sender,
-        FulfillmentDbContext db,
+        IShippingCatalogReader catalog,
         HttpRequest request,
         CurrentAuthenticatedSession session,
         ICurrentTenant tenant,
@@ -212,7 +197,7 @@ public static class ShippingServiceEndpoints
             await AdminPanelAccess.RequireAuthorizedAsync(
                 request, session, tenant, guard, environment, cancellationToken);
             await sender.Send(new UpdateShippingServiceCommand(serviceId, ToModel(body)), cancellationToken);
-            return Results.Json(await LoadDetailAsync(db, serviceId, cancellationToken));
+            return Results.Json(await LoadDetailAsync(catalog, serviceId, cancellationToken));
         }
         catch (PlatformHttpException ex)
         {
@@ -271,7 +256,7 @@ public static class ShippingServiceEndpoints
 
     /// <summary>پر کردن درخت روش ارسال برای مودال ایجاد مرسوله.</summary>
     public static async Task<IReadOnlyList<object>> ListEnabledMethodsTreeAsync(
-        FulfillmentDbContext db,
+        IShippingCatalogReader catalog,
         ILanguageDirectory languages,
         ShippingMethodsOptions options,
         ISender sender,
@@ -284,11 +269,11 @@ public static class ShippingServiceEndpoints
             .Select(x => x.Code)
             .ToHashSet(StringComparer.OrdinalIgnoreCase);
 
-        var services = await db.ShippingServices.AsNoTracking()
-            .Where(x => x.IsActive)
+        var catalogRows = await catalog.ListAsync(cancellationToken);
+        var services = catalogRows
+            .Where(x => x.IsActive && enabledCodes.Contains(x.Code))
             .OrderBy(x => x.SortOrder).ThenBy(x => x.Code)
-            .ToListAsync(cancellationToken);
-        services = services.Where(x => enabledCodes.Contains(x.Code)).ToList();
+            .ToList();
         if (services.Count == 0)
         {
             return ShippingMethodRegistry.Enabled(options)
@@ -305,34 +290,15 @@ public static class ShippingServiceEndpoints
                 .ToList();
         }
 
-        var serviceIds = services.Select(x => x.ShippingServiceId).ToArray();
-        var translations = await db.ShippingServiceTranslations.AsNoTracking()
-            .Where(x => serviceIds.Contains(x.ShippingServiceId)).ToListAsync(cancellationToken);
-        var opts = await db.ShippingServiceOptions.AsNoTracking()
-            .Where(x => serviceIds.Contains(x.ShippingServiceId) && x.IsActive)
-            .OrderBy(x => x.SortOrder).ThenBy(x => x.Code)
-            .ToListAsync(cancellationToken);
-        var optionIds = opts.Select(x => x.ShippingServiceOptionId).ToArray();
-        var optionTranslations = await db.ShippingServiceOptionTranslations.AsNoTracking()
-            .Where(x => optionIds.Contains(x.ShippingServiceOptionId)).ToListAsync(cancellationToken);
-
-        var tByService = translations.GroupBy(x => x.ShippingServiceId).ToDictionary(g => g.Key, g => g.ToList());
-        var oByService = opts.GroupBy(x => x.ShippingServiceId).ToDictionary(g => g.Key, g => g.ToList());
-        var otByOption = optionTranslations.GroupBy(x => x.ShippingServiceOptionId).ToDictionary(g => g.Key, g => g.ToList());
-
         return services.Select(s =>
         {
-            tByService.TryGetValue(s.ShippingServiceId, out var rows);
-            var name = rows?.FirstOrDefault(r => r.LanguageId == langId)?.Name
-                ?? rows?.FirstOrDefault()?.Name
+            var name = s.Translations.FirstOrDefault(r => r.LanguageId == langId)?.Name
+                ?? s.Translations.FirstOrDefault()?.Name
                 ?? s.Code;
-            oByService.TryGetValue(s.ShippingServiceId, out var children);
-            children ??= [];
-            var mappedOptions = children.Select(o =>
+            var mappedOptions = s.Options.Where(o => o.IsActive).Select(o =>
             {
-                otByOption.TryGetValue(o.ShippingServiceOptionId, out var otRows);
-                var optionName = otRows?.FirstOrDefault(r => r.LanguageId == langId)?.Name
-                    ?? otRows?.FirstOrDefault()?.Name
+                var optionName = o.Translations.FirstOrDefault(r => r.LanguageId == langId)?.Name
+                    ?? o.Translations.FirstOrDefault()?.Name
                     ?? o.Code;
                 return new { code = o.Code, labelFa = optionName, name = optionName };
             }).ToList();
@@ -366,28 +332,15 @@ public static class ShippingServiceEndpoints
                 o.Translations.Select(t => new ShippingServiceOptionTranslationWriteModel(t.LanguageId, t.Name)).ToList())).ToList());
 
     private static async Task<ShippingServiceDetail?> LoadDetailAsync(
-        FulfillmentDbContext db,
+        IShippingCatalogReader catalog,
         Guid serviceId,
         CancellationToken cancellationToken)
     {
-        var entity = await db.ShippingServices.AsNoTracking()
-            .FirstOrDefaultAsync(x => x.ShippingServiceId == serviceId, cancellationToken);
+        var entity = await catalog.GetAsync(serviceId, cancellationToken);
         if (entity is null)
         {
             return null;
         }
-
-        var translations = await db.ShippingServiceTranslations.AsNoTracking()
-            .Where(x => x.ShippingServiceId == serviceId).ToListAsync(cancellationToken);
-        var options = await db.ShippingServiceOptions.AsNoTracking()
-            .Where(x => x.ShippingServiceId == serviceId)
-            .OrderBy(x => x.SortOrder).ThenBy(x => x.Code)
-            .ToListAsync(cancellationToken);
-        var optionIds = options.Select(x => x.ShippingServiceOptionId).ToArray();
-        var optionTranslations = await db.ShippingServiceOptionTranslations.AsNoTracking()
-            .Where(x => optionIds.Contains(x.ShippingServiceOptionId)).ToListAsync(cancellationToken);
-        var otByOption = optionTranslations.GroupBy(x => x.ShippingServiceOptionId)
-            .ToDictionary(g => g.Key, g => g.ToList());
 
         return new ShippingServiceDetail(
             entity.ShippingServiceId,
@@ -397,18 +350,14 @@ public static class ShippingServiceEndpoints
             entity.ColorKey,
             entity.IsActive,
             entity.SortOrder,
-            translations.Select(t => new ShippingServiceTranslationWrite(t.LanguageId, t.Name, t.Description)).ToList(),
-            options.Select(o =>
-            {
-                otByOption.TryGetValue(o.ShippingServiceOptionId, out var rows);
-                rows ??= [];
-                return new ShippingServiceOptionDetail(
+            entity.Translations.Select(t => new ShippingServiceTranslationWrite(t.LanguageId, t.Name, t.Description)).ToList(),
+            entity.Options.Select(o =>
+                new ShippingServiceOptionDetail(
                     o.ShippingServiceOptionId,
                     o.Code,
                     o.IsActive,
                     o.SortOrder,
-                    rows.Select(r => new ShippingServiceOptionTranslationWrite(r.LanguageId, r.Name)).ToList());
-            }).ToList());
+                    o.Translations.Select(r => new ShippingServiceOptionTranslationWrite(r.LanguageId, r.Name)).ToList())).ToList());
     }
 
     private static async Task<Guid> ResolveLanguageIdAsync(

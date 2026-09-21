@@ -29,7 +29,63 @@ public sealed class PartyDirectory : IPartyDirectory, IPartyLookupGateway, IPart
     {
         var party = await _db.Parties.AsNoTracking()
             .SingleOrDefaultAsync(x => x.PartyId == partyId, cancellationToken);
-        return party is null ? null : new PartyLookupResult(party.PartyId, party.Kind.ToString());
+        return party is null ? null : new PartyLookupResult(party.PartyId, party.Kind.ToString(), party.DisplayName);
+    }
+
+    /// <inheritdoc />
+    async Task<IReadOnlyDictionary<Guid, string>> IPartyLookup.GetDisplayNamesAsync(
+        IReadOnlyList<Guid> partyIds,
+        CancellationToken cancellationToken)
+    {
+        if (partyIds.Count == 0)
+        {
+            return new Dictionary<Guid, string>();
+        }
+
+        var rows = await _db.Parties.AsNoTracking()
+            .Where(x => partyIds.Contains(x.PartyId))
+            .Select(x => new { x.PartyId, x.DisplayName })
+            .ToListAsync(cancellationToken);
+        return rows.ToDictionary(x => x.PartyId, x => x.DisplayName);
+    }
+
+    /// <inheritdoc />
+    async Task<IReadOnlyList<Guid>> IPartyLookup.SearchIdsByDisplayNameAsync(
+        string term,
+        int take,
+        CancellationToken cancellationToken)
+    {
+        var normalized = term.Trim().ToLower();
+        return await _db.Parties.AsNoTracking()
+            .Where(p => p.DisplayName.ToLower().Contains(normalized))
+            .Select(p => p.PartyId)
+            .Take(take)
+            .ToListAsync(cancellationToken);
+    }
+
+    /// <inheritdoc />
+    async Task<IReadOnlyList<Guid>> IPartyLookup.FilterIdsByDisplayNameAsync(
+        string? op,
+        string? value,
+        IReadOnlyList<string>? values,
+        int take,
+        CancellationToken cancellationToken)
+    {
+        var operatorKind = (op ?? string.Empty).Trim();
+        var text = (value ?? string.Empty).Trim().ToLowerInvariant();
+        IQueryable<BusinessParty> q = _db.Parties.AsNoTracking();
+        q = operatorKind switch
+        {
+            "blank" => q.Where(x => x.DisplayName == null || x.DisplayName.Trim() == ""),
+            "notBlank" => q.Where(x => x.DisplayName != null && x.DisplayName.Trim() != ""),
+            "equals" => q.Where(x => x.DisplayName.ToLower() == text),
+            "notEqual" => q.Where(x => x.DisplayName.ToLower() != text),
+            "startsWith" => q.Where(x => x.DisplayName.ToLower().StartsWith(text)),
+            "endsWith" => q.Where(x => x.DisplayName.ToLower().EndsWith(text)),
+            "notContains" => q.Where(x => !x.DisplayName.ToLower().Contains(text)),
+            _ => q.Where(x => x.DisplayName.ToLower().Contains(text)),
+        };
+        return await q.Select(x => x.PartyId).Take(take).ToListAsync(cancellationToken);
     }
 
     /// <inheritdoc />

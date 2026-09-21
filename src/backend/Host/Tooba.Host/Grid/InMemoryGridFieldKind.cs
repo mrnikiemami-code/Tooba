@@ -1,4 +1,4 @@
-namespace Tooba.Host.Grid;
+﻿namespace Tooba.Host.Grid;
 
 /// <summary>نوع فیلد برای اعمال فیلتر/مرتب‌سازی in-memory گرید Admin.</summary>
 public enum InMemoryGridFieldKind
