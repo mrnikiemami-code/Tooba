@@ -1,4 +1,5 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
+using Tooba.BuildingBlocks;
 using Tooba.Promotion.Application;
 using Tooba.Promotion.Domain;
 using Tooba.Promotion.Infrastructure.Persistence;
@@ -11,23 +12,33 @@ namespace Tooba.Promotion.Infrastructure;
 public sealed class MerchandisingCampaignDirectory : IMerchandisingCampaignDirectory
 {
     private readonly PromotionDbContext _db;
+    private readonly IClock _clock;
+    private readonly IIdGenerator _ids;
 
     /// <summary>
     /// دایرکتوری را به schema promotion وصل می‌کند.
     /// </summary>
-    public MerchandisingCampaignDirectory(PromotionDbContext db) => _db = db;
+    public MerchandisingCampaignDirectory(
+        PromotionDbContext db,
+        IClock? clock = null,
+        IIdGenerator? ids = null)
+    {
+        _db = db;
+        _clock = clock ?? new SystemUtcClock();
+        _ids = ids ?? new UuidV7IdGenerator();
+    }
 
     /// <inheritdoc />
     public async Task<MerchandisingPromotionTypeReference> EnsureAmazingTypeSeededAsync(
         CancellationToken cancellationToken)
     {
-        var now = DateTimeOffset.UtcNow;
+        var now = _clock.UtcNow;
         var existing = await _db.MerchandisingPromotionTypes
             .SingleOrDefaultAsync(x => x.Code == MerchandisingPromotionType.AmazingCode, cancellationToken);
 
         if (existing is null)
         {
-            existing = MerchandisingPromotionType.CreateSystem(
+            existing = MerchandisingPromotionType.CreateSystem(_ids.NewId(),
                 MerchandisingPromotionType.AmazingCode,
                 sortOrder: 100,
                 now);
@@ -66,12 +77,13 @@ public sealed class MerchandisingCampaignDirectory : IMerchandisingCampaignDirec
         }
 
         var campaign = MerchandisingCampaign.Create(
+            _ids.NewId(),
             promotionTypeId,
             storeId,
             startAt,
             endAt,
             priority,
-            DateTimeOffset.UtcNow);
+            _clock.UtcNow);
         _db.MerchandisingCampaigns.Add(campaign);
         await _db.SaveChangesAsync(cancellationToken);
         return ToCampaignReference(campaign);
@@ -86,7 +98,7 @@ public sealed class MerchandisingCampaignDirectory : IMerchandisingCampaignDirec
         CancellationToken cancellationToken)
     {
         var campaign = await RequireCampaignAsync(campaignId, cancellationToken);
-        campaign.UpdateWindow(startAt, endAt, priority, DateTimeOffset.UtcNow);
+        campaign.UpdateWindow(startAt, endAt, priority, _clock.UtcNow);
         await _db.SaveChangesAsync(cancellationToken);
         return ToCampaignReference(campaign);
     }
@@ -95,7 +107,7 @@ public sealed class MerchandisingCampaignDirectory : IMerchandisingCampaignDirec
     public async Task PublishCampaignAsync(Guid campaignId, CancellationToken cancellationToken)
     {
         var campaign = await RequireCampaignAsync(campaignId, cancellationToken);
-        campaign.Publish(DateTimeOffset.UtcNow);
+        campaign.Publish(_clock.UtcNow);
         await _db.SaveChangesAsync(cancellationToken);
     }
 
@@ -103,7 +115,7 @@ public sealed class MerchandisingCampaignDirectory : IMerchandisingCampaignDirec
     public async Task ArchiveCampaignAsync(Guid campaignId, CancellationToken cancellationToken)
     {
         var campaign = await RequireCampaignAsync(campaignId, cancellationToken);
-        campaign.Archive(DateTimeOffset.UtcNow);
+        campaign.Archive(_clock.UtcNow);
         await _db.SaveChangesAsync(cancellationToken);
     }
 
@@ -163,10 +175,11 @@ public sealed class MerchandisingCampaignDirectory : IMerchandisingCampaignDirec
         }
 
         var membership = MerchandisingCampaignOffer.Create(
+            _ids.NewId(),
             campaignId,
             sellerOfferId,
             sortOrder,
-            DateTimeOffset.UtcNow);
+            _clock.UtcNow);
         _db.MerchandisingCampaignOffers.Add(membership);
         await _db.SaveChangesAsync(cancellationToken);
         return ToMemberReference(membership);
@@ -284,19 +297,19 @@ public sealed class MerchandisingCampaignDirectory : IMerchandisingCampaignDirec
             throw new InvalidOperationException("گونهٔ مرچندایزینگ یافت نشد.");
         }
 
-        var now = DateTimeOffset.UtcNow;
+        var now = _clock.UtcNow;
         var existing = await _db.MerchandisingCampaigns
             .SingleOrDefaultAsync(x => x.Id == campaignId, cancellationToken);
         if (existing is null)
         {
             existing = MerchandisingCampaign.Create(
+                campaignId,
                 promotionTypeId,
                 storeId,
                 startAt,
                 endAt,
                 priority,
-                now,
-                campaignId);
+                now);
             existing.ForceLifecycleForSeed(lifecycle, now);
             _db.MerchandisingCampaigns.Add(existing);
         }
@@ -344,7 +357,7 @@ public sealed class MerchandisingCampaignDirectory : IMerchandisingCampaignDirec
         var byOffer = members
             .Where(x => desiredSet.Contains(x.SellerOfferId))
             .ToDictionary(x => x.SellerOfferId);
-        var now = DateTimeOffset.UtcNow;
+        var now = _clock.UtcNow;
         for (var i = 0; i < desired.Length; i++)
         {
             var offerId = desired[i];
@@ -355,7 +368,7 @@ public sealed class MerchandisingCampaignDirectory : IMerchandisingCampaignDirec
             else
             {
                 _db.MerchandisingCampaignOffers.Add(
-                    MerchandisingCampaignOffer.Create(campaignId, offerId, i, now));
+                    MerchandisingCampaignOffer.Create(_ids.NewId(), campaignId, offerId, i, now));
             }
         }
 

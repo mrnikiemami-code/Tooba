@@ -15,7 +15,7 @@ public sealed class QuantityDecimalRegressionTests
     public void Inventory_fractional_reserve_keeps_available()
     {
         var now = DateTimeOffset.UtcNow;
-        var position = StockPosition.Open(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), now);
+        var position = StockPosition.Open(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), now);
         position.SyncQuantities(100m, 1.25m, now);
         Assert.Equal(100m, position.OnHand);
         Assert.Equal(1.25m, position.Reserved);

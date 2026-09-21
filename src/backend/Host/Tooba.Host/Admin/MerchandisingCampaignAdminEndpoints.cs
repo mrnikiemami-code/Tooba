@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Tooba.BuildingBlocks;
 using Tooba.Catalog.Domain;
 using Tooba.Catalog.Infrastructure.Persistence;
-using Tooba.Inventory.Application;
+using Tooba.Inventory.Contracts;
 using Tooba.Offer.Contracts.Dtos;
 using Tooba.Offer.Contracts.Ports;
 using Tooba.Party.Infrastructure.Persistence;

@@ -1,10 +1,10 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using System.Security.Cryptography;
 using System.Text;
 using Tooba.Catalog.Application;
 using Tooba.Catalog.Domain;
 using Tooba.Catalog.Infrastructure.Persistence;
-using Tooba.Inventory.Infrastructure.Persistence;
+using Tooba.Inventory.Contracts;
 using Tooba.Offer.Contracts.Dtos;
 using Tooba.Offer.Contracts.Ports;
 using Tooba.Party.Application;
@@ -32,7 +32,7 @@ public sealed class StorefrontComposer
     private readonly CatalogDbContext _catalog;
     private readonly IOfferQueryGateway _offers;
     private readonly IPriceQueryGateway _prices;
-    private readonly InventoryDbContext _inventory;
+    private readonly IInventoryQueryGateway _inventory;
     private readonly ITaxQueryGateway _tax;
     private readonly IPartyLookupGateway _parties;
     private readonly IPromotionEvaluator _promotions;
@@ -47,7 +47,7 @@ public sealed class StorefrontComposer
         CatalogDbContext catalog,
         IOfferQueryGateway offers,
         IPriceQueryGateway prices,
-        InventoryDbContext inventory,
+        IInventoryQueryGateway inventory,
         ITaxQueryGateway tax,
         IPartyLookupGateway parties,
         IPromotionEvaluator promotions,
@@ -866,9 +866,7 @@ public sealed class StorefrontComposer
         }
 
         var prices = await _prices.ListByOfferIdsAsync(offerIds, cancellationToken);
-        var positions = await _inventory.Positions.AsNoTracking()
-            .Where(x => offerIds.Contains(x.OfferId))
-            .ToListAsync(cancellationToken);
+        var positions = await _inventory.ListPositionsByOfferIdsAsync(offerIds, cancellationToken);
         var taxRows = await _tax.ListClassificationsByOfferIdsAsync(offerIds, cancellationToken);
         var taxCats = taxRows.Count == 0
             ? []
@@ -890,7 +888,7 @@ public sealed class StorefrontComposer
                 continue;
             }
 
-            var available = positions.Where(item => item.OfferId == offer.OfferId).Sum(item => item.OnHand - item.Reserved);
+            var available = positions.Where(item => item.OfferId == offer.OfferId).Sum(item => item.Available);
             var seller = await _parties.FindByIdAsync(offer.SellerPartyId, cancellationToken);
             var tax = taxRows.FirstOrDefault(row => row.OfferId == offer.OfferId);
             var taxLabel = tax is null

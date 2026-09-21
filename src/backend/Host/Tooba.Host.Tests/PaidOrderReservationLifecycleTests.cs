@@ -64,7 +64,7 @@ public sealed class PaidOrderReservationLifecycleTests : IAsyncLifetime
     public void CommitForPaidOrder_clears_expires_at_and_is_idempotent()
     {
         var now = DateTimeOffset.UtcNow;
-        var hold = StockReservation.Hold(Guid.NewGuid(), 1.25m, "cart", null, now, now.AddMinutes(30));
+        var hold = StockReservation.Hold(Guid.NewGuid(), Guid.NewGuid(), 1.25m, "cart", null, now, now.AddMinutes(30));
         Assert.NotNull(hold.ExpiresAt);
 
         hold.CommitForPaidOrder(now.AddSeconds(1));
@@ -85,7 +85,7 @@ public sealed class PaidOrderReservationLifecycleTests : IAsyncLifetime
         var now = DateTimeOffset.UtcNow;
         var cartExpiry = now.AddMinutes(30);
         var reviewExpiry = now.AddHours(24);
-        var hold = StockReservation.Hold(Guid.NewGuid(), 1.25m, "cart", null, now, cartExpiry);
+        var hold = StockReservation.Hold(Guid.NewGuid(), Guid.NewGuid(), 1.25m, "cart", null, now, cartExpiry);
         Assert.Equal(cartExpiry, hold.ExpiresAt);
 
         hold.PromoteForManualPaymentReview(reviewExpiry, now.AddSeconds(1));
@@ -103,7 +103,7 @@ public sealed class PaidOrderReservationLifecycleTests : IAsyncLifetime
     public void PromoteForManualPaymentReview_rejects_released_without_resurrect()
     {
         var now = DateTimeOffset.UtcNow;
-        var hold = StockReservation.Hold(Guid.NewGuid(), 1m, "cart", null, now, now.AddMinutes(30));
+        var hold = StockReservation.Hold(Guid.NewGuid(), Guid.NewGuid(), 1m, "cart", null, now, now.AddMinutes(30));
         hold.MoveTo(StockReservationStatus.Released, now.AddSeconds(1));
         var ex = Assert.Throws<InvalidOperationException>(() =>
             hold.PromoteForManualPaymentReview(now.AddHours(24), now.AddSeconds(2)));
@@ -114,7 +114,7 @@ public sealed class PaidOrderReservationLifecycleTests : IAsyncLifetime
     public void CommitForPaidOrder_rejects_released_without_resurrect()
     {
         var now = DateTimeOffset.UtcNow;
-        var hold = StockReservation.Hold(Guid.NewGuid(), 2m, "cart", null, now, now.AddMinutes(10));
+        var hold = StockReservation.Hold(Guid.NewGuid(), Guid.NewGuid(), 2m, "cart", null, now, now.AddMinutes(10));
         hold.MoveTo(StockReservationStatus.Released, now.AddSeconds(1));
 
         var ex = Assert.Throws<InvalidOperationException>(() => hold.CommitForPaidOrder(now.AddSeconds(2)));
@@ -127,7 +127,7 @@ public sealed class PaidOrderReservationLifecycleTests : IAsyncLifetime
     public void CommitForPaidOrder_rejects_consumed_without_resurrect()
     {
         var now = DateTimeOffset.UtcNow;
-        var hold = StockReservation.Hold(Guid.NewGuid(), 1m, "cart", null, now, now.AddMinutes(10));
+        var hold = StockReservation.Hold(Guid.NewGuid(), Guid.NewGuid(), 1m, "cart", null, now, now.AddMinutes(10));
         hold.MoveTo(StockReservationStatus.Consumed, now.AddSeconds(1));
 
         var ex = Assert.Throws<InvalidOperationException>(() => hold.CommitForPaidOrder(now.AddSeconds(2)));

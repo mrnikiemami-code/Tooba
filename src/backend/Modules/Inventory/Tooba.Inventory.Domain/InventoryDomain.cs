@@ -106,21 +106,26 @@ public sealed class InventoryLocation : IHasDomainEvents
     /// <summary>
     /// محل فعال می‌سازد. موجودی Offer را صفر نمی‌کند.
     /// </summary>
-    public static InventoryLocation Create(string code, string name, DateTimeOffset now)
+    public static InventoryLocation Create(Guid locationId, string code, string name, DateTimeOffset now)
     {
+        if (locationId == Guid.Empty)
+        {
+            throw new InvalidOperationException("inventory.location.id_required");
+        }
+
         if (string.IsNullOrWhiteSpace(code) || code.Trim().Length > 32)
         {
-            throw new InvalidOperationException("کد محل باید کوتاه و غیرخالی باشد.");
+            throw new InvalidOperationException("inventory.location.code_invalid");
         }
 
         if (string.IsNullOrWhiteSpace(name) || name.Trim().Length > 128)
         {
-            throw new InvalidOperationException("نام محل باید غیرخالی باشد.");
+            throw new InvalidOperationException("inventory.location.name_required");
         }
 
         return new InventoryLocation
         {
-            LocationId = UuidV7.New(),
+            LocationId = locationId,
             Code = code.Trim().ToUpperInvariant(),
             Name = name.Trim(),
             Status = InventoryLocationStatus.Active,
@@ -191,16 +196,21 @@ public sealed class StockPosition : IHasDomainEvents
     /// <summary>
     /// موقعیت خالی می‌سازد. قابل‌خرید بودن Offer را اعلام نمی‌کند.
     /// </summary>
-    public static StockPosition Open(Guid offerId, Guid catalogVariantId, Guid locationId, DateTimeOffset now)
+    public static StockPosition Open(
+        Guid stockItemId,
+        Guid offerId,
+        Guid catalogVariantId,
+        Guid locationId,
+        DateTimeOffset now)
     {
-        if (offerId == Guid.Empty || catalogVariantId == Guid.Empty || locationId == Guid.Empty)
+        if (stockItemId == Guid.Empty || offerId == Guid.Empty || catalogVariantId == Guid.Empty || locationId == Guid.Empty)
         {
-            throw new InvalidOperationException("Offer و گونه و محل باید شناسهٔ پایدار داشته باشند.");
+            throw new InvalidOperationException("inventory.position.ids_required");
         }
 
         var position = new StockPosition
         {
-            StockItemId = UuidV7.New(),
+            StockItemId = stockItemId,
             OfferId = offerId,
             CatalogVariantId = catalogVariantId,
             LocationId = locationId,
@@ -264,7 +274,7 @@ public sealed class StockPosition : IHasDomainEvents
     {
         if (onHand < 0 || reserved < 0 || reserved > onHand)
         {
-            throw new InvalidOperationException("OnHand و Reserved نمی‌توانند منفی باشند یا Reserved از OnHand بیشتر شود.");
+            throw new InvalidOperationException("inventory.position.quantity_invalid");
         }
     }
 }
@@ -323,6 +333,7 @@ public sealed class StockReservation
     /// رزرو Held می‌سازد.
     /// </summary>
     public static StockReservation Hold(
+        Guid reservationId,
         Guid stockItemId,
         decimal quantity,
         string? externalReference,
@@ -330,19 +341,24 @@ public sealed class StockReservation
         DateTimeOffset now,
         DateTimeOffset? expiresAt)
     {
+        if (reservationId == Guid.Empty || stockItemId == Guid.Empty)
+        {
+            throw new InvalidOperationException("inventory.reservation.id_required");
+        }
+
         if (quantity <= 0)
         {
-            throw new InvalidOperationException("مقدار رزرو باید مثبت باشد.");
+            throw new InvalidOperationException("inventory.reservation.quantity_invalid");
         }
 
         if (expiresAt is { } expiry && expiry <= now)
         {
-            throw new InvalidOperationException("مهلت رزرو باید بعد از زمان ایجاد باشد.");
+            throw new InvalidOperationException("inventory.reservation.expiry_invalid");
         }
 
         return new StockReservation
         {
-            ReservationId = UuidV7.New(),
+            ReservationId = reservationId,
             StockItemId = stockItemId,
             Quantity = quantity,
             Status = StockReservationStatus.Held,

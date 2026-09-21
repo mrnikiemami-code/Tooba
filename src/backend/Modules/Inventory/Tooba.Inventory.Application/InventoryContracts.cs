@@ -3,28 +3,6 @@ using Tooba.Inventory.Domain;
 namespace Tooba.Inventory.Application;
 
 /// <summary>
-/// خلاصهٔ موجودی یک محل. موجودیت EF نیست.
-/// </summary>
-public sealed record LocationAvailability(
-    Guid StockItemId,
-    Guid LocationId,
-    string LocationCode,
-    decimal OnHand,
-    decimal Reserved,
-    decimal Available);
-
-/// <summary>
-/// نتیجهٔ خواندن موجودی Offer در Tenant جاری. قابل‌خرید بودن را تضمین نمی‌کند.
-/// </summary>
-public sealed record InventoryAvailability(
-    Guid OfferId,
-    Guid CatalogVariantId,
-    decimal OnHand,
-    decimal Reserved,
-    decimal Available,
-    IReadOnlyList<LocationAvailability> Locations);
-
-/// <summary>
 /// نتیجهٔ رزرو. سبد خرید ساخته نمی‌شود.
 /// </summary>
 public sealed record ReservationReceipt(
@@ -34,24 +12,6 @@ public sealed record ReservationReceipt(
     decimal Quantity,
     StockReservationStatus Status,
     DateTimeOffset? ExpiresAt);
-
-/// <summary>
-/// درز خواندن موجودی بدون نشت EF.
-/// </summary>
-public interface IInventoryAvailabilityGateway
-{
-    /// <summary>
-    /// موجودی Offer را در پایگاه Tenant/Marketplace جاری جمع می‌کند.
-    /// </summary>
-    Task<InventoryAvailability?> GetAvailabilityAsync(Guid offerId, CancellationToken cancellationToken);
-
-    /// <summary>
-    /// موجودی چند Offer را در یک خواندن جمع می‌کند تا GET سبد N+1 نشود.
-    /// </summary>
-    Task<IReadOnlyDictionary<Guid, InventoryAvailability>> GetAvailabilityBatchAsync(
-        IReadOnlyCollection<Guid> offerIds,
-        CancellationToken cancellationToken);
-}
 
 /// <summary>
 /// درز نگهبان مجوز Inventory. ماتریس انبار اینجا نیست.

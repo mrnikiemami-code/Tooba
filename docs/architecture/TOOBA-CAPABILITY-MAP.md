@@ -68,6 +68,7 @@ Evidence files remain the deep-detail source; this map is the quick index.
 | Tax + Pricing reference batch | REFERENCE_BATCH_COMPLETE | TB-TMAR-REFBATCH-TP-001 |
 | Result Pattern Foundation + Offer Golden | RESULT_PATTERN_FOUNDATION_COMPLETE; Offer COMPLETE_REFERENCE_PATTERN with Result/ApiResponseFactory | TB-TMAR-FND-RESULT-001-R1 |
 | Tax + Pricing Result delta | REFERENCE_RESULT_DELTA_COMPLETE; Tax/Pricing COMPLETE_REFERENCE_PATTERN | TB-TMAR-REFBATCH-TP-RESULT-001 |
-| Next | TB-TMAR-NEXT-MODULE-BATCH-001. Checkout remains PAUSED_AT_SAFE_W5_CHECKPOINT. Frontend frozen. | — |
+| Inventory + Promotion batch | NEXT_REFERENCE_BATCH_COMPLETE; Inventory/Promotion COMPLETE_REFERENCE_PATTERN | TB-TMAR-NEXT-MODULE-BATCH-001 |
+| Next | TB-TMAR-NEXT-MODULE-BATCH-002. Checkout remains PAUSED_AT_SAFE_W5_CHECKPOINT. Frontend frozen. | — |
 
-Last Verified Task = TB-TMAR-REFBATCH-TP-RESULT-001
+Last Verified Task = TB-TMAR-NEXT-MODULE-BATCH-001

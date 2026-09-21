@@ -4,8 +4,8 @@ using Tooba.Catalog.Application;
 using Tooba.Catalog.Domain;
 using Tooba.Catalog.Infrastructure.Persistence;
 using Tooba.Inventory.Application;
+using Tooba.Inventory.Contracts;
 using Tooba.Inventory.Domain;
-using Tooba.Inventory.Infrastructure.Persistence;
 using Tooba.Offer.Application.Ports;
 using Tooba.Offer.Contracts.Dtos;
 using Tooba.Offer.Contracts.Ports;
@@ -190,7 +190,7 @@ internal static class CatalogAttributeSchemaDevelopmentBootstrap
         var prices = provider.GetRequiredService<IPriceDirectory>();
         var tax = provider.GetRequiredService<ITaxDirectory>();
         var inventory = provider.GetRequiredService<IInventoryDirectory>();
-        var inventoryDb = provider.GetRequiredService<InventoryDbContext>();
+        var inventoryQuery = provider.GetRequiredService<IInventoryQueryGateway>();
 
         var seller = await partyDb.Parties.AsNoTracking()
             .OrderBy(p => p.CreatedAt)
@@ -212,8 +212,7 @@ internal static class CatalogAttributeSchemaDevelopmentBootstrap
         var start = DateTimeOffset.Parse("2026-01-01T00:00:00Z");
         var amount = 12_500_000m;
         var locationCode = "WH-SCHEMA-MOBILE";
-        var location = await inventoryDb.Locations.AsNoTracking()
-            .SingleOrDefaultAsync(l => l.Code == locationCode, cancellationToken);
+        var location = await inventoryQuery.FindLocationByCodeAsync(locationCode, cancellationToken);
         var locationId = location?.LocationId
             ?? await inventory.CreateLocationAsync(locationCode, "انبار schema موبایل", cancellationToken);
 

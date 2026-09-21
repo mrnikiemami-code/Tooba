@@ -255,6 +255,7 @@ public sealed class PromotionDefinition : IHasDomainEvents
     /// پروموشن پیش‌نویس می‌سازد. منطق کمپین در کنترلر نیست.
     /// </summary>
     public static PromotionDefinition Create(
+        Guid promotionId,
         string name,
         int priority,
         DateTimeOffset effectiveFrom,
@@ -278,59 +279,64 @@ public sealed class PromotionDefinition : IHasDomainEvents
         decimal? minimumSubtotal,
         DateTimeOffset now)
     {
+        if (promotionId == Guid.Empty)
+        {
+            throw new InvalidOperationException("promotion.definition.id_required");
+        }
+
         if (string.IsNullOrWhiteSpace(name))
         {
-            throw new InvalidOperationException("نام پروموشن خالی نیست.");
+            throw new InvalidOperationException("promotion.definition.name_required");
         }
 
         if (effectiveTo is not null && effectiveTo <= effectiveFrom)
         {
-            throw new InvalidOperationException("پنجرهٔ اعتبار پروموشن نامعتبر است.");
+            throw new InvalidOperationException("promotion.definition.window_invalid");
         }
 
         if (discountKind == PromotionDiscountKind.PercentageOff)
         {
             if (percentageRate <= 0 || percentageRate > 1)
             {
-                throw new InvalidOperationException("نرخ درصدی باید کسری بین صفر و یک باشد.");
+                throw new InvalidOperationException("promotion.definition.percent_invalid");
             }
 
             if (fixedAmount != 0)
             {
-                throw new InvalidOperationException("پروموشن درصدی مبلغ ثابت ندارد.");
+                throw new InvalidOperationException("promotion.definition.percent_no_fixed");
             }
         }
         else
         {
             if (fixedAmount <= 0)
             {
-                throw new InvalidOperationException("مبلغ ثابت باید مثبت باشد.");
+                throw new InvalidOperationException("promotion.definition.fixed_amount_invalid");
             }
 
             if (string.IsNullOrWhiteSpace(fixedAmountCurrency))
             {
-                throw new InvalidOperationException("مبلغ ثابت بدون ارز اعمال نمی‌شود.");
+                throw new InvalidOperationException("promotion.definition.fixed_currency_required");
             }
 
             if (percentageRate != 0)
             {
-                throw new InvalidOperationException("پروموشن مبلغ ثابت نرخ درصد ندارد.");
+                throw new InvalidOperationException("promotion.definition.fixed_no_percent");
             }
         }
 
         if (minimumQuantity is <= 0)
         {
-            throw new InvalidOperationException("حداقل تعداد باید مثبت باشد.");
+            throw new InvalidOperationException("promotion.definition.min_qty_invalid");
         }
 
         if (minimumSubtotal is < 0)
         {
-            throw new InvalidOperationException("حداقل جمع منفی نیست.");
+            throw new InvalidOperationException("promotion.definition.min_subtotal_invalid");
         }
 
         var promotion = new PromotionDefinition
         {
-            PromotionId = UuidV7.New(),
+            PromotionId = promotionId,
             Name = name.Trim(),
             Status = PromotionStatus.Draft,
             Priority = priority,
@@ -381,7 +387,7 @@ public sealed class PromotionDefinition : IHasDomainEvents
     {
         if (string.IsNullOrWhiteSpace(name))
         {
-            throw new InvalidOperationException("نام پروموشن خالی نیست.");
+            throw new InvalidOperationException("promotion.definition.name_required");
         }
 
         Name = name.Trim();
@@ -407,52 +413,52 @@ public sealed class PromotionDefinition : IHasDomainEvents
     {
         if (Status == PromotionStatus.Active)
         {
-            throw new InvalidOperationException("پروموشن فعال قابل ویرایش فیلدهای اقتصادی نیست.");
+            throw new InvalidOperationException("promotion.definition.active_immutable");
         }
 
         if (string.IsNullOrWhiteSpace(name))
         {
-            throw new InvalidOperationException("نام پروموشن خالی نیست.");
+            throw new InvalidOperationException("promotion.definition.name_required");
         }
 
         if (effectiveTo is not null && effectiveTo <= effectiveFrom)
         {
-            throw new InvalidOperationException("پنجرهٔ اعتبار پروموشن نامعتبر است.");
+            throw new InvalidOperationException("promotion.definition.window_invalid");
         }
 
         if (discountKind == PromotionDiscountKind.PercentageOff)
         {
             if (percentageRate <= 0 || percentageRate > 1)
             {
-                throw new InvalidOperationException("نرخ درصدی باید کسری بین صفر و یک باشد.");
+                throw new InvalidOperationException("promotion.definition.percent_invalid");
             }
 
             if (fixedAmount != 0)
             {
-                throw new InvalidOperationException("پروموشن درصدی مبلغ ثابت ندارد.");
+                throw new InvalidOperationException("promotion.definition.percent_no_fixed");
             }
         }
         else
         {
             if (fixedAmount <= 0)
             {
-                throw new InvalidOperationException("مبلغ ثابت باید مثبت باشد.");
+                throw new InvalidOperationException("promotion.definition.fixed_amount_invalid");
             }
 
             if (string.IsNullOrWhiteSpace(fixedAmountCurrency))
             {
-                throw new InvalidOperationException("مبلغ ثابت بدون ارز اعمال نمی‌شود.");
+                throw new InvalidOperationException("promotion.definition.fixed_currency_required");
             }
 
             if (percentageRate != 0)
             {
-                throw new InvalidOperationException("پروموشن مبلغ ثابت نرخ درصد ندارد.");
+                throw new InvalidOperationException("promotion.definition.fixed_no_percent");
             }
         }
 
         if (minimumSubtotal is < 0)
         {
-            throw new InvalidOperationException("حداقل جمع منفی نیست.");
+            throw new InvalidOperationException("promotion.definition.min_subtotal_invalid");
         }
 
         Name = name.Trim();

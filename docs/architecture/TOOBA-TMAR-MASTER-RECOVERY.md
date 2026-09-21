@@ -188,10 +188,13 @@ User choice:
 Continue TMAR for now until user explicitly says to return to product feature work.
 
 Next TMAR task:
-TB-TMAR-NEXT-MODULE-BATCH-001. TB-TMAR-REFBATCH-TP-RESULT-001 completed Tax/Pricing Result Pattern delta. Module-Recovery-State REFERENCE_RESULT_DELTA_COMPLETE. Checkout remains PAUSED_AT_SAFE_W5_CHECKPOINT. Frontend remains frozen.
+TB-TMAR-NEXT-MODULE-BATCH-002. TB-TMAR-NEXT-MODULE-BATCH-001 completed Inventory+Promotion Golden batch. Module-Recovery-State NEXT_REFERENCE_BATCH_COMPLETE. Checkout remains PAUSED_AT_SAFE_W5_CHECKPOINT. Frontend remains frozen.
+
+Inventory + Promotion reference batch:
+TB-TMAR-NEXT-MODULE-BATCH-001 — Host Inventory/Promotion DbContext removed; Contracts query/schema ports; IClock/IIdGenerator; seller SetInventoryAsync Result; Domain stable codes; Module-Recovery-State NEXT_REFERENCE_BATCH_COMPLETE; Inventory/Promotion COMPLETE_REFERENCE_PATTERN. Evidence: docs/evidence/TB-TMAR-NEXT-MODULE-BATCH-001/. Next: TB-TMAR-NEXT-MODULE-BATCH-002.
 
 Tax + Pricing Result Pattern delta:
-TB-TMAR-REFBATCH-TP-RESULT-001 — Pricing seller-write expected failures return Result.Failure (amount/offer/market/currency/overlap); Tax RESULT_DELTA_NOT_APPLICABLE (TaxOutcome remains canonical); Module-Recovery-State REFERENCE_RESULT_DELTA_COMPLETE; Tax/Pricing COMPLETE_REFERENCE_PATTERN. Evidence: docs/evidence/TB-TMAR-REFBATCH-TP-RESULT-001/. Next: TB-TMAR-NEXT-MODULE-BATCH-001.
+TB-TMAR-REFBATCH-TP-RESULT-001 — Pricing seller-write expected failures return Result.Failure (amount/offer/market/currency/overlap); Tax RESULT_DELTA_NOT_APPLICABLE (TaxOutcome remains canonical); Module-Recovery-State REFERENCE_RESULT_DELTA_COMPLETE; Tax/Pricing COMPLETE_REFERENCE_PATTERN. Evidence: docs/evidence/TB-TMAR-REFBATCH-TP-RESULT-001/.
 
 Result Pattern Foundation + Offer Golden:
 TB-TMAR-FND-RESULT-001-R1 — Offer COMPLETE was REOPENED for missing Result pattern; BuildingBlocks Result/Result&lt;T&gt; + ApiResponseFactory success/failure mapping; Offer seller CQRS/endpoints adopted; Pricing/Inventory seller-write gateways return Result; Module-Recovery-State RESULT_PATTERN_FOUNDATION_COMPLETE; Offer-State COMPLETE_REFERENCE_PATTERN. Evidence: docs/evidence/TB-TMAR-FND-RESULT-001-R1/.

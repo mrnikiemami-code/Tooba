@@ -71,18 +71,24 @@ public sealed class MerchandisingPromotionType
     /// گونهٔ سیستمی می‌سازد. Code پس از ایجاد برای سیستم قابل تغییر نیست.
     /// </summary>
     public static MerchandisingPromotionType CreateSystem(
+        Guid id,
         string code,
         int sortOrder,
         DateTimeOffset now)
     {
+        if (id == Guid.Empty)
+        {
+            throw new InvalidOperationException("promotion.type.id_required");
+        }
+
         if (string.IsNullOrWhiteSpace(code))
         {
-            throw new InvalidOperationException("کد گونهٔ مرچندایزینگ خالی نیست.");
+            throw new InvalidOperationException("promotion.type.code_required");
         }
 
         return new MerchandisingPromotionType
         {
-            Id = UuidV7.New(),
+            Id = id,
             Code = code.Trim().ToUpperInvariant(),
             IsSystem = true,
             IsActive = true,
@@ -96,19 +102,25 @@ public sealed class MerchandisingPromotionType
     /// گونهٔ غیراجباری می‌سازد.
     /// </summary>
     public static MerchandisingPromotionType Create(
+        Guid id,
         string code,
         int sortOrder,
         bool isActive,
         DateTimeOffset now)
     {
+        if (id == Guid.Empty)
+        {
+            throw new InvalidOperationException("promotion.type.id_required");
+        }
+
         if (string.IsNullOrWhiteSpace(code))
         {
-            throw new InvalidOperationException("کد گونهٔ مرچندایزینگ خالی نیست.");
+            throw new InvalidOperationException("promotion.type.code_required");
         }
 
         return new MerchandisingPromotionType
         {
-            Id = UuidV7.New(),
+            Id = id,
             Code = code.Trim().ToUpperInvariant(),
             IsSystem = false,
             IsActive = isActive,
@@ -125,12 +137,12 @@ public sealed class MerchandisingPromotionType
     {
         if (IsSystem)
         {
-            throw new InvalidOperationException("کد گونهٔ سیستمی قابل تغییر نیست.");
+            throw new InvalidOperationException("promotion.type.system_code_immutable");
         }
 
         if (string.IsNullOrWhiteSpace(newCode))
         {
-            throw new InvalidOperationException("کد گونهٔ مرچندایزینگ خالی نیست.");
+            throw new InvalidOperationException("promotion.type.code_required");
         }
 
         Code = newCode.Trim().ToUpperInvariant();
@@ -144,7 +156,7 @@ public sealed class MerchandisingPromotionType
     {
         if (IsSystem)
         {
-            throw new InvalidOperationException("گونهٔ سیستمی قابل حذف نیست.");
+            throw new InvalidOperationException("promotion.type.system_delete_forbidden");
         }
     }
 
@@ -188,17 +200,17 @@ public sealed class MerchandisingPromotionTypeTranslation
     {
         if (typeId == Guid.Empty)
         {
-            throw new InvalidOperationException("شناسهٔ گونه لازم است.");
+            throw new InvalidOperationException("promotion.type.id_required");
         }
 
         if (string.IsNullOrWhiteSpace(locale))
         {
-            throw new InvalidOperationException("Locale ترجمه خالی نیست.");
+            throw new InvalidOperationException("promotion.translation.locale_required");
         }
 
         if (string.IsNullOrWhiteSpace(displayName))
         {
-            throw new InvalidOperationException("نام نمایشی ترجمه خالی نیست.");
+            throw new InvalidOperationException("promotion.translation.name_required");
         }
 
         return new MerchandisingPromotionTypeTranslation
@@ -216,7 +228,7 @@ public sealed class MerchandisingPromotionTypeTranslation
     {
         if (string.IsNullOrWhiteSpace(displayName))
         {
-            throw new InvalidOperationException("نام نمایشی ترجمه خالی نیست.");
+            throw new InvalidOperationException("promotion.translation.name_required");
         }
 
         DisplayName = displayName.Trim();
@@ -264,29 +276,34 @@ public sealed class MerchandisingCampaign
     /// کمپین پیش‌نویس می‌سازد.
     /// </summary>
     public static MerchandisingCampaign Create(
+        Guid id,
         Guid promotionTypeId,
         Guid storeId,
         DateTimeOffset startAt,
         DateTimeOffset? endAt,
         int priority,
-        DateTimeOffset now,
-        Guid? fixedId = null)
+        DateTimeOffset now)
     {
+        if (id == Guid.Empty)
+        {
+            throw new InvalidOperationException("promotion.campaign.id_required");
+        }
+
         if (promotionTypeId == Guid.Empty)
         {
-            throw new InvalidOperationException("گونهٔ مرچندایزینگ برای کمپین لازم است.");
+            throw new InvalidOperationException("promotion.campaign.type_required");
         }
 
         if (storeId == Guid.Empty)
         {
-            throw new InvalidOperationException("فروشگاه کمپین لازم است.");
+            throw new InvalidOperationException("promotion.campaign.store_required");
         }
 
         ValidateWindow(startAt, endAt);
 
         return new MerchandisingCampaign
         {
-            Id = fixedId ?? UuidV7.New(),
+            Id = id,
             PromotionTypeId = promotionTypeId,
             StoreId = storeId,
             LifecycleStatus = MerchandisingCampaignLifecycleStatus.Draft,
@@ -326,7 +343,7 @@ public sealed class MerchandisingCampaign
     {
         if (LifecycleStatus == MerchandisingCampaignLifecycleStatus.Archived)
         {
-            throw new InvalidOperationException("کمپین بایگانی‌شده قابل انتشار نیست.");
+            throw new InvalidOperationException("promotion.campaign.archived_cannot_publish");
         }
 
         LifecycleStatus = MerchandisingCampaignLifecycleStatus.Published;
@@ -354,7 +371,7 @@ public sealed class MerchandisingCampaign
     {
         if (endAt is not null && endAt <= startAt)
         {
-            throw new InvalidOperationException("پایان کمپین باید بعد از شروع باشد.");
+            throw new InvalidOperationException("promotion.campaign.window_invalid");
         }
     }
 }
@@ -396,17 +413,17 @@ public sealed class MerchandisingCampaignTranslation
     {
         if (campaignId == Guid.Empty)
         {
-            throw new InvalidOperationException("شناسهٔ کمپین لازم است.");
+            throw new InvalidOperationException("promotion.campaign.id_required");
         }
 
         if (string.IsNullOrWhiteSpace(locale))
         {
-            throw new InvalidOperationException("Locale ترجمه خالی نیست.");
+            throw new InvalidOperationException("promotion.translation.locale_required");
         }
 
         if (string.IsNullOrWhiteSpace(title))
         {
-            throw new InvalidOperationException("عنوان ترجمه خالی نیست.");
+            throw new InvalidOperationException("promotion.translation.title_required");
         }
 
         return new MerchandisingCampaignTranslation
@@ -426,7 +443,7 @@ public sealed class MerchandisingCampaignTranslation
     {
         if (string.IsNullOrWhiteSpace(title))
         {
-            throw new InvalidOperationException("عنوان ترجمه خالی نیست.");
+            throw new InvalidOperationException("promotion.translation.title_required");
         }
 
         Title = title.Trim();
@@ -464,24 +481,30 @@ public sealed class MerchandisingCampaignOffer
     /// عضویت می‌سازد. فیلد تخصیص/سقف کمپین عمداً نیست — سقف سفارش روی Offer است.
     /// </summary>
     public static MerchandisingCampaignOffer Create(
+        Guid id,
         Guid campaignId,
         Guid sellerOfferId,
         int sortOrder,
         DateTimeOffset now)
     {
+        if (id == Guid.Empty)
+        {
+            throw new InvalidOperationException("promotion.campaign_offer.id_required");
+        }
+
         if (campaignId == Guid.Empty)
         {
-            throw new InvalidOperationException("شناسهٔ کمپین لازم است.");
+            throw new InvalidOperationException("promotion.campaign.id_required");
         }
 
         if (sellerOfferId == Guid.Empty)
         {
-            throw new InvalidOperationException("شناسهٔ Offer لازم است.");
+            throw new InvalidOperationException("promotion.campaign_offer.offer_required");
         }
 
         return new MerchandisingCampaignOffer
         {
-            Id = UuidV7.New(),
+            Id = id,
             CampaignId = campaignId,
             SellerOfferId = sellerOfferId,
             SortOrder = sortOrder,

@@ -1,9 +1,9 @@
 using Microsoft.EntityFrameworkCore;
-using Tooba.Inventory.Application;
+using Tooba.BuildingBlocks;
+using Tooba.BuildingBlocks.Observability.Tracing;
+using Tooba.Inventory.Contracts;
 using Tooba.Offer.Contracts.Dtos;
 using Tooba.Offer.Contracts.Ports;
-using Tooba.Offer.Contracts.Dtos;
-using Tooba.Pricing.Application;
 using Tooba.Pricing.Contracts;
 using Tooba.Promotion.Application;
 using Tooba.Promotion.Domain;
@@ -20,6 +20,7 @@ public sealed class MerchandisingCampaignQuery : IMerchandisingCampaignQuery
     private readonly IOfferLookupGateway _offers;
     private readonly IPriceLookupGateway _prices;
     private readonly IInventoryAvailabilityGateway _inventory;
+    private readonly IModuleCallTracer _tracer;
 
     /// <summary>
     /// کوئری را به schema promotion و درزهای Offer/Price/Inventory وصل می‌کند.
@@ -28,12 +29,14 @@ public sealed class MerchandisingCampaignQuery : IMerchandisingCampaignQuery
         PromotionDbContext db,
         IOfferLookupGateway offers,
         IPriceLookupGateway prices,
-        IInventoryAvailabilityGateway inventory)
+        IInventoryAvailabilityGateway inventory,
+        IModuleCallTracer? tracer = null)
     {
         _db = db;
         _offers = offers;
         _prices = prices;
         _inventory = inventory;
+        _tracer = tracer ?? new ModuleCallTracer();
     }
 
     /// <inheritdoc />

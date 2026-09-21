@@ -14,8 +14,8 @@ using Tooba.Identity.Application;
 using Tooba.Identity.Domain;
 using Tooba.Identity.Infrastructure;
 using Tooba.Inventory.Application;
+using Tooba.Inventory.Contracts;
 using Tooba.Inventory.Domain;
-using Tooba.Inventory.Infrastructure.Persistence;
 using Tooba.Offer.Application.Ports;
 using Tooba.Offer.Contracts.Dtos;
 using Tooba.Offer.Contracts.Ports;
@@ -85,7 +85,7 @@ internal static class AccessControlDevelopmentSeed
         var catalogDb = provider.GetRequiredService<CatalogDbContext>();
         var orderDb = provider.GetRequiredService<OrderDbContext>();
         var offerQueries = provider.GetRequiredService<IOfferQueryGateway>();
-        var inventoryDb = provider.GetRequiredService<InventoryDbContext>();
+        var inventoryQuery = provider.GetRequiredService<IInventoryQueryGateway>();
 
         var seller = await partyDb.Parties.AsNoTracking()
             .SingleOrDefaultAsync(x => x.DisplayName == SellerDevActorBootstrap.SellerADisplayName, cancellationToken);
@@ -136,7 +136,7 @@ internal static class AccessControlDevelopmentSeed
             taxQuery,
             catalogDb,
             offerQueries,
-            inventoryDb,
+            inventoryQuery,
             seller.PartyId,
             MobileProductSlug,
             "گوشی دمو موبایل",
@@ -154,7 +154,7 @@ internal static class AccessControlDevelopmentSeed
             taxQuery,
             catalogDb,
             offerQueries,
-            inventoryDb,
+            inventoryQuery,
             seller.PartyId,
             BooksProductSlug,
             "کتاب دمو",
@@ -348,7 +348,7 @@ internal static class AccessControlDevelopmentSeed
         ITaxQueryGateway taxQuery,
         CatalogDbContext catalogDb,
         IOfferQueryGateway offerQueries,
-        InventoryDbContext inventoryDb,
+        IInventoryQueryGateway inventoryQuery,
         Guid sellerPartyId,
         string slug,
         string faName,
@@ -379,7 +379,7 @@ internal static class AccessControlDevelopmentSeed
                 if (existingOffer is not null)
                 {
                     await tax.AssignOfferCategoryAsync(existingOffer.OfferId, taxCategory.CategoryId, cancellationToken);
-                    await EnsureOfferStockAsync(inventory, inventoryDb, existingOffer.OfferId, locationCode, cancellationToken);
+                    await EnsureOfferStockAsync(inventory, inventoryQuery, existingOffer.OfferId, locationCode, cancellationToken);
                     return existingOffer;
                 }
             }
@@ -445,7 +445,7 @@ internal static class AccessControlDevelopmentSeed
         var price = await prices.CreatePriceAsync(offer.OfferId, "IR", SalesChannel.Marketplace, amount, "IRR", start, null, cancellationToken);
         await prices.ActivateAsync(price.PriceId, cancellationToken);
         await tax.AssignOfferCategoryAsync(offer.OfferId, taxCategory.CategoryId, cancellationToken);
-        await EnsureOfferStockAsync(inventory, inventoryDb, offer.OfferId, locationCode, cancellationToken);
+        await EnsureOfferStockAsync(inventory, inventoryQuery, offer.OfferId, locationCode, cancellationToken);
         return new OfferReference(
             offer.OfferId, offer.CatalogVariantId, offer.SellerPartyId,
             Enum.Parse<SalesChannel>(offer.Channel),
@@ -456,18 +456,16 @@ internal static class AccessControlDevelopmentSeed
 
     private static async Task EnsureOfferStockAsync(
         IInventoryDirectory inventory,
-        InventoryDbContext inventoryDb,
+        IInventoryQueryGateway inventoryQuery,
         Guid offerId,
         string locationCode,
         CancellationToken cancellationToken)
     {
-        var existingLocation = await inventoryDb.Locations.AsNoTracking()
-            .SingleOrDefaultAsync(x => x.Code == locationCode, cancellationToken);
+        var existingLocation = await inventoryQuery.FindLocationByCodeAsync(locationCode, cancellationToken);
         var locationId = existingLocation?.LocationId
             ?? await inventory.CreateLocationAsync(locationCode, "انبار دمو ACC", cancellationToken);
 
-        var existingStock = await inventoryDb.Positions.AsNoTracking()
-            .FirstOrDefaultAsync(x => x.OfferId == offerId && x.LocationId == locationId, cancellationToken);
+        var existingStock = await inventoryQuery.FindPositionAsync(offerId, locationId, cancellationToken);
         if (existingStock is not null)
         {
             if (existingStock.OnHand < 10)

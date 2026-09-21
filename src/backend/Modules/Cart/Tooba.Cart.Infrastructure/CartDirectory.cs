@@ -7,6 +7,7 @@ using CartContract = Tooba.Cart.Contracts;
 using Tooba.Cart.Infrastructure.Persistence;
 using Tooba.Catalog.Application;
 using Tooba.Inventory.Application;
+using Tooba.Inventory.Contracts;
 using Tooba.Offer.Contracts.Dtos;
 using Tooba.Offer.Contracts.Ports;
 using Tooba.Pricing.Contracts;

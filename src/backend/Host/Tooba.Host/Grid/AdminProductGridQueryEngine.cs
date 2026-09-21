@@ -2,7 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using Tooba.Catalog.Domain;
 using Tooba.Catalog.Infrastructure.Persistence;
-using Tooba.Inventory.Infrastructure.Persistence;
+using Tooba.Inventory.Contracts;
 using Tooba.Offer.Contracts.Ports;
 using Tooba.Pricing.Contracts;
 
@@ -18,13 +18,13 @@ internal sealed class AdminProductGridQueryEngine
     private readonly CatalogDbContext _catalog;
     private readonly IOfferQueryGateway _offers;
     private readonly IPriceQueryGateway _prices;
-    private readonly InventoryDbContext _inventory;
+    private readonly IInventoryQueryGateway _inventory;
 
     public AdminProductGridQueryEngine(
         CatalogDbContext catalog,
         IOfferQueryGateway offers,
         IPriceQueryGateway prices,
-        InventoryDbContext inventory)
+        IInventoryQueryGateway inventory)
     {
         _catalog = catalog;
         _offers = offers;
@@ -393,9 +393,7 @@ internal sealed class AdminProductGridQueryEngine
     {
         var variantToProduct = await LoadVariantToProductMapAsync(cancellationToken);
         var offerToVariant = await _offers.MapAllOfferIdsToCatalogVariantIdsAsync(cancellationToken);
-        var positions = await _inventory.Positions.AsNoTracking()
-            .Select(p => new { p.OfferId, Units = p.OnHand - p.Reserved })
-            .ToListAsync(cancellationToken);
+        var positions = await _inventory.ListAllPositionsAsync(cancellationToken);
 
         var metrics = new Dictionary<Guid, decimal>();
         foreach (var pos in positions)
@@ -405,7 +403,7 @@ internal sealed class AdminProductGridQueryEngine
                 continue;
             }
 
-            metrics[productId] = metrics.GetValueOrDefault(productId) + pos.Units;
+            metrics[productId] = metrics.GetValueOrDefault(productId) + pos.Available;
         }
 
         return metrics;
@@ -418,9 +416,7 @@ internal sealed class AdminProductGridQueryEngine
     {
         var variantToProduct = await LoadVariantToProductMapAsync(cancellationToken);
         var offerToVariant = await _offers.MapAllOfferIdsToCatalogVariantIdsAsync(cancellationToken);
-        var positions = await _inventory.Positions.AsNoTracking()
-            .Select(p => new { p.OfferId, p.LocationId })
-            .ToListAsync(cancellationToken);
+        var positions = await _inventory.ListAllPositionsAsync(cancellationToken);
 
         var locSets = new Dictionary<Guid, HashSet<Guid>>();
         foreach (var pos in positions)

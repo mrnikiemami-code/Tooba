@@ -1,9 +1,9 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Tooba.BuildingBlocks;
 using Tooba.Catalog.Application;
 using Tooba.Catalog.Domain;
 using Tooba.Catalog.Infrastructure.Persistence;
-using Tooba.Inventory.Infrastructure.Persistence;
+using Tooba.Inventory.Contracts;
 using Tooba.Offer.Contracts.Dtos;
 using Tooba.Offer.Contracts.Ports;
 using Tooba.Pricing.Contracts;
@@ -23,7 +23,7 @@ public sealed class ProductWorkspaceComposer
     private readonly CatalogDbContext _catalog;
     private readonly IOfferQueryGateway _offers;
     private readonly IPriceQueryGateway _prices;
-    private readonly InventoryDbContext _inventory;
+    private readonly IInventoryQueryGateway _inventory;
     private readonly ITaxQueryGateway _tax;
     private readonly IPartyLookupGateway _parties;
     private readonly ICatalogDirectory _catalogDirectory;
@@ -35,7 +35,7 @@ public sealed class ProductWorkspaceComposer
         CatalogDbContext catalog,
         IOfferQueryGateway offers,
         IPriceQueryGateway prices,
-        InventoryDbContext inventory,
+        IInventoryQueryGateway inventory,
         ITaxQueryGateway tax,
         IPartyLookupGateway parties,
         ICatalogDirectory catalogDirectory)
@@ -95,10 +95,9 @@ public sealed class ProductWorkspaceComposer
                 .ToList();
         var unitRows = offerIds.Count == 0
             ? []
-            : await _inventory.Positions.AsNoTracking()
-                .Where(x => offerIds.Contains(x.OfferId))
+            : (await _inventory.ListPositionsByOfferIdsAsync(offerIds, cancellationToken))
                 .Select(x => new { x.OfferId, x.OnHand, x.Reserved, x.LocationId })
-                .ToListAsync(cancellationToken);
+                .ToList();
         var categoryLinks = productIds.Count == 0
             ? []
             : await _catalog.ProductCategories.AsNoTracking()
@@ -238,11 +237,11 @@ public sealed class ProductWorkspaceComposer
             : await _prices.ListByOfferIdsAsync(offerIds, cancellationToken);
         var positions = offerIds.Count == 0
             ? []
-            : await _inventory.Positions.AsNoTracking().Where(x => offerIds.Contains(x.OfferId)).ToListAsync(cancellationToken);
+            : await _inventory.ListPositionsByOfferIdsAsync(offerIds, cancellationToken);
         var locationIds = positions.Select(x => x.LocationId).Distinct().ToList();
         var locations = locationIds.Count == 0
             ? []
-            : await _inventory.Locations.AsNoTracking().Where(x => locationIds.Contains(x.LocationId)).ToListAsync(cancellationToken);
+            : await _inventory.ListLocationsByIdsAsync(locationIds, cancellationToken);
         var taxRows = offerIds.Count == 0
             ? []
             : await _tax.ListClassificationsByOfferIdsAsync(offerIds, cancellationToken);

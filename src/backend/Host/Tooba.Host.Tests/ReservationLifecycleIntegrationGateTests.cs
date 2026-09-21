@@ -196,7 +196,7 @@ public sealed class ReservationLifecycleIntegrationGateTests
         Assert.Equal(1, cycle.CycleNumber);
         Assert.Equal(ReservationCycleReason.ManualReview, cycle.Reason);
         Assert.Equal(T0.AddHours(24), cycle.ExpiresAt);
-        var hold = Tooba.Inventory.Domain.StockReservation.Hold(Guid.NewGuid(), 1.25m, "order", null, T0, T0.AddMinutes(3));
+        var hold = Tooba.Inventory.Domain.StockReservation.Hold(Guid.NewGuid(), Guid.NewGuid(), 1.25m, "order", null, T0, T0.AddMinutes(3));
         Assert.Equal(0, 1.25m.CompareTo(hold.Quantity));
     }
 

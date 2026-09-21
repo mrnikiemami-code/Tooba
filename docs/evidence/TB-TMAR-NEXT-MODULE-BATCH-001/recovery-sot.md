@@ -1,0 +1,152 @@
+# recovery-sot — TB-TMAR-NEXT-MODULE-BATCH-001
+
+\\\	ext
+Inventory-State: COMPLETE_REFERENCE_PATTERN
+Promotion-State: COMPLETE_REFERENCE_PATTERN
+Foundation-State: RESULT_PATTERN_FOUNDATION_COMPLETE
+Offer-State: COMPLETE_REFERENCE_PATTERN
+Pricing-State: COMPLETE_REFERENCE_PATTERN
+Tax-State: COMPLETE_REFERENCE_PATTERN
+Batch-State: COMPLETE
+Module-Recovery-State: NEXT_REFERENCE_BATCH_COMPLETE
+Checkout-State: PAUSED_AT_SAFE_W5_CHECKPOINT
+Frontend-Production-Changes: NONE
+Next-Recommended-Task: TB-TMAR-NEXT-MODULE-BATCH-002
+\\\
+"@
+
+W "RESULT.bridge.txt" @"
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+
+BEGIN_TOOBA_WORKER_RESULT
+
+Task-ID:
+TB-TMAR-NEXT-MODULE-BATCH-001
+
+Parent-Task:
+TB-TMAR-REFBATCH-TP-RESULT-001
+
+Channel:
+tooba-main
+
+WorkerId:
+tooba-worker-01
+
+AgentType:
+cursor
+
+Status:
+PASS
+
+Summary:
+Inventory+Promotion Fast-Safe Golden batch PASS. Host Inventory/Promotion DbContext removed via query/schema Contracts ports; IClock/IIdGenerator; seller SetInventoryAsync Result preserved; Domain localized prose scrubbed to stable codes; architecture guards + module tests added. Batch COMPLETE; next TB-TMAR-NEXT-MODULE-BATCH-002.
+
+Program-Name:
+TMAR — Tooba Microservice-Ready Architecture Recovery
+
+Track:
+NEXT_REFERENCE_MODULE_BATCH
+
+Recovery-Start:
+docs/evidence/TB-TMAR-NEXT-MODULE-BATCH-001/recovery-start.md — Claim 4323ab34-f89e-479b-8a0d-ead204c9eaaa
+
+Inventory-Audit:
+docs/evidence/TB-TMAR-NEXT-MODULE-BATCH-001/inventory-audit.md
+
+Inventory-Repairs:
+IInventoryQueryGateway/IInventorySchemaMigrator; Host DbContext removal; IClock/IIdGenerator/IModuleCallTracer; Domain id injection; Domain code messages; Inventory.Tests guards; MigrationRunner adapter
+
+Inventory-Result-Adoption:
+SetInventoryAsync Task<Result> for quantity/offer/seller expected failures; Success path Result.Success; no catch-all
+
+Inventory-Foundation-Adoption:
+Contracts availability ports; no TypeForwardedTo; tracer on Offer/Catalog lookup; no UtcNow/Guid bypass
+
+Inventory-Guards:
+InventoryArchitectureGuardTests (Domain refs, seller Result seam, Host no InventoryDbContext, Golden bypass)
+
+Inventory-Validation:
+Tooba.Inventory.Tests 3/3 passed
+
+Inventory-State:
+COMPLETE_REFERENCE_PATTERN
+
+Promotion-Audit:
+docs/evidence/TB-TMAR-NEXT-MODULE-BATCH-001/promotion-audit.md
+
+Promotion-Repairs:
+IPromotionSchemaMigrator; Host no PromotionDbContext; IClock/IIdGenerator; Domain id injection; Domain code messages; Promotion.Tests guards; MigrationRunner adapter
+
+Promotion-Result-Adoption:
+No new Promotion-owned HTTP Result surface; Host campaign transport over Directory ports; CheckoutPromotion Contracts preserved
+
+Promotion-Foundation-Adoption:
+Offer/Pricing/Inventory Contracts only; no foreign App/Domain; no TypeForwardedTo/StartActivity
+
+Promotion-Guards:
+PromotionArchitectureGuardTests (Domain/Infra refs, Host no PromotionDbContext, Golden bypass)
+
+Promotion-Validation:
+Tooba.Promotion.Tests 3/3 passed
+
+Promotion-State:
+COMPLETE_REFERENCE_PATTERN
+
+Host-Leak-Scan:
+docs/evidence/TB-TMAR-NEXT-MODULE-BATCH-001/host-leak-scan.md — production CLEAN
+
+Foundation-Adoption-Scan:
+docs/evidence/TB-TMAR-NEXT-MODULE-BATCH-001/foundation-adoption-scan.md
+
+Focused-Validation:
+Inventory.Tests 3/3; Promotion.Tests 3/3; Host.Tests compile fixes for Domain factory signatures; dotnet build Tooba.slnx 0 errors
+
+Skipped-Validation:
+Offer/Pricing/Tax/BuildingBlocks/Cart/Order full suites (no intentional production reopen; Cart only compile seam for Inventory Contracts); full Host integration suite
+
+Full-Validation:
+dotnet build src/backend/Tooba.slnx — 0 errors
+
+AntiPattern-Gate:
+CLEAN — no Host DbContext authority; no TypeForwardedTo; no catch-all Exception→Result; no frontend; no Checkout process-manager resume; no broad campaign MediatR rewrite
+
+Residual-Defects:
+Cart.Application→Inventory.Application for reservation release APIs (pre-existing App→App). Host campaign admin remains Directory composition (justified transport). Domain still uses InvalidOperationException with stable codes (not SemanticException/Result) for invariants not crossing seller Result seam.
+
+Batch-State:
+COMPLETE
+
+Foundation-State:
+RESULT_PATTERN_FOUNDATION_COMPLETE
+
+Offer-State:
+COMPLETE_REFERENCE_PATTERN
+
+Pricing-State:
+COMPLETE_REFERENCE_PATTERN
+
+Tax-State:
+COMPLETE_REFERENCE_PATTERN
+
+Checkout-State:
+PAUSED_AT_SAFE_W5_CHECKPOINT
+
+Frontend-Production-Changes:
+NONE
+
+Git:
+TIP_SHA_PLACEHOLDER
+
+Blockers:
+NONE
+
+User-Work-Preserved:
+YES — stashes untouched; .rar untouched; protected ancestor; no destructive git
+
+Module-Recovery-State:
+NEXT_REFERENCE_BATCH_COMPLETE
+
+Next-Recommended-Task:
+TB-TMAR-NEXT-MODULE-BATCH-002
+
+END_TOOBA_WORKER_RESULT

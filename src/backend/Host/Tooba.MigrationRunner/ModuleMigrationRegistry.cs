@@ -12,7 +12,6 @@ using Tooba.CustomerProfile.Infrastructure.Persistence;
 using Tooba.UserPreference.Infrastructure.Persistence;
 using Tooba.OperatorProfile.Infrastructure.Persistence;
 using Tooba.Identity.Infrastructure.Persistence;
-using Tooba.Inventory.Infrastructure.Persistence;
 using Tooba.Order.Infrastructure.Persistence;
 using Tooba.Party.Infrastructure.Persistence;
 using Tooba.Fulfillment.Infrastructure.Persistence;
@@ -25,7 +24,6 @@ using Tooba.Wallet.Infrastructure.Persistence;
 using Tooba.Payment.Infrastructure.Persistence;
 using Tooba.PlatformProbe.Infrastructure.Persistence;
 using Tooba.ProductQnA.Infrastructure.Persistence;
-using Tooba.Promotion.Infrastructure.Persistence;
 using Tooba.Reviews.Infrastructure.Persistence;
 using Tooba.Wishlist.Infrastructure.Persistence;
 using Tooba.Persistence;
@@ -53,7 +51,7 @@ internal static class ModuleMigrationRegistry
         Descriptor<CatalogDbContext>("Catalog", CatalogDbContext.Schema),
         new ModuleMigrationDescriptor(Tooba.Offer.Infrastructure.Adapters.OfferModuleMigration.Module, Tooba.Offer.Infrastructure.Adapters.OfferModuleMigration.Schema, Tooba.Offer.Infrastructure.Adapters.OfferModuleMigration.CreateContext),
         new ModuleMigrationDescriptor(Tooba.Pricing.Infrastructure.Adapters.PricingModuleMigration.Module, Tooba.Pricing.Infrastructure.Adapters.PricingModuleMigration.Schema, Tooba.Pricing.Infrastructure.Adapters.PricingModuleMigration.CreateContext),
-        Descriptor<InventoryDbContext>("Inventory", InventoryDbContext.Schema),
+        new ModuleMigrationDescriptor(Tooba.Inventory.Infrastructure.Adapters.InventoryModuleMigration.Module, Tooba.Inventory.Infrastructure.Adapters.InventoryModuleMigration.Schema, Tooba.Inventory.Infrastructure.Adapters.InventoryModuleMigration.CreateContext),
         new ModuleMigrationDescriptor(Tooba.Tax.Infrastructure.Adapters.TaxModuleMigration.Module, Tooba.Tax.Infrastructure.Adapters.TaxModuleMigration.Schema, Tooba.Tax.Infrastructure.Adapters.TaxModuleMigration.CreateContext),
         Descriptor<PartyDbContext>("Party", PartyDbContext.Schema),
         Descriptor<IdentityDbContext>("Identity", IdentityDbContext.Schema),
@@ -67,7 +65,7 @@ internal static class ModuleMigrationRegistry
         Descriptor<WalletDbContext>("Wallet", WalletDbContext.Schema),
         Descriptor<NotificationDbContext>("Notification", NotificationDbContext.Schema),
         Descriptor<AccessControlDbContext>("AccessControl", AccessControlDbContext.Schema),
-        Descriptor<PromotionDbContext>("Promotion", PromotionDbContext.Schema),
+        new ModuleMigrationDescriptor(Tooba.Promotion.Infrastructure.Adapters.PromotionModuleMigration.Module, Tooba.Promotion.Infrastructure.Adapters.PromotionModuleMigration.Schema, Tooba.Promotion.Infrastructure.Adapters.PromotionModuleMigration.CreateContext),
         Descriptor<PlatformProbeDbContext>("PlatformProbe", PlatformProbeDbContext.Schema),
         Descriptor<ReviewsDbContext>("Reviews", ReviewsDbContext.Schema),
         Descriptor<ProductQnADbContext>("ProductQnA", ProductQnADbContext.Schema),

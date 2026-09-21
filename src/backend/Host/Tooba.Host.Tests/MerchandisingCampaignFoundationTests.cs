@@ -85,7 +85,7 @@ public sealed class MerchandisingCampaignFoundationTests : IAsyncLifetime
 
         // 2 PromotionType Code unique
         db.MerchandisingPromotionTypes.Add(
-            MerchandisingPromotionType.CreateSystem(MerchandisingPromotionType.AmazingCode, 1, now));
+            MerchandisingPromotionType.CreateSystem(Guid.NewGuid(), MerchandisingPromotionType.AmazingCode, 1, now));
         await Assert.ThrowsAnyAsync<DbUpdateException>(() => db.SaveChangesAsync());
         db.ChangeTracker.Clear();
 

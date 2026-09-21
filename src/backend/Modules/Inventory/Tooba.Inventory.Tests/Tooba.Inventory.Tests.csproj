@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <IsPackable>false</IsPackable>
+    <RootNamespace>Tooba.Inventory.Tests</RootNamespace>
+    <AssemblyName>Tooba.Inventory.Tests</AssemblyName>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.11.1" />
+    <PackageReference Include="xunit" Version="2.9.2" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="2.8.2">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Tooba.Inventory.Domain\Tooba.Inventory.Domain.csproj" />
+    <ProjectReference Include="..\Tooba.Inventory.Application\Tooba.Inventory.Application.csproj" />
+    <ProjectReference Include="..\Tooba.Inventory.Contracts\Tooba.Inventory.Contracts.csproj" />
+    <ProjectReference Include="..\Tooba.Inventory.Infrastructure\Tooba.Inventory.Infrastructure.csproj" />
+  </ItemGroup>
+</Project>

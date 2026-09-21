@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Tooba.BuildingBlocks;
 using Tooba.Inventory.Application;
 using Tooba.Inventory.Domain;
 using Tooba.Inventory.Infrastructure.Persistence;
@@ -13,6 +14,7 @@ public sealed class InventoryReturnGateway : IInventoryReturnGateway
     private readonly InventoryDbContext _db;
     private readonly IInventoryUseCaseGuard _guard;
     private readonly IInventoryDirectory _directory;
+    private readonly IClock _clock;
 
     /// <summary>
     /// gateway را به schema inventory وصل می‌کند.
@@ -20,11 +22,13 @@ public sealed class InventoryReturnGateway : IInventoryReturnGateway
     public InventoryReturnGateway(
         InventoryDbContext db,
         IInventoryUseCaseGuard guard,
-        IInventoryDirectory directory)
+        IInventoryDirectory directory,
+        IClock? clock = null)
     {
         _db = db;
         _guard = guard;
         _directory = directory;
+        _clock = clock ?? new SystemUtcClock();
     }
 
     /// <inheritdoc />
@@ -89,7 +93,7 @@ public sealed class InventoryReturnGateway : IInventoryReturnGateway
             IdempotencyKey = normalizedKey,
             ReservationId = reservationId,
             Quantity = quantity,
-            ProcessedAt = DateTimeOffset.UtcNow,
+            ProcessedAt = _clock.UtcNow,
         });
         await _db.SaveChangesAsync(cancellationToken);
     }

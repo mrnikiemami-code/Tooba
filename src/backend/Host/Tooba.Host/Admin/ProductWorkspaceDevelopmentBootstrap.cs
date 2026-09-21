@@ -6,8 +6,8 @@ using Tooba.Catalog.Domain;
 using Tooba.Catalog.Infrastructure.Persistence;
 using Tooba.Identity.Infrastructure.Persistence;
 using Tooba.Inventory.Application;
+using Tooba.Inventory.Contracts;
 using Tooba.Inventory.Domain;
-using Tooba.Inventory.Infrastructure.Persistence;
 using Tooba.Offer.Application.Ports;
 using Tooba.Offer.Contracts.Dtos;
 using Tooba.Offer.Contracts.Ports;
@@ -20,7 +20,7 @@ using Tooba.PlatformProbe.Infrastructure.Persistence;
 using Tooba.Pricing.Application;
 using Tooba.Pricing.Contracts;
 using Tooba.Promotion.Application;
-using Tooba.Promotion.Infrastructure.Persistence;
+using Tooba.Promotion.Contracts;
 using Tooba.Tax.Application;
 using Tooba.Tax.Contracts;
 using Tooba.Tax.Domain;
@@ -99,7 +99,7 @@ internal static class ProductWorkspaceDevelopmentBootstrap
         await MigrateAsync(provider.GetRequiredService<CatalogDbContext>());
         await provider.GetRequiredService<IOfferSchemaMigrator>().MigrateAsync();
         await provider.GetRequiredService<IPricingSchemaMigrator>().MigrateAsync();
-        await MigrateAsync(provider.GetRequiredService<InventoryDbContext>());
+        await provider.GetRequiredService<IInventorySchemaMigrator>().MigrateAsync();
         await provider.GetRequiredService<ITaxSchemaMigrator>().MigrateAsync();
         await MigrateAsync(provider.GetRequiredService<PartyDbContext>());
         await MigrateAsync(provider.GetRequiredService<IdentityDbContext>());
@@ -107,7 +107,7 @@ internal static class ProductWorkspaceDevelopmentBootstrap
         await MigrateAsync(provider.GetRequiredService<OrderDbContext>());
         await MigrateAsync(provider.GetRequiredService<PaymentDbContext>());
         await MigrateAsync(provider.GetRequiredService<FulfillmentDbContext>());
-        await MigrateAsync(provider.GetRequiredService<PromotionDbContext>());
+        await provider.GetRequiredService<IPromotionSchemaMigrator>().MigrateAsync();
         await provider.GetRequiredService<IMerchandisingCampaignDirectory>()
             .EnsureAmazingTypeSeededAsync(CancellationToken.None);
         // Development AMAZING campaigns must seed even when legacy Catalog bootstraps are off

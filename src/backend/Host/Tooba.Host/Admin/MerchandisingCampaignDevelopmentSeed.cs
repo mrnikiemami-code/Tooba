@@ -1,10 +1,10 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Tooba.BuildingBlocks;
 using Tooba.Catalog.Domain;
 using Tooba.Catalog.Infrastructure.Persistence;
 using Tooba.Inventory.Application;
+using Tooba.Inventory.Contracts;
 using Tooba.Inventory.Domain;
-using Tooba.Inventory.Infrastructure.Persistence;
 using Tooba.Offer.Contracts.Dtos;
 using Tooba.Offer.Contracts.Ports;
 using Tooba.Party.Application;
@@ -63,7 +63,7 @@ internal static class MerchandisingCampaignDevelopmentSeed
         var offerQueries = provider.GetRequiredService<IOfferQueryGateway>();
         var offerSeeds = provider.GetRequiredService<IOfferDevelopmentSeedGateway>();
         var catalogDb = provider.GetRequiredService<CatalogDbContext>();
-        var inventoryDb = provider.GetRequiredService<InventoryDbContext>();
+        var inventoryQuery = provider.GetRequiredService<IInventoryQueryGateway>();
         var inventory = provider.GetRequiredService<IInventoryDirectory>();
         var parties = provider.GetRequiredService<IPartyDirectory>();
         var partyDb = provider.GetRequiredService<PartyDbContext>();
@@ -98,7 +98,7 @@ internal static class MerchandisingCampaignDevelopmentSeed
 
         var oosOfferId = await EnsureOosOfferAsync(
             offerSeeds,
-            inventoryDb,
+            inventoryQuery,
             inventory,
             parties,
             partyDb,
@@ -308,7 +308,7 @@ internal static class MerchandisingCampaignDevelopmentSeed
 
     private static async Task<Guid?> EnsureOosOfferAsync(
         IOfferDevelopmentSeedGateway offerSeeds,
-        InventoryDbContext inventoryDb,
+        IInventoryQueryGateway inventoryQuery,
         IInventoryDirectory inventory,
         IPartyDirectory parties,
         PartyDbContext partyDb,
@@ -337,27 +337,26 @@ internal static class MerchandisingCampaignDevelopmentSeed
             return null;
         }
 
-        await EnsureZeroStockAsync(offerId.Value, inventoryDb, inventory, cancellationToken);
+        await EnsureZeroStockAsync(offerId.Value, inventoryQuery, inventory, cancellationToken);
         return offerId;
     }
 
     private static async Task EnsureZeroStockAsync(
         Guid offerId,
-        InventoryDbContext inventoryDb,
+        IInventoryQueryGateway inventoryQuery,
         IInventoryDirectory inventory,
         CancellationToken cancellationToken)
     {
-        var locationId = await inventoryDb.Locations.AsNoTracking()
-            .Select(x => x.LocationId)
-            .FirstOrDefaultAsync(cancellationToken);
+        var locationId = await inventoryQuery.FindFirstActiveLocationIdAsync(cancellationToken) ?? Guid.Empty;
         if (locationId == Guid.Empty)
         {
             locationId = await inventory.CreateLocationAsync("WH-DEV-OOS", "Dev OOS bin", cancellationToken);
         }
 
         var stockItemId = await inventory.OpenPositionAsync(offerId, locationId, cancellationToken);
-        var position = await inventoryDb.Positions.SingleAsync(x => x.StockItemId == stockItemId, cancellationToken);
-        var available = position.OnHand - position.Reserved;
+        var position = await inventoryQuery.FindPositionByStockItemIdAsync(stockItemId, cancellationToken)
+            ?? throw new InvalidOperationException("dev-seed-oos position missing");
+        var available = position.Available;
         if (available > 0)
         {
             await inventory.AdjustAsync(

@@ -1,4 +1,5 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
+using Tooba.BuildingBlocks;
 using Tooba.Promotion.Application;
 using Tooba.Promotion.Domain;
 using Tooba.Promotion.Infrastructure.Persistence;
@@ -32,6 +33,8 @@ public sealed class PromotionDirectory : IPromotionDirectory
     private readonly PromotionDbContext _db;
     private readonly IPromotionUseCaseGuard _guard;
     private readonly IPromotionRedemptionLedger _ledger;
+    private readonly IClock _clock;
+    private readonly IIdGenerator _ids;
 
     /// <summary>
     /// دایرکتوری را به schema promotion وصل می‌کند.
@@ -39,11 +42,15 @@ public sealed class PromotionDirectory : IPromotionDirectory
     public PromotionDirectory(
         PromotionDbContext db,
         IPromotionUseCaseGuard guard,
-        IPromotionRedemptionLedger ledger)
+        IPromotionRedemptionLedger ledger,
+        IClock? clock = null,
+        IIdGenerator? ids = null)
     {
         _db = db;
         _guard = guard;
         _ledger = ledger;
+        _clock = clock ?? new SystemUtcClock();
+        _ids = ids ?? new UuidV7IdGenerator();
     }
 
     /// <inheritdoc />
@@ -72,7 +79,7 @@ public sealed class PromotionDirectory : IPromotionDirectory
         CancellationToken cancellationToken)
     {
         await _guard.EnsureCanMutateAsync(cancellationToken);
-        var promotion = PromotionDefinition.Create(
+        var promotion = PromotionDefinition.Create(_ids.NewId(),
             name,
             priority,
             effectiveFrom,
@@ -94,7 +101,7 @@ public sealed class PromotionDirectory : IPromotionDirectory
             organizationPartyId,
             minimumQuantity,
             minimumSubtotal,
-            DateTimeOffset.UtcNow);
+            _clock.UtcNow);
         _db.Promotions.Add(promotion);
         await _db.SaveChangesAsync(cancellationToken);
         return ToReference(promotion);
@@ -105,7 +112,7 @@ public sealed class PromotionDirectory : IPromotionDirectory
     {
         await _guard.EnsureCanMutateAsync(cancellationToken);
         var promotion = await _db.Promotions.SingleAsync(x => x.PromotionId == promotionId, cancellationToken);
-        promotion.Activate(DateTimeOffset.UtcNow);
+        promotion.Activate(_clock.UtcNow);
         await _db.SaveChangesAsync(cancellationToken);
     }
 
@@ -114,7 +121,7 @@ public sealed class PromotionDirectory : IPromotionDirectory
     {
         await _guard.EnsureCanMutateAsync(cancellationToken);
         var promotion = await _db.Promotions.SingleAsync(x => x.PromotionId == promotionId, cancellationToken);
-        promotion.Change(name, priority, DateTimeOffset.UtcNow);
+        promotion.Change(name, priority, _clock.UtcNow);
         await _db.SaveChangesAsync(cancellationToken);
     }
 
@@ -123,7 +130,7 @@ public sealed class PromotionDirectory : IPromotionDirectory
     {
         await _guard.EnsureCanMutateAsync(cancellationToken);
         var promotion = await _db.Promotions.SingleAsync(x => x.PromotionId == promotionId, cancellationToken);
-        promotion.Expire(DateTimeOffset.UtcNow);
+        promotion.Expire(_clock.UtcNow);
         await _db.SaveChangesAsync(cancellationToken);
     }
 
@@ -234,7 +241,7 @@ public sealed class PromotionDirectory : IPromotionDirectory
             fixedAmountCurrency,
             couponCode,
             minimumSubtotal,
-            DateTimeOffset.UtcNow);
+            _clock.UtcNow);
         await _db.SaveChangesAsync(cancellationToken);
         return ToReference(promotion);
     }
@@ -249,7 +256,7 @@ public sealed class PromotionDirectory : IPromotionDirectory
         _ = tenantId;
         await _guard.EnsureCanMutateAsync(cancellationToken);
         var promotion = await RequireOwnedAsync(sellerPartyId, promotionId, cancellationToken);
-        promotion.Activate(DateTimeOffset.UtcNow);
+        promotion.Activate(_clock.UtcNow);
         await _db.SaveChangesAsync(cancellationToken);
     }
 
@@ -263,7 +270,7 @@ public sealed class PromotionDirectory : IPromotionDirectory
         _ = tenantId;
         await _guard.EnsureCanMutateAsync(cancellationToken);
         var promotion = await RequireOwnedAsync(sellerPartyId, promotionId, cancellationToken);
-        promotion.Expire(DateTimeOffset.UtcNow);
+        promotion.Expire(_clock.UtcNow);
         await _db.SaveChangesAsync(cancellationToken);
     }
 
@@ -311,7 +318,7 @@ public sealed class PromotionDirectory : IPromotionDirectory
             x => x.PromotionId == promotionId,
             cancellationToken)
             ?? throw new InvalidOperationException("پروموشن یافت نشد.");
-        promotion.Expire(DateTimeOffset.UtcNow);
+        promotion.Expire(_clock.UtcNow);
         await _db.SaveChangesAsync(cancellationToken);
     }
 

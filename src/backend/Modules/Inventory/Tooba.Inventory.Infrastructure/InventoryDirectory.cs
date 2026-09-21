@@ -2,7 +2,8 @@
 using Npgsql;
 using Tooba.BuildingBlocks;
 using Tooba.BuildingBlocks.Results;
-using Tooba.Catalog.Application;
+using Tooba.BuildingBlocks.Observability.Tracing;
+using Tooba.Catalog.Contracts;
 using Tooba.Inventory.Application;
 using Tooba.Inventory.Contracts;
 using Tooba.Inventory.Domain;
@@ -31,7 +32,10 @@ public sealed class InventoryDirectory : IInventoryDirectory, IInventoryAvailabi
     private readonly InventoryDbContext _db;
     private readonly IInventoryUseCaseGuard _guard;
     private readonly IOfferLookupGateway _offers;
-    private readonly ICatalogLookupGateway _catalog;
+    private readonly ICatalogVariantLookup _catalog;
+    private readonly IClock _clock;
+    private readonly IIdGenerator _ids;
+    private readonly IModuleCallTracer _tracer;
 
     /// <summary>
     /// دایرکتوری را به schema Inventory و درز Offer/Catalog وصل می‌کند نه به join بین‌schema.
@@ -40,12 +44,18 @@ public sealed class InventoryDirectory : IInventoryDirectory, IInventoryAvailabi
         InventoryDbContext db,
         IInventoryUseCaseGuard guard,
         IOfferLookupGateway offers,
-        ICatalogLookupGateway catalog)
+        ICatalogVariantLookup catalog,
+        IClock? clock = null,
+        IIdGenerator? ids = null,
+        IModuleCallTracer? tracer = null)
     {
         _db = db;
         _guard = guard;
         _offers = offers;
         _catalog = catalog;
+        _clock = clock ?? new SystemUtcClock();
+        _ids = ids ?? new UuidV7IdGenerator();
+        _tracer = tracer ?? new ModuleCallTracer();
     }
 
     /// <inheritdoc />
@@ -93,7 +103,7 @@ public sealed class InventoryDirectory : IInventoryDirectory, IInventoryAvailabi
         ArgumentNullException.ThrowIfNull(request);
         if (request.OnHand < 0)
             return Result.Failure(new SemanticError(InventoryErrorCodes.QuantityInvalid));
-        var offer = await _offers.FindOfferAsync(request.OfferId, cancellationToken);
+        var offer = await FindOfferAsync(request.OfferId, cancellationToken);
         if (offer is null || offer.SellerPartyId != request.SellerPartyId)
             return Result.Failure(new SemanticError(OfferErrorCodes.NotFound));
         var position = await _db.Positions.AsNoTracking()
@@ -162,7 +172,7 @@ public sealed class InventoryDirectory : IInventoryDirectory, IInventoryAvailabi
     public async Task<Guid> CreateLocationAsync(string code, string name, CancellationToken cancellationToken)
     {
         await _guard.EnsureCanMutateAsync(cancellationToken);
-        var location = InventoryLocation.Create(code, name, DateTimeOffset.UtcNow);
+        var location = InventoryLocation.Create(_ids.NewId(), code, name, _clock.UtcNow);
         _db.Locations.Add(location);
         await _db.SaveChangesAsync(cancellationToken);
         return location.LocationId;
@@ -172,9 +182,9 @@ public sealed class InventoryDirectory : IInventoryDirectory, IInventoryAvailabi
     public async Task<Guid> OpenPositionAsync(Guid offerId, Guid locationId, CancellationToken cancellationToken)
     {
         await _guard.EnsureCanMutateAsync(cancellationToken);
-        var offer = await _offers.FindOfferAsync(offerId, cancellationToken)
+        var offer = await FindOfferAsync(offerId, cancellationToken)
             ?? throw new InvalidOperationException("Offer از قرارداد Lookup پیدا نشد؛ DbContext Offer خوانده نشد.");
-        if (await _catalog.FindVariantAsync(offer.CatalogVariantId, cancellationToken) is null)
+        if (await FindVariantAsync(offer.CatalogVariantId, cancellationToken) is null)
         {
             throw new InvalidOperationException("گونهٔ Catalog از قرارداد Lookup پیدا نشد؛ DbContext Catalog خوانده نشد.");
         }
@@ -192,7 +202,7 @@ public sealed class InventoryDirectory : IInventoryDirectory, IInventoryAvailabi
             return existing.StockItemId;
         }
 
-        var position = StockPosition.Open(offerId, offer.CatalogVariantId, locationId, DateTimeOffset.UtcNow);
+        var position = StockPosition.Open(_ids.NewId(), offerId, offer.CatalogVariantId, locationId, _clock.UtcNow);
         _db.Positions.Add(position);
         await _db.SaveChangesAsync(cancellationToken);
         return position.StockItemId;
@@ -229,7 +239,7 @@ public sealed class InventoryDirectory : IInventoryDirectory, IInventoryAvailabi
             _ => throw new InvalidOperationException("گونهٔ اصلاح ناشناخته است."),
         };
 
-        var now = DateTimeOffset.UtcNow;
+        var now = _clock.UtcNow;
         var affected = await _db.Positions
             .Where(x => x.StockItemId == stockItemId && x.OnHand + delta >= x.Reserved && x.OnHand + delta >= 0)
             .ExecuteUpdateAsync(
@@ -270,7 +280,7 @@ public sealed class InventoryDirectory : IInventoryDirectory, IInventoryAvailabi
             }
         }
 
-        var now = DateTimeOffset.UtcNow;
+        var now = _clock.UtcNow;
         var reserved = await _db.Positions
             .Where(x => x.StockItemId == stockItemId && x.OnHand - x.Reserved >= quantity && quantity > 0)
             .ExecuteUpdateAsync(
@@ -284,7 +294,7 @@ public sealed class InventoryDirectory : IInventoryDirectory, IInventoryAvailabi
         }
 
         var position = await _db.Positions.SingleAsync(x => x.StockItemId == stockItemId, cancellationToken);
-        var hold = StockReservation.Hold(stockItemId, quantity, externalReference, idempotencyKey, now, expiresAt);
+        var hold = StockReservation.Hold(_ids.NewId(), stockItemId, quantity, externalReference, idempotencyKey, now, expiresAt);
         _db.Reservations.Add(hold);
         position.RecordReserved(hold.ReservationId, quantity);
         position.SyncQuantities(position.OnHand, position.Reserved, now);
@@ -385,7 +395,7 @@ public sealed class InventoryDirectory : IInventoryDirectory, IInventoryAvailabi
             return;
         }
 
-        var now = DateTimeOffset.UtcNow;
+        var now = _clock.UtcNow;
         var released = await _db.Positions
             .Where(x => x.StockItemId == reservation.StockItemId && x.Reserved >= reservation.Quantity)
             .ExecuteUpdateAsync(
@@ -411,7 +421,7 @@ public sealed class InventoryDirectory : IInventoryDirectory, IInventoryAvailabi
         await _guard.EnsureCanMutateAsync(cancellationToken);
         var reservation = await _db.Reservations.SingleOrDefaultAsync(x => x.ReservationId == reservationId, cancellationToken)
             ?? throw new InvalidOperationException("رزرو پیدا نشد.");
-        var now = DateTimeOffset.UtcNow;
+        var now = _clock.UtcNow;
         var consumed = await _db.Positions
             .Where(x => x.StockItemId == reservation.StockItemId
                         && x.Reserved >= reservation.Quantity
@@ -442,7 +452,7 @@ public sealed class InventoryDirectory : IInventoryDirectory, IInventoryAvailabi
         await _guard.EnsureCanMutateAsync(cancellationToken);
         var reservation = await _db.Reservations.SingleOrDefaultAsync(x => x.ReservationId == reservationId, cancellationToken)
             ?? throw new InvalidOperationException("inventory.reservation.not_found");
-        reservation.CommitForPaidOrder(DateTimeOffset.UtcNow);
+        reservation.CommitForPaidOrder(_clock.UtcNow);
         await _db.SaveChangesAsync(cancellationToken);
         return await FindReservationAsync(reservationId, cancellationToken)
             ?? throw new InvalidOperationException("inventory.reservation.not_found");
@@ -457,7 +467,7 @@ public sealed class InventoryDirectory : IInventoryDirectory, IInventoryAvailabi
         await _guard.EnsureCanMutateAsync(cancellationToken);
         var reservation = await _db.Reservations.SingleOrDefaultAsync(x => x.ReservationId == reservationId, cancellationToken)
             ?? throw new InvalidOperationException("inventory.reservation.not_found");
-        reservation.PromoteForManualPaymentReview(reviewExpiresAt, DateTimeOffset.UtcNow);
+        reservation.PromoteForManualPaymentReview(reviewExpiresAt, _clock.UtcNow);
         await _db.SaveChangesAsync(cancellationToken);
         return await FindReservationAsync(reservationId, cancellationToken)
             ?? throw new InvalidOperationException("inventory.reservation.not_found");
@@ -599,7 +609,7 @@ public sealed class InventoryDirectory : IInventoryDirectory, IInventoryAvailabi
                     : null;
                 // idempotency_key column is varchar(128); keep this compact.
                 var idempotencyKey =
-                    $"os-{(int)request.Mode}-{input.OrderLineId:N}-{request.CheckoutId:N}-{DateTimeOffset.UtcNow.UtcTicks}";
+                    $"os-{(int)request.Mode}-{input.OrderLineId:N}-{request.CheckoutId:N}-{_clock.UtcNow.UtcTicks}";
                 var receipt = await ReserveAsync(
                     stockItemId,
                     input.RemainingQuantity,
@@ -681,7 +691,7 @@ public sealed class InventoryDirectory : IInventoryDirectory, IInventoryAvailabi
 
             var heldValid = existing is { Status: StockReservationStatus.Held }
                 && existing.Quantity >= line.RemainingQuantity
-                && (existing.ExpiresAt is null || existing.ExpiresAt > DateTimeOffset.UtcNow);
+                && (existing.ExpiresAt is null || existing.ExpiresAt > _clock.UtcNow);
 
             if (heldValid)
             {
@@ -810,5 +820,37 @@ public sealed class InventoryDirectory : IInventoryDirectory, IInventoryAvailabi
         }
 
         return false;
+    }
+
+    private async Task<OfferReference?> FindOfferAsync(Guid offerId, CancellationToken cancellationToken)
+    {
+        using var trace = _tracer.Begin("Inventory", "Offer", "LookupOffer");
+        try
+        {
+            var offer = await _offers.FindOfferAsync(offerId, cancellationToken).ConfigureAwait(false);
+            trace.SetOk();
+            return offer;
+        }
+        catch (Exception ex)
+        {
+            trace.SetError(ex);
+            throw;
+        }
+    }
+
+    private async Task<CatalogVariantLookupResult?> FindVariantAsync(Guid variantId, CancellationToken cancellationToken)
+    {
+        using var trace = _tracer.Begin("Inventory", "Catalog", "LookupVariant");
+        try
+        {
+            var variant = await _catalog.FindVariantAsync(variantId, cancellationToken).ConfigureAwait(false);
+            trace.SetOk();
+            return variant;
+        }
+        catch (Exception ex)
+        {
+            trace.SetError(ex);
+            throw;
+        }
     }
 }
