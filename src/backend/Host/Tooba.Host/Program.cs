@@ -129,7 +129,8 @@ builder.Services.AddHostedService<UnpaidOrderExpiryHostedService>();
 builder.Services.AddToobaCqrsFoundation(
     typeof(Tooba.Catalog.Application.CreateStoreLandingPageCommand).Assembly,
     typeof(Tooba.Fulfillment.Application.Shipping.CreateShippingServiceCommand).Assembly,
-    typeof(Tooba.Offer.Application.Commands.CreateOffer.CreateOfferCommand).Assembly);
+    typeof(Tooba.Offer.Application.Commands.CreateOffer.CreateOfferCommand).Assembly,
+    typeof(Tooba.Settlement.Application.Queries.GetSellerSettlementBalanceQuery).Assembly);
 builder.Services.AddScoped<Tooba.Catalog.Application.IStoreLandingExternalReferenceGate, Tooba.Host.Admin.MerchandisingStoreLandingReferenceGate>();
 builder.Services.AddScoped<Tooba.Catalog.Application.IUnitOfMeasureLanguageGate, Tooba.Host.Admin.HostUnitOfMeasureLanguageGate>();
 builder.Services.AddToobaModules(builder.Configuration, builder.Environment);
@@ -146,7 +147,6 @@ builder.Services.AddScoped<Tooba.Order.Application.IReservationCyclePolicyResolv
 builder.Services.AddScoped<ReservationCycleCoordinator>();
 builder.Services.AddScoped<Tooba.Host.Admin.ProductWorkspaceComposer>();
 builder.Services.AddScoped<Tooba.Host.Grid.AdminContentGridQueryEngine>();
-builder.Services.AddScoped<Tooba.Host.Grid.AdminPayoutGridQueryEngine>();
 builder.Services.AddScoped<Tooba.Host.Grid.AdminStoryGridQueryEngine>();
 builder.Services.AddScoped<Tooba.Host.Grid.AdminReviewGridQueryEngine>();
 builder.Services.AddScoped<Tooba.Host.Grid.AdminOrdersGridQueryEngine>();
@@ -205,7 +205,6 @@ builder.Services.AddScoped<Tooba.Host.Storefront.StorefrontShippingComposer>(sp 
         sp.GetRequiredService<IHttpContextAccessor>()));
 builder.Services.AddScoped<Tooba.Host.Fulfillment.FulfillmentPanelComposer>();
 builder.Services.AddScoped<ReturnPanelComposer>();
-builder.Services.AddScoped<Tooba.Host.Settlement.SettlementPanelComposer>();
 builder.Services.AddScoped<Tooba.Host.Storefront.StorefrontPendingPaymentComposer>(sp =>
     new Tooba.Host.Storefront.StorefrontPendingPaymentComposer(
         sp.GetRequiredService<Tooba.Order.Infrastructure.Persistence.OrderDbContext>(),

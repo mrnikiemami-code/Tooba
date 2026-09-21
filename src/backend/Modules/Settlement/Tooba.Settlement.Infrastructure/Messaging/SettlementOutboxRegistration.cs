@@ -68,7 +68,7 @@ public sealed class SettlementOutboxRegistration : IOutboxModuleRegistration
             _ when integrationEventType == typeof(SettlementEntryPostedIntegrationEvent) => SettlementEntryPostedIntegrationEvent.EventTypeName,
             _ when integrationEventType == typeof(PayoutSucceededIntegrationEvent) => PayoutSucceededIntegrationEvent.EventTypeName,
             _ when integrationEventType == typeof(PayoutFailedIntegrationEvent) => PayoutFailedIntegrationEvent.EventTypeName,
-            _ => throw new InvalidOperationException("Unmapped Settlement integration event type."),
+            _ => throw new InvalidOperationException("settlement.outbox.unmapped_event"),
         };
 
     /// <inheritdoc />

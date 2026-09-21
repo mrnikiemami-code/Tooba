@@ -84,10 +84,18 @@ public sealed class AdminDbNativeGridQueryTests
             Path.Combine(root, "Content", "ContentPanelComposer.cs"),
             Path.Combine(root, "Fulfillment", "FulfillmentPanelComposer.cs"),
             Path.Combine(root, "Returns", "ReturnPanelComposer.cs"),
-            Path.Combine(root, "Settlement", "SettlementPanelComposer.cs"),
             Path.Combine(root, "Reviews", "ReviewPanelComposer.cs"),
             Path.Combine(root, "Story", "StoryPanelComposer.cs"),
         };
+
+        var settlementEndpoints = Path.Combine(root, "Settlement", "SettlementEndpoints.cs");
+        Assert.True(File.Exists(settlementEndpoints), $"missing {settlementEndpoints}");
+        var settlementText = File.ReadAllText(settlementEndpoints);
+        Assert.DoesNotContain("AdminListGridPolicies.Payouts.Execute", settlementText);
+        Assert.DoesNotContain("SettlementDbContext", settlementText);
+        Assert.DoesNotContain("PartyDbContext", settlementText);
+        Assert.DoesNotContain("BoundedListGridQueryEngine", settlementText);
+        Assert.DoesNotContain("InMemoryGridQueryEngine", settlementText);
 
         foreach (var file in files)
         {
@@ -117,7 +125,6 @@ public sealed class AdminDbNativeGridQueryTests
             "AdminOrdersGridQueryEngine.cs",
             "AdminCustomersGridQueryEngine.cs",
             "AdminSellersGridQueryEngine.cs",
-            "AdminPayoutGridQueryEngine.cs",
             "AdminReviewGridQueryEngine.cs",
             "AdminStoryGridQueryEngine.cs",
         };
@@ -142,6 +149,7 @@ public sealed class AdminDbNativeGridQueryTests
         {
             Path.GetFullPath(Path.Combine(root, "..", "..", "..", "Modules", "Fulfillment", "Tooba.Fulfillment.Infrastructure", "Queries", "AdminFulfillmentWorkQueueQueryEngine.cs")),
             Path.GetFullPath(Path.Combine(root, "..", "..", "..", "Modules", "Returns", "Tooba.Returns.Infrastructure", "Queries", "AdminReturnGridQueryEngine.cs")),
+            Path.GetFullPath(Path.Combine(root, "..", "..", "..", "Modules", "Settlement", "Tooba.Settlement.Infrastructure", "Queries", "AdminPayoutGridQueryEngine.cs")),
         };
         foreach (var path in moduleEngines)
         {

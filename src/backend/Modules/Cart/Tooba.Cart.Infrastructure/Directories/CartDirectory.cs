@@ -309,7 +309,7 @@ public sealed class CartDirectory : ICartDirectory, CartContract.ICartQueryGatew
         await _guard.EnsureCanMutateAsync(cancellationToken);
         if (userId == Guid.Empty)
         {
-            throw new InvalidOperationException("سبد واردشده به UserId پایدار نیاز دارد.");
+            throw new InvalidOperationException("cart.user_id.required");
         }
 
         ShoppingCart? guest = null;
@@ -317,7 +317,7 @@ public sealed class CartDirectory : ICartDirectory, CartContract.ICartQueryGatew
         {
             if (string.IsNullOrWhiteSpace(guestSecret))
             {
-                throw new InvalidOperationException("راز مهمان نامعتبر است؛ CartId به‌تنهایی مجوز نیست و راز خام در پایگاه نیست.");
+                throw new InvalidOperationException("cart.guest_secret.invalid");
             }
 
             guest = await LoadRequiredAsync(cartId, cancellationToken);
@@ -325,7 +325,7 @@ public sealed class CartDirectory : ICartDirectory, CartContract.ICartQueryGatew
             {
                 if (guest.OwnerUserId != userId)
                 {
-                    throw new InvalidOperationException("سبد واردشده بدون UserId مطابق قابل‌دسترسی نیست؛ CartId Bearer نیست.");
+                    throw new InvalidOperationException("cart.access.denied");
                 }
 
                 return new CartMergeResult(await ToSnapshotAsync(guest, cancellationToken), false, (await ToSnapshotAsync(guest, cancellationToken)).Lines);
@@ -469,21 +469,21 @@ public sealed class CartDirectory : ICartDirectory, CartContract.ICartQueryGatew
         CancellationToken cancellationToken)
     {
         var offer = await _offers.FindOfferAsync(offerId, cancellationToken)
-            ?? throw new InvalidOperationException("Offer از قرارداد Lookup پیدا نشد؛ DbContext Offer خوانده نشد.");
+            ?? throw new InvalidOperationException("cart.offer.missing");
         if (offer.Status != OfferStatus.Active)
         {
-            throw new InvalidOperationException("Offer غیرفعال یا بایگانی‌شده به سبد اضافه نمی‌شود.");
+            throw new InvalidOperationException("cart.offer.inactive");
         }
 
         if (offer.Channel != cart.Channel)
         {
-            throw new InvalidOperationException("کانال Offer با زمینهٔ سبد یکی نیست.");
+            throw new InvalidOperationException("cart.offer.channel_mismatch");
         }
 
         if (_catalog is not null)
         {
             var policy = await _catalog.GetEffectiveQuantityPolicyForVariantAsync(offer.CatalogVariantId, cancellationToken)
-                ?? throw new InvalidOperationException("سیاست مقدار گونه از Catalog پیدا نشد.");
+                ?? throw new InvalidOperationException("cart.quantity_policy.missing");
             quantity = _normalizer.Normalize(quantity, policy);
         }
 
@@ -526,7 +526,7 @@ public sealed class CartDirectory : ICartDirectory, CartContract.ICartQueryGatew
         var quote = await _prices.ResolvePriceAsync(
             new PriceResolutionQuery(offerId, cart.Market, cart.Channel, cart.Currency, now, null, null, quantity),
             cancellationToken)
-            ?? throw new InvalidOperationException("نقل‌قول قیمت از قرارداد Pricing پیدا نشد؛ مبلغ روی Product/Offer نیست.");
+            ?? throw new InvalidOperationException("cart.pricing.quote_missing");
         return (offer, quote, quantity, null);
     }
 
@@ -638,10 +638,10 @@ public sealed class CartDirectory : ICartDirectory, CartContract.ICartQueryGatew
     private async Task EnsureSellableAsync(Guid offerId, decimal quantity, CancellationToken cancellationToken)
     {
         var availability = await _availability.GetAvailabilityAsync(offerId, cancellationToken)
-            ?? throw new InvalidOperationException("موجودی Offer از قرارداد Inventory پیدا نشد؛ جدول Inventory اینجا join نشد.");
+            ?? throw new InvalidOperationException("cart.inventory.missing");
         if (availability.Available < quantity)
         {
-            throw new InvalidOperationException("موجودی قابل‌فروش برای خط سبد کافی نیست.");
+            throw new InvalidOperationException("cart.inventory.insufficient");
         }
     }
 
@@ -661,7 +661,7 @@ public sealed class CartDirectory : ICartDirectory, CartContract.ICartQueryGatew
         await _db.Carts.Include(x => x.Lines).SingleOrDefaultAsync(x => x.CartId == cartId, cancellationToken);
 
     private async Task<ShoppingCart> LoadRequiredAsync(Guid cartId, CancellationToken cancellationToken) =>
-        await LoadAsync(cartId, cancellationToken) ?? throw new InvalidOperationException("سبد پیدا نشد.");
+        await LoadAsync(cartId, cancellationToken) ?? throw new InvalidOperationException("cart.missing");
 
     private static void EnsureAccess(ShoppingCart cart, CartContract.CartAccess access)
     {
@@ -669,7 +669,7 @@ public sealed class CartDirectory : ICartDirectory, CartContract.ICartQueryGatew
         {
             if (access.UserId is null || access.UserId != cart.OwnerUserId)
             {
-                throw new InvalidOperationException("سبد واردشده بدون UserId مطابق قابل‌دسترسی نیست؛ CartId Bearer نیست.");
+                throw new InvalidOperationException("cart.access.denied");
             }
 
             return;
@@ -679,7 +679,7 @@ public sealed class CartDirectory : ICartDirectory, CartContract.ICartQueryGatew
             || string.IsNullOrWhiteSpace(cart.GuestCredentialHash)
             || !CartCredentialHasher.Matches(access.GuestSecret, cart.GuestCredentialHash))
         {
-            throw new InvalidOperationException("راز مهمان نامعتبر است؛ CartId به‌تنهایی مجوز نیست و راز خام در پایگاه نیست.");
+            throw new InvalidOperationException("cart.guest_secret.invalid");
         }
     }
 
@@ -691,7 +691,7 @@ public sealed class CartDirectory : ICartDirectory, CartContract.ICartQueryGatew
         }
         catch (DbUpdateConcurrencyException)
         {
-            throw new InvalidOperationException("نسخهٔ سبد کهنه است؛ جهش همزمان خط رد شد.");
+            throw new InvalidOperationException("cart.version.stale");
         }
     }
 

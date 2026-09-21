@@ -6,9 +6,11 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Tooba.BuildingBlocks;
+using Tooba.BuildingBlocks.Presentation.Errors;
 using Tooba.ModuleContracts;
 using Tooba.Returns.Contracts.Settlement;
 using Tooba.Settlement.Application;
+using Tooba.Settlement.Application.Ports;
 using Tooba.Settlement.Infrastructure.Persistence;
 using Tooba.Persistence;
 
@@ -31,9 +33,11 @@ public sealed class SettlementModule : IToobaModule
 
         services.AddSingleton<SettlementInstrumentation>();
         services.AddSingleton<IOutboxModuleRegistration, SettlementOutboxRegistration>();
+        services.AddSingleton<IErrorCatalogContributor, Errors.SettlementErrorCatalogContributor>();
         services.AddScoped<ISettlementUseCaseGuard, OpenSettlementUseCaseGuard>();
         services.AddScoped<SettlementDirectory>();
         services.AddScoped<ISettlementDirectory>(sp => sp.GetRequiredService<SettlementDirectory>());
+        services.AddScoped<IAdminPayoutGridQuery, Queries.AdminPayoutGridQueryEngine>();
         services.AddScoped<ISettlementOrderReader, SettlementOrderBridge>();
         services.AddScoped<ISettlementPaymentReader, SettlementPaymentBridge>();
         services.AddScoped<ISettlementReturnsReader, SettlementReturnsBridge>();

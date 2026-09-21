@@ -1,18 +1,23 @@
+using MediatR;
 using Tooba.BuildingBlocks;
 using Tooba.BuildingBlocks.Grid;
+using Tooba.BuildingBlocks.Presentation;
+using Tooba.BuildingBlocks.Results;
 using Tooba.Host.Admin;
+using Tooba.Host.Grid;
 using Tooba.Host.Seller;
+using Tooba.Settlement.Application.Commands;
+using Tooba.Settlement.Application.Models;
+using Tooba.Settlement.Application.Queries;
 
 namespace Tooba.Host.Settlement;
 
 /// <summary>
-/// HTTP تسویه برای seller/admin با فیلتر مجوز در سرور.
+/// Endpoint-State: HOST_THIN_TRANSPORT — auth + ISender/ApiResponseFactory only.
 /// </summary>
 public static class SettlementEndpoints
 {
-    /// <summary>
-    /// مسیرهای تسویه را ثبت می‌کند.
-    /// </summary>
+    /// <summary>مسیرهای تسویه را ثبت می‌کند.</summary>
     public static void MapSettlementEndpoints(this WebApplication app)
     {
         var seller = app.MapGroup("/v1/seller");
@@ -30,11 +35,9 @@ public static class SettlementEndpoints
         admin.MapPost("/settlement/payout-requests/{payoutRequestId:guid}/retry", AdminRetryPayoutAsync);
     }
 
-    private static IResult ToError(PlatformHttpException ex) =>
-        Results.Json(new { title = ex.Title, errorCode = ex.ErrorCode }, statusCode: ex.StatusCode);
-
     private static async Task<IResult> SellerBalanceAsync(
-        SettlementPanelComposer composer,
+        ISender sender,
+        ApiResponseFactory api,
         HttpRequest request,
         CurrentAuthenticatedSession session,
         IAuthorizationGuard guard,
@@ -45,16 +48,17 @@ public static class SettlementEndpoints
         {
             var (_, sellerPartyId) = await SellerPanelAccess.RequireAuthorizedAsync(
                 request, session, guard, environment, cancellationToken);
-            var balance = await composer.GetBalanceAsync(sellerPartyId, cancellationToken);
-            return balance is null
-                ? Results.Json(new { title = "Not Found", errorCode = "settlement.account.missing" }, statusCode: 404)
-                : Results.Json(balance);
+            return api.From(await sender.Send(new GetSellerSettlementBalanceQuery(sellerPartyId), cancellationToken));
         }
-        catch (PlatformHttpException ex) { return ToError(ex); }
+        catch (PlatformHttpException ex)
+        {
+            return api.FromFailure(new SemanticError(ex.ErrorCode ?? "platform.http"));
+        }
     }
 
     private static async Task<IResult> SellerEntriesAsync(
-        SettlementPanelComposer composer,
+        ISender sender,
+        ApiResponseFactory api,
         HttpRequest request,
         CurrentAuthenticatedSession session,
         IAuthorizationGuard guard,
@@ -65,13 +69,17 @@ public static class SettlementEndpoints
         {
             var (_, sellerPartyId) = await SellerPanelAccess.RequireAuthorizedAsync(
                 request, session, guard, environment, cancellationToken);
-            return Results.Json(await composer.ListEntriesAsync(sellerPartyId, cancellationToken));
+            return api.From(await sender.Send(new ListSellerSettlementEntriesQuery(sellerPartyId), cancellationToken));
         }
-        catch (PlatformHttpException ex) { return ToError(ex); }
+        catch (PlatformHttpException ex)
+        {
+            return api.FromFailure(new SemanticError(ex.ErrorCode ?? "platform.http"));
+        }
     }
 
     private static async Task<IResult> SellerStatementsAsync(
-        SettlementPanelComposer composer,
+        ISender sender,
+        ApiResponseFactory api,
         HttpRequest request,
         CurrentAuthenticatedSession session,
         IAuthorizationGuard guard,
@@ -82,13 +90,17 @@ public static class SettlementEndpoints
         {
             var (_, sellerPartyId) = await SellerPanelAccess.RequireAuthorizedAsync(
                 request, session, guard, environment, cancellationToken);
-            return Results.Json(await composer.ListStatementsAsync(sellerPartyId, cancellationToken));
+            return api.From(await sender.Send(new ListSellerSettlementStatementsQuery(sellerPartyId), cancellationToken));
         }
-        catch (PlatformHttpException ex) { return ToError(ex); }
+        catch (PlatformHttpException ex)
+        {
+            return api.FromFailure(new SemanticError(ex.ErrorCode ?? "platform.http"));
+        }
     }
 
     private static async Task<IResult> SellerPayoutListAsync(
-        SettlementPanelComposer composer,
+        ISender sender,
+        ApiResponseFactory api,
         HttpRequest request,
         CurrentAuthenticatedSession session,
         IAuthorizationGuard guard,
@@ -99,14 +111,18 @@ public static class SettlementEndpoints
         {
             var (_, sellerPartyId) = await SellerPanelAccess.RequireAuthorizedAsync(
                 request, session, guard, environment, cancellationToken);
-            return Results.Json(await composer.ListPayoutRequestsAsync(sellerPartyId, cancellationToken));
+            return api.From(await sender.Send(new ListSellerPayoutRequestsQuery(sellerPartyId), cancellationToken));
         }
-        catch (PlatformHttpException ex) { return ToError(ex); }
+        catch (PlatformHttpException ex)
+        {
+            return api.FromFailure(new SemanticError(ex.ErrorCode ?? "platform.http"));
+        }
     }
 
     private static async Task<IResult> SellerRequestPayoutAsync(
         RequestPayoutBody body,
-        SettlementPanelComposer composer,
+        ISender sender,
+        ApiResponseFactory api,
         HttpRequest request,
         CurrentAuthenticatedSession session,
         IAuthorizationGuard guard,
@@ -117,17 +133,19 @@ public static class SettlementEndpoints
         {
             var (actorUserId, sellerPartyId) = await SellerPanelAccess.RequireAuthorizedAsync(
                 request, session, guard, environment, cancellationToken);
-            return Results.Json(await composer.RequestPayoutAsync(sellerPartyId, actorUserId, body, cancellationToken));
+            return api.From(await sender.Send(
+                new RequestSellerPayoutCommand(sellerPartyId, actorUserId, body.Amount, body.IdempotencyKey),
+                cancellationToken));
         }
-        catch (PlatformHttpException ex) { return ToError(ex); }
-        catch (InvalidOperationException ex)
+        catch (PlatformHttpException ex)
         {
-            return Results.Json(new { title = "Bad Request", errorCode = "settlement.payout.rejected", detail = ex.Message }, statusCode: 400);
+            return api.FromFailure(new SemanticError(ex.ErrorCode ?? "platform.http"));
         }
     }
 
     private static async Task<IResult> AdminBalancesAsync(
-        SettlementPanelComposer composer,
+        ISender sender,
+        ApiResponseFactory api,
         HttpRequest request,
         CurrentAuthenticatedSession session,
         ICurrentTenant tenant,
@@ -140,13 +158,17 @@ public static class SettlementEndpoints
         {
             await SettlementAdminAccess.RequireAuthorizedAsync(
                 request, session, tenant, registry, guard, environment, cancellationToken);
-            return Results.Json(await composer.ListAllBalancesAsync(cancellationToken));
+            return api.From(await sender.Send(new ListAdminSettlementBalancesQuery(), cancellationToken));
         }
-        catch (PlatformHttpException ex) { return ToError(ex); }
+        catch (PlatformHttpException ex)
+        {
+            return api.FromFailure(new SemanticError(ex.ErrorCode ?? "platform.http"));
+        }
     }
 
     private static async Task<IResult> AdminPayoutQueueAsync(
-        SettlementPanelComposer composer,
+        ISender sender,
+        ApiResponseFactory api,
         HttpRequest request,
         CurrentAuthenticatedSession session,
         ICurrentTenant tenant,
@@ -159,14 +181,18 @@ public static class SettlementEndpoints
         {
             await SettlementAdminAccess.RequireAuthorizedAsync(
                 request, session, tenant, registry, guard, environment, cancellationToken);
-            return Results.Json(await composer.ListPayoutQueueAsync(cancellationToken));
+            return api.From(await sender.Send(new ListAdminPayoutQueueQuery(), cancellationToken));
         }
-        catch (PlatformHttpException ex) { return ToError(ex); }
+        catch (PlatformHttpException ex)
+        {
+            return api.FromFailure(new SemanticError(ex.ErrorCode ?? "platform.http"));
+        }
     }
 
     private static async Task<IResult> AdminQueryPayoutGridAsync(
         GridQueryRequest body,
-        SettlementPanelComposer composer,
+        ISender sender,
+        ApiResponseFactory api,
         HttpRequest request,
         CurrentAuthenticatedSession session,
         ICurrentTenant tenant,
@@ -179,14 +205,19 @@ public static class SettlementEndpoints
         {
             await SettlementAdminAccess.RequireAuthorizedAsync(
                 request, session, tenant, registry, guard, environment, cancellationToken);
-            return Results.Json(await composer.QueryPayoutGridAsync(body, cancellationToken));
+            var normalized = AdminListGridPolicies.Payouts.Normalize(body);
+            return api.From(await sender.Send(new QueryAdminPayoutGridQuery(normalized), cancellationToken));
         }
-        catch (PlatformHttpException ex) { return ToError(ex); }
+        catch (PlatformHttpException ex)
+        {
+            return api.FromFailure(new SemanticError(ex.ErrorCode ?? "platform.http"));
+        }
     }
 
     private static async Task<IResult> AdminProcessPayoutAsync(
         Guid payoutRequestId,
-        SettlementPanelComposer composer,
+        ISender sender,
+        ApiResponseFactory api,
         HttpRequest request,
         CurrentAuthenticatedSession session,
         ICurrentTenant tenant,
@@ -199,18 +230,20 @@ public static class SettlementEndpoints
         {
             var actorUserId = await SettlementAdminAccess.RequireAuthorizedAsync(
                 request, session, tenant, registry, guard, environment, cancellationToken);
-            return Results.Json(await composer.ProcessPayoutAsync(payoutRequestId, actorUserId, cancellationToken));
+            return api.From(await sender.Send(
+                new ProcessAdminPayoutCommand(payoutRequestId, actorUserId),
+                cancellationToken));
         }
-        catch (PlatformHttpException ex) { return ToError(ex); }
-        catch (InvalidOperationException ex)
+        catch (PlatformHttpException ex)
         {
-            return Results.Json(new { title = "Bad Request", errorCode = "settlement.payout.rejected", detail = ex.Message }, statusCode: 400);
+            return api.FromFailure(new SemanticError(ex.ErrorCode ?? "platform.http"));
         }
     }
 
     private static async Task<IResult> AdminRetryPayoutAsync(
         Guid payoutRequestId,
-        SettlementPanelComposer composer,
+        ISender sender,
+        ApiResponseFactory api,
         HttpRequest request,
         CurrentAuthenticatedSession session,
         ICurrentTenant tenant,
@@ -223,12 +256,13 @@ public static class SettlementEndpoints
         {
             var actorUserId = await SettlementAdminAccess.RequireAuthorizedAsync(
                 request, session, tenant, registry, guard, environment, cancellationToken);
-            return Results.Json(await composer.RetryPayoutAsync(payoutRequestId, actorUserId, cancellationToken));
+            return api.From(await sender.Send(
+                new RetryAdminPayoutCommand(payoutRequestId, actorUserId),
+                cancellationToken));
         }
-        catch (PlatformHttpException ex) { return ToError(ex); }
-        catch (InvalidOperationException ex)
+        catch (PlatformHttpException ex)
         {
-            return Results.Json(new { title = "Bad Request", errorCode = "settlement.payout.rejected", detail = ex.Message }, statusCode: 400);
+            return api.FromFailure(new SemanticError(ex.ErrorCode ?? "platform.http"));
         }
     }
 }

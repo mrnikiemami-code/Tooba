@@ -1,26 +1,29 @@
 using Microsoft.EntityFrameworkCore;
 using Tooba.BuildingBlocks.Grid;
+using Tooba.Party.Contracts;
 using Tooba.Persistence.Grid;
-using Tooba.Host.Admin;
-using Tooba.Party.Infrastructure.Persistence;
-using Tooba.Settlement.Application;
-using Tooba.Settlement.Domain;
+using Tooba.Settlement.Application.Models;
+using Tooba.Settlement.Application.Ports;
+using Tooba.Settlement.Domain.Aggregates;
+using Tooba.Settlement.Domain.ValueObjects;
 using Tooba.Settlement.Infrastructure.Persistence;
 
-namespace Tooba.Host.Grid;
+namespace Tooba.Settlement.Infrastructure.Queries;
 
-/// <summary>پرس‌وجوی DB-native صف payout Admin (Pending|Failed) با batch attempt و نام فروشنده.</summary>
-internal sealed class AdminPayoutGridQueryEngine
+/// <summary>پرس‌وجوی DB-native صف payout Admin (Pending|Failed) با batch نام فروشنده از Party.Contracts.</summary>
+public sealed class AdminPayoutGridQueryEngine : IAdminPayoutGridQuery
 {
     private readonly SettlementDbContext _db;
-    private readonly PartyDbContext _parties;
+    private readonly IPartyLookup _parties;
 
-    public AdminPayoutGridQueryEngine(SettlementDbContext db, PartyDbContext parties)
+    /// <summary>موتور گرید payout را می‌سازد.</summary>
+    public AdminPayoutGridQueryEngine(SettlementDbContext db, IPartyLookup parties)
     {
         _db = db;
         _parties = parties;
     }
 
+    /// <inheritdoc />
     public async Task<GridPageResponse<AdminPayoutListItem>> QueryAsync(
         GridQueryRequest request,
         CancellationToken cancellationToken)
@@ -121,11 +124,7 @@ internal sealed class AdminPayoutGridQueryEngine
         }
 
         var sellerIds = rows.Select(x => x.SellerPartyId).Distinct().ToList();
-        var sellerRows = await _parties.Parties.AsNoTracking()
-            .Where(x => sellerIds.Contains(x.PartyId))
-            .Select(x => new { x.PartyId, x.DisplayName })
-            .ToListAsync(cancellationToken);
-        var sellerNames = sellerRows.ToDictionary(x => x.PartyId, x => x.DisplayName);
+        var sellerNames = await _parties.GetDisplayNamesAsync(sellerIds, cancellationToken);
 
         return rows.Select(request =>
         {

@@ -1,0 +1,182 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+
+BEGIN_TOOBA_WORKER_RESULT
+
+Task-ID:
+TB-TMAR-NEXT-MODULE-BATCH-005-R1
+
+Parent-Task:
+TB-TMAR-NEXT-MODULE-BATCH-005
+
+Channel:
+tooba-main
+
+WorkerId:
+tooba-worker-01
+
+AgentType:
+cursor
+
+Status:
+PASS
+
+Summary:
+Settlement Host thin transport closed: AdminPayoutGridQueryEngine moved to Settlement.Infrastructure with Party.Contracts IPartyLookup; SettlementPanelComposer deleted; SettlementEndpoints use ISender+ApiResponseFactory+Result/SemanticError catalog. Dedicated Cart.Tests and Settlement.Tests ArchitectureGuard projects enforced. Cart/Settlement localized exception prose converted to stable codes. Tax/Pricing/Checkout/frontend untouched. BATCH-006 not started.
+
+Program-Name:
+TMAR — Tooba Microservice-Ready Architecture Recovery
+
+Track:
+REFERENCE_BATCH_REPAIR
+
+Recovery-Start:
+docs/evidence/TB-TMAR-NEXT-MODULE-BATCH-005-R1/recovery-start.md — Claim 3d2cb11f-0928-4b89-93e2-75510effbfe5; baseline 4b342f62ccfab689b6123004083a5559150dc213
+
+Settlement-Host-Authority-Audit:
+docs/evidence/TB-TMAR-NEXT-MODULE-BATCH-005-R1/settlement-host-authority-audit.md — Host Db/query authority removed; composer+Host engine deleted
+
+Settlement-Endpoint-Boundary:
+docs/evidence/TB-TMAR-NEXT-MODULE-BATCH-005-R1/settlement-endpoint-boundary.md — HOST_THIN_TRANSPORT auth+ISender+ApiResponseFactory; routes preserved
+
+Settlement-Party-Boundary:
+docs/evidence/TB-TMAR-NEXT-MODULE-BATCH-005-R1/settlement-party-boundary.md — IPartyLookup Contracts-only; PartyDbContext Settlement-path=0
+
+Settlement-Error-Presentation:
+CENTRALIZED — SettlementErrorCatalogContributor + Result/SemanticError; no manual Results.Json/ex.Message
+
+Settlement-Result-Adoption:
+ADOPTED for seller/admin HTTP use cases via MediatR Result handlers
+
+Settlement-CQRS-State:
+MEDIATR_HANDLERS — Get/List/Query/Request/Process/Retry Commands+Queries on Settlement.Application; MediatR 12.5.0 via AddToobaCqrsFoundation
+
+Settlement-Host-DbAuthority:
+NONE — production business/query hits 0; bootstrap MarketplaceDevelopmentBootstrap migrate only
+
+Settlement-Behavior-Parity:
+VERIFIED — focused Host SettlementFoundation + AdminDbNativeGridQuery + directory ports preserved; response shapes preserved
+
+Settlement-Architecture-Guards:
+ENFORCED — Tooba.Settlement.Tests/Architecture/SettlementArchitectureGuardTests.cs PASS
+
+Cart-Architecture-Guards:
+ENFORCED — Tooba.Cart.Tests/Architecture/CartArchitectureGuardTests.cs PASS
+
+Cart-Behavior-Parity:
+VERIFIED — exception messages → cart.* codes only; no Cart redesign; focused Host Cart/Settlement characterization PASS
+
+Host-DbContext-Scan:
+docs/evidence/TB-TMAR-NEXT-MODULE-BATCH-005-R1/host-dbcontext-scan.md — SettlementDbContext Host production business=0; PartyDbContext Settlement-path=0
+
+Behavior-Preservation-Audit:
+docs/evidence/TB-TMAR-NEXT-MODULE-BATCH-005-R1/behavior-preservation-audit.md — payout grid/filters/sort/paging/seller names/process/retry preserved
+
+Focused-Validation:
+dotnet test Cart.Tests → 1 PASS; Settlement.Tests → 1 PASS; Host.Tests filter SettlementFoundation|AdminDbNativeGridQuery|CartFoundation|CampaignCart|CheckoutIdentity|QuantityDecimal → 22 PASS; dotnet build src/backend/Tooba.slnx → SUCCESS
+
+Skipped-Validation:
+broad Host suite; full Checkout workflow; Tax/Pricing; frontend; unrelated module suites
+
+Full-Validation:
+dotnet build src/backend/Tooba.slnx SUCCESS (0 errors)
+
+AntiPattern-Gate:
+CLEAN — Host SettlementDbContext business/query=0; Host PartyDbContext Settlement=0; no manual semantic Results.Json; no raw ex.Message; no PlatformHttpException business mapping for Settlement outcomes; foreign App/Domain/Infra refs Contracts-only; root dump clean; no TypeForwardedTo; no clock/id bypass; no hidden DI fallback; no silent catch; no localized exception prose; dedicated architecture guards present; Checkout/Tax/Pricing/frontend untouched
+
+Residual-Defects:
+NONE blocking BATCH-005 R1 scope
+
+Cart-State:
+COMPLETE_REFERENCE_PATTERN
+
+Cart-Physical-State:
+VERIFIED_ON_DISK_AND_NAMESPACE
+
+Cart-CrossModule-Boundary:
+CONTRACTS_ONLY
+
+Settlement-State:
+COMPLETE_REFERENCE_PATTERN
+
+Settlement-Physical-State:
+VERIFIED_ON_DISK_AND_NAMESPACE
+
+Settlement-CrossModule-Boundary:
+CONTRACTS_ONLY
+
+Settlement-Endpoint-State:
+HOST_THIN_TRANSPORT
+
+Settlement-Party-Boundary:
+CONTRACTS_ONLY
+
+Settlement-Host-DbAuthority:
+NONE
+
+Settlement-Error-Presentation:
+CENTRALIZED
+
+Behavior-Preservation:
+VERIFIED
+
+Fulfillment-State:
+COMPLETE_REFERENCE_PATTERN
+
+Returns-State:
+COMPLETE_REFERENCE_PATTERN
+
+Notification-State:
+COMPLETE_REFERENCE_PATTERN
+
+Support-State:
+COMPLETE_REFERENCE_PATTERN
+
+Wallet-State:
+COMPLETE_REFERENCE_PATTERN
+
+Payment-State:
+COMPLETE_REFERENCE_PATTERN
+
+Inventory-State:
+COMPLETE_REFERENCE_PATTERN
+
+Promotion-State:
+COMPLETE_REFERENCE_PATTERN
+
+Offer-State:
+COMPLETE_REFERENCE_PATTERN
+
+Foundation-State:
+RESULT_PATTERN_FOUNDATION_COMPLETE
+
+Tax-State:
+DEFERRED_PHYSICAL_REVIEW_BY_USER
+
+Pricing-State:
+DEFERRED_PHYSICAL_REVIEW_BY_USER
+
+Checkout-State:
+PAUSED_AT_SAFE_W5_CHECKPOINT
+
+Frontend-Production-Changes:
+NONE
+
+Batch-State:
+COMPLETE
+
+Git:
+branch=main SHA=TIP_PLACEHOLDER HEAD==origin/main after push. Stashes preserved (unrelated-pre-r10; temp-before-push). No .rar touched.
+
+Blockers:
+NONE
+
+User-Work-Preserved:
+YES — stashes untouched; unrelated untracked preserved
+
+Module-Recovery-State:
+NEXT_REFERENCE_BATCH_005_COMPLETE
+
+Next-Recommended-Task:
+TB-TMAR-NEXT-MODULE-BATCH-006
+
+END_TOOBA_WORKER_RESULT

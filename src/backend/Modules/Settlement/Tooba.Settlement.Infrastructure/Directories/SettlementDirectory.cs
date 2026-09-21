@@ -72,10 +72,10 @@ public sealed class SettlementDirectory : ISettlementDirectory
         }
 
         var payment = await _payments.GetPaymentAsync(paymentId, cancellationToken)
-            ?? throw new InvalidOperationException("پرداخت برای accrual پیدا نشد.");
+            ?? throw new InvalidOperationException("settlement.accrual.payment_missing");
         if (!payment.IsSucceeded)
         {
-            throw new InvalidOperationException("accrual فقط برای پرداخت Succeeded مجاز است.");
+            throw new InvalidOperationException("settlement.accrual.payment_not_succeeded");
         }
 
         var policy = await GetDefaultCommissionPolicyAsync(cancellationToken);
@@ -98,10 +98,10 @@ public sealed class SettlementDirectory : ISettlementDirectory
             }
 
             var order = await _orders.GetAsync(sellerOrderId, cancellationToken)
-                ?? throw new InvalidOperationException("سفارش برای accrual پیدا نشد.");
+                ?? throw new InvalidOperationException("settlement.accrual.order_missing");
             if (!order.IsPaid)
             {
-                throw new InvalidOperationException("accrual فقط برای سفارش Paid مجاز است.");
+                throw new InvalidOperationException("settlement.accrual.order_not_paid");
             }
 
             var account = await EnsureAccountAsync(order.SellerPartyId, allocation.Currency, now, cancellationToken);
@@ -156,11 +156,11 @@ public sealed class SettlementDirectory : ISettlementDirectory
         }
 
         var refund = await _returns.GetAsync(returnRequestId, cancellationToken)
-            ?? throw new InvalidOperationException("refund برای adjustment پیدا نشد.");
+            ?? throw new InvalidOperationException("settlement.refund.missing");
         if (!string.Equals(refund.Currency, currency, StringComparison.OrdinalIgnoreCase)
             || refund.RefundAmount != refundAmount)
         {
-            throw new InvalidOperationException("snapshot refund با رویداد هم‌خوان نیست.");
+            throw new InvalidOperationException("settlement.refund.mismatch");
         }
 
         var policy = await GetDefaultCommissionPolicyAsync(cancellationToken);
@@ -329,12 +329,12 @@ public sealed class SettlementDirectory : ISettlementDirectory
 
         var account = await _db.SettlementAccounts.AsNoTracking()
             .SingleOrDefaultAsync(x => x.SellerPartyId == command.SellerPartyId, cancellationToken)
-            ?? throw new InvalidOperationException("حساب تسویه برای فروشنده پیدا نشد.");
+            ?? throw new InvalidOperationException("settlement.account.missing");
 
         var balance = await BuildBalanceAsync(account, cancellationToken);
         if (command.Amount > balance.AvailableBalance)
         {
-            throw new InvalidOperationException("مبلغ payout از ماندهٔ قابل برداشت بیشتر است.");
+            throw new InvalidOperationException("settlement.payout.invalid_amount");
         }
 
         var now = _clock.UtcNow;
@@ -610,7 +610,7 @@ public sealed class SettlementDirectory : ISettlementDirectory
     {
         var request = await _db.PayoutRequests
             .SingleOrDefaultAsync(x => x.PayoutRequestId == payoutRequestId, cancellationToken)
-            ?? throw new InvalidOperationException("درخواست payout پیدا نشد.");
+            ?? throw new InvalidOperationException("settlement.payout.missing");
         if (request.Status == PayoutStatus.Succeeded)
         {
             return await MapPayoutAsync(request, cancellationToken);

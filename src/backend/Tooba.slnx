@@ -33,6 +33,7 @@
     <Project Path="Modules/Cart/Tooba.Cart.Contracts/Tooba.Cart.Contracts.csproj" />
     <Project Path="Modules/Cart/Tooba.Cart.Application/Tooba.Cart.Application.csproj" />
     <Project Path="Modules/Cart/Tooba.Cart.Infrastructure/Tooba.Cart.Infrastructure.csproj" />
+    <Project Path="Modules/Cart/Tooba.Cart.Tests/Tooba.Cart.Tests.csproj" />
     <Project Path="Modules/Order/Tooba.Order.Domain/Tooba.Order.Domain.csproj" />
     <Project Path="Modules/Order/Tooba.Order.Contracts/Tooba.Order.Contracts.csproj" />
     <Project Path="Modules/Order/Tooba.Order.Application/Tooba.Order.Application.csproj" />
@@ -64,6 +65,7 @@
     <Project Path="Modules/Settlement/Tooba.Settlement.Domain/Tooba.Settlement.Domain.csproj" />
     <Project Path="Modules/Settlement/Tooba.Settlement.Application/Tooba.Settlement.Application.csproj" />
     <Project Path="Modules/Settlement/Tooba.Settlement.Infrastructure/Tooba.Settlement.Infrastructure.csproj" />
+    <Project Path="Modules/Settlement/Tooba.Settlement.Tests/Tooba.Settlement.Tests.csproj" />
     <Project Path="Modules/Notification/Tooba.Notification.Contracts/Tooba.Notification.Contracts.csproj" />
     <Project Path="Modules/Notification/Tooba.Notification.Domain/Tooba.Notification.Domain.csproj" />
     <Project Path="Modules/Notification/Tooba.Notification.Application/Tooba.Notification.Application.csproj" />

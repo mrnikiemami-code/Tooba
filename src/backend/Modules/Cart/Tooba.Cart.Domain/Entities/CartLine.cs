@@ -159,12 +159,12 @@ public sealed class CartLine
     {
         if (quantity <= 0)
         {
-            throw new InvalidOperationException("تعداد خط سبد باید مثبت باشد.");
+            throw new InvalidOperationException("cart.line.quantity_positive");
         }
 
         if (quantity > 99)
         {
-            throw new InvalidOperationException("تعداد خط سبد از سقف foundation بیشتر است.");
+            throw new InvalidOperationException("cart.line.quantity_ceiling");
         }
     }
 }

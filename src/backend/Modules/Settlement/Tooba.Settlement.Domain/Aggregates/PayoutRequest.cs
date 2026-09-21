@@ -64,12 +64,12 @@ public sealed class PayoutRequest : IHasDomainEvents
     {
         if (amount <= 0)
         {
-            throw new InvalidOperationException("مبلغ payout باید مثبت باشد.");
+            throw new InvalidOperationException("settlement.amount.invalid");
         }
 
         if (string.IsNullOrWhiteSpace(idempotencyKey))
         {
-            throw new InvalidOperationException("کلید idempotency الزامی است.");
+            throw new InvalidOperationException("settlement.idempotency.required");
         }
 
         return new PayoutRequest
@@ -98,7 +98,7 @@ public sealed class PayoutRequest : IHasDomainEvents
     {
         if (Status is PayoutStatus.Succeeded)
         {
-            throw new InvalidOperationException("payout قبلاً موفق شده است.");
+            throw new InvalidOperationException("settlement.payout.invalid_state");
         }
 
         Status = PayoutStatus.Processing;

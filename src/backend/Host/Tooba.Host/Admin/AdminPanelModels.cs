@@ -226,34 +226,6 @@ public sealed record AdminReceiptListItem(
     bool ReservationRetryLimitReached = false);
 
 /// <summary>
-/// ماندهٔ تسویه با نام نمایشی فروشنده برای گرید Admin.
-/// </summary>
-public sealed record AdminSettlementBalanceListItem(
-    Guid SettlementAccountId,
-    Guid SellerPartyId,
-    string SellerDisplayName,
-    string Currency,
-    decimal PostedCredits,
-    decimal PostedDebits,
-    decimal ReservedPayouts,
-    decimal AvailableBalance);
-
-/// <summary>
-/// درخواست payout با نام نمایشی فروشنده برای گرید Admin.
-/// </summary>
-public sealed record AdminPayoutListItem(
-    Guid PayoutRequestId,
-    Guid SettlementAccountId,
-    Guid SellerPartyId,
-    string SellerDisplayName,
-    decimal Amount,
-    string Currency,
-    string Status,
-    string IdempotencyKey,
-    DateTimeOffset CreatedAt,
-    DateTimeOffset UpdatedAt);
-
-/// <summary>
 /// بازرسی عملیاتی پرداخت روی جزئیات سفارش مدیر؛ راز یا payload خام ندارد.
 /// </summary>
 public sealed record AdminPaymentOpsView(

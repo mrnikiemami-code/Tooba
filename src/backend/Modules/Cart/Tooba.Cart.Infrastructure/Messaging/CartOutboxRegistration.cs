@@ -127,7 +127,7 @@ public sealed class CartOutboxRegistration : IOutboxModuleRegistration
             return CartConvertedIntegrationEvent.EventTypeName;
         }
 
-        throw new InvalidOperationException("Unmapped Cart integration event type.");
+        throw new InvalidOperationException("cart.outbox.unmapped_event");
     }
 
     /// <inheritdoc />

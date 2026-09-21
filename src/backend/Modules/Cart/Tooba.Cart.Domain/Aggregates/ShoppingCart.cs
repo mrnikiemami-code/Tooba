@@ -110,7 +110,7 @@ public sealed class ShoppingCart : IHasDomainEvents
     {
         if (userId == Guid.Empty)
         {
-            throw new InvalidOperationException("سبد واردشده به UserId پایدار نیاز دارد.");
+            throw new InvalidOperationException("cart.user_id.required");
         }
 
         var cart = CreateCore(cartId, CartAccessKind.Authenticated, userId, null, market, currency, channel, now, expiresAt);
@@ -132,7 +132,7 @@ public sealed class ShoppingCart : IHasDomainEvents
     {
         if (string.IsNullOrWhiteSpace(guestCredentialHash))
         {
-            throw new InvalidOperationException("هش راز مهمان تهی است.");
+            throw new InvalidOperationException("cart.guest_secret.hash_required");
         }
 
         var cart = CreateCore(cartId, CartAccessKind.Guest, null, guestCredentialHash.Trim(), market, currency, channel, now, expiresAt);
@@ -148,7 +148,7 @@ public sealed class ShoppingCart : IHasDomainEvents
         EnsureActive();
         if (Lines.Any(x => x.OfferId == line.OfferId))
         {
-            throw new InvalidOperationException("ادغام خط موجود باید از مسیر تغییر تعداد انجام شود تا رزرو بیش از مقدار خط نماند.");
+            throw new InvalidOperationException("cart.line.merge_via_quantity");
         }
 
         Lines.Add(line);
@@ -166,7 +166,7 @@ public sealed class ShoppingCart : IHasDomainEvents
     /// </summary>
     public CartLine RequireLine(Guid lineId) =>
         Lines.SingleOrDefault(x => x.LineId == lineId)
-        ?? throw new InvalidOperationException("خط سبد پیدا نشد.");
+        ?? throw new InvalidOperationException("cart.line.missing");
 
     /// <summary>
     /// پس از تغییر تعداد، رویداد و نسخه را جلو می‌برد.
@@ -197,7 +197,7 @@ public sealed class ShoppingCart : IHasDomainEvents
     {
         if (Status is CartStatus.Converted)
         {
-            throw new InvalidOperationException("سبد تبدیل‌شده منقضی نمی‌شود.");
+            throw new InvalidOperationException("cart.converted.not_expirable");
         }
 
         if (Status == CartStatus.Expired)
@@ -229,7 +229,7 @@ public sealed class ShoppingCart : IHasDomainEvents
         EnsureActive();
         if (intent == CartConversionIntent.None)
         {
-            throw new InvalidOperationException("تبدیل سبد به مسیر سفارش نیاز دارد.");
+            throw new InvalidOperationException("cart.convert.order_required");
         }
 
         Status = CartStatus.Converted;
@@ -246,12 +246,12 @@ public sealed class ShoppingCart : IHasDomainEvents
         EnsureActive();
         if (userId == Guid.Empty)
         {
-            throw new InvalidOperationException("سبد واردشده به UserId پایدار نیاز دارد.");
+            throw new InvalidOperationException("cart.user_id.required");
         }
 
         if (AccessKind != CartAccessKind.Guest)
         {
-            throw new InvalidOperationException("فقط سبد مهمان قابل انتساب است.");
+            throw new InvalidOperationException("cart.assign.guest_only");
         }
 
         AccessKind = CartAccessKind.Authenticated;
@@ -268,7 +268,7 @@ public sealed class ShoppingCart : IHasDomainEvents
         EnsureActive();
         if (expiresAt <= now)
         {
-            throw new InvalidOperationException("مهلت سبد باید در آینده باشد.");
+            throw new InvalidOperationException("cart.expiry.future_required");
         }
 
         ExpiresAt = expiresAt;
@@ -282,7 +282,7 @@ public sealed class ShoppingCart : IHasDomainEvents
     {
         if (expectedVersion != Version)
         {
-            throw new InvalidOperationException("نسخهٔ سبد کهنه است؛ جهش همزمان خط رد شد.");
+            throw new InvalidOperationException("cart.version.stale");
         }
     }
 
@@ -299,17 +299,17 @@ public sealed class ShoppingCart : IHasDomainEvents
     {
         if (string.IsNullOrWhiteSpace(market))
         {
-            throw new InvalidOperationException("بازار سبد اجباری است و Locale نیست.");
+            throw new InvalidOperationException("cart.market.required");
         }
 
         if (string.IsNullOrWhiteSpace(currency) || currency.Trim().Length != 3)
         {
-            throw new InvalidOperationException("ارز سبد باید کد سه حرفی باشد نه Locale.");
+            throw new InvalidOperationException("cart.currency.invalid");
         }
 
         if (expiresAt <= now)
         {
-            throw new InvalidOperationException("مهلت سبد باید بعد از ایجاد باشد.");
+            throw new InvalidOperationException("cart.expiry.after_created");
         }
 
         return new ShoppingCart
@@ -334,7 +334,7 @@ public sealed class ShoppingCart : IHasDomainEvents
     {
         if (Status != CartStatus.Active)
         {
-            throw new InvalidOperationException("فقط سبد Active قابل جهش خط است.");
+            throw new InvalidOperationException("cart.line.requires_active");
         }
     }
 
