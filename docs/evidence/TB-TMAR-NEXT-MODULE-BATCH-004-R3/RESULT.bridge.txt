@@ -1,0 +1,170 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+
+BEGIN_TOOBA_WORKER_RESULT
+
+Task-ID:
+TB-TMAR-NEXT-MODULE-BATCH-004-R3
+
+Parent-Task:
+TB-TMAR-NEXT-MODULE-BATCH-004-R2
+
+Channel:
+tooba-main
+
+WorkerId:
+tooba-worker-01
+
+AgentType:
+cursor
+
+Status:
+PASS
+
+Summary:
+Closed remaining Fulfillment Host authority seams from R2 reopen. IAdminOrderFulfillmentOperations now Order.Infrastructure-owned (AdminOrderFulfillmentOperations + checkout/permission gates); HostAdminOrderFulfillmentOperations deleted. Shipping methods tree moved to ListEnabledShippingMethodsTreeQuery in Fulfillment.Application; Host /v1/admin/shipping-methods is ISender-only. Architecture guards + focused tests green. Returns/Tax/Pricing/Checkout/frontend untouched. BATCH-005 not started.
+
+Program-Name:
+TMAR — Tooba Microservice-Ready Architecture Recovery
+
+Track:
+REFERENCE_BATCH_REPAIR
+
+Recovery-Start:
+docs/evidence/TB-TMAR-NEXT-MODULE-BATCH-004-R3/recovery-start.md — Claim e6f4db14-2872-4cf0-b610-e6a3634ab40a; baseline 02978a2d4b353c2457a72895d9b8a6f892841925
+
+Order-Fulfillment-Operation-Boundary:
+docs/evidence/TB-TMAR-NEXT-MODULE-BATCH-004-R3/order-fulfillment-operation-boundary.md — Order.Infrastructure AdminOrderFulfillmentOperations; Host adapter deleted; IFulfillmentDirectory reused
+
+Order-Fulfillment-Operations-Implementation:
+ORDER_OWNED — Tooba.Order.Infrastructure.Fulfillment.AdminOrderFulfillmentOperations registered in OrderModule
+
+Shipping-Tree-Ownership-Audit:
+docs/evidence/TB-TMAR-NEXT-MODULE-BATCH-004-R3/shipping-tree-ownership-audit.md — ListEnabledShippingMethodsTreeQuery/Handler; Host DefaultColor/DefaultOptions/ListEnabledMethodsTreeAsync removed
+
+Fulfillment-ShippingTree-Authority:
+APPLICATION_OWNED
+
+Host-Authority-Scan:
+docs/evidence/TB-TMAR-NEXT-MODULE-BATCH-004-R3/host-authority-scan.md — HostAdminOrderFulfillmentOperations=absent; Host IAdminOrderFulfillmentOperations impl=0; Host shipping tree projection=0
+
+Behavior-Preservation-Audit:
+docs/evidence/TB-TMAR-NEXT-MODULE-BATCH-004-R3/behavior-preservation-audit.md — ops codes/error codes and shipping tree shape preserved
+
+Architecture-Guards:
+FulfillmentArchitectureGuardTests: HostAdminOrderFulfillmentOperations absent; no Host IAdminOrderFulfillmentOperations; no ListEnabledMethodsTreeAsync/DefaultColor/DefaultOptions/IShippingCatalogReader on ShippingServiceEndpoints; tree query under Fulfillment.Application; Order ops no Host refs
+
+Fulfillment-Validation:
+dotnet test Tooba.Fulfillment.Tests filter Architecture|AdminFulfillmentBulk|ShippingMethodsTree → 14 passed
+
+Order-Validation:
+Host AdminOrderFulfillmentOperationsTests (Order-owned success + semantic failure + no-Host guard) → 3 passed; Order.Infrastructure build OK
+
+Focused-Validation:
+Fulfillment.Tests 14/14; Host AdminOrderFulfillmentOperationsTests + AdminFulfillmentWorkQueueTests + ShippingServiceAdminTests 30/30
+
+Skipped-Validation:
+Broad Host suite; broad Order suite; Returns full suite; Checkout workflow; Tax/Pricing; frontend
+
+Full-Validation:
+dotnet build src/backend/Tooba.slnx → succeeded 0 errors
+
+AntiPattern-Gate:
+CLEAN — no Host IAdminOrderFulfillmentOperations; no Host shipping tree projection; no Order→Host; no Fulfillment.Application→Order.Application; no BATCH-005
+
+Residual-Defects:
+NONE for R3 scope. Broader AdminOrderOperationsComposer remains Host-owned for non-bulk admin HTTP lifecycle (outside R3 seam).
+
+Fulfillment-State:
+COMPLETE_REFERENCE_PATTERN
+
+Fulfillment-Physical-State:
+VERIFIED_ON_DISK_AND_NAMESPACE
+
+Fulfillment-CrossModule-Boundary:
+CONTRACTS_ONLY
+
+Fulfillment-Endpoint-State:
+HOST_THIN_TRANSPORT
+
+Fulfillment-Host-DbAuthority:
+NONE
+
+Fulfillment-Shipping-Presentation:
+CENTRALIZED
+
+Fulfillment-WorkQueue-Authority:
+APPLICATION_OWNED
+
+Host-Fulfillment-Business-Adapter:
+NONE
+
+Returns-State:
+COMPLETE_REFERENCE_PATTERN
+
+Returns-Endpoint-State:
+HOST_THIN_TRANSPORT
+
+Returns-Host-DbAuthority:
+NONE
+
+Returns-Error-Presentation:
+CENTRALIZED
+
+Behavior-Preservation:
+VERIFIED
+
+Notification-State:
+COMPLETE_REFERENCE_PATTERN
+
+Support-State:
+COMPLETE_REFERENCE_PATTERN
+
+Wallet-State:
+COMPLETE_REFERENCE_PATTERN
+
+Payment-State:
+COMPLETE_REFERENCE_PATTERN
+
+Inventory-State:
+COMPLETE_REFERENCE_PATTERN
+
+Promotion-State:
+COMPLETE_REFERENCE_PATTERN
+
+Offer-State:
+COMPLETE_REFERENCE_PATTERN
+
+Foundation-State:
+RESULT_PATTERN_FOUNDATION_COMPLETE
+
+Tax-State:
+DEFERRED_PHYSICAL_REVIEW_BY_USER
+
+Pricing-State:
+DEFERRED_PHYSICAL_REVIEW_BY_USER
+
+Checkout-State:
+PAUSED_AT_SAFE_W5_CHECKPOINT
+
+Frontend-Production-Changes:
+NONE
+
+Batch-State:
+COMPLETE
+
+Git:
+f13a68f5955fe394b2518c3b321a2a13aadb8fe2
+
+Blockers:
+NONE
+
+User-Work-Preserved:
+YES
+
+Module-Recovery-State:
+NEXT_REFERENCE_BATCH_004_COMPLETE
+
+Next-Recommended-Task:
+TB-TMAR-NEXT-MODULE-BATCH-005
+
+END_TOOBA_WORKER_RESULT
