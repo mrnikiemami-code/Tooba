@@ -9,6 +9,7 @@ public sealed class TaxRuleInvariantTests
     public void Create_percentage_rule_starts_draft()
     {
         var rule = TaxRule.Create(
+            Guid.NewGuid(),
             "IR-NAT",
             "IR",
             Guid.NewGuid(),
@@ -27,6 +28,7 @@ public sealed class TaxRuleInvariantTests
     public void Create_rejects_percentage_rate_above_one()
     {
         Assert.Throws<InvalidOperationException>(() => TaxRule.Create(
+            Guid.NewGuid(),
             "IR-NAT",
             "IR",
             Guid.NewGuid(),

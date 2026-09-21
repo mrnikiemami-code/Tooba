@@ -10,8 +10,7 @@ using Tooba.Offer.Contracts.Ports;
 using Tooba.Party.Application;
 using Tooba.Party.Infrastructure.Persistence;
 using Tooba.Pricing.Application;
-using Tooba.Pricing.Domain;
-using Tooba.Pricing.Infrastructure.Persistence;
+using Tooba.Pricing.Contracts;
 using Tooba.Promotion.Application;
 using Tooba.Promotion.Domain;
 
@@ -69,7 +68,7 @@ internal static class MerchandisingCampaignDevelopmentSeed
         var parties = provider.GetRequiredService<IPartyDirectory>();
         var partyDb = provider.GetRequiredService<PartyDbContext>();
         var prices = provider.GetRequiredService<IPriceDirectory>();
-        var priceDb = provider.GetRequiredService<PricingDbContext>();
+        var priceQuery = provider.GetRequiredService<IPriceQueryGateway>();
         var now = DateTimeOffset.UtcNow;
 
         // Prefer offers whose Catalog Product is Published so Storefront ProductCards can project promo prices.
@@ -189,7 +188,7 @@ internal static class MerchandisingCampaignDevelopmentSeed
         // Active primary: first 3 members get promo < base; 4th (if present) keeps base-only fallback.
         await EnsureCampaignPromoPricesAsync(
             prices,
-            priceDb,
+            priceQuery,
             ActivePrimaryId,
             activeOffers.Take(3).ToList(),
             fractionOfBase: 0.7m,
@@ -199,7 +198,7 @@ internal static class MerchandisingCampaignDevelopmentSeed
         // Future: promo rows exist but must not apply until StartAt.
         await EnsureCampaignPromoPricesAsync(
             prices,
-            priceDb,
+            priceQuery,
             FutureId,
             activeOffers.Take(1).ToList(),
             fractionOfBase: 0.5m,
@@ -213,7 +212,7 @@ internal static class MerchandisingCampaignDevelopmentSeed
     /// </summary>
     private static async Task EnsureCampaignPromoPricesAsync(
         IPriceDirectory prices,
-        PricingDbContext priceDb,
+        IPriceQueryGateway priceQuery,
         Guid campaignId,
         IReadOnlyList<Guid> offerIds,
         decimal fractionOfBase,
@@ -227,14 +226,7 @@ internal static class MerchandisingCampaignDevelopmentSeed
         }
 
         var key = campaignId.ToString("D");
-        var existing = await priceDb.Prices.AsNoTracking()
-            .Where(x =>
-                offerIds.Contains(x.OfferId)
-                && x.QualifierKind == PriceQualifierKind.MerchandisingCampaign
-                && x.QualifierKey == key
-                && x.Status == PriceStatus.Active)
-            .Select(x => x.OfferId)
-            .ToListAsync(cancellationToken);
+        var existing = await priceQuery.ListActiveCampaignOfferIdsAsync(offerIds, key, cancellationToken);
         var have = existing.ToHashSet();
 
         foreach (var offerId in offerIds)
@@ -244,15 +236,7 @@ internal static class MerchandisingCampaignDevelopmentSeed
                 continue;
             }
 
-            var basePrice = await priceDb.Prices.AsNoTracking()
-                .Where(x =>
-                    x.OfferId == offerId
-                    && x.QualifierKind == PriceQualifierKind.Base
-                    && x.Status == PriceStatus.Active
-                    && x.Market == "IR"
-                    && x.Currency == "IRR")
-                .OrderByDescending(x => x.ValidFrom)
-                .FirstOrDefaultAsync(cancellationToken);
+            var basePrice = await priceQuery.FindLatestActiveBaseAsync(offerId, "IR", "IRR", cancellationToken);
             if (basePrice is null || basePrice.Amount <= 0)
             {
                 continue;

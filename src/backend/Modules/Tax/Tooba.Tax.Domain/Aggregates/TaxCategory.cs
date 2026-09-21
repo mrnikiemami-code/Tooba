@@ -37,16 +37,21 @@ public sealed class TaxCategory
     /// <summary>
     /// طبقه می‌سازد. نرخ مالیات اینجا نیست.
     /// </summary>
-    public static TaxCategory Create(string code, string displayName, DateTimeOffset now)
+    public static TaxCategory Create(Guid categoryId, string code, string displayName, DateTimeOffset now)
     {
+        if (categoryId == Guid.Empty)
+        {
+            throw new InvalidOperationException("tax.category.id_required");
+        }
+
         if (string.IsNullOrWhiteSpace(code))
         {
-            throw new InvalidOperationException("کد طبقهٔ مالیاتی خالی نیست.");
+            throw new InvalidOperationException("tax.category.code_required");
         }
 
         return new TaxCategory
         {
-            CategoryId = UuidV7.New(),
+            CategoryId = categoryId,
             Code = code.Trim(),
             DisplayName = displayName.Trim(),
             CreatedAt = now,

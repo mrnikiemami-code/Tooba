@@ -8,10 +8,9 @@ using Tooba.Inventory.Infrastructure.Persistence;
 using Tooba.Offer.Contracts.Dtos;
 using Tooba.Offer.Contracts.Ports;
 using Tooba.Party.Application;
-using Tooba.Pricing.Domain;
-using Tooba.Pricing.Infrastructure.Persistence;
+using Tooba.Pricing.Contracts;
 using Tooba.Promotion.Application;
-using Tooba.Tax.Infrastructure.Persistence;
+using Tooba.Tax.Contracts;
 using Tooba.Reviews.Application;
 using Tooba.Content.Application;
 using Tooba.Content.Domain;
@@ -32,9 +31,9 @@ public sealed class StorefrontComposer
 
     private readonly CatalogDbContext _catalog;
     private readonly IOfferQueryGateway _offers;
-    private readonly PricingDbContext _prices;
+    private readonly IPriceQueryGateway _prices;
     private readonly InventoryDbContext _inventory;
-    private readonly TaxDbContext _tax;
+    private readonly ITaxQueryGateway _tax;
     private readonly IPartyLookupGateway _parties;
     private readonly IPromotionEvaluator _promotions;
     private readonly IReviewDirectory _reviews;
@@ -47,9 +46,9 @@ public sealed class StorefrontComposer
     public StorefrontComposer(
         CatalogDbContext catalog,
         IOfferQueryGateway offers,
-        PricingDbContext prices,
+        IPriceQueryGateway prices,
         InventoryDbContext inventory,
-        TaxDbContext tax,
+        ITaxQueryGateway tax,
         IPartyLookupGateway parties,
         IPromotionEvaluator promotions,
         IReviewDirectory reviews,
@@ -866,27 +865,22 @@ public sealed class StorefrontComposer
             return null;
         }
 
-        var prices = await _prices.Prices.AsNoTracking()
-            .Where(x => offerIds.Contains(x.OfferId) && x.Status == PriceStatus.Active)
-            .ToListAsync(cancellationToken);
+        var prices = await _prices.ListByOfferIdsAsync(offerIds, cancellationToken);
         var positions = await _inventory.Positions.AsNoTracking()
             .Where(x => offerIds.Contains(x.OfferId))
             .ToListAsync(cancellationToken);
-        var taxRows = await _tax.OfferClassifications.AsNoTracking()
-            .Where(x => offerIds.Contains(x.OfferId))
-            .ToListAsync(cancellationToken);
+        var taxRows = await _tax.ListClassificationsByOfferIdsAsync(offerIds, cancellationToken);
         var taxCats = taxRows.Count == 0
             ? []
-            : await _tax.Categories.AsNoTracking()
-                .Where(x => taxRows.Select(row => row.CategoryId).Contains(x.CategoryId))
-                .ToListAsync(cancellationToken);
+            : await _tax.ListCategoriesByIdsAsync(taxRows.Select(row => row.CategoryId).Distinct().ToArray(), cancellationToken);
 
         var candidates = new List<StorefrontOfferCandidate>();
         foreach (var offer in offers)
         {
             var price = prices
                 .Where(item => item.OfferId == offer.OfferId
-                    && item.QualifierKind == PriceQualifierKind.Base
+                    && item.Status == "Active"
+                    && item.QualifierKind == "Base"
                     && item.ValidFrom <= now
                     && (item.ValidTo is null || item.ValidTo >= now))
                 .OrderBy(item => item.Amount)

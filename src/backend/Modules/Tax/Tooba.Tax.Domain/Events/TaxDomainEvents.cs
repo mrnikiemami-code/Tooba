@@ -79,7 +79,7 @@ public sealed class TaxCalculationFailedDomainEvent : IDomainEvent
     /// <summary>
     /// رویداد را می‌سازد.
     /// </summary>
-    public TaxCalculationFailedDomainEvent(TaxOutcome outcome)
+    public TaxCalculationFailedDomainEvent(string outcome)
     {
         Outcome = outcome;
         Metadata = EventMetadataFactory.ForDomain("tax.calculation_failed.v1");
@@ -91,5 +91,5 @@ public sealed class TaxCalculationFailedDomainEvent : IDomainEvent
     /// <summary>
     /// نتیجهٔ شکست.
     /// </summary>
-    public TaxOutcome Outcome { get; }
+    public string Outcome { get; }
 }

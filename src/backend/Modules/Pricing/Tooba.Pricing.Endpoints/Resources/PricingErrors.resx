@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="pricing.amount.invalid" xml:space="preserve"><value>The price amount is invalid.</value></data>
+  <data name="pricing.overlap" xml:space="preserve"><value>More than one active price overlaps this selection.</value></data>
+  <data name="pricing.offer.missing" xml:space="preserve"><value>Offer was not found.</value></data>
+  <data name="pricing.campaign.required" xml:space="preserve"><value>A campaign price requires a campaign.</value></data>
+  <data name="pricing.validity.inverted" xml:space="preserve"><value>The price validity window is invalid.</value></data>
+  <data name="pricing.retired.reactivate" xml:space="preserve"><value>A retired price cannot be activated again.</value></data>
+  <data name="pricing.retired.immutable" xml:space="preserve"><value>A retired price cannot be changed.</value></data>
+  <data name="pricing.currency.change_forbidden" xml:space="preserve"><value>Changing currency requires a new price.</value></data>
+  <data name="pricing.market.invalid" xml:space="preserve"><value>The market code is invalid.</value></data>
+  <data name="pricing.currency.invalid" xml:space="preserve"><value>The currency code is invalid.</value></data>
+  <data name="pricing.currency.display_unit" xml:space="preserve"><value>Use the stored currency code, not a display unit.</value></data>
+</root>

@@ -43,7 +43,7 @@ public sealed class TaxOutboxRegistration : IOutboxModuleRegistration
             TaxCalculationFailedDomainEvent failed => new TaxCalculationFailedIntegrationEvent
             {
                 Metadata = metadata with { EventType = TaxCalculationFailedIntegrationEvent.EventTypeName, Version = 1 },
-                Outcome = failed.Outcome.ToString(),
+                Outcome = failed.Outcome,
             },
             _ => null,
         };

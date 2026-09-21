@@ -1,5 +1,4 @@
 using Tooba.BuildingBlocks;
-using Tooba.Offer.Contracts.Dtos;
 
 namespace Tooba.Pricing.Domain;
 
@@ -28,7 +27,7 @@ public sealed class AuthoredPrice : IHasDomainEvents
     /// <summary>
     /// کانال فروش همان مفهوم Offer است نه فهرست جدا.
     /// </summary>
-    public SalesChannel Channel { get; init; }
+    public PriceChannel Channel { get; init; }
 
     /// <summary>
     /// ارز نوشته‌شده.
@@ -82,15 +81,17 @@ public sealed class AuthoredPrice : IHasDomainEvents
     /// قیمت نوشته‌شده می‌سازد. قابل‌خرید بودن و نرخ FX را اعلام نمی‌کند.
     /// </summary>
     public static AuthoredPrice Create(
+        Guid priceId,
         Guid offerId,
         string marketCode,
-        SalesChannel channel,
+        PriceChannel channel,
         decimal amount,
         string currencyCode,
         DateTimeOffset validFrom,
         DateTimeOffset? validTo,
         DateTimeOffset now) =>
         CreateCore(
+            priceId,
             offerId,
             marketCode,
             channel,
@@ -106,10 +107,11 @@ public sealed class AuthoredPrice : IHasDomainEvents
     /// قیمت کمپین مرچندایزینگ می‌سازد؛ QualifierKey همان CampaignId پایدار است.
     /// </summary>
     public static AuthoredPrice CreateMerchandisingCampaign(
+        Guid priceId,
         Guid offerId,
         Guid campaignId,
         string marketCode,
-        SalesChannel channel,
+        PriceChannel channel,
         decimal amount,
         string currencyCode,
         DateTimeOffset validFrom,
@@ -118,10 +120,11 @@ public sealed class AuthoredPrice : IHasDomainEvents
     {
         if (campaignId == Guid.Empty)
         {
-            throw new InvalidOperationException("CampaignId برای قیمت کمپین الزامی است.");
+            throw new SemanticException(new SemanticError(PricingErrorCodes.CampaignRequired));
         }
 
         return CreateCore(
+            priceId,
             offerId,
             marketCode,
             channel,
@@ -135,9 +138,10 @@ public sealed class AuthoredPrice : IHasDomainEvents
     }
 
     private static AuthoredPrice CreateCore(
+        Guid priceId,
         Guid offerId,
         string marketCode,
-        SalesChannel channel,
+        PriceChannel channel,
         decimal amount,
         string currencyCode,
         DateTimeOffset validFrom,
@@ -150,12 +154,17 @@ public sealed class AuthoredPrice : IHasDomainEvents
         var money = Money.Create(amount, currencyCode);
         if (validTo is { } to && to <= validFrom)
         {
-            throw new InvalidOperationException("پایان اعتبار باید بعد از شروع باشد.");
+            throw new SemanticException(new SemanticError(PricingErrorCodes.ValidityInverted));
+        }
+
+        if (priceId == Guid.Empty)
+        {
+            throw new InvalidOperationException("pricing.price.id_required");
         }
 
         var price = new AuthoredPrice
         {
-            PriceId = UuidV7.New(),
+            PriceId = priceId,
             OfferId = offerId,
             Market = market.Value,
             Channel = channel,
@@ -180,7 +189,7 @@ public sealed class AuthoredPrice : IHasDomainEvents
     {
         if (Status == PriceStatus.Retired)
         {
-            throw new InvalidOperationException("قیمت بازنشسته دوباره فعال نمی‌شود؛ رکورد جدید بنویسید.");
+            throw new SemanticException(new SemanticError(PricingErrorCodes.RetiredReactivate));
         }
 
         Status = PriceStatus.Active;
@@ -195,13 +204,13 @@ public sealed class AuthoredPrice : IHasDomainEvents
     {
         if (Status == PriceStatus.Retired)
         {
-            throw new InvalidOperationException("قیمت بازنشسته ویرایش نمی‌شود.");
+            throw new SemanticException(new SemanticError(PricingErrorCodes.RetiredImmutable));
         }
 
         var money = Money.Create(amount, currencyCode);
         if (!string.Equals(money.Currency.Value, Currency, StringComparison.Ordinal))
         {
-            throw new InvalidOperationException("تغییر ارز یک قیمت نوشته‌شده، قیمت جدیدی می‌خواهد نه تبدیل خاموش FX.");
+            throw new SemanticException(new SemanticError(PricingErrorCodes.CurrencyChangeForbidden));
         }
 
         Amount = money.Amount;

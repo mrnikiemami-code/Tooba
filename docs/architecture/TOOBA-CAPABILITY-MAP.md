@@ -62,9 +62,10 @@ Evidence files remain the deep-detail source; this map is the quick index.
 | Checkout Implementation W4 | Order.Infrastructure lifecycle via IOrderInventoryLifecyclePort; Infra↛Inventory.Application; TX preserved; W5 READY | TB-TMAR-CHECKOUT-IMPL-W4 |
 | Checkout Implementation W5 | Promotion checkout via ICheckoutPromotionPort; Order.Application↛Promotion.Application; TX preserved; W6 READY | TB-TMAR-CHECKOUT-IMPL-W5 |
 | Offer Reference Module W1 | COMPLETE_REFERENCE_PATTERN; Endpoints+Tests; Host MapOfferModule; ARCH-MODULE-FILE-001 + HOST-MODULE-ENDPOINT-001; Checkout paused at W5 | TB-TMAR-OFFER-REFERENCE-W1 |
-| Tax Reference Module W1 | COMPLETE_REFERENCE_PATTERN; Offer pattern reused; Endpoints composition point; PROVEN_ON_2_MODULES; Checkout paused at W5 | TB-TMAR-TAX-REFERENCE-W1 |
-| Pricing Reference Module W1 | COMPLETE_REFERENCE_PATTERN; medium module; Offer.Contracts lookup; MapPricingModule; PROVEN_ON_3_MODULES; Checkout paused at W5 | TB-TMAR-PRICING-REFERENCE-W1 |
+| Tax Reference Module W1 | COMPLETE_REFERENCE_PATTERN revalidated by TB-TMAR-REFBATCH-TP-001; Checkout paused at W5 | TB-TMAR-TAX-REFERENCE-W1 |
+| Pricing Reference Module W1 | COMPLETE_REFERENCE_PATTERN revalidated by TB-TMAR-REFBATCH-TP-001; USER_REVIEW_OFFER gate removed; Checkout paused at W5 | TB-TMAR-PRICING-REFERENCE-W1 |
 | Foundation Observability R4 | FOUNDATION_COMPLETE; central correlation/tracing/error catalog/localization; Offer re-verified COMPLETE_REFERENCE_PATTERN as first Golden consumer | TB-TMAR-FND-OBSERR-001-R4 |
-| Next | USER_REVIEW_OFFER. Pricing stays gated until that review. Checkout remains PAUSED_AT_SAFE_W5_CHECKPOINT | — |
+| Tax + Pricing reference batch | REFERENCE_BATCH_COMPLETE; both modules COMPLETE_REFERENCE_PATTERN | TB-TMAR-REFBATCH-TP-001 |
+| Next | TB-TMAR-NEXT-MODULE-BATCH-001. Checkout remains PAUSED_AT_SAFE_W5_CHECKPOINT. Frontend frozen. | — |
 
 Last Verified Task = TB-TMAR-FND-OBSERR-001-R4

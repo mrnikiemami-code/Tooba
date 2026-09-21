@@ -1,18 +1,18 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Tooba.BuildingBlocks;
+using Tooba.BuildingBlocks.Observability.Tracing;
 using Tooba.Offer.Contracts;
 using Tooba.Offer.Contracts.Dtos;
 using Tooba.Offer.Contracts.Ports;
 using Tooba.Pricing.Application;
 using Tooba.Pricing.Contracts;
 using Tooba.Pricing.Domain;
+using PricingErrorCodes = Tooba.Pricing.Contracts.PricingErrorCodes;
 using Tooba.Pricing.Infrastructure.Persistence;
 
 namespace Tooba.Pricing.Infrastructure;
 
-/// <summary>
-/// نگهبان باز موردکاربرد. ماتریس ادمین قیمت اینجا نیست.
-/// </summary>
+/// <summary>Open use-case guard. Pricing admin matrix is not implemented here.</summary>
 public sealed class OpenPricingUseCaseGuard : IPricingUseCaseGuard
 {
     /// <inheritdoc />
@@ -20,22 +20,32 @@ public sealed class OpenPricingUseCaseGuard : IPricingUseCaseGuard
 }
 
 /// <summary>
-/// نوشتن و انتخاب قیمت با قرارداد Offer. DbContext کاتالوگ و Offer لمس نمی‌شود.
+/// Authored-price writer and reader. Offer is reached only through <see cref="IOfferLookupGateway"/>.
 /// </summary>
-public sealed class PriceDirectory : IPriceDirectory, IPriceLookupGateway, ISellerOfferPricingGateway
+public sealed class PriceDirectory : IPriceDirectory, IPriceLookupGateway, ISellerOfferPricingGateway, IPriceQueryGateway
 {
     private readonly PricingDbContext _db;
     private readonly IPricingUseCaseGuard _guard;
     private readonly IOfferLookupGateway _offers;
+    private readonly IClock _clock;
+    private readonly IIdGenerator _ids;
+    private readonly IModuleCallTracer _tracer;
 
-    /// <summary>
-    /// دایرکتوری را به schema Pricing و درز Offer وصل می‌کند نه به join بین‌schema.
-    /// </summary>
-    public PriceDirectory(PricingDbContext db, IPricingUseCaseGuard guard, IOfferLookupGateway offers)
+    /// <summary>Binds the directory to the Pricing schema and the Offer lookup contract.</summary>
+    public PriceDirectory(
+        PricingDbContext db,
+        IPricingUseCaseGuard guard,
+        IOfferLookupGateway offers,
+        IClock? clock = null,
+        IIdGenerator? ids = null,
+        IModuleCallTracer? tracer = null)
     {
         _db = db;
         _guard = guard;
         _offers = offers;
+        _clock = clock ?? new SystemUtcClock();
+        _ids = ids ?? new UuidV7IdGenerator();
+        _tracer = tracer ?? new ModuleCallTracer();
     }
 
     /// <inheritdoc />
@@ -47,7 +57,7 @@ public sealed class PriceDirectory : IPriceDirectory, IPriceLookupGateway, ISell
         var matches = await _db.Prices.AsNoTracking()
             .Where(x => x.OfferId == query.OfferId
                         && x.Market == market.Value
-                        && x.Channel == query.Channel
+                        && x.Channel == ToPriceChannel(query.Channel)
                         && x.Currency == currency.Value
                         && x.QualifierKind == PriceQualifierKind.Base
                         && x.Status == PriceStatus.Active)
@@ -55,7 +65,7 @@ public sealed class PriceDirectory : IPriceDirectory, IPriceLookupGateway, ISell
         var effective = matches.Where(x => x.IsEffectiveAt(query.At)).ToList();
         if (effective.Count > 1)
         {
-            throw new InvalidOperationException("چند قیمت پایهٔ فعال هم‌پوشان برای همین کلید انتخاب وجود دارد.");
+            throw new SemanticException(new SemanticError(PricingErrorCodes.Overlap));
         }
 
         return effective.Count == 0 ? null : ToQuote(effective[0]);
@@ -66,29 +76,39 @@ public sealed class PriceDirectory : IPriceDirectory, IPriceLookupGateway, ISell
     {
         ArgumentNullException.ThrowIfNull(request);
         if (request.Amount < 0)
+        {
             throw new SemanticException(new SemanticError(PricingErrorCodes.AmountInvalid));
-        var offer = await _offers.FindOfferAsync(request.OfferId, cancellationToken);
+        }
+
+        var offer = await FindOfferAsync(request.OfferId, cancellationToken);
         if (offer is null || offer.SellerPartyId != request.SellerPartyId)
+        {
             throw new SemanticException(new SemanticError(OfferErrorCodes.NotFound));
+        }
+
         var market = string.IsNullOrWhiteSpace(request.Market) ? "IR" : request.Market.Trim();
         var currency = string.IsNullOrWhiteSpace(request.Currency) ? "IRR" : request.Currency.Trim();
+        var channel = ToPriceChannel(offer.Channel);
         var existing = await _db.Prices.AsNoTracking()
             .Where(x => x.OfferId == request.OfferId && x.Market == market
-                        && x.Channel == offer.Channel && x.Currency == currency)
+                        && x.Channel == channel && x.Currency == currency
+                        && x.QualifierKind == PriceQualifierKind.Base)
             .OrderByDescending(x => x.PriceId)
             .FirstOrDefaultAsync(cancellationToken);
         if (existing is null || existing.Status == PriceStatus.Retired)
         {
             var created = await CreatePriceAsync(
                 request.OfferId, market, offer.Channel, request.Amount, currency,
-                DateTimeOffset.UtcNow.AddYears(-1), null, cancellationToken);
+                _clock.UtcNow.AddYears(-1), null, cancellationToken);
             await ActivateAsync(created.PriceId, cancellationToken);
             return;
         }
 
         await ChangeAmountAsync(existing.PriceId, request.Amount, currency, cancellationToken);
         if (existing.Status != PriceStatus.Active)
+        {
             await ActivateAsync(existing.PriceId, cancellationToken);
+        }
     }
 
     /// <inheritdoc />
@@ -108,33 +128,18 @@ public sealed class PriceDirectory : IPriceDirectory, IPriceLookupGateway, ISell
 
         var marketCode = MarketCode.Parse(market);
         var currencyCode = CurrencyCode.Parse(currency);
+        var priceChannel = ToPriceChannel(channel);
         var ids = offerIds.Distinct().ToArray();
         var matches = await _db.Prices.AsNoTracking()
             .Where(x => ids.Contains(x.OfferId)
                         && x.Market == marketCode.Value
-                        && x.Channel == channel
+                        && x.Channel == priceChannel
                         && x.Currency == currencyCode.Value
                         && x.QualifierKind == PriceQualifierKind.Base
                         && x.Status == PriceStatus.Active)
             .ToListAsync(cancellationToken);
 
-        var result = new Dictionary<Guid, PriceQuote>();
-        foreach (var group in matches.GroupBy(x => x.OfferId))
-        {
-            var effective = group.Where(x => x.IsEffectiveAt(at)).ToList();
-            if (effective.Count > 1)
-            {
-                throw new InvalidOperationException(
-                    $"چند قیمت پایهٔ فعال هم‌پوشان برای Offer {group.Key} وجود دارد.");
-            }
-
-            if (effective.Count == 1)
-            {
-                result[group.Key] = ToQuote(effective[0]);
-            }
-        }
-
-        return result;
+        return ToEffectiveQuotes(matches, at);
     }
 
     /// <inheritdoc />
@@ -155,35 +160,20 @@ public sealed class PriceDirectory : IPriceDirectory, IPriceLookupGateway, ISell
 
         var marketCode = MarketCode.Parse(market);
         var currencyCode = CurrencyCode.Parse(currency);
+        var priceChannel = ToPriceChannel(channel);
         var key = campaignId.ToString("D");
         var ids = offerIds.Distinct().ToArray();
         var matches = await _db.Prices.AsNoTracking()
             .Where(x => ids.Contains(x.OfferId)
                         && x.Market == marketCode.Value
-                        && x.Channel == channel
+                        && x.Channel == priceChannel
                         && x.Currency == currencyCode.Value
                         && x.QualifierKind == PriceQualifierKind.MerchandisingCampaign
                         && x.QualifierKey == key
                         && x.Status == PriceStatus.Active)
             .ToListAsync(cancellationToken);
 
-        var result = new Dictionary<Guid, PriceQuote>();
-        foreach (var group in matches.GroupBy(x => x.OfferId))
-        {
-            var effective = group.Where(x => x.IsEffectiveAt(at)).ToList();
-            if (effective.Count > 1)
-            {
-                throw new InvalidOperationException(
-                    $"چند قیمت کمپین فعال هم‌پوشان برای Offer {group.Key} و Campaign {campaignId} وجود دارد.");
-            }
-
-            if (effective.Count == 1)
-            {
-                result[group.Key] = ToQuote(effective[0]);
-            }
-        }
-
-        return result;
+        return ToEffectiveQuotes(matches, at);
     }
 
     /// <inheritdoc />
@@ -198,12 +188,17 @@ public sealed class PriceDirectory : IPriceDirectory, IPriceLookupGateway, ISell
         CancellationToken cancellationToken)
     {
         await _guard.EnsureCanMutateAsync(cancellationToken);
-        if (await _offers.FindOfferAsync(offerId, cancellationToken) is null)
-        {
-            throw new InvalidOperationException("Offer از قرارداد Lookup پیدا نشد؛ DbContext Offer خوانده نشد.");
-        }
-
-        var price = AuthoredPrice.Create(offerId, market, channel, amount, currency, validFrom, validTo, DateTimeOffset.UtcNow);
+        await RequireOfferAsync(offerId, cancellationToken);
+        var price = AuthoredPrice.Create(
+            _ids.NewId(),
+            offerId,
+            market,
+            ToPriceChannel(channel),
+            amount,
+            currency,
+            validFrom,
+            validTo,
+            _clock.UtcNow);
         _db.Prices.Add(price);
         await _db.SaveChangesAsync(cancellationToken);
         return ToQuote(price);
@@ -222,21 +217,18 @@ public sealed class PriceDirectory : IPriceDirectory, IPriceLookupGateway, ISell
         CancellationToken cancellationToken)
     {
         await _guard.EnsureCanMutateAsync(cancellationToken);
-        if (await _offers.FindOfferAsync(offerId, cancellationToken) is null)
-        {
-            throw new InvalidOperationException("Offer از قرارداد Lookup پیدا نشد؛ DbContext Offer خوانده نشد.");
-        }
-
+        await RequireOfferAsync(offerId, cancellationToken);
         var price = AuthoredPrice.CreateMerchandisingCampaign(
+            _ids.NewId(),
             offerId,
             campaignId,
             market,
-            channel,
+            ToPriceChannel(channel),
             amount,
             currency,
             validFrom,
             validTo,
-            DateTimeOffset.UtcNow);
+            _clock.UtcNow);
         _db.Prices.Add(price);
         await _db.SaveChangesAsync(cancellationToken);
         return ToQuote(price);
@@ -248,7 +240,7 @@ public sealed class PriceDirectory : IPriceDirectory, IPriceLookupGateway, ISell
         await _guard.EnsureCanMutateAsync(cancellationToken);
         var price = await _db.Prices.SingleAsync(x => x.PriceId == priceId, cancellationToken);
         await EnsureNoOverlapAsync(price, price.PriceId, cancellationToken);
-        price.Activate(DateTimeOffset.UtcNow);
+        price.Activate(_clock.UtcNow);
         await _db.SaveChangesAsync(cancellationToken);
     }
 
@@ -257,7 +249,7 @@ public sealed class PriceDirectory : IPriceDirectory, IPriceLookupGateway, ISell
     {
         await _guard.EnsureCanMutateAsync(cancellationToken);
         var price = await _db.Prices.SingleAsync(x => x.PriceId == priceId, cancellationToken);
-        price.ChangeAmount(amount, currency, DateTimeOffset.UtcNow);
+        price.ChangeAmount(amount, currency, _clock.UtcNow);
         await _db.SaveChangesAsync(cancellationToken);
     }
 
@@ -266,8 +258,101 @@ public sealed class PriceDirectory : IPriceDirectory, IPriceLookupGateway, ISell
     {
         await _guard.EnsureCanMutateAsync(cancellationToken);
         var price = await _db.Prices.SingleAsync(x => x.PriceId == priceId, cancellationToken);
-        price.Expire(DateTimeOffset.UtcNow);
+        price.Expire(_clock.UtcNow);
         await _db.SaveChangesAsync(cancellationToken);
+    }
+
+    /// <inheritdoc />
+    public async Task<IReadOnlyList<OfferAmountRow>> ListOfferAmountsAsync(CancellationToken cancellationToken)
+    {
+        var rows = await _db.Prices.AsNoTracking()
+            .Select(p => new OfferAmountRow(p.OfferId, p.Amount))
+            .ToListAsync(cancellationToken);
+        return rows;
+    }
+
+    /// <inheritdoc />
+    public async Task<IReadOnlyList<AuthoredPriceSnapshot>> ListByOfferIdsAsync(
+        IReadOnlyCollection<Guid> offerIds,
+        CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(offerIds);
+        if (offerIds.Count == 0)
+        {
+            return [];
+        }
+
+        var ids = offerIds.Distinct().ToArray();
+        var rows = await _db.Prices.AsNoTracking()
+            .Where(x => ids.Contains(x.OfferId))
+            .ToListAsync(cancellationToken);
+        return rows.Select(ToSnapshot).ToArray();
+    }
+
+    /// <inheritdoc />
+    public async Task<IReadOnlyList<Guid>> ListActiveCampaignOfferIdsAsync(
+        IReadOnlyCollection<Guid> offerIds,
+        string campaignKey,
+        CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(offerIds);
+        if (offerIds.Count == 0 || string.IsNullOrWhiteSpace(campaignKey))
+        {
+            return [];
+        }
+
+        var ids = offerIds.Distinct().ToArray();
+        return await _db.Prices.AsNoTracking()
+            .Where(x =>
+                ids.Contains(x.OfferId)
+                && x.QualifierKind == PriceQualifierKind.MerchandisingCampaign
+                && x.QualifierKey == campaignKey
+                && x.Status == PriceStatus.Active)
+            .Select(x => x.OfferId)
+            .ToListAsync(cancellationToken);
+    }
+
+    /// <inheritdoc />
+    public async Task<AuthoredPriceSnapshot?> FindLatestActiveBaseAsync(
+        Guid offerId,
+        string market,
+        string currency,
+        CancellationToken cancellationToken)
+    {
+        var row = await _db.Prices.AsNoTracking()
+            .Where(x =>
+                x.OfferId == offerId
+                && x.QualifierKind == PriceQualifierKind.Base
+                && x.Status == PriceStatus.Active
+                && x.Market == market
+                && x.Currency == currency)
+            .OrderByDescending(x => x.ValidFrom)
+            .FirstOrDefaultAsync(cancellationToken);
+        return row is null ? null : ToSnapshot(row);
+    }
+
+    private async Task RequireOfferAsync(Guid offerId, CancellationToken cancellationToken)
+    {
+        if (await FindOfferAsync(offerId, cancellationToken) is null)
+        {
+            throw new SemanticException(new SemanticError(PricingErrorCodes.OfferMissing));
+        }
+    }
+
+    private async Task<OfferReference?> FindOfferAsync(Guid offerId, CancellationToken cancellationToken)
+    {
+        using var trace = _tracer.Begin("Pricing", "Offer", "LookupOffer");
+        try
+        {
+            var offer = await _offers.FindOfferAsync(offerId, cancellationToken).ConfigureAwait(false);
+            trace.SetOk();
+            return offer;
+        }
+        catch (Exception ex)
+        {
+            trace.SetError(ex);
+            throw;
+        }
     }
 
     private async Task EnsureNoOverlapAsync(AuthoredPrice candidate, Guid excludePriceId, CancellationToken cancellationToken)
@@ -284,8 +369,28 @@ public sealed class PriceDirectory : IPriceDirectory, IPriceLookupGateway, ISell
             .ToListAsync(cancellationToken);
         if (siblings.Any(candidate.Overlaps))
         {
-            throw new InvalidOperationException("قیمت فعال هم‌پوشان برای Offer و بازار و کانال و ارز و محدودکننده مجاز نیست.");
+            throw new SemanticException(new SemanticError(PricingErrorCodes.Overlap));
         }
+    }
+
+    private static Dictionary<Guid, PriceQuote> ToEffectiveQuotes(List<AuthoredPrice> matches, DateTimeOffset at)
+    {
+        var result = new Dictionary<Guid, PriceQuote>();
+        foreach (var group in matches.GroupBy(x => x.OfferId))
+        {
+            var effective = group.Where(x => x.IsEffectiveAt(at)).ToList();
+            if (effective.Count > 1)
+            {
+                throw new SemanticException(new SemanticError(PricingErrorCodes.Overlap));
+            }
+
+            if (effective.Count == 1)
+            {
+                result[group.Key] = ToQuote(effective[0]);
+            }
+        }
+
+        return result;
     }
 
     private static PriceQuote ToQuote(AuthoredPrice price) =>
@@ -293,9 +398,29 @@ public sealed class PriceDirectory : IPriceDirectory, IPriceLookupGateway, ISell
             price.PriceId,
             price.OfferId,
             price.Market,
-            price.Channel,
+            ToSalesChannel(price.Channel),
             price.Amount,
             price.Currency,
             TaxExclusive: true,
             IsAuthored: true);
+
+    private static AuthoredPriceSnapshot ToSnapshot(AuthoredPrice price) =>
+        new(
+            price.PriceId,
+            price.OfferId,
+            price.Market,
+            ToSalesChannel(price.Channel),
+            price.Amount,
+            price.Currency,
+            price.Status.ToString(),
+            price.ValidFrom,
+            price.ValidTo,
+            price.QualifierKind.ToString(),
+            price.QualifierKey);
+
+    private static PriceChannel ToPriceChannel(SalesChannel channel) =>
+        Enum.Parse<PriceChannel>(channel.ToString());
+
+    private static SalesChannel ToSalesChannel(PriceChannel channel) =>
+        Enum.Parse<SalesChannel>(channel.ToString());
 }

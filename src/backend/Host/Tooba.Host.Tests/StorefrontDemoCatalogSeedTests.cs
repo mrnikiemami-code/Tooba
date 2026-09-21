@@ -156,7 +156,7 @@ public sealed class StorefrontDemoCatalogSeedTests : IAsyncLifetime
             priceDirectory,
             inventoryDirectory,
             taxDirectory,
-            taxDb,
+            taxDirectory,
             CancellationToken.None);
 
         Assert.False(first.AlreadySeeded);
@@ -234,7 +234,7 @@ public sealed class StorefrontDemoCatalogSeedTests : IAsyncLifetime
             priceDirectory,
             inventoryDirectory,
             taxDirectory,
-            taxDb,
+            taxDirectory,
             CancellationToken.None);
 
         Assert.True(second.AlreadySeeded);

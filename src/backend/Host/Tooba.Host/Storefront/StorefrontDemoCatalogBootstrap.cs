@@ -13,8 +13,8 @@ using Tooba.Pricing.Application;
 using Tooba.ProductQnA.Infrastructure;
 using Tooba.Content.Infrastructure;
 using Tooba.Tax.Application;
+using Tooba.Tax.Contracts;
 using Tooba.Tax.Domain;
-using Tooba.Tax.Infrastructure.Persistence;
 
 namespace Tooba.Host.Storefront;
 
@@ -114,11 +114,11 @@ internal static class StorefrontDemoCatalogBootstrap
             provider.GetRequiredService<IPriceDirectory>(),
             provider.GetRequiredService<IInventoryDirectory>(),
             provider.GetRequiredService<ITaxDirectory>(),
-            provider.GetRequiredService<TaxDbContext>(),
+            provider.GetRequiredService<ITaxQueryGateway>(),
             CancellationToken.None);
         await EnsureDemoTaxCoverageAsync(
             provider.GetRequiredService<IOfferQueryGateway>(),
-            provider.GetRequiredService<TaxDbContext>(),
+            provider.GetRequiredService<ITaxQueryGateway>(),
             provider.GetRequiredService<ITaxDirectory>(),
             CancellationToken.None);
         // پرسش‌وپاسخ نمایشی پس از وجود demo-mobile-1؛ همان CommerceContext همین scope.
@@ -138,7 +138,7 @@ internal static class StorefrontDemoCatalogBootstrap
     /// <param name="prices">قرارداد نوشتن Pricing؛ مبلغ فقط با کلید OfferId نوشته می‌شود.</param>
     /// <param name="inventory">قرارداد نوشتن Inventory؛ موجودی فقط با کلید OfferId نوشته می‌شود.</param>
     /// <param name="tax">قرارداد Tax برای طبقه و قاعدهٔ نمایشی روی Offer.</param>
-    /// <param name="taxDb">خواندن idempotent طبقه/قاعده در schema tax.</param>
+    /// <param name="taxQuery">Idempotent tax category and rule reads through the Tax contract.</param>
     /// <param name="cancellationToken">توکن لغو عملیات.</param>
     /// <returns>جمع‌بندی شمارشی وضعیت پس از اجرا.</returns>
     public static async Task<StorefrontDemoSeedSummary> SeedAsync(
@@ -149,7 +149,7 @@ internal static class StorefrontDemoCatalogBootstrap
         IPriceDirectory prices,
         IInventoryDirectory inventory,
         ITaxDirectory tax,
-        TaxDbContext taxDb,
+        ITaxQueryGateway taxQuery,
         CancellationToken cancellationToken)
     {
         if (await catalogRead.Products.AsNoTracking()
@@ -293,7 +293,7 @@ internal static class StorefrontDemoCatalogBootstrap
                         prices,
                         inventory,
                         tax,
-                        taxDb,
+                        taxQuery,
                         variant.VariantId,
                         sellerPartyIds[productOrdinal % sellerPartyIds.Count],
                         $"{child.Token.ToUpperInvariant()}-{index + 1}-A",
@@ -315,7 +315,7 @@ internal static class StorefrontDemoCatalogBootstrap
                             prices,
                             inventory,
                             tax,
-                            taxDb,
+                            taxQuery,
                             specialVariant.VariantId,
                             sellerPartyIds[productOrdinal % sellerPartyIds.Count],
                             $"{child.Token.ToUpperInvariant()}-{index + 1}-SPECIAL",
@@ -335,7 +335,7 @@ internal static class StorefrontDemoCatalogBootstrap
                             prices,
                             inventory,
                             tax,
-                            taxDb,
+                            taxQuery,
                             variant.VariantId,
                             sellerPartyIds[(productOrdinal + 1) % sellerPartyIds.Count],
                             $"{child.Token.ToUpperInvariant()}-{index + 1}-B",
@@ -425,7 +425,7 @@ internal static class StorefrontDemoCatalogBootstrap
         IPriceDirectory prices,
         IInventoryDirectory inventory,
         ITaxDirectory tax,
-        TaxDbContext taxDb,
+        ITaxQueryGateway taxQuery,
         Guid variantId,
         Guid sellerPartyId,
         string skuSuffix,
@@ -459,8 +459,8 @@ internal static class StorefrontDemoCatalogBootstrap
             null,
             cancellationToken);
 
-        var taxCategory = await EnsureStandardTaxCategoryAsync(tax, taxDb, cancellationToken);
-        await EnsureStandardTaxRuleAsync(tax, taxDb, taxCategory.CategoryId, cancellationToken);
+        var taxCategory = await EnsureStandardTaxCategoryAsync(tax, taxQuery, cancellationToken);
+        await EnsureStandardTaxRuleAsync(tax, taxQuery, taxCategory.CategoryId, cancellationToken);
         await tax.AssignOfferCategoryAsync(offer.OfferId, taxCategory.CategoryId, cancellationToken);
     }
 
@@ -470,12 +470,12 @@ internal static class StorefrontDemoCatalogBootstrap
     /// </summary>
     private static async Task EnsureDemoTaxCoverageAsync(
         IOfferQueryGateway offers,
-        TaxDbContext taxDb,
+        ITaxQueryGateway taxQuery,
         ITaxDirectory tax,
         CancellationToken cancellationToken)
     {
-        var category = await EnsureStandardTaxCategoryAsync(tax, taxDb, cancellationToken);
-        await EnsureStandardTaxRuleAsync(tax, taxDb, category.CategoryId, cancellationToken);
+        var category = await EnsureStandardTaxCategoryAsync(tax, taxQuery, cancellationToken);
+        await EnsureStandardTaxRuleAsync(tax, taxQuery, category.CategoryId, cancellationToken);
 
         var demoOfferIds = await offers.ListOfferIdsBySellerSkuPrefixAsync("DEMO-", cancellationToken);
         foreach (var offerId in demoOfferIds)
@@ -486,11 +486,10 @@ internal static class StorefrontDemoCatalogBootstrap
 
     private static async Task<TaxCategoryReference> EnsureStandardTaxCategoryAsync(
         ITaxDirectory tax,
-        TaxDbContext taxDb,
+        ITaxQueryGateway taxQuery,
         CancellationToken cancellationToken)
     {
-        var existing = await taxDb.Categories.AsNoTracking()
-            .FirstOrDefaultAsync(category => category.Code == "standard" || category.Code == "standard-demo", cancellationToken);
+        var existing = await taxQuery.FindCategoryByCodesAsync(["standard", "standard-demo"], cancellationToken);
         if (existing is not null)
         {
             return new TaxCategoryReference(existing.CategoryId, existing.Code, existing.DisplayName);
@@ -501,17 +500,11 @@ internal static class StorefrontDemoCatalogBootstrap
 
     private static async Task EnsureStandardTaxRuleAsync(
         ITaxDirectory tax,
-        TaxDbContext taxDb,
+        ITaxQueryGateway taxQuery,
         Guid categoryId,
         CancellationToken cancellationToken)
     {
-        var active = await taxDb.Rules.AsNoTracking()
-            .AnyAsync(
-                rule => rule.CategoryId == categoryId
-                    && rule.Jurisdiction == "IR-NAT"
-                    && rule.Market == DemoMarket
-                    && rule.Status == TaxRuleStatus.Active,
-                cancellationToken);
+        var active = await taxQuery.HasActiveRuleAsync(categoryId, "IR-NAT", DemoMarket, cancellationToken);
         if (active)
         {
             return;

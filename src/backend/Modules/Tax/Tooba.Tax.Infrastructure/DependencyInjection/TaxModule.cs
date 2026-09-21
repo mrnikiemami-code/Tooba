@@ -7,6 +7,7 @@ using Tooba.ModuleContracts;
 using Tooba.Persistence;
 using Tooba.Tax.Application;
 using Tooba.Tax.Contracts;
+using Tooba.Tax.Infrastructure.Adapters;
 using Tooba.Tax.Infrastructure.Persistence;
 
 namespace Tooba.Tax.Infrastructure;
@@ -30,6 +31,8 @@ public sealed class TaxModule : IToobaModule
         services.AddScoped<ITaxUseCaseGuard, OpenTaxUseCaseGuard>();
         services.AddScoped<ITaxDirectory, TaxDirectory>();
         services.AddScoped<ITaxCalculator>(sp => sp.GetRequiredService<ITaxDirectory>());
+        services.AddScoped<ITaxQueryGateway>(sp => (TaxDirectory)sp.GetRequiredService<ITaxDirectory>());
+        services.AddScoped<ITaxSchemaMigrator, TaxSchemaMigrator>();
         services.AddDbContext<TaxDbContext>((sp, options) =>
         {
             var connectionString = ToobaNpgsql.ResolveForContext(

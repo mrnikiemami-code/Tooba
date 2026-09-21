@@ -26,7 +26,7 @@ Accepted architecture baseline:
 TB-TMAR-ARCH-BASELINE
 
 Current next task:
-USER_REVIEW_OFFER after TB-TMAR-FND-OBSERR-001-R4 FOUNDATION_COMPLETE. Offer is COMPLETE_REFERENCE_PATTERN (re-verified, not ceremonial). Pricing gated until that user review. Checkout remains PAUSED_AT_SAFE_W5_CHECKPOINT.
+TB-TMAR-NEXT-MODULE-BATCH-001 after TB-TMAR-REFBATCH-TP-001. Offer, Tax, and Pricing are COMPLETE_REFERENCE_PATTERN. Foundation is FOUNDATION_COMPLETE. The stale gate that Pricing waits for USER_REVIEW_OFFER is removed. Checkout remains PAUSED_AT_SAFE_W5_CHECKPOINT.
 
 Product development rule:
 Foundation (TB-TMAR-FND-001) is ACCEPTED.
@@ -60,7 +60,7 @@ Host Structure W1 (TB-TMAR-HOST-STRUCTURE-W1) PASS — Host folder reorganizatio
 Checkout Implementation W4 (TB-TMAR-CHECKOUT-IMPL-W4) PASS — IOrderInventoryLifecyclePort; Order.Infrastructure↛Inventory.Application; TX preserved; W5 READY; next CHECKOUT-IMPL-W5.
 Checkout Implementation W5 (TB-TMAR-CHECKOUT-IMPL-W5) PASS — ICheckoutPromotionPort; Order.Application↛Promotion.Application; TX preserved; W6 READY; next CHECKOUT-IMPL-W6.
 Offer Reference Module W1 (TB-TMAR-OFFER-REFERENCE-W1) PASS then REOPENED — physical structure mismatch found by user visual inspection.
-Offer Reference Module Repair R1 (TB-TMAR-OFFER-REFERENCE-W1-R1) PASS — Physical-Structure-State VERIFIED_ON_DISK; ARCH-MODULE-PHYSICAL-001; COMPLETE_REFERENCE_PATTERN revalidated; Checkout paused at W5; Pricing gated until Architect ACCEPT.
+Offer Reference Module Repair R1 (TB-TMAR-OFFER-REFERENCE-W1-R1) PASS — Physical-Structure-State VERIFIED_ON_DISK; ARCH-MODULE-PHYSICAL-001; COMPLETE_REFERENCE_PATTERN revalidated; Checkout paused at W5. The R1-era Pricing gate is closed by TB-TMAR-REFBATCH-TP-001.
 Offer Reference Repair R3 (TB-TMAR-OFFER-REFERENCE-W1-R3) — Module-Recovery-State IN_PROGRESS_REFERENCE_REPAIR; CQRS and contract-boundary repair; Checkout paused; next TB-TMAR-OFFER-REFERENCE-W1-R4.
 Offer Reference Repair R4 (TB-TMAR-OFFER-REFERENCE-W1-R4) — Module-Recovery-State READY_FOR_FINAL_VERIFICATION; real CQRS reads, Host BFF removal, and Pricing/Inventory owner gates; next TB-TMAR-OFFER-REFERENCE-W1-R5.
 Offer Reference Final Verification R5 (TB-TMAR-OFFER-REFERENCE-W1-R5) — Module-Recovery-State INCOMPLETE; magic exception seam repaired; Host OfferDbContext residual remains; next TB-TMAR-OFFER-REFERENCE-W1-R6.
@@ -68,8 +68,8 @@ Offer Reference Host Persistence Closure R6 (TB-TMAR-OFFER-REFERENCE-W1-R6) — 
 Foundation Observability/Error Presentation R1 (TB-TMAR-FND-OBSERR-001-R1) — FOUNDATION_PHASE1_COMPLETE; central Correlation/SafeErrorMapper/ApiResponseFactory/locale/ProblemDetails.
 Foundation Observability/Error Presentation R2 (TB-TMAR-FND-OBSERR-001-R2) — FOUNDATION_RUNTIME_TRACING_COMPLETE; runtime correlation/log-scope/MediatR/module topology/messaging; next TB-TMAR-FND-OBSERR-001-R3.
 Foundation Observability/Error Presentation R3 (TB-TMAR-FND-OBSERR-001-R3) — FOUNDATION_ERROR_LOCALIZATION_COMPLETE; ErrorDescriptor catalog + .resx localization + exception presentation; Offer READY_FOR_FINAL_REFERENCE_REVERIFY; next TB-TMAR-FND-OBSERR-001-R4.
-Tax Reference Module W1 (TB-TMAR-TAX-REFERENCE-W1) PASS — COMPLETE_REFERENCE_PATTERN historically; physical recheck pending after Offer R1.
-Pricing Reference Module W1 (TB-TMAR-PRICING-REFERENCE-W1) PASS historically — gated NOT_STARTED_UNTIL_OFFER_REPAIR_ACCEPTED for next Architect sequencing after Offer R1.
+Tax Reference Module W1 (TB-TMAR-TAX-REFERENCE-W1) PASS — COMPLETE_REFERENCE_PATTERN revalidated by TB-TMAR-REFBATCH-TP-001.
+Pricing Reference Module W1 (TB-TMAR-PRICING-REFERENCE-W1) PASS — COMPLETE_REFERENCE_PATTERN revalidated by TB-TMAR-REFBATCH-TP-001. The stale wait for USER_REVIEW_OFFER is removed.
 Product-Resume-Safety = SAFE_WITH_TMAR_PARALLEL (Order hub still frozen; do not expand App→App / Infra→App; no NEW cross-context ACID).
 Last Product Task = TB-P10-T022-R21.
 Architecture Baseline = TB-TMAR-ARCH-BASELINE.
@@ -478,16 +478,17 @@ host-structure-w1-r1 = TB-TMAR-HOST-STRUCTURE-W1-R1 PASS (durable locks + FE fre
 checkout-impl-w4 = TB-TMAR-CHECKOUT-IMPL-W4 PASS (Order.Infra Inventory lifecycle Contracts; Infra→Inventory.Application removed; W5 READY)
 checkout-impl-w5 = TB-TMAR-CHECKOUT-IMPL-W5 PASS (Promotion checkout Contracts; Order.App→Promotion.Application removed; W6 READY)
 offer-reference-w1 = TB-TMAR-OFFER-REFERENCE-W1 PASS then REOPENED (physical mismatch)
-offer-reference-w1-r1 = TB-TMAR-OFFER-REFERENCE-W1-R1 PASS (Physical VERIFIED_ON_DISK; ARCH-MODULE-PHYSICAL-001; COMPLETE_REFERENCE_PATTERN revalidated; Checkout paused at W5; Pricing gated)
+offer-reference-w1-r1 = TB-TMAR-OFFER-REFERENCE-W1-R1 PASS (Physical VERIFIED_ON_DISK; ARCH-MODULE-PHYSICAL-001; COMPLETE_REFERENCE_PATTERN revalidated; Checkout paused at W5; R1-era Pricing gate closed by TB-TMAR-REFBATCH-TP-001)
 offer-reference-w1-r2 = TB-TMAR-OFFER-REFERENCE-W1-R2 PASS (semantic/determinism residual repair; COMPLETE_REFERENCE_PATTERN)
 offer-reference-w1-r6 = TB-TMAR-OFFER-REFERENCE-W1-R6 historically COMPLETE then REOPENED_WAITING_CENTRAL_FOUNDATION
 fnd-obserr-001-r1 = TB-TMAR-FND-OBSERR-001-R1 FOUNDATION_PHASE1_COMPLETE (Correlation/SafeErrorMapper/ApiResponseFactory/locale)
 fnd-obserr-001-r2 = TB-TMAR-FND-OBSERR-001-R2 FOUNDATION_RUNTIME_TRACING_COMPLETE (runtime tracing/messaging; next R3)
 fnd-obserr-001-r3 = TB-TMAR-FND-OBSERR-001-R3 FOUNDATION_ERROR_LOCALIZATION_COMPLETE (catalog/localization/presentation; next R4)
-fnd-obserr-001-r4 = TB-TMAR-FND-OBSERR-001-R4 FOUNDATION_COMPLETE (integrated verification + Offer Golden reverify; next USER_REVIEW_OFFER)
-tax-reference-w1 = TB-TMAR-TAX-REFERENCE-W1 PASS (COMPLETE_REFERENCE_PATTERN historically; physical recheck pending)
-pricing-reference-w1 = TB-TMAR-PRICING-REFERENCE-W1 PASS historically (gated until USER_REVIEW_OFFER)
-next task = USER_REVIEW_OFFER; Checkout remains PAUSED_AT_SAFE_W5_CHECKPOINT; Offer COMPLETE_REFERENCE_PATTERN; foundation FOUNDATION_COMPLETE
+fnd-obserr-001-r4 = TB-TMAR-FND-OBSERR-001-R4 FOUNDATION_COMPLETE (integrated verification + Offer Golden reverify)
+tax-reference-w1 = TB-TMAR-TAX-REFERENCE-W1 PASS, revalidated COMPLETE_REFERENCE_PATTERN by TB-TMAR-REFBATCH-TP-001
+pricing-reference-w1 = TB-TMAR-PRICING-REFERENCE-W1 PASS, revalidated COMPLETE_REFERENCE_PATTERN by TB-TMAR-REFBATCH-TP-001 (USER_REVIEW_OFFER gate removed)
+refbatch-tp-001 = TB-TMAR-REFBATCH-TP-001 REFERENCE_BATCH_COMPLETE
+next task = TB-TMAR-NEXT-MODULE-BATCH-001; Checkout remains PAUSED_AT_SAFE_W5_CHECKPOINT; Frontend frozen; Offer, Tax, and Pricing COMPLETE_REFERENCE_PATTERN; foundation FOUNDATION_COMPLETE
 
 primary goal = painless future Microservice migration
 

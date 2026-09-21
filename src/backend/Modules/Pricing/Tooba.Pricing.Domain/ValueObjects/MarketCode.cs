@@ -21,13 +21,13 @@ public readonly record struct MarketCode
     {
         if (string.IsNullOrWhiteSpace(raw))
         {
-            throw new InvalidOperationException("بازار خالی نیست و با Locale یکی نیست.");
+            throw new SemanticException(new SemanticError(PricingErrorCodes.MarketInvalid));
         }
 
         var code = raw.Trim().ToUpperInvariant();
         if (code.Length is < 2 or > 16 || !code.All(ch => char.IsAsciiLetterOrDigit(ch) || ch is '-' or '_'))
         {
-            throw new InvalidOperationException("کد بازار باید کوتاه و پایدار باشد نه نام زبان.");
+            throw new SemanticException(new SemanticError(PricingErrorCodes.MarketInvalid));
         }
 
         return new MarketCode(code);

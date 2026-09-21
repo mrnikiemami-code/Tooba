@@ -4,7 +4,7 @@ using Tooba.Catalog.Domain;
 using Tooba.Catalog.Infrastructure.Persistence;
 using Tooba.Inventory.Infrastructure.Persistence;
 using Tooba.Offer.Contracts.Ports;
-using Tooba.Pricing.Infrastructure.Persistence;
+using Tooba.Pricing.Contracts;
 
 using Tooba.BuildingBlocks.Grid;
 
@@ -17,13 +17,13 @@ internal sealed class AdminProductGridQueryEngine
 {
     private readonly CatalogDbContext _catalog;
     private readonly IOfferQueryGateway _offers;
-    private readonly PricingDbContext _prices;
+    private readonly IPriceQueryGateway _prices;
     private readonly InventoryDbContext _inventory;
 
     public AdminProductGridQueryEngine(
         CatalogDbContext catalog,
         IOfferQueryGateway offers,
-        PricingDbContext prices,
+        IPriceQueryGateway prices,
         InventoryDbContext inventory)
     {
         _catalog = catalog;
@@ -561,7 +561,7 @@ internal sealed class AdminProductGridQueryEngine
     {
         var variantToProduct = await LoadVariantToProductMapAsync(cancellationToken);
         var offerToVariant = await _offers.MapAllOfferIdsToCatalogVariantIdsAsync(cancellationToken);
-        var prices = await _prices.Prices.AsNoTracking().Select(p => new { p.OfferId, p.Amount }).ToListAsync(cancellationToken);
+        var prices = await _prices.ListOfferAmountsAsync(cancellationToken);
         var byProduct = new Dictionary<Guid, List<decimal>>();
         foreach (var price in prices)
         {

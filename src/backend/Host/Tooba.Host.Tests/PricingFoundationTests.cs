@@ -180,7 +180,7 @@ public sealed class PricingFoundationTests : IAsyncLifetime
         var start = DateTimeOffset.Parse("2026-01-01T00:00:00Z");
         var mid = DateTimeOffset.Parse("2026-06-01T00:00:00Z");
         var end = DateTimeOffset.Parse("2026-12-31T00:00:00Z");
-        Assert.ThrowsAny<Exception>(() => AuthoredPrice.Create(offer.OfferId, "IR", SalesChannel.Marketplace, 10, "IRR", start, start, DateTimeOffset.UtcNow));
+        Assert.ThrowsAny<Exception>(() => AuthoredPrice.Create(Guid.NewGuid(), offer.OfferId, "IR", PriceChannel.Marketplace, 10, "IRR", start, start, DateTimeOffset.UtcNow));
 
         var created = await priceDirA.CreatePriceAsync(offer.OfferId, "IR", SalesChannel.Marketplace, 100000, "IRR", start, end, CancellationToken.None);
         Assert.True(created.TaxExclusive);

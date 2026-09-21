@@ -1,0 +1,40 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+
+BEGIN_TOOBA_WORKER_RESULT
+
+Summary: Fast-safe revalidation repaired Tax and Pricing against the Golden Offer/Foundation contract in one batch. Host no longer opens TaxDbContext or PricingDbContext. Both modules are COMPLETE_REFERENCE_PATTERN.
+Program-Name: TMAR — Tooba Microservice-Ready Architecture Recovery
+Track: REFERENCE_MODULE_REVALIDATION
+Recovery-Start: docs/evidence/TB-TMAR-REFBATCH-TP-001/recovery-start.md — main bcbb717fd167e7787aa673feb09b236b5ca8ab04 HEAD==origin/main, staged 0, 18ca10c9 ancestor, stashes untouched
+Golden-Baseline: Offer COMPLETE_REFERENCE_PATTERN and foundation FOUNDATION_COMPLETE at bcbb717fd167e7787aa673feb09b236b5ca8ab04
+Tax-Audit: docs/evidence/TB-TMAR-REFBATCH-TP-001/tax-audit.md
+Tax-Repairs: Removed TypeForwardedTo and Domain→Contracts. TaxOutcome namespace is Tooba.Tax.Contracts. IClock/IIdGenerator on TaxDirectory. ITaxQueryGateway and ITaxSchemaMigrator replace Host TaxDbContext. English invariant codes replace Persian exception text. No ceremonial MediatR or resx.
+Tax-Foundation-Adoption: CANONICAL for the token list. No PlatformHttpException, Accept-Language, raw ex.Message, UtcNow, Guid.NewGuid, UuidV7.New, or StartActivity in production. SemanticException not used because Tax has no HTTP semantic exception surface.
+Tax-Guards: TaxArchitectureGuardTests.Tax_golden_boundaries_remain_clean plus existing project-ref, 800 LOC, and MapTaxModule guards
+Tax-Validation: Tooba.Tax.Tests 12 passed, 0 failed
+Tax-State: COMPLETE_REFERENCE_PATTERN
+Pricing-Audit: docs/evidence/TB-TMAR-REFBATCH-TP-001/pricing-audit.md
+Pricing-Repairs: Removed TypeForwardedTo and Domain→Contracts/Offer.Contracts. PriceChannel owned by Pricing. IClock/IIdGenerator. SemanticException catalog with en/fa resx. IPriceQueryGateway and IPricingSchemaMigrator replace Host PricingDbContext. IModuleCallTracer on Pricing→Offer lookup. Seller SetPriceAsync selects base prices only.
+Pricing-Foundation-Adoption: CANONICAL. SemanticException plus explicit descriptors. IModuleCallTracer for the Offer lookup. No raw StartActivity, UtcNow, Guid.NewGuid, UuidV7.New, Accept-Language, or ex.Message response.
+Pricing-Guards: PricingArchitectureGuardTests.Pricing_golden_boundaries_remain_clean plus existing Offer.Contracts-not-Application, 800 LOC, and MapPricingModule guards
+Pricing-Validation: Tooba.Pricing.Tests 13 passed, 0 failed
+Pricing-State: COMPLETE_REFERENCE_PATTERN
+Host-Leak-Scan: docs/evidence/TB-TMAR-REFBATCH-TP-001/host-leak-scan.md — production Host has zero TaxDbContext and PricingDbContext references
+Foundation-Adoption-Scan: docs/evidence/TB-TMAR-REFBATCH-TP-001/foundation-adoption-scan.md
+Focused-Validation: Host ContractsW4CharacterizationTests and ContractsW6CharacterizationTests 7 passed, 0 failed
+Full-Validation: dotnet build src/backend/Tooba.slnx succeeded, 0 errors. BuildingBlocks and Offer.Tests not run; foundation and Offer contracts were not changed.
+AntiPattern-Gate: CLEAN
+Residual-Defects: Persian XML docs remain on older Tax/Pricing types and are not user-facing. Tax has no HTTP error resx by design. Host test fixtures may still construct module DbContexts. Other Host module DbContexts were not refactored.
+Batch-State: COMPLETE
+Frontend-Production-Changes: none
+Checkout-State: PAUSED_AT_SAFE_W5_CHECKPOINT
+Capability-Map: docs/architecture/TOOBA-CAPABILITY-MAP.md updated; next is TB-TMAR-NEXT-MODULE-BATCH-001
+Master-Recovery-State: docs/architecture/TOOBA-TMAR-MASTER-RECOVERY.md updated; USER_REVIEW_OFFER pricing gate removed
+Recovery-SoT: docs/evidence/TB-TMAR-REFBATCH-TP-001/recovery-sot.md
+Git: TIP_SHA_PLACEHOLDER
+Blockers:
+User-Work-Preserved: yes — stashes untouched, .rar untouched, no reset/clean
+Module-Recovery-State: REFERENCE_BATCH_COMPLETE
+Next-Recommended-Task: TB-TMAR-NEXT-MODULE-BATCH-001
+
+END_TOOBA_WORKER_RESULT

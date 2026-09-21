@@ -95,6 +95,59 @@ public sealed class TaxArchitectureGuardTests
         Assert.Contains("MapTaxModule()", program, StringComparison.Ordinal);
     }
 
+    [Fact]
+    public void Tax_golden_boundaries_remain_clean()
+    {
+        Assert.DoesNotContain(ProjectRefs("Tooba.Tax.Domain"), x => x.Contains("Tooba.Tax.Contracts", StringComparison.Ordinal));
+        Assert.DoesNotContain(AllProductionSources(), x => x.Text.Contains("TypeForwardedTo", StringComparison.Ordinal));
+        Assert.DoesNotContain(Sources("Tooba.Tax.Contracts"), x => x.Text.Contains("namespace Tooba.Tax.Domain", StringComparison.Ordinal));
+        var hostRoot = Path.Combine(RepoRoot(), "src", "backend", "Host", "Tooba.Host");
+        var hostHits = Directory.EnumerateFiles(hostRoot, "*.cs", SearchOption.AllDirectories)
+            .Where(path => !path.Contains($"{Path.DirectorySeparatorChar}bin{Path.DirectorySeparatorChar}") && !path.Contains($"{Path.DirectorySeparatorChar}obj{Path.DirectorySeparatorChar}"))
+            .Where(path => File.ReadAllText(path).Contains("TaxDbContext", StringComparison.Ordinal))
+            .ToList();
+        Assert.Empty(hostHits);
+        var bypass = AllProductionSources()
+            .Where(x => x.Text.Contains("DateTimeOffset.UtcNow", StringComparison.Ordinal)
+                        || x.Text.Contains("DateTime.UtcNow", StringComparison.Ordinal)
+                        || x.Text.Contains("Guid.NewGuid()", StringComparison.Ordinal)
+                        || x.Text.Contains("UuidV7.New()", StringComparison.Ordinal)
+                        || x.Text.Contains("StartActivity(", StringComparison.Ordinal)
+                        || x.Text.Contains("PlatformHttpException", StringComparison.Ordinal))
+            .Select(x => x.Path)
+            .ToList();
+        Assert.True(bypass.Count == 0, string.Join("; ", bypass));
+        var endpoints = Sources("Tooba.Tax.Endpoints");
+        Assert.DoesNotContain(endpoints, x => x.Text.Contains("ex.Message", StringComparison.Ordinal) || x.Text.Contains("AcceptLanguage", StringComparison.Ordinal));
+    }
+
+    private static IEnumerable<(string Path, string Text)> AllProductionSources() =>
+        Sources("Tooba.Tax.Domain")
+            .Concat(Sources("Tooba.Tax.Application"))
+            .Concat(Sources("Tooba.Tax.Contracts"))
+            .Concat(Sources("Tooba.Tax.Infrastructure"))
+            .Concat(Sources("Tooba.Tax.Endpoints"));
+
+    private static IEnumerable<(string Path, string Text)> Sources(string projectFolder)
+    {
+        var root = Path.Combine(TaxRoot(), projectFolder);
+        foreach (var file in Directory.EnumerateFiles(root, "*.cs", SearchOption.AllDirectories))
+        {
+            var n = file.Replace('\\', '/');
+            if (n.Contains("/bin/", StringComparison.Ordinal) || n.Contains("/obj/", StringComparison.Ordinal))
+            {
+                continue;
+            }
+
+            if (n.Contains("/Migrations/", StringComparison.OrdinalIgnoreCase) || n.EndsWith("ModelSnapshot.cs", StringComparison.OrdinalIgnoreCase))
+            {
+                continue;
+            }
+
+            yield return (Path.GetRelativePath(RepoRoot(), file), File.ReadAllText(file));
+        }
+    }
+
     private static IReadOnlyList<string> ProjectRefs(string projectFolder)
     {
         var csproj = Path.Combine(TaxRoot(), projectFolder, projectFolder + ".csproj");

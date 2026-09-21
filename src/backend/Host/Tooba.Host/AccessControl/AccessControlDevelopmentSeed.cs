@@ -26,8 +26,8 @@ using Tooba.Party.Domain;
 using Tooba.Party.Infrastructure.Persistence;
 using Tooba.Pricing.Application;
 using Tooba.Tax.Application;
+using Tooba.Tax.Contracts;
 using Tooba.Tax.Domain;
-using Tooba.Tax.Infrastructure.Persistence;
 
 namespace Tooba.Host.AccessControl;
 
@@ -108,7 +108,7 @@ internal static class AccessControlDevelopmentSeed
         var prices = provider.GetRequiredService<IPriceDirectory>();
         var inventory = provider.GetRequiredService<IInventoryDirectory>();
         var tax = provider.GetRequiredService<ITaxDirectory>();
-        var taxDb = provider.GetRequiredService<TaxDbContext>();
+        var taxQuery = provider.GetRequiredService<ITaxQueryGateway>();
         var access = provider.GetRequiredService<IAccessControlDirectory>();
         var auth = provider.GetRequiredService<IIdentityAuthenticationService>();
         var carts = provider.GetRequiredService<ICartDirectory>();
@@ -133,7 +133,7 @@ internal static class AccessControlDevelopmentSeed
             prices,
             inventory,
             tax,
-            taxDb,
+            taxQuery,
             catalogDb,
             offerQueries,
             inventoryDb,
@@ -151,7 +151,7 @@ internal static class AccessControlDevelopmentSeed
             prices,
             inventory,
             tax,
-            taxDb,
+            taxQuery,
             catalogDb,
             offerQueries,
             inventoryDb,
@@ -345,7 +345,7 @@ internal static class AccessControlDevelopmentSeed
         IPriceDirectory prices,
         IInventoryDirectory inventory,
         ITaxDirectory tax,
-        TaxDbContext taxDb,
+        ITaxQueryGateway taxQuery,
         CatalogDbContext catalogDb,
         IOfferQueryGateway offerQueries,
         InventoryDbContext inventoryDb,
@@ -358,8 +358,8 @@ internal static class AccessControlDevelopmentSeed
         string locationCode,
         CancellationToken cancellationToken)
     {
-        var taxCategory = await EnsureAccTaxCategoryAsync(tax, taxDb, cancellationToken);
-        await EnsureAccTaxRuleAsync(tax, taxDb, taxCategory.CategoryId, cancellationToken);
+        var taxCategory = await EnsureAccTaxCategoryAsync(tax, taxQuery, cancellationToken);
+        await EnsureAccTaxRuleAsync(tax, taxQuery, taxCategory.CategoryId, cancellationToken);
 
         var existingProduct = await catalogDb.Products.AsNoTracking()
             .SingleOrDefaultAsync(x => x.SlugSeam == slug, cancellationToken);
@@ -479,11 +479,10 @@ internal static class AccessControlDevelopmentSeed
 
     private static async Task<TaxCategoryReference> EnsureAccTaxCategoryAsync(
         ITaxDirectory tax,
-        TaxDbContext taxDb,
+        ITaxQueryGateway taxQuery,
         CancellationToken cancellationToken)
     {
-        var existing = await taxDb.Categories.AsNoTracking()
-            .FirstOrDefaultAsync(category => category.Code == "standard" || category.Code == "standard-demo", cancellationToken);
+        var existing = await taxQuery.FindCategoryByCodesAsync(["standard", "standard-demo"], cancellationToken);
         if (existing is not null)
         {
             return new TaxCategoryReference(existing.CategoryId, existing.Code, existing.DisplayName);
@@ -494,17 +493,11 @@ internal static class AccessControlDevelopmentSeed
 
     private static async Task EnsureAccTaxRuleAsync(
         ITaxDirectory tax,
-        TaxDbContext taxDb,
+        ITaxQueryGateway taxQuery,
         Guid categoryId,
         CancellationToken cancellationToken)
     {
-        var active = await taxDb.Rules.AsNoTracking()
-            .AnyAsync(
-                rule => rule.CategoryId == categoryId
-                    && rule.Jurisdiction == "IR-NAT"
-                    && rule.Market == "IR"
-                    && rule.Status == TaxRuleStatus.Active,
-                cancellationToken);
+        var active = await taxQuery.HasActiveRuleAsync(categoryId, "IR-NAT", "IR", cancellationToken);
         if (active)
         {
             return;

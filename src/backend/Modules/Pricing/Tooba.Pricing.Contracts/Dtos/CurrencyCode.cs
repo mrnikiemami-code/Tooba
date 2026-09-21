@@ -1,4 +1,6 @@
-namespace Tooba.Pricing.Domain;
+using Tooba.BuildingBlocks;
+
+namespace Tooba.Pricing.Contracts;
 
 /// <summary>
 /// کد ارز ISO. از Locale یا Market حدس زده نمی‌شود و تومان نمایشی با ریال مخلوط نمی‌شود.
@@ -20,18 +22,18 @@ public readonly record struct CurrencyCode
     {
         if (string.IsNullOrWhiteSpace(raw))
         {
-            throw new InvalidOperationException("کد ارز خالی نیست؛ از Locale هم استنباط نمی‌شود.");
+            throw new SemanticException(new SemanticError(PricingErrorCodes.CurrencyInvalid));
         }
 
         var code = raw.Trim().ToUpperInvariant();
         if (code is "TMN" or "IRT" or "TOMAN")
         {
-            throw new InvalidOperationException("تومان واحد نمایش است نه ارز ذخیره‌شده؛ مبلغ نوشته‌شده باید IRR باشد.");
+            throw new SemanticException(new SemanticError(PricingErrorCodes.CurrencyDisplayUnit));
         }
 
         if (code.Length != 3 || !code.All(char.IsAsciiLetter))
         {
-            throw new InvalidOperationException("ارز باید کد سه حرفی ISO باشد نه زبان UI.");
+            throw new SemanticException(new SemanticError(PricingErrorCodes.CurrencyInvalid));
         }
 
         return new CurrencyCode(code);

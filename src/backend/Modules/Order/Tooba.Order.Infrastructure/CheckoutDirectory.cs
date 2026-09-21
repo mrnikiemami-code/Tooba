@@ -15,7 +15,6 @@ using Tooba.Order.Infrastructure.Persistence;
 using Tooba.Pricing.Contracts;
 using Tooba.Promotion.Contracts;
 using Tooba.Tax.Contracts;
-using Tooba.Tax.Domain;
 namespace Tooba.Order.Infrastructure;
 
 /// <summary>

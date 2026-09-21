@@ -24,11 +24,9 @@ using Tooba.Support.Infrastructure.Persistence;
 using Tooba.Wallet.Infrastructure.Persistence;
 using Tooba.Payment.Infrastructure.Persistence;
 using Tooba.PlatformProbe.Infrastructure.Persistence;
-using Tooba.Pricing.Infrastructure.Persistence;
 using Tooba.ProductQnA.Infrastructure.Persistence;
 using Tooba.Promotion.Infrastructure.Persistence;
 using Tooba.Reviews.Infrastructure.Persistence;
-using Tooba.Tax.Infrastructure.Persistence;
 using Tooba.Wishlist.Infrastructure.Persistence;
 using Tooba.Persistence;
 
@@ -54,9 +52,9 @@ internal static class ModuleMigrationRegistry
     [
         Descriptor<CatalogDbContext>("Catalog", CatalogDbContext.Schema),
         new ModuleMigrationDescriptor(Tooba.Offer.Infrastructure.Adapters.OfferModuleMigration.Module, Tooba.Offer.Infrastructure.Adapters.OfferModuleMigration.Schema, Tooba.Offer.Infrastructure.Adapters.OfferModuleMigration.CreateContext),
-        Descriptor<PricingDbContext>("Pricing", PricingDbContext.Schema),
+        new ModuleMigrationDescriptor(Tooba.Pricing.Infrastructure.Adapters.PricingModuleMigration.Module, Tooba.Pricing.Infrastructure.Adapters.PricingModuleMigration.Schema, Tooba.Pricing.Infrastructure.Adapters.PricingModuleMigration.CreateContext),
         Descriptor<InventoryDbContext>("Inventory", InventoryDbContext.Schema),
-        Descriptor<TaxDbContext>("Tax", TaxDbContext.Schema),
+        new ModuleMigrationDescriptor(Tooba.Tax.Infrastructure.Adapters.TaxModuleMigration.Module, Tooba.Tax.Infrastructure.Adapters.TaxModuleMigration.Schema, Tooba.Tax.Infrastructure.Adapters.TaxModuleMigration.CreateContext),
         Descriptor<PartyDbContext>("Party", PartyDbContext.Schema),
         Descriptor<IdentityDbContext>("Identity", IdentityDbContext.Schema),
         Descriptor<CartDbContext>("Cart", CartDbContext.Schema),

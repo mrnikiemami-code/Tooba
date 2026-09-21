@@ -88,6 +88,7 @@ public sealed class TaxRule : IHasDomainEvents
     /// قاعده می‌سازد. درصد حوزه در کد سخت نیست.
     /// </summary>
     public static TaxRule Create(
+        Guid ruleId,
         string jurisdiction,
         string market,
         Guid categoryId,
@@ -99,36 +100,41 @@ public sealed class TaxRule : IHasDomainEvents
         TaxOverridePolicy overridePolicy,
         DateTimeOffset now)
     {
+        if (ruleId == Guid.Empty)
+        {
+            throw new InvalidOperationException("tax.rule.id_required");
+        }
+
         if (string.IsNullOrWhiteSpace(jurisdiction))
         {
-            throw new InvalidOperationException("حوزهٔ مالیاتی باید صریح باشد؛ از Locale استنباط نمی‌شود.");
+            throw new InvalidOperationException("tax.jurisdiction.required");
         }
 
         if (string.IsNullOrWhiteSpace(market))
         {
-            throw new InvalidOperationException("بازار قاعده خالی نیست؛ با حوزه یکی گرفته نمی‌شود.");
+            throw new InvalidOperationException("tax.market.required");
         }
 
         if (effectiveTo is not null && effectiveTo <= effectiveFrom)
         {
-            throw new InvalidOperationException("پنجرهٔ اعتبار قاعده نامعتبر است.");
+            throw new InvalidOperationException("tax.validity.inverted");
         }
 
         if (kind == TaxRuleKind.Percentage)
         {
             if (rate < 0 || rate > 1)
             {
-                throw new InvalidOperationException("نرخ درصدی باید کسری بین صفر و یک باشد.");
+                throw new InvalidOperationException("tax.rate.out_of_range");
             }
         }
         else if (rate != 0)
         {
-            throw new InvalidOperationException("قاعدهٔ معاف یا نرخ صفر نباید نرخ درصدی غیرصفر داشته باشد.");
+            throw new InvalidOperationException("tax.rate.not_applicable");
         }
 
         var rule = new TaxRule
         {
-            RuleId = UuidV7.New(),
+            RuleId = ruleId,
             Jurisdiction = jurisdiction.Trim(),
             Market = market.Trim(),
             CategoryId = categoryId,
@@ -163,12 +169,12 @@ public sealed class TaxRule : IHasDomainEvents
     {
         if (Kind != TaxRuleKind.Percentage)
         {
-            throw new InvalidOperationException("فقط قاعدهٔ درصدی نرخ قابل‌تغییر دارد.");
+            throw new InvalidOperationException("tax.rate.kind_mismatch");
         }
 
         if (rate < 0 || rate > 1)
         {
-            throw new InvalidOperationException("نرخ درصدی باید کسری بین صفر و یک باشد.");
+            throw new InvalidOperationException("tax.rate.out_of_range");
         }
 
         Rate = rate;

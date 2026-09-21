@@ -1,5 +1,5 @@
 using Xunit;
-using Tooba.Offer.Contracts.Dtos;
+using Tooba.BuildingBlocks;
 using Tooba.Pricing.Domain;
 
 namespace Tooba.Pricing.Tests.Domain;
@@ -11,8 +11,9 @@ public sealed class AuthoredPriceInvariantTests
     {
         var price = AuthoredPrice.Create(
             Guid.NewGuid(),
+            Guid.NewGuid(),
             "IR",
-            SalesChannel.Marketplace,
+            PriceChannel.Marketplace,
             1000m,
             "IRR",
             DateTimeOffset.Parse("2026-01-01Z"),
@@ -27,12 +28,12 @@ public sealed class AuthoredPriceInvariantTests
     [Fact]
     public void Money_rejects_negative_amount()
     {
-        Assert.Throws<InvalidOperationException>(() => Money.Create(-1m, "IRR"));
+        Assert.Throws<SemanticException>(() => Money.Create(-1m, "IRR"));
     }
 
     [Fact]
     public void MarketCode_rejects_empty()
     {
-        Assert.Throws<InvalidOperationException>(() => MarketCode.Parse(" "));
+        Assert.Throws<SemanticException>(() => MarketCode.Parse(" "));
     }
 }

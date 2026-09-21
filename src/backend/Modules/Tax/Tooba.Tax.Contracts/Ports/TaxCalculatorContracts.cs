@@ -1,5 +1,4 @@
 using Tooba.BuildingBlocks;
-using Tooba.Tax.Domain;
 
 namespace Tooba.Tax.Contracts;
 

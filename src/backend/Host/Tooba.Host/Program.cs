@@ -68,6 +68,7 @@ builder.Logging.AddJsonConsole(options =>
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddToobaObservabilityFoundation();
 builder.Services.AddOfferEndpointPresentation();
+builder.Services.AddPricingEndpointPresentation();
 builder.Services.AddProblemDetails();
 builder.Services.AddSingleton<IExceptionPresentationService, ExceptionPresentationService>();
 builder.Services.AddExceptionHandler<ToobaExceptionHandler>();

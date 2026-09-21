@@ -15,9 +15,9 @@ public readonly record struct Money
     /// <summary>
     /// ارز مبلغ نوشته‌شده. تبدیل FX اینجا ذخیره نمی‌شود.
     /// </summary>
-    public CurrencyCode Currency { get; }
+    public AuthoredCurrency Currency { get; }
 
-    private Money(decimal amount, CurrencyCode currency)
+    private Money(decimal amount, AuthoredCurrency currency)
     {
         Amount = amount;
         Currency = currency;
@@ -30,10 +30,10 @@ public readonly record struct Money
     {
         if (amount < 0)
         {
-            throw new InvalidOperationException("مبلغ پایه منفی نیست.");
+            throw new SemanticException(new SemanticError(PricingErrorCodes.AmountInvalid));
         }
 
-        var currency = CurrencyCode.Parse(currencyCode);
+        var currency = AuthoredCurrency.Parse(currencyCode);
         var rounded = decimal.Round(amount, currency.Scale, MidpointRounding.AwayFromZero);
         return new Money(rounded, currency);
     }

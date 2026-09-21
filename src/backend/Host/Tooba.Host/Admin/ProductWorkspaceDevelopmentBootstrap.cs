@@ -18,12 +18,12 @@ using Tooba.Payment.Infrastructure.Persistence;
 using Tooba.Fulfillment.Infrastructure.Persistence;
 using Tooba.PlatformProbe.Infrastructure.Persistence;
 using Tooba.Pricing.Application;
-using Tooba.Pricing.Infrastructure.Persistence;
+using Tooba.Pricing.Contracts;
 using Tooba.Promotion.Application;
 using Tooba.Promotion.Infrastructure.Persistence;
 using Tooba.Tax.Application;
+using Tooba.Tax.Contracts;
 using Tooba.Tax.Domain;
-using Tooba.Tax.Infrastructure.Persistence;
 using Tooba.Reviews.Infrastructure.Persistence;
 using Tooba.ProductQnA.Infrastructure.Persistence;
 using Tooba.BulkInquiry.Infrastructure.Persistence;
@@ -98,9 +98,9 @@ internal static class ProductWorkspaceDevelopmentBootstrap
 
         await MigrateAsync(provider.GetRequiredService<CatalogDbContext>());
         await provider.GetRequiredService<IOfferSchemaMigrator>().MigrateAsync();
-        await MigrateAsync(provider.GetRequiredService<PricingDbContext>());
+        await provider.GetRequiredService<IPricingSchemaMigrator>().MigrateAsync();
         await MigrateAsync(provider.GetRequiredService<InventoryDbContext>());
-        await MigrateAsync(provider.GetRequiredService<TaxDbContext>());
+        await provider.GetRequiredService<ITaxSchemaMigrator>().MigrateAsync();
         await MigrateAsync(provider.GetRequiredService<PartyDbContext>());
         await MigrateAsync(provider.GetRequiredService<IdentityDbContext>());
         await MigrateAsync(provider.GetRequiredService<CartDbContext>());

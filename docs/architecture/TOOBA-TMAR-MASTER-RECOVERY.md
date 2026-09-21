@@ -188,10 +188,13 @@ User choice:
 Continue TMAR for now until user explicitly says to return to product feature work.
 
 Next TMAR task:
-USER_REVIEW_OFFER. TB-TMAR-FND-OBSERR-001-R4 verified the observability/error/localization foundation as FOUNDATION_COMPLETE and re-verified Offer as COMPLETE_REFERENCE_PATTERN. Pricing remains gated until that review. Checkout remains PAUSED_AT_SAFE_W5_CHECKPOINT.
+TB-TMAR-NEXT-MODULE-BATCH-001. TB-TMAR-REFBATCH-TP-001 revalidated Tax and Pricing against the Golden Offer/Foundation contract. Both are COMPLETE_REFERENCE_PATTERN. The stale gate that Pricing waits for USER_REVIEW_OFFER is removed; the user authorized continuation after Offer acceptance. Checkout remains PAUSED_AT_SAFE_W5_CHECKPOINT. Frontend remains frozen.
+
+Tax + Pricing reference revalidation:
+TB-TMAR-REFBATCH-TP-001 — FAST-SAFE batch. Tax-State COMPLETE_REFERENCE_PATTERN. Pricing-State COMPLETE_REFERENCE_PATTERN. Batch-State COMPLETE. Module-Recovery-State REFERENCE_BATCH_COMPLETE. Host TaxDbContext/PricingDbContext production leaks closed through query and schema-migrator contracts. Pricing HTTP semantic errors have descriptors and en/fa resources. Tax has no HTTP error surface, so no ceremonial resources. Evidence: docs/evidence/TB-TMAR-REFBATCH-TP-001/. Next: TB-TMAR-NEXT-MODULE-BATCH-001.
 
 Foundation Observability/Error Presentation R4:
-TB-TMAR-FND-OBSERR-001-R4 — Final integrated verification. Module-Recovery-State FOUNDATION_COMPLETE. Offer-State COMPLETE_REFERENCE_PATTERN. Canonical foundation pipeline; Offer is the first Golden consumer. Repairs: Offer development seed uses IClock; Host error/correlation fixtures use PostgresSerial after a MassTransit migrator race. Evidence: docs/evidence/TB-TMAR-FND-OBSERR-001-R4/. Next: USER_REVIEW_OFFER.
+TB-TMAR-FND-OBSERR-001-R4 — Final integrated verification. Module-Recovery-State FOUNDATION_COMPLETE. Offer-State COMPLETE_REFERENCE_PATTERN. Canonical foundation pipeline; Offer is the first Golden consumer. Repairs: Offer development seed uses IClock; Host error/correlation fixtures use PostgresSerial after a MassTransit migrator race. Evidence: docs/evidence/TB-TMAR-FND-OBSERR-001-R4/. Superseded next pointer: TB-TMAR-REFBATCH-TP-001.
 
 Foundation Observability/Error Presentation R3:
 TB-TMAR-FND-OBSERR-001-R3 — Error localization/catalog complete; Module-Recovery-State FOUNDATION_ERROR_LOCALIZATION_COMPLETE; Offer-State READY_FOR_FINAL_REFERENCE_REVERIFY. Evidence: docs/evidence/TB-TMAR-FND-OBSERR-001-R3/.
@@ -208,10 +211,10 @@ TB-TMAR-OFFER-REFERENCE-W1-R2 — Offer Golden residual repair: SemanticExceptio
 TB-TMAR-OFFER-REFERENCE-W1-R3 — prior COMPLETE claim revoked; CQRS/contract-boundary repair implemented. Module-Recovery-State: IN_PROGRESS_REFERENCE_REPAIR. Next: TB-TMAR-OFFER-REFERENCE-W1-R4. Evidence: docs/evidence/TB-TMAR-OFFER-REFERENCE-W1-R3/.
 
 Pricing Reference Module W1:
-TB-TMAR-PRICING-REFERENCE-W1 — historically shipped COMPLETE_REFERENCE_PATTERN; Offer R1 repair requires Architect ACCEPT before treating Pricing as active next work (Worker reports Pricing-Reference-State NOT_STARTED_UNTIL_OFFER_REPAIR_ACCEPTED). Evidence: docs/evidence/TB-TMAR-PRICING-REFERENCE-W1/.
+TB-TMAR-PRICING-REFERENCE-W1 — historically shipped COMPLETE_REFERENCE_PATTERN, then revalidated by TB-TMAR-REFBATCH-TP-001. The stale "wait for USER_REVIEW_OFFER" gate is removed. Evidence: docs/evidence/TB-TMAR-PRICING-REFERENCE-W1/ and docs/evidence/TB-TMAR-REFBATCH-TP-001/.
 
 Tax Reference Module W1:
-TB-TMAR-TAX-REFERENCE-W1 — COMPLETE_REFERENCE_PATTERN historically; physical recheck pending after Offer R1 lock. Evidence: docs/evidence/TB-TMAR-TAX-REFERENCE-W1/.
+TB-TMAR-TAX-REFERENCE-W1 — COMPLETE_REFERENCE_PATTERN revalidated by TB-TMAR-REFBATCH-TP-001. Evidence: docs/evidence/TB-TMAR-TAX-REFERENCE-W1/ and docs/evidence/TB-TMAR-REFBATCH-TP-001/.
 
 Offer Reference Repair R4:
 TB-TMAR-OFFER-REFERENCE-W1-R4 — fake CQRS and Host Offer BFF removed; owner contract gates established; Module-Recovery-State READY_FOR_FINAL_VERIFICATION; next TB-TMAR-OFFER-REFERENCE-W1-R5. Evidence: docs/evidence/TB-TMAR-OFFER-REFERENCE-W1-R4/.

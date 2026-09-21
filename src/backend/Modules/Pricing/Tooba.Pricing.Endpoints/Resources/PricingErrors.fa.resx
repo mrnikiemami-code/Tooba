@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="pricing.amount.invalid" xml:space="preserve"><value>مبلغ قیمت نامعتبر است.</value></data>
+  <data name="pricing.overlap" xml:space="preserve"><value>بیش از یک قیمت فعال برای این انتخاب هم‌پوشانی دارد.</value></data>
+  <data name="pricing.offer.missing" xml:space="preserve"><value>پیشنهاد پیدا نشد.</value></data>
+  <data name="pricing.campaign.required" xml:space="preserve"><value>قیمت کمپین به شناسه کمپین نیاز دارد.</value></data>
+  <data name="pricing.validity.inverted" xml:space="preserve"><value>بازه اعتبار قیمت نامعتبر است.</value></data>
+  <data name="pricing.retired.reactivate" xml:space="preserve"><value>قیمت بازنشسته دوباره فعال نمی‌شود.</value></data>
+  <data name="pricing.retired.immutable" xml:space="preserve"><value>قیمت بازنشسته قابل ویرایش نیست.</value></data>
+  <data name="pricing.currency.change_forbidden" xml:space="preserve"><value>تغییر ارز به قیمت جدید نیاز دارد.</value></data>
+  <data name="pricing.market.invalid" xml:space="preserve"><value>کد بازار نامعتبر است.</value></data>
+  <data name="pricing.currency.invalid" xml:space="preserve"><value>کد ارز نامعتبر است.</value></data>
+  <data name="pricing.currency.display_unit" xml:space="preserve"><value>واحد نمایش را به‌جای کد ارز ذخیره نکنید.</value></data>
+</root>

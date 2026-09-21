@@ -6,9 +6,9 @@ using Tooba.Catalog.Infrastructure.Persistence;
 using Tooba.Inventory.Infrastructure.Persistence;
 using Tooba.Offer.Contracts.Dtos;
 using Tooba.Offer.Contracts.Ports;
-using Tooba.Pricing.Infrastructure.Persistence;
+using Tooba.Pricing.Contracts;
 using Tooba.Party.Application;
-using Tooba.Tax.Infrastructure.Persistence;
+using Tooba.Tax.Contracts;
 
 using Tooba.BuildingBlocks.Grid;
 using Tooba.Host.Grid;
@@ -22,9 +22,9 @@ public sealed class ProductWorkspaceComposer
 {
     private readonly CatalogDbContext _catalog;
     private readonly IOfferQueryGateway _offers;
-    private readonly PricingDbContext _prices;
+    private readonly IPriceQueryGateway _prices;
     private readonly InventoryDbContext _inventory;
-    private readonly TaxDbContext _tax;
+    private readonly ITaxQueryGateway _tax;
     private readonly IPartyLookupGateway _parties;
     private readonly ICatalogDirectory _catalogDirectory;
 
@@ -34,9 +34,9 @@ public sealed class ProductWorkspaceComposer
     public ProductWorkspaceComposer(
         CatalogDbContext catalog,
         IOfferQueryGateway offers,
-        PricingDbContext prices,
+        IPriceQueryGateway prices,
         InventoryDbContext inventory,
-        TaxDbContext tax,
+        ITaxQueryGateway tax,
         IPartyLookupGateway parties,
         ICatalogDirectory catalogDirectory)
     {
@@ -90,10 +90,9 @@ public sealed class ProductWorkspaceComposer
         var offerIds = offerRows.Select(x => x.OfferId).ToList();
         var amountRows = offerIds.Count == 0
             ? []
-            : await _prices.Prices.AsNoTracking()
-                .Where(x => offerIds.Contains(x.OfferId))
+            : (await _prices.ListByOfferIdsAsync(offerIds, cancellationToken))
                 .Select(x => new { x.OfferId, x.Amount, x.Currency })
-                .ToListAsync(cancellationToken);
+                .ToList();
         var unitRows = offerIds.Count == 0
             ? []
             : await _inventory.Positions.AsNoTracking()
@@ -236,7 +235,7 @@ public sealed class ProductWorkspaceComposer
         var offerIds = offers.Select(x => x.OfferId).ToList();
         var prices = offerIds.Count == 0
             ? []
-            : await _prices.Prices.AsNoTracking().Where(x => offerIds.Contains(x.OfferId)).ToListAsync(cancellationToken);
+            : await _prices.ListByOfferIdsAsync(offerIds, cancellationToken);
         var positions = offerIds.Count == 0
             ? []
             : await _inventory.Positions.AsNoTracking().Where(x => offerIds.Contains(x.OfferId)).ToListAsync(cancellationToken);
@@ -246,10 +245,10 @@ public sealed class ProductWorkspaceComposer
             : await _inventory.Locations.AsNoTracking().Where(x => locationIds.Contains(x.LocationId)).ToListAsync(cancellationToken);
         var taxRows = offerIds.Count == 0
             ? []
-            : await _tax.OfferClassifications.AsNoTracking().Where(x => offerIds.Contains(x.OfferId)).ToListAsync(cancellationToken);
+            : await _tax.ListClassificationsByOfferIdsAsync(offerIds, cancellationToken);
         var taxCats = taxRows.Count == 0
             ? []
-            : await _tax.Categories.AsNoTracking().Where(x => taxRows.Select(r => r.CategoryId).Contains(x.CategoryId)).ToListAsync(cancellationToken);
+            : await _tax.ListCategoriesByIdsAsync(taxRows.Select(r => r.CategoryId).Distinct().ToArray(), cancellationToken);
 
         var offerViews = new List<ProductOfferView>(offers.Count);
         foreach (var offer in offers)
@@ -270,7 +269,7 @@ public sealed class ProductWorkspaceComposer
             p.Market,
             p.Currency,
             p.Amount,
-            p.Status.ToString(),
+            p.Status,
             p.ValidFrom,
             p.ValidTo)).ToList();
         var taxViews = taxRows.Select(row =>

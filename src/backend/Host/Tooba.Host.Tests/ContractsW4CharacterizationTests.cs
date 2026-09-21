@@ -1,6 +1,5 @@
 using Tooba.Offer.Domain;
 using Tooba.Tax.Contracts;
-using Tooba.Tax.Domain;
 using Xunit;
 
 namespace Tooba.Host.Tests;
@@ -31,7 +30,7 @@ public sealed class ContractsW4CharacterizationTests
     [Fact]
     public void Tax_outcome_and_calculator_are_contracts_assembly_owned()
     {
-        Assert.Equal("Tooba.Tax.Domain", typeof(TaxOutcome).Namespace);
+        Assert.Equal("Tooba.Tax.Contracts", typeof(TaxOutcome).Namespace);
         Assert.Equal("Tooba.Tax.Contracts", typeof(TaxOutcome).Assembly.GetName().Name);
         Assert.Equal("Tooba.Tax.Contracts", typeof(ITaxCalculator).Namespace);
         Assert.Equal("Tooba.Tax.Contracts", typeof(ITaxCalculator).Assembly.GetName().Name);
