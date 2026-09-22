@@ -278,12 +278,12 @@ public sealed partial class CheckoutDirectory : ICheckoutDirectory
         EnsureAccess(group, access);
         if (group.SellerOrders.Count == 0 || group.SellerOrders.Any(x => x.Status != SellerOrderStatus.Cancelled))
         {
-            throw new InvalidOperationException("order.restore.not_cancelled");
+            throw new ContractOperationException("order.restore.not_cancelled");
         }
 
         if (group.SellerOrders.Any(x => x.CancelledFromStatus is null))
         {
-            throw new InvalidOperationException("order.restore.missing_snapshot");
+            throw new ContractOperationException("order.restore.missing_snapshot");
         }
 
         var acquired = new List<Guid>();
@@ -344,12 +344,22 @@ public sealed partial class CheckoutDirectory : ICheckoutDirectory
                     cancellationToken);
             }
         }
-        catch
+        catch (Exception ex)
         {
             foreach (var reservationId in acquired)
             {
                 // رزرو تازه‌گرفته‌شده را تا حد ممکن آزاد می‌کنیم؛ سفارش لغو می‌ماند.
                 await _inventoryLifecycle.TryReleaseReservationAsync(reservationId, cancellationToken);
+            }
+
+            if (ex is ContractOperationException)
+            {
+                throw;
+            }
+
+            if (ex is InvalidOperationException ioe && ContractOperationFault.LooksLikeStableCode(ioe.Message))
+            {
+                throw new ContractOperationException(ioe.Message, ioe);
             }
 
             throw;

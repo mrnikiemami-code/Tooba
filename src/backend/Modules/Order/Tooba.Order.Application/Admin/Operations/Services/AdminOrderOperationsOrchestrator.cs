@@ -8,7 +8,6 @@ using Tooba.Order.Contracts.Fulfillment;
 using Tooba.Order.Contracts.Payments;
 using Tooba.Order.Domain;
 using Tooba.Payment.Contracts.Admin;
-using Tooba.Returns.Contracts.Errors;
 using Tooba.Returns.Contracts.Operations;
 using Tooba.Settlement.Contracts.Operations;
 
@@ -115,6 +114,10 @@ public sealed class AdminOrderOperationsOrchestrator
             return Result.Success(await ListCoreAsync(checkoutId, actorUserId, cancellationToken));
         }
         catch (AdminOrderOperationsException ex)
+        {
+            return Result.Failure<AdminOrderOperationsPage>(new SemanticError(ex.Code));
+        }
+        catch (ContractOperationException ex)
         {
             return Result.Failure<AdminOrderOperationsPage>(new SemanticError(ex.Code));
         }
@@ -242,6 +245,10 @@ public sealed class AdminOrderOperationsOrchestrator
         {
             return Result.Failure<IReadOnlyList<ReturnEligibilityResult>>(new SemanticError(ex.Code));
         }
+        catch (ContractOperationException ex)
+        {
+            return Result.Failure<IReadOnlyList<ReturnEligibilityResult>>(new SemanticError(ex.Code));
+        }
     }
 
     /// <summary>یک عملیات را پس از بررسی مجوز اجرا می‌کند.</summary>
@@ -252,6 +259,10 @@ public sealed class AdminOrderOperationsOrchestrator
             return Result.Success(await execute());
         }
         catch (AdminOrderOperationsException ex)
+        {
+            return Result.Failure<object>(new SemanticError(ex.Code));
+        }
+        catch (ContractOperationException ex)
         {
             return Result.Failure<object>(new SemanticError(ex.Code));
         }
@@ -329,20 +340,12 @@ public sealed class AdminOrderOperationsOrchestrator
         {
             throw;
         }
-        catch (InvalidOperationException ex)
+        catch (ContractOperationException ex)
         {
-            var mapped = MapKnownOperationException(ex.Message);
-            if (mapped.Code == "order.operation.failed")
-            {
-                if (!TryMapReturnCode(ex.Message, out var semantic))
-                {
-                    throw;
-                }
-
-                mapped = (semantic.Code, semantic.Code);
-            }
-
-            throw new AdminOrderOperationsException(mapped.Code);
+            var code = ex.Code == "fulfillment.cancel.already_dispatched"
+                ? "fulfillment.dispatch.already_dispatched"
+                : ex.Code;
+            throw new AdminOrderOperationsException(code);
         }
     }
 
@@ -373,19 +376,15 @@ public sealed class AdminOrderOperationsOrchestrator
             {
                 throw;
             }
-            catch (InvalidOperationException ex) when (
-                ex.Message.StartsWith("order.cancel.forbidden", StringComparison.Ordinal)
-                || ex.Message == "fulfillment.cancel.already_dispatched")
+            catch (ContractOperationException ex) when (
+                ex.Code.StartsWith("order.cancel.forbidden", StringComparison.Ordinal)
+                || ex.Code == "fulfillment.cancel.already_dispatched")
             {
                 throw new AdminOrderOperationsException("order.cancel.forbidden");
             }
-            catch (InvalidOperationException ex) when (ex.Message == "settlement.cancel.payout_completed")
+            catch (ContractOperationException ex) when (ex.Code == "settlement.cancel.payout_completed")
             {
                 throw new AdminOrderOperationsException("order.cancel.payout_completed");
-            }
-            catch (InvalidOperationException)
-            {
-                throw new AdminOrderOperationsException("order.operation.failed");
             }
         });
 
@@ -414,9 +413,9 @@ public sealed class AdminOrderOperationsOrchestrator
             {
                 throw;
             }
-            catch (InvalidOperationException ex)
+            catch (ContractOperationException ex)
             {
-                throw MapPaymentRestoreError(ex);
+                throw MapPaymentRestoreFault(ex);
             }
         });
 
@@ -445,9 +444,9 @@ public sealed class AdminOrderOperationsOrchestrator
             {
                 throw;
             }
-            catch (InvalidOperationException ex)
+            catch (ContractOperationException ex)
             {
-                throw MapPaymentUnconfirmError(ex);
+                throw MapPaymentUnconfirmFault(ex);
             }
         });
 
@@ -1347,14 +1346,7 @@ public sealed class AdminOrderOperationsOrchestrator
             throw new AdminOrderOperationsException("order.operation.invalid");
         }
 
-        try
-        {
-            return await _fulfillment.PackSelectionsAsync(fulfillmentId, actorUserId, selections, cancellationToken);
-        }
-        catch (InvalidOperationException ex) when (ex.Message.StartsWith("fulfillment.pack.", StringComparison.Ordinal))
-        {
-            throw new AdminOrderOperationsException(ex.Message);
-        }
+        return await _fulfillment.PackSelectionsAsync(fulfillmentId, actorUserId, selections, cancellationToken);
     }
 
     private async Task<object> UnpackCoreAsync(
@@ -1412,21 +1404,14 @@ public sealed class AdminOrderOperationsOrchestrator
             throw new AdminOrderOperationsException("order.operation.invalid");
         }
 
-        try
-        {
-            return await _fulfillment.CreateShipmentAsync(
-                fulfillmentId,
-                actorUserId,
-                carrier!,
-                lines,
-                methodCode,
-                request.ProviderMetadataJson,
-                cancellationToken);
-        }
-        catch (InvalidOperationException ex)
-        {
-            throw new AdminOrderOperationsException("order.operation.invalid");
-        }
+        return await _fulfillment.CreateShipmentAsync(
+            fulfillmentId,
+            actorUserId,
+            carrier!,
+            lines,
+            methodCode,
+            request.ProviderMetadataJson,
+            cancellationToken);
     }
 
     private async Task<object> CancelShipmentCoreAsync(
@@ -1471,27 +1456,12 @@ public sealed class AdminOrderOperationsOrchestrator
             throw new AdminOrderOperationsException("order.operation.invalid");
         }
 
-        try
-        {
-            return await _fulfillment.CorrectTrackingAsync(
-                fulfillmentId,
-                shipmentId,
-                actorUserId,
-                request.TrackingReference.Trim(),
-                cancellationToken);
-        }
-        catch (InvalidOperationException ex) when (ex.Message == "fulfillment.tracking.locked_after_dispatch")
-        {
-            throw new AdminOrderOperationsException(ex.Message);
-        }
-        catch (InvalidOperationException ex) when (ex.Message == "fulfillment.tracking.nothing_to_correct")
-        {
-            throw new AdminOrderOperationsException(ex.Message);
-        }
-        catch (InvalidOperationException ex) when (ex.Message == "fulfillment.tracking.invalid_state")
-        {
-            throw new AdminOrderOperationsException(ex.Message);
-        }
+        return await _fulfillment.CorrectTrackingAsync(
+            fulfillmentId,
+            shipmentId,
+            actorUserId,
+            request.TrackingReference.Trim(),
+            cancellationToken);
     }
 
     private async Task<object> DispatchCoreAsync(
@@ -1891,26 +1861,25 @@ public sealed class AdminOrderOperationsOrchestrator
 
             return new { ok = true, code = "restore_cancelled_order", checkoutId = group.CheckoutId };
         }
-        catch (InvalidOperationException ex) when (ex.Message == "order.restore.inventory_failed"
-            || ex.Message.Contains("موجودی قابل‌فروش", StringComparison.Ordinal))
+        catch (ContractOperationException ex) when (ex.Code == "order.restore.inventory_failed")
         {
             throw new AdminOrderOperationsException("order.restore.inventory_failed");
         }
-        catch (InvalidOperationException ex) when (ex.Message == "fulfillment.restore.already_dispatched")
+        catch (ContractOperationException ex) when (ex.Code == "fulfillment.restore.already_dispatched")
         {
             throw new AdminOrderOperationsException("order.restore.dispatched");
         }
-        catch (InvalidOperationException ex) when (ex.Message is "payment.restore.refund_completed"
+        catch (ContractOperationException ex) when (ex.Code is "payment.restore.refund_completed"
             or "settlement.restore.payout_completed")
         {
-            var code = ex.Message == "settlement.restore.payout_completed"
+            var code = ex.Code == "settlement.restore.payout_completed"
                 ? "order.restore.seller_payout_completed"
                 : "order.restore.refund_completed";
             throw new AdminOrderOperationsException(code);
         }
-        catch (InvalidOperationException ex) when (ex.Message.StartsWith("order.restore.", StringComparison.Ordinal))
+        catch (ContractOperationException ex) when (ex.Code.StartsWith("order.restore.", StringComparison.Ordinal))
         {
-            throw new AdminOrderOperationsException(ex.Message);
+            throw new AdminOrderOperationsException(ex.Code);
         }
     }
 
@@ -1933,9 +1902,9 @@ public sealed class AdminOrderOperationsOrchestrator
         {
             return await _payments.RestoreDepositAsync(payment.PaymentId, cancellationToken);
         }
-        catch (InvalidOperationException ex)
+        catch (ContractOperationException ex)
         {
-            throw MapPaymentRestoreError(ex);
+            throw MapPaymentRestoreFault(ex);
         }
     }
 
@@ -1971,9 +1940,9 @@ public sealed class AdminOrderOperationsOrchestrator
             await _settlement.VoidUnpaidAccrualForPaymentAsync(payment.PaymentId, sellerOrderIds, cancellationToken);
             return await _payments.UnconfirmDepositAsync(payment.PaymentId, cancellationToken);
         }
-        catch (InvalidOperationException ex)
+        catch (ContractOperationException ex)
         {
-            throw MapPaymentUnconfirmError(ex);
+            throw MapPaymentUnconfirmFault(ex);
         }
     }
 
@@ -2006,21 +1975,14 @@ public sealed class AdminOrderOperationsOrchestrator
             await _fulfillment.EnsureCreatedForPaidCheckoutAsync(checkoutId, sellerOrderIds, cancellationToken);
             return result;
         }
-        catch (InvalidOperationException ex) when (ex.Message is "payment.method.not_manual")
-        {
-            throw new AdminOrderOperationsException(ex.Message);
-        }
-        catch (InvalidOperationException ex) when (ex.Message is "payment.confirm.invalid_state")
-        {
-            throw new AdminOrderOperationsException(ex.Message);
-        }
-        catch (InvalidOperationException ex) when (ex.Message is "inventory.manual_review.unavailable")
+        catch (ContractOperationException ex) when (ex.Code is "inventory.manual_review.unavailable"
+            or "inventory.reservation.not_active")
         {
             throw new AdminOrderOperationsException("inventory.supply.unavailable");
         }
-        catch (InvalidOperationException ex) when (ex.Message is "inventory.reservation.not_active")
+        catch (ContractOperationException ex)
         {
-            throw new AdminOrderOperationsException("inventory.supply.unavailable");
+            throw new AdminOrderOperationsException(ex.Code);
         }
     }
 
@@ -2036,13 +1998,9 @@ public sealed class AdminOrderOperationsOrchestrator
             await _orderPayments.ReleaseReservationsAfterManualRejectAsync(checkoutId, cancellationToken);
             return result;
         }
-        catch (InvalidOperationException ex) when (ex.Message is "payment.method.not_manual")
+        catch (ContractOperationException ex)
         {
-            throw new AdminOrderOperationsException(ex.Message);
-        }
-        catch (InvalidOperationException ex) when (ex.Message is "payment.reject.invalid_state")
-        {
-            throw new AdminOrderOperationsException(ex.Message);
+            throw new AdminOrderOperationsException(ex.Code);
         }
     }
 
@@ -2246,24 +2204,24 @@ public sealed class AdminOrderOperationsOrchestrator
         return gates.Values.Any(x => x.HasCompletedPayoutEffect);
     }
 
-    private static AdminOrderOperationsException MapPaymentRestoreError(InvalidOperationException ex) =>
-        ex.Message switch
+    private static AdminOrderOperationsException MapPaymentRestoreFault(ContractOperationException ex) =>
+        ex.Code switch
         {
-            "payment.restore.not_manual" => new AdminOrderOperationsException(ex.Message),
-            "payment.restore.already_succeeded" => new AdminOrderOperationsException(ex.Message),
-            "payment.restore.invalid_state" => new AdminOrderOperationsException(ex.Message),
-            _ => new AdminOrderOperationsException("order.operation.failed"),
+            "payment.restore.not_manual" => new AdminOrderOperationsException(ex.Code),
+            "payment.restore.already_succeeded" => new AdminOrderOperationsException(ex.Code),
+            "payment.restore.invalid_state" => new AdminOrderOperationsException(ex.Code),
+            _ => throw ex,
         };
 
-    private static AdminOrderOperationsException MapPaymentUnconfirmError(InvalidOperationException ex) =>
-        ex.Message switch
+    private static AdminOrderOperationsException MapPaymentUnconfirmFault(ContractOperationException ex) =>
+        ex.Code switch
         {
-            "payment.unconfirm.not_manual" => new AdminOrderOperationsException(ex.Message),
-            "payment.unconfirm.invalid_state" => new AdminOrderOperationsException(ex.Message),
-            "fulfillment.unconfirm.already_started" => new AdminOrderOperationsException(ex.Message),
-            "order.payment.unconfirm.invalid_state" => new AdminOrderOperationsException(ex.Message),
-            "settlement.unconfirm.payout_completed" => new AdminOrderOperationsException(ex.Message),
-            _ => new AdminOrderOperationsException("order.operation.failed"),
+            "payment.unconfirm.not_manual" => new AdminOrderOperationsException(ex.Code),
+            "payment.unconfirm.invalid_state" => new AdminOrderOperationsException(ex.Code),
+            "fulfillment.unconfirm.already_started" => new AdminOrderOperationsException(ex.Code),
+            "order.payment.unconfirm.invalid_state" => new AdminOrderOperationsException(ex.Code),
+            "settlement.unconfirm.payout_completed" => new AdminOrderOperationsException(ex.Code),
+            _ => throw ex,
         };
 
     private static bool MatchesIds(AdminOrderOperationAction action, AdminOrderOperationRequest request) =>
@@ -2630,117 +2588,6 @@ public sealed class AdminOrderOperationsOrchestrator
         "fulfillment.package.tracking_locked" => "پس از ارسال بسته تجمیعی، تغییر کد رهگیری مجاز نیست.",
         "fulfillment.package.checkout_required" => "شناسه سفارش برای بسته تجمیعی الزامی است.",
         _ => "این عملیات در وضعیت فعلی سفارش مجاز نیست.",
-    };
-
-    private static bool TryMapReturnCode(string? message, out SemanticError error)
-    {
-        switch (message)
-        {
-            case ReturnsErrorCodes.Missing:
-            case "returns.request.not_found":
-            case "returns.order_missing":
-                error = new SemanticError(ReturnsErrorCodes.Missing); return true;
-            case ReturnsErrorCodes.Rejected:
-                error = new SemanticError(ReturnsErrorCodes.Rejected); return true;
-            case ReturnsErrorCodes.Expired:
-            case "returns.window_expired":
-                error = new SemanticError(ReturnsErrorCodes.Expired); return true;
-            case ReturnsErrorCodes.NonReturnable:
-            case "returns.non_returnable":
-                error = new SemanticError(ReturnsErrorCodes.NonReturnable); return true;
-            case ReturnsErrorCodes.QuantityExceeded:
-            case "returns.nothing_returnable":
-            case "returns.qty.exceeds_remaining":
-                error = new SemanticError(ReturnsErrorCodes.QuantityExceeded); return true;
-            case ReturnsErrorCodes.QuantityInvalid:
-            case "returns.qty.positive":
-                error = new SemanticError(ReturnsErrorCodes.QuantityInvalid); return true;
-            case ReturnsErrorCodes.NotDelivered:
-            case "returns.not_delivered":
-                error = new SemanticError(ReturnsErrorCodes.NotDelivered); return true;
-            case ReturnsErrorCodes.NotPaid:
-            case "returns.not_paid":
-                error = new SemanticError(ReturnsErrorCodes.NotPaid); return true;
-            case ReturnsErrorCodes.FulfillmentMissing:
-            case "returns.fulfillment_missing":
-                error = new SemanticError(ReturnsErrorCodes.FulfillmentMissing); return true;
-            case ReturnsErrorCodes.Stale:
-            case "fulfillment.status.transition_invalid":
-                error = new SemanticError(ReturnsErrorCodes.Stale); return true;
-            case ReturnsErrorCodes.AlreadyApproved:
-                error = new SemanticError(ReturnsErrorCodes.AlreadyApproved); return true;
-            case ReturnsErrorCodes.AlreadyRejected:
-                error = new SemanticError(ReturnsErrorCodes.AlreadyRejected); return true;
-            case ReturnsErrorCodes.LineMissing:
-            case "returns.order_line.not_found":
-                error = new SemanticError(ReturnsErrorCodes.LineMissing); return true;
-            case ReturnsErrorCodes.NotOwner:
-            case "returns.actor.not_owner":
-                error = new SemanticError(ReturnsErrorCodes.NotOwner); return true;
-            case ReturnsErrorCodes.IdempotencyRequired:
-            case "returns.idempotency.required":
-                error = new SemanticError(ReturnsErrorCodes.IdempotencyRequired); return true;
-            case ReturnsErrorCodes.RefundDestinationInvalid:
-            case "returns.refund_destination.invalid":
-                error = new SemanticError(ReturnsErrorCodes.RefundDestinationInvalid); return true;
-            case ReturnsErrorCodes.RefundRetryInvalidState:
-            case "returns.retry.invalid_status":
-                error = new SemanticError(ReturnsErrorCodes.RefundRetryInvalidState); return true;
-            case ReturnsErrorCodes.RefundAlreadyStarted:
-            case "returns.payment.not_succeeded":
-                error = new SemanticError(ReturnsErrorCodes.RefundAlreadyStarted); return true;
-            case ReturnsErrorCodes.RefundAlreadyCompleted:
-                error = new SemanticError(ReturnsErrorCodes.RefundAlreadyCompleted); return true;
-            case ReturnsErrorCodes.RefundPaymentMissing:
-            case "returns.payment.not_found":
-            case "returns.payment.reference_missing":
-                error = new SemanticError(ReturnsErrorCodes.RefundPaymentMissing); return true;
-            case "returns.outbox.unmapped_event":
-                error = new SemanticError("returns.outbox.unmapped_event"); return true;
-            default:
-                error = default!;
-                return false;
-        }
-    }
-    public static (string Code, string Fa) MapKnownOperationException(string message) => message switch
-    {
-        "dispatch از این وضعیت مجاز نیست." =>
-            ("fulfillment.dispatch.invalid_state", FulfillmentOpToFa("fulfillment.dispatch.invalid_state")),
-        "dispatch بدون tracking مجاز نیست." =>
-            ("fulfillment.dispatch.tracking_required", FulfillmentOpToFa("fulfillment.dispatch.tracking_required")),
-        "ابطال مرسوله پس از ارسال مجاز نیست." =>
-            ("fulfillment.shipment.void_after_dispatch", FulfillmentOpToFa("fulfillment.shipment.void_after_dispatch")),
-        "ابطال مرسوله از این وضعیت مجاز نیست." =>
-            ("fulfillment.shipment.void_invalid_state", FulfillmentOpToFa("fulfillment.shipment.void_invalid_state")),
-        "fulfillment.cancel.already_dispatched" =>
-            ("fulfillment.dispatch.already_dispatched", FulfillmentOpToFa("fulfillment.dispatch.already_dispatched")),
-        "بسته‌بندی پس از تحویل کامل مجاز نیست." =>
-            ("fulfillment.pack.after_delivered", FulfillmentOpToFa("fulfillment.pack.after_delivered")),
-        "پردازش پس از تحویل کامل مجاز نیست." =>
-            ("fulfillment.process.after_delivered", FulfillmentOpToFa("fulfillment.process.after_delivered")),
-        "بسته‌بندی پس از ارسال مجاز نیست." =>
-            ("fulfillment.pack.after_delivered", FulfillmentOpToFa("fulfillment.pack.after_delivered")),
-        "پردازش پس از ارسال مجاز نیست." =>
-            ("fulfillment.process.after_delivered", FulfillmentOpToFa("fulfillment.process.after_delivered")),
-        "تعداد محموله از باقیمانده بسته‌بندی‌شده بیشتر است." =>
-            ("fulfillment.allocation.conflict", FulfillmentOpToFa("fulfillment.allocation.conflict")),
-        "این کد پیگیری قبلاً ثبت شده است." =>
-            ("fulfillment.tracking.duplicate", FulfillmentOpToFa("fulfillment.tracking.duplicate")),
-        "inventory.reservation.not_active" =>
-            ("inventory.reservation.not_active", FulfillmentOpToFa("inventory.reservation.not_active")),
-        "inventory.reservation.not_found" =>
-            ("inventory.reservation.not_found", FulfillmentOpToFa("inventory.reservation.not_found")),
-        "مصرف رزرو با موجودی هم‌خوان نبود." =>
-            ("inventory.reservation.stock_mismatch", FulfillmentOpToFa("inventory.reservation.stock_mismatch")),
-        "فقط رزرو Held قابل آزادسازی یا مصرف است." =>
-            ("inventory.reservation.not_active", FulfillmentOpToFa("inventory.reservation.not_active")),
-        "رزرو پیدا نشد." =>
-            ("inventory.reservation.not_found", FulfillmentOpToFa("inventory.reservation.not_found")),
-        _ when message.StartsWith("fulfillment.", StringComparison.Ordinal) =>
-            (message, FulfillmentOpToFa(message)),
-        _ when message.StartsWith("inventory.", StringComparison.Ordinal) =>
-            (message, FulfillmentOpToFa(message)),
-        _ => ("order.operation.failed", message),
     };
 
     private static AdminOrderOperationAction Action(

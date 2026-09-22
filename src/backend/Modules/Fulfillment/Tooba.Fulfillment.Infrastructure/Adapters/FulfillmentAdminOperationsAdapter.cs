@@ -1,3 +1,5 @@
+using Tooba.BuildingBlocks;
+using Tooba.Fulfillment.Application.Errors;
 using Tooba.Fulfillment.Application.Ports;
 using Tooba.Fulfillment.Application.Shipping;
 using Tooba.Fulfillment.Contracts.Operations;
@@ -8,34 +10,50 @@ namespace Tooba.Fulfillment.Infrastructure.Adapters;
 /// <summary>
 /// Contract-facing adapter over <see cref="IFulfillmentDirectory"/> so admin order callers never
 /// reference Fulfillment Application/Domain types. Owner-side mapping keeps the wire shape stable.
+/// Expected failures cross the boundary as <see cref="ContractOperationException"/> (stable Code).
 /// </summary>
 internal sealed class FulfillmentAdminOperationsAdapter(
     IFulfillmentDirectory directory,
     ShippingMethodsOptions shippingMethods) : IFulfillmentAdminOperations
 {
-    public async Task<FulfillmentSnapshot?> GetAsync(Guid fulfillmentId, CancellationToken cancellationToken) =>
-        Map(await directory.GetAsync(fulfillmentId, cancellationToken));
+    public Task<FulfillmentSnapshot?> GetAsync(Guid fulfillmentId, CancellationToken cancellationToken) =>
+        GuardAsync(async () => Map(await directory.GetAsync(fulfillmentId, cancellationToken)));
 
-    public async Task<IReadOnlyList<FulfillmentSnapshot>> ListForCheckoutAsync(
+    public Task<IReadOnlyList<FulfillmentSnapshot>> ListForCheckoutAsync(
         Guid checkoutId,
         CancellationToken cancellationToken) =>
-        (await directory.ListForCheckoutAsync(checkoutId, cancellationToken)).Select(MapRequired).ToList();
+        GuardAsync(async () =>
+        {
+            IReadOnlyList<FulfillmentSnapshot> list =
+                (await directory.ListForCheckoutAsync(checkoutId, cancellationToken)).Select(MapRequired).ToList();
+            return list;
+        });
 
-    public async Task<IReadOnlyList<ConsolidatedPackageSnapshot>> GetPackagesForCheckoutAsync(
+    public Task<IReadOnlyList<ConsolidatedPackageSnapshot>> GetPackagesForCheckoutAsync(
         Guid checkoutId,
         CancellationToken cancellationToken) =>
-        (await directory.GetPackagesForCheckoutAsync(checkoutId, cancellationToken)).Select(Map).ToList();
+        GuardAsync(async () =>
+        {
+            IReadOnlyList<ConsolidatedPackageSnapshot> list =
+                (await directory.GetPackagesForCheckoutAsync(checkoutId, cancellationToken)).Select(Map).ToList();
+            return list;
+        });
 
-    public async Task<IReadOnlyList<ActivePackageMembershipSnapshot>> GetActiveMembershipByShipmentIdsAsync(
+    public Task<IReadOnlyList<ActivePackageMembershipSnapshot>> GetActiveMembershipByShipmentIdsAsync(
         IReadOnlyList<Guid> shipmentIds,
         CancellationToken cancellationToken) =>
-        (await directory.GetActiveMembershipByShipmentIdsAsync(shipmentIds, cancellationToken))
-        .Select(x => new ActivePackageMembershipSnapshot(
-            x.ShipmentId,
-            x.ConsolidatedPackageId,
-            x.PackageNumber,
-            (ConsolidatedPackageOperationStatus)x.PackageStatus))
-        .ToList();
+        GuardAsync(async () =>
+        {
+            IReadOnlyList<ActivePackageMembershipSnapshot> list =
+                (await directory.GetActiveMembershipByShipmentIdsAsync(shipmentIds, cancellationToken))
+                .Select(x => new ActivePackageMembershipSnapshot(
+                    x.ShipmentId,
+                    x.ConsolidatedPackageId,
+                    x.PackageNumber,
+                    (ConsolidatedPackageOperationStatus)x.PackageStatus))
+                .ToList();
+            return list;
+        });
 
     public IReadOnlyList<ShippingMethodOption> ListEnabledShippingMethods() =>
         ShippingMethodRegistry.Enabled(shippingMethods)
@@ -45,45 +63,50 @@ internal sealed class FulfillmentAdminOperationsAdapter(
     public string ResolveShippingMethodLabel(string? code, string? fallbackDisplayName) =>
         ShippingMethodRegistry.ResolveLabel(code, fallbackDisplayName);
 
-    public async Task<FulfillmentSnapshot> MarkProcessingAsync(
+    public Task<FulfillmentSnapshot> MarkProcessingAsync(
         Guid fulfillmentId,
         Guid actorUserId,
         CancellationToken cancellationToken) =>
-        MapRequired(await directory.MarkProcessingAsync(fulfillmentId, actorUserId, cancellationToken));
+        GuardAsync(async () =>
+            MapRequired(await directory.MarkProcessingAsync(fulfillmentId, actorUserId, cancellationToken)));
 
-    public async Task<FulfillmentSnapshot> ProcessSelectionsAsync(
-        Guid fulfillmentId,
-        Guid actorUserId,
-        IReadOnlyList<FulfillmentSelectionCommand> selections,
-        CancellationToken cancellationToken) =>
-        MapRequired(await directory.ProcessSelectionsAsync(
-            fulfillmentId, actorUserId, Map(selections), cancellationToken));
-
-    public async Task<FulfillmentSnapshot> UnprocessSelectionsAsync(
+    public Task<FulfillmentSnapshot> ProcessSelectionsAsync(
         Guid fulfillmentId,
         Guid actorUserId,
         IReadOnlyList<FulfillmentSelectionCommand> selections,
         CancellationToken cancellationToken) =>
-        MapRequired(await directory.UnprocessSelectionsAsync(
-            fulfillmentId, actorUserId, Map(selections), cancellationToken));
+        GuardAsync(async () =>
+            MapRequired(await directory.ProcessSelectionsAsync(
+                fulfillmentId, actorUserId, Map(selections), cancellationToken)));
 
-    public async Task<FulfillmentSnapshot> PackSelectionsAsync(
+    public Task<FulfillmentSnapshot> UnprocessSelectionsAsync(
         Guid fulfillmentId,
         Guid actorUserId,
         IReadOnlyList<FulfillmentSelectionCommand> selections,
         CancellationToken cancellationToken) =>
-        MapRequired(await directory.PackSelectionsAsync(
-            fulfillmentId, actorUserId, Map(selections), cancellationToken));
+        GuardAsync(async () =>
+            MapRequired(await directory.UnprocessSelectionsAsync(
+                fulfillmentId, actorUserId, Map(selections), cancellationToken)));
 
-    public async Task<FulfillmentSnapshot> UnpackSelectionsAsync(
+    public Task<FulfillmentSnapshot> PackSelectionsAsync(
         Guid fulfillmentId,
         Guid actorUserId,
         IReadOnlyList<FulfillmentSelectionCommand> selections,
         CancellationToken cancellationToken) =>
-        MapRequired(await directory.UnpackSelectionsAsync(
-            fulfillmentId, actorUserId, Map(selections), cancellationToken));
+        GuardAsync(async () =>
+            MapRequired(await directory.PackSelectionsAsync(
+                fulfillmentId, actorUserId, Map(selections), cancellationToken)));
 
-    public async Task<FulfillmentSnapshot> CreateShipmentAsync(
+    public Task<FulfillmentSnapshot> UnpackSelectionsAsync(
+        Guid fulfillmentId,
+        Guid actorUserId,
+        IReadOnlyList<FulfillmentSelectionCommand> selections,
+        CancellationToken cancellationToken) =>
+        GuardAsync(async () =>
+            MapRequired(await directory.UnpackSelectionsAsync(
+                fulfillmentId, actorUserId, Map(selections), cancellationToken)));
+
+    public Task<FulfillmentSnapshot> CreateShipmentAsync(
         Guid fulfillmentId,
         Guid actorUserId,
         string carrierDisplayName,
@@ -91,55 +114,61 @@ internal sealed class FulfillmentAdminOperationsAdapter(
         string? shippingMethodCode,
         string? providerMetadataJson,
         CancellationToken cancellationToken) =>
-        MapRequired(await directory.CreateShipmentAsync(
-            fulfillmentId,
-            actorUserId,
-            carrierDisplayName,
-            items.Select(x => new AppModels.ShipmentLineCommand(x.OrderLineId, x.Quantity)).ToList(),
-            cancellationToken,
-            shippingMethodCode,
-            providerMetadataJson));
+        GuardAsync(async () =>
+            MapRequired(await directory.CreateShipmentAsync(
+                fulfillmentId,
+                actorUserId,
+                carrierDisplayName,
+                items.Select(x => new AppModels.ShipmentLineCommand(x.OrderLineId, x.Quantity)).ToList(),
+                cancellationToken,
+                shippingMethodCode,
+                providerMetadataJson)));
 
-    public async Task<FulfillmentSnapshot> CancelShipmentAsync(
+    public Task<FulfillmentSnapshot> CancelShipmentAsync(
         Guid fulfillmentId,
         Guid shipmentId,
         Guid actorUserId,
         CancellationToken cancellationToken) =>
-        MapRequired(await directory.CancelShipmentAsync(fulfillmentId, shipmentId, actorUserId, cancellationToken));
+        GuardAsync(async () =>
+            MapRequired(await directory.CancelShipmentAsync(fulfillmentId, shipmentId, actorUserId, cancellationToken)));
 
-    public async Task<FulfillmentSnapshot> AssignTrackingAsync(
-        Guid fulfillmentId,
-        Guid shipmentId,
-        Guid actorUserId,
-        string trackingReference,
-        CancellationToken cancellationToken) =>
-        MapRequired(await directory.AssignTrackingAsync(
-            fulfillmentId, shipmentId, actorUserId, trackingReference, cancellationToken));
-
-    public async Task<FulfillmentSnapshot> CorrectTrackingAsync(
+    public Task<FulfillmentSnapshot> AssignTrackingAsync(
         Guid fulfillmentId,
         Guid shipmentId,
         Guid actorUserId,
         string trackingReference,
         CancellationToken cancellationToken) =>
-        MapRequired(await directory.CorrectTrackingAsync(
-            fulfillmentId, shipmentId, actorUserId, trackingReference, cancellationToken));
+        GuardAsync(async () =>
+            MapRequired(await directory.AssignTrackingAsync(
+                fulfillmentId, shipmentId, actorUserId, trackingReference, cancellationToken)));
 
-    public async Task<FulfillmentSnapshot> DispatchShipmentAsync(
+    public Task<FulfillmentSnapshot> CorrectTrackingAsync(
+        Guid fulfillmentId,
+        Guid shipmentId,
+        Guid actorUserId,
+        string trackingReference,
+        CancellationToken cancellationToken) =>
+        GuardAsync(async () =>
+            MapRequired(await directory.CorrectTrackingAsync(
+                fulfillmentId, shipmentId, actorUserId, trackingReference, cancellationToken)));
+
+    public Task<FulfillmentSnapshot> DispatchShipmentAsync(
         Guid fulfillmentId,
         Guid shipmentId,
         Guid actorUserId,
         CancellationToken cancellationToken) =>
-        MapRequired(await directory.DispatchShipmentAsync(fulfillmentId, shipmentId, actorUserId, cancellationToken));
+        GuardAsync(async () =>
+            MapRequired(await directory.DispatchShipmentAsync(fulfillmentId, shipmentId, actorUserId, cancellationToken)));
 
-    public async Task<FulfillmentSnapshot> DeliverShipmentAsync(
+    public Task<FulfillmentSnapshot> DeliverShipmentAsync(
         Guid fulfillmentId,
         Guid shipmentId,
         Guid actorUserId,
         CancellationToken cancellationToken) =>
-        MapRequired(await directory.DeliverShipmentAsync(fulfillmentId, shipmentId, actorUserId, cancellationToken));
+        GuardAsync(async () =>
+            MapRequired(await directory.DeliverShipmentAsync(fulfillmentId, shipmentId, actorUserId, cancellationToken)));
 
-    public async Task<ConsolidatedPackageSnapshot> CreateConsolidatedPackageAsync(
+    public Task<ConsolidatedPackageSnapshot> CreateConsolidatedPackageAsync(
         Guid checkoutId,
         IReadOnlyList<Guid> shipmentIds,
         string? shippingMethodCode,
@@ -147,49 +176,104 @@ internal sealed class FulfillmentAdminOperationsAdapter(
         string? note,
         Guid actorUserId,
         CancellationToken cancellationToken) =>
-        Map(await directory.CreateConsolidatedPackageAsync(
-            checkoutId, shipmentIds, shippingMethodCode, trackingReference, note, actorUserId, cancellationToken));
+        GuardAsync(async () =>
+            Map(await directory.CreateConsolidatedPackageAsync(
+                checkoutId, shipmentIds, shippingMethodCode, trackingReference, note, actorUserId, cancellationToken)));
 
-    public async Task<ConsolidatedPackageSnapshot> CancelConsolidatedPackageAsync(
+    public Task<ConsolidatedPackageSnapshot> CancelConsolidatedPackageAsync(
         Guid consolidatedPackageId,
         Guid actorUserId,
         CancellationToken cancellationToken) =>
-        Map(await directory.CancelConsolidatedPackageAsync(consolidatedPackageId, actorUserId, cancellationToken));
+        GuardAsync(async () =>
+            Map(await directory.CancelConsolidatedPackageAsync(consolidatedPackageId, actorUserId, cancellationToken)));
 
-    public async Task<ConsolidatedPackageSnapshot> AssignConsolidatedPackageTrackingAsync(
+    public Task<ConsolidatedPackageSnapshot> AssignConsolidatedPackageTrackingAsync(
         Guid consolidatedPackageId,
         string trackingReference,
         Guid actorUserId,
         CancellationToken cancellationToken) =>
-        Map(await directory.AssignConsolidatedPackageTrackingAsync(
-            consolidatedPackageId, trackingReference, actorUserId, cancellationToken));
+        GuardAsync(async () =>
+            Map(await directory.AssignConsolidatedPackageTrackingAsync(
+                consolidatedPackageId, trackingReference, actorUserId, cancellationToken)));
 
-    public async Task<ConsolidatedPackageSnapshot> DispatchConsolidatedPackageAsync(
+    public Task<ConsolidatedPackageSnapshot> DispatchConsolidatedPackageAsync(
         Guid consolidatedPackageId,
         Guid actorUserId,
         CancellationToken cancellationToken) =>
-        Map(await directory.DispatchConsolidatedPackageAsync(consolidatedPackageId, actorUserId, cancellationToken));
+        GuardAsync(async () =>
+            Map(await directory.DispatchConsolidatedPackageAsync(consolidatedPackageId, actorUserId, cancellationToken)));
 
-    public async Task<ConsolidatedPackageSnapshot> DeliverConsolidatedPackageAsync(
+    public Task<ConsolidatedPackageSnapshot> DeliverConsolidatedPackageAsync(
         Guid consolidatedPackageId,
         Guid actorUserId,
         CancellationToken cancellationToken) =>
-        Map(await directory.DeliverConsolidatedPackageAsync(consolidatedPackageId, actorUserId, cancellationToken));
+        GuardAsync(async () =>
+            Map(await directory.DeliverConsolidatedPackageAsync(consolidatedPackageId, actorUserId, cancellationToken)));
 
     public Task AbortForCheckoutCancelAsync(Guid checkoutId, CancellationToken cancellationToken) =>
-        directory.AbortForCheckoutCancelAsync(checkoutId, cancellationToken);
+        GuardAsync(() => directory.AbortForCheckoutCancelAsync(checkoutId, cancellationToken));
 
     public Task ReactivateAfterOrderRestoreAsync(Guid checkoutId, CancellationToken cancellationToken) =>
-        directory.ReactivateAfterOrderRestoreAsync(checkoutId, cancellationToken);
+        GuardAsync(() => directory.ReactivateAfterOrderRestoreAsync(checkoutId, cancellationToken));
 
     public Task EnsureCreatedForPaidCheckoutAsync(
         Guid checkoutId,
         IReadOnlyList<Guid> sellerOrderIds,
         CancellationToken cancellationToken) =>
-        directory.EnsureCreatedForPaidCheckoutAsync(checkoutId, sellerOrderIds, cancellationToken);
+        GuardAsync(() => directory.EnsureCreatedForPaidCheckoutAsync(checkoutId, sellerOrderIds, cancellationToken));
 
     public Task VoidUnstartedForCheckoutAsync(Guid checkoutId, CancellationToken cancellationToken) =>
-        directory.VoidUnstartedForCheckoutAsync(checkoutId, cancellationToken);
+        GuardAsync(() => directory.VoidUnstartedForCheckoutAsync(checkoutId, cancellationToken));
+
+    private static async Task<T> GuardAsync<T>(Func<Task<T>> action)
+    {
+        try
+        {
+            return await action();
+        }
+        catch (ContractOperationException)
+        {
+            throw;
+        }
+        catch (InvalidOperationException ex) when (TryPromote(ex, out var fault))
+        {
+            throw fault;
+        }
+    }
+
+    private static async Task GuardAsync(Func<Task> action)
+    {
+        try
+        {
+            await action();
+        }
+        catch (ContractOperationException)
+        {
+            throw;
+        }
+        catch (InvalidOperationException ex) when (TryPromote(ex, out var fault))
+        {
+            throw fault;
+        }
+    }
+
+    private static bool TryPromote(InvalidOperationException ex, out ContractOperationException fault)
+    {
+        if (FulfillmentExceptionMapper.TryMapExact(ex.Message, out var error))
+        {
+            fault = new ContractOperationException(error.Code, ex);
+            return true;
+        }
+
+        if (ContractOperationFault.LooksLikeStableCode(ex.Message))
+        {
+            fault = new ContractOperationException(ex.Message, ex);
+            return true;
+        }
+
+        fault = null!;
+        return false;
+    }
 
     private static IReadOnlyList<AppModels.FulfillmentSelectionCommand> Map(
         IReadOnlyList<FulfillmentSelectionCommand> selections) =>

@@ -1,3 +1,4 @@
+using Tooba.BuildingBlocks;
 using Tooba.Inventory.Domain.ValueObjects;
 using Tooba.Inventory.Contracts.Orders;
 using Tooba.Inventory.Application.Ports;
@@ -33,16 +34,31 @@ public sealed class OrderInventoryLifecycleAdapter : IOrderInventoryLifecyclePor
         string idempotencyKey,
         CancellationToken cancellationToken)
     {
-        var previous = await _inventory.FindReservationAsync(previousReservationId, cancellationToken)
-            ?? throw new InvalidOperationException("order.restore.inventory_failed");
-        var receipt = await _inventory.ReserveAsync(
-            previous.StockItemId,
-            previous.Quantity,
-            externalReference,
-            idempotencyKey,
-            expiresAt: null,
-            cancellationToken);
-        return receipt.ReservationId;
+        try
+        {
+            var previous = await _inventory.FindReservationAsync(previousReservationId, cancellationToken)
+                ?? throw new ContractOperationException("order.restore.inventory_failed");
+            var receipt = await _inventory.ReserveAsync(
+                previous.StockItemId,
+                previous.Quantity,
+                externalReference,
+                idempotencyKey,
+                expiresAt: null,
+                cancellationToken);
+            return receipt.ReservationId;
+        }
+        catch (ContractOperationException)
+        {
+            throw;
+        }
+        catch (InvalidOperationException ex) when (ContractOperationFault.LooksLikeStableCode(ex.Message))
+        {
+            throw new ContractOperationException(
+                ex.Message.StartsWith("inventory.", StringComparison.Ordinal)
+                    ? "order.restore.inventory_failed"
+                    : ex.Message,
+                ex);
+        }
     }
 
     /// <inheritdoc />
@@ -56,16 +72,23 @@ public sealed class OrderInventoryLifecycleAdapter : IOrderInventoryLifecyclePor
         var existing = await _inventory.FindReservationAsync(reservationId, cancellationToken);
         if (existing is { Status: StockReservationStatus.Held })
         {
-            await _inventory.PromoteReservationForManualPaymentReviewAsync(
-                reservationId,
-                reviewExpiresAt,
-                cancellationToken);
-            return reservationId;
+            try
+            {
+                await _inventory.PromoteReservationForManualPaymentReviewAsync(
+                    reservationId,
+                    reviewExpiresAt,
+                    cancellationToken);
+                return reservationId;
+            }
+            catch (InvalidOperationException ex) when (ContractOperationFault.LooksLikeStableCode(ex.Message))
+            {
+                throw new ContractOperationException(ex.Message, ex);
+            }
         }
 
         if (existing is null)
         {
-            throw new InvalidOperationException("inventory.reservation.not_found");
+            throw new ContractOperationException("inventory.reservation.not_found");
         }
 
         try
@@ -79,9 +102,13 @@ public sealed class OrderInventoryLifecycleAdapter : IOrderInventoryLifecyclePor
                 cancellationToken);
             return receipt.ReservationId;
         }
+        catch (ContractOperationException)
+        {
+            throw;
+        }
         catch (InvalidOperationException)
         {
-            throw new InvalidOperationException("inventory.manual_review.unavailable");
+            throw new ContractOperationException("inventory.manual_review.unavailable");
         }
     }
 

@@ -224,7 +224,9 @@ public sealed class AdminOrderOperationsTests
         Assert.Contains("ISender", endpoints, StringComparison.Ordinal);
         Assert.Contains("order.operation.denied", composer, StringComparison.Ordinal);
         Assert.Contains("order.operation.invalid", composer, StringComparison.Ordinal);
-        Assert.Contains("order.operation.failed", composer, StringComparison.Ordinal);
+        Assert.Contains("ContractOperationException", composer, StringComparison.Ordinal);
+        Assert.DoesNotContain("MapKnownOperationException", composer, StringComparison.Ordinal);
+        Assert.DoesNotContain("ex.Message", composer, StringComparison.Ordinal);
         Assert.Contains("MapAdminOrderInventoryRecoverySupplyEndpoints", program, StringComparison.Ordinal);
         Assert.Contains("MapOrderEndpoints", program, StringComparison.Ordinal);
         Assert.DoesNotContain("AdminOrderOperationsComposer", program, StringComparison.Ordinal);

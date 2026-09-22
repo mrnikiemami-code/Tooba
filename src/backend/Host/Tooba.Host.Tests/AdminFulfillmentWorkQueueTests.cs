@@ -162,20 +162,23 @@ public sealed class AdminFulfillmentWorkQueueTests
     }
 
     [Fact]
-    public void Composer_maps_stale_dispatch_english_to_human_fa()
+    public void Composer_maps_stable_fulfillment_codes_to_human_fa()
     {
-        var mapped = AdminOrderOperationsOrchestrator.MapKnownOperationException("dispatch از این وضعیت مجاز نیست.");
-        Assert.Equal("fulfillment.dispatch.invalid_state", mapped.Code);
-        Assert.Equal("ارسال در وضعیت فعلی مرسوله مجاز نیست.", mapped.Fa);
-        var tracking = AdminOrderOperationsOrchestrator.MapKnownOperationException("dispatch بدون tracking مجاز نیست.");
-        Assert.Equal("fulfillment.dispatch.tracking_required", tracking.Code);
-        var voided = AdminOrderOperationsOrchestrator.MapKnownOperationException("ابطال مرسوله پس از ارسال مجاز نیست.");
-        Assert.Equal("fulfillment.shipment.void_after_dispatch", voided.Code);
-        var packAfter = AdminOrderOperationsOrchestrator.MapKnownOperationException("بسته‌بندی پس از تحویل کامل مجاز نیست.");
-        Assert.Equal("fulfillment.pack.after_delivered", packAfter.Code);
-        Assert.Equal("پس از تحویل کامل نمی‌توان بسته‌بندی کرد.", packAfter.Fa);
-        var processAfter = AdminOrderOperationsOrchestrator.MapKnownOperationException("پردازش پس از تحویل کامل مجاز نیست.");
-        Assert.Equal("fulfillment.process.after_delivered", processAfter.Code);
+        Assert.Equal(
+            "ارسال در وضعیت فعلی مرسوله مجاز نیست.",
+            AdminOrderOperationsOrchestrator.FulfillmentOpToFa("fulfillment.dispatch.invalid_state"));
+        Assert.Equal(
+            "بدون کد رهگیری نمی‌توان ارسال کرد.",
+            AdminOrderOperationsOrchestrator.FulfillmentOpToFa("fulfillment.dispatch.tracking_required"));
+        Assert.Equal(
+            "پس از ارسال نمی‌توان مرسوله را ابطال کرد.",
+            AdminOrderOperationsOrchestrator.FulfillmentOpToFa("fulfillment.shipment.void_after_dispatch"));
+        Assert.Equal(
+            "پس از تحویل کامل نمی‌توان بسته‌بندی کرد.",
+            AdminOrderOperationsOrchestrator.FulfillmentOpToFa("fulfillment.pack.after_delivered"));
+        Assert.Equal(
+            "پس از تحویل کامل نمی‌توان پردازش را ادامه داد.",
+            AdminOrderOperationsOrchestrator.FulfillmentOpToFa("fulfillment.process.after_delivered"));
     }
 
     [Fact]

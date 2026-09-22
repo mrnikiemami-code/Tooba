@@ -79,12 +79,19 @@ public sealed class OrderAdminOperationsArchitectureGuardTests
             Assert.DoesNotContain("PlatformHttpException", text, StringComparison.Ordinal);
             Assert.DoesNotContain("OrderDbContext", text, StringComparison.Ordinal);
             Assert.DoesNotContain("Results.Json", text, StringComparison.Ordinal);
+            Assert.DoesNotContain("ex.Message", text, StringComparison.Ordinal);
+            Assert.DoesNotContain("exception.Message", text, StringComparison.Ordinal);
+            Assert.DoesNotContain("when (ex.Message", text, StringComparison.Ordinal);
+            Assert.DoesNotContain(".Message.StartsWith", text, StringComparison.Ordinal);
+            Assert.DoesNotContain("MapKnownOperationException", text, StringComparison.Ordinal);
+            Assert.DoesNotContain("TryMapReturnCode", text, StringComparison.Ordinal);
         }
 
         var orchestrator = File.ReadAllText(Path.Combine(
             OrderRoot(), "Tooba.Order.Application", "Admin", "Operations", "Services",
             "AdminOrderOperationsOrchestrator.cs"));
         Assert.Contains("SemanticError", orchestrator, StringComparison.Ordinal);
+        Assert.Contains("ContractOperationException", orchestrator, StringComparison.Ordinal);
         Assert.DoesNotContain("MapFulfillmentException", orchestrator, StringComparison.Ordinal);
     }
 
