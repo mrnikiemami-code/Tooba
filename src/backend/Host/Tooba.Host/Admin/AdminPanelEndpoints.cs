@@ -17,7 +17,7 @@ public static class AdminPanelEndpoints
         group.MapGet("/dashboard", GetDashboardAsync);
         group.MapGet("/orders", ListOrdersAsync);
         // R3: POST /v1/admin/orders/query is owned by Order.Endpoints (MapOrderEndpoints).
-        group.MapGet("/orders/{checkoutId:guid}", GetOrderAsync);
+        // R6: GET /v1/admin/orders/{checkoutId} is owned by Order.Endpoints (AdminOrderDetailEndpoints).
         // R2_REMAINDER: payment detail/actions owned by Payment.Endpoints (MapPaymentEndpoints).
         group.MapGet("/sellers", ListSellersAsync);
         group.MapPost("/sellers/query", QuerySellersGridAsync);
@@ -47,31 +47,6 @@ public static class AdminPanelEndpoints
         CancellationToken cancellationToken) =>
         await ExecuteAsync(request, session, tenant, guard, environment, cancellationToken,
             () => composer.ListOrdersAsync(cancellationToken));
-
-    private static async Task<IResult> GetOrderAsync(
-        Guid checkoutId,
-        AdminPanelComposer composer,
-        HttpRequest request,
-        CurrentAuthenticatedSession session,
-        ICurrentTenant tenant,
-        IAuthorizationGuard guard,
-        IHostEnvironment environment,
-        CancellationToken cancellationToken)
-    {
-        try
-        {
-            var actor = await AdminPanelAccess.RequireAuthorizedAsync(
-                request, session, tenant, guard, environment, cancellationToken);
-            var page = await composer.GetOrderAsync(checkoutId, actor, cancellationToken);
-            return page is null
-                ? Results.Json(new { title = "سفارش پیدا نشد.", errorCode = "admin.order.missing" }, statusCode: 404)
-                : Results.Json(page);
-        }
-        catch (PlatformHttpException ex)
-        {
-            return ToError(ex);
-        }
-    }
 
     private static async Task<IResult> ListSellersAsync(
         AdminPanelComposer composer,

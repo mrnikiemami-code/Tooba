@@ -474,7 +474,7 @@ public sealed partial class CheckoutDirectory : ICheckoutDirectory
             return;
         }
 
-        _db.AdminViewAcks.Add(CheckoutAdminViewAck.Create(checkoutId, viewerUserId, DateTimeOffset.UtcNow));
+        _db.AdminViewAcks.Add(CheckoutAdminViewAck.Create(checkoutId, viewerUserId, _clock.UtcNow));
         await _db.SaveChangesAsync(cancellationToken);
     }
 

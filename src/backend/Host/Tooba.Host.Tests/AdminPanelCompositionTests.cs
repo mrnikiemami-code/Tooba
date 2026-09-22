@@ -1,6 +1,5 @@
-using Tooba.Payment.Domain.Aggregates;
-using Tooba.Payment.Domain.ValueObjects;
 using Tooba.Host.Admin;
+using Tooba.Order.Application.Admin.Detail.Models;
 using Tooba.Order.Application.Admin.OrdersGrid.Models;
 using Xunit;
 
@@ -77,13 +76,21 @@ public sealed class AdminPanelCompositionTests
         Assert.DoesNotContain("_orders.Checkouts.Join(", source, StringComparison.Ordinal);
         Assert.DoesNotContain("_parties.Parties.Join(", source, StringComparison.Ordinal);
         Assert.DoesNotContain("FromSql", source, StringComparison.OrdinalIgnoreCase);
-        Assert.Contains("_payments.GetLatestOperationalForCheckoutAsync", source, StringComparison.Ordinal);
-        Assert.Contains("_settlement.ListEntriesBySellerOrderIdsAsync", source, StringComparison.Ordinal);
-        Assert.Contains("_fulfillment.ListForCheckoutAsync", source, StringComparison.Ordinal);
-        Assert.Contains("HumanizeProviderCode", source, StringComparison.Ordinal);
-        Assert.Contains("IsSuccessfulPaymentStatus", source, StringComparison.Ordinal);
+        Assert.DoesNotContain("GetOrderAsync", source, StringComparison.Ordinal);
+        Assert.DoesNotContain("AdminViewAcks", source, StringComparison.Ordinal);
+        Assert.DoesNotContain("_payments.", source, StringComparison.Ordinal);
+        Assert.DoesNotContain("_fulfillment.", source, StringComparison.Ordinal);
         Assert.DoesNotContain("Product.Price", source, StringComparison.Ordinal);
         Assert.DoesNotContain("Product.Stock", source, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void Host_admin_endpoints_no_longer_own_order_detail_route()
+    {
+        var source = File.ReadAllText(Path.Combine(
+            FindRepoRoot(), "src", "backend", "Host", "Tooba.Host", "Admin", "AdminPanelEndpoints.cs"));
+        Assert.DoesNotContain("MapGet(\"/orders/{checkoutId:guid}\"", source, StringComparison.Ordinal);
+        Assert.DoesNotContain("GetOrderAsync", source, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -91,7 +98,6 @@ public sealed class AdminPanelCompositionTests
     {
         var source = File.ReadAllText(Path.Combine(
             FindRepoRoot(), "src", "backend", "Host", "Tooba.Host", "Admin", "ProductWorkspaceEndpoints.cs"));
-        // List/Create/Get/History/PatchTitle + publish/unpublish/archive/delete + media×8 + variants×2 + seo×3 + grid query + brand assign/options + additional category add/remove
         Assert.Equal(32, Count(source, "AdminPanelAccess.RequireAuthorizedAsync"));
         Assert.Contains("IAuthorizationGuard", source, StringComparison.Ordinal);
         Assert.Contains("ICurrentTenant", source, StringComparison.Ordinal);
@@ -102,7 +108,6 @@ public sealed class AdminPanelCompositionTests
     {
         var source = File.ReadAllText(Path.Combine(
             FindRepoRoot(), "src", "backend", "Host", "Tooba.Host", "Media", "MediaEndpoints.cs"));
-        // upload + list + get metadata
         Assert.Equal(3, Count(source, "AdminPanelAccess.RequireAuthorizedAsync"));
     }
 

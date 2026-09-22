@@ -1,6 +1,7 @@
 ﻿using System.Text.RegularExpressions;
 using Tooba.Host.Admin;
 using Tooba.Order.Application;
+using Tooba.Order.Application.Admin.Detail.Models;
 using Tooba.Order.Application.Admin.Supply.Models;
 using Tooba.Order.Domain;
 using Xunit;
@@ -115,10 +116,14 @@ public sealed class AdminReservationCycleAuditTests
     [Fact]
     public void Order_detail_includes_one_projection_and_grids_batch()
     {
-        var composer = File.ReadAllText(Host("Admin/AdminPanelComposer.cs"));
-        Assert.Contains("GetProjectionAsync", composer, StringComparison.Ordinal);
-        Assert.Contains("ListEventsAsync", composer, StringComparison.Ordinal);
-        Assert.Contains("ToAudit", composer, StringComparison.Ordinal);
+        var detail = File.ReadAllText(OrderModule(
+            "Tooba.Order.Application/Admin/Detail/AdminOrderDetailComposer.cs"));
+        Assert.Contains("GetProjectionAsync", detail, StringComparison.Ordinal);
+        Assert.Contains("ListEventsAsync", detail, StringComparison.Ordinal);
+        Assert.Contains("ToAudit", detail, StringComparison.Ordinal);
+        var hostComposer = File.ReadAllText(Host("Admin/AdminPanelComposer.cs"));
+        Assert.DoesNotContain("GetProjectionAsync", hostComposer, StringComparison.Ordinal);
+        Assert.DoesNotContain("ToAudit", hostComposer, StringComparison.Ordinal);
         var orders = File.ReadAllText(OrderModule(
             "Tooba.Order.Infrastructure/Admin/OrdersGrid/AdminOrdersGridReader.cs"));
         var payments = File.ReadAllText(Module(
@@ -128,8 +133,8 @@ public sealed class AdminReservationCycleAuditTests
         Assert.DoesNotContain("GetProjectionAsync(", orders, StringComparison.Ordinal);
         Assert.DoesNotContain("GetProjectionAsync(", payments, StringComparison.Ordinal);
         Assert.DoesNotContain("ListEventsAsync", orders, StringComparison.Ordinal);
-        Assert.DoesNotContain("تمدید رزرو", composer, StringComparison.Ordinal);
-        Assert.DoesNotContain("ExpiresAt editor", composer, StringComparison.Ordinal);
+        Assert.DoesNotContain("تمدید رزرو", detail, StringComparison.Ordinal);
+        Assert.DoesNotContain("ExpiresAt editor", detail, StringComparison.Ordinal);
     }
 
     [Fact]

@@ -1,3 +1,4 @@
+using Tooba.Order.Application.Admin.Detail;
 using Tooba.Order.Application.Admin.Operations.Models;
 using Tooba.Order.Application.Admin.Operations.Policies;
 using Tooba.Fulfillment.Application.Ports;
@@ -5,7 +6,6 @@ using Tooba.Fulfillment.Application.Models;
 using Tooba.Fulfillment.Application.Shipping;
 using Tooba.Fulfillment.Domain.Aggregates;
 using Tooba.Fulfillment.Domain.ValueObjects;
-using Tooba.Host.Admin;
 using Tooba.Order.Domain;
 using Xunit;
 
@@ -176,17 +176,17 @@ public sealed class AdminFulfillmentScopeSequenceTests
     [Fact]
     public void Line_status_stays_mixed_after_partial_pack()
     {
-        var ready = Snapshot(FulfillmentStatus.ReadyToFulfill, [new FulfillmentItemSnapshot(Guid.NewGuid(), Guid.NewGuid(), 2, 0, null, 0)]);
-        Assert.Equal("ReadyToFulfill", AdminPanelComposer.LineOperationalStatus(SellerOrderStatus.Paid, ready, 0, 2, 0));
-        var processing = Snapshot(FulfillmentStatus.Processing, [new FulfillmentItemSnapshot(Guid.NewGuid(), Guid.NewGuid(), 3, 1, null, 0, 3)]);
-        Assert.Equal("ReadyToFulfill", AdminPanelComposer.LineOperationalStatus(SellerOrderStatus.Paid, processing, 0, 3, 0));
-        Assert.Equal("Processing", AdminPanelComposer.LineOperationalStatus(SellerOrderStatus.Paid, processing, 1, 3, 3));
-        Assert.Equal("Packed", AdminPanelComposer.LineOperationalStatus(SellerOrderStatus.Paid, processing, 3, 3, 3));
-        var dispatched = Snapshot(FulfillmentStatus.Dispatched, [new FulfillmentItemSnapshot(Guid.NewGuid(), Guid.NewGuid(), 1.25m, 0.50m, null, 0.50m, 1.25m)]);
-        Assert.Equal("PartialDispatched", AdminPanelComposer.LineOperationalStatus(SellerOrderStatus.Paid, dispatched, 0.50m, 1.25m, 1.25m, 0.50m));
-        Assert.Equal("Dispatched", AdminPanelComposer.LineOperationalStatus(SellerOrderStatus.Paid, dispatched, 1.25m, 1.25m, 1.25m, 1.25m));
-        Assert.Equal("PendingPayment", AdminPanelComposer.LineOperationalStatus(SellerOrderStatus.PendingPayment, null, 0, 2));
-        Assert.Equal("Cancelled", AdminPanelComposer.LineOperationalStatus(SellerOrderStatus.Cancelled, null, 0, 2));
+        var ready = Snapshot(FulfillmentStatus.ReadyToFulfill, [new FulfillmentItemSnapshot(Guid.NewGuid(), Guid.NewGuid(), 2, 0, null, 0)]).ToContracts();
+        Assert.Equal("ReadyToFulfill", AdminOrderDetailFulfillmentStatus.LineOperationalStatus(SellerOrderStatus.Paid, ready, 0, 2, 0));
+        var processing = Snapshot(FulfillmentStatus.Processing, [new FulfillmentItemSnapshot(Guid.NewGuid(), Guid.NewGuid(), 3, 1, null, 0, 3)]).ToContracts();
+        Assert.Equal("ReadyToFulfill", AdminOrderDetailFulfillmentStatus.LineOperationalStatus(SellerOrderStatus.Paid, processing, 0, 3, 0));
+        Assert.Equal("Processing", AdminOrderDetailFulfillmentStatus.LineOperationalStatus(SellerOrderStatus.Paid, processing, 1, 3, 3));
+        Assert.Equal("Packed", AdminOrderDetailFulfillmentStatus.LineOperationalStatus(SellerOrderStatus.Paid, processing, 3, 3, 3));
+        var dispatched = Snapshot(FulfillmentStatus.Dispatched, [new FulfillmentItemSnapshot(Guid.NewGuid(), Guid.NewGuid(), 1.25m, 0.50m, null, 0.50m, 1.25m)]).ToContracts();
+        Assert.Equal("PartialDispatched", AdminOrderDetailFulfillmentStatus.LineOperationalStatus(SellerOrderStatus.Paid, dispatched, 0.50m, 1.25m, 1.25m, 0.50m));
+        Assert.Equal("Dispatched", AdminOrderDetailFulfillmentStatus.LineOperationalStatus(SellerOrderStatus.Paid, dispatched, 1.25m, 1.25m, 1.25m, 1.25m));
+        Assert.Equal("PendingPayment", AdminOrderDetailFulfillmentStatus.LineOperationalStatus(SellerOrderStatus.PendingPayment, null, 0, 2));
+        Assert.Equal("Cancelled", AdminOrderDetailFulfillmentStatus.LineOperationalStatus(SellerOrderStatus.Cancelled, null, 0, 2));
     }
 
     [Fact]

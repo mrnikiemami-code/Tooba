@@ -1,8 +1,8 @@
-using Tooba.Host.Admin;
-using Tooba.Offer.Domain;
 using Tooba.Order.Application.Admin.Completeness.History;
+using Tooba.Order.Application.Admin.Detail;
+using Tooba.Order.Application.Admin.Detail.Models;
 using Tooba.Order.Domain;
-using Tooba.Settlement.Application;
+using Tooba.Settlement.Contracts.Operations;
 using Tooba.Settlement.Domain;
 using Xunit;
 
@@ -10,6 +10,7 @@ namespace Tooba.Host.Tests;
 
 /// <summary>
 /// TB-P09-T007 — projection سابقه مالی سفارش: attribution، عدم تکرار، برچسب‌های انسانی.
+/// Owner: Order.Application.Admin.Detail (R6).
 /// </summary>
 public sealed class AdminOrderFinancialHistoryTests
 {
@@ -51,19 +52,18 @@ public sealed class AdminOrderFinancialHistoryTests
         var returnId = Guid.NewGuid();
         var refunds = new[]
         {
-            new AdminPanelComposer.OrderFinancialRefundInput(
+            new AdminOrderDetailFinancials.OrderFinancialRefundInput(
                 returnId, Guid.NewGuid(), 50_000m, "IRR", now.AddMinutes(-8), 50_000m, "rf-a"),
-            // retry duplicate for same return — must collapse to one movement
-            new AdminPanelComposer.OrderFinancialRefundInput(
+            new AdminOrderDetailFinancials.OrderFinancialRefundInput(
                 returnId, Guid.NewGuid(), 50_000m, "IRR", now.AddMinutes(-7), 50_000m, "rf-b"),
         };
 
-        var settlementByOrder = new Dictionary<Guid, IReadOnlyList<SettlementEntrySnapshot>>
+        var settlementByOrder = new Dictionary<Guid, IReadOnlyList<SettlementAdminOrderEntrySnapshot>>
         {
             [order.SellerOrderId] = [credit, debit],
         };
 
-        var events = AdminPanelComposer.BuildFinancialEvents(group, sellerNames, payment, settlementByOrder, refunds);
+        var events = AdminOrderDetailFinancials.BuildFinancialEvents(group, sellerNames, payment, settlementByOrder, refunds);
 
         Assert.Equal(1, events.Count(x => x.EventType == "CustomerReceipt"));
         Assert.Equal(1, events.Count(x => x.EventType == "CustomerRefund"));
@@ -93,14 +93,13 @@ public sealed class AdminOrderFinancialHistoryTests
             Guid.NewGuid(),
             order.SellerPartyId, Guid.NewGuid(), order.SellerOrderId, orderNet, "IRR", policy, "pay-order", DateTimeOffset.UtcNow));
 
-        // Fake "batch total" must never appear — projection only sees this SellerOrder's entry NetAmount.
         const decimal batchTotal = 500_000m;
-        var events = AdminPanelComposer.BuildFinancialEvents(
+        var events = AdminOrderDetailFinancials.BuildFinancialEvents(
             group,
             sellerNames,
             payment: null,
-            new Dictionary<Guid, IReadOnlyList<SettlementEntrySnapshot>> { [order.SellerOrderId] = [credit] },
-            Array.Empty<AdminPanelComposer.OrderFinancialRefundInput>());
+            new Dictionary<Guid, IReadOnlyList<SettlementAdminOrderEntrySnapshot>> { [order.SellerOrderId] = [credit] },
+            Array.Empty<AdminOrderDetailFinancials.OrderFinancialRefundInput>());
 
         Assert.Single(events);
         Assert.Equal("SellerPayout", events[0].EventType);
@@ -120,11 +119,11 @@ public sealed class AdminOrderFinancialHistoryTests
             Guid.NewGuid(),
             Guid.NewGuid(),
             order.SellerPartyId, Guid.NewGuid(), order.SellerOrderId, 20_000m, "IRR", policy, "imm-1", postedAt));
-        var settlement = new Dictionary<Guid, IReadOnlyList<SettlementEntrySnapshot>> { [order.SellerOrderId] = [credit] };
-        var first = AdminPanelComposer.BuildFinancialEvents(
-            group, sellerNames, null, settlement, Array.Empty<AdminPanelComposer.OrderFinancialRefundInput>());
-        var second = AdminPanelComposer.BuildFinancialEvents(
-            group, sellerNames, null, settlement, Array.Empty<AdminPanelComposer.OrderFinancialRefundInput>());
+        var settlement = new Dictionary<Guid, IReadOnlyList<SettlementAdminOrderEntrySnapshot>> { [order.SellerOrderId] = [credit] };
+        var first = AdminOrderDetailFinancials.BuildFinancialEvents(
+            group, sellerNames, null, settlement, Array.Empty<AdminOrderDetailFinancials.OrderFinancialRefundInput>());
+        var second = AdminOrderDetailFinancials.BuildFinancialEvents(
+            group, sellerNames, null, settlement, Array.Empty<AdminOrderDetailFinancials.OrderFinancialRefundInput>());
         Assert.Equal(first.Single().OccurredAt, second.Single().OccurredAt);
         Assert.Equal(first.Single().Amount, second.Single().Amount);
         Assert.Equal(first.Single().Reference, second.Single().Reference);
@@ -139,20 +138,16 @@ public sealed class AdminOrderFinancialHistoryTests
         Assert.DoesNotContain("aaaaaaaa", AdminOrderHistoryFormatting.FormatPackScopeFa("فروشگاه", 1), StringComparison.OrdinalIgnoreCase);
     }
 
-    private static SettlementEntrySnapshot MapEntry(SettlementEntry entry) =>
+    private static SettlementAdminOrderEntrySnapshot MapEntry(SettlementEntry entry) =>
         new(
             entry.EntryId,
-            entry.SettlementAccountId,
-            entry.SellerPartyId,
-            entry.EntryType,
+            entry.SellerOrderId ?? Guid.Empty,
+            entry.EntryType.ToString(),
             entry.GrossAmount,
             entry.CommissionAmount,
             entry.NetAmount,
             entry.Currency,
-            entry.CommissionPolicySnapshot,
             entry.SourceType,
-            entry.SourceId,
-            entry.SellerOrderId,
             entry.PostedAt);
 
     private static CheckoutGroup SeedCheckout(decimal unitPrice)
