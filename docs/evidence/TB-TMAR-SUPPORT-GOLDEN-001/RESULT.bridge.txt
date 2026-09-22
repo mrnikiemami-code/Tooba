@@ -48,9 +48,9 @@ Pricing-State: UNTOUCHED
 Frontend-Production-Changes: NONE
 
 Git:
-  Commit: 47afb5106fea249fd560b210284478a877ede1e6
-  Message: docs(TB-TMAR-SUPPORT-GOLDEN-001): add Bridge Result artifact.
-  Push: origin/main updated a20ef51f..47afb5106fea249fd560b210284478a877ede1e6
+  Commit: fe9b5f67a7fe87fdd634c9a3e41de30d52bffb1c
+  Message: docs(TB-TMAR-SUPPORT-GOLDEN-001): tip-align Result Git SHA to final tip.
+  Push: origin/main updated a20ef51f..fe9b5f67a7fe87fdd634c9a3e41de30d52bffb1c
   HEAD == origin/main: YES
   User-Work-Preserved: YES (no reset/clean/force-push; stashes untouched; CART/Fulfillment leftover bridge-result files left untracked)
 
