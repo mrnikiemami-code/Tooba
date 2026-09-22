@@ -1,0 +1,26 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+BEGIN_TOOBA_WORKER_RESULT
+
+Task-ID: TB-TMAR-ORDER-GOLDEN-001-R4-R1
+Parent-Task: TB-TMAR-ORDER-GOLDEN-001-R4
+Status: PASS
+
+Summary: Fixed R4 Inventory Recovery clock and exception swallowing. OrderInventoryRecoveryService and OrderSupplyService use IClock. RecoverAsync maps only typed ContractOperationException expected codes to SemanticError; unknown exceptions propagate after rollback. Rollback failures surface via AggregateException (no empty catch). Inventory Reserve insufficient emits ContractOperationException at source. R4 Host removal preserved. SoT records R4-R1; nextTask R5 not started.
+Clock-State: IClock injected; no DateTimeOffset.UtcNow/DateTime.UtcNow in InventoryRecovery/Supply Application paths
+Unknown-Exception-State: unknown exceptions rethrown after rollback; not converted to inventory.recovery.insufficient
+Rollback-Failure-State: rollback errors collected and thrown as AggregateException with original fault preserved
+Typed-Failure-State: expected ContractOperationException codes map to SemanticError (supply.unavailable/conflict -> inventory.recovery.insufficient)
+R4-Host-Removal-Preserved: yes
+Architecture-Guard-Validation: OrderAdminOperationsArchitectureGuardTests 12/12 PASS including IClock/no-swallow guard
+Focused-Validation: Host OrderInventoryRecovery/OrderSupply 12 PASS
+Full-Validation: dotnet build src/backend/Tooba.slnx succeeded 0 errors
+Recovery-State: slice ADMIN_ORDER_RECOVERY_SUPPLY_CLOCK_FAULT_R4_R1 recorded; Order INCOMPLETE_REFERENCE_REPAIR
+Recovery-Next-Task: TB-TMAR-ORDER-GOLDEN-001-R5
+Residual-Defects: none for R4-R1 scope
+Order-Overall-State: INCOMPLETE_REFERENCE_REPAIR
+Checkout-State: PAUSED_AT_SAFE_W5_CHECKPOINT
+Git: 70e9e3517b88fa7b0f3213a066b308089f16db91 pushed origin/main; HEAD==origin/main
+User-Work-Preserved: yes; unrelated untracked R2C RESULT.bridge.txt untouched
+Next-Recommended-Task: TB-TMAR-ORDER-GOLDEN-001-R5
+
+END_TOOBA_WORKER_RESULT
