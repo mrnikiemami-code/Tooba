@@ -188,9 +188,9 @@ User choice:
 Continue TMAR for now until user explicitly says to return to product feature work.
 
 Next TMAR task:
-TB-TMAR-PAYMENT-GOLDEN-001
+TB-TMAR-PROMOTION-GOLDEN-001
 
-Current recovery state (authoritative — TB-TMAR-RECOVERY-LOCK-HARDEN-001 / ARCH-COMPLETE-001):
+Current recovery state (authoritative — TB-TMAR-PAYMENT-GOLDEN-001):
 
 COMPLETE_REFERENCE_PATTERN (HTTP-owning, module Endpoints + MediatR):
 - Cart — TB-TMAR-CART-GOLDEN-001-R1 — 35198728bf17381eaaec5db1e8033478675397fb
@@ -200,9 +200,9 @@ COMPLETE_REFERENCE_PATTERN (HTTP-owning, module Endpoints + MediatR):
 - Notification — TB-TMAR-NOTIFICATION-GOLDEN-001 — 5c947708af5c66a3031786ccdfc34a726ec8746e
 - Support — TB-TMAR-SUPPORT-GOLDEN-001 — b2d3e6f7df85750b5b5d9c42b19f3fa996ba5d91
 - Wallet — TB-TMAR-WALLET-GOLDEN-001 — f81c11e9b21c4bb5e05385b253db28fdb1c62402
+- Payment — TB-TMAR-PAYMENT-GOLDEN-001 — PENDING_TIP_ALIGN (Payment COMPLETE_REFERENCE_PATTERN)
 
 Remaining:
-- Payment — REOPENED_ENDPOINT_CQRS_OWNERSHIP
 - Promotion — REOPENED_ENDPOINT_CQRS_OWNERSHIP
 - Offer — NEEDS_FINAL_REVERIFY (Endpoints exists)
 - Inventory — NEEDS_APPLICABILITY_REVERIFY (may be internal-only)
@@ -217,6 +217,7 @@ Machine-readable: docs/architecture/tmar-current-state.json
 Recovery phrase: برگردیم به TMAR؛ TOOBA-TMAR-MASTER-RECOVERY.md و آخرین recovery-sot را مبنا بگیر.
 
 HISTORICAL / SUPERSEDED (do not treat as current authoritative COMPLETE):
+TB-TMAR-PAYMENT-GOLDEN-001-R1 partial (webhook/admin only) and TB-TMAR-PAYMENT-GOLDEN-001-R2 next-task wording are superseded by full Payment golden closure above.
 TB-TMAR-NEXT-MODULE-BATCH-001 Inventory/Promotion COMPLETE claims and next-task TB-TMAR-NEXT-MODULE-BATCH-002 are superseded by the golden wave above and ARCH-COMPLETE-001.
 
 Inventory + Promotion reference batch (HISTORICAL / SUPERSEDED):

@@ -1,11 +1,7 @@
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
 using Tooba.Payment.Infrastructure.Adapters;
-using Tooba.Payment.Infrastructure.DependencyInjection;
-using Tooba.Payment.Infrastructure.Directories;
-using Tooba.Payment.Infrastructure.Messaging;
 using Tooba.Payment.Infrastructure.Providers;
 using Xunit;
 
@@ -19,36 +15,33 @@ public sealed class StorefrontPaymentMethodsCatalogTests
     [Fact]
     public void Sandbox_mode_offers_gateway_and_manual_when_enabled()
     {
-        var composer = CreateComposer(new PaymentGatewayOptions
+        var catalog = CreateCatalog(new PaymentGatewayOptions
         {
             Mode = "Sandbox",
             DefaultProvider = "fake",
             ManualCardToCardEnabled = true,
         });
-        var page = composer.ListPaymentMethods();
-        Assert.Contains(page.Methods, m => m.Code == "gateway");
-        Assert.Contains(page.Methods, m => m.Code == "manual");
-        Assert.True(page.ManualCardToCardEnabled);
+        Assert.True(catalog.IsOnlineGatewayOffered());
+        Assert.True(catalog.ManualCardToCardEnabled);
     }
 
     [Fact]
     public void Disabled_mode_omits_gateway()
     {
-        var composer = CreateComposer(new PaymentGatewayOptions
+        var catalog = CreateCatalog(new PaymentGatewayOptions
         {
             Mode = "Disabled",
             DefaultProvider = "webhook",
             ManualCardToCardEnabled = true,
         });
-        var page = composer.ListPaymentMethods();
-        Assert.DoesNotContain(page.Methods, m => m.Code == "gateway");
-        Assert.Contains(page.Methods, m => m.Code == "manual");
+        Assert.False(catalog.IsOnlineGatewayOffered());
+        Assert.True(catalog.ManualCardToCardEnabled);
     }
 
     [Fact]
     public void Webhook_without_config_omits_gateway()
     {
-        var composer = CreateComposer(new PaymentGatewayOptions
+        var catalog = CreateCatalog(new PaymentGatewayOptions
         {
             Mode = "Webhook",
             DefaultProvider = "webhook",
@@ -56,14 +49,13 @@ public sealed class StorefrontPaymentMethodsCatalogTests
             WebhookSigningSecret = "",
             ManualCardToCardEnabled = false,
         });
-        var page = composer.ListPaymentMethods();
-        Assert.Empty(page.Methods);
+        Assert.False(catalog.IsOnlineGatewayOffered());
     }
 
     [Fact]
     public void Webhook_configured_offers_gateway()
     {
-        var composer = CreateComposer(new PaymentGatewayOptions
+        var catalog = CreateCatalog(new PaymentGatewayOptions
         {
             Mode = "Webhook",
             DefaultProvider = "webhook",
@@ -71,47 +63,28 @@ public sealed class StorefrontPaymentMethodsCatalogTests
             WebhookSigningSecret = "secret",
             ManualCardToCardEnabled = false,
         });
-        var page = composer.ListPaymentMethods();
-        Assert.Contains(page.Methods, m => m.Code == "gateway");
-        Assert.DoesNotContain(page.Methods, m => m.Code == "manual");
+        Assert.True(catalog.IsOnlineGatewayOffered());
+        Assert.False(catalog.ManualCardToCardEnabled);
     }
 
     [Fact]
     public void Production_environment_does_not_enable_sandbox_simulator()
     {
-        var composer = new Storefront.StorefrontPaymentComposer(
-            checkouts: null!,
-            payments: null!,
-            orderPayments: null!,
-            wallets: null!,
-            gatewayOptions: Options.Create(new PaymentGatewayOptions { Mode = "Sandbox" }),
-            session: new CurrentAuthenticatedSession(),
-            environment: new TestHostEnvironment { EnvironmentName = Environments.Production },
-            media: null!,
-            logger: NullLogger<Storefront.StorefrontPaymentComposer>.Instance);
-        Assert.False(composer.IsSandboxSimulatorEnabled());
+        var catalog = new PaymentGatewayCatalogAdapter(
+            Options.Create(new PaymentGatewayOptions { Mode = "Sandbox" }),
+            new TestHostEnvironment { EnvironmentName = Environments.Production });
+        Assert.False(catalog.IsSandboxSimulatorEnabled());
     }
 
     [Fact]
     public void Development_sandbox_mode_enables_simulator()
     {
-        var composer = CreateComposer(new PaymentGatewayOptions { Mode = "Sandbox" });
-        Assert.True(composer.IsSandboxSimulatorEnabled());
+        var catalog = CreateCatalog(new PaymentGatewayOptions { Mode = "Sandbox" });
+        Assert.True(catalog.IsSandboxSimulatorEnabled());
     }
 
-    private static Storefront.StorefrontPaymentComposer CreateComposer(PaymentGatewayOptions options)
-    {
-        return new Storefront.StorefrontPaymentComposer(
-            checkouts: null!,
-            payments: null!,
-            orderPayments: null!,
-            wallets: null!,
-            gatewayOptions: Options.Create(options),
-            session: new CurrentAuthenticatedSession(),
-            environment: new TestHostEnvironment(),
-            media: null!,
-            logger: NullLogger<Storefront.StorefrontPaymentComposer>.Instance);
-    }
+    private static PaymentGatewayCatalogAdapter CreateCatalog(PaymentGatewayOptions options) =>
+        new(Options.Create(options), new TestHostEnvironment());
 
     private sealed class TestHostEnvironment : IHostEnvironment
     {

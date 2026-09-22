@@ -1,4 +1,4 @@
-# Tooba — Recovery Context
+﻿# Tooba — Recovery Context
 
 Canonical repository:
 
@@ -91,6 +91,46 @@ Wallet-Idempotency-Generation: IIdGenerator
 Wallet-Physical-State: VERIFIED_ON_DISK_AND_NAMESPACE
 Wallet-Architecture-Guards: ENFORCED
 Wallet-Behavior-Preservation: VERIFIED
+
+TB-TMAR-PAYMENT-GOLDEN-001 — Payment Endpoints Ownership + MediatR CQRS + Host Payment Authority Removal
+Payment-State: COMPLETE_REFERENCE_PATTERN
+Payment-HTTP-Ownership: MODULE_ENDPOINTS
+Payment-Endpoints-State: REAL_PROJECT_PRESENT
+Payment-CQRS-State: MEDIATR_12_5_APPLICATION_HANDLERS
+Payment-Host-Webhook: REMOVED
+Payment-Host-StorefrontComposer: REMOVED
+Payment-Host-AdminGridEngine: REMOVED
+Payment-Host-Business-Authority: NONE
+Payment-Reconciliation-Host-Role: SCHEDULER_ONLY
+Payment-CrossModule-Boundary: CONTRACTS_ONLY
+Payment-Result-Adoption: HTTP_USE_CASES_ADOPTED
+Payment-Error-Classification: STABLE_CODES_ONLY
+Payment-Prose-Mapping: NONE
+Payment-Unexpected-Exception-Swallow: NONE
+Payment-Physical-State: VERIFIED_ON_DISK_AND_NAMESPACE
+Payment-Architecture-Guards: ENFORCED
+Payment-Behavior-Preservation: VERIFIED
+Recovery-Next-Task: TB-TMAR-PROMOTION-GOLDEN-001
+
+TB-TMAR-PAYMENT-GOLDEN-001 — Payment Endpoints Ownership + MediatR CQRS + Host Payment Authority Removal
+Payment-State: COMPLETE_REFERENCE_PATTERN
+Payment-HTTP-Ownership: MODULE_ENDPOINTS
+Payment-Endpoints-State: REAL_PROJECT_PRESENT
+Payment-CQRS-State: MEDIATR_12_5_APPLICATION_HANDLERS
+Payment-Host-Webhook: REMOVED
+Payment-Host-StorefrontComposer: REMOVED
+Payment-Host-AdminGridEngine: REMOVED
+Payment-Host-Business-Authority: NONE
+Payment-Reconciliation-Host-Role: SCHEDULER_ONLY
+Payment-CrossModule-Boundary: CONTRACTS_ONLY
+Payment-Result-Adoption: HTTP_USE_CASES_ADOPTED
+Payment-Error-Classification: STABLE_CODES_ONLY
+Payment-Prose-Mapping: NONE
+Payment-Unexpected-Exception-Swallow: NONE
+Payment-Physical-State: VERIFIED_ON_DISK_AND_NAMESPACE
+Payment-Architecture-Guards: ENFORCED
+Payment-Behavior-Preservation: VERIFIED
+Recovery-Next-Task: TB-TMAR-PROMOTION-GOLDEN-001
 Support-State: COMPLETE_REFERENCE_PATTERN
 Notification-State: COMPLETE_REFERENCE_PATTERN
 Returns-State: COMPLETE_REFERENCE_PATTERN
@@ -101,7 +141,7 @@ Checkout-State: PAUSED_AT_SAFE_W5_CHECKPOINT
 Tax-State: DEFERRED_PHYSICAL_REVIEW_BY_USER
 Pricing-State: DEFERRED_PHYSICAL_REVIEW_BY_USER
 Frontend-Production-Changes: NONE
-Next-Recommended-Task: TB-TMAR-PAYMENT-GOLDEN-001
+Next-Recommended-Task: TB-TMAR-PROMOTION-GOLDEN-001
 ```
 
 Prior TMAR Cart golden (awaiting Architect / USER_CART_REVIEW_CHECKPOINT):

@@ -1,4 +1,4 @@
-using Tooba.Host.Storefront;
+﻿using Tooba.Host.Storefront;
 using Tooba.Order.Application;
 
 namespace Tooba.Host.Storefront;
@@ -39,16 +39,6 @@ public static class StorefrontEndpoints
         group.MapPut("/shipping/selection", SaveShippingSelectionAsync);
         group.MapPost("/shipping/commit", CommitShippingAsync);
         group.MapGet("/geography/provinces", () => Results.Json(StorefrontIranGeography.Provinces));
-        group.MapPost("/checkout/{checkoutId:guid}/payments", InitiatePaymentAsync);
-        group.MapGet("/checkout/{checkoutId:guid}/wallet-quote", GetWalletQuoteAsync);
-        group.MapGet("/payment-methods", ListPaymentMethodsAsync);
-        group.MapGet("/payments/{paymentId:guid}", GetPaymentAsync);
-        group.MapGet("/payments/{paymentId:guid}/sandbox", GetSandboxContextAsync);
-        group.MapPost("/payments/{paymentId:guid}/sandbox/complete", CompleteSandboxPaymentAsync);
-        group.MapPost("/payments/{paymentId:guid}/manual-evidence", SubmitManualEvidenceAsync);
-        group.MapPost("/payments/{paymentId:guid}/manual-retry", RetryManualPaymentAsync);
-        group.MapPost("/payments/{paymentId:guid}/unpaid-retry", RetryUnpaidPaymentAsync);
-        group.MapPost("/payments/{paymentId:guid}/proof", UploadManualProofAsync).DisableAntiforgery();
     }
 
     private static async Task<IResult> GetHomeAsync(
@@ -231,9 +221,9 @@ public static class StorefrontEndpoints
         }
         catch (InvalidOperationException exception)
         {
-            var mapped = MapPaymentException(exception);
+            var mapped = MapPendingCardException(exception);
             return Results.Json(
-                new { title = mapped.Title, errorCode = mapped.Code, detail = MapPaymentCustomerDetail(mapped.Code) },
+                new { title = mapped.Title, errorCode = mapped.Code, detail = MapPendingCardCustomerDetail(mapped.Code) },
                 statusCode: mapped.Status);
         }
     }
@@ -254,9 +244,9 @@ public static class StorefrontEndpoints
         }
         catch (InvalidOperationException exception)
         {
-            var mapped = MapPaymentException(exception);
+            var mapped = MapPendingCardException(exception);
             return Results.Json(
-                new { title = mapped.Title, errorCode = mapped.Code, detail = MapPaymentCustomerDetail(mapped.Code) },
+                new { title = mapped.Title, errorCode = mapped.Code, detail = MapPendingCardCustomerDetail(mapped.Code) },
                 statusCode: mapped.Status);
         }
     }
@@ -277,9 +267,9 @@ public static class StorefrontEndpoints
         }
         catch (InvalidOperationException exception)
         {
-            var mapped = MapPaymentException(exception);
+            var mapped = MapPendingCardException(exception);
             return Results.Json(
-                new { title = mapped.Title, errorCode = mapped.Code, detail = MapPaymentCustomerDetail(mapped.Code) },
+                new { title = mapped.Title, errorCode = mapped.Code, detail = MapPendingCardCustomerDetail(mapped.Code) },
                 statusCode: mapped.Status);
         }
     }
@@ -478,318 +468,31 @@ public static class StorefrontEndpoints
         });
     }
 
-    private static Task<IResult> InitiatePaymentAsync(
-        Guid checkoutId,
-        StorefrontInitiatePaymentRequest body,
-        StorefrontPaymentComposer composer,
-        CheckoutIdentityGate gate,
-        HttpRequest request,
-        CancellationToken cancellationToken)
-        => ExecutePaymentAsync(async () =>
-        {
-            await gate.EnsureCheckoutActorAsync(cancellationToken);
-            return await composer.InitiateAsync(
-                checkoutId,
-                body.CartId,
-                ReadGuestSecret(request),
-                body.IdempotencyKey,
-                body.WantsWallet,
-                body.ProviderCode,
-                cancellationToken);
-        });
-
-    private static Task<IResult> GetWalletQuoteAsync(
-        Guid checkoutId,
-        Guid cartId,
-        StorefrontPaymentComposer composer,
-        CheckoutIdentityGate gate,
-        HttpRequest request,
-        CancellationToken cancellationToken)
-        => ExecutePaymentAsync(async () =>
-        {
-            await gate.EnsureCheckoutActorAsync(cancellationToken);
-            return await composer.GetWalletQuoteAsync(
-                checkoutId,
-                cartId,
-                ReadGuestSecret(request),
-                cancellationToken);
-        });
-
-    private static Task<IResult> ListPaymentMethodsAsync(
-        StorefrontPaymentComposer composer)
-        => Task.FromResult(Results.Json(composer.ListPaymentMethods()));
-
-    private static async Task<IResult> GetPaymentAsync(
-        Guid paymentId,
-        Guid cartId,
-        StorefrontPaymentComposer composer,
-        HttpRequest request,
-        CancellationToken cancellationToken)
-    {
-        return await ExecutePaymentAsync(async () =>
-        {
-            var page = await composer.GetAsync(paymentId, cartId, ReadGuestSecret(request), cancellationToken);
-            return page ?? throw new InvalidOperationException("پرداخت پیدا نشد.");
-        });
-    }
-
-    private static Task<IResult> GetSandboxContextAsync(
-        Guid paymentId,
-        Guid cartId,
-        StorefrontPaymentComposer composer,
-        HttpRequest request,
-        CancellationToken cancellationToken)
-        => ExecutePaymentAsync(() => composer.GetSandboxContextAsync(
-            paymentId,
-            cartId,
-            ReadGuestSecret(request),
-            cancellationToken));
-
-    private static Task<IResult> CompleteSandboxPaymentAsync(
-        Guid paymentId,
-        StorefrontSandboxPaymentRequest body,
-        StorefrontPaymentComposer composer,
-        HttpRequest request,
-        CancellationToken cancellationToken)
-        => ExecutePaymentAsync(() => composer.CompleteSandboxAsync(
-            paymentId,
-            body.CartId,
-            ReadGuestSecret(request),
-            body.AttemptId,
-            body.ProviderRequestReference,
-            body.Outcome,
-            cancellationToken));
-
-    private static Task<IResult> SubmitManualEvidenceAsync(
-        Guid paymentId,
-        StorefrontManualEvidenceRequest body,
-        StorefrontPaymentComposer composer,
-        HttpRequest request,
-        CancellationToken cancellationToken)
-        => ExecutePaymentAsync(() => composer.SubmitManualEvidenceAsync(
-            paymentId,
-            body.CartId,
-            ReadGuestSecret(request),
-            body.TransferReference,
-            body.ProofMediaAssetId,
-            cancellationToken));
-
-    private static Task<IResult> RetryManualPaymentAsync(
-        Guid paymentId,
-        StorefrontPaymentCartRequest body,
-        StorefrontPaymentComposer composer,
-        HttpRequest request,
-        CancellationToken cancellationToken)
-        => ExecutePaymentAsync(() => composer.RetryManualAsync(
-            paymentId,
-            body.CartId,
-            ReadGuestSecret(request),
-            cancellationToken));
-
-    private static Task<IResult> RetryUnpaidPaymentAsync(
-        Guid paymentId,
-        StorefrontPaymentCartRequest body,
-        StorefrontPaymentComposer composer,
-        HttpRequest request,
-        CancellationToken cancellationToken)
-        => ExecutePaymentAsync(() => composer.RetryUnpaidAsync(
-            paymentId,
-            body.CartId,
-            ReadGuestSecret(request),
-            cancellationToken));
-
-    private static async Task<IResult> UploadManualProofAsync(
-        Guid paymentId,
-        Guid cartId,
-        StorefrontPaymentComposer composer,
-        HttpRequest request,
-        CancellationToken cancellationToken)
-    {
-        try
-        {
-            if (!request.HasFormContentType)
-            {
-                return Results.Json(
-                    new { title = "Bad Request", errorCode = "payment.proof.required", detail = "فایل مدرک پرداخت لازم است." },
-                    statusCode: StatusCodes.Status400BadRequest);
-            }
-
-            var form = await request.ReadFormAsync(cancellationToken);
-            var file = form.Files.GetFile("file") ?? form.Files.FirstOrDefault();
-            if (file is null)
-            {
-                return Results.Json(
-                    new { title = "Bad Request", errorCode = "payment.proof.required", detail = "فایل مدرک پرداخت لازم است." },
-                    statusCode: StatusCodes.Status400BadRequest);
-            }
-
-            await using var stream = file.OpenReadStream();
-            var mediaAssetId = await composer.UploadManualProofAsync(
-                paymentId,
-                cartId,
-                ReadGuestSecret(request),
-                stream,
-                file.FileName,
-                file.ContentType ?? string.Empty,
-                cancellationToken);
-            return Results.Json(new { mediaAssetId });
-        }
-        catch (InvalidOperationException exception)
-        {
-            var mapped = MapPaymentException(exception);
-            return Results.Json(
-                new { title = mapped.Title, errorCode = mapped.Code, detail = MapPaymentCustomerDetail(mapped.Code) },
-                statusCode: mapped.Status);
-        }
-        catch (Tooba.BuildingBlocks.PlatformHttpException platform)
-        {
-            return Results.Json(
-                new { title = platform.Title, errorCode = platform.ErrorCode, detail = platform.Title },
-                statusCode: platform.StatusCode);
-        }
-    }
-
-    private static async Task<IResult> ExecutePaymentAsync<T>(Func<Task<T>> action)
-    {
-        try
-        {
-            return Results.Json(await action());
-        }
-        catch (InvalidOperationException exception)
-        {
-            var mapped = MapPaymentException(exception);
-            return Results.Json(
-                new { title = mapped.Title, errorCode = mapped.Code, detail = MapPaymentCustomerDetail(mapped.Code) },
-                statusCode: mapped.Status);
-        }
-    }
-
-    private static (int Status, string Title, string Code) MapPaymentException(InvalidOperationException exception)
+    private static (int Status, string Title, string Code) MapPendingCardException(InvalidOperationException exception)
     {
         var text = exception.Message;
-        if (text.Contains("checkout.authentication_required", StringComparison.Ordinal))
-        {
-            return (StatusCodes.Status401Unauthorized, "Unauthorized", "checkout.authentication_required");
-        }
-
-        if (text.Contains("payment.already_succeeded", StringComparison.Ordinal)
-            || text.Contains("قبلاً با موفقیت", StringComparison.Ordinal)
-            || text.Contains("قبلاً پرداخت", StringComparison.Ordinal))
-        {
-            return (StatusCodes.Status409Conflict, "Conflict", "payment.already_succeeded");
-        }
-
-        if (text.Contains("payment.not_found", StringComparison.Ordinal)
-            || text.Contains("payment.missing", StringComparison.Ordinal)
-            || text.Contains("پیدا نشد", StringComparison.Ordinal))
-        {
-            return (StatusCodes.Status404NotFound, "Not Found", "payment.missing");
-        }
-
-        if (text.Contains("checkout.access.denied", StringComparison.Ordinal)
-            || text.Contains("payment.access.denied", StringComparison.Ordinal))
-        {
-            return (StatusCodes.Status403Forbidden, "Forbidden", "payment.access.denied");
-        }
-
-        if (text.Contains("دسترسی", StringComparison.Ordinal) || text.Contains("راز", StringComparison.Ordinal))
-        {
-            return (StatusCodes.Status401Unauthorized, "Unauthorized", "payment.guest.invalid");
-        }
-
-        if (text.Contains("پرداخت ترکیبی", StringComparison.Ordinal)
-            || text.Contains("موجودی کیف پول کافی نیست", StringComparison.Ordinal)
-            || text.Contains("موجودی باید کل مبلغ", StringComparison.Ordinal))
-        {
-            return (StatusCodes.Status400BadRequest, "Bad Request", "payment.wallet.mixed_deferred");
-        }
-
-        if (text.Contains("payment.method.unavailable", StringComparison.Ordinal)
-            || text.Contains("کارت به کارت در این فروشگاه فعال نیست", StringComparison.Ordinal))
-        {
-            return (StatusCodes.Status400BadRequest, "Bad Request", "payment.method.unavailable");
-        }
-
-        if (text.Contains("payment.tracking_reference.required", StringComparison.Ordinal)
-            || text.Contains("شماره پیگیری پرداخت الزامی است", StringComparison.Ordinal))
-        {
-            return (StatusCodes.Status400BadRequest, "Bad Request", "payment.tracking.required");
-        }
-
-        if (text.Contains("payment.proof.required", StringComparison.Ordinal))
-        {
-            return (StatusCodes.Status400BadRequest, "Bad Request", "payment.proof.required");
-        }
-
-        if (text.Contains("payment.proof.foreign", StringComparison.Ordinal))
-        {
-            return (StatusCodes.Status403Forbidden, "Forbidden", "payment.proof.foreign");
-        }
-
-        if (text.Contains("payment.sandbox.unavailable", StringComparison.Ordinal))
-        {
-            return (StatusCodes.Status403Forbidden, "Forbidden", "payment.sandbox.unavailable");
-        }
-
-        if (text.Contains("تعداد دفعات مجاز رزرو مجدد", StringComparison.Ordinal)
-            || text.Contains("inventory.reservation.retry_limit_reached", StringComparison.Ordinal))
-        {
-            return (StatusCodes.Status409Conflict, "Conflict", "inventory.reservation.retry_limit_reached");
-        }
-
-        if (text.Contains("این سفارش در حال حاضر قابل تأمین نیست.", StringComparison.Ordinal)
-            || text.Contains("inventory.supply.unavailable", StringComparison.Ordinal))
-        {
-            return (StatusCodes.Status409Conflict, "Conflict", "payment.unpaid.supply_unavailable");
-        }
-
-        if (text.Contains("payment.unpaid.retry.invalid_state", StringComparison.Ordinal))
-        {
-            return (StatusCodes.Status409Conflict, "Conflict", "payment.unpaid.retry.invalid");
-        }
-
         if (text.Contains("order.cancel.unpaid_only", StringComparison.Ordinal))
-        {
             return (StatusCodes.Status409Conflict, "Conflict", "order.cancel.unpaid_only");
-        }
-
         if (text.Contains("order.cancel.forbidden", StringComparison.Ordinal)
             || text.Contains("پس از ارسال کالا", StringComparison.Ordinal))
-        {
             return (StatusCodes.Status409Conflict, "Conflict", "order.cancel.forbidden");
-        }
-
         if (text.Contains("pending.hide.active_hold", StringComparison.Ordinal))
-        {
             return (StatusCodes.Status409Conflict, "Conflict", "pending.hide.active_hold");
-        }
-
+        if (text.Contains("checkout.authentication_required", StringComparison.Ordinal))
+            return (StatusCodes.Status401Unauthorized, "Unauthorized", "checkout.authentication_required");
+        if (text.Contains("پیدا نشد", StringComparison.Ordinal))
+            return (StatusCodes.Status404NotFound, "Not Found", "payment.missing");
         return (StatusCodes.Status400BadRequest, "Bad Request", "payment.rejected");
     }
 
-    private static string MapPaymentCustomerDetail(string code) => code switch
+    private static string MapPendingCardCustomerDetail(string code) => code switch
     {
-        "payment.already-paid" => "پرداخت این سفارش قبلاً با موفقیت انجام شده است.",
-        "payment.already_succeeded" => "پرداخت این سفارش قبلاً با موفقیت انجام شده است.",
-        "payment.missing" => "پرداخت پیدا نشد.",
-        "payment.guest.invalid" => "دسترسی به پرداخت معتبر نیست.",
-        "payment.access.denied" =>
-            "دسترسی به اطلاعات پرداخت این سفارش تأیید نشد. لطفاً از بخش سفارش‌ها دوباره وارد پرداخت شوید.",
-        "payment.wallet.mixed_deferred" => "پرداخت ترکیبی کیف پول هنوز فعال نیست؛ موجودی باید کل مبلغ را پوشش دهد.",
-        "payment.method.unavailable" => "این روش پرداخت برای فروشگاه فعال نیست.",
-        "payment.tracking.required" => "شماره پیگیری پرداخت الزامی است.",
-        "payment.proof.required" => "بارگذاری مدرک پرداخت الزامی است.",
-        "payment.proof.foreign" => "مدرک پرداخت معتبر نیست.",
-        "payment.sandbox.unavailable" => "درگاه آزمایشی در این محیط در دسترس نیست.",
-        "payment.unpaid.supply_unavailable" => "این سفارش در حال حاضر قابل تأمین نیست.",
-        "inventory.reservation.retry_limit_reached" =>
-            "تعداد دفعات مجاز رزرو مجدد موجودی برای این سفارش به پایان رسیده است.",
-        "payment.unpaid.retry.invalid" => "مهلت پرداخت این سفارش به پایان رسیده است.",
         "order.cancel.unpaid_only" => "لغو این سفارش از سبد فقط قبل از پرداخت موفق امکان‌پذیر است.",
         "order.cancel.forbidden" => "پس از ارسال کالا، لغو کامل سفارش امکان‌پذیر نیست.",
         "pending.hide.active_hold" => "تا پایان مهلت رزرو نمی‌توان این کارت را پنهان کرد.",
         "checkout.authentication_required" => "برای ادامه فرایند خرید وارد حساب خود شوید.",
-        _ => "امکان شروع پرداخت در حال حاضر وجود ندارد.",
+        "payment.missing" => "پرداخت پیدا نشد.",
+        _ => "امکان انجام این عملیات در حال حاضر وجود ندارد.",
     };
 
     private static async Task<IResult> ExecuteCheckoutAsync(

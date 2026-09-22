@@ -110,7 +110,7 @@ public sealed class UnpaidOrderExpiryTests
     public void Retry_uses_same_order_and_ensure_supply()
     {
         Assert.Equal(4, (int)OrderSupplyMode.EnsureUnpaidRetryHold);
-        var composer = Read("src/backend/Host/Tooba.Host/Storefront/StorefrontPaymentComposer.cs");
+        var composer = Read("src/backend/Host/Tooba.Host/Modules/Payment/Tooba.Payment.Application/Models/StorefrontPaymentOrchestrator.cs");
         Assert.Contains("EnsureUnpaidRetryHold", composer, StringComparison.Ordinal);
         Assert.Contains("ReopenExpiredForRetryAsync", composer, StringComparison.Ordinal);
         Assert.Contains("این سفارش در حال حاضر قابل تأمین نیست.", composer, StringComparison.Ordinal);

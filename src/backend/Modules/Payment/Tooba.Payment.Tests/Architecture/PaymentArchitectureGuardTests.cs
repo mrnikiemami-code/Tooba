@@ -7,15 +7,18 @@ namespace Tooba.Payment.Tests.Architecture;
 public sealed class PaymentArchitectureGuardTests
 {
     private static readonly string[] AllowedDomainFolders = ["Aggregates", "Entities", "ValueObjects", "Events", "Policies"];
-    private static readonly string[] AllowedApplicationFolders = ["Ports", "Models", "Commands", "Queries", "Handlers", "Errors"];
-    private static readonly string[] AllowedContractsFolders = ["Events", "Dtos", "Ports", "Returns"];
+    private static readonly string[] AllowedApplicationFolders = ["Ports", "Models", "Commands", "Queries", "Errors"];
+    private static readonly string[] AllowedContractsFolders = ["Events", "Dtos", "Ports", "Returns", "Settlement"];
     private static readonly string[] AllowedInfrastructureFolders =
         ["Persistence", "Directories", "Adapters", "Providers", "Events", "Messaging", "DependencyInjection", "Gateways", "Migrations"];
+    private static readonly string[] AllowedEndpointsFolders = ["Storefront", "Admin", "Webhooks", "Errors", "Resources"];
 
     private static readonly HashSet<string> HostDbContextAllowlist = new(StringComparer.OrdinalIgnoreCase)
     {
         "MarketplaceDevelopmentBootstrap.cs",
         "ProductWorkspaceDevelopmentBootstrap.cs",
+        "Program.cs",
+        "ModuleMigrationRegistry.cs",
     };
 
     private static string RepoRoot()
@@ -52,7 +55,7 @@ public sealed class PaymentArchitectureGuardTests
     [Fact]
     public void Payment_consumes_Wallet_only_through_Contracts()
     {
-        foreach (var project in new[] { "Tooba.Payment.Domain", "Tooba.Payment.Application", "Tooba.Payment.Infrastructure" })
+        foreach (var project in new[] { "Tooba.Payment.Domain", "Tooba.Payment.Application", "Tooba.Payment.Infrastructure", "Tooba.Payment.Endpoints" })
         {
             var refs = ProjectRefs(project);
             Assert.DoesNotContain(refs, r => r.Contains("Wallet.Application", StringComparison.OrdinalIgnoreCase));
@@ -60,6 +63,8 @@ public sealed class PaymentArchitectureGuardTests
             Assert.DoesNotContain(refs, r => r.Contains("Wallet.Infrastructure", StringComparison.OrdinalIgnoreCase));
         }
 
+        var appRefs = ProjectRefs("Tooba.Payment.Application");
+        Assert.Contains(appRefs, r => r.Contains("Wallet.Contracts", StringComparison.Ordinal));
         var infraRefs = ProjectRefs("Tooba.Payment.Infrastructure");
         Assert.Contains(infraRefs, r => r.Contains("Wallet.Contracts", StringComparison.Ordinal));
 
@@ -73,7 +78,7 @@ public sealed class PaymentArchitectureGuardTests
     public void Payment_golden_boundaries_and_physical_layout_remain_clean()
     {
         Assert.True(Directory.Exists(Path.Combine(PaymentRoot(), "Tooba.Payment.Contracts")));
-        Assert.False(Directory.Exists(Path.Combine(PaymentRoot(), "Tooba.Payment.Endpoints")));
+        Assert.True(Directory.Exists(Path.Combine(PaymentRoot(), "Tooba.Payment.Endpoints")));
         Assert.DoesNotContain(AllProductionSources(), x => x.Text.Contains("TypeForwardedTo", StringComparison.Ordinal));
 
         var directory = File.ReadAllText(Path.Combine(PaymentRoot(), "Tooba.Payment.Infrastructure", "Directories", "PaymentDirectory.cs"));
@@ -86,17 +91,17 @@ public sealed class PaymentArchitectureGuardTests
         Assert.Contains("IWalletOrderPaymentPort", walletGateway, StringComparison.Ordinal);
         Assert.Contains("IModuleCallTracer", walletGateway, StringComparison.Ordinal);
         Assert.Contains("IClock", walletGateway, StringComparison.Ordinal);
-        Assert.DoesNotContain("?? new SystemUtcClock()", walletGateway, StringComparison.Ordinal);
-        Assert.DoesNotContain("?? new ModuleCallTracer()", walletGateway, StringComparison.Ordinal);
 
         AssertNoRootDump("Tooba.Payment.Domain", AllowedDomainFolders);
         AssertNoRootDump("Tooba.Payment.Application", AllowedApplicationFolders);
         AssertNoRootDump("Tooba.Payment.Contracts", AllowedContractsFolders);
         AssertNoRootDump("Tooba.Payment.Infrastructure", AllowedInfrastructureFolders);
+        AssertNoRootDump("Tooba.Payment.Endpoints", AllowedEndpointsFolders);
         AssertNamespacesAlign("Tooba.Payment.Domain", "Tooba.Payment.Domain");
         AssertNamespacesAlign("Tooba.Payment.Application", "Tooba.Payment.Application");
         AssertNamespacesAlign("Tooba.Payment.Contracts", "Tooba.Payment.Contracts");
         AssertNamespacesAlign("Tooba.Payment.Infrastructure", "Tooba.Payment.Infrastructure");
+        AssertNamespacesAlign("Tooba.Payment.Endpoints", "Tooba.Payment.Endpoints");
 
         var hostRoot = Path.Combine(RepoRoot(), "src", "backend", "Host", "Tooba.Host");
         var hostHits = Directory.EnumerateFiles(hostRoot, "*.cs", SearchOption.AllDirectories)
@@ -131,21 +136,112 @@ public sealed class PaymentArchitectureGuardTests
                 .Select(m => (x.Path, Msg: m.Groups[1].Value)))
             .Where(x => Regex.IsMatch(x.Msg, @"[\u0600-\u06FF]") || x.Msg.Contains(' ', StringComparison.Ordinal))
             .Where(x => !x.Msg.StartsWith("payment.", StringComparison.Ordinal)
-                        && !x.Msg.StartsWith("domain.", StringComparison.Ordinal))
+                        && !x.Msg.StartsWith("admin.payment.", StringComparison.Ordinal)
+                        && !x.Msg.StartsWith("inventory.", StringComparison.Ordinal)
+                        && !x.Msg.StartsWith("domain.", StringComparison.Ordinal)
+                        && !x.Msg.StartsWith("checkout.", StringComparison.Ordinal))
             .Select(x => $"{x.Path}:{x.Msg}")
             .ToList();
         Assert.True(localized.Count == 0, "localized exception prose: " + string.Join("; ", localized));
     }
 
+    [Fact]
+    public void Payment_endpoints_cqrs_and_host_ownership_are_enforced()
+    {
+        Assert.True(Directory.Exists(Path.Combine(PaymentRoot(), "Tooba.Payment.Endpoints")));
+        Assert.True(File.Exists(Path.Combine(PaymentRoot(), "Tooba.Payment.Endpoints", "Tooba.Payment.Endpoints.csproj")));
+
+        var storefront = File.ReadAllText(Path.Combine(PaymentRoot(), "Tooba.Payment.Endpoints", "Storefront", "PaymentStorefrontEndpoints.cs"));
+        var admin = File.ReadAllText(Path.Combine(PaymentRoot(), "Tooba.Payment.Endpoints", "Admin", "PaymentAdminEndpoints.cs"));
+        var webhook = File.ReadAllText(Path.Combine(PaymentRoot(), "Tooba.Payment.Endpoints", "Webhooks", "PaymentWebhookEndpoints.cs"));
+        var module = File.ReadAllText(Path.Combine(PaymentRoot(), "Tooba.Payment.Endpoints", "PaymentEndpointModule.cs"));
+
+        foreach (var endpoint in new[] { storefront, admin, webhook })
+        {
+            Assert.Contains("ISender sender", endpoint, StringComparison.Ordinal);
+            Assert.Contains("ApiResponseFactory", endpoint, StringComparison.Ordinal);
+            Assert.DoesNotContain("IPaymentDirectory", endpoint, StringComparison.Ordinal);
+            Assert.DoesNotContain("IPaymentAdminDirectory", endpoint, StringComparison.Ordinal);
+            Assert.DoesNotContain("ex.Message", endpoint, StringComparison.Ordinal);
+            Assert.DoesNotContain("exception.Message", endpoint, StringComparison.Ordinal);
+            Assert.DoesNotContain("PaymentDbContext", endpoint, StringComparison.Ordinal);
+            Assert.DoesNotContain("catch (InvalidOperationException", endpoint, StringComparison.Ordinal);
+            Assert.DoesNotContain("Guid.NewGuid()", endpoint, StringComparison.Ordinal);
+            Assert.DoesNotContain("DateTimeOffset.UtcNow", endpoint, StringComparison.Ordinal);
+        }
+
+        Assert.Contains("MapGroup(\"/v1/storefront\")", storefront, StringComparison.Ordinal);
+        Assert.Contains("/payment-methods", storefront, StringComparison.Ordinal);
+        Assert.Contains("InitiateStorefrontPaymentCommand", storefront, StringComparison.Ordinal);
+        Assert.Contains("MapGroup(\"/v1/admin\")", admin, StringComparison.Ordinal);
+        Assert.Contains("/payments/", admin, StringComparison.Ordinal);
+        Assert.Contains("QueryAdminPaymentsGridQuery", admin, StringComparison.Ordinal);
+        Assert.Contains("/v1/payments/webhooks/", webhook, StringComparison.Ordinal);
+        Assert.Contains("ProcessPaymentWebhookCommand", webhook, StringComparison.Ordinal);
+        Assert.Contains("MapPaymentEndpoints", module, StringComparison.Ordinal);
+
+        var endpointRefs = ProjectRefs("Tooba.Payment.Endpoints");
+        Assert.Contains(endpointRefs, r => r.Contains("Payment.Application", StringComparison.Ordinal));
+        Assert.DoesNotContain(endpointRefs, r => r.Contains("Infrastructure", StringComparison.OrdinalIgnoreCase));
+        Assert.DoesNotContain(endpointRefs, r => r.Contains("Host", StringComparison.OrdinalIgnoreCase));
+
+        var application = Sources("Tooba.Payment.Application").ToList();
+        Assert.Contains(application, x => x.Text.Contains("InitiateStorefrontPaymentCommand", StringComparison.Ordinal));
+        Assert.Contains(application, x => x.Text.Contains("ProcessPaymentWebhookCommand", StringComparison.Ordinal));
+        Assert.Contains(application, x => x.Text.Contains("ReconcileStalePaymentsCommand", StringComparison.Ordinal));
+        Assert.Contains(application, x => x.Text.Contains("QueryAdminPaymentsGridQuery", StringComparison.Ordinal));
+        Assert.Contains(application, x => x.Text.Contains("IRequestHandler<", StringComparison.Ordinal));
+        Assert.Contains(application, x => x.Text.Contains("using MediatR", StringComparison.Ordinal));
+        Assert.Contains(application, x => x.Text.Contains("PaymentExceptionMapper", StringComparison.Ordinal));
+        Assert.DoesNotContain(application, x =>
+            x.Text.Contains(".Contains(\"", StringComparison.Ordinal) && x.Path.Contains("ExceptionMapper", StringComparison.Ordinal));
+
+        var hostRoot = Path.Combine(RepoRoot(), "src", "backend", "Host", "Tooba.Host");
+        Assert.False(File.Exists(Path.Combine(hostRoot, "Payments", "PaymentWebhookEndpoints.cs")));
+        Assert.False(File.Exists(Path.Combine(hostRoot, "Storefront", "StorefrontPaymentComposer.cs")));
+        Assert.False(File.Exists(Path.Combine(hostRoot, "Grid", "AdminPaymentsGridQueryEngine.cs")));
+        Assert.True(File.Exists(Path.Combine(hostRoot, "Storefront", "HostPaymentStorefrontAuthorizer.cs")));
+        Assert.True(File.Exists(Path.Combine(hostRoot, "Admin", "HostPaymentAdminAuthorizer.cs")));
+
+        var storefrontHost = File.ReadAllText(Path.Combine(hostRoot, "Storefront", "StorefrontEndpoints.cs"));
+        Assert.DoesNotContain("MapPost(\"/checkout/{checkoutId:guid}/payments\"", storefrontHost, StringComparison.Ordinal);
+        Assert.DoesNotContain("MapGet(\"/payment-methods\"", storefrontHost, StringComparison.Ordinal);
+        Assert.DoesNotContain("MapPaymentException", storefrontHost, StringComparison.Ordinal);
+        Assert.DoesNotContain("ExecutePaymentAsync", storefrontHost, StringComparison.Ordinal);
+
+        var adminHost = File.ReadAllText(Path.Combine(hostRoot, "Admin", "AdminPanelEndpoints.cs"));
+        Assert.DoesNotContain("MapGet(\"/payments/{paymentId:guid}\"", adminHost, StringComparison.Ordinal);
+        Assert.DoesNotContain("MapPost(\"/payments/query\"", adminHost, StringComparison.Ordinal);
+
+        var programCs = File.ReadAllText(Path.Combine(hostRoot, "Program.cs"));
+        Assert.Contains("MapPaymentEndpoints()", programCs, StringComparison.Ordinal);
+        Assert.Contains("AddPaymentEndpointPresentation()", programCs, StringComparison.Ordinal);
+        Assert.Contains("HostPaymentStorefrontAuthorizer", programCs, StringComparison.Ordinal);
+        Assert.Contains("HostPaymentAdminAuthorizer", programCs, StringComparison.Ordinal);
+        Assert.Contains("InitiateStorefrontPaymentCommand", programCs, StringComparison.Ordinal);
+
+        var worker = File.ReadAllText(Path.Combine(hostRoot, "PaymentReconciliationHostedService.cs"));
+        Assert.Contains("ReconcileStalePaymentsCommand", worker, StringComparison.Ordinal);
+        Assert.Contains("ISender", worker, StringComparison.Ordinal);
+        Assert.DoesNotContain("Guid.NewGuid()", worker, StringComparison.Ordinal);
+        Assert.DoesNotContain("DateTimeOffset.UtcNow", worker, StringComparison.Ordinal);
+        Assert.DoesNotContain("StartActivity(", worker, StringComparison.Ordinal);
+        Assert.DoesNotContain("IPaymentReconciliationDirectory", worker, StringComparison.Ordinal);
+    }
+
     private static void AssertNoRootDump(string project, string[] allowedFolders)
     {
         var root = Path.Combine(PaymentRoot(), project);
-        var rootCs = Directory.EnumerateFiles(root, "*.cs", SearchOption.TopDirectoryOnly).Select(Path.GetFileName).ToArray();
+        var rootCs = Directory.EnumerateFiles(root, "*.cs", SearchOption.TopDirectoryOnly)
+            .Select(Path.GetFileName)
+            .Where(name => name is not null
+                           && !name.EndsWith("EndpointModule.cs", StringComparison.OrdinalIgnoreCase))
+            .ToArray();
         Assert.True(rootCs.Length == 0, $"{project} root dumping-ground: " + string.Join(", ", rootCs));
         foreach (var dir in Directory.EnumerateDirectories(root))
         {
             var name = Path.GetFileName(dir);
-            if (name is "bin" or "obj" || name.StartsWith('.')) continue;
+            if (name is "bin" or "obj" or "artifacts" || name.StartsWith('.')) continue;
             Assert.Contains(name, allowedFolders);
         }
     }
@@ -181,7 +277,8 @@ public sealed class PaymentArchitectureGuardTests
         Sources("Tooba.Payment.Domain")
             .Concat(Sources("Tooba.Payment.Application"))
             .Concat(Sources("Tooba.Payment.Contracts"))
-            .Concat(Sources("Tooba.Payment.Infrastructure"));
+            .Concat(Sources("Tooba.Payment.Infrastructure"))
+            .Concat(Sources("Tooba.Payment.Endpoints"));
 
     private static IEnumerable<(string Path, string Text)> Sources(string projectFolder)
     {

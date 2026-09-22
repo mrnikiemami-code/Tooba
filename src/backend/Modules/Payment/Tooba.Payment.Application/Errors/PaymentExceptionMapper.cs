@@ -4,17 +4,18 @@ using Tooba.BuildingBlocks.Results;
 namespace Tooba.Payment.Application.Errors;
 
 /// <summary>
-/// Exact machine-code Payment exception mapping only — no Contains/StartsWith prose heuristics.
+/// Maps known Payment directory/domain stable machine codes to SemanticError.
+/// Exact message match only — no Contains, no StartsWith prose heuristics; unknowns rethrow.
 /// </summary>
 public static class PaymentExceptionMapper
 {
     private static readonly HashSet<string> KnownCodes = new(StringComparer.Ordinal)
     {
+        PaymentErrorCodes.AlreadySucceeded,
         PaymentErrorCodes.Missing,
-        PaymentErrorCodes.Rejected,
+        PaymentErrorCodes.AttemptMissing,
         PaymentErrorCodes.AccessDenied,
         PaymentErrorCodes.GuestInvalid,
-        PaymentErrorCodes.AlreadySucceeded,
         PaymentErrorCodes.WalletMixedDeferred,
         PaymentErrorCodes.MethodUnavailable,
         PaymentErrorCodes.TrackingRequired,
@@ -23,33 +24,39 @@ public static class PaymentExceptionMapper
         PaymentErrorCodes.SandboxUnavailable,
         PaymentErrorCodes.UnpaidSupplyUnavailable,
         PaymentErrorCodes.UnpaidRetryInvalid,
-        PaymentErrorCodes.WebhookUnauthorized,
+        PaymentErrorCodes.ReservationRetryLimit,
+        PaymentErrorCodes.Rejected,
+        PaymentErrorCodes.WebhookInvalidSignature,
         PaymentErrorCodes.WebhookInvalidPayload,
         PaymentErrorCodes.WebhookAmountMismatch,
         PaymentErrorCodes.WebhookAttemptMismatch,
         PaymentErrorCodes.WebhookProviderMismatch,
-        PaymentErrorCodes.WebhookRejected,
-        "payment.webhook.signature_invalid",
-        "payment.webhook.signature_missing",
-        "payment.already_paid",
-        "payment.status_invalid",
-        "payment.provider_invalid",
-        "payment.amount_invalid",
-        "payment.currency_invalid",
-        "payment.idempotency_invalid",
-        "payment.attempt_missing",
-        "payment.method_invalid",
-        "payment.manual_evidence_invalid",
-        "payment.reconcile_rejected",
-        "payment.deposit_confirm_rejected",
-        "payment.deposit_reject_rejected",
+        PaymentErrorCodes.GatewayUnconfigured,
+        PaymentErrorCodes.AdminPaymentMissing,
+        PaymentErrorCodes.MethodNotManual,
+        PaymentErrorCodes.ConfirmInvalidState,
+        PaymentErrorCodes.RejectInvalidState,
+        PaymentErrorCodes.CheckoutAuthenticationRequired,
+        "payment.not_found",
+        "payment.tracking_reference.required",
+        "payment.unpaid.retry.invalid_state",
+        "inventory.supply.unavailable",
+    };
+
+    private static readonly Dictionary<string, string> PublicAliases = new(StringComparer.Ordinal)
+    {
+        ["payment.not_found"] = PaymentErrorCodes.Missing,
+        ["payment.tracking_reference.required"] = PaymentErrorCodes.TrackingRequired,
+        ["payment.unpaid.retry.invalid_state"] = PaymentErrorCodes.UnpaidRetryInvalid,
+        ["inventory.supply.unavailable"] = PaymentErrorCodes.UnpaidSupplyUnavailable,
     };
 
     public static bool TryMapExact(string? message, out SemanticError error)
     {
         if (message is not null && KnownCodes.Contains(message))
         {
-            error = new SemanticError(message);
+            var code = PublicAliases.TryGetValue(message, out var alias) ? alias : message;
+            error = new SemanticError(code);
             return true;
         }
 
@@ -69,34 +76,27 @@ public static class PaymentExceptionMapper
         return false;
     }
 
-    public static async Task<Result<T>> TryAsync<T>(Func<Task<T>> action, string? publicErrorCode = null)
+    public static async Task<Result<T>> TryAsync<T>(Func<Task<T>> action)
     {
         try
         {
             return Result.Success(await action());
         }
-        catch (InvalidOperationException ex) when (
-            publicErrorCode is null
-                ? TryMapExact(ex.Message, out var mapped)
-                : TryMapExact(ex.Message, publicErrorCode, out mapped))
+        catch (InvalidOperationException ex) when (TryMapExact(ex.Message, out var mapped))
         {
             return Result.Failure<T>(mapped);
         }
     }
 
-    public static async Task<Result> TryAsync(Func<Task> action, string? publicErrorCode = null)
+    public static async Task<Result<T>> TryAsync<T>(Func<Task<T>> action, string publicErrorCode)
     {
         try
         {
-            await action();
-            return Result.Success();
+            return Result.Success(await action());
         }
-        catch (InvalidOperationException ex) when (
-            publicErrorCode is null
-                ? TryMapExact(ex.Message, out var mapped)
-                : TryMapExact(ex.Message, publicErrorCode, out mapped))
+        catch (InvalidOperationException ex) when (TryMapExact(ex.Message, publicErrorCode, out var mapped))
         {
-            return Result.Failure(mapped);
+            return Result.Failure<T>(mapped);
         }
     }
 }

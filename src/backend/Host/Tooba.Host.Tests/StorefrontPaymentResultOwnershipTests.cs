@@ -1,4 +1,4 @@
-using Xunit;
+﻿using Xunit;
 
 namespace Tooba.Host.Tests;
 
@@ -13,7 +13,7 @@ public sealed class StorefrontPaymentResultOwnershipTests
         var root = FindRepoRoot();
         var payment = File.ReadAllText(Path.Combine(
             root,
-            "src", "backend", "Host", "Tooba.Host", "Storefront", "StorefrontPaymentComposer.cs"));
+            "src", "backend", "Host", "Tooba.Host", "Modules", "Payment", "Tooba.Payment.Application", "Models", "StorefrontPaymentOrchestrator.cs"));
         var checkout = File.ReadAllText(Path.Combine(
             root,
             "src", "backend", "Host", "Tooba.Host", "Storefront", "StorefrontCheckoutComposer.cs"));

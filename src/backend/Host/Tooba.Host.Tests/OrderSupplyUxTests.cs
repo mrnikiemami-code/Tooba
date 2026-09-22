@@ -1,4 +1,4 @@
-using System.IO;
+﻿using System.IO;
 using Xunit;
 
 namespace Tooba.Host.Tests;
@@ -16,7 +16,7 @@ public sealed class OrderSupplyUxTests
         var orders = Host(Path.Combine("Grid", "AdminOrdersGridQueryEngine.cs"));
         Assert.Contains("GetStatusesAsync", orders, StringComparison.Ordinal);
         Assert.DoesNotContain("GetStatusAsync(r.CheckoutId", orders, StringComparison.Ordinal);
-        var payments = Host(Path.Combine("Grid", "AdminPaymentsGridQueryEngine.cs"));
+        var payments = Host(Path.Combine("..", "..", "Modules", "Payment", "Tooba.Payment.Application", "Queries", "QueryAdminPaymentsGrid", "QueryAdminPaymentsGridQuery.cs"));
         Assert.Contains("GetStatusesAsync", payments, StringComparison.Ordinal);
         Assert.Contains("GetProjectionsAsync", orders, StringComparison.Ordinal);
         Assert.Contains("GetProjectionsAsync", payments, StringComparison.Ordinal);

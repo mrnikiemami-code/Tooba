@@ -24,7 +24,7 @@ using Tooba.Host.Seller;
 using Tooba.Returns.Endpoints;
 using Tooba.Notification.Endpoints;
 using Tooba.Host.AccessControl;
-using Tooba.Host.Payments;
+using Tooba.Payment.Endpoints;
 using Tooba.Host.Storefront;
 using Tooba.Host.Reviews;
 using Tooba.Host.ProductQnA;
@@ -76,6 +76,7 @@ builder.Services.AddCartEndpointPresentation();
 builder.Services.AddNotificationEndpointPresentation();
 builder.Services.AddSupportEndpointPresentation();
 builder.Services.AddWalletEndpointPresentation();
+builder.Services.AddPaymentEndpointPresentation();
 builder.Services.AddPricingEndpointPresentation();
 builder.Services.AddProblemDetails();
 builder.Services.AddSingleton<IExceptionPresentationService, ExceptionPresentationService>();
@@ -142,7 +143,8 @@ builder.Services.AddToobaCqrsFoundation(
     typeof(Tooba.Returns.Application.Commands.CreateReturn.CreateReturnCommand).Assembly,
     typeof(Tooba.Notification.Application.Commands.MarkCustomerNotificationRead.MarkCustomerNotificationReadCommand).Assembly,
     typeof(Tooba.Support.Application.Commands.CreateCustomerTicket.CreateCustomerTicketCommand).Assembly,
-    typeof(Tooba.Wallet.Application.Commands.RedeemCustomerGiftCard.RedeemCustomerGiftCardCommand).Assembly);
+    typeof(Tooba.Wallet.Application.Commands.RedeemCustomerGiftCard.RedeemCustomerGiftCardCommand).Assembly,
+    typeof(Tooba.Payment.Application.Commands.InitiateStorefrontPayment.InitiateStorefrontPaymentCommand).Assembly);
 builder.Services.AddScoped<Tooba.Catalog.Application.IStoreLandingExternalReferenceGate, Tooba.Host.Admin.MerchandisingStoreLandingReferenceGate>();
 builder.Services.AddScoped<Tooba.Catalog.Application.IUnitOfMeasureLanguageGate, Tooba.Host.Admin.HostUnitOfMeasureLanguageGate>();
 builder.Services.AddToobaModules(builder.Configuration, builder.Environment);
@@ -222,20 +224,17 @@ builder.Services.AddScoped<Tooba.Host.Storefront.StorefrontPendingPaymentCompose
         sp.GetRequiredService<CurrentAuthenticatedSession>(),
         sp.GetRequiredService<IHostEnvironment>(),
         sp.GetRequiredService<IHttpContextAccessor>()));
-builder.Services.AddScoped<Tooba.Host.Storefront.StorefrontPaymentComposer>(sp =>
-    new Tooba.Host.Storefront.StorefrontPaymentComposer(
-        sp.GetRequiredService<StorefrontCheckoutComposer>(),
-        sp.GetRequiredService<Tooba.Payment.Application.Ports.IPaymentDirectory>(),
-        sp.GetRequiredService<Tooba.Payment.Application.Ports.IOrderPaymentProjection>(),
-        sp.GetRequiredService<Tooba.Wallet.Application.Ports.IWalletDirectory>(),
-        sp.GetRequiredService<Microsoft.Extensions.Options.IOptions<Tooba.Payment.Infrastructure.Providers.PaymentGatewayOptions>>(),
-        sp.GetRequiredService<CurrentAuthenticatedSession>(),
-        sp.GetRequiredService<IHostEnvironment>(),
-        sp.GetRequiredService<Tooba.Media.Application.IMediaDirectory>(),
-        sp.GetRequiredService<Microsoft.Extensions.Logging.ILogger<Tooba.Host.Storefront.StorefrontPaymentComposer>>(),
+builder.Services.AddScoped<Tooba.Payment.Application.Models.StorefrontPaymentOrchestrator>();
+builder.Services.AddScoped<Tooba.Payment.Application.Ports.IStorefrontCheckoutPaymentAccessPort, Tooba.Host.Storefront.HostStorefrontCheckoutPaymentAccessAdapter>();
+builder.Services.AddScoped<Tooba.Payment.Application.Ports.IPaymentProofMediaPort, Tooba.Host.Storefront.HostPaymentProofMediaAdapter>();
+builder.Services.AddScoped<Tooba.Payment.Application.Ports.IPaymentUnpaidRetrySupplyPort>(sp =>
+    new Tooba.Host.Storefront.HostPaymentUnpaidRetrySupplyAdapter(
         sp.GetRequiredService<Tooba.Host.Admin.OrderSupplyComposer>(),
-        sp.GetRequiredService<Tooba.Payment.Application.Ports.IPaymentExpiryDirectory>(),
         sp.GetRequiredService<ReservationCycleCoordinator>()));
+builder.Services.AddScoped<Tooba.Payment.Application.Ports.IPaymentAdminOrderEnrichmentPort, Tooba.Host.Admin.HostPaymentAdminOrderEnrichmentAdapter>();
+builder.Services.AddScoped<Tooba.Payment.Endpoints.Storefront.IPaymentStorefrontAuthorizer, Tooba.Host.Storefront.HostPaymentStorefrontAuthorizer>();
+builder.Services.AddScoped<Tooba.Payment.Endpoints.Admin.IPaymentAdminAuthorizer, Tooba.Host.Admin.HostPaymentAdminAuthorizer>();
+builder.Services.AddScoped<Tooba.Payment.Endpoints.Admin.IPaymentAdminGridQueryNormalizer, Tooba.Host.Admin.HostPaymentAdminGridQueryNormalizer>();
 builder.Services.AddScoped<Tooba.Host.Seller.SellerPanelComposer>();
 builder.Services.AddScoped<Tooba.Offer.Endpoints.Seller.IOfferSellerAuthorizer, Tooba.Host.Seller.HostOfferSellerAuthorizer>();
 builder.Services.AddScoped<Tooba.Settlement.Endpoints.Seller.ISettlementSellerAuthorizer, Tooba.Host.Seller.HostSettlementSellerAuthorizer>();
@@ -534,7 +533,7 @@ app.MapAdminOrderOperationsEndpoints();
 app.MapAdminOrderCompletenessEndpoints();
 app.MapStorefrontEndpoints();
 app.MapCartEndpoints();
-app.MapPaymentWebhookEndpoints();
+app.MapPaymentEndpoints();
 app.MapSellerPanelEndpoints();
 app.MapOfferModule();
 app.MapTaxModule();

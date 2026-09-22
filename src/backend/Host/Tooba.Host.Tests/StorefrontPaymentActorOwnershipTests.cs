@@ -1,4 +1,4 @@
-using Xunit;
+﻿using Xunit;
 
 namespace Tooba.Host.Tests;
 
@@ -13,7 +13,7 @@ public sealed class StorefrontPaymentActorOwnershipTests
         var root = FindRepoRoot();
         var src = File.ReadAllText(Path.Combine(
             root,
-            "src", "backend", "Host", "Tooba.Host", "Storefront", "StorefrontPaymentComposer.cs"));
+            "src", "backend", "Host", "Tooba.Host", "Modules", "Payment", "Tooba.Payment.Application", "Models", "StorefrontPaymentOrchestrator.cs"));
         Assert.Contains("ResolvePaymentActor", src, StringComparison.Ordinal);
         Assert.Contains("CurrentAuthenticatedSession", src, StringComparison.Ordinal);
         Assert.Contains("_session.IsAuthenticated", src, StringComparison.Ordinal);

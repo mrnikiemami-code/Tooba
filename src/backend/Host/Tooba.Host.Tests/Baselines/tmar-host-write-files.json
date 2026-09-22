@@ -1,4 +1,4 @@
-{
+﻿{
   "rule": "HostWrite",
   "files": [
     "AddressBook/AddressBookDevelopmentSeed.cs",
@@ -29,7 +29,6 @@
     "Grid/AdminCustomersGridQueryEngine.cs",
     "Grid/AdminFulfillmentWorkQueueQueryEngine.cs",
     "Grid/AdminOrdersGridQueryEngine.cs",
-    "Grid/AdminPaymentsGridQueryEngine.cs",
     "Grid/AdminPayoutGridQueryEngine.cs",
     "Grid/AdminProductGridQueryEngine.cs",
     "Grid/AdminReturnGridQueryEngine.cs",

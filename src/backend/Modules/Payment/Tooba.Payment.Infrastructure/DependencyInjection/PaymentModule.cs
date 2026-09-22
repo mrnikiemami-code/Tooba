@@ -43,9 +43,13 @@ public sealed class PaymentModule : IToobaModule
         services.AddScoped<IPaymentExpiryDirectory>(sp => (PaymentDirectory)sp.GetRequiredService<IPaymentDirectory>());
         services.AddScoped<IPaymentSettlementReader, PaymentSettlementBridge>();
         services.AddScoped<IPaymentWebhookHandler, PaymentWebhookHandler>();
+        services.AddScoped<IPaymentWebhookSignatureVerifier, PaymentWebhookSignatureVerifierAdapter>();
+        services.AddScoped<IPaymentGatewayCatalogPort, PaymentGatewayCatalogAdapter>();
         services.AddScoped<IPaymentHoldSettingsDirectory, PaymentHoldSettingsDirectory>();
         services.AddScoped<IPaymentQueryDirectory, PaymentQueryDirectory>();
         services.AddScoped<IPaymentReturnReader, PaymentReturnBridge>();
+        services.AddScoped<IPaymentGatewayCatalogPort, PaymentGatewayCatalogAdapter>();
+        services.AddScoped<IPaymentWebhookSignatureVerifier, PaymentWebhookSignatureVerifierAdapter>();
 
         if (environment.IsProduction())
         {

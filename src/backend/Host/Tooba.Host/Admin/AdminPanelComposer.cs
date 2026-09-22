@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Tooba.BuildingBlocks.Grid;
 using Tooba.Catalog.Domain;
 using Tooba.Catalog.Infrastructure.Persistence;
@@ -44,7 +44,6 @@ public sealed class AdminPanelComposer
     private readonly AdminOrdersGridQueryEngine _ordersGrid;
     private readonly AdminSellersGridQueryEngine _sellersGrid;
     private readonly AdminCustomersGridQueryEngine _customersGrid;
-    private readonly AdminPaymentsGridQueryEngine _paymentsGrid;
 
     /// <summary>
     /// ترکیب‌گر Host را با contextهای مستقل ماژول‌ها می‌سازد.
@@ -54,7 +53,6 @@ public sealed class AdminPanelComposer
         IOfferQueryGateway offers,
         OrderDbContext orders,
         PartyDbContext parties,
-        IPaymentQueryDirectory paymentQueries,
         IPaymentAdminDirectory payments,
         ISettlementDirectory settlement,
         IFulfillmentDirectory fulfillment,
@@ -75,7 +73,6 @@ public sealed class AdminPanelComposer
         _ordersGrid = new AdminOrdersGridQueryEngine(orders, parties, returns, supply, cycles);
         _sellersGrid = new AdminSellersGridQueryEngine(offers, parties, orders);
         _customersGrid = new AdminCustomersGridQueryEngine(orders);
-        _paymentsGrid = new AdminPaymentsGridQueryEngine(paymentQueries, orders, supply, cycles);
     }
 
     /// <summary>
@@ -439,17 +436,7 @@ public sealed class AdminPanelComposer
         var q = AdminListGridPolicies.Customers.Normalize(request);
         return _customersGrid.QueryAsync(q, cancellationToken);
     }
-
-    /// <summary>صفحه‌بندی server-side گرید دریافت‌های Admin (DB-native).</summary>
-    public Task<GridPageResponse<AdminReceiptListItem>> QueryPaymentsGridAsync(
-        GridQueryRequest request,
-        CancellationToken cancellationToken)
-    {
-        var q = AdminListGridPolicies.Payments.Normalize(request);
-        return _paymentsGrid.QueryAsync(q, cancellationToken);
-    }
-
-    private async Task<IReadOnlyList<CheckoutGroup>> LoadOrderGroupsAsync(CancellationToken cancellationToken) =>
+private async Task<IReadOnlyList<CheckoutGroup>> LoadOrderGroupsAsync(CancellationToken cancellationToken) =>
         await _orders.Checkouts.AsNoTracking()
             .Include(x => x.SellerOrders)
             .ThenInclude(x => x.Lines)

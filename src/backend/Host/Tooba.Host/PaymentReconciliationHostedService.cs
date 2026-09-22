@@ -1,18 +1,15 @@
+using MediatR;
 using Microsoft.Extensions.Options;
 using Tooba.BuildingBlocks;
+using Tooba.Payment.Application.Commands.ReconcileStalePayments;
 using Tooba.Payment.Application.Models;
-using Tooba.Payment.Application.Ports;
-using Tooba.Payment.Infrastructure.Adapters;
-using Tooba.Payment.Infrastructure.DependencyInjection;
-using Tooba.Payment.Infrastructure.Directories;
-using Tooba.Payment.Infrastructure.Messaging;
 using Tooba.Payment.Infrastructure.Providers;
 using Tooba.Persistence;
 
 namespace Tooba.Host;
 
 /// <summary>
-/// کارگر reconciliation: پرداخت‌های Pending قدیمی را Verify می‌کند؛ callback گم‌شده جبران می‌شود.
+/// Scheduler-only payment reconciliation worker: tenant scope + ISender dispatch.
 /// </summary>
 internal sealed class PaymentReconciliationHostedService : BackgroundService
 {
@@ -101,16 +98,17 @@ internal sealed class PaymentReconciliationHostedService : BackgroundService
             {
                 await using var scope = _scopes.CreateAsyncScope();
                 var assigner = scope.ServiceProvider.GetRequiredService<ICommerceContextAssigner>();
-                assigner.Assign(_workerContext.FromPollTarget(target, Guid.NewGuid().ToString("N")));
-                var reconciliation = scope.ServiceProvider.GetRequiredService<IPaymentReconciliationDirectory>();
-                using var activity = ToobaTelemetry.ActivitySource.StartActivity("tooba.payment.reconcile");
-                activity?.SetTag("tooba.tenant_id", target.TenantId ?? string.Empty);
-                var processed = await reconciliation.ReconcileStalePendingAsync(
-                    DateTimeOffset.UtcNow,
-                    TimeSpan.FromMinutes(Math.Max(1, _options.PendingAgeMinutes)),
-                    _options.BatchSize,
+                var ids = scope.ServiceProvider.GetRequiredService<IIdGenerator>();
+                assigner.Assign(_workerContext.FromPollTarget(target, ids.NewId().ToString("N")));
+                var sender = scope.ServiceProvider.GetRequiredService<ISender>();
+                var result = await sender.Send(
+                    new ReconcileStalePaymentsCommand(
+                        TimeSpan.FromMinutes(Math.Max(1, _options.PendingAgeMinutes)),
+                        _options.BatchSize),
                     cancellationToken).ConfigureAwait(false);
-                total += processed;
+                if (result.IsFailure)
+                    throw new InvalidOperationException(result.Errors[0].Code);
+                total += result.Value;
             }
             catch (Exception ex)
             {

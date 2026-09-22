@@ -1,4 +1,4 @@
-using Tooba.Host.Admin;
+﻿using Tooba.Host.Admin;
 using Tooba.Inventory.Application.Ports;
 using Tooba.Inventory.Application.Checkout;
 using Tooba.Inventory.Application.Orders;
@@ -122,7 +122,7 @@ public sealed class AdminReservationCycleAuditTests
         Assert.Contains("ListEventsAsync", composer, StringComparison.Ordinal);
         Assert.Contains("ToAudit", composer, StringComparison.Ordinal);
         var orders = File.ReadAllText(Host("Grid/AdminOrdersGridQueryEngine.cs"));
-        var payments = File.ReadAllText(Host("Grid/AdminPaymentsGridQueryEngine.cs"));
+        var payments = File.ReadAllText(Host("Modules/Payment/Tooba.Payment.Application/Queries/QueryAdminPaymentsGrid/QueryAdminPaymentsGridQuery.cs"));
         Assert.Contains("GetProjectionsAsync", orders, StringComparison.Ordinal);
         Assert.Contains("GetProjectionsAsync", payments, StringComparison.Ordinal);
         Assert.DoesNotContain("GetProjectionAsync(", orders, StringComparison.Ordinal);
