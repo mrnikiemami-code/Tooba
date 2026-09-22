@@ -102,7 +102,7 @@ public sealed class TmarDurableGuardTests
         using var doc = JsonDocument.Parse(File.ReadAllText(statePath));
         var rootEl = doc.RootElement;
         Assert.Equal("BACKEND_ONLY_UNTIL_EXPLICIT_RELEASE", rootEl.GetProperty("executionMode").GetString());
-        Assert.Equal("TB-TMAR-PROMOTION-GOLDEN-001", rootEl.GetProperty("nextTask").GetString());
+        Assert.Equal("TB-TMAR-OFFER-FINAL-REVERIFY-001", rootEl.GetProperty("nextTask").GetString());
         Assert.Equal("ARCH-COMPLETE-001", rootEl.GetProperty("locksVersion").GetString());
 
         var complete = rootEl.GetProperty("completeReferenceModules")
@@ -111,7 +111,7 @@ public sealed class TmarDurableGuardTests
             .OrderBy(x => x, StringComparer.Ordinal)
             .ToArray();
         Assert.Equal(
-            new[] { "Cart", "Fulfillment", "Notification", "Payment", "Returns", "Settlement", "Support", "Wallet" },
+            new[] { "Cart", "Fulfillment", "Notification", "Payment", "Promotion", "Returns", "Settlement", "Support", "Wallet" },
             complete);
 
         var remaining = rootEl.GetProperty("reopenedModules")
@@ -121,7 +121,6 @@ public sealed class TmarDurableGuardTests
                 Module: x.GetProperty("module").GetString()!,
                 State: x.GetProperty("state").GetString()!))
             .ToDictionary(x => x.Module, x => x.State, StringComparer.Ordinal);
-        Assert.Equal("REOPENED_ENDPOINT_CQRS_OWNERSHIP", remaining["Promotion"]);
         Assert.Equal("NEEDS_FINAL_REVERIFY", remaining["Offer"]);
         Assert.Equal("NEEDS_APPLICABILITY_REVERIFY", remaining["Inventory"]);
 

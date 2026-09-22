@@ -203,7 +203,7 @@ COMPLETE_REFERENCE_PATTERN (HTTP-owning, module Endpoints + MediatR):
 - Payment — TB-TMAR-PAYMENT-GOLDEN-001-R2 — f73b04f516a915f7f182be94d7c6829c86d2de9f
 
 Remaining:
-- Promotion — REOPENED_ENDPOINT_CQRS_OWNERSHIP
+- Promotion — COMPLETE_REFERENCE_PATTERN (TB-TMAR-PROMOTION-GOLDEN-001; implementation 431ca6d21b21fa3af0972a1dafa0c85003abe662)
 - Offer — NEEDS_FINAL_REVERIFY (Endpoints exists)
 - Inventory — NEEDS_APPLICABILITY_REVERIFY (may be internal-only)
 

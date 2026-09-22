@@ -26,12 +26,12 @@ Accepted architecture baseline:
 TB-TMAR-ARCH-BASELINE
 
 Current next task:
-TB-TMAR-PROMOTION-GOLDEN-001
+TB-TMAR-OFFER-FINAL-REVERIFY-001
 
 Current recovery state (authoritative — TB-TMAR-PAYMENT-GOLDEN-001-R2 — f73b04f516a915f7f182be94d7c6829c86d2de9f):
-COMPLETE HTTP-owning: Cart, Settlement, Fulfillment, Returns, Notification, Support, Wallet, Payment.
+COMPLETE HTTP-owning: Cart, Settlement, Fulfillment, Returns, Notification, Support, Wallet, Payment, Promotion.
 Payment COMPLETE_REFERENCE_PATTERN.
-Remaining: Promotion REOPENED_ENDPOINT_CQRS_OWNERSHIP; Offer NEEDS_FINAL_REVERIFY; Inventory NEEDS_APPLICABILITY_REVERIFY.
+Promotion COMPLETE_REFERENCE_PATTERN. Remaining: Offer NEEDS_FINAL_REVERIFY; Inventory NEEDS_APPLICABILITY_REVERIFY.
 Checkout PAUSED_AT_SAFE_W5_CHECKPOINT. Tax/Pricing UNTOUCHED in this wave. Frontend BACKEND_ONLY_UNTIL_EXPLICIT_RELEASE.
 Machine-readable: docs/architecture/tmar-current-state.json
 
@@ -506,7 +506,7 @@ refbatch-tp-001 = TB-TMAR-REFBATCH-TP-001 REFERENCE_BATCH_COMPLETE (architecture
 fnd-result-001-r1 = TB-TMAR-FND-RESULT-001-R1 RESULT_PATTERN_FOUNDATION_COMPLETE; Offer COMPLETE_REFERENCE_PATTERN with Result/ApiResponseFactory
 refbatch-tp-result-001 = TB-TMAR-REFBATCH-TP-RESULT-001 REFERENCE_RESULT_DELTA_COMPLETE; Tax/Pricing COMPLETE_REFERENCE_PATTERN vs Result Golden
 next-module-batch-001 = TB-TMAR-NEXT-MODULE-BATCH-001 NEXT_REFERENCE_BATCH_COMPLETE; Inventory/Promotion historically COMPLETE — SUPERSEDED by ARCH-COMPLETE-001 reopen statuses (HISTORICAL)
-next task = TB-TMAR-PROMOTION-GOLDEN-001; Payment COMPLETE_REFERENCE_PATTERN; Checkout remains PAUSED_AT_SAFE_W5_CHECKPOINT; Frontend frozen
+next task = TB-TMAR-OFFER-FINAL-REVERIFY-001; Promotion COMPLETE_REFERENCE_PATTERN; Checkout remains PAUSED_AT_SAFE_W5_CHECKPOINT; Frontend frozen
 recovery-lock-harden-001 = TB-TMAR-RECOVERY-LOCK-HARDEN-001 ARCH-COMPLETE-001 + durable multi-module Host endpoint guard + tmar-current-state.json
 
 primary goal = painless future Microservice migration

@@ -1,0 +1,57 @@
+﻿# Promotion physical tree
+
+| Path | Namespace | Responsibility |
+|---|---|---|
+| src/backend/Modules/Promotion/Tooba.Promotion.Application/Checkout/CheckoutPromotionAdapter.cs | Tooba.Promotion.Application.Checkout | Production Promotion component |
+| src/backend/Modules/Promotion/Tooba.Promotion.Application/Commands/ActivateSellerPromotion/ActivateSellerPromotionCommand.cs | Tooba.Promotion.Application.Commands.ActivateSellerPromotion | Production Promotion component |
+| src/backend/Modules/Promotion/Tooba.Promotion.Application/Commands/CreateSellerPromotion/CreateSellerPromotionCommand.cs | Tooba.Promotion.Application.Commands.CreateSellerPromotion | Production Promotion component |
+| src/backend/Modules/Promotion/Tooba.Promotion.Application/Commands/DeactivateAdminPromotion/DeactivateAdminPromotionCommand.cs | Tooba.Promotion.Application.Commands.DeactivateAdminPromotion | Production Promotion component |
+| src/backend/Modules/Promotion/Tooba.Promotion.Application/Commands/DeactivateSellerPromotion/DeactivateSellerPromotionCommand.cs | Tooba.Promotion.Application.Commands.DeactivateSellerPromotion | Production Promotion component |
+| src/backend/Modules/Promotion/Tooba.Promotion.Application/Commands/UpdateSellerPromotion/UpdateSellerPromotionCommand.cs | Tooba.Promotion.Application.Commands.UpdateSellerPromotion | Production Promotion component |
+| src/backend/Modules/Promotion/Tooba.Promotion.Application/Errors/PromotionErrors.cs | Tooba.Promotion.Application.Errors | Production Promotion component |
+| src/backend/Modules/Promotion/Tooba.Promotion.Application/Merchandising/MerchandisingCampaignPorts.cs | Tooba.Promotion.Application.Merchandising | Production Promotion component |
+| src/backend/Modules/Promotion/Tooba.Promotion.Application/Merchandising/MerchandisingCampaignRuntimePorts.cs | Tooba.Promotion.Application.Merchandising | Production Promotion component |
+| src/backend/Modules/Promotion/Tooba.Promotion.Application/Models/PromotionMutationInput.cs | Tooba.Promotion.Application.Models | Production Promotion component |
+| src/backend/Modules/Promotion/Tooba.Promotion.Application/Ports/PromotionDirectoryPorts.cs | Tooba.Promotion.Application.Ports | Production Promotion component |
+| src/backend/Modules/Promotion/Tooba.Promotion.Application/Queries/GetAdminPromotion/GetAdminPromotionQuery.cs | Tooba.Promotion.Application.Queries.GetAdminPromotion | Production Promotion component |
+| src/backend/Modules/Promotion/Tooba.Promotion.Application/Queries/GetSellerPromotion/GetSellerPromotionQuery.cs | Tooba.Promotion.Application.Queries.GetSellerPromotion | Production Promotion component |
+| src/backend/Modules/Promotion/Tooba.Promotion.Application/Queries/ListAdminPromotions/ListAdminPromotionsQuery.cs | Tooba.Promotion.Application.Queries.ListAdminPromotions | Production Promotion component |
+| src/backend/Modules/Promotion/Tooba.Promotion.Application/Queries/ListSellerPromotions/ListSellerPromotionsQuery.cs | Tooba.Promotion.Application.Queries.ListSellerPromotions | Production Promotion component |
+| src/backend/Modules/Promotion/Tooba.Promotion.Contracts/Checkout/CheckoutPromotionContracts.cs | Tooba.Promotion.Contracts.Checkout | Production Promotion component |
+| src/backend/Modules/Promotion/Tooba.Promotion.Contracts/Merchandising/IPromotionSchemaMigrator.cs | Tooba.Promotion.Contracts.Merchandising | Production Promotion component |
+| src/backend/Modules/Promotion/Tooba.Promotion.Domain/Aggregates/PromotionDefinition.cs | Tooba.Promotion.Domain.Aggregates | Production Promotion component |
+| src/backend/Modules/Promotion/Tooba.Promotion.Domain/Events/PromotionActivatedDomainEvent.cs | Tooba.Promotion.Domain.Events | Production Promotion component |
+| src/backend/Modules/Promotion/Tooba.Promotion.Domain/Events/PromotionChangedDomainEvent.cs | Tooba.Promotion.Domain.Events | Production Promotion component |
+| src/backend/Modules/Promotion/Tooba.Promotion.Domain/Events/PromotionCreatedDomainEvent.cs | Tooba.Promotion.Domain.Events | Production Promotion component |
+| src/backend/Modules/Promotion/Tooba.Promotion.Domain/Events/PromotionExpiredDomainEvent.cs | Tooba.Promotion.Domain.Events | Production Promotion component |
+| src/backend/Modules/Promotion/Tooba.Promotion.Domain/Merchandising/IMerchandisingCampaignPromoPrice.cs | Tooba.Promotion.Domain.Merchandising | Production Promotion component |
+| src/backend/Modules/Promotion/Tooba.Promotion.Domain/Merchandising/MerchandisingCampaign.cs | Tooba.Promotion.Domain.Merchandising | Production Promotion component |
+| src/backend/Modules/Promotion/Tooba.Promotion.Domain/Merchandising/MerchandisingCampaignLifecycleStatus.cs | Tooba.Promotion.Domain.Merchandising | Production Promotion component |
+| src/backend/Modules/Promotion/Tooba.Promotion.Domain/Merchandising/MerchandisingCampaignOffer.cs | Tooba.Promotion.Domain.Merchandising | Production Promotion component |
+| src/backend/Modules/Promotion/Tooba.Promotion.Domain/Merchandising/MerchandisingCampaignTranslation.cs | Tooba.Promotion.Domain.Merchandising | Production Promotion component |
+| src/backend/Modules/Promotion/Tooba.Promotion.Domain/Merchandising/MerchandisingPromotionType.cs | Tooba.Promotion.Domain.Merchandising | Production Promotion component |
+| src/backend/Modules/Promotion/Tooba.Promotion.Domain/Merchandising/MerchandisingPromotionTypeTranslation.cs | Tooba.Promotion.Domain.Merchandising | Production Promotion component |
+| src/backend/Modules/Promotion/Tooba.Promotion.Domain/Policies/PromotionCouponNormalizer.cs | Tooba.Promotion.Domain.Policies | Production Promotion component |
+| src/backend/Modules/Promotion/Tooba.Promotion.Domain/Policies/PromotionRounding.cs | Tooba.Promotion.Domain.Policies | Production Promotion component |
+| src/backend/Modules/Promotion/Tooba.Promotion.Domain/ValueObjects/PromotionDiscountKind.cs | Tooba.Promotion.Domain.ValueObjects | Production Promotion component |
+| src/backend/Modules/Promotion/Tooba.Promotion.Domain/ValueObjects/PromotionEligibilityFacts.cs | Tooba.Promotion.Domain.ValueObjects | Production Promotion component |
+| src/backend/Modules/Promotion/Tooba.Promotion.Domain/ValueObjects/PromotionStackingPolicy.cs | Tooba.Promotion.Domain.ValueObjects | Production Promotion component |
+| src/backend/Modules/Promotion/Tooba.Promotion.Domain/ValueObjects/PromotionStatus.cs | Tooba.Promotion.Domain.ValueObjects | Production Promotion component |
+| src/backend/Modules/Promotion/Tooba.Promotion.Endpoints/PromotionEndpointModule.cs | Tooba.Promotion.Endpoints | Production Promotion component |
+| src/backend/Modules/Promotion/Tooba.Promotion.Endpoints/Admin/IPromotionAdminAuthorizer.cs | Tooba.Promotion.Endpoints.Admin | Production Promotion component |
+| src/backend/Modules/Promotion/Tooba.Promotion.Endpoints/Admin/PromotionAdminEndpoints.cs | Tooba.Promotion.Endpoints.Admin | Production Promotion component |
+| src/backend/Modules/Promotion/Tooba.Promotion.Endpoints/Errors/PromotionErrorCatalogContributor.cs | Tooba.Promotion.Endpoints.Errors | Production Promotion component |
+| src/backend/Modules/Promotion/Tooba.Promotion.Endpoints/Seller/IPromotionSellerAuthorizer.cs | Tooba.Promotion.Endpoints.Seller | Production Promotion component |
+| src/backend/Modules/Promotion/Tooba.Promotion.Endpoints/Seller/PromotionSellerEndpoints.cs | Tooba.Promotion.Endpoints.Seller | Production Promotion component |
+| src/backend/Modules/Promotion/Tooba.Promotion.Infrastructure/Adapters/CampaignCartPriceAuthority.cs | Tooba.Promotion.Infrastructure.Adapters | Production Promotion component |
+| src/backend/Modules/Promotion/Tooba.Promotion.Infrastructure/Adapters/PromotionModuleMigration.cs | Tooba.Promotion.Infrastructure.Adapters | Production Promotion component |
+| src/backend/Modules/Promotion/Tooba.Promotion.Infrastructure/Adapters/PromotionSchemaMigrator.cs | Tooba.Promotion.Infrastructure.Adapters | Production Promotion component |
+| src/backend/Modules/Promotion/Tooba.Promotion.Infrastructure/DependencyInjection/PromotionModule.cs | Tooba.Promotion.Infrastructure.DependencyInjection | Production Promotion component |
+| src/backend/Modules/Promotion/Tooba.Promotion.Infrastructure/Directories/MerchandisingCampaignDirectory.cs | Tooba.Promotion.Infrastructure.Directories | Production Promotion component |
+| src/backend/Modules/Promotion/Tooba.Promotion.Infrastructure/Directories/PromotionDirectory.cs | Tooba.Promotion.Infrastructure.Directories | Production Promotion component |
+| src/backend/Modules/Promotion/Tooba.Promotion.Infrastructure/Events/PromotionIntegrationEvents.cs | Tooba.Promotion.Infrastructure.Events | Production Promotion component |
+| src/backend/Modules/Promotion/Tooba.Promotion.Infrastructure/Messaging/PromotionOutboxRegistration.cs | Tooba.Promotion.Infrastructure.Messaging | Production Promotion component |
+| src/backend/Modules/Promotion/Tooba.Promotion.Infrastructure/Persistence/PromotionDbContext.cs | Tooba.Promotion.Infrastructure.Persistence | Production Promotion component |
+| src/backend/Modules/Promotion/Tooba.Promotion.Infrastructure/Queries/MerchandisingCampaignQuery.cs | Tooba.Promotion.Infrastructure.Queries | Production Promotion component |
+| src/backend/Modules/Promotion/Tooba.Promotion.Tests/Architecture/PromotionArchitectureGuardTests.cs | Tooba.Promotion.Tests.Architecture | Production Promotion component |
+| src/backend/Modules/Promotion/Tooba.Promotion.Tests/Behavior/PromotionCqrsNormalizationTests.cs | Tooba.Promotion.Tests.Behavior | Production Promotion component |
