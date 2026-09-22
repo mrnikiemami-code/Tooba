@@ -1,0 +1,35 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+BEGIN_TOOBA_WORKER_RESULT
+
+Task-ID: TB-TMAR-ORDER-GOLDEN-001-R6
+Parent-Task: TB-TMAR-ORDER-GOLDEN-001-R5-R1
+Status: PASS
+
+Summary: Moved Admin Order Detail GET /v1/admin/orders/{checkoutId} and AdminViewAck persistence from Host to Order CQRS. Order.Endpoints via ISender→GetAdminOrderDetailQuery→Result<AdminOrderDetailPage>. Host GetOrderAsync and detail DTOs removed. AdminViewAck uses IClock. Settlement detail via Contracts. R5/R5-R1/R4 Host removals preserved. SoT nextTask R7 not started.
+Admin-Detail-State: Order-owned AdminOrderDetailComposer + models under Admin/Detail
+AdminViewAck-State: Order.Infrastructure AdminOrderDetailCheckoutStore + CheckoutDirectory RecordAdminViewAsync on IClock
+Order-Endpoint-State: AdminOrderDetailEndpoints owns GET /orders/{checkoutId}
+Order-CQRS-State: GetAdminOrderDetailQuery real IRequestHandler
+Order-Host-DbAuthority: Host has no OrderDbContext for detail path
+Order-Foreign-Boundary: Settlement Contracts + existing Fulfillment/Payment/Catalog/Party Contracts seams; no foreign Application in Order.Application Detail
+Behavior-Parity: preserved (seller/catalog/fulfillment/packages/payment/settlement/returns/financials/AdminViewAck)
+Clock-State: IClock; no UtcNow on detail/AdminViewAck path
+Error-Semantics: Result/SemanticError + ApiResponseFactory; no message classification
+Architecture-Guard-Validation: OrderAdminOrderDetailArchitectureGuardTests + Order.Tests 71/71 PASS
+Focused-Validation: Host AdminPanel/detail/financial/durable 18 PASS
+Full-Validation: dotnet build src/backend/Tooba.slnx succeeded 0 errors
+Host-Removed-This-Task: AdminPanelEndpoints detail route; AdminPanelComposer.GetOrderAsync + detail helpers/DTOs
+Host-Still-Remaining-For-Order: Admin list leftover if any; ReservationCycleCoordinator; CustomerPanel/SellerPanel; panel composers consuming Order data
+Allowed-Host-Adapters: HostOrderAdminAuthorizer; storefront actor/identity thin adapters
+Residual-Defects: reverse-audit for remaining Host Order authority deferred to R7
+Order-Overall-State: INCOMPLETE_REFERENCE_REPAIR
+Checkout-State: PAUSED_AT_SAFE_W5_CHECKPOINT
+Frontend-Production-Changes: none
+Recovery-State: slice ADMIN_ORDER_DETAIL_CQRS_R6 recorded
+Recovery-Next-Task: TB-TMAR-ORDER-GOLDEN-001-R7
+Git: e7bae3d142bd8e622081417bda4b3944445f5622 pushed origin/main; HEAD==origin/main
+Blockers: none
+User-Work-Preserved: yes; unrelated R2C/R5-R1 RESULT.bridge.txt untracked untouched
+Next-Recommended-Task: TB-TMAR-ORDER-GOLDEN-001-R7
+
+END_TOOBA_WORKER_RESULT
