@@ -14,7 +14,6 @@ public interface IAdminOrdersGridReader
 
 /// <summary>
 /// وضعیت تأمین Checkout برای ستون/فیلتر گرید.
-/// درز باریک Order به ترکیب‌گر تأمین که هنوز در Host است (R4).
 /// </summary>
 public interface IAdminOrderSupplyStatusReader
 {

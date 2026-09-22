@@ -56,7 +56,7 @@ public sealed record AdminOrderInventoryRecoveryResult(
     string OrderNumbers);
 
 /// <summary>
-/// Narrow port over Host OrderInventoryRecoveryComposer — assess/recover only; no Order business logic.
+/// Narrow port over Order inventory-recovery service — assess/recover only.
 /// </summary>
 public interface IAdminOrderOperationsInventoryRecoveryPort
 {
@@ -94,7 +94,7 @@ public sealed record AdminOrderOpsSupplyEnsureResult(
     bool Unavailable);
 
 /// <summary>
-/// Narrow port over Host OrderSupplyComposer — status/ensure only; no Order business logic.
+/// Narrow port over Order supply service — status/ensure only.
 /// </summary>
 public interface IAdminOrderOperationsSupplyPort
 {

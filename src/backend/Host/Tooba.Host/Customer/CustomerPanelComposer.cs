@@ -8,10 +8,8 @@ using Tooba.Order.Domain;
 using Tooba.Order.Infrastructure.Persistence;
 using Tooba.Party.Application;
 using Tooba.Host.Admin;
-using Tooba.Inventory.Application.Ports;
-using Tooba.Inventory.Application.Checkout;
-using Tooba.Inventory.Application.Orders;
-using Tooba.Inventory.Contracts.Returns;
+using Tooba.Order.Application.Admin.Supply.Models;
+using Tooba.Order.Application.Admin.Supply.Services;
 using Tooba.Payment.Application.Models;
 using Tooba.Payment.Contracts.Customer;
 using Tooba.Payment.Domain.Aggregates;
@@ -35,7 +33,7 @@ public sealed class CustomerPanelComposer
     private readonly IAddressBookDirectory _addresses;
     private readonly ICustomerProfileDirectory _profiles;
     private readonly IIdentityContactLookup _identityContacts;
-    private readonly OrderSupplyComposer? _supply;
+    private readonly OrderSupplyService? _supply;
     private readonly IPaymentCustomerGateway? _expiry;
     private readonly ReservationCycleCoordinator? _cycles;
 
@@ -51,7 +49,7 @@ public sealed class CustomerPanelComposer
         IAddressBookDirectory addresses,
         ICustomerProfileDirectory profiles,
         IIdentityContactLookup identityContacts,
-        OrderSupplyComposer? supply = null,
+        OrderSupplyService? supply = null,
         IPaymentCustomerGateway? expiry = null,
         ReservationCycleCoordinator? cycles = null)
     {
@@ -285,12 +283,12 @@ public sealed class CustomerPanelComposer
 
         var result = _cycles is not null
             ? await _cycles.EnsureRetryAfterExpiryAsync(checkoutId, cancellationToken)
-            : await _supply.EnsureAsync(
+            : (await _supply.EnsureAsync(
                 checkoutId,
                 OrderSupplyMode.EnsureUnpaidRetryHold,
                 allowReacquire: true,
                 reason: "unpaid-retry",
-                cancellationToken);
+                cancellationToken)).Value;
         if (result.Status is OrderSupplyStatusKind.Unavailable or OrderSupplyStatusKind.PartiallyUnavailable
             || result.Outcome is OrderSupplyOutcome.Unavailable or OrderSupplyOutcome.PartiallyUnavailable)
         {

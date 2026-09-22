@@ -163,16 +163,76 @@ public sealed class OrderAdminOperationsArchitectureGuardTests
     }
 
     [Fact]
-    public void Host_keeps_thin_recovery_supply_routes_without_ops_authority()
+    public void Host_recovery_supply_authority_files_are_absent()
     {
-        var hostEndpoints = File.ReadAllText(Path.Combine(
-            RepoRoot(), "src", "backend", "Host", "Tooba.Host", "Admin",
-            "AdminOrderInventoryRecoverySupplyEndpoints.cs"));
-        Assert.Contains("inventory-recovery", hostEndpoints, StringComparison.Ordinal);
-        Assert.Contains("supply-status", hostEndpoints, StringComparison.Ordinal);
-        Assert.DoesNotContain("/operations", hostEndpoints, StringComparison.Ordinal);
-        Assert.DoesNotContain("return-eligibility", hostEndpoints, StringComparison.Ordinal);
-        Assert.DoesNotContain("AdminOrderOperationsOrchestrator", hostEndpoints, StringComparison.Ordinal);
+        var hostAdmin = Path.Combine(RepoRoot(), "src", "backend", "Host", "Tooba.Host", "Admin");
+        Assert.False(File.Exists(Path.Combine(hostAdmin, "OrderInventoryRecoveryComposer.cs")));
+        Assert.False(File.Exists(Path.Combine(hostAdmin, "OrderSupplyComposer.cs")));
+        Assert.False(File.Exists(Path.Combine(hostAdmin, "AdminOrderInventoryRecoverySupplyEndpoints.cs")));
+        Assert.False(File.Exists(Path.Combine(hostAdmin, "HostAdminOrderOperationsInventoryRecoveryAdapter.cs")));
+        Assert.False(File.Exists(Path.Combine(hostAdmin, "HostAdminOrderOperationsSupplyAdapter.cs")));
+        Assert.False(File.Exists(Path.Combine(hostAdmin, "HostAdminOrderSupplyStatusReader.cs")));
+    }
+
+    [Fact]
+    public void Order_endpoints_own_recovery_supply_routes_via_ISender()
+    {
+        var endpoints = File.ReadAllText(Path.Combine(
+            OrderRoot(), "Tooba.Order.Endpoints", "AdminOrderInventoryRecoverySupplyEndpoints.cs"));
+        Assert.Contains("inventory-recovery/audit", endpoints, StringComparison.Ordinal);
+        Assert.Contains("inventory-recovery", endpoints, StringComparison.Ordinal);
+        Assert.Contains("supply-status", endpoints, StringComparison.Ordinal);
+        Assert.Contains("ISender", endpoints, StringComparison.Ordinal);
+        Assert.Contains("AuditOrderInventoryRecoveryQuery", endpoints, StringComparison.Ordinal);
+        Assert.Contains("AssessOrderInventoryRecoveryQuery", endpoints, StringComparison.Ordinal);
+        Assert.Contains("GetOrderSupplyStatusQuery", endpoints, StringComparison.Ordinal);
+        Assert.DoesNotContain("OrderDbContext", endpoints, StringComparison.Ordinal);
+        Assert.DoesNotContain("Tooba.Order.Infrastructure", endpoints, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void Recovery_supply_cqrs_folders_align_offer_style()
+    {
+        Assert.True(File.Exists(Path.Combine(
+            OrderRoot(), "Tooba.Order.Application", "Admin", "InventoryRecovery", "Queries",
+            "AuditOrderInventoryRecovery", "AuditOrderInventoryRecoveryQuery.cs")));
+        Assert.True(File.Exists(Path.Combine(
+            OrderRoot(), "Tooba.Order.Application", "Admin", "InventoryRecovery", "Queries",
+            "AssessOrderInventoryRecovery", "AssessOrderInventoryRecoveryQuery.cs")));
+        Assert.True(File.Exists(Path.Combine(
+            OrderRoot(), "Tooba.Order.Application", "Admin", "Supply", "Queries",
+            "GetOrderSupplyStatus", "GetOrderSupplyStatusQuery.cs")));
+        Assert.True(File.Exists(Path.Combine(
+            OrderRoot(), "Tooba.Order.Application", "Admin", "InventoryRecovery", "Commands",
+            "RecoverOrderInventoryReservation", "RecoverOrderInventoryReservationCommand.cs")));
+        Assert.True(File.Exists(Path.Combine(
+            OrderRoot(), "Tooba.Order.Application", "Admin", "Supply", "Commands",
+            "EnsureOrderSupply", "EnsureOrderSupplyCommand.cs")));
+    }
+
+    [Fact]
+    public void Application_recovery_supply_uses_contracts_only_and_no_message_parsing()
+    {
+        foreach (var folder in new[]
+                 {
+                     Path.Combine(OrderRoot(), "Tooba.Order.Application", "Admin", "InventoryRecovery"),
+                     Path.Combine(OrderRoot(), "Tooba.Order.Application", "Admin", "Supply"),
+                 })
+        {
+            foreach (var path in Directory.GetFiles(folder, "*.cs", SearchOption.AllDirectories))
+            {
+                var text = File.ReadAllText(path);
+                Assert.DoesNotContain("Tooba.Inventory.Application", text, StringComparison.Ordinal);
+                Assert.DoesNotContain("Tooba.Inventory.Infrastructure", text, StringComparison.Ordinal);
+                Assert.DoesNotContain("Tooba.Fulfillment.Application", text, StringComparison.Ordinal);
+                Assert.DoesNotContain("Tooba.Fulfillment.Infrastructure", text, StringComparison.Ordinal);
+                Assert.DoesNotContain("Tooba.Payment.Application", text, StringComparison.Ordinal);
+                Assert.DoesNotContain("OrderDbContext", text, StringComparison.Ordinal);
+                Assert.DoesNotContain("PlatformHttpException", text, StringComparison.Ordinal);
+                Assert.DoesNotContain("ex.Message", text, StringComparison.Ordinal);
+                Assert.DoesNotContain("exception.Message", text, StringComparison.Ordinal);
+            }
+        }
     }
 
     [Fact]

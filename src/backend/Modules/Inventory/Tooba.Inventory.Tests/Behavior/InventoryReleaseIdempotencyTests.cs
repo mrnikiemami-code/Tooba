@@ -1,3 +1,4 @@
+using Tooba.BuildingBlocks;
 using Tooba.Inventory.Domain.Aggregates;
 using Tooba.Inventory.Domain.ValueObjects;
 using Xunit;
@@ -21,9 +22,9 @@ public sealed class InventoryReleaseIdempotencyTests
 
         reservation.MoveTo(StockReservationStatus.Released, now.AddMinutes(1));
         Assert.Equal(StockReservationStatus.Released, reservation.Status);
-        Assert.Throws<InvalidOperationException>(() =>
+        Assert.Throws<ContractOperationException>(() =>
             reservation.MoveTo(StockReservationStatus.Released, now.AddMinutes(2)));
-        Assert.Throws<InvalidOperationException>(() =>
+        Assert.Throws<ContractOperationException>(() =>
             reservation.MoveTo(StockReservationStatus.Consumed, now.AddMinutes(2)));
     }
 

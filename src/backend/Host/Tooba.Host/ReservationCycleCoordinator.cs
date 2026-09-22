@@ -1,11 +1,8 @@
 #pragma warning disable CS1591
 using Microsoft.EntityFrameworkCore;
-using Tooba.Host.Admin;
-using Tooba.Inventory.Application.Ports;
-using Tooba.Inventory.Application.Checkout;
-using Tooba.Inventory.Application.Orders;
-using Tooba.Inventory.Contracts.Returns;
 using Tooba.Order.Application;
+using Tooba.Order.Application.Admin.Supply.Models;
+using Tooba.Order.Application.Admin.Supply.Services;
 using Tooba.Order.Domain;
 using Tooba.Order.Infrastructure.Persistence;
 
@@ -16,13 +13,13 @@ public sealed class ReservationCycleCoordinator
 {
     private readonly IReservationCycleDirectory _cycles;
     private readonly IReservationCyclePolicyResolver _policy;
-    private readonly OrderSupplyComposer _supply;
+    private readonly OrderSupplyService _supply;
     private readonly OrderDbContext _orders;
 
     public ReservationCycleCoordinator(
         IReservationCycleDirectory cycles,
         IReservationCyclePolicyResolver policy,
-        OrderSupplyComposer supply,
+        OrderSupplyService supply,
         OrderDbContext orders)
     {
         _cycles = cycles;
@@ -50,12 +47,12 @@ public sealed class ReservationCycleCoordinator
         var active = await _cycles.GetActiveAsync(checkoutId, cancellationToken);
         if (active is not null)
         {
-            return await _supply.EnsureAsync(
+            return (await _supply.EnsureAsync(
                 checkoutId,
                 OrderSupplyMode.EnsureUnpaidRetryHold,
                 allowReacquire: false,
                 reason: "active-cycle-retry",
-                cancellationToken);
+                cancellationToken)).Value;
         }
 
         if (created >= policy.MaxCycles)
@@ -65,12 +62,12 @@ public sealed class ReservationCycleCoordinator
         }
 
         await _cycles.RecordReacquireRequestedAsync(checkoutId, now, cancellationToken);
-        var result = await _supply.EnsureAsync(
+        var result = (await _supply.EnsureAsync(
             checkoutId,
             OrderSupplyMode.EnsureUnpaidRetryHold,
             allowReacquire: true,
             reason: "unpaid-retry",
-            cancellationToken);
+            cancellationToken)).Value;
         if (result.Status is OrderSupplyStatusKind.Unavailable or OrderSupplyStatusKind.PartiallyUnavailable
             || result.Outcome is OrderSupplyOutcome.Unavailable or OrderSupplyOutcome.PartiallyUnavailable)
         {
@@ -125,10 +122,15 @@ public sealed class ReservationCycleCoordinator
         var group = await _orders.Checkouts.AsNoTracking()
             .Include(x => x.SellerOrders)
             .ThenInclude(x => x.Lines)
-            .SingleAsync(x => x.CheckoutId == checkoutId, cancellationToken);
+            .SingleOrDefaultAsync(x => x.CheckoutId == checkoutId, cancellationToken);
+        if (group is null)
+        {
+            return [];
+        }
+
         return group.SellerOrders
             .SelectMany(x => x.Lines)
-            .Where(x => x.ReservationId is not null)
+            .Where(x => x.ReservationId.HasValue)
             .Select(x => x.ReservationId!.Value)
             .Distinct()
             .ToArray();

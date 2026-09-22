@@ -1,10 +1,7 @@
-using Tooba.Inventory.Application.Ports;
-using Tooba.Inventory.Application.Checkout;
-using Tooba.Inventory.Application.Orders;
-using Tooba.Inventory.Contracts.Returns;
 using Tooba.Order.Application;
 using Tooba.Order.Application.Admin.OrdersGrid;
 using Tooba.Order.Application.Admin.OrdersGrid.Models;
+using Tooba.Order.Application.Admin.Supply.Models;
 using Tooba.Order.Domain;
 
 namespace Tooba.Host.Admin;
@@ -158,7 +155,7 @@ public static class AdminReservationCycleMapper
             projection.ServerTime,
             projection.SecondsRemaining,
             projection.SupplyStatus ?? supply?.Status.ToString() ?? "NotApplicable",
-            OrderSupplyComposer.MessageFa(supply?.Status ?? ParseSupply(projection.SupplyStatus)),
+            OrderSupplyMessages.MessageFa(supply?.Status ?? ParseSupply(projection.SupplyStatus)),
             retryLimit,
             CanRetryReservation: false,
             CanExtendTimer: false,

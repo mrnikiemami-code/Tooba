@@ -1,12 +1,10 @@
 using Tooba.Order.Application.Admin.OrdersGrid.Ports;
+using Tooba.Order.Application.Admin.Supply.Services;
 
-namespace Tooba.Host.Admin;
+namespace Tooba.Order.Infrastructure.Admin.OrdersGrid;
 
-/// <summary>
-/// درز باریک وضعیت تأمین برای گرید سفارش‌های Order.
-/// ترکیب‌گر تأمین تا R4 در Host می‌ماند؛ Order فقط نام پایدار وضعیت را می‌بیند.
-/// </summary>
-internal sealed class HostAdminOrderSupplyStatusReader(OrderSupplyComposer supply) : IAdminOrderSupplyStatusReader
+/// <summary>Order-owned supply status reader for OrdersGrid.</summary>
+internal sealed class AdminOrderSupplyStatusReader(OrderSupplyService supply) : IAdminOrderSupplyStatusReader
 {
     public async Task<IReadOnlyDictionary<Guid, string>> GetStatusesAsync(
         IReadOnlyList<Guid> checkoutIds,

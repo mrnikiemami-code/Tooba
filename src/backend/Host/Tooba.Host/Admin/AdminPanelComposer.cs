@@ -11,6 +11,7 @@ using Tooba.Host.Grid;
 using Tooba.Offer.Contracts.Dtos;
 using Tooba.Order.Application.Admin.OrdersGrid;
 using Tooba.Order.Application.Admin.OrdersGrid.Models;
+using Tooba.Order.Application.Admin.Supply.Services;
 using Tooba.Offer.Contracts.Ports;
 using Tooba.Order.Application;
 using Tooba.Order.Domain;
@@ -41,7 +42,7 @@ public sealed class AdminPanelComposer
     private readonly ISettlementDirectory _settlement;
     private readonly IFulfillmentDirectory _fulfillment;
     private readonly IReturnDirectory _returns;
-    private readonly OrderSupplyComposer _supply;
+    private readonly OrderSupplyService _supply;
     private readonly IReservationCycleDirectory _cycles;
     private readonly Tooba.Returns.Contracts.Operations.IReturnAdminOperations _returnOperations;
     private readonly AdminSellersGridQueryEngine _sellersGrid;
@@ -60,7 +61,7 @@ public sealed class AdminPanelComposer
         IFulfillmentDirectory fulfillment,
         IReturnDirectory returns,
         Tooba.Returns.Contracts.Operations.IReturnAdminOperations returnOperations,
-        OrderSupplyComposer supply,
+        OrderSupplyService supply,
         IReservationCycleDirectory cycles)
     {
         _returnOperations = returnOperations;
@@ -267,7 +268,13 @@ public sealed class AdminPanelComposer
         }).ToList();
         var listItem = await MapOrderListItemAsync(group, sellerNames, cancellationToken);
         var paymentOps = await _payments.GetLatestOperationalForCheckoutAsync(checkoutId, cancellationToken);
-        var supplyStatus = await _supply.GetStatusAsync(checkoutId, cancellationToken);
+        var supplyStatusResult = await _supply.GetStatusAsync(checkoutId, cancellationToken);
+        if (supplyStatusResult.IsFailure)
+        {
+            throw new BuildingBlocks.PlatformHttpException(404, "سفارش پیدا نشد.", supplyStatusResult.FirstError.Code);
+        }
+
+        var supplyStatus = supplyStatusResult.Value;
         var now = DateTimeOffset.UtcNow;
         var cycleProjection = await _cycles.GetProjectionAsync(
             checkoutId,

@@ -6,12 +6,6 @@ namespace Tooba.Host.Tests;
 
 public sealed class OrderInventoryRecoveryTests
 {
-    private static string Read(string relative)
-    {
-        var root = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", "Tooba.Host"));
-        return File.ReadAllText(Path.Combine(root, relative));
-    }
-
     private static string ReadOrderApplication(string relative)
     {
         var root = Path.GetFullPath(Path.Combine(
@@ -21,12 +15,13 @@ public sealed class OrderInventoryRecoveryTests
     }
 
     [Fact]
-    public void Recovery_composer_never_resurrects_and_rolls_back_partial_acquire()
+    public void Recovery_service_never_resurrects_and_rolls_back_partial_acquire()
     {
-        var src = Read(Path.Combine("Admin", "OrderInventoryRecoveryComposer.cs"));
+        var src = ReadOrderApplication(Path.Combine(
+            "Admin", "InventoryRecovery", "Services", "OrderInventoryRecoveryService.cs"));
         Assert.Contains("RecoverAsync", src, StringComparison.Ordinal);
-        Assert.Contains("ReleaseAsync", src, StringComparison.Ordinal);
-        Assert.Contains("ReplaceReservation", src, StringComparison.Ordinal);
+        Assert.Contains("ReleaseHeldReservationAsync", src, StringComparison.Ordinal);
+        Assert.Contains("ReplaceReservationsAsync", src, StringComparison.Ordinal);
         Assert.Contains("RebindActiveReservationsFromOrderAsync", src, StringComparison.Ordinal);
         Assert.Contains("inventory.recovery.insufficient", src, StringComparison.Ordinal);
         Assert.Contains("AlreadyHealthy", src, StringComparison.Ordinal);
@@ -53,7 +48,7 @@ public sealed class OrderInventoryRecoveryTests
     {
         var contracts = File.ReadAllText(Path.GetFullPath(Path.Combine(
             AppContext.BaseDirectory, "..", "..", "..", "..", "..", "Modules", "Fulfillment",
-            "Tooba.Fulfillment.Application", "Ports", "IFulfillmentDirectory.cs")));
+            "Tooba.Fulfillment.Contracts", "Operations", "FulfillmentAdminOperationsContracts.cs")));
         Assert.Contains("RebindActiveReservationsFromOrderAsync", contracts, StringComparison.Ordinal);
         var dir = File.ReadAllText(Path.GetFullPath(Path.Combine(
             AppContext.BaseDirectory, "..", "..", "..", "..", "..", "Modules", "Fulfillment",

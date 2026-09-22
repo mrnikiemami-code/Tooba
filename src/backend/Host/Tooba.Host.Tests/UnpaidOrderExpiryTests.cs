@@ -36,7 +36,7 @@ public sealed class UnpaidOrderExpiryTests
         Assert.Contains("OnlinePaymentHoldHours", app, StringComparison.Ordinal);
         Assert.Contains("ManualPaymentInitialHoldHours", app, StringComparison.Ordinal);
         Assert.Contains("ManualPaymentReviewHoldHours", app, StringComparison.Ordinal);
-        Assert.Contains("ICommerceHoldPolicy", Read("src/backend/Modules/Payment/Tooba.Payment.Application/CommerceHoldPolicyContracts.cs"), StringComparison.Ordinal);
+        Assert.Contains("ICommerceHoldPolicy", Read("src/backend/Modules/Payment/Tooba.Payment.Application/Ports/CommerceHoldPolicyPorts.cs"), StringComparison.Ordinal);
         Assert.Contains("FindMethod", Read("src/backend/Host/Tooba.Host/CommerceHoldPolicy.cs"), StringComparison.Ordinal);
         Assert.Contains("store_hold_policy_settings", Read("src/backend/Modules/Catalog/Tooba.Catalog.Infrastructure/Persistence/CatalogDbContext.cs"), StringComparison.Ordinal);
         Assert.Contains("payment_method_hold_overrides", Read("src/backend/Modules/Payment/Tooba.Payment.Infrastructure/Persistence/PaymentDbContext.cs"), StringComparison.Ordinal);
@@ -63,7 +63,7 @@ public sealed class UnpaidOrderExpiryTests
     [Fact]
     public void Cart_persistence_is_independent_of_hold()
     {
-        Assert.Contains("ICartPersistenceHoursSource", Read("src/backend/Modules/Cart/Tooba.Cart.Application/ICartPersistenceHoursSource.cs"), StringComparison.Ordinal);
+        Assert.Contains("ICartPersistenceHoursSource", Read("src/backend/Modules/Cart/Tooba.Cart.Application/Ports/ICartPersistenceHoursSource.cs"), StringComparison.Ordinal);
         var cart = Read("src/backend/Modules/Cart/Tooba.Cart.Infrastructure/Directories/CartDirectory.cs");
         Assert.Contains("ResolvePersistenceTtl", cart, StringComparison.Ordinal);
         Assert.DoesNotContain("ReserveAsync", cart, StringComparison.Ordinal);
@@ -110,12 +110,12 @@ public sealed class UnpaidOrderExpiryTests
     public void Retry_uses_same_order_and_ensure_supply()
     {
         Assert.Equal(4, (int)OrderSupplyMode.EnsureUnpaidRetryHold);
-        var composer = Read("src/backend/Host/Tooba.Host/Modules/Payment/Tooba.Payment.Application/Models/StorefrontPaymentOrchestrator.cs");
-        Assert.Contains("EnsureUnpaidRetryHold", composer, StringComparison.Ordinal);
-        Assert.Contains("ReopenExpiredForRetryAsync", composer, StringComparison.Ordinal);
-        Assert.Contains("این سفارش در حال حاضر قابل تأمین نیست.", composer, StringComparison.Ordinal);
+        var supply = Read("src/backend/Modules/Order/Tooba.Order.Application/Admin/Supply/Services/OrderSupplyService.cs");
+        Assert.Contains("EnsureUnpaidRetryHold", supply, StringComparison.Ordinal);
         var customer = Read("src/backend/Host/Tooba.Host/Customer/CustomerPanelComposer.cs");
         Assert.Contains("RetryUnpaidAsync", customer, StringComparison.Ordinal);
+        Assert.Contains("EnsureUnpaidRetryHold", customer, StringComparison.Ordinal);
+        Assert.Contains("این سفارش در حال حاضر قابل تأمین نیست.", customer, StringComparison.Ordinal);
         Assert.Contains("PaymentExpired", customer, StringComparison.Ordinal);
         var reopen = Read("src/backend/Modules/Payment/Tooba.Payment.Infrastructure/Directories/PaymentDirectory.cs");
         Assert.Contains("RecordInitiation", reopen, StringComparison.Ordinal);
@@ -157,8 +157,8 @@ public sealed class UnpaidOrderExpiryTests
     public void Regression_r5_r9_surfaces_remain()
     {
         Assert.Contains("PromoteReservationsForManualPaymentReviewAsync", Read("src/backend/Modules/Order/Tooba.Order.Infrastructure/OrderPaymentBridge.cs"), StringComparison.Ordinal);
-        Assert.Contains("EnsureOrderSupplyAsync", Read("src/backend/Modules/Inventory/Tooba.Inventory.Infrastructure/InventoryDirectory.cs"), StringComparison.Ordinal);
-        Assert.Contains("GetStatusesAsync", Read("src/backend/Host/Tooba.Host/Admin/OrderSupplyComposer.cs"), StringComparison.Ordinal);
+        Assert.Contains("EnsureOrderSupplyAsync", Read("src/backend/Modules/Inventory/Tooba.Inventory.Infrastructure/Directories/InventoryDirectory.cs"), StringComparison.Ordinal);
+        Assert.Contains("GetStatusesAsync", Read("src/backend/Modules/Order/Tooba.Order.Application/Admin/Supply/Services/OrderSupplyService.cs"), StringComparison.Ordinal);
         Assert.DoesNotContain("ReserveAsync", Read("src/backend/Modules/Cart/Tooba.Cart.Infrastructure/Directories/CartDirectory.cs"), StringComparison.Ordinal);
         Assert.Contains(nameof(ICheckoutReservationHoldPolicy), typeof(ICheckoutReservationHoldPolicy).Name);
         Assert.Contains("CartLifetimeOptions", typeof(CartLifetimeOptions).Name);

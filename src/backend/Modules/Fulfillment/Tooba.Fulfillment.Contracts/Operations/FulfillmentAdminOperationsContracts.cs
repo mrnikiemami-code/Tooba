@@ -314,4 +314,15 @@ public interface IFulfillmentAdminOperations
 
     /// <summary>Remove not-started units after a deposit confirmation is reverted.</summary>
     Task VoidUnstartedForCheckoutAsync(Guid checkoutId, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Rebind active fulfillment item reservations from current Order line bindings
+    /// without reactivating cancelled units.
+    /// </summary>
+    Task RebindActiveReservationsFromOrderAsync(Guid checkoutId, CancellationToken cancellationToken);
+
+    /// <summary>Batch QuantityShipped by OrderLineId for the given checkouts.</summary>
+    Task<IReadOnlyDictionary<Guid, decimal>> GetShippedByOrderLineIdsForCheckoutsAsync(
+        IReadOnlyList<Guid> checkoutIds,
+        CancellationToken cancellationToken);
 }

@@ -40,6 +40,12 @@ public sealed class OrderModule : IToobaModule
         services.AddScoped<IAdminOrderCompletenessStore, AdminOrderCompletenessStore>();
         services.AddScoped<Application.Admin.OrdersGrid.Ports.IAdminOrdersGridReader, Admin.OrdersGrid.AdminOrdersGridReader>();
         services.AddScoped<Application.Admin.Operations.Ports.IAdminOrderOperationsCheckoutReader, Admin.Operations.AdminOrderOperationsCheckoutReader>();
+        services.AddScoped<Application.Admin.Supply.Ports.IOrderSupplyCheckoutStore, Admin.Supply.OrderSupplyCheckoutStore>();
+        services.AddScoped<Application.Admin.Supply.Services.OrderSupplyService>();
+        services.AddScoped<Application.Admin.InventoryRecovery.Services.OrderInventoryRecoveryService>();
+        services.AddScoped<Application.Admin.OrdersGrid.Ports.IAdminOrderSupplyStatusReader, Admin.OrdersGrid.AdminOrderSupplyStatusReader>();
+        services.AddScoped<Application.Admin.Operations.Ports.IAdminOrderOperationsInventoryRecoveryPort, Admin.Operations.AdminOrderOperationsInventoryRecoveryAdapter>();
+        services.AddScoped<Application.Admin.Operations.Ports.IAdminOrderOperationsSupplyPort, Admin.Operations.AdminOrderOperationsSupplyAdapter>();
         services.AddScoped<Application.Admin.Operations.Services.AdminOrderOperationsOrchestrator>();
         services.AddScoped<ICheckoutDirectory, CheckoutDirectory>();
         services.AddScoped<ICheckoutProcessTracker, CheckoutProcessTracker>();

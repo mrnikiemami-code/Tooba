@@ -1,10 +1,7 @@
 ﻿using System.Text.RegularExpressions;
 using Tooba.Host.Admin;
-using Tooba.Inventory.Application.Ports;
-using Tooba.Inventory.Application.Checkout;
-using Tooba.Inventory.Application.Orders;
-using Tooba.Inventory.Contracts.Returns;
 using Tooba.Order.Application;
+using Tooba.Order.Application.Admin.Supply.Models;
 using Tooba.Order.Domain;
 using Xunit;
 

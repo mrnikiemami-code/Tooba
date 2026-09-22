@@ -119,9 +119,9 @@ public sealed class PaidOrderReservationLifecycleTests : IAsyncLifetime
         var now = DateTimeOffset.UtcNow;
         var hold = StockReservation.Hold(Guid.NewGuid(), Guid.NewGuid(), 1m, "cart", null, now, now.AddMinutes(30));
         hold.MoveTo(StockReservationStatus.Released, now.AddSeconds(1));
-        var ex = Assert.Throws<InvalidOperationException>(() =>
+        var ex = Assert.Throws<ContractOperationException>(() =>
             hold.PromoteForManualPaymentReview(now.AddHours(24), now.AddSeconds(2)));
-        Assert.Equal("inventory.reservation.not_active", ex.Message);
+        Assert.Equal("inventory.reservation.not_active", ex.Code);
     }
 
     [Fact]
@@ -131,8 +131,8 @@ public sealed class PaidOrderReservationLifecycleTests : IAsyncLifetime
         var hold = StockReservation.Hold(Guid.NewGuid(), Guid.NewGuid(), 2m, "cart", null, now, now.AddMinutes(10));
         hold.MoveTo(StockReservationStatus.Released, now.AddSeconds(1));
 
-        var ex = Assert.Throws<InvalidOperationException>(() => hold.CommitForPaidOrder(now.AddSeconds(2)));
-        Assert.Equal("inventory.reservation.not_active", ex.Message);
+        var ex = Assert.Throws<ContractOperationException>(() => hold.CommitForPaidOrder(now.AddSeconds(2)));
+        Assert.Equal("inventory.reservation.not_active", ex.Code);
         Assert.Equal(StockReservationStatus.Released, hold.Status);
         Assert.NotNull(hold.ExpiresAt);
     }
@@ -144,8 +144,8 @@ public sealed class PaidOrderReservationLifecycleTests : IAsyncLifetime
         var hold = StockReservation.Hold(Guid.NewGuid(), Guid.NewGuid(), 1m, "cart", null, now, now.AddMinutes(10));
         hold.MoveTo(StockReservationStatus.Consumed, now.AddSeconds(1));
 
-        var ex = Assert.Throws<InvalidOperationException>(() => hold.CommitForPaidOrder(now.AddSeconds(2)));
-        Assert.Equal("inventory.reservation.not_active", ex.Message);
+        var ex = Assert.Throws<ContractOperationException>(() => hold.CommitForPaidOrder(now.AddSeconds(2)));
+        Assert.Equal("inventory.reservation.not_active", ex.Code);
         Assert.Equal(StockReservationStatus.Consumed, hold.Status);
     }
 
@@ -300,7 +300,7 @@ public sealed class PaidOrderReservationLifecycleTests : IAsyncLifetime
         var after = await inventoryDir.FindReservationAsync(reserved.ReservationId, CancellationToken.None);
         Assert.Equal(StockReservationStatus.Released, after!.Status);
 
-        await Assert.ThrowsAsync<InvalidOperationException>(() =>
+        await Assert.ThrowsAsync<ContractOperationException>(() =>
             inventoryDir.CommitReservationForPaidOrderAsync(reserved.ReservationId, CancellationToken.None));
     }
 
@@ -352,9 +352,9 @@ public sealed class PaidOrderReservationLifecycleTests : IAsyncLifetime
             CancellationToken.None);
         await inventoryDir.ReleaseAsync(reserved.ReservationId, CancellationToken.None);
 
-        var ex = await Assert.ThrowsAsync<InvalidOperationException>(() =>
+        var ex = await Assert.ThrowsAsync<ContractOperationException>(() =>
             inventoryDir.CommitReservationForPaidOrderAsync(reserved.ReservationId, CancellationToken.None));
-        Assert.Equal("inventory.reservation.not_active", ex.Message);
+        Assert.Equal("inventory.reservation.not_active", ex.Code);
 
         var found = await inventoryDir.FindReservationAsync(reserved.ReservationId, CancellationToken.None);
         Assert.Equal(StockReservationStatus.Released, found!.Status);

@@ -171,6 +171,88 @@ public sealed class OrderInventoryLifecycleAdapter : IOrderInventoryLifecyclePor
         return result;
     }
 
+    /// <inheritdoc />
+    public async Task<OrderInventoryReservationView?> FindReservationAsync(
+        Guid reservationId,
+        CancellationToken cancellationToken)
+    {
+        var existing = await _inventory.FindReservationAsync(reservationId, cancellationToken);
+        return existing is null ? null : MapReservation(existing);
+    }
+
+    /// <inheritdoc />
+    public async Task<OrderInventoryReservationView> ReserveAsync(
+        Guid stockItemId,
+        decimal quantity,
+        string? externalReference,
+        string? idempotencyKey,
+        DateTimeOffset? expiresAt,
+        CancellationToken cancellationToken)
+    {
+        var receipt = await _inventory.ReserveAsync(
+            stockItemId, quantity, externalReference, idempotencyKey, expiresAt, cancellationToken);
+        return MapReservation(receipt);
+    }
+
+    /// <inheritdoc />
+    public Task CommitReservationForPaidOrderAsync(Guid reservationId, CancellationToken cancellationToken)
+        => _inventory.CommitReservationForPaidOrderAsync(reservationId, cancellationToken);
+
+    /// <inheritdoc />
+    public async Task<OrderInventorySupplyStatusDetail> GetSupplyStatusDetailAsync(
+        Guid checkoutId,
+        IReadOnlyList<OrderInventorySupplyLine> lines,
+        CancellationToken cancellationToken)
+    {
+        var status = await _inventory.GetOrderSupplyStatusAsync(
+            checkoutId, lines.Select(Map).ToArray(), cancellationToken);
+        return MapStatus(status);
+    }
+
+    /// <inheritdoc />
+    public async Task<OrderInventoryEnsureDetailResult> EnsureSupplyDetailAsync(
+        OrderInventoryEnsureDetailRequest request,
+        CancellationToken cancellationToken)
+    {
+        if (!Enum.TryParse<OrderSupplyMode>(request.Mode, ignoreCase: true, out var mode))
+        {
+            throw new ContractOperationException("inventory.supply.mode_invalid");
+        }
+
+        var result = await _inventory.EnsureOrderSupplyAsync(
+            new EnsureOrderSupplyRequest(
+                request.CheckoutId,
+                mode,
+                request.AllowReacquire,
+                request.Reason,
+                request.CorrelationId,
+                request.ReviewExpiresAt,
+                request.Lines.Select(Map).ToArray()),
+            cancellationToken);
+        return new OrderInventoryEnsureDetailResult(
+            result.Outcome.ToString(),
+            result.Status.ToString(),
+            result.Lines.Select(MapLine).ToArray(),
+            result.NewBindingsByOrderLineId);
+    }
+
     private static OrderSupplyLineInput Map(OrderInventorySupplyLine line) =>
         new(line.OrderLineId, line.OfferId, line.CurrentReservationId, line.RemainingQuantity, line.ItemTitle, line.UnitCode);
+
+    private static OrderInventoryReservationView MapReservation(ReservationReceipt receipt) =>
+        new(receipt.ReservationId, receipt.StockItemId, receipt.Quantity, receipt.Status.ToString(), receipt.ExpiresAt);
+
+    private static OrderInventorySupplyStatusDetail MapStatus(OrderSupplyStatus status) =>
+        new(status.CheckoutId, status.Status.ToString(), status.Lines.Select(MapLine).ToArray());
+
+    private static OrderInventorySupplyLineDetail MapLine(OrderSupplyLineShortage line) =>
+        new(
+            line.OrderLineId,
+            line.ItemTitle,
+            line.UnitCode,
+            line.Required,
+            line.Available,
+            line.Shortage,
+            line.LineStatus.ToString(),
+            line.BoundReservationId);
 }

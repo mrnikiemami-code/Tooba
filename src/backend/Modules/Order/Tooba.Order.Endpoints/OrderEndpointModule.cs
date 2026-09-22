@@ -39,6 +39,7 @@ public static class OrderEndpointModule
         AdminOrderCompletenessEndpoints.Map(app);
         AdminOrdersGridEndpoints.Map(app);
         AdminOrderOperationsEndpoints.Map(app);
+        AdminOrderInventoryRecoverySupplyEndpoints.Map(app);
         return app;
     }
 }

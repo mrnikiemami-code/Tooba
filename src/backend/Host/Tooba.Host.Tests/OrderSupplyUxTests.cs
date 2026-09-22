@@ -43,8 +43,11 @@ public sealed class OrderSupplyUxTests
     [Fact]
     public void Batch_status_loads_fulfillment_items_once()
     {
-        var supply = Host(Path.Combine("Admin", "OrderSupplyComposer.cs"));
+        var supply = File.ReadAllText(Path.GetFullPath(Path.Combine(
+            AppContext.BaseDirectory, "..", "..", "..", "..", "..",
+            "Modules", "Order", "Tooba.Order.Application", "Admin", "Supply", "Services",
+            "OrderSupplyService.cs")));
         Assert.Contains("GetStatusesAsync", supply, StringComparison.Ordinal);
-        Assert.Contains("LoadShippedByLineAsync", supply, StringComparison.Ordinal);
+        Assert.Contains("GetShippedByOrderLineIdsForCheckoutsAsync", supply, StringComparison.Ordinal);
     }
 }

@@ -227,7 +227,7 @@ public sealed class AdminOrderOperationsTests
         Assert.Contains("ContractOperationException", composer, StringComparison.Ordinal);
         Assert.DoesNotContain("MapKnownOperationException", composer, StringComparison.Ordinal);
         Assert.DoesNotContain("ex.Message", composer, StringComparison.Ordinal);
-        Assert.Contains("MapAdminOrderInventoryRecoverySupplyEndpoints", program, StringComparison.Ordinal);
+        Assert.DoesNotContain("MapAdminOrderInventoryRecoverySupplyEndpoints", program, StringComparison.Ordinal);
         Assert.Contains("MapOrderEndpoints", program, StringComparison.Ordinal);
         Assert.DoesNotContain("AdminOrderOperationsComposer", program, StringComparison.Ordinal);
         Assert.True(File.Exists(Path.Combine(root, "src", "backend", "Modules", "Order", "Tooba.Order.Application", "Admin", "Operations", "Services", "AdminOrderOperationsOrchestrator.cs")));

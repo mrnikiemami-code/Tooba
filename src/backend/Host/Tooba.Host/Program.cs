@@ -151,17 +151,8 @@ builder.Services.AddToobaCqrsFoundation(
     typeof(Tooba.Order.Application.Admin.Completeness.Queries.ListAdminOrderNotes.ListAdminOrderNotesQuery).Assembly);
 builder.Services.AddScoped<IOrderAdminAuthorizer, HostOrderAdminAuthorizer>();
 builder.Services.AddScoped<
-    Tooba.Order.Application.Admin.OrdersGrid.Ports.IAdminOrderSupplyStatusReader,
-    Tooba.Host.Admin.HostAdminOrderSupplyStatusReader>();
-builder.Services.AddScoped<
     Tooba.Order.Application.Admin.Operations.Ports.IOrderAdminEffectiveAccessReader,
     Tooba.Host.Admin.HostOrderAdminEffectiveAccessReader>();
-builder.Services.AddScoped<
-    Tooba.Order.Application.Admin.Operations.Ports.IAdminOrderOperationsInventoryRecoveryPort,
-    Tooba.Host.Admin.HostAdminOrderOperationsInventoryRecoveryAdapter>();
-builder.Services.AddScoped<
-    Tooba.Order.Application.Admin.Operations.Ports.IAdminOrderOperationsSupplyPort,
-    Tooba.Host.Admin.HostAdminOrderOperationsSupplyAdapter>();
 builder.Services.AddScoped<Tooba.Catalog.Application.IStoreLandingExternalReferenceGate, Tooba.Host.Admin.MerchandisingStoreLandingReferenceGate>();
 builder.Services.AddScoped<Tooba.Catalog.Application.IUnitOfMeasureLanguageGate, Tooba.Host.Admin.HostUnitOfMeasureLanguageGate>();
 builder.Services.AddToobaModules(builder.Configuration, builder.Environment);
@@ -265,8 +256,6 @@ builder.Services.AddScoped<Tooba.Wallet.Endpoints.Customer.IWalletCustomerAuthor
 builder.Services.AddScoped<Tooba.Wallet.Endpoints.Admin.IWalletAdminAuthorizer, Tooba.Host.Admin.HostWalletAdminAuthorizer>();
 builder.Services.AddScoped<Tooba.Host.Customer.CustomerPanelComposer>();
 builder.Services.AddScoped<Tooba.Host.Admin.AdminPanelComposer>();
-builder.Services.AddScoped<Tooba.Host.Admin.OrderInventoryRecoveryComposer>();
-builder.Services.AddScoped<Tooba.Host.Admin.OrderSupplyComposer>();
 builder.Services.AddScoped<Tooba.Host.Wishlist.WishlistComposer>();
 builder.Services.AddScoped<Tooba.Host.Content.ContentPanelComposer>();
 builder.Services.AddScoped<Tooba.Host.Content.ContentAuthorPanelComposer>();
@@ -536,7 +525,6 @@ app.MapCatalogTagEndpoints();
 app.MapCatalogCategoryEndpoints();
 app.MapCatalogDemoDevEndpoints();
 app.MapAdminPanelEndpoints();
-app.MapAdminOrderInventoryRecoverySupplyEndpoints();
 app.MapOrderEndpoints();
 app.MapStorefrontEndpoints();
 app.MapCartEndpoints();

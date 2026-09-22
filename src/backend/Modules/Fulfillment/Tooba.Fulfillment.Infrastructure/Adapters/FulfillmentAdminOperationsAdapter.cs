@@ -13,6 +13,7 @@ namespace Tooba.Fulfillment.Infrastructure.Adapters;
 /// </summary>
 internal sealed class FulfillmentAdminOperationsAdapter(
     IFulfillmentDirectory directory,
+    IFulfillmentShippedQuantityReader shipped,
     ShippingMethodsOptions shippingMethods) : IFulfillmentAdminOperations
 {
     public async Task<FulfillmentSnapshot?> GetAsync(Guid fulfillmentId, CancellationToken cancellationToken) =>
@@ -204,6 +205,14 @@ internal sealed class FulfillmentAdminOperationsAdapter(
 
     public Task VoidUnstartedForCheckoutAsync(Guid checkoutId, CancellationToken cancellationToken) =>
         directory.VoidUnstartedForCheckoutAsync(checkoutId, cancellationToken);
+
+    public Task RebindActiveReservationsFromOrderAsync(Guid checkoutId, CancellationToken cancellationToken) =>
+        directory.RebindActiveReservationsFromOrderAsync(checkoutId, cancellationToken);
+
+    public Task<IReadOnlyDictionary<Guid, decimal>> GetShippedByOrderLineIdsForCheckoutsAsync(
+        IReadOnlyList<Guid> checkoutIds,
+        CancellationToken cancellationToken) =>
+        shipped.GetShippedByOrderLineIdsForCheckoutsAsync(checkoutIds, cancellationToken);
 
     private static IReadOnlyList<AppModels.FulfillmentSelectionCommand> Map(
         IReadOnlyList<FulfillmentSelectionCommand> selections) =>

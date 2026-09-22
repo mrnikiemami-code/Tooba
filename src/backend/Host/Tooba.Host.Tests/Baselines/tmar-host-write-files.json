@@ -17,8 +17,6 @@
     "Admin/IndustryBatchCTemplateCatalogSeed.cs",
     "Admin/MerchandisingCampaignAdminEndpoints.cs",
     "Admin/MerchandisingCampaignDevelopmentSeed.cs",
-    "Admin/OrderInventoryRecoveryComposer.cs",
-    "Admin/OrderSupplyComposer.cs",
     "Admin/ProductWorkspaceComposer.cs",
     "Admin/ProductWorkspaceDevelopmentBootstrap.cs",
     "Admin/ReservationPolicyAdminComposer.cs",

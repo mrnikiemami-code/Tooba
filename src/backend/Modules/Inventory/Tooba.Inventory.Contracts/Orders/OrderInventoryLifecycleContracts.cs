@@ -42,6 +42,48 @@ public sealed record OrderInventorySupplyResult(
 
 public sealed record OrderInventorySupplyStatusSnapshot(Guid CheckoutId, string Status);
 
+/// <summary>رزرو قابل مشاهده برای بازیابی سفارش (بدون Domain Inventory).</summary>
+public sealed record OrderInventoryReservationView(
+    Guid ReservationId,
+    Guid StockItemId,
+    decimal Quantity,
+    string Status,
+    DateTimeOffset? ExpiresAt);
+
+/// <summary>جزئیات کمبود یک خط تأمین برای Order.</summary>
+public sealed record OrderInventorySupplyLineDetail(
+    Guid OrderLineId,
+    string? ItemTitle,
+    string? UnitCode,
+    decimal Required,
+    decimal Available,
+    decimal Shortage,
+    string LineStatus,
+    Guid? BoundReservationId);
+
+/// <summary>وضعیت تأمین با خطوط کمبود.</summary>
+public sealed record OrderInventorySupplyStatusDetail(
+    Guid CheckoutId,
+    string Status,
+    IReadOnlyList<OrderInventorySupplyLineDetail> Lines);
+
+/// <summary>درخواست Ensure کامل با mode پایدار (نام enum مالک Inventory).</summary>
+public sealed record OrderInventoryEnsureDetailRequest(
+    Guid CheckoutId,
+    string Mode,
+    bool AllowReacquire,
+    string Reason,
+    string? CorrelationId,
+    DateTimeOffset? ReviewExpiresAt,
+    IReadOnlyList<OrderInventorySupplyLine> Lines);
+
+/// <summary>نتیجهٔ Ensure با جزئیات خطوط و bindingها.</summary>
+public sealed record OrderInventoryEnsureDetailResult(
+    string Outcome,
+    string Status,
+    IReadOnlyList<OrderInventorySupplyLineDetail> Lines,
+    IReadOnlyDictionary<Guid, Guid> NewBindingsByOrderLineId);
+
 /// <summary>
 /// درز پایدار Cancel / Restore / PaymentBridge برای هماهنگی سفارش با موجودی.
 /// معنای رزرو و انتخاب StockItem در Inventory می‌ماند؛ آمادهٔ آداپتر آیندهٔ HTTP/gRPC.
@@ -88,5 +130,33 @@ public interface IOrderInventoryLifecyclePort
 
     Task<IReadOnlyDictionary<Guid, OrderInventorySupplyStatusSnapshot>> GetSupplyStatusesAsync(
         IReadOnlyDictionary<Guid, IReadOnlyList<OrderInventorySupplyLine>> linesByCheckoutId,
+        CancellationToken cancellationToken);
+
+    /// <summary>رزرو را برای ارزیابی بازیابی می‌خواند؛ Released هم برمی‌گردد.</summary>
+    Task<OrderInventoryReservationView?> FindReservationAsync(
+        Guid reservationId,
+        CancellationToken cancellationToken);
+
+    /// <summary>رزرو جدید authoritative (بدون زنده کردن Released).</summary>
+    Task<OrderInventoryReservationView> ReserveAsync(
+        Guid stockItemId,
+        decimal quantity,
+        string? externalReference,
+        string? idempotencyKey,
+        DateTimeOffset? expiresAt,
+        CancellationToken cancellationToken);
+
+    /// <summary>رزرو Held پرداخت‌شده را از TTL خارج می‌کند.</summary>
+    Task CommitReservationForPaidOrderAsync(Guid reservationId, CancellationToken cancellationToken);
+
+    /// <summary>وضعیت تأمین با خطوط کمبود (CheckOnly).</summary>
+    Task<OrderInventorySupplyStatusDetail> GetSupplyStatusDetailAsync(
+        Guid checkoutId,
+        IReadOnlyList<OrderInventorySupplyLine> lines,
+        CancellationToken cancellationToken);
+
+    /// <summary>Ensure کامل با mode/expiry برای آهنگ‌سازی Order.</summary>
+    Task<OrderInventoryEnsureDetailResult> EnsureSupplyDetailAsync(
+        OrderInventoryEnsureDetailRequest request,
         CancellationToken cancellationToken);
 }

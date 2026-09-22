@@ -5,7 +5,7 @@
     "checkoutState":  "PAUSED_AT_SAFE_W5_CHECKPOINT",
     "lastAcceptedTask":  "TB-TMAR-GOLDEN-WAVE-FINAL-CLOSURE-001",
     "lastAcceptedCommit":  "024ce2b5708aa70ad9f395b4dcbe48fdd6912c5a",
-    "nextTask":  "TB-TMAR-ORDER-GOLDEN-001-R4",
+    "nextTask":  "TB-TMAR-ORDER-GOLDEN-001-R5",
     "nextTaskGate":  "ORDER_GOLDEN_REPAIR_REQUIRED",
     "goldenWaveState":  "COMPLETE",
     "goldenWaveUserReview":  "USER_ACCEPTED",
@@ -124,7 +124,7 @@
     "activeModuleRecovery":  {
                                  "module":  "Order",
                                  "state":  "INCOMPLETE_REFERENCE_REPAIR",
-                                 "task":  "TB-TMAR-ORDER-GOLDEN-001-R3B-R3",
+                                 "task":  "TB-TMAR-ORDER-GOLDEN-001-R4",
                                  "completedSlices":  [
                                                          "ORDER_ENDPOINTS_FOUNDATION",
                                                          "ADMIN_ORDER_COMPLETENESS_CQRS",
@@ -135,10 +135,11 @@
                                                          "ADMIN_ORDER_OPERATIONS_CQRS",
                                                          "ADMIN_ORDER_OPERATIONS_TYPED_CQRS_R3B_R1",
                                                          "ADMIN_ORDER_OPERATIONS_TYPED_FAULT_R3B_R2",
-                                                         "ADMIN_ORDER_OPERATIONS_TYPED_FAULT_SOURCE_R3B_R3"
+                                                         "ADMIN_ORDER_OPERATIONS_TYPED_FAULT_SOURCE_R3B_R3",
+                                                         "ADMIN_ORDER_INVENTORY_RECOVERY_SUPPLY_CQRS_R4"
                                                      ],
-                                 "nextTask":  "TB-TMAR-ORDER-GOLDEN-001-R4",
+                                 "nextTask":  "TB-TMAR-ORDER-GOLDEN-001-R5",
                                  "checkoutState":  "PAUSED_AT_SAFE_W5_CHECKPOINT",
-                                 "notes":  "R3B-R3 removed Message parsing from ContractOperationFault and Ops adapters; typed ContractOperationException.Code at owning Domain/Directory."
+                                 "notes":  "R4 moved Inventory Recovery + Supply authority from Host into Order CQRS/Endpoints; Host composers/endpoints/adapters removed."
                              }
 }
