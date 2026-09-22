@@ -61,8 +61,8 @@ Pricing-State: UNTOUCHED
 Frontend-Production-Changes: NONE
 
 Git:
-  Commit: 9053e92b744eed06205f8b5e8c20a2bcbdaff4c1
-  Message: feat(TB-TMAR-PAYMENT-GOLDEN-001): Payment Endpoints ownership + MediatR CQRS golden.
+  Commit: edbae43f25c4a2d98041236bf3da11aab1a4a3f8
+  Message: docs(TB-TMAR-PAYMENT-GOLDEN-001): tip-align Result Git SHA to final tip.
   Push: origin/main updated
   HEAD == origin/main: YES
   User-Work-Preserved: YES (no reset/clean/force-push; stashes untouched; CART/Fulfillment leftover bridge-result and R1 leftovers left untracked)
@@ -71,3 +71,4 @@ Blockers: NONE
 Next-Recommended-Task: TB-TMAR-PROMOTION-GOLDEN-001
 
 END_TOOBA_WORKER_RESULT
+

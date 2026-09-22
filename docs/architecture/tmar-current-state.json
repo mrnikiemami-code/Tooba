@@ -3,9 +3,9 @@
   "executionMode": "BACKEND_ONLY_UNTIL_EXPLICIT_RELEASE",
   "frontendFrozen": true,
   "checkoutState": "PAUSED_AT_SAFE_W5_CHECKPOINT",
-  "lastAcceptedTask": "TB-TMAR-PAYMENT-GOLDEN-001",
-  "lastAcceptedCommit": "9053e92b744eed06205f8b5e8c20a2bcbdaff4c1",
-  "nextTask": "TB-TMAR-PROMOTION-GOLDEN-001",
+  "lastAcceptedTask": "TB-TMAR-WALLET-GOLDEN-001",
+  "lastAcceptedCommit": "f81c11e9b21c4bb5e05385b253db28fdb1c62402",
+  "nextTask": "TB-TMAR-PAYMENT-GOLDEN-001-R2",
   "locksVersion": "ARCH-COMPLETE-001",
   "definitionMarker": "COMPLETE_REFERENCE_PATTERN_REQUIRES_ENDPOINTS_CQRS_RESULT_CONTRACTS_GUARDS_SOT",
   "recoveryPhrase": "برگردیم به TMAR؛ TOOBA-TMAR-MASTER-RECOVERY.md و آخرین recovery-sot را مبنا بگیر.",
@@ -72,18 +72,20 @@
       "cqrs": "MEDIATR_12_5",
       "lastAcceptedTask": "TB-TMAR-WALLET-GOLDEN-001",
       "lastAcceptedCommit": "f81c11e9b21c4bb5e05385b253db28fdb1c62402"
-    },
-    {
-      "module": "Payment",
-      "state": "COMPLETE_REFERENCE_PATTERN",
-      "httpApplicability": "HTTP_OWNING",
-      "endpointOwnership": "MODULE_ENDPOINTS",
-      "cqrs": "MEDIATR_12_5",
-      "lastAcceptedTask": "TB-TMAR-PAYMENT-GOLDEN-001",
-      "lastAcceptedCommit": "9053e92b744eed06205f8b5e8c20a2bcbdaff4c1"
     }
   ],
   "reopenedModules": [
+    {
+      "module": "Payment",
+      "state": "IN_PROGRESS_GOLDEN_R2_READY",
+      "httpApplicability": "HTTP_OWNING",
+      "endpointOwnership": "PARTIAL_R1_PLUS_STOREFRONT_GRID_MOVED",
+      "cqrs": "MEDIATR_12_5_PARTIAL_R1",
+      "lastAcceptedTask": null,
+      "lastAcceptedCommit": null,
+      "latestAttemptedTask": "TB-TMAR-PAYMENT-GOLDEN-001-R1",
+      "parentIncompleteTask": "TB-TMAR-PAYMENT-GOLDEN-001"
+    },
     {
       "module": "Promotion",
       "state": "REOPENED_ENDPOINT_CQRS_OWNERSHIP",
