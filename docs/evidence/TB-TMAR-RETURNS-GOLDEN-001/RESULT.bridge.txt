@@ -1,4 +1,4 @@
-﻿PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
 BEGIN_TOOBA_WORKER_RESULT
 
 Task-ID: TB-TMAR-RETURNS-GOLDEN-001
@@ -47,9 +47,9 @@ Pricing-State: UNTOUCHED
 Frontend-Production-Changes: NONE
 
 Git:
-  Commit: 83d1b2195437301913ec3a88c8afb9341ede4a1d
+  Commit: da4156232897c66a0c63a4f5e13e99fd2817d888
   Message: feat(TB-TMAR-RETURNS-GOLDEN-001): Returns Endpoints + CQRS Host ownership closure.
-  Push: origin/main updated 37180cc4..83d1b2195437301913ec3a88c8afb9341ede4a1d
+  Push: origin/main updated 37180cc4..da4156232897c66a0c63a4f5e13e99fd2817d888
   HEAD == origin/main: YES
   User-Work-Preserved: YES (no reset/clean/force-push; stashes untouched; cart/fulfillment bridge leftovers left untracked)
 
