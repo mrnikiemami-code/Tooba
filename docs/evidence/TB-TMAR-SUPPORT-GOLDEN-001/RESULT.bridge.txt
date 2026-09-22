@@ -1,0 +1,60 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+BEGIN_TOOBA_WORKER_RESULT
+
+Task-ID: TB-TMAR-SUPPORT-GOLDEN-001
+Claim-Id: 5c72b630-371a-4a8b-af60-e10273dc3d51
+WorkerId: tooba-worker-01
+Channel: tooba-main
+Verdict: PASS
+
+Summary:
+Created Tooba.Support.Endpoints and moved all customer/seller/admin Support ticket routes from Host. Host now only maps MapSupportEndpoints(), registers AddSupportEndpointPresentation(), and customer/seller/admin authorizer adapters; SupportDevelopmentSeedHost retained as Development bootstrap allowlist. Application Commands/Queries split into use-case folders with MediatR 12.5.0 handlers; SupportExceptionMapper is STABLE_CODES_ONLY (exact machine codes only); demo preview via ISupportDemoPreviewPort. Host/Support/SupportEndpoints.cs removed; SupportCommands.cs/SupportQueries.cs removed. Support.Tests 12 passed; full Tooba.slnx build exit 0. Evidence under docs/evidence/TB-TMAR-SUPPORT-GOLDEN-001/.
+
+Program-Name: TMAR — Tooba Microservice-Ready Architecture Recovery
+Track: SUPPORT_GOLDEN_CLOSURE
+Recovery-Start: docs/evidence/TB-TMAR-SUPPORT-GOLDEN-001/recovery-start.md
+Support-HTTP-Ownership-Audit: docs/evidence/TB-TMAR-SUPPORT-GOLDEN-001/support-http-ownership-audit.md
+Support-Endpoints-State: REAL_PROJECT_PRESENT
+Support-CQRS-State: MEDIATR_12_5_APPLICATION_HANDLERS
+Support-Application-UseCases: ListCustomerTickets; GetCustomerTicket; CreateCustomerTicket; ReplyCustomerTicket; CloseCustomerTicket; ReopenCustomerTicket; ListSellerTickets; GetSellerTicket; CreateSellerTicket; ReplySellerTicket; CloseSellerTicket; ReopenSellerTicket; ListAdminTickets; GetAdminTicket; ReplyAdminTicket; PatchAdminTicket; GetSupportDemoPreview
+Support-Auth-Boundary: docs/evidence/TB-TMAR-SUPPORT-GOLDEN-001/support-auth-boundary.md; ISupportCustomerAuthorizer + ISupportSellerAuthorizer + ISupportAdminAuthorizer in Endpoints; Host adapters only; seller caps support.view/create/reply; admin caps support.view/manage with Unavailable fail-open preserved
+Support-Result-Adoption: HTTP_USE_CASES_ADOPTED
+Support-Error-Classification: STABLE_CODES_ONLY
+Support-Prose-Mapping: NONE
+Support-Unexpected-Exception-Swallow: NONE
+Support-Host-Authority-Audit: docs/evidence/TB-TMAR-SUPPORT-GOLDEN-001/support-host-authority-audit.md
+Support-Host-Endpoints: REMOVED
+Support-Host-Business-Authority: NONE
+Support-Host-DbAuthority: NONE_EXCEPT_DEV_BOOTSTRAP_ALLOWLIST
+Support-CrossModule-Boundary: CONTRACTS_ONLY
+Support-Dev-Seed-Audit: docs/evidence/TB-TMAR-SUPPORT-GOLDEN-001/support-dev-seed-audit.md; SupportDevelopmentSeedHost retained Development-only bootstrap
+Support-Physical-State: VERIFIED_ON_DISK_AND_NAMESPACE
+Support-Architecture-Guards: ENFORCED
+Support-Behavior-Preservation: VERIFIED
+Focused-Validation: PASS — Support.Tests exit 0 (12 passed: architecture ownership/CQRS/host guards, CQRS behavior, route ownership, semantic presentation, characterization)
+Skipped-Validation: broad Host suite; Checkout workflow; Tax/Pricing; frontend; unrelated modules
+Full-Validation: PASS — dotnet build src/backend/Tooba.slnx exit 0 (0 errors)
+AntiPattern-Gate: PASS — no Host SupportEndpoints; no ISupportDirectory in Host HTTP; no SupportCommands/SupportQueries dump files; no InvalidOperationException swallow in Endpoints; no manual Rejected/Missing/ToError; Contracts-only Notification; no TypeForwardedTo; SupportDevelopmentSeedHost allowlisted
+Residual-Defects: NONE
+Support-State: COMPLETE_REFERENCE_PATTERN
+Notification-State: COMPLETE_REFERENCE_PATTERN
+Returns-State: COMPLETE_REFERENCE_PATTERN
+Fulfillment-State: COMPLETE_REFERENCE_PATTERN
+Settlement-State: COMPLETE_REFERENCE_PATTERN
+Cart-State: COMPLETE_REFERENCE_PATTERN
+Checkout-State: PAUSED_AT_SAFE_W5_CHECKPOINT
+Tax-State: UNTOUCHED
+Pricing-State: UNTOUCHED
+Frontend-Production-Changes: NONE
+
+Git:
+  Commit: 66ca07787522adad779a87db98c64ffac3c80758
+  Message: feat(TB-TMAR-SUPPORT-GOLDEN-001): Support Endpoints + CQRS Host ownership closure.
+  Push: origin/main updated a20ef51f..66ca07787522adad779a87db98c64ffac3c80758
+  HEAD == origin/main: YES
+  User-Work-Preserved: YES (no reset/clean/force-push; stashes untouched; CART/Fulfillment leftover bridge-result files left untracked)
+
+Blockers: NONE
+Next-Recommended-Task: ARCHITECT_SELECT_NEXT_REOPENED_MODULE
+
+END_TOOBA_WORKER_RESULT
