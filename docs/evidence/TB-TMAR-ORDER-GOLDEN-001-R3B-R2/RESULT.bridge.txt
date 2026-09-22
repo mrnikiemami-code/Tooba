@@ -1,0 +1,26 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+BEGIN_TOOBA_WORKER_RESULT
+
+Task-ID: TB-TMAR-ORDER-GOLDEN-001-R3B-R2
+Parent-Task: TB-TMAR-ORDER-GOLDEN-001-R3B-R1
+Status: PASS
+
+Summary: Removed expected-failure classification by exception message from Order Application Admin Ops. Owning adapters promote stable codes to ContractOperationException; orchestrator maps via .Code only. MapKnownOperationException/TryMapReturnCode and ex.Message filters removed. R3B-R1 typed CQRS and Host ops removal preserved. SoT records R3B-R1/R2; nextTask R4 not started.
+Message-Classification-State: none remaining in Order.Application/Admin/Operations (ex.Message / StartsWith / MapKnown* / TryMapReturnCode / Persian Contains absent)
+Typed-Outcome-State: ContractOperationException + ContractOperationFault in BuildingBlocks; Fulfillment/Returns/Settlement/Payment/Inventory adapters promote known codes; Order maps .Code to SemanticError; unknown exceptions propagate
+CQRS-Repair-Preserved: typed handlers and no ExecuteAsync facade retained
+Host-Removal-Preserved: AdminOrderOperations Host files remain absent
+Contracts-Changed: BuildingBlocks ContractOperationException/Fault; adapter wraps in Fulfillment/Returns/Settlement/Payment; Inventory lifecycle + CheckoutDirectory typed throws
+Architecture-Guard-Validation: OrderAdminOperationsArchitectureGuardTests 7/7 PASS (message-classification forbidden)
+Focused-Validation: Order.Tests 49 PASS; Host focused ops 86 PASS (agent); parent reconfirmed Ops guards + full build
+Full-Validation: dotnet build src/backend/Tooba.slnx succeeded 0 errors; Fulfillment/Returns/Settlement architecture guards PASS
+Recovery-State: tmar-current-state records ADMIN_ORDER_OPERATIONS_TYPED_CQRS_R3B_R1 and ADMIN_ORDER_OPERATIONS_TYPED_FAULT_R3B_R2; Order INCOMPLETE_REFERENCE_REPAIR
+Recovery-Next-Task: TB-TMAR-ORDER-GOLDEN-001-R4
+Residual-Defects: none for R3B-R2
+Order-Overall-State: INCOMPLETE_REFERENCE_REPAIR
+Checkout-State: PAUSED_AT_SAFE_W5_CHECKPOINT
+Git: e7b07a1e1d1072c605e4cb89fda00dfd0617c13e pushed origin/main; HEAD==origin/main
+User-Work-Preserved: yes; unrelated untracked R2C RESULT.bridge.txt untouched
+Next-Recommended-Task: TB-TMAR-ORDER-GOLDEN-001-R4
+
+END_TOOBA_WORKER_RESULT
