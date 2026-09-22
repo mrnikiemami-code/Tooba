@@ -1,3 +1,5 @@
+using Tooba.Wallet.Application.Models;
+using Tooba.Wallet.Application.Ports;
 using Tooba.Wallet.Domain.Aggregates;
 using Tooba.Wallet.Domain.ValueObjects;
 using Tooba.Wallet.Infrastructure.Persistence;
@@ -106,6 +108,32 @@ public static class WalletDemoSnapshotStore
     /// <summary>آخرین snapshot؛ null اگر آماده نباشد.</summary>
     public static WalletDemoSnapshot? Current => _current;
 
-    /// <summary>snapshot را منتشر می‌کند.</summary>
-    public static void Publish(WalletDemoSnapshot snapshot) => _current = snapshot;
+    /// <summary>snapshot را منتشر می‌کند؛ null برای پاک‌سازی (تست/بازنشانی).</summary>
+    public static void Publish(WalletDemoSnapshot? snapshot) => _current = snapshot;
+}
+
+/// <summary>Adapter exposing demo snapshot to Application without Endpoints→Infrastructure coupling.</summary>
+public sealed class WalletDemoPreviewAdapter : IWalletDemoPreviewPort
+{
+    /// <inheritdoc />
+    public WalletDemoPreviewDto? TryGetCurrent()
+    {
+        var s = WalletDemoSnapshotStore.Current;
+        return s is null
+            ? null
+            : new WalletDemoPreviewDto(
+                s.CustomerActorUserId,
+                s.AccountId,
+                s.Balance,
+                s.UnusedGiftCardId,
+                s.UnusedGiftCardDemoCode,
+                s.PartiallyRedeemedGiftCardId,
+                s.ExpiredGiftCardId,
+                s.RevokedGiftCardId,
+                s.WalletPaidCheckoutId,
+                s.WalletPaidPaymentId,
+                s.WalletPaidSellerOrderId,
+                s.WalletRefundReturnRequestId,
+                s.Note);
+    }
 }

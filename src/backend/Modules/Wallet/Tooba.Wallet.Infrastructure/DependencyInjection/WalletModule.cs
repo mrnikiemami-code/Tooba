@@ -10,6 +10,7 @@ using Tooba.Wallet.Application.Ports;
 using Tooba.Wallet.Contracts.Dtos;
 using Tooba.Wallet.Contracts.Payments;
 using Tooba.Wallet.Contracts.Refunds;
+using Tooba.Wallet.Infrastructure.Adapters;
 using Tooba.Wallet.Infrastructure.Persistence;
 using Tooba.Wallet.Infrastructure.Directories;
 
@@ -25,6 +26,7 @@ public sealed class WalletModule : IToobaModule
     public void AddServices(IServiceCollection services, IConfiguration configuration, IHostEnvironment environment)
     {
         services.AddSingleton<IOutboxModuleRegistration, WalletOutboxRegistration>();
+        services.AddSingleton<IWalletDemoPreviewPort, WalletDemoPreviewAdapter>();
         services.AddScoped<IWalletDirectory, WalletDirectory>();
         services.AddScoped<IWalletOrderPaymentPort>(sp => (IWalletOrderPaymentPort)sp.GetRequiredService<IWalletDirectory>());
         services.AddScoped<IWalletRefundCreditPort>(sp => (IWalletRefundCreditPort)sp.GetRequiredService<IWalletDirectory>());

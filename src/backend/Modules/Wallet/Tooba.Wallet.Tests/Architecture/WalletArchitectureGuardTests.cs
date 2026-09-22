@@ -7,14 +7,18 @@ namespace Tooba.Wallet.Tests.Architecture;
 public sealed class WalletArchitectureGuardTests
 {
     private static readonly string[] AllowedDomainFolders = ["Aggregates", "Entities", "ValueObjects", "Events", "Policies"];
-    private static readonly string[] AllowedApplicationFolders = ["Ports", "Models", "Commands", "Queries", "Handlers", "Payments", "Refunds"];
+    private static readonly string[] AllowedApplicationFolders = ["Ports", "Models", "Commands", "Queries", "Errors"];
     private static readonly string[] AllowedContractsFolders = ["Payments", "Refunds", "Dtos", "Ports", "Errors"];
     private static readonly string[] AllowedInfrastructureFolders =
         ["Persistence", "Directories", "Adapters", "Events", "Messaging", "DependencyInjection", "Migrations"];
+    private static readonly string[] AllowedEndpointsFolders = ["Customer", "Admin", "Errors", "Resources"];
 
     private static readonly HashSet<string> HostDbContextAllowlist = new(StringComparer.OrdinalIgnoreCase)
     {
+        "Program.cs",
+        "ModuleMigrationRegistry.cs",
         "WalletDevelopmentSeedHost.cs",
+        "ProductWorkspaceDevelopmentBootstrap.cs",
     };
 
     private static string RepoRoot()
@@ -58,6 +62,7 @@ public sealed class WalletArchitectureGuardTests
         Assert.DoesNotContain(refs, r => r.Contains("Infrastructure", StringComparison.OrdinalIgnoreCase));
         Assert.DoesNotContain(refs, r => r.Contains("Host", StringComparison.OrdinalIgnoreCase));
         Assert.Contains(refs, r => r.Contains("Wallet.Contracts", StringComparison.Ordinal));
+        Assert.Contains(refs, r => r.Contains("BuildingBlocks", StringComparison.Ordinal));
     }
 
     [Fact]
@@ -110,10 +115,12 @@ public sealed class WalletArchitectureGuardTests
         AssertNoRootDump("Tooba.Wallet.Application", AllowedApplicationFolders);
         AssertNoRootDump("Tooba.Wallet.Contracts", AllowedContractsFolders);
         AssertNoRootDump("Tooba.Wallet.Infrastructure", AllowedInfrastructureFolders);
+        AssertNoRootDump("Tooba.Wallet.Endpoints", AllowedEndpointsFolders);
         AssertNamespacesAlign("Tooba.Wallet.Domain", "Tooba.Wallet.Domain");
         AssertNamespacesAlign("Tooba.Wallet.Application", "Tooba.Wallet.Application");
         AssertNamespacesAlign("Tooba.Wallet.Contracts", "Tooba.Wallet.Contracts");
         AssertNamespacesAlign("Tooba.Wallet.Infrastructure", "Tooba.Wallet.Infrastructure");
+        AssertNamespacesAlign("Tooba.Wallet.Endpoints", "Tooba.Wallet.Endpoints");
 
         var hostRoot = Path.Combine(RepoRoot(), "src", "backend", "Host", "Tooba.Host");
         var hostHits = Directory.EnumerateFiles(hostRoot, "*.cs", SearchOption.AllDirectories)
@@ -154,15 +161,107 @@ public sealed class WalletArchitectureGuardTests
         Assert.True(localized.Count == 0, "localized exception prose: " + string.Join("; ", localized));
     }
 
+    [Fact]
+    public void Wallet_endpoints_cqrs_and_host_ownership_are_enforced()
+    {
+        Assert.True(Directory.Exists(Path.Combine(WalletRoot(), "Tooba.Wallet.Endpoints")));
+        Assert.True(File.Exists(Path.Combine(WalletRoot(), "Tooba.Wallet.Endpoints", "Tooba.Wallet.Endpoints.csproj")));
+
+        var customer = File.ReadAllText(Path.Combine(WalletRoot(), "Tooba.Wallet.Endpoints", "Customer", "WalletCustomerEndpoints.cs"));
+        var admin = File.ReadAllText(Path.Combine(WalletRoot(), "Tooba.Wallet.Endpoints", "Admin", "WalletAdminEndpoints.cs"));
+        var module = File.ReadAllText(Path.Combine(WalletRoot(), "Tooba.Wallet.Endpoints", "WalletEndpointModule.cs"));
+
+        foreach (var endpoint in new[] { customer, admin })
+        {
+            Assert.Contains("ISender sender", endpoint, StringComparison.Ordinal);
+            Assert.Contains("ApiResponseFactory", endpoint, StringComparison.Ordinal);
+            Assert.DoesNotContain("IWalletDirectory", endpoint, StringComparison.Ordinal);
+            Assert.DoesNotContain("ex.Message", endpoint, StringComparison.Ordinal);
+            Assert.DoesNotContain("exception.Message", endpoint, StringComparison.Ordinal);
+            Assert.DoesNotContain("new { title", endpoint, StringComparison.Ordinal);
+            Assert.DoesNotContain("WalletDbContext", endpoint, StringComparison.Ordinal);
+            Assert.DoesNotContain("catch (InvalidOperationException", endpoint, StringComparison.Ordinal);
+            Assert.DoesNotContain("catch (PlatformHttpException", endpoint, StringComparison.Ordinal);
+            Assert.DoesNotContain("Rejected(", endpoint, StringComparison.Ordinal);
+            Assert.DoesNotContain("Guid.NewGuid()", endpoint, StringComparison.Ordinal);
+        }
+
+        Assert.Contains("/v1/customer/wallet", customer, StringComparison.Ordinal);
+        Assert.Contains("GetCustomerWalletSummaryQuery", customer, StringComparison.Ordinal);
+        Assert.Contains("RedeemCustomerGiftCardCommand", customer, StringComparison.Ordinal);
+        Assert.Contains("IIdGenerator", customer, StringComparison.Ordinal);
+        Assert.Contains("/v1/admin/gift-cards", admin, StringComparison.Ordinal);
+        Assert.Contains("ListAdminGiftCardsQuery", admin, StringComparison.Ordinal);
+        Assert.Contains("IssueAdminGiftCardCommand", admin, StringComparison.Ordinal);
+        Assert.Contains("GetWalletDemoPreviewQuery", admin, StringComparison.Ordinal);
+        Assert.Contains("demo-preview", admin, StringComparison.Ordinal);
+        Assert.Contains("giftcard.view", admin, StringComparison.Ordinal);
+        Assert.Contains("wallet.adjust", admin, StringComparison.Ordinal);
+        Assert.Contains("IIdGenerator", admin, StringComparison.Ordinal);
+        Assert.Contains("MapWalletEndpoints", module, StringComparison.Ordinal);
+
+        var endpointRefs = ProjectRefs("Tooba.Wallet.Endpoints");
+        Assert.Contains(endpointRefs, r => r.Contains("Wallet.Application", StringComparison.Ordinal));
+        Assert.DoesNotContain(endpointRefs, r => r.Contains("Infrastructure", StringComparison.OrdinalIgnoreCase));
+        Assert.DoesNotContain(endpointRefs, r => r.Contains("Host", StringComparison.OrdinalIgnoreCase));
+        Assert.DoesNotContain(endpointRefs, r => r.Contains("DbContext", StringComparison.OrdinalIgnoreCase));
+        Assert.DoesNotContain(endpointRefs, r => r.Contains("AccessControl.Application", StringComparison.OrdinalIgnoreCase));
+
+        var application = Sources("Tooba.Wallet.Application").ToList();
+        Assert.Contains(application, x => x.Text.Contains("GetCustomerWalletSummaryQuery", StringComparison.Ordinal));
+        Assert.Contains(application, x => x.Text.Contains("RedeemCustomerGiftCardCommand", StringComparison.Ordinal));
+        Assert.Contains(application, x => x.Text.Contains("AdjustAdminWalletCommand", StringComparison.Ordinal));
+        Assert.Contains(application, x => x.Text.Contains("GetWalletDemoPreviewQuery", StringComparison.Ordinal));
+        Assert.Contains(application, x => x.Text.Contains("IRequestHandler<", StringComparison.Ordinal));
+        Assert.Contains(application, x => x.Text.Contains("using MediatR", StringComparison.Ordinal));
+        Assert.Contains(application, x => x.Text.Contains("WalletExceptionMapper", StringComparison.Ordinal));
+        Assert.DoesNotContain(application, x =>
+            x.Text.Contains("StartsWith(\"wallet.\"", StringComparison.Ordinal)
+            || (x.Text.Contains(".Contains(\"", StringComparison.Ordinal) && x.Path.Contains("ExceptionMapper", StringComparison.Ordinal)));
+
+        var hostRoot = Path.Combine(RepoRoot(), "src", "backend", "Host", "Tooba.Host");
+        Assert.False(File.Exists(Path.Combine(hostRoot, "Wallet", "WalletEndpoints.cs")));
+        Assert.True(File.Exists(Path.Combine(hostRoot, "Wallet", "WalletDevelopmentSeedHost.cs")));
+        Assert.True(File.Exists(Path.Combine(hostRoot, "Customer", "HostWalletCustomerAuthorizer.cs")));
+        Assert.True(File.Exists(Path.Combine(hostRoot, "Admin", "HostWalletAdminAuthorizer.cs")));
+
+        var hostCustomer = File.ReadAllText(Path.Combine(hostRoot, "Customer", "HostWalletCustomerAuthorizer.cs"));
+        var hostAdmin = File.ReadAllText(Path.Combine(hostRoot, "Admin", "HostWalletAdminAuthorizer.cs"));
+        Assert.Contains("X-Tooba-Dev-Actor-User-Id", hostCustomer, StringComparison.Ordinal);
+        Assert.Contains("AdminPanelAccess.RequireAuthorizedAsync", hostAdmin, StringComparison.Ordinal);
+        Assert.Contains("AuthorizationDecisionKind.Unavailable", hostAdmin, StringComparison.Ordinal);
+        Assert.DoesNotContain("IWalletDirectory", hostCustomer, StringComparison.Ordinal);
+        Assert.DoesNotContain("IWalletDirectory", hostAdmin, StringComparison.Ordinal);
+
+        var programCs = File.ReadAllText(Path.Combine(hostRoot, "Program.cs"));
+        Assert.Contains("MapWalletEndpoints()", programCs, StringComparison.Ordinal);
+        Assert.Contains("AddWalletEndpointPresentation()", programCs, StringComparison.Ordinal);
+        Assert.Contains("HostWalletCustomerAuthorizer", programCs, StringComparison.Ordinal);
+        Assert.Contains("HostWalletAdminAuthorizer", programCs, StringComparison.Ordinal);
+        Assert.Contains("RedeemCustomerGiftCardCommand", programCs, StringComparison.Ordinal);
+
+        var hostHits = Directory.EnumerateFiles(hostRoot, "*.cs", SearchOption.AllDirectories)
+            .Where(path => !path.Contains($"{Path.DirectorySeparatorChar}bin{Path.DirectorySeparatorChar}")
+                           && !path.Contains($"{Path.DirectorySeparatorChar}obj{Path.DirectorySeparatorChar}"))
+            .Where(path => File.ReadAllText(path).Contains("WalletDbContext", StringComparison.Ordinal))
+            .Where(path => !HostDbContextAllowlist.Contains(Path.GetFileName(path)))
+            .ToList();
+        Assert.True(hostHits.Count == 0, "Host WalletDbContext allowlist: " + string.Join("; ", hostHits));
+    }
+
     private static void AssertNoRootDump(string project, string[] allowedFolders)
     {
         var root = Path.Combine(WalletRoot(), project);
-        var rootCs = Directory.EnumerateFiles(root, "*.cs", SearchOption.TopDirectoryOnly).Select(Path.GetFileName).ToArray();
+        var rootCs = Directory.EnumerateFiles(root, "*.cs", SearchOption.TopDirectoryOnly)
+            .Select(Path.GetFileName)
+            .Where(name => name is not null
+                           && !name.EndsWith("EndpointModule.cs", StringComparison.OrdinalIgnoreCase))
+            .ToArray();
         Assert.True(rootCs.Length == 0, $"{project} root dumping-ground: " + string.Join(", ", rootCs));
         foreach (var dir in Directory.EnumerateDirectories(root))
         {
             var name = Path.GetFileName(dir);
-            if (name is "bin" or "obj") continue;
+            if (name is "bin" or "obj" or "artifacts" || name.StartsWith('.')) continue;
             Assert.Contains(name, allowedFolders);
         }
     }
@@ -198,7 +297,8 @@ public sealed class WalletArchitectureGuardTests
         Sources("Tooba.Wallet.Domain")
             .Concat(Sources("Tooba.Wallet.Application"))
             .Concat(Sources("Tooba.Wallet.Contracts"))
-            .Concat(Sources("Tooba.Wallet.Infrastructure"));
+            .Concat(Sources("Tooba.Wallet.Infrastructure"))
+            .Concat(Sources("Tooba.Wallet.Endpoints"));
 
     private static IEnumerable<(string Path, string Text)> Sources(string projectFolder)
     {

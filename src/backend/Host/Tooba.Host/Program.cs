@@ -41,6 +41,7 @@ using Tooba.Host.Promotion;
 using Tooba.Host.Support;
 using Tooba.Support.Endpoints;
 using Tooba.Host.Wallet;
+using Tooba.Wallet.Endpoints;
 using Tooba.Offer.Endpoints;
 using Tooba.Offer.Endpoints.Seller;
 using Tooba.Cart.Endpoints;
@@ -74,6 +75,7 @@ builder.Services.AddOfferEndpointPresentation();
 builder.Services.AddCartEndpointPresentation();
 builder.Services.AddNotificationEndpointPresentation();
 builder.Services.AddSupportEndpointPresentation();
+builder.Services.AddWalletEndpointPresentation();
 builder.Services.AddPricingEndpointPresentation();
 builder.Services.AddProblemDetails();
 builder.Services.AddSingleton<IExceptionPresentationService, ExceptionPresentationService>();
@@ -139,7 +141,8 @@ builder.Services.AddToobaCqrsFoundation(
     typeof(Tooba.Cart.Application.Commands.CreateGuestCart.CreateGuestCartCommand).Assembly,
     typeof(Tooba.Returns.Application.Commands.CreateReturn.CreateReturnCommand).Assembly,
     typeof(Tooba.Notification.Application.Commands.MarkCustomerNotificationRead.MarkCustomerNotificationReadCommand).Assembly,
-    typeof(Tooba.Support.Application.Commands.CreateCustomerTicket.CreateCustomerTicketCommand).Assembly);
+    typeof(Tooba.Support.Application.Commands.CreateCustomerTicket.CreateCustomerTicketCommand).Assembly,
+    typeof(Tooba.Wallet.Application.Commands.RedeemCustomerGiftCard.RedeemCustomerGiftCardCommand).Assembly);
 builder.Services.AddScoped<Tooba.Catalog.Application.IStoreLandingExternalReferenceGate, Tooba.Host.Admin.MerchandisingStoreLandingReferenceGate>();
 builder.Services.AddScoped<Tooba.Catalog.Application.IUnitOfMeasureLanguageGate, Tooba.Host.Admin.HostUnitOfMeasureLanguageGate>();
 builder.Services.AddToobaModules(builder.Configuration, builder.Environment);
@@ -248,6 +251,8 @@ builder.Services.AddScoped<Tooba.Notification.Endpoints.Seller.INotificationSell
 builder.Services.AddScoped<Tooba.Support.Endpoints.Customer.ISupportCustomerAuthorizer, Tooba.Host.Customer.HostSupportCustomerAuthorizer>();
 builder.Services.AddScoped<Tooba.Support.Endpoints.Seller.ISupportSellerAuthorizer, Tooba.Host.Seller.HostSupportSellerAuthorizer>();
 builder.Services.AddScoped<Tooba.Support.Endpoints.Admin.ISupportAdminAuthorizer, Tooba.Host.Admin.HostSupportAdminAuthorizer>();
+builder.Services.AddScoped<Tooba.Wallet.Endpoints.Customer.IWalletCustomerAuthorizer, Tooba.Host.Customer.HostWalletCustomerAuthorizer>();
+builder.Services.AddScoped<Tooba.Wallet.Endpoints.Admin.IWalletAdminAuthorizer, Tooba.Host.Admin.HostWalletAdminAuthorizer>();
 builder.Services.AddScoped<Tooba.Host.Customer.CustomerPanelComposer>();
 builder.Services.AddScoped<Tooba.Host.Admin.AdminPanelComposer>();
 builder.Services.AddScoped<Tooba.Host.Admin.AdminOrderOperationsComposer>();

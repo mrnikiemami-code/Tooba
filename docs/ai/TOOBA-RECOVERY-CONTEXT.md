@@ -50,7 +50,7 @@ TB-P07-T043
 Last Implementation Task:
 
 ```text
-TB-TMAR-SETTLEMENT-GOLDEN-001
+TB-TMAR-WALLET-GOLDEN-001
 ```
 
 Last Architecture Audit Task:
@@ -62,7 +62,7 @@ TB-P10-T022-R14
 Current Issued Task:
 
 ```text
-TB-TMAR-SETTLEMENT-GOLDEN-001 (Worker PASS — awaiting Architect)
+TB-TMAR-WALLET-GOLDEN-001 (Worker PASS — awaiting Architect)
 ```
 
 Current Repair Task:
@@ -74,23 +74,28 @@ none
 TMAR Module Recovery (Worker PASS — awaiting Architect):
 
 ```text
-TB-TMAR-SETTLEMENT-GOLDEN-001 — Settlement Endpoints Ownership + CQRS/Result + Physical Golden Closure
+TB-TMAR-WALLET-GOLDEN-001 — Wallet Endpoints Ownership + MediatR CQRS + Host Error/Idempotency Cleanup
+Wallet-State: COMPLETE_REFERENCE_PATTERN
+Wallet-HTTP-Ownership: MODULE_ENDPOINTS
+Wallet-Endpoints-State: REAL_PROJECT_PRESENT
+Wallet-CQRS-State: MEDIATR_12_5_APPLICATION_HANDLERS
+Wallet-Host-Endpoints: REMOVED
+Wallet-Host-Business-Authority: NONE
+Wallet-Host-DbAuthority: NONE_EXCEPT_DEV_BOOTSTRAP_ALLOWLIST
+Wallet-CrossModule-Boundary: CONTRACTS_ONLY
+Wallet-Result-Adoption: HTTP_USE_CASES_ADOPTED
+Wallet-Error-Classification: STABLE_CODES_ONLY
+Wallet-Prose-Mapping: NONE
+Wallet-Unexpected-Exception-Swallow: NONE
+Wallet-Idempotency-Generation: IIdGenerator
+Wallet-Physical-State: VERIFIED_ON_DISK_AND_NAMESPACE
+Wallet-Architecture-Guards: ENFORCED
+Wallet-Behavior-Preservation: VERIFIED
+Support-State: COMPLETE_REFERENCE_PATTERN
+Notification-State: COMPLETE_REFERENCE_PATTERN
+Returns-State: COMPLETE_REFERENCE_PATTERN
+Fulfillment-State: COMPLETE_REFERENCE_PATTERN
 Settlement-State: COMPLETE_REFERENCE_PATTERN
-Settlement-HTTP-Ownership: MODULE_ENDPOINTS
-Settlement-Endpoints-State: REAL_PROJECT_PRESENT
-Settlement-CQRS-State: MEDIATR_12_5_APPLICATION_HANDLERS
-Settlement-Host-Endpoints: REMOVED
-Settlement-Host-Business-Authority: NONE
-Settlement-Host-DbAuthority: NONE
-Settlement-Grid-Ownership: MODULE_OWNED
-Settlement-CrossModule-Boundary: CONTRACTS_ONLY
-Settlement-Result-Adoption: HTTP_USE_CASES_ADOPTED
-Settlement-Error-Classification: STABLE_CODES_ONLY
-Settlement-Prose-Mapping: NONE
-Settlement-Unexpected-Exception-Swallow: NONE
-Settlement-Physical-State: VERIFIED_ON_DISK_AND_NAMESPACE
-Settlement-Architecture-Guards: ENFORCED
-Settlement-Behavior-Preservation: VERIFIED
 Cart-State: COMPLETE_REFERENCE_PATTERN
 Checkout-State: PAUSED_AT_SAFE_W5_CHECKPOINT
 Tax-State: DEFERRED_PHYSICAL_REVIEW_BY_USER

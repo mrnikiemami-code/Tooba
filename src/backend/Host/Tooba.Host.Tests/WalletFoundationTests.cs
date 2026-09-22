@@ -23,21 +23,27 @@ public sealed class WalletFoundationTests
         Assert.Contains(AccessScopeKind.GlobalWithinOwner, view.ScopeKinds);
     }
 
-    /// <summary>نقاط انتهایی Customer/Admin در Host سیم‌کشی شده‌اند.</summary>
+    /// <summary>نقاط انتهایی Customer/Admin در Wallet.Endpoints سیم‌کشی شده‌اند.</summary>
     [Fact]
     public void Wallet_endpoints_source_declares_audience_routes()
     {
-        var path = Path.Combine(FindRepoRoot(), "src", "backend", "Host", "Tooba.Host", "Wallet", "WalletEndpoints.cs");
-        Assert.True(File.Exists(path));
-        var source = File.ReadAllText(path);
-        Assert.Contains("MapWalletEndpoints", source, StringComparison.Ordinal);
-        Assert.Contains("/v1/customer/wallet", source, StringComparison.Ordinal);
-        Assert.Contains("/v1/customer/wallet/ledger", source, StringComparison.Ordinal);
-        Assert.Contains("/v1/customer/wallet/gift-cards/redeem", source, StringComparison.Ordinal);
-        Assert.Contains("/v1/admin/gift-cards", source, StringComparison.Ordinal);
-        Assert.Contains("/v1/admin/wallets/", source, StringComparison.Ordinal);
-        Assert.Contains("demo-preview", source, StringComparison.Ordinal);
-        Assert.Contains("AdminPanelAccess.RequireAuthorizedAsync", source, StringComparison.Ordinal);
+        var hostEndpoints = Path.Combine(FindRepoRoot(), "src", "backend", "Host", "Tooba.Host", "Wallet", "WalletEndpoints.cs");
+        Assert.False(File.Exists(hostEndpoints));
+
+        var customer = Path.Combine(FindRepoRoot(), "src", "backend", "Modules", "Wallet", "Tooba.Wallet.Endpoints", "Customer", "WalletCustomerEndpoints.cs");
+        var admin = Path.Combine(FindRepoRoot(), "src", "backend", "Modules", "Wallet", "Tooba.Wallet.Endpoints", "Admin", "WalletAdminEndpoints.cs");
+        Assert.True(File.Exists(customer));
+        Assert.True(File.Exists(admin));
+        var customerSource = File.ReadAllText(customer);
+        var adminSource = File.ReadAllText(admin);
+        Assert.Contains("/v1/customer/wallet", customerSource, StringComparison.Ordinal);
+        Assert.Contains("/v1/customer/wallet/ledger", customerSource, StringComparison.Ordinal);
+        Assert.Contains("/v1/customer/wallet/gift-cards/redeem", customerSource, StringComparison.Ordinal);
+        Assert.Contains("/v1/admin/gift-cards", adminSource, StringComparison.Ordinal);
+        Assert.Contains("/v1/admin/wallets/", adminSource, StringComparison.Ordinal);
+        Assert.Contains("demo-preview", adminSource, StringComparison.Ordinal);
+        Assert.Contains("ISender", customerSource, StringComparison.Ordinal);
+        Assert.Contains("ISender", adminSource, StringComparison.Ordinal);
     }
 
     /// <summary>ماژول Wallet نباید Infrastructure همتا را ProjectReference کند.</summary>
@@ -105,7 +111,10 @@ public sealed class WalletFoundationTests
             "Tooba.Host",
             "Program.cs"));
         Assert.Contains("MapWalletEndpoints", program, StringComparison.Ordinal);
+        Assert.Contains("AddWalletEndpointPresentation", program, StringComparison.Ordinal);
         Assert.Contains("WalletDevelopmentSeedHost", program, StringComparison.Ordinal);
+        Assert.Contains("HostWalletCustomerAuthorizer", program, StringComparison.Ordinal);
+        Assert.Contains("HostWalletAdminAuthorizer", program, StringComparison.Ordinal);
     }
 
     /// <summary>مسیر deep-link کیف پول در allowlist اعلان‌ها باشد.</summary>

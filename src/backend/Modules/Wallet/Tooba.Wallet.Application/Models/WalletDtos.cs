@@ -136,7 +136,7 @@ public sealed record WalletCreditResultDto(
     decimal Balance,
     bool IdempotentReplay);
 
-/// <summary>snapshot پیش‌نمایش توسعه.</summary>
+/// <summary>snapshot پیش‌نمایش توسعه (matches prior Host demo JSON shape).</summary>
 public sealed record WalletDemoPreviewDto(
     Guid CustomerActorUserId,
     Guid AccountId,
@@ -146,4 +146,8 @@ public sealed record WalletDemoPreviewDto(
     Guid PartiallyRedeemedGiftCardId,
     Guid ExpiredGiftCardId,
     Guid RevokedGiftCardId,
+    Guid? WalletPaidCheckoutId,
+    Guid? WalletPaidPaymentId,
+    Guid? WalletPaidSellerOrderId,
+    Guid? WalletRefundReturnRequestId,
     string Note);

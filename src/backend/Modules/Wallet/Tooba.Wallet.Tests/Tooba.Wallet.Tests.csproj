@@ -21,6 +21,8 @@
     <ProjectReference Include="..\Tooba.Wallet.Application\Tooba.Wallet.Application.csproj" />
     <ProjectReference Include="..\Tooba.Wallet.Contracts\Tooba.Wallet.Contracts.csproj" />
     <ProjectReference Include="..\Tooba.Wallet.Infrastructure\Tooba.Wallet.Infrastructure.csproj" />
+    <ProjectReference Include="..\Tooba.Wallet.Endpoints\Tooba.Wallet.Endpoints.csproj" />
     <ProjectReference Include="..\..\Notification\Tooba.Notification.Contracts\Tooba.Notification.Contracts.csproj" />
+    <ProjectReference Include="..\..\..\BuildingBlocks\Tooba.BuildingBlocks\Tooba.BuildingBlocks.csproj" />
   </ItemGroup>
 </Project>

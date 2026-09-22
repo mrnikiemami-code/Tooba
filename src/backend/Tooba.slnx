@@ -126,6 +126,7 @@
     <Project Path="Modules/Wallet/Tooba.Wallet.Application/Tooba.Wallet.Application.csproj" />
     <Project Path="Modules/Wallet/Tooba.Wallet.Contracts/Tooba.Wallet.Contracts.csproj" />
     <Project Path="Modules/Wallet/Tooba.Wallet.Infrastructure/Tooba.Wallet.Infrastructure.csproj" />
+    <Project Path="Modules/Wallet/Tooba.Wallet.Endpoints/Tooba.Wallet.Endpoints.csproj" />
     <Project Path="Modules/Wallet/Tooba.Wallet.Tests/Tooba.Wallet.Tests.csproj" />
   </Folder>
   <Folder Name="/Modules/Fulfillment/">
