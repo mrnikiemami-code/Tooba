@@ -131,32 +131,32 @@ public sealed class CustomerPayment : IHasDomainEvents
     {
         if (paymentId == Guid.Empty)
         {
-            throw new InvalidOperationException("payment.ids_required");
+            throw new ContractOperationException("payment.ids_required");
         }
 
         if (amount <= 0)
         {
-            throw new InvalidOperationException("payment.amount_positive");
+            throw new ContractOperationException("payment.amount_positive");
         }
 
         if (allocations.Count == 0)
         {
-            throw new InvalidOperationException("payment.allocations_required");
+            throw new ContractOperationException("payment.allocations_required");
         }
 
         if (allocations.Sum(x => x.Amount) != amount)
         {
-            throw new InvalidOperationException("payment.allocations_sum_mismatch");
+            throw new ContractOperationException("payment.allocations_sum_mismatch");
         }
 
         if (allocations.Any(x => x.Amount <= 0))
         {
-            throw new InvalidOperationException("payment.allocation.non_positive");
+            throw new ContractOperationException("payment.allocation.non_positive");
         }
 
         if (!allocations.Any(x => x.TargetKind == PaymentAllocationTargetKind.SellerOrder))
         {
-            throw new InvalidOperationException("payment.seller_allocation_required");
+            throw new ContractOperationException("payment.seller_allocation_required");
         }
 
         var payment = new CustomerPayment
@@ -197,7 +197,7 @@ public sealed class CustomerPayment : IHasDomainEvents
             or PaymentStatus.Refunded
             or PaymentStatus.RefundFailed)
         {
-            throw new InvalidOperationException("payment.terminal_no_reinitiate");
+            throw new ContractOperationException("payment.terminal_no_reinitiate");
         }
 
         var attempt = PaymentAttempt.Initiate(attemptId, PaymentId, ProviderCode, requestReference, at);
@@ -215,19 +215,19 @@ public sealed class CustomerPayment : IHasDomainEvents
     {
         if (!string.Equals(ProviderCode, "manual", StringComparison.OrdinalIgnoreCase))
         {
-            throw new InvalidOperationException("payment.method.not_manual");
+            throw new ContractOperationException("payment.method.not_manual");
         }
 
         if (Status != PaymentStatus.Pending)
         {
-            throw new InvalidOperationException("payment.manual.submit.invalid_state");
+            throw new ContractOperationException("payment.manual.submit.invalid_state");
         }
 
         var attempt = _attempts
             .Where(x => x.Status == PaymentAttemptStatus.Initiated)
             .OrderByDescending(x => x.CreatedAt)
             .FirstOrDefault()
-            ?? throw new InvalidOperationException("payment.attempt.missing");
+            ?? throw new ContractOperationException("payment.attempt.missing");
         attempt.SubmitCustomerEvidence(transferReference, proofMediaAssetId, at);
         UnpaidTimeoutAt = null;
         UpdatedAt = at;
@@ -332,7 +332,7 @@ public sealed class CustomerPayment : IHasDomainEvents
     {
         if (!string.Equals(ProviderCode, "manual", StringComparison.OrdinalIgnoreCase))
         {
-            throw new InvalidOperationException("payment.restore.not_manual");
+            throw new ContractOperationException("payment.restore.not_manual");
         }
 
         if (Status == PaymentStatus.Pending)
@@ -346,17 +346,17 @@ public sealed class CustomerPayment : IHasDomainEvents
                 return latest;
             }
 
-            throw new InvalidOperationException("payment.restore.invalid_state");
+            throw new ContractOperationException("payment.restore.invalid_state");
         }
 
         if (Status == PaymentStatus.Succeeded)
         {
-            throw new InvalidOperationException("payment.restore.already_succeeded");
+            throw new ContractOperationException("payment.restore.already_succeeded");
         }
 
         if (Status != PaymentStatus.Failed)
         {
-            throw new InvalidOperationException("payment.restore.invalid_state");
+            throw new ContractOperationException("payment.restore.invalid_state");
         }
 
         var rejected = _attempts
@@ -365,7 +365,7 @@ public sealed class CustomerPayment : IHasDomainEvents
                 && string.Equals(x.FailureCode, "MANUAL_DEPOSIT_REJECTED", StringComparison.Ordinal));
         if (rejected is null)
         {
-            throw new InvalidOperationException("payment.restore.invalid_state");
+            throw new ContractOperationException("payment.restore.invalid_state");
         }
 
         var attempt = RecordInitiation(attemptId, $"manual-restore-{PaymentId:N}-{at.UtcTicks}", at);
@@ -380,7 +380,7 @@ public sealed class CustomerPayment : IHasDomainEvents
     {
         if (!string.Equals(ProviderCode, "manual", StringComparison.OrdinalIgnoreCase))
         {
-            throw new InvalidOperationException("payment.unconfirm.not_manual");
+            throw new ContractOperationException("payment.unconfirm.not_manual");
         }
 
         if (Status == PaymentStatus.Pending)
@@ -392,12 +392,12 @@ public sealed class CustomerPayment : IHasDomainEvents
                 return latest;
             }
 
-            throw new InvalidOperationException("payment.unconfirm.invalid_state");
+            throw new ContractOperationException("payment.unconfirm.invalid_state");
         }
 
         if (Status != PaymentStatus.Succeeded)
         {
-            throw new InvalidOperationException("payment.unconfirm.invalid_state");
+            throw new ContractOperationException("payment.unconfirm.invalid_state");
         }
 
         CompletedAt = null;
@@ -429,7 +429,7 @@ public sealed class CustomerPayment : IHasDomainEvents
 
         if (Status == PaymentStatus.Succeeded)
         {
-            throw new InvalidOperationException("payment.cancel.requires_refund");
+            throw new ContractOperationException("payment.cancel.requires_refund");
         }
 
         Status = PaymentStatus.Cancelled;
@@ -449,7 +449,7 @@ public sealed class CustomerPayment : IHasDomainEvents
 
         if (Status != PaymentStatus.Succeeded)
         {
-            throw new InvalidOperationException("payment.refund.invalid_state");
+            throw new ContractOperationException("payment.refund.invalid_state");
         }
 
         Status = PaymentStatus.RefundPending;
@@ -467,7 +467,7 @@ public sealed class CustomerPayment : IHasDomainEvents
 
         if (Status is not (PaymentStatus.RefundPending or PaymentStatus.Succeeded))
         {
-            throw new InvalidOperationException("payment.refund.invalid_state");
+            throw new ContractOperationException("payment.refund.invalid_state");
         }
 
         Status = PaymentStatus.Refunded;
@@ -485,7 +485,7 @@ public sealed class CustomerPayment : IHasDomainEvents
 
         if (Status != PaymentStatus.RefundPending)
         {
-            throw new InvalidOperationException("payment.refund.invalid_state");
+            throw new ContractOperationException("payment.refund.invalid_state");
         }
 
         Status = PaymentStatus.RefundFailed;
@@ -509,7 +509,7 @@ public sealed class CustomerPayment : IHasDomainEvents
 
         if (Status == PaymentStatus.Refunded)
         {
-            throw new InvalidOperationException("payment.restore.refund_completed");
+            throw new ContractOperationException("payment.restore.refund_completed");
         }
 
         if (Status is PaymentStatus.RefundPending or PaymentStatus.RefundFailed)

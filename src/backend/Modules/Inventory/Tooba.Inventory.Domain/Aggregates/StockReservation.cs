@@ -67,17 +67,17 @@ public sealed class StockReservation
     {
         if (reservationId == Guid.Empty || stockItemId == Guid.Empty)
         {
-            throw new InvalidOperationException("inventory.reservation.id_required");
+            throw new ContractOperationException("inventory.reservation.id_required");
         }
 
         if (quantity <= 0)
         {
-            throw new InvalidOperationException("inventory.reservation.quantity_invalid");
+            throw new ContractOperationException("inventory.reservation.quantity_invalid");
         }
 
         if (expiresAt is { } expiry && expiry <= now)
         {
-            throw new InvalidOperationException("inventory.reservation.expiry_invalid");
+            throw new ContractOperationException("inventory.reservation.expiry_invalid");
         }
 
         return new StockReservation
@@ -102,12 +102,12 @@ public sealed class StockReservation
     {
         if (Status is StockReservationStatus.Released or StockReservationStatus.Consumed)
         {
-            throw new InvalidOperationException("inventory.reservation.not_active");
+            throw new ContractOperationException("inventory.reservation.not_active");
         }
 
         if (Status != StockReservationStatus.Held)
         {
-            throw new InvalidOperationException("inventory.reservation.not_active");
+            throw new ContractOperationException("inventory.reservation.not_active");
         }
 
         if (ExpiresAt is null)
@@ -128,17 +128,17 @@ public sealed class StockReservation
     {
         if (Status is StockReservationStatus.Released or StockReservationStatus.Consumed)
         {
-            throw new InvalidOperationException("inventory.reservation.not_active");
+            throw new ContractOperationException("inventory.reservation.not_active");
         }
 
         if (Status != StockReservationStatus.Held)
         {
-            throw new InvalidOperationException("inventory.reservation.not_active");
+            throw new ContractOperationException("inventory.reservation.not_active");
         }
 
         if (reviewExpiresAt <= now)
         {
-            throw new InvalidOperationException("inventory.reservation.review_expiry_invalid");
+            throw new ContractOperationException("inventory.reservation.review_expiry_invalid");
         }
 
         if (ExpiresAt is { } existing && existing >= reviewExpiresAt)
@@ -158,7 +158,7 @@ public sealed class StockReservation
     {
         if (Status != StockReservationStatus.Held)
         {
-            throw new InvalidOperationException("inventory.reservation.not_active");
+            throw new ContractOperationException("inventory.reservation.not_active");
         }
 
         Status = status;

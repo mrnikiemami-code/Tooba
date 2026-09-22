@@ -175,6 +175,43 @@ public sealed class OrderAdminOperationsArchitectureGuardTests
         Assert.DoesNotContain("AdminOrderOperationsOrchestrator", hostEndpoints, StringComparison.Ordinal);
     }
 
+    [Fact]
+    public void Contract_ops_adapters_do_not_parse_exception_message()
+    {
+        var adapters = new[]
+        {
+            Path.Combine(RepoRoot(), "src", "backend", "Modules", "Fulfillment",
+                "Tooba.Fulfillment.Infrastructure", "Adapters", "FulfillmentAdminOperationsAdapter.cs"),
+            Path.Combine(RepoRoot(), "src", "backend", "Modules", "Returns",
+                "Tooba.Returns.Infrastructure", "Adapters", "ReturnAdminOperationsAdapter.cs"),
+            Path.Combine(RepoRoot(), "src", "backend", "Modules", "Settlement",
+                "Tooba.Settlement.Infrastructure", "Adapters", "SettlementOrderAccrualAdapter.cs"),
+            Path.Combine(RepoRoot(), "src", "backend", "Modules", "Payment",
+                "Tooba.Payment.Infrastructure", "Adapters", "PaymentHostContractBridge.cs"),
+            Path.Combine(RepoRoot(), "src", "backend", "Modules", "Inventory",
+                "Tooba.Inventory.Application", "Orders", "OrderInventoryLifecycleAdapter.cs"),
+            Path.Combine(RepoRoot(), "src", "backend", "Modules", "Order",
+                "Tooba.Order.Infrastructure", "CheckoutDirectory.cs"),
+            Path.Combine(RepoRoot(), "src", "backend", "BuildingBlocks",
+                "Tooba.BuildingBlocks", "ContractOperationFault.cs"),
+        };
+
+        foreach (var path in adapters)
+        {
+            Assert.True(File.Exists(path), path);
+            var text = File.ReadAllText(path);
+            Assert.DoesNotContain("LooksLikeStableCode", text, StringComparison.Ordinal);
+            Assert.DoesNotContain("TryMapExact(ex.Message", text, StringComparison.Ordinal);
+            Assert.DoesNotContain("TryMapExact(exception.Message", text, StringComparison.Ordinal);
+            Assert.DoesNotContain("when (ContractOperationFault", text, StringComparison.Ordinal);
+            Assert.DoesNotContain("catch (InvalidOperationException ex) when", text, StringComparison.Ordinal);
+        }
+
+        var fault = File.ReadAllText(adapters[^1]);
+        Assert.DoesNotContain("LooksLikeStableCode", fault, StringComparison.Ordinal);
+        Assert.DoesNotContain("ex.Message", fault, StringComparison.Ordinal);
+    }
+
     private static string OrderRoot() =>
         Path.Combine(RepoRoot(), "src", "backend", "Modules", "Order");
 

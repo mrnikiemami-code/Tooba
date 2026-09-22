@@ -30,6 +30,10 @@ public static class ReturnsExceptionMapper
         {
             return Result.Success(await action());
         }
+        catch (ContractOperationException ex) when (TryMapExact(ex.Code, out var error))
+        {
+            return Result.Failure<T>(error);
+        }
         catch (InvalidOperationException ex) when (TryMapExact(ex.Message, out var error))
         {
             return Result.Failure<T>(error);

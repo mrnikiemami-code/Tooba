@@ -1,5 +1,7 @@
 using Tooba.Fulfillment.Domain.ValueObjects;
 
+using Tooba.BuildingBlocks;
+
 namespace Tooba.Fulfillment.Domain.Aggregates;
 
 
@@ -67,12 +69,12 @@ public sealed class FulfillmentItem
     {
         if (quantity <= 0)
         {
-            throw new InvalidOperationException("fulfillment.processing.qty_positive");
+            throw new ContractOperationException("fulfillment.processing.qty_positive");
         }
 
         if (QuantityProcessing + quantity > QuantityOrdered)
         {
-            throw new InvalidOperationException("fulfillment.processing.qty_exceeds");
+            throw new ContractOperationException("fulfillment.processing.qty_exceeds");
         }
 
         QuantityProcessing += quantity;
@@ -82,12 +84,12 @@ public sealed class FulfillmentItem
     {
         if (quantity <= 0)
         {
-            throw new InvalidOperationException("fulfillment.processing.release_qty_positive");
+            throw new ContractOperationException("fulfillment.processing.release_qty_positive");
         }
 
         if (QuantityProcessing - quantity < QuantityPacked)
         {
-            throw new InvalidOperationException("fulfillment.processing.release_invalid");
+            throw new ContractOperationException("fulfillment.processing.release_invalid");
         }
 
         QuantityProcessing -= quantity;
@@ -97,12 +99,12 @@ public sealed class FulfillmentItem
     {
         if (quantity <= 0)
         {
-            throw new InvalidOperationException("fulfillment.pack.qty_positive");
+            throw new ContractOperationException("fulfillment.pack.qty_positive");
         }
 
         if (QuantityPacked + quantity > QuantityOrdered)
         {
-            throw new InvalidOperationException("fulfillment.pack.qty_exceeds");
+            throw new ContractOperationException("fulfillment.pack.qty_exceeds");
         }
 
         QuantityPacked += quantity;
@@ -112,12 +114,12 @@ public sealed class FulfillmentItem
     {
         if (quantity <= 0)
         {
-            throw new InvalidOperationException("fulfillment.pack.release_qty_positive");
+            throw new ContractOperationException("fulfillment.pack.release_qty_positive");
         }
 
         if (quantity > QuantityPacked)
         {
-            throw new InvalidOperationException("fulfillment.pack.release_exceeds");
+            throw new ContractOperationException("fulfillment.pack.release_exceeds");
         }
 
         QuantityPacked -= quantity;
@@ -133,12 +135,12 @@ public sealed class FulfillmentItem
     {
         if (quantity <= 0)
         {
-            throw new InvalidOperationException("fulfillment.ship.qty_positive");
+            throw new ContractOperationException("fulfillment.ship.qty_positive");
         }
 
         if (QuantityShipped + quantity > QuantityOrdered)
         {
-            throw new InvalidOperationException("fulfillment.ship.qty_exceeds");
+            throw new ContractOperationException("fulfillment.ship.qty_exceeds");
         }
 
         QuantityShipped += quantity;

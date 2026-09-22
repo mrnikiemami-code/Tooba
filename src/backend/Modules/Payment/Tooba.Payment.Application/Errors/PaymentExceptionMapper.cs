@@ -82,6 +82,10 @@ public static class PaymentExceptionMapper
         {
             return Result.Success(await action());
         }
+        catch (ContractOperationException ex) when (TryMapExact(ex.Code, out var mapped))
+        {
+            return Result.Failure<T>(mapped);
+        }
         catch (InvalidOperationException ex) when (TryMapExact(ex.Message, out var mapped))
         {
             return Result.Failure<T>(mapped);
@@ -93,6 +97,10 @@ public static class PaymentExceptionMapper
         try
         {
             return Result.Success(await action());
+        }
+        catch (ContractOperationException ex) when (TryMapExact(ex.Code, publicErrorCode, out var mapped))
+        {
+            return Result.Failure<T>(mapped);
         }
         catch (InvalidOperationException ex) when (TryMapExact(ex.Message, publicErrorCode, out var mapped))
         {

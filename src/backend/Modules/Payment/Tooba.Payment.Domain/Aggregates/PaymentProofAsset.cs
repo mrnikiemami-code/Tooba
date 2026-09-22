@@ -1,5 +1,7 @@
 using Tooba.Payment.Domain.ValueObjects;
 
+using Tooba.BuildingBlocks;
+
 namespace Tooba.Payment.Domain.Aggregates;
 
 /// <summary>
@@ -29,7 +31,7 @@ public sealed class PaymentProofAsset
     {
         if (proofAssetRowId == Guid.Empty || paymentId == Guid.Empty || mediaAssetId == Guid.Empty)
         {
-            throw new InvalidOperationException("payment.proof.invalid");
+            throw new ContractOperationException("payment.proof.invalid");
         }
 
         return new PaymentProofAsset

@@ -103,16 +103,16 @@ public sealed class ReturnDirectory : IReturnDirectory
         }
 
         var orderContext = await _orders.GetReturnContextAsync(command.SellerOrderId, cancellationToken)
-            ?? throw new InvalidOperationException("returns." + ReturnEligibilityReasonCodes.OrderMissing);
+            ?? throw new ContractOperationException("returns." + ReturnEligibilityReasonCodes.OrderMissing);
         if (requireOwner && orderContext.PlacedByUserId != command.ActorUserId)
         {
-            throw new InvalidOperationException("returns.actor.not_owner");
+            throw new ContractOperationException("returns.actor.not_owner");
         }
 
         var eligibility = await _eligibility.EvaluateAsync(command.SellerOrderId, cancellationToken);
         if (!eligibility.Eligible)
         {
-            throw new InvalidOperationException("returns." + eligibility.ReasonCode);
+            throw new ContractOperationException("returns." + eligibility.ReasonCode);
         }
 
         var remainingByLine = eligibility.Lines.ToDictionary(x => x.OrderLineId, x => x.RemainingReturnableQuantity);
@@ -120,11 +120,11 @@ public sealed class ReturnDirectory : IReturnDirectory
         foreach (var item in command.Items)
         {
             var orderLine = orderContext.Lines.SingleOrDefault(x => x.OrderLineId == item.OrderLineId)
-                ?? throw new InvalidOperationException("returns.order_line.not_found");
+                ?? throw new ContractOperationException("returns.order_line.not_found");
             remainingByLine.TryGetValue(item.OrderLineId, out var remaining);
             if (item.Quantity <= 0 || item.Quantity > remaining)
             {
-                throw new InvalidOperationException("returns.qty.exceeds_remaining");
+                throw new ContractOperationException("returns.qty.exceeds_remaining");
             }
 
             lineSnapshots.Add((item.OrderLineId, item.Quantity, orderLine.UnitPriceSnapshot, orderLine.ReservationId));
@@ -229,10 +229,10 @@ public sealed class ReturnDirectory : IReturnDirectory
         await _guard.EnsureCanMutateAsync(cancellationToken);
         var request = await LoadMutableAsync(command.ReturnRequestId, cancellationToken);
         var payment = await ResolvePaymentAsync(request, cancellationToken)
-            ?? throw new InvalidOperationException("returns.payment.not_found");
+            ?? throw new ContractOperationException("returns.payment.not_found");
         if (!string.Equals(payment.Status, "Succeeded", StringComparison.Ordinal))
         {
-            throw new InvalidOperationException("returns.payment.not_succeeded");
+            throw new ContractOperationException("returns.payment.not_succeeded");
         }
 
         request.Approve(payment.PaymentId, _clock.UtcNow, command.RefundDestination);
@@ -266,11 +266,11 @@ public sealed class ReturnDirectory : IReturnDirectory
         var request = await LoadMutableAsync(command.ReturnRequestId, cancellationToken);
         if (request.Status != ReturnRequestStatus.RefundFailed)
         {
-            throw new InvalidOperationException("returns.retry.invalid_status");
+            throw new ContractOperationException("returns.retry.invalid_status");
         }
 
         var paymentId = request.PaymentId
-            ?? throw new InvalidOperationException("returns.payment.reference_missing");
+            ?? throw new ContractOperationException("returns.payment.reference_missing");
         request.MarkRefundProcessing(_clock.UtcNow);
         var attempt = request.BeginRefundAttempt(
             _ids.NewId(),
@@ -360,7 +360,7 @@ public sealed class ReturnDirectory : IReturnDirectory
     private async Task<ReturnRequest> LoadMutableAsync(Guid returnRequestId, CancellationToken cancellationToken)
     {
         var request = await _db.ReturnRequests.SingleOrDefaultAsync(x => x.ReturnRequestId == returnRequestId, cancellationToken)
-            ?? throw new InvalidOperationException("returns.request.not_found");
+            ?? throw new ContractOperationException("returns.request.not_found");
         var items = await _db.ReturnItems.Where(x => x.ReturnRequestId == returnRequestId).ToListAsync(cancellationToken);
         var attempts = await _db.RefundAttempts.Where(x => x.ReturnRequestId == returnRequestId).ToListAsync(cancellationToken);
         request.AttachLoadedItems(items);

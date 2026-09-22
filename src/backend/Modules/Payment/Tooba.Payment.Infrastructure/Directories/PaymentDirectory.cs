@@ -1,4 +1,4 @@
-﻿using Tooba.BuildingBlocks;
+using Tooba.BuildingBlocks;
 using Microsoft.EntityFrameworkCore;
 using Tooba.Payment.Application.Models;
 using Tooba.Payment.Application.Ports;
@@ -135,10 +135,10 @@ public sealed class PaymentDirectory : IPaymentDirectory, IPaymentReconciliation
         }
 
         var payable = await _orders.GetPayableAsync(command.CheckoutId, command.ActorUserId, command.BuyerPartyId, cancellationToken)
-            ?? throw new InvalidOperationException("payment.checkout.not_payable");
+            ?? throw new ContractOperationException("payment.checkout.not_payable");
         if (payable.Mode != OrderPaymentMode.OnlinePurchase)
         {
-            throw new InvalidOperationException("payment.initiate.reservation_forbidden");
+            throw new ContractOperationException("payment.initiate.reservation_forbidden");
         }
 
         var pending = payable.SellerOrders.Where(x => x.PendingPayment).ToArray();
@@ -150,7 +150,7 @@ public sealed class PaymentDirectory : IPaymentDirectory, IPaymentReconciliation
         if (pending.Select(x => x.Currency).Distinct(StringComparer.OrdinalIgnoreCase).Count() != 1
             || !string.Equals(payable.Currency, pending[0].Currency, StringComparison.OrdinalIgnoreCase))
         {
-            throw new InvalidOperationException("payment.currency.mismatch");
+            throw new ContractOperationException("payment.currency.mismatch");
         }
 
         var merchandise = pending.Sum(x => x.PayableAmount);
@@ -248,14 +248,14 @@ public sealed class PaymentDirectory : IPaymentDirectory, IPaymentReconciliation
     {
         await _guard.EnsureCanMutateAsync(cancellationToken);
         var payment = await _db.Payments.SingleOrDefaultAsync(x => x.PaymentId == command.PaymentId, cancellationToken)
-            ?? throw new InvalidOperationException("payment.not_found");
+            ?? throw new ContractOperationException("payment.not_found");
         var attempt = await _db.Attempts.SingleOrDefaultAsync(
             x => x.AttemptId == command.AttemptId && x.PaymentId == payment.PaymentId,
             cancellationToken)
-            ?? throw new InvalidOperationException("payment.attempt.not_found");
+            ?? throw new ContractOperationException("payment.attempt.not_found");
         if (attempt.ProviderRequestReference != command.ProviderRequestReference)
         {
-            throw new InvalidOperationException("payment.provider_reference.mismatch");
+            throw new ContractOperationException("payment.provider_reference.mismatch");
         }
 
         if (payment.Status == PaymentStatus.Succeeded)
@@ -362,16 +362,16 @@ public sealed class PaymentDirectory : IPaymentDirectory, IPaymentReconciliation
     {
         await _guard.EnsureCanMutateAsync(cancellationToken);
         var payment = await _db.Payments.SingleOrDefaultAsync(x => x.PaymentId == paymentId, cancellationToken)
-            ?? throw new InvalidOperationException("payment.not_found");
+            ?? throw new ContractOperationException("payment.not_found");
         await EnsureActorCanSeeAsync(payment, actorUserId, buyerPartyId, cancellationToken);
         if (!ManualPaymentGateway.IsManual(payment.ProviderCode))
         {
-            throw new InvalidOperationException("payment.method.not_manual");
+            throw new ContractOperationException("payment.method.not_manual");
         }
 
         if (payment.Status != PaymentStatus.Pending)
         {
-            throw new InvalidOperationException("payment.manual.submit.invalid_state");
+            throw new ContractOperationException("payment.manual.submit.invalid_state");
         }
 
         var duplicate = await _db.ProofAssets.AnyAsync(x => x.MediaAssetId == mediaAssetId, cancellationToken);
@@ -382,7 +382,7 @@ public sealed class PaymentDirectory : IPaymentDirectory, IPaymentReconciliation
                 cancellationToken);
             if (!owned)
             {
-                throw new InvalidOperationException("payment.proof.foreign");
+                throw new ContractOperationException("payment.proof.foreign");
             }
 
             return;
@@ -403,7 +403,7 @@ public sealed class PaymentDirectory : IPaymentDirectory, IPaymentReconciliation
     {
         await _guard.EnsureCanMutateAsync(cancellationToken);
         var payment = await _db.Payments.SingleOrDefaultAsync(x => x.PaymentId == paymentId, cancellationToken)
-            ?? throw new InvalidOperationException("payment.not_found");
+            ?? throw new ContractOperationException("payment.not_found");
         await EnsureActorCanSeeAsync(payment, actorUserId, buyerPartyId, cancellationToken);
         if (payment.Status == PaymentStatus.Succeeded)
         {
@@ -426,7 +426,7 @@ public sealed class PaymentDirectory : IPaymentDirectory, IPaymentReconciliation
                 cancellationToken);
             if (!owned)
             {
-                throw new InvalidOperationException("payment.proof.foreign");
+                throw new ContractOperationException("payment.proof.foreign");
             }
         }
 
@@ -442,7 +442,7 @@ public sealed class PaymentDirectory : IPaymentDirectory, IPaymentReconciliation
         CancellationToken cancellationToken)
     {
         var payment = await _db.Payments.AsNoTracking().SingleOrDefaultAsync(x => x.PaymentId == paymentId, cancellationToken)
-            ?? throw new InvalidOperationException("payment.not_found");
+            ?? throw new ContractOperationException("payment.not_found");
         await EnsureActorCanSeeAsync(payment, actorUserId, buyerPartyId, cancellationToken);
         await RestoreDepositAsync(paymentId, cancellationToken);
     }
@@ -487,13 +487,13 @@ public sealed class PaymentDirectory : IPaymentDirectory, IPaymentReconciliation
         var payment = await _db.Payments.AsNoTracking()
             .SingleOrDefaultAsync(x => x.PaymentId == paymentId, cancellationToken)
             .ConfigureAwait(false)
-            ?? throw new InvalidOperationException("payment.missing");
+            ?? throw new ContractOperationException("payment.missing");
         var attempt = await _db.Attempts.AsNoTracking()
             .Where(x => x.PaymentId == paymentId)
             .OrderByDescending(x => x.CreatedAt)
             .FirstOrDefaultAsync(cancellationToken)
             .ConfigureAwait(false)
-            ?? throw new InvalidOperationException("payment.attempt.missing");
+            ?? throw new ContractOperationException("payment.attempt.missing");
         return await VerifyAsync(
             new VerifyPaymentCommand(
                 payment.PaymentId,
@@ -510,7 +510,7 @@ public sealed class PaymentDirectory : IPaymentDirectory, IPaymentReconciliation
         var payment = await _db.Payments
             .SingleOrDefaultAsync(x => x.PaymentId == paymentId, cancellationToken)
             .ConfigureAwait(false)
-            ?? throw new InvalidOperationException("payment.missing");
+            ?? throw new ContractOperationException("payment.missing");
         if (payment.Status == PaymentStatus.Succeeded)
         {
             return new PaymentVerificationResult(payment.PaymentId, payment.Status, NewlySucceeded: false);
@@ -518,12 +518,12 @@ public sealed class PaymentDirectory : IPaymentDirectory, IPaymentReconciliation
 
         if (!ManualPaymentGateway.IsManual(payment.ProviderCode))
         {
-            throw new InvalidOperationException("payment.method.not_manual");
+            throw new ContractOperationException("payment.method.not_manual");
         }
 
         if (payment.Status != PaymentStatus.Pending)
         {
-            throw new InvalidOperationException("payment.confirm.invalid_state");
+            throw new ContractOperationException("payment.confirm.invalid_state");
         }
 
         var attempt = await _db.Attempts
@@ -531,10 +531,10 @@ public sealed class PaymentDirectory : IPaymentDirectory, IPaymentReconciliation
             .OrderByDescending(x => x.CreatedAt)
             .FirstOrDefaultAsync(cancellationToken)
             .ConfigureAwait(false)
-            ?? throw new InvalidOperationException("payment.attempt.missing");
+            ?? throw new ContractOperationException("payment.attempt.missing");
         if (string.IsNullOrWhiteSpace(attempt.CustomerTransferReference))
         {
-            throw new InvalidOperationException("payment.tracking_reference.required");
+            throw new ContractOperationException("payment.tracking_reference.required");
         }
 
         payment.AttachLoadedAttempt(attempt);
@@ -562,15 +562,15 @@ public sealed class PaymentDirectory : IPaymentDirectory, IPaymentReconciliation
         var payment = await _db.Payments
             .SingleOrDefaultAsync(x => x.PaymentId == paymentId, cancellationToken)
             .ConfigureAwait(false)
-            ?? throw new InvalidOperationException("payment.missing");
+            ?? throw new ContractOperationException("payment.missing");
         if (!ManualPaymentGateway.IsManual(payment.ProviderCode))
         {
-            throw new InvalidOperationException("payment.method.not_manual");
+            throw new ContractOperationException("payment.method.not_manual");
         }
 
         if (payment.Status != PaymentStatus.Pending)
         {
-            throw new InvalidOperationException("payment.reject.invalid_state");
+            throw new ContractOperationException("payment.reject.invalid_state");
         }
 
         var attempt = await _db.Attempts
@@ -578,7 +578,7 @@ public sealed class PaymentDirectory : IPaymentDirectory, IPaymentReconciliation
             .OrderByDescending(x => x.CreatedAt)
             .FirstOrDefaultAsync(cancellationToken)
             .ConfigureAwait(false)
-            ?? throw new InvalidOperationException("payment.attempt.missing");
+            ?? throw new ContractOperationException("payment.attempt.missing");
 
         payment.AttachLoadedAttempt(attempt);
         var allocations = await _db.Allocations.Where(x => x.PaymentId == payment.PaymentId).ToListAsync(cancellationToken)
@@ -596,10 +596,10 @@ public sealed class PaymentDirectory : IPaymentDirectory, IPaymentReconciliation
         var payment = await _db.Payments
             .SingleOrDefaultAsync(x => x.PaymentId == paymentId, cancellationToken)
             .ConfigureAwait(false)
-            ?? throw new InvalidOperationException("payment.missing");
+            ?? throw new ContractOperationException("payment.missing");
         if (!ManualPaymentGateway.IsManual(payment.ProviderCode))
         {
-            throw new InvalidOperationException("payment.restore.not_manual");
+            throw new ContractOperationException("payment.restore.not_manual");
         }
 
         var attempts = await _db.Attempts
@@ -632,10 +632,10 @@ public sealed class PaymentDirectory : IPaymentDirectory, IPaymentReconciliation
         var payment = await _db.Payments
             .SingleOrDefaultAsync(x => x.PaymentId == paymentId, cancellationToken)
             .ConfigureAwait(false)
-            ?? throw new InvalidOperationException("payment.missing");
+            ?? throw new ContractOperationException("payment.missing");
         if (!ManualPaymentGateway.IsManual(payment.ProviderCode))
         {
-            throw new InvalidOperationException("payment.unconfirm.not_manual");
+            throw new ContractOperationException("payment.unconfirm.not_manual");
         }
 
         var attempts = await _db.Attempts
@@ -896,11 +896,11 @@ public sealed class PaymentDirectory : IPaymentDirectory, IPaymentReconciliation
     {
         await _guard.EnsureCanMutateAsync(cancellationToken);
         var payment = await _db.Payments.SingleOrDefaultAsync(x => x.PaymentId == paymentId, cancellationToken)
-            ?? throw new InvalidOperationException("payment.not_found");
+            ?? throw new ContractOperationException("payment.not_found");
         await EnsureActorCanSeeAsync(payment, actorUserId, buyerPartyId, cancellationToken);
         if (payment.Status != PaymentStatus.Expired)
         {
-            throw new InvalidOperationException("payment.unpaid.retry.invalid_state");
+            throw new ContractOperationException("payment.unpaid.retry.invalid_state");
         }
 
         var attempts = await _db.Attempts.Where(x => x.PaymentId == paymentId).ToListAsync(cancellationToken);
@@ -937,7 +937,7 @@ public sealed class PaymentDirectory : IPaymentDirectory, IPaymentReconciliation
         var payable = await _orders.GetPayableAsync(payment.CheckoutId, actorUserId, buyerPartyId, cancellationToken);
         if (payable is null)
         {
-            throw new InvalidOperationException("payment.access.order_identity_required");
+            throw new ContractOperationException("payment.access.order_identity_required");
         }
     }
 

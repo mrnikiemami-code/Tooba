@@ -78,12 +78,12 @@ public sealed class SettlementEntry : IHasDomainEvents
     {
         if (grossAmount <= 0)
         {
-            throw new InvalidOperationException("settlement.amount.invalid");
+            throw new ContractOperationException("settlement.amount.invalid");
         }
 
         if (string.IsNullOrWhiteSpace(idempotencyKey))
         {
-            throw new InvalidOperationException("settlement.idempotency.required");
+            throw new ContractOperationException("settlement.idempotency.required");
         }
 
         var commission = decimal.Round(grossAmount * policySnapshot.Rate, 4, MidpointRounding.AwayFromZero);
@@ -132,12 +132,12 @@ public sealed class SettlementEntry : IHasDomainEvents
     {
         if (refundGrossAmount <= 0)
         {
-            throw new InvalidOperationException("settlement.amount.invalid");
+            throw new ContractOperationException("settlement.amount.invalid");
         }
 
         if (string.IsNullOrWhiteSpace(idempotencyKey))
         {
-            throw new InvalidOperationException("settlement.idempotency.required");
+            throw new ContractOperationException("settlement.idempotency.required");
         }
 
         var commission = decimal.Round(refundGrossAmount * policySnapshot.Rate, 4, MidpointRounding.AwayFromZero);
@@ -186,12 +186,12 @@ public sealed class SettlementEntry : IHasDomainEvents
     {
         if (grossAmount <= 0)
         {
-            throw new InvalidOperationException("settlement.amount.invalid");
+            throw new ContractOperationException("settlement.amount.invalid");
         }
 
         if (string.IsNullOrWhiteSpace(idempotencyKey))
         {
-            throw new InvalidOperationException("settlement.idempotency.required");
+            throw new ContractOperationException("settlement.idempotency.required");
         }
 
         var commission = decimal.Round(grossAmount * policySnapshot.Rate, 4, MidpointRounding.AwayFromZero);
@@ -240,12 +240,12 @@ public sealed class SettlementEntry : IHasDomainEvents
     {
         if (grossAmount <= 0)
         {
-            throw new InvalidOperationException("settlement.amount.invalid");
+            throw new ContractOperationException("settlement.amount.invalid");
         }
 
         if (string.IsNullOrWhiteSpace(idempotencyKey))
         {
-            throw new InvalidOperationException("settlement.idempotency.required");
+            throw new ContractOperationException("settlement.idempotency.required");
         }
 
         var commission = decimal.Round(grossAmount * policySnapshot.Rate, 4, MidpointRounding.AwayFromZero);

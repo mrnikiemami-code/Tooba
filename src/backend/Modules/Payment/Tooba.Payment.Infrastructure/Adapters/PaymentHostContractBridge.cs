@@ -1,5 +1,4 @@
 #pragma warning disable CS1591
-using Tooba.BuildingBlocks;
 using Tooba.Payment.Application.Ports;
 using Tooba.Payment.Contracts.Admin;
 using Tooba.Payment.Contracts.Customer;
@@ -7,6 +6,11 @@ using Tooba.Payment.Contracts.Hold;
 
 namespace Tooba.Payment.Infrastructure.Adapters;
 
+/// <summary>
+/// Contract bridge for Host/Order admin surfaces. Expected failures originate as
+/// <see cref="Tooba.BuildingBlocks.ContractOperationException"/> at owning Payment Directory;
+/// this bridge does not parse Message or promote InvalidOperationException.
+/// </summary>
 public sealed class PaymentHostContractBridge(
     IPaymentDirectory payments,
     IPaymentAdminDirectory admin,
@@ -28,23 +32,22 @@ public sealed class PaymentHostContractBridge(
     }
 
     public Task CloseOrStartRefundForOrderCancelAsync(Guid checkoutId, CancellationToken cancellationToken) =>
-        GuardAsync(() => admin.CloseOrStartRefundForOrderCancelAsync(checkoutId, cancellationToken));
+        admin.CloseOrStartRefundForOrderCancelAsync(checkoutId, cancellationToken);
 
     public Task RestoreAfterOrderCancelRestoreAsync(Guid checkoutId, CancellationToken cancellationToken) =>
-        GuardAsync(() => admin.RestoreAfterOrderCancelRestoreAsync(checkoutId, cancellationToken));
+        admin.RestoreAfterOrderCancelRestoreAsync(checkoutId, cancellationToken);
 
-    public Task<PaymentAdminMutationResult> ConfirmDepositAsync(Guid paymentId, CancellationToken cancellationToken) =>
-        GuardAsync(async () => Map(await admin.ConfirmDepositAsync(paymentId, cancellationToken)));
+    public async Task<PaymentAdminMutationResult> ConfirmDepositAsync(Guid paymentId, CancellationToken cancellationToken) =>
+        Map(await admin.ConfirmDepositAsync(paymentId, cancellationToken));
 
-    public Task<PaymentAdminMutationResult> RejectDepositAsync(Guid paymentId, CancellationToken cancellationToken) =>
-        GuardAsync(async () => Map(await admin.RejectDepositAsync(paymentId, cancellationToken)));
+    public async Task<PaymentAdminMutationResult> RejectDepositAsync(Guid paymentId, CancellationToken cancellationToken) =>
+        Map(await admin.RejectDepositAsync(paymentId, cancellationToken));
 
-    public Task<PaymentAdminMutationResult> RestoreDepositAsync(Guid paymentId, CancellationToken cancellationToken) =>
-        GuardAsync(async () => Map(await admin.RestoreDepositAsync(paymentId, cancellationToken)));
+    public async Task<PaymentAdminMutationResult> RestoreDepositAsync(Guid paymentId, CancellationToken cancellationToken) =>
+        Map(await admin.RestoreDepositAsync(paymentId, cancellationToken));
 
-    public Task<PaymentAdminMutationResult> UnconfirmDepositAsync(Guid paymentId, CancellationToken cancellationToken) =>
-        GuardAsync(async () => Map(await admin.UnconfirmDepositAsync(paymentId, cancellationToken)));
-
+    public async Task<PaymentAdminMutationResult> UnconfirmDepositAsync(Guid paymentId, CancellationToken cancellationToken) =>
+        Map(await admin.UnconfirmDepositAsync(paymentId, cancellationToken));
     public async Task<PaymentCustomerSnapshot?> GetLatestForCheckoutAsync(
         Guid checkoutId, Guid actorUserId, Guid? buyerPartyId, CancellationToken cancellationToken)
     {
@@ -83,36 +86,4 @@ public sealed class PaymentHostContractBridge(
 
     private static PaymentAdminMutationResult Map(PaymentVerificationResult x) =>
         new(x.PaymentId, x.Status.ToString(), x.NewlySucceeded);
-
-    private static async Task<T> GuardAsync<T>(Func<Task<T>> action)
-    {
-        try
-        {
-            return await action();
-        }
-        catch (ContractOperationException)
-        {
-            throw;
-        }
-        catch (InvalidOperationException ex) when (ContractOperationFault.LooksLikeStableCode(ex.Message))
-        {
-            throw new ContractOperationException(ex.Message, ex);
-        }
-    }
-
-    private static async Task GuardAsync(Func<Task> action)
-    {
-        try
-        {
-            await action();
-        }
-        catch (ContractOperationException)
-        {
-            throw;
-        }
-        catch (InvalidOperationException ex) when (ContractOperationFault.LooksLikeStableCode(ex.Message))
-        {
-            throw new ContractOperationException(ex.Message, ex);
-        }
-    }
 }

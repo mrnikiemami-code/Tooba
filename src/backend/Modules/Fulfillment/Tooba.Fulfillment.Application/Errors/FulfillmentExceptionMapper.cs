@@ -28,6 +28,10 @@ public static class FulfillmentExceptionMapper
         {
             return Result.Success(await action());
         }
+        catch (ContractOperationException ex) when (TryMapExact(ex.Code, out var error))
+        {
+            return Result.Failure<T>(error);
+        }
         catch (InvalidOperationException ex) when (TryMapExact(ex.Message, out var error))
         {
             return Result.Failure<T>(error);
@@ -41,6 +45,10 @@ public static class FulfillmentExceptionMapper
         {
             await action();
             return Result.Success();
+        }
+        catch (ContractOperationException ex) when (TryMapExact(ex.Code, out var error))
+        {
+            return Result.Failure(error);
         }
         catch (InvalidOperationException ex) when (TryMapExact(ex.Message, out var error))
         {

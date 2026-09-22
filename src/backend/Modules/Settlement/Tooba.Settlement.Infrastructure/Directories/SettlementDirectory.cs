@@ -72,10 +72,10 @@ public sealed class SettlementDirectory : ISettlementDirectory
         }
 
         var payment = await _payments.GetPaymentAsync(paymentId, cancellationToken)
-            ?? throw new InvalidOperationException("settlement.accrual.payment_missing");
+            ?? throw new ContractOperationException("settlement.accrual.payment_missing");
         if (!payment.IsSucceeded)
         {
-            throw new InvalidOperationException("settlement.accrual.payment_not_succeeded");
+            throw new ContractOperationException("settlement.accrual.payment_not_succeeded");
         }
 
         var policy = await GetDefaultCommissionPolicyAsync(cancellationToken);
@@ -98,10 +98,10 @@ public sealed class SettlementDirectory : ISettlementDirectory
             }
 
             var order = await _orders.GetAsync(sellerOrderId, cancellationToken)
-                ?? throw new InvalidOperationException("settlement.accrual.order_missing");
+                ?? throw new ContractOperationException("settlement.accrual.order_missing");
             if (!order.IsPaid)
             {
-                throw new InvalidOperationException("settlement.accrual.order_not_paid");
+                throw new ContractOperationException("settlement.accrual.order_not_paid");
             }
 
             var account = await EnsureAccountAsync(order.SellerPartyId, allocation.Currency, now, cancellationToken);
@@ -156,11 +156,11 @@ public sealed class SettlementDirectory : ISettlementDirectory
         }
 
         var refund = await _returns.GetAsync(returnRequestId, cancellationToken)
-            ?? throw new InvalidOperationException("settlement.refund.missing");
+            ?? throw new ContractOperationException("settlement.refund.missing");
         if (!string.Equals(refund.Currency, currency, StringComparison.OrdinalIgnoreCase)
             || refund.RefundAmount != refundAmount)
         {
-            throw new InvalidOperationException("settlement.refund.mismatch");
+            throw new ContractOperationException("settlement.refund.mismatch");
         }
 
         var policy = await GetDefaultCommissionPolicyAsync(cancellationToken);
@@ -329,12 +329,12 @@ public sealed class SettlementDirectory : ISettlementDirectory
 
         var account = await _db.SettlementAccounts.AsNoTracking()
             .SingleOrDefaultAsync(x => x.SellerPartyId == command.SellerPartyId, cancellationToken)
-            ?? throw new InvalidOperationException("settlement.account.missing");
+            ?? throw new ContractOperationException("settlement.account.missing");
 
         var balance = await BuildBalanceAsync(account, cancellationToken);
         if (command.Amount > balance.AvailableBalance)
         {
-            throw new InvalidOperationException("settlement.payout.invalid_amount");
+            throw new ContractOperationException("settlement.payout.invalid_amount");
         }
 
         var now = _clock.UtcNow;
@@ -415,7 +415,7 @@ public sealed class SettlementDirectory : ISettlementDirectory
         var gates = await GetRestoreSettlementGatesAsync(sellerOrderIds, cancellationToken);
         if (gates.Values.Any(x => x.HasCompletedPayoutEffect))
         {
-            throw new InvalidOperationException("settlement.unconfirm.payout_completed");
+            throw new ContractOperationException("settlement.unconfirm.payout_completed");
         }
 
         var entries = await _db.SettlementEntries
@@ -450,7 +450,7 @@ public sealed class SettlementDirectory : ISettlementDirectory
         var gates = await GetRestoreSettlementGatesAsync(ids, cancellationToken);
         if (gates.Values.Any(x => x.HasCompletedPayoutEffect))
         {
-            throw new InvalidOperationException("settlement.cancel.payout_completed");
+            throw new ContractOperationException("settlement.cancel.payout_completed");
         }
 
         var now = _clock.UtcNow;
@@ -525,7 +525,7 @@ public sealed class SettlementDirectory : ISettlementDirectory
         var gates = await GetRestoreSettlementGatesAsync(ids, cancellationToken);
         if (gates.Values.Any(x => x.HasCompletedPayoutEffect))
         {
-            throw new InvalidOperationException("settlement.restore.payout_completed");
+            throw new ContractOperationException("settlement.restore.payout_completed");
         }
 
         var now = _clock.UtcNow;
@@ -610,7 +610,7 @@ public sealed class SettlementDirectory : ISettlementDirectory
     {
         var request = await _db.PayoutRequests
             .SingleOrDefaultAsync(x => x.PayoutRequestId == payoutRequestId, cancellationToken)
-            ?? throw new InvalidOperationException("settlement.payout.missing");
+            ?? throw new ContractOperationException("settlement.payout.missing");
         if (request.Status == PayoutStatus.Succeeded)
         {
             return await MapPayoutAsync(request, cancellationToken);

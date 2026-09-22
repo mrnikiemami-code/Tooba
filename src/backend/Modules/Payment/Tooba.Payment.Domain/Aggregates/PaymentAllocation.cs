@@ -1,5 +1,7 @@
 using Tooba.Payment.Domain.ValueObjects;
 
+using Tooba.BuildingBlocks;
+
 namespace Tooba.Payment.Domain.Aggregates;
 
 /// <summary>
@@ -79,22 +81,22 @@ public sealed class PaymentAllocation
     {
         if (allocationId == Guid.Empty || paymentId == Guid.Empty)
         {
-            throw new InvalidOperationException("payment.allocation.ids_required");
+            throw new ContractOperationException("payment.allocation.ids_required");
         }
 
         if (amount <= 0)
         {
-            throw new InvalidOperationException("payment.allocation.amount_positive");
+            throw new ContractOperationException("payment.allocation.amount_positive");
         }
 
         if (targetKind == PaymentAllocationTargetKind.SellerOrder && targetId == Guid.Empty)
         {
-            throw new InvalidOperationException("payment.allocation.seller_order_required");
+            throw new ContractOperationException("payment.allocation.seller_order_required");
         }
 
         if (targetKind == PaymentAllocationTargetKind.StoreShipping && targetId != StoreShippingTargetId)
         {
-            throw new InvalidOperationException("payment.allocation.store_shipping_target");
+            throw new ContractOperationException("payment.allocation.store_shipping_target");
         }
 
         return new PaymentAllocation

@@ -1,5 +1,7 @@
 using Tooba.Payment.Domain.ValueObjects;
 
+using Tooba.BuildingBlocks;
+
 namespace Tooba.Payment.Domain.Aggregates;
 
 /// <summary>
@@ -85,7 +87,7 @@ public sealed class PaymentAttempt
     public static PaymentAttempt Initiate(Guid attemptId, Guid paymentId, string providerCode, string requestReference, DateTimeOffset at)
     {
         if (attemptId == Guid.Empty || paymentId == Guid.Empty)
-            throw new InvalidOperationException("payment.attempt.ids_required");
+            throw new ContractOperationException("payment.attempt.ids_required");
         return new PaymentAttempt
         {
             AttemptId = attemptId,
@@ -135,17 +137,17 @@ public sealed class PaymentAttempt
         var trimmed = (transferReference ?? string.Empty).Trim();
         if (string.IsNullOrWhiteSpace(trimmed))
         {
-            throw new InvalidOperationException("payment.tracking_reference.required");
+            throw new ContractOperationException("payment.tracking_reference.required");
         }
 
         if (trimmed.Length > CustomerTransferReferenceMaxLength)
         {
-            throw new InvalidOperationException("payment.tracking_reference.too_long");
+            throw new ContractOperationException("payment.tracking_reference.too_long");
         }
 
         if (Status != PaymentAttemptStatus.Initiated)
         {
-            throw new InvalidOperationException("payment.manual.evidence.immutable");
+            throw new ContractOperationException("payment.manual.evidence.immutable");
         }
 
         if (EvidenceSubmittedAt is not null)
@@ -157,7 +159,7 @@ public sealed class PaymentAttempt
                 return;
             }
 
-            throw new InvalidOperationException("payment.manual.evidence.duplicate");
+            throw new ContractOperationException("payment.manual.evidence.duplicate");
         }
 
         CustomerTransferReference = trimmed;

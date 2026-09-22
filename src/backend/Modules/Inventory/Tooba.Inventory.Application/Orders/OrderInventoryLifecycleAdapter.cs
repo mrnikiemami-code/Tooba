@@ -47,17 +47,10 @@ public sealed class OrderInventoryLifecycleAdapter : IOrderInventoryLifecyclePor
                 cancellationToken);
             return receipt.ReservationId;
         }
-        catch (ContractOperationException)
+        catch (ContractOperationException ex) when (
+            ex.Code.StartsWith("inventory.", StringComparison.Ordinal))
         {
-            throw;
-        }
-        catch (InvalidOperationException ex) when (ContractOperationFault.LooksLikeStableCode(ex.Message))
-        {
-            throw new ContractOperationException(
-                ex.Message.StartsWith("inventory.", StringComparison.Ordinal)
-                    ? "order.restore.inventory_failed"
-                    : ex.Message,
-                ex);
+            throw new ContractOperationException("order.restore.inventory_failed", ex);
         }
     }
 
@@ -72,18 +65,11 @@ public sealed class OrderInventoryLifecycleAdapter : IOrderInventoryLifecyclePor
         var existing = await _inventory.FindReservationAsync(reservationId, cancellationToken);
         if (existing is { Status: StockReservationStatus.Held })
         {
-            try
-            {
-                await _inventory.PromoteReservationForManualPaymentReviewAsync(
-                    reservationId,
-                    reviewExpiresAt,
-                    cancellationToken);
-                return reservationId;
-            }
-            catch (InvalidOperationException ex) when (ContractOperationFault.LooksLikeStableCode(ex.Message))
-            {
-                throw new ContractOperationException(ex.Message, ex);
-            }
+            await _inventory.PromoteReservationForManualPaymentReviewAsync(
+                reservationId,
+                reviewExpiresAt,
+                cancellationToken);
+            return reservationId;
         }
 
         if (existing is null)

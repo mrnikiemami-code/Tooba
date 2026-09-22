@@ -77,10 +77,10 @@ public sealed class FulfillmentDirectory : IFulfillmentDirectory
             }
 
             var handoff = await _orders.GetHandoffAsync(sellerOrderId, cancellationToken)
-                ?? throw new InvalidOperationException("fulfillment.order.not_found");
+                ?? throw new ContractOperationException("fulfillment.order.not_found");
             if (!handoff.IsPaid)
             {
-                throw new InvalidOperationException("fulfillment.order.not_paid");
+                throw new ContractOperationException("fulfillment.order.not_paid");
             }
 
             var unit = FulfillmentUnit.CreateFromPaidOrder(
@@ -303,7 +303,7 @@ public sealed class FulfillmentDirectory : IFulfillmentDirectory
         if (!string.IsNullOrWhiteSpace(methodCode))
         {
             var definition = ShippingMethodRegistry.Find(methodCode)
-                ?? throw new InvalidOperationException("fulfillment.shipping_method.unsupported");
+                ?? throw new ContractOperationException("fulfillment.shipping_method.unsupported");
             methodLabel = definition.LabelFa;
             if (string.IsNullOrWhiteSpace(carrierDisplayName))
             {
@@ -385,7 +385,7 @@ public sealed class FulfillmentDirectory : IFulfillmentDirectory
                 cancellationToken);
         if (duplicate)
         {
-            throw new InvalidOperationException("fulfillment.tracking.duplicate");
+            throw new ContractOperationException("fulfillment.tracking.duplicate");
         }
 
         unit.AssignTracking(shipmentId, normalized, _clock.UtcNow);
@@ -395,7 +395,7 @@ public sealed class FulfillmentDirectory : IFulfillmentDirectory
         }
         catch (DbUpdateException ex)
         {
-            throw new InvalidOperationException("fulfillment.tracking.duplicate", ex);
+            throw new ContractOperationException("fulfillment.tracking.duplicate", ex);
         }
 
         _telemetry.RecordTrackingAssigned();
@@ -423,7 +423,7 @@ public sealed class FulfillmentDirectory : IFulfillmentDirectory
                 cancellationToken);
         if (duplicate)
         {
-            throw new InvalidOperationException("fulfillment.tracking.duplicate");
+            throw new ContractOperationException("fulfillment.tracking.duplicate");
         }
 
         unit.CorrectTracking(shipmentId, normalized, _clock.UtcNow);
@@ -433,7 +433,7 @@ public sealed class FulfillmentDirectory : IFulfillmentDirectory
         }
         catch (DbUpdateException ex)
         {
-            throw new InvalidOperationException("fulfillment.tracking.duplicate", ex);
+            throw new ContractOperationException("fulfillment.tracking.duplicate", ex);
         }
 
         _telemetry.RecordTrackingAssigned();
@@ -529,7 +529,7 @@ public sealed class FulfillmentDirectory : IFulfillmentDirectory
     private async Task<FulfillmentUnit> LoadMutableAsync(Guid fulfillmentId, CancellationToken cancellationToken)
     {
         var unit = await _db.Fulfillments.SingleOrDefaultAsync(x => x.FulfillmentId == fulfillmentId, cancellationToken)
-            ?? throw new InvalidOperationException("fulfillment.not_found");
+            ?? throw new ContractOperationException("fulfillment.not_found");
         var items = await _db.Items.Where(x => x.FulfillmentId == fulfillmentId).ToListAsync(cancellationToken);
         var shipments = await _db.Shipments.Where(x => x.FulfillmentId == fulfillmentId).ToListAsync(cancellationToken);
         foreach (var shipment in shipments)
@@ -620,7 +620,7 @@ public sealed class FulfillmentDirectory : IFulfillmentDirectory
             || items.Any(x => x.QuantityPacked > 0 || x.QuantityProcessing > 0)
             || shipments.Any(x => x.Status != ShipmentStatus.Cancelled))
         {
-            throw new InvalidOperationException("fulfillment.unconfirm.already_started");
+            throw new ContractOperationException("fulfillment.unconfirm.already_started");
         }
 
         var shipmentIds = shipments.Select(x => x.ShipmentId).ToList();
@@ -652,10 +652,10 @@ public sealed class FulfillmentDirectory : IFulfillmentDirectory
             }
 
             var handoff = await _orders.GetHandoffAsync(sellerOrderId, cancellationToken)
-                ?? throw new InvalidOperationException("fulfillment.order.not_found");
+                ?? throw new ContractOperationException("fulfillment.order.not_found");
             if (!handoff.IsPaid)
             {
-                throw new InvalidOperationException("fulfillment.order.not_paid");
+                throw new ContractOperationException("fulfillment.order.not_paid");
             }
 
             foreach (var line in handoff.Lines)
@@ -719,7 +719,7 @@ public sealed class FulfillmentDirectory : IFulfillmentDirectory
 
         if (loaded.Any(x => x.HasDispatchedQuantity()))
         {
-            throw new InvalidOperationException("fulfillment.cancel.already_dispatched");
+            throw new ContractOperationException("fulfillment.cancel.already_dispatched");
         }
 
         foreach (var unit in loaded)
@@ -751,13 +751,13 @@ public sealed class FulfillmentDirectory : IFulfillmentDirectory
 
         if (loaded.Any(x => x.HasDispatchedQuantity()))
         {
-            throw new InvalidOperationException("fulfillment.restore.already_dispatched");
+            throw new ContractOperationException("fulfillment.restore.already_dispatched");
         }
 
         foreach (var unit in loaded)
         {
             var handoff = await _orders.GetHandoffAsync(unit.SellerOrderId, cancellationToken)
-                ?? throw new InvalidOperationException("fulfillment.order.not_found");
+                ?? throw new ContractOperationException("fulfillment.order.not_found");
             var reservations = handoff.Lines.ToDictionary(x => x.OrderLineId, x => x.ReservationId);
             unit.RebindActiveReservations(reservations);
             unit.ReactivateAfterOrderRestore(now);
@@ -782,7 +782,7 @@ public sealed class FulfillmentDirectory : IFulfillmentDirectory
         {
             var unit = await LoadMutableAsync(unitRow.FulfillmentId, cancellationToken);
             var handoff = await _orders.GetHandoffAsync(unit.SellerOrderId, cancellationToken)
-                ?? throw new InvalidOperationException("fulfillment.order.not_found");
+                ?? throw new ContractOperationException("fulfillment.order.not_found");
             var reservations = handoff.Lines.ToDictionary(x => x.OrderLineId, x => x.ReservationId);
             unit.RebindActiveReservations(reservations);
         }
@@ -868,13 +868,13 @@ public sealed class FulfillmentDirectory : IFulfillmentDirectory
         await _guard.EnsureCanMutateAsync(cancellationToken);
         if (shipmentIds is null || shipmentIds.Count == 0)
         {
-            throw new InvalidOperationException("fulfillment.package.requires_multi_seller");
+            throw new ContractOperationException("fulfillment.package.requires_multi_seller");
         }
 
         var distinctIds = shipmentIds.Distinct().ToArray();
         if (distinctIds.Length != shipmentIds.Count)
         {
-            throw new InvalidOperationException("fulfillment.package.duplicate_shipment");
+            throw new ContractOperationException("fulfillment.package.duplicate_shipment");
         }
 
         var units = await _db.Fulfillments
@@ -882,7 +882,7 @@ public sealed class FulfillmentDirectory : IFulfillmentDirectory
             .ToListAsync(cancellationToken);
         if (units.Count == 0)
         {
-            throw new InvalidOperationException("fulfillment.package.checkout_required");
+            throw new ContractOperationException("fulfillment.package.checkout_required");
         }
 
         var unitById = units.ToDictionary(x => x.FulfillmentId);
@@ -892,13 +892,13 @@ public sealed class FulfillmentDirectory : IFulfillmentDirectory
             .ToListAsync(cancellationToken);
         if (shipments.Count != distinctIds.Length)
         {
-            throw new InvalidOperationException("fulfillment.package.mixed_checkout");
+            throw new ContractOperationException("fulfillment.package.mixed_checkout");
         }
 
         var existingLocks = await GetActiveMembershipByShipmentIdsAsync(distinctIds, cancellationToken);
         if (existingLocks.Count > 0)
         {
-            throw new InvalidOperationException("fulfillment.package.shipment_already_member");
+            throw new ContractOperationException("fulfillment.package.shipment_already_member");
         }
 
         var memberSpecs = new List<(Guid ShipmentId, Guid SellerPartyId, Guid FulfillmentId)>(shipments.Count);
@@ -909,20 +909,20 @@ public sealed class FulfillmentDirectory : IFulfillmentDirectory
             if (shipment.Status != ShipmentStatus.Created
                 || shipment.DispatchedAt is not null)
             {
-                throw new InvalidOperationException("fulfillment.package.shipment_not_eligible");
+                throw new ContractOperationException("fulfillment.package.shipment_not_eligible");
             }
 
             if (!unitById.TryGetValue(shipment.FulfillmentId, out var unit)
                 || unit.CheckoutId != checkoutId
                 || unit.Status == FulfillmentStatus.Cancelled)
             {
-                throw new InvalidOperationException("fulfillment.package.shipment_not_eligible");
+                throw new ContractOperationException("fulfillment.package.shipment_not_eligible");
             }
 
             var shipmentMethod = (shipment.ShippingMethodCode ?? string.Empty).Trim();
             if (string.IsNullOrWhiteSpace(shipmentMethod))
             {
-                throw new InvalidOperationException("fulfillment.package.shipping_method_required");
+                throw new ContractOperationException("fulfillment.package.shipping_method_required");
             }
 
             inheritedMethodCodes.Add(shipmentMethod);
@@ -934,7 +934,7 @@ public sealed class FulfillmentDirectory : IFulfillmentDirectory
 
         if (inheritedMethodCodes.Count != 1)
         {
-            throw new InvalidOperationException("fulfillment.package.shipping_method_mismatch");
+            throw new ContractOperationException("fulfillment.package.shipping_method_mismatch");
         }
 
         var inheritedCode = inheritedMethodCodes.Single();
@@ -942,11 +942,11 @@ public sealed class FulfillmentDirectory : IFulfillmentDirectory
         if (!string.IsNullOrWhiteSpace(requestedCode)
             && !string.Equals(requestedCode, inheritedCode, StringComparison.OrdinalIgnoreCase))
         {
-            throw new InvalidOperationException("fulfillment.package.shipping_method_mismatch");
+            throw new ContractOperationException("fulfillment.package.shipping_method_mismatch");
         }
 
         var definition = ShippingMethodRegistry.Find(inheritedCode)
-            ?? throw new InvalidOperationException("fulfillment.package.shipping_method_required");
+            ?? throw new ContractOperationException("fulfillment.package.shipping_method_required");
         var methodLabel = string.IsNullOrWhiteSpace(inheritedLabel)
             ? ShippingMethodRegistry.ResolveLabel(definition.Code, null)
             : inheritedLabel;
@@ -972,7 +972,7 @@ public sealed class FulfillmentDirectory : IFulfillmentDirectory
         }
         catch (DbUpdateException ex)
         {
-            throw new InvalidOperationException("fulfillment.package.shipment_already_member", ex);
+            throw new ContractOperationException("fulfillment.package.shipment_already_member", ex);
         }
 
         _telemetry.RecordTransition("consolidated_package_created");
@@ -1025,20 +1025,20 @@ public sealed class FulfillmentDirectory : IFulfillmentDirectory
 
         if (package.Status != ConsolidatedPackageStatus.Created)
         {
-            throw new InvalidOperationException("fulfillment.package.dispatch_invalid_state");
+            throw new ContractOperationException("fulfillment.package.dispatch_invalid_state");
         }
 
         var activeMembers = package.Members.Where(x => x.IsActiveMembership).ToArray();
         if (activeMembers.Length == 0)
         {
-            throw new InvalidOperationException("fulfillment.package.member_state_changed");
+            throw new ContractOperationException("fulfillment.package.member_state_changed");
         }
 
         foreach (var member in activeMembers)
         {
             var unit = await LoadMutableAsync(member.FulfillmentId, cancellationToken);
             var shipment = unit.Shipments.SingleOrDefault(x => x.ShipmentId == member.ShipmentId)
-                ?? throw new InvalidOperationException("fulfillment.package.member_state_changed");
+                ?? throw new ContractOperationException("fulfillment.package.member_state_changed");
             if (shipment.Status is ShipmentStatus.Dispatched or ShipmentStatus.InTransit or ShipmentStatus.Delivered)
             {
                 continue;
@@ -1046,7 +1046,7 @@ public sealed class FulfillmentDirectory : IFulfillmentDirectory
 
             if (shipment.Status != ShipmentStatus.Created)
             {
-                throw new InvalidOperationException("fulfillment.package.member_state_changed");
+                throw new ContractOperationException("fulfillment.package.member_state_changed");
             }
 
             if (string.IsNullOrWhiteSpace(shipment.TrackingReference)
@@ -1094,7 +1094,7 @@ public sealed class FulfillmentDirectory : IFulfillmentDirectory
 
         if (package.Status != ConsolidatedPackageStatus.Dispatched)
         {
-            throw new InvalidOperationException("fulfillment.package.deliver_before_dispatch");
+            throw new ContractOperationException("fulfillment.package.deliver_before_dispatch");
         }
 
         var activeMembers = package.Members.Where(x => x.IsActiveMembership).ToArray();
@@ -1144,7 +1144,7 @@ public sealed class FulfillmentDirectory : IFulfillmentDirectory
     {
         if (await IsShipmentLockedByPackageAsync(shipmentId, cancellationToken))
         {
-            throw new InvalidOperationException("fulfillment.shipment.locked_by_consolidated_package");
+            throw new ContractOperationException("fulfillment.shipment.locked_by_consolidated_package");
         }
     }
 
@@ -1154,7 +1154,7 @@ public sealed class FulfillmentDirectory : IFulfillmentDirectory
     {
         var package = await _db.ConsolidatedPackages
             .SingleOrDefaultAsync(x => x.ConsolidatedPackageId == consolidatedPackageId, cancellationToken)
-            ?? throw new InvalidOperationException("fulfillment.package.not_found");
+            ?? throw new ContractOperationException("fulfillment.package.not_found");
         var members = await _db.ConsolidatedPackageMembers
             .Where(x => x.ConsolidatedPackageId == consolidatedPackageId)
             .ToListAsync(cancellationToken);

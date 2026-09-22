@@ -344,22 +344,12 @@ public sealed partial class CheckoutDirectory : ICheckoutDirectory
                     cancellationToken);
             }
         }
-        catch (Exception ex)
+        catch (Exception)
         {
             foreach (var reservationId in acquired)
             {
                 // رزرو تازه‌گرفته‌شده را تا حد ممکن آزاد می‌کنیم؛ سفارش لغو می‌ماند.
                 await _inventoryLifecycle.TryReleaseReservationAsync(reservationId, cancellationToken);
-            }
-
-            if (ex is ContractOperationException)
-            {
-                throw;
-            }
-
-            if (ex is InvalidOperationException ioe && ContractOperationFault.LooksLikeStableCode(ioe.Message))
-            {
-                throw new ContractOperationException(ioe.Message, ioe);
             }
 
             throw;

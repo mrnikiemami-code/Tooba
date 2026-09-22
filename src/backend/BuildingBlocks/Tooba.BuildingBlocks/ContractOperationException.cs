@@ -2,8 +2,7 @@ namespace Tooba.BuildingBlocks;
 
 /// <summary>
 /// Expected cross-module admin/operation failure carrying a stable semantic <see cref="Code"/>
-/// (not prose). Owning Infrastructure adapters promote known InvalidOperationException codes here
-/// before foreign Application layers observe them.
+/// (not prose). Owning Domain/Directory throw this directly; adapters must not infer Code from Message.
 /// </summary>
 public sealed class ContractOperationException : Exception
 {

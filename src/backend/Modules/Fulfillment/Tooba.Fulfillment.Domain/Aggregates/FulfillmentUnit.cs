@@ -162,7 +162,7 @@ public sealed class FulfillmentUnit : IHasDomainEvents
             return;
         }
 
-        throw new InvalidOperationException("fulfillment.status.processing_invalid");
+        throw new ContractOperationException("fulfillment.status.processing_invalid");
     }
 
     /// <summary>پردازش انتخاب‌شده فقط همان خطوط را جلو می‌برد.</summary>
@@ -173,7 +173,7 @@ public sealed class FulfillmentUnit : IHasDomainEvents
         EnsureNotTerminal();
         if (Status == FulfillmentStatus.Delivered)
         {
-            throw new InvalidOperationException("fulfillment.process.after_delivered");
+            throw new ContractOperationException("fulfillment.process.after_delivered");
         }
 
         var normalized = NormalizeSelections(selections);
@@ -214,7 +214,7 @@ public sealed class FulfillmentUnit : IHasDomainEvents
         EnsureNotTerminal();
         if (Status == FulfillmentStatus.Delivered)
         {
-            throw new InvalidOperationException("fulfillment.pack.after_delivered");
+            throw new ContractOperationException("fulfillment.pack.after_delivered");
         }
 
         var selections = _items
@@ -223,7 +223,7 @@ public sealed class FulfillmentUnit : IHasDomainEvents
             .ToArray();
         if (selections.Length == 0)
         {
-            throw new InvalidOperationException("fulfillment.pack.requires_processing");
+            throw new ContractOperationException("fulfillment.pack.requires_processing");
         }
 
         PackSelections(selections, now);
@@ -237,7 +237,7 @@ public sealed class FulfillmentUnit : IHasDomainEvents
         EnsureNotTerminal();
         if (Status == FulfillmentStatus.Delivered)
         {
-            throw new InvalidOperationException("fulfillment.pack.after_delivered");
+            throw new ContractOperationException("fulfillment.pack.after_delivered");
         }
 
         var normalized = NormalizeSelections(selections);
@@ -247,12 +247,12 @@ public sealed class FulfillmentUnit : IHasDomainEvents
             var item = RequireItem(selection.OrderLineId);
             if (item.QuantityPacked + selection.Quantity > item.QuantityOrdered)
             {
-                throw new InvalidOperationException("fulfillment.pack.qty_exceeds");
+                throw new ContractOperationException("fulfillment.pack.qty_exceeds");
             }
 
             if (item.QuantityProcessing < item.QuantityPacked + selection.Quantity)
             {
-                throw new InvalidOperationException("fulfillment.pack.requires_processing");
+                throw new ContractOperationException("fulfillment.pack.requires_processing");
             }
 
             item.ApplyPackedQuantity(selection.Quantity);
@@ -283,7 +283,7 @@ public sealed class FulfillmentUnit : IHasDomainEvents
             var unpackable = item.QuantityPacked - blockingAllocated;
             if (selection.Quantity > unpackable)
             {
-                throw new InvalidOperationException("fulfillment.pack.release_allocated");
+                throw new ContractOperationException("fulfillment.pack.release_allocated");
             }
 
             item.ReleasePackedQuantity(selection.Quantity);
@@ -342,7 +342,7 @@ public sealed class FulfillmentUnit : IHasDomainEvents
         EnsureNotTerminal();
         if (Status is FulfillmentStatus.Cancelled or FulfillmentStatus.Failed or FulfillmentStatus.Delivered)
         {
-            throw new InvalidOperationException("fulfillment.shipment.create_terminal");
+            throw new ContractOperationException("fulfillment.shipment.create_terminal");
         }
 
         var normalized = NormalizeSelections(items);
@@ -388,7 +388,7 @@ public sealed class FulfillmentUnit : IHasDomainEvents
 
         if (HasDispatchedQuantity())
         {
-            throw new InvalidOperationException("fulfillment.cancel.already_dispatched");
+            throw new ContractOperationException("fulfillment.cancel.already_dispatched");
         }
 
         foreach (var shipment in _shipments.Where(x => x.Status == ShipmentStatus.Created).ToList())
@@ -419,7 +419,7 @@ public sealed class FulfillmentUnit : IHasDomainEvents
 
         if (HasDispatchedQuantity())
         {
-            throw new InvalidOperationException("fulfillment.restore.already_dispatched");
+            throw new ContractOperationException("fulfillment.restore.already_dispatched");
         }
 
         foreach (var item in _items)
@@ -475,14 +475,14 @@ public sealed class FulfillmentUnit : IHasDomainEvents
 
     private FulfillmentItem RequireItem(Guid orderLineId) =>
         _items.SingleOrDefault(x => x.OrderLineId == orderLineId)
-        ?? throw new InvalidOperationException("fulfillment.order_line.not_found");
+        ?? throw new ContractOperationException("fulfillment.order_line.not_found");
 
     private static IReadOnlyList<(Guid OrderLineId, decimal Quantity)> NormalizeSelections(
         IReadOnlyList<(Guid OrderLineId, decimal Quantity)> selections)
     {
         if (selections is null || selections.Count == 0)
         {
-            throw new InvalidOperationException("fulfillment.selection.required");
+            throw new ContractOperationException("fulfillment.selection.required");
         }
 
         var map = new Dictionary<Guid, decimal>();
@@ -490,7 +490,7 @@ public sealed class FulfillmentUnit : IHasDomainEvents
         {
             if (selection.Quantity <= 0)
             {
-                throw new InvalidOperationException("fulfillment.qty.positive");
+                throw new ContractOperationException("fulfillment.qty.positive");
             }
 
             map[selection.OrderLineId] = map.TryGetValue(selection.OrderLineId, out var existing)
@@ -555,7 +555,7 @@ public sealed class FulfillmentUnit : IHasDomainEvents
 
     private Shipment RequireShipment(Guid shipmentId) =>
         _shipments.SingleOrDefault(x => x.ShipmentId == shipmentId)
-        ?? throw new InvalidOperationException("fulfillment.shipment.not_found");
+        ?? throw new ContractOperationException("fulfillment.shipment.not_found");
 
     private bool AllItemsDelivered() =>
         _items.Count > 0 && _items.All(x => x.QuantityShipped >= x.QuantityOrdered);
@@ -564,7 +564,7 @@ public sealed class FulfillmentUnit : IHasDomainEvents
     {
         if (Status is FulfillmentStatus.Cancelled or FulfillmentStatus.Failed)
         {
-            throw new InvalidOperationException("fulfillment.status.terminal");
+            throw new ContractOperationException("fulfillment.status.terminal");
         }
     }
 }

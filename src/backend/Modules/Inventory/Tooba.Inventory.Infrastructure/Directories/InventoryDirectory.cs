@@ -1,4 +1,4 @@
-﻿using Tooba.Inventory.Domain.ValueObjects;
+using Tooba.Inventory.Domain.ValueObjects;
 using Tooba.Inventory.Domain.Aggregates;
 using Tooba.Inventory.Contracts.Seller;
 using Tooba.Inventory.Contracts.Errors;
@@ -199,7 +199,7 @@ public sealed class InventoryDirectory : IInventoryDirectory, IInventoryAvailabi
             ?? throw new InvalidOperationException("domain.invariant");
         if (await FindVariantAsync(offer.CatalogVariantId, cancellationToken) is null)
         {
-            throw new InvalidOperationException("inventory.catalog_variant.missing");
+            throw new ContractOperationException("inventory.catalog_variant.missing");
         }
 
         if (await _db.Locations.SingleOrDefaultAsync(x => x.LocationId == locationId, cancellationToken) is not { Status: InventoryLocationStatus.Active })
@@ -238,7 +238,7 @@ public sealed class InventoryDirectory : IInventoryDirectory, IInventoryAvailabi
 
         if (quantity < 0)
         {
-            throw new InvalidOperationException("inventory.adjustment.quantity_invalid");
+            throw new ContractOperationException("inventory.adjustment.quantity_invalid");
         }
 
         var position = await _db.Positions.SingleOrDefaultAsync(x => x.StockItemId == stockItemId, cancellationToken)
@@ -249,7 +249,7 @@ public sealed class InventoryDirectory : IInventoryDirectory, IInventoryAvailabi
             StockAdjustmentKind.Increase => quantity,
             StockAdjustmentKind.Decrease => -quantity,
             StockAdjustmentKind.Set => quantity - position.OnHand,
-            _ => throw new InvalidOperationException("inventory.adjustment.kind_unknown"),
+            _ => throw new ContractOperationException("inventory.adjustment.kind_unknown"),
         };
 
         var now = _clock.UtcNow;
@@ -317,7 +317,7 @@ public sealed class InventoryDirectory : IInventoryDirectory, IInventoryAvailabi
         }
         catch (DbUpdateException ex) when (IsReservationIdempotencyConflict(ex))
         {
-            throw new InvalidOperationException("inventory.reservation.conflict");
+            throw new ContractOperationException("inventory.reservation.conflict");
         }
 
         return new ReservationReceipt(hold.ReservationId, stockItemId, position.OfferId, quantity, hold.Status, hold.ExpiresAt);
@@ -402,7 +402,7 @@ public sealed class InventoryDirectory : IInventoryDirectory, IInventoryAvailabi
     {
         await _guard.EnsureCanMutateAsync(cancellationToken);
         var reservation = await _db.Reservations.SingleOrDefaultAsync(x => x.ReservationId == reservationId, cancellationToken)
-            ?? throw new InvalidOperationException("inventory.reservation.not_found");
+            ?? throw new ContractOperationException("inventory.reservation.not_found");
         if (reservation.Status is StockReservationStatus.Released or StockReservationStatus.Consumed)
         {
             return;
@@ -418,7 +418,7 @@ public sealed class InventoryDirectory : IInventoryDirectory, IInventoryAvailabi
                 cancellationToken);
         if (released != 1)
         {
-            throw new InvalidOperationException("inventory.reservation.release_mismatch");
+            throw new ContractOperationException("inventory.reservation.release_mismatch");
         }
 
         reservation.MoveTo(StockReservationStatus.Released, now);
@@ -433,7 +433,7 @@ public sealed class InventoryDirectory : IInventoryDirectory, IInventoryAvailabi
     {
         await _guard.EnsureCanMutateAsync(cancellationToken);
         var reservation = await _db.Reservations.SingleOrDefaultAsync(x => x.ReservationId == reservationId, cancellationToken)
-            ?? throw new InvalidOperationException("inventory.reservation.not_found");
+            ?? throw new ContractOperationException("inventory.reservation.not_found");
         var now = _clock.UtcNow;
         var consumed = await _db.Positions
             .Where(x => x.StockItemId == reservation.StockItemId
@@ -470,11 +470,11 @@ public sealed class InventoryDirectory : IInventoryDirectory, IInventoryAvailabi
     {
         await _guard.EnsureCanMutateAsync(cancellationToken);
         var reservation = await _db.Reservations.SingleOrDefaultAsync(x => x.ReservationId == reservationId, cancellationToken)
-            ?? throw new InvalidOperationException("inventory.reservation.not_found");
+            ?? throw new ContractOperationException("inventory.reservation.not_found");
         reservation.CommitForPaidOrder(_clock.UtcNow);
         await _db.SaveChangesAsync(cancellationToken);
         return await FindReservationAsync(reservationId, cancellationToken)
-            ?? throw new InvalidOperationException("inventory.reservation.not_found");
+            ?? throw new ContractOperationException("inventory.reservation.not_found");
     }
 
     /// <inheritdoc />
@@ -485,11 +485,11 @@ public sealed class InventoryDirectory : IInventoryDirectory, IInventoryAvailabi
     {
         await _guard.EnsureCanMutateAsync(cancellationToken);
         var reservation = await _db.Reservations.SingleOrDefaultAsync(x => x.ReservationId == reservationId, cancellationToken)
-            ?? throw new InvalidOperationException("inventory.reservation.not_found");
+            ?? throw new ContractOperationException("inventory.reservation.not_found");
         reservation.PromoteForManualPaymentReview(reviewExpiresAt, _clock.UtcNow);
         await _db.SaveChangesAsync(cancellationToken);
         return await FindReservationAsync(reservationId, cancellationToken)
-            ?? throw new InvalidOperationException("inventory.reservation.not_found");
+            ?? throw new ContractOperationException("inventory.reservation.not_found");
     }
 
     /// <inheritdoc />
@@ -620,7 +620,7 @@ public sealed class InventoryDirectory : IInventoryDirectory, IInventoryAvailabi
                 }
 
                 var stockItemId = await ResolveStockItemIdAsync(input, cancellationToken)
-                    ?? throw new InvalidOperationException("inventory.manual_review.unavailable");
+                    ?? throw new ContractOperationException("inventory.manual_review.unavailable");
                 DateTimeOffset? expiresAt = IsTimedHold(request.Mode)
                     ? request.ReviewExpiresAt
                     : null;
@@ -864,4 +864,3 @@ public sealed class InventoryDirectory : IInventoryDirectory, IInventoryAvailabi
         }
     }
 }
-

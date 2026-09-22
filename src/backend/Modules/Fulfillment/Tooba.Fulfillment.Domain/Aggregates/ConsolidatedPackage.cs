@@ -84,30 +84,30 @@ public sealed class ConsolidatedPackage
     {
         if (checkoutId == Guid.Empty)
         {
-            throw new InvalidOperationException("fulfillment.package.checkout_required");
+            throw new ContractOperationException("fulfillment.package.checkout_required");
         }
 
         if (members is null || members.Count < 2)
         {
-            throw new InvalidOperationException("fulfillment.package.requires_multi_seller");
+            throw new ContractOperationException("fulfillment.package.requires_multi_seller");
         }
 
         var distinctShipments = members.Select(x => x.ShipmentId).Distinct().ToArray();
         if (distinctShipments.Length != members.Count)
         {
-            throw new InvalidOperationException("fulfillment.package.duplicate_shipment");
+            throw new ContractOperationException("fulfillment.package.duplicate_shipment");
         }
 
         var distinctSellers = members.Select(x => x.SellerPartyId).Distinct().ToArray();
         if (distinctSellers.Length < 2)
         {
-            throw new InvalidOperationException("fulfillment.package.requires_multi_seller");
+            throw new ContractOperationException("fulfillment.package.requires_multi_seller");
         }
 
         var methodCode = (shippingMethodCode ?? string.Empty).Trim();
         if (string.IsNullOrWhiteSpace(methodCode))
         {
-            throw new InvalidOperationException("fulfillment.package.shipping_method_required");
+            throw new ContractOperationException("fulfillment.package.shipping_method_required");
         }
 
         var package = new ConsolidatedPackage
@@ -160,7 +160,7 @@ public sealed class ConsolidatedPackage
 
         if (Status != ConsolidatedPackageStatus.Created)
         {
-            throw new InvalidOperationException("fulfillment.package.cancel_after_dispatch");
+            throw new ContractOperationException("fulfillment.package.cancel_after_dispatch");
         }
 
         foreach (var member in _members.Where(x => x.IsActiveMembership))
@@ -185,7 +185,7 @@ public sealed class ConsolidatedPackage
 
         if (Status != ConsolidatedPackageStatus.Created)
         {
-            throw new InvalidOperationException("fulfillment.package.dispatch_invalid_state");
+            throw new ContractOperationException("fulfillment.package.dispatch_invalid_state");
         }
 
         EnsureAllMembersReadyForDispatch(memberStatuses);
@@ -206,7 +206,7 @@ public sealed class ConsolidatedPackage
 
         if (Status != ConsolidatedPackageStatus.Dispatched)
         {
-            throw new InvalidOperationException("fulfillment.package.deliver_before_dispatch");
+            throw new ContractOperationException("fulfillment.package.deliver_before_dispatch");
         }
 
         EnsureAllMembersDelivered(memberStatuses);
@@ -220,12 +220,12 @@ public sealed class ConsolidatedPackage
     {
         if (Status != ConsolidatedPackageStatus.Created)
         {
-            throw new InvalidOperationException("fulfillment.package.tracking_locked");
+            throw new ContractOperationException("fulfillment.package.tracking_locked");
         }
 
         if (string.IsNullOrWhiteSpace(trackingReference))
         {
-            throw new InvalidOperationException("fulfillment.package.tracking_required");
+            throw new ContractOperationException("fulfillment.package.tracking_required");
         }
 
         TrackingReference = trackingReference.Trim();
@@ -255,12 +255,12 @@ public sealed class ConsolidatedPackage
         {
             if (!memberStatuses.TryGetValue(member.ShipmentId, out var status))
             {
-                throw new InvalidOperationException("fulfillment.package.member_state_changed");
+                throw new ContractOperationException("fulfillment.package.member_state_changed");
             }
 
             if (status is not (ShipmentStatus.Dispatched or ShipmentStatus.InTransit or ShipmentStatus.Delivered))
             {
-                throw new InvalidOperationException("fulfillment.package.member_state_changed");
+                throw new ContractOperationException("fulfillment.package.member_state_changed");
             }
         }
     }
@@ -272,7 +272,7 @@ public sealed class ConsolidatedPackage
             if (!memberStatuses.TryGetValue(member.ShipmentId, out var status)
                 || status != ShipmentStatus.Delivered)
             {
-                throw new InvalidOperationException("fulfillment.package.member_state_changed");
+                throw new ContractOperationException("fulfillment.package.member_state_changed");
             }
         }
     }

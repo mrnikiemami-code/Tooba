@@ -124,7 +124,7 @@
     "activeModuleRecovery":  {
                                  "module":  "Order",
                                  "state":  "INCOMPLETE_REFERENCE_REPAIR",
-                                 "task":  "TB-TMAR-ORDER-GOLDEN-001-R3B-R2",
+                                 "task":  "TB-TMAR-ORDER-GOLDEN-001-R3B-R3",
                                  "completedSlices":  [
                                                          "ORDER_ENDPOINTS_FOUNDATION",
                                                          "ADMIN_ORDER_COMPLETENESS_CQRS",
@@ -134,10 +134,11 @@
                                                          "ADMIN_ORDERS_GRID_CQRS",
                                                          "ADMIN_ORDER_OPERATIONS_CQRS",
                                                          "ADMIN_ORDER_OPERATIONS_TYPED_CQRS_R3B_R1",
-                                                         "ADMIN_ORDER_OPERATIONS_TYPED_FAULT_R3B_R2"
+                                                         "ADMIN_ORDER_OPERATIONS_TYPED_FAULT_R3B_R2",
+                                                         "ADMIN_ORDER_OPERATIONS_TYPED_FAULT_SOURCE_R3B_R3"
                                                      ],
                                  "nextTask":  "TB-TMAR-ORDER-GOLDEN-001-R4",
                                  "checkoutState":  "PAUSED_AT_SAFE_W5_CHECKPOINT",
-                                 "notes":  "R3B-R1 typed CQRS accepted; R3B-R2 removed Application Ops message-based exception classification (ContractOperationException at owning adapters)."
+                                 "notes":  "R3B-R3 removed Message parsing from ContractOperationFault and Ops adapters; typed ContractOperationException.Code at owning Domain/Directory."
                              }
 }

@@ -1,5 +1,7 @@
 using Tooba.Fulfillment.Domain.ValueObjects;
 
+using Tooba.BuildingBlocks;
+
 namespace Tooba.Fulfillment.Domain.Aggregates;
 
 
@@ -72,7 +74,7 @@ public sealed class Shipment
     {
         if (string.IsNullOrWhiteSpace(carrierDisplayName))
         {
-            throw new InvalidOperationException("fulfillment.shipment.carrier_required");
+            throw new ContractOperationException("fulfillment.shipment.carrier_required");
         }
 
         var shipment = new Shipment
@@ -100,12 +102,12 @@ public sealed class Shipment
             var pendingShipmentQty = shipment._items.Where(x => x.OrderLineId == item.OrderLineId).Sum(x => x.Quantity);
             if (remaining.QuantityPacked < remaining.QuantityShipped + openAllocated + pendingShipmentQty + item.Quantity)
             {
-                throw new InvalidOperationException("fulfillment.shipment.qty_exceeds_packed");
+                throw new ContractOperationException("fulfillment.shipment.qty_exceeds_packed");
             }
 
             if (remaining.QuantityShipped + openAllocated + pendingShipmentQty + item.Quantity > remaining.QuantityOrdered)
             {
-                throw new InvalidOperationException("fulfillment.shipment.qty_exceeds_ordered");
+                throw new ContractOperationException("fulfillment.shipment.qty_exceeds_ordered");
             }
 
             shipment._items.Add(ShipmentItem.Create(newId(), shipment.ShipmentId, item.OrderLineId, item.Quantity));
@@ -126,13 +128,13 @@ public sealed class Shipment
         var normalized = trackingReference.Trim();
         if (string.IsNullOrWhiteSpace(normalized))
         {
-            throw new InvalidOperationException("fulfillment.tracking.required");
+            throw new ContractOperationException("fulfillment.tracking.required");
         }
 
         if (TrackingReference is not null
             && !string.Equals(TrackingReference, normalized, StringComparison.Ordinal))
         {
-            throw new InvalidOperationException("fulfillment.tracking.already_set");
+            throw new ContractOperationException("fulfillment.tracking.already_set");
         }
 
         TrackingReference = normalized;
@@ -144,23 +146,23 @@ public sealed class Shipment
         if (Status is ShipmentStatus.Dispatched or ShipmentStatus.InTransit or ShipmentStatus.Delivered
             || DispatchedAt is not null)
         {
-            throw new InvalidOperationException("fulfillment.tracking.locked_after_dispatch");
+            throw new ContractOperationException("fulfillment.tracking.locked_after_dispatch");
         }
 
         if (Status != ShipmentStatus.Created)
         {
-            throw new InvalidOperationException("fulfillment.tracking.invalid_state");
+            throw new ContractOperationException("fulfillment.tracking.invalid_state");
         }
 
         var normalized = trackingReference.Trim();
         if (string.IsNullOrWhiteSpace(normalized))
         {
-            throw new InvalidOperationException("fulfillment.tracking.required");
+            throw new ContractOperationException("fulfillment.tracking.required");
         }
 
         if (string.IsNullOrWhiteSpace(TrackingReference))
         {
-            throw new InvalidOperationException("fulfillment.tracking.nothing_to_correct");
+            throw new ContractOperationException("fulfillment.tracking.nothing_to_correct");
         }
 
         if (string.Equals(TrackingReference, normalized, StringComparison.Ordinal))
@@ -182,12 +184,12 @@ public sealed class Shipment
 
         if (Status != ShipmentStatus.Created)
         {
-            throw new InvalidOperationException("fulfillment.dispatch.invalid_status");
+            throw new ContractOperationException("fulfillment.dispatch.invalid_status");
         }
 
         if (string.IsNullOrWhiteSpace(TrackingReference))
         {
-            throw new InvalidOperationException("fulfillment.dispatch.tracking_required");
+            throw new ContractOperationException("fulfillment.dispatch.tracking_required");
         }
 
         Status = ShipmentStatus.Dispatched;
@@ -203,7 +205,7 @@ public sealed class Shipment
 
         if (Status is not (ShipmentStatus.Dispatched or ShipmentStatus.InTransit))
         {
-            throw new InvalidOperationException("fulfillment.deliver.invalid_status");
+            throw new ContractOperationException("fulfillment.deliver.invalid_status");
         }
 
         Status = ShipmentStatus.Delivered;
@@ -214,7 +216,7 @@ public sealed class Shipment
     {
         if (Status is ShipmentStatus.Dispatched or ShipmentStatus.InTransit or ShipmentStatus.Delivered)
         {
-            throw new InvalidOperationException("fulfillment.shipment.cancel_invalid");
+            throw new ContractOperationException("fulfillment.shipment.cancel_invalid");
         }
 
         if (Status == ShipmentStatus.Cancelled)
@@ -224,7 +226,7 @@ public sealed class Shipment
 
         if (Status != ShipmentStatus.Created)
         {
-            throw new InvalidOperationException("fulfillment.shipment.cancel_invalid");
+            throw new ContractOperationException("fulfillment.shipment.cancel_invalid");
         }
 
         Status = ShipmentStatus.Cancelled;
