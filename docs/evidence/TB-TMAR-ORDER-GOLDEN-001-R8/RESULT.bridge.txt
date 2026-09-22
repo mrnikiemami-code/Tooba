@@ -1,0 +1,36 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+BEGIN_TOOBA_WORKER_RESULT
+
+Task-ID: TB-TMAR-ORDER-GOLDEN-001-R8
+Parent-Task: TB-TMAR-ORDER-GOLDEN-001-R7
+Status: PASS
+
+Summary: Moved reservation cycle policy/retry/expiry business authority from Host to Order. Host ReservationCycleCoordinator and ReservationCyclePolicyResolver deleted. Policy merge uses Catalog.Contracts hold overrides. Unpaid expiry Host worker is execution shell calling IUnpaidOrderExpiryReconciler. IClock on moved paths. SoT nextTask R9 not started.
+Reservation-Cycle-Coordinator-State: Order.Application ReservationCycleCoordinator + IReservationCycleCoordinator; Host file absent
+Reservation-Policy-Resolver-State: Order.Application ReservationCyclePolicyResolver via Catalog.Contracts IReservationCycleHoldPolicyReader
+Catalog-Contracts-State: ReservationCycleHoldPolicyContracts + Catalog.Infrastructure reader registered
+Retry-After-Expiry-State: Order-owned EnsureRetryAfterExpiryAsync with IClock; max-cycle/reacquire/events preserved
+Unpaid-Expiry-Reconciler-State: Order.Infrastructure UnpaidOrderExpiryReconciler owns CloseExpiredDue/ExpireDueUnpaid/release/close-active
+Host-Worker-Shell-State: UnpaidOrderExpiryHostedService tenant loop only; resolves IUnpaidOrderExpiryReconciler; no UtcNow/cycle directory/payment projection
+Clock-State: IClock in coordinator/reconciler; no UtcNow in moved business logic
+Error-Semantics: typed/stable; no message classification; Host shell may log per-tenant failures
+Behavior-Parity: preserved (precedence, strictest multi-line, retry/reacquire/limit, expiry release, multi-tenant worker)
+Architecture-Guard-Validation: OrderReservationCycleArchitectureGuardTests + Order.Tests 76/76 PASS
+Focused-Validation: Host cycle/policy/expiry/reverse-audit/durable/folder 49 PASS
+Full-Validation: dotnet build src/backend/Tooba.slnx succeeded 0 errors
+Host-Removed-This-Task: ReservationCycleCoordinator.cs; ReservationCyclePolicyResolver.cs; expiry business body
+Host-Still-Remaining-For-Order: CustomerPanel Order (R9); SellerPanel Order (R10); Admin dashboard/list/grids (R11); thin adapters
+Allowed-Host-Adapters: UnpaidOrderExpiryHostedService execution shell; storefront/admin auth thin adapters
+Reverse-Audit-Delta: R7 inventory refreshed for R8 removals; historical R7 audit markdown preserved
+Residual-Defects: R9–R11 residuals unchanged
+Order-Overall-State: INCOMPLETE_REFERENCE_REPAIR
+Checkout-State: PAUSED_AT_SAFE_W5_CHECKPOINT
+Frontend-Production-Changes: none
+Recovery-State: slice RESERVATION_CYCLE_POLICY_RETRY_EXPIRY_R8 recorded
+Recovery-Next-Task: TB-TMAR-ORDER-GOLDEN-001-R9
+Git: 96b1b2c9a6ce3a647fc90599656b952be3aea81e pushed origin/main; HEAD==origin/main
+Blockers: none
+User-Work-Preserved: yes; R2C/R5-R1 RESULT.bridge.txt untracked untouched
+Next-Recommended-Task: TB-TMAR-ORDER-GOLDEN-001-R9
+
+END_TOOBA_WORKER_RESULT
