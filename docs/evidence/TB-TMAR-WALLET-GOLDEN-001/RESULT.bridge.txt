@@ -1,0 +1,62 @@
+﻿PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+BEGIN_TOOBA_WORKER_RESULT
+
+Task-ID: TB-TMAR-WALLET-GOLDEN-001
+Claim-Id: 5fc0cbab-441f-46a3-8bd0-be9710ae9004
+WorkerId: tooba-worker-01
+Channel: tooba-main
+Verdict: PASS
+
+Summary:
+Created Tooba.Wallet.Endpoints and moved all customer/admin Wallet and gift-card routes from Host. Host now only maps MapWalletEndpoints(), registers AddWalletEndpointPresentation(), and customer/admin authorizer adapters; WalletDevelopmentSeedHost retained as Development bootstrap allowlist. Application Commands/Queries split into use-case folders with MediatR 12.5.0 handlers; WalletExceptionMapper is STABLE_CODES_ONLY (exact machine codes only); demo preview via IWalletDemoPreviewPort; missing idempotency keys generated via IIdGenerator (Guid.NewGuid removed from Wallet HTTP flow). Host/Wallet/WalletEndpoints.cs removed. Wallet.Tests 24 passed; full Tooba.slnx build exit 0. Evidence under docs/evidence/TB-TMAR-WALLET-GOLDEN-001/.
+
+Program-Name: TMAR — Tooba Microservice-Ready Architecture Recovery
+Track: WALLET_GOLDEN_CLOSURE
+Recovery-Start: docs/evidence/TB-TMAR-WALLET-GOLDEN-001/recovery-start.md
+Wallet-HTTP-Ownership-Audit: docs/evidence/TB-TMAR-WALLET-GOLDEN-001/wallet-http-ownership-audit.md
+Wallet-Endpoints-State: REAL_PROJECT_PRESENT
+Wallet-CQRS-State: MEDIATR_12_5_APPLICATION_HANDLERS
+Wallet-Application-UseCases: GetCustomerWalletSummary; ListCustomerWalletLedger; RedeemCustomerGiftCard; ListAdminGiftCards; GetAdminGiftCard; IssueAdminGiftCard; RevokeAdminGiftCard; GetAdminWallet; ListAdminWalletLedger; AdjustAdminWallet; GetWalletDemoPreview
+Wallet-Auth-Boundary: docs/evidence/TB-TMAR-WALLET-GOLDEN-001/wallet-auth-boundary.md; IWalletCustomerAuthorizer + IWalletAdminAuthorizer in Endpoints; Host adapters only; caps giftcard.view/manage + wallet.view/adjust with Unavailable fail-open preserved
+Wallet-Idempotency-Audit: docs/evidence/TB-TMAR-WALLET-GOLDEN-001/wallet-idempotency-audit.md; body → Idempotency-Key header → IIdGenerator.NewId().ToString("N")
+Wallet-Result-Adoption: HTTP_USE_CASES_ADOPTED
+Wallet-Error-Classification: STABLE_CODES_ONLY
+Wallet-Prose-Mapping: NONE
+Wallet-Unexpected-Exception-Swallow: NONE
+Wallet-Host-Authority-Audit: docs/evidence/TB-TMAR-WALLET-GOLDEN-001/wallet-host-authority-audit.md
+Wallet-Host-Endpoints: REMOVED
+Wallet-Host-Business-Authority: NONE
+Wallet-Host-DbAuthority: NONE_EXCEPT_DEV_BOOTSTRAP_ALLOWLIST
+Wallet-CrossModule-Boundary: CONTRACTS_ONLY
+Wallet-Dev-Seed-Audit: docs/evidence/TB-TMAR-WALLET-GOLDEN-001/wallet-dev-seed-audit.md; WalletDevelopmentSeedHost retained Development-only bootstrap
+Wallet-Physical-State: VERIFIED_ON_DISK_AND_NAMESPACE
+Wallet-Architecture-Guards: ENFORCED
+Wallet-Behavior-Preservation: VERIFIED
+Focused-Validation: PASS — Wallet.Tests exit 0 (24 passed: architecture ownership/CQRS/host guards, CQRS behavior, idempotency precedence, semantic presentation, financial characterization, account factory)
+Skipped-Validation: broad Host suite; Checkout workflow; Tax/Pricing; frontend; Payment/Promotion/Inventory/Offer; unrelated modules
+Full-Validation: PASS — dotnet build src/backend/Tooba.slnx exit 0 (0 errors)
+AntiPattern-Gate: PASS — no Host WalletEndpoints; no IWalletDirectory in Wallet Endpoints; no Guid.NewGuid in Wallet production; no InvalidOperationException swallow in Endpoints; no manual Rejected/ToError; Contracts-only Notification; no TypeForwardedTo; WalletDevelopmentSeedHost allowlisted
+Residual-Defects: NONE
+Wallet-State: COMPLETE_REFERENCE_PATTERN
+Support-State: COMPLETE_REFERENCE_PATTERN
+Notification-State: COMPLETE_REFERENCE_PATTERN
+Returns-State: COMPLETE_REFERENCE_PATTERN
+Fulfillment-State: COMPLETE_REFERENCE_PATTERN
+Settlement-State: COMPLETE_REFERENCE_PATTERN
+Cart-State: COMPLETE_REFERENCE_PATTERN
+Checkout-State: PAUSED_AT_SAFE_W5_CHECKPOINT
+Tax-State: UNTOUCHED
+Pricing-State: UNTOUCHED
+Frontend-Production-Changes: NONE
+
+Git:
+  Commit: f81c11e9b21c4bb5e05385b253db28fdb1c62402
+  Message: docs(TB-TMAR-WALLET-GOLDEN-001): tip-align Result Git SHA to final tip.
+  Push: origin/main updated
+  HEAD == origin/main: YES
+  User-Work-Preserved: YES (no reset/clean/force-push; stashes untouched; CART/Fulfillment leftover bridge-result files left untracked)
+
+Blockers: NONE
+Next-Recommended-Task: ARCHITECT_SELECT_NEXT_REOPENED_MODULE
+
+END_TOOBA_WORKER_RESULT
