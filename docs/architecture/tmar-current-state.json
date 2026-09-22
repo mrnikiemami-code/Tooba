@@ -124,7 +124,7 @@
     "activeModuleRecovery":  {
                                  "module":  "Order",
                                  "state":  "INCOMPLETE_REFERENCE_REPAIR",
-                                 "task":  "TB-TMAR-ORDER-GOLDEN-001-R5",
+                                 "task":  "TB-TMAR-ORDER-GOLDEN-001-R5-R1",
                                  "completedSlices":  [
                                                          "ORDER_ENDPOINTS_FOUNDATION",
                                                          "ADMIN_ORDER_COMPLETENESS_CQRS",
@@ -138,10 +138,11 @@
                                                          "ADMIN_ORDER_OPERATIONS_TYPED_FAULT_SOURCE_R3B_R3",
                                                          "ADMIN_ORDER_INVENTORY_RECOVERY_SUPPLY_CQRS_R4",
                                                          "ADMIN_ORDER_RECOVERY_SUPPLY_CLOCK_FAULT_R4_R1",
-                                                         "STOREFRONT_ORDER_CQRS_R5"
+                                                         "STOREFRONT_ORDER_CQRS_R5",
+                                                         "STOREFRONT_CHECKOUT_ABUSE_TYPED_R5_R1"
                                                      ],
                                  "nextTask":  "TB-TMAR-ORDER-GOLDEN-001-R6",
                                  "checkoutState":  "PAUSED_AT_SAFE_W5_CHECKPOINT",
-                                 "notes":  "R5: Storefront checkout/pending/shipping business authority moved to Order CQRS (9 routes via ISender). Host composers removed. Checkout remains PAUSED_AT_SAFE_W5_CHECKPOINT; R6 not started."
+                                 "notes":  "R5-R1: CheckoutAbuseGate moved to Order.Infrastructure (IClock + Catalog.Contracts settings). CheckoutProcessManager inventory conflict uses ContractOperationException.Code only. Host CheckoutAbuseGate removed. R5 routes preserved. R6 not started."
                              }
 }

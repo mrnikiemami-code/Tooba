@@ -191,20 +191,8 @@ public sealed class CheckoutProcessManager : ICheckoutProcessManager
             await _host.ReconcileCartConversionAsync(winner, command, cancellationToken);
             return winner;
         }
-        // Inventory conflict: prefer typed ContractOperationException; keep legacy IOE message for frozen W5 path.
+        // Inventory conflict: typed ContractOperationException only — no Message classification.
         catch (ContractOperationException ex) when (ex.Code == "inventory.reservation.conflict")
-        {
-            var winner = await _host.FindConflictWinnerAsync(command, cancellationToken);
-            if (winner is null)
-            {
-                throw;
-            }
-
-            _host.EnsureCheckoutAccess(winner, command);
-            await _host.ReconcileCartConversionAsync(winner, command, cancellationToken);
-            return winner;
-        }
-        catch (InvalidOperationException ex) when (ex.Message == "inventory.reservation.conflict")
         {
             var winner = await _host.FindConflictWinnerAsync(command, cancellationToken);
             if (winner is null)

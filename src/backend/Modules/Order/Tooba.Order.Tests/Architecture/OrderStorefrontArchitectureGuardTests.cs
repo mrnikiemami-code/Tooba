@@ -183,6 +183,43 @@ public sealed class OrderStorefrontArchitectureGuardTests
     }
 
     [Fact]
+    public void Host_checkout_abuse_gate_is_absent()
+    {
+        Assert.False(File.Exists(Path.Combine(
+            RepoRoot(), "src", "backend", "Host", "Tooba.Host", "Storefront", "CheckoutAbuseGate.cs")));
+        var program = File.ReadAllText(Path.Combine(
+            RepoRoot(), "src", "backend", "Host", "Tooba.Host", "Program.cs"));
+        Assert.DoesNotContain("CheckoutAbuseGate", program, StringComparison.Ordinal);
+        Assert.DoesNotContain("ICheckoutAbuseGate", program, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void Order_owns_checkout_abuse_gate_with_IClock_and_catalog_contract()
+    {
+        var gatePath = Path.Combine(
+            OrderRoot(), "Tooba.Order.Infrastructure", "CheckoutAbuse", "CheckoutAbuseGate.cs");
+        Assert.True(File.Exists(gatePath));
+        var gate = File.ReadAllText(gatePath);
+        Assert.Contains("IClock", gate, StringComparison.Ordinal);
+        Assert.Contains("_clock.UtcNow", gate, StringComparison.Ordinal);
+        Assert.Contains("IStoreCheckoutAbuseSettingsReader", gate, StringComparison.Ordinal);
+        Assert.DoesNotContain("CatalogDbContext", gate, StringComparison.Ordinal);
+        Assert.DoesNotContain("DateTimeOffset.UtcNow", gate, StringComparison.Ordinal);
+        Assert.DoesNotContain("DateTime.UtcNow", gate, StringComparison.Ordinal);
+        Assert.Contains("OrderDbContext", gate, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void CheckoutProcessManager_has_no_message_based_inventory_conflict_classification()
+    {
+        var manager = File.ReadAllText(Path.Combine(
+            OrderRoot(), "Tooba.Order.Application", "CheckoutProcessManager.cs"));
+        Assert.DoesNotContain("ex.Message == \"inventory.reservation.conflict\"", manager, StringComparison.Ordinal);
+        Assert.DoesNotContain("when (ex.Message", manager, StringComparison.Ordinal);
+        Assert.Contains("ex.Code == \"inventory.reservation.conflict\"", manager, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public void Shipping_and_pending_services_use_IClock()
     {
         var shipping = File.ReadAllText(Path.Combine(

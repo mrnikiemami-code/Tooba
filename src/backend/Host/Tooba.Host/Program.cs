@@ -184,7 +184,6 @@ builder.Services.AddScoped<CatalogDemoResetAndSeedHost>();
 builder.Services.AddScoped<Tooba.Host.Storefront.StorefrontComposer>();
 builder.Services.AddScoped<Tooba.Host.Storefront.FashionTemplatePreviewQuery>();
 builder.Services.AddScoped<Tooba.Host.Storefront.IndustryTemplatePreviewQuery>();
-builder.Services.AddScoped<Tooba.Order.Application.ICheckoutAbuseGate, Tooba.Host.Storefront.CheckoutAbuseGate>();
 builder.Services.AddScoped<Tooba.Order.Application.Storefront.Ports.IOrderStorefrontActor, Tooba.Host.Order.HostOrderStorefrontActor>();
 builder.Services.AddScoped<Tooba.Order.Application.Storefront.Ports.IOrderStorefrontCheckoutIdentityGate, Tooba.Host.Order.HostOrderStorefrontCheckoutIdentityGate>();
 builder.Services.AddScoped<Tooba.AddressBook.Contracts.IAddressBookCheckoutLookup>(sp => sp.GetRequiredService<Tooba.AddressBook.Application.IAddressBookDirectory>());

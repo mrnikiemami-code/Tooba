@@ -17,6 +17,7 @@ using Tooba.Order.Contracts.Payments;
 using Tooba.Order.Infrastructure.Payments;
 using Tooba.Order.Application.Admin.Completeness.Ports;
 using Tooba.Order.Infrastructure.Admin;
+using Tooba.Order.Infrastructure.CheckoutAbuse;
 
 namespace Tooba.Order.Infrastructure;
 
@@ -48,6 +49,7 @@ public sealed class OrderModule : IToobaModule
         services.AddScoped<Application.Admin.Operations.Ports.IAdminOrderOperationsSupplyPort, Admin.Operations.AdminOrderOperationsSupplyAdapter>();
         services.AddScoped<Application.Admin.Operations.Services.AdminOrderOperationsOrchestrator>();
         services.AddScoped<ICheckoutDirectory, CheckoutDirectory>();
+        services.AddScoped<ICheckoutAbuseGate, CheckoutAbuseGate>();
         services.AddScoped<ICheckoutProcessTracker, CheckoutProcessTracker>();
         services.AddScoped<IReservationCycleDirectory, ReservationCycleDirectory>();
         services.AddScoped<IOrderPurchaseVerificationGateway, OrderPurchaseVerificationGateway>();

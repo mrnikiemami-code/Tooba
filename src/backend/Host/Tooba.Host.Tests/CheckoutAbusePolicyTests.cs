@@ -57,7 +57,7 @@ public sealed class CheckoutAbusePolicyTests
         var checkout = File.ReadAllText(Path.Combine(root, "src", "backend", "Modules", "Order", "Tooba.Order.Application", "CheckoutProcessManager.cs"));
         var host = File.ReadAllText(Path.Combine(root, "src", "backend", "Modules", "Order", "Tooba.Order.Infrastructure", "CheckoutSubmitHost.cs"));
         var directory = File.ReadAllText(Path.Combine(root, "src", "backend", "Modules", "Order", "Tooba.Order.Infrastructure", "CheckoutDirectory.cs"));
-        var gate = File.ReadAllText(Path.Combine(root, "src", "backend", "Host", "Tooba.Host", "Storefront", "CheckoutAbuseGate.cs"));
+        var gate = File.ReadAllText(Path.Combine(root, "src", "backend", "Modules", "Order", "Tooba.Order.Infrastructure", "CheckoutAbuse", "CheckoutAbuseGate.cs"));
         var hide = File.ReadAllText(Path.Combine(root, "src", "backend", "Modules", "Order", "Tooba.Order.Application", "Storefront", "Services", "StorefrontPendingPaymentService.cs"));
         var endpoints = File.ReadAllText(Path.Combine(root, "src", "backend", "Modules", "Order", "Tooba.Order.Endpoints", "Errors", "OrderErrorCatalogContributor.cs"));
         var admin = File.ReadAllText(Path.Combine(root, "src", "backend", "Host", "Tooba.Host", "Admin", "CheckoutAbuseSettingsEndpoints.cs"));
@@ -73,8 +73,14 @@ public sealed class CheckoutAbusePolicyTests
         Assert.Contains("OpenUnpaidOrderPredicate.OpenUnpaidStatuses", gate, StringComparison.Ordinal);
         Assert.Contains("CheckoutReservationCommits", gate, StringComparison.Ordinal);
         Assert.Contains("CheckoutAbuseCustomerLocks", gate, StringComparison.Ordinal);
+        Assert.Contains("IClock", gate, StringComparison.Ordinal);
+        Assert.Contains("IStoreCheckoutAbuseSettingsReader", gate, StringComparison.Ordinal);
+        Assert.DoesNotContain("CatalogDbContext", gate, StringComparison.Ordinal);
+        Assert.DoesNotContain("DateTimeOffset.UtcNow", gate, StringComparison.Ordinal);
         Assert.DoesNotContain("PendingPaymentCardHides", gate, StringComparison.Ordinal);
         Assert.DoesNotContain("PaymentAttempt", gate, StringComparison.Ordinal);
+        Assert.DoesNotContain("ex.Message == \"inventory.reservation.conflict\"", checkout, StringComparison.Ordinal);
+        Assert.Contains("ContractOperationException", checkout, StringComparison.Ordinal);
         Assert.Contains("pending.hide.active_hold", File.ReadAllText(Path.Combine(root, "src", "backend", "Modules", "Order", "Tooba.Order.Application", "Storefront", "StorefrontOrderErrors.cs")), StringComparison.Ordinal);
         var orderErrors = File.ReadAllText(Path.Combine(root, "src", "backend", "Modules", "Order", "Tooba.Order.Application", "Storefront", "StorefrontOrderErrors.cs"));
         var catalog = File.ReadAllText(Path.Combine(root, "src", "backend", "Modules", "Order", "Tooba.Order.Endpoints", "Errors", "OrderErrorCatalogContributor.cs"));
@@ -96,7 +102,7 @@ public sealed class CheckoutAbusePolicyTests
     public void Concurrent_last_slot_uses_row_lock_not_sleep()
     {
         var root = FindRepoRoot();
-        var gate = File.ReadAllText(Path.Combine(root, "src", "backend", "Host", "Tooba.Host", "Storefront", "CheckoutAbuseGate.cs"));
+        var gate = File.ReadAllText(Path.Combine(root, "src", "backend", "Modules", "Order", "Tooba.Order.Infrastructure", "CheckoutAbuse", "CheckoutAbuseGate.cs"));
         Assert.Contains("AcquireCustomerLockAsync", gate, StringComparison.Ordinal);
         Assert.Contains("TouchedAt", gate, StringComparison.Ordinal);
         Assert.DoesNotContain("Thread.Sleep", gate, StringComparison.Ordinal);

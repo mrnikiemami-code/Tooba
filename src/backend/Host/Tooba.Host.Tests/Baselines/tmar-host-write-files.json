@@ -36,7 +36,6 @@
     "Program.cs",
     "ReservationCyclePolicyResolver.cs",
     "Seller/SellerPanelComposer.cs",
-    "Storefront/CheckoutAbuseGate.cs",
     "Storefront/StoreAppearanceProjection.cs",
     "Storefront/StorefrontComposer.cs",
     "Storefront/StorefrontDemoCatalogBootstrap.cs",
