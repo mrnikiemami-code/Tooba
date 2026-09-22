@@ -1,0 +1,59 @@
+﻿PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+BEGIN_TOOBA_WORKER_RESULT
+
+Task-ID: TB-TMAR-RETURNS-GOLDEN-001
+Claim-Id: fb5a8e8b-12bd-4390-9013-bd7d4a9e2eff
+WorkerId: tooba-worker-01
+Channel: tooba-main
+Verdict: PASS
+
+Summary:
+Created Tooba.Returns.Endpoints and moved all customer/seller/admin Returns routes from Host. Host now only maps MapReturnEndpoints() and registers customer/seller/admin authorizer adapters. Application Commands/Queries split into use-case folders with MediatR 12.5.0 handlers; AdminReturnGridQueryPolicy owns Normalize; ReturnsExceptionMapper is STABLE_CODES_ONLY without StartsWith/Contains swallow. Host/Returns/ removed; AdminListGridPolicies.Returns removed. Returns.Tests 14 passed; full Tooba.slnx build exit 0. Evidence under docs/evidence/TB-TMAR-RETURNS-GOLDEN-001/.
+
+Program-Name: TMAR — Tooba Microservice-Ready Architecture Recovery
+Track: RETURNS_GOLDEN_CLOSURE
+Recovery-Start: docs/evidence/TB-TMAR-RETURNS-GOLDEN-001/recovery-start.md
+Returns-HTTP-Ownership-Audit: docs/evidence/TB-TMAR-RETURNS-GOLDEN-001/returns-http-ownership-audit.md
+Returns-Endpoints-State: REAL_PROJECT_PRESENT
+Returns-CQRS-State: MEDIATR_12_5_APPLICATION_HANDLERS
+Returns-Application-UseCases: CreateReturn; ApproveReturn; RejectReturn; RetryReturnRefund; GetCustomerReturn; ListCustomerReturns; GetSellerReturn; ListSellerReturns; GetAdminReturn; ListAdminReturns; QueryAdminReturnsGrid
+Returns-Auth-Boundary: docs/evidence/TB-TMAR-RETURNS-GOLDEN-001/returns-auth-boundary.md; IReturnCustomerAuthorizer + IReturnSellerAuthorizer + IReturnAdminAuthorizer in Endpoints; Host adapters only
+Returns-Grid-Ownership: MODULE_OWNED
+Returns-Result-Adoption: HTTP_USE_CASES_ADOPTED
+Returns-Error-Classification: STABLE_CODES_ONLY
+Returns-Prose-Mapping: NONE
+Returns-Unexpected-Exception-Swallow: NONE
+Returns-Host-Authority-Audit: docs/evidence/TB-TMAR-RETURNS-GOLDEN-001/returns-host-authority-audit.md
+Returns-Host-Endpoints: REMOVED
+Returns-Host-Composer: REMOVED
+Returns-Host-Business-Authority: NONE
+Returns-Host-DbAuthority: NONE
+Returns-CrossModule-Boundary: CONTRACTS_ONLY
+Returns-Physical-State: VERIFIED_ON_DISK_AND_NAMESPACE
+Returns-Architecture-Guards: ENFORCED
+Returns-Behavior-Preservation: VERIFIED
+Focused-Validation: PASS — Returns.Tests exit 0 (14 passed: architecture ownership, CQRS/host guards, stable-code mapper, grid policy, endpoint URLs, semantics)
+Skipped-Validation: broad Host suite; Checkout workflow; Tax/Pricing; frontend; unrelated modules
+Full-Validation: PASS — dotnet build src/backend/Tooba.slnx exit 0 (0 errors)
+AntiPattern-Gate: PASS — no Host ReturnEndpoints; no ReturnPanelComposer; no AdminListGridPolicies.Returns; no StartsWith/Contains message heuristics in ReturnsExceptionMapper; unknown IOE propagates; no TypeForwardedTo; Host/Returns absent
+Residual-Defects: NONE
+Returns-State: COMPLETE_REFERENCE_PATTERN
+Fulfillment-State: COMPLETE_REFERENCE_PATTERN
+Settlement-State: COMPLETE_REFERENCE_PATTERN
+Cart-State: COMPLETE_REFERENCE_PATTERN
+Checkout-State: PAUSED_AT_SAFE_W5_CHECKPOINT
+Tax-State: UNTOUCHED
+Pricing-State: UNTOUCHED
+Frontend-Production-Changes: NONE
+
+Git:
+  Commit: 6829cfdca1c1e421821102943917036b0d8c7461
+  Message: feat(TB-TMAR-RETURNS-GOLDEN-001): Returns Endpoints + CQRS Host ownership closure.
+  Push: origin/main updated 37180cc4..6829cfdca1c1e421821102943917036b0d8c7461
+  HEAD == origin/main: YES
+  User-Work-Preserved: YES (no reset/clean/force-push; stashes untouched; cart/fulfillment bridge leftovers left untracked)
+
+Blockers: NONE
+Next-Recommended-Task: ARCHITECT_SELECT_NEXT_REOPENED_MODULE
+
+END_TOOBA_WORKER_RESULT
