@@ -1,7 +1,6 @@
-using Tooba.Returns.Application.Ports;
-using Tooba.Returns.Application.Models;
+using Tooba.Returns.Contracts.Operations;
 
-namespace Tooba.Host.Admin;
+namespace Tooba.Order.Application.Admin.Operations.Models;
 
 /// <summary>یک اقدام lifecycle قابل‌نمایش برای سفارش ادمین.</summary>
 public sealed record AdminOrderOperationAction(

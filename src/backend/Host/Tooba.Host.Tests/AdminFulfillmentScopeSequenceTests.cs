@@ -1,3 +1,5 @@
+using Tooba.Order.Application.Admin.Operations.Models;
+using Tooba.Order.Application.Admin.Operations.Policies;
 using Tooba.Fulfillment.Application.Ports;
 using Tooba.Fulfillment.Application.Models;
 using Tooba.Fulfillment.Application.Shipping;
@@ -73,7 +75,7 @@ public sealed class AdminFulfillmentScopeSequenceTests
         unit.PackSelections([(l1, 1)], now);
         Assert.Equal(1, unit.Items.Single(x => x.OrderLineId == l1).QuantityPacked);
         var blocked = Assert.Throws<InvalidOperationException>(() => unit.UnprocessSelections([(l1, 1)], now));
-        Assert.Contains("بسته‌بندی", blocked.Message, StringComparison.Ordinal);
+        Assert.Contains("fulfillment.processing.release_invalid", blocked.Message, StringComparison.Ordinal);
         unit.UnpackSelections([(l1, 1)], now);
         unit.UnprocessSelections([(l1, 1)], now);
         Assert.Equal(0, unit.Items.Single(x => x.OrderLineId == l1).QuantityProcessing);
@@ -131,7 +133,7 @@ public sealed class AdminFulfillmentScopeSequenceTests
         unit.MarkProcessing(now);
         var ex = Assert.Throws<InvalidOperationException>(() => unit.PackSelections([(line, 3)], now));
         Assert.Equal(0, unit.Items.Single().QuantityPacked);
-        Assert.Contains("بیشتر", ex.Message, StringComparison.Ordinal);
+        Assert.Contains("fulfillment.pack.qty_exceeds", ex.Message, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -143,8 +145,7 @@ public sealed class AdminFulfillmentScopeSequenceTests
             FulfillmentStatus.Processing,
             [new FulfillmentItemSnapshot(Guid.NewGuid(), l1, 1, 0, null, 0, 1),
              new FulfillmentItemSnapshot(Guid.NewGuid(), l2, 2, 0, null, 0, 2)]);
-        Assert.True(AdminOrderOperationsComposer.SelectionsAreHomogeneousPackable(
-            snapshot,
+        Assert.True(AdminOrderOperationsPolicy.SelectionsAreHomogeneousPackable(snapshot.ToContracts(),
             [new AdminOrderLineSelection(l1, 1), new AdminOrderLineSelection(l2, 1)]));
     }
 
@@ -157,20 +158,19 @@ public sealed class AdminFulfillmentScopeSequenceTests
             FulfillmentStatus.Processing,
             [new FulfillmentItemSnapshot(Guid.NewGuid(), l1, 1, 0, null, 1, 1),
              new FulfillmentItemSnapshot(Guid.NewGuid(), l2, 2, 0, null, 0, 2)]);
-        Assert.False(AdminOrderOperationsComposer.SelectionsAreHomogeneousPackable(
-            snapshot,
+        Assert.False(AdminOrderOperationsPolicy.SelectionsAreHomogeneousPackable(snapshot.ToContracts(),
             [new AdminOrderLineSelection(l1, 1), new AdminOrderLineSelection(l2, 1)]));
     }
 
     [Fact]
     public void Fulfillment_error_codes_are_human_fa()
     {
-        Assert.Equal("ابتدا پردازش را شروع کنید.", AdminOrderOperationsComposer.FulfillmentOpToFa("fulfillment.pack.requires_processing"));
-        Assert.Equal("این قلم هنوز در مرحله پردازش نیست.", AdminOrderOperationsComposer.FulfillmentOpToFa("fulfillment.pack.not_processing"));
-        Assert.Equal("این قلم هنوز بسته‌بندی نشده است.", AdminOrderOperationsComposer.FulfillmentOpToFa("fulfillment.ship.not_packed"));
-        Assert.Equal("تعداد انتخاب‌شده بیشتر از تعداد قابل عملیات است.", AdminOrderOperationsComposer.FulfillmentOpToFa("fulfillment.selection.qty_exceeded"));
-        Assert.Equal("ردیف‌های انتخاب‌شده برای این عملیات سازگار نیستند.", AdminOrderOperationsComposer.FulfillmentOpToFa("fulfillment.bulk.incompatible"));
-        Assert.Equal("عملیات گروهی روی فروشندگان متفاوت مجاز نیست.", AdminOrderOperationsComposer.FulfillmentOpToFa("fulfillment.bulk.cross_seller"));
+        Assert.Equal("ابتدا پردازش را شروع کنید.", AdminOrderOperationsPolicy.FulfillmentOpToFa("fulfillment.pack.requires_processing"));
+        Assert.Equal("این قلم هنوز در مرحله پردازش نیست.", AdminOrderOperationsPolicy.FulfillmentOpToFa("fulfillment.pack.not_processing"));
+        Assert.Equal("این قلم هنوز بسته‌بندی نشده است.", AdminOrderOperationsPolicy.FulfillmentOpToFa("fulfillment.ship.not_packed"));
+        Assert.Equal("تعداد انتخاب‌شده بیشتر از تعداد قابل عملیات است.", AdminOrderOperationsPolicy.FulfillmentOpToFa("fulfillment.selection.qty_exceeded"));
+        Assert.Equal("ردیف‌های انتخاب‌شده برای این عملیات سازگار نیستند.", AdminOrderOperationsPolicy.FulfillmentOpToFa("fulfillment.bulk.incompatible"));
+        Assert.Equal("عملیات گروهی روی فروشندگان متفاوت مجاز نیست.", AdminOrderOperationsPolicy.FulfillmentOpToFa("fulfillment.bulk.cross_seller"));
     }
 
     [Fact]
@@ -193,7 +193,7 @@ public sealed class AdminFulfillmentScopeSequenceTests
     public void Composer_source_keeps_pack_behind_processing()
     {
         var root = FindRepoRoot();
-        var composer = File.ReadAllText(Path.Combine(root, "src", "backend", "Host", "Tooba.Host", "Admin", "AdminOrderOperationsComposer.cs"));
+        var composer = File.ReadAllText(Path.Combine(root, "src", "backend", "Modules", "Order", "Tooba.Order.Application", "Admin", "Operations", "Services", "AdminOrderOperationsOrchestrator.cs"));
         Assert.Contains("pack_selected", composer, StringComparison.Ordinal);
         Assert.Contains("QuantityProcessing", composer, StringComparison.Ordinal);
         Assert.Contains("unprocess", composer, StringComparison.Ordinal);

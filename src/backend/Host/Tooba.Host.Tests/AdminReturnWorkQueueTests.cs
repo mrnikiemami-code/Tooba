@@ -1,3 +1,4 @@
+using Tooba.Order.Application.Admin.Operations.Policies;
 using Tooba.Returns.Application.Errors;
 using Tooba.Returns.Application.Models;
 using Tooba.Returns.Application.Ports;
@@ -100,7 +101,7 @@ public sealed class AdminReturnWorkQueueTests
         Assert.DoesNotContain("ReturnErrorMapper", endpoints, StringComparison.Ordinal);
 
         var composer = File.ReadAllText(Path.GetFullPath(Path.Combine(
-            AppContext.BaseDirectory, "..", "..", "..", "..", "Tooba.Host", "Admin", "AdminOrderOperationsComposer.cs")));
+            AppContext.BaseDirectory, "..", "..", "..", "..", "Tooba.Host", "Admin", "AdminOrderOperationsPolicy.cs")));
         Assert.Contains("isReturnLifecycleOp", composer, StringComparison.Ordinal);
         Assert.Contains("ToErrorCode(eligibility.ReasonCode)", composer, StringComparison.Ordinal);
 

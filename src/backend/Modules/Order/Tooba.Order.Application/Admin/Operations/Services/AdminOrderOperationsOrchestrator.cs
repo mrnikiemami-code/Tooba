@@ -1,43 +1,25 @@
+using Tooba.BuildingBlocks;
+using Tooba.BuildingBlocks.Results;
+using Tooba.Fulfillment.Contracts.Operations;
+using Tooba.Order.Application.Admin.Operations.Models;
+using Tooba.Order.Application.Admin.Operations.Policies;
+using Tooba.Order.Application.Admin.Operations.Ports;
 using Tooba.Order.Contracts.Fulfillment;
 using Tooba.Order.Contracts.Payments;
-﻿using Microsoft.EntityFrameworkCore;
-using Tooba.AccessControl.Application;
-using Tooba.AccessControl.Domain;
-using Tooba.BuildingBlocks;
-using Tooba.Fulfillment.Application.Ports;
-using Tooba.Fulfillment.Application.Models;
-using Tooba.Fulfillment.Application.Shipping;
-using Tooba.Inventory.Application.Ports;
-using Tooba.Inventory.Application.Checkout;
-using Tooba.Inventory.Application.Orders;
-using Tooba.Inventory.Contracts.Returns;
-using Tooba.Fulfillment.Domain.Aggregates;
-using Tooba.Fulfillment.Domain.ValueObjects;
-using Tooba.Order.Application;
 using Tooba.Order.Domain;
-using Tooba.Order.Infrastructure.Persistence;
-using Tooba.Payment.Application.Models;
 using Tooba.Payment.Contracts.Admin;
-using Tooba.Payment.Domain.Aggregates;
-using Tooba.Payment.Domain.ValueObjects;
-using Tooba.Payment.Infrastructure.Adapters;
-using Tooba.Payment.Infrastructure.DependencyInjection;
-using Tooba.Payment.Infrastructure.Directories;
-using Tooba.Payment.Infrastructure.Messaging;
-using Tooba.Payment.Infrastructure.Providers;
-using Tooba.Returns.Application.Ports;
-using Tooba.Returns.Application.Models;
-using Tooba.Returns.Application.Errors;
-using Tooba.Settlement.Application;
-using Tooba.Returns.Domain.ValueObjects;
+using Tooba.Returns.Contracts.Errors;
+using Tooba.Returns.Contracts.Operations;
+using Tooba.Settlement.Contracts.Operations;
 
-namespace Tooba.Host.Admin;
+namespace Tooba.Order.Application.Admin.Operations.Services;
 
 /// <summary>
-/// ترکیب عملیات lifecycle سفارش ادمین؛ منطق دامنه در Directoryها می‌ماند.
+/// Admin order lifecycle orchestration — Host-free; Contracts + Order ports only.
 /// </summary>
-public sealed class AdminOrderOperationsComposer
+public sealed class AdminOrderOperationsOrchestrator
 {
+
     private static readonly HashSet<string> OpsFamilyPrefixes =
     [
         "order.",
@@ -47,7 +29,7 @@ public sealed class AdminOrderOperationsComposer
         "payment.",
     ];
 
-    internal static readonly HashSet<string> CancelledBlockedCodes = new(StringComparer.OrdinalIgnoreCase)
+    public static readonly HashSet<string> CancelledBlockedCodes = new(StringComparer.OrdinalIgnoreCase)
     {
         "confirm_deposit",
         "reject_deposit",
@@ -71,66 +53,80 @@ public sealed class AdminOrderOperationsComposer
         "deliver_consolidated_package",
     };
 
-    internal const string WholeOrderCancelBlockedAfterDispatchFa =
+    public const string WholeOrderCancelBlockedAfterDispatchFa =
         "پس از ارسال کالا، لغو کامل سفارش امکان‌پذیر نیست.";
 
-    internal const string WholeOrderCancelConfirmFa =
+    public const string WholeOrderCancelConfirmFa =
         "با لغو کامل سفارش، مرسوله‌های پیش از ارسال ابطال می‌شوند، موجودی آزاد می‌شود و در صورت پرداخت موفق بازگشت وجه آغاز می‌شود. آیا مطمئن هستید؟";
 
-    private readonly OrderDbContext _orders;
+    private readonly IAdminOrderOperationsCheckoutReader _checkouts;
     
-    private readonly IFulfillmentDirectory _fulfillment;
-    private readonly IReturnDirectory _returnDirectory;
-    private readonly IReturnEligibilityEvaluator _eligibility;
+    private readonly IFulfillmentAdminOperations _fulfillment;
+    private readonly IReturnAdminOperations _returns;
+    
     private readonly ICheckoutDirectory _checkout;
-    private readonly IAccessControlDirectory _access;
-    private readonly ICurrentTenant _tenant;
+    private readonly IOrderAdminEffectiveAccessReader _access;
+    
     private readonly IPaymentAdminGateway _payments;
     private readonly IOrderPaymentProjectionPort _orderPayments;
-    private readonly ISettlementDirectory _settlement;
-    private readonly OrderInventoryRecoveryComposer _inventoryRecovery;
-    private readonly OrderSupplyComposer _orderSupply;
-    private readonly ShippingMethodsOptions _shippingMethods;
+    private readonly ISettlementOrderAccrualPort _settlement;
+    private readonly IAdminOrderOperationsInventoryRecoveryPort _inventoryRecovery;
+    private readonly IAdminOrderOperationsSupplyPort _orderSupply;
+    
 
     /// <summary>ترکیب‌گر عملیات را به ماژول‌های موجود وصل می‌کند.</summary>
-    public AdminOrderOperationsComposer(
-        OrderDbContext orders,
-        IFulfillmentDirectory fulfillment,
-        IReturnDirectory returnDirectory,
-        IReturnEligibilityEvaluator eligibility,
+    public AdminOrderOperationsOrchestrator(
+        IAdminOrderOperationsCheckoutReader checkouts,
+        IFulfillmentAdminOperations fulfillment,
+        IReturnAdminOperations returns,
+        
         ICheckoutDirectory checkout,
-        IAccessControlDirectory access,
-        ICurrentTenant tenant,
+        IOrderAdminEffectiveAccessReader access,
+        
         IPaymentAdminGateway payments,
         IOrderPaymentProjectionPort orderPayments,
-        ISettlementDirectory settlement,
-        OrderInventoryRecoveryComposer inventoryRecovery,
-        OrderSupplyComposer orderSupply,
-        ShippingMethodsOptions? shippingMethods = null)
+        ISettlementOrderAccrualPort settlement,
+        IAdminOrderOperationsInventoryRecoveryPort inventoryRecovery,
+        IAdminOrderOperationsSupplyPort orderSupply)
     {
-        _orders = orders;
+        _checkouts = checkouts;
         _fulfillment = fulfillment;
-        _returnDirectory = returnDirectory;
-        _eligibility = eligibility;
+        _returns = returns;
+        
         _checkout = checkout;
         _access = access;
-        _tenant = tenant;
+        
         _payments = payments;
         _orderPayments = orderPayments;
         _settlement = settlement;
         _inventoryRecovery = inventoryRecovery;
         _orderSupply = orderSupply;
-        _shippingMethods = shippingMethods ?? new ShippingMethodsOptions();
+        
     }
 
     /// <summary>اقدامات مجاز و eligibility مرجوعی یک checkout را برمی‌گرداند.</summary>
-    public async Task<AdminOrderOperationsPage> ListAsync(
+    public async Task<Result<AdminOrderOperationsPage>> ListAsync(
+        Guid checkoutId,
+        Guid actorUserId,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            return Result.Success(await ListCoreAsync(checkoutId, actorUserId, cancellationToken));
+        }
+        catch (AdminOrderOperationsException ex)
+        {
+            return Result.Failure<AdminOrderOperationsPage>(new SemanticError(ex.Code));
+        }
+    }
+
+    private async Task<AdminOrderOperationsPage> ListCoreAsync(
         Guid checkoutId,
         Guid actorUserId,
         CancellationToken cancellationToken)
     {
         var group = await LoadCheckoutAsync(checkoutId, cancellationToken)
-            ?? throw new PlatformHttpException(404, "سفارش پیدا نشد.", "order.operation.invalid");
+            ?? throw new AdminOrderOperationsException("order.operation.invalid");
 
         var effective = await LoadEffectiveAsync(actorUserId, cancellationToken);
         var fulfillments = await _fulfillment.ListForCheckoutAsync(checkoutId, cancellationToken);
@@ -139,7 +135,7 @@ public sealed class AdminOrderOperationsComposer
         var memberships = await _fulfillment.GetActiveMembershipByShipmentIdsAsync(allShipmentIds, cancellationToken);
         var membershipByShipment = memberships.ToDictionary(x => x.ShipmentId);
         var sellerOrderIds = group.SellerOrders.Select(x => x.SellerOrderId).ToList();
-        var returns = (await _returnDirectory.ListBySellerOrderIdsAsync(sellerOrderIds, cancellationToken))
+        var returns = (await _returns.ListBySellerOrderIdsAsync(sellerOrderIds, cancellationToken))
             .OrderByDescending(x => x.CreatedAt)
             .Take(200)
             .ToList();
@@ -155,7 +151,7 @@ public sealed class AdminOrderOperationsComposer
         }
         foreach (var order in group.SellerOrders)
         {
-            var elig = await _eligibility.EvaluateAsync(order.SellerOrderId, cancellationToken);
+            var elig = await _returns.EvaluateEligibilityAsync(order.SellerOrderId, cancellationToken);
             eligibility.Add(elig);
             var fulfillment = fulfillments.FirstOrDefault(x => x.SellerOrderId == order.SellerOrderId);
             ProjectActions(actions, order, fulfillment, returns, elig, effective, membershipByShipment);
@@ -164,7 +160,7 @@ public sealed class AdminOrderOperationsComposer
         ProjectWholeOrderCancel(actions, group, fulfillments, effective, blockedBySellerPayout);
         ProjectRestoreCancelledOrder(actions, group, fulfillments, returns, effective, blockedBySellerPayout, payment?.Status);
         ProjectConsolidatedPackageActions(actions, group, fulfillments, packages, membershipByShipment, effective);
-        var recovery = await _inventoryRecovery.AssessCheckoutAsync(checkoutId, cancellationToken);
+        var recovery = await _inventoryRecovery.AssessAsync(checkoutId, cancellationToken);
         var canConfirmDeposit = payment is { ConfirmDepositEligible: true } && Has(effective, "payment.reconcile");
         ProjectInventoryRecovery(actions, recovery, effective, supply.Status, canConfirmDeposit);
         var collapsed = AdminOrderWholeOrderActions.Collapse(actions);
@@ -204,9 +200,9 @@ public sealed class AdminOrderOperationsComposer
             ? "رزرو موجودی این سفارش از چرخه قبلی معتبر نیست و نیاز به بازیابی موجودی دارد."
             : null;
         var canRecover = collapsed.Any(a => a.Code == "recover_inventory_reservation");
-        var shortage = supply.Status is OrderSupplyStatusKind.Unavailable or OrderSupplyStatusKind.PartiallyUnavailable
+        var shortage = supply.Status is "Unavailable" or "PartiallyUnavailable"
             ? supply.Lines
-                .Where(x => x.Shortage > 0 || x.LineStatus is OrderSupplyStatusKind.Unavailable or OrderSupplyStatusKind.PartiallyUnavailable)
+                .Where(x => x.Shortage > 0 || x.LineStatus is "Unavailable" or "PartiallyUnavailable")
                 .Select(x => new AdminSupplyLineShortage(x.ItemTitle, x.UnitCode, x.Required, x.Available, x.Shortage))
                 .ToList()
             : [];
@@ -218,31 +214,54 @@ public sealed class AdminOrderOperationsComposer
             sellerCaps,
             warning,
             recovery.ClassCode is "A" or "B" or "C" ? recovery.ClassCode : null,
-            supply.Status.ToString(),
-            OrderSupplyComposer.MessageFa(supply.Status),
+            supply.Status,
+            supply.MessageFa,
             canConfirmDeposit,
             canRecover,
             shortage);
     }
 
     /// <summary>eligibility همهٔ سفارش‌های فروشندهٔ یک checkout.</summary>
-    public async Task<IReadOnlyList<ReturnEligibilityResult>> ListReturnEligibilityAsync(
+    public async Task<Result<IReadOnlyList<ReturnEligibilityResult>>> ListReturnEligibilityAsync(
         Guid checkoutId,
         CancellationToken cancellationToken)
     {
-        var group = await LoadCheckoutAsync(checkoutId, cancellationToken)
-            ?? throw new PlatformHttpException(404, "سفارش پیدا نشد.", "order.operation.invalid");
-        var results = new List<ReturnEligibilityResult>();
-        foreach (var order in group.SellerOrders)
+        try
         {
-            results.Add(await _eligibility.EvaluateAsync(order.SellerOrderId, cancellationToken));
-        }
+            var group = await LoadCheckoutAsync(checkoutId, cancellationToken)
+                ?? throw new AdminOrderOperationsException("order.operation.invalid");
+            var results = new List<ReturnEligibilityResult>();
+            foreach (var order in group.SellerOrders)
+            {
+                results.Add(await _returns.EvaluateEligibilityAsync(order.SellerOrderId, cancellationToken));
+            }
 
-        return results;
+            return Result.Success<IReadOnlyList<ReturnEligibilityResult>>(results);
+        }
+        catch (AdminOrderOperationsException ex)
+        {
+            return Result.Failure<IReadOnlyList<ReturnEligibilityResult>>(new SemanticError(ex.Code));
+        }
     }
 
     /// <summary>یک عملیات را پس از بررسی مجوز اجرا می‌کند.</summary>
-    public async Task<object> ExecuteAsync(
+    public async Task<Result<object>> ExecuteAsync(
+        Guid checkoutId,
+        Guid actorUserId,
+        AdminOrderOperationRequest request,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            return Result.Success(await ExecuteCoreAsync(checkoutId, actorUserId, request, cancellationToken));
+        }
+        catch (AdminOrderOperationsException ex)
+        {
+            return Result.Failure<object>(new SemanticError(ex.Code));
+        }
+    }
+
+    private async Task<object> ExecuteCoreAsync(
         Guid checkoutId,
         Guid actorUserId,
         AdminOrderOperationRequest request,
@@ -250,16 +269,16 @@ public sealed class AdminOrderOperationsComposer
     {
         if (string.IsNullOrWhiteSpace(request.Code))
         {
-            throw new PlatformHttpException(400, "کد عملیات نامعتبر است.", "order.operation.invalid");
+            throw new AdminOrderOperationsException("order.operation.invalid");
         }
 
         var group = await LoadCheckoutAsync(checkoutId, cancellationToken)
-            ?? throw new PlatformHttpException(404, "سفارش پیدا نشد.", "order.operation.invalid");
+            ?? throw new AdminOrderOperationsException("order.operation.invalid");
         var effective = await LoadEffectiveAsync(actorUserId, cancellationToken);
         var code = request.Code.Trim().ToLowerInvariant();
         if (IsCheckoutCancelled(group) && CancelledBlockedCodes.Contains(code))
         {
-            throw new PlatformHttpException(400, FulfillmentOpToFa("order.cancelled.blocks_action"), "order.cancelled.blocks_action");
+            throw new AdminOrderOperationsException("order.cancelled.blocks_action");
         }
 
         // cancel / restore_deposit / unconfirm_deposit / restore_cancelled_order: projection may hide; domain remains authoritative.
@@ -267,14 +286,14 @@ public sealed class AdminOrderOperationsComposer
         {
             if (!Has(effective, "order.cancel"))
             {
-                throw new PlatformHttpException(403, "مجوز انجام این عملیات وجود ندارد.", "order.operation.denied");
+                throw new AdminOrderOperationsException("order.operation.denied");
             }
 
             try
             {
                 return await CancelAsync(group, request, cancellationToken);
             }
-            catch (PlatformHttpException)
+            catch (AdminOrderOperationsException)
             {
                 throw;
             }
@@ -282,18 +301,15 @@ public sealed class AdminOrderOperationsComposer
                 ex.Message.StartsWith("order.cancel.forbidden", StringComparison.Ordinal)
                 || ex.Message == "fulfillment.cancel.already_dispatched")
             {
-                throw new PlatformHttpException(400, WholeOrderCancelBlockedAfterDispatchFa, "order.cancel.forbidden");
+                throw new AdminOrderOperationsException("order.cancel.forbidden");
             }
             catch (InvalidOperationException ex) when (ex.Message == "settlement.cancel.payout_completed")
             {
-                throw new PlatformHttpException(
-                    400,
-                    "لغو پس از واریز سهم فروشنده مجاز نیست.",
-                    "order.cancel.payout_completed");
+                throw new AdminOrderOperationsException("order.cancel.payout_completed");
             }
             catch (InvalidOperationException ex)
             {
-                throw new PlatformHttpException(400, ex.Message, "order.operation.failed");
+                throw new AdminOrderOperationsException("order.operation.failed");
             }
         }
 
@@ -301,14 +317,14 @@ public sealed class AdminOrderOperationsComposer
         {
             if (!Has(effective, "payment.reconcile"))
             {
-                throw new PlatformHttpException(403, "مجوز انجام این عملیات وجود ندارد.", "order.operation.denied");
+                throw new AdminOrderOperationsException("order.operation.denied");
             }
 
             try
             {
                 return await RestoreDepositForCheckoutAsync(checkoutId, cancellationToken);
             }
-            catch (PlatformHttpException)
+            catch (AdminOrderOperationsException)
             {
                 throw;
             }
@@ -322,14 +338,14 @@ public sealed class AdminOrderOperationsComposer
         {
             if (!Has(effective, "payment.reconcile"))
             {
-                throw new PlatformHttpException(403, "مجوز انجام این عملیات وجود ندارد.", "order.operation.denied");
+                throw new AdminOrderOperationsException("order.operation.denied");
             }
 
             try
             {
                 return await UnconfirmDepositForCheckoutAsync(group, cancellationToken);
             }
-            catch (PlatformHttpException)
+            catch (AdminOrderOperationsException)
             {
                 throw;
             }
@@ -343,7 +359,7 @@ public sealed class AdminOrderOperationsComposer
         {
             if (!HasAny(effective, "order.cancel", "order.handle"))
             {
-                throw new PlatformHttpException(403, "مجوز انجام این عملیات وجود ندارد.", "order.operation.denied");
+                throw new AdminOrderOperationsException("order.operation.denied");
             }
 
             return await RestoreCancelledOrderAsync(group, actorUserId, cancellationToken);
@@ -353,13 +369,13 @@ public sealed class AdminOrderOperationsComposer
         {
             if (!Has(effective, "payment.reconcile"))
             {
-                throw new PlatformHttpException(403, "مجوز انجام این عملیات وجود ندارد.", "order.operation.denied");
+                throw new AdminOrderOperationsException("order.operation.denied");
             }
 
             return await RecoverInventoryReservationAsync(checkoutId, actorUserId, request, cancellationToken);
         }
 
-        var page = await ListAsync(checkoutId, actorUserId, cancellationToken);
+        var page = await ListCoreAsync(checkoutId, actorUserId, cancellationToken);
         var projected = page.Actions.FirstOrDefault(a =>
             string.Equals(a.Code, request.Code, StringComparison.OrdinalIgnoreCase)
             && MatchesIds(a, request));
@@ -368,17 +384,17 @@ public sealed class AdminOrderOperationsComposer
         {
             if (!isReturnLifecycleOp)
             {
-                throw new PlatformHttpException(400, "این عملیات در وضعیت فعلی سفارش مجاز نیست.", "order.operation.invalid");
+                throw new AdminOrderOperationsException("order.operation.invalid");
             }
 
             if (!Has(effective, "return.manage"))
             {
-                throw new PlatformHttpException(403, "مجوز انجام این عملیات وجود ندارد.", "order.operation.denied");
+                throw new AdminOrderOperationsException("order.operation.denied");
             }
         }
         else if (!Has(effective, projected.RequiredPermission))
         {
-            throw new PlatformHttpException(403, "مجوز انجام این عملیات وجود ندارد.", "order.operation.denied");
+            throw new AdminOrderOperationsException("order.operation.denied");
         }
 
         try
@@ -409,19 +425,19 @@ public sealed class AdminOrderOperationsComposer
                 "confirm_deposit" => await ConfirmDepositForCheckoutAsync(group, cancellationToken),
                 "reject_deposit" => await RejectDepositForCheckoutAsync(checkoutId, cancellationToken),
                 "recover_inventory_reservation" => await RecoverInventoryReservationAsync(checkoutId, actorUserId, request, cancellationToken),
-                _ => throw new PlatformHttpException(400, "کد عملیات نامعتبر است.", "order.operation.invalid"),
+                _ => throw new AdminOrderOperationsException("order.operation.invalid"),
             };
         }
-        catch (PlatformHttpException)
+        catch (AdminOrderOperationsException)
         {
             throw;
         }
         catch (InvalidOperationException ex)
         {
-            var mapped = MapFulfillmentException(ex.Message);
+            var mapped = MapKnownOperationException(ex.Message);
             if (mapped.Code == "order.operation.failed")
             {
-                if (!ReturnsExceptionMapper.TryMapExact(ex.Message, out var semantic))
+                if (!TryMapReturnCode(ex.Message, out var semantic))
                 {
                     throw;
                 }
@@ -429,17 +445,17 @@ public sealed class AdminOrderOperationsComposer
                 mapped = (semantic.Code, semantic.Code);
             }
 
-            throw new PlatformHttpException(400, mapped.Fa, mapped.Code);
+            throw new AdminOrderOperationsException(mapped.Code);
         }
     }
 
     private void ProjectActions(
         List<AdminOrderOperationAction> actions,
-        SellerOrder order,
+        AdminOrderOpsSellerOrderSnapshot order,
         FulfillmentSnapshot? fulfillment,
         IReadOnlyList<ReturnSnapshot> returns,
         ReturnEligibilityResult eligibility,
-        EffectiveAccessDto effective,
+        OrderAdminEffectiveAccess effective,
         IReadOnlyDictionary<Guid, ActivePackageMembershipSnapshot> membershipByShipment)
     {
         if (order.Status != SellerOrderStatus.Cancelled && fulfillment is not null)
@@ -578,7 +594,7 @@ public sealed class AdminOrderOperationsComposer
                 }
             }
 
-            if (fulfillment.Status is not (FulfillmentStatus.Cancelled or FulfillmentStatus.Failed or FulfillmentStatus.Delivered)
+            if (fulfillment.Status is not (FulfillmentOperationStatus.Cancelled or FulfillmentOperationStatus.Failed or FulfillmentOperationStatus.Delivered)
                 && HasUnallocatedShipmentQuantity(fulfillment)
                 && HasAny(effective, "order.handle", "fulfillment.manage"))
             {
@@ -595,12 +611,12 @@ public sealed class AdminOrderOperationsComposer
                     "مرسوله برای این سفارش ایجاد شود؟"));
             }
 
-            foreach (var shipment in fulfillment.Shipments.Where(s => s.Status != ShipmentStatus.Cancelled))
+            foreach (var shipment in fulfillment.Shipments.Where(s => s.Status != ShipmentOperationStatus.Cancelled))
             {
                 var lockedByPackage = membershipByShipment.TryGetValue(shipment.ShipmentId, out var membership)
-                    && membership.PackageStatus is ConsolidatedPackageStatus.Created or ConsolidatedPackageStatus.Dispatched;
+                    && membership.PackageStatus is ConsolidatedPackageOperationStatus.Created or ConsolidatedPackageOperationStatus.Dispatched;
 
-                if (shipment.Status == ShipmentStatus.Created
+                if (shipment.Status == ShipmentOperationStatus.Created
                     && !lockedByPackage
                     && HasAny(effective, "order.handle", "fulfillment.manage"))
                 {
@@ -618,7 +634,7 @@ public sealed class AdminOrderOperationsComposer
                 }
 
                 if (string.IsNullOrWhiteSpace(shipment.TrackingReference)
-                    && shipment.Status == ShipmentStatus.Created
+                    && shipment.Status == ShipmentOperationStatus.Created
                     && !lockedByPackage
                     && HasAny(effective, "order.handle", "fulfillment.manage"))
                 {
@@ -637,7 +653,7 @@ public sealed class AdminOrderOperationsComposer
 
                 if (!string.IsNullOrWhiteSpace(shipment.TrackingReference)
                     && shipment.DispatchedAt is null
-                    && shipment.Status == ShipmentStatus.Created
+                    && shipment.Status == ShipmentOperationStatus.Created
                     && !lockedByPackage
                     && HasAny(effective, "order.handle", "fulfillment.manage"))
                 {
@@ -656,7 +672,7 @@ public sealed class AdminOrderOperationsComposer
 
                 if (!string.IsNullOrWhiteSpace(shipment.TrackingReference)
                     && shipment.DispatchedAt is null
-                    && shipment.Status is ShipmentStatus.Created
+                    && shipment.Status is ShipmentOperationStatus.Created
                     && !lockedByPackage
                     && HasAny(effective, "order.handle", "fulfillment.manage"))
                 {
@@ -673,7 +689,7 @@ public sealed class AdminOrderOperationsComposer
                         "ارسال مرسوله ثبت شود؟"));
                 }
 
-                if (shipment.Status is ShipmentStatus.Dispatched or ShipmentStatus.InTransit
+                if (shipment.Status is ShipmentOperationStatus.Dispatched or ShipmentOperationStatus.InTransit
                     && shipment.DeliveredAt is null
                     && !lockedByPackage
                     && HasAny(effective, "order.handle", "fulfillment.manage"))
@@ -710,7 +726,7 @@ public sealed class AdminOrderOperationsComposer
 
         foreach (var ret in returns.Where(x => x.SellerOrderId == order.SellerOrderId))
         {
-            if (ret.Status == ReturnRequestStatus.Requested && Has(effective, "return.manage"))
+            if (ret.Status == ReturnRequestOperationStatus.Requested && Has(effective, "return.manage"))
             {
                 actions.Add(Action(
                     "approve_return",
@@ -736,7 +752,7 @@ public sealed class AdminOrderOperationsComposer
                     "مرجوعی رد شود؟"));
             }
 
-            if (ret.Status == ReturnRequestStatus.RefundFailed
+            if (ret.Status == ReturnRequestOperationStatus.RefundFailed
                 && HasAny(effective, "order.refund", "return.manage"))
             {
                 actions.Add(Action(
@@ -756,11 +772,11 @@ public sealed class AdminOrderOperationsComposer
 
     private void ProjectConsolidatedPackageActions(
         List<AdminOrderOperationAction> actions,
-        CheckoutGroup group,
+        AdminOrderOpsCheckoutSnapshot group,
         IReadOnlyList<FulfillmentSnapshot> fulfillments,
         IReadOnlyList<ConsolidatedPackageSnapshot> packages,
         IReadOnlyDictionary<Guid, ActivePackageMembershipSnapshot> membershipByShipment,
-        EffectiveAccessDto effective)
+        OrderAdminEffectiveAccess effective)
     {
         if (IsCheckoutCancelled(group))
         {
@@ -776,7 +792,7 @@ public sealed class AdminOrderOperationsComposer
         var permission = Prefer(effective, "order.handle", "fulfillment.manage");
         var eligibleByMethod = fulfillments
             .SelectMany(f => f.Shipments
-                .Where(s => s.Status == ShipmentStatus.Created
+                .Where(s => s.Status == ShipmentOperationStatus.Created
                     && s.DispatchedAt is null
                     && !string.IsNullOrWhiteSpace(s.ShippingMethodCode)
                     && !membershipByShipment.ContainsKey(s.ShipmentId))
@@ -798,7 +814,7 @@ public sealed class AdminOrderOperationsComposer
                 "بسته تجمیعی برای مرسوله‌های انتخاب‌شده ایجاد شود؟"));
         }
 
-        foreach (var package in packages.Where(p => p.Status == ConsolidatedPackageStatus.Created))
+        foreach (var package in packages.Where(p => p.Status == ConsolidatedPackageOperationStatus.Created))
         {
             actions.Add(Action(
                 "cancel_consolidated_package",
@@ -842,7 +858,7 @@ public sealed class AdminOrderOperationsComposer
                 consolidatedPackageId: package.ConsolidatedPackageId));
         }
 
-        foreach (var package in packages.Where(p => p.Status == ConsolidatedPackageStatus.Dispatched))
+        foreach (var package in packages.Where(p => p.Status == ConsolidatedPackageOperationStatus.Dispatched))
         {
             actions.Add(Action(
                 "deliver_consolidated_package",
@@ -860,7 +876,7 @@ public sealed class AdminOrderOperationsComposer
     }
 
     private async Task<object> CancelAsync(
-        CheckoutGroup group,
+        AdminOrderOpsCheckoutSnapshot group,
         AdminOrderOperationRequest request,
         CancellationToken cancellationToken)
     {
@@ -868,7 +884,7 @@ public sealed class AdminOrderOperationsComposer
         var fulfillments = await _fulfillment.ListForCheckoutAsync(group.CheckoutId, cancellationToken);
         if (HasDispatchedOrDelivered(fulfillments))
         {
-            throw new PlatformHttpException(400, WholeOrderCancelBlockedAfterDispatchFa, "order.cancel.forbidden");
+            throw new AdminOrderOperationsException("order.cancel.forbidden");
         }
 
         var sellerOrderIds = group.SellerOrders.Select(x => x.SellerOrderId).ToList();
@@ -876,10 +892,7 @@ public sealed class AdminOrderOperationsComposer
         var blockedBySellerPayout = await HasSellerPayoutRestoreBlockAsync(sellerOrderIds, cancellationToken);
         if (!alreadyCancelled && blockedBySellerPayout)
         {
-            throw new PlatformHttpException(
-                400,
-                "لغو پس از واریز سهم فروشنده مجاز نیست.",
-                "order.cancel.payout_completed");
+            throw new AdminOrderOperationsException("order.cancel.payout_completed");
         }
 
         var access = new OrderAccess(null, group.PlacedByUserId);
@@ -899,7 +912,7 @@ public sealed class AdminOrderOperationsComposer
 
         if (!alreadyCancelled && cancelled.Count == 0)
         {
-            throw new PlatformHttpException(400, "لغو در وضعیت فعلی سفارش مجاز نیست.", "order.cancel.forbidden");
+            throw new AdminOrderOperationsException("order.cancel.forbidden");
         }
 
         var payment = await _payments.GetLatestOperationalForCheckoutAsync(group.CheckoutId, cancellationToken);
@@ -933,16 +946,16 @@ public sealed class AdminOrderOperationsComposer
         }
 
         var snapshot = await _fulfillment.GetAsync(fulfillmentId, cancellationToken)
-            ?? throw new PlatformHttpException(404, "fulfillment پیدا نشد.", "order.operation.invalid");
+            ?? throw new AdminOrderOperationsException("order.operation.invalid");
         if (!SelectionsAreHomogeneousProcessable(snapshot, request.Selections))
         {
-            throw new PlatformHttpException(400, FulfillmentOpToFa("fulfillment.bulk.incompatible"), "fulfillment.bulk.incompatible");
+            throw new AdminOrderOperationsException("fulfillment.bulk.incompatible");
         }
 
         var selections = ResolveProcessSelections(snapshot, request.Selections);
         if (selections.Count == 0)
         {
-            throw new PlatformHttpException(400, "قلم قابل پردازش باقی نمانده است.", "order.operation.invalid");
+            throw new AdminOrderOperationsException("order.operation.invalid");
         }
 
         return await _fulfillment.ProcessSelectionsAsync(fulfillmentId, actorUserId, selections, cancellationToken);
@@ -955,16 +968,16 @@ public sealed class AdminOrderOperationsComposer
     {
         var fulfillmentId = RequireFulfillmentId(request);
         var snapshot = await _fulfillment.GetAsync(fulfillmentId, cancellationToken)
-            ?? throw new PlatformHttpException(404, "fulfillment پیدا نشد.", "order.operation.invalid");
+            ?? throw new AdminOrderOperationsException("order.operation.invalid");
         if (request.Selections is { Count: > 0 } && !SelectionsAreHomogeneousUnprocessable(snapshot, request.Selections))
         {
-            throw new PlatformHttpException(400, FulfillmentOpToFa("fulfillment.bulk.incompatible"), "fulfillment.bulk.incompatible");
+            throw new AdminOrderOperationsException("fulfillment.bulk.incompatible");
         }
 
         var selections = ResolveUnprocessSelections(snapshot, request.Selections);
         if (selections.Count == 0)
         {
-            throw new PlatformHttpException(400, "قلم قابل برگشت از پردازش باقی نمانده است.", "order.operation.invalid");
+            throw new AdminOrderOperationsException("order.operation.invalid");
         }
 
         return await _fulfillment.UnprocessSelectionsAsync(fulfillmentId, actorUserId, selections, cancellationToken);
@@ -978,26 +991,26 @@ public sealed class AdminOrderOperationsComposer
     {
         var fulfillmentId = RequireFulfillmentId(request);
         var snapshot = await _fulfillment.GetAsync(fulfillmentId, cancellationToken)
-            ?? throw new PlatformHttpException(404, "fulfillment پیدا نشد.", "order.operation.invalid");
-        if (snapshot.Status == FulfillmentStatus.ReadyToFulfill)
+            ?? throw new AdminOrderOperationsException("order.operation.invalid");
+        if (snapshot.Status == FulfillmentOperationStatus.ReadyToFulfill)
         {
-            throw new PlatformHttpException(400, FulfillmentOpToFa("fulfillment.pack.requires_processing"), "fulfillment.pack.requires_processing");
+            throw new AdminOrderOperationsException("fulfillment.pack.requires_processing");
         }
 
         if (requireSelections && (request.Selections is null || request.Selections.Count == 0))
         {
-            throw new PlatformHttpException(400, FulfillmentOpToFa("fulfillment.bulk.incompatible"), "fulfillment.bulk.incompatible");
+            throw new AdminOrderOperationsException("fulfillment.bulk.incompatible");
         }
 
         if (requireSelections && !SelectionsAreHomogeneousPackable(snapshot, request.Selections!))
         {
-            throw new PlatformHttpException(400, FulfillmentOpToFa("fulfillment.bulk.incompatible"), "fulfillment.bulk.incompatible");
+            throw new AdminOrderOperationsException("fulfillment.bulk.incompatible");
         }
 
         var selections = ResolvePackSelections(snapshot, requireSelections ? request.Selections : request.Selections);
         if (selections.Count == 0)
         {
-            throw new PlatformHttpException(400, "قلم قابل بسته‌بندی باقی نمانده است.", "order.operation.invalid");
+            throw new AdminOrderOperationsException("order.operation.invalid");
         }
 
         try
@@ -1006,7 +1019,7 @@ public sealed class AdminOrderOperationsComposer
         }
         catch (InvalidOperationException ex) when (ex.Message.StartsWith("fulfillment.pack.", StringComparison.Ordinal))
         {
-            throw new PlatformHttpException(400, FulfillmentOpToFa(ex.Message), ex.Message);
+            throw new AdminOrderOperationsException(ex.Message);
         }
     }
 
@@ -1017,16 +1030,16 @@ public sealed class AdminOrderOperationsComposer
     {
         var fulfillmentId = RequireFulfillmentId(request);
         var snapshot = await _fulfillment.GetAsync(fulfillmentId, cancellationToken)
-            ?? throw new PlatformHttpException(404, "fulfillment پیدا نشد.", "order.operation.invalid");
+            ?? throw new AdminOrderOperationsException("order.operation.invalid");
         if (request.Selections is { Count: > 0 } && !SelectionsAreHomogeneousUnpackable(snapshot, request.Selections))
         {
-            throw new PlatformHttpException(400, FulfillmentOpToFa("fulfillment.bulk.incompatible"), "fulfillment.bulk.incompatible");
+            throw new AdminOrderOperationsException("fulfillment.bulk.incompatible");
         }
 
         var selections = ResolveUnpackSelections(snapshot, request.Selections);
         if (selections.Count == 0)
         {
-            throw new PlatformHttpException(400, "قلم قابل بازگشت از بسته‌بندی باقی نمانده است.", "order.operation.invalid");
+            throw new AdminOrderOperationsException("order.operation.invalid");
         }
 
         return await _fulfillment.UnpackSelectionsAsync(fulfillmentId, actorUserId, selections, cancellationToken);
@@ -1042,27 +1055,27 @@ public sealed class AdminOrderOperationsComposer
         var carrier = request.CarrierDisplayName?.Trim();
         if (string.IsNullOrWhiteSpace(methodCode) && string.IsNullOrWhiteSpace(carrier))
         {
-            throw new PlatformHttpException(400, "روش ارسال الزامی است.", "order.operation.invalid");
+            throw new AdminOrderOperationsException("order.operation.invalid");
         }
 
         if (!string.IsNullOrWhiteSpace(methodCode))
         {
-            var enabled = ShippingMethodRegistry.Enabled(_shippingMethods).Any(x =>
+            var enabled = _fulfillment.ListEnabledShippingMethods().Any(x =>
                 string.Equals(x.Code, methodCode, StringComparison.OrdinalIgnoreCase));
             if (!enabled)
             {
-                throw new PlatformHttpException(400, "روش ارسال برای این فروشگاه فعال نیست.", "order.operation.invalid");
+                throw new AdminOrderOperationsException("order.operation.invalid");
             }
 
-            carrier = ShippingMethodRegistry.ResolveLabel(methodCode, carrier);
+            carrier = _fulfillment.ResolveShippingMethodLabel(methodCode, carrier);
         }
 
         var snapshot = await _fulfillment.GetAsync(fulfillmentId, cancellationToken)
-            ?? throw new PlatformHttpException(404, "fulfillment پیدا نشد.", "order.operation.invalid");
+            ?? throw new AdminOrderOperationsException("order.operation.invalid");
         var lines = ResolveShipmentSelections(snapshot, request.Selections);
         if (lines.Length == 0)
         {
-            throw new PlatformHttpException(400, "قلم قابل ارسال باقی نمانده است.", "order.operation.invalid");
+            throw new AdminOrderOperationsException("order.operation.invalid");
         }
 
         try
@@ -1072,13 +1085,13 @@ public sealed class AdminOrderOperationsComposer
                 actorUserId,
                 carrier!,
                 lines,
-                cancellationToken,
                 methodCode,
-                request.ProviderMetadataJson);
+                request.ProviderMetadataJson,
+                cancellationToken);
         }
         catch (InvalidOperationException ex)
         {
-            throw new PlatformHttpException(400, ex.Message, "order.operation.invalid");
+            throw new AdminOrderOperationsException("order.operation.invalid");
         }
     }
 
@@ -1101,7 +1114,7 @@ public sealed class AdminOrderOperationsComposer
         var shipmentId = RequireShipmentId(request);
         if (string.IsNullOrWhiteSpace(request.TrackingReference))
         {
-            throw new PlatformHttpException(400, "کد پیگیری الزامی است.", "order.operation.invalid");
+            throw new AdminOrderOperationsException("order.operation.invalid");
         }
 
         return await _fulfillment.AssignTrackingAsync(
@@ -1121,7 +1134,7 @@ public sealed class AdminOrderOperationsComposer
         var shipmentId = RequireShipmentId(request);
         if (string.IsNullOrWhiteSpace(request.TrackingReference))
         {
-            throw new PlatformHttpException(400, "کد پیگیری الزامی است.", "order.operation.invalid");
+            throw new AdminOrderOperationsException("order.operation.invalid");
         }
 
         try
@@ -1135,15 +1148,15 @@ public sealed class AdminOrderOperationsComposer
         }
         catch (InvalidOperationException ex) when (ex.Message == "fulfillment.tracking.locked_after_dispatch")
         {
-            throw new PlatformHttpException(400, "پس از ارسال نمی‌توان کد رهگیری را اصلاح کرد.", ex.Message);
+            throw new AdminOrderOperationsException(ex.Message);
         }
         catch (InvalidOperationException ex) when (ex.Message == "fulfillment.tracking.nothing_to_correct")
         {
-            throw new PlatformHttpException(400, "ابتدا کد رهگیری را ثبت کنید.", ex.Message);
+            throw new AdminOrderOperationsException(ex.Message);
         }
         catch (InvalidOperationException ex) when (ex.Message == "fulfillment.tracking.invalid_state")
         {
-            throw new PlatformHttpException(400, "اصلاح کد رهگیری در این وضعیت مرسوله مجاز نیست.", ex.Message);
+            throw new AdminOrderOperationsException(ex.Message);
         }
     }
 
@@ -1176,10 +1189,7 @@ public sealed class AdminOrderOperationsComposer
         var shipmentIds = request.ShipmentIds;
         if (shipmentIds is null || shipmentIds.Count == 0)
         {
-            throw new PlatformHttpException(
-                400,
-                FulfillmentOpToFa("fulfillment.package.requires_multi_seller"),
-                "fulfillment.package.requires_multi_seller");
+            throw new AdminOrderOperationsException("fulfillment.package.requires_multi_seller");
         }
 
         var methodCode = request.ShippingMethodCode?.Trim();
@@ -1211,10 +1221,7 @@ public sealed class AdminOrderOperationsComposer
         var packageId = RequireConsolidatedPackageId(request);
         if (string.IsNullOrWhiteSpace(request.TrackingReference))
         {
-            throw new PlatformHttpException(
-                400,
-                FulfillmentOpToFa("fulfillment.package.tracking_required"),
-                "fulfillment.package.tracking_required");
+            throw new AdminOrderOperationsException("fulfillment.package.tracking_required");
         }
 
         return await _fulfillment.AssignConsolidatedPackageTrackingAsync(
@@ -1243,19 +1250,16 @@ public sealed class AdminOrderOperationsComposer
     }
 
     private async Task<object> RequestReturnAsync(
-        CheckoutGroup group,
+        AdminOrderOpsCheckoutSnapshot group,
         AdminOrderOperationRequest request,
         CancellationToken cancellationToken)
     {
         var sellerOrderId = request.SellerOrderId
-            ?? throw new PlatformHttpException(400, "شناسه سفارش فروشنده الزامی است.", "order.operation.invalid");
-        var eligibility = await _eligibility.EvaluateAsync(sellerOrderId, cancellationToken);
+            ?? throw new AdminOrderOperationsException("order.operation.invalid");
+        var eligibility = await _returns.EvaluateEligibilityAsync(sellerOrderId, cancellationToken);
         if (!eligibility.Eligible)
         {
-            throw new PlatformHttpException(
-                400,
-                ReturnEligibilityReasonCodes.ToFaMessage(eligibility.ReasonCode),
-                ReturnEligibilityReasonCodes.ToErrorCode(eligibility.ReasonCode));
+            throw new AdminOrderOperationsException(ReturnEligibilityReasons.ToErrorCode(eligibility.ReasonCode));
         }
 
         var items = request.ReturnItems;
@@ -1277,14 +1281,14 @@ public sealed class AdminOrderOperationsComposer
 
         if (items.Count == 0)
         {
-            throw new PlatformHttpException(400, "قلم قابل مرجوعی باقی نمانده است.", "return.quantity_exceeded");
+            throw new AdminOrderOperationsException("return.quantity_exceeded");
         }
 
         var idempotency = string.IsNullOrWhiteSpace(request.IdempotencyKey)
             ? $"admin-return-{sellerOrderId:N}-{Guid.NewGuid():N}"
             : request.IdempotencyKey.Trim();
-        return await _returnDirectory.CreateAdminInitiatedAsync(
-            new CreateReturnCommand(
+        return await _returns.CreateAdminInitiatedAsync(
+            new CreateAdminReturnCommand(
                 sellerOrderId,
                 group.PlacedByUserId,
                 idempotency,
@@ -1299,9 +1303,7 @@ public sealed class AdminOrderOperationsComposer
         CancellationToken cancellationToken)
     {
         var returnRequestId = RequireReturnRequestId(request);
-        return await _returnDirectory.ApproveAsync(
-            new ApproveReturnCommand(returnRequestId, actorUserId),
-            cancellationToken);
+        return await _returns.ApproveAsync(returnRequestId, actorUserId, cancellationToken);
     }
 
     private async Task<object> RejectReturnAsync(
@@ -1310,9 +1312,7 @@ public sealed class AdminOrderOperationsComposer
         CancellationToken cancellationToken)
     {
         var returnRequestId = RequireReturnRequestId(request);
-        return await _returnDirectory.RejectAsync(
-            new RejectReturnCommand(returnRequestId, actorUserId, request.Reason),
-            cancellationToken);
+        return await _returns.RejectAsync(returnRequestId, actorUserId, request.Reason, cancellationToken);
     }
 
     private void ProjectPaymentActions(
@@ -1320,9 +1320,9 @@ public sealed class AdminOrderOperationsComposer
         PaymentAdminOperationalSnapshot? payment,
         IReadOnlyList<FulfillmentSnapshot> fulfillments,
         IReadOnlyList<ReturnSnapshot> returns,
-        EffectiveAccessDto effective,
+        OrderAdminEffectiveAccess effective,
         bool blockedBySellerPayout,
-        OrderSupplyStatusKind supplyStatus)
+        string supplyStatus)
     {
         if (payment is null || !Has(effective, "payment.reconcile"))
         {
@@ -1333,9 +1333,9 @@ public sealed class AdminOrderOperationsComposer
         {
             var confirmMessage = supplyStatus switch
             {
-                OrderSupplyStatusKind.AvailableForReacquire =>
+                "AvailableForReacquire" =>
                     "موجودی قابل تأمین است و هنگام تأیید واریز به‌صورت خودکار رزرو می‌شود.",
-                OrderSupplyStatusKind.Unavailable or OrderSupplyStatusKind.PartiallyUnavailable =>
+                "Unavailable" or "PartiallyUnavailable" =>
                     "این سفارش در حال حاضر قابل تأمین نیست.",
                 _ => "آیا واریز کارت‌به‌کارت این سفارش را تأیید می‌کنید؟",
             };
@@ -1403,9 +1403,9 @@ public sealed class AdminOrderOperationsComposer
 
     private void ProjectInventoryRecovery(
         List<AdminOrderOperationAction> actions,
-        OrderInventoryRecoveryAssessment recovery,
-        EffectiveAccessDto effective,
-        OrderSupplyStatusKind supplyStatus,
+        AdminOrderInventoryRecoveryAssessment recovery,
+        OrderAdminEffectiveAccess effective,
+        string supplyStatus,
         bool canConfirmDeposit)
     {
         if (!Has(effective, "payment.reconcile"))
@@ -1413,7 +1413,7 @@ public sealed class AdminOrderOperationsComposer
             return;
         }
 
-        if (canConfirmDeposit && supplyStatus is OrderSupplyStatusKind.Reserved or OrderSupplyStatusKind.AvailableForReacquire)
+        if (canConfirmDeposit && supplyStatus is "Reserved" or "AvailableForReacquire")
         {
             return;
         }
@@ -1443,9 +1443,9 @@ public sealed class AdminOrderOperationsComposer
 
     private void ProjectWholeOrderCancel(
         List<AdminOrderOperationAction> actions,
-        CheckoutGroup group,
+        AdminOrderOpsCheckoutSnapshot group,
         IReadOnlyList<FulfillmentSnapshot> fulfillments,
-        EffectiveAccessDto effective,
+        OrderAdminEffectiveAccess effective,
         bool blockedBySellerPayout)
     {
         if (!Has(effective, "order.cancel")
@@ -1479,10 +1479,10 @@ public sealed class AdminOrderOperationsComposer
 
     private void ProjectRestoreCancelledOrder(
         List<AdminOrderOperationAction> actions,
-        CheckoutGroup group,
+        AdminOrderOpsCheckoutSnapshot group,
         IReadOnlyList<FulfillmentSnapshot> fulfillments,
         IReadOnlyList<ReturnSnapshot> returns,
-        EffectiveAccessDto effective,
+        OrderAdminEffectiveAccess effective,
         bool blockedBySellerPayout,
         string? paymentStatus)
     {
@@ -1510,21 +1510,19 @@ public sealed class AdminOrderOperationsComposer
     }
 
     private async Task<object> RestoreCancelledOrderAsync(
-        CheckoutGroup group,
+        AdminOrderOpsCheckoutSnapshot group,
         Guid actorUserId,
         CancellationToken cancellationToken)
     {
         _ = actorUserId;
         var fulfillments = await _fulfillment.ListForCheckoutAsync(group.CheckoutId, cancellationToken);
         var sellerOrderIds = group.SellerOrders.Select(x => x.SellerOrderId).ToList();
-        var returns = await _returnDirectory.ListBySellerOrderIdsAsync(sellerOrderIds, cancellationToken);
+        var returns = await _returns.ListBySellerOrderIdsAsync(sellerOrderIds, cancellationToken);
         var blockedBySellerPayout = await HasSellerPayoutRestoreBlockAsync(sellerOrderIds, cancellationToken);
         var payment = await _payments.GetLatestOperationalForCheckoutAsync(group.CheckoutId, cancellationToken);
         if (!CanRestoreCancelledOrder(group, fulfillments, returns, blockedBySellerPayout, payment?.Status))
         {
-            throw new PlatformHttpException(
-                400,
-                RestoreForbiddenMessage(group, fulfillments, returns, blockedBySellerPayout, payment?.Status),
+            throw new AdminOrderOperationsException(
                 RestoreForbiddenCode(group, fulfillments, returns, blockedBySellerPayout, payment?.Status));
         }
 
@@ -1562,17 +1560,11 @@ public sealed class AdminOrderOperationsComposer
         catch (InvalidOperationException ex) when (ex.Message == "order.restore.inventory_failed"
             || ex.Message.Contains("موجودی قابل‌فروش", StringComparison.Ordinal))
         {
-            throw new PlatformHttpException(
-                400,
-                "بازگردانی ممکن نیست؛ موجودی برای رزرو دوباره کافی نیست. سفارش لغوشده باقی ماند.",
-                "order.restore.inventory_failed");
+            throw new AdminOrderOperationsException("order.restore.inventory_failed");
         }
         catch (InvalidOperationException ex) when (ex.Message == "fulfillment.restore.already_dispatched")
         {
-            throw new PlatformHttpException(
-                400,
-                RestoreCodeToFa("order.restore.dispatched"),
-                "order.restore.dispatched");
+            throw new AdminOrderOperationsException("order.restore.dispatched");
         }
         catch (InvalidOperationException ex) when (ex.Message is "payment.restore.refund_completed"
             or "settlement.restore.payout_completed")
@@ -1580,11 +1572,11 @@ public sealed class AdminOrderOperationsComposer
             var code = ex.Message == "settlement.restore.payout_completed"
                 ? "order.restore.seller_payout_completed"
                 : "order.restore.refund_completed";
-            throw new PlatformHttpException(400, RestoreCodeToFa(code), code);
+            throw new AdminOrderOperationsException(code);
         }
         catch (InvalidOperationException ex) when (ex.Message.StartsWith("order.restore.", StringComparison.Ordinal))
         {
-            throw new PlatformHttpException(400, RestoreCodeToFa(ex.Message), ex.Message);
+            throw new AdminOrderOperationsException(ex.Message);
         }
     }
 
@@ -1593,17 +1585,14 @@ public sealed class AdminOrderOperationsComposer
         CancellationToken cancellationToken)
     {
         var payment = await _payments.GetLatestOperationalForCheckoutAsync(checkoutId, cancellationToken)
-            ?? throw new PlatformHttpException(400, "پرداختی برای بازگردانی پیدا نشد.", "payment.missing");
+            ?? throw new AdminOrderOperationsException("payment.missing");
         var fulfillments = await _fulfillment.ListForCheckoutAsync(checkoutId, cancellationToken);
         var sellerOrderIds = (await LoadCheckoutAsync(checkoutId, cancellationToken))?.SellerOrders.Select(x => x.SellerOrderId).ToList()
             ?? [];
-        var returns = await _returnDirectory.ListBySellerOrderIdsAsync(sellerOrderIds, cancellationToken);
+        var returns = await _returns.ListBySellerOrderIdsAsync(sellerOrderIds, cancellationToken);
         if (HasIrreversibleFinanceBlock(fulfillments, returns))
         {
-            throw new PlatformHttpException(
-                400,
-                "بازگرداندن واریز پس از ارسال، تحویل یا بازگشت وجه تکمیل‌شده مجاز نیست.",
-                "payment.restore.invalid_state");
+            throw new AdminOrderOperationsException("payment.restore.invalid_state");
         }
 
         try
@@ -1617,37 +1606,28 @@ public sealed class AdminOrderOperationsComposer
     }
 
     private async Task<object> UnconfirmDepositForCheckoutAsync(
-        CheckoutGroup group,
+        AdminOrderOpsCheckoutSnapshot group,
         CancellationToken cancellationToken)
     {
         var checkoutId = group.CheckoutId;
         var payment = await _payments.GetLatestOperationalForCheckoutAsync(checkoutId, cancellationToken)
-            ?? throw new PlatformHttpException(400, "پرداختی برای برگشت تأیید پیدا نشد.", "payment.missing");
+            ?? throw new AdminOrderOperationsException("payment.missing");
         var fulfillments = await _fulfillment.ListForCheckoutAsync(checkoutId, cancellationToken);
         var sellerOrderIds = group.SellerOrders.Select(x => x.SellerOrderId).ToList();
-        var returns = await _returnDirectory.ListBySellerOrderIdsAsync(sellerOrderIds, cancellationToken);
+        var returns = await _returns.ListBySellerOrderIdsAsync(sellerOrderIds, cancellationToken);
         if (HasIrreversibleFinanceBlock(fulfillments, returns))
         {
-            throw new PlatformHttpException(
-                400,
-                "برگشت از واریز پس از ارسال، تحویل یا بازگشت وجه تکمیل‌شده مجاز نیست.",
-                "payment.unconfirm.irreversible");
+            throw new AdminOrderOperationsException("payment.unconfirm.irreversible");
         }
 
         if (HasStartedFulfillment(fulfillments))
         {
-            throw new PlatformHttpException(
-                400,
-                "پس از شروع پردازش نمی‌توان تأیید پرداخت را برگرداند.",
-                "fulfillment.unconfirm.already_started");
+            throw new AdminOrderOperationsException("fulfillment.unconfirm.already_started");
         }
 
         if (await HasSellerPayoutRestoreBlockAsync(sellerOrderIds, cancellationToken))
         {
-            throw new PlatformHttpException(
-                400,
-                "برگشت از واریز پس از واریز سهم فروشنده مجاز نیست.",
-                "payment.unconfirm.payout_completed");
+            throw new AdminOrderOperationsException("payment.unconfirm.payout_completed");
         }
 
         try
@@ -1664,27 +1644,21 @@ public sealed class AdminOrderOperationsComposer
     }
 
     private async Task<object> ConfirmDepositForCheckoutAsync(
-        CheckoutGroup group,
+        AdminOrderOpsCheckoutSnapshot group,
         CancellationToken cancellationToken)
     {
         var checkoutId = group.CheckoutId;
         var payment = await _payments.GetLatestOperationalForCheckoutAsync(checkoutId, cancellationToken)
-            ?? throw new PlatformHttpException(400, "پرداختی برای تأیید پیدا نشد.", "payment.missing");
+            ?? throw new AdminOrderOperationsException("payment.missing");
         var sellerOrderIds = group.SellerOrders.Select(x => x.SellerOrderId).ToList();
 
-        var supply = await _orderSupply.EnsureAsync(
+        var supply = await _orderSupply.EnsurePaidDurableAsync(
             checkoutId,
-            OrderSupplyMode.EnsurePaidDurable,
-            allowReacquire: true,
-            reason: "confirm_deposit",
+            "confirm_deposit",
             cancellationToken);
-        if (supply.Outcome is OrderSupplyOutcome.Unavailable or OrderSupplyOutcome.PartiallyUnavailable
-            || supply.Status is OrderSupplyStatusKind.Unavailable or OrderSupplyStatusKind.PartiallyUnavailable)
+        if (supply.Unavailable)
         {
-            throw new PlatformHttpException(
-                400,
-                "این سفارش در حال حاضر قابل تأمین نیست.",
-                "inventory.supply.unavailable");
+            throw new AdminOrderOperationsException("inventory.supply.unavailable");
         }
 
         try
@@ -1700,25 +1674,19 @@ public sealed class AdminOrderOperationsComposer
         }
         catch (InvalidOperationException ex) when (ex.Message is "payment.method.not_manual")
         {
-            throw new PlatformHttpException(400, "این پرداخت کارت‌به‌کارت/دستی نیست.", ex.Message);
+            throw new AdminOrderOperationsException(ex.Message);
         }
         catch (InvalidOperationException ex) when (ex.Message is "payment.confirm.invalid_state")
         {
-            throw new PlatformHttpException(400, "تأیید واریز در این وضعیت مجاز نیست.", ex.Message);
+            throw new AdminOrderOperationsException(ex.Message);
         }
         catch (InvalidOperationException ex) when (ex.Message is "inventory.manual_review.unavailable")
         {
-            throw new PlatformHttpException(
-                400,
-                "این سفارش در حال حاضر قابل تأمین نیست.",
-                "inventory.supply.unavailable");
+            throw new AdminOrderOperationsException("inventory.supply.unavailable");
         }
         catch (InvalidOperationException ex) when (ex.Message is "inventory.reservation.not_active")
         {
-            throw new PlatformHttpException(
-                400,
-                "این سفارش در حال حاضر قابل تأمین نیست.",
-                "inventory.supply.unavailable");
+            throw new AdminOrderOperationsException("inventory.supply.unavailable");
         }
     }
 
@@ -1727,7 +1695,7 @@ public sealed class AdminOrderOperationsComposer
         CancellationToken cancellationToken)
     {
         var payment = await _payments.GetLatestOperationalForCheckoutAsync(checkoutId, cancellationToken)
-            ?? throw new PlatformHttpException(400, "پرداختی برای رد پیدا نشد.", "payment.missing");
+            ?? throw new AdminOrderOperationsException("payment.missing");
         try
         {
             var result = await _payments.RejectDepositAsync(payment.PaymentId, cancellationToken);
@@ -1736,11 +1704,11 @@ public sealed class AdminOrderOperationsComposer
         }
         catch (InvalidOperationException ex) when (ex.Message is "payment.method.not_manual")
         {
-            throw new PlatformHttpException(400, "این پرداخت کارت‌به‌کارت/دستی نیست.", ex.Message);
+            throw new AdminOrderOperationsException(ex.Message);
         }
         catch (InvalidOperationException ex) when (ex.Message is "payment.reject.invalid_state")
         {
-            throw new PlatformHttpException(400, "رد واریز در این وضعیت مجاز نیست.", ex.Message);
+            throw new AdminOrderOperationsException(ex.Message);
         }
     }
 
@@ -1750,29 +1718,20 @@ public sealed class AdminOrderOperationsComposer
         CancellationToken cancellationToken)
     {
         var returnRequestId = RequireReturnRequestId(request);
-        return await _returnDirectory.RetryRefundAsync(
-            new RetryRefundCommand(returnRequestId, actorUserId),
-            cancellationToken);
+        return await _returns.RetryRefundAsync(returnRequestId, actorUserId, cancellationToken);
     }
 
-    private async Task<CheckoutGroup?> LoadCheckoutAsync(Guid checkoutId, CancellationToken cancellationToken) =>
-        await _orders.Checkouts.AsNoTracking()
-            .Include(x => x.SellerOrders)
-            .ThenInclude(x => x.Lines)
-            .SingleOrDefaultAsync(x => x.CheckoutId == checkoutId, cancellationToken);
+    private Task<AdminOrderOpsCheckoutSnapshot?> LoadCheckoutAsync(Guid checkoutId, CancellationToken cancellationToken) =>
+        _checkouts.GetAsync(checkoutId, cancellationToken);
 
-    private async Task<EffectiveAccessDto> LoadEffectiveAsync(Guid actorUserId, CancellationToken cancellationToken)
-    {
-        var tenantId = _tenant.Current?.TenantId.Value;
-        var scope = new AccessOwnerScope(AccessOwnerScopeKind.Platform, null, tenantId);
-        return await _access.GetEffectiveAccessAsync(actorUserId, scope, cancellationToken);
-    }
+    private Task<OrderAdminEffectiveAccess> LoadEffectiveAsync(Guid actorUserId, CancellationToken cancellationToken) =>
+        _access.GetAsync(actorUserId, cancellationToken);
 
     /// <summary>
     /// اگر کاربر مجوز granular از خانواده‌های order/return/fulfillment دارد، همان را الزام می‌کند؛
     /// در غیر این صورت admin قدیمی (فقط tenant#view) همهٔ ops را می‌بیند.
     /// </summary>
-    internal static bool Has(EffectiveAccessDto effective, string permissionId)
+    public static bool Has(OrderAdminEffectiveAccess effective, string permissionId)
     {
         var grants = effective.Permissions.Where(p => !p.DeniedByCeiling).ToList();
         var hasOpsFamily = grants.Any(p => OpsFamilyPrefixes.Any(prefix =>
@@ -1785,10 +1744,10 @@ public sealed class AdminOrderOperationsComposer
         return grants.Any(p => string.Equals(p.PermissionId, permissionId, StringComparison.OrdinalIgnoreCase));
     }
 
-    internal static bool HasAny(EffectiveAccessDto effective, params string[] permissionIds) =>
+    public static bool HasAny(OrderAdminEffectiveAccess effective, params string[] permissionIds) =>
         permissionIds.Any(p => Has(effective, p));
 
-    internal static string Prefer(EffectiveAccessDto effective, params string[] permissionIds)
+    public static string Prefer(OrderAdminEffectiveAccess effective, params string[] permissionIds)
     {
         foreach (var permissionId in permissionIds)
         {
@@ -1801,7 +1760,7 @@ public sealed class AdminOrderOperationsComposer
         return permissionIds[0];
     }
 
-    internal static bool CanCancel(SellerOrder order, FulfillmentSnapshot? fulfillment)
+    public static bool CanCancel(AdminOrderOpsSellerOrderSnapshot order, FulfillmentSnapshot? fulfillment)
     {
         SellerOrderCancelFulfillmentSnapshot? gate = fulfillment is null
             ? null
@@ -1812,20 +1771,20 @@ public sealed class AdminOrderOperationsComposer
         return SellerOrderCancellationPolicy.CanCancel(order.Status, gate);
     }
 
-    internal static bool IsCheckoutCancelled(CheckoutGroup group) =>
+    public static bool IsCheckoutCancelled(AdminOrderOpsCheckoutSnapshot group) =>
         group.SellerOrders.Count > 0
         && group.SellerOrders.All(x => x.Status == SellerOrderStatus.Cancelled);
 
-    internal static bool HasDispatchedQuantity(FulfillmentSnapshot? fulfillment)
+    public static bool HasDispatchedQuantity(FulfillmentSnapshot? fulfillment)
     {
         if (fulfillment is null)
         {
             return false;
         }
 
-        if (fulfillment.Status is FulfillmentStatus.Dispatched
-            or FulfillmentStatus.InTransit
-            or FulfillmentStatus.Delivered)
+        if (fulfillment.Status is FulfillmentOperationStatus.Dispatched
+            or FulfillmentOperationStatus.InTransit
+            or FulfillmentOperationStatus.Delivered)
         {
             return true;
         }
@@ -1836,37 +1795,37 @@ public sealed class AdminOrderOperationsComposer
         }
 
         return fulfillment.Shipments.Any(shipment =>
-            shipment.Status != ShipmentStatus.Cancelled
+            shipment.Status != ShipmentOperationStatus.Cancelled
             && (shipment.DispatchedAt is not null
                 || shipment.DeliveredAt is not null
-                || shipment.Status is ShipmentStatus.Dispatched
-                    or ShipmentStatus.InTransit
-                    or ShipmentStatus.Delivered));
+                || shipment.Status is ShipmentOperationStatus.Dispatched
+                    or ShipmentOperationStatus.InTransit
+                    or ShipmentOperationStatus.Delivered));
     }
 
-    internal static bool HasDispatchedOrDelivered(IReadOnlyList<FulfillmentSnapshot> fulfillments) =>
+    public static bool HasDispatchedOrDelivered(IReadOnlyList<FulfillmentSnapshot> fulfillments) =>
         fulfillments.Any(HasDispatchedQuantity);
 
-    internal static bool HasCompletedRefund(
+    public static bool HasCompletedRefund(
         IReadOnlyList<ReturnSnapshot> returns,
         string? paymentStatus = null) =>
-        returns.Any(x => x.Status == ReturnRequestStatus.Completed)
+        returns.Any(x => x.Status == ReturnRequestOperationStatus.Completed)
         || paymentStatus == "Refunded";
 
-    internal static bool HasIrreversibleFinanceBlock(
+    public static bool HasIrreversibleFinanceBlock(
         IReadOnlyList<FulfillmentSnapshot> fulfillments,
         IReadOnlyList<ReturnSnapshot> returns,
         string? paymentStatus = null) =>
         HasDispatchedOrDelivered(fulfillments) || HasCompletedRefund(returns, paymentStatus);
 
-    internal static bool HasStartedFulfillment(IReadOnlyList<FulfillmentSnapshot> fulfillments) =>
+    public static bool HasStartedFulfillment(IReadOnlyList<FulfillmentSnapshot> fulfillments) =>
         fulfillments.Any(f =>
-            f.Status != FulfillmentStatus.ReadyToFulfill
+            f.Status != FulfillmentOperationStatus.ReadyToFulfill
             || f.Items.Any(i => i.QuantityPacked > 0 || i.QuantityProcessing > 0)
-            || f.Shipments.Any(s => s.Status != ShipmentStatus.Cancelled));
+            || f.Shipments.Any(s => s.Status != ShipmentOperationStatus.Cancelled));
 
-    internal static bool CanRestoreCancelledOrder(
-        CheckoutGroup group,
+    public static bool CanRestoreCancelledOrder(
+        AdminOrderOpsCheckoutSnapshot group,
         IReadOnlyList<FulfillmentSnapshot> fulfillments,
         IReadOnlyList<ReturnSnapshot> returns,
         bool blockedBySellerPayout = false,
@@ -1882,8 +1841,8 @@ public sealed class AdminOrderOperationsComposer
         return !HasIrreversibleFinanceBlock(fulfillments, returns, paymentStatus) && !blockedBySellerPayout;
     }
 
-    internal static string RestoreForbiddenCode(
-        CheckoutGroup group,
+    public static string RestoreForbiddenCode(
+        AdminOrderOpsCheckoutSnapshot group,
         IReadOnlyList<FulfillmentSnapshot> fulfillments,
         IReadOnlyList<ReturnSnapshot> returns,
         bool blockedBySellerPayout = false,
@@ -1905,8 +1864,8 @@ public sealed class AdminOrderOperationsComposer
         }
 
         if (fulfillments.Any(f =>
-            f.Status == FulfillmentStatus.Delivered
-            || f.Shipments.Any(s => s.DeliveredAt is not null || s.Status == ShipmentStatus.Delivered)))
+            f.Status == FulfillmentOperationStatus.Delivered
+            || f.Shipments.Any(s => s.DeliveredAt is not null || s.Status == ShipmentOperationStatus.Delivered)))
         {
             return "order.restore.delivered";
         }
@@ -1924,15 +1883,15 @@ public sealed class AdminOrderOperationsComposer
         return "order.restore.invalid_state";
     }
 
-    internal static string RestoreForbiddenMessage(
-        CheckoutGroup group,
+    public static string RestoreForbiddenMessage(
+        AdminOrderOpsCheckoutSnapshot group,
         IReadOnlyList<FulfillmentSnapshot> fulfillments,
         IReadOnlyList<ReturnSnapshot> returns,
         bool blockedBySellerPayout = false,
         string? paymentStatus = null) =>
         RestoreCodeToFa(RestoreForbiddenCode(group, fulfillments, returns, blockedBySellerPayout, paymentStatus));
 
-    internal static string RestoreCodeToFa(string code) => code switch
+    public static string RestoreCodeToFa(string code) => code switch
     {
         "order.restore.not_cancelled" => "فقط سفارش لغوشده را می‌توان بازگرداند.",
         "order.restore.missing_snapshot" => "وضعیت قبل از لغو برای بازگردانی موجود نیست.",
@@ -1949,36 +1908,28 @@ public sealed class AdminOrderOperationsComposer
         IReadOnlyList<Guid> sellerOrderIds,
         CancellationToken cancellationToken)
     {
-        var gates = await _settlement.GetRestoreSettlementGatesAsync(sellerOrderIds, cancellationToken);
+        var gates = await _settlement.GetRestoreGatesAsync(sellerOrderIds, cancellationToken);
         return gates.Values.Any(x => x.HasCompletedPayoutEffect);
     }
 
-    private static PlatformHttpException MapPaymentRestoreError(InvalidOperationException ex) =>
+    private static AdminOrderOperationsException MapPaymentRestoreError(InvalidOperationException ex) =>
         ex.Message switch
         {
-            "payment.restore.not_manual" =>
-                new PlatformHttpException(400, "فقط پرداخت کارت‌به‌کارت/دستی قابل بازگردانی است.", ex.Message),
-            "payment.restore.already_succeeded" =>
-                new PlatformHttpException(400, "پرداخت موفق جایگزین شده و قابل بازگردانی نیست.", ex.Message),
-            "payment.restore.invalid_state" =>
-                new PlatformHttpException(400, "بازگرداندن واریز در این وضعیت مجاز نیست.", ex.Message),
-            _ => new PlatformHttpException(400, ex.Message, "order.operation.failed"),
+            "payment.restore.not_manual" => new AdminOrderOperationsException(ex.Message),
+            "payment.restore.already_succeeded" => new AdminOrderOperationsException(ex.Message),
+            "payment.restore.invalid_state" => new AdminOrderOperationsException(ex.Message),
+            _ => new AdminOrderOperationsException("order.operation.failed"),
         };
 
-    private static PlatformHttpException MapPaymentUnconfirmError(InvalidOperationException ex) =>
+    private static AdminOrderOperationsException MapPaymentUnconfirmError(InvalidOperationException ex) =>
         ex.Message switch
         {
-            "payment.unconfirm.not_manual" =>
-                new PlatformHttpException(400, "فقط پرداخت کارت‌به‌کارت/دستی قابل برگشت از واریز است.", ex.Message),
-            "payment.unconfirm.invalid_state" =>
-                new PlatformHttpException(400, "برگشت از واریز در این وضعیت مجاز نیست.", ex.Message),
-            "fulfillment.unconfirm.already_started" =>
-                new PlatformHttpException(400, "پس از شروع پردازش نمی‌توان واریز را برگرداند.", ex.Message),
-            "order.payment.unconfirm.invalid_state" =>
-                new PlatformHttpException(400, "وضعیت سفارش برای برگشت از واریز مناسب نیست.", ex.Message),
-            "settlement.unconfirm.payout_completed" =>
-                new PlatformHttpException(400, "برگشت از واریز پس از واریز سهم فروشنده مجاز نیست.", ex.Message),
-            _ => new PlatformHttpException(400, ex.Message, "order.operation.failed"),
+            "payment.unconfirm.not_manual" => new AdminOrderOperationsException(ex.Message),
+            "payment.unconfirm.invalid_state" => new AdminOrderOperationsException(ex.Message),
+            "fulfillment.unconfirm.already_started" => new AdminOrderOperationsException(ex.Message),
+            "order.payment.unconfirm.invalid_state" => new AdminOrderOperationsException(ex.Message),
+            "settlement.unconfirm.payout_completed" => new AdminOrderOperationsException(ex.Message),
+            _ => new AdminOrderOperationsException("order.operation.failed"),
         };
 
     private static bool MatchesIds(AdminOrderOperationAction action, AdminOrderOperationRequest request) =>
@@ -1990,19 +1941,19 @@ public sealed class AdminOrderOperationsComposer
 
     private static Guid RequireFulfillmentId(AdminOrderOperationRequest request) =>
         request.FulfillmentId
-        ?? throw new PlatformHttpException(400, "شناسه fulfillment الزامی است.", "order.operation.invalid");
+        ?? throw new AdminOrderOperationsException("order.operation.invalid");
 
     private static Guid RequireShipmentId(AdminOrderOperationRequest request) =>
         request.ShipmentId
-        ?? throw new PlatformHttpException(400, "شناسه محموله الزامی است.", "order.operation.invalid");
+        ?? throw new AdminOrderOperationsException("order.operation.invalid");
 
     private static Guid RequireConsolidatedPackageId(AdminOrderOperationRequest request) =>
         request.ConsolidatedPackageId
-        ?? throw new PlatformHttpException(400, "شناسه بسته تجمیعی الزامی است.", "order.operation.invalid");
+        ?? throw new AdminOrderOperationsException("order.operation.invalid");
 
     private static Guid RequireReturnRequestId(AdminOrderOperationRequest request) =>
         request.ReturnRequestId
-        ?? throw new PlatformHttpException(400, "شناسه درخواست مرجوعی الزامی است.", "order.operation.invalid");
+        ?? throw new AdminOrderOperationsException("order.operation.invalid");
 
     /// <summary>
     /// آیا هنوز تعدادی برای ایجاد محمولهٔ جدید باقی مانده (با احتساب محمولهٔ Created باز و packed).
@@ -2036,7 +1987,7 @@ public sealed class AdminOrderOperationsComposer
 
     private static decimal OpenAllocated(FulfillmentSnapshot fulfillment, Guid orderLineId) =>
         fulfillment.Shipments
-            .Where(s => s.Status == ShipmentStatus.Created)
+            .Where(s => s.Status == ShipmentOperationStatus.Created)
             .SelectMany(s => s.Items)
             .Where(line => line.OrderLineId == orderLineId)
             .Sum(line => line.Quantity);
@@ -2058,7 +2009,7 @@ public sealed class AdminOrderOperationsComposer
             var packable = item.QuantityProcessing - item.QuantityPacked;
             if (qty > packable)
             {
-                throw new PlatformHttpException(400, FulfillmentOpToFa("fulfillment.selection.qty_exceeded"), "fulfillment.selection.qty_exceeded");
+                throw new AdminOrderOperationsException("fulfillment.selection.qty_exceeded");
             }
         });
     }
@@ -2080,7 +2031,7 @@ public sealed class AdminOrderOperationsComposer
             var processable = item.QuantityOrdered - item.QuantityProcessing;
             if (qty > processable)
             {
-                throw new PlatformHttpException(400, FulfillmentOpToFa("fulfillment.selection.qty_exceeded"), "fulfillment.selection.qty_exceeded");
+                throw new AdminOrderOperationsException("fulfillment.selection.qty_exceeded");
             }
         });
     }
@@ -2109,7 +2060,7 @@ public sealed class AdminOrderOperationsComposer
             var unprocessable = item.QuantityProcessing - item.QuantityPacked;
             if (qty > unprocessable)
             {
-                throw new PlatformHttpException(400, FulfillmentOpToFa("fulfillment.selection.qty_exceeded"), "fulfillment.selection.qty_exceeded");
+                throw new AdminOrderOperationsException("fulfillment.selection.qty_exceeded");
             }
         });
     }
@@ -2140,10 +2091,7 @@ public sealed class AdminOrderOperationsComposer
             var unpackable = item.QuantityPacked - blocking;
             if (qty > unpackable)
             {
-                throw new PlatformHttpException(
-                    400,
-                    "بازگشت از بسته‌بندی برای تعداد تخصیص‌یافته یا ارسال‌شده مجاز نیست.",
-                    "order.operation.invalid");
+                throw new AdminOrderOperationsException("order.operation.invalid");
             }
         });
     }
@@ -2174,7 +2122,7 @@ public sealed class AdminOrderOperationsComposer
             var remaining = item.QuantityPacked - item.QuantityShipped - open;
             if (qty > remaining)
             {
-                throw new PlatformHttpException(400, "تعداد از باقیماندهٔ قابل تخصیص به مرسوله بیشتر است.", "order.operation.invalid");
+                throw new AdminOrderOperationsException("order.operation.invalid");
             }
         });
         return normalized.Select(x => new ShipmentLineCommand(x.OrderLineId, x.Quantity)).ToArray();
@@ -2191,12 +2139,12 @@ public sealed class AdminOrderOperationsComposer
         {
             if (selection.Quantity <= 0)
             {
-                throw new PlatformHttpException(400, "تعداد باید بزرگ‌تر از صفر باشد.", "order.operation.invalid");
+                throw new AdminOrderOperationsException("order.operation.invalid");
             }
 
             if (!itemsByLine.ContainsKey(selection.OrderLineId))
             {
-                throw new PlatformHttpException(400, "خط انتخاب‌شده متعلق به این فروشنده نیست.", "order.operation.invalid");
+                throw new AdminOrderOperationsException("order.operation.invalid");
             }
 
             map[selection.OrderLineId] = map.TryGetValue(selection.OrderLineId, out var existing)
@@ -2212,7 +2160,7 @@ public sealed class AdminOrderOperationsComposer
         return map.Select(x => new FulfillmentSelectionCommand(x.Key, x.Value)).ToArray();
     }
 
-    internal static bool SelectionsAreHomogeneousUnpackable(
+    public static bool SelectionsAreHomogeneousUnpackable(
         FulfillmentSnapshot snapshot,
         IReadOnlyList<AdminOrderLineSelection> selections)
     {
@@ -2239,7 +2187,7 @@ public sealed class AdminOrderOperationsComposer
         return true;
     }
 
-    internal static bool SelectionsAreHomogeneousPackable(
+    public static bool SelectionsAreHomogeneousPackable(
         FulfillmentSnapshot snapshot,
         IReadOnlyList<AdminOrderLineSelection> selections)
     {
@@ -2261,7 +2209,7 @@ public sealed class AdminOrderOperationsComposer
         return true;
     }
 
-    internal static bool SelectionsAreHomogeneousProcessable(
+    public static bool SelectionsAreHomogeneousProcessable(
         FulfillmentSnapshot snapshot,
         IReadOnlyList<AdminOrderLineSelection> selections)
     {
@@ -2283,7 +2231,7 @@ public sealed class AdminOrderOperationsComposer
         return true;
     }
 
-    internal static bool SelectionsAreHomogeneousUnprocessable(
+    public static bool SelectionsAreHomogeneousUnprocessable(
         FulfillmentSnapshot snapshot,
         IReadOnlyList<AdminOrderLineSelection> selections)
     {
@@ -2305,7 +2253,7 @@ public sealed class AdminOrderOperationsComposer
         return true;
     }
 
-    internal static string FulfillmentOpToFa(string code) => code switch
+    public static string FulfillmentOpToFa(string code) => code switch
     {
         "fulfillment.pack.requires_processing" => "ابتدا پردازش را شروع کنید.",
         "fulfillment.pack.not_processing" => "این قلم هنوز در مرحله پردازش نیست.",
@@ -2350,7 +2298,77 @@ public sealed class AdminOrderOperationsComposer
         _ => "این عملیات در وضعیت فعلی سفارش مجاز نیست.",
     };
 
-    internal static (string Code, string Fa) MapFulfillmentException(string message) => message switch
+    private static bool TryMapReturnCode(string? message, out SemanticError error)
+    {
+        switch (message)
+        {
+            case ReturnsErrorCodes.Missing:
+            case "returns.request.not_found":
+            case "returns.order_missing":
+                error = new SemanticError(ReturnsErrorCodes.Missing); return true;
+            case ReturnsErrorCodes.Rejected:
+                error = new SemanticError(ReturnsErrorCodes.Rejected); return true;
+            case ReturnsErrorCodes.Expired:
+            case "returns.window_expired":
+                error = new SemanticError(ReturnsErrorCodes.Expired); return true;
+            case ReturnsErrorCodes.NonReturnable:
+            case "returns.non_returnable":
+                error = new SemanticError(ReturnsErrorCodes.NonReturnable); return true;
+            case ReturnsErrorCodes.QuantityExceeded:
+            case "returns.nothing_returnable":
+            case "returns.qty.exceeds_remaining":
+                error = new SemanticError(ReturnsErrorCodes.QuantityExceeded); return true;
+            case ReturnsErrorCodes.QuantityInvalid:
+            case "returns.qty.positive":
+                error = new SemanticError(ReturnsErrorCodes.QuantityInvalid); return true;
+            case ReturnsErrorCodes.NotDelivered:
+            case "returns.not_delivered":
+                error = new SemanticError(ReturnsErrorCodes.NotDelivered); return true;
+            case ReturnsErrorCodes.NotPaid:
+            case "returns.not_paid":
+                error = new SemanticError(ReturnsErrorCodes.NotPaid); return true;
+            case ReturnsErrorCodes.FulfillmentMissing:
+            case "returns.fulfillment_missing":
+                error = new SemanticError(ReturnsErrorCodes.FulfillmentMissing); return true;
+            case ReturnsErrorCodes.Stale:
+            case "fulfillment.status.transition_invalid":
+                error = new SemanticError(ReturnsErrorCodes.Stale); return true;
+            case ReturnsErrorCodes.AlreadyApproved:
+                error = new SemanticError(ReturnsErrorCodes.AlreadyApproved); return true;
+            case ReturnsErrorCodes.AlreadyRejected:
+                error = new SemanticError(ReturnsErrorCodes.AlreadyRejected); return true;
+            case ReturnsErrorCodes.LineMissing:
+            case "returns.order_line.not_found":
+                error = new SemanticError(ReturnsErrorCodes.LineMissing); return true;
+            case ReturnsErrorCodes.NotOwner:
+            case "returns.actor.not_owner":
+                error = new SemanticError(ReturnsErrorCodes.NotOwner); return true;
+            case ReturnsErrorCodes.IdempotencyRequired:
+            case "returns.idempotency.required":
+                error = new SemanticError(ReturnsErrorCodes.IdempotencyRequired); return true;
+            case ReturnsErrorCodes.RefundDestinationInvalid:
+            case "returns.refund_destination.invalid":
+                error = new SemanticError(ReturnsErrorCodes.RefundDestinationInvalid); return true;
+            case ReturnsErrorCodes.RefundRetryInvalidState:
+            case "returns.retry.invalid_status":
+                error = new SemanticError(ReturnsErrorCodes.RefundRetryInvalidState); return true;
+            case ReturnsErrorCodes.RefundAlreadyStarted:
+            case "returns.payment.not_succeeded":
+                error = new SemanticError(ReturnsErrorCodes.RefundAlreadyStarted); return true;
+            case ReturnsErrorCodes.RefundAlreadyCompleted:
+                error = new SemanticError(ReturnsErrorCodes.RefundAlreadyCompleted); return true;
+            case ReturnsErrorCodes.RefundPaymentMissing:
+            case "returns.payment.not_found":
+            case "returns.payment.reference_missing":
+                error = new SemanticError(ReturnsErrorCodes.RefundPaymentMissing); return true;
+            case "returns.outbox.unmapped_event":
+                error = new SemanticError("returns.outbox.unmapped_event"); return true;
+            default:
+                error = default!;
+                return false;
+        }
+    }
+    public static (string Code, string Fa) MapKnownOperationException(string message) => message switch
     {
         "dispatch از این وضعیت مجاز نیست." =>
             ("fulfillment.dispatch.invalid_state", FulfillmentOpToFa("fulfillment.dispatch.invalid_state")),
@@ -2422,7 +2440,7 @@ public sealed class AdminOrderOperationsComposer
 /// <summary>
 /// حذف تکرار اقدام‌های کل‌سفارش؛ seller-scoped دست نخورده می‌ماند.
 /// </summary>
-internal static class AdminOrderWholeOrderActions
+public static class AdminOrderWholeOrderActions
 {
     private static readonly HashSet<string> WholeOrderCodes = new(StringComparer.OrdinalIgnoreCase)
     {

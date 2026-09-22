@@ -1,4 +1,5 @@
-﻿using System.IO;
+using Tooba.Order.Application.Admin.Operations.Policies;
+using System.IO;
 using Xunit;
 
 namespace Tooba.Host.Tests;
@@ -37,11 +38,13 @@ public sealed class OrderInventoryRecoveryTests
     [Fact]
     public void Admin_projects_recover_action_and_warning()
     {
-        var ops = Read(Path.Combine("Admin", "AdminOrderOperationsComposer.cs"));
+        var ops = ReadOrderApplication(Path.Combine(
+            "Admin", "Operations", "Services", "AdminOrderOperationsOrchestrator.cs"));
         Assert.Contains("recover_inventory_reservation", ops, StringComparison.Ordinal);
         Assert.Contains("ProjectInventoryRecovery", ops, StringComparison.Ordinal);
         Assert.Contains("رزرو موجودی این سفارش از چرخه قبلی معتبر نیست", ops, StringComparison.Ordinal);
-        var models = Read(Path.Combine("Admin", "AdminOrderOperationsModels.cs"));
+        var models = ReadOrderApplication(Path.Combine(
+            "Admin", "Operations", "Models", "AdminOrderOperationsModels.cs"));
         Assert.Contains("InventoryRecoveryWarningFa", models, StringComparison.Ordinal);
     }
 

@@ -1,3 +1,4 @@
+using Tooba.Order.Application.Admin.Operations.Policies;
 using Tooba.Fulfillment.Application.Ports;
 using Tooba.Fulfillment.Application.Models;
 using Tooba.Fulfillment.Application.Shipping;
@@ -60,9 +61,9 @@ public sealed class WholeOrderCancelUntilDispatchTests
     public void Composer_allows_packed_created_and_created_with_tracking()
     {
         var order = CreatePaidOrder();
-        Assert.True(AdminOrderOperationsComposer.CanCancel(order, Snapshot(order, FulfillmentStatus.Packed, 1.25m, 0m, ShipmentStatus.Created, tracking: null)));
-        Assert.True(AdminOrderOperationsComposer.CanCancel(order, Snapshot(order, FulfillmentStatus.Packed, 1.25m, 0m, ShipmentStatus.Created, tracking: "TRK-1")));
-        Assert.True(AdminOrderOperationsComposer.CanCancel(order, fulfillment: null));
+        Assert.True(AdminOrderOperationsPolicy.CanCancel(order.ToOps(), Snapshot(order, FulfillmentStatus.Packed, 1.25m, 0m, ShipmentStatus.Created, tracking: null).ToContracts()));
+        Assert.True(AdminOrderOperationsPolicy.CanCancel(order.ToOps(), Snapshot(order, FulfillmentStatus.Packed, 1.25m, 0m, ShipmentStatus.Created, tracking: "TRK-1").ToContracts()));
+        Assert.True(AdminOrderOperationsPolicy.CanCancel(order.ToOps(), fulfillment: null));
     }
 
     [Fact]
@@ -73,11 +74,11 @@ public sealed class WholeOrderCancelUntilDispatchTests
         var dispatched = Snapshot(order, FulfillmentStatus.Dispatched, 1.25m, 0.50m, ShipmentStatus.Dispatched, tracking: "TRK-2", dispatchedAt: DateTimeOffset.UtcNow);
         var delivered = Snapshot(order, FulfillmentStatus.Delivered, 1.25m, 0.50m, ShipmentStatus.Delivered, tracking: "TRK-3", dispatchedAt: DateTimeOffset.UtcNow, deliveredAt: DateTimeOffset.UtcNow);
         var unitOnly = Snapshot(order, FulfillmentStatus.Dispatched, 1.25m, 0m, ShipmentStatus.Created, tracking: "TRK-4");
-        Assert.False(AdminOrderOperationsComposer.CanCancel(order, dispatched));
-        Assert.False(AdminOrderOperationsComposer.CanCancel(order, delivered));
-        Assert.False(AdminOrderOperationsComposer.CanCancel(order, unitOnly));
-        Assert.False(AdminOrderOperationsComposer.HasDispatchedOrDelivered([created]));
-        Assert.True(AdminOrderOperationsComposer.HasDispatchedOrDelivered([created, dispatched]));
+        Assert.False(AdminOrderOperationsPolicy.CanCancel(order.ToOps(), dispatched.ToContracts()));
+        Assert.False(AdminOrderOperationsPolicy.CanCancel(order.ToOps(), delivered.ToContracts()));
+        Assert.False(AdminOrderOperationsPolicy.CanCancel(order.ToOps(), unitOnly.ToContracts()));
+        Assert.False(AdminOrderOperationsPolicy.HasDispatchedOrDelivered([created.ToContracts()]));
+        Assert.True(AdminOrderOperationsPolicy.HasDispatchedOrDelivered([created.ToContracts(), dispatched.ToContracts()]));
     }
 
     [Fact]
@@ -85,9 +86,9 @@ public sealed class WholeOrderCancelUntilDispatchTests
     {
         var order = CreatePaidOrder();
         var unitDispatched = Snapshot(order, FulfillmentStatus.Dispatched, 1.25m, 0m, ShipmentStatus.Created, tracking: null);
-        Assert.True(AdminOrderOperationsComposer.HasDispatchedQuantity(unitDispatched));
+        Assert.True(AdminOrderOperationsPolicy.HasDispatchedQuantity(unitDispatched.ToContracts()));
         var packed = Snapshot(order, FulfillmentStatus.Packed, 1.25m, 0m, ShipmentStatus.Created, tracking: "TRK-1");
-        Assert.False(AdminOrderOperationsComposer.HasDispatchedQuantity(packed));
+        Assert.False(AdminOrderOperationsPolicy.HasDispatchedQuantity(packed.ToContracts()));
         var gate = File.ReadAllText(Path.Combine(
             FindRepoRoot(),
             "src",
@@ -95,6 +96,7 @@ public sealed class WholeOrderCancelUntilDispatchTests
             "Modules",
             "Fulfillment",
             "Tooba.Fulfillment.Infrastructure",
+            "Bridges",
             "FulfillmentSellerOrderCancelGate.cs"));
         Assert.Contains("FulfillmentStatus.Dispatched", gate, StringComparison.Ordinal);
         Assert.Contains("FulfillmentStatus.InTransit", gate, StringComparison.Ordinal);
@@ -140,13 +142,19 @@ public sealed class WholeOrderCancelUntilDispatchTests
     {
         var root = FindRepoRoot();
         var composer = File.ReadAllText(Path.Combine(
-            root, "src", "backend", "Host", "Tooba.Host", "Admin", "AdminOrderOperationsComposer.cs"));
+            root, "src", "backend", "Modules", "Order", "Tooba.Order.Application", "Admin", "Operations", "Services", "AdminOrderOperationsOrchestrator.cs"));
         var completeness = File.ReadAllText(Path.Combine(
-            root, "src", "backend", "Host", "Tooba.Host", "Admin", "AdminOrderCompletenessComposer.cs"));
+            root, "src", "backend", "Modules", "Order", "Tooba.Order.Application", "Admin", "Completeness", "History", "AdminOrderHistoryComposer.cs"))
+            + File.ReadAllText(Path.Combine(
+            root, "src", "backend", "Modules", "Order", "Tooba.Order.Application", "Admin", "Completeness", "History", "AdminOrderHistoryComposer.Fulfillment.cs"))
+            + File.ReadAllText(Path.Combine(
+            root, "src", "backend", "Modules", "Order", "Tooba.Order.Application", "Admin", "Completeness", "History", "AdminOrderHistoryComposer.Payment.cs"))
+            + File.ReadAllText(Path.Combine(
+            root, "src", "backend", "Modules", "Order", "Tooba.Order.Application", "Admin", "Completeness", "History", "AdminOrderHistoryComposer.Returns.cs"));
         var checkout = File.ReadAllText(Path.Combine(
             root, "src", "backend", "Modules", "Order", "Tooba.Order.Infrastructure", "CheckoutDirectory.cs"));
-        Assert.Contains(AdminOrderOperationsComposer.WholeOrderCancelBlockedAfterDispatchFa, composer, StringComparison.Ordinal);
-        Assert.Contains(AdminOrderOperationsComposer.WholeOrderCancelConfirmFa, composer, StringComparison.Ordinal);
+        Assert.Contains(AdminOrderOperationsPolicy.WholeOrderCancelBlockedAfterDispatchFa, composer, StringComparison.Ordinal);
+        Assert.Contains(AdminOrderOperationsPolicy.WholeOrderCancelConfirmFa, composer, StringComparison.Ordinal);
         Assert.Contains("HasDispatchedOrDelivered(fulfillments)", composer, StringComparison.Ordinal);
         Assert.Contains("AbortForCheckoutCancelAsync", composer, StringComparison.Ordinal);
         Assert.Contains("NeutralizeUnpaidAccrualForCancelAsync", composer, StringComparison.Ordinal);
@@ -165,12 +173,12 @@ public sealed class WholeOrderCancelUntilDispatchTests
     [Fact]
     public void Cancelled_blocks_pack_ship_dispatch_deliver()
     {
-        Assert.Contains("mark_processing", AdminOrderOperationsComposer.CancelledBlockedCodes);
-        Assert.Contains("mark_packed", AdminOrderOperationsComposer.CancelledBlockedCodes);
-        Assert.Contains("pack_selected", AdminOrderOperationsComposer.CancelledBlockedCodes);
-        Assert.Contains("create_shipment", AdminOrderOperationsComposer.CancelledBlockedCodes);
-        Assert.Contains("dispatch_shipment", AdminOrderOperationsComposer.CancelledBlockedCodes);
-        Assert.Contains("deliver_shipment", AdminOrderOperationsComposer.CancelledBlockedCodes);
+        Assert.Contains("mark_processing", AdminOrderOperationsPolicy.CancelledBlockedCodes);
+        Assert.Contains("mark_packed", AdminOrderOperationsPolicy.CancelledBlockedCodes);
+        Assert.Contains("pack_selected", AdminOrderOperationsPolicy.CancelledBlockedCodes);
+        Assert.Contains("create_shipment", AdminOrderOperationsPolicy.CancelledBlockedCodes);
+        Assert.Contains("dispatch_shipment", AdminOrderOperationsPolicy.CancelledBlockedCodes);
+        Assert.Contains("deliver_shipment", AdminOrderOperationsPolicy.CancelledBlockedCodes);
     }
 
     [Fact]
@@ -178,13 +186,13 @@ public sealed class WholeOrderCancelUntilDispatchTests
     {
         Assert.Equal(
             "پس از ارسال کالا، لغو کامل سفارش امکان‌پذیر نیست.",
-            AdminOrderOperationsComposer.WholeOrderCancelBlockedAfterDispatchFa);
+            AdminOrderOperationsPolicy.WholeOrderCancelBlockedAfterDispatchFa);
         Assert.Equal(
             "پس از ارسال کالا، لغو کامل سفارش امکان‌پذیر نیست.",
-            AdminOrderOperationsComposer.FulfillmentOpToFa("order.cancel.forbidden"));
-        Assert.Contains("مرسوله‌های پیش از ارسال ابطال می‌شوند", AdminOrderOperationsComposer.WholeOrderCancelConfirmFa, StringComparison.Ordinal);
-        Assert.Contains("موجودی آزاد می‌شود", AdminOrderOperationsComposer.WholeOrderCancelConfirmFa, StringComparison.Ordinal);
-        Assert.Contains("بازگشت وجه آغاز می‌شود", AdminOrderOperationsComposer.WholeOrderCancelConfirmFa, StringComparison.Ordinal);
+            AdminOrderOperationsPolicy.FulfillmentOpToFa("order.cancel.forbidden"));
+        Assert.Contains("مرسوله‌های پیش از ارسال ابطال می‌شوند", AdminOrderOperationsPolicy.WholeOrderCancelConfirmFa, StringComparison.Ordinal);
+        Assert.Contains("موجودی آزاد می‌شود", AdminOrderOperationsPolicy.WholeOrderCancelConfirmFa, StringComparison.Ordinal);
+        Assert.Contains("بازگشت وجه آغاز می‌شود", AdminOrderOperationsPolicy.WholeOrderCancelConfirmFa, StringComparison.Ordinal);
     }
 
     private static SellerOrder CreatePaidOrder()

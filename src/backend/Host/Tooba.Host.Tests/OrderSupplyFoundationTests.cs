@@ -1,3 +1,4 @@
+using Tooba.Order.Application.Admin.Operations.Policies;
 using Tooba.Promotion.Application.Ports;
 using Tooba.Promotion.Infrastructure.Queries;
 using Tooba.Promotion.Infrastructure.Messaging;
@@ -23,14 +24,14 @@ public sealed class OrderSupplyFoundationTests
     {
         return File.ReadAllText(Path.GetFullPath(Path.Combine(
             AppContext.BaseDirectory, "..", "..", "..", "..", "..", "Modules", "Inventory",
-            "Tooba.Inventory.Infrastructure", "InventoryDirectory.cs")));
+            "Tooba.Inventory.Infrastructure", "Directories", "InventoryDirectory.cs")));
     }
 
     private static string Contracts()
     {
         return File.ReadAllText(Path.GetFullPath(Path.Combine(
             AppContext.BaseDirectory, "..", "..", "..", "..", "..", "Modules", "Inventory",
-            "Tooba.Inventory.Application", "OrderSupplyContracts.cs")));
+            "Tooba.Inventory.Application", "Orders", "OrderSupplyContracts.cs")));
     }
 
     [Fact]
@@ -59,14 +60,19 @@ public sealed class OrderSupplyFoundationTests
         Assert.DoesNotContain("ReserveAsync", slice, StringComparison.Ordinal);
     }
 
+    private static string OrderOps() =>
+        File.ReadAllText(Path.GetFullPath(Path.Combine(
+            AppContext.BaseDirectory, "..", "..", "..", "..", "..",
+            "Modules", "Order", "Tooba.Order.Application", "Admin", "Operations", "Services",
+            "AdminOrderOperationsOrchestrator.cs")));
+
     [Fact]
     public void Confirm_uses_EnsurePaidDurable_and_blocks_unavailable()
     {
-        var ops = Host(Path.Combine("Admin", "AdminOrderOperationsComposer.cs"));
-        Assert.Contains("OrderSupplyMode.EnsurePaidDurable", ops, StringComparison.Ordinal);
+        var ops = OrderOps();
+        Assert.Contains("EnsurePaidDurableAsync", ops, StringComparison.Ordinal);
         Assert.Contains("inventory.supply.unavailable", ops, StringComparison.Ordinal);
         Assert.Contains("این سفارش در حال حاضر قابل تأمین نیست.", ops, StringComparison.Ordinal);
-        Assert.Contains("EnsureAsync", ops, StringComparison.Ordinal);
     }
 
     [Fact]

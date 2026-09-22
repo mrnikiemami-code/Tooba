@@ -1,4 +1,4 @@
-﻿using System.Text.RegularExpressions;
+using System.Text.RegularExpressions;
 using System.Xml.Linq;
 using Xunit;
 
@@ -101,10 +101,15 @@ public sealed class FulfillmentArchitectureGuardTests
         Assert.DoesNotContain("Fulfillments", hostGrid, StringComparison.Ordinal);
         Assert.DoesNotContain("AdminFulfillmentWorkQueueRow", hostGrid, StringComparison.Ordinal);
 
-        var orderOpsEndpoint = File.ReadAllText(Path.Combine(hostRoot, "Admin", "AdminOrderOperationsEndpoints.cs"));
+        var orderOpsEndpoint = File.ReadAllText(Path.Combine(
+            RepoRoot(),
+            "src", "backend", "Modules", "Order", "Tooba.Order.Endpoints", "AdminOrderOperationsEndpoints.cs"));
         Assert.DoesNotContain("/v1/admin/shipping-methods", orderOpsEndpoint, StringComparison.Ordinal);
         Assert.DoesNotContain("ListEnabledShippingMethodsTreeQuery", orderOpsEndpoint, StringComparison.Ordinal);
         Assert.DoesNotContain("ListShippingMethodsAsync", orderOpsEndpoint, StringComparison.Ordinal);
+        Assert.False(File.Exists(Path.Combine(hostRoot, "Admin", "AdminOrderOperationsEndpoints.cs")));
+        Assert.False(File.Exists(Path.Combine(hostRoot, "Admin", "AdminOrderOperationsComposer.cs")));
+        Assert.False(File.Exists(Path.Combine(hostRoot, "Admin", "AdminOrderOperationsModels.cs")));
 
         Assert.False(
             File.Exists(Path.Combine(hostRoot, "Admin", "AdminFulfillmentWorkQueueComposer.cs")),

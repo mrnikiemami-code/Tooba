@@ -38,6 +38,7 @@ public static class OrderEndpointModule
         ArgumentNullException.ThrowIfNull(app);
         AdminOrderCompletenessEndpoints.Map(app);
         AdminOrdersGridEndpoints.Map(app);
+        AdminOrderOperationsEndpoints.Map(app);
         return app;
     }
 }

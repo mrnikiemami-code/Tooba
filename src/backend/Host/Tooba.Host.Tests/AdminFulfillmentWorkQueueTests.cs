@@ -1,9 +1,14 @@
-﻿using Tooba.Fulfillment.Application.Ports;
+using Tooba.Order.Application.Admin.Operations.Services;
+using Tooba.Fulfillment.Application.Ports;
 using Tooba.Fulfillment.Application.Models;
 using Tooba.Fulfillment.Application.Shipping;
 using Tooba.Fulfillment.Domain.Aggregates;
 using Tooba.Fulfillment.Domain.ValueObjects;
 using Tooba.Host.Admin;
+using Tooba.Order.Application.Admin.Operations.Policies;
+using Tooba.Order.Application.Admin.Operations.Ports;
+using Tooba.Order.Application.Admin.Operations.Services;
+using Tooba.Order.Application.Admin.Operations.Models;
 using Xunit;
 
 namespace Tooba.Host.Tests;
@@ -159,17 +164,17 @@ public sealed class AdminFulfillmentWorkQueueTests
     [Fact]
     public void Composer_maps_stale_dispatch_english_to_human_fa()
     {
-        var mapped = AdminOrderOperationsComposer.MapFulfillmentException("dispatch از این وضعیت مجاز نیست.");
+        var mapped = AdminOrderOperationsOrchestrator.MapKnownOperationException("dispatch از این وضعیت مجاز نیست.");
         Assert.Equal("fulfillment.dispatch.invalid_state", mapped.Code);
         Assert.Equal("ارسال در وضعیت فعلی مرسوله مجاز نیست.", mapped.Fa);
-        var tracking = AdminOrderOperationsComposer.MapFulfillmentException("dispatch بدون tracking مجاز نیست.");
+        var tracking = AdminOrderOperationsOrchestrator.MapKnownOperationException("dispatch بدون tracking مجاز نیست.");
         Assert.Equal("fulfillment.dispatch.tracking_required", tracking.Code);
-        var voided = AdminOrderOperationsComposer.MapFulfillmentException("ابطال مرسوله پس از ارسال مجاز نیست.");
+        var voided = AdminOrderOperationsOrchestrator.MapKnownOperationException("ابطال مرسوله پس از ارسال مجاز نیست.");
         Assert.Equal("fulfillment.shipment.void_after_dispatch", voided.Code);
-        var packAfter = AdminOrderOperationsComposer.MapFulfillmentException("بسته‌بندی پس از تحویل کامل مجاز نیست.");
+        var packAfter = AdminOrderOperationsOrchestrator.MapKnownOperationException("بسته‌بندی پس از تحویل کامل مجاز نیست.");
         Assert.Equal("fulfillment.pack.after_delivered", packAfter.Code);
         Assert.Equal("پس از تحویل کامل نمی‌توان بسته‌بندی کرد.", packAfter.Fa);
-        var processAfter = AdminOrderOperationsComposer.MapFulfillmentException("پردازش پس از تحویل کامل مجاز نیست.");
+        var processAfter = AdminOrderOperationsOrchestrator.MapKnownOperationException("پردازش پس از تحویل کامل مجاز نیست.");
         Assert.Equal("fulfillment.process.after_delivered", processAfter.Code);
     }
 

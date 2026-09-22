@@ -1,3 +1,4 @@
+using Tooba.Order.Application.Admin.Operations.Policies;
 using Tooba.Fulfillment.Application.Models;
 using Tooba.Fulfillment.Application.Ports;
 using Tooba.Fulfillment.Application.Shipping;
@@ -144,9 +145,9 @@ public sealed class AdminOrderFulfillmentOperationsTests
         var text = File.ReadAllText(impl);
         Assert.Contains("namespace Tooba.Order.Infrastructure.Fulfillment", text, StringComparison.Ordinal);
         Assert.DoesNotContain("Tooba.Host", text, StringComparison.Ordinal);
-        Assert.DoesNotContain("AdminOrderOperationsComposer", text, StringComparison.Ordinal);
+        Assert.DoesNotContain("AdminOrderOperationsPolicy", text, StringComparison.Ordinal);
         Assert.DoesNotContain("PlatformHttpException", text, StringComparison.Ordinal);
-        Assert.DoesNotContain("MapFulfillmentException", text, StringComparison.Ordinal);
+        Assert.DoesNotContain("MapKnownOperationException", text, StringComparison.Ordinal);
         Assert.DoesNotMatch(new System.Text.RegularExpressions.Regex(@"[\u0600-\u06FF]"), text);
     }
 

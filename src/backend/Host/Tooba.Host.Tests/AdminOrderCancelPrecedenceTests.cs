@@ -1,3 +1,4 @@
+using Tooba.Order.Application.Admin.Operations.Policies;
 using Tooba.Host.Admin;
 using Tooba.Offer.Domain;
 using Tooba.Order.Domain;
@@ -12,33 +13,33 @@ public sealed class AdminOrderCancelPrecedenceTests
     public void IsCheckoutCancelled_true_when_every_seller_is_cancelled()
     {
         var group = SeedCheckout(cancel: true);
-        Assert.True(AdminOrderOperationsComposer.IsCheckoutCancelled(group));
+        Assert.True(AdminOrderOperationsPolicy.IsCheckoutCancelled(group.ToOps()));
     }
 
     [Fact]
     public void IsCheckoutCancelled_false_when_pending_payment()
     {
         var group = SeedCheckout(cancel: false);
-        Assert.False(AdminOrderOperationsComposer.IsCheckoutCancelled(group));
+        Assert.False(AdminOrderOperationsPolicy.IsCheckoutCancelled(group.ToOps()));
     }
 
     [Fact]
     public void Cancelled_blocked_codes_cover_payment_and_fulfillment_forward_ops()
     {
-        Assert.Contains("confirm_deposit", AdminOrderOperationsComposer.CancelledBlockedCodes);
-        Assert.Contains("reject_deposit", AdminOrderOperationsComposer.CancelledBlockedCodes);
-        Assert.Contains("restore_deposit", AdminOrderOperationsComposer.CancelledBlockedCodes);
-        Assert.Contains("unconfirm_deposit", AdminOrderOperationsComposer.CancelledBlockedCodes);
-        Assert.Contains("mark_processing", AdminOrderOperationsComposer.CancelledBlockedCodes);
-        Assert.Contains("pack_selected", AdminOrderOperationsComposer.CancelledBlockedCodes);
-        Assert.Contains("unprocess", AdminOrderOperationsComposer.CancelledBlockedCodes);
-        Assert.Contains("unpack", AdminOrderOperationsComposer.CancelledBlockedCodes);
-        Assert.Contains("create_shipment", AdminOrderOperationsComposer.CancelledBlockedCodes);
-        Assert.Contains("dispatch_shipment", AdminOrderOperationsComposer.CancelledBlockedCodes);
-        Assert.Contains("deliver_shipment", AdminOrderOperationsComposer.CancelledBlockedCodes);
-        Assert.Contains("mark_packed", AdminOrderOperationsComposer.CancelledBlockedCodes);
-        Assert.DoesNotContain("restore_cancelled_order", AdminOrderOperationsComposer.CancelledBlockedCodes);
-        Assert.DoesNotContain("cancel", AdminOrderOperationsComposer.CancelledBlockedCodes);
+        Assert.Contains("confirm_deposit", AdminOrderOperationsPolicy.CancelledBlockedCodes);
+        Assert.Contains("reject_deposit", AdminOrderOperationsPolicy.CancelledBlockedCodes);
+        Assert.Contains("restore_deposit", AdminOrderOperationsPolicy.CancelledBlockedCodes);
+        Assert.Contains("unconfirm_deposit", AdminOrderOperationsPolicy.CancelledBlockedCodes);
+        Assert.Contains("mark_processing", AdminOrderOperationsPolicy.CancelledBlockedCodes);
+        Assert.Contains("pack_selected", AdminOrderOperationsPolicy.CancelledBlockedCodes);
+        Assert.Contains("unprocess", AdminOrderOperationsPolicy.CancelledBlockedCodes);
+        Assert.Contains("unpack", AdminOrderOperationsPolicy.CancelledBlockedCodes);
+        Assert.Contains("create_shipment", AdminOrderOperationsPolicy.CancelledBlockedCodes);
+        Assert.Contains("dispatch_shipment", AdminOrderOperationsPolicy.CancelledBlockedCodes);
+        Assert.Contains("deliver_shipment", AdminOrderOperationsPolicy.CancelledBlockedCodes);
+        Assert.Contains("mark_packed", AdminOrderOperationsPolicy.CancelledBlockedCodes);
+        Assert.DoesNotContain("restore_cancelled_order", AdminOrderOperationsPolicy.CancelledBlockedCodes);
+        Assert.DoesNotContain("cancel", AdminOrderOperationsPolicy.CancelledBlockedCodes);
     }
 
     [Fact]
@@ -46,7 +47,7 @@ public sealed class AdminOrderCancelPrecedenceTests
     {
         Assert.Equal(
             "سفارش لغوشده است؛ این عملیات مجاز نیست.",
-            AdminOrderOperationsComposer.FulfillmentOpToFa("order.cancelled.blocks_action"));
+            AdminOrderOperationsPolicy.FulfillmentOpToFa("order.cancelled.blocks_action"));
     }
 
     [Fact]
@@ -54,7 +55,7 @@ public sealed class AdminOrderCancelPrecedenceTests
     {
         var root = FindRepoRoot();
         var composer = File.ReadAllText(Path.Combine(
-            root, "src", "backend", "Host", "Tooba.Host", "Admin", "AdminOrderOperationsComposer.cs"));
+            root, "src", "backend", "Modules", "Order", "Tooba.Order.Application", "Admin", "Operations", "Services", "AdminOrderOperationsOrchestrator.cs"));
         var panel = File.ReadAllText(Path.Combine(
             root, "src", "backend", "Host", "Tooba.Host", "Admin", "AdminPanelComposer.cs"));
         Assert.Contains("if (!IsCheckoutCancelled(group))", composer, StringComparison.Ordinal);

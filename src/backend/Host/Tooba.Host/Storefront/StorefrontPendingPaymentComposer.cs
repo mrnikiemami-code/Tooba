@@ -3,10 +3,8 @@ using Microsoft.Extensions.Hosting;
 using Tooba.Cart.Application.Ports;
 using Tooba.Catalog.Domain;
 using Tooba.Catalog.Infrastructure.Persistence;
-using Tooba.Fulfillment.Application.Ports;
-using Tooba.Fulfillment.Application.Models;
-using Tooba.Fulfillment.Application.Shipping;
-using Tooba.Host.Admin;
+using Tooba.Fulfillment.Contracts.Operations;
+using Tooba.Order.Application.Admin.Operations.Policies;
 using Tooba.Order.Application;
 using Tooba.Order.Domain;
 using Tooba.Order.Infrastructure.Persistence;
@@ -30,7 +28,7 @@ public sealed class StorefrontPendingPaymentComposer
     private readonly ICartPresentationGateway _carts;
     private readonly IReservationCycleDirectory _cycles;
     private readonly ICheckoutDirectory _checkout;
-    private readonly IFulfillmentDirectory _fulfillment;
+    private readonly IFulfillmentAdminOperations _fulfillment;
     private readonly ISettlementDirectory _settlement;
     private readonly CurrentAuthenticatedSession _session;
     private readonly IHostEnvironment _environment;
@@ -44,7 +42,7 @@ public sealed class StorefrontPendingPaymentComposer
         ICartPresentationGateway carts,
         IReservationCycleDirectory cycles,
         ICheckoutDirectory checkout,
-        IFulfillmentDirectory fulfillment,
+        IFulfillmentAdminOperations fulfillment,
         ISettlementDirectory settlement,
         CurrentAuthenticatedSession session,
         IHostEnvironment environment,
@@ -172,7 +170,7 @@ public sealed class StorefrontPendingPaymentComposer
             throw new InvalidOperationException("سفارش پیدا نشد.");
         }
 
-        if (AdminOrderOperationsComposer.IsCheckoutCancelled(group))
+        if (AdminOrderOperationsPolicy.IsCheckoutCancelled(group.SellerOrders.Select(x => x.Status)))
         {
             return new { ok = true, checkoutId = group.CheckoutId, alreadyCancelled = true };
         }
@@ -192,10 +190,10 @@ public sealed class StorefrontPendingPaymentComposer
         }
 
         var fulfillments = await _fulfillment.ListForCheckoutAsync(group.CheckoutId, cancellationToken);
-        if (AdminOrderOperationsComposer.HasDispatchedOrDelivered(fulfillments))
+        if (AdminOrderOperationsPolicy.HasDispatchedOrDelivered(fulfillments))
         {
             throw new InvalidOperationException(
-                $"order.cancel.forbidden: {AdminOrderOperationsComposer.WholeOrderCancelBlockedAfterDispatchFa}");
+                $"order.cancel.forbidden: {AdminOrderOperationsPolicy.WholeOrderCancelBlockedAfterDispatchFa}");
         }
 
         await _fulfillment.AbortForCheckoutCancelAsync(group.CheckoutId, cancellationToken);

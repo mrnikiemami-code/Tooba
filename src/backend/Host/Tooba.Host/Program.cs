@@ -153,6 +153,15 @@ builder.Services.AddScoped<IOrderAdminAuthorizer, HostOrderAdminAuthorizer>();
 builder.Services.AddScoped<
     Tooba.Order.Application.Admin.OrdersGrid.Ports.IAdminOrderSupplyStatusReader,
     Tooba.Host.Admin.HostAdminOrderSupplyStatusReader>();
+builder.Services.AddScoped<
+    Tooba.Order.Application.Admin.Operations.Ports.IOrderAdminEffectiveAccessReader,
+    Tooba.Host.Admin.HostOrderAdminEffectiveAccessReader>();
+builder.Services.AddScoped<
+    Tooba.Order.Application.Admin.Operations.Ports.IAdminOrderOperationsInventoryRecoveryPort,
+    Tooba.Host.Admin.HostAdminOrderOperationsInventoryRecoveryAdapter>();
+builder.Services.AddScoped<
+    Tooba.Order.Application.Admin.Operations.Ports.IAdminOrderOperationsSupplyPort,
+    Tooba.Host.Admin.HostAdminOrderOperationsSupplyAdapter>();
 builder.Services.AddScoped<Tooba.Catalog.Application.IStoreLandingExternalReferenceGate, Tooba.Host.Admin.MerchandisingStoreLandingReferenceGate>();
 builder.Services.AddScoped<Tooba.Catalog.Application.IUnitOfMeasureLanguageGate, Tooba.Host.Admin.HostUnitOfMeasureLanguageGate>();
 builder.Services.AddToobaModules(builder.Configuration, builder.Environment);
@@ -225,7 +234,7 @@ builder.Services.AddScoped<Tooba.Host.Storefront.StorefrontPendingPaymentCompose
         sp.GetRequiredService<Tooba.Cart.Application.Ports.ICartPresentationGateway>(),
         sp.GetRequiredService<Tooba.Order.Application.IReservationCycleDirectory>(),
         sp.GetRequiredService<Tooba.Order.Application.ICheckoutDirectory>(),
-        sp.GetRequiredService<Tooba.Fulfillment.Application.Ports.IFulfillmentDirectory>(),
+        sp.GetRequiredService<Tooba.Fulfillment.Contracts.Operations.IFulfillmentAdminOperations>(),
         sp.GetRequiredService<Tooba.Settlement.Application.Ports.ISettlementDirectory>(),
         sp.GetRequiredService<CurrentAuthenticatedSession>(),
         sp.GetRequiredService<IHostEnvironment>(),
@@ -256,7 +265,6 @@ builder.Services.AddScoped<Tooba.Wallet.Endpoints.Customer.IWalletCustomerAuthor
 builder.Services.AddScoped<Tooba.Wallet.Endpoints.Admin.IWalletAdminAuthorizer, Tooba.Host.Admin.HostWalletAdminAuthorizer>();
 builder.Services.AddScoped<Tooba.Host.Customer.CustomerPanelComposer>();
 builder.Services.AddScoped<Tooba.Host.Admin.AdminPanelComposer>();
-builder.Services.AddScoped<Tooba.Host.Admin.AdminOrderOperationsComposer>();
 builder.Services.AddScoped<Tooba.Host.Admin.OrderInventoryRecoveryComposer>();
 builder.Services.AddScoped<Tooba.Host.Admin.OrderSupplyComposer>();
 builder.Services.AddScoped<Tooba.Host.Wishlist.WishlistComposer>();
@@ -528,7 +536,7 @@ app.MapCatalogTagEndpoints();
 app.MapCatalogCategoryEndpoints();
 app.MapCatalogDemoDevEndpoints();
 app.MapAdminPanelEndpoints();
-app.MapAdminOrderOperationsEndpoints();
+app.MapAdminOrderInventoryRecoverySupplyEndpoints();
 app.MapOrderEndpoints();
 app.MapStorefrontEndpoints();
 app.MapCartEndpoints();

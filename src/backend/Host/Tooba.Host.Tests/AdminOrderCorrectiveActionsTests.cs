@@ -1,3 +1,5 @@
+using Tooba.Order.Application.Admin.Operations.Models;
+using Tooba.Order.Application.Admin.Operations.Policies;
 using Tooba.Fulfillment.Application.Ports;
 using Tooba.Fulfillment.Application.Models;
 using Tooba.Fulfillment.Application.Shipping;
@@ -34,7 +36,7 @@ public sealed class AdminOrderCorrectiveActionsTests
             Act("confirm_deposit", null),
             Act("cancel_shipment", a),
         };
-        var collapsed = AdminOrderWholeOrderActions.Collapse(actions);
+        var collapsed = AdminOrderOperationsPolicy.Collapse(actions);
         Assert.Equal(3, collapsed.Count);
         Assert.Equal(1, collapsed.Count(x => x.Code == "cancel"));
         Assert.Null(collapsed.Single(x => x.Code == "cancel").SellerOrderId);
@@ -159,11 +161,11 @@ public sealed class AdminOrderCorrectiveActionsTests
             "پست",
             [new FulfillmentItemSnapshot(Guid.NewGuid(), Guid.NewGuid(), 1, 0, null, 0)],
             []);
-        Assert.False(AdminOrderOperationsComposer.HasStartedFulfillment([ready]));
-        Assert.False(AdminOrderOperationsComposer.HasStartedFulfillment([]));
+        Assert.False(AdminOrderOperationsPolicy.HasStartedFulfillment([ready.ToContracts()]));
+        Assert.False(AdminOrderOperationsPolicy.HasStartedFulfillment([]));
 
         var processing = ready with { Status = FulfillmentStatus.Processing };
-        Assert.True(AdminOrderOperationsComposer.HasStartedFulfillment([processing]));
+        Assert.True(AdminOrderOperationsPolicy.HasStartedFulfillment([processing.ToContracts()]));
 
         var cancelledOnly = ready with
         {
@@ -179,7 +181,7 @@ public sealed class AdminOrderCorrectiveActionsTests
                     []),
             ],
         };
-        Assert.False(AdminOrderOperationsComposer.HasStartedFulfillment([cancelledOnly]));
+        Assert.False(AdminOrderOperationsPolicy.HasStartedFulfillment([cancelledOnly.ToContracts()]));
 
         var packedAfterRestore = ready with
         {
@@ -187,7 +189,7 @@ public sealed class AdminOrderCorrectiveActionsTests
             Items = [ready.Items[0] with { QuantityPacked = 1, QuantityProcessing = 1 }],
             Shipments = cancelledOnly.Shipments,
         };
-        Assert.True(AdminOrderOperationsComposer.HasStartedFulfillment([packedAfterRestore]));
+        Assert.True(AdminOrderOperationsPolicy.HasStartedFulfillment([packedAfterRestore.ToContracts()]));
     }
 
     [Fact]
@@ -256,10 +258,10 @@ public sealed class AdminOrderCorrectiveActionsTests
                     null,
                     []),
             ]);
-        Assert.False(AdminOrderOperationsComposer.CanRestoreCancelledOrder(group, [dispatched], []));
+        Assert.False(AdminOrderOperationsPolicy.CanRestoreCancelledOrder(group.ToOps(), [dispatched.ToContracts()], []));
         Assert.Equal(
             "order.restore.dispatched",
-            AdminOrderOperationsComposer.RestoreForbiddenCode(group, [dispatched], []));
+            AdminOrderOperationsPolicy.RestoreForbiddenCode(group.ToOps(), [dispatched.ToContracts()], []));
 
         var refunded = ReturnRequest.Create(Guid.NewGuid(), () => Guid.NewGuid(), group.SellerOrders[0].SellerOrderId,
             group.CheckoutId,
@@ -273,56 +275,52 @@ public sealed class AdminOrderCorrectiveActionsTests
         refunded.Approve(Guid.NewGuid(), DateTimeOffset.UtcNow);
         refunded.MarkRefundProcessing(DateTimeOffset.UtcNow);
         refunded.MarkRefundSucceeded(DateTimeOffset.UtcNow);
-        Assert.False(AdminOrderOperationsComposer.CanRestoreCancelledOrder(group, [], [Snap(refunded)]));
+        Assert.False(AdminOrderOperationsPolicy.CanRestoreCancelledOrder(group.ToOps(), [], [], paymentStatus: "Refunded"));
         Assert.Equal(
             "order.restore.refund_completed",
-            AdminOrderOperationsComposer.RestoreForbiddenCode(group, [], [Snap(refunded)]));
+            AdminOrderOperationsPolicy.RestoreForbiddenCode(group.ToOps(), [], [], paymentStatus: "Refunded"));
     }
 
     [Fact]
     public void Restore_allowed_when_all_sellers_cancelled_without_irreversible_effect()
     {
         var group = SeedCancelledCheckout();
-        Assert.True(AdminOrderOperationsComposer.CanRestoreCancelledOrder(group, [], []));
-        Assert.True(AdminOrderOperationsComposer.CanRestoreCancelledOrder(group, [], [], blockedBySellerPayout: false));
+        Assert.True(AdminOrderOperationsPolicy.CanRestoreCancelledOrder(group.ToOps(), [], []));
+        Assert.True(AdminOrderOperationsPolicy.CanRestoreCancelledOrder(group.ToOps(), [], [], blockedBySellerPayout: false));
     }
 
     [Fact]
     public void Restore_forbidden_when_seller_payout_completed()
     {
         var group = SeedCancelledCheckout();
-        Assert.False(AdminOrderOperationsComposer.CanRestoreCancelledOrder(group, [], [], blockedBySellerPayout: true));
+        Assert.False(AdminOrderOperationsPolicy.CanRestoreCancelledOrder(group.ToOps(), [], [], blockedBySellerPayout: true));
         Assert.Equal(
             "order.restore.seller_payout_completed",
-            AdminOrderOperationsComposer.RestoreForbiddenCode(group, [], [], blockedBySellerPayout: true));
+            AdminOrderOperationsPolicy.RestoreForbiddenCode(group.ToOps(), [], [], blockedBySellerPayout: true));
         Assert.Equal(
             "این سفارش به‌دلیل انجام تسویه/واریز سهم فروشنده قابل بازگردانی نیست.",
-            AdminOrderOperationsComposer.RestoreCodeToFa("order.restore.seller_payout_completed"));
+            AdminOrderOperationsPolicy.RestoreCodeToFa("order.restore.seller_payout_completed"));
     }
 
     [Fact]
     public void Restore_forbidden_when_payment_refunded_but_allowed_while_refund_pending()
     {
         var group = SeedCancelledCheckout();
-        Assert.False(AdminOrderOperationsComposer.CanRestoreCancelledOrder(
-            group,
+        Assert.False(AdminOrderOperationsPolicy.CanRestoreCancelledOrder(group.ToOps(),
             [],
             [],
             paymentStatus: "Refunded"));
         Assert.Equal(
             "order.restore.refund_completed",
-            AdminOrderOperationsComposer.RestoreForbiddenCode(
-                group,
+            AdminOrderOperationsPolicy.RestoreForbiddenCode(group.ToOps(),
                 [],
                 [],
                 paymentStatus: "Refunded"));
-        Assert.True(AdminOrderOperationsComposer.CanRestoreCancelledOrder(
-            group,
+        Assert.True(AdminOrderOperationsPolicy.CanRestoreCancelledOrder(group.ToOps(),
             [],
             [],
             paymentStatus: "RefundPending"));
-        Assert.True(AdminOrderOperationsComposer.CanRestoreCancelledOrder(
-            group,
+        Assert.True(AdminOrderOperationsPolicy.CanRestoreCancelledOrder(group.ToOps(),
             [],
             [],
             paymentStatus: "RefundFailed"));
@@ -457,7 +455,7 @@ public sealed class AdminOrderCorrectiveActionsTests
             ]);
         Assert.Equal(
             "order.restore.dispatched",
-            AdminOrderOperationsComposer.RestoreForbiddenCode(group, [dispatched], [], blockedBySellerPayout: true));
+            AdminOrderOperationsPolicy.RestoreForbiddenCode(group.ToOps(), [dispatched.ToContracts()], [], blockedBySellerPayout: true));
 
         var refunded = ReturnRequest.Create(Guid.NewGuid(), () => Guid.NewGuid(), group.SellerOrders[0].SellerOrderId,
             group.CheckoutId,
@@ -473,7 +471,7 @@ public sealed class AdminOrderCorrectiveActionsTests
         refunded.MarkRefundSucceeded(DateTimeOffset.UtcNow);
         Assert.Equal(
             "order.restore.refund_completed",
-            AdminOrderOperationsComposer.RestoreForbiddenCode(group, [], [Snap(refunded)], blockedBySellerPayout: true));
+            AdminOrderOperationsPolicy.RestoreForbiddenCode(group.ToOps(), [], [], blockedBySellerPayout: true, paymentStatus: "Refunded"));
     }
 
     [Fact]
@@ -519,7 +517,7 @@ public sealed class AdminOrderCorrectiveActionsTests
     {
         var root = FindRepoRoot();
         var composer = File.ReadAllText(Path.Combine(
-            root, "src", "backend", "Host", "Tooba.Host", "Admin", "AdminOrderOperationsComposer.cs"));
+            root, "src", "backend", "Modules", "Order", "Tooba.Order.Application", "Admin", "Operations", "Services", "AdminOrderOperationsOrchestrator.cs"));
         Assert.Contains("restore_deposit", composer, StringComparison.Ordinal);
         Assert.Contains("unconfirm_deposit", composer, StringComparison.Ordinal);
         Assert.Contains("ApplyVerifiedSuccessAsync", composer, StringComparison.Ordinal);
@@ -527,7 +525,7 @@ public sealed class AdminOrderCorrectiveActionsTests
         Assert.Contains("برگشت از واریز", composer, StringComparison.Ordinal);
         Assert.Contains("برگشت از رد واریز", composer, StringComparison.Ordinal);
         Assert.Contains("restore_cancelled_order", composer, StringComparison.Ordinal);
-        Assert.Contains("GetRestoreSettlementGatesAsync", composer, StringComparison.Ordinal);
+        Assert.Contains("GetRestoreGatesAsync", composer, StringComparison.Ordinal);
         Assert.Contains("order.restore.seller_payout_completed", composer, StringComparison.Ordinal);
         Assert.Contains("if (code == \"restore_cancelled_order\")", composer, StringComparison.Ordinal);
         Assert.Contains("correct_tracking", composer, StringComparison.Ordinal);

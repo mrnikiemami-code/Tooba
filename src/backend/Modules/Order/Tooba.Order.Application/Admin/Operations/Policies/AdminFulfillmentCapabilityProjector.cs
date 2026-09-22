@@ -1,20 +1,18 @@
-using Tooba.Fulfillment.Application.Ports;
-using Tooba.Fulfillment.Application.Models;
-using Tooba.Fulfillment.Application.Shipping;
-using Tooba.Fulfillment.Domain.Aggregates;
-using Tooba.Fulfillment.Domain.ValueObjects;
+using Tooba.Fulfillment.Contracts.Operations;
+using Tooba.Order.Application.Admin.Operations.Models;
+using Tooba.Order.Application.Admin.Operations.Ports;
 using Tooba.Order.Domain;
 
-namespace Tooba.Host.Admin;
+namespace Tooba.Order.Application.Admin.Operations.Policies;
 
-/// <summary>TB-P09-T012: قابلیت‌های انتخاب/عملیات از وضعیت فروشنده + fulfillment + projection.</summary>
-internal static class AdminFulfillmentCapabilityProjector
+/// <summary>قابلیت‌های انتخاب/عملیات از وضعیت فروشنده + fulfillment + projection.</summary>
+public static class AdminFulfillmentCapabilityProjector
 {
-    internal const string PaymentLockedFa =
+    public const string PaymentLockedFa =
         "پرداخت این بخش از سفارش هنوز تأیید نشده است؛ پس از تأیید پرداخت، عملیات پردازش و ارسال فعال می‌شود.";
 
-    internal static (IReadOnlyList<AdminOrderLineCapability> Lines, AdminSellerCapability Seller) Project(
-        SellerOrder order,
+    public static (IReadOnlyList<AdminOrderLineCapability> Lines, AdminSellerCapability Seller) Project(
+        AdminOrderOpsSellerOrderSnapshot order,
         FulfillmentSnapshot? fulfillment,
         IReadOnlyList<AdminOrderOperationAction> projected)
     {
@@ -53,7 +51,7 @@ internal static class AdminFulfillmentCapabilityProjector
             var processing = item?.QuantityProcessing ?? 0;
             var shipped = item?.QuantityShipped ?? 0;
             var openAllocated = fulfillment.Shipments
-                .Where(s => s.Status == ShipmentStatus.Created)
+                .Where(s => s.Status == ShipmentOperationStatus.Created)
                 .SelectMany(s => s.Items)
                 .Where(i => i.OrderLineId == line.LineId)
                 .Sum(i => i.Quantity);

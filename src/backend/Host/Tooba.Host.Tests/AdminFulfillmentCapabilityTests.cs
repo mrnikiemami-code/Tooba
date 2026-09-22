@@ -1,3 +1,5 @@
+using Tooba.Order.Application.Admin.Operations.Models;
+using Tooba.Order.Application.Admin.Operations.Policies;
 using Tooba.Fulfillment.Application.Ports;
 using Tooba.Fulfillment.Application.Models;
 using Tooba.Fulfillment.Application.Shipping;
@@ -18,7 +20,7 @@ public sealed class AdminFulfillmentCapabilityTests
     {
         var group = SeedCheckout(cancel: false);
         var order = group.SellerOrders.Single();
-        var projected = AdminFulfillmentCapabilityProjector.Project(order, fulfillment: null, []);
+        var projected = AdminFulfillmentCapabilityProjector.Project(order.ToOps(), fulfillment: null, []);
         Assert.True(projected.Seller.PaymentLocked);
         Assert.False(projected.Seller.SelectionAllowed);
         Assert.False(projected.Seller.ShipmentCreationPossible);
@@ -39,10 +41,10 @@ public sealed class AdminFulfillmentCapabilityTests
             [new FulfillmentItemSnapshot(Guid.NewGuid(), lineId, 2, 0, null, 0)]);
         var actions = new[]
         {
-            new AdminOrderOperationAction("mark_processing", "شروع", "s", order.SellerOrderId, fulfillment.FulfillmentId, null, null, "order.handle", true, null),
-            new AdminOrderOperationAction("pack_selected", "pack", "p", order.SellerOrderId, fulfillment.FulfillmentId, null, null, "order.handle", true, null),
+            new Tooba.Order.Application.Admin.Operations.Models.AdminOrderOperationAction("mark_processing", "شروع", "s", order.SellerOrderId, fulfillment.FulfillmentId, null, null, "order.handle", true, null),
+            new Tooba.Order.Application.Admin.Operations.Models.AdminOrderOperationAction("pack_selected", "pack", "p", order.SellerOrderId, fulfillment.FulfillmentId, null, null, "order.handle", true, null),
         };
-        var projected = AdminFulfillmentCapabilityProjector.Project(order, fulfillment, actions);
+        var projected = AdminFulfillmentCapabilityProjector.Project(order.ToOps(), fulfillment.ToContracts(), actions);
         var line = Assert.Single(projected.Lines);
         Assert.True(line.Selectable);
         Assert.Contains("mark_processing", line.RowActionCodes);
@@ -67,11 +69,11 @@ public sealed class AdminFulfillmentCapabilityTests
             ]);
         var actions = new[]
         {
-            new AdminOrderOperationAction("mark_processing", "شروع", "s", order.SellerOrderId, fulfillment.FulfillmentId, null, null, "order.handle", true, null),
-            new AdminOrderOperationAction("pack_selected", "pack", "p", order.SellerOrderId, fulfillment.FulfillmentId, null, null, "order.handle", true, null),
-            new AdminOrderOperationAction("unprocess", "برگشت", "u", order.SellerOrderId, fulfillment.FulfillmentId, null, null, "order.handle", true, null),
+            new Tooba.Order.Application.Admin.Operations.Models.AdminOrderOperationAction("mark_processing", "شروع", "s", order.SellerOrderId, fulfillment.FulfillmentId, null, null, "order.handle", true, null),
+            new Tooba.Order.Application.Admin.Operations.Models.AdminOrderOperationAction("pack_selected", "pack", "p", order.SellerOrderId, fulfillment.FulfillmentId, null, null, "order.handle", true, null),
+            new Tooba.Order.Application.Admin.Operations.Models.AdminOrderOperationAction("unprocess", "برگشت", "u", order.SellerOrderId, fulfillment.FulfillmentId, null, null, "order.handle", true, null),
         };
-        var projected = AdminFulfillmentCapabilityProjector.Project(order, fulfillment, actions);
+        var projected = AdminFulfillmentCapabilityProjector.Project(order.ToOps(), fulfillment.ToContracts(), actions);
         var processed = projected.Lines.Single(x => x.OrderLineId == first.LineId);
         var sibling = projected.Lines.Single(x => x.OrderLineId == second.LineId);
         Assert.Contains("pack_selected", processed.RowActionCodes);
@@ -87,9 +89,9 @@ public sealed class AdminFulfillmentCapabilityTests
     {
         var root = FindRepoRoot();
         var composer = File.ReadAllText(Path.Combine(
-            root, "src", "backend", "Host", "Tooba.Host", "Admin", "AdminOrderOperationsComposer.cs"));
+            root, "src", "backend", "Modules", "Order", "Tooba.Order.Application", "Admin", "Operations", "Services", "AdminOrderOperationsOrchestrator.cs"));
         var projector = File.ReadAllText(Path.Combine(
-            root, "src", "backend", "Host", "Tooba.Host", "Admin", "AdminFulfillmentCapabilityProjector.cs"));
+            root, "src", "backend", "Modules", "Order", "Tooba.Order.Application", "Admin", "Operations", "Policies", "AdminFulfillmentCapabilityProjector.cs"));
         Assert.Contains("AdminFulfillmentCapabilityProjector.Project", composer, StringComparison.Ordinal);
         Assert.Contains("lineCaps", composer, StringComparison.Ordinal);
         Assert.DoesNotContain("ListForCheckoutAsync(", projector, StringComparison.Ordinal);

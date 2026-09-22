@@ -39,6 +39,8 @@ public sealed class OrderModule : IToobaModule
         services.AddScoped<IOrderUseCaseGuard, OpenOrderUseCaseGuard>();
         services.AddScoped<IAdminOrderCompletenessStore, AdminOrderCompletenessStore>();
         services.AddScoped<Application.Admin.OrdersGrid.Ports.IAdminOrdersGridReader, Admin.OrdersGrid.AdminOrdersGridReader>();
+        services.AddScoped<Application.Admin.Operations.Ports.IAdminOrderOperationsCheckoutReader, Admin.Operations.AdminOrderOperationsCheckoutReader>();
+        services.AddScoped<Application.Admin.Operations.Services.AdminOrderOperationsOrchestrator>();
         services.AddScoped<ICheckoutDirectory, CheckoutDirectory>();
         services.AddScoped<ICheckoutProcessTracker, CheckoutProcessTracker>();
         services.AddScoped<IReservationCycleDirectory, ReservationCycleDirectory>();

@@ -1,18 +1,15 @@
-using Tooba.AccessControl.Application;
-using Tooba.AccessControl.Domain;
-using Tooba.Fulfillment.Application.Ports;
-using Tooba.Fulfillment.Application.Models;
-using Tooba.Fulfillment.Application.Shipping;
-using Tooba.Fulfillment.Domain.Aggregates;
-using Tooba.Fulfillment.Domain.ValueObjects;
-using Tooba.Host.Admin;
+using Tooba.Fulfillment.Contracts.Operations;
+using Tooba.Order.Application.Admin.Operations.Models;
+using Tooba.Order.Application.Admin.Operations.Policies;
+using Tooba.Order.Application.Admin.Operations.Ports;
+using Tooba.Order.Application.Admin.Operations.Services;
 using Tooba.Order.Domain;
 using Xunit;
 
 namespace Tooba.Host.Tests;
 
 /// <summary>
-/// تست‌های متمرکز projection عملیات سفارش ادمین.
+/// تست‌های متمرکز projection عملیات سفارش ادمین (Order Application policy ownership).
 /// </summary>
 public sealed class AdminOrderOperationsTests
 {
@@ -21,7 +18,7 @@ public sealed class AdminOrderOperationsTests
     {
         var order = CreateSellerOrder(paid: false);
         Assert.Equal(SellerOrderStatus.PendingPayment, order.Status);
-        Assert.True(AdminOrderOperationsComposer.CanCancel(order, fulfillment: null));
+        Assert.True(AdminOrderOperationsPolicy.CanCancel(order, fulfillment: null));
     }
 
     [Fact]
@@ -31,9 +28,9 @@ public sealed class AdminOrderOperationsTests
         var fulfillment = new FulfillmentSnapshot(
             Guid.NewGuid(),
             order.SellerOrderId,
-            order.CheckoutId,
+            Guid.NewGuid(),
             order.SellerPartyId,
-            FulfillmentStatus.Delivered,
+            FulfillmentOperationStatus.Delivered,
             "n",
             "m",
             "p",
@@ -46,14 +43,14 @@ public sealed class AdminOrderOperationsTests
             [
                 new ShipmentSnapshot(
                     Guid.NewGuid(),
-                    ShipmentStatus.Delivered,
+                    ShipmentOperationStatus.Delivered,
                     "Post",
                     "TRK",
                     DateTimeOffset.UtcNow.AddDays(-2),
                     DateTimeOffset.UtcNow.AddDays(-1),
                     []),
             ]);
-        Assert.False(AdminOrderOperationsComposer.CanCancel(order, fulfillment));
+        Assert.False(AdminOrderOperationsPolicy.CanCancel(order, fulfillment));
     }
 
     [Fact]
@@ -63,9 +60,9 @@ public sealed class AdminOrderOperationsTests
         var packed = new FulfillmentSnapshot(
             Guid.NewGuid(),
             order.SellerOrderId,
-            order.CheckoutId,
+            Guid.NewGuid(),
             order.SellerPartyId,
-            FulfillmentStatus.Packed,
+            FulfillmentOperationStatus.Packed,
             "n",
             "m",
             "p",
@@ -78,15 +75,15 @@ public sealed class AdminOrderOperationsTests
             [
                 new ShipmentSnapshot(
                     Guid.NewGuid(),
-                    ShipmentStatus.Created,
+                    ShipmentOperationStatus.Created,
                     "Post",
                     "TRK",
                     null,
                     null,
                     []),
             ]);
-        Assert.True(AdminOrderOperationsComposer.CanCancel(order, packed));
-        Assert.True(AdminOrderOperationsComposer.CanCancel(order, fulfillment: null));
+        Assert.True(AdminOrderOperationsPolicy.CanCancel(order, packed));
+        Assert.True(AdminOrderOperationsPolicy.CanCancel(order, fulfillment: null));
     }
 
     [Fact]
@@ -96,9 +93,9 @@ public sealed class AdminOrderOperationsTests
         var createdTracked = new FulfillmentSnapshot(
             Guid.NewGuid(),
             order.SellerOrderId,
-            order.CheckoutId,
+            Guid.NewGuid(),
             order.SellerPartyId,
-            FulfillmentStatus.Packed,
+            FulfillmentOperationStatus.Packed,
             "n",
             "m",
             "p",
@@ -107,77 +104,31 @@ public sealed class AdminOrderOperationsTests
             "1",
             "post",
             "پست",
-            [new FulfillmentItemSnapshot(Guid.NewGuid(), Guid.NewGuid(), 1.25m, 0, Guid.NewGuid(), 0.50m, 1.25m)],
+            [new FulfillmentItemSnapshot(Guid.NewGuid(), Guid.NewGuid(), 1, 0, Guid.NewGuid(), 1, 1)],
             [
                 new ShipmentSnapshot(
                     Guid.NewGuid(),
-                    ShipmentStatus.Created,
+                    ShipmentOperationStatus.Created,
                     "Post",
-                    "TRK-PRE",
-                    null,
-                    null,
-                    [new ShipmentLineSnapshot(Guid.NewGuid(), 0.50m)]),
-            ]);
-        Assert.True(AdminOrderOperationsComposer.CanCancel(order, createdTracked));
-        Assert.False(AdminOrderOperationsComposer.HasDispatchedQuantity(createdTracked));
-    }
-
-    [Fact]
-    public void HasDispatchedQuantity_true_when_unit_status_is_dispatched_even_if_shipped_qty_zero()
-    {
-        var unitOnly = new FulfillmentSnapshot(
-            Guid.NewGuid(),
-            Guid.NewGuid(),
-            Guid.NewGuid(),
-            Guid.NewGuid(),
-            FulfillmentStatus.Dispatched,
-            "n",
-            "m",
-            "p",
-            "c",
-            "a",
-            "1",
-            "post",
-            "پست",
-            [new FulfillmentItemSnapshot(Guid.NewGuid(), Guid.NewGuid(), 1.25m, 0, null, 0.50m, 1.25m)],
-            []);
-        Assert.True(AdminOrderOperationsComposer.HasDispatchedQuantity(unitOnly));
-    }
-
-    [Fact]
-    public void HasDispatchedOrDelivered_true_if_any_seller_has_shipped_quantity()
-    {
-        var created = new FulfillmentSnapshot(
-            Guid.NewGuid(),
-            Guid.NewGuid(),
-            Guid.NewGuid(),
-            Guid.NewGuid(),
-            FulfillmentStatus.Packed,
-            "n",
-            "m",
-            "p",
-            "c",
-            "a",
-            "1",
-            "post",
-            "پست",
-            [new FulfillmentItemSnapshot(Guid.NewGuid(), Guid.NewGuid(), 1, 0, null, 1, 1)],
-            [
-                new ShipmentSnapshot(
-                    Guid.NewGuid(),
-                    ShipmentStatus.Created,
-                    "Post",
-                    "TRK",
+                    "TRK-1",
                     null,
                     null,
                     []),
             ]);
-        var dispatched = new FulfillmentSnapshot(
+        Assert.True(AdminOrderOperationsPolicy.CanCancel(order, createdTracked));
+        Assert.False(AdminOrderOperationsPolicy.HasDispatchedQuantity(createdTracked));
+    }
+
+    [Fact]
+    public void HasDispatchedQuantity_true_for_unit_dispatched_status()
+    {
+        var order = CreateSellerOrder(paid: true);
+        var unitOnly = new FulfillmentSnapshot(
             Guid.NewGuid(),
+            order.SellerOrderId,
             Guid.NewGuid(),
-            created.CheckoutId,
-            Guid.NewGuid(),
-            FulfillmentStatus.Dispatched,
+            order.SellerPartyId,
+            FulfillmentOperationStatus.Dispatched,
             "n",
             "m",
             "p",
@@ -186,66 +137,75 @@ public sealed class AdminOrderOperationsTests
             "1",
             "post",
             "پست",
-            [new FulfillmentItemSnapshot(Guid.NewGuid(), Guid.NewGuid(), 1, 1, null, 1, 1)],
+            [new FulfillmentItemSnapshot(Guid.NewGuid(), Guid.NewGuid(), 1, 1, Guid.NewGuid(), 1, 1)],
+            []);
+        Assert.True(AdminOrderOperationsPolicy.HasDispatchedQuantity(unitOnly));
+    }
+
+    [Fact]
+    public void HasDispatchedOrDelivered_ignores_created_only()
+    {
+        var order = CreateSellerOrder(paid: true);
+        var created = new FulfillmentSnapshot(
+            Guid.NewGuid(),
+            order.SellerOrderId,
+            Guid.NewGuid(),
+            order.SellerPartyId,
+            FulfillmentOperationStatus.Packed,
+            "n",
+            "m",
+            "p",
+            "c",
+            "a",
+            "1",
+            "post",
+            "پست",
+            [],
             [
                 new ShipmentSnapshot(
                     Guid.NewGuid(),
-                    ShipmentStatus.Dispatched,
+                    ShipmentOperationStatus.Created,
+                    "Post",
+                    null,
+                    null,
+                    null,
+                    []),
+            ]);
+        var dispatched = created with
+        {
+            Shipments =
+            [
+                new ShipmentSnapshot(
+                    Guid.NewGuid(),
+                    ShipmentOperationStatus.Dispatched,
                     "Post",
                     "TRK",
                     DateTimeOffset.UtcNow,
                     null,
                     []),
-            ]);
-        Assert.False(AdminOrderOperationsComposer.HasDispatchedOrDelivered([created]));
-        Assert.True(AdminOrderOperationsComposer.HasDispatchedOrDelivered([created, dispatched]));
+            ],
+        };
+        Assert.False(AdminOrderOperationsPolicy.HasDispatchedOrDelivered([created]));
+        Assert.True(AdminOrderOperationsPolicy.HasDispatchedOrDelivered([created, dispatched]));
     }
 
     [Fact]
     public void Has_allows_legacy_admin_without_ops_family_grants()
     {
-        var effective = new EffectiveAccessDto(
-            Guid.NewGuid(),
-            AccessOwnerScopeKind.Platform,
-            null,
-            [],
-            ["admin"]);
-        Assert.True(AdminOrderOperationsComposer.Has(effective, "order.cancel"));
-        Assert.True(AdminOrderOperationsComposer.Has(effective, "return.manage"));
+        var effective = new OrderAdminEffectiveAccess([]);
+        Assert.True(AdminOrderOperationsPolicy.Has(effective, "order.cancel"));
+        Assert.True(AdminOrderOperationsPolicy.Has(effective, "return.manage"));
     }
 
     [Fact]
     public void Has_requires_specific_perm_when_ops_family_present()
     {
-        var effective = new EffectiveAccessDto(
-            Guid.NewGuid(),
-            AccessOwnerScopeKind.Platform,
-            null,
-            [
-                new EffectivePermissionDto(
-                    "order.view",
-                    "Order",
-                    AccessScopeKind.GlobalWithinOwner,
-                    null,
-                    ["ops"],
-                    DeniedByCeiling: false),
-            ],
-            ["ops"]);
-        Assert.False(AdminOrderOperationsComposer.Has(effective, "order.cancel"));
-        Assert.True(AdminOrderOperationsComposer.Has(
-            effective with
-            {
-                Permissions =
-                [
-                    new EffectivePermissionDto(
-                        "order.cancel",
-                        "Order",
-                        AccessScopeKind.GlobalWithinOwner,
-                        null,
-                        ["ops"],
-                        DeniedByCeiling: false),
-                ],
-            },
+        var effective = new OrderAdminEffectiveAccess(
+            [new OrderAdminPermissionGrant("order.view", DeniedByCeiling: false)]);
+        Assert.False(AdminOrderOperationsPolicy.Has(effective, "order.cancel"));
+        Assert.True(AdminOrderOperationsPolicy.Has(
+            new OrderAdminEffectiveAccess(
+                [new OrderAdminPermissionGrant("order.cancel", DeniedByCeiling: false)]),
             "order.cancel"));
     }
 
@@ -254,53 +214,36 @@ public sealed class AdminOrderOperationsTests
     {
         var root = FindRepoRoot();
         var endpoints = File.ReadAllText(Path.Combine(
-            root, "src", "backend", "Host", "Tooba.Host", "Admin", "AdminOrderOperationsEndpoints.cs"));
+            root, "src", "backend", "Modules", "Order", "Tooba.Order.Endpoints", "AdminOrderOperationsEndpoints.cs"));
         var composer = File.ReadAllText(Path.Combine(
-            root, "src", "backend", "Host", "Tooba.Host", "Admin", "AdminOrderOperationsComposer.cs"));
+            root, "src", "backend", "Modules", "Order", "Tooba.Order.Application", "Admin", "Operations", "Services", "AdminOrderOperationsOrchestrator.cs"));
         var program = File.ReadAllText(Path.Combine(
             root, "src", "backend", "Host", "Tooba.Host", "Program.cs"));
         Assert.Contains("/{checkoutId:guid}/operations", endpoints, StringComparison.Ordinal);
         Assert.Contains("return-eligibility", endpoints, StringComparison.Ordinal);
+        Assert.Contains("ISender", endpoints, StringComparison.Ordinal);
         Assert.Contains("order.operation.denied", composer, StringComparison.Ordinal);
         Assert.Contains("order.operation.invalid", composer, StringComparison.Ordinal);
         Assert.Contains("order.operation.failed", composer, StringComparison.Ordinal);
-        Assert.Contains("MapAdminOrderOperationsEndpoints", program, StringComparison.Ordinal);
-        Assert.Contains("AdminOrderOperationsComposer", program, StringComparison.Ordinal);
+        Assert.Contains("MapAdminOrderInventoryRecoverySupplyEndpoints", program, StringComparison.Ordinal);
+        Assert.Contains("MapOrderEndpoints", program, StringComparison.Ordinal);
+        Assert.DoesNotContain("AdminOrderOperationsComposer", program, StringComparison.Ordinal);
+        Assert.True(File.Exists(Path.Combine(root, "src", "backend", "Modules", "Order", "Tooba.Order.Application", "Admin", "Operations", "Services", "AdminOrderOperationsOrchestrator.cs")));
+        Assert.True(File.Exists(Path.Combine(root, "src", "backend", "Modules", "Order", "Tooba.Order.Endpoints", "AdminOrderOperationsEndpoints.cs")));
+        Assert.False(File.Exists(Path.Combine(root, "src", "backend", "Host", "Tooba.Host", "Admin", "AdminOrderOperationsModels.cs")));
+        Assert.False(File.Exists(Path.Combine(root, "src", "backend", "Host", "Tooba.Host", "Admin", "AdminOrderOperationsComposer.cs")));
+        Assert.False(File.Exists(Path.Combine(root, "src", "backend", "Host", "Tooba.Host", "Admin", "AdminOrderOperationsEndpoints.cs")));
     }
 
-    private static SellerOrder CreateSellerOrder(bool paid)
+    private static AdminOrderOpsSellerOrderSnapshot CreateSellerOrder(bool paid)
     {
-        var checkoutId = Guid.NewGuid();
-        var sellerOrderId = Guid.NewGuid();
-        var line = OrderLine.FromCheckout(
-            sellerOrderId,
+        var status = paid ? SellerOrderStatus.Paid : SellerOrderStatus.PendingPayment;
+        return new AdminOrderOpsSellerOrderSnapshot(
             Guid.NewGuid(),
             Guid.NewGuid(),
-            Guid.NewGuid(),
-            1,
-            1000m,
-            "IRR",
-            true,
-            Guid.NewGuid(),
+            status,
             null,
-            "Taxable",
-            0.09m,
-            90m,
-            1090m,
-            null);
-        var order = SellerOrder.Open(
-            checkoutId,
-            Guid.NewGuid(),
-            $"SO-{sellerOrderId:N}"[..20],
-            OrderMode.OnlinePurchase,
-            "IRR",
-            [line]);
-        if (paid)
-        {
-            order.RecordVerifiedPayment();
-        }
-
-        return order;
+            [new AdminOrderOpsLineSnapshot(Guid.NewGuid(), 1)]);
     }
 
     private static string FindRepoRoot()
