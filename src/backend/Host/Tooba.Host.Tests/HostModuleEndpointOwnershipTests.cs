@@ -17,7 +17,6 @@ public sealed class HostModuleEndpointOwnershipTests
 
     /// <summary>
     /// Canonical COMPLETE HTTP-owning modules for this recovery wave.
-    /// Offer is endpoint-owned but not COMPLETE — included for ownership smoke only.
     /// </summary>
     private static readonly ModuleEndpointManifest[] CompleteHttpModules =
     [
@@ -30,6 +29,7 @@ public sealed class HostModuleEndpointOwnershipTests
         new("Wallet", "Tooba.Wallet.Endpoints", "MapWalletEndpoints()", "Wallet/WalletEndpoints.cs", true),
         new("Payment", "Tooba.Payment.Endpoints", "MapPaymentEndpoints()", "Payments/PaymentWebhookEndpoints.cs", true),
         new("Promotion", "Tooba.Promotion.Endpoints", "MapPromotionEndpoints()", "Promotion/PromotionEndpoints.cs", true),
+        new("Offer", "Tooba.Offer.Endpoints", "MapOfferModule()", null, true),
     ];
 
     [Fact]

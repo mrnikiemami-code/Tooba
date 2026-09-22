@@ -39,6 +39,8 @@ public sealed class OfferArchitectureGuardTests
     {
         var refs = ProjectRefs("Tooba.Offer.Endpoints");
         Assert.DoesNotContain(refs, r => r.Contains("Infrastructure", StringComparison.OrdinalIgnoreCase));
+        Assert.DoesNotContain(refs, r => r.Contains("Inventory.Contracts", StringComparison.OrdinalIgnoreCase));
+        Assert.DoesNotContain(refs, r => r.Contains("Pricing.Contracts", StringComparison.OrdinalIgnoreCase));
         Assert.Contains(refs, r => r.Contains("Tooba.Offer.Application", StringComparison.Ordinal));
     }
 
@@ -134,6 +136,54 @@ public sealed class OfferArchitectureGuardTests
         Assert.DoesNotContain(".SetReturnPolicy(", composer, StringComparison.Ordinal);
         Assert.DoesNotContain(".SetOrderQuantityLimits(", composer, StringComparison.Ordinal);
         Assert.DoesNotContain("_offers.SaveChanges", composer, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void Offer_price_and_inventory_routes_use_application_commands_only()
+    {
+        var endpoint = File.ReadAllText(Path.Combine(
+            OfferRoot(), "Tooba.Offer.Endpoints", "Seller", "OfferSellerEndpoints.cs"));
+        Assert.Contains("new SetOfferPriceCommand(", endpoint, StringComparison.Ordinal);
+        Assert.Contains("new SetOfferInventoryCommand(", endpoint, StringComparison.Ordinal);
+        Assert.DoesNotContain("ISellerOfferPricingGateway", endpoint, StringComparison.Ordinal);
+        Assert.DoesNotContain("ISellerOfferInventoryGateway", endpoint, StringComparison.Ordinal);
+        Assert.DoesNotContain(".SetPriceAsync(", endpoint, StringComparison.Ordinal);
+        Assert.DoesNotContain(".SetInventoryAsync(", endpoint, StringComparison.Ordinal);
+
+        var price = Sources("Tooba.Offer.Application")
+            .Single(x => x.Path.Replace('\\', '/').EndsWith(
+                "/Commands/SetOfferPrice/SetOfferPriceCommand.cs", StringComparison.Ordinal));
+        var inventory = Sources("Tooba.Offer.Application")
+            .Single(x => x.Path.Replace('\\', '/').EndsWith(
+                "/Commands/SetOfferInventory/SetOfferInventoryCommand.cs", StringComparison.Ordinal));
+        Assert.Contains("IRequestHandler<SetOfferPriceCommand", price.Text, StringComparison.Ordinal);
+        Assert.Contains("pricing.SetPriceAsync(", price.Text, StringComparison.Ordinal);
+        Assert.Contains("IRequestHandler<SetOfferInventoryCommand", inventory.Text, StringComparison.Ordinal);
+        Assert.Contains("inventory.SetInventoryAsync(", inventory.Text, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void Offer_foreign_project_references_are_contracts_only()
+    {
+        foreach (var project in new[] { "Tooba.Offer.Application", "Tooba.Offer.Infrastructure" })
+        {
+            var forbidden = ProjectRefs(project)
+                .Where(reference =>
+                    reference.Contains("Catalog.", StringComparison.OrdinalIgnoreCase)
+                    || reference.Contains("Inventory.", StringComparison.OrdinalIgnoreCase)
+                    || reference.Contains("Party.", StringComparison.OrdinalIgnoreCase)
+                    || reference.Contains("Pricing.", StringComparison.OrdinalIgnoreCase))
+                .Where(reference => !reference.Contains(".Contracts", StringComparison.OrdinalIgnoreCase))
+                .ToArray();
+            Assert.True(forbidden.Length == 0, $"{project} foreign non-contract refs: {string.Join("; ", forbidden)}");
+        }
+    }
+
+    [Fact]
+    public void Offer_has_no_type_forwarding_artifacts()
+    {
+        Assert.DoesNotContain(AllOfferSources(), x => x.Text.Contains("TypeForwardedTo", StringComparison.Ordinal));
+        Assert.Empty(Directory.EnumerateFiles(OfferRoot(), "TypeForwarders.cs", SearchOption.AllDirectories));
     }
 
     [Fact]

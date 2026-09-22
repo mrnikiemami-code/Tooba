@@ -3,18 +3,14 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using Tooba.BuildingBlocks.Presentation;
-using Tooba.Inventory.Contracts.Availability;
-using Tooba.Inventory.Contracts.Checkout;
-using Tooba.Inventory.Contracts.Errors;
-using Tooba.Inventory.Contracts.Orders;
-using Tooba.Inventory.Contracts.Seller;
 using Tooba.Offer.Application.Commands.CreateOffer;
+using Tooba.Offer.Application.Commands.SetOfferInventory;
+using Tooba.Offer.Application.Commands.SetOfferPrice;
 using Tooba.Offer.Application.Commands.UpdateOffer;
 using Tooba.Offer.Application.Queries.GetOffer;
 using Tooba.Offer.Application.Queries.ListSellerOffers;
 using Tooba.Offer.Contracts;
 using Tooba.Offer.Contracts.Dtos;
-using Tooba.Pricing.Contracts;
 
 namespace Tooba.Offer.Endpoints.Seller;
 
@@ -96,7 +92,6 @@ public static class OfferSellerEndpoints
     private static async Task<IResult> WriteOfferPriceAsync(
         Guid offerId,
         SellerOfferPriceWriteRequest body,
-        ISellerOfferPricingGateway pricing,
         ISender sender,
         IOfferSellerAuthorizer authorizer,
         ApiResponseFactory api,
@@ -104,18 +99,14 @@ public static class OfferSellerEndpoints
         CancellationToken token)
     {
         var (_, sellerId) = await authorizer.RequireAuthorizedAsync(context, token);
-        var write = await pricing.SetPriceAsync(new SetSellerOfferPrice(
+        var result = await sender.Send(new SetOfferPriceCommand(
             offerId, sellerId, body.Amount, body.Currency, body.Market), token);
-        if (write.IsFailure)
-            return api.From(write);
-        var result = await sender.Send(new GetOfferQuery(offerId, sellerId), token);
         return api.From(result);
     }
 
     private static async Task<IResult> WriteOfferInventoryAsync(
         Guid offerId,
         SellerOfferInventoryWriteRequest body,
-        ISellerOfferInventoryGateway inventory,
         ISender sender,
         IOfferSellerAuthorizer authorizer,
         ApiResponseFactory api,
@@ -123,11 +114,8 @@ public static class OfferSellerEndpoints
         CancellationToken token)
     {
         var (_, sellerId) = await authorizer.RequireAuthorizedAsync(context, token);
-        var write = await inventory.SetInventoryAsync(new SetSellerOfferInventory(
+        var result = await sender.Send(new SetOfferInventoryCommand(
             offerId, sellerId, body.OnHand, body.Reason), token);
-        if (write.IsFailure)
-            return api.From(write);
-        var result = await sender.Send(new GetOfferQuery(offerId, sellerId), token);
         return api.From(result);
     }
 }

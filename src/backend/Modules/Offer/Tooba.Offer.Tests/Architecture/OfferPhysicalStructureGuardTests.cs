@@ -119,7 +119,7 @@ public sealed class OfferPhysicalStructureGuardTests
         ExpectNs("Tooba.Offer.Domain", "Events", "Tooba.Offer.Domain.Events", violations);
         ExpectNs("Tooba.Offer.Application", "Ports", "Tooba.Offer.Application.Ports", violations);
         ExpectNs("Tooba.Offer.Contracts", "Ports", "Tooba.Offer.Contracts.Ports", violations);
-        ExpectNs("Tooba.Offer.Contracts", "Dtos", "Tooba.Offer.Contracts.Dtos", violations, excludeTypeForwarders: true);
+        ExpectNs("Tooba.Offer.Contracts", "Dtos", "Tooba.Offer.Contracts.Dtos", violations);
         ExpectNs("Tooba.Offer.Infrastructure", "Adapters", "Tooba.Offer.Infrastructure.Adapters", violations);
         ExpectNs("Tooba.Offer.Infrastructure", "Outbox", "Tooba.Offer.Infrastructure.Outbox", violations);
         ExpectNs(
@@ -249,8 +249,7 @@ public sealed class OfferPhysicalStructureGuardTests
         string project,
         string folder,
         string expectedNamespace,
-        List<(string File, string Namespace, string Expected)> violations,
-        bool excludeTypeForwarders = false)
+        List<(string File, string Namespace, string Expected)> violations)
     {
         var dir = Path.Combine(OfferRoot(), project, folder);
         if (!Directory.Exists(dir))
@@ -264,22 +263,6 @@ public sealed class OfferPhysicalStructureGuardTests
             if (n.Contains("/bin/", StringComparison.Ordinal) || n.Contains("/obj/", StringComparison.Ordinal))
             {
                 continue;
-            }
-
-            var fileName = Path.GetFileName(file);
-            if (fileName.Equals("TypeForwarders.cs", StringComparison.OrdinalIgnoreCase))
-            {
-                // Assembly-level type forwarders; no type namespace required.
-                continue;
-            }
-
-            if (excludeTypeForwarders)
-            {
-                if (fileName is "OfferStatus.cs" or "SalesChannel.cs")
-                {
-                    // Type-forwarder enums intentionally retain Tooba.Offer.Domain namespace.
-                    continue;
-                }
             }
 
             var text = File.ReadAllText(file);
