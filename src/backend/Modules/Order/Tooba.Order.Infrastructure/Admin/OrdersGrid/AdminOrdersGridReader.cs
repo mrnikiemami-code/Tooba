@@ -1,33 +1,36 @@
 using Microsoft.EntityFrameworkCore;
 using Tooba.BuildingBlocks.Grid;
-using Tooba.Persistence.Grid;
-using Tooba.Host.Admin;
 using Tooba.Order.Application;
+using Tooba.Order.Application.Admin.OrdersGrid;
+using Tooba.Order.Application.Admin.OrdersGrid.Models;
+using Tooba.Order.Application.Admin.OrdersGrid.Ports;
 using Tooba.Order.Domain;
 using Tooba.Order.Infrastructure.Persistence;
-using Tooba.Party.Infrastructure.Persistence;
+using Tooba.Party.Contracts;
+using Tooba.Persistence.Grid;
+using Tooba.Returns.Contracts.Operations;
 
-using Tooba.Returns.Domain.ValueObjects;
-using Tooba.Returns.Application.Ports;
-using Tooba.Returns.Application.Models;
-using Tooba.Host.Storefront;
+namespace Tooba.Order.Infrastructure.Admin.OrdersGrid;
 
-namespace Tooba.Host.Grid;
-
-/// <summary>پرس‌وجوی DB-native گرید سفارش‌های Admin روی Checkout + aggregates SellerOrders.</summary>
-internal sealed class AdminOrdersGridQueryEngine
+/// <summary>
+/// پرس‌وجوی DB-native گرید سفارش‌های Admin روی Checkout + aggregates SellerOrders.
+/// نام فروشنده و مرجوعی فقط از Contracts ماژول مالک می‌آید؛ هیچ JOIN بین schemaها نیست.
+/// </summary>
+internal sealed class AdminOrdersGridReader : IAdminOrdersGridReader
 {
+    private const int PartyLookupTake = 10_000;
+
     private readonly OrderDbContext _orders;
-    private readonly PartyDbContext _parties;
-    private readonly IReturnDirectory _returns;
-    private readonly OrderSupplyComposer _supply;
+    private readonly IPartyLookup _parties;
+    private readonly IReturnAdminOperations _returns;
+    private readonly IAdminOrderSupplyStatusReader _supply;
     private readonly IReservationCycleDirectory _cycles;
 
-    public AdminOrdersGridQueryEngine(
+    public AdminOrdersGridReader(
         OrderDbContext orders,
-        PartyDbContext parties,
-        IReturnDirectory returns,
-        OrderSupplyComposer supply,
+        IPartyLookup parties,
+        IReturnAdminOperations returns,
+        IAdminOrderSupplyStatusReader supply,
         IReservationCycleDirectory cycles)
     {
         _orders = orders;
@@ -41,15 +44,14 @@ internal sealed class AdminOrdersGridQueryEngine
         GridQueryRequest request,
         CancellationToken cancellationToken)
     {
+        ArgumentNullException.ThrowIfNull(request);
         IQueryable<CheckoutGroup> q = _orders.Checkouts.AsNoTracking();
 
         if (!string.IsNullOrWhiteSpace(request.Search))
         {
             var term = request.Search.Trim().ToLower();
-            var matchingSellerIds = await _parties.Parties.AsNoTracking()
-                .Where(p => p.DisplayName.ToLower().Contains(term))
-                .Select(p => p.PartyId)
-                .ToListAsync(cancellationToken);
+            var matchingSellerIds = (await _parties.SearchIdsByDisplayNameAsync(term, PartyLookupTake, cancellationToken))
+                .ToList();
             q = q.Where(c =>
                 c.RecipientName.ToLower().Contains(term)
                 || c.CheckoutId.ToString().ToLower().Contains(term)
@@ -156,13 +158,13 @@ internal sealed class AdminOrdersGridQueryEngine
             case "sellers":
                 return source;
             case "lines":
-                return ApplyIntAggFilter(source, c => c.SellerOrders.Sum(o => o.TotalItemCount), filter);
+                return EfGridQuery.ApplyIntFilter(source, c => c.SellerOrders.Sum(o => o.TotalItemCount), filter);
             case "payment":
                 return ApplyPaymentFilter(source, filter);
             case "status":
                 return source;
             case "amount":
-                return ApplyDecimalAggFilter(source, c => c.SellerOrders.Sum(o => o.GrandTotalSnapshot), filter);
+                return EfGridQuery.ApplyNumberFilter(source, c => c.SellerOrders.Sum(o => o.GrandTotalSnapshot), filter);
             case "created":
                 return EfGridQuery.ApplyDateFilter(source, x => x.SubmittedAt, filter);
             default:
@@ -244,7 +246,9 @@ internal sealed class AdminOrdersGridQueryEngine
             overlaySellerIds = rows
                 .GroupBy(r => r.SellerOrderId)
                 .Where(g => overlayWanted.Contains(
-                    ComposeOperationalStatus([SellerOrderStatus.Paid], g.Select(x => x.Status).ToList())))
+                    AdminOrdersGridProjection.ComposeOperationalStatus(
+                        [SellerOrderStatus.Paid],
+                        g.Select(x => x.Status).ToList())))
                 .Select(g => g.Key)
                 .ToHashSet();
         }
@@ -281,15 +285,6 @@ internal sealed class AdminOrdersGridQueryEngine
                 && parsed.Contains(c.SellerOrders.Select(o => o.Status).First())));
     }
 
-    private static IQueryable<CheckoutGroup> ApplyIntAggFilter(
-        IQueryable<CheckoutGroup> source,
-        System.Linq.Expressions.Expression<Func<CheckoutGroup, int>> selector,
-        GridFilterRequest filter)
-    {
-        // Materialize via projection join pattern using EF-translatable Count/Sum already in selector body.
-        return EfGridQuery.ApplyIntFilter(source, selector, filter);
-    }
-
     private async Task<IQueryable<CheckoutGroup>> ApplySellerNamesFilterAsync(
         IQueryable<CheckoutGroup> source,
         GridFilterRequest filter,
@@ -316,34 +311,7 @@ internal sealed class AdminOrdersGridQueryEngine
             values = [value];
         }
 
-        IQueryable<Guid> partyIds = _parties.Parties.AsNoTracking().Select(p => p.PartyId);
-        if (values.Count > 0)
-        {
-            var lowered = values.Select(v => v.ToLower()).ToList();
-            partyIds = op switch
-            {
-                "equals" => _parties.Parties.AsNoTracking()
-                    .Where(p => lowered.Contains(p.DisplayName.ToLower()))
-                    .Select(p => p.PartyId),
-                "notEqual" => _parties.Parties.AsNoTracking()
-                    .Where(p => !lowered.Contains(p.DisplayName.ToLower()))
-                    .Select(p => p.PartyId),
-                "startsWith" => _parties.Parties.AsNoTracking()
-                    .Where(p => lowered.Any(v => p.DisplayName.ToLower().StartsWith(v)))
-                    .Select(p => p.PartyId),
-                "endsWith" => _parties.Parties.AsNoTracking()
-                    .Where(p => lowered.Any(v => p.DisplayName.ToLower().EndsWith(v)))
-                    .Select(p => p.PartyId),
-                "notContains" => _parties.Parties.AsNoTracking()
-                    .Where(p => lowered.All(v => !p.DisplayName.ToLower().Contains(v)))
-                    .Select(p => p.PartyId),
-                _ => _parties.Parties.AsNoTracking()
-                    .Where(p => lowered.Any(v => p.DisplayName.ToLower().Contains(v)))
-                    .Select(p => p.PartyId),
-            };
-        }
-
-        var ids = await partyIds.ToListAsync(cancellationToken);
+        var ids = await ResolveSellerPartyIdsAsync(op, values, cancellationToken);
         if (ids.Count == 0)
         {
             return op is "notEqual" or "notContains" or "notIn" ? source : source.Where(_ => false);
@@ -357,11 +325,44 @@ internal sealed class AdminOrdersGridQueryEngine
         };
     }
 
-    private static IQueryable<CheckoutGroup> ApplyDecimalAggFilter(
-        IQueryable<CheckoutGroup> source,
-        System.Linq.Expressions.Expression<Func<CheckoutGroup, decimal>> selector,
-        GridFilterRequest filter) =>
-        EfGridQuery.ApplyNumberFilter(source, selector, filter);
+    /// <summary>
+    /// نام فروشنده فقط از Contracts؛ چند مقداری با اجتماع (شمول) و اشتراک (نفی) مثل رفتار پیشین.
+    /// </summary>
+    private async Task<List<Guid>> ResolveSellerPartyIdsAsync(
+        string op,
+        IReadOnlyList<string> values,
+        CancellationToken cancellationToken)
+    {
+        if (values.Count == 0)
+        {
+            return (await _parties.FilterIdsByDisplayNameAsync(op, string.Empty, null, PartyLookupTake, cancellationToken))
+                .ToList();
+        }
+
+        var negated = op is "notEqual" or "notContains" or "notIn";
+        HashSet<Guid>? accumulated = null;
+        foreach (var value in values)
+        {
+            var matched = (await _parties.FilterIdsByDisplayNameAsync(op, value, null, PartyLookupTake, cancellationToken))
+                .ToHashSet();
+            if (accumulated is null)
+            {
+                accumulated = matched;
+                continue;
+            }
+
+            if (negated)
+            {
+                accumulated.IntersectWith(matched);
+            }
+            else
+            {
+                accumulated.UnionWith(matched);
+            }
+        }
+
+        return accumulated is null ? [] : accumulated.ToList();
+    }
 
     private static IQueryable<CheckoutGroup> Order(IQueryable<CheckoutGroup> source, GridSortRequest sort)
     {
@@ -420,16 +421,14 @@ internal sealed class AdminOrdersGridQueryEngine
             .ToListAsync(cancellationToken);
         var byId = groups.ToDictionary(x => x.CheckoutId);
         var sellerIds = groups.SelectMany(g => g.SellerOrders.Select(o => o.SellerPartyId)).Distinct().ToList();
-        var sellerNames = await LoadSellerNamesAsync(sellerIds, cancellationToken);
+        var sellerNames = await _parties.GetDisplayNamesAsync(sellerIds, cancellationToken);
         var sellerOrderIds = groups.SelectMany(g => g.SellerOrders.Select(o => o.SellerOrderId)).Distinct().ToList();
         var returnsBySellerOrder = await _returns.ListBySellerOrderIdsAsync(sellerOrderIds, cancellationToken);
         var returnsLookup = returnsBySellerOrder
             .GroupBy(x => x.SellerOrderId)
             .ToDictionary(g => g.Key, g => (IReadOnlyList<ReturnSnapshot>)g.ToList());
         var supply = await _supply.GetStatusesAsync(ids, cancellationToken);
-        var supplyByCheckout = supply.ToDictionary(
-            x => x.Key,
-            x => (string?)x.Value.Status.ToString());
+        var supplyByCheckout = supply.ToDictionary(x => x.Key, x => (string?)x.Value);
         var cycles = await _cycles.GetProjectionsAsync(
             ids,
             DateTimeOffset.UtcNow,
@@ -437,14 +436,14 @@ internal sealed class AdminOrdersGridQueryEngine
             cancellationToken);
         return rows
             .Where(r => byId.ContainsKey(r.CheckoutId))
-            .Select(r => MapOrderListItem(
+            .Select(r => AdminOrdersGridProjection.MapOrderListItem(
                 byId[r.CheckoutId],
                 sellerNames,
                 returnsLookup,
-                supply.TryGetValue(r.CheckoutId, out var st) ? st.Status.ToString() : "NotApplicable",
+                supply.TryGetValue(r.CheckoutId, out var st) ? st : "NotApplicable",
                 cycles.TryGetValue(r.CheckoutId, out var projection)
-                    ? AdminReservationCycleMapper.ToSummary(projection)
-                    : AdminReservationCycleMapper.EmptySummary()))
+                    ? OrderReservationCycleSummaryMapper.ToSummary(projection)
+                    : OrderReservationCycleSummaryMapper.EmptySummary()))
             .ToList();
     }
 
@@ -465,9 +464,7 @@ internal sealed class AdminOrdersGridQueryEngine
 
         var ids = await source.Select(x => x.CheckoutId).ToListAsync(cancellationToken);
         var statuses = await _supply.GetStatusesAsync(ids, cancellationToken);
-        var match = ids.Where(id =>
-                statuses.TryGetValue(id, out var st) && wanted.Contains(st.Status.ToString()))
-            .ToHashSet();
+        var match = ids.Where(id => statuses.TryGetValue(id, out var st) && wanted.Contains(st)).ToHashSet();
         return source.Where(x => match.Contains(x.CheckoutId));
     }
 
@@ -488,9 +485,7 @@ internal sealed class AdminOrdersGridQueryEngine
 
         var ids = await source.Select(x => x.CheckoutId).ToListAsync(cancellationToken);
         var supply = await _supply.GetStatusesAsync(ids, cancellationToken);
-        var supplyByCheckout = supply.ToDictionary(
-            x => x.Key,
-            x => (string?)x.Value.Status.ToString());
+        var supplyByCheckout = supply.ToDictionary(x => x.Key, x => (string?)x.Value);
         var cycles = await _cycles.GetProjectionsAsync(
             ids,
             DateTimeOffset.UtcNow,
@@ -499,128 +494,10 @@ internal sealed class AdminOrdersGridQueryEngine
         var match = ids.Where(id =>
         {
             var summary = cycles.TryGetValue(id, out var projection)
-                ? AdminReservationCycleMapper.ToSummary(projection)
-                : AdminReservationCycleMapper.EmptySummary();
+                ? OrderReservationCycleSummaryMapper.ToSummary(projection)
+                : OrderReservationCycleSummaryMapper.EmptySummary();
             return wanted.Contains(summary.State) || wanted.Contains(summary.CompactLabelFa);
         }).ToHashSet();
         return source.Where(x => match.Contains(x.CheckoutId));
-    }
-
-    private async Task<IReadOnlyDictionary<Guid, string>> LoadSellerNamesAsync(
-        IReadOnlyCollection<Guid> sellerIds,
-        CancellationToken cancellationToken)
-    {
-        if (sellerIds.Count == 0)
-        {
-            return new Dictionary<Guid, string>();
-        }
-
-        var sellerRows = await _parties.Parties.AsNoTracking()
-            .Where(x => sellerIds.Contains(x.PartyId))
-            .Select(x => new { x.PartyId, x.DisplayName })
-            .ToListAsync(cancellationToken);
-        return sellerRows.ToDictionary(x => x.PartyId, x => x.DisplayName);
-    }
-
-    /// <summary>نگاشت ردیف فهرست سفارش با وضعیت عملیاتی ترکیب‌شده.</summary>
-    internal static AdminOrderListItem MapOrderListItem(
-        CheckoutGroup group,
-        IReadOnlyDictionary<Guid, string> sellerNames,
-        IReadOnlyDictionary<Guid, IReadOnlyList<ReturnSnapshot>> returnsBySellerOrder,
-        string supplyStatus = "NotApplicable",
-        AdminReservationCycleSummary? reservation = null)
-    {
-        var orders = group.SellerOrders;
-        reservation ??= AdminReservationCycleMapper.EmptySummary();
-        var references = orders.Select(x => x.OrderNumber).Where(x => !string.IsNullOrWhiteSpace(x)).ToList();
-        var statuses = orders.Select(x => x.Status).Distinct().ToList();
-        var relatedReturns = orders
-            .SelectMany(o => returnsBySellerOrder.TryGetValue(o.SellerOrderId, out var list) ? list : Array.Empty<ReturnSnapshot>())
-            .Select(r => r.Status)
-            .ToList();
-        var composedStatus = ComposeOperationalStatus(statuses, relatedReturns);
-        return new AdminOrderListItem(
-            group.CheckoutId,
-            references.Count == 0 ? group.CheckoutId.ToString("N")[..12] : string.Join(" / ", references),
-            group.SubmittedAt,
-            StorefrontRecipientNames.DisplayOrFallback(group.RecipientFirstName, group.RecipientLastName, group.RecipientName),
-            orders.Count,
-            FormatSellerDisplayNames(orders, sellerNames),
-            InvoiceHeaderSemantics.LineCount(orders),
-            orders.Sum(x => x.GrandTotalSnapshot),
-            orders.Select(x => x.Currency).FirstOrDefault() ?? "IRR",
-            orders.Count > 0 && orders.All(x => x.Status == SellerOrderStatus.Cancelled)
-                ? "Cancelled"
-                : orders.Count > 0 && orders.All(x => x.Status == SellerOrderStatus.Paid)
-                    ? "Paid"
-                    : "PendingPayment",
-            composedStatus,
-            string.IsNullOrWhiteSpace(supplyStatus) ? "NotApplicable" : supplyStatus,
-            reservation.CompactLabelFa,
-            reservation.CompactLabelEn,
-            reservation.State,
-            reservation.CycleNumber,
-            reservation.RetryPossible,
-            reservation.NeedsReacquire,
-            reservation.RetryLimitReached);
-    }
-
-    /// <summary>
-    /// وضعیت عملیاتی فهرست: در صورت مرجوعی/بازگشت وجه، سلول وضعیت را از آن می‌سازد.
-    /// </summary>
-    internal static string ComposeOperationalStatus(
-        IReadOnlyList<SellerOrderStatus> orderStatuses,
-        IReadOnlyList<ReturnRequestStatus> returnStatuses)
-    {
-        if (returnStatuses.Count > 0)
-        {
-            if (returnStatuses.Any(s => s == ReturnRequestStatus.RefundFailed))
-            {
-                return "RefundFailed";
-            }
-
-            if (returnStatuses.Any(s => s == ReturnRequestStatus.RefundProcessing))
-            {
-                return "RefundPending";
-            }
-
-            if (returnStatuses.Any(s => s == ReturnRequestStatus.Requested))
-            {
-                return "ReturnRequested";
-            }
-
-            if (returnStatuses.Any(s => s == ReturnRequestStatus.Approved))
-            {
-                return "ReturnApproved";
-            }
-
-            if (returnStatuses.Any(s => s == ReturnRequestStatus.Completed)
-                && returnStatuses.All(s => s is ReturnRequestStatus.Completed or ReturnRequestStatus.Rejected or ReturnRequestStatus.Cancelled))
-            {
-                return "RefundCompleted";
-            }
-        }
-
-        return orderStatuses.Count == 1 ? orderStatuses[0].ToString() : "Mixed";
-    }
-
-    private static string FormatSellerDisplayNames(
-        IEnumerable<SellerOrder> orders,
-        IReadOnlyDictionary<Guid, string> sellerNames)
-    {
-        var sellerIds = orders.Select(o => o.SellerPartyId).Distinct().ToList();
-        if (sellerIds.Count == 0)
-        {
-            return "—";
-        }
-
-        if (sellerIds.Count == 1)
-        {
-            return sellerNames.TryGetValue(sellerIds[0], out var name) && !string.IsNullOrWhiteSpace(name)
-                ? name
-                : "—";
-        }
-
-        return $"{sellerIds.Count} فروشنده";
     }
 }
