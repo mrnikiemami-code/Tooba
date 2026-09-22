@@ -48,9 +48,9 @@ Pricing-State: UNTOUCHED
 Frontend-Production-Changes: NONE
 
 Git:
-  Commit: fe9b5f67a7fe87fdd634c9a3e41de30d52bffb1c
+  Commit: b2d3e6f7df85750b5b5d9c42b19f3fa996ba5d91
   Message: docs(TB-TMAR-SUPPORT-GOLDEN-001): tip-align Result Git SHA to final tip.
-  Push: origin/main updated a20ef51f..fe9b5f67a7fe87fdd634c9a3e41de30d52bffb1c
+  Push: origin/main updated a20ef51f..b2d3e6f7df85750b5b5d9c42b19f3fa996ba5d91
   HEAD == origin/main: YES
   User-Work-Preserved: YES (no reset/clean/force-push; stashes untouched; CART/Fulfillment leftover bridge-result files left untracked)
 
