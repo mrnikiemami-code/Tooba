@@ -1,0 +1,1 @@
+# Admin detail/actions migration\n\n- GET/POST reconcile/confirm-deposit/reject-deposit moved to Payment.Endpoints.Admin.\n- IPaymentAdminAuthorizer + HostPaymentAdminAuthorizer (AdminPanelAccess only).\n- /v1/admin/payments/query remains Host (R2).\n

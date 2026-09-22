@@ -1,0 +1,1 @@
+# Recovery state sync\n\n- Payment state: IN_PROGRESS_GOLDEN_R2_READY\n- nextTask: TB-TMAR-PAYMENT-GOLDEN-001-R2\n- last accepted COMPLETE: Wallet\n- parent incomplete: TB-TMAR-PAYMENT-GOLDEN-001 recorded as latest attempted, not COMPLETE\n

@@ -1,0 +1,1 @@
+# Payment R1 repo audit\n\n- Endpoints project real and in slnx/Host.\n- Host webhook file removed.\n- Admin detail/actions removed from AdminPanelEndpoints; /payments/query remains Host R2_REMAINDER.\n- StorefrontPaymentComposer + storefront payment routes remain Host R2_REMAINDER.\n- AdminPaymentsGridQueryEngine remains Host R2_REMAINDER.\n

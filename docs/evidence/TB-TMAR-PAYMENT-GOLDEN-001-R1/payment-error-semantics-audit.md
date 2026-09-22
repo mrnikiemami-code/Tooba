@@ -1,0 +1,1 @@
+# Error semantics\n\n- PaymentErrorCodes + PaymentExceptionMapper: exact KnownCodes only; limited stable aliases (payment.not_found→payment.missing, tracking/unpaid/inventory supply).\n- No Contains/StartsWith prose heuristics.\n- Admin missing stays admin.payment.missing for GetAdminPayment.\n

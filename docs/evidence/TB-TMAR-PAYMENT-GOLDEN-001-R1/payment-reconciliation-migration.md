@@ -1,0 +1,1 @@
+# Reconciliation migration\n\n- Host worker scheduler-only: ISender + ReconcileStalePaymentsCommand.\n- No IPaymentReconciliationDirectory / UtcNow / Guid.NewGuid / StartActivity in Host worker.\n- Application handler uses IClock + IPaymentReconciliationDirectory.\n

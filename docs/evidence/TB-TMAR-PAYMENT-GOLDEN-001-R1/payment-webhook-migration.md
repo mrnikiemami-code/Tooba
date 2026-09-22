@@ -1,0 +1,1 @@
+# Webhook migration\n\n- Route POST /v1/payments/webhooks/{providerCode} owned by Payment.Endpoints.Webhooks.\n- ProcessPaymentWebhookCommand + handler; signature via IPaymentWebhookSignatureVerifier; processing via IPaymentWebhookHandler.\n- Host PaymentWebhookEndpoints.cs deleted.\n

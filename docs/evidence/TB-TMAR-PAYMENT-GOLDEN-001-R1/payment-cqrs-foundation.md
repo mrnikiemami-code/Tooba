@@ -1,0 +1,1 @@
+# CQRS foundation\n\n- MediatR 12.5 handlers: ProcessPaymentWebhook, GetAdminPayment, ReconcileAdminPayment, ConfirmAdminDeposit, RejectAdminDeposit, ReconcileStalePayments.\n- Payment.Application registered in AddToobaCqrsFoundation.\n- R2 prep: storefront orchestrator/ports/grid query exist but storefront HTTP stays Host.\n

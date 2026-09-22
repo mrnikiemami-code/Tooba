@@ -1,0 +1,1 @@
+# Architecture guards\n\n- PaymentArchitectureGuardTests enforces Endpoints existence, ISender webhook/admin, Host webhook absent, admin detail mappings absent, reconciliation scheduler-only, exact mapper, Wallet Contracts-only.\n- Payment NOT added to COMPLETE HostModuleEndpointOwnershipTests manifest.\n
