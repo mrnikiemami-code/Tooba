@@ -7,6 +7,8 @@ using Tooba.Payment.Infrastructure.DependencyInjection;
 using Tooba.Payment.Infrastructure.Directories;
 using Tooba.Payment.Infrastructure.Messaging;
 using Tooba.Payment.Infrastructure.Providers;
+using Tooba.Order.Application.Admin.OrdersGrid;
+using Tooba.Returns.Contracts.Operations;
 using Tooba.Returns.Domain.Aggregates;
 using Tooba.Returns.Domain.ValueObjects;
 using Xunit;
@@ -38,19 +40,19 @@ public sealed class ManualPaymentAndListStatusTests
         var orderStatuses = new[] { SellerOrderStatus.Paid };
         Assert.Equal(
             "ReturnRequested",
-            AdminOrdersGridQueryEngine.ComposeOperationalStatus(orderStatuses, [ReturnRequestStatus.Requested]));
+            AdminOrdersGridProjection.ComposeOperationalStatus(orderStatuses, [ReturnRequestOperationStatus.Requested]));
         Assert.Equal(
             "ReturnApproved",
-            AdminOrdersGridQueryEngine.ComposeOperationalStatus(orderStatuses, [ReturnRequestStatus.Approved]));
+            AdminOrdersGridProjection.ComposeOperationalStatus(orderStatuses, [ReturnRequestOperationStatus.Approved]));
         Assert.Equal(
             "RefundPending",
-            AdminOrdersGridQueryEngine.ComposeOperationalStatus(orderStatuses, [ReturnRequestStatus.RefundProcessing]));
+            AdminOrdersGridProjection.ComposeOperationalStatus(orderStatuses, [ReturnRequestOperationStatus.RefundProcessing]));
         Assert.Equal(
             "RefundCompleted",
-            AdminOrdersGridQueryEngine.ComposeOperationalStatus(orderStatuses, [ReturnRequestStatus.Completed]));
+            AdminOrdersGridProjection.ComposeOperationalStatus(orderStatuses, [ReturnRequestOperationStatus.Completed]));
         Assert.Equal(
             "Paid",
-            AdminOrdersGridQueryEngine.ComposeOperationalStatus(orderStatuses, Array.Empty<ReturnRequestStatus>()));
+            AdminOrdersGridProjection.ComposeOperationalStatus(orderStatuses, Array.Empty<ReturnRequestOperationStatus>()));
     }
 
     [Fact]
@@ -58,7 +60,8 @@ public sealed class ManualPaymentAndListStatusTests
     {
         var root = FindRepoRoot();
         var engine = File.ReadAllText(Path.Combine(
-            root, "src", "backend", "Host", "Tooba.Host", "Grid", "AdminOrdersGridQueryEngine.cs"));
+            root, "src", "backend", "Modules", "Order", "Tooba.Order.Infrastructure",
+            "Admin", "OrdersGrid", "AdminOrdersGridReader.cs"));
         Assert.Contains("ApplyStatusFilterAsync", engine, StringComparison.Ordinal);
         Assert.Contains("ReturnRequested", engine, StringComparison.Ordinal);
         Assert.Contains("RefundFailed", engine, StringComparison.Ordinal);

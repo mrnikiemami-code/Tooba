@@ -130,7 +130,6 @@ public sealed class AdminDbNativeGridQueryTests
         var engines = new[]
         {
             "AdminContentGridQueryEngine.cs",
-            "AdminOrdersGridQueryEngine.cs",
             "AdminCustomersGridQueryEngine.cs",
             "AdminSellersGridQueryEngine.cs",
             "AdminReviewGridQueryEngine.cs",
@@ -155,6 +154,7 @@ public sealed class AdminDbNativeGridQueryTests
 
         var moduleEngines = new[]
         {
+            Path.GetFullPath(Path.Combine(root, "..", "..", "..", "Modules", "Order", "Tooba.Order.Infrastructure", "Admin", "OrdersGrid", "AdminOrdersGridReader.cs")),
             Path.GetFullPath(Path.Combine(root, "..", "..", "..", "Modules", "Fulfillment", "Tooba.Fulfillment.Infrastructure", "Queries", "AdminFulfillmentWorkQueueQueryEngine.cs")),
             Path.GetFullPath(Path.Combine(root, "..", "..", "..", "Modules", "Returns", "Tooba.Returns.Infrastructure", "Queries", "AdminReturnGridQueryEngine.cs")),
             Path.GetFullPath(Path.Combine(root, "..", "..", "..", "Modules", "Settlement", "Tooba.Settlement.Infrastructure", "Queries", "AdminPayoutGridQueryEngine.cs")),

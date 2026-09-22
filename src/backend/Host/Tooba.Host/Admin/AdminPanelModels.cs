@@ -12,29 +12,7 @@ public sealed record AdminDashboardSummary(
     int Sellers,
     int Customers);
 
-/// <summary>
-/// ردیف سفارش تجمیعی مدیر بر پایهٔ Checkout و snapshotهای سفارش.
-/// </summary>
-public sealed record AdminOrderListItem(
-    Guid CheckoutId,
-    string Reference,
-    DateTimeOffset SubmittedAt,
-    string CustomerDisplayName,
-    int SellerCount,
-    string SellerDisplayNames,
-    int LineCount,
-    decimal PayableAmount,
-    string Currency,
-    string PaymentState,
-    string Status,
-    string SupplyStatus = "NotApplicable",
-    string ReservationLabel = "—",
-    string ReservationLabelEn = "—",
-    string ReservationState = "none",
-    int? ReservationCycleNumber = null,
-    bool ReservationRetryPossible = false,
-    bool ReservationNeedsReacquire = false,
-    bool ReservationRetryLimitReached = false);
+// R3: AdminOrderListItem moved to Tooba.Order.Application.Admin.OrdersGrid.Models.
 
 /// <summary>
 /// خط سفارش مدیر؛ مبلغ از snapshot سفارش می‌آید و قیمت جاری Product نیست.

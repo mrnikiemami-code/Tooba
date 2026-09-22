@@ -1,6 +1,7 @@
 using Tooba.Payment.Domain.Aggregates;
 using Tooba.Payment.Domain.ValueObjects;
 using Tooba.Host.Admin;
+using Tooba.Order.Application.Admin.OrdersGrid.Models;
 using Xunit;
 
 namespace Tooba.Host.Tests;
@@ -91,7 +92,7 @@ public sealed class AdminPanelCompositionTests
         var source = File.ReadAllText(Path.Combine(
             FindRepoRoot(), "src", "backend", "Host", "Tooba.Host", "Admin", "ProductWorkspaceEndpoints.cs"));
         // List/Create/Get/History/PatchTitle + publish/unpublish/archive/delete + media×8 + variants×2 + seo×3 + grid query + brand assign/options + additional category add/remove
-        Assert.Equal(31, Count(source, "AdminPanelAccess.RequireAuthorizedAsync"));
+        Assert.Equal(32, Count(source, "AdminPanelAccess.RequireAuthorizedAsync"));
         Assert.Contains("IAuthorizationGuard", source, StringComparison.Ordinal);
         Assert.Contains("ICurrentTenant", source, StringComparison.Ordinal);
     }

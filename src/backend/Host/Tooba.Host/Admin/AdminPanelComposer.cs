@@ -9,6 +9,8 @@ using Tooba.Fulfillment.Domain.Aggregates;
 using Tooba.Fulfillment.Domain.ValueObjects;
 using Tooba.Host.Grid;
 using Tooba.Offer.Contracts.Dtos;
+using Tooba.Order.Application.Admin.OrdersGrid;
+using Tooba.Order.Application.Admin.OrdersGrid.Models;
 using Tooba.Offer.Contracts.Ports;
 using Tooba.Order.Application;
 using Tooba.Order.Domain;
@@ -41,7 +43,7 @@ public sealed class AdminPanelComposer
     private readonly IReturnDirectory _returns;
     private readonly OrderSupplyComposer _supply;
     private readonly IReservationCycleDirectory _cycles;
-    private readonly AdminOrdersGridQueryEngine _ordersGrid;
+    private readonly Tooba.Returns.Contracts.Operations.IReturnAdminOperations _returnOperations;
     private readonly AdminSellersGridQueryEngine _sellersGrid;
     private readonly AdminCustomersGridQueryEngine _customersGrid;
 
@@ -57,9 +59,11 @@ public sealed class AdminPanelComposer
         ISettlementDirectory settlement,
         IFulfillmentDirectory fulfillment,
         IReturnDirectory returns,
+        Tooba.Returns.Contracts.Operations.IReturnAdminOperations returnOperations,
         OrderSupplyComposer supply,
         IReservationCycleDirectory cycles)
     {
+        _returnOperations = returnOperations;
         _catalog = catalog;
         _offers = offers;
         _orders = orders;
@@ -70,7 +74,6 @@ public sealed class AdminPanelComposer
         _returns = returns;
         _supply = supply;
         _cycles = cycles;
-        _ordersGrid = new AdminOrdersGridQueryEngine(orders, parties, returns, supply, cycles);
         _sellersGrid = new AdminSellersGridQueryEngine(offers, parties, orders);
         _customersGrid = new AdminCustomersGridQueryEngine(orders);
     }
@@ -119,15 +122,6 @@ public sealed class AdminPanelComposer
         }
 
         return items;
-    }
-
-    /// <summary>صفحه‌بندی server-side گرید سفارش‌های Admin (DB-native).</summary>
-    public Task<GridPageResponse<AdminOrderListItem>> QueryOrdersGridAsync(
-        GridQueryRequest request,
-        CancellationToken cancellationToken)
-    {
-        var q = AdminListGridPolicies.Orders.Normalize(request);
-        return _ordersGrid.QueryAsync(q, cancellationToken);
     }
 
     /// <summary>
@@ -492,11 +486,13 @@ private async Task<IReadOnlyList<CheckoutGroup>> LoadOrderGroupsAsync(Cancellati
         CancellationToken cancellationToken)
     {
         var sellerOrderIds = group.SellerOrders.Select(x => x.SellerOrderId).ToList();
-        var returns = await _returns.ListBySellerOrderIdsAsync(sellerOrderIds, cancellationToken);
+        var returns = await _returnOperations.ListBySellerOrderIdsAsync(sellerOrderIds, cancellationToken);
         var returnsLookup = returns
             .GroupBy(x => x.SellerOrderId)
-            .ToDictionary(g => g.Key, g => (IReadOnlyList<ReturnSnapshot>)g.ToList());
-        return AdminOrdersGridQueryEngine.MapOrderListItem(group, sellerNames, returnsLookup);
+            .ToDictionary(
+                g => g.Key,
+                g => (IReadOnlyList<Tooba.Returns.Contracts.Operations.ReturnSnapshot>)g.ToList());
+        return AdminOrdersGridProjection.MapOrderListItem(group, sellerNames, returnsLookup);
     }
 
     private static string FormatSellerDisplayNames(

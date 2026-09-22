@@ -3,6 +3,8 @@ using Tooba.Inventory.Application.Checkout;
 using Tooba.Inventory.Application.Orders;
 using Tooba.Inventory.Contracts.Returns;
 using Tooba.Order.Application;
+using Tooba.Order.Application.Admin.OrdersGrid;
+using Tooba.Order.Application.Admin.OrdersGrid.Models;
 using Tooba.Order.Domain;
 
 namespace Tooba.Host.Admin;
@@ -61,39 +63,16 @@ public static class AdminReservationCycleMapper
     };
 
     /// <summary>برچسب فشرده گرید فارسی.</summary>
-    public static string CompactFa(ReservationCycleStatus? status, int? cycleNumber) => status switch
-    {
-        ReservationCycleStatus.Active => cycleNumber is int n ? $"فعال #{n}" : "فعال",
-        ReservationCycleStatus.Expired => cycleNumber is int n ? $"پایان‌یافته #{n}" : "پایان‌یافته",
-        ReservationCycleStatus.CommittedPaid => "نهایی‌شده",
-        ReservationCycleStatus.ReleasedByCancel or ReservationCycleStatus.ReleasedByPolicy =>
-            cycleNumber is int n ? $"آزادشده #{n}" : "آزادشده",
-        ReservationCycleStatus.ReacquireFailed => "رزرو مجدد ناموفق",
-        _ => "—",
-    };
+    public static string CompactFa(ReservationCycleStatus? status, int? cycleNumber) =>
+        OrderReservationCycleSummaryMapper.CompactFa(status, cycleNumber);
 
     /// <summary>برچسب فشرده گرید انگلیسی.</summary>
-    public static string CompactEn(ReservationCycleStatus? status, int? cycleNumber) => status switch
-    {
-        ReservationCycleStatus.Active => cycleNumber is int n ? $"Active #{n}" : "Active",
-        ReservationCycleStatus.Expired => cycleNumber is int n ? $"Expired #{n}" : "Expired",
-        ReservationCycleStatus.CommittedPaid => "Committed",
-        ReservationCycleStatus.ReleasedByCancel or ReservationCycleStatus.ReleasedByPolicy =>
-            cycleNumber is int n ? $"Released #{n}" : "Released",
-        ReservationCycleStatus.ReacquireFailed => "Reacquire failed",
-        _ => "—",
-    };
+    public static string CompactEn(ReservationCycleStatus? status, int? cycleNumber) =>
+        OrderReservationCycleSummaryMapper.CompactEn(status, cycleNumber);
 
     /// <summary>کلید فیلتر پایدار.</summary>
-    public static string StateKey(ReservationCycleStatus? status) => status switch
-    {
-        ReservationCycleStatus.Active => "active",
-        ReservationCycleStatus.Expired => "expired",
-        ReservationCycleStatus.CommittedPaid => "committed",
-        ReservationCycleStatus.ReleasedByCancel or ReservationCycleStatus.ReleasedByPolicy => "released",
-        ReservationCycleStatus.ReacquireFailed => "reacquireFailed",
-        _ => "none",
-    };
+    public static string StateKey(ReservationCycleStatus? status) =>
+        OrderReservationCycleSummaryMapper.StateKey(status);
 
     /// <summary>منبع سیاست ذخیره‌شده؛ Settings جاری بازنویسی نمی‌کند.</summary>
     public static string PolicySourceFa(string? source) => (source ?? "").Trim().ToLowerInvariant() switch
@@ -144,33 +123,8 @@ public static class AdminReservationCycleMapper
     }
 
     /// <summary>خلاصهٔ فشرده برای گرید سفارش/پرداخت.</summary>
-    public static AdminReservationCycleSummary ToSummary(ReservationCycleProjection? projection)
-    {
-        if (projection is null || (projection.CurrentStatus is null && projection.TotalCyclesCreated == 0))
-        {
-            return EmptySummary();
-        }
-
-        var status = projection.CurrentStatus;
-        var retryLimit = projection.RetryCountRemaining <= 0
-            && status is not ReservationCycleStatus.Active
-            && status is not ReservationCycleStatus.CommittedPaid
-            && projection.TotalCyclesCreated > 0;
-        var retryPossible = projection.RetryCountRemaining > 0
-            && status is ReservationCycleStatus.Expired or ReservationCycleStatus.ReleasedByPolicy;
-        var needsReacquire = status is not ReservationCycleStatus.Active
-            && status is not ReservationCycleStatus.CommittedPaid
-            && projection.SupplyStatus is "AvailableForReacquire" or "Unavailable" or "PartiallyUnavailable";
-
-        return new AdminReservationCycleSummary(
-            CompactFa(status, projection.CurrentCycleNumber),
-            CompactEn(status, projection.CurrentCycleNumber),
-            StateKey(status),
-            projection.CurrentCycleNumber,
-            retryPossible,
-            needsReacquire,
-            retryLimit);
-    }
+    public static AdminReservationCycleSummary ToSummary(ReservationCycleProjection? projection) =>
+        Map(OrderReservationCycleSummaryMapper.ToSummary(projection));
 
     /// <summary>ممیزی کامل جزئیات سفارش از تاریخچهٔ immutable.</summary>
     public static AdminReservationCycleAuditView ToAudit(
@@ -215,7 +169,17 @@ public static class AdminReservationCycleMapper
 
     /// <summary>خلاصهٔ خالی گرید.</summary>
     public static AdminReservationCycleSummary EmptySummary() =>
-        new("—", "—", "none", null, false, false, false);
+        Map(OrderReservationCycleSummaryMapper.EmptySummary());
+
+    private static AdminReservationCycleSummary Map(OrderReservationCycleSummary summary) =>
+        new(
+            summary.CompactLabelFa,
+            summary.CompactLabelEn,
+            summary.State,
+            summary.CycleNumber,
+            summary.RetryPossible,
+            summary.NeedsReacquire,
+            summary.RetryLimitReached);
 
     private static AdminReservationCycleHistoryRow ToHistoryRow(ReservationCycleSnapshot cycle) =>
         new(

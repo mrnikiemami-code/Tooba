@@ -38,6 +38,7 @@ public sealed class OrderModule : IToobaModule
         services.AddSingleton<IOutboxModuleRegistration, OrderOutboxRegistration>();
         services.AddScoped<IOrderUseCaseGuard, OpenOrderUseCaseGuard>();
         services.AddScoped<IAdminOrderCompletenessStore, AdminOrderCompletenessStore>();
+        services.AddScoped<Application.Admin.OrdersGrid.Ports.IAdminOrdersGridReader, Admin.OrdersGrid.AdminOrdersGridReader>();
         services.AddScoped<ICheckoutDirectory, CheckoutDirectory>();
         services.AddScoped<ICheckoutProcessTracker, CheckoutProcessTracker>();
         services.AddScoped<IReservationCycleDirectory, ReservationCycleDirectory>();

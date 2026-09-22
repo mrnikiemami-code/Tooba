@@ -121,7 +121,8 @@ public sealed class AdminReservationCycleAuditTests
         Assert.Contains("GetProjectionAsync", composer, StringComparison.Ordinal);
         Assert.Contains("ListEventsAsync", composer, StringComparison.Ordinal);
         Assert.Contains("ToAudit", composer, StringComparison.Ordinal);
-        var orders = File.ReadAllText(Host("Grid/AdminOrdersGridQueryEngine.cs"));
+        var orders = File.ReadAllText(OrderModule(
+            "Tooba.Order.Infrastructure/Admin/OrdersGrid/AdminOrdersGridReader.cs"));
         var payments = File.ReadAllText(Host("Modules/Payment/Tooba.Payment.Application/Queries/QueryAdminPaymentsGrid/QueryAdminPaymentsGridQuery.cs"));
         Assert.Contains("GetProjectionsAsync", orders, StringComparison.Ordinal);
         Assert.Contains("GetProjectionsAsync", payments, StringComparison.Ordinal);
@@ -215,6 +216,11 @@ public sealed class AdminReservationCycleAuditTests
 
     private static string Host(string relative) =>
         Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", "Tooba.Host", relative.Replace('/', Path.DirectorySeparatorChar));
+
+    private static string OrderModule(string relative) =>
+        Path.Combine(
+            AppContext.BaseDirectory, "..", "..", "..", "..", "..", "Modules", "Order",
+            relative.Replace('/', Path.DirectorySeparatorChar));
 
     private static string RepoRoot() =>
         Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", "..", "..", ".."));

@@ -13,7 +13,9 @@ public sealed class OrderSupplyUxTests
     {
         var models = Host(Path.Combine("Admin", "AdminPanelModels.cs"));
         Assert.Contains("SupplyStatus", models, StringComparison.Ordinal);
-        var orders = Host(Path.Combine("Grid", "AdminOrdersGridQueryEngine.cs"));
+        var orders = Host(Path.Combine(
+            "..", "..", "Modules", "Order", "Tooba.Order.Infrastructure",
+            "Admin", "OrdersGrid", "AdminOrdersGridReader.cs"));
         Assert.Contains("GetStatusesAsync", orders, StringComparison.Ordinal);
         Assert.DoesNotContain("GetStatusAsync(r.CheckoutId", orders, StringComparison.Ordinal);
         var payments = Host(Path.Combine("..", "..", "Modules", "Payment", "Tooba.Payment.Application", "Queries", "QueryAdminPaymentsGrid", "QueryAdminPaymentsGridQuery.cs"));

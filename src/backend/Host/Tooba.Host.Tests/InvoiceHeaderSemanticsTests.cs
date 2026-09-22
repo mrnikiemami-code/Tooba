@@ -2,8 +2,8 @@ using Tooba.Host.Grid;
 using Tooba.Offer.Domain;
 using Tooba.Order.Application.Admin.Completeness.Documents;
 using Tooba.Order.Domain;
-using Tooba.Returns.Application.Models;
-using Tooba.Returns.Domain.ValueObjects;
+using Tooba.Order.Application.Admin.OrdersGrid;
+using Tooba.Returns.Contracts.Operations;
 using Xunit;
 
 namespace Tooba.Host.Tests;
@@ -27,7 +27,7 @@ public sealed class InvoiceHeaderSemanticsTests
     public void List_projection_reads_header_count_not_quantity()
     {
         var group = Submit(OpenThreeLines(1.25m, 2.00m, 1m, "kg", "kg", "kg"));
-        var item = AdminOrdersGridQueryEngine.MapOrderListItem(
+        var item = AdminOrdersGridProjection.MapOrderListItem(
             group,
             new Dictionary<Guid, string>(),
             new Dictionary<Guid, IReadOnlyList<ReturnSnapshot>>());

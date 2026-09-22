@@ -15,6 +15,12 @@ public interface IOrderAdminAuthorizer
         HttpContext context,
         string permissionId,
         CancellationToken cancellationToken);
+
+    /// <summary>
+    /// فقط مرز پنل مدیر (Tenant) بدون مجوز اضافه؛ برای مسیرهایی که پیش از انتقال هم
+    /// همین بررسی را داشتند.
+    /// </summary>
+    Task<Guid> RequireAdminAsync(HttpContext context, CancellationToken cancellationToken);
 }
 
 public static class OrderEndpointModule
@@ -31,6 +37,7 @@ public static class OrderEndpointModule
     {
         ArgumentNullException.ThrowIfNull(app);
         AdminOrderCompletenessEndpoints.Map(app);
+        AdminOrdersGridEndpoints.Map(app);
         return app;
     }
 }

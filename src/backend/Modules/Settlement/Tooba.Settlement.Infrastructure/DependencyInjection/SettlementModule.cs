@@ -38,6 +38,7 @@ public sealed class SettlementModule : IToobaModule
         services.AddScoped<SettlementDirectory>();
         services.AddScoped<ISettlementDirectory>(sp => sp.GetRequiredService<SettlementDirectory>());
         services.AddScoped<Contracts.History.ISettlementHistoryReader, Adapters.SettlementHistoryReader>();
+        services.AddScoped<Contracts.Operations.ISettlementOrderAccrualPort, Adapters.SettlementOrderAccrualAdapter>();
         services.AddScoped<IAdminPayoutGridQuery, Queries.AdminPayoutGridQueryEngine>();
         services.AddScoped<ISettlementOrderReader, SettlementOrderBridge>();
         services.AddScoped<ISettlementPaymentReader, SettlementPaymentBridge>();

@@ -12,6 +12,10 @@ internal sealed class HostOrderAdminAuthorizer(
     IHostEnvironment environment,
     IAccessControlDirectory access) : IOrderAdminAuthorizer
 {
+    public Task<Guid> RequireAdminAsync(HttpContext context, CancellationToken cancellationToken) =>
+        AdminPanelAccess.RequireAuthorizedAsync(
+            context.Request, session, tenant, guard, environment, cancellationToken);
+
     public async Task<Guid> RequirePermissionAsync(
         HttpContext context,
         string permissionId,

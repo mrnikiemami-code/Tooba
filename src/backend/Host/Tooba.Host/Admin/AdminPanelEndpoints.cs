@@ -16,7 +16,7 @@ public static class AdminPanelEndpoints
         var group = app.MapGroup("/v1/admin");
         group.MapGet("/dashboard", GetDashboardAsync);
         group.MapGet("/orders", ListOrdersAsync);
-        group.MapPost("/orders/query", QueryOrdersGridAsync);
+        // R3: POST /v1/admin/orders/query is owned by Order.Endpoints (MapOrderEndpoints).
         group.MapGet("/orders/{checkoutId:guid}", GetOrderAsync);
         // R2_REMAINDER: payment detail/actions owned by Payment.Endpoints (MapPaymentEndpoints).
         group.MapGet("/sellers", ListSellersAsync);
@@ -47,25 +47,6 @@ public static class AdminPanelEndpoints
         CancellationToken cancellationToken) =>
         await ExecuteAsync(request, session, tenant, guard, environment, cancellationToken,
             () => composer.ListOrdersAsync(cancellationToken));
-
-    private static Task<IResult> QueryOrdersGridAsync(
-        GridQueryRequest body,
-        AdminPanelComposer composer,
-        HttpRequest request,
-        CurrentAuthenticatedSession session,
-        ICurrentTenant tenant,
-        IAuthorizationGuard guard,
-        IHostEnvironment environment,
-        CancellationToken cancellationToken) =>
-        AdminGridQueryEndpoint.ExecuteAsync(
-            body,
-            request,
-            session,
-            tenant,
-            guard,
-            environment,
-            composer.QueryOrdersGridAsync,
-            cancellationToken);
 
     private static async Task<IResult> GetOrderAsync(
         Guid checkoutId,

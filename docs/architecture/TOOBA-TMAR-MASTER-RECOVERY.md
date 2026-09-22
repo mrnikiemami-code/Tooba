@@ -10,8 +10,8 @@ Current Golden Wave Closure (authoritative)
 - Inventory = INTERNAL_ONLY / NOT_APPLICABLE / INTERNAL_USE_CASE_BOUNDARIES
 - reopenedModules = empty; internalApplicabilityReviewModules = empty
 - Checkout = PAUSED_AT_SAFE_W5_CHECKPOINT
-- Order: INCOMPLETE_REFERENCE_REPAIR after TB-TMAR-ORDER-GOLDEN-001-R2C
-- Next task: TB-TMAR-ORDER-GOLDEN-001-R3
+- Order: INCOMPLETE_REFERENCE_REPAIR after TB-TMAR-ORDER-GOLDEN-001-R3 (OrdersGrid migrated; AdminOrderOperations remains Host)
+- Next task: TB-TMAR-ORDER-GOLDEN-001-R3B
 - Gate: ORDER_GOLDEN_REPAIR_REQUIRED
 - Closed by: TB-TMAR-GOLDEN-WAVE-FINAL-CLOSURE-001
 

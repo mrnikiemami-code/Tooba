@@ -150,6 +150,9 @@ builder.Services.AddToobaCqrsFoundation(
     typeof(Tooba.Promotion.Application.Commands.CreateSellerPromotion.CreateSellerPromotionCommand).Assembly,
     typeof(Tooba.Order.Application.Admin.Completeness.Queries.ListAdminOrderNotes.ListAdminOrderNotesQuery).Assembly);
 builder.Services.AddScoped<IOrderAdminAuthorizer, HostOrderAdminAuthorizer>();
+builder.Services.AddScoped<
+    Tooba.Order.Application.Admin.OrdersGrid.Ports.IAdminOrderSupplyStatusReader,
+    Tooba.Host.Admin.HostAdminOrderSupplyStatusReader>();
 builder.Services.AddScoped<Tooba.Catalog.Application.IStoreLandingExternalReferenceGate, Tooba.Host.Admin.MerchandisingStoreLandingReferenceGate>();
 builder.Services.AddScoped<Tooba.Catalog.Application.IUnitOfMeasureLanguageGate, Tooba.Host.Admin.HostUnitOfMeasureLanguageGate>();
 builder.Services.AddToobaModules(builder.Configuration, builder.Environment);
@@ -168,7 +171,6 @@ builder.Services.AddScoped<Tooba.Host.Admin.ProductWorkspaceComposer>();
 builder.Services.AddScoped<Tooba.Host.Grid.AdminContentGridQueryEngine>();
 builder.Services.AddScoped<Tooba.Host.Grid.AdminStoryGridQueryEngine>();
 builder.Services.AddScoped<Tooba.Host.Grid.AdminReviewGridQueryEngine>();
-builder.Services.AddScoped<Tooba.Host.Grid.AdminOrdersGridQueryEngine>();
 builder.Services.AddScoped<Tooba.Host.Grid.AdminCustomersGridQueryEngine>();
 builder.Services.AddScoped<Tooba.Host.Grid.AdminSellersGridQueryEngine>();
 builder.Services.Configure<CatalogDemoSeedOptions>(

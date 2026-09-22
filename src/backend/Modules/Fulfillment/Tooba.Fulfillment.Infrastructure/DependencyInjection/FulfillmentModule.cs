@@ -96,6 +96,7 @@ public sealed class FulfillmentModule : IToobaModule
         services.AddScoped<FulfillmentDirectory>();
         services.AddScoped<IFulfillmentDirectory>(sp => sp.GetRequiredService<FulfillmentDirectory>());
         services.AddScoped<Contracts.History.IFulfillmentHistoryReader, Adapters.FulfillmentHistoryReader>();
+        services.AddScoped<Contracts.Operations.IFulfillmentAdminOperations, Adapters.FulfillmentAdminOperationsAdapter>();
         services.AddScoped<ISellerFulfillmentAuthorizer, SellerFulfillmentAuthorizer>();
         services.AddScoped<IFulfillmentShippedQuantityReader, FulfillmentShippedQuantityReader>();
         services.AddScoped<IAdminFulfillmentWorkQueueQuery, Queries.AdminFulfillmentWorkQueueQueryEngine>();

@@ -2,6 +2,7 @@ using Tooba.BuildingBlocks;
 using Tooba.BuildingBlocks.Grid;
 using Tooba.Host.Admin;
 using Tooba.Host.Grid;
+using Tooba.Order.Application.Admin.OrdersGrid.Models;
 using Xunit;
 
 namespace Tooba.Host.Tests;
