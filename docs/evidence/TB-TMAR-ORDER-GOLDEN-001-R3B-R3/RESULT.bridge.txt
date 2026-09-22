@@ -1,0 +1,28 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+BEGIN_TOOBA_WORKER_RESULT
+
+Task-ID: TB-TMAR-ORDER-GOLDEN-001-R3B-R3
+Parent-Task: TB-TMAR-ORDER-GOLDEN-001-R3B-R2
+Status: PASS
+
+Summary: Removed message parsing from Contract fault boundaries. ContractOperationFault no longer classifies Message. Owning Domain/Directory emit ContractOperationException(Code) for Admin Ops expected failures. Ops adapters pass through typed Code only; unknown InvalidOperationException propagates. R3B-R1 CQRS and Host removal preserved. SoT records R3B-R3; nextTask R4 not started.
+Message-Parsing-State: none in ContractOperationFault or touched Ops adapters (LooksLikeStableCode/TryMapExact/IOE Message promotion absent)
+Typed-Fault-Origin-State: Fulfillment/Returns/Settlement/Payment/Inventory Domain+Directory throw ContractOperationException(code) at source for Admin Ops expected failures
+ContractOperationFault-State: no longer a message classifier
+Adapter-State: Fulfillment/Returns/Settlement/Payment/Inventory/CheckoutDirectory pass-through typed Code only
+CQRS-Repair-Preserved: yes
+Host-Removal-Preserved: yes
+Contracts-Changed: BuildingBlocks ContractOperationFault/Exception; owning Domain/Directory throw sites; Ops adapters; ExceptionMappers catch typed Code
+Architecture-Guard-Validation: OrderAdminOperationsArchitectureGuardTests 8/8 PASS (includes no-message-parse adapter guard)
+Focused-Validation: Order.Tests 50 PASS; Host AdminOrderOperations 9; Fulfillment/Returns/Settlement/Payment focused suites PASS
+Full-Validation: dotnet build src/backend/Tooba.slnx succeeded 0 errors
+Recovery-State: slice ADMIN_ORDER_OPERATIONS_TYPED_FAULT_SOURCE_R3B_R3 recorded; Order INCOMPLETE_REFERENCE_REPAIR
+Recovery-Next-Task: TB-TMAR-ORDER-GOLDEN-001-R4
+Residual-Defects: Module ExceptionMappers may still map residual IOE Message on non-ops CQRS paths; domain.invariant may remain IOE outside Admin Ops contract path
+Order-Overall-State: INCOMPLETE_REFERENCE_REPAIR
+Checkout-State: PAUSED_AT_SAFE_W5_CHECKPOINT
+Git: 51a3eed7c4b8eaf3daed28554a60df77692656e1 pushed origin/main; HEAD==origin/main
+User-Work-Preserved: yes
+Next-Recommended-Task: TB-TMAR-ORDER-GOLDEN-001-R4
+
+END_TOOBA_WORKER_RESULT
