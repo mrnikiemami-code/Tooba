@@ -20,7 +20,7 @@ Recovery-Next-Task: TB-TMAR-ORDER-GOLDEN-001-R6
 Residual-Defects: Admin order detail still Host (deferred R6+); CheckoutAbuseGate still Host adapter over DbContext counts
 Order-Overall-State: INCOMPLETE_REFERENCE_REPAIR
 Checkout-State: PAUSED_AT_SAFE_W5_CHECKPOINT
-Git: PLACEHOLDER pushed origin/main; HEAD==origin/main
+Git: b05ae389b591b508574c4cdb9cfa12ded86fc22c pushed origin/main; HEAD==origin/main
 User-Work-Preserved: yes; unrelated untracked R2C RESULT.bridge.txt untouched
 Next-Recommended-Task: TB-TMAR-ORDER-GOLDEN-001-R6
 
