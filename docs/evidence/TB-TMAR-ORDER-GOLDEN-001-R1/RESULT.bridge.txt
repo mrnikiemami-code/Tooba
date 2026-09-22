@@ -58,7 +58,7 @@ Frontend-Production-Changes: NONE
 Recovery-State: CURRENT_AND_MACHINE_READABLE
 Recovery-Next-Task: TB-TMAR-ORDER-GOLDEN-001-R2
 Current-State-Manifest: UPDATED_INCOMPLETE_R2
-Git: PENDING_COMMIT_PUSH
+Git: evidence commit 83a0581a74e0d02d5be927bd66225051f73a101c pushed to origin/main
 Blockers: Completing all gates requires coordinated endpoint, CQRS, Contracts, Host authority, and deterministic policy migration beyond the inherited audit state.
 User-Work-Preserved: YES
 Next-Recommended-Task: TB-TMAR-ORDER-GOLDEN-001-R2
