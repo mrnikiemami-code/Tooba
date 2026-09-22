@@ -11,8 +11,8 @@ Canonical bootstrap for recovering the Tooba architecture context after chat/ses
 - Inventory = INTERNAL_ONLY / NOT_APPLICABLE / INTERNAL_USE_CASE_BOUNDARIES
 - reopenedModules = empty; internalApplicabilityReviewModules = empty
 - Checkout = PAUSED_AT_SAFE_W5_CHECKPOINT
-- Order = INCOMPLETE_REFERENCE_REPAIR after TB-TMAR-ORDER-GOLDEN-001
-- Current next task: TB-TMAR-ORDER-GOLDEN-001-R1
+- Order = INCOMPLETE_REFERENCE_REPAIR after TB-TMAR-ORDER-GOLDEN-001-R1
+- Current next task: TB-TMAR-ORDER-GOLDEN-001-R2
 - Gate: ORDER_GOLDEN_REPAIR_REQUIRED
 - Closed by: TB-TMAR-GOLDEN-WAVE-FINAL-CLOSURE-001
 
@@ -40,7 +40,7 @@ Accepted architecture baseline:
 TB-TMAR-ARCH-BASELINE
 
 Current next task:
-TB-TMAR-ORDER-GOLDEN-001-R1
+TB-TMAR-ORDER-GOLDEN-001-R2
 
 Current recovery summary (consistent with the authoritative closure above):
 COMPLETE HTTP-owning: Cart, Settlement, Fulfillment, Returns, Notification, Support, Wallet, Payment, Promotion, Offer.

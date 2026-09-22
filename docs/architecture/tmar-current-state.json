@@ -5,7 +5,7 @@
     "checkoutState":  "PAUSED_AT_SAFE_W5_CHECKPOINT",
     "lastAcceptedTask":  "TB-TMAR-GOLDEN-WAVE-FINAL-CLOSURE-001",
     "lastAcceptedCommit":  "024ce2b5708aa70ad9f395b4dcbe48fdd6912c5a",
-    "nextTask":  "TB-TMAR-ORDER-GOLDEN-001-R1",
+    "nextTask":  "TB-TMAR-ORDER-GOLDEN-001-R2",
     "nextTaskGate":  "ORDER_GOLDEN_REPAIR_REQUIRED",
     "goldenWaveState":  "COMPLETE",
     "goldenWaveUserReview":  "USER_ACCEPTED",
@@ -122,8 +122,8 @@
     "activeModuleRecovery":  {
                                    "module":  "Order",
                                    "state":  "INCOMPLETE_REFERENCE_REPAIR",
-                                   "task":  "TB-TMAR-ORDER-GOLDEN-001",
-                                   "nextTask":  "TB-TMAR-ORDER-GOLDEN-001-R1",
+                                   "task":  "TB-TMAR-ORDER-GOLDEN-001-R1",
+                                   "nextTask":  "TB-TMAR-ORDER-GOLDEN-001-R2",
                                    "checkoutState":  "PAUSED_AT_SAFE_W5_CHECKPOINT"
                                }
 }
