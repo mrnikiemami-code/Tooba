@@ -1,7 +1,6 @@
-using Tooba.Host.Admin;
-using Tooba.Host.Returns;
-using Tooba.Returns.Application.Ports;
+using Tooba.Returns.Application.Errors;
 using Tooba.Returns.Application.Models;
+using Tooba.Returns.Application.Ports;
 using Tooba.Returns.Domain.Aggregates;
 using Tooba.Returns.Domain.ValueObjects;
 using Xunit;
@@ -86,18 +85,18 @@ public sealed class AdminReturnWorkQueueTests
         Assert.DoesNotContain("OrderDbContext", engine, StringComparison.Ordinal);
 
         var hostRoot = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", "Tooba.Host"));
-        var hostPanel = File.ReadAllText(Path.Combine(hostRoot, "Returns", "ReturnPanelComposer.cs"));
-        Assert.DoesNotContain("ReturnsDbContext", hostPanel, StringComparison.Ordinal);
+        Assert.False(Directory.Exists(Path.Combine(hostRoot, "Returns")));
+        Assert.False(File.Exists(Path.Combine(hostRoot, "Returns", "ReturnPanelComposer.cs")));
     }
 
     [Fact]
     public void Endpoints_map_stale_and_expired_without_english_bad_request()
     {
         var endpoints = File.ReadAllText(Path.GetFullPath(Path.Combine(
-            AppContext.BaseDirectory, "..", "..", "..", "..", "Tooba.Host", "Returns", "ReturnEndpoints.cs")));
+            AppContext.BaseDirectory, "..", "..", "..", "..", "..", "Modules", "Returns",
+            "Tooba.Returns.Endpoints", "Seller", "ReturnSellerEndpoints.cs")));
         Assert.DoesNotContain("title = \"Bad Request\"", endpoints, StringComparison.Ordinal);
         Assert.Contains("ApiResponseFactory", endpoints, StringComparison.Ordinal);
-        Assert.Contains("ReturnSemanticMapper", endpoints, StringComparison.Ordinal);
         Assert.DoesNotContain("ReturnErrorMapper", endpoints, StringComparison.Ordinal);
 
         var composer = File.ReadAllText(Path.GetFullPath(Path.Combine(
@@ -105,14 +104,16 @@ public sealed class AdminReturnWorkQueueTests
         Assert.Contains("isReturnLifecycleOp", composer, StringComparison.Ordinal);
         Assert.Contains("ToErrorCode(eligibility.ReasonCode)", composer, StringComparison.Ordinal);
 
-        var expired = ReturnSemanticMapper.MapException(
-            new InvalidOperationException(ReturnEligibilityReasonCodes.ToFaMessage(ReturnEligibilityReasonCodes.WindowExpired)));
+        var expired = ReturnsExceptionMapper.ToSemanticError(
+            new InvalidOperationException("returns.window_expired"));
         Assert.Equal("return.expired", expired.Code);
 
-        var stale = ReturnSemanticMapper.MapException(new InvalidOperationException("انتقال وضعیت از این حالت مجاز نیست."));
+        var stale = ReturnsExceptionMapper.ToSemanticError(
+            new InvalidOperationException("fulfillment.status.transition_invalid"));
         Assert.Equal("return.stale", stale.Code);
 
-        var qty = ReturnSemanticMapper.MapException(new InvalidOperationException("تعداد مرجوعی از باقیماندهٔ تحویل‌شده بیشتر است."));
+        var qty = ReturnsExceptionMapper.ToSemanticError(
+            new InvalidOperationException("returns.qty.exceeds_remaining"));
         Assert.Equal("return.quantity_exceeded", qty.Code);
     }
 }

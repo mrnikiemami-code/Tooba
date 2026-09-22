@@ -7,11 +7,12 @@ namespace Tooba.Returns.Tests.Architecture;
 public sealed class ReturnsArchitectureGuardTests
 {
     private static readonly string[] AllowedDomainFolders = ["Aggregates", "Entities", "ValueObjects", "Events", "Policies"];
-    private static readonly string[] AllowedApplicationFolders = ["Ports", "Models", "Commands", "Queries"];
+    private static readonly string[] AllowedApplicationFolders = ["Ports", "Models", "Commands", "Queries", "Errors"];
     private static readonly string[] AllowedContractsFolders = ["Events", "Settlement", "Errors"];
     private static readonly string[] AllowedInfrastructureFolders =
         ["Persistence", "Directories", "Adapters", "Events", "Messaging", "DependencyInjection", "Migrations",
             "Gateways", "Bridges", "Evaluators", "Observability", "Queries", "Errors"];
+    private static readonly string[] AllowedEndpointsFolders = ["Customer", "Seller", "Admin", "Errors", "Resources"];
 
     private static readonly HashSet<string> HostDbContextAllowlist = new(StringComparer.OrdinalIgnoreCase)
     {
@@ -71,10 +72,12 @@ public sealed class ReturnsArchitectureGuardTests
         AssertNoRootDump("Tooba.Returns.Application", AllowedApplicationFolders);
         AssertNoRootDump("Tooba.Returns.Contracts", AllowedContractsFolders);
         AssertNoRootDump("Tooba.Returns.Infrastructure", AllowedInfrastructureFolders);
+        AssertNoRootDump("Tooba.Returns.Endpoints", AllowedEndpointsFolders);
         AssertNamespacesAlign("Tooba.Returns.Domain", "Tooba.Returns.Domain");
         AssertNamespacesAlign("Tooba.Returns.Application", "Tooba.Returns.Application");
         AssertNamespacesAlign("Tooba.Returns.Contracts", "Tooba.Returns.Contracts");
         AssertNamespacesAlign("Tooba.Returns.Infrastructure", "Tooba.Returns.Infrastructure");
+        AssertNamespacesAlign("Tooba.Returns.Endpoints", "Tooba.Returns.Endpoints");
 
         var directory = File.ReadAllText(Path.Combine(ModuleRoot(), "Tooba.Returns.Infrastructure", "Directories", "ReturnDirectory.cs"));
         Assert.Contains("IClock", directory, StringComparison.Ordinal);
@@ -90,20 +93,17 @@ public sealed class ReturnsArchitectureGuardTests
             .ToList();
         Assert.True(hostHits.Count == 0, "Host ReturnsDbContext allowlist: " + string.Join("; ", hostHits));
 
-        var hostRootForMapper = Path.Combine(RepoRoot(), "src", "backend", "Host", "Tooba.Host");
-        Assert.False(File.Exists(Path.Combine(hostRootForMapper, "Returns", "ReturnErrorMapper.cs")));
-        var returnEndpoint = File.ReadAllText(Path.Combine(hostRootForMapper, "Returns", "ReturnEndpoints.cs"));
-        Assert.Contains("ApiResponseFactory", returnEndpoint, StringComparison.Ordinal);
-        Assert.DoesNotContain("ReturnErrorMapper", returnEndpoint, StringComparison.Ordinal);
-        Assert.DoesNotContain("Results.Json(new { title = mapped.Fa", returnEndpoint, StringComparison.Ordinal);
-        Assert.DoesNotContain("Results.Json(new { title", returnEndpoint, StringComparison.Ordinal);
-        Assert.DoesNotContain("ReturnsDbContext", returnEndpoint, StringComparison.Ordinal);
-        Assert.Contains("ReturnSemanticMapper", returnEndpoint, StringComparison.Ordinal);
+        Assert.False(Directory.Exists(Path.Combine(hostRoot, "Returns")));
+        Assert.False(File.Exists(Path.Combine(hostRoot, "Returns", "ReturnEndpoints.cs")));
+        Assert.False(File.Exists(Path.Combine(hostRoot, "Returns", "ReturnPanelComposer.cs")));
 
-        var returnPanel = File.ReadAllText(Path.Combine(hostRootForMapper, "Returns", "ReturnPanelComposer.cs"));
-        Assert.DoesNotContain("ReturnsDbContext", returnPanel, StringComparison.Ordinal);
-        Assert.DoesNotContain("مقصد بازگشت وجه نامعتبر است", returnPanel, StringComparison.Ordinal);
-        Assert.DoesNotContain("throw new", returnPanel, StringComparison.Ordinal);
+        var hostGrid = File.ReadAllText(Path.Combine(hostRoot, "Grid", "AdminListGridPolicies.cs"));
+        Assert.DoesNotContain("AdminReturnWorkQueueRow", hostGrid, StringComparison.Ordinal);
+        Assert.DoesNotContain("AdminListGridPolicies.Returns", hostGrid, StringComparison.Ordinal);
+
+        var programCs = File.ReadAllText(Path.Combine(hostRoot, "Program.cs"));
+        Assert.Contains("MapReturnEndpoints()", programCs, StringComparison.Ordinal);
+        Assert.DoesNotContain("ReturnPanelComposer", programCs, StringComparison.Ordinal);
 
         var bypass = AllProductionSources()
             .Where(x => x.Text.Contains("DateTimeOffset.UtcNow", StringComparison.Ordinal)
@@ -133,10 +133,78 @@ public sealed class ReturnsArchitectureGuardTests
         Assert.True(localized.Count == 0, "localized exception prose: " + string.Join("; ", localized));
     }
 
+    [Fact]
+    public void Returns_endpoints_cqrs_and_host_ownership_are_enforced()
+    {
+        Assert.True(Directory.Exists(Path.Combine(ModuleRoot(), "Tooba.Returns.Endpoints")));
+        Assert.True(File.Exists(Path.Combine(ModuleRoot(), "Tooba.Returns.Endpoints", "Tooba.Returns.Endpoints.csproj")));
+
+        var customer = File.ReadAllText(Path.Combine(ModuleRoot(), "Tooba.Returns.Endpoints", "Customer", "ReturnCustomerEndpoints.cs"));
+        var seller = File.ReadAllText(Path.Combine(ModuleRoot(), "Tooba.Returns.Endpoints", "Seller", "ReturnSellerEndpoints.cs"));
+        var admin = File.ReadAllText(Path.Combine(ModuleRoot(), "Tooba.Returns.Endpoints", "Admin", "ReturnAdminEndpoints.cs"));
+        var module = File.ReadAllText(Path.Combine(ModuleRoot(), "Tooba.Returns.Endpoints", "ReturnEndpointModule.cs"));
+
+        foreach (var endpoint in new[] { customer, seller, admin })
+        {
+            Assert.Contains("ISender sender", endpoint, StringComparison.Ordinal);
+            Assert.Contains("ApiResponseFactory", endpoint, StringComparison.Ordinal);
+            Assert.DoesNotContain("ex.Message", endpoint, StringComparison.Ordinal);
+            Assert.DoesNotContain("exception.Message", endpoint, StringComparison.Ordinal);
+            Assert.DoesNotContain("new { title", endpoint, StringComparison.Ordinal);
+            Assert.DoesNotContain("ReturnsDbContext", endpoint, StringComparison.Ordinal);
+            Assert.DoesNotContain("DbContext", endpoint, StringComparison.Ordinal);
+            Assert.DoesNotContain("AdminListGridPolicies", endpoint, StringComparison.Ordinal);
+            Assert.DoesNotContain("catch (InvalidOperationException", endpoint, StringComparison.Ordinal);
+            Assert.DoesNotContain("ReturnPanelComposer", endpoint, StringComparison.Ordinal);
+        }
+
+        Assert.Contains("MapGroup(\"/v1/customer\")", module, StringComparison.Ordinal);
+        Assert.Contains("MapGroup(\"/v1/seller\")", module, StringComparison.Ordinal);
+        Assert.Contains("MapGroup(\"/v1/admin\")", module, StringComparison.Ordinal);
+        Assert.Contains("MapGet(\"/returns\"", customer, StringComparison.Ordinal);
+        Assert.Contains("MapPost(\"/returns\"", customer, StringComparison.Ordinal);
+        Assert.Contains("CreateReturnCommand", customer, StringComparison.Ordinal);
+        Assert.Contains("ApproveReturnCommand", seller, StringComparison.Ordinal);
+        Assert.Contains("RejectReturnCommand", seller, StringComparison.Ordinal);
+        Assert.Contains("QueryAdminReturnsGridQuery", admin, StringComparison.Ordinal);
+        Assert.Contains("RetryReturnRefundCommand", admin, StringComparison.Ordinal);
+
+        var endpointRefs = ProjectRefs("Tooba.Returns.Endpoints");
+        Assert.Contains(endpointRefs, r => r.Contains("Returns.Application", StringComparison.Ordinal));
+        Assert.DoesNotContain(endpointRefs, r => r.Contains("Infrastructure", StringComparison.OrdinalIgnoreCase));
+        Assert.DoesNotContain(endpointRefs, r => r.Contains("Host", StringComparison.OrdinalIgnoreCase));
+        Assert.DoesNotContain(endpointRefs, r => r.Contains("DbContext", StringComparison.OrdinalIgnoreCase));
+
+        var application = Sources("Tooba.Returns.Application").ToList();
+        Assert.Contains(application, x => x.Text.Contains("CreateReturnCommand", StringComparison.Ordinal));
+        Assert.Contains(application, x => x.Text.Contains("ApproveReturnCommand", StringComparison.Ordinal));
+        Assert.Contains(application, x => x.Text.Contains("RejectReturnCommand", StringComparison.Ordinal));
+        Assert.Contains(application, x => x.Text.Contains("RetryReturnRefundCommand", StringComparison.Ordinal));
+        Assert.Contains(application, x => x.Text.Contains("QueryAdminReturnsGridQuery", StringComparison.Ordinal));
+        Assert.Contains(application, x => x.Text.Contains("AdminReturnGridQueryPolicy", StringComparison.Ordinal));
+        Assert.Contains(application, x => x.Text.Contains("ReturnsExceptionMapper", StringComparison.Ordinal));
+        Assert.Contains(application, x => x.Text.Contains("IRequestHandler<", StringComparison.Ordinal));
+        Assert.Contains(application, x => x.Text.Contains("using MediatR", StringComparison.Ordinal));
+        Assert.DoesNotContain(application, x =>
+            x.Text.Contains("StartsWith(\"return.\"", StringComparison.Ordinal)
+            || x.Text.Contains("StartsWith(\"returns.\"", StringComparison.Ordinal)
+            || x.Text.Contains("StartsWith(\"refund.\"", StringComparison.Ordinal)
+            || (x.Text.Contains(".Contains(\"", StringComparison.Ordinal) && x.Path.Contains("ExceptionMapper", StringComparison.Ordinal)));
+
+        var hostRoot = Path.Combine(RepoRoot(), "src", "backend", "Host", "Tooba.Host");
+        Assert.True(File.Exists(Path.Combine(hostRoot, "Customer", "HostReturnCustomerAuthorizer.cs")));
+        Assert.True(File.Exists(Path.Combine(hostRoot, "Seller", "HostReturnSellerAuthorizer.cs")));
+        Assert.True(File.Exists(Path.Combine(hostRoot, "Admin", "HostReturnAdminAuthorizer.cs")));
+    }
+
     private static void AssertNoRootDump(string project, string[] allowedFolders)
     {
         var root = Path.Combine(ModuleRoot(), project);
-        var rootCs = Directory.EnumerateFiles(root, "*.cs", SearchOption.TopDirectoryOnly).Select(Path.GetFileName).ToArray();
+        var rootCs = Directory.EnumerateFiles(root, "*.cs", SearchOption.TopDirectoryOnly)
+            .Select(Path.GetFileName)
+            .Where(name => name is not null
+                           && !name.EndsWith("EndpointModule.cs", StringComparison.OrdinalIgnoreCase))
+            .ToArray();
         Assert.True(rootCs.Length == 0, $"{project} root dumping-ground: " + string.Join(", ", rootCs));
         foreach (var dir in Directory.EnumerateDirectories(root))
         {
@@ -177,7 +245,8 @@ public sealed class ReturnsArchitectureGuardTests
         Sources("Tooba.Returns.Domain")
             .Concat(Sources("Tooba.Returns.Application"))
             .Concat(Sources("Tooba.Returns.Contracts"))
-            .Concat(Sources("Tooba.Returns.Infrastructure"));
+            .Concat(Sources("Tooba.Returns.Infrastructure"))
+            .Concat(Sources("Tooba.Returns.Endpoints"));
 
     private static IEnumerable<(string Path, string Text)> Sources(string projectFolder)
     {

@@ -26,9 +26,9 @@ using Tooba.Payment.Infrastructure.Messaging;
 using Tooba.Payment.Infrastructure.Providers;
 using Tooba.Returns.Application.Ports;
 using Tooba.Returns.Application.Models;
+using Tooba.Returns.Application.Errors;
 using Tooba.Settlement.Application;
 using Tooba.Returns.Domain.ValueObjects;
-using Tooba.Host.Returns;
 
 namespace Tooba.Host.Admin;
 
@@ -420,7 +420,11 @@ public sealed class AdminOrderOperationsComposer
             var mapped = MapFulfillmentException(ex.Message);
             if (mapped.Code == "order.operation.failed")
             {
-                var semantic = ReturnSemanticMapper.MapException(ex);
+                if (!ReturnsExceptionMapper.TryMapExact(ex.Message, out var semantic))
+                {
+                    throw;
+                }
+
                 mapped = (semantic.Code, semantic.Code);
             }
 

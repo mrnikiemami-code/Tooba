@@ -82,10 +82,17 @@ public sealed class AdminDbNativeGridQueryTests
         {
             Path.Combine(root, "Admin", "AdminPanelComposer.cs"),
             Path.Combine(root, "Content", "ContentPanelComposer.cs"),
-            Path.Combine(root, "Returns", "ReturnPanelComposer.cs"),
             Path.Combine(root, "Reviews", "ReviewPanelComposer.cs"),
             Path.Combine(root, "Story", "StoryPanelComposer.cs"),
         };
+
+        var returnsEndpoints = Path.Combine(
+            root, "..", "..", "Modules", "Returns", "Tooba.Returns.Endpoints", "Admin", "ReturnAdminEndpoints.cs");
+        Assert.True(File.Exists(returnsEndpoints), $"missing {returnsEndpoints}");
+        var returnsText = File.ReadAllText(returnsEndpoints);
+        Assert.DoesNotContain("AdminListGridPolicies.Returns", returnsText);
+        Assert.DoesNotContain("ReturnPanelComposer", returnsText);
+        Assert.False(Directory.Exists(Path.Combine(root, "Returns")));
 
         var settlementEndpoints = Path.Combine(
             root, "..", "..", "Modules", "Settlement", "Tooba.Settlement.Endpoints", "Admin", "SettlementAdminEndpoints.cs");

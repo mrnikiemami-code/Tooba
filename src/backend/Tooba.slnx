@@ -141,6 +141,7 @@
     <Project Path="Modules/Returns/Tooba.Returns.Contracts/Tooba.Returns.Contracts.csproj" />
     <Project Path="Modules/Returns/Tooba.Returns.Application/Tooba.Returns.Application.csproj" />
     <Project Path="Modules/Returns/Tooba.Returns.Infrastructure/Tooba.Returns.Infrastructure.csproj" />
+    <Project Path="Modules/Returns/Tooba.Returns.Endpoints/Tooba.Returns.Endpoints.csproj" />
     <Project Path="Modules/Returns/Tooba.Returns.Tests/Tooba.Returns.Tests.csproj" />
   </Folder>
   <Folder Name="/Modules/Settlement/">
