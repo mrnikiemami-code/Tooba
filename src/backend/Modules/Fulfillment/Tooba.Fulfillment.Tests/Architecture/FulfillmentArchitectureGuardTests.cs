@@ -7,11 +7,12 @@ namespace Tooba.Fulfillment.Tests.Architecture;
 public sealed class FulfillmentArchitectureGuardTests
 {
     private static readonly string[] AllowedDomainFolders = ["Aggregates", "Entities", "ValueObjects", "Events", "Policies"];
-    private static readonly string[] AllowedApplicationFolders = ["Ports", "Models", "Shipping", "Commands", "Queries"];
+    private static readonly string[] AllowedApplicationFolders = ["Ports", "Models", "Shipping", "Commands", "Queries", "Errors"];
     private static readonly string[] AllowedContractsFolders = ["Events", "Returns", "Errors"];
     private static readonly string[] AllowedInfrastructureFolders =
         ["Persistence", "Directories", "Adapters", "Events", "Messaging", "DependencyInjection", "Migrations",
             "Gateways", "Bridges", "Handlers", "Shipping", "Observability", "Queries", "Errors"];
+    private static readonly string[] AllowedEndpointsFolders = ["Seller", "Admin", "Shipping", "Customer", "Errors", "Resources"];
 
     private static readonly HashSet<string> HostDbContextAllowlist = new(StringComparer.OrdinalIgnoreCase)
     {
@@ -70,10 +71,12 @@ public sealed class FulfillmentArchitectureGuardTests
         AssertNoRootDump("Tooba.Fulfillment.Application", AllowedApplicationFolders);
         AssertNoRootDump("Tooba.Fulfillment.Contracts", AllowedContractsFolders);
         AssertNoRootDump("Tooba.Fulfillment.Infrastructure", AllowedInfrastructureFolders);
+        AssertNoRootDump("Tooba.Fulfillment.Endpoints", AllowedEndpointsFolders);
         AssertNamespacesAlign("Tooba.Fulfillment.Domain", "Tooba.Fulfillment.Domain");
         AssertNamespacesAlign("Tooba.Fulfillment.Application", "Tooba.Fulfillment.Application");
         AssertNamespacesAlign("Tooba.Fulfillment.Contracts", "Tooba.Fulfillment.Contracts");
         AssertNamespacesAlign("Tooba.Fulfillment.Infrastructure", "Tooba.Fulfillment.Infrastructure");
+        AssertNamespacesAlign("Tooba.Fulfillment.Endpoints", "Tooba.Fulfillment.Endpoints");
 
         var directory = File.ReadAllText(Path.Combine(ModuleRoot(), "Tooba.Fulfillment.Infrastructure", "Directories", "FulfillmentDirectory.cs"));
         Assert.Contains("IClock", directory, StringComparison.Ordinal);
@@ -89,59 +92,33 @@ public sealed class FulfillmentArchitectureGuardTests
             .ToList();
         Assert.True(hostHits.Count == 0, "Host FulfillmentDbContext allowlist: " + string.Join("; ", hostHits));
 
-        var hostRootForLocator = Path.Combine(RepoRoot(), "src", "backend", "Host", "Tooba.Host");
-        var fulfillmentEndpoint = File.ReadAllText(Path.Combine(hostRootForLocator, "Fulfillment", "FulfillmentEndpoints.cs"));
-        Assert.DoesNotContain("RequestServices.GetRequiredService", fulfillmentEndpoint, StringComparison.Ordinal);
-        Assert.Contains("ApiResponseFactory", fulfillmentEndpoint, StringComparison.Ordinal);
-        Assert.DoesNotContain("PlatformHttpException(403", fulfillmentEndpoint, StringComparison.Ordinal);
-        Assert.DoesNotContain("detail = ex.Message", fulfillmentEndpoint, StringComparison.Ordinal);
-        Assert.DoesNotContain("Results.Json(new { title", fulfillmentEndpoint, StringComparison.Ordinal);
-        Assert.DoesNotContain("OrderDbContext", fulfillmentEndpoint, StringComparison.Ordinal);
-        Assert.DoesNotContain("FulfillmentDbContext", fulfillmentEndpoint, StringComparison.Ordinal);
-        Assert.Contains("ExecuteAdminFulfillmentBulkCommand", fulfillmentEndpoint, StringComparison.Ordinal);
-        Assert.DoesNotContain("AdminFulfillmentWorkQueueComposer", fulfillmentEndpoint, StringComparison.Ordinal);
+        Assert.False(Directory.Exists(Path.Combine(hostRoot, "Fulfillment")));
+        Assert.False(File.Exists(Path.Combine(hostRoot, "Fulfillment", "FulfillmentEndpoints.cs")));
+        Assert.False(File.Exists(Path.Combine(hostRoot, "Fulfillment", "FulfillmentPanelComposer.cs")));
+        Assert.False(File.Exists(Path.Combine(hostRoot, "Admin", "ShippingServiceEndpoints.cs")));
+
+        var hostGrid = File.ReadAllText(Path.Combine(hostRoot, "Grid", "AdminListGridPolicies.cs"));
+        Assert.DoesNotContain("Fulfillments", hostGrid, StringComparison.Ordinal);
+        Assert.DoesNotContain("AdminFulfillmentWorkQueueRow", hostGrid, StringComparison.Ordinal);
+
+        var orderOpsEndpoint = File.ReadAllText(Path.Combine(hostRoot, "Admin", "AdminOrderOperationsEndpoints.cs"));
+        Assert.DoesNotContain("/v1/admin/shipping-methods", orderOpsEndpoint, StringComparison.Ordinal);
+        Assert.DoesNotContain("ListEnabledShippingMethodsTreeQuery", orderOpsEndpoint, StringComparison.Ordinal);
+        Assert.DoesNotContain("ListShippingMethodsAsync", orderOpsEndpoint, StringComparison.Ordinal);
 
         Assert.False(
-            File.Exists(Path.Combine(hostRootForLocator, "Admin", "AdminFulfillmentWorkQueueComposer.cs")),
+            File.Exists(Path.Combine(hostRoot, "Admin", "AdminFulfillmentWorkQueueComposer.cs")),
             "AdminFulfillmentWorkQueueComposer must be deleted — bulk ownership is Application-owned.");
-
-        var shippingEndpoint = File.ReadAllText(Path.Combine(hostRootForLocator, "Admin", "ShippingServiceEndpoints.cs"));
-        Assert.Contains("ApiResponseFactory", shippingEndpoint, StringComparison.Ordinal);
-        Assert.DoesNotContain("Results.Json(new { title", shippingEndpoint, StringComparison.Ordinal);
-        Assert.DoesNotContain("errorCode = ex.Message", shippingEndpoint, StringComparison.Ordinal);
-        Assert.DoesNotContain("catch (InvalidOperationException ex)", shippingEndpoint, StringComparison.Ordinal);
-        Assert.DoesNotContain("Localization.Application", shippingEndpoint, StringComparison.Ordinal);
-        Assert.DoesNotContain("ILanguageDirectory", shippingEndpoint, StringComparison.Ordinal);
-        Assert.DoesNotContain("LoadDetailAsync", shippingEndpoint, StringComparison.Ordinal);
-        Assert.Contains("ListShippingServicesQuery", shippingEndpoint, StringComparison.Ordinal);
-        Assert.Contains("GetShippingServiceQuery", shippingEndpoint, StringComparison.Ordinal);
-        Assert.DoesNotContain("ListEnabledMethodsTreeAsync", shippingEndpoint, StringComparison.Ordinal);
-        Assert.DoesNotContain("DefaultColor", shippingEndpoint, StringComparison.Ordinal);
-        Assert.DoesNotContain("DefaultOptions", shippingEndpoint, StringComparison.Ordinal);
-        Assert.DoesNotContain("IShippingCatalogReader", shippingEndpoint, StringComparison.Ordinal);
-
         Assert.False(
-            File.Exists(Path.Combine(hostRootForLocator, "Admin", "HostAdminOrderFulfillmentOperations.cs")),
+            File.Exists(Path.Combine(hostRoot, "Admin", "HostAdminOrderFulfillmentOperations.cs")),
             "HostAdminOrderFulfillmentOperations must be deleted — Order owns IAdminOrderFulfillmentOperations.");
 
-        var hostAdminSources = Directory.EnumerateFiles(Path.Combine(hostRootForLocator, "Admin"), "*.cs")
-            .Select(File.ReadAllText)
-            .ToList();
-        Assert.DoesNotContain(
-            hostAdminSources,
-            text => text.Contains(": IAdminOrderFulfillmentOperations", StringComparison.Ordinal)
-                    || text.Contains(", IAdminOrderFulfillmentOperations", StringComparison.Ordinal));
-        Assert.DoesNotContain(
-            hostAdminSources,
-            text => text.Contains(": IShippingServiceLanguageGate", StringComparison.Ordinal)
-                    || text.Contains(", IShippingServiceLanguageGate", StringComparison.Ordinal));
-        Assert.DoesNotContain(
-            hostAdminSources,
-            text => text.Contains("HostShippingServiceLanguageGate", StringComparison.Ordinal));
-
-        var programCs = File.ReadAllText(Path.Combine(hostRootForLocator, "Program.cs"));
+        var programCs = File.ReadAllText(Path.Combine(hostRoot, "Program.cs"));
+        Assert.Contains("MapFulfillmentEndpoints()", programCs, StringComparison.Ordinal);
+        Assert.DoesNotContain("MapShippingServiceEndpoints()", programCs, StringComparison.Ordinal);
         Assert.DoesNotContain("HostShippingServiceLanguageGate", programCs, StringComparison.Ordinal);
         Assert.DoesNotContain("IShippingServiceLanguageGate", programCs, StringComparison.Ordinal);
+        Assert.DoesNotContain("FulfillmentPanelComposer", programCs, StringComparison.Ordinal);
 
         var orderOps = File.ReadAllText(Path.Combine(
             RepoRoot(),
@@ -168,18 +145,9 @@ public sealed class FulfillmentArchitectureGuardTests
         Assert.Contains("IShippingServiceLanguageGate, ShippingServiceLanguageGate", fulfillmentModule, StringComparison.Ordinal);
 
         var treeQuery = File.ReadAllText(Path.Combine(
-            ModuleRoot(), "Tooba.Fulfillment.Application", "Shipping", "ListEnabledShippingMethodsTreeQuery.cs"));
+            ModuleRoot(), "Tooba.Fulfillment.Application", "Queries", "ListEnabledShippingMethodsTree", "ListEnabledShippingMethodsTreeQuery.cs"));
         Assert.Contains("ListEnabledShippingMethodsTreeQuery", treeQuery, StringComparison.Ordinal);
         Assert.Contains("ListEnabledShippingMethodsTreeHandler", treeQuery, StringComparison.Ordinal);
-
-        var orderOpsEndpoint = File.ReadAllText(Path.Combine(hostRootForLocator, "Admin", "AdminOrderOperationsEndpoints.cs"));
-        Assert.Contains("ListEnabledShippingMethodsTreeQuery", orderOpsEndpoint, StringComparison.Ordinal);
-        Assert.DoesNotContain("ListEnabledMethodsTreeAsync", orderOpsEndpoint, StringComparison.Ordinal);
-
-        var panelComposer = File.ReadAllText(Path.Combine(hostRootForLocator, "Fulfillment", "FulfillmentPanelComposer.cs"));
-        Assert.DoesNotContain("FulfillmentDbContext", panelComposer, StringComparison.Ordinal);
-        Assert.DoesNotContain("OrderDbContext", panelComposer, StringComparison.Ordinal);
-        Assert.DoesNotContain("PartyDbContext", panelComposer, StringComparison.Ordinal);
 
         var bypass = AllProductionSources()
             .Where(x => x.Text.Contains("DateTimeOffset.UtcNow", StringComparison.Ordinal)
@@ -213,10 +181,94 @@ public sealed class FulfillmentArchitectureGuardTests
         Assert.True(localized.Count == 0, "localized exception prose: " + string.Join("; ", localized));
     }
 
+    [Fact]
+    public void Fulfillment_endpoints_cqrs_and_host_ownership_are_enforced()
+    {
+        Assert.True(Directory.Exists(Path.Combine(ModuleRoot(), "Tooba.Fulfillment.Endpoints")));
+        Assert.True(File.Exists(Path.Combine(ModuleRoot(), "Tooba.Fulfillment.Endpoints", "Tooba.Fulfillment.Endpoints.csproj")));
+
+        var seller = File.ReadAllText(Path.Combine(
+            ModuleRoot(), "Tooba.Fulfillment.Endpoints", "Seller", "FulfillmentSellerEndpoints.cs"));
+        var admin = File.ReadAllText(Path.Combine(
+            ModuleRoot(), "Tooba.Fulfillment.Endpoints", "Admin", "FulfillmentAdminEndpoints.cs"));
+        var shipping = File.ReadAllText(Path.Combine(
+            ModuleRoot(), "Tooba.Fulfillment.Endpoints", "Shipping", "ShippingServiceEndpoints.cs"));
+        var methods = File.ReadAllText(Path.Combine(
+            ModuleRoot(), "Tooba.Fulfillment.Endpoints", "Shipping", "ShippingMethodsEndpoints.cs"));
+        var customer = File.ReadAllText(Path.Combine(
+            ModuleRoot(), "Tooba.Fulfillment.Endpoints", "Customer", "FulfillmentCustomerEndpoints.cs"));
+        var module = File.ReadAllText(Path.Combine(
+            ModuleRoot(), "Tooba.Fulfillment.Endpoints", "FulfillmentEndpointModule.cs"));
+
+        foreach (var endpoint in new[] { seller, admin, shipping, methods, customer })
+        {
+            Assert.Contains("ISender sender", endpoint, StringComparison.Ordinal);
+            Assert.Contains("ApiResponseFactory", endpoint, StringComparison.Ordinal);
+            Assert.DoesNotContain("ex.Message", endpoint, StringComparison.Ordinal);
+            Assert.DoesNotContain("exception.Message", endpoint, StringComparison.Ordinal);
+            Assert.DoesNotContain("new { title", endpoint, StringComparison.Ordinal);
+            Assert.DoesNotContain("FulfillmentDbContext", endpoint, StringComparison.Ordinal);
+            Assert.DoesNotContain("DbContext", endpoint, StringComparison.Ordinal);
+            Assert.DoesNotContain("AdminListGridPolicies", endpoint, StringComparison.Ordinal);
+            Assert.DoesNotContain("catch (InvalidOperationException", endpoint, StringComparison.Ordinal);
+        }
+
+        Assert.Contains("MapGroup(\"/v1/seller\")", module, StringComparison.Ordinal);
+        Assert.Contains("MapGroup(\"/v1/admin\")", module, StringComparison.Ordinal);
+        Assert.Contains("MapGroup(\"/v1/customer\")", module, StringComparison.Ordinal);
+        Assert.Contains("MapGet(\"/fulfillments\"", seller, StringComparison.Ordinal);
+        Assert.Contains("SellerMutateFulfillmentCommand", seller, StringComparison.Ordinal);
+        Assert.Contains("ExecuteAdminFulfillmentBulkCommand", admin, StringComparison.Ordinal);
+        Assert.Contains("QueryAdminFulfillmentWorkQueueQuery", admin, StringComparison.Ordinal);
+        Assert.Contains("ListShippingServicesQuery", shipping, StringComparison.Ordinal);
+        Assert.Contains("CreateShippingServiceCommand", shipping, StringComparison.Ordinal);
+        Assert.Contains("/v1/admin/shipping-methods", methods, StringComparison.Ordinal);
+        Assert.Contains("ListEnabledShippingMethodsTreeQuery", methods, StringComparison.Ordinal);
+        Assert.Contains("ListCustomerCheckoutFulfillmentsQuery", customer, StringComparison.Ordinal);
+
+        var endpointRefs = ProjectRefs("Tooba.Fulfillment.Endpoints");
+        Assert.Contains(endpointRefs, r => r.Contains("Fulfillment.Application", StringComparison.Ordinal));
+        Assert.DoesNotContain(endpointRefs, r => r.Contains("Infrastructure", StringComparison.OrdinalIgnoreCase));
+        Assert.DoesNotContain(endpointRefs, r => r.Contains("Host", StringComparison.OrdinalIgnoreCase));
+        Assert.DoesNotContain(endpointRefs, r => r.Contains("DbContext", StringComparison.OrdinalIgnoreCase));
+
+        var application = Sources("Tooba.Fulfillment.Application").ToList();
+        Assert.Contains(application, x => x.Text.Contains("ExecuteAdminFulfillmentBulkCommand", StringComparison.Ordinal));
+        Assert.Contains(application, x => x.Text.Contains("SellerMutateFulfillmentCommand", StringComparison.Ordinal));
+        Assert.Contains(application, x => x.Text.Contains("CreateShippingServiceCommand", StringComparison.Ordinal));
+        Assert.Contains(application, x => x.Text.Contains("ListEnabledShippingMethodsTreeQuery", StringComparison.Ordinal));
+        Assert.Contains(application, x => x.Text.Contains("QueryAdminFulfillmentWorkQueueQuery", StringComparison.Ordinal));
+        Assert.Contains(application, x => x.Text.Contains("AdminFulfillmentGridQueryPolicy", StringComparison.Ordinal));
+        Assert.Contains(application, x => x.Text.Contains("FulfillmentExceptionMapper", StringComparison.Ordinal));
+        Assert.Contains(application, x => x.Text.Contains("IRequestHandler<", StringComparison.Ordinal));
+        Assert.Contains(application, x => x.Text.Contains("using MediatR", StringComparison.Ordinal));
+        Assert.DoesNotContain(application, x => x.Path.EndsWith("FulfillmentQueries.cs", StringComparison.OrdinalIgnoreCase));
+        Assert.DoesNotContain(application, x => x.Path.EndsWith("ExecuteAdminFulfillmentBulkCommand.cs", StringComparison.OrdinalIgnoreCase)
+            && x.Path.Contains("/Commands/ExecuteAdminFulfillmentBulkCommand.cs", StringComparison.Ordinal));
+        Assert.DoesNotContain(application, x => x.Path.Contains("/Commands/SellerMutateFulfillmentCommand.cs", StringComparison.Ordinal));
+        Assert.DoesNotContain(application, x => x.Path.Contains("/Shipping/ShippingServiceWriteHandlers.cs", StringComparison.Ordinal));
+        Assert.DoesNotContain(application, x => x.Path.Contains("/Shipping/ShippingServiceReadHandlers.cs", StringComparison.Ordinal));
+        Assert.DoesNotContain(application, x => x.Path.Contains("/Shipping/ListEnabledShippingMethodsTreeQuery.cs", StringComparison.Ordinal));
+        Assert.DoesNotContain(application, x =>
+            x.Text.Contains("StartsWith(\"fulfillment.\"", StringComparison.Ordinal)
+            || x.Text.Contains("StartsWith(\"shipping_service.\"", StringComparison.Ordinal)
+            || x.Text.Contains("IsShippingSemantic", StringComparison.Ordinal)
+            || x.Text.Contains(".Contains(\"", StringComparison.Ordinal) && x.Path.Contains("ExceptionMapper", StringComparison.Ordinal));
+
+        var hostRoot = Path.Combine(RepoRoot(), "src", "backend", "Host", "Tooba.Host");
+        Assert.True(File.Exists(Path.Combine(hostRoot, "Seller", "HostFulfillmentSellerAuthorizer.cs")));
+        Assert.True(File.Exists(Path.Combine(hostRoot, "Admin", "HostFulfillmentAdminAuthorizer.cs")));
+        Assert.True(File.Exists(Path.Combine(hostRoot, "Customer", "HostFulfillmentCustomerAuthorizer.cs")));
+    }
+
     private static void AssertNoRootDump(string project, string[] allowedFolders)
     {
         var root = Path.Combine(ModuleRoot(), project);
-        var rootCs = Directory.EnumerateFiles(root, "*.cs", SearchOption.TopDirectoryOnly).Select(Path.GetFileName).ToArray();
+        var rootCs = Directory.EnumerateFiles(root, "*.cs", SearchOption.TopDirectoryOnly)
+            .Select(Path.GetFileName)
+            .Where(name => name is not null
+                           && !name.EndsWith("EndpointModule.cs", StringComparison.OrdinalIgnoreCase))
+            .ToArray();
         Assert.True(rootCs.Length == 0, $"{project} root dumping-ground: " + string.Join(", ", rootCs));
         foreach (var dir in Directory.EnumerateDirectories(root))
         {
@@ -257,7 +309,8 @@ public sealed class FulfillmentArchitectureGuardTests
         Sources("Tooba.Fulfillment.Domain")
             .Concat(Sources("Tooba.Fulfillment.Application"))
             .Concat(Sources("Tooba.Fulfillment.Contracts"))
-            .Concat(Sources("Tooba.Fulfillment.Infrastructure"));
+            .Concat(Sources("Tooba.Fulfillment.Infrastructure"))
+            .Concat(Sources("Tooba.Fulfillment.Endpoints"));
 
     private static IEnumerable<(string Path, string Text)> Sources(string projectFolder)
     {

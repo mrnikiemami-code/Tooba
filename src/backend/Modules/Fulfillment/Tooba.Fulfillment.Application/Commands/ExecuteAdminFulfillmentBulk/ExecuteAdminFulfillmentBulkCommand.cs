@@ -1,4 +1,4 @@
-using MediatR;
+﻿using MediatR;
 using Tooba.BuildingBlocks.Results;
 using Tooba.Fulfillment.Application.Models;
 using Tooba.Fulfillment.Application.Ports;
@@ -6,7 +6,7 @@ using Tooba.Fulfillment.Contracts.Errors;
 using Tooba.Fulfillment.Domain.ValueObjects;
 using Tooba.Order.Contracts.Fulfillment;
 
-namespace Tooba.Fulfillment.Application.Commands;
+namespace Tooba.Fulfillment.Application.Commands.ExecuteAdminFulfillmentBulk;
 
 /// <summary>اجرای گروهی صف کار Fulfillment.</summary>
 public sealed record ExecuteAdminFulfillmentBulkCommand(
@@ -157,3 +157,4 @@ public sealed class ExecuteAdminFulfillmentBulkHandler
         return active.FirstOrDefault()?.ShipmentId;
     }
 }
+

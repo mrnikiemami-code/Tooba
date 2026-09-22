@@ -1,4 +1,4 @@
-using Tooba.Fulfillment.Application.Ports;
+﻿using Tooba.Fulfillment.Application.Ports;
 using Tooba.Fulfillment.Application.Models;
 using Tooba.Fulfillment.Application.Shipping;
 using Tooba.Fulfillment.Domain.Aggregates;
@@ -200,7 +200,7 @@ public sealed class AdminFulfillmentWorkQueueTests
     public void Work_queue_endpoints_are_application_owned_without_host_composer()
     {
         var root = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", "Tooba.Host"));
-        var endpoints = File.ReadAllText(Path.Combine(root, "Fulfillment", "FulfillmentEndpoints.cs"));
+        var endpoints = File.ReadAllText(Path.Combine(root, "..", "..", "Modules", "Fulfillment", "Tooba.Fulfillment.Endpoints", "Admin", "FulfillmentAdminEndpoints.cs"));
         var program = File.ReadAllText(Path.Combine(root, "Program.cs"));
         Assert.Contains("/fulfillments/work-queue/query", endpoints, StringComparison.Ordinal);
         Assert.Contains("/fulfillments/work-queue/bulk", endpoints, StringComparison.Ordinal);
@@ -265,3 +265,4 @@ public sealed class AdminFulfillmentWorkQueueTests
             DateTimeOffset.UtcNow,
             codes);
 }
+

@@ -1,9 +1,9 @@
-using Tooba.Fulfillment.Application.Ports;
+﻿using Tooba.Fulfillment.Application.Ports;
 using Tooba.Fulfillment.Application.Models;
 using Tooba.Fulfillment.Application.Shipping;
 using Tooba.Fulfillment.Domain.Aggregates;
 using Tooba.Fulfillment.Domain.ValueObjects;
-using Tooba.Host.Fulfillment;
+using Tooba.Fulfillment.Application.Queries.ListCustomerCheckoutFulfillments;
 using Tooba.Host.Storefront;
 using Xunit;
 
@@ -20,7 +20,7 @@ public sealed class CustomerFulfillmentTrackingTests
         var checkoutId = Guid.NewGuid();
         var cancelled = Package(checkoutId, "MP-OLD", ConsolidatedPackageStatus.Cancelled, "OLD-TRK", daysAgo: 2);
         var delivered = Package(checkoutId, "MP-NEW", ConsolidatedPackageStatus.Delivered, "CENTRAL-DELIVERED", daysAgo: 0);
-        var preferred = FulfillmentPanelComposer.SelectPreferredCustomerPackage([cancelled, delivered]);
+        var preferred = CustomerFulfillmentPackageSelector.SelectPreferred([cancelled, delivered]);
         Assert.NotNull(preferred);
         Assert.Equal("MP-NEW", preferred!.PackageNumber);
         Assert.Equal("CENTRAL-DELIVERED", preferred.TrackingReference);
@@ -33,7 +33,7 @@ public sealed class CustomerFulfillmentTrackingTests
         var checkoutId = Guid.NewGuid();
         var cancelled = Package(checkoutId, "MP-1", ConsolidatedPackageStatus.Cancelled, "TRK-1", daysAgo: 1);
         var created = Package(checkoutId, "MP-2", ConsolidatedPackageStatus.Created, "TRK-2", daysAgo: 0);
-        var preferred = FulfillmentPanelComposer.SelectPreferredCustomerPackage([cancelled, created]);
+        var preferred = CustomerFulfillmentPackageSelector.SelectPreferred([cancelled, created]);
         Assert.NotNull(preferred);
         Assert.Equal("MP-2", preferred!.PackageNumber);
     }
@@ -42,8 +42,8 @@ public sealed class CustomerFulfillmentTrackingTests
     public void Preferred_package_null_when_only_cancelled_or_empty()
     {
         var checkoutId = Guid.NewGuid();
-        Assert.Null(FulfillmentPanelComposer.SelectPreferredCustomerPackage([]));
-        Assert.Null(FulfillmentPanelComposer.SelectPreferredCustomerPackage(
+        Assert.Null(CustomerFulfillmentPackageSelector.SelectPreferred([]));
+        Assert.Null(CustomerFulfillmentPackageSelector.SelectPreferred(
         [
             Package(checkoutId, "MP-X", ConsolidatedPackageStatus.Cancelled, "TRK-X", daysAgo: 0),
         ]));
@@ -52,21 +52,20 @@ public sealed class CustomerFulfillmentTrackingTests
     [Fact]
     public void Customer_fulfillment_endpoint_reuses_guest_actor_and_guest_secret_proof()
     {
-        var source = File.ReadAllText(Path.Combine(
-            FindRepoRoot(),
-            "src",
-            "backend",
-            "Host",
-            "Tooba.Host",
-            "Fulfillment",
-            "FulfillmentEndpoints.cs"));
-        Assert.Contains("StorefrontGuestActorId", source, StringComparison.Ordinal);
-        Assert.Contains("X-Tooba-Guest-Secret", source, StringComparison.Ordinal);
-        Assert.Contains("ICartQueryGateway", source, StringComparison.Ordinal);
-        Assert.Contains("SelectPreferredCustomerPackage", source, StringComparison.Ordinal);
-        Assert.Contains("preferredCustomerPackageStatus", source, StringComparison.Ordinal);
-        Assert.Contains("CartAccess", source, StringComparison.Ordinal);
-        Assert.Contains("ownedByActor = false", source, StringComparison.Ordinal);
+        var root = FindRepoRoot();
+        var customerEp = File.ReadAllText(Path.Combine(
+            root, "src", "backend", "Modules", "Fulfillment",
+            "Tooba.Fulfillment.Endpoints", "Customer", "FulfillmentCustomerEndpoints.cs"));
+        var authorizer = File.ReadAllText(Path.Combine(
+            root, "src", "backend", "Host", "Tooba.Host",
+            "Customer", "HostFulfillmentCustomerAuthorizer.cs"));
+        Assert.Contains("preferredCustomerPackageStatus", customerEp, StringComparison.Ordinal);
+        Assert.Contains("ListCustomerCheckoutFulfillmentsQuery", customerEp, StringComparison.Ordinal);
+        Assert.Contains("StorefrontGuestActorId", authorizer, StringComparison.Ordinal);
+        Assert.Contains("X-Tooba-Guest-Secret", authorizer, StringComparison.Ordinal);
+        Assert.Contains("ICartQueryGateway", authorizer, StringComparison.Ordinal);
+        Assert.Contains("CartAccess", authorizer, StringComparison.Ordinal);
+        Assert.Contains("ownedByActor = false", authorizer, StringComparison.Ordinal);
         Assert.True(StorefrontCheckoutComposer.StorefrontGuestActorId != Guid.Empty);
     }
 
@@ -112,3 +111,4 @@ public sealed class CustomerFulfillmentTrackingTests
         throw new InvalidOperationException("repo root not found");
     }
 }
+

@@ -1,7 +1,14 @@
-using MediatR;
+﻿using MediatR;
 using Microsoft.Extensions.DependencyInjection;
 using Tooba.BuildingBlocks;
 using Tooba.Fulfillment.Application.Shipping;
+using Tooba.Fulfillment.Application.Commands.CreateShippingService;
+using Tooba.Fulfillment.Application.Commands.UpdateShippingService;
+using Tooba.Fulfillment.Application.Commands.DeactivateShippingService;
+using Tooba.Fulfillment.Application.Commands.EnsureShippingCatalogSeed;
+using Tooba.Fulfillment.Application.Queries.ListShippingServices;
+using Tooba.Fulfillment.Application.Queries.GetShippingService;
+using Tooba.Fulfillment.Application.Queries.ListEnabledShippingMethodsTree;
 using Tooba.Localization.Contracts;
 using Xunit;
 
@@ -151,3 +158,4 @@ public sealed class ShippingMethodsTreeTests
             throw new NotImplementedException();
     }
 }
+

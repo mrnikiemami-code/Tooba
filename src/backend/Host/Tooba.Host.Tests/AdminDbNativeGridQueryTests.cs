@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Tooba.BuildingBlocks.Grid;
 using Tooba.Content.Domain;
 using Tooba.Content.Infrastructure.Persistence;
@@ -82,7 +82,6 @@ public sealed class AdminDbNativeGridQueryTests
         {
             Path.Combine(root, "Admin", "AdminPanelComposer.cs"),
             Path.Combine(root, "Content", "ContentPanelComposer.cs"),
-            Path.Combine(root, "Fulfillment", "FulfillmentPanelComposer.cs"),
             Path.Combine(root, "Returns", "ReturnPanelComposer.cs"),
             Path.Combine(root, "Reviews", "ReviewPanelComposer.cs"),
             Path.Combine(root, "Story", "StoryPanelComposer.cs"),
@@ -175,3 +174,4 @@ public sealed class AdminDbNativeGridQueryTests
         return new ContentDbContext(options);
     }
 }
+

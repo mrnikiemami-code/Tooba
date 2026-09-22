@@ -1,8 +1,9 @@
-using MediatR;
+﻿using MediatR;
 using Tooba.BuildingBlocks.Results;
 using Tooba.Localization.Contracts;
+using Tooba.Fulfillment.Application.Shipping;
 
-namespace Tooba.Fulfillment.Application.Shipping;
+namespace Tooba.Fulfillment.Application.Queries.ListEnabledShippingMethodsTree;
 
 /// <summary>گزینهٔ سطح ۲ درخت روش ارسال فعال (شکل JSON پایدار برای UI).</summary>
 public sealed record EnabledShippingMethodOptionDto(string Code, string LabelFa, string Name);
@@ -117,3 +118,6 @@ public sealed class ListEnabledShippingMethodsTreeHandler
             ]
             : Array.Empty<EnabledShippingMethodOptionDto>();
 }
+
+
+

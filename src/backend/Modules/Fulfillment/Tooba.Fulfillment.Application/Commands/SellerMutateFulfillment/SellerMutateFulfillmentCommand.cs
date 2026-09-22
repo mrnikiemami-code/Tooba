@@ -1,12 +1,12 @@
 using MediatR;
 using Tooba.BuildingBlocks;
 using Tooba.BuildingBlocks.Results;
+using Tooba.Fulfillment.Application.Errors;
 using Tooba.Fulfillment.Application.Models;
 using Tooba.Fulfillment.Application.Ports;
 using Tooba.Fulfillment.Contracts;
 using Tooba.Fulfillment.Contracts.Errors;
-
-namespace Tooba.Fulfillment.Application.Commands;
+namespace Tooba.Fulfillment.Application.Commands.SellerMutateFulfillment;
 
 /// <summary>Snapshot مجوز که Host از AccessControl می‌سازد.</summary>
 public sealed record SellerHandlePermissionInput(
@@ -30,28 +30,21 @@ public sealed record SellerMutateFulfillmentCommand(
 /// <summary>نوع جهش فروشنده.</summary>
 public enum SellerFulfillmentMutationKind
 {
-    /// <summary>Processing.</summary>
     MarkProcessing,
-    /// <summary>Packed.</summary>
     MarkPacked,
-    /// <summary>Create shipment.</summary>
     CreateShipment,
-    /// <summary>Assign tracking.</summary>
     AssignTracking,
-    /// <summary>Dispatch.</summary>
     Dispatch,
-    /// <summary>Deliver.</summary>
     Deliver,
 }
 
-/// <summary>Handler جهش فروشنده.</summary>
+/// <summary>Handler جهش فروشنده — STABLE_CODES_ONLY via FulfillmentExceptionMapper.</summary>
 public sealed class SellerMutateFulfillmentHandler
     : IRequestHandler<SellerMutateFulfillmentCommand, Result<FulfillmentSnapshot>>
 {
     private readonly IFulfillmentDirectory _fulfillment;
     private readonly ISellerFulfillmentAuthorizer _authorizer;
 
-    /// <summary>Handler را می‌سازد.</summary>
     public SellerMutateFulfillmentHandler(
         IFulfillmentDirectory fulfillment,
         ISellerFulfillmentAuthorizer authorizer)
@@ -60,7 +53,6 @@ public sealed class SellerMutateFulfillmentHandler
         _authorizer = authorizer;
     }
 
-    /// <inheritdoc />
     public async Task<Result<FulfillmentSnapshot>> Handle(
         SellerMutateFulfillmentCommand request,
         CancellationToken cancellationToken)
@@ -83,9 +75,9 @@ public sealed class SellerMutateFulfillmentHandler
             return Result.Failure<FulfillmentSnapshot>(auth.Errors);
         }
 
-        try
+        return await FulfillmentExceptionMapper.TryAsync(async () =>
         {
-            var snapshot = request.Kind switch
+            return request.Kind switch
             {
                 SellerFulfillmentMutationKind.MarkProcessing =>
                     await _fulfillment.MarkProcessingAsync(request.FulfillmentId, request.ActorUserId, cancellationToken),
@@ -121,18 +113,7 @@ public sealed class SellerMutateFulfillmentHandler
                         cancellationToken),
                 _ => throw new InvalidOperationException(FulfillmentErrorCodes.Rejected),
             };
-            return Result.Success(snapshot);
-        }
-        catch (InvalidOperationException ex) when (
-            ex.Message.StartsWith("fulfillment.", StringComparison.Ordinal)
-            || ex.Message.StartsWith("shipping_service.", StringComparison.Ordinal)
-            || ex.Message.StartsWith("domain.", StringComparison.Ordinal))
-        {
-            return Result.Failure<FulfillmentSnapshot>(new SemanticError(ex.Message));
-        }
-        catch (InvalidOperationException)
-        {
-            return Result.Failure<FulfillmentSnapshot>(new SemanticError(FulfillmentErrorCodes.Rejected));
-        }
+        });
     }
 }
+

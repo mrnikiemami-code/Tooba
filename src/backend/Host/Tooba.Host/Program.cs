@@ -1,4 +1,4 @@
-using Tooba.Payment.Application.Ports;
+﻿using Tooba.Payment.Application.Ports;
 // ریشهٔ ترکیب Host: Observability، resolve Edition/Tenant، ماژول‌های صریح، Outbox dispatcher، MassTransit SQL Transport، کش درون‌فرآیندی.
 // Host ورودی routing است نه TenantId. کارگر Outbox و مصرف‌کننده Tenant را از Host نمی‌خوانند.
 // مسیرهای /__platform-* فقط Development/Testing هستند و قبل از استقرار عمومی باید محدود شوند.
@@ -21,7 +21,6 @@ using Tooba.Localization.Application;
 using Tooba.Host.Admin.CatalogDemo;
 using Tooba.Host.Customer;
 using Tooba.Host.Seller;
-using Tooba.Host.Fulfillment;
 using Tooba.Host.Returns;
 using Tooba.Host.Notifications;
 using Tooba.Host.AccessControl;
@@ -45,6 +44,7 @@ using Tooba.Offer.Endpoints;
 using Tooba.Offer.Endpoints.Seller;
 using Tooba.Cart.Endpoints;
 using Tooba.Settlement.Endpoints;
+using Tooba.Fulfillment.Endpoints;
 using Tooba.Offer.Infrastructure.Adapters;
 using Tooba.Tax.Endpoints;
 using Tooba.Pricing.Endpoints;
@@ -130,7 +130,7 @@ builder.Services.AddHostedService<PaymentReconciliationHostedService>();
 builder.Services.AddHostedService<UnpaidOrderExpiryHostedService>();
 builder.Services.AddToobaCqrsFoundation(
     typeof(Tooba.Catalog.Application.CreateStoreLandingPageCommand).Assembly,
-    typeof(Tooba.Fulfillment.Application.Shipping.CreateShippingServiceCommand).Assembly,
+    typeof(Tooba.Fulfillment.Application.Commands.CreateShippingService.CreateShippingServiceCommand).Assembly,
     typeof(Tooba.Offer.Application.Commands.CreateOffer.CreateOfferCommand).Assembly,
     typeof(Tooba.Settlement.Application.Queries.GetSellerSettlementBalance.GetSellerSettlementBalanceQuery).Assembly,
     typeof(Tooba.Cart.Application.Commands.CreateGuestCart.CreateGuestCartCommand).Assembly);
@@ -199,7 +199,6 @@ builder.Services.AddScoped<Tooba.Host.Storefront.StorefrontShippingComposer>(sp 
         sp.GetRequiredService<CurrentAuthenticatedSession>(),
         sp.GetRequiredService<IHostEnvironment>(),
         sp.GetRequiredService<IHttpContextAccessor>()));
-builder.Services.AddScoped<Tooba.Host.Fulfillment.FulfillmentPanelComposer>();
 builder.Services.AddScoped<ReturnPanelComposer>();
 builder.Services.AddScoped<Tooba.Host.Storefront.StorefrontPendingPaymentComposer>(sp =>
     new Tooba.Host.Storefront.StorefrontPendingPaymentComposer(
@@ -233,6 +232,9 @@ builder.Services.AddScoped<Tooba.Host.Seller.SellerPanelComposer>();
 builder.Services.AddScoped<Tooba.Offer.Endpoints.Seller.IOfferSellerAuthorizer, Tooba.Host.Seller.HostOfferSellerAuthorizer>();
 builder.Services.AddScoped<Tooba.Settlement.Endpoints.Seller.ISettlementSellerAuthorizer, Tooba.Host.Seller.HostSettlementSellerAuthorizer>();
 builder.Services.AddScoped<Tooba.Settlement.Endpoints.Admin.ISettlementAdminAuthorizer, Tooba.Host.Admin.HostSettlementAdminAuthorizer>();
+builder.Services.AddScoped<Tooba.Fulfillment.Endpoints.Seller.IFulfillmentSellerAuthorizer, Tooba.Host.Seller.HostFulfillmentSellerAuthorizer>();
+builder.Services.AddScoped<Tooba.Fulfillment.Endpoints.Admin.IFulfillmentAdminAuthorizer, Tooba.Host.Admin.HostFulfillmentAdminAuthorizer>();
+builder.Services.AddScoped<Tooba.Fulfillment.Endpoints.Customer.IFulfillmentCustomerAuthorizer, Tooba.Host.Customer.HostFulfillmentCustomerAuthorizer>();
 builder.Services.AddScoped<Tooba.Host.Customer.CustomerPanelComposer>();
 builder.Services.AddScoped<Tooba.Host.Admin.AdminPanelComposer>();
 builder.Services.AddScoped<Tooba.Host.Admin.AdminOrderOperationsComposer>();
@@ -503,7 +505,6 @@ app.MapMerchandisingCampaignAdminEndpoints();
 app.MapStoreMenuEndpoints();
 app.MapReservationPolicyAdminEndpoints();
 app.MapUnitOfMeasureEndpoints();
-app.MapShippingServiceEndpoints();
 app.MapCatalogAttributeEndpoints();
 app.MapCatalogFacetEndpoints();
 app.MapCatalogMegaMenuEndpoints();
@@ -584,3 +585,4 @@ app.Run();
 /// نقطهٔ ورود Host و لنگر WebApplicationFactory. منطق کسب‌وکار در این نوع نیست.
 /// </summary>
 public partial class Program;
+

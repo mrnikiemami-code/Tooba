@@ -1,4 +1,3 @@
-using MediatR;
 using Tooba.BuildingBlocks;
 using Tooba.BuildingBlocks.Results;
 using Tooba.Fulfillment.Contracts.Errors;
@@ -45,14 +44,6 @@ public sealed record ShippingServiceDetailDto(
     IReadOnlyList<ShippingServiceTranslationDto> Translations,
     IReadOnlyList<ShippingServiceOptionDetailDto> Options);
 
-/// <summary>فهرست سرویس ارسال با fallback زبان.</summary>
-public sealed record ListShippingServicesQuery(string? Language)
-    : IRequest<Result<IReadOnlyList<ShippingServiceListItemDto>>>;
-
-/// <summary>جزئیات سرویس ارسال.</summary>
-public sealed record GetShippingServiceQuery(Guid ServiceId)
-    : IRequest<Result<ShippingServiceDetailDto>>;
-
 /// <summary>نگاشت خطاهای معنایی shipping_service.* به SemanticError.</summary>
 public static class ShippingServiceSemantic
 {
@@ -64,24 +55,16 @@ public static class ShippingServiceSemantic
     public static Result<T> Failure<T>(string code) =>
         Result.Failure<T>(new SemanticError(Normalize(code)));
 
-    /// <summary>آیا پیام خطای معنایی shipping است؟</summary>
-    public static bool IsShippingSemantic(string? message) =>
-        !string.IsNullOrWhiteSpace(message)
-        && (message.StartsWith("shipping_service.", StringComparison.Ordinal)
-            || message.StartsWith("shipping_service_option.", StringComparison.Ordinal));
-
-    private static string Normalize(string code) => code switch
+private static string Normalize(string code)
     {
-        FulfillmentErrorCodes.ShippingServiceNotFound => FulfillmentErrorCodes.ShippingServiceNotFound,
-        FulfillmentErrorCodes.ShippingServiceCodeDuplicate => FulfillmentErrorCodes.ShippingServiceCodeDuplicate,
-        FulfillmentErrorCodes.ShippingServiceCodeRequired => FulfillmentErrorCodes.ShippingServiceCodeRequired,
-        FulfillmentErrorCodes.ShippingServiceNameRequired => FulfillmentErrorCodes.ShippingServiceNameRequired,
-        FulfillmentErrorCodes.ShippingServiceLanguageInvalid => FulfillmentErrorCodes.ShippingServiceLanguageInvalid,
-        _ when IsShippingSemantic(code) => code,
-        _ => FulfillmentErrorCodes.Rejected,
-    };
+        if (Errors.FulfillmentExceptionMapper.TryMapExact(code, out var error))
+        {
+            return error.Code;
+        }
 
-    /// <summary>Resolve language id with default/culture/code/urlPrefix fallback.</summary>
+        throw new InvalidOperationException(code);
+    }
+/// <summary>Resolve language id with default/culture/code/urlPrefix fallback.</summary>
     public static async Task<Guid> ResolveLanguageIdAsync(
         ILanguageLookup languages,
         string? language,

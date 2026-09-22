@@ -1,10 +1,16 @@
-using FluentValidation;
+﻿using FluentValidation;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Tooba.BuildingBlocks;
 using Tooba.BuildingBlocks.Results;
 using Tooba.Fulfillment.Application.Shipping;
+using Tooba.Fulfillment.Application.Commands.CreateShippingService;
+using Tooba.Fulfillment.Application.Commands.UpdateShippingService;
+using Tooba.Fulfillment.Application.Commands.DeactivateShippingService;
+using Tooba.Fulfillment.Application.Commands.EnsureShippingCatalogSeed;
+using Tooba.Fulfillment.Application.Queries.ListShippingServices;
+using Tooba.Fulfillment.Application.Queries.GetShippingService;
 using Tooba.Fulfillment.Contracts.Errors;
 using Tooba.Fulfillment.Infrastructure.Persistence;
 using Tooba.Fulfillment.Infrastructure.Shipping;
@@ -110,7 +116,7 @@ public sealed class ShippingServiceAdminTests
     [Fact]
     public void Admin_shipping_endpoints_are_host_thin_transport()
     {
-        var source = File.ReadAllText(Path.Combine(FindRepoRoot(), "src/backend/Host/Tooba.Host/Admin/ShippingServiceEndpoints.cs"));
+        var source = File.ReadAllText(Path.Combine(FindRepoRoot(), "src/backend/Modules/Fulfillment/Tooba.Fulfillment.Endpoints/Shipping/ShippingServiceEndpoints.cs"));
         Assert.Contains("ApiResponseFactory", source, StringComparison.Ordinal);
         Assert.Contains("ListShippingServicesQuery", source, StringComparison.Ordinal);
         Assert.Contains("GetShippingServiceQuery", source, StringComparison.Ordinal);
@@ -130,7 +136,7 @@ public sealed class ShippingServiceAdminTests
     public void Language_gate_implementation_is_fulfillment_infrastructure_owned()
     {
         var root = FindRepoRoot();
-        var hostEndpoints = Path.Combine(root, "src/backend/Host/Tooba.Host/Admin/ShippingServiceEndpoints.cs");
+        var hostEndpoints = Path.Combine(root, "src/backend/Modules/Fulfillment/Tooba.Fulfillment.Endpoints/Shipping/ShippingServiceEndpoints.cs");
         var gate = Path.Combine(root, "src/backend/Modules/Fulfillment/Tooba.Fulfillment.Infrastructure/Shipping/ShippingServiceLanguageGate.cs");
         var program = Path.Combine(root, "src/backend/Host/Tooba.Host/Program.cs");
         Assert.True(File.Exists(gate));
@@ -243,3 +249,5 @@ public sealed class ShippingServiceAdminTests
             => Task.FromResult(_langs);
     }
 }
+
+

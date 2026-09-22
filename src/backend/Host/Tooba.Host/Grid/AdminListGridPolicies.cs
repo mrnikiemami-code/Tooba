@@ -1,7 +1,4 @@
 ﻿using Tooba.Content.Application;
-using Tooba.Fulfillment.Application.Ports;
-using Tooba.Fulfillment.Application.Models;
-using Tooba.Fulfillment.Application.Shipping;
 using Tooba.Host.Admin;
 using Tooba.Host.Reviews;
 using Tooba.Host.Story;
@@ -54,28 +51,6 @@ public static class AdminListGridPolicies
     ],
         defaultSortField: "activity",
         tieBreakerField: "name");
-
-    /// <summary>صف کار ارسال و تحویل Admin.</summary>
-    public static readonly AdminListGridQueryPolicy<AdminFulfillmentWorkQueueRow> Fulfillments = new(
-    [
-        new("orderReference", x => x.OrderReference, InMemoryGridFieldKind.Text, searchable: true),
-        new("recipientName", x => x.RecipientName, InMemoryGridFieldKind.Text, searchable: true),
-        new("fulfillmentId", x => x.FulfillmentId, InMemoryGridFieldKind.Text, searchable: true),
-        new("checkoutId", x => x.CheckoutId, InMemoryGridFieldKind.Text, searchable: true),
-        new("cityName", x => x.CityName, InMemoryGridFieldKind.Text, searchable: true),
-        new("sellerPartyId", x => x.SellerPartyId, InMemoryGridFieldKind.Text),
-        new("sellerDisplayName", x => x.SellerDisplayName, InMemoryGridFieldKind.Text, searchable: true),
-        new("shippingMethodCode", x => x.ShippingMethodCode, InMemoryGridFieldKind.Enum),
-        new("shippingMethodLabel", x => x.ShippingMethodLabel, InMemoryGridFieldKind.Text),
-        new("shipmentCount", x => x.ShipmentCount, InMemoryGridFieldKind.Number),
-        new("status", x => x.Status, InMemoryGridFieldKind.Enum),
-        new("queueFilter", x => x.Status, InMemoryGridFieldKind.Enum),
-        new("createdAt", x => x.CreatedAt, InMemoryGridFieldKind.Date),
-        new("updatedAt", x => x.UpdatedAt, InMemoryGridFieldKind.Date),
-    ],
-        defaultSortField: "updatedAt",
-        defaultSortDirection: "desc",
-        tieBreakerField: "fulfillmentId");
 
     /// <summary>گرید مرجوعی Admin.</summary>
     public static readonly AdminListGridQueryPolicy<AdminReturnWorkQueueRow> Returns = new(
@@ -168,3 +143,5 @@ public static class AdminListGridPolicies
         defaultSortDirection: "asc",
         tieBreakerField: "title");
 }
+
+

@@ -1,6 +1,4 @@
-using MediatR;
-using Tooba.BuildingBlocks;
-using Tooba.Fulfillment.Application.Shipping;
+﻿using Tooba.BuildingBlocks;
 
 namespace Tooba.Host.Admin;
 
@@ -19,7 +17,6 @@ public static class AdminOrderOperationsEndpoints
         group.MapGet("/{checkoutId:guid}/operations", ListOperationsAsync);
         group.MapPost("/{checkoutId:guid}/operations", ExecuteOperationAsync);
         group.MapGet("/{checkoutId:guid}/return-eligibility", ListReturnEligibilityAsync);
-        app.MapGet("/v1/admin/shipping-methods", ListShippingMethodsAsync);
     }
 
     private static async Task<IResult> AuditInventoryRecoveryAsync(
@@ -45,15 +42,6 @@ public static class AdminOrderOperationsEndpoints
         OrderSupplyComposer supply,
         CancellationToken cancellationToken) =>
         Results.Json(await supply.GetStatusAsync(checkoutId, cancellationToken));
-
-    private static async Task<IResult> ListShippingMethodsAsync(
-        ISender sender,
-        string? language,
-        CancellationToken cancellationToken)
-    {
-        var result = await sender.Send(new ListEnabledShippingMethodsTreeQuery(language), cancellationToken);
-        return Results.Json(result.Value);
-    }
 
     private static async Task<IResult> ListOperationsAsync(
         Guid checkoutId,
@@ -138,3 +126,4 @@ public static class AdminOrderOperationsEndpoints
             },
             statusCode: ex.StatusCode);
 }
+

@@ -60,6 +60,7 @@
     <ProjectReference Include="..\..\Modules\Story\Tooba.Story.Infrastructure\Tooba.Story.Infrastructure.csproj" />
     <ProjectReference Include="..\..\Modules\Payment\Tooba.Payment.Infrastructure\Tooba.Payment.Infrastructure.csproj" />
     <ProjectReference Include="..\..\Modules\Fulfillment\Tooba.Fulfillment.Infrastructure\Tooba.Fulfillment.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\Modules\Fulfillment\Tooba.Fulfillment.Endpoints\Tooba.Fulfillment.Endpoints.csproj" />
     <ProjectReference Include="..\..\Modules\Returns\Tooba.Returns.Infrastructure\Tooba.Returns.Infrastructure.csproj" />
     <ProjectReference Include="..\..\Modules\Settlement\Tooba.Settlement.Infrastructure\Tooba.Settlement.Infrastructure.csproj" />
     <ProjectReference Include="..\..\Modules\Settlement\Tooba.Settlement.Endpoints\Tooba.Settlement.Endpoints.csproj" />
@@ -82,3 +83,4 @@
     <PackageReference Include="OpenTelemetry.Instrumentation.Runtime" Version="1.12.0" />
   </ItemGroup>
 </Project>
+
