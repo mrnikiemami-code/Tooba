@@ -112,6 +112,7 @@ public sealed class TmarDurableGuardTests
         Assert.Equal("ARCH-COMPLETE-001", rootEl.GetProperty("locksVersion").GetString());
 
         var completeModules = rootEl.GetProperty("completeReferenceModules").EnumerateArray().ToArray();
+        Assert.Equal(11, completeModules.Length);
         var complete = completeModules
             .Select(x => x.GetProperty("module").GetString()!)
             .OrderBy(x => x, StringComparer.Ordinal)
@@ -141,6 +142,7 @@ public sealed class TmarDurableGuardTests
         Assert.Equal("INTERNAL_ONLY", inventory.GetProperty("httpApplicability").GetString());
         Assert.Equal("NOT_APPLICABLE", inventory.GetProperty("endpointOwnership").GetString());
         Assert.Equal("INTERNAL_USE_CASE_BOUNDARIES", inventory.GetProperty("cqrs").GetString());
+        Assert.Equal("2814da32245b25a718aa952ba0e836d7550a3ee0", inventory.GetProperty("lastAcceptedCommit").GetString());
 
         var master = File.ReadAllText(Path.Combine(root, "docs", "architecture", "TOOBA-TMAR-MASTER-RECOVERY.md"));
         var bootstrap = File.ReadAllText(Path.Combine(root, "docs", "architecture", "TOOBA-ARCHITECT-BOOTSTRAP.md"));
@@ -156,15 +158,63 @@ public sealed class TmarDurableGuardTests
         Assert.Contains("Inventory = INTERNAL_ONLY / NOT_APPLICABLE / INTERNAL_USE_CASE_BOUNDARIES", master, StringComparison.Ordinal);
         Assert.Contains("Inventory = INTERNAL_ONLY / NOT_APPLICABLE / INTERNAL_USE_CASE_BOUNDARIES", bootstrap, StringComparison.Ordinal);
 
-        // Reject only authoritative stale next-task, not historical chronology mentions.
-        var masterCurrent = master[..master.IndexOf("HISTORICAL / SUPERSEDED", StringComparison.Ordinal)];
-        var bootstrapCurrent = bootstrap[..bootstrap.IndexOf("HISTORICAL / SUPERSEDED", StringComparison.Ordinal)];
+        // Current authority ends at the explicit historical boundary; chronology after it remains legitimate evidence.
+        var masterCurrent = CurrentAuthority(master);
+        var bootstrapCurrent = CurrentAuthority(bootstrap);
+        Assert.Equal(1, CountAuthoritativeCurrentHeadings(masterCurrent));
+        Assert.Equal(1, CountAuthoritativeCurrentHeadings(bootstrapCurrent));
+        Assert.DoesNotContain("Remaining:", masterCurrent, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("NEEDS_APPLICABILITY_REVERIFY", masterCurrent, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotMatch(
+            new Regex(
+                @"COMPLETE_REFERENCE_PATTERN \(internal-only[^\r\n]*\)[\s\S]{0,500}^- Offer\b",
+                RegexOptions.IgnoreCase | RegexOptions.Multiline),
+            masterCurrent);
+
+        var expectedNextTask = rootEl.GetProperty("nextTask").GetString()!;
+        var expectedGate = rootEl.GetProperty("nextTaskGate").GetString()!;
+        Assert.Contains(expectedNextTask, masterCurrent, StringComparison.Ordinal);
+        Assert.Contains(expectedGate, masterCurrent, StringComparison.Ordinal);
+        Assert.Contains(expectedNextTask, bootstrapCurrent, StringComparison.Ordinal);
+        Assert.Contains(expectedGate, bootstrapCurrent, StringComparison.Ordinal);
+        Assert.Contains("Golden wave: COMPLETE", masterCurrent, StringComparison.Ordinal);
+        Assert.Contains("Golden wave = COMPLETE", bootstrapCurrent, StringComparison.Ordinal);
+
+        var endpointGuard = File.ReadAllText(Path.Combine(
+            root, "src", "backend", "Host", "Tooba.Host.Tests", "HostModuleEndpointOwnershipTests.cs"));
+        var manifest = Regex.Match(
+            endpointGuard,
+            @"CompleteHttpModules\s*=\s*\[(?<entries>[\s\S]*?)\];",
+            RegexOptions.CultureInvariant);
+        Assert.True(manifest.Success, "CompleteHttpModules manifest not found");
+        var manifestModules = Regex.Matches(manifest.Groups["entries"].Value, @"new\(""(?<module>[^""]+)""")
+            .Select(x => x.Groups["module"].Value)
+            .ToArray();
+        Assert.Equal(10, manifestModules.Length);
+        Assert.DoesNotContain("Inventory", manifestModules, StringComparer.Ordinal);
+        Assert.Equal(
+            httpModules.Select(x => x.GetProperty("module").GetString()!).OrderBy(x => x, StringComparer.Ordinal),
+            manifestModules.OrderBy(x => x, StringComparer.Ordinal));
+
         foreach (var stale in new[] { "TB-TMAR-PAYMENT-GOLDEN", "TB-TMAR-PROMOTION-GOLDEN", "TB-TMAR-OFFER-FINAL", "TB-TMAR-INVENTORY-APPLICABILITY" })
         {
             Assert.DoesNotContain("next task: " + stale, masterCurrent, StringComparison.OrdinalIgnoreCase);
             Assert.DoesNotContain("next task: " + stale, bootstrapCurrent, StringComparison.OrdinalIgnoreCase);
         }
     }
+
+    private static string CurrentAuthority(string text)
+    {
+        var historicalBoundary = text.IndexOf("HISTORICAL / SUPERSEDED", StringComparison.Ordinal);
+        Assert.True(historicalBoundary >= 0, "explicit HISTORICAL / SUPERSEDED boundary is required");
+        return text[..historicalBoundary];
+    }
+
+    private static int CountAuthoritativeCurrentHeadings(string current) =>
+        Regex.Matches(
+                current,
+                @"(?im)^(?:#+\s*)?Current[^\r\n]*\(authoritative\)[^\r\n]*\r?$")
+            .Count;
 
     private static bool IsProductionFrontendPath(string relative)
     {

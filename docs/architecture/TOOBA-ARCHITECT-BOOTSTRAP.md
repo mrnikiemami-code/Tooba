@@ -41,7 +41,7 @@ TB-TMAR-ARCH-BASELINE
 Current next task:
 USER_REVIEW_GOLDEN_WAVE
 
-Current recovery state (authoritative — TB-TMAR-GOLDEN-WAVE-FINAL-CLOSURE-001):
+Current recovery summary (consistent with the authoritative closure above):
 COMPLETE HTTP-owning: Cart, Settlement, Fulfillment, Returns, Notification, Support, Wallet, Payment, Promotion, Offer.
 Inventory COMPLETE_REFERENCE_PATTERN as INTERNAL_ONLY / NOT_APPLICABLE / INTERNAL_USE_CASE_BOUNDARIES.
 Checkout PAUSED_AT_SAFE_W5_CHECKPOINT. Tax/Pricing UNTOUCHED in this wave. Frontend BACKEND_ONLY_UNTIL_EXPLICIT_RELEASE.

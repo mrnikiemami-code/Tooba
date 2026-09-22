@@ -111,7 +111,7 @@
                                          "endpointOwnership":  "NOT_APPLICABLE",
                                          "cqrs":  "INTERNAL_USE_CASE_BOUNDARIES",
                                          "lastAcceptedTask":  "TB-TMAR-INVENTORY-APPLICABILITY-REVERIFY-001",
-                                         "lastAcceptedCommit":  "2814da32"
+                                         "lastAcceptedCommit":  "2814da32245b25a718aa952ba0e836d7550a3ee0"
                                      }
                                  ],
     "reopenedModules":  [

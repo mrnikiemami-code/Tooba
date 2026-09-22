@@ -204,7 +204,9 @@ Continue TMAR for now until user explicitly says to return to product feature wo
 Next TMAR task:
 USER_REVIEW_GOLDEN_WAVE
 
-Current recovery state (authoritative — TB-TMAR-INVENTORY-APPLICABILITY-REVERIFY-001):
+HISTORICAL / SUPERSEDED (the following inventory applicability snapshot is not current authority)
+
+Historical recovery state — TB-TMAR-INVENTORY-APPLICABILITY-REVERIFY-001:
 
 COMPLETE_REFERENCE_PATTERN (HTTP-owning, module Endpoints + MediatR):
 - Cart — TB-TMAR-CART-GOLDEN-001-R1 — 35198728bf17381eaaec5db1e8033478675397fb
