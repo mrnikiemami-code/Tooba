@@ -5,36 +5,41 @@ using Tooba.Payment.Application.Models;
 using Tooba.Payment.Application.Ports;
 using Tooba.Payment.Domain.ValueObjects;
 using Tooba.Wallet.Contracts.Payments;
+using Tooba.Order.Contracts.Payments;
+using Tooba.Media.Contracts.Assets;
 
-namespace Tooba.Payment.Application.Models;
+namespace Tooba.Payment.Application.Orchestration;
 
 /// <summary>Application-owned storefront payment orchestration (former Host StorefrontPaymentComposer).</summary>
 public sealed class StorefrontPaymentOrchestrator
 {
-    private readonly IStorefrontCheckoutPaymentAccessPort _checkouts;
+    private readonly ICheckoutPaymentAccessReader _checkouts;
+    private readonly ICheckoutActorPolicyPort _actorPolicy;
     private readonly IPaymentDirectory _payments;
     private readonly IOrderPaymentProjection _orderPayments;
     private readonly IWalletOrderPaymentPort _wallets;
     private readonly IPaymentGatewayCatalogPort _catalog;
-    private readonly IPaymentProofMediaPort _media;
-    private readonly IPaymentUnpaidRetrySupplyPort _supply;
+    private readonly IMediaAssetUploadPort _media;
+    private readonly IOrderUnpaidRetrySupplyPort _supply;
     private readonly IPaymentExpiryDirectory _expiry;
     private readonly IClock _clock;
     private readonly ILogger<StorefrontPaymentOrchestrator> _logger;
 
     public StorefrontPaymentOrchestrator(
-        IStorefrontCheckoutPaymentAccessPort checkouts,
+        ICheckoutPaymentAccessReader checkouts,
+        ICheckoutActorPolicyPort actorPolicy,
         IPaymentDirectory payments,
         IOrderPaymentProjection orderPayments,
         IWalletOrderPaymentPort wallets,
         IPaymentGatewayCatalogPort catalog,
-        IPaymentProofMediaPort media,
-        IPaymentUnpaidRetrySupplyPort supply,
+        IMediaAssetUploadPort media,
+        IOrderUnpaidRetrySupplyPort supply,
         IPaymentExpiryDirectory expiry,
         IClock clock,
         ILogger<StorefrontPaymentOrchestrator> logger)
     {
         _checkouts = checkouts;
+        _actorPolicy = actorPolicy;
         _payments = payments;
         _orderPayments = orderPayments;
         _wallets = wallets;
@@ -58,8 +63,8 @@ public sealed class StorefrontPaymentOrchestrator
         Guid? authenticatedUserId,
         CancellationToken cancellationToken)
     {
-        await _checkouts.EnsureCheckoutActorAsync(cancellationToken);
-        var checkout = await _checkouts.GetForMutationAsync(checkoutId, cartId, guestSecret, cancellationToken)
+        await _actorPolicy.EnsureCheckoutActorAsync(cancellationToken);
+        var checkout = await _checkouts.GetForMutationAsync(checkoutId, cartId, guestSecret, authenticatedUserId, cancellationToken)
             ?? throw new InvalidOperationException(PaymentErrorCodes.Missing);
 
         var actor = ResolvePaymentActor(authenticatedUserId);
@@ -110,8 +115,8 @@ public sealed class StorefrontPaymentOrchestrator
         Guid? authenticatedUserId,
         CancellationToken cancellationToken)
     {
-        await _checkouts.EnsureCheckoutActorAsync(cancellationToken);
-        var checkout = await _checkouts.GetForMutationAsync(checkoutId, cartId, guestSecret, cancellationToken)
+        await _actorPolicy.EnsureCheckoutActorAsync(cancellationToken);
+        var checkout = await _checkouts.GetForMutationAsync(checkoutId, cartId, guestSecret, authenticatedUserId, cancellationToken)
             ?? throw new InvalidOperationException(PaymentErrorCodes.Missing);
 
         var providerCode = _catalog.DefaultProvider;
@@ -251,6 +256,7 @@ public sealed class StorefrontPaymentOrchestrator
         var checkout = await _checkouts.GetOwnedForPaymentResultAsync(
             payment.CheckoutId,
             guestSecret,
+            authenticatedUserId,
             cancellationToken);
         if (checkout is null)
             throw new InvalidOperationException(PaymentErrorCodes.GuestInvalid);
@@ -270,7 +276,7 @@ public sealed class StorefrontPaymentOrchestrator
 
         var payment = await GetAsync(paymentId, cartId, guestSecret, authenticatedUserId, cancellationToken)
             ?? throw new InvalidOperationException(PaymentErrorCodes.Missing);
-        var checkout = await _checkouts.GetOwnedAsync(payment.CheckoutId, cartId, guestSecret, cancellationToken)
+        var checkout = await _checkouts.GetOwnedAsync(payment.CheckoutId, cartId, guestSecret, authenticatedUserId, cancellationToken)
             ?? throw new InvalidOperationException(PaymentErrorCodes.Missing);
         var orderNumber = checkout.OrderNumber
             ?? checkout.CheckoutId.ToString("N")[..12];
@@ -459,7 +465,7 @@ public sealed class StorefrontPaymentOrchestrator
 
     private StorefrontPaymentDto MapPaymentPage(
         PaymentSnapshot payment,
-        StorefrontCheckoutPaymentAccessDto checkout)
+        CheckoutPaymentAccessSnapshot checkout)
     {
         var history = (payment.EvidenceHistory ?? [])
             .Select(x => new StorefrontManualEvidenceHistoryDto(

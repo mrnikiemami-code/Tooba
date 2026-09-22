@@ -123,4 +123,41 @@ public sealed class OrderInventoryLifecycleAdapter : IOrderInventoryLifecyclePor
             cancellationToken);
         return new OrderInventoryPaidSupplyResult(result.NewBindingsByOrderLineId);
     }
+
+    /// <inheritdoc />
+    public async Task<OrderInventorySupplyResult> EnsureUnpaidRetryHoldAsync(
+        OrderInventoryUnpaidRetryRequest request,
+        CancellationToken cancellationToken)
+    {
+        var lines = request.Lines.Select(Map).ToArray();
+        var result = await _inventory.EnsureOrderSupplyAsync(
+            new EnsureOrderSupplyRequest(
+                request.CheckoutId,
+                OrderSupplyMode.EnsureUnpaidRetryHold,
+                request.AllowReacquire,
+                request.Reason,
+                null,
+                null,
+                lines),
+            cancellationToken);
+        return new(result.Status.ToString(), result.Outcome.ToString(), result.NewBindingsByOrderLineId);
+    }
+
+    /// <inheritdoc />
+    public async Task<IReadOnlyDictionary<Guid, OrderInventorySupplyStatusSnapshot>> GetSupplyStatusesAsync(
+        IReadOnlyDictionary<Guid, IReadOnlyList<OrderInventorySupplyLine>> linesByCheckoutId,
+        CancellationToken cancellationToken)
+    {
+        var result = new Dictionary<Guid, OrderInventorySupplyStatusSnapshot>();
+        foreach (var pair in linesByCheckoutId)
+        {
+            var status = await _inventory.GetOrderSupplyStatusAsync(
+                pair.Key, pair.Value.Select(Map).ToArray(), cancellationToken);
+            result[pair.Key] = new(pair.Key, status.Status.ToString());
+        }
+        return result;
+    }
+
+    private static OrderSupplyLineInput Map(OrderInventorySupplyLine line) =>
+        new(line.OrderLineId, line.OfferId, line.CurrentReservationId, line.RemainingQuantity, line.ItemTitle, line.UnitCode);
 }

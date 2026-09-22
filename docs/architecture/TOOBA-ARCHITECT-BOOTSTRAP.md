@@ -26,12 +26,12 @@ Accepted architecture baseline:
 TB-TMAR-ARCH-BASELINE
 
 Current next task:
-TB-TMAR-PAYMENT-GOLDEN-001-R2
+TB-TMAR-PROMOTION-GOLDEN-001
 
-Current recovery state (authoritative — TB-TMAR-PAYMENT-GOLDEN-001-R1):
-COMPLETE HTTP-owning: Cart, Settlement, Fulfillment, Returns, Notification, Support, Wallet (Wallet COMPLETE_REFERENCE_PATTERN).
-Payment IN_PROGRESS_GOLDEN_R2_READY (R1 delivered; Architect COMPLETE deferred to R2).
-Remaining: Payment R2; Promotion REOPENED_ENDPOINT_CQRS_OWNERSHIP; Offer NEEDS_FINAL_REVERIFY; Inventory NEEDS_APPLICABILITY_REVERIFY.
+Current recovery state (authoritative — TB-TMAR-PAYMENT-GOLDEN-001-R2):
+COMPLETE HTTP-owning: Cart, Settlement, Fulfillment, Returns, Notification, Support, Wallet, Payment.
+Payment COMPLETE_REFERENCE_PATTERN.
+Remaining: Promotion REOPENED_ENDPOINT_CQRS_OWNERSHIP; Offer NEEDS_FINAL_REVERIFY; Inventory NEEDS_APPLICABILITY_REVERIFY.
 Checkout PAUSED_AT_SAFE_W5_CHECKPOINT. Tax/Pricing UNTOUCHED in this wave. Frontend BACKEND_ONLY_UNTIL_EXPLICIT_RELEASE.
 Machine-readable: docs/architecture/tmar-current-state.json
 

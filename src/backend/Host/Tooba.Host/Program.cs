@@ -213,25 +213,18 @@ builder.Services.AddScoped<Tooba.Host.Storefront.StorefrontShippingComposer>(sp 
 builder.Services.AddScoped<Tooba.Host.Storefront.StorefrontPendingPaymentComposer>(sp =>
     new Tooba.Host.Storefront.StorefrontPendingPaymentComposer(
         sp.GetRequiredService<Tooba.Order.Infrastructure.Persistence.OrderDbContext>(),
-        sp.GetRequiredService<Tooba.Payment.Application.Ports.IPaymentQueryDirectory>(),
+        sp.GetRequiredService<Tooba.Payment.Contracts.Storefront.IPendingPaymentReader>(),
         sp.GetRequiredService<Tooba.Catalog.Infrastructure.Persistence.CatalogDbContext>(),
         sp.GetRequiredService<Tooba.Cart.Application.Ports.ICartPresentationGateway>(),
         sp.GetRequiredService<Tooba.Order.Application.IReservationCycleDirectory>(),
         sp.GetRequiredService<Tooba.Order.Application.ICheckoutDirectory>(),
         sp.GetRequiredService<Tooba.Fulfillment.Application.Ports.IFulfillmentDirectory>(),
-        sp.GetRequiredService<Tooba.Payment.Application.Ports.IPaymentAdminDirectory>(),
         sp.GetRequiredService<Tooba.Settlement.Application.Ports.ISettlementDirectory>(),
         sp.GetRequiredService<CurrentAuthenticatedSession>(),
         sp.GetRequiredService<IHostEnvironment>(),
         sp.GetRequiredService<IHttpContextAccessor>()));
-builder.Services.AddScoped<Tooba.Payment.Application.Models.StorefrontPaymentOrchestrator>();
-builder.Services.AddScoped<Tooba.Payment.Application.Ports.IStorefrontCheckoutPaymentAccessPort, Tooba.Host.Storefront.HostStorefrontCheckoutPaymentAccessAdapter>();
-builder.Services.AddScoped<Tooba.Payment.Application.Ports.IPaymentProofMediaPort, Tooba.Host.Storefront.HostPaymentProofMediaAdapter>();
-builder.Services.AddScoped<Tooba.Payment.Application.Ports.IPaymentUnpaidRetrySupplyPort>(sp =>
-    new Tooba.Host.Storefront.HostPaymentUnpaidRetrySupplyAdapter(
-        sp.GetRequiredService<Tooba.Host.Admin.OrderSupplyComposer>(),
-        sp.GetRequiredService<ReservationCycleCoordinator>()));
-builder.Services.AddScoped<Tooba.Payment.Application.Ports.IPaymentAdminOrderEnrichmentPort, Tooba.Host.Admin.HostPaymentAdminOrderEnrichmentAdapter>();
+builder.Services.AddScoped<Tooba.Payment.Application.Orchestration.StorefrontPaymentOrchestrator>();
+builder.Services.AddScoped<Tooba.Payment.Application.Ports.ICheckoutActorPolicyPort, Tooba.Host.Storefront.HostCheckoutActorPolicyAdapter>();
 builder.Services.AddScoped<Tooba.Payment.Endpoints.Storefront.IPaymentStorefrontAuthorizer, Tooba.Host.Storefront.HostPaymentStorefrontAuthorizer>();
 builder.Services.AddScoped<Tooba.Payment.Endpoints.Admin.IPaymentAdminAuthorizer, Tooba.Host.Admin.HostPaymentAdminAuthorizer>();
 builder.Services.AddScoped<Tooba.Payment.Endpoints.Admin.IPaymentAdminGridQueryNormalizer, Tooba.Host.Admin.HostPaymentAdminGridQueryNormalizer>();

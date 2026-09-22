@@ -3,6 +3,7 @@ using Tooba.BuildingBlocks;
 using Tooba.BuildingBlocks.Results;
 using Tooba.Payment.Application.Models;
 using Tooba.Payment.Application.Ports;
+using Tooba.Order.Contracts.Payments;
 
 namespace Tooba.Payment.Application.Queries.QueryAdminPaymentsGrid;
 
@@ -13,7 +14,7 @@ public sealed record QueryAdminPaymentsGridQuery(AdminPaymentGridQueryInput Inpu
 /// <summary>Handles QueryAdminPaymentsGrid.</summary>
 public sealed class QueryAdminPaymentsGridHandler(
     IPaymentQueryDirectory payments,
-    IPaymentAdminOrderEnrichmentPort enrichment)
+    IPaymentAdminOrderEnrichmentReader enrichment)
     : IRequestHandler<QueryAdminPaymentsGridQuery, Result<AdminPaymentGridPageDto>>
 {
     public async Task<Result<AdminPaymentGridPageDto>> Handle(

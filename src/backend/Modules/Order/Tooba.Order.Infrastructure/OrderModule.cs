@@ -13,6 +13,8 @@ using Tooba.Order.Infrastructure.Persistence;
 using Tooba.Persistence;
 using Tooba.Order.Contracts.Fulfillment;
 using Tooba.Order.Contracts.Returns;
+using Tooba.Order.Contracts.Payments;
+using Tooba.Order.Infrastructure.Payments;
 
 namespace Tooba.Order.Infrastructure;
 
@@ -45,6 +47,9 @@ public sealed class OrderModule : IToobaModule
         services.AddScoped<IOrderGridEnrichmentReader, OrderGridEnrichmentBridge>();
         services.AddScoped<IOrderReturnReader, OrderReturnBridge>();
         services.AddScoped<IOrderNotificationReader, OrderNotificationBridge>();
+        services.AddScoped<ICheckoutPaymentAccessReader, CheckoutPaymentAccessBridge>();
+        services.AddScoped<IPaymentAdminOrderEnrichmentReader, PaymentAdminOrderEnrichmentBridge>();
+        services.AddScoped<IOrderUnpaidRetrySupplyPort, OrderUnpaidRetrySupplyBridge>();
         services.AddScoped<Fulfillment.IAdminOrderFulfillmentCheckoutReader, Fulfillment.AdminOrderFulfillmentCheckoutReader>();
         services.AddScoped<Fulfillment.IAdminOrderFulfillmentPermissionGate, Fulfillment.AdminOrderFulfillmentPermissionGate>();
         services.AddScoped<IAdminOrderFulfillmentOperations, Fulfillment.AdminOrderFulfillmentOperations>();

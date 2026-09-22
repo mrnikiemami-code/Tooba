@@ -1,3 +1,4 @@
+#pragma warning disable CS1591
 namespace Tooba.Inventory.Contracts.Orders;
 
 /// <summary>خط سفارش برای تأمین Paid durable.</summary>
@@ -19,6 +20,27 @@ public sealed record OrderInventoryPaidSupplyRequest(
 /// <summary>نتیجهٔ تأمین Paid؛ فقط bindingهای جدید برای به‌روزرسانی خطوط سفارش.</summary>
 public sealed record OrderInventoryPaidSupplyResult(
     IReadOnlyDictionary<Guid, Guid> NewBindingsByOrderLineId);
+
+public sealed record OrderInventorySupplyLine(
+    Guid OrderLineId,
+    Guid OfferId,
+    Guid? CurrentReservationId,
+    decimal RemainingQuantity,
+    string? ItemTitle,
+    string? UnitCode);
+
+public sealed record OrderInventoryUnpaidRetryRequest(
+    Guid CheckoutId,
+    bool AllowReacquire,
+    string Reason,
+    IReadOnlyList<OrderInventorySupplyLine> Lines);
+
+public sealed record OrderInventorySupplyResult(
+    string Status,
+    string Outcome,
+    IReadOnlyDictionary<Guid, Guid> NewBindingsByOrderLineId);
+
+public sealed record OrderInventorySupplyStatusSnapshot(Guid CheckoutId, string Status);
 
 /// <summary>
 /// درز پایدار Cancel / Restore / PaymentBridge برای هماهنگی سفارش با موجودی.
@@ -58,5 +80,13 @@ public interface IOrderInventoryLifecyclePort
     /// <summary>تضمین تأمین Paid durable با امکان بازگیری؛ bindingهای تازه را برمی‌گرداند.</summary>
     Task<OrderInventoryPaidSupplyResult> EnsurePaidDurableSupplyAsync(
         OrderInventoryPaidSupplyRequest request,
+        CancellationToken cancellationToken);
+
+    Task<OrderInventorySupplyResult> EnsureUnpaidRetryHoldAsync(
+        OrderInventoryUnpaidRetryRequest request,
+        CancellationToken cancellationToken);
+
+    Task<IReadOnlyDictionary<Guid, OrderInventorySupplyStatusSnapshot>> GetSupplyStatusesAsync(
+        IReadOnlyDictionary<Guid, IReadOnlyList<OrderInventorySupplyLine>> linesByCheckoutId,
         CancellationToken cancellationToken);
 }

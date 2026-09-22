@@ -188,7 +188,7 @@ User choice:
 Continue TMAR for now until user explicitly says to return to product feature work.
 
 Next TMAR task:
-TB-TMAR-PAYMENT-GOLDEN-001-R2
+TB-TMAR-PROMOTION-GOLDEN-001
 
 Current recovery state (authoritative — TB-TMAR-PAYMENT-GOLDEN-001-R1):
 
@@ -200,12 +200,9 @@ COMPLETE_REFERENCE_PATTERN (HTTP-owning, module Endpoints + MediatR):
 - Notification — TB-TMAR-NOTIFICATION-GOLDEN-001 — 5c947708af5c66a3031786ccdfc34a726ec8746e
 - Support — TB-TMAR-SUPPORT-GOLDEN-001 — b2d3e6f7df85750b5b5d9c42b19f3fa996ba5d91
 - Wallet — TB-TMAR-WALLET-GOLDEN-001 — f81c11e9b21c4bb5e05385b253db28fdb1c62402
-
-In progress:
-- Payment — IN_PROGRESS_GOLDEN_R2_READY (R1 delivered; Architect COMPLETE deferred to R2) — latest TB-TMAR-PAYMENT-GOLDEN-001-R1; parent TB-TMAR-PAYMENT-GOLDEN-001 INCOMPLETE
+- Payment — TB-TMAR-PAYMENT-GOLDEN-001-R2 — R2_FINAL_TIP
 
 Remaining:
-- Payment R2
 - Promotion — REOPENED_ENDPOINT_CQRS_OWNERSHIP
 - Offer — NEEDS_FINAL_REVERIFY (Endpoints exists)
 - Inventory — NEEDS_APPLICABILITY_REVERIFY (may be internal-only)

@@ -28,6 +28,7 @@ public sealed class HostModuleEndpointOwnershipTests
         new("Notification", "Tooba.Notification.Endpoints", "MapNotificationEndpoints()", "Notification/NotificationEndpoints.cs", true),
         new("Support", "Tooba.Support.Endpoints", "MapSupportEndpoints()", "Support/SupportEndpoints.cs", true),
         new("Wallet", "Tooba.Wallet.Endpoints", "MapWalletEndpoints()", "Wallet/WalletEndpoints.cs", true),
+        new("Payment", "Tooba.Payment.Endpoints", "MapPaymentEndpoints()", "Payments/PaymentWebhookEndpoints.cs", true),
     ];
 
     [Fact]

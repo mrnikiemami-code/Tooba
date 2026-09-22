@@ -4,6 +4,8 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Tooba.BuildingBlocks;
 using Tooba.Media.Application;
+using Tooba.Media.Contracts.Assets;
+using Tooba.Media.Infrastructure.Assets;
 using Tooba.Media.Infrastructure.Persistence;
 using Tooba.ModuleContracts;
 using Tooba.Persistence;
@@ -33,6 +35,7 @@ public sealed class MediaModule : IToobaModule
             return new LocalFileMediaStore(root);
         });
         services.AddScoped<IMediaDirectory, MediaDirectory>();
+        services.AddScoped<IMediaAssetUploadPort, MediaAssetUploadBridge>();
         services.AddDbContext<MediaDbContext>((sp, options) =>
         {
             var connection = ToobaNpgsql.ResolveForContext(

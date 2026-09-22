@@ -7,6 +7,7 @@ using Tooba.ModuleContracts;
 using Tooba.Payment.Application.Models;
 using Tooba.Payment.Application.Ports;
 using Tooba.Payment.Contracts.Settlement;
+using Tooba.Payment.Contracts.Storefront;
 using Tooba.Payment.Contracts.Returns;using Tooba.Payment.Infrastructure.Persistence;
 using Tooba.Persistence;
 
@@ -47,6 +48,7 @@ public sealed class PaymentModule : IToobaModule
         services.AddScoped<IPaymentGatewayCatalogPort, PaymentGatewayCatalogAdapter>();
         services.AddScoped<IPaymentHoldSettingsDirectory, PaymentHoldSettingsDirectory>();
         services.AddScoped<IPaymentQueryDirectory, PaymentQueryDirectory>();
+        services.AddScoped<IPendingPaymentReader, PendingPaymentBridge>();
         services.AddScoped<IPaymentReturnReader, PaymentReturnBridge>();
         services.AddScoped<IPaymentGatewayCatalogPort, PaymentGatewayCatalogAdapter>();
         services.AddScoped<IPaymentWebhookSignatureVerifier, PaymentWebhookSignatureVerifierAdapter>();

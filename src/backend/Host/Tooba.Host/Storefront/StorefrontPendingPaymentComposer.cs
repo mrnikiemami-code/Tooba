@@ -10,7 +10,7 @@ using Tooba.Host.Admin;
 using Tooba.Order.Application;
 using Tooba.Order.Domain;
 using Tooba.Order.Infrastructure.Persistence;
-using Tooba.Payment.Application.Ports;
+using Tooba.Payment.Contracts.Storefront;
 using Tooba.Payment.Domain.ValueObjects;
 using Tooba.Settlement.Application;
 
@@ -25,13 +25,12 @@ public sealed class StorefrontPendingPaymentComposer
     private const string DevActorHeader = "X-Tooba-Dev-Actor-User-Id";
 
     private readonly OrderDbContext _orders;
-    private readonly IPaymentQueryDirectory _paymentQueries;
+    private readonly IPendingPaymentReader _payments;
     private readonly CatalogDbContext _catalog;
     private readonly ICartPresentationGateway _carts;
     private readonly IReservationCycleDirectory _cycles;
     private readonly ICheckoutDirectory _checkout;
     private readonly IFulfillmentDirectory _fulfillment;
-    private readonly IPaymentAdminDirectory _paymentOps;
     private readonly ISettlementDirectory _settlement;
     private readonly CurrentAuthenticatedSession _session;
     private readonly IHostEnvironment _environment;
@@ -40,26 +39,24 @@ public sealed class StorefrontPendingPaymentComposer
     /// <summary>ترکیب Host برای فهرست در انتظار پرداخت.</summary>
     internal StorefrontPendingPaymentComposer(
         OrderDbContext orders,
-        IPaymentQueryDirectory paymentQueries,
+        IPendingPaymentReader payments,
         CatalogDbContext catalog,
         ICartPresentationGateway carts,
         IReservationCycleDirectory cycles,
         ICheckoutDirectory checkout,
         IFulfillmentDirectory fulfillment,
-        IPaymentAdminDirectory paymentOps,
         ISettlementDirectory settlement,
         CurrentAuthenticatedSession session,
         IHostEnvironment environment,
         IHttpContextAccessor http)
     {
         _orders = orders;
-        _paymentQueries = paymentQueries;
+        _payments = payments;
         _catalog = catalog;
         _carts = carts;
         _cycles = cycles;
         _checkout = checkout;
         _fulfillment = fulfillment;
-        _paymentOps = paymentOps;
         _settlement = settlement;
         _session = session;
         _environment = environment;
@@ -79,7 +76,7 @@ public sealed class StorefrontPendingPaymentComposer
         }
 
         var checkoutIds = groups.Select(x => x.CheckoutId).ToArray();
-        var paymentRows = await _paymentQueries.GetLatestByCheckoutIdsAsync(checkoutIds, cancellationToken);
+        var paymentRows = await _payments.GetLatestByCheckoutIdsAsync(checkoutIds, cancellationToken);
         var latestPayments = paymentRows.ToDictionary(
             row => row.CheckoutId,
             row => new StorefrontPendingPaymentProjector.PaymentInput(
@@ -186,12 +183,9 @@ public sealed class StorefrontPendingPaymentComposer
                 "order.cancel.unpaid_only: لغو این سفارش از سبد فقط قبل از پرداخت موفق امکان‌پذیر است.");
         }
 
-        var payment = await _paymentOps.GetLatestOperationalForCheckoutAsync(group.CheckoutId, cancellationToken);
+        var payment = await _payments.GetLatestOperationalForCheckoutAsync(group.CheckoutId, cancellationToken);
         if (payment is not null
-            && payment.Status is PaymentStatus.Succeeded
-                or PaymentStatus.RefundPending
-                or PaymentStatus.Refunded
-                or PaymentStatus.RefundFailed)
+            && payment.Status is "Succeeded" or "RefundPending" or "Refunded" or "RefundFailed")
         {
             throw new InvalidOperationException(
                 "order.cancel.unpaid_only: لغو این سفارش از سبد فقط قبل از پرداخت موفق امکان‌پذیر است.");
@@ -232,7 +226,7 @@ public sealed class StorefrontPendingPaymentComposer
                 cancellationToken);
         }
 
-        await _paymentOps.CloseOrStartRefundForOrderCancelAsync(group.CheckoutId, cancellationToken);
+        await _payments.CloseOrStartRefundForOrderCancelAsync(group.CheckoutId, cancellationToken);
         return new { ok = true, checkoutId = group.CheckoutId, alreadyCancelled = false };
     }
 

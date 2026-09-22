@@ -7,8 +7,8 @@ namespace Tooba.Payment.Tests.Architecture;
 public sealed class PaymentArchitectureGuardTests
 {
     private static readonly string[] AllowedDomainFolders = ["Aggregates", "Entities", "ValueObjects", "Events", "Policies"];
-    private static readonly string[] AllowedApplicationFolders = ["Ports", "Models", "Commands", "Queries", "Errors"];
-    private static readonly string[] AllowedContractsFolders = ["Events", "Dtos", "Ports", "Returns", "Settlement"];
+    private static readonly string[] AllowedApplicationFolders = ["Ports", "Models", "Commands", "Queries", "Errors", "Orchestration"];
+    private static readonly string[] AllowedContractsFolders = ["Events", "Dtos", "Ports", "Returns", "Settlement", "Storefront"];
     private static readonly string[] AllowedInfrastructureFolders =
         ["Persistence", "Directories", "Adapters", "Providers", "Events", "Messaging", "DependencyInjection", "Gateways", "Migrations"];
     private static readonly string[] AllowedEndpointsFolders = ["Storefront", "Admin", "Webhooks", "Errors", "Resources"];
@@ -200,6 +200,10 @@ public sealed class PaymentArchitectureGuardTests
         Assert.False(File.Exists(Path.Combine(hostRoot, "Payments", "PaymentWebhookEndpoints.cs")));
         Assert.False(File.Exists(Path.Combine(hostRoot, "Storefront", "StorefrontPaymentComposer.cs")));
         Assert.False(File.Exists(Path.Combine(hostRoot, "Grid", "AdminPaymentsGridQueryEngine.cs")));
+        Assert.False(File.Exists(Path.Combine(hostRoot, "Admin", "HostPaymentAdminOrderEnrichmentAdapter.cs")));
+        Assert.False(File.Exists(Path.Combine(hostRoot, "Storefront", "HostPaymentUnpaidRetrySupplyAdapter.cs")));
+        Assert.False(File.Exists(Path.Combine(hostRoot, "Storefront", "HostPaymentProofMediaAdapter.cs")));
+        Assert.False(File.Exists(Path.Combine(hostRoot, "Storefront", "HostStorefrontCheckoutPaymentAccessAdapter.cs")));
         Assert.True(File.Exists(Path.Combine(hostRoot, "Storefront", "HostPaymentStorefrontAuthorizer.cs")));
         Assert.True(File.Exists(Path.Combine(hostRoot, "Admin", "HostPaymentAdminAuthorizer.cs")));
 
@@ -219,6 +223,20 @@ public sealed class PaymentArchitectureGuardTests
         Assert.Contains("HostPaymentStorefrontAuthorizer", programCs, StringComparison.Ordinal);
         Assert.Contains("HostPaymentAdminAuthorizer", programCs, StringComparison.Ordinal);
         Assert.Contains("InitiateStorefrontPaymentCommand", programCs, StringComparison.Ordinal);
+        var pending = File.ReadAllText(Path.Combine(hostRoot, "Storefront", "StorefrontPendingPaymentComposer.cs"));
+        Assert.DoesNotContain("Tooba.Payment.Application.Ports", pending, StringComparison.Ordinal);
+        Assert.Contains("Tooba.Payment.Contracts.Storefront", pending, StringComparison.Ordinal);
+        Assert.True(Directory.Exists(Path.Combine(PaymentRoot(), "Tooba.Payment.Application", "Orchestration")));
+        Assert.False(File.Exists(Path.Combine(PaymentRoot(), "Tooba.Payment.Application", "Models", "StorefrontPaymentOrchestrator.cs")));
+
+        foreach (var project in new[] { "Tooba.Payment.Application", "Tooba.Payment.Infrastructure" })
+        {
+            var refs = ProjectRefs(project);
+            foreach (var foreign in new[] { "Order", "Media", "Inventory" })
+                Assert.DoesNotContain(refs, r => r.Contains($"Tooba.{foreign}.Application", StringComparison.Ordinal)
+                    || r.Contains($"Tooba.{foreign}.Infrastructure", StringComparison.Ordinal)
+                    || r.Contains($"Tooba.{foreign}.Domain", StringComparison.Ordinal));
+        }
 
         var worker = File.ReadAllText(Path.Combine(hostRoot, "PaymentReconciliationHostedService.cs"));
         Assert.Contains("ReconcileStalePaymentsCommand", worker, StringComparison.Ordinal);

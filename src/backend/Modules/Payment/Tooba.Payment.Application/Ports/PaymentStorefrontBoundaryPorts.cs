@@ -1,5 +1,10 @@
 namespace Tooba.Payment.Application.Ports;
 
+public interface ICheckoutActorPolicyPort
+{
+    Task EnsureCheckoutActorAsync(CancellationToken cancellationToken);
+}
+
 /// <summary>Checkout ownership/payable read seam for Payment storefront (Host adapter; no Checkout redesign).</summary>
 public sealed record StorefrontCheckoutPaymentAccessDto(
     Guid CheckoutId,
@@ -8,7 +13,8 @@ public sealed record StorefrontCheckoutPaymentAccessDto(
     string? OrderNumber);
 
 /// <summary>Narrow checkout access for Payment without Host composer dependency from Application.</summary>
-public interface IStorefrontCheckoutPaymentAccessPort
+[Obsolete("Use Order.Contracts ICheckoutPaymentAccessReader and ICheckoutActorPolicyPort.")]
+public interface IStorefrontCheckoutPaymentAccessPort : ICheckoutActorPolicyPort
 {
     /// <summary>Storefront checkout actor gate (auth/guest policy).</summary>
     Task EnsureCheckoutActorAsync(CancellationToken cancellationToken);
@@ -35,6 +41,7 @@ public interface IStorefrontCheckoutPaymentAccessPort
 }
 
 /// <summary>Media proof upload for manual payment (no Media.Application from Payment.Application).</summary>
+[Obsolete("Use Media.Contracts IMediaAssetUploadPort.")]
 public interface IPaymentProofMediaPort
 {
     Task<Guid> UploadAsync(
@@ -46,6 +53,7 @@ public interface IPaymentProofMediaPort
 }
 
 /// <summary>Unpaid-retry supply ensure (Host/Inventory via Contracts/adapter).</summary>
+[Obsolete("Use Order.Contracts IOrderUnpaidRetrySupplyPort.")]
 public interface IPaymentUnpaidRetrySupplyPort
 {
     Task EnsureRetrySupplyAsync(Guid checkoutId, CancellationToken cancellationToken);
@@ -73,6 +81,7 @@ public interface IPaymentWebhookSignatureVerifier
 }
 
 /// <summary>Order enrichment for admin payment grid (Contracts/Host adapter; no OrderDbContext in Payment).</summary>
+[Obsolete("Use Order.Contracts IPaymentAdminOrderEnrichmentReader.")]
 public interface IPaymentAdminOrderEnrichmentPort
 {
     Task<IReadOnlyList<Guid>> ResolveSearchCheckoutIdsAsync(string search, CancellationToken cancellationToken);
