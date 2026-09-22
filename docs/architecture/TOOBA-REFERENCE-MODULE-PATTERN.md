@@ -2,6 +2,15 @@
 
 Canonical golden module: **Offer** (Result-pattern Golden revalidated by `TB-TMAR-FND-RESULT-001-R1`).
 
+Golden wave final state (`TB-TMAR-GOLDEN-WAVE-FINAL-CLOSURE-001`):
+
+- Complete modules: Cart, Settlement, Fulfillment, Returns, Notification, Support, Wallet, Payment, Promotion, Offer, Inventory
+- Cart through Offer above are HTTP-owning and require `MODULE_ENDPOINTS` + `MEDIATR_12_5`.
+- Inventory = INTERNAL_ONLY / NOT_APPLICABLE / INTERNAL_USE_CASE_BOUNDARIES; no Endpoints project is created.
+- Locks: ARCH-COMPLETE-001, HOST-MODULE-ENDPOINT-001, ARCH-CQRS-001/002.
+- Checkout remains PAUSED_AT_SAFE_W5_CHECKPOINT; frontend remains frozen.
+- Next task: USER_REVIEW_GOLDEN_WAVE; USER_REVIEW_REQUIRED_BEFORE_NEXT_TMAR_WAVE.
+
 Golden HTTP contract for expected business outcomes:
 
 - Application/CQRS returns `Result` / `Result<T>` carrying `SemanticError`

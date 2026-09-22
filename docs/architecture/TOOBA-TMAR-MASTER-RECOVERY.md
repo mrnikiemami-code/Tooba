@@ -1,5 +1,19 @@
 ﻿TOOBA TMAR MASTER RECOVERY
 
+Current Golden Wave Closure (authoritative)
+
+- Locks: ARCH-COMPLETE-001, HOST-MODULE-ENDPOINT-001, ARCH-CQRS-001/002
+- Execution: BACKEND_ONLY_UNTIL_EXPLICIT_RELEASE; frontendFrozen = true
+- Golden wave: COMPLETE; 11 COMPLETE_REFERENCE_PATTERN modules
+- Complete modules: Cart, Settlement, Fulfillment, Returns, Notification, Support, Wallet, Payment, Promotion, Offer, Inventory
+- HTTP-owning: Cart, Settlement, Fulfillment, Returns, Notification, Support, Wallet, Payment, Promotion, Offer — MODULE_ENDPOINTS + MEDIATR_12_5
+- Inventory = INTERNAL_ONLY / NOT_APPLICABLE / INTERNAL_USE_CASE_BOUNDARIES
+- reopenedModules = empty; internalApplicabilityReviewModules = empty
+- Checkout = PAUSED_AT_SAFE_W5_CHECKPOINT
+- Next task: USER_REVIEW_GOLDEN_WAVE
+- Gate: USER_REVIEW_REQUIRED_BEFORE_NEXT_TMAR_WAVE
+- Closed by: TB-TMAR-GOLDEN-WAVE-FINAL-CLOSURE-001
+
 Purpose
 
 This file is the durable recovery entry point for the Tooba architecture program.
@@ -188,7 +202,7 @@ User choice:
 Continue TMAR for now until user explicitly says to return to product feature work.
 
 Next TMAR task:
-TB-TMAR-GOLDEN-WAVE-FINAL-CLOSURE-001
+USER_REVIEW_GOLDEN_WAVE
 
 Current recovery state (authoritative — TB-TMAR-INVENTORY-APPLICABILITY-REVERIFY-001):
 

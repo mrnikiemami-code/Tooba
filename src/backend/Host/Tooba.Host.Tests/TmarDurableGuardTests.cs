@@ -102,11 +102,17 @@ public sealed class TmarDurableGuardTests
         using var doc = JsonDocument.Parse(File.ReadAllText(statePath));
         var rootEl = doc.RootElement;
         Assert.Equal("BACKEND_ONLY_UNTIL_EXPLICIT_RELEASE", rootEl.GetProperty("executionMode").GetString());
-        Assert.Equal("TB-TMAR-GOLDEN-WAVE-FINAL-CLOSURE-001", rootEl.GetProperty("nextTask").GetString());
+        Assert.Equal("COMPLETE", rootEl.GetProperty("goldenWaveState").GetString());
+        Assert.Equal("TB-TMAR-GOLDEN-WAVE-FINAL-CLOSURE-001", rootEl.GetProperty("goldenWaveClosedBy").GetString());
+        Assert.False(string.IsNullOrWhiteSpace(rootEl.GetProperty("goldenWaveClosedCommit").GetString()));
+        Assert.Equal("USER_REVIEW_GOLDEN_WAVE", rootEl.GetProperty("nextTask").GetString());
+        Assert.Equal("USER_REVIEW_REQUIRED_BEFORE_NEXT_TMAR_WAVE", rootEl.GetProperty("nextTaskGate").GetString());
+        Assert.Equal("PAUSED_AT_SAFE_W5_CHECKPOINT", rootEl.GetProperty("checkoutState").GetString());
+        Assert.True(rootEl.GetProperty("frontendFrozen").GetBoolean());
         Assert.Equal("ARCH-COMPLETE-001", rootEl.GetProperty("locksVersion").GetString());
 
-        var complete = rootEl.GetProperty("completeReferenceModules")
-            .EnumerateArray()
+        var completeModules = rootEl.GetProperty("completeReferenceModules").EnumerateArray().ToArray();
+        var complete = completeModules
             .Select(x => x.GetProperty("module").GetString()!)
             .OrderBy(x => x, StringComparer.Ordinal)
             .ToArray();
@@ -114,44 +120,50 @@ public sealed class TmarDurableGuardTests
             new[] { "Cart", "Fulfillment", "Inventory", "Notification", "Offer", "Payment", "Promotion", "Returns", "Settlement", "Support", "Wallet" },
             complete);
 
-        var remaining = rootEl.GetProperty("reopenedModules")
-            .EnumerateArray()
-            .Concat(rootEl.GetProperty("internalApplicabilityReviewModules").EnumerateArray())
-            .Select(x => (
-                Module: x.GetProperty("module").GetString()!,
-                State: x.GetProperty("state").GetString()!))
-            .ToDictionary(x => x.Module, x => x.State, StringComparer.Ordinal);
-        Assert.Empty(remaining);
+        Assert.Empty(rootEl.GetProperty("reopenedModules").EnumerateArray());
+        Assert.Empty(rootEl.GetProperty("internalApplicabilityReviewModules").EnumerateArray());
 
-        var inventory = rootEl.GetProperty("completeReferenceModules").EnumerateArray()
+        var httpModules = completeModules
+            .Where(x => x.GetProperty("module").GetString() != "Inventory")
+            .ToArray();
+        Assert.Equal(10, httpModules.Length);
+        Assert.All(httpModules, module =>
+        {
+            Assert.Equal("COMPLETE_REFERENCE_PATTERN", module.GetProperty("state").GetString());
+            Assert.Equal("HTTP_OWNING", module.GetProperty("httpApplicability").GetString());
+            Assert.Equal("MODULE_ENDPOINTS", module.GetProperty("endpointOwnership").GetString());
+            Assert.Equal("MEDIATR_12_5", module.GetProperty("cqrs").GetString());
+        });
+
+        var inventory = completeModules
             .Single(x => x.GetProperty("module").GetString() == "Inventory");
+        Assert.Equal("COMPLETE_REFERENCE_PATTERN", inventory.GetProperty("state").GetString());
         Assert.Equal("INTERNAL_ONLY", inventory.GetProperty("httpApplicability").GetString());
         Assert.Equal("NOT_APPLICABLE", inventory.GetProperty("endpointOwnership").GetString());
         Assert.Equal("INTERNAL_USE_CASE_BOUNDARIES", inventory.GetProperty("cqrs").GetString());
 
         var master = File.ReadAllText(Path.Combine(root, "docs", "architecture", "TOOBA-TMAR-MASTER-RECOVERY.md"));
         var bootstrap = File.ReadAllText(Path.Combine(root, "docs", "architecture", "TOOBA-ARCHITECT-BOOTSTRAP.md"));
-        Assert.Contains("TB-TMAR-INVENTORY-APPLICABILITY-REVERIFY-001", master, StringComparison.Ordinal);
-        Assert.Contains("TB-TMAR-INVENTORY-APPLICABILITY-REVERIFY-001", bootstrap, StringComparison.Ordinal);
+        Assert.Contains("USER_REVIEW_GOLDEN_WAVE", master, StringComparison.Ordinal);
+        Assert.Contains("USER_REVIEW_GOLDEN_WAVE", bootstrap, StringComparison.Ordinal);
+        Assert.Contains("USER_REVIEW_REQUIRED_BEFORE_NEXT_TMAR_WAVE", master, StringComparison.Ordinal);
+        Assert.Contains("USER_REVIEW_REQUIRED_BEFORE_NEXT_TMAR_WAVE", bootstrap, StringComparison.Ordinal);
         Assert.Contains("ARCH-COMPLETE-001", master, StringComparison.Ordinal);
         Assert.Contains("ARCH-COMPLETE-001", bootstrap, StringComparison.Ordinal);
-        Assert.Contains("Inventory", master, StringComparison.Ordinal);
-        Assert.Contains("COMPLETE_REFERENCE_PATTERN", master, StringComparison.Ordinal);
-        Assert.Contains("Inventory COMPLETE_REFERENCE_PATTERN", bootstrap, StringComparison.Ordinal);
+        const string currentCompleteList = "Cart, Settlement, Fulfillment, Returns, Notification, Support, Wallet, Payment, Promotion, Offer, Inventory";
+        Assert.Contains(currentCompleteList, master, StringComparison.Ordinal);
+        Assert.Contains(currentCompleteList, bootstrap, StringComparison.Ordinal);
+        Assert.Contains("Inventory = INTERNAL_ONLY / NOT_APPLICABLE / INTERNAL_USE_CASE_BOUNDARIES", master, StringComparison.Ordinal);
+        Assert.Contains("Inventory = INTERNAL_ONLY / NOT_APPLICABLE / INTERNAL_USE_CASE_BOUNDARIES", bootstrap, StringComparison.Ordinal);
 
         // Reject only authoritative stale next-task, not historical chronology mentions.
-        Assert.DoesNotContain(
-            "Next TMAR task:\r\nTB-TMAR-NEXT-MODULE-BATCH-002",
-            master.Replace("\r\n", "\n"),
-            StringComparison.Ordinal);
-        Assert.DoesNotContain(
-            "Next TMAR task:\nTB-TMAR-NEXT-MODULE-BATCH-002",
-            master.Replace("\r\n", "\n"),
-            StringComparison.Ordinal);
-        Assert.DoesNotContain(
-            "Current next task:\nTB-TMAR-NEXT-MODULE-BATCH-002",
-            bootstrap.Replace("\r\n", "\n"),
-            StringComparison.Ordinal);
+        var masterCurrent = master[..master.IndexOf("HISTORICAL / SUPERSEDED", StringComparison.Ordinal)];
+        var bootstrapCurrent = bootstrap[..bootstrap.IndexOf("HISTORICAL / SUPERSEDED", StringComparison.Ordinal)];
+        foreach (var stale in new[] { "TB-TMAR-PAYMENT-GOLDEN", "TB-TMAR-PROMOTION-GOLDEN", "TB-TMAR-OFFER-FINAL", "TB-TMAR-INVENTORY-APPLICABILITY" })
+        {
+            Assert.DoesNotContain("next task: " + stale, masterCurrent, StringComparison.OrdinalIgnoreCase);
+            Assert.DoesNotContain("next task: " + stale, bootstrapCurrent, StringComparison.OrdinalIgnoreCase);
+        }
     }
 
     private static bool IsProductionFrontendPath(string relative)

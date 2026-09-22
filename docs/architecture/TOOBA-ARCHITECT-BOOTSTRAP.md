@@ -2,6 +2,19 @@
 
 Canonical bootstrap for recovering the Tooba architecture context after chat/session loss.
 
+## Current Golden Wave Closure (authoritative)
+
+- Locks: ARCH-COMPLETE-001, HOST-MODULE-ENDPOINT-001, ARCH-CQRS-001/002
+- Golden wave = COMPLETE; backend-only; frontendFrozen = true
+- Complete modules: Cart, Settlement, Fulfillment, Returns, Notification, Support, Wallet, Payment, Promotion, Offer, Inventory
+- Ten HTTP-owning modules use MODULE_ENDPOINTS + MEDIATR_12_5.
+- Inventory = INTERNAL_ONLY / NOT_APPLICABLE / INTERNAL_USE_CASE_BOUNDARIES
+- reopenedModules = empty; internalApplicabilityReviewModules = empty
+- Checkout = PAUSED_AT_SAFE_W5_CHECKPOINT
+- Current next task: USER_REVIEW_GOLDEN_WAVE
+- Gate: USER_REVIEW_REQUIRED_BEFORE_NEXT_TMAR_WAVE
+- Closed by: TB-TMAR-GOLDEN-WAVE-FINAL-CLOSURE-001
+
 1. Primary Goal
 
 The highest architectural goal of Tooba is:
@@ -26,12 +39,11 @@ Accepted architecture baseline:
 TB-TMAR-ARCH-BASELINE
 
 Current next task:
-TB-TMAR-INVENTORY-APPLICABILITY-REVERIFY-001
+USER_REVIEW_GOLDEN_WAVE
 
-Current recovery state (authoritative — TB-TMAR-OFFER-FINAL-REVERIFY-001; implementation 813184b90906489b5654694b60afc96c4803cd3d):
+Current recovery state (authoritative — TB-TMAR-GOLDEN-WAVE-FINAL-CLOSURE-001):
 COMPLETE HTTP-owning: Cart, Settlement, Fulfillment, Returns, Notification, Support, Wallet, Payment, Promotion, Offer.
-Payment COMPLETE_REFERENCE_PATTERN.
-Promotion and Offer COMPLETE_REFERENCE_PATTERN. Remaining: Inventory NEEDS_APPLICABILITY_REVERIFY.
+Inventory COMPLETE_REFERENCE_PATTERN as INTERNAL_ONLY / NOT_APPLICABLE / INTERNAL_USE_CASE_BOUNDARIES.
 Checkout PAUSED_AT_SAFE_W5_CHECKPOINT. Tax/Pricing UNTOUCHED in this wave. Frontend BACKEND_ONLY_UNTIL_EXPLICIT_RELEASE.
 Machine-readable: docs/architecture/tmar-current-state.json
 

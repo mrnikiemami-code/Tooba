@@ -4,6 +4,15 @@ Status: CANONICAL after TB-TMAR-FND-001
 
 These locks govern NEW work during TMAR recovery. Existing LOCK-SF-* storefront locks remain intact.
 
+## Golden wave final closure
+`TB-TMAR-GOLDEN-WAVE-FINAL-CLOSURE-001` closes the targeted wave under
+`ARCH-COMPLETE-001`, `HOST-MODULE-ENDPOINT-001`, and `ARCH-CQRS-001/002`.
+Complete modules: Cart, Settlement, Fulfillment, Returns, Notification, Support, Wallet, Payment, Promotion, Offer, Inventory.
+The first ten are HTTP-owning (`MODULE_ENDPOINTS` + `MEDIATR_12_5`); Inventory is
+`INTERNAL_ONLY / NOT_APPLICABLE / INTERNAL_USE_CASE_BOUNDARIES`.
+Checkout remains `PAUSED_AT_SAFE_W5_CHECKPOINT`, frontend remains frozen, and
+`USER_REVIEW_REQUIRED_BEFORE_NEXT_TMAR_WAVE` applies. Next task: `USER_REVIEW_GOLDEN_WAVE`.
+
 ## ARCH-OWN-001
 Domain ownership is determined by bounded-context invariant/lifecycle, never persistence convenience.
 
