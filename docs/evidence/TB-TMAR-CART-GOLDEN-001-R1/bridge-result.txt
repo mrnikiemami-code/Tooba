@@ -1,0 +1,52 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+BEGIN_TOOBA_WORKER_RESULT
+
+Task-ID: TB-TMAR-CART-GOLDEN-001-R1
+Claim-Id: ceb98138-be8f-419e-a811-76a66eadfcb9
+WorkerId: tooba-worker-01
+Channel: tooba-main
+Verdict: PASS
+
+Summary:
+Repaired CartExceptionMapper to STABLE_CODES_ONLY exact-message mapping. Removed Persian/English Contains heuristics and the unknown-IOE → cart.rejected swallow. TryAsync maps only known expected codes; unknowns rethrow. Strengthened architecture guards and focused mapper tests. Evidence under docs/evidence/TB-TMAR-CART-GOLDEN-001-R1/. Checkout remains PAUSED_AT_SAFE_W5_CHECKPOINT.
+
+Program-Name: TMAR — Tooba Microservice-Ready Architecture Recovery
+Track: CART_GOLDEN_CLOSURE
+Recovery-Start: docs/evidence/TB-TMAR-CART-GOLDEN-001-R1/recovery-start.md
+Cart-Exception-Source-Audit: docs/evidence/TB-TMAR-CART-GOLDEN-001-R1/cart-exception-source-audit.md
+Cart-Error-Code-Map: docs/evidence/TB-TMAR-CART-GOLDEN-001-R1/cart-error-code-map.md
+Cart-Exception-Classification: STABLE_CODES_ONLY
+Cart-Prose-Mapping: NONE
+Cart-Unexpected-Exception-Swallow: NONE
+Behavior-Preservation-Audit: docs/evidence/TB-TMAR-CART-GOLDEN-001-R1/behavior-preservation-audit.md
+AntiPattern-Scan: docs/evidence/TB-TMAR-CART-GOLDEN-001-R1/antipattern-scan.md; localized prose matching = 0; Contains-based exception classification = 0; unknown InvalidOperationException swallowed = 0
+Architecture-Guards: ENFORCED (CartArchitectureGuardTests + Cart_exception_mapper_is_stable_codes_only_without_prose_heuristics)
+Cart-Validation: PASS — Cart.Tests exit 0 (9 passed)
+Focused-Validation: PASS — exact stable-code map; prose NOT mapped; unknown IOE propagates; Cart.Tests exit 0
+Full-Validation: PASS — dotnet build src/backend/Tooba.slnx exit 0 (0 errors)
+Residual-Defects: NONE
+Cart-HTTP-Ownership: MODULE_ENDPOINTS
+Cart-Endpoints-State: REAL_PROJECT_PRESENT
+Cart-CQRS-State: MEDIATR_12_5_APPLICATION_HANDLERS
+Cart-Host-Routes: REMOVED
+Cart-Host-Composer: REMOVED
+Cart-CrossModule-Boundary: CONTRACTS_ONLY
+Cart-Result-Adoption: HTTP_USE_CASES_ADOPTED
+Cart-Physical-State: VERIFIED_ON_DISK_AND_NAMESPACE
+Cart-State: COMPLETE_REFERENCE_PATTERN
+Checkout-State: PAUSED_AT_SAFE_W5_CHECKPOINT
+Tax-State: UNTOUCHED
+Pricing-State: UNTOUCHED
+Frontend-Production-Changes: NONE
+
+Git:
+  Commit: 35198728bf17381eaaec5db1e8033478675397fb
+  Message: fix(TB-TMAR-CART-GOLDEN-001-R1): Cart exception mapping to stable codes only.
+  Push: origin/main updated 56692b7c..35198728
+  HEAD == origin/main: YES
+  User-Work-Preserved: YES (no reset/clean/force-push; stashes untouched)
+
+Blockers: NONE
+Next-Recommended-Task: USER_CART_REVIEW_CHECKPOINT
+
+END_TOOBA_WORKER_RESULT

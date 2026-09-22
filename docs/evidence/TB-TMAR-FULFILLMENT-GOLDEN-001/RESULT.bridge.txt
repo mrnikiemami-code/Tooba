@@ -1,0 +1,59 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+BEGIN_TOOBA_WORKER_RESULT
+
+Task-ID: TB-TMAR-FULFILLMENT-GOLDEN-001
+Claim-Id: 42c832ff-b5df-485d-984f-62514a523091
+WorkerId: tooba-worker-01
+Channel: tooba-main
+Verdict: PASS
+
+Summary:
+Created Tooba.Fulfillment.Endpoints and moved all seller/admin/customer/shipping Fulfillment routes from Host. Host now only maps MapFulfillmentEndpoints() and registers seller/admin/customer authorizer adapters. Application Commands/Queries split into use-case folders with MediatR 12.5.0 handlers; AdminFulfillmentGridQueryPolicy owns Normalize; FulfillmentExceptionMapper is STABLE_CODES_ONLY without StartsWith/Contains swallow. Host/Fulfillment/ removed; Admin ShippingServiceEndpoints removed; shipping-methods route moved out of AdminOrderOperationsEndpoints; AdminListGridPolicies.Fulfillments removed. Fulfillment.Tests 31 passed; full Tooba.slnx build exit 0. Evidence under docs/evidence/TB-TMAR-FULFILLMENT-GOLDEN-001/.
+
+Program-Name: TMAR — Tooba Microservice-Ready Architecture Recovery
+Track: FULFILLMENT_GOLDEN_CLOSURE
+Recovery-Start: docs/evidence/TB-TMAR-FULFILLMENT-GOLDEN-001/recovery-start.md
+Fulfillment-HTTP-Ownership-Audit: docs/evidence/TB-TMAR-FULFILLMENT-GOLDEN-001/fulfillment-http-ownership-audit.md
+Fulfillment-Endpoints-State: REAL_PROJECT_PRESENT
+Fulfillment-CQRS-State: MEDIATR_12_5_APPLICATION_HANDLERS
+Fulfillment-Application-UseCases: ExecuteAdminFulfillmentBulk; SellerMutateFulfillment; CreateShippingService; UpdateShippingService; DeactivateShippingService; EnsureShippingCatalogSeed; ListSellerFulfillments; GetSellerFulfillment; ListAdminFulfillments; GetAdminFulfillment; QueryAdminFulfillmentWorkQueue; ListCustomerCheckoutFulfillments; ListShippingServices; GetShippingService; ListEnabledShippingMethodsTree
+Fulfillment-Auth-Boundary: docs/evidence/TB-TMAR-FULFILLMENT-GOLDEN-001/fulfillment-auth-boundary.md; IFulfillmentSellerAuthorizer + IFulfillmentAdminAuthorizer + IFulfillmentCustomerAuthorizer in Endpoints; Host adapters only
+Fulfillment-Shipping-Ownership: MODULE_ENDPOINTS
+Fulfillment-Shipping-Method-Route: MODULE_ENDPOINTS
+Fulfillment-Result-Adoption: HTTP_USE_CASES_ADOPTED
+Fulfillment-Error-Classification: STABLE_CODES_ONLY
+Fulfillment-Prose-Mapping: NONE
+Fulfillment-Unexpected-Exception-Swallow: NONE
+Fulfillment-Host-Authority-Audit: docs/evidence/TB-TMAR-FULFILLMENT-GOLDEN-001/fulfillment-host-authority-audit.md
+Fulfillment-Host-Endpoints: REMOVED
+Fulfillment-Host-Composer: REMOVED
+Fulfillment-Host-Business-Authority: NONE
+Fulfillment-Host-DbAuthority: NONE
+Fulfillment-CrossModule-Boundary: CONTRACTS_ONLY
+Fulfillment-Physical-State: VERIFIED_ON_DISK_AND_NAMESPACE
+Fulfillment-Architecture-Guards: ENFORCED
+Fulfillment-Behavior-Preservation: VERIFIED
+Focused-Validation: PASS — Fulfillment.Tests exit 0 (31 passed: architecture ownership, CQRS/host guards, stable-code mapper, grid policy, endpoint URLs, shipping tree, bulk, auth)
+Skipped-Validation: broad Host suite; Checkout workflow; Tax/Pricing; frontend; unrelated modules
+Full-Validation: PASS — dotnet build src/backend/Tooba.slnx exit 0 (0 errors)
+AntiPattern-Gate: PASS — no Host FulfillmentEndpoints; no FulfillmentPanelComposer; no Host ShippingServiceEndpoints; no Host shipping-methods route; no StartsWith/Contains message heuristics in FulfillmentExceptionMapper; unknown IOE propagates; no TypeForwardedTo; Host/Fulfillment absent
+Residual-Defects: NONE
+Fulfillment-State: COMPLETE_REFERENCE_PATTERN
+Settlement-State: COMPLETE_REFERENCE_PATTERN
+Cart-State: COMPLETE_REFERENCE_PATTERN
+Checkout-State: PAUSED_AT_SAFE_W5_CHECKPOINT
+Tax-State: UNTOUCHED
+Pricing-State: UNTOUCHED
+Frontend-Production-Changes: NONE
+
+Git:
+  Commit: 37180cc4df674e1269c1c103647ab5c96aacf64a
+  Message: feat(TB-TMAR-FULFILLMENT-GOLDEN-001): Fulfillment Endpoints + CQRS Host ownership closure.
+  Push: origin/main updated e3f36c1c..37180cc4
+  HEAD == origin/main: YES
+  User-Work-Preserved: YES (no reset/clean/force-push; stashes untouched; cart bridge-result leftovers left untracked)
+
+Blockers: NONE
+Next-Recommended-Task: ARCHITECT_SELECT_NEXT_REOPENED_MODULE
+
+END_TOOBA_WORKER_RESULT

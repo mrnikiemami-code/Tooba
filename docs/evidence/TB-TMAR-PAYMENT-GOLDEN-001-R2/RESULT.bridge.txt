@@ -1,0 +1,77 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+BEGIN_TOOBA_WORKER_RESULT
+
+Task-ID: TB-TMAR-PAYMENT-GOLDEN-001-R2
+Claim-Id: 47a23619-75b9-44ac-a1aa-b0da27645689
+WorkerId: tooba-worker-01
+Channel: tooba-main
+Verdict: PASS
+
+Summary:
+Payment R2 COMPLETE. Deleted HostPaymentAdminOrderEnrichmentAdapter, HostPaymentUnpaidRetrySupplyAdapter, HostPaymentProofMediaAdapter, HostStorefrontCheckoutPaymentAccessAdapter. Added Order.Contracts.Payments, Media.Contracts, Inventory unpaid-retry/supply Contracts, Payment.Contracts Storefront/Admin/Customer/Hold gateways; implementations in owning module Infrastructure. StorefrontPaymentOrchestrator moved to Application/Orchestration. Host pending-payment and other Host Payment consumers use Payment.Contracts (HostCheckoutActorPolicyAdapter security-only remain). Payment added to HostModuleEndpointOwnershipTests COMPLETE manifest. SoT Payment=COMPLETE_REFERENCE_PATTERN; nextTask=TB-TMAR-PROMOTION-GOLDEN-001. Payment.Tests 16/16; Host durable ownership 8/8; Tooba.slnx build exit 0.
+
+Program-Name: TMAR — Tooba Microservice-Ready Architecture Recovery
+Track: PAYMENT_GOLDEN_CLOSURE_R2
+Recovery-Start: docs/evidence/TB-TMAR-PAYMENT-GOLDEN-001-R2/recovery-start.md
+Payment-HTTP-Ownership: MODULE_ENDPOINTS
+Payment-Endpoints-State: REAL_PROJECT_PRESENT
+Payment-CQRS-State: MEDIATR_12_5_APPLICATION_HANDLERS
+Payment-Application-UseCases: GetStorefrontWalletQuote; ListStorefrontPaymentMethods; GetStorefrontPayment; GetStorefrontPaymentSandboxContext; InitiateStorefrontPayment; CompleteSandboxPayment; SubmitManualPaymentEvidence; RetryManualPayment; RetryUnpaidPayment; UploadManualPaymentProof; GetAdminPayment; ReconcileAdminPayment; ConfirmAdminDeposit; RejectAdminDeposit; QueryAdminPaymentsGrid; ProcessPaymentWebhook; ReconcileStalePayments
+Payment-Storefront-Routes: MODULE_ENDPOINTS
+Payment-Admin-Routes: MODULE_ENDPOINTS
+Payment-Webhook-Route: MODULE_ENDPOINTS
+Payment-Host-Authority-Audit: docs/evidence/TB-TMAR-PAYMENT-GOLDEN-001-R2/host-authority-audit.md
+Payment-Host-Business-Authority: NONE
+Payment-Host-DbAuthority: NONE_EXCEPT_PLATFORM_BOOTSTRAP_ALLOWLIST
+Payment-Host-CrossModule-BusinessAdapters: NONE
+Payment-Reconciliation-Host-Role: SCHEDULER_ONLY
+Payment-CheckoutOrder-Boundary: CONTRACTS_ONLY
+Payment-Inventory-Boundary: CONTRACTS_ONLY
+Payment-Media-Boundary: CONTRACTS_ONLY
+Payment-Wallet-Boundary: CONTRACTS_ONLY
+Payment-External-Consumers: PAYMENT_CONTRACTS_ONLY
+Payment-Result-Adoption: HTTP_USE_CASES_ADOPTED
+Payment-Error-Classification: STABLE_CODES_ONLY
+Payment-Prose-Mapping: NONE
+Payment-Unexpected-Exception-Swallow: NONE
+Payment-Physical-State: VERIFIED_ON_DISK_AND_NAMESPACE
+Payment-Architecture-Guards: ENFORCED
+Payment-Behavior-Preservation: VERIFIED
+Payment-Microservice-Extraction: READY_WITHOUT_REWRITE
+Recovery-State: CURRENT_AND_MACHINE_READABLE
+Recovery-Next-Task: TB-TMAR-PROMOTION-GOLDEN-001
+Current-State-Manifest: docs/architecture/tmar-current-state.json
+Focused-Validation: PASS — Payment.Tests 16/16; HostModuleEndpointOwnershipTests + TmarDurableGuardTests 8/8
+Skipped-Validation: broad Host suite; Checkout workflow; Tax/Pricing; frontend; Promotion/Offer/Inventory
+Full-Validation: PASS — dotnet build src/backend/Tooba.slnx exit 0 (0 errors)
+AntiPattern-Gate: PASS — no Host Payment business adapters; no Host Payment.Application.Ports business consumers except HostCheckoutActorPolicyAdapter; Orchestration folder; Contracts-only foreign seams; Payment in COMPLETE HTTP module manifest; STABLE_CODES_ONLY; scheduler-only reconciliation
+Residual-Defects: NONE
+Payment-State: COMPLETE_REFERENCE_PATTERN
+Wallet-State: COMPLETE_REFERENCE_PATTERN
+Support-State: COMPLETE_REFERENCE_PATTERN
+Notification-State: COMPLETE_REFERENCE_PATTERN
+Returns-State: COMPLETE_REFERENCE_PATTERN
+Fulfillment-State: COMPLETE_REFERENCE_PATTERN
+Settlement-State: COMPLETE_REFERENCE_PATTERN
+Cart-State: COMPLETE_REFERENCE_PATTERN
+Promotion-State: REOPENED_ENDPOINT_CQRS_OWNERSHIP
+Offer-State: NEEDS_FINAL_REVERIFY
+Inventory-State: NEEDS_APPLICABILITY_REVERIFY
+Checkout-State: PAUSED_AT_SAFE_W5_CHECKPOINT
+Tax-State: UNTOUCHED
+Pricing-State: UNTOUCHED
+Frontend-Production-Changes: NONE
+
+Git:
+  Commit: db58a6710b54f3d046c0aed82a7b1dd73ea2c353
+  Message: docs(TB-TMAR-PAYMENT-GOLDEN-001-R2): tip-align Result Git SHA to final tip.
+  Implementation-Commit: 1df5bd23 (Host contract boundary); ab8937f9 (R2 boundary closure)
+  Push: origin/main updated
+  HEAD == origin/main: YES
+  User-Work-Preserved: YES (no reset/clean/force-push; stashes untouched; unrelated CART/Fulfillment bridge-result leftovers left untracked)
+
+Blockers: NONE
+User-Work-Preserved: YES
+Next-Recommended-Task: TB-TMAR-PROMOTION-GOLDEN-001
+
+END_TOOBA_WORKER_RESULT

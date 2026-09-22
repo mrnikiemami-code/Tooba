@@ -1,0 +1,69 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+BEGIN_TOOBA_WORKER_RESULT
+
+Task-ID: TB-TMAR-CART-GOLDEN-001
+Claim-Id: 55788375-f147-4d27-8e24-c3523dd6086e
+WorkerId: tooba-worker-01
+Channel: tooba-main
+Verdict: PASS
+
+Summary:
+Cart is now an HTTP-owning module. Created Tooba.Cart.Endpoints; moved seven storefront Cart routes out of Host; added MediatR 12.5.0 CQRS Commands/Queries/Handlers in Cart.Application; moved presentation to CartPresentationComposer; deleted StorefrontCartComposer; foreign enrichment via Catalog.Contracts.Cart + Party.Contracts; Checkout/Shipping/PendingPayment compile-only ICartPresentationGateway seams; guards/tests/evidence/SoT updated; committed and pushed main.
+
+Program-Name: TMAR — Tooba Microservice-Ready Architecture Recovery
+Track: CART_GOLDEN_CLOSURE
+Recovery-Start: HEAD 6f56e79c == origin/main; stash wip-slnx-folders-pre-bridge preserved
+
+Cart-HTTP-Ownership-Audit: MODULE_ENDPOINTS — MapCartEndpoints() /v1/storefront; exact URLs preserved
+Cart-Endpoints-State: REAL_PROJECT_PRESENT
+Cart-CQRS-State: MEDIATR_12_5_APPLICATION_HANDLERS
+Cart-Application-UseCases:
+  Commands: CreateGuestCart, MergeCartAfterLogin, AddCartLine, ChangeCartLineQuantity, RemoveCartLine
+  Queries: GetCurrentAuthenticatedCart, GetCart
+Cart-Result-Adoption: HTTP_USE_CASES_ADOPTED (Result/SemanticError/ApiResponseFactory; Cart error catalog)
+Cart-Presentation-Boundary: APPLICATION_OWNED (CartPresentationComposer; CartPage/CartLineView)
+Cart-Foreign-Contracts-Audit: CONTRACTS_ONLY (ICatalogCartPresentationLookup + IPartyLookup)
+Cart-Host-Authority-Audit: Host composition + MapCartEndpoints only; no Cart HTTP handlers; no CatalogDb Cart authority
+Cart-Host-Routes: REMOVED
+Cart-Host-Composer: REMOVED
+Cart-Host-CatalogDbAuthority: NONE
+Cart-CrossModule-Boundary: CONTRACTS_ONLY
+Cart-Physical-State: VERIFIED_ON_DISK_AND_NAMESPACE
+Cart-Architecture-Guards: ENFORCED
+Cart-Behavior-Preservation: VERIFIED (accidental=0; intentional: ProblemDetails via ApiResponseFactory vs legacy {title,errorCode,detail})
+
+Checkout-Impact: PAUSED_AT_SAFE_W5_CHECKPOINT — compile-only ICartPresentationGateway seam on Checkout/Shipping/PendingPayment; no Checkout semantics change
+
+Focused-Validation:
+  dotnet test Modules/Cart/Tooba.Cart.Tests → exit 0 (Passed 6)
+  dotnet test Host.Tests filter CartLifetimeSeparation|StorefrontCheckoutAccess|CheckoutIdentityContract → exit 0 (Passed 12)
+  dotnet build src/backend/Tooba.slnx → exit 0
+
+Skipped-Validation: broad Host suite; full Checkout workflow; Tax/Pricing; frontend; unrelated modules
+Full-Validation: Tooba.slnx build succeeded (0 errors)
+
+AntiPattern-Gate: PASS (no TypeForwardedTo; no Host Cart composer; Endpoints use ISender+ApiResponseFactory; no raw ex.Message; Contracts-only foreign data)
+
+Residual-Defects:
+  - Failure HTTP envelope now ProblemDetails (ApiResponseFactory) rather than legacy manual {title,errorCode,detail} — intentional Result adoption; Architect/FE may want smoke check
+  - docs/ai/tasks/_claim-raw.json left untracked (ignored claim.json pattern); stash list unchanged
+
+Cart-State: COMPLETE_REFERENCE_PATTERN
+Checkout-State: PAUSED_AT_SAFE_W5_CHECKPOINT
+Tax-State: DEFERRED_PHYSICAL_REVIEW_BY_USER
+Pricing-State: DEFERRED_PHYSICAL_REVIEW_BY_USER
+Frontend-Production-Changes: NONE
+
+Git:
+  Commit: 56692b7c2ac8e8145b5030fe733f40bfcac7ddee
+  Message: feat(TB-TMAR-CART-GOLDEN-001): Cart Endpoints + MediatR CQRS Host ownership closure.
+  Push: origin/main updated 6f56e79c..56692b7c
+  HEAD == origin/main: YES
+  Working tree: clean for task files; only ?? docs/ai/tasks/_claim-raw.json
+  Stashes preserved: wip-slnx-folders-pre-bridge (+ unrelated-pre-r10, temp-before-push)
+
+Blockers: NONE
+User-Work-Preserved: YES (stashes untouched; no force-push/reset/clean; no broad git add .)
+Next-Recommended-Task: USER_CART_REVIEW_CHECKPOINT
+
+END_TOOBA_WORKER_RESULT
