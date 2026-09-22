@@ -44,7 +44,7 @@ Pricing-State: UNTOUCHED
 Frontend-Production-Changes: NONE
 
 Git:
-  Commit: 06b80528a19a3891bc1aae53c32287564f6e19ec
+  Commit: d7e32371474cdd939b1f3ba4be759fac9a9bccd4
   Message: feat(TB-TMAR-SETTLEMENT-GOLDEN-001): Settlement Endpoints + CQRS Host ownership closure.
   Push: origin/main updated 5a3c3313..06b80528
   HEAD == origin/main: YES
