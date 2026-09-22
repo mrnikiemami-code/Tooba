@@ -1,4 +1,5 @@
-﻿using Tooba.Host.Admin;
+﻿using System.Text.RegularExpressions;
+using Tooba.Host.Admin;
 using Tooba.Inventory.Application.Ports;
 using Tooba.Inventory.Application.Checkout;
 using Tooba.Inventory.Application.Orders;
@@ -123,9 +124,10 @@ public sealed class AdminReservationCycleAuditTests
         Assert.Contains("ToAudit", composer, StringComparison.Ordinal);
         var orders = File.ReadAllText(OrderModule(
             "Tooba.Order.Infrastructure/Admin/OrdersGrid/AdminOrdersGridReader.cs"));
-        var payments = File.ReadAllText(Host("Modules/Payment/Tooba.Payment.Application/Queries/QueryAdminPaymentsGrid/QueryAdminPaymentsGridQuery.cs"));
+        var payments = File.ReadAllText(Module(
+            "Payment/Tooba.Payment.Application/Queries/QueryAdminPaymentsGrid/QueryAdminPaymentsGridQuery.cs"));
         Assert.Contains("GetProjectionsAsync", orders, StringComparison.Ordinal);
-        Assert.Contains("GetProjectionsAsync", payments, StringComparison.Ordinal);
+        Assert.Equal(1, Regex.Matches(payments, @"EnrichAsync\(").Count);
         Assert.DoesNotContain("GetProjectionAsync(", orders, StringComparison.Ordinal);
         Assert.DoesNotContain("GetProjectionAsync(", payments, StringComparison.Ordinal);
         Assert.DoesNotContain("ListEventsAsync", orders, StringComparison.Ordinal);
@@ -217,9 +219,11 @@ public sealed class AdminReservationCycleAuditTests
     private static string Host(string relative) =>
         Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", "Tooba.Host", relative.Replace('/', Path.DirectorySeparatorChar));
 
-    private static string OrderModule(string relative) =>
+    private static string OrderModule(string relative) => Module("Order/" + relative);
+
+    private static string Module(string relative) =>
         Path.Combine(
-            AppContext.BaseDirectory, "..", "..", "..", "..", "..", "Modules", "Order",
+            AppContext.BaseDirectory, "..", "..", "..", "..", "..", "Modules",
             relative.Replace('/', Path.DirectorySeparatorChar));
 
     private static string RepoRoot() =>
