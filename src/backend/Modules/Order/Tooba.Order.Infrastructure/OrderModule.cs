@@ -15,7 +15,7 @@ using Tooba.Order.Contracts.Fulfillment;
 using Tooba.Order.Contracts.Returns;
 using Tooba.Order.Contracts.Payments;
 using Tooba.Order.Infrastructure.Payments;
-using Tooba.Order.Application.Admin.Completeness;
+using Tooba.Order.Application.Admin.Completeness.Ports;
 using Tooba.Order.Infrastructure.Admin;
 
 namespace Tooba.Order.Infrastructure;

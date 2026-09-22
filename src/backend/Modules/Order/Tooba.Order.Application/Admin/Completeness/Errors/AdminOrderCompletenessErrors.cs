@@ -1,4 +1,4 @@
-namespace Tooba.Order.Application.Admin.Completeness;
+namespace Tooba.Order.Application.Admin.Completeness.Errors;
 
 public static class AdminOrderCompletenessErrors
 {

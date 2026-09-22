@@ -194,7 +194,7 @@ public interface ICheckoutDirectory
     /// <summary>
     /// یادداشت را طبق قاعدهٔ نویسنده/قفل مشاهده soft-delete می‌کند.
     /// </summary>
-    Task DeleteNoteAsync(
+    Task<CheckoutNoteDeleteOutcome> DeleteNoteAsync(
         Guid checkoutId,
         Guid noteId,
         Guid actorUserId,
@@ -217,6 +217,13 @@ public sealed record CheckoutOperationalNoteSnapshot(
     Guid CreatedByUserId,
     DateTimeOffset CreatedAt,
     bool CanDelete);
+
+public enum CheckoutNoteDeleteOutcome
+{
+    Deleted,
+    Forbidden,
+    NotFound
+}
 
 /// <summary>اثبات خرید پرداخت‌شده که فقط از دادهٔ مالک Order ساخته می‌شود.</summary>
 public sealed record OrderPurchaseVerification(bool IsVerified, Guid? SellerOrderId)

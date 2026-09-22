@@ -1,8 +1,11 @@
 using MediatR;
 using Tooba.BuildingBlocks;
 using Tooba.BuildingBlocks.Results;
+using Tooba.Order.Application.Admin.Completeness.Errors;
+using Tooba.Order.Application.Admin.Completeness.Models;
+using Tooba.Order.Application.Admin.Completeness.Ports;
 
-namespace Tooba.Order.Application.Admin.Completeness;
+namespace Tooba.Order.Application.Admin.Completeness.Queries.GetAdminOrderInvoice;
 
 public sealed record GetAdminOrderInvoiceQuery(Guid CheckoutId, AdminOrderActor Actor)
     : IRequest<Result<AdminOrderPrintableDocument>>;

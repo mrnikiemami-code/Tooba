@@ -431,7 +431,7 @@ public sealed partial class CheckoutDirectory : ICheckoutDirectory
     }
 
     /// <inheritdoc />
-    public async Task DeleteNoteAsync(
+    public async Task<CheckoutNoteDeleteOutcome> DeleteNoteAsync(
         Guid checkoutId,
         Guid noteId,
         Guid actorUserId,
@@ -439,8 +439,11 @@ public sealed partial class CheckoutDirectory : ICheckoutDirectory
     {
         await _guard.EnsureCanMutateAsync(cancellationToken);
         var note = await _db.OperationalNotes
-            .SingleOrDefaultAsync(x => x.CheckoutId == checkoutId && x.NoteId == noteId, cancellationToken)
-            ?? throw new InvalidOperationException("یادداشت پیدا نشد.");
+            .SingleOrDefaultAsync(x => x.CheckoutId == checkoutId && x.NoteId == noteId, cancellationToken);
+        if (note is null)
+        {
+            return CheckoutNoteDeleteOutcome.NotFound;
+        }
 
         var lockedByOther = await _db.AdminViewAcks.AsNoTracking()
             .AnyAsync(
@@ -450,11 +453,12 @@ public sealed partial class CheckoutDirectory : ICheckoutDirectory
                 cancellationToken);
         if (lockedByOther)
         {
-            throw new InvalidOperationException("حذف یادداشت پس از مشاهدهٔ کاربر دیگر مجاز نیست.");
+            return CheckoutNoteDeleteOutcome.Forbidden;
         }
 
         note.SoftDelete(actorUserId, DateTimeOffset.UtcNow);
         await _db.SaveChangesAsync(cancellationToken);
+        return CheckoutNoteDeleteOutcome.Deleted;
     }
 
     /// <inheritdoc />

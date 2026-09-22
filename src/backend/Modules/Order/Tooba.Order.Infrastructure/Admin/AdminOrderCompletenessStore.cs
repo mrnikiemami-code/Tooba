@@ -4,7 +4,8 @@ using System.Text;
 using Microsoft.EntityFrameworkCore;
 using Tooba.BuildingBlocks;
 using Tooba.Order.Application;
-using Tooba.Order.Application.Admin.Completeness;
+using Tooba.Order.Application.Admin.Completeness.Models;
+using Tooba.Order.Application.Admin.Completeness.Ports;
 using Tooba.Order.Infrastructure.Persistence;
 using Tooba.Payment.Contracts.Admin;
 
@@ -28,18 +29,14 @@ internal sealed class AdminOrderCompletenessStore(
     public async Task<AdminOrderNoteView> AddNoteAsync(Guid checkoutId, Guid actorUserId, string body, CancellationToken ct) =>
         Map(await checkout.AddNoteAsync(checkoutId, actorUserId, body, ct));
 
-    public async Task<bool> DeleteNoteAsync(Guid checkoutId, Guid noteId, Guid actorUserId, CancellationToken ct)
-    {
-        try
+    public async Task<AdminOrderNoteDeleteOutcome> DeleteNoteAsync(Guid checkoutId, Guid noteId, Guid actorUserId, CancellationToken ct) =>
+        await checkout.DeleteNoteAsync(checkoutId, noteId, actorUserId, ct) switch
         {
-            await checkout.DeleteNoteAsync(checkoutId, noteId, actorUserId, ct);
-            return true;
-        }
-        catch (InvalidOperationException)
-        {
-            return false;
-        }
-    }
+            CheckoutNoteDeleteOutcome.Deleted => AdminOrderNoteDeleteOutcome.Deleted,
+            CheckoutNoteDeleteOutcome.Forbidden => AdminOrderNoteDeleteOutcome.Forbidden,
+            CheckoutNoteDeleteOutcome.NotFound => AdminOrderNoteDeleteOutcome.NotFound,
+            _ => throw new InvalidOperationException("Unknown checkout note deletion outcome.")
+        };
 
     public async Task<AdminOrderOperationalHistoryPage?> GetHistoryAsync(Guid checkoutId, Guid actorUserId, int page, int pageSize, CancellationToken ct)
     {
@@ -49,12 +46,12 @@ internal sealed class AdminOrderCompletenessStore(
         await checkout.RecordAdminViewAsync(checkoutId, actorUserId, ct);
         var entries = new List<AdminOrderHistoryEntry>
         {
-            new(group.SubmittedAt, "order_created", "ثبت سفارش", "Order created", null, $"Checkout {group.CheckoutId:N}"[..20])
+            new(group.SubmittedAt, "order_created", "ثبت سفارش", "Order created", "system", "سیستم", "توسط سیستم", "By system", null, $"Checkout {group.CheckoutId:N}"[..20])
         };
         entries.AddRange(group.SellerOrders.Where(x => x.Status == Domain.SellerOrderStatus.Cancelled)
-            .Select(x => new AdminOrderHistoryEntry(group.SubmittedAt, "order_cancelled", "سفارش لغو شد", "Order cancelled", $"سفارش {x.OrderNumber}", $"Order {x.OrderNumber}")));
+            .Select(x => new AdminOrderHistoryEntry(group.SubmittedAt, "order_cancelled", "سفارش لغو شد", "Order cancelled", "system", "سیستم", "توسط سیستم", "By system", $"سفارش {x.OrderNumber}", $"Order {x.OrderNumber}")));
         var notes = await checkout.ListNotesAsync(checkoutId, Guid.Empty, 50, ct);
-        entries.AddRange(notes.Select(x => new AdminOrderHistoryEntry(x.CreatedAt, "operational_note", "یادداشت داخلی", "Internal note", Truncate(x.Body), Truncate(x.Body))));
+        entries.AddRange(notes.Select(x => new AdminOrderHistoryEntry(x.CreatedAt, "operational_note", "یادداشت داخلی", "Internal note", "user", "کاربر نامشخص", "توسط کاربر نامشخص", "By unknown user", Truncate(x.Body), Truncate(x.Body))));
         var ordered = entries.OrderByDescending(x => x.OccurredAt).ToList();
         return new(checkoutId, page, pageSize, ordered.Count, ordered.Skip((page - 1) * pageSize).Take(pageSize).ToList());
     }
@@ -126,7 +123,8 @@ internal sealed class AdminOrderCompletenessStore(
     }
 
     private static AdminOrderNoteView Map(CheckoutOperationalNoteSnapshot x) =>
-        new(x.NoteId, x.CheckoutId, x.Body, x.CreatedByUserId, x.CreatedAt, x.CanDelete);
+        new(x.NoteId, x.CheckoutId, x.Body, x.CreatedByUserId, x.CreatedAt,
+            "user", "کاربر نامشخص", "توسط کاربر نامشخص", "By unknown user", x.CanDelete);
     private static string Truncate(string value) => value.Length <= 120 ? value : value[..119] + "…";
     private static string Money(decimal amount, string currency) =>
         string.Create(CultureInfo.InvariantCulture, $"{amount:0.####} {currency}");

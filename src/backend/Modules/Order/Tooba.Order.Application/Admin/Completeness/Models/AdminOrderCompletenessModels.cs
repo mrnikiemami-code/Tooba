@@ -1,4 +1,4 @@
-namespace Tooba.Order.Application.Admin.Completeness;
+namespace Tooba.Order.Application.Admin.Completeness.Models;
 
 public sealed record AdminOrderActor(Guid UserId);
 
@@ -8,6 +8,10 @@ public sealed record AdminOrderNoteView(
     string Body,
     Guid CreatedByUserId,
     DateTimeOffset CreatedAt,
+    string ActorKind,
+    string ActorDisplayName,
+    string ActorDisplayFa,
+    string ActorDisplayEn,
     bool CanDelete);
 
 public sealed record AdminOrderHistoryEntry(
@@ -15,6 +19,10 @@ public sealed record AdminOrderHistoryEntry(
     string Kind,
     string LabelFa,
     string LabelEn,
+    string ActorKind,
+    string ActorDisplayName,
+    string ActorDisplayFa,
+    string ActorDisplayEn,
     string? SummaryFa,
     string? SummaryEn);
 

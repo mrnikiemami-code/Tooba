@@ -3,7 +3,13 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using Tooba.BuildingBlocks.Presentation;
-using Tooba.Order.Application.Admin.Completeness;
+using Tooba.Order.Application.Admin.Completeness.Commands.AddAdminOrderNote;
+using Tooba.Order.Application.Admin.Completeness.Commands.DeleteAdminOrderNote;
+using Tooba.Order.Application.Admin.Completeness.Models;
+using Tooba.Order.Application.Admin.Completeness.Queries.GetAdminOrderInvoice;
+using Tooba.Order.Application.Admin.Completeness.Queries.GetAdminOrderOperationalHistory;
+using Tooba.Order.Application.Admin.Completeness.Queries.GetAdminOrderReceipt;
+using Tooba.Order.Application.Admin.Completeness.Queries.ListAdminOrderNotes;
 
 namespace Tooba.Order.Endpoints;
 
