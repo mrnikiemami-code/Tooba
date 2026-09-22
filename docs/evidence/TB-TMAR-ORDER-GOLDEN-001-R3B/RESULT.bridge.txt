@@ -1,0 +1,36 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+BEGIN_TOOBA_WORKER_RESULT
+
+Task-ID: TB-TMAR-ORDER-GOLDEN-001-R3B
+Parent-Task: TB-TMAR-ORDER-GOLDEN-001-R3
+Status: PASS
+
+Summary: Migrated AdminOrderOperations business authority from Host into Order MediatR CQRS. Host AdminOrderOperationsEndpoints/Composer/Models removed. Ops and return-eligibility routes owned by Order.Endpoints via ISender and explicit Queries/Commands. Inventory-recovery and supply-status remain thin Host endpoints with narrow adapters. Order remains INCOMPLETE_REFERENCE_REPAIR; Checkout W5 paused; nextTask R4 not started.
+Recovery-Start: HEAD==origin/main at claim; safe tree; Bridge health ok; claimed dbe57c9e / TB-TMAR-ORDER-GOLDEN-001-R3B
+AdminOrderOperations-State: Host authority removed; Order Application AdminOrderOperationsOrchestrator + policies/ports own list/execute/eligibility; Host keeps only recovery/supply composers + thin route adapters
+Order-Endpoint-State: Order.Endpoints.AdminOrderOperationsEndpoints owns GET/POST /v1/admin/orders/{checkoutId}/operations and GET .../return-eligibility; Host AdminOrderInventoryRecoverySupplyEndpoints owns inventory-recovery audit/assess and supply-status only
+Order-CQRS-State: GetAdminOrderOperations + ListAdminOrderReturnEligibility queries; explicit commands per operation family (CancelOrder, RestoreCancelledOrder, Confirm/Reject/Restore/UnconfirmDeposit, RecoverInventoryReservation, fulfillment/shipment/package/return/refund commands); endpoint maps Code->command Send; no mega ExecuteOperationCommand
+Order-CQRS-Physical-Structure: Tooba.Order.Application.Admin.Operations.{Queries,Commands,Models,Policies,Ports,Services}; Infrastructure Admin/Operations checkout reader; Endpoints AdminOrderOperationsEndpoints
+Order-Host-DbAuthority: Migrated ops path has no Host OrderDbContext; checkout load via Order.Infrastructure AdminOrderOperationsCheckoutReader
+Order-Foreign-Boundary: Application Ops uses Fulfillment/Returns/Settlement Contracts Operations ports + Order ports for payment/access/recovery/supply; no foreign Application/Infrastructure/Domain imports in Ops Application path
+Order-Result-Semantics: Handlers return Result/Result<T> with SemanticError; endpoints use ApiResponseFactory; no PlatformHttpException in Order Application Ops path
+Behavior-Parity: Permissions, action visibility, cancel/restore, deposit/payment, fulfillment/shipment/package, return/refund, inventory recovery visibility, supply-status dependent behavior preserved; Host tests remapped to Order policies; StorefrontPendingPaymentComposer uses Order policy helpers
+Architecture-Guard-Validation: OrderAdminOperationsArchitectureGuardTests 5/5 PASS; Fulfillment/Returns/Settlement architecture guards PASS
+Focused-Validation: Order.Tests 47/47; Host focused Ops/Corrective/Fulfillment/Cancel/Supply/Recovery 104/104 PASS
+Full-Validation: dotnet build src/backend/Tooba.slnx succeeded
+Host-Removed-This-Task: AdminOrderOperationsEndpoints.cs; AdminOrderOperationsComposer.cs; AdminOrderOperationsModels.cs; AdminFulfillmentCapabilityProjector.cs (moved); Program MapAdminOrderOperationsEndpoints + AddScoped composer
+Host-Still-Remaining-For-Order: OrderInventoryRecoveryComposer; OrderSupplyComposer; AdminOrderInventoryRecoverySupplyEndpoints (thin); Storefront checkout/pending-payment/shipping; Order detail Host surfaces; Checkout W6 paused
+Allowed-Host-Adapters: HostOrderAdminAuthorizer; HostOrderAdminEffectiveAccessReader; HostAdminOrderOperationsInventoryRecoveryAdapter; HostAdminOrderOperationsSupplyAdapter; HostAdminOrderSupplyStatusReader
+Residual-Defects: None in R3B scope. Known deferred: recovery/supply composers still Host; some stable-code exception mapping retained for foreign InvalidOperationException parity (not MapFulfillmentException prose classifier)
+Order-Overall-State: INCOMPLETE_REFERENCE_REPAIR
+Checkout-State: PAUSED_AT_SAFE_W5_CHECKPOINT
+Protected-Golden-Modules: Cart/Settlement/Fulfillment/Returns/Notification/Support/Wallet/GiftCard remain COMPLETE_REFERENCE_PATTERN
+Frontend-Production-Changes: none
+Recovery-State: SoT nextTask=TB-TMAR-ORDER-GOLDEN-001-R4; slice ADMIN_ORDER_OPERATIONS_CQRS recorded; evidence docs/evidence/TB-TMAR-ORDER-GOLDEN-001-R3B/host-delta.md
+Recovery-Next-Task: TB-TMAR-ORDER-GOLDEN-001-R4
+Git: bd0ca2ca76b4b8649a98f4c017bbf592e03a0be1 pushed origin/main; HEAD==origin/main
+Blockers: none
+User-Work-Preserved: yes; unrelated untracked R2C RESULT.bridge.txt left untouched
+Next-Recommended-Task: TB-TMAR-ORDER-GOLDEN-001-R4
+
+END_TOOBA_WORKER_RESULT
