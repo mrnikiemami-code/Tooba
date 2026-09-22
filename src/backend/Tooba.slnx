@@ -24,58 +24,10 @@
     <Project Path="Modules/Catalog/Tooba.Catalog.Contracts/Tooba.Catalog.Contracts.csproj" />
     <Project Path="Modules/Catalog/Tooba.Catalog.Application/Tooba.Catalog.Application.csproj" />
     <Project Path="Modules/Catalog/Tooba.Catalog.Infrastructure/Tooba.Catalog.Infrastructure.csproj" />
-    <Project Path="Modules/Inventory/Tooba.Inventory.Domain/Tooba.Inventory.Domain.csproj" />
-    <Project Path="Modules/Inventory/Tooba.Inventory.Contracts/Tooba.Inventory.Contracts.csproj" />
-    <Project Path="Modules/Inventory/Tooba.Inventory.Application/Tooba.Inventory.Application.csproj" />
-    <Project Path="Modules/Inventory/Tooba.Inventory.Infrastructure/Tooba.Inventory.Infrastructure.csproj" />
-    <Project Path="Modules/Inventory/Tooba.Inventory.Tests/Tooba.Inventory.Tests.csproj" />
-    <Project Path="Modules/Cart/Tooba.Cart.Domain/Tooba.Cart.Domain.csproj" />
-    <Project Path="Modules/Cart/Tooba.Cart.Contracts/Tooba.Cart.Contracts.csproj" />
-    <Project Path="Modules/Cart/Tooba.Cart.Application/Tooba.Cart.Application.csproj" />
-    <Project Path="Modules/Cart/Tooba.Cart.Infrastructure/Tooba.Cart.Infrastructure.csproj" />
-    <Project Path="Modules/Cart/Tooba.Cart.Endpoints/Tooba.Cart.Endpoints.csproj" />
-    <Project Path="Modules/Cart/Tooba.Cart.Tests/Tooba.Cart.Tests.csproj" />
-    <Project Path="Modules/Order/Tooba.Order.Domain/Tooba.Order.Domain.csproj" />
-    <Project Path="Modules/Order/Tooba.Order.Contracts/Tooba.Order.Contracts.csproj" />
-    <Project Path="Modules/Order/Tooba.Order.Application/Tooba.Order.Application.csproj" />
-    <Project Path="Modules/Order/Tooba.Order.Infrastructure/Tooba.Order.Infrastructure.csproj" />
-    <Project Path="Modules/Promotion/Tooba.Promotion.Domain/Tooba.Promotion.Domain.csproj" />
-    <Project Path="Modules/Promotion/Tooba.Promotion.Contracts/Tooba.Promotion.Contracts.csproj" />
-    <Project Path="Modules/Promotion/Tooba.Promotion.Application/Tooba.Promotion.Application.csproj" />
-    <Project Path="Modules/Promotion/Tooba.Promotion.Infrastructure/Tooba.Promotion.Infrastructure.csproj" />
-    <Project Path="Modules/Promotion/Tooba.Promotion.Tests/Tooba.Promotion.Tests.csproj" />
-    <Project Path="Modules/Payment/Tooba.Payment.Domain/Tooba.Payment.Domain.csproj" />
-    <Project Path="Modules/Payment/Tooba.Payment.Contracts/Tooba.Payment.Contracts.csproj" />
-    <Project Path="Modules/Payment/Tooba.Payment.Application/Tooba.Payment.Application.csproj" />
-    <Project Path="Modules/Payment/Tooba.Payment.Infrastructure/Tooba.Payment.Infrastructure.csproj" />
-    <Project Path="Modules/Payment/Tooba.Payment.Tests/Tooba.Payment.Tests.csproj" />
     <Project Path="Modules/Localization/Tooba.Localization.Contracts/Tooba.Localization.Contracts.csproj" />
     <Project Path="Modules/Localization/Tooba.Localization.Domain/Tooba.Localization.Domain.csproj" />
     <Project Path="Modules/Localization/Tooba.Localization.Application/Tooba.Localization.Application.csproj" />
     <Project Path="Modules/Localization/Tooba.Localization.Infrastructure/Tooba.Localization.Infrastructure.csproj" />
-    <Project Path="Modules/Fulfillment/Tooba.Fulfillment.Domain/Tooba.Fulfillment.Domain.csproj" />
-    <Project Path="Modules/Fulfillment/Tooba.Fulfillment.Contracts/Tooba.Fulfillment.Contracts.csproj" />
-    <Project Path="Modules/Fulfillment/Tooba.Fulfillment.Application/Tooba.Fulfillment.Application.csproj" />
-    <Project Path="Modules/Fulfillment/Tooba.Fulfillment.Infrastructure/Tooba.Fulfillment.Infrastructure.csproj" />
-    <Project Path="Modules/Fulfillment/Tooba.Fulfillment.Tests/Tooba.Fulfillment.Tests.csproj" />
-    <Project Path="Modules/Returns/Tooba.Returns.Domain/Tooba.Returns.Domain.csproj" />
-    <Project Path="Modules/Returns/Tooba.Returns.Contracts/Tooba.Returns.Contracts.csproj" />
-    <Project Path="Modules/Returns/Tooba.Returns.Application/Tooba.Returns.Application.csproj" />
-    <Project Path="Modules/Returns/Tooba.Returns.Infrastructure/Tooba.Returns.Infrastructure.csproj" />
-    <Project Path="Modules/Returns/Tooba.Returns.Tests/Tooba.Returns.Tests.csproj" />
-    <Project Path="Modules/Settlement/Tooba.Settlement.Domain/Tooba.Settlement.Domain.csproj" />
-    <Project Path="Modules/Settlement/Tooba.Settlement.Application/Tooba.Settlement.Application.csproj" />
-    <Project Path="Modules/Settlement/Tooba.Settlement.Infrastructure/Tooba.Settlement.Infrastructure.csproj" />
-    <Project Path="Modules/Settlement/Tooba.Settlement.Tests/Tooba.Settlement.Tests.csproj" />
-    <Project Path="Modules/Notification/Tooba.Notification.Contracts/Tooba.Notification.Contracts.csproj" />
-    <Project Path="Modules/Notification/Tooba.Notification.Domain/Tooba.Notification.Domain.csproj" />
-    <Project Path="Modules/Notification/Tooba.Notification.Application/Tooba.Notification.Application.csproj" />
-    <Project Path="Modules/Notification/Tooba.Notification.Infrastructure/Tooba.Notification.Infrastructure.csproj" />
-    <Project Path="Modules/Notification/Tooba.Notification.Tests/Tooba.Notification.Tests.csproj" />
-    <Project Path="Modules/Support/Tooba.Support.Domain/Tooba.Support.Domain.csproj" />
-    <Project Path="Modules/Support/Tooba.Support.Application/Tooba.Support.Application.csproj" />
-    <Project Path="Modules/Support/Tooba.Support.Infrastructure/Tooba.Support.Infrastructure.csproj" />
-    <Project Path="Modules/Support/Tooba.Support.Tests/Tooba.Support.Tests.csproj" />
     <Project Path="Modules/AccessControl/Tooba.AccessControl.Domain/Tooba.AccessControl.Domain.csproj" />
     <Project Path="Modules/AccessControl/Tooba.AccessControl.Application/Tooba.AccessControl.Application.csproj" />
     <Project Path="Modules/AccessControl/Tooba.AccessControl.Infrastructure/Tooba.AccessControl.Infrastructure.csproj" />
@@ -109,11 +61,6 @@
     <Project Path="Modules/Story/Tooba.Story.Domain/Tooba.Story.Domain.csproj" />
     <Project Path="Modules/Story/Tooba.Story.Application/Tooba.Story.Application.csproj" />
     <Project Path="Modules/Story/Tooba.Story.Infrastructure/Tooba.Story.Infrastructure.csproj" />
-    <Project Path="Modules/Wallet/Tooba.Wallet.Domain/Tooba.Wallet.Domain.csproj" />
-    <Project Path="Modules/Wallet/Tooba.Wallet.Application/Tooba.Wallet.Application.csproj" />
-    <Project Path="Modules/Wallet/Tooba.Wallet.Contracts/Tooba.Wallet.Contracts.csproj" />
-    <Project Path="Modules/Wallet/Tooba.Wallet.Infrastructure/Tooba.Wallet.Infrastructure.csproj" />
-    <Project Path="Modules/Wallet/Tooba.Wallet.Tests/Tooba.Wallet.Tests.csproj" />
   </Folder>
   <Folder Name="/Modules/Offer/">
     <Project Path="Modules/Offer/Tooba.Offer.Application/Tooba.Offer.Application.csproj" />
@@ -138,5 +85,80 @@
     <Project Path="Modules/Tax/Tooba.Tax.Endpoints/Tooba.Tax.Endpoints.csproj" />
     <Project Path="Modules/Tax/Tooba.Tax.Infrastructure/Tooba.Tax.Infrastructure.csproj" />
     <Project Path="Modules/Tax/Tooba.Tax.Tests/Tooba.Tax.Tests.csproj" />
+  </Folder>
+  <Folder Name="/Modules/Order/">
+    <Project Path="Modules/Order/Tooba.Order.Domain/Tooba.Order.Domain.csproj" />
+    <Project Path="Modules/Order/Tooba.Order.Contracts/Tooba.Order.Contracts.csproj" />
+    <Project Path="Modules/Order/Tooba.Order.Application/Tooba.Order.Application.csproj" />
+    <Project Path="Modules/Order/Tooba.Order.Infrastructure/Tooba.Order.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/Modules/Inventory/">
+    <Project Path="Modules/Inventory/Tooba.Inventory.Domain/Tooba.Inventory.Domain.csproj" />
+    <Project Path="Modules/Inventory/Tooba.Inventory.Contracts/Tooba.Inventory.Contracts.csproj" />
+    <Project Path="Modules/Inventory/Tooba.Inventory.Application/Tooba.Inventory.Application.csproj" />
+    <Project Path="Modules/Inventory/Tooba.Inventory.Infrastructure/Tooba.Inventory.Infrastructure.csproj" />
+    <Project Path="Modules/Inventory/Tooba.Inventory.Tests/Tooba.Inventory.Tests.csproj" />
+  </Folder>
+  <Folder Name="/Modules/Cart/">
+    <Project Path="Modules/Cart/Tooba.Cart.Domain/Tooba.Cart.Domain.csproj" />
+    <Project Path="Modules/Cart/Tooba.Cart.Contracts/Tooba.Cart.Contracts.csproj" />
+    <Project Path="Modules/Cart/Tooba.Cart.Application/Tooba.Cart.Application.csproj" />
+    <Project Path="Modules/Cart/Tooba.Cart.Infrastructure/Tooba.Cart.Infrastructure.csproj" />
+    <Project Path="Modules/Cart/Tooba.Cart.Endpoints/Tooba.Cart.Endpoints.csproj" />
+    <Project Path="Modules/Cart/Tooba.Cart.Tests/Tooba.Cart.Tests.csproj" />
+  </Folder>
+  <Folder Name="/Modules/Promotion/">
+    <Project Path="Modules/Promotion/Tooba.Promotion.Domain/Tooba.Promotion.Domain.csproj" />
+    <Project Path="Modules/Promotion/Tooba.Promotion.Contracts/Tooba.Promotion.Contracts.csproj" />
+    <Project Path="Modules/Promotion/Tooba.Promotion.Application/Tooba.Promotion.Application.csproj" />
+    <Project Path="Modules/Promotion/Tooba.Promotion.Infrastructure/Tooba.Promotion.Infrastructure.csproj" />
+    <Project Path="Modules/Promotion/Tooba.Promotion.Tests/Tooba.Promotion.Tests.csproj" />
+  </Folder>
+  <Folder Name="/Modules/Payment/">
+    <Project Path="Modules/Payment/Tooba.Payment.Domain/Tooba.Payment.Domain.csproj" />
+    <Project Path="Modules/Payment/Tooba.Payment.Contracts/Tooba.Payment.Contracts.csproj" />
+    <Project Path="Modules/Payment/Tooba.Payment.Application/Tooba.Payment.Application.csproj" />
+    <Project Path="Modules/Payment/Tooba.Payment.Infrastructure/Tooba.Payment.Infrastructure.csproj" />
+    <Project Path="Modules/Payment/Tooba.Payment.Tests/Tooba.Payment.Tests.csproj" />
+  </Folder>
+  <Folder Name="/Modules/Wallet/">
+    <Project Path="Modules/Wallet/Tooba.Wallet.Domain/Tooba.Wallet.Domain.csproj" />
+    <Project Path="Modules/Wallet/Tooba.Wallet.Application/Tooba.Wallet.Application.csproj" />
+    <Project Path="Modules/Wallet/Tooba.Wallet.Contracts/Tooba.Wallet.Contracts.csproj" />
+    <Project Path="Modules/Wallet/Tooba.Wallet.Infrastructure/Tooba.Wallet.Infrastructure.csproj" />
+    <Project Path="Modules/Wallet/Tooba.Wallet.Tests/Tooba.Wallet.Tests.csproj" />
+  </Folder>
+  <Folder Name="/Modules/Fulfillment/">
+    <Project Path="Modules/Fulfillment/Tooba.Fulfillment.Domain/Tooba.Fulfillment.Domain.csproj" />
+    <Project Path="Modules/Fulfillment/Tooba.Fulfillment.Contracts/Tooba.Fulfillment.Contracts.csproj" />
+    <Project Path="Modules/Fulfillment/Tooba.Fulfillment.Application/Tooba.Fulfillment.Application.csproj" />
+    <Project Path="Modules/Fulfillment/Tooba.Fulfillment.Infrastructure/Tooba.Fulfillment.Infrastructure.csproj" />
+    <Project Path="Modules/Fulfillment/Tooba.Fulfillment.Tests/Tooba.Fulfillment.Tests.csproj" />
+  </Folder>
+  <Folder Name="/Modules/Returns/">
+    <Project Path="Modules/Returns/Tooba.Returns.Domain/Tooba.Returns.Domain.csproj" />
+    <Project Path="Modules/Returns/Tooba.Returns.Contracts/Tooba.Returns.Contracts.csproj" />
+    <Project Path="Modules/Returns/Tooba.Returns.Application/Tooba.Returns.Application.csproj" />
+    <Project Path="Modules/Returns/Tooba.Returns.Infrastructure/Tooba.Returns.Infrastructure.csproj" />
+    <Project Path="Modules/Returns/Tooba.Returns.Tests/Tooba.Returns.Tests.csproj" />
+  </Folder>
+  <Folder Name="/Modules/Settlement/">
+    <Project Path="Modules/Settlement/Tooba.Settlement.Domain/Tooba.Settlement.Domain.csproj" />
+    <Project Path="Modules/Settlement/Tooba.Settlement.Application/Tooba.Settlement.Application.csproj" />
+    <Project Path="Modules/Settlement/Tooba.Settlement.Infrastructure/Tooba.Settlement.Infrastructure.csproj" />
+    <Project Path="Modules/Settlement/Tooba.Settlement.Tests/Tooba.Settlement.Tests.csproj" />
+  </Folder>
+  <Folder Name="/Modules/Notification/">
+    <Project Path="Modules/Notification/Tooba.Notification.Contracts/Tooba.Notification.Contracts.csproj" />
+    <Project Path="Modules/Notification/Tooba.Notification.Domain/Tooba.Notification.Domain.csproj" />
+    <Project Path="Modules/Notification/Tooba.Notification.Application/Tooba.Notification.Application.csproj" />
+    <Project Path="Modules/Notification/Tooba.Notification.Infrastructure/Tooba.Notification.Infrastructure.csproj" />
+    <Project Path="Modules/Notification/Tooba.Notification.Tests/Tooba.Notification.Tests.csproj" />
+  </Folder>
+  <Folder Name="/Modules/Support/">
+    <Project Path="Modules/Support/Tooba.Support.Domain/Tooba.Support.Domain.csproj" />
+    <Project Path="Modules/Support/Tooba.Support.Application/Tooba.Support.Application.csproj" />
+    <Project Path="Modules/Support/Tooba.Support.Infrastructure/Tooba.Support.Infrastructure.csproj" />
+    <Project Path="Modules/Support/Tooba.Support.Tests/Tooba.Support.Tests.csproj" />
   </Folder>
 </Solution>
