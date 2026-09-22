@@ -1,0 +1,62 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+BEGIN_TOOBA_WORKER_RESULT
+
+Task-ID: TB-TMAR-ORDER-GOLDEN-001-R2A
+Status: INCOMPLETE
+
+Summary: Restored deny-by-default order.view/order.handle authorization and substantially richer invoice/receipt output while preserving the R2 endpoint migration. Full history, actor-label, note-delete outcome, and parity-test closure remain incomplete.
+Program-Name: TMAR — Tooba Microservice-Ready Architecture Recovery
+Track: ORDER_GOLDEN_IMPLEMENTATION_SLICE_1_PARITY_REPAIR
+Recovery-Start: 6ef22c8f862a98dabf886c7ed17d00c388fe5aaf
+R2-Repository-State: PRESERVED
+Behavior-Baseline: 113a017a81b893caefcbde63ee0d4a4ebb8d613c
+Order-Endpoints-Foundation: PRESERVED
+AdminOrderCompleteness-Host-Composer: ABSENT
+AdminOrderCompleteness-Host-Endpoints: ABSENT
+AdminOrderCompleteness-Permission-Parity: IMPLEMENTED_EXPLICIT_GRANTS_TEST_CLOSURE_MISSING
+AdminOrderCompleteness-Note-Parity: INCOMPLETE_ACTOR_FIELDS_AND_TYPED_DELETE
+AdminOrderCompleteness-Actor-Labels: MISSING
+AdminOrderCompleteness-History-Parity: INCOMPLETE
+AdminOrderCompleteness-History-Kinds: ORDER_CREATED_ORDER_CANCELLED_OPERATIONAL_NOTE_ONLY
+AdminOrderCompleteness-History-Ordering: INCOMPLETE_KIND_TIE_BREAK
+AdminOrderCompleteness-Invoice-Parity: SUBSTANTIALLY_RESTORED_SHARED_UNIT_TEST_CLOSURE_MISSING
+AdminOrderCompleteness-Receipt-Parity: SUBSTANTIALLY_RESTORED_TEST_CLOSURE_MISSING
+AdminOrderCompleteness-Foreign-Boundary: CONTRACTS_ONLY
+AdminOrderCompleteness-Foreign-DbContext: NONE
+AdminOrderCompleteness-Host-DbAuthority: NONE
+AdminOrderCompleteness-Result-Semantics: PARTIAL
+AdminOrderCompleteness-Unknown-Exception-Handling: INCOMPLETE_DELETE_CATCHES_ALL_INVALID_OPERATION
+Legacy-Test-Helper-State: REMAINS_AND_REQUIRES_REPLACEMENT
+Contracts-Changed: ORDER_ENDPOINT_AUTHORIZER_ONLY
+Protected-Module-Guard-Validation: NOT_REQUIRED_NO_PROTECTED_CONTRACT_CHANGE
+Architecture-Guard-Validation: 21_PASS_1_CHECKOUT_POSTGRES_FIXTURE_FAILURE
+Focused-Validation: ADMIN_COMPLETENESS_AND_INVOICE_HEADER_11_PASS
+Skipped-Validation: DEDICATED_PERMISSION_HISTORY_INVOICE_RECEIPT_PARITY_SUITES_NOT_PRESENT
+Full-Validation: DOTNET_BUILD_PASS
+AntiPattern-Gate: PASS_NO_HOST_COMPOSER_NO_FOREIGN_DB_CONTEXT
+Residual-Defects: ACTOR_LABELS; FULL_HISTORY_SOURCES; SELLER_AND_PRODUCT_LABELS; TYPED_DELETE_OUTCOME; LEGACY_HELPER; DEDICATED_PARITY_TESTS; SHARED_UNIT_INVOICE_QUANTITY
+Order-Overall-State: INCOMPLETE_REFERENCE_REPAIR
+Checkout-State: PAUSED_AT_SAFE_W5_CHECKPOINT
+Cart-State: COMPLETE_REFERENCE_PATTERN
+Settlement-State: COMPLETE_REFERENCE_PATTERN
+Fulfillment-State: COMPLETE_REFERENCE_PATTERN
+Returns-State: COMPLETE_REFERENCE_PATTERN
+Notification-State: COMPLETE_REFERENCE_PATTERN
+Support-State: COMPLETE_REFERENCE_PATTERN
+Wallet-State: COMPLETE_REFERENCE_PATTERN
+Payment-State: COMPLETE_REFERENCE_PATTERN
+Promotion-State: COMPLETE_REFERENCE_PATTERN
+Offer-State: COMPLETE_REFERENCE_PATTERN
+Inventory-State: COMPLETE_REFERENCE_PATTERN
+Tax-State: UNCHANGED
+Pricing-State: UNCHANGED
+Frontend-Production-Changes: NONE
+Recovery-State: INCOMPLETE
+Recovery-Next-Task: TB-TMAR-ORDER-GOLDEN-001-R2B
+Current-State-Manifest: UNCHANGED_R2_INCOMPLETE_STATE
+Git: ec022633c02a029d6d91e703846523da9017c78a pushed to origin/main; Result artifact follow-up commit pending at composition time
+Blockers: REQUIRED_CONTRACT_PROJECTIONS_AND_CHARACTERIZATION_NOT_COMPLETED
+User-Work-Preserved: YES
+Next-Recommended-Task: TB-TMAR-ORDER-GOLDEN-001-R2B
+
+END_TOOBA_WORKER_RESULT
