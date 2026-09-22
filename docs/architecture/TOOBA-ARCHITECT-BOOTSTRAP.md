@@ -28,7 +28,7 @@ TB-TMAR-ARCH-BASELINE
 Current next task:
 TB-TMAR-PROMOTION-GOLDEN-001
 
-Current recovery state (authoritative — TB-TMAR-PAYMENT-GOLDEN-001-R2):
+Current recovery state (authoritative — TB-TMAR-PAYMENT-GOLDEN-001-R2 — 1df5bd23922bb67a9d368b53ebff76d9f4c0bb2e):
 COMPLETE HTTP-owning: Cart, Settlement, Fulfillment, Returns, Notification, Support, Wallet, Payment.
 Payment COMPLETE_REFERENCE_PATTERN.
 Remaining: Promotion REOPENED_ENDPOINT_CQRS_OWNERSHIP; Offer NEEDS_FINAL_REVERIFY; Inventory NEEDS_APPLICABILITY_REVERIFY.
