@@ -118,6 +118,28 @@ public sealed class HostOrderReverseAuditGuardTests
         Assert.Contains("UnpaidOrderExpiryHostedService", audit, StringComparison.Ordinal);
     }
 
+    [Fact]
+    public void R8_removed_Host_cycle_policy_files_are_absent_from_inventory_and_disk()
+    {
+        var root = FindRepoRoot();
+        var host = Path.Combine(root, "src", "backend", "Host", "Tooba.Host");
+        Assert.False(File.Exists(Path.Combine(host, "ReservationCycleCoordinator.cs")));
+        Assert.False(File.Exists(Path.Combine(host, "ReservationCyclePolicyResolver.cs")));
+
+        var inventoryPath = Path.Combine(
+            root, "docs", "evidence", "TB-TMAR-ORDER-GOLDEN-001-R7", "host-order-reference-inventory.json");
+        using var doc = JsonDocument.Parse(File.ReadAllText(inventoryPath));
+        var files = doc.RootElement.GetProperty("files").EnumerateArray()
+            .Select(x => x.GetString()!)
+            .ToHashSet(StringComparer.Ordinal);
+        Assert.DoesNotContain("ReservationCycleCoordinator.cs", files);
+        Assert.DoesNotContain("ReservationCyclePolicyResolver.cs", files);
+        Assert.Contains("UnpaidOrderExpiryHostedService.cs", files);
+
+        var r8 = doc.RootElement.GetProperty("r8InventoryUpdate");
+        Assert.Equal("TB-TMAR-ORDER-GOLDEN-001-R8", r8.GetProperty("updatedBy").GetString());
+    }
+
     private static IReadOnlyList<string> DiscoverHostOrderReferences(string root, IEnumerable<string> extras)
     {
         var host = Path.Combine(root, "src", "backend", "Host", "Tooba.Host");

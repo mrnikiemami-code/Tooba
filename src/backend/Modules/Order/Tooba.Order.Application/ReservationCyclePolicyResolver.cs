@@ -1,33 +1,33 @@
-#pragma warning disable CS1591
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
-using Tooba.Catalog.Domain;
-using Tooba.Catalog.Infrastructure.Persistence;
-using Tooba.Order.Application;
+using Tooba.Catalog.Contracts.Reservation;
 
-namespace Tooba.Host;
+namespace Tooba.Order.Application;
 
-/// <summary>تقدم Offer &gt; Category &gt; Store &gt; Platform؛ چندخط = حداقل TTL و سخت‌گیرانه‌ترین سقف.</summary>
+/// <summary>
+/// Order-owned precedence merge: platform → store → category → offer; multi-line = strictest (min).
+/// Catalog overrides via <see cref="IReservationCycleHoldPolicyReader"/> only.
+/// </summary>
 public sealed class ReservationCyclePolicyResolver : IReservationCyclePolicyResolver
 {
     private readonly ReservationCycleOptions _platform;
-    private readonly CatalogDbContext _catalog;
+    private readonly IReservationCycleHoldPolicyReader _holds;
 
+    /// <summary>Platform options + Catalog hold-policy contract.</summary>
     public ReservationCyclePolicyResolver(
         IOptions<ReservationCycleOptions> platform,
-        CatalogDbContext catalog)
+        IReservationCycleHoldPolicyReader holds)
     {
         _platform = platform.Value;
-        _catalog = catalog;
+        _holds = holds;
     }
 
+    /// <inheritdoc />
     public async Task<ReservationCyclePolicySnapshot> ResolveAsync(
         IReadOnlyList<ReservationCyclePolicyLine> lines,
         CancellationToken cancellationToken)
     {
         var platform = Platform();
-        var store = await _catalog.StoreHoldPolicySettings.AsNoTracking()
-            .SingleOrDefaultAsync(x => x.SettingsId == StoreHoldPolicySettings.SingletonId, cancellationToken);
+        var store = await _holds.GetStoreOverrideAsync(cancellationToken);
         var storeSnap = Merge(
             platform,
             store?.InitialReservationHoldMinutes,
@@ -42,20 +42,16 @@ public sealed class ReservationCyclePolicyResolver : IReservationCyclePolicyReso
 
         var offerIds = lines.Select(x => x.OfferId).Distinct().ToArray();
         var categoryIds = lines.Where(x => x.CategoryId is not null).Select(x => x.CategoryId!.Value).Distinct().ToArray();
-        var overrides = await _catalog.ReservationCyclePolicyOverrides.AsNoTracking()
-            .Where(x =>
-                (x.ScopeKind == ReservationCyclePolicyOverride.OfferScope && offerIds.Contains(x.ScopeId))
-                || (x.ScopeKind == ReservationCyclePolicyOverride.CategoryScope && categoryIds.Contains(x.ScopeId)))
-            .ToListAsync(cancellationToken);
+        var overrides = await _holds.GetOverridesAsync(offerIds, categoryIds, cancellationToken);
 
         ReservationCyclePolicySnapshot? tightest = null;
         foreach (var line in lines)
         {
             var offer = overrides.FirstOrDefault(x =>
-                x.ScopeKind == ReservationCyclePolicyOverride.OfferScope && x.ScopeId == line.OfferId);
+                x.ScopeKind == ReservationCycleHoldOverrideScopes.Offer && x.ScopeId == line.OfferId);
             var category = line.CategoryId is { } cid
                 ? overrides.FirstOrDefault(x =>
-                    x.ScopeKind == ReservationCyclePolicyOverride.CategoryScope && x.ScopeId == cid)
+                    x.ScopeKind == ReservationCycleHoldOverrideScopes.Category && x.ScopeId == cid)
                 : null;
             var resolved = storeSnap;
             if (category is not null)
@@ -84,100 +80,50 @@ public sealed class ReservationCyclePolicyResolver : IReservationCyclePolicyReso
         return tightest ?? storeSnap;
     }
 
+    /// <inheritdoc />
     public async Task<ReservationPolicyPreview> PreviewAsync(
         Guid? offerId,
         Guid? categoryId,
         CancellationToken cancellationToken)
     {
-        var platform = PlatformLayer();
-        var store = await _catalog.StoreHoldPolicySettings.AsNoTracking()
-            .SingleOrDefaultAsync(x => x.SettingsId == StoreHoldPolicySettings.SingletonId, cancellationToken);
-        var afterStore = Overlay(
-            platform,
-            store?.InitialReservationHoldMinutes,
-            store?.RetryReservationHoldMinutes,
-            store?.MaxReservationCycles,
-            "store");
-
-        ReservationCyclePolicyOverride? category = null;
-        if (categoryId is { } cid)
-        {
-            category = await _catalog.ReservationCyclePolicyOverrides.AsNoTracking()
-                .SingleOrDefaultAsync(
-                    x => x.ScopeKind == ReservationCyclePolicyOverride.CategoryScope && x.ScopeId == cid,
-                    cancellationToken);
-        }
-
-        var afterCategory = Overlay(
-            afterStore,
-            category?.InitialReservationHoldMinutes,
-            category?.RetryReservationHoldMinutes,
-            category?.MaxReservationCycles,
-            "category");
-
-        ReservationCyclePolicyOverride? offer = null;
-        if (offerId is { } oid)
-        {
-            offer = await _catalog.ReservationCyclePolicyOverrides.AsNoTracking()
-                .SingleOrDefaultAsync(
-                    x => x.ScopeKind == ReservationCyclePolicyOverride.OfferScope && x.ScopeId == oid,
-                    cancellationToken);
-        }
-
-        var afterOffer = Overlay(
-            afterCategory,
-            offer?.InitialReservationHoldMinutes,
-            offer?.RetryReservationHoldMinutes,
-            offer?.MaxReservationCycles,
-            "offer");
-
-        return new ReservationPolicyPreview(
-            platform,
-            afterStore,
-            afterCategory,
-            afterOffer,
-            store?.InitialReservationHoldMinutes,
-            store?.RetryReservationHoldMinutes,
-            store?.MaxReservationCycles,
-            category?.InitialReservationHoldMinutes,
-            category?.RetryReservationHoldMinutes,
-            category?.MaxReservationCycles,
-            offer?.InitialReservationHoldMinutes,
-            offer?.RetryReservationHoldMinutes,
-            offer?.MaxReservationCycles);
+        var many = await PreviewManyAsync(
+            [(offerId ?? Guid.Empty, categoryId)],
+            cancellationToken);
+        return many[0];
     }
 
-    /// <summary>یک بار store/overrides را می‌خواند و پیش‌نمایش چند Offer را برمی‌گرداند.</summary>
+    /// <inheritdoc />
     public async Task<IReadOnlyList<ReservationPolicyPreview>> PreviewManyAsync(
         IReadOnlyList<(Guid OfferId, Guid? CategoryId)> lines,
         CancellationToken cancellationToken)
     {
         var platform = PlatformLayer();
-        var store = await _catalog.StoreHoldPolicySettings.AsNoTracking()
-            .SingleOrDefaultAsync(x => x.SettingsId == StoreHoldPolicySettings.SingletonId, cancellationToken);
+        var store = await _holds.GetStoreOverrideAsync(cancellationToken);
         var afterStore = Overlay(
             platform,
             store?.InitialReservationHoldMinutes,
             store?.RetryReservationHoldMinutes,
             store?.MaxReservationCycles,
             "store");
-        var offerIds = lines.Select(x => x.OfferId).Distinct().ToArray();
+        var offerIds = lines
+            .Where(x => x.OfferId != Guid.Empty)
+            .Select(x => x.OfferId)
+            .Distinct()
+            .ToArray();
         var categoryIds = lines.Where(x => x.CategoryId is not null).Select(x => x.CategoryId!.Value).Distinct().ToArray();
-        var overrides = await _catalog.ReservationCyclePolicyOverrides.AsNoTracking()
-            .Where(x =>
-                (x.ScopeKind == ReservationCyclePolicyOverride.OfferScope && offerIds.Contains(x.ScopeId))
-                || (x.ScopeKind == ReservationCyclePolicyOverride.CategoryScope && categoryIds.Contains(x.ScopeId)))
-            .ToListAsync(cancellationToken);
+        var overrides = await _holds.GetOverridesAsync(offerIds, categoryIds, cancellationToken);
 
         var result = new List<ReservationPolicyPreview>(lines.Count);
         foreach (var line in lines)
         {
             var category = line.CategoryId is { } cid
                 ? overrides.FirstOrDefault(x =>
-                    x.ScopeKind == ReservationCyclePolicyOverride.CategoryScope && x.ScopeId == cid)
+                    x.ScopeKind == ReservationCycleHoldOverrideScopes.Category && x.ScopeId == cid)
                 : null;
-            var offer = overrides.FirstOrDefault(x =>
-                x.ScopeKind == ReservationCyclePolicyOverride.OfferScope && x.ScopeId == line.OfferId);
+            var offer = line.OfferId == Guid.Empty
+                ? null
+                : overrides.FirstOrDefault(x =>
+                    x.ScopeKind == ReservationCycleHoldOverrideScopes.Offer && x.ScopeId == line.OfferId);
             var afterCategory = Overlay(
                 afterStore,
                 category?.InitialReservationHoldMinutes,

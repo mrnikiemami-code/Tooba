@@ -66,6 +66,11 @@ public interface IReservationCyclePolicyResolver
         Guid? offerId,
         Guid? categoryId,
         CancellationToken cancellationToken);
+
+    /// <summary>پیش‌نمایش دسته‌ای بدون N+1 خواندن store/overrides.</summary>
+    Task<IReadOnlyList<ReservationPolicyPreview>> PreviewManyAsync(
+        IReadOnlyList<(Guid OfferId, Guid? CategoryId)> lines,
+        CancellationToken cancellationToken);
 }
 
 /// <summary>تصویر یک چرخه برای projection.</summary>

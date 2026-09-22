@@ -18,8 +18,6 @@ public sealed class HostFolderStructureTests
         "GlobalUsings.CartSettlementApp.cs",
         "GlobalUsings.CartSettlementDomain.cs",
         "OfferGlobalUsings.cs",
-        "ReservationCycleCoordinator.cs",
-        "ReservationCyclePolicyResolver.cs",
         "UnpaidOrderExpiryHostedService.cs",
         "UnpaidOrderExpiryHostOptions.cs",
         "PaymentReconciliationHostedService.cs",

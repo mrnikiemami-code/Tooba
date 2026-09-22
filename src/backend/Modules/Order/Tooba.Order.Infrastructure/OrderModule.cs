@@ -54,6 +54,12 @@ public sealed class OrderModule : IToobaModule
         services.AddScoped<ICheckoutAbuseGate, CheckoutAbuseGate>();
         services.AddScoped<ICheckoutProcessTracker, CheckoutProcessTracker>();
         services.AddScoped<IReservationCycleDirectory, ReservationCycleDirectory>();
+        services.AddScoped<IReservationCycleCheckoutLineSource, ReservationCycleCheckoutLineSource>();
+        services.AddScoped<IReservationCyclePolicyResolver, ReservationCyclePolicyResolver>();
+        services.AddScoped<IReservationCycleCoordinator, ReservationCycleCoordinator>();
+        services.AddScoped<IUnpaidOrderExpiryReconciler, UnpaidOrderExpiryReconciler>();
+        services.Configure<ReservationCycleOptions>(
+            configuration.GetSection(ReservationCycleOptions.SectionName));
         services.AddScoped<IOrderPurchaseVerificationGateway, OrderPurchaseVerificationGateway>();
         services.AddScoped<IPayableCheckoutReader, OrderPaymentBridge>();
         services.AddScoped<IOrderPaymentProjection, OrderPaymentBridge>();

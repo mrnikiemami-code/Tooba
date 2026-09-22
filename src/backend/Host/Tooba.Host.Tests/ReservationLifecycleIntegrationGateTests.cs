@@ -215,10 +215,11 @@ public sealed class ReservationLifecycleIntegrationGateTests
         Assert.DoesNotContain("new ReservationCyclePolicyLine(x.OfferId, null)", checkout, StringComparison.Ordinal);
         Assert.Contains("CategoryIdSnapshot", checkout, StringComparison.Ordinal);
 
-        var coordinator = Read("src/backend/Host/Tooba.Host/ReservationCycleCoordinator.cs");
+        var coordinator = Read("src/backend/Modules/Order/Tooba.Order.Application/ReservationCycleCoordinator.cs");
         Assert.Contains("allowReacquire: false", coordinator, StringComparison.Ordinal);
         Assert.Contains("RetryHoldMinutes", coordinator, StringComparison.Ordinal);
-        Assert.Contains("RetryLimitReachedFa", coordinator, StringComparison.Ordinal);
+        Assert.Contains("ContractOperationException", coordinator, StringComparison.Ordinal);
+        Assert.Contains("RetryLimitReached", coordinator, StringComparison.Ordinal);
 
         var pendingUi = Read("src/frontend/app/storefront/storefront-pending-payments.tsx");
         Assert.Contains("remainingSecondsFromServer", pendingUi, StringComparison.Ordinal);
@@ -229,7 +230,7 @@ public sealed class ReservationLifecycleIntegrationGateTests
         Assert.DoesNotContain("Offer > Category", editor, StringComparison.Ordinal);
         Assert.Contains("dir={dir}", editor, StringComparison.Ordinal);
 
-        var mapper = Read("src/backend/Host/Tooba.Host/Admin/AdminReservationCycleMapper.cs");
+        var mapper = Read("src/backend/Modules/Order/Tooba.Order.Application/Admin/Detail/AdminOrderReservationCycleMapper.cs");
         Assert.Contains("CanExtendTimer", mapper, StringComparison.Ordinal);
         Assert.Contains("false", mapper, StringComparison.Ordinal);
 
@@ -249,7 +250,7 @@ public sealed class ReservationLifecycleIntegrationGateTests
                 RetryReservationHoldMinutes = retry,
                 MaxReservationCycles = max,
             }),
-            catalog);
+            new Tooba.Catalog.Infrastructure.Reservation.ReservationCycleHoldPolicyReader(catalog));
 
     private static CatalogDbContext CreateCatalog() =>
         new(new DbContextOptionsBuilder<CatalogDbContext>().UseInMemoryDatabase(Guid.NewGuid().ToString("N")).Options);

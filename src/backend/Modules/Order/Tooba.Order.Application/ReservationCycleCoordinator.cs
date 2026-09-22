@@ -1,46 +1,52 @@
-#pragma warning disable CS1591
-using Microsoft.EntityFrameworkCore;
-using Tooba.Order.Application;
+using Tooba.BuildingBlocks;
 using Tooba.Order.Application.Admin.Supply.Models;
 using Tooba.Order.Application.Admin.Supply.Services;
 using Tooba.Order.Domain;
-using Tooba.Order.Infrastructure.Persistence;
 
-namespace Tooba.Host;
+namespace Tooba.Order.Application;
 
-/// <summary>EnsureOrderSupply را با چرخه رزرو هم‌گام می‌کند؛ PaymentAttempt چرخه نیست.</summary>
-public sealed class ReservationCycleCoordinator
+/// <summary>
+/// EnsureOrderSupply را با چرخه رزرو هم‌گام می‌کند؛ PaymentAttempt چرخه نیست.
+/// Time via <see cref="IClock"/>; typed fault via <see cref="ContractOperationException"/>.
+/// </summary>
+public sealed class ReservationCycleCoordinator : IReservationCycleCoordinator
 {
     private readonly IReservationCycleDirectory _cycles;
     private readonly IReservationCyclePolicyResolver _policy;
     private readonly OrderSupplyService _supply;
-    private readonly OrderDbContext _orders;
+    private readonly IReservationCycleCheckoutLineSource _lines;
+    private readonly IClock _clock;
 
+    /// <summary>Directory + policy + supply + checkout line port + clock.</summary>
     public ReservationCycleCoordinator(
         IReservationCycleDirectory cycles,
         IReservationCyclePolicyResolver policy,
         OrderSupplyService supply,
-        OrderDbContext orders)
+        IReservationCycleCheckoutLineSource lines,
+        IClock clock)
     {
         _cycles = cycles;
         _policy = policy;
         _supply = supply;
-        _orders = orders;
+        _lines = lines;
+        _clock = clock;
     }
 
+    /// <inheritdoc />
     public async Task<ReservationCyclePolicySnapshot> ResolveForCheckoutAsync(
         Guid checkoutId,
         CancellationToken cancellationToken)
     {
-        var lines = await LoadPolicyLinesAsync(checkoutId, cancellationToken);
+        var lines = await _lines.LoadPolicyLinesAsync(checkoutId, cancellationToken);
         return await _policy.ResolveAsync(lines, cancellationToken);
     }
 
+    /// <inheritdoc />
     public async Task<EnsureOrderSupplyResult> EnsureRetryAfterExpiryAsync(
         Guid checkoutId,
         CancellationToken cancellationToken)
     {
-        var now = DateTimeOffset.UtcNow;
+        var now = _clock.UtcNow;
         await _cycles.CloseExpiredDueAsync(now, cancellationToken);
         var policy = await ResolveForCheckoutAsync(checkoutId, cancellationToken);
         var created = await _cycles.CountCreatedAsync(checkoutId, cancellationToken);
@@ -58,7 +64,7 @@ public sealed class ReservationCycleCoordinator
         if (created >= policy.MaxCycles)
         {
             await _cycles.RecordRetryLimitReachedAsync(checkoutId, now, cancellationToken);
-            throw new InvalidOperationException(ReservationCycleErrors.RetryLimitReachedFa);
+            throw new ContractOperationException(ReservationCycleErrors.RetryLimitReached);
         }
 
         await _cycles.RecordReacquireRequestedAsync(checkoutId, now, cancellationToken);
@@ -78,7 +84,7 @@ public sealed class ReservationCycleCoordinator
         var reservationIds = result.NewBindingsByOrderLineId.Values.Distinct().ToArray();
         if (reservationIds.Length == 0)
         {
-            reservationIds = (await LoadReservationIdsAsync(checkoutId, cancellationToken)).ToArray();
+            reservationIds = (await _lines.LoadReservationIdsAsync(checkoutId, cancellationToken)).ToArray();
         }
 
         await _cycles.StartAsync(
@@ -93,46 +99,5 @@ public sealed class ReservationCycleCoordinator
             paymentAttemptId: null,
             cancellationToken);
         return result;
-    }
-
-    private async Task<IReadOnlyList<ReservationCyclePolicyLine>> LoadPolicyLinesAsync(
-        Guid checkoutId,
-        CancellationToken cancellationToken)
-    {
-        var group = await _orders.Checkouts.AsNoTracking()
-            .Include(x => x.SellerOrders)
-            .ThenInclude(x => x.Lines)
-            .SingleOrDefaultAsync(x => x.CheckoutId == checkoutId, cancellationToken);
-        if (group is null)
-        {
-            return [];
-        }
-
-        return group.SellerOrders
-            .Where(x => x.Status != SellerOrderStatus.Cancelled)
-            .SelectMany(x => x.Lines)
-            .Select(x => new ReservationCyclePolicyLine(x.OfferId, x.CategoryIdSnapshot))
-            .ToArray();
-    }
-
-    private async Task<IReadOnlyList<Guid>> LoadReservationIdsAsync(
-        Guid checkoutId,
-        CancellationToken cancellationToken)
-    {
-        var group = await _orders.Checkouts.AsNoTracking()
-            .Include(x => x.SellerOrders)
-            .ThenInclude(x => x.Lines)
-            .SingleOrDefaultAsync(x => x.CheckoutId == checkoutId, cancellationToken);
-        if (group is null)
-        {
-            return [];
-        }
-
-        return group.SellerOrders
-            .SelectMany(x => x.Lines)
-            .Where(x => x.ReservationId.HasValue)
-            .Select(x => x.ReservationId!.Value)
-            .Distinct()
-            .ToArray();
     }
 }

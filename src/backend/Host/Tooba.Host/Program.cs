@@ -165,8 +165,6 @@ builder.Services.AddScoped<CommerceHoldPolicy>();
 builder.Services.AddScoped<Tooba.Payment.Contracts.Hold.ICommerceHoldPolicySource>(sp => sp.GetRequiredService<CommerceHoldPolicy>());
 builder.Services.AddScoped<Tooba.Order.Application.ICheckoutReservationHoldPolicy>(sp => sp.GetRequiredService<CommerceHoldPolicy>());
 builder.Services.AddScoped<Tooba.Cart.Application.Ports.ICartPersistenceHoursSource>(sp => sp.GetRequiredService<CommerceHoldPolicy>());
-builder.Services.AddScoped<Tooba.Order.Application.IReservationCyclePolicyResolver, ReservationCyclePolicyResolver>();
-builder.Services.AddScoped<ReservationCycleCoordinator>();
 builder.Services.AddScoped<Tooba.Host.Admin.ProductWorkspaceComposer>();
 builder.Services.AddScoped<Tooba.Host.Grid.AdminContentGridQueryEngine>();
 builder.Services.AddScoped<Tooba.Host.Grid.AdminStoryGridQueryEngine>();

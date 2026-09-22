@@ -103,7 +103,12 @@ public sealed class UnpaidOrderExpiryTests
         Assert.Contains("FOR UPDATE SKIP LOCKED", dir, StringComparison.Ordinal);
         Assert.Contains("unpaid_timeout_at", dir, StringComparison.Ordinal);
         Assert.Contains("UnpaidOrderExpiryHostedService", Read("src/backend/Host/Tooba.Host/Program.cs"), StringComparison.Ordinal);
-        Assert.Contains("ReleaseReservationsAfterManualRejectAsync", Read("src/backend/Host/Tooba.Host/UnpaidOrderExpiryHostedService.cs"), StringComparison.Ordinal);
+        Assert.Contains("IUnpaidOrderExpiryReconciler", Read("src/backend/Host/Tooba.Host/UnpaidOrderExpiryHostedService.cs"), StringComparison.Ordinal);
+        Assert.DoesNotContain("ReleaseReservationsAfterManualRejectAsync", Read("src/backend/Host/Tooba.Host/UnpaidOrderExpiryHostedService.cs"), StringComparison.Ordinal);
+        Assert.Contains("ReleaseReservationsAfterManualRejectAsync", Read("src/backend/Modules/Order/Tooba.Order.Infrastructure/UnpaidOrderExpiryReconciler.cs"), StringComparison.Ordinal);
+        Assert.DoesNotContain("IReservationCycleDirectory", Read("src/backend/Host/Tooba.Host/UnpaidOrderExpiryHostedService.cs"), StringComparison.Ordinal);
+        Assert.DoesNotContain("IOrderPaymentProjectionPort", Read("src/backend/Host/Tooba.Host/UnpaidOrderExpiryHostedService.cs"), StringComparison.Ordinal);
+        Assert.DoesNotContain("DateTimeOffset.UtcNow", Read("src/backend/Host/Tooba.Host/UnpaidOrderExpiryHostedService.cs"), StringComparison.Ordinal);
     }
 
     [Fact]

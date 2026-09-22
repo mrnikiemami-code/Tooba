@@ -211,7 +211,7 @@ public sealed class ReservationPolicyAdminUxTests
         var editor = Read("src/frontend/app/admin/reservation-policy-editor.tsx");
         var offer = Read("src/frontend/app/admin/offer-reservation-panel.tsx");
         var vendor = Read("src/frontend/app/vendor-panel/products/[offerId]/page.tsx");
-        var mapper = Read("src/backend/Host/Tooba.Host/Admin/AdminReservationCycleMapper.cs");
+        var mapper = Read("src/backend/Modules/Order/Tooba.Order.Application/Admin/Detail/AdminOrderReservationCycleMapper.cs");
         var pending = Read("src/frontend/app/storefront/storefront-pending-payments.tsx");
         Assert.Contains("Inventory reservation policy", editor, StringComparison.Ordinal);
         Assert.Contains("admin-settings-reservation-policy", settings, StringComparison.Ordinal);
@@ -250,16 +250,20 @@ public sealed class ReservationPolicyAdminUxTests
         var api = Read("src/frontend/app/admin/reservation-policy-api.ts");
         var composer = Read("src/backend/Host/Tooba.Host/Admin/ReservationPolicyAdminComposer.cs");
         var endpoints = Read("src/backend/Host/Tooba.Host/Admin/ReservationPolicyAdminEndpoints.cs");
-        var resolver = Read("src/backend/Host/Tooba.Host/ReservationCyclePolicyResolver.cs");
+        var resolver = Read("src/backend/Modules/Order/Tooba.Order.Application/ReservationCyclePolicyResolver.cs");
         Assert.DoesNotContain("Offer > Category > Store", editor, StringComparison.Ordinal);
         Assert.DoesNotContain("product-level", composer, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("PreviewAsync", resolver, StringComparison.Ordinal);
+        Assert.Contains("IReservationCycleHoldPolicyReader", resolver, StringComparison.Ordinal);
+        Assert.DoesNotContain("CatalogDbContext", resolver, StringComparison.Ordinal);
         Assert.Contains("reservation.policy.seller.denied", endpoints, StringComparison.Ordinal);
         Assert.DoesNotContain("ExpiresAt =", composer, StringComparison.Ordinal);
         Assert.DoesNotContain("setInterval", editor, StringComparison.Ordinal);
         Assert.DoesNotContain("setInterval", api, StringComparison.Ordinal);
         Assert.Contains("false,", composer, StringComparison.Ordinal);
         Assert.Contains("SellerCanMutate", Read("src/backend/Host/Tooba.Host/Admin/ReservationPolicyAdminModels.cs"), StringComparison.Ordinal);
+        Assert.DoesNotContain("ReservationCyclePolicyResolver concrete", endpoints, StringComparison.Ordinal);
+        Assert.DoesNotContain("is Tooba.Host.ReservationCyclePolicyResolver", endpoints, StringComparison.Ordinal);
     }
 
     private static ReservationCyclePolicyResolver Resolver(
@@ -274,7 +278,7 @@ public sealed class ReservationPolicyAdminUxTests
                 RetryReservationHoldMinutes = retry,
                 MaxReservationCycles = max,
             }),
-            catalog);
+            new Tooba.Catalog.Infrastructure.Reservation.ReservationCycleHoldPolicyReader(catalog));
 
     private static CatalogDbContext CreateCatalog()
     {

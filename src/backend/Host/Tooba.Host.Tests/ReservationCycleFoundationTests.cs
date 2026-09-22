@@ -184,7 +184,7 @@ public sealed class ReservationCycleFoundationTests
                 RetryReservationHoldMinutes = 120,
                 MaxReservationCycles = 3,
             }),
-            catalog);
+            new Tooba.Catalog.Infrastructure.Reservation.ReservationCycleHoldPolicyReader(catalog));
         var snap = await resolver.ResolveAsync(
             [
                 new ReservationCyclePolicyLine(offerA, cat),
@@ -215,13 +215,13 @@ public sealed class ReservationCycleFoundationTests
         Assert.Contains("CorrelatePaymentAttempt", dir, StringComparison.Ordinal);
         Assert.Contains("PrepareStart", checkout, StringComparison.Ordinal);
         Assert.Contains("EnsureRetrySupplyAsync", composer, StringComparison.Ordinal);
-        Assert.Contains("EnsureRetryAfterExpiryAsync", Read("src/backend/Host/Tooba.Host/ReservationCycleCoordinator.cs"), StringComparison.Ordinal);
+        Assert.Contains("EnsureRetryAfterExpiryAsync", Read("src/backend/Modules/Order/Tooba.Order.Application/ReservationCycleCoordinator.cs"), StringComparison.Ordinal);
         Assert.DoesNotContain("ReserveAsync", cart, StringComparison.Ordinal);
         Assert.DoesNotContain("TB-P10-T005", Read("src/backend/Host/Tooba.Host/Program.cs"), StringComparison.Ordinal);
         Assert.Contains("InitialReservationHoldMinutes", Read("src/backend/Host/Tooba.Host/appsettings.json"), StringComparison.Ordinal);
         Assert.Contains("inventory.reservation.retry_limit_reached", Read("src/backend/Modules/Order/Tooba.Order.Application/ReservationCycleContracts.cs"), StringComparison.Ordinal);
         Assert.DoesNotContain("setInterval", dir, StringComparison.Ordinal);
-        Assert.DoesNotContain("setInterval", Read("src/backend/Host/Tooba.Host/ReservationCycleCoordinator.cs"), StringComparison.Ordinal);
+        Assert.DoesNotContain("setInterval", Read("src/backend/Modules/Order/Tooba.Order.Application/ReservationCycleCoordinator.cs"), StringComparison.Ordinal);
     }
 
     [Fact]
@@ -247,9 +247,12 @@ public sealed class ReservationCycleFoundationTests
     [Fact]
     public void Coordinator_and_locks_are_wired()
     {
-        Assert.Contains("ReservationCycleCoordinator", Read("src/backend/Host/Tooba.Host/Program.cs"), StringComparison.Ordinal);
-        Assert.Contains("IReservationCyclePolicyResolver", Read("src/backend/Host/Tooba.Host/Program.cs"), StringComparison.Ordinal);
-        Assert.Contains("CloseExpiredDueAsync", Read("src/backend/Host/Tooba.Host/UnpaidOrderExpiryHostedService.cs"), StringComparison.Ordinal);
+        Assert.DoesNotContain("ReservationCycleCoordinator", Read("src/backend/Host/Tooba.Host/Program.cs"), StringComparison.Ordinal);
+        Assert.Contains("IReservationCyclePolicyResolver", Read("src/backend/Modules/Order/Tooba.Order.Infrastructure/OrderModule.cs"), StringComparison.Ordinal);
+        Assert.Contains("IReservationCycleCoordinator", Read("src/backend/Modules/Order/Tooba.Order.Infrastructure/OrderModule.cs"), StringComparison.Ordinal);
+        Assert.Contains("IUnpaidOrderExpiryReconciler", Read("src/backend/Host/Tooba.Host/UnpaidOrderExpiryHostedService.cs"), StringComparison.Ordinal);
+        Assert.DoesNotContain("IReservationCycleDirectory", Read("src/backend/Host/Tooba.Host/UnpaidOrderExpiryHostedService.cs"), StringComparison.Ordinal);
+        Assert.DoesNotContain("DateTimeOffset.UtcNow", Read("src/backend/Host/Tooba.Host/UnpaidOrderExpiryHostedService.cs"), StringComparison.Ordinal);
         Assert.Contains("LOCK-SF-076", Read("docs/architecture/TOOBA-LOCKS.md"), StringComparison.Ordinal);
         Assert.Contains("Reservation Cycle is not a Payment Attempt", Read("docs/architecture/TOOBA-LOCKS.md"), StringComparison.Ordinal);
     }

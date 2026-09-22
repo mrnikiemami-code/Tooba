@@ -2,6 +2,14 @@
   "taskId": "TB-TMAR-ORDER-GOLDEN-001-R7",
   "headAtAudit": "6e9980a40c06a8ced0f4a32aefa004b700a99003",
   "discoveryRule": "Host production .cs under Tooba.Host matching OrderDbContext OR Tooba.Order.Application|Infrastructure|Domain OR explicit Order-owned Host route/adapter files listed in extraFiles",
+  "r8InventoryUpdate": {
+    "updatedBy": "TB-TMAR-ORDER-GOLDEN-001-R8",
+    "removedFiles": [
+      "ReservationCycleCoordinator.cs",
+      "ReservationCyclePolicyResolver.cs"
+    ],
+    "note": "Historical R7 audit markdown left intact; inventory files list refreshed after R8 Host deletions."
+  },
   "extraFiles": [
     "Admin/AdminPanelEndpoints.cs",
     "Admin/HostOrderAdminAuthorizer.cs",
@@ -37,8 +45,6 @@
     "Order/HostOrderStorefrontActor.cs",
     "Preferences/UserPreferenceEndpoints.cs",
     "Program.cs",
-    "ReservationCycleCoordinator.cs",
-    "ReservationCyclePolicyResolver.cs",
     "Seller/SellerPanelComposer.cs",
     "Seller/SellerPanelEndpoints.cs",
     "Settings/SettingsFoundationDevelopmentSeed.cs",

@@ -5,7 +5,7 @@
     "checkoutState":  "PAUSED_AT_SAFE_W5_CHECKPOINT",
     "lastAcceptedTask":  "TB-TMAR-GOLDEN-WAVE-FINAL-CLOSURE-001",
     "lastAcceptedCommit":  "024ce2b5708aa70ad9f395b4dcbe48fdd6912c5a",
-    "nextTask":  "TB-TMAR-ORDER-GOLDEN-001-R8",
+    "nextTask":  "TB-TMAR-ORDER-GOLDEN-001-R9",
     "nextTaskGate":  "ORDER_GOLDEN_REPAIR_REQUIRED",
     "goldenWaveState":  "COMPLETE",
     "goldenWaveUserReview":  "USER_ACCEPTED",
@@ -124,7 +124,7 @@
     "activeModuleRecovery":  {
                                  "module":  "Order",
                                  "state":  "INCOMPLETE_REFERENCE_REPAIR",
-                                 "task":  "TB-TMAR-ORDER-GOLDEN-001-R7",
+                                 "task":  "TB-TMAR-ORDER-GOLDEN-001-R8",
                                  "completedSlices":  [
                                                          "ORDER_ENDPOINTS_FOUNDATION",
                                                          "ADMIN_ORDER_COMPLETENESS_CQRS",
@@ -141,10 +141,11 @@
                                                          "STOREFRONT_ORDER_CQRS_R5",
                                                          "STOREFRONT_CHECKOUT_ABUSE_TYPED_R5_R1",
                                                          "ADMIN_ORDER_DETAIL_CQRS_R6",
-                                                         "HOST_ORDER_REVERSE_AUDIT_R7"
+                                                         "HOST_ORDER_REVERSE_AUDIT_R7",
+                                                         "RESERVATION_CYCLE_POLICY_RETRY_EXPIRY_R8"
                                                      ],
-                                 "nextTask":  "TB-TMAR-ORDER-GOLDEN-001-R8",
+                                 "nextTask":  "TB-TMAR-ORDER-GOLDEN-001-R9",
                                  "checkoutState":  "PAUSED_AT_SAFE_W5_CHECKPOINT",
-                                 "notes":  "R7: Host Order reverse audit ONLY (NOT_READY_FOR_CLOSURE). Illegal residuals: ReservationCycleCoordinator+PolicyResolver+UnpaidOrderExpiry (R8), CustomerPanel Order (R9), SellerPanel Order (R10), Admin dashboard/list/grids (R11). Order stays INCOMPLETE_REFERENCE_REPAIR. Checkout PAUSED_AT_SAFE_W5. No Host business removals in R7."
+                                 "notes":  "R8: Reservation cycle policy/retry/expiry moved Host→Order (coordinator+policy resolver deleted from Host; unpaid expiry Host shell + Order reconciler; Catalog.Contracts hold overrides). Order stays INCOMPLETE_REFERENCE_REPAIR. Checkout PAUSED_AT_SAFE_W5. Next: CustomerPanel Order (R9). Do not start R9 until Architect ACCEPT."
                              }
 }

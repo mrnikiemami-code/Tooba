@@ -9,6 +9,7 @@ using Tooba.Order.Domain;
 using Tooba.Order.Infrastructure.Persistence;
 using Tooba.Party.Application;
 using Tooba.Host.Admin;
+using Tooba.Order.Application;
 using Tooba.Order.Application.Admin.Supply.Models;
 using Tooba.Order.Application.Admin.Supply.Services;
 using Tooba.Payment.Application.Models;
@@ -36,7 +37,7 @@ public sealed class CustomerPanelComposer
     private readonly IIdentityContactLookup _identityContacts;
     private readonly OrderSupplyService? _supply;
     private readonly IPaymentCustomerGateway? _expiry;
-    private readonly ReservationCycleCoordinator? _cycles;
+    private readonly IReservationCycleCoordinator? _cycles;
 
     /// <summary>
     /// ترکیب‌گر را با مرزهای خواندن مستقل می‌سازد.
@@ -52,7 +53,7 @@ public sealed class CustomerPanelComposer
         IIdentityContactLookup identityContacts,
         OrderSupplyService? supply = null,
         IPaymentCustomerGateway? expiry = null,
-        ReservationCycleCoordinator? cycles = null)
+        IReservationCycleCoordinator? cycles = null)
     {
         _orders = orders;
         _catalog = catalog;

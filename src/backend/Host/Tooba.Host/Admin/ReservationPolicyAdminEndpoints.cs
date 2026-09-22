@@ -188,9 +188,7 @@ public static class ReservationPolicyAdminEndpoints
                 offers, catalog, ids, cancellationToken);
             var lines = ids.Select(id => (id, categories.GetValueOrDefault(id))).ToList();
 
-            var previews = resolver is Tooba.Host.ReservationCyclePolicyResolver concrete
-                ? await concrete.PreviewManyAsync(lines, cancellationToken)
-                : await Task.WhenAll(lines.Select(x => resolver.PreviewAsync(x.Item1, x.Item2, cancellationToken)));
+            var previews = await resolver.PreviewManyAsync(lines, cancellationToken);
             var items = ids.Select((offerId, index) =>
                     ReservationPolicyAdminComposer.ForOffer(offerId, previews[index], true))
                 .ToList();

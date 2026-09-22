@@ -6,8 +6,10 @@ using Tooba.BuildingBlocks;
 using Tooba.Catalog.Application;
 using Tooba.Catalog.Contracts;
 using Tooba.Catalog.Contracts.Checkout;
+using Tooba.Catalog.Contracts.Reservation;
 using Tooba.Catalog.Infrastructure.Checkout;
 using Tooba.Catalog.Infrastructure.Persistence;
+using Tooba.Catalog.Infrastructure.Reservation;
 using Tooba.ModuleContracts;
 using Tooba.Persistence;
 using Microsoft.EntityFrameworkCore;
@@ -40,6 +42,7 @@ public sealed class CatalogModule : IToobaModule
         services.AddScoped<ICatalogCartPresentationLookup>(sp => (CatalogDirectory)sp.GetRequiredService<ICatalogDirectory>());
         services.AddScoped<ICatalogOfferReadGateway, CatalogOfferReadGateway>();
         services.AddScoped<IStoreCheckoutAbuseSettingsReader, StoreCheckoutAbuseSettingsReader>();
+        services.AddScoped<IReservationCycleHoldPolicyReader, ReservationCycleHoldPolicyReader>();
         services.AddScoped<IStoreLandingPageDirectory, StoreLandingPageDirectory>();
         services.AddScoped<IStoreMenuDirectory, StoreMenuDirectory>();
         services.AddScoped<IStoreAppearanceSettingsDirectory, StoreAppearanceSettingsDirectory>();

@@ -2,16 +2,13 @@ using System.Diagnostics.Metrics;
 using Microsoft.Extensions.Options;
 using Tooba.BuildingBlocks;
 using Tooba.Order.Application;
-using Tooba.Order.Domain;
-using Tooba.Payment.Application.Models;
-using Tooba.Payment.Contracts.Customer;
-using Tooba.Order.Contracts.Payments;
 using Tooba.Persistence;
 
 namespace Tooba.Host;
 
 /// <summary>
-/// کارگر سرور: پرداخت unpaid سررسید را Expired می‌کند و رزرو سفارش را آزاد می‌کند.
+/// Host shell only: tenant loop, config, logging, telemetry.
+/// Business reconciliation lives in <see cref="IUnpaidOrderExpiryReconciler"/>.
 /// </summary>
 internal sealed class UnpaidOrderExpiryHostedService : BackgroundService
 {
@@ -98,31 +95,9 @@ internal sealed class UnpaidOrderExpiryHostedService : BackgroundService
                 await using var scope = _scopes.CreateAsyncScope();
                 var assigner = scope.ServiceProvider.GetRequiredService<ICommerceContextAssigner>();
                 assigner.Assign(_workerContext.FromPollTarget(target, Guid.NewGuid().ToString("N")));
-                var expiry = scope.ServiceProvider.GetRequiredService<IPaymentCustomerGateway>();
-                var projection = scope.ServiceProvider.GetRequiredService<IOrderPaymentProjectionPort>();
-                var cycles = scope.ServiceProvider.GetRequiredService<IReservationCycleDirectory>();
-                var now = DateTimeOffset.UtcNow;
-                await cycles.CloseExpiredDueAsync(now, cancellationToken).ConfigureAwait(false);
-                var checkoutIds = await expiry.ExpireDueUnpaidAsync(
-                    now,
-                    _options.BatchSize,
-                    cancellationToken).ConfigureAwait(false);
-                foreach (var checkoutId in checkoutIds.Distinct())
-                {
-                    await projection.ReleaseReservationsAfterManualRejectAsync(checkoutId, cancellationToken)
-                        .ConfigureAwait(false);
-                    var active = await cycles.GetActiveAsync(checkoutId, cancellationToken).ConfigureAwait(false);
-                    if (active is not null)
-                    {
-                        await cycles.CloseActiveAsync(
-                            checkoutId,
-                            ReservationCycleStatus.ReleasedByPolicy,
-                            now,
-                            cancellationToken).ConfigureAwait(false);
-                    }
-                }
-
-                total += checkoutIds.Count;
+                var reconciler = scope.ServiceProvider.GetRequiredService<IUnpaidOrderExpiryReconciler>();
+                total += await reconciler.ReconcileAsync(_options.BatchSize, cancellationToken)
+                    .ConfigureAwait(false);
             }
             catch (Exception ex)
             {
