@@ -1,0 +1,26 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+BEGIN_TOOBA_WORKER_RESULT
+
+Task-ID: TB-TMAR-ORDER-GOLDEN-001-R3B-R1
+Parent-Task: TB-TMAR-ORDER-GOLDEN-001-R3B
+Status: PASS
+
+Summary: Removed facade CQRS. AdminOrderOperationsOrchestrator.ExecuteAsync/ExecuteCoreAsync deleted. All 27 command handlers invoke typed use-case methods (CancelOrderAsync, MarkProcessingAsync, ApproveReturnAsync, …). Endpoint may still map wire Code to Command Send; Application no longer routes by Code. Host removal preserved. Guards strengthened.
+Generic-Dispatcher-State: ExecuteAsync and ExecuteCoreAsync absent from Order Application Ops
+Command-Handler-State: 27 handlers call typed orchestrator *Async methods; no Request with { Code = ... } routing
+Application-Code-Switch-State: no central operation-code execute switch in Application; projection/list helpers retained
+Host-Removal-Preserved: AdminOrderOperationsEndpoints/Composer/Models and AdminFulfillmentCapabilityProjector remain absent from Host
+Order-CQRS-State: Offer-style typed command paths + shared typed service methods; queries unchanged
+Behavior-Parity: preserved; focused Host ops/cancel/corrective/fulfillment regressions PASS
+Architecture-Guard-Validation: OrderAdminOperationsArchitectureGuardTests 7/7 PASS
+Focused-Validation: Order.Tests 49 PASS; Host focused ops-related 86 PASS (agent); parent re-confirmed Ops guards 7/7 and full slnx build
+Full-Validation: dotnet build src/backend/Tooba.slnx succeeded 0 errors
+Residual-Defects: none for R3B-R1; wire AdminOrderOperationRequest.Code remains for endpoint compatibility only
+Order-Overall-State: INCOMPLETE_REFERENCE_REPAIR
+Checkout-State: PAUSED_AT_SAFE_W5_CHECKPOINT
+Recovery-Next-Task: TB-TMAR-ORDER-GOLDEN-001-R4
+Git: c48d4405b0841d3bf1888c3980ff555163eb4fa1 pushed origin/main; HEAD==origin/main
+User-Work-Preserved: yes; unrelated untracked R2C RESULT.bridge.txt untouched
+Next-Recommended-Task: TB-TMAR-ORDER-GOLDEN-001-R4
+
+END_TOOBA_WORKER_RESULT
