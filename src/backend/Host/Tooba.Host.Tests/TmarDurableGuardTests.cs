@@ -103,10 +103,11 @@ public sealed class TmarDurableGuardTests
         var rootEl = doc.RootElement;
         Assert.Equal("BACKEND_ONLY_UNTIL_EXPLICIT_RELEASE", rootEl.GetProperty("executionMode").GetString());
         Assert.Equal("COMPLETE", rootEl.GetProperty("goldenWaveState").GetString());
+        Assert.Equal("USER_ACCEPTED", rootEl.GetProperty("goldenWaveUserReview").GetString());
         Assert.Equal("TB-TMAR-GOLDEN-WAVE-FINAL-CLOSURE-001", rootEl.GetProperty("goldenWaveClosedBy").GetString());
         Assert.False(string.IsNullOrWhiteSpace(rootEl.GetProperty("goldenWaveClosedCommit").GetString()));
-        Assert.Equal("USER_REVIEW_GOLDEN_WAVE", rootEl.GetProperty("nextTask").GetString());
-        Assert.Equal("USER_REVIEW_REQUIRED_BEFORE_NEXT_TMAR_WAVE", rootEl.GetProperty("nextTaskGate").GetString());
+        Assert.Equal("TB-TMAR-ORDER-GOLDEN-001-R1", rootEl.GetProperty("nextTask").GetString());
+        Assert.Equal("ORDER_GOLDEN_REPAIR_REQUIRED", rootEl.GetProperty("nextTaskGate").GetString());
         Assert.Equal("PAUSED_AT_SAFE_W5_CHECKPOINT", rootEl.GetProperty("checkoutState").GetString());
         Assert.True(rootEl.GetProperty("frontendFrozen").GetBoolean());
         Assert.Equal("ARCH-COMPLETE-001", rootEl.GetProperty("locksVersion").GetString());
@@ -146,10 +147,10 @@ public sealed class TmarDurableGuardTests
 
         var master = File.ReadAllText(Path.Combine(root, "docs", "architecture", "TOOBA-TMAR-MASTER-RECOVERY.md"));
         var bootstrap = File.ReadAllText(Path.Combine(root, "docs", "architecture", "TOOBA-ARCHITECT-BOOTSTRAP.md"));
-        Assert.Contains("USER_REVIEW_GOLDEN_WAVE", master, StringComparison.Ordinal);
-        Assert.Contains("USER_REVIEW_GOLDEN_WAVE", bootstrap, StringComparison.Ordinal);
-        Assert.Contains("USER_REVIEW_REQUIRED_BEFORE_NEXT_TMAR_WAVE", master, StringComparison.Ordinal);
-        Assert.Contains("USER_REVIEW_REQUIRED_BEFORE_NEXT_TMAR_WAVE", bootstrap, StringComparison.Ordinal);
+        Assert.Contains("TB-TMAR-ORDER-GOLDEN-001-R1", master, StringComparison.Ordinal);
+        Assert.Contains("TB-TMAR-ORDER-GOLDEN-001-R1", bootstrap, StringComparison.Ordinal);
+        Assert.Contains("ORDER_GOLDEN_REPAIR_REQUIRED", master, StringComparison.Ordinal);
+        Assert.Contains("ORDER_GOLDEN_REPAIR_REQUIRED", bootstrap, StringComparison.Ordinal);
         Assert.Contains("ARCH-COMPLETE-001", master, StringComparison.Ordinal);
         Assert.Contains("ARCH-COMPLETE-001", bootstrap, StringComparison.Ordinal);
         const string currentCompleteList = "Cart, Settlement, Fulfillment, Returns, Notification, Support, Wallet, Payment, Promotion, Offer, Inventory";

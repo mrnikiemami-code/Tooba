@@ -14,6 +14,9 @@ namespace Tooba.Order.Infrastructure;
 
 public sealed partial class CheckoutDirectory : ICheckoutSubmitHost
 {
+    private const int ConflictWinnerReadAttempts = 10;
+    private static readonly TimeSpan ConflictWinnerReadDelay = TimeSpan.FromMilliseconds(20);
+
     /// <inheritdoc />
     Task ICheckoutSubmitHost.EnsureCanMutateAsync(CancellationToken cancellationToken)
         => _guard.EnsureCanMutateAsync(cancellationToken);
@@ -180,10 +183,10 @@ public sealed partial class CheckoutDirectory : ICheckoutSubmitHost
         {
             await _db.SaveChangesAsync(cancellationToken);
         }
-        catch (DbUpdateException)
+        catch (DbUpdateException ex)
         {
             _db.ChangeTracker.Clear();
-            throw new InvalidOperationException("checkout.conflict");
+            throw new CheckoutConflictException(ex);
         }
 
         return ToSnapshot(group);
@@ -232,11 +235,13 @@ public sealed partial class CheckoutDirectory : ICheckoutSubmitHost
         _db.ChangeTracker.Clear();
         await _db.Database.CloseConnectionAsync();
         CheckoutGroup? winner = null;
-        for (var attempt = 0; attempt < 10 && winner is null; attempt++)
+        // The winning transaction can commit immediately after our unique-key failure.
+        // Keep this bounded and cancellation-aware; the maximum delay is 900 ms.
+        for (var attempt = 0; attempt < ConflictWinnerReadAttempts && winner is null; attempt++)
         {
             if (attempt > 0)
             {
-                await Task.Delay(20 * attempt, cancellationToken);
+                await Task.Delay(ConflictWinnerReadDelay * attempt, cancellationToken);
             }
 
             winner = await _db.Checkouts

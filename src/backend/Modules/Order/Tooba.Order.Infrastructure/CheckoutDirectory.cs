@@ -2,6 +2,7 @@ using Tooba.Order.Contracts.Fulfillment;
 using System.Linq.Expressions;
 using System.Transactions;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using Tooba.BuildingBlocks;
 using Tooba.Cart.Application.Ports;
 using Tooba.Cart.Application.Conversion;
@@ -49,6 +50,9 @@ public sealed partial class CheckoutDirectory : ICheckoutDirectory
     internal readonly ICheckoutProcessTracker? _processes;
     internal readonly ICheckoutInventoryReservationPort _inventoryReservation;
     internal readonly ICartConversionPort _cartConversion;
+    internal readonly IClock _clock;
+    internal readonly IIdGenerator _ids;
+    internal readonly ILogger<CheckoutProcessManager> _checkoutLogger;
 
     /// <summary>
     /// دایرکتوری را به schema order و درزهای ماژول‌های دیگر وصل می‌کند.
@@ -65,6 +69,9 @@ public sealed partial class CheckoutDirectory : ICheckoutDirectory
         ICheckoutPromotionPort promotions,
         ICatalogLookupGateway catalog,
         ISellerOrderCancelFulfillmentGate cancelFulfillmentGate,
+        IClock clock,
+        IIdGenerator ids,
+        ILogger<CheckoutProcessManager> checkoutLogger,
         IReturnPolicyResolver? returnPolicies = null,
         ICheckoutReservationHoldPolicy? holdPolicy = null,
         IReservationCycleDirectory? cycles = null,
@@ -87,6 +94,9 @@ public sealed partial class CheckoutDirectory : ICheckoutDirectory
         _promotions = promotions;
         _catalog = catalog;
         _cancelFulfillmentGate = cancelFulfillmentGate;
+        _clock = clock;
+        _ids = ids;
+        _checkoutLogger = checkoutLogger;
         _returnPolicies = returnPolicies ?? new ReturnPolicyResolver(new ReturnPolicyOptions());
         _holdPolicy = holdPolicy;
         _cycles = cycles;
@@ -102,7 +112,14 @@ public sealed partial class CheckoutDirectory : ICheckoutDirectory
 
     /// <inheritdoc />
     public Task<CheckoutSnapshot> SubmitAsync(SubmitCheckoutCommand command, CancellationToken cancellationToken)
-        => new CheckoutProcessManager(this, _inventoryReservation, _cartConversion, _processes).SubmitAsync(command, cancellationToken);
+        => new CheckoutProcessManager(
+            this,
+            _inventoryReservation,
+            _cartConversion,
+            _clock,
+            _ids,
+            _checkoutLogger,
+            _processes).SubmitAsync(command, cancellationToken);
 
     /// <inheritdoc />
     public async Task<CheckoutSnapshot> PreviewAsync(SubmitCheckoutCommand command, CancellationToken cancellationToken)

@@ -1,4 +1,5 @@
 ﻿using System.Transactions;
+using Microsoft.Extensions.Logging;
 using Tooba.BuildingBlocks;
 using Tooba.Cart.Contracts;
 using Tooba.Inventory.Contracts.Availability;
@@ -20,17 +21,26 @@ public sealed class CheckoutProcessManager : ICheckoutProcessManager
     private readonly ICheckoutInventoryReservationPort _inventory;
     private readonly ICartConversionPort _cartConversion;
     private readonly ICheckoutProcessTracker? _processes;
+    private readonly IClock _clock;
+    private readonly IIdGenerator _ids;
+    private readonly ILogger<CheckoutProcessManager> _logger;
 
     /// <summary>Process Manager را می‌سازد.</summary>
     public CheckoutProcessManager(
         ICheckoutSubmitHost host,
         ICheckoutInventoryReservationPort inventory,
         ICartConversionPort cartConversion,
+        IClock clock,
+        IIdGenerator ids,
+        ILogger<CheckoutProcessManager> logger,
         ICheckoutProcessTracker? processes = null)
     {
         _host = host;
         _inventory = inventory;
         _cartConversion = cartConversion;
+        _clock = clock;
+        _ids = ids;
+        _logger = logger;
         _processes = processes;
     }
 
@@ -47,8 +57,8 @@ public sealed class CheckoutProcessManager : ICheckoutProcessManager
         }
 
         var cart = await _host.LoadActiveCartAsync(command, cancellationToken);
-        var now = DateTimeOffset.UtcNow;
-        var checkoutId = UuidV7.New();
+        var now = _clock.UtcNow;
+        var checkoutId = _ids.NewId();
         CheckoutProcess? process = null;
         if (_processes is not null)
         {
@@ -169,17 +179,26 @@ public sealed class CheckoutProcessManager : ICheckoutProcessManager
             scope.Complete();
             return group;
         }
-        catch (InvalidOperationException ex) when (ex.Message is "checkout.conflict" or "inventory.reservation.conflict")
+        catch (CheckoutConflictException)
         {
             var winner = await _host.FindConflictWinnerAsync(command, cancellationToken);
             if (winner is null)
             {
-                if (ex.Message == "inventory.reservation.conflict")
-                {
-                    throw;
-                }
+                throw;
+            }
 
-                throw new InvalidOperationException("checkout تکراری سبد ذخیره شد ولی خوانده نشد.");
+            _host.EnsureCheckoutAccess(winner, command);
+            await _host.ReconcileCartConversionAsync(winner, command, cancellationToken);
+            return winner;
+        }
+        // Inventory still exposes this W1-W5 conflict as a legacy exception code.
+        // Keep the frozen winner-reconciliation behavior until R1 adds a typed Contracts error.
+        catch (InvalidOperationException ex) when (ex.Message == "inventory.reservation.conflict")
+        {
+            var winner = await _host.FindConflictWinnerAsync(command, cancellationToken);
+            if (winner is null)
+            {
+                throw;
             }
 
             _host.EnsureCheckoutAccess(winner, command);
@@ -194,13 +213,27 @@ public sealed class CheckoutProcessManager : ICheckoutProcessManager
                 {
                     await _inventory.ReleaseAsync(reservations.Values, cancellationToken);
                 }
-                catch (InvalidOperationException)
+                catch (InvalidOperationException ex)
                 {
+                    _logger.LogWarning(
+                        ex,
+                        "Failed to release checkout reservations after submit failure. CheckoutId={CheckoutId}",
+                        checkoutId);
                 }
             }
 
             throw;
         }
+    }
+}
+
+/// <summary>Signals a stable checkout uniqueness/concurrency conflict without message classification.</summary>
+public sealed class CheckoutConflictException : Exception
+{
+    /// <summary>Creates a checkout conflict.</summary>
+    public CheckoutConflictException(Exception? innerException = null)
+        : base("order.checkout.conflict", innerException)
+    {
     }
 }
 

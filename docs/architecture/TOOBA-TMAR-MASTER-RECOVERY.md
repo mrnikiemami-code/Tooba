@@ -4,14 +4,15 @@ Current Golden Wave Closure (authoritative)
 
 - Locks: ARCH-COMPLETE-001, HOST-MODULE-ENDPOINT-001, ARCH-CQRS-001/002
 - Execution: BACKEND_ONLY_UNTIL_EXPLICIT_RELEASE; frontendFrozen = true
-- Golden wave: COMPLETE; 11 COMPLETE_REFERENCE_PATTERN modules
+- Golden wave: COMPLETE + USER_ACCEPTED; 11 COMPLETE_REFERENCE_PATTERN modules
 - Complete modules: Cart, Settlement, Fulfillment, Returns, Notification, Support, Wallet, Payment, Promotion, Offer, Inventory
 - HTTP-owning: Cart, Settlement, Fulfillment, Returns, Notification, Support, Wallet, Payment, Promotion, Offer — MODULE_ENDPOINTS + MEDIATR_12_5
 - Inventory = INTERNAL_ONLY / NOT_APPLICABLE / INTERNAL_USE_CASE_BOUNDARIES
 - reopenedModules = empty; internalApplicabilityReviewModules = empty
 - Checkout = PAUSED_AT_SAFE_W5_CHECKPOINT
-- Next task: USER_REVIEW_GOLDEN_WAVE
-- Gate: USER_REVIEW_REQUIRED_BEFORE_NEXT_TMAR_WAVE
+- Order: INCOMPLETE_REFERENCE_REPAIR after TB-TMAR-ORDER-GOLDEN-001
+- Next task: TB-TMAR-ORDER-GOLDEN-001-R1
+- Gate: ORDER_GOLDEN_REPAIR_REQUIRED
 - Closed by: TB-TMAR-GOLDEN-WAVE-FINAL-CLOSURE-001
 
 Purpose
