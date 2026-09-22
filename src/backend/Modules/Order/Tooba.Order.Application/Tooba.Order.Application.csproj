@@ -5,6 +5,7 @@
     <Nullable>enable</Nullable>
     <RootNamespace>Tooba.Order.Application</RootNamespace>
     <AssemblyName>Tooba.Order.Application</AssemblyName>
+    <NoWarn>$(NoWarn);1591</NoWarn>
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\Tooba.Order.Domain\Tooba.Order.Domain.csproj" />

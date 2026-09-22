@@ -90,6 +90,7 @@
     <Project Path="Modules/Order/Tooba.Order.Domain/Tooba.Order.Domain.csproj" />
     <Project Path="Modules/Order/Tooba.Order.Contracts/Tooba.Order.Contracts.csproj" />
     <Project Path="Modules/Order/Tooba.Order.Application/Tooba.Order.Application.csproj" />
+    <Project Path="Modules/Order/Tooba.Order.Endpoints/Tooba.Order.Endpoints.csproj" />
     <Project Path="Modules/Order/Tooba.Order.Infrastructure/Tooba.Order.Infrastructure.csproj" />
   </Folder>
   <Folder Name="/Modules/Inventory/">

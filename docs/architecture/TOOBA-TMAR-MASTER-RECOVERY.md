@@ -11,7 +11,7 @@ Current Golden Wave Closure (authoritative)
 - reopenedModules = empty; internalApplicabilityReviewModules = empty
 - Checkout = PAUSED_AT_SAFE_W5_CHECKPOINT
 - Order: INCOMPLETE_REFERENCE_REPAIR after TB-TMAR-ORDER-GOLDEN-001-R1
-- Next task: TB-TMAR-ORDER-GOLDEN-001-R2
+- Next task: TB-TMAR-ORDER-GOLDEN-001-R2A
 - Gate: ORDER_GOLDEN_REPAIR_REQUIRED
 - Closed by: TB-TMAR-GOLDEN-WAVE-FINAL-CLOSURE-001
 

@@ -15,6 +15,8 @@ using Tooba.Order.Contracts.Fulfillment;
 using Tooba.Order.Contracts.Returns;
 using Tooba.Order.Contracts.Payments;
 using Tooba.Order.Infrastructure.Payments;
+using Tooba.Order.Application.Admin.Completeness;
+using Tooba.Order.Infrastructure.Admin;
 
 namespace Tooba.Order.Infrastructure;
 
@@ -35,6 +37,7 @@ public sealed class OrderModule : IToobaModule
 
         services.AddSingleton<IOutboxModuleRegistration, OrderOutboxRegistration>();
         services.AddScoped<IOrderUseCaseGuard, OpenOrderUseCaseGuard>();
+        services.AddScoped<IAdminOrderCompletenessStore, AdminOrderCompletenessStore>();
         services.AddScoped<ICheckoutDirectory, CheckoutDirectory>();
         services.AddScoped<ICheckoutProcessTracker, CheckoutProcessTracker>();
         services.AddScoped<IReservationCycleDirectory, ReservationCycleDirectory>();

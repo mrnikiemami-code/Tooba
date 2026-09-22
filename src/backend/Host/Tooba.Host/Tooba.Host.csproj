@@ -35,6 +35,7 @@
     <ProjectReference Include="..\..\Modules\Cart\Tooba.Cart.Infrastructure\Tooba.Cart.Infrastructure.csproj" />
     <ProjectReference Include="..\..\Modules\Cart\Tooba.Cart.Endpoints\Tooba.Cart.Endpoints.csproj" />
     <ProjectReference Include="..\..\Modules\Order\Tooba.Order.Infrastructure\Tooba.Order.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\Modules\Order\Tooba.Order.Endpoints\Tooba.Order.Endpoints.csproj" />
     <ProjectReference Include="..\..\Modules\Tax\Tooba.Tax.Infrastructure\Tooba.Tax.Infrastructure.csproj" />
     <ProjectReference Include="..\..\Modules\Promotion\Tooba.Promotion.Infrastructure\Tooba.Promotion.Infrastructure.csproj" />
     <ProjectReference Include="..\..\Modules\Promotion\Tooba.Promotion.Endpoints\Tooba.Promotion.Endpoints.csproj" />

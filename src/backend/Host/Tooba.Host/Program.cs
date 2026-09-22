@@ -49,6 +49,7 @@ using Tooba.Fulfillment.Endpoints;
 using Tooba.Offer.Infrastructure.Adapters;
 using Tooba.Tax.Endpoints;
 using Tooba.Pricing.Endpoints;
+using Tooba.Order.Endpoints;
 using Tooba.Persistence;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -77,6 +78,7 @@ builder.Services.AddSupportEndpointPresentation();
 builder.Services.AddWalletEndpointPresentation();
 builder.Services.AddPaymentEndpointPresentation();
 builder.Services.AddPromotionEndpointPresentation();
+builder.Services.AddOrderEndpointPresentation();
 builder.Services.AddPricingEndpointPresentation();
 builder.Services.AddProblemDetails();
 builder.Services.AddSingleton<IExceptionPresentationService, ExceptionPresentationService>();
@@ -145,7 +147,9 @@ builder.Services.AddToobaCqrsFoundation(
     typeof(Tooba.Support.Application.Commands.CreateCustomerTicket.CreateCustomerTicketCommand).Assembly,
     typeof(Tooba.Wallet.Application.Commands.RedeemCustomerGiftCard.RedeemCustomerGiftCardCommand).Assembly,
     typeof(Tooba.Payment.Application.Commands.InitiateStorefrontPayment.InitiateStorefrontPaymentCommand).Assembly,
-    typeof(Tooba.Promotion.Application.Commands.CreateSellerPromotion.CreateSellerPromotionCommand).Assembly);
+    typeof(Tooba.Promotion.Application.Commands.CreateSellerPromotion.CreateSellerPromotionCommand).Assembly,
+    typeof(Tooba.Order.Application.Admin.Completeness.ListAdminOrderNotesQuery).Assembly);
+builder.Services.AddScoped<IOrderAdminAuthorizer, HostOrderAdminAuthorizer>();
 builder.Services.AddScoped<Tooba.Catalog.Application.IStoreLandingExternalReferenceGate, Tooba.Host.Admin.MerchandisingStoreLandingReferenceGate>();
 builder.Services.AddScoped<Tooba.Catalog.Application.IUnitOfMeasureLanguageGate, Tooba.Host.Admin.HostUnitOfMeasureLanguageGate>();
 builder.Services.AddToobaModules(builder.Configuration, builder.Environment);
@@ -253,7 +257,6 @@ builder.Services.AddScoped<Tooba.Host.Admin.AdminPanelComposer>();
 builder.Services.AddScoped<Tooba.Host.Admin.AdminOrderOperationsComposer>();
 builder.Services.AddScoped<Tooba.Host.Admin.OrderInventoryRecoveryComposer>();
 builder.Services.AddScoped<Tooba.Host.Admin.OrderSupplyComposer>();
-builder.Services.AddScoped<Tooba.Host.Admin.AdminOrderCompletenessComposer>();
 builder.Services.AddScoped<Tooba.Host.Wishlist.WishlistComposer>();
 builder.Services.AddScoped<Tooba.Host.Content.ContentPanelComposer>();
 builder.Services.AddScoped<Tooba.Host.Content.ContentAuthorPanelComposer>();
@@ -524,7 +527,7 @@ app.MapCatalogCategoryEndpoints();
 app.MapCatalogDemoDevEndpoints();
 app.MapAdminPanelEndpoints();
 app.MapAdminOrderOperationsEndpoints();
-app.MapAdminOrderCompletenessEndpoints();
+app.MapOrderEndpoints();
 app.MapStorefrontEndpoints();
 app.MapCartEndpoints();
 app.MapPaymentEndpoints();

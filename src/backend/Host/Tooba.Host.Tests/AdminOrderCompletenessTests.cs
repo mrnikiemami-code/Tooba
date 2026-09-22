@@ -173,12 +173,13 @@ public sealed class AdminOrderCompletenessTests
     public void Completeness_and_directory_contracts_are_wired()
     {
         var endpoints = File.ReadAllText(Path.Combine(
-            FindRepoRoot(), "src", "backend", "Host", "Tooba.Host", "Admin", "AdminOrderCompletenessEndpoints.cs"));
+            FindRepoRoot(), "src", "backend", "Modules", "Order", "Tooba.Order.Endpoints", "AdminOrderCompletenessEndpoints.cs"));
         var directory = File.ReadAllText(Path.Combine(
             FindRepoRoot(), "src", "backend", "Modules", "Order", "Tooba.Order.Infrastructure", "CheckoutDirectory.cs"));
         var contracts = File.ReadAllText(Path.Combine(
             FindRepoRoot(), "src", "backend", "Modules", "Order", "Tooba.Order.Application", "OrderContracts.cs"));
-        Assert.Equal(6, Count(endpoints, "AdminPanelAccess.RequireAuthorizedAsync"));
+        Assert.Equal(6, Count(endpoints, "auth.RequireAuthorizedAsync"));
+        Assert.Contains("ISender", endpoints, StringComparison.Ordinal);
         Assert.Contains("/notes", endpoints, StringComparison.Ordinal);
         Assert.Contains("DeleteNoteAsync", endpoints, StringComparison.Ordinal);
         Assert.Contains("/operational-history", endpoints, StringComparison.Ordinal);
