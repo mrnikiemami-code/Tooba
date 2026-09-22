@@ -4,6 +4,7 @@ namespace Tooba.Host.Tests;
 
 /// <summary>
 /// TB-P10-T004-R13 — post-commit checkout ownership is not checkout.rejected.
+/// TB-TMAR-CART-GOLDEN-001 — Cart presentation moved to Cart.Application.
 /// </summary>
 public sealed class StorefrontCheckoutAccessTests
 {
@@ -16,7 +17,7 @@ public sealed class StorefrontCheckoutAccessTests
         var checkout = File.ReadAllText(Path.Combine(
             root, "src", "backend", "Host", "Tooba.Host", "Storefront", "StorefrontCheckoutComposer.cs"));
         var cart = File.ReadAllText(Path.Combine(
-            root, "src", "backend", "Host", "Tooba.Host", "Storefront", "StorefrontCartComposer.cs"));
+            root, "src", "backend", "Modules", "Cart", "Tooba.Cart.Application", "Presentation", "CartPresentationComposer.cs"));
 
         Assert.Contains("checkout.access.denied", endpoints, StringComparison.Ordinal);
         Assert.Contains("payment.access.denied", endpoints, StringComparison.Ordinal);
@@ -24,6 +25,8 @@ public sealed class StorefrontCheckoutAccessTests
         Assert.Contains("TryGetForOwnershipAsync", cart, StringComparison.Ordinal);
         Assert.Contains("snapshot.Status.ToString()", cart, StringComparison.Ordinal);
         Assert.DoesNotContain("current active Cart as post-commit ownership", checkout, StringComparison.Ordinal);
+        Assert.False(File.Exists(Path.Combine(
+            root, "src", "backend", "Host", "Tooba.Host", "Storefront", "StorefrontCartComposer.cs")));
     }
 
     [Fact]

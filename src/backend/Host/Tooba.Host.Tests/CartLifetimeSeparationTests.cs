@@ -29,12 +29,12 @@ public sealed class CartLifetimeSeparationTests
     public void Checkout_submit_creates_order_hold_preview_does_not()
     {
         var checkout = Read("src/backend/Modules/Order/Tooba.Order.Infrastructure/CheckoutDirectory.cs");
-        var adapter = Read("src/backend/Modules/Inventory/Tooba.Inventory.Application/CheckoutInventoryReservationAdapter.cs");
+        var adapter = Read("src/backend/Modules/Inventory/Tooba.Inventory.Application/Checkout/CheckoutInventoryReservationAdapter.cs");
         Assert.Contains("ReserveCartLinesForOrderAsync", checkout, StringComparison.Ordinal);
         Assert.Contains("requireReservation: false", checkout, StringComparison.Ordinal);
         Assert.Contains("order-commit:", adapter, StringComparison.Ordinal);
         Assert.Contains("inventory.supply.unavailable", adapter, StringComparison.Ordinal);
-        Assert.DoesNotContain("ReserveAsync(", Read("src/backend/Host/Tooba.Host/Storefront/StorefrontCartComposer.cs"), StringComparison.Ordinal);
+        Assert.DoesNotContain("ReserveAsync(", Read("src/backend/Modules/Cart/Tooba.Cart.Application/Presentation/CartPresentationComposer.cs"), StringComparison.Ordinal);
     }
 
     [Fact]
@@ -45,7 +45,7 @@ public sealed class CartLifetimeSeparationTests
         Assert.Contains("OnlinePaymentHoldHours", app, StringComparison.Ordinal);
         Assert.Contains("ManualPaymentInitialHoldHours", app, StringComparison.Ordinal);
         Assert.Contains("ManualPaymentReviewHoldHours", app, StringComparison.Ordinal);
-        Assert.Contains("CartLifetimeOptions", Read("src/backend/Modules/Cart/Tooba.Cart.Application/CartLifetimeOptions.cs"), StringComparison.Ordinal);
+        Assert.Contains("CartLifetimeOptions", Read("src/backend/Modules/Cart/Tooba.Cart.Application/Lifetime/CartLifetimeOptions.cs"), StringComparison.Ordinal);
         Assert.Contains(nameof(ICheckoutReservationHoldPolicy), typeof(ICheckoutReservationHoldPolicy).Name);
         var policy = new CheckoutReservationHoldPolicy(
             Microsoft.Extensions.Options.Options.Create(new PaymentGatewayOptions
@@ -63,7 +63,7 @@ public sealed class CartLifetimeSeparationTests
         Assert.Equal(0, (int)CartLineAvailabilityKind.Available);
         Assert.Equal(1, (int)CartLineAvailabilityKind.LimitedQuantity);
         Assert.Equal(2, (int)CartLineAvailabilityKind.Unavailable);
-        var contracts = Read("src/backend/Modules/Cart/Tooba.Cart.Contracts/CartContracts.cs");
+        var contracts = Read("src/backend/Modules/Cart/Tooba.Cart.Contracts/Checkout/CartContracts.cs");
         Assert.Contains("CartLineAvailabilityKind", contracts, StringComparison.Ordinal);
         Assert.DoesNotContain("OrderSupplyStatusKind", contracts, StringComparison.Ordinal);
     }

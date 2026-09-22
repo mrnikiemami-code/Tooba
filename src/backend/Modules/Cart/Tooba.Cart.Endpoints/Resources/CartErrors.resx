@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="cart.missing" xml:space="preserve">
+    <value>Cart was not found.</value>
+  </data>
+  <data name="cart.guest.invalid" xml:space="preserve">
+    <value>Guest cart access is not valid.</value>
+  </data>
+  <data name="cart.access.denied" xml:space="preserve">
+    <value>Cart access denied.</value>
+  </data>
+  <data name="cart.version.conflict" xml:space="preserve">
+    <value>Cart was updated concurrently. Refresh and retry.</value>
+  </data>
+  <data name="cart.expired" xml:space="preserve">
+    <value>Cart has expired.</value>
+  </data>
+  <data name="cart.quantity.invalid" xml:space="preserve">
+    <value>Selected quantity is not valid.</value>
+  </data>
+  <data name="cart.line.missing" xml:space="preserve">
+    <value>Cart line was not found.</value>
+  </data>
+  <data name="cart.offer.unavailable" xml:space="preserve">
+    <value>This offer cannot be added to the cart.</value>
+  </data>
+  <data name="cart.inventory.insufficient" xml:space="preserve">
+    <value>Selected quantity exceeds sellable inventory.</value>
+  </data>
+  <data name="cart.inventory.stale" xml:space="preserve">
+    <value>Inventory changed. Review the quantity and retry.</value>
+  </data>
+  <data name="cart.rejected" xml:space="preserve">
+    <value>Cart operation was rejected. Please retry.</value>
+  </data>
+  <data name="checkout.authentication_required" xml:space="preserve">
+    <value>Sign in to continue.</value>
+  </data>
+</root>

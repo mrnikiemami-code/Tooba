@@ -6,6 +6,7 @@ using Tooba.BuildingBlocks;
 using Tooba.ModuleContracts;
 using Tooba.Cart.Application.Ports;
 using Tooba.Cart.Application.Conversion;
+using Tooba.Cart.Application.Presentation;
 using Tooba.Cart.Contracts;
 using Tooba.Cart.Infrastructure.Persistence;
 using Tooba.Persistence;
@@ -32,6 +33,8 @@ public sealed class CartModule : IToobaModule
         services.AddScoped<ICartDirectory, CartDirectory>();
         services.AddScoped<ICartConversionPort, CartConversionAdapter>();
         services.AddScoped<ICartQueryGateway>(sp => (CartDirectory)sp.GetRequiredService<ICartDirectory>());
+        services.AddScoped<CartPresentationComposer>();
+        services.AddScoped<ICartPresentationGateway>(sp => sp.GetRequiredService<CartPresentationComposer>());
         services.AddDbContext<CartDbContext>((sp, options) =>
         {
             var connectionString = ToobaNpgsql.ResolveForContext(

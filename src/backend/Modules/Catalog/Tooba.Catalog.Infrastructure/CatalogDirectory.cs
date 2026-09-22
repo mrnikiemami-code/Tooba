@@ -19,7 +19,12 @@ public sealed class OpenCatalogUseCaseGuard : ICatalogUseCaseGuard
 /// <summary>
 /// پیاده‌سازی نوشتن/خواندن Catalog روی schema همین ماژول. Host و Search را parse/ایندکس نمی‌کند.
 /// </summary>
-public sealed class CatalogDirectory : ICatalogDirectory, ICatalogLookupGateway, ICatalogVariantLookup, ICatalogCartQuantityPolicyGateway
+public sealed class CatalogDirectory :
+    ICatalogDirectory,
+    ICatalogLookupGateway,
+    ICatalogVariantLookup,
+    ICatalogCartQuantityPolicyGateway,
+    ICatalogCartPresentationLookup
 {
     private readonly CatalogDbContext _db;
     private readonly ICatalogUseCaseGuard _guard;
@@ -371,6 +376,74 @@ public sealed class CatalogDirectory : ICatalogDirectory, ICatalogLookupGateway,
                 product.QuantityDecimalPlaces,
                 product.QuantityStep,
                 rounding);
+        }
+
+        return result;
+    }
+
+    /// <inheritdoc />
+    async Task<IReadOnlyDictionary<Guid, EffectiveQuantityPolicy>> ICatalogCartPresentationLookup.GetEffectiveQuantityPoliciesForVariantIdsAsync(
+        IReadOnlyCollection<Guid> variantIds,
+        CancellationToken cancellationToken) =>
+        await GetEffectiveQuantityPoliciesForVariantIdsAsync(variantIds, cancellationToken);
+
+    /// <inheritdoc />
+    public async Task<IReadOnlyDictionary<Guid, CatalogCartVariantPresentation>> GetVariantPresentationsAsync(
+        IReadOnlyList<Guid> variantIds,
+        CancellationToken cancellationToken)
+    {
+        if (variantIds.Count == 0)
+        {
+            return new Dictionary<Guid, CatalogCartVariantPresentation>();
+        }
+
+        var distinct = variantIds.Distinct().ToArray();
+        var variants = await _db.Variants.AsNoTracking()
+            .Where(item => distinct.Contains(item.VariantId))
+            .Select(item => new { item.VariantId, item.ProductId })
+            .ToListAsync(cancellationToken);
+        if (variants.Count == 0)
+        {
+            return new Dictionary<Guid, CatalogCartVariantPresentation>();
+        }
+
+        var productIds = variants.Select(item => item.ProductId).Distinct().ToList();
+        var products = await _db.Products.AsNoTracking()
+            .Where(item => productIds.Contains(item.ProductId))
+            .Select(item => new { item.ProductId, item.SlugSeam })
+            .ToListAsync(cancellationToken);
+        var productMap = products.ToDictionary(item => item.ProductId);
+        var names = await GetProductTitlesAsync(productIds, cancellationToken);
+        var media = await _db.MediaReferences.AsNoTracking()
+            .Where(item => productIds.Contains(item.ProductId))
+            .Select(item => new { item.ProductId, item.MediaAssetId })
+            .ToListAsync(cancellationToken);
+        var mediaMap = media
+            .GroupBy(item => item.ProductId)
+            .ToDictionary(group => group.Key, group => group.Select(item => item.MediaAssetId).FirstOrDefault());
+
+        var result = new Dictionary<Guid, CatalogCartVariantPresentation>();
+        foreach (var variant in variants)
+        {
+            productMap.TryGetValue(variant.ProductId, out var product);
+            var title = names.GetValueOrDefault(variant.ProductId)
+                ?? product?.SlugSeam
+                ?? "کالا";
+            var slug = product is null || string.IsNullOrWhiteSpace(product.SlugSeam)
+                ? (product?.ProductId.ToString("N") ?? variant.ProductId.ToString("N"))
+                : product.SlugSeam;
+            Guid? mediaId = mediaMap.GetValueOrDefault(variant.ProductId);
+            if (mediaId == Guid.Empty)
+            {
+                mediaId = null;
+            }
+
+            result[variant.VariantId] = new CatalogCartVariantPresentation(
+                variant.VariantId,
+                variant.ProductId,
+                slug,
+                title,
+                mediaId);
         }
 
         return result;

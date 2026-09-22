@@ -41,7 +41,6 @@
     "Seller/SellerPanelComposer.cs",
     "Storefront/CheckoutAbuseGate.cs",
     "Storefront/StoreAppearanceProjection.cs",
-    "Storefront/StorefrontCartComposer.cs",
     "Storefront/StorefrontComposer.cs",
     "Storefront/StorefrontDemoCatalogBootstrap.cs",
     "Storefront/StorefrontPendingPaymentComposer.cs",

@@ -41,12 +41,13 @@ public sealed class CheckoutIdentityContractTests
     {
         var auth = File.ReadAllText(Path.Combine(FindRepoRoot(), "src", "backend", "Host", "Tooba.Host", "Authentication", "AuthenticationHttpBoundary.cs"));
         var endpoints = File.ReadAllText(Path.Combine(FindRepoRoot(), "src", "backend", "Host", "Tooba.Host", "Storefront", "StorefrontEndpoints.cs"));
+        var cartEndpoints = File.ReadAllText(Path.Combine(FindRepoRoot(), "src", "backend", "Modules", "Cart", "Tooba.Cart.Endpoints", "Storefront", "CartStorefrontEndpoints.cs"));
         var checkout = File.ReadAllText(Path.Combine(FindRepoRoot(), "src", "backend", "Host", "Tooba.Host", "Storefront", "StorefrontCheckoutComposer.cs"));
         var login = File.ReadAllText(Path.Combine(FindRepoRoot(), "src", "frontend", "app", "login", "storefront-login.tsx"));
         Assert.Contains("/otp-login/request", auth, StringComparison.Ordinal);
         Assert.Contains("/otp-login/complete", auth, StringComparison.Ordinal);
         Assert.Contains("checkout.authentication_required", endpoints, StringComparison.Ordinal);
-        Assert.Contains("/cart/merge", endpoints, StringComparison.Ordinal);
+        Assert.Contains("/cart/merge", cartEndpoints, StringComparison.Ordinal);
         Assert.Contains("checkout-identity-policy", endpoints, StringComparison.Ordinal);
         Assert.Contains("_session.IsAuthenticated ? _session.UserId", checkout, StringComparison.Ordinal);
         Assert.DoesNotContain("type=\"password\"", login, StringComparison.Ordinal);

@@ -3,6 +3,8 @@ using System.Text;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Tooba.AddressBook.Application;
+using Tooba.Cart.Application.Models;
+using Tooba.Cart.Application.Ports;
 using Tooba.Fulfillment.Application.Ports;
 using Tooba.Fulfillment.Application.Models;
 using Tooba.Fulfillment.Application.Shipping;
@@ -16,10 +18,11 @@ namespace Tooba.Host.Storefront;
 
 /// <summary>
 /// تصویر یکپارچهٔ مرحلهٔ ارسال فروشگاه: روش‌های Store-enabled، قیمت، حداقل تحویل، پیش‌نویس سبد.
+/// Checkout PAUSED — Cart seam is ICartPresentationGateway only (compile adaptation).
 /// </summary>
 public sealed class StorefrontShippingComposer
 {
-    private readonly StorefrontCartComposer _carts;
+    private readonly ICartPresentationGateway _carts;
     private readonly StorefrontCheckoutComposer _checkouts;
     private readonly IAddressBookDirectory _addresses;
     private readonly IShippingCatalogReader _shippingCatalog;
@@ -33,7 +36,7 @@ public sealed class StorefrontShippingComposer
 
     /// <summary>سازنده.</summary>
     internal StorefrontShippingComposer(
-        StorefrontCartComposer carts,
+        ICartPresentationGateway carts,
         StorefrontCheckoutComposer checkouts,
         IAddressBookDirectory addresses,
         IShippingCatalogReader shippingCatalog,
@@ -413,7 +416,7 @@ public sealed class StorefrontShippingComposer
         return new string(chars);
     }
 
-    private async Task<StorefrontCartPage> RequireCartAsync(Guid cartId, string? guestSecret, CancellationToken cancellationToken)
+    private async Task<CartPage> RequireCartAsync(Guid cartId, string? guestSecret, CancellationToken cancellationToken)
     {
         var cart = await _carts.GetAsync(cartId, guestSecret, cancellationToken)
             ?? throw new InvalidOperationException("shipping.cart.missing");

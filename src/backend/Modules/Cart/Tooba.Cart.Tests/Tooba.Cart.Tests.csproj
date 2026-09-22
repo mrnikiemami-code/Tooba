@@ -20,5 +20,9 @@
     <ProjectReference Include="..\Tooba.Cart.Application\Tooba.Cart.Application.csproj" />
     <ProjectReference Include="..\Tooba.Cart.Contracts\Tooba.Cart.Contracts.csproj" />
     <ProjectReference Include="..\Tooba.Cart.Infrastructure\Tooba.Cart.Infrastructure.csproj" />
+    <ProjectReference Include="..\Tooba.Cart.Endpoints\Tooba.Cart.Endpoints.csproj" />
+    <ProjectReference Include="..\..\Catalog\Tooba.Catalog.Contracts\Tooba.Catalog.Contracts.csproj" />
+    <ProjectReference Include="..\..\Party\Tooba.Party.Contracts\Tooba.Party.Contracts.csproj" />
+    <ProjectReference Include="..\..\..\BuildingBlocks\Tooba.BuildingBlocks\Tooba.BuildingBlocks.csproj" />
   </ItemGroup>
 </Project>

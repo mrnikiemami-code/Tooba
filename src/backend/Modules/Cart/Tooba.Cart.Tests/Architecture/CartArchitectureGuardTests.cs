@@ -7,10 +7,12 @@ namespace Tooba.Cart.Tests.Architecture;
 public sealed class CartArchitectureGuardTests
 {
     private static readonly string[] AllowedDomainFolders = ["Aggregates", "Entities", "ValueObjects", "Events"];
-    private static readonly string[] AllowedApplicationFolders = ["Ports", "Lifetime", "Conversion"];
+    private static readonly string[] AllowedApplicationFolders =
+        ["Ports", "Lifetime", "Conversion", "Commands", "Queries", "Models", "Errors", "Presentation"];
     private static readonly string[] AllowedContractsFolders = ["Checkout"];
     private static readonly string[] AllowedInfrastructureFolders =
         ["Persistence", "Directories", "Messaging", "DependencyInjection", "Events", "Security", "Migrations"];
+    private static readonly string[] AllowedEndpointsFolders = ["Storefront", "Errors", "Resources"];
 
     private static readonly HashSet<string> HostDbContextAllowlist = new(StringComparer.OrdinalIgnoreCase)
     {
@@ -46,10 +48,12 @@ public sealed class CartArchitectureGuardTests
         AssertNoRootDump("Tooba.Cart.Application", AllowedApplicationFolders);
         AssertNoRootDump("Tooba.Cart.Contracts", AllowedContractsFolders);
         AssertNoRootDump("Tooba.Cart.Infrastructure", AllowedInfrastructureFolders);
+        AssertNoRootDump("Tooba.Cart.Endpoints", AllowedEndpointsFolders);
         AssertNamespacesAlign("Tooba.Cart.Domain", "Tooba.Cart.Domain");
         AssertNamespacesAlign("Tooba.Cart.Application", "Tooba.Cart.Application");
         AssertNamespacesAlign("Tooba.Cart.Contracts", "Tooba.Cart.Contracts");
         AssertNamespacesAlign("Tooba.Cart.Infrastructure", "Tooba.Cart.Infrastructure");
+        AssertNamespacesAlign("Tooba.Cart.Endpoints", "Tooba.Cart.Endpoints");
 
         var domainRefs = ProjectRefs("Tooba.Cart.Domain");
         Assert.DoesNotContain(domainRefs, r => r.Contains("Application", StringComparison.OrdinalIgnoreCase));
@@ -61,7 +65,16 @@ public sealed class CartArchitectureGuardTests
         Assert.DoesNotContain(appRefs, r => r.Contains("Infrastructure", StringComparison.OrdinalIgnoreCase));
         Assert.DoesNotContain(appRefs, r => r.Contains("Host", StringComparison.OrdinalIgnoreCase));
         Assert.Contains(appRefs, r => r.Contains("Catalog.Contracts", StringComparison.Ordinal));
+        Assert.Contains(appRefs, r => r.Contains("Party.Contracts", StringComparison.Ordinal));
         Assert.Contains(appRefs, r => r.Contains("Inventory.Contracts", StringComparison.Ordinal));
+        Assert.Contains(appRefs, r => r.Contains("BuildingBlocks", StringComparison.Ordinal));
+
+        var endpointRefs = ProjectRefs("Tooba.Cart.Endpoints");
+        Assert.Contains(endpointRefs, r => r.Contains("Cart.Application", StringComparison.Ordinal));
+        Assert.DoesNotContain(endpointRefs, r => r.Contains("Infrastructure", StringComparison.OrdinalIgnoreCase));
+        Assert.DoesNotContain(endpointRefs, r => r.Contains("Host", StringComparison.OrdinalIgnoreCase));
+        Assert.DoesNotContain(endpointRefs, r => r.Contains("Catalog.Application", StringComparison.Ordinal));
+        Assert.DoesNotContain(endpointRefs, r => r.Contains("Party.Application", StringComparison.Ordinal));
 
         var infraRefs = ProjectRefs("Tooba.Cart.Infrastructure");
         Assert.DoesNotContain(infraRefs, r => r.Contains(".Application", StringComparison.Ordinal) && !r.Contains("Cart.Application", StringComparison.Ordinal));
@@ -112,10 +125,70 @@ public sealed class CartArchitectureGuardTests
             .Where(x => Regex.IsMatch(x.Msg, @"[\u0600-\u06FF]") || x.Msg.Contains(' ', StringComparison.Ordinal))
             .Where(x => !x.Msg.StartsWith("cart.", StringComparison.Ordinal)
                         && !x.Msg.StartsWith("offer.", StringComparison.Ordinal)
-                        && !x.Msg.StartsWith("domain.", StringComparison.Ordinal))
+                        && !x.Msg.StartsWith("domain.", StringComparison.Ordinal)
+                        && !x.Msg.StartsWith("checkout.", StringComparison.Ordinal))
             .Select(x => $"{x.Path}:{x.Msg}")
             .ToList();
         Assert.True(localized.Count == 0, "localized exception prose: " + string.Join("; ", localized));
+    }
+
+    [Fact]
+    public void Cart_endpoints_cqrs_and_host_ownership_are_enforced()
+    {
+        Assert.True(Directory.Exists(Path.Combine(CartRoot(), "Tooba.Cart.Endpoints")));
+        Assert.True(File.Exists(Path.Combine(CartRoot(), "Tooba.Cart.Endpoints", "Tooba.Cart.Endpoints.csproj")));
+
+        var endpoint = File.ReadAllText(Path.Combine(
+            CartRoot(), "Tooba.Cart.Endpoints", "Storefront", "CartStorefrontEndpoints.cs"));
+        Assert.Contains("ISender sender", endpoint, StringComparison.Ordinal);
+        Assert.Contains("ApiResponseFactory api", endpoint, StringComparison.Ordinal);
+        Assert.Contains("api.From(", endpoint, StringComparison.Ordinal);
+        Assert.DoesNotContain("ex.Message", endpoint, StringComparison.Ordinal);
+        Assert.DoesNotContain("exception.Message", endpoint, StringComparison.Ordinal);
+        Assert.DoesNotContain("new { title", endpoint, StringComparison.Ordinal);
+        Assert.DoesNotContain("errorCode =", endpoint, StringComparison.Ordinal);
+        Assert.DoesNotContain("CatalogDbContext", endpoint, StringComparison.Ordinal);
+        Assert.DoesNotContain("DbContext", endpoint, StringComparison.Ordinal);
+
+        var application = Sources("Tooba.Cart.Application").ToList();
+        Assert.Contains(application, x => x.Text.Contains("CreateGuestCartCommand", StringComparison.Ordinal));
+        Assert.Contains(application, x => x.Text.Contains("MergeCartAfterLoginCommand", StringComparison.Ordinal));
+        Assert.Contains(application, x => x.Text.Contains("AddCartLineCommand", StringComparison.Ordinal));
+        Assert.Contains(application, x => x.Text.Contains("ChangeCartLineQuantityCommand", StringComparison.Ordinal));
+        Assert.Contains(application, x => x.Text.Contains("RemoveCartLineCommand", StringComparison.Ordinal));
+        Assert.Contains(application, x => x.Text.Contains("GetCurrentAuthenticatedCartQuery", StringComparison.Ordinal));
+        Assert.Contains(application, x => x.Text.Contains("GetCartQuery", StringComparison.Ordinal));
+        Assert.Contains(application, x => x.Text.Contains("IRequestHandler<", StringComparison.Ordinal));
+        Assert.Contains(application, x => x.Text.Contains("using MediatR", StringComparison.Ordinal));
+        Assert.DoesNotContain(application, x => x.Path.EndsWith("CartHandlers.cs", StringComparison.OrdinalIgnoreCase));
+
+        Assert.DoesNotContain(application, x =>
+            x.Text.Contains("Catalog.Application", StringComparison.Ordinal)
+            || x.Text.Contains("Party.Application", StringComparison.Ordinal)
+            || x.Text.Contains("CatalogDbContext", StringComparison.Ordinal));
+
+        var hostEndpoints = File.ReadAllText(Path.Combine(
+            RepoRoot(), "src", "backend", "Host", "Tooba.Host", "Storefront", "StorefrontEndpoints.cs"));
+        Assert.DoesNotContain("MapPost(\"/cart\"", hostEndpoints, StringComparison.Ordinal);
+        Assert.DoesNotContain("MapGet(\"/cart/", hostEndpoints, StringComparison.Ordinal);
+        Assert.DoesNotContain("MapPatch(\"/cart/", hostEndpoints, StringComparison.Ordinal);
+        Assert.DoesNotContain("MapDelete(\"/cart/", hostEndpoints, StringComparison.Ordinal);
+        Assert.DoesNotContain("ExecuteCartAsync", hostEndpoints, StringComparison.Ordinal);
+        Assert.DoesNotContain("MapCartException", hostEndpoints, StringComparison.Ordinal);
+
+        Assert.False(File.Exists(Path.Combine(
+            RepoRoot(), "src", "backend", "Host", "Tooba.Host", "Storefront", "StorefrontCartComposer.cs")));
+
+        var hostProgram = File.ReadAllText(Path.Combine(
+            RepoRoot(), "src", "backend", "Host", "Tooba.Host", "Program.cs"));
+        Assert.Contains("MapCartEndpoints()", hostProgram, StringComparison.Ordinal);
+        Assert.DoesNotContain("new StorefrontCartComposer(", hostProgram, StringComparison.Ordinal);
+
+        var presentation = File.ReadAllText(Path.Combine(
+            CartRoot(), "Tooba.Cart.Application", "Presentation", "CartPresentationComposer.cs"));
+        Assert.DoesNotContain("CatalogDbContext", presentation, StringComparison.Ordinal);
+        Assert.Contains("ICatalogCartPresentationLookup", presentation, StringComparison.Ordinal);
+        Assert.Contains("IPartyLookup", presentation, StringComparison.Ordinal);
     }
 
     private static void AssertNoRootDump(string project, string[] allowedFolders)
@@ -123,7 +196,9 @@ public sealed class CartArchitectureGuardTests
         var root = Path.Combine(CartRoot(), project);
         var rootCs = Directory.EnumerateFiles(root, "*.cs", SearchOption.TopDirectoryOnly)
             .Select(Path.GetFileName)
-            .Where(name => name is not null && !name.StartsWith("GlobalUsings", StringComparison.OrdinalIgnoreCase))
+            .Where(name => name is not null
+                           && !name.StartsWith("GlobalUsings", StringComparison.OrdinalIgnoreCase)
+                           && !name.EndsWith("EndpointModule.cs", StringComparison.OrdinalIgnoreCase))
             .ToArray();
         Assert.True(rootCs.Length == 0, $"{project} root dumping-ground: " + string.Join(", ", rootCs));
         foreach (var dir in Directory.EnumerateDirectories(root))
@@ -168,11 +243,17 @@ public sealed class CartArchitectureGuardTests
         Sources("Tooba.Cart.Domain")
             .Concat(Sources("Tooba.Cart.Application"))
             .Concat(Sources("Tooba.Cart.Contracts"))
-            .Concat(Sources("Tooba.Cart.Infrastructure"));
+            .Concat(Sources("Tooba.Cart.Infrastructure"))
+            .Concat(Sources("Tooba.Cart.Endpoints"));
 
     private static IEnumerable<(string Path, string Text)> Sources(string projectFolder)
     {
         var root = Path.Combine(CartRoot(), projectFolder);
+        if (!Directory.Exists(root))
+        {
+            yield break;
+        }
+
         foreach (var file in Directory.EnumerateFiles(root, "*.cs", SearchOption.AllDirectories))
         {
             var n = file.Replace('\\', '/');

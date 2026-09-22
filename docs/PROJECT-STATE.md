@@ -74,7 +74,7 @@ TB-P10-T022-R14
 Current Issued Task:
 
 ```text
-(none)
+TB-TMAR-CART-GOLDEN-001 (Worker PASS — awaiting Architect / USER_CART_REVIEW_CHECKPOINT)
 ```
 
 Current Repair Task:
@@ -84,6 +84,29 @@ Current Repair Task:
 ```
 
 TMAR Module Recovery (Worker PASS — awaiting Architect):
+
+```text
+TB-TMAR-CART-GOLDEN-001 — Cart HTTP Ownership + MediatR CQRS + Host Orchestration Closure
+Cart-State: COMPLETE_REFERENCE_PATTERN
+Cart-HTTP-Ownership: MODULE_ENDPOINTS
+Cart-Endpoints-State: REAL_PROJECT_PRESENT
+Cart-CQRS-State: MEDIATR_12_5_APPLICATION_HANDLERS
+Cart-Host-Routes: REMOVED
+Cart-Host-Composer: REMOVED
+Cart-Host-CatalogDbAuthority: NONE
+Cart-CrossModule-Boundary: CONTRACTS_ONLY
+Cart-Result-Adoption: HTTP_USE_CASES_ADOPTED
+Cart-Physical-State: VERIFIED_ON_DISK_AND_NAMESPACE
+Cart-Architecture-Guards: ENFORCED
+Cart-Behavior-Preservation: VERIFIED
+Checkout-State: PAUSED_AT_SAFE_W5_CHECKPOINT
+Tax-State: DEFERRED_PHYSICAL_REVIEW_BY_USER
+Pricing-State: DEFERRED_PHYSICAL_REVIEW_BY_USER
+Frontend-Production-Changes: NONE
+Next-Recommended-Task: USER_CART_REVIEW_CHECKPOINT
+```
+
+Prior TMAR batch (BATCH-004 tip before Cart golden):
 
 ```text
 TB-TMAR-NEXT-MODULE-BATCH-004 — Fulfillment + Returns Golden Recovery Batch

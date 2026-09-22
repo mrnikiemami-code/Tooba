@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Hosting;
+using Tooba.Cart.Application.Ports;
 using Tooba.Catalog.Domain;
 using Tooba.Catalog.Infrastructure.Persistence;
 using Tooba.Fulfillment.Application.Ports;
@@ -17,6 +18,7 @@ namespace Tooba.Host.Storefront;
 
 /// <summary>
 /// تصویر دسته‌ای در انتظار پرداخت. مالکیت مهمان فقط اثبات متعهد است؛ سبد فعال منبع اختیار نیست.
+/// Checkout PAUSED — Cart seam is ICartPresentationGateway only (compile adaptation).
 /// </summary>
 public sealed class StorefrontPendingPaymentComposer
 {
@@ -25,7 +27,7 @@ public sealed class StorefrontPendingPaymentComposer
     private readonly OrderDbContext _orders;
     private readonly IPaymentQueryDirectory _paymentQueries;
     private readonly CatalogDbContext _catalog;
-    private readonly StorefrontCartComposer _carts;
+    private readonly ICartPresentationGateway _carts;
     private readonly IReservationCycleDirectory _cycles;
     private readonly ICheckoutDirectory _checkout;
     private readonly IFulfillmentDirectory _fulfillment;
@@ -40,7 +42,7 @@ public sealed class StorefrontPendingPaymentComposer
         OrderDbContext orders,
         IPaymentQueryDirectory paymentQueries,
         CatalogDbContext catalog,
-        StorefrontCartComposer carts,
+        ICartPresentationGateway carts,
         IReservationCycleDirectory cycles,
         ICheckoutDirectory checkout,
         IFulfillmentDirectory fulfillment,

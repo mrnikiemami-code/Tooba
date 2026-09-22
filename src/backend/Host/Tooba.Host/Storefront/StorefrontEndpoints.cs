@@ -29,13 +29,6 @@ public static class StorefrontEndpoints
         group.MapGet("/media/{assetId:guid}", GetPresentationMediaAsync);
         group.MapGet("/checkout-identity-policy", GetCheckoutIdentityPolicyAsync);
         group.MapGet("/appearance", GetAppearanceAsync);
-        group.MapPost("/cart", CreateGuestCartAsync);
-        group.MapGet("/cart/current", GetCurrentAuthenticatedCartAsync);
-        group.MapGet("/cart/{cartId:guid}", GetCartAsync);
-        group.MapPost("/cart/merge", MergeCartAfterLoginAsync);
-        group.MapPost("/cart/{cartId:guid}/lines", AddCartLineAsync);
-        group.MapPatch("/cart/{cartId:guid}/lines/{lineId:guid}", ChangeCartLineAsync);
-        group.MapDelete("/cart/{cartId:guid}/lines/{lineId:guid}", RemoveCartLineAsync);
         group.MapPost("/pending-payments", ListPendingPaymentsAsync);
         group.MapPost("/checkout/{checkoutId:guid}/cancel", CancelPendingCheckoutAsync);
         group.MapPost("/checkout/{checkoutId:guid}/hide-pending-card", HidePendingCardAsync);
@@ -227,82 +220,6 @@ public static class StorefrontEndpoints
         return served ?? Tooba.Host.Media.MediaEndpoints.PlaceholderSvg(assetId);
     }
 
-    private static Task<IResult> CreateGuestCartAsync(StorefrontCartComposer composer, CancellationToken cancellationToken)
-        => ExecuteCartAsync(() => composer.CreateGuestAsync(cancellationToken));
-
-    private static Task<IResult> GetCurrentAuthenticatedCartAsync(
-        StorefrontCartComposer composer,
-        CancellationToken cancellationToken)
-        => ExecuteCartAsync(async () =>
-        {
-            var page = await composer.GetCurrentAuthenticatedAsync(cancellationToken);
-            return page ?? throw new InvalidOperationException("سبد پیدا نشد.");
-        });
-
-    private static async Task<IResult> GetCartAsync(
-        Guid cartId,
-        StorefrontCartComposer composer,
-        HttpRequest request,
-        CancellationToken cancellationToken)
-    {
-        return await ExecuteCartAsync(async () =>
-        {
-            var page = await composer.GetAsync(cartId, ReadGuestSecret(request), cancellationToken);
-            if (page is null)
-            {
-                throw new InvalidOperationException("سبد پیدا نشد.");
-            }
-
-            return page;
-        });
-    }
-
-    private static Task<IResult> AddCartLineAsync(
-        Guid cartId,
-        StorefrontAddCartLineRequest body,
-        StorefrontCartComposer composer,
-        HttpRequest request,
-        int? expectedVersion,
-        CancellationToken cancellationToken)
-        => ExecuteCartAsync(() => composer.AddLineAsync(
-            cartId,
-            ReadGuestSecret(request),
-            ReadExpectedVersion(request, expectedVersion),
-            body.OfferId,
-            body.Quantity,
-            cancellationToken,
-            body.MerchandisingCampaignId));
-
-    private static Task<IResult> ChangeCartLineAsync(
-        Guid lineId,
-        Guid cartId,
-        StorefrontChangeCartLineRequest body,
-        StorefrontCartComposer composer,
-        HttpRequest request,
-        int? expectedVersion,
-        CancellationToken cancellationToken)
-        => ExecuteCartAsync(() => composer.ChangeLineAsync(
-            cartId,
-            ReadGuestSecret(request),
-            ReadExpectedVersion(request, expectedVersion),
-            lineId,
-            body.Quantity,
-            cancellationToken));
-
-    private static Task<IResult> RemoveCartLineAsync(
-        Guid lineId,
-        Guid cartId,
-        StorefrontCartComposer composer,
-        HttpRequest request,
-        int? expectedVersion,
-        CancellationToken cancellationToken)
-        => ExecuteCartAsync(() => composer.RemoveLineAsync(
-            cartId,
-            ReadGuestSecret(request),
-            ReadExpectedVersion(request, expectedVersion),
-            lineId,
-            cancellationToken));
-
     private static async Task<IResult> ListPendingPaymentsAsync(
         StorefrontPendingPaymentQueryRequest? body,
         StorefrontPendingPaymentComposer composer,
@@ -446,16 +363,6 @@ public static class StorefrontEndpoints
             updatedAt = appearance.UpdatedAt,
         });
     }
-
-    private static Task<IResult> MergeCartAfterLoginAsync(
-        StorefrontMergeCartRequest? body,
-        StorefrontCartComposer composer,
-        HttpRequest request,
-        CancellationToken cancellationToken)
-        => ExecuteCartAsync(() => composer.MergeAfterLoginAsync(
-            body?.CartId,
-            ReadGuestSecret(request),
-            cancellationToken));
 
     private static Task<IResult> PreviewCheckoutAsync(
         Guid cartId,
@@ -1141,105 +1048,4 @@ public static class StorefrontEndpoints
 
         return request.Cookies.TryGetValue("tooba_guest_secret", out var cookie) ? cookie : null;
     }
-
-    private static int ReadExpectedVersion(HttpRequest request, int? expectedVersion)
-    {
-        if (expectedVersion is int queryVersion)
-        {
-            return queryVersion;
-        }
-
-        if (request.Headers.TryGetValue("X-Tooba-Cart-Version", out var header) && int.TryParse(header, out var parsed))
-        {
-            return parsed;
-        }
-
-        throw new InvalidOperationException("نسخهٔ سبد کهنه است؛ جهش همزمان خط رد شد.");
-    }
-
-    private static async Task<IResult> ExecuteCartAsync(Func<Task<StorefrontCartPage>> action)
-    {
-        try
-        {
-            return Results.Json(await action());
-        }
-        catch (InvalidOperationException exception)
-        {
-            var mapped = MapCartException(exception);
-            return Results.Json(
-                new { title = mapped.Title, errorCode = mapped.Code, detail = MapCartCustomerDetail(mapped.Code) },
-                statusCode: mapped.Status);
-        }
-    }
-
-    private static (int Status, string Title, string Code) MapCartException(InvalidOperationException exception)
-    {
-        var text = exception.Message;
-        if (text.Contains("checkout.authentication_required", StringComparison.Ordinal))
-        {
-            return (StatusCodes.Status401Unauthorized, "Unauthorized", "checkout.authentication_required");
-        }
-
-        if (text.Contains("پیدا نشد", StringComparison.Ordinal))
-        {
-            return (StatusCodes.Status404NotFound, "Not Found", "cart.missing");
-        }
-
-        if (text.Contains("راز", StringComparison.Ordinal) || text.Contains("مجوز", StringComparison.Ordinal))
-        {
-            return (StatusCodes.Status401Unauthorized, "Unauthorized", "cart.guest.invalid");
-        }
-
-        if (text.Contains("کهنه", StringComparison.Ordinal) || text.Contains("همزمان", StringComparison.Ordinal))
-        {
-            return (StatusCodes.Status409Conflict, "Conflict", "cart.version.conflict");
-        }
-
-        if (text.Contains("Held", StringComparison.Ordinal)
-            || text.Contains("رزرو", StringComparison.Ordinal)
-            || text.Contains("آزادسازی", StringComparison.Ordinal))
-        {
-            return (StatusCodes.Status409Conflict, "Conflict", "cart.inventory.stale");
-        }
-
-        if (text.Contains("موجودی", StringComparison.Ordinal))
-        {
-            return (StatusCodes.Status409Conflict, "Conflict", "cart.inventory.insufficient");
-        }
-
-        if (text.Contains("تعداد", StringComparison.Ordinal))
-        {
-            return (StatusCodes.Status400BadRequest, "Bad Request", "cart.quantity.invalid");
-        }
-
-        if (text.Contains("Offer", StringComparison.Ordinal) || text.Contains("غیرفعال", StringComparison.Ordinal))
-        {
-            return (StatusCodes.Status400BadRequest, "Bad Request", "cart.offer.unavailable");
-        }
-
-        if (text.Contains("فقط سبد Active", StringComparison.Ordinal)
-            || text.Contains("قابل جهش خط", StringComparison.Ordinal))
-        {
-            return (StatusCodes.Status409Conflict, "Conflict", "cart.rejected");
-        }
-
-        return (StatusCodes.Status400BadRequest, "Bad Request", "cart.rejected");
-    }
-
-    /// <summary>
-    /// متن مشتری را از کد ماشین می‌سازد؛ واژگان Held/رزرو داخلی را به ویترین نمی‌برد.
-    /// </summary>
-    private static string MapCartCustomerDetail(string code) => code switch
-    {
-        "cart.inventory.insufficient" => "تعداد انتخاب‌شده بیشتر از موجودی قابل فروش است.",
-        "cart.inventory.stale" => "موجودی این کالا تغییر کرده است. لطفاً تعداد را دوباره بررسی کنید.",
-        "cart.quantity.invalid" => "تعداد انتخاب‌شده معتبر نیست.",
-        "cart.offer.unavailable" => "این کالا در حال حاضر قابل افزودن به سبد نیست.",
-        "cart.version.conflict" => "سبد هم‌زمان به‌روز شده است. صفحه را تازه کنید.",
-        "cart.guest.invalid" => "دسترسی به سبد مهمان معتبر نیست.",
-        "cart.missing" => "سبد پیدا نشد.",
-        "cart.rejected" => "عملیات سبد انجام نشد. لطفاً دوباره تلاش کنید.",
-        "checkout.authentication_required" => "برای ادامه فرایند خرید وارد حساب خود شوید.",
-        _ => "عملیات سبد انجام نشد. لطفاً دوباره تلاش کنید.",
-    };
 }

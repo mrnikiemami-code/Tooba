@@ -1,5 +1,6 @@
-using Tooba.AddressBook.Application;
-using Tooba.Cart.Application;
+﻿using Tooba.AddressBook.Application;
+using Tooba.Cart.Application.Models;
+using Tooba.Cart.Application.Ports;
 using Tooba.Cart.Contracts;
 using Tooba.Order.Application;
 using Tooba.Order.Domain;
@@ -9,6 +10,7 @@ namespace Tooba.Host.Storefront;
 /// <summary>
 /// ترکیب نمایشی Checkout روی قرارداد Order. مبلغ نهایی در React ساخته نمی‌شود و سفارش Paid نمی‌شود.
 /// دفترچهٔ آدرس فقط برای تصویربرداری فیلدهای ارسال مصرف می‌شود و شناسهٔ نشانی روی سفارش ذخیره نمی‌گردد.
+/// Checkout PAUSED — Cart seam is ICartPresentationGateway only (compile adaptation).
 /// </summary>
 public sealed class StorefrontCheckoutComposer
 {
@@ -22,7 +24,7 @@ public sealed class StorefrontCheckoutComposer
     private const string TaxJurisdiction = "IR-NAT";
     private const string DevActorHeader = "X-Tooba-Dev-Actor-User-Id";
 
-    private readonly StorefrontCartComposer _carts;
+    private readonly ICartPresentationGateway _carts;
     private readonly ICheckoutDirectory _checkouts;
     private readonly IAddressBookDirectory _addresses;
     private readonly CurrentAuthenticatedSession _session;
@@ -34,7 +36,7 @@ public sealed class StorefrontCheckoutComposer
     /// داخلی است چون <see cref="CurrentAuthenticatedSession"/> عمومی نیست؛ ثبت DI با کارخانه در Program انجام می‌شود.
     /// </summary>
     internal StorefrontCheckoutComposer(
-        StorefrontCartComposer carts,
+        ICartPresentationGateway carts,
         ICheckoutDirectory checkouts,
         IAddressBookDirectory addresses,
         CurrentAuthenticatedSession session,
@@ -180,7 +182,7 @@ public sealed class StorefrontCheckoutComposer
         return MapPage(snapshot, committedCart, persisted: true);
     }
 
-    private static StorefrontCartPage StubCartPage(CheckoutSnapshot snapshot) =>
+    private static CartPage StubCartPage(CheckoutSnapshot snapshot) =>
         new(
             snapshot.CartId,
             0,
@@ -189,7 +191,7 @@ public sealed class StorefrontCheckoutComposer
             snapshot.Channel.ToString(),
             0,
             0,
-            Array.Empty<StorefrontCartLineView>(),
+            Array.Empty<CartLineView>(),
             null,
             "Converted");
 
@@ -265,7 +267,7 @@ public sealed class StorefrontCheckoutComposer
         return StorefrontGuestActorId;
     }
 
-    private async Task<StorefrontCartPage> RequireCartAsync(Guid cartId, string? guestSecret, CancellationToken cancellationToken)
+    private async Task<CartPage> RequireCartAsync(Guid cartId, string? guestSecret, CancellationToken cancellationToken)
     {
         var cart = await _carts.GetAsync(cartId, guestSecret, cancellationToken)
             ?? throw new InvalidOperationException("سبد پیدا نشد.");
@@ -278,7 +280,7 @@ public sealed class StorefrontCheckoutComposer
     }
 
     private SubmitCheckoutCommand BuildCommand(
-        StorefrontCartPage cart,
+        CartPage cart,
         string? guestSecret,
         string idempotencyKey,
         Guid placedByUserId,
@@ -318,7 +320,7 @@ public sealed class StorefrontCheckoutComposer
             shipping?.FirstName ?? string.Empty,
             shipping?.LastName ?? string.Empty);
 
-    private static StorefrontCheckoutPage MapPage(CheckoutSnapshot snapshot, StorefrontCartPage cart, bool persisted)
+    private static StorefrontCheckoutPage MapPage(CheckoutSnapshot snapshot, CartPage cart, bool persisted)
     {
         var titleByOffer = cart.Lines.ToDictionary(x => x.OfferId, x => (x.Title, x.SellerDisplayName));
         var sellers = snapshot.SellerOrders.Select(order =>
