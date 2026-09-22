@@ -7,6 +7,7 @@ using Tooba.Inventory.Contracts.Seller;
 using Tooba.Order.Application;
 using Tooba.Order.Domain;
 using Tooba.Order.Infrastructure.Persistence;
+using Tooba.Order.Contracts.Payments;
 using Tooba.Payment.Application.Models;
 using Tooba.Payment.Application.Ports;
 
@@ -16,7 +17,7 @@ namespace Tooba.Order.Infrastructure;
 /// درز سفارش برای پرداخت. DbContext پرداخت اینجا باز نمی‌شود و مبلغ از کلاینت خوانده نمی‌شود.
 /// تصویر Paid فقط از مصرف رویداد پایدار نوشته می‌شود، نه از تراکنش همزمان Payment.
 /// </summary>
-public sealed class OrderPaymentBridge : IPayableCheckoutReader, IOrderPaymentProjection
+public sealed class OrderPaymentBridge : IPayableCheckoutReader, IOrderPaymentProjection, IOrderPaymentProjectionPort
 {
     private readonly OrderDbContext _db;
     private readonly IOrderInventoryLifecyclePort _inventoryLifecycle;

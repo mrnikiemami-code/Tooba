@@ -308,24 +308,24 @@ public sealed class AdminOrderCorrectiveActionsTests
             group,
             [],
             [],
-            paymentStatus: PaymentStatus.Refunded));
+            paymentStatus: "Refunded"));
         Assert.Equal(
             "order.restore.refund_completed",
             AdminOrderOperationsComposer.RestoreForbiddenCode(
                 group,
                 [],
                 [],
-                paymentStatus: PaymentStatus.Refunded));
+                paymentStatus: "Refunded"));
         Assert.True(AdminOrderOperationsComposer.CanRestoreCancelledOrder(
             group,
             [],
             [],
-            paymentStatus: PaymentStatus.RefundPending));
+            paymentStatus: "RefundPending"));
         Assert.True(AdminOrderOperationsComposer.CanRestoreCancelledOrder(
             group,
             [],
             [],
-            paymentStatus: PaymentStatus.RefundFailed));
+            paymentStatus: "RefundFailed"));
     }
 
     [Fact]

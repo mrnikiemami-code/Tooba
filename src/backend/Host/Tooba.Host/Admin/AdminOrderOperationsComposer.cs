@@ -1,4 +1,5 @@
 using Tooba.Order.Contracts.Fulfillment;
+using Tooba.Order.Contracts.Payments;
 ﻿using Microsoft.EntityFrameworkCore;
 using Tooba.AccessControl.Application;
 using Tooba.AccessControl.Domain;
@@ -16,7 +17,7 @@ using Tooba.Order.Application;
 using Tooba.Order.Domain;
 using Tooba.Order.Infrastructure.Persistence;
 using Tooba.Payment.Application.Models;
-using Tooba.Payment.Application.Ports;
+using Tooba.Payment.Contracts.Admin;
 using Tooba.Payment.Domain.Aggregates;
 using Tooba.Payment.Domain.ValueObjects;
 using Tooba.Payment.Infrastructure.Adapters;
@@ -84,8 +85,8 @@ public sealed class AdminOrderOperationsComposer
     private readonly ICheckoutDirectory _checkout;
     private readonly IAccessControlDirectory _access;
     private readonly ICurrentTenant _tenant;
-    private readonly IPaymentAdminDirectory _payments;
-    private readonly IOrderPaymentProjection _orderPayments;
+    private readonly IPaymentAdminGateway _payments;
+    private readonly IOrderPaymentProjectionPort _orderPayments;
     private readonly ISettlementDirectory _settlement;
     private readonly OrderInventoryRecoveryComposer _inventoryRecovery;
     private readonly OrderSupplyComposer _orderSupply;
@@ -100,8 +101,8 @@ public sealed class AdminOrderOperationsComposer
         ICheckoutDirectory checkout,
         IAccessControlDirectory access,
         ICurrentTenant tenant,
-        IPaymentAdminDirectory payments,
-        IOrderPaymentProjection orderPayments,
+        IPaymentAdminGateway payments,
+        IOrderPaymentProjectionPort orderPayments,
         ISettlementDirectory settlement,
         OrderInventoryRecoveryComposer inventoryRecovery,
         OrderSupplyComposer orderSupply,
@@ -1316,7 +1317,7 @@ public sealed class AdminOrderOperationsComposer
 
     private void ProjectPaymentActions(
         List<AdminOrderOperationAction> actions,
-        PaymentOperationalSnapshot? payment,
+        PaymentAdminOperationalSnapshot? payment,
         IReadOnlyList<FulfillmentSnapshot> fulfillments,
         IReadOnlyList<ReturnSnapshot> returns,
         EffectiveAccessDto effective,
@@ -1483,7 +1484,7 @@ public sealed class AdminOrderOperationsComposer
         IReadOnlyList<ReturnSnapshot> returns,
         EffectiveAccessDto effective,
         bool blockedBySellerPayout,
-        PaymentStatus? paymentStatus)
+        string? paymentStatus)
     {
         if (!HasAny(effective, "order.cancel", "order.handle"))
         {
@@ -1848,14 +1849,14 @@ public sealed class AdminOrderOperationsComposer
 
     internal static bool HasCompletedRefund(
         IReadOnlyList<ReturnSnapshot> returns,
-        PaymentStatus? paymentStatus = null) =>
+        string? paymentStatus = null) =>
         returns.Any(x => x.Status == ReturnRequestStatus.Completed)
-        || paymentStatus == PaymentStatus.Refunded;
+        || paymentStatus == "Refunded";
 
     internal static bool HasIrreversibleFinanceBlock(
         IReadOnlyList<FulfillmentSnapshot> fulfillments,
         IReadOnlyList<ReturnSnapshot> returns,
-        PaymentStatus? paymentStatus = null) =>
+        string? paymentStatus = null) =>
         HasDispatchedOrDelivered(fulfillments) || HasCompletedRefund(returns, paymentStatus);
 
     internal static bool HasStartedFulfillment(IReadOnlyList<FulfillmentSnapshot> fulfillments) =>
@@ -1869,7 +1870,7 @@ public sealed class AdminOrderOperationsComposer
         IReadOnlyList<FulfillmentSnapshot> fulfillments,
         IReadOnlyList<ReturnSnapshot> returns,
         bool blockedBySellerPayout = false,
-        PaymentStatus? paymentStatus = null)
+        string? paymentStatus = null)
     {
         if (group.SellerOrders.Count == 0
             || group.SellerOrders.Any(x => x.Status != SellerOrderStatus.Cancelled)
@@ -1886,7 +1887,7 @@ public sealed class AdminOrderOperationsComposer
         IReadOnlyList<FulfillmentSnapshot> fulfillments,
         IReadOnlyList<ReturnSnapshot> returns,
         bool blockedBySellerPayout = false,
-        PaymentStatus? paymentStatus = null)
+        string? paymentStatus = null)
     {
         if (group.SellerOrders.Any(x => x.Status != SellerOrderStatus.Cancelled))
         {
@@ -1928,7 +1929,7 @@ public sealed class AdminOrderOperationsComposer
         IReadOnlyList<FulfillmentSnapshot> fulfillments,
         IReadOnlyList<ReturnSnapshot> returns,
         bool blockedBySellerPayout = false,
-        PaymentStatus? paymentStatus = null) =>
+        string? paymentStatus = null) =>
         RestoreCodeToFa(RestoreForbiddenCode(group, fulfillments, returns, blockedBySellerPayout, paymentStatus));
 
     internal static string RestoreCodeToFa(string code) => code switch

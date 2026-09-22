@@ -13,7 +13,7 @@ using Tooba.Inventory.Application.Checkout;
 using Tooba.Inventory.Application.Orders;
 using Tooba.Inventory.Contracts.Returns;
 using Tooba.Payment.Application.Models;
-using Tooba.Payment.Application.Ports;
+using Tooba.Payment.Contracts.Customer;
 using Tooba.Payment.Domain.Aggregates;
 using Tooba.Payment.Domain.ValueObjects;
 using Tooba.Wishlist.Application;
@@ -30,13 +30,13 @@ public sealed class CustomerPanelComposer
     private readonly OrderDbContext _orders;
     private readonly CatalogDbContext _catalog;
     private readonly IPartyLookupGateway _parties;
-    private readonly IPaymentDirectory _payments;
+    private readonly IPaymentCustomerGateway _payments;
     private readonly IWishlistDirectory _wishlist;
     private readonly IAddressBookDirectory _addresses;
     private readonly ICustomerProfileDirectory _profiles;
     private readonly IIdentityContactLookup _identityContacts;
     private readonly OrderSupplyComposer? _supply;
-    private readonly IPaymentExpiryDirectory? _expiry;
+    private readonly IPaymentCustomerGateway? _expiry;
     private readonly ReservationCycleCoordinator? _cycles;
 
     /// <summary>
@@ -46,13 +46,13 @@ public sealed class CustomerPanelComposer
         OrderDbContext orders,
         CatalogDbContext catalog,
         IPartyLookupGateway parties,
-        IPaymentDirectory payments,
+        IPaymentCustomerGateway payments,
         IWishlistDirectory wishlist,
         IAddressBookDirectory addresses,
         ICustomerProfileDirectory profiles,
         IIdentityContactLookup identityContacts,
         OrderSupplyComposer? supply = null,
-        IPaymentExpiryDirectory? expiry = null,
+        IPaymentCustomerGateway? expiry = null,
         ReservationCycleCoordinator? cycles = null)
     {
         _orders = orders;
@@ -263,7 +263,7 @@ public sealed class CustomerPanelComposer
             group.ShippingMethodLabel,
             sellerViews,
             payment?.PaymentId,
-            payment?.Status == PaymentStatus.Expired);
+            payment?.Status == "Expired");
     }
 
     /// <summary>تلاش مجدد همان سفارش پس از مهلت پرداخت.</summary>
@@ -381,19 +381,19 @@ public sealed class CustomerPanelComposer
             status);
     }
 
-    private static string PaymentState(PaymentSnapshot? payment) =>
+    private static string PaymentState(PaymentCustomerSnapshot? payment) =>
         payment?.Status switch
         {
-            PaymentStatus.Succeeded
-                or PaymentStatus.RefundPending
-                or PaymentStatus.Refunded
-                or PaymentStatus.RefundFailed => "Paid",
-            PaymentStatus.Failed or PaymentStatus.Cancelled => "Failed",
-            PaymentStatus.Expired => "PaymentExpired",
+            "Succeeded"
+                or "RefundPending"
+                or "Refunded"
+                or "RefundFailed" => "Paid",
+            "Failed" or "Cancelled" => "Failed",
+            "Expired" => "PaymentExpired",
             _ => "PendingPayment",
         };
 
-    private static string PaymentState(PaymentSnapshot? payment, Guid sellerOrderId) =>
+    private static string PaymentState(PaymentCustomerSnapshot? payment, Guid sellerOrderId) =>
         payment is null || payment.Allocations.Any(x => x.SellerOrderId == sellerOrderId)
             ? PaymentState(payment)
             : "PendingPayment";

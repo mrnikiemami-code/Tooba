@@ -11,9 +11,10 @@ using Tooba.Inventory.Application.Orders;
 using Tooba.Inventory.Contracts.Returns;
 using Tooba.Order.Application;
 using Tooba.Order.Domain;
+using Tooba.Payment.Contracts.Hold;
 using Tooba.Order.Infrastructure.Persistence;
 using Tooba.Payment.Application.Models;
-using Tooba.Payment.Application.Ports;
+
 using Tooba.Payment.Infrastructure.Adapters;
 using Tooba.Payment.Infrastructure.DependencyInjection;
 using Tooba.Payment.Infrastructure.Directories;
@@ -32,7 +33,7 @@ public sealed class OrderSupplyComposer
     private readonly IFulfillmentDirectory _fulfillment;
     private readonly IFulfillmentShippedQuantityReader _shipped;
     private readonly PaymentGatewayOptions _paymentGateway;
-    private readonly ICommerceHoldPolicy? _holdPolicy;
+    private readonly CommerceHoldPolicy? _holdPolicy;
     private readonly IReservationCyclePolicyResolver? _cyclePolicy;
 
     public OrderSupplyComposer(
@@ -41,7 +42,7 @@ public sealed class OrderSupplyComposer
         IFulfillmentDirectory fulfillment,
         IFulfillmentShippedQuantityReader shipped,
         IOptions<PaymentGatewayOptions> paymentGateway,
-        ICommerceHoldPolicy? holdPolicy = null,
+        CommerceHoldPolicy? holdPolicy = null,
         IReservationCyclePolicyResolver? cyclePolicy = null)
     {
         _orders = orders;

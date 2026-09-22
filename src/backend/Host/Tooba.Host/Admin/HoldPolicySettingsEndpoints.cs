@@ -4,7 +4,7 @@ using Tooba.Cart.Application;
 using Tooba.Catalog.Domain;
 using Tooba.Catalog.Infrastructure.Persistence;
 using Tooba.Order.Application;
-using Tooba.Payment.Application.Ports;
+using Tooba.Payment.Contracts.Hold;
 using Tooba.Payment.Infrastructure.Providers;
 
 namespace Tooba.Host.Admin;
@@ -61,7 +61,7 @@ public static class HoldPolicySettingsEndpoints
 
     private static async Task<IResult> GetAsync(
         CatalogDbContext catalog,
-        IPaymentHoldSettingsDirectory paymentHolds,
+        IPaymentHoldSettingsGateway paymentHolds,
         IReservationCyclePolicyResolver resolver,
         Microsoft.Extensions.Options.IOptions<PaymentGatewayOptions> gateway,
         Microsoft.Extensions.Options.IOptions<CartLifetimeOptions> cart,
@@ -87,7 +87,7 @@ public static class HoldPolicySettingsEndpoints
     private static async Task<IResult> PutAsync(
         HoldPolicySettingsWriteRequest body,
         CatalogDbContext catalog,
-        IPaymentHoldSettingsDirectory paymentHolds,
+        IPaymentHoldSettingsGateway paymentHolds,
         IReservationCyclePolicyResolver resolver,
         Microsoft.Extensions.Options.IOptions<PaymentGatewayOptions> gateway,
         Microsoft.Extensions.Options.IOptions<CartLifetimeOptions> cart,
@@ -156,7 +156,7 @@ public static class HoldPolicySettingsEndpoints
 
     private static async Task<HoldPolicySettingsView> BuildViewAsync(
         CatalogDbContext catalog,
-        IPaymentHoldSettingsDirectory paymentHolds,
+        IPaymentHoldSettingsGateway paymentHolds,
         IReservationCyclePolicyResolver resolver,
         PaymentGatewayOptions gateway,
         CartLifetimeOptions cart,
@@ -217,7 +217,7 @@ public static class HoldPolicySettingsEndpoints
         string code,
         string fa,
         string en,
-        IReadOnlyList<PaymentMethodHoldOverrideDto> rows)
+        IReadOnlyList<PaymentMethodHoldOverride> rows)
     {
         var row = rows.FirstOrDefault(x => string.Equals(x.ProviderCode, code, StringComparison.OrdinalIgnoreCase));
         return new PaymentMethodHoldView(

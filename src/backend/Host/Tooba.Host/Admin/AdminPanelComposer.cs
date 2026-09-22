@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Tooba.BuildingBlocks.Grid;
 using Tooba.Catalog.Domain;
 using Tooba.Catalog.Infrastructure.Persistence;
@@ -14,7 +14,7 @@ using Tooba.Order.Application;
 using Tooba.Order.Domain;
 using Tooba.Order.Infrastructure.Persistence;
 using Tooba.Party.Infrastructure.Persistence;
-using Tooba.Payment.Application.Ports;
+using Tooba.Payment.Contracts.Admin;
 
 using Tooba.Returns.Domain.ValueObjects;
 using Tooba.Returns.Application.Ports;
@@ -35,7 +35,7 @@ public sealed class AdminPanelComposer
     private readonly IOfferQueryGateway _offers;
     private readonly OrderDbContext _orders;
     private readonly PartyDbContext _parties;
-    private readonly IPaymentAdminDirectory _payments;
+    private readonly IPaymentAdminGateway _payments;
     private readonly ISettlementDirectory _settlement;
     private readonly IFulfillmentDirectory _fulfillment;
     private readonly IReturnDirectory _returns;
@@ -53,7 +53,7 @@ public sealed class AdminPanelComposer
         IOfferQueryGateway offers,
         OrderDbContext orders,
         PartyDbContext parties,
-        IPaymentAdminDirectory payments,
+        IPaymentAdminGateway payments,
         ISettlementDirectory settlement,
         IFulfillmentDirectory fulfillment,
         IReturnDirectory returns,

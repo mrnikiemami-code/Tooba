@@ -28,3 +28,16 @@ public interface IOrderUnpaidRetrySupplyPort
 {
     Task EnsureRetrySupplyAsync(Guid checkoutId, CancellationToken cancellationToken);
 }
+
+public interface IOrderPaymentProjectionPort
+{
+    Task ApplyVerifiedSuccessAsync(
+        Guid checkoutId, Guid paymentId, IReadOnlyList<Guid> sellerOrderIds,
+        CancellationToken cancellationToken);
+    Task RevertVerifiedSuccessAsync(
+        Guid checkoutId, IReadOnlyList<Guid> sellerOrderIds, CancellationToken cancellationToken);
+    Task PromoteReservationsForManualPaymentReviewAsync(
+        Guid checkoutId, DateTimeOffset reviewExpiresAt, CancellationToken cancellationToken);
+    Task ReleaseReservationsAfterManualRejectAsync(
+        Guid checkoutId, CancellationToken cancellationToken);
+}

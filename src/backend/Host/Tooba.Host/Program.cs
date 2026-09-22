@@ -1,4 +1,3 @@
-﻿using Tooba.Payment.Application.Ports;
 // ریشهٔ ترکیب Host: Observability، resolve Edition/Tenant، ماژول‌های صریح، Outbox dispatcher، MassTransit SQL Transport، کش درون‌فرآیندی.
 // Host ورودی routing است نه TenantId. کارگر Outbox و مصرف‌کننده Tenant را از Host نمی‌خوانند.
 // مسیرهای /__platform-* فقط Development/Testing هستند و قبل از استقرار عمومی باید محدود شوند.
@@ -154,7 +153,7 @@ builder.Services.Configure<Tooba.Cart.Application.Lifetime.CartLifetimeOptions>(
 builder.Services.Configure<Tooba.Order.Application.ReservationCycleOptions>(
     builder.Configuration.GetSection(Tooba.Order.Application.ReservationCycleOptions.SectionName));
 builder.Services.AddScoped<CommerceHoldPolicy>();
-builder.Services.AddScoped<Tooba.Payment.Application.Ports.ICommerceHoldPolicy>(sp => sp.GetRequiredService<CommerceHoldPolicy>());
+builder.Services.AddScoped<Tooba.Payment.Contracts.Hold.ICommerceHoldPolicySource>(sp => sp.GetRequiredService<CommerceHoldPolicy>());
 builder.Services.AddScoped<Tooba.Order.Application.ICheckoutReservationHoldPolicy>(sp => sp.GetRequiredService<CommerceHoldPolicy>());
 builder.Services.AddScoped<Tooba.Cart.Application.Ports.ICartPersistenceHoursSource>(sp => sp.GetRequiredService<CommerceHoldPolicy>());
 builder.Services.AddScoped<Tooba.Order.Application.IReservationCyclePolicyResolver, ReservationCyclePolicyResolver>();

@@ -1,4 +1,4 @@
-﻿using Tooba.Host.Storefront;
+using Tooba.Host.Storefront;
 using Tooba.Order.Application;
 
 namespace Tooba.Host.Storefront;
@@ -450,7 +450,7 @@ public static class StorefrontEndpoints
         Guid checkoutId,
         Guid cartId,
         StorefrontCheckoutComposer composer,
-        Tooba.Payment.Application.Ports.IPaymentDirectory payments,
+        Tooba.Payment.Contracts.Customer.IPaymentCustomerGateway payments,
         HttpRequest request,
         CancellationToken cancellationToken)
     {

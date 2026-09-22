@@ -8,7 +8,7 @@ public sealed class PaymentArchitectureGuardTests
 {
     private static readonly string[] AllowedDomainFolders = ["Aggregates", "Entities", "ValueObjects", "Events", "Policies"];
     private static readonly string[] AllowedApplicationFolders = ["Ports", "Models", "Commands", "Queries", "Errors", "Orchestration"];
-    private static readonly string[] AllowedContractsFolders = ["Events", "Dtos", "Ports", "Returns", "Settlement", "Storefront"];
+    private static readonly string[] AllowedContractsFolders = ["Admin", "Customer", "Events", "Dtos", "Hold", "Ports", "Returns", "Settlement", "Storefront"];
     private static readonly string[] AllowedInfrastructureFolders =
         ["Persistence", "Directories", "Adapters", "Providers", "Events", "Messaging", "DependencyInjection", "Gateways", "Migrations"];
     private static readonly string[] AllowedEndpointsFolders = ["Storefront", "Admin", "Webhooks", "Errors", "Resources"];
@@ -226,6 +226,22 @@ public sealed class PaymentArchitectureGuardTests
         var pending = File.ReadAllText(Path.Combine(hostRoot, "Storefront", "StorefrontPendingPaymentComposer.cs"));
         Assert.DoesNotContain("Tooba.Payment.Application.Ports", pending, StringComparison.Ordinal);
         Assert.Contains("Tooba.Payment.Contracts.Storefront", pending, StringComparison.Ordinal);
+        var forbiddenHostIdentifiers = new[]
+        {
+            "IPaymentDirectory", "IPaymentAdminDirectory", "IPaymentQueryDirectory",
+            "IPaymentExpiryDirectory", "IOrderPaymentProjection", "IPaymentHoldSettingsDirectory",
+        };
+        var hostBoundaryViolations = Directory.EnumerateFiles(hostRoot, "*.cs", SearchOption.AllDirectories)
+            .Where(path => !path.Contains($"{Path.DirectorySeparatorChar}Tests{Path.DirectorySeparatorChar}", StringComparison.OrdinalIgnoreCase))
+            .Where(path => Path.GetFileName(path) is not "HostCheckoutActorPolicyAdapter.cs" and not "Program.cs")
+            .Select(path => (Path: path, Text: File.ReadAllText(path)))
+            .Where(x => x.Text.Contains("using Tooba.Payment.Application.Ports", StringComparison.Ordinal)
+                || forbiddenHostIdentifiers.Any(identifier =>
+                    Regex.IsMatch(x.Text, $@"\b{Regex.Escape(identifier)}\b")))
+            .Select(x => Path.GetRelativePath(hostRoot, x.Path))
+            .ToArray();
+        Assert.True(hostBoundaryViolations.Length == 0,
+            "Host Payment.Application.Ports boundary violations: " + string.Join(", ", hostBoundaryViolations));
         Assert.True(Directory.Exists(Path.Combine(PaymentRoot(), "Tooba.Payment.Application", "Orchestration")));
         Assert.False(File.Exists(Path.Combine(PaymentRoot(), "Tooba.Payment.Application", "Models", "StorefrontPaymentOrchestrator.cs")));
 

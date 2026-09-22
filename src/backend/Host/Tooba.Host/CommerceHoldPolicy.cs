@@ -4,7 +4,7 @@ using Tooba.Cart.Application;
 using Tooba.Catalog.Domain;
 using Tooba.Catalog.Infrastructure.Persistence;
 using Tooba.Order.Application;
-using Tooba.Payment.Application.Ports;
+using Tooba.Payment.Contracts.Hold;
 using Tooba.Payment.Infrastructure.Providers;
 
 namespace Tooba.Host;
@@ -12,14 +12,14 @@ namespace Tooba.Host;
 /// <summary>
 /// حل مهلت: روش پرداخت &gt; فروشگاه &gt; Payment:Gateway / Cart:PersistenceHours.
 /// </summary>
-public sealed class CommerceHoldPolicy : ICommerceHoldPolicy, ICheckoutReservationHoldPolicy, ICartPersistenceHoursSource
+public sealed class CommerceHoldPolicy : ICommerceHoldPolicySource, ICheckoutReservationHoldPolicy, ICartPersistenceHoursSource
 {
     private readonly PaymentGatewayOptions _gateway;
     private readonly CartLifetimeOptions _cart;
     private readonly CatalogDbContext _catalog;
-    private readonly IPaymentHoldSettingsDirectory _paymentHolds;
+    private readonly IPaymentHoldSettingsGateway _paymentHolds;
     private StoreHoldPolicySettings? _store;
-    private Dictionary<string, PaymentMethodHoldOverrideDto>? _methods;
+    private Dictionary<string, PaymentMethodHoldOverride>? _methods;
     private bool _loaded;
 
     /// <summary>سیاست را به Options و درگاه تنظیمات Payment وصل می‌کند.</summary>
@@ -27,7 +27,7 @@ public sealed class CommerceHoldPolicy : ICommerceHoldPolicy, ICheckoutReservati
         IOptions<PaymentGatewayOptions> gateway,
         IOptions<CartLifetimeOptions> cart,
         CatalogDbContext catalog,
-        IPaymentHoldSettingsDirectory paymentHolds)
+        IPaymentHoldSettingsGateway paymentHolds)
     {
         _gateway = gateway.Value;
         _cart = cart.Value;
@@ -113,7 +113,7 @@ public sealed class CommerceHoldPolicy : ICommerceHoldPolicy, ICheckoutReservati
         _loaded = true;
     }
 
-    private PaymentMethodHoldOverrideDto? FindMethod(string? providerCode)
+    private PaymentMethodHoldOverride? FindMethod(string? providerCode)
     {
         if (string.IsNullOrWhiteSpace(providerCode) || _methods is null)
         {

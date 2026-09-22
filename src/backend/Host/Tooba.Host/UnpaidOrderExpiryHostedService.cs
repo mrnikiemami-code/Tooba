@@ -4,7 +4,8 @@ using Tooba.BuildingBlocks;
 using Tooba.Order.Application;
 using Tooba.Order.Domain;
 using Tooba.Payment.Application.Models;
-using Tooba.Payment.Application.Ports;
+using Tooba.Payment.Contracts.Customer;
+using Tooba.Order.Contracts.Payments;
 using Tooba.Persistence;
 
 namespace Tooba.Host;
@@ -97,8 +98,8 @@ internal sealed class UnpaidOrderExpiryHostedService : BackgroundService
                 await using var scope = _scopes.CreateAsyncScope();
                 var assigner = scope.ServiceProvider.GetRequiredService<ICommerceContextAssigner>();
                 assigner.Assign(_workerContext.FromPollTarget(target, Guid.NewGuid().ToString("N")));
-                var expiry = scope.ServiceProvider.GetRequiredService<IPaymentExpiryDirectory>();
-                var projection = scope.ServiceProvider.GetRequiredService<IOrderPaymentProjection>();
+                var expiry = scope.ServiceProvider.GetRequiredService<IPaymentCustomerGateway>();
+                var projection = scope.ServiceProvider.GetRequiredService<IOrderPaymentProjectionPort>();
                 var cycles = scope.ServiceProvider.GetRequiredService<IReservationCycleDirectory>();
                 var now = DateTimeOffset.UtcNow;
                 await cycles.CloseExpiredDueAsync(now, cancellationToken).ConfigureAwait(false);

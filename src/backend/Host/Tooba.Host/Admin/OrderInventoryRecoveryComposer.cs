@@ -16,7 +16,7 @@ using Tooba.Order.Application;
 using Tooba.Order.Domain;
 using Tooba.Order.Infrastructure.Persistence;
 using Tooba.Payment.Application.Models;
-using Tooba.Payment.Application.Ports;
+using Tooba.Payment.Contracts.Admin;
 using Tooba.Payment.Domain.Aggregates;
 using Tooba.Payment.Domain.ValueObjects;
 using Tooba.Payment.Infrastructure.Adapters;
@@ -37,7 +37,7 @@ public sealed class OrderInventoryRecoveryComposer
     private readonly OrderDbContext _orders;
     private readonly IInventoryDirectory _inventory;
     private readonly IFulfillmentDirectory _fulfillment;
-    private readonly IPaymentAdminDirectory _payments;
+    private readonly IPaymentAdminGateway _payments;
     private readonly ICheckoutDirectory _checkout;
     private readonly PaymentGatewayOptions _gateway;
     private readonly IReservationCycleDirectory? _cycles;
@@ -47,7 +47,7 @@ public sealed class OrderInventoryRecoveryComposer
         OrderDbContext orders,
         IInventoryDirectory inventory,
         IFulfillmentDirectory fulfillment,
-        IPaymentAdminDirectory payments,
+        IPaymentAdminGateway payments,
         ICheckoutDirectory checkout,
         IOptions<PaymentGatewayOptions> gateway,
         IReservationCycleDirectory? cycles = null,
@@ -205,15 +205,15 @@ public sealed class OrderInventoryRecoveryComposer
             return Assessment(group, orderNumbers, "NotEligible", false, "سفارش لغو شده است.", []);
         if (payment is null)
             return Assessment(group, orderNumbers, "C", false, "پرداخت نامشخص است.", []);
-        if (payment.Status == PaymentStatus.Refunded)
+        if (payment.Status == "Refunded")
             return Assessment(group, orderNumbers, "NotEligible", false, "پرداخت مسترد شده است.", []);
 
         var manual = ManualPaymentGateway.IsManual(payment.ProviderCode);
-        var classA = manual && payment.Status == PaymentStatus.Pending
+        var classA = manual && payment.Status == "Pending"
             && (!string.IsNullOrWhiteSpace(payment.CustomerTransferReference) || payment.EvidenceSubmittedAt is not null);
-        var classB = payment.Status == PaymentStatus.Succeeded;
+        var classB = payment.Status == "Succeeded";
 
-        if (payment.Status == PaymentStatus.Failed && payment.HasManualDepositRejection && !classA)
+        if (payment.Status == "Failed" && payment.HasManualDepositRejection && !classA)
             return Assessment(group, orderNumbers, "NotEligible", false, "واریز رد شده و ادعای فعال ندارد.", []);
         if (!classA && !classB)
             return Assessment(group, orderNumbers, "NotEligible", false, "وضعیت پرداخت واجد شرایط بازیابی نیست.", []);

@@ -19,7 +19,7 @@ using Tooba.Order.Domain;
 using Tooba.Order.Infrastructure.Persistence;
 using Tooba.Party.Application;
 using Tooba.Payment.Application.Models;
-using Tooba.Payment.Application.Ports;
+using Tooba.Payment.Contracts.Admin;
 using Tooba.Payment.Domain.Aggregates;
 using Tooba.Payment.Domain.ValueObjects;
 
@@ -42,7 +42,7 @@ public sealed class AdminOrderCompletenessComposer
     private readonly CatalogDbContext _catalog;
     private readonly ICheckoutDirectory _checkout;
     private readonly IFulfillmentDirectory _fulfillment;
-    private readonly IPaymentAdminDirectory _payments;
+    private readonly IPaymentAdminGateway _payments;
     private readonly ISettlementDirectory _settlement;
     private readonly IAccessControlDirectory _access;
     private readonly IOperatorProfileDirectory _profiles;
@@ -57,7 +57,7 @@ public sealed class AdminOrderCompletenessComposer
         CatalogDbContext catalog,
         ICheckoutDirectory checkout,
         IFulfillmentDirectory fulfillment,
-        IPaymentAdminDirectory payments,
+        IPaymentAdminGateway payments,
         ISettlementDirectory settlement,
         IAccessControlDirectory access,
         IOperatorProfileDirectory profiles,
@@ -248,7 +248,7 @@ public sealed class AdminOrderCompletenessComposer
 
             switch (payment.Status)
             {
-                case PaymentStatus.Pending:
+                case "Pending":
                     entries.Add(Draft(
                         payment.UpdatedAt == default ? payment.CreatedAt : payment.UpdatedAt,
                         "payment_pending",
@@ -266,7 +266,7 @@ public sealed class AdminOrderCompletenessComposer
                     }
 
                     break;
-                case PaymentStatus.Succeeded:
+                case "Succeeded":
                     entries.Add(Draft(
                         payment.CompletedAt ?? payment.UpdatedAt,
                         "payment_succeeded",
@@ -276,7 +276,7 @@ public sealed class AdminOrderCompletenessComposer
                         $"{payment.Amount:0} {payment.Currency}",
                         $"{payment.Amount:0} {payment.Currency}"));
                     break;
-                case PaymentStatus.Failed:
+                case "Failed":
                     entries.Add(Draft(
                         payment.UpdatedAt,
                         payment.HasManualDepositRejection || payment.LastFailureCode == "MANUAL_DEPOSIT_REJECTED"
@@ -292,7 +292,7 @@ public sealed class AdminOrderCompletenessComposer
                         payment.LastFailureCode,
                         payment.LastFailureCode));
                     break;
-                case PaymentStatus.Cancelled:
+                case "Cancelled":
                     entries.Add(Draft(
                         payment.UpdatedAt,
                         "payment_cancelled",
@@ -300,7 +300,7 @@ public sealed class AdminOrderCompletenessComposer
                         "Payment cancelled",
                         null));
                     break;
-                case PaymentStatus.Expired:
+                case "Expired":
                     entries.Add(Draft(
                         payment.UpdatedAt,
                         "payment_expired",
@@ -308,7 +308,7 @@ public sealed class AdminOrderCompletenessComposer
                         "Payment expired",
                         null));
                     break;
-                case PaymentStatus.RefundPending:
+                case "RefundPending":
                     entries.Add(Draft(
                         payment.UpdatedAt,
                         "payment_refund_pending",
@@ -318,7 +318,7 @@ public sealed class AdminOrderCompletenessComposer
                         "Refund pending",
                         null));
                     break;
-                case PaymentStatus.Refunded:
+                case "Refunded":
                     entries.Add(Draft(
                         payment.UpdatedAt,
                         "payment_refunded",
@@ -328,7 +328,7 @@ public sealed class AdminOrderCompletenessComposer
                         $"{payment.Amount:0} {payment.Currency}",
                         $"{payment.Amount:0} {payment.Currency}"));
                     break;
-                case PaymentStatus.RefundFailed:
+                case "RefundFailed":
                     entries.Add(Draft(
                         payment.UpdatedAt,
                         "payment_refund_failed",
@@ -1070,7 +1070,7 @@ public sealed class AdminOrderCompletenessComposer
         return await _access.GetEffectiveAccessAsync(actorUserId, scope, cancellationToken);
     }
 
-    internal static string RenderInvoiceHtml(CheckoutGroup group, PaymentOperationalSnapshot? payment)
+    internal static string RenderInvoiceHtml(CheckoutGroup group, PaymentAdminOperationalSnapshot? payment)
     {
         var reference = group.SellerOrders.Select(x => x.OrderNumber).FirstOrDefault()
             ?? group.CheckoutId.ToString("N")[..12];
@@ -1132,7 +1132,7 @@ public sealed class AdminOrderCompletenessComposer
         return sb.ToString();
     }
 
-    internal static string RenderReceiptHtml(CheckoutGroup group, PaymentOperationalSnapshot payment)
+    internal static string RenderReceiptHtml(CheckoutGroup group, PaymentAdminOperationalSnapshot payment)
     {
         var reference = MaskPaymentReference(payment);
         var sb = new StringBuilder();
@@ -1170,7 +1170,7 @@ public sealed class AdminOrderCompletenessComposer
         };
     }
 
-    internal static string MaskPaymentReference(PaymentOperationalSnapshot payment)
+    internal static string MaskPaymentReference(PaymentAdminOperationalSnapshot payment)
     {
         var tx = payment.ProviderTransactionReference?.Trim();
         if (!string.IsNullOrWhiteSpace(tx))

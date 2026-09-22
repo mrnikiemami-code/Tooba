@@ -9,6 +9,9 @@ using Tooba.Payment.Application.Ports;
 using Tooba.Payment.Contracts.Settlement;
 using Tooba.Payment.Contracts.Storefront;
 using Tooba.Payment.Contracts.Returns;using Tooba.Payment.Infrastructure.Persistence;
+using Tooba.Payment.Contracts.Admin;
+using Tooba.Payment.Contracts.Customer;
+using Tooba.Payment.Contracts.Hold;
 using Tooba.Persistence;
 
 using Tooba.Payment.Infrastructure.Adapters;
@@ -36,6 +39,7 @@ public sealed class PaymentModule : IToobaModule
         services.AddSingleton<PaymentGatewayInstrumentation>();
         services.AddSingleton<IOutboxModuleRegistration, PaymentOutboxRegistration>();
         services.AddScoped<IPaymentUseCaseGuard, OpenPaymentUseCaseGuard>();
+        services.AddScoped<ICommerceHoldPolicy, CommerceHoldPolicyAdapter>();
         services.AddScoped<PaymentGatewayActorContext>();
         services.AddScoped<IPaymentGatewayRegistry, PaymentGatewayRegistry>();
         services.AddScoped<IPaymentDirectory, PaymentDirectory>();
@@ -49,6 +53,10 @@ public sealed class PaymentModule : IToobaModule
         services.AddScoped<IPaymentHoldSettingsDirectory, PaymentHoldSettingsDirectory>();
         services.AddScoped<IPaymentQueryDirectory, PaymentQueryDirectory>();
         services.AddScoped<IPendingPaymentReader, PendingPaymentBridge>();
+        services.AddScoped<PaymentHostContractBridge>();
+        services.AddScoped<IPaymentAdminGateway>(sp => sp.GetRequiredService<PaymentHostContractBridge>());
+        services.AddScoped<IPaymentCustomerGateway>(sp => sp.GetRequiredService<PaymentHostContractBridge>());
+        services.AddScoped<IPaymentHoldSettingsGateway>(sp => sp.GetRequiredService<PaymentHostContractBridge>());
         services.AddScoped<IPaymentReturnReader, PaymentReturnBridge>();
         services.AddScoped<IPaymentGatewayCatalogPort, PaymentGatewayCatalogAdapter>();
         services.AddScoped<IPaymentWebhookSignatureVerifier, PaymentWebhookSignatureVerifierAdapter>();

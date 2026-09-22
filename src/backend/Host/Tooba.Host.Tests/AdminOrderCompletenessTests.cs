@@ -5,7 +5,7 @@ using Tooba.Offer.Domain;
 using Tooba.Order.Domain;
 using Tooba.Order.Infrastructure.Persistence;
 using Tooba.Payment.Application.Models;
-using Tooba.Payment.Application.Ports;
+using Tooba.Payment.Contracts.Admin;
 using Tooba.Payment.Domain.Aggregates;
 using Tooba.Payment.Domain.ValueObjects;
 using Xunit;
@@ -71,10 +71,10 @@ public sealed class AdminOrderCompletenessTests
     public void Receipt_html_masks_provider_reference_without_raw_secrets()
     {
         var group = SeedCheckoutInMemory(unitPrice: 1000m);
-        var payment = new PaymentOperationalSnapshot(
+        var payment = new PaymentAdminOperationalSnapshot(
             Guid.NewGuid(),
             group.CheckoutId,
-            PaymentStatus.Succeeded,
+            "Succeeded",
             1000m,
             "IRR",
             "wallet",
