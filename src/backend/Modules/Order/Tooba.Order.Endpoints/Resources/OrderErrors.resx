@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="order.operation.invalid" xml:space="preserve">
+    <value>Order was not found.</value>
+  </data>
+  <data name="order.note.invalid" xml:space="preserve">
+    <value>Internal note body is required.</value>
+  </data>
+  <data name="order.note.delete.forbidden" xml:space="preserve">
+    <value>This internal note can no longer be deleted.</value>
+  </data>
+  <data name="order.invoice.unavailable" xml:space="preserve">
+    <value>Invoice is not available for this order.</value>
+  </data>
+  <data name="order.receipt.unavailable" xml:space="preserve">
+    <value>Payment receipt is not available for this order.</value>
+  </data>
+</root>

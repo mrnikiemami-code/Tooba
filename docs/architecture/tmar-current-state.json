@@ -5,7 +5,7 @@
     "checkoutState":  "PAUSED_AT_SAFE_W5_CHECKPOINT",
     "lastAcceptedTask":  "TB-TMAR-GOLDEN-WAVE-FINAL-CLOSURE-001",
     "lastAcceptedCommit":  "024ce2b5708aa70ad9f395b4dcbe48fdd6912c5a",
-    "nextTask":  "TB-TMAR-ORDER-GOLDEN-001-R2A",
+    "nextTask":  "TB-TMAR-ORDER-GOLDEN-001-R3",
     "nextTaskGate":  "ORDER_GOLDEN_REPAIR_REQUIRED",
     "goldenWaveState":  "COMPLETE",
     "goldenWaveUserReview":  "USER_ACCEPTED",
@@ -118,13 +118,21 @@
     "reopenedModules":  [
 
                         ],
-    "internalApplicabilityReviewModules":  [],
+    "internalApplicabilityReviewModules":  [
+
+                                           ],
     "activeModuleRecovery":  {
-                                   "module":  "Order",
-                                   "state":  "INCOMPLETE_REFERENCE_REPAIR",
-                                   "task":  "TB-TMAR-ORDER-GOLDEN-001-R2",
-                                   "completedSlices":  ["ORDER_ENDPOINTS_FOUNDATION"],
-                                   "nextTask":  "TB-TMAR-ORDER-GOLDEN-001-R2A",
-                                   "checkoutState":  "PAUSED_AT_SAFE_W5_CHECKPOINT"
-                               }
+                                 "module":  "Order",
+                                 "state":  "INCOMPLETE_REFERENCE_REPAIR",
+                                 "task":  "TB-TMAR-ORDER-GOLDEN-001-R2C",
+                                 "completedSlices":  [
+                                                         "ORDER_ENDPOINTS_FOUNDATION",
+                                                         "ADMIN_ORDER_COMPLETENESS_CQRS",
+                                                         "ADMIN_ORDER_COMPLETENESS_BEHAVIOR_PARITY",
+                                                         "ADMIN_ORDER_COMPLETENESS_OFFER_STYLE_CQRS",
+                                                         "ADMIN_ORDER_COMPLETENESS_FINAL_CLOSURE"
+                                                     ],
+                                 "nextTask":  "TB-TMAR-ORDER-GOLDEN-001-R3",
+                                 "checkoutState":  "PAUSED_AT_SAFE_W5_CHECKPOINT"
+                             }
 }

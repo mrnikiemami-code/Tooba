@@ -1,5 +1,6 @@
 using Tooba.Host.Admin;
 using Tooba.Offer.Domain;
+using Tooba.Order.Application.Admin.Completeness.History;
 using Tooba.Order.Domain;
 using Tooba.Settlement.Application;
 using Tooba.Settlement.Domain;
@@ -133,9 +134,9 @@ public sealed class AdminOrderFinancialHistoryTests
     [Fact]
     public void Operational_scope_helpers_are_human_and_fa_digit()
     {
-        Assert.Equal("فروشگاه آرمان — ۲ قلم", AdminOrderCompletenessComposer.FormatPackScopeFa("فروشگاه آرمان", 2));
-        Assert.Equal("کالای X — تعداد ۲", AdminOrderCompletenessComposer.FormatProductQtyScopeFa("کالای X", 2));
-        Assert.DoesNotContain("aaaaaaaa", AdminOrderCompletenessComposer.FormatPackScopeFa("فروشگاه", 1), StringComparison.OrdinalIgnoreCase);
+        Assert.Equal("فروشگاه آرمان — ۲ قلم", AdminOrderHistoryFormatting.FormatPackScopeFa("فروشگاه آرمان", 2));
+        Assert.Equal("کالای X — تعداد ۲", AdminOrderHistoryFormatting.FormatProductQtyScopeFa("کالای X", 2));
+        Assert.DoesNotContain("aaaaaaaa", AdminOrderHistoryFormatting.FormatPackScopeFa("فروشگاه", 1), StringComparison.OrdinalIgnoreCase);
     }
 
     private static SettlementEntrySnapshot MapEntry(SettlementEntry entry) =>

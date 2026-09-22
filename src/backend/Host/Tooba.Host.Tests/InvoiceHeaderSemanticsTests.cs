@@ -1,6 +1,6 @@
-using Tooba.Host.Admin;
 using Tooba.Host.Grid;
 using Tooba.Offer.Domain;
+using Tooba.Order.Application.Admin.Completeness.Documents;
 using Tooba.Order.Domain;
 using Tooba.Returns.Application.Models;
 using Tooba.Returns.Domain.ValueObjects;
@@ -38,14 +38,14 @@ public sealed class InvoiceHeaderSemanticsTests
     [Fact]
     public void Invoice_html_uses_integer_count_and_omits_mixed_unit_quantity()
     {
-        var same = AdminOrderCompletenessComposer.RenderInvoiceHtml(
+        var same = AdminOrderDocumentRenderer.RenderInvoiceHtml(
             Submit(OpenThreeLines(1.25m, 2.00m, 1m, "kg", "kg", "kg")),
             payment: null);
         Assert.Contains("تعداد اقلام: <strong dir=\"ltr\">3</strong>", same, StringComparison.Ordinal);
         Assert.Contains("جمع مقدار: <strong dir=\"ltr\">4.25</strong>", same, StringComparison.Ordinal);
         Assert.DoesNotContain("4.250000", same, StringComparison.Ordinal);
 
-        var mixed = AdminOrderCompletenessComposer.RenderInvoiceHtml(
+        var mixed = AdminOrderDocumentRenderer.RenderInvoiceHtml(
             Submit(OpenThreeLines(1.25m, 2.00m, 1m, "kg", "pcs", "kg")),
             payment: null);
         Assert.Contains("تعداد اقلام: <strong dir=\"ltr\">3</strong>", mixed, StringComparison.Ordinal);

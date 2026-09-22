@@ -1,4 +1,4 @@
-using System.Text.RegularExpressions;
+﻿using System.Text.RegularExpressions;
 using System.Xml.Linq;
 using Xunit;
 
@@ -8,7 +8,7 @@ public sealed class ReturnsArchitectureGuardTests
 {
     private static readonly string[] AllowedDomainFolders = ["Aggregates", "Entities", "ValueObjects", "Events", "Policies"];
     private static readonly string[] AllowedApplicationFolders = ["Ports", "Models", "Commands", "Queries", "Errors"];
-    private static readonly string[] AllowedContractsFolders = ["Events", "Settlement", "Errors"];
+    private static readonly string[] AllowedContractsFolders = ["Events", "Settlement", "Errors", "History"];
     private static readonly string[] AllowedInfrastructureFolders =
         ["Persistence", "Directories", "Adapters", "Events", "Messaging", "DependencyInjection", "Migrations",
             "Gateways", "Bridges", "Evaluators", "Observability", "Queries", "Errors"];

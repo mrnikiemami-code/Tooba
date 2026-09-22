@@ -1,7 +1,8 @@
 using Microsoft.EntityFrameworkCore;
 using Tooba.BuildingBlocks;
-using Tooba.Host.Admin;
 using Tooba.Offer.Domain;
+using Tooba.Order.Application.Admin.Completeness.Documents;
+using Tooba.Order.Application.Admin.Completeness.Models;
 using Tooba.Order.Domain;
 using Tooba.Order.Infrastructure.Persistence;
 using Tooba.Payment.Application.Models;
@@ -59,7 +60,7 @@ public sealed class AdminOrderCompletenessTests
     public void Invoice_html_contains_snapshot_money_not_live_offer_price()
     {
         var group = SeedCheckoutInMemory(unitPrice: 7777.5m);
-        var html = AdminOrderCompletenessComposer.RenderInvoiceHtml(group, payment: null);
+        var html = AdminOrderDocumentRenderer.RenderInvoiceHtml(group, payment: null);
         Assert.Contains("7777.5 IRR", html, StringComparison.Ordinal);
         Assert.Contains("فاکتور", html, StringComparison.Ordinal);
         Assert.DoesNotContain("commission", html, StringComparison.OrdinalIgnoreCase);
@@ -87,7 +88,7 @@ public sealed class AdminOrderCompletenessTests
             false,
             false,
             false);
-        var html = AdminOrderCompletenessComposer.RenderReceiptHtml(group, payment);
+        var html = AdminOrderDocumentRenderer.RenderReceiptHtml(group, payment);
         Assert.Contains("کیف پول", html, StringComparison.Ordinal);
         Assert.Contains("wallet:abcdef01", html, StringComparison.Ordinal);
         Assert.DoesNotContain("secret", html, StringComparison.Ordinal);
@@ -97,7 +98,7 @@ public sealed class AdminOrderCompletenessTests
     [Fact]
     public void History_entries_sort_by_occurred_at_descending()
     {
-        var older = new AdminOperationalHistoryEntry(
+        var older = new AdminOrderHistoryEntry(
             DateTimeOffset.Parse("2026-01-01T10:00:00Z"),
             "order_created",
             "ثبت سفارش",
@@ -105,8 +106,10 @@ public sealed class AdminOrderCompletenessTests
             "system",
             "سیستم",
             "توسط سیستم",
-            "By system");
-        var newer = new AdminOperationalHistoryEntry(
+            "By system",
+            null,
+            null);
+        var newer = new AdminOrderHistoryEntry(
             DateTimeOffset.Parse("2026-01-02T10:00:00Z"),
             "payment_succeeded",
             "پرداخت موفق",
@@ -114,7 +117,9 @@ public sealed class AdminOrderCompletenessTests
             "system",
             "سیستم",
             "توسط سیستم",
-            "By system");
+            "By system",
+            null,
+            null);
         var ordered = new[] { older, newer }
             .OrderByDescending(x => x.OccurredAt)
             .ThenBy(x => x.Kind, StringComparer.Ordinal)
@@ -126,18 +131,18 @@ public sealed class AdminOrderCompletenessTests
     [Fact]
     public void Actor_labels_are_human_readable_without_technical_ids()
     {
-        var empty = new Dictionary<Guid, AdminOrderCompletenessComposer.ActorLabel>();
-        var system = AdminOrderCompletenessComposer.ResolveLabel(null, empty);
+        var empty = new Dictionary<Guid, AdminOrderActorLabel>();
+        var system = AdminOrderActorLabels.Resolve(null, empty);
         Assert.Equal("system", system.Kind);
         Assert.Equal("توسط سیستم", system.DisplayFa);
         Assert.DoesNotContain("اپراتور", system.DisplayFa, StringComparison.Ordinal);
 
         var userId = Guid.Parse("aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee");
-        var resolved = AdminOrderCompletenessComposer.ResolveLabel(
+        var resolved = AdminOrderActorLabels.Resolve(
             userId,
-            new Dictionary<Guid, AdminOrderCompletenessComposer.ActorLabel>
+            new Dictionary<Guid, AdminOrderActorLabel>
             {
-                [userId] = AdminOrderCompletenessComposer.ActorLabel.User("اپراتور آلفا"),
+                [userId] = AdminOrderActorLabel.User("اپراتور آلفا"),
             });
         Assert.Equal("user", resolved.Kind);
         Assert.Equal("اپراتور آلفا", resolved.DisplayName);
@@ -145,7 +150,7 @@ public sealed class AdminOrderCompletenessTests
         Assert.DoesNotContain("aaaaaaaa", resolved.DisplayFa, StringComparison.OrdinalIgnoreCase);
         Assert.DoesNotContain(userId.ToString("N")[..8], resolved.DisplayFa, StringComparison.OrdinalIgnoreCase);
 
-        var missing = AdminOrderCompletenessComposer.ResolveLabel(userId, empty);
+        var missing = AdminOrderActorLabels.Resolve(userId, empty);
         Assert.Equal("user", missing.Kind);
         Assert.Equal("توسط کاربر نامشخص", missing.DisplayFa);
         Assert.DoesNotContain(userId.ToString("N"), missing.DisplayFa, StringComparison.OrdinalIgnoreCase);
@@ -157,13 +162,13 @@ public sealed class AdminOrderCompletenessTests
     {
         var a = Guid.NewGuid();
         var b = Guid.NewGuid();
-        var map = new Dictionary<Guid, AdminOrderCompletenessComposer.ActorLabel>
+        var map = new Dictionary<Guid, AdminOrderActorLabel>
         {
-            [a] = AdminOrderCompletenessComposer.ActorLabel.User("A"),
-            [b] = AdminOrderCompletenessComposer.ActorLabel.User("B"),
+            [a] = AdminOrderActorLabel.User("A"),
+            [b] = AdminOrderActorLabel.User("B"),
         };
         var labels = new[] { a, a, b, a }
-            .Select(id => AdminOrderCompletenessComposer.ResolveLabel(id, map).DisplayName)
+            .Select(id => AdminOrderActorLabels.Resolve(id, map).DisplayName)
             .ToArray();
         Assert.Equal(new[] { "A", "A", "B", "A" }, labels);
         Assert.Equal(2, map.Count);

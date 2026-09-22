@@ -14,6 +14,7 @@
     <Project Path="Modules/Tooba.ModuleContracts/Tooba.ModuleContracts.csproj" />
     <Project Path="Modules/PlatformProbe/Tooba.PlatformProbe.Infrastructure/Tooba.PlatformProbe.Infrastructure.csproj" />
     <Project Path="Modules/Identity/Tooba.Identity.Domain/Tooba.Identity.Domain.csproj" />
+    <Project Path="Modules/Identity/Tooba.Identity.Contracts/Tooba.Identity.Contracts.csproj" />
     <Project Path="Modules/Identity/Tooba.Identity.Application/Tooba.Identity.Application.csproj" />
     <Project Path="Modules/Identity/Tooba.Identity.Infrastructure/Tooba.Identity.Infrastructure.csproj" />
     <Project Path="Modules/Party/Tooba.Party.Domain/Tooba.Party.Domain.csproj" />
@@ -44,6 +45,7 @@
     <Project Path="Modules/UserPreference/Tooba.UserPreference.Application/Tooba.UserPreference.Application.csproj" />
     <Project Path="Modules/UserPreference/Tooba.UserPreference.Infrastructure/Tooba.UserPreference.Infrastructure.csproj" />
     <Project Path="Modules/OperatorProfile/Tooba.OperatorProfile.Domain/Tooba.OperatorProfile.Domain.csproj" />
+    <Project Path="Modules/OperatorProfile/Tooba.OperatorProfile.Contracts/Tooba.OperatorProfile.Contracts.csproj" />
     <Project Path="Modules/OperatorProfile/Tooba.OperatorProfile.Application/Tooba.OperatorProfile.Application.csproj" />
     <Project Path="Modules/OperatorProfile/Tooba.OperatorProfile.Infrastructure/Tooba.OperatorProfile.Infrastructure.csproj" />
     <Project Path="Modules/ProductQnA/Tooba.ProductQnA.Domain/Tooba.ProductQnA.Domain.csproj" />
@@ -92,6 +94,7 @@
     <Project Path="Modules/Order/Tooba.Order.Application/Tooba.Order.Application.csproj" />
     <Project Path="Modules/Order/Tooba.Order.Endpoints/Tooba.Order.Endpoints.csproj" />
     <Project Path="Modules/Order/Tooba.Order.Infrastructure/Tooba.Order.Infrastructure.csproj" />
+    <Project Path="Modules/Order/Tooba.Order.Tests/Tooba.Order.Tests.csproj" />
   </Folder>
   <Folder Name="/Modules/Inventory/">
     <Project Path="Modules/Inventory/Tooba.Inventory.Domain/Tooba.Inventory.Domain.csproj" />
@@ -151,6 +154,7 @@
   <Folder Name="/Modules/Settlement/">
     <Project Path="Modules/Settlement/Tooba.Settlement.Domain/Tooba.Settlement.Domain.csproj" />
     <Project Path="Modules/Settlement/Tooba.Settlement.Application/Tooba.Settlement.Application.csproj" />
+    <Project Path="Modules/Settlement/Tooba.Settlement.Contracts/Tooba.Settlement.Contracts.csproj" />
     <Project Path="Modules/Settlement/Tooba.Settlement.Infrastructure/Tooba.Settlement.Infrastructure.csproj" />
     <Project Path="Modules/Settlement/Tooba.Settlement.Endpoints/Tooba.Settlement.Endpoints.csproj" />
     <Project Path="Modules/Settlement/Tooba.Settlement.Tests/Tooba.Settlement.Tests.csproj" />

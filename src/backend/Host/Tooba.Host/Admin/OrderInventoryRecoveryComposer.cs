@@ -13,6 +13,7 @@ using Tooba.Inventory.Domain.Aggregates;
 using Tooba.Inventory.Domain.ValueObjects;
 using Tooba.Inventory.Domain.Events;
 using Tooba.Order.Application;
+using Tooba.Order.Application.Admin.Completeness.History;
 using Tooba.Order.Domain;
 using Tooba.Order.Infrastructure.Persistence;
 using Tooba.Payment.Application.Models;
@@ -29,10 +30,10 @@ namespace Tooba.Host.Admin;
 
 public sealed class OrderInventoryRecoveryComposer
 {
-    public const string NotePrefixSucceeded = "[inventory_recovery:succeeded]";
-    public const string NotePrefixFailed = "[inventory_recovery:failed_insufficient]";
-    public const string NotePrefixManual = "[inventory_recovery:requires_manual_review]";
-    public const string NotePrefixRequested = "[inventory_recovery:requested]";
+    public const string NotePrefixSucceeded = AdminOrderInventoryRecoveryNotePrefixes.Succeeded;
+    public const string NotePrefixFailed = AdminOrderInventoryRecoveryNotePrefixes.Failed;
+    public const string NotePrefixManual = AdminOrderInventoryRecoveryNotePrefixes.Manual;
+    public const string NotePrefixRequested = AdminOrderInventoryRecoveryNotePrefixes.Requested;
 
     private readonly OrderDbContext _orders;
     private readonly IInventoryDirectory _inventory;

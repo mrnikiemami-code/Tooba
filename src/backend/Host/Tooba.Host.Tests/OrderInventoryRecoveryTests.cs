@@ -11,6 +11,14 @@ public sealed class OrderInventoryRecoveryTests
         return File.ReadAllText(Path.Combine(root, relative));
     }
 
+    private static string ReadOrderApplication(string relative)
+    {
+        var root = Path.GetFullPath(Path.Combine(
+            AppContext.BaseDirectory, "..", "..", "..", "..", "..",
+            "Modules", "Order", "Tooba.Order.Application"));
+        return File.ReadAllText(Path.Combine(root, relative));
+    }
+
     [Fact]
     public void Recovery_composer_never_resurrects_and_rolls_back_partial_acquire()
     {
@@ -42,11 +50,11 @@ public sealed class OrderInventoryRecoveryTests
     {
         var contracts = File.ReadAllText(Path.GetFullPath(Path.Combine(
             AppContext.BaseDirectory, "..", "..", "..", "..", "..", "Modules", "Fulfillment",
-            "Tooba.Fulfillment.Application", "FulfillmentContracts.cs")));
+            "Tooba.Fulfillment.Application", "Ports", "IFulfillmentDirectory.cs")));
         Assert.Contains("RebindActiveReservationsFromOrderAsync", contracts, StringComparison.Ordinal);
         var dir = File.ReadAllText(Path.GetFullPath(Path.Combine(
             AppContext.BaseDirectory, "..", "..", "..", "..", "..", "Modules", "Fulfillment",
-            "Tooba.Fulfillment.Infrastructure", "FulfillmentDirectory.cs")));
+            "Tooba.Fulfillment.Infrastructure", "Directories", "FulfillmentDirectory.cs")));
         var idx = dir.IndexOf("RebindActiveReservationsFromOrderAsync", StringComparison.Ordinal);
         Assert.True(idx >= 0);
         var slice = dir.Substring(idx, Math.Min(800, dir.Length - idx));
@@ -57,7 +65,8 @@ public sealed class OrderInventoryRecoveryTests
     [Fact]
     public void History_maps_inventory_recovery_note_kinds()
     {
-        var src = Read(Path.Combine("Admin", "AdminOrderCompletenessComposer.cs"));
+        var src = ReadOrderApplication(Path.Combine(
+            "Admin", "Completeness", "History", "AdminOrderHistoryComposer.cs"));
         Assert.Contains("inventory_recovery_requested", src, StringComparison.Ordinal);
         Assert.Contains("inventory_recovery_succeeded", src, StringComparison.Ordinal);
         Assert.Contains("inventory_recovery_failed_insufficient", src, StringComparison.Ordinal);

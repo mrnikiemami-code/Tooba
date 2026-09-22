@@ -1,0 +1,2 @@
+﻿# Inventory recovery compatibility
+AdminOrderInventoryRecoveryNotePrefixes mirror Host prefixes; TryMapInventoryRecoveryNote maps requested/succeeded/insufficient/manual_review; else operational_note.

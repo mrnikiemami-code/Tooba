@@ -1,4 +1,4 @@
-using System.Text.RegularExpressions;
+﻿using System.Text.RegularExpressions;
 using System.Xml.Linq;
 using Xunit;
 
@@ -8,7 +8,7 @@ public sealed class FulfillmentArchitectureGuardTests
 {
     private static readonly string[] AllowedDomainFolders = ["Aggregates", "Entities", "ValueObjects", "Events", "Policies"];
     private static readonly string[] AllowedApplicationFolders = ["Ports", "Models", "Shipping", "Commands", "Queries", "Errors"];
-    private static readonly string[] AllowedContractsFolders = ["Events", "Returns", "Errors"];
+    private static readonly string[] AllowedContractsFolders = ["Events", "Returns", "Errors", "History"];
     private static readonly string[] AllowedInfrastructureFolders =
         ["Persistence", "Directories", "Adapters", "Events", "Messaging", "DependencyInjection", "Migrations",
             "Gateways", "Bridges", "Handlers", "Shipping", "Observability", "Queries", "Errors"];

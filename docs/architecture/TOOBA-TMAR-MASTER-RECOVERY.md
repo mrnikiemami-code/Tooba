@@ -10,8 +10,8 @@ Current Golden Wave Closure (authoritative)
 - Inventory = INTERNAL_ONLY / NOT_APPLICABLE / INTERNAL_USE_CASE_BOUNDARIES
 - reopenedModules = empty; internalApplicabilityReviewModules = empty
 - Checkout = PAUSED_AT_SAFE_W5_CHECKPOINT
-- Order: INCOMPLETE_REFERENCE_REPAIR after TB-TMAR-ORDER-GOLDEN-001-R1
-- Next task: TB-TMAR-ORDER-GOLDEN-001-R2A
+- Order: INCOMPLETE_REFERENCE_REPAIR after TB-TMAR-ORDER-GOLDEN-001-R2C
+- Next task: TB-TMAR-ORDER-GOLDEN-001-R3
 - Gate: ORDER_GOLDEN_REPAIR_REQUIRED
 - Closed by: TB-TMAR-GOLDEN-WAVE-FINAL-CLOSURE-001
 
@@ -592,3 +592,4 @@ read latest recovery-sot
 identify last accepted Task-ID
 
 continue from next task without reconstructing from guesses
+

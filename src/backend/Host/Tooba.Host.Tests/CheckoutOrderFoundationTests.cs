@@ -153,7 +153,12 @@ public sealed class CheckoutOrderFoundationTests : IAsyncLifetime
             Assert.DoesNotContain("Tooba.Pricing.Infrastructure", csproj, StringComparison.Ordinal);
             Assert.DoesNotContain("Tooba.Tax.Infrastructure", csproj, StringComparison.Ordinal);
             Assert.DoesNotContain("Tooba.Promotion.Infrastructure", csproj, StringComparison.Ordinal);
-            Assert.DoesNotContain("Tooba.Identity", csproj, StringComparison.Ordinal);
+            Assert.DoesNotContain("Tooba.Identity.Application", csproj, StringComparison.Ordinal);
+            Assert.DoesNotContain("Tooba.Identity.Domain", csproj, StringComparison.Ordinal);
+            Assert.DoesNotContain("Tooba.Identity.Infrastructure", csproj, StringComparison.Ordinal);
+            Assert.DoesNotContain("Tooba.OperatorProfile.Application", csproj, StringComparison.Ordinal);
+            Assert.DoesNotContain("Tooba.OperatorProfile.Domain", csproj, StringComparison.Ordinal);
+            Assert.DoesNotContain("Tooba.OperatorProfile.Infrastructure", csproj, StringComparison.Ordinal);
         }
 
         var application = File.ReadAllText(Path.Combine(root, "src", "backend", "Modules", "Order", "Tooba.Order.Application", "Tooba.Order.Application.csproj"));
@@ -163,6 +168,11 @@ public sealed class CheckoutOrderFoundationTests : IAsyncLifetime
         Assert.Contains("Tooba.Pricing.Contracts", application);
         Assert.Contains("Tooba.Inventory.Contracts", application);
         Assert.Contains("Tooba.Tax.Contracts", application);
+        Assert.Contains("Tooba.Identity.Contracts", application);
+        Assert.Contains("Tooba.OperatorProfile.Contracts", application);
+        Assert.Contains("Tooba.Fulfillment.Contracts", application);
+        Assert.Contains("Tooba.Returns.Contracts", application);
+        Assert.Contains("Tooba.Settlement.Contracts", application);
         Assert.DoesNotContain("Tooba.Promotion.Application", application);
         Assert.Contains("Tooba.Promotion.Contracts", File.ReadAllText(Path.Combine(root, "src", "backend", "Modules", "Order", "Tooba.Order.Infrastructure", "Tooba.Order.Infrastructure.csproj")));
         Assert.DoesNotContain("Tooba.Tax.Infrastructure", File.ReadAllText(Path.Combine(root, "src", "backend", "Modules", "Order", "Tooba.Order.Infrastructure", "Tooba.Order.Infrastructure.csproj")), StringComparison.Ordinal);
