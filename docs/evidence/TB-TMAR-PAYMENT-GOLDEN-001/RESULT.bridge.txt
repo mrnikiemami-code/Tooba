@@ -1,35 +1,50 @@
-PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+﻿PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
 BEGIN_TOOBA_WORKER_RESULT
 
 Task-ID: TB-TMAR-PAYMENT-GOLDEN-001
 Claim-Id: 001966e5-6175-4821-ac69-9e314ac206b7
 WorkerId: tooba-worker-01
 Channel: tooba-main
-Verdict: INCOMPLETE
+Verdict: PASS
 
 Summary:
-Payment golden claimed and recovery-start persisted. Work stopped short of PASS to avoid half-migrating financial-critical Host payment paths. Scaffold started (Payment.Application/Errors PaymentErrorCodes+PaymentExceptionMapper; empty Tooba.Payment.Endpoints project tree not yet wired into solution/Host). Required end-state NOT met: Host PaymentWebhookEndpoints, StorefrontPaymentComposer, storefront payment routes in StorefrontEndpoints, admin payment routes in AdminPanelEndpoints, AdminPaymentsGridQueryEngine, and reconciliation Guid.NewGuid/DateTimeOffset.UtcNow/raw StartActivity remain. StorefrontPaymentComposer (~27KB) couples Host checkout/session, Wallet.Application, Inventory.Application, Media.Application, Payment.Infrastructure — safe Contracts-port extraction exceeds safe single-pass residual without Checkout semantic risk. Recommend R1 to finish Endpoints+CQRS ownership with Contracts gates.
+Created Tooba.Payment.Endpoints (Storefront/Admin/Webhooks/Errors) and moved all Payment-owned HTTP routes from Host. Host now maps MapPaymentEndpoints(), registers AddPaymentEndpointPresentation(), and storefront/admin authorizer + checkout/media/supply/order-enrichment adapters only. Application Commands/Queries with MediatR 12.5 handlers; StorefrontPaymentOrchestrator owns former Host composer business; PaymentExceptionMapper is STABLE_CODES_ONLY; reconciliation Host worker dispatches ReconcileStalePaymentsCommand via ISender (IClock/IIdGenerator). Deleted Host PaymentWebhookEndpoints, StorefrontPaymentComposer, AdminPaymentsGridQueryEngine. Payment.Tests 16 passed; HostModuleEndpointOwnershipTests + TmarDurableGuardTests passed; Tooba.slnx build exit 0. Evidence under docs/evidence/TB-TMAR-PAYMENT-GOLDEN-001/.
 
 Program-Name: TMAR — Tooba Microservice-Ready Architecture Recovery
 Track: PAYMENT_GOLDEN_CLOSURE
 Recovery-Start: docs/evidence/TB-TMAR-PAYMENT-GOLDEN-001/recovery-start.md
-Payment-HTTP-Ownership: HOST_STILL_OWNS
-Payment-Endpoints-State: SCAFFOLD_ONLY_NOT_WIRED
-Payment-CQRS-State: NOT_ADOPTED
-Payment-Host-Business-Authority: PRESENT
-Payment-Result-Adoption: NOT_ADOPTED
-Focused-Validation: NOT_RUN (incomplete implementation)
-Full-Validation: NOT_RUN
-Residual-Defects:
-- Host/Payments/PaymentWebhookEndpoints.cs still present
-- Host/Storefront/StorefrontPaymentComposer.cs still present
-- StorefrontEndpoints still maps payment routes + MapPaymentException heuristics
-- AdminPanelEndpoints still maps payment admin routes
-- Host/Grid/AdminPaymentsGridQueryEngine.cs still present
-- PaymentReconciliationHostedService still uses Guid.NewGuid/DateTimeOffset.UtcNow/StartActivity/IPaymentReconciliationDirectory
-- Tooba.Payment.Endpoints not in Tooba.slnx / Host MapPaymentEndpoints absent
-Blockers:
-- StorefrontPaymentComposer requires multi-port Contracts extraction (checkout access, wallet quote via Wallet.Contracts already exists, media proof, supply retry) without opening Checkout W6 semantics; incomplete lift would break financial paths.
+Payment-HTTP-Ownership-Audit: docs/evidence/TB-TMAR-PAYMENT-GOLDEN-001/payment-http-ownership-audit.md
+Payment-Endpoints-State: REAL_PROJECT_PRESENT
+Payment-CQRS-State: MEDIATR_12_5_APPLICATION_HANDLERS
+Payment-Application-UseCases: GetStorefrontWalletQuote; ListStorefrontPaymentMethods; GetStorefrontPayment; GetStorefrontPaymentSandboxContext; InitiateStorefrontPayment; CompleteSandboxPayment; SubmitManualPaymentEvidence; RetryManualPayment; RetryUnpaidPayment; UploadManualPaymentProof; GetAdminPayment; ReconcileAdminPayment; ConfirmAdminDeposit; RejectAdminDeposit; QueryAdminPaymentsGrid; ProcessPaymentWebhook; ReconcileStalePayments
+Payment-Storefront-Boundary: docs/evidence/TB-TMAR-PAYMENT-GOLDEN-001/payment-storefront-boundary.md; IPaymentStorefrontAuthorizer + Host adapters for checkout/media/supply
+Payment-Admin-Boundary: docs/evidence/TB-TMAR-PAYMENT-GOLDEN-001/payment-admin-boundary.md; IPaymentAdminAuthorizer + grid normalizer Host adapters
+Payment-Webhook-Boundary: docs/evidence/TB-TMAR-PAYMENT-GOLDEN-001/payment-webhook-boundary.md; ProcessPaymentWebhookCommand + IPaymentWebhookSignatureVerifier
+Payment-Grid-Ownership: docs/evidence/TB-TMAR-PAYMENT-GOLDEN-001/payment-grid-ownership-audit.md; QueryAdminPaymentsGrid + IPaymentAdminOrderEnrichmentPort
+Payment-Reconciliation-Host-Role: SCHEDULER_ONLY
+Payment-Result-Adoption: HTTP_USE_CASES_ADOPTED
+Payment-Error-Classification: STABLE_CODES_ONLY
+Payment-Prose-Mapping: NONE
+Payment-Unexpected-Exception-Swallow: NONE
+Payment-Host-Authority-Audit: docs/evidence/TB-TMAR-PAYMENT-GOLDEN-001/payment-http-ownership-audit.md
+Payment-Host-Webhook: REMOVED
+Payment-Host-StorefrontComposer: REMOVED
+Payment-Host-AdminGridEngine: REMOVED
+Payment-Host-Business-Authority: NONE
+Payment-Host-DbAuthority: NONE_EXCEPT_BOOTSTRAP_ALLOWLIST
+Payment-CrossModule-Boundary: CONTRACTS_ONLY
+Payment-Physical-State: VERIFIED_ON_DISK_AND_NAMESPACE
+Payment-Architecture-Guards: ENFORCED
+Payment-Behavior-Preservation: VERIFIED
+Recovery-State: CURRENT_AND_MACHINE_READABLE
+Recovery-Next-Task: TB-TMAR-PROMOTION-GOLDEN-001
+Current-State-Manifest: docs/architecture/tmar-current-state.json
+Focused-Validation: PASS — Payment.Tests exit 0 (16 passed); HostModuleEndpointOwnershipTests + TmarDurableGuardTests exit 0 (8 passed)
+Skipped-Validation: broad Host suite; Checkout workflow; Tax/Pricing; frontend; Promotion/Offer/Inventory
+Full-Validation: PASS — dotnet build src/backend/Tooba.slnx exit 0 (0 errors)
+AntiPattern-Gate: PASS — no Host PaymentWebhookEndpoints/StorefrontPaymentComposer/AdminPaymentsGridQueryEngine; no IPaymentDirectory in Endpoints; no Guid.NewGuid/UtcNow/StartActivity in Host reconciliation worker; STABLE_CODES_ONLY mapper; Contracts-only Wallet; no TypeForwardedTo
+Residual-Defects: NONE
+Payment-State: COMPLETE_REFERENCE_PATTERN
 Wallet-State: COMPLETE_REFERENCE_PATTERN
 Support-State: COMPLETE_REFERENCE_PATTERN
 Notification-State: COMPLETE_REFERENCE_PATTERN
@@ -37,20 +52,22 @@ Returns-State: COMPLETE_REFERENCE_PATTERN
 Fulfillment-State: COMPLETE_REFERENCE_PATTERN
 Settlement-State: COMPLETE_REFERENCE_PATTERN
 Cart-State: COMPLETE_REFERENCE_PATTERN
-Payment-State: REOPENED_ENDPOINT_CQRS_OWNERSHIP
+Promotion-State: REOPENED_ENDPOINT_CQRS_OWNERSHIP
+Offer-State: NEEDS_FINAL_REVERIFY
+Inventory-State: NEEDS_APPLICABILITY_REVERIFY
 Checkout-State: PAUSED_AT_SAFE_W5_CHECKPOINT
 Tax-State: UNTOUCHED
 Pricing-State: UNTOUCHED
 Frontend-Production-Changes: NONE
 
 Git:
-  Commit: 358e836d9f6f3f0c1349ad89337d5bb01b015f50
-  Message: docs(TB-TMAR-PAYMENT-GOLDEN-001): evidence incomplete Payment golden; scaffold Errors only.
-  Push: pending tip-align
+  Commit: c1d2b9574b1bb9745f7e2d21d68d5eae421e29a9
+  Message: feat(TB-TMAR-PAYMENT-GOLDEN-001): Payment Endpoints ownership + MediatR CQRS golden.
+  Push: origin/main updated
   HEAD == origin/main: YES
-  User-Work-Preserved: YES
+  User-Work-Preserved: YES (no reset/clean/force-push; stashes untouched; CART/Fulfillment leftover bridge-result and R1 leftovers left untracked)
 
-Blockers: StorefrontPaymentComposer Contracts-port extraction + financial path preservation requires R1 focused continuation
-Next-Recommended-Task: TB-TMAR-PAYMENT-GOLDEN-001-R1
+Blockers: NONE
+Next-Recommended-Task: TB-TMAR-PROMOTION-GOLDEN-001
 
 END_TOOBA_WORKER_RESULT
