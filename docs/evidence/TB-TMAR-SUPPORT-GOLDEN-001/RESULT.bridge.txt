@@ -48,9 +48,9 @@ Pricing-State: UNTOUCHED
 Frontend-Production-Changes: NONE
 
 Git:
-  Commit: 66ca07787522adad779a87db98c64ffac3c80758
-  Message: feat(TB-TMAR-SUPPORT-GOLDEN-001): Support Endpoints + CQRS Host ownership closure.
-  Push: origin/main updated a20ef51f..66ca07787522adad779a87db98c64ffac3c80758
+  Commit: 47afb5106fea249fd560b210284478a877ede1e6
+  Message: docs(TB-TMAR-SUPPORT-GOLDEN-001): add Bridge Result artifact.
+  Push: origin/main updated a20ef51f..47afb5106fea249fd560b210284478a877ede1e6
   HEAD == origin/main: YES
   User-Work-Preserved: YES (no reset/clean/force-push; stashes untouched; CART/Fulfillment leftover bridge-result files left untracked)
 
