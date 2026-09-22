@@ -1,4 +1,4 @@
-PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+﻿PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
 BEGIN_TOOBA_WORKER_RESULT
 
 Task-ID: TB-TMAR-NOTIFICATION-GOLDEN-001
@@ -47,9 +47,9 @@ Pricing-State: UNTOUCHED
 Frontend-Production-Changes: NONE
 
 Git:
-  Commit: TIP_ALIGN_PENDING
+  Commit: 2757f23bc43bf5bd5654b319cccf625ef4205e71
   Message: feat(TB-TMAR-NOTIFICATION-GOLDEN-001): Notification Endpoints + CQRS Host ownership closure.
-  Push: pending
+  Push: pending tip-align
   HEAD == origin/main: pending
   User-Work-Preserved: YES (no reset/clean/force-push; stashes untouched; cart/fulfillment bridge leftovers left untracked)
 
