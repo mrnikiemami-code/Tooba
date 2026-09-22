@@ -1,10 +1,10 @@
-﻿{
+{
   "program": "TMAR — Tooba Microservice-Ready Architecture Recovery",
   "executionMode": "BACKEND_ONLY_UNTIL_EXPLICIT_RELEASE",
   "frontendFrozen": true,
   "checkoutState": "PAUSED_AT_SAFE_W5_CHECKPOINT",
   "lastAcceptedTask": "TB-TMAR-PAYMENT-GOLDEN-001",
-  "lastAcceptedCommit": "ac03eb9b857cc68b291c1c63ece5c1669b7ea1df",
+  "lastAcceptedCommit": "d743bf22f38b366562ff472f5a1cc69240f609ba",
   "nextTask": "TB-TMAR-PROMOTION-GOLDEN-001",
   "locksVersion": "ARCH-COMPLETE-001",
   "definitionMarker": "COMPLETE_REFERENCE_PATTERN_REQUIRES_ENDPOINTS_CQRS_RESULT_CONTRACTS_GUARDS_SOT",
@@ -80,7 +80,7 @@
       "endpointOwnership": "MODULE_ENDPOINTS",
       "cqrs": "MEDIATR_12_5",
       "lastAcceptedTask": "TB-TMAR-PAYMENT-GOLDEN-001",
-      "lastAcceptedCommit": "ac03eb9b857cc68b291c1c63ece5c1669b7ea1df"
+      "lastAcceptedCommit": "d743bf22f38b366562ff472f5a1cc69240f609ba"
     }
   ],
   "reopenedModules": [

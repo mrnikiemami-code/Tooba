@@ -1,4 +1,4 @@
-﻿PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
 BEGIN_TOOBA_WORKER_RESULT
 
 Task-ID: TB-TMAR-PAYMENT-GOLDEN-001
@@ -61,9 +61,9 @@ Pricing-State: UNTOUCHED
 Frontend-Production-Changes: NONE
 
 Git:
-  Commit: ac03eb9b857cc68b291c1c63ece5c1669b7ea1df
+  Commit: d743bf22f38b366562ff472f5a1cc69240f609ba
   Message: docs(TB-TMAR-PAYMENT-GOLDEN-001): tip-align Result Git SHA to final tip.
-  Implementation-Commit: ac03eb9b857cc68b291c1c63ece5c1669b7ea1df
+  Implementation-Commit: d743bf22f38b366562ff472f5a1cc69240f609ba
   Push: origin/main updated
   HEAD == origin/main: YES
   User-Work-Preserved: YES (no reset/clean/force-push; stashes untouched; CART/Fulfillment leftover bridge-result and R1 leftovers left untracked)
@@ -72,6 +72,3 @@ Blockers: NONE
 Next-Recommended-Task: TB-TMAR-PROMOTION-GOLDEN-001
 
 END_TOOBA_WORKER_RESULT
-
-
-
