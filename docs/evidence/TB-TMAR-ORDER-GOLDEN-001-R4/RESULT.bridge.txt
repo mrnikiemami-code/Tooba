@@ -1,0 +1,33 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+BEGIN_TOOBA_WORKER_RESULT
+
+Task-ID: TB-TMAR-ORDER-GOLDEN-001-R4
+Parent-Task: TB-TMAR-ORDER-GOLDEN-001-R3B-R3
+Status: PASS
+
+Summary: Moved Inventory Recovery and Supply authority from Host into Order MediatR CQRS. Host composers/endpoints/temporary bridges removed. Three routes owned by Order.Endpoints via ISender. Behavior parity preserved; Contracts-only foreign boundaries. Order remains INCOMPLETE_REFERENCE_REPAIR; Checkout W5 paused; nextTask R5 not started.
+Recovery-State: R4 recorded in SoT; Checkout PAUSED_AT_SAFE_W5_CHECKPOINT
+Inventory-Recovery-State: Order.Application Admin/InventoryRecovery owns audit/assess (+ recover when required); Host OrderInventoryRecoveryComposer absent
+Order-Supply-State: Order.Application Admin/Supply owns supply status/ensure; Host OrderSupplyComposer absent
+Order-Endpoint-State: Order.Endpoints AdminOrderInventoryRecoverySupplyEndpoints owns GET inventory-recovery/audit, GET {checkoutId}/inventory-recovery, GET {checkoutId}/supply-status via ISender
+Order-CQRS-State: AuditOrderInventoryRecovery, AssessOrderInventoryRecovery, GetOrderSupplyStatus queries; typed handlers; no mega dispatcher
+Order-Host-DbAuthority: no Host OrderDbContext for Recovery/Supply paths; Infra readers own persistence
+Order-Foreign-Boundary: Order Application uses ports + Inventory/Fulfillment Contracts only; no Inventory.Application refs in Order Application
+Behavior-Parity: recovery classes/audit/reasons, supply states/shortage, paid-durable ensure/reacquire preserved; Host consumers use Order-owned OrderSupplyService
+Architecture-Guard-Validation: Order architecture guards PASS (29 Architecture filter tests)
+Focused-Validation: Order.Tests 53; Inventory.Tests 7; Host focused Recovery/Supply/Ops 48 PASS (agent); parent reconfirmed Architecture 29 + full build
+Full-Validation: dotnet build src/backend/Tooba.slnx succeeded 0 errors
+Host-Removed-This-Task: OrderInventoryRecoveryComposer; OrderSupplyComposer; AdminOrderInventoryRecoverySupplyEndpoints; HostAdminOrderOperationsInventoryRecoveryAdapter; HostAdminOrderOperationsSupplyAdapter; HostAdminOrderSupplyStatusReader
+Host-Still-Remaining-For-Order: AdminPanelComposer order detail; CustomerPanelComposer; ReservationCycleCoordinator/Mapper (consume Order-owned supply); Storefront checkout/pending-payment/shipping; Checkout W6 paused
+Allowed-Host-Adapters: HostOrderAdminAuthorizer; HostOrderAdminEffectiveAccessReader (auth/composition only)
+Residual-Defects: HTTP response now Offer-style ApiResponseFactory envelope vs prior raw Results.Json; Storefront Order surfaces still Host (R5)
+Order-Overall-State: INCOMPLETE_REFERENCE_REPAIR
+Checkout-State: PAUSED_AT_SAFE_W5_CHECKPOINT
+Frontend-Production-Changes: none
+Recovery-Next-Task: TB-TMAR-ORDER-GOLDEN-001-R5
+Git: b58adf8f81000ee0dafe7d2a190e7293ccc1378b pushed origin/main; HEAD==origin/main
+Blockers: none
+User-Work-Preserved: yes; unrelated untracked R2C RESULT.bridge.txt untouched
+Next-Recommended-Task: TB-TMAR-ORDER-GOLDEN-001-R5
+
+END_TOOBA_WORKER_RESULT
