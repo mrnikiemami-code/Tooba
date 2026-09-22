@@ -1,0 +1,54 @@
+﻿PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+BEGIN_TOOBA_WORKER_RESULT
+
+Task-ID: TB-TMAR-PAYMENT-GOLDEN-001-R1
+Claim-Id: f35dff47-6507-42c9-ad11-a7efc9ab2258
+WorkerId: tooba-worker-01
+Channel: tooba-main
+Verdict: PASS
+
+Summary:
+R1 Payment safe foundation PASS. Tooba.Payment.Endpoints is real and Host-wired (MapPaymentEndpoints + AddPaymentEndpointPresentation). Webhook POST /v1/payments/webhooks/{providerCode} is module Endpoints→ISender→ProcessPaymentWebhookCommand. Admin detail/actions (get/reconcile/confirm-deposit/reject-deposit) are module Endpoints→ISender. Host PaymentReconciliationHostedService is scheduler-only (ISender + ReconcileStalePaymentsCommand; no IPaymentReconciliationDirectory/UtcNow/Guid.NewGuid/StartActivity). PaymentExceptionMapper is STABLE_CODES_ONLY. Storefront + admin-grid contract plans recorded; storefront/grid HTTP also already moved in-repo during this wave, but Payment COMPLETE remains deferred to R2 per R1 Result contract. SoT nextTask=TB-TMAR-PAYMENT-GOLDEN-001-R2; Payment-State=IN_PROGRESS_GOLDEN_R2_READY. Payment.Tests 16/16; Host durable ownership tests 8/8; Tooba.slnx build 0 errors.
+
+Program-Name: TMAR — Tooba Microservice-Ready Architecture Recovery
+Track: PAYMENT_GOLDEN_CLOSURE_R1
+Recovery-Start: docs/evidence/TB-TMAR-PAYMENT-GOLDEN-001-R1/recovery-start.md
+Payment-R1-Endpoints-Project: REAL_AND_WIRED
+Payment-R1-Webhook: MODULE_ENDPOINTS_CQRS
+Payment-R1-Admin-DetailActions: MODULE_ENDPOINTS_CQRS
+Payment-R1-Reconciliation-Host: SCHEDULER_ONLY
+Payment-R1-CQRS: MEDIATR_12_5_REAL
+Payment-R1-Error-Classification: STABLE_CODES_ONLY
+Payment-R1-Storefront-Plan: CONTRACTS_TARGET_EXPLICIT
+Payment-R1-AdminGrid-Plan: CONTRACTS_TARGET_EXPLICIT
+Payment-R1-Architecture-Guards: ENFORCED
+Focused-Validation: PASS — Payment.Tests 16/16; HostModuleEndpointOwnershipTests + TmarDurableGuardTests 8/8
+Full-Validation: PASS — dotnet build src/backend/Tooba.slnx exit 0
+Residual-Defects: NONE for R1 criteria; Architect COMPLETE of Payment deferred to R2
+Payment-State: IN_PROGRESS_GOLDEN_R2_READY
+Recovery-State: CURRENT_AND_MACHINE_READABLE
+Recovery-Next-Task: TB-TMAR-PAYMENT-GOLDEN-001-R2
+Current-State-Manifest: docs/architecture/tmar-current-state.json
+Wallet-State: COMPLETE_REFERENCE_PATTERN
+Support-State: COMPLETE_REFERENCE_PATTERN
+Notification-State: COMPLETE_REFERENCE_PATTERN
+Returns-State: COMPLETE_REFERENCE_PATTERN
+Fulfillment-State: COMPLETE_REFERENCE_PATTERN
+Settlement-State: COMPLETE_REFERENCE_PATTERN
+Cart-State: COMPLETE_REFERENCE_PATTERN
+Checkout-State: PAUSED_AT_SAFE_W5_CHECKPOINT
+Tax-State: UNTOUCHED
+Pricing-State: UNTOUCHED
+Frontend-Production-Changes: NONE
+
+Git:
+  Commit: 3cece00a8ed13d8deb135a36f1c21d2c0b75d1e1
+  Message: docs(TB-TMAR-PAYMENT-GOLDEN-001-R1): sync R1 SoT to IN_PROGRESS_GOLDEN_R2_READY.
+  Push: origin/main updated
+  HEAD == origin/main: YES
+  User-Work-Preserved: YES (no reset/clean/force-push; stashes untouched; unrelated CART/Fulfillment leftover bridge-result files left untracked)
+
+Blockers: NONE
+Next-Recommended-Task: TB-TMAR-PAYMENT-GOLDEN-001-R2
+
+END_TOOBA_WORKER_RESULT
