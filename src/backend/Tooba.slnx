@@ -146,6 +146,7 @@
     <Project Path="Modules/Settlement/Tooba.Settlement.Domain/Tooba.Settlement.Domain.csproj" />
     <Project Path="Modules/Settlement/Tooba.Settlement.Application/Tooba.Settlement.Application.csproj" />
     <Project Path="Modules/Settlement/Tooba.Settlement.Infrastructure/Tooba.Settlement.Infrastructure.csproj" />
+    <Project Path="Modules/Settlement/Tooba.Settlement.Endpoints/Tooba.Settlement.Endpoints.csproj" />
     <Project Path="Modules/Settlement/Tooba.Settlement.Tests/Tooba.Settlement.Tests.csproj" />
   </Folder>
   <Folder Name="/Modules/Notification/">

@@ -1,5 +1,5 @@
 using Tooba.BuildingBlocks;
-using Tooba.Host.Settlement;
+using Tooba.Host.Admin;
 
 namespace Tooba.Host;
 
@@ -22,7 +22,7 @@ internal static class MarketplaceAdminDevBootstrap
                     Resource = new AuthorizationResource
                     {
                         Type = AuthorizationObjectTypes.Tenant,
-                        Id = SettlementAdminAccess.MarketplacePlatformTenantId,
+                        Id = HostSettlementAdminAuthorizer.MarketplacePlatformTenantId,
                     },
                     Relation = AuthorizationRelations.Member,
                 },

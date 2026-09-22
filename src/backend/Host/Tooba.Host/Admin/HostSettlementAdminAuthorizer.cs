@@ -1,28 +1,32 @@
 using Tooba.BuildingBlocks;
 using Tooba.Host.Admin;
+using Tooba.Settlement.Endpoints.Admin;
 
-namespace Tooba.Host.Settlement;
+namespace Tooba.Host.Admin;
 
 /// <summary>
-/// مجوز admin تسویه: Single-Store از tenant موجود؛ Marketplace در Development از tenant پلتفرم synthetic.
+/// اتصال Host به درز احراز Settlement admin Endpoints.
+/// Single-Store از tenant موجود؛ Marketplace در Development از tenant پلتفرم synthetic.
 /// </summary>
-internal static class SettlementAdminAccess
+public sealed class HostSettlementAdminAuthorizer : ISettlementAdminAuthorizer
 {
-    internal const string MarketplacePlatformTenantId = "marketplace-platform";
+    /// <summary>شناسه tenant synthetic پلتفرم Marketplace در Development.</summary>
+    public const string MarketplacePlatformTenantId = "marketplace-platform";
 
-    public static async Task<Guid> RequireAuthorizedAsync(
-        HttpRequest request,
-        CurrentAuthenticatedSession session,
-        ICurrentTenant currentTenant,
-        ControlPlaneRegistry registry,
-        IAuthorizationGuard guard,
-        IHostEnvironment environment,
-        CancellationToken cancellationToken)
+    /// <inheritdoc />
+    public async Task<Guid> RequireAuthorizedAsync(HttpContext httpContext, CancellationToken cancellationToken)
     {
-        if (currentTenant.Current is not null)
+        ArgumentNullException.ThrowIfNull(httpContext);
+        var session = httpContext.RequestServices.GetRequiredService<CurrentAuthenticatedSession>();
+        var tenant = httpContext.RequestServices.GetRequiredService<ICurrentTenant>();
+        var registry = httpContext.RequestServices.GetRequiredService<ControlPlaneRegistry>();
+        var guard = httpContext.RequestServices.GetRequiredService<IAuthorizationGuard>();
+        var environment = httpContext.RequestServices.GetRequiredService<IHostEnvironment>();
+
+        if (tenant.Current is not null)
         {
             return await AdminPanelAccess.RequireAuthorizedAsync(
-                request, session, currentTenant, guard, environment, cancellationToken);
+                httpContext.Request, session, tenant, guard, environment, cancellationToken);
         }
 
         if (!environment.IsDevelopment() || registry.Edition != ToobaEdition.Marketplace)
@@ -30,7 +34,7 @@ internal static class SettlementAdminAccess
             throw new PlatformHttpException(503, "زمینهٔ فروشگاه در دسترس نیست.", "admin.tenant.missing");
         }
 
-        var actorUserId = AdminPanelAccess.ResolveActorUserId(request, session, environment);
+        var actorUserId = AdminPanelAccess.ResolveActorUserId(httpContext.Request, session, environment);
         var decision = await guard.AuthorizeUseCaseAsync(
             new AuthorizationCheck
             {

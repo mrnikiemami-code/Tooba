@@ -88,14 +88,16 @@ public sealed class AdminDbNativeGridQueryTests
             Path.Combine(root, "Story", "StoryPanelComposer.cs"),
         };
 
-        var settlementEndpoints = Path.Combine(root, "Settlement", "SettlementEndpoints.cs");
+        var settlementEndpoints = Path.Combine(
+            root, "..", "..", "Modules", "Settlement", "Tooba.Settlement.Endpoints", "Admin", "SettlementAdminEndpoints.cs");
         Assert.True(File.Exists(settlementEndpoints), $"missing {settlementEndpoints}");
         var settlementText = File.ReadAllText(settlementEndpoints);
-        Assert.DoesNotContain("AdminListGridPolicies.Payouts.Execute", settlementText);
+        Assert.DoesNotContain("AdminListGridPolicies.Payouts", settlementText);
         Assert.DoesNotContain("SettlementDbContext", settlementText);
         Assert.DoesNotContain("PartyDbContext", settlementText);
         Assert.DoesNotContain("BoundedListGridQueryEngine", settlementText);
         Assert.DoesNotContain("InMemoryGridQueryEngine", settlementText);
+        Assert.False(File.Exists(Path.Combine(root, "Settlement", "SettlementEndpoints.cs")));
 
         foreach (var file in files)
         {

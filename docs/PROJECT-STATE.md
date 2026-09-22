@@ -62,7 +62,7 @@ TB-P05-GATE
 Last Implementation Task:
 
 ```text
-TB-P10-T022-R21
+TB-TMAR-SETTLEMENT-GOLDEN-001
 ```
 
 Last Architecture Audit Task:
@@ -74,16 +74,44 @@ TB-P10-T022-R14
 Current Issued Task:
 
 ```text
-TB-TMAR-CART-GOLDEN-001 (reopened; repaired by TB-TMAR-CART-GOLDEN-001-R1 — awaiting Architect / USER_CART_REVIEW_CHECKPOINT)
+TB-TMAR-SETTLEMENT-GOLDEN-001 (Worker PASS — awaiting Architect)
 ```
 
 Current Repair Task:
 
 ```text
-TB-TMAR-CART-GOLDEN-001-R1 (Worker PASS — awaiting Architect)
+none
 ```
 
 TMAR Module Recovery (Worker PASS — awaiting Architect):
+
+```text
+TB-TMAR-SETTLEMENT-GOLDEN-001 — Settlement Endpoints Ownership + CQRS/Result + Physical Golden Closure
+Settlement-State: COMPLETE_REFERENCE_PATTERN
+Settlement-HTTP-Ownership: MODULE_ENDPOINTS
+Settlement-Endpoints-State: REAL_PROJECT_PRESENT
+Settlement-CQRS-State: MEDIATR_12_5_APPLICATION_HANDLERS
+Settlement-Host-Endpoints: REMOVED
+Settlement-Host-Business-Authority: NONE
+Settlement-Host-DbAuthority: NONE
+Settlement-Grid-Ownership: MODULE_OWNED
+Settlement-CrossModule-Boundary: CONTRACTS_ONLY
+Settlement-Result-Adoption: HTTP_USE_CASES_ADOPTED
+Settlement-Error-Classification: STABLE_CODES_ONLY
+Settlement-Prose-Mapping: NONE
+Settlement-Unexpected-Exception-Swallow: NONE
+Settlement-Physical-State: VERIFIED_ON_DISK_AND_NAMESPACE
+Settlement-Architecture-Guards: ENFORCED
+Settlement-Behavior-Preservation: VERIFIED
+Cart-State: COMPLETE_REFERENCE_PATTERN
+Checkout-State: PAUSED_AT_SAFE_W5_CHECKPOINT
+Tax-State: DEFERRED_PHYSICAL_REVIEW_BY_USER
+Pricing-State: DEFERRED_PHYSICAL_REVIEW_BY_USER
+Frontend-Production-Changes: NONE
+Next-Recommended-Task: ARCHITECT_SELECT_NEXT_REOPENED_MODULE
+```
+
+Prior TMAR Cart golden (awaiting Architect / USER_CART_REVIEW_CHECKPOINT):
 
 ```text
 TB-TMAR-CART-GOLDEN-001-R1 — Cart Exception/Result Semantics Closure

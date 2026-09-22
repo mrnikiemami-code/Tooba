@@ -11,6 +11,7 @@ public sealed class SettlementArchitectureGuardTests
     private static readonly string[] AllowedInfrastructureFolders =
         ["Persistence", "Directories", "Messaging", "DependencyInjection", "Bridges", "Gateways", "Handlers",
             "Observability", "Queries", "Errors", "Migrations"];
+    private static readonly string[] AllowedEndpointsFolders = ["Seller", "Admin", "Errors", "Resources"];
 
     private static readonly HashSet<string> HostDbContextAllowlist = new(StringComparer.OrdinalIgnoreCase)
     {
@@ -46,14 +47,22 @@ public sealed class SettlementArchitectureGuardTests
         AssertNoRootDump("Tooba.Settlement.Domain", AllowedDomainFolders);
         AssertNoRootDump("Tooba.Settlement.Application", AllowedApplicationFolders);
         AssertNoRootDump("Tooba.Settlement.Infrastructure", AllowedInfrastructureFolders);
+        AssertNoRootDump("Tooba.Settlement.Endpoints", AllowedEndpointsFolders);
         AssertNamespacesAlign("Tooba.Settlement.Domain", "Tooba.Settlement.Domain");
         AssertNamespacesAlign("Tooba.Settlement.Application", "Tooba.Settlement.Application");
         AssertNamespacesAlign("Tooba.Settlement.Infrastructure", "Tooba.Settlement.Infrastructure");
+        AssertNamespacesAlign("Tooba.Settlement.Endpoints", "Tooba.Settlement.Endpoints");
 
         var appRefs = ProjectRefs("Tooba.Settlement.Application");
         Assert.DoesNotContain(appRefs, r => r.Contains("Infrastructure", StringComparison.OrdinalIgnoreCase));
         Assert.DoesNotContain(appRefs, r => r.Contains(".Application", StringComparison.Ordinal) && !r.Contains("Settlement.Application", StringComparison.Ordinal));
         Assert.DoesNotContain(appRefs, r => r.Contains("Host", StringComparison.OrdinalIgnoreCase));
+
+        var endpointRefs = ProjectRefs("Tooba.Settlement.Endpoints");
+        Assert.Contains(endpointRefs, r => r.Contains("Settlement.Application", StringComparison.Ordinal));
+        Assert.DoesNotContain(endpointRefs, r => r.Contains("Infrastructure", StringComparison.OrdinalIgnoreCase));
+        Assert.DoesNotContain(endpointRefs, r => r.Contains("Host", StringComparison.OrdinalIgnoreCase));
+        Assert.DoesNotContain(endpointRefs, r => r.Contains("DbContext", StringComparison.OrdinalIgnoreCase));
 
         var infraRefs = ProjectRefs("Tooba.Settlement.Infrastructure");
         Assert.Contains(infraRefs, r => r.Contains("Party.Contracts", StringComparison.Ordinal));
@@ -91,28 +100,16 @@ public sealed class SettlementArchitectureGuardTests
             .ToList();
         Assert.True(hostSettlementDbHits.Count == 0, "Host SettlementDbContext: " + string.Join("; ", hostSettlementDbHits));
 
-        var settlementHostFiles = Directory.EnumerateFiles(Path.Combine(hostRoot, "Settlement"), "*.cs")
-            .Concat(Directory.EnumerateFiles(Path.Combine(hostRoot, "Grid"), "*.cs"))
-            .Where(path => Path.GetFileName(path).Contains("Settlement", StringComparison.OrdinalIgnoreCase)
-                           || Path.GetFileName(path).Contains("Payout", StringComparison.OrdinalIgnoreCase))
-            .ToList();
-        foreach (var path in settlementHostFiles)
-        {
-            var text = File.ReadAllText(path);
-            Assert.DoesNotContain("PartyDbContext", text, StringComparison.Ordinal);
-            Assert.DoesNotContain("SettlementDbContext", text, StringComparison.Ordinal);
-        }
-
-        var endpoints = File.ReadAllText(Path.Combine(hostRoot, "Settlement", "SettlementEndpoints.cs"));
-        Assert.Contains("ApiResponseFactory", endpoints, StringComparison.Ordinal);
-        Assert.Contains("ISender", endpoints, StringComparison.Ordinal);
-        Assert.DoesNotContain("Results.Json(new { title", endpoints, StringComparison.Ordinal);
-        Assert.DoesNotContain("detail = ex.Message", endpoints, StringComparison.Ordinal);
-        Assert.DoesNotContain("catch (InvalidOperationException", endpoints, StringComparison.Ordinal);
-        Assert.DoesNotContain("SettlementPanelComposer", endpoints, StringComparison.Ordinal);
+        Assert.False(Directory.Exists(Path.Combine(hostRoot, "Settlement")));
+        Assert.False(File.Exists(Path.Combine(hostRoot, "Settlement", "SettlementEndpoints.cs")));
+        Assert.False(File.Exists(Path.Combine(hostRoot, "Settlement", "SettlementAdminAccess.cs")));
         Assert.False(File.Exists(Path.Combine(hostRoot, "Settlement", "SettlementPanelComposer.cs")));
         Assert.False(File.Exists(Path.Combine(hostRoot, "Grid", "AdminPayoutGridQueryEngine.cs")));
         Assert.True(File.Exists(Path.Combine(SettlementRoot(), "Tooba.Settlement.Infrastructure", "Queries", "AdminPayoutGridQueryEngine.cs")));
+
+        var hostGrid = File.ReadAllText(Path.Combine(hostRoot, "Grid", "AdminListGridPolicies.cs"));
+        Assert.DoesNotContain("Payouts", hostGrid, StringComparison.Ordinal);
+        Assert.DoesNotContain("PayoutRequestSnapshot", hostGrid, StringComparison.Ordinal);
 
         var bypass = AllProductionSources()
             .Where(x => x.Text.Contains("DateTimeOffset.UtcNow", StringComparison.Ordinal)
@@ -144,12 +141,112 @@ public sealed class SettlementArchitectureGuardTests
         Assert.True(localized.Count == 0, "localized exception prose: " + string.Join("; ", localized));
     }
 
+    [Fact]
+    public void Settlement_endpoints_cqrs_and_host_ownership_are_enforced()
+    {
+        Assert.True(Directory.Exists(Path.Combine(SettlementRoot(), "Tooba.Settlement.Endpoints")));
+        Assert.True(File.Exists(Path.Combine(SettlementRoot(), "Tooba.Settlement.Endpoints", "Tooba.Settlement.Endpoints.csproj")));
+
+        var seller = File.ReadAllText(Path.Combine(
+            SettlementRoot(), "Tooba.Settlement.Endpoints", "Seller", "SettlementSellerEndpoints.cs"));
+        var admin = File.ReadAllText(Path.Combine(
+            SettlementRoot(), "Tooba.Settlement.Endpoints", "Admin", "SettlementAdminEndpoints.cs"));
+        var module = File.ReadAllText(Path.Combine(
+            SettlementRoot(), "Tooba.Settlement.Endpoints", "SettlementEndpointModule.cs"));
+
+        foreach (var endpoint in new[] { seller, admin })
+        {
+            Assert.Contains("ISender sender", endpoint, StringComparison.Ordinal);
+            Assert.Contains("ApiResponseFactory api", endpoint, StringComparison.Ordinal);
+            Assert.Contains("api.From(", endpoint, StringComparison.Ordinal);
+            Assert.DoesNotContain("ex.Message", endpoint, StringComparison.Ordinal);
+            Assert.DoesNotContain("exception.Message", endpoint, StringComparison.Ordinal);
+            Assert.DoesNotContain("new { title", endpoint, StringComparison.Ordinal);
+            Assert.DoesNotContain("errorCode =", endpoint, StringComparison.Ordinal);
+            Assert.DoesNotContain("SettlementDbContext", endpoint, StringComparison.Ordinal);
+            Assert.DoesNotContain("DbContext", endpoint, StringComparison.Ordinal);
+            Assert.DoesNotContain("AdminListGridPolicies", endpoint, StringComparison.Ordinal);
+            Assert.DoesNotContain("PlatformHttpException", endpoint, StringComparison.Ordinal);
+            Assert.DoesNotContain("catch (InvalidOperationException", endpoint, StringComparison.Ordinal);
+        }
+
+        Assert.Contains("MapGroup(\"/v1/seller\")", module, StringComparison.Ordinal);
+        Assert.Contains("MapGroup(\"/v1/admin\")", module, StringComparison.Ordinal);
+        Assert.Contains("MapGet(\"/settlement/balance\"", seller, StringComparison.Ordinal);
+        Assert.Contains("MapGet(\"/settlement/entries\"", seller, StringComparison.Ordinal);
+        Assert.Contains("MapGet(\"/settlement/statements\"", seller, StringComparison.Ordinal);
+        Assert.Contains("MapGet(\"/settlement/payout-requests\"", seller, StringComparison.Ordinal);
+        Assert.Contains("MapPost(\"/settlement/payout-requests\"", seller, StringComparison.Ordinal);
+        Assert.Contains("MapGet(\"/settlement/balances\"", admin, StringComparison.Ordinal);
+        Assert.Contains("MapGet(\"/settlement/payout-queue\"", admin, StringComparison.Ordinal);
+        Assert.Contains("MapPost(\"/settlement/payout-queue/query\"", admin, StringComparison.Ordinal);
+        Assert.Contains("MapPost(\"/settlement/payout-requests/{payoutRequestId:guid}/process\"", admin, StringComparison.Ordinal);
+        Assert.Contains("MapPost(\"/settlement/payout-requests/{payoutRequestId:guid}/retry\"", admin, StringComparison.Ordinal);
+
+        var application = Sources("Tooba.Settlement.Application").ToList();
+        Assert.Contains(application, x => x.Text.Contains("RequestSellerPayoutCommand", StringComparison.Ordinal));
+        Assert.Contains(application, x => x.Text.Contains("ProcessAdminPayoutCommand", StringComparison.Ordinal));
+        Assert.Contains(application, x => x.Text.Contains("RetryAdminPayoutCommand", StringComparison.Ordinal));
+        Assert.Contains(application, x => x.Text.Contains("GetSellerSettlementBalanceQuery", StringComparison.Ordinal));
+        Assert.Contains(application, x => x.Text.Contains("QueryAdminPayoutGridQuery", StringComparison.Ordinal));
+        Assert.Contains(application, x => x.Text.Contains("IRequestHandler<", StringComparison.Ordinal));
+        Assert.Contains(application, x => x.Text.Contains("using MediatR", StringComparison.Ordinal));
+        Assert.Contains(application, x => x.Text.Contains("AdminPayoutGridQueryPolicy", StringComparison.Ordinal));
+        Assert.DoesNotContain(application, x => x.Path.EndsWith("SettlementCommands.cs", StringComparison.OrdinalIgnoreCase));
+        Assert.DoesNotContain(application, x => x.Path.EndsWith("SettlementQueries.cs", StringComparison.OrdinalIgnoreCase));
+
+        var hostProgram = File.ReadAllText(Path.Combine(
+            RepoRoot(), "src", "backend", "Host", "Tooba.Host", "Program.cs"));
+        Assert.Contains("MapSettlementEndpoints()", hostProgram, StringComparison.Ordinal);
+        Assert.Contains("ISettlementSellerAuthorizer", hostProgram, StringComparison.Ordinal);
+        Assert.Contains("ISettlementAdminAuthorizer", hostProgram, StringComparison.Ordinal);
+        Assert.DoesNotContain("using Tooba.Host.Settlement;", hostProgram, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void Settlement_exception_mapper_is_stable_codes_only_without_prose_heuristics()
+    {
+        var mapperPath = Path.Combine(SettlementRoot(), "Tooba.Settlement.Application", "Errors", "SettlementExceptionMapper.cs");
+        Assert.True(File.Exists(mapperPath));
+        var mapper = File.ReadAllText(mapperPath);
+
+        Assert.DoesNotContain(".Contains(", mapper, StringComparison.Ordinal);
+        Assert.DoesNotContain("StartsWith(", mapper, StringComparison.Ordinal);
+        Assert.DoesNotContain("StringComparison.OrdinalIgnoreCase", mapper, StringComparison.Ordinal);
+        Assert.True(Regex.IsMatch(mapper, @"[\u0600-\u06FF]") == false, "Persian prose in SettlementExceptionMapper");
+
+        Assert.False(
+            Regex.IsMatch(
+                mapper,
+                @"default\s*:\s*(?:\{[^}]*?)?(?:return\s+new\s+SemanticError\(\s*SettlementErrorCodes\.PayoutRejected\s*\)|error\s*=\s*new\s+SemanticError\(\s*SettlementErrorCodes\.PayoutRejected)",
+                RegexOptions.Singleline),
+            "default branch must not map unknown IOE to settlement.payout.rejected");
+        Assert.Contains("TryMapExact", mapper, StringComparison.Ordinal);
+        Assert.Contains("default:", mapper, StringComparison.Ordinal);
+        Assert.Contains("return false", mapper, StringComparison.Ordinal);
+        Assert.Contains("throw exception", mapper, StringComparison.Ordinal);
+
+        var messageHeuristics = Sources("Tooba.Settlement.Application")
+            .Where(x => x.Path.Replace('\\', '/').Contains("/Errors/", StringComparison.Ordinal)
+                        || x.Path.Replace('\\', '/').Contains("/Commands/", StringComparison.Ordinal)
+                        || x.Path.Replace('\\', '/').Contains("/Queries/", StringComparison.Ordinal))
+            .Where(x => Regex.IsMatch(
+                x.Text,
+                @"exception\.Message.*\.Contains\(|\.Message\s*\.Contains\(|text\.Contains\(|message\.StartsWith\(",
+                RegexOptions.IgnoreCase))
+            .Select(x => x.Path)
+            .ToList();
+        Assert.True(messageHeuristics.Count == 0, "message heuristics: " + string.Join("; ", messageHeuristics));
+    }
+
     private static void AssertNoRootDump(string project, string[] allowedFolders)
     {
         var root = Path.Combine(SettlementRoot(), project);
         var rootCs = Directory.EnumerateFiles(root, "*.cs", SearchOption.TopDirectoryOnly)
             .Select(Path.GetFileName)
-            .Where(name => name is not null && !name.StartsWith("GlobalUsings", StringComparison.OrdinalIgnoreCase))
+            .Where(name => name is not null
+                           && !name.StartsWith("GlobalUsings", StringComparison.OrdinalIgnoreCase)
+                           && !name.EndsWith("EndpointModule.cs", StringComparison.OrdinalIgnoreCase))
             .ToArray();
         Assert.True(rootCs.Length == 0, $"{project} root dumping-ground: " + string.Join(", ", rootCs));
         foreach (var dir in Directory.EnumerateDirectories(root))
@@ -193,11 +290,17 @@ public sealed class SettlementArchitectureGuardTests
     private static IEnumerable<(string Path, string Text)> AllProductionSources() =>
         Sources("Tooba.Settlement.Domain")
             .Concat(Sources("Tooba.Settlement.Application"))
-            .Concat(Sources("Tooba.Settlement.Infrastructure"));
+            .Concat(Sources("Tooba.Settlement.Infrastructure"))
+            .Concat(Sources("Tooba.Settlement.Endpoints"));
 
     private static IEnumerable<(string Path, string Text)> Sources(string projectFolder)
     {
         var root = Path.Combine(SettlementRoot(), projectFolder);
+        if (!Directory.Exists(root))
+        {
+            yield break;
+        }
+
         foreach (var file in Directory.EnumerateFiles(root, "*.cs", SearchOption.AllDirectories))
         {
             var n = file.Replace('\\', '/');

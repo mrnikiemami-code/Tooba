@@ -19,6 +19,8 @@
     <ProjectReference Include="..\Tooba.Settlement.Domain\Tooba.Settlement.Domain.csproj" />
     <ProjectReference Include="..\Tooba.Settlement.Application\Tooba.Settlement.Application.csproj" />
     <ProjectReference Include="..\Tooba.Settlement.Infrastructure\Tooba.Settlement.Infrastructure.csproj" />
+    <ProjectReference Include="..\Tooba.Settlement.Endpoints\Tooba.Settlement.Endpoints.csproj" />
     <ProjectReference Include="..\..\Party\Tooba.Party.Contracts\Tooba.Party.Contracts.csproj" />
+    <ProjectReference Include="..\..\..\BuildingBlocks\Tooba.BuildingBlocks\Tooba.BuildingBlocks.csproj" />
   </ItemGroup>
 </Project>

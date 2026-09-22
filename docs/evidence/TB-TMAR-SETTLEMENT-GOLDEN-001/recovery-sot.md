@@ -1,0 +1,11 @@
+# recovery-sot
+
+Settlement-State: COMPLETE_REFERENCE_PATTERN (Worker PASS — awaiting Architect)
+Cart-State: COMPLETE_REFERENCE_PATTERN
+Checkout-State: PAUSED_AT_SAFE_W5_CHECKPOINT
+Tax-State: UNTOUCHED / DEFERRED_PHYSICAL_REVIEW_BY_USER
+Pricing-State: UNTOUCHED / DEFERRED_PHYSICAL_REVIEW_BY_USER
+Frontend-Production-Changes: NONE
+Next-Recommended-Task: ARCHITECT_SELECT_NEXT_REOPENED_MODULE
+
+PROJECT-STATE / RECOVERY-CONTEXT updated for Settlement golden closure.

@@ -23,7 +23,6 @@ using Tooba.Host.Customer;
 using Tooba.Host.Seller;
 using Tooba.Host.Fulfillment;
 using Tooba.Host.Returns;
-using Tooba.Host.Settlement;
 using Tooba.Host.Notifications;
 using Tooba.Host.AccessControl;
 using Tooba.Host.Payments;
@@ -45,6 +44,7 @@ using Tooba.Host.Wallet;
 using Tooba.Offer.Endpoints;
 using Tooba.Offer.Endpoints.Seller;
 using Tooba.Cart.Endpoints;
+using Tooba.Settlement.Endpoints;
 using Tooba.Offer.Infrastructure.Adapters;
 using Tooba.Tax.Endpoints;
 using Tooba.Pricing.Endpoints;
@@ -132,7 +132,7 @@ builder.Services.AddToobaCqrsFoundation(
     typeof(Tooba.Catalog.Application.CreateStoreLandingPageCommand).Assembly,
     typeof(Tooba.Fulfillment.Application.Shipping.CreateShippingServiceCommand).Assembly,
     typeof(Tooba.Offer.Application.Commands.CreateOffer.CreateOfferCommand).Assembly,
-    typeof(Tooba.Settlement.Application.Queries.GetSellerSettlementBalanceQuery).Assembly,
+    typeof(Tooba.Settlement.Application.Queries.GetSellerSettlementBalance.GetSellerSettlementBalanceQuery).Assembly,
     typeof(Tooba.Cart.Application.Commands.CreateGuestCart.CreateGuestCartCommand).Assembly);
 builder.Services.AddScoped<Tooba.Catalog.Application.IStoreLandingExternalReferenceGate, Tooba.Host.Admin.MerchandisingStoreLandingReferenceGate>();
 builder.Services.AddScoped<Tooba.Catalog.Application.IUnitOfMeasureLanguageGate, Tooba.Host.Admin.HostUnitOfMeasureLanguageGate>();
@@ -231,6 +231,8 @@ builder.Services.AddScoped<Tooba.Host.Storefront.StorefrontPaymentComposer>(sp =
         sp.GetRequiredService<ReservationCycleCoordinator>()));
 builder.Services.AddScoped<Tooba.Host.Seller.SellerPanelComposer>();
 builder.Services.AddScoped<Tooba.Offer.Endpoints.Seller.IOfferSellerAuthorizer, Tooba.Host.Seller.HostOfferSellerAuthorizer>();
+builder.Services.AddScoped<Tooba.Settlement.Endpoints.Seller.ISettlementSellerAuthorizer, Tooba.Host.Seller.HostSettlementSellerAuthorizer>();
+builder.Services.AddScoped<Tooba.Settlement.Endpoints.Admin.ISettlementAdminAuthorizer, Tooba.Host.Admin.HostSettlementAdminAuthorizer>();
 builder.Services.AddScoped<Tooba.Host.Customer.CustomerPanelComposer>();
 builder.Services.AddScoped<Tooba.Host.Admin.AdminPanelComposer>();
 builder.Services.AddScoped<Tooba.Host.Admin.AdminOrderOperationsComposer>();

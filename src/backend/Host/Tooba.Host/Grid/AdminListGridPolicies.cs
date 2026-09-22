@@ -4,9 +4,9 @@ using Tooba.Fulfillment.Application.Models;
 using Tooba.Fulfillment.Application.Shipping;
 using Tooba.Host.Admin;
 using Tooba.Host.Reviews;
+using Tooba.Host.Story;
 using Tooba.Returns.Application.Ports;
 using Tooba.Returns.Application.Models;
-using Tooba.Settlement.Application;
 using Tooba.Story.Application;
 
 namespace Tooba.Host.Grid;
@@ -95,17 +95,6 @@ public static class AdminListGridPolicies
     ],
         defaultSortField: "createdAt",
         tieBreakerField: "returnRequestId");
-
-    /// <summary>گرید صف payout Admin.</summary>
-    public static readonly AdminListGridQueryPolicy<PayoutRequestSnapshot> Payouts = new(
-    [
-        new("seller", x => x.SellerPartyId, InMemoryGridFieldKind.Text, searchable: true),
-        new("amount", x => x.Amount, InMemoryGridFieldKind.Number),
-        new("status", x => x.Status.ToString(), InMemoryGridFieldKind.Enum),
-        new("created", x => x.CreatedAt, InMemoryGridFieldKind.Date),
-    ],
-        defaultSortField: "created",
-        tieBreakerField: "seller");
 
     /// <summary>گرید دریافت‌های Admin (پرداخت مشتری).</summary>
     public static readonly AdminListGridQueryPolicy<AdminReceiptListItem> Payments = new(
