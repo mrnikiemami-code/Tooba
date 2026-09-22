@@ -1,0 +1,4 @@
+﻿using MediatR; using Tooba.BuildingBlocks.Results; using Tooba.Promotion.Application.Errors; using Tooba.Promotion.Application.Ports;
+namespace Tooba.Promotion.Application.Commands.ActivateSellerPromotion;
+public sealed record ActivateSellerPromotionCommand(Guid SellerPartyId,Guid PromotionId):IRequest<Result<PromotionReference>>;
+public sealed class ActivateSellerPromotionCommandHandler(IPromotionDirectory promotions):IRequestHandler<ActivateSellerPromotionCommand,Result<PromotionReference>>{public Task<Result<PromotionReference>> Handle(ActivateSellerPromotionCommand r,CancellationToken ct)=>PromotionExceptionMapper.TryAsync(async()=>{await promotions.ActivateForSellerAsync(null,r.SellerPartyId,r.PromotionId,ct);return await promotions.GetForSellerAsync(null,r.SellerPartyId,r.PromotionId,ct)??throw new InvalidOperationException(PromotionErrorCodes.Missing);});}

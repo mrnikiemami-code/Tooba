@@ -24,6 +24,7 @@ using Tooba.Returns.Endpoints;
 using Tooba.Notification.Endpoints;
 using Tooba.Host.AccessControl;
 using Tooba.Payment.Endpoints;
+using Tooba.Promotion.Endpoints;
 using Tooba.Host.Storefront;
 using Tooba.Host.Reviews;
 using Tooba.Host.ProductQnA;
@@ -36,7 +37,6 @@ using Tooba.Host.PageComposition;
 using Tooba.Host.Story;
 using Tooba.Host.Preferences;
 using Tooba.Host.OperatorProfile;
-using Tooba.Host.Promotion;
 using Tooba.Host.Support;
 using Tooba.Support.Endpoints;
 using Tooba.Host.Wallet;
@@ -76,6 +76,7 @@ builder.Services.AddNotificationEndpointPresentation();
 builder.Services.AddSupportEndpointPresentation();
 builder.Services.AddWalletEndpointPresentation();
 builder.Services.AddPaymentEndpointPresentation();
+builder.Services.AddPromotionEndpointPresentation();
 builder.Services.AddPricingEndpointPresentation();
 builder.Services.AddProblemDetails();
 builder.Services.AddSingleton<IExceptionPresentationService, ExceptionPresentationService>();
@@ -143,7 +144,8 @@ builder.Services.AddToobaCqrsFoundation(
     typeof(Tooba.Notification.Application.Commands.MarkCustomerNotificationRead.MarkCustomerNotificationReadCommand).Assembly,
     typeof(Tooba.Support.Application.Commands.CreateCustomerTicket.CreateCustomerTicketCommand).Assembly,
     typeof(Tooba.Wallet.Application.Commands.RedeemCustomerGiftCard.RedeemCustomerGiftCardCommand).Assembly,
-    typeof(Tooba.Payment.Application.Commands.InitiateStorefrontPayment.InitiateStorefrontPaymentCommand).Assembly);
+    typeof(Tooba.Payment.Application.Commands.InitiateStorefrontPayment.InitiateStorefrontPaymentCommand).Assembly,
+    typeof(Tooba.Promotion.Application.Commands.CreateSellerPromotion.CreateSellerPromotionCommand).Assembly);
 builder.Services.AddScoped<Tooba.Catalog.Application.IStoreLandingExternalReferenceGate, Tooba.Host.Admin.MerchandisingStoreLandingReferenceGate>();
 builder.Services.AddScoped<Tooba.Catalog.Application.IUnitOfMeasureLanguageGate, Tooba.Host.Admin.HostUnitOfMeasureLanguageGate>();
 builder.Services.AddToobaModules(builder.Configuration, builder.Environment);
@@ -227,6 +229,8 @@ builder.Services.AddScoped<Tooba.Payment.Application.Ports.ICheckoutActorPolicyP
 builder.Services.AddScoped<Tooba.Payment.Endpoints.Storefront.IPaymentStorefrontAuthorizer, Tooba.Host.Storefront.HostPaymentStorefrontAuthorizer>();
 builder.Services.AddScoped<Tooba.Payment.Endpoints.Admin.IPaymentAdminAuthorizer, Tooba.Host.Admin.HostPaymentAdminAuthorizer>();
 builder.Services.AddScoped<Tooba.Payment.Endpoints.Admin.IPaymentAdminGridQueryNormalizer, Tooba.Host.Admin.HostPaymentAdminGridQueryNormalizer>();
+builder.Services.AddScoped<Tooba.Promotion.Endpoints.Seller.IPromotionSellerAuthorizer, Tooba.Host.Seller.HostPromotionSellerAuthorizer>();
+builder.Services.AddScoped<Tooba.Promotion.Endpoints.Admin.IPromotionAdminAuthorizer, Tooba.Host.Admin.HostPromotionAdminAuthorizer>();
 builder.Services.AddScoped<Tooba.Host.Seller.SellerPanelComposer>();
 builder.Services.AddScoped<Tooba.Offer.Endpoints.Seller.IOfferSellerAuthorizer, Tooba.Host.Seller.HostOfferSellerAuthorizer>();
 builder.Services.AddScoped<Tooba.Settlement.Endpoints.Seller.ISettlementSellerAuthorizer, Tooba.Host.Seller.HostSettlementSellerAuthorizer>();
@@ -258,8 +262,6 @@ builder.Services.AddScoped<Tooba.Content.Application.IContentMediaAssetValidator
 builder.Services.AddScoped<Tooba.Host.Reviews.ReviewPanelComposer>();
 builder.Services.AddScoped<Tooba.Host.PageComposition.PageCompositionPanelComposer>();
 builder.Services.AddScoped<Tooba.Host.Story.StoryPanelComposer>();
-builder.Services.AddScoped<Tooba.Host.Promotion.PromotionPanelComposer>();
-
 builder.Services.ConfigureHttpJsonOptions(options =>
 {
     options.SerializerOptions.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;

@@ -112,6 +112,7 @@
     <Project Path="Modules/Promotion/Tooba.Promotion.Contracts/Tooba.Promotion.Contracts.csproj" />
     <Project Path="Modules/Promotion/Tooba.Promotion.Application/Tooba.Promotion.Application.csproj" />
     <Project Path="Modules/Promotion/Tooba.Promotion.Infrastructure/Tooba.Promotion.Infrastructure.csproj" />
+    <Project Path="Modules/Promotion/Tooba.Promotion.Endpoints/Tooba.Promotion.Endpoints.csproj" />
     <Project Path="Modules/Promotion/Tooba.Promotion.Tests/Tooba.Promotion.Tests.csproj" />
   </Folder>
   <Folder Name="/Modules/Payment/">

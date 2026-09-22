@@ -20,5 +20,6 @@
     <ProjectReference Include="..\Tooba.Promotion.Application\Tooba.Promotion.Application.csproj" />
     <ProjectReference Include="..\Tooba.Promotion.Contracts\Tooba.Promotion.Contracts.csproj" />
     <ProjectReference Include="..\Tooba.Promotion.Infrastructure\Tooba.Promotion.Infrastructure.csproj" />
+    <ProjectReference Include="..\Tooba.Promotion.Endpoints\Tooba.Promotion.Endpoints.csproj" />
   </ItemGroup>
 </Project>

@@ -7,7 +7,7 @@ namespace Tooba.Promotion.Tests.Architecture;
 public sealed class PromotionArchitectureGuardTests
 {
     private static readonly string[] AllowedDomainFolders = ["Aggregates", "ValueObjects", "Events", "Policies", "Merchandising"];
-    private static readonly string[] AllowedApplicationFolders = ["Ports", "Models", "Checkout", "Merchandising", "Promotions"];
+    private static readonly string[] AllowedApplicationFolders = ["Ports", "Models", "Checkout", "Merchandising", "Promotions", "Commands", "Queries", "Errors"];
     private static readonly string[] AllowedContractsFolders = ["Checkout", "Merchandising", "Pricing", "Errors"];
     private static readonly string[] AllowedInfrastructureFolders =
         ["Persistence", "Directories", "Queries", "Adapters", "Events", "Messaging", "DependencyInjection"];
@@ -83,8 +83,16 @@ public sealed class PromotionArchitectureGuardTests
         AssertNamespacesAlign("Tooba.Promotion.Application", "Tooba.Promotion.Application");
         AssertNamespacesAlign("Tooba.Promotion.Contracts", "Tooba.Promotion.Contracts");
         AssertNamespacesAlign("Tooba.Promotion.Infrastructure", "Tooba.Promotion.Infrastructure");
-
+        Assert.True(Directory.Exists(Path.Combine(PromotionRoot(), "Tooba.Promotion.Endpoints")));
+        var endpointSources = Sources("Tooba.Promotion.Endpoints").ToList();
+        Assert.Contains(endpointSources, x => x.Text.Contains("ISender", StringComparison.Ordinal));
+        Assert.DoesNotContain(endpointSources, x => x.Text.Contains("IPromotionDirectory", StringComparison.Ordinal));
+        Assert.DoesNotContain(endpointSources, x => x.Text.Contains("PlatformHttpException", StringComparison.Ordinal));
+        Assert.DoesNotContain(endpointSources, x => x.Text.Contains("ex.Message", StringComparison.Ordinal));
         var hostRoot = Path.Combine(RepoRoot(), "src", "backend", "Host", "Tooba.Host");
+        Assert.False(File.Exists(Path.Combine(hostRoot, "Promotion", "PromotionEndpoints.cs")));
+        Assert.False(File.Exists(Path.Combine(hostRoot, "Promotion", "PromotionPanelComposer.cs")));
+
         var hostHits = Directory.EnumerateFiles(hostRoot, "*.cs", SearchOption.AllDirectories)
             .Where(path => !path.Contains($"{Path.DirectorySeparatorChar}bin{Path.DirectorySeparatorChar}") && !path.Contains($"{Path.DirectorySeparatorChar}obj{Path.DirectorySeparatorChar}"))
             .Where(path => File.ReadAllText(path).Contains("PromotionDbContext", StringComparison.Ordinal))
@@ -168,7 +176,8 @@ public sealed class PromotionArchitectureGuardTests
         Sources("Tooba.Promotion.Domain")
             .Concat(Sources("Tooba.Promotion.Application"))
             .Concat(Sources("Tooba.Promotion.Contracts"))
-            .Concat(Sources("Tooba.Promotion.Infrastructure"));
+            .Concat(Sources("Tooba.Promotion.Infrastructure"))
+            .Concat(Sources("Tooba.Promotion.Endpoints"));
 
     private static IEnumerable<(string Path, string Text)> Sources(string projectFolder)
     {

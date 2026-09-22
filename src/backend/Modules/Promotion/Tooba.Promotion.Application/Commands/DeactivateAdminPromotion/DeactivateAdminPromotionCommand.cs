@@ -1,0 +1,4 @@
+﻿using MediatR; using Tooba.BuildingBlocks.Results; using Tooba.Promotion.Application.Errors; using Tooba.Promotion.Application.Ports;
+namespace Tooba.Promotion.Application.Commands.DeactivateAdminPromotion;
+public sealed record DeactivateAdminPromotionCommand(Guid PromotionId):IRequest<Result<PromotionReference>>;
+public sealed class DeactivateAdminPromotionCommandHandler(IPromotionDirectory promotions):IRequestHandler<DeactivateAdminPromotionCommand,Result<PromotionReference>>{public Task<Result<PromotionReference>> Handle(DeactivateAdminPromotionCommand r,CancellationToken ct)=>PromotionExceptionMapper.TryAsync(async()=>{await promotions.DeactivateForAdminAsync(null,r.PromotionId,ct);return await promotions.GetForAdminAsync(null,r.PromotionId,ct)??throw new InvalidOperationException(PromotionErrorCodes.Missing);});}
