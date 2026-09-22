@@ -16,7 +16,6 @@ public sealed class MarkFulfillmentPackedHandler(AdminOrderOperationsOrchestrato
 {
     public Task<Result<object>> Handle(MarkFulfillmentPackedCommand request, CancellationToken cancellationToken)
     {
-        var body = request.Request with { Code = "mark_packed" };
-        return operations.ExecuteAsync(request.CheckoutId, request.ActorUserId, body, cancellationToken);
+        return operations.MarkPackedAsync(request.CheckoutId, request.ActorUserId, request.Request, cancellationToken);
     }
 }

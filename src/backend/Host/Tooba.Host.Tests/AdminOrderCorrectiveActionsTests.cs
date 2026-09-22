@@ -527,7 +527,8 @@ public sealed class AdminOrderCorrectiveActionsTests
         Assert.Contains("restore_cancelled_order", composer, StringComparison.Ordinal);
         Assert.Contains("GetRestoreGatesAsync", composer, StringComparison.Ordinal);
         Assert.Contains("order.restore.seller_payout_completed", composer, StringComparison.Ordinal);
-        Assert.Contains("if (code == \"restore_cancelled_order\")", composer, StringComparison.Ordinal);
+        Assert.Contains("RestoreCancelledOrderAsync", composer, StringComparison.Ordinal);
+        Assert.Contains("RestoreCancelledOrderCoreAsync", composer, StringComparison.Ordinal);
         Assert.Contains("correct_tracking", composer, StringComparison.Ordinal);
         Assert.Contains("ProjectWholeOrderCancel", composer, StringComparison.Ordinal);
         Assert.Contains("AbortForCheckoutCancelAsync", composer, StringComparison.Ordinal);

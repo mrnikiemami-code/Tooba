@@ -16,7 +16,6 @@ public sealed class UnprocessFulfillmentHandler(AdminOrderOperationsOrchestrator
 {
     public Task<Result<object>> Handle(UnprocessFulfillmentCommand request, CancellationToken cancellationToken)
     {
-        var body = request.Request with { Code = "unprocess" };
-        return operations.ExecuteAsync(request.CheckoutId, request.ActorUserId, body, cancellationToken);
+        return operations.UnprocessAsync(request.CheckoutId, request.ActorUserId, request.Request, cancellationToken);
     }
 }

@@ -16,7 +16,6 @@ public sealed class CancelConsolidatedPackageHandler(AdminOrderOperationsOrchest
 {
     public Task<Result<object>> Handle(CancelConsolidatedPackageCommand request, CancellationToken cancellationToken)
     {
-        var body = request.Request with { Code = "cancel_consolidated_package" };
-        return operations.ExecuteAsync(request.CheckoutId, request.ActorUserId, body, cancellationToken);
+        return operations.CancelConsolidatedPackageAsync(request.CheckoutId, request.ActorUserId, request.Request, cancellationToken);
     }
 }

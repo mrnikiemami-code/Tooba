@@ -16,7 +16,6 @@ public sealed class RejectReturnHandler(AdminOrderOperationsOrchestrator operati
 {
     public Task<Result<object>> Handle(RejectReturnCommand request, CancellationToken cancellationToken)
     {
-        var body = request.Request with { Code = "reject_return" };
-        return operations.ExecuteAsync(request.CheckoutId, request.ActorUserId, body, cancellationToken);
+        return operations.RejectReturnAsync(request.CheckoutId, request.ActorUserId, request.Request, cancellationToken);
     }
 }

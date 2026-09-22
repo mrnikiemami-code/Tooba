@@ -16,7 +16,6 @@ public sealed class CreateShipmentHandler(AdminOrderOperationsOrchestrator opera
 {
     public Task<Result<object>> Handle(CreateShipmentCommand request, CancellationToken cancellationToken)
     {
-        var body = request.Request with { Code = "create_shipment" };
-        return operations.ExecuteAsync(request.CheckoutId, request.ActorUserId, body, cancellationToken);
+        return operations.CreateShipmentAsync(request.CheckoutId, request.ActorUserId, request.Request, cancellationToken);
     }
 }

@@ -16,7 +16,6 @@ public sealed class RequestReturnHandler(AdminOrderOperationsOrchestrator operat
 {
     public Task<Result<object>> Handle(RequestReturnCommand request, CancellationToken cancellationToken)
     {
-        var body = request.Request with { Code = "request_return" };
-        return operations.ExecuteAsync(request.CheckoutId, request.ActorUserId, body, cancellationToken);
+        return operations.RequestReturnAsync(request.CheckoutId, request.ActorUserId, request.Request, cancellationToken);
     }
 }

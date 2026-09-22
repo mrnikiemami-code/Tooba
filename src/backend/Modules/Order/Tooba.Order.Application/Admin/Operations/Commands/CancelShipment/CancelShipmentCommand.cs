@@ -16,7 +16,6 @@ public sealed class CancelShipmentHandler(AdminOrderOperationsOrchestrator opera
 {
     public Task<Result<object>> Handle(CancelShipmentCommand request, CancellationToken cancellationToken)
     {
-        var body = request.Request with { Code = "cancel_shipment" };
-        return operations.ExecuteAsync(request.CheckoutId, request.ActorUserId, body, cancellationToken);
+        return operations.CancelShipmentAsync(request.CheckoutId, request.ActorUserId, request.Request, cancellationToken);
     }
 }

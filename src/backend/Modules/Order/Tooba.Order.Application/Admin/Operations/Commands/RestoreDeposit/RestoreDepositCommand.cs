@@ -16,7 +16,6 @@ public sealed class RestoreDepositHandler(AdminOrderOperationsOrchestrator opera
 {
     public Task<Result<object>> Handle(RestoreDepositCommand request, CancellationToken cancellationToken)
     {
-        var body = request.Request with { Code = "restore_deposit" };
-        return operations.ExecuteAsync(request.CheckoutId, request.ActorUserId, body, cancellationToken);
+        return operations.RestoreDepositAsync(request.CheckoutId, request.ActorUserId, request.Request, cancellationToken);
     }
 }

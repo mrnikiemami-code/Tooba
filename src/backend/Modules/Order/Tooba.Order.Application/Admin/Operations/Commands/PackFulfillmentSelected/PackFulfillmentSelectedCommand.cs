@@ -16,7 +16,6 @@ public sealed class PackFulfillmentSelectedHandler(AdminOrderOperationsOrchestra
 {
     public Task<Result<object>> Handle(PackFulfillmentSelectedCommand request, CancellationToken cancellationToken)
     {
-        var body = request.Request with { Code = "pack_selected" };
-        return operations.ExecuteAsync(request.CheckoutId, request.ActorUserId, body, cancellationToken);
+        return operations.PackSelectedAsync(request.CheckoutId, request.ActorUserId, request.Request, cancellationToken);
     }
 }

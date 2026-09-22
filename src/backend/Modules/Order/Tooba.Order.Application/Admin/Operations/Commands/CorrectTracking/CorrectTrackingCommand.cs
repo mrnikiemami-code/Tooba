@@ -16,7 +16,6 @@ public sealed class CorrectTrackingHandler(AdminOrderOperationsOrchestrator oper
 {
     public Task<Result<object>> Handle(CorrectTrackingCommand request, CancellationToken cancellationToken)
     {
-        var body = request.Request with { Code = "correct_tracking" };
-        return operations.ExecuteAsync(request.CheckoutId, request.ActorUserId, body, cancellationToken);
+        return operations.CorrectTrackingAsync(request.CheckoutId, request.ActorUserId, request.Request, cancellationToken);
     }
 }

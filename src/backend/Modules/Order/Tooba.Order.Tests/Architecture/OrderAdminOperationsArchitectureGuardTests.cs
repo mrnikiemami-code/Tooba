@@ -1,8 +1,7 @@
-using Tooba.Order.Application.Admin.Operations.Models;
-using Tooba.Order.Application.Admin.Operations.Queries.GetAdminOrderOperations;
-using Tooba.Order.Application.Admin.Operations.Queries.ListAdminOrderReturnEligibility;
 using Tooba.Order.Application.Admin.Operations.Commands.CancelOrder;
 using Tooba.Order.Application.Admin.Operations.Commands.ConfirmDeposit;
+using Tooba.Order.Application.Admin.Operations.Queries.GetAdminOrderOperations;
+using Tooba.Order.Application.Admin.Operations.Queries.ListAdminOrderReturnEligibility;
 using Xunit;
 
 namespace Tooba.Order.Tests.Architecture;
@@ -16,6 +15,7 @@ public sealed class OrderAdminOperationsArchitectureGuardTests
         Assert.False(File.Exists(Path.Combine(hostAdmin, "AdminOrderOperationsEndpoints.cs")));
         Assert.False(File.Exists(Path.Combine(hostAdmin, "AdminOrderOperationsComposer.cs")));
         Assert.False(File.Exists(Path.Combine(hostAdmin, "AdminOrderOperationsModels.cs")));
+        Assert.False(File.Exists(Path.Combine(hostAdmin, "AdminFulfillmentCapabilityProjector.cs")));
     }
 
     [Fact]
@@ -86,6 +86,73 @@ public sealed class OrderAdminOperationsArchitectureGuardTests
             "AdminOrderOperationsOrchestrator.cs"));
         Assert.Contains("SemanticError", orchestrator, StringComparison.Ordinal);
         Assert.DoesNotContain("MapFulfillmentException", orchestrator, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void Application_ops_has_no_central_ExecuteAsync_dispatcher()
+    {
+        var appSources = Directory.GetFiles(
+            Path.Combine(OrderRoot(), "Tooba.Order.Application", "Admin", "Operations"),
+            "*.cs",
+            SearchOption.AllDirectories);
+        foreach (var path in appSources)
+        {
+            var text = File.ReadAllText(path);
+            Assert.DoesNotContain("ExecuteAsync", text, StringComparison.Ordinal);
+            Assert.DoesNotContain("ExecuteCoreAsync", text, StringComparison.Ordinal);
+            Assert.DoesNotContain("with { Code =", text, StringComparison.Ordinal);
+        }
+
+        var orchestrator = File.ReadAllText(Path.Combine(
+            OrderRoot(), "Tooba.Order.Application", "Admin", "Operations", "Services",
+            "AdminOrderOperationsOrchestrator.cs"));
+        // Forbid ExecuteCoreAsync-style central dispatcher arms (mapping `code switch` helpers remain OK).
+        Assert.DoesNotContain("=> await MarkProcessingCoreAsync", orchestrator, StringComparison.Ordinal);
+        Assert.DoesNotContain("=> await MarkPackedCoreAsync", orchestrator, StringComparison.Ordinal);
+        Assert.DoesNotContain("\"mark_processing\" => await", orchestrator, StringComparison.Ordinal);
+        Assert.DoesNotContain("\"pack_selected\" => await", orchestrator, StringComparison.Ordinal);
+        Assert.DoesNotContain("if (code == \"cancel\")", orchestrator, StringComparison.Ordinal);
+        Assert.DoesNotContain("if (code == \"restore_deposit\")", orchestrator, StringComparison.Ordinal);
+        Assert.DoesNotContain("var code = request.Code", orchestrator, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void Command_handlers_call_typed_orchestrator_methods()
+    {
+        var commandsRoot = Path.Combine(
+            OrderRoot(), "Tooba.Order.Application", "Admin", "Operations", "Commands");
+        var folders = Directory.GetDirectories(commandsRoot);
+        Assert.True(folders.Length >= 27, $"expected >=27 command folders, got {folders.Length}");
+
+        var typedSpotChecks = new Dictionary<string, string>(StringComparer.Ordinal)
+        {
+            ["CancelOrder"] = "CancelOrderAsync",
+            ["ConfirmDeposit"] = "ConfirmDepositAsync",
+            ["MarkFulfillmentProcessing"] = "MarkProcessingAsync",
+            ["ApproveReturn"] = "ApproveReturnAsync",
+            ["CreateShipment"] = "CreateShipmentAsync",
+            ["RecoverInventoryReservation"] = "RecoverInventoryReservationAsync",
+            ["PackFulfillmentSelected"] = "PackSelectedAsync",
+        };
+
+        foreach (var folder in folders)
+        {
+            var files = Directory.GetFiles(folder, "*Command.cs");
+            Assert.True(files.Length == 1, $"expected one command file in {folder}");
+            var text = File.ReadAllText(files[0]);
+            Assert.Contains("IRequestHandler", text, StringComparison.Ordinal);
+            Assert.DoesNotContain("with { Code =", text, StringComparison.Ordinal);
+            Assert.DoesNotContain("ExecuteAsync", text, StringComparison.Ordinal);
+            Assert.Matches(@"operations\.\w+Async\(", text);
+        }
+
+        foreach (var (folderName, method) in typedSpotChecks)
+        {
+            var path = Path.Combine(commandsRoot, folderName, $"{folderName}Command.cs");
+            Assert.True(File.Exists(path), path);
+            var text = File.ReadAllText(path);
+            Assert.Contains($"operations.{method}(", text, StringComparison.Ordinal);
+        }
     }
 
     [Fact]

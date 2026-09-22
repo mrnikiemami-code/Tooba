@@ -16,7 +16,6 @@ public sealed class AssignConsolidatedPackageTrackingHandler(AdminOrderOperation
 {
     public Task<Result<object>> Handle(AssignConsolidatedPackageTrackingCommand request, CancellationToken cancellationToken)
     {
-        var body = request.Request with { Code = "assign_consolidated_package_tracking" };
-        return operations.ExecuteAsync(request.CheckoutId, request.ActorUserId, body, cancellationToken);
+        return operations.AssignConsolidatedPackageTrackingAsync(request.CheckoutId, request.ActorUserId, request.Request, cancellationToken);
     }
 }

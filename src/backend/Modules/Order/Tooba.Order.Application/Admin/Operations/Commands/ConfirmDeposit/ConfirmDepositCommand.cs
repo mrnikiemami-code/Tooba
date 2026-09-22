@@ -16,7 +16,6 @@ public sealed class ConfirmDepositHandler(AdminOrderOperationsOrchestrator opera
 {
     public Task<Result<object>> Handle(ConfirmDepositCommand request, CancellationToken cancellationToken)
     {
-        var body = request.Request with { Code = "confirm_deposit" };
-        return operations.ExecuteAsync(request.CheckoutId, request.ActorUserId, body, cancellationToken);
+        return operations.ConfirmDepositAsync(request.CheckoutId, request.ActorUserId, request.Request, cancellationToken);
     }
 }

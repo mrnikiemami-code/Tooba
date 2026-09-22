@@ -16,7 +16,6 @@ public sealed class MarkFulfillmentProcessingHandler(AdminOrderOperationsOrchest
 {
     public Task<Result<object>> Handle(MarkFulfillmentProcessingCommand request, CancellationToken cancellationToken)
     {
-        var body = request.Request with { Code = "mark_processing" };
-        return operations.ExecuteAsync(request.CheckoutId, request.ActorUserId, body, cancellationToken);
+        return operations.MarkProcessingAsync(request.CheckoutId, request.ActorUserId, request.Request, cancellationToken);
     }
 }

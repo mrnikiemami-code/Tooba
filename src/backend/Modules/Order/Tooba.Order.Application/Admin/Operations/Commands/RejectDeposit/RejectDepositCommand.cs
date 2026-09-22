@@ -16,7 +16,6 @@ public sealed class RejectDepositHandler(AdminOrderOperationsOrchestrator operat
 {
     public Task<Result<object>> Handle(RejectDepositCommand request, CancellationToken cancellationToken)
     {
-        var body = request.Request with { Code = "reject_deposit" };
-        return operations.ExecuteAsync(request.CheckoutId, request.ActorUserId, body, cancellationToken);
+        return operations.RejectDepositAsync(request.CheckoutId, request.ActorUserId, request.Request, cancellationToken);
     }
 }

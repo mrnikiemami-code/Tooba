@@ -16,7 +16,6 @@ public sealed class DispatchShipmentHandler(AdminOrderOperationsOrchestrator ope
 {
     public Task<Result<object>> Handle(DispatchShipmentCommand request, CancellationToken cancellationToken)
     {
-        var body = request.Request with { Code = "dispatch_shipment" };
-        return operations.ExecuteAsync(request.CheckoutId, request.ActorUserId, body, cancellationToken);
+        return operations.DispatchShipmentAsync(request.CheckoutId, request.ActorUserId, request.Request, cancellationToken);
     }
 }

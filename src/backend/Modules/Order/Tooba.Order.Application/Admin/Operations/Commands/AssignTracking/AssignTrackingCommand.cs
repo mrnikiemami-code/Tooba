@@ -16,7 +16,6 @@ public sealed class AssignTrackingHandler(AdminOrderOperationsOrchestrator opera
 {
     public Task<Result<object>> Handle(AssignTrackingCommand request, CancellationToken cancellationToken)
     {
-        var body = request.Request with { Code = "assign_tracking" };
-        return operations.ExecuteAsync(request.CheckoutId, request.ActorUserId, body, cancellationToken);
+        return operations.AssignTrackingAsync(request.CheckoutId, request.ActorUserId, request.Request, cancellationToken);
     }
 }

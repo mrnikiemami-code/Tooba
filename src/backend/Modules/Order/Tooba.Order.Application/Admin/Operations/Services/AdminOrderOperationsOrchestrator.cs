@@ -245,15 +245,11 @@ public sealed class AdminOrderOperationsOrchestrator
     }
 
     /// <summary>یک عملیات را پس از بررسی مجوز اجرا می‌کند.</summary>
-    public async Task<Result<object>> ExecuteAsync(
-        Guid checkoutId,
-        Guid actorUserId,
-        AdminOrderOperationRequest request,
-        CancellationToken cancellationToken)
+    private static async Task<Result<object>> RunOperationAsync(Func<Task<object>> execute)
     {
         try
         {
-            return Result.Success(await ExecuteCoreAsync(checkoutId, actorUserId, request, cancellationToken));
+            return Result.Success(await execute());
         }
         catch (AdminOrderOperationsException ex)
         {
@@ -261,29 +257,109 @@ public sealed class AdminOrderOperationsOrchestrator
         }
     }
 
-    private async Task<object> ExecuteCoreAsync(
-        Guid checkoutId,
-        Guid actorUserId,
-        AdminOrderOperationRequest request,
-        CancellationToken cancellationToken)
+    private void EnsureCancelledDoesNotBlock(
+        AdminOrderOpsCheckoutSnapshot group,
+        string expectedCode)
     {
-        if (string.IsNullOrWhiteSpace(request.Code))
-        {
-            throw new AdminOrderOperationsException("order.operation.invalid");
-        }
-
-        var group = await LoadCheckoutAsync(checkoutId, cancellationToken)
-            ?? throw new AdminOrderOperationsException("order.operation.invalid");
-        var effective = await LoadEffectiveAsync(actorUserId, cancellationToken);
-        var code = request.Code.Trim().ToLowerInvariant();
-        if (IsCheckoutCancelled(group) && CancelledBlockedCodes.Contains(code))
+        if (IsCheckoutCancelled(group) && CancelledBlockedCodes.Contains(expectedCode))
         {
             throw new AdminOrderOperationsException("order.cancelled.blocks_action");
         }
+    }
 
-        // cancel / restore_deposit / unconfirm_deposit / restore_cancelled_order: projection may hide; domain remains authoritative.
-        if (code == "cancel")
+    private async Task EnsureProjectedActionAllowedAsync(
+        Guid checkoutId,
+        Guid actorUserId,
+        AdminOrderOperationRequest request,
+        string expectedCode,
+        OrderAdminEffectiveAccess effective,
+        bool allowReturnLifecycleFallback,
+        CancellationToken cancellationToken)
+    {
+        var page = await ListCoreAsync(checkoutId, actorUserId, cancellationToken);
+        var projected = page.Actions.FirstOrDefault(a =>
+            string.Equals(a.Code, expectedCode, StringComparison.OrdinalIgnoreCase)
+            && MatchesIds(a, request));
+        if (projected is null)
         {
+            if (!allowReturnLifecycleFallback)
+            {
+                throw new AdminOrderOperationsException("order.operation.invalid");
+            }
+
+            if (!Has(effective, "return.manage"))
+            {
+                throw new AdminOrderOperationsException("order.operation.denied");
+            }
+        }
+        else if (!Has(effective, projected.RequiredPermission))
+        {
+            throw new AdminOrderOperationsException("order.operation.denied");
+        }
+    }
+
+    private async Task<object> RunProjectedCoreAsync(
+        Guid checkoutId,
+        Guid actorUserId,
+        AdminOrderOperationRequest request,
+        string expectedCode,
+        Func<AdminOrderOpsCheckoutSnapshot, Task<object>> execute,
+        CancellationToken cancellationToken,
+        bool allowReturnLifecycleFallback = false)
+    {
+        var group = await LoadCheckoutAsync(checkoutId, cancellationToken)
+            ?? throw new AdminOrderOperationsException("order.operation.invalid");
+        var effective = await LoadEffectiveAsync(actorUserId, cancellationToken);
+        EnsureCancelledDoesNotBlock(group, expectedCode);
+
+        await EnsureProjectedActionAllowedAsync(
+            checkoutId,
+            actorUserId,
+            request,
+            expectedCode,
+            effective,
+            allowReturnLifecycleFallback,
+            cancellationToken);
+
+        try
+        {
+            return await execute(group);
+        }
+        catch (AdminOrderOperationsException)
+        {
+            throw;
+        }
+        catch (InvalidOperationException ex)
+        {
+            var mapped = MapKnownOperationException(ex.Message);
+            if (mapped.Code == "order.operation.failed")
+            {
+                if (!TryMapReturnCode(ex.Message, out var semantic))
+                {
+                    throw;
+                }
+
+                mapped = (semantic.Code, semantic.Code);
+            }
+
+            throw new AdminOrderOperationsException(mapped.Code);
+        }
+    }
+
+    // --- Early-exit ops (projection may hide; domain remains authoritative) ---
+
+    public Task<Result<object>> CancelOrderAsync(
+        Guid checkoutId,
+        Guid actorUserId,
+        AdminOrderOperationRequest request,
+        CancellationToken cancellationToken) =>
+        RunOperationAsync(async () =>
+        {
+            var group = await LoadCheckoutAsync(checkoutId, cancellationToken)
+                ?? throw new AdminOrderOperationsException("order.operation.invalid");
+            var effective = await LoadEffectiveAsync(actorUserId, cancellationToken);
+            EnsureCancelledDoesNotBlock(group, "cancel");
+
             if (!Has(effective, "order.cancel"))
             {
                 throw new AdminOrderOperationsException("order.operation.denied");
@@ -307,14 +383,24 @@ public sealed class AdminOrderOperationsOrchestrator
             {
                 throw new AdminOrderOperationsException("order.cancel.payout_completed");
             }
-            catch (InvalidOperationException ex)
+            catch (InvalidOperationException)
             {
                 throw new AdminOrderOperationsException("order.operation.failed");
             }
-        }
+        });
 
-        if (code == "restore_deposit")
+    public Task<Result<object>> RestoreDepositAsync(
+        Guid checkoutId,
+        Guid actorUserId,
+        AdminOrderOperationRequest request,
+        CancellationToken cancellationToken) =>
+        RunOperationAsync(async () =>
         {
+            var group = await LoadCheckoutAsync(checkoutId, cancellationToken)
+                ?? throw new AdminOrderOperationsException("order.operation.invalid");
+            var effective = await LoadEffectiveAsync(actorUserId, cancellationToken);
+            EnsureCancelledDoesNotBlock(group, "restore_deposit");
+
             if (!Has(effective, "payment.reconcile"))
             {
                 throw new AdminOrderOperationsException("order.operation.denied");
@@ -332,10 +418,20 @@ public sealed class AdminOrderOperationsOrchestrator
             {
                 throw MapPaymentRestoreError(ex);
             }
-        }
+        });
 
-        if (code == "unconfirm_deposit")
+    public Task<Result<object>> UnconfirmDepositAsync(
+        Guid checkoutId,
+        Guid actorUserId,
+        AdminOrderOperationRequest request,
+        CancellationToken cancellationToken) =>
+        RunOperationAsync(async () =>
         {
+            var group = await LoadCheckoutAsync(checkoutId, cancellationToken)
+                ?? throw new AdminOrderOperationsException("order.operation.invalid");
+            var effective = await LoadEffectiveAsync(actorUserId, cancellationToken);
+            EnsureCancelledDoesNotBlock(group, "unconfirm_deposit");
+
             if (!Has(effective, "payment.reconcile"))
             {
                 throw new AdminOrderOperationsException("order.operation.denied");
@@ -353,101 +449,339 @@ public sealed class AdminOrderOperationsOrchestrator
             {
                 throw MapPaymentUnconfirmError(ex);
             }
-        }
+        });
 
-        if (code == "restore_cancelled_order")
+    public Task<Result<object>> RestoreCancelledOrderAsync(
+        Guid checkoutId,
+        Guid actorUserId,
+        AdminOrderOperationRequest request,
+        CancellationToken cancellationToken) =>
+        RunOperationAsync(async () =>
         {
+            var group = await LoadCheckoutAsync(checkoutId, cancellationToken)
+                ?? throw new AdminOrderOperationsException("order.operation.invalid");
+            var effective = await LoadEffectiveAsync(actorUserId, cancellationToken);
+            EnsureCancelledDoesNotBlock(group, "restore_cancelled_order");
+
             if (!HasAny(effective, "order.cancel", "order.handle"))
             {
                 throw new AdminOrderOperationsException("order.operation.denied");
             }
 
-            return await RestoreCancelledOrderAsync(group, actorUserId, cancellationToken);
-        }
+            return await RestoreCancelledOrderCoreAsync(group, actorUserId, cancellationToken);
+        });
 
-        if (code == "recover_inventory_reservation")
+    public Task<Result<object>> RecoverInventoryReservationAsync(
+        Guid checkoutId,
+        Guid actorUserId,
+        AdminOrderOperationRequest request,
+        CancellationToken cancellationToken) =>
+        RunOperationAsync(async () =>
         {
+            var group = await LoadCheckoutAsync(checkoutId, cancellationToken)
+                ?? throw new AdminOrderOperationsException("order.operation.invalid");
+            var effective = await LoadEffectiveAsync(actorUserId, cancellationToken);
+            EnsureCancelledDoesNotBlock(group, "recover_inventory_reservation");
+
             if (!Has(effective, "payment.reconcile"))
             {
                 throw new AdminOrderOperationsException("order.operation.denied");
             }
 
-            return await RecoverInventoryReservationAsync(checkoutId, actorUserId, request, cancellationToken);
-        }
+            return await RecoverInventoryReservationCoreAsync(checkoutId, actorUserId, request, cancellationToken);
+        });
 
-        var page = await ListCoreAsync(checkoutId, actorUserId, cancellationToken);
-        var projected = page.Actions.FirstOrDefault(a =>
-            string.Equals(a.Code, request.Code, StringComparison.OrdinalIgnoreCase)
-            && MatchesIds(a, request));
-        var isReturnLifecycleOp = code is "request_return" or "approve_return" or "reject_return" or "retry_refund";
-        if (projected is null)
-        {
-            if (!isReturnLifecycleOp)
-            {
-                throw new AdminOrderOperationsException("order.operation.invalid");
-            }
+    // --- Projection-gated ops ---
 
-            if (!Has(effective, "return.manage"))
-            {
-                throw new AdminOrderOperationsException("order.operation.denied");
-            }
-        }
-        else if (!Has(effective, projected.RequiredPermission))
-        {
-            throw new AdminOrderOperationsException("order.operation.denied");
-        }
+    public Task<Result<object>> MarkProcessingAsync(
+        Guid checkoutId,
+        Guid actorUserId,
+        AdminOrderOperationRequest request,
+        CancellationToken cancellationToken) =>
+        RunOperationAsync(() => RunProjectedCoreAsync(
+            checkoutId,
+            actorUserId,
+            request,
+            "mark_processing",
+            _ => MarkProcessingCoreAsync(request, actorUserId, cancellationToken),
+            cancellationToken));
 
-        try
-        {
-            return code switch
-            {
-                "mark_processing" => await MarkProcessingAsync(request, actorUserId, cancellationToken),
-                "mark_packed" => await MarkPackedAsync(request, actorUserId, cancellationToken, requireSelections: false),
-                "pack_selected" => await MarkPackedAsync(request, actorUserId, cancellationToken, requireSelections: true),
-                "unprocess" => await UnprocessAsync(request, actorUserId, cancellationToken),
-                "unpack" => await UnpackAsync(request, actorUserId, cancellationToken),
-                "create_shipment" => await CreateShipmentAsync(request, actorUserId, cancellationToken),
-                "cancel_shipment" => await CancelShipmentAsync(request, actorUserId, cancellationToken),
-                "assign_tracking" => await AssignTrackingAsync(request, actorUserId, cancellationToken),
-                "correct_tracking" => await CorrectTrackingAsync(request, actorUserId, cancellationToken),
-                "restore_cancelled_order" => await RestoreCancelledOrderAsync(group, actorUserId, cancellationToken),
-                "dispatch_shipment" => await DispatchAsync(request, actorUserId, cancellationToken),
-                "deliver_shipment" => await DeliverAsync(request, actorUserId, cancellationToken),
-                "create_consolidated_package" => await CreateConsolidatedPackageAsync(checkoutId, request, actorUserId, cancellationToken),
-                "cancel_consolidated_package" => await CancelConsolidatedPackageAsync(request, actorUserId, cancellationToken),
-                "assign_consolidated_package_tracking" => await AssignConsolidatedPackageTrackingAsync(request, actorUserId, cancellationToken),
-                "dispatch_consolidated_package" => await DispatchConsolidatedPackageAsync(request, actorUserId, cancellationToken),
-                "deliver_consolidated_package" => await DeliverConsolidatedPackageAsync(request, actorUserId, cancellationToken),
-                "request_return" => await RequestReturnAsync(group, request, cancellationToken),
-                "approve_return" => await ApproveReturnAsync(request, actorUserId, cancellationToken),
-                "reject_return" => await RejectReturnAsync(request, actorUserId, cancellationToken),
-                "retry_refund" => await RetryRefundAsync(request, actorUserId, cancellationToken),
-                "confirm_deposit" => await ConfirmDepositForCheckoutAsync(group, cancellationToken),
-                "reject_deposit" => await RejectDepositForCheckoutAsync(checkoutId, cancellationToken),
-                "recover_inventory_reservation" => await RecoverInventoryReservationAsync(checkoutId, actorUserId, request, cancellationToken),
-                _ => throw new AdminOrderOperationsException("order.operation.invalid"),
-            };
-        }
-        catch (AdminOrderOperationsException)
-        {
-            throw;
-        }
-        catch (InvalidOperationException ex)
-        {
-            var mapped = MapKnownOperationException(ex.Message);
-            if (mapped.Code == "order.operation.failed")
-            {
-                if (!TryMapReturnCode(ex.Message, out var semantic))
-                {
-                    throw;
-                }
+    public Task<Result<object>> MarkPackedAsync(
+        Guid checkoutId,
+        Guid actorUserId,
+        AdminOrderOperationRequest request,
+        CancellationToken cancellationToken) =>
+        RunOperationAsync(() => RunProjectedCoreAsync(
+            checkoutId,
+            actorUserId,
+            request,
+            "mark_packed",
+            _ => MarkPackedCoreAsync(request, actorUserId, cancellationToken, requireSelections: false),
+            cancellationToken));
 
-                mapped = (semantic.Code, semantic.Code);
-            }
+    public Task<Result<object>> PackSelectedAsync(
+        Guid checkoutId,
+        Guid actorUserId,
+        AdminOrderOperationRequest request,
+        CancellationToken cancellationToken) =>
+        RunOperationAsync(() => RunProjectedCoreAsync(
+            checkoutId,
+            actorUserId,
+            request,
+            "pack_selected",
+            _ => MarkPackedCoreAsync(request, actorUserId, cancellationToken, requireSelections: true),
+            cancellationToken));
 
-            throw new AdminOrderOperationsException(mapped.Code);
-        }
-    }
+    public Task<Result<object>> UnprocessAsync(
+        Guid checkoutId,
+        Guid actorUserId,
+        AdminOrderOperationRequest request,
+        CancellationToken cancellationToken) =>
+        RunOperationAsync(() => RunProjectedCoreAsync(
+            checkoutId,
+            actorUserId,
+            request,
+            "unprocess",
+            _ => UnprocessCoreAsync(request, actorUserId, cancellationToken),
+            cancellationToken));
+
+    public Task<Result<object>> UnpackAsync(
+        Guid checkoutId,
+        Guid actorUserId,
+        AdminOrderOperationRequest request,
+        CancellationToken cancellationToken) =>
+        RunOperationAsync(() => RunProjectedCoreAsync(
+            checkoutId,
+            actorUserId,
+            request,
+            "unpack",
+            _ => UnpackCoreAsync(request, actorUserId, cancellationToken),
+            cancellationToken));
+
+    public Task<Result<object>> CreateShipmentAsync(
+        Guid checkoutId,
+        Guid actorUserId,
+        AdminOrderOperationRequest request,
+        CancellationToken cancellationToken) =>
+        RunOperationAsync(() => RunProjectedCoreAsync(
+            checkoutId,
+            actorUserId,
+            request,
+            "create_shipment",
+            _ => CreateShipmentCoreAsync(request, actorUserId, cancellationToken),
+            cancellationToken));
+
+    public Task<Result<object>> CancelShipmentAsync(
+        Guid checkoutId,
+        Guid actorUserId,
+        AdminOrderOperationRequest request,
+        CancellationToken cancellationToken) =>
+        RunOperationAsync(() => RunProjectedCoreAsync(
+            checkoutId,
+            actorUserId,
+            request,
+            "cancel_shipment",
+            _ => CancelShipmentCoreAsync(request, actorUserId, cancellationToken),
+            cancellationToken));
+
+    public Task<Result<object>> AssignTrackingAsync(
+        Guid checkoutId,
+        Guid actorUserId,
+        AdminOrderOperationRequest request,
+        CancellationToken cancellationToken) =>
+        RunOperationAsync(() => RunProjectedCoreAsync(
+            checkoutId,
+            actorUserId,
+            request,
+            "assign_tracking",
+            _ => AssignTrackingCoreAsync(request, actorUserId, cancellationToken),
+            cancellationToken));
+
+    public Task<Result<object>> CorrectTrackingAsync(
+        Guid checkoutId,
+        Guid actorUserId,
+        AdminOrderOperationRequest request,
+        CancellationToken cancellationToken) =>
+        RunOperationAsync(() => RunProjectedCoreAsync(
+            checkoutId,
+            actorUserId,
+            request,
+            "correct_tracking",
+            _ => CorrectTrackingCoreAsync(request, actorUserId, cancellationToken),
+            cancellationToken));
+
+    public Task<Result<object>> DispatchShipmentAsync(
+        Guid checkoutId,
+        Guid actorUserId,
+        AdminOrderOperationRequest request,
+        CancellationToken cancellationToken) =>
+        RunOperationAsync(() => RunProjectedCoreAsync(
+            checkoutId,
+            actorUserId,
+            request,
+            "dispatch_shipment",
+            _ => DispatchCoreAsync(request, actorUserId, cancellationToken),
+            cancellationToken));
+
+    public Task<Result<object>> DeliverShipmentAsync(
+        Guid checkoutId,
+        Guid actorUserId,
+        AdminOrderOperationRequest request,
+        CancellationToken cancellationToken) =>
+        RunOperationAsync(() => RunProjectedCoreAsync(
+            checkoutId,
+            actorUserId,
+            request,
+            "deliver_shipment",
+            _ => DeliverCoreAsync(request, actorUserId, cancellationToken),
+            cancellationToken));
+
+    public Task<Result<object>> CreateConsolidatedPackageAsync(
+        Guid checkoutId,
+        Guid actorUserId,
+        AdminOrderOperationRequest request,
+        CancellationToken cancellationToken) =>
+        RunOperationAsync(() => RunProjectedCoreAsync(
+            checkoutId,
+            actorUserId,
+            request,
+            "create_consolidated_package",
+            _ => CreateConsolidatedPackageCoreAsync(checkoutId, request, actorUserId, cancellationToken),
+            cancellationToken));
+
+    public Task<Result<object>> CancelConsolidatedPackageAsync(
+        Guid checkoutId,
+        Guid actorUserId,
+        AdminOrderOperationRequest request,
+        CancellationToken cancellationToken) =>
+        RunOperationAsync(() => RunProjectedCoreAsync(
+            checkoutId,
+            actorUserId,
+            request,
+            "cancel_consolidated_package",
+            _ => CancelConsolidatedPackageCoreAsync(request, actorUserId, cancellationToken),
+            cancellationToken));
+
+    public Task<Result<object>> AssignConsolidatedPackageTrackingAsync(
+        Guid checkoutId,
+        Guid actorUserId,
+        AdminOrderOperationRequest request,
+        CancellationToken cancellationToken) =>
+        RunOperationAsync(() => RunProjectedCoreAsync(
+            checkoutId,
+            actorUserId,
+            request,
+            "assign_consolidated_package_tracking",
+            _ => AssignConsolidatedPackageTrackingCoreAsync(request, actorUserId, cancellationToken),
+            cancellationToken));
+
+    public Task<Result<object>> DispatchConsolidatedPackageAsync(
+        Guid checkoutId,
+        Guid actorUserId,
+        AdminOrderOperationRequest request,
+        CancellationToken cancellationToken) =>
+        RunOperationAsync(() => RunProjectedCoreAsync(
+            checkoutId,
+            actorUserId,
+            request,
+            "dispatch_consolidated_package",
+            _ => DispatchConsolidatedPackageCoreAsync(request, actorUserId, cancellationToken),
+            cancellationToken));
+
+    public Task<Result<object>> DeliverConsolidatedPackageAsync(
+        Guid checkoutId,
+        Guid actorUserId,
+        AdminOrderOperationRequest request,
+        CancellationToken cancellationToken) =>
+        RunOperationAsync(() => RunProjectedCoreAsync(
+            checkoutId,
+            actorUserId,
+            request,
+            "deliver_consolidated_package",
+            _ => DeliverConsolidatedPackageCoreAsync(request, actorUserId, cancellationToken),
+            cancellationToken));
+
+    public Task<Result<object>> RequestReturnAsync(
+        Guid checkoutId,
+        Guid actorUserId,
+        AdminOrderOperationRequest request,
+        CancellationToken cancellationToken) =>
+        RunOperationAsync(() => RunProjectedCoreAsync(
+            checkoutId,
+            actorUserId,
+            request,
+            "request_return",
+            group => RequestReturnCoreAsync(group, request, cancellationToken),
+            cancellationToken,
+            allowReturnLifecycleFallback: true));
+
+    public Task<Result<object>> ApproveReturnAsync(
+        Guid checkoutId,
+        Guid actorUserId,
+        AdminOrderOperationRequest request,
+        CancellationToken cancellationToken) =>
+        RunOperationAsync(() => RunProjectedCoreAsync(
+            checkoutId,
+            actorUserId,
+            request,
+            "approve_return",
+            _ => ApproveReturnCoreAsync(request, actorUserId, cancellationToken),
+            cancellationToken,
+            allowReturnLifecycleFallback: true));
+
+    public Task<Result<object>> RejectReturnAsync(
+        Guid checkoutId,
+        Guid actorUserId,
+        AdminOrderOperationRequest request,
+        CancellationToken cancellationToken) =>
+        RunOperationAsync(() => RunProjectedCoreAsync(
+            checkoutId,
+            actorUserId,
+            request,
+            "reject_return",
+            _ => RejectReturnCoreAsync(request, actorUserId, cancellationToken),
+            cancellationToken,
+            allowReturnLifecycleFallback: true));
+
+    public Task<Result<object>> RetryRefundAsync(
+        Guid checkoutId,
+        Guid actorUserId,
+        AdminOrderOperationRequest request,
+        CancellationToken cancellationToken) =>
+        RunOperationAsync(() => RunProjectedCoreAsync(
+            checkoutId,
+            actorUserId,
+            request,
+            "retry_refund",
+            _ => RetryRefundCoreAsync(request, actorUserId, cancellationToken),
+            cancellationToken,
+            allowReturnLifecycleFallback: true));
+
+    public Task<Result<object>> ConfirmDepositAsync(
+        Guid checkoutId,
+        Guid actorUserId,
+        AdminOrderOperationRequest request,
+        CancellationToken cancellationToken) =>
+        RunOperationAsync(() => RunProjectedCoreAsync(
+            checkoutId,
+            actorUserId,
+            request,
+            "confirm_deposit",
+            group => ConfirmDepositForCheckoutAsync(group, cancellationToken),
+            cancellationToken));
+
+    public Task<Result<object>> RejectDepositAsync(
+        Guid checkoutId,
+        Guid actorUserId,
+        AdminOrderOperationRequest request,
+        CancellationToken cancellationToken) =>
+        RunOperationAsync(() => RunProjectedCoreAsync(
+            checkoutId,
+            actorUserId,
+            request,
+            "reject_deposit",
+            _ => RejectDepositForCheckoutAsync(checkoutId, cancellationToken),
+            cancellationToken));
 
     private void ProjectActions(
         List<AdminOrderOperationAction> actions,
@@ -934,7 +1268,7 @@ public sealed class AdminOrderOperationsOrchestrator
         };
     }
 
-    private async Task<object> MarkProcessingAsync(
+    private async Task<object> MarkProcessingCoreAsync(
         AdminOrderOperationRequest request,
         Guid actorUserId,
         CancellationToken cancellationToken)
@@ -961,7 +1295,7 @@ public sealed class AdminOrderOperationsOrchestrator
         return await _fulfillment.ProcessSelectionsAsync(fulfillmentId, actorUserId, selections, cancellationToken);
     }
 
-    private async Task<object> UnprocessAsync(
+    private async Task<object> UnprocessCoreAsync(
         AdminOrderOperationRequest request,
         Guid actorUserId,
         CancellationToken cancellationToken)
@@ -983,7 +1317,7 @@ public sealed class AdminOrderOperationsOrchestrator
         return await _fulfillment.UnprocessSelectionsAsync(fulfillmentId, actorUserId, selections, cancellationToken);
     }
 
-    private async Task<object> MarkPackedAsync(
+    private async Task<object> MarkPackedCoreAsync(
         AdminOrderOperationRequest request,
         Guid actorUserId,
         CancellationToken cancellationToken,
@@ -1023,7 +1357,7 @@ public sealed class AdminOrderOperationsOrchestrator
         }
     }
 
-    private async Task<object> UnpackAsync(
+    private async Task<object> UnpackCoreAsync(
         AdminOrderOperationRequest request,
         Guid actorUserId,
         CancellationToken cancellationToken)
@@ -1045,7 +1379,7 @@ public sealed class AdminOrderOperationsOrchestrator
         return await _fulfillment.UnpackSelectionsAsync(fulfillmentId, actorUserId, selections, cancellationToken);
     }
 
-    private async Task<object> CreateShipmentAsync(
+    private async Task<object> CreateShipmentCoreAsync(
         AdminOrderOperationRequest request,
         Guid actorUserId,
         CancellationToken cancellationToken)
@@ -1095,7 +1429,7 @@ public sealed class AdminOrderOperationsOrchestrator
         }
     }
 
-    private async Task<object> CancelShipmentAsync(
+    private async Task<object> CancelShipmentCoreAsync(
         AdminOrderOperationRequest request,
         Guid actorUserId,
         CancellationToken cancellationToken)
@@ -1105,7 +1439,7 @@ public sealed class AdminOrderOperationsOrchestrator
         return await _fulfillment.CancelShipmentAsync(fulfillmentId, shipmentId, actorUserId, cancellationToken);
     }
 
-    private async Task<object> AssignTrackingAsync(
+    private async Task<object> AssignTrackingCoreAsync(
         AdminOrderOperationRequest request,
         Guid actorUserId,
         CancellationToken cancellationToken)
@@ -1125,7 +1459,7 @@ public sealed class AdminOrderOperationsOrchestrator
             cancellationToken);
     }
 
-    private async Task<object> CorrectTrackingAsync(
+    private async Task<object> CorrectTrackingCoreAsync(
         AdminOrderOperationRequest request,
         Guid actorUserId,
         CancellationToken cancellationToken)
@@ -1160,7 +1494,7 @@ public sealed class AdminOrderOperationsOrchestrator
         }
     }
 
-    private async Task<object> DispatchAsync(
+    private async Task<object> DispatchCoreAsync(
         AdminOrderOperationRequest request,
         Guid actorUserId,
         CancellationToken cancellationToken)
@@ -1170,7 +1504,7 @@ public sealed class AdminOrderOperationsOrchestrator
         return await _fulfillment.DispatchShipmentAsync(fulfillmentId, shipmentId, actorUserId, cancellationToken);
     }
 
-    private async Task<object> DeliverAsync(
+    private async Task<object> DeliverCoreAsync(
         AdminOrderOperationRequest request,
         Guid actorUserId,
         CancellationToken cancellationToken)
@@ -1180,7 +1514,7 @@ public sealed class AdminOrderOperationsOrchestrator
         return await _fulfillment.DeliverShipmentAsync(fulfillmentId, shipmentId, actorUserId, cancellationToken);
     }
 
-    private async Task<object> CreateConsolidatedPackageAsync(
+    private async Task<object> CreateConsolidatedPackageCoreAsync(
         Guid checkoutId,
         AdminOrderOperationRequest request,
         Guid actorUserId,
@@ -1204,7 +1538,7 @@ public sealed class AdminOrderOperationsOrchestrator
             cancellationToken);
     }
 
-    private async Task<object> CancelConsolidatedPackageAsync(
+    private async Task<object> CancelConsolidatedPackageCoreAsync(
         AdminOrderOperationRequest request,
         Guid actorUserId,
         CancellationToken cancellationToken)
@@ -1213,7 +1547,7 @@ public sealed class AdminOrderOperationsOrchestrator
         return await _fulfillment.CancelConsolidatedPackageAsync(packageId, actorUserId, cancellationToken);
     }
 
-    private async Task<object> AssignConsolidatedPackageTrackingAsync(
+    private async Task<object> AssignConsolidatedPackageTrackingCoreAsync(
         AdminOrderOperationRequest request,
         Guid actorUserId,
         CancellationToken cancellationToken)
@@ -1231,7 +1565,7 @@ public sealed class AdminOrderOperationsOrchestrator
             cancellationToken);
     }
 
-    private async Task<object> DispatchConsolidatedPackageAsync(
+    private async Task<object> DispatchConsolidatedPackageCoreAsync(
         AdminOrderOperationRequest request,
         Guid actorUserId,
         CancellationToken cancellationToken)
@@ -1240,7 +1574,7 @@ public sealed class AdminOrderOperationsOrchestrator
         return await _fulfillment.DispatchConsolidatedPackageAsync(packageId, actorUserId, cancellationToken);
     }
 
-    private async Task<object> DeliverConsolidatedPackageAsync(
+    private async Task<object> DeliverConsolidatedPackageCoreAsync(
         AdminOrderOperationRequest request,
         Guid actorUserId,
         CancellationToken cancellationToken)
@@ -1249,7 +1583,7 @@ public sealed class AdminOrderOperationsOrchestrator
         return await _fulfillment.DeliverConsolidatedPackageAsync(packageId, actorUserId, cancellationToken);
     }
 
-    private async Task<object> RequestReturnAsync(
+    private async Task<object> RequestReturnCoreAsync(
         AdminOrderOpsCheckoutSnapshot group,
         AdminOrderOperationRequest request,
         CancellationToken cancellationToken)
@@ -1297,7 +1631,7 @@ public sealed class AdminOrderOperationsOrchestrator
             cancellationToken);
     }
 
-    private async Task<object> ApproveReturnAsync(
+    private async Task<object> ApproveReturnCoreAsync(
         AdminOrderOperationRequest request,
         Guid actorUserId,
         CancellationToken cancellationToken)
@@ -1306,7 +1640,7 @@ public sealed class AdminOrderOperationsOrchestrator
         return await _returns.ApproveAsync(returnRequestId, actorUserId, cancellationToken);
     }
 
-    private async Task<object> RejectReturnAsync(
+    private async Task<object> RejectReturnCoreAsync(
         AdminOrderOperationRequest request,
         Guid actorUserId,
         CancellationToken cancellationToken)
@@ -1434,7 +1768,7 @@ public sealed class AdminOrderOperationsOrchestrator
         }
     }
 
-    private async Task<object> RecoverInventoryReservationAsync(
+    private async Task<object> RecoverInventoryReservationCoreAsync(
         Guid checkoutId,
         Guid actorUserId,
         AdminOrderOperationRequest request,
@@ -1509,7 +1843,7 @@ public sealed class AdminOrderOperationsOrchestrator
             "سفارش لغوشده بازگردانی شود؟ رزرو موجودی دوباره گرفته می‌شود."));
     }
 
-    private async Task<object> RestoreCancelledOrderAsync(
+    private async Task<object> RestoreCancelledOrderCoreAsync(
         AdminOrderOpsCheckoutSnapshot group,
         Guid actorUserId,
         CancellationToken cancellationToken)
@@ -1712,7 +2046,7 @@ public sealed class AdminOrderOperationsOrchestrator
         }
     }
 
-    private async Task<object> RetryRefundAsync(
+    private async Task<object> RetryRefundCoreAsync(
         AdminOrderOperationRequest request,
         Guid actorUserId,
         CancellationToken cancellationToken)

@@ -60,7 +60,8 @@ public sealed class AdminOrderCancelPrecedenceTests
             root, "src", "backend", "Host", "Tooba.Host", "Admin", "AdminPanelComposer.cs"));
         Assert.Contains("if (!IsCheckoutCancelled(group))", composer, StringComparison.Ordinal);
         Assert.Contains("ProjectPaymentActions", composer, StringComparison.Ordinal);
-        Assert.Contains("CancelledBlockedCodes.Contains(code)", composer, StringComparison.Ordinal);
+        Assert.Contains("CancelledBlockedCodes.Contains(expectedCode)", composer, StringComparison.Ordinal);
+        Assert.Contains("EnsureCancelledDoesNotBlock", composer, StringComparison.Ordinal);
         Assert.Contains("order.cancelled.blocks_action", composer, StringComparison.Ordinal);
         Assert.Contains("order.Status != SellerOrderStatus.Cancelled && fulfillment is not null", composer, StringComparison.Ordinal);
         Assert.Contains("return (policyLabel, \"\", \"before_delivery\")", panel, StringComparison.Ordinal);

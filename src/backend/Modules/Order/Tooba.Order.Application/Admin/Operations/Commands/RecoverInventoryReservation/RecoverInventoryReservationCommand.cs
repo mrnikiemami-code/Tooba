@@ -16,7 +16,6 @@ public sealed class RecoverInventoryReservationHandler(AdminOrderOperationsOrche
 {
     public Task<Result<object>> Handle(RecoverInventoryReservationCommand request, CancellationToken cancellationToken)
     {
-        var body = request.Request with { Code = "recover_inventory_reservation" };
-        return operations.ExecuteAsync(request.CheckoutId, request.ActorUserId, body, cancellationToken);
+        return operations.RecoverInventoryReservationAsync(request.CheckoutId, request.ActorUserId, request.Request, cancellationToken);
     }
 }

@@ -16,7 +16,6 @@ public sealed class DeliverConsolidatedPackageHandler(AdminOrderOperationsOrches
 {
     public Task<Result<object>> Handle(DeliverConsolidatedPackageCommand request, CancellationToken cancellationToken)
     {
-        var body = request.Request with { Code = "deliver_consolidated_package" };
-        return operations.ExecuteAsync(request.CheckoutId, request.ActorUserId, body, cancellationToken);
+        return operations.DeliverConsolidatedPackageAsync(request.CheckoutId, request.ActorUserId, request.Request, cancellationToken);
     }
 }

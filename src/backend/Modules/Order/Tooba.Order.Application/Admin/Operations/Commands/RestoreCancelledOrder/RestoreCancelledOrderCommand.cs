@@ -16,7 +16,6 @@ public sealed class RestoreCancelledOrderHandler(AdminOrderOperationsOrchestrato
 {
     public Task<Result<object>> Handle(RestoreCancelledOrderCommand request, CancellationToken cancellationToken)
     {
-        var body = request.Request with { Code = "restore_cancelled_order" };
-        return operations.ExecuteAsync(request.CheckoutId, request.ActorUserId, body, cancellationToken);
+        return operations.RestoreCancelledOrderAsync(request.CheckoutId, request.ActorUserId, request.Request, cancellationToken);
     }
 }

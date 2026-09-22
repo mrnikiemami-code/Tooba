@@ -16,7 +16,6 @@ public sealed class CancelOrderHandler(AdminOrderOperationsOrchestrator operatio
 {
     public Task<Result<object>> Handle(CancelOrderCommand request, CancellationToken cancellationToken)
     {
-        var body = request.Request with { Code = "cancel" };
-        return operations.ExecuteAsync(request.CheckoutId, request.ActorUserId, body, cancellationToken);
+        return operations.CancelOrderAsync(request.CheckoutId, request.ActorUserId, request.Request, cancellationToken);
     }
 }

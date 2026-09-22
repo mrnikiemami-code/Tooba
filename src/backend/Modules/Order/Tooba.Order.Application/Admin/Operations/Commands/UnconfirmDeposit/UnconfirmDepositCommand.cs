@@ -16,7 +16,6 @@ public sealed class UnconfirmDepositHandler(AdminOrderOperationsOrchestrator ope
 {
     public Task<Result<object>> Handle(UnconfirmDepositCommand request, CancellationToken cancellationToken)
     {
-        var body = request.Request with { Code = "unconfirm_deposit" };
-        return operations.ExecuteAsync(request.CheckoutId, request.ActorUserId, body, cancellationToken);
+        return operations.UnconfirmDepositAsync(request.CheckoutId, request.ActorUserId, request.Request, cancellationToken);
     }
 }

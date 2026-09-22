@@ -16,7 +16,6 @@ public sealed class ApproveReturnHandler(AdminOrderOperationsOrchestrator operat
 {
     public Task<Result<object>> Handle(ApproveReturnCommand request, CancellationToken cancellationToken)
     {
-        var body = request.Request with { Code = "approve_return" };
-        return operations.ExecuteAsync(request.CheckoutId, request.ActorUserId, body, cancellationToken);
+        return operations.ApproveReturnAsync(request.CheckoutId, request.ActorUserId, request.Request, cancellationToken);
     }
 }

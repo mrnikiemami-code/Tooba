@@ -16,7 +16,6 @@ public sealed class RetryRefundHandler(AdminOrderOperationsOrchestrator operatio
 {
     public Task<Result<object>> Handle(RetryRefundCommand request, CancellationToken cancellationToken)
     {
-        var body = request.Request with { Code = "retry_refund" };
-        return operations.ExecuteAsync(request.CheckoutId, request.ActorUserId, body, cancellationToken);
+        return operations.RetryRefundAsync(request.CheckoutId, request.ActorUserId, request.Request, cancellationToken);
     }
 }

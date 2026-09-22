@@ -16,7 +16,6 @@ public sealed class UnpackFulfillmentHandler(AdminOrderOperationsOrchestrator op
 {
     public Task<Result<object>> Handle(UnpackFulfillmentCommand request, CancellationToken cancellationToken)
     {
-        var body = request.Request with { Code = "unpack" };
-        return operations.ExecuteAsync(request.CheckoutId, request.ActorUserId, body, cancellationToken);
+        return operations.UnpackAsync(request.CheckoutId, request.ActorUserId, request.Request, cancellationToken);
     }
 }
