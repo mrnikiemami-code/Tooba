@@ -1,0 +1,27 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+BEGIN_TOOBA_WORKER_RESULT
+
+Task-ID: TB-TMAR-ORDER-GOLDEN-001-R5
+Parent-Task: TB-TMAR-ORDER-GOLDEN-001-R4-R1
+Status: PASS
+
+Summary: Moved Storefront checkout/pending-payment/shipping business authority from Host composers into Order CQRS. Nine routes owned by Order.Endpoints via ISender→MediatR. Host StorefrontCheckout/PendingPayment/Shipping composers+helpers removed. Thin Host adapters only (actor + checkout identity gate). Cart/AddressBook/Fulfillment/Payment Contracts seams for foreign reads. Checkout remains PAUSED_AT_SAFE_W5_CHECKPOINT; R6 not started.
+Host-Removal-State: StorefrontCheckoutComposer, StorefrontPendingPaymentComposer/Projector, StorefrontShippingComposer/Calculator, StorefrontIranGeography, StorefrontRecipientNames removed from Host
+Route-Ownership: 9 storefront checkout/pending/shipping routes in Order.Endpoints/StorefrontOrderEndpoints via ISender
+CQRS-State: Preview/Get/Submit checkout; List/Cancel/Hide pending; Project/Save/Commit shipping as real MediatR handlers
+Contracts-Seams: Cart presentation, AddressBook, Fulfillment shipping catalog, Payment provider codes via Contracts
+Message-Classification-State: migrated routes use ApiResponseFactory/SemanticError; Host message classifiers removed with handlers
+R4-Host-Removal-Preserved: yes
+Architecture-Guard-Validation: OrderStorefrontArchitectureGuardTests 8/8 PASS; Order.Tests 62/62 PASS; Cart/Fulfillment/Payment architecture guards PASS
+Focused-Validation: Host storefront/checkout/durable/folder 62 PASS
+Full-Validation: dotnet build src/backend/Tooba.slnx succeeded 0 errors
+Recovery-State: slice STOREFRONT_ORDER_CQRS_R5 recorded; Order INCOMPLETE_REFERENCE_REPAIR
+Recovery-Next-Task: TB-TMAR-ORDER-GOLDEN-001-R6
+Residual-Defects: Admin order detail still Host (deferred R6+); CheckoutAbuseGate still Host adapter over DbContext counts
+Order-Overall-State: INCOMPLETE_REFERENCE_REPAIR
+Checkout-State: PAUSED_AT_SAFE_W5_CHECKPOINT
+Git: PLACEHOLDER pushed origin/main; HEAD==origin/main
+User-Work-Preserved: yes; unrelated untracked R2C RESULT.bridge.txt untouched
+Next-Recommended-Task: TB-TMAR-ORDER-GOLDEN-001-R6
+
+END_TOOBA_WORKER_RESULT
