@@ -8,6 +8,7 @@ using Tooba.Notification.Contracts.Routes;
 using Tooba.Support.Domain.Aggregates;
 using Tooba.Support.Domain.Entities;
 using Tooba.Support.Domain.ValueObjects;
+using Tooba.Support.Application.Models;
 using Tooba.Support.Infrastructure.Adapters;
 using Tooba.Support.Infrastructure.Persistence;
 
@@ -38,7 +39,7 @@ public static class SupportDevelopmentSeed
         await EnsureSellerOpenAsync(db, sellerPartyId, sellerActorUserId, now, cancellationToken);
 
         SupportDemoSnapshotStore.Publish(
-            new SupportDemoSnapshot(
+            new SupportDemoSnapshotDto(
                 SupportDemoIds.CustomerOpenTicketId,
                 SupportDemoIds.CustomerResolvedTicketId,
                 SupportDemoIds.SellerWaitingTicketId,

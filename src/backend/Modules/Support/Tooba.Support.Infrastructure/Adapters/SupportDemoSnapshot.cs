@@ -1,3 +1,6 @@
+using Tooba.Support.Application.Models;
+using Tooba.Support.Application.Ports;
+
 namespace Tooba.Support.Infrastructure.Adapters;
 
 /// <summary>شناسه‌های پایدار دانهٔ توسعه برای demo-preview.</summary>
@@ -34,27 +37,21 @@ public static class SupportDemoIds
     public static readonly Guid DemoRelatedOrderId = Guid.Parse("aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaa0001");
 }
 
-/// <summary>snapshot شناسه‌های demo برای USER-PREVIEW.</summary>
-public sealed record SupportDemoSnapshot(
-    Guid CustomerOpenTicketId,
-    Guid CustomerResolvedTicketId,
-    Guid SellerWaitingTicketId,
-    Guid SellerOpenTicketId,
-    Guid? CustomerActorUserId,
-    Guid? SellerPartyId,
-    Guid? SellerActorUserId,
-    Guid? AdminActorUserId,
-    Guid? RelatedOrderId,
-    string Note);
-
 /// <summary>نگهدارندهٔ snapshot پس از دانهٔ توسعه.</summary>
 public static class SupportDemoSnapshotStore
 {
-    private static SupportDemoSnapshot? _current;
+    private static SupportDemoSnapshotDto? _current;
 
     /// <summary>آخرین snapshot دانه‌شده؛ null اگر هنوز آماده نباشد.</summary>
-    public static SupportDemoSnapshot? Current => _current;
+    public static SupportDemoSnapshotDto? Current => _current;
 
-    /// <summary>snapshot را منتشر می‌کند.</summary>
-    public static void Publish(SupportDemoSnapshot snapshot) => _current = snapshot;
+    /// <summary>snapshot را منتشر می‌کند؛ null برای پاک‌سازی (تست/بازنشانی).</summary>
+    public static void Publish(SupportDemoSnapshotDto? snapshot) => _current = snapshot;
+}
+
+/// <summary>Adapter exposing demo snapshot to Application without Endpoints→Infrastructure coupling.</summary>
+public sealed class SupportDemoPreviewAdapter : ISupportDemoPreviewPort
+{
+    /// <inheritdoc />
+    public SupportDemoSnapshotDto? TryGetCurrent() => SupportDemoSnapshotStore.Current;
 }

@@ -33,11 +33,18 @@ public sealed class SupportFoundationTests
         Assert.Contains(AccessScopeKind.GlobalWithinOwner, view.ScopeKinds);
     }
 
-    /// <summary>نقاط انتهایی Customer/Seller/Admin در Host سیم‌کشی شده‌اند.</summary>
+    /// <summary>نقاط انتهایی Customer/Seller/Admin در Support.Endpoints سیم‌کشی شده‌اند.</summary>
     [Fact]
     public void Support_endpoints_source_declares_audience_routes_when_present()
     {
-        var path = Path.Combine(FindRepoRoot(), "src", "backend", "Host", "Tooba.Host", "Support", "SupportEndpoints.cs");
+        var path = Path.Combine(
+            FindRepoRoot(),
+            "src",
+            "backend",
+            "Modules",
+            "Support",
+            "Tooba.Support.Endpoints",
+            "SupportEndpointModule.cs");
         if (!File.Exists(path))
         {
             return;
@@ -45,14 +52,20 @@ public sealed class SupportFoundationTests
 
         var source = File.ReadAllText(path);
         Assert.Contains("MapSupportEndpoints", source, StringComparison.Ordinal);
-        Assert.Contains("/v1/customer/support/tickets", source, StringComparison.Ordinal);
-        Assert.Contains("/v1/seller/support/tickets", source, StringComparison.Ordinal);
-        Assert.Contains("/v1/admin/support/tickets", source, StringComparison.Ordinal);
-        Assert.Contains("/replies", source, StringComparison.Ordinal);
-        Assert.Contains("SellerPanelAccess.RequireAuthorizedAsync", source, StringComparison.Ordinal);
-        Assert.Contains("AdminPanelAccess.RequireAuthorizedAsync", source, StringComparison.Ordinal);
-        Assert.Contains("IsInternalNote", source, StringComparison.Ordinal);
-        Assert.Contains("demo-preview", source, StringComparison.Ordinal);
+        Assert.Contains("/v1/customer/support", source, StringComparison.Ordinal);
+        Assert.Contains("/v1/seller/support", source, StringComparison.Ordinal);
+        Assert.Contains("/v1/admin/support", source, StringComparison.Ordinal);
+
+        var customer = File.ReadAllText(Path.Combine(
+            FindRepoRoot(), "src", "backend", "Modules", "Support", "Tooba.Support.Endpoints", "Customer", "SupportCustomerEndpoints.cs"));
+        var seller = File.ReadAllText(Path.Combine(
+            FindRepoRoot(), "src", "backend", "Modules", "Support", "Tooba.Support.Endpoints", "Seller", "SupportSellerEndpoints.cs"));
+        var admin = File.ReadAllText(Path.Combine(
+            FindRepoRoot(), "src", "backend", "Modules", "Support", "Tooba.Support.Endpoints", "Admin", "SupportAdminEndpoints.cs"));
+        Assert.Contains("/replies", customer, StringComparison.Ordinal);
+        Assert.Contains("support.view", seller, StringComparison.Ordinal);
+        Assert.Contains("IsInternalNote", admin, StringComparison.Ordinal);
+        Assert.Contains("demo-preview", admin, StringComparison.Ordinal);
     }
 
     /// <summary>ماژول Support نباید Infrastructure ماژول‌های دیگر را ProjectReference کند.</summary>

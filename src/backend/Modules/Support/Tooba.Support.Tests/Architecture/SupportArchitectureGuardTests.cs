@@ -7,9 +7,18 @@ namespace Tooba.Support.Tests.Architecture;
 public sealed class SupportArchitectureGuardTests
 {
     private static readonly string[] AllowedDomainFolders = ["Aggregates", "Entities", "ValueObjects", "Events", "Policies"];
-    private static readonly string[] AllowedApplicationFolders = ["Ports", "Models", "Commands", "Queries"];
+    private static readonly string[] AllowedApplicationFolders = ["Ports", "Models", "Commands", "Queries", "Errors"];
     private static readonly string[] AllowedInfrastructureFolders =
         ["Persistence", "Directories", "Adapters", "Seeds", "Messaging", "DependencyInjection", "Migrations"];
+    private static readonly string[] AllowedEndpointsFolders = ["Customer", "Seller", "Admin", "Errors", "Resources"];
+
+    private static readonly HashSet<string> HostDbContextAllowlist = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "Program.cs",
+        "ModuleMigrationRegistry.cs",
+        "SupportDevelopmentSeedHost.cs",
+        "ProductWorkspaceDevelopmentBootstrap.cs",
+    };
 
     private static string RepoRoot()
     {
@@ -65,9 +74,11 @@ public sealed class SupportArchitectureGuardTests
         AssertNoRootDump("Tooba.Support.Domain", AllowedDomainFolders);
         AssertNoRootDump("Tooba.Support.Application", AllowedApplicationFolders);
         AssertNoRootDump("Tooba.Support.Infrastructure", AllowedInfrastructureFolders);
+        AssertNoRootDump("Tooba.Support.Endpoints", AllowedEndpointsFolders);
         AssertNamespacesAlign("Tooba.Support.Domain", "Tooba.Support.Domain");
         AssertNamespacesAlign("Tooba.Support.Application", "Tooba.Support.Application");
         AssertNamespacesAlign("Tooba.Support.Infrastructure", "Tooba.Support.Infrastructure");
+        AssertNamespacesAlign("Tooba.Support.Endpoints", "Tooba.Support.Endpoints");
 
         var bypass = AllProductionSources()
             .Where(x => x.Text.Contains("DateTimeOffset.UtcNow", StringComparison.Ordinal)
@@ -80,6 +91,12 @@ public sealed class SupportArchitectureGuardTests
             .ToList();
         Assert.True(bypass.Count == 0, string.Join("; ", bypass));
 
+        var silentCatch = AllProductionSources()
+            .Where(x => Regex.IsMatch(x.Text, @"catch\s*\(\s*Exception\s*\)\s*\{|catch\s*\{\s*\}|catch\s*\([^)]+\)\s*\{\s*\}", RegexOptions.Multiline))
+            .Select(x => x.Path)
+            .ToList();
+        Assert.True(silentCatch.Count == 0, "silent/empty catch: " + string.Join("; ", silentCatch));
+
         var localized = AllProductionSources()
             .SelectMany(x => Regex.Matches(x.Text, @"throw new \w+Exception\(\s*""([^""]*)""\s*\)")
                 .Select(m => (x.Path, Msg: m.Groups[1].Value)))
@@ -90,10 +107,116 @@ public sealed class SupportArchitectureGuardTests
         Assert.True(localized.Count == 0, "localized exception prose: " + string.Join("; ", localized));
     }
 
+    [Fact]
+    public void Support_endpoints_cqrs_and_host_ownership_are_enforced()
+    {
+        Assert.True(Directory.Exists(Path.Combine(SupportRoot(), "Tooba.Support.Endpoints")));
+        Assert.True(File.Exists(Path.Combine(SupportRoot(), "Tooba.Support.Endpoints", "Tooba.Support.Endpoints.csproj")));
+
+        var customer = File.ReadAllText(Path.Combine(SupportRoot(), "Tooba.Support.Endpoints", "Customer", "SupportCustomerEndpoints.cs"));
+        var seller = File.ReadAllText(Path.Combine(SupportRoot(), "Tooba.Support.Endpoints", "Seller", "SupportSellerEndpoints.cs"));
+        var admin = File.ReadAllText(Path.Combine(SupportRoot(), "Tooba.Support.Endpoints", "Admin", "SupportAdminEndpoints.cs"));
+        var module = File.ReadAllText(Path.Combine(SupportRoot(), "Tooba.Support.Endpoints", "SupportEndpointModule.cs"));
+
+        foreach (var endpoint in new[] { customer, seller, admin })
+        {
+            Assert.Contains("ISender sender", endpoint, StringComparison.Ordinal);
+            Assert.Contains("ApiResponseFactory", endpoint, StringComparison.Ordinal);
+            Assert.DoesNotContain("ISupportDirectory", endpoint, StringComparison.Ordinal);
+            Assert.DoesNotContain("ex.Message", endpoint, StringComparison.Ordinal);
+            Assert.DoesNotContain("exception.Message", endpoint, StringComparison.Ordinal);
+            Assert.DoesNotContain("new { title", endpoint, StringComparison.Ordinal);
+            Assert.DoesNotContain("SupportDbContext", endpoint, StringComparison.Ordinal);
+            Assert.DoesNotContain("catch (InvalidOperationException", endpoint, StringComparison.Ordinal);
+            Assert.DoesNotContain("catch (PlatformHttpException", endpoint, StringComparison.Ordinal);
+            Assert.DoesNotContain("Rejected(", endpoint, StringComparison.Ordinal);
+            Assert.DoesNotContain("Missing()", endpoint, StringComparison.Ordinal);
+        }
+
+        Assert.Contains("MapGroup(\"/v1/customer/support\")", module, StringComparison.Ordinal);
+        Assert.Contains("MapGroup(\"/v1/seller/support\")", module, StringComparison.Ordinal);
+        Assert.Contains("MapGroup(\"/v1/admin/support\")", module, StringComparison.Ordinal);
+        Assert.Contains("ListCustomerTicketsQuery", customer, StringComparison.Ordinal);
+        Assert.Contains("CreateCustomerTicketCommand", customer, StringComparison.Ordinal);
+        Assert.Contains("ListSellerTicketsQuery", seller, StringComparison.Ordinal);
+        Assert.Contains("CreateSellerTicketCommand", seller, StringComparison.Ordinal);
+        Assert.Contains("support.view", seller, StringComparison.Ordinal);
+        Assert.Contains("support.create", seller, StringComparison.Ordinal);
+        Assert.Contains("support.reply", seller, StringComparison.Ordinal);
+        Assert.Contains("ListAdminTicketsQuery", admin, StringComparison.Ordinal);
+        Assert.Contains("PatchAdminTicketCommand", admin, StringComparison.Ordinal);
+        Assert.Contains("GetSupportDemoPreviewQuery", admin, StringComparison.Ordinal);
+        Assert.Contains("demo-preview", admin, StringComparison.Ordinal);
+
+        var endpointRefs = ProjectRefs("Tooba.Support.Endpoints");
+        Assert.Contains(endpointRefs, r => r.Contains("Support.Application", StringComparison.Ordinal));
+        Assert.DoesNotContain(endpointRefs, r => r.Contains("Infrastructure", StringComparison.OrdinalIgnoreCase));
+        Assert.DoesNotContain(endpointRefs, r => r.Contains("Host", StringComparison.OrdinalIgnoreCase));
+        Assert.DoesNotContain(endpointRefs, r => r.Contains("DbContext", StringComparison.OrdinalIgnoreCase));
+        Assert.DoesNotContain(endpointRefs, r => r.Contains("AccessControl.Application", StringComparison.OrdinalIgnoreCase));
+        Assert.DoesNotContain(endpointRefs, r => r.Contains("AccessControl.Domain", StringComparison.OrdinalIgnoreCase));
+
+        var application = Sources("Tooba.Support.Application").ToList();
+        Assert.Contains(application, x => x.Text.Contains("ListCustomerTicketsQuery", StringComparison.Ordinal));
+        Assert.Contains(application, x => x.Text.Contains("CreateCustomerTicketCommand", StringComparison.Ordinal));
+        Assert.Contains(application, x => x.Text.Contains("ReplySellerTicketCommand", StringComparison.Ordinal));
+        Assert.Contains(application, x => x.Text.Contains("PatchAdminTicketCommand", StringComparison.Ordinal));
+        Assert.Contains(application, x => x.Text.Contains("GetSupportDemoPreviewQuery", StringComparison.Ordinal));
+        Assert.Contains(application, x => x.Text.Contains("IRequestHandler<", StringComparison.Ordinal));
+        Assert.Contains(application, x => x.Text.Contains("using MediatR", StringComparison.Ordinal));
+        Assert.Contains(application, x => x.Text.Contains("SupportExceptionMapper", StringComparison.Ordinal));
+        Assert.DoesNotContain(application, x =>
+            x.Text.Contains("StartsWith(\"support.\"", StringComparison.Ordinal)
+            || (x.Text.Contains(".Contains(\"", StringComparison.Ordinal) && x.Path.Contains("ExceptionMapper", StringComparison.Ordinal)));
+
+        Assert.False(File.Exists(Path.Combine(SupportRoot(), "Tooba.Support.Application", "Commands", "SupportCommands.cs")));
+        Assert.False(File.Exists(Path.Combine(SupportRoot(), "Tooba.Support.Application", "Queries", "SupportQueries.cs")));
+
+        var hostRoot = Path.Combine(RepoRoot(), "src", "backend", "Host", "Tooba.Host");
+        Assert.False(File.Exists(Path.Combine(hostRoot, "Support", "SupportEndpoints.cs")));
+        Assert.True(File.Exists(Path.Combine(hostRoot, "Support", "SupportDevelopmentSeedHost.cs")));
+        Assert.True(File.Exists(Path.Combine(hostRoot, "Customer", "HostSupportCustomerAuthorizer.cs")));
+        Assert.True(File.Exists(Path.Combine(hostRoot, "Seller", "HostSupportSellerAuthorizer.cs")));
+        Assert.True(File.Exists(Path.Combine(hostRoot, "Admin", "HostSupportAdminAuthorizer.cs")));
+
+        var hostCustomer = File.ReadAllText(Path.Combine(hostRoot, "Customer", "HostSupportCustomerAuthorizer.cs"));
+        var hostSeller = File.ReadAllText(Path.Combine(hostRoot, "Seller", "HostSupportSellerAuthorizer.cs"));
+        var hostAdmin = File.ReadAllText(Path.Combine(hostRoot, "Admin", "HostSupportAdminAuthorizer.cs"));
+        Assert.Contains("X-Tooba-Dev-Actor-User-Id", hostCustomer, StringComparison.Ordinal);
+        Assert.Contains("SellerPanelAccess.RequireAuthorizedAsync", hostSeller, StringComparison.Ordinal);
+        Assert.Contains("SellerAuthorizationDenied", hostSeller, StringComparison.Ordinal);
+        Assert.Contains("GetEffectiveAccessAsync", hostSeller, StringComparison.Ordinal);
+        Assert.Contains("AdminPanelAccess.RequireAuthorizedAsync", hostAdmin, StringComparison.Ordinal);
+        Assert.Contains("AuthorizationDecisionKind.Unavailable", hostAdmin, StringComparison.Ordinal);
+        Assert.DoesNotContain("ISupportDirectory", hostCustomer, StringComparison.Ordinal);
+        Assert.DoesNotContain("ISupportDirectory", hostSeller, StringComparison.Ordinal);
+        Assert.DoesNotContain("ISupportDirectory", hostAdmin, StringComparison.Ordinal);
+
+        var programCs = File.ReadAllText(Path.Combine(hostRoot, "Program.cs"));
+        Assert.Contains("MapSupportEndpoints()", programCs, StringComparison.Ordinal);
+        Assert.Contains("AddSupportEndpointPresentation()", programCs, StringComparison.Ordinal);
+        Assert.Contains("HostSupportCustomerAuthorizer", programCs, StringComparison.Ordinal);
+        Assert.Contains("HostSupportSellerAuthorizer", programCs, StringComparison.Ordinal);
+        Assert.Contains("HostSupportAdminAuthorizer", programCs, StringComparison.Ordinal);
+        Assert.Contains("CreateCustomerTicketCommand", programCs, StringComparison.Ordinal);
+
+        var hostHits = Directory.EnumerateFiles(hostRoot, "*.cs", SearchOption.AllDirectories)
+            .Where(path => !path.Contains($"{Path.DirectorySeparatorChar}bin{Path.DirectorySeparatorChar}")
+                           && !path.Contains($"{Path.DirectorySeparatorChar}obj{Path.DirectorySeparatorChar}"))
+            .Where(path => File.ReadAllText(path).Contains("SupportDbContext", StringComparison.Ordinal))
+            .Where(path => !HostDbContextAllowlist.Contains(Path.GetFileName(path)))
+            .ToList();
+        Assert.True(hostHits.Count == 0, "Host SupportDbContext allowlist: " + string.Join("; ", hostHits));
+    }
+
     private static void AssertNoRootDump(string project, string[] allowedFolders)
     {
         var root = Path.Combine(SupportRoot(), project);
-        var rootCs = Directory.EnumerateFiles(root, "*.cs", SearchOption.TopDirectoryOnly).Select(Path.GetFileName).ToArray();
+        var rootCs = Directory.EnumerateFiles(root, "*.cs", SearchOption.TopDirectoryOnly)
+            .Select(Path.GetFileName)
+            .Where(name => name is not null
+                           && !name.EndsWith("EndpointModule.cs", StringComparison.OrdinalIgnoreCase))
+            .ToArray();
         Assert.True(rootCs.Length == 0, $"{project} root dumping-ground: " + string.Join(", ", rootCs));
         foreach (var dir in Directory.EnumerateDirectories(root))
         {
@@ -133,7 +256,8 @@ public sealed class SupportArchitectureGuardTests
     private static IEnumerable<(string Path, string Text)> AllProductionSources() =>
         Sources("Tooba.Support.Domain")
             .Concat(Sources("Tooba.Support.Application"))
-            .Concat(Sources("Tooba.Support.Infrastructure"));
+            .Concat(Sources("Tooba.Support.Infrastructure"))
+            .Concat(Sources("Tooba.Support.Endpoints"));
 
     private static IEnumerable<(string Path, string Text)> Sources(string projectFolder)
     {

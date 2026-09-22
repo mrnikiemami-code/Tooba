@@ -4,11 +4,14 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <NoWarn>$(NoWarn);1591</NoWarn>
-    <RootNamespace>Tooba.Support.Application</RootNamespace>
-    <AssemblyName>Tooba.Support.Application</AssemblyName>
+    <RootNamespace>Tooba.Support.Endpoints</RootNamespace>
+    <AssemblyName>Tooba.Support.Endpoints</AssemblyName>
   </PropertyGroup>
   <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Tooba.Support.Application\Tooba.Support.Application.csproj" />
     <ProjectReference Include="..\..\..\BuildingBlocks\Tooba.BuildingBlocks\Tooba.BuildingBlocks.csproj" />
-    <ProjectReference Include="..\Tooba.Support.Domain\Tooba.Support.Domain.csproj" />
   </ItemGroup>
 </Project>

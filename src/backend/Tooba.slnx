@@ -163,6 +163,7 @@
     <Project Path="Modules/Support/Tooba.Support.Domain/Tooba.Support.Domain.csproj" />
     <Project Path="Modules/Support/Tooba.Support.Application/Tooba.Support.Application.csproj" />
     <Project Path="Modules/Support/Tooba.Support.Infrastructure/Tooba.Support.Infrastructure.csproj" />
+    <Project Path="Modules/Support/Tooba.Support.Endpoints/Tooba.Support.Endpoints.csproj" />
     <Project Path="Modules/Support/Tooba.Support.Tests/Tooba.Support.Tests.csproj" />
   </Folder>
 </Solution>

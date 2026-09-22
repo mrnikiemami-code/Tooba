@@ -6,6 +6,7 @@ using Tooba.BuildingBlocks;
 using Tooba.ModuleContracts;
 using Tooba.Persistence;
 using Tooba.Support.Application.Ports;
+using Tooba.Support.Infrastructure.Adapters;
 using Tooba.Support.Infrastructure.Directories;
 using Tooba.Support.Infrastructure.Messaging;
 using Tooba.Support.Infrastructure.Persistence;
@@ -23,6 +24,7 @@ public sealed class SupportModule : IToobaModule
     {
         services.AddSingleton<IOutboxModuleRegistration, SupportOutboxRegistration>();
         services.AddScoped<ISupportDirectory, SupportDirectory>();
+        services.AddSingleton<ISupportDemoPreviewPort, SupportDemoPreviewAdapter>();
         services.AddDbContext<SupportDbContext>((sp, options) =>
         {
             var connection = ToobaNpgsql.ResolveForContext(

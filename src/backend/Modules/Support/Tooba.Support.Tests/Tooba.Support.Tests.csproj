@@ -20,6 +20,8 @@
     <ProjectReference Include="..\Tooba.Support.Domain\Tooba.Support.Domain.csproj" />
     <ProjectReference Include="..\Tooba.Support.Application\Tooba.Support.Application.csproj" />
     <ProjectReference Include="..\Tooba.Support.Infrastructure\Tooba.Support.Infrastructure.csproj" />
+    <ProjectReference Include="..\Tooba.Support.Endpoints\Tooba.Support.Endpoints.csproj" />
     <ProjectReference Include="..\..\Notification\Tooba.Notification.Contracts\Tooba.Notification.Contracts.csproj" />
+    <ProjectReference Include="..\..\..\BuildingBlocks\Tooba.BuildingBlocks\Tooba.BuildingBlocks.csproj" />
   </ItemGroup>
 </Project>
