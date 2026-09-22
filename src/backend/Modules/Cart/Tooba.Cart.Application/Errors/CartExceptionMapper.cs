@@ -1,109 +1,112 @@
 using Tooba.BuildingBlocks;
 using Tooba.BuildingBlocks.Results;
-using Tooba.Cart.Application.Errors;
 
 namespace Tooba.Cart.Application.Errors;
 
-/// <summary>Maps known Cart directory/domain exception messages to stable SemanticError codes.</summary>
+/// <summary>
+/// Maps known Cart domain/directory stable machine codes to SemanticError.
+/// Exact message match only — no Contains, no prose heuristics; unknowns rethrow.
+/// </summary>
 public static class CartExceptionMapper
 {
-    /// <summary>Converts a known Cart <see cref="InvalidOperationException"/> into a SemanticError.</summary>
+    /// <summary>
+    /// Converts a known Cart <see cref="InvalidOperationException"/> into a SemanticError.
+    /// Unknown messages are rethrown (not swallowed into <see cref="CartErrorCodes.Rejected"/>).
+    /// </summary>
     public static SemanticError ToSemanticError(InvalidOperationException exception)
     {
         ArgumentNullException.ThrowIfNull(exception);
-        var text = exception.Message ?? string.Empty;
-
-        if (text.Contains("checkout.authentication_required", StringComparison.Ordinal)
-            || text.Equals(CartErrorCodes.AuthenticationRequired, StringComparison.Ordinal))
+        if (TryMapExact(exception.Message, out var error))
         {
-            return new SemanticError(CartErrorCodes.AuthenticationRequired);
+            return error;
         }
 
-        if (text.Contains("cart.missing", StringComparison.Ordinal)
-            || text.Contains("پیدا نشد", StringComparison.Ordinal))
-        {
-            return new SemanticError(CartErrorCodes.Missing);
-        }
-
-        if (text.Contains("cart.guest_secret.invalid", StringComparison.Ordinal)
-            || text.Contains("cart.access.denied", StringComparison.Ordinal)
-            || text.Contains("راز", StringComparison.Ordinal)
-            || text.Contains("مجوز", StringComparison.Ordinal))
-        {
-            return new SemanticError(CartErrorCodes.GuestInvalid);
-        }
-
-        if (text.Contains("cart.version.stale", StringComparison.Ordinal)
-            || text.Contains("cart.version.conflict", StringComparison.Ordinal)
-            || text.Contains("کهنه", StringComparison.Ordinal)
-            || text.Contains("همزمان", StringComparison.Ordinal))
-        {
-            return new SemanticError(CartErrorCodes.VersionConflict);
-        }
-
-        if (text.Contains("cart.expired", StringComparison.Ordinal)
-            || text.Contains("منقضی", StringComparison.Ordinal))
-        {
-            return new SemanticError(CartErrorCodes.Expired);
-        }
-
-        if (text.Contains("Held", StringComparison.Ordinal)
-            || text.Contains("رزرو", StringComparison.Ordinal)
-            || text.Contains("آزادسازی", StringComparison.Ordinal)
-            || text.Contains("cart.inventory.stale", StringComparison.Ordinal))
-        {
-            return new SemanticError(CartErrorCodes.InventoryStale);
-        }
-
-        if (text.Contains("موجودی", StringComparison.Ordinal)
-            || text.Contains("cart.inventory.insufficient", StringComparison.Ordinal)
-            || text.Contains("cart.inventory.missing", StringComparison.Ordinal))
-        {
-            return new SemanticError(CartErrorCodes.InventoryInsufficient);
-        }
-
-        if (text.Contains("تعداد", StringComparison.Ordinal)
-            || text.Contains("cart.line.quantity", StringComparison.Ordinal)
-            || text.Contains("quantity_policy", StringComparison.Ordinal)
-            || text.Contains("min_quantity", StringComparison.Ordinal)
-            || text.Contains("max_quantity", StringComparison.Ordinal))
-        {
-            return new SemanticError(CartErrorCodes.QuantityInvalid);
-        }
-
-        if (text.Contains("cart.line.missing", StringComparison.Ordinal))
-        {
-            return new SemanticError(CartErrorCodes.LineMissing);
-        }
-
-        if (text.Contains("Offer", StringComparison.Ordinal)
-            || text.Contains("غیرفعال", StringComparison.Ordinal)
-            || text.Contains("cart.offer.", StringComparison.Ordinal))
-        {
-            return new SemanticError(CartErrorCodes.OfferUnavailable);
-        }
-
-        if (text.Contains("فقط سبد Active", StringComparison.Ordinal)
-            || text.Contains("قابل جهش خط", StringComparison.Ordinal)
-            || text.Contains("cart.line.requires_active", StringComparison.Ordinal)
-            || text.Contains("cart.converted", StringComparison.Ordinal))
-        {
-            return new SemanticError(CartErrorCodes.Rejected);
-        }
-
-        return new SemanticError(CartErrorCodes.Rejected);
+        throw exception;
     }
 
-    /// <summary>Runs a Cart directory action and maps known failures to Result.</summary>
+    /// <summary>Runs a Cart directory action and maps only known expected failures to Result.</summary>
     public static async Task<Result<T>> TryAsync<T>(Func<Task<T>> action)
     {
         try
         {
             return Result.Success(await action());
         }
-        catch (InvalidOperationException ex)
+        catch (InvalidOperationException ex) when (TryMapExact(ex.Message, out var error))
         {
-            return Result.Failure<T>(ToSemanticError(ex));
+            return Result.Failure<T>(error);
+        }
+    }
+
+    /// <summary>Exact stable-code mapping only. Returns false for unknown / unexpected messages.</summary>
+    public static bool TryMapExact(string? message, out SemanticError error)
+    {
+        // Exact Ordinal match on stable machine codes emitted by Domain/Directory/handlers.
+        switch (message)
+        {
+            case CartErrorCodes.Missing:
+                error = new SemanticError(CartErrorCodes.Missing);
+                return true;
+
+            case CartErrorCodes.GuestInvalid:
+            case "cart.guest_secret.invalid":
+                error = new SemanticError(CartErrorCodes.GuestInvalid);
+                return true;
+
+            case CartErrorCodes.AccessDenied:
+                error = new SemanticError(CartErrorCodes.AccessDenied);
+                return true;
+
+            case CartErrorCodes.VersionConflict:
+            case "cart.version.stale":
+                error = new SemanticError(CartErrorCodes.VersionConflict);
+                return true;
+
+            case CartErrorCodes.Expired:
+                error = new SemanticError(CartErrorCodes.Expired);
+                return true;
+
+            case CartErrorCodes.QuantityInvalid:
+            case "cart.line.quantity_positive":
+            case "cart.line.quantity_ceiling":
+            case "cart.quantity_policy.missing":
+            case "offer.min_quantity.not_met":
+            case "offer.max_quantity.exceeded":
+                error = new SemanticError(CartErrorCodes.QuantityInvalid);
+                return true;
+
+            case CartErrorCodes.LineMissing:
+                error = new SemanticError(CartErrorCodes.LineMissing);
+                return true;
+
+            case CartErrorCodes.OfferUnavailable:
+            case "cart.offer.missing":
+            case "cart.offer.inactive":
+            case "cart.offer.channel_mismatch":
+                error = new SemanticError(CartErrorCodes.OfferUnavailable);
+                return true;
+
+            case CartErrorCodes.InventoryInsufficient:
+            case "cart.inventory.missing":
+                error = new SemanticError(CartErrorCodes.InventoryInsufficient);
+                return true;
+
+            case CartErrorCodes.InventoryStale:
+                error = new SemanticError(CartErrorCodes.InventoryStale);
+                return true;
+
+            case CartErrorCodes.Rejected:
+            case "cart.line.requires_active":
+            case "cart.converted.not_expirable":
+                error = new SemanticError(CartErrorCodes.Rejected);
+                return true;
+
+            case CartErrorCodes.AuthenticationRequired:
+                error = new SemanticError(CartErrorCodes.AuthenticationRequired);
+                return true;
+
+            default:
+                error = default!;
+                return false;
         }
     }
 }

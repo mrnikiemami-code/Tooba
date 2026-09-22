@@ -74,19 +74,19 @@ TB-P10-T022-R14
 Current Issued Task:
 
 ```text
-TB-TMAR-CART-GOLDEN-001 (Worker PASS — awaiting Architect / USER_CART_REVIEW_CHECKPOINT)
+TB-TMAR-CART-GOLDEN-001 (reopened; repaired by TB-TMAR-CART-GOLDEN-001-R1 — awaiting Architect / USER_CART_REVIEW_CHECKPOINT)
 ```
 
 Current Repair Task:
 
 ```text
-(none)
+TB-TMAR-CART-GOLDEN-001-R1 (Worker PASS — awaiting Architect)
 ```
 
 TMAR Module Recovery (Worker PASS — awaiting Architect):
 
 ```text
-TB-TMAR-CART-GOLDEN-001 — Cart HTTP Ownership + MediatR CQRS + Host Orchestration Closure
+TB-TMAR-CART-GOLDEN-001-R1 — Cart Exception/Result Semantics Closure
 Cart-State: COMPLETE_REFERENCE_PATTERN
 Cart-HTTP-Ownership: MODULE_ENDPOINTS
 Cart-Endpoints-State: REAL_PROJECT_PRESENT
@@ -95,6 +95,9 @@ Cart-Host-Routes: REMOVED
 Cart-Host-Composer: REMOVED
 Cart-Host-CatalogDbAuthority: NONE
 Cart-CrossModule-Boundary: CONTRACTS_ONLY
+Cart-Exception-Classification: STABLE_CODES_ONLY
+Cart-Prose-Mapping: NONE
+Cart-Unexpected-Exception-Swallow: NONE
 Cart-Result-Adoption: HTTP_USE_CASES_ADOPTED
 Cart-Physical-State: VERIFIED_ON_DISK_AND_NAMESPACE
 Cart-Architecture-Guards: ENFORCED
