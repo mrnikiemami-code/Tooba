@@ -58,7 +58,7 @@ public sealed class PaidProjectionFinancialTests
     [Fact]
     public void Settlement_and_initiate_exclude_store_shipping_from_seller_ids()
     {
-        var settlement = Read("src/backend/Modules/Settlement/Tooba.Settlement.Infrastructure/SettlementEventHandlers.cs");
+        var settlement = Read("src/backend/Modules/Settlement/Tooba.Settlement.Infrastructure/Handlers/SettlementEventHandlers.cs");
         Assert.Contains("integrationEvent.SellerOrderIds", settlement, StringComparison.Ordinal);
         var directory = Read("src/backend/Modules/Payment/Tooba.Payment.Infrastructure/Directories/PaymentDirectory.cs");
         Assert.Contains("PaymentAllocationTargetKind.StoreShipping", directory, StringComparison.Ordinal);

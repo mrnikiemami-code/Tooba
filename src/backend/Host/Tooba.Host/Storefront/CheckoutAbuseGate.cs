@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Tooba.Catalog.Domain;
 using Tooba.Catalog.Infrastructure.Persistence;
 using Tooba.Order.Application;
@@ -154,7 +154,7 @@ public sealed class CheckoutAbuseGate : ICheckoutAbuseGate
             .CountAsync(checkout => checkout.PlacedByUserId == customerId, cancellationToken);
 
     private static bool IsCustomer(Guid placedByUserId) =>
-        placedByUserId != Guid.Empty && placedByUserId != StorefrontCheckoutComposer.StorefrontGuestActorId;
+        placedByUserId != Guid.Empty && placedByUserId != Tooba.Order.Application.Storefront.Services.StorefrontCheckoutService.StorefrontGuestActorId;
 
     private static CheckoutAbuseSettingsSnapshot ToSnapshot(StoreCheckoutAbuseSettings? row) =>
         new(

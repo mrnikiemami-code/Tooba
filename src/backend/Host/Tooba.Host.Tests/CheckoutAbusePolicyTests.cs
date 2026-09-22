@@ -1,4 +1,4 @@
-using Tooba.Catalog.Domain;
+﻿using Tooba.Catalog.Domain;
 using Tooba.Order.Domain;
 using Xunit;
 
@@ -58,8 +58,8 @@ public sealed class CheckoutAbusePolicyTests
         var host = File.ReadAllText(Path.Combine(root, "src", "backend", "Modules", "Order", "Tooba.Order.Infrastructure", "CheckoutSubmitHost.cs"));
         var directory = File.ReadAllText(Path.Combine(root, "src", "backend", "Modules", "Order", "Tooba.Order.Infrastructure", "CheckoutDirectory.cs"));
         var gate = File.ReadAllText(Path.Combine(root, "src", "backend", "Host", "Tooba.Host", "Storefront", "CheckoutAbuseGate.cs"));
-        var hide = File.ReadAllText(Path.Combine(root, "src", "backend", "Host", "Tooba.Host", "Storefront", "StorefrontPendingPaymentComposer.cs"));
-        var endpoints = File.ReadAllText(Path.Combine(root, "src", "backend", "Host", "Tooba.Host", "Storefront", "StorefrontEndpoints.cs"));
+        var hide = File.ReadAllText(Path.Combine(root, "src", "backend", "Modules", "Order", "Tooba.Order.Application", "Storefront", "Services", "StorefrontPendingPaymentService.cs"));
+        var endpoints = File.ReadAllText(Path.Combine(root, "src", "backend", "Modules", "Order", "Tooba.Order.Endpoints", "Errors", "OrderErrorCatalogContributor.cs"));
         var admin = File.ReadAllText(Path.Combine(root, "src", "backend", "Host", "Tooba.Host", "Admin", "CheckoutAbuseSettingsEndpoints.cs"));
         var settings = File.ReadAllText(Path.Combine(root, "src", "frontend", "app", "admin", "settings", "page.tsx"));
         var fe = File.ReadAllText(Path.Combine(root, "src", "frontend", "app", "storefront", "storefront-checkout-api.ts"));
@@ -75,10 +75,12 @@ public sealed class CheckoutAbusePolicyTests
         Assert.Contains("CheckoutAbuseCustomerLocks", gate, StringComparison.Ordinal);
         Assert.DoesNotContain("PendingPaymentCardHides", gate, StringComparison.Ordinal);
         Assert.DoesNotContain("PaymentAttempt", gate, StringComparison.Ordinal);
-        Assert.Contains("pending.hide.active_hold", hide, StringComparison.Ordinal);
-        Assert.Contains("checkout.open_unpaid_limit_reached", endpoints, StringComparison.Ordinal);
-        Assert.Contains("checkout.reservation_commit_limit_reached", endpoints, StringComparison.Ordinal);
-        Assert.Contains("شما به حداکثر تعداد سفارش‌های در انتظار پرداخت رسیده‌اید", endpoints, StringComparison.Ordinal);
+        Assert.Contains("pending.hide.active_hold", File.ReadAllText(Path.Combine(root, "src", "backend", "Modules", "Order", "Tooba.Order.Application", "Storefront", "StorefrontOrderErrors.cs")), StringComparison.Ordinal);
+        var orderErrors = File.ReadAllText(Path.Combine(root, "src", "backend", "Modules", "Order", "Tooba.Order.Application", "Storefront", "StorefrontOrderErrors.cs"));
+        var catalog = File.ReadAllText(Path.Combine(root, "src", "backend", "Modules", "Order", "Tooba.Order.Endpoints", "Errors", "OrderErrorCatalogContributor.cs"));
+        Assert.Contains("checkout.open_unpaid_limit_reached", orderErrors, StringComparison.Ordinal);
+        Assert.Contains("checkout.reservation_commit_limit_reached", orderErrors, StringComparison.Ordinal);
+        Assert.Contains("شما به حداکثر تعداد سفارش‌های در انتظار پرداخت رسیده‌اید", catalog, StringComparison.Ordinal);
         Assert.DoesNotContain("Math.Clamp", admin, StringComparison.Ordinal);
         Assert.Contains("ReservationPolicyAuditEvent", admin, StringComparison.Ordinal);
         Assert.Contains("کنترل سفارش‌های پرداخت‌نشده و سوءاستفاده از رزرو", settings, StringComparison.Ordinal);

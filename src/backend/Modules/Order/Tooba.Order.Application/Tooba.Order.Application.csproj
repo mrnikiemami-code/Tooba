@@ -24,5 +24,7 @@
     <ProjectReference Include="..\..\Settlement\Tooba.Settlement.Contracts\Tooba.Settlement.Contracts.csproj" />
     <ProjectReference Include="..\..\Identity\Tooba.Identity.Contracts\Tooba.Identity.Contracts.csproj" />
     <ProjectReference Include="..\..\OperatorProfile\Tooba.OperatorProfile.Contracts\Tooba.OperatorProfile.Contracts.csproj" />
+    <ProjectReference Include="..\..\AddressBook\Tooba.AddressBook.Contracts\Tooba.AddressBook.Contracts.csproj" />
+    <ProjectReference Include="..\..\Localization\Tooba.Localization.Contracts\Tooba.Localization.Contracts.csproj" />
   </ItemGroup>
 </Project>

@@ -1,4 +1,4 @@
-using Xunit;
+﻿using Xunit;
 
 namespace Tooba.Host.Tests;
 
@@ -12,15 +12,17 @@ public sealed class StorefrontCheckoutAccessTests
     public void Checkout_get_maps_access_denied_not_order_registration_failed()
     {
         var root = FindRepoRoot();
-        var endpoints = File.ReadAllText(Path.Combine(
-            root, "src", "backend", "Host", "Tooba.Host", "Storefront", "StorefrontEndpoints.cs"));
+        var orderErrors = File.ReadAllText(Path.Combine(
+            root, "src", "backend", "Modules", "Order", "Tooba.Order.Application", "Storefront", "StorefrontOrderErrors.cs"));
+        var paymentCodes = File.ReadAllText(Path.Combine(
+            root, "src", "backend", "Modules", "Payment", "Tooba.Payment.Application", "Errors", "PaymentErrorCodes.cs"));
         var checkout = File.ReadAllText(Path.Combine(
-            root, "src", "backend", "Host", "Tooba.Host", "Storefront", "StorefrontCheckoutComposer.cs"));
+            root, "src", "backend", "Modules", "Order", "Tooba.Order.Application", "Storefront", "Services", "StorefrontCheckoutService.cs"));
         var cart = File.ReadAllText(Path.Combine(
             root, "src", "backend", "Modules", "Cart", "Tooba.Cart.Application", "Presentation", "CartPresentationComposer.cs"));
 
-        Assert.Contains("checkout.access.denied", endpoints, StringComparison.Ordinal);
-        Assert.Contains("payment.access.denied", endpoints, StringComparison.Ordinal);
+        Assert.Contains("checkout.access.denied", orderErrors, StringComparison.Ordinal);
+        Assert.Contains("payment.access.denied", paymentCodes, StringComparison.Ordinal);
         Assert.Contains("TryGetForOwnershipAsync", checkout, StringComparison.Ordinal);
         Assert.Contains("TryGetForOwnershipAsync", cart, StringComparison.Ordinal);
         Assert.Contains("snapshot.Status.ToString()", cart, StringComparison.Ordinal);

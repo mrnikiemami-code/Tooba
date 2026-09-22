@@ -1,3 +1,5 @@
+﻿using Tooba.Host.Order;
+using Tooba.Cart.Contracts;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -9,7 +11,11 @@ using Tooba.AddressBook.Domain;
 using Tooba.AddressBook.Infrastructure;
 using Tooba.AddressBook.Infrastructure.Persistence;
 using Tooba.Host.AddressBook;
-using Tooba.Host.Storefront;
+using Tooba.Order.Application.Storefront.Services;
+using Tooba.Order.Application.Storefront.Models;
+using Tooba.AddressBook.Contracts;
+using Tooba.Cart.Application.Ports;
+using Tooba.Fulfillment.Contracts.Shipping;
 using Tooba.Order.Domain;
 using Tooba.Persistence;
 using Xunit;
@@ -90,11 +96,11 @@ public sealed class AddressBookFoundationTests
         var inline = new StorefrontCheckoutShippingInput(
             "مهمان", "09120000000", "تهران", "تهران", "خیابان نمونه", "19199");
         var prepared = await composer.PrepareShippingAsync(inline, CancellationToken.None);
-        Assert.Equal(StorefrontCheckoutComposer.StorefrontGuestActorId, prepared.PlacedByUserId);
+        Assert.Equal(Tooba.Order.Application.Storefront.Services.StorefrontCheckoutService.StorefrontGuestActorId, prepared.PlacedByUserId);
         Assert.Equal("مهمان", prepared.Shipping.RecipientName);
         Assert.Null(prepared.Shipping.SavedAddressId);
 
-        await Assert.ThrowsAsync<InvalidOperationException>(() =>
+        await Assert.ThrowsAsync<Tooba.Order.Application.Storefront.StorefrontOrderException>(() =>
             composer.PrepareShippingAsync(
                 new StorefrontCheckoutShippingInput("", "", "", "", "", ""),
                 CancellationToken.None));
@@ -125,7 +131,7 @@ public sealed class AddressBookFoundationTests
         });
 
         var composer = CreateComposer(book, owner, "Testing");
-        await Assert.ThrowsAsync<InvalidOperationException>(() =>
+        await Assert.ThrowsAsync<Tooba.Order.Application.Storefront.StorefrontOrderException>(() =>
             composer.PrepareShippingAsync(
                 new StorefrontCheckoutShippingInput("", "", "", "", "", "", foreignId),
                 CancellationToken.None));
@@ -168,7 +174,7 @@ public sealed class AddressBookFoundationTests
         Assert.Equal("محمد لمامی", prepared.Shipping.RecipientName);
         Assert.Equal(string.Empty, prepared.Shipping.FirstName);
         Assert.Equal(string.Empty, prepared.Shipping.LastName);
-        Assert.DoesNotContain("Split", typeof(StorefrontRecipientNames).GetMethods().Select(x => x.Name));
+        Assert.DoesNotContain("Split", typeof(Tooba.Order.Application.Storefront.Services.StorefrontRecipientNames).GetMethods().Select(x => x.Name));
     }
 
     /// <summary>FirstName/LastName صریح روی نشانی قدیمی برنده است و RecipientName درخواست به‌تنهایی دفترچه را عوض نمی‌کند.</summary>
@@ -199,12 +205,12 @@ public sealed class AddressBookFoundationTests
         Assert.Equal("محمد", explicitNames.Shipping.FirstName);
         Assert.Equal("امامی", explicitNames.Shipping.LastName);
         Assert.Equal("محمد امامی", explicitNames.Shipping.RecipientName);
-        Assert.Equal("محمد امامی", StorefrontRecipientNames.Display(
+        Assert.Equal("محمد امامی", Tooba.Order.Application.Storefront.Services.StorefrontRecipientNames.Display(
             explicitNames.Shipping.FirstName, explicitNames.Shipping.LastName, explicitNames.Shipping.RecipientName));
         Assert.NotEqual("محمد لمامی", explicitNames.Shipping.RecipientName);
     }
 
-    private static StorefrontCheckoutComposer CreateComposer(
+    private static StorefrontCheckoutService CreateComposer(
         IAddressBookDirectory directory,
         Guid? headerActor = null,
         string environmentName = "Testing")
@@ -215,13 +221,15 @@ public sealed class AddressBookFoundationTests
             http.HttpContext.Request.Headers["X-Tooba-Dev-Actor-User-Id"] = actor.ToString("D");
         }
 
-        return new StorefrontCheckoutComposer(
+        var env = new TestHostEnvironment { EnvironmentName = environmentName };
+        return new StorefrontCheckoutService(
             null!,
             null!,
             directory,
-            new CurrentAuthenticatedSession(),
-            new TestHostEnvironment { EnvironmentName = environmentName },
-            http);
+            new HostOrderStorefrontActor(
+                new CurrentAuthenticatedSession(),
+                env,
+                http));
     }
 
     private static string FindRepoRoot()
@@ -394,7 +402,7 @@ public sealed class AddressBookPostgresTests : IAsyncLifetime
         await using var provider = services.BuildServiceProvider();
         await AddressBookDevelopmentSeed.ApplyAsync(provider);
         await AddressBookDevelopmentSeed.ApplyAsync(provider);
-        var actor = StorefrontCheckoutComposer.StorefrontGuestActorId;
+        var actor = Tooba.Order.Application.Storefront.Services.StorefrontCheckoutService.StorefrontGuestActorId;
         var rows = await db.Addresses.AsNoTracking().Where(x => x.OwnerUserId == actor).ToListAsync();
         Assert.Equal(2, rows.Count);
         Assert.Single(rows, x => x.IsDefault);

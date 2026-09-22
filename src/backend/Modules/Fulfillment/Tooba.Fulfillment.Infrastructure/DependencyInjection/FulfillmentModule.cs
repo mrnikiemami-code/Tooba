@@ -1,4 +1,4 @@
-using Tooba.Payment.Contracts.Events;
+﻿using Tooba.Payment.Contracts.Events;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -6,6 +6,7 @@ using Microsoft.Extensions.Hosting;
 using Tooba.BuildingBlocks;
 using Tooba.BuildingBlocks.Presentation.Errors;
 using Tooba.Fulfillment.Application.Ports;
+using Tooba.Fulfillment.Contracts.Shipping;
 using Tooba.Fulfillment.Application.Shipping;
 using Tooba.Fulfillment.Infrastructure.Persistence;
 using Tooba.Fulfillment.Infrastructure.Directories;
@@ -103,6 +104,7 @@ public sealed class FulfillmentModule : IToobaModule
         services.AddScoped<IShippingServiceDirectory, ShippingServiceDirectory>();
         services.AddScoped<IShippingServiceLanguageGate, ShippingServiceLanguageGate>();
         services.AddScoped<IShippingCatalogReader, ShippingCatalogReader>();
+        services.AddScoped<IShippingCatalogSeedPort, ShippingCatalogSeedAdapter>();
         services.AddSingleton<IErrorCatalogContributor, Errors.FulfillmentErrorCatalogContributor>();
         services.AddScoped<IFulfillmentInventoryGateway, FulfillmentInventoryGateway>();
         services.AddScoped<IFulfillmentReturnReader, FulfillmentReturnBridge>();

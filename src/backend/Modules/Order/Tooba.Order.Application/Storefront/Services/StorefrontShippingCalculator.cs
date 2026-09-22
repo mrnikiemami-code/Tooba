@@ -1,8 +1,6 @@
-using Tooba.Fulfillment.Application.Ports;
-using Tooba.Fulfillment.Application.Models;
-using Tooba.Fulfillment.Application.Shipping;
+using Tooba.Fulfillment.Contracts.Shipping;
 
-namespace Tooba.Host.Storefront;
+namespace Tooba.Order.Application.Storefront.Services;
 
 /// <summary>
 /// محاسبهٔ backend-authoritative قیمت ارسال و حداقل تحویل.
@@ -10,7 +8,6 @@ namespace Tooba.Host.Storefront;
 /// </summary>
 public static class StorefrontShippingCalculator
 {
-    /// <summary>پنجره‌های ساعتی روز (برآورد روزمحور؛ نه تقویم پیچیده).</summary>
     public static readonly IReadOnlyList<(string Value, string LabelFa)> DayTimeWindows =
     [
         ("9-12", "۹ صبح تا ۱۲ ظهر"),
@@ -19,7 +16,6 @@ public static class StorefrontShippingCalculator
         ("18-21", "۶ عصر تا ۹ شب"),
     ];
 
-    /// <summary>روزهای آماده‌سازی کندترین فروشنده در سبد.</summary>
     public static int MaxSellerPreparationDays(
         IEnumerable<Guid> sellerPartyIds,
         ShippingMethodsOptions options)
@@ -40,7 +36,6 @@ public static class StorefrontShippingCalculator
         return days.Length == 0 ? Math.Max(0, options.DefaultSellerPreparationDays) : days.Max();
     }
 
-    /// <summary>نرخ روش را با تطبیق کد کامل سپس کد سرویس پیدا می‌کند.</summary>
     public static ShippingMethodRateOptions ResolveRate(string methodCode, ShippingMethodsOptions options)
     {
         var code = methodCode.Trim().ToLowerInvariant();
@@ -64,7 +59,6 @@ public static class StorefrontShippingCalculator
         };
     }
 
-    /// <summary>قیمت ارسال؛ رایگان فقط وقتی آستانهٔ پیکربندی برقرار باشد یا BasePrice=0.</summary>
     public static decimal QuotePrice(ShippingMethodRateOptions rate, decimal cartSubtotalExclusive)
     {
         if (rate.FreeAboveSubtotal is decimal threshold && cartSubtotalExclusive >= threshold)
@@ -75,7 +69,6 @@ public static class StorefrontShippingCalculator
         return Math.Max(0m, rate.BasePrice);
     }
 
-    /// <summary>آیا مقصد برای نرخ مجاز است.</summary>
     public static bool IsDestinationAllowed(ShippingMethodRateOptions rate, string? provinceName)
     {
         if (rate.AllowedProvinces is not { Length: > 0 })
@@ -92,24 +85,18 @@ public static class StorefrontShippingCalculator
             string.Equals(p.Trim(), provinceName.Trim(), StringComparison.OrdinalIgnoreCase));
     }
 
-    /// <summary>
-    /// تاریخ حداقل تحویل (فقط تاریخ UTC تقویمی).
-    /// min = today + maxSellerPrep + methodLead.
-    /// </summary>
     public static DateOnly ComputeMinimumDeliveryDate(
         DateOnly today,
         int maxSellerPreparationDays,
         int methodLeadDays)
         => today.AddDays(Math.Max(0, maxSellerPreparationDays) + Math.Max(0, methodLeadDays));
 
-    /// <summary>گزینه‌های تاریخ از حداقل تا افق.</summary>
     public static IReadOnlyList<DateOnly> BuildDeliveryDates(DateOnly minimum, int horizonDays)
     {
         var days = Math.Clamp(horizonDays, 1, 30);
         return Enumerable.Range(0, days).Select(offset => minimum.AddDays(offset)).ToArray();
     }
 
-    /// <summary>برچسب نسبی فارسی برای روز نسبت به امروز تقویمی.</summary>
     public static string FormatDeliveryDateLabelFa(DateOnly date, DateOnly today)
     {
         var delta = date.DayNumber - today.DayNumber;
@@ -122,7 +109,6 @@ public static class StorefrontShippingCalculator
         };
     }
 
-    /// <summary>زیرنویس جلالی با ارقام فارسی — API value همچنان yyyy-MM-dd میلادی است.</summary>
     public static string FormatDeliveryDateSubLabelFa(DateOnly date)
     {
         var calendar = new System.Globalization.PersianCalendar();
@@ -151,16 +137,14 @@ public static class StorefrontShippingCalculator
         return new string(chars);
     }
 
-    /// <summary>رد تاریخ زودتر از حداقل.</summary>
     public static void EnsureDeliveryNotEarlier(DateOnly selected, DateOnly minimum)
     {
         if (selected < minimum)
         {
-            throw new InvalidOperationException("shipping.delivery.too_early");
+            throw new StorefrontOrderException(StorefrontOrderErrors.ShippingDeliveryTooEarly);
         }
     }
 
-    /// <summary>پنجره‌های ساعتی معتبر برای روز انتخاب‌شده.</summary>
     public static IReadOnlyList<(string Value, string LabelFa)> ValidTimeWindows(DateOnly selected, DateOnly minimum)
     {
         if (selected < minimum)
@@ -168,7 +152,6 @@ public static class StorefrontShippingCalculator
             return Array.Empty<(string, string)>();
         }
 
-        // مدل روزمحور: در روز حداقل و بعد همهٔ پنجره‌ها مجازند؛ ساخت ساعت جعلی نمی‌کنیم.
         return DayTimeWindows;
     }
 }

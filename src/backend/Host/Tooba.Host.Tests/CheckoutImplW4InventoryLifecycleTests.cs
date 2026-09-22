@@ -1,4 +1,4 @@
-using Tooba.Promotion.Application.Ports;
+﻿using Tooba.Promotion.Application.Ports;
 using Tooba.Promotion.Infrastructure.Queries;
 using Tooba.Promotion.Infrastructure.Messaging;
 using Tooba.Promotion.Infrastructure.Adapters;
@@ -49,18 +49,18 @@ public sealed class CheckoutImplW4InventoryLifecycleTests
     [Fact]
     public void Inventory_contracts_and_adapter_are_inventory_owned()
     {
-        var contracts = Read("src/backend/Modules/Inventory/Tooba.Inventory.Contracts/OrderInventoryLifecycleContracts.cs");
+        var contracts = Read("src/backend/Modules/Inventory/Tooba.Inventory.Contracts/Orders/OrderInventoryLifecycleContracts.cs");
         Assert.Contains("interface IOrderInventoryLifecyclePort", contracts, StringComparison.Ordinal);
         Assert.Contains("OrderInventoryPaidSupplyRequest", contracts, StringComparison.Ordinal);
         Assert.DoesNotContain("Tooba.Inventory.Domain", contracts, StringComparison.Ordinal);
         Assert.DoesNotContain("IInventoryDirectory", contracts, StringComparison.Ordinal);
 
-        var adapter = Read("src/backend/Modules/Inventory/Tooba.Inventory.Application/OrderInventoryLifecycleAdapter.cs");
+        var adapter = Read("src/backend/Modules/Inventory/Tooba.Inventory.Application/Orders/OrderInventoryLifecycleAdapter.cs");
         Assert.Contains("class OrderInventoryLifecycleAdapter : IOrderInventoryLifecyclePort", adapter, StringComparison.Ordinal);
         Assert.Contains("EnsureOrderSupplyAsync", adapter, StringComparison.Ordinal);
         Assert.Contains("OrderSupplyMode.EnsurePaidDurable", adapter, StringComparison.Ordinal);
 
-        var module = Read("src/backend/Modules/Inventory/Tooba.Inventory.Infrastructure/InventoryModule.cs");
+        var module = Read("src/backend/Modules/Inventory/Tooba.Inventory.Infrastructure/DependencyInjection/InventoryModule.cs");
         Assert.Contains("IOrderInventoryLifecyclePort, OrderInventoryLifecycleAdapter", module, StringComparison.Ordinal);
     }
 
@@ -91,10 +91,10 @@ public sealed class CheckoutImplW4InventoryLifecycleTests
         var fe = Path.Combine(Root, "src", "frontend");
         Assert.True(Directory.Exists(fe));
         // Characterization: W4 deliverables live only under backend Inventory/Order modules.
-        Assert.True(File.Exists(Path.Combine(Root, "src", "backend", "Modules", "Inventory", "Tooba.Inventory.Contracts", "OrderInventoryLifecycleContracts.cs")));
-        Assert.True(File.Exists(Path.Combine(Root, "src", "backend", "Modules", "Inventory", "Tooba.Inventory.Application", "OrderInventoryLifecycleAdapter.cs")));
+        Assert.True(File.Exists(Path.Combine(Root, "src", "backend", "Modules", "Inventory", "Tooba.Inventory.Contracts", "Orders", "OrderInventoryLifecycleContracts.cs")));
+        Assert.True(File.Exists(Path.Combine(Root, "src", "backend", "Modules", "Inventory", "Tooba.Inventory.Application", "Orders", "OrderInventoryLifecycleAdapter.cs")));
         Assert.False(Regex.IsMatch(
-            Read("src/backend/Modules/Inventory/Tooba.Inventory.Contracts/OrderInventoryLifecycleContracts.cs"),
+            Read("src/backend/Modules/Inventory/Tooba.Inventory.Contracts/Orders/OrderInventoryLifecycleContracts.cs"),
             @"src[/\\]frontend",
             RegexOptions.IgnoreCase));
     }

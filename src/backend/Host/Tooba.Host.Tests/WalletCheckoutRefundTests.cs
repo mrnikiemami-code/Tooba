@@ -98,9 +98,9 @@ public sealed class WalletCheckoutRefundTests : IAsyncLifetime
         Assert.Contains("SpendForOrderPaymentAsync", File.ReadAllText(Path.Combine(FindRepoRoot(),
             "src", "backend", "Modules", "Wallet", "Tooba.Wallet.Contracts", "Payments", "WalletOrderPaymentPort.cs")), StringComparison.Ordinal);
         Assert.Contains("wallet-quote", File.ReadAllText(Path.Combine(FindRepoRoot(),
-            "src", "backend", "Host", "Tooba.Host", "Storefront", "StorefrontEndpoints.cs")), StringComparison.Ordinal);
-        Assert.Contains("WALLET_MIXED_TENDER", File.ReadAllText(Path.Combine(FindRepoRoot(),
-            "src", "backend", "Host", "Tooba.Host", "Modules", "Payment", "Tooba.Payment.Application", "Models", "StorefrontPaymentOrchestrator.cs")), StringComparison.Ordinal);
+            "src", "backend", "Modules", "Payment", "Tooba.Payment.Endpoints", "Storefront", "PaymentStorefrontEndpoints.cs")), StringComparison.Ordinal);
+        Assert.Contains("payment.wallet.mixed_deferred", File.ReadAllText(Path.Combine(FindRepoRoot(),
+            "src", "backend", "Modules", "Payment", "Tooba.Payment.Application", "Errors", "PaymentErrorCodes.cs")), StringComparison.Ordinal);
         Assert.Contains("WalletPaymentSucceeded", File.ReadAllText(Path.Combine(FindRepoRoot(),
             "src", "backend", "Modules", "Notification", "Tooba.Notification.Contracts", "Copy",
             "NotificationSemanticTypes.cs")), StringComparison.Ordinal);
@@ -333,7 +333,7 @@ public sealed class WalletCheckoutRefundTests : IAsyncLifetime
 
     private static OrderDbContext CreateOrderDb(string connectionString, ICurrentCommerceContext commerce)
     {
-        var modules = new IOutboxModuleRegistration[] { new Order.Infrastructure.OrderOutboxRegistration() };
+        var modules = new IOutboxModuleRegistration[] { new Tooba.Order.Infrastructure.OrderOutboxRegistration() };
         var serializer = new JsonIntegrationEventSerializer(modules);
         var interceptor = new OutboxSaveChangesInterceptor(commerce, modules, serializer);
         var options = new DbContextOptionsBuilder<OrderDbContext>();

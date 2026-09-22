@@ -1,7 +1,9 @@
-namespace Tooba.Host.Storefront;
+using Tooba.Order.Application.Storefront.Models;
+
+namespace Tooba.Order.Application.Storefront.Services;
 
 /// <summary>نام و نام خانوادگی را جدا نگه می‌دارد؛ برای رکورد قدیمی فقط RecipientName را بدون حدس شکستن برمی‌گرداند.</summary>
-internal static class StorefrontRecipientNames
+public static class StorefrontRecipientNames
 {
     public static (string First, string Last, string Recipient) Resolve(string? firstName, string? lastName, string? recipientName)
     {
@@ -16,7 +18,6 @@ internal static class StorefrontRecipientNames
         return (first, last, recipient);
     }
 
-    /// <summary>نمایش گیرنده: First+Last اگر هر دو موجود باشند؛ وگرنه RecipientName قدیمی بدون شکستن حدسی.</summary>
     public static string Display(string? firstName, string? lastName, string? recipientName)
     {
         var resolved = Resolve(firstName, lastName, recipientName);
@@ -29,7 +30,6 @@ internal static class StorefrontRecipientNames
         return display.Length == 0 ? fallback : display;
     }
 
-    /// <summary>اگر فرم First/Last صریح دارد همان برنده است؛ وگرنه تصویر دفترچه/legacy.</summary>
     public static (string First, string Last, string Recipient) ResolveExplicitOverLegacy(
         string? explicitFirst,
         string? explicitLast,
@@ -51,12 +51,32 @@ internal static class StorefrontRecipientNames
     {
         if (first.Length == 0)
         {
-            throw new InvalidOperationException("shipping.firstname.required");
+            throw new StorefrontOrderException(StorefrontOrderErrors.ShippingFirstNameRequired);
         }
 
         if (last.Length == 0)
         {
-            throw new InvalidOperationException("shipping.lastname.required");
+            throw new StorefrontOrderException(StorefrontOrderErrors.ShippingLastNameRequired);
         }
     }
+}
+
+/// <summary>کاتالوگ استان/شهر ایران برای فرم ارسال فروشگاهی.</summary>
+public static class StorefrontIranGeography
+{
+    public static IReadOnlyList<StorefrontProvinceOption> Provinces { get; } =
+    [
+        new("tehran", "تهران", ["تهران", "ری", "شهریار", "اسلامشهر", "ملارد", "پاکدشت"]),
+        new("alborz", "البرز", ["کرج", "فردیس", "نظرآباد", "ساوجبلاغ"]),
+        new("isfahan", "اصفهان", ["اصفهان", "کاشان", "خمینی‌شهر", "شاهین‌شهر", "نجف‌آباد"]),
+        new("razavi_khorasan", "خراسان رضوی", ["مشهد", "نیشابور", "سبزوار", "تربت حیدریه"]),
+        new("fars", "فارس", ["شیراز", "مرودشت", "جهرم", "فسا", "کازرون"]),
+        new("east_azerbaijan", "آذربایجان شرقی", ["تبریز", "مرند", "مراغه", "اهر"]),
+        new("khuzestan", "خوزستان", ["اهواز", "آبادان", "دزفول", "بندر ماهشهر"]),
+        new("mazandaran", "مازندران", ["ساری", "بابل", "آمل", "قائم‌شهر"]),
+        new("gilan", "گیلان", ["رشت", "بندرانزلی", "لاهیجان", "رودسر"]),
+        new("qom", "قم", ["قم"]),
+        new("yazd", "یزد", ["یزد", "اردکان", "میبد"]),
+        new("kerman", "کرمان", ["کرمان", "رفسنجان", "سیرجان"]),
+    ];
 }

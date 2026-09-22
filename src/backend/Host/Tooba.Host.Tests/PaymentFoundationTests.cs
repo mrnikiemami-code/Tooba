@@ -1,4 +1,4 @@
-using Tooba.Payment.Contracts.Events;
+﻿using Tooba.Payment.Contracts.Events;
 using Tooba.Promotion.Application.Ports;
 using Tooba.Promotion.Infrastructure.Queries;
 using Tooba.Promotion.Infrastructure.Messaging;
@@ -319,7 +319,7 @@ public sealed class PaymentFoundationTests : IAsyncLifetime
 
     private static OrderDbContext CreateOrderDb(string connectionString, ICurrentCommerceContext commerce)
     {
-        var modules = new IOutboxModuleRegistration[] { new Order.Infrastructure.OrderOutboxRegistration() };
+        var modules = new IOutboxModuleRegistration[] { new Tooba.Order.Infrastructure.OrderOutboxRegistration() };
         var serializer = new JsonIntegrationEventSerializer(modules);
         var interceptor = new OutboxSaveChangesInterceptor(commerce, modules, serializer);
         var options = new DbContextOptionsBuilder<OrderDbContext>();

@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Testcontainers.PostgreSql;
 using Tooba.CustomerProfile.Application;
@@ -7,6 +7,11 @@ using Tooba.CustomerProfile.Infrastructure.Persistence;
 using Tooba.Host.Customer;
 using Tooba.Host.CustomerProfile;
 using Tooba.Host.Storefront;
+using Tooba.Order.Application.Storefront.Services;
+using Tooba.Order.Application.Storefront.Models;
+using Tooba.AddressBook.Contracts;
+using Tooba.Cart.Application.Ports;
+using Tooba.Fulfillment.Contracts.Shipping;
 using Tooba.Persistence;
 using Xunit;
 
@@ -118,7 +123,7 @@ public sealed class CustomerProfileFoundationTests
         await using var provider = services.BuildServiceProvider();
         await CustomerProfileDevelopmentSeed.ApplyAsync(provider);
         await CustomerProfileDevelopmentSeed.ApplyAsync(provider);
-        var actor = StorefrontCheckoutComposer.StorefrontGuestActorId;
+        var actor = Tooba.Order.Application.Storefront.Services.StorefrontCheckoutService.StorefrontGuestActorId;
         var rows = await db.Profiles.AsNoTracking().Where(x => x.OwnerUserId == actor).ToListAsync();
         Assert.Single(rows);
         Assert.Equal("مشتری نمایشی توبا", rows[0].DisplayName);

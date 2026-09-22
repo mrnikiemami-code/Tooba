@@ -1,9 +1,14 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Tooba.Catalog.Domain;
 using Tooba.Catalog.Infrastructure.Persistence;
 using Tooba.Host.Admin;
 using Tooba.Host.Storefront;
+using Tooba.Order.Application.Storefront.Services;
+using Tooba.Order.Application.Storefront.Models;
+using Tooba.AddressBook.Contracts;
+using Tooba.Cart.Application.Ports;
+using Tooba.Fulfillment.Contracts.Shipping;
 using Tooba.Order.Application;
 using Tooba.Order.Domain;
 using Tooba.Order.Infrastructure;
@@ -127,7 +132,7 @@ public sealed class ReservationLifecycleIntegrationGateTests
         var checkout = Guid.NewGuid();
         var pending = StorefrontPendingPaymentProjector.Project(
             [Checkout(checkout)],
-            Pay(checkout, PaymentStatus.Pending, "sandbox"),
+            Pay(checkout, "Pending", "sandbox"),
             Cycle(checkout, 1, ReservationCycleStatus.Active, 180, created: 1, max: 2, remaining: 1, expires: T0.AddMinutes(3)),
             T0).Items.Single();
         Assert.Equal("pay", pending.PrimaryAction);
@@ -135,7 +140,7 @@ public sealed class ReservationLifecycleIntegrationGateTests
 
         var failed = StorefrontPendingPaymentProjector.Project(
             [Checkout(checkout)],
-            Pay(checkout, PaymentStatus.Failed, "sandbox"),
+            Pay(checkout, "Failed", "sandbox"),
             Cycle(checkout, 1, ReservationCycleStatus.Active, 180, created: 1, max: 2, remaining: 1, expires: T0.AddMinutes(3)),
             T0).Items.Single();
         Assert.Equal(pending.HoldEndsAt, failed.HoldEndsAt);
@@ -143,14 +148,14 @@ public sealed class ReservationLifecycleIntegrationGateTests
 
         var expired = StorefrontPendingPaymentProjector.Project(
             [Checkout(checkout)],
-            Pay(checkout, PaymentStatus.Expired, "sandbox"),
+            Pay(checkout, "Expired", "sandbox"),
             Cycle(checkout, 1, ReservationCycleStatus.Expired, 0, created: 1, max: 2, remaining: 1, expires: T0.AddMinutes(-1)),
             T0).Items.Single();
         Assert.Equal("retryAfterExpiry", expired.PrimaryAction);
 
         var maxed = StorefrontPendingPaymentProjector.Project(
             [Checkout(checkout)],
-            Pay(checkout, PaymentStatus.Expired, "sandbox"),
+            Pay(checkout, "Expired", "sandbox"),
             Cycle(checkout, 2, ReservationCycleStatus.Expired, 0, created: 2, max: 2, remaining: 0),
             T0).Items.Single();
         Assert.Equal("none", maxed.PrimaryAction);
@@ -160,7 +165,7 @@ public sealed class ReservationLifecycleIntegrationGateTests
             [Checkout(checkout)],
             new Dictionary<Guid, StorefrontPendingPaymentProjector.PaymentInput>
             {
-                [checkout] = new(Guid.NewGuid(), PaymentStatus.Pending, "manual", T0.AddMinutes(-5), 1000, "IRR"),
+                [checkout] = new(Guid.NewGuid(), "Pending", "manual", T0.AddMinutes(-5), 1000, "IRR"),
             },
             Cycle(checkout, 1, ReservationCycleStatus.Active, 400, created: 1, max: 2, remaining: 1, expires: T0.AddHours(24)),
             T0).Items.Single();
@@ -169,7 +174,7 @@ public sealed class ReservationLifecycleIntegrationGateTests
 
         var paid = StorefrontPendingPaymentProjector.Project(
             [Checkout(checkout)],
-            Pay(checkout, PaymentStatus.Succeeded, "sandbox"),
+            Pay(checkout, "Succeeded", "sandbox"),
             Cycle(checkout, 1, ReservationCycleStatus.CommittedPaid, 0, created: 1, max: 2, remaining: 1),
             T0);
         Assert.Empty(paid.Items);
@@ -257,7 +262,7 @@ public sealed class ReservationLifecycleIntegrationGateTests
             [new("SO-R19", SellerOrderStatus.PendingPayment, 250000, "IRR", [new("کالا", 1, Guid.NewGuid())])]);
 
     private static Dictionary<Guid, StorefrontPendingPaymentProjector.PaymentInput> Pay(
-        Guid checkout, PaymentStatus status, string provider) =>
+        Guid checkout, string status, string provider) =>
         new() { [checkout] = new(Guid.NewGuid(), status, provider, null, 250000, "IRR") };
 
     private static Dictionary<Guid, ReservationCycleProjection> Cycle(

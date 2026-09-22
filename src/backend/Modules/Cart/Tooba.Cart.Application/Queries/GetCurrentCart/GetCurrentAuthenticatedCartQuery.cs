@@ -1,9 +1,9 @@
+﻿using Tooba.Cart.Application.Ports;
 using MediatR;
 using Tooba.BuildingBlocks.Results;
 using Tooba.BuildingBlocks.Security;
 using Tooba.Cart.Application.Errors;
-using Tooba.Cart.Application.Models;
-using Tooba.Cart.Application.Ports;
+using Tooba.Cart.Contracts;
 using Tooba.Cart.Application.Presentation;
 
 namespace Tooba.Cart.Application.Queries.GetCurrentCart;

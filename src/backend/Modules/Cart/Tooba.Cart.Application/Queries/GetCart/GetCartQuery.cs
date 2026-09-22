@@ -1,8 +1,8 @@
-using MediatR;
+﻿using MediatR;
 using Tooba.BuildingBlocks.Results;
 using Tooba.BuildingBlocks.Security;
 using Tooba.Cart.Application.Errors;
-using Tooba.Cart.Application.Models;
+using Tooba.Cart.Contracts;
 using Tooba.Cart.Application.Presentation;
 using Tooba.Cart.Contracts;
 

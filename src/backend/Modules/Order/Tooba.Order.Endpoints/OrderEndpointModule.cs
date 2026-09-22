@@ -40,6 +40,7 @@ public static class OrderEndpointModule
         AdminOrdersGridEndpoints.Map(app);
         AdminOrderOperationsEndpoints.Map(app);
         AdminOrderInventoryRecoverySupplyEndpoints.Map(app);
+        StorefrontOrderEndpoints.Map(app);
         return app;
     }
 }

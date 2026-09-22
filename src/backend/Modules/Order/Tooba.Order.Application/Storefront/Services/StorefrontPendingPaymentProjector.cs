@@ -1,21 +1,15 @@
 using Tooba.Order.Application;
 using Tooba.Order.Domain;
-using Tooba.Payment.Domain.Aggregates;
-using Tooba.Payment.Domain.ValueObjects;
-using Tooba.Payment.Infrastructure.Adapters;
-using Tooba.Payment.Infrastructure.DependencyInjection;
-using Tooba.Payment.Infrastructure.Directories;
-using Tooba.Payment.Infrastructure.Messaging;
-using Tooba.Payment.Infrastructure.Providers;
+using Tooba.Order.Application.Storefront.Models;
+using Tooba.Payment.Contracts.Storefront;
 
-namespace Tooba.Host.Storefront;
+namespace Tooba.Order.Application.Storefront.Services;
 
 /// <summary>
 /// نگاشت تصویر در انتظار پرداخت. انقضا را جعل نمی‌کند و قابلیت را از سرور می‌سازد.
 /// </summary>
 public static class StorefrontPendingPaymentProjector
 {
-    /// <summary>ورودی سفارش برای نگاشت بدون DbContext.</summary>
     public sealed record CheckoutInput(
         Guid CheckoutId,
         Guid CartId,
@@ -23,7 +17,6 @@ public static class StorefrontPendingPaymentProjector
         DateTimeOffset SubmittedAt,
         IReadOnlyList<SellerInput> Sellers);
 
-    /// <summary>سفارش فروشنده فشرده.</summary>
     public sealed record SellerInput(
         string OrderNumber,
         SellerOrderStatus Status,
@@ -31,19 +24,16 @@ public static class StorefrontPendingPaymentProjector
         string Currency,
         IReadOnlyList<LineInput> Lines);
 
-    /// <summary>خط فشرده.</summary>
     public sealed record LineInput(string Title, decimal Quantity, Guid? MediaAssetId);
 
-    /// <summary>آخرین پرداخت سفارش.</summary>
     public sealed record PaymentInput(
         Guid PaymentId,
-        PaymentStatus Status,
+        string Status,
         string ProviderCode,
         DateTimeOffset? EvidenceSubmittedAt,
         decimal Amount,
         string Currency);
 
-    /// <summary>سفارش‌های قابل نمایش مشتری را از دستهٔ بارگذاری‌شده می‌سازد.</summary>
     public static StorefrontPendingPaymentPage Project(
         IReadOnlyList<CheckoutInput> checkouts,
         IReadOnlyDictionary<Guid, PaymentInput> payments,
@@ -88,9 +78,11 @@ public static class StorefrontPendingPaymentProjector
         var retryRemaining = cycle?.RetryCountRemaining ?? 0;
         var maxCycles = cycle?.EffectiveMaxCycles ?? 3;
         var retryLimit = !cycleActive && retryRemaining <= 0 && (cycle?.TotalCyclesCreated ?? 0) >= maxCycles;
-        var isManual = ManualPaymentGateway.IsManual(payment?.ProviderCode);
+        var isManual = PaymentProviderCodes.IsManual(payment?.ProviderCode);
         var awaitingReview = isManual
-            && payment is { Status: PaymentStatus.Pending, EvidenceSubmittedAt: not null };
+            && payment is not null
+            && string.Equals(payment.Status, "Pending", StringComparison.OrdinalIgnoreCase)
+            && payment.EvidenceSubmittedAt is not null;
         var cycleEnded = !cycleActive && cycle is not null
             && (cycle.CurrentStatus is ReservationCycleStatus.Expired
                 or ReservationCycleStatus.ReleasedByPolicy
@@ -115,7 +107,9 @@ public static class StorefrontPendingPaymentProjector
             ? "awaitingReview"
             : retryLimit
                 ? "retryLimit"
-                : payment is { Status: PaymentStatus.Failed } && cycleActive
+                : payment is not null
+                    && string.Equals(payment.Status, "Failed", StringComparison.OrdinalIgnoreCase)
+                    && cycleActive
                     ? "failedRetryable"
                     : cycleEnded
                         ? "expiredRetryable"
@@ -160,10 +154,10 @@ public static class StorefrontPendingPaymentProjector
             retryLimit);
     }
 
-    private static bool IsTerminalHidden(PaymentStatus status) =>
-        status is PaymentStatus.Succeeded
-            or PaymentStatus.Cancelled
-            or PaymentStatus.RefundPending
-            or PaymentStatus.Refunded
-            or PaymentStatus.RefundFailed;
+    private static bool IsTerminalHidden(string status) =>
+        status is "Succeeded"
+            or "Cancelled"
+            or "RefundPending"
+            or "Refunded"
+            or "RefundFailed";
 }

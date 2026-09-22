@@ -1,4 +1,4 @@
-using Xunit;
+﻿using Xunit;
 
 namespace Tooba.Host.Tests;
 
@@ -33,12 +33,12 @@ public sealed class CheckoutImplW5PromotionContractTests
     [Fact]
     public void Promotion_contracts_and_adapter_are_promotion_owned()
     {
-        var contracts = Read("src/backend/Modules/Promotion/Tooba.Promotion.Contracts/CheckoutPromotionContracts.cs");
+        var contracts = Read("src/backend/Modules/Promotion/Tooba.Promotion.Contracts/Checkout/CheckoutPromotionContracts.cs");
         Assert.Contains("interface ICheckoutPromotionPort", contracts, StringComparison.Ordinal);
         Assert.DoesNotContain("Tooba.Promotion.Domain", contracts, StringComparison.Ordinal);
-        var adapter = Read("src/backend/Modules/Promotion/Tooba.Promotion.Application/CheckoutPromotionAdapter.cs");
+        var adapter = Read("src/backend/Modules/Promotion/Tooba.Promotion.Application/Checkout/CheckoutPromotionAdapter.cs");
         Assert.Contains("class CheckoutPromotionAdapter : ICheckoutPromotionPort", adapter, StringComparison.Ordinal);
-        var module = Read("src/backend/Modules/Promotion/Tooba.Promotion.Infrastructure/PromotionModule.cs");
+        var module = Read("src/backend/Modules/Promotion/Tooba.Promotion.Infrastructure/DependencyInjection/PromotionModule.cs");
         Assert.Contains("ICheckoutPromotionPort, CheckoutPromotionAdapter", module, StringComparison.Ordinal);
     }
 

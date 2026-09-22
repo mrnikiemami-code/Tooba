@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Tooba.CustomerProfile.Domain;
 using Tooba.CustomerProfile.Infrastructure.Persistence;
 using Tooba.Host.Storefront;
@@ -9,13 +9,13 @@ namespace Tooba.Host.CustomerProfile;
 public static class CustomerProfileDevelopmentSeed
 {
     /// <summary>
-    /// پروفایل ساختگی غیرشخصی را برای <see cref="StorefrontCheckoutComposer.StorefrontGuestActorId"/>
+    /// پروفایل ساختگی غیرشخصی را برای <see cref="Tooba.Order.Application.Storefront.Services.StorefrontCheckoutService.StorefrontGuestActorId"/>
     /// به‌صورت idempotent درج می‌کند؛ در Production صدا زده نمی‌شود.
     /// </summary>
     public static async Task ApplyAsync(IServiceProvider services, CancellationToken cancellationToken = default)
     {
         var db = services.GetRequiredService<CustomerProfileDbContext>();
-        var actor = StorefrontCheckoutComposer.StorefrontGuestActorId;
+        var actor = Tooba.Order.Application.Storefront.Services.StorefrontCheckoutService.StorefrontGuestActorId;
         if (await db.Profiles.AnyAsync(x => x.OwnerUserId == actor, cancellationToken))
         {
             return;

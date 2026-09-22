@@ -1,12 +1,12 @@
-using Tooba.Order.Contracts.Fulfillment;
+﻿using Tooba.Order.Contracts.Fulfillment;
 using System.Linq.Expressions;
 using System.Transactions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Tooba.BuildingBlocks;
 using Tooba.Cart.Application.Ports;
-using Tooba.Cart.Application.Conversion;
 using Tooba.Cart.Contracts;
+using Tooba.Cart.Application.Conversion;
 using Tooba.Catalog.Application;
 using Tooba.Inventory.Contracts.Availability;
 using Tooba.Inventory.Contracts.Checkout;

@@ -1,4 +1,4 @@
-using Tooba.BuildingBlocks;
+﻿using Tooba.BuildingBlocks;
 using Tooba.Host.Admin;
 using Tooba.Host.Storefront;
 using Tooba.UserPreference.Application;
@@ -146,7 +146,7 @@ public static class UserPreferenceEndpoints
             return devActor;
         }
 
-        return StorefrontCheckoutComposer.StorefrontGuestActorId;
+        return Tooba.Order.Application.Storefront.Services.StorefrontCheckoutService.StorefrontGuestActorId;
     }
 
     private static IResult UnauthorizedCustomer() =>

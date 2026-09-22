@@ -1,8 +1,9 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Tooba.AccessControl.Application;
 using Tooba.AccessControl.Domain;
 using Tooba.BuildingBlocks;
 using Tooba.Cart.Application;
+using Tooba.Cart.Application.Ports;
 using Tooba.Cart.Contracts;
 using Tooba.Catalog.Application;
 using Tooba.Catalog.Domain;
@@ -717,7 +718,7 @@ internal static class AccessControlDevelopmentSeed
                 cart.Version,
                 OrderMode.OnlinePurchase,
                 null,
-                StorefrontCheckoutComposer.StorefrontGuestActorId,
+                Tooba.Order.Application.Storefront.Services.StorefrontCheckoutService.StorefrontGuestActorId,
                 idempotencyKey,
                 "IR-NAT",
                 RecipientName: "گیرنده دمو ACC",
@@ -773,7 +774,7 @@ internal static class AccessControlDevelopmentSeed
                 cart.Version,
                 OrderMode.OnlinePurchase,
                 null,
-                StorefrontCheckoutComposer.StorefrontGuestActorId,
+                Tooba.Order.Application.Storefront.Services.StorefrontCheckoutService.StorefrontGuestActorId,
                 idempotencyKey,
                 "IR-NAT",
                 RecipientName: "گیرنده دمو ترکیبی",

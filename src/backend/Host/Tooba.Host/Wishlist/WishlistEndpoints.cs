@@ -1,4 +1,4 @@
-using Tooba.Host.Storefront;
+﻿using Tooba.Host.Storefront;
 using Tooba.Wishlist.Application;
 
 namespace Tooba.Host.Wishlist;
@@ -59,7 +59,7 @@ public static class WishlistEndpoints
         if (!environment.IsDevelopment() && !environment.IsEnvironment("Testing")) return null;
         if (request.Headers.TryGetValue(DevActorHeader, out var raw)
             && Guid.TryParse(raw.ToString(), out var actor) && actor != Guid.Empty) return actor;
-        return StorefrontCheckoutComposer.StorefrontGuestActorId;
+        return Tooba.Order.Application.Storefront.Services.StorefrontCheckoutService.StorefrontGuestActorId;
     }
 
     private static IResult Unauthorized() => Results.Json(

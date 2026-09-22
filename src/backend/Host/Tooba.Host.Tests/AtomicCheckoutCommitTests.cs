@@ -13,7 +13,7 @@ public sealed class AtomicCheckoutCommitTests
         var checkout = File.ReadAllText(Path.Combine(root, "src", "backend", "Modules", "Order", "Tooba.Order.Application", "CheckoutProcessManager.cs"));
         var host = File.ReadAllText(Path.Combine(root, "src", "backend", "Modules", "Order", "Tooba.Order.Infrastructure", "CheckoutSubmitHost.cs"));
         var directory = File.ReadAllText(Path.Combine(root, "src", "backend", "Modules", "Order", "Tooba.Order.Infrastructure", "CheckoutDirectory.cs"));
-        var payment = File.ReadAllText(Path.Combine(root, "src", "backend", "Host", "Tooba.Host", "Modules", "Payment", "Tooba.Payment.Application", "Models", "StorefrontPaymentOrchestrator.cs"));
+        var payment = File.ReadAllText(Path.Combine(root, "src", "backend", "Modules", "Payment", "Tooba.Payment.Application", "Orchestration", "StorefrontPaymentOrchestrator.cs"));
         var feCheckout = File.ReadAllText(Path.Combine(root, "src", "frontend", "app", "storefront", "storefront-checkout-api.ts"));
         var feShipping = File.ReadAllText(Path.Combine(root, "src", "frontend", "app", "storefront", "storefront-shipping-api.ts"));
         Assert.Contains("TransactionScope", checkout, StringComparison.Ordinal);
@@ -48,13 +48,13 @@ public sealed class AtomicCheckoutCommitTests
     {
         var root = FindRepoRoot();
         var locks = File.ReadAllText(Path.Combine(root, "docs", "architecture", "TOOBA-LOCKS.md"));
-        var composer = File.ReadAllText(Path.Combine(root, "src", "backend", "Host", "Tooba.Host", "Storefront", "StorefrontPendingPaymentComposer.cs"));
+        var composer = File.ReadAllText(Path.Combine(root, "src", "backend", "Modules", "Order", "Tooba.Order.Application", "Storefront", "Services", "StorefrontPendingPaymentService.cs"));
         Assert.Contains("LOCK-SF-103", locks, StringComparison.Ordinal);
         Assert.Contains("LOCK-SF-104", locks, StringComparison.Ordinal);
         Assert.Contains("LOCK-SF-105", locks, StringComparison.Ordinal);
         Assert.Contains("HidePendingCardAsync", composer, StringComparison.Ordinal);
         Assert.Contains("CancelSellerOrderAsync", composer, StringComparison.Ordinal);
-        Assert.Contains("pending.hide.active_hold", composer, StringComparison.Ordinal);
+        Assert.Contains("pending.hide.active_hold", File.ReadAllText(Path.Combine(root, "src", "backend", "Modules", "Order", "Tooba.Order.Application", "Storefront", "StorefrontOrderErrors.cs")), StringComparison.Ordinal);
     }
 
     private static string FindRepoRoot()

@@ -1,4 +1,4 @@
-using System.Reflection;
+﻿using System.Reflection;
 using Tooba.Cart.Domain;
 using DomainCartStatus = Tooba.Cart.Domain.ValueObjects.CartStatus;
 using DomainCartAccessKind = Tooba.Cart.Domain.ValueObjects.CartAccessKind;
@@ -40,18 +40,20 @@ public sealed class CheckoutIdentityContractTests
     public void Storefront_and_auth_boundaries_expose_otp_login_and_merge()
     {
         var auth = File.ReadAllText(Path.Combine(FindRepoRoot(), "src", "backend", "Host", "Tooba.Host", "Authentication", "AuthenticationHttpBoundary.cs"));
-        var endpoints = File.ReadAllText(Path.Combine(FindRepoRoot(), "src", "backend", "Host", "Tooba.Host", "Storefront", "StorefrontEndpoints.cs"));
+        var orderEndpoints = File.ReadAllText(Path.Combine(FindRepoRoot(), "src", "backend", "Modules", "Order", "Tooba.Order.Endpoints", "StorefrontOrderEndpoints.cs"));
+        var hostEndpoints = File.ReadAllText(Path.Combine(FindRepoRoot(), "src", "backend", "Host", "Tooba.Host", "Storefront", "StorefrontEndpoints.cs"));
+        var orderErrors = File.ReadAllText(Path.Combine(FindRepoRoot(), "src", "backend", "Modules", "Order", "Tooba.Order.Application", "Storefront", "StorefrontOrderErrors.cs"));
         var cartEndpoints = File.ReadAllText(Path.Combine(FindRepoRoot(), "src", "backend", "Modules", "Cart", "Tooba.Cart.Endpoints", "Storefront", "CartStorefrontEndpoints.cs"));
-        var checkout = File.ReadAllText(Path.Combine(FindRepoRoot(), "src", "backend", "Host", "Tooba.Host", "Storefront", "StorefrontCheckoutComposer.cs"));
+        var actor = File.ReadAllText(Path.Combine(FindRepoRoot(), "src", "backend", "Host", "Tooba.Host", "Order", "HostOrderStorefrontActor.cs"));
         var login = File.ReadAllText(Path.Combine(FindRepoRoot(), "src", "frontend", "app", "login", "storefront-login.tsx"));
         Assert.Contains("/otp-login/request", auth, StringComparison.Ordinal);
         Assert.Contains("/otp-login/complete", auth, StringComparison.Ordinal);
-        Assert.Contains("checkout.authentication_required", endpoints, StringComparison.Ordinal);
+        Assert.Contains("checkout.authentication_required", orderErrors, StringComparison.Ordinal);
         Assert.Contains("/cart/merge", cartEndpoints, StringComparison.Ordinal);
-        Assert.Contains("checkout-identity-policy", endpoints, StringComparison.Ordinal);
-        Assert.Contains("_session.IsAuthenticated ? _session.UserId", checkout, StringComparison.Ordinal);
+        Assert.Contains("checkout-identity-policy", hostEndpoints, StringComparison.Ordinal);
+        Assert.Contains("session.IsAuthenticated", actor, StringComparison.Ordinal);
         Assert.DoesNotContain("type=\"password\"", login, StringComparison.Ordinal);
-        Assert.DoesNotContain("TB-P10-T005", endpoints, StringComparison.Ordinal);
+        Assert.DoesNotContain("TB-P10-T005", orderEndpoints, StringComparison.Ordinal);
     }
 
     [Fact]

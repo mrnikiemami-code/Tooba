@@ -1,4 +1,4 @@
-using Tooba.CustomerProfile.Application;
+﻿using Tooba.CustomerProfile.Application;
 using Tooba.Host.Storefront;
 
 namespace Tooba.Host.Customer;
@@ -35,7 +35,7 @@ public static class CustomerPanelEndpoints
 
         return Results.Json(new
         {
-            actorUserId = StorefrontCheckoutComposer.StorefrontGuestActorId,
+            actorUserId = Tooba.Order.Application.Storefront.Services.StorefrontCheckoutService.StorefrontGuestActorId,
             label = "مشتری آزمایشی فروشگاه",
         });
     }
@@ -179,7 +179,7 @@ public static class CustomerPanelEndpoints
             return devActor;
         }
 
-        return StorefrontCheckoutComposer.StorefrontGuestActorId;
+        return Tooba.Order.Application.Storefront.Services.StorefrontCheckoutService.StorefrontGuestActorId;
     }
 
     private static IResult Unauthorized() =>

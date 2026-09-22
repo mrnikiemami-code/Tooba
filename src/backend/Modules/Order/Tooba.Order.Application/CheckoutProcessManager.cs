@@ -191,8 +191,19 @@ public sealed class CheckoutProcessManager : ICheckoutProcessManager
             await _host.ReconcileCartConversionAsync(winner, command, cancellationToken);
             return winner;
         }
-        // Inventory still exposes this W1-W5 conflict as a legacy exception code.
-        // Keep the frozen winner-reconciliation behavior until R1 adds a typed Contracts error.
+        // Inventory conflict: prefer typed ContractOperationException; keep legacy IOE message for frozen W5 path.
+        catch (ContractOperationException ex) when (ex.Code == "inventory.reservation.conflict")
+        {
+            var winner = await _host.FindConflictWinnerAsync(command, cancellationToken);
+            if (winner is null)
+            {
+                throw;
+            }
+
+            _host.EnsureCheckoutAccess(winner, command);
+            await _host.ReconcileCartConversionAsync(winner, command, cancellationToken);
+            return winner;
+        }
         catch (InvalidOperationException ex) when (ex.Message == "inventory.reservation.conflict")
         {
             var winner = await _host.FindConflictWinnerAsync(command, cancellationToken);
@@ -213,7 +224,7 @@ public sealed class CheckoutProcessManager : ICheckoutProcessManager
                 {
                     await _inventory.ReleaseAsync(reservations.Values, cancellationToken);
                 }
-                catch (InvalidOperationException ex)
+                catch (Exception ex) when (ex is InvalidOperationException or ContractOperationException)
                 {
                     _logger.LogWarning(
                         ex,

@@ -1,65 +1,54 @@
-using System.Security.Cryptography;
+﻿using System.Security.Cryptography;
 using System.Text;
-using MediatR;
-using Microsoft.EntityFrameworkCore;
-using Tooba.AddressBook.Application;
-using Tooba.Cart.Application.Models;
-using Tooba.Cart.Application.Ports;
-using Tooba.Fulfillment.Application.Ports;
-using Tooba.Fulfillment.Application.Models;
-using Tooba.Fulfillment.Application.Shipping;
-using Tooba.Fulfillment.Application.Commands.EnsureShippingCatalogSeed;
-
-using Tooba.Localization.Application;
-using Tooba.Order.Application;
+using Tooba.AddressBook.Contracts;
+using Tooba.BuildingBlocks;
+using Tooba.Cart.Contracts;
+using Tooba.Fulfillment.Contracts.Shipping;
+using Tooba.Localization.Contracts;
+using Tooba.Order.Application.Storefront.Models;
+using Tooba.Order.Application.Storefront.Ports;
 using Tooba.Order.Domain;
-using Tooba.Order.Infrastructure.Persistence;
 
-namespace Tooba.Host.Storefront;
+namespace Tooba.Order.Application.Storefront.Services;
 
 /// <summary>
-/// تصویر یکپارچهٔ مرحلهٔ ارسال فروشگاه: روش‌های Store-enabled، قیمت، حداقل تحویل، پیش‌نویس سبد.
-/// Checkout PAUSED — Cart seam is ICartPresentationGateway only (compile adaptation).
+/// Order-owned storefront shipping projection/selection/commit.
 /// </summary>
-public sealed class StorefrontShippingComposer
+public sealed class StorefrontShippingService
 {
     private readonly ICartPresentationGateway _carts;
-    private readonly StorefrontCheckoutComposer _checkouts;
-    private readonly IAddressBookDirectory _addresses;
+    private readonly StorefrontCheckoutService _checkouts;
+    private readonly IAddressBookCheckoutLookup _addresses;
     private readonly IShippingCatalogReader _shippingCatalog;
-    private readonly OrderDbContext _orders;
-    private readonly ILanguageDirectory _languages;
+    private readonly IStorefrontShippingDraftStore _drafts;
+    private readonly ILanguageLookup _languages;
     private readonly ShippingMethodsOptions _shippingOptions;
-    private readonly ISender _sender;
-    private readonly CurrentAuthenticatedSession _session;
-    private readonly IHostEnvironment _environment;
-    private readonly IHttpContextAccessor _http;
+    private readonly IShippingCatalogSeedPort _shippingSeed;
+    private readonly IOrderStorefrontActor _actor;
+    private readonly IClock _clock;
 
-    /// <summary>سازنده.</summary>
-    internal StorefrontShippingComposer(
+    public StorefrontShippingService(
         ICartPresentationGateway carts,
-        StorefrontCheckoutComposer checkouts,
-        IAddressBookDirectory addresses,
+        StorefrontCheckoutService checkouts,
+        Tooba.AddressBook.Contracts.IAddressBookCheckoutLookup addresses,
         IShippingCatalogReader shippingCatalog,
-        OrderDbContext orders,
-        ILanguageDirectory languages,
+        IStorefrontShippingDraftStore drafts,
+        ILanguageLookup languages,
         ShippingMethodsOptions shippingOptions,
-        ISender sender,
-        CurrentAuthenticatedSession session,
-        IHostEnvironment environment,
-        IHttpContextAccessor http)
+        IShippingCatalogSeedPort shippingSeed,
+        IOrderStorefrontActor actor,
+        IClock clock)
     {
         _carts = carts;
         _checkouts = checkouts;
         _addresses = addresses;
         _shippingCatalog = shippingCatalog;
-        _orders = orders;
+        _drafts = drafts;
         _languages = languages;
         _shippingOptions = shippingOptions;
-        _sender = sender;
-        _session = session;
-        _environment = environment;
-        _http = http;
+        _shippingSeed = shippingSeed;
+        _actor = actor;
+        _clock = clock;
     }
 
     /// <summary>تصویر ارسال برای سبد جاری.</summary>
@@ -74,7 +63,7 @@ public sealed class StorefrontShippingComposer
         var cart = await RequireCartAsync(cartId, guestSecret, cancellationToken);
         var sellerIds = cart.Lines.Select(x => x.SellerPartyId).Distinct().ToArray();
         var maxPrep = StorefrontShippingCalculator.MaxSellerPreparationDays(sellerIds, _shippingOptions);
-        var today = DateOnly.FromDateTime(DateTime.UtcNow);
+        var today = DateOnly.FromDateTime(_clock.UtcNow.UtcDateTime);
         var methods = await LoadEligibleMethodsAsync(cart.SubtotalExclusiveOfTax, provinceName, language, cancellationToken);
 
         var draft = await LoadDraftAsync(cart.CartId, guestSecret, cancellationToken);
@@ -145,7 +134,7 @@ public sealed class StorefrontShippingComposer
         var cart = await RequireCartAsync(request.CartId, guestSecret, cancellationToken);
         if (cart.Version != request.ExpectedCartVersion)
         {
-            throw new InvalidOperationException("shipping.cart.stale");
+            throw new StorefrontOrderException(StorefrontOrderErrors.ShippingCartStale);
         }
 
         var names = StorefrontRecipientNames.Resolve(request.FirstName, request.LastName, request.RecipientName);
@@ -155,7 +144,7 @@ public sealed class StorefrontShippingComposer
         }
         else if (names.First.Length == 0 && names.Last.Length == 0 && names.Recipient.Length == 0)
         {
-            throw new InvalidOperationException("shipping.firstname.required");
+            throw new StorefrontOrderException(StorefrontOrderErrors.ShippingFirstNameRequired);
         }
 
         var prepared = await _checkouts.PrepareShippingAsync(
@@ -178,15 +167,15 @@ public sealed class StorefrontShippingComposer
             cancellationToken);
         var method = methods.FirstOrDefault(m =>
             string.Equals(m.MethodCode, request.ShippingMethodCode?.Trim(), StringComparison.OrdinalIgnoreCase))
-            ?? throw new InvalidOperationException("shipping.method.unavailable");
+            ?? throw new StorefrontOrderException(StorefrontOrderErrors.ShippingMethodUnavailable);
 
         var sellerIds = cart.Lines.Select(x => x.SellerPartyId).Distinct();
         var maxPrep = StorefrontShippingCalculator.MaxSellerPreparationDays(sellerIds, _shippingOptions);
-        var today = DateOnly.FromDateTime(DateTime.UtcNow);
+        var today = DateOnly.FromDateTime(_clock.UtcNow.UtcDateTime);
         var minimum = StorefrontShippingCalculator.ComputeMinimumDeliveryDate(today, maxPrep, method.LeadDays);
         if (!DateOnly.TryParse(request.SelectedDeliveryDate, out var selectedDate))
         {
-            throw new InvalidOperationException("shipping.delivery.invalid");
+            throw new StorefrontOrderException(StorefrontOrderErrors.ShippingDeliveryInvalid);
         }
 
         StorefrontShippingCalculator.EnsureDeliveryNotEarlier(selectedDate, minimum);
@@ -194,19 +183,19 @@ public sealed class StorefrontShippingComposer
         if (string.IsNullOrWhiteSpace(request.SelectedDeliveryTimeWindow)
             || windows.All(w => w.Value != request.SelectedDeliveryTimeWindow.Trim()))
         {
-            throw new InvalidOperationException("shipping.delivery.slot_unavailable");
+            throw new StorefrontOrderException(StorefrontOrderErrors.ShippingDeliverySlotUnavailable);
         }
 
         if (request.CustomerNote is { Length: > CartShippingDraft.CustomerNoteMaxLength })
         {
-            throw new InvalidOperationException("shipping.note.too_long");
+            throw new StorefrontOrderException(StorefrontOrderErrors.ShippingNoteTooLong);
         }
 
         // کلاینت نمی‌تواند قیمت را جعل کند.
         var amount = method.PriceAmount;
-        var now = DateTimeOffset.UtcNow;
+        var now = _clock.UtcNow;
         var hash = HashGuestSecret(guestSecret);
-        var existing = await _orders.ShippingDrafts.FirstOrDefaultAsync(x => x.CartId == cart.CartId, cancellationToken);
+        var existing = await _drafts.GetByCartIdAsync(cart.CartId, cancellationToken);
         if (existing is null)
         {
             existing = CartShippingDraft.Create(
@@ -229,12 +218,12 @@ public sealed class StorefrontShippingComposer
                 request.CustomerNote,
                 now);
             existing.ApplyRecipientNames(names.First, names.Last);
-            if (_session.IsAuthenticated)
+            if (_actor.IsAuthenticated)
             {
                 existing.ClearGuestSecret();
             }
 
-            _orders.ShippingDrafts.Add(existing);
+            await _drafts.SaveAsync(existing, isNew: true, cancellationToken);
         }
         else
         {
@@ -258,13 +247,14 @@ public sealed class StorefrontShippingComposer
                 request.CustomerNote,
                 now);
             existing.ApplyRecipientNames(names.First, names.Last);
-            if (_session.IsAuthenticated)
+            if (_actor.IsAuthenticated)
             {
                 existing.ClearGuestSecret();
             }
+
+            await _drafts.SaveAsync(existing, isNew: false, cancellationToken);
         }
 
-        await _orders.SaveChangesAsync(cancellationToken);
         return MapDraft(existing);
     }
 
@@ -277,9 +267,8 @@ public sealed class StorefrontShippingComposer
         string? couponCode,
         CancellationToken cancellationToken)
     {
-        var draft = await _orders.ShippingDrafts.AsNoTracking()
-            .FirstOrDefaultAsync(x => x.CartId == cartId, cancellationToken)
-            ?? throw new InvalidOperationException("shipping.selection.required");
+        var draft = await _drafts.GetByCartIdAsync(cartId, cancellationToken)
+            ?? throw new StorefrontOrderException(StorefrontOrderErrors.ShippingSelectionRequired);
         EnsureDraftOwnership(draft, guestSecret);
 
         // بازاعتبارسنجی قبل از ثبت سفارش.
@@ -303,8 +292,7 @@ public sealed class StorefrontShippingComposer
             guestSecret,
             cancellationToken);
 
-        draft = await _orders.ShippingDrafts.AsNoTracking()
-            .FirstAsync(x => x.CartId == cartId, cancellationToken);
+        draft = (await _drafts.GetByCartIdAsync(cartId, cancellationToken))!;
 
         return await _checkouts.SubmitAsync(
             cartId,
@@ -338,7 +326,7 @@ public sealed class StorefrontShippingComposer
         string? language,
         CancellationToken cancellationToken)
     {
-        await _sender.Send(new EnsureShippingCatalogSeedCommand(), cancellationToken);
+        await _shippingSeed.EnsureSeedAsync(cancellationToken);
         var enabled = ShippingMethodRegistry.Enabled(_shippingOptions)
             .Select(x => x.Code)
             .ToHashSet(StringComparer.OrdinalIgnoreCase);
@@ -420,10 +408,10 @@ public sealed class StorefrontShippingComposer
     private async Task<CartPage> RequireCartAsync(Guid cartId, string? guestSecret, CancellationToken cancellationToken)
     {
         var cart = await _carts.GetAsync(cartId, guestSecret, cancellationToken)
-            ?? throw new InvalidOperationException("shipping.cart.missing");
+            ?? throw new StorefrontOrderException(StorefrontOrderErrors.ShippingCartMissing);
         if (cart.Lines.Count == 0)
         {
-            throw new InvalidOperationException("shipping.cart.empty");
+            throw new StorefrontOrderException(StorefrontOrderErrors.ShippingCartEmpty);
         }
 
         return cart;
@@ -431,8 +419,7 @@ public sealed class StorefrontShippingComposer
 
     private async Task<CartShippingDraft?> LoadDraftAsync(Guid cartId, string? guestSecret, CancellationToken cancellationToken)
     {
-        var draft = await _orders.ShippingDrafts.AsNoTracking()
-            .FirstOrDefaultAsync(x => x.CartId == cartId, cancellationToken);
+        var draft = await _drafts.GetByCartIdAsync(cartId, cancellationToken);
         if (draft is null)
         {
             return null;
@@ -458,12 +445,12 @@ public sealed class StorefrontShippingComposer
         }
 
         // پس از ادغام ورود، راز مهمان از نشست حذف می‌شود اما پیش‌نویس همان سبد مالک باقی می‌ماند.
-        if (_session.IsAuthenticated && string.IsNullOrEmpty(hash))
+        if (_actor.IsAuthenticated && string.IsNullOrEmpty(hash))
         {
             return;
         }
 
-        throw new InvalidOperationException("shipping.cart.forbidden");
+        throw new StorefrontOrderException(StorefrontOrderErrors.ShippingCartForbidden);
     }
 
     private async Task<Guid> ResolveLanguageIdAsync(string? language, CancellationToken cancellationToken)

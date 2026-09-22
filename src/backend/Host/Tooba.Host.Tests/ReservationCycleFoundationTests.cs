@@ -210,15 +210,16 @@ public sealed class ReservationCycleFoundationTests
     {
         var dir = Read("src/backend/Modules/Order/Tooba.Order.Infrastructure/ReservationCycleDirectory.cs");
         var checkout = Read("src/backend/Modules/Order/Tooba.Order.Infrastructure/CheckoutDirectory.cs");
-        var composer = Read("src/backend/Host/Tooba.Host/Modules/Payment/Tooba.Payment.Application/Models/StorefrontPaymentOrchestrator.cs");
+        var composer = Read("src/backend/Modules/Payment/Tooba.Payment.Application/Orchestration/StorefrontPaymentOrchestrator.cs");
         var cart = Read("src/backend/Modules/Cart/Tooba.Cart.Infrastructure/Directories/CartDirectory.cs");
         Assert.Contains("CorrelatePaymentAttempt", dir, StringComparison.Ordinal);
         Assert.Contains("PrepareStart", checkout, StringComparison.Ordinal);
-        Assert.Contains("EnsureRetryAfterExpiryAsync", composer, StringComparison.Ordinal);
+        Assert.Contains("EnsureRetrySupplyAsync", composer, StringComparison.Ordinal);
+        Assert.Contains("EnsureRetryAfterExpiryAsync", Read("src/backend/Host/Tooba.Host/ReservationCycleCoordinator.cs"), StringComparison.Ordinal);
         Assert.DoesNotContain("ReserveAsync", cart, StringComparison.Ordinal);
         Assert.DoesNotContain("TB-P10-T005", Read("src/backend/Host/Tooba.Host/Program.cs"), StringComparison.Ordinal);
         Assert.Contains("InitialReservationHoldMinutes", Read("src/backend/Host/Tooba.Host/appsettings.json"), StringComparison.Ordinal);
-        Assert.Contains("inventory.reservation.retry_limit_reached", Read("src/backend/Host/Tooba.Host/Storefront/StorefrontEndpoints.cs"), StringComparison.Ordinal);
+        Assert.Contains("inventory.reservation.retry_limit_reached", Read("src/backend/Modules/Order/Tooba.Order.Application/ReservationCycleContracts.cs"), StringComparison.Ordinal);
         Assert.DoesNotContain("setInterval", dir, StringComparison.Ordinal);
         Assert.DoesNotContain("setInterval", Read("src/backend/Host/Tooba.Host/ReservationCycleCoordinator.cs"), StringComparison.Ordinal);
     }

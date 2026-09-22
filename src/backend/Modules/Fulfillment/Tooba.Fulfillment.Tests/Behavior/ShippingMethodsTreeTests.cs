@@ -1,6 +1,7 @@
 ﻿using MediatR;
 using Microsoft.Extensions.DependencyInjection;
 using Tooba.BuildingBlocks;
+using Tooba.Fulfillment.Contracts.Shipping;
 using Tooba.Fulfillment.Application.Shipping;
 using Tooba.Fulfillment.Application.Commands.CreateShippingService;
 using Tooba.Fulfillment.Application.Commands.UpdateShippingService;

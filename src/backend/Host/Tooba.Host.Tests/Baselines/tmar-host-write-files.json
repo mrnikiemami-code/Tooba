@@ -40,9 +40,6 @@
     "Storefront/StoreAppearanceProjection.cs",
     "Storefront/StorefrontComposer.cs",
     "Storefront/StorefrontDemoCatalogBootstrap.cs",
-    "Storefront/StorefrontPendingPaymentComposer.cs",
-    "Storefront/StorefrontPendingPaymentProjector.cs",
-    "Storefront/StorefrontShippingComposer.cs",
     "Wishlist/WishlistDevelopmentSeed.cs"
   ]
 }

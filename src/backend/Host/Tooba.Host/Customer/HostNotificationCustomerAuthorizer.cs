@@ -1,4 +1,4 @@
-#pragma warning disable CS1591
+﻿#pragma warning disable CS1591
 using Tooba.BuildingBlocks;
 using Tooba.Host.Storefront;
 using Tooba.Notification.Endpoints.Customer;
@@ -30,6 +30,6 @@ public sealed class HostNotificationCustomerAuthorizer : INotificationCustomerAu
             return devActor;
         }
 
-        return StorefrontCheckoutComposer.StorefrontGuestActorId;
+        return Tooba.Order.Application.Storefront.Services.StorefrontCheckoutService.StorefrontGuestActorId;
     }
 }

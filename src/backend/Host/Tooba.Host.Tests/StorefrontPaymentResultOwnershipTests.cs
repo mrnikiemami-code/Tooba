@@ -13,16 +13,18 @@ public sealed class StorefrontPaymentResultOwnershipTests
         var root = FindRepoRoot();
         var payment = File.ReadAllText(Path.Combine(
             root,
-            "src", "backend", "Host", "Tooba.Host", "Modules", "Payment", "Tooba.Payment.Application", "Models", "StorefrontPaymentOrchestrator.cs"));
+            "src", "backend", "Modules", "Payment", "Tooba.Payment.Application", "Orchestration", "StorefrontPaymentOrchestrator.cs"));
         var checkout = File.ReadAllText(Path.Combine(
             root,
-            "src", "backend", "Host", "Tooba.Host", "Storefront", "StorefrontCheckoutComposer.cs"));
+            "src", "backend", "Modules", "Order", "Tooba.Order.Application", "Storefront", "Services", "StorefrontCheckoutService.cs"));
 
         Assert.Contains("GetOwnedForPaymentResultAsync", payment, StringComparison.Ordinal);
         Assert.Contains("GetOwnedForPaymentResultAsync", checkout, StringComparison.Ordinal);
         Assert.Contains("_ = cartId;", payment, StringComparison.Ordinal);
         Assert.Contains("snapshot.CartId", checkout, StringComparison.Ordinal);
-        Assert.Contains("_session.IsAuthenticated", checkout, StringComparison.Ordinal);
+        Assert.Contains("_actor", checkout, StringComparison.Ordinal);
+        Assert.Contains("IsAuthenticated", File.ReadAllText(Path.Combine(
+            root, "src", "backend", "Host", "Tooba.Host", "Order", "HostOrderStorefrontActor.cs")), StringComparison.Ordinal);
         Assert.DoesNotContain("new empty Cart authorizing old Payment", payment, StringComparison.Ordinal);
     }
 

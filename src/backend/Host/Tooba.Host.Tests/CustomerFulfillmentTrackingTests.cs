@@ -5,6 +5,11 @@ using Tooba.Fulfillment.Domain.Aggregates;
 using Tooba.Fulfillment.Domain.ValueObjects;
 using Tooba.Fulfillment.Application.Queries.ListCustomerCheckoutFulfillments;
 using Tooba.Host.Storefront;
+using Tooba.Order.Application.Storefront.Services;
+using Tooba.Order.Application.Storefront.Models;
+using Tooba.AddressBook.Contracts;
+using Tooba.Cart.Application.Ports;
+using Tooba.Fulfillment.Contracts.Shipping;
 using Xunit;
 
 namespace Tooba.Host.Tests;
@@ -66,7 +71,7 @@ public sealed class CustomerFulfillmentTrackingTests
         Assert.Contains("ICartQueryGateway", authorizer, StringComparison.Ordinal);
         Assert.Contains("CartAccess", authorizer, StringComparison.Ordinal);
         Assert.Contains("ownedByActor = false", authorizer, StringComparison.Ordinal);
-        Assert.True(StorefrontCheckoutComposer.StorefrontGuestActorId != Guid.Empty);
+        Assert.True(Tooba.Order.Application.Storefront.Services.StorefrontCheckoutService.StorefrontGuestActorId != Guid.Empty);
     }
 
     private static ConsolidatedPackageSnapshot Package(

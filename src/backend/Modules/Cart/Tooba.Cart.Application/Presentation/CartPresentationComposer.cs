@@ -1,6 +1,4 @@
-using Tooba.BuildingBlocks.Security;
-using Tooba.Cart.Application.Models;
-using Tooba.Cart.Application.Ports;
+﻿using Tooba.BuildingBlocks.Security;
 using Tooba.Cart.Contracts;
 using Tooba.Catalog.Contracts;
 using Tooba.Party.Contracts;
@@ -10,7 +8,7 @@ namespace Tooba.Cart.Application.Presentation;
 /// <summary>
 /// Owns Cart storefront presentation enrichment via Catalog/Party Contracts only.
 /// </summary>
-public sealed class CartPresentationComposer : ICartPresentationGateway
+public sealed class CartPresentationComposer : Tooba.Cart.Contracts.ICartPresentationGateway
 {
     private readonly ICartQueryGateway _cartQueries;
     private readonly ICatalogCartPresentationLookup _catalog;

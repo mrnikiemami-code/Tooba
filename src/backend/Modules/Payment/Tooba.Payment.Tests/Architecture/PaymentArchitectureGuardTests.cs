@@ -223,7 +223,7 @@ public sealed class PaymentArchitectureGuardTests
         Assert.Contains("HostPaymentStorefrontAuthorizer", programCs, StringComparison.Ordinal);
         Assert.Contains("HostPaymentAdminAuthorizer", programCs, StringComparison.Ordinal);
         Assert.Contains("InitiateStorefrontPaymentCommand", programCs, StringComparison.Ordinal);
-        var pending = File.ReadAllText(Path.Combine(hostRoot, "Storefront", "StorefrontPendingPaymentComposer.cs"));
+        var pending = File.ReadAllText(Path.Combine(RepoRoot(), "src", "backend", "Modules", "Order", "Tooba.Order.Application", "Storefront", "Services", "StorefrontPendingPaymentService.cs"));
         Assert.DoesNotContain("Tooba.Payment.Application.Ports", pending, StringComparison.Ordinal);
         Assert.Contains("Tooba.Payment.Contracts.Storefront", pending, StringComparison.Ordinal);
         var forbiddenHostIdentifiers = new[]

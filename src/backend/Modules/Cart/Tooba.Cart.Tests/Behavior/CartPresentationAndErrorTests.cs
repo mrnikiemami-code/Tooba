@@ -1,6 +1,6 @@
-using Tooba.BuildingBlocks;
+﻿using Tooba.BuildingBlocks;
 using Tooba.Cart.Application.Errors;
-using Tooba.Cart.Application.Models;
+using Tooba.Cart.Contracts;
 using Tooba.Cart.Application.Presentation;
 using Tooba.Cart.Contracts;
 using Tooba.Catalog.Contracts;

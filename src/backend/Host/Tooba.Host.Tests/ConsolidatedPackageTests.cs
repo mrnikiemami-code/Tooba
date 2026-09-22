@@ -497,7 +497,7 @@ public sealed class ConsolidatedPackageTests : IAsyncLifetime
             providerMetadataJson: tipaxMeta);
         var tipaxShipmentId = tipax.Shipments.Single(s => s.Status == ShipmentStatus.Created).ShipmentId;
 
-        var mixed = await Assert.ThrowsAsync<InvalidOperationException>(() =>
+        var mixed = await Assert.ThrowsAsync<ContractOperationException>(() =>
             directory.CreateConsolidatedPackageAsync(
                 checkoutId,
                 [ready[0].ShipmentId, tipaxShipmentId],
@@ -506,7 +506,7 @@ public sealed class ConsolidatedPackageTests : IAsyncLifetime
                 null,
                 actor,
                 CancellationToken.None));
-        Assert.Equal("fulfillment.package.shipping_method_mismatch", mixed.Message);
+        Assert.Equal("fulfillment.package.shipping_method_mismatch", mixed.Code);
 
         // Recreate matching tipax on first seller and succeed with inherited method.
         await directory.CancelShipmentAsync(ready[0].FulfillmentId, ready[0].ShipmentId, actor, CancellationToken.None);
@@ -532,14 +532,14 @@ public sealed class ConsolidatedPackageTests : IAsyncLifetime
         Assert.Equal("tipax", created.ShippingMethodCode);
         Assert.Equal(ConsolidatedPackageStatus.Created, created.Status);
 
-        var lockedAssign = await Assert.ThrowsAsync<InvalidOperationException>(() =>
+        var lockedAssign = await Assert.ThrowsAsync<ContractOperationException>(() =>
             directory.AssignTrackingAsync(
                 tipaxA.FulfillmentId,
                 tipaxAId,
                 actor,
                 "SHOULD-FAIL",
                 CancellationToken.None));
-        Assert.Equal("fulfillment.shipment.locked_by_consolidated_package", lockedAssign.Message);
+        Assert.Equal("fulfillment.shipment.locked_by_consolidated_package", lockedAssign.Code);
     }
 
     [Fact]

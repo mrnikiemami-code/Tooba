@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Tooba.Host.Admin;
 using Tooba.Host.Seller;
 using Tooba.Host.Storefront;
@@ -81,7 +81,7 @@ public static class SettingsFoundationDevelopmentSeed
         CancellationToken cancellationToken)
     {
         var directory = provider.GetRequiredService<IUserPreferenceDirectory>();
-        var guest = StorefrontCheckoutComposer.StorefrontGuestActorId;
+        var guest = Tooba.Order.Application.Storefront.Services.StorefrontCheckoutService.StorefrontGuestActorId;
         if (await directory.GetAsync(guest, cancellationToken) is null)
         {
             await directory.UpsertAsync(

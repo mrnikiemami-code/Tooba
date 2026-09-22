@@ -1,4 +1,8 @@
-using Tooba.Host.Storefront;
+﻿using Tooba.Order.Application.Storefront.Services;
+using Tooba.Order.Application.Storefront.Models;
+using Tooba.AddressBook.Contracts;
+using Tooba.Cart.Application.Ports;
+using Tooba.Fulfillment.Contracts.Shipping;
 using Tooba.Order.Application;
 using Tooba.Order.Domain;
 using Tooba.Payment.Domain.Aggregates;
@@ -18,7 +22,7 @@ public sealed class StorefrontPendingPaymentTests
         var checkout = Guid.NewGuid();
         var page = StorefrontPendingPaymentProjector.Project(
             [Checkout(checkout, "SO-ACTIVE")],
-            Pay(checkout, PaymentStatus.Pending, "sandbox"),
+            Pay(checkout, "Pending", "sandbox"),
             Cycle(checkout, 1, ReservationCycleStatus.Active, 570, expires: Now.AddMinutes(9.5)),
             Now);
         var item = Assert.Single(page.Items);
@@ -37,7 +41,7 @@ public sealed class StorefrontPendingPaymentTests
         var checkout = Guid.NewGuid();
         var page = StorefrontPendingPaymentProjector.Project(
             [Checkout(checkout, "SO-PAID")],
-            Pay(checkout, PaymentStatus.Succeeded, "sandbox"),
+            Pay(checkout, "Succeeded", "sandbox"),
             Cycle(checkout, 1, ReservationCycleStatus.CommittedPaid, 0),
             Now);
         Assert.Empty(page.Items);
@@ -51,7 +55,7 @@ public sealed class StorefrontPendingPaymentTests
             [Checkout(checkout, "SO-MANUAL")],
             new Dictionary<Guid, StorefrontPendingPaymentProjector.PaymentInput>
             {
-                [checkout] = new(Guid.NewGuid(), PaymentStatus.Pending, "manual", Now.AddMinutes(-5), 1000, "IRR"),
+                [checkout] = new(Guid.NewGuid(), "Pending", "manual", Now.AddMinutes(-5), 1000, "IRR"),
             },
             Cycle(checkout, 1, ReservationCycleStatus.Active, 400, expires: Now.AddMinutes(7)),
             Now);
@@ -70,7 +74,7 @@ public sealed class StorefrontPendingPaymentTests
         var b = Guid.NewGuid();
         var page = StorefrontPendingPaymentProjector.Project(
             [Checkout(a, "SO-A"), Checkout(b, "SO-B")],
-            Merge(Pay(a, PaymentStatus.Pending, "sandbox"), Pay(b, PaymentStatus.Failed, "sandbox")),
+            Merge(Pay(a, "Pending", "sandbox"), Pay(b, "Failed", "sandbox")),
             Merge(
                 Cycle(a, 1, ReservationCycleStatus.Active, 100, expires: Now.AddMinutes(2)),
                 Cycle(b, 1, ReservationCycleStatus.Active, 400, expires: Now.AddMinutes(8))),
@@ -88,12 +92,12 @@ public sealed class StorefrontPendingPaymentTests
         var expires = Now.AddMinutes(10);
         var before = StorefrontPendingPaymentProjector.Project(
             [Checkout(checkout, "SO-FAIL")],
-            Pay(checkout, PaymentStatus.Pending, "sandbox"),
+            Pay(checkout, "Pending", "sandbox"),
             Cycle(checkout, 1, ReservationCycleStatus.Active, 600, expires: expires),
             Now).Items.Single();
         var after = StorefrontPendingPaymentProjector.Project(
             [Checkout(checkout, "SO-FAIL")],
-            Pay(checkout, PaymentStatus.Failed, "sandbox"),
+            Pay(checkout, "Failed", "sandbox"),
             Cycle(checkout, 1, ReservationCycleStatus.Active, 600, expires: expires),
             Now).Items.Single();
         Assert.Equal(before.HoldEndsAt, after.HoldEndsAt);
@@ -109,7 +113,7 @@ public sealed class StorefrontPendingPaymentTests
         var checkout = Guid.NewGuid();
         var page = StorefrontPendingPaymentProjector.Project(
             [Checkout(checkout, "SO-EXP")],
-            Pay(checkout, PaymentStatus.Expired, "sandbox"),
+            Pay(checkout, "Expired", "sandbox"),
             Cycle(checkout, 1, ReservationCycleStatus.Expired, 0, created: 1, remaining: 2, expires: Now.AddMinutes(-1)),
             Now);
         var item = Assert.Single(page.Items);
@@ -126,7 +130,7 @@ public sealed class StorefrontPendingPaymentTests
         var checkout = Guid.NewGuid();
         var page = StorefrontPendingPaymentProjector.Project(
             [Checkout(checkout, "SO-MAX")],
-            Pay(checkout, PaymentStatus.Expired, "sandbox"),
+            Pay(checkout, "Expired", "sandbox"),
             Cycle(checkout, 3, ReservationCycleStatus.Expired, 0, created: 3, max: 3, remaining: 0),
             Now);
         var item = Assert.Single(page.Items);
@@ -148,7 +152,7 @@ public sealed class StorefrontPendingPaymentTests
                     [new("SO-C", SellerOrderStatus.Cancelled, 10, "IRR", [new("کالا", 1, null)])]),
                 Checkout(refunded, "SO-R"),
             ],
-            Pay(refunded, PaymentStatus.Refunded, "sandbox"),
+            Pay(refunded, "Refunded", "sandbox"),
             new Dictionary<Guid, ReservationCycleProjection>(),
             Now);
         Assert.Empty(page.Items);
@@ -160,7 +164,7 @@ public sealed class StorefrontPendingPaymentTests
         var checkout = Guid.NewGuid();
         var page = StorefrontPendingPaymentProjector.Project(
             [Checkout(checkout, "SO-REL")],
-            Pay(checkout, PaymentStatus.Pending, "sandbox"),
+            Pay(checkout, "Pending", "sandbox"),
             Cycle(checkout, 1, ReservationCycleStatus.ReleasedByCancel, 0),
             Now);
         Assert.Empty(page.Items);
@@ -170,13 +174,13 @@ public sealed class StorefrontPendingPaymentTests
     public void Composer_batches_projections_and_does_not_use_active_cart_secret()
     {
         var root = FindRepoRoot();
-        var composer = File.ReadAllText(Path.Combine(root, "src", "backend", "Host", "Tooba.Host", "Storefront", "StorefrontPendingPaymentComposer.cs"));
-        var endpoints = File.ReadAllText(Path.Combine(root, "src", "backend", "Host", "Tooba.Host", "Storefront", "StorefrontEndpoints.cs"));
+        var composer = File.ReadAllText(Path.Combine(root, "src", "backend", "Modules", "Order", "Tooba.Order.Application", "Storefront", "Services", "StorefrontPendingPaymentService.cs"));
+        var endpoints = File.ReadAllText(Path.Combine(root, "src", "backend", "Modules", "Order", "Tooba.Order.Endpoints", "StorefrontOrderEndpoints.cs"));
         var cart = File.ReadAllText(Path.Combine(root, "src", "frontend", "app", "storefront", "storefront-cart.tsx"));
         var pendingUi = File.ReadAllText(Path.Combine(root, "src", "frontend", "app", "storefront", "storefront-pending-payments.tsx"));
         var pendingApi = File.ReadAllText(Path.Combine(root, "src", "frontend", "app", "storefront", "storefront-pending-payment-api.ts"));
         Assert.Contains("GetProjectionsAsync", composer, StringComparison.Ordinal);
-        Assert.Contains("checkoutIds.Contains", composer, StringComparison.Ordinal);
+        Assert.Contains("GetLatestByCheckoutIdsAsync", composer, StringComparison.Ordinal);
         Assert.DoesNotContain("GetLatestForCheckoutAsync", composer, StringComparison.Ordinal);
         Assert.DoesNotContain("GetProjectionAsync(", composer, StringComparison.Ordinal);
         Assert.Contains("TryGetForOwnershipAsync(group.CartId, proof.GuestSecret", composer, StringComparison.Ordinal);
@@ -187,13 +191,13 @@ public sealed class StorefrontPendingPaymentTests
         Assert.Contains("/checkout/{checkoutId:guid}/hide-pending-card", endpoints, StringComparison.Ordinal);
         Assert.Contains("ReadOptionalCartIdAsync", endpoints, StringComparison.Ordinal);
         Assert.Contains("HidePendingCardAsync", composer, StringComparison.Ordinal);
-        Assert.Contains("PendingPaymentCardHides", composer, StringComparison.Ordinal);
-        Assert.Contains("pending.hide.active_hold", composer, StringComparison.Ordinal);
+        Assert.Contains("PendingPaymentCardHides", File.ReadAllText(Path.Combine(root, "src", "backend", "Modules", "Order", "Tooba.Order.Infrastructure", "Storefront", "StorefrontOrderStores.cs")), StringComparison.Ordinal);
+        Assert.Contains("pending.hide.active_hold", File.ReadAllText(Path.Combine(root, "src", "backend", "Modules", "Order", "Tooba.Order.Application", "Storefront", "StorefrontOrderErrors.cs")), StringComparison.Ordinal);
         Assert.Contains("LoadHiddenCheckoutIdsAsync", composer, StringComparison.Ordinal);
         Assert.Contains("CancelSellerOrderAsync", composer, StringComparison.Ordinal);
         Assert.Contains("AbortForCheckoutCancelAsync", composer, StringComparison.Ordinal);
         Assert.Contains("CloseOrStartRefundForOrderCancelAsync", composer, StringComparison.Ordinal);
-        Assert.Contains("ReleasedByCancel", File.ReadAllText(Path.Combine(root, "src", "backend", "Host", "Tooba.Host", "Storefront", "StorefrontPendingPaymentProjector.cs")), StringComparison.Ordinal);
+        Assert.Contains("ReleasedByCancel", File.ReadAllText(Path.Combine(root, "src", "backend", "Modules", "Order", "Tooba.Order.Application", "Storefront", "Services", "StorefrontPendingPaymentProjector.cs")), StringComparison.Ordinal);
         Assert.Contains("cancelStorefrontPendingCheckout", pendingApi, StringComparison.Ordinal);
         Assert.Contains("لغو سفارش", pendingUi, StringComparison.Ordinal);
         Assert.Contains("window.confirm", pendingUi, StringComparison.Ordinal);
@@ -209,7 +213,7 @@ public sealed class StorefrontPendingPaymentTests
         Assert.DoesNotContain("ReservationCycleStatus", pendingUi, StringComparison.Ordinal);
         Assert.Contains("retryStorefrontUnpaidPayment(item.paymentId, item.checkoutId)", pendingUi, StringComparison.Ordinal);
         Assert.Contains("persistCommittedCheckoutAndDetachActiveCart", File.ReadAllText(Path.Combine(root, "src", "frontend", "app", "storefront", "storefront-cart-api.ts")), StringComparison.Ordinal);
-        Assert.Contains("CanInitiatePayment", File.ReadAllText(Path.Combine(root, "src", "backend", "Host", "Tooba.Host", "Storefront", "StorefrontModels.cs")), StringComparison.Ordinal);
+        Assert.Contains("CanInitiatePayment", File.ReadAllText(Path.Combine(root, "src", "backend", "Modules", "Order", "Tooba.Order.Application", "Storefront", "Models", "StorefrontOrderModels.cs")), StringComparison.Ordinal);
         Assert.DoesNotContain("TB-P10-T005", composer, StringComparison.Ordinal);
     }
 
@@ -218,13 +222,16 @@ public sealed class StorefrontPendingPaymentTests
     {
         var root = FindRepoRoot();
         var locks = File.ReadAllText(Path.Combine(root, "docs", "architecture", "TOOBA-LOCKS.md"));
-        var endpoints = File.ReadAllText(Path.Combine(root, "src", "backend", "Host", "Tooba.Host", "Storefront", "StorefrontEndpoints.cs"));
+        var paymentCodes = File.ReadAllText(Path.Combine(root, "src", "backend", "Modules", "Payment", "Tooba.Payment.Application", "Errors", "PaymentErrorCodes.cs"));
+        var reservation = File.ReadAllText(Path.Combine(root, "src", "backend", "Modules", "Order", "Tooba.Order.Application", "ReservationCycleContracts.cs"));
+        var pendingApi = File.ReadAllText(Path.Combine(root, "src", "frontend", "app", "storefront", "storefront-pending-payment-api.ts"));
+        var customer = File.ReadAllText(Path.Combine(root, "src", "backend", "Host", "Tooba.Host", "Customer", "CustomerPanelEndpoints.cs"));
         Assert.Contains("LOCK-SF-085", locks, StringComparison.Ordinal);
         Assert.Contains("LOCK-SF-090", locks, StringComparison.Ordinal);
-        Assert.Contains("payment.access.denied", endpoints, StringComparison.Ordinal);
-        Assert.Contains("این سفارش در حال حاضر قابل تأمین نیست.", endpoints, StringComparison.Ordinal);
-        Assert.Contains("تعداد دفعات مجاز رزرو مجدد موجودی برای این سفارش به پایان رسیده است.", endpoints, StringComparison.Ordinal);
-        Assert.Contains("پرداخت این سفارش قبلاً با موفقیت انجام شده است.", endpoints, StringComparison.Ordinal);
+        Assert.Contains("payment.access.denied", paymentCodes, StringComparison.Ordinal);
+        Assert.Contains("این سفارش در حال حاضر قابل تأمین نیست.", customer, StringComparison.Ordinal);
+        Assert.Contains("تعداد دفعات مجاز رزرو مجدد موجودی برای این سفارش به پایان رسیده است.", reservation, StringComparison.Ordinal);
+        Assert.Contains("پرداخت این سفارش قبلاً با موفقیت انجام شده است.", pendingApi, StringComparison.Ordinal);
     }
 
     private static StorefrontPendingPaymentProjector.CheckoutInput Checkout(Guid id, string orderNumber) =>
@@ -237,7 +244,7 @@ public sealed class StorefrontPendingPaymentTests
 
     private static Dictionary<Guid, StorefrontPendingPaymentProjector.PaymentInput> Pay(
         Guid checkout,
-        PaymentStatus status,
+        string status,
         string provider) =>
         new()
         {

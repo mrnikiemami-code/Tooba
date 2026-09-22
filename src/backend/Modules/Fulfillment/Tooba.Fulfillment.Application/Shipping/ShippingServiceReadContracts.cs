@@ -1,3 +1,4 @@
+﻿using Tooba.Fulfillment.Contracts.Shipping;
 using Tooba.BuildingBlocks;
 using Tooba.BuildingBlocks.Results;
 using Tooba.Fulfillment.Contracts.Errors;

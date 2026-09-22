@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Tooba.BuildingBlocks;
 using Tooba.Host.Admin;
@@ -64,7 +64,7 @@ internal static class SupportDevelopmentSeedHost
 
         await SupportDevelopmentSeed.ApplyAsync(
             provider,
-            StorefrontCheckoutComposer.StorefrontGuestActorId,
+            Tooba.Order.Application.Storefront.Services.StorefrontCheckoutService.StorefrontGuestActorId,
             seller.ActorA.SellerPartyId,
             seller.ActorA.ActorUserId,
             admin.ActorUserId,

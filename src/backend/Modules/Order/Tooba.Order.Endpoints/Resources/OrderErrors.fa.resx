@@ -27,4 +27,106 @@
   <data name="order.receipt.unavailable" xml:space="preserve">
     <value>رسید پرداخت این سفارش در دسترس نیست.</value>
   </data>
+  <data name="checkout.missing" xml:space="preserve">
+    <value>سفارش پیدا نشد.</value>
+  </data>
+  <data name="checkout.access.denied" xml:space="preserve">
+    <value>دسترسی به اطلاعات پرداخت این سفارش تأیید نشد. لطفاً از بخش سفارش‌ها دوباره وارد پرداخت شوید.</value>
+  </data>
+  <data name="checkout.address.forbidden" xml:space="preserve">
+    <value>این نشانی متعلق به مشتری جاری نیست.</value>
+  </data>
+  <data name="checkout.authentication_required" xml:space="preserve">
+    <value>برای ادامه فرایند خرید وارد حساب خود شوید.</value>
+  </data>
+  <data name="checkout.open_unpaid_limit_reached" xml:space="preserve">
+    <value>شما به حداکثر تعداد سفارش‌های در انتظار پرداخت رسیده‌اید. ابتدا یکی از سفارش‌های قبلی را پرداخت یا لغو کنید.</value>
+  </data>
+  <data name="checkout.reservation_commit_limit_reached" xml:space="preserve">
+    <value>تعداد دفعات مجاز شروع رزرو در بازه زمانی اخیر به پایان رسیده است. کمی بعد دوباره تلاش کنید.</value>
+  </data>
+  <data name="checkout.inventory.unavailable" xml:space="preserve">
+    <value>موجودی یکی از کالاها برای ثبت سفارش کافی نیست.</value>
+  </data>
+  <data name="checkout.price.changed" xml:space="preserve">
+    <value>قیمت یکی از کالاها تغییر کرده؛ لطفاً سفارش را دوباره بررسی کنید.</value>
+  </data>
+  <data name="checkout.tax.unavailable" xml:space="preserve">
+    <value>محاسبهٔ مالیات این سفارش الان ممکن نیست. لطفاً دوباره تلاش کنید.</value>
+  </data>
+  <data name="checkout.cart.expired" xml:space="preserve">
+    <value>سبد خرید منقضی شده است.</value>
+  </data>
+  <data name="checkout.shipping.incomplete" xml:space="preserve">
+    <value>اطلاعات ارسال کامل نیست.</value>
+  </data>
+  <data name="checkout.cart.empty" xml:space="preserve">
+    <value>سبد خرید خالی است.</value>
+  </data>
+  <data name="checkout.version.conflict" xml:space="preserve">
+    <value>سبد هم‌زمان به‌روز شده است. صفحه را تازه کنید.</value>
+  </data>
+  <data name="checkout.rejected" xml:space="preserve">
+    <value>ثبت سفارش انجام نشد. لطفاً دوباره تلاش کنید.</value>
+  </data>
+  <data name="checkout.cart.missing" xml:space="preserve">
+    <value>سبد خرید پیدا نشد.</value>
+  </data>
+  <data name="shipping.address.forbidden" xml:space="preserve">
+    <value>نشانی انتخاب‌شده متعلق به این مشتری نیست.</value>
+  </data>
+  <data name="shipping.cart.missing" xml:space="preserve">
+    <value>سبد خرید پیدا نشد.</value>
+  </data>
+  <data name="shipping.cart.empty" xml:space="preserve">
+    <value>سبد خرید خالی است.</value>
+  </data>
+  <data name="shipping.cart.stale" xml:space="preserve">
+    <value>سبد خرید تغییر کرده است؛ صفحه را تازه کنید.</value>
+  </data>
+  <data name="shipping.cart.forbidden" xml:space="preserve">
+    <value>نشانی انتخاب‌شده متعلق به این مشتری نیست.</value>
+  </data>
+  <data name="shipping.method.unavailable" xml:space="preserve">
+    <value>روش ارسال انتخاب‌شده در دسترس نیست.</value>
+  </data>
+  <data name="shipping.delivery.too_early" xml:space="preserve">
+    <value>تاریخ تحویل نمی‌تواند زودتر از حداقل زمان آماده‌سازی باشد.</value>
+  </data>
+  <data name="shipping.delivery.slot_unavailable" xml:space="preserve">
+    <value>بازهٔ زمانی تحویل دیگر در دسترس نیست.</value>
+  </data>
+  <data name="shipping.delivery.invalid" xml:space="preserve">
+    <value>بازهٔ زمانی تحویل دیگر در دسترس نیست.</value>
+  </data>
+  <data name="shipping.note.too_long" xml:space="preserve">
+    <value>توضیحات سفارش بیش از حد طولانی است.</value>
+  </data>
+  <data name="shipping.selection.required" xml:space="preserve">
+    <value>ابتدا اطلاعات ارسال را تکمیل کنید.</value>
+  </data>
+  <data name="shipping.firstname.required" xml:space="preserve">
+    <value>نام الزامی است.</value>
+  </data>
+  <data name="shipping.lastname.required" xml:space="preserve">
+    <value>نام خانوادگی الزامی است.</value>
+  </data>
+  <data name="shipping.rejected" xml:space="preserve">
+    <value>امکان ادامهٔ مرحلهٔ ارسال وجود ندارد.</value>
+  </data>
+  <data name="order.cancel.unpaid_only" xml:space="preserve">
+    <value>لغو این سفارش از سبد فقط قبل از پرداخت موفق امکان‌پذیر است.</value>
+  </data>
+  <data name="order.cancel.forbidden" xml:space="preserve">
+    <value>پس از ارسال کالا، لغو کامل سفارش امکان‌پذیر نیست.</value>
+  </data>
+  <data name="pending.hide.active_hold" xml:space="preserve">
+    <value>تا پایان مهلت رزرو نمی‌توان این کارت را پنهان کرد.</value>
+  </data>
+  <data name="payment.missing" xml:space="preserve">
+    <value>پرداخت پیدا نشد.</value>
+  </data>
+  <data name="payment.rejected" xml:space="preserve">
+    <value>امکان انجام این عملیات در حال حاضر وجود ندارد.</value>
+  </data>
 </root>

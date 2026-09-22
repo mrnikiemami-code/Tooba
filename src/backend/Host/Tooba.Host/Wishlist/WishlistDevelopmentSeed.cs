@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Tooba.Catalog.Domain;
 using Tooba.Catalog.Infrastructure.Persistence;
 using Tooba.Host.Storefront;
@@ -15,7 +15,7 @@ public static class WishlistDevelopmentSeed
     {
         var catalog = services.GetRequiredService<CatalogDbContext>();
         var wishlist = services.GetRequiredService<WishlistDbContext>();
-        var actor = StorefrontCheckoutComposer.StorefrontGuestActorId;
+        var actor = Tooba.Order.Application.Storefront.Services.StorefrontCheckoutService.StorefrontGuestActorId;
         var links = await catalog.ProductCategories.AsNoTracking()
             .Where(link => catalog.Products.Any(product =>
                 product.ProductId == link.ProductId && product.Status == CatalogPublicationStatus.Published))

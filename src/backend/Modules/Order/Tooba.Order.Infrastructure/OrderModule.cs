@@ -66,6 +66,11 @@ public sealed class OrderModule : IToobaModule
         services.AddScoped<Fulfillment.IAdminOrderFulfillmentCheckoutReader, Fulfillment.AdminOrderFulfillmentCheckoutReader>();
         services.AddScoped<Fulfillment.IAdminOrderFulfillmentPermissionGate, Fulfillment.AdminOrderFulfillmentPermissionGate>();
         services.AddScoped<IAdminOrderFulfillmentOperations, Fulfillment.AdminOrderFulfillmentOperations>();
+        services.AddScoped<Application.Storefront.Ports.IStorefrontShippingDraftStore, Storefront.StorefrontShippingDraftStore>();
+        services.AddScoped<Application.Storefront.Ports.IStorefrontPendingCheckoutStore, Storefront.StorefrontPendingCheckoutStore>();
+        services.AddScoped<Application.Storefront.Services.StorefrontCheckoutService>();
+        services.AddScoped<Application.Storefront.Services.StorefrontShippingService>();
+        services.AddScoped<Application.Storefront.Services.StorefrontPendingPaymentService>();
         services.AddScoped<IIntegrationEventHandler<PaymentSucceededIntegrationEvent>, OrderPaymentSucceededHandler>();
         services.AddDbContext<OrderDbContext>((sp, options) =>
         {

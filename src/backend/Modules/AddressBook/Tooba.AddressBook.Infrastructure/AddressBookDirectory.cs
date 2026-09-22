@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Tooba.AddressBook.Application;
+using Tooba.AddressBook.Contracts;
 using Tooba.AddressBook.Domain;
 using Tooba.AddressBook.Infrastructure.Persistence;
 

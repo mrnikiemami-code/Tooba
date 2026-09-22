@@ -1,3 +1,4 @@
+﻿using Tooba.BuildingBlocks;
 using Tooba.Payment.Domain.Aggregates;
 using Tooba.Payment.Domain.ValueObjects;
 using Xunit;
@@ -14,9 +15,9 @@ public sealed class StorefrontPaymentCompletionDomainTests
     {
         var payment = OpenManual();
         var attempt = payment.RecordInitiation(Guid.NewGuid(), "manual-ref", DateTimeOffset.UtcNow);
-        Assert.Throws<InvalidOperationException>(() =>
+        Assert.Throws<ContractOperationException>(() =>
             payment.SubmitManualEvidence("   ", null, DateTimeOffset.UtcNow));
-        var missing = Assert.Throws<InvalidOperationException>(() =>
+        var missing = Assert.Throws<ContractOperationException>(() =>
             payment.SubmitManualEvidence("   ", null, DateTimeOffset.UtcNow));
         Assert.Equal("payment.tracking_reference.required", missing.Message);
 

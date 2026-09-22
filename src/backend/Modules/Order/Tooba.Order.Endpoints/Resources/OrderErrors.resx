@@ -27,4 +27,106 @@
   <data name="order.receipt.unavailable" xml:space="preserve">
     <value>Payment receipt is not available for this order.</value>
   </data>
+  <data name="checkout.missing" xml:space="preserve">
+    <value>Checkout was not found.</value>
+  </data>
+  <data name="checkout.access.denied" xml:space="preserve">
+    <value>Payment access for this checkout was not confirmed. Open the order again from your orders list.</value>
+  </data>
+  <data name="checkout.address.forbidden" xml:space="preserve">
+    <value>This address does not belong to the current customer.</value>
+  </data>
+  <data name="checkout.authentication_required" xml:space="preserve">
+    <value>Sign in to continue checkout.</value>
+  </data>
+  <data name="checkout.open_unpaid_limit_reached" xml:space="preserve">
+    <value>You have reached the maximum number of unpaid checkouts. Pay or cancel an existing one first.</value>
+  </data>
+  <data name="checkout.reservation_commit_limit_reached" xml:space="preserve">
+    <value>Reservation start attempts are exhausted for the recent window. Try again later.</value>
+  </data>
+  <data name="checkout.inventory.unavailable" xml:space="preserve">
+    <value>Inventory is insufficient for one or more items.</value>
+  </data>
+  <data name="checkout.price.changed" xml:space="preserve">
+    <value>A product price changed; review the order again.</value>
+  </data>
+  <data name="checkout.tax.unavailable" xml:space="preserve">
+    <value>Tax could not be calculated for this order. Try again.</value>
+  </data>
+  <data name="checkout.cart.expired" xml:space="preserve">
+    <value>The cart has expired.</value>
+  </data>
+  <data name="checkout.shipping.incomplete" xml:space="preserve">
+    <value>Shipping details are incomplete.</value>
+  </data>
+  <data name="checkout.cart.empty" xml:space="preserve">
+    <value>The cart is empty.</value>
+  </data>
+  <data name="checkout.version.conflict" xml:space="preserve">
+    <value>The cart was updated concurrently. Refresh the page.</value>
+  </data>
+  <data name="checkout.rejected" xml:space="preserve">
+    <value>Checkout could not be completed. Try again.</value>
+  </data>
+  <data name="checkout.cart.missing" xml:space="preserve">
+    <value>Cart was not found.</value>
+  </data>
+  <data name="shipping.address.forbidden" xml:space="preserve">
+    <value>The selected address does not belong to this customer.</value>
+  </data>
+  <data name="shipping.cart.missing" xml:space="preserve">
+    <value>Cart was not found.</value>
+  </data>
+  <data name="shipping.cart.empty" xml:space="preserve">
+    <value>The cart is empty.</value>
+  </data>
+  <data name="shipping.cart.stale" xml:space="preserve">
+    <value>The cart changed; refresh the page.</value>
+  </data>
+  <data name="shipping.cart.forbidden" xml:space="preserve">
+    <value>The selected address does not belong to this customer.</value>
+  </data>
+  <data name="shipping.method.unavailable" xml:space="preserve">
+    <value>The selected shipping method is unavailable.</value>
+  </data>
+  <data name="shipping.delivery.too_early" xml:space="preserve">
+    <value>Delivery date cannot be earlier than the minimum preparation time.</value>
+  </data>
+  <data name="shipping.delivery.slot_unavailable" xml:space="preserve">
+    <value>The selected delivery time window is no longer available.</value>
+  </data>
+  <data name="shipping.delivery.invalid" xml:space="preserve">
+    <value>The selected delivery time window is no longer available.</value>
+  </data>
+  <data name="shipping.note.too_long" xml:space="preserve">
+    <value>Order notes are too long.</value>
+  </data>
+  <data name="shipping.selection.required" xml:space="preserve">
+    <value>Complete shipping details first.</value>
+  </data>
+  <data name="shipping.firstname.required" xml:space="preserve">
+    <value>First name is required.</value>
+  </data>
+  <data name="shipping.lastname.required" xml:space="preserve">
+    <value>Last name is required.</value>
+  </data>
+  <data name="shipping.rejected" xml:space="preserve">
+    <value>Shipping step cannot continue.</value>
+  </data>
+  <data name="order.cancel.unpaid_only" xml:space="preserve">
+    <value>This order can only be cancelled from the cart before successful payment.</value>
+  </data>
+  <data name="order.cancel.forbidden" xml:space="preserve">
+    <value>Full order cancellation is not allowed after shipment.</value>
+  </data>
+  <data name="pending.hide.active_hold" xml:space="preserve">
+    <value>This card cannot be hidden until the reservation hold ends.</value>
+  </data>
+  <data name="payment.missing" xml:space="preserve">
+    <value>Payment was not found.</value>
+  </data>
+  <data name="payment.rejected" xml:space="preserve">
+    <value>This operation is not available right now.</value>
+  </data>
 </root>

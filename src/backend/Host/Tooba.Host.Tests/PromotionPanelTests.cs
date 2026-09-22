@@ -1,4 +1,4 @@
-using Tooba.Promotion.Infrastructure.Queries;
+﻿using Tooba.Promotion.Infrastructure.Queries;
 using Tooba.Promotion.Infrastructure.Messaging;
 using Tooba.Promotion.Infrastructure.Adapters;
 using Tooba.Promotion.Infrastructure.Directories;
@@ -198,7 +198,7 @@ public sealed class PromotionPanelTests : IAsyncLifetime
         var root = FindRepoRoot();
         var endpoints = File.ReadAllText(Path.Combine(root, "src", "backend", "Host", "Tooba.Host", "Promotion", "PromotionEndpoints.cs"));
         var program = File.ReadAllText(Path.Combine(root, "src", "backend", "Host", "Tooba.Host", "Program.cs"));
-        var checkout = File.ReadAllText(Path.Combine(root, "src", "backend", "Host", "Tooba.Host", "Storefront", "StorefrontCheckoutComposer.cs"));
+        var checkout = File.ReadAllText(Path.Combine(root, "src", "backend", "Modules", "Order", "Tooba.Order.Application", "Storefront", "Services", "StorefrontCheckoutService.cs"));
         Assert.Contains("/v1/seller/promotions", endpoints, StringComparison.Ordinal);
         Assert.Contains("/v1/admin/promotions", endpoints, StringComparison.Ordinal);
         Assert.Contains("SellerPanelAccess.RequireAuthorizedAsync", endpoints, StringComparison.Ordinal);

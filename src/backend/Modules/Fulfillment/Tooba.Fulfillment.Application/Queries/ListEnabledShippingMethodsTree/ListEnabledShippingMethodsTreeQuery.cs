@@ -1,6 +1,7 @@
 ﻿using MediatR;
 using Tooba.BuildingBlocks.Results;
 using Tooba.Localization.Contracts;
+using Tooba.Fulfillment.Contracts.Shipping;
 using Tooba.Fulfillment.Application.Shipping;
 
 namespace Tooba.Fulfillment.Application.Queries.ListEnabledShippingMethodsTree;

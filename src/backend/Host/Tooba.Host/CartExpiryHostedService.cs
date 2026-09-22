@@ -2,6 +2,7 @@ using System.Diagnostics.Metrics;
 using Microsoft.Extensions.Options;
 using Tooba.BuildingBlocks;
 using Tooba.Cart.Application;
+using Tooba.Cart.Application.Ports;
 using Tooba.Persistence;
 
 namespace Tooba.Host;

@@ -1,5 +1,6 @@
-using Tooba.AddressBook.Domain;
-using Tooba.Host.Storefront;
+﻿using Tooba.AddressBook.Domain;
+using Tooba.Order.Application.Storefront;
+using Tooba.Order.Application.Storefront.Services;
 using Tooba.Order.Domain;
 using Xunit;
 
@@ -23,7 +24,7 @@ public sealed class StorefrontRecipientCanonicalizationTests
         Assert.Equal("محمد لمامی", StorefrontRecipientNames.Display("", "امامی", "محمد لمامی"));
         Assert.Equal(string.Empty, StorefrontRecipientNames.Display("", "", ""));
         Assert.Equal("مشتری توبا", StorefrontRecipientNames.DisplayOrFallback("", "", ""));
-        var source = File.ReadAllText(Path.Combine(FindRepoRoot(), "src", "backend", "Host", "Tooba.Host", "Storefront", "StorefrontRecipientNames.cs"));
+        var source = File.ReadAllText(Path.Combine(FindRepoRoot(), "src", "backend", "Modules", "Order", "Tooba.Order.Application", "Storefront", "Services", "StorefrontRecipientNames.cs"));
         Assert.DoesNotContain("Split(", source, StringComparison.Ordinal);
         Assert.DoesNotContain("recipient.Split", source, StringComparison.Ordinal);
     }
@@ -45,8 +46,8 @@ public sealed class StorefrontRecipientCanonicalizationTests
     [Fact]
     public void New_address_requires_first_and_last_and_mirrors_recipient()
     {
-        Assert.Throws<InvalidOperationException>(() => StorefrontRecipientNames.EnsureNewAddressNames("", "امامی"));
-        Assert.Throws<InvalidOperationException>(() => StorefrontRecipientNames.EnsureNewAddressNames("محمد", ""));
+        Assert.Throws<StorefrontOrderException>(() => StorefrontRecipientNames.EnsureNewAddressNames("", "امامی"));
+        Assert.Throws<StorefrontOrderException>(() => StorefrontRecipientNames.EnsureNewAddressNames("محمد", ""));
         StorefrontRecipientNames.EnsureNewAddressNames("محمد", "امامی");
         var resolved = StorefrontRecipientNames.Resolve("محمد", "امامی", "باید نادیده شود");
         Assert.Equal("محمد", resolved.First);
@@ -107,8 +108,8 @@ public sealed class StorefrontRecipientCanonicalizationTests
     [Fact]
     public void Payment_customer_and_admin_projections_share_the_same_display_helper()
     {
-        var checkout = File.ReadAllText(Path.Combine(FindRepoRoot(), "src", "backend", "Host", "Tooba.Host", "Storefront", "StorefrontCheckoutComposer.cs"));
-        var shipping = File.ReadAllText(Path.Combine(FindRepoRoot(), "src", "backend", "Host", "Tooba.Host", "Storefront", "StorefrontShippingComposer.cs"));
+        var checkout = File.ReadAllText(Path.Combine(FindRepoRoot(), "src", "backend", "Modules", "Order", "Tooba.Order.Application", "Storefront", "Services", "StorefrontCheckoutService.cs"));
+        var shipping = File.ReadAllText(Path.Combine(FindRepoRoot(), "src", "backend", "Modules", "Order", "Tooba.Order.Application", "Storefront", "Services", "StorefrontShippingService.cs"));
         var customer = File.ReadAllText(Path.Combine(FindRepoRoot(), "src", "backend", "Host", "Tooba.Host", "Customer", "CustomerPanelComposer.cs"));
         var admin = File.ReadAllText(Path.Combine(FindRepoRoot(), "src", "backend", "Host", "Tooba.Host", "Admin", "AdminPanelComposer.cs"));
         Assert.Contains("ResolveExplicitOverLegacy", checkout, StringComparison.Ordinal);

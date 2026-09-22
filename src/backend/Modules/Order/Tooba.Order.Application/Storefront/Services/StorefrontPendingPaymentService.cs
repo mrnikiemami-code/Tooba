@@ -1,54 +1,45 @@
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Hosting;
-using Tooba.Cart.Application.Ports;
-using Tooba.Catalog.Domain;
-using Tooba.Catalog.Infrastructure.Persistence;
+﻿using Tooba.BuildingBlocks;
+using Tooba.Cart.Contracts;
+using Tooba.Catalog.Contracts;
 using Tooba.Fulfillment.Contracts.Operations;
 using Tooba.Order.Application.Admin.Operations.Policies;
-using Tooba.Order.Application;
+using Tooba.Order.Application.Storefront.Models;
+using Tooba.Order.Application.Storefront.Ports;
 using Tooba.Order.Domain;
-using Tooba.Order.Infrastructure.Persistence;
 using Tooba.Payment.Contracts.Storefront;
-using Tooba.Payment.Domain.ValueObjects;
-using Tooba.Settlement.Application;
+using Tooba.Settlement.Contracts.Operations;
 
-namespace Tooba.Host.Storefront;
+namespace Tooba.Order.Application.Storefront.Services;
 
 /// <summary>
-/// تصویر دسته‌ای در انتظار پرداخت. مالکیت مهمان فقط اثبات متعهد است؛ سبد فعال منبع اختیار نیست.
-/// Checkout PAUSED — Cart seam is ICartPresentationGateway only (compile adaptation).
+/// Order-owned storefront pending payment list/cancel/hide.
 /// </summary>
-public sealed class StorefrontPendingPaymentComposer
+public sealed class StorefrontPendingPaymentService
 {
-    private const string DevActorHeader = "X-Tooba-Dev-Actor-User-Id";
-
-    private readonly OrderDbContext _orders;
+    private readonly IStorefrontPendingCheckoutStore _store;
     private readonly IPendingPaymentReader _payments;
-    private readonly CatalogDbContext _catalog;
+    private readonly ICatalogCartPresentationLookup _catalog;
     private readonly ICartPresentationGateway _carts;
     private readonly IReservationCycleDirectory _cycles;
     private readonly ICheckoutDirectory _checkout;
     private readonly IFulfillmentAdminOperations _fulfillment;
-    private readonly ISettlementDirectory _settlement;
-    private readonly CurrentAuthenticatedSession _session;
-    private readonly IHostEnvironment _environment;
-    private readonly IHttpContextAccessor _http;
+    private readonly ISettlementOrderAccrualPort _settlement;
+    private readonly IOrderStorefrontActor _actor;
+    private readonly IClock _clock;
 
-    /// <summary>ترکیب Host برای فهرست در انتظار پرداخت.</summary>
-    internal StorefrontPendingPaymentComposer(
-        OrderDbContext orders,
+    public StorefrontPendingPaymentService(
+        IStorefrontPendingCheckoutStore store,
         IPendingPaymentReader payments,
-        CatalogDbContext catalog,
+        ICatalogCartPresentationLookup catalog,
         ICartPresentationGateway carts,
         IReservationCycleDirectory cycles,
         ICheckoutDirectory checkout,
         IFulfillmentAdminOperations fulfillment,
-        ISettlementDirectory settlement,
-        CurrentAuthenticatedSession session,
-        IHostEnvironment environment,
-        IHttpContextAccessor http)
+        ISettlementOrderAccrualPort settlement,
+        IOrderStorefrontActor actor,
+        IClock clock)
     {
-        _orders = orders;
+        _store = store;
         _payments = payments;
         _catalog = catalog;
         _carts = carts;
@@ -56,17 +47,15 @@ public sealed class StorefrontPendingPaymentComposer
         _checkout = checkout;
         _fulfillment = fulfillment;
         _settlement = settlement;
-        _session = session;
-        _environment = environment;
-        _http = http;
+        _actor = actor;
+        _clock = clock;
     }
-
     /// <summary>فهرست سفارش‌های unpaid قابل‌اقدام یا اطلاع‌رسانی را برمی‌گرداند.</summary>
     public async Task<StorefrontPendingPaymentPage> ListAsync(
         StorefrontPendingPaymentQueryRequest? query,
         CancellationToken cancellationToken)
     {
-        var now = DateTimeOffset.UtcNow;
+        var now = _clock.UtcNow;
         var groups = await ResolveOwnedGroupsAsync(query, cancellationToken);
         if (groups.Count == 0)
         {
@@ -77,10 +66,7 @@ public sealed class StorefrontPendingPaymentComposer
         var paymentRows = await _payments.GetLatestByCheckoutIdsAsync(checkoutIds, cancellationToken);
         var latestPayments = paymentRows.ToDictionary(
             row => row.CheckoutId,
-            row => new StorefrontPendingPaymentProjector.PaymentInput(
-                row.PaymentId,
-                Enum.TryParse<PaymentStatus>(row.Status, true, out var st) ? st : PaymentStatus.Pending,
-                row.ProviderCode,
+            row => new StorefrontPendingPaymentProjector.PaymentInput(row.PaymentId, row.Status, row.ProviderCode,
                 row.EvidenceSubmittedAt,
                 row.Amount,
                 row.Currency));
@@ -126,31 +112,18 @@ public sealed class StorefrontPendingPaymentComposer
         CancellationToken cancellationToken)
     {
         var group = await ResolveOwnedGroupForCancelAsync(checkoutId, cartId, guestSecret, cancellationToken);
-        var now = DateTimeOffset.UtcNow;
+        var now = _clock.UtcNow;
         var cycle = (await _cycles.GetProjectionsAsync([group.CheckoutId], now, null, cancellationToken))
             .GetValueOrDefault(group.CheckoutId);
         if (cycle is { CurrentStatus: ReservationCycleStatus.Active, SecondsRemaining: > 0 })
         {
-            throw new InvalidOperationException(
-                "pending.hide.active_hold: تا پایان مهلت رزرو نمی‌توان کارت را پنهان کرد.");
+            throw new StorefrontOrderException(StorefrontOrderErrors.PendingHideActiveHold);
         }
 
-        var actor = ResolveListActor();
+        var actor = _actor.TryResolveListActor();
         var ownerUserId = actor;
         var guestCartId = actor is null ? group.CartId : (Guid?)null;
-        var exists = await _orders.PendingPaymentCardHides.AsNoTracking()
-            .AnyAsync(
-                x => x.CheckoutId == group.CheckoutId
-                    && (ownerUserId != null
-                        ? x.OwnerUserId == ownerUserId
-                        : x.GuestCartId == guestCartId),
-                cancellationToken);
-        if (!exists)
-        {
-            _orders.PendingPaymentCardHides.Add(
-                PendingPaymentCardHide.Create(group.CheckoutId, ownerUserId, guestCartId, now));
-            await _orders.SaveChangesAsync(cancellationToken);
-        }
+        await _store.HidePendingCardAsync(group.CheckoutId, ownerUserId, guestCartId, now, cancellationToken);
 
         return new { ok = true, checkoutId = group.CheckoutId, hidden = true };
     }
@@ -167,7 +140,7 @@ public sealed class StorefrontPendingPaymentComposer
         var group = await ResolveOwnedGroupForCancelAsync(checkoutId, cartId, guestSecret, cancellationToken);
         if (group.SellerOrders.Count == 0)
         {
-            throw new InvalidOperationException("سفارش پیدا نشد.");
+            throw new StorefrontOrderException(StorefrontOrderErrors.PaymentMissing);
         }
 
         if (AdminOrderOperationsPolicy.IsCheckoutCancelled(group.SellerOrders.Select(x => x.Status)))
@@ -177,23 +150,20 @@ public sealed class StorefrontPendingPaymentComposer
 
         if (group.SellerOrders.Any(x => x.Status == SellerOrderStatus.Paid))
         {
-            throw new InvalidOperationException(
-                "order.cancel.unpaid_only: لغو این سفارش از سبد فقط قبل از پرداخت موفق امکان‌پذیر است.");
+            throw new StorefrontOrderException(StorefrontOrderErrors.OrderCancelUnpaidOnly);
         }
 
         var payment = await _payments.GetLatestOperationalForCheckoutAsync(group.CheckoutId, cancellationToken);
         if (payment is not null
             && payment.Status is "Succeeded" or "RefundPending" or "Refunded" or "RefundFailed")
         {
-            throw new InvalidOperationException(
-                "order.cancel.unpaid_only: لغو این سفارش از سبد فقط قبل از پرداخت موفق امکان‌پذیر است.");
+            throw new StorefrontOrderException(StorefrontOrderErrors.OrderCancelUnpaidOnly);
         }
 
         var fulfillments = await _fulfillment.ListForCheckoutAsync(group.CheckoutId, cancellationToken);
         if (AdminOrderOperationsPolicy.HasDispatchedOrDelivered(fulfillments))
         {
-            throw new InvalidOperationException(
-                $"order.cancel.forbidden: {AdminOrderOperationsPolicy.WholeOrderCancelBlockedAfterDispatchFa}");
+            throw new StorefrontOrderException(StorefrontOrderErrors.OrderCancelForbidden);
         }
 
         await _fulfillment.AbortForCheckoutCancelAsync(group.CheckoutId, cancellationToken);
@@ -213,7 +183,7 @@ public sealed class StorefrontPendingPaymentComposer
 
         if (cancelled.Count == 0)
         {
-            throw new InvalidOperationException("order.cancel.forbidden: لغو در وضعیت فعلی سفارش مجاز نیست.");
+            throw new StorefrontOrderException(StorefrontOrderErrors.OrderCancelForbidden);
         }
 
         if (payment is not null)
@@ -234,22 +204,19 @@ public sealed class StorefrontPendingPaymentComposer
         string? guestSecret,
         CancellationToken cancellationToken)
     {
-        var group = await _orders.Checkouts.AsNoTracking()
-            .Include(x => x.SellerOrders)
-            .SingleOrDefaultAsync(x => x.CheckoutId == checkoutId, cancellationToken)
-            ?? throw new InvalidOperationException("سفارش پیدا نشد.");
+        var group = await _store.GetWithSellerOrdersAsync(checkoutId, cancellationToken) ?? throw new StorefrontOrderException(StorefrontOrderErrors.PaymentMissing);
 
-        var actor = ResolveListActor();
+        var actor = _actor.TryResolveListActor();
         if (actor is Guid userId)
         {
             if (group.PlacedByUserId != userId)
             {
-                throw new InvalidOperationException("checkout.access.denied");
+                throw new StorefrontOrderException(StorefrontOrderErrors.CheckoutAccessDenied);
             }
 
             if (cartId != Guid.Empty && cartId != group.CartId)
             {
-                throw new InvalidOperationException("checkout.access.denied");
+                throw new StorefrontOrderException(StorefrontOrderErrors.CheckoutAccessDenied);
             }
 
             return group;
@@ -257,13 +224,13 @@ public sealed class StorefrontPendingPaymentComposer
 
         if (cartId == Guid.Empty || cartId != group.CartId)
         {
-            throw new InvalidOperationException("checkout.access.denied");
+            throw new StorefrontOrderException(StorefrontOrderErrors.CheckoutAccessDenied);
         }
 
         var owned = await _carts.TryGetForOwnershipAsync(group.CartId, guestSecret, cancellationToken);
         if (owned is null)
         {
-            throw new InvalidOperationException("checkout.access.denied");
+            throw new StorefrontOrderException(StorefrontOrderErrors.CheckoutAccessDenied);
         }
 
         return group;
@@ -273,16 +240,10 @@ public sealed class StorefrontPendingPaymentComposer
         StorefrontPendingPaymentQueryRequest? query,
         CancellationToken cancellationToken)
     {
-        var actor = ResolveListActor();
+        var actor = _actor.TryResolveListActor();
         if (actor is Guid userId)
         {
-            return await _orders.Checkouts.AsNoTracking()
-                .Include(x => x.SellerOrders)
-                .ThenInclude(x => x.Lines)
-                .Where(x => x.PlacedByUserId == userId)
-                .OrderByDescending(x => x.SubmittedAt)
-                .Take(50)
-                .ToListAsync(cancellationToken);
+            return await _store.ListOwnedByUserAsync(userId, 50, cancellationToken);
         }
 
         var proofs = (query?.Proofs ?? [])
@@ -295,11 +256,7 @@ public sealed class StorefrontPendingPaymentComposer
         }
 
         var ids = proofs.Select(x => x.CheckoutId).Distinct().ToArray();
-        var groups = await _orders.Checkouts.AsNoTracking()
-            .Include(x => x.SellerOrders)
-            .ThenInclude(x => x.Lines)
-            .Where(x => ids.Contains(x.CheckoutId))
-            .ToListAsync(cancellationToken);
+        var groups = await _store.ListByCheckoutIdsAsync(ids, cancellationToken);
         var allowed = new List<CheckoutGroup>();
         foreach (var group in groups)
         {
@@ -331,43 +288,14 @@ public sealed class StorefrontPendingPaymentComposer
         }
 
         var checkoutIds = groups.Select(x => x.CheckoutId).ToArray();
-        var actor = ResolveListActor();
+        var actor = _actor.TryResolveListActor();
         if (actor is Guid userId)
         {
-            var rows = await _orders.PendingPaymentCardHides.AsNoTracking()
-                .Where(x => x.OwnerUserId == userId && checkoutIds.Contains(x.CheckoutId))
-                .Select(x => x.CheckoutId)
-                .ToListAsync(cancellationToken);
-            return [.. rows];
+            return await _store.LoadHiddenCheckoutIdsAsync(checkoutIds, userId, Array.Empty<Guid>(), cancellationToken);
         }
 
         var cartIds = groups.Select(x => x.CartId).Distinct().ToArray();
-        var guestRows = await _orders.PendingPaymentCardHides.AsNoTracking()
-            .Where(x => x.GuestCartId != null && cartIds.Contains(x.GuestCartId.Value) && checkoutIds.Contains(x.CheckoutId))
-            .Select(x => x.CheckoutId)
-            .ToListAsync(cancellationToken);
-        return [.. guestRows];
-    }
-
-    private Guid? ResolveListActor()
-    {
-        if (_session.IsAuthenticated && _session.UserId is Guid userId && userId != Guid.Empty)
-        {
-            return userId;
-        }
-
-        var request = _http.HttpContext?.Request;
-        var isDevSeam = _environment.IsDevelopment() || _environment.IsEnvironment("Testing");
-        if (isDevSeam
-            && request is not null
-            && request.Headers.TryGetValue(DevActorHeader, out var raw)
-            && Guid.TryParse(raw.ToString(), out var headerActor)
-            && headerActor != Guid.Empty)
-        {
-            return headerActor;
-        }
-
-        return null;
+        return await _store.LoadHiddenCheckoutIdsAsync(checkoutIds, null, cartIds, cancellationToken);
     }
 
     private async Task<Dictionary<Guid, (string Title, Guid? MediaAssetId)>> LoadLineCatalogAsync(
@@ -384,41 +312,19 @@ public sealed class StorefrontPendingPaymentComposer
             return result;
         }
 
-        var variants = await _catalog.Variants.AsNoTracking()
-            .Where(x => variantIds.Contains(x.VariantId))
-            .Select(x => new { x.VariantId, x.ProductId })
-            .ToListAsync(cancellationToken);
-        var productIds = variants.Select(x => x.ProductId).Distinct().ToArray();
-        var names = productIds.Length == 0
-            ? []
-            : await _catalog.LocalizedTexts.AsNoTracking()
-                .Where(x =>
-                    x.OwnerKind == CatalogLocalizedOwnerKind.Product
-                    && productIds.Contains(x.OwnerId)
-                    && x.FieldKey == "name")
-                .ToListAsync(cancellationToken);
-        var productName = names
-            .GroupBy(x => x.OwnerId)
-            .ToDictionary(
-                g => g.Key,
-                g => g.OrderBy(row => row.Locale.StartsWith("fa", StringComparison.OrdinalIgnoreCase) ? 0 : 1)
-                    .First().Value);
-        var media = productIds.Length == 0
-            ? []
-            : await _catalog.MediaReferences.AsNoTracking()
-                .Where(x => productIds.Contains(x.ProductId))
-                .Select(x => new { x.ProductId, x.MediaAssetId })
-                .ToListAsync(cancellationToken);
-        var productMedia = media
-            .GroupBy(x => x.ProductId)
-            .ToDictionary(g => g.Key, g => (Guid?)g.First().MediaAssetId);
-        var variantProduct = variants.ToDictionary(x => x.VariantId, x => x.ProductId);
+        var presentations = await _catalog.GetVariantPresentationsAsync(variantIds, cancellationToken);
         foreach (var variantId in variantIds)
         {
-            variantProduct.TryGetValue(variantId, out var productId);
-            productName.TryGetValue(productId, out var title);
-            productMedia.TryGetValue(productId, out var asset);
-            result[variantId] = (string.IsNullOrWhiteSpace(title) ? "کالا" : title, asset);
+            if (presentations.TryGetValue(variantId, out var row))
+            {
+                result[variantId] = (
+                    string.IsNullOrWhiteSpace(row.LocalizedTitle) ? "کالا" : row.LocalizedTitle,
+                    row.MediaAssetId);
+            }
+            else
+            {
+                result[variantId] = ("کالا", null);
+            }
         }
 
         return result;

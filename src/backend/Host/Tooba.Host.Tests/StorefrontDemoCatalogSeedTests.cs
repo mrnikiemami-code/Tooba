@@ -1,4 +1,4 @@
-using Tooba.Promotion.Application.Ports;
+﻿using Tooba.Promotion.Application.Ports;
 using Tooba.Promotion.Infrastructure.Queries;
 using Tooba.Promotion.Infrastructure.Messaging;
 using Tooba.Promotion.Infrastructure.Adapters;
@@ -15,6 +15,11 @@ using Tooba.Catalog.Domain;
 using Tooba.Catalog.Infrastructure;
 using Tooba.Catalog.Infrastructure.Persistence;
 using Tooba.Host.Storefront;
+using Tooba.Order.Application.Storefront.Services;
+using Tooba.Order.Application.Storefront.Models;
+using Tooba.AddressBook.Contracts;
+using Tooba.Cart.Application.Ports;
+using Tooba.Fulfillment.Contracts.Shipping;
 using Tooba.Inventory.Infrastructure.DependencyInjection;
 using Tooba.Inventory.Infrastructure.Persistence;
 using Tooba.Offer.Domain;

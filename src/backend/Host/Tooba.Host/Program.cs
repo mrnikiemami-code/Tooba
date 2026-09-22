@@ -1,4 +1,4 @@
-// ریشهٔ ترکیب Host: Observability، resolve Edition/Tenant، ماژول‌های صریح، Outbox dispatcher، MassTransit SQL Transport، کش درون‌فرآیندی.
+﻿// ریشهٔ ترکیب Host: Observability، resolve Edition/Tenant، ماژول‌های صریح، Outbox dispatcher، MassTransit SQL Transport، کش درون‌فرآیندی.
 // Host ورودی routing است نه TenantId. کارگر Outbox و مصرف‌کننده Tenant را از Host نمی‌خوانند.
 // مسیرهای /__platform-* فقط Development/Testing هستند و قبل از استقرار عمومی باید محدود شوند.
 // لاگ فنی جایگزین Audit نیست. DbContext و Outbox برای /health و /ready باز نمی‌شوند.
@@ -185,6 +185,10 @@ builder.Services.AddScoped<Tooba.Host.Storefront.StorefrontComposer>();
 builder.Services.AddScoped<Tooba.Host.Storefront.FashionTemplatePreviewQuery>();
 builder.Services.AddScoped<Tooba.Host.Storefront.IndustryTemplatePreviewQuery>();
 builder.Services.AddScoped<Tooba.Order.Application.ICheckoutAbuseGate, Tooba.Host.Storefront.CheckoutAbuseGate>();
+builder.Services.AddScoped<Tooba.Order.Application.Storefront.Ports.IOrderStorefrontActor, Tooba.Host.Order.HostOrderStorefrontActor>();
+builder.Services.AddScoped<Tooba.Order.Application.Storefront.Ports.IOrderStorefrontCheckoutIdentityGate, Tooba.Host.Order.HostOrderStorefrontCheckoutIdentityGate>();
+builder.Services.AddScoped<Tooba.AddressBook.Contracts.IAddressBookCheckoutLookup>(sp => sp.GetRequiredService<Tooba.AddressBook.Application.IAddressBookDirectory>());
+
 builder.Services.AddMemoryCache();
 builder.Services.AddScoped<Tooba.Host.Storefront.StoreAppearanceProjector>();
 builder.Services.AddScoped<Tooba.Host.Admin.StoreAppearanceSettingsComposer>();
@@ -196,40 +200,6 @@ builder.Services.AddScoped(sp =>
         sp.GetRequiredService<Tooba.Catalog.Infrastructure.Persistence.CatalogDbContext>(),
         sp.GetRequiredService<CurrentAuthenticatedSession>()));
 builder.Services.AddScoped<Tooba.BuildingBlocks.Security.ICurrentAuthenticatedUser, HostCurrentAuthenticatedUser>();
-builder.Services.AddScoped<StorefrontCheckoutComposer>(sp =>
-    new StorefrontCheckoutComposer(
-        sp.GetRequiredService<Tooba.Cart.Application.Ports.ICartPresentationGateway>(),
-        sp.GetRequiredService<Tooba.Order.Application.ICheckoutDirectory>(),
-        sp.GetRequiredService<Tooba.AddressBook.Application.IAddressBookDirectory>(),
-        sp.GetRequiredService<CurrentAuthenticatedSession>(),
-        sp.GetRequiredService<IHostEnvironment>(),
-        sp.GetRequiredService<IHttpContextAccessor>()));
-builder.Services.AddScoped<Tooba.Host.Storefront.StorefrontShippingComposer>(sp =>
-    new Tooba.Host.Storefront.StorefrontShippingComposer(
-        sp.GetRequiredService<Tooba.Cart.Application.Ports.ICartPresentationGateway>(),
-        sp.GetRequiredService<StorefrontCheckoutComposer>(),
-        sp.GetRequiredService<Tooba.AddressBook.Application.IAddressBookDirectory>(),
-        sp.GetRequiredService<Tooba.Fulfillment.Application.Shipping.IShippingCatalogReader>(),
-        sp.GetRequiredService<Tooba.Order.Infrastructure.Persistence.OrderDbContext>(),
-        sp.GetRequiredService<Tooba.Localization.Application.ILanguageDirectory>(),
-        sp.GetRequiredService<Tooba.Fulfillment.Application.Shipping.ShippingMethodsOptions>(),
-        sp.GetRequiredService<MediatR.ISender>(),
-        sp.GetRequiredService<CurrentAuthenticatedSession>(),
-        sp.GetRequiredService<IHostEnvironment>(),
-        sp.GetRequiredService<IHttpContextAccessor>()));
-builder.Services.AddScoped<Tooba.Host.Storefront.StorefrontPendingPaymentComposer>(sp =>
-    new Tooba.Host.Storefront.StorefrontPendingPaymentComposer(
-        sp.GetRequiredService<Tooba.Order.Infrastructure.Persistence.OrderDbContext>(),
-        sp.GetRequiredService<Tooba.Payment.Contracts.Storefront.IPendingPaymentReader>(),
-        sp.GetRequiredService<Tooba.Catalog.Infrastructure.Persistence.CatalogDbContext>(),
-        sp.GetRequiredService<Tooba.Cart.Application.Ports.ICartPresentationGateway>(),
-        sp.GetRequiredService<Tooba.Order.Application.IReservationCycleDirectory>(),
-        sp.GetRequiredService<Tooba.Order.Application.ICheckoutDirectory>(),
-        sp.GetRequiredService<Tooba.Fulfillment.Contracts.Operations.IFulfillmentAdminOperations>(),
-        sp.GetRequiredService<Tooba.Settlement.Application.Ports.ISettlementDirectory>(),
-        sp.GetRequiredService<CurrentAuthenticatedSession>(),
-        sp.GetRequiredService<IHostEnvironment>(),
-        sp.GetRequiredService<IHttpContextAccessor>()));
 builder.Services.AddScoped<Tooba.Payment.Application.Orchestration.StorefrontPaymentOrchestrator>();
 builder.Services.AddScoped<Tooba.Payment.Application.Ports.ICheckoutActorPolicyPort, Tooba.Host.Storefront.HostCheckoutActorPolicyAdapter>();
 builder.Services.AddScoped<Tooba.Payment.Endpoints.Storefront.IPaymentStorefrontAuthorizer, Tooba.Host.Storefront.HostPaymentStorefrontAuthorizer>();

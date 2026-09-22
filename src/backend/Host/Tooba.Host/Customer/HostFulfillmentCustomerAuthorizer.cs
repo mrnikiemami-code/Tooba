@@ -1,4 +1,4 @@
-#pragma warning disable CS1591
+﻿#pragma warning disable CS1591
 using Tooba.BuildingBlocks;
 using Tooba.Cart.Contracts;
 using Tooba.Fulfillment.Contracts.Errors;
@@ -30,7 +30,7 @@ public sealed class HostFulfillmentCustomerAuthorizer : IFulfillmentCustomerAuth
             return new SemanticError(FulfillmentErrorCodes.CustomerOrderMissing);
 
         var ownedByActor = actor is not null && checkout.PlacedByUserId == actor.Value;
-        if (checkout.PlacedByUserId == StorefrontCheckoutComposer.StorefrontGuestActorId)
+        if (checkout.PlacedByUserId == Tooba.Order.Application.Storefront.Services.StorefrontCheckoutService.StorefrontGuestActorId)
             ownedByActor = false;
 
         var ownedByGuest = false;
@@ -67,7 +67,7 @@ public sealed class HostFulfillmentCustomerAuthorizer : IFulfillmentCustomerAuth
             && devActor != Guid.Empty)
             return devActor;
 
-        return StorefrontCheckoutComposer.StorefrontGuestActorId;
+        return Tooba.Order.Application.Storefront.Services.StorefrontCheckoutService.StorefrontGuestActorId;
     }
 
     private static string? ReadGuestSecret(HttpRequest request)

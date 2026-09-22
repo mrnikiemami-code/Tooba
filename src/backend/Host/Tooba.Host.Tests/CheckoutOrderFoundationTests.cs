@@ -1,4 +1,4 @@
-using Tooba.Promotion.Infrastructure.Queries;
+﻿using Tooba.Promotion.Infrastructure.Queries;
 using Tooba.Promotion.Infrastructure.Messaging;
 using Tooba.Promotion.Infrastructure.Adapters;
 using Tooba.Promotion.Infrastructure.Directories;
@@ -12,6 +12,7 @@ using Testcontainers.PostgreSql;
 using Tooba.BuildingBlocks;
 using Tooba.BuildingBlocks.Observability.Tracing;
 using Tooba.Cart.Application;
+using Tooba.Cart.Application.Ports;
 using Tooba.Cart.Contracts;
 using Tooba.Cart.Infrastructure;
 using Tooba.Cart.Infrastructure.Persistence;

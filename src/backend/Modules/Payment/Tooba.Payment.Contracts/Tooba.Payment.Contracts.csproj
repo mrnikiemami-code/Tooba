@@ -1,8 +1,9 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    <NoWarn>$(NoWarn);1591</NoWarn>
     <RootNamespace>Tooba.Payment.Contracts</RootNamespace>
     <AssemblyName>Tooba.Payment.Contracts</AssemblyName>
   </PropertyGroup>

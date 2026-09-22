@@ -1,6 +1,7 @@
 using Tooba.Fulfillment.Application.Models;
 using Tooba.Fulfillment.Application.Ports;
 using Tooba.Fulfillment.Application.Shipping;
+using Tooba.Fulfillment.Contracts.Shipping;
 using Tooba.Fulfillment.Domain.ValueObjects;
 using Tooba.Order.Contracts.Fulfillment;
 

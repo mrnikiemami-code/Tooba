@@ -1,4 +1,9 @@
-using Tooba.Host.Storefront;
+﻿using Tooba.Host.Storefront;
+using Tooba.Order.Application.Storefront.Services;
+using Tooba.Order.Application.Storefront.Models;
+using Tooba.AddressBook.Contracts;
+using Tooba.Cart.Application.Ports;
+using Tooba.Fulfillment.Contracts.Shipping;
 using Xunit;
 
 namespace Tooba.Host.Tests;
@@ -35,11 +40,25 @@ public sealed class StorefrontAccountIdentityTests
     [Fact]
     public void Me_projection_does_not_read_shipping_recipient()
     {
-        var source = System.IO.File.ReadAllText(
-            System.IO.Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", "Tooba.Host", "AuthenticationHttpBoundary.cs"));
-        Assert.Contains("ICustomerProfileDirectory", source, System.StringComparison.Ordinal);
-        Assert.Contains("IIdentityContactLookup", source, System.StringComparison.Ordinal);
-        Assert.DoesNotContain("RecipientName", source, System.StringComparison.Ordinal);
-        Assert.Contains("StorefrontAccountIdentity.CanonicalName", source, System.StringComparison.Ordinal);
+        var root = FindRepoRoot();
+        var source = File.ReadAllText(Path.Combine(
+            root, "src", "backend", "Host", "Tooba.Host", "Authentication", "AuthenticationHttpBoundary.cs"));
+        Assert.Contains("ICustomerProfileDirectory", source, StringComparison.Ordinal);
+        Assert.Contains("IIdentityContactLookup", source, StringComparison.Ordinal);
+        Assert.DoesNotContain("RecipientName", source, StringComparison.Ordinal);
+        Assert.Contains("StorefrontAccountIdentity.CanonicalName", source, StringComparison.Ordinal);
+    }
+
+    private static string FindRepoRoot()
+    {
+        var dir = new DirectoryInfo(AppContext.BaseDirectory);
+        while (dir is not null)
+        {
+            if (File.Exists(Path.Combine(dir.FullName, "AGENTS.md")))
+                return dir.FullName;
+            dir = dir.Parent;
+        }
+
+        throw new InvalidOperationException("repo root not found");
     }
 }

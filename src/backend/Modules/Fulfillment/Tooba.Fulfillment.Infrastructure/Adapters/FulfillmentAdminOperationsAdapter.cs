@@ -1,6 +1,7 @@
-using Tooba.Fulfillment.Application.Ports;
+﻿using Tooba.Fulfillment.Application.Ports;
 using Tooba.Fulfillment.Application.Shipping;
 using Tooba.Fulfillment.Contracts.Operations;
+using Tooba.Fulfillment.Contracts.Shipping;
 using AppModels = Tooba.Fulfillment.Application.Models;
 
 namespace Tooba.Fulfillment.Infrastructure.Adapters;

@@ -1,4 +1,5 @@
-﻿using FluentValidation;
+﻿using Tooba.Fulfillment.Contracts.Shipping;
+using FluentValidation;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;

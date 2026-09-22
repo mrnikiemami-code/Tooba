@@ -1,7 +1,6 @@
-using Tooba.Fulfillment.Application.Ports;
-using Tooba.Fulfillment.Application.Models;
-using Tooba.Fulfillment.Application.Shipping;
-using Tooba.Host.Storefront;
+﻿using Tooba.Fulfillment.Contracts.Shipping;
+using Tooba.Order.Application.Storefront;
+using Tooba.Order.Application.Storefront.Services;
 using Xunit;
 
 namespace Tooba.Host.Tests;
@@ -53,7 +52,7 @@ public sealed class StorefrontShippingCalculatorTests
     public void Forged_earlier_delivery_is_rejected_later_accepted()
     {
         var min = new DateOnly(2026, 9, 12);
-        Assert.Throws<InvalidOperationException>(() =>
+        Assert.Throws<StorefrontOrderException>(() =>
             StorefrontShippingCalculator.EnsureDeliveryNotEarlier(new DateOnly(2026, 9, 11), min));
         StorefrontShippingCalculator.EnsureDeliveryNotEarlier(min, min);
         StorefrontShippingCalculator.EnsureDeliveryNotEarlier(new DateOnly(2026, 9, 14), min);

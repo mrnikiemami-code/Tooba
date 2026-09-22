@@ -1,12 +1,9 @@
-namespace Tooba.Fulfillment.Application.Shipping;
+namespace Tooba.Fulfillment.Contracts.Shipping;
 
-/// <summary>ترجمه سرویس ارسال برای خواندن کاتالوگ.</summary>
 public sealed record ShippingCatalogTranslationSnapshot(Guid LanguageId, string Name, string? Description);
 
-/// <summary>ترجمه گزینه.</summary>
 public sealed record ShippingCatalogOptionTranslationSnapshot(Guid LanguageId, string Name);
 
-/// <summary>گزینه سطح ۲.</summary>
 public sealed record ShippingCatalogOptionSnapshot(
     Guid ShippingServiceOptionId,
     Guid ShippingServiceId,
@@ -15,7 +12,6 @@ public sealed record ShippingCatalogOptionSnapshot(
     int SortOrder,
     IReadOnlyList<ShippingCatalogOptionTranslationSnapshot> Translations);
 
-/// <summary>سرویس ارسال والد.</summary>
 public sealed record ShippingCatalogServiceSnapshot(
     Guid ShippingServiceId,
     string Code,
@@ -27,12 +23,15 @@ public sealed record ShippingCatalogServiceSnapshot(
     IReadOnlyList<ShippingCatalogTranslationSnapshot> Translations,
     IReadOnlyList<ShippingCatalogOptionSnapshot> Options);
 
-/// <summary>خواندن کاتالوگ سرویس ارسال بدون افشای FulfillmentDbContext به Host.</summary>
+/// <summary>Read shipping catalog without Fulfillment.Application / DbContext leakage.</summary>
 public interface IShippingCatalogReader
 {
-    /// <summary>کل کاتالوگ (سرویس‌ها، ترجمه‌ها، گزینه‌ها).</summary>
     Task<IReadOnlyList<ShippingCatalogServiceSnapshot>> ListAsync(CancellationToken cancellationToken);
-
-    /// <summary>یک سرویس با جزئیات.</summary>
     Task<ShippingCatalogServiceSnapshot?> GetAsync(Guid serviceId, CancellationToken cancellationToken);
+}
+
+/// <summary>Ensures the shipping catalog seed exists (Order storefront projection seam).</summary>
+public interface IShippingCatalogSeedPort
+{
+    Task EnsureSeedAsync(CancellationToken cancellationToken);
 }

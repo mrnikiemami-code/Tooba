@@ -1,3 +1,4 @@
+﻿using Tooba.Fulfillment.Contracts.Shipping;
 using Microsoft.EntityFrameworkCore;
 using Tooba.BuildingBlocks.Grid;
 using Tooba.Fulfillment.Application.Models;

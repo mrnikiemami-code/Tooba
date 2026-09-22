@@ -1,6 +1,7 @@
 ﻿using MediatR;
 using Tooba.BuildingBlocks.Results;
 using Tooba.Fulfillment.Application.Errors;
+using Tooba.Fulfillment.Contracts.Shipping;
 using Tooba.Fulfillment.Application.Shipping;
 using Tooba.Fulfillment.Contracts.Errors;
 

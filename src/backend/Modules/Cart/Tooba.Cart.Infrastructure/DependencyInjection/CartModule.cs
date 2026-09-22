@@ -1,10 +1,10 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Tooba.BuildingBlocks;
 using Tooba.ModuleContracts;
-using Tooba.Cart.Application.Ports;
+using Tooba.Cart.Contracts;
 using Tooba.Cart.Application.Conversion;
 using Tooba.Cart.Application.Presentation;
 using Tooba.Cart.Contracts;
@@ -34,7 +34,7 @@ public sealed class CartModule : IToobaModule
         services.AddScoped<ICartConversionPort, CartConversionAdapter>();
         services.AddScoped<ICartQueryGateway>(sp => (CartDirectory)sp.GetRequiredService<ICartDirectory>());
         services.AddScoped<CartPresentationComposer>();
-        services.AddScoped<ICartPresentationGateway>(sp => sp.GetRequiredService<CartPresentationComposer>());
+        services.AddScoped<Tooba.Cart.Contracts.ICartPresentationGateway>(sp => sp.GetRequiredService<CartPresentationComposer>());
         services.AddDbContext<CartDbContext>((sp, options) =>
         {
             var connectionString = ToobaNpgsql.ResolveForContext(

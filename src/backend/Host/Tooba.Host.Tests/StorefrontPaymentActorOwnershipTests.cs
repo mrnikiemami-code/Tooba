@@ -11,17 +11,18 @@ public sealed class StorefrontPaymentActorOwnershipTests
     public void Payment_composer_resolves_actor_from_authenticated_session()
     {
         var root = FindRepoRoot();
-        var src = File.ReadAllText(Path.Combine(
+        var orchestrator = File.ReadAllText(Path.Combine(
             root,
-            "src", "backend", "Host", "Tooba.Host", "Modules", "Payment", "Tooba.Payment.Application", "Models", "StorefrontPaymentOrchestrator.cs"));
-        Assert.Contains("ResolvePaymentActor", src, StringComparison.Ordinal);
-        Assert.Contains("CurrentAuthenticatedSession", src, StringComparison.Ordinal);
-        Assert.Contains("_session.IsAuthenticated", src, StringComparison.Ordinal);
-        Assert.Contains("_session.UserId", src, StringComparison.Ordinal);
-        Assert.DoesNotContain(
-            "InitiatePaymentCommand(\n            StorefrontCheckoutComposer.StorefrontGuestActorId,",
-            src,
-            StringComparison.Ordinal);
+            "src", "backend", "Modules", "Payment", "Tooba.Payment.Application", "Orchestration", "StorefrontPaymentOrchestrator.cs"));
+        var authorizer = File.ReadAllText(Path.Combine(
+            root,
+            "src", "backend", "Host", "Tooba.Host", "Storefront", "HostPaymentStorefrontAuthorizer.cs"));
+        Assert.Contains("ResolvePaymentActor", orchestrator, StringComparison.Ordinal);
+        Assert.Contains("authenticatedUserId", orchestrator, StringComparison.Ordinal);
+        Assert.Contains("CurrentAuthenticatedSession", authorizer, StringComparison.Ordinal);
+        Assert.Contains("session.IsAuthenticated", authorizer, StringComparison.Ordinal);
+        Assert.Contains("session.UserId", authorizer, StringComparison.Ordinal);
+        Assert.DoesNotContain("aaaaaaaa-aaaa-4aaa-8aaa-000000000009", orchestrator, StringComparison.Ordinal);
     }
 
     private static string FindRepoRoot()

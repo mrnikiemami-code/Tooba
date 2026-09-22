@@ -1,8 +1,10 @@
 using System.Globalization;
+using System.Reflection;
 using Microsoft.Extensions.DependencyInjection;
 using Tooba.BuildingBlocks.Localization;
 using Tooba.BuildingBlocks.Presentation.Errors;
 using Tooba.Order.Application.Admin.Completeness.Errors;
+using Tooba.Order.Application.Storefront;
 using Tooba.Order.Endpoints;
 using Tooba.Order.Endpoints.Errors;
 using Tooba.Order.Endpoints.Resources;
@@ -13,7 +15,7 @@ namespace Tooba.Order.Tests.Endpoints;
 /// <summary>کاتالوگ خطا و منابع محلی‌سازی Order در لایهٔ presentation.</summary>
 public sealed class OrderEndpointPresentationTests
 {
-    private static readonly string[] AllCodes =
+    private static readonly string[] CompletenessCodes =
     [
         AdminOrderCompletenessErrors.Missing,
         AdminOrderCompletenessErrors.InvalidNote,
@@ -21,6 +23,15 @@ public sealed class OrderEndpointPresentationTests
         AdminOrderCompletenessErrors.InvoiceUnavailable,
         AdminOrderCompletenessErrors.ReceiptUnavailable,
     ];
+
+    private static readonly string[] StorefrontCodes =
+        typeof(StorefrontOrderErrors)
+            .GetFields(BindingFlags.Public | BindingFlags.Static)
+            .Where(f => f.IsLiteral && !f.IsInitOnly && f.FieldType == typeof(string))
+            .Select(f => (string)f.GetRawConstantValue()!)
+            .ToArray();
+
+    private static readonly string[] AllCodes = CompletenessCodes.Concat(StorefrontCodes).ToArray();
 
     [Fact]
     public void Presentation_registration_adds_catalog_and_resource_set()
@@ -55,7 +66,12 @@ public sealed class OrderEndpointPresentationTests
     {
         var set = new OrderErrorResourceSet();
         Assert.True(set.Owns("order.note.invalid"));
+        Assert.True(set.Owns("checkout.missing"));
+        Assert.True(set.Owns("shipping.cart.stale"));
+        Assert.True(set.Owns("pending.hide.active_hold"));
+        Assert.True(set.Owns(StorefrontOrderErrors.PaymentMissing));
         Assert.False(set.Owns("offer.not_found"));
+        Assert.False(set.Owns("payment.attempt.missing"));
 
         foreach (var code in AllCodes)
         {

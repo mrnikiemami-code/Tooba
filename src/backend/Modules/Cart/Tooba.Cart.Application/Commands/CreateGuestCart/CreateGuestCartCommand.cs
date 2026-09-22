@@ -1,8 +1,8 @@
+﻿using Tooba.Cart.Application.Ports;
 using MediatR;
 using Tooba.BuildingBlocks.Results;
 using Tooba.Cart.Application.Errors;
-using Tooba.Cart.Application.Models;
-using Tooba.Cart.Application.Ports;
+using Tooba.Cart.Contracts;
 using Tooba.Cart.Application.Presentation;
 using Tooba.Offer.Contracts.Dtos;
 

@@ -1,4 +1,4 @@
-using Tooba.AddressBook.Application;
+﻿using Tooba.AddressBook.Application;
 using Tooba.Host.Storefront;
 
 namespace Tooba.Host.AddressBook;
@@ -154,7 +154,7 @@ public static class AddressBookEndpoints
             return actor;
         }
 
-        return StorefrontCheckoutComposer.StorefrontGuestActorId;
+        return Tooba.Order.Application.Storefront.Services.StorefrontCheckoutService.StorefrontGuestActorId;
     }
 
     private static IResult Unauthorized() => Results.Json(
