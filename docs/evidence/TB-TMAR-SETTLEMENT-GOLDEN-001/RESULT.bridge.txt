@@ -1,0 +1,56 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+BEGIN_TOOBA_WORKER_RESULT
+
+Task-ID: TB-TMAR-SETTLEMENT-GOLDEN-001
+Claim-Id: b1ecb2b8-4bed-4a11-9510-4fed1bc6a4ff
+WorkerId: tooba-worker-01
+Channel: tooba-main
+Verdict: PASS
+
+Summary:
+Created Tooba.Settlement.Endpoints and moved all seller/admin Settlement routes from Host. Host now only maps MapSettlementEndpoints() and registers seller/admin authorizer adapters. Application Commands/Queries split into use-case folders with MediatR 12.5.0 handlers; AdminPayoutGridQueryPolicy owns Normalize; SettlementExceptionMapper is STABLE_CODES_ONLY without StartsWith/Contains swallow. Host/Settlement/ removed; AdminListGridPolicies.Payouts removed. Settlement.Tests 8 passed; full Tooba.slnx build exit 0. Evidence under docs/evidence/TB-TMAR-SETTLEMENT-GOLDEN-001/.
+
+Program-Name: TMAR — Tooba Microservice-Ready Architecture Recovery
+Track: SETTLEMENT_GOLDEN_CLOSURE
+Recovery-Start: docs/evidence/TB-TMAR-SETTLEMENT-GOLDEN-001/recovery-start.md
+Settlement-HTTP-Ownership-Audit: docs/evidence/TB-TMAR-SETTLEMENT-GOLDEN-001/settlement-http-ownership-audit.md
+Settlement-Endpoints-State: REAL_PROJECT_PRESENT
+Settlement-CQRS-State: MEDIATR_12_5_APPLICATION_HANDLERS
+Settlement-Application-UseCases: RequestSellerPayout; ProcessAdminPayout; RetryAdminPayout; GetSellerSettlementBalance; ListSellerSettlementEntries; ListSellerSettlementStatements; ListSellerPayoutRequests; ListAdminSettlementBalances; ListAdminPayoutQueue; QueryAdminPayoutGrid
+Settlement-Auth-Boundary: docs/evidence/TB-TMAR-SETTLEMENT-GOLDEN-001/settlement-auth-boundary.md; ISettlementSellerAuthorizer + ISettlementAdminAuthorizer in Endpoints; HostSettlementSellerAuthorizer + HostSettlementAdminAuthorizer adapters only
+Settlement-Grid-Ownership: MODULE_OWNED
+Settlement-Result-Adoption: HTTP_USE_CASES_ADOPTED
+Settlement-Error-Classification: STABLE_CODES_ONLY
+Settlement-Prose-Mapping: NONE
+Settlement-Unexpected-Exception-Swallow: NONE
+Settlement-Host-Authority-Audit: docs/evidence/TB-TMAR-SETTLEMENT-GOLDEN-001/settlement-host-authority-audit.md
+Settlement-Host-Endpoints: REMOVED
+Settlement-Host-Business-Authority: NONE
+Settlement-Host-DbAuthority: NONE
+Settlement-CrossModule-Boundary: CONTRACTS_ONLY
+Settlement-Physical-State: VERIFIED_ON_DISK_AND_NAMESPACE
+Settlement-Architecture-Guards: ENFORCED
+Settlement-Behavior-Preservation: VERIFIED
+Focused-Validation: PASS — Settlement.Tests exit 0 (8 passed: architecture ownership, CQRS/host guards, stable-code mapper, grid policy, endpoint URLs)
+Skipped-Validation: broad Host suite; Checkout workflow; Tax/Pricing; frontend; unrelated modules
+Full-Validation: PASS — dotnet build src/backend/Tooba.slnx exit 0 (0 errors)
+AntiPattern-Gate: PASS — no Host SettlementEndpoints; no SettlementPanelComposer; no Host Payouts policy; no StartsWith/Contains message heuristics in SettlementExceptionMapper; unknown IOE propagates; no TypeForwardedTo; Host/Settlement absent
+Residual-Defects: NONE
+Settlement-State: COMPLETE_REFERENCE_PATTERN
+Cart-State: COMPLETE_REFERENCE_PATTERN
+Checkout-State: PAUSED_AT_SAFE_W5_CHECKPOINT
+Tax-State: UNTOUCHED
+Pricing-State: UNTOUCHED
+Frontend-Production-Changes: NONE
+
+Git:
+  Commit: 06b80528a19a3891bc1aae53c32287564f6e19ec
+  Message: feat(TB-TMAR-SETTLEMENT-GOLDEN-001): Settlement Endpoints + CQRS Host ownership closure.
+  Push: origin/main updated 5a3c3313..06b80528
+  HEAD == origin/main: YES
+  User-Work-Preserved: YES (no reset/clean/force-push; stashes untouched; cart bridge-result leftovers left untracked)
+
+Blockers: NONE
+Next-Recommended-Task: ARCHITECT_SELECT_NEXT_REOPENED_MODULE
+
+END_TOOBA_WORKER_RESULT
