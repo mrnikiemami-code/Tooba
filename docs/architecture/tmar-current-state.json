@@ -124,7 +124,7 @@
     "activeModuleRecovery":  {
                                  "module":  "Order",
                                  "state":  "INCOMPLETE_REFERENCE_REPAIR",
-                                 "task":  "TB-TMAR-ORDER-GOLDEN-001-R4",
+                                 "task":  "TB-TMAR-ORDER-GOLDEN-001-R4-R1",
                                  "completedSlices":  [
                                                          "ORDER_ENDPOINTS_FOUNDATION",
                                                          "ADMIN_ORDER_COMPLETENESS_CQRS",
@@ -136,10 +136,11 @@
                                                          "ADMIN_ORDER_OPERATIONS_TYPED_CQRS_R3B_R1",
                                                          "ADMIN_ORDER_OPERATIONS_TYPED_FAULT_R3B_R2",
                                                          "ADMIN_ORDER_OPERATIONS_TYPED_FAULT_SOURCE_R3B_R3",
-                                                         "ADMIN_ORDER_INVENTORY_RECOVERY_SUPPLY_CQRS_R4"
+                                                         "ADMIN_ORDER_INVENTORY_RECOVERY_SUPPLY_CQRS_R4",
+                                                         "ADMIN_ORDER_RECOVERY_SUPPLY_CLOCK_FAULT_R4_R1"
                                                      ],
                                  "nextTask":  "TB-TMAR-ORDER-GOLDEN-001-R5",
                                  "checkoutState":  "PAUSED_AT_SAFE_W5_CHECKPOINT",
-                                 "notes":  "R4 moved Inventory Recovery + Supply authority from Host into Order CQRS/Endpoints; Host composers/endpoints/adapters removed."
+                                 "notes":  "R4-R1: InventoryRecovery/Supply use IClock; RecoverAsync no longer swallows unknown exceptions into inventory.recovery.insufficient; rollback failures surface via AggregateException."
                              }
 }

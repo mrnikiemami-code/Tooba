@@ -26,6 +26,7 @@ public sealed class OrderInventoryRecoveryService
     private readonly IFulfillmentAdminOperations _fulfillment;
     private readonly IPaymentAdminGateway _payments;
     private readonly ICheckoutDirectory _checkout;
+    private readonly IClock _clock;
     private readonly ICommerceHoldPolicySource? _holdPolicy;
     private readonly IReservationCycleDirectory? _cycles;
     private readonly IReservationCyclePolicyResolver? _cyclePolicy;
@@ -37,6 +38,7 @@ public sealed class OrderInventoryRecoveryService
         IFulfillmentAdminOperations fulfillment,
         IPaymentAdminGateway payments,
         ICheckoutDirectory checkout,
+        IClock clock,
         ICommerceHoldPolicySource? holdPolicy = null,
         IReservationCycleDirectory? cycles = null,
         IReservationCyclePolicyResolver? cyclePolicy = null)
@@ -46,6 +48,7 @@ public sealed class OrderInventoryRecoveryService
         _fulfillment = fulfillment;
         _payments = payments;
         _checkout = checkout;
+        _clock = clock;
         _holdPolicy = holdPolicy;
         _cycles = cycles;
         _cyclePolicy = cyclePolicy;
@@ -147,11 +150,12 @@ public sealed class OrderInventoryRecoveryService
                     ? ResolveManualReviewExpiresAt()
                     : null;
 
+                var now = _clock.UtcNow;
                 var receipt = await _inventory.ReserveAsync(
                     line.StockItemId,
                     line.RemainingQuantity,
                     $"inventory-recovery-{line.OrderLineId:N}",
-                    $"inventory-recovery-{line.OrderLineId:N}-{DateTimeOffset.UtcNow.UtcTicks}",
+                    $"inventory-recovery-{line.OrderLineId:N}-{now.UtcTicks}",
                     expiresAt,
                     cancellationToken);
                 acquired.Add(receipt.ReservationId);
@@ -168,7 +172,7 @@ public sealed class OrderInventoryRecoveryService
             await _fulfillment.RebindActiveReservationsFromOrderAsync(checkoutId, cancellationToken);
             if (_cycles is not null)
             {
-                var now = DateTimeOffset.UtcNow;
+                var now = _clock.UtcNow;
                 var policy = _cyclePolicy is null
                     ? new ReservationCyclePolicySnapshot(120, 120, 3, "platform")
                     : await _cyclePolicy.ResolveAsync(
@@ -206,18 +210,14 @@ public sealed class OrderInventoryRecoveryService
             group = await _orders.GetAsync(checkoutId, cancellationToken) ?? group;
             return Result.Success(ToResult("Recovered", await AssessAsync(group, cancellationToken), null));
         }
-        catch (Exception)
+        catch (ContractOperationException ex) when (IsExpectedRecoveryFault(ex.Code))
         {
-            foreach (var reservationId in acquired)
+            var rollbackFailures = await RollbackAcquiredAsync(acquired, cancellationToken);
+            if (rollbackFailures.Count > 0)
             {
-                try
-                {
-                    await _inventory.ReleaseHeldReservationAsync(reservationId, cancellationToken);
-                }
-                catch
-                {
-                    // best-effort rollback
-                }
+                throw new AggregateException(
+                    "inventory.recovery.rollback_failed",
+                    new Exception[] { ex }.Concat(rollbackFailures));
             }
 
             await _checkout.AddNoteAsync(
@@ -226,18 +226,66 @@ public sealed class OrderInventoryRecoveryService
                 $"{NotePrefixFailed} class={assessment.ClassCode}",
                 cancellationToken);
             return Result.Failure<OrderInventoryRecoveryResult>(
-                new SemanticError("inventory.recovery.insufficient"));
+                new SemanticError(MapRecoveryFaultCode(ex.Code)));
+        }
+        catch (Exception ex)
+        {
+            var rollbackFailures = await RollbackAcquiredAsync(acquired, cancellationToken);
+            await _checkout.AddNoteAsync(
+                checkoutId,
+                actorUserId,
+                $"{NotePrefixFailed} class={assessment.ClassCode}",
+                cancellationToken);
+            if (rollbackFailures.Count > 0)
+            {
+                throw new AggregateException(
+                    "inventory.recovery.rollback_failed",
+                    new Exception[] { ex }.Concat(rollbackFailures));
+            }
+
+            throw;
         }
     }
+
+    private async Task<List<Exception>> RollbackAcquiredAsync(List<Guid> acquired, CancellationToken cancellationToken)
+    {
+        var rollbackFailures = new List<Exception>();
+        foreach (var reservationId in acquired)
+        {
+            try
+            {
+                await _inventory.ReleaseHeldReservationAsync(reservationId, cancellationToken);
+            }
+            catch (Exception rollbackEx)
+            {
+                rollbackFailures.Add(rollbackEx);
+            }
+        }
+
+        return rollbackFailures;
+    }
+
+    private static bool IsExpectedRecoveryFault(string code) =>
+        code is "inventory.supply.unavailable"
+            or "inventory.recovery.insufficient"
+            or "inventory.reservation.conflict"
+            or "inventory.manual_review.unavailable"
+            or "inventory.reservation.not_found"
+            or "inventory.reservation.not_active";
+
+    private static string MapRecoveryFaultCode(string code) =>
+        code is "inventory.supply.unavailable" or "inventory.reservation.conflict"
+            ? "inventory.recovery.insufficient"
+            : code;
 
     private DateTimeOffset ResolveManualReviewExpiresAt()
     {
         if (_holdPolicy is not null)
         {
-            return _holdPolicy.ResolveManualReviewExpiresAt(DateTimeOffset.UtcNow);
+            return _holdPolicy.ResolveManualReviewExpiresAt(_clock.UtcNow);
         }
 
-        return DateTimeOffset.UtcNow.AddHours(48);
+        return _clock.UtcNow.AddHours(48);
     }
 
     private async Task<OrderInventoryRecoveryAssessment> AssessAsync(
@@ -310,8 +358,9 @@ public sealed class OrderInventoryRecoveryService
                     continue;
                 }
 
+                var now = _clock.UtcNow;
                 var healthy = existing.Status == "Held"
-                    && (existing.ExpiresAt is null || existing.ExpiresAt > DateTimeOffset.UtcNow)
+                    && (existing.ExpiresAt is null || existing.ExpiresAt > now)
                     && existing.Quantity >= remaining;
                 if (healthy)
                 {
@@ -325,7 +374,7 @@ public sealed class OrderInventoryRecoveryService
                 }
 
                 if (existing.Status == "Released"
-                    || (existing.Status == "Held" && existing.ExpiresAt is not null && existing.ExpiresAt <= DateTimeOffset.UtcNow))
+                    || (existing.Status == "Held" && existing.ExpiresAt is not null && existing.ExpiresAt <= now))
                 {
                     anyUnhealthy = true;
                     lines.Add(new OrderInventoryRecoveryLineNeed(

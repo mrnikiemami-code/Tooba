@@ -303,7 +303,7 @@ public sealed class InventoryDirectory : IInventoryDirectory, IInventoryAvailabi
                 cancellationToken);
         if (reserved != 1)
         {
-            throw new InvalidOperationException("domain.invariant");
+            throw new ContractOperationException("inventory.supply.unavailable");
         }
 
         var position = await _db.Positions.SingleAsync(x => x.StockItemId == stockItemId, cancellationToken);

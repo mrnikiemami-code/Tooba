@@ -17,6 +17,7 @@ public sealed class OrderSupplyService
     private readonly IOrderSupplyCheckoutStore _orders;
     private readonly IOrderInventoryLifecyclePort _inventory;
     private readonly IFulfillmentAdminOperations _fulfillment;
+    private readonly IClock _clock;
     private readonly ICommerceHoldPolicySource? _holdPolicy;
     private readonly IReservationCyclePolicyResolver? _cyclePolicy;
 
@@ -25,12 +26,14 @@ public sealed class OrderSupplyService
         IOrderSupplyCheckoutStore orders,
         IOrderInventoryLifecyclePort inventory,
         IFulfillmentAdminOperations fulfillment,
+        IClock clock,
         ICommerceHoldPolicySource? holdPolicy = null,
         IReservationCyclePolicyResolver? cyclePolicy = null)
     {
         _orders = orders;
         _inventory = inventory;
         _fulfillment = fulfillment;
+        _clock = clock;
         _holdPolicy = holdPolicy;
         _cyclePolicy = cyclePolicy;
     }
@@ -40,10 +43,10 @@ public sealed class OrderSupplyService
     {
         if (_holdPolicy is not null)
         {
-            return _holdPolicy.ResolveManualReviewExpiresAt(DateTimeOffset.UtcNow);
+            return _holdPolicy.ResolveManualReviewExpiresAt(_clock.UtcNow);
         }
 
-        return DateTimeOffset.UtcNow.AddHours(48);
+        return _clock.UtcNow.AddHours(48);
     }
 
     /// <summary>مهلت retry unpaid.</summary>
@@ -51,7 +54,7 @@ public sealed class OrderSupplyService
     {
         if (_holdPolicy is not null)
         {
-            return _holdPolicy.ResolveInitialExpiresAt(DateTimeOffset.UtcNow);
+            return _holdPolicy.ResolveInitialExpiresAt(_clock.UtcNow);
         }
 
         return ResolveManualReviewExpiresAt();
@@ -70,7 +73,7 @@ public sealed class OrderSupplyService
                     .Select(x => new ReservationCyclePolicyLine(x.OfferId, x.CategoryIdSnapshot))
                     .ToArray(),
                 cancellationToken);
-            return DateTimeOffset.UtcNow.AddMinutes(policy.RetryHoldMinutes);
+            return _clock.UtcNow.AddMinutes(policy.RetryHoldMinutes);
         }
 
         return ResolveUnpaidRetryExpiresAt();

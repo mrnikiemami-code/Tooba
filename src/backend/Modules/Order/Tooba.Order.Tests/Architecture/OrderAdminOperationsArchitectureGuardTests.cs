@@ -272,6 +272,46 @@ public sealed class OrderAdminOperationsArchitectureGuardTests
         Assert.DoesNotContain("ex.Message", fault, StringComparison.Ordinal);
     }
 
+    [Fact]
+    public void Application_recovery_supply_uses_iclock_and_no_exception_swallowing()
+    {
+        foreach (var folder in new[]
+                 {
+                     Path.Combine(OrderRoot(), "Tooba.Order.Application", "Admin", "InventoryRecovery"),
+                     Path.Combine(OrderRoot(), "Tooba.Order.Application", "Admin", "Supply"),
+                 })
+        {
+            foreach (var path in Directory.GetFiles(folder, "*.cs", SearchOption.AllDirectories))
+            {
+                var text = File.ReadAllText(path);
+                Assert.DoesNotContain("DateTimeOffset.UtcNow", text, StringComparison.Ordinal);
+                Assert.DoesNotContain("DateTime.UtcNow", text, StringComparison.Ordinal);
+                Assert.DoesNotContain("catch\r\n                {", text, StringComparison.Ordinal);
+                Assert.DoesNotContain("catch\n                {", text, StringComparison.Ordinal);
+                Assert.DoesNotContain("catch {", text, StringComparison.Ordinal);
+            }
+        }
+
+        var recovery = File.ReadAllText(Path.Combine(
+            OrderRoot(), "Tooba.Order.Application", "Admin", "InventoryRecovery", "Services",
+            "OrderInventoryRecoveryService.cs"));
+        Assert.Contains("IClock", recovery, StringComparison.Ordinal);
+        Assert.Contains("_clock.UtcNow", recovery, StringComparison.Ordinal);
+        Assert.Contains("ContractOperationException", recovery, StringComparison.Ordinal);
+        Assert.DoesNotContain(
+            "return Result.Failure<OrderInventoryRecoveryResult>(\r\n                new SemanticError(\"inventory.recovery.insufficient\"));\r\n        }\r\n    }",
+            recovery,
+            StringComparison.Ordinal);
+        Assert.Contains("throw;", recovery, StringComparison.Ordinal);
+        Assert.Contains("AggregateException", recovery, StringComparison.Ordinal);
+
+        var supply = File.ReadAllText(Path.Combine(
+            OrderRoot(), "Tooba.Order.Application", "Admin", "Supply", "Services",
+            "OrderSupplyService.cs"));
+        Assert.Contains("IClock", supply, StringComparison.Ordinal);
+        Assert.Contains("_clock.UtcNow", supply, StringComparison.Ordinal);
+    }
+
     private static string OrderRoot() =>
         Path.Combine(RepoRoot(), "src", "backend", "Modules", "Order");
 
