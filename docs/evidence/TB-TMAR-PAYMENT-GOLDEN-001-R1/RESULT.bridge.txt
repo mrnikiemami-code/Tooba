@@ -42,7 +42,7 @@ Pricing-State: UNTOUCHED
 Frontend-Production-Changes: NONE
 
 Git:
-  Commit: 90612c8913ac20bacc9f03223ba32da5b360e98e
+  Commit: c5b5c9984dcd0cd05a23e676d7b89f3e8239fb64
   Message: docs(TB-TMAR-PAYMENT-GOLDEN-001-R1): sync R1 SoT to IN_PROGRESS_GOLDEN_R2_READY.
   Push: origin/main updated
   HEAD == origin/main: YES
