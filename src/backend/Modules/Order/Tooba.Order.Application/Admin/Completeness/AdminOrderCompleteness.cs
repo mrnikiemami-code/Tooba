@@ -23,7 +23,7 @@ public interface IAdminOrderCompletenessStore
 {
     Task<bool> ExistsAsync(Guid checkoutId, CancellationToken cancellationToken);
     Task<IReadOnlyList<AdminOrderNoteView>> ListNotesAsync(Guid checkoutId, Guid actorUserId, CancellationToken cancellationToken);
-    Task<AdminOrderNoteView> AddNoteAsync(Guid checkoutId, Guid actorUserId, string body, DateTimeOffset now, CancellationToken cancellationToken);
+    Task<AdminOrderNoteView> AddNoteAsync(Guid checkoutId, Guid actorUserId, string body, CancellationToken cancellationToken);
     Task<bool> DeleteNoteAsync(Guid checkoutId, Guid noteId, Guid actorUserId, CancellationToken cancellationToken);
     Task<AdminOrderOperationalHistoryPage?> GetHistoryAsync(Guid checkoutId, Guid actorUserId, int page, int pageSize, CancellationToken cancellationToken);
     Task<string?> GetInvoiceHtmlAsync(Guid checkoutId, CancellationToken cancellationToken);
@@ -40,7 +40,7 @@ public sealed class ListAdminOrderNotesHandler(IAdminOrderCompletenessStore stor
 }
 
 public sealed record AddAdminOrderNoteCommand(Guid CheckoutId, AdminOrderActor Actor, string Body) : IRequest<Result<AdminOrderNoteView>>;
-public sealed class AddAdminOrderNoteHandler(IAdminOrderCompletenessStore store, IClock clock) : IRequestHandler<AddAdminOrderNoteCommand, Result<AdminOrderNoteView>>
+public sealed class AddAdminOrderNoteHandler(IAdminOrderCompletenessStore store) : IRequestHandler<AddAdminOrderNoteCommand, Result<AdminOrderNoteView>>
 {
     public async Task<Result<AdminOrderNoteView>> Handle(AddAdminOrderNoteCommand request, CancellationToken ct)
     {
@@ -48,7 +48,7 @@ public sealed class AddAdminOrderNoteHandler(IAdminOrderCompletenessStore store,
             return Result.Failure<AdminOrderNoteView>(new SemanticError(AdminOrderCompletenessErrors.Missing));
         if (string.IsNullOrWhiteSpace(request.Body))
             return Result.Failure<AdminOrderNoteView>(new SemanticError(AdminOrderCompletenessErrors.InvalidNote));
-        return Result.Success(await store.AddNoteAsync(request.CheckoutId, request.Actor.UserId, request.Body.Trim(), clock.UtcNow, ct));
+        return Result.Success(await store.AddNoteAsync(request.CheckoutId, request.Actor.UserId, request.Body.Trim(), ct));
     }
 }
 

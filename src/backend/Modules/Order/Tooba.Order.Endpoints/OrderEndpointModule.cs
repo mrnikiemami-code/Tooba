@@ -7,7 +7,10 @@ namespace Tooba.Order.Endpoints;
 
 public interface IOrderAdminAuthorizer
 {
-    Task<Guid> RequireAuthorizedAsync(HttpContext context, CancellationToken cancellationToken);
+    Task<Guid> RequirePermissionAsync(
+        HttpContext context,
+        string permissionId,
+        CancellationToken cancellationToken);
 }
 
 public static class OrderEndpointModule

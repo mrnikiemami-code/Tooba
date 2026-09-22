@@ -9,6 +9,9 @@ namespace Tooba.Order.Endpoints;
 
 internal static class AdminOrderCompletenessEndpoints
 {
+    private const string ViewPermission = "order.view";
+    private const string HandlePermission = "order.handle";
+
     internal static void Map(IEndpointRouteBuilder app)
     {
         var group = app.MapGroup("/v1/admin/orders");
@@ -21,26 +24,26 @@ internal static class AdminOrderCompletenessEndpoints
     }
 
     private static async Task<IResult> ListNotesAsync(Guid checkoutId, ISender sender, IOrderAdminAuthorizer auth, ApiResponseFactory api, HttpContext context, CancellationToken ct) =>
-        api.From(await sender.Send(new ListAdminOrderNotesQuery(checkoutId, new(await auth.RequireAuthorizedAsync(context, ct))), ct));
+        api.From(await sender.Send(new ListAdminOrderNotesQuery(checkoutId, new(await auth.RequirePermissionAsync(context, ViewPermission, ct))), ct));
 
     private static async Task<IResult> AddNoteAsync(Guid checkoutId, AdminOrderNoteRequest? body, ISender sender, IOrderAdminAuthorizer auth, ApiResponseFactory api, HttpContext context, CancellationToken ct) =>
-        api.From(await sender.Send(new AddAdminOrderNoteCommand(checkoutId, new(await auth.RequireAuthorizedAsync(context, ct)), body?.Body ?? string.Empty), ct));
+        api.From(await sender.Send(new AddAdminOrderNoteCommand(checkoutId, new(await auth.RequirePermissionAsync(context, HandlePermission, ct)), body?.Body ?? string.Empty), ct));
 
     private static async Task<IResult> DeleteNoteAsync(Guid checkoutId, Guid noteId, ISender sender, IOrderAdminAuthorizer auth, ApiResponseFactory api, HttpContext context, CancellationToken ct) =>
-        api.From(await sender.Send(new DeleteAdminOrderNoteCommand(checkoutId, noteId, new(await auth.RequireAuthorizedAsync(context, ct))), ct));
+        api.From(await sender.Send(new DeleteAdminOrderNoteCommand(checkoutId, noteId, new(await auth.RequirePermissionAsync(context, HandlePermission, ct))), ct));
 
     private static async Task<IResult> GetHistoryAsync(Guid checkoutId, int? page, int? pageSize, ISender sender, IOrderAdminAuthorizer auth, ApiResponseFactory api, HttpContext context, CancellationToken ct) =>
-        api.From(await sender.Send(new GetAdminOrderOperationalHistoryQuery(checkoutId, new(await auth.RequireAuthorizedAsync(context, ct)), page ?? 1, pageSize ?? 20), ct));
+        api.From(await sender.Send(new GetAdminOrderOperationalHistoryQuery(checkoutId, new(await auth.RequirePermissionAsync(context, ViewPermission, ct)), page ?? 1, pageSize ?? 20), ct));
 
     private static async Task<IResult> GetInvoiceAsync(Guid checkoutId, ISender sender, IOrderAdminAuthorizer auth, ApiResponseFactory api, HttpContext context, CancellationToken ct)
     {
-        var result = await sender.Send(new GetAdminOrderInvoiceQuery(checkoutId, new(await auth.RequireAuthorizedAsync(context, ct))), ct);
+        var result = await sender.Send(new GetAdminOrderInvoiceQuery(checkoutId, new(await auth.RequirePermissionAsync(context, ViewPermission, ct))), ct);
         return result.IsFailure ? api.From(result) : Results.Content(result.Value!.Html, "text/html; charset=utf-8");
     }
 
     private static async Task<IResult> GetReceiptAsync(Guid checkoutId, ISender sender, IOrderAdminAuthorizer auth, ApiResponseFactory api, HttpContext context, CancellationToken ct)
     {
-        var result = await sender.Send(new GetAdminOrderReceiptQuery(checkoutId, new(await auth.RequireAuthorizedAsync(context, ct))), ct);
+        var result = await sender.Send(new GetAdminOrderReceiptQuery(checkoutId, new(await auth.RequirePermissionAsync(context, ViewPermission, ct))), ct);
         return result.IsFailure ? api.From(result) : Results.Content(result.Value!.Html, "text/html; charset=utf-8");
     }
 
