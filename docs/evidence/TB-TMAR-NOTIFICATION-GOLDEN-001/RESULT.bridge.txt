@@ -47,9 +47,9 @@ Pricing-State: UNTOUCHED
 Frontend-Production-Changes: NONE
 
 Git:
-  Commit: f87cc05ea9440f2fb1c5502c4113e27b253ddcc9
+  Commit: 554f2a815ab4372d4cc1bcca682847e78503f289
   Message: feat(TB-TMAR-NOTIFICATION-GOLDEN-001): Notification Endpoints + CQRS Host ownership closure.
-  Push: pending tip-align
+  Push: origin/main pending
   HEAD == origin/main: pending
   User-Work-Preserved: YES (no reset/clean/force-push; stashes untouched; cart/fulfillment bridge leftovers left untracked)
 
