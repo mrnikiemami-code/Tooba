@@ -156,6 +156,7 @@
     <Project Path="Modules/Notification/Tooba.Notification.Domain/Tooba.Notification.Domain.csproj" />
     <Project Path="Modules/Notification/Tooba.Notification.Application/Tooba.Notification.Application.csproj" />
     <Project Path="Modules/Notification/Tooba.Notification.Infrastructure/Tooba.Notification.Infrastructure.csproj" />
+    <Project Path="Modules/Notification/Tooba.Notification.Endpoints/Tooba.Notification.Endpoints.csproj" />
     <Project Path="Modules/Notification/Tooba.Notification.Tests/Tooba.Notification.Tests.csproj" />
   </Folder>
   <Folder Name="/Modules/Support/">

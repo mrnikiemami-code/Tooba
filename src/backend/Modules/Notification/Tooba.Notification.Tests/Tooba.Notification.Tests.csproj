@@ -21,6 +21,7 @@
     <ProjectReference Include="..\Tooba.Notification.Application\Tooba.Notification.Application.csproj" />
     <ProjectReference Include="..\Tooba.Notification.Contracts\Tooba.Notification.Contracts.csproj" />
     <ProjectReference Include="..\Tooba.Notification.Infrastructure\Tooba.Notification.Infrastructure.csproj" />
+    <ProjectReference Include="..\Tooba.Notification.Endpoints\Tooba.Notification.Endpoints.csproj" />
     <ProjectReference Include="..\..\Order\Tooba.Order.Contracts\Tooba.Order.Contracts.csproj" />
   </ItemGroup>
 </Project>

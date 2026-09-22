@@ -22,7 +22,7 @@ using Tooba.Host.Admin.CatalogDemo;
 using Tooba.Host.Customer;
 using Tooba.Host.Seller;
 using Tooba.Returns.Endpoints;
-using Tooba.Host.Notifications;
+using Tooba.Notification.Endpoints;
 using Tooba.Host.AccessControl;
 using Tooba.Host.Payments;
 using Tooba.Host.Storefront;
@@ -71,6 +71,7 @@ builder.Services.AddHttpContextAccessor();
 builder.Services.AddToobaObservabilityFoundation();
 builder.Services.AddOfferEndpointPresentation();
 builder.Services.AddCartEndpointPresentation();
+builder.Services.AddNotificationEndpointPresentation();
 builder.Services.AddPricingEndpointPresentation();
 builder.Services.AddProblemDetails();
 builder.Services.AddSingleton<IExceptionPresentationService, ExceptionPresentationService>();
@@ -134,7 +135,8 @@ builder.Services.AddToobaCqrsFoundation(
     typeof(Tooba.Offer.Application.Commands.CreateOffer.CreateOfferCommand).Assembly,
     typeof(Tooba.Settlement.Application.Queries.GetSellerSettlementBalance.GetSellerSettlementBalanceQuery).Assembly,
     typeof(Tooba.Cart.Application.Commands.CreateGuestCart.CreateGuestCartCommand).Assembly,
-    typeof(Tooba.Returns.Application.Commands.CreateReturn.CreateReturnCommand).Assembly);
+    typeof(Tooba.Returns.Application.Commands.CreateReturn.CreateReturnCommand).Assembly,
+    typeof(Tooba.Notification.Application.Commands.MarkCustomerNotificationRead.MarkCustomerNotificationReadCommand).Assembly);
 builder.Services.AddScoped<Tooba.Catalog.Application.IStoreLandingExternalReferenceGate, Tooba.Host.Admin.MerchandisingStoreLandingReferenceGate>();
 builder.Services.AddScoped<Tooba.Catalog.Application.IUnitOfMeasureLanguageGate, Tooba.Host.Admin.HostUnitOfMeasureLanguageGate>();
 builder.Services.AddToobaModules(builder.Configuration, builder.Environment);
@@ -238,6 +240,8 @@ builder.Services.AddScoped<Tooba.Fulfillment.Endpoints.Customer.IFulfillmentCust
 builder.Services.AddScoped<Tooba.Returns.Endpoints.Customer.IReturnCustomerAuthorizer, Tooba.Host.Customer.HostReturnCustomerAuthorizer>();
 builder.Services.AddScoped<Tooba.Returns.Endpoints.Seller.IReturnSellerAuthorizer, Tooba.Host.Seller.HostReturnSellerAuthorizer>();
 builder.Services.AddScoped<Tooba.Returns.Endpoints.Admin.IReturnAdminAuthorizer, Tooba.Host.Admin.HostReturnAdminAuthorizer>();
+builder.Services.AddScoped<Tooba.Notification.Endpoints.Customer.INotificationCustomerAuthorizer, Tooba.Host.Customer.HostNotificationCustomerAuthorizer>();
+builder.Services.AddScoped<Tooba.Notification.Endpoints.Seller.INotificationSellerAuthorizer, Tooba.Host.Seller.HostNotificationSellerAuthorizer>();
 builder.Services.AddScoped<Tooba.Host.Customer.CustomerPanelComposer>();
 builder.Services.AddScoped<Tooba.Host.Admin.AdminPanelComposer>();
 builder.Services.AddScoped<Tooba.Host.Admin.AdminOrderOperationsComposer>();

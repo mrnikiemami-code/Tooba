@@ -78,10 +78,17 @@ public sealed class NotificationFoundationTests : IAsyncLifetime
         Assert.Throws<InvalidOperationException>(() => NotificationTargetRoutes.RequireAllowed("javascript:alert(1)"));
         Assert.Throws<InvalidOperationException>(() => NotificationTargetRoutes.RequireAllowed("/admin/secret"));
 
-        var endpoints = File.ReadAllText(Path.Combine(RepoRoot(), "src", "backend", "Host", "Tooba.Host", "Notifications", "NotificationEndpoints.cs"));
-        Assert.Contains("/v1/customer/notifications", endpoints, StringComparison.Ordinal);
-        Assert.Contains("/v1/seller/notifications", endpoints, StringComparison.Ordinal);
-        Assert.Contains("SellerPanelAccess.RequireAuthorizedAsync", endpoints, StringComparison.Ordinal);
+        var endpointsRoot = Path.Combine(RepoRoot(), "src", "backend", "Modules", "Notification", "Tooba.Notification.Endpoints");
+        var customer = File.ReadAllText(Path.Combine(endpointsRoot, "Customer", "NotificationCustomerEndpoints.cs"));
+        var seller = File.ReadAllText(Path.Combine(endpointsRoot, "Seller", "NotificationSellerEndpoints.cs"));
+        var module = File.ReadAllText(Path.Combine(endpointsRoot, "NotificationEndpointModule.cs"));
+        Assert.Contains("/v1/customer/notifications", module, StringComparison.Ordinal);
+        Assert.Contains("/v1/seller/notifications", module, StringComparison.Ordinal);
+        Assert.Contains("ISender", customer, StringComparison.Ordinal);
+        Assert.Contains("ISender", seller, StringComparison.Ordinal);
+
+        var hostSeller = File.ReadAllText(Path.Combine(RepoRoot(), "src", "backend", "Host", "Tooba.Host", "Seller", "HostNotificationSellerAuthorizer.cs"));
+        Assert.Contains("SellerPanelAccess.RequireAuthorizedAsync", hostSeller, StringComparison.Ordinal);
     }
 
     /// <summary>ایجاد با SourceEventId تکراری، mark-read idempotent و ایزولهٔ فروشنده.</summary>
