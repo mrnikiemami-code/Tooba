@@ -1,7 +1,7 @@
-# Recovery Source of Truth
+﻿# Recovery Source of Truth
 
 - Payment: `COMPLETE_REFERENCE_PATTERN`
-- Accepted commit: `e8d704c0fc8d22e11e00d88849b41799e0f84619`
+- Accepted commit: `f73b04f516a915f7f182be94d7c6829c86d2de9f`
 - Endpoint ownership: `MODULE_ENDPOINTS`
 - CQRS: `MEDIATR_12_5`
 - Next task: `TB-TMAR-PROMOTION-GOLDEN-001`

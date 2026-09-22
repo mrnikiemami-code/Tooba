@@ -1,4 +1,4 @@
-Tooba Architect Bootstrap
+﻿Tooba Architect Bootstrap
 
 Canonical bootstrap for recovering the Tooba architecture context after chat/session loss.
 
@@ -28,7 +28,7 @@ TB-TMAR-ARCH-BASELINE
 Current next task:
 TB-TMAR-PROMOTION-GOLDEN-001
 
-Current recovery state (authoritative — TB-TMAR-PAYMENT-GOLDEN-001-R2 — e8d704c0fc8d22e11e00d88849b41799e0f84619):
+Current recovery state (authoritative — TB-TMAR-PAYMENT-GOLDEN-001-R2 — f73b04f516a915f7f182be94d7c6829c86d2de9f):
 COMPLETE HTTP-owning: Cart, Settlement, Fulfillment, Returns, Notification, Support, Wallet, Payment.
 Payment COMPLETE_REFERENCE_PATTERN.
 Remaining: Promotion REOPENED_ENDPOINT_CQRS_OWNERSHIP; Offer NEEDS_FINAL_REVERIFY; Inventory NEEDS_APPLICABILITY_REVERIFY.
