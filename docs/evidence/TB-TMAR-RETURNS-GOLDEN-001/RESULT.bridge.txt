@@ -47,9 +47,9 @@ Pricing-State: UNTOUCHED
 Frontend-Production-Changes: NONE
 
 Git:
-  Commit: 3ef019032f7d6b3898f0808cfd3436be68f16da6
+  Commit: 83d1b2195437301913ec3a88c8afb9341ede4a1d
   Message: feat(TB-TMAR-RETURNS-GOLDEN-001): Returns Endpoints + CQRS Host ownership closure.
-  Push: origin/main updated 37180cc4..3ef019032f7d6b3898f0808cfd3436be68f16da6
+  Push: origin/main updated 37180cc4..83d1b2195437301913ec3a88c8afb9341ede4a1d
   HEAD == origin/main: YES
   User-Work-Preserved: YES (no reset/clean/force-push; stashes untouched; cart/fulfillment bridge leftovers left untracked)
 
