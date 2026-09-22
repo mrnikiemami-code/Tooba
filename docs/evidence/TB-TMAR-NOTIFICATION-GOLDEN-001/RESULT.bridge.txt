@@ -1,0 +1,59 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+BEGIN_TOOBA_WORKER_RESULT
+
+Task-ID: TB-TMAR-NOTIFICATION-GOLDEN-001
+Claim-Id: c533a0bd-be12-4284-ad7d-a8c7ce90357c
+WorkerId: tooba-worker-01
+Channel: tooba-main
+Verdict: PASS
+
+Summary:
+Created Tooba.Notification.Endpoints and moved all customer/seller Notification routes from Host. Host now only maps MapNotificationEndpoints(), registers AddNotificationEndpointPresentation(), and customer/seller authorizer adapters. Application Commands/Queries split into use-case folders with MediatR 12.5.0 handlers; list projection owned by NotificationHttpMapper; stable codes customer.session.required and notification.missing via ApiResponseFactory catalog. Host/Notifications/ removed. Notification.Tests 18 passed; full Tooba.slnx build exit 0. Evidence under docs/evidence/TB-TMAR-NOTIFICATION-GOLDEN-001/.
+
+Program-Name: TMAR — Tooba Microservice-Ready Architecture Recovery
+Track: NOTIFICATION_GOLDEN_CLOSURE
+Recovery-Start: docs/evidence/TB-TMAR-NOTIFICATION-GOLDEN-001/recovery-start.md
+Notification-HTTP-Ownership-Audit: docs/evidence/TB-TMAR-NOTIFICATION-GOLDEN-001/notification-http-ownership-audit.md
+Notification-Endpoints-State: REAL_PROJECT_PRESENT
+Notification-CQRS-State: MEDIATR_12_5_APPLICATION_HANDLERS
+Notification-Application-UseCases: ListCustomerNotifications; GetCustomerUnreadNotificationCount; ListSellerNotifications; GetSellerUnreadNotificationCount; MarkCustomerNotificationRead; MarkAllCustomerNotificationsRead; DismissCustomerNotification; MarkSellerNotificationRead; MarkAllSellerNotificationsRead; DismissSellerNotification
+Notification-Auth-Boundary: docs/evidence/TB-TMAR-NOTIFICATION-GOLDEN-001/notification-auth-boundary.md; INotificationCustomerAuthorizer + INotificationSellerAuthorizer in Endpoints; Host adapters only
+Notification-Response-Contract: docs/evidence/TB-TMAR-NOTIFICATION-GOLDEN-001/notification-response-contract-audit.md; items[].notificationId/type/category/title/body/targetRoute/isRead/createdAt + skip/take/totalCount/unreadCount preserved
+Notification-Result-Adoption: HTTP_USE_CASES_ADOPTED
+Notification-Error-Classification: STABLE_CODES_ONLY
+Notification-Prose-Mapping: NONE
+Notification-Unexpected-Exception-Swallow: NONE
+Notification-Host-Authority-Audit: docs/evidence/TB-TMAR-NOTIFICATION-GOLDEN-001/notification-host-authority-audit.md
+Notification-Host-Endpoints: REMOVED
+Notification-Host-Business-Authority: NONE
+Notification-Host-DbAuthority: NONE
+Notification-CrossModule-Boundary: CONTRACTS_ONLY
+Notification-Physical-State: VERIFIED_ON_DISK_AND_NAMESPACE
+Notification-Architecture-Guards: ENFORCED
+Notification-Behavior-Preservation: VERIFIED
+Focused-Validation: PASS — Notification.Tests exit 0 (18 passed: architecture ownership, CQRS/host guards, HTTP contract shapes, 204/404 codes, characterization, projector parity)
+Skipped-Validation: broad Host suite; Checkout workflow; Tax/Pricing; frontend; unrelated modules
+Full-Validation: PASS — dotnet build src/backend/Tooba.slnx exit 0 (0 errors)
+AntiPattern-Gate: PASS — no Host NotificationEndpoints; no INotificationDirectory in Host HTTP; no MapListResponse/CustomerUnauthorized/SellerError in Endpoints; no prose heuristics; Host/Notifications absent
+Residual-Defects: NONE
+Notification-State: COMPLETE_REFERENCE_PATTERN
+Returns-State: COMPLETE_REFERENCE_PATTERN
+Fulfillment-State: COMPLETE_REFERENCE_PATTERN
+Settlement-State: COMPLETE_REFERENCE_PATTERN
+Cart-State: COMPLETE_REFERENCE_PATTERN
+Checkout-State: PAUSED_AT_SAFE_W5_CHECKPOINT
+Tax-State: UNTOUCHED
+Pricing-State: UNTOUCHED
+Frontend-Production-Changes: NONE
+
+Git:
+  Commit: TIP_ALIGN_PENDING
+  Message: feat(TB-TMAR-NOTIFICATION-GOLDEN-001): Notification Endpoints + CQRS Host ownership closure.
+  Push: pending
+  HEAD == origin/main: pending
+  User-Work-Preserved: YES (no reset/clean/force-push; stashes untouched; cart/fulfillment bridge leftovers left untracked)
+
+Blockers: NONE
+Next-Recommended-Task: ARCHITECT_SELECT_NEXT_REOPENED_MODULE
+
+END_TOOBA_WORKER_RESULT
