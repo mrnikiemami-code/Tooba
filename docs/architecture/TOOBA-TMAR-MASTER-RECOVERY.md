@@ -21,9 +21,9 @@ eliminate cross-module structural leakage
 
 move module communication behind stable Contracts/Gates/Events
 
-keep Host as transport/composition root only
+keep Host as composition root (DI/middleware/global auth/session/tenant/platform endpoints) with module-owned HTTP Endpoints for business routes
 
-use CQRS + MediatR for new application use-cases
+use CQRS + MediatR for new application use-cases and for all HTTP use-cases of COMPLETE HTTP-owning modules (ARCH-COMPLETE-001 / ARCH-CQRS-001)
 
 centralize time, ID, error/localization and cache abstractions
 
@@ -188,10 +188,39 @@ User choice:
 Continue TMAR for now until user explicitly says to return to product feature work.
 
 Next TMAR task:
-TB-TMAR-NEXT-MODULE-BATCH-002. TB-TMAR-NEXT-MODULE-BATCH-001 completed Inventory+Promotion Golden batch. Module-Recovery-State NEXT_REFERENCE_BATCH_COMPLETE. Checkout remains PAUSED_AT_SAFE_W5_CHECKPOINT. Frontend remains frozen.
+TB-TMAR-PAYMENT-GOLDEN-001
 
-Inventory + Promotion reference batch:
-TB-TMAR-NEXT-MODULE-BATCH-001 — Host Inventory/Promotion DbContext removed; Contracts query/schema ports; IClock/IIdGenerator; seller SetInventoryAsync Result; Domain stable codes; Module-Recovery-State NEXT_REFERENCE_BATCH_COMPLETE; Inventory/Promotion COMPLETE_REFERENCE_PATTERN. Evidence: docs/evidence/TB-TMAR-NEXT-MODULE-BATCH-001/. Next: TB-TMAR-NEXT-MODULE-BATCH-002.
+Current recovery state (authoritative — TB-TMAR-RECOVERY-LOCK-HARDEN-001 / ARCH-COMPLETE-001):
+
+COMPLETE_REFERENCE_PATTERN (HTTP-owning, module Endpoints + MediatR):
+- Cart — TB-TMAR-CART-GOLDEN-001-R1 — 35198728bf17381eaaec5db1e8033478675397fb
+- Settlement — TB-TMAR-SETTLEMENT-GOLDEN-001 — f450523d08f1d42a00e28f8972a509bc202516b0
+- Fulfillment — TB-TMAR-FULFILLMENT-GOLDEN-001 — 37180cc4df674e1269c1c103647ab5c96aacf64a
+- Returns — TB-TMAR-RETURNS-GOLDEN-001 — 9b4bdedf0d2301c5455cf9c0af7d69f3b37039b5
+- Notification — TB-TMAR-NOTIFICATION-GOLDEN-001 — 5c947708af5c66a3031786ccdfc34a726ec8746e
+- Support — TB-TMAR-SUPPORT-GOLDEN-001 — b2d3e6f7df85750b5b5d9c42b19f3fa996ba5d91
+- Wallet — TB-TMAR-WALLET-GOLDEN-001 — f81c11e9b21c4bb5e05385b253db28fdb1c62402
+
+Remaining:
+- Payment — REOPENED_ENDPOINT_CQRS_OWNERSHIP
+- Promotion — REOPENED_ENDPOINT_CQRS_OWNERSHIP
+- Offer — NEEDS_FINAL_REVERIFY (Endpoints exists)
+- Inventory — NEEDS_APPLICABILITY_REVERIFY (may be internal-only)
+
+Preserved:
+- Checkout = PAUSED_AT_SAFE_W5_CHECKPOINT
+- Tax = UNTOUCHED in this current repair wave
+- Pricing = UNTOUCHED in this current repair wave
+- Frontend = BACKEND_ONLY_UNTIL_EXPLICIT_RELEASE
+
+Machine-readable: docs/architecture/tmar-current-state.json
+Recovery phrase: برگردیم به TMAR؛ TOOBA-TMAR-MASTER-RECOVERY.md و آخرین recovery-sot را مبنا بگیر.
+
+HISTORICAL / SUPERSEDED (do not treat as current authoritative COMPLETE):
+TB-TMAR-NEXT-MODULE-BATCH-001 Inventory/Promotion COMPLETE claims and next-task TB-TMAR-NEXT-MODULE-BATCH-002 are superseded by the golden wave above and ARCH-COMPLETE-001.
+
+Inventory + Promotion reference batch (HISTORICAL / SUPERSEDED):
+TB-TMAR-NEXT-MODULE-BATCH-001 — Host Inventory/Promotion DbContext removed; Contracts query/schema ports; IClock/IIdGenerator; seller SetInventoryAsync Result; Domain stable codes; historically claimed COMPLETE_REFERENCE_PATTERN — SUPERSEDED by ARCH-COMPLETE-001 reopen statuses. Evidence: docs/evidence/TB-TMAR-NEXT-MODULE-BATCH-001/.
 
 Tax + Pricing Result Pattern delta:
 TB-TMAR-REFBATCH-TP-RESULT-001 — Pricing seller-write expected failures return Result.Failure (amount/offer/market/currency/overlap); Tax RESULT_DELTA_NOT_APPLICABLE (TaxOutcome remains canonical); Module-Recovery-State REFERENCE_RESULT_DELTA_COMPLETE; Tax/Pricing COMPLETE_REFERENCE_PATTERN. Evidence: docs/evidence/TB-TMAR-REFBATCH-TP-RESULT-001/.
@@ -400,29 +429,42 @@ Business MediatR handlers must not live in Infrastructure.
 
 Host Target
 
-Host may own:
+SUPERSEDES_OLD_HOST_THIN_TRANSPORT:
+Older wording that Host may own generic HTTP transport/endpoint implementation for module business routes is superseded. Module-owned `Tooba.*.Endpoints` is mandatory for HTTP-owning COMPLETE modules (`HOST-MODULE-ENDPOINT-001`, `ARCH-COMPLETE-001`).
 
-HTTP transport
+Host owns:
 
-auth/session boundary
+process startup / DI / composition root
 
 middleware
 
-DI/composition root
+global authentication/session/tenant/correlation
 
-endpoint mapping
+platform-level endpoints such as health/readiness
 
-serialization
+tiny security adapters for module Endpoints
 
-minimal presentation/read composition
+explicit Development bootstrap allowlists
+
+Module owns:
+
+module HTTP route implementation
+
+wire DTOs specific to that module
+
+module success/failure presentation composition
+
+business use-case dispatch via ISender → Application MediatR handlers
 
 Host must not gain:
 
-business writes
+module-owned business route implementation
 
-SaveChanges/transactions
+direct Directory calls from Host HTTP for module business use-cases
 
-price/inventory/seller/campaign business truth
+module-specific business response mapping/composers/query engines as durable ownership
+
+business writes / SaveChanges/transactions as module business truth
 
 domain ownership
 

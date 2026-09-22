@@ -71,8 +71,29 @@ Each module owns schema/DbContext/migrations; no cross-schema FK/JOIN or foreign
 ## ARCH-CQRS-001
 All NEW application use-cases use CQRS + MediatR Handler.
 
+Additionally: any HTTP-owning module claiming `COMPLETE_REFERENCE_PATTERN` MUST place its HTTP business use-cases behind real MediatR 12.5.0 Commands/Queries/Handlers. Module Endpoints MUST NOT invoke Directory/Application services directly for business use-cases. Fake/ceremonial handlers are forbidden.
+
 ## ARCH-CQRS-002
 Approved MediatR version is EXACTLY **12.5.0**.
+
+## ARCH-COMPLETE-001
+A module MUST NOT be marked `COMPLETE_REFERENCE_PATTERN` unless its declared HTTP applicability, endpoint ownership, CQRS/MediatR boundary, Result/error semantics, physical structure, cross-module contracts, Host authority, behavior preservation, and recovery state are all verified. Green build/tests alone are insufficient.
+
+For an HTTP-owning module, `COMPLETE_REFERENCE_PATTERN` requires ALL of:
+- real physical `Tooba.<Module>.Endpoints` project
+- module owns its business HTTP routes
+- Host only maps module endpoint composition (`Map…`)
+- Endpoint invokes Application use-cases through `ISender`
+- real MediatR 12.5.0 Command/Query + Handler in Application
+- expected business outcomes use Result/SemanticError + centralized HTTP presentation
+- foreign module dependencies are Contracts/Gates/Events only
+- no foreign DbContext/cross-module SQL ownership
+- physical folder + namespace ownership verified
+- architecture guards enforce these properties
+- behavior preservation evidence exists
+- recovery SoT updated in the same accepted task cycle
+
+For true internal-only modules: Endpoints may be `NOT_APPLICABLE` only when explicitly proven and recorded. CQRS applies to actual application use-case boundaries. Internal-only status cannot be assumed merely because no Endpoints project exists.
 
 ## ARCH-VAL-001
 NEW request validation uses FluentValidation through MediatR pipeline.
@@ -99,7 +120,21 @@ No new multi-responsibility module god-files. New production files must have one
 A reference-complete module must place production source files under the approved module/project responsibility folders on disk. Namespace alignment and documentation alone are insufficient for `COMPLETE_REFERENCE_PATTERN`. Empty ceremonial folders are forbidden. Guard: `OfferPhysicalStructureGuardTests` (Offer; extend per module). Proven by `TB-TMAR-OFFER-REFERENCE-W1-R1` after prior COMPLETE was reopened on visual evidence.
 
 ## HOST-MODULE-ENDPOINT-001
-New module-owned HTTP endpoints must live in the module `Tooba.*.Endpoints` project, not `Tooba.Host`, except truly cross-cutting Host endpoints (health/readiness/platform). Host maps via `Map*Module()` only. Guard: `HostModuleEndpointOwnershipTests` + module architecture tests.
+For HTTP-owning COMPLETE modules the required flow is:
+`Module.Endpoints → ISender → Module.Application` (MediatR Commands/Queries/Handlers).
+
+Host may:
+- register adapters/services
+- map `Map<Module>…()` composition methods
+- own global auth/session/tenant/middleware/platform endpoints
+
+Host must NOT:
+- implement module-owned business routes
+- call module business directories directly from HTTP endpoints
+- own module-specific business response mapping/composers/query engines
+
+Development-only bootstrap is separately allowlisted and does not count as endpoint/business ownership.
+Guard: `HostModuleEndpointOwnershipTests` (multi-module durable) + module architecture tests.
 
 ## ARCH-REFACTOR-001
 Critical giant-file decomposition requires characterization tests around the touched slice before structural splitting. Preserve public behavior; split incrementally by capability/use-case; keep architecture guards green; do not rely only on AI-generated diff inspection.

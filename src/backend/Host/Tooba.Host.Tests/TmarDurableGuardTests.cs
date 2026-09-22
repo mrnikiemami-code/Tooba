@@ -93,6 +93,64 @@ public sealed class TmarDurableGuardTests
         Assert.Equal(0, p.ExitCode);
     }
 
+    [Fact]
+    public void Recovery_current_state_is_fresh_and_machine_readable()
+    {
+        var root = FindRepoRoot();
+        var statePath = Path.Combine(root, "docs", "architecture", "tmar-current-state.json");
+        Assert.True(File.Exists(statePath), statePath);
+        using var doc = JsonDocument.Parse(File.ReadAllText(statePath));
+        var rootEl = doc.RootElement;
+        Assert.Equal("BACKEND_ONLY_UNTIL_EXPLICIT_RELEASE", rootEl.GetProperty("executionMode").GetString());
+        Assert.Equal("TB-TMAR-PAYMENT-GOLDEN-001", rootEl.GetProperty("nextTask").GetString());
+        Assert.Equal("ARCH-COMPLETE-001", rootEl.GetProperty("locksVersion").GetString());
+
+        var complete = rootEl.GetProperty("completeReferenceModules")
+            .EnumerateArray()
+            .Select(x => x.GetProperty("module").GetString()!)
+            .OrderBy(x => x, StringComparer.Ordinal)
+            .ToArray();
+        Assert.Equal(
+            new[] { "Cart", "Fulfillment", "Notification", "Returns", "Settlement", "Support", "Wallet" },
+            complete);
+
+        var remaining = rootEl.GetProperty("reopenedModules")
+            .EnumerateArray()
+            .Concat(rootEl.GetProperty("internalApplicabilityReviewModules").EnumerateArray())
+            .Select(x => (
+                Module: x.GetProperty("module").GetString()!,
+                State: x.GetProperty("state").GetString()!))
+            .ToDictionary(x => x.Module, x => x.State, StringComparer.Ordinal);
+        Assert.Equal("REOPENED_ENDPOINT_CQRS_OWNERSHIP", remaining["Payment"]);
+        Assert.Equal("REOPENED_ENDPOINT_CQRS_OWNERSHIP", remaining["Promotion"]);
+        Assert.Equal("NEEDS_FINAL_REVERIFY", remaining["Offer"]);
+        Assert.Equal("NEEDS_APPLICABILITY_REVERIFY", remaining["Inventory"]);
+
+        var master = File.ReadAllText(Path.Combine(root, "docs", "architecture", "TOOBA-TMAR-MASTER-RECOVERY.md"));
+        var bootstrap = File.ReadAllText(Path.Combine(root, "docs", "architecture", "TOOBA-ARCHITECT-BOOTSTRAP.md"));
+        Assert.Contains("TB-TMAR-PAYMENT-GOLDEN-001", master, StringComparison.Ordinal);
+        Assert.Contains("TB-TMAR-PAYMENT-GOLDEN-001", bootstrap, StringComparison.Ordinal);
+        Assert.Contains("ARCH-COMPLETE-001", master, StringComparison.Ordinal);
+        Assert.Contains("ARCH-COMPLETE-001", bootstrap, StringComparison.Ordinal);
+        Assert.Contains("Wallet", master, StringComparison.Ordinal);
+        Assert.Contains("COMPLETE_REFERENCE_PATTERN", master, StringComparison.Ordinal);
+        Assert.Contains("Wallet COMPLETE_REFERENCE_PATTERN", bootstrap, StringComparison.Ordinal);
+
+        // Reject only authoritative stale next-task, not historical chronology mentions.
+        Assert.DoesNotContain(
+            "Next TMAR task:\r\nTB-TMAR-NEXT-MODULE-BATCH-002",
+            master.Replace("\r\n", "\n"),
+            StringComparison.Ordinal);
+        Assert.DoesNotContain(
+            "Next TMAR task:\nTB-TMAR-NEXT-MODULE-BATCH-002",
+            master.Replace("\r\n", "\n"),
+            StringComparison.Ordinal);
+        Assert.DoesNotContain(
+            "Current next task:\nTB-TMAR-NEXT-MODULE-BATCH-002",
+            bootstrap.Replace("\r\n", "\n"),
+            StringComparison.Ordinal);
+    }
+
     private static bool IsProductionFrontendPath(string relative)
     {
         var n = relative.Replace('\\', '/');

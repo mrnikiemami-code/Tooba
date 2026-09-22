@@ -26,7 +26,16 @@ Accepted architecture baseline:
 TB-TMAR-ARCH-BASELINE
 
 Current next task:
-TB-TMAR-NEXT-MODULE-BATCH-002 after TB-TMAR-NEXT-MODULE-BATCH-001. Inventory/Promotion COMPLETE_REFERENCE_PATTERN. Module-Recovery-State NEXT_REFERENCE_BATCH_COMPLETE. Checkout remains PAUSED_AT_SAFE_W5_CHECKPOINT.
+TB-TMAR-PAYMENT-GOLDEN-001
+
+Current recovery state (authoritative — TB-TMAR-RECOVERY-LOCK-HARDEN-001 / ARCH-COMPLETE-001):
+COMPLETE HTTP-owning: Cart, Settlement, Fulfillment, Returns, Notification, Support, Wallet (Wallet COMPLETE_REFERENCE_PATTERN).
+Remaining: Payment REOPENED_ENDPOINT_CQRS_OWNERSHIP; Promotion REOPENED_ENDPOINT_CQRS_OWNERSHIP; Offer NEEDS_FINAL_REVERIFY; Inventory NEEDS_APPLICABILITY_REVERIFY.
+Checkout PAUSED_AT_SAFE_W5_CHECKPOINT. Tax/Pricing UNTOUCHED in this wave. Frontend BACKEND_ONLY_UNTIL_EXPLICIT_RELEASE.
+Machine-readable: docs/architecture/tmar-current-state.json
+
+HISTORICAL / SUPERSEDED next-task wording (do not use as current):
+TB-TMAR-NEXT-MODULE-BATCH-002 after TB-TMAR-NEXT-MODULE-BATCH-001. Inventory/Promotion COMPLETE_REFERENCE_PATTERN. Module-Recovery-State NEXT_REFERENCE_BATCH_COMPLETE.
 
 Product development rule:
 Foundation (TB-TMAR-FND-001) is ACCEPTED.
@@ -251,23 +260,28 @@ No Big Bang rewrite.
 
 11. Host Rule
 
+SUPERSEDES_OLD_HOST_THIN_TRANSPORT:
+Older Host "HTTP transport / endpoint mapping" ownership for module business routes is superseded by module-owned Endpoints (`HOST-MODULE-ENDPOINT-001`, `ARCH-COMPLETE-001`).
+
 Host must converge to:
 
-HTTP transport
-
-authentication/session boundary
+process startup / DI / composition root
 
 middleware
 
-DI/composition root
+global authentication/session/tenant/correlation
 
-endpoint mapping
+platform-level endpoints (health/readiness)
 
-serialization
+tiny security adapters for module Endpoints
 
-minimal view composition
+explicit Development bootstrap allowlists
+
+Module owns module HTTP routes, wire DTOs, presentation composition, and ISender dispatch to Application MediatR handlers.
 
 Host must NOT gain new:
+
+module-owned business routes
 
 business writes
 
@@ -490,8 +504,9 @@ pricing-reference-w1 = TB-TMAR-PRICING-REFERENCE-W1 PASS, revalidated COMPLETE_R
 refbatch-tp-001 = TB-TMAR-REFBATCH-TP-001 REFERENCE_BATCH_COMPLETE (architecture cleanup)
 fnd-result-001-r1 = TB-TMAR-FND-RESULT-001-R1 RESULT_PATTERN_FOUNDATION_COMPLETE; Offer COMPLETE_REFERENCE_PATTERN with Result/ApiResponseFactory
 refbatch-tp-result-001 = TB-TMAR-REFBATCH-TP-RESULT-001 REFERENCE_RESULT_DELTA_COMPLETE; Tax/Pricing COMPLETE_REFERENCE_PATTERN vs Result Golden
-next-module-batch-001 = TB-TMAR-NEXT-MODULE-BATCH-001 NEXT_REFERENCE_BATCH_COMPLETE; Inventory/Promotion COMPLETE_REFERENCE_PATTERN
-next task = TB-TMAR-NEXT-MODULE-BATCH-002; Checkout remains PAUSED_AT_SAFE_W5_CHECKPOINT; Frontend frozen
+next-module-batch-001 = TB-TMAR-NEXT-MODULE-BATCH-001 NEXT_REFERENCE_BATCH_COMPLETE; Inventory/Promotion historically COMPLETE — SUPERSEDED by ARCH-COMPLETE-001 reopen statuses (HISTORICAL)
+next task = TB-TMAR-PAYMENT-GOLDEN-001; Wallet COMPLETE_REFERENCE_PATTERN; Checkout remains PAUSED_AT_SAFE_W5_CHECKPOINT; Frontend frozen
+recovery-lock-harden-001 = TB-TMAR-RECOVERY-LOCK-HARDEN-001 ARCH-COMPLETE-001 + durable multi-module Host endpoint guard + tmar-current-state.json
 
 primary goal = painless future Microservice migration
 

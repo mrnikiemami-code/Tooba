@@ -1,4 +1,4 @@
-﻿# Tooba — Project State
+# Tooba — Project State
 
 Project:
 
@@ -62,7 +62,7 @@ TB-P05-GATE
 Last Implementation Task:
 
 ```text
-TB-TMAR-WALLET-GOLDEN-001
+TB-TMAR-RECOVERY-LOCK-HARDEN-001
 ```
 
 Last Architecture Audit Task:
@@ -74,7 +74,7 @@ TB-P10-T022-R14
 Current Issued Task:
 
 ```text
-TB-TMAR-WALLET-GOLDEN-001 (Worker PASS — awaiting Architect)
+TB-TMAR-RECOVERY-LOCK-HARDEN-001 (Worker PASS — awaiting Architect)
 ```
 
 Current Repair Task:
@@ -113,7 +113,7 @@ Checkout-State: PAUSED_AT_SAFE_W5_CHECKPOINT
 Tax-State: DEFERRED_PHYSICAL_REVIEW_BY_USER
 Pricing-State: DEFERRED_PHYSICAL_REVIEW_BY_USER
 Frontend-Production-Changes: NONE
-Next-Recommended-Task: ARCHITECT_SELECT_NEXT_REOPENED_MODULE
+Next-Recommended-Task: TB-TMAR-PAYMENT-GOLDEN-001
 ```
 
 Prior TMAR Cart golden (awaiting Architect / USER_CART_REVIEW_CHECKPOINT):

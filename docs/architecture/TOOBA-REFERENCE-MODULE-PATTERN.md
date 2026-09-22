@@ -37,13 +37,17 @@ These projects must exist as **real on-disk `.csproj` trees**, not logical/docum
 ## Folder conventions (Offer proven on disk)
 
 - Domain: `Aggregates/`, `Events/`
-- Application: `Ports/` (create `UseCases/` only when real use-case files exist)
+- Application (HTTP-owning COMPLETE): `Commands/<UseCase>/`, `Queries/<UseCase>/`, `Models/`, `Ports/`, `Errors/` as applicable — real MediatR handlers for HTTP business use-cases are mandatory (`ARCH-COMPLETE-001` / `ARCH-CQRS-001`). Do not require empty Commands or Queries folders when a module genuinely has only one side. Do not imply that a COMPLETE HTTP module may omit CQRS use-case folders.
 - Contracts: `Ports/`, `Dtos/`
 - Infrastructure: `Persistence/` (+ `Configurations/`, `Migrations/`), `Adapters/`, `Outbox/`, `Events/`, `DependencyInjection/`
 - Endpoints: feature folders (e.g. `Seller/`) + `*EndpointModule.cs`
 - Tests: mirrors layers under `Domain/`, `Contracts/`, `Infrastructure/`, `Endpoints/`, `Architecture/`
 
 Do not create empty ceremonial folders.
+
+## COMPLETE_REFERENCE_PATTERN (canonical)
+
+See `ARCH-COMPLETE-001` in `TMAR-architecture-locks.md`. Green build alone is insufficient. HTTP-owning COMPLETE modules require real Endpoints + MediatR HTTP use-cases + Result semantics + Contracts-only foreign boundaries + Host composition-only mapping.
 
 ## Physical structure lock
 
@@ -57,7 +61,8 @@ Do not create empty ceremonial folders.
 ## Endpoint ownership
 
 - Module HTTP routes live in `Tooba.<Name>.Endpoints`.
-- Host calls `Map<Name>Module()` (composition only).
+- Host calls `Map<Name>Module()` / `Map<Name>Endpoints()` (composition only).
+- Endpoints dispatch business use-cases through `ISender` (not direct Directory calls).
 - Host must not map module-owned business routes (guard `HOST-MODULE-ENDPOINT-001`).
 - Auth/policy adapters may be Host-provided behind Endpoints ports.
 
