@@ -7,7 +7,7 @@ namespace Tooba.Payment.Tests.Architecture;
 public sealed class PaymentArchitectureGuardTests
 {
     private static readonly string[] AllowedDomainFolders = ["Aggregates", "Entities", "ValueObjects", "Events", "Policies"];
-    private static readonly string[] AllowedApplicationFolders = ["Ports", "Models", "Commands", "Queries", "Handlers"];
+    private static readonly string[] AllowedApplicationFolders = ["Ports", "Models", "Commands", "Queries", "Handlers", "Errors"];
     private static readonly string[] AllowedContractsFolders = ["Events", "Dtos", "Ports", "Returns"];
     private static readonly string[] AllowedInfrastructureFolders =
         ["Persistence", "Directories", "Adapters", "Providers", "Events", "Messaging", "DependencyInjection", "Gateways", "Migrations"];
