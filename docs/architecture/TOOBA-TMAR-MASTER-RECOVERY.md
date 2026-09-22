@@ -188,9 +188,9 @@ User choice:
 Continue TMAR for now until user explicitly says to return to product feature work.
 
 Next TMAR task:
-TB-TMAR-PROMOTION-GOLDEN-001
+TB-TMAR-INVENTORY-APPLICABILITY-REVERIFY-001
 
-Current recovery state (authoritative — TB-TMAR-PAYMENT-GOLDEN-001-R1):
+Current recovery state (authoritative — TB-TMAR-OFFER-FINAL-REVERIFY-001):
 
 COMPLETE_REFERENCE_PATTERN (HTTP-owning, module Endpoints + MediatR):
 - Cart — TB-TMAR-CART-GOLDEN-001-R1 — 35198728bf17381eaaec5db1e8033478675397fb
@@ -201,10 +201,10 @@ COMPLETE_REFERENCE_PATTERN (HTTP-owning, module Endpoints + MediatR):
 - Support — TB-TMAR-SUPPORT-GOLDEN-001 — b2d3e6f7df85750b5b5d9c42b19f3fa996ba5d91
 - Wallet — TB-TMAR-WALLET-GOLDEN-001 — f81c11e9b21c4bb5e05385b253db28fdb1c62402
 - Payment — TB-TMAR-PAYMENT-GOLDEN-001-R2 — f73b04f516a915f7f182be94d7c6829c86d2de9f
+- Promotion — TB-TMAR-PROMOTION-GOLDEN-001 — 431ca6d21b21fa3af0972a1dafa0c85003abe662
+- Offer — TB-TMAR-OFFER-FINAL-REVERIFY-001 — implementation 813184b90906489b5654694b60afc96c4803cd3d
 
 Remaining:
-- Promotion — COMPLETE_REFERENCE_PATTERN (TB-TMAR-PROMOTION-GOLDEN-001; implementation 431ca6d21b21fa3af0972a1dafa0c85003abe662)
-- Offer — NEEDS_FINAL_REVERIFY (Endpoints exists)
 - Inventory — NEEDS_APPLICABILITY_REVERIFY (may be internal-only)
 
 Preserved:

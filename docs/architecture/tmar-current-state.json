@@ -3,9 +3,9 @@
     "executionMode":  "BACKEND_ONLY_UNTIL_EXPLICIT_RELEASE",
     "frontendFrozen":  true,
     "checkoutState":  "PAUSED_AT_SAFE_W5_CHECKPOINT",
-    "lastAcceptedTask":  "TB-TMAR-PROMOTION-GOLDEN-001",
-    "lastAcceptedCommit":  "431ca6d21b21fa3af0972a1dafa0c85003abe662",
-    "nextTask":  "TB-TMAR-OFFER-FINAL-REVERIFY-001",
+    "lastAcceptedTask":  "TB-TMAR-OFFER-FINAL-REVERIFY-001",
+    "lastAcceptedCommit":  "813184b90906489b5654694b60afc96c4803cd3d",
+    "nextTask":  "TB-TMAR-INVENTORY-APPLICABILITY-REVERIFY-001",
     "locksVersion":  "ARCH-COMPLETE-001",
     "definitionMarker":  "COMPLETE_REFERENCE_PATTERN_REQUIRES_ENDPOINTS_CQRS_RESULT_CONTRACTS_GUARDS_SOT",
     "recoveryPhrase":  "برگردیم به TMAR؛ TOOBA-TMAR-MASTER-RECOVERY.md و آخرین recovery-sot را مبنا بگیر.",
@@ -90,21 +90,21 @@
                                          "cqrs":  "MEDIATR_12_5",
                                          "lastAcceptedTask":  "TB-TMAR-PROMOTION-GOLDEN-001",
                                          "lastAcceptedCommit":  "431ca6d21b21fa3af0972a1dafa0c85003abe662"
+                                     },
+                                     {
+                                         "module":  "Offer",
+                                         "state":  "COMPLETE_REFERENCE_PATTERN",
+                                         "httpApplicability":  "HTTP_OWNING",
+                                         "endpointOwnership":  "MODULE_ENDPOINTS",
+                                         "cqrs":  "MEDIATR_12_5",
+                                         "lastAcceptedTask":  "TB-TMAR-OFFER-FINAL-REVERIFY-001",
+                                         "lastAcceptedCommit":  "813184b90906489b5654694b60afc96c4803cd3d"
                                      }
                                  ],
     "reopenedModules":  [
 
                         ],
     "internalApplicabilityReviewModules":  [
-                                               {
-                                                   "module":  "Offer",
-                                                   "state":  "NEEDS_FINAL_REVERIFY",
-                                                   "httpApplicability":  "HTTP_OWNING",
-                                                   "endpointOwnership":  "MODULE_ENDPOINTS",
-                                                   "cqrs":  "TO_VERIFY",
-                                                   "lastAcceptedTask":  null,
-                                                   "lastAcceptedCommit":  null
-                                               },
                                                {
                                                    "module":  "Inventory",
                                                    "state":  "NEEDS_APPLICABILITY_REVERIFY",
