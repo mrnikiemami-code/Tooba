@@ -106,7 +106,7 @@ public sealed class TmarDurableGuardTests
         Assert.Equal("USER_ACCEPTED", rootEl.GetProperty("goldenWaveUserReview").GetString());
         Assert.Equal("TB-TMAR-GOLDEN-WAVE-FINAL-CLOSURE-001", rootEl.GetProperty("goldenWaveClosedBy").GetString());
         Assert.False(string.IsNullOrWhiteSpace(rootEl.GetProperty("goldenWaveClosedCommit").GetString()));
-        Assert.Equal("TB-TMAR-ORDER-GOLDEN-001-R7", rootEl.GetProperty("nextTask").GetString());
+        Assert.Equal("TB-TMAR-ORDER-GOLDEN-001-R8", rootEl.GetProperty("nextTask").GetString());
         Assert.Equal("ORDER_GOLDEN_REPAIR_REQUIRED", rootEl.GetProperty("nextTaskGate").GetString());
         Assert.Equal("PAUSED_AT_SAFE_W5_CHECKPOINT", rootEl.GetProperty("checkoutState").GetString());
         Assert.True(rootEl.GetProperty("frontendFrozen").GetBoolean());
@@ -145,6 +145,14 @@ public sealed class TmarDurableGuardTests
         Assert.Equal("INTERNAL_USE_CASE_BOUNDARIES", inventory.GetProperty("cqrs").GetString());
         Assert.Equal("2814da32245b25a718aa952ba0e836d7550a3ee0", inventory.GetProperty("lastAcceptedCommit").GetString());
 
+        var active = rootEl.GetProperty("activeModuleRecovery");
+        Assert.Equal("Order", active.GetProperty("module").GetString());
+        Assert.Equal("INCOMPLETE_REFERENCE_REPAIR", active.GetProperty("state").GetString());
+        Assert.Equal("TB-TMAR-ORDER-GOLDEN-001-R8", active.GetProperty("nextTask").GetString());
+        Assert.Contains(
+            "HOST_ORDER_REVERSE_AUDIT_R7",
+            active.GetProperty("completedSlices").EnumerateArray().Select(x => x.GetString()));
+
         var master = File.ReadAllText(Path.Combine(root, "docs", "architecture", "TOOBA-TMAR-MASTER-RECOVERY.md"));
         var bootstrap = File.ReadAllText(Path.Combine(root, "docs", "architecture", "TOOBA-ARCHITECT-BOOTSTRAP.md"));
         Assert.Contains("TB-TMAR-ORDER-GOLDEN-001-R3", master, StringComparison.Ordinal);
@@ -153,12 +161,14 @@ public sealed class TmarDurableGuardTests
         Assert.Contains("TB-TMAR-ORDER-GOLDEN-001-R5-R1", master, StringComparison.Ordinal);
         Assert.Contains("TB-TMAR-ORDER-GOLDEN-001-R6", master, StringComparison.Ordinal);
         Assert.Contains("TB-TMAR-ORDER-GOLDEN-001-R7", master, StringComparison.Ordinal);
+        Assert.Contains("TB-TMAR-ORDER-GOLDEN-001-R8", master, StringComparison.Ordinal);
         Assert.Contains("TB-TMAR-ORDER-GOLDEN-001-R3", bootstrap, StringComparison.Ordinal);
         Assert.Contains("TB-TMAR-ORDER-GOLDEN-001-R3B", bootstrap, StringComparison.Ordinal);
         Assert.Contains("TB-TMAR-ORDER-GOLDEN-001-R5", bootstrap, StringComparison.Ordinal);
         Assert.Contains("TB-TMAR-ORDER-GOLDEN-001-R5-R1", bootstrap, StringComparison.Ordinal);
         Assert.Contains("TB-TMAR-ORDER-GOLDEN-001-R6", bootstrap, StringComparison.Ordinal);
         Assert.Contains("TB-TMAR-ORDER-GOLDEN-001-R7", bootstrap, StringComparison.Ordinal);
+        Assert.Contains("TB-TMAR-ORDER-GOLDEN-001-R8", bootstrap, StringComparison.Ordinal);
         Assert.Contains("ORDER_GOLDEN_REPAIR_REQUIRED", master, StringComparison.Ordinal);
         Assert.Contains("ORDER_GOLDEN_REPAIR_REQUIRED", bootstrap, StringComparison.Ordinal);
         Assert.Contains("ARCH-COMPLETE-001", master, StringComparison.Ordinal);
