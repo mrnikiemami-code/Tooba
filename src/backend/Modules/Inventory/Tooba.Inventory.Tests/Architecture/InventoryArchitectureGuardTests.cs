@@ -8,7 +8,7 @@ public sealed class InventoryArchitectureGuardTests
 {
     private static readonly string[] AllowedDomainFolders = ["Aggregates", "Entities", "ValueObjects", "Events", "Policies"];
     private static readonly string[] AllowedApplicationFolders = ["Ports", "Models", "Checkout", "Orders"];
-    private static readonly string[] AllowedContractsFolders = ["Seller", "Checkout", "Orders", "Availability", "Errors", "Fulfillment", "Returns"];
+    private static readonly string[] AllowedContractsFolders = ["Seller", "Checkout", "Orders", "Availability", "Errors", "Fulfillment", "Returns", "Cart"];
     private static readonly string[] AllowedInfrastructureFolders =
         ["Persistence", "Directories", "Adapters", "Events", "Messaging", "DependencyInjection"];
 
@@ -145,6 +145,45 @@ public sealed class InventoryArchitectureGuardTests
         Assert.Contains("StockReservationStatus.Released or StockReservationStatus.Consumed", body, StringComparison.Ordinal);
         Assert.Contains("return;", body, StringComparison.Ordinal);
         Assert.DoesNotContain("catch (", body, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void Internal_only_http_applicability_remains_explicit_and_offer_owned()
+    {
+        var root = RepoRoot();
+        Assert.False(Directory.Exists(Path.Combine(InventoryRoot(), "Tooba.Inventory.Endpoints")));
+        Assert.False(Directory.Exists(Path.Combine(root, "src", "backend", "Host", "Tooba.Host", "Inventory")));
+
+        var production = Directory.EnumerateFiles(Path.Combine(root, "src", "backend"), "*.cs", SearchOption.AllDirectories)
+            .Where(p => !p.Contains(".Tests" + Path.DirectorySeparatorChar, StringComparison.Ordinal)
+                        && !p.Contains($"{Path.DirectorySeparatorChar}bin{Path.DirectorySeparatorChar}", StringComparison.Ordinal)
+                        && !p.Contains($"{Path.DirectorySeparatorChar}obj{Path.DirectorySeparatorChar}", StringComparison.Ordinal))
+            .Select(p => (Path: p, Text: File.ReadAllText(p)))
+            .ToList();
+        Assert.DoesNotContain(production, x => x.Text.Contains("MapInventoryEndpoints", StringComparison.Ordinal));
+
+        var offerEndpoint = File.ReadAllText(Path.Combine(root, "src", "backend", "Modules", "Offer",
+            "Tooba.Offer.Endpoints", "Seller", "OfferSellerEndpoints.cs"));
+        Assert.Contains("/offers/{offerId:guid}/inventory", offerEndpoint, StringComparison.Ordinal);
+        Assert.Contains("SetOfferInventoryCommand", offerEndpoint, StringComparison.Ordinal);
+
+        var offerHandler = File.ReadAllText(Path.Combine(root, "src", "backend", "Modules", "Offer",
+            "Tooba.Offer.Application", "Commands", "SetOfferInventory", "SetOfferInventoryCommand.cs"));
+        Assert.Contains("using Tooba.Inventory.Contracts.Seller;", offerHandler, StringComparison.Ordinal);
+        Assert.Contains("ISellerOfferInventoryGateway", offerHandler, StringComparison.Ordinal);
+        Assert.DoesNotContain("InventoryDbContext", offerHandler, StringComparison.Ordinal);
+
+        var hostManifest = File.ReadAllText(Path.Combine(root, "src", "backend", "Host", "Tooba.Host.Tests",
+            "HostModuleEndpointOwnershipTests.cs"));
+        Assert.DoesNotContain("new(\"Inventory\"", hostManifest, StringComparison.Ordinal);
+
+        using var state = System.Text.Json.JsonDocument.Parse(File.ReadAllText(
+            Path.Combine(root, "docs", "architecture", "tmar-current-state.json")));
+        var inventory = state.RootElement.GetProperty("completeReferenceModules").EnumerateArray()
+            .Single(x => x.GetProperty("module").GetString() == "Inventory");
+        Assert.Equal("INTERNAL_ONLY", inventory.GetProperty("httpApplicability").GetString());
+        Assert.Equal("NOT_APPLICABLE", inventory.GetProperty("endpointOwnership").GetString());
+        Assert.Equal("INTERNAL_USE_CASE_BOUNDARIES", inventory.GetProperty("cqrs").GetString());
     }
 
     private static void AssertNoRootDump(string project, string[] allowedFolders)
