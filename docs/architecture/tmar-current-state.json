@@ -4,7 +4,7 @@
     "frontendFrozen":  true,
     "checkoutState":  "PAUSED_AT_SAFE_W5_CHECKPOINT",
     "lastAcceptedTask":  "TB-TMAR-CART-POSTCERT-SEMANTIC-HOST-CLOSURE-001-R1",
-    "lastAcceptedCommit":  "PLACEHOLDER_STAMP_AFTER_COMMIT",
+    "lastAcceptedCommit":  "eea83df99f56f87a67c02a685e771d2b95fb8f74",
     "nextTask":  "USER_REVIEW_CART_POSTCERT_SEMANTIC_HOST_CLOSURE_R1",
     "nextTaskGate":  "USER_REVIEW_REQUIRED_BEFORE_NEXT_TMAR_WAVE",
     "goldenWaveState":  "COMPLETE",
@@ -63,7 +63,7 @@
                                          "lastAcceptedTask":  "TB-TMAR-CART-ARCH-COMPLETE-002-REVERIFY-001",
                                          "lastAcceptedCommit":  "6e880942baaf3b2afd60fa0766e5e132704eca66",
                                          "lastPostCertificationRepairTask":  "TB-TMAR-CART-POSTCERT-SEMANTIC-HOST-CLOSURE-001-R1",
-                                         "lastPostCertificationRepairCommit":  "PLACEHOLDER_STAMP_AFTER_COMMIT",
+                                         "lastPostCertificationRepairCommit":  "eea83df99f56f87a67c02a685e771d2b95fb8f74",
                                          "postCertificationRepairNote":  "Commerce-authority repair only; not a new structural certification. Cart owns no commerce policy default (Market/Currency/SalesChannel) and consumes the platform store commerce context. Cart remains COMPLETE_REFERENCE_PATTERN + ARCH-COMPLETE-002 STRUCTURE_CERTIFIED."
                                      },
                                      {
