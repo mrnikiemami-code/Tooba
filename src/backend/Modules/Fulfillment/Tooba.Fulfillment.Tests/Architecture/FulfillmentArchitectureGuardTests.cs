@@ -103,7 +103,7 @@ public sealed class FulfillmentArchitectureGuardTests
 
         var orderOpsEndpoint = File.ReadAllText(Path.Combine(
             RepoRoot(),
-            "src", "backend", "Modules", "Order", "Tooba.Order.Endpoints", "AdminOrderOperationsEndpoints.cs"));
+            "src", "backend", "Modules", "Order", "Tooba.Order.Endpoints", "Admin", "Operations", "AdminOrderOperationsEndpoints.cs"));
         Assert.DoesNotContain("/v1/admin/shipping-methods", orderOpsEndpoint, StringComparison.Ordinal);
         Assert.DoesNotContain("ListEnabledShippingMethodsTreeQuery", orderOpsEndpoint, StringComparison.Ordinal);
         Assert.DoesNotContain("ListShippingMethodsAsync", orderOpsEndpoint, StringComparison.Ordinal);

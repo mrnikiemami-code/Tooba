@@ -61,7 +61,7 @@ public sealed class OrderStorefrontArchitectureGuardTests
     public void Order_endpoints_own_nine_storefront_routes_via_ISender()
     {
         var endpoints = File.ReadAllText(Path.Combine(
-            OrderRoot(), "Tooba.Order.Endpoints", "StorefrontOrderEndpoints.cs"));
+            OrderRoot(), "Tooba.Order.Endpoints", "Storefront", "StorefrontOrderEndpoints.cs"));
         Assert.Contains("ISender", endpoints, StringComparison.Ordinal);
         Assert.Contains("/pending-payments", endpoints, StringComparison.Ordinal);
         Assert.Contains("/checkout/{checkoutId:guid}/cancel", endpoints, StringComparison.Ordinal);

@@ -9,7 +9,7 @@ using Tooba.Order.Application.Customer.Commands.RetryCustomerUnpaidOrder;
 using Tooba.Order.Application.Customer.Queries.GetCustomerOrderDetail;
 using Tooba.Order.Application.Customer.Queries.ListCustomerOrders;
 
-namespace Tooba.Order.Endpoints;
+namespace Tooba.Order.Endpoints.Customer;
 
 /// <summary>Host transport adapter — resolves authenticated/dev customer Actor for Order customer routes.</summary>
 public interface IOrderCustomerAuthorizer

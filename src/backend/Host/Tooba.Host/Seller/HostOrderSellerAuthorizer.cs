@@ -1,6 +1,6 @@
 using Tooba.BuildingBlocks;
 using Tooba.Order.Application.Seller;
-using Tooba.Order.Endpoints;
+using Tooba.Order.Endpoints.Seller;
 
 namespace Tooba.Host.Seller;
 

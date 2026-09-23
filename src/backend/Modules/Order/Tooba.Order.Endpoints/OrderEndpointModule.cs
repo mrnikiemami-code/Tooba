@@ -4,8 +4,17 @@ using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
 using Tooba.BuildingBlocks.Localization;
 using Tooba.BuildingBlocks.Presentation.Errors;
+using Tooba.Order.Endpoints.Admin.Completeness;
+using Tooba.Order.Endpoints.Admin.Customers;
+using Tooba.Order.Endpoints.Admin.Detail;
+using Tooba.Order.Endpoints.Admin.InventoryRecovery;
+using Tooba.Order.Endpoints.Admin.Operations;
+using Tooba.Order.Endpoints.Admin.OrdersGrid;
+using Tooba.Order.Endpoints.Customer;
 using Tooba.Order.Endpoints.Errors;
 using Tooba.Order.Endpoints.Resources;
+using Tooba.Order.Endpoints.Seller;
+using Tooba.Order.Endpoints.Storefront;
 
 namespace Tooba.Order.Endpoints;
 

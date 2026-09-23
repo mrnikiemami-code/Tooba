@@ -47,7 +47,7 @@ public sealed class OrderSellerPanelArchitectureGuardTests
     public void Order_endpoints_own_seller_order_routes_via_ISender()
     {
         var endpoints = File.ReadAllText(Path.Combine(
-            OrderRoot(), "Tooba.Order.Endpoints", "SellerOrderEndpoints.cs"));
+            OrderRoot(), "Tooba.Order.Endpoints", "Seller", "SellerOrderEndpoints.cs"));
         Assert.Contains("/orders", endpoints, StringComparison.Ordinal);
         Assert.Contains("/orders/{sellerOrderId:guid}", endpoints, StringComparison.Ordinal);
         Assert.Contains("ISender sender", endpoints, StringComparison.Ordinal);

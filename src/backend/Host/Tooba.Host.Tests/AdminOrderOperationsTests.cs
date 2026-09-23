@@ -224,7 +224,7 @@ public sealed class AdminOrderOperationsTests
     {
         var root = FindRepoRoot();
         var endpoints = File.ReadAllText(Path.Combine(
-            root, "src", "backend", "Modules", "Order", "Tooba.Order.Endpoints", "AdminOrderOperationsEndpoints.cs"));
+            root, "src", "backend", "Modules", "Order", "Tooba.Order.Endpoints", "Admin", "Operations", "AdminOrderOperationsEndpoints.cs"));
         var composer = File.ReadAllText(Path.Combine(
             root, "src", "backend", "Modules", "Order", "Tooba.Order.Application", "Admin", "Operations", "Services", "AdminOrderOperationsOrchestrator.cs"));
         var program = File.ReadAllText(Path.Combine(
@@ -241,7 +241,7 @@ public sealed class AdminOrderOperationsTests
         Assert.Contains("MapOrderEndpoints", program, StringComparison.Ordinal);
         Assert.DoesNotContain("AdminOrderOperationsComposer", program, StringComparison.Ordinal);
         Assert.True(File.Exists(Path.Combine(root, "src", "backend", "Modules", "Order", "Tooba.Order.Application", "Admin", "Operations", "Services", "AdminOrderOperationsOrchestrator.cs")));
-        Assert.True(File.Exists(Path.Combine(root, "src", "backend", "Modules", "Order", "Tooba.Order.Endpoints", "AdminOrderOperationsEndpoints.cs")));
+        Assert.True(File.Exists(Path.Combine(root, "src", "backend", "Modules", "Order", "Tooba.Order.Endpoints", "Admin", "Operations", "AdminOrderOperationsEndpoints.cs")));
         Assert.False(File.Exists(Path.Combine(root, "src", "backend", "Host", "Tooba.Host", "Admin", "AdminOrderOperationsModels.cs")));
         Assert.False(File.Exists(Path.Combine(root, "src", "backend", "Host", "Tooba.Host", "Admin", "AdminOrderOperationsComposer.cs")));
         Assert.False(File.Exists(Path.Combine(root, "src", "backend", "Host", "Tooba.Host", "Admin", "AdminOrderOperationsEndpoints.cs")));

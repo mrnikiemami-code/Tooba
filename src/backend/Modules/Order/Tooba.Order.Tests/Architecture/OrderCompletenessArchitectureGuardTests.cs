@@ -97,7 +97,7 @@ public sealed class OrderCompletenessArchitectureGuardTests
     public void Endpoints_delegate_every_completeness_route_to_isender()
     {
         var endpoints = File.ReadAllText(Path.Combine(
-            OrderRoot(), "Tooba.Order.Endpoints", "AdminOrderCompletenessEndpoints.cs"));
+            OrderRoot(), "Tooba.Order.Endpoints", "Admin", "Completeness", "AdminOrderCompletenessEndpoints.cs"));
         Assert.Contains("ISender sender", endpoints, StringComparison.Ordinal);
         Assert.Contains("ApiResponseFactory api", endpoints, StringComparison.Ordinal);
         Assert.Equal(6, CountOccurrences(endpoints, "sender.Send("));

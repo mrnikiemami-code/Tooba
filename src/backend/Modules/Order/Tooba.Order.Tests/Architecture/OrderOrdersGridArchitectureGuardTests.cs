@@ -61,7 +61,7 @@ public sealed class OrderOrdersGridArchitectureGuardTests
     public void Orders_grid_route_is_mapped_once_and_only_by_order_endpoints()
     {
         var endpoints = File.ReadAllText(Path.Combine(
-            OrderRoot(), "Tooba.Order.Endpoints", "AdminOrdersGridEndpoints.cs"));
+            OrderRoot(), "Tooba.Order.Endpoints", "Admin", "OrdersGrid", "AdminOrdersGridEndpoints.cs"));
         Assert.Contains("/v1/admin/orders/query", endpoints, StringComparison.Ordinal);
         Assert.Contains("ISender sender", endpoints, StringComparison.Ordinal);
         Assert.Contains("ApiResponseFactory api", endpoints, StringComparison.Ordinal);

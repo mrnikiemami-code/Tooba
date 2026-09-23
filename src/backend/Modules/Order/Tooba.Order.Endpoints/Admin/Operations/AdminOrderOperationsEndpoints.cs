@@ -36,7 +36,9 @@ using Tooba.Order.Application.Admin.Operations.Queries.ListAdminOrderReturnEligi
 using Tooba.BuildingBlocks;
 using Tooba.BuildingBlocks.Results;
 
-namespace Tooba.Order.Endpoints;
+using Tooba.Order.Endpoints;
+
+namespace Tooba.Order.Endpoints.Admin.Operations;
 
 internal static class AdminOrderOperationsEndpoints
 {

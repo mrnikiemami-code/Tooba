@@ -97,7 +97,12 @@ public sealed class OrderEndpointValidatorCoverageGuardTests
 
         var endpointText = string.Join(
             "\n",
-            Directory.GetFiles(Path.Combine(RepoRoot(), "src", "backend", "Modules", "Order", "Tooba.Order.Endpoints"), "*.cs")
+            Directory.GetFiles(
+                    Path.Combine(RepoRoot(), "src", "backend", "Modules", "Order", "Tooba.Order.Endpoints"),
+                    "*.cs",
+                    SearchOption.AllDirectories)
+                .Where(p => !p.Contains($"{Path.DirectorySeparatorChar}obj{Path.DirectorySeparatorChar}", StringComparison.Ordinal)
+                    && !p.Contains($"{Path.DirectorySeparatorChar}bin{Path.DirectorySeparatorChar}", StringComparison.Ordinal))
                 .Select(File.ReadAllText));
 
         foreach (var (name, _) in Manifest)

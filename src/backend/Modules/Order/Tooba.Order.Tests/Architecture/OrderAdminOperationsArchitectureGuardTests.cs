@@ -22,7 +22,7 @@ public sealed class OrderAdminOperationsArchitectureGuardTests
     public void Order_endpoints_own_ops_routes_via_ISender()
     {
         var endpoints = File.ReadAllText(Path.Combine(
-            OrderRoot(), "Tooba.Order.Endpoints", "AdminOrderOperationsEndpoints.cs"));
+            OrderRoot(), "Tooba.Order.Endpoints", "Admin", "Operations", "AdminOrderOperationsEndpoints.cs"));
         Assert.Contains("/{checkoutId:guid}/operations", endpoints, StringComparison.Ordinal);
         Assert.Contains("return-eligibility", endpoints, StringComparison.Ordinal);
         Assert.Contains("ISender", endpoints, StringComparison.Ordinal);
@@ -178,7 +178,7 @@ public sealed class OrderAdminOperationsArchitectureGuardTests
     public void Order_endpoints_own_recovery_supply_routes_via_ISender()
     {
         var endpoints = File.ReadAllText(Path.Combine(
-            OrderRoot(), "Tooba.Order.Endpoints", "AdminOrderInventoryRecoverySupplyEndpoints.cs"));
+            OrderRoot(), "Tooba.Order.Endpoints", "Admin", "InventoryRecovery", "AdminOrderInventoryRecoverySupplyEndpoints.cs"));
         Assert.Contains("inventory-recovery/audit", endpoints, StringComparison.Ordinal);
         Assert.Contains("inventory-recovery", endpoints, StringComparison.Ordinal);
         Assert.Contains("supply-status", endpoints, StringComparison.Ordinal);

@@ -50,7 +50,7 @@ public sealed class OrderAdminOrderDetailArchitectureGuardTests
     public void Order_endpoints_own_detail_route_via_ISender()
     {
         var endpoints = File.ReadAllText(Path.Combine(
-            OrderRoot(), "Tooba.Order.Endpoints", "AdminOrderDetailEndpoints.cs"));
+            OrderRoot(), "Tooba.Order.Endpoints", "Admin", "Detail", "AdminOrderDetailEndpoints.cs"));
         Assert.Contains("/v1/admin/orders/{checkoutId:guid}", endpoints, StringComparison.Ordinal);
         Assert.Contains("ISender sender", endpoints, StringComparison.Ordinal);
         Assert.Contains("ApiResponseFactory api", endpoints, StringComparison.Ordinal);

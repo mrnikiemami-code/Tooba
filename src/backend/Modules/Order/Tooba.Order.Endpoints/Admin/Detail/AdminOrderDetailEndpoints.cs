@@ -5,7 +5,9 @@ using Microsoft.AspNetCore.Routing;
 using Tooba.BuildingBlocks.Presentation;
 using Tooba.Order.Application.Admin.Detail.Queries.GetAdminOrderDetail;
 
-namespace Tooba.Order.Endpoints;
+using Tooba.Order.Endpoints;
+
+namespace Tooba.Order.Endpoints.Admin.Detail;
 
 internal static class AdminOrderDetailEndpoints
 {

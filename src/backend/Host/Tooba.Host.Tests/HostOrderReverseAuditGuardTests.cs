@@ -71,12 +71,12 @@ public sealed class HostOrderReverseAuditGuardTests
         Assert.Contains(files, f => f.Equals("Admin/AdminPanelEndpoints.cs", StringComparison.Ordinal));
 
         var orderAdminOrders = File.ReadAllText(Path.Combine(
-            root, "src", "backend", "Modules", "Order", "Tooba.Order.Endpoints", "AdminOrdersGridEndpoints.cs"));
+            root, "src", "backend", "Modules", "Order", "Tooba.Order.Endpoints", "Admin", "OrdersGrid", "AdminOrdersGridEndpoints.cs"));
         Assert.Contains("MapGet(\"/v1/admin/orders\"", orderAdminOrders, StringComparison.Ordinal);
         Assert.Contains("ListAdminOrdersQuery", orderAdminOrders, StringComparison.Ordinal);
 
         var orderAdminCustomers = File.ReadAllText(Path.Combine(
-            root, "src", "backend", "Modules", "Order", "Tooba.Order.Endpoints", "AdminCustomersEndpoints.cs"));
+            root, "src", "backend", "Modules", "Order", "Tooba.Order.Endpoints", "Admin", "Customers", "AdminCustomersEndpoints.cs"));
         Assert.Contains("MapGet(\"/v1/admin/customers\"", orderAdminCustomers, StringComparison.Ordinal);
         Assert.Contains("MapPost(\"/v1/admin/customers/query\"", orderAdminCustomers, StringComparison.Ordinal);
 
@@ -88,7 +88,7 @@ public sealed class HostOrderReverseAuditGuardTests
         Assert.Contains(files, f => f.Equals("Customer/HostOrderCustomerAuthorizer.cs", StringComparison.Ordinal));
 
         var orderCustomerEndpoints = File.ReadAllText(Path.Combine(
-            root, "src", "backend", "Modules", "Order", "Tooba.Order.Endpoints", "CustomerOrderEndpoints.cs"));
+            root, "src", "backend", "Modules", "Order", "Tooba.Order.Endpoints", "Customer", "CustomerOrderEndpoints.cs"));
         Assert.Contains("MapGet(\"/orders\"", orderCustomerEndpoints, StringComparison.Ordinal);
         Assert.Contains("MapPost(\"/orders/{checkoutId:guid}/retry-unpaid\"", orderCustomerEndpoints, StringComparison.Ordinal);
 
@@ -101,7 +101,7 @@ public sealed class HostOrderReverseAuditGuardTests
         Assert.Contains(files, f => f.Equals("Seller/HostSellerOrderViewAccessReader.cs", StringComparison.Ordinal));
 
         var orderSellerEndpoints = File.ReadAllText(Path.Combine(
-            root, "src", "backend", "Modules", "Order", "Tooba.Order.Endpoints", "SellerOrderEndpoints.cs"));
+            root, "src", "backend", "Modules", "Order", "Tooba.Order.Endpoints", "Seller", "SellerOrderEndpoints.cs"));
         Assert.Contains("MapGet(\"/orders\"", orderSellerEndpoints, StringComparison.Ordinal);
         Assert.Contains("MapGet(\"/orders/{sellerOrderId:guid}\"", orderSellerEndpoints, StringComparison.Ordinal);
 

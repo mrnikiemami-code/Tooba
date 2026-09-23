@@ -7,7 +7,9 @@ using Tooba.Order.Application.Admin.InventoryRecovery.Queries.AssessOrderInvento
 using Tooba.Order.Application.Admin.InventoryRecovery.Queries.AuditOrderInventoryRecovery;
 using Tooba.Order.Application.Admin.Supply.Queries.GetOrderSupplyStatus;
 
-namespace Tooba.Order.Endpoints;
+using Tooba.Order.Endpoints;
+
+namespace Tooba.Order.Endpoints.Admin.InventoryRecovery;
 
 internal static class AdminOrderInventoryRecoverySupplyEndpoints
 {

@@ -7,7 +7,9 @@ using Tooba.BuildingBlocks.Presentation;
 using Tooba.Order.Application.Admin.LegacyList.Queries.ListAdminOrders;
 using Tooba.Order.Application.Admin.OrdersGrid.Queries.QueryAdminOrdersGrid;
 
-namespace Tooba.Order.Endpoints;
+using Tooba.Order.Endpoints;
+
+namespace Tooba.Order.Endpoints.Admin.OrdersGrid;
 
 internal static class AdminOrdersGridEndpoints
 {

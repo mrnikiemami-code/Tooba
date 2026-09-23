@@ -50,7 +50,7 @@ public sealed class OrderAdminPanelResidualArchitectureGuardTests
     public void Order_endpoints_own_admin_orders_list_and_customers_via_ISender()
     {
         var orders = File.ReadAllText(Path.Combine(
-            OrderRoot(), "Tooba.Order.Endpoints", "AdminOrdersGridEndpoints.cs"));
+            OrderRoot(), "Tooba.Order.Endpoints", "Admin", "OrdersGrid", "AdminOrdersGridEndpoints.cs"));
         Assert.Contains("MapGet(\"/v1/admin/orders\"", orders, StringComparison.Ordinal);
         Assert.Contains("ListAdminOrdersQuery", orders, StringComparison.Ordinal);
         Assert.Contains("ISender sender", orders, StringComparison.Ordinal);
@@ -58,7 +58,7 @@ public sealed class OrderAdminPanelResidualArchitectureGuardTests
         Assert.Contains("IOrderAdminAuthorizer", orders, StringComparison.Ordinal);
 
         var customers = File.ReadAllText(Path.Combine(
-            OrderRoot(), "Tooba.Order.Endpoints", "AdminCustomersEndpoints.cs"));
+            OrderRoot(), "Tooba.Order.Endpoints", "Admin", "Customers", "AdminCustomersEndpoints.cs"));
         Assert.Contains("MapGet(\"/v1/admin/customers\"", customers, StringComparison.Ordinal);
         Assert.Contains("MapPost(\"/v1/admin/customers/query\"", customers, StringComparison.Ordinal);
         Assert.Contains("ListAdminCustomersQuery", customers, StringComparison.Ordinal);

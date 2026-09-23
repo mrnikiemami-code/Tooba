@@ -1,7 +1,7 @@
 using Tooba.BuildingBlocks;
 using Tooba.Host.Storefront;
 using Tooba.Order.Application.Customer;
-using Tooba.Order.Endpoints;
+using Tooba.Order.Endpoints.Customer;
 
 namespace Tooba.Host.Customer;
 

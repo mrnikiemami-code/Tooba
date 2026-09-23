@@ -47,7 +47,7 @@ public sealed class OrderCustomerPanelArchitectureGuardTests
     public void Order_endpoints_own_customer_order_routes_via_ISender()
     {
         var endpoints = File.ReadAllText(Path.Combine(
-            OrderRoot(), "Tooba.Order.Endpoints", "CustomerOrderEndpoints.cs"));
+            OrderRoot(), "Tooba.Order.Endpoints", "Customer", "CustomerOrderEndpoints.cs"));
         Assert.Contains("/orders", endpoints, StringComparison.Ordinal);
         Assert.Contains("/orders/{checkoutId:guid}", endpoints, StringComparison.Ordinal);
         Assert.Contains("/orders/{checkoutId:guid}/retry-unpaid", endpoints, StringComparison.Ordinal);

@@ -15,7 +15,7 @@ using Tooba.Order.Application.Storefront.Shipping.Commands.CommitStorefrontShipp
 using Tooba.Order.Application.Storefront.Shipping.Commands.SaveStorefrontShippingSelection;
 using Tooba.Order.Application.Storefront.Shipping.Queries.ProjectStorefrontShipping;
 
-namespace Tooba.Order.Endpoints;
+namespace Tooba.Order.Endpoints.Storefront;
 
 internal static class StorefrontOrderEndpoints
 {

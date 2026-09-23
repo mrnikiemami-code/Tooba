@@ -7,7 +7,7 @@ using Tooba.BuildingBlocks.Presentation;
 using Tooba.Order.Application.Seller.Queries.GetSellerOrderDetail;
 using Tooba.Order.Application.Seller.Queries.ListSellerOrders;
 
-namespace Tooba.Order.Endpoints;
+namespace Tooba.Order.Endpoints.Seller;
 
 /// <summary>Host transport adapter — resolves authorized seller Actor for Order seller routes.</summary>
 public interface IOrderSellerAuthorizer

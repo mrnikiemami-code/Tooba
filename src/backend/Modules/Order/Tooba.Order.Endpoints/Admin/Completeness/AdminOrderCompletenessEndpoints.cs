@@ -11,7 +11,9 @@ using Tooba.Order.Application.Admin.Completeness.Queries.GetAdminOrderOperationa
 using Tooba.Order.Application.Admin.Completeness.Queries.GetAdminOrderReceipt;
 using Tooba.Order.Application.Admin.Completeness.Queries.ListAdminOrderNotes;
 
-namespace Tooba.Order.Endpoints;
+using Tooba.Order.Endpoints;
+
+namespace Tooba.Order.Endpoints.Admin.Completeness;
 
 internal static class AdminOrderCompletenessEndpoints
 {

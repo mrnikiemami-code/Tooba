@@ -178,7 +178,7 @@ public sealed class AdminOrderCompletenessTests
     public void Completeness_and_directory_contracts_are_wired()
     {
         var endpoints = File.ReadAllText(Path.Combine(
-            FindRepoRoot(), "src", "backend", "Modules", "Order", "Tooba.Order.Endpoints", "AdminOrderCompletenessEndpoints.cs"));
+            FindRepoRoot(), "src", "backend", "Modules", "Order", "Tooba.Order.Endpoints", "Admin", "Completeness", "AdminOrderCompletenessEndpoints.cs"));
         var directory = File.ReadAllText(Path.Combine(
             FindRepoRoot(), "src", "backend", "Modules", "Order", "Tooba.Order.Infrastructure", "CheckoutDirectory.cs"));
         var contracts = File.ReadAllText(Path.Combine(

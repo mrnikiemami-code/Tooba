@@ -176,7 +176,7 @@ public sealed class StorefrontPendingPaymentTests
     {
         var root = FindRepoRoot();
         var composer = File.ReadAllText(Path.Combine(root, "src", "backend", "Modules", "Order", "Tooba.Order.Application", "Storefront", "Services", "StorefrontPendingPaymentService.cs"));
-        var endpoints = File.ReadAllText(Path.Combine(root, "src", "backend", "Modules", "Order", "Tooba.Order.Endpoints", "StorefrontOrderEndpoints.cs"));
+        var endpoints = File.ReadAllText(Path.Combine(root, "src", "backend", "Modules", "Order", "Tooba.Order.Endpoints", "Storefront", "StorefrontOrderEndpoints.cs"));
         var cart = File.ReadAllText(Path.Combine(root, "src", "frontend", "app", "storefront", "storefront-cart.tsx"));
         var pendingUi = File.ReadAllText(Path.Combine(root, "src", "frontend", "app", "storefront", "storefront-pending-payments.tsx"));
         var pendingApi = File.ReadAllText(Path.Combine(root, "src", "frontend", "app", "storefront", "storefront-pending-payment-api.ts"));
