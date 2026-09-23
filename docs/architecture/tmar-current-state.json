@@ -3,10 +3,10 @@
     "executionMode":  "BACKEND_ONLY_UNTIL_EXPLICIT_RELEASE",
     "frontendFrozen":  true,
     "checkoutState":  "PAUSED_AT_SAFE_W5_CHECKPOINT",
-    "lastAcceptedTask":  "TB-TMAR-GOLDEN-WAVE-FINAL-CLOSURE-001",
-    "lastAcceptedCommit":  "024ce2b5708aa70ad9f395b4dcbe48fdd6912c5a",
-    "nextTask":  "TB-TMAR-ORDER-GOLDEN-001-FINAL-CLOSURE",
-    "nextTaskGate":  "ORDER_GOLDEN_REPAIR_REQUIRED",
+    "lastAcceptedTask":  "TB-TMAR-ORDER-GOLDEN-001-FINAL-CLOSURE",
+    "lastAcceptedCommit":  "PENDING_FINAL_CLOSURE_COMMIT",
+    "nextTask":  "USER_REVIEW_ORDER_COMPLETE_REFERENCE",
+    "nextTaskGate":  "USER_REVIEW_REQUIRED_BEFORE_NEXT_TMAR_WAVE",
     "goldenWaveState":  "COMPLETE",
     "goldenWaveUserReview":  "USER_ACCEPTED",
     "goldenWaveClosedBy":  "TB-TMAR-GOLDEN-WAVE-FINAL-CLOSURE-001",
@@ -106,6 +106,15 @@
                                          "lastAcceptedCommit":  "813184b90906489b5654694b60afc96c4803cd3d"
                                      },
                                      {
+                                         "module":  "Order",
+                                         "state":  "COMPLETE_REFERENCE_PATTERN",
+                                         "httpApplicability":  "HTTP_OWNING",
+                                         "endpointOwnership":  "MODULE_ENDPOINTS",
+                                         "cqrs":  "MEDIATR_12_5",
+                                         "lastAcceptedTask":  "TB-TMAR-ORDER-GOLDEN-001-FINAL-CLOSURE",
+                                         "lastAcceptedCommit":  "PENDING_FINAL_CLOSURE_COMMIT"
+                                     },
+                                     {
                                          "module":  "Inventory",
                                          "state":  "COMPLETE_REFERENCE_PATTERN",
                                          "httpApplicability":  "INTERNAL_ONLY",
@@ -122,34 +131,6 @@
 
                                            ],
     "activeModuleRecovery":  {
-                                 "module":  "Order",
-                                 "state":  "INCOMPLETE_REFERENCE_REPAIR",
-                                 "task":  "TB-TMAR-ORDER-GOLDEN-001-R11-R1",
-                                 "completedSlices":  [
-                                                         "ORDER_ENDPOINTS_FOUNDATION",
-                                                         "ADMIN_ORDER_COMPLETENESS_CQRS",
-                                                         "ADMIN_ORDER_COMPLETENESS_BEHAVIOR_PARITY",
-                                                         "ADMIN_ORDER_COMPLETENESS_OFFER_STYLE_CQRS",
-                                                         "ADMIN_ORDER_COMPLETENESS_FINAL_CLOSURE",
-                                                         "ADMIN_ORDERS_GRID_CQRS",
-                                                         "ADMIN_ORDER_OPERATIONS_CQRS",
-                                                         "ADMIN_ORDER_OPERATIONS_TYPED_CQRS_R3B_R1",
-                                                         "ADMIN_ORDER_OPERATIONS_TYPED_FAULT_R3B_R2",
-                                                         "ADMIN_ORDER_OPERATIONS_TYPED_FAULT_SOURCE_R3B_R3",
-                                                         "ADMIN_ORDER_INVENTORY_RECOVERY_SUPPLY_CQRS_R4",
-                                                         "ADMIN_ORDER_RECOVERY_SUPPLY_CLOCK_FAULT_R4_R1",
-                                                         "STOREFRONT_ORDER_CQRS_R5",
-                                                         "STOREFRONT_CHECKOUT_ABUSE_TYPED_R5_R1",
-                                                         "ADMIN_ORDER_DETAIL_CQRS_R6",
-                                                         "HOST_ORDER_REVERSE_AUDIT_R7",
-                                                         "RESERVATION_CYCLE_POLICY_RETRY_EXPIRY_R8",
-                                                         "CUSTOMER_PANEL_ORDER_CQRS_R9",
-                                                         "SELLER_PANEL_ORDER_CQRS_R10",
-                                                         "ADMIN_PANEL_ORDER_RESIDUALS_CQRS_R11",
-                                                         "HOST_ORDER_SYMBOLIC_SWEEP_R11_R1"
-                                                     ],
-                                 "nextTask":  "TB-TMAR-ORDER-GOLDEN-001-FINAL-CLOSURE",
-                                 "checkoutState":  "PAUSED_AT_SAFE_W5_CHECKPOINT",
-                                 "notes":  "R11-R1: Host symbolic Order sweep closed dead AdminOrderCompletenessModels; reverse-audit discovery includes filename/type Order symbols. R11 migrations preserved. Order stays INCOMPLETE_REFERENCE_REPAIR until Architect FINAL-CLOSURE. Checkout PAUSED_AT_SAFE_W5. Do not start FINAL-CLOSURE."
+
                              }
 }

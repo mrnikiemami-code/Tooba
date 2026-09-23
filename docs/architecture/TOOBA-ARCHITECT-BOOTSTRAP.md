@@ -6,15 +6,16 @@ Canonical bootstrap for recovering the Tooba architecture context after chat/ses
 
 - Locks: ARCH-COMPLETE-001, HOST-MODULE-ENDPOINT-001, ARCH-CQRS-001/002
 - Golden wave = COMPLETE + USER_ACCEPTED; backend-only; frontendFrozen = true
-- Complete modules: Cart, Settlement, Fulfillment, Returns, Notification, Support, Wallet, Payment, Promotion, Offer, Inventory
-- Ten HTTP-owning modules use MODULE_ENDPOINTS + MEDIATR_12_5.
+- Complete modules: Cart, Settlement, Fulfillment, Returns, Notification, Support, Wallet, Payment, Promotion, Offer, Order, Inventory
+- Eleven HTTP-owning modules use MODULE_ENDPOINTS + MEDIATR_12_5.
 - Inventory = INTERNAL_ONLY / NOT_APPLICABLE / INTERNAL_USE_CASE_BOUNDARIES
-- reopenedModules = empty; internalApplicabilityReviewModules = empty
+- reopenedModules = empty; internalApplicabilityReviewModules = empty; activeModuleRecovery = empty
 - Checkout = PAUSED_AT_SAFE_W5_CHECKPOINT
-- Order = INCOMPLETE_REFERENCE_REPAIR after TB-TMAR-ORDER-GOLDEN-001-R11-R1 Host symbolic Order sweep (prior: TB-TMAR-ORDER-GOLDEN-001-R11, TB-TMAR-ORDER-GOLDEN-001-R10, TB-TMAR-ORDER-GOLDEN-001-R9, TB-TMAR-ORDER-GOLDEN-001-R8, TB-TMAR-ORDER-GOLDEN-001-R7, TB-TMAR-ORDER-GOLDEN-001-R6, TB-TMAR-ORDER-GOLDEN-001-R3, TB-TMAR-ORDER-GOLDEN-001-R3B, TB-TMAR-ORDER-GOLDEN-001-R4, TB-TMAR-ORDER-GOLDEN-001-R4-R1, TB-TMAR-ORDER-GOLDEN-001-R5, TB-TMAR-ORDER-GOLDEN-001-R5-R1)
-- Current next task: TB-TMAR-ORDER-GOLDEN-001-FINAL-CLOSURE
-- Gate: ORDER_GOLDEN_REPAIR_REQUIRED
+- Order = COMPLETE_REFERENCE_PATTERN after TB-TMAR-ORDER-GOLDEN-001-FINAL-CLOSURE (prior: TB-TMAR-ORDER-GOLDEN-001-R11-R1, R11, R10, R9, R8, R7, R6, R3, R3B, R4, R4-R1, R5, R5-R1)
+- Current next task: USER_REVIEW_ORDER_COMPLETE_REFERENCE
+- Gate: USER_REVIEW_REQUIRED_BEFORE_NEXT_TMAR_WAVE
 - Closed by: TB-TMAR-GOLDEN-WAVE-FINAL-CLOSURE-001
+- Order closed by: TB-TMAR-ORDER-GOLDEN-001-FINAL-CLOSURE
 
 1. Primary Goal
 
@@ -40,14 +41,14 @@ Accepted architecture baseline:
 TB-TMAR-ARCH-BASELINE
 
 Current next task:
-TB-TMAR-ORDER-GOLDEN-001-FINAL-CLOSURE
+USER_REVIEW_ORDER_COMPLETE_REFERENCE
 
 Current recovery summary (consistent with the authoritative closure above):
-COMPLETE HTTP-owning: Cart, Settlement, Fulfillment, Returns, Notification, Support, Wallet, Payment, Promotion, Offer.
+COMPLETE HTTP-owning: Cart, Settlement, Fulfillment, Returns, Notification, Support, Wallet, Payment, Promotion, Offer, Order.
 Inventory COMPLETE_REFERENCE_PATTERN as INTERNAL_ONLY / NOT_APPLICABLE / INTERNAL_USE_CASE_BOUNDARIES.
 Checkout PAUSED_AT_SAFE_W5_CHECKPOINT. Tax/Pricing UNTOUCHED in this wave. Frontend BACKEND_ONLY_UNTIL_EXPLICIT_RELEASE.
 Machine-readable: docs/architecture/tmar-current-state.json
-Current gate: ORDER_GOLDEN_REPAIR_REQUIRED.
+Current gate: USER_REVIEW_REQUIRED_BEFORE_NEXT_TMAR_WAVE.
 
 HISTORICAL / SUPERSEDED next-task wording (do not use as current):
 TB-TMAR-PROMOTION-GOLDEN-001 after premature Payment COMPLETE; TB-TMAR-NEXT-MODULE-BATCH-002 after TB-TMAR-NEXT-MODULE-BATCH-001. Inventory/Promotion COMPLETE_REFERENCE_PATTERN. Module-Recovery-State NEXT_REFERENCE_BATCH_COMPLETE.
