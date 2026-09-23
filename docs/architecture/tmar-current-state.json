@@ -1,10 +1,10 @@
-{
+﻿{
     "program":  "TMAR — Tooba Microservice-Ready Architecture Recovery",
     "executionMode":  "BACKEND_ONLY_UNTIL_EXPLICIT_RELEASE",
     "frontendFrozen":  true,
     "checkoutState":  "PAUSED_AT_SAFE_W5_CHECKPOINT",
     "lastAcceptedTask":  "TB-TMAR-CART-HOST-RESIDUAL-REVERIFY-001",
-    "lastAcceptedCommit":  "PENDING_COMMIT",
+    "lastAcceptedCommit":  "ec39c98220f8d7d08bfb238157fc66ffa12128ae",
     "nextTask":  "USER_REVIEW_CART_HOST_REVERIFY",
     "nextTaskGate":  "USER_REVIEW_REQUIRED_BEFORE_NEXT_TMAR_WAVE",
     "goldenWaveState":  "COMPLETE",
@@ -58,7 +58,7 @@
                                          "endpointOwnership":  "MODULE_ENDPOINTS",
                                          "cqrs":  "MEDIATR_12_5",
                                          "lastAcceptedTask":  "TB-TMAR-CART-HOST-RESIDUAL-REVERIFY-001",
-                                         "lastAcceptedCommit":  "PENDING_COMMIT"
+                                         "lastAcceptedCommit":  "ec39c98220f8d7d08bfb238157fc66ffa12128ae"
                                      },
                                      {
                                          "module":  "Settlement",
