@@ -157,14 +157,12 @@ builder.Services.AddScoped<Tooba.Catalog.Application.IStoreLandingExternalRefere
 builder.Services.AddScoped<Tooba.Catalog.Application.IUnitOfMeasureLanguageGate, Tooba.Host.Admin.HostUnitOfMeasureLanguageGate>();
 builder.Services.AddToobaModules(builder.Configuration, builder.Environment);
 builder.Services.AddOfferModuleCallTracing();
-builder.Services.Configure<Tooba.Cart.Application.Lifetime.CartLifetimeOptions>(
-    builder.Configuration.GetSection(Tooba.Cart.Application.Lifetime.CartLifetimeOptions.SectionName));
+builder.Services.AddScoped<Tooba.Cart.Application.Ports.ICartPersistenceHoursResolver, Tooba.Host.HostCartPersistenceHoursResolver>();
 builder.Services.Configure<Tooba.Order.Application.ReservationCycle.Contracts.ReservationCycleOptions>(
     builder.Configuration.GetSection(Tooba.Order.Application.ReservationCycle.Contracts.ReservationCycleOptions.SectionName));
 builder.Services.AddScoped<CommerceHoldPolicy>();
 builder.Services.AddScoped<Tooba.Payment.Contracts.Hold.ICommerceHoldPolicySource>(sp => sp.GetRequiredService<CommerceHoldPolicy>());
 builder.Services.AddScoped<Tooba.Order.Application.Checkout.Contracts.ICheckoutReservationHoldPolicy>(sp => sp.GetRequiredService<CommerceHoldPolicy>());
-builder.Services.AddScoped<Tooba.Cart.Application.Ports.ICartPersistenceHoursSource>(sp => sp.GetRequiredService<CommerceHoldPolicy>());
 builder.Services.AddScoped<Tooba.Host.Admin.ProductWorkspaceComposer>();
 builder.Services.AddScoped<Tooba.Host.Grid.AdminContentGridQueryEngine>();
 builder.Services.AddScoped<Tooba.Host.Grid.AdminStoryGridQueryEngine>();

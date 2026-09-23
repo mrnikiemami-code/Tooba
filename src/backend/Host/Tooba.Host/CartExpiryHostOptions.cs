@@ -1,7 +1,8 @@
 namespace Tooba.Host;
 
 /// <summary>
-/// تنظیمات کارگر انقضای سبد از بخش <c>Tooba:CartExpiry</c>. مستقل از Outbox است.
+/// کارگر انقضای سبد از بخش <c>Tooba:CartExpiry</c>. مستقل از Outbox است.
+/// فقط knobs اجرای Host؛ سیاست عمر سبد مال Cart است.
 /// </summary>
 internal sealed class CartExpiryHostOptions
 {

@@ -11,7 +11,7 @@ public sealed class CartArchitectureGuardTests
         ["Ports", "Lifetime", "Conversion", "Commands", "Queries", "Models", "Errors", "Presentation"];
     private static readonly string[] AllowedContractsFolders = ["Checkout", "Presentation"];
     private static readonly string[] AllowedInfrastructureFolders =
-        ["Persistence", "Directories", "Messaging", "DependencyInjection", "Events", "Security", "Migrations"];
+        ["Persistence", "Directories", "Messaging", "DependencyInjection", "Events", "Security", "Migrations", "Lifetime"];
     private static readonly string[] AllowedEndpointsFolders = ["Storefront", "Errors", "Resources"];
 
     private static readonly HashSet<string> HostDbContextAllowlist = new(StringComparer.OrdinalIgnoreCase)

@@ -1,7 +1,5 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
-using Tooba.Cart.Application;
-using Tooba.Cart.Application.Lifetime;
 using Tooba.Cart.Application.Ports;
 using Tooba.Catalog.Domain;
 using Tooba.Catalog.Infrastructure.Persistence;
@@ -21,12 +19,13 @@ using Tooba.Payment.Infrastructure.Providers;
 namespace Tooba.Host;
 
 /// <summary>
-/// حل مهلت: روش پرداخت &gt; فروشگاه &gt; Payment:Gateway / Cart:PersistenceHours.
+/// حل مهلت پرداخت/رزرو: روش پرداخت &gt; فروشگاه &gt; Payment:Gateway.
+/// ماندگاری سبد اینجا محاسبه نمی‌شود؛ مالک آن Cart است.
 /// </summary>
-public sealed class CommerceHoldPolicy : ICommerceHoldPolicySource, ICheckoutReservationHoldPolicy, ICartPersistenceHoursSource
+public sealed class CommerceHoldPolicy : ICommerceHoldPolicySource, ICheckoutReservationHoldPolicy
 {
     private readonly PaymentGatewayOptions _gateway;
-    private readonly CartLifetimeOptions _cart;
+    private readonly ICartPersistenceHoursSource _cartPersistence;
     private readonly CatalogDbContext _catalog;
     private readonly IPaymentHoldSettingsGateway _paymentHolds;
     private StoreHoldPolicySettings? _store;
@@ -36,23 +35,19 @@ public sealed class CommerceHoldPolicy : ICommerceHoldPolicySource, ICheckoutRes
     /// <summary>سیاست را به Options و درگاه تنظیمات Payment وصل می‌کند.</summary>
     public CommerceHoldPolicy(
         IOptions<PaymentGatewayOptions> gateway,
-        IOptions<CartLifetimeOptions> cart,
+        ICartPersistenceHoursSource cartPersistence,
         CatalogDbContext catalog,
         IPaymentHoldSettingsGateway paymentHolds)
     {
         _gateway = gateway.Value;
-        _cart = cart.Value;
+        _cartPersistence = cartPersistence;
         _catalog = catalog;
         _paymentHolds = paymentHolds;
     }
 
     /// <inheritdoc />
-    public int ResolveCartPersistenceHours()
-    {
-        Load();
-        var platform = Math.Clamp(_cart.PersistenceHours <= 0 ? 168 : _cart.PersistenceHours, 1, 24 * 90);
-        return Clamp(_store?.CartPersistenceHours ?? platform, 1, 24 * 90);
-    }
+    /// <remarks>Cart owns the persistence policy; Host only forwards the Cart-owned value.</remarks>
+    public int ResolveCartPersistenceHours() => _cartPersistence.ResolvePersistenceHours();
 
     /// <inheritdoc />
     public int ResolveOnlineHoldHours(string? providerCode)
@@ -106,9 +101,6 @@ public sealed class CommerceHoldPolicy : ICommerceHoldPolicySource, ICheckoutRes
     /// <inheritdoc />
     public DateTimeOffset ResolveManualReviewExpiresAt(DateTimeOffset utcNow) =>
         utcNow.AddHours(ResolveManualReviewHoldHours("manual"));
-
-    /// <inheritdoc />
-    public int ResolvePersistenceHours() => ResolveCartPersistenceHours();
 
     private void Load()
     {

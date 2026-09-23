@@ -43,6 +43,7 @@ public sealed class CatalogModule : IToobaModule
         services.AddScoped<ICatalogOfferReadGateway, CatalogOfferReadGateway>();
         services.AddScoped<IStoreCheckoutAbuseSettingsReader, StoreCheckoutAbuseSettingsReader>();
         services.AddScoped<IReservationCycleHoldPolicyReader, ReservationCycleHoldPolicyReader>();
+        services.AddScoped<IStoreCartPersistenceHoursReader, StoreCartPersistenceHoursReader>();
         services.AddScoped<IStoreLandingPageDirectory, StoreLandingPageDirectory>();
         services.AddScoped<IStoreMenuDirectory, StoreMenuDirectory>();
         services.AddScoped<IStoreAppearanceSettingsDirectory, StoreAppearanceSettingsDirectory>();

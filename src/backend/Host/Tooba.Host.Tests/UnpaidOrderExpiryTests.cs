@@ -73,9 +73,14 @@ public sealed class UnpaidOrderExpiryTests
     public void Cart_persistence_is_independent_of_hold()
     {
         Assert.Contains("ICartPersistenceHoursSource", Read("src/backend/Modules/Cart/Tooba.Cart.Application/Ports/ICartPersistenceHoursSource.cs"), StringComparison.Ordinal);
+        Assert.Contains("ICartPersistenceHoursResolver", Read("src/backend/Modules/Cart/Tooba.Cart.Application/Ports/ICartPersistenceHoursResolver.cs"), StringComparison.Ordinal);
         var cart = Read("src/backend/Modules/Cart/Tooba.Cart.Infrastructure/Directories/CartDirectory.cs");
         Assert.Contains("ResolvePersistenceTtl", cart, StringComparison.Ordinal);
         Assert.DoesNotContain("ReserveAsync", cart, StringComparison.Ordinal);
+        Assert.Contains("CartPersistenceHours", Read("src/backend/Modules/Cart/Tooba.Cart.Application/Ports/CartPersistenceHours.cs"), StringComparison.Ordinal);
+        var holdPolicy = Read("src/backend/Host/Tooba.Host/CommerceHoldPolicy.cs");
+        Assert.DoesNotContain("CartLifetimeOptions", holdPolicy, StringComparison.Ordinal);
+        Assert.DoesNotContain("24 * 90", holdPolicy, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -179,7 +184,7 @@ public sealed class UnpaidOrderExpiryTests
         Assert.Contains("GetStatusesAsync", Read("src/backend/Modules/Order/Tooba.Order.Application/Admin/Supply/Services/OrderSupplyService.cs"), StringComparison.Ordinal);
         Assert.DoesNotContain("ReserveAsync", Read("src/backend/Modules/Cart/Tooba.Cart.Infrastructure/Directories/CartDirectory.cs"), StringComparison.Ordinal);
         Assert.Contains(nameof(ICheckoutReservationHoldPolicy), typeof(ICheckoutReservationHoldPolicy).Name);
-        Assert.Contains("CartLifetimeOptions", typeof(CartLifetimeOptions).Name);
+        Assert.Contains("CartLifetimeOptions", Read("src/backend/Modules/Cart/Tooba.Cart.Application/Lifetime/CartLifetimeOptions.cs"), StringComparison.Ordinal);
     }
 
     [Fact]

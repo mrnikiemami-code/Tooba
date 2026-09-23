@@ -82,7 +82,9 @@ public sealed class CartLifetimeSeparationTests
     {
         var program = Read("src/backend/Host/Tooba.Host/Program.cs");
         Assert.Contains("ICheckoutReservationHoldPolicy", program, StringComparison.Ordinal);
-        Assert.Contains("CartLifetimeOptions", program, StringComparison.Ordinal);
+        Assert.Contains("ICartPersistenceHoursResolver", program, StringComparison.Ordinal);
+        Assert.DoesNotContain("CartLifetimeOptions", program, StringComparison.Ordinal);
+        Assert.Contains("CartLifetimeOptions", Read("src/backend/Modules/Cart/Tooba.Cart.Infrastructure/DependencyInjection/CartModule.cs"), StringComparison.Ordinal);
     }
 
     private static string Read(string relative)

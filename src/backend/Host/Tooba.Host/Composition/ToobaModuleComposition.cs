@@ -7,7 +7,7 @@ using Tooba.Party.Infrastructure;
 using Tooba.PlatformProbe.Infrastructure;
 using Tooba.Pricing.Infrastructure;
 using Tooba.Inventory.Infrastructure.DependencyInjection;
-using Tooba.Cart.Infrastructure;
+using Tooba.Cart.Infrastructure.DependencyInjection;
 using Tooba.Order.Infrastructure;
 using Tooba.Tax.Infrastructure;
 using Tooba.Promotion.Infrastructure.DependencyInjection;

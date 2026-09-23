@@ -1,14 +1,14 @@
 using System.Diagnostics.Metrics;
 using Microsoft.Extensions.Options;
 using Tooba.BuildingBlocks;
-using Tooba.Cart.Application;
-using Tooba.Cart.Application.Ports;
+using Tooba.Cart.Application.Lifetime;
 using Tooba.Persistence;
 
 namespace Tooba.Host;
 
 /// <summary>
-/// کارگر سرور: سبد منقضی را با claim امن PostgreSQL آزاد می‌کند تا موجودی Held قفل نماند.
+/// Host shell only: tenant loop, config, logging, telemetry.
+/// Cart expiry business reconciliation lives in <see cref="ICartExpiryReconciler"/>.
 /// </summary>
 internal sealed class CartExpiryHostedService : BackgroundService
 {
@@ -90,7 +90,7 @@ internal sealed class CartExpiryHostedService : BackgroundService
     }
 
     /// <summary>
-    /// برای هر Tenant فعال، سبد سررسیدشده را در سرور منقضی می‌کند.
+    /// برای هر Tenant فعال، یک reconciler تحت مالکیت Cart را صدا می‌زند.
     /// </summary>
     private async Task<int> ReconcileOnceAsync(CancellationToken cancellationToken)
     {
@@ -102,14 +102,9 @@ internal sealed class CartExpiryHostedService : BackgroundService
                 await using var scope = _scopes.CreateAsyncScope();
                 var assigner = scope.ServiceProvider.GetRequiredService<ICommerceContextAssigner>();
                 assigner.Assign(_workerContext.FromPollTarget(target, Guid.NewGuid().ToString("N")));
-                var carts = scope.ServiceProvider.GetRequiredService<ICartDirectory>();
-                using var activity = ToobaTelemetry.ActivitySource.StartActivity("tooba.cart_expiry.reconcile");
-                activity?.SetTag("tooba.tenant_id", target.TenantId ?? string.Empty);
-                var expired = await carts.ExpireDueCartsAsync(
-                    DateTimeOffset.UtcNow,
-                    _options.BatchSize,
-                    cancellationToken).ConfigureAwait(false);
-                total += expired;
+                var reconciler = scope.ServiceProvider.GetRequiredService<ICartExpiryReconciler>();
+                total += await reconciler.ReconcileAsync(_options.BatchSize, cancellationToken)
+                    .ConfigureAwait(false);
             }
             catch (Exception ex)
             {

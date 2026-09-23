@@ -1,6 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Tooba.BuildingBlocks;
-using Tooba.Cart.Application;
+using Tooba.Cart.Application.Ports;
 using Tooba.Catalog.Domain;
 using Tooba.Catalog.Infrastructure.Persistence;
 using Tooba.Order.Application;
@@ -73,7 +73,7 @@ public static class HoldPolicySettingsEndpoints
         IPaymentHoldSettingsGateway paymentHolds,
         IReservationCyclePolicyResolver resolver,
         Microsoft.Extensions.Options.IOptions<PaymentGatewayOptions> gateway,
-        Microsoft.Extensions.Options.IOptions<CartLifetimeOptions> cart,
+        ICartPersistenceHoursSource cartPersistence,
         HttpRequest request,
         CurrentAuthenticatedSession session,
         ICurrentTenant tenant,
@@ -85,7 +85,7 @@ public static class HoldPolicySettingsEndpoints
         {
             await AdminPanelAccess.RequireAuthorizedAsync(
                 request, session, tenant, guard, environment, cancellationToken);
-            return Results.Json(await BuildViewAsync(catalog, paymentHolds, resolver, gateway.Value, cart.Value, cancellationToken));
+            return Results.Json(await BuildViewAsync(catalog, paymentHolds, resolver, gateway.Value, cartPersistence, cancellationToken));
         }
         catch (PlatformHttpException ex)
         {
@@ -99,7 +99,7 @@ public static class HoldPolicySettingsEndpoints
         IPaymentHoldSettingsGateway paymentHolds,
         IReservationCyclePolicyResolver resolver,
         Microsoft.Extensions.Options.IOptions<PaymentGatewayOptions> gateway,
-        Microsoft.Extensions.Options.IOptions<CartLifetimeOptions> cart,
+        ICartPersistenceHoursSource cartPersistence,
         HttpRequest request,
         CurrentAuthenticatedSession session,
         ICurrentTenant tenant,
@@ -155,7 +155,7 @@ public static class HoldPolicySettingsEndpoints
             }
 
             await catalog.SaveChangesAsync(cancellationToken);
-            return Results.Json(await BuildViewAsync(catalog, paymentHolds, resolver, gateway.Value, cart.Value, cancellationToken));
+            return Results.Json(await BuildViewAsync(catalog, paymentHolds, resolver, gateway.Value, cartPersistence, cancellationToken));
         }
         catch (PlatformHttpException ex)
         {
@@ -168,7 +168,7 @@ public static class HoldPolicySettingsEndpoints
         IPaymentHoldSettingsGateway paymentHolds,
         IReservationCyclePolicyResolver resolver,
         PaymentGatewayOptions gateway,
-        CartLifetimeOptions cart,
+        ICartPersistenceHoursSource cartPersistence,
         CancellationToken cancellationToken)
     {
         var store = await catalog.StoreHoldPolicySettings.AsNoTracking()
@@ -177,7 +177,7 @@ public static class HoldPolicySettingsEndpoints
         var reservation = ReservationPolicyAdminComposer.ForStore(
             await resolver.PreviewAsync(null, null, cancellationToken),
             true);
-        var platformCart = Math.Clamp(cart.PersistenceHours <= 0 ? 168 : cart.PersistenceHours, 1, 24 * 90);
+        var platformCart = cartPersistence.ResolvePersistenceHours();
         var platformOnline = Math.Clamp(gateway.OnlinePaymentHoldHours <= 0 ? 2 : gateway.OnlinePaymentHoldHours, 1, 24 * 30);
         var platformManual = Math.Clamp(gateway.ManualPaymentInitialHoldHours <= 0 ? 2 : gateway.ManualPaymentInitialHoldHours, 1, 24 * 30);
         var platformReview = Math.Clamp(gateway.ManualPaymentReviewHoldHours <= 0 ? 24 : gateway.ManualPaymentReviewHoldHours, 1, 24 * 30);
