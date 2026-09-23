@@ -1,4 +1,4 @@
-﻿// ریشهٔ ترکیب Host: Observability، resolve Edition/Tenant، ماژول‌های صریح، Outbox dispatcher، MassTransit SQL Transport، کش درون‌فرآیندی.
+// ریشهٔ ترکیب Host: Observability، resolve Edition/Tenant، ماژول‌های صریح، Outbox dispatcher، MassTransit SQL Transport، کش درون‌فرآیندی.
 // Host ورودی routing است نه TenantId. کارگر Outbox و مصرف‌کننده Tenant را از Host نمی‌خوانند.
 // مسیرهای /__platform-* فقط Development/Testing هستند و قبل از استقرار عمومی باید محدود شوند.
 // لاگ فنی جایگزین Audit نیست. DbContext و Outbox برای /health و /ready باز نمی‌شوند.
@@ -159,11 +159,11 @@ builder.Services.AddToobaModules(builder.Configuration, builder.Environment);
 builder.Services.AddOfferModuleCallTracing();
 builder.Services.Configure<Tooba.Cart.Application.Lifetime.CartLifetimeOptions>(
     builder.Configuration.GetSection(Tooba.Cart.Application.Lifetime.CartLifetimeOptions.SectionName));
-builder.Services.Configure<Tooba.Order.Application.ReservationCycleOptions>(
-    builder.Configuration.GetSection(Tooba.Order.Application.ReservationCycleOptions.SectionName));
+builder.Services.Configure<Tooba.Order.Application.ReservationCycle.Contracts.ReservationCycleOptions>(
+    builder.Configuration.GetSection(Tooba.Order.Application.ReservationCycle.Contracts.ReservationCycleOptions.SectionName));
 builder.Services.AddScoped<CommerceHoldPolicy>();
 builder.Services.AddScoped<Tooba.Payment.Contracts.Hold.ICommerceHoldPolicySource>(sp => sp.GetRequiredService<CommerceHoldPolicy>());
-builder.Services.AddScoped<Tooba.Order.Application.ICheckoutReservationHoldPolicy>(sp => sp.GetRequiredService<CommerceHoldPolicy>());
+builder.Services.AddScoped<Tooba.Order.Application.Checkout.Contracts.ICheckoutReservationHoldPolicy>(sp => sp.GetRequiredService<CommerceHoldPolicy>());
 builder.Services.AddScoped<Tooba.Cart.Application.Ports.ICartPersistenceHoursSource>(sp => sp.GetRequiredService<CommerceHoldPolicy>());
 builder.Services.AddScoped<Tooba.Host.Admin.ProductWorkspaceComposer>();
 builder.Services.AddScoped<Tooba.Host.Grid.AdminContentGridQueryEngine>();

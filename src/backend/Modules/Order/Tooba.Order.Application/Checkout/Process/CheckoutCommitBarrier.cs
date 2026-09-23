@@ -1,4 +1,9 @@
-namespace Tooba.Order.Application;
+using Tooba.Order.Application.Checkout.Abuse;
+using Tooba.Order.Application.Checkout.Contracts;
+using Tooba.Order.Application.Checkout.Policies;
+using Tooba.Order.Application.Checkout.Process;
+
+namespace Tooba.Order.Application.Checkout.Process;
 
 /// <summary>
 /// نقاط تزریق خطای کنترل‌شده قبل از COMMIT اتمی checkout. پیاده‌سازی پیش‌فرض هیچ کاری نمی‌کند.

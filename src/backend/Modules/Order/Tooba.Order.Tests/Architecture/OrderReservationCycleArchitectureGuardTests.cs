@@ -1,5 +1,15 @@
 using Xunit;
 
+using Tooba.Order.Application.Checkout.Abuse;
+using Tooba.Order.Application.Checkout.Contracts;
+using Tooba.Order.Application.Checkout.Policies;
+using Tooba.Order.Application.Checkout.Process;
+using Tooba.Order.Application.PurchaseVerification;
+using Tooba.Order.Application.ReservationCycle.Contracts;
+using Tooba.Order.Application.ReservationCycle.Policies;
+using Tooba.Order.Application.ReservationCycle.Services;
+using Tooba.Order.Application.Seller.Policies;
+
 namespace Tooba.Order.Tests.Architecture;
 
 /// <summary>TB-TMAR-ORDER-GOLDEN-001-R8 — reservation cycle policy/retry/expiry ownership guards.</summary>
@@ -21,7 +31,7 @@ public sealed class OrderReservationCycleArchitectureGuardTests
     {
         var root = FindRepoRoot();
         var resolver = File.ReadAllText(Path.Combine(
-            root, "src", "backend", "Modules", "Order", "Tooba.Order.Application", "ReservationCyclePolicyResolver.cs"));
+            root, "src", "backend", "Modules", "Order", "Tooba.Order.Application", "ReservationCycle", "Policies", "ReservationCyclePolicyResolver.cs"));
         Assert.Contains("IReservationCycleHoldPolicyReader", resolver, StringComparison.Ordinal);
         Assert.DoesNotContain("CatalogDbContext", resolver, StringComparison.Ordinal);
         Assert.DoesNotContain("Tooba.Catalog.Application", resolver, StringComparison.Ordinal);
@@ -42,7 +52,7 @@ public sealed class OrderReservationCycleArchitectureGuardTests
     {
         var root = FindRepoRoot();
         var coordinator = File.ReadAllText(Path.Combine(
-            root, "src", "backend", "Modules", "Order", "Tooba.Order.Application", "ReservationCycleCoordinator.cs"));
+            root, "src", "backend", "Modules", "Order", "Tooba.Order.Application", "ReservationCycle", "Services", "ReservationCycleCoordinator.cs"));
         Assert.Contains("_clock.UtcNow", coordinator, StringComparison.Ordinal);
         Assert.Contains("ContractOperationException", coordinator, StringComparison.Ordinal);
         Assert.Contains("ReservationCycleErrors.RetryLimitReached", coordinator, StringComparison.Ordinal);

@@ -1,5 +1,15 @@
 using Xunit;
 
+using Tooba.Order.Application.Checkout.Abuse;
+using Tooba.Order.Application.Checkout.Contracts;
+using Tooba.Order.Application.Checkout.Policies;
+using Tooba.Order.Application.Checkout.Process;
+using Tooba.Order.Application.PurchaseVerification;
+using Tooba.Order.Application.ReservationCycle.Contracts;
+using Tooba.Order.Application.ReservationCycle.Policies;
+using Tooba.Order.Application.ReservationCycle.Services;
+using Tooba.Order.Application.Seller.Policies;
+
 namespace Tooba.Order.Tests.Architecture;
 
 /// <summary>TB-TMAR-ORDER-GOLDEN-001-R5 — Storefront Order ownership guards.</summary>
@@ -213,7 +223,7 @@ public sealed class OrderStorefrontArchitectureGuardTests
     public void CheckoutProcessManager_has_no_message_based_inventory_conflict_classification()
     {
         var manager = File.ReadAllText(Path.Combine(
-            OrderRoot(), "Tooba.Order.Application", "CheckoutProcessManager.cs"));
+            OrderRoot(), "Tooba.Order.Application", "Checkout", "Process", "CheckoutProcessManager.cs"));
         Assert.DoesNotContain("ex.Message == \"inventory.reservation.conflict\"", manager, StringComparison.Ordinal);
         Assert.DoesNotContain("when (ex.Message", manager, StringComparison.Ordinal);
         Assert.Contains("ex.Code == \"inventory.reservation.conflict\"", manager, StringComparison.Ordinal);

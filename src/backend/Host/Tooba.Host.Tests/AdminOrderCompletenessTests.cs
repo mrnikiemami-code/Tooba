@@ -182,7 +182,7 @@ public sealed class AdminOrderCompletenessTests
         var directory = File.ReadAllText(Path.Combine(
             FindRepoRoot(), "src", "backend", "Modules", "Order", "Tooba.Order.Infrastructure", "CheckoutDirectory.cs"));
         var contracts = File.ReadAllText(Path.Combine(
-            FindRepoRoot(), "src", "backend", "Modules", "Order", "Tooba.Order.Application", "OrderContracts.cs"));
+            FindRepoRoot(), "src", "backend", "Modules", "Order", "Tooba.Order.Application", "Checkout", "Contracts", "CheckoutDirectoryPorts.cs"));
         Assert.Equal(6, Count(endpoints, "auth.RequirePermissionAsync"));
         Assert.Equal(5, Count(endpoints, "ViewPermission"));
         Assert.Equal(3, Count(endpoints, "HandlePermission"));

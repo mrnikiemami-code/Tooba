@@ -1,6 +1,11 @@
 using Tooba.Order.Domain;
 
-namespace Tooba.Order.Application;
+using Tooba.Order.Application.Checkout.Abuse;
+using Tooba.Order.Application.Checkout.Contracts;
+using Tooba.Order.Application.Checkout.Policies;
+using Tooba.Order.Application.Checkout.Process;
+
+namespace Tooba.Order.Application.Checkout.Process;
 
 /// <summary>ردیابی پایدار فرآیند checkout داخل مالک Order (بدون موتور Saga).</summary>
 public interface ICheckoutProcessTracker

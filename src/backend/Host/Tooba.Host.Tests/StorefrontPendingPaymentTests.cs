@@ -1,9 +1,10 @@
-﻿using Tooba.Order.Application.Storefront.Services;
+using Tooba.Order.Application.Storefront.Services;
 using Tooba.Order.Application.Storefront.Models;
 using Tooba.AddressBook.Contracts;
 using Tooba.Cart.Application.Ports;
 using Tooba.Fulfillment.Contracts.Shipping;
 using Tooba.Order.Application;
+using Tooba.Order.Application.ReservationCycle.Contracts;
 using Tooba.Order.Domain;
 using Tooba.Payment.Domain.Aggregates;
 using Tooba.Payment.Domain.ValueObjects;
@@ -223,7 +224,7 @@ public sealed class StorefrontPendingPaymentTests
         var root = FindRepoRoot();
         var locks = File.ReadAllText(Path.Combine(root, "docs", "architecture", "TOOBA-LOCKS.md"));
         var paymentCodes = File.ReadAllText(Path.Combine(root, "src", "backend", "Modules", "Payment", "Tooba.Payment.Application", "Errors", "PaymentErrorCodes.cs"));
-        var reservation = File.ReadAllText(Path.Combine(root, "src", "backend", "Modules", "Order", "Tooba.Order.Application", "ReservationCycleContracts.cs"));
+        var reservation = File.ReadAllText(Path.Combine(root, "src", "backend", "Modules", "Order", "Tooba.Order.Application", "ReservationCycle", "Contracts", "ReservationCycleContracts.cs"));
         var pendingApi = File.ReadAllText(Path.Combine(root, "src", "frontend", "app", "storefront", "storefront-pending-payment-api.ts"));
         var customer = File.ReadAllText(Path.Combine(root, "src", "backend", "Modules", "Order", "Tooba.Order.Endpoints", "Errors", "OrderErrorCatalogContributor.cs"));
         Assert.Contains("LOCK-SF-085", locks, StringComparison.Ordinal);

@@ -1,4 +1,4 @@
-﻿using System.Transactions;
+using System.Transactions;
 using Microsoft.Extensions.Logging;
 using Tooba.BuildingBlocks;
 using Tooba.Cart.Contracts;
@@ -8,8 +8,11 @@ using Tooba.Inventory.Contracts.Errors;
 using Tooba.Inventory.Contracts.Orders;
 using Tooba.Inventory.Contracts.Seller;
 using Tooba.Order.Domain;
+using Tooba.Order.Application.Checkout.Abuse;
 
-namespace Tooba.Order.Application;
+using Tooba.Order.Application.Checkout.Contracts;
+using Tooba.Order.Application.Checkout.Abuse;
+namespace Tooba.Order.Application.Checkout.Process;
 
 /// <summary>
 /// هماهنگ‌کنندهٔ در-فرآیند و همزمان checkout (Process Manager).

@@ -1,8 +1,17 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Tooba.Catalog.Domain;
 using Tooba.Catalog.Infrastructure.Persistence;
 using Tooba.Order.Application;
+using Tooba.Order.Application.Checkout.Abuse;
+using Tooba.Order.Application.Checkout.Contracts;
+using Tooba.Order.Application.Checkout.Policies;
+using Tooba.Order.Application.Checkout.Process;
+using Tooba.Order.Application.PurchaseVerification;
+using Tooba.Order.Application.ReservationCycle.Contracts;
+using Tooba.Order.Application.ReservationCycle.Policies;
+using Tooba.Order.Application.ReservationCycle.Services;
+using Tooba.Order.Application.Seller.Policies;
 using Tooba.Order.Domain;
 using Tooba.Order.Infrastructure;
 using Tooba.Order.Infrastructure.Persistence;
@@ -215,13 +224,13 @@ public sealed class ReservationCycleFoundationTests
         Assert.Contains("CorrelatePaymentAttempt", dir, StringComparison.Ordinal);
         Assert.Contains("PrepareStart", checkout, StringComparison.Ordinal);
         Assert.Contains("EnsureRetrySupplyAsync", composer, StringComparison.Ordinal);
-        Assert.Contains("EnsureRetryAfterExpiryAsync", Read("src/backend/Modules/Order/Tooba.Order.Application/ReservationCycleCoordinator.cs"), StringComparison.Ordinal);
+        Assert.Contains("EnsureRetryAfterExpiryAsync", Read("src/backend/Modules/Order/Tooba.Order.Application/ReservationCycle/Services/ReservationCycleCoordinator.cs"), StringComparison.Ordinal);
         Assert.DoesNotContain("ReserveAsync", cart, StringComparison.Ordinal);
         Assert.DoesNotContain("TB-P10-T005", Read("src/backend/Host/Tooba.Host/Program.cs"), StringComparison.Ordinal);
         Assert.Contains("InitialReservationHoldMinutes", Read("src/backend/Host/Tooba.Host/appsettings.json"), StringComparison.Ordinal);
-        Assert.Contains("inventory.reservation.retry_limit_reached", Read("src/backend/Modules/Order/Tooba.Order.Application/ReservationCycleContracts.cs"), StringComparison.Ordinal);
+        Assert.Contains("inventory.reservation.retry_limit_reached", Read("src/backend/Modules/Order/Tooba.Order.Application/ReservationCycle/Contracts/ReservationCycleContracts.cs"), StringComparison.Ordinal);
         Assert.DoesNotContain("setInterval", dir, StringComparison.Ordinal);
-        Assert.DoesNotContain("setInterval", Read("src/backend/Modules/Order/Tooba.Order.Application/ReservationCycleCoordinator.cs"), StringComparison.Ordinal);
+        Assert.DoesNotContain("setInterval", Read("src/backend/Modules/Order/Tooba.Order.Application/ReservationCycle/Services/ReservationCycleCoordinator.cs"), StringComparison.Ordinal);
     }
 
     [Fact]

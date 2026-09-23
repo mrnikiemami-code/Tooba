@@ -1,4 +1,14 @@
-﻿using Xunit;
+using Xunit;
+
+using Tooba.Order.Application.Checkout.Abuse;
+using Tooba.Order.Application.Checkout.Contracts;
+using Tooba.Order.Application.Checkout.Policies;
+using Tooba.Order.Application.Checkout.Process;
+using Tooba.Order.Application.PurchaseVerification;
+using Tooba.Order.Application.ReservationCycle.Contracts;
+using Tooba.Order.Application.ReservationCycle.Policies;
+using Tooba.Order.Application.ReservationCycle.Services;
+using Tooba.Order.Application.Seller.Policies;
 
 namespace Tooba.Host.Tests;
 
@@ -52,7 +62,7 @@ public sealed class CheckoutImplW5PromotionContractTests
     [Fact]
     public void Shared_TransactionScope_remains_in_process_manager()
     {
-        var pm = Read("src/backend/Modules/Order/Tooba.Order.Application/CheckoutProcessManager.cs");
+        var pm = Read("src/backend/Modules/Order/Tooba.Order.Application/Checkout/Process/CheckoutProcessManager.cs");
         Assert.Contains("TransactionScope", pm, StringComparison.Ordinal);
     }
 

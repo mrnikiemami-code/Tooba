@@ -1,7 +1,8 @@
 using Microsoft.Extensions.Options;
 using Tooba.Catalog.Contracts.Reservation;
 
-namespace Tooba.Order.Application;
+using Tooba.Order.Application.ReservationCycle.Contracts;
+namespace Tooba.Order.Application.ReservationCycle.Policies;
 
 /// <summary>
 /// Order-owned precedence merge: platform → store → category → offer; multi-line = strictest (min).

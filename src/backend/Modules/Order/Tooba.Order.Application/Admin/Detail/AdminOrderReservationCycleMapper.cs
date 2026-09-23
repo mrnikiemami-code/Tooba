@@ -3,6 +3,7 @@ using Tooba.Order.Application.Admin.OrdersGrid;
 using Tooba.Order.Application.Admin.OrdersGrid.Models;
 using Tooba.Order.Application.Admin.Supply.Models;
 using Tooba.Order.Domain;
+using Tooba.Order.Application.ReservationCycle.Contracts;
 
 namespace Tooba.Order.Application.Admin.Detail;
 

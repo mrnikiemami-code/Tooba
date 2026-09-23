@@ -1,4 +1,5 @@
-namespace Tooba.Order.Application;
+
+namespace Tooba.Order.Application.ReservationCycle.Contracts;
 
 /// <summary>Port for checkout line data needed by reservation-cycle orchestration (no DbContext in Application).</summary>
 public interface IReservationCycleCheckoutLineSource

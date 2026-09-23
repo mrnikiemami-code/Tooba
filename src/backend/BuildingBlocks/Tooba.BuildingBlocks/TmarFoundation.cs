@@ -232,6 +232,10 @@ public static class ToobaCqrsRegistration
                 cfg.RegisterServicesFromAssembly(assembly);
             }
         });
+        foreach (var assembly in additionalHandlerAssemblies)
+        {
+            services.AddValidatorsFromAssembly(assembly);
+        }
         services.AddTransient(typeof(IPipelineBehavior<,>), typeof(Observability.Tracing.TracingBehavior<,>));
         services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
         services.AddTransient(typeof(IPipelineBehavior<,>), typeof(LoggingBehavior<,>));

@@ -1,6 +1,7 @@
 using Tooba.Order.Domain;
 
-namespace Tooba.Order.Application;
+
+namespace Tooba.Order.Application.ReservationCycle.Contracts;
 
 /// <summary>کلیدهای سیاست چرخه رزرو از Settings.</summary>
 public sealed class ReservationCycleOptions
@@ -118,7 +119,7 @@ public sealed record ReservationCycleProjection(
 public interface IReservationCycleDirectory
 {
     /// <summary>چرخه را بدون Save جدا آماده می‌کند تا با commit سفارش یکی شود.</summary>
-    ReservationCycle PrepareStart(
+    global::Tooba.Order.Domain.ReservationCycle PrepareStart(
         Guid checkoutId,
         ReservationCycleReason reason,
         DateTimeOffset startedAt,

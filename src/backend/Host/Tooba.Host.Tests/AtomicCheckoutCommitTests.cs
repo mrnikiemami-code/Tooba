@@ -1,5 +1,15 @@
-﻿using Tooba.Order.Infrastructure;
+using Tooba.Order.Infrastructure;
 using Xunit;
+
+using Tooba.Order.Application.Checkout.Abuse;
+using Tooba.Order.Application.Checkout.Contracts;
+using Tooba.Order.Application.Checkout.Policies;
+using Tooba.Order.Application.Checkout.Process;
+using Tooba.Order.Application.PurchaseVerification;
+using Tooba.Order.Application.ReservationCycle.Contracts;
+using Tooba.Order.Application.ReservationCycle.Policies;
+using Tooba.Order.Application.ReservationCycle.Services;
+using Tooba.Order.Application.Seller.Policies;
 
 namespace Tooba.Host.Tests;
 
@@ -10,7 +20,7 @@ public sealed class AtomicCheckoutCommitTests
     public void Submit_uses_one_ambient_transaction_and_convert_before_complete()
     {
         var root = FindRepoRoot();
-        var checkout = File.ReadAllText(Path.Combine(root, "src", "backend", "Modules", "Order", "Tooba.Order.Application", "CheckoutProcessManager.cs"));
+        var checkout = File.ReadAllText(Path.Combine(root, "src", "backend", "Modules", "Order", "Tooba.Order.Application", "Checkout", "Process", "CheckoutProcessManager.cs"));
         var host = File.ReadAllText(Path.Combine(root, "src", "backend", "Modules", "Order", "Tooba.Order.Infrastructure", "CheckoutSubmitHost.cs"));
         var directory = File.ReadAllText(Path.Combine(root, "src", "backend", "Modules", "Order", "Tooba.Order.Infrastructure", "CheckoutDirectory.cs"));
         var payment = File.ReadAllText(Path.Combine(root, "src", "backend", "Modules", "Payment", "Tooba.Payment.Application", "Orchestration", "StorefrontPaymentOrchestrator.cs"));

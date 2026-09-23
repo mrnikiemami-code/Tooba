@@ -1,4 +1,9 @@
-namespace Tooba.Order.Application;
+using Tooba.Order.Application.Checkout.Abuse;
+using Tooba.Order.Application.Checkout.Contracts;
+using Tooba.Order.Application.Checkout.Policies;
+using Tooba.Order.Application.Checkout.Process;
+
+namespace Tooba.Order.Application.Checkout.Policies;
 
 /// <summary>
 /// مبلغ قابل‌پرداخت سفارش: جمع کالای فروشنده + StoreShipping.

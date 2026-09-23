@@ -1,6 +1,6 @@
-﻿{
+{
     "rule":  "CrossContextTransactionOrchestrators",
     "files":  [
-                  "src/backend/Modules/Order/Tooba.Order.Application/CheckoutProcessManager.cs"
+                  "src/backend/Modules/Order/Tooba.Order.Application/Checkout/Process/CheckoutProcessManager.cs"
               ]
 }

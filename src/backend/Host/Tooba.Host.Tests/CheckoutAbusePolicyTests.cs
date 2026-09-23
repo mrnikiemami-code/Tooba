@@ -1,6 +1,16 @@
-﻿using Tooba.Catalog.Domain;
+using Tooba.Catalog.Domain;
 using Tooba.Order.Domain;
 using Xunit;
+
+using Tooba.Order.Application.Checkout.Abuse;
+using Tooba.Order.Application.Checkout.Contracts;
+using Tooba.Order.Application.Checkout.Policies;
+using Tooba.Order.Application.Checkout.Process;
+using Tooba.Order.Application.PurchaseVerification;
+using Tooba.Order.Application.ReservationCycle.Contracts;
+using Tooba.Order.Application.ReservationCycle.Policies;
+using Tooba.Order.Application.ReservationCycle.Services;
+using Tooba.Order.Application.Seller.Policies;
 
 namespace Tooba.Host.Tests;
 
@@ -54,7 +64,7 @@ public sealed class CheckoutAbusePolicyTests
     public void Enforcement_and_admin_boundaries_are_backend_authoritative()
     {
         var root = FindRepoRoot();
-        var checkout = File.ReadAllText(Path.Combine(root, "src", "backend", "Modules", "Order", "Tooba.Order.Application", "CheckoutProcessManager.cs"));
+        var checkout = File.ReadAllText(Path.Combine(root, "src", "backend", "Modules", "Order", "Tooba.Order.Application", "Checkout", "Process", "CheckoutProcessManager.cs"));
         var host = File.ReadAllText(Path.Combine(root, "src", "backend", "Modules", "Order", "Tooba.Order.Infrastructure", "CheckoutSubmitHost.cs"));
         var directory = File.ReadAllText(Path.Combine(root, "src", "backend", "Modules", "Order", "Tooba.Order.Infrastructure", "CheckoutDirectory.cs"));
         var gate = File.ReadAllText(Path.Combine(root, "src", "backend", "Modules", "Order", "Tooba.Order.Infrastructure", "CheckoutAbuse", "CheckoutAbuseGate.cs"));

@@ -1,3 +1,4 @@
+
 namespace Tooba.Order.Domain;
 
 /// <summary>قفل سطری مشتری برای جلوگیری از رقابت روی آخرین ظرفیت/سهمیه.</summary>

@@ -1,4 +1,5 @@
-namespace Tooba.Order.Application;
+
+namespace Tooba.Order.Application.ReservationCycle.Contracts;
 
 /// <summary>Order-owned unpaid expiry + reservation release reconciliation.</summary>
 public interface IUnpaidOrderExpiryReconciler

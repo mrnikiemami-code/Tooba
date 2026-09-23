@@ -1,5 +1,6 @@
 using Tooba.BuildingBlocks;
 
+
 namespace Tooba.Order.Domain;
 
 /// <summary>ممیزی مسدود شدن تسویه به‌خاطر سقف سفارش باز یا سهمیه رزرو.</summary>

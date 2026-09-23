@@ -51,12 +51,36 @@ public sealed class AdminOrderCompletenessHandlerTests
         var sender = BuildSender(out var store);
 
         var added = await sender.Send(new AddAdminOrderNoteCommand(CheckoutId, Actor, "  یادداشت  "));
-        var blank = await sender.Send(new AddAdminOrderNoteCommand(CheckoutId, Actor, "   "));
-
         Assert.True(added.IsSuccess);
         Assert.Equal("یادداشت", Assert.Single(store.AddedBodies));
-        Assert.True(blank.IsFailure);
-        Assert.Equal(AdminOrderCompletenessErrors.InvalidNote, blank.FirstError!.Code);
+
+        var blank = await Assert.ThrowsAsync<FluentValidation.ValidationException>(() =>
+            sender.Send(new AddAdminOrderNoteCommand(CheckoutId, Actor, "   ")));
+        Assert.Contains(blank.Errors, e => e.ErrorCode == Tooba.Order.Application.Validation.OrderValidationCodes.NoteBodyRequired);
+    }
+
+    [Fact]
+    public async Task History_query_rejects_out_of_range_paging_before_handler()
+    {
+        var sender = BuildSender(out _);
+
+        var ex = await Assert.ThrowsAsync<FluentValidation.ValidationException>(() =>
+            sender.Send(new GetAdminOrderOperationalHistoryQuery(CheckoutId, Actor, -3, 500)));
+
+        Assert.Contains(ex.Errors, e => e.ErrorCode == Tooba.Order.Application.Validation.OrderValidationCodes.PageMin);
+        Assert.Contains(ex.Errors, e => e.ErrorCode == Tooba.Order.Application.Validation.OrderValidationCodes.PageSizeRange);
+    }
+
+    [Fact]
+    public async Task History_query_forwards_valid_paging_to_the_store()
+    {
+        var sender = BuildSender(out var store);
+
+        var result = await sender.Send(new GetAdminOrderOperationalHistoryQuery(CheckoutId, Actor, 2, 20));
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal(2, store.RecordedPage);
+        Assert.Equal(20, store.RecordedPageSize);
     }
 
     [Theory]
@@ -77,18 +101,6 @@ public sealed class AdminOrderCompletenessHandlerTests
         {
             Assert.Equal(AdminOrderCompletenessErrors.DeleteForbidden, result.FirstError!.Code);
         }
-    }
-
-    [Fact]
-    public async Task History_query_clamps_paging_before_reaching_the_store()
-    {
-        var sender = BuildSender(out var store);
-
-        var result = await sender.Send(new GetAdminOrderOperationalHistoryQuery(CheckoutId, Actor, -3, 500));
-
-        Assert.True(result.IsSuccess);
-        Assert.Equal(1, store.RecordedPage);
-        Assert.Equal(50, store.RecordedPageSize);
     }
 
     [Fact]

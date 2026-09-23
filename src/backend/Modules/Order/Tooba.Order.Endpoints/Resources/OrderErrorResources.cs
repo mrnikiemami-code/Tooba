@@ -3,6 +3,7 @@ using System.Resources;
 using Tooba.BuildingBlocks.Localization;
 using Tooba.Order.Application;
 using Tooba.Order.Application.Customer;
+using Tooba.Order.Application.ReservationCycle.Contracts;
 using Tooba.Order.Application.Seller;
 using Tooba.Order.Application.Storefront;
 

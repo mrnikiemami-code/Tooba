@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Tooba.Catalog.Domain;
 using Tooba.Catalog.Infrastructure.Persistence;
@@ -10,6 +10,15 @@ using Tooba.AddressBook.Contracts;
 using Tooba.Cart.Application.Ports;
 using Tooba.Fulfillment.Contracts.Shipping;
 using Tooba.Order.Application;
+using Tooba.Order.Application.Checkout.Abuse;
+using Tooba.Order.Application.Checkout.Contracts;
+using Tooba.Order.Application.Checkout.Policies;
+using Tooba.Order.Application.Checkout.Process;
+using Tooba.Order.Application.PurchaseVerification;
+using Tooba.Order.Application.ReservationCycle.Contracts;
+using Tooba.Order.Application.ReservationCycle.Policies;
+using Tooba.Order.Application.ReservationCycle.Services;
+using Tooba.Order.Application.Seller.Policies;
 using Tooba.Order.Application.Admin.Detail;
 using Tooba.Order.Domain;
 using Tooba.Order.Infrastructure;
@@ -216,7 +225,7 @@ public sealed class ReservationLifecycleIntegrationGateTests
         Assert.DoesNotContain("new ReservationCyclePolicyLine(x.OfferId, null)", checkout, StringComparison.Ordinal);
         Assert.Contains("CategoryIdSnapshot", checkout, StringComparison.Ordinal);
 
-        var coordinator = Read("src/backend/Modules/Order/Tooba.Order.Application/ReservationCycleCoordinator.cs");
+        var coordinator = Read("src/backend/Modules/Order/Tooba.Order.Application/ReservationCycle/Services/ReservationCycleCoordinator.cs");
         Assert.Contains("allowReacquire: false", coordinator, StringComparison.Ordinal);
         Assert.Contains("RetryHoldMinutes", coordinator, StringComparison.Ordinal);
         Assert.Contains("ContractOperationException", coordinator, StringComparison.Ordinal);

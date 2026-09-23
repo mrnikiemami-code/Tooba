@@ -1,4 +1,4 @@
-﻿using Tooba.Promotion.Application.Ports;
+using Tooba.Promotion.Application.Ports;
 using Tooba.Promotion.Infrastructure.Queries;
 using Tooba.Promotion.Infrastructure.Messaging;
 using Tooba.Promotion.Infrastructure.Adapters;
@@ -8,6 +8,16 @@ using Tooba.Inventory.Infrastructure.Adapters;
 using Tooba.Inventory.Infrastructure.Directories;
 using System.Text.RegularExpressions;
 using Xunit;
+
+using Tooba.Order.Application.Checkout.Abuse;
+using Tooba.Order.Application.Checkout.Contracts;
+using Tooba.Order.Application.Checkout.Policies;
+using Tooba.Order.Application.Checkout.Process;
+using Tooba.Order.Application.PurchaseVerification;
+using Tooba.Order.Application.ReservationCycle.Contracts;
+using Tooba.Order.Application.ReservationCycle.Policies;
+using Tooba.Order.Application.ReservationCycle.Services;
+using Tooba.Order.Application.Seller.Policies;
 
 namespace Tooba.Host.Tests;
 
@@ -80,7 +90,7 @@ public sealed class CheckoutImplW4InventoryLifecycleTests
         var checkout = Read("src/backend/Modules/Order/Tooba.Order.Infrastructure/CheckoutDirectory.cs");
         Assert.Contains("using System.Transactions", checkout, StringComparison.Ordinal);
         Assert.Contains("ICheckoutInventoryReservationPort", checkout, StringComparison.Ordinal);
-        var pm = Read("src/backend/Modules/Order/Tooba.Order.Application/CheckoutProcessManager.cs");
+        var pm = Read("src/backend/Modules/Order/Tooba.Order.Application/Checkout/Process/CheckoutProcessManager.cs");
         Assert.Contains("TransactionScope", pm, StringComparison.Ordinal);
         Assert.Contains("ICheckoutInventoryReservationPort", pm, StringComparison.Ordinal);
     }

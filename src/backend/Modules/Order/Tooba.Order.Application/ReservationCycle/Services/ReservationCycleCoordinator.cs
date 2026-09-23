@@ -3,7 +3,9 @@ using Tooba.Order.Application.Admin.Supply.Models;
 using Tooba.Order.Application.Admin.Supply.Services;
 using Tooba.Order.Domain;
 
-namespace Tooba.Order.Application;
+using Tooba.Order.Application.ReservationCycle.Contracts;
+using Tooba.Order.Application.ReservationCycle.Policies;
+namespace Tooba.Order.Application.ReservationCycle.Services;
 
 /// <summary>
 /// EnsureOrderSupply را با چرخه رزرو هم‌گام می‌کند؛ PaymentAttempt چرخه نیست.
