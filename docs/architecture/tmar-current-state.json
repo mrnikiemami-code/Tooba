@@ -3,9 +3,9 @@
     "executionMode":  "BACKEND_ONLY_UNTIL_EXPLICIT_RELEASE",
     "frontendFrozen":  true,
     "checkoutState":  "PAUSED_AT_SAFE_W5_CHECKPOINT",
-    "lastAcceptedTask":  "TB-TMAR-CART-HOST-RESIDUAL-REVERIFY-001",
-    "lastAcceptedCommit":  "ec39c98220f8d7d08bfb238157fc66ffa12128ae",
-    "nextTask":  "USER_REVIEW_CART_HOST_REVERIFY",
+    "lastAcceptedTask":  "TB-TMAR-CART-ARCH-COMPLETE-002-REVERIFY-001",
+    "lastAcceptedCommit":  "PENDING_COMMIT",
+    "nextTask":  "USER_REVIEW_CART_ARCH_COMPLETE_002",
     "nextTaskGate":  "USER_REVIEW_REQUIRED_BEFORE_NEXT_TMAR_WAVE",
     "goldenWaveState":  "COMPLETE",
     "goldenWaveUserReview":  "USER_ACCEPTED",
@@ -24,7 +24,8 @@
             "NO_NAMESPACE_ALIAS_WORKAROUND"
         ],
         "certifiedModules":  [
-            "Order"
+            "Order",
+            "Cart"
         ],
         "manifest":  "docs/architecture/tmar-module-structure-manifests.json",
         "standard":  "docs/architecture/TMAR-COMPLETE-REFERENCE-STRUCTURE-STANDARD.md",

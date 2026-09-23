@@ -12,7 +12,7 @@ public sealed class TmarCompleteReferenceStructureGateTests
     private const string ManifestRelativePath = "docs/architecture/tmar-module-structure-manifests.json";
 
     [Fact]
-    public void Manifest_is_well_formed_and_only_Order_is_certified()
+    public void Manifest_is_well_formed_and_only_Order_and_Cart_are_certified()
     {
         using var doc = ReadManifest(out _);
         var root = doc.RootElement;
@@ -25,16 +25,18 @@ public sealed class TmarCompleteReferenceStructureGateTests
 
         var modules = root.GetProperty("modules").EnumerateArray().ToArray();
         Assert.Equal(
-            new[] { "Order" },
+            new[] { "Cart", "Order" },
             modules.Select(m => m.GetProperty("module").GetString()!).OrderBy(x => x, StringComparer.Ordinal).ToArray());
 
-        var order = modules.Single();
-        Assert.True(order.GetProperty("structureCertified").GetBoolean());
-        Assert.Equal("ARCH-COMPLETE-002", order.GetProperty("lockVersion").GetString());
+        foreach (var module in modules)
+        {
+            Assert.True(module.GetProperty("structureCertified").GetBoolean());
+            Assert.Equal("ARCH-COMPLETE-002", module.GetProperty("lockVersion").GetString());
+        }
 
         foreach (var other in root.GetProperty("uncertifiedHttpOwningModules").EnumerateArray())
         {
-            Assert.NotEqual("Order", other.GetString(), StringComparer.Ordinal);
+            Assert.DoesNotContain(other.GetString(), new[] { "Order", "Cart" }, StringComparer.Ordinal);
         }
     }
 
@@ -90,13 +92,14 @@ public sealed class TmarCompleteReferenceStructureGateTests
             .Select(x => x.GetString()!)
             .ToArray();
         Assert.DoesNotContain("Order", uncertified, StringComparer.Ordinal);
+        Assert.DoesNotContain("Cart", uncertified, StringComparer.Ordinal);
         Assert.NotEmpty(uncertified);
 
         var statePath = Path.Combine(RepoRoot(), "docs", "architecture", "tmar-current-state.json");
         using var state = JsonDocument.Parse(File.ReadAllText(statePath));
         var certified = state.RootElement.GetProperty("structureLock").GetProperty("certifiedModules")
-            .EnumerateArray().Select(x => x.GetString()!).ToArray();
-        Assert.Equal(new[] { "Order" }, certified);
+            .EnumerateArray().Select(x => x.GetString()!).OrderBy(x => x, StringComparer.Ordinal).ToArray();
+        Assert.Equal(new[] { "Cart", "Order" }, certified);
     }
 
     private static void AssertNamespaceAlignment(string projectPath, string projectName)
@@ -107,6 +110,12 @@ public sealed class TmarCompleteReferenceStructureGateTests
             var relative = file[rootFull.Length..].TrimStart(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
             if (relative.StartsWith($"obj{Path.DirectorySeparatorChar}", StringComparison.Ordinal)
                 || relative.StartsWith($"bin{Path.DirectorySeparatorChar}", StringComparison.Ordinal))
+            {
+                continue;
+            }
+
+            // Global using files are pure import aggregation and declare no namespace by design.
+            if (Path.GetFileName(relative).StartsWith("GlobalUsings", StringComparison.OrdinalIgnoreCase))
             {
                 continue;
             }

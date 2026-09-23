@@ -95,5 +95,5 @@ Tooba.Order.Infrastructure
 
 ## Existing modules
 
-- Order is certified under ARCH-COMPLETE-002 now.
+- Order and Cart are certified under ARCH-COMPLETE-002 now.
 - All other existing COMPLETE_REFERENCE_PATTERN modules are NOT structure-certified until separately reverified; they must not be claimed as ARCH-COMPLETE-002.

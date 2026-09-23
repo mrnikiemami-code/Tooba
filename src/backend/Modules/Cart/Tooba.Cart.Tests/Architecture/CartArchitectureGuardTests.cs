@@ -8,7 +8,7 @@ public sealed class CartArchitectureGuardTests
 {
     private static readonly string[] AllowedDomainFolders = ["Aggregates", "Entities", "ValueObjects", "Events"];
     private static readonly string[] AllowedApplicationFolders =
-        ["Ports", "Lifetime", "Conversion", "Commands", "Queries", "Models", "Errors", "Presentation"];
+        ["Ports", "Lifetime", "Conversion", "Commands", "Queries", "Models", "Errors", "Presentation", "Validation"];
     private static readonly string[] AllowedContractsFolders = ["Checkout", "Presentation"];
     private static readonly string[] AllowedInfrastructureFolders =
         ["Persistence", "Directories", "Messaging", "DependencyInjection", "Events", "Security", "Migrations", "Lifetime"];

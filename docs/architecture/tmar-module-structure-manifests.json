@@ -14,8 +14,7 @@
       "module": "Order",
       "structureCertified": true,
       "lockVersion": "ARCH-COMPLETE-002",
-      "projects": [
-        {
+      "projects": [        {
           "projectName": "Tooba.Order.Application",
           "rootAllowlist": [],
           "forbiddenRootFiles": [
@@ -82,10 +81,62 @@
           ]
         }
       ]
+    },
+    {
+      "module": "Cart",
+      "structureCertified": true,
+      "lockVersion": "ARCH-COMPLETE-002",
+      "projects": [
+        {
+          "projectName": "Tooba.Cart.Application",
+          "rootAllowlist": [
+            "GlobalUsings.Domain.cs",
+            "GlobalUsings.Layout.cs"
+          ],
+          "rootAllowlistJustification": "Both are genuinely project-wide shared imports (Cart.Domain aggregates/entities/events and Cart.Contracts/Ports/Conversion/Lifetime). They are not capability-specific and carry no foreign-module Application/Infrastructure/Domain dependency.",
+          "forbiddenRootFiles": [
+            "CartHandlers.cs",
+            "CartDirectoryContracts.cs",
+            "CartPersistenceHours.cs",
+            "CartConversionAdapter.cs"
+          ],
+          "forbiddenTopLevelFolders": []
+        },
+        {
+          "projectName": "Tooba.Cart.Endpoints",
+          "rootAllowlist": [
+            "CartEndpointModule.cs"
+          ],
+          "forbiddenRootFiles": [
+            "CartStorefrontEndpoints.cs",
+            "CartErrorCatalogContributor.cs",
+            "CartErrorResources.cs"
+          ],
+          "forbiddenTopLevelFolders": []
+        },
+        {
+          "projectName": "Tooba.Cart.Infrastructure",
+          "rootAllowlist": [
+            "GlobalUsings.Domain.cs",
+            "GlobalUsings.Layout.cs"
+          ],
+          "rootAllowlistJustification": "Both are genuinely project-wide shared imports (Cart Domain types and Cart Application ports/Conversion/Lifetime plus Cart Infrastructure integration namespaces). They are not capability-specific and hide no foreign module dependency.",
+          "forbiddenRootFiles": [
+            "CartModule.cs",
+            "CartDirectory.cs",
+            "CartDbContext.cs",
+            "CartEvents.cs",
+            "CartExpiryReconciler.cs",
+            "CartPersistenceHoursSource.cs",
+            "CartCredentialHasher.cs",
+            "CartOutboxRegistration.cs"
+          ],
+          "forbiddenTopLevelFolders": []
+        }
+      ]
     }
   ],
   "uncertifiedHttpOwningModules": [
-    "Cart",
     "Settlement",
     "Fulfillment",
     "Returns",

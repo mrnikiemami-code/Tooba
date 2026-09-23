@@ -13,8 +13,9 @@ Current Golden Wave Closure (authoritative)
 - Order: COMPLETE_REFERENCE_PATTERN after TB-TMAR-ORDER-GOLDEN-001-FINAL-CLOSURE (prior repair lineage: TB-TMAR-ORDER-GOLDEN-001-R11-R1; TB-TMAR-ORDER-GOLDEN-001-R11; TB-TMAR-ORDER-GOLDEN-001-R10; TB-TMAR-ORDER-GOLDEN-001-R9; TB-TMAR-ORDER-GOLDEN-001-R8; TB-TMAR-ORDER-GOLDEN-001-R7; TB-TMAR-ORDER-GOLDEN-001-R6; TB-TMAR-ORDER-GOLDEN-001-R5-R1; TB-TMAR-ORDER-GOLDEN-001-R5; TB-TMAR-ORDER-GOLDEN-001-R4-R1; TB-TMAR-ORDER-GOLDEN-001-R4; TB-TMAR-ORDER-GOLDEN-001-R3B; TB-TMAR-ORDER-GOLDEN-001-R3)
 - Post-closure quality: TB-TMAR-ORDER-POSTCLOSURE-QUALITY-001-R1 (complete transport FluentValidation coverage; Order remains COMPLETE_REFERENCE_PATTERN)
 - Post-closure structure: TB-TMAR-ORDER-POSTCLOSURE-STRUCTURE-001 (Order.Endpoints capability foldering); TB-TMAR-ORDER-POSTCLOSURE-STRUCTURE-002 (Order.Infrastructure capability + integration foldering); TB-TMAR-ORDER-POSTCLOSURE-STRUCTURE-LOCK-001 (ARCH-COMPLETE-002 structure lock; Order STRUCTURE_CERTIFIED)
-- Cart Host residual: TB-TMAR-CART-HOST-RESIDUAL-REVERIFY-001 (HOST_CART_ILLEGAL_AUTHORITY = 0; Cart expiry + persistence policy Cart-owned; Host worker shell only; no broad Cart global usings; Cart remains COMPLETE_REFERENCE_PATTERN — not ARCH-COMPLETE-002 structure-certified)
-- Next task: USER_REVIEW_CART_HOST_REVERIFY
+- Cart Host residual: TB-TMAR-CART-HOST-RESIDUAL-REVERIFY-001 (HOST_CART_ILLEGAL_AUTHORITY = 0; Cart expiry + persistence policy Cart-owned; Host worker shell only; no broad Cart global usings; Cart remains COMPLETE_REFERENCE_PATTERN)
+- Cart structure + validation: TB-TMAR-CART-ARCH-COMPLETE-002-REVERIFY-001 (Cart physical structure CERTIFIED against ARCH-COMPLETE-002; explicit root allowlists; path↔namespace aligned; Cart.Application foreign boundaries clean; 4 endpoint-reachable requests VALIDATOR_REQUIRED with concrete FluentValidation validators; 3 requests explicitly NO_VALIDATOR_REQUIRED; validator coverage guard added; Cart = COMPLETE_REFERENCE_PATTERN + ARCH-COMPLETE-002 STRUCTURE_CERTIFIED)
+- Next task: USER_REVIEW_CART_ARCH_COMPLETE_002
 - Gate: USER_REVIEW_REQUIRED_BEFORE_NEXT_TMAR_WAVE
 - Closed by: TB-TMAR-GOLDEN-WAVE-FINAL-CLOSURE-001
 - Order closed by: TB-TMAR-ORDER-GOLDEN-001-FINAL-CLOSURE

@@ -110,7 +110,7 @@ Certification mechanism:
 
 Standard: `docs/architecture/TMAR-COMPLETE-REFERENCE-STRUCTURE-STANDARD.md`.
 
-Certified modules: Order (ARCH-COMPLETE-002 STRUCTURE_CERTIFIED). All other existing COMPLETE modules are NOT structure-certified until separately reverified.
+Certified modules: Order, Cart (ARCH-COMPLETE-002 STRUCTURE_CERTIFIED). All other existing COMPLETE modules are NOT structure-certified until separately reverified.
 
 For an HTTP-owning module, `COMPLETE_REFERENCE_PATTERN` requires ALL of:
 - real physical `Tooba.<Module>.Endpoints` project
