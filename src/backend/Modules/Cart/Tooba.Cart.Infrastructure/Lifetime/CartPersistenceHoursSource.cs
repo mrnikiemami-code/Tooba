@@ -14,6 +14,8 @@ public sealed class CartPersistenceHoursSource : ICartPersistenceHoursSource
     private readonly ICartPersistenceHoursResolver? _storeOverride;
 
     /// <summary>Binds Cart platform options and an optional store override source.</summary>
+    /// <param name="options">Cart platform lifetime options.</param>
+    /// <param name="storeOverride">Optional store override seam.</param>
     public CartPersistenceHoursSource(
         IOptions<CartLifetimeOptions> options,
         ICartPersistenceHoursResolver? storeOverride = null)
@@ -23,5 +25,6 @@ public sealed class CartPersistenceHoursSource : ICartPersistenceHoursSource
     }
 
     /// <inheritdoc />
-    public int ResolvePersistenceHours() => CartPersistenceHours.Resolve(_options.Value, _storeOverride);
+    public Task<int> ResolvePersistenceHoursAsync(CancellationToken cancellationToken) =>
+        CartPersistenceHours.ResolveAsync(_options.Value, _storeOverride, cancellationToken);
 }

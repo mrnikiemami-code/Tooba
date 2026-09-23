@@ -16,14 +16,11 @@ public sealed class HostCartResidualGuardTests
     /// </summary>
     private static readonly Dictionary<string, string> CartNamingAllowlist = new(StringComparer.OrdinalIgnoreCase)
     {
-        ["Program.cs"] = "endpoint/MediatR/module composition + Cart reconciler seam registration",
+        ["Program.cs"] = "endpoint/MediatR/module composition only (no Cart implementation)",
         ["Composition/ToobaModuleComposition.cs"] = "explicit module list composition",
-        ["Composition/HostCartPersistenceHoursResolver.cs"] = "Host seam forwarding Catalog store override to Cart",
-        ["CartExpiryHostedService.cs"] = "background execution shell calling one Cart-owned reconciler",
-        ["CartExpiryHostOptions.cs"] = "Host scheduling knobs only (no Cart lifetime policy)",
-        ["CommerceHoldPolicy.cs"] = "Payment/Order hold adapter; forwards Cart-owned persistence value",
+        ["CommerceHoldPolicy.cs"] = "Payment/Order hold adapter; holds only (no Cart persistence value)",
         ["CheckoutReservationHoldPolicy.cs"] = "Order hold port adapter (Payment options only)",
-        ["Admin/HoldPolicySettingsEndpoints.cs"] = "settings admin UX reading Cart-owned persistence seam",
+        ["Admin/HoldPolicySettingsEndpoints.cs"] = "settings admin UX; reads Cart-owned persistence hours via Cart-owned port",
         ["Admin/ProductWorkspaceDevelopmentBootstrap.cs"] = "Development-only schema migration list",
         ["AccessControl/AccessControlDevelopmentSeed.cs"] = "Development-only seed via Cart directory",
         ["Storefront/StorefrontModels.cs"] = "storefront wire DTOs that carry CartId",
@@ -102,17 +99,127 @@ public sealed class HostCartResidualGuardTests
     }
 
     [Fact]
-    public void Host_Cart_expiry_worker_is_shell_only()
+    public void Host_has_no_Cart_specific_implementation_classes()
     {
         var hostRoot = Path.Combine(FindRepoRoot(), "src", "backend", "Host", "Tooba.Host");
-        var worker = File.ReadAllText(Path.Combine(hostRoot, "CartExpiryHostedService.cs"));
 
+        // Cart owns its implementation; Host must not carry these files at all.
+        Assert.False(File.Exists(Path.Combine(hostRoot, "CartExpiryHostedService.cs")));
+        Assert.False(File.Exists(Path.Combine(hostRoot, "CartExpiryHostOptions.cs")));
+        Assert.False(File.Exists(Path.Combine(hostRoot, "Composition", "HostCartPersistenceHoursResolver.cs")));
+
+        var hostSources = EnumerateProductionSources(hostRoot).ToArray();
+
+        // Host must not implement Cart Application ports (consuming a Cart-owned port is allowed).
+        Assert.DoesNotContain(hostSources, path =>
+            Regex.IsMatch(File.ReadAllText(path), @"class\s+\w+[^{]*:\s*[^{]*\bICartPersistenceHours(Source|Resolver)\b"));
+
+        // Host must not own Cart business defaults or worker options.
+        Assert.DoesNotContain(hostSources, path =>
+            Regex.IsMatch(File.ReadAllText(path), @"\bCartLifetimeOptions\b|\bCartExpiryOptions\b|\bCartCommerceDefaultsOptions\b"));
+
+        // Host must not implement the Cart-owned expiry worker or reconciler.
+        Assert.DoesNotContain(hostSources, path =>
+            Regex.IsMatch(File.ReadAllText(path), @"\bICartExpiryReconciler\b"));
+    }
+
+    [Fact]
+    public void Cart_owns_expiry_worker_and_its_worker_seams()
+    {
+        var cartRoot = Path.Combine(FindRepoRoot(), "src", "backend", "Modules", "Cart");
+
+        var worker = File.ReadAllText(Path.Combine(
+            cartRoot, "Tooba.Cart.Infrastructure", "Lifetime", "CartExpiryWorker.cs"));
         Assert.Contains("ICartExpiryReconciler", worker, StringComparison.Ordinal);
         Assert.Contains("ReconcileAsync(_options.BatchSize, cancellationToken)", worker, StringComparison.Ordinal);
+        Assert.Contains("IOutboxPollTargetSource", worker, StringComparison.Ordinal);
+        Assert.Contains("IWorkerCommerceContextFactory", worker, StringComparison.Ordinal);
+        Assert.Contains("IBackgroundWorkerRegistry", worker, StringComparison.Ordinal);
+        Assert.Contains("ICommerceContextAssigner", worker, StringComparison.Ordinal);
         Assert.DoesNotContain("ICartDirectory", worker, StringComparison.Ordinal);
         Assert.DoesNotContain("ExpireDueCartsAsync", worker, StringComparison.Ordinal);
-        Assert.DoesNotContain("new PositiveInteger", worker, StringComparison.Ordinal);
-        Assert.DoesNotContain("SystemClock", worker, StringComparison.Ordinal);
+        Assert.DoesNotContain("Tooba.Host", worker, StringComparison.Ordinal);
+        Assert.DoesNotContain("Guid.NewGuid()", worker, StringComparison.Ordinal);
+
+        var options = File.ReadAllText(Path.Combine(
+            cartRoot, "Tooba.Cart.Application", "Lifetime", "CartExpiryOptions.cs"));
+        Assert.Contains("Tooba:CartExpiry", options, StringComparison.Ordinal);
+
+        var module = File.ReadAllText(Path.Combine(
+            cartRoot, "Tooba.Cart.Infrastructure", "DependencyInjection", "CartModule.cs"));
+        Assert.Contains("AddHostedService<CartExpiryWorker>", module, StringComparison.Ordinal);
+        Assert.Contains("Configure<CartExpiryOptions>", module, StringComparison.Ordinal);
+        Assert.Contains("ICartPersistenceHoursResolver, CatalogCartPersistenceHoursResolver", module, StringComparison.Ordinal);
+        Assert.Contains("ICartCommerceContextResolver, CartCommerceContextResolver", module, StringComparison.Ordinal);
+
+        var adapter = File.ReadAllText(Path.Combine(
+            cartRoot, "Tooba.Cart.Infrastructure", "Lifetime", "CatalogCartPersistenceHoursResolver.cs"));
+        Assert.Contains("ResolveOverrideHoursAsync", adapter, StringComparison.Ordinal);
+        Assert.Contains("GetStoreCartPersistenceHoursAsync(cancellationToken)", adapter, StringComparison.Ordinal);
+        Assert.DoesNotContain("GetAwaiter().GetResult()", adapter, StringComparison.Ordinal);
+        Assert.DoesNotContain("CancellationToken.None", adapter, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void Cart_persistence_hours_path_is_fully_async()
+    {
+        var cartRoot = Path.Combine(FindRepoRoot(), "src", "backend", "Modules", "Cart");
+        var files = new[]
+        {
+            Path.Combine(cartRoot, "Tooba.Cart.Application", "Ports", "ICartPersistenceHoursResolver.cs"),
+            Path.Combine(cartRoot, "Tooba.Cart.Application", "Ports", "ICartPersistenceHoursSource.cs"),
+            Path.Combine(cartRoot, "Tooba.Cart.Application", "Ports", "CartPersistenceHours.cs"),
+            Path.Combine(cartRoot, "Tooba.Cart.Infrastructure", "Lifetime", "CatalogCartPersistenceHoursResolver.cs"),
+            Path.Combine(cartRoot, "Tooba.Cart.Infrastructure", "Lifetime", "CartPersistenceHoursSource.cs"),
+        };
+
+        foreach (var file in files)
+        {
+            var text = File.ReadAllText(file);
+            Assert.DoesNotContain(".Result", text, StringComparison.Ordinal);
+            Assert.DoesNotContain(".Wait()", text, StringComparison.Ordinal);
+            Assert.DoesNotContain("GetAwaiter().GetResult()", text, StringComparison.Ordinal);
+            Assert.DoesNotContain("CancellationToken.None", text, StringComparison.Ordinal);
+        }
+
+        Assert.Contains(
+            "Task<int?> ResolveOverrideHoursAsync(CancellationToken cancellationToken)",
+            File.ReadAllText(files[0]),
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "Task<int> ResolvePersistenceHoursAsync(CancellationToken cancellationToken)",
+            File.ReadAllText(files[1]),
+            StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void CreateGuestCart_uses_commerce_context_without_hardcoded_values()
+    {
+        var handler = File.ReadAllText(Path.Combine(
+            FindRepoRoot(),
+            "src", "backend", "Modules", "Cart", "Tooba.Cart.Application",
+            "Commands", "CreateGuestCart", "CreateGuestCartCommand.cs"));
+
+        Assert.Contains("ICartCommerceContextResolver", handler, StringComparison.Ordinal);
+        Assert.Contains("commerceContext.Resolve()", handler, StringComparison.Ordinal);
+        Assert.DoesNotContain("\"IR\"", handler, StringComparison.Ordinal);
+        Assert.DoesNotContain("\"IRR\"", handler, StringComparison.Ordinal);
+        Assert.DoesNotContain("SalesChannel.Marketplace", handler, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void Cart_presentation_has_no_language_hardcoded_fallbacks()
+    {
+        var composer = File.ReadAllText(Path.Combine(
+            FindRepoRoot(),
+            "src", "backend", "Modules", "Cart", "Tooba.Cart.Application",
+            "Presentation", "CartPresentationComposer.cs"));
+
+        Assert.DoesNotContain("کالا", composer, StringComparison.Ordinal);
+        Assert.DoesNotContain("فروشنده", composer, StringComparison.Ordinal);
+        Assert.DoesNotContain("\"Product\"", composer, StringComparison.Ordinal);
+        Assert.Contains("string.Empty", composer, StringComparison.Ordinal);
+        Assert.Contains("ICatalogCartPresentationLookup", composer, StringComparison.Ordinal);
     }
 
     [Fact]

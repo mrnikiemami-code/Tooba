@@ -5,7 +5,6 @@ namespace Tooba.Payment.Infrastructure.Adapters;
 
 internal sealed class CommerceHoldPolicyAdapter(ICommerceHoldPolicySource source) : ICommerceHoldPolicy
 {
-    public int ResolveCartPersistenceHours() => source.ResolveCartPersistenceHours();
     public int ResolveOnlineHoldHours(string? providerCode) => source.ResolveOnlineHoldHours(providerCode);
     public int ResolveManualInitialHoldHours(string? providerCode) => source.ResolveManualInitialHoldHours(providerCode);
     public int ResolveManualReviewHoldHours(string? providerCode) => source.ResolveManualReviewHoldHours(providerCode);

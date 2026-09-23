@@ -97,10 +97,10 @@ builder.Services.AddScoped<ICurrentEdition>(sp => sp.GetRequiredService<HttpComm
 builder.Services.AddScoped<ICurrentTenant>(sp => sp.GetRequiredService<HttpCommerceContextAccessor>());
 builder.Services.AddScoped<ICommerceContextAssigner>(sp => sp.GetRequiredService<HttpCommerceContextAccessor>());
 builder.Services.Configure<OutboxHostOptions>(builder.Configuration.GetSection("Tooba:Outbox"));
-builder.Services.Configure<CartExpiryHostOptions>(builder.Configuration.GetSection("Tooba:CartExpiry"));
 builder.Services.Configure<PaymentReconciliationHostOptions>(builder.Configuration.GetSection("Tooba:PaymentReconciliation"));
 builder.Services.Configure<UnpaidOrderExpiryHostOptions>(builder.Configuration.GetSection("Tooba:UnpaidOrderExpiry"));
 builder.Services.AddSingleton<BackgroundWorkerRegistry>();
+builder.Services.AddSingleton<IBackgroundWorkerRegistry>(sp => sp.GetRequiredService<BackgroundWorkerRegistry>());
 builder.Services.AddScoped<ILanguageReferenceGuard, ContentLanguageReferenceGuard>();
 builder.Services.AddOptions<MessagingHostOptions>()
     .Bind(builder.Configuration.GetSection("Tooba:Messaging"))
@@ -127,13 +127,13 @@ builder.Services.AddSingleton<IIntegrationEventSerializer, JsonIntegrationEventS
 builder.Services.AddSingleton<IOutboxDispatcherStore, NpgsqlOutboxDispatcherStore>();
 builder.Services.AddSingleton<IOutboxPollTargetSource, ConfiguredOutboxPollTargetSource>();
 builder.Services.AddSingleton<WorkerCommerceContextFactory>();
+builder.Services.AddSingleton<IWorkerCommerceContextFactory>(sp => sp.GetRequiredService<WorkerCommerceContextFactory>());
 builder.Services.AddSingleton<OutboxDispatcher>();
 var messagingOptions = new MessagingHostOptions();
 builder.Configuration.GetSection("Tooba:Messaging").Bind(messagingOptions);
 builder.Services.AddToobaIntegrationPublisher(builder.Environment, messagingOptions);
 builder.Services.AddScoped<OutboxSaveChangesInterceptor>();
 builder.Services.AddHostedService<OutboxDispatcherHostedService>();
-builder.Services.AddHostedService<CartExpiryHostedService>();
 builder.Services.AddHostedService<PaymentReconciliationHostedService>();
 builder.Services.AddHostedService<UnpaidOrderExpiryHostedService>();
 builder.Services.AddToobaCqrsFoundation(
@@ -157,7 +157,6 @@ builder.Services.AddScoped<Tooba.Catalog.Application.IStoreLandingExternalRefere
 builder.Services.AddScoped<Tooba.Catalog.Application.IUnitOfMeasureLanguageGate, Tooba.Host.Admin.HostUnitOfMeasureLanguageGate>();
 builder.Services.AddToobaModules(builder.Configuration, builder.Environment);
 builder.Services.AddOfferModuleCallTracing();
-builder.Services.AddScoped<Tooba.Cart.Application.Ports.ICartPersistenceHoursResolver, Tooba.Host.HostCartPersistenceHoursResolver>();
 builder.Services.Configure<Tooba.Order.Application.ReservationCycle.Contracts.ReservationCycleOptions>(
     builder.Configuration.GetSection(Tooba.Order.Application.ReservationCycle.Contracts.ReservationCycleOptions.SectionName));
 builder.Services.AddScoped<CommerceHoldPolicy>();

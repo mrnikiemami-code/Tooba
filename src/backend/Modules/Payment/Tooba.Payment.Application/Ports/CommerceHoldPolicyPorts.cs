@@ -7,9 +7,6 @@ namespace Tooba.Payment.Application.Ports;
 /// </summary>
 public interface ICommerceHoldPolicy
 {
-    /// <summary>ساعت ماندگاری سبد؛ رزرو موجودی نیست.</summary>
-    int ResolveCartPersistenceHours();
-
     /// <summary>مهلت پرداخت آنلاین به ساعت.</summary>
     int ResolveOnlineHoldHours(string? providerCode);
 

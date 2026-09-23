@@ -1,6 +1,5 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
-using Tooba.Cart.Application.Ports;
 using Tooba.Catalog.Domain;
 using Tooba.Catalog.Infrastructure.Persistence;
 using Tooba.Order.Application;
@@ -25,7 +24,6 @@ namespace Tooba.Host;
 public sealed class CommerceHoldPolicy : ICommerceHoldPolicySource, ICheckoutReservationHoldPolicy
 {
     private readonly PaymentGatewayOptions _gateway;
-    private readonly ICartPersistenceHoursSource _cartPersistence;
     private readonly CatalogDbContext _catalog;
     private readonly IPaymentHoldSettingsGateway _paymentHolds;
     private StoreHoldPolicySettings? _store;
@@ -35,19 +33,13 @@ public sealed class CommerceHoldPolicy : ICommerceHoldPolicySource, ICheckoutRes
     /// <summary>سیاست را به Options و درگاه تنظیمات Payment وصل می‌کند.</summary>
     public CommerceHoldPolicy(
         IOptions<PaymentGatewayOptions> gateway,
-        ICartPersistenceHoursSource cartPersistence,
         CatalogDbContext catalog,
         IPaymentHoldSettingsGateway paymentHolds)
     {
         _gateway = gateway.Value;
-        _cartPersistence = cartPersistence;
         _catalog = catalog;
         _paymentHolds = paymentHolds;
     }
-
-    /// <inheritdoc />
-    /// <remarks>Cart owns the persistence policy; Host only forwards the Cart-owned value.</remarks>
-    public int ResolveCartPersistenceHours() => _cartPersistence.ResolvePersistenceHours();
 
     /// <inheritdoc />
     public int ResolveOnlineHoldHours(string? providerCode)

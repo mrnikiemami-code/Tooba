@@ -57,7 +57,7 @@ internal sealed class ConfiguredOutboxPollTargetSource : IOutboxPollTargetSource
 /// <summary>
 /// بازسازی <see cref="CommerceContext"/> برای کارگر از ردیف Outbox و registry. Host هدر خوانده نمی‌شود.
 /// </summary>
-internal sealed class WorkerCommerceContextFactory
+internal sealed class WorkerCommerceContextFactory : IWorkerCommerceContextFactory
 {
     private readonly ControlPlaneRegistry _registry;
 

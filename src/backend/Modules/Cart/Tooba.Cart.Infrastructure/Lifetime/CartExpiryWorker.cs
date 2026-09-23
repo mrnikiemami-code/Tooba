@@ -1,42 +1,57 @@
 using System.Diagnostics.Metrics;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Tooba.BuildingBlocks;
 using Tooba.Cart.Application.Lifetime;
 using Tooba.Persistence;
 
-namespace Tooba.Host;
+namespace Tooba.Cart.Infrastructure.Lifetime;
 
 /// <summary>
-/// Host shell only: tenant loop, config, logging, telemetry.
-/// Cart expiry business reconciliation lives in <see cref="ICartExpiryReconciler"/>.
+/// Cart-owned expiry worker: tenant loop, cancellation, per-tenant failure isolation, and telemetry.
+/// Business reconciliation stays in <see cref="ICartExpiryReconciler"/>; the tenant target source,
+/// commerce-context factory, and worker registry are generic platform seams supplied by Host.
 /// </summary>
-internal sealed class CartExpiryHostedService : BackgroundService
+public sealed class CartExpiryWorker : BackgroundService
 {
+    /// <summary>نام پایدار کارگر در <see cref="IBackgroundWorkerRegistry"/>.</summary>
     public const string WorkerName = "cart-expiry";
 
     private static readonly Counter<long> ExpiredCarts = ToobaTelemetry.Meter.CreateCounter<long>("tooba.cart_expiry.expired");
     private static readonly Counter<long> TenantFailures = ToobaTelemetry.Meter.CreateCounter<long>("tooba.cart_expiry.tenant_failures");
 
     private readonly IOutboxPollTargetSource _targets;
-    private readonly WorkerCommerceContextFactory _workerContext;
+    private readonly IWorkerCommerceContextFactory _workerContext;
+    private readonly IIdGenerator _ids;
     private readonly IServiceScopeFactory _scopes;
-    private readonly CartExpiryHostOptions _options;
-    private readonly BackgroundWorkerRegistry _registry;
-    private readonly ILogger<CartExpiryHostedService> _logger;
+    private readonly CartExpiryOptions _options;
+    private readonly IBackgroundWorkerRegistry _registry;
+    private readonly ILogger<CartExpiryWorker> _logger;
 
     /// <summary>
     /// کارگر را به اهداف Tenant و زمینهٔ بدون HTTP وصل می‌کند.
     /// </summary>
-    public CartExpiryHostedService(
+    /// <param name="targets">منبع اهداف poll.</param>
+    /// <param name="workerContext">سازندهٔ زمینهٔ کارگر.</param>
+    /// <param name="ids">تولید شناسهٔ همبستگی.</param>
+    /// <param name="scopes">سازندهٔ scope.</param>
+    /// <param name="options">knobs اجرای کارگر.</param>
+    /// <param name="registry">رجیستری وضعیت کارگر.</param>
+    /// <param name="logger">لاگر.</param>
+    public CartExpiryWorker(
         IOutboxPollTargetSource targets,
-        WorkerCommerceContextFactory workerContext,
+        IWorkerCommerceContextFactory workerContext,
+        IIdGenerator ids,
         IServiceScopeFactory scopes,
-        IOptions<CartExpiryHostOptions> options,
-        BackgroundWorkerRegistry registry,
-        ILogger<CartExpiryHostedService> logger)
+        IOptions<CartExpiryOptions> options,
+        IBackgroundWorkerRegistry registry,
+        ILogger<CartExpiryWorker> logger)
     {
         _targets = targets;
         _workerContext = workerContext;
+        _ids = ids;
         _scopes = scopes;
         _options = options.Value;
         _registry = registry;
@@ -101,7 +116,7 @@ internal sealed class CartExpiryHostedService : BackgroundService
             {
                 await using var scope = _scopes.CreateAsyncScope();
                 var assigner = scope.ServiceProvider.GetRequiredService<ICommerceContextAssigner>();
-                assigner.Assign(_workerContext.FromPollTarget(target, Guid.NewGuid().ToString("N")));
+                assigner.Assign(_workerContext.FromPollTarget(target, _ids.NewId().ToString("N")));
                 var reconciler = scope.ServiceProvider.GetRequiredService<ICartExpiryReconciler>();
                 total += await reconciler.ReconcileAsync(_options.BatchSize, cancellationToken)
                     .ConfigureAwait(false);

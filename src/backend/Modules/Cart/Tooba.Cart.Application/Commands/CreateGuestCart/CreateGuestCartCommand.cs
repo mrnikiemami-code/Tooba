@@ -4,7 +4,6 @@ using Tooba.BuildingBlocks.Results;
 using Tooba.Cart.Application.Errors;
 using Tooba.Cart.Contracts;
 using Tooba.Cart.Application.Presentation;
-using Tooba.Offer.Contracts.Dtos;
 
 namespace Tooba.Cart.Application.Commands.CreateGuestCart;
 
@@ -13,12 +12,18 @@ public sealed record CreateGuestCartCommand : IRequest<Result<CartPage>>;
 
 internal sealed class CreateGuestCartHandler(
     ICartDirectory carts,
+    ICartCommerceContextResolver commerceContext,
     CartPresentationComposer presentation) : IRequestHandler<CreateGuestCartCommand, Result<CartPage>>
 {
     public Task<Result<CartPage>> Handle(CreateGuestCartCommand request, CancellationToken cancellationToken) =>
         CartExceptionMapper.TryAsync(async () =>
         {
-            var created = await carts.CreateGuestAsync("IR", "IRR", SalesChannel.Marketplace, cancellationToken);
+            var context = commerceContext.Resolve();
+            var created = await carts.CreateGuestAsync(
+                context.Market,
+                context.Currency,
+                context.Channel,
+                cancellationToken);
             return await presentation.PresentAsync(created.Cart, created.GuestSecret, cancellationToken);
         });
 }

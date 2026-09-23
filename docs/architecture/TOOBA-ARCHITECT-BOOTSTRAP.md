@@ -15,7 +15,8 @@ Canonical bootstrap for recovering the Tooba architecture context after chat/ses
 - Post-closure quality: TB-TMAR-ORDER-POSTCLOSURE-QUALITY-001-R1 (complete transport FluentValidation coverage; Order remains COMPLETE_REFERENCE_PATTERN)
 - Post-closure structure: TB-TMAR-ORDER-POSTCLOSURE-STRUCTURE-001 (Order.Endpoints capability foldering); TB-TMAR-ORDER-POSTCLOSURE-STRUCTURE-002 (Order.Infrastructure capability + integration foldering); TB-TMAR-ORDER-POSTCLOSURE-STRUCTURE-LOCK-001 (ARCH-COMPLETE-002 structure lock; Order STRUCTURE_CERTIFIED); TB-TMAR-CART-ARCH-COMPLETE-002-REVERIFY-001 (Cart STRUCTURE_CERTIFIED under ARCH-COMPLETE-002 + complete endpoint-reachable validator coverage); TB-TMAR-CART-ARCH-COMPLETE-002-REVERIFY-001-R1 (Cart ARCH-COMPLETE-002 SoT consistency repair + durable coherence guard)
 - Cart Host residual: TB-TMAR-CART-HOST-RESIDUAL-REVERIFY-001 (HOST_CART_ILLEGAL_AUTHORITY = 0; Cart expiry + persistence policy Cart-owned; Host worker shell only; no broad Cart global usings)
-- Current next task: USER_REVIEW_CART_ARCH_COMPLETE_002
+- Cart post-certification semantic/ownership repair: TB-TMAR-CART-POSTCERT-SEMANTIC-HOST-CLOSURE-001 (Host owns zero Cart implementation classes; Cart expiry worker/options + persistence adapter Cart-owned; persistence-hours fully async; CreateGuestCart uses canonical commerce context; no hardcoded Persian presentation fallbacks)
+- Current next task: USER_REVIEW_CART_POSTCERT_SEMANTIC_HOST_CLOSURE
 - Gate: USER_REVIEW_REQUIRED_BEFORE_NEXT_TMAR_WAVE
 - Closed by: TB-TMAR-GOLDEN-WAVE-FINAL-CLOSURE-001
 - Order closed by: TB-TMAR-ORDER-GOLDEN-001-FINAL-CLOSURE
@@ -44,7 +45,7 @@ Accepted architecture baseline:
 TB-TMAR-ARCH-BASELINE
 
 Current next task:
-USER_REVIEW_ORDER_COMPLETE_REFERENCE
+USER_REVIEW_CART_POSTCERT_SEMANTIC_HOST_CLOSURE
 
 Current recovery summary (consistent with the authoritative closure above):
 COMPLETE HTTP-owning: Cart, Settlement, Fulfillment, Returns, Notification, Support, Wallet, Payment, Promotion, Offer, Order.

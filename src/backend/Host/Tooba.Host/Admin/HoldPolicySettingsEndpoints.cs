@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using Tooba.BuildingBlocks;
 using Tooba.Cart.Application.Ports;
 using Tooba.Catalog.Domain;
@@ -177,7 +178,7 @@ public static class HoldPolicySettingsEndpoints
         var reservation = ReservationPolicyAdminComposer.ForStore(
             await resolver.PreviewAsync(null, null, cancellationToken),
             true);
-        var platformCart = cartPersistence.ResolvePersistenceHours();
+        var platformCart = await cartPersistence.ResolvePersistenceHoursAsync(cancellationToken);
         var platformOnline = Math.Clamp(gateway.OnlinePaymentHoldHours <= 0 ? 2 : gateway.OnlinePaymentHoldHours, 1, 24 * 30);
         var platformManual = Math.Clamp(gateway.ManualPaymentInitialHoldHours <= 0 ? 2 : gateway.ManualPaymentInitialHoldHours, 1, 24 * 30);
         var platformReview = Math.Clamp(gateway.ManualPaymentReviewHoldHours <= 0 ? 24 : gateway.ManualPaymentReviewHoldHours, 1, 24 * 30);

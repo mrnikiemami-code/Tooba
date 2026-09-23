@@ -10,8 +10,6 @@ public sealed class HostFolderStructureTests
     {
         "Program.cs",
         // W1 deferred: checkout/order/payment-adjacent root leftovers
-        "CartExpiryHostedService.cs",
-        "CartExpiryHostOptions.cs",
         "CheckoutReservationHoldPolicy.cs",
         "CommerceHoldPolicy.cs",
         "FulfillmentReturnsGridAliases.cs",

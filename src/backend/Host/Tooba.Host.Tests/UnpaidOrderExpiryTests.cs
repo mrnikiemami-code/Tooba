@@ -75,12 +75,13 @@ public sealed class UnpaidOrderExpiryTests
         Assert.Contains("ICartPersistenceHoursSource", Read("src/backend/Modules/Cart/Tooba.Cart.Application/Ports/ICartPersistenceHoursSource.cs"), StringComparison.Ordinal);
         Assert.Contains("ICartPersistenceHoursResolver", Read("src/backend/Modules/Cart/Tooba.Cart.Application/Ports/ICartPersistenceHoursResolver.cs"), StringComparison.Ordinal);
         var cart = Read("src/backend/Modules/Cart/Tooba.Cart.Infrastructure/Directories/CartDirectory.cs");
-        Assert.Contains("ResolvePersistenceTtl", cart, StringComparison.Ordinal);
+        Assert.Contains("ResolvePersistenceTtlAsync", cart, StringComparison.Ordinal);
         Assert.DoesNotContain("ReserveAsync", cart, StringComparison.Ordinal);
         Assert.Contains("CartPersistenceHours", Read("src/backend/Modules/Cart/Tooba.Cart.Application/Ports/CartPersistenceHours.cs"), StringComparison.Ordinal);
         var holdPolicy = Read("src/backend/Host/Tooba.Host/CommerceHoldPolicy.cs");
         Assert.DoesNotContain("CartLifetimeOptions", holdPolicy, StringComparison.Ordinal);
         Assert.DoesNotContain("24 * 90", holdPolicy, StringComparison.Ordinal);
+        Assert.DoesNotContain("ResolveCartPersistenceHours", holdPolicy, StringComparison.Ordinal);
     }
 
     [Fact]

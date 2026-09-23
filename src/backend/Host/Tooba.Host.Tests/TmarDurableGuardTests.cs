@@ -106,7 +106,7 @@ public sealed class TmarDurableGuardTests
         Assert.Equal("USER_ACCEPTED", rootEl.GetProperty("goldenWaveUserReview").GetString());
         Assert.Equal("TB-TMAR-GOLDEN-WAVE-FINAL-CLOSURE-001", rootEl.GetProperty("goldenWaveClosedBy").GetString());
         Assert.False(string.IsNullOrWhiteSpace(rootEl.GetProperty("goldenWaveClosedCommit").GetString()));
-        Assert.Equal("USER_REVIEW_CART_ARCH_COMPLETE_002", rootEl.GetProperty("nextTask").GetString());
+        Assert.Equal("USER_REVIEW_CART_POSTCERT_SEMANTIC_HOST_CLOSURE", rootEl.GetProperty("nextTask").GetString());
         Assert.Equal("USER_REVIEW_REQUIRED_BEFORE_NEXT_TMAR_WAVE", rootEl.GetProperty("nextTaskGate").GetString());
         Assert.Equal("PAUSED_AT_SAFE_W5_CHECKPOINT", rootEl.GetProperty("checkoutState").GetString());
         Assert.True(rootEl.GetProperty("frontendFrozen").GetBoolean());
@@ -165,7 +165,14 @@ public sealed class TmarDurableGuardTests
             cartEntry.GetProperty("lastAcceptedTask").GetString(),
             StringComparison.Ordinal);
         Assert.False(string.IsNullOrWhiteSpace(cartEntry.GetProperty("lastAcceptedCommit").GetString()));
-        Assert.Equal("TB-TMAR-CART-ARCH-COMPLETE-002-REVERIFY-001-R1", rootEl.GetProperty("lastAcceptedTask").GetString());
+        Assert.Equal("TB-TMAR-CART-POSTCERT-SEMANTIC-HOST-CLOSURE-001", rootEl.GetProperty("lastAcceptedTask").GetString());
+        Assert.Equal(
+            "TB-TMAR-CART-POSTCERT-SEMANTIC-HOST-CLOSURE-001",
+            cartEntry.GetProperty("lastPostCertificationRepairTask").GetString());
+        Assert.Equal("CART_OWNED_ICartExpiryReconciler", rootEl.GetProperty("hostCartBoundary").GetProperty("cartExpiryOwnership").GetString());
+        Assert.Equal(
+            "REMOVED_HOST_OWNS_ZERO_CART_IMPLEMENTATION",
+            rootEl.GetProperty("hostCartBoundary").GetProperty("cartExpiryHostWorker").GetString());
         Assert.False(string.IsNullOrWhiteSpace(rootEl.GetProperty("lastAcceptedCommit").GetString()));
         Assert.DoesNotContain("PENDING_FINAL_CLOSURE_COMMIT", rootEl.GetProperty("lastAcceptedCommit").GetString(), StringComparison.Ordinal);
         Assert.DoesNotContain("PLACEHOLDER_STAMP_AFTER_COMMIT", rootEl.GetProperty("lastAcceptedCommit").GetString(), StringComparison.Ordinal);

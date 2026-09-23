@@ -1,11 +1,12 @@
 using System.Collections.Concurrent;
+using Tooba.Persistence;
 
 namespace Tooba.Host;
 
 /// <summary>
 /// وضعیت آخرین اجرای کارگرهای پس‌زمینه برای لاگ/عملیات. اسکن DB انجام نمی‌دهد.
 /// </summary>
-internal sealed class BackgroundWorkerRegistry
+internal sealed class BackgroundWorkerRegistry : IBackgroundWorkerRegistry
 {
     private readonly ConcurrentDictionary<string, BackgroundWorkerRunState> _states = new(StringComparer.Ordinal);
 

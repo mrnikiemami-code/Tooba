@@ -72,7 +72,7 @@ public sealed class CartPresentationComposer : Tooba.Cart.Contracts.ICartPresent
             var seller = await _parties.FindByIdAsync(line.SellerPartyId, cancellationToken);
             var unit = line.QuotedAmount;
             var lineAmount = unit is decimal amount ? amount * line.Quantity : (decimal?)null;
-            var title = presentation?.LocalizedTitle ?? "کالا";
+            var title = presentation?.LocalizedTitle ?? string.Empty;
             var slug = presentation?.Slug;
             Guid? mediaId = presentation?.MediaAssetId;
             if (mediaId == Guid.Empty)
@@ -89,7 +89,7 @@ public sealed class CartPresentationComposer : Tooba.Cart.Contracts.ICartPresent
                 presentation?.ProductId,
                 slug,
                 title,
-                seller?.DisplayName ?? "فروشنده",
+                seller?.DisplayName ?? string.Empty,
                 mediaId,
                 line.Quantity,
                 unit,

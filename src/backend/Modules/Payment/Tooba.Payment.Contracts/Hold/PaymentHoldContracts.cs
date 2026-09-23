@@ -21,7 +21,6 @@ public interface IPaymentHoldSettingsGateway
 
 public interface ICommerceHoldPolicySource
 {
-    int ResolveCartPersistenceHours();
     int ResolveOnlineHoldHours(string? providerCode);
     int ResolveManualInitialHoldHours(string? providerCode);
     int ResolveManualReviewHoldHours(string? providerCode);

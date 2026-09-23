@@ -49,6 +49,7 @@ public sealed class CartDirectory : ICartDirectory, CartContract.ICartQueryGatew
     private readonly IQuantityNormalizer _normalizer;
     private readonly ICartPersistenceHoursSource? _persistenceHours;
     private readonly ICampaignCartPriceAuthority? _campaignPrices;
+    private readonly ICartCommerceContextResolver? _commerceContext;
     private readonly IClock _clock;
     private readonly IIdGenerator _ids;
 
@@ -68,7 +69,8 @@ public sealed class CartDirectory : ICartDirectory, CartContract.ICartQueryGatew
         ICatalogCartQuantityPolicyGateway? catalog = null,
         IOptions<CartLifetimeOptions>? lifetime = null,
         ICartPersistenceHoursSource? persistenceHours = null,
-        ICampaignCartPriceAuthority? campaignPrices = null)
+        ICampaignCartPriceAuthority? campaignPrices = null,
+        ICartCommerceContextResolver? commerceContext = null)
     {
         _db = db;
         _guard = guard;
@@ -80,9 +82,10 @@ public sealed class CartDirectory : ICartDirectory, CartContract.ICartQueryGatew
         _normalizer = normalizer;
         _persistenceHours = persistenceHours;
         _campaignPrices = campaignPrices;
+        _commerceContext = commerceContext;
         _clock = clock;
         _ids = ids;
-        var hours = Math.Clamp(lifetime?.Value.PersistenceHours ?? 168, 1, 24 * 90);
+        var hours = CartPersistenceHours.Clamp(lifetime?.Value.PersistenceHours ?? CartPersistenceHours.DefaultHours);
         _persistenceTtl = TimeSpan.FromHours(hours);
     }
 
@@ -111,9 +114,10 @@ public sealed class CartDirectory : ICartDirectory, CartContract.ICartQueryGatew
         await _guard.EnsureCanMutateAsync(cancellationToken);
         _ = CurrencyCode.Parse(currency);
         var now = _clock.UtcNow;
+        var ttl = await ResolvePersistenceTtlAsync(cancellationToken).ConfigureAwait(false);
         var cart = ShoppingCart.CreateAuthenticated(
             _ids.NewId(),
-            userId, market, currency, channel, now, now.Add(ResolvePersistenceTtl()));
+            userId, market, currency, channel, now, now.Add(ttl));
         _db.Carts.Add(cart);
         await _db.SaveChangesAsync(cancellationToken);
         return await ToSnapshotAsync(cart, cancellationToken);
@@ -130,9 +134,10 @@ public sealed class CartDirectory : ICartDirectory, CartContract.ICartQueryGatew
         _ = CurrencyCode.Parse(currency);
         var secret = CartCredentialHasher.CreateSecret();
         var now = _clock.UtcNow;
+        var ttl = await ResolvePersistenceTtlAsync(cancellationToken).ConfigureAwait(false);
         var cart = ShoppingCart.CreateGuest(
             _ids.NewId(),
-            CartCredentialHasher.Hash(secret), market, currency, channel, now, now.Add(ResolvePersistenceTtl()));
+            CartCredentialHasher.Hash(secret), market, currency, channel, now, now.Add(ttl));
         _db.Carts.Add(cart);
         await _db.SaveChangesAsync(cancellationToken);
         return new GuestCartCreated(await ToSnapshotAsync(cart, cancellationToken), secret);
@@ -185,7 +190,8 @@ public sealed class CartDirectory : ICartDirectory, CartContract.ICartQueryGatew
             now,
             effectiveCampaignId);
         await EnsureSellableAsync(offer.OfferId, quantity, cancellationToken);
-        cart.RefreshExpiry(now.Add(ResolvePersistenceTtl()), now);
+        var ttl = await ResolvePersistenceTtlAsync(cancellationToken).ConfigureAwait(false);
+        cart.RefreshExpiry(now.Add(ttl), now);
         cart.AddLine(line, now);
         await SaveCartAsync(cancellationToken);
         return await ToSnapshotAsync(cart, cancellationToken);
@@ -342,7 +348,14 @@ public sealed class CartDirectory : ICartDirectory, CartContract.ICartQueryGatew
 
         if (guest is null)
         {
-            authenticated ??= await CreateAuthenticatedCoreAsync(userId, "IR", "IRR", SalesChannel.Marketplace, cancellationToken);
+            if (_commerceContext is null)
+            {
+                throw new InvalidOperationException("cart.commerce.context_unavailable");
+            }
+
+            var context = _commerceContext.Resolve();
+            authenticated ??= await CreateAuthenticatedCoreAsync(
+                userId, context.Market, context.Currency, context.Channel, cancellationToken);
             var empty = await ToSnapshotAsync(authenticated, cancellationToken);
             return new CartMergeResult(empty, false, empty.Lines);
         }
@@ -441,7 +454,8 @@ public sealed class CartDirectory : ICartDirectory, CartContract.ICartQueryGatew
             quote.PriceId,
             now,
             effectiveCampaignId);
-        cart.RefreshExpiry(now.Add(ResolvePersistenceTtl()), now);
+        var ttl = await ResolvePersistenceTtlAsync(cancellationToken).ConfigureAwait(false);
+        cart.RefreshExpiry(now.Add(ttl), now);
         cart.RecordLineChanged(line.LineId, line.OfferId, quantity, now);
         await SaveCartAsync(cancellationToken);
         return await ToSnapshotAsync(cart, cancellationToken);
@@ -530,14 +544,15 @@ public sealed class CartDirectory : ICartDirectory, CartContract.ICartQueryGatew
         return (offer, quote, quantity, null);
     }
 
-    private TimeSpan ResolvePersistenceTtl()
+    private async Task<TimeSpan> ResolvePersistenceTtlAsync(CancellationToken cancellationToken)
     {
         if (_persistenceHours is null)
         {
             return _persistenceTtl;
         }
 
-        return TimeSpan.FromHours(Math.Clamp(_persistenceHours.ResolvePersistenceHours(), 1, 24 * 90));
+        var hours = await _persistenceHours.ResolvePersistenceHoursAsync(cancellationToken).ConfigureAwait(false);
+        return TimeSpan.FromHours(CartPersistenceHours.Clamp(hours));
     }
 
     private async Task<ShoppingCart> CreateAuthenticatedCoreAsync(
@@ -549,9 +564,10 @@ public sealed class CartDirectory : ICartDirectory, CartContract.ICartQueryGatew
     {
         _ = CurrencyCode.Parse(currency);
         var now = _clock.UtcNow;
+        var ttl = await ResolvePersistenceTtlAsync(cancellationToken).ConfigureAwait(false);
         var cart = ShoppingCart.CreateAuthenticated(
             _ids.NewId(),
-            userId, market, currency, channel, now, now.Add(ResolvePersistenceTtl()));
+            userId, market, currency, channel, now, now.Add(ttl));
         _db.Carts.Add(cart);
         await _db.SaveChangesAsync(cancellationToken);
         return cart;

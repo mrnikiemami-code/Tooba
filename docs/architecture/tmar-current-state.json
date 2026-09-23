@@ -3,9 +3,9 @@
     "executionMode":  "BACKEND_ONLY_UNTIL_EXPLICIT_RELEASE",
     "frontendFrozen":  true,
     "checkoutState":  "PAUSED_AT_SAFE_W5_CHECKPOINT",
-    "lastAcceptedTask":  "TB-TMAR-CART-ARCH-COMPLETE-002-REVERIFY-001-R1",
-    "lastAcceptedCommit":  "44563393d90bb7c9ad5048d1b7812e78f1ee7d44",
-    "nextTask":  "USER_REVIEW_CART_ARCH_COMPLETE_002",
+    "lastAcceptedTask":  "TB-TMAR-CART-POSTCERT-SEMANTIC-HOST-CLOSURE-001",
+    "lastAcceptedCommit":  "PLACEHOLDER_STAMP_AFTER_COMMIT",
+    "nextTask":  "USER_REVIEW_CART_POSTCERT_SEMANTIC_HOST_CLOSURE",
     "nextTaskGate":  "USER_REVIEW_REQUIRED_BEFORE_NEXT_TMAR_WAVE",
     "goldenWaveState":  "COMPLETE",
     "goldenWaveUserReview":  "USER_ACCEPTED",
@@ -33,13 +33,13 @@
     },
     "recoveryPhrase":  "برگردیم به TMAR؛ TOOBA-TMAR-MASTER-RECOVERY.md و آخرین recovery-sot را مبنا بگیر.",
     "hostCartBoundary":  {
-        "task":  "TB-TMAR-CART-HOST-RESIDUAL-REVERIFY-001",
+        "task":  "TB-TMAR-CART-POSTCERT-SEMANTIC-HOST-CLOSURE-001",
         "illegalCartAuthorityCount":  0,
         "deadCartResidueCount":  0,
         "cartExpiryOwnership":  "CART_OWNED_ICartExpiryReconciler",
-        "cartExpiryHostWorker":  "ALLOWED_HOST_EXECUTION_SHELL",
+        "cartExpiryHostWorker":  "REMOVED_HOST_OWNS_ZERO_CART_IMPLEMENTATION",
         "cartPersistencePolicy":  "CART_OWNED_CartPersistenceHours",
-        "commerceHoldPolicyCartState":  "NO_CART_POLICY_HOST_FORWARDS_CART_VALUE",
+        "commerceHoldPolicyCartState":  "PAYMENT_ORDER_HOLDS_ONLY_NO_CART_POLICY",
         "cartDomainGlobalUsings":  "REMOVED",
         "cartApplicationGlobalUsings":  "REMOVED",
         "cartInfrastructureGlobalUsings":  "REMOVED",
@@ -48,7 +48,7 @@
         "cartForeignBoundary":  "CONTRACTS_PORTS_ONLY",
         "clockState":  "ICLOCK_IN_CART_BUSINESS_TIME",
         "guard":  "src/backend/Host/Tooba.Host.Tests/Architecture/HostCartResidualGuardTests.cs",
-        "evidence":  "docs/evidence/TB-TMAR-CART-HOST-RESIDUAL-REVERIFY-001/cart-host-reverse-audit.md",
+        "evidence":  "docs/evidence/TB-TMAR-CART-POSTCERT-SEMANTIC-HOST-CLOSURE-001/cart-semantic-host-closure.md",
         "structureCertifiedUnderArchComplete002":  true
     },
     "completeReferenceModules":  [
@@ -59,7 +59,10 @@
                                          "endpointOwnership":  "MODULE_ENDPOINTS",
                                          "cqrs":  "MEDIATR_12_5",
                                          "lastAcceptedTask":  "TB-TMAR-CART-ARCH-COMPLETE-002-REVERIFY-001",
-                                         "lastAcceptedCommit":  "6e880942baaf3b2afd60fa0766e5e132704eca66"
+                                         "lastAcceptedCommit":  "6e880942baaf3b2afd60fa0766e5e132704eca66",
+                                         "lastPostCertificationRepairTask":  "TB-TMAR-CART-POSTCERT-SEMANTIC-HOST-CLOSURE-001",
+                                         "lastPostCertificationRepairCommit":  "PLACEHOLDER_STAMP_AFTER_COMMIT",
+                                         "postCertificationRepairNote":  "Semantic/ownership repair only; not a new structural certification. Cart remains COMPLETE_REFERENCE_PATTERN + ARCH-COMPLETE-002 STRUCTURE_CERTIFIED."
                                      },
                                      {
                                          "module":  "Settlement",
