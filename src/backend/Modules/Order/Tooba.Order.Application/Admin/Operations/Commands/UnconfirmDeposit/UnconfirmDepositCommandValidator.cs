@@ -1,12 +1,12 @@
 using FluentValidation;
 using Tooba.Order.Application.Validation;
 
-namespace Tooba.Order.Application.Admin.Operations.Commands.CancelOrder;
+namespace Tooba.Order.Application.Admin.Operations.Commands.UnconfirmDeposit;
 
 /// <summary>Syntactic envelope for admin order operation command.</summary>
-public sealed class CancelOrderCommandValidator : AbstractValidator<CancelOrderCommand>
+public sealed class UnconfirmDepositCommandValidator : AbstractValidator<UnconfirmDepositCommand>
 {
-    public CancelOrderCommandValidator()
+    public UnconfirmDepositCommandValidator()
     {
         OrderFluentRules.RequireAdminOperationEnvelope(
             this,

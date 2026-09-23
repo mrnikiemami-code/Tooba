@@ -21,4 +21,6 @@ public static class OrderValidationCodes
     public const string SellerOrderIdRequired = "order.validation.seller_order_id_required";
     public const string ReasonRequired = "order.validation.reason_required";
     public const string ReasonTooLong = "order.validation.reason_too_long";
+    public const string TakeRange = "order.validation.take_range";
+    public const string ShippingBodyRequired = "order.validation.shipping_body_required";
 }

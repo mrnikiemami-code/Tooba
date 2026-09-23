@@ -111,7 +111,7 @@ public sealed class TmarDurableGuardTests
         Assert.Equal("PAUSED_AT_SAFE_W5_CHECKPOINT", rootEl.GetProperty("checkoutState").GetString());
         Assert.True(rootEl.GetProperty("frontendFrozen").GetBoolean());
         Assert.Equal("ARCH-COMPLETE-001", rootEl.GetProperty("locksVersion").GetString());
-        Assert.Equal("TB-TMAR-ORDER-POSTCLOSURE-QUALITY-001", rootEl.GetProperty("lastAcceptedTask").GetString());
+        Assert.Equal("TB-TMAR-ORDER-POSTCLOSURE-QUALITY-001-R1", rootEl.GetProperty("lastAcceptedTask").GetString());
         Assert.False(string.IsNullOrWhiteSpace(rootEl.GetProperty("lastAcceptedCommit").GetString()));
         Assert.DoesNotContain("PENDING_FINAL_CLOSURE_COMMIT", rootEl.GetProperty("lastAcceptedCommit").GetString(), StringComparison.Ordinal);
 

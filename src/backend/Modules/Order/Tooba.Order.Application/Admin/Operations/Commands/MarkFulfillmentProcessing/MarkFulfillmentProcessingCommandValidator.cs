@@ -1,12 +1,12 @@
 using FluentValidation;
 using Tooba.Order.Application.Validation;
 
-namespace Tooba.Order.Application.Admin.Operations.Commands.CancelOrder;
+namespace Tooba.Order.Application.Admin.Operations.Commands.MarkFulfillmentProcessing;
 
 /// <summary>Syntactic envelope for admin order operation command.</summary>
-public sealed class CancelOrderCommandValidator : AbstractValidator<CancelOrderCommand>
+public sealed class MarkFulfillmentProcessingCommandValidator : AbstractValidator<MarkFulfillmentProcessingCommand>
 {
-    public CancelOrderCommandValidator()
+    public MarkFulfillmentProcessingCommandValidator()
     {
         OrderFluentRules.RequireAdminOperationEnvelope(
             this,
