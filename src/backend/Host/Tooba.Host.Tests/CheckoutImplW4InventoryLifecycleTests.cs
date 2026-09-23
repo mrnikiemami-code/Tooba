@@ -36,7 +36,7 @@ public sealed class CheckoutImplW4InventoryLifecycleTests
         Assert.DoesNotContain("Tooba.Inventory.Application", csproj, StringComparison.Ordinal);
         Assert.Contains("Tooba.Inventory.Contracts", csproj, StringComparison.Ordinal);
 
-        var checkout = Read("src/backend/Modules/Order/Tooba.Order.Infrastructure/CheckoutDirectory.cs");
+        var checkout = Read("src/backend/Modules/Order/Tooba.Order.Infrastructure/Checkout/Persistence/CheckoutDirectory.cs");
         Assert.Contains("IOrderInventoryLifecyclePort", checkout, StringComparison.Ordinal);
         Assert.Contains("ReleaseHeldReservationAsync", checkout, StringComparison.Ordinal);
         Assert.Contains("ReacquireDurableHoldFromPreviousAsync", checkout, StringComparison.Ordinal);
@@ -44,7 +44,7 @@ public sealed class CheckoutImplW4InventoryLifecycleTests
         Assert.DoesNotContain("IInventoryDirectory", checkout, StringComparison.Ordinal);
         Assert.DoesNotContain("CheckoutInventoryReservationAdapter", checkout, StringComparison.Ordinal);
 
-        var bridge = Read("src/backend/Modules/Order/Tooba.Order.Infrastructure/OrderPaymentBridge.cs");
+        var bridge = Read("src/backend/Modules/Order/Tooba.Order.Infrastructure/Integrations/Payment/OrderPaymentBridge.cs");
         Assert.Contains("IOrderInventoryLifecyclePort", bridge, StringComparison.Ordinal);
         Assert.Contains("PromoteOrReacquireForManualPaymentReviewAsync", bridge, StringComparison.Ordinal);
         Assert.Contains("ReleaseIfHeldAsync", bridge, StringComparison.Ordinal);
@@ -87,7 +87,7 @@ public sealed class CheckoutImplW4InventoryLifecycleTests
     [Fact]
     public void Shared_TransactionScope_and_checkout_reservation_port_remain()
     {
-        var checkout = Read("src/backend/Modules/Order/Tooba.Order.Infrastructure/CheckoutDirectory.cs");
+        var checkout = Read("src/backend/Modules/Order/Tooba.Order.Infrastructure/Checkout/Persistence/CheckoutDirectory.cs");
         Assert.Contains("using System.Transactions", checkout, StringComparison.Ordinal);
         Assert.Contains("ICheckoutInventoryReservationPort", checkout, StringComparison.Ordinal);
         var pm = Read("src/backend/Modules/Order/Tooba.Order.Application/Checkout/Process/CheckoutProcessManager.cs");

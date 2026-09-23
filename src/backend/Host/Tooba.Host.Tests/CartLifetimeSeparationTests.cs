@@ -37,7 +37,7 @@ public sealed class CartLifetimeSeparationTests
     [Fact]
     public void Checkout_submit_creates_order_hold_preview_does_not()
     {
-        var checkout = Read("src/backend/Modules/Order/Tooba.Order.Infrastructure/CheckoutDirectory.cs");
+        var checkout = Read("src/backend/Modules/Order/Tooba.Order.Infrastructure/Checkout/Persistence/CheckoutDirectory.cs");
         var adapter = Read("src/backend/Modules/Inventory/Tooba.Inventory.Application/Checkout/CheckoutInventoryReservationAdapter.cs");
         Assert.Contains("ReserveCartLinesForOrderAsync", checkout, StringComparison.Ordinal);
         Assert.Contains("requireReservation: false", checkout, StringComparison.Ordinal);

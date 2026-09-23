@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Testcontainers.PostgreSql;
 using Tooba.BuildingBlocks;
 using Tooba.Fulfillment.Application.Ports;
@@ -15,6 +15,12 @@ using Tooba.Fulfillment.Infrastructure.Persistence;
 using Tooba.Offer.Domain;
 using Tooba.Order.Domain;
 using Tooba.Order.Infrastructure;
+using Tooba.Order.Infrastructure.Checkout.Persistence;
+using Tooba.Order.Infrastructure.Guards;
+using Tooba.Order.Infrastructure.Integrations.Fulfillment;
+using Tooba.Order.Infrastructure.Integrations.Payment;
+using Tooba.Order.Infrastructure.Messaging;
+using Tooba.Order.Infrastructure.ReservationCycle;
 using Tooba.Order.Infrastructure.Persistence;
 using Tooba.Persistence;
 using Xunit;
@@ -412,7 +418,7 @@ public sealed class FulfillmentFoundationTests : IAsyncLifetime
 
     private static OrderDbContext CreateOrderDb(string connectionString, ICurrentCommerceContext commerce)
     {
-        var modules = new IOutboxModuleRegistration[] { new Tooba.Order.Infrastructure.OrderOutboxRegistration() };
+        var modules = new IOutboxModuleRegistration[] { new Tooba.Order.Infrastructure.Messaging.OrderOutboxRegistration() };
         var serializer = new JsonIntegrationEventSerializer(modules);
         var interceptor = new OutboxSaveChangesInterceptor(commerce, modules, serializer);
         var options = new DbContextOptionsBuilder<OrderDbContext>();

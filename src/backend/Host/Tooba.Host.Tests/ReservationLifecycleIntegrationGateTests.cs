@@ -22,6 +22,12 @@ using Tooba.Order.Application.Seller.Policies;
 using Tooba.Order.Application.Admin.Detail;
 using Tooba.Order.Domain;
 using Tooba.Order.Infrastructure;
+using Tooba.Order.Infrastructure.Checkout.Persistence;
+using Tooba.Order.Infrastructure.Guards;
+using Tooba.Order.Infrastructure.Integrations.Fulfillment;
+using Tooba.Order.Infrastructure.Integrations.Payment;
+using Tooba.Order.Infrastructure.Messaging;
+using Tooba.Order.Infrastructure.ReservationCycle;
 using Tooba.Order.Infrastructure.Persistence;
 using Tooba.Payment.Domain.Aggregates;
 using Tooba.Payment.Domain.ValueObjects;
@@ -219,7 +225,7 @@ public sealed class ReservationLifecycleIntegrationGateTests
     [Fact]
     public void Commit_hold_uses_category_and_gate_sources_are_clean()
     {
-        var checkout = Read("src/backend/Modules/Order/Tooba.Order.Infrastructure/CheckoutDirectory.cs");
+        var checkout = Read("src/backend/Modules/Order/Tooba.Order.Infrastructure/Checkout/Persistence/CheckoutDirectory.cs");
         Assert.Contains("GetPrimaryCategoryIdsByVariantIdsAsync", checkout, StringComparison.Ordinal);
         Assert.Contains("ResolveInitialCycleExpiresAtAsync", checkout, StringComparison.Ordinal);
         Assert.DoesNotContain("new ReservationCyclePolicyLine(x.OfferId, null)", checkout, StringComparison.Ordinal);

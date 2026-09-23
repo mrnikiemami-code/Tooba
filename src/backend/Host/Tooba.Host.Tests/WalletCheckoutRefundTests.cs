@@ -1,4 +1,4 @@
-﻿using Tooba.Payment.Contracts.Events;
+using Tooba.Payment.Contracts.Events;
 using Tooba.BuildingBlocks;
 using Tooba.BuildingBlocks.Observability.Tracing;
 using Tooba.Promotion.Application.Ports;
@@ -22,6 +22,15 @@ using Tooba.Inventory.Application.Checkout;
 using Tooba.Inventory.Application.Orders;
 using Tooba.Inventory.Contracts.Returns;
 using Tooba.Order.Infrastructure;
+using Tooba.Order.Infrastructure.Checkout.Persistence;
+using Tooba.Order.Infrastructure.Guards;
+using Tooba.Order.Infrastructure.Integrations.Fulfillment;
+using Tooba.Order.Infrastructure.Integrations.Payment;
+using Tooba.Order.Infrastructure.Messaging;
+using Tooba.Order.Infrastructure.Events.Payment;
+using Tooba.Order.Infrastructure.Integrations.Returns;
+using Tooba.Order.Infrastructure.Integrations.Notifications;
+using Tooba.Order.Infrastructure.ReservationCycle;
 using Tooba.Order.Infrastructure.Persistence;
 using Tooba.Payment.Application.Models;
 using Tooba.Payment.Application.Ports;
@@ -333,7 +342,7 @@ public sealed class WalletCheckoutRefundTests : IAsyncLifetime
 
     private static OrderDbContext CreateOrderDb(string connectionString, ICurrentCommerceContext commerce)
     {
-        var modules = new IOutboxModuleRegistration[] { new Tooba.Order.Infrastructure.OrderOutboxRegistration() };
+        var modules = new IOutboxModuleRegistration[] { new Tooba.Order.Infrastructure.Messaging.OrderOutboxRegistration() };
         var serializer = new JsonIntegrationEventSerializer(modules);
         var interceptor = new OutboxSaveChangesInterceptor(commerce, modules, serializer);
         var options = new DbContextOptionsBuilder<OrderDbContext>();

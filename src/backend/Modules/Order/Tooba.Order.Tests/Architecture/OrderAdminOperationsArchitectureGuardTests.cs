@@ -251,7 +251,7 @@ public sealed class OrderAdminOperationsArchitectureGuardTests
             Path.Combine(RepoRoot(), "src", "backend", "Modules", "Inventory",
                 "Tooba.Inventory.Application", "Orders", "OrderInventoryLifecycleAdapter.cs"),
             Path.Combine(RepoRoot(), "src", "backend", "Modules", "Order",
-                "Tooba.Order.Infrastructure", "CheckoutDirectory.cs"),
+                "Tooba.Order.Infrastructure", "Checkout", "Persistence", "CheckoutDirectory.cs"),
             Path.Combine(RepoRoot(), "src", "backend", "BuildingBlocks",
                 "Tooba.BuildingBlocks", "ContractOperationFault.cs"),
         };

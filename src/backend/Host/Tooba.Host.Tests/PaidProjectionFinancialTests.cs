@@ -81,7 +81,7 @@ public sealed class PaidProjectionFinancialTests
     public void R10_retry_and_late_capture_surfaces_remain()
     {
         Assert.Contains("EnsureUnpaidRetryHold", Read("src/backend/Modules/Inventory/Tooba.Inventory.Application/OrderSupplyContracts.cs"), StringComparison.Ordinal);
-        Assert.Contains("EnsurePaidDurableOrKeepPaidAsync", Read("src/backend/Modules/Order/Tooba.Order.Infrastructure/OrderPaymentBridge.cs"), StringComparison.Ordinal);
+        Assert.Contains("EnsurePaidDurableOrKeepPaidAsync", Read("src/backend/Modules/Order/Tooba.Order.Infrastructure/Integrations/Payment/OrderPaymentBridge.cs"), StringComparison.Ordinal);
         Assert.Contains("ExpireUnpaidTimeout", Read("src/backend/Modules/Payment/Tooba.Payment.Domain/Aggregates/CustomerPayment.cs"), StringComparison.Ordinal);
     }
 

@@ -1,0 +1,10 @@
+# Recovery SoT — TB-TMAR-ORDER-POSTCLOSURE-STRUCTURE-002
+
+- Task: TB-TMAR-ORDER-POSTCLOSURE-STRUCTURE-002
+- Parent: TB-TMAR-ORDER-POSTCLOSURE-STRUCTURE-001
+- Order-Final-State: COMPLETE_REFERENCE_PATTERN
+- Checkout-State: PAUSED_AT_SAFE_W5_CHECKPOINT
+- Host-Authority-State: NONE
+- Frontend-Production-Changes: NONE
+- Next-Recommended-Task: TB-TMAR-ORDER-POSTCLOSURE-STRUCTURE-LOCK-001 (not started)
+- Evidence: docs/evidence/TB-TMAR-ORDER-POSTCLOSURE-STRUCTURE-002/infrastructure-organization.md

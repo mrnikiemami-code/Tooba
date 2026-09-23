@@ -106,12 +106,12 @@ public sealed class TmarDurableGuardTests
         Assert.Equal("USER_ACCEPTED", rootEl.GetProperty("goldenWaveUserReview").GetString());
         Assert.Equal("TB-TMAR-GOLDEN-WAVE-FINAL-CLOSURE-001", rootEl.GetProperty("goldenWaveClosedBy").GetString());
         Assert.False(string.IsNullOrWhiteSpace(rootEl.GetProperty("goldenWaveClosedCommit").GetString()));
-        Assert.Equal("TB-TMAR-ORDER-POSTCLOSURE-STRUCTURE-002", rootEl.GetProperty("nextTask").GetString());
+        Assert.Equal("TB-TMAR-ORDER-POSTCLOSURE-STRUCTURE-LOCK-001", rootEl.GetProperty("nextTask").GetString());
         Assert.Equal("USER_REVIEW_REQUIRED_BEFORE_NEXT_TMAR_WAVE", rootEl.GetProperty("nextTaskGate").GetString());
         Assert.Equal("PAUSED_AT_SAFE_W5_CHECKPOINT", rootEl.GetProperty("checkoutState").GetString());
         Assert.True(rootEl.GetProperty("frontendFrozen").GetBoolean());
         Assert.Equal("ARCH-COMPLETE-001", rootEl.GetProperty("locksVersion").GetString());
-        Assert.Equal("TB-TMAR-ORDER-POSTCLOSURE-STRUCTURE-001", rootEl.GetProperty("lastAcceptedTask").GetString());
+        Assert.Equal("TB-TMAR-ORDER-POSTCLOSURE-STRUCTURE-002", rootEl.GetProperty("lastAcceptedTask").GetString());
         Assert.False(string.IsNullOrWhiteSpace(rootEl.GetProperty("lastAcceptedCommit").GetString()));
         Assert.DoesNotContain("PENDING_FINAL_CLOSURE_COMMIT", rootEl.GetProperty("lastAcceptedCommit").GetString(), StringComparison.Ordinal);
         Assert.DoesNotContain("PLACEHOLDER_STAMP_AFTER_COMMIT", rootEl.GetProperty("lastAcceptedCommit").GetString(), StringComparison.Ordinal);
@@ -183,6 +183,8 @@ public sealed class TmarDurableGuardTests
         Assert.Contains("TB-TMAR-ORDER-GOLDEN-001-R11", bootstrap, StringComparison.Ordinal);
         Assert.Contains("TB-TMAR-ORDER-GOLDEN-001-R11-R1", bootstrap, StringComparison.Ordinal);
         Assert.Contains("TB-TMAR-ORDER-GOLDEN-001-FINAL-CLOSURE", bootstrap, StringComparison.Ordinal);
+        Assert.Contains("TB-TMAR-ORDER-POSTCLOSURE-STRUCTURE-LOCK-001", master, StringComparison.Ordinal);
+        Assert.Contains("TB-TMAR-ORDER-POSTCLOSURE-STRUCTURE-LOCK-001", bootstrap, StringComparison.Ordinal);
         Assert.Contains("TB-TMAR-ORDER-POSTCLOSURE-STRUCTURE-002", master, StringComparison.Ordinal);
         Assert.Contains("TB-TMAR-ORDER-POSTCLOSURE-STRUCTURE-002", bootstrap, StringComparison.Ordinal);
         Assert.Contains("TB-TMAR-ORDER-POSTCLOSURE-STRUCTURE-001", master, StringComparison.Ordinal);

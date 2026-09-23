@@ -1,6 +1,15 @@
 using Microsoft.EntityFrameworkCore;
 using Tooba.BuildingBlocks;
 using Tooba.Order.Infrastructure;
+using Tooba.Order.Infrastructure.Checkout.Persistence;
+using Tooba.Order.Infrastructure.Guards;
+using Tooba.Order.Infrastructure.Integrations.Fulfillment;
+using Tooba.Order.Infrastructure.Integrations.Payment;
+using Tooba.Order.Infrastructure.Messaging;
+using Tooba.Order.Infrastructure.Events.Payment;
+using Tooba.Order.Infrastructure.Integrations.Returns;
+using Tooba.Order.Infrastructure.Integrations.Notifications;
+using Tooba.Order.Infrastructure.ReservationCycle;
 using Tooba.Order.Infrastructure.Persistence;
 using Tooba.Payment.Infrastructure.Adapters;
 using Tooba.Payment.Infrastructure.DependencyInjection;

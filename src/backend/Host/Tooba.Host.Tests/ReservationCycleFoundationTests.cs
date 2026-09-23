@@ -14,6 +14,12 @@ using Tooba.Order.Application.ReservationCycle.Services;
 using Tooba.Order.Application.Seller.Policies;
 using Tooba.Order.Domain;
 using Tooba.Order.Infrastructure;
+using Tooba.Order.Infrastructure.Checkout.Persistence;
+using Tooba.Order.Infrastructure.Guards;
+using Tooba.Order.Infrastructure.Integrations.Fulfillment;
+using Tooba.Order.Infrastructure.Integrations.Payment;
+using Tooba.Order.Infrastructure.Messaging;
+using Tooba.Order.Infrastructure.ReservationCycle;
 using Tooba.Order.Infrastructure.Persistence;
 using Xunit;
 
@@ -217,8 +223,8 @@ public sealed class ReservationCycleFoundationTests
     [Fact]
     public void Antipattern_scan_is_clean()
     {
-        var dir = Read("src/backend/Modules/Order/Tooba.Order.Infrastructure/ReservationCycleDirectory.cs");
-        var checkout = Read("src/backend/Modules/Order/Tooba.Order.Infrastructure/CheckoutDirectory.cs");
+        var dir = Read("src/backend/Modules/Order/Tooba.Order.Infrastructure/ReservationCycle/ReservationCycleDirectory.cs");
+        var checkout = Read("src/backend/Modules/Order/Tooba.Order.Infrastructure/Checkout/Persistence/CheckoutDirectory.cs");
         var composer = Read("src/backend/Modules/Payment/Tooba.Payment.Application/Orchestration/StorefrontPaymentOrchestrator.cs");
         var cart = Read("src/backend/Modules/Cart/Tooba.Cart.Infrastructure/Directories/CartDirectory.cs");
         Assert.Contains("CorrelatePaymentAttempt", dir, StringComparison.Ordinal);

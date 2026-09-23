@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
 using Tooba.Order.Domain;
+using ReservationCycleEntity = Tooba.Order.Domain.ReservationCycle;
 using Tooba.Persistence;
 
 using Tooba.Order.Application.Checkout.Abuse;
@@ -12,6 +13,8 @@ using Tooba.Order.Application.ReservationCycle.Contracts;
 using Tooba.Order.Application.ReservationCycle.Policies;
 using Tooba.Order.Application.ReservationCycle.Services;
 using Tooba.Order.Application.Seller.Policies;
+
+using Tooba.Order.Infrastructure.Events.Payment;
 
 namespace Tooba.Order.Infrastructure.Persistence;
 
@@ -72,7 +75,7 @@ public sealed class OrderDbContext : DbContext
     public DbSet<CheckoutAdminViewAck> AdminViewAcks => Set<CheckoutAdminViewAck>();
 
     /// <summary>چرخه‌های رزرو سطح سفارش.</summary>
-    public DbSet<ReservationCycle> ReservationCycles => Set<ReservationCycle>();
+    public DbSet<ReservationCycleEntity> ReservationCycles => Set<ReservationCycleEntity>();
 
     /// <summary>رویدادهای ممیزی چرخه رزرو.</summary>
     public DbSet<ReservationCycleEvent> ReservationCycleEvents => Set<ReservationCycleEvent>();
@@ -229,7 +232,7 @@ public sealed class OrderDbContext : DbContext
             entity.Property(x => x.ViewedAt).IsRequired();
             entity.HasIndex(x => new { x.CheckoutId, x.ViewedAt });
         });
-        modelBuilder.Entity<ReservationCycle>(entity =>
+        modelBuilder.Entity<ReservationCycleEntity>(entity =>
         {
             entity.ToTable("reservation_cycles");
             entity.HasKey(x => x.CycleId);

@@ -65,9 +65,9 @@ public sealed class CheckoutAbusePolicyTests
     {
         var root = FindRepoRoot();
         var checkout = File.ReadAllText(Path.Combine(root, "src", "backend", "Modules", "Order", "Tooba.Order.Application", "Checkout", "Process", "CheckoutProcessManager.cs"));
-        var host = File.ReadAllText(Path.Combine(root, "src", "backend", "Modules", "Order", "Tooba.Order.Infrastructure", "CheckoutSubmitHost.cs"));
-        var directory = File.ReadAllText(Path.Combine(root, "src", "backend", "Modules", "Order", "Tooba.Order.Infrastructure", "CheckoutDirectory.cs"));
-        var gate = File.ReadAllText(Path.Combine(root, "src", "backend", "Modules", "Order", "Tooba.Order.Infrastructure", "CheckoutAbuse", "CheckoutAbuseGate.cs"));
+        var host = File.ReadAllText(Path.Combine(root, "src", "backend", "Modules", "Order", "Tooba.Order.Infrastructure", "Checkout", "Persistence", "CheckoutSubmitHost.cs"));
+        var directory = File.ReadAllText(Path.Combine(root, "src", "backend", "Modules", "Order", "Tooba.Order.Infrastructure", "Checkout", "Persistence", "CheckoutDirectory.cs"));
+        var gate = File.ReadAllText(Path.Combine(root, "src", "backend", "Modules", "Order", "Tooba.Order.Infrastructure", "Checkout", "Abuse", "CheckoutAbuseGate.cs"));
         var hide = File.ReadAllText(Path.Combine(root, "src", "backend", "Modules", "Order", "Tooba.Order.Application", "Storefront", "Services", "StorefrontPendingPaymentService.cs"));
         var endpoints = File.ReadAllText(Path.Combine(root, "src", "backend", "Modules", "Order", "Tooba.Order.Endpoints", "Errors", "OrderErrorCatalogContributor.cs"));
         var admin = File.ReadAllText(Path.Combine(root, "src", "backend", "Host", "Tooba.Host", "Admin", "CheckoutAbuseSettingsEndpoints.cs"));
@@ -112,7 +112,7 @@ public sealed class CheckoutAbusePolicyTests
     public void Concurrent_last_slot_uses_row_lock_not_sleep()
     {
         var root = FindRepoRoot();
-        var gate = File.ReadAllText(Path.Combine(root, "src", "backend", "Modules", "Order", "Tooba.Order.Infrastructure", "CheckoutAbuse", "CheckoutAbuseGate.cs"));
+        var gate = File.ReadAllText(Path.Combine(root, "src", "backend", "Modules", "Order", "Tooba.Order.Infrastructure", "Checkout", "Abuse", "CheckoutAbuseGate.cs"));
         Assert.Contains("AcquireCustomerLockAsync", gate, StringComparison.Ordinal);
         Assert.Contains("TouchedAt", gate, StringComparison.Ordinal);
         Assert.DoesNotContain("Thread.Sleep", gate, StringComparison.Ordinal);

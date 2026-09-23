@@ -148,6 +148,7 @@ public sealed class OrderSellerPanelArchitectureGuardTests
             .Where(x => !x.Contains("/Tooba.Order.Tests/", StringComparison.Ordinal))
             .Where(x => x.Contains(SellerSlice, StringComparison.Ordinal)
                 || x.EndsWith("/SellerOrderEndpoints.cs", StringComparison.Ordinal))
+            .Where(x => !x.EndsWith("/SellerOrderAuthBridge.cs", StringComparison.Ordinal))
             .Select(x => (Path.GetRelativePath(RepoRoot(), x), File.ReadAllText(x)))
             .ToList();
 

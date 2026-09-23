@@ -2,6 +2,12 @@ using Microsoft.EntityFrameworkCore;
 using Tooba.BuildingBlocks;
 using Tooba.Order.Domain;
 using Tooba.Order.Infrastructure;
+using Tooba.Order.Infrastructure.Checkout.Persistence;
+using Tooba.Order.Infrastructure.Guards;
+using Tooba.Order.Infrastructure.Integrations.Fulfillment;
+using Tooba.Order.Infrastructure.Integrations.Payment;
+using Tooba.Order.Infrastructure.Messaging;
+using Tooba.Order.Infrastructure.ReservationCycle;
 using Tooba.Order.Infrastructure.Persistence;
 using Xunit;
 
@@ -110,7 +116,7 @@ public sealed class CheckoutProcessFoundationTests
     {
         var root = FindRepoRoot();
         var manager = File.ReadAllText(Path.Combine(root, "src/backend/Modules/Order/Tooba.Order.Application/Checkout/Process/CheckoutProcessManager.cs"));
-        var directory = File.ReadAllText(Path.Combine(root, "src/backend/Modules/Order/Tooba.Order.Infrastructure/CheckoutDirectory.cs"));
+        var directory = File.ReadAllText(Path.Combine(root, "src/backend/Modules/Order/Tooba.Order.Infrastructure/Checkout/Persistence/CheckoutDirectory.cs"));
         Assert.Contains("new TransactionScope(", manager, StringComparison.Ordinal);
         Assert.Contains("ICheckoutProcessTracker", directory, StringComparison.Ordinal);
         Assert.Contains("ICheckoutInventoryReservationPort", manager, StringComparison.Ordinal);

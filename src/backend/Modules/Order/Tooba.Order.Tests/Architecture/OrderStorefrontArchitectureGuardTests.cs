@@ -207,7 +207,7 @@ public sealed class OrderStorefrontArchitectureGuardTests
     public void Order_owns_checkout_abuse_gate_with_IClock_and_catalog_contract()
     {
         var gatePath = Path.Combine(
-            OrderRoot(), "Tooba.Order.Infrastructure", "CheckoutAbuse", "CheckoutAbuseGate.cs");
+            OrderRoot(), "Tooba.Order.Infrastructure", "Checkout", "Abuse", "CheckoutAbuseGate.cs");
         Assert.True(File.Exists(gatePath));
         var gate = File.ReadAllText(gatePath);
         Assert.Contains("IClock", gate, StringComparison.Ordinal);

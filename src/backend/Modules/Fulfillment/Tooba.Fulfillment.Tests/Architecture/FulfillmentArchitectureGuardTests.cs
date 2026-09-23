@@ -127,7 +127,7 @@ public sealed class FulfillmentArchitectureGuardTests
 
         var orderOps = File.ReadAllText(Path.Combine(
             RepoRoot(),
-            "src", "backend", "Modules", "Order", "Tooba.Order.Infrastructure", "Fulfillment", "AdminOrderFulfillmentOperations.cs"));
+            "src", "backend", "Modules", "Order", "Tooba.Order.Infrastructure", "Admin", "Fulfillment", "AdminOrderFulfillmentOperations.cs"));
         Assert.Contains("IAdminOrderFulfillmentOperations", orderOps, StringComparison.Ordinal);
         Assert.DoesNotContain("Tooba.Host", orderOps, StringComparison.Ordinal);
         Assert.DoesNotContain("AdminOrderOperationsComposer", orderOps, StringComparison.Ordinal);

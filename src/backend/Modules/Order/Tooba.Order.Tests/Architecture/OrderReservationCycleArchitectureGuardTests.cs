@@ -77,7 +77,7 @@ public sealed class OrderReservationCycleArchitectureGuardTests
         Assert.DoesNotContain("DateTime.UtcNow", hostWorker, StringComparison.Ordinal);
 
         var reconciler = File.ReadAllText(Path.Combine(
-            root, "src", "backend", "Modules", "Order", "Tooba.Order.Infrastructure", "UnpaidOrderExpiryReconciler.cs"));
+            root, "src", "backend", "Modules", "Order", "Tooba.Order.Infrastructure", "ReservationCycle", "UnpaidOrderExpiryReconciler.cs"));
         Assert.Contains("_clock.UtcNow", reconciler, StringComparison.Ordinal);
         Assert.Contains("IPaymentCustomerGateway", reconciler, StringComparison.Ordinal);
         Assert.Contains("IOrderPaymentProjectionPort", reconciler, StringComparison.Ordinal);

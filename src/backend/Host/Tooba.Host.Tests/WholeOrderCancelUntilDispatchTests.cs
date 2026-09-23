@@ -161,7 +161,7 @@ public sealed class WholeOrderCancelUntilDispatchTests
             + File.ReadAllText(Path.Combine(
             root, "src", "backend", "Modules", "Order", "Tooba.Order.Application", "Admin", "Completeness", "History", "AdminOrderHistoryComposer.Returns.cs"));
         var checkout = File.ReadAllText(Path.Combine(
-            root, "src", "backend", "Modules", "Order", "Tooba.Order.Infrastructure", "CheckoutDirectory.cs"));
+            root, "src", "backend", "Modules", "Order", "Tooba.Order.Infrastructure", "Checkout", "Persistence", "CheckoutDirectory.cs"));
         Assert.Contains(AdminOrderOperationsPolicy.WholeOrderCancelBlockedAfterDispatchFa, composer, StringComparison.Ordinal);
         Assert.Contains(AdminOrderOperationsPolicy.WholeOrderCancelConfirmFa, composer, StringComparison.Ordinal);
         Assert.Contains("HasDispatchedOrDelivered(fulfillments)", composer, StringComparison.Ordinal);

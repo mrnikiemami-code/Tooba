@@ -4,7 +4,7 @@ using Tooba.Fulfillment.Application.Ports;
 using Tooba.Fulfillment.Application.Shipping;
 using Tooba.Fulfillment.Domain.ValueObjects;
 using Tooba.Order.Contracts.Fulfillment;
-using Tooba.Order.Infrastructure.Fulfillment;
+using Tooba.Order.Infrastructure.Admin.Fulfillment;
 using Xunit;
 
 using Tooba.Order.Application.Checkout.Abuse;
@@ -150,10 +150,10 @@ public sealed class AdminOrderFulfillmentOperationsTests
     {
         var root = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", ".."));
         Assert.False(File.Exists(Path.Combine(root, "Host", "Tooba.Host", "Admin", "HostAdminOrderFulfillmentOperations.cs")));
-        var impl = Path.Combine(root, "Modules", "Order", "Tooba.Order.Infrastructure", "Fulfillment", "AdminOrderFulfillmentOperations.cs");
+        var impl = Path.Combine(root, "Modules", "Order", "Tooba.Order.Infrastructure", "Admin", "Fulfillment", "AdminOrderFulfillmentOperations.cs");
         Assert.True(File.Exists(impl));
         var text = File.ReadAllText(impl);
-        Assert.Contains("namespace Tooba.Order.Infrastructure.Fulfillment", text, StringComparison.Ordinal);
+        Assert.Contains("namespace Tooba.Order.Infrastructure.Admin.Fulfillment", text, StringComparison.Ordinal);
         Assert.DoesNotContain("Tooba.Host", text, StringComparison.Ordinal);
         Assert.DoesNotContain("AdminOrderOperationsPolicy", text, StringComparison.Ordinal);
         Assert.DoesNotContain("PlatformHttpException", text, StringComparison.Ordinal);

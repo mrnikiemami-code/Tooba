@@ -114,7 +114,7 @@ public sealed class UnpaidOrderExpiryTests
         Assert.Contains("UnpaidOrderExpiryHostedService", Read("src/backend/Host/Tooba.Host/Program.cs"), StringComparison.Ordinal);
         Assert.Contains("IUnpaidOrderExpiryReconciler", Read("src/backend/Host/Tooba.Host/UnpaidOrderExpiryHostedService.cs"), StringComparison.Ordinal);
         Assert.DoesNotContain("ReleaseReservationsAfterManualRejectAsync", Read("src/backend/Host/Tooba.Host/UnpaidOrderExpiryHostedService.cs"), StringComparison.Ordinal);
-        Assert.Contains("ReleaseReservationsAfterManualRejectAsync", Read("src/backend/Modules/Order/Tooba.Order.Infrastructure/UnpaidOrderExpiryReconciler.cs"), StringComparison.Ordinal);
+        Assert.Contains("ReleaseReservationsAfterManualRejectAsync", Read("src/backend/Modules/Order/Tooba.Order.Infrastructure/ReservationCycle/UnpaidOrderExpiryReconciler.cs"), StringComparison.Ordinal);
         Assert.DoesNotContain("IReservationCycleDirectory", Read("src/backend/Host/Tooba.Host/UnpaidOrderExpiryHostedService.cs"), StringComparison.Ordinal);
         Assert.DoesNotContain("IOrderPaymentProjectionPort", Read("src/backend/Host/Tooba.Host/UnpaidOrderExpiryHostedService.cs"), StringComparison.Ordinal);
         Assert.DoesNotContain("DateTimeOffset.UtcNow", Read("src/backend/Host/Tooba.Host/UnpaidOrderExpiryHostedService.cs"), StringComparison.Ordinal);
@@ -149,7 +149,7 @@ public sealed class UnpaidOrderExpiryTests
         Assert.True(payment.ExpireUnpaidTimeout(now));
         Assert.True(payment.ApplyVerifiedSuccess(attempt.AttemptId, "txn-late", now.AddMinutes(1)));
         Assert.Equal(PaymentStatus.Succeeded, payment.Status);
-        var bridge = Read("src/backend/Modules/Order/Tooba.Order.Infrastructure/OrderPaymentBridge.cs");
+        var bridge = Read("src/backend/Modules/Order/Tooba.Order.Infrastructure/Integrations/Payment/OrderPaymentBridge.cs");
         Assert.Contains("Late captured money stays Paid", bridge, StringComparison.Ordinal);
         Assert.Contains("SupplyStatus remains Unavailable", bridge, StringComparison.Ordinal);
         Assert.Contains("EnsurePaidDurableOrKeepPaidAsync", bridge, StringComparison.Ordinal);
@@ -174,7 +174,7 @@ public sealed class UnpaidOrderExpiryTests
     [Fact]
     public void Regression_r5_r9_surfaces_remain()
     {
-        Assert.Contains("PromoteReservationsForManualPaymentReviewAsync", Read("src/backend/Modules/Order/Tooba.Order.Infrastructure/OrderPaymentBridge.cs"), StringComparison.Ordinal);
+        Assert.Contains("PromoteReservationsForManualPaymentReviewAsync", Read("src/backend/Modules/Order/Tooba.Order.Infrastructure/Integrations/Payment/OrderPaymentBridge.cs"), StringComparison.Ordinal);
         Assert.Contains("EnsureOrderSupplyAsync", Read("src/backend/Modules/Inventory/Tooba.Inventory.Infrastructure/Directories/InventoryDirectory.cs"), StringComparison.Ordinal);
         Assert.Contains("GetStatusesAsync", Read("src/backend/Modules/Order/Tooba.Order.Application/Admin/Supply/Services/OrderSupplyService.cs"), StringComparison.Ordinal);
         Assert.DoesNotContain("ReserveAsync", Read("src/backend/Modules/Cart/Tooba.Cart.Infrastructure/Directories/CartDirectory.cs"), StringComparison.Ordinal);

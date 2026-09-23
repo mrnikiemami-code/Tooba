@@ -32,7 +32,7 @@ public sealed class CheckoutImplW5PromotionContractTests
     [Fact]
     public void Checkout_directory_uses_checkout_promotion_port()
     {
-        var checkout = Read("src/backend/Modules/Order/Tooba.Order.Infrastructure/CheckoutDirectory.cs");
+        var checkout = Read("src/backend/Modules/Order/Tooba.Order.Infrastructure/Checkout/Persistence/CheckoutDirectory.cs");
         Assert.Contains("ICheckoutPromotionPort", checkout, StringComparison.Ordinal);
         Assert.Contains("EvaluateForCheckoutAsync", checkout, StringComparison.Ordinal);
         Assert.Contains("CheckoutPromotionEvaluationRequest", checkout, StringComparison.Ordinal);
