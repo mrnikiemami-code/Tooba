@@ -6,7 +6,7 @@ These locks govern NEW work during TMAR recovery. Existing LOCK-SF-* storefront 
 
 ## Golden wave final closure
 `TB-TMAR-GOLDEN-WAVE-FINAL-CLOSURE-001` closes the targeted wave under
-`ARCH-COMPLETE-001`, `HOST-MODULE-ENDPOINT-001`, and `ARCH-CQRS-001/002`.
+`ARCH-COMPLETE-001`/`ARCH-COMPLETE-002`, `HOST-MODULE-ENDPOINT-001`, and `ARCH-CQRS-001/002`.
 Complete modules: Cart, Settlement, Fulfillment, Returns, Notification, Support, Wallet, Payment, Promotion, Offer, Inventory.
 The first ten are HTTP-owning (`MODULE_ENDPOINTS` + `MEDIATR_12_5`); Inventory is
 `INTERNAL_ONLY / NOT_APPLICABLE / INTERNAL_USE_CASE_BOUNDARIES`.
@@ -87,6 +87,30 @@ Approved MediatR version is EXACTLY **12.5.0**.
 
 ## ARCH-COMPLETE-001
 A module MUST NOT be marked `COMPLETE_REFERENCE_PATTERN` unless its declared HTTP applicability, endpoint ownership, CQRS/MediatR boundary, Result/error semantics, physical structure, cross-module contracts, Host authority, behavior preservation, and recovery state are all verified. Green build/tests alone are insufficient.
+
+## ARCH-COMPLETE-002
+`ARCH-COMPLETE-001` remains in force and `ARCH-COMPLETE-002` hardens its physical-structure clause into an enforceable, reusable lock.
+
+Definition marker:
+`COMPLETE_REFERENCE_PATTERN_REQUIRES_ENDPOINTS_CQRS_RESULT_CONTRACTS_VALIDATION_CAPABILITY_STRUCTURE_GUARDS_SOT`
+
+Locked rules:
+- `APPLICATION_CAPABILITY_FOLDERS` — capability-specific files must not live at Application root; Commands/Queries/Models/Ports/Policies/Services grouped under their owning capability; no miscellaneous `*Contracts.cs` dumping at root; validators live with the request or under an explicit shared `Validation` capability; business validation must not be moved into FluentValidation.
+- `ENDPOINTS_CAPABILITY_FOLDERS` — capability `*Endpoints.cs` must not live at Endpoints root; Admin/Customer/Seller/Storefront or equivalent grouping must be visible; root may contain the endpoint composition entry only.
+- `INFRASTRUCTURE_CAPABILITY_INTEGRATION_FOLDERS` — capability implementation/bridge/service files must not live at Infrastructure root; persistence under `Persistence`; migrations under `Persistence/Migrations`; foreign adapters under a coherent `Integrations/<Module>` or owning capability path; one integration must not be fragmented across competing top-level folders.
+- `PATH_NAMESPACE_ALIGNMENT` — every file namespace equals project name + relative folder path.
+- `ROOT_ALLOWLIST` — each module project declares an explicit root `.cs` allowlist; a new root `.cs` file fails the gate unless the manifest is deliberately updated.
+- `NO_NAMESPACE_ALIAS_WORKAROUND` — namespace-alias workarounds used only to hide folder debt are forbidden.
+
+Certification mechanism:
+- `docs/architecture/tmar-module-structure-manifests.json` holds module manifests.
+- `Tooba.Host.Tests.Architecture.TmarCompleteReferenceStructureGateTests` enforces them plus repo-wide path↔namespace alignment.
+- Order-only detailed guards remain as an additional layer.
+- Certification is recorded in `tmar-current-state.json` → `structureLock.certifiedModules`.
+
+Standard: `docs/architecture/TMAR-COMPLETE-REFERENCE-STRUCTURE-STANDARD.md`.
+
+Certified modules: Order (ARCH-COMPLETE-002 STRUCTURE_CERTIFIED). All other existing COMPLETE modules are NOT structure-certified until separately reverified.
 
 For an HTTP-owning module, `COMPLETE_REFERENCE_PATTERN` requires ALL of:
 - real physical `Tooba.<Module>.Endpoints` project

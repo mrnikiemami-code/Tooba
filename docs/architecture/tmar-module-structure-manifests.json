@@ -1,0 +1,99 @@
+{
+  "version": "ARCH-COMPLETE-002",
+  "definitionMarker": "COMPLETE_REFERENCE_PATTERN_REQUIRES_ENDPOINTS_CQRS_RESULT_CONTRACTS_VALIDATION_CAPABILITY_STRUCTURE_GUARDS_SOT",
+  "rules": [
+    "APPLICATION_CAPABILITY_FOLDERS",
+    "ENDPOINTS_CAPABILITY_FOLDERS",
+    "INFRASTRUCTURE_CAPABILITY_INTEGRATION_FOLDERS",
+    "PATH_NAMESPACE_ALIGNMENT",
+    "ROOT_ALLOWLIST",
+    "NO_NAMESPACE_ALIAS_WORKAROUND"
+  ],
+  "modules": [
+    {
+      "module": "Order",
+      "structureCertified": true,
+      "lockVersion": "ARCH-COMPLETE-002",
+      "projects": [
+        {
+          "projectName": "Tooba.Order.Application",
+          "rootAllowlist": [],
+          "forbiddenRootFiles": [
+            "OrderContracts.cs",
+            "CheckoutAbuseContracts.cs",
+            "CheckoutCommitBarrier.cs",
+            "CheckoutPayableInvariant.cs",
+            "CheckoutProcessContracts.cs",
+            "CheckoutProcessManager.cs",
+            "IReservationCycleCoordinator.cs",
+            "IUnpaidOrderExpiryReconciler.cs",
+            "ReservationCycleContracts.cs",
+            "ReservationCycleCoordinator.cs",
+            "ReservationCyclePolicyResolver.cs",
+            "SellerOrderCancellationPolicy.cs"
+          ],
+          "forbiddenTopLevelFolders": []
+        },
+        {
+          "projectName": "Tooba.Order.Endpoints",
+          "rootAllowlist": [
+            "OrderEndpointModule.cs"
+          ],
+          "forbiddenRootFiles": [
+            "AdminCustomersEndpoints.cs",
+            "AdminOrderCompletenessEndpoints.cs",
+            "AdminOrderDetailEndpoints.cs",
+            "AdminOrderInventoryRecoverySupplyEndpoints.cs",
+            "AdminOrderOperationsEndpoints.cs",
+            "AdminOrdersGridEndpoints.cs",
+            "CustomerOrderEndpoints.cs",
+            "SellerOrderEndpoints.cs",
+            "StorefrontOrderEndpoints.cs"
+          ],
+          "forbiddenTopLevelFolders": []
+        },
+        {
+          "projectName": "Tooba.Order.Infrastructure",
+          "rootAllowlist": [
+            "OrderModule.cs"
+          ],
+          "forbiddenRootFiles": [
+            "CheckoutDirectory.cs",
+            "CheckoutProcessTracker.cs",
+            "CheckoutSubmitHost.cs",
+            "OpenOrderUseCaseGuard.cs",
+            "OrderFulfillmentBridge.cs",
+            "OrderGridEnrichmentBridge.cs",
+            "OrderNotificationBridge.cs",
+            "OrderOutboxRegistration.cs",
+            "OrderPaymentBridge.cs",
+            "OrderPaymentSucceededHandler.cs",
+            "OrderPurchaseVerificationGateway.cs",
+            "OrderReturnBridge.cs",
+            "ReservationCycleCheckoutLineSource.cs",
+            "ReservationCycleDirectory.cs",
+            "SellerOrderAuthBridge.cs",
+            "UnpaidOrderExpiryReconciler.cs"
+          ],
+          "forbiddenTopLevelFolders": [
+            "CheckoutAbuse",
+            "Payments",
+            "Fulfillment"
+          ]
+        }
+      ]
+    }
+  ],
+  "uncertifiedHttpOwningModules": [
+    "Cart",
+    "Settlement",
+    "Fulfillment",
+    "Returns",
+    "Notification",
+    "Support",
+    "Wallet",
+    "Payment",
+    "Promotion",
+    "Offer"
+  ]
+}

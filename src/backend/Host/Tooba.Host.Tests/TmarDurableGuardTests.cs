@@ -106,12 +106,29 @@ public sealed class TmarDurableGuardTests
         Assert.Equal("USER_ACCEPTED", rootEl.GetProperty("goldenWaveUserReview").GetString());
         Assert.Equal("TB-TMAR-GOLDEN-WAVE-FINAL-CLOSURE-001", rootEl.GetProperty("goldenWaveClosedBy").GetString());
         Assert.False(string.IsNullOrWhiteSpace(rootEl.GetProperty("goldenWaveClosedCommit").GetString()));
-        Assert.Equal("TB-TMAR-ORDER-POSTCLOSURE-STRUCTURE-LOCK-001", rootEl.GetProperty("nextTask").GetString());
+        Assert.Equal("USER_REVIEW_ORDER_STRUCTURE_LOCK_COMPLETE", rootEl.GetProperty("nextTask").GetString());
         Assert.Equal("USER_REVIEW_REQUIRED_BEFORE_NEXT_TMAR_WAVE", rootEl.GetProperty("nextTaskGate").GetString());
         Assert.Equal("PAUSED_AT_SAFE_W5_CHECKPOINT", rootEl.GetProperty("checkoutState").GetString());
         Assert.True(rootEl.GetProperty("frontendFrozen").GetBoolean());
-        Assert.Equal("ARCH-COMPLETE-001", rootEl.GetProperty("locksVersion").GetString());
-        Assert.Equal("TB-TMAR-ORDER-POSTCLOSURE-STRUCTURE-002", rootEl.GetProperty("lastAcceptedTask").GetString());
+        Assert.Equal("ARCH-COMPLETE-002", rootEl.GetProperty("locksVersion").GetString());
+        Assert.Equal(
+            "COMPLETE_REFERENCE_PATTERN_REQUIRES_ENDPOINTS_CQRS_RESULT_CONTRACTS_VALIDATION_CAPABILITY_STRUCTURE_GUARDS_SOT",
+            rootEl.GetProperty("definitionMarker").GetString());
+        var structureLock = rootEl.GetProperty("structureLock");
+        Assert.Equal("ARCH-COMPLETE-002", structureLock.GetProperty("version").GetString());
+        Assert.Equal(
+            new[] { "Order" },
+            structureLock.GetProperty("certifiedModules").EnumerateArray()
+                .Select(x => x.GetString()!)
+                .OrderBy(x => x, StringComparer.Ordinal)
+                .ToArray());
+        Assert.Contains(
+            "APPLICATION_CAPABILITY_FOLDERS",
+            structureLock.GetProperty("rules").EnumerateArray().Select(x => x.GetString()!).ToArray());
+        Assert.Contains(
+            "NO_NAMESPACE_ALIAS_WORKAROUND",
+            structureLock.GetProperty("rules").EnumerateArray().Select(x => x.GetString()!).ToArray());
+        Assert.Equal("TB-TMAR-ORDER-POSTCLOSURE-STRUCTURE-LOCK-001", rootEl.GetProperty("lastAcceptedTask").GetString());
         Assert.False(string.IsNullOrWhiteSpace(rootEl.GetProperty("lastAcceptedCommit").GetString()));
         Assert.DoesNotContain("PENDING_FINAL_CLOSURE_COMMIT", rootEl.GetProperty("lastAcceptedCommit").GetString(), StringComparison.Ordinal);
         Assert.DoesNotContain("PLACEHOLDER_STAMP_AFTER_COMMIT", rootEl.GetProperty("lastAcceptedCommit").GetString(), StringComparison.Ordinal);
@@ -185,16 +202,16 @@ public sealed class TmarDurableGuardTests
         Assert.Contains("TB-TMAR-ORDER-GOLDEN-001-FINAL-CLOSURE", bootstrap, StringComparison.Ordinal);
         Assert.Contains("TB-TMAR-ORDER-POSTCLOSURE-STRUCTURE-LOCK-001", master, StringComparison.Ordinal);
         Assert.Contains("TB-TMAR-ORDER-POSTCLOSURE-STRUCTURE-LOCK-001", bootstrap, StringComparison.Ordinal);
-        Assert.Contains("TB-TMAR-ORDER-POSTCLOSURE-STRUCTURE-002", master, StringComparison.Ordinal);
-        Assert.Contains("TB-TMAR-ORDER-POSTCLOSURE-STRUCTURE-002", bootstrap, StringComparison.Ordinal);
+        Assert.Contains("TB-TMAR-ORDER-POSTCLOSURE-STRUCTURE-LOCK-001", master, StringComparison.Ordinal);
+        Assert.Contains("TB-TMAR-ORDER-POSTCLOSURE-STRUCTURE-LOCK-001", bootstrap, StringComparison.Ordinal);
         Assert.Contains("TB-TMAR-ORDER-POSTCLOSURE-STRUCTURE-001", master, StringComparison.Ordinal);
         Assert.Contains("TB-TMAR-ORDER-POSTCLOSURE-STRUCTURE-001", bootstrap, StringComparison.Ordinal);
         Assert.Contains("TB-TMAR-ORDER-POSTCLOSURE-QUALITY-001", master, StringComparison.Ordinal);
         Assert.Contains("TB-TMAR-ORDER-POSTCLOSURE-QUALITY-001", bootstrap, StringComparison.Ordinal);
         Assert.Contains("USER_REVIEW_REQUIRED_BEFORE_NEXT_TMAR_WAVE", master, StringComparison.Ordinal);
         Assert.Contains("USER_REVIEW_REQUIRED_BEFORE_NEXT_TMAR_WAVE", bootstrap, StringComparison.Ordinal);
-        Assert.Contains("ARCH-COMPLETE-001", master, StringComparison.Ordinal);
-        Assert.Contains("ARCH-COMPLETE-001", bootstrap, StringComparison.Ordinal);
+        Assert.Contains("ARCH-COMPLETE-002", master, StringComparison.Ordinal);
+        Assert.Contains("ARCH-COMPLETE-002", bootstrap, StringComparison.Ordinal);
         Assert.Contains("COMPLETE_REFERENCE_PATTERN", master, StringComparison.Ordinal);
         Assert.Contains("COMPLETE_REFERENCE_PATTERN", bootstrap, StringComparison.Ordinal);
         const string currentCompleteList = "Cart, Settlement, Fulfillment, Returns, Notification, Support, Wallet, Payment, Promotion, Offer, Order, Inventory";

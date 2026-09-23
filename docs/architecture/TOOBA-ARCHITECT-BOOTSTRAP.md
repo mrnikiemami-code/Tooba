@@ -4,7 +4,7 @@ Canonical bootstrap for recovering the Tooba architecture context after chat/ses
 
 ## Current Order Recovery (authoritative)
 
-- Locks: ARCH-COMPLETE-001, HOST-MODULE-ENDPOINT-001, ARCH-CQRS-001/002
+- Locks: ARCH-COMPLETE-002, HOST-MODULE-ENDPOINT-001, ARCH-CQRS-001/002
 - Golden wave = COMPLETE + USER_ACCEPTED; backend-only; frontendFrozen = true
 - Complete modules: Cart, Settlement, Fulfillment, Returns, Notification, Support, Wallet, Payment, Promotion, Offer, Order, Inventory
 - Eleven HTTP-owning modules use MODULE_ENDPOINTS + MEDIATR_12_5.
@@ -13,8 +13,8 @@ Canonical bootstrap for recovering the Tooba architecture context after chat/ses
 - Checkout = PAUSED_AT_SAFE_W5_CHECKPOINT
 - Order = COMPLETE_REFERENCE_PATTERN after TB-TMAR-ORDER-GOLDEN-001-FINAL-CLOSURE (prior: TB-TMAR-ORDER-GOLDEN-001-R11-R1, TB-TMAR-ORDER-GOLDEN-001-R11, TB-TMAR-ORDER-GOLDEN-001-R10, TB-TMAR-ORDER-GOLDEN-001-R9, TB-TMAR-ORDER-GOLDEN-001-R8, TB-TMAR-ORDER-GOLDEN-001-R7, TB-TMAR-ORDER-GOLDEN-001-R6, TB-TMAR-ORDER-GOLDEN-001-R3, TB-TMAR-ORDER-GOLDEN-001-R3B, TB-TMAR-ORDER-GOLDEN-001-R4, TB-TMAR-ORDER-GOLDEN-001-R4-R1, TB-TMAR-ORDER-GOLDEN-001-R5, TB-TMAR-ORDER-GOLDEN-001-R5-R1)
 - Post-closure quality: TB-TMAR-ORDER-POSTCLOSURE-QUALITY-001-R1 (complete transport FluentValidation coverage; Order remains COMPLETE_REFERENCE_PATTERN)
-- Post-closure structure: TB-TMAR-ORDER-POSTCLOSURE-STRUCTURE-001 (Order.Endpoints capability foldering); TB-TMAR-ORDER-POSTCLOSURE-STRUCTURE-002 (Order.Infrastructure capability + integration foldering; Order remains COMPLETE_REFERENCE_PATTERN)
-- Current next task: TB-TMAR-ORDER-POSTCLOSURE-STRUCTURE-LOCK-001
+- Post-closure structure: TB-TMAR-ORDER-POSTCLOSURE-STRUCTURE-001 (Order.Endpoints capability foldering); TB-TMAR-ORDER-POSTCLOSURE-STRUCTURE-002 (Order.Infrastructure capability + integration foldering); TB-TMAR-ORDER-POSTCLOSURE-STRUCTURE-LOCK-001 (ARCH-COMPLETE-002 structure lock; Order STRUCTURE_CERTIFIED)
+- Current next task: USER_REVIEW_ORDER_STRUCTURE_LOCK_COMPLETE
 - Gate: USER_REVIEW_REQUIRED_BEFORE_NEXT_TMAR_WAVE
 - Closed by: TB-TMAR-GOLDEN-WAVE-FINAL-CLOSURE-001
 - Order closed by: TB-TMAR-ORDER-GOLDEN-001-FINAL-CLOSURE

@@ -2,7 +2,7 @@ TOOBA TMAR MASTER RECOVERY
 
 Current Golden Wave Closure (authoritative)
 
-- Locks: ARCH-COMPLETE-001, HOST-MODULE-ENDPOINT-001, ARCH-CQRS-001/002
+- Locks: ARCH-COMPLETE-002, HOST-MODULE-ENDPOINT-001, ARCH-CQRS-001/002
 - Execution: BACKEND_ONLY_UNTIL_EXPLICIT_RELEASE; frontendFrozen = true
 - Golden wave: COMPLETE + USER_ACCEPTED; 12 COMPLETE_REFERENCE_PATTERN modules
 - Complete modules: Cart, Settlement, Fulfillment, Returns, Notification, Support, Wallet, Payment, Promotion, Offer, Order, Inventory
@@ -12,11 +12,24 @@ Current Golden Wave Closure (authoritative)
 - Checkout = PAUSED_AT_SAFE_W5_CHECKPOINT
 - Order: COMPLETE_REFERENCE_PATTERN after TB-TMAR-ORDER-GOLDEN-001-FINAL-CLOSURE (prior repair lineage: TB-TMAR-ORDER-GOLDEN-001-R11-R1; TB-TMAR-ORDER-GOLDEN-001-R11; TB-TMAR-ORDER-GOLDEN-001-R10; TB-TMAR-ORDER-GOLDEN-001-R9; TB-TMAR-ORDER-GOLDEN-001-R8; TB-TMAR-ORDER-GOLDEN-001-R7; TB-TMAR-ORDER-GOLDEN-001-R6; TB-TMAR-ORDER-GOLDEN-001-R5-R1; TB-TMAR-ORDER-GOLDEN-001-R5; TB-TMAR-ORDER-GOLDEN-001-R4-R1; TB-TMAR-ORDER-GOLDEN-001-R4; TB-TMAR-ORDER-GOLDEN-001-R3B; TB-TMAR-ORDER-GOLDEN-001-R3)
 - Post-closure quality: TB-TMAR-ORDER-POSTCLOSURE-QUALITY-001-R1 (complete transport FluentValidation coverage; Order remains COMPLETE_REFERENCE_PATTERN)
-- Post-closure structure: TB-TMAR-ORDER-POSTCLOSURE-STRUCTURE-001 (Order.Endpoints capability foldering); TB-TMAR-ORDER-POSTCLOSURE-STRUCTURE-002 (Order.Infrastructure capability + integration foldering; Order remains COMPLETE_REFERENCE_PATTERN)
-- Next task: TB-TMAR-ORDER-POSTCLOSURE-STRUCTURE-LOCK-001
+- Post-closure structure: TB-TMAR-ORDER-POSTCLOSURE-STRUCTURE-001 (Order.Endpoints capability foldering); TB-TMAR-ORDER-POSTCLOSURE-STRUCTURE-002 (Order.Infrastructure capability + integration foldering); TB-TMAR-ORDER-POSTCLOSURE-STRUCTURE-LOCK-001 (ARCH-COMPLETE-002 structure lock; Order STRUCTURE_CERTIFIED)
+- Next task: USER_REVIEW_ORDER_STRUCTURE_LOCK_COMPLETE
 - Gate: USER_REVIEW_REQUIRED_BEFORE_NEXT_TMAR_WAVE
 - Closed by: TB-TMAR-GOLDEN-WAVE-FINAL-CLOSURE-001
 - Order closed by: TB-TMAR-ORDER-GOLDEN-001-FINAL-CLOSURE
+
+Final closure template lock (ARCH-COMPLETE-002)
+
+Every future final-closure task must include all of the following gates before claiming COMPLETE_REFERENCE_PATTERN:
+- Application organization audit (capability folders + namespace alignment).
+- Endpoints organization audit where the module owns HTTP (capability mapping exactly once).
+- Infrastructure organization audit (capability/integration folders).
+- path↔namespace audit for Application/Endpoints/Infrastructure.
+- root allowlist audit per project.
+- FluentValidation coverage audit for every MediatR transport request.
+- explicit NO_VALIDATOR_REQUIRED classification where a validator is not applicable.
+- module entry in docs/architecture/tmar-module-structure-manifests.json + structureLock certification in tmar-current-state.json.
+Standard: docs/architecture/TMAR-COMPLETE-REFERENCE-STRUCTURE-STANDARD.md
 
 Purpose
 

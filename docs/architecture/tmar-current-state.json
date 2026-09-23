@@ -3,16 +3,33 @@
     "executionMode":  "BACKEND_ONLY_UNTIL_EXPLICIT_RELEASE",
     "frontendFrozen":  true,
     "checkoutState":  "PAUSED_AT_SAFE_W5_CHECKPOINT",
-    "lastAcceptedTask":  "TB-TMAR-ORDER-POSTCLOSURE-STRUCTURE-002",
-    "lastAcceptedCommit":  "a3af48eb2e1715c9fab9860e8e52327398dc5c15",
-    "nextTask":  "TB-TMAR-ORDER-POSTCLOSURE-STRUCTURE-LOCK-001",
+    "lastAcceptedTask":  "TB-TMAR-ORDER-POSTCLOSURE-STRUCTURE-LOCK-001",
+    "lastAcceptedCommit":  "PENDING_COMMIT",
+    "nextTask":  "USER_REVIEW_ORDER_STRUCTURE_LOCK_COMPLETE",
     "nextTaskGate":  "USER_REVIEW_REQUIRED_BEFORE_NEXT_TMAR_WAVE",
     "goldenWaveState":  "COMPLETE",
     "goldenWaveUserReview":  "USER_ACCEPTED",
     "goldenWaveClosedBy":  "TB-TMAR-GOLDEN-WAVE-FINAL-CLOSURE-001",
     "goldenWaveClosedCommit":  "024ce2b5708aa70ad9f395b4dcbe48fdd6912c5a",
-    "locksVersion":  "ARCH-COMPLETE-001",
-    "definitionMarker":  "COMPLETE_REFERENCE_PATTERN_REQUIRES_ENDPOINTS_CQRS_RESULT_CONTRACTS_GUARDS_SOT",
+    "locksVersion":  "ARCH-COMPLETE-002",
+    "definitionMarker":  "COMPLETE_REFERENCE_PATTERN_REQUIRES_ENDPOINTS_CQRS_RESULT_CONTRACTS_VALIDATION_CAPABILITY_STRUCTURE_GUARDS_SOT",
+    "structureLock":  {
+        "version":  "ARCH-COMPLETE-002",
+        "rules":  [
+            "APPLICATION_CAPABILITY_FOLDERS",
+            "ENDPOINTS_CAPABILITY_FOLDERS",
+            "INFRASTRUCTURE_CAPABILITY_INTEGRATION_FOLDERS",
+            "PATH_NAMESPACE_ALIGNMENT",
+            "ROOT_ALLOWLIST",
+            "NO_NAMESPACE_ALIAS_WORKAROUND"
+        ],
+        "certifiedModules":  [
+            "Order"
+        ],
+        "manifest":  "docs/architecture/tmar-module-structure-manifests.json",
+        "standard":  "docs/architecture/TMAR-COMPLETE-REFERENCE-STRUCTURE-STANDARD.md",
+        "uncertifiedModulesNote":  "Other existing COMPLETE_REFERENCE_PATTERN modules are NOT structure-certified under ARCH-COMPLETE-002 until separately reverified."
+    },
     "recoveryPhrase":  "برگردیم به TMAR؛ TOOBA-TMAR-MASTER-RECOVERY.md و آخرین recovery-sot را مبنا بگیر.",
     "completeReferenceModules":  [
                                      {
