@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Tooba.Catalog.Application;
 using Tooba.Catalog.Domain;
 using Tooba.Order.Application;
+using Tooba.Order.Application.PurchaseVerification;
 using Tooba.Reviews.Application;
 using Tooba.Reviews.Domain;
 using Tooba.Reviews.Infrastructure.Persistence;
