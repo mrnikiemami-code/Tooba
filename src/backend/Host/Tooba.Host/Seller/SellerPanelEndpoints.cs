@@ -1,11 +1,13 @@
 using Tooba.BuildingBlocks;
 using Tooba.Catalog.Application;
 using Tooba.Host.Admin;
+using Tooba.Order.Application.Seller.Queries.GetSellerOrderDashboardSummary;
 
 namespace Tooba.Host.Seller;
 
 /// <summary>
 /// مسیرهای HTTP پنل فروشنده. مجوز از Actor احرازشده و SpiceDB/موتور مجوز می‌آید؛ هدر Seller فقط زمینه است.
+/// مسیرهای /orders* به Order.Endpoints منتقل شده‌اند.
 /// </summary>
 public static class SellerPanelEndpoints
 {
@@ -20,7 +22,7 @@ public static class SellerPanelEndpoints
     public const string DevActorHeader = SellerPanelAccess.DevActorHeader;
 
     /// <summary>
-    /// مسیرهای Seller Panel را ثبت می‌کند.
+    /// مسیرهای Seller Panel را ثبت می‌کند (بدون /orders*).
     /// </summary>
     public static void MapSellerPanelEndpoints(this WebApplication app)
     {
@@ -28,8 +30,6 @@ public static class SellerPanelEndpoints
         group.MapGet("/dashboard", GetDashboardAsync);
         group.MapGet("/catalog-variants", ListCatalogVariantsAsync);
         // Offer HTTP routes live in Tooba.Offer.Endpoints (MapOfferModule).
-        group.MapGet("/orders", ListOrdersAsync);
-        group.MapGet("/orders/{sellerOrderId:guid}", GetOrderAsync);
         group.MapGet("/dev-contexts", GetDevContexts);
         group.MapPut("/products/{productId:guid}/attributes/{definitionId:guid}", SetProductAttributeAsync);
         group.MapPut("/products/{productId:guid}/variant-axes", SetProductVariantAxesAsync);
@@ -40,6 +40,7 @@ public static class SellerPanelEndpoints
 
     private static async Task<IResult> GetDashboardAsync(
         SellerPanelComposer composer,
+        MediatR.ISender sender,
         HttpRequest request,
         CurrentAuthenticatedSession session,
         IAuthorizationGuard guard,
@@ -50,8 +51,28 @@ public static class SellerPanelEndpoints
         {
             var (actorUserId, sellerPartyId) = await SellerPanelAccess.RequireAuthorizedAsync(
                 request, session, guard, environment, cancellationToken);
-            var summary = await composer.GetDashboardAsync(sellerPartyId, actorUserId, cancellationToken);
-            return Results.Json(summary);
+            var (displayName, found) = await composer.GetSellerDisplayAsync(sellerPartyId, cancellationToken);
+            if (!found)
+            {
+                throw new PlatformHttpException(404, "Seller was not found.", "seller.missing");
+            }
+
+            var orderSummary = await sender.Send(
+                new GetSellerOrderDashboardSummaryQuery(sellerPartyId, actorUserId),
+                cancellationToken);
+            if (orderSummary.IsFailure)
+            {
+                return Results.Json(
+                    new { title = orderSummary.FirstError.Code, errorCode = orderSummary.FirstError.Code },
+                    statusCode: StatusCodes.Status400BadRequest);
+            }
+
+            return Results.Json(new SellerDashboardSummary(
+                sellerPartyId,
+                displayName,
+                ActiveOffers: 0,
+                orderSummary.Value.OpenOrders,
+                orderSummary.Value.PaidOrders));
         }
         catch (PlatformHttpException ex)
         {
@@ -73,51 +94,6 @@ public static class SellerPanelEndpoints
                 request, session, guard, environment, cancellationToken);
             var items = await composer.ListCatalogVariantsAsync(sellerPartyId, cancellationToken);
             return Results.Json(items);
-        }
-        catch (PlatformHttpException ex)
-        {
-            return ToError(ex);
-        }
-    }
-
-    private static async Task<IResult> ListOrdersAsync(
-        SellerPanelComposer composer,
-        HttpRequest request,
-        CurrentAuthenticatedSession session,
-        IAuthorizationGuard guard,
-        IHostEnvironment environment,
-        CancellationToken cancellationToken)
-    {
-        try
-        {
-            var (actorUserId, sellerPartyId) = await SellerPanelAccess.RequireAuthorizedAsync(
-                request, session, guard, environment, cancellationToken);
-            var items = await composer.ListOrdersAsync(sellerPartyId, actorUserId, cancellationToken);
-            return Results.Json(items);
-        }
-        catch (PlatformHttpException ex)
-        {
-            return ToError(ex);
-        }
-    }
-
-    private static async Task<IResult> GetOrderAsync(
-        Guid sellerOrderId,
-        SellerPanelComposer composer,
-        HttpRequest request,
-        CurrentAuthenticatedSession session,
-        IAuthorizationGuard guard,
-        IHostEnvironment environment,
-        CancellationToken cancellationToken)
-    {
-        try
-        {
-            var (actorUserId, sellerPartyId) = await SellerPanelAccess.RequireAuthorizedAsync(
-                request, session, guard, environment, cancellationToken);
-            var page = await composer.GetOrderAsync(sellerPartyId, actorUserId, sellerOrderId, cancellationToken);
-            return page is null
-                ? Results.Json(new { title = "سفارش فروشنده پیدا نشد.", errorCode = "seller.order.missing" }, statusCode: StatusCodes.Status404NotFound)
-                : Results.Json(page);
         }
         catch (PlatformHttpException ex)
         {

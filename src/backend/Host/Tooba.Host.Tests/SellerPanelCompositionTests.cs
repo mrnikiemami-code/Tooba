@@ -1,7 +1,7 @@
 ﻿using System.Text.Json;
 using Tooba.Host.Seller;
 using Tooba.Offer.Contracts.Dtos;
-using Tooba.Offer.Contracts.Ports;
+using Tooba.Order.Application.Seller.Models;
 using Xunit;
 
 namespace Tooba.Host.Tests;
@@ -68,7 +68,7 @@ public sealed class SellerPanelCompositionTests
     }
 
     [Fact]
-    public void Endpoints_require_seller_party_header_constant()
+    public void Endpoints_require_seller_party_header_and_no_longer_own_orders()
     {
         Assert.Equal("X-Tooba-Seller-Party-Id", SellerPanelEndpoints.SellerPartyHeader);
         Assert.Equal("X-Tooba-Dev-Actor-User-Id", SellerPanelEndpoints.DevActorHeader);
@@ -80,7 +80,7 @@ public sealed class SellerPanelCompositionTests
             "Tooba.Host",
             "Seller",
             "SellerPanelComposer.cs"));
-        Assert.Contains("x.SellerPartyId == sellerPartyId", source, StringComparison.Ordinal);
+        Assert.DoesNotContain("OrderDbContext", source, StringComparison.Ordinal);
         Assert.DoesNotContain(".Join(", source, StringComparison.Ordinal);
         Assert.DoesNotContain("FromSql", source, StringComparison.OrdinalIgnoreCase);
 
@@ -94,6 +94,8 @@ public sealed class SellerPanelCompositionTests
             "SellerPanelEndpoints.cs"));
         Assert.Contains("RequireAuthorizedAsync", endpoints, StringComparison.Ordinal);
         Assert.Contains("IAuthorizationGuard", endpoints, StringComparison.Ordinal);
+        Assert.DoesNotContain("MapGet(\"/orders\"", endpoints, StringComparison.Ordinal);
+        Assert.Contains("GetSellerOrderDashboardSummaryQuery", endpoints, StringComparison.Ordinal);
     }
 
     private static string FindRepoRoot()

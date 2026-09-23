@@ -3,6 +3,7 @@ using System.Resources;
 using Tooba.BuildingBlocks.Localization;
 using Tooba.Order.Application;
 using Tooba.Order.Application.Customer;
+using Tooba.Order.Application.Seller;
 using Tooba.Order.Application.Storefront;
 
 namespace Tooba.Order.Endpoints.Resources;
@@ -25,6 +26,7 @@ public sealed class OrderErrorResourceSet : IErrorResourceSet
         || localizationKey.StartsWith("shipping.", StringComparison.OrdinalIgnoreCase)
         || localizationKey.StartsWith("pending.", StringComparison.OrdinalIgnoreCase)
         || localizationKey.StartsWith("customer.", StringComparison.OrdinalIgnoreCase)
+        || localizationKey.StartsWith("seller.", StringComparison.OrdinalIgnoreCase)
         || localizationKey.Equals(StorefrontOrderErrors.PaymentMissing, StringComparison.OrdinalIgnoreCase)
         || localizationKey.Equals(StorefrontOrderErrors.PaymentRejected, StringComparison.OrdinalIgnoreCase)
         || localizationKey.Equals(CustomerOrderErrors.SupplyUnavailable, StringComparison.OrdinalIgnoreCase)

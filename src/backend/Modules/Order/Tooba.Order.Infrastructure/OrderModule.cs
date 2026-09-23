@@ -44,6 +44,8 @@ public sealed class OrderModule : IToobaModule
         services.AddScoped<Application.Admin.Detail.AdminOrderDetailComposer>();
         services.AddScoped<Application.Customer.Ports.ICustomerOrderCheckoutStore, Customer.CustomerOrderCheckoutStore>();
         services.AddScoped<Application.Customer.CustomerOrderComposer>();
+        services.AddScoped<Application.Seller.Ports.ISellerOrderStore, Seller.SellerOrderStore>();
+        services.AddScoped<Application.Seller.SellerOrderComposer>();
         services.AddScoped<Application.Admin.Operations.Ports.IAdminOrderOperationsCheckoutReader, Admin.Operations.AdminOrderOperationsCheckoutReader>();
         services.AddScoped<Application.Admin.Supply.Ports.IOrderSupplyCheckoutStore, Admin.Supply.OrderSupplyCheckoutStore>();
         services.AddScoped<Application.Admin.Supply.Services.OrderSupplyService>();

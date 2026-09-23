@@ -3,6 +3,7 @@ using Tooba.BuildingBlocks.Presentation.Errors;
 using Tooba.Order.Application;
 using Tooba.Order.Application.Admin.Completeness.Errors;
 using Tooba.Order.Application.Customer;
+using Tooba.Order.Application.Seller;
 using Tooba.Order.Application.Storefront;
 
 namespace Tooba.Order.Endpoints.Errors;
@@ -107,6 +108,24 @@ public sealed class OrderErrorCatalogContributor : IErrorCatalogContributor
             "این سفارش در حال حاضر قابل تأمین نیست."),
         D(ReservationCycleErrors.RetryLimitReached, ErrorClassification.Conflict, StatusCodes.Status409Conflict,
             ReservationCycleErrors.RetryLimitReachedFa),
+
+        // Seller panel Order
+        D(SellerOrderErrors.SellerMissing, ErrorClassification.NotFound, StatusCodes.Status404NotFound,
+            "Seller was not found."),
+        D(SellerOrderErrors.ViewDenied, ErrorClassification.Forbidden, StatusCodes.Status403Forbidden,
+            "Order access denied."),
+        D(SellerOrderErrors.OrderMissing, ErrorClassification.NotFound, StatusCodes.Status404NotFound,
+            "Seller order was not found."),
+        D(SellerOrderErrors.ActorMissing, ErrorClassification.Forbidden, StatusCodes.Status401Unauthorized,
+            "Actor identity is required."),
+        D(SellerOrderErrors.IdentityMissing, ErrorClassification.Validation, StatusCodes.Status400BadRequest,
+            "Seller identity is invalid."),
+        D(SellerOrderErrors.PartyViewDenied, ErrorClassification.Forbidden, StatusCodes.Status403Forbidden,
+            "Seller party access denied."),
+        D("seller.authorization.denied", ErrorClassification.Forbidden, StatusCodes.Status403Forbidden,
+            "Seller party access denied."),
+        D("seller.authorization.unavailable", ErrorClassification.Platform, StatusCodes.Status503ServiceUnavailable,
+            "Authorization service unavailable."),
     ];
 
     private static ErrorDescriptor D(

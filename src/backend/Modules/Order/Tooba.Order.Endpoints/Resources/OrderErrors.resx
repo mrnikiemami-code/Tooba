@@ -141,4 +141,28 @@
   <data name="inventory.reservation.retry_limit_reached" xml:space="preserve">
     <value>Retry reservation limit for this order has been reached.</value>
   </data>
+  <data name="seller.missing" xml:space="preserve">
+    <value>Seller was not found.</value>
+  </data>
+  <data name="seller.order.view.denied" xml:space="preserve">
+    <value>Order access denied.</value>
+  </data>
+  <data name="seller.order.missing" xml:space="preserve">
+    <value>Seller order was not found.</value>
+  </data>
+  <data name="seller.actor.missing" xml:space="preserve">
+    <value>Actor identity is required.</value>
+  </data>
+  <data name="seller.identity.missing" xml:space="preserve">
+    <value>Seller identity is invalid.</value>
+  </data>
+  <data name="seller.party.view.denied" xml:space="preserve">
+    <value>Seller party access denied.</value>
+  </data>
+  <data name="seller.authorization.denied" xml:space="preserve">
+    <value>Seller party access denied.</value>
+  </data>
+  <data name="seller.authorization.unavailable" xml:space="preserve">
+    <value>Authorization service unavailable.</value>
+  </data>
 </root>

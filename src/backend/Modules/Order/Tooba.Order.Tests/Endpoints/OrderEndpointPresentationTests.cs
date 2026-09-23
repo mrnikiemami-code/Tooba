@@ -6,6 +6,7 @@ using Tooba.BuildingBlocks.Presentation.Errors;
 using Tooba.Order.Application;
 using Tooba.Order.Application.Admin.Completeness.Errors;
 using Tooba.Order.Application.Customer;
+using Tooba.Order.Application.Seller;
 using Tooba.Order.Application.Storefront;
 using Tooba.Order.Endpoints;
 using Tooba.Order.Endpoints.Errors;
@@ -41,8 +42,20 @@ public sealed class OrderEndpointPresentationTests
         ReservationCycleErrors.RetryLimitReached,
     ];
 
+    private static readonly string[] SellerCodes =
+    [
+        SellerOrderErrors.SellerMissing,
+        SellerOrderErrors.ViewDenied,
+        SellerOrderErrors.OrderMissing,
+        SellerOrderErrors.ActorMissing,
+        SellerOrderErrors.IdentityMissing,
+        SellerOrderErrors.PartyViewDenied,
+        "seller.authorization.denied",
+        "seller.authorization.unavailable",
+    ];
+
     private static readonly string[] AllCodes =
-        CompletenessCodes.Concat(StorefrontCodes).Concat(CustomerCodes).ToArray();
+        CompletenessCodes.Concat(StorefrontCodes).Concat(CustomerCodes).Concat(SellerCodes).ToArray();
 
     [Fact]
     public void Presentation_registration_adds_catalog_and_resource_set()
@@ -67,7 +80,7 @@ public sealed class OrderEndpointPresentationTests
         {
             var descriptor = Assert.Single(descriptors, x => x.Code == code);
             Assert.Equal(code, descriptor.LocalizationKey);
-            Assert.InRange(descriptor.HttpStatus, 400, 499);
+            Assert.InRange(descriptor.HttpStatus, 400, 599);
             Assert.False(string.IsNullOrWhiteSpace(descriptor.SafeTitleFallback));
         }
     }

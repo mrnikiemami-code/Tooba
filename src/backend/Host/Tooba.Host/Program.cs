@@ -212,6 +212,8 @@ builder.Services.AddScoped<Tooba.Fulfillment.Endpoints.Seller.IFulfillmentSeller
 builder.Services.AddScoped<Tooba.Fulfillment.Endpoints.Admin.IFulfillmentAdminAuthorizer, Tooba.Host.Admin.HostFulfillmentAdminAuthorizer>();
 builder.Services.AddScoped<Tooba.Fulfillment.Endpoints.Customer.IFulfillmentCustomerAuthorizer, Tooba.Host.Customer.HostFulfillmentCustomerAuthorizer>();
 builder.Services.AddScoped<Tooba.Order.Endpoints.IOrderCustomerAuthorizer, Tooba.Host.Customer.HostOrderCustomerAuthorizer>();
+builder.Services.AddScoped<Tooba.Order.Endpoints.IOrderSellerAuthorizer, Tooba.Host.Seller.HostOrderSellerAuthorizer>();
+builder.Services.AddScoped<Tooba.Order.Application.Seller.Ports.ISellerOrderViewAccessReader, Tooba.Host.Seller.HostSellerOrderViewAccessReader>();
 builder.Services.AddScoped<Tooba.Returns.Endpoints.Customer.IReturnCustomerAuthorizer, Tooba.Host.Customer.HostReturnCustomerAuthorizer>();
 builder.Services.AddScoped<Tooba.Returns.Endpoints.Seller.IReturnSellerAuthorizer, Tooba.Host.Seller.HostReturnSellerAuthorizer>();
 builder.Services.AddScoped<Tooba.Returns.Endpoints.Admin.IReturnAdminAuthorizer, Tooba.Host.Admin.HostReturnAdminAuthorizer>();

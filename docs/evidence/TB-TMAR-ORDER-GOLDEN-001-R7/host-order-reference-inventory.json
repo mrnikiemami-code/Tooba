@@ -22,6 +22,18 @@
     ],
     "note": "CustomerPanel Order list/detail/retry moved Host→Order CQRS. Composer no longer has OrderDbContext. Historical R7 audit markdown and r8InventoryUpdate left intact; files list refreshed after R9."
   },
+  "r10InventoryUpdate": {
+    "updatedBy": "TB-TMAR-ORDER-GOLDEN-001-R10",
+    "addedFiles": [
+      "Seller/HostOrderSellerAuthorizer.cs",
+      "Seller/HostSellerOrderViewAccessReader.cs"
+    ],
+    "removedOrderAuthorityFrom": [
+      "Seller/SellerPanelComposer.cs",
+      "Seller/SellerPanelEndpoints.cs"
+    ],
+    "note": "SellerPanel Order list/detail/dashboard counts moved Host→Order CQRS. Composer no longer has OrderDbContext. Historical R7 audit markdown and r8/r9InventoryUpdate left intact; files list refreshed after R10."
+  },
   "extraFiles": [
     "Admin/AdminPanelEndpoints.cs",
     "Admin/HostOrderAdminAuthorizer.cs",
@@ -59,7 +71,8 @@
     "Order/HostOrderStorefrontActor.cs",
     "Preferences/UserPreferenceEndpoints.cs",
     "Program.cs",
-    "Seller/SellerPanelComposer.cs",
+    "Seller/HostOrderSellerAuthorizer.cs",
+    "Seller/HostSellerOrderViewAccessReader.cs",
     "Seller/SellerPanelEndpoints.cs",
     "Settings/SettingsFoundationDevelopmentSeed.cs",
     "Storefront/StorefrontEndpoints.cs",
