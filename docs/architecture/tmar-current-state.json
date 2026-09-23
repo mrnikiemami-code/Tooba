@@ -3,9 +3,9 @@
     "executionMode":  "BACKEND_ONLY_UNTIL_EXPLICIT_RELEASE",
     "frontendFrozen":  true,
     "checkoutState":  "PAUSED_AT_SAFE_W5_CHECKPOINT",
-    "lastAcceptedTask":  "TB-TMAR-CART-POSTCERT-SEMANTIC-HOST-CLOSURE-001",
-    "lastAcceptedCommit":  "2a0f239b94ce3bc8dae9ba027893a2ca72db5cc5",
-    "nextTask":  "USER_REVIEW_CART_POSTCERT_SEMANTIC_HOST_CLOSURE",
+    "lastAcceptedTask":  "TB-TMAR-CART-POSTCERT-SEMANTIC-HOST-CLOSURE-001-R1",
+    "lastAcceptedCommit":  "PLACEHOLDER_STAMP_AFTER_COMMIT",
+    "nextTask":  "USER_REVIEW_CART_POSTCERT_SEMANTIC_HOST_CLOSURE_R1",
     "nextTaskGate":  "USER_REVIEW_REQUIRED_BEFORE_NEXT_TMAR_WAVE",
     "goldenWaveState":  "COMPLETE",
     "goldenWaveUserReview":  "USER_ACCEPTED",
@@ -48,7 +48,9 @@
         "cartForeignBoundary":  "CONTRACTS_PORTS_ONLY",
         "clockState":  "ICLOCK_IN_CART_BUSINESS_TIME",
         "guard":  "src/backend/Host/Tooba.Host.Tests/Architecture/HostCartResidualGuardTests.cs",
-        "evidence":  "docs/evidence/TB-TMAR-CART-POSTCERT-SEMANTIC-HOST-CLOSURE-001/cart-semantic-host-closure.md",
+        "evidence":  "docs/evidence/TB-TMAR-CART-POSTCERT-SEMANTIC-HOST-CLOSURE-001-R1/commerce-authority-repair.md",
+        "commerceAuthority":  "PLATFORM_STORE_COMMERCE_CONTEXT_CONSUMED_BY_CART",
+        "cartCommerceDefaults":  "REMOVED_CART_OWNS_NO_COMMERCE_POLICY_DEFAULT",
         "structureCertifiedUnderArchComplete002":  true
     },
     "completeReferenceModules":  [
@@ -60,9 +62,9 @@
                                          "cqrs":  "MEDIATR_12_5",
                                          "lastAcceptedTask":  "TB-TMAR-CART-ARCH-COMPLETE-002-REVERIFY-001",
                                          "lastAcceptedCommit":  "6e880942baaf3b2afd60fa0766e5e132704eca66",
-                                         "lastPostCertificationRepairTask":  "TB-TMAR-CART-POSTCERT-SEMANTIC-HOST-CLOSURE-001",
-                                         "lastPostCertificationRepairCommit":  "2a0f239b94ce3bc8dae9ba027893a2ca72db5cc5",
-                                         "postCertificationRepairNote":  "Semantic/ownership repair only; not a new structural certification. Cart remains COMPLETE_REFERENCE_PATTERN + ARCH-COMPLETE-002 STRUCTURE_CERTIFIED."
+                                         "lastPostCertificationRepairTask":  "TB-TMAR-CART-POSTCERT-SEMANTIC-HOST-CLOSURE-001-R1",
+                                         "lastPostCertificationRepairCommit":  "PLACEHOLDER_STAMP_AFTER_COMMIT",
+                                         "postCertificationRepairNote":  "Commerce-authority repair only; not a new structural certification. Cart owns no commerce policy default (Market/Currency/SalesChannel) and consumes the platform store commerce context. Cart remains COMPLETE_REFERENCE_PATTERN + ARCH-COMPLETE-002 STRUCTURE_CERTIFIED."
                                      },
                                      {
                                          "module":  "Settlement",

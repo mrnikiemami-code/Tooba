@@ -148,7 +148,12 @@ internal sealed class TenantResolutionMiddleware
                     "Service Unavailable",
                     "platform.connection.unconfigured");
             _ = _connections.Resolve(marketplaceRef);
-            return new CommerceContext(editionContext, Tenant: null, marketplaceRef, traceId);
+            return new CommerceContext(
+                editionContext,
+                Tenant: null,
+                marketplaceRef,
+                traceId,
+                StoreCommerce: _registry.DeploymentStoreCommerce);
         }
 
         var rawHost = httpContext.Request.Host.Value;
@@ -175,7 +180,12 @@ internal sealed class TenantResolutionMiddleware
             host,
             record.PrimaryDomain);
 
-        return new CommerceContext(editionContext, tenant, record.ConnectionReference, traceId);
+        return new CommerceContext(
+            editionContext,
+            tenant,
+            record.ConnectionReference,
+            traceId,
+            StoreCommerce: record.StoreCommerce);
     }
 
     /// <summary>

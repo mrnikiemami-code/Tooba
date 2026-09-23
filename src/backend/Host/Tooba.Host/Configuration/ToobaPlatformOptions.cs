@@ -43,6 +43,34 @@ internal sealed class ToobaPlatformOptions
     /// نقشهٔ ConnectionReference به رشتهٔ اتصال. مقدار رشته لاگ نشود.
     /// </summary>
     public PostgreSqlOptions PostgreSQL { get; set; } = new();
+
+    /// <summary>
+    /// زمینهٔ تجارت مؤثر فروشگاه در سطح deployment (مسیر Marketplace). در Single-Store از هر Tenant خوانده می‌شود.
+    /// مالک این تنظیم کنترل‌پلین پلتفرم است؛ ماژول مصرف‌کننده صاحب پیش‌فرض تجاری نمی‌شود.
+    /// </summary>
+    public StoreCommerceOptions StoreCommerce { get; set; } = new();
+}
+
+/// <summary>
+/// زمینهٔ تجارت مؤثر فروشگاه برای deploymentهایی که Tenant جدا ندارند (Marketplace).
+/// این پیش‌فرض تجاری مالک کنترل‌پلین است، نه ماژول‌های دامنه‌ای.
+/// </summary>
+internal sealed class StoreCommerceOptions
+{
+    /// <summary>
+    /// مرجع بازار مؤثر؛ تهی یعنی resolve نشده و مصرف‌کننده fail-closed می‌شود.
+    /// </summary>
+    public string? Market { get; set; }
+
+    /// <summary>
+    /// کد ارز مؤثر ISO؛ تهی یعنی resolve نشده.
+    /// </summary>
+    public string? Currency { get; set; }
+
+    /// <summary>
+    /// نام پایدار کانال فروش؛ تهی یعنی resolve نشده.
+    /// </summary>
+    public string? SalesChannel { get; set; }
 }
 
 /// <summary>
@@ -101,6 +129,11 @@ internal sealed class TenantRecordOptions
     /// ارجاع بازار پیش‌فرض؛ با Locale یکی نیست.
     /// </summary>
     public string? DefaultMarketReference { get; set; }
+
+    /// <summary>
+    /// زمینهٔ تجارت مؤثر این فروشگاه در کنترل‌پلین. تهی‌ها از DefaultMarketReference و deployment ارث می‌برند.
+    /// </summary>
+    public StoreCommerceOptions? StoreCommerce { get; set; }
 
     /// <summary>
     /// دامنهٔ اصلی در صورت وجود.
@@ -165,6 +198,11 @@ internal sealed class TenantRecord
     public string? DefaultMarketReference { get; init; }
 
     /// <summary>
+    /// زمینهٔ تجارت مؤثر همین فروشگاه. اگر تنظیم نشده باشد، DefaultMarketReference بازار را تأمین می‌کند و ارز/کانال تهی می‌مانند.
+    /// </summary>
+    public StoreCommerceContext StoreCommerce { get; init; } = new(null, null, null);
+
+    /// <summary>
     /// دامنهٔ اصلی نرمال‌شده در صورت وجود.
     /// </summary>
     public string? PrimaryDomain { get; init; }
@@ -194,6 +232,11 @@ internal sealed class ControlPlaneRegistry
     /// مرجع اتصال marketplace؛ در Single-Store تهی است.
     /// </summary>
     public ConnectionReference? MarketplaceConnectionReference { get; init; }
+
+    /// <summary>
+    /// زمینهٔ تجارت مؤثر در سطح deployment (مسیر Marketplace). در Single-Store از Tenant خوانده می‌شود.
+    /// </summary>
+    public StoreCommerceContext DeploymentStoreCommerce { get; init; } = new(null, null, null);
 
     /// <summary>
     /// نگاشت Host نرمال‌شده → Tenant. کلید هویت نیست.
@@ -444,6 +487,7 @@ internal sealed class PlatformOptionsValidator : IValidateOptions<ToobaPlatformO
                     ConnectionReference = new ConnectionReference(raw.ConnectionReference),
                     ThemeReference = raw.ThemeReference,
                     DefaultMarketReference = raw.DefaultMarketReference,
+                    StoreCommerce = ResolveStoreCommerce(raw.DefaultMarketReference, raw.StoreCommerce),
                     PrimaryDomain = raw.PrimaryDomain is not null
                         && HostNormalizer.TryNormalize(raw.PrimaryDomain, out var pd)
                         ? pd
@@ -466,8 +510,30 @@ internal sealed class PlatformOptionsValidator : IValidateOptions<ToobaPlatformO
             MarketplaceConnectionReference = edition == ToobaEdition.Marketplace
                 ? new ConnectionReference(options.Marketplace.ConnectionReference)
                 : null,
+            DeploymentStoreCommerce = ResolveStoreCommerce(
+                marketFallback: null,
+                options.StoreCommerce),
             Hosts = hosts,
             Tenants = tenants,
         };
     }
+
+    /// <summary>
+    /// زمینهٔ تجارت مؤثر را از پیکربندی کنترل‌پلین می‌سازد. ارز/کانال فقط از پیکربندی صریح می‌آیند؛
+    /// بازار در نبود تنظیم صریح از مرجع بازار پیش‌فرض ارث می‌برد. مقدار نامعلوم در کد اختراع نمی‌شود.
+    /// </summary>
+    private static StoreCommerceContext ResolveStoreCommerce(string? marketFallback, StoreCommerceOptions? raw)
+    {
+        var market = Normalize(raw?.Market) ?? Normalize(marketFallback);
+        return new StoreCommerceContext(
+            market,
+            Normalize(raw?.Currency),
+            Normalize(raw?.SalesChannel));
+    }
+
+    /// <summary>
+    /// مقدار پیکربندی را trim می‌کند؛ تهی/فاصله یعنی resolve نشده و مصرف‌کننده باید fail-closed شود.
+    /// </summary>
+    private static string? Normalize(string? value) =>
+        string.IsNullOrWhiteSpace(value) ? null : value.Trim();
 }

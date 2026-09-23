@@ -83,7 +83,12 @@ internal sealed class WorkerCommerceContextFactory : IWorkerCommerceContextFacto
         {
             var marketplace = _registry.MarketplaceConnectionReference
                 ?? throw new InvalidOperationException("Marketplace outbox worker has no connection reference.");
-            return new CommerceContext(editionContext, Tenant: null, marketplace, traceId);
+            return new CommerceContext(
+                editionContext,
+                Tenant: null,
+                marketplace,
+                traceId,
+                StoreCommerce: _registry.DeploymentStoreCommerce);
         }
 
         if (string.IsNullOrWhiteSpace(message.TenantId)
@@ -104,7 +109,12 @@ internal sealed class WorkerCommerceContextFactory : IWorkerCommerceContextFacto
             resolvedHost,
             record.PrimaryDomain);
 
-        return new CommerceContext(editionContext, tenant, record.ConnectionReference, traceId);
+        return new CommerceContext(
+            editionContext,
+            tenant,
+            record.ConnectionReference,
+            traceId,
+            StoreCommerce: record.StoreCommerce);
     }
 
     /// <summary>
@@ -115,7 +125,12 @@ internal sealed class WorkerCommerceContextFactory : IWorkerCommerceContextFacto
         var editionContext = new EditionContext(target.Edition, target.DeploymentId);
         if (target.Edition == ToobaEdition.Marketplace)
         {
-            return new CommerceContext(editionContext, Tenant: null, target.ConnectionReference, traceId);
+            return new CommerceContext(
+                editionContext,
+                Tenant: null,
+                target.ConnectionReference,
+                traceId,
+                StoreCommerce: _registry.DeploymentStoreCommerce);
         }
 
         if (string.IsNullOrWhiteSpace(target.TenantId)
@@ -135,6 +150,11 @@ internal sealed class WorkerCommerceContextFactory : IWorkerCommerceContextFacto
             record.DefaultMarketReference,
             resolvedHost,
             record.PrimaryDomain);
-        return new CommerceContext(editionContext, tenant, record.ConnectionReference, traceId);
+        return new CommerceContext(
+            editionContext,
+            tenant,
+            record.ConnectionReference,
+            traceId,
+            StoreCommerce: record.StoreCommerce);
     }
 }

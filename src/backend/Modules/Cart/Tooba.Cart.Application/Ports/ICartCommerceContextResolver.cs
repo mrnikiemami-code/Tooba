@@ -13,17 +13,19 @@ namespace Tooba.Cart.Application.Ports;
 public sealed record CartCommerceContext(string Market, string Currency, SalesChannel Channel);
 
 /// <summary>
-/// Reads the effective storefront commerce context from the canonical commerce/storefront
-/// configuration already present in the platform. Unresolvable context fails closed with a
-/// stable Cart error code instead of a hardcoded fallback.
+/// Reads the effective storefront commerce context that the platform control plane already
+/// resolved for the current request or worker. Cart consumes this context; it never becomes the
+/// policy authority for Market, Currency, or SalesChannel, owns no fallback defaults, and never
+/// trusts raw HTTP strings.
 /// </summary>
 public interface ICartCommerceContextResolver
 {
     /// <summary>
-    /// Resolves the effective commerce context for the current commerce context.
+    /// Resolves the effective commerce context authoritative for the current storefront/store.
     /// </summary>
     /// <exception cref="InvalidOperationException">
-    /// Stable <c>cart.commerce.*</c> code when market or currency is not configured.
+    /// Stable <c>cart.commerce.*</c> code when the platform-boundary context is absent or does not
+    /// carry a market, currency, or channel. Cart never invents a default.
     /// </exception>
     CartCommerceContext Resolve();
 }

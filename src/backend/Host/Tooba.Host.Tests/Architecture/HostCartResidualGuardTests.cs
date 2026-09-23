@@ -151,6 +151,9 @@ public sealed class HostCartResidualGuardTests
         Assert.Contains("Configure<CartExpiryOptions>", module, StringComparison.Ordinal);
         Assert.Contains("ICartPersistenceHoursResolver, CatalogCartPersistenceHoursResolver", module, StringComparison.Ordinal);
         Assert.Contains("ICartCommerceContextResolver, CartCommerceContextResolver", module, StringComparison.Ordinal);
+        // Cart registers no commerce policy defaults of its own.
+        Assert.DoesNotContain("CartCommerceDefaultsOptions", module, StringComparison.Ordinal);
+        Assert.DoesNotContain("Cart:CommerceDefaults", module, StringComparison.Ordinal);
 
         var adapter = File.ReadAllText(Path.Combine(
             cartRoot, "Tooba.Cart.Infrastructure", "Lifetime", "CatalogCartPersistenceHoursResolver.cs"));
@@ -195,8 +198,9 @@ public sealed class HostCartResidualGuardTests
     [Fact]
     public void CreateGuestCart_uses_commerce_context_without_hardcoded_values()
     {
+        var repoRoot = FindRepoRoot();
         var handler = File.ReadAllText(Path.Combine(
-            FindRepoRoot(),
+            repoRoot,
             "src", "backend", "Modules", "Cart", "Tooba.Cart.Application",
             "Commands", "CreateGuestCart", "CreateGuestCartCommand.cs"));
 
@@ -205,6 +209,46 @@ public sealed class HostCartResidualGuardTests
         Assert.DoesNotContain("\"IR\"", handler, StringComparison.Ordinal);
         Assert.DoesNotContain("\"IRR\"", handler, StringComparison.Ordinal);
         Assert.DoesNotContain("SalesChannel.Marketplace", handler, StringComparison.Ordinal);
+        Assert.DoesNotContain("SalesChannel.Direct", handler, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void Cart_owns_no_commerce_policy_default_and_consumes_platform_authority()
+    {
+        var repoRoot = FindRepoRoot();
+        var cartRoot = Path.Combine(repoRoot, "src", "backend", "Modules", "Cart");
+
+        // Cart must not carry a commerce-defaults options type, section, or code-level channel literal.
+        var cartProduction = EnumerateProductionSources(cartRoot)
+            .Where(path => !path.Replace('\\', '/').Contains("/Tooba.Cart.Tests/", StringComparison.Ordinal))
+            .ToArray();
+        Assert.DoesNotContain(cartProduction, path =>
+            Regex.IsMatch(File.ReadAllText(path), @"\bCartCommerceDefaultsOptions\b"));
+        Assert.DoesNotContain(cartProduction, path =>
+            Regex.IsMatch(File.ReadAllText(path), @"SalesChannel\.(Direct|Marketplace)\b"));
+        Assert.DoesNotContain(cartProduction, path =>
+            Regex.IsMatch(File.ReadAllText(path), @"""Cart:CommerceDefaults"""));
+
+        // Cart must not keep a global Cart currency/market knob as effective store authority.
+        Assert.DoesNotContain(cartProduction, path =>
+            Regex.IsMatch(File.ReadAllText(path), @"\bDefaultCurrency\b|\bDefaultMarket\b|\bDefaultSalesChannel\b"));
+
+        // Effective currency/channel come from the platform-boundary store commerce context.
+        var resolver = File.ReadAllText(Path.Combine(
+            cartRoot, "Tooba.Cart.Infrastructure", "Lifetime", "CartCommerceContextResolver.cs"));
+        Assert.Contains("StoreCommerce", resolver, StringComparison.Ordinal);
+        Assert.Contains("ICurrentCommerceContext", resolver, StringComparison.Ordinal);
+        Assert.Contains("cart.commerce.market_unconfigured", resolver, StringComparison.Ordinal);
+        Assert.Contains("cart.commerce.currency_unconfigured", resolver, StringComparison.Ordinal);
+        Assert.Contains("cart.commerce.channel_unconfigured", resolver, StringComparison.Ordinal);
+        Assert.DoesNotContain("IOptions<", resolver, StringComparison.Ordinal);
+        Assert.DoesNotContain("CartCommerceDefaultsOptions", resolver, StringComparison.Ordinal);
+        Assert.DoesNotContain("SalesChannel.Direct", resolver, StringComparison.Ordinal);
+        Assert.DoesNotContain("SalesChannel.Marketplace", resolver, StringComparison.Ordinal);
+
+        // Cart still owns zero dependency on Host; prior Host closure remains intact.
+        Assert.DoesNotContain(cartProduction, path =>
+            File.ReadAllText(path).Contains("Tooba.Host", StringComparison.Ordinal));
     }
 
     [Fact]

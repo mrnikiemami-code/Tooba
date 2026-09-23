@@ -6,10 +6,8 @@ using Tooba.BuildingBlocks;
 using Tooba.ModuleContracts;
 using Tooba.Cart.Contracts;
 using Tooba.Cart.Application;
-using Tooba.Cart.Application;
 using Tooba.Cart.Application.Conversion;
 using Tooba.Cart.Application.Lifetime;
-using Tooba.Cart.Application.Models;
 using Tooba.Cart.Application.Ports;
 using Tooba.Cart.Application.Presentation;
 using Tooba.Cart.Infrastructure.Lifetime;
@@ -35,7 +33,6 @@ public sealed class CartModule : IToobaModule
         ArgumentNullException.ThrowIfNull(environment);
 
         services.Configure<CartLifetimeOptions>(configuration.GetSection(CartLifetimeOptions.SectionName));
-        services.Configure<CartCommerceDefaultsOptions>(configuration.GetSection(CartCommerceDefaultsOptions.SectionName));
         services.Configure<CartExpiryOptions>(configuration.GetSection(CartExpiryOptions.SectionName));
         services.AddSingleton<IOutboxModuleRegistration, CartOutboxRegistration>();
         services.AddScoped<ICartUseCaseGuard, OpenCartUseCaseGuard>();

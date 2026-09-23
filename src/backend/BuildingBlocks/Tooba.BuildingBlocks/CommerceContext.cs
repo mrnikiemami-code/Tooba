@@ -96,6 +96,18 @@ public sealed record TenantContext(
     string? PrimaryDomain);
 
 /// <summary>
+/// زمینهٔ تجارت مؤثر فروشگاه/Storefront برای همین درخواست. مالک آن مرز کنترل‌پلین پلتفرم است، نه ماژول‌های مصرف‌کننده.
+/// Market/Currency/SalesChannel اینجا resolve می‌شوند تا مصرف‌کننده صاحب پیش‌فرض تجاری نشود.
+/// </summary>
+/// <param name="Market">مرجع بازار مؤثر؛ تهی یعنی resolve نشده و مصرف‌کننده باید fail-closed شود.</param>
+/// <param name="Currency">کد ارز مؤثر ISO؛ تهی یعنی resolve نشده.</param>
+/// <param name="SalesChannel">نام پایدار کانال فروش؛ تهی یعنی resolve نشده.</param>
+public sealed record StoreCommerceContext(
+    string? Market,
+    string? Currency,
+    string? SalesChannel);
+
+/// <summary>
 /// زمینهٔ تجارت درخواست پس از middleware. در Marketplace مقدار Tenant تهی است و اتصال متعلق به marketplace است.
 /// هدر/کوکی/query به‌عنوان مرجع Tenant پذیرفته نمی‌شوند.
 /// </summary>
@@ -103,11 +115,13 @@ public sealed record TenantContext(
 /// <param name="Tenant">فقط Single-Store پس از allowlist و Active.</param>
 /// <param name="DatabaseConnectionReference">مرجعی که DbContext باید resolve کند.</param>
 /// <param name="TraceId">همبستگی تله‌متری؛ جایگزین Audit نیست.</param>
+/// <param name="StoreCommerce">زمینهٔ تجارت مؤثر فروشگاه؛ مالک پلتفرم/کنترل‌پلین، مصرف‌کننده فقط می‌خواند.</param>
 public sealed record CommerceContext(
     EditionContext Edition,
     TenantContext? Tenant,
     ConnectionReference DatabaseConnectionReference,
-    string TraceId);
+    string TraceId,
+    StoreCommerceContext? StoreCommerce = null);
 
 /// <summary>
 /// دسترسی به <see cref="CommerceContext"/> درخواست جاری. بدون resolve موفق مقدار تهی است.
