@@ -4,7 +4,7 @@
     "frontendFrozen":  true,
     "checkoutState":  "PAUSED_AT_SAFE_W5_CHECKPOINT",
     "lastAcceptedTask":  "TB-TMAR-CART-ARCH-COMPLETE-002-REVERIFY-001-R1",
-    "lastAcceptedCommit":  "PENDING_COMMIT",
+    "lastAcceptedCommit":  "44563393d90bb7c9ad5048d1b7812e78f1ee7d44",
     "nextTask":  "USER_REVIEW_CART_ARCH_COMPLETE_002",
     "nextTaskGate":  "USER_REVIEW_REQUIRED_BEFORE_NEXT_TMAR_WAVE",
     "goldenWaveState":  "COMPLETE",
