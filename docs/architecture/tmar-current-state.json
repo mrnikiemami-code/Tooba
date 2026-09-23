@@ -4,7 +4,7 @@
     "frontendFrozen":  true,
     "checkoutState":  "PAUSED_AT_SAFE_W5_CHECKPOINT",
     "lastAcceptedTask":  "TB-TMAR-ORDER-POSTCLOSURE-QUALITY-001",
-    "lastAcceptedCommit":  "2765524141dce663747923aaf7fa4ba3c8821651",
+    "lastAcceptedCommit":  "bcbc6f13a275193050beed4873257a5472aedcfe",
     "nextTask":  "USER_REVIEW_ORDER_POSTCLOSURE_QUALITY",
     "nextTaskGate":  "USER_REVIEW_REQUIRED_BEFORE_NEXT_TMAR_WAVE",
     "goldenWaveState":  "COMPLETE",
