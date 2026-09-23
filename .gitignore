@@ -66,3 +66,5 @@ docs/evidence/**/capture-error.png
 docs/evidence/**/r*-console-probe.mjs
 docs/evidence/**/r*-console-stack.mjs
 docs/evidence/GIT-DOCS-TRIAGE/
+
+docs/evidence/**/RESULT.bridge.txt
