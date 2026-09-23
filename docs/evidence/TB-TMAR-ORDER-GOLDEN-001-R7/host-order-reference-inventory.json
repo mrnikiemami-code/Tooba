@@ -34,6 +34,19 @@
     ],
     "note": "SellerPanel Order list/detail/dashboard counts moved Host→Order CQRS. Composer no longer has OrderDbContext. Historical R7 audit markdown and r8/r9InventoryUpdate left intact; files list refreshed after R10."
   },
+  "r11InventoryUpdate": {
+    "updatedBy": "TB-TMAR-ORDER-GOLDEN-001-R11",
+    "removedFiles": [
+      "Grid/AdminCustomersGridQueryEngine.cs",
+      "Admin/AdminReservationCycleMapper.cs"
+    ],
+    "removedOrderAuthorityFrom": [
+      "Admin/AdminPanelComposer.cs",
+      "Admin/AdminPanelEndpoints.cs",
+      "Grid/AdminSellersGridQueryEngine.cs"
+    ],
+    "note": "AdminPanel Order residuals moved Host→Order CQRS: GET /v1/admin/orders, GET/POST /v1/admin/customers*; dashboard Order metrics + seller order counts via Order Application; Host composers/grids have no OrderDbContext. Historical R7 audit markdown and r8–r10InventoryUpdate left intact; files list refreshed after R11."
+  },
   "extraFiles": [
     "Admin/AdminPanelEndpoints.cs",
     "Admin/HostOrderAdminAuthorizer.cs",
@@ -47,7 +60,6 @@
     "Admin/AdminPanelComposer.cs",
     "Admin/AdminPanelEndpoints.cs",
     "Admin/AdminPanelModels.cs",
-    "Admin/AdminReservationCycleMapper.cs",
     "Admin/HoldPolicySettingsEndpoints.cs",
     "Admin/HostOrderAdminAuthorizer.cs",
     "Admin/HostOrderAdminEffectiveAccessReader.cs",
@@ -65,7 +77,6 @@
     "Customer/HostOrderCustomerAuthorizer.cs",
     "CustomerProfile/CustomerProfileDevelopmentSeed.cs",
     "Development/MarketplaceDevelopmentBootstrap.cs",
-    "Grid/AdminCustomersGridQueryEngine.cs",
     "Grid/AdminListGridPolicies.cs",
     "Grid/AdminSellersGridQueryEngine.cs",
     "Order/HostOrderStorefrontActor.cs",

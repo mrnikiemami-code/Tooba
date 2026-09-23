@@ -106,7 +106,7 @@ public sealed class TmarDurableGuardTests
         Assert.Equal("USER_ACCEPTED", rootEl.GetProperty("goldenWaveUserReview").GetString());
         Assert.Equal("TB-TMAR-GOLDEN-WAVE-FINAL-CLOSURE-001", rootEl.GetProperty("goldenWaveClosedBy").GetString());
         Assert.False(string.IsNullOrWhiteSpace(rootEl.GetProperty("goldenWaveClosedCommit").GetString()));
-        Assert.Equal("TB-TMAR-ORDER-GOLDEN-001-R11", rootEl.GetProperty("nextTask").GetString());
+        Assert.Equal("TB-TMAR-ORDER-GOLDEN-001-FINAL-CLOSURE", rootEl.GetProperty("nextTask").GetString());
         Assert.Equal("ORDER_GOLDEN_REPAIR_REQUIRED", rootEl.GetProperty("nextTaskGate").GetString());
         Assert.Equal("PAUSED_AT_SAFE_W5_CHECKPOINT", rootEl.GetProperty("checkoutState").GetString());
         Assert.True(rootEl.GetProperty("frontendFrozen").GetBoolean());
@@ -148,7 +148,10 @@ public sealed class TmarDurableGuardTests
         var active = rootEl.GetProperty("activeModuleRecovery");
         Assert.Equal("Order", active.GetProperty("module").GetString());
         Assert.Equal("INCOMPLETE_REFERENCE_REPAIR", active.GetProperty("state").GetString());
-        Assert.Equal("TB-TMAR-ORDER-GOLDEN-001-R11", active.GetProperty("nextTask").GetString());
+        Assert.Equal("TB-TMAR-ORDER-GOLDEN-001-FINAL-CLOSURE", active.GetProperty("nextTask").GetString());
+        Assert.Contains(
+            "ADMIN_PANEL_ORDER_RESIDUALS_CQRS_R11",
+            active.GetProperty("completedSlices").EnumerateArray().Select(x => x.GetString()));
         Assert.Contains(
             "SELLER_PANEL_ORDER_CQRS_R10",
             active.GetProperty("completedSlices").EnumerateArray().Select(x => x.GetString()));
@@ -171,6 +174,7 @@ public sealed class TmarDurableGuardTests
         Assert.Contains("TB-TMAR-ORDER-GOLDEN-001-R9", master, StringComparison.Ordinal);
         Assert.Contains("TB-TMAR-ORDER-GOLDEN-001-R10", master, StringComparison.Ordinal);
         Assert.Contains("TB-TMAR-ORDER-GOLDEN-001-R11", master, StringComparison.Ordinal);
+        Assert.Contains("TB-TMAR-ORDER-GOLDEN-001-FINAL-CLOSURE", master, StringComparison.Ordinal);
         Assert.Contains("TB-TMAR-ORDER-GOLDEN-001-R3", bootstrap, StringComparison.Ordinal);
         Assert.Contains("TB-TMAR-ORDER-GOLDEN-001-R3B", bootstrap, StringComparison.Ordinal);
         Assert.Contains("TB-TMAR-ORDER-GOLDEN-001-R5", bootstrap, StringComparison.Ordinal);
@@ -181,6 +185,7 @@ public sealed class TmarDurableGuardTests
         Assert.Contains("TB-TMAR-ORDER-GOLDEN-001-R9", bootstrap, StringComparison.Ordinal);
         Assert.Contains("TB-TMAR-ORDER-GOLDEN-001-R10", bootstrap, StringComparison.Ordinal);
         Assert.Contains("TB-TMAR-ORDER-GOLDEN-001-R11", bootstrap, StringComparison.Ordinal);
+        Assert.Contains("TB-TMAR-ORDER-GOLDEN-001-FINAL-CLOSURE", bootstrap, StringComparison.Ordinal);
         Assert.Contains("ORDER_GOLDEN_REPAIR_REQUIRED", master, StringComparison.Ordinal);
         Assert.Contains("ORDER_GOLDEN_REPAIR_REQUIRED", bootstrap, StringComparison.Ordinal);
         Assert.Contains("ARCH-COMPLETE-001", master, StringComparison.Ordinal);

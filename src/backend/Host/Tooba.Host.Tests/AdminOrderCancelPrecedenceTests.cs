@@ -64,7 +64,11 @@ public sealed class AdminOrderCancelPrecedenceTests
         Assert.Contains("EnsureCancelledDoesNotBlock", composer, StringComparison.Ordinal);
         Assert.Contains("order.cancelled.blocks_action", composer, StringComparison.Ordinal);
         Assert.Contains("order.Status != SellerOrderStatus.Cancelled && fulfillment is not null", composer, StringComparison.Ordinal);
-        Assert.Contains("return (policyLabel, \"\", \"before_delivery\")", panel, StringComparison.Ordinal);
+        var detail = File.ReadAllText(Path.Combine(
+            root, "src", "backend", "Modules", "Order", "Tooba.Order.Application", "Admin", "Detail", "AdminOrderDetailComposer.cs"));
+        Assert.Contains("return (policyLabel, \"\", \"before_delivery\")", detail, StringComparison.Ordinal);
+        Assert.DoesNotContain("OrderDbContext", panel, StringComparison.Ordinal);
+        Assert.DoesNotContain("SellerOrderStatus", panel, StringComparison.Ordinal);
     }
 
     private static CheckoutGroup SeedCheckout(bool cancel)

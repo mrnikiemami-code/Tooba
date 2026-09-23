@@ -14,6 +14,8 @@ public sealed record AdminDashboardSummary(
 
 // R3: AdminOrderListItem moved to Tooba.Order.Application.Admin.OrdersGrid.Models.
 // R6: Admin order detail DTOs moved to Tooba.Order.Application.Admin.Detail.Models.
+// R11: AdminCustomerListItem moved to Tooba.Order.Application.Admin.Customers.Models.
+// R11: AdminReservationCycleMapper / Host reservation summary DTOs removed (Order Detail owns mapping).
 
 /// <summary>
 /// ردیف دریافت مشتری (پرداخت) برای گرید Admin.
@@ -47,24 +49,3 @@ public sealed record AdminSellerListItem(
     string Status,
     int ActiveOffers,
     int OrderCount);
-
-/// <summary>خلاصهٔ فشرده چرخه رزرو برای گرید.</summary>
-public sealed record AdminReservationCycleSummary(
-    string CompactLabelFa,
-    string CompactLabelEn,
-    string State,
-    int? CycleNumber,
-    bool RetryPossible,
-    bool NeedsReacquire,
-    bool RetryLimitReached);
-
-/// <summary>
-/// مشتری صادقانهٔ عملیاتی بر پایهٔ User سفارش و آخرین snapshot گیرنده.
-/// </summary>
-public sealed record AdminCustomerListItem(
-    Guid CustomerUserId,
-    string DisplayName,
-    string? ContactMobile,
-    int OrderCount,
-    DateTimeOffset LastOrderAt,
-    string Status);

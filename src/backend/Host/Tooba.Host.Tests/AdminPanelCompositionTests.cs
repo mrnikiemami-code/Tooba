@@ -1,4 +1,5 @@
 using Tooba.Host.Admin;
+using Tooba.Order.Application.Admin.Customers.Models;
 using Tooba.Order.Application.Admin.Detail.Models;
 using Tooba.Order.Application.Admin.OrdersGrid.Models;
 using Xunit;
@@ -68,12 +69,13 @@ public sealed class AdminPanelCompositionTests
         Assert.Contains("_catalog.Products", source, StringComparison.Ordinal);
         Assert.Contains("IOfferQueryGateway", source, StringComparison.Ordinal);
         Assert.Contains("CountActiveOffersAsync", source, StringComparison.Ordinal);
-        Assert.Contains("_orders.Checkouts", source, StringComparison.Ordinal);
+        Assert.Contains("GetAdminOrderDashboardMetricsQuery", source, StringComparison.Ordinal);
+        Assert.Contains("ISellerOrderCountReader", source, StringComparison.Ordinal);
         Assert.Contains("_parties.Parties", source, StringComparison.Ordinal);
+        Assert.DoesNotContain("OrderDbContext", source, StringComparison.Ordinal);
         Assert.DoesNotContain("OfferDbContext", source, StringComparison.Ordinal);
         Assert.DoesNotContain("_offers.Offers", source, StringComparison.Ordinal);
         Assert.DoesNotContain("_catalog.Products.Join(", source, StringComparison.Ordinal);
-        Assert.DoesNotContain("_orders.Checkouts.Join(", source, StringComparison.Ordinal);
         Assert.DoesNotContain("_parties.Parties.Join(", source, StringComparison.Ordinal);
         Assert.DoesNotContain("FromSql", source, StringComparison.OrdinalIgnoreCase);
         Assert.DoesNotContain("GetOrderAsync", source, StringComparison.Ordinal);
@@ -82,15 +84,23 @@ public sealed class AdminPanelCompositionTests
         Assert.DoesNotContain("_fulfillment.", source, StringComparison.Ordinal);
         Assert.DoesNotContain("Product.Price", source, StringComparison.Ordinal);
         Assert.DoesNotContain("Product.Stock", source, StringComparison.Ordinal);
+        Assert.DoesNotContain("SellerOrderStatus", source, StringComparison.Ordinal);
+        Assert.DoesNotContain("ListOrdersAsync", source, StringComparison.Ordinal);
+        Assert.DoesNotContain("ListCustomersAsync", source, StringComparison.Ordinal);
     }
 
     [Fact]
-    public void Host_admin_endpoints_no_longer_own_order_detail_route()
+    public void Host_admin_endpoints_no_longer_own_order_or_customer_routes()
     {
         var source = File.ReadAllText(Path.Combine(
             FindRepoRoot(), "src", "backend", "Host", "Tooba.Host", "Admin", "AdminPanelEndpoints.cs"));
+        Assert.DoesNotContain("MapGet(\"/orders\"", source, StringComparison.Ordinal);
         Assert.DoesNotContain("MapGet(\"/orders/{checkoutId:guid}\"", source, StringComparison.Ordinal);
+        Assert.DoesNotContain("MapGet(\"/customers\"", source, StringComparison.Ordinal);
+        Assert.DoesNotContain("MapPost(\"/customers/query\"", source, StringComparison.Ordinal);
         Assert.DoesNotContain("GetOrderAsync", source, StringComparison.Ordinal);
+        Assert.DoesNotContain("ListOrdersAsync", source, StringComparison.Ordinal);
+        Assert.DoesNotContain("ListCustomersAsync", source, StringComparison.Ordinal);
     }
 
     [Fact]

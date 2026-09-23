@@ -1,7 +1,8 @@
 ﻿using System.Text.RegularExpressions;
-using Tooba.Host.Admin;
 using Tooba.Order.Application;
+using Tooba.Order.Application.Admin.Detail;
 using Tooba.Order.Application.Admin.Detail.Models;
+using Tooba.Order.Application.Admin.OrdersGrid;
 using Tooba.Order.Application.Admin.Supply.Models;
 using Tooba.Order.Domain;
 using Xunit;
@@ -63,7 +64,7 @@ public sealed class AdminReservationCycleAuditTests
             new(Guid.NewGuid(), "سیب", "kg", 2, 0.5m, 1.5m, OrderSupplyStatusKind.Unavailable, null),
             new(Guid.NewGuid(), "گلابی", "kg", 1, 0, 1, OrderSupplyStatusKind.Unavailable, null),
         ]);
-        var audit = AdminReservationCycleMapper.ToAudit(
+        var audit = AdminOrderReservationCycleMapper.ToAudit(
             Proj([expired], 1, ReservationCycleStatus.Expired, remaining: 2, supply: "Unavailable"),
             events,
             supply);
@@ -82,22 +83,22 @@ public sealed class AdminReservationCycleAuditTests
         var audit = Audit(Proj([expired], 3, ReservationCycleStatus.Expired, remaining: 0, max: 3), events);
         Assert.True(audit.RetryLimitReached);
         Assert.Contains(audit.Events, e => e.DetailFa == "حداکثر دفعات رزرو این سفارش استفاده شده است.");
-        Assert.Equal("در انتظار بررسی پرداخت", AdminReservationCycleMapper.ReasonFa(ReservationCycleReason.ManualReview));
-        Assert.Equal("در انتظار ثبت اطلاعات پرداخت", AdminReservationCycleMapper.ReasonFa(ReservationCycleReason.ManualInitial));
-        Assert.Equal("بازیابی سفارش", AdminReservationCycleMapper.ReasonFa(ReservationCycleReason.Restore));
-        Assert.Equal("بازیابی تاریخی", AdminReservationCycleMapper.ReasonFa(ReservationCycleReason.HistoricalRecovery));
-        Assert.Equal("بازیابی پرداخت دیرهنگام", AdminReservationCycleMapper.ReasonFa(ReservationCycleReason.LatePaymentRecovery));
+        Assert.Equal("در انتظار بررسی پرداخت", AdminOrderReservationCycleMapper.ReasonFa(ReservationCycleReason.ManualReview));
+        Assert.Equal("در انتظار ثبت اطلاعات پرداخت", AdminOrderReservationCycleMapper.ReasonFa(ReservationCycleReason.ManualInitial));
+        Assert.Equal("بازیابی سفارش", AdminOrderReservationCycleMapper.ReasonFa(ReservationCycleReason.Restore));
+        Assert.Equal("بازیابی تاریخی", AdminOrderReservationCycleMapper.ReasonFa(ReservationCycleReason.HistoricalRecovery));
+        Assert.Equal("بازیابی پرداخت دیرهنگام", AdminOrderReservationCycleMapper.ReasonFa(ReservationCycleReason.LatePaymentRecovery));
     }
 
     [Fact]
     public void Grid_compact_labels_and_summary_capabilities()
     {
-        Assert.Equal("فعال #1", AdminReservationCycleMapper.CompactFa(ReservationCycleStatus.Active, 1));
-        Assert.Equal("پایان‌یافته #1", AdminReservationCycleMapper.CompactFa(ReservationCycleStatus.Expired, 1));
-        Assert.Equal("فعال #2", AdminReservationCycleMapper.CompactFa(ReservationCycleStatus.Active, 2));
-        Assert.Equal("نهایی‌شده", AdminReservationCycleMapper.CompactFa(ReservationCycleStatus.CommittedPaid, 1));
-        Assert.Equal("—", AdminReservationCycleMapper.CompactFa(null, null));
-        var expired = AdminReservationCycleMapper.ToSummary(
+        Assert.Equal("فعال #1", AdminOrderReservationCycleMapper.CompactFa(ReservationCycleStatus.Active, 1));
+        Assert.Equal("پایان‌یافته #1", AdminOrderReservationCycleMapper.CompactFa(ReservationCycleStatus.Expired, 1));
+        Assert.Equal("فعال #2", AdminOrderReservationCycleMapper.CompactFa(ReservationCycleStatus.Active, 2));
+        Assert.Equal("نهایی‌شده", AdminOrderReservationCycleMapper.CompactFa(ReservationCycleStatus.CommittedPaid, 1));
+        Assert.Equal("—", AdminOrderReservationCycleMapper.CompactFa(null, null));
+        var expired = OrderReservationCycleSummaryMapper.ToSummary(
             Proj([Closed(1, ReservationCycleStatus.Expired)], 1, ReservationCycleStatus.Expired, remaining: 2, supply: "AvailableForReacquire"));
         Assert.True(expired.RetryPossible);
         Assert.True(expired.NeedsReacquire);
@@ -107,10 +108,12 @@ public sealed class AdminReservationCycleAuditTests
     [Fact]
     public void Historical_policy_is_not_current_settings()
     {
-        var mapper = File.ReadAllText(Host("Admin/AdminReservationCycleMapper.cs"));
+        var mapper = File.ReadAllText(OrderModule(
+            "Tooba.Order.Application/Admin/Detail/AdminOrderReservationCycleMapper.cs"));
         Assert.Contains("PolicySourceFa", mapper, StringComparison.Ordinal);
         Assert.DoesNotContain("IOptions<ReservationCycleOptions>", mapper, StringComparison.Ordinal);
         Assert.DoesNotContain("InitialReservationHoldMinutes", mapper, StringComparison.Ordinal);
+        Assert.False(File.Exists(Host("Admin/AdminReservationCycleMapper.cs")));
     }
 
     [Fact]
@@ -143,13 +146,16 @@ public sealed class AdminReservationCycleAuditTests
         var locks = File.ReadAllText(Path.Combine(RepoRoot(), "docs", "architecture", "TOOBA-LOCKS.md"));
         Assert.Contains("LOCK-SF-091", locks, StringComparison.Ordinal);
         Assert.Contains("LOCK-SF-096", locks, StringComparison.Ordinal);
-        Assert.DoesNotContain("TB-P10-T005", File.ReadAllText(Host("Admin/AdminReservationCycleMapper.cs")), StringComparison.Ordinal);
+        Assert.DoesNotContain(
+            "TB-P10-T005",
+            File.ReadAllText(OrderModule("Tooba.Order.Application/Admin/Detail/AdminOrderReservationCycleMapper.cs")),
+            StringComparison.Ordinal);
     }
 
     private static AdminReservationCycleAuditView Audit(
         ReservationCycleProjection projection,
         IReadOnlyList<ReservationCycleEventSnapshot> events) =>
-        AdminReservationCycleMapper.ToAudit(projection, events, null);
+        AdminOrderReservationCycleMapper.ToAudit(projection, events, null);
 
     private static ReservationCycleSnapshot Active(
         int n,

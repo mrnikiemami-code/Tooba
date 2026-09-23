@@ -130,7 +130,6 @@ public sealed class AdminDbNativeGridQueryTests
         var engines = new[]
         {
             "AdminContentGridQueryEngine.cs",
-            "AdminCustomersGridQueryEngine.cs",
             "AdminSellersGridQueryEngine.cs",
             "AdminReviewGridQueryEngine.cs",
             "AdminStoryGridQueryEngine.cs",
@@ -152,9 +151,15 @@ public sealed class AdminDbNativeGridQueryTests
             Assert.DoesNotContain("InMemoryGridQueryEngine", text);
         }
 
+        Assert.False(File.Exists(Path.Combine(root, "AdminCustomersGridQueryEngine.cs")));
+        var sellersEngine = File.ReadAllText(Path.Combine(root, "AdminSellersGridQueryEngine.cs"));
+        Assert.DoesNotContain("OrderDbContext", sellersEngine, StringComparison.Ordinal);
+        Assert.Contains("ISellerOrderCountReader", sellersEngine, StringComparison.Ordinal);
+
         var moduleEngines = new[]
         {
             Path.GetFullPath(Path.Combine(root, "..", "..", "..", "Modules", "Order", "Tooba.Order.Infrastructure", "Admin", "OrdersGrid", "AdminOrdersGridReader.cs")),
+            Path.GetFullPath(Path.Combine(root, "..", "..", "..", "Modules", "Order", "Tooba.Order.Infrastructure", "Admin", "Customers", "AdminCustomersGridReader.cs")),
             Path.GetFullPath(Path.Combine(root, "..", "..", "..", "Modules", "Fulfillment", "Tooba.Fulfillment.Infrastructure", "Queries", "AdminFulfillmentWorkQueueQueryEngine.cs")),
             Path.GetFullPath(Path.Combine(root, "..", "..", "..", "Modules", "Returns", "Tooba.Returns.Infrastructure", "Queries", "AdminReturnGridQueryEngine.cs")),
             Path.GetFullPath(Path.Combine(root, "..", "..", "..", "Modules", "Settlement", "Tooba.Settlement.Infrastructure", "Queries", "AdminPayoutGridQueryEngine.cs")),
@@ -163,7 +168,12 @@ public sealed class AdminDbNativeGridQueryTests
         {
             Assert.True(File.Exists(path), $"missing {path}");
             var text = File.ReadAllText(path);
-            Assert.Contains("EfGridQuery.PageAsync", text, StringComparison.Ordinal);
+            Assert.True(
+                text.Contains("EfGridQuery.PageAsync", StringComparison.Ordinal)
+                || (text.Contains("CountAsync", StringComparison.Ordinal)
+                    && text.Contains("Skip(", StringComparison.Ordinal)
+                    && text.Contains("Take(", StringComparison.Ordinal)),
+                $"{Path.GetFileName(path)} must page via EfGridQuery.PageAsync or CountAsync+Skip+Take");
         }
 
         var helper = File.ReadAllText(Path.GetFullPath(Path.Combine(

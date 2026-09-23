@@ -10,6 +10,7 @@ using Tooba.AddressBook.Contracts;
 using Tooba.Cart.Application.Ports;
 using Tooba.Fulfillment.Contracts.Shipping;
 using Tooba.Order.Application;
+using Tooba.Order.Application.Admin.Detail;
 using Tooba.Order.Domain;
 using Tooba.Order.Infrastructure;
 using Tooba.Order.Infrastructure.Persistence;
@@ -182,7 +183,7 @@ public sealed class ReservationLifecycleIntegrationGateTests
         var history = new ReservationCycleSnapshot(
             Guid.NewGuid(), checkout, 1, ReservationCycleReason.InitialPayment, ReservationCycleStatus.Active,
             T0, T0.AddMinutes(3), null, 3, 2, "offer", [], null, null);
-        var admin = AdminReservationCycleMapper.ToAudit(
+        var admin = AdminOrderReservationCycleMapper.ToAudit(
             new ReservationCycleProjection(
                 checkout, 1, ReservationCycleStatus.Active, T0, T0.AddMinutes(3), T0, 180, 1, 2, 1,
                 [history], "Reserved"),

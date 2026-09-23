@@ -1,27 +1,57 @@
 using Microsoft.EntityFrameworkCore;
 using Tooba.BuildingBlocks.Grid;
-using Tooba.Persistence.Grid;
-using Tooba.Host.Admin;
+using Tooba.Order.Application.Admin.Customers.Models;
+using Tooba.Order.Application.Admin.Customers.Ports;
+using Tooba.Order.Application.Storefront.Services;
 using Tooba.Order.Infrastructure.Persistence;
+using Tooba.Persistence.Grid;
 
-namespace Tooba.Host.Grid;
+namespace Tooba.Order.Infrastructure.Admin.Customers;
 
 /// <summary>
 /// پرس‌وجوی DB-native مشتریان Admin — گروه روی PlacedByUserId با Count/Max؛
 /// نام/موبایل آخرین checkout فقط برای صفحه.
 /// Status همیشه Active (فیلتر status=Active عبوری است).
 /// </summary>
-internal sealed class AdminCustomersGridQueryEngine
+internal sealed class AdminCustomersGridReader(OrderDbContext orders) : IAdminCustomersGridReader
 {
-    private readonly OrderDbContext _orders;
-
-    public AdminCustomersGridQueryEngine(OrderDbContext orders) => _orders = orders;
+    public async Task<IReadOnlyList<AdminCustomerListItem>> ListAsync(CancellationToken cancellationToken)
+    {
+        var rows = await orders.Checkouts.AsNoTracking()
+            .Select(x => new
+            {
+                x.PlacedByUserId,
+                x.RecipientName,
+                x.RecipientFirstName,
+                x.RecipientLastName,
+                x.ContactMobile,
+                x.SubmittedAt,
+            })
+            .ToListAsync(cancellationToken);
+        return rows.GroupBy(x => x.PlacedByUserId)
+            .Select(group =>
+            {
+                var latest = group.OrderByDescending(x => x.SubmittedAt).First();
+                return new AdminCustomerListItem(
+                    group.Key,
+                    StorefrontRecipientNames.DisplayOrFallback(
+                        latest.RecipientFirstName,
+                        latest.RecipientLastName,
+                        latest.RecipientName),
+                    string.IsNullOrWhiteSpace(latest.ContactMobile) ? null : latest.ContactMobile,
+                    group.Count(),
+                    latest.SubmittedAt,
+                    "Active");
+            })
+            .OrderByDescending(x => x.LastOrderAt)
+            .ToList();
+    }
 
     public async Task<GridPageResponse<AdminCustomerListItem>> QueryAsync(
         GridQueryRequest request,
         CancellationToken cancellationToken)
     {
-        var aggregates = _orders.Checkouts.AsNoTracking()
+        var aggregates = orders.Checkouts.AsNoTracking()
             .GroupBy(x => x.PlacedByUserId)
             .Select(g => new CustomerAgg(
                 g.Key,
@@ -31,7 +61,7 @@ internal sealed class AdminCustomersGridQueryEngine
         if (!string.IsNullOrWhiteSpace(request.Search))
         {
             var term = request.Search.Trim().ToLower();
-            var matchingUserIds = await _orders.Checkouts.AsNoTracking()
+            var matchingUserIds = await orders.Checkouts.AsNoTracking()
                 .Where(c =>
                     c.RecipientName.ToLower().Contains(term)
                     || c.ContactMobile.ToLower().Contains(term))
@@ -78,7 +108,7 @@ internal sealed class AdminCustomersGridQueryEngine
             return null;
         }
 
-        var baseAgg = _orders.Checkouts.AsNoTracking()
+        var baseAgg = orders.Checkouts.AsNoTracking()
             .GroupBy(x => x.PlacedByUserId)
             .Select(g => new CustomerAgg(g.Key, g.Count(), g.Max(x => x.SubmittedAt)));
 
@@ -117,7 +147,6 @@ internal sealed class AdminCustomersGridQueryEngine
             case "activity":
                 return EfGridQuery.ApplyDateFilter(source, x => x.LastOrderAt, filter);
             case "status":
-                // Always Active — equals Active is pass-through; anything else empty.
                 return IsActiveOnlyFilter(filter) ? source : source.Where(_ => false);
             default:
                 return source;
@@ -160,7 +189,7 @@ internal sealed class AdminCustomersGridQueryEngine
         CancellationToken cancellationToken)
     {
         var fieldIsName = filter.Field == "name";
-        IQueryable<Tooba.Order.Domain.CheckoutGroup> q = _orders.Checkouts.AsNoTracking();
+        IQueryable<Tooba.Order.Domain.CheckoutGroup> q = orders.Checkouts.AsNoTracking();
         q = fieldIsName
             ? EfGridQuery.ApplyTextFilter(q, x => x.RecipientName, filter)
             : EfGridQuery.ApplyTextFilter(q, x => x.ContactMobile, filter);
@@ -195,7 +224,7 @@ internal sealed class AdminCustomersGridQueryEngine
         }
 
         var userIds = pageAggs.Select(x => x.UserId).ToList();
-        var checkouts = await _orders.Checkouts.AsNoTracking()
+        var checkouts = await orders.Checkouts.AsNoTracking()
             .Where(x => userIds.Contains(x.PlacedByUserId))
             .Select(x => new { x.PlacedByUserId, x.RecipientName, x.ContactMobile, x.SubmittedAt })
             .ToListAsync(cancellationToken);

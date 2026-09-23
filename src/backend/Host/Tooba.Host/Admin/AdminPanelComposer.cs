@@ -1,100 +1,74 @@
-﻿using Tooba.Order.Application.Storefront.Services;
+﻿using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Tooba.BuildingBlocks.Grid;
 using Tooba.Catalog.Domain;
 using Tooba.Catalog.Infrastructure.Persistence;
 using Tooba.Host.Grid;
 using Tooba.Offer.Contracts.Dtos;
-using Tooba.Order.Application.Admin.OrdersGrid;
-using Tooba.Order.Application.Admin.OrdersGrid.Models;
 using Tooba.Offer.Contracts.Ports;
-using Tooba.Order.Domain;
-using Tooba.Order.Infrastructure.Persistence;
+using Tooba.Order.Application.Admin.Dashboard.Queries.GetAdminOrderDashboardMetrics;
+using Tooba.Order.Application.Admin.Sellers.Ports;
 using Tooba.Party.Infrastructure.Persistence;
 
 namespace Tooba.Host.Admin;
 
 /// <summary>
-/// read model باریک مدیر را با پرس‌وجوی مستقل هر DbContext و ترکیب در حافظه می‌سازد.
-/// جزئیات سفارش (GET /orders/{id}) در Order.Endpoints / Admin/Detail است.
+/// ترکیب باریک Host برای سطوح cross-module مدیر (داشبورد / فروشندگان).
+/// مسیرهای Order-owned (orders list، customers) در Order.Endpoints هستند.
 /// </summary>
 public sealed class AdminPanelComposer
 {
     private readonly CatalogDbContext _catalog;
     private readonly IOfferQueryGateway _offers;
-    private readonly OrderDbContext _orders;
     private readonly PartyDbContext _parties;
-    private readonly Tooba.Returns.Contracts.Operations.IReturnAdminOperations _returnOperations;
+    private readonly ISender _sender;
+    private readonly ISellerOrderCountReader _sellerOrderCounts;
     private readonly AdminSellersGridQueryEngine _sellersGrid;
-    private readonly AdminCustomersGridQueryEngine _customersGrid;
 
     /// <summary>
-    /// ترکیب‌گر Host را با contextهای مستقل ماژول‌ها می‌سازد.
+    /// ترکیب‌گر Host را با contextهای غیر-Order و مرزهای Order Application می‌سازد.
     /// </summary>
     public AdminPanelComposer(
         CatalogDbContext catalog,
         IOfferQueryGateway offers,
-        OrderDbContext orders,
         PartyDbContext parties,
-        Tooba.Returns.Contracts.Operations.IReturnAdminOperations returnOperations)
+        ISender sender,
+        ISellerOrderCountReader sellerOrderCounts,
+        AdminSellersGridQueryEngine sellersGrid)
     {
-        _returnOperations = returnOperations;
         _catalog = catalog;
         _offers = offers;
-        _orders = orders;
         _parties = parties;
-        _sellersGrid = new AdminSellersGridQueryEngine(offers, parties, orders);
-        _customersGrid = new AdminCustomersGridQueryEngine(orders);
+        _sender = sender;
+        _sellerOrderCounts = sellerOrderCounts;
+        _sellersGrid = sellersGrid;
     }
 
     /// <summary>
     /// خلاصهٔ واقعی داشبورد را بدون نمودار یا درآمد ساختگی برمی‌گرداند.
+    /// شمارنده‌های Order از CQRS Order می‌آیند؛ Catalog/Offer در Host ترکیب می‌شوند.
     /// </summary>
     public async Task<AdminDashboardSummary> GetDashboardAsync(CancellationToken cancellationToken)
     {
         var publishedProducts = await _catalog.Products.AsNoTracking()
             .CountAsync(x => x.Status == CatalogPublicationStatus.Published, cancellationToken);
         var activeOffers = await _offers.CountActiveOffersAsync(cancellationToken);
-        var statuses = await _orders.SellerOrders.AsNoTracking()
-            .Select(x => x.Status)
-            .ToListAsync(cancellationToken);
         var sellerIds = await _offers.ListDistinctSellerPartyIdsAsync(cancellationToken);
-        var customers = await _orders.Checkouts.AsNoTracking()
-            .Select(x => x.PlacedByUserId)
-            .Distinct()
-            .CountAsync(cancellationToken);
-        var paid = statuses.Count(x => x == SellerOrderStatus.Paid);
-        var pending = statuses.Count(x => x is SellerOrderStatus.PendingPayment or SellerOrderStatus.Submitted);
-        var open = statuses.Count(x => x is not SellerOrderStatus.Paid and not SellerOrderStatus.Cancelled);
+        var orderMetrics = (await _sender.Send(new GetAdminOrderDashboardMetricsQuery(), cancellationToken)).Value;
+
         return new AdminDashboardSummary(
             publishedProducts,
             activeOffers,
-            open,
-            paid,
-            pending,
+            orderMetrics.OpenOrders,
+            orderMetrics.PaidOrders,
+            orderMetrics.PendingOrders,
             sellerIds.Count,
-            customers);
-    }
-
-    /// <summary>
-    /// Checkoutها را به ردیف‌های سفارش مدیر با snapshot مشتری و مبلغ تبدیل می‌کند.
-    /// </summary>
-    public async Task<IReadOnlyList<AdminOrderListItem>> ListOrdersAsync(CancellationToken cancellationToken)
-    {
-        var groups = await LoadOrderGroupsAsync(cancellationToken);
-        var sellerIds = groups.SelectMany(g => g.SellerOrders.Select(o => o.SellerPartyId)).Distinct().ToList();
-        var sellerNames = await LoadSellerDisplayNamesAsync(sellerIds, cancellationToken);
-        var items = new List<AdminOrderListItem>(groups.Count);
-        foreach (var group in groups)
-        {
-            items.Add(await MapOrderListItemAsync(group, sellerNames, cancellationToken));
-        }
-
-        return items;
+            orderMetrics.Customers);
     }
 
     /// <summary>
     /// فروشندگان دارای Offer را با وضعیت Party و شمارنده‌های مستقل فهرست می‌کند.
+    /// شمارش سفارش از مرز Order Application است.
     /// </summary>
     public async Task<IReadOnlyList<AdminSellerListItem>> ListSellersAsync(CancellationToken cancellationToken)
     {
@@ -104,12 +78,7 @@ public sealed class AdminPanelComposer
             .Where(x => sellerIds.Contains(x.PartyId))
             .Select(x => new { x.PartyId, x.DisplayName, x.Status })
             .ToListAsync(cancellationToken);
-        var orderCounts = await _orders.SellerOrders.AsNoTracking()
-            .Where(x => sellerIds.Contains(x.SellerPartyId))
-            .GroupBy(x => x.SellerPartyId)
-            .Select(x => new { SellerPartyId = x.Key, Count = x.Count() })
-            .ToListAsync(cancellationToken);
-        var orderMap = orderCounts.ToDictionary(x => x.SellerPartyId, x => x.Count);
+        var orderMap = await _sellerOrderCounts.GetCountsBySellerAsync(sellerIds, cancellationToken);
         return parties.Select(party => new AdminSellerListItem(
             party.PartyId,
             party.DisplayName,
@@ -118,84 +87,12 @@ public sealed class AdminPanelComposer
             orderMap.GetValueOrDefault(party.PartyId))).ToList();
     }
 
-    /// <summary>
-    /// مشتریان را فقط از User ثبت‌کنندهٔ سفارش و آخرین snapshot گیرنده استخراج می‌کند؛ CRM اختراع نمی‌شود.
-    /// </summary>
-    public async Task<IReadOnlyList<AdminCustomerListItem>> ListCustomersAsync(CancellationToken cancellationToken)
-    {
-        var rows = await _orders.Checkouts.AsNoTracking()
-            .Select(x => new { x.PlacedByUserId, x.RecipientName, x.RecipientFirstName, x.RecipientLastName, x.ContactMobile, x.SubmittedAt })
-            .ToListAsync(cancellationToken);
-        return rows.GroupBy(x => x.PlacedByUserId)
-            .Select(group =>
-            {
-                var latest = group.OrderByDescending(x => x.SubmittedAt).First();
-                return new AdminCustomerListItem(
-                    group.Key,
-                    StorefrontRecipientNames.DisplayOrFallback(latest.RecipientFirstName, latest.RecipientLastName, latest.RecipientName),
-                    string.IsNullOrWhiteSpace(latest.ContactMobile) ? null : latest.ContactMobile,
-                    group.Count(),
-                    latest.SubmittedAt,
-                    "Active");
-            })
-            .OrderByDescending(x => x.LastOrderAt)
-            .ToList();
-    }
-
-    /// <summary>صفحه‌بندی server-side گرید فروشندگان Admin (DB-native).</summary>
+    /// <summary>صفحه‌بندی server-side گرید فروشندگان Admin (DB-native؛ Order metric از مرز Order).</summary>
     public Task<GridPageResponse<AdminSellerListItem>> QuerySellersGridAsync(
         GridQueryRequest request,
         CancellationToken cancellationToken)
     {
         var q = AdminListGridPolicies.Sellers.Normalize(request);
         return _sellersGrid.QueryAsync(q, cancellationToken);
-    }
-
-    /// <summary>صفحه‌بندی server-side گرید مشتریان Admin (DB-native).</summary>
-    public Task<GridPageResponse<AdminCustomerListItem>> QueryCustomersGridAsync(
-        GridQueryRequest request,
-        CancellationToken cancellationToken)
-    {
-        var q = AdminListGridPolicies.Customers.Normalize(request);
-        return _customersGrid.QueryAsync(q, cancellationToken);
-    }
-
-    private async Task<IReadOnlyList<CheckoutGroup>> LoadOrderGroupsAsync(CancellationToken cancellationToken) =>
-        await _orders.Checkouts.AsNoTracking()
-            .Include(x => x.SellerOrders)
-            .ThenInclude(x => x.Lines)
-            .OrderByDescending(x => x.SubmittedAt)
-            .Take(200)
-            .ToListAsync(cancellationToken);
-
-    private async Task<IReadOnlyDictionary<Guid, string>> LoadSellerDisplayNamesAsync(
-        IReadOnlyCollection<Guid> sellerIds,
-        CancellationToken cancellationToken)
-    {
-        if (sellerIds.Count == 0)
-        {
-            return new Dictionary<Guid, string>();
-        }
-
-        var sellerRows = await _parties.Parties.AsNoTracking()
-            .Where(x => sellerIds.Contains(x.PartyId))
-            .Select(x => new { x.PartyId, x.DisplayName })
-            .ToListAsync(cancellationToken);
-        return sellerRows.ToDictionary(x => x.PartyId, x => x.DisplayName);
-    }
-
-    private async Task<AdminOrderListItem> MapOrderListItemAsync(
-        CheckoutGroup group,
-        IReadOnlyDictionary<Guid, string> sellerNames,
-        CancellationToken cancellationToken)
-    {
-        var sellerOrderIds = group.SellerOrders.Select(x => x.SellerOrderId).ToList();
-        var returns = await _returnOperations.ListBySellerOrderIdsAsync(sellerOrderIds, cancellationToken);
-        var returnsLookup = returns
-            .GroupBy(x => x.SellerOrderId)
-            .ToDictionary(
-                g => g.Key,
-                g => (IReadOnlyList<Tooba.Returns.Contracts.Operations.ReturnSnapshot>)g.ToList());
-        return AdminOrdersGridProjection.MapOrderListItem(group, sellerNames, returnsLookup);
     }
 }

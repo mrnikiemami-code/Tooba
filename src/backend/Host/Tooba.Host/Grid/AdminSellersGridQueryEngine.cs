@@ -3,7 +3,7 @@ using Tooba.BuildingBlocks.Grid;
 using Tooba.Persistence.Grid;
 using Tooba.Host.Admin;
 using Tooba.Offer.Contracts.Ports;
-using Tooba.Order.Infrastructure.Persistence;
+using Tooba.Order.Application.Admin.Sellers.Ports;
 using Tooba.Party.Domain;
 using Tooba.Party.Infrastructure.Persistence;
 
@@ -12,24 +12,27 @@ namespace Tooba.Host.Grid;
 /// <summary>
 /// پرس‌وجوی فروشندگان Admin.
 /// Party scalars در SQL؛ شمارنده‌های Offer/Order جدا (بدون JOIN بین schema).
+/// Order count از مرز Order Application؛ بدون تزریق DbContext سفارش.
 /// مرتب‌سازی name/status در Party SQL؛ مرتب‌سازی offers/orders با الگوی محصول (IDهای فیلترشده سپس sort در حافظه).
 /// </summary>
-internal sealed class AdminSellersGridQueryEngine
+public sealed class AdminSellersGridQueryEngine
 {
     private readonly IOfferQueryGateway _offers;
     private readonly PartyDbContext _parties;
-    private readonly OrderDbContext _orders;
+    private readonly ISellerOrderCountReader _orderCounts;
 
+    /// <summary>موتور گرید فروشندگان را با مرزهای Offer/Party/Order می‌سازد.</summary>
     public AdminSellersGridQueryEngine(
         IOfferQueryGateway offers,
         PartyDbContext parties,
-        OrderDbContext orders)
+        ISellerOrderCountReader orderCounts)
     {
         _offers = offers;
         _parties = parties;
-        _orders = orders;
+        _orderCounts = orderCounts;
     }
 
+    /// <summary>صفحهٔ گرید فروشندگان را با فیلتر/مرتب‌سازی/صفحه‌بندی برمی‌گرداند.</summary>
     public async Task<GridPageResponse<AdminSellerListItem>> QueryAsync(
         GridQueryRequest request,
         CancellationToken cancellationToken)
@@ -195,17 +198,10 @@ internal sealed class AdminSellersGridQueryEngine
         IReadOnlyList<Guid> sellerIds,
         CancellationToken cancellationToken)
     {
-        if (sellerIds.Count == 0)
-        {
-            return [];
-        }
-
-        var rows = await _orders.SellerOrders.AsNoTracking()
-            .Where(x => sellerIds.Contains(x.SellerPartyId))
-            .GroupBy(x => x.SellerPartyId)
-            .Select(g => new { SellerPartyId = g.Key, Count = g.Count() })
-            .ToListAsync(cancellationToken);
-        return rows.ToDictionary(x => x.SellerPartyId, x => x.Count);
+        var counts = await _orderCounts.GetCountsBySellerAsync(sellerIds, cancellationToken);
+        return counts is Dictionary<Guid, int> dict
+            ? dict
+            : counts.ToDictionary(x => x.Key, x => x.Value);
     }
 
     private static HashSet<Guid> FilterMetrics(Dictionary<Guid, int> metrics, GridFilterRequest filter)

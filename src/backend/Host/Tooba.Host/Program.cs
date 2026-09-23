@@ -169,7 +169,6 @@ builder.Services.AddScoped<Tooba.Host.Admin.ProductWorkspaceComposer>();
 builder.Services.AddScoped<Tooba.Host.Grid.AdminContentGridQueryEngine>();
 builder.Services.AddScoped<Tooba.Host.Grid.AdminStoryGridQueryEngine>();
 builder.Services.AddScoped<Tooba.Host.Grid.AdminReviewGridQueryEngine>();
-builder.Services.AddScoped<Tooba.Host.Grid.AdminCustomersGridQueryEngine>();
 builder.Services.AddScoped<Tooba.Host.Grid.AdminSellersGridQueryEngine>();
 builder.Services.Configure<CatalogDemoSeedOptions>(
     builder.Configuration.GetSection(CatalogDemoSeedOptions.SectionName));

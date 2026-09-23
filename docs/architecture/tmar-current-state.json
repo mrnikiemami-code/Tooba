@@ -5,7 +5,7 @@
     "checkoutState":  "PAUSED_AT_SAFE_W5_CHECKPOINT",
     "lastAcceptedTask":  "TB-TMAR-GOLDEN-WAVE-FINAL-CLOSURE-001",
     "lastAcceptedCommit":  "024ce2b5708aa70ad9f395b4dcbe48fdd6912c5a",
-    "nextTask":  "TB-TMAR-ORDER-GOLDEN-001-R11",
+    "nextTask":  "TB-TMAR-ORDER-GOLDEN-001-FINAL-CLOSURE",
     "nextTaskGate":  "ORDER_GOLDEN_REPAIR_REQUIRED",
     "goldenWaveState":  "COMPLETE",
     "goldenWaveUserReview":  "USER_ACCEPTED",
@@ -124,7 +124,7 @@
     "activeModuleRecovery":  {
                                  "module":  "Order",
                                  "state":  "INCOMPLETE_REFERENCE_REPAIR",
-                                 "task":  "TB-TMAR-ORDER-GOLDEN-001-R10",
+                                 "task":  "TB-TMAR-ORDER-GOLDEN-001-R11",
                                  "completedSlices":  [
                                                          "ORDER_ENDPOINTS_FOUNDATION",
                                                          "ADMIN_ORDER_COMPLETENESS_CQRS",
@@ -144,10 +144,11 @@
                                                          "HOST_ORDER_REVERSE_AUDIT_R7",
                                                          "RESERVATION_CYCLE_POLICY_RETRY_EXPIRY_R8",
                                                          "CUSTOMER_PANEL_ORDER_CQRS_R9",
-                                                         "SELLER_PANEL_ORDER_CQRS_R10"
+                                                         "SELLER_PANEL_ORDER_CQRS_R10",
+                                                         "ADMIN_PANEL_ORDER_RESIDUALS_CQRS_R11"
                                                      ],
-                                 "nextTask":  "TB-TMAR-ORDER-GOLDEN-001-R11",
+                                 "nextTask":  "TB-TMAR-ORDER-GOLDEN-001-FINAL-CLOSURE",
                                  "checkoutState":  "PAUSED_AT_SAFE_W5_CHECKPOINT",
-                                 "notes":  "R10: SellerPanel Order list/detail + dashboard Order counts moved Host→Order CQRS (routes via Order.Endpoints ISender; Host composer has no OrderDbContext; dashboard thin composition). Order stays INCOMPLETE_REFERENCE_REPAIR. Checkout PAUSED_AT_SAFE_W5. Next: AdminPanel Order residuals (R11). Do not start R11 until Architect ACCEPT."
+                                 "notes":  "R11: AdminPanel Order residuals moved Host→Order CQRS (GET /v1/admin/orders, GET/POST /v1/admin/customers*; dashboard Order metrics + seller order counts via Order Application; Host AdminPanelComposer/AdminSellersGrid have no OrderDbContext; AdminCustomersGridQueryEngine removed). Order stays INCOMPLETE_REFERENCE_REPAIR until Architect final reverse-audit. Checkout PAUSED_AT_SAFE_W5. Next: FINAL-CLOSURE (do not start)."
                              }
 }

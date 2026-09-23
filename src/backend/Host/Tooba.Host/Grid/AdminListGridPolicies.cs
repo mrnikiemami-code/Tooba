@@ -39,17 +39,7 @@ public static class AdminListGridPolicies
         defaultSortDirection: "asc",
         tieBreakerField: "name");
 
-    /// <summary>گرید مشتریان Admin.</summary>
-    public static readonly AdminListGridQueryPolicy<AdminCustomerListItem> Customers = new(
-    [
-        new("name", x => x.DisplayName, InMemoryGridFieldKind.Text, searchable: true),
-        new("contact", x => x.ContactMobile, InMemoryGridFieldKind.Text, searchable: true),
-        new("orders", x => x.OrderCount, InMemoryGridFieldKind.Number),
-        new("activity", x => x.LastOrderAt, InMemoryGridFieldKind.Date),
-        new("status", x => x.Status, InMemoryGridFieldKind.Enum),
-    ],
-        defaultSortField: "activity",
-        tieBreakerField: "name");
+    // R11: Admin customers grid policy/normalize owned by Order.Application.Admin.Customers.AdminCustomersGridPolicy.
 
     /// <summary>گرید دریافت‌های Admin (پرداخت مشتری).</summary>
     public static readonly AdminListGridQueryPolicy<AdminReceiptListItem> Payments = new(

@@ -57,8 +57,20 @@ public sealed class HostOrderReverseAuditGuardTests
             .ToHashSet(StringComparer.Ordinal);
 
         var admin = File.ReadAllText(Path.Combine(host, "Admin", "AdminPanelEndpoints.cs"));
-        Assert.Contains("MapGet(\"/orders\"", admin, StringComparison.Ordinal);
+        Assert.DoesNotContain("MapGet(\"/orders\"", admin, StringComparison.Ordinal);
+        Assert.DoesNotContain("MapGet(\"/customers\"", admin, StringComparison.Ordinal);
+        Assert.DoesNotContain("MapPost(\"/customers/query\"", admin, StringComparison.Ordinal);
         Assert.Contains(files, f => f.Equals("Admin/AdminPanelEndpoints.cs", StringComparison.Ordinal));
+
+        var orderAdminOrders = File.ReadAllText(Path.Combine(
+            root, "src", "backend", "Modules", "Order", "Tooba.Order.Endpoints", "AdminOrdersGridEndpoints.cs"));
+        Assert.Contains("MapGet(\"/v1/admin/orders\"", orderAdminOrders, StringComparison.Ordinal);
+        Assert.Contains("ListAdminOrdersQuery", orderAdminOrders, StringComparison.Ordinal);
+
+        var orderAdminCustomers = File.ReadAllText(Path.Combine(
+            root, "src", "backend", "Modules", "Order", "Tooba.Order.Endpoints", "AdminCustomersEndpoints.cs"));
+        Assert.Contains("MapGet(\"/v1/admin/customers\"", orderAdminCustomers, StringComparison.Ordinal);
+        Assert.Contains("MapPost(\"/v1/admin/customers/query\"", orderAdminCustomers, StringComparison.Ordinal);
 
         var customer = File.ReadAllText(Path.Combine(host, "Customer", "CustomerPanelEndpoints.cs"));
         Assert.DoesNotContain("MapGet(\"/orders\"", customer, StringComparison.Ordinal);
@@ -120,6 +132,9 @@ public sealed class HostOrderReverseAuditGuardTests
 
         Assert.DoesNotContain("Customer/CustomerPanelComposer.cs", dbConsumers);
         Assert.DoesNotContain("Seller/SellerPanelComposer.cs", dbConsumers);
+        Assert.DoesNotContain("Admin/AdminPanelComposer.cs", dbConsumers);
+        Assert.DoesNotContain("Grid/AdminCustomersGridQueryEngine.cs", dbConsumers);
+        Assert.DoesNotContain("Grid/AdminSellersGridQueryEngine.cs", dbConsumers);
     }
 
     [Fact]
@@ -196,6 +211,41 @@ public sealed class HostOrderReverseAuditGuardTests
         var hostComposer = File.ReadAllText(Path.Combine(
             root, "src", "backend", "Host", "Tooba.Host", "Seller", "SellerPanelComposer.cs"));
         Assert.DoesNotContain("OrderDbContext", hostComposer, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void R11_admin_order_residual_move_is_recorded_in_inventory_without_erasing_r7_r10()
+    {
+        var root = FindRepoRoot();
+        var inventoryPath = Path.Combine(
+            root, "docs", "evidence", "TB-TMAR-ORDER-GOLDEN-001-R7", "host-order-reference-inventory.json");
+        using var doc = JsonDocument.Parse(File.ReadAllText(inventoryPath));
+        var r11 = doc.RootElement.GetProperty("r11InventoryUpdate");
+        Assert.Equal("TB-TMAR-ORDER-GOLDEN-001-R11", r11.GetProperty("updatedBy").GetString());
+        Assert.Contains(
+            "AdminPanel Order residuals",
+            r11.GetProperty("note").GetString()!,
+            StringComparison.Ordinal);
+        Assert.True(doc.RootElement.TryGetProperty("r10InventoryUpdate", out _));
+        Assert.True(doc.RootElement.TryGetProperty("r9InventoryUpdate", out _));
+        Assert.True(doc.RootElement.TryGetProperty("r8InventoryUpdate", out _));
+
+        var host = Path.Combine(root, "src", "backend", "Host", "Tooba.Host");
+        Assert.DoesNotContain(
+            "OrderDbContext",
+            File.ReadAllText(Path.Combine(host, "Admin", "AdminPanelComposer.cs")),
+            StringComparison.Ordinal);
+        Assert.DoesNotContain(
+            "OrderDbContext",
+            File.ReadAllText(Path.Combine(host, "Grid", "AdminSellersGridQueryEngine.cs")),
+            StringComparison.Ordinal);
+        Assert.False(File.Exists(Path.Combine(host, "Grid", "AdminCustomersGridQueryEngine.cs")));
+        Assert.False(File.Exists(Path.Combine(host, "Admin", "AdminReservationCycleMapper.cs")));
+        var files = doc.RootElement.GetProperty("files").EnumerateArray()
+            .Select(x => x.GetString()!)
+            .ToHashSet(StringComparer.Ordinal);
+        Assert.DoesNotContain("Grid/AdminCustomersGridQueryEngine.cs", files);
+        Assert.DoesNotContain("Admin/AdminReservationCycleMapper.cs", files);
     }
 
     private static IReadOnlyList<string> DiscoverHostOrderReferences(string root, IEnumerable<string> extras)

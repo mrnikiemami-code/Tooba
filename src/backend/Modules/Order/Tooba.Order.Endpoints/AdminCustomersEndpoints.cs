@@ -4,17 +4,17 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using Tooba.BuildingBlocks.Grid;
 using Tooba.BuildingBlocks.Presentation;
-using Tooba.Order.Application.Admin.LegacyList.Queries.ListAdminOrders;
-using Tooba.Order.Application.Admin.OrdersGrid.Queries.QueryAdminOrdersGrid;
+using Tooba.Order.Application.Admin.Customers.Queries.ListAdminCustomers;
+using Tooba.Order.Application.Admin.Customers.Queries.QueryAdminCustomersGrid;
 
 namespace Tooba.Order.Endpoints;
 
-internal static class AdminOrdersGridEndpoints
+internal static class AdminCustomersEndpoints
 {
     internal static void Map(IEndpointRouteBuilder app)
     {
-        app.MapGet("/v1/admin/orders", ListAsync);
-        app.MapPost("/v1/admin/orders/query", QueryAsync);
+        app.MapGet("/v1/admin/customers", ListAsync);
+        app.MapPost("/v1/admin/customers/query", QueryAsync);
     }
 
     private static async Task<IResult> ListAsync(
@@ -25,7 +25,7 @@ internal static class AdminOrdersGridEndpoints
         CancellationToken ct)
     {
         await auth.RequireAdminAsync(context, ct);
-        return api.From(await sender.Send(new ListAdminOrdersQuery(), ct));
+        return api.From(await sender.Send(new ListAdminCustomersQuery(), ct));
     }
 
     private static async Task<IResult> QueryAsync(
@@ -37,6 +37,6 @@ internal static class AdminOrdersGridEndpoints
         CancellationToken ct)
     {
         await auth.RequireAdminAsync(context, ct);
-        return api.From(await sender.Send(new QueryAdminOrdersGridQuery(body), ct));
+        return api.From(await sender.Send(new QueryAdminCustomersGridQuery(body), ct));
     }
 }

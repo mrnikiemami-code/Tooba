@@ -4,25 +4,25 @@ using Tooba.BuildingBlocks.Grid;
 namespace Tooba.Host.Admin;
 
 /// <summary>
-/// مسیرهای فقط‌خواندنی عملیات مدیر؛ هر handler پیش از خواندن داده مجوز Tenant را بررسی می‌کند.
+/// مسیرهای فقط‌خواندنی عملیات مدیر برای سطوح cross-module.
+/// مسیرهای /orders و /customers به Order.Endpoints منتقل شده‌اند.
 /// </summary>
 public static class AdminPanelEndpoints
 {
     /// <summary>
-    /// مسیرهای داشبورد، سفارش‌ها، فروشندگان و مشتریان مدیر را ثبت می‌کند.
+    /// مسیرهای داشبورد و فروشندگان مدیر را ثبت می‌کند.
     /// </summary>
     public static void MapAdminPanelEndpoints(this WebApplication app)
     {
         var group = app.MapGroup("/v1/admin");
         group.MapGet("/dashboard", GetDashboardAsync);
-        group.MapGet("/orders", ListOrdersAsync);
+        // R11: GET /v1/admin/orders owned by Order.Endpoints (AdminOrdersGridEndpoints).
         // R3: POST /v1/admin/orders/query is owned by Order.Endpoints (MapOrderEndpoints).
         // R6: GET /v1/admin/orders/{checkoutId} is owned by Order.Endpoints (AdminOrderDetailEndpoints).
         // R2_REMAINDER: payment detail/actions owned by Payment.Endpoints (MapPaymentEndpoints).
+        // R11: GET/POST /v1/admin/customers* owned by Order.Endpoints (AdminCustomersEndpoints).
         group.MapGet("/sellers", ListSellersAsync);
         group.MapPost("/sellers/query", QuerySellersGridAsync);
-        group.MapGet("/customers", ListCustomersAsync);
-        group.MapPost("/customers/query", QueryCustomersGridAsync);
         group.MapGet("/dev-context", GetDevContext);
     }
 
@@ -36,17 +36,6 @@ public static class AdminPanelEndpoints
         CancellationToken cancellationToken) =>
         await ExecuteAsync(request, session, tenant, guard, environment, cancellationToken,
             () => composer.GetDashboardAsync(cancellationToken));
-
-    private static async Task<IResult> ListOrdersAsync(
-        AdminPanelComposer composer,
-        HttpRequest request,
-        CurrentAuthenticatedSession session,
-        ICurrentTenant tenant,
-        IAuthorizationGuard guard,
-        IHostEnvironment environment,
-        CancellationToken cancellationToken) =>
-        await ExecuteAsync(request, session, tenant, guard, environment, cancellationToken,
-            () => composer.ListOrdersAsync(cancellationToken));
 
     private static async Task<IResult> ListSellersAsync(
         AdminPanelComposer composer,
@@ -76,36 +65,6 @@ public static class AdminPanelEndpoints
             guard,
             environment,
             composer.QuerySellersGridAsync,
-            cancellationToken);
-
-    private static async Task<IResult> ListCustomersAsync(
-        AdminPanelComposer composer,
-        HttpRequest request,
-        CurrentAuthenticatedSession session,
-        ICurrentTenant tenant,
-        IAuthorizationGuard guard,
-        IHostEnvironment environment,
-        CancellationToken cancellationToken) =>
-        await ExecuteAsync(request, session, tenant, guard, environment, cancellationToken,
-            () => composer.ListCustomersAsync(cancellationToken));
-
-    private static Task<IResult> QueryCustomersGridAsync(
-        GridQueryRequest body,
-        AdminPanelComposer composer,
-        HttpRequest request,
-        CurrentAuthenticatedSession session,
-        ICurrentTenant tenant,
-        IAuthorizationGuard guard,
-        IHostEnvironment environment,
-        CancellationToken cancellationToken) =>
-        AdminGridQueryEndpoint.ExecuteAsync(
-            body,
-            request,
-            session,
-            tenant,
-            guard,
-            environment,
-            composer.QueryCustomersGridAsync,
             cancellationToken);
 
     private static async Task<IResult> ExecuteAsync<T>(
