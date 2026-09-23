@@ -129,4 +129,16 @@
   <data name="payment.rejected" xml:space="preserve">
     <value>امکان انجام این عملیات در حال حاضر وجود ندارد.</value>
   </data>
+  <data name="customer.order.missing" xml:space="preserve">
+    <value>سفارش پیدا نشد.</value>
+  </data>
+  <data name="customer.session.required" xml:space="preserve">
+    <value>برای ادامه وارد حساب خود شوید.</value>
+  </data>
+  <data name="payment.unpaid.supply_unavailable" xml:space="preserve">
+    <value>این سفارش در حال حاضر قابل تأمین نیست.</value>
+  </data>
+  <data name="inventory.reservation.retry_limit_reached" xml:space="preserve">
+    <value>تعداد دفعات مجاز رزرو مجدد موجودی برای این سفارش به پایان رسیده است.</value>
+  </data>
 </root>

@@ -1,6 +1,8 @@
 using System.Globalization;
 using System.Resources;
 using Tooba.BuildingBlocks.Localization;
+using Tooba.Order.Application;
+using Tooba.Order.Application.Customer;
 using Tooba.Order.Application.Storefront;
 
 namespace Tooba.Order.Endpoints.Resources;
@@ -22,8 +24,11 @@ public sealed class OrderErrorResourceSet : IErrorResourceSet
         || localizationKey.StartsWith("checkout.", StringComparison.OrdinalIgnoreCase)
         || localizationKey.StartsWith("shipping.", StringComparison.OrdinalIgnoreCase)
         || localizationKey.StartsWith("pending.", StringComparison.OrdinalIgnoreCase)
+        || localizationKey.StartsWith("customer.", StringComparison.OrdinalIgnoreCase)
         || localizationKey.Equals(StorefrontOrderErrors.PaymentMissing, StringComparison.OrdinalIgnoreCase)
-        || localizationKey.Equals(StorefrontOrderErrors.PaymentRejected, StringComparison.OrdinalIgnoreCase);
+        || localizationKey.Equals(StorefrontOrderErrors.PaymentRejected, StringComparison.OrdinalIgnoreCase)
+        || localizationKey.Equals(CustomerOrderErrors.SupplyUnavailable, StringComparison.OrdinalIgnoreCase)
+        || localizationKey.Equals(ReservationCycleErrors.RetryLimitReached, StringComparison.OrdinalIgnoreCase);
 
     /// <inheritdoc />
     public string? GetString(string localizationKey, CultureInfo culture) =>

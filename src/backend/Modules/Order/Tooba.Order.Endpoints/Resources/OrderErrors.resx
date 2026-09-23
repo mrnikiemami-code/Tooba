@@ -129,4 +129,16 @@
   <data name="payment.rejected" xml:space="preserve">
     <value>This operation is not available right now.</value>
   </data>
+  <data name="customer.order.missing" xml:space="preserve">
+    <value>Not Found</value>
+  </data>
+  <data name="customer.session.required" xml:space="preserve">
+    <value>Unauthorized</value>
+  </data>
+  <data name="payment.unpaid.supply_unavailable" xml:space="preserve">
+    <value>This order cannot be supplied right now.</value>
+  </data>
+  <data name="inventory.reservation.retry_limit_reached" xml:space="preserve">
+    <value>Retry reservation limit for this order has been reached.</value>
+  </data>
 </root>

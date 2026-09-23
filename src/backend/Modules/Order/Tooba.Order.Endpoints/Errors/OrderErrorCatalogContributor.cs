@@ -1,11 +1,13 @@
 using Microsoft.AspNetCore.Http;
 using Tooba.BuildingBlocks.Presentation.Errors;
+using Tooba.Order.Application;
 using Tooba.Order.Application.Admin.Completeness.Errors;
+using Tooba.Order.Application.Customer;
 using Tooba.Order.Application.Storefront;
 
 namespace Tooba.Order.Endpoints.Errors;
 
-/// <summary>Explicit Order API error catalog (admin completeness + storefront Order routes).</summary>
+/// <summary>Explicit Order API error catalog (admin completeness + storefront + customer Order routes).</summary>
 public sealed class OrderErrorCatalogContributor : IErrorCatalogContributor
 {
     /// <inheritdoc />
@@ -95,6 +97,16 @@ public sealed class OrderErrorCatalogContributor : IErrorCatalogContributor
             "پرداخت پیدا نشد."),
         D(StorefrontOrderErrors.PaymentRejected, ErrorClassification.Business, StatusCodes.Status400BadRequest,
             "امکان انجام این عملیات در حال حاضر وجود ندارد."),
+
+        // Customer panel Order
+        D(CustomerOrderErrors.Missing, ErrorClassification.NotFound, StatusCodes.Status404NotFound,
+            "Not Found"),
+        D(CustomerOrderErrors.SessionRequired, ErrorClassification.Forbidden, StatusCodes.Status401Unauthorized,
+            "Unauthorized"),
+        D(CustomerOrderErrors.SupplyUnavailable, ErrorClassification.Conflict, StatusCodes.Status409Conflict,
+            "این سفارش در حال حاضر قابل تأمین نیست."),
+        D(ReservationCycleErrors.RetryLimitReached, ErrorClassification.Conflict, StatusCodes.Status409Conflict,
+            ReservationCycleErrors.RetryLimitReachedFa),
     ];
 
     private static ErrorDescriptor D(

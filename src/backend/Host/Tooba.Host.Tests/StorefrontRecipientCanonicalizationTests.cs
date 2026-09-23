@@ -110,7 +110,7 @@ public sealed class StorefrontRecipientCanonicalizationTests
     {
         var checkout = File.ReadAllText(Path.Combine(FindRepoRoot(), "src", "backend", "Modules", "Order", "Tooba.Order.Application", "Storefront", "Services", "StorefrontCheckoutService.cs"));
         var shipping = File.ReadAllText(Path.Combine(FindRepoRoot(), "src", "backend", "Modules", "Order", "Tooba.Order.Application", "Storefront", "Services", "StorefrontShippingService.cs"));
-        var customer = File.ReadAllText(Path.Combine(FindRepoRoot(), "src", "backend", "Host", "Tooba.Host", "Customer", "CustomerPanelComposer.cs"));
+        var customer = File.ReadAllText(Path.Combine(FindRepoRoot(), "src", "backend", "Modules", "Order", "Tooba.Order.Application", "Customer", "CustomerOrderComposer.cs"));
         var admin = File.ReadAllText(Path.Combine(FindRepoRoot(), "src", "backend", "Host", "Tooba.Host", "Admin", "AdminPanelComposer.cs"));
         Assert.Contains("ResolveExplicitOverLegacy", checkout, StringComparison.Ordinal);
         Assert.Contains("StorefrontRecipientNames.Display", checkout, StringComparison.Ordinal);

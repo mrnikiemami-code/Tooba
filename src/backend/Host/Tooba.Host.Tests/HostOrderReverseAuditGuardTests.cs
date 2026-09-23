@@ -61,10 +61,16 @@ public sealed class HostOrderReverseAuditGuardTests
         Assert.Contains(files, f => f.Equals("Admin/AdminPanelEndpoints.cs", StringComparison.Ordinal));
 
         var customer = File.ReadAllText(Path.Combine(host, "Customer", "CustomerPanelEndpoints.cs"));
-        Assert.Contains("MapGet(\"/orders\"", customer, StringComparison.Ordinal);
-        Assert.Contains("MapGet(\"/orders/{checkoutId:guid}\"", customer, StringComparison.Ordinal);
-        Assert.Contains("MapPost(\"/orders/{checkoutId:guid}/retry-unpaid\"", customer, StringComparison.Ordinal);
+        Assert.DoesNotContain("MapGet(\"/orders\"", customer, StringComparison.Ordinal);
+        Assert.DoesNotContain("MapPost(\"/orders/{checkoutId:guid}/retry-unpaid\"", customer, StringComparison.Ordinal);
+        Assert.Contains("GetCustomerOrderDashboardSummaryQuery", customer, StringComparison.Ordinal);
         Assert.Contains(files, f => f.Equals("Customer/CustomerPanelEndpoints.cs", StringComparison.Ordinal));
+        Assert.Contains(files, f => f.Equals("Customer/HostOrderCustomerAuthorizer.cs", StringComparison.Ordinal));
+
+        var orderCustomerEndpoints = File.ReadAllText(Path.Combine(
+            root, "src", "backend", "Modules", "Order", "Tooba.Order.Endpoints", "CustomerOrderEndpoints.cs"));
+        Assert.Contains("MapGet(\"/orders\"", orderCustomerEndpoints, StringComparison.Ordinal);
+        Assert.Contains("MapPost(\"/orders/{checkoutId:guid}/retry-unpaid\"", orderCustomerEndpoints, StringComparison.Ordinal);
 
         var seller = File.ReadAllText(Path.Combine(host, "Seller", "SellerPanelEndpoints.cs"));
         Assert.Contains("MapGet(\"/orders\"", seller, StringComparison.Ordinal);
@@ -103,6 +109,8 @@ public sealed class HostOrderReverseAuditGuardTests
                 files.Contains(consumer),
                 "OrderDbContext consumer missing from R7 inventory: " + consumer);
         }
+
+        Assert.DoesNotContain("Customer/CustomerPanelComposer.cs", dbConsumers);
     }
 
     [Fact]
@@ -138,6 +146,26 @@ public sealed class HostOrderReverseAuditGuardTests
 
         var r8 = doc.RootElement.GetProperty("r8InventoryUpdate");
         Assert.Equal("TB-TMAR-ORDER-GOLDEN-001-R8", r8.GetProperty("updatedBy").GetString());
+    }
+
+    [Fact]
+    public void R9_customer_order_move_is_recorded_in_inventory_without_erasing_r7_r8()
+    {
+        var root = FindRepoRoot();
+        var inventoryPath = Path.Combine(
+            root, "docs", "evidence", "TB-TMAR-ORDER-GOLDEN-001-R7", "host-order-reference-inventory.json");
+        using var doc = JsonDocument.Parse(File.ReadAllText(inventoryPath));
+        var r9 = doc.RootElement.GetProperty("r9InventoryUpdate");
+        Assert.Equal("TB-TMAR-ORDER-GOLDEN-001-R9", r9.GetProperty("updatedBy").GetString());
+        Assert.Contains(
+            "CustomerPanel Order list/detail/retry",
+            r9.GetProperty("note").GetString()!,
+            StringComparison.Ordinal);
+        Assert.True(doc.RootElement.TryGetProperty("r8InventoryUpdate", out _));
+
+        var hostComposer = File.ReadAllText(Path.Combine(
+            root, "src", "backend", "Host", "Tooba.Host", "Customer", "CustomerPanelComposer.cs"));
+        Assert.DoesNotContain("OrderDbContext", hostComposer, StringComparison.Ordinal);
     }
 
     private static IReadOnlyList<string> DiscoverHostOrderReferences(string root, IEnumerable<string> extras)

@@ -10,6 +10,18 @@
     ],
     "note": "Historical R7 audit markdown left intact; inventory files list refreshed after R8 Host deletions."
   },
+  "r9InventoryUpdate": {
+    "updatedBy": "TB-TMAR-ORDER-GOLDEN-001-R9",
+    "addedFiles": [
+      "Customer/HostOrderCustomerAuthorizer.cs",
+      "Customer/CustomerPanelModels.cs"
+    ],
+    "removedOrderAuthorityFrom": [
+      "Customer/CustomerPanelComposer.cs",
+      "Customer/CustomerPanelEndpoints.cs"
+    ],
+    "note": "CustomerPanel Order list/detail/retry moved Host→Order CQRS. Composer no longer has OrderDbContext. Historical R7 audit markdown and r8InventoryUpdate left intact; files list refreshed after R9."
+  },
   "extraFiles": [
     "Admin/AdminPanelEndpoints.cs",
     "Admin/HostOrderAdminAuthorizer.cs",
@@ -35,8 +47,10 @@
     "Composition/ToobaModuleComposition.cs",
     "Customer/CustomerPanelComposer.cs",
     "Customer/CustomerPanelEndpoints.cs",
+    "Customer/CustomerPanelModels.cs",
     "Customer/HostFulfillmentCustomerAuthorizer.cs",
     "Customer/HostNotificationCustomerAuthorizer.cs",
+    "Customer/HostOrderCustomerAuthorizer.cs",
     "CustomerProfile/CustomerProfileDevelopmentSeed.cs",
     "Development/MarketplaceDevelopmentBootstrap.cs",
     "Grid/AdminCustomersGridQueryEngine.cs",

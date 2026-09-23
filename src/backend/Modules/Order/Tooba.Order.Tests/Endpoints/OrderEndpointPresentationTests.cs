@@ -3,7 +3,9 @@ using System.Reflection;
 using Microsoft.Extensions.DependencyInjection;
 using Tooba.BuildingBlocks.Localization;
 using Tooba.BuildingBlocks.Presentation.Errors;
+using Tooba.Order.Application;
 using Tooba.Order.Application.Admin.Completeness.Errors;
+using Tooba.Order.Application.Customer;
 using Tooba.Order.Application.Storefront;
 using Tooba.Order.Endpoints;
 using Tooba.Order.Endpoints.Errors;
@@ -31,7 +33,16 @@ public sealed class OrderEndpointPresentationTests
             .Select(f => (string)f.GetRawConstantValue()!)
             .ToArray();
 
-    private static readonly string[] AllCodes = CompletenessCodes.Concat(StorefrontCodes).ToArray();
+    private static readonly string[] CustomerCodes =
+    [
+        CustomerOrderErrors.Missing,
+        CustomerOrderErrors.SessionRequired,
+        CustomerOrderErrors.SupplyUnavailable,
+        ReservationCycleErrors.RetryLimitReached,
+    ];
+
+    private static readonly string[] AllCodes =
+        CompletenessCodes.Concat(StorefrontCodes).Concat(CustomerCodes).ToArray();
 
     [Fact]
     public void Presentation_registration_adds_catalog_and_resource_set()

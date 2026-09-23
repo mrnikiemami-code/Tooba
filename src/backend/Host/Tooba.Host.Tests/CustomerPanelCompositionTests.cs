@@ -1,12 +1,11 @@
-using Tooba.Payment.Domain.Aggregates;
-using Tooba.Payment.Domain.ValueObjects;
 using Tooba.Host.Customer;
+using Tooba.Order.Application.Customer.Models;
 using Xunit;
 
 namespace Tooba.Host.Tests;
 
 /// <summary>
-/// قفل قرارداد پنل مشتری: مالکیت سفارش در Host و داده‌ها snapshot هستند.
+/// قفل قرارداد پنل مشتری پس از R9: مالکیت سفارش در Order CQRS؛ Host فقط ترکیب نازک داشبورد/پروفایل.
 /// </summary>
 public sealed class CustomerPanelCompositionTests
 {
@@ -47,9 +46,43 @@ public sealed class CustomerPanelCompositionTests
     }
 
     [Fact]
-    public void Composer_filters_orders_by_authenticated_actor_without_cross_schema_join()
+    public void Order_CQRS_filters_by_authenticated_actor_without_cross_schema_join()
     {
-        var source = File.ReadAllText(Path.Combine(
+        var store = File.ReadAllText(Path.Combine(
+            FindRepoRoot(),
+            "src",
+            "backend",
+            "Modules",
+            "Order",
+            "Tooba.Order.Infrastructure",
+            "Customer",
+            "CustomerOrderCheckoutStore.cs"));
+        Assert.Contains("x.PlacedByUserId == actorUserId", store, StringComparison.Ordinal);
+        Assert.DoesNotContain(".Join(", store, StringComparison.Ordinal);
+        Assert.DoesNotContain("FromSql", store, StringComparison.OrdinalIgnoreCase);
+
+        var composer = File.ReadAllText(Path.Combine(
+            FindRepoRoot(),
+            "src",
+            "backend",
+            "Modules",
+            "Order",
+            "Tooba.Order.Application",
+            "Customer",
+            "CustomerOrderComposer.cs"));
+        Assert.Contains("orders.Sum(x => x.TotalItemCount)", composer, StringComparison.Ordinal);
+        Assert.DoesNotContain("Lines.Sum(line => line.Quantity)", composer, StringComparison.Ordinal);
+        Assert.Contains("GetLatestForCheckoutAsync", composer, StringComparison.Ordinal);
+        Assert.Contains("SellerOrderStatus.Cancelled", composer, StringComparison.Ordinal);
+        Assert.DoesNotContain("PaymentState(sellerOrder.Status)", composer, StringComparison.Ordinal);
+        Assert.DoesNotContain("CatalogDbContext", composer, StringComparison.Ordinal);
+        Assert.DoesNotContain("Tooba.Payment.Domain", composer, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void Host_composer_has_no_OrderDbContext_and_dashboard_uses_summary_query()
+    {
+        var hostComposer = File.ReadAllText(Path.Combine(
             FindRepoRoot(),
             "src",
             "backend",
@@ -57,23 +90,12 @@ public sealed class CustomerPanelCompositionTests
             "Tooba.Host",
             "Customer",
             "CustomerPanelComposer.cs"));
-        Assert.Contains("x.PlacedByUserId == actorUserId", source, StringComparison.Ordinal);
-        Assert.DoesNotContain("_orders.Checkouts.Join(", source, StringComparison.Ordinal);
-        Assert.DoesNotContain("FromSql", source, StringComparison.OrdinalIgnoreCase);
-        Assert.DoesNotContain("Product.Price", source, StringComparison.Ordinal);
-        Assert.DoesNotContain("Product.Stock", source, StringComparison.Ordinal);
-        Assert.Contains("orders.Sum(x => x.TotalItemCount)", source, StringComparison.Ordinal);
-        Assert.DoesNotContain("Lines.Sum(line => line.Quantity)", source, StringComparison.Ordinal);
-        Assert.Contains("GetLatestForCheckoutAsync", source, StringComparison.Ordinal);
-        Assert.Contains("PaymentStatus.Failed", source, StringComparison.Ordinal);
-        Assert.Contains("SellerOrderStatus.Cancelled", source, StringComparison.Ordinal);
-        Assert.DoesNotContain("PaymentState(sellerOrder.Status)", source, StringComparison.Ordinal);
-    }
+        Assert.DoesNotContain("OrderDbContext", hostComposer, StringComparison.Ordinal);
+        Assert.DoesNotContain("RetryUnpaidAsync", hostComposer, StringComparison.Ordinal);
+        Assert.Contains("ComposeDashboardAsync", hostComposer, StringComparison.Ordinal);
+        Assert.Contains("CustomerOrderDashboardSummary", hostComposer, StringComparison.Ordinal);
 
-    [Fact]
-    public void Endpoints_prefer_existing_authenticated_session()
-    {
-        var source = File.ReadAllText(Path.Combine(
+        var endpoints = File.ReadAllText(Path.Combine(
             FindRepoRoot(),
             "src",
             "backend",
@@ -81,10 +103,12 @@ public sealed class CustomerPanelCompositionTests
             "Tooba.Host",
             "Customer",
             "CustomerPanelEndpoints.cs"));
-        Assert.Contains("session.IsAuthenticated", source, StringComparison.Ordinal);
-        Assert.Contains("session.UserId", source, StringComparison.Ordinal);
-        Assert.Contains("environment.IsDevelopment()", source, StringComparison.Ordinal);
-        Assert.Contains("customer.session.required", source, StringComparison.Ordinal);
+        Assert.Contains("session.IsAuthenticated", endpoints, StringComparison.Ordinal);
+        Assert.Contains("session.UserId", endpoints, StringComparison.Ordinal);
+        Assert.Contains("environment.IsDevelopment()", endpoints, StringComparison.Ordinal);
+        Assert.Contains("customer.session.required", endpoints, StringComparison.Ordinal);
+        Assert.Contains("GetCustomerOrderDashboardSummaryQuery", endpoints, StringComparison.Ordinal);
+        Assert.DoesNotContain("MapGet(\"/orders\"", endpoints, StringComparison.Ordinal);
     }
 
     private static string FindRepoRoot()

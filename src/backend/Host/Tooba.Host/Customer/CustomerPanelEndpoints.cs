@@ -1,18 +1,21 @@
 ﻿using Tooba.CustomerProfile.Application;
 using Tooba.Host.Storefront;
+using Tooba.Order.Application.Customer.Models;
+using Tooba.Order.Application.Customer.Queries.GetCustomerOrderDashboardSummary;
 
 namespace Tooba.Host.Customer;
 
 /// <summary>
 /// مرز HTTP پنل مشتری. اصل تولید فقط از نشست معتبر می‌آید؛
 /// هدر Actor موجود صرفاً seam محیط Development برای شواهد محلی است.
+/// مسیرهای /orders* به Order.Endpoints منتقل شده‌اند.
 /// </summary>
 public static class CustomerPanelEndpoints
 {
     private const string DevActorHeader = "X-Tooba-Dev-Actor-User-Id";
 
     /// <summary>
-    /// مسیرهای خواندنی پنل مشتری را ثبت می‌کند.
+    /// مسیرهای خواندنی پنل مشتری را ثبت می‌کند (بدون /orders*).
     /// </summary>
     public static void MapCustomerPanelEndpoints(this WebApplication app)
     {
@@ -21,9 +24,6 @@ public static class CustomerPanelEndpoints
         group.MapGet("/dashboard", GetDashboardAsync);
         group.MapGet("/profile", GetProfileAsync);
         group.MapPut("/profile", UpdateProfileAsync);
-        group.MapGet("/orders", ListOrdersAsync);
-        group.MapGet("/orders/{checkoutId:guid}", GetOrderAsync);
-        group.MapPost("/orders/{checkoutId:guid}/retry-unpaid", RetryUnpaidAsync);
     }
 
     private static IResult GetDevContext(IHostEnvironment environment)
@@ -45,12 +45,27 @@ public static class CustomerPanelEndpoints
         CurrentAuthenticatedSession session,
         IHostEnvironment environment,
         CustomerPanelComposer composer,
+        MediatR.ISender sender,
         CancellationToken cancellationToken)
     {
         var actor = ResolveActor(request, session, environment);
-        return actor is null
-            ? Unauthorized()
-            : Results.Json(await composer.GetDashboardAsync(actor.Value, cancellationToken));
+        if (actor is null)
+        {
+            return Unauthorized();
+        }
+
+        var summaryResult = await sender.Send(
+            new GetCustomerOrderDashboardSummaryQuery(actor.Value),
+            cancellationToken);
+        if (summaryResult.IsFailure)
+        {
+            return Results.Json(
+                new { title = "Unauthorized", errorCode = summaryResult.FirstError.Code },
+                statusCode: StatusCodes.Status401Unauthorized);
+        }
+
+        return Results.Json(
+            await composer.ComposeDashboardAsync(actor.Value, summaryResult.Value, cancellationToken));
     }
 
     private static async Task<IResult> GetProfileAsync(
@@ -58,12 +73,21 @@ public static class CustomerPanelEndpoints
         CurrentAuthenticatedSession session,
         IHostEnvironment environment,
         CustomerPanelComposer composer,
+        MediatR.ISender sender,
         CancellationToken cancellationToken)
     {
         var actor = ResolveActor(request, session, environment);
-        return actor is null
-            ? Unauthorized()
-            : Results.Json(await composer.GetProfileAsync(actor.Value, cancellationToken));
+        if (actor is null)
+        {
+            return Unauthorized();
+        }
+
+        var summaryResult = await sender.Send(
+            new GetCustomerOrderDashboardSummaryQuery(actor.Value),
+            cancellationToken);
+        CustomerOrderDashboardSummary? summary = summaryResult.IsSuccess ? summaryResult.Value : null;
+        return Results.Json(
+            await composer.ComposeProfileAsync(actor.Value, summary, cancellationToken));
     }
 
     private static async Task<IResult> UpdateProfileAsync(
@@ -72,6 +96,7 @@ public static class CustomerPanelEndpoints
         CurrentAuthenticatedSession session,
         IHostEnvironment environment,
         CustomerPanelComposer composer,
+        MediatR.ISender sender,
         CancellationToken cancellationToken)
     {
         var actor = ResolveActor(request, session, environment);
@@ -80,81 +105,13 @@ public static class CustomerPanelEndpoints
             return Unauthorized();
         }
 
-        var updated = await composer.UpdateProfileAsync(actor.Value, body.ToWrite(), cancellationToken);
-        return Results.Json(updated);
-    }
-
-    private static async Task<IResult> ListOrdersAsync(
-        HttpRequest request,
-        CurrentAuthenticatedSession session,
-        IHostEnvironment environment,
-        CustomerPanelComposer composer,
-        CancellationToken cancellationToken)
-    {
-        var actor = ResolveActor(request, session, environment);
-        return actor is null
-            ? Unauthorized()
-            : Results.Json(await composer.ListOrdersAsync(actor.Value, cancellationToken));
-    }
-
-    private static async Task<IResult> GetOrderAsync(
-        Guid checkoutId,
-        HttpRequest request,
-        CurrentAuthenticatedSession session,
-        IHostEnvironment environment,
-        CustomerPanelComposer composer,
-        CancellationToken cancellationToken)
-    {
-        var actor = ResolveActor(request, session, environment);
-        if (actor is null)
-        {
-            return Unauthorized();
-        }
-
-        var page = await composer.GetOrderAsync(actor.Value, checkoutId, cancellationToken);
-        return page is null
-            ? Results.Json(
-                new { title = "Not Found", errorCode = "customer.order.missing" },
-                statusCode: StatusCodes.Status404NotFound)
-            : Results.Json(page);
-    }
-
-    private static async Task<IResult> RetryUnpaidAsync(
-        Guid checkoutId,
-        HttpRequest request,
-        CurrentAuthenticatedSession session,
-        IHostEnvironment environment,
-        CustomerPanelComposer composer,
-        CancellationToken cancellationToken)
-    {
-        var actor = ResolveActor(request, session, environment);
-        if (actor is null)
-        {
-            return Unauthorized();
-        }
-
-        try
-        {
-            var page = await composer.RetryUnpaidAsync(actor.Value, checkoutId, cancellationToken);
-            return page is null
-                ? Results.Json(
-                    new { title = "Not Found", errorCode = "customer.order.missing" },
-                    statusCode: StatusCodes.Status404NotFound)
-                : Results.Json(page);
-        }
-        catch (InvalidOperationException ex) when (
-            ex.Message.Contains("قابل تأمین نیست", StringComparison.Ordinal)
-            || ex.Message.Contains("inventory.supply.unavailable", StringComparison.Ordinal))
-        {
-            return Results.Json(
-                new
-                {
-                    title = "این سفارش در حال حاضر قابل تأمین نیست.",
-                    errorCode = "payment.unpaid.supply_unavailable",
-                    detail = "این سفارش در حال حاضر قابل تأمین نیست.",
-                },
-                statusCode: StatusCodes.Status409Conflict);
-        }
+        await composer.UpsertProfileAsync(actor.Value, body.ToWrite(), cancellationToken);
+        var summaryResult = await sender.Send(
+            new GetCustomerOrderDashboardSummaryQuery(actor.Value),
+            cancellationToken);
+        CustomerOrderDashboardSummary? summary = summaryResult.IsSuccess ? summaryResult.Value : null;
+        return Results.Json(
+            await composer.ComposeProfileAsync(actor.Value, summary, cancellationToken));
     }
 
     private static Guid? ResolveActor(
