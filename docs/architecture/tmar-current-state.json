@@ -4,7 +4,7 @@
     "frontendFrozen":  true,
     "checkoutState":  "PAUSED_AT_SAFE_W5_CHECKPOINT",
     "lastAcceptedTask":  "TB-TMAR-CART-POSTCERT-SEMANTIC-HOST-CLOSURE-001",
-    "lastAcceptedCommit":  "PLACEHOLDER_STAMP_AFTER_COMMIT",
+    "lastAcceptedCommit":  "2a0f239b94ce3bc8dae9ba027893a2ca72db5cc5",
     "nextTask":  "USER_REVIEW_CART_POSTCERT_SEMANTIC_HOST_CLOSURE",
     "nextTaskGate":  "USER_REVIEW_REQUIRED_BEFORE_NEXT_TMAR_WAVE",
     "goldenWaveState":  "COMPLETE",
@@ -61,7 +61,7 @@
                                          "lastAcceptedTask":  "TB-TMAR-CART-ARCH-COMPLETE-002-REVERIFY-001",
                                          "lastAcceptedCommit":  "6e880942baaf3b2afd60fa0766e5e132704eca66",
                                          "lastPostCertificationRepairTask":  "TB-TMAR-CART-POSTCERT-SEMANTIC-HOST-CLOSURE-001",
-                                         "lastPostCertificationRepairCommit":  "PLACEHOLDER_STAMP_AFTER_COMMIT",
+                                         "lastPostCertificationRepairCommit":  "2a0f239b94ce3bc8dae9ba027893a2ca72db5cc5",
                                          "postCertificationRepairNote":  "Semantic/ownership repair only; not a new structural certification. Cart remains COMPLETE_REFERENCE_PATTERN + ARCH-COMPLETE-002 STRUCTURE_CERTIFIED."
                                      },
                                      {
