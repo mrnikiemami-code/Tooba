@@ -30,6 +30,7 @@ public sealed class HostModuleEndpointOwnershipTests
         new("Payment", "Tooba.Payment.Endpoints", "MapPaymentEndpoints()", "Payments/PaymentWebhookEndpoints.cs", true),
         new("Promotion", "Tooba.Promotion.Endpoints", "MapPromotionEndpoints()", "Promotion/PromotionEndpoints.cs", true),
         new("Offer", "Tooba.Offer.Endpoints", "MapOfferModule()", null, true),
+        new("Order", "Tooba.Order.Endpoints", "MapOrderEndpoints()", null, true),
     ];
 
     [Fact]

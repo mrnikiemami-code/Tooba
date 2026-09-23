@@ -228,7 +228,7 @@ public sealed class TmarDurableGuardTests
         var manifestModules = Regex.Matches(manifest.Groups["entries"].Value, @"new\(""(?<module>[^""]+)""")
             .Select(x => x.Groups["module"].Value)
             .ToArray();
-        Assert.Equal(10, manifestModules.Length);
+        Assert.Equal(11, manifestModules.Length);
         Assert.DoesNotContain("Inventory", manifestModules, StringComparer.Ordinal);
         Assert.Equal(
             httpModules.Select(x => x.GetProperty("module").GetString()!).OrderBy(x => x, StringComparer.Ordinal),
