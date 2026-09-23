@@ -4,7 +4,7 @@
     "frontendFrozen":  true,
     "checkoutState":  "PAUSED_AT_SAFE_W5_CHECKPOINT",
     "lastAcceptedTask":  "TB-TMAR-ORDER-GOLDEN-001-FINAL-CLOSURE",
-    "lastAcceptedCommit":  "PENDING_FINAL_CLOSURE_COMMIT",
+    "lastAcceptedCommit":  "6dc04d6d480a207ec56b08d0e6bc2c0457f33ed6",
     "nextTask":  "USER_REVIEW_ORDER_COMPLETE_REFERENCE",
     "nextTaskGate":  "USER_REVIEW_REQUIRED_BEFORE_NEXT_TMAR_WAVE",
     "goldenWaveState":  "COMPLETE",
@@ -112,7 +112,7 @@
                                          "endpointOwnership":  "MODULE_ENDPOINTS",
                                          "cqrs":  "MEDIATR_12_5",
                                          "lastAcceptedTask":  "TB-TMAR-ORDER-GOLDEN-001-FINAL-CLOSURE",
-                                         "lastAcceptedCommit":  "PENDING_FINAL_CLOSURE_COMMIT"
+                                         "lastAcceptedCommit":  "6dc04d6d480a207ec56b08d0e6bc2c0457f33ed6"
                                      },
                                      {
                                          "module":  "Inventory",
