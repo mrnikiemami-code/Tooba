@@ -3,8 +3,8 @@
     "executionMode":  "BACKEND_ONLY_UNTIL_EXPLICIT_RELEASE",
     "frontendFrozen":  true,
     "checkoutState":  "PAUSED_AT_SAFE_W5_CHECKPOINT",
-    "lastAcceptedTask":  "TB-TMAR-CART-ARCH-COMPLETE-002-REVERIFY-001",
-    "lastAcceptedCommit":  "6e880942baaf3b2afd60fa0766e5e132704eca66",
+    "lastAcceptedTask":  "TB-TMAR-CART-ARCH-COMPLETE-002-REVERIFY-001-R1",
+    "lastAcceptedCommit":  "PENDING_COMMIT",
     "nextTask":  "USER_REVIEW_CART_ARCH_COMPLETE_002",
     "nextTaskGate":  "USER_REVIEW_REQUIRED_BEFORE_NEXT_TMAR_WAVE",
     "goldenWaveState":  "COMPLETE",
@@ -49,7 +49,7 @@
         "clockState":  "ICLOCK_IN_CART_BUSINESS_TIME",
         "guard":  "src/backend/Host/Tooba.Host.Tests/Architecture/HostCartResidualGuardTests.cs",
         "evidence":  "docs/evidence/TB-TMAR-CART-HOST-RESIDUAL-REVERIFY-001/cart-host-reverse-audit.md",
-        "structureCertifiedUnderArchComplete002":  false
+        "structureCertifiedUnderArchComplete002":  true
     },
     "completeReferenceModules":  [
                                      {
@@ -58,8 +58,8 @@
                                          "httpApplicability":  "HTTP_OWNING",
                                          "endpointOwnership":  "MODULE_ENDPOINTS",
                                          "cqrs":  "MEDIATR_12_5",
-                                         "lastAcceptedTask":  "TB-TMAR-CART-HOST-RESIDUAL-REVERIFY-001",
-                                         "lastAcceptedCommit":  "ec39c98220f8d7d08bfb238157fc66ffa12128ae"
+                                         "lastAcceptedTask":  "TB-TMAR-CART-ARCH-COMPLETE-002-REVERIFY-001",
+                                         "lastAcceptedCommit":  "6e880942baaf3b2afd60fa0766e5e132704eca66"
                                      },
                                      {
                                          "module":  "Settlement",

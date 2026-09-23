@@ -128,7 +128,44 @@ public sealed class TmarDurableGuardTests
         Assert.Contains(
             "NO_NAMESPACE_ALIAS_WORKAROUND",
             structureLock.GetProperty("rules").EnumerateArray().Select(x => x.GetString()!).ToArray());
-        Assert.Equal("TB-TMAR-CART-ARCH-COMPLETE-002-REVERIFY-001", rootEl.GetProperty("lastAcceptedTask").GetString());
+
+        // ARCH-COMPLETE-002 SoT coherence: every certified module must have a matching manifest entry,
+        // and Cart's certification line must be consistent across SoT locations (no contradiction recurrence).
+        var structureManifestPath = Path.Combine(root, "docs", "architecture", "tmar-module-structure-manifests.json");
+        using var structureManifestDoc = JsonDocument.Parse(File.ReadAllText(structureManifestPath));
+        var structureCertifiedByModule = structureManifestDoc.RootElement.GetProperty("modules").EnumerateArray()
+            .ToDictionary(
+                m => m.GetProperty("module").GetString()!,
+                m => m.GetProperty("structureCertified").GetBoolean(),
+                StringComparer.Ordinal);
+        var structureUncertified = structureManifestDoc.RootElement.GetProperty("uncertifiedHttpOwningModules")
+            .EnumerateArray().Select(x => x.GetString()!).ToArray();
+
+        var structureCertified = structureLock.GetProperty("certifiedModules").EnumerateArray()
+            .Select(x => x.GetString()!)
+            .OrderBy(x => x, StringComparer.Ordinal)
+            .ToArray();
+        foreach (var module in structureCertified)
+        {
+            Assert.True(
+                structureCertifiedByModule.TryGetValue(module, out var certifiedInManifest) && certifiedInManifest,
+                $"structureLock.certifiedModules lists {module} but the manifest does not declare structureCertified=true");
+            Assert.DoesNotContain(module, structureUncertified, StringComparer.Ordinal);
+        }
+
+        Assert.Contains("Order", structureCertified);
+        Assert.Contains("Cart", structureCertified);
+        Assert.True(rootEl.GetProperty("hostCartBoundary").GetProperty("structureCertifiedUnderArchComplete002").GetBoolean());
+
+        var cartEntry = rootEl.GetProperty("completeReferenceModules").EnumerateArray()
+            .Single(x => x.GetProperty("module").GetString() == "Cart");
+        Assert.Equal("COMPLETE_REFERENCE_PATTERN", cartEntry.GetProperty("state").GetString());
+        Assert.StartsWith(
+            "TB-TMAR-CART-ARCH-COMPLETE-002-REVERIFY-001",
+            cartEntry.GetProperty("lastAcceptedTask").GetString(),
+            StringComparison.Ordinal);
+        Assert.False(string.IsNullOrWhiteSpace(cartEntry.GetProperty("lastAcceptedCommit").GetString()));
+        Assert.Equal("TB-TMAR-CART-ARCH-COMPLETE-002-REVERIFY-001-R1", rootEl.GetProperty("lastAcceptedTask").GetString());
         Assert.False(string.IsNullOrWhiteSpace(rootEl.GetProperty("lastAcceptedCommit").GetString()));
         Assert.DoesNotContain("PENDING_FINAL_CLOSURE_COMMIT", rootEl.GetProperty("lastAcceptedCommit").GetString(), StringComparison.Ordinal);
         Assert.DoesNotContain("PLACEHOLDER_STAMP_AFTER_COMMIT", rootEl.GetProperty("lastAcceptedCommit").GetString(), StringComparison.Ordinal);
