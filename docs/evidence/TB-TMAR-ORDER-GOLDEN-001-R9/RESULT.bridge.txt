@@ -1,0 +1,38 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+BEGIN_TOOBA_WORKER_RESULT
+
+Task-ID: TB-TMAR-ORDER-GOLDEN-001-R9
+Parent-Task: TB-TMAR-ORDER-GOLDEN-001-R8
+Status: PASS
+
+Summary: Moved Customer Order list/detail/retry and dashboard Order summary from Host to Order CQRS. Three /v1/customer/orders* routes owned by Order.Endpoints via ISender. CustomerPanelComposer has no OrderDbContext; Host dashboard thin-composes GetCustomerOrderDashboardSummaryQuery with Wishlist/AddressBook/profile. SoT nextTask R10 not started.
+Customer-Order-Route-State: Order.Endpoints CustomerOrderEndpoints owns GET/POST /orders*
+Customer-Order-CQRS-State: ListCustomerOrdersQuery; GetCustomerOrderDetailQuery; GetCustomerOrderDashboardSummaryQuery; RetryCustomerUnpaidOrderCommand
+Customer-Order-DbAuthority: Host CustomerPanelComposer has no OrderDbContext; Order.Infrastructure CustomerOrderCheckoutStore owns reads
+Customer-Retry-Unpaid-State: RetryCustomerUnpaidOrderCommand + IReservationCycleCoordinator; Host retry business absent
+Customer-Dashboard-Order-State: Order summary query; Host GET /dashboard thin composition only
+Customer-Ownership-Security: HostOrderCustomerAuthorizer + PlacedByUserId ownership; no body-trusted actor ids
+Order-Foreign-Boundary: Catalog/Party/Payment Contracts only in Order Customer Application
+Payment-Boundary: Payment.Contracts snapshots; no Payment.Application/Domain in Customer path
+Error-Semantics: Result/SemanticError + ApiResponseFactory; no message classification/PlatformHttpException in Order Application
+Behavior-Parity: preserved
+Architecture-Guard-Validation: OrderCustomerPanelArchitectureGuardTests + Order.Tests 81/81 PASS
+Focused-Validation: Host CustomerPanel/reverse-audit/durable 15 PASS
+Full-Validation: dotnet build src/backend/Tooba.slnx succeeded 0 errors
+Host-Removed-This-Task: CustomerPanel /orders* routes; composer OrderDbContext/list/detail/retry; CustomerOrder* Host DTOs
+Customer-Dashboard-Host-Remainder: GET /dashboard + profile; Order summary via ISender query
+Host-Still-Remaining-For-Order: SellerPanel Order (R10); Admin dashboard/list/grids (R11); thin adapters
+Allowed-Host-Adapters: HostOrderCustomerAuthorizer; storefront/admin thin adapters; unpaid expiry shell
+Reverse-Audit-Delta: R7 inventory refreshed for R9; historical R7 audit preserved
+Residual-Defects: R10–R11 residuals unchanged
+Order-Overall-State: INCOMPLETE_REFERENCE_REPAIR
+Checkout-State: PAUSED_AT_SAFE_W5_CHECKPOINT
+Frontend-Production-Changes: none
+Recovery-State: slice CUSTOMER_PANEL_ORDER_CQRS_R9 recorded
+Recovery-Next-Task: TB-TMAR-ORDER-GOLDEN-001-R10
+Git: a59b8cd6f574c8e6b121a3dee8f2d75e3986153f pushed origin/main; HEAD==origin/main
+Blockers: none
+User-Work-Preserved: yes; R2C/R5-R1 RESULT.bridge.txt untracked untouched
+Next-Recommended-Task: TB-TMAR-ORDER-GOLDEN-001-R10
+
+END_TOOBA_WORKER_RESULT
