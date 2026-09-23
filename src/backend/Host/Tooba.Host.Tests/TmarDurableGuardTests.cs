@@ -150,6 +150,9 @@ public sealed class TmarDurableGuardTests
         Assert.Equal("INCOMPLETE_REFERENCE_REPAIR", active.GetProperty("state").GetString());
         Assert.Equal("TB-TMAR-ORDER-GOLDEN-001-FINAL-CLOSURE", active.GetProperty("nextTask").GetString());
         Assert.Contains(
+            "HOST_ORDER_SYMBOLIC_SWEEP_R11_R1",
+            active.GetProperty("completedSlices").EnumerateArray().Select(x => x.GetString()));
+        Assert.Contains(
             "ADMIN_PANEL_ORDER_RESIDUALS_CQRS_R11",
             active.GetProperty("completedSlices").EnumerateArray().Select(x => x.GetString()));
         Assert.Contains(
@@ -174,6 +177,7 @@ public sealed class TmarDurableGuardTests
         Assert.Contains("TB-TMAR-ORDER-GOLDEN-001-R9", master, StringComparison.Ordinal);
         Assert.Contains("TB-TMAR-ORDER-GOLDEN-001-R10", master, StringComparison.Ordinal);
         Assert.Contains("TB-TMAR-ORDER-GOLDEN-001-R11", master, StringComparison.Ordinal);
+        Assert.Contains("TB-TMAR-ORDER-GOLDEN-001-R11-R1", master, StringComparison.Ordinal);
         Assert.Contains("TB-TMAR-ORDER-GOLDEN-001-FINAL-CLOSURE", master, StringComparison.Ordinal);
         Assert.Contains("TB-TMAR-ORDER-GOLDEN-001-R3", bootstrap, StringComparison.Ordinal);
         Assert.Contains("TB-TMAR-ORDER-GOLDEN-001-R3B", bootstrap, StringComparison.Ordinal);
@@ -185,6 +189,7 @@ public sealed class TmarDurableGuardTests
         Assert.Contains("TB-TMAR-ORDER-GOLDEN-001-R9", bootstrap, StringComparison.Ordinal);
         Assert.Contains("TB-TMAR-ORDER-GOLDEN-001-R10", bootstrap, StringComparison.Ordinal);
         Assert.Contains("TB-TMAR-ORDER-GOLDEN-001-R11", bootstrap, StringComparison.Ordinal);
+        Assert.Contains("TB-TMAR-ORDER-GOLDEN-001-R11-R1", bootstrap, StringComparison.Ordinal);
         Assert.Contains("TB-TMAR-ORDER-GOLDEN-001-FINAL-CLOSURE", bootstrap, StringComparison.Ordinal);
         Assert.Contains("ORDER_GOLDEN_REPAIR_REQUIRED", master, StringComparison.Ordinal);
         Assert.Contains("ORDER_GOLDEN_REPAIR_REQUIRED", bootstrap, StringComparison.Ordinal);

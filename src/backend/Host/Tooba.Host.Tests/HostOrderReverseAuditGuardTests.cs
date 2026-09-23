@@ -12,7 +12,15 @@ namespace Tooba.Host.Tests;
 public sealed class HostOrderReverseAuditGuardTests
 {
     private static readonly Regex OrderNamespaceOrDb = new(
-        @"OrderDbContext|Tooba\.Order\.Application|Tooba\.Order\.Infrastructure|Tooba\.Order\.Domain",
+        @"OrderDbContext|Tooba\.Order\.Application|Tooba\.Order\.Infrastructure|Tooba\.Order\.Domain|Tooba\.Order\.Contracts|Tooba\.Order\.Endpoints",
+        RegexOptions.Compiled | RegexOptions.CultureInvariant);
+
+    private static readonly Regex OrderTypeDeclaration = new(
+        @"(?m)^\s*(?:public|internal|private|protected)?\s*(?:sealed\s+|abstract\s+|static\s+|partial\s+)*(?:class|record|struct|interface|enum)\s+(\w*Order\w*)\b",
+        RegexOptions.Compiled | RegexOptions.CultureInvariant);
+
+    private static readonly Regex OrderRouteRegistration = new(
+        @"Map(?:Get|Post|Put|Delete)\(""/[^""]*orders",
         RegexOptions.Compiled | RegexOptions.CultureInvariant);
 
     [Fact]
@@ -248,6 +256,60 @@ public sealed class HostOrderReverseAuditGuardTests
         Assert.DoesNotContain("Admin/AdminReservationCycleMapper.cs", files);
     }
 
+    [Fact]
+    public void R11R1_symbolic_sweep_deleted_dead_completeness_models_and_records_inventory()
+    {
+        var root = FindRepoRoot();
+        var host = Path.Combine(root, "src", "backend", "Host", "Tooba.Host");
+        Assert.False(File.Exists(Path.Combine(host, "Admin", "AdminOrderCompletenessModels.cs")));
+
+        var inventoryPath = Path.Combine(
+            root, "docs", "evidence", "TB-TMAR-ORDER-GOLDEN-001-R7", "host-order-reference-inventory.json");
+        using var doc = JsonDocument.Parse(File.ReadAllText(inventoryPath));
+        var r11r1 = doc.RootElement.GetProperty("r11r1InventoryUpdate");
+        Assert.Equal("TB-TMAR-ORDER-GOLDEN-001-R11-R1", r11r1.GetProperty("updatedBy").GetString());
+        Assert.Contains(
+            "AdminOrderCompletenessModels",
+            r11r1.GetProperty("note").GetString()!,
+            StringComparison.Ordinal);
+        Assert.True(doc.RootElement.TryGetProperty("r11InventoryUpdate", out _));
+
+        var files = doc.RootElement.GetProperty("files").EnumerateArray()
+            .Select(x => x.GetString()!)
+            .ToHashSet(StringComparer.Ordinal);
+        Assert.DoesNotContain("Admin/AdminOrderCompletenessModels.cs", files);
+        Assert.Contains(files, f => f.Equals("UnpaidOrderExpiryHostOptions.cs", StringComparison.Ordinal));
+        Assert.Contains(files, f => f.Equals("Admin/ProductWorkspaceModels.cs", StringComparison.Ordinal));
+
+        var audit = File.ReadAllText(Path.Combine(
+            root, "docs", "evidence", "TB-TMAR-ORDER-GOLDEN-001-R11-R1", "final-host-symbolic-audit.md"));
+        Assert.Contains("ILLEGAL_ORDER_AUTHORITY", audit, StringComparison.Ordinal);
+        Assert.Contains("DEAD_ORDER_RESIDUE", audit, StringComparison.Ordinal);
+        Assert.Contains("| **0** |", audit, StringComparison.Ordinal);
+        Assert.Contains("AdminOrderCompletenessModels.cs", audit, StringComparison.Ordinal);
+        Assert.Contains("AdminProductMediaOrderRequest", audit, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void Host_has_no_dead_AdminOrderCompleteness_DTO_types()
+    {
+        var host = Path.Combine(FindRepoRoot(), "src", "backend", "Host", "Tooba.Host");
+        var leaks = Directory.EnumerateFiles(host, "*.cs", SearchOption.AllDirectories)
+            .Select(p => p.Replace('\\', '/'))
+            .Where(p => !p.Contains("/obj/", StringComparison.Ordinal) && !p.Contains("/bin/", StringComparison.Ordinal))
+            .Where(p =>
+            {
+                var text = File.ReadAllText(p);
+                return text.Contains("record AdminOrderNoteRequest", StringComparison.Ordinal)
+                    || text.Contains("record AdminOrderNoteView", StringComparison.Ordinal)
+                    || text.Contains("record AdminOperationalHistoryEntry", StringComparison.Ordinal)
+                    || text.Contains("record AdminOperationalHistoryPage", StringComparison.Ordinal);
+            })
+            .Select(p => Relativize(host, p))
+            .ToList();
+        Assert.True(leaks.Count == 0, "dead Host Order completeness DTOs: " + string.Join("; ", leaks));
+    }
+
     private static IReadOnlyList<string> DiscoverHostOrderReferences(string root, IEnumerable<string> extras)
     {
         var host = Path.Combine(root, "src", "backend", "Host", "Tooba.Host");
@@ -261,10 +323,15 @@ public sealed class HostOrderReverseAuditGuardTests
                 continue;
             }
 
+            var relative = Relativize(host, normalized);
+            var fileName = Path.GetFileName(normalized);
             var text = File.ReadAllText(path);
-            if (OrderNamespaceOrDb.IsMatch(text))
+            if (OrderNamespaceOrDb.IsMatch(text)
+                || OrderTypeDeclaration.IsMatch(text)
+                || OrderRouteRegistration.IsMatch(text)
+                || fileName.Contains("Order", StringComparison.Ordinal))
             {
-                set.Add(Relativize(host, normalized));
+                set.Add(relative);
             }
         }
 

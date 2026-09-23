@@ -124,7 +124,7 @@
     "activeModuleRecovery":  {
                                  "module":  "Order",
                                  "state":  "INCOMPLETE_REFERENCE_REPAIR",
-                                 "task":  "TB-TMAR-ORDER-GOLDEN-001-R11",
+                                 "task":  "TB-TMAR-ORDER-GOLDEN-001-R11-R1",
                                  "completedSlices":  [
                                                          "ORDER_ENDPOINTS_FOUNDATION",
                                                          "ADMIN_ORDER_COMPLETENESS_CQRS",
@@ -145,10 +145,11 @@
                                                          "RESERVATION_CYCLE_POLICY_RETRY_EXPIRY_R8",
                                                          "CUSTOMER_PANEL_ORDER_CQRS_R9",
                                                          "SELLER_PANEL_ORDER_CQRS_R10",
-                                                         "ADMIN_PANEL_ORDER_RESIDUALS_CQRS_R11"
+                                                         "ADMIN_PANEL_ORDER_RESIDUALS_CQRS_R11",
+                                                         "HOST_ORDER_SYMBOLIC_SWEEP_R11_R1"
                                                      ],
                                  "nextTask":  "TB-TMAR-ORDER-GOLDEN-001-FINAL-CLOSURE",
                                  "checkoutState":  "PAUSED_AT_SAFE_W5_CHECKPOINT",
-                                 "notes":  "R11: AdminPanel Order residuals moved Host→Order CQRS (GET /v1/admin/orders, GET/POST /v1/admin/customers*; dashboard Order metrics + seller order counts via Order Application; Host AdminPanelComposer/AdminSellersGrid have no OrderDbContext; AdminCustomersGridQueryEngine removed). Order stays INCOMPLETE_REFERENCE_REPAIR until Architect final reverse-audit. Checkout PAUSED_AT_SAFE_W5. Next: FINAL-CLOSURE (do not start)."
+                                 "notes":  "R11-R1: Host symbolic Order sweep closed dead AdminOrderCompletenessModels; reverse-audit discovery includes filename/type Order symbols. R11 migrations preserved. Order stays INCOMPLETE_REFERENCE_REPAIR until Architect FINAL-CLOSURE. Checkout PAUSED_AT_SAFE_W5. Do not start FINAL-CLOSURE."
                              }
 }

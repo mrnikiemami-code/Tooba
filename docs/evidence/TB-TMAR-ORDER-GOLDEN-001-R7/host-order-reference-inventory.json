@@ -1,7 +1,7 @@
 {
   "taskId": "TB-TMAR-ORDER-GOLDEN-001-R7",
   "headAtAudit": "6e9980a40c06a8ced0f4a32aefa004b700a99003",
-  "discoveryRule": "Host production .cs under Tooba.Host matching OrderDbContext OR Tooba.Order.Application|Infrastructure|Domain OR explicit Order-owned Host route/adapter files listed in extraFiles",
+  "discoveryRule": "Host production .cs under Tooba.Host matching (1) OrderDbContext OR Tooba.Order.Application|Infrastructure|Domain|Contracts|Endpoints OR (2) filename containing Order OR (3) type declaration name containing Order OR (4) Map* route path containing /orders OR (5) explicit extraFiles. Tests/bin/obj excluded.",
   "r8InventoryUpdate": {
     "updatedBy": "TB-TMAR-ORDER-GOLDEN-001-R8",
     "removedFiles": [
@@ -47,6 +47,18 @@
     ],
     "note": "AdminPanel Order residuals moved Host→Order CQRS: GET /v1/admin/orders, GET/POST /v1/admin/customers*; dashboard Order metrics + seller order counts via Order Application; Host composers/grids have no OrderDbContext. Historical R7 audit markdown and r8–r10InventoryUpdate left intact; files list refreshed after R11."
   },
+  "r11r1InventoryUpdate": {
+    "updatedBy": "TB-TMAR-ORDER-GOLDEN-001-R11-R1",
+    "removedFiles": [
+      "Admin/AdminOrderCompletenessModels.cs"
+    ],
+    "addedSymbolicFiles": [
+      "Admin/ProductWorkspaceModels.cs",
+      "UnpaidOrderExpiryHostOptions.cs"
+    ],
+    "discoveryExpanded": "filename/type Order symbols + Contracts/Endpoints refs",
+    "note": "Symbolic Host Order sweep closed AdminOrderCompletenessModels dead residue (no production callers). Inventory discovery strengthened beyond namespace/DbContext-only. Historical r7–r11 updates left intact."
+  },
   "extraFiles": [
     "Admin/AdminPanelEndpoints.cs",
     "Admin/HostOrderAdminAuthorizer.cs",
@@ -64,6 +76,7 @@
     "Admin/HostOrderAdminAuthorizer.cs",
     "Admin/HostOrderAdminEffectiveAccessReader.cs",
     "Admin/ProductWorkspaceDevelopmentBootstrap.cs",
+    "Admin/ProductWorkspaceModels.cs",
     "Admin/ReservationPolicyAdminComposer.cs",
     "Admin/ReservationPolicyAdminEndpoints.cs",
     "CheckoutReservationHoldPolicy.cs",
@@ -89,6 +102,7 @@
     "Storefront/StorefrontEndpoints.cs",
     "Support/SupportDevelopmentSeedHost.cs",
     "UnpaidOrderExpiryHostedService.cs",
+    "UnpaidOrderExpiryHostOptions.cs",
     "Wishlist/WishlistDevelopmentSeed.cs",
     "Wishlist/WishlistEndpoints.cs"
   ]

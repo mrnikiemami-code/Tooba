@@ -10,7 +10,7 @@ Current Golden Wave Closure (authoritative)
 - Inventory = INTERNAL_ONLY / NOT_APPLICABLE / INTERNAL_USE_CASE_BOUNDARIES
 - reopenedModules = empty; internalApplicabilityReviewModules = empty
 - Checkout = PAUSED_AT_SAFE_W5_CHECKPOINT
-- Order: INCOMPLETE_REFERENCE_REPAIR after TB-TMAR-ORDER-GOLDEN-001-R11 (AdminPanel Order residuals Host→Order CQRS: legacy orders list, customers list/grid, dashboard Order metrics, seller order counts). Prior: TB-TMAR-ORDER-GOLDEN-001-R10 SellerPanel Order; TB-TMAR-ORDER-GOLDEN-001-R9 CustomerPanel Order; TB-TMAR-ORDER-GOLDEN-001-R8 reservation cycle policy/retry/expiry; TB-TMAR-ORDER-GOLDEN-001-R7 Host Order reverse audit; TB-TMAR-ORDER-GOLDEN-001-R6 Admin Order Detail + AdminViewAck CQRS; TB-TMAR-ORDER-GOLDEN-001-R5-R1; TB-TMAR-ORDER-GOLDEN-001-R5; TB-TMAR-ORDER-GOLDEN-001-R3; TB-TMAR-ORDER-GOLDEN-001-R3B; TB-TMAR-ORDER-GOLDEN-001-R4; TB-TMAR-ORDER-GOLDEN-001-R4-R1.
+- Order: INCOMPLETE_REFERENCE_REPAIR after TB-TMAR-ORDER-GOLDEN-001-R11-R1 (Host symbolic Order sweep; deleted dead AdminOrderCompletenessModels). Prior: TB-TMAR-ORDER-GOLDEN-001-R11 AdminPanel Order residuals Host→Order CQRS; TB-TMAR-ORDER-GOLDEN-001-R10 SellerPanel Order; TB-TMAR-ORDER-GOLDEN-001-R9 CustomerPanel Order; TB-TMAR-ORDER-GOLDEN-001-R8 reservation cycle policy/retry/expiry; TB-TMAR-ORDER-GOLDEN-001-R7 Host Order reverse audit; TB-TMAR-ORDER-GOLDEN-001-R6 Admin Order Detail + AdminViewAck CQRS; TB-TMAR-ORDER-GOLDEN-001-R5-R1; TB-TMAR-ORDER-GOLDEN-001-R5; TB-TMAR-ORDER-GOLDEN-001-R3; TB-TMAR-ORDER-GOLDEN-001-R3B; TB-TMAR-ORDER-GOLDEN-001-R4; TB-TMAR-ORDER-GOLDEN-001-R4-R1.
 - Next task: TB-TMAR-ORDER-GOLDEN-001-FINAL-CLOSURE
 - Gate: ORDER_GOLDEN_REPAIR_REQUIRED
 - Closed by: TB-TMAR-GOLDEN-WAVE-FINAL-CLOSURE-001
