@@ -113,7 +113,7 @@ public sealed class UnpaidOrderExpiryTests
     [Fact]
     public void Worker_is_batched_and_skips_locked_rows()
     {
-        var dir = Read("src/backend/Modules/Payment/Tooba.Payment.Infrastructure/Directories/PaymentDirectory.cs");
+        var dir = Read("src/backend/Modules/Payment/Tooba.Payment.Infrastructure/Directories/PaymentExpiryDirectory.cs");
         Assert.Contains("ExpireDueUnpaidAsync", dir, StringComparison.Ordinal);
         Assert.Contains("FOR UPDATE SKIP LOCKED", dir, StringComparison.Ordinal);
         Assert.Contains("unpaid_timeout_at", dir, StringComparison.Ordinal);
@@ -141,7 +141,7 @@ public sealed class UnpaidOrderExpiryTests
         var catalog = Read("src/backend/Modules/Order/Tooba.Order.Endpoints/Errors/OrderErrorCatalogContributor.cs");
         Assert.Contains("این سفارش در حال حاضر قابل تأمین نیست.", catalog, StringComparison.Ordinal);
         Assert.Contains("PaymentExpired", Read("src/backend/Modules/Order/Tooba.Order.Application/Customer/CustomerOrderComposer.cs"), StringComparison.Ordinal);
-        var reopen = Read("src/backend/Modules/Payment/Tooba.Payment.Infrastructure/Directories/PaymentDirectory.cs");
+        var reopen = Read("src/backend/Modules/Payment/Tooba.Payment.Infrastructure/Directories/PaymentExpiryDirectory.cs");
         Assert.Contains("RecordInitiation", reopen, StringComparison.Ordinal);
         Assert.DoesNotContain("new CustomerPayment.Open", reopen, StringComparison.Ordinal);
     }

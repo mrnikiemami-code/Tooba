@@ -1,10 +1,10 @@
-using Tooba.BuildingBlocks;
 using Microsoft.EntityFrameworkCore;
+using Tooba.BuildingBlocks;
 using Tooba.Payment.Application.Models;
 using Tooba.Payment.Application.Ports;
-using Tooba.Payment.Contracts.Returns;
 using Tooba.Payment.Domain.Aggregates;
 using Tooba.Payment.Domain.ValueObjects;
+using Tooba.Payment.Infrastructure.Directories.Shared;
 using Tooba.Payment.Infrastructure.Persistence;
 using Tooba.Payment.Infrastructure.Providers;
 
@@ -12,21 +12,25 @@ namespace Tooba.Payment.Infrastructure.Directories;
 
 /// <summary>
 /// ارکستراسیون پرداخت در schema payment. مبلغ از تصویر سفارش است نه از کلاینت؛ OrderDbContext اینجا باز نمی‌شود.
+/// این دایرکتوری فقط <see cref="IPaymentDirectory"/> را پیاده می‌کند؛ بازرسی/مدیریت، reconciliation و انقضای پرداخت‌نشده
+/// در دایرکتوری‌های متمرکز جداگانه‌اند.
 /// </summary>
-public sealed class PaymentDirectory : IPaymentDirectory, IPaymentReconciliationDirectory, IPaymentAdminDirectory, IPaymentExpiryDirectory
+public sealed class PaymentDirectory : IPaymentDirectory
 {
     private readonly PaymentDbContext _db;
     private readonly IPaymentUseCaseGuard _guard;
+    private readonly PaymentActorAccess _actorAccess;
     private readonly IPayableCheckoutReader _orders;
     private readonly IPaymentGatewayRegistry _gateways;
     private readonly PaymentGatewayActorContext _actorContext;
-    private readonly IPaymentRefundGateway? _refundGateway;
-    private readonly ICommerceHoldPolicy? _holdPolicy;
+    private readonly PaymentUnpaidTimeoutAssigner _timeoutAssigner;
+    private readonly Func<IPaymentAdminDirectory>? _adminDirectory;
     private readonly IClock _clock;
     private readonly IIdGenerator _ids;
 
     /// <summary>
     /// دایرکتوری را به schema payment و رجیستری درگاه وصل می‌کند. تصویر Paid سفارش از Outbox می‌آید نه از همین تراکنش.
+    /// <paramref name="adminDirectory"/> به‌صورت deferred تزریق می‌شود تا چرخهٔ ساخت PaymentDirectory↔PaymentAdminDirectory شکسته شود.
     /// </summary>
     public PaymentDirectory(
         PaymentDbContext db,
@@ -36,18 +40,19 @@ public sealed class PaymentDirectory : IPaymentDirectory, IPaymentReconciliation
         PaymentGatewayActorContext actorContext,
         IClock clock,
         IIdGenerator ids,
-        IPaymentRefundGateway? refundGateway = null,
+        Func<IPaymentAdminDirectory>? adminDirectory = null,
         ICommerceHoldPolicy? holdPolicy = null)
     {
         _db = db;
         _guard = guard;
+        _actorAccess = new PaymentActorAccess(orders);
         _orders = orders;
         _gateways = gateways;
         _actorContext = actorContext;
+        _timeoutAssigner = new PaymentUnpaidTimeoutAssigner(holdPolicy);
+        _adminDirectory = adminDirectory;
         _clock = clock;
         _ids = ids;
-        _refundGateway = refundGateway;
-        _holdPolicy = holdPolicy;
     }
 
     /// <inheritdoc />
@@ -58,7 +63,7 @@ public sealed class PaymentDirectory : IPaymentDirectory, IPaymentReconciliation
         var existing = await _db.Payments.FirstOrDefaultAsync(x => x.IdempotencyKey == key, cancellationToken);
         if (existing is not null)
         {
-            await EnsureActorCanSeeAsync(existing, command.ActorUserId, command.BuyerPartyId, cancellationToken);
+            await _actorAccess.EnsureActorCanSeeAsync(existing, command.ActorUserId, command.BuyerPartyId, cancellationToken);
             var priorAttempts = await _db.Attempts
                 .Where(x => x.PaymentId == existing.PaymentId)
                 .OrderBy(x => x.CreatedAt)
@@ -84,7 +89,7 @@ public sealed class PaymentDirectory : IPaymentDirectory, IPaymentReconciliation
                     existing.Currency,
                     cancellationToken);
                 var retryAttempt = existing.RecordInitiation(_ids.NewId(), retryInitiation.ProviderRequestReference, _clock.UtcNow);
-                AssignUnpaidTimeout(existing, _clock.UtcNow);
+                _timeoutAssigner.Assign(existing, _clock.UtcNow);
                 _db.Attempts.Add(retryAttempt);
                 await _db.SaveChangesAsync(cancellationToken);
                 return new PaymentInitiationResult(
@@ -186,7 +191,7 @@ public sealed class PaymentDirectory : IPaymentDirectory, IPaymentReconciliation
         _actorContext.ActorUserId = command.ActorUserId;
         var initiation = await gateway.InitiateAsync(payment.PaymentId, payment.Amount, payment.Currency, cancellationToken);
         var attempt = payment.RecordInitiation(_ids.NewId(), initiation.ProviderRequestReference, _clock.UtcNow);
-        AssignUnpaidTimeout(payment, _clock.UtcNow);
+        _timeoutAssigner.Assign(payment, _clock.UtcNow);
         _db.Payments.Add(payment);
         _db.Allocations.AddRange(payment.Allocations);
         _db.Attempts.Add(attempt);
@@ -200,47 +205,6 @@ public sealed class PaymentDirectory : IPaymentDirectory, IPaymentReconciliation
             ResolveRedirectUrl(gateway, payment.PaymentId, attempt.AttemptId, attempt.ProviderRequestReference, initiation.RedirectUrl),
             payment.Amount,
             payment.Currency);
-    }
-
-    /// <inheritdoc />
-    public async Task<int> ReconcileStalePendingAsync(
-        DateTimeOffset asOf,
-        TimeSpan minAge,
-        int batchSize,
-        CancellationToken cancellationToken)
-    {
-        var cutoff = asOf - minAge;
-        var pending = await _db.Payments.AsNoTracking()
-            .Where(x => x.Status == PaymentStatus.Pending && x.UpdatedAt <= cutoff)
-            .OrderBy(x => x.UpdatedAt)
-            .Take(Math.Max(1, batchSize))
-            .ToListAsync(cancellationToken)
-            .ConfigureAwait(false);
-
-        var processed = 0;
-        foreach (var payment in pending)
-        {
-            var attempt = await _db.Attempts.AsNoTracking()
-                .Where(x => x.PaymentId == payment.PaymentId)
-                .OrderByDescending(x => x.CreatedAt)
-                .FirstOrDefaultAsync(cancellationToken)
-                .ConfigureAwait(false);
-            if (attempt is null)
-            {
-                continue;
-            }
-
-            await VerifyAsync(
-                new VerifyPaymentCommand(
-                    payment.PaymentId,
-                    attempt.AttemptId,
-                    attempt.ProviderRequestReference,
-                    false),
-                cancellationToken).ConfigureAwait(false);
-            processed++;
-        }
-
-        return processed;
     }
 
     /// <inheritdoc />
@@ -303,7 +267,7 @@ public sealed class PaymentDirectory : IPaymentDirectory, IPaymentReconciliation
             return null;
         }
 
-        await EnsureActorCanSeeAsync(payment, actorUserId, buyerPartyId, cancellationToken);
+        await _actorAccess.EnsureActorCanSeeAsync(payment, actorUserId, buyerPartyId, cancellationToken);
         var allocations = await _db.Allocations.Where(x => x.PaymentId == paymentId).ToListAsync(cancellationToken);
         var attempts = await _db.Attempts.AsNoTracking()
             .Where(x => x.PaymentId == paymentId)
@@ -363,7 +327,7 @@ public sealed class PaymentDirectory : IPaymentDirectory, IPaymentReconciliation
         await _guard.EnsureCanMutateAsync(cancellationToken);
         var payment = await _db.Payments.SingleOrDefaultAsync(x => x.PaymentId == paymentId, cancellationToken)
             ?? throw new ContractOperationException("payment.not_found");
-        await EnsureActorCanSeeAsync(payment, actorUserId, buyerPartyId, cancellationToken);
+        await _actorAccess.EnsureActorCanSeeAsync(payment, actorUserId, buyerPartyId, cancellationToken);
         if (!ManualPaymentGateway.IsManual(payment.ProviderCode))
         {
             throw new ContractOperationException("payment.method.not_manual");
@@ -404,7 +368,7 @@ public sealed class PaymentDirectory : IPaymentDirectory, IPaymentReconciliation
         await _guard.EnsureCanMutateAsync(cancellationToken);
         var payment = await _db.Payments.SingleOrDefaultAsync(x => x.PaymentId == paymentId, cancellationToken)
             ?? throw new ContractOperationException("payment.not_found");
-        await EnsureActorCanSeeAsync(payment, actorUserId, buyerPartyId, cancellationToken);
+        await _actorAccess.EnsureActorCanSeeAsync(payment, actorUserId, buyerPartyId, cancellationToken);
         if (payment.Status == PaymentStatus.Succeeded)
         {
             throw AlreadySucceeded();
@@ -443,362 +407,13 @@ public sealed class PaymentDirectory : IPaymentDirectory, IPaymentReconciliation
     {
         var payment = await _db.Payments.AsNoTracking().SingleOrDefaultAsync(x => x.PaymentId == paymentId, cancellationToken)
             ?? throw new ContractOperationException("payment.not_found");
-        await EnsureActorCanSeeAsync(payment, actorUserId, buyerPartyId, cancellationToken);
-        await RestoreDepositAsync(paymentId, cancellationToken);
-    }
-
-    /// <inheritdoc />
-    public async Task<PaymentOperationalSnapshot?> GetOperationalAsync(
-        Guid paymentId,
-        CancellationToken cancellationToken)
-    {
-        var payment = await _db.Payments.AsNoTracking()
-            .SingleOrDefaultAsync(x => x.PaymentId == paymentId, cancellationToken)
-            .ConfigureAwait(false);
-        if (payment is null)
+        await _actorAccess.EnsureActorCanSeeAsync(payment, actorUserId, buyerPartyId, cancellationToken);
+        if (_adminDirectory is null)
         {
-            return null;
+            throw new InvalidOperationException("payment.admin_directory.unavailable");
         }
 
-        return await ToOperationalAsync(payment, cancellationToken).ConfigureAwait(false);
-    }
-
-    /// <inheritdoc />
-    public async Task<PaymentOperationalSnapshot?> GetLatestOperationalForCheckoutAsync(
-        Guid checkoutId,
-        CancellationToken cancellationToken)
-    {
-        var payment = await _db.Payments.AsNoTracking()
-            .Where(x => x.CheckoutId == checkoutId)
-            .OrderByDescending(x => x.CreatedAt)
-            .FirstOrDefaultAsync(cancellationToken)
-            .ConfigureAwait(false);
-        if (payment is null)
-        {
-            return null;
-        }
-
-        return await ToOperationalAsync(payment, cancellationToken).ConfigureAwait(false);
-    }
-
-    /// <inheritdoc />
-    public async Task<PaymentVerificationResult> ReconcileAsync(Guid paymentId, CancellationToken cancellationToken)
-    {
-        var payment = await _db.Payments.AsNoTracking()
-            .SingleOrDefaultAsync(x => x.PaymentId == paymentId, cancellationToken)
-            .ConfigureAwait(false)
-            ?? throw new ContractOperationException("payment.missing");
-        var attempt = await _db.Attempts.AsNoTracking()
-            .Where(x => x.PaymentId == paymentId)
-            .OrderByDescending(x => x.CreatedAt)
-            .FirstOrDefaultAsync(cancellationToken)
-            .ConfigureAwait(false)
-            ?? throw new ContractOperationException("payment.attempt.missing");
-        return await VerifyAsync(
-            new VerifyPaymentCommand(
-                payment.PaymentId,
-                attempt.AttemptId,
-                attempt.ProviderRequestReference,
-                false),
-            cancellationToken).ConfigureAwait(false);
-    }
-
-    /// <inheritdoc />
-    public async Task<PaymentVerificationResult> ConfirmDepositAsync(Guid paymentId, CancellationToken cancellationToken)
-    {
-        await _guard.EnsureCanMutateAsync(cancellationToken).ConfigureAwait(false);
-        var payment = await _db.Payments
-            .SingleOrDefaultAsync(x => x.PaymentId == paymentId, cancellationToken)
-            .ConfigureAwait(false)
-            ?? throw new ContractOperationException("payment.missing");
-        if (payment.Status == PaymentStatus.Succeeded)
-        {
-            return new PaymentVerificationResult(payment.PaymentId, payment.Status, NewlySucceeded: false);
-        }
-
-        if (!ManualPaymentGateway.IsManual(payment.ProviderCode))
-        {
-            throw new ContractOperationException("payment.method.not_manual");
-        }
-
-        if (payment.Status != PaymentStatus.Pending)
-        {
-            throw new ContractOperationException("payment.confirm.invalid_state");
-        }
-
-        var attempt = await _db.Attempts
-            .Where(x => x.PaymentId == paymentId)
-            .OrderByDescending(x => x.CreatedAt)
-            .FirstOrDefaultAsync(cancellationToken)
-            .ConfigureAwait(false)
-            ?? throw new ContractOperationException("payment.attempt.missing");
-        if (string.IsNullOrWhiteSpace(attempt.CustomerTransferReference))
-        {
-            throw new ContractOperationException("payment.tracking_reference.required");
-        }
-
-        payment.AttachLoadedAttempt(attempt);
-        var allocations = await _db.Allocations.Where(x => x.PaymentId == payment.PaymentId).ToListAsync(cancellationToken)
-            .ConfigureAwait(false);
-        payment.AttachLoadedAllocations(allocations);
-        var txn = $"manual-confirm-{payment.PaymentId:N}-{attempt.AttemptId:N}";
-        var duplicateTxn = await _db.Attempts.AnyAsync(
-            x => x.ProviderTransactionReference == txn,
-            cancellationToken).ConfigureAwait(false);
-        if (duplicateTxn)
-        {
-            return new PaymentVerificationResult(payment.PaymentId, payment.Status, NewlySucceeded: false);
-        }
-
-        var firstSuccess = payment.ApplyVerifiedSuccess(attempt.AttemptId, txn, _clock.UtcNow);
-        await _db.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
-        return new PaymentVerificationResult(payment.PaymentId, payment.Status, firstSuccess);
-    }
-
-    /// <inheritdoc />
-    public async Task<PaymentVerificationResult> RejectDepositAsync(Guid paymentId, CancellationToken cancellationToken)
-    {
-        await _guard.EnsureCanMutateAsync(cancellationToken).ConfigureAwait(false);
-        var payment = await _db.Payments
-            .SingleOrDefaultAsync(x => x.PaymentId == paymentId, cancellationToken)
-            .ConfigureAwait(false)
-            ?? throw new ContractOperationException("payment.missing");
-        if (!ManualPaymentGateway.IsManual(payment.ProviderCode))
-        {
-            throw new ContractOperationException("payment.method.not_manual");
-        }
-
-        if (payment.Status != PaymentStatus.Pending)
-        {
-            throw new ContractOperationException("payment.reject.invalid_state");
-        }
-
-        var attempt = await _db.Attempts
-            .Where(x => x.PaymentId == paymentId)
-            .OrderByDescending(x => x.CreatedAt)
-            .FirstOrDefaultAsync(cancellationToken)
-            .ConfigureAwait(false)
-            ?? throw new ContractOperationException("payment.attempt.missing");
-
-        payment.AttachLoadedAttempt(attempt);
-        var allocations = await _db.Allocations.Where(x => x.PaymentId == payment.PaymentId).ToListAsync(cancellationToken)
-            .ConfigureAwait(false);
-        payment.AttachLoadedAllocations(allocations);
-        payment.ApplyVerifiedFailure(attempt.AttemptId, "MANUAL_DEPOSIT_REJECTED", _clock.UtcNow);
-        await _db.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
-        return new PaymentVerificationResult(payment.PaymentId, payment.Status, NewlySucceeded: false);
-    }
-
-    /// <inheritdoc />
-    public async Task<PaymentVerificationResult> RestoreDepositAsync(Guid paymentId, CancellationToken cancellationToken)
-    {
-        await _guard.EnsureCanMutateAsync(cancellationToken).ConfigureAwait(false);
-        var payment = await _db.Payments
-            .SingleOrDefaultAsync(x => x.PaymentId == paymentId, cancellationToken)
-            .ConfigureAwait(false)
-            ?? throw new ContractOperationException("payment.missing");
-        if (!ManualPaymentGateway.IsManual(payment.ProviderCode))
-        {
-            throw new ContractOperationException("payment.restore.not_manual");
-        }
-
-        var attempts = await _db.Attempts
-            .Where(x => x.PaymentId == paymentId)
-            .OrderBy(x => x.CreatedAt)
-            .ToListAsync(cancellationToken)
-            .ConfigureAwait(false);
-        foreach (var loaded in attempts)
-        {
-            payment.AttachLoadedAttempt(loaded);
-        }
-
-        var allocations = await _db.Allocations.Where(x => x.PaymentId == payment.PaymentId).ToListAsync(cancellationToken)
-            .ConfigureAwait(false);
-        payment.AttachLoadedAllocations(allocations);
-        var restored = payment.RestoreRejectedManualToPending(_ids.NewId(), _clock.UtcNow);
-        if (attempts.All(x => x.AttemptId != restored.AttemptId))
-        {
-            _db.Attempts.Add(restored);
-        }
-
-        await _db.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
-        return new PaymentVerificationResult(payment.PaymentId, payment.Status, NewlySucceeded: false);
-    }
-
-    /// <inheritdoc />
-    public async Task<PaymentVerificationResult> UnconfirmDepositAsync(Guid paymentId, CancellationToken cancellationToken)
-    {
-        await _guard.EnsureCanMutateAsync(cancellationToken).ConfigureAwait(false);
-        var payment = await _db.Payments
-            .SingleOrDefaultAsync(x => x.PaymentId == paymentId, cancellationToken)
-            .ConfigureAwait(false)
-            ?? throw new ContractOperationException("payment.missing");
-        if (!ManualPaymentGateway.IsManual(payment.ProviderCode))
-        {
-            throw new ContractOperationException("payment.unconfirm.not_manual");
-        }
-
-        var attempts = await _db.Attempts
-            .Where(x => x.PaymentId == paymentId)
-            .OrderBy(x => x.CreatedAt)
-            .ToListAsync(cancellationToken)
-            .ConfigureAwait(false);
-        foreach (var loaded in attempts)
-        {
-            payment.AttachLoadedAttempt(loaded);
-        }
-
-        var allocations = await _db.Allocations.Where(x => x.PaymentId == payment.PaymentId).ToListAsync(cancellationToken)
-            .ConfigureAwait(false);
-        payment.AttachLoadedAllocations(allocations);
-        var unconfirmed = payment.UnconfirmManualDeposit(_ids.NewId(), _clock.UtcNow);
-        if (attempts.All(x => x.AttemptId != unconfirmed.AttemptId))
-        {
-            _db.Attempts.Add(unconfirmed);
-        }
-
-        await _db.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
-        return new PaymentVerificationResult(payment.PaymentId, payment.Status, NewlySucceeded: false);
-    }
-
-    /// <inheritdoc />
-    public async Task CloseOrStartRefundForOrderCancelAsync(Guid checkoutId, CancellationToken cancellationToken)
-    {
-        await _guard.EnsureCanMutateAsync(cancellationToken).ConfigureAwait(false);
-        var payment = await _db.Payments
-            .Where(x => x.CheckoutId == checkoutId)
-            .OrderByDescending(x => x.CreatedAt)
-            .FirstOrDefaultAsync(cancellationToken)
-            .ConfigureAwait(false);
-        if (payment is null)
-        {
-            return;
-        }
-
-        var now = _clock.UtcNow;
-        if (payment.Status is PaymentStatus.Created
-            or PaymentStatus.Pending
-            or PaymentStatus.Failed
-            or PaymentStatus.Expired)
-        {
-            payment.CloseForOrderCancel(now);
-            await _db.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
-            return;
-        }
-
-        if (payment.Status is PaymentStatus.Cancelled or PaymentStatus.Refunded or PaymentStatus.RefundFailed)
-        {
-            return;
-        }
-
-        payment.BeginOrderCancelRefund(now);
-        await _db.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
-
-        if (ManualPaymentGateway.IsManual(payment.ProviderCode) || _refundGateway is null)
-        {
-            return;
-        }
-
-        try
-        {
-            var result = await _refundGateway.RefundAsync(
-                payment.PaymentId,
-                payment.Amount,
-                payment.Currency,
-                $"order-cancel-refund:{payment.PaymentId:N}",
-                cancellationToken).ConfigureAwait(false);
-            if (result.Succeeded)
-            {
-                payment.MarkRefunded(_clock.UtcNow);
-            }
-            else
-            {
-                payment.MarkRefundFailed(result.FailureCode, _clock.UtcNow);
-            }
-
-            await _db.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
-        }
-        catch (ContractOperationException ex) when (ex.Code == "payment.refund.gateway.unconfigured")
-        {
-            // RefundPending remains for admin action.
-        }
-        catch (ContractOperationException ex) when (ex.Code.StartsWith("payment.", StringComparison.Ordinal))
-        {
-            payment.MarkRefundFailed(ex.Code, _clock.UtcNow);
-            await _db.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
-        }
-    }
-
-    /// <inheritdoc />
-    public async Task RestoreAfterOrderCancelRestoreAsync(Guid checkoutId, CancellationToken cancellationToken)
-    {
-        await _guard.EnsureCanMutateAsync(cancellationToken).ConfigureAwait(false);
-        var payment = await _db.Payments
-            .Where(x => x.CheckoutId == checkoutId)
-            .OrderByDescending(x => x.CreatedAt)
-            .FirstOrDefaultAsync(cancellationToken)
-            .ConfigureAwait(false);
-        if (payment is null)
-        {
-            return;
-        }
-
-        var attempts = await _db.Attempts
-            .Where(x => x.PaymentId == payment.PaymentId)
-            .OrderBy(x => x.CreatedAt)
-            .ToListAsync(cancellationToken)
-            .ConfigureAwait(false);
-        foreach (var loaded in attempts)
-        {
-            payment.AttachLoadedAttempt(loaded);
-        }
-
-        payment.RestoreAfterOrderCancelRestore(_clock.UtcNow);
-        await _db.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
-    }
-
-    private async Task<PaymentOperationalSnapshot> ToOperationalAsync(
-        CustomerPayment payment,
-        CancellationToken cancellationToken)
-    {
-        var attempts = await _db.Attempts.AsNoTracking()
-            .Where(x => x.PaymentId == payment.PaymentId)
-            .OrderByDescending(x => x.CreatedAt)
-            .ToListAsync(cancellationToken)
-            .ConfigureAwait(false);
-        var attempt = attempts.FirstOrDefault();
-        var manual = ManualPaymentGateway.IsManual(payment.ProviderCode);
-        var manualPending = manual && payment.Status == PaymentStatus.Pending;
-        var hasManualRejection = attempts.Any(x =>
-            x.Status == PaymentAttemptStatus.VerifiedFailed
-            && string.Equals(x.FailureCode, "MANUAL_DEPOSIT_REJECTED", StringComparison.Ordinal));
-        var restoreEligible = manual
-            && payment.Status == PaymentStatus.Failed
-            && hasManualRejection;
-        var unconfirmEligible = manual && payment.Status == PaymentStatus.Succeeded;
-        var evidenceReady = !string.IsNullOrWhiteSpace(attempt?.CustomerTransferReference);
-        return new PaymentOperationalSnapshot(
-            payment.PaymentId,
-            payment.CheckoutId,
-            payment.Status,
-            payment.Amount,
-            payment.Currency,
-            payment.ProviderCode,
-            attempt?.ProviderRequestReference,
-            attempt?.ProviderTransactionReference,
-            payment.CreatedAt,
-            payment.UpdatedAt,
-            payment.CompletedAt,
-            attempt?.FailureCode,
-            payment.Status == PaymentStatus.Pending,
-            ConfirmDepositEligible: manualPending && evidenceReady,
-            RejectDepositEligible: manualPending,
-            RestoreDepositEligible: restoreEligible,
-            HasManualDepositRejection: hasManualRejection,
-            UnconfirmDepositEligible: unconfirmEligible,
-            CustomerTransferReference: attempt?.CustomerTransferReference,
-            ProofMediaAssetId: attempt?.ProofMediaAssetId,
-            EvidenceSubmittedAt: attempt?.EvidenceSubmittedAt);
+        await _adminDirectory().RestoreDepositAsync(paymentId, cancellationToken);
     }
 
     private static PaymentSnapshot ToSnapshot(
@@ -830,115 +445,6 @@ public sealed class PaymentDirectory : IPaymentDirectory, IPaymentReconciliation
             latest?.ProofMediaAssetId,
             latest?.EvidenceSubmittedAt,
             history);
-    }
-
-    /// <inheritdoc />
-    public async Task<IReadOnlyList<Guid>> ExpireDueUnpaidAsync(
-        DateTimeOffset utcNow,
-        int batchSize,
-        CancellationToken cancellationToken)
-    {
-        await _guard.EnsureCanMutateAsync(cancellationToken);
-        var limit = Math.Max(1, batchSize);
-        await using var transaction = await _db.Database.BeginTransactionAsync(cancellationToken).ConfigureAwait(false);
-        var paymentIds = await _db.Database
-            .SqlQuery<Guid>(
-                $"""
-                 SELECT p.payment_id AS "Value"
-                 FROM payment.payments AS p
-                 WHERE p.status IN ('Created', 'Pending', 'Failed')
-                   AND p.unpaid_timeout_at IS NOT NULL
-                   AND p.unpaid_timeout_at <= {utcNow}
-                 ORDER BY p.unpaid_timeout_at
-                 LIMIT {limit}
-                 FOR UPDATE SKIP LOCKED
-                 """)
-            .ToListAsync(cancellationToken)
-            .ConfigureAwait(false);
-        if (paymentIds.Count == 0)
-        {
-            await transaction.CommitAsync(cancellationToken).ConfigureAwait(false);
-            return [];
-        }
-
-        var expiredCheckouts = new List<Guid>();
-        foreach (var paymentId in paymentIds)
-        {
-            var payment = await _db.Payments.SingleAsync(x => x.PaymentId == paymentId, cancellationToken)
-                .ConfigureAwait(false);
-            var attempts = await _db.Attempts
-                .Where(x => x.PaymentId == paymentId)
-                .OrderBy(x => x.CreatedAt)
-                .ToListAsync(cancellationToken)
-                .ConfigureAwait(false);
-            foreach (var loaded in attempts)
-            {
-                payment.AttachLoadedAttempt(loaded);
-            }
-
-            if (payment.ExpireUnpaidTimeout(utcNow))
-            {
-                expiredCheckouts.Add(payment.CheckoutId);
-            }
-        }
-
-        await _db.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
-        await transaction.CommitAsync(cancellationToken).ConfigureAwait(false);
-        return expiredCheckouts;
-    }
-
-    /// <inheritdoc />
-    public async Task ReopenExpiredForRetryAsync(
-        Guid paymentId,
-        Guid actorUserId,
-        Guid? buyerPartyId,
-        CancellationToken cancellationToken)
-    {
-        await _guard.EnsureCanMutateAsync(cancellationToken);
-        var payment = await _db.Payments.SingleOrDefaultAsync(x => x.PaymentId == paymentId, cancellationToken)
-            ?? throw new ContractOperationException("payment.not_found");
-        await EnsureActorCanSeeAsync(payment, actorUserId, buyerPartyId, cancellationToken);
-        if (payment.Status != PaymentStatus.Expired)
-        {
-            throw new ContractOperationException("payment.unpaid.retry.invalid_state");
-        }
-
-        var attempts = await _db.Attempts.Where(x => x.PaymentId == paymentId).ToListAsync(cancellationToken);
-        foreach (var loaded in attempts)
-        {
-            payment.AttachLoadedAttempt(loaded);
-        }
-
-        _actorContext.ActorUserId = actorUserId;
-        var gateway = _gateways.Resolve(payment.ProviderCode);
-        var initiation = await gateway.InitiateAsync(payment.PaymentId, payment.Amount, payment.Currency, cancellationToken);
-        var attempt = payment.RecordInitiation(_ids.NewId(), initiation.ProviderRequestReference, _clock.UtcNow);
-        AssignUnpaidTimeout(payment, _clock.UtcNow);
-        _db.Attempts.Add(attempt);
-        await _db.SaveChangesAsync(cancellationToken);
-    }
-
-    private void AssignUnpaidTimeout(CustomerPayment payment, DateTimeOffset now)
-    {
-        if (_holdPolicy is null)
-        {
-            return;
-        }
-
-        payment.AssignUnpaidTimeout(_holdPolicy.ResolveUnpaidTimeoutAt(payment.ProviderCode, now), now);
-    }
-
-    private async Task EnsureActorCanSeeAsync(
-        CustomerPayment payment,
-        Guid actorUserId,
-        Guid? buyerPartyId,
-        CancellationToken cancellationToken)
-    {
-        var payable = await _orders.GetPayableAsync(payment.CheckoutId, actorUserId, buyerPartyId, cancellationToken);
-        if (payable is null)
-        {
-            throw new ContractOperationException("payment.access.order_identity_required");
-        }
     }
 
     private static string ResolveRedirectUrl(

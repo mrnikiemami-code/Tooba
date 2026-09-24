@@ -417,10 +417,15 @@ public sealed class PaymentArchitectureGuardTests
         Assert.Contains("throw new ContractOperationException(\"payment.refund.gateway.unconfigured\")", refundGateway, StringComparison.Ordinal);
         Assert.DoesNotContain("InvalidOperationException(\"payment.refund", refundGateway, StringComparison.Ordinal);
 
+        var admin = File.ReadAllText(Path.Combine(
+            PaymentRoot(), "Tooba.Payment.Infrastructure", "Directories", "PaymentAdminDirectory.cs"));
+        Assert.Contains("catch (ContractOperationException ex) when (ex.Code == \"payment.refund.gateway.unconfigured\")", admin, StringComparison.Ordinal);
+        Assert.Contains("payment.MarkRefundFailed(ex.Code, clock.UtcNow)", admin, StringComparison.Ordinal);
+        Assert.DoesNotContain("ex.Message", admin, StringComparison.Ordinal);
+        Assert.DoesNotContain("catch (InvalidOperationException ex) when (ex.Message", admin, StringComparison.Ordinal);
+
         var directory = File.ReadAllText(Path.Combine(
             PaymentRoot(), "Tooba.Payment.Infrastructure", "Directories", "PaymentDirectory.cs"));
-        Assert.Contains("catch (ContractOperationException ex) when (ex.Code == \"payment.refund.gateway.unconfigured\")", directory, StringComparison.Ordinal);
-        Assert.Contains("payment.MarkRefundFailed(ex.Code, _clock.UtcNow)", directory, StringComparison.Ordinal);
         Assert.DoesNotContain("ex.Message", directory, StringComparison.Ordinal);
         Assert.DoesNotContain("catch (InvalidOperationException ex) when (ex.Message", directory, StringComparison.Ordinal);
 
@@ -464,7 +469,83 @@ public sealed class PaymentArchitectureGuardTests
         var path = Path.Combine(
             PaymentRoot(), "Tooba.Payment.Infrastructure", "Directories", "PaymentDirectory.cs");
         var lines = File.ReadAllText(path).Split(new[] { "\r\n", "\n" }, StringSplitOptions.None).Length;
-        Assert.True(lines <= 971, $"PaymentDirectory.cs grew to {lines} lines (accepted post-task baseline 971).");
+        Assert.True(lines < 700, $"PaymentDirectory.cs grew to {lines} lines (task limit <700).");
+    }
+
+    [Fact]
+    public void Payment_directories_are_focused_one_port_each()
+    {
+        const string ns = "namespace Tooba.Payment.Infrastructure.Directories;";
+        var directories = Path.Combine(PaymentRoot(), "Tooba.Payment.Infrastructure", "Directories");
+
+        var expected = new (string File, string Type, string Port)[]
+        {
+            ("PaymentDirectory.cs", "PaymentDirectory", "IPaymentDirectory"),
+            ("PaymentReconciliationDirectory.cs", "PaymentReconciliationDirectory", "IPaymentReconciliationDirectory"),
+            ("PaymentAdminDirectory.cs", "PaymentAdminDirectory", "IPaymentAdminDirectory"),
+            ("PaymentExpiryDirectory.cs", "PaymentExpiryDirectory", "IPaymentExpiryDirectory"),
+        };
+
+        var portInterfaces = new[]
+        {
+            "IPaymentDirectory", "IPaymentReconciliationDirectory", "IPaymentAdminDirectory", "IPaymentExpiryDirectory",
+        };
+
+        foreach (var (file, type, port) in expected)
+        {
+            var path = Path.Combine(directories, file);
+            Assert.True(File.Exists(path), path);
+            var text = File.ReadAllText(path);
+            Assert.Contains(ns, text, StringComparison.Ordinal);
+            var declarationStart = text.IndexOf($"public sealed class {type}", StringComparison.Ordinal);
+            Assert.True(declarationStart >= 0, $"{file} missing class {type}");
+            var body = text.IndexOf('{', declarationStart);
+            var declaration = text[declarationStart..body];
+            Assert.Contains($": {port}", declaration, StringComparison.Ordinal);
+            foreach (var other in portInterfaces.Where(x => x != port))
+            {
+                Assert.DoesNotContain($", {other}", declaration, StringComparison.Ordinal);
+                Assert.DoesNotContain($" : {other}", declaration, StringComparison.Ordinal);
+            }
+        }
+
+        // No production class implements more than one of the four directory ports.
+        var multiPort = AllProductionSources()
+            .Select(x => (x.Path, Text: Regex.Match(x.Text, @"class\s+(\w+)\s*:\s*([^\{]+)").Groups[2].Value))
+            .Where(x => x.Text.Length > 0)
+            .Where(x => portInterfaces.Count(p => Regex.IsMatch(x.Text, $@"\b{p}\b")) > 1)
+            .Select(x => x.Path)
+            .ToArray();
+        Assert.True(multiPort.Length == 0, "multi-port directory: " + string.Join("; ", multiPort));
+
+        var module = File.ReadAllText(Path.Combine(
+            PaymentRoot(), "Tooba.Payment.Infrastructure", "DependencyInjection", "PaymentModule.cs"));
+        Assert.Contains("new PaymentDirectory(", module, StringComparison.Ordinal);
+        Assert.Contains("new PaymentReconciliationDirectory(", module, StringComparison.Ordinal);
+        Assert.Contains("new PaymentAdminDirectory(", module, StringComparison.Ordinal);
+        Assert.Contains("new PaymentExpiryDirectory(", module, StringComparison.Ordinal);
+        Assert.DoesNotContain("(PaymentDirectory)sp.GetRequiredService<IPaymentDirectory>()", module, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void Payment_directories_have_no_dumping_ground_and_stay_under_size_limit()
+    {
+        var directories = Path.Combine(PaymentRoot(), "Tooba.Payment.Infrastructure", "Directories");
+        foreach (var banned in new[] { "Common", "Helpers", "Utils", "Manager" })
+        {
+            Assert.False(Directory.Exists(Path.Combine(directories, banned)), banned);
+        }
+
+        var sharedFiles = Directory.Exists(Path.Combine(directories, "Shared"))
+            ? Directory.GetFiles(Path.Combine(directories, "Shared"), "*.cs").Select(Path.GetFileName).OrderBy(x => x, StringComparer.Ordinal).ToArray()
+            : [];
+        Assert.Equal(new[] { "PaymentActorAccess.cs", "PaymentUnpaidTimeoutAssigner.cs" }, sharedFiles);
+
+        foreach (var file in Directory.GetFiles(directories, "*.cs", SearchOption.AllDirectories))
+        {
+            var lines = File.ReadAllText(file).Split(new[] { "\r\n", "\n" }, StringSplitOptions.None).Length;
+            Assert.True(lines < 800, $"{Path.GetFileName(file)} has {lines} lines");
+        }
     }
 
     private static void AssertNoRootDump(string project, string[] allowedFolders)

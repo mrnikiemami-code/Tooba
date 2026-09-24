@@ -107,7 +107,7 @@ public sealed class TmarDurableGuardTests
         Assert.Equal("TB-TMAR-GOLDEN-WAVE-FINAL-CLOSURE-001", rootEl.GetProperty("goldenWaveClosedBy").GetString());
         Assert.False(string.IsNullOrWhiteSpace(rootEl.GetProperty("goldenWaveClosedCommit").GetString()));
         Assert.Equal("TB-TMAR-PAYMENT-ARCH-COMPLETE-002-STRUCTURE-001", rootEl.GetProperty("nextTask").GetString());
-        Assert.Equal("NEXT_TMAR_WAVE_AFTER_PAYMENT_HOST_RESIDUE_REPAIR", rootEl.GetProperty("nextTaskGate").GetString());
+        Assert.Equal("NEXT_TMAR_WAVE_AFTER_PAYMENT_PRECERT_DIRECTORY_SPLIT", rootEl.GetProperty("nextTaskGate").GetString());
         Assert.Equal("PAUSED_AT_SAFE_W5_CHECKPOINT", rootEl.GetProperty("checkoutState").GetString());
         Assert.True(rootEl.GetProperty("frontendFrozen").GetBoolean());
         Assert.Equal("ARCH-COMPLETE-002", rootEl.GetProperty("locksVersion").GetString());
@@ -178,8 +178,8 @@ public sealed class TmarDurableGuardTests
             cartEntry.GetProperty("lastAcceptedTask").GetString(),
             StringComparison.Ordinal);
         Assert.False(string.IsNullOrWhiteSpace(cartEntry.GetProperty("lastAcceptedCommit").GetString()));
-        Assert.Equal("TB-TMAR-PAYMENT-HOST-RESIDUE-REPAIR-001-R1", rootEl.GetProperty("lastAcceptedTask").GetString());
-        Assert.Equal("f43904967311a3ac3e3f2cca773af3c733458a76", rootEl.GetProperty("lastAcceptedCommit").GetString());
+        Assert.Equal("TB-TMAR-PAYMENT-PRECERT-HYGIENE-001", rootEl.GetProperty("lastAcceptedTask").GetString());
+        Assert.Equal("22849a17e31aa3357277c3979ac351a3f3f9f8e5", rootEl.GetProperty("lastAcceptedCommit").GetString());
 
         var paymentHostResidue = rootEl.GetProperty("paymentHostResidueRepair");
         Assert.Equal("TB-TMAR-PAYMENT-HOST-RESIDUE-REPAIR-001", paymentHostResidue.GetProperty("task").GetString());
@@ -210,6 +210,26 @@ public sealed class TmarDurableGuardTests
             paymentPrecert.GetProperty("structureCertification").GetString());
         Assert.Equal(paymentPrecert.GetProperty("paymentDirectoryBaseline").GetInt32(),
             paymentPrecert.GetProperty("paymentDirectoryLines").GetInt32());
+
+        var paymentSplit = rootEl.GetProperty("paymentPrecertDirectorySplit");
+        Assert.Equal("TB-TMAR-PAYMENT-PRECERT-DIRECTORY-SPLIT-001", paymentSplit.GetProperty("task").GetString());
+        Assert.Equal("BEHAVIOR_PRESERVING_FOCUSED_DIRECTORIES", paymentSplit.GetProperty("state").GetString());
+        Assert.Equal("TB-TMAR-PAYMENT-PRECERT-HYGIENE-001", paymentSplit.GetProperty("parent").GetString());
+        Assert.Equal(
+            "FOCUSED_DIRECTORIES_PAYMENT_RECONCILIATION_ADMIN_EXPIRY",
+            paymentSplit.GetProperty("paymentDirectoryArchitecture").GetString());
+        Assert.Equal("REMOVED", paymentSplit.GetProperty("paymentDirectoryGodFile").GetString());
+        Assert.Equal("REMOVED", paymentSplit.GetProperty("interfaceDowncast").GetString());
+        Assert.Equal("NONE", paymentSplit.GetProperty("schemaMigration").GetString());
+        Assert.Equal("PRESERVED", paymentSplit.GetProperty("behaviorParity").GetString());
+        Assert.Equal("ZERO", paymentSplit.GetProperty("paymentToHostDependency").GetString());
+        Assert.Equal(476, paymentSplit.GetProperty("paymentDirectoryLines").GetInt32());
+        Assert.True(paymentSplit.GetProperty("paymentDirectoryLines").GetInt32() < 700);
+        Assert.Equal("PENDING_TB_TMAR_PAYMENT_ARCH_COMPLETE_002_STRUCTURE_001",
+            paymentSplit.GetProperty("structureCertification").GetString());
+        Assert.Equal("PAYMENT_RUNTIME_RESIDUE_REMOVED_SECURITY_ADAPTERS_ONLY",
+            paymentSplit.GetProperty("paymentHostResidue").GetString());
+        Assert.Equal("REMOVED", paymentSplit.GetProperty("messageClassification").GetString());
 
         var paymentAudit = rootEl.GetProperty("paymentArchComplete002Audit");
         Assert.Equal("TB-TMAR-PAYMENT-ARCH-COMPLETE-002-AUDIT-001", paymentAudit.GetProperty("task").GetString());

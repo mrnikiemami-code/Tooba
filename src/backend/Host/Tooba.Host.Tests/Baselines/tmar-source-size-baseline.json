@@ -207,12 +207,6 @@
       "classification": "OVERSIZED_LEGACY"
     },
     {
-      "path": "src/backend/Modules/Payment/Tooba.Payment.Infrastructure/Directories/PaymentDirectory.cs",
-      "language": "cs",
-      "loc": 969,
-      "classification": "OVERSIZED_LEGACY"
-    },
-    {
       "path": "src/backend/Modules/AccessControl/Tooba.AccessControl.Infrastructure/AccessControlDirectory.cs",
       "language": "cs",
       "loc": 957,

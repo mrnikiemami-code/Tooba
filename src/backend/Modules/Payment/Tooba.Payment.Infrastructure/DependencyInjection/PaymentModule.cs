@@ -47,10 +47,38 @@ public sealed class PaymentModule : IToobaModule
         services.AddScoped<ICommerceHoldPolicy, CommerceHoldPolicyAdapter>();
         services.AddScoped<PaymentGatewayActorContext>();
         services.AddScoped<IPaymentGatewayRegistry, PaymentGatewayRegistry>();
-        services.AddScoped<IPaymentDirectory, PaymentDirectory>();
-        services.AddScoped<IPaymentReconciliationDirectory>(sp => (PaymentDirectory)sp.GetRequiredService<IPaymentDirectory>());
-        services.AddScoped<IPaymentAdminDirectory>(sp => (PaymentDirectory)sp.GetRequiredService<IPaymentDirectory>());
-        services.AddScoped<IPaymentExpiryDirectory>(sp => (PaymentDirectory)sp.GetRequiredService<IPaymentDirectory>());
+        // Focused directory decomposition: each port resolves to its own focused implementation.
+        // PaymentDirectory still needs the admin directory for RetryManualAfterRejectionAsync; the
+        // deferred Func breaks the PaymentAdminDirectory -> IPaymentDirectory -> PaymentAdminDirectory cycle.
+        services.AddScoped<IPaymentDirectory>(sp => new PaymentDirectory(
+            sp.GetRequiredService<PaymentDbContext>(),
+            sp.GetRequiredService<IPaymentUseCaseGuard>(),
+            sp.GetRequiredService<IPayableCheckoutReader>(),
+            sp.GetRequiredService<IPaymentGatewayRegistry>(),
+            sp.GetRequiredService<PaymentGatewayActorContext>(),
+            sp.GetRequiredService<IClock>(),
+            sp.GetRequiredService<IIdGenerator>(),
+            () => sp.GetRequiredService<IPaymentAdminDirectory>(),
+            sp.GetRequiredService<ICommerceHoldPolicy>()));
+        services.AddScoped<IPaymentReconciliationDirectory>(sp => new PaymentReconciliationDirectory(
+            sp.GetRequiredService<PaymentDbContext>(),
+            sp.GetRequiredService<IPaymentDirectory>()));
+        services.AddScoped<IPaymentAdminDirectory>(sp => new PaymentAdminDirectory(
+            sp.GetRequiredService<PaymentDbContext>(),
+            sp.GetRequiredService<IPaymentUseCaseGuard>(),
+            sp.GetRequiredService<IPaymentDirectory>(),
+            sp.GetRequiredService<IClock>(),
+            sp.GetRequiredService<IIdGenerator>(),
+            sp.GetService<IPaymentRefundGateway>()));
+        services.AddScoped<IPaymentExpiryDirectory>(sp => new PaymentExpiryDirectory(
+            sp.GetRequiredService<PaymentDbContext>(),
+            sp.GetRequiredService<IPaymentUseCaseGuard>(),
+            sp.GetRequiredService<IPayableCheckoutReader>(),
+            sp.GetRequiredService<IPaymentGatewayRegistry>(),
+            sp.GetRequiredService<PaymentGatewayActorContext>(),
+            sp.GetRequiredService<IClock>(),
+            sp.GetRequiredService<IIdGenerator>(),
+            sp.GetRequiredService<ICommerceHoldPolicy>()));
         services.AddScoped<IPaymentSettlementReader, PaymentSettlementBridge>();
         services.AddScoped<IPaymentWebhookHandler, PaymentWebhookHandler>();
         services.AddScoped<IPaymentWebhookSignatureVerifier, PaymentWebhookSignatureVerifierAdapter>();

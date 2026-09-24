@@ -1,4 +1,8 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using Tooba.BuildingBlocks;
 using Tooba.BuildingBlocks.Observability.Tracing;
 using Tooba.Payment.Application.Models;
@@ -11,6 +15,7 @@ using Tooba.Payment.Infrastructure.Persistence;
 using Tooba.Payment.Infrastructure.Providers;
 using Tooba.Wallet.Contracts.Dtos;
 using Tooba.Wallet.Contracts.Payments;
+using Tooba.Persistence;
 using Xunit;
 
 namespace Tooba.Payment.Tests.Behavior;
@@ -42,8 +47,8 @@ public sealed class PaymentPrecertHygieneTests
         await using var db = CreateDb();
         var payment = SeedSucceededPayment(db);
 
-        var directory = CreateDirectory(db, new ThrowingRefundGateway("payment.refund.gateway.unconfigured"));
-        await directory.CloseOrStartRefundForOrderCancelAsync(payment.CheckoutId, CancellationToken.None);
+        var admin = CreateAdminDirectory(db, new ThrowingRefundGateway("payment.refund.gateway.unconfigured"));
+        await admin.CloseOrStartRefundForOrderCancelAsync(payment.CheckoutId, CancellationToken.None);
 
         var reloaded = await db.Payments.AsNoTracking().SingleAsync(x => x.PaymentId == payment.PaymentId);
         Assert.Equal(PaymentStatus.RefundPending, reloaded.Status);
@@ -55,8 +60,8 @@ public sealed class PaymentPrecertHygieneTests
         await using var db = CreateDb();
         var payment = SeedSucceededPayment(db);
 
-        var directory = CreateDirectory(db, new ThrowingRefundGateway("payment.refund.gateway.declined"));
-        await directory.CloseOrStartRefundForOrderCancelAsync(payment.CheckoutId, CancellationToken.None);
+        var admin = CreateAdminDirectory(db, new ThrowingRefundGateway("payment.refund.gateway.declined"));
+        await admin.CloseOrStartRefundForOrderCancelAsync(payment.CheckoutId, CancellationToken.None);
 
         var reloaded = await db.Payments.AsNoTracking().SingleAsync(x => x.PaymentId == payment.PaymentId);
         Assert.Equal(PaymentStatus.RefundFailed, reloaded.Status);
@@ -68,9 +73,9 @@ public sealed class PaymentPrecertHygieneTests
         await using var db = CreateDb();
         var payment = SeedSucceededPayment(db);
 
-        var directory = CreateDirectory(db, new ThrowingRefundGateway(null));
+        var admin = CreateAdminDirectory(db, new ThrowingRefundGateway(null));
         await Assert.ThrowsAsync<InvalidOperationException>(() =>
-            directory.CloseOrStartRefundForOrderCancelAsync(payment.CheckoutId, CancellationToken.None));
+            admin.CloseOrStartRefundForOrderCancelAsync(payment.CheckoutId, CancellationToken.None));
 
         var reloaded = await db.Payments.AsNoTracking().SingleAsync(x => x.PaymentId == payment.PaymentId);
         Assert.Equal(PaymentStatus.RefundPending, reloaded.Status);
@@ -115,6 +120,109 @@ public sealed class PaymentPrecertHygieneTests
     }
 
     [Fact]
+    public void Directory_ports_resolve_to_distinct_focused_implementations()
+    {
+        var services = new ServiceCollection();
+        services.AddLogging();
+        services.AddSingleton<IOutboxPollTargetSource, NullTargetSource>();
+        services.AddSingleton<IWorkerCommerceContextFactory, ThrowingCommerceContextFactory>();
+        services.AddSingleton<IBackgroundWorkerRegistry, NullWorkerRegistry>();
+        new Tooba.Payment.Infrastructure.DependencyInjection.PaymentModule()
+            .AddServices(services, new ConfigurationBuilder().Build(), new EnvironmentStub());
+
+        foreach (var (serviceType, implementationType) in new[]
+        {
+            (typeof(IPaymentDirectory), typeof(PaymentDirectory)),
+            (typeof(IPaymentReconciliationDirectory), typeof(PaymentReconciliationDirectory)),
+            (typeof(IPaymentAdminDirectory), typeof(PaymentAdminDirectory)),
+            (typeof(IPaymentExpiryDirectory), typeof(PaymentExpiryDirectory)),
+        })
+        {
+            var descriptors = services.Where(d => d.ServiceType == serviceType).ToArray();
+            Assert.Single(descriptors);
+            Assert.Equal(ServiceLifetime.Scoped, descriptors[0].Lifetime);
+            Assert.NotSame(descriptors[0].ImplementationType, typeof(PaymentDirectory));
+            Assert.NotEqual(serviceType, implementationType);
+        }
+
+        // Each focused implementation must implement exactly its own port among the four.
+        var ports = new[] { typeof(IPaymentDirectory), typeof(IPaymentReconciliationDirectory), typeof(IPaymentAdminDirectory), typeof(IPaymentExpiryDirectory) };
+        foreach (var (port, implementation) in new[]
+        {
+            (typeof(IPaymentDirectory), typeof(PaymentDirectory)),
+            (typeof(IPaymentReconciliationDirectory), typeof(PaymentReconciliationDirectory)),
+            (typeof(IPaymentAdminDirectory), typeof(PaymentAdminDirectory)),
+            (typeof(IPaymentExpiryDirectory), typeof(PaymentExpiryDirectory)),
+        })
+        {
+            var implemented = implementation.GetInterfaces().Where(ports.Contains).ToArray();
+            Assert.Equal(new[] { port }, implemented);
+        }
+
+        var types = new[]
+        {
+            typeof(PaymentDirectory), typeof(PaymentReconciliationDirectory),
+            typeof(PaymentAdminDirectory), typeof(PaymentExpiryDirectory),
+        };
+        Assert.Equal(4, types.Distinct().Count());
+    }
+
+    [Fact]
+    public async Task Stale_reconciliation_delegates_to_canonical_verify()
+    {
+        await using var db = CreateDb();
+        var now = DateTimeOffset.Parse("2026-09-24T12:00:00Z");
+        var payment = SeedPendingPayment(db, now.AddHours(-1));
+        var core = CreateDirectory(db, new ThrowingRefundGateway("payment.refund.gateway.declined"));
+        var reconciliation = new PaymentReconciliationDirectory(db, core);
+
+        var processed = await reconciliation.ReconcileStalePendingAsync(now, TimeSpan.FromMinutes(5), 10, CancellationToken.None);
+
+        Assert.Equal(1, processed);
+        var reloaded = await db.Payments.AsNoTracking().SingleAsync(x => x.PaymentId == payment.PaymentId);
+        Assert.Equal(PaymentStatus.Failed, reloaded.Status);
+    }
+
+    [Fact]
+    public async Task Admin_reconcile_uses_canonical_verify_path()
+    {
+        await using var db = CreateDb();
+        var now = DateTimeOffset.Parse("2026-09-24T12:00:00Z");
+        var payment = SeedPendingPayment(db, now);
+        var core = CreateDirectory(db, new ThrowingRefundGateway("payment.refund.gateway.declined"));
+        var admin = CreateAdminDirectory(db, core, new ThrowingRefundGateway("payment.refund.gateway.declined"));
+
+        var result = await admin.ReconcileAsync(payment.PaymentId, CancellationToken.None);
+
+        Assert.Equal(PaymentStatus.Failed, result.Status);
+    }
+
+    [Fact]
+    public async Task Unpaid_reopen_expired_creates_new_attempt()
+    {
+        await using var db = CreateDb();
+        var now = DateTimeOffset.Parse("2026-09-24T12:00:00Z");
+        var payment = SeedPendingPayment(db, now, timeoutAt: now.AddMinutes(1));
+        payment.ExpireUnpaidTimeout(now.AddMinutes(2));
+        db.SaveChanges();
+
+        var expiry = new PaymentExpiryDirectory(
+            db,
+            new OpenPaymentUseCaseGuard(),
+            new PermissivePayableCheckoutReader(),
+            new FakeGatewayRegistry(),
+            new PaymentGatewayActorContext(),
+            new SystemUtcClock(),
+            new UuidV7IdGenerator());
+
+        await expiry.ReopenExpiredForRetryAsync(payment.PaymentId, Guid.NewGuid(), null, CancellationToken.None);
+
+        var reloaded = await db.Payments.AsNoTracking().SingleAsync(x => x.PaymentId == payment.PaymentId);
+        Assert.Equal(PaymentStatus.Pending, reloaded.Status);
+        Assert.Equal(2, await db.Attempts.CountAsync(x => x.PaymentId == payment.PaymentId));
+    }
+
+    [Fact]
     public async Task Admin_grid_missing_enrichment_returns_empty_display_strings()
     {
         var checkoutId = Guid.Parse("01900000-0000-7000-8000-000000000903");
@@ -141,7 +249,18 @@ public sealed class PaymentPrecertHygieneTests
 
     private static CustomerPayment SeedSucceededPayment(PaymentDbContext db)
     {
-        var now = DateTimeOffset.Parse("2026-09-24T12:00:00Z");
+        var payment = SeedPendingPayment(db, DateTimeOffset.Parse("2026-09-24T12:00:00Z"));
+        var attempt = payment.Attempts.Single();
+        payment.ApplyVerifiedSuccess(attempt.AttemptId, "txn-precert", payment.CreatedAt.AddSeconds(2));
+        db.SaveChanges();
+        return payment;
+    }
+
+    private static CustomerPayment SeedPendingPayment(
+        PaymentDbContext db,
+        DateTimeOffset now,
+        DateTimeOffset? timeoutAt = null)
+    {
         var payment = CustomerPayment.Open(
             Guid.NewGuid(),
             Guid.NewGuid(),
@@ -152,8 +271,25 @@ public sealed class PaymentPrecertHygieneTests
             [(PaymentAllocationTargetKind.SellerOrder, Guid.NewGuid(), 1000m, Guid.NewGuid())],
             now);
         var attempt = payment.RecordInitiation(Guid.NewGuid(), "ref-precert", now.AddSeconds(1));
-        payment.ApplyVerifiedSuccess(attempt.AttemptId, "txn-precert", now.AddSeconds(2));
+        if (timeoutAt is { } due)
+        {
+            payment.AssignUnpaidTimeout(due, now.AddSeconds(1));
+        }
+        else
+        {
+            payment.AssignUnpaidTimeout(now.AddHours(1), now.AddSeconds(1));
+        }
+
+        _ = attempt;
         db.Payments.Add(payment);
+        db.Allocations.AddRange(payment.Allocations);
+        var attempts = new List<PaymentAttempt>();
+        foreach (var loaded in payment.Attempts)
+        {
+            attempts.Add(loaded);
+        }
+
+        db.Attempts.AddRange(attempts);
         db.SaveChanges();
         return payment;
     }
@@ -162,9 +298,26 @@ public sealed class PaymentPrecertHygieneTests
         new(
             db,
             new OpenPaymentUseCaseGuard(),
-            new UnusedPayableCheckoutReader(),
-            new UnusedGatewayRegistry(),
+            new PermissivePayableCheckoutReader(),
+            new FailingGatewayRegistry(),
             new PaymentGatewayActorContext(),
+            new SystemUtcClock(),
+            new UuidV7IdGenerator(),
+            () => CreateAdminDirectory(db, refundGateway));
+
+    private static PaymentAdminDirectory CreateAdminDirectory(
+        PaymentDbContext db,
+        IPaymentRefundGateway refundGateway) =>
+        CreateAdminDirectory(db, CreateDirectory(db, refundGateway), refundGateway);
+
+    private static PaymentAdminDirectory CreateAdminDirectory(
+        PaymentDbContext db,
+        IPaymentDirectory core,
+        IPaymentRefundGateway refundGateway) =>
+        new(
+            db,
+            new OpenPaymentUseCaseGuard(),
+            core,
             new SystemUtcClock(),
             new UuidV7IdGenerator(),
             refundGateway);
@@ -198,10 +351,40 @@ public sealed class PaymentPrecertHygieneTests
             Task.FromResult<PayableCheckoutSnapshot?>(null);
     }
 
+    /// <summary>مالکیت پرداخت برای مسیر Verify/Reconciliation را می‌پذیرد (بدون قرارداد سفارش).</summary>
+    private sealed class PermissivePayableCheckoutReader : IPayableCheckoutReader
+    {
+        public Task<PayableCheckoutSnapshot?> GetPayableAsync(
+            Guid checkoutId,
+            Guid actorUserId,
+            Guid? buyerPartyId,
+            CancellationToken cancellationToken) =>
+            Task.FromResult<PayableCheckoutSnapshot?>(new PayableCheckoutSnapshot(
+                checkoutId,
+                OrderPaymentMode.OnlinePurchase,
+                "IRR",
+                []));
+    }
+
     private sealed class UnusedGatewayRegistry : IPaymentGatewayRegistry
     {
         public IPaymentGateway Resolve(string providerCode) =>
             throw new ContractOperationException("payment.gateway.unavailable");
+    }
+
+    /// <summary>درگاه fake برای Verify؛ شکست قطعی می‌دهد تا مسیر Failed قابل اثبات باشد.</summary>
+    private sealed class FailingGatewayRegistry : IPaymentGatewayRegistry
+    {
+        private readonly IPaymentGateway _gateway = new FakeFailingPaymentGateway(new SystemUtcClock());
+
+        public IPaymentGateway Resolve(string providerCode) => _gateway;
+    }
+
+    private sealed class FakeGatewayRegistry : IPaymentGatewayRegistry
+    {
+        private readonly FakePaymentGateway _gateway = new(new SystemUtcClock(), new UuidV7IdGenerator());
+
+        public IPaymentGateway Resolve(string providerCode) => _gateway;
     }
 
     private sealed class RecordingWalletPort : IWalletOrderPaymentPort
@@ -270,6 +453,40 @@ public sealed class PaymentPrecertHygieneTests
             IReadOnlyList<Guid> checkoutIds,
             CancellationToken cancellationToken) =>
             Task.FromResult<IReadOnlyList<Tooba.Order.Contracts.Payments.AdminPaymentOrderEnrichmentSnapshot>>([]);
+    }
+
+    private sealed class NullTargetSource : IOutboxPollTargetSource
+    {
+        public IReadOnlyList<OutboxPollTarget> GetTargets() => [];
+    }
+
+    private sealed class ThrowingCommerceContextFactory : IWorkerCommerceContextFactory
+    {
+        public CommerceContext FromPollTarget(OutboxPollTarget target, string traceId) =>
+            throw new InvalidOperationException("commerce.context.not_expected_in_test");
+    }
+
+    private sealed class NullWorkerRegistry : IBackgroundWorkerRegistry
+    {
+        public void RecordSuccess(string workerName, int processedCount)
+        {
+        }
+
+        public void RecordFailure(string workerName, string errorType)
+        {
+        }
+    }
+
+    private sealed class EnvironmentStub : IHostEnvironment
+    {
+        public string EnvironmentName { get; set; } = Environments.Production;
+
+        public string ApplicationName { get; set; } = "Tooba.Payment.Tests";
+
+        public string ContentRootPath { get; set; } = AppContext.BaseDirectory;
+
+        public Microsoft.Extensions.FileProviders.IFileProvider ContentRootFileProvider { get; set; } =
+            new Microsoft.Extensions.FileProviders.NullFileProvider();
     }
 }
 
