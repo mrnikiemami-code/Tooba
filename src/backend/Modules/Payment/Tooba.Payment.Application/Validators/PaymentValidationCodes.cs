@@ -47,4 +47,34 @@ public static class PaymentValidationCodes
 
     /// <summary>Proof content type must not be blank.</summary>
     public const string ProofContentTypeShape = "payment.validation.proof_content_type_shape";
+
+    /// <summary>Admin grid query input must be supplied.</summary>
+    public const string GridInputRequired = "payment.validation.grid_input_required";
+
+    /// <summary>Admin grid query filters must be supplied.</summary>
+    public const string GridFiltersRequired = "payment.validation.grid_filters_required";
+
+    /// <summary>Admin grid sort field must not be blank.</summary>
+    public const string GridSortFieldShape = "payment.validation.grid_sort_field_shape";
+
+    /// <summary>Admin grid sort direction must not be blank.</summary>
+    public const string GridSortDirectionShape = "payment.validation.grid_sort_direction_shape";
+
+    /// <summary>Admin grid page must be at least one.</summary>
+    public const string GridPageMin = "payment.validation.grid_page_min";
+
+    /// <summary>Admin grid page size must be at least one.</summary>
+    public const string GridPageSizeMin = "payment.validation.grid_page_size_min";
+
+    /// <summary>Webhook provider code must not be blank.</summary>
+    public const string WebhookProviderCodeShape = "payment.validation.webhook_provider_code_shape";
+
+    /// <summary>Webhook raw body must be supplied.</summary>
+    public const string WebhookRawBodyRequired = "payment.validation.webhook_raw_body_required";
+
+    /// <summary>Webhook body text must not be blank.</summary>
+    public const string WebhookBodyTextShape = "payment.validation.webhook_body_text_shape";
+
+    /// <summary>Webhook signature header must not be whitespace-only when supplied.</summary>
+    public const string WebhookSignatureHeaderShape = "payment.validation.webhook_signature_header_shape";
 }

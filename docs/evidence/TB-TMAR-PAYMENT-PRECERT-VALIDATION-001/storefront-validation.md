@@ -92,7 +92,7 @@ Focused in-memory, no web host, no database.
 
 ```
 dotnet test src/backend/Modules/Payment/Tooba.Payment.Tests/Tooba.Payment.Tests.csproj --no-build \
-  --filter "FullyQualifiedName~PaymentArchitectureGuardTests|FullyQualifiedName~PaymentStorefrontValidatorCoverageGuardTests"
+  --filter "FullyQualifiedName~PaymentArchitectureGuardTests|FullyQualifiedName~PaymentValidatorCoverageGuardTests"
 Passed! - Failed: 0, Passed: 19, Skipped: 0, Total: 19
 ```
 
@@ -103,14 +103,15 @@ dotnet build src/backend/Modules/Payment/Tooba.Payment.Tests/Tooba.Payment.Tests
 Build succeeded. 0 Error(s)
 ```
 
-## 9. Admin + Webhook remain explicitly pending
+## 9. Admin + Webhook closed by follow-up task
 
-`Validators/Admin` and `Validators/Webhooks` do not exist in this slice.
-They are reserved for `TB-TMAR-PAYMENT-PRECERT-VALIDATION-002`.
+`Validators/Admin` and `Validators/Webhooks` were **not** part of this slice; they were added by
+`TB-TMAR-PAYMENT-PRECERT-VALIDATION-002`.
 
 - `paymentValidationStorefront` = `9_REQUIRED_PRESENT_1_NO_VALIDATOR_REQUIRED`
-- `paymentValidationAdminWebhook` = `PENDING_TB_TMAR_PAYMENT_PRECERT_VALIDATION_002`
-- `paymentValidationOverall` = `PARTIAL_9_OF_15_REQUIRED_PRESENT`
+- `paymentValidationAdminWebhook` at this task's acceptance = `PENDING_TB_TMAR_PAYMENT_PRECERT_VALIDATION_002`
+- `paymentValidationOverall` at this task's acceptance = `PARTIAL_9_OF_15_REQUIRED_PRESENT`
+- After `TB-TMAR-PAYMENT-PRECERT-VALIDATION-002`: overall = `COMPLETE_15_OF_15_REQUIRED_PRESENT_1_NO_VALIDATOR_REQUIRED`
 
 ## 10. Protected architecture state preserved
 
