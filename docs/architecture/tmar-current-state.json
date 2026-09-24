@@ -3,12 +3,12 @@
     "executionMode":  "BACKEND_ONLY_UNTIL_EXPLICIT_RELEASE",
     "frontendFrozen":  true,
     "checkoutState":  "PAUSED_AT_SAFE_W5_CHECKPOINT",
-    "lastAcceptedTask":  "TB-TMAR-OFFER-HOST-RESIDUE-REPAIR-001",
-    "lastAcceptedCommit":  "b9008efdfcdb0057b45357c002861aff90e03df4",
-    "lastAcceptedSoTStamp":  "b9008efdfcdb0057b45357c002861aff90e03df4",
-    "lastAcceptedNote":  "TB-TMAR-OFFER-HOST-RESIDUE-REPAIR-001 Architect-ACCEPTED at b9008efdfcdb0057b45357c002861aff90e03df4 (Host no longer owns Offer business selection policy or hidden Offer type aliases; Offer selection is Offer-owned behind a Contracts port; structure certification deferred to TB-TMAR-OFFER-ARCH-COMPLETE-002-STRUCTURE-001).",
-    "nextTask":  "USER_REVIEW_OFFER_ARCH_COMPLETE_002_STRUCTURE_001",
-    "nextTaskGate":  "NEXT_TMAR_WAVE_AFTER_OFFER_STRUCTURE_CERTIFICATION",
+    "lastAcceptedTask":  "TB-TMAR-OFFER-ARCH-COMPLETE-002-STRUCTURE-001",
+    "lastAcceptedCommit":  "8d7f5e531ac50b263ed79a5c511802e3e1a013bb",
+    "lastAcceptedSoTStamp":  "8d7f5e531ac50b263ed79a5c511802e3e1a013bb",
+    "lastAcceptedNote":  "TB-TMAR-OFFER-ARCH-COMPLETE-002-STRUCTURE-001 Architect-ACCEPTED at 8d7f5e531ac50b263ed79a5c511802e3e1a013bb (Offer = COMPLETE_REFERENCE_PATTERN + ARCH-COMPLETE-002 STRUCTURE_CERTIFIED; structureLock.certifiedModules = Order, Cart, StoreContext, Offer; Payment bounded audit opened next).",
+    "nextTask":  "USER_REVIEW_PAYMENT_ARCH_COMPLETE_002_AUDIT_001",
+    "nextTaskGate":  "NEXT_TMAR_WAVE_AFTER_PAYMENT_AUDIT",
     "cartMultiCurrency":  {
         "task":  "TB-TMAR-CART-MULTICURRENCY-LINES-001",
         "state":  "LINE_LEVEL_CURRENCY_AUTHORITY_WITH_DEFAULT_SELECTION_AND_TOTALS_BY_CURRENCY",
@@ -57,6 +57,28 @@
         "offerToHostDependency":  "ZERO",
         "structureCertification":  "PENDING_TB_TMAR_OFFER_ARCH_COMPLETE_002_STRUCTURE_001",
         "evidence":  "docs/evidence/TB-TMAR-OFFER-HOST-RESIDUE-REPAIR-001/offer-host-residue-repair.md"
+    },
+    "paymentArchComplete002Audit":  {
+        "task":  "TB-TMAR-PAYMENT-ARCH-COMPLETE-002-AUDIT-001",
+        "state":  "ACCEPTED_AUDIT_ONLY",
+        "productionCodeChanged":  false,
+        "structureCertifiedUnderArchComplete002":  false,
+        "hostResidueClassified":  true,
+        "hostResidueFiles":  5,
+        "reconciliationWorkerOwnership":  "PAYMENT_INFRASTRUCTURE_OWNS_WORKER_AND_OPTIONS",
+        "gridNormalizerOwnership":  "PAYMENT_OWNS_GRID_WHITELIST_KEEP_THIN_HOST_SECURITY_ADAPTER",
+        "endpointReachableRequests":  16,
+        "workerReachableRequests":  1,
+        "validatorRequiredCount":  15,
+        "noValidatorRequiredCount":  1,
+        "validatorsMissing":  15,
+        "paymentHostContractBridgeDecision":  "RENAME_INTERNAL_PAYMENT_BRIDGE",
+        "splitDecision":  "TWO_TASKS_HOST_RESIDUE_THEN_STRUCTURE",
+        "nextImplementationTasks":  [
+            "TB-TMAR-PAYMENT-HOST-RESIDUE-REPAIR-001",
+            "TB-TMAR-PAYMENT-ARCH-COMPLETE-002-STRUCTURE-001"
+        ],
+        "evidence":  "docs/evidence/TB-TMAR-PAYMENT-ARCH-COMPLETE-002-AUDIT-001/payment-arch-complete-002-audit.md"
     },
     "offerArchComplete002Structure":  {
         "task":  "TB-TMAR-OFFER-ARCH-COMPLETE-002-STRUCTURE-001",
@@ -219,7 +241,12 @@
                                          "endpointOwnership":  "MODULE_ENDPOINTS",
                                          "cqrs":  "MEDIATR_12_5",
                                          "lastAcceptedTask":  "TB-TMAR-PAYMENT-GOLDEN-001-R2",
-                                         "lastAcceptedCommit":  "f73b04f516a915f7f182be94d7c6829c86d2de9f"
+                                         "lastAcceptedCommit":  "f73b04f516a915f7f182be94d7c6829c86d2de9f",
+                                         "structureCertifiedUnderArchComplete002":  false,
+                                         "paymentStructureCertificationState":  "AUDITED_PENDING_TB_TMAR_PAYMENT_ARCH_COMPLETE_002_STRUCTURE_001",
+                                         "paymentHostResidue":  "AUDIT_CLASSIFIED_4_MOVE_2_KEEP_THIN_SECURITY",
+                                         "paymentValidatorCoverage":  "0_REQUIRED_PRESENT_15_VALIDATOR_REQUIRED_1_NO_VALIDATOR_REQUIRED",
+                                         "paymentPathNamespace":  "EXACT_PENDING_CERTIFICATION"
                                      },
                                      {
                                          "module":  "Promotion",
