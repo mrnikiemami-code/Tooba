@@ -106,7 +106,7 @@ public sealed class TmarDurableGuardTests
         Assert.Equal("USER_ACCEPTED", rootEl.GetProperty("goldenWaveUserReview").GetString());
         Assert.Equal("TB-TMAR-GOLDEN-WAVE-FINAL-CLOSURE-001", rootEl.GetProperty("goldenWaveClosedBy").GetString());
         Assert.False(string.IsNullOrWhiteSpace(rootEl.GetProperty("goldenWaveClosedCommit").GetString()));
-        Assert.Equal("TB-TMAR-OFFER-ARCH-COMPLETE-002-STRUCTURE-001", rootEl.GetProperty("nextTask").GetString());
+        Assert.Equal("USER_REVIEW_OFFER_ARCH_COMPLETE_002_STRUCTURE_001", rootEl.GetProperty("nextTask").GetString());
         Assert.Equal("NEXT_TMAR_WAVE_AFTER_OFFER_STRUCTURE_CERTIFICATION", rootEl.GetProperty("nextTaskGate").GetString());
         Assert.Equal("PAUSED_AT_SAFE_W5_CHECKPOINT", rootEl.GetProperty("checkoutState").GetString());
         Assert.True(rootEl.GetProperty("frontendFrozen").GetBoolean());
@@ -117,7 +117,7 @@ public sealed class TmarDurableGuardTests
         var structureLock = rootEl.GetProperty("structureLock");
         Assert.Equal("ARCH-COMPLETE-002", structureLock.GetProperty("version").GetString());
         Assert.Equal(
-            new[] { "Cart", "Order", "StoreContext" },
+            new[] { "Cart", "Offer", "Order", "StoreContext" },
             structureLock.GetProperty("certifiedModules").EnumerateArray()
                 .Select(x => x.GetString()!)
                 .OrderBy(x => x, StringComparer.Ordinal)
@@ -155,7 +155,20 @@ public sealed class TmarDurableGuardTests
 
         Assert.Contains("Order", structureCertified);
         Assert.Contains("Cart", structureCertified);
+        Assert.Contains("Offer", structureCertified);
         Assert.True(rootEl.GetProperty("hostCartBoundary").GetProperty("structureCertifiedUnderArchComplete002").GetBoolean());
+
+        var offerStructure = rootEl.GetProperty("offerArchComplete002Structure");
+        Assert.True(offerStructure.GetProperty("structureCertifiedUnderArchComplete002").GetBoolean());
+        Assert.Equal("EXACT", offerStructure.GetProperty("pathNamespace").GetString());
+        Assert.Equal("5_REQUIRED_PRESENT_1_NO_VALIDATOR_REQUIRED", offerStructure.GetProperty("validatorCoverage").GetString());
+        Assert.Equal("OFFER_CONTRACT_PORT_APPLICATION_POLICY", offerStructure.GetProperty("selectionOwner").GetString());
+        Assert.Equal("BUSINESS_RESIDUE_REMOVED_THIN_SECURITY_ADAPTER_ONLY", offerStructure.GetProperty("hostResidue").GetString());
+
+        var offerEntry = rootEl.GetProperty("completeReferenceModules").EnumerateArray()
+            .Single(x => x.GetProperty("module").GetString() == "Offer");
+        Assert.Equal("TB-TMAR-OFFER-ARCH-COMPLETE-002-STRUCTURE-001", offerEntry.GetProperty("lastStructureCertificationTask").GetString());
+        Assert.True(offerEntry.GetProperty("structureCertifiedUnderArchComplete002").GetBoolean());
 
         var cartEntry = rootEl.GetProperty("completeReferenceModules").EnumerateArray()
             .Single(x => x.GetProperty("module").GetString() == "Cart");
@@ -165,7 +178,7 @@ public sealed class TmarDurableGuardTests
             cartEntry.GetProperty("lastAcceptedTask").GetString(),
             StringComparison.Ordinal);
         Assert.False(string.IsNullOrWhiteSpace(cartEntry.GetProperty("lastAcceptedCommit").GetString()));
-        Assert.Equal("TB-TMAR-OFFER-ARCH-COMPLETE-002-AUDIT-001", rootEl.GetProperty("lastAcceptedTask").GetString());
+        Assert.Equal("TB-TMAR-OFFER-HOST-RESIDUE-REPAIR-001", rootEl.GetProperty("lastAcceptedTask").GetString());
         Assert.Equal(
             "TB-TMAR-CART-POSTCERT-SEMANTIC-HOST-CLOSURE-001-R1",
             cartEntry.GetProperty("lastPostCertificationRepairTask").GetString());

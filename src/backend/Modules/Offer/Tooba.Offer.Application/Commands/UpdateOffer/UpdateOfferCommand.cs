@@ -3,8 +3,8 @@ using Tooba.BuildingBlocks;
 using Tooba.BuildingBlocks.Results;
 using Tooba.Offer.Application.Ports;
 using Tooba.Offer.Application.ReadModels;
-using Tooba.Offer.Contracts;
 using Tooba.Offer.Contracts.Dtos;
+using Tooba.Offer.Contracts.Errors;
 using Tooba.Offer.Contracts.Ports;
 
 namespace Tooba.Offer.Application.Commands.UpdateOffer;

@@ -48,6 +48,8 @@ using Tooba.Cart.Endpoints;
 using Tooba.Settlement.Endpoints;
 using Tooba.Fulfillment.Endpoints;
 using Tooba.Offer.Infrastructure.Adapters;
+using Tooba.Offer.Infrastructure.Adapters.Tracing;
+using Tooba.Offer.Infrastructure.Adapters.Tracing;
 using Tooba.Tax.Endpoints;
 using Tooba.Pricing.Endpoints;
 using Tooba.Order.Endpoints;

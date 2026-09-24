@@ -15,7 +15,7 @@ using Tooba.Offer.Application.Ports;
 using Tooba.Offer.Application.Queries.GetOffer;
 using Tooba.Offer.Application.Queries.ListSellerOffers;
 using Tooba.Offer.Application.ReadModels;
-using Tooba.Offer.Contracts;
+using Tooba.Offer.Contracts.Errors;
 using Tooba.Offer.Contracts.Dtos;
 using Tooba.Offer.Contracts.Ports;
 using Tooba.Offer.Domain.Aggregates;

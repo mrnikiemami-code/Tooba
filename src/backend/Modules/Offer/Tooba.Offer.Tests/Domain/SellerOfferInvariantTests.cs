@@ -1,5 +1,5 @@
 using Tooba.BuildingBlocks.Results;
-using Tooba.Offer.Contracts;
+using Tooba.Offer.Contracts.Errors;
 using Tooba.Offer.Domain.Aggregates;
 using Tooba.Offer.Domain.Events;
 using Tooba.Offer.Domain.ValueObjects;

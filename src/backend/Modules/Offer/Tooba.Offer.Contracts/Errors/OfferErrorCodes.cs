@@ -1,4 +1,4 @@
-namespace Tooba.Offer.Contracts;
+namespace Tooba.Offer.Contracts.Errors;
 
 /// <summary>Stable semantic error codes owned by Offer.</summary>
 public static class OfferErrorCodes

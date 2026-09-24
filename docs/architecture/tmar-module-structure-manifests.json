@@ -159,6 +159,56 @@
           "forbiddenTopLevelFolders": []
         }
       ]
+    },
+    {
+      "module": "Offer",
+      "structureCertified": true,
+      "lockVersion": "ARCH-COMPLETE-002",
+      "projects": [
+        {
+          "projectName": "Tooba.Offer.Application",
+          "rootAllowlist": [],
+          "forbiddenRootFiles": [
+            "OfferContractMapping.cs",
+            "IOfferStore.cs",
+            "OfferReadModelComposer.cs",
+            "OfferRequests.cs",
+            "OfferHandlers.cs",
+            "OfferQueries.cs",
+            "OfferQueryHandlers.cs"
+          ],
+          "forbiddenTopLevelFolders": []
+        },
+        {
+          "projectName": "Tooba.Offer.Endpoints",
+          "rootAllowlist": [
+            "OfferEndpointModule.cs"
+          ],
+          "forbiddenRootFiles": [
+            "OfferSellerEndpoints.cs",
+            "IOfferSellerAuthorizer.cs",
+            "OfferErrorCatalogContributor.cs",
+            "OfferErrorResources.cs",
+            "OfferEndpointLocalizer.cs"
+          ],
+          "forbiddenTopLevelFolders": []
+        },
+        {
+          "projectName": "Tooba.Offer.Infrastructure",
+          "rootAllowlist": [],
+          "forbiddenRootFiles": [
+            "OfferModule.cs",
+            "OfferDbContext.cs",
+            "OfferStore.cs",
+            "OfferEvents.cs",
+            "OfferModuleMigration.cs",
+            "OfferSchemaMigrator.cs",
+            "OfferDevelopmentSeedGateway.cs",
+            "OfferOutboxRegistration.cs"
+          ],
+          "forbiddenTopLevelFolders": []
+        }
+      ]
     }
   ],
   "uncertifiedHttpOwningModules": [
@@ -169,7 +219,6 @@
     "Support",
     "Wallet",
     "Payment",
-    "Promotion",
-    "Offer"
+    "Promotion"
   ]
 }

@@ -1,6 +1,6 @@
 using Tooba.BuildingBlocks;
 using Tooba.BuildingBlocks.Results;
-using Tooba.Offer.Contracts;
+using Tooba.Offer.Contracts.Errors;
 
 namespace Tooba.Offer.Contracts.Ports;
 

@@ -3,11 +3,11 @@
     "executionMode":  "BACKEND_ONLY_UNTIL_EXPLICIT_RELEASE",
     "frontendFrozen":  true,
     "checkoutState":  "PAUSED_AT_SAFE_W5_CHECKPOINT",
-    "lastAcceptedTask":  "TB-TMAR-OFFER-ARCH-COMPLETE-002-AUDIT-001",
-    "lastAcceptedCommit":  "7a0b36061db85fc4ba57e117bcf50d9ee390fa73",
-    "lastAcceptedSoTStamp":  "7a0b36061db85fc4ba57e117bcf50d9ee390fa73",
-    "lastAcceptedNote":  "TB-TMAR-OFFER-ARCH-COMPLETE-002-AUDIT-001 Architect-ACCEPTED at 7a0b36061db85fc4ba57e117bcf50d9ee390fa73 (Offer Host residue classified; StorefrontPrimaryOfferResolver must leave Host; OfferGlobalUsings removed; .tmp-t014-test-out dead residue; Offer ARCH-COMPLETE-002 certification remains a separate follow-up).",
-    "nextTask":  "TB-TMAR-OFFER-ARCH-COMPLETE-002-STRUCTURE-001",
+    "lastAcceptedTask":  "TB-TMAR-OFFER-HOST-RESIDUE-REPAIR-001",
+    "lastAcceptedCommit":  "b9008efdfcdb0057b45357c002861aff90e03df4",
+    "lastAcceptedSoTStamp":  "b9008efdfcdb0057b45357c002861aff90e03df4",
+    "lastAcceptedNote":  "TB-TMAR-OFFER-HOST-RESIDUE-REPAIR-001 Architect-ACCEPTED at b9008efdfcdb0057b45357c002861aff90e03df4 (Host no longer owns Offer business selection policy or hidden Offer type aliases; Offer selection is Offer-owned behind a Contracts port; structure certification deferred to TB-TMAR-OFFER-ARCH-COMPLETE-002-STRUCTURE-001).",
+    "nextTask":  "USER_REVIEW_OFFER_ARCH_COMPLETE_002_STRUCTURE_001",
     "nextTaskGate":  "NEXT_TMAR_WAVE_AFTER_OFFER_STRUCTURE_CERTIFICATION",
     "cartMultiCurrency":  {
         "task":  "TB-TMAR-CART-MULTICURRENCY-LINES-001",
@@ -58,6 +58,22 @@
         "structureCertification":  "PENDING_TB_TMAR_OFFER_ARCH_COMPLETE_002_STRUCTURE_001",
         "evidence":  "docs/evidence/TB-TMAR-OFFER-HOST-RESIDUE-REPAIR-001/offer-host-residue-repair.md"
     },
+    "offerArchComplete002Structure":  {
+        "task":  "TB-TMAR-OFFER-ARCH-COMPLETE-002-STRUCTURE-001",
+        "state":  "COMPLETE_REFERENCE_PATTERN",
+        "httpApplicability":  "HTTP_OWNING",
+        "endpointOwnership":  "MODULE_ENDPOINTS",
+        "cqrs":  "MEDIATR_12_5",
+        "structureCertifiedUnderArchComplete002":  true,
+        "hostResidue":  "BUSINESS_RESIDUE_REMOVED_THIN_SECURITY_ADAPTER_ONLY",
+        "validatorCoverage":  "5_REQUIRED_PRESENT_1_NO_VALIDATOR_REQUIRED",
+        "pathNamespace":  "EXACT",
+        "selectionOwner":  "OFFER_CONTRACT_PORT_APPLICATION_POLICY",
+        "endpointReachableRequests":  6,
+        "contractsErrorsNamespace":  "Tooba.Offer.Contracts.Errors",
+        "validatorsFolder":  "src/backend/Modules/Offer/Tooba.Offer.Application/Validators",
+        "evidence":  "docs/evidence/TB-TMAR-OFFER-ARCH-COMPLETE-002-STRUCTURE-001/offer-structure-certification.md"
+    },
     "goldenWaveState":  "COMPLETE",
     "goldenWaveUserReview":  "USER_ACCEPTED",
     "goldenWaveClosedBy":  "TB-TMAR-GOLDEN-WAVE-FINAL-CLOSURE-001",
@@ -77,7 +93,8 @@
         "certifiedModules":  [
             "Order",
             "Cart",
-            "StoreContext"
+            "StoreContext",
+            "Offer"
         ],
         "manifest":  "docs/architecture/tmar-module-structure-manifests.json",
         "standard":  "docs/architecture/TMAR-COMPLETE-REFERENCE-STRUCTURE-STANDARD.md",
@@ -220,7 +237,13 @@
                                          "endpointOwnership":  "MODULE_ENDPOINTS",
                                          "cqrs":  "MEDIATR_12_5",
                                          "lastAcceptedTask":  "TB-TMAR-OFFER-FINAL-REVERIFY-001",
-                                         "lastAcceptedCommit":  "813184b90906489b5654694b60afc96c4803cd3d"
+                                         "lastAcceptedCommit":  "813184b90906489b5654694b60afc96c4803cd3d",
+                                         "lastStructureCertificationTask":  "TB-TMAR-OFFER-ARCH-COMPLETE-002-STRUCTURE-001",
+                                         "structureCertifiedUnderArchComplete002":  true,
+                                         "hostResidue":  "BUSINESS_RESIDUE_REMOVED_THIN_SECURITY_ADAPTER_ONLY",
+                                         "validatorCoverage":  "5_REQUIRED_PRESENT_1_NO_VALIDATOR_REQUIRED",
+                                         "pathNamespace":  "EXACT",
+                                         "selectionOwner":  "OFFER_CONTRACT_PORT_APPLICATION_POLICY"
                                      },
                                      {
                                          "module":  "Order",

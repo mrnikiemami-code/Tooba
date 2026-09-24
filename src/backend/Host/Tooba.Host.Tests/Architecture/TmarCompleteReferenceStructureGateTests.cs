@@ -25,7 +25,7 @@ public sealed class TmarCompleteReferenceStructureGateTests
 
         var modules = root.GetProperty("modules").EnumerateArray().ToArray();
         Assert.Equal(
-            new[] { "Cart", "Order", "StoreContext" },
+            new[] { "Cart", "Offer", "Order", "StoreContext" },
             modules.Select(m => m.GetProperty("module").GetString()!).OrderBy(x => x, StringComparer.Ordinal).ToArray());
 
         foreach (var module in modules)
@@ -36,7 +36,7 @@ public sealed class TmarCompleteReferenceStructureGateTests
 
         foreach (var other in root.GetProperty("uncertifiedHttpOwningModules").EnumerateArray())
         {
-            Assert.DoesNotContain(other.GetString(), new[] { "Order", "Cart", "StoreContext" }, StringComparer.Ordinal);
+            Assert.DoesNotContain(other.GetString(), new[] { "Order", "Cart", "StoreContext", "Offer" }, StringComparer.Ordinal);
         }
     }
 
@@ -93,13 +93,14 @@ public sealed class TmarCompleteReferenceStructureGateTests
             .ToArray();
         Assert.DoesNotContain("Order", uncertified, StringComparer.Ordinal);
         Assert.DoesNotContain("Cart", uncertified, StringComparer.Ordinal);
+        Assert.DoesNotContain("Offer", uncertified, StringComparer.Ordinal);
         Assert.NotEmpty(uncertified);
 
         var statePath = Path.Combine(RepoRoot(), "docs", "architecture", "tmar-current-state.json");
         using var state = JsonDocument.Parse(File.ReadAllText(statePath));
         var certified = state.RootElement.GetProperty("structureLock").GetProperty("certifiedModules")
             .EnumerateArray().Select(x => x.GetString()!).OrderBy(x => x, StringComparer.Ordinal).ToArray();
-        Assert.Equal(new[] { "Cart", "Order", "StoreContext" }, certified);
+        Assert.Equal(new[] { "Cart", "Offer", "Order", "StoreContext" }, certified);
     }
 
     private static void AssertNamespaceAlignment(string projectPath, string projectName)

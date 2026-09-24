@@ -1,5 +1,5 @@
 using Microsoft.EntityFrameworkCore;
-using Tooba.Offer.Application;
+using Tooba.Offer.Application.Mappings;
 using Tooba.Offer.Application.Ports;
 using Tooba.Offer.Contracts.Dtos;
 using Tooba.Offer.Contracts.Ports;

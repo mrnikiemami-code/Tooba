@@ -18,8 +18,8 @@ using Tooba.Inventory.Contracts.Fulfillment;
 using Tooba.Inventory.Contracts.Returns;
 using Tooba.Inventory.Domain.Events;
 using Tooba.Inventory.Infrastructure.Persistence;
-using Tooba.Offer.Contracts;
 using Tooba.Offer.Contracts.Dtos;
+using Tooba.Offer.Contracts.Errors;
 using Tooba.Offer.Contracts.Ports;
 
 namespace Tooba.Inventory.Infrastructure.Directories;

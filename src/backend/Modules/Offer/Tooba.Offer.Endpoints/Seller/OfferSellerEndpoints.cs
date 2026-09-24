@@ -9,7 +9,6 @@ using Tooba.Offer.Application.Commands.SetOfferPrice;
 using Tooba.Offer.Application.Commands.UpdateOffer;
 using Tooba.Offer.Application.Queries.GetOffer;
 using Tooba.Offer.Application.Queries.ListSellerOffers;
-using Tooba.Offer.Contracts;
 using Tooba.Offer.Contracts.Dtos;
 
 namespace Tooba.Offer.Endpoints.Seller;

@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Http;
 using Tooba.BuildingBlocks;
 using Tooba.BuildingBlocks.Localization;
 using Tooba.BuildingBlocks.Presentation.Errors;
-using Tooba.Offer.Contracts;
+using Tooba.Offer.Contracts.Errors;
 using Tooba.Offer.Endpoints.Errors;
 using Tooba.Offer.Endpoints.Resources;
 using Xunit;

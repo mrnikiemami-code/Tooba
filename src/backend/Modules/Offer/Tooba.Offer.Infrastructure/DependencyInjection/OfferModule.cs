@@ -1,3 +1,4 @@
+using Tooba.Offer.Infrastructure.Adapters.Tracing;
 using Tooba.Offer.Infrastructure.Outbox;
 using Tooba.Offer.Infrastructure.Adapters;
 using Tooba.Offer.Contracts.Ports;

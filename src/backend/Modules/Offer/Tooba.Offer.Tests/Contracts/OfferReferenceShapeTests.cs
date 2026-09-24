@@ -5,7 +5,6 @@ using Tooba.Offer.Domain.Aggregates;
 
 ﻿using Xunit;
 using System.Text.Json;
-using Tooba.Offer.Contracts;
 using Tooba.Offer.Domain;
 
 namespace Tooba.Offer.Tests.Contracts;

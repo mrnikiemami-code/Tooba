@@ -1,6 +1,7 @@
 using MediatR;
 using Tooba.BuildingBlocks;
 using Tooba.BuildingBlocks.Results;
+using Tooba.Offer.Application.Mappings;
 using Tooba.Offer.Application.Ports;
 using Tooba.Offer.Application.ReadModels;
 using Tooba.Offer.Contracts.Dtos;

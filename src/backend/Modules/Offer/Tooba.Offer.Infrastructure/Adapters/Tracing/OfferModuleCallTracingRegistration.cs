@@ -9,7 +9,7 @@ using Tooba.Inventory.Contracts.Seller;
 using Tooba.Party.Contracts;
 using Tooba.Pricing.Contracts;
 
-namespace Tooba.Offer.Infrastructure.Adapters;
+namespace Tooba.Offer.Infrastructure.Adapters.Tracing;
 
 /// <summary>
 /// Decorates Offer golden-path cross-module gateways after all modules register.

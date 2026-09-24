@@ -112,27 +112,41 @@ public sealed class OfferPhysicalStructureGuardTests
     }
 
     [Fact]
-    public void ARCH_MODULE_PHYSICAL_001_namespaces_align_with_physical_folders()
+    public void ARCH_MODULE_PHYSICAL_001_namespaces_equal_path_derived_namespaces_exactly()
     {
-        var violations = new List<(string File, string Namespace, string Expected)>();
-        ExpectNs("Tooba.Offer.Domain", "Aggregates", "Tooba.Offer.Domain.Aggregates", violations);
-        ExpectNs("Tooba.Offer.Domain", "Events", "Tooba.Offer.Domain.Events", violations);
-        ExpectNs("Tooba.Offer.Application", "Ports", "Tooba.Offer.Application.Ports", violations);
-        ExpectNs("Tooba.Offer.Contracts", "Ports", "Tooba.Offer.Contracts.Ports", violations);
-        ExpectNs("Tooba.Offer.Contracts", "Dtos", "Tooba.Offer.Contracts.Dtos", violations);
-        ExpectNs("Tooba.Offer.Infrastructure", "Adapters", "Tooba.Offer.Infrastructure.Adapters", violations);
-        ExpectNs("Tooba.Offer.Infrastructure", "Outbox", "Tooba.Offer.Infrastructure.Outbox", violations);
-        ExpectNs(
-            "Tooba.Offer.Infrastructure",
-            "DependencyInjection",
-            "Tooba.Offer.Infrastructure.DependencyInjection",
-            violations);
-        ExpectNs("Tooba.Offer.Endpoints", "Seller", "Tooba.Offer.Endpoints.Seller", violations);
+        var violations = new List<string>();
+        foreach (var project in new[]
+                 {
+                     "Tooba.Offer.Domain",
+                     "Tooba.Offer.Application",
+                     "Tooba.Offer.Contracts",
+                     "Tooba.Offer.Infrastructure",
+                     "Tooba.Offer.Endpoints",
+                 })
+        {
+            CheckExactNamespaces(project, violations);
+        }
 
-        Assert.True(
-            violations.Count == 0,
-            "namespace/path mismatches:\n"
-            + string.Join("\n", violations.Select(v => $"{v.File}: ns={v.Namespace} expected={v.Expected}")));
+        Assert.True(violations.Count == 0, "namespace/path mismatches:\n" + string.Join("\n", violations));
+    }
+
+    [Fact]
+    public void ARCH_MODULE_PHYSICAL_001_contracts_and_validator_folders_are_namespace_exact()
+    {
+        var violations = new List<string>();
+        foreach (var project in new[]
+                 {
+                     "Tooba.Offer.Contracts",
+                     "Tooba.Offer.Application",
+                 })
+        {
+            foreach (var folder in new[] { "Dtos", "Ports", "Errors", "Validators" })
+            {
+                ExpectExactFolderNamespace(project, folder, violations);
+            }
+        }
+
+        Assert.True(violations.Count == 0, "namespace/path mismatches:\n" + string.Join("\n", violations));
     }
 
     [Fact]
@@ -184,6 +198,34 @@ public sealed class OfferPhysicalStructureGuardTests
             "Seller",
             "OfferSellerEndpoints.cs");
         Assert.True(File.Exists(moduleEndpoints), "Offer seller endpoints must live in module Endpoints project");
+    }
+
+    [Fact]
+    public void ARCH_MODULE_PHYSICAL_001_no_alias_workaround_in_production_sources()
+    {
+        var violations = AllProductionFileContents()
+            .Where(x => x.Text.Contains("global using", StringComparison.Ordinal))
+            .Select(x => x.File)
+            .ToList();
+
+        Assert.True(violations.Count == 0, "global namespace alias workaround: " + string.Join("; ", violations));
+
+        var hostRoot = Path.Combine(RepoRoot(), "src", "backend", "Host", "Tooba.Host");
+        var hostAlias = Directory.EnumerateFiles(hostRoot, "*.cs", SearchOption.AllDirectories)
+            .Where(p =>
+            {
+                var n = p.Replace('\\', '/');
+                return !n.Contains("/bin/", StringComparison.Ordinal) && !n.Contains("/obj/", StringComparison.Ordinal);
+            })
+            .Where(p =>
+            {
+                var text = File.ReadAllText(p);
+                return text.Contains("global using Tooba.Offer", StringComparison.Ordinal)
+                    || text.Contains("global using Offer", StringComparison.Ordinal);
+            })
+            .Select(p => Path.GetRelativePath(RepoRoot(), p))
+            .ToList();
+        Assert.True(hostAlias.Count == 0, "Host Offer alias workaround: " + string.Join("; ", hostAlias));
     }
 
     private static void AssertNoRootDump(string project, string[] allowedFolders, string[] allowRootFiles)
@@ -245,11 +287,10 @@ public sealed class OfferPhysicalStructureGuardTests
         }
     }
 
-    private static void ExpectNs(
+    private static void ExpectExactFolderNamespace(
         string project,
         string folder,
-        string expectedNamespace,
-        List<(string File, string Namespace, string Expected)> violations)
+        List<string> violations)
     {
         var dir = Path.Combine(OfferRoot(), project, folder);
         if (!Directory.Exists(dir))
@@ -257,6 +298,7 @@ public sealed class OfferPhysicalStructureGuardTests
             return;
         }
 
+        var expected = project + "." + folder;
         foreach (var file in Directory.EnumerateFiles(dir, "*.cs", SearchOption.AllDirectories))
         {
             var n = file.Replace('\\', '/');
@@ -265,6 +307,56 @@ public sealed class OfferPhysicalStructureGuardTests
                 continue;
             }
 
+            var match = System.Text.RegularExpressions.Regex.Match(
+                File.ReadAllText(file),
+                @"^namespace\s+([A-Za-z0-9_.]+)\s*;",
+                System.Text.RegularExpressions.RegexOptions.Multiline);
+            if (!match.Success)
+            {
+                violations.Add($"{Path.GetRelativePath(RepoRoot(), file)}: <missing> expected={expected}");
+                continue;
+            }
+
+            if (!string.Equals(match.Groups[1].Value, expected, StringComparison.Ordinal))
+            {
+                violations.Add($"{Path.GetRelativePath(RepoRoot(), file)}: ns={match.Groups[1].Value} expected={expected}");
+            }
+        }
+    }
+
+    /// <summary>
+    /// Exact path-derived namespace equality for every production .cs file.
+    /// EF migrations and the model snapshot are excluded because they are generated with
+    /// block-scoped namespaces that are not the regular single-line form.
+    /// </summary>
+    private static void CheckExactNamespaces(string project, List<string> violations)
+    {
+        var root = Path.Combine(OfferRoot(), project);
+        if (!Directory.Exists(root))
+        {
+            return;
+        }
+
+        foreach (var file in Directory.EnumerateFiles(root, "*.cs", SearchOption.AllDirectories))
+        {
+            var n = file.Replace('\\', '/');
+            if (n.Contains("/bin/", StringComparison.Ordinal) || n.Contains("/obj/", StringComparison.Ordinal))
+            {
+                continue;
+            }
+
+            if (n.Contains("/Migrations/", StringComparison.OrdinalIgnoreCase)
+                || n.EndsWith("ModelSnapshot.cs", StringComparison.OrdinalIgnoreCase))
+            {
+                continue;
+            }
+
+            var rel = Path.GetRelativePath(root, file).Replace('\\', '/');
+            var dir = Path.GetDirectoryName(rel)?.Replace('\\', '/') ?? string.Empty;
+            var expected = string.IsNullOrEmpty(dir)
+                ? project
+                : project + "." + dir.Replace('/', '.');
+
             var text = File.ReadAllText(file);
             var match = System.Text.RegularExpressions.Regex.Match(
                 text,
@@ -272,15 +364,42 @@ public sealed class OfferPhysicalStructureGuardTests
                 System.Text.RegularExpressions.RegexOptions.Multiline);
             if (!match.Success)
             {
-                violations.Add((Path.GetRelativePath(RepoRoot(), file), "<missing>", expectedNamespace));
+                violations.Add($"{Path.GetRelativePath(RepoRoot(), file)}: <missing> expected={expected}");
                 continue;
             }
 
-            var ns = match.Groups[1].Value;
-            if (!ns.StartsWith(expectedNamespace, StringComparison.Ordinal))
+            if (!string.Equals(match.Groups[1].Value, expected, StringComparison.Ordinal))
             {
-                violations.Add((Path.GetRelativePath(RepoRoot(), file), ns, expectedNamespace));
+                violations.Add($"{Path.GetRelativePath(RepoRoot(), file)}: ns={match.Groups[1].Value} expected={expected}");
             }
         }
+    }
+
+    private static IReadOnlyList<(string File, string Text)> AllProductionFileContents()
+    {
+        var results = new List<(string, string)>();
+        foreach (var project in new[]
+                 {
+                     "Tooba.Offer.Domain",
+                     "Tooba.Offer.Application",
+                     "Tooba.Offer.Contracts",
+                     "Tooba.Offer.Infrastructure",
+                     "Tooba.Offer.Endpoints",
+                 })
+        {
+            var root = Path.Combine(OfferRoot(), project);
+            foreach (var file in Directory.EnumerateFiles(root, "*.cs", SearchOption.AllDirectories))
+            {
+                var n = file.Replace('\\', '/');
+                if (n.Contains("/bin/", StringComparison.Ordinal) || n.Contains("/obj/", StringComparison.Ordinal))
+                {
+                    continue;
+                }
+
+                results.Add((Path.GetRelativePath(RepoRoot(), file), File.ReadAllText(file)));
+            }
+        }
+
+        return results;
     }
 }

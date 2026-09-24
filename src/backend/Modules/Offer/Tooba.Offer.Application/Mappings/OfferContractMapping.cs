@@ -1,7 +1,7 @@
 using Tooba.Offer.Contracts.Dtos;
 using Tooba.Offer.Domain.Aggregates;
 
-namespace Tooba.Offer.Application;
+namespace Tooba.Offer.Application.Mappings;
 
 /// <summary>Maps Offer domain types to public contract types explicitly.</summary>
 public static class OfferContractMapping

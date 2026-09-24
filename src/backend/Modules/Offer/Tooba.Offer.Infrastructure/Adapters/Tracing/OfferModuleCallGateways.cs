@@ -10,7 +10,7 @@ using Tooba.Offer.Contracts.Dtos;
 using Tooba.Party.Contracts;
 using Tooba.Pricing.Contracts;
 
-namespace Tooba.Offer.Infrastructure.Adapters;
+namespace Tooba.Offer.Infrastructure.Adapters.Tracing;
 
 /// <summary>Traced Offer→Catalog variant lookup boundary.</summary>
 internal sealed class TracedCatalogVariantLookup(ICatalogVariantLookup inner, IModuleCallTracer tracer) : ICatalogVariantLookup
