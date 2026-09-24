@@ -24,7 +24,9 @@ Canonical bootstrap for recovering the Tooba architecture context after chat/ses
 - Cart multi-currency bounded audit: TB-TMAR-CART-MULTICURRENCY-AUDIT-001 (AUDIT-ONLY; zero production code change; deterministic next-implementation map; Order/Checkout/Payment deferred)
 - Cart multi-currency line slice: TB-TMAR-CART-MULTICURRENCY-LINES-001 (ShoppingCart.Currency -> DefaultCurrency selection metadata only; physical DB column currency unchanged, no migration; optional requested currency on add-line; existing line requotes in its own sticky QuotedCurrency; merge never falls back to cart default; line currency truth fails closed with cart.line.currency_missing; CartPage exposes TotalsByCurrency and no cross-currency scalar; Pricing contracts unchanged and remain quote authority; Order/Checkout/Payment multi-currency explicitly deferred)
 - Cart multi-currency Order compatibility repair: TB-TMAR-CART-MULTICURRENCY-LINES-001-R1 (Order shipping no longer sums per-currency Cart totals; StorefrontCartCurrencyCompatibility requires exactly one distinct non-empty line currency and never uses Cart.DefaultCurrency as Order transaction authority; mixed/missing line currency fails closed with checkout.multicurrency.not_supported before shipping arithmetic, repricing, reservation or Order persistence; CheckoutDirectory/CheckoutSubmitHost take CheckoutGroup + SellerOrder currency, MoneyPlaces and Pricing selector from the sole line currency; Cart code, Pricing contracts, Payment and frontend untouched; Cart = ACCEPTED_WITH_ORDER_SINGLE_CURRENCY_COMPATIBILITY_GUARD; Order boundary = SINGLE_CURRENCY_ONLY_FAIL_CLOSED_UNTIL_DEDICATED_WAVE; Order multi-currency = DEFERRED; Checkout = PAUSED_AT_SAFE_W5_CHECKPOINT)
-- Current next task: USER_REVIEW_CART_MULTICURRENCY_LINES_001_R1
+- Current next task: USER_REVIEW_OFFER_ARCH_COMPLETE_002_AUDIT_001
+- Accepted parent: TB-TMAR-CART-MULTICURRENCY-LINES-001-R1 at 1aa6ab8b99a689319f25e8c31f55c332bc3f3ab4 (Cart multi-currency ACCEPTED_WITH_ORDER_SINGLE_CURRENCY_COMPATIBILITY_GUARD)
+- Offer ARCH-COMPLETE-002 bounded audit: TB-TMAR-OFFER-ARCH-COMPLETE-002-AUDIT-001 (AUDIT-ONLY; no production code changed; Offer = COMPLETE_REFERENCE_PATTERN / HTTP_OWNING / MODULE_ENDPOINTS / MEDIATR_12_5 but NOT yet ARCH-COMPLETE-002 structure-certified; HostOfferSellerAuthorizer = KEEP_AS_EXPLICIT_THIN_HOST_SECURITY_ADAPTER; StorefrontPrimaryOfferResolver = REMOVE_TO_OFFER_MODULE (buy-box policy, 3 StorefrontComposer call sites); OfferGlobalUsings = RENAME_OR_REMOVE_GLOBAL_ALIAS (9 unqualified consumers); .tmp-t014-test-out = REMOVE_DEAD_RESIDUE; 6 endpoint-reachable requests all handled via ISender; 5 VALIDATOR_REQUIRED with zero validators today; Tooba.Offer.Contracts/Errors/OfferErrorCodes.cs namespace/path defect; certification split into TB-TMAR-OFFER-HOST-RESIDUE-REPAIR-001 then TB-TMAR-OFFER-ARCH-COMPLETE-002-STRUCTURE-001; evidence docs/evidence/TB-TMAR-OFFER-ARCH-COMPLETE-002-AUDIT-001/offer-arch-complete-002-audit.md)
 - Gate: USER_REVIEW_REQUIRED_BEFORE_NEXT_TMAR_WAVE
 - Closed by: TB-TMAR-GOLDEN-WAVE-FINAL-CLOSURE-001
 - Order closed by: TB-TMAR-ORDER-GOLDEN-001-FINAL-CLOSURE
@@ -50,13 +52,13 @@ Last accepted Product task:
 TB-P10-T022-R21
 
 Last accepted TMAR task:
-TB-TMAR-STORECONTEXT-GOLDEN-001
+TB-TMAR-CART-MULTICURRENCY-LINES-001-R1
 
 Accepted architecture baseline:
 TB-TMAR-ARCH-BASELINE
 
 Current next task:
-USER_REVIEW_CART_MULTICURRENCY_LINES_001_R1
+USER_REVIEW_OFFER_ARCH_COMPLETE_002_AUDIT_001
 
 Current recovery summary (consistent with the authoritative closure above):
 COMPLETE HTTP-owning: Cart, Settlement, Fulfillment, Returns, Notification, Support, Wallet, Payment, Promotion, Offer, Order.

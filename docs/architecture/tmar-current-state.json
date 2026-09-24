@@ -3,11 +3,11 @@
     "executionMode":  "BACKEND_ONLY_UNTIL_EXPLICIT_RELEASE",
     "frontendFrozen":  true,
     "checkoutState":  "PAUSED_AT_SAFE_W5_CHECKPOINT",
-    "lastAcceptedTask":  "TB-TMAR-STORECONTEXT-GOLDEN-001",
-    "lastAcceptedCommit":  "f2667a249d43fb542903a08b429cd1ea8e219704",
-    "lastAcceptedSoTStamp":  "f2667a249d43fb542903a08b429cd1ea8e219704",
-    "lastAcceptedNote":  "TB-TMAR-STORECONTEXT-GOLDEN-001 Architect-ACCEPTED (DefaultCurrency semantics + StoreContext ARCH-COMPLETE-002 structure certification). TB-TMAR-CART-MULTICURRENCY-AUDIT-001 is an AUDIT-ONLY task: it changes no production code and its acceptance stamp is applied by the Architect.",
-    "nextTask":  "USER_REVIEW_CART_MULTICURRENCY_LINES_001_R1",
+    "lastAcceptedTask":  "TB-TMAR-CART-MULTICURRENCY-LINES-001-R1",
+    "lastAcceptedCommit":  "1aa6ab8b99a689319f25e8c31f55c332bc3f3ab4",
+    "lastAcceptedSoTStamp":  "1aa6ab8b99a689319f25e8c31f55c332bc3f3ab4",
+    "lastAcceptedNote":  "TB-TMAR-CART-MULTICURRENCY-LINES-001-R1 Architect-ACCEPTED at 1aa6ab8b99a689319f25e8c31f55c332bc3f3ab4 (Order boundary fails closed on mixed/currency-less Cart; cross-currency shipping sum removed; cart.DefaultCurrency is no longer Order transaction authority; Cart multi-currency accepted with the Order single-currency compatibility guard). TB-TMAR-CART-MULTICURRENCY-AUDIT-001 and TB-TMAR-OFFER-ARCH-COMPLETE-002-AUDIT-001 are AUDIT-ONLY tasks: they change no production code and their acceptance stamp is applied by the Architect.",
+    "nextTask":  "USER_REVIEW_OFFER_ARCH_COMPLETE_002_AUDIT_001",
     "nextTaskGate":  "USER_REVIEW_REQUIRED_BEFORE_NEXT_TMAR_WAVE",
     "cartMultiCurrency":  {
         "task":  "TB-TMAR-CART-MULTICURRENCY-LINES-001",
@@ -28,7 +28,20 @@
         "orderBoundaryHelper":  "src/backend/Modules/Order/Tooba.Order.Application/Storefront/Services/StorefrontCartCurrencyCompatibility.cs",
         "orderMultiCurrency":  "DEFERRED",
         "deferred":  "ORDER_CHECKOUT_PAYMENT_MULTICURRENCY_NOT_IMPLEMENTED",
-        "evidence":  "docs/evidence/TB-TMAR-CART-MULTICURRENCY-LINES-001/cart-multicurrency-lines.md"
+        "evidence":  "docs/evidence/TB-TMAR-CART-MULTICURRENCY-LINES-001/cart-multicurrency-lines.md",
+        "orderCompatibilityEvidence":  "docs/evidence/TB-TMAR-CART-MULTICURRENCY-LINES-001-R1/order-single-currency-compat.md"
+    },
+    "offerArchComplete002Audit":  {
+        "task":  "TB-TMAR-OFFER-ARCH-COMPLETE-002-AUDIT-001",
+        "state":  "AUDIT_ONLY_COMPLETE_NOT_YET_CERTIFIED",
+        "productionCodeChanged":  false,
+        "structureCertifiedUnderArchComplete002":  false,
+        "hostResidueClassified":  true,
+        "resolverOwnershipSettled":  "REMOVE_TO_OFFER_MODULE",
+        "endpointReachableRequests":  6,
+        "validatorsMissing":  5,
+        "splitDecision":  "TWO_TASKS_HOST_RESIDUE_THEN_STRUCTURE",
+        "evidence":  "docs/evidence/TB-TMAR-OFFER-ARCH-COMPLETE-002-AUDIT-001/offer-arch-complete-002-audit.md"
     },
     "goldenWaveState":  "COMPLETE",
     "goldenWaveUserReview":  "USER_ACCEPTED",
