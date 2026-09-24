@@ -237,7 +237,8 @@ public sealed class HostCartResidualGuardTests
         var resolver = File.ReadAllText(Path.Combine(
             cartRoot, "Tooba.Cart.Infrastructure", "Lifetime", "CartCommerceContextResolver.cs"));
         Assert.Contains("StoreCommerce", resolver, StringComparison.Ordinal);
-        Assert.Contains("ICurrentCommerceContext", resolver, StringComparison.Ordinal);
+        Assert.Contains("ICurrentStoreCommerceContext", resolver, StringComparison.Ordinal);
+        Assert.DoesNotContain("ICurrentCommerceContext", resolver, StringComparison.Ordinal);
         Assert.Contains("cart.commerce.market_unconfigured", resolver, StringComparison.Ordinal);
         Assert.Contains("cart.commerce.currency_unconfigured", resolver, StringComparison.Ordinal);
         Assert.Contains("cart.commerce.channel_unconfigured", resolver, StringComparison.Ordinal);
@@ -249,6 +250,56 @@ public sealed class HostCartResidualGuardTests
         // Cart still owns zero dependency on Host; prior Host closure remains intact.
         Assert.DoesNotContain(cartProduction, path =>
             File.ReadAllText(path).Contains("Tooba.Host", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public void StoreContext_owns_effective_store_commerce_and_BuildingBlocks_does_not()
+    {
+        var repoRoot = FindRepoRoot();
+        var buildingBlocks = File.ReadAllText(Path.Combine(
+            repoRoot, "src", "backend", "BuildingBlocks", "Tooba.BuildingBlocks", "CommerceContext.cs"));
+        Assert.DoesNotContain("StoreCommerceContext", buildingBlocks, StringComparison.Ordinal);
+        Assert.DoesNotContain("StoreCommerce", buildingBlocks, StringComparison.Ordinal);
+
+        var storeContextRoot = Path.Combine(repoRoot, "src", "backend", "Modules", "StoreContext");
+        var contractsRoot = Path.Combine(storeContextRoot, "Tooba.StoreContext.Contracts");
+        var infraRoot = Path.Combine(storeContextRoot, "Tooba.StoreContext.Infrastructure");
+
+        Assert.True(Directory.Exists(contractsRoot), contractsRoot);
+        Assert.True(Directory.Exists(infraRoot), infraRoot);
+
+        // Infrastructure root may only contain the module composition entry.
+        var infraRootFiles = Directory.GetFiles(infraRoot, "*.cs", SearchOption.TopDirectoryOnly)
+            .Select(Path.GetFileName!)
+            .OrderBy(x => x, StringComparer.Ordinal)
+            .ToArray();
+        Assert.Equal(new[] { "StoreContextModule.cs" }, infraRootFiles);
+
+        // Contracts must not depend on Cart or Host, and must expose the three seams.
+        var contractsProject = File.ReadAllText(Path.Combine(contractsRoot, "Tooba.StoreContext.Contracts.csproj"));
+        Assert.DoesNotContain("Cart", contractsProject, StringComparison.Ordinal);
+        Assert.DoesNotContain("Host", contractsProject, StringComparison.Ordinal);
+
+        var contractsSource = string.Concat(
+            Directory.GetFiles(contractsRoot, "*.cs", SearchOption.AllDirectories).Select(File.ReadAllText));
+        Assert.Contains("ICurrentStoreCommerceContext", contractsSource, StringComparison.Ordinal);
+        Assert.Contains("IStoreCommerceContextAssigner", contractsSource, StringComparison.Ordinal);
+        Assert.Contains("IWorkerStoreCommerceContextFactory", contractsSource, StringComparison.Ordinal);
+
+        // Cart consumes StoreContext.Contracts and has no Host dependency.
+        var cartInfraProject = File.ReadAllText(Path.Combine(
+            repoRoot, "src", "backend", "Modules", "Cart", "Tooba.Cart.Infrastructure", "Tooba.Cart.Infrastructure.csproj"));
+        Assert.Contains("Tooba.StoreContext.Contracts", cartInfraProject, StringComparison.Ordinal);
+        Assert.DoesNotContain("Tooba.Host", cartInfraProject, StringComparison.Ordinal);
+
+        // Host adapter must not carry a commerce-authority fallback literal.
+        var adapter = File.ReadAllText(Path.Combine(
+            repoRoot, "src", "backend", "Host", "Tooba.Host", "Outbox", "OutboxWorkerSeams.cs"));
+        Assert.Contains("IWorkerStoreCommerceContextFactory", adapter, StringComparison.Ordinal);
+        Assert.DoesNotContain("\"IR\"", adapter, StringComparison.Ordinal);
+        Assert.DoesNotContain("\"IRR\"", adapter, StringComparison.Ordinal);
+        Assert.DoesNotContain("SalesChannel.Direct", adapter, StringComparison.Ordinal);
+        Assert.DoesNotContain("SalesChannel.Marketplace", adapter, StringComparison.Ordinal);
     }
 
     [Fact]

@@ -7,6 +7,7 @@ using Tooba.BuildingBlocks.Observability.Correlation;
 using Tooba.BuildingBlocks.Observability.Messaging;
 using Tooba.BuildingBlocks.Observability.Tracing;
 using Tooba.Persistence;
+using Tooba.StoreContext.Contracts.Current;
 
 namespace Tooba.Host;
 
@@ -28,6 +29,7 @@ internal sealed class OutboxDispatcher
     private readonly IIntegrationEventSerializer _serializer;
     private readonly IDatabaseConnectionResolver _connections;
     private readonly WorkerCommerceContextFactory _workerContext;
+    private readonly IWorkerStoreCommerceContextFactory _workerStoreContext;
     private readonly IServiceScopeFactory _scopes;
     private readonly OutboxHostOptions _options;
     private readonly ILogger<OutboxDispatcher> _logger;
@@ -42,6 +44,7 @@ internal sealed class OutboxDispatcher
         IIntegrationEventSerializer serializer,
         IDatabaseConnectionResolver connections,
         WorkerCommerceContextFactory workerContext,
+        IWorkerStoreCommerceContextFactory workerStoreContext,
         IServiceScopeFactory scopes,
         IOptions<OutboxHostOptions> options,
         BackgroundWorkerRegistry registry,
@@ -53,6 +56,7 @@ internal sealed class OutboxDispatcher
         _serializer = serializer;
         _connections = connections;
         _workerContext = workerContext;
+        _workerStoreContext = workerStoreContext;
         _scopes = scopes;
         _options = options.Value;
         _registry = registry;
@@ -138,6 +142,8 @@ internal sealed class OutboxDispatcher
                     await using var scope = _scopes.CreateAsyncScope();
                     var assigner = scope.ServiceProvider.GetRequiredService<ICommerceContextAssigner>();
                     assigner.Assign(_workerContext.FromOutbox(message, correlationId));
+                    var storeAssigner = scope.ServiceProvider.GetRequiredService<IStoreCommerceContextAssigner>();
+                    storeAssigner.Assign(_workerStoreContext.FromTarget(target.Edition, target.TenantId));
                     var publisher = scope.ServiceProvider.GetRequiredService<IIntegrationEventPublisher>();
                     await publisher.PublishAsync(integration, cancellationToken).ConfigureAwait(false);
                     await _store.MarkProcessedAsync(

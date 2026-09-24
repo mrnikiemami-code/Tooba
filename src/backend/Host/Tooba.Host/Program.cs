@@ -13,6 +13,7 @@ using Tooba.BuildingBlocks;
 using Tooba.BuildingBlocks.DependencyInjection;
 using Tooba.BuildingBlocks.Observability.Correlation;
 using Tooba.BuildingBlocks.Presentation;
+using Tooba.StoreContext.Contracts.Current;
 using Tooba.Host;
 using Tooba.Host.Admin;
 using Tooba.Host.Localization;
@@ -128,6 +129,8 @@ builder.Services.AddSingleton<IOutboxDispatcherStore, NpgsqlOutboxDispatcherStor
 builder.Services.AddSingleton<IOutboxPollTargetSource, ConfiguredOutboxPollTargetSource>();
 builder.Services.AddSingleton<WorkerCommerceContextFactory>();
 builder.Services.AddSingleton<IWorkerCommerceContextFactory>(sp => sp.GetRequiredService<WorkerCommerceContextFactory>());
+builder.Services.AddSingleton<WorkerStoreCommerceContextFactory>();
+builder.Services.AddSingleton<IWorkerStoreCommerceContextFactory>(sp => sp.GetRequiredService<WorkerStoreCommerceContextFactory>());
 builder.Services.AddSingleton<OutboxDispatcher>();
 var messagingOptions = new MessagingHostOptions();
 builder.Configuration.GetSection("Tooba:Messaging").Bind(messagingOptions);

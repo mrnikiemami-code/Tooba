@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using Tooba.BuildingBlocks;
+using Tooba.StoreContext.Contracts.Current;
 
 namespace Tooba.Host;
 
@@ -95,8 +96,9 @@ internal sealed class TenantResolutionMiddleware
 
         try
         {
-            var context = Resolve(httpContext, traceId);
+            var (context, storeCommerce) = Resolve(httpContext, traceId);
             httpContext.Items[HttpCommerceContextAccessor.ItemKey] = context;
+            httpContext.RequestServices.GetRequiredService<IStoreCommerceContextAssigner>().Assign(storeCommerce);
             Activity.Current?.SetTag("tooba.edition", context.Edition.Edition.ToString());
             Activity.Current?.SetTag("tooba.deployment", context.Edition.DeploymentId);
             if (context.Tenant is { } tenant)
@@ -127,8 +129,9 @@ internal sealed class TenantResolutionMiddleware
 
     /// <summary>
     /// Host نرمال‌شده را با allowlist تطبیق می‌دهد. Marketplace Tenant نمی‌سازد.
+    /// زمینهٔ تجارت مؤثر فروشگاه جدا از زمینهٔ فنی بازگردانده می‌شود.
     /// </summary>
-    private CommerceContext Resolve(HttpContext httpContext, string traceId)
+    private (CommerceContext Context, StoreCommerceContext StoreCommerce) Resolve(HttpContext httpContext, string traceId)
     {
         var editionContext = new EditionContext(_registry.Edition, _registry.DeploymentId);
 
@@ -148,12 +151,12 @@ internal sealed class TenantResolutionMiddleware
                     "Service Unavailable",
                     "platform.connection.unconfigured");
             _ = _connections.Resolve(marketplaceRef);
-            return new CommerceContext(
+            var marketplaceContext = new CommerceContext(
                 editionContext,
                 Tenant: null,
                 marketplaceRef,
-                traceId,
-                StoreCommerce: _registry.DeploymentStoreCommerce);
+                traceId);
+            return (marketplaceContext, _registry.DeploymentStoreCommerce);
         }
 
         var rawHost = httpContext.Request.Host.Value;
@@ -180,12 +183,12 @@ internal sealed class TenantResolutionMiddleware
             host,
             record.PrimaryDomain);
 
-        return new CommerceContext(
+        var context = new CommerceContext(
             editionContext,
             tenant,
             record.ConnectionReference,
-            traceId,
-            StoreCommerce: record.StoreCommerce);
+            traceId);
+        return (context, record.StoreCommerce);
     }
 
     /// <summary>

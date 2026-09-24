@@ -6,6 +6,7 @@ using Microsoft.Extensions.Options;
 using Tooba.BuildingBlocks;
 using Tooba.Cart.Application.Lifetime;
 using Tooba.Persistence;
+using Tooba.StoreContext.Contracts.Current;
 
 namespace Tooba.Cart.Infrastructure.Lifetime;
 
@@ -24,6 +25,7 @@ public sealed class CartExpiryWorker : BackgroundService
 
     private readonly IOutboxPollTargetSource _targets;
     private readonly IWorkerCommerceContextFactory _workerContext;
+    private readonly IWorkerStoreCommerceContextFactory _workerStoreContext;
     private readonly IIdGenerator _ids;
     private readonly IServiceScopeFactory _scopes;
     private readonly CartExpiryOptions _options;
@@ -35,6 +37,7 @@ public sealed class CartExpiryWorker : BackgroundService
     /// </summary>
     /// <param name="targets">منبع اهداف poll.</param>
     /// <param name="workerContext">سازندهٔ زمینهٔ کارگر.</param>
+    /// <param name="workerStoreContext">انتخاب‌کنندهٔ زمینهٔ تجارت مؤثر فروشگاه برای کارگر.</param>
     /// <param name="ids">تولید شناسهٔ همبستگی.</param>
     /// <param name="scopes">سازندهٔ scope.</param>
     /// <param name="options">knobs اجرای کارگر.</param>
@@ -43,6 +46,7 @@ public sealed class CartExpiryWorker : BackgroundService
     public CartExpiryWorker(
         IOutboxPollTargetSource targets,
         IWorkerCommerceContextFactory workerContext,
+        IWorkerStoreCommerceContextFactory workerStoreContext,
         IIdGenerator ids,
         IServiceScopeFactory scopes,
         IOptions<CartExpiryOptions> options,
@@ -51,6 +55,7 @@ public sealed class CartExpiryWorker : BackgroundService
     {
         _targets = targets;
         _workerContext = workerContext;
+        _workerStoreContext = workerStoreContext;
         _ids = ids;
         _scopes = scopes;
         _options = options.Value;
@@ -117,6 +122,8 @@ public sealed class CartExpiryWorker : BackgroundService
                 await using var scope = _scopes.CreateAsyncScope();
                 var assigner = scope.ServiceProvider.GetRequiredService<ICommerceContextAssigner>();
                 assigner.Assign(_workerContext.FromPollTarget(target, _ids.NewId().ToString("N")));
+                var storeAssigner = scope.ServiceProvider.GetRequiredService<IStoreCommerceContextAssigner>();
+                storeAssigner.Assign(_workerStoreContext.FromTarget(target.Edition, target.TenantId));
                 var reconciler = scope.ServiceProvider.GetRequiredService<ICartExpiryReconciler>();
                 total += await reconciler.ReconcileAsync(_options.BatchSize, cancellationToken)
                     .ConfigureAwait(false);

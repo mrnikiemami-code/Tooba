@@ -1,6 +1,7 @@
 using Microsoft.Extensions.Options;
 using Tooba.BuildingBlocks;
 using Tooba.Offer.Contracts.Dtos;
+using Tooba.StoreContext.Contracts.Current;
 
 namespace Tooba.Host;
 

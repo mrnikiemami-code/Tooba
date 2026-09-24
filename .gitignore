@@ -69,3 +69,7 @@ docs/evidence/GIT-DOCS-TRIAGE/
 
 docs/evidence/**/RESULT.bridge.txt
 /docs/evidence/TB-TMAR-CART-ARCH-COMPLETE-002-REVERIFY-001-R1/post-result.js
+
+# Test crash/hang dumps (never track binary dumps or TestResults)
+src/**/TestResults/
+*.dmp

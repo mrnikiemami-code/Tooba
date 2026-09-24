@@ -38,6 +38,7 @@ using Tooba.Support.Infrastructure.DependencyInjection;
 using Tooba.Wallet.Infrastructure.Adapters;
 using Tooba.Wallet.Infrastructure.DependencyInjection;
 using Tooba.Wallet.Infrastructure.Directories;
+using Tooba.StoreContext.Infrastructure;
 
 namespace Tooba.Host;
 
@@ -53,6 +54,7 @@ internal static class ToobaModuleComposition
     public static IReadOnlyList<IToobaModule> Modules { get; } =
     [
         new PlatformProbeModule(),
+        new StoreContextModule(),
         new IdentityModule(),
         new PartyModule(),
         new CatalogModule(),

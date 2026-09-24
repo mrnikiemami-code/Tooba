@@ -1,6 +1,6 @@
-using Tooba.BuildingBlocks;
 using Tooba.Cart.Application.Ports;
 using Tooba.Offer.Contracts.Dtos;
+using Tooba.StoreContext.Contracts.Current;
 
 namespace Tooba.Cart.Infrastructure.Lifetime;
 
@@ -11,19 +11,19 @@ namespace Tooba.Cart.Infrastructure.Lifetime;
 /// </summary>
 public sealed class CartCommerceContextResolver : ICartCommerceContextResolver
 {
-    private readonly ICurrentCommerceContext _commerce;
+    private readonly ICurrentStoreCommerceContext _storeCommerce;
 
-    /// <summary>Binds the canonical per-request commerce context.</summary>
-    /// <param name="commerce">Canonical commerce context resolved by the platform boundary.</param>
-    public CartCommerceContextResolver(ICurrentCommerceContext commerce)
+    /// <summary>Binds the canonical per-request store commerce context.</summary>
+    /// <param name="storeCommerce">Store commerce context resolved by the platform boundary.</param>
+    public CartCommerceContextResolver(ICurrentStoreCommerceContext storeCommerce)
     {
-        _commerce = commerce;
+        _storeCommerce = storeCommerce;
     }
 
     /// <inheritdoc />
     public CartCommerceContext Resolve()
     {
-        var store = _commerce.Current?.StoreCommerce;
+        var store = _storeCommerce.Current;
         if (store is null)
         {
             throw new InvalidOperationException("cart.commerce.context_unavailable");

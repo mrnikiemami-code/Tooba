@@ -3,9 +3,9 @@
     "executionMode":  "BACKEND_ONLY_UNTIL_EXPLICIT_RELEASE",
     "frontendFrozen":  true,
     "checkoutState":  "PAUSED_AT_SAFE_W5_CHECKPOINT",
-    "lastAcceptedTask":  "TB-TMAR-CART-STORE-COMMERCE-FAILFAST-001",
-    "lastAcceptedCommit":  "98daf3ec7f653424fff8fcf6c4bb004fccf5f4d5",
-    "nextTask":  "USER_REVIEW_CART_STORE_COMMERCE_FAILFAST_001",
+    "lastAcceptedTask":  "TB-TMAR-STORECONTEXT-FOUNDATION-001",
+    "lastAcceptedCommit":  "8e6f1cf253e39f5dfc90a410f07cc46b1b810acf",
+    "nextTask":  "USER_REVIEW_STORECONTEXT_FOUNDATION_001",
     "nextTaskGate":  "USER_REVIEW_REQUIRED_BEFORE_NEXT_TMAR_WAVE",
     "goldenWaveState":  "COMPLETE",
     "goldenWaveUserReview":  "USER_ACCEPTED",
@@ -51,8 +51,10 @@
         "evidence":  "docs/evidence/TB-TMAR-CART-POSTCERT-SEMANTIC-HOST-CLOSURE-001-R1/commerce-authority-repair.md",
         "commerceAuthority":  "PLATFORM_STORE_COMMERCE_CONTEXT_CONSUMED_BY_CART",
         "cartCommerceDefaults":  "REMOVED_CART_OWNS_NO_COMMERCE_POLICY_DEFAULT",
+        "storeCommerceOwnership":  "TOOBA_STORECONTEXT_CONTRACTS_AND_INFRASTRUCTURE",
         "storeCommerceStartupValidation":  "PRODUCTION_FAIL_FAST_ON_INCOMPLETE_STORE_COMMERCE",
         "storeCommerceSalesChannelValidation":  "STARTUP_VALIDATED_AGAINST_TOOBA_OFFER_CONTRACTS_SALESCHANNEL",
+        "storeContextState":  "FOUNDATION_EXTRACTED_NOT_YET_STRUCTURE_CERTIFIED",
         "structureCertifiedUnderArchComplete002":  true
     },
     "completeReferenceModules":  [
