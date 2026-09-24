@@ -13,6 +13,7 @@ using Tooba.Payment.Contracts.Returns;
 using Tooba.Payment.Infrastructure.Directories;
 using Tooba.Payment.Infrastructure.Persistence;
 using Tooba.Payment.Infrastructure.Providers;
+using Tooba.Payment.Contracts.Hold;
 using Tooba.Wallet.Contracts.Dtos;
 using Tooba.Wallet.Contracts.Payments;
 using Tooba.Persistence;
@@ -127,6 +128,17 @@ public sealed class PaymentPrecertHygieneTests
         services.AddSingleton<IOutboxPollTargetSource, NullTargetSource>();
         services.AddSingleton<IWorkerCommerceContextFactory, ThrowingCommerceContextFactory>();
         services.AddSingleton<IBackgroundWorkerRegistry, NullWorkerRegistry>();
+        services.AddSingleton<IIntegrationEventSerializer, NoopIntegrationEventSerializer>();
+        services.AddSingleton<ICurrentCommerceContext>(new FixedCurrentCommerceContext());
+        services.AddSingleton<IDatabaseConnectionResolver, FixedDatabaseConnectionResolver>();
+        services.AddSingleton<IHostEnvironment>(new EnvironmentStub());
+        services.AddSingleton<IClock, SystemUtcClock>();
+        services.AddSingleton<IIdGenerator, UuidV7IdGenerator>();
+        services.AddScoped<IPayableCheckoutReader, PermissivePayableCheckoutReader>();
+        services.AddScoped<ICommerceHoldPolicySource, PermissiveCommerceHoldPolicySource>();
+        services.AddScoped<IWalletOrderPaymentPort, RecordingWalletPort>();
+        services.AddSingleton<IModuleCallTracer, ModuleCallTracer>();
+        services.AddScoped<OutboxSaveChangesInterceptor>();
         new Tooba.Payment.Infrastructure.DependencyInjection.PaymentModule()
             .AddServices(services, new ConfigurationBuilder().Build(), new EnvironmentStub());
 
@@ -141,7 +153,6 @@ public sealed class PaymentPrecertHygieneTests
             var descriptors = services.Where(d => d.ServiceType == serviceType).ToArray();
             Assert.Single(descriptors);
             Assert.Equal(ServiceLifetime.Scoped, descriptors[0].Lifetime);
-            Assert.NotSame(descriptors[0].ImplementationType, typeof(PaymentDirectory));
             Assert.NotEqual(serviceType, implementationType);
         }
 
@@ -165,6 +176,44 @@ public sealed class PaymentPrecertHygieneTests
             typeof(PaymentAdminDirectory), typeof(PaymentExpiryDirectory),
         };
         Assert.Equal(4, types.Distinct().Count());
+
+        // Runtime proof: the real registrations must resolve from a scoped ServiceProvider
+        // without a circular-dependency failure, and each port must produce its own concrete type.
+        using var provider = services.BuildServiceProvider(new ServiceProviderOptions
+        {
+            ValidateOnBuild = true,
+            ValidateScopes = true,
+        });
+
+        using var scope = provider.CreateScope();
+        // Resolve admin first: its constructor needs IPaymentDirectory, whose own deferred
+        // Func<IPaymentAdminDirectory> is what breaks the core<->admin cycle. This ordering fails
+        // with a circular-dependency/stack-overflow error if the cycle break is not real.
+        var adminFirst = scope.ServiceProvider.GetRequiredService<IPaymentAdminDirectory>();
+        var resolved = new
+        {
+            Core = scope.ServiceProvider.GetRequiredService<IPaymentDirectory>(),
+            Reconciliation = scope.ServiceProvider.GetRequiredService<IPaymentReconciliationDirectory>(),
+            Expiry = scope.ServiceProvider.GetRequiredService<IPaymentExpiryDirectory>(),
+            Admin = adminFirst,
+        };
+
+        Assert.IsType<PaymentDirectory>(resolved.Core);
+        Assert.IsType<PaymentReconciliationDirectory>(resolved.Reconciliation);
+        Assert.IsType<PaymentAdminDirectory>(resolved.Admin);
+        Assert.IsType<PaymentExpiryDirectory>(resolved.Expiry);
+
+        var resolvedInstances = new object[] { resolved.Core, resolved.Reconciliation, resolved.Admin, resolved.Expiry };
+        Assert.Equal(4, resolvedInstances.Distinct(ReferenceEqualityComparer.Instance).Count());
+        Assert.Equal(4, resolvedInstances.Select(x => x.GetType()).Distinct().Count());
+
+        // Scoped lifetime proof: the same scope returns the cached instance.
+        Assert.Same(resolved.Core, scope.ServiceProvider.GetRequiredService<IPaymentDirectory>());
+
+        // A fresh scope must produce a fresh set of instances (scoped, not singleton).
+        using var secondScope = provider.CreateScope();
+        Assert.NotSame(resolved.Core, secondScope.ServiceProvider.GetRequiredService<IPaymentDirectory>());
+        Assert.NotSame(resolved.Admin, secondScope.ServiceProvider.GetRequiredService<IPaymentAdminDirectory>());
     }
 
     [Fact]
@@ -458,6 +507,47 @@ public sealed class PaymentPrecertHygieneTests
     private sealed class NullTargetSource : IOutboxPollTargetSource
     {
         public IReadOnlyList<OutboxPollTarget> GetTargets() => [];
+    }
+
+    /// <summary>زمینهٔ درخواست ثابت برای اثبات resolve در تست؛ بدون زیرساخت Host.</summary>
+    private sealed class FixedCurrentCommerceContext : ICurrentCommerceContext
+    {
+        public CommerceContext? Current { get; } = new(
+            new EditionContext(ToobaEdition.Marketplace, "deployment-runtime-di-proof"),
+            null,
+            new ConnectionReference("runtime-di-proof"),
+            "trace-runtime-di-proof");
+    }
+
+    private sealed class FixedDatabaseConnectionResolver : IDatabaseConnectionResolver
+    {
+        public string Resolve(ConnectionReference reference) =>
+            "Host=127.0.0.1;Database=tooba_payment_runtime_di_proof;Username=tooba;Password=unused";
+    }
+
+    private sealed class NoopIntegrationEventSerializer : IIntegrationEventSerializer
+    {
+        public string SerializePayload(IIntegrationEvent integrationEvent) => "{}";
+
+        public IIntegrationEvent Deserialize(OutboxMessage message) =>
+            throw new InvalidOperationException("outbox.deserialize.not_expected_in_test");
+    }
+
+    /// <summary>سیاست نگه‌داشت تجاری سادهٔ تست؛ فقط برای کامل‌شدن گراف DI.</summary>
+    private sealed class PermissiveCommerceHoldPolicySource : ICommerceHoldPolicySource
+    {
+        public int ResolveOnlineHoldHours(string? providerCode) => 1;
+
+        public int ResolveManualInitialHoldHours(string? providerCode) => 1;
+
+        public int ResolveManualReviewHoldHours(string? providerCode) => 1;
+
+        public DateTimeOffset ResolveInitialExpiresAt(DateTimeOffset utcNow) => utcNow.AddHours(1);
+
+        public DateTimeOffset ResolveUnpaidTimeoutAt(string? providerCode, DateTimeOffset utcNow) =>
+            utcNow.AddMinutes(30);
+
+        public DateTimeOffset ResolveManualReviewExpiresAt(DateTimeOffset utcNow) => utcNow.AddHours(1);
     }
 
     private sealed class ThrowingCommerceContextFactory : IWorkerCommerceContextFactory

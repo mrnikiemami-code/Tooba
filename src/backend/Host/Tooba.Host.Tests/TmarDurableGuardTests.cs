@@ -106,8 +106,8 @@ public sealed class TmarDurableGuardTests
         Assert.Equal("USER_ACCEPTED", rootEl.GetProperty("goldenWaveUserReview").GetString());
         Assert.Equal("TB-TMAR-GOLDEN-WAVE-FINAL-CLOSURE-001", rootEl.GetProperty("goldenWaveClosedBy").GetString());
         Assert.False(string.IsNullOrWhiteSpace(rootEl.GetProperty("goldenWaveClosedCommit").GetString()));
-        Assert.Equal("TB-TMAR-PAYMENT-ARCH-COMPLETE-002-STRUCTURE-001", rootEl.GetProperty("nextTask").GetString());
-        Assert.Equal("NEXT_TMAR_WAVE_AFTER_PAYMENT_PRECERT_DIRECTORY_SPLIT", rootEl.GetProperty("nextTaskGate").GetString());
+        Assert.Equal("TB-TMAR-PAYMENT-PRECERT-VALIDATION-001", rootEl.GetProperty("nextTask").GetString());
+        Assert.Equal("NEXT_TMAR_WAVE_AFTER_PAYMENT_PRECERT_DIRECTORY_SPLIT_R1", rootEl.GetProperty("nextTaskGate").GetString());
         Assert.Equal("PAUSED_AT_SAFE_W5_CHECKPOINT", rootEl.GetProperty("checkoutState").GetString());
         Assert.True(rootEl.GetProperty("frontendFrozen").GetBoolean());
         Assert.Equal("ARCH-COMPLETE-002", rootEl.GetProperty("locksVersion").GetString());
@@ -230,6 +230,21 @@ public sealed class TmarDurableGuardTests
         Assert.Equal("PAYMENT_RUNTIME_RESIDUE_REMOVED_SECURITY_ADAPTERS_ONLY",
             paymentSplit.GetProperty("paymentHostResidue").GetString());
         Assert.Equal("REMOVED", paymentSplit.GetProperty("messageClassification").GetString());
+        Assert.Equal("ACCEPTED_AFTER_R1_RUNTIME_DI_RESOLUTION_PROOF",
+            paymentSplit.GetProperty("parentAcceptance").GetString());
+        Assert.Equal("PROVEN", paymentSplit.GetProperty("runtimeDiResolution").GetString());
+
+        var splitR1 = rootEl.GetProperty("paymentPrecertDirectorySplitR1");
+        Assert.Equal("TB-TMAR-PAYMENT-PRECERT-DIRECTORY-SPLIT-001-R1", splitR1.GetProperty("task").GetString());
+        Assert.Equal("ACCEPTED_AFTER_R1_RUNTIME_DI_RESOLUTION_PROOF",
+            splitR1.GetProperty("parentProductionDecomposition").GetString());
+        Assert.Equal("REPAIR_PAYMENT_DIRECTORY_DI_RESOLUTION_PROOF_ONLY", splitR1.GetProperty("objective").GetString());
+        Assert.Equal("PROVEN", splitR1.GetProperty("runtimeDiResolution").GetString());
+        Assert.Equal("NONE", splitR1.GetProperty("constructionCycle").GetString());
+        Assert.False(splitR1.GetProperty("productionDiChanged").GetBoolean());
+        Assert.Equal("ZERO", splitR1.GetProperty("paymentToHostDependency").GetString());
+        Assert.Equal("PENDING_TB_TMAR_PAYMENT_ARCH_COMPLETE_002_STRUCTURE_001",
+            splitR1.GetProperty("structureCertification").GetString());
 
         var paymentAudit = rootEl.GetProperty("paymentArchComplete002Audit");
         Assert.Equal("TB-TMAR-PAYMENT-ARCH-COMPLETE-002-AUDIT-001", paymentAudit.GetProperty("task").GetString());

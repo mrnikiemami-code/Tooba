@@ -7,8 +7,8 @@
     "lastAcceptedCommit":  "22849a17e31aa3357277c3979ac351a3f3f9f8e5",
     "lastAcceptedSoTStamp":  "22849a17e31aa3357277c3979ac351a3f3f9f8e5",
     "lastAcceptedNote":  "TB-TMAR-PAYMENT-PRECERT-HYGIENE-001 Architect-ACCEPTED at 22849a17e31aa3357277c3979ac351a3f3f9f8e5 (dead Payment ports removed; PaymentContractBridge rename; typed Payment/Wallet faults; locale-neutral admin grid).",
-    "nextTask":  "TB-TMAR-PAYMENT-ARCH-COMPLETE-002-STRUCTURE-001",
-    "nextTaskGate":  "NEXT_TMAR_WAVE_AFTER_PAYMENT_PRECERT_DIRECTORY_SPLIT",
+    "nextTask":  "TB-TMAR-PAYMENT-PRECERT-VALIDATION-001",
+    "nextTaskGate":  "NEXT_TMAR_WAVE_AFTER_PAYMENT_PRECERT_DIRECTORY_SPLIT_R1",
     "cartMultiCurrency":  {
         "task":  "TB-TMAR-CART-MULTICURRENCY-LINES-001",
         "state":  "LINE_LEVEL_CURRENCY_AUTHORITY_WITH_DEFAULT_SELECTION_AND_TOTALS_BY_CURRENCY",
@@ -146,7 +146,22 @@
         "paymentToHostDependency":  "ZERO",
         "messageClassification":  "REMOVED",
         "structureCertification":  "PENDING_TB_TMAR_PAYMENT_ARCH_COMPLETE_002_STRUCTURE_001",
+        "parentAcceptance":  "ACCEPTED_AFTER_R1_RUNTIME_DI_RESOLUTION_PROOF",
+        "runtimeDiResolution":  "PROVEN",
         "evidence":  "docs/evidence/TB-TMAR-PAYMENT-PRECERT-DIRECTORY-SPLIT-001/payment-directory-split.md"
+    },
+    "paymentPrecertDirectorySplitR1":  {
+        "task":  "TB-TMAR-PAYMENT-PRECERT-DIRECTORY-SPLIT-001-R1",
+        "parent":  "TB-TMAR-PAYMENT-PRECERT-DIRECTORY-SPLIT-001",
+        "parentProductionDecomposition":  "ACCEPTED_AFTER_R1_RUNTIME_DI_RESOLUTION_PROOF",
+        "objective":  "REPAIR_PAYMENT_DIRECTORY_DI_RESOLUTION_PROOF_ONLY",
+        "runtimeDiResolution":  "PROVEN",
+        "resolvedPorts":  "IPaymentDirectory->PaymentDirectory,IPaymentReconciliationDirectory->PaymentReconciliationDirectory,IPaymentAdminDirectory->PaymentAdminDirectory,IPaymentExpiryDirectory->PaymentExpiryDirectory",
+        "constructionCycle":  "NONE",
+        "productionDiChanged":  false,
+        "paymentToHostDependency":  "ZERO",
+        "structureCertification":  "PENDING_TB_TMAR_PAYMENT_ARCH_COMPLETE_002_STRUCTURE_001",
+        "evidence":  "docs/evidence/TB-TMAR-PAYMENT-PRECERT-DIRECTORY-SPLIT-001-R1/runtime-di-resolution-proof.md"
     },
     "offerArchComplete002Structure":  {
         "task":  "TB-TMAR-OFFER-ARCH-COMPLETE-002-STRUCTURE-001",
