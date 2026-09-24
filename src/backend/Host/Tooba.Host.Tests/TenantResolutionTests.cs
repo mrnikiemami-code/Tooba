@@ -146,7 +146,7 @@ public sealed class PlatformOptionsValidatorTests
         var options = SampleSingleStore();
         options.SingleStore.Tenants[0].StoreCommerce = new StoreCommerceOptions
         {
-            Currency = "IRR",
+            DefaultCurrency = "IRR",
         };
 
         var result = Production(environment => new PlatformOptionsValidator(environment)).Validate(null, options);
@@ -161,7 +161,7 @@ public sealed class PlatformOptionsValidatorTests
         var options = SampleSingleStore();
         options.SingleStore.Tenants[0].StoreCommerce = new StoreCommerceOptions
         {
-            Currency = "IRR",
+            DefaultCurrency = "IRR",
             SalesChannel = "Marketplce",
         };
 
@@ -177,7 +177,7 @@ public sealed class PlatformOptionsValidatorTests
         var options = SampleSingleStore();
         options.SingleStore.Tenants[0].StoreCommerce = new StoreCommerceOptions
         {
-            Currency = "IRR",
+            DefaultCurrency = "IRR",
             SalesChannel = "Marketplace",
         };
 
@@ -192,7 +192,7 @@ public sealed class PlatformOptionsValidatorTests
         var options = SampleSingleStore();
         options.SingleStore.Tenants[0].StoreCommerce = new StoreCommerceOptions
         {
-            Currency = "IRR",
+            DefaultCurrency = "IRR",
             SalesChannel = "Marketplace",
         };
         options.SingleStore.Tenants.Add(new TenantRecordOptions
@@ -287,7 +287,7 @@ public sealed class PlatformOptionsValidatorTests
         StoreCommerce = new StoreCommerceOptions
         {
             Market = "IR",
-            Currency = "IRR",
+            DefaultCurrency = "IRR",
             SalesChannel = "Marketplace",
         },
         PostgreSQL = new PostgreSqlOptions

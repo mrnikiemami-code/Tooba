@@ -7,7 +7,7 @@ namespace Tooba.Cart.Infrastructure.Lifetime;
 /// <summary>
 /// Reads the effective storefront commerce context that the platform control plane already
 /// resolved for the current request or worker. Cart consumes this context; it never owns or
-/// invents Market, Currency, or SalesChannel defaults and never trusts raw HTTP values.
+/// invents Market, DefaultCurrency, or SalesChannel defaults and never trusts raw HTTP values.
 /// </summary>
 public sealed class CartCommerceContextResolver : ICartCommerceContextResolver
 {
@@ -35,7 +35,7 @@ public sealed class CartCommerceContextResolver : ICartCommerceContextResolver
             throw new InvalidOperationException("cart.commerce.market_unconfigured");
         }
 
-        var currency = store.Currency;
+        var currency = store.DefaultCurrency;
         if (string.IsNullOrWhiteSpace(currency))
         {
             throw new InvalidOperationException("cart.commerce.currency_unconfigured");

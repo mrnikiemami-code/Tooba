@@ -21,7 +21,7 @@ internal sealed class CreateGuestCartHandler(
             var context = commerceContext.Resolve();
             var created = await carts.CreateGuestAsync(
                 context.Market,
-                context.Currency,
+                context.DefaultCurrency,
                 context.Channel,
                 cancellationToken);
             return await presentation.PresentAsync(created.Cart, created.GuestSecret, cancellationToken);

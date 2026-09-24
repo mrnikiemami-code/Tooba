@@ -5,14 +5,19 @@ namespace Tooba.StoreContext.Contracts.Current;
 /// <summary>
 /// Effective storefront/store commerce context for the current request or worker cycle.
 /// The platform control plane owns it; consumer modules only read. Null means unresolved and the
-/// consumer must fail closed instead of inventing Market/Currency/SalesChannel.
+/// consumer must fail closed instead of inventing Market/DefaultCurrency/SalesChannel.
 /// </summary>
 /// <param name="Market">Effective market reference.</param>
-/// <param name="Currency">Effective ISO currency code.</param>
+/// <param name="DefaultCurrency">
+/// Default storefront currency only: the default/preferred currency a use-case may use when it
+/// needs an initial currency. It is NOT a transaction/line/order/settlement/payment-group currency
+/// and does NOT impose single-currency Cart/Order semantics; consumer transaction lines may carry
+/// their own currency.
+/// </param>
 /// <param name="SalesChannel">Stable sales-channel name; still a string at this boundary.</param>
 public sealed record StoreCommerceContext(
     string? Market,
-    string? Currency,
+    string? DefaultCurrency,
     string? SalesChannel);
 
 /// <summary>

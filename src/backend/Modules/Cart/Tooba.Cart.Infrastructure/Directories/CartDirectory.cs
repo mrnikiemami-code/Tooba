@@ -355,7 +355,7 @@ public sealed class CartDirectory : ICartDirectory, CartContract.ICartQueryGatew
 
             var context = _commerceContext.Resolve();
             authenticated ??= await CreateAuthenticatedCoreAsync(
-                userId, context.Market, context.Currency, context.Channel, cancellationToken);
+                userId, context.Market, context.DefaultCurrency, context.Channel, cancellationToken);
             var empty = await ToSnapshotAsync(authenticated, cancellationToken);
             return new CartMergeResult(empty, false, empty.Lines);
         }

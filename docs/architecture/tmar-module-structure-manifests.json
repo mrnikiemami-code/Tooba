@@ -134,6 +134,31 @@
           "forbiddenTopLevelFolders": []
         }
       ]
+    },
+    {
+      "module": "StoreContext",
+      "structureCertified": true,
+      "lockVersion": "ARCH-COMPLETE-002",
+      "projects": [
+        {
+          "projectName": "Tooba.StoreContext.Contracts",
+          "rootAllowlist": [],
+          "forbiddenRootFiles": [
+            "StoreCommerceContext.cs"
+          ],
+          "forbiddenTopLevelFolders": []
+        },
+        {
+          "projectName": "Tooba.StoreContext.Infrastructure",
+          "rootAllowlist": [
+            "StoreContextModule.cs"
+          ],
+          "forbiddenRootFiles": [
+            "StoreCommerceContextAccessor.cs"
+          ],
+          "forbiddenTopLevelFolders": []
+        }
+      ]
     }
   ],
   "uncertifiedHttpOwningModules": [

@@ -5,7 +5,9 @@
     "checkoutState":  "PAUSED_AT_SAFE_W5_CHECKPOINT",
     "lastAcceptedTask":  "TB-TMAR-STORECONTEXT-FOUNDATION-001",
     "lastAcceptedCommit":  "48720fd3ae5bc69ccb5ae6532a2000f7a2b9d4f8",
-    "nextTask":  "USER_REVIEW_STORECONTEXT_FOUNDATION_001",
+    "lastAcceptedSoTStamp":  "95706f174cbfe63f32cc84641b77ace403ab190f",
+    "lastAcceptedNote":  "StoreContext foundation accepted. Currency semantics hardened separately in TB-TMAR-STORECONTEXT-GOLDEN-001 (Pending->Result); this stamp changes only when that task is Architect-ACCEPTED.",
+    "nextTask":  "USER_REVIEW_STORECONTEXT_GOLDEN_001",
     "nextTaskGate":  "USER_REVIEW_REQUIRED_BEFORE_NEXT_TMAR_WAVE",
     "goldenWaveState":  "COMPLETE",
     "goldenWaveUserReview":  "USER_ACCEPTED",
@@ -25,7 +27,8 @@
         ],
         "certifiedModules":  [
             "Order",
-            "Cart"
+            "Cart",
+            "StoreContext"
         ],
         "manifest":  "docs/architecture/tmar-module-structure-manifests.json",
         "standard":  "docs/architecture/TMAR-COMPLETE-REFERENCE-STRUCTURE-STANDARD.md",
@@ -54,8 +57,27 @@
         "storeCommerceOwnership":  "TOOBA_STORECONTEXT_CONTRACTS_AND_INFRASTRUCTURE",
         "storeCommerceStartupValidation":  "PRODUCTION_FAIL_FAST_ON_INCOMPLETE_STORE_COMMERCE",
         "storeCommerceSalesChannelValidation":  "STARTUP_VALIDATED_AGAINST_TOOBA_OFFER_CONTRACTS_SALESCHANNEL",
-        "storeContextState":  "FOUNDATION_EXTRACTED_NOT_YET_STRUCTURE_CERTIFIED",
+        "storeContextState":  "GOLDEN_PLATFORM_CONTEXT_STRUCTURE_CERTIFIED_ARCH_COMPLETE_002",
         "structureCertifiedUnderArchComplete002":  true
+    },
+    "storeContext":  {
+        "module":  "StoreContext",
+        "state":  "PLATFORM_CONTEXT_REFERENCE_PATTERN",
+        "httpApplicability":  "INTERNAL_ONLY",
+        "endpointOwnership":  "NOT_APPLICABLE",
+        "cqrs":  "NOT_APPLICABLE_NO_APPLICATION_USE_CASE",
+        "structureCertifiedUnderArchComplete002":  true,
+        "foundationTask":  "TB-TMAR-STORECONTEXT-FOUNDATION-001",
+        "foundationCommit":  "48720fd3ae5bc69ccb5ae6532a2000f7a2b9d4f8",
+        "goldenTask":  "TB-TMAR-STORECONTEXT-GOLDEN-001",
+        "currencySemantics":  "DEFAULT_CURRENCY_ONLY_NOT_TRANSACTION_SINGLE_CURRENCY_INVARIANT",
+        "canonicalConfigKey":  "StoreCommerce:DefaultCurrency",
+        "singleStoreConfigKey":  "SingleStore:Tenants:<n>:StoreCommerce:DefaultCurrency",
+        "mediatRState":  "NOT_APPLICABLE_NO_USE_CASE",
+        "endpointsState":  "NOT_APPLICABLE_INTERNAL_ONLY",
+        "knownCartCurrencyDebt":  "CART_STILL_HAS_SINGLE_CART_PRICING_CURRENCY_RESIDUAL_DEBT_NOT_REPAIRED_HERE",
+        "guard":  "src/backend/Host/Tooba.Host.Tests/Architecture/HostCartResidualGuardTests.cs",
+        "evidence":  "docs/evidence/TB-TMAR-STORECONTEXT-GOLDEN-001/store-context-golden.md"
     },
     "completeReferenceModules":  [
                                      {

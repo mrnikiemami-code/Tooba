@@ -230,8 +230,10 @@ public sealed class HostCartResidualGuardTests
             Regex.IsMatch(File.ReadAllText(path), @"""Cart:CommerceDefaults"""));
 
         // Cart must not keep a global Cart currency/market knob as effective store authority.
+        // StoreContext.DefaultCurrency is consumed only as a default-selection input, never as a
+        // Cart-owned policy default or a single-currency transaction invariant.
         Assert.DoesNotContain(cartProduction, path =>
-            Regex.IsMatch(File.ReadAllText(path), @"\bDefaultCurrency\b|\bDefaultMarket\b|\bDefaultSalesChannel\b"));
+            Regex.IsMatch(File.ReadAllText(path), @"\bDefaultMarket\b|\bDefaultSalesChannel\b|\bCartCommerceDefaultsOptions\b"));
 
         // Effective currency/channel come from the platform-boundary store commerce context.
         var resolver = File.ReadAllText(Path.Combine(
@@ -239,6 +241,8 @@ public sealed class HostCartResidualGuardTests
         Assert.Contains("StoreCommerce", resolver, StringComparison.Ordinal);
         Assert.Contains("ICurrentStoreCommerceContext", resolver, StringComparison.Ordinal);
         Assert.DoesNotContain("ICurrentCommerceContext", resolver, StringComparison.Ordinal);
+        Assert.Contains("store.DefaultCurrency", resolver, StringComparison.Ordinal);
+        Assert.DoesNotContain("store.Currency", resolver, StringComparison.Ordinal);
         Assert.Contains("cart.commerce.market_unconfigured", resolver, StringComparison.Ordinal);
         Assert.Contains("cart.commerce.currency_unconfigured", resolver, StringComparison.Ordinal);
         Assert.Contains("cart.commerce.channel_unconfigured", resolver, StringComparison.Ordinal);
@@ -300,6 +304,92 @@ public sealed class HostCartResidualGuardTests
         Assert.DoesNotContain("\"IRR\"", adapter, StringComparison.Ordinal);
         Assert.DoesNotContain("SalesChannel.Direct", adapter, StringComparison.Ordinal);
         Assert.DoesNotContain("SalesChannel.Marketplace", adapter, StringComparison.Ordinal);
+    }
+
+    /// <summary>
+    /// TB-TMAR-STORECONTEXT-GOLDEN-001 — StoreContext is a golden-certified platform context:
+    /// default-currency semantics only, structure-certified under ARCH-COMPLETE-002, no ceremonial
+    /// Application/Endpoints/MediatR, and no transaction single-currency invariant.
+    /// </summary>
+    [Fact]
+    public void StoreContext_is_golden_certified_with_default_currency_semantics()
+    {
+        var repoRoot = FindRepoRoot();
+        var storeContextRoot = Path.Combine(repoRoot, "src", "backend", "Modules", "StoreContext");
+
+        // 1. Contract carries DefaultCurrency and no ambiguity-prone Currency.
+        var contract = File.ReadAllText(Path.Combine(storeContextRoot, "Tooba.StoreContext.Contracts", "Current", "StoreCommerceContext.cs"));
+        Assert.Contains("string? DefaultCurrency", contract, StringComparison.Ordinal);
+        Assert.DoesNotContain("string? Currency", contract, StringComparison.Ordinal);
+        Assert.DoesNotContain("AllowedCurrencies", contract, StringComparison.Ordinal);
+        Assert.DoesNotContain("SettlementCurrency", contract, StringComparison.Ordinal);
+        Assert.DoesNotContain("PaymentCurrency", contract, StringComparison.Ordinal);
+
+        // 2. No AllowedCurrencies / settlement / payment currency model anywhere in StoreContext.
+        var storeContextSources = Directory
+            .EnumerateFiles(storeContextRoot, "*.cs", SearchOption.AllDirectories)
+            .Where(p => !p.Replace('\\', '/').Contains("/bin/", StringComparison.Ordinal)
+                        && !p.Replace('\\', '/').Contains("/obj/", StringComparison.Ordinal))
+            .ToArray();
+        Assert.DoesNotContain(storeContextSources, path =>
+            Regex.IsMatch(File.ReadAllText(path), @"\bAllowedCurrencies\b|\bSettlementCurrency\b|\bPaymentCurrency\b"));
+
+        // 3. No ceremonial Application/Endpoints project.
+        Assert.False(Directory.Exists(Path.Combine(storeContextRoot, "Tooba.StoreContext.Application")));
+        Assert.False(Directory.Exists(Path.Combine(storeContextRoot, "Tooba.StoreContext.Endpoints")));
+        Assert.DoesNotContain(storeContextSources, path =>
+            File.ReadAllText(path).Contains("MediatR", StringComparison.Ordinal));
+
+        // 4. Contracts root has zero .cs; Infrastructure root only the module entry.
+        var contractsRootFiles = Directory.GetFiles(
+            Path.Combine(storeContextRoot, "Tooba.StoreContext.Contracts"), "*.cs", SearchOption.TopDirectoryOnly);
+        Assert.Empty(contractsRootFiles);
+
+        var infraRootFiles = Directory
+            .GetFiles(Path.Combine(storeContextRoot, "Tooba.StoreContext.Infrastructure"), "*.cs", SearchOption.TopDirectoryOnly)
+            .Select(Path.GetFileName!)
+            .OrderBy(x => x, StringComparer.Ordinal)
+            .ToArray();
+        Assert.Equal(new[] { "StoreContextModule.cs" }, infraRootFiles);
+
+        // 5. Path <-> namespace alignment for the capability folder.
+        var contractText = File.ReadAllText(Path.Combine(
+            storeContextRoot, "Tooba.StoreContext.Contracts", "Current", "StoreCommerceContext.cs"));
+        Assert.Contains("namespace Tooba.StoreContext.Contracts.Current;", contractText, StringComparison.Ordinal);
+        var accessorText = File.ReadAllText(Path.Combine(
+            storeContextRoot, "Tooba.StoreContext.Infrastructure", "Current", "StoreCommerceContextAccessor.cs"));
+        Assert.Contains("namespace Tooba.StoreContext.Infrastructure.Current;", accessorText, StringComparison.Ordinal);
+
+        // 6. Structure manifest declares StoreContext under ARCH-COMPLETE-002.
+        var manifest = File.ReadAllText(Path.Combine(repoRoot, "docs", "architecture", "tmar-module-structure-manifests.json"));
+        Assert.Contains("\"module\": \"StoreContext\"", manifest, StringComparison.Ordinal);
+        Assert.Contains("Tooba.StoreContext.Contracts", manifest, StringComparison.Ordinal);
+        Assert.Contains("Tooba.StoreContext.Infrastructure", manifest, StringComparison.Ordinal);
+
+        // 7. SoT certifies StoreContext as an internal platform context, not an HTTP module.
+        var sot = File.ReadAllText(Path.Combine(repoRoot, "docs", "architecture", "tmar-current-state.json"));
+        Assert.Contains("PLATFORM_CONTEXT_REFERENCE_PATTERN", sot, StringComparison.Ordinal);
+        Assert.Contains("\"StoreContext\"", sot, StringComparison.Ordinal);
+        Assert.Contains("INTERNAL_ONLY", sot, StringComparison.Ordinal);
+        Assert.Contains("NOT_APPLICABLE_NO_APPLICATION_USE_CASE", sot, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void Host_configuration_uses_canonical_store_commerce_default_currency_key()
+    {
+        var repoRoot = FindRepoRoot();
+        var options = File.ReadAllText(Path.Combine(
+            repoRoot, "src", "backend", "Host", "Tooba.Host", "Configuration", "ToobaPlatformOptions.cs"));
+        Assert.Contains("public string? DefaultCurrency { get; set; }", options, StringComparison.Ordinal);
+        Assert.DoesNotContain("public string? Currency { get; set; }", options, StringComparison.Ordinal);
+        Assert.Contains("StoreCommerce:DefaultCurrency", options, StringComparison.Ordinal);
+        Assert.DoesNotContain("StoreCommerce:Currency", options, StringComparison.Ordinal);
+        Assert.Contains("Normalize(raw?.DefaultCurrency)", options, StringComparison.Ordinal);
+
+        var devSettings = File.ReadAllText(Path.Combine(
+            repoRoot, "src", "backend", "Host", "Tooba.Host", "appsettings.Development.json"));
+        Assert.Contains("\"DefaultCurrency\"", devSettings, StringComparison.Ordinal);
+        Assert.DoesNotContain("\"Currency\":", devSettings, StringComparison.Ordinal);
     }
 
     [Fact]

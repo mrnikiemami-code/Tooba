@@ -65,9 +65,10 @@ internal sealed class StoreCommerceOptions
     public string? Market { get; set; }
 
     /// <summary>
-    /// کد ارز مؤثر ISO؛ تهی یعنی resolve نشده.
+    /// کد ارز پیش‌فرض فروشگاه (ISO)؛ تهی یعنی resolve نشده. این ارز فقط انتخاب پیش‌فرض اولیه است،
+    /// نه ارز هر line/order/payment-group.
     /// </summary>
-    public string? Currency { get; set; }
+    public string? DefaultCurrency { get; set; }
 
     /// <summary>
     /// نام پایدار کانال فروش؛ تهی یعنی resolve نشده.
@@ -375,9 +376,9 @@ internal sealed class PlatformOptionsValidator : IValidateOptions<ToobaPlatformO
             return $"Production {scope} requires effective StoreCommerce:Market to be configured.";
         }
 
-        if (string.IsNullOrWhiteSpace(storeCommerce.Currency))
+        if (string.IsNullOrWhiteSpace(storeCommerce.DefaultCurrency))
         {
-            return $"Production {scope} requires effective StoreCommerce:Currency to be configured.";
+            return $"Production {scope} requires effective StoreCommerce:DefaultCurrency to be configured.";
         }
 
         return ValidateSalesChannel(scope, storeCommerce.SalesChannel);
@@ -594,7 +595,7 @@ internal sealed class PlatformOptionsValidator : IValidateOptions<ToobaPlatformO
         var market = Normalize(raw?.Market) ?? Normalize(marketFallback);
         return new StoreCommerceContext(
             market,
-            Normalize(raw?.Currency),
+            Normalize(raw?.DefaultCurrency),
             Normalize(raw?.SalesChannel));
     }
 

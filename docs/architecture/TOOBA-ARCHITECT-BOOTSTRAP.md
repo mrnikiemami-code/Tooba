@@ -19,7 +19,8 @@ Canonical bootstrap for recovering the Tooba architecture context after chat/ses
 - Cart commerce-authority repair: TB-TMAR-CART-POSTCERT-SEMANTIC-HOST-CLOSURE-001-R1 (Cart owns no commerce policy default; platform-owned StoreCommerceContext is the effective storefront commerce authority consumed by Cart; fail-closed cart.commerce.* codes; Cart remains COMPLETE_REFERENCE_PATTERN + STRUCTURE_CERTIFIED)
 - Cart store-commerce fail-fast: TB-TMAR-CART-STORE-COMMERCE-FAILFAST-001 (Production startup fails fast on incomplete/invalid StoreCommerce; Marketplace validates deployment Market/Currency/SalesChannel; SingleStore validates every ACTIVE tenant (Disabled/Suspended skipped); SalesChannel validated against canonical Tooba.Offer.Contracts.Dtos.SalesChannel; Cart code untouched; Cart remains COMPLETE_REFERENCE_PATTERN + STRUCTURE_CERTIFIED)
 - StoreContext foundation extraction: TB-TMAR-STORECONTEXT-FOUNDATION-001 (effective store commerce context extracted from Tooba.BuildingBlocks to Tooba.StoreContext.Contracts + Tooba.StoreContext.Infrastructure; request and worker paths assign StoreContext separately from technical CommerceContext; Cart consumes only StoreContext.Contracts with zero Host dependency; parent fail-fast preserved; no new default; no Shared-DB claim; StoreContext = FOUNDATION_EXTRACTED_NOT_YET_STRUCTURE_CERTIFIED)
-- Current next task: USER_REVIEW_STORECONTEXT_FOUNDATION_001
+- StoreContext golden hardening: TB-TMAR-STORECONTEXT-GOLDEN-001 (StoreCommerceContext.Currency -> DefaultCurrency: default storefront selection input only, never a single-currency transaction/line/order/payment invariant; canonical key StoreCommerce:DefaultCurrency, no silent Currency alias; Cart adapter wording only; StoreContext = PLATFORM_CONTEXT_REFERENCE_PATTERN / INTERNAL_ONLY / NOT_APPLICABLE endpoints / NOT_APPLICABLE_NO_APPLICATION_USE_CASE, ARCH-COMPLETE-002 STRUCTURE_CERTIFIED, no ceremonial Application/Endpoints/MediatR; Cart single pricing-currency residual debt explicitly NOT repaired; Cart/Order certifications preserved)
+- Current next task: USER_REVIEW_STORECONTEXT_GOLDEN_001
 - Gate: USER_REVIEW_REQUIRED_BEFORE_NEXT_TMAR_WAVE
 - Closed by: TB-TMAR-GOLDEN-WAVE-FINAL-CLOSURE-001
 - Order closed by: TB-TMAR-ORDER-GOLDEN-001-FINAL-CLOSURE
@@ -51,7 +52,7 @@ Accepted architecture baseline:
 TB-TMAR-ARCH-BASELINE
 
 Current next task:
-USER_REVIEW_STORECONTEXT_FOUNDATION_001
+USER_REVIEW_STORECONTEXT_GOLDEN_001
 
 Current recovery summary (consistent with the authoritative closure above):
 COMPLETE HTTP-owning: Cart, Settlement, Fulfillment, Returns, Notification, Support, Wallet, Payment, Promotion, Offer, Order.
