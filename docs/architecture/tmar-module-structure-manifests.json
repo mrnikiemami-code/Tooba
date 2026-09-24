@@ -209,6 +209,63 @@
           "forbiddenTopLevelFolders": []
         }
       ]
+    },
+    {
+      "module": "Payment",
+      "structureCertified": true,
+      "lockVersion": "ARCH-COMPLETE-002",
+      "projects": [
+        {
+          "projectName": "Tooba.Payment.Application",
+          "rootAllowlist": [],
+          "forbiddenRootFiles": [
+            "PaymentContracts.cs",
+            "PaymentHandlers.cs",
+            "PaymentRequests.cs",
+            "PaymentQueries.cs",
+            "PaymentQueryHandlers.cs",
+            "StorefrontPaymentOrchestrator.cs",
+            "PaymentErrorCodes.cs"
+          ],
+          "forbiddenTopLevelFolders": []
+        },
+        {
+          "projectName": "Tooba.Payment.Endpoints",
+          "rootAllowlist": [
+            "PaymentEndpointModule.cs"
+          ],
+          "forbiddenRootFiles": [
+            "PaymentStorefrontEndpoints.cs",
+            "PaymentAdminEndpoints.cs",
+            "PaymentWebhookEndpoints.cs",
+            "IPaymentStorefrontAuthorizer.cs",
+            "IPaymentAdminAuthorizer.cs",
+            "IPaymentAdminGridQueryNormalizer.cs",
+            "PaymentErrorCatalogContributor.cs",
+            "PaymentErrorResources.cs",
+            "PaymentEndpointLocalizer.cs"
+          ],
+          "forbiddenTopLevelFolders": []
+        },
+        {
+          "projectName": "Tooba.Payment.Infrastructure",
+          "rootAllowlist": [],
+          "forbiddenRootFiles": [
+            "PaymentModule.cs",
+            "PaymentDbContext.cs",
+            "PaymentDirectory.cs",
+            "PaymentAdminDirectory.cs",
+            "PaymentReconciliationDirectory.cs",
+            "PaymentExpiryDirectory.cs",
+            "PaymentEvents.cs",
+            "PaymentOutboxRegistration.cs",
+            "PaymentReconciliationWorker.cs",
+            "PaymentReconciliationOptions.cs",
+            "PaymentGatewayRegistry.cs"
+          ],
+          "forbiddenTopLevelFolders": []
+        }
+      ]
     }
   ],
   "uncertifiedHttpOwningModules": [
@@ -218,7 +275,6 @@
     "Notification",
     "Support",
     "Wallet",
-    "Payment",
     "Promotion"
   ]
 }

@@ -7,8 +7,7 @@ namespace Tooba.Payment.Tests.Architecture;
 public sealed class PaymentArchitectureGuardTests
 {
     private static readonly string[] AllowedDomainFolders = ["Aggregates", "Entities", "ValueObjects", "Events", "Policies"];
-    private static readonly string[] AllowedApplicationFolders = ["Ports", "Models", "Commands", "Queries", "Errors", "Orchestration", "Validators"];
-    private static readonly string[] AllowedContractsFolders = ["Admin", "Customer", "Events", "Dtos", "Hold", "Ports", "Returns", "Settlement", "Storefront"];
+    private static readonly string[] AllowedApplicationFolders = ["Ports", "Models", "Commands", "Queries", "Errors", "Orchestration", "Validators"];    private static readonly string[] AllowedContractsFolders = ["Admin", "Customer", "Events", "Dtos", "Hold", "Ports", "Returns", "Settlement", "Storefront"];
     private static readonly string[] AllowedInfrastructureFolders =
         ["Persistence", "Directories", "Adapters", "Providers", "Events", "Messaging", "DependencyInjection", "Gateways", "Migrations", "Workers"];
     private static readonly string[] AllowedEndpointsFolders = ["Storefront", "Admin", "Webhooks", "Errors", "Resources"];
@@ -97,11 +96,11 @@ public sealed class PaymentArchitectureGuardTests
         AssertNoRootDump("Tooba.Payment.Contracts", AllowedContractsFolders);
         AssertNoRootDump("Tooba.Payment.Infrastructure", AllowedInfrastructureFolders);
         AssertNoRootDump("Tooba.Payment.Endpoints", AllowedEndpointsFolders);
-        AssertNamespacesAlign("Tooba.Payment.Domain", "Tooba.Payment.Domain");
-        AssertNamespacesAlign("Tooba.Payment.Application", "Tooba.Payment.Application");
-        AssertNamespacesAlign("Tooba.Payment.Contracts", "Tooba.Payment.Contracts");
-        AssertNamespacesAlign("Tooba.Payment.Infrastructure", "Tooba.Payment.Infrastructure");
-        AssertNamespacesAlign("Tooba.Payment.Endpoints", "Tooba.Payment.Endpoints");
+        AssertExactPathNamespaceAlignment("Tooba.Payment.Domain", "Tooba.Payment.Domain");
+        AssertExactPathNamespaceAlignment("Tooba.Payment.Application", "Tooba.Payment.Application");
+        AssertExactPathNamespaceAlignment("Tooba.Payment.Contracts", "Tooba.Payment.Contracts");
+        AssertExactPathNamespaceAlignment("Tooba.Payment.Infrastructure", "Tooba.Payment.Infrastructure");
+        AssertExactPathNamespaceAlignment("Tooba.Payment.Endpoints", "Tooba.Payment.Endpoints");
 
         var hostRoot = Path.Combine(RepoRoot(), "src", "backend", "Host", "Tooba.Host");
         var hostHits = Directory.EnumerateFiles(hostRoot, "*.cs", SearchOption.AllDirectories)
@@ -565,28 +564,134 @@ public sealed class PaymentArchitectureGuardTests
         }
     }
 
-    private static void AssertNamespacesAlign(string projectFolder, string nsPrefix)
+    [Fact]
+    public void Payment_root_allowlists_and_forbidden_root_files_are_enforced()
     {
-        var violations = new List<string>();
-        foreach (var (path, text) in Sources(projectFolder))
+        var expected = new (string Project, string[] Allowlist, string[] Forbidden)[]
         {
-            var ns = Regex.Match(text, @"^namespace\s+([\w.]+)", RegexOptions.Multiline).Groups[1].Value;
-            if (string.IsNullOrEmpty(ns) || !ns.StartsWith(nsPrefix, StringComparison.Ordinal))
+            ("Tooba.Payment.Application", [], [
+                "PaymentContracts.cs", "PaymentHandlers.cs", "PaymentRequests.cs",
+                "PaymentQueries.cs", "PaymentQueryHandlers.cs", "StorefrontPaymentOrchestrator.cs",
+                "PaymentErrorCodes.cs",
+            ]),
+            ("Tooba.Payment.Endpoints", ["PaymentEndpointModule.cs"], [
+                "PaymentStorefrontEndpoints.cs", "PaymentAdminEndpoints.cs", "PaymentWebhookEndpoints.cs",
+                "IPaymentStorefrontAuthorizer.cs", "IPaymentAdminAuthorizer.cs",
+                "IPaymentAdminGridQueryNormalizer.cs", "PaymentErrorCatalogContributor.cs",
+                "PaymentErrorResources.cs", "PaymentEndpointLocalizer.cs",
+            ]),
+            ("Tooba.Payment.Infrastructure", [], [
+                "PaymentModule.cs", "PaymentDbContext.cs", "PaymentDirectory.cs",
+                "PaymentAdminDirectory.cs", "PaymentReconciliationDirectory.cs",
+                "PaymentExpiryDirectory.cs", "PaymentEvents.cs", "PaymentOutboxRegistration.cs",
+                "PaymentReconciliationWorker.cs", "PaymentReconciliationOptions.cs",
+                "PaymentGatewayRegistry.cs",
+            ]),
+        };
+
+        foreach (var (project, allowlist, forbidden) in expected)
+        {
+            var root = Path.Combine(PaymentRoot(), project);
+            var actual = Directory.GetFiles(root, "*.cs", SearchOption.TopDirectoryOnly)
+                .Select(Path.GetFileName!)
+                .OrderBy(x => x, StringComparer.Ordinal)
+                .ToArray();
+            Assert.Equal(allowlist.OrderBy(x => x, StringComparer.Ordinal).ToArray(), actual);
+
+            foreach (var file in forbidden)
             {
-                violations.Add($"{path}: ns={ns}");
+                Assert.False(File.Exists(Path.Combine(root, file)), $"{project} forbidden root file {file}");
+            }
+        }
+    }
+
+    [Fact]
+    public void Payment_rejects_namespace_alias_workarounds_and_foreign_global_aliases()
+    {
+        // Only the narrowly justified Orchestration self-namespace import may exist as a global using;
+        // any other/foreign global alias, or a type-forwarding/compat shim, must fail.
+        var globalUsingsFiles = Directory.EnumerateFiles(PaymentRoot(), "GlobalUsings*.cs", SearchOption.AllDirectories)
+            .Where(p => !p.Contains($"{Path.DirectorySeparatorChar}bin{Path.DirectorySeparatorChar}", StringComparison.Ordinal)
+                        && !p.Contains($"{Path.DirectorySeparatorChar}obj{Path.DirectorySeparatorChar}", StringComparison.Ordinal))
+            .Select(p => Path.GetRelativePath(RepoRoot(), p).Replace('\\', '/'))
+            .OrderBy(x => x, StringComparer.Ordinal)
+            .ToArray();
+        Assert.Equal(
+            new[] { "src/backend/Modules/Payment/Tooba.Payment.Application/Orchestration/GlobalUsings.cs" },
+            globalUsingsFiles);
+
+        var globalUsings = File.ReadAllText(Path.Combine(
+            PaymentRoot(), "Tooba.Payment.Application", "Orchestration", "GlobalUsings.cs"));
+        var aliases = Regex.Matches(globalUsings, @"global\s+using\s+([\w.]+)\s*;")
+            .Select(m => m.Groups[1].Value)
+            .ToArray();
+        Assert.Equal(new[] { "Tooba.Payment.Application.Orchestration" }, aliases);
+        Assert.DoesNotContain("=", globalUsings, StringComparison.Ordinal);
+        Assert.DoesNotContain("Tooba.Payment.Infrastructure", globalUsings, StringComparison.Ordinal);
+        Assert.DoesNotContain("Tooba.Host", globalUsings, StringComparison.Ordinal);
+
+        // No production type-forwarding/compatibility shim may preserve an old Payment path.
+        Assert.DoesNotContain(AllProductionSources(), x => x.Text.Contains("TypeForwardedTo", StringComparison.Ordinal));
+        Assert.DoesNotContain(
+            AllProductionSources(),
+            x => x.Text.Contains("namespace Tooba.Payment.Application;\n", StringComparison.Ordinal)
+                && x.Path.Contains("Orchestration", StringComparison.Ordinal));
+
+        // A foreign-module global alias anywhere in Payment production must fail.
+        var foreignGlobalAlias = AllProductionSources()
+            .Where(x => Regex.IsMatch(x.Text, @"global\s+using\s+Tooba\.(Order|Media|Inventory|Wallet|Cart|Offer)\.[\w.]*(Application|Infrastructure|Domain)"))
+            .Select(x => x.Path)
+            .ToArray();
+        Assert.True(foreignGlobalAlias.Length == 0, "foreign global alias: " + string.Join("; ", foreignGlobalAlias));
+    }
+
+    private static void AssertExactPathNamespaceAlignment(string projectFolder, string nsPrefix)
+    {
+        var root = Path.Combine(PaymentRoot(), projectFolder);
+        var rootFull = Path.GetFullPath(root);
+        var violations = new List<string>();
+        foreach (var file in Directory.EnumerateFiles(root, "*.cs", SearchOption.AllDirectories))
+        {
+            var normalized = file.Replace('\\', '/');
+            if (normalized.Contains("/bin/", StringComparison.Ordinal) || normalized.Contains("/obj/", StringComparison.Ordinal))
+            {
                 continue;
             }
 
-            var rel = path.Replace('\\', '/');
-            var marker = projectFolder.Replace('\\', '/') + "/";
-            var idx = rel.IndexOf(marker, StringComparison.Ordinal);
-            if (idx < 0) continue;
-            var under = rel[(idx + marker.Length)..];
-            var folder = under.Split('/')[0];
-            if (folder.EndsWith(".cs", StringComparison.Ordinal)) continue;
-            var expected = nsPrefix + "." + folder;
-            if (!ns.StartsWith(expected, StringComparison.Ordinal))
-                violations.Add($"{path}: ns={ns} expectedPrefix={expected}");
+            // EF generated migrations/model snapshot keep their legitimate migrations namespace exemption.
+            if (normalized.Contains("/Migrations/", StringComparison.OrdinalIgnoreCase)
+                || normalized.EndsWith("ModelSnapshot.cs", StringComparison.OrdinalIgnoreCase))
+            {
+                continue;
+            }
+
+            var relative = Path.GetRelativePath(rootFull, file).Replace('\\', '/');
+            var fileName = Path.GetFileName(relative);
+
+            // Global using files aggregate imports and declare no namespace by design; they are
+            // allowed only as the narrow Orchestration self-namespace import (see the alias guard).
+            if (fileName.StartsWith("GlobalUsings", StringComparison.OrdinalIgnoreCase))
+            {
+                continue;
+            }
+
+            var dir = Path.GetDirectoryName(relative)?.Replace('\\', '/');
+            var expected = string.IsNullOrEmpty(dir)
+                ? nsPrefix
+                : nsPrefix + "." + dir.Replace('/', '.');
+            var text = File.ReadAllText(file);
+            var match = Regex.Match(text, @"^namespace\s+([\w.]+)", RegexOptions.Multiline);
+            if (!match.Success)
+            {
+                violations.Add($"{relative}: no namespace");
+                continue;
+            }
+
+            // Exact equality only: a name that merely starts with the expected prefix is a violation.
+            if (!string.Equals(match.Groups[1].Value, expected, StringComparison.Ordinal))
+            {
+                violations.Add($"{relative}: ns={match.Groups[1].Value} expected={expected}");
+            }
         }
 
         Assert.True(violations.Count == 0, string.Join("\n", violations));

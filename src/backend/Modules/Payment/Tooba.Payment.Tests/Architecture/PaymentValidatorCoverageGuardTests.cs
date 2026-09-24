@@ -239,18 +239,18 @@ public sealed class PaymentValidatorCoverageGuardTests
     }
 
     [Fact]
-    public void Payment_remains_not_structure_certified()
+    public void Payment_is_structure_certified_under_arch_complete_002()
     {
         var state = File.ReadAllText(Path.Combine(
             RepoRoot(), "docs", "architecture", "tmar-current-state.json"));
-        Assert.Contains("PENDING_TB_TMAR_PAYMENT_ARCH_COMPLETE_002_STRUCTURE_001", state, StringComparison.Ordinal);
+        Assert.Contains("STRUCTURE_CERTIFIED_UNDER_ARCH_COMPLETE_002", state, StringComparison.Ordinal);
 
         var manifests = File.ReadAllText(Path.Combine(
             RepoRoot(), "docs", "architecture", "tmar-module-structure-manifests.json"));
         var at = manifests.IndexOf("\"uncertifiedHttpOwningModules\"", StringComparison.Ordinal);
         Assert.True(at >= 0, "uncertifiedHttpOwningModules missing");
         var window = manifests[at..Math.Min(manifests.Length, at + 2000)];
-        Assert.Contains("Payment", window, StringComparison.Ordinal);
+        Assert.DoesNotContain("Payment", window, StringComparison.Ordinal);
     }
 
     private static IReadOnlyList<string> EndpointFiles() =>
