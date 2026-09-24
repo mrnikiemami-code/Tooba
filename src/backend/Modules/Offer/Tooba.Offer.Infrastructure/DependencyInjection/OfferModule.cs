@@ -10,6 +10,7 @@ using Tooba.BuildingBlocks;
 using Tooba.ModuleContracts;
 using Tooba.Offer.Infrastructure.Persistence;
 using Tooba.Offer.Application.ReadModels;
+using Tooba.Offer.Application.Policies;
 using Tooba.Persistence;
 
 namespace Tooba.Offer.Infrastructure.DependencyInjection;
@@ -48,6 +49,7 @@ public sealed class OfferModule : IToobaModule
             return new ReturnPolicyResolver(opts);
         });
         services.AddScoped<IOfferStore, OfferStore>();
+        services.AddSingleton<IPrimaryOfferSelectionPolicy, PrimaryOfferSelectionPolicy>();
         services.AddScoped<OfferReadModelComposer>();
         services.AddScoped<IOfferLookupGateway>(sp => (OfferStore)sp.GetRequiredService<IOfferStore>());
         services.AddScoped<IOfferQueryGateway>(sp => (OfferStore)sp.GetRequiredService<IOfferStore>());

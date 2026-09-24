@@ -30,7 +30,6 @@ public sealed class HostCartResidualGuardTests
         ["Customer/HostFulfillmentCustomerAuthorizer.cs"] = "thin ownership probe via Cart contracts",
         ["GlobalUsings.SettlementApp.cs"] = "Settlement-only global usings (no Cart import)",
         ["GlobalUsings.SettlementDomain.cs"] = "Settlement-only global usings (no Cart import)",
-        ["OfferGlobalUsings.cs"] = "Offer alias only",
         ["UnpaidOrderExpiryHostedService.cs"] = "Order worker shell (no Cart authority)",
         ["UnpaidOrderExpiryHostOptions.cs"] = "Order worker scheduling knobs",
         ["PaymentReconciliationHostedService.cs"] = "Payment worker shell",

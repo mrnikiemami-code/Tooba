@@ -45,6 +45,7 @@ public sealed class StorefrontComposer
     private readonly IReviewDirectory _reviews;
     private readonly IContentDirectory _content;
     private readonly ICatalogDirectory _catalogDirectory;
+    private readonly IPrimaryOfferSelectionPolicy _primaryOffers;
 
     /// <summary>
     /// سازندهٔ ترکیب فروشگاه. نام فروشنده از Party جدا از Offer خوانده می‌شود.
@@ -59,7 +60,8 @@ public sealed class StorefrontComposer
         IPromotionEvaluator promotions,
         IReviewDirectory reviews,
         IContentDirectory content,
-        ICatalogDirectory catalogDirectory)
+        ICatalogDirectory catalogDirectory,
+        IPrimaryOfferSelectionPolicy primaryOffers)
     {
         _catalog = catalog;
         _offers = offers;
@@ -71,6 +73,7 @@ public sealed class StorefrontComposer
         _reviews = reviews;
         _content = content;
         _catalogDirectory = catalogDirectory;
+        _primaryOffers = primaryOffers;
     }
 
     /// <summary>
@@ -913,10 +916,10 @@ public sealed class StorefrontComposer
                 taxLabel));
         }
 
-        var chosenVariantId = StorefrontPrimaryOfferResolver.ResolveVariantId(
+        var chosenVariantId = _primaryOffers.ResolveVariantId(
             selectedVariantId,
             variantIds,
-            candidates);
+            candidates.Select(ToSelectionCandidate).ToList());
         if (chosenVariantId is null)
         {
             return null;
@@ -926,11 +929,13 @@ public sealed class StorefrontComposer
         var resolvableCandidates = preferredSellerPartyId is Guid sellerPartyId
             ? selectedCandidates.Where(candidate => candidate.SellerPartyId == sellerPartyId).ToList()
             : selectedCandidates;
-        var primary = StorefrontPrimaryOfferResolver.Resolve(resolvableCandidates);
-        if (primary is null)
+        var selected = _primaryOffers.Resolve(resolvableCandidates.Select(ToSelectionCandidate).ToList());
+        if (selected is null)
         {
             return null;
         }
+
+        var primary = resolvableCandidates.First(candidate => candidate.OfferId == selected.OfferId);
 
         var others = selectedCandidates
             .Where(item => item.OfferId != primary.OfferId)
@@ -1023,6 +1028,17 @@ public sealed class StorefrontComposer
     /// <summary>
     /// همهٔ گونه‌ها را با محور خوانا و Offer اصلی همان گونه نمایش می‌دهد؛ انتخاب کلاینت در این مرحله معتبر فرض نمی‌شود.
     /// </summary>
+    /// <summary>
+    /// نگاشت فقط-انتخاب: فیلدهای نمایشی Host وارد قرارداد Offer نمی‌شوند.
+    /// </summary>
+    private static OfferSelectionCandidate ToSelectionCandidate(StorefrontOfferCandidate candidate)
+        => new(
+            candidate.OfferId,
+            candidate.CatalogVariantId,
+            candidate.SellerPartyId,
+            candidate.AmountExclusiveOfTax,
+            candidate.AvailableUnits);
+
     private async Task<IReadOnlyList<StorefrontProductVariant>> BuildVariantsAsync(
         IReadOnlyList<CatalogVariant> variants,
         IReadOnlyList<StorefrontOfferCandidate> candidates,
@@ -1041,8 +1057,13 @@ public sealed class StorefrontComposer
                     .ToList(),
                 cancellationToken,
                 static (label, value) => new StorefrontVariantAxis(label, value));
-            var primary = StorefrontPrimaryOfferResolver.Resolve(
-                candidates.Where(candidate => candidate.CatalogVariantId == variant.VariantId).ToList());
+            var variantCandidates = candidates
+                .Where(candidate => candidate.CatalogVariantId == variant.VariantId)
+                .ToList();
+            var selected = _primaryOffers.Resolve(variantCandidates.Select(ToSelectionCandidate).ToList());
+            var primary = selected is null
+                ? null
+                : variantCandidates.First(candidate => candidate.OfferId == selected.OfferId);
             result.Add(new StorefrontProductVariant(
                 variant.VariantId,
                 axes,

@@ -15,7 +15,6 @@ public sealed class HostFolderStructureTests
         "FulfillmentReturnsGridAliases.cs",
         "GlobalUsings.SettlementApp.cs",
         "GlobalUsings.SettlementDomain.cs",
-        "OfferGlobalUsings.cs",
         "UnpaidOrderExpiryHostedService.cs",
         "UnpaidOrderExpiryHostOptions.cs",
         "PaymentReconciliationHostedService.cs",

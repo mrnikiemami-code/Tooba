@@ -370,6 +370,64 @@ public sealed class OfferArchitectureGuardTests
         Assert.Contains("RequestObservabilityEnrichmentMiddleware", program, StringComparison.Ordinal);
     }
 
+    /// <summary>
+    /// TB-TMAR-OFFER-HOST-RESIDUE-REPAIR-001 — Host may not own Offer business selection policy or
+    /// hidden Offer type aliases; the primary-offer rule is Offer-owned behind a Contracts port.
+    /// </summary>
+    [Fact]
+    public void Host_owns_no_offer_selection_policy_or_hidden_offer_alias()
+    {
+        var hostRoot = Path.Combine(RepoRoot(), "src", "backend", "Host", "Tooba.Host");
+
+        Assert.False(File.Exists(Path.Combine(hostRoot, "Storefront", "StorefrontPrimaryOfferResolver.cs")));
+        Assert.False(File.Exists(Path.Combine(hostRoot, "OfferGlobalUsings.cs")));
+        Assert.False(Directory.Exists(Path.Combine(hostRoot, ".tmp-t014-test-out")));
+
+        var hostSources = Directory.EnumerateFiles(hostRoot, "*.cs", SearchOption.AllDirectories)
+            .Where(path =>
+            {
+                var n = path.Replace('\\', '/');
+                return !n.Contains("/bin/", StringComparison.Ordinal)
+                       && !n.Contains("/obj/", StringComparison.Ordinal);
+            })
+            .Select(path => (Path: Path.GetRelativePath(RepoRoot(), path), Text: File.ReadAllText(path)))
+            .ToArray();
+
+        Assert.DoesNotContain(hostSources, x => x.Text.Contains("global using OfferStatus", StringComparison.Ordinal));
+        Assert.DoesNotContain(hostSources, x => x.Text.Contains("global using SalesChannel", StringComparison.Ordinal));
+        Assert.DoesNotContain(hostSources, x => x.Text.Contains("global using Tooba.Offer", StringComparison.Ordinal));
+
+        // The equivalent primary-offer ordering rule must not survive anywhere in Host.
+        Assert.DoesNotContain(
+            hostSources,
+            x => x.Text.Contains("OrderByDescending(candidate => candidate.AvailableUnits > 0)", StringComparison.Ordinal));
+
+        // Host consumes the Offer Contracts port, never the Application implementation.
+        var composer = hostSources.Single(x => x.Path.EndsWith(
+            "Host/Tooba.Host/Storefront/StorefrontComposer.cs".Replace('/', Path.DirectorySeparatorChar),
+            StringComparison.Ordinal));
+        Assert.Contains("IPrimaryOfferSelectionPolicy", composer.Text, StringComparison.Ordinal);
+        Assert.DoesNotContain("Tooba.Offer.Application", composer.Text, StringComparison.Ordinal);
+        Assert.Contains("Tooba.Offer.Contracts.Ports", composer.Text, StringComparison.Ordinal);
+
+        // Contracts owns the port; Application owns the implementation.
+        Assert.True(File.Exists(Path.Combine(
+            OfferRoot(), "Tooba.Offer.Contracts", "Ports", "IPrimaryOfferSelectionPolicy.cs")));
+        Assert.True(File.Exists(Path.Combine(
+            OfferRoot(), "Tooba.Offer.Application", "Policies", "PrimaryOfferSelectionPolicy.cs")));
+
+        // The allowed thin Host security adapter stays thin and business-free.
+        var adapter = File.ReadAllText(Path.Combine(hostRoot, "Seller", "HostOfferSellerAuthorizer.cs"));
+        Assert.Contains("IOfferSellerAuthorizer", adapter, StringComparison.Ordinal);
+        Assert.DoesNotContain("PrimaryOfferSelectionPolicy", adapter, StringComparison.Ordinal);
+
+        // No Offer -> Host reference in the Offer production projects.
+        foreach (var project in new[] { "Tooba.Offer.Domain", "Tooba.Offer.Application", "Tooba.Offer.Contracts", "Tooba.Offer.Infrastructure", "Tooba.Offer.Endpoints" })
+        {
+            Assert.DoesNotContain(ProjectRefs(project), r => r.Contains("Tooba.Host", StringComparison.OrdinalIgnoreCase));
+        }
+    }
+
     private static int CountOccurrences(string text, string needle)
     {
         var count = 0;
