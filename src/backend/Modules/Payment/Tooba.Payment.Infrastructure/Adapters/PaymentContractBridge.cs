@@ -7,11 +7,11 @@ using Tooba.Payment.Contracts.Hold;
 namespace Tooba.Payment.Infrastructure.Adapters;
 
 /// <summary>
-/// Contract bridge for Host/Order admin surfaces. Expected failures originate as
+/// Contract bridge exposing Payment admin/customer/hold contract gateways. Expected failures originate as
 /// <see cref="Tooba.BuildingBlocks.ContractOperationException"/> at owning Payment Directory;
 /// this bridge does not parse Message or promote InvalidOperationException.
 /// </summary>
-public sealed class PaymentHostContractBridge(
+public sealed class PaymentContractBridge(
     IPaymentDirectory payments,
     IPaymentAdminDirectory admin,
     IPaymentExpiryDirectory expiry,

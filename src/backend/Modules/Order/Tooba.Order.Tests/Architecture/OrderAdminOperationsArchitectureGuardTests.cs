@@ -247,7 +247,7 @@ public sealed class OrderAdminOperationsArchitectureGuardTests
             Path.Combine(RepoRoot(), "src", "backend", "Modules", "Settlement",
                 "Tooba.Settlement.Infrastructure", "Adapters", "SettlementOrderAccrualAdapter.cs"),
             Path.Combine(RepoRoot(), "src", "backend", "Modules", "Payment",
-                "Tooba.Payment.Infrastructure", "Adapters", "PaymentHostContractBridge.cs"),
+                "Tooba.Payment.Infrastructure", "Adapters", "PaymentContractBridge.cs"),
             Path.Combine(RepoRoot(), "src", "backend", "Modules", "Inventory",
                 "Tooba.Inventory.Application", "Orders", "OrderInventoryLifecycleAdapter.cs"),
             Path.Combine(RepoRoot(), "src", "backend", "Modules", "Order",

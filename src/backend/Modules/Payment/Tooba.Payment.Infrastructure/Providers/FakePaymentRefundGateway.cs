@@ -1,4 +1,5 @@
-﻿using Tooba.Payment.Application.Models;
+﻿using Tooba.BuildingBlocks;
+using Tooba.Payment.Application.Models;
 using Tooba.Payment.Contracts.Returns;
 
 namespace Tooba.Payment.Infrastructure.Providers;
@@ -49,6 +50,6 @@ public sealed class FailClosedPaymentRefundGateway : IPaymentRefundGateway
         _ = amount;
         _ = currency;
         _ = idempotencyKey;
-        throw new InvalidOperationException("payment.refund.gateway.unconfigured");
+        throw new ContractOperationException("payment.refund.gateway.unconfigured");
     }
 }

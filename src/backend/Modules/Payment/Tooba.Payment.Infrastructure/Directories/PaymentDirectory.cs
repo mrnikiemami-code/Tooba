@@ -718,13 +718,13 @@ public sealed class PaymentDirectory : IPaymentDirectory, IPaymentReconciliation
 
             await _db.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
         }
-        catch (InvalidOperationException ex) when (ex.Message == "payment.refund.gateway.unconfigured")
+        catch (ContractOperationException ex) when (ex.Code == "payment.refund.gateway.unconfigured")
         {
             // RefundPending remains for admin action.
         }
-        catch (InvalidOperationException ex) when (ex.Message.StartsWith("payment.", StringComparison.Ordinal))
+        catch (ContractOperationException ex) when (ex.Code.StartsWith("payment.", StringComparison.Ordinal))
         {
-            payment.MarkRefundFailed(ex.Message, _clock.UtcNow);
+            payment.MarkRefundFailed(ex.Code, _clock.UtcNow);
             await _db.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
         }
     }

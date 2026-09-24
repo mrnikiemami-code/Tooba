@@ -178,8 +178,8 @@ public sealed class TmarDurableGuardTests
             cartEntry.GetProperty("lastAcceptedTask").GetString(),
             StringComparison.Ordinal);
         Assert.False(string.IsNullOrWhiteSpace(cartEntry.GetProperty("lastAcceptedCommit").GetString()));
-        Assert.Equal("TB-TMAR-PAYMENT-ARCH-COMPLETE-002-AUDIT-001", rootEl.GetProperty("lastAcceptedTask").GetString());
-        Assert.Equal("dcb8b416b19d8f9db90e8162754723e4cfbbfb14", rootEl.GetProperty("lastAcceptedCommit").GetString());
+        Assert.Equal("TB-TMAR-PAYMENT-HOST-RESIDUE-REPAIR-001-R1", rootEl.GetProperty("lastAcceptedTask").GetString());
+        Assert.Equal("f43904967311a3ac3e3f2cca773af3c733458a76", rootEl.GetProperty("lastAcceptedCommit").GetString());
 
         var paymentHostResidue = rootEl.GetProperty("paymentHostResidueRepair");
         Assert.Equal("TB-TMAR-PAYMENT-HOST-RESIDUE-REPAIR-001", paymentHostResidue.GetProperty("task").GetString());
@@ -193,6 +193,23 @@ public sealed class TmarDurableGuardTests
         Assert.Equal("PAYMENT_ENDPOINTS", paymentHostResidue.GetProperty("adminGridPolicyOwnership").GetString());
         Assert.Equal("ZERO", paymentHostResidue.GetProperty("paymentToHostDependency").GetString());
         Assert.False(paymentHostResidue.GetProperty("productionCodeChanged").GetBoolean() == false);
+
+        var paymentPrecert = rootEl.GetProperty("paymentPrecertHygiene");
+        Assert.Equal("TB-TMAR-PAYMENT-PRECERT-HYGIENE-001", paymentPrecert.GetProperty("task").GetString());
+        Assert.Equal(
+            "DEAD_PORTS_REMOVED_TYPED_FAULTS_NO_LOCALIZED_APPLICATION_FALLBACK",
+            paymentPrecert.GetProperty("state").GetString());
+        Assert.Equal("TB-TMAR-PAYMENT-HOST-RESIDUE-REPAIR-001-R1", paymentPrecert.GetProperty("parent").GetString());
+        Assert.Equal("PAYMENT_CONTRACT_BRIDGE", paymentPrecert.GetProperty("internalBridge").GetString());
+        Assert.Equal("REMOVED", paymentPrecert.GetProperty("messageClassification").GetString());
+        Assert.Equal(
+            "ContractOperationException_Code_WALLET_SPEND_REJECTED",
+            paymentPrecert.GetProperty("walletTypedBoundary").GetString());
+        Assert.Equal("ZERO", paymentPrecert.GetProperty("paymentToHostDependency").GetString());
+        Assert.Equal("PENDING_TB_TMAR_PAYMENT_ARCH_COMPLETE_002_STRUCTURE_001",
+            paymentPrecert.GetProperty("structureCertification").GetString());
+        Assert.Equal(paymentPrecert.GetProperty("paymentDirectoryBaseline").GetInt32(),
+            paymentPrecert.GetProperty("paymentDirectoryLines").GetInt32());
 
         var paymentAudit = rootEl.GetProperty("paymentArchComplete002Audit");
         Assert.Equal("TB-TMAR-PAYMENT-ARCH-COMPLETE-002-AUDIT-001", paymentAudit.GetProperty("task").GetString());

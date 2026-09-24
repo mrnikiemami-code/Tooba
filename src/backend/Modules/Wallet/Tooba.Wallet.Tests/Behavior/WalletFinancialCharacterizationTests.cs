@@ -72,7 +72,7 @@ public sealed class WalletFinancialCharacterizationTests
         var actor = Guid.Parse("bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb");
         var paymentId = Guid.NewGuid();
 
-        var ex = await Assert.ThrowsAsync<InvalidOperationException>(() =>
+        var ex = await Assert.ThrowsAsync<ContractOperationException>(() =>
             wallets.SpendForOrderPaymentAsync(
                 actor,
                 10_000m,
@@ -80,7 +80,7 @@ public sealed class WalletFinancialCharacterizationTests
                 paymentId,
                 $"wallet-order-debit:{paymentId:D}",
                 CancellationToken.None));
-        Assert.Equal("wallet.rejected.2YXZiNis", ex.Message);
+        Assert.Equal("wallet.rejected.2YXZiNis", ex.Code);
         Assert.Empty(notes.Commands);
     }
 

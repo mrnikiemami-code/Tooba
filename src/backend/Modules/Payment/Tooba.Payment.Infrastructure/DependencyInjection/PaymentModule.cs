@@ -58,10 +58,10 @@ public sealed class PaymentModule : IToobaModule
         services.AddScoped<IPaymentHoldSettingsDirectory, PaymentHoldSettingsDirectory>();
         services.AddScoped<IPaymentQueryDirectory, PaymentQueryDirectory>();
         services.AddScoped<IPendingPaymentReader, PendingPaymentBridge>();
-        services.AddScoped<PaymentHostContractBridge>();
-        services.AddScoped<IPaymentAdminGateway>(sp => sp.GetRequiredService<PaymentHostContractBridge>());
-        services.AddScoped<IPaymentCustomerGateway>(sp => sp.GetRequiredService<PaymentHostContractBridge>());
-        services.AddScoped<IPaymentHoldSettingsGateway>(sp => sp.GetRequiredService<PaymentHostContractBridge>());
+        services.AddScoped<PaymentContractBridge>();
+        services.AddScoped<IPaymentAdminGateway>(sp => sp.GetRequiredService<PaymentContractBridge>());
+        services.AddScoped<IPaymentCustomerGateway>(sp => sp.GetRequiredService<PaymentContractBridge>());
+        services.AddScoped<IPaymentHoldSettingsGateway>(sp => sp.GetRequiredService<PaymentContractBridge>());
         services.AddScoped<IPaymentReturnReader, PaymentReturnBridge>();
 
         if (environment.IsProduction())

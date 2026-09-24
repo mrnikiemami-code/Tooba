@@ -150,9 +150,9 @@ public sealed class WalletCheckoutRefundTests : IAsyncLifetime
         await wallets.AdjustWalletForAdminAsync(
             actor, admin, new AdminWalletAdjustmentCommand(500_000m, "Credit", "test top-up", "wallet-test-topup-v1"), CancellationToken.None);
 
-        await Assert.ThrowsAsync<InvalidOperationException>(() =>
+        await Assert.ThrowsAsync<ContractOperationException>(() =>
             wallets.SpendForOrderPaymentAsync(actor, 600_000m, "IRR", Guid.NewGuid(), $"wallet-order-debit:{Guid.NewGuid():D}", CancellationToken.None));
-        await Assert.ThrowsAsync<InvalidOperationException>(() =>
+        await Assert.ThrowsAsync<ContractOperationException>(() =>
             wallets.SpendForOrderPaymentAsync(actor, 10_000m, "USD", Guid.NewGuid(), $"wallet-order-debit:{Guid.NewGuid():D}", CancellationToken.None));
 
         var paymentId = Guid.Parse("01900000-0000-7000-8000-000000000101");
@@ -255,7 +255,7 @@ public sealed class WalletCheckoutRefundTests : IAsyncLifetime
             actor, 5_000m, "IRR", partialId, $"wallet-refund-credit:{partialId:D}", CancellationToken.None);
         Assert.Equal(5_000m, partial.Entry.Amount);
 
-        await Assert.ThrowsAsync<InvalidOperationException>(() =>
+        await Assert.ThrowsAsync<ContractOperationException>(() =>
             wallets.SpendForOrderPaymentAsync(stranger, 10_000m, "IRR", Guid.NewGuid(), $"wallet-order-debit:{Guid.NewGuid():D}", CancellationToken.None));
 
         Assert.True(WalletDemoIds.AccountId != Guid.Empty);

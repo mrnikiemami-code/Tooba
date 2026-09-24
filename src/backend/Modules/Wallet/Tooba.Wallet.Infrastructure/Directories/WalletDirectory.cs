@@ -323,11 +323,11 @@ public sealed class WalletDirectory : IWalletDirectory, IWalletOrderPaymentPort,
         CancellationToken cancellationToken)
     {
         if (customerActorId == Guid.Empty || paymentId == Guid.Empty)
-            throw new InvalidOperationException("wallet.rejected.2YfZiNuM");
+            throw new ContractOperationException("wallet.rejected.2YfZiNuM");
         if (amount <= 0)
-            throw new InvalidOperationException("wallet.rejected.2YXYqNmE");
+            throw new ContractOperationException("wallet.rejected.2YXYqNmE");
         if (string.IsNullOrWhiteSpace(idempotencyKey))
-            throw new InvalidOperationException("wallet.rejected.SWRlbXBv");
+            throw new ContractOperationException("wallet.rejected.SWRlbXBv");
 
         var key = idempotencyKey.Trim();
         var normalizedCurrency = WalletAccount.NormalizeCurrency(currency);
@@ -340,7 +340,7 @@ public sealed class WalletDirectory : IWalletDirectory, IWalletOrderPaymentPort,
                 || existing.Amount != decimal.Round(amount, 0, MidpointRounding.AwayFromZero)
                 || !string.Equals(existing.Currency, normalizedCurrency, StringComparison.Ordinal))
             {
-                throw new InvalidOperationException("wallet.rejected.2qnZhNuM");
+                throw new ContractOperationException("wallet.rejected.2qnZhNuM");
             }
 
             var balanceReplay = await DeriveBalanceAsync(existing.AccountId, cancellationToken);
@@ -363,14 +363,14 @@ public sealed class WalletDirectory : IWalletDirectory, IWalletOrderPaymentPort,
 
             var account = await EnsureAccountTrackedAsync(customerActorId, cancellationToken);
             if (!account.CanMutateLedger)
-                throw new InvalidOperationException("wallet.rejected.2K3Ys9in");
+                throw new ContractOperationException("wallet.rejected.2K3Ys9in");
             if (!string.Equals(account.Currency, normalizedCurrency, StringComparison.Ordinal))
-                throw new InvalidOperationException("wallet.rejected.2KfYsdiy");
+                throw new ContractOperationException("wallet.rejected.2KfYsdiy");
 
             var balance = await DeriveBalanceAsync(account.AccountId, cancellationToken);
             var rounded = decimal.Round(amount, 0, MidpointRounding.AwayFromZero);
             if (rounded > balance)
-                throw new InvalidOperationException("wallet.rejected.2YXZiNis");
+                throw new ContractOperationException("wallet.rejected.2YXZiNis");
 
             var now = _clock.UtcNow;
             var entry = WalletLedgerEntry.PostOrderPaymentDebit(

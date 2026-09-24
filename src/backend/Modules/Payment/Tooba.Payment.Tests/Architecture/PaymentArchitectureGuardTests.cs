@@ -374,6 +374,99 @@ public sealed class PaymentArchitectureGuardTests
         Assert.Equal(20, instance.NormalizedBatchSize);
     }
 
+    [Fact]
+    public void Payment_precert_hygiene_removes_dead_ports_and_legacy_bridge_name()
+    {
+        var ports = File.ReadAllText(Path.Combine(
+            PaymentRoot(), "Tooba.Payment.Application", "Ports", "PaymentStorefrontBoundaryPorts.cs"));
+        Assert.DoesNotContain("StorefrontCheckoutPaymentAccessDto", ports, StringComparison.Ordinal);
+        Assert.DoesNotContain("IStorefrontCheckoutPaymentAccessPort", ports, StringComparison.Ordinal);
+        Assert.DoesNotContain("IPaymentProofMediaPort", ports, StringComparison.Ordinal);
+        Assert.DoesNotContain("IPaymentUnpaidRetrySupplyPort", ports, StringComparison.Ordinal);
+        Assert.DoesNotContain("IPaymentAdminOrderEnrichmentPort", ports, StringComparison.Ordinal);
+        Assert.DoesNotContain("AdminPaymentOrderEnrichmentDto", ports, StringComparison.Ordinal);
+        Assert.Contains("ICheckoutActorPolicyPort", ports, StringComparison.Ordinal);
+        Assert.Contains("IPaymentGatewayCatalogPort", ports, StringComparison.Ordinal);
+        Assert.Contains("IPaymentWebhookSignatureVerifier", ports, StringComparison.Ordinal);
+
+        var adapters = Path.Combine(PaymentRoot(), "Tooba.Payment.Infrastructure", "Adapters");
+        Assert.False(File.Exists(Path.Combine(adapters, "PaymentHostContractBridge.cs")));
+        Assert.True(File.Exists(Path.Combine(adapters, "PaymentContractBridge.cs")));
+
+        var bridge = File.ReadAllText(Path.Combine(adapters, "PaymentContractBridge.cs"));
+        Assert.Contains("public sealed class PaymentContractBridge", bridge, StringComparison.Ordinal);
+        Assert.DoesNotContain("PaymentHostContractBridge", bridge, StringComparison.Ordinal);
+        Assert.Contains("IPaymentAdminGateway", bridge, StringComparison.Ordinal);
+        Assert.Contains("IPaymentCustomerGateway", bridge, StringComparison.Ordinal);
+        Assert.Contains("IPaymentHoldSettingsGateway", bridge, StringComparison.Ordinal);
+
+        Assert.DoesNotContain(AllProductionSources(), x => x.Text.Contains("PaymentHostContractBridge", StringComparison.Ordinal));
+
+        var infraModule = File.ReadAllText(Path.Combine(
+            PaymentRoot(), "Tooba.Payment.Infrastructure", "DependencyInjection", "PaymentModule.cs"));
+        Assert.Contains("AddScoped<PaymentContractBridge>()", infraModule, StringComparison.Ordinal);
+        Assert.DoesNotContain("PaymentHostContractBridge", infraModule, StringComparison.Ordinal);
+        Assert.DoesNotContain("PaymentHostContractBridge, PaymentHostContractBridge", infraModule, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void Payment_expected_faults_use_typed_codes_not_message_classification()
+    {
+        var refundGateway = File.ReadAllText(Path.Combine(
+            PaymentRoot(), "Tooba.Payment.Infrastructure", "Providers", "FakePaymentRefundGateway.cs"));
+        Assert.Contains("throw new ContractOperationException(\"payment.refund.gateway.unconfigured\")", refundGateway, StringComparison.Ordinal);
+        Assert.DoesNotContain("InvalidOperationException(\"payment.refund", refundGateway, StringComparison.Ordinal);
+
+        var directory = File.ReadAllText(Path.Combine(
+            PaymentRoot(), "Tooba.Payment.Infrastructure", "Directories", "PaymentDirectory.cs"));
+        Assert.Contains("catch (ContractOperationException ex) when (ex.Code == \"payment.refund.gateway.unconfigured\")", directory, StringComparison.Ordinal);
+        Assert.Contains("payment.MarkRefundFailed(ex.Code, _clock.UtcNow)", directory, StringComparison.Ordinal);
+        Assert.DoesNotContain("ex.Message", directory, StringComparison.Ordinal);
+        Assert.DoesNotContain("catch (InvalidOperationException ex) when (ex.Message", directory, StringComparison.Ordinal);
+
+        var walletGateway = File.ReadAllText(Path.Combine(
+            PaymentRoot(), "Tooba.Payment.Infrastructure", "Providers", "WalletPaymentGateway.cs"));
+        Assert.Contains("catch (ContractOperationException)", walletGateway, StringComparison.Ordinal);
+        Assert.Contains("WALLET_SPEND_REJECTED", walletGateway, StringComparison.Ordinal);
+        Assert.DoesNotContain("ex.Message", walletGateway, StringComparison.Ordinal);
+        Assert.DoesNotContain(".Message.Contains(", walletGateway, StringComparison.Ordinal);
+        Assert.DoesNotContain(".Message.StartsWith(", walletGateway, StringComparison.Ordinal);
+        Assert.DoesNotContain("catch (InvalidOperationException", walletGateway, StringComparison.Ordinal);
+
+        foreach (var (path, text) in AllProductionSources())
+        {
+            Assert.False(text.Contains(".Message.Contains(", StringComparison.Ordinal), path);
+            Assert.False(text.Contains(".Message.StartsWith(", StringComparison.Ordinal), path);
+            Assert.False(text.Contains(".Message ==", StringComparison.Ordinal), path);
+        }
+    }
+
+    [Fact]
+    public void Payment_application_admin_grid_has_no_localized_presentation_fallback()
+    {
+        var gridQuery = File.ReadAllText(Path.Combine(
+            PaymentRoot(), "Tooba.Payment.Application", "Queries", "QueryAdminPaymentsGrid", "QueryAdminPaymentsGridQuery.cs"));
+        Assert.Contains("order?.CustomerDisplayName ?? string.Empty", gridQuery, StringComparison.Ordinal);
+        Assert.Contains("order?.ReservationLabel ?? string.Empty", gridQuery, StringComparison.Ordinal);
+        Assert.Contains("order?.ReservationLabelEn ?? string.Empty", gridQuery, StringComparison.Ordinal);
+        Assert.DoesNotContain("مشتری", gridQuery, StringComparison.Ordinal);
+        Assert.False(Regex.IsMatch(gridQuery, @"[\u0600-\u06FF]"), "Persian literal in admin grid query");
+
+        var dtos = File.ReadAllText(Path.Combine(
+            PaymentRoot(), "Tooba.Payment.Application", "Models", "StorefrontPaymentDtos.cs"));
+        Assert.DoesNotContain("ReservationLabel = \"—\"", dtos, StringComparison.Ordinal);
+        Assert.Contains("ReservationLabel = \"\"", dtos, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void PaymentDirectory_does_not_expand_beyond_accepted_baseline()
+    {
+        var path = Path.Combine(
+            PaymentRoot(), "Tooba.Payment.Infrastructure", "Directories", "PaymentDirectory.cs");
+        var lines = File.ReadAllText(path).Split(new[] { "\r\n", "\n" }, StringSplitOptions.None).Length;
+        Assert.True(lines <= 971, $"PaymentDirectory.cs grew to {lines} lines (accepted post-task baseline 971).");
+    }
+
     private static void AssertNoRootDump(string project, string[] allowedFolders)
     {
         var root = Path.Combine(PaymentRoot(), project);

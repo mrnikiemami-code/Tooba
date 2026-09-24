@@ -3,10 +3,10 @@
     "executionMode":  "BACKEND_ONLY_UNTIL_EXPLICIT_RELEASE",
     "frontendFrozen":  true,
     "checkoutState":  "PAUSED_AT_SAFE_W5_CHECKPOINT",
-    "lastAcceptedTask":  "TB-TMAR-PAYMENT-ARCH-COMPLETE-002-AUDIT-001",
-    "lastAcceptedCommit":  "dcb8b416b19d8f9db90e8162754723e4cfbbfb14",
-    "lastAcceptedSoTStamp":  "dcb8b416b19d8f9db90e8162754723e4cfbbfb14",
-    "lastAcceptedNote":  "TB-TMAR-PAYMENT-ARCH-COMPLETE-002-AUDIT-001 Architect-ACCEPTED at dcb8b416b19d8f9db90e8162754723e4cfbbfb14 (Payment bounded Host-residue audit accepted; Payment host-residue repair opened next).",
+    "lastAcceptedTask":  "TB-TMAR-PAYMENT-HOST-RESIDUE-REPAIR-001-R1",
+    "lastAcceptedCommit":  "f43904967311a3ac3e3f2cca773af3c733458a76",
+    "lastAcceptedSoTStamp":  "62e016d5f0bd623057e4d8abf3050005b2896c90",
+    "lastAcceptedNote":  "TB-TMAR-PAYMENT-HOST-RESIDUE-REPAIR-001-R1 Architect-ACCEPTED at f43904967311a3ac3e3f2cca773af3c733458a76 (Payment reconciliation 15s min cadence restored; all Payment admin grid structural failures map to stable semantic 400).",
     "nextTask":  "TB-TMAR-PAYMENT-ARCH-COMPLETE-002-STRUCTURE-001",
     "nextTaskGate":  "NEXT_TMAR_WAVE_AFTER_PAYMENT_HOST_RESIDUE_REPAIR",
     "cartMultiCurrency":  {
@@ -103,6 +103,26 @@
         "hostDeadRowModel":  "AdminReceiptListItem_REMOVED",
         "structureCertification":  "PENDING_TB_TMAR_PAYMENT_ARCH_COMPLETE_002_STRUCTURE_001",
         "evidence":  "docs/evidence/TB-TMAR-PAYMENT-HOST-RESIDUE-REPAIR-001-R1/payment-host-residue-parity-repair.md"
+    },
+    "paymentPrecertHygiene":  {
+        "task":  "TB-TMAR-PAYMENT-PRECERT-HYGIENE-001",
+        "state":  "DEAD_PORTS_REMOVED_TYPED_FAULTS_NO_LOCALIZED_APPLICATION_FALLBACK",
+        "parent":  "TB-TMAR-PAYMENT-HOST-RESIDUE-REPAIR-001-R1",
+        "productionCodeChanged":  true,
+        "deadPorts":  "StorefrontCheckoutPaymentAccessDto,IStorefrontCheckoutPaymentAccessPort,IPaymentProofMediaPort,IPaymentUnpaidRetrySupplyPort,IPaymentAdminOrderEnrichmentPort,AdminPaymentOrderEnrichmentDto_REMOVED",
+        "livePortsRetained":  "ICheckoutActorPolicyPort,IPaymentGatewayCatalogPort,IPaymentWebhookSignatureVerifier",
+        "internalBridge":  "PAYMENT_CONTRACT_BRIDGE",
+        "bridgePath":  "src/backend/Modules/Payment/Tooba.Payment.Infrastructure/Adapters/PaymentContractBridge.cs",
+        "messageClassification":  "REMOVED",
+        "refundTypedFault":  "ContractOperationException_payment.refund.gateway.unconfigured_RefundPending_preserved",
+        "walletTypedBoundary":  "ContractOperationException_Code_WALLET_SPEND_REJECTED",
+        "adminGridLocalizedFallback":  "REMOVED_LOCALE_NEUTRAL_EMPTY_STRING",
+        "paymentDirectoryLines":  971,
+        "paymentDirectoryBaseline":  971,
+        "paymentToHostDependency":  "ZERO",
+        "hostPaymentResidue":  "PAYMENT_RUNTIME_RESIDUE_REMOVED_SECURITY_ADAPTERS_ONLY",
+        "structureCertification":  "PENDING_TB_TMAR_PAYMENT_ARCH_COMPLETE_002_STRUCTURE_001",
+        "evidence":  "docs/evidence/TB-TMAR-PAYMENT-PRECERT-HYGIENE-001/payment-precert-hygiene.md"
     },
     "offerArchComplete002Structure":  {
         "task":  "TB-TMAR-OFFER-ARCH-COMPLETE-002-STRUCTURE-001",
@@ -272,7 +292,9 @@
                                          "paymentReconciliationOwnership":  "PAYMENT_INFRASTRUCTURE_WORKER_AND_OPTIONS",
                                          "paymentAdminGridPolicyOwnership":  "PAYMENT_ENDPOINTS",
                                          "paymentValidatorCoverage":  "0_REQUIRED_PRESENT_15_VALIDATOR_REQUIRED_1_NO_VALIDATOR_REQUIRED",
-                                         "paymentPathNamespace":  "EXACT_PENDING_CERTIFICATION"
+                                         "paymentPathNamespace":  "EXACT_PENDING_CERTIFICATION",
+                                         "paymentPrecertHygiene":  "DEAD_PORTS_REMOVED_TYPED_FAULTS_NO_LOCALIZED_APPLICATION_FALLBACK",
+                                         "paymentInternalBridge":  "PAYMENT_CONTRACT_BRIDGE"
                                      },
                                      {
                                          "module":  "Promotion",

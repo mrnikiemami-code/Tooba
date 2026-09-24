@@ -82,11 +82,9 @@ public sealed class WalletPaymentGateway : IPaymentGateway
                 cancellationToken).ConfigureAwait(false);
             return new GatewayVerification(true, $"wallet:{paymentId:D}", null);
         }
-        catch (InvalidOperationException ex) when (
-            ex.Message.StartsWith("wallet.", StringComparison.Ordinal)
-            || ex.Message.Contains("payment.wallet", StringComparison.Ordinal)
-            || ex.Message.Contains("insufficient", StringComparison.OrdinalIgnoreCase))
+        catch (ContractOperationException)
         {
+            // Expected Wallet order-payment rejection crosses the contract boundary typed; no Message classification.
             return new GatewayVerification(false, null, "WALLET_SPEND_REJECTED");
         }
     }
