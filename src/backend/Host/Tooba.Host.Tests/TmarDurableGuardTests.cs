@@ -106,8 +106,8 @@ public sealed class TmarDurableGuardTests
         Assert.Equal("USER_ACCEPTED", rootEl.GetProperty("goldenWaveUserReview").GetString());
         Assert.Equal("TB-TMAR-GOLDEN-WAVE-FINAL-CLOSURE-001", rootEl.GetProperty("goldenWaveClosedBy").GetString());
         Assert.False(string.IsNullOrWhiteSpace(rootEl.GetProperty("goldenWaveClosedCommit").GetString()));
-        Assert.Equal("TB-TMAR-PAYMENT-PRECERT-VALIDATION-001", rootEl.GetProperty("nextTask").GetString());
-        Assert.Equal("NEXT_TMAR_WAVE_AFTER_PAYMENT_PRECERT_DIRECTORY_SPLIT_R1", rootEl.GetProperty("nextTaskGate").GetString());
+        Assert.Equal("TB-TMAR-PAYMENT-PRECERT-VALIDATION-002", rootEl.GetProperty("nextTask").GetString());
+        Assert.Equal("NEXT_TMAR_WAVE_AFTER_PAYMENT_PRECERT_VALIDATION_001", rootEl.GetProperty("nextTaskGate").GetString());
         Assert.Equal("PAUSED_AT_SAFE_W5_CHECKPOINT", rootEl.GetProperty("checkoutState").GetString());
         Assert.True(rootEl.GetProperty("frontendFrozen").GetBoolean());
         Assert.Equal("ARCH-COMPLETE-002", rootEl.GetProperty("locksVersion").GetString());
@@ -245,6 +245,30 @@ public sealed class TmarDurableGuardTests
         Assert.Equal("ZERO", splitR1.GetProperty("paymentToHostDependency").GetString());
         Assert.Equal("PENDING_TB_TMAR_PAYMENT_ARCH_COMPLETE_002_STRUCTURE_001",
             splitR1.GetProperty("structureCertification").GetString());
+
+        var validationStorefront = rootEl.GetProperty("paymentPrecertValidationStorefront");
+        Assert.Equal("TB-TMAR-PAYMENT-PRECERT-VALIDATION-001", validationStorefront.GetProperty("task").GetString());
+        Assert.Equal("TB-TMAR-PAYMENT-PRECERT-DIRECTORY-SPLIT-001-R1",
+            validationStorefront.GetProperty("parent").GetString());
+        Assert.Equal("ARCHITECT_ACCEPTED",
+            validationStorefront.GetProperty("parentDirectorySplitR1").GetString());
+        Assert.Equal("9_REQUIRED_PRESENT_1_NO_VALIDATOR_REQUIRED",
+            validationStorefront.GetProperty("paymentValidationStorefront").GetString());
+        Assert.Equal("PENDING_TB_TMAR_PAYMENT_PRECERT_VALIDATION_002",
+            validationStorefront.GetProperty("paymentValidationAdminWebhook").GetString());
+        Assert.Equal("PARTIAL_9_OF_15_REQUIRED_PRESENT",
+            validationStorefront.GetProperty("paymentValidationOverall").GetString());
+        Assert.Equal(10, validationStorefront.GetProperty("storefrontEndpointReachableRequests").GetInt32());
+        Assert.Equal(9, validationStorefront.GetProperty("storefrontValidatorRequiredCount").GetInt32());
+        Assert.Equal(1, validationStorefront.GetProperty("storefrontNoValidatorRequiredCount").GetInt32());
+        Assert.Equal("NO_VALIDATOR_REQUIRED_NO_INPUT",
+            validationStorefront.GetProperty("listStorefrontPaymentMethodsQuery").GetString());
+        Assert.Equal("TRANSPORT_INPUT_SHAPE_ONLY",
+            validationStorefront.GetProperty("validationScope").GetString());
+        Assert.Equal("NONE", validationStorefront.GetProperty("directValidatorInvocation").GetString());
+        Assert.Equal("ZERO", validationStorefront.GetProperty("paymentToHostDependency").GetString());
+        Assert.Equal("PENDING_TB_TMAR_PAYMENT_ARCH_COMPLETE_002_STRUCTURE_001",
+            validationStorefront.GetProperty("structureCertification").GetString());
 
         var paymentAudit = rootEl.GetProperty("paymentArchComplete002Audit");
         Assert.Equal("TB-TMAR-PAYMENT-ARCH-COMPLETE-002-AUDIT-001", paymentAudit.GetProperty("task").GetString());
