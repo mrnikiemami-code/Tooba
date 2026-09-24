@@ -231,6 +231,7 @@
         "paymentToHostDependency":  "ZERO",
         "manifestCertified":  true,
         "certifiedModules":  "Order,Cart,StoreContext,Offer,Payment",
+        "commit":  "3e403aaffb4e1f79f41bd7fd25de6fdaf0f708b0",
         "evidence":  "docs/evidence/TB-TMAR-PAYMENT-ARCH-COMPLETE-002-STRUCTURE-001/payment-structure-certification.md"
     },
     "offerArchComplete002Structure":  {
@@ -395,7 +396,7 @@
                                          "endpointOwnership":  "MODULE_ENDPOINTS",
                                          "cqrs":  "MEDIATR_12_5",
                                          "lastAcceptedTask":  "TB-TMAR-PAYMENT-ARCH-COMPLETE-002-STRUCTURE-001",
-                                         "lastAcceptedCommit":  "PENDING_STRUCTURE_CERTIFICATION_COMMIT",
+                                         "lastAcceptedCommit":  "3e403aaffb4e1f79f41bd7fd25de6fdaf0f708b0",
                                          "structureCertifiedUnderArchComplete002":  true,
                                          "paymentStructureCertificationState":  "STRUCTURE_CERTIFIED_UNDER_ARCH_COMPLETE_002",
                                          "paymentHostResidue":  "PAYMENT_RUNTIME_RESIDUE_REMOVED_SECURITY_ADAPTERS_ONLY",
