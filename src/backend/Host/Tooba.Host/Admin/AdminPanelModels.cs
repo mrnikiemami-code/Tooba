@@ -16,29 +16,7 @@ public sealed record AdminDashboardSummary(
 // R6: Admin order detail DTOs moved to Tooba.Order.Application.Admin.Detail.Models.
 // R11: AdminCustomerListItem moved to Tooba.Order.Application.Admin.Customers.Models.
 // R11: AdminReservationCycleMapper / Host reservation summary DTOs removed (Order Detail owns mapping).
-
-/// <summary>
-/// ردیف دریافت مشتری (پرداخت) برای گرید Admin.
-/// </summary>
-public sealed record AdminReceiptListItem(
-    Guid PaymentId,
-    Guid CheckoutId,
-    string OrderReference,
-    string CustomerDisplayName,
-    decimal Amount,
-    string Currency,
-    string Status,
-    string ProviderCode,
-    DateTimeOffset CreatedAt,
-    DateTimeOffset? CompletedAt,
-    string SupplyStatus = "NotApplicable",
-    string ReservationLabel = "—",
-    string ReservationLabelEn = "—",
-    string ReservationState = "none",
-    int? ReservationCycleNumber = null,
-    bool ReservationRetryPossible = false,
-    bool ReservationNeedsReacquire = false,
-    bool ReservationRetryLimitReached = false);
+// R12: AdminReceiptListItem removed — the admin payments grid row is Payment-owned (AdminPaymentGridItemDto).
 
 /// <summary>
 /// ردیف فروشنده از Party و شمارنده‌های جداگانهٔ Offer/Order.

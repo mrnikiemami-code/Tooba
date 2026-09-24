@@ -1,39 +1,51 @@
 using MediatR;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Tooba.BuildingBlocks;
 using Tooba.Payment.Application.Commands.ReconcileStalePayments;
-using Tooba.Payment.Application.Models;
 using Tooba.Payment.Infrastructure.Providers;
 using Tooba.Persistence;
 
-namespace Tooba.Host;
+namespace Tooba.Payment.Infrastructure.Workers;
 
 /// <summary>
-/// Scheduler-only payment reconciliation worker: tenant scope + ISender dispatch.
+/// Payment-owned stale-payment reconciliation worker: tenant loop, scoped <see cref="ISender"/> dispatch,
+/// per-tenant failure isolation, and reconciliation telemetry. The tenant target source, commerce-context
+/// factory, and worker registry are generic platform seams supplied by Host; Payment never references Host.
 /// </summary>
-internal sealed class PaymentReconciliationHostedService : BackgroundService
+public sealed class PaymentReconciliationWorker : BackgroundService
 {
+    /// <summary>نام پایدار کارگر در <see cref="IBackgroundWorkerRegistry"/>.</summary>
     public const string WorkerName = "payment-reconciliation";
 
     private readonly IOutboxPollTargetSource _targets;
-    private readonly WorkerCommerceContextFactory _workerContext;
+    private readonly IWorkerCommerceContextFactory _workerContext;
     private readonly IServiceScopeFactory _scopes;
-    private readonly PaymentReconciliationHostOptions _options;
-    private readonly BackgroundWorkerRegistry _registry;
+    private readonly PaymentReconciliationOptions _options;
+    private readonly IBackgroundWorkerRegistry _registry;
     private readonly PaymentGatewayInstrumentation _telemetry;
-    private readonly ILogger<PaymentReconciliationHostedService> _logger;
+    private readonly ILogger<PaymentReconciliationWorker> _logger;
 
     /// <summary>
     /// کارگر را به اهداف Tenant و زمینهٔ بدون HTTP وصل می‌کند.
     /// </summary>
-    public PaymentReconciliationHostedService(
+    /// <param name="targets">منبع اهداف poll.</param>
+    /// <param name="workerContext">سازندهٔ زمینهٔ کارگر بدون خواندن هدر HTTP.</param>
+    /// <param name="scopes">سازندهٔ scope برای هر هدف.</param>
+    /// <param name="options">knobs زمان‌بندی Payment-owned.</param>
+    /// <param name="registry">رجیستری وضعیت کارگر.</param>
+    /// <param name="telemetry">تله‌متری reconciliation درگاه.</param>
+    /// <param name="logger">لاگر.</param>
+    public PaymentReconciliationWorker(
         IOutboxPollTargetSource targets,
-        WorkerCommerceContextFactory workerContext,
+        IWorkerCommerceContextFactory workerContext,
         IServiceScopeFactory scopes,
-        IOptions<PaymentReconciliationHostOptions> options,
-        BackgroundWorkerRegistry registry,
+        IOptions<PaymentReconciliationOptions> options,
+        IBackgroundWorkerRegistry registry,
         PaymentGatewayInstrumentation telemetry,
-        ILogger<PaymentReconciliationHostedService> logger)
+        ILogger<PaymentReconciliationWorker> logger)
     {
         _targets = targets;
         _workerContext = workerContext;
@@ -53,7 +65,7 @@ internal sealed class PaymentReconciliationHostedService : BackgroundService
             return;
         }
 
-        var delay = TimeSpan.FromSeconds(Math.Max(15, _options.PollIntervalSeconds));
+        var delay = _options.NormalizedPollInterval;
         while (!stoppingToken.IsCancellationRequested)
         {
             try
@@ -103,8 +115,8 @@ internal sealed class PaymentReconciliationHostedService : BackgroundService
                 var sender = scope.ServiceProvider.GetRequiredService<ISender>();
                 var result = await sender.Send(
                     new ReconcileStalePaymentsCommand(
-                        TimeSpan.FromMinutes(Math.Max(1, _options.PendingAgeMinutes)),
-                        _options.BatchSize),
+                        _options.NormalizedPendingAge,
+                        _options.NormalizedBatchSize),
                     cancellationToken).ConfigureAwait(false);
                 if (result.IsFailure)
                     throw new InvalidOperationException(result.Errors[0].Code);

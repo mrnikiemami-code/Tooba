@@ -10,7 +10,7 @@ public sealed class PaymentArchitectureGuardTests
     private static readonly string[] AllowedApplicationFolders = ["Ports", "Models", "Commands", "Queries", "Errors", "Orchestration"];
     private static readonly string[] AllowedContractsFolders = ["Admin", "Customer", "Events", "Dtos", "Hold", "Ports", "Returns", "Settlement", "Storefront"];
     private static readonly string[] AllowedInfrastructureFolders =
-        ["Persistence", "Directories", "Adapters", "Providers", "Events", "Messaging", "DependencyInjection", "Gateways", "Migrations"];
+        ["Persistence", "Directories", "Adapters", "Providers", "Events", "Messaging", "DependencyInjection", "Gateways", "Migrations", "Workers"];
     private static readonly string[] AllowedEndpointsFolders = ["Storefront", "Admin", "Webhooks", "Errors", "Resources"];
 
     private static readonly HashSet<string> HostDbContextAllowlist = new(StringComparer.OrdinalIgnoreCase)
@@ -254,13 +254,90 @@ public sealed class PaymentArchitectureGuardTests
                     || r.Contains($"Tooba.{foreign}.Domain", StringComparison.Ordinal));
         }
 
-        var worker = File.ReadAllText(Path.Combine(hostRoot, "PaymentReconciliationHostedService.cs"));
+        var worker = File.ReadAllText(Path.Combine(
+            PaymentRoot(), "Tooba.Payment.Infrastructure", "Workers", "PaymentReconciliationWorker.cs"));
         Assert.Contains("ReconcileStalePaymentsCommand", worker, StringComparison.Ordinal);
         Assert.Contains("ISender", worker, StringComparison.Ordinal);
+        Assert.Contains("IOutboxPollTargetSource", worker, StringComparison.Ordinal);
+        Assert.Contains("IWorkerCommerceContextFactory", worker, StringComparison.Ordinal);
+        Assert.Contains("IBackgroundWorkerRegistry", worker, StringComparison.Ordinal);
+        Assert.Contains("ICommerceContextAssigner", worker, StringComparison.Ordinal);
+        Assert.Contains("PaymentGatewayInstrumentation", worker, StringComparison.Ordinal);
+        Assert.DoesNotContain("Tooba.Host", worker, StringComparison.Ordinal);
+        Assert.DoesNotContain("ConfiguredOutboxPollTargetSource", worker, StringComparison.Ordinal);
+        Assert.DoesNotContain("WorkerStoreCommerceContextFactory", worker, StringComparison.Ordinal);
+        Assert.DoesNotContain("ControlPlaneRegistry", worker, StringComparison.Ordinal);
         Assert.DoesNotContain("Guid.NewGuid()", worker, StringComparison.Ordinal);
         Assert.DoesNotContain("DateTimeOffset.UtcNow", worker, StringComparison.Ordinal);
         Assert.DoesNotContain("StartActivity(", worker, StringComparison.Ordinal);
         Assert.DoesNotContain("IPaymentReconciliationDirectory", worker, StringComparison.Ordinal);
+
+        var options = File.ReadAllText(Path.Combine(
+            PaymentRoot(), "Tooba.Payment.Infrastructure", "Workers", "PaymentReconciliationOptions.cs"));
+        Assert.Contains("Tooba:PaymentReconciliation", options, StringComparison.Ordinal);
+
+        var infraModule = File.ReadAllText(Path.Combine(
+            PaymentRoot(), "Tooba.Payment.Infrastructure", "DependencyInjection", "PaymentModule.cs"));
+        Assert.Contains("AddHostedService<PaymentReconciliationWorker>", infraModule, StringComparison.Ordinal);
+        Assert.Contains("Configure<PaymentReconciliationOptions>", infraModule, StringComparison.Ordinal);
+        Assert.DoesNotContain("PaymentHostContractBridge, PaymentHostContractBridge", infraModule, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void Host_owns_no_Payment_runtime_or_grid_residue()
+    {
+        var hostRoot = Path.Combine(RepoRoot(), "src", "backend", "Host", "Tooba.Host");
+
+        // Host must not carry Payment reconciliation worker/options or the admin grid normalizer.
+        Assert.False(File.Exists(Path.Combine(hostRoot, "PaymentReconciliationHostedService.cs")));
+        Assert.False(File.Exists(Path.Combine(hostRoot, "PaymentReconciliationHostOptions.cs")));
+        Assert.False(File.Exists(Path.Combine(hostRoot, "Admin", "HostPaymentAdminGridQueryNormalizer.cs")));
+
+        var programCs = File.ReadAllText(Path.Combine(hostRoot, "Program.cs"));
+        Assert.DoesNotContain("PaymentReconciliationHostedService", programCs, StringComparison.Ordinal);
+        Assert.DoesNotContain("PaymentReconciliationHostOptions", programCs, StringComparison.Ordinal);
+        Assert.DoesNotContain("HostPaymentAdminGridQueryNormalizer", programCs, StringComparison.Ordinal);
+        Assert.Contains("HostPaymentAdminAuthorizer", programCs, StringComparison.Ordinal);
+        Assert.Contains("HostPaymentStorefrontAuthorizer", programCs, StringComparison.Ordinal);
+
+        // Host admin grid policies must not own the payments whitelist or its row model.
+        var hostGrid = File.ReadAllText(Path.Combine(hostRoot, "Grid", "AdminListGridPolicies.cs"));
+        Assert.DoesNotContain("Payments", hostGrid, StringComparison.Ordinal);
+        Assert.DoesNotContain("AdminReceiptListItem", hostGrid, StringComparison.Ordinal);
+
+        // Only the two approved thin Payment security adapters remain in Host.
+        var paymentNamedHostFiles = Directory
+            .EnumerateFiles(hostRoot, "*Payment*.cs", SearchOption.AllDirectories)
+            .Where(p => !p.Contains($"{Path.DirectorySeparatorChar}bin{Path.DirectorySeparatorChar}")
+                        && !p.Contains($"{Path.DirectorySeparatorChar}obj{Path.DirectorySeparatorChar}"))
+            .Select(p => Path.GetFileName(p)!)
+            .OrderBy(x => x, StringComparer.Ordinal)
+            .ToArray();
+        Assert.Equal(new[] { "HostPaymentAdminAuthorizer.cs", "HostPaymentStorefrontAuthorizer.cs" }, paymentNamedHostFiles);
+    }
+
+    [Fact]
+    public void Payment_owns_admin_grid_normalizer_without_host_grid_engine()
+    {
+        var endpointsRoot = Path.Combine(PaymentRoot(), "Tooba.Payment.Endpoints");
+
+        var normalizer = File.ReadAllText(Path.Combine(endpointsRoot, "Admin", "PaymentAdminGridQueryNormalizer.cs"));
+        Assert.Contains("IPaymentAdminGridQueryNormalizer", normalizer, StringComparison.Ordinal);
+        Assert.Contains("Tooba.BuildingBlocks.Grid", normalizer, StringComparison.Ordinal);
+        Assert.Contains("GridQueryPolicyBase", normalizer, StringComparison.Ordinal);
+        Assert.DoesNotContain("Tooba.Host", normalizer, StringComparison.Ordinal);
+        Assert.DoesNotContain("AdminListGridPolicies", normalizer, StringComparison.Ordinal);
+        Assert.DoesNotContain("AdminReceiptListItem", normalizer, StringComparison.Ordinal);
+        Assert.DoesNotContain("AdminListGridQueryPolicy", normalizer, StringComparison.Ordinal);
+
+        var module = File.ReadAllText(Path.Combine(endpointsRoot, "PaymentEndpointModule.cs"));
+        Assert.Contains("IPaymentAdminGridQueryNormalizer, PaymentAdminGridQueryNormalizer", module, StringComparison.Ordinal);
+        Assert.Contains("AddPaymentEndpointPresentation", module, StringComparison.Ordinal);
+
+        // Payment.Infrastructure must not reference Tooba.Host and the worker seam uses generic interfaces only.
+        var infraRefs = ProjectRefs("Tooba.Payment.Infrastructure");
+        Assert.DoesNotContain(infraRefs, r => r.Contains("Tooba.Host", StringComparison.Ordinal));
+        Assert.Contains(infraRefs, r => r.Contains("Tooba.Persistence", StringComparison.Ordinal));
     }
 
     private static void AssertNoRootDump(string project, string[] allowedFolders)

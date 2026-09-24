@@ -8,7 +8,8 @@ using Tooba.Payment.Application.Models;
 using Tooba.Payment.Application.Ports;
 using Tooba.Payment.Contracts.Settlement;
 using Tooba.Payment.Contracts.Storefront;
-using Tooba.Payment.Contracts.Returns;using Tooba.Payment.Infrastructure.Persistence;
+using Tooba.Payment.Contracts.Returns;
+using Tooba.Payment.Infrastructure.Persistence;
 using Tooba.Payment.Contracts.Admin;
 using Tooba.Payment.Contracts.Customer;
 using Tooba.Payment.Contracts.Hold;
@@ -18,6 +19,8 @@ using Tooba.Payment.Infrastructure.Adapters;
 using Tooba.Payment.Infrastructure.Directories;
 using Tooba.Payment.Infrastructure.Messaging;
 using Tooba.Payment.Infrastructure.Providers;
+using Tooba.Payment.Infrastructure.Workers;
+
 namespace Tooba.Payment.Infrastructure.DependencyInjection;
 
 /// <summary>
@@ -36,7 +39,9 @@ public sealed class PaymentModule : IToobaModule
         ArgumentNullException.ThrowIfNull(environment);
 
         services.Configure<PaymentGatewayOptions>(configuration.GetSection(PaymentGatewayOptions.SectionName));
+        services.Configure<PaymentReconciliationOptions>(configuration.GetSection(PaymentReconciliationOptions.SectionName));
         services.AddSingleton<PaymentGatewayInstrumentation>();
+        services.AddHostedService<PaymentReconciliationWorker>();
         services.AddSingleton<IOutboxModuleRegistration, PaymentOutboxRegistration>();
         services.AddScoped<IPaymentUseCaseGuard, OpenPaymentUseCaseGuard>();
         services.AddScoped<ICommerceHoldPolicy, CommerceHoldPolicyAdapter>();
@@ -58,8 +63,6 @@ public sealed class PaymentModule : IToobaModule
         services.AddScoped<IPaymentCustomerGateway>(sp => sp.GetRequiredService<PaymentHostContractBridge>());
         services.AddScoped<IPaymentHoldSettingsGateway>(sp => sp.GetRequiredService<PaymentHostContractBridge>());
         services.AddScoped<IPaymentReturnReader, PaymentReturnBridge>();
-        services.AddScoped<IPaymentGatewayCatalogPort, PaymentGatewayCatalogAdapter>();
-        services.AddScoped<IPaymentWebhookSignatureVerifier, PaymentWebhookSignatureVerifierAdapter>();
 
         if (environment.IsProduction())
         {

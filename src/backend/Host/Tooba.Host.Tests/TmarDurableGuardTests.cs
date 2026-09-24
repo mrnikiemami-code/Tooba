@@ -106,8 +106,8 @@ public sealed class TmarDurableGuardTests
         Assert.Equal("USER_ACCEPTED", rootEl.GetProperty("goldenWaveUserReview").GetString());
         Assert.Equal("TB-TMAR-GOLDEN-WAVE-FINAL-CLOSURE-001", rootEl.GetProperty("goldenWaveClosedBy").GetString());
         Assert.False(string.IsNullOrWhiteSpace(rootEl.GetProperty("goldenWaveClosedCommit").GetString()));
-        Assert.Equal("USER_REVIEW_PAYMENT_ARCH_COMPLETE_002_AUDIT_001", rootEl.GetProperty("nextTask").GetString());
-        Assert.Equal("NEXT_TMAR_WAVE_AFTER_PAYMENT_AUDIT", rootEl.GetProperty("nextTaskGate").GetString());
+        Assert.Equal("TB-TMAR-PAYMENT-ARCH-COMPLETE-002-STRUCTURE-001", rootEl.GetProperty("nextTask").GetString());
+        Assert.Equal("NEXT_TMAR_WAVE_AFTER_PAYMENT_HOST_RESIDUE_REPAIR", rootEl.GetProperty("nextTaskGate").GetString());
         Assert.Equal("PAUSED_AT_SAFE_W5_CHECKPOINT", rootEl.GetProperty("checkoutState").GetString());
         Assert.True(rootEl.GetProperty("frontendFrozen").GetBoolean());
         Assert.Equal("ARCH-COMPLETE-002", rootEl.GetProperty("locksVersion").GetString());
@@ -178,8 +178,16 @@ public sealed class TmarDurableGuardTests
             cartEntry.GetProperty("lastAcceptedTask").GetString(),
             StringComparison.Ordinal);
         Assert.False(string.IsNullOrWhiteSpace(cartEntry.GetProperty("lastAcceptedCommit").GetString()));
-        Assert.Equal("TB-TMAR-OFFER-ARCH-COMPLETE-002-STRUCTURE-001", rootEl.GetProperty("lastAcceptedTask").GetString());
-        Assert.Equal("8d7f5e531ac50b263ed79a5c511802e3e1a013bb", rootEl.GetProperty("lastAcceptedCommit").GetString());
+        Assert.Equal("TB-TMAR-PAYMENT-ARCH-COMPLETE-002-AUDIT-001", rootEl.GetProperty("lastAcceptedTask").GetString());
+        Assert.Equal("dcb8b416b19d8f9db90e8162754723e4cfbbfb14", rootEl.GetProperty("lastAcceptedCommit").GetString());
+
+        var paymentHostResidue = rootEl.GetProperty("paymentHostResidueRepair");
+        Assert.Equal("TB-TMAR-PAYMENT-HOST-RESIDUE-REPAIR-001", paymentHostResidue.GetProperty("task").GetString());
+        Assert.Equal("PAYMENT_RUNTIME_RESIDUE_REMOVED_SECURITY_ADAPTERS_ONLY", paymentHostResidue.GetProperty("state").GetString());
+        Assert.Equal("PAYMENT_INFRASTRUCTURE_WORKER_AND_OPTIONS", paymentHostResidue.GetProperty("reconciliationOwnership").GetString());
+        Assert.Equal("PAYMENT_ENDPOINTS", paymentHostResidue.GetProperty("adminGridPolicyOwnership").GetString());
+        Assert.Equal("ZERO", paymentHostResidue.GetProperty("paymentToHostDependency").GetString());
+        Assert.False(paymentHostResidue.GetProperty("productionCodeChanged").GetBoolean() == false);
 
         var paymentAudit = rootEl.GetProperty("paymentArchComplete002Audit");
         Assert.Equal("TB-TMAR-PAYMENT-ARCH-COMPLETE-002-AUDIT-001", paymentAudit.GetProperty("task").GetString());

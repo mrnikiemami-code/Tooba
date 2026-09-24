@@ -22,11 +22,12 @@ public static class PaymentEndpointModule
         return app;
     }
 
-    /// <summary>Registers Payment error catalog for ApiResponseFactory.</summary>
+    /// <summary>Registers Payment error catalog and module-owned admin grid normalizer.</summary>
     public static IServiceCollection AddPaymentEndpointPresentation(this IServiceCollection services)
     {
         ArgumentNullException.ThrowIfNull(services);
         services.AddSingleton<IErrorCatalogContributor, PaymentErrorCatalogContributor>();
+        services.AddSingleton<IPaymentAdminGridQueryNormalizer, PaymentAdminGridQueryNormalizer>();
         return services;
     }
 }

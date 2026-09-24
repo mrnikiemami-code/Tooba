@@ -40,22 +40,7 @@ public static class AdminListGridPolicies
         tieBreakerField: "name");
 
     // R11: Admin customers grid policy/normalize owned by Order.Application.Admin.Customers.AdminCustomersGridPolicy.
-
-    /// <summary>گرید دریافت‌های Admin (پرداخت مشتری).</summary>
-    public static readonly AdminListGridQueryPolicy<AdminReceiptListItem> Payments = new(
-    [
-        new("reference", x => x.OrderReference, InMemoryGridFieldKind.Text, searchable: true),
-        new("customer", x => x.CustomerDisplayName, InMemoryGridFieldKind.Text, searchable: true),
-        new("amount", x => x.Amount, InMemoryGridFieldKind.Number),
-        new("status", x => x.Status, InMemoryGridFieldKind.Enum),
-        new("supply", x => x.SupplyStatus, InMemoryGridFieldKind.Enum),
-        new("reservation", x => x.ReservationState, InMemoryGridFieldKind.Enum),
-        new("provider", x => x.ProviderCode, InMemoryGridFieldKind.Text, searchable: true),
-        new("created", x => x.CreatedAt, InMemoryGridFieldKind.Date),
-        new("completed", x => x.CompletedAt ?? x.CreatedAt, InMemoryGridFieldKind.Date),
-    ],
-        defaultSortField: "created",
-        tieBreakerField: "reference");
+    // R12: Admin payments grid policy/normalize owned by Payment.Endpoints.Admin.PaymentAdminGridQueryNormalizer.
 
     /// <summary>گرید مقالات Admin.</summary>
     public static readonly AdminListGridQueryPolicy<AdminArticleSnapshot> Content = new(

@@ -17,8 +17,6 @@ public sealed class HostFolderStructureTests
         "GlobalUsings.SettlementDomain.cs",
         "UnpaidOrderExpiryHostedService.cs",
         "UnpaidOrderExpiryHostOptions.cs",
-        "PaymentReconciliationHostedService.cs",
-        "PaymentReconciliationHostOptions.cs",
     };
 
     [Fact]

@@ -100,7 +100,6 @@ builder.Services.AddScoped<ICurrentEdition>(sp => sp.GetRequiredService<HttpComm
 builder.Services.AddScoped<ICurrentTenant>(sp => sp.GetRequiredService<HttpCommerceContextAccessor>());
 builder.Services.AddScoped<ICommerceContextAssigner>(sp => sp.GetRequiredService<HttpCommerceContextAccessor>());
 builder.Services.Configure<OutboxHostOptions>(builder.Configuration.GetSection("Tooba:Outbox"));
-builder.Services.Configure<PaymentReconciliationHostOptions>(builder.Configuration.GetSection("Tooba:PaymentReconciliation"));
 builder.Services.Configure<UnpaidOrderExpiryHostOptions>(builder.Configuration.GetSection("Tooba:UnpaidOrderExpiry"));
 builder.Services.AddSingleton<BackgroundWorkerRegistry>();
 builder.Services.AddSingleton<IBackgroundWorkerRegistry>(sp => sp.GetRequiredService<BackgroundWorkerRegistry>());
@@ -139,7 +138,6 @@ builder.Configuration.GetSection("Tooba:Messaging").Bind(messagingOptions);
 builder.Services.AddToobaIntegrationPublisher(builder.Environment, messagingOptions);
 builder.Services.AddScoped<OutboxSaveChangesInterceptor>();
 builder.Services.AddHostedService<OutboxDispatcherHostedService>();
-builder.Services.AddHostedService<PaymentReconciliationHostedService>();
 builder.Services.AddHostedService<UnpaidOrderExpiryHostedService>();
 builder.Services.AddToobaCqrsFoundation(
     typeof(Tooba.Catalog.Application.CreateStoreLandingPageCommand).Assembly,
@@ -202,7 +200,6 @@ builder.Services.AddScoped<Tooba.Payment.Application.Orchestration.StorefrontPay
 builder.Services.AddScoped<Tooba.Payment.Application.Ports.ICheckoutActorPolicyPort, Tooba.Host.Storefront.HostCheckoutActorPolicyAdapter>();
 builder.Services.AddScoped<Tooba.Payment.Endpoints.Storefront.IPaymentStorefrontAuthorizer, Tooba.Host.Storefront.HostPaymentStorefrontAuthorizer>();
 builder.Services.AddScoped<Tooba.Payment.Endpoints.Admin.IPaymentAdminAuthorizer, Tooba.Host.Admin.HostPaymentAdminAuthorizer>();
-builder.Services.AddScoped<Tooba.Payment.Endpoints.Admin.IPaymentAdminGridQueryNormalizer, Tooba.Host.Admin.HostPaymentAdminGridQueryNormalizer>();
 builder.Services.AddScoped<Tooba.Promotion.Endpoints.Seller.IPromotionSellerAuthorizer, Tooba.Host.Seller.HostPromotionSellerAuthorizer>();
 builder.Services.AddScoped<Tooba.Promotion.Endpoints.Admin.IPromotionAdminAuthorizer, Tooba.Host.Admin.HostPromotionAdminAuthorizer>();
 builder.Services.AddScoped<Tooba.Host.Seller.SellerPanelComposer>();
