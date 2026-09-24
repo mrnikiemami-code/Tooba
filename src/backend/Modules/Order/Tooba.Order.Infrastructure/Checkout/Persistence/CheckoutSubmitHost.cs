@@ -17,6 +17,7 @@ using Tooba.Order.Application.ReservationCycle.Contracts;
 using Tooba.Order.Application.ReservationCycle.Policies;
 using Tooba.Order.Application.ReservationCycle.Services;
 using Tooba.Order.Application.Seller.Policies;
+using Tooba.Order.Application.Storefront.Services;
 using Tooba.Order.Domain;
 
 namespace Tooba.Order.Infrastructure.Checkout.Persistence;
@@ -154,7 +155,7 @@ public sealed partial class CheckoutDirectory : ICheckoutSubmitHost
             command.BuyerPartyId,
             command.PlacedByUserId,
             cart.Market,
-            cart.DefaultCurrency,
+            StorefrontCartCurrencyCompatibility.ResolveSoleCurrency(cart),
             cart.Channel,
             sellerOrders,
             now,

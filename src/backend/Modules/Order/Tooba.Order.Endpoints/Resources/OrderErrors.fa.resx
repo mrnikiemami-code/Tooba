@@ -72,6 +72,9 @@
   <data name="checkout.cart.missing" xml:space="preserve">
     <value>سبد خرید پیدا نشد.</value>
   </data>
+  <data name="checkout.multicurrency.not_supported" xml:space="preserve">
+    <value>در حال حاضر پرداخت سبدی که اقلام آن ارزهای متفاوت دارند پشتیبانی نمی‌شود.</value>
+  </data>
   <data name="shipping.address.forbidden" xml:space="preserve">
     <value>نشانی انتخاب‌شده متعلق به این مشتری نیست.</value>
   </data>

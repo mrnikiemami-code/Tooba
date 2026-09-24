@@ -25,6 +25,7 @@ using Tooba.Order.Application.ReservationCycle.Contracts;
 using Tooba.Order.Application.ReservationCycle.Policies;
 using Tooba.Order.Application.ReservationCycle.Services;
 using Tooba.Order.Application.Seller.Policies;
+using Tooba.Order.Application.Storefront.Services;
 using Tooba.Order.Domain;
 using Tooba.Order.Infrastructure.Persistence;
 using Tooba.Pricing.Contracts;
@@ -164,7 +165,7 @@ public sealed partial class CheckoutDirectory : ICheckoutDirectory
             command.BuyerPartyId,
             command.PlacedByUserId,
             cart.Market,
-            cart.DefaultCurrency,
+            StorefrontCartCurrencyCompatibility.ResolveSoleCurrency(cart),
             cart.Channel,
             sellerOrders,
             now,
@@ -621,7 +622,8 @@ public sealed partial class CheckoutDirectory : ICheckoutDirectory
             cart.Lines.Select(x => x.CatalogVariantId).Distinct().ToArray(),
             cancellationToken);
         var rounding = await _catalog.GetGlobalRoundingModeAsync(cancellationToken);
-        var moneyPlaces = FinancialRounder.MoneyPlaces(cart.DefaultCurrency);
+        var effectiveCurrency = StorefrontCartCurrencyCompatibility.ResolveSoleCurrency(cart);
+        var moneyPlaces = FinancialRounder.MoneyPlaces(effectiveCurrency);
         foreach (var sellerGroup in cart.Lines.GroupBy(x => x.SellerPartyId))
         {
             sequence++;
@@ -645,7 +647,7 @@ public sealed partial class CheckoutDirectory : ICheckoutDirectory
                     offer.ReturnPolicyChoice,
                     offer.CustomReturnWindowDays);
 
-                var quote = await ResolveCheckoutLineQuoteAsync(cart, cartLine, now, cancellationToken)
+                var quote = await ResolveCheckoutLineQuoteAsync(cart, cartLine, effectiveCurrency, now, cancellationToken)
                     ?? throw new InvalidOperationException("نقل‌قول قیمت از قرارداد Pricing پیدا نشد.");
 
                 if (cartLine.QuotedAmount is null
@@ -747,7 +749,7 @@ public sealed partial class CheckoutDirectory : ICheckoutDirectory
                 sellerGroup.Key,
                 BuildOrderNumber(now, sequence),
                 command.Mode,
-                cart.DefaultCurrency,
+                effectiveCurrency,
                 lines,
                 rounding,
                 moneyPlaces));
@@ -888,6 +890,7 @@ public sealed partial class CheckoutDirectory : ICheckoutDirectory
     private async Task<PriceQuote?> ResolveCheckoutLineQuoteAsync(
         CartSnapshot cart,
         CartLineSnapshot cartLine,
+        string effectiveCurrency,
         DateTimeOffset now,
         CancellationToken cancellationToken)
     {
@@ -900,7 +903,7 @@ public sealed partial class CheckoutDirectory : ICheckoutDirectory
                 cartLine.OfferId,
                 cart.Market,
                 cart.Channel,
-                cart.DefaultCurrency,
+                effectiveCurrency,
                 now,
                 cancellationToken);
             if (campaignQuote is not null)
@@ -914,7 +917,7 @@ public sealed partial class CheckoutDirectory : ICheckoutDirectory
                 cartLine.OfferId,
                 cart.Market,
                 cart.Channel,
-                cart.DefaultCurrency,
+                effectiveCurrency,
                 now,
                 null,
                 null,

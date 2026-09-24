@@ -57,6 +57,8 @@ public sealed class OrderErrorCatalogContributor : IErrorCatalogContributor
             "ثبت سفارش انجام نشد. لطفاً دوباره تلاش کنید."),
         D(StorefrontOrderErrors.CheckoutCartMissing, ErrorClassification.NotFound, StatusCodes.Status404NotFound,
             "سبد خرید پیدا نشد."),
+        D(StorefrontOrderErrors.CheckoutMultiCurrencyNotSupported, ErrorClassification.Business, StatusCodes.Status400BadRequest,
+            "در حال حاضر پرداخت سبدی که اقلام آن ارزهای متفاوت دارند پشتیبانی نمی‌شود."),
 
         // Shipping
         D(StorefrontOrderErrors.ShippingAddressForbidden, ErrorClassification.Forbidden, StatusCodes.Status403Forbidden,

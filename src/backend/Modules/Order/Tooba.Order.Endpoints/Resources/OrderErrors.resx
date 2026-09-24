@@ -72,6 +72,9 @@
   <data name="checkout.cart.missing" xml:space="preserve">
     <value>Cart was not found.</value>
   </data>
+  <data name="checkout.multicurrency.not_supported" xml:space="preserve">
+    <value>Checkout of a cart with multiple currencies is not supported yet.</value>
+  </data>
   <data name="shipping.address.forbidden" xml:space="preserve">
     <value>The selected address does not belong to this customer.</value>
   </data>

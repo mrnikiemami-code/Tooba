@@ -203,6 +203,52 @@ public sealed class OrderStorefrontArchitectureGuardTests
         Assert.DoesNotContain("ICheckoutAbuseGate", program, StringComparison.Ordinal);
     }
 
+    /// <summary>
+    /// TB-TMAR-CART-MULTICURRENCY-LINES-001-R1 — Order boundary may not sum unlike currencies and may
+    /// not derive Order/Checkout currency authority from Cart.DefaultCurrency.
+    /// </summary>
+    [Fact]
+    public void Order_boundary_is_single_currency_fail_closed_and_never_uses_cart_default_currency()
+    {
+        var shipping = StripCommentLines(File.ReadAllText(Path.Combine(
+            OrderRoot(), "Tooba.Order.Application", "Storefront", "Services", "StorefrontShippingService.cs")));
+        var checkout = StripCommentLines(File.ReadAllText(Path.Combine(
+            OrderRoot(), "Tooba.Order.Application", "Storefront", "Services", "StorefrontCheckoutService.cs")));
+        var compatibility = StripCommentLines(File.ReadAllText(Path.Combine(
+            OrderRoot(), "Tooba.Order.Application", "Storefront", "Services", "StorefrontCartCurrencyCompatibility.cs")));
+        var directory = StripCommentLines(File.ReadAllText(Path.Combine(
+            OrderRoot(), "Tooba.Order.Infrastructure", "Checkout", "Persistence", "CheckoutDirectory.cs")));
+        var submitHost = StripCommentLines(File.ReadAllText(Path.Combine(
+            OrderRoot(), "Tooba.Order.Infrastructure", "Checkout", "Persistence", "CheckoutSubmitHost.cs")));
+        var errors = File.ReadAllText(Path.Combine(
+            OrderRoot(), "Tooba.Order.Application", "Storefront", "StorefrontOrderErrors.cs"));
+
+        // 1. No cross-currency subtotal arithmetic in Order shipping.
+        Assert.DoesNotContain("TotalsByCurrency.Sum", shipping, StringComparison.Ordinal);
+        Assert.DoesNotContain("TotalsByCurrency.Sum", compatibility, StringComparison.Ordinal);
+
+        // 2. Cart.DefaultCurrency is never Order transaction/pricing/order currency authority.
+        foreach (var text in new[] { shipping, checkout, directory, submitHost })
+        {
+            Assert.DoesNotContain("cart.DefaultCurrency", text, StringComparison.Ordinal);
+        }
+
+        // 3. Order pricing/order currency authority uses the sole line currency.
+        Assert.Contains("ResolveSoleCurrency", shipping, StringComparison.Ordinal);
+        Assert.Contains("ResolveSoleCurrency", checkout, StringComparison.Ordinal);
+        Assert.Contains("ResolveSoleCurrency(cart)", directory, StringComparison.Ordinal);
+        Assert.Contains("ResolveSoleCurrency(cart)", submitHost, StringComparison.Ordinal);
+
+        // 4. Typed stable mixed-currency fail-closed error exists and is used by the helper only.
+        Assert.Contains("checkout.multicurrency.not_supported", errors, StringComparison.Ordinal);
+        Assert.Contains("CheckoutMultiCurrencyNotSupported", compatibility, StringComparison.Ordinal);
+        Assert.DoesNotContain(".DefaultCurrency", compatibility, StringComparison.Ordinal);
+
+        // 5. No Host business implementation added for this repair.
+        Assert.False(Directory.Exists(Path.Combine(
+            RepoRoot(), "src", "backend", "Host", "Tooba.Host", "Storefront", "CurrencyCompatibility")));
+    }
+
     [Fact]
     public void Order_owns_checkout_abuse_gate_with_IClock_and_catalog_contract()
     {
@@ -265,6 +311,13 @@ public sealed class OrderStorefrontArchitectureGuardTests
 
         throw new InvalidOperationException("repo root not found");
     }
+
+    /// <summary>Drops comment lines so documentation may still explain the forbidden rule.</summary>
+    private static string StripCommentLines(string source) =>
+        string.Join(
+            '\n',
+            source.Split('\n').Where(line => !line.TrimStart().StartsWith("///", StringComparison.Ordinal)
+                                             && !line.TrimStart().StartsWith("//", StringComparison.Ordinal)));
 
     private static string OrderRoot() =>
         Path.Combine(RepoRoot(), "src", "backend", "Modules", "Order");

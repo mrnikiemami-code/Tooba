@@ -50,4 +50,11 @@ public static class StorefrontOrderErrors
     public const string PendingHideActiveHold = "pending.hide.active_hold";
     public const string PaymentMissing = "payment.missing";
     public const string PaymentRejected = "payment.rejected";
+
+    /// <summary>
+    /// Until the dedicated Order multi-currency wave, the Order/Checkout boundary accepts only a
+    /// cart whose lines carry exactly one distinct non-empty quoted currency. Cart.DefaultCurrency
+    /// is never transaction authority; a mixed or currency-less cart fails closed here.
+    /// </summary>
+    public const string CheckoutMultiCurrencyNotSupported = "checkout.multicurrency.not_supported";
 }

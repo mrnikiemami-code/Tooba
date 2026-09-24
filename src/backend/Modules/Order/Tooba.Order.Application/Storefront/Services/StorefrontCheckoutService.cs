@@ -219,6 +219,8 @@ public sealed class StorefrontCheckoutService
             throw new StorefrontOrderException(StorefrontOrderErrors.CheckoutCartEmpty);
         }
 
+        // Order boundary: sole line currency is the only transaction currency; mixed/missing fails closed.
+        _ = StorefrontCartCurrencyCompatibility.ResolveSoleCurrency(cart);
         return cart;
     }
 
