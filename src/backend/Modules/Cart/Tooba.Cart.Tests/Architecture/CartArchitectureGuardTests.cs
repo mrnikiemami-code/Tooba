@@ -243,6 +243,51 @@ public sealed class CartArchitectureGuardTests
         Assert.True(messageHeuristics.Count == 0, "message Contains heuristics: " + string.Join("; ", messageHeuristics));
     }
 
+    [Fact]
+    public void Cart_line_currency_authority_and_per_currency_totals_cannot_regress()
+    {
+        var directory = File.ReadAllText(Path.Combine(
+            CartRoot(), "Tooba.Cart.Infrastructure", "Directories", "CartDirectory.cs"));
+        var presentation = File.ReadAllText(Path.Combine(
+            CartRoot(), "Tooba.Cart.Application", "Presentation", "CartPresentationComposer.cs"));
+        var contracts = File.ReadAllText(Path.Combine(
+            CartRoot(), "Tooba.Cart.Contracts", "Presentation", "CartPresentationContracts.cs"));
+        var domain = File.ReadAllText(Path.Combine(
+            CartRoot(), "Tooba.Cart.Domain", "Aggregates", "ShoppingCart.cs"));
+        var snapshot = File.ReadAllText(Path.Combine(
+            CartRoot(), "Tooba.Cart.Contracts", "Checkout", "CartContracts.cs"));
+
+        // 1. No cart-level currency as the pricing selector.
+        Assert.DoesNotContain("cart.Currency", directory, StringComparison.Ordinal);
+        Assert.DoesNotContain("cart.Currency", presentation, StringComparison.Ordinal);
+        Assert.DoesNotContain("snapshot.Currency", presentation, StringComparison.Ordinal);
+
+        // 2. No default-currency fallback for an already-quoted line.
+        Assert.DoesNotContain("QuotedCurrency ?? ", directory, StringComparison.Ordinal);
+        Assert.DoesNotContain("QuotedCurrency ?? ", presentation, StringComparison.Ordinal);
+        Assert.DoesNotContain("?? cart.DefaultCurrency", directory, StringComparison.Ordinal);
+        Assert.DoesNotContain("?? snapshot.DefaultCurrency", presentation, StringComparison.Ordinal);
+
+        // 3. No scalar cross-currency subtotal in the CartPage contract itself.
+        var cartPageRecord = contracts[
+            contracts.IndexOf("public sealed record CartPage(", StringComparison.Ordinal)..];
+        cartPageRecord = cartPageRecord[..cartPageRecord.IndexOf(");", StringComparison.Ordinal)];
+        Assert.DoesNotContain("SubtotalExclusiveOfTax", cartPageRecord, StringComparison.Ordinal);
+        Assert.Contains("TotalsByCurrency", cartPageRecord, StringComparison.Ordinal);
+        Assert.Contains("CartCurrencyTotal", contracts, StringComparison.Ordinal);
+
+        // 4. Cart keeps only DefaultCurrency metadata; the transaction-semantic member is gone.
+        Assert.Contains("DefaultCurrency", domain, StringComparison.Ordinal);
+        Assert.Contains("DefaultCurrency", snapshot, StringComparison.Ordinal);
+        Assert.DoesNotContain("public string Currency", domain, StringComparison.Ordinal);
+        Assert.DoesNotContain("public string Currency", snapshot, StringComparison.Ordinal);
+
+        // 5. The physical DB column is preserved by explicit mapping (no schema rename).
+        var dbContext = File.ReadAllText(Path.Combine(
+            CartRoot(), "Tooba.Cart.Infrastructure", "Persistence", "CartDbContext.cs"));
+        Assert.Contains("HasColumnName(\"currency\")", dbContext, StringComparison.Ordinal);
+    }
+
     private static void AssertNoRootDump(string project, string[] allowedFolders)
     {
         var root = Path.Combine(CartRoot(), project);

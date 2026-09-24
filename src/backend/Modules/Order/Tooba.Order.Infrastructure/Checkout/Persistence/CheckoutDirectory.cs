@@ -164,7 +164,7 @@ public sealed partial class CheckoutDirectory : ICheckoutDirectory
             command.BuyerPartyId,
             command.PlacedByUserId,
             cart.Market,
-            cart.Currency,
+            cart.DefaultCurrency,
             cart.Channel,
             sellerOrders,
             now,
@@ -621,7 +621,7 @@ public sealed partial class CheckoutDirectory : ICheckoutDirectory
             cart.Lines.Select(x => x.CatalogVariantId).Distinct().ToArray(),
             cancellationToken);
         var rounding = await _catalog.GetGlobalRoundingModeAsync(cancellationToken);
-        var moneyPlaces = FinancialRounder.MoneyPlaces(cart.Currency);
+        var moneyPlaces = FinancialRounder.MoneyPlaces(cart.DefaultCurrency);
         foreach (var sellerGroup in cart.Lines.GroupBy(x => x.SellerPartyId))
         {
             sequence++;
@@ -747,7 +747,7 @@ public sealed partial class CheckoutDirectory : ICheckoutDirectory
                 sellerGroup.Key,
                 BuildOrderNumber(now, sequence),
                 command.Mode,
-                cart.Currency,
+                cart.DefaultCurrency,
                 lines,
                 rounding,
                 moneyPlaces));
@@ -900,7 +900,7 @@ public sealed partial class CheckoutDirectory : ICheckoutDirectory
                 cartLine.OfferId,
                 cart.Market,
                 cart.Channel,
-                cart.Currency,
+                cart.DefaultCurrency,
                 now,
                 cancellationToken);
             if (campaignQuote is not null)
@@ -914,7 +914,7 @@ public sealed partial class CheckoutDirectory : ICheckoutDirectory
                 cartLine.OfferId,
                 cart.Market,
                 cart.Channel,
-                cart.Currency,
+                cart.DefaultCurrency,
                 now,
                 null,
                 null,

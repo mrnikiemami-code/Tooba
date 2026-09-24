@@ -26,26 +26,29 @@ public interface ICartUseCaseGuard
 public interface ICartDirectory
 {
     /// <summary>
-    /// سبد واردشده می‌سازد.
+    /// سبد واردشده می‌سازد. <paramref name="defaultCurrency"/> فقط انتخاب پیش‌فرض خط تازه است، نه ارز تراکنش.
     /// </summary>
     Task<CartSnapshot> CreateAuthenticatedAsync(
         Guid userId,
         string market,
-        string currency,
+        string defaultCurrency,
         SalesChannel channel,
         CancellationToken cancellationToken);
 
     /// <summary>
     /// سبد مهمان می‌سازد و راز یک‌بارمصرف را برمی‌گرداند.
+    /// <paramref name="defaultCurrency"/> فقط انتخاب پیش‌فرض خط تازه است، نه ارز تراکنش.
     /// </summary>
     Task<GuestCartCreated> CreateGuestAsync(
         string market,
-        string currency,
+        string defaultCurrency,
         SalesChannel channel,
         CancellationToken cancellationToken);
 
     /// <summary>
     /// خط Offer اضافه یا ادغام می‌کند پس از اعتبارسنجی موجودی؛ رزرو سخت نمی‌سازد.
+    /// <paramref name="requestedCurrency"/> فقط انتخاب ارز خط تازه است؛ برای خط موجود نادیده گرفته
+    /// می‌شود و ارز خود خط حاکم است. Pricing همچنان مرجع وجود نقل‌قول است.
     /// </summary>
     Task<CartSnapshot> AddOrIncreaseLineAsync(
         Guid cartId,
@@ -54,7 +57,8 @@ public interface ICartDirectory
         Guid offerId,
         decimal quantity,
         CancellationToken cancellationToken,
-        Guid? merchandisingCampaignId = null);
+        Guid? merchandisingCampaignId = null,
+        string? requestedCurrency = null);
 
     /// <summary>
     /// تعداد خط را عوض می‌کند. صفر یعنی حذف؛ رزرو تاریخی سبد در صورت وجود آزاد می‌شود.

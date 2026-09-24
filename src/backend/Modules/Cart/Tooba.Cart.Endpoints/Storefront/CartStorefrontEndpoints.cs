@@ -96,7 +96,8 @@ public static class CartStorefrontEndpoints
                 version.Value,
                 body.OfferId,
                 body.Quantity,
-                body.MerchandisingCampaignId),
+                body.MerchandisingCampaignId,
+                body.Currency),
             cancellationToken);
         return api.From(result);
     }
@@ -184,8 +185,8 @@ public static class CartStorefrontEndpoints
     }
 }
 
-/// <summary>Wire model for adding a cart line.</summary>
-public sealed record CartAddLineRequest(Guid OfferId, decimal Quantity, Guid? MerchandisingCampaignId = null);
+/// <summary>Wire model for adding a cart line. <c>Currency</c> is an optional line-currency selector.</summary>
+public sealed record CartAddLineRequest(Guid OfferId, decimal Quantity, Guid? MerchandisingCampaignId = null, string? Currency = null);
 
 /// <summary>Wire model for changing a cart line quantity.</summary>
 public sealed record CartChangeLineRequest(decimal Quantity);

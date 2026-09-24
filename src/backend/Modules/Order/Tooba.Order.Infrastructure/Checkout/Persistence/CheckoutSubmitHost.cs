@@ -154,7 +154,7 @@ public sealed partial class CheckoutDirectory : ICheckoutSubmitHost
             command.BuyerPartyId,
             command.PlacedByUserId,
             cart.Market,
-            cart.Currency,
+            cart.DefaultCurrency,
             cart.Channel,
             sellerOrders,
             now,

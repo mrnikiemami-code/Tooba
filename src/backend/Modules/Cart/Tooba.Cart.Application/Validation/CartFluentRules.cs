@@ -37,4 +37,18 @@ public static class CartFluentRules
     /// <param name="selector">Expected version selector.</param>
     public static void RequireExpectedVersionMin<T>(AbstractValidator<T> validator, Expression<Func<T, int>> selector)
         => validator.RuleFor(selector).GreaterThanOrEqualTo(0).WithErrorCode(CartValidationCodes.ExpectedVersionMin);
+
+    /// <summary>
+    /// Optional currency selector: absent/null is allowed; when present it must be a shaped
+    /// 3-character code. Existence of a quote in that currency is business validation, not here.
+    /// </summary>
+    /// <typeparam name="T">Request type.</typeparam>
+    /// <param name="validator">Target validator.</param>
+    /// <param name="selector">Currency selector.</param>
+    public static void OptionalCurrencyShape<T>(AbstractValidator<T> validator, Expression<Func<T, string?>> selector)
+        => validator.RuleFor(selector)
+            .Must(value => value is null
+                || string.IsNullOrWhiteSpace(value)
+                || value.Trim().Length == 3)
+            .WithErrorCode(CartValidationCodes.CurrencyShape);
 }

@@ -167,7 +167,7 @@ public sealed class StorefrontCheckoutService
             snapshot.Currency,
             snapshot.Channel.ToString(),
             0,
-            0,
+            Array.Empty<CartCurrencyTotal>(),
             Array.Empty<CartLineView>(),
             null,
             "Converted");

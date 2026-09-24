@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Tooba.BuildingBlocks;
+using Tooba.Cart.Application.Errors;
 using Tooba.Cart.Application.Ports;
 using Tooba.Cart.Application.Lifetime;
 using Tooba.Cart.Domain.Aggregates;
@@ -107,17 +108,17 @@ public sealed class CartDirectory : ICartDirectory, CartContract.ICartQueryGatew
     public async Task<CartContract.CartSnapshot> CreateAuthenticatedAsync(
         Guid userId,
         string market,
-        string currency,
+        string defaultCurrency,
         SalesChannel channel,
         CancellationToken cancellationToken)
     {
         await _guard.EnsureCanMutateAsync(cancellationToken);
-        _ = CurrencyCode.Parse(currency);
+        _ = CurrencyCode.Parse(defaultCurrency);
         var now = _clock.UtcNow;
         var ttl = await ResolvePersistenceTtlAsync(cancellationToken).ConfigureAwait(false);
         var cart = ShoppingCart.CreateAuthenticated(
             _ids.NewId(),
-            userId, market, currency, channel, now, now.Add(ttl));
+            userId, market, defaultCurrency, channel, now, now.Add(ttl));
         _db.Carts.Add(cart);
         await _db.SaveChangesAsync(cancellationToken);
         return await ToSnapshotAsync(cart, cancellationToken);
@@ -126,18 +127,18 @@ public sealed class CartDirectory : ICartDirectory, CartContract.ICartQueryGatew
     /// <inheritdoc />
     public async Task<GuestCartCreated> CreateGuestAsync(
         string market,
-        string currency,
+        string defaultCurrency,
         SalesChannel channel,
         CancellationToken cancellationToken)
     {
         await _guard.EnsureCanMutateAsync(cancellationToken);
-        _ = CurrencyCode.Parse(currency);
+        _ = CurrencyCode.Parse(defaultCurrency);
         var secret = CartCredentialHasher.CreateSecret();
         var now = _clock.UtcNow;
         var ttl = await ResolvePersistenceTtlAsync(cancellationToken).ConfigureAwait(false);
         var cart = ShoppingCart.CreateGuest(
             _ids.NewId(),
-            CartCredentialHasher.Hash(secret), market, currency, channel, now, now.Add(ttl));
+            CartCredentialHasher.Hash(secret), market, defaultCurrency, channel, now, now.Add(ttl));
         _db.Carts.Add(cart);
         await _db.SaveChangesAsync(cancellationToken);
         return new GuestCartCreated(await ToSnapshotAsync(cart, cancellationToken), secret);
@@ -151,7 +152,8 @@ public sealed class CartDirectory : ICartDirectory, CartContract.ICartQueryGatew
         Guid offerId,
         decimal quantity,
         CancellationToken cancellationToken,
-        Guid? merchandisingCampaignId = null)
+        Guid? merchandisingCampaignId = null,
+        string? requestedCurrency = null)
     {
         await _guard.EnsureCanMutateAsync(cancellationToken);
         var cart = await LoadRequiredAsync(cartId, cancellationToken);
@@ -163,14 +165,17 @@ public sealed class CartDirectory : ICartDirectory, CartContract.ICartQueryGatew
             // Prefer surviving campaign context when merging quantity into an existing line.
             var mergedCampaign = merchandisingCampaignId ?? existing.MerchandisingCampaignId;
             existing.SetMerchandisingCampaignId(mergedCampaign);
+            // The line's own QuotedCurrency stays authoritative; requestedCurrency never switches it.
             return await ChangeLineCoreAsync(cart, existing, existing.Quantity + quantity, cancellationToken);
         }
 
+        var lineCurrency = CartLineCurrency.ForNewLine(cart, requestedCurrency);
         var now = _clock.UtcNow;
         var (offer, quote, normalized, effectiveCampaignId) = await ValidateOfferAndQuoteAsync(
             cart,
             offerId,
             quantity,
+            lineCurrency,
             now,
             merchandisingCampaignId,
             cancellationToken);
@@ -430,10 +435,13 @@ public sealed class CartDirectory : ICartDirectory, CartContract.ICartQueryGatew
     private async Task<CartContract.CartSnapshot> ChangeLineCoreAsync(ShoppingCart cart, CartLine line, decimal quantity, CancellationToken cancellationToken)
     {
         var now = _clock.UtcNow;
+        // Existing line requotes in its own authoritative QuotedCurrency; cart default never overrides it.
+        var lineCurrency = CartLineCurrency.RequireForExistingLine(line);
         var (_, quote, normalized, effectiveCampaignId) = await ValidateOfferAndQuoteAsync(
             cart,
             line.OfferId,
             quantity,
+            lineCurrency,
             now,
             line.MerchandisingCampaignId,
             cancellationToken);
@@ -478,6 +486,7 @@ public sealed class CartDirectory : ICartDirectory, CartContract.ICartQueryGatew
         ShoppingCart cart,
         Guid offerId,
         decimal quantity,
+        string selectedCurrency,
         DateTimeOffset now,
         Guid? merchandisingCampaignId,
         CancellationToken cancellationToken)
@@ -523,7 +532,7 @@ public sealed class CartDirectory : ICartDirectory, CartContract.ICartQueryGatew
                 offerId,
                 cart.Market,
                 cart.Channel,
-                cart.Currency,
+                selectedCurrency,
                 now,
                 cancellationToken);
             if (campaignQuote is not null)
@@ -538,7 +547,7 @@ public sealed class CartDirectory : ICartDirectory, CartContract.ICartQueryGatew
         }
 
         var quote = await _prices.ResolvePriceAsync(
-            new PriceResolutionQuery(offerId, cart.Market, cart.Channel, cart.Currency, now, null, null, quantity),
+            new PriceResolutionQuery(offerId, cart.Market, cart.Channel, selectedCurrency, now, null, null, quantity),
             cancellationToken)
             ?? throw new InvalidOperationException("cart.pricing.quote_missing");
         return (offer, quote, quantity, null);
@@ -558,16 +567,16 @@ public sealed class CartDirectory : ICartDirectory, CartContract.ICartQueryGatew
     private async Task<ShoppingCart> CreateAuthenticatedCoreAsync(
         Guid userId,
         string market,
-        string currency,
+        string defaultCurrency,
         SalesChannel channel,
         CancellationToken cancellationToken)
     {
-        _ = CurrencyCode.Parse(currency);
+        _ = CurrencyCode.Parse(defaultCurrency);
         var now = _clock.UtcNow;
         var ttl = await ResolvePersistenceTtlAsync(cancellationToken).ConfigureAwait(false);
         var cart = ShoppingCart.CreateAuthenticated(
             _ids.NewId(),
-            userId, market, currency, channel, now, now.Add(ttl));
+            userId, market, defaultCurrency, channel, now, now.Add(ttl));
         _db.Carts.Add(cart);
         await _db.SaveChangesAsync(cancellationToken);
         return cart;
@@ -581,8 +590,13 @@ public sealed class CartDirectory : ICartDirectory, CartContract.ICartQueryGatew
         var now = _clock.UtcNow;
         var existing = target.FindLineByOffer(source.OfferId);
         var quantity = (existing?.Quantity ?? 0) + source.Quantity;
+        // Merge currency truth: the target's own line currency, else the source line's currency.
+        // cart.DefaultCurrency is never a fallback for an already-quoted line.
+        var mergedLineCurrency = existing is not null
+            ? CartLineCurrency.RequireForExistingLine(existing)
+            : CartLineCurrency.RequireForExistingLine(source);
         decimal quotedAmount = source.QuotedAmount ?? 0;
-        var quotedCurrency = source.QuotedCurrency ?? target.Currency;
+        var quotedCurrency = mergedLineCurrency;
         var taxExclusive = source.QuotedTaxExclusive;
         var priceId = source.PriceId ?? Guid.Empty;
         try
@@ -591,6 +605,7 @@ public sealed class CartDirectory : ICartDirectory, CartContract.ICartQueryGatew
                 target,
                 source.OfferId,
                 quantity,
+                mergedLineCurrency,
                 now,
                 source.MerchandisingCampaignId ?? existing?.MerchandisingCampaignId,
                 cancellationToken);
@@ -723,7 +738,7 @@ public sealed class CartDirectory : ICartDirectory, CartContract.ICartQueryGatew
             (CartContract.CartAccessKind)(int)cart.AccessKind,
             cart.OwnerUserId,
             cart.Market,
-            cart.Currency,
+            cart.DefaultCurrency,
             cart.Channel,
             cart.ExpiresAt,
             (CartContract.CartConversionIntent)(int)cart.ConversionIntent,
@@ -779,6 +794,7 @@ public sealed class CartDirectory : ICartDirectory, CartContract.ICartQueryGatew
                     cart,
                     line.OfferId,
                     line.Quantity,
+                    CartLineCurrency.RequireForExistingLine(line),
                     now,
                     line.MerchandisingCampaignId,
                     cancellationToken);

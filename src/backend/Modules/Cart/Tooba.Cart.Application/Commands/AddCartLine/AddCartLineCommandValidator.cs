@@ -15,5 +15,6 @@ public sealed class AddCartLineCommandValidator : AbstractValidator<AddCartLineC
         CartFluentRules.RequireCartId(this, x => x.CartId);
         CartFluentRules.RequireOfferId(this, x => x.OfferId);
         CartFluentRules.RequireExpectedVersionMin(this, x => x.ExpectedVersion);
+        CartFluentRules.OptionalCurrencyShape(this, x => x.Currency);
     }
 }

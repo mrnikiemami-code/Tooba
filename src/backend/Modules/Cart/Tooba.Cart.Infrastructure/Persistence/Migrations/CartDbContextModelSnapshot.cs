@@ -117,7 +117,7 @@ namespace Tooba.Cart.Infrastructure.Persistence.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at");
 
-                    b.Property<string>("Currency")
+                    b.Property<string>("DefaultCurrency")
                         .IsRequired()
                         .HasMaxLength(3)
                         .HasColumnType("character varying(3)")

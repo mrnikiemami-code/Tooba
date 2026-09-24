@@ -33,6 +33,9 @@
   <data name="cart.line.missing" xml:space="preserve">
     <value>خط سبد پیدا نشد.</value>
   </data>
+  <data name="cart.line.currency_missing" xml:space="preserve">
+    <value>ارز خط سبد در دسترس نیست. دوباره تلاش کنید.</value>
+  </data>
   <data name="cart.offer.unavailable" xml:space="preserve">
     <value>این کالا در حال حاضر قابل افزودن به سبد نیست.</value>
   </data>

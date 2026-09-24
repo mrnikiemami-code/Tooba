@@ -22,7 +22,8 @@ Canonical bootstrap for recovering the Tooba architecture context after chat/ses
 - StoreContext golden hardening: TB-TMAR-STORECONTEXT-GOLDEN-001 (StoreCommerceContext.Currency -> DefaultCurrency: default storefront selection input only, never a single-currency transaction/line/order/payment invariant; canonical key StoreCommerce:DefaultCurrency, no silent Currency alias; Cart adapter wording only; StoreContext = PLATFORM_CONTEXT_REFERENCE_PATTERN / INTERNAL_ONLY / NOT_APPLICABLE endpoints / NOT_APPLICABLE_NO_APPLICATION_USE_CASE, ARCH-COMPLETE-002 STRUCTURE_CERTIFIED, no ceremonial Application/Endpoints/MediatR; Cart single pricing-currency residual debt explicitly NOT repaired; Cart/Order certifications preserved)
 - StoreContext golden ACCEPTED: TB-TMAR-STORECONTEXT-GOLDEN-001 (Architect-ACCEPTED at f2667a249d43fb542903a08b429cd1ea8e219704; DefaultCurrency default-selection semantics; StoreContext = PLATFORM_CONTEXT_REFERENCE_PATTERN / INTERNAL_ONLY / ARCH-COMPLETE-002 STRUCTURE_CERTIFIED)
 - Cart multi-currency bounded audit: TB-TMAR-CART-MULTICURRENCY-AUDIT-001 (AUDIT-ONLY; zero production code change; deterministic next-implementation map; Order/Checkout/Payment deferred)
-- Current next task: USER_REVIEW_CART_MULTICURRENCY_AUDIT_001
+- Cart multi-currency line slice: TB-TMAR-CART-MULTICURRENCY-LINES-001 (ShoppingCart.Currency -> DefaultCurrency selection metadata only; physical DB column currency unchanged, no migration; optional requested currency on add-line; existing line requotes in its own sticky QuotedCurrency; merge never falls back to cart default; line currency truth fails closed with cart.line.currency_missing; CartPage exposes TotalsByCurrency and no cross-currency scalar; Pricing contracts unchanged and remain quote authority; Order/Checkout/Payment multi-currency explicitly deferred)
+- Current next task: USER_REVIEW_CART_MULTICURRENCY_LINES_001
 - Gate: USER_REVIEW_REQUIRED_BEFORE_NEXT_TMAR_WAVE
 - Closed by: TB-TMAR-GOLDEN-WAVE-FINAL-CLOSURE-001
 - Order closed by: TB-TMAR-ORDER-GOLDEN-001-FINAL-CLOSURE
@@ -54,7 +55,7 @@ Accepted architecture baseline:
 TB-TMAR-ARCH-BASELINE
 
 Current next task:
-USER_REVIEW_CART_MULTICURRENCY_AUDIT_001
+USER_REVIEW_CART_MULTICURRENCY_LINES_001
 
 Current recovery summary (consistent with the authoritative closure above):
 COMPLETE HTTP-owning: Cart, Settlement, Fulfillment, Returns, Notification, Support, Wallet, Payment, Promotion, Offer, Order.

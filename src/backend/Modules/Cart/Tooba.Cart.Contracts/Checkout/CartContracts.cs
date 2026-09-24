@@ -87,6 +87,7 @@ public sealed record CartLineSnapshot(
 
 /// <summary>
 /// نمای سبد بدون نشت EF. حقیقت تسویه یا سفارش نیست.
+/// <c>DefaultCurrency</c> فقط انتخاب پیش‌فرض خط تازه است، نه ارز همهٔ خطوط یا سفارش.
 /// </summary>
 public sealed record CartSnapshot(
     Guid CartId,
@@ -94,7 +95,7 @@ public sealed record CartSnapshot(
     CartAccessKind AccessKind,
     Guid? OwnerUserId,
     string Market,
-    string Currency,
+    string DefaultCurrency,
     SalesChannel Channel,
     DateTimeOffset? ExpiresAt,
     CartConversionIntent ConversionIntent,

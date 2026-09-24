@@ -14,4 +14,7 @@ public static class CartValidationCodes
 
     /// <summary>Expected cart version must be non-negative.</summary>
     public const string ExpectedVersionMin = "cart.validation.expected_version_min";
+
+    /// <summary>Optional currency must be shaped as a 3-character code when supplied.</summary>
+    public const string CurrencyShape = "cart.validation.currency_shape";
 }

@@ -1,4 +1,5 @@
 ﻿using Tooba.BuildingBlocks.Security;
+using Tooba.Cart.Application.Errors;
 using Tooba.Cart.Contracts;
 using Tooba.Catalog.Contracts;
 using Tooba.Party.Contracts;
@@ -81,6 +82,12 @@ public sealed class CartPresentationComposer : Tooba.Cart.Contracts.ICartPresent
             }
 
             policies.TryGetValue(line.CatalogVariantId, out var policy);
+            // Line currency truth only. There is no cart.DefaultCurrency fallback for a quoted line.
+            if (string.IsNullOrWhiteSpace(line.QuotedCurrency))
+            {
+                throw new InvalidOperationException(CartErrorCodes.LineCurrencyMissing);
+            }
+
             lines.Add(new CartLineView(
                 line.LineId,
                 line.OfferId,
@@ -94,7 +101,7 @@ public sealed class CartPresentationComposer : Tooba.Cart.Contracts.ICartPresent
                 line.Quantity,
                 unit,
                 lineAmount,
-                line.QuotedCurrency ?? snapshot.Currency,
+                line.QuotedCurrency,
                 line.QuotedTaxExclusive,
                 policy?.UnitCode,
                 policy?.UnitDisplayName ?? policy?.UnitShortName,
@@ -104,17 +111,18 @@ public sealed class CartPresentationComposer : Tooba.Cart.Contracts.ICartPresent
                 line.MerchandisingCampaignId));
         }
 
-        var subtotal = lines.Sum(item => item.LineAmountExclusiveOfTax ?? 0);
+        var totalsByCurrency = CartCurrencyTotals.Group(
+            lines.Select(item => (item.Currency, item.LineAmountExclusiveOfTax)));
         if (snapshot.Status == CartStatus.Converted)
         {
             return new CartPage(
                 snapshot.CartId,
                 snapshot.Version,
                 snapshot.Market,
-                snapshot.Currency,
+                snapshot.DefaultCurrency,
                 snapshot.Channel.ToString(),
                 0,
-                0,
+                Array.Empty<CartCurrencyTotal>(),
                 Array.Empty<CartLineView>(),
                 guestSecret,
                 snapshot.Status.ToString());
@@ -124,10 +132,10 @@ public sealed class CartPresentationComposer : Tooba.Cart.Contracts.ICartPresent
             snapshot.CartId,
             snapshot.Version,
             snapshot.Market,
-            snapshot.Currency,
+            snapshot.DefaultCurrency,
             snapshot.Channel.ToString(),
             snapshot.Lines.Sum(item => item.Quantity),
-            subtotal,
+            totalsByCurrency,
             lines,
             guestSecret,
             snapshot.Status.ToString());

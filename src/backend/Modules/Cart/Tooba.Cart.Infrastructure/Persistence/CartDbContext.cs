@@ -51,7 +51,8 @@ public sealed class CartDbContext : DbContext
             entity.Property(x => x.AccessKind).HasConversion<string>().HasMaxLength(32);
             entity.Property(x => x.GuestCredentialHash).HasMaxLength(128);
             entity.Property(x => x.Market).HasMaxLength(16);
-            entity.Property(x => x.Currency).HasMaxLength(3);
+            // Default selection only. Mapped to the existing physical "currency" column; no schema change.
+            entity.Property(x => x.DefaultCurrency).HasColumnName("currency").HasMaxLength(3);
             entity.Property(x => x.Channel).HasConversion<string>().HasMaxLength(32);
             entity.Property(x => x.ConversionIntent).HasConversion<string>().HasMaxLength(32);
             entity.Property(x => x.Version).IsConcurrencyToken();

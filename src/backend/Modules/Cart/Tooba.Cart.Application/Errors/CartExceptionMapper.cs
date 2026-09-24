@@ -78,6 +78,10 @@ public static class CartExceptionMapper
                 error = new SemanticError(CartErrorCodes.LineMissing);
                 return true;
 
+            case CartErrorCodes.LineCurrencyMissing:
+                error = new SemanticError(CartErrorCodes.LineCurrencyMissing);
+                return true;
+
             case CartErrorCodes.OfferUnavailable:
             case "cart.offer.missing":
             case "cart.offer.inactive":

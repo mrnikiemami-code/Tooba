@@ -87,7 +87,7 @@ public sealed class CartPresentationAndErrorTests
 
         var page = await composer.PresentAsync(snapshot, guestSecret: "raw-secret", CancellationToken.None);
         Assert.Equal(0m, page.ItemCount);
-        Assert.Equal(0m, page.SubtotalExclusiveOfTax);
+        Assert.Empty(page.TotalsByCurrency);
         Assert.Empty(page.Lines);
         Assert.Equal("Converted", page.Status);
         Assert.Equal("raw-secret", page.GuestSecret);
@@ -135,7 +135,9 @@ public sealed class CartPresentationAndErrorTests
 
         var page = await composer.PresentAsync(snapshot, guestSecret: null, CancellationToken.None);
         Assert.Equal(2m, page.ItemCount);
-        Assert.Equal(3000m, page.SubtotalExclusiveOfTax);
+        var total = Assert.Single(page.TotalsByCurrency);
+        Assert.Equal("IRR", total.Currency);
+        Assert.Equal(3000m, total.SubtotalExclusiveOfTax);
         var line = Assert.Single(page.Lines);
         Assert.Equal(productId, line.ProductId);
         Assert.Equal("tea", line.ProductSlug);

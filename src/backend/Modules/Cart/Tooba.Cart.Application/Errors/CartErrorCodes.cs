@@ -24,6 +24,9 @@ public static class CartErrorCodes
     /// <summary>Cart line was not found.</summary>
     public const string LineMissing = "cart.line.missing";
 
+    /// <summary>A quoted line has no currency truth; unlike currencies are never assumed.</summary>
+    public const string LineCurrencyMissing = "cart.line.currency_missing";
+
     /// <summary>Offer cannot be added to the cart.</summary>
     public const string OfferUnavailable = "cart.offer.unavailable";
 

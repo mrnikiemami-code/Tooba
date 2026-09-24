@@ -23,15 +23,25 @@ public sealed record CartLineView(
     string Availability = "Available",
     Guid? MerchandisingCampaignId = null);
 
-/// <summary>Live cart page. Totals are tax-exclusive estimates from Cart quotes, not Checkout settlement.</summary>
+/// <summary>
+/// Total of one line currency group. Amounts of unlike currencies are never summed together.
+/// </summary>
+public sealed record CartCurrencyTotal(string Currency, decimal SubtotalExclusiveOfTax);
+
+/// <summary>
+/// Live cart page. Totals are tax-exclusive estimates from Cart quotes, not Checkout settlement.
+/// <c>DefaultCurrency</c> is default-selection metadata only; per-currency truth lives in
+/// <see cref="TotalsByCurrency"/> and in each <see cref="CartLineView.Currency"/>.
+/// There is intentionally no single scalar page-level subtotal: unlike currencies are never summed.
+/// </summary>
 public sealed record CartPage(
     Guid CartId,
     int Version,
     string Market,
-    string Currency,
+    string DefaultCurrency,
     string Channel,
     decimal ItemCount,
-    decimal SubtotalExclusiveOfTax,
+    IReadOnlyList<CartCurrencyTotal> TotalsByCurrency,
     IReadOnlyList<CartLineView> Lines,
     string? GuestSecret,
     string Status = "Active");

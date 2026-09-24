@@ -64,7 +64,7 @@ public sealed class StorefrontShippingService
         var sellerIds = cart.Lines.Select(x => x.SellerPartyId).Distinct().ToArray();
         var maxPrep = StorefrontShippingCalculator.MaxSellerPreparationDays(sellerIds, _shippingOptions);
         var today = DateOnly.FromDateTime(_clock.UtcNow.UtcDateTime);
-        var methods = await LoadEligibleMethodsAsync(cart.SubtotalExclusiveOfTax, provinceName, language, cancellationToken);
+        var methods = await LoadEligibleMethodsAsync(CartSubtotalExclusiveOfTax(cart), provinceName, language, cancellationToken);
 
         var draft = await LoadDraftAsync(cart.CartId, guestSecret, cancellationToken);
         var revalidationMessage = (string?)null;
@@ -109,9 +109,9 @@ public sealed class StorefrontShippingService
         return new StorefrontShippingProjection(
             cart.CartId,
             cart.Version,
-            cart.Currency,
+            cart.DefaultCurrency,
             cart.ItemCount,
-            cart.SubtotalExclusiveOfTax,
+            CartSubtotalExclusiveOfTax(cart),
             sellerIds.Length,
             maxPrep,
             methods,
@@ -161,7 +161,7 @@ public sealed class StorefrontShippingService
             cancellationToken);
 
         var methods = await LoadEligibleMethodsAsync(
-            cart.SubtotalExclusiveOfTax,
+            CartSubtotalExclusiveOfTax(cart),
             prepared.Shipping.ProvinceName,
             null,
             cancellationToken);
@@ -404,6 +404,14 @@ public sealed class StorefrontShippingService
         var chars = raw.Select(c => c is >= '0' and <= '9' ? (char)('۰' + (c - '0')) : c).ToArray();
         return new string(chars);
     }
+
+    /// <summary>
+    /// Compile-compatibility scalar for the still-deferred Order multi-currency decision.
+    /// Reproduces the previous arithmetic over the per-currency Cart totals without
+    /// introducing any new Order-owned currency policy.
+    /// </summary>
+    private static decimal CartSubtotalExclusiveOfTax(CartPage cart) =>
+        cart.TotalsByCurrency.Sum(item => item.SubtotalExclusiveOfTax);
 
     private async Task<CartPage> RequireCartAsync(Guid cartId, string? guestSecret, CancellationToken cancellationToken)
     {

@@ -669,8 +669,9 @@ public sealed class CheckoutOrderFoundationTests : IAsyncLifetime
             Guid offerId,
             decimal quantity,
             CancellationToken cancellationToken,
-            Guid? merchandisingCampaignId = null) =>
-            _inner.AddOrIncreaseLineAsync(cartId, access, expectedVersion, offerId, quantity, cancellationToken, merchandisingCampaignId);
+            Guid? merchandisingCampaignId = null,
+            string? requestedCurrency = null) =>
+            _inner.AddOrIncreaseLineAsync(cartId, access, expectedVersion, offerId, quantity, cancellationToken, merchandisingCampaignId, requestedCurrency);
 
         public Task<CartSnapshot> ChangeLineQuantityAsync(Guid cartId, CartAccess access, int expectedVersion, Guid lineId, decimal quantity, CancellationToken cancellationToken) =>
             _inner.ChangeLineQuantityAsync(cartId, access, expectedVersion, lineId, quantity, cancellationToken);

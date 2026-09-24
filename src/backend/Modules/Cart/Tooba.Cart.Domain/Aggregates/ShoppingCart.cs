@@ -51,9 +51,10 @@ public sealed class ShoppingCart : IHasDomainEvents
     public string Market { get; init; } = string.Empty;
 
     /// <summary>
-    /// ارز زمینهٔ سبد. Locale یا نام نمایشی نیست.
+    /// ارز پیش‌فرض انتخاب خط تازه. Locale یا نام نمایشی نیست و ارز تراکنش نیست:
+    /// این مقدار فقط انتخاب اولیهٔ سبد است و ارز حقیقی هر خط از نقل‌قول Pricing روی همان خط می‌آید.
     /// </summary>
-    public string Currency { get; init; } = string.Empty;
+    public string DefaultCurrency { get; init; } = string.Empty;
 
     /// <summary>
     /// کانال فروش پایدار سبد.
@@ -97,13 +98,13 @@ public sealed class ShoppingCart : IHasDomainEvents
     public void ClearDomainEvents() => _domainEvents.Clear();
 
     /// <summary>
-    /// سبد واردشده می‌سازد.
+    /// سبد واردشده می‌سازد. <paramref name="defaultCurrency"/> فقط انتخاب پیش‌فرض خط تازه است.
     /// </summary>
     public static ShoppingCart CreateAuthenticated(
         Guid cartId,
         Guid userId,
         string market,
-        string currency,
+        string defaultCurrency,
         SalesChannel channel,
         DateTimeOffset now,
         DateTimeOffset expiresAt)
@@ -113,19 +114,19 @@ public sealed class ShoppingCart : IHasDomainEvents
             throw new InvalidOperationException("cart.user_id.required");
         }
 
-        var cart = CreateCore(cartId, CartAccessKind.Authenticated, userId, null, market, currency, channel, now, expiresAt);
+        var cart = CreateCore(cartId, CartAccessKind.Authenticated, userId, null, market, defaultCurrency, channel, now, expiresAt);
         cart._domainEvents.Add(new CartCreatedDomainEvent(cart.CartId, cart.AccessKind));
         return cart;
     }
 
     /// <summary>
-    /// سبد مهمان می‌سازد؛ فقط هش راز را نگه می‌دارد.
+    /// سبد مهمان می‌سازد؛ فقط هش راز را نگه می‌دارد. <paramref name="defaultCurrency"/> فقط انتخاب پیش‌فرض خط تازه است.
     /// </summary>
     public static ShoppingCart CreateGuest(
         Guid cartId,
         string guestCredentialHash,
         string market,
-        string currency,
+        string defaultCurrency,
         SalesChannel channel,
         DateTimeOffset now,
         DateTimeOffset expiresAt)
@@ -135,7 +136,7 @@ public sealed class ShoppingCart : IHasDomainEvents
             throw new InvalidOperationException("cart.guest_secret.hash_required");
         }
 
-        var cart = CreateCore(cartId, CartAccessKind.Guest, null, guestCredentialHash.Trim(), market, currency, channel, now, expiresAt);
+        var cart = CreateCore(cartId, CartAccessKind.Guest, null, guestCredentialHash.Trim(), market, defaultCurrency, channel, now, expiresAt);
         cart._domainEvents.Add(new CartCreatedDomainEvent(cart.CartId, cart.AccessKind));
         return cart;
     }
@@ -292,7 +293,7 @@ public sealed class ShoppingCart : IHasDomainEvents
         Guid? userId,
         string? guestHash,
         string market,
-        string currency,
+        string defaultCurrency,
         SalesChannel channel,
         DateTimeOffset now,
         DateTimeOffset expiresAt)
@@ -302,7 +303,9 @@ public sealed class ShoppingCart : IHasDomainEvents
             throw new InvalidOperationException("cart.market.required");
         }
 
-        if (string.IsNullOrWhiteSpace(currency) || currency.Trim().Length != 3)
+        // Default selection shape only. This is NOT the currency invariant of all CartLines;
+        // each line's authoritative currency comes from its own Pricing quote.
+        if (string.IsNullOrWhiteSpace(defaultCurrency) || defaultCurrency.Trim().Length != 3)
         {
             throw new InvalidOperationException("cart.currency.invalid");
         }
@@ -320,7 +323,7 @@ public sealed class ShoppingCart : IHasDomainEvents
             OwnerUserId = userId,
             GuestCredentialHash = guestHash,
             Market = market.Trim(),
-            Currency = currency.Trim().ToUpperInvariant(),
+            DefaultCurrency = defaultCurrency.Trim().ToUpperInvariant(),
             Channel = channel,
             ExpiresAt = expiresAt,
             ConversionIntent = CartConversionIntent.None,

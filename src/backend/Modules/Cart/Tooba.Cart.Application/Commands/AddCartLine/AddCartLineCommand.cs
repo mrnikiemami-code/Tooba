@@ -16,7 +16,8 @@ public sealed record AddCartLineCommand(
     int ExpectedVersion,
     Guid OfferId,
     decimal Quantity,
-    Guid? MerchandisingCampaignId = null) : IRequest<Result<CartPage>>;
+    Guid? MerchandisingCampaignId = null,
+    string? Currency = null) : IRequest<Result<CartPage>>;
 
 internal sealed class AddCartLineHandler(
     ICartDirectory carts,
@@ -33,7 +34,8 @@ internal sealed class AddCartLineHandler(
                 request.OfferId,
                 request.Quantity,
                 cancellationToken,
-                request.MerchandisingCampaignId);
+                request.MerchandisingCampaignId,
+                request.Currency);
             return await presentation.PresentAsync(snapshot, guestSecret: null, cancellationToken);
         });
 
