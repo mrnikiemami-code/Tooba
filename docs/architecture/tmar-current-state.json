@@ -3,9 +3,9 @@
     "executionMode":  "BACKEND_ONLY_UNTIL_EXPLICIT_RELEASE",
     "frontendFrozen":  true,
     "checkoutState":  "PAUSED_AT_SAFE_W5_CHECKPOINT",
-    "lastAcceptedTask":  "TB-TMAR-CART-POSTCERT-SEMANTIC-HOST-CLOSURE-001-R1",
-    "lastAcceptedCommit":  "eea83df99f56f87a67c02a685e771d2b95fb8f74",
-    "nextTask":  "USER_REVIEW_CART_POSTCERT_SEMANTIC_HOST_CLOSURE_R1",
+    "lastAcceptedTask":  "TB-TMAR-CART-STORE-COMMERCE-FAILFAST-001",
+    "lastAcceptedCommit":  "PLACEHOLDER_STAMP_AFTER_COMMIT",
+    "nextTask":  "USER_REVIEW_CART_STORE_COMMERCE_FAILFAST_001",
     "nextTaskGate":  "USER_REVIEW_REQUIRED_BEFORE_NEXT_TMAR_WAVE",
     "goldenWaveState":  "COMPLETE",
     "goldenWaveUserReview":  "USER_ACCEPTED",
@@ -33,7 +33,7 @@
     },
     "recoveryPhrase":  "برگردیم به TMAR؛ TOOBA-TMAR-MASTER-RECOVERY.md و آخرین recovery-sot را مبنا بگیر.",
     "hostCartBoundary":  {
-        "task":  "TB-TMAR-CART-POSTCERT-SEMANTIC-HOST-CLOSURE-001",
+        "task":  "TB-TMAR-CART-STORE-COMMERCE-FAILFAST-001",
         "illegalCartAuthorityCount":  0,
         "deadCartResidueCount":  0,
         "cartExpiryOwnership":  "CART_OWNED_ICartExpiryReconciler",
@@ -51,6 +51,8 @@
         "evidence":  "docs/evidence/TB-TMAR-CART-POSTCERT-SEMANTIC-HOST-CLOSURE-001-R1/commerce-authority-repair.md",
         "commerceAuthority":  "PLATFORM_STORE_COMMERCE_CONTEXT_CONSUMED_BY_CART",
         "cartCommerceDefaults":  "REMOVED_CART_OWNS_NO_COMMERCE_POLICY_DEFAULT",
+        "storeCommerceStartupValidation":  "PRODUCTION_FAIL_FAST_ON_INCOMPLETE_STORE_COMMERCE",
+        "storeCommerceSalesChannelValidation":  "STARTUP_VALIDATED_AGAINST_TOOBA_OFFER_CONTRACTS_SALESCHANNEL",
         "structureCertifiedUnderArchComplete002":  true
     },
     "completeReferenceModules":  [
@@ -64,7 +66,7 @@
                                          "lastAcceptedCommit":  "6e880942baaf3b2afd60fa0766e5e132704eca66",
                                          "lastPostCertificationRepairTask":  "TB-TMAR-CART-POSTCERT-SEMANTIC-HOST-CLOSURE-001-R1",
                                          "lastPostCertificationRepairCommit":  "eea83df99f56f87a67c02a685e771d2b95fb8f74",
-                                         "postCertificationRepairNote":  "Commerce-authority repair only; not a new structural certification. Cart owns no commerce policy default (Market/Currency/SalesChannel) and consumes the platform store commerce context. Cart remains COMPLETE_REFERENCE_PATTERN + ARCH-COMPLETE-002 STRUCTURE_CERTIFIED."
+                                         "postCertificationRepairNote":  "Commerce-authority repair only; not a new structural certification. Cart owns no commerce policy default (Market/Currency/SalesChannel) and consumes the platform store commerce context. Cart remains COMPLETE_REFERENCE_PATTERN + ARCH-COMPLETE-002 STRUCTURE_CERTIFIED. Follow-up platform startup fail-fast (TB-TMAR-CART-STORE-COMMERCE-FAILFAST-001) hardened StoreCommerce validation without touching Cart."
                                      },
                                      {
                                          "module":  "Settlement",

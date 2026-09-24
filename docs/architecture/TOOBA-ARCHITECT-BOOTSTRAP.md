@@ -17,7 +17,8 @@ Canonical bootstrap for recovering the Tooba architecture context after chat/ses
 - Cart Host residual: TB-TMAR-CART-HOST-RESIDUAL-REVERIFY-001 (HOST_CART_ILLEGAL_AUTHORITY = 0; Cart expiry + persistence policy Cart-owned; Host worker shell only; no broad Cart global usings)
 - Cart post-certification semantic/ownership repair: TB-TMAR-CART-POSTCERT-SEMANTIC-HOST-CLOSURE-001 (Host owns zero Cart implementation classes; Cart expiry worker/options + persistence adapter Cart-owned; persistence-hours fully async; CreateGuestCart uses canonical commerce context; no hardcoded Persian presentation fallbacks)
 - Cart commerce-authority repair: TB-TMAR-CART-POSTCERT-SEMANTIC-HOST-CLOSURE-001-R1 (Cart owns no commerce policy default; platform-owned StoreCommerceContext is the effective storefront commerce authority consumed by Cart; fail-closed cart.commerce.* codes; Cart remains COMPLETE_REFERENCE_PATTERN + STRUCTURE_CERTIFIED)
-- Current next task: USER_REVIEW_CART_POSTCERT_SEMANTIC_HOST_CLOSURE_R1
+- Cart store-commerce fail-fast: TB-TMAR-CART-STORE-COMMERCE-FAILFAST-001 (Production startup fails fast on incomplete/invalid StoreCommerce; Marketplace validates deployment Market/Currency/SalesChannel; SingleStore validates every ACTIVE tenant (Disabled/Suspended skipped); SalesChannel validated against canonical Tooba.Offer.Contracts.Dtos.SalesChannel; Cart code untouched; Cart remains COMPLETE_REFERENCE_PATTERN + STRUCTURE_CERTIFIED)
+- Current next task: USER_REVIEW_CART_STORE_COMMERCE_FAILFAST_001
 - Gate: USER_REVIEW_REQUIRED_BEFORE_NEXT_TMAR_WAVE
 - Closed by: TB-TMAR-GOLDEN-WAVE-FINAL-CLOSURE-001
 - Order closed by: TB-TMAR-ORDER-GOLDEN-001-FINAL-CLOSURE
@@ -43,13 +44,13 @@ Last accepted Product task:
 TB-P10-T022-R21
 
 Last accepted TMAR task:
-TB-TMAR-CART-POSTCERT-SEMANTIC-HOST-CLOSURE-001-R1
+TB-TMAR-CART-STORE-COMMERCE-FAILFAST-001
 
 Accepted architecture baseline:
 TB-TMAR-ARCH-BASELINE
 
 Current next task:
-USER_REVIEW_CART_POSTCERT_SEMANTIC_HOST_CLOSURE_R1
+USER_REVIEW_CART_STORE_COMMERCE_FAILFAST_001
 
 Current recovery summary (consistent with the authoritative closure above):
 COMPLETE HTTP-owning: Cart, Settlement, Fulfillment, Returns, Notification, Support, Wallet, Payment, Promotion, Offer, Order.

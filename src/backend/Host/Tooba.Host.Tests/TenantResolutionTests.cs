@@ -89,6 +89,152 @@ public sealed class PlatformOptionsValidatorTests
         Assert.Contains("Production requires Tooba:Edition", result.FailureMessage, StringComparison.Ordinal);
     }
 
+    [Fact]
+    public void Production_marketplace_rejects_missing_store_commerce()
+    {
+        var options = SampleMarketplace();
+        options.StoreCommerce = new StoreCommerceOptions();
+
+        var result = Production(environment => new PlatformOptionsValidator(environment)).Validate(null, options);
+
+        Assert.False(result.Succeeded);
+        Assert.Contains("Market", result.FailureMessage, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void Production_marketplace_rejects_invalid_sales_channel()
+    {
+        var options = SampleMarketplace();
+        options.StoreCommerce.SalesChannel = "Marketplce";
+
+        var result = Production(environment => new PlatformOptionsValidator(environment)).Validate(null, options);
+
+        Assert.False(result.Succeeded);
+        Assert.Contains("SalesChannel", result.FailureMessage, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void Production_marketplace_accepts_complete_valid_store_commerce()
+    {
+        var options = SampleMarketplace();
+
+        var result = Production(environment => new PlatformOptionsValidator(environment)).Validate(null, options);
+
+        Assert.True(result.Succeeded, result.FailureMessage);
+    }
+
+    [Fact]
+    public void Production_singlestore_rejects_active_tenant_missing_currency()
+    {
+        var options = SampleSingleStore();
+        options.SingleStore.Tenants[0].DefaultMarketReference = null;
+        options.SingleStore.Tenants[0].StoreCommerce = new StoreCommerceOptions
+        {
+            Market = "IR",
+            SalesChannel = "Marketplace",
+        };
+
+        var result = Production(environment => new PlatformOptionsValidator(environment)).Validate(null, options);
+
+        Assert.False(result.Succeeded);
+        Assert.Contains("Currency", result.FailureMessage, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void Production_singlestore_rejects_active_tenant_missing_sales_channel()
+    {
+        var options = SampleSingleStore();
+        options.SingleStore.Tenants[0].StoreCommerce = new StoreCommerceOptions
+        {
+            Currency = "IRR",
+        };
+
+        var result = Production(environment => new PlatformOptionsValidator(environment)).Validate(null, options);
+
+        Assert.False(result.Succeeded);
+        Assert.Contains("SalesChannel", result.FailureMessage, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void Production_singlestore_rejects_invalid_sales_channel()
+    {
+        var options = SampleSingleStore();
+        options.SingleStore.Tenants[0].StoreCommerce = new StoreCommerceOptions
+        {
+            Currency = "IRR",
+            SalesChannel = "Marketplce",
+        };
+
+        var result = Production(environment => new PlatformOptionsValidator(environment)).Validate(null, options);
+
+        Assert.False(result.Succeeded);
+        Assert.Contains("SalesChannel", result.FailureMessage, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void Production_singlestore_accepts_market_from_default_reference()
+    {
+        var options = SampleSingleStore();
+        options.SingleStore.Tenants[0].StoreCommerce = new StoreCommerceOptions
+        {
+            Currency = "IRR",
+            SalesChannel = "Marketplace",
+        };
+
+        var result = Production(environment => new PlatformOptionsValidator(environment)).Validate(null, options);
+
+        Assert.True(result.Succeeded, result.FailureMessage);
+    }
+
+    [Fact]
+    public void Production_singlestore_disabled_tenant_without_store_commerce_does_not_block_startup()
+    {
+        var options = SampleSingleStore();
+        options.SingleStore.Tenants[0].StoreCommerce = new StoreCommerceOptions
+        {
+            Currency = "IRR",
+            SalesChannel = "Marketplace",
+        };
+        options.SingleStore.Tenants.Add(new TenantRecordOptions
+        {
+            TenantId = "store-disabled",
+            Status = "Disabled",
+            ConnectionReference = "tenant-disabled",
+            Hosts = ["disabled.localhost"],
+        });
+        options.PostgreSQL.ConnectionReferences["tenant-disabled"] = "Host=127.0.0.1;Database=tooba_disabled";
+
+        var result = Production(environment => new PlatformOptionsValidator(environment)).Validate(null, options);
+
+        Assert.True(result.Succeeded, result.FailureMessage);
+    }
+
+    /// <summary>
+    /// اعتبارسنج fail-fast زمینهٔ تجارت را مستقل از اتصال‌ها اثبات می‌کند: یک Tenant فعال بدون Currency بازار معتبر دارد.
+    /// </summary>
+    [Fact]
+    public void Production_singlestore_store_commerce_validation_is_independent_of_market()
+    {
+        var options = SampleSingleStore();
+        options.SingleStore.Tenants[0].StoreCommerce = new StoreCommerceOptions
+        {
+            Market = "IR",
+            SalesChannel = "Marketplace",
+        };
+
+        var result = Production(environment => new PlatformOptionsValidator(environment)).Validate(null, options);
+
+        Assert.False(result.Succeeded);
+        Assert.Contains("Currency", result.FailureMessage, StringComparison.Ordinal);
+    }
+
+    /// <summary>
+    /// اعتبارسنج production-aware را با محیط ساختگی Production می‌سازد.
+    /// </summary>
+    private static PlatformOptionsValidator Production(
+        Func<FakeHostEnvironment, PlatformOptionsValidator> factory) =>
+        factory(new FakeHostEnvironment("Production"));
+
     /// <summary>
     /// محیط Host ساختگی برای تست fail-fast تولید.
     /// </summary>
@@ -116,9 +262,40 @@ public sealed class PlatformOptionsValidatorTests
                 {
                     TenantId = "store-alpha",
                     ConnectionReference = "Tenant:alpha",
+                    DefaultMarketReference = "IR",
                     Hosts = ["alpha.localhost"],
                 },
             ],
+        },
+        PostgreSQL = new PostgreSqlOptions
+        {
+            ConnectionReferences =
+            {
+                ["Tenant:alpha"] = "Host=127.0.0.1;Database=tooba_alpha",
+            },
+        },
+    };
+
+    /// <summary>
+    /// نمونهٔ حداقل Marketplace با StoreCommerce کامل برای تست اعتبارسنجی تولید.
+    /// </summary>
+    private static ToobaPlatformOptions SampleMarketplace() => new()
+    {
+        Edition = "Marketplace",
+        DeploymentId = "test-marketplace",
+        Marketplace = new MarketplaceOptions { ConnectionReference = "marketplace" },
+        StoreCommerce = new StoreCommerceOptions
+        {
+            Market = "IR",
+            Currency = "IRR",
+            SalesChannel = "Marketplace",
+        },
+        PostgreSQL = new PostgreSqlOptions
+        {
+            ConnectionReferences =
+            {
+                ["marketplace"] = "Host=127.0.0.1;Database=tooba_marketplace",
+            },
         },
     };
 }

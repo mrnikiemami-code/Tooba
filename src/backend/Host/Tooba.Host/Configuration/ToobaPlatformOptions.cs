@@ -1,5 +1,6 @@
 using Microsoft.Extensions.Options;
 using Tooba.BuildingBlocks;
+using Tooba.Offer.Contracts.Dtos;
 
 namespace Tooba.Host;
 
@@ -131,7 +132,7 @@ internal sealed class TenantRecordOptions
     public string? DefaultMarketReference { get; set; }
 
     /// <summary>
-    /// زمینهٔ تجارت مؤثر این فروشگاه در کنترل‌پلین. تهی‌ها از DefaultMarketReference و deployment ارث می‌برند.
+    /// بازار می‌تواند از DefaultMarketReference ارث ببرد؛ ارز و کانال فروش نیازمند مقدار صریح StoreCommerce در همین Tenant هستند.
     /// </summary>
     public StoreCommerceOptions? StoreCommerce { get; set; }
 
@@ -325,6 +326,71 @@ internal sealed class PlatformOptionsValidator : IValidateOptions<ToobaPlatformO
             {
                 return $"Production requires PostgreSQL connection reference '{reference}' to be configured.";
             }
+        }
+
+        return ValidateStoreCommerce(registry);
+    }
+
+    /// <summary>
+    /// زمینهٔ تجارت مؤثر فروشگاه باید در Production کامل باشد؛ ناقص بودن یعنی فرآیند بالا نیاید نه شکست دیرهنگام در زمان مصرف.
+    /// Marketplace از StoreCommerce سطح deployment، Single-Store از رکورد هر Tenant فعال استفاده می‌کند.
+    /// </summary>
+    private static string? ValidateStoreCommerce(ControlPlaneRegistry registry)
+    {
+        if (registry.Edition == ToobaEdition.Marketplace)
+        {
+            return ValidateStoreCommerceRecord("Marketplace", registry.DeploymentStoreCommerce);
+        }
+
+        if (registry.Edition == ToobaEdition.SingleStore)
+        {
+            foreach (var tenant in registry.Tenants.Values)
+            {
+                if (tenant.Status != TenantStatus.Active)
+                {
+                    continue;
+                }
+
+                var failure = ValidateStoreCommerceRecord(
+                    $"tenant '{tenant.TenantId.Value}'",
+                    tenant.StoreCommerce);
+                if (failure is not null)
+                {
+                    return failure;
+                }
+            }
+        }
+
+        return null;
+    }
+
+    /// <summary>
+    /// یک زمینهٔ تجارت را اعتبارسنجی می‌کند: بازار/ارز خالی نباشند و کانال هم نام canonical باشد.
+    /// </summary>
+    private static string? ValidateStoreCommerceRecord(string scope, StoreCommerceContext storeCommerce)
+    {
+        if (string.IsNullOrWhiteSpace(storeCommerce.Market))
+        {
+            return $"Production {scope} requires effective StoreCommerce:Market to be configured.";
+        }
+
+        if (string.IsNullOrWhiteSpace(storeCommerce.Currency))
+        {
+            return $"Production {scope} requires effective StoreCommerce:Currency to be configured.";
+        }
+
+        return ValidateSalesChannel(scope, storeCommerce.SalesChannel);
+    }
+
+    /// <summary>
+    /// کانال فروش باید با enum canonical فروشگاه (<see cref="SalesChannel"/>) بخواند؛ مقدار نامعتبر باید در Startup رد شود.
+    /// </summary>
+    private static string? ValidateSalesChannel(string scope, string? raw)
+    {
+        if (string.IsNullOrWhiteSpace(raw)
+            || !Enum.TryParse<SalesChannel>(raw.Trim(), ignoreCase: true, out _))
+        {
+            return $"Production {scope} requires StoreCommerce:SalesChannel to be a valid SalesChannel.";
         }
 
         return null;
