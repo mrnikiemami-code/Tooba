@@ -16,7 +16,7 @@ public sealed class PaymentReconciliationOptions
     public bool Enabled { get; set; } = true;
 
     /// <summary>
-    /// فاصلهٔ poll بر حسب ثانیه (حداقل ۵). مقادیر نامعتبر به مقدار پیش‌فرض normalize می‌شوند.
+    /// فاصلهٔ poll بر حسب ثانیه (حداقل مؤثر ۱۵؛ پیش‌فرض ۶۰). مقادیر نامعتبر به کف ۱۵ ثانیه normalize می‌شوند.
     /// </summary>
     public int PollIntervalSeconds { get; set; } = 60;
 
@@ -31,10 +31,11 @@ public sealed class PaymentReconciliationOptions
     public int BatchSize { get; set; } = 20;
 
     /// <summary>
-    /// فاصلهٔ poll نرمال‌شده (ثانیه). تنها نقطهٔ clamp سیاست زمان‌بندی Payment است.
+    /// فاصلهٔ poll نرمال‌شده (ثانیه). تنها نقطهٔ clamp سیاست زمان‌بندی Payment است؛
+    /// حداقل مؤثر ۱۵ ثانیه است (parity با رفتار Host پیش از انتقال مالکیت) و مقادیر کمتر به ۱۵ ثانیه ارتقا می‌یابند.
     /// </summary>
     public TimeSpan NormalizedPollInterval =>
-        TimeSpan.FromSeconds(PollIntervalSeconds < 5 ? 5 : PollIntervalSeconds);
+        TimeSpan.FromSeconds(PollIntervalSeconds < 15 ? 15 : PollIntervalSeconds);
 
     /// <summary>
     /// حداقل سن Pending نرمال‌شده؛ هر مقدار کمتر از ۱ دقیقه به ۱ دقیقه ارتقا می‌یابد.

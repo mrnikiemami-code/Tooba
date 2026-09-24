@@ -36,6 +36,21 @@ public sealed class PaymentAdminGridQueryNormalizer : IPaymentAdminGridQueryNorm
     {
         ArgumentNullException.ThrowIfNull(request);
 
+        // One narrow boundary: every structural grid validation error (the grid policy's own
+        // connector checks plus the Payment-owned field/operator checks below) surfaces as a stable
+        // SemanticException instead of escaping as GridQueryValidationException and mapping to 500.
+        try
+        {
+            return NormalizeCore(request);
+        }
+        catch (GridQueryValidationException ex)
+        {
+            throw new SemanticException(new SemanticError(ex.ErrorCode));
+        }
+    }
+
+    private static GridQueryRequest NormalizeCore(GridQueryRequest request)
+    {
         var (page, pageSize) = GridQueryPolicyBase.NormalizePaging(
             request.Page,
             request.PageSize,
@@ -60,13 +75,13 @@ public sealed class PaymentAdminGridQueryNormalizer : IPaymentAdminGridQueryNorm
         {
             if (!TryResolveOperators(filter.Field, out var allowedOps))
             {
-                throw ValidationFailure(GridQueryValidationException.FilterFieldInvalid().ErrorCode);
+                throw GridQueryValidationException.FilterFieldInvalid();
             }
 
             var op = (filter.Operator ?? string.Empty).Trim();
             if (!allowedOps.Contains(op))
             {
-                throw ValidationFailure(GridQueryValidationException.FilterOperatorInvalid().ErrorCode);
+                throw GridQueryValidationException.FilterOperatorInvalid();
             }
 
             filters.Add(GridQueryPolicyBase.NormalizeFilter(filter with { Field = filter.Field!.Trim() }));
@@ -89,13 +104,13 @@ public sealed class PaymentAdminGridQueryNormalizer : IPaymentAdminGridQueryNorm
         {
             if (!TryResolveOperators(condition.Field, out var allowedOps))
             {
-                throw ValidationFailure(GridQueryValidationException.AdvancedFieldInvalid().ErrorCode);
+                throw GridQueryValidationException.AdvancedFieldInvalid();
             }
 
             var op = (condition.Operator ?? string.Empty).Trim();
             if (!allowedOps.Contains(op))
             {
-                throw ValidationFailure(GridQueryValidationException.FilterOperatorInvalid().ErrorCode);
+                throw GridQueryValidationException.FilterOperatorInvalid();
             }
 
             normalized.Add(new GridAdvancedFilterCondition(
@@ -122,7 +137,4 @@ public sealed class PaymentAdminGridQueryNormalizer : IPaymentAdminGridQueryNorm
                && AllowedFields.Contains(field.Trim())
                && OperatorsByField.TryGetValue(field.Trim(), out operators!);
     }
-
-    private static SemanticException ValidationFailure(string errorCode) =>
-        new(new SemanticError(errorCode));
 }

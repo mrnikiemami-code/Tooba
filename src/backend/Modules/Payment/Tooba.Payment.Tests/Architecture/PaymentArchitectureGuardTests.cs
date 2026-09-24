@@ -329,6 +329,16 @@ public sealed class PaymentArchitectureGuardTests
         Assert.DoesNotContain("AdminListGridPolicies", normalizer, StringComparison.Ordinal);
         Assert.DoesNotContain("AdminReceiptListItem", normalizer, StringComparison.Ordinal);
         Assert.DoesNotContain("AdminListGridQueryPolicy", normalizer, StringComparison.Ordinal);
+        Assert.DoesNotContain("PlatformHttpException", normalizer, StringComparison.Ordinal);
+        Assert.DoesNotContain("ex.Message", normalizer, StringComparison.Ordinal);
+        Assert.DoesNotContain("exception.Message", normalizer, StringComparison.Ordinal);
+
+        // Exhaustive boundary: GridQueryValidationException is caught once and rethrown as SemanticException
+        // so no connector/field/operator validation can escape as an unmapped 500.
+        Assert.Contains("catch (GridQueryValidationException ex)", normalizer, StringComparison.Ordinal);
+        Assert.Contains("throw new SemanticException(new SemanticError(ex.ErrorCode))", normalizer, StringComparison.Ordinal);
+        Assert.DoesNotContain("GridQueryValidationException.ConnectorCount().ErrorCode", normalizer, StringComparison.Ordinal);
+        Assert.DoesNotContain("GridQueryValidationException.ConnectorInvalid().ErrorCode", normalizer, StringComparison.Ordinal);
 
         var module = File.ReadAllText(Path.Combine(endpointsRoot, "PaymentEndpointModule.cs"));
         Assert.Contains("IPaymentAdminGridQueryNormalizer, PaymentAdminGridQueryNormalizer", module, StringComparison.Ordinal);
@@ -338,6 +348,30 @@ public sealed class PaymentArchitectureGuardTests
         var infraRefs = ProjectRefs("Tooba.Payment.Infrastructure");
         Assert.DoesNotContain(infraRefs, r => r.Contains("Tooba.Host", StringComparison.Ordinal));
         Assert.Contains(infraRefs, r => r.Contains("Tooba.Persistence", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public void Payment_reconciliation_cadence_preserves_fifteen_second_minimum()
+    {
+        var options = File.ReadAllText(Path.Combine(
+            PaymentRoot(), "Tooba.Payment.Infrastructure", "Workers", "PaymentReconciliationOptions.cs"));
+        Assert.Contains("PollIntervalSeconds < 15 ? 15 : PollIntervalSeconds", options, StringComparison.Ordinal);
+        Assert.DoesNotContain("PollIntervalSeconds < 5 ? 5", options, StringComparison.Ordinal);
+
+        var instance = new Tooba.Payment.Infrastructure.Workers.PaymentReconciliationOptions
+        {
+            PollIntervalSeconds = 1,
+        };
+        Assert.Equal(TimeSpan.FromSeconds(15), instance.NormalizedPollInterval);
+
+        instance.PollIntervalSeconds = 60;
+        Assert.Equal(TimeSpan.FromSeconds(60), instance.NormalizedPollInterval);
+
+        instance.PendingAgeMinutes = 0;
+        Assert.Equal(TimeSpan.FromMinutes(1), instance.NormalizedPendingAge);
+
+        instance.BatchSize = 0;
+        Assert.Equal(20, instance.NormalizedBatchSize);
     }
 
     private static void AssertNoRootDump(string project, string[] allowedFolders)

@@ -31,6 +31,20 @@ public sealed class PaymentReconciliationWorkerTests
         Assert.Equal(0, targets.Calls);
     }
 
+    [Theory]
+    [InlineData(1, 15)]
+    [InlineData(5, 15)]
+    [InlineData(14, 15)]
+    [InlineData(15, 15)]
+    [InlineData(60, 60)]
+    [InlineData(120, 120)]
+    public void Options_clamp_poll_interval_to_minimum_fifteen_seconds(int configured, int expectedSeconds)
+    {
+        var options = new PaymentReconciliationOptions { PollIntervalSeconds = configured };
+
+        Assert.Equal(TimeSpan.FromSeconds(expectedSeconds), options.NormalizedPollInterval);
+    }
+
     [Fact]
     public void Options_normalize_unsafe_values_at_one_payment_owned_boundary()
     {
@@ -41,7 +55,7 @@ public sealed class PaymentReconciliationWorkerTests
             BatchSize = -5,
         };
 
-        Assert.Equal(TimeSpan.FromSeconds(5), options.NormalizedPollInterval);
+        Assert.Equal(TimeSpan.FromSeconds(15), options.NormalizedPollInterval);
         Assert.Equal(TimeSpan.FromMinutes(1), options.NormalizedPendingAge);
         Assert.Equal(20, options.NormalizedBatchSize);
     }

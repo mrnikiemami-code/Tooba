@@ -184,7 +184,12 @@ public sealed class TmarDurableGuardTests
         var paymentHostResidue = rootEl.GetProperty("paymentHostResidueRepair");
         Assert.Equal("TB-TMAR-PAYMENT-HOST-RESIDUE-REPAIR-001", paymentHostResidue.GetProperty("task").GetString());
         Assert.Equal("PAYMENT_RUNTIME_RESIDUE_REMOVED_SECURITY_ADAPTERS_ONLY", paymentHostResidue.GetProperty("state").GetString());
+        Assert.Equal("ACCEPTED_AFTER_R1_BEHAVIOR_PARITY_REPAIR", paymentHostResidue.GetProperty("parentRepair").GetString());
+        Assert.Equal("TB-TMAR-PAYMENT-HOST-RESIDUE-REPAIR-001-R1", paymentHostResidue.GetProperty("parityRepairTask").GetString());
         Assert.Equal("PAYMENT_INFRASTRUCTURE_WORKER_AND_OPTIONS", paymentHostResidue.GetProperty("reconciliationOwnership").GetString());
+        Assert.Equal("MIN_15_SECONDS_PRESERVED", paymentHostResidue.GetProperty("reconciliationCadence").GetString());
+        Assert.Equal("ALL_GRID_VALIDATION_ERRORS_STABLE_SEMANTIC_400", paymentHostResidue.GetProperty("gridValidationMapping").GetString());
+        Assert.Equal("PAYMENT_RUNTIME_RESIDUE_REMOVED_SECURITY_ADAPTERS_ONLY", paymentHostResidue.GetProperty("hostResidue").GetString());
         Assert.Equal("PAYMENT_ENDPOINTS", paymentHostResidue.GetProperty("adminGridPolicyOwnership").GetString());
         Assert.Equal("ZERO", paymentHostResidue.GetProperty("paymentToHostDependency").GetString());
         Assert.False(paymentHostResidue.GetProperty("productionCodeChanged").GetBoolean() == false);

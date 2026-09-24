@@ -83,8 +83,13 @@
     "paymentHostResidueRepair":  {
         "task":  "TB-TMAR-PAYMENT-HOST-RESIDUE-REPAIR-001",
         "state":  "PAYMENT_RUNTIME_RESIDUE_REMOVED_SECURITY_ADAPTERS_ONLY",
+        "hostResidue":  "PAYMENT_RUNTIME_RESIDUE_REMOVED_SECURITY_ADAPTERS_ONLY",
+        "parentRepair":  "ACCEPTED_AFTER_R1_BEHAVIOR_PARITY_REPAIR",
+        "parityRepairTask":  "TB-TMAR-PAYMENT-HOST-RESIDUE-REPAIR-001-R1",
         "productionCodeChanged":  true,
         "reconciliationOwnership":  "PAYMENT_INFRASTRUCTURE_WORKER_AND_OPTIONS",
+        "reconciliationCadence":  "MIN_15_SECONDS_PRESERVED",
+        "gridValidationMapping":  "ALL_GRID_VALIDATION_ERRORS_STABLE_SEMANTIC_400",
         "adminGridPolicyOwnership":  "PAYMENT_ENDPOINTS",
         "hostPaymentSecurityAdapters":  "HostPaymentAdminAuthorizer,HostPaymentStorefrontAuthorizer",
         "workerPath":  "src/backend/Modules/Payment/Tooba.Payment.Infrastructure/Workers/PaymentReconciliationWorker.cs",
@@ -97,7 +102,7 @@
         "hostAdminGridPaymentsPolicy":  "REMOVED",
         "hostDeadRowModel":  "AdminReceiptListItem_REMOVED",
         "structureCertification":  "PENDING_TB_TMAR_PAYMENT_ARCH_COMPLETE_002_STRUCTURE_001",
-        "evidence":  "docs/evidence/TB-TMAR-PAYMENT-HOST-RESIDUE-REPAIR-001/payment-host-residue-repair.md"
+        "evidence":  "docs/evidence/TB-TMAR-PAYMENT-HOST-RESIDUE-REPAIR-001-R1/payment-host-residue-parity-repair.md"
     },
     "offerArchComplete002Structure":  {
         "task":  "TB-TMAR-OFFER-ARCH-COMPLETE-002-STRUCTURE-001",
