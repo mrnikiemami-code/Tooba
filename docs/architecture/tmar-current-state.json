@@ -4,7 +4,7 @@
     "frontendFrozen":  true,
     "checkoutState":  "PAUSED_AT_SAFE_W5_CHECKPOINT",
     "lastAcceptedTask":  "TB-TMAR-CART-STORE-COMMERCE-FAILFAST-001",
-    "lastAcceptedCommit":  "PLACEHOLDER_STAMP_AFTER_COMMIT",
+    "lastAcceptedCommit":  "98daf3ec7f653424fff8fcf6c4bb004fccf5f4d5",
     "nextTask":  "USER_REVIEW_CART_STORE_COMMERCE_FAILFAST_001",
     "nextTaskGate":  "USER_REVIEW_REQUIRED_BEFORE_NEXT_TMAR_WAVE",
     "goldenWaveState":  "COMPLETE",
