@@ -777,5 +777,28 @@
       "fulfillmentHostEvacuation": "COMPLETE",
       "fulfillmentStructureCertification": "COMPLETE_REFERENCE_PATTERN_STRUCTURE_CERTIFIED_ARCH_COMPLETE_002"
     }
+  },
+  "architectCursorWorkflow": {
+    "protocol": "BRIDGE-WAKE-V1",
+    "source": "docs/architecture/TMAR-HOST-EVACUATION-PROTOCOL.md#architect--cursor-canonical-task-handoff",
+    "architect": "ChatGPT",
+    "worker": "Cursor",
+    "delivery": "DOWNLOADABLE_TASK_MD_ONLY_DO_NOT_PASTE_FULL_TASK_IN_CHAT",
+    "userArtifactPath": "/mnt/data/<Task-ID>.task.md",
+    "repositoryArtifactPath": "docs/ai/tasks/<Task-ID>.task.md",
+    "exactFilenameRule": "<Task-ID>.task.md",
+    "repairNaming": "-R1,-R2,...",
+    "oneTaskAtATime": true,
+    "verifyWorkerResultBeforeNextTask": true,
+    "workerResultEnvelope": "BEGIN_TOOBA_WORKER_RESULT...END_TOOBA_WORKER_RESULT_ONLY_THEN_STOP",
+    "taskSizing": {
+      "preferred": "COHERENT_FAMILY_SIZED_WHEN_SAFE",
+      "targetMinutes": "10-12",
+      "hardMaxMinutes": 15,
+      "overrunAction": "INCOMPLETE_AND_STOP_NO_LOOP_NO_SCOPE_EXPANSION_NO_AUTO_NEXT"
+    },
+    "validation": "FOCUSED_ESSENTIAL_BUILDS_TESTS_ONLY_TESTS_ARE_EVIDENCE_NOT_NAVIGATION",
+    "recoveryDiscipline": "SYNC_SOT_FREQUENTLY_NEW_CHAT_MUST_RESUME_FROM_REPO_NOT_CONVERSATION_MEMORY",
+    "minimalRecoveryPhraseFa": "برگردیم به TMAR؛ ریکاوری را انجام بده"
   }
 }
