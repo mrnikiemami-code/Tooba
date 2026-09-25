@@ -18,6 +18,7 @@ using Tooba.AccessControl.Application.Queries.GetRolePermissions;
 using Tooba.AccessControl.Application.Queries.ListAssignments;
 using Tooba.AccessControl.Application.Queries.ListPermissionCatalog;
 using Tooba.AccessControl.Application.Queries.ListRoles;
+using Tooba.AccessControl.Application.Queries.ListScopeResources;
 using Tooba.AccessControl.Application.Queries.SearchAccessUsers;
 using Tooba.AccessControl.Domain;
 using Tooba.BuildingBlocks;
@@ -49,6 +50,38 @@ public static class AccessControlAdminEndpoints
         group.MapDelete("/assignments/{assignmentId:guid}", RemoveAssignmentAsync);
         group.MapGet("/users/{userId:guid}/effective", EffectiveAsync);
         group.MapGet("/users", SearchUsersAsync);
+        MapScopeResources(group.MapGroup("/scope-resources"));
+    }
+
+    private static void MapScopeResources(RouteGroupBuilder group)
+    {
+        group.MapGet("/categories", (HttpRequest request, ISender sender, IAdminPanelAccess access, IAuthorizationService authz, ICurrentTenant tenant, CancellationToken ct, string? q = null) =>
+            ListScopeResourceAsync(request, sender, access, authz, tenant, AccessScopeResourceKind.Category, q, ct));
+        group.MapGet("/brands", (HttpRequest request, ISender sender, IAdminPanelAccess access, IAuthorizationService authz, ICurrentTenant tenant, CancellationToken ct, string? q = null) =>
+            ListScopeResourceAsync(request, sender, access, authz, tenant, AccessScopeResourceKind.Brand, q, ct));
+        group.MapGet("/products", (HttpRequest request, ISender sender, IAdminPanelAccess access, IAuthorizationService authz, ICurrentTenant tenant, CancellationToken ct, string? q = null) =>
+            ListScopeResourceAsync(request, sender, access, authz, tenant, AccessScopeResourceKind.Product, q, ct));
+        group.MapGet("/warehouses", (HttpRequest request, ISender sender, IAdminPanelAccess access, IAuthorizationService authz, ICurrentTenant tenant, CancellationToken ct) =>
+            ListScopeResourceAsync(request, sender, access, authz, tenant, AccessScopeResourceKind.Warehouse, null, ct));
+        group.MapGet("/stores", (HttpRequest request, ISender sender, IAdminPanelAccess access, IAuthorizationService authz, ICurrentTenant tenant, CancellationToken ct) =>
+            ListScopeResourceAsync(request, sender, access, authz, tenant, AccessScopeResourceKind.Store, null, ct));
+        group.MapGet("/order-segments", (HttpRequest request, ISender sender, IAdminPanelAccess access, IAuthorizationService authz, ICurrentTenant tenant, CancellationToken ct) =>
+            ListScopeResourceAsync(request, sender, access, authz, tenant, AccessScopeResourceKind.OrderSegment, null, ct));
+    }
+
+    private static async Task<IResult> ListScopeResourceAsync(
+        HttpRequest request,
+        ISender sender,
+        IAdminPanelAccess adminPanelAccess,
+        IAuthorizationService authz,
+        ICurrentTenant tenant,
+        AccessScopeResourceKind kind,
+        string? q,
+        CancellationToken cancellationToken)
+    {
+        var actor = await adminPanelAccess.RequireAuthorizedAsync(request, cancellationToken);
+        await AccessControlCapabilityGate.EnsureAsync(actor, "accesscontrol.view", authz, tenant, cancellationToken);
+        return Results.Json(await sender.Send(new ListScopeResourcesQuery(kind, q), cancellationToken));
     }
 
     private static async Task<IResult> SearchUsersAsync(

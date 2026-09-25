@@ -63,10 +63,19 @@ public sealed class AccessControlFoundationTests : IAsyncLifetime
 
         var endpoints = File.ReadAllText(Path.Combine(RepoRoot(), "src", "backend", "Host", "Tooba.Host", "AccessControl", "AccessControlEndpoints.cs"));
         Assert.Contains("/v1/admin/access-control", endpoints, StringComparison.Ordinal);
-        Assert.Contains("/v1/seller/access-control", endpoints, StringComparison.Ordinal);
-        Assert.Contains("/v1/admin/sellers/{sellerId:guid}/access-control", endpoints, StringComparison.Ordinal);
-        Assert.Contains("/scope-resources/categories", endpoints, StringComparison.Ordinal);
-        Assert.Contains("/me/capabilities", endpoints, StringComparison.Ordinal);
+        Assert.DoesNotContain("/scope-resources/categories", endpoints, StringComparison.Ordinal);
+        Assert.DoesNotContain("/me/capabilities", endpoints, StringComparison.Ordinal);
+
+        var adminEndpoints = File.ReadAllText(Path.Combine(RepoRoot(), "src", "backend", "Modules", "AccessControl", "Tooba.AccessControl.Endpoints", "Admin", "AccessControlAdminEndpoints.cs"));
+        Assert.Contains("/scope-resources", adminEndpoints, StringComparison.Ordinal);
+        Assert.Contains("/users", adminEndpoints, StringComparison.Ordinal);
+
+        var sellerEndpoints = File.ReadAllText(Path.Combine(RepoRoot(), "src", "backend", "Modules", "AccessControl", "Tooba.AccessControl.Endpoints", "Seller", "AccessControlSellerEndpoints.cs"));
+        Assert.Contains("/scope-resources", sellerEndpoints, StringComparison.Ordinal);
+        Assert.Contains("/me/capabilities", sellerEndpoints, StringComparison.Ordinal);
+
+        var endpointModule = File.ReadAllText(Path.Combine(RepoRoot(), "src", "backend", "Modules", "AccessControl", "Tooba.AccessControl.Endpoints", "AccessControlEndpointModule.cs"));
+        Assert.Contains("/v1/seller/access-control", endpointModule, StringComparison.Ordinal);
     }
 
     /// <summary>سقف، منع escalation و Mobile ALLOW / Books DENY در لایهٔ مجوز.</summary>

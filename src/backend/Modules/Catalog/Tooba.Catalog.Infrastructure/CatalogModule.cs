@@ -37,6 +37,7 @@ public sealed class CatalogModule : IToobaModule
         services.AddScoped<ICatalogActorContext, CatalogActorContext>();
         services.AddScoped<ICatalogDirectory, CatalogDirectory>();
         services.AddScoped<ICatalogLookupGateway>(sp => (CatalogDirectory)sp.GetRequiredService<ICatalogDirectory>());
+        services.AddScoped<IAccessControlScopeResourceLookup, CatalogAccessControlScopeResourceLookup>();
         services.AddScoped<ICatalogVariantLookup>(sp => (CatalogDirectory)sp.GetRequiredService<ICatalogDirectory>());
         services.AddScoped<ICatalogCartQuantityPolicyGateway>(sp => (CatalogDirectory)sp.GetRequiredService<ICatalogDirectory>());
         services.AddScoped<ICatalogCartPresentationLookup>(sp => (CatalogDirectory)sp.GetRequiredService<ICatalogDirectory>());
