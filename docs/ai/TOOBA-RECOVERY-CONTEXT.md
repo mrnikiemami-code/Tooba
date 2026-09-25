@@ -720,3 +720,30 @@ Final HEAD/origin (TB-P07-T042):
 ```text
 babdb350ed580e04257814e8270ed1907ce755e4
 ```
+
+## TMAR HOST EVACUATION — CANONICAL RECOVERY OVERRIDE
+
+Marker: `TMAR-HOST-EVACUATION-V1`
+
+Canonical protocol:
+`docs/architecture/TMAR-HOST-EVACUATION-PROTOCOL.md`
+
+Current method:
+- Finish active Fulfillment Host evacuation before Fulfillment structure certification.
+- Then traverse `src/backend/Host/Tooba.Host` folder-by-folder/file-by-file in repository order.
+- Read every Host production file completely and create a member-level Content Disposition Map.
+- A file may split across multiple module owners.
+- Never delete a Host production file before every live responsibility is rehomed and parity is proven.
+- If a destination module lacks proper Endpoints/CQRS/MediatR/validation/foldering/contracts boundaries, repair that destination before completing the Host-file evacuation.
+- Tests/guards are focused proof after ownership repair; they are not the navigation strategy.
+- Final target: Host = thin platform/composition shell only.
+
+Recent accepted recovery facts:
+- Settlement ARCH-COMPLETE-002 STRUCTURE_CERTIFIED at `54b1c8ff1f6e9214a5b5c16b6103f0285bd2a37e`; SoT stamp `01d15f3cb1ad38f0e91ed65e990e32c4f9d19876`.
+- Fulfillment audit R1 corrected inventory to 15 endpoint requests = 10 validator-required + 5 no-validator-required.
+- Fulfillment pre-cert repair accepted at `16062d45bde71476da35f9e20622f1b6b5637fa8`; ten transport validators are present.
+- `FulfillmentReturnsGridAliases.cs` was syntax-only alias residue with zero production consumers; its underlying canonical types were not deleted.
+- Fulfillment still requires Host evacuation of its three current Host-specific authorizers before structure certification.
+- Intended current task: `TB-TMAR-FULFILLMENT-HOST-EVACUATION-001`.
+
+After Fulfillment, do NOT automatically continue by uncertified-module list. Start Host traversal with AccessControl, then AddressBook, then subsequent Host folders in repository order.
