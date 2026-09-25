@@ -1,4 +1,4 @@
-namespace Tooba.AccessControl.Infrastructure;
+﻿namespace Tooba.AccessControl.Infrastructure.Observability;
 
 /// <summary>
 /// شمارنده‌های سبک Access Control برای تله‌متری Host.

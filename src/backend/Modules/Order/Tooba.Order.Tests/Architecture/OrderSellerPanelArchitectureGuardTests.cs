@@ -1,4 +1,4 @@
-using Xunit;
+﻿using Xunit;
 
 using Tooba.Order.Application.Checkout.Abuse;
 using Tooba.Order.Application.Checkout.Contracts;
@@ -10,6 +10,8 @@ using Tooba.Order.Application.ReservationCycle.Policies;
 using Tooba.Order.Application.ReservationCycle.Services;
 using Tooba.Order.Application.Seller.Policies;
 
+using Tooba.AccessControl.Application.Models;
+using Tooba.AccessControl.Application.Permissions;
 namespace Tooba.Order.Tests.Architecture;
 
 /// <summary>TB-TMAR-ORDER-GOLDEN-001-R10 — Seller Order list/detail/dashboard ownership guards.</summary>

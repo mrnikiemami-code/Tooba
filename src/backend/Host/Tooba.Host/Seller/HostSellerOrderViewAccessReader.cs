@@ -1,7 +1,9 @@
-using Tooba.AccessControl.Application;
+﻿using Tooba.AccessControl.Application;
 using Tooba.AccessControl.Domain;
 using Tooba.Order.Application.Seller.Ports;
 
+using Tooba.AccessControl.Application.Models;
+using Tooba.AccessControl.Application.Permissions;
 namespace Tooba.Host.Seller;
 
 /// <summary>Thin Host adapter: AccessControl order.view snapshot for Seller Order CQRS.</summary>

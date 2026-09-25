@@ -1,6 +1,7 @@
+﻿using Tooba.AccessControl.Application.Permissions;
 using Tooba.AccessControl.Domain;
 
-namespace Tooba.AccessControl.Application;
+namespace Tooba.AccessControl.Application.Models;
 
 /// <summary>زمینهٔ مالک برای عملیات دایرکتوری.</summary>
 /// <param name="Kind">گونهٔ مالک.</param>

@@ -1,8 +1,10 @@
-using Tooba.AccessControl.Application;
+﻿using Tooba.AccessControl.Application;
 using Tooba.AccessControl.Domain;
 using Tooba.BuildingBlocks;
 using Tooba.Party.Application;
 
+using Tooba.AccessControl.Application.Models;
+using Tooba.AccessControl.Application.Permissions;
 namespace Tooba.Host.Seller;
 
 /// <summary>

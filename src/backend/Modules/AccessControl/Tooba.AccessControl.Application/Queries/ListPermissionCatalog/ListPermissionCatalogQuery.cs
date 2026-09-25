@@ -1,5 +1,7 @@
-using MediatR;
+﻿using MediatR;
 
+using Tooba.AccessControl.Application.Models;
+using Tooba.AccessControl.Application.Permissions;
 namespace Tooba.AccessControl.Application.Queries.ListPermissionCatalog;
 
 /// <summary>

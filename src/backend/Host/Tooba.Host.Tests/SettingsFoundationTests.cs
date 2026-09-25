@@ -28,6 +28,8 @@ using Tooba.UserPreference.Infrastructure;
 using Tooba.UserPreference.Infrastructure.Persistence;
 using Xunit;
 
+using Tooba.AccessControl.Application.Models;
+using Tooba.AccessControl.Application.Permissions;
 namespace Tooba.Host.Tests;
 
 /// <summary>قفل قرارداد تنظیمات مشتری/فروشنده/اپراتور، مجوزها، و دانهٔ Development.</summary>

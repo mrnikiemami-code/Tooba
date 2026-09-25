@@ -1,7 +1,9 @@
-using Tooba.AccessControl.Application;
+﻿using Tooba.AccessControl.Application;
 using Tooba.AccessControl.Domain;
 using Tooba.BuildingBlocks;
 
+using Tooba.AccessControl.Application.Models;
+using Tooba.AccessControl.Application.Permissions;
 namespace Tooba.Order.Infrastructure.Admin.Fulfillment;
 
 /// <summary>Permission evaluation for fulfillment admin ops (legacy-admin compatible).</summary>

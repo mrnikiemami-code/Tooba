@@ -8,6 +8,8 @@ using Tooba.Support.Infrastructure.Adapters;
 using Tooba.Support.Infrastructure.Persistence;
 using Tooba.Support.Infrastructure.Seeds;
 
+using Tooba.AccessControl.Application.Models;
+using Tooba.AccessControl.Application.Permissions;
 namespace Tooba.Host.Support;
 
 /// <summary>اعمال دانهٔ توسعه Support روی scope با CommerceContext.</summary>
@@ -48,7 +50,7 @@ internal static class SupportDevelopmentSeedHost
         if (seller is null || admin is null)
             return;
 
-        var access = provider.GetRequiredService<Tooba.AccessControl.Application.IAccessControlDirectory>();
+        var access = provider.GetRequiredService<Tooba.AccessControl.Application.Models.IAccessControlDirectory>();
         await access.EnsureBootstrapAsync(
             admin.ActorUserId,
             [seller.ActorA.SellerPartyId],
@@ -56,7 +58,7 @@ internal static class SupportDevelopmentSeedHost
             CancellationToken.None);
         await access.SyncUserCapabilityTuplesAsync(
             seller.ActorA.ActorUserId,
-            new Tooba.AccessControl.Application.AccessOwnerScope(
+            new Tooba.AccessControl.Application.Models.AccessOwnerScope(
                 Tooba.AccessControl.Domain.AccessOwnerScopeKind.Seller,
                 seller.ActorA.SellerPartyId,
                 tenant.TenantId.Value),

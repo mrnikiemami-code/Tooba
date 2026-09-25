@@ -1,4 +1,4 @@
-using MediatR;
+﻿using MediatR;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
@@ -21,6 +21,8 @@ using Tooba.AccessControl.Domain;
 using Tooba.BuildingBlocks;
 using Tooba.BuildingBlocks.Security;
 
+using Tooba.AccessControl.Application.Models;
+using Tooba.AccessControl.Application.Permissions;
 namespace Tooba.AccessControl.Endpoints.Admin;
 
 /// <summary>مسیرهای نازک پنل مدیر برای نقش‌های محدودهٔ فروشنده.</summary>

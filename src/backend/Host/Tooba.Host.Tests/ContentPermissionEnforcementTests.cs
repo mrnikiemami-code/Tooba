@@ -1,4 +1,4 @@
-using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Hosting;
 using Tooba.AccessControl.Application;
@@ -8,6 +8,8 @@ using Tooba.Host.Content;
 using Tooba.Identity.Application;
 using Xunit;
 
+using Tooba.AccessControl.Application.Models;
+using Tooba.AccessControl.Application.Permissions;
 namespace Tooba.Host.Tests;
 
 /// <summary>

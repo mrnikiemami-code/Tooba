@@ -1,8 +1,10 @@
-using MediatR;
+﻿using MediatR;
 using Tooba.AccessControl.Domain;
 using Tooba.Identity.Contracts;
 using Tooba.OperatorProfile.Contracts;
 
+using Tooba.AccessControl.Application.Models;
+using Tooba.AccessControl.Application.Permissions;
 namespace Tooba.AccessControl.Application.Queries.SearchAccessUsers;
 
 /// <summary>

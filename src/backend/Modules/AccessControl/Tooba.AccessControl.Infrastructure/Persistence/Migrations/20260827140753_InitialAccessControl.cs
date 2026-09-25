@@ -3,6 +3,11 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
+using Tooba.AccessControl.Application.Models;
+using Tooba.AccessControl.Application.Permissions;
+using Tooba.AccessControl.Infrastructure.Directories;
+using Tooba.AccessControl.Infrastructure.Observability;
+using Tooba.AccessControl.Infrastructure.Messaging;
 namespace Tooba.AccessControl.Infrastructure.Persistence.Migrations
 {
     /// <inheritdoc />

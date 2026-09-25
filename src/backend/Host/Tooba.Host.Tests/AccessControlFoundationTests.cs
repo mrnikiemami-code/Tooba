@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
 using Testcontainers.PostgreSql;
@@ -10,6 +10,10 @@ using Tooba.BuildingBlocks;
 using Tooba.Persistence;
 using Xunit;
 
+using Tooba.AccessControl.Application.Models;
+using Tooba.AccessControl.Application.Permissions;
+using Tooba.AccessControl.Infrastructure.Directories;
+using Tooba.AccessControl.Infrastructure.Observability;
 namespace Tooba.Host.Tests;
 
 /// <summary>

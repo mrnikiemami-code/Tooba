@@ -1,4 +1,4 @@
-using MediatR;
+﻿using MediatR;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
@@ -24,6 +24,8 @@ using Tooba.AccessControl.Domain;
 using Tooba.BuildingBlocks;
 using Tooba.BuildingBlocks.Security;
 
+using Tooba.AccessControl.Application.Models;
+using Tooba.AccessControl.Application.Permissions;
 namespace Tooba.AccessControl.Endpoints.Seller;
 
 /// <summary>مسیرهای نازک پنل فروشنده برای Access Control.</summary>

@@ -1,6 +1,6 @@
-using Tooba.AccessControl.Domain;
+﻿using Tooba.AccessControl.Domain;
 
-namespace Tooba.AccessControl.Application;
+namespace Tooba.AccessControl.Application.Permissions;
 
 /// <summary>
 /// تعریف پایدار یک Permission کاتالوگ (نه نام endpoint).

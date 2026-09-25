@@ -1,4 +1,4 @@
-#pragma warning disable CS1591
+﻿#pragma warning disable CS1591
 using Tooba.AccessControl.Application;
 using Tooba.AccessControl.Domain;
 using Tooba.BuildingBlocks;
@@ -6,6 +6,8 @@ using Tooba.Host.Seller;
 using Tooba.Support.Application.Errors;
 using Tooba.Support.Endpoints.Seller;
 
+using Tooba.AccessControl.Application.Models;
+using Tooba.AccessControl.Application.Permissions;
 namespace Tooba.Host.Seller;
 
 /// <summary>Host transport adapter for Support seller Endpoints auth + capabilities.</summary>

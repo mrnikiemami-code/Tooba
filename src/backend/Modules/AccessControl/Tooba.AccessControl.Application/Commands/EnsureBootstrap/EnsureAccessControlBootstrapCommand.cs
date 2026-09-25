@@ -1,6 +1,8 @@
-using MediatR;
+﻿using MediatR;
 using Tooba.BuildingBlocks.Results;
 
+using Tooba.AccessControl.Application.Models;
+using Tooba.AccessControl.Application.Permissions;
 namespace Tooba.AccessControl.Application.Commands.EnsureBootstrap;
 
 /// <summary>
