@@ -146,6 +146,61 @@ Priority order:
 Do not spend broad test time while obvious Host residue remains.
 No broad/full suites unless explicitly required by a blocker.
 
+## Architect ↔ Cursor canonical task handoff
+
+This is a recovery-critical execution contract. A new chat must restore it before issuing any TMAR implementation task.
+
+### Architect task delivery
+
+- ChatGPT acts as Architect; Cursor is the worker.
+- Never paste the full task body into chat when a task is issued.
+- Generate a real downloadable artifact at `/mnt/data/<Task-ID>.task.md` and present only the short status + download link in chat.
+- The repository copy committed by Cursor must be exactly `docs/ai/tasks/<Task-ID>.task.md`.
+- Filename must exactly equal `Task-ID + ".task.md"`.
+- Repair tasks use canonical suffixes `-R1`, `-R2`, ...; do not invent unrelated naming patterns.
+- Every task starts with `PIPELINE-PROTOCOL: BRIDGE-WAKE-V1` / `BEGIN_TOOBA_TASK` and ends with `END_TOOBA_TASK`.
+- Include Channel=`tooba-main`, WorkerId=`tooba-worker-01`, AgentType=`cursor`, Program, Mode, parent task/accepted commit when applicable, scope, protected state, focused validation, evidence, exact success criteria, canonical Result fields, and STOP/no-polling rules.
+- Issue exactly ONE task at a time. Never issue the next task while Cursor is still working or before the prior Worker Result is verified and accepted/repaired.
+- Prefer coherent family-sized slices, but keep target execution around 10–12 minutes and hard maximum 15 minutes.
+- If a clean task cannot finish inside the hard limit, Cursor must return `INCOMPLETE` and `STOP`; never broaden scope, retry-loop, silently split, or auto-start the next task.
+- Use focused builds/tests only. Tests are evidence, not navigation. No solution build, broad integration suite, broad architecture suite, or retry cascade unless a concrete blocker explicitly requires it.
+- Avoid task proliferation: combine closely related routes/use-cases when the shared CQRS/boundary already exists and the whole family safely fits the hard timebox.
+
+### Cursor worker result contract
+
+Cursor returns only the canonical result envelope:
+
+```text
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: <exact task id>
+Parent-Task: <when applicable>
+Status: PASS | INCOMPLETE | RECOVERY_CONFLICT
+...
+END_TOOBA_WORKER_RESULT
+```
+
+The Result must include the exact Task-ID, status/verdict, structured state fields requested by the task, focused validations, evidence path, Git commit/push state, user-work-preserved state, recovery-next-task, and next-recommended-task, then stop completely.
+
+### Architect result handling
+
+For every Worker Result:
+1. Verify the reported commit against the repository before accepting factual claims.
+2. Verify the canonical task artifact and evidence exist on `main`.
+3. Inspect only the code/files necessary to validate scope, ownership, boundaries and claimed behavior.
+4. Decide `ARCHITECT-ACCEPTED` or issue a narrowly scoped repair only when a real defect/canonical mismatch exists.
+5. Do not trust `Next-Recommended-Task` blindly; choose the next task from verified repository state.
+6. After acceptance, issue at most one next downloadable `.task.md`.
+7. Keep Recovery SoT synchronized frequently enough that a new chat can resume from repository state without conversational memory.
+
+### Minimal user recovery phrase
+
+If the user says only something equivalent to:
+
+`برگردیم به TMAR؛ ریکاوری را انجام بده`
+
+restore this contract plus the current SoT, latest accepted task/commit, active track/folder, known blockers/debt, and exact next task before continuing. Do not ask the user to reconstruct prior task history unless the repository evidence is genuinely missing.
+
 ## Recovery instruction for a new chat
 
 When recovering TMAR context:
