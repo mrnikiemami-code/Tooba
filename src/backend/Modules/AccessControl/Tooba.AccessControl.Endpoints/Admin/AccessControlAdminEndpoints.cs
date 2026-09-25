@@ -4,7 +4,10 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using Tooba.AccessControl.Application;
 using Tooba.AccessControl.Application.Authorization;
-using Tooba.AccessControl.Application.Commands.EnsureBootstrap;using Tooba.AccessControl.Application.Queries.GetEffectiveAccess;
+using Tooba.AccessControl.Application.Commands.CreateRole;
+using Tooba.AccessControl.Application.Commands.EnsureBootstrap;
+using Tooba.AccessControl.Application.Commands.UpdateRole;
+using Tooba.AccessControl.Application.Queries.GetEffectiveAccess;
 using Tooba.AccessControl.Application.Queries.GetRole;
 using Tooba.AccessControl.Application.Queries.ListPermissionCatalog;
 using Tooba.AccessControl.Application.Queries.ListRoles;
@@ -27,6 +30,8 @@ public static class AccessControlAdminEndpoints
         group.MapGet("/permissions", ListPermissionsAsync);
         group.MapGet("/roles", ListRolesAsync);
         group.MapGet("/roles/{roleId:guid}", GetRoleAsync);
+        group.MapPost("/roles", CreateRoleAsync);
+        group.MapPut("/roles/{roleId:guid}", UpdateRoleAsync);
     }
 
     private static async Task<IResult> BootstrapAsync(
@@ -120,4 +125,73 @@ public static class AccessControlAdminEndpoints
             return Results.Json(new { title = ace.Message, code = ace.Code }, statusCode: ace.Code.Contains("escalation", StringComparison.Ordinal) || ace.Code.Contains("ceiling", StringComparison.Ordinal) ? 403 : 400);
         }
     }
+
+    private static async Task<IResult> CreateRoleAsync(
+        CreateAccessRoleCommand body,
+        HttpRequest request,
+        ISender sender,
+        IAdminPanelAccess adminPanelAccess,
+        IAuthorizationService authz,
+        ICurrentTenant tenant,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            var actor = await adminPanelAccess.RequireAuthorizedAsync(request, cancellationToken);
+            await AccessControlCapabilityGate.EnsureAsync(actor, "accesscontrol.manage", authz, tenant, cancellationToken);
+            return Results.Json(await sender.Send(
+                new CreateRoleCommand(
+                    actor,
+                    tenant.Current?.TenantId.Value,
+                    body.Name,
+                    body.Code,
+                    body.Description,
+                    Trace(request)),
+                cancellationToken));
+        }
+        catch (Exception ex) when (ex is AccessControlException or PlatformHttpException)
+        {
+            return ex is PlatformHttpException ph
+                ? Results.Json(new { title = ph.Title, code = ph.ErrorCode }, statusCode: ph.StatusCode)
+                : MapAccessError(ex);
+        }
+    }
+
+    private static async Task<IResult> UpdateRoleAsync(
+        Guid roleId,
+        UpdateAccessRoleCommand body,
+        HttpRequest request,
+        ISender sender,
+        IAdminPanelAccess adminPanelAccess,
+        IAuthorizationService authz,
+        ICurrentTenant tenant,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            var actor = await adminPanelAccess.RequireAuthorizedAsync(request, cancellationToken);
+            await AccessControlCapabilityGate.EnsureAsync(actor, "accesscontrol.manage", authz, tenant, cancellationToken);
+            return Results.Json(await sender.Send(
+                new UpdateRoleCommand(
+                    roleId,
+                    actor,
+                    tenant.Current?.TenantId.Value,
+                    body.Name,
+                    body.Description,
+                    Trace(request)),
+                cancellationToken));
+        }
+        catch (Exception ex) when (ex is AccessControlException or PlatformHttpException)
+        {
+            return MapAccessError(ex);
+        }
+    }
+
+    private static string? Trace(HttpRequest request) =>
+        request.Headers.TryGetValue("X-Request-Id", out var v) ? v.ToString() : null;
+
+    private static IResult MapAccessError(Exception ex) =>
+        ex is AccessControlException ace
+            ? Results.Json(new { title = ace.Message, code = ace.Code }, statusCode: ace.Code.Contains("escalation", StringComparison.Ordinal) || ace.Code.Contains("ceiling", StringComparison.Ordinal) ? 403 : 400)
+            : Results.Json(new { title = "access.error", code = "access.error" }, statusCode: 500);
 }

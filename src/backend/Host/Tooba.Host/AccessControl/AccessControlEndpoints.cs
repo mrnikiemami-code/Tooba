@@ -20,8 +20,6 @@ public static class AccessControlEndpoints
     public static void MapAccessControlEndpoints(this WebApplication app)
     {
         var admin = app.MapGroup("/v1/admin/access-control");
-        admin.MapPost("/roles", AdminCreateRoleAsync);
-        admin.MapPut("/roles/{roleId:guid}", AdminUpdateRoleAsync);
         admin.MapPost("/roles/{roleId:guid}/clone", AdminCloneRoleAsync);
         admin.MapDelete("/roles/{roleId:guid}", AdminArchiveRoleAsync);
         admin.MapGet("/roles/{roleId:guid}/permissions", AdminGetRolePermissionsAsync);
@@ -92,38 +90,6 @@ public static class AccessControlEndpoints
             : Results.Json(new { title = "access.error", code = "access.error" }, statusCode: 500);
 
     #region Admin platform
-
-    private static async Task<IResult> AdminCreateRoleAsync(
-        CreateAccessRoleCommand body, HttpRequest request, CurrentAuthenticatedSession session, ICurrentTenant tenant,
-        IAuthorizationGuard guard, IAuthorizationService authz, IHostEnvironment env, IAccessControlDirectory directory, CancellationToken ct)
-    {
-        try
-        {
-            var actor = await AdminPanelAccess.RequireAuthorizedAsync(request, session, tenant, guard, env, ct);
-            await AccessControlCapabilityGate.EnsureAsync(actor, "accesscontrol.manage", authz, tenant, ct);
-            return Results.Json(await directory.CreateRoleAsync(PlatformScope(tenant), body, actor, Trace(request), ct));
-        }
-        catch (Exception ex) when (ex is AccessControlException or PlatformHttpException)
-        {
-            return ex is PlatformHttpException ph ? Results.Json(new { title = ph.Title, code = ph.ErrorCode }, statusCode: ph.StatusCode) : MapError(ex);
-        }
-    }
-
-    private static async Task<IResult> AdminUpdateRoleAsync(
-        Guid roleId, UpdateAccessRoleCommand body, HttpRequest request, CurrentAuthenticatedSession session, ICurrentTenant tenant,
-        IAuthorizationGuard guard, IAuthorizationService authz, IHostEnvironment env, IAccessControlDirectory directory, CancellationToken ct)
-    {
-        try
-        {
-            var actor = await AdminPanelAccess.RequireAuthorizedAsync(request, session, tenant, guard, env, ct);
-            await AccessControlCapabilityGate.EnsureAsync(actor, "accesscontrol.manage", authz, tenant, ct);
-            return Results.Json(await directory.UpdateRoleAsync(roleId, PlatformScope(tenant), body, actor, Trace(request), ct));
-        }
-        catch (Exception ex) when (ex is AccessControlException or PlatformHttpException)
-        {
-            return MapError(ex);
-        }
-    }
 
     private static async Task<IResult> AdminCloneRoleAsync(
         Guid roleId, CloneAccessRoleCommand body, HttpRequest request, CurrentAuthenticatedSession session, ICurrentTenant tenant,
