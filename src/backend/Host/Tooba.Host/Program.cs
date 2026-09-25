@@ -199,7 +199,7 @@ builder.Services.AddScoped(sp =>
 builder.Services.AddScoped<Tooba.BuildingBlocks.Security.ICurrentAuthenticatedUser, HostCurrentAuthenticatedUser>();
 builder.Services.AddScoped<Tooba.BuildingBlocks.Security.IAdminPanelAccess, Tooba.Host.Admin.HostAdminPanelAccess>();
 builder.Services.AddScoped<Tooba.BuildingBlocks.Security.ISellerPanelAccess, Tooba.Host.Seller.HostSellerPanelAccess>();
-builder.Services.AddScoped<Tooba.BuildingBlocks.Security.IPlatformEffectiveAccessReader, Tooba.Host.AccessControl.HostPlatformEffectiveAccessReader>();
+builder.Services.AddScoped<Tooba.BuildingBlocks.Security.IPlatformEffectiveAccessReader, Tooba.AccessControl.Infrastructure.Adapters.Security.PlatformEffectiveAccessReader>();
 builder.Services.AddScoped<Tooba.Payment.Application.Orchestration.StorefrontPaymentOrchestrator>();
 builder.Services.AddScoped<Tooba.Payment.Application.Ports.ICheckoutActorPolicyPort, Tooba.Host.Storefront.HostCheckoutActorPolicyAdapter>();
 builder.Services.AddScoped<Tooba.Payment.Endpoints.Storefront.IPaymentStorefrontAuthorizer, Tooba.Host.Storefront.HostPaymentStorefrontAuthorizer>();

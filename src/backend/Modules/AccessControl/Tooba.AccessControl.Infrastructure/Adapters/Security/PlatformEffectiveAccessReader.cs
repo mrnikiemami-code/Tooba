@@ -2,13 +2,13 @@ using Tooba.AccessControl.Application;
 using Tooba.AccessControl.Domain;
 using Tooba.BuildingBlocks.Security;
 
-namespace Tooba.Host.AccessControl;
+namespace Tooba.AccessControl.Infrastructure.Adapters.Security;
 
 /// <summary>
-/// آداپتر عمومی Host: مجوز مؤثر AccessControl را به قرارداد خنثی پلتفرم نگاشت می‌کند.
+/// آداپتر عمومی AccessControl: مجوز مؤثر را به قرارداد خنثی پلتفرم نگاشت می‌کند.
 /// هیچ سیاست ماژولی اینجا نیست.
 /// </summary>
-internal sealed class HostPlatformEffectiveAccessReader(IAccessControlDirectory access) : IPlatformEffectiveAccessReader
+public sealed class PlatformEffectiveAccessReader(IAccessControlDirectory access) : IPlatformEffectiveAccessReader
 {
     /// <inheritdoc />
     public async Task<IReadOnlyList<PlatformPermissionGrant>> GetEffectivePermissionsAsync(
