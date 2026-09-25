@@ -1,4 +1,5 @@
-using Tooba.AccessControl.Application;
+﻿using Tooba.AccessControl.Application;
+using Tooba.AccessControl.Application.Authorization;
 using Tooba.AccessControl.Domain;
 using Tooba.BuildingBlocks;
 using Tooba.Catalog.Application;
@@ -94,58 +95,6 @@ public static class AccessControlEndpoints
             ? Results.Json(new { title = ace.Message, code = ace.Code }, statusCode: ace.Code.Contains("escalation", StringComparison.Ordinal) || ace.Code.Contains("ceiling", StringComparison.Ordinal) ? 403 : 400)
             : Results.Json(new { title = "access.error", code = "access.error" }, statusCode: 500);
 
-    private static async Task EnsureCapabilityAsync(
-        Guid actorUserId,
-        string permissionId,
-        IAuthorizationService authz,
-        ICurrentTenant tenant,
-        CancellationToken cancellationToken)
-    {
-        var decision = await authz.CanAsync(
-            new AuthorizationCheck
-            {
-                Subject = AuthorizationSubject.ForUser(actorUserId),
-                Resource = new AuthorizationResource
-                {
-                    Type = AuthorizationObjectTypes.Permission,
-                    Id = permissionId,
-                },
-                Permission = AuthorizationRelations.Check,
-                CallContext = new AuthorizationCallContext
-                {
-                    Edition = ToobaEdition.SingleStore,
-                    TenantId = tenant.Current?.TenantId.Value ?? "unknown",
-                },
-            },
-            cancellationToken);
-
-        // Bootstrap path: panel tenant/party view already passed; allow manage until capability tuples exist.
-        if (decision.Kind == AuthorizationDecisionKind.Allow)
-        {
-            return;
-        }
-
-        // Fail-open only for accesscontrol.view when no capability tuples yet (first visit after panel allow).
-        if (permissionId == "accesscontrol.view")
-        {
-            return;
-        }
-
-        if (decision.Kind == AuthorizationDecisionKind.Unavailable)
-        {
-            throw new PlatformHttpException(503, "سرویس مجوز در دسترس نیست.", "access.authorization.unavailable");
-        }
-
-        // For manage: also allow if actor has accesscontrol.manage OR panel admin already authorized.
-        // Panel gate already enforced; deny only when capability explicitly checked and denied after bootstrap.
-        if (permissionId == "accesscontrol.manage")
-        {
-            return;
-        }
-
-        throw new PlatformHttpException(403, "مجوز این عملیات وجود ندارد.", "access.capability.denied");
-    }
-
     #region Admin platform
 
     private static async Task<IResult> AdminListCatalogAsync(
@@ -153,7 +102,7 @@ public static class AccessControlEndpoints
         IAuthorizationService authz, IHostEnvironment env, IAccessControlDirectory directory, CancellationToken ct)
     {
         var actor = await AdminPanelAccess.RequireAuthorizedAsync(request, session, tenant, guard, env, ct);
-        await EnsureCapabilityAsync(actor, "accesscontrol.view", authz, tenant, ct);
+        await AccessControlCapabilityGate.EnsureAsync(actor, "accesscontrol.view", authz, tenant, ct);
         return Results.Json(directory.ListCatalog());
     }
 
@@ -162,7 +111,7 @@ public static class AccessControlEndpoints
         IAuthorizationService authz, IHostEnvironment env, IAccessControlDirectory directory, CancellationToken ct, bool includeArchived = false)
     {
         var actor = await AdminPanelAccess.RequireAuthorizedAsync(request, session, tenant, guard, env, ct);
-        await EnsureCapabilityAsync(actor, "accesscontrol.view", authz, tenant, ct);
+        await AccessControlCapabilityGate.EnsureAsync(actor, "accesscontrol.view", authz, tenant, ct);
         return Results.Json(await directory.ListRolesAsync(PlatformScope(tenant), includeArchived, ct));
     }
 
@@ -173,7 +122,7 @@ public static class AccessControlEndpoints
         try
         {
             var actor = await AdminPanelAccess.RequireAuthorizedAsync(request, session, tenant, guard, env, ct);
-            await EnsureCapabilityAsync(actor, "accesscontrol.manage", authz, tenant, ct);
+            await AccessControlCapabilityGate.EnsureAsync(actor, "accesscontrol.manage", authz, tenant, ct);
             return Results.Json(await directory.CreateRoleAsync(PlatformScope(tenant), body, actor, Trace(request), ct));
         }
         catch (Exception ex) when (ex is AccessControlException or PlatformHttpException)
@@ -189,7 +138,7 @@ public static class AccessControlEndpoints
         try
         {
             var actor = await AdminPanelAccess.RequireAuthorizedAsync(request, session, tenant, guard, env, ct);
-            await EnsureCapabilityAsync(actor, "accesscontrol.view", authz, tenant, ct);
+            await AccessControlCapabilityGate.EnsureAsync(actor, "accesscontrol.view", authz, tenant, ct);
             var role = await directory.GetRoleAsync(roleId, PlatformScope(tenant), ct);
             return role is null ? Results.NotFound() : Results.Json(role);
         }
@@ -206,7 +155,7 @@ public static class AccessControlEndpoints
         try
         {
             var actor = await AdminPanelAccess.RequireAuthorizedAsync(request, session, tenant, guard, env, ct);
-            await EnsureCapabilityAsync(actor, "accesscontrol.manage", authz, tenant, ct);
+            await AccessControlCapabilityGate.EnsureAsync(actor, "accesscontrol.manage", authz, tenant, ct);
             return Results.Json(await directory.UpdateRoleAsync(roleId, PlatformScope(tenant), body, actor, Trace(request), ct));
         }
         catch (Exception ex) when (ex is AccessControlException or PlatformHttpException)
@@ -222,7 +171,7 @@ public static class AccessControlEndpoints
         try
         {
             var actor = await AdminPanelAccess.RequireAuthorizedAsync(request, session, tenant, guard, env, ct);
-            await EnsureCapabilityAsync(actor, "accesscontrol.manage", authz, tenant, ct);
+            await AccessControlCapabilityGate.EnsureAsync(actor, "accesscontrol.manage", authz, tenant, ct);
             return Results.Json(await directory.CloneRoleAsync(roleId, PlatformScope(tenant), body, actor, Trace(request), ct));
         }
         catch (Exception ex) when (ex is AccessControlException)
@@ -238,7 +187,7 @@ public static class AccessControlEndpoints
         try
         {
             var actor = await AdminPanelAccess.RequireAuthorizedAsync(request, session, tenant, guard, env, ct);
-            await EnsureCapabilityAsync(actor, "accesscontrol.manage", authz, tenant, ct);
+            await AccessControlCapabilityGate.EnsureAsync(actor, "accesscontrol.manage", authz, tenant, ct);
             await directory.ArchiveRoleAsync(roleId, PlatformScope(tenant), actor, Trace(request), ct);
             return Results.NoContent();
         }
@@ -255,7 +204,7 @@ public static class AccessControlEndpoints
         try
         {
             var actor = await AdminPanelAccess.RequireAuthorizedAsync(request, session, tenant, guard, env, ct);
-            await EnsureCapabilityAsync(actor, "accesscontrol.view", authz, tenant, ct);
+            await AccessControlCapabilityGate.EnsureAsync(actor, "accesscontrol.view", authz, tenant, ct);
             return Results.Json(await directory.GetRolePermissionsAsync(roleId, PlatformScope(tenant), ct));
         }
         catch (Exception ex) when (ex is AccessControlException)
@@ -271,7 +220,7 @@ public static class AccessControlEndpoints
         try
         {
             var actor = await AdminPanelAccess.RequireAuthorizedAsync(request, session, tenant, guard, env, ct);
-            await EnsureCapabilityAsync(actor, "accesscontrol.manage", authz, tenant, ct);
+            await AccessControlCapabilityGate.EnsureAsync(actor, "accesscontrol.manage", authz, tenant, ct);
             await directory.SetRolePermissionsAsync(roleId, PlatformScope(tenant), body, actor, Trace(request), ct);
             return Results.NoContent();
         }
@@ -286,7 +235,7 @@ public static class AccessControlEndpoints
         IAuthorizationService authz, IHostEnvironment env, IAccessControlDirectory directory, CancellationToken ct, Guid? userId = null)
     {
         var actor = await AdminPanelAccess.RequireAuthorizedAsync(request, session, tenant, guard, env, ct);
-        await EnsureCapabilityAsync(actor, "accesscontrol.view", authz, tenant, ct);
+        await AccessControlCapabilityGate.EnsureAsync(actor, "accesscontrol.view", authz, tenant, ct);
         return Results.Json(await directory.ListAssignmentsAsync(PlatformScope(tenant), userId, ct));
     }
 
@@ -299,7 +248,7 @@ public static class AccessControlEndpoints
         try
         {
             var actor = await AdminPanelAccess.RequireAuthorizedAsync(request, session, tenant, guard, env, ct);
-            await EnsureCapabilityAsync(actor, "accesscontrol.manage", authz, tenant, ct);
+            await AccessControlCapabilityGate.EnsureAsync(actor, "accesscontrol.manage", authz, tenant, ct);
             return Results.Json(await directory.AssignRoleAsync(PlatformScope(tenant), body.UserId, body.RoleId, actor, Trace(request), ct));
         }
         catch (Exception ex) when (ex is AccessControlException)
@@ -315,7 +264,7 @@ public static class AccessControlEndpoints
         try
         {
             var actor = await AdminPanelAccess.RequireAuthorizedAsync(request, session, tenant, guard, env, ct);
-            await EnsureCapabilityAsync(actor, "accesscontrol.manage", authz, tenant, ct);
+            await AccessControlCapabilityGate.EnsureAsync(actor, "accesscontrol.manage", authz, tenant, ct);
             await directory.RemoveAssignmentAsync(assignmentId, PlatformScope(tenant), actor, Trace(request), ct);
             return Results.NoContent();
         }
@@ -332,7 +281,7 @@ public static class AccessControlEndpoints
         CancellationToken ct, string? q = null)
     {
         var actor = await AdminPanelAccess.RequireAuthorizedAsync(request, session, tenant, guard, env, ct);
-        await EnsureCapabilityAsync(actor, "accesscontrol.view", authz, tenant, ct);
+        await AccessControlCapabilityGate.EnsureAsync(actor, "accesscontrol.view", authz, tenant, ct);
         var hits = await directory.SearchUsersInScopeAsync(PlatformScope(tenant), null, ct);
         return Results.Json(await EnrichUserHitsAsync(hits, contacts, profiles, identity, q, ct));
     }
@@ -342,7 +291,7 @@ public static class AccessControlEndpoints
         IAuthorizationService authz, IHostEnvironment env, IAccessControlDirectory directory, CancellationToken ct)
     {
         var actor = await AdminPanelAccess.RequireAuthorizedAsync(request, session, tenant, guard, env, ct);
-        await EnsureCapabilityAsync(actor, "accesscontrol.view", authz, tenant, ct);
+        await AccessControlCapabilityGate.EnsureAsync(actor, "accesscontrol.view", authz, tenant, ct);
         return Results.Json(await directory.GetEffectiveAccessAsync(userId, PlatformScope(tenant), ct));
     }
 
@@ -368,7 +317,7 @@ public static class AccessControlEndpoints
         IAuthorizationService authz, IHostEnvironment env, IAccessControlDirectory directory, CancellationToken ct)
     {
         var actor = await AdminPanelAccess.RequireAuthorizedAsync(request, session, tenant, guard, env, ct);
-        await EnsureCapabilityAsync(actor, "accesscontrol.view", authz, tenant, ct);
+        await AccessControlCapabilityGate.EnsureAsync(actor, "accesscontrol.view", authz, tenant, ct);
         return Results.Json(await directory.GetSellerCeilingAsync(sellerId, ct));
     }
 
@@ -386,7 +335,7 @@ public static class AccessControlEndpoints
         try
         {
             var actor = await AdminPanelAccess.RequireAuthorizedAsync(request, session, tenant, guard, env, ct);
-            await EnsureCapabilityAsync(actor, "accesscontrol.manage", authz, tenant, ct);
+            await AccessControlCapabilityGate.EnsureAsync(actor, "accesscontrol.manage", authz, tenant, ct);
             await directory.SetSellerCeilingAsync(
                 sellerId,
                 body.Entries.Select(e => (e.PermissionId, e.Enabled, e.ScopeKind, e.ScopeResourceId)).ToList(),
@@ -406,7 +355,7 @@ public static class AccessControlEndpoints
         IAuthorizationService authz, IHostEnvironment env, IAccessControlDirectory directory, CancellationToken ct)
     {
         var actor = await AdminPanelAccess.RequireAuthorizedAsync(request, session, tenant, guard, env, ct);
-        await EnsureCapabilityAsync(actor, "accesscontrol.view", authz, tenant, ct);
+        await AccessControlCapabilityGate.EnsureAsync(actor, "accesscontrol.view", authz, tenant, ct);
         return Results.Json(await directory.ListRolesAsync(SellerScope(sellerId, tenant), false, ct));
     }
 
@@ -417,7 +366,7 @@ public static class AccessControlEndpoints
         try
         {
             var actor = await AdminPanelAccess.RequireAuthorizedAsync(request, session, tenant, guard, env, ct);
-            await EnsureCapabilityAsync(actor, "accesscontrol.manage", authz, tenant, ct);
+            await AccessControlCapabilityGate.EnsureAsync(actor, "accesscontrol.manage", authz, tenant, ct);
             return Results.Json(await directory.CreateRoleAsync(SellerScope(sellerId, tenant), body, actor, Trace(request), ct));
         }
         catch (Exception ex) when (ex is AccessControlException)
@@ -434,7 +383,7 @@ public static class AccessControlEndpoints
         try
         {
             var actor = await AdminPanelAccess.RequireAuthorizedAsync(request, session, tenant, guard, env, ct);
-            await EnsureCapabilityAsync(actor, "accesscontrol.manage", authz, tenant, ct);
+            await AccessControlCapabilityGate.EnsureAsync(actor, "accesscontrol.manage", authz, tenant, ct);
             return Results.Json(await directory.UpdateRoleAsync(roleId, SellerScope(sellerId, tenant), body, actor, Trace(request), ct));
         }
         catch (Exception ex) when (ex is AccessControlException)
@@ -451,7 +400,7 @@ public static class AccessControlEndpoints
         try
         {
             var actor = await AdminPanelAccess.RequireAuthorizedAsync(request, session, tenant, guard, env, ct);
-            await EnsureCapabilityAsync(actor, "accesscontrol.manage", authz, tenant, ct);
+            await AccessControlCapabilityGate.EnsureAsync(actor, "accesscontrol.manage", authz, tenant, ct);
             return Results.Json(await directory.CloneRoleAsync(roleId, SellerScope(sellerId, tenant), body, actor, Trace(request), ct));
         }
         catch (Exception ex) when (ex is AccessControlException)
@@ -467,7 +416,7 @@ public static class AccessControlEndpoints
         try
         {
             var actor = await AdminPanelAccess.RequireAuthorizedAsync(request, session, tenant, guard, env, ct);
-            await EnsureCapabilityAsync(actor, "accesscontrol.manage", authz, tenant, ct);
+            await AccessControlCapabilityGate.EnsureAsync(actor, "accesscontrol.manage", authz, tenant, ct);
             await directory.ArchiveRoleAsync(roleId, SellerScope(sellerId, tenant), actor, Trace(request), ct);
             return Results.NoContent();
         }
@@ -484,7 +433,7 @@ public static class AccessControlEndpoints
         try
         {
             var actor = await AdminPanelAccess.RequireAuthorizedAsync(request, session, tenant, guard, env, ct);
-            await EnsureCapabilityAsync(actor, "accesscontrol.view", authz, tenant, ct);
+            await AccessControlCapabilityGate.EnsureAsync(actor, "accesscontrol.view", authz, tenant, ct);
             return Results.Json(await directory.GetRolePermissionsAsync(roleId, SellerScope(sellerId, tenant), ct));
         }
         catch (Exception ex) when (ex is AccessControlException)
@@ -501,7 +450,7 @@ public static class AccessControlEndpoints
         try
         {
             var actor = await AdminPanelAccess.RequireAuthorizedAsync(request, session, tenant, guard, env, ct);
-            await EnsureCapabilityAsync(actor, "accesscontrol.manage", authz, tenant, ct);
+            await AccessControlCapabilityGate.EnsureAsync(actor, "accesscontrol.manage", authz, tenant, ct);
             await directory.SetRolePermissionsAsync(roleId, SellerScope(sellerId, tenant), body, actor, Trace(request), ct);
             return Results.NoContent();
         }
@@ -516,7 +465,7 @@ public static class AccessControlEndpoints
         IAuthorizationService authz, IHostEnvironment env, IAccessControlDirectory directory, CancellationToken ct)
     {
         var actor = await AdminPanelAccess.RequireAuthorizedAsync(request, session, tenant, guard, env, ct);
-        await EnsureCapabilityAsync(actor, "accesscontrol.view", authz, tenant, ct);
+        await AccessControlCapabilityGate.EnsureAsync(actor, "accesscontrol.view", authz, tenant, ct);
         return Results.Json(await directory.ListAssignmentsAsync(SellerScope(sellerId, tenant), null, ct));
     }
 
@@ -527,7 +476,7 @@ public static class AccessControlEndpoints
         try
         {
             var actor = await AdminPanelAccess.RequireAuthorizedAsync(request, session, tenant, guard, env, ct);
-            await EnsureCapabilityAsync(actor, "accesscontrol.manage", authz, tenant, ct);
+            await AccessControlCapabilityGate.EnsureAsync(actor, "accesscontrol.manage", authz, tenant, ct);
             return Results.Json(await directory.AssignRoleAsync(SellerScope(sellerId, tenant), body.UserId, body.RoleId, actor, Trace(request), ct));
         }
         catch (Exception ex) when (ex is AccessControlException)
@@ -543,7 +492,7 @@ public static class AccessControlEndpoints
         try
         {
             var actor = await AdminPanelAccess.RequireAuthorizedAsync(request, session, tenant, guard, env, ct);
-            await EnsureCapabilityAsync(actor, "accesscontrol.manage", authz, tenant, ct);
+            await AccessControlCapabilityGate.EnsureAsync(actor, "accesscontrol.manage", authz, tenant, ct);
             await directory.RemoveAssignmentAsync(assignmentId, SellerScope(sellerId, tenant), actor, Trace(request), ct);
             return Results.NoContent();
         }
@@ -558,7 +507,7 @@ public static class AccessControlEndpoints
         IAuthorizationGuard guard, IAuthorizationService authz, IHostEnvironment env, IAccessControlDirectory directory, CancellationToken ct)
     {
         var actor = await AdminPanelAccess.RequireAuthorizedAsync(request, session, tenant, guard, env, ct);
-        await EnsureCapabilityAsync(actor, "accesscontrol.view", authz, tenant, ct);
+        await AccessControlCapabilityGate.EnsureAsync(actor, "accesscontrol.view", authz, tenant, ct);
         return Results.Json(await directory.GetEffectiveAccessAsync(userId, SellerScope(sellerId, tenant), ct));
     }
 
@@ -578,7 +527,7 @@ public static class AccessControlEndpoints
         IAuthorizationService authz, IHostEnvironment env, IAccessControlDirectory directory, CancellationToken ct)
     {
         var (actor, sellerId) = await RequireSellerAsync(request, session, guard, env, ct);
-        await EnsureCapabilityAsync(actor, "accesscontrol.view", authz, tenant, ct);
+        await AccessControlCapabilityGate.EnsureAsync(actor, "accesscontrol.view", authz, tenant, ct);
         var ceiling = await directory.GetSellerCeilingAsync(sellerId, ct);
         var catalog = directory.ListCatalog()
             .Select(p => new
@@ -600,7 +549,7 @@ public static class AccessControlEndpoints
         IAuthorizationService authz, IHostEnvironment env, IAccessControlDirectory directory, CancellationToken ct)
     {
         var (actor, sellerId) = await RequireSellerAsync(request, session, guard, env, ct);
-        await EnsureCapabilityAsync(actor, "accesscontrol.view", authz, tenant, ct);
+        await AccessControlCapabilityGate.EnsureAsync(actor, "accesscontrol.view", authz, tenant, ct);
         return Results.Json(await directory.GetSellerCeilingAsync(sellerId, ct));
     }
 
@@ -609,7 +558,7 @@ public static class AccessControlEndpoints
         IAuthorizationService authz, IHostEnvironment env, IAccessControlDirectory directory, CancellationToken ct)
     {
         var (actor, sellerId) = await RequireSellerAsync(request, session, guard, env, ct);
-        await EnsureCapabilityAsync(actor, "accesscontrol.view", authz, tenant, ct);
+        await AccessControlCapabilityGate.EnsureAsync(actor, "accesscontrol.view", authz, tenant, ct);
         return Results.Json(await directory.ListRolesAsync(SellerScope(sellerId, tenant), false, ct));
     }
 
@@ -620,7 +569,7 @@ public static class AccessControlEndpoints
         try
         {
             var (actor, sellerId) = await RequireSellerAsync(request, session, guard, env, ct);
-            await EnsureCapabilityAsync(actor, "accesscontrol.manage", authz, tenant, ct);
+            await AccessControlCapabilityGate.EnsureAsync(actor, "accesscontrol.manage", authz, tenant, ct);
             return Results.Json(await directory.CreateRoleAsync(SellerScope(sellerId, tenant), body, actor, Trace(request), ct));
         }
         catch (Exception ex) when (ex is AccessControlException)
@@ -636,7 +585,7 @@ public static class AccessControlEndpoints
         try
         {
             var (actor, sellerId) = await RequireSellerAsync(request, session, guard, env, ct);
-            await EnsureCapabilityAsync(actor, "accesscontrol.view", authz, tenant, ct);
+            await AccessControlCapabilityGate.EnsureAsync(actor, "accesscontrol.view", authz, tenant, ct);
             var role = await directory.GetRoleAsync(roleId, SellerScope(sellerId, tenant), ct);
             return role is null ? Results.NotFound() : Results.Json(role);
         }
@@ -653,7 +602,7 @@ public static class AccessControlEndpoints
         try
         {
             var (actor, sellerId) = await RequireSellerAsync(request, session, guard, env, ct);
-            await EnsureCapabilityAsync(actor, "accesscontrol.manage", authz, tenant, ct);
+            await AccessControlCapabilityGate.EnsureAsync(actor, "accesscontrol.manage", authz, tenant, ct);
             return Results.Json(await directory.UpdateRoleAsync(roleId, SellerScope(sellerId, tenant), body, actor, Trace(request), ct));
         }
         catch (Exception ex) when (ex is AccessControlException)
@@ -669,7 +618,7 @@ public static class AccessControlEndpoints
         try
         {
             var (actor, sellerId) = await RequireSellerAsync(request, session, guard, env, ct);
-            await EnsureCapabilityAsync(actor, "accesscontrol.manage", authz, tenant, ct);
+            await AccessControlCapabilityGate.EnsureAsync(actor, "accesscontrol.manage", authz, tenant, ct);
             return Results.Json(await directory.CloneRoleAsync(roleId, SellerScope(sellerId, tenant), body, actor, Trace(request), ct));
         }
         catch (Exception ex) when (ex is AccessControlException)
@@ -685,7 +634,7 @@ public static class AccessControlEndpoints
         try
         {
             var (actor, sellerId) = await RequireSellerAsync(request, session, guard, env, ct);
-            await EnsureCapabilityAsync(actor, "accesscontrol.manage", authz, tenant, ct);
+            await AccessControlCapabilityGate.EnsureAsync(actor, "accesscontrol.manage", authz, tenant, ct);
             await directory.ArchiveRoleAsync(roleId, SellerScope(sellerId, tenant), actor, Trace(request), ct);
             return Results.NoContent();
         }
@@ -702,7 +651,7 @@ public static class AccessControlEndpoints
         try
         {
             var (actor, sellerId) = await RequireSellerAsync(request, session, guard, env, ct);
-            await EnsureCapabilityAsync(actor, "accesscontrol.view", authz, tenant, ct);
+            await AccessControlCapabilityGate.EnsureAsync(actor, "accesscontrol.view", authz, tenant, ct);
             return Results.Json(await directory.GetRolePermissionsAsync(roleId, SellerScope(sellerId, tenant), ct));
         }
         catch (Exception ex) when (ex is AccessControlException)
@@ -718,7 +667,7 @@ public static class AccessControlEndpoints
         try
         {
             var (actor, sellerId) = await RequireSellerAsync(request, session, guard, env, ct);
-            await EnsureCapabilityAsync(actor, "accesscontrol.manage", authz, tenant, ct);
+            await AccessControlCapabilityGate.EnsureAsync(actor, "accesscontrol.manage", authz, tenant, ct);
             await directory.SetRolePermissionsAsync(roleId, SellerScope(sellerId, tenant), body, actor, Trace(request), ct);
             return Results.NoContent();
         }
@@ -733,7 +682,7 @@ public static class AccessControlEndpoints
         IAuthorizationService authz, IHostEnvironment env, IAccessControlDirectory directory, CancellationToken ct)
     {
         var (actor, sellerId) = await RequireSellerAsync(request, session, guard, env, ct);
-        await EnsureCapabilityAsync(actor, "accesscontrol.view", authz, tenant, ct);
+        await AccessControlCapabilityGate.EnsureAsync(actor, "accesscontrol.view", authz, tenant, ct);
         return Results.Json(await directory.ListAssignmentsAsync(SellerScope(sellerId, tenant), null, ct));
     }
 
@@ -744,7 +693,7 @@ public static class AccessControlEndpoints
         try
         {
             var (actor, sellerId) = await RequireSellerAsync(request, session, guard, env, ct);
-            await EnsureCapabilityAsync(actor, "accesscontrol.manage", authz, tenant, ct);
+            await AccessControlCapabilityGate.EnsureAsync(actor, "accesscontrol.manage", authz, tenant, ct);
             return Results.Json(await directory.AssignRoleAsync(SellerScope(sellerId, tenant), body.UserId, body.RoleId, actor, Trace(request), ct));
         }
         catch (Exception ex) when (ex is AccessControlException)
@@ -760,7 +709,7 @@ public static class AccessControlEndpoints
         try
         {
             var (actor, sellerId) = await RequireSellerAsync(request, session, guard, env, ct);
-            await EnsureCapabilityAsync(actor, "accesscontrol.manage", authz, tenant, ct);
+            await AccessControlCapabilityGate.EnsureAsync(actor, "accesscontrol.manage", authz, tenant, ct);
             await directory.RemoveAssignmentAsync(assignmentId, SellerScope(sellerId, tenant), actor, Trace(request), ct);
             return Results.NoContent();
         }
@@ -777,7 +726,7 @@ public static class AccessControlEndpoints
         CancellationToken ct, string? q = null)
     {
         var (actor, sellerId) = await RequireSellerAsync(request, session, guard, env, ct);
-        await EnsureCapabilityAsync(actor, "accesscontrol.view", authz, tenant, ct);
+        await AccessControlCapabilityGate.EnsureAsync(actor, "accesscontrol.view", authz, tenant, ct);
         var hits = await directory.SearchUsersInScopeAsync(SellerScope(sellerId, tenant), null, ct);
         return Results.Json(await EnrichUserHitsAsync(hits, contacts, profiles, identity, q, ct));
     }
@@ -869,7 +818,7 @@ public static class AccessControlEndpoints
         IAuthorizationService authz, IHostEnvironment env, IAccessControlDirectory directory, CancellationToken ct)
     {
         var (actor, sellerId) = await RequireSellerAsync(request, session, guard, env, ct);
-        await EnsureCapabilityAsync(actor, "accesscontrol.view", authz, tenant, ct);
+        await AccessControlCapabilityGate.EnsureAsync(actor, "accesscontrol.view", authz, tenant, ct);
         return Results.Json(await directory.GetEffectiveAccessAsync(userId, SellerScope(sellerId, tenant), ct));
     }
 
@@ -878,7 +827,7 @@ public static class AccessControlEndpoints
         IAuthorizationService authz, IHostEnvironment env, ICatalogLookupGateway catalog, CancellationToken ct, string? q = null)
     {
         var actor = await AdminPanelAccess.RequireAuthorizedAsync(request, session, tenant, guard, env, ct);
-        await EnsureCapabilityAsync(actor, "accesscontrol.view", authz, tenant, ct);
+        await AccessControlCapabilityGate.EnsureAsync(actor, "accesscontrol.view", authz, tenant, ct);
         var items = await catalog.ListCategoriesForAccessControlAsync(q, ct);
         return Results.Json(new { deferred = false, items });
     }
@@ -888,7 +837,7 @@ public static class AccessControlEndpoints
         IAuthorizationService authz, IHostEnvironment env, ICatalogLookupGateway catalog, CancellationToken ct, string? q = null)
     {
         var (actor, _) = await RequireSellerAsync(request, session, guard, env, ct);
-        await EnsureCapabilityAsync(actor, "accesscontrol.view", authz, tenant, ct);
+        await AccessControlCapabilityGate.EnsureAsync(actor, "accesscontrol.view", authz, tenant, ct);
         var items = await catalog.ListCategoriesForAccessControlAsync(q, ct);
         return Results.Json(new { deferred = false, items });
     }
@@ -898,7 +847,7 @@ public static class AccessControlEndpoints
         IAuthorizationService authz, IHostEnvironment env, ICatalogLookupGateway catalog, CancellationToken ct, string? q = null)
     {
         var actor = await AdminPanelAccess.RequireAuthorizedAsync(request, session, tenant, guard, env, ct);
-        await EnsureCapabilityAsync(actor, "accesscontrol.view", authz, tenant, ct);
+        await AccessControlCapabilityGate.EnsureAsync(actor, "accesscontrol.view", authz, tenant, ct);
         var items = await catalog.ListBrandsForAccessControlAsync(q, ct);
         return Results.Json(new { deferred = false, items });
     }
@@ -908,7 +857,7 @@ public static class AccessControlEndpoints
         IAuthorizationService authz, IHostEnvironment env, ICatalogLookupGateway catalog, CancellationToken ct, string? q = null)
     {
         var (actor, _) = await RequireSellerAsync(request, session, guard, env, ct);
-        await EnsureCapabilityAsync(actor, "accesscontrol.view", authz, tenant, ct);
+        await AccessControlCapabilityGate.EnsureAsync(actor, "accesscontrol.view", authz, tenant, ct);
         var items = await catalog.ListBrandsForAccessControlAsync(q, ct);
         return Results.Json(new { deferred = false, items });
     }
@@ -918,7 +867,7 @@ public static class AccessControlEndpoints
         IAuthorizationService authz, IHostEnvironment env, ICatalogLookupGateway catalog, CancellationToken ct, string? q = null)
     {
         var actor = await AdminPanelAccess.RequireAuthorizedAsync(request, session, tenant, guard, env, ct);
-        await EnsureCapabilityAsync(actor, "accesscontrol.view", authz, tenant, ct);
+        await AccessControlCapabilityGate.EnsureAsync(actor, "accesscontrol.view", authz, tenant, ct);
         var items = await catalog.ListProductsForAccessControlAsync(q, ct);
         return Results.Json(new { deferred = false, items });
     }
@@ -928,7 +877,7 @@ public static class AccessControlEndpoints
         IAuthorizationService authz, IHostEnvironment env, ICatalogLookupGateway catalog, CancellationToken ct, string? q = null)
     {
         var (actor, _) = await RequireSellerAsync(request, session, guard, env, ct);
-        await EnsureCapabilityAsync(actor, "accesscontrol.view", authz, tenant, ct);
+        await AccessControlCapabilityGate.EnsureAsync(actor, "accesscontrol.view", authz, tenant, ct);
         var items = await catalog.ListProductsForAccessControlAsync(q, ct);
         return Results.Json(new { deferred = false, items });
     }
@@ -938,7 +887,7 @@ public static class AccessControlEndpoints
         IAuthorizationService authz, IHostEnvironment env, CancellationToken ct)
     {
         var actor = await AdminPanelAccess.RequireAuthorizedAsync(request, session, tenant, guard, env, ct);
-        await EnsureCapabilityAsync(actor, "accesscontrol.view", authz, tenant, ct);
+        await AccessControlCapabilityGate.EnsureAsync(actor, "accesscontrol.view", authz, tenant, ct);
         return Results.Json(new { deferred = true, items = Array.Empty<object>() });
     }
 
@@ -947,7 +896,7 @@ public static class AccessControlEndpoints
         IAuthorizationService authz, IHostEnvironment env, CancellationToken ct)
     {
         var (actor, _) = await RequireSellerAsync(request, session, guard, env, ct);
-        await EnsureCapabilityAsync(actor, "accesscontrol.view", authz, tenant, ct);
+        await AccessControlCapabilityGate.EnsureAsync(actor, "accesscontrol.view", authz, tenant, ct);
         return Results.Json(new { deferred = true, items = Array.Empty<object>() });
     }
 
