@@ -18,6 +18,7 @@ using Tooba.AccessControl.Application.Queries.GetRolePermissions;
 using Tooba.AccessControl.Application.Queries.ListAssignments;
 using Tooba.AccessControl.Application.Queries.ListPermissionCatalog;
 using Tooba.AccessControl.Application.Queries.ListRoles;
+using Tooba.AccessControl.Application.Queries.SearchAccessUsers;
 using Tooba.AccessControl.Domain;
 using Tooba.BuildingBlocks;
 using Tooba.BuildingBlocks.Security;
@@ -47,6 +48,27 @@ public static class AccessControlAdminEndpoints
         group.MapPost("/assignments", AssignAsync);
         group.MapDelete("/assignments/{assignmentId:guid}", RemoveAssignmentAsync);
         group.MapGet("/users/{userId:guid}/effective", EffectiveAsync);
+        group.MapGet("/users", SearchUsersAsync);
+    }
+
+    private static async Task<IResult> SearchUsersAsync(
+        HttpRequest request,
+        ISender sender,
+        IAdminPanelAccess adminPanelAccess,
+        IAuthorizationService authz,
+        ICurrentTenant tenant,
+        CancellationToken cancellationToken,
+        string? q = null)
+    {
+        var actor = await adminPanelAccess.RequireAuthorizedAsync(request, cancellationToken);
+        await AccessControlCapabilityGate.EnsureAsync(actor, "accesscontrol.view", authz, tenant, cancellationToken);
+        return Results.Json(await sender.Send(
+            new SearchAccessUsersQuery(
+                AccessOwnerScopeKind.Platform,
+                null,
+                tenant.Current?.TenantId.Value,
+                q),
+            cancellationToken));
     }
 
     private static async Task<IResult> ListAssignmentsAsync(

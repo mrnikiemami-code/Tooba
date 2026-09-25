@@ -9,5 +9,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\..\BuildingBlocks\Tooba.BuildingBlocks\Tooba.BuildingBlocks.csproj" />
     <ProjectReference Include="..\Tooba.AccessControl.Domain\Tooba.AccessControl.Domain.csproj" />
+    <ProjectReference Include="..\..\Identity\Tooba.Identity.Contracts\Tooba.Identity.Contracts.csproj" />
+    <ProjectReference Include="..\..\OperatorProfile\Tooba.OperatorProfile.Contracts\Tooba.OperatorProfile.Contracts.csproj" />
   </ItemGroup>
 </Project>

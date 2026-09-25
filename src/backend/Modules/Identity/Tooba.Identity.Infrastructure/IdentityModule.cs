@@ -67,6 +67,7 @@ public sealed class IdentityModule : IToobaModule
         services.AddScoped<IIdentityOtpLoginService, IdentityOtpLoginService>();
         services.AddScoped<IIdentityContactLookup, EfIdentityContactLookup>();
         services.AddScoped<Contracts.IActorContactLookup, ActorContactLookupAdapter>();
+        services.AddScoped<Contracts.IActorIdentifierResolver, ActorIdentifierResolverAdapter>();
         services.AddScoped<IExternalIdentityDirectory, EfExternalIdentityDirectory>();
         services.AddScoped<IMfaEnrollmentStore, EfMfaEnrollmentStore>();
         services.AddDbContext<IdentityDbContext>((sp, options) =>

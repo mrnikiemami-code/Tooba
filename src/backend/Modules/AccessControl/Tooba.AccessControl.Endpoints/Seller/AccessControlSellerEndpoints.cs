@@ -18,6 +18,7 @@ using Tooba.AccessControl.Application.Queries.GetSellerCeiling;
 using Tooba.AccessControl.Application.Queries.ListAssignments;
 using Tooba.AccessControl.Application.Queries.ListRoles;
 using Tooba.AccessControl.Application.Queries.ListSellerPermissionCatalog;
+using Tooba.AccessControl.Application.Queries.SearchAccessUsers;
 using Tooba.AccessControl.Domain;
 using Tooba.BuildingBlocks;
 using Tooba.BuildingBlocks.Security;
@@ -46,6 +47,48 @@ public static class AccessControlSellerEndpoints
         group.MapGet("/assignments", ListAssignmentsAsync);
         group.MapPost("/assignments", AssignAsync);
         group.MapDelete("/assignments/{assignmentId:guid}", RemoveAssignmentAsync);
+        group.MapGet("/users/{userId:guid}/effective", EffectiveAsync);
+        group.MapGet("/users", SearchUsersAsync);
+    }
+
+    private static async Task<IResult> SearchUsersAsync(
+        HttpRequest request,
+        ISender sender,
+        ISellerPanelAccess sellerPanelAccess,
+        IAuthorizationService authz,
+        ICurrentTenant tenant,
+        CancellationToken cancellationToken,
+        string? q = null)
+    {
+        var (actor, sellerId) = await sellerPanelAccess.RequireAuthorizedAsync(request, cancellationToken);
+        await AccessControlCapabilityGate.EnsureAsync(actor, "accesscontrol.view", authz, tenant, cancellationToken);
+        return Results.Json(await sender.Send(
+            new SearchAccessUsersQuery(
+                AccessOwnerScopeKind.Seller,
+                sellerId,
+                tenant.Current?.TenantId.Value,
+                q),
+            cancellationToken));
+    }
+
+    private static async Task<IResult> EffectiveAsync(
+        Guid userId,
+        HttpRequest request,
+        ISender sender,
+        ISellerPanelAccess sellerPanelAccess,
+        IAuthorizationService authz,
+        ICurrentTenant tenant,
+        CancellationToken cancellationToken)
+    {
+        var (actor, sellerId) = await sellerPanelAccess.RequireAuthorizedAsync(request, cancellationToken);
+        await AccessControlCapabilityGate.EnsureAsync(actor, "accesscontrol.view", authz, tenant, cancellationToken);
+        return Results.Json(await sender.Send(
+            new GetEffectiveAccessQuery(
+                userId,
+                AccessOwnerScopeKind.Seller,
+                sellerId,
+                tenant.Current?.TenantId.Value),
+            cancellationToken));
     }
 
     private static async Task<IResult> GetCeilingAsync(

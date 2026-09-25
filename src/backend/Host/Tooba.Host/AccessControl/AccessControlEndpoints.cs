@@ -5,9 +5,6 @@ using Tooba.BuildingBlocks;
 using Tooba.Catalog.Application;
 using Tooba.Host.Admin;
 using Tooba.Host.Seller;
-using Tooba.Identity.Application;
-using Tooba.Identity.Domain;
-using Tooba.OperatorProfile.Application;
 
 namespace Tooba.Host.AccessControl;
 
@@ -20,7 +17,6 @@ public static class AccessControlEndpoints
     public static void MapAccessControlEndpoints(this WebApplication app)
     {
         var admin = app.MapGroup("/v1/admin/access-control");
-        admin.MapGet("/users", AdminSearchUsersAsync);
         admin.MapGet("/demo-preview", AdminDemoPreviewAsync);
         admin.MapGet("/scope-resources/categories", AdminListCategoriesAsync);
         admin.MapGet("/scope-resources/brands", AdminListBrandsAsync);
@@ -30,8 +26,6 @@ public static class AccessControlEndpoints
         admin.MapGet("/scope-resources/order-segments", AdminDeferredScopeAsync);
 
         var seller = app.MapGroup("/v1/seller/access-control");
-        seller.MapGet("/users", SellerSearchUsersAsync);
-        seller.MapGet("/users/{userId:guid}/effective", SellerEffectiveAsync);
         seller.MapGet("/scope-resources/categories", SellerListCategoriesAsync);
         seller.MapGet("/scope-resources/brands", SellerListBrandsAsync);
         seller.MapGet("/scope-resources/products", SellerListProductsAsync);
@@ -39,12 +33,6 @@ public static class AccessControlEndpoints
         seller.MapGet("/scope-resources/stores", SellerDeferredScopeAsync);
         seller.MapGet("/scope-resources/order-segments", SellerDeferredScopeAsync);
     }
-
-    private static AccessOwnerScope PlatformScope(ICurrentTenant tenant) =>
-        new(AccessOwnerScopeKind.Platform, null, tenant.Current?.TenantId.Value);
-
-    private static AccessOwnerScope SellerScope(Guid sellerId, ICurrentTenant tenant) =>
-        new(AccessOwnerScopeKind.Seller, sellerId, tenant.Current?.TenantId.Value);
 
     private static string? Trace(HttpRequest request) =>
         request.Headers.TryGetValue("X-Request-Id", out var v) ? v.ToString() : null;
@@ -55,18 +43,6 @@ public static class AccessControlEndpoints
             : Results.Json(new { title = "access.error", code = "access.error" }, statusCode: 500);
 
     #region Admin platform
-
-    private static async Task<IResult> AdminSearchUsersAsync(
-        HttpRequest request, CurrentAuthenticatedSession session, ICurrentTenant tenant, IAuthorizationGuard guard,
-        IAuthorizationService authz, IHostEnvironment env, IAccessControlDirectory directory,
-        IIdentityContactLookup contacts, IOperatorProfileDirectory profiles, IIdentityAuthenticationService identity,
-        CancellationToken ct, string? q = null)
-    {
-        var actor = await AdminPanelAccess.RequireAuthorizedAsync(request, session, tenant, guard, env, ct);
-        await AccessControlCapabilityGate.EnsureAsync(actor, "accesscontrol.view", authz, tenant, ct);
-        var hits = await directory.SearchUsersInScopeAsync(PlatformScope(tenant), null, ct);
-        return Results.Json(await EnrichUserHitsAsync(hits, contacts, profiles, identity, q, ct));
-    }
 
     private static IResult AdminDemoPreviewAsync(IHostEnvironment env)
     {
@@ -90,109 +66,6 @@ public static class AccessControlEndpoints
     {
         var ctx = await SellerPanelAccess.RequireAuthorizedAsync(request, session, guard, env, ct);
         return (ctx.ActorUserId, ctx.SellerPartyId);
-    }
-
-    private static async Task<IResult> SellerSearchUsersAsync(
-        HttpRequest request, CurrentAuthenticatedSession session, ICurrentTenant tenant, IAuthorizationGuard guard,
-        IAuthorizationService authz, IHostEnvironment env, IAccessControlDirectory directory,
-        IIdentityContactLookup contacts, IOperatorProfileDirectory profiles, IIdentityAuthenticationService identity,
-        CancellationToken ct, string? q = null)
-    {
-        var (actor, sellerId) = await RequireSellerAsync(request, session, guard, env, ct);
-        await AccessControlCapabilityGate.EnsureAsync(actor, "accesscontrol.view", authz, tenant, ct);
-        var hits = await directory.SearchUsersInScopeAsync(SellerScope(sellerId, tenant), null, ct);
-        return Results.Json(await EnrichUserHitsAsync(hits, contacts, profiles, identity, q, ct));
-    }
-
-    /// <summary>
-    /// هویت نمایشی را در Host از Identity/OperatorProfile می‌چسباند — نه SQL بین‌ماژولی در Access Control.
-    /// </summary>
-    private static async Task<IReadOnlyList<AccessUserHitDto>> EnrichUserHitsAsync(
-        IReadOnlyList<AccessUserHitDto> hits,
-        IIdentityContactLookup contacts,
-        IOperatorProfileDirectory profiles,
-        IIdentityAuthenticationService identity,
-        string? query,
-        CancellationToken cancellationToken)
-    {
-        var byUser = hits.ToDictionary(h => h.UserId);
-        var q = string.IsNullOrWhiteSpace(query) ? null : query.Trim();
-
-        if (q is not null)
-        {
-            Guid? resolved = null;
-            if (Guid.TryParse(q, out var uid))
-            {
-                resolved = uid;
-            }
-            else if (q.Contains('@', StringComparison.Ordinal))
-            {
-                resolved = await identity.FindUserIdByIdentifierAsync(LoginIdentifierKind.Email, q, cancellationToken);
-            }
-            else if (q.Any(char.IsDigit) && q.Length >= 8)
-            {
-                resolved = await identity.FindUserIdByIdentifierAsync(LoginIdentifierKind.Phone, q, cancellationToken);
-            }
-
-            if (resolved is { } extraId && !byUser.ContainsKey(extraId))
-            {
-                byUser[extraId] = new AccessUserHitDto(extraId, Array.Empty<string>());
-            }
-        }
-
-        var enriched = new List<AccessUserHitDto>(byUser.Count);
-        foreach (var hit in byUser.Values)
-        {
-            var contact = await contacts.GetContactAsync(hit.UserId, cancellationToken);
-            var profile = await profiles.GetAsync(hit.UserId, cancellationToken);
-            var displayName = FirstNonEmpty(
-                profile?.DisplayName,
-                contact.Email,
-                contact.Mobile);
-            enriched.Add(new AccessUserHitDto(
-                hit.UserId,
-                hit.RoleCodes,
-                displayName,
-                contact.Email,
-                contact.Mobile));
-        }
-
-        if (q is null)
-        {
-            return enriched.OrderBy(h => h.DisplayName ?? h.Email ?? h.UserId.ToString("D"), StringComparer.OrdinalIgnoreCase).ToList();
-        }
-
-        return enriched
-            .Where(h =>
-                (h.DisplayName?.Contains(q, StringComparison.OrdinalIgnoreCase) ?? false)
-                || (h.Email?.Contains(q, StringComparison.OrdinalIgnoreCase) ?? false)
-                || (h.Mobile?.Contains(q, StringComparison.OrdinalIgnoreCase) ?? false)
-                || h.UserId.ToString("D").Contains(q, StringComparison.OrdinalIgnoreCase)
-                || h.RoleCodes.Any(c => c.Contains(q, StringComparison.OrdinalIgnoreCase)))
-            .OrderBy(h => h.DisplayName ?? h.Email ?? h.UserId.ToString("D"), StringComparer.OrdinalIgnoreCase)
-            .ToList();
-    }
-
-    private static string? FirstNonEmpty(params string?[] values)
-    {
-        foreach (var v in values)
-        {
-            if (!string.IsNullOrWhiteSpace(v))
-            {
-                return v.Trim();
-            }
-        }
-
-        return null;
-    }
-
-    private static async Task<IResult> SellerEffectiveAsync(
-        Guid userId, HttpRequest request, CurrentAuthenticatedSession session, ICurrentTenant tenant, IAuthorizationGuard guard,
-        IAuthorizationService authz, IHostEnvironment env, IAccessControlDirectory directory, CancellationToken ct)
-    {
-        var (actor, sellerId) = await RequireSellerAsync(request, session, guard, env, ct);
-        await AccessControlCapabilityGate.EnsureAsync(actor, "accesscontrol.view", authz, tenant, ct);
-        return Results.Json(await directory.GetEffectiveAccessAsync(userId, SellerScope(sellerId, tenant), ct));
     }
 
     private static async Task<IResult> AdminListCategoriesAsync(
