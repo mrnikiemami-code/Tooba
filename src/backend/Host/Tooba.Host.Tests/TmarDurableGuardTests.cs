@@ -106,9 +106,8 @@ public sealed class TmarDurableGuardTests
         Assert.Equal("USER_ACCEPTED", rootEl.GetProperty("goldenWaveUserReview").GetString());
         Assert.Equal("TB-TMAR-GOLDEN-WAVE-FINAL-CLOSURE-001", rootEl.GetProperty("goldenWaveClosedBy").GetString());
         Assert.False(string.IsNullOrWhiteSpace(rootEl.GetProperty("goldenWaveClosedCommit").GetString()));
-        Assert.Equal("USER_REVIEW_PAYMENT_ARCH_COMPLETE_002_STRUCTURE_001", rootEl.GetProperty("nextTask").GetString());
-        Assert.Equal("USER_REVIEW_REQUIRED_AFTER_PAYMENT_STRUCTURE_CERTIFICATION", rootEl.GetProperty("nextTaskGate").GetString());
-        Assert.Equal("PAUSED_AT_SAFE_W5_CHECKPOINT", rootEl.GetProperty("checkoutState").GetString());
+        Assert.Equal("TB-TMAR-SETTLEMENT-ARCH-COMPLETE-002-PRECERT-REPAIR-001", rootEl.GetProperty("nextTask").GetString());
+        Assert.Equal("SETTLEMENT_NEEDS_PRECERT_REPAIR_THEN_STRUCTURE", rootEl.GetProperty("nextTaskGate").GetString());        Assert.Equal("PAUSED_AT_SAFE_W5_CHECKPOINT", rootEl.GetProperty("checkoutState").GetString());
         Assert.True(rootEl.GetProperty("frontendFrozen").GetBoolean());
         Assert.Equal("ARCH-COMPLETE-002", rootEl.GetProperty("locksVersion").GetString());
         Assert.Equal(
@@ -309,8 +308,7 @@ public sealed class TmarDurableGuardTests
             paymentEntry.GetProperty("paymentValidatorCoverage").GetString());
         Assert.Equal("EXACT", paymentEntry.GetProperty("paymentPathNamespace").GetString());
 
-        var paymentStructure = rootEl.GetProperty("paymentArchComplete002Structure");
-        Assert.True(paymentStructure.GetProperty("structureCertifiedUnderArchComplete002").GetBoolean());
+        var paymentStructure = rootEl.GetProperty("paymentArchComplete002Structure");        Assert.True(paymentStructure.GetProperty("structureCertifiedUnderArchComplete002").GetBoolean());
         Assert.Equal("EXACT", paymentStructure.GetProperty("pathNamespace").GetString());
         Assert.Equal("ENFORCED", paymentStructure.GetProperty("rootAllowlist").GetString());
         Assert.Equal("NONE", paymentStructure.GetProperty("aliasWorkaround").GetString());
@@ -325,6 +323,28 @@ public sealed class TmarDurableGuardTests
         Assert.True(paymentStructure.GetProperty("manifestCertified").GetBoolean());
         Assert.Equal("Order,Cart,StoreContext,Offer,Payment", paymentStructure.GetProperty("certifiedModules").GetString());
         Assert.Contains("Payment", structureCertified);
+
+        var settlementAudit = rootEl.GetProperty("settlementArchComplete002Audit");
+        Assert.Equal("TB-TMAR-SETTLEMENT-ARCH-COMPLETE-002-AUDIT-001", settlementAudit.GetProperty("task").GetString());
+        Assert.False(settlementAudit.GetProperty("productionCodeChanged").GetBoolean());
+        Assert.False(settlementAudit.GetProperty("structureCertifiedUnderArchComplete002").GetBoolean());
+        Assert.Equal(10, settlementAudit.GetProperty("endpointReachableRequests").GetInt32());
+        Assert.Equal(10, settlementAudit.GetProperty("totalMediatRRequests").GetInt32());
+        Assert.Equal(0, settlementAudit.GetProperty("workerInternalRequests").GetInt32());
+        Assert.Equal(10, settlementAudit.GetProperty("validatorRequiredCount").GetInt32());
+        Assert.Equal(0, settlementAudit.GetProperty("validatorsPresentCount").GetInt32());
+        Assert.Equal(10, settlementAudit.GetProperty("validatorsMissingCount").GetInt32());
+        Assert.Equal(0, settlementAudit.GetProperty("noValidatorRequiredCount").GetInt32());
+        Assert.Equal("0_OF_10_REQUIRED_PRESENT_NO_VALIDATORS_EXIST",
+            settlementAudit.GetProperty("validatorCoverageState").GetString());
+        Assert.Equal("EXACT", settlementAudit.GetProperty("pathNamespaceState").GetString());
+        Assert.Equal("NO_ALIAS_NO_FOREIGN_GLOBAL_ALIAS", settlementAudit.GetProperty("aliasWorkaroundState").GetString());
+        Assert.Equal("TWO_THIN_HOST_SECURITY_ADAPTERS_ONLY_KEEP",
+            settlementAudit.GetProperty("hostSettlementResidue").GetString());
+        Assert.Equal("ZERO", settlementAudit.GetProperty("settlementToHostDependency").GetString());
+        Assert.Equal("NEEDS_PRECERT_REPAIR_THEN_STRUCTURE", settlementAudit.GetProperty("auditDecision").GetString());
+        Assert.DoesNotContain("Settlement", structureCertified, StringComparer.Ordinal);
+        Assert.Contains("Settlement", structureUncertified, StringComparer.Ordinal);
         Assert.Equal(
             "TB-TMAR-CART-POSTCERT-SEMANTIC-HOST-CLOSURE-001-R1",
             cartEntry.GetProperty("lastPostCertificationRepairTask").GetString());
