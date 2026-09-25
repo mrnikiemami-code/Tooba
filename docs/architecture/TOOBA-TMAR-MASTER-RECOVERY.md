@@ -685,12 +685,19 @@ Recent accepted recovery facts:
 
 After Fulfillment, do NOT automatically continue by uncertified-module list. Start Host traversal with AccessControl, then AddressBook, then subsequent Host folders in repository order.
 
-## TMAR Host Evacuation — Current Live State (AccessControl)
+## TMAR Host Evacuation — Current Live State (AddressBook)
 
-Latest accepted task: `TB-TMAR-HOST-ACCESSCONTROL-USER-SEARCH-EFFECTIVE-SEAM-001`
-Latest accepted commit / SoT stamp: `4a6074e62fbaf557f57aa2770d76b8d14164dc72`
-Current track: `HOST_FIRST_FOLDER_BY_FOLDER` — active Host folder = `AccessControl`
-Latest accepted parent: `TB-TMAR-HOST-ACCESSCONTROL-ADMINPLATFORM-ASSIGNMENTS-EFFECTIVE-001` at `99d59d894a4464b57d1f53a6df9800843a76a592`
+AccessControl Host evacuation is CLOSED and AccessControl is fully certified. The authoritative current state is:
+
+- Latest accepted task: `TB-TMAR-ACCESSCONTROL-FINAL-CERTIFICATION-AND-SOT-CLOSURE-001` (commit / SoT stamp `53365a7ec09f7d3123889cca008354857e16c56b`)
+- AccessControl: Host ZERO, `COMPLETE_REFERENCE_PATTERN`, ARCH-COMPLETE-002 `STRUCTURE_CERTIFIED`
+- 19 endpoint-reachable requests; 6 validator-required / 6 present / 13 no-validator-required
+- Contracts-only boundaries; `structureLock.certifiedModules = Order, Cart, StoreContext, Offer, Payment, Settlement, Fulfillment, AccessControl`
+- Current track: `HOST_FIRST_FOLDER_BY_FOLDER` — active Host folder = `AddressBook`
+- Next Host folder: `AddressBook`; next task: `TB-TMAR-HOST-ADDRESSBOOK-INVENTORY-001`
+- Frontend FROZEN; Checkout `PAUSED_AT_SAFE_W5_CHECKPOINT`
+
+Everything below this heading is HISTORICAL AccessControl evacuation history and is no longer live state.
 
 ### Accepted AccessControl migration summary (module-owned)
 
@@ -710,38 +717,40 @@ Latest accepted parent: `TB-TMAR-HOST-ACCESSCONTROL-ADMINPLATFORM-ASSIGNMENTS-EF
 - `Tooba.OperatorProfile.Contracts/IActorDisplayLookup` (batch display projection).
 - `AccessControl.Application` references Identity.Contracts + OperatorProfile.Contracts only — ZERO `Identity.Application`/`Identity.Domain`/`OperatorProfile.Application`/`OperatorProfile.Domain`; Host `AccessControlEndpoints.cs` no longer imports the foreign Application/Domain namespaces.
 
-### Current residual Host AccessControl routes/files
+### Residual Host AccessControl routes/files (HISTORICAL — RESOLVED)
 
-`src/backend/Host/Tooba.Host/AccessControl/AccessControlEndpoints.cs` still owns:
+RESOLVED by `TB-TMAR-ACCESSCONTROL-FINAL-CERTIFICATION-AND-SOT-CLOSURE-001`: the Host AccessControl folder is now absent and Host AccessControl residue is ZERO. The following lines record the historical pre-closure state only.
+
+`src/backend/Host/Tooba.Host/AccessControl/AccessControlEndpoints.cs` formerly owned:
 
 - Admin scope-resources: categories, brands, products, warehouses (deferred), stores (deferred), order-segments (deferred).
 - Seller scope-resources: categories, brands, products, warehouses (deferred), stores (deferred), order-segments (deferred).
 - Admin demo-preview.
 - Residual shared helpers only as actually still used (`RequireSellerAsync`, `Trace`, `MapError`).
 
-Separate Host folder files still present:
+Historical Host folder files (all removed at closure):
 
 - `AccessControlEndpoints.cs`
 - `AccessControlDevelopmentSeed.cs`
 - `AccessControlDemoSnapshot.cs`
 
-`Program.cs` still has legacy AccessControl Host mapping/bootstrap residue until final cleanup.
+`Program.cs` legacy AccessControl Host mapping/bootstrap residue has been removed; only `app.MapAccessControlModuleEndpoints()` remains.
 
-### Known test debt (not a production regression)
+### Known test debt (HISTORICAL — RESOLVED)
 
-`Tooba.Host.Tests/AccessControlFoundationTests.AccessControl_module_boundary_static_checks` is stale: it still expects old Host route/group text (`/v1/admin/sellers/{sellerId:guid}/access-control`, `/me/capabilities`). Those routes were correctly evacuated in previously accepted tasks and the assertion would already have failed at accepted parent `99d59d89`. Record as TEST-MAINTENANCE DEBT; repair only if explicitly scoped and tiny, otherwise a separate focused test-maintenance task.
+`Tooba.Host.Tests/AccessControlFoundationTests.AccessControl_module_boundary_static_checks` was stale (it expected old Host route/group text). It is repaired and green; the closure task also repaired the `TmarDurableGuardTests` `lastAcceptedTask`/`lastAcceptedCommit` SoT drift.
 
-### Next implementation task
+### Next implementation task (HISTORICAL — SUPERSEDED)
 
-`TB-TMAR-HOST-ACCESSCONTROL-SCOPE-RESOURCES-001` — evacuate Admin + Seller scope-resources family from Host with a proper Catalog Contracts/shared-neutral seam rather than moving `ICatalogLookupGateway` from Catalog.Application into AccessControl. The stale foundation-test assertion may be repaired in that task only if explicitly scoped and tiny.
+The former `TB-TMAR-HOST-ACCESSCONTROL-SCOPE-RESOURCES-001` scope was completed through the accepted `TB-TMAR-HOST-ACCESSCONTROL-SCOPE-RESOURCES-001` line of work ending with AccessControl closure. The current next task is `TB-TMAR-HOST-ADDRESSBOOK-INVENTORY-001`.
 
-### AccessControl honest state
+### AccessControl honest state (HISTORICAL — SUPERSEDED)
 
-AccessControl remains `IN_PROGRESS`; NOT `COMPLETE_REFERENCE_PATTERN`; NOT ARCH-COMPLETE-002 STRUCTURE_CERTIFIED; Host residue is NON-ZERO. It is NOT added to the certified-module list.
+AccessControl is `COMPLETE_REFERENCE_PATTERN` and ARCH-COMPLETE-002 `STRUCTURE_CERTIFIED`; Host residue is ZERO. It IS in the certified-module list.
 
 ### Global locks preserved
 
 - Mode: `BACKEND_ONLY_UNTIL_EXPLICIT_RELEASE`; frontend `FROZEN`.
 - Checkout: `PAUSED_AT_SAFE_W5_CHECKPOINT`.
-- Structure-certified modules remain: Order, Cart, StoreContext, Offer, Payment, Settlement, Fulfillment.
+- Structure-certified modules: Order, Cart, StoreContext, Offer, Payment, Settlement, Fulfillment, AccessControl.
 

@@ -248,8 +248,8 @@ public sealed class TmarDurableGuardTests
             cartEntry.GetProperty("lastAcceptedTask").GetString(),
             StringComparison.Ordinal);
         Assert.False(string.IsNullOrWhiteSpace(cartEntry.GetProperty("lastAcceptedCommit").GetString()));
-        Assert.Equal("TB-TMAR-ACCESSCONTROL-PRECERT-VALIDATORS-001", rootEl.GetProperty("lastAcceptedTask").GetString());
-        Assert.Equal("34476274bcb116e28de7ae96977e819d4f6d09eb", rootEl.GetProperty("lastAcceptedCommit").GetString());
+        Assert.Equal("TB-TMAR-ACCESSCONTROL-FINAL-CERTIFICATION-AND-SOT-CLOSURE-001", rootEl.GetProperty("lastAcceptedTask").GetString());
+        Assert.Equal("53365a7ec09f7d3123889cca008354857e16c56b", rootEl.GetProperty("lastAcceptedCommit").GetString());
 
         var paymentHostResidue = rootEl.GetProperty("paymentHostResidueRepair");
         Assert.Equal("TB-TMAR-PAYMENT-HOST-RESIDUE-REPAIR-001", paymentHostResidue.GetProperty("task").GetString());
