@@ -16,6 +16,8 @@ public static class AccessControlEndpointModule
         ArgumentNullException.ThrowIfNull(app);
         var admin = app.MapGroup("/v1/admin/access-control");
         AccessControlAdminEndpoints.Map(admin);
+        var adminSeller = app.MapGroup("/v1/admin/sellers/{sellerId:guid}/access-control");
+        AccessControlAdminSellerEndpoints.Map(adminSeller);
         var seller = app.MapGroup("/v1/seller/access-control");
         AccessControlSellerEndpoints.Map(seller);
         return app;

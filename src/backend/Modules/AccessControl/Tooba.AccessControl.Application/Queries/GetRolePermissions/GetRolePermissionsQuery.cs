@@ -4,12 +4,16 @@ using Tooba.AccessControl.Domain;
 namespace Tooba.AccessControl.Application.Queries.GetRolePermissions;
 
 /// <summary>
-/// پرس‌وجوی مجوزهای یک نقش در محدودهٔ پلتفرم.
+/// پرس‌وجوی مجوزهای یک نقش در محدودهٔ مالک مشخص.
 /// </summary>
 /// <param name="RoleId">شناسهٔ نقش.</param>
+/// <param name="OwnerScopeKind">گونهٔ محدودهٔ مالک.</param>
+/// <param name="OwnerScopeId">شناسهٔ مالک در محدودهٔ Seller.</param>
 /// <param name="TenantId">شناسهٔ Tenant جاری در صورت وجود.</param>
 public sealed record GetRolePermissionsQuery(
     Guid RoleId,
+    AccessOwnerScopeKind OwnerScopeKind,
+    Guid? OwnerScopeId,
     string? TenantId) : IRequest<IReadOnlyList<RolePermissionGrant>>;
 
 /// <summary>Handler پرس‌وجوی مجوزهای نقش.</summary>
@@ -26,7 +30,7 @@ public sealed class GetRolePermissionsQueryHandler
     public Task<IReadOnlyList<RolePermissionGrant>> Handle(
         GetRolePermissionsQuery request, CancellationToken cancellationToken)
     {
-        var owner = new AccessOwnerScope(AccessOwnerScopeKind.Platform, null, request.TenantId);
+        var owner = new AccessOwnerScope(request.OwnerScopeKind, request.OwnerScopeId, request.TenantId);
         return _directory.GetRolePermissionsAsync(request.RoleId, owner, cancellationToken);
     }
 }

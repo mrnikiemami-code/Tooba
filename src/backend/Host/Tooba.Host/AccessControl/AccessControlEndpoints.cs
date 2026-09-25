@@ -36,13 +36,6 @@ public static class AccessControlEndpoints
         var adminSeller = app.MapGroup("/v1/admin/sellers/{sellerId:guid}/access-control");
         adminSeller.MapGet("/ceiling", AdminGetCeilingAsync);
         adminSeller.MapPut("/ceiling", AdminSetCeilingAsync);
-        adminSeller.MapGet("/roles", AdminSellerListRolesAsync);
-        adminSeller.MapPost("/roles", AdminSellerCreateRoleAsync);
-        adminSeller.MapPut("/roles/{roleId:guid}", AdminSellerUpdateRoleAsync);
-        adminSeller.MapPost("/roles/{roleId:guid}/clone", AdminSellerCloneRoleAsync);
-        adminSeller.MapDelete("/roles/{roleId:guid}", AdminSellerArchiveRoleAsync);
-        adminSeller.MapGet("/roles/{roleId:guid}/permissions", AdminSellerGetPermsAsync);
-        adminSeller.MapPut("/roles/{roleId:guid}/permissions", AdminSellerSetPermsAsync);
         adminSeller.MapGet("/assignments", AdminSellerListAssignmentsAsync);
         adminSeller.MapPost("/assignments", AdminSellerAssignAsync);
         adminSeller.MapDelete("/assignments/{assignmentId:guid}", AdminSellerRemoveAssignmentAsync);
@@ -199,116 +192,6 @@ public static class AccessControlEndpoints
                 actor,
                 Trace(request),
                 ct);
-            return Results.NoContent();
-        }
-        catch (Exception ex) when (ex is AccessControlException)
-        {
-            return MapError(ex);
-        }
-    }
-
-    private static async Task<IResult> AdminSellerListRolesAsync(
-        Guid sellerId, HttpRequest request, CurrentAuthenticatedSession session, ICurrentTenant tenant, IAuthorizationGuard guard,
-        IAuthorizationService authz, IHostEnvironment env, IAccessControlDirectory directory, CancellationToken ct)
-    {
-        var actor = await AdminPanelAccess.RequireAuthorizedAsync(request, session, tenant, guard, env, ct);
-        await AccessControlCapabilityGate.EnsureAsync(actor, "accesscontrol.view", authz, tenant, ct);
-        return Results.Json(await directory.ListRolesAsync(SellerScope(sellerId, tenant), false, ct));
-    }
-
-    private static async Task<IResult> AdminSellerCreateRoleAsync(
-        Guid sellerId, CreateAccessRoleCommand body, HttpRequest request, CurrentAuthenticatedSession session, ICurrentTenant tenant,
-        IAuthorizationGuard guard, IAuthorizationService authz, IHostEnvironment env, IAccessControlDirectory directory, CancellationToken ct)
-    {
-        try
-        {
-            var actor = await AdminPanelAccess.RequireAuthorizedAsync(request, session, tenant, guard, env, ct);
-            await AccessControlCapabilityGate.EnsureAsync(actor, "accesscontrol.manage", authz, tenant, ct);
-            return Results.Json(await directory.CreateRoleAsync(SellerScope(sellerId, tenant), body, actor, Trace(request), ct));
-        }
-        catch (Exception ex) when (ex is AccessControlException)
-        {
-            return MapError(ex);
-        }
-    }
-
-    private static async Task<IResult> AdminSellerUpdateRoleAsync(
-        Guid sellerId, Guid roleId, UpdateAccessRoleCommand body, HttpRequest request, CurrentAuthenticatedSession session,
-        ICurrentTenant tenant, IAuthorizationGuard guard, IAuthorizationService authz, IHostEnvironment env,
-        IAccessControlDirectory directory, CancellationToken ct)
-    {
-        try
-        {
-            var actor = await AdminPanelAccess.RequireAuthorizedAsync(request, session, tenant, guard, env, ct);
-            await AccessControlCapabilityGate.EnsureAsync(actor, "accesscontrol.manage", authz, tenant, ct);
-            return Results.Json(await directory.UpdateRoleAsync(roleId, SellerScope(sellerId, tenant), body, actor, Trace(request), ct));
-        }
-        catch (Exception ex) when (ex is AccessControlException)
-        {
-            return MapError(ex);
-        }
-    }
-
-    private static async Task<IResult> AdminSellerCloneRoleAsync(
-        Guid sellerId, Guid roleId, CloneAccessRoleCommand body, HttpRequest request, CurrentAuthenticatedSession session,
-        ICurrentTenant tenant, IAuthorizationGuard guard, IAuthorizationService authz, IHostEnvironment env,
-        IAccessControlDirectory directory, CancellationToken ct)
-    {
-        try
-        {
-            var actor = await AdminPanelAccess.RequireAuthorizedAsync(request, session, tenant, guard, env, ct);
-            await AccessControlCapabilityGate.EnsureAsync(actor, "accesscontrol.manage", authz, tenant, ct);
-            return Results.Json(await directory.CloneRoleAsync(roleId, SellerScope(sellerId, tenant), body, actor, Trace(request), ct));
-        }
-        catch (Exception ex) when (ex is AccessControlException)
-        {
-            return MapError(ex);
-        }
-    }
-
-    private static async Task<IResult> AdminSellerArchiveRoleAsync(
-        Guid sellerId, Guid roleId, HttpRequest request, CurrentAuthenticatedSession session, ICurrentTenant tenant,
-        IAuthorizationGuard guard, IAuthorizationService authz, IHostEnvironment env, IAccessControlDirectory directory, CancellationToken ct)
-    {
-        try
-        {
-            var actor = await AdminPanelAccess.RequireAuthorizedAsync(request, session, tenant, guard, env, ct);
-            await AccessControlCapabilityGate.EnsureAsync(actor, "accesscontrol.manage", authz, tenant, ct);
-            await directory.ArchiveRoleAsync(roleId, SellerScope(sellerId, tenant), actor, Trace(request), ct);
-            return Results.NoContent();
-        }
-        catch (Exception ex) when (ex is AccessControlException)
-        {
-            return MapError(ex);
-        }
-    }
-
-    private static async Task<IResult> AdminSellerGetPermsAsync(
-        Guid sellerId, Guid roleId, HttpRequest request, CurrentAuthenticatedSession session, ICurrentTenant tenant,
-        IAuthorizationGuard guard, IAuthorizationService authz, IHostEnvironment env, IAccessControlDirectory directory, CancellationToken ct)
-    {
-        try
-        {
-            var actor = await AdminPanelAccess.RequireAuthorizedAsync(request, session, tenant, guard, env, ct);
-            await AccessControlCapabilityGate.EnsureAsync(actor, "accesscontrol.view", authz, tenant, ct);
-            return Results.Json(await directory.GetRolePermissionsAsync(roleId, SellerScope(sellerId, tenant), ct));
-        }
-        catch (Exception ex) when (ex is AccessControlException)
-        {
-            return MapError(ex);
-        }
-    }
-
-    private static async Task<IResult> AdminSellerSetPermsAsync(
-        Guid sellerId, Guid roleId, List<RolePermissionGrant> body, HttpRequest request, CurrentAuthenticatedSession session,
-        ICurrentTenant tenant, IAuthorizationGuard guard, IAuthorizationService authz, IHostEnvironment env,
-        IAccessControlDirectory directory, CancellationToken ct)
-    {
-        try
-        {
-            var actor = await AdminPanelAccess.RequireAuthorizedAsync(request, session, tenant, guard, env, ct);
-            await AccessControlCapabilityGate.EnsureAsync(actor, "accesscontrol.manage", authz, tenant, ct);
-            await directory.SetRolePermissionsAsync(roleId, SellerScope(sellerId, tenant), body, actor, Trace(request), ct);
             return Results.NoContent();
         }
         catch (Exception ex) when (ex is AccessControlException)
