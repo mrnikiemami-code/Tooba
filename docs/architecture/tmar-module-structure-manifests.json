@@ -322,10 +322,84 @@
           "forbiddenTopLevelFolders": []
         }
       ]
+    },
+    {
+      "module": "Fulfillment",
+      "structureCertified": true,
+      "lockVersion": "ARCH-COMPLETE-002",
+      "projects": [
+        {
+          "projectName": "Tooba.Fulfillment.Domain",
+          "rootAllowlist": [],
+          "forbiddenRootFiles": [
+            "FulfillmentAggregate.cs",
+            "ShipmentAggregate.cs",
+            "ConsolidatedPackage.cs"
+          ],
+          "forbiddenTopLevelFolders": []
+        },
+        {
+          "projectName": "Tooba.Fulfillment.Contracts",
+          "rootAllowlist": [],
+          "forbiddenRootFiles": [
+            "FulfillmentContracts.cs",
+            "ShippingCatalogContracts.cs",
+            "FulfillmentErrorCodes.cs"
+          ],
+          "forbiddenTopLevelFolders": []
+        },
+        {
+          "projectName": "Tooba.Fulfillment.Application",
+          "rootAllowlist": [],
+          "rootAllowlistJustification": "Fulfillment.Application intentionally has no root .cs file: the capability folders Commands/Queries/Errors/Models/Ports/Validators plus the Shipping capability folder carry every type, and namespace alignment is exact path-derived equality.",
+          "forbiddenRootFiles": [
+            "FulfillmentContracts.cs",
+            "FulfillmentCommands.cs",
+            "FulfillmentQueries.cs",
+            "FulfillmentHandlers.cs",
+            "FulfillmentQueries.cs",
+            "FulfillmentErrorCodes.cs",
+            "FulfillmentModels.cs",
+            "SellerMutateFulfillmentCommand.cs",
+            "QueryAdminFulfillmentWorkQueueQuery.cs"
+          ],
+          "forbiddenTopLevelFolders": []
+        },
+        {
+          "projectName": "Tooba.Fulfillment.Endpoints",
+          "rootAllowlist": [
+            "FulfillmentEndpointModule.cs"
+          ],
+          "forbiddenRootFiles": [
+            "FulfillmentSellerEndpoints.cs",
+            "FulfillmentAdminEndpoints.cs",
+            "FulfillmentCustomerEndpoints.cs",
+            "ShippingServiceEndpoints.cs",
+            "ShippingMethodsEndpoints.cs",
+            "IFulfillmentSellerAuthorizer.cs",
+            "IFulfillmentAdminAuthorizer.cs",
+            "IFulfillmentCustomerAuthorizer.cs"
+          ],
+          "forbiddenTopLevelFolders": []
+        },
+        {
+          "projectName": "Tooba.Fulfillment.Infrastructure",
+          "rootAllowlist": [],
+          "rootAllowlistJustification": "Fulfillment.Infrastructure intentionally has no root .cs file: Adapters/Bridges/DependencyInjection/Directories/Errors/Gateways/Handlers/Messaging/Observability/Persistence/Queries/Shipping carry every type, and namespace alignment is exact path-derived equality.",
+          "forbiddenRootFiles": [
+            "FulfillmentModule.cs",
+            "FulfillmentDbContext.cs",
+            "FulfillmentDirectory.cs",
+            "FulfillmentOutboxRegistration.cs",
+            "AdminFulfillmentWorkQueueQueryEngine.cs",
+            "FulfillmentErrorCatalogContributor.cs"
+          ],
+          "forbiddenTopLevelFolders": []
+        }
+      ]
     }
   ],
   "uncertifiedHttpOwningModules": [
-    "Fulfillment",
     "Returns",
     "Notification",
     "Support",

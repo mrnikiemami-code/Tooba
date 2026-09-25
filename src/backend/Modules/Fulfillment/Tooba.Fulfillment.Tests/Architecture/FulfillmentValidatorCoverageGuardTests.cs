@@ -199,7 +199,7 @@ public sealed class FulfillmentValidatorCoverageGuardTests
     }
 
     [Fact]
-    public void Dead_host_alias_residue_is_absent_and_fulfillment_remains_uncertified()
+    public void Dead_host_alias_residue_is_absent_and_fulfillment_is_structure_certified()
     {
         var hostAlias = Path.Combine(
             RepoRoot(), "src", "backend", "Host", "Tooba.Host", "FulfillmentReturnsGridAliases.cs");
@@ -210,14 +210,14 @@ public sealed class FulfillmentValidatorCoverageGuardTests
         using var stateDoc = System.Text.Json.JsonDocument.Parse(state);
         var certified = stateDoc.RootElement.GetProperty("structureLock").GetProperty("certifiedModules")
             .EnumerateArray().Select(x => x.GetString()!).ToArray();
-        Assert.DoesNotContain("Fulfillment", certified);
+        Assert.Contains("Fulfillment", certified);
 
         var manifests = File.ReadAllText(Path.Combine(
             RepoRoot(), "docs", "architecture", "tmar-module-structure-manifests.json"));
         var at = manifests.IndexOf("\"uncertifiedHttpOwningModules\"", StringComparison.Ordinal);
         Assert.True(at >= 0, "uncertifiedHttpOwningModules missing");
         var window = manifests[at..Math.Min(manifests.Length, at + 3000)];
-        Assert.Contains("Fulfillment", window, StringComparison.Ordinal);
+        Assert.DoesNotContain("Fulfillment", window, StringComparison.Ordinal);
     }
 
     private static string[] EndpointRequestConstructions() =>

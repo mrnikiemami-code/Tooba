@@ -306,15 +306,18 @@ public sealed class FulfillmentArchitectureGuardTests
         }
     }
 
+    // TB-TMAR-FULFILLMENT-ARCH-COMPLETE-002-STRUCTURE-001: exact path-derived namespace equality.
+    // The previous loose StartsWith(prefix) acceptance is replaced so a capability file cannot be
+    // flattened into root or re-declared under a wrong namespace silently.
     private static void AssertNamespacesAlign(string projectFolder, string nsPrefix)
     {
         var violations = new List<string>();
         foreach (var (path, text) in Sources(projectFolder))
         {
             var ns = Regex.Match(text, @"^namespace\s+([\w.]+)", RegexOptions.Multiline).Groups[1].Value;
-            if (string.IsNullOrEmpty(ns) || !ns.StartsWith(nsPrefix, StringComparison.Ordinal))
+            if (string.IsNullOrEmpty(ns))
             {
-                violations.Add($"{path}: ns={ns}");
+                violations.Add($"{path}: ns=<none>");
                 continue;
             }
 
@@ -323,15 +326,96 @@ public sealed class FulfillmentArchitectureGuardTests
             var idx = rel.IndexOf(marker, StringComparison.Ordinal);
             if (idx < 0) continue;
             var under = rel[(idx + marker.Length)..];
-            var folder = under.Split('/')[0];
-            if (folder.EndsWith(".cs", StringComparison.Ordinal)) continue;
-            var expected = nsPrefix + "." + folder;
-            if (!ns.StartsWith(expected, StringComparison.Ordinal))
-                violations.Add($"{path}: ns={ns} expectedPrefix={expected}");
+            var dir = under.Contains('/') ? under[..under.LastIndexOf('/')] : string.Empty;
+            var expected = string.IsNullOrEmpty(dir)
+                ? nsPrefix
+                : nsPrefix + "." + dir.Replace("/", ".");
+            if (!string.Equals(ns, expected, StringComparison.Ordinal))
+                violations.Add($"{path}: ns={ns} expected={expected}");
         }
 
         Assert.True(violations.Count == 0, string.Join("\n", violations));
     }
+
+    [Fact]
+    public void Fulfillment_root_allowlists_and_forbidden_flattened_files_are_enforced()
+    {
+        Assert.Equal([], RootCs("Tooba.Fulfillment.Application"));
+        Assert.Equal([], RootCs("Tooba.Fulfillment.Domain"));
+        Assert.Equal([], RootCs("Tooba.Fulfillment.Contracts"));
+        Assert.Equal([], RootCs("Tooba.Fulfillment.Infrastructure"));
+        Assert.Equal(["FulfillmentEndpointModule.cs"], RootCs("Tooba.Fulfillment.Endpoints"));
+
+        foreach (var flattened in new[]
+        {
+            "FulfillmentContracts.cs", "FulfillmentHandlers.cs", "FulfillmentRequests.cs",
+            "FulfillmentQueries.cs", "FulfillmentQueryHandlers.cs", "FulfillmentCommands.cs",
+            "FulfillmentErrorCodes.cs", "FulfillmentModels.cs",
+        })
+        {
+            Assert.False(File.Exists(Path.Combine(ModuleRoot(), "Tooba.Fulfillment.Application", flattened)),
+                $"flattened Application root file {flattened}");
+        }
+
+        foreach (var flattened in new[]
+        {
+            "FulfillmentSellerEndpoints.cs", "FulfillmentAdminEndpoints.cs", "FulfillmentCustomerEndpoints.cs",
+            "ShippingServiceEndpoints.cs", "ShippingMethodsEndpoints.cs",
+            "IFulfillmentSellerAuthorizer.cs", "IFulfillmentAdminAuthorizer.cs", "IFulfillmentCustomerAuthorizer.cs",
+        })
+        {
+            Assert.False(File.Exists(Path.Combine(ModuleRoot(), "Tooba.Fulfillment.Endpoints", flattened)),
+                $"flattened Endpoints root file {flattened}");
+        }
+
+        foreach (var flattened in new[]
+        {
+            "FulfillmentModule.cs", "FulfillmentDbContext.cs", "FulfillmentDirectory.cs",
+            "FulfillmentOutboxRegistration.cs", "AdminFulfillmentWorkQueueQueryEngine.cs",
+            "FulfillmentErrorCatalogContributor.cs",
+        })
+        {
+            Assert.False(File.Exists(Path.Combine(ModuleRoot(), "Tooba.Fulfillment.Infrastructure", flattened)),
+                $"flattened Infrastructure root file {flattened}");
+        }
+    }
+
+    [Fact]
+    public void Fulfillment_rejects_namespace_alias_workarounds_and_type_forwarding()
+    {
+        Assert.DoesNotContain(AllProductionSources(), x => x.Text.Contains("TypeForwardedTo", StringComparison.Ordinal));
+
+        // Self-module short aliases (e.g. `using AppModels = Tooba.Fulfillment.Application.Models;`) are
+        // legitimate import ergonomics and are not a namespace workaround. Only foreign-module
+        // Application/Infrastructure/Domain aliases are rejected.
+        var foreignAliases = AllProductionSources()
+            .SelectMany(x => Regex.Matches(
+                    x.Text, @"^\s*using\s+[A-Za-z0-9_]+\s*=\s*Tooba\.(?!Fulfillment\.)[A-Za-z0-9_.]+(Application|Infrastructure|Domain)",
+                    RegexOptions.Multiline)
+                .Select(m => $"{x.Path}: {m.Value.Trim()}"))
+            .ToList();
+        Assert.True(foreignAliases.Count == 0, "foreign-module alias workaround: " + string.Join("; ", foreignAliases));
+
+        foreach (var project in new[]
+        {
+            "Tooba.Fulfillment.Application", "Tooba.Fulfillment.Contracts",
+            "Tooba.Fulfillment.Domain", "Tooba.Fulfillment.Endpoints", "Tooba.Fulfillment.Infrastructure",
+        })
+        {
+            var root = Path.Combine(ModuleRoot(), project);
+            foreach (var file in Directory.EnumerateFiles(root, "*.cs", SearchOption.TopDirectoryOnly))
+            {
+                Assert.DoesNotContain("GlobalUsings", Path.GetFileName(file), StringComparison.Ordinal);
+            }
+        }
+    }
+
+    private static string[] RootCs(string project) =>
+        Directory.EnumerateFiles(Path.Combine(ModuleRoot(), project), "*.cs", SearchOption.TopDirectoryOnly)
+            .Select(path => Path.GetFileName(path)!)
+            .OrderBy(x => x, StringComparer.Ordinal)
+            .ToArray();
+
 
     private static IEnumerable<(string Path, string Text)> AllProductionSources() =>
         Sources("Tooba.Fulfillment.Domain")
