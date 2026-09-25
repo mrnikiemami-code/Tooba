@@ -8,9 +8,11 @@ using Tooba.AccessControl.Application.Commands.ArchiveRole;
 using Tooba.AccessControl.Application.Commands.CloneRole;
 using Tooba.AccessControl.Application.Commands.CreateRole;
 using Tooba.AccessControl.Application.Commands.EnsureBootstrap;
+using Tooba.AccessControl.Application.Commands.SetRolePermissions;
 using Tooba.AccessControl.Application.Commands.UpdateRole;
 using Tooba.AccessControl.Application.Queries.GetEffectiveAccess;
 using Tooba.AccessControl.Application.Queries.GetRole;
+using Tooba.AccessControl.Application.Queries.GetRolePermissions;
 using Tooba.AccessControl.Application.Queries.ListPermissionCatalog;
 using Tooba.AccessControl.Application.Queries.ListRoles;
 using Tooba.AccessControl.Domain;
@@ -36,6 +38,8 @@ public static class AccessControlAdminEndpoints
         group.MapPut("/roles/{roleId:guid}", UpdateRoleAsync);
         group.MapPost("/roles/{roleId:guid}/clone", CloneRoleAsync);
         group.MapDelete("/roles/{roleId:guid}", ArchiveRoleAsync);
+        group.MapGet("/roles/{roleId:guid}/permissions", GetRolePermissionsAsync);
+        group.MapPut("/roles/{roleId:guid}/permissions", SetRolePermissionsAsync);
     }
 
     private static async Task<IResult> BootstrapAsync(
@@ -240,6 +244,61 @@ public static class AccessControlAdminEndpoints
                     roleId,
                     actor,
                     tenant.Current?.TenantId.Value,
+                    Trace(request)),
+                cancellationToken);
+            return Results.NoContent();
+        }
+        catch (AccessControlException ace)
+        {
+            return MapAccessError(ace);
+        }
+    }
+
+    private static async Task<IResult> GetRolePermissionsAsync(
+        Guid roleId,
+        HttpRequest request,
+        ISender sender,
+        IAdminPanelAccess adminPanelAccess,
+        IAuthorizationService authz,
+        ICurrentTenant tenant,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            var actor = await adminPanelAccess.RequireAuthorizedAsync(request, cancellationToken);
+            await AccessControlCapabilityGate.EnsureAsync(actor, "accesscontrol.view", authz, tenant, cancellationToken);
+            return Results.Json(await sender.Send(
+                new GetRolePermissionsQuery(
+                    roleId,
+                    tenant.Current?.TenantId.Value),
+                cancellationToken));
+        }
+        catch (AccessControlException ace)
+        {
+            return MapAccessError(ace);
+        }
+    }
+
+    private static async Task<IResult> SetRolePermissionsAsync(
+        Guid roleId,
+        List<RolePermissionGrant> body,
+        HttpRequest request,
+        ISender sender,
+        IAdminPanelAccess adminPanelAccess,
+        IAuthorizationService authz,
+        ICurrentTenant tenant,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            var actor = await adminPanelAccess.RequireAuthorizedAsync(request, cancellationToken);
+            await AccessControlCapabilityGate.EnsureAsync(actor, "accesscontrol.manage", authz, tenant, cancellationToken);
+            await sender.Send(
+                new SetRolePermissionsCommand(
+                    roleId,
+                    actor,
+                    tenant.Current?.TenantId.Value,
+                    body,
                     Trace(request)),
                 cancellationToken);
             return Results.NoContent();

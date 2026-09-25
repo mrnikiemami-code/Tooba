@@ -20,8 +20,6 @@ public static class AccessControlEndpoints
     public static void MapAccessControlEndpoints(this WebApplication app)
     {
         var admin = app.MapGroup("/v1/admin/access-control");
-        admin.MapGet("/roles/{roleId:guid}/permissions", AdminGetRolePermissionsAsync);
-        admin.MapPut("/roles/{roleId:guid}/permissions", AdminSetRolePermissionsAsync);
         admin.MapGet("/assignments", AdminListAssignmentsAsync);
         admin.MapPost("/assignments", AdminAssignAsync);
         admin.MapDelete("/assignments/{assignmentId:guid}", AdminRemoveAssignmentAsync);
@@ -88,39 +86,6 @@ public static class AccessControlEndpoints
             : Results.Json(new { title = "access.error", code = "access.error" }, statusCode: 500);
 
     #region Admin platform
-
-    private static async Task<IResult> AdminGetRolePermissionsAsync(
-        Guid roleId, HttpRequest request, CurrentAuthenticatedSession session, ICurrentTenant tenant, IAuthorizationGuard guard,
-        IAuthorizationService authz, IHostEnvironment env, IAccessControlDirectory directory, CancellationToken ct)
-    {
-        try
-        {
-            var actor = await AdminPanelAccess.RequireAuthorizedAsync(request, session, tenant, guard, env, ct);
-            await AccessControlCapabilityGate.EnsureAsync(actor, "accesscontrol.view", authz, tenant, ct);
-            return Results.Json(await directory.GetRolePermissionsAsync(roleId, PlatformScope(tenant), ct));
-        }
-        catch (Exception ex) when (ex is AccessControlException)
-        {
-            return MapError(ex);
-        }
-    }
-
-    private static async Task<IResult> AdminSetRolePermissionsAsync(
-        Guid roleId, List<RolePermissionGrant> body, HttpRequest request, CurrentAuthenticatedSession session, ICurrentTenant tenant,
-        IAuthorizationGuard guard, IAuthorizationService authz, IHostEnvironment env, IAccessControlDirectory directory, CancellationToken ct)
-    {
-        try
-        {
-            var actor = await AdminPanelAccess.RequireAuthorizedAsync(request, session, tenant, guard, env, ct);
-            await AccessControlCapabilityGate.EnsureAsync(actor, "accesscontrol.manage", authz, tenant, ct);
-            await directory.SetRolePermissionsAsync(roleId, PlatformScope(tenant), body, actor, Trace(request), ct);
-            return Results.NoContent();
-        }
-        catch (Exception ex) when (ex is AccessControlException)
-        {
-            return MapError(ex);
-        }
-    }
 
     private static async Task<IResult> AdminListAssignmentsAsync(
         HttpRequest request, CurrentAuthenticatedSession session, ICurrentTenant tenant, IAuthorizationGuard guard,
