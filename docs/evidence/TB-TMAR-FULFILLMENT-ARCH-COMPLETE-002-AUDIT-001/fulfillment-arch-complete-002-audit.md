@@ -1,5 +1,16 @@
 # TB-TMAR-FULFILLMENT-ARCH-COMPLETE-002-AUDIT-001 — Fulfillment ARCH-COMPLETE-002 readiness audit
 
+> **R1 classification repair (TB-TMAR-FULFILLMENT-ARCH-COMPLETE-002-AUDIT-001-R1):** the validator
+> classification below was corrected before Architect acceptance. `ListCustomerCheckoutFulfillmentsQuery`
+> is `VALIDATOR_REQUIRED` because `CheckoutId` is untrusted route input — a customer authorizer verifying
+> whether the actor may view that checkout does **not** turn the route value into an authorization-derived
+> identity. Its future transport rule is only `CheckoutId != Guid.Empty`. The two `Language`-taking shipping
+> queries were re-labelled from `NO_INPUT` to `NO_VALIDATOR_REQUIRED_OPTIONAL_PRESENTATION_LOCALE`.
+> Corrected totals: 15 endpoint-reachable / 10 `VALIDATOR_REQUIRED` / 0 present / 10 missing /
+> 5 `NO_VALIDATOR_REQUIRED` (2 `NO_INPUT` + 1 `AUTH_SCOPED_QUERY` + 2 `OPTIONAL_PRESENTATION_LOCALE`).
+> Repair scope is now `ADD_10_TRANSPORT_VALIDATORS_AND_REMOVE_DEAD_HOST_FULFILLMENT_RETURNS_GRID_ALIASES_THEN_STRUCTURE`.
+> No production code, validator, Host alias file and no guard was changed in either task.
+
 Audit-only. Zero Fulfillment / Host production code change. No guard strengthened. Fulfillment is **not** certified here.
 
 Parent: `TB-TMAR-SETTLEMENT-ARCH-COMPLETE-002-STRUCTURE-001` — ARCHITECT-ACCEPTED
@@ -49,15 +60,16 @@ Endpoint files audited: `Admin/FulfillmentAdminEndpoints.cs`, `Seller/Fulfillmen
 | `DeactivateShippingServiceCommand` | `VALIDATOR_REQUIRED` | untrusted route `serviceId` |
 | `GetAdminFulfillmentQuery` | `VALIDATOR_REQUIRED` | untrusted route `fulfillmentId` |
 | `GetSellerFulfillmentQuery` | `VALIDATOR_REQUIRED` | untrusted route `fulfillmentId` (SellerPartyId comes from the authorizer and is deliberately not a validator reason) |
-| `ListShippingServicesQuery` | `NO_VALIDATOR_REQUIRED_NO_INPUT` | only an optional presentation `Language`; no untrusted payload |
-| `ListEnabledShippingMethodsTreeQuery` | `NO_VALIDATOR_REQUIRED_NO_INPUT` | only an optional presentation `Language`; no untrusted payload |
+| `ListCustomerCheckoutFulfillmentsQuery` | `VALIDATOR_REQUIRED` | untrusted route `checkoutId` — the customer authorizer checks whether the actor may view that checkout, which does not convert the route value into an authorization-derived identity; only `CheckoutId != Guid.Empty` belongs in FluentValidation, never ownership/existence/business access |
+| `ListShippingServicesQuery` | `NO_VALIDATOR_REQUIRED_OPTIONAL_PRESENTATION_LOCALE` | takes the optional `Language` HTTP query parameter; no Fulfillment-owned transport-shape constraint, semantic locale resolution stays on the existing localization path |
+| `ListEnabledShippingMethodsTreeQuery` | `NO_VALIDATOR_REQUIRED_OPTIONAL_PRESENTATION_LOCALE` | takes the optional `Language` HTTP query parameter; same reason as above |
 | `ListAdminFulfillmentsQuery` | `NO_VALIDATOR_REQUIRED_NO_INPUT` | parameterless |
-| `ListSellerFulfillmentsQuery` | `NO_VALIDATOR_REQUIRED_AUTH_SCOPED_QUERY` | `SellerPartyId` comes only from `IFulfillmentSellerAuthorizer`; no untrusted payload |
-| `ListCustomerCheckoutFulfillmentsQuery` | `NO_VALIDATOR_REQUIRED_AUTH_SCOPED_QUERY` | `CheckoutId` route value is only meaningful after `IFulfillmentCustomerAuthorizer` scopes it to the actor; no untrusted body |
+| `ListSellerFulfillmentsQuery` | `NO_VALIDATOR_REQUIRED_AUTH_SCOPED_QUERY` | `SellerPartyId` is produced only by `IFulfillmentSellerAuthorizer`; no untrusted payload |
 | `EnsureShippingCatalogSeedCommand` | `NO_VALIDATOR_REQUIRED_NO_INPUT` | parameterless admin operation |
 
-Totals: `VALIDATOR_REQUIRED = 9`, `present = 0`, `missing = 9`, `NO_VALIDATOR_REQUIRED = 6`
-(4 `NO_VALIDATOR_REQUIRED_NO_INPUT` + 2 `NO_VALIDATOR_REQUIRED_AUTH_SCOPED_QUERY`).
+Totals: `VALIDATOR_REQUIRED = 10`, `present = 0`, `missing = 10`, `NO_VALIDATOR_REQUIRED = 5`
+(2 `NO_VALIDATOR_REQUIRED_NO_INPUT` + 1 `NO_VALIDATOR_REQUIRED_AUTH_SCOPED_QUERY` +
+2 `NO_VALIDATOR_REQUIRED_OPTIONAL_PRESENTATION_LOCALE`).
 
 Evidence of absence: no `Validators/` folder anywhere in the module, zero `FluentValidation` / `AbstractValidator`
 reference, zero `AddValidatorsFromAssembly` usage. Discovery would be the standard
@@ -86,7 +98,7 @@ Note: Fulfillment has **no** `GlobalUsings*.cs` at all (unlike Settlement/Paymen
 satisfied empty rather than by an allowlist.
 
 Structural gap vs ARCH-COMPLETE-002: `Application` has **no capability `Validators` folder**, and the audit found
-no ceremonial folder should be created until the 9 required validators are added (see §2).
+no ceremonial folder should be created until the 10 required validators are added (see §2).
 `Shipping` folders exist in Application/Infrastructure/Endpoints/Contracts and are capability folders for the
 shipping-catalog bounded slice; they are legitimate and must be part of the certification allowlist.
 
@@ -162,8 +174,8 @@ Missing vs ARCH-COMPLETE-002:
 4. alias-workaround / `TypeForwardedTo` / flattened-namespace shim rejection (Host alias file is currently
    whitelisted instead),
 5. exhaustive endpoint-reachable request inventory (15) as a checked manifest,
-6. validator coverage manifest (9 required / 6 no-validator-required) with DI resolution and
-   "no validator for the six" assertions,
+6. validator coverage manifest (10 required / 5 no-validator-required) with DI resolution and
+   "no validator for the five" assertions,
 7. MediatR `12.5.0` and ISender-only invariants,
 8. explicit Host residue manifest (exactly three thin adapters + named non-authority composition/dev files),
 9. cross-module boundary assertions for Party/Localization Contracts.
@@ -179,26 +191,29 @@ NEEDS_PRECERT_REPAIR_THEN_STRUCTURE
 Repair scope (exact, one bounded wave, to be authorized as a separate task):
 
 ```text
-ADD_EXACTLY_9_FULFILLMENT_TRANSPORT_VALIDATORS
+ADD_EXACTLY_10_FULFILLMENT_TRANSPORT_VALIDATORS
   SellerMutateFulfillmentCommand        -> Tooba.Fulfillment.Application/Validators/Seller
+  GetSellerFulfillmentQuery             -> Tooba.Fulfillment.Application/Validators/Seller
+  ListCustomerCheckoutFulfillmentsQuery -> Tooba.Fulfillment.Application/Validators/Customer  (CheckoutId != Guid.Empty ONLY)
   CreateShippingServiceCommand          -> Tooba.Fulfillment.Application/Validators/Shipping
-  UpdateShippingServiceCommand          -> .../Validators/Shipping
-  DeactivateShippingServiceCommand      -> .../Validators/Shipping
-  GetShippingServiceQuery               -> .../Validators/Shipping
-  EnsureShippingCatalogSeedCommand      -> (no validator; NO_VALIDATOR_REQUIRED_NO_INPUT)
-  ExecuteAdminFulfillmentBulkCommand    -> .../Validators/Admin
-  QueryAdminFulfillmentWorkQueueQuery   -> .../Validators/Admin   (primitive grid envelope only; no duplication of AdminFulfillmentGridQueryPolicy)
-  GetAdminFulfillmentQuery              -> .../Validators/Admin
-  (GetSellerFulfillmentQuery / ListSellerFulfillmentsQuery -> Seller folders as applicable)
+  UpdateShippingServiceCommand          -> Tooba.Fulfillment.Application/Validators/Shipping
+  DeactivateShippingServiceCommand      -> Tooba.Fulfillment.Application/Validators/Shipping
+  GetShippingServiceQuery               -> Tooba.Fulfillment.Application/Validators/Shipping
+  ExecuteAdminFulfillmentBulkCommand    -> Tooba.Fulfillment.Application/Validators/Admin
+  GetAdminFulfillmentQuery              -> Tooba.Fulfillment.Application/Validators/Admin
+  QueryAdminFulfillmentWorkQueueQuery   -> Tooba.Fulfillment.Application/Validators/Admin   (primitive grid envelope only; no duplication of AdminFulfillmentGridQueryPolicy)
 PRIMITIVE_TRANSPORT_SHAPE_ONLY
 NO_BUSINESS_DOMAIN_RULES_IN_VALIDATORS
 NEVER_VALIDATE_TRUSTED_AUTHORIZER_VALUES
-NO_CEREMONIAL_VALIDATORS_FOR_THE_6_NO_VALIDATOR_REQUIRED_REQUESTS
+NO_CEREMONIAL_VALIDATORS_FOR_THE_5_NO_VALIDATOR_REQUIRED_REQUESTS
 DISCOVERY_VIA_EXISTING_CQRS_FOUNDATION
+REMOVE_DEAD_HOST_FULFILLMENT_RETURNS_GRID_ALIASES
+  src/backend/Host/Tooba.Host/FulfillmentReturnsGridAliases.cs  (7 dead global using aliases, zero production consumer)
+  plus the focused Host guard/allowlist repair needed only for that deletion
 THEN
 TB-TMAR-FULFILLMENT-ARCH-COMPLETE-002-STRUCTURE-001
   exact namespace equality, root allowlists, forbidden root files, alias rejection,
-  exhaustive 15-request inventory, 9/6 validator coverage, MediatR 12.5.0, ISender-only,
+  exhaustive 15-request inventory, 10/5 validator coverage, MediatR 12.5.0, ISender-only,
   Host residue manifest (three thin adapters), cross-module boundary assertions,
   manifest certification + removal from uncertifiedHttpOwningModules
 ```
@@ -208,7 +223,7 @@ TB-TMAR-FULFILLMENT-ARCH-COMPLETE-002-STRUCTURE-001
 | Check | Result |
 | --- | --- |
 | `dotnet build Tooba.Fulfillment.Tests.csproj --no-restore` | PASS, 0 errors |
-| `FulfillmentArchitectureGuardTests` + `FulfillmentEndpointOwnershipTests` | PASS (4/4) |
+| `FulfillmentArchitectureGuardTests` + `FulfillmentEndpointOwnershipTests` | PASS (4/4) — run in the parent audit; not re-run in R1 per the task's fast budget |
 
 No full Fulfillment suite, Host suite, broad TMAR suite, solution test/build, Testcontainers or DB integration
 test was run.

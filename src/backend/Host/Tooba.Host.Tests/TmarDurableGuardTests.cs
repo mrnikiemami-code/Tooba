@@ -166,20 +166,35 @@ public sealed class TmarDurableGuardTests
         Assert.Equal(15, fulfillmentAudit.GetProperty("endpointReachableRequests").GetInt32());
         Assert.Equal(15, fulfillmentAudit.GetProperty("totalMediatRRequests").GetInt32());
         Assert.Equal(0, fulfillmentAudit.GetProperty("workerInternalRequests").GetInt32());
-        Assert.Equal(9, fulfillmentAudit.GetProperty("validatorRequiredCount").GetInt32());
+        Assert.Equal(10, fulfillmentAudit.GetProperty("validatorRequiredCount").GetInt32());
         Assert.Equal(0, fulfillmentAudit.GetProperty("validatorsPresentCount").GetInt32());
-        Assert.Equal(9, fulfillmentAudit.GetProperty("validatorsMissingCount").GetInt32());
-        Assert.Equal(6, fulfillmentAudit.GetProperty("noValidatorRequiredCount").GetInt32());
-        Assert.Equal(4, fulfillmentAudit.GetProperty("noInputNoValidatorCount").GetInt32());
-        Assert.Equal(2, fulfillmentAudit.GetProperty("authScopedNoValidatorCount").GetInt32());
-        Assert.Equal("0_OF_9_REQUIRED_PRESENT_6_NO_VALIDATOR_REQUIRED",
+        Assert.Equal(10, fulfillmentAudit.GetProperty("validatorsMissingCount").GetInt32());
+        Assert.Equal(5, fulfillmentAudit.GetProperty("noValidatorRequiredCount").GetInt32());
+        Assert.Equal(2, fulfillmentAudit.GetProperty("noInputNoValidatorCount").GetInt32());
+        Assert.Equal(1, fulfillmentAudit.GetProperty("authScopedNoValidatorCount").GetInt32());
+        Assert.Equal(2, fulfillmentAudit.GetProperty("optionalPresentationLocaleNoValidatorCount").GetInt32());
+        Assert.Equal("0_OF_10_REQUIRED_PRESENT_5_NO_VALIDATOR_REQUIRED",
             fulfillmentAudit.GetProperty("validatorCoverageState").GetString());
+        Assert.Contains("ListCustomerCheckoutFulfillmentsQuery",
+            fulfillmentAudit.GetProperty("requiredValidatorRequests").GetString(),
+            StringComparison.Ordinal);
+        Assert.Equal("ListAdminFulfillmentsQuery,EnsureShippingCatalogSeedCommand",
+            fulfillmentAudit.GetProperty("noInputNoValidatorRequests").GetString());
+        Assert.Equal("ListSellerFulfillmentsQuery",
+            fulfillmentAudit.GetProperty("authScopedNoValidatorRequests").GetString());
+        Assert.Equal("ListShippingServicesQuery,ListEnabledShippingMethodsTreeQuery",
+            fulfillmentAudit.GetProperty("optionalPresentationLocaleNoValidatorRequests").GetString());
+        Assert.Equal("VALIDATOR_REQUIRED_ROUTE_CHECKOUTID_ONLY_NOT_GUID_EMPTY",
+            fulfillmentAudit.GetProperty("customerCheckoutClassification").GetString());
         Assert.Equal("EXACT_UNGUARDED_LOOSE_PREFIX", fulfillmentAudit.GetProperty("pathNamespaceState").GetString());
         Assert.Equal("THREE_THIN_HOST_SECURITY_ADAPTERS_ONLY",
             fulfillmentAudit.GetProperty("hostFulfillmentResidue").GetString());
         Assert.Equal("ZERO", fulfillmentAudit.GetProperty("fulfillmentToHostDependency").GetString());
         Assert.Equal("NEEDS_PRECERT_REPAIR_THEN_STRUCTURE",
             fulfillmentAudit.GetProperty("auditDecision").GetString());
+        Assert.Equal(
+            "ADD_10_TRANSPORT_VALIDATORS_AND_REMOVE_DEAD_HOST_FULFILLMENT_RETURNS_GRID_ALIASES_THEN_STRUCTURE",
+            fulfillmentAudit.GetProperty("repairScope").GetString());
         Assert.Contains("Fulfillment", structureUncertified, StringComparer.Ordinal);
         Assert.DoesNotContain("Fulfillment", structureCertified, StringComparer.Ordinal);
 
