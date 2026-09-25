@@ -83,6 +83,7 @@ builder.Services.AddPaymentEndpointPresentation();
 builder.Services.AddPromotionEndpointPresentation();
 builder.Services.AddOrderEndpointPresentation();
 builder.Services.AddPricingEndpointPresentation();
+builder.Services.AddFulfillmentEndpointPresentation();
 builder.Services.AddProblemDetails();
 builder.Services.AddSingleton<IExceptionPresentationService, ExceptionPresentationService>();
 builder.Services.AddExceptionHandler<ToobaExceptionHandler>();
@@ -196,6 +197,9 @@ builder.Services.AddScoped(sp =>
         sp.GetRequiredService<Tooba.Catalog.Infrastructure.Persistence.CatalogDbContext>(),
         sp.GetRequiredService<CurrentAuthenticatedSession>()));
 builder.Services.AddScoped<Tooba.BuildingBlocks.Security.ICurrentAuthenticatedUser, HostCurrentAuthenticatedUser>();
+builder.Services.AddScoped<Tooba.BuildingBlocks.Security.IAdminPanelAccess, Tooba.Host.Admin.HostAdminPanelAccess>();
+builder.Services.AddScoped<Tooba.BuildingBlocks.Security.ISellerPanelAccess, Tooba.Host.Seller.HostSellerPanelAccess>();
+builder.Services.AddScoped<Tooba.BuildingBlocks.Security.IPlatformEffectiveAccessReader, Tooba.Host.AccessControl.HostPlatformEffectiveAccessReader>();
 builder.Services.AddScoped<Tooba.Payment.Application.Orchestration.StorefrontPaymentOrchestrator>();
 builder.Services.AddScoped<Tooba.Payment.Application.Ports.ICheckoutActorPolicyPort, Tooba.Host.Storefront.HostCheckoutActorPolicyAdapter>();
 builder.Services.AddScoped<Tooba.Payment.Endpoints.Storefront.IPaymentStorefrontAuthorizer, Tooba.Host.Storefront.HostPaymentStorefrontAuthorizer>();
@@ -206,9 +210,6 @@ builder.Services.AddScoped<Tooba.Host.Seller.SellerPanelComposer>();
 builder.Services.AddScoped<Tooba.Offer.Endpoints.Seller.IOfferSellerAuthorizer, Tooba.Host.Seller.HostOfferSellerAuthorizer>();
 builder.Services.AddScoped<Tooba.Settlement.Endpoints.Seller.ISettlementSellerAuthorizer, Tooba.Host.Seller.HostSettlementSellerAuthorizer>();
 builder.Services.AddScoped<Tooba.Settlement.Endpoints.Admin.ISettlementAdminAuthorizer, Tooba.Host.Admin.HostSettlementAdminAuthorizer>();
-builder.Services.AddScoped<Tooba.Fulfillment.Endpoints.Seller.IFulfillmentSellerAuthorizer, Tooba.Host.Seller.HostFulfillmentSellerAuthorizer>();
-builder.Services.AddScoped<Tooba.Fulfillment.Endpoints.Admin.IFulfillmentAdminAuthorizer, Tooba.Host.Admin.HostFulfillmentAdminAuthorizer>();
-builder.Services.AddScoped<Tooba.Fulfillment.Endpoints.Customer.IFulfillmentCustomerAuthorizer, Tooba.Host.Customer.HostFulfillmentCustomerAuthorizer>();
 builder.Services.AddScoped<Tooba.Order.Endpoints.Customer.IOrderCustomerAuthorizer, Tooba.Host.Customer.HostOrderCustomerAuthorizer>();
 builder.Services.AddScoped<Tooba.Order.Endpoints.Seller.IOrderSellerAuthorizer, Tooba.Host.Seller.HostOrderSellerAuthorizer>();
 builder.Services.AddScoped<Tooba.Order.Application.Seller.Ports.ISellerOrderViewAccessReader, Tooba.Host.Seller.HostSellerOrderViewAccessReader>();

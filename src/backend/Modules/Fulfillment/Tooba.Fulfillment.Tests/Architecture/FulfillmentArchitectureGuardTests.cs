@@ -161,12 +161,17 @@ public sealed class FulfillmentArchitectureGuardTests
                         || x.Text.Contains("Guid.NewGuid()", StringComparison.Ordinal)
                         || x.Text.Contains("UuidV7.New()", StringComparison.Ordinal)
                         || x.Text.Contains("StartActivity(", StringComparison.Ordinal)
-                        || x.Text.Contains("PlatformHttpException", StringComparison.Ordinal)
                         || x.Text.Contains("?? new SystemUtcClock()", StringComparison.Ordinal)
                         || x.Text.Contains("?? new UuidV7IdGenerator()", StringComparison.Ordinal))
             .Select(x => x.Path)
             .ToList();
         Assert.True(bypass.Count == 0, string.Join("; ", bypass));
+
+        // TB-TMAR-FULFILLMENT-HOST-EVACUATION-001: Host is out; AccessControl/Order are Contracts-only.
+        Assert.DoesNotContain(AllProductionSources(), x => x.Text.Contains("Tooba.Host", StringComparison.Ordinal));
+        Assert.DoesNotContain(AllProductionSources(), x => x.Text.Contains("Tooba.AccessControl.", StringComparison.Ordinal));
+        Assert.DoesNotContain(AllProductionSources(), x => x.Text.Contains("Tooba.Order.Application", StringComparison.Ordinal));
+        Assert.DoesNotContain(AllProductionSources(), x => x.Text.Contains("aaaaaaaa-aaaa-4aaa-8aaa-000000000009", StringComparison.Ordinal));
 
         var silentCatch = AllProductionSources()
             .Where(x => Regex.IsMatch(x.Text, @"catch\s*\(\s*Exception\s*\)\s*\{|catch\s*\{\s*\}|catch\s*\([^)]+\)\s*\{\s*\}", RegexOptions.Multiline))
@@ -234,8 +239,12 @@ public sealed class FulfillmentArchitectureGuardTests
 
         var endpointRefs = ProjectRefs("Tooba.Fulfillment.Endpoints");
         Assert.Contains(endpointRefs, r => r.Contains("Fulfillment.Application", StringComparison.Ordinal));
+        Assert.Contains(endpointRefs, r => r.Contains("Order.Contracts", StringComparison.Ordinal));
+        Assert.Contains(endpointRefs, r => r.Contains("Cart.Contracts", StringComparison.Ordinal));
         Assert.DoesNotContain(endpointRefs, r => r.Contains("Infrastructure", StringComparison.OrdinalIgnoreCase));
         Assert.DoesNotContain(endpointRefs, r => r.Contains("Host", StringComparison.OrdinalIgnoreCase));
+        Assert.DoesNotContain(endpointRefs, r => r.Contains("Order.Application", StringComparison.OrdinalIgnoreCase));
+        Assert.DoesNotContain(endpointRefs, r => r.Contains("AccessControl", StringComparison.OrdinalIgnoreCase));
         Assert.DoesNotContain(endpointRefs, r => r.Contains("DbContext", StringComparison.OrdinalIgnoreCase));
 
         var application = Sources("Tooba.Fulfillment.Application").ToList();
@@ -262,9 +271,22 @@ public sealed class FulfillmentArchitectureGuardTests
             || x.Text.Contains(".Contains(\"", StringComparison.Ordinal) && x.Path.Contains("ExceptionMapper", StringComparison.Ordinal));
 
         var hostRoot = Path.Combine(RepoRoot(), "src", "backend", "Host", "Tooba.Host");
-        Assert.True(File.Exists(Path.Combine(hostRoot, "Seller", "HostFulfillmentSellerAuthorizer.cs")));
-        Assert.True(File.Exists(Path.Combine(hostRoot, "Admin", "HostFulfillmentAdminAuthorizer.cs")));
-        Assert.True(File.Exists(Path.Combine(hostRoot, "Customer", "HostFulfillmentCustomerAuthorizer.cs")));
+        Assert.False(File.Exists(Path.Combine(hostRoot, "Seller", "HostFulfillmentSellerAuthorizer.cs")));
+        Assert.False(File.Exists(Path.Combine(hostRoot, "Admin", "HostFulfillmentAdminAuthorizer.cs")));
+        Assert.False(File.Exists(Path.Combine(hostRoot, "Customer", "HostFulfillmentCustomerAuthorizer.cs")));
+
+        var hostFulfillment = Directory.EnumerateFiles(hostRoot, "*.cs", SearchOption.AllDirectories)
+            .Where(path => !path.Contains($"{Path.DirectorySeparatorChar}bin{Path.DirectorySeparatorChar}")
+                           && !path.Contains($"{Path.DirectorySeparatorChar}obj{Path.DirectorySeparatorChar}"))
+            .Where(path => Path.GetFileName(path).Contains("Fulfillment", StringComparison.Ordinal))
+            .ToList();
+        Assert.True(hostFulfillment.Count == 0, "Host Fulfillment-specific files: " + string.Join("; ", hostFulfillment));
+
+        var endpointsRoot = Path.Combine(ModuleRoot(), "Tooba.Fulfillment.Endpoints");
+        Assert.True(File.Exists(Path.Combine(endpointsRoot, "Admin", "FulfillmentAdminAuthorizer.cs")));
+        Assert.True(File.Exists(Path.Combine(endpointsRoot, "Customer", "FulfillmentCustomerAuthorizer.cs")));
+        Assert.True(File.Exists(Path.Combine(endpointsRoot, "Seller", "FulfillmentSellerAuthorizer.cs")));
+        Assert.Contains("AddFulfillmentEndpointPresentation", module, StringComparison.Ordinal);
     }
 
     private static void AssertNoRootDump(string project, string[] allowedFolders)

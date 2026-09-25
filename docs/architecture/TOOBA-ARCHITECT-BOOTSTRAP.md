@@ -600,7 +600,7 @@ Recent accepted recovery facts:
 - Fulfillment audit R1 corrected inventory to 15 endpoint requests = 10 validator-required + 5 no-validator-required.
 - Fulfillment pre-cert repair accepted at `16062d45bde71476da35f9e20622f1b6b5637fa8`; ten transport validators are present.
 - `FulfillmentReturnsGridAliases.cs` was syntax-only alias residue with zero production consumers; its underlying canonical types were not deleted.
-- Fulfillment still requires Host evacuation of its three current Host-specific authorizers before structure certification.
-- Intended current task: `TB-TMAR-FULFILLMENT-HOST-EVACUATION-001`.
+- Fulfillment Host evacuation COMPLETE at task `TB-TMAR-FULFILLMENT-HOST-EVACUATION-001`: all three Host-specific authorizers rehomed to `Tooba.Fulfillment.Endpoints` after a full Content Disposition Map; `HOST_FULFILLMENT_SPECIFIC_FILES = ZERO`; generic Host seams `HostAdminPanelAccess`/`HostSellerPanelAccess`/`HostPlatformEffectiveAccessReader`; evidence `docs/evidence/TB-TMAR-FULFILLMENT-HOST-EVACUATION-001/fulfillment-host-evacuation.md`.
+- Intended next task: `TB-TMAR-FULFILLMENT-ARCH-COMPLETE-002-STRUCTURE-001`.
 
 After Fulfillment, do NOT automatically continue by uncertified-module list. Start Host traversal with AccessControl, then AddressBook, then subsequent Host folders in repository order.

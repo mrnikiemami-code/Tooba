@@ -21,7 +21,7 @@ namespace Tooba.Order.Application.Storefront.Services;
 /// </summary>
 public sealed class StorefrontCheckoutService
 {
-    public static readonly Guid StorefrontGuestActorId = Guid.Parse("aaaaaaaa-aaaa-4aaa-8aaa-000000000009");
+    public static readonly Guid StorefrontGuestActorId = Tooba.Order.Contracts.Fulfillment.StorefrontGuestActor.ActorId;
 
     private const string DefaultShippingCode = "storefront-default";
     private const string DefaultShippingLabel = "ارسال پیش‌فرض فروشگاه";

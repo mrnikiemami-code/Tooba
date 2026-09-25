@@ -27,7 +27,6 @@ public sealed class HostCartResidualGuardTests
         ["Storefront/StorefrontComposer.cs"] = "storefront read composition flag",
         ["Storefront/StorefrontEndpoints.cs"] = "checkout identity policy flag name (no Cart authority)",
         ["Order/HostOrderStorefrontActor.cs"] = "thin session → CartAccess adapter",
-        ["Customer/HostFulfillmentCustomerAuthorizer.cs"] = "thin ownership probe via Cart contracts",
         ["GlobalUsings.SettlementApp.cs"] = "Settlement-only global usings (no Cart import)",
         ["GlobalUsings.SettlementDomain.cs"] = "Settlement-only global usings (no Cart import)",
         ["UnpaidOrderExpiryHostedService.cs"] = "Order worker shell (no Cart authority)",

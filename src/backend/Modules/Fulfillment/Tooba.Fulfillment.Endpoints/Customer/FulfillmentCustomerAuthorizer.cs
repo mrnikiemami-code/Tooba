@@ -1,27 +1,33 @@
-﻿#pragma warning disable CS1591
+using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Hosting;
 using Tooba.BuildingBlocks;
+using Tooba.BuildingBlocks.Security;
 using Tooba.Cart.Contracts;
 using Tooba.Fulfillment.Contracts.Errors;
-using Tooba.Fulfillment.Endpoints.Customer;
-using Tooba.Host.Storefront;
 using Tooba.Order.Contracts.Fulfillment;
 
-namespace Tooba.Host.Customer;
+namespace Tooba.Fulfillment.Endpoints.Customer;
 
-/// <summary>Host transport adapter — customer/guest checkout ownership for Fulfillment list.</summary>
-public sealed class HostFulfillmentCustomerAuthorizer : IFulfillmentCustomerAuthorizer
+/// <summary>
+/// مالکیت checkout مشتری/مهمان برای لیست Fulfillment. هویت Actor از درز عمومی پلتفرم و
+/// مالکیت از قراردادهای Order/Cart می‌آید؛ ماژول به Host و Order.Application وابسته نیست.
+/// </summary>
+public sealed class FulfillmentCustomerAuthorizer(
+    ICurrentAuthenticatedUser currentUser,
+    IHostEnvironment environment,
+    ICustomerCheckoutOwnershipReader ownership,
+    ICartQueryGateway carts) : IFulfillmentCustomerAuthorizer
 {
+    private const string DevActorHeader = "X-Tooba-Dev-Actor-User-Id";
+    private const string GuestSecretHeader = "X-Tooba-Guest-Secret";
+
+    /// <inheritdoc />
     public async Task<SemanticError?> EnsureCanViewCheckoutAsync(
         HttpContext httpContext, Guid checkoutId, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(httpContext);
-        var session = httpContext.RequestServices.GetRequiredService<CurrentAuthenticatedSession>();
-        var environment = httpContext.RequestServices.GetRequiredService<IHostEnvironment>();
-        var ownership = httpContext.RequestServices.GetRequiredService<ICustomerCheckoutOwnershipReader>();
-        var carts = httpContext.RequestServices.GetRequiredService<ICartQueryGateway>();
-
-        var actor = ResolveCustomerActor(httpContext.Request, session, environment);
-        var guestSecret = ReadGuestSecret(httpContext.Request);
+        var actor = ResolveCustomerActor(httpContext, currentUser, environment);
+        var guestSecret = ReadGuestSecret(httpContext);
         if (actor is null && string.IsNullOrWhiteSpace(guestSecret))
             return new SemanticError(FulfillmentErrorCodes.CustomerActorMissing);
 
@@ -30,7 +36,7 @@ public sealed class HostFulfillmentCustomerAuthorizer : IFulfillmentCustomerAuth
             return new SemanticError(FulfillmentErrorCodes.CustomerOrderMissing);
 
         var ownedByActor = actor is not null && checkout.PlacedByUserId == actor.Value;
-        if (checkout.PlacedByUserId == Tooba.Order.Application.Storefront.Services.StorefrontCheckoutService.StorefrontGuestActorId)
+        if (checkout.PlacedByUserId == StorefrontGuestActor.ActorId)
             ownedByActor = false;
 
         var ownedByGuest = false;
@@ -54,25 +60,29 @@ public sealed class HostFulfillmentCustomerAuthorizer : IFulfillmentCustomerAuth
         return null;
     }
 
-    private static Guid? ResolveCustomerActor(HttpRequest request, CurrentAuthenticatedSession session, IHostEnvironment environment)
+    private static Guid? ResolveCustomerActor(
+        HttpContext httpContext,
+        ICurrentAuthenticatedUser currentUser,
+        IHostEnvironment environment)
     {
-        if (session.IsAuthenticated && session.UserId is { } authenticated)
+        if (currentUser.IsAuthenticated && currentUser.UserId is { } authenticated)
             return authenticated;
 
         var isDevSeam = environment.IsDevelopment() || environment.IsEnvironment("Testing");
         if (!isDevSeam) return null;
 
-        if (request.Headers.TryGetValue("X-Tooba-Dev-Actor-User-Id", out var raw)
+        if (httpContext.Request.Headers.TryGetValue(DevActorHeader, out var raw)
             && Guid.TryParse(raw.ToString(), out var devActor)
             && devActor != Guid.Empty)
             return devActor;
 
-        return Tooba.Order.Application.Storefront.Services.StorefrontCheckoutService.StorefrontGuestActorId;
+        return StorefrontGuestActor.ActorId;
     }
 
-    private static string? ReadGuestSecret(HttpRequest request)
+    private static string? ReadGuestSecret(HttpContext httpContext)
     {
-        if (request.Headers.TryGetValue("X-Tooba-Guest-Secret", out var header) && !string.IsNullOrWhiteSpace(header))
+        if (httpContext.Request.Headers.TryGetValue(GuestSecretHeader, out var header)
+            && !string.IsNullOrWhiteSpace(header))
             return header.ToString();
         return null;
     }

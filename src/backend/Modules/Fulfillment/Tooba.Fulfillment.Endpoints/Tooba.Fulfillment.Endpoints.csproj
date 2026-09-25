@@ -11,7 +11,12 @@
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
   </ItemGroup>
   <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="8.0.2" />
+  </ItemGroup>
+  <ItemGroup>
     <ProjectReference Include="..\Tooba.Fulfillment.Application\Tooba.Fulfillment.Application.csproj" />
     <ProjectReference Include="..\..\..\BuildingBlocks\Tooba.BuildingBlocks\Tooba.BuildingBlocks.csproj" />
+    <ProjectReference Include="..\..\Order\Tooba.Order.Contracts\Tooba.Order.Contracts.csproj" />
+    <ProjectReference Include="..\..\Cart\Tooba.Cart.Contracts\Tooba.Cart.Contracts.csproj" />
   </ItemGroup>
 </Project>

@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Routing;
+using Microsoft.Extensions.DependencyInjection;
 using Tooba.Fulfillment.Endpoints.Admin;
 using Tooba.Fulfillment.Endpoints.Customer;
 using Tooba.Fulfillment.Endpoints.Seller;
@@ -23,5 +24,15 @@ public static class FulfillmentEndpointModule
         var customer = app.MapGroup("/v1/customer");
         FulfillmentCustomerEndpoints.Map(customer);
         return app;
+    }
+
+    /// <summary>Registers module-owned Fulfillment authorizer implementations.</summary>
+    public static IServiceCollection AddFulfillmentEndpointPresentation(this IServiceCollection services)
+    {
+        ArgumentNullException.ThrowIfNull(services);
+        services.AddScoped<IFulfillmentAdminAuthorizer, FulfillmentAdminAuthorizer>();
+        services.AddScoped<IFulfillmentCustomerAuthorizer, FulfillmentCustomerAuthorizer>();
+        services.AddScoped<IFulfillmentSellerAuthorizer, FulfillmentSellerAuthorizer>();
+        return services;
     }
 }

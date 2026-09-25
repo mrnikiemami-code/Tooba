@@ -1,33 +1,31 @@
-#pragma warning disable CS1591
 using Tooba.BuildingBlocks;
-using Tooba.Host.Admin;
-using Tooba.Fulfillment.Endpoints.Admin;
+using Tooba.BuildingBlocks.Security;
 
 namespace Tooba.Host.Admin;
 
 /// <summary>
-/// اتصال Host به درز احراز Fulfillment admin Endpoints.
-/// Single-Store از tenant موجود؛ Marketplace در Development از tenant پلتفرم synthetic.
+/// درز عمومی Host برای دسترسی پنل مدیر: Single-Store از Tenant موجود و در Development/Marketplace
+/// از Tenant synthetic پلتفرم. هیچ سیاست ماژولی اینجا نیست.
 /// </summary>
-public sealed class HostFulfillmentAdminAuthorizer : IFulfillmentAdminAuthorizer
+internal sealed class HostAdminPanelAccess(
+    CurrentAuthenticatedSession session,
+    ICurrentTenant tenant,
+    ControlPlaneRegistry registry,
+    IAuthorizationGuard guard,
+    IHostEnvironment environment) : IAdminPanelAccess
 {
     /// <summary>شناسه tenant synthetic پلتفرم Marketplace در Development.</summary>
     public const string MarketplacePlatformTenantId = "marketplace-platform";
 
     /// <inheritdoc />
-    public async Task<Guid> RequireAuthorizedAsync(HttpContext httpContext, CancellationToken cancellationToken)
+    public async Task<Guid> RequireAuthorizedAsync(HttpRequest request, CancellationToken cancellationToken)
     {
-        ArgumentNullException.ThrowIfNull(httpContext);
-        var session = httpContext.RequestServices.GetRequiredService<CurrentAuthenticatedSession>();
-        var tenant = httpContext.RequestServices.GetRequiredService<ICurrentTenant>();
-        var registry = httpContext.RequestServices.GetRequiredService<ControlPlaneRegistry>();
-        var guard = httpContext.RequestServices.GetRequiredService<IAuthorizationGuard>();
-        var environment = httpContext.RequestServices.GetRequiredService<IHostEnvironment>();
+        ArgumentNullException.ThrowIfNull(request);
 
         if (tenant.Current is not null)
         {
             return await AdminPanelAccess.RequireAuthorizedAsync(
-                httpContext.Request, session, tenant, guard, environment, cancellationToken);
+                request, session, tenant, guard, environment, cancellationToken);
         }
 
         if (!environment.IsDevelopment() || registry.Edition != ToobaEdition.Marketplace)
@@ -35,7 +33,7 @@ public sealed class HostFulfillmentAdminAuthorizer : IFulfillmentAdminAuthorizer
             throw new PlatformHttpException(503, "زمینهٔ فروشگاه در دسترس نیست.", "admin.tenant.missing");
         }
 
-        var actorUserId = AdminPanelAccess.ResolveActorUserId(httpContext.Request, session, environment);
+        var actorUserId = AdminPanelAccess.ResolveActorUserId(request, session, environment);
         var decision = await guard.AuthorizeUseCaseAsync(
             new AuthorizationCheck
             {
@@ -66,4 +64,3 @@ public sealed class HostFulfillmentAdminAuthorizer : IFulfillmentAdminAuthorizer
         throw new PlatformHttpException(403, "دسترسی مدیریت marketplace مجاز نیست.", "admin.authorization.denied");
     }
 }
-

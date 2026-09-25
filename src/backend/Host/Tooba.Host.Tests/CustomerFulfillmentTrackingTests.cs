@@ -62,16 +62,18 @@ public sealed class CustomerFulfillmentTrackingTests
             root, "src", "backend", "Modules", "Fulfillment",
             "Tooba.Fulfillment.Endpoints", "Customer", "FulfillmentCustomerEndpoints.cs"));
         var authorizer = File.ReadAllText(Path.Combine(
-            root, "src", "backend", "Host", "Tooba.Host",
-            "Customer", "HostFulfillmentCustomerAuthorizer.cs"));
+            root, "src", "backend", "Modules", "Fulfillment",
+            "Tooba.Fulfillment.Endpoints", "Customer", "FulfillmentCustomerAuthorizer.cs"));
         Assert.Contains("preferredCustomerPackageStatus", customerEp, StringComparison.Ordinal);
         Assert.Contains("ListCustomerCheckoutFulfillmentsQuery", customerEp, StringComparison.Ordinal);
-        Assert.Contains("StorefrontGuestActorId", authorizer, StringComparison.Ordinal);
+        Assert.Contains("StorefrontGuestActor", authorizer, StringComparison.Ordinal);
         Assert.Contains("X-Tooba-Guest-Secret", authorizer, StringComparison.Ordinal);
         Assert.Contains("ICartQueryGateway", authorizer, StringComparison.Ordinal);
         Assert.Contains("CartAccess", authorizer, StringComparison.Ordinal);
         Assert.Contains("ownedByActor = false", authorizer, StringComparison.Ordinal);
-        Assert.True(Tooba.Order.Application.Storefront.Services.StorefrontCheckoutService.StorefrontGuestActorId != Guid.Empty);
+        Assert.DoesNotContain("Tooba.Host", authorizer, StringComparison.Ordinal);
+        Assert.DoesNotContain("Tooba.Order.Application", authorizer, StringComparison.Ordinal);
+        Assert.True(Tooba.Order.Contracts.Fulfillment.StorefrontGuestActor.ActorId != Guid.Empty);
     }
 
     private static ConsolidatedPackageSnapshot Package(
