@@ -7,7 +7,8 @@ namespace Tooba.Fulfillment.Tests.Architecture;
 public sealed class FulfillmentArchitectureGuardTests
 {
     private static readonly string[] AllowedDomainFolders = ["Aggregates", "Entities", "ValueObjects", "Events", "Policies"];
-    private static readonly string[] AllowedApplicationFolders = ["Ports", "Models", "Shipping", "Commands", "Queries", "Errors"];
+    private static readonly string[] AllowedApplicationFolders =
+        ["Ports", "Models", "Shipping", "Commands", "Queries", "Errors", "Validators"];
     private static readonly string[] AllowedContractsFolders = ["Events", "Returns", "Errors", "History", "Operations", "Shipping"];
     private static readonly string[] AllowedInfrastructureFolders =
         ["Persistence", "Directories", "Adapters", "Events", "Messaging", "DependencyInjection", "Migrations",

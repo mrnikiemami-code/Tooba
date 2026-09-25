@@ -106,8 +106,8 @@ public sealed class TmarDurableGuardTests
         Assert.Equal("USER_ACCEPTED", rootEl.GetProperty("goldenWaveUserReview").GetString());
         Assert.Equal("TB-TMAR-GOLDEN-WAVE-FINAL-CLOSURE-001", rootEl.GetProperty("goldenWaveClosedBy").GetString());
         Assert.False(string.IsNullOrWhiteSpace(rootEl.GetProperty("goldenWaveClosedCommit").GetString()));
-        Assert.Equal("TB-TMAR-FULFILLMENT-ARCH-COMPLETE-002-PRECERT-REPAIR-001", rootEl.GetProperty("nextTask").GetString());
-        Assert.Equal("FULFILLMENT_NEEDS_PRECERT_REPAIR_THEN_STRUCTURE", rootEl.GetProperty("nextTaskGate").GetString());
+        Assert.Equal("TB-TMAR-FULFILLMENT-ARCH-COMPLETE-002-STRUCTURE-001", rootEl.GetProperty("nextTask").GetString());
+        Assert.Equal("NEXT_TMAR_WAVE_AFTER_FULFILLMENT_PRECERT_REPAIR", rootEl.GetProperty("nextTaskGate").GetString());
         Assert.Equal("PAUSED_AT_SAFE_W5_CHECKPOINT", rootEl.GetProperty("checkoutState").GetString());
         Assert.True(rootEl.GetProperty("frontendFrozen").GetBoolean());
         Assert.Equal("ARCH-COMPLETE-002", rootEl.GetProperty("locksVersion").GetString());
@@ -197,6 +197,38 @@ public sealed class TmarDurableGuardTests
             fulfillmentAudit.GetProperty("repairScope").GetString());
         Assert.Contains("Fulfillment", structureUncertified, StringComparer.Ordinal);
         Assert.DoesNotContain("Fulfillment", structureCertified, StringComparer.Ordinal);
+
+        var fulfillmentPrecert = rootEl.GetProperty("fulfillmentPrecertValidation");
+        Assert.Equal("TB-TMAR-FULFILLMENT-ARCH-COMPLETE-002-PRECERT-REPAIR-001",
+            fulfillmentPrecert.GetProperty("task").GetString());
+        Assert.Equal("FULFILLMENT_TRANSPORT_VALIDATORS_ADDED_AND_DEAD_HOST_ALIAS_RESIDUE_REMOVED",
+            fulfillmentPrecert.GetProperty("state").GetString());
+        Assert.Equal(15, fulfillmentPrecert.GetProperty("endpointReachableRequests").GetInt32());
+        Assert.Equal(10, fulfillmentPrecert.GetProperty("validatorRequiredCount").GetInt32());
+        Assert.Equal(10, fulfillmentPrecert.GetProperty("validatorsPresentCount").GetInt32());
+        Assert.Equal(0, fulfillmentPrecert.GetProperty("validatorsMissingCount").GetInt32());
+        Assert.Equal(5, fulfillmentPrecert.GetProperty("noValidatorRequiredCount").GetInt32());
+        Assert.Equal(2, fulfillmentPrecert.GetProperty("noInputNoValidatorCount").GetInt32());
+        Assert.Equal(1, fulfillmentPrecert.GetProperty("authScopedNoValidatorCount").GetInt32());
+        Assert.Equal(2, fulfillmentPrecert.GetProperty("optionalPresentationLocaleNoValidatorCount").GetInt32());
+        Assert.Equal("COMPLETE_10_OF_10_REQUIRED_PRESENT_5_NO_VALIDATOR_REQUIRED",
+            fulfillmentPrecert.GetProperty("validatorCoverage").GetString());
+        Assert.Equal("TRANSPORT_INPUT_SHAPE_ONLY",
+            fulfillmentPrecert.GetProperty("validationScope").GetString());
+        Assert.Equal("12.5.0", fulfillmentPrecert.GetProperty("mediatR").GetString());
+        Assert.Equal("ISENDER_ONLY_NO_DIRECT_VALIDATOR_INVOCATION",
+            fulfillmentPrecert.GetProperty("senderState").GetString());
+        Assert.Equal("REMOVED_ZERO_PRODUCTION_CONSUMERS_NO_COMPATIBILITY_ALIAS",
+            fulfillmentPrecert.GetProperty("hostDeadAliasResidue").GetString());
+        Assert.Equal("THREE_THIN_HOST_SECURITY_ADAPTERS_ONLY",
+            fulfillmentPrecert.GetProperty("hostFulfillmentResidue").GetString());
+        Assert.Equal("ZERO", fulfillmentPrecert.GetProperty("fulfillmentToHostDependency").GetString());
+        Assert.Equal("PENDING_TB_TMAR_FULFILLMENT_ARCH_COMPLETE_002_STRUCTURE_001",
+            fulfillmentPrecert.GetProperty("structureCertification").GetString());
+
+        var hostAliasResidue = Path.Combine(
+            root, "src", "backend", "Host", "Tooba.Host", "FulfillmentReturnsGridAliases.cs");
+        Assert.False(File.Exists(hostAliasResidue), hostAliasResidue);
 
         var offerStructure = rootEl.GetProperty("offerArchComplete002Structure");
         Assert.True(offerStructure.GetProperty("structureCertifiedUnderArchComplete002").GetBoolean());

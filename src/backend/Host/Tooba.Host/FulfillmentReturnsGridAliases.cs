@@ -1,7 +1,0 @@
-global using AdminFulfillmentWorkQueueRow = Tooba.Fulfillment.Application.Models.AdminFulfillmentWorkQueueRow;
-global using AdminFulfillmentQueueFilters = Tooba.Fulfillment.Application.Models.AdminFulfillmentQueueFilters;
-global using AdminFulfillmentWorkQueueBulkRequest = Tooba.Fulfillment.Application.Models.AdminFulfillmentWorkQueueBulkRequest;
-global using AdminFulfillmentWorkQueueBulkItem = Tooba.Fulfillment.Application.Models.AdminFulfillmentWorkQueueBulkItem;
-global using AdminFulfillmentWorkQueueBulkResult = Tooba.Fulfillment.Application.Models.AdminFulfillmentWorkQueueBulkResult;
-global using AdminReturnWorkQueueRow = Tooba.Returns.Application.Models.AdminReturnWorkQueueRow;
-global using AdminReturnQueueFilters = Tooba.Returns.Application.Models.AdminReturnQueueFilters;

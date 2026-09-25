@@ -32,7 +32,6 @@ public sealed class HostCartResidualGuardTests
         ["GlobalUsings.SettlementDomain.cs"] = "Settlement-only global usings (no Cart import)",
         ["UnpaidOrderExpiryHostedService.cs"] = "Order worker shell (no Cart authority)",
         ["UnpaidOrderExpiryHostOptions.cs"] = "Order worker scheduling knobs",
-        ["FulfillmentReturnsGridAliases.cs"] = "grid aliases",
     };
 
     [Fact]

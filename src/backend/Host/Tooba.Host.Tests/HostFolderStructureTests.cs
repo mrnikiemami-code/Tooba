@@ -12,7 +12,6 @@ public sealed class HostFolderStructureTests
         // W1 deferred: checkout/order/payment-adjacent root leftovers
         "CheckoutReservationHoldPolicy.cs",
         "CommerceHoldPolicy.cs",
-        "FulfillmentReturnsGridAliases.cs",
         "GlobalUsings.SettlementApp.cs",
         "GlobalUsings.SettlementDomain.cs",
         "UnpaidOrderExpiryHostedService.cs",
@@ -41,6 +40,15 @@ public sealed class HostFolderStructureTests
                 File.Exists(Path.Combine(hostRoot, allowed)),
                 "allowlisted root file missing: " + allowed);
         }
+    }
+
+    [Fact]
+    public void Dead_fulfillment_returns_grid_alias_residue_stays_removed()
+    {
+        var hostRoot = Path.Combine(FindRepoRoot(), "src", "backend", "Host", "Tooba.Host");
+        Assert.False(
+            File.Exists(Path.Combine(hostRoot, "FulfillmentReturnsGridAliases.cs")),
+            "dead Host alias residue must stay removed with no compatibility alias replacement");
     }
 
     [Fact]
