@@ -3,6 +3,11 @@
 AUDIT-ONLY. Zero Settlement / Host production change. Settlement is **NOT**
 structure-certified by this task.
 
+> Classification repair R1 (`TB-TMAR-SETTLEMENT-ARCH-COMPLETE-002-AUDIT-001-R1`):
+> section B was corrected from an incorrect "all 10 requests VALIDATOR_REQUIRED"
+> reading to the ARCH-COMPLETE-002 rule — 4 required / 6 no-validator-required
+> (4 auth-scoped seller queries, 2 parameterless admin queries).
+
 - Parent-Task: `TB-TMAR-PAYMENT-ARCH-COMPLETE-002-STRUCTURE-001` (ARCHITECT-ACCEPTED)
 - Accepted certification commit: `3e403aaffb4e1f79f41bd7fd25de6fdaf0f708b0`
 - Accepted SoT stamp: `0ae295e50b2e7adcefd6e2ca40001fbdb601d7d7`
@@ -37,29 +42,52 @@ Application service, Directory, or DbContext call from any endpoint.
 | Classification | Count |
 | --- | --- |
 | endpoint-reachable requests | 10 |
-| `VALIDATOR_REQUIRED` | 10 |
+| `VALIDATOR_REQUIRED` | 4 |
 | validators present | 0 |
-| validators missing | 10 |
-| `NO_VALIDATOR_REQUIRED_<reason>` | 0 |
+| validators missing | 4 |
+| `NO_VALIDATOR_REQUIRED_<reason>` | 6 |
 
-Every request is `VALIDATOR_REQUIRED` on transport-shape grounds:
+Transport/input validation belongs in FluentValidation; trusted
+authorization-derived values and zero-input requests do not require ceremonial
+validators (same rule as the accepted Offer precedent for auth-scoped seller identity).
 
-- `RequestSellerPayoutCommand` — `Amount > 0`, `IdempotencyKey` non-blank, ids non-empty
-- four seller `SellerPartyId` queries — id non-empty
-- `ProcessAdminPayoutCommand` / `RetryAdminPayoutCommand` — ids non-empty
-- two admin list queries — envelope only (no input beyond optional grid body)
-- `QueryAdminPayoutGridQuery` — primitive grid envelope only (grid policy stays with `AdminPayoutGridQueryPolicy`)
+### `VALIDATOR_REQUIRED` — exactly four
+
+| Request | Untrusted input | Expected validator | Present |
+| --- | --- | --- | --- |
+| `RequestSellerPayoutCommand` | body `Amount`, `IdempotencyKey` | `RequestSellerPayoutCommandValidator` | missing |
+| `ProcessAdminPayoutCommand` | route `PayoutRequestId` | `ProcessAdminPayoutCommandValidator` | missing |
+| `RetryAdminPayoutCommand` | route `PayoutRequestId` | `RetryAdminPayoutCommandValidator` | missing |
+| `QueryAdminPayoutGridQuery` | `GridQueryRequest` body | `QueryAdminPayoutGridQueryValidator` | missing |
+
+- `RequestSellerPayoutCommand`: `Amount > 0`, `IdempotencyKey` non-blank.
+- `ProcessAdminPayoutCommand` / `RetryAdminPayoutCommand`: `PayoutRequestId` non-empty.
+- `QueryAdminPayoutGridQuery`: envelope/null/basic shape only (primitive grid envelope);
+  grid field/operator/sort/connector policy remains owned by the existing
+  `AdminPayoutGridQueryPolicy`.
+- `ActorUserId` / `SellerPartyId` values supplied by trusted authorizers must **not** be
+  the reason for creating validators.
+
+### `NO_VALIDATOR_REQUIRED` — six
+
+| Request | Reason |
+| --- | --- |
+| `GetSellerSettlementBalanceQuery` | `NO_VALIDATOR_REQUIRED_AUTH_SCOPED_QUERY` |
+| `ListSellerSettlementEntriesQuery` | `NO_VALIDATOR_REQUIRED_AUTH_SCOPED_QUERY` |
+| `ListSellerSettlementStatementsQuery` | `NO_VALIDATOR_REQUIRED_AUTH_SCOPED_QUERY` |
+| `ListSellerPayoutRequestsQuery` | `NO_VALIDATOR_REQUIRED_AUTH_SCOPED_QUERY` |
+| `ListAdminSettlementBalancesQuery` | `NO_VALIDATOR_REQUIRED_NO_INPUT` |
+| `ListAdminPayoutQueueQuery` | `NO_VALIDATOR_REQUIRED_NO_INPUT` |
+
+The four seller queries receive `SellerPartyId` only from
+`ISettlementSellerAuthorizer.RequireAuthorizedAsync(...)` and have no untrusted request
+payload. The two admin queries are parameterless and are created only after admin
+authorization. No ceremonial empty validator is proposed for any of the six.
 
 Current state: `Tooba.Settlement.Application` has **no `Validators/` folder**, no
 `FluentValidation` package/reference anywhere in Settlement, and no validator type.
 Existing `AddToobaCqrsFoundation` / `AddValidatorsFromAssembly` discovery is therefore
-not exercised for Settlement. Missing validators:
-
-`RequestSellerPayoutCommandValidator`, `GetSellerSettlementBalanceQueryValidator`,
-`ListSellerSettlementEntriesQueryValidator`, `ListSellerSettlementStatementsQueryValidator`,
-`ListSellerPayoutRequestsQueryValidator`, `ProcessAdminPayoutCommandValidator`,
-`RetryAdminPayoutCommandValidator`, `ListAdminSettlementBalancesQueryValidator`,
-`ListAdminPayoutQueueQueryValidator`, `QueryAdminPayoutGridQueryValidator`.
+not exercised for Settlement. Missing validators are exactly the four above.
 
 Transport shape only was considered; no business/domain rule is proposed as a
 FluentValidation rule.
@@ -166,15 +194,15 @@ Gaps (not fixed in this audit):
 ## I. Certification plan
 
 **Decision: `NEEDS_PRECERT_REPAIR_THEN_STRUCTURE`**
-
 Repair scope (do not execute here):
 
-- `TB-TMAR-SETTLEMENT-ARCH-COMPLETE-002-PRECERT-REPAIR-001` — add exactly 10
-  primitive-shape transport validators under
-  `Tooba.Settlement.Application/Validators/` (Seller/Admin grouping), discovered via the
-  existing `AddToobaCqrsFoundation`/`AddValidatorsFromAssembly`, with a focused validator
+- `TB-TMAR-SETTLEMENT-ARCH-COMPLETE-002-PRECERT-REPAIR-001` — add exactly **four**
+  primitive-shape transport validators under `Tooba.Settlement.Application/Validators/`
+  (`RequestSellerPayoutCommandValidator`, `ProcessAdminPayoutCommandValidator`,
+  `RetryAdminPayoutCommandValidator`, `QueryAdminPayoutGridQueryValidator`), discovered via
+  the existing `AddToobaCqrsFoundation`/`AddValidatorsFromAssembly`, with a focused validator
   test and an exhaustive endpoint-validator coverage guard; no business rules, no grid
-  policy duplication.
+  policy duplication, and no validator for the six `NO_VALIDATOR_REQUIRED` requests.
 
 Then `TB-TMAR-SETTLEMENT-ARCH-COMPLETE-002-STRUCTURE-001` adds exact namespace,
 root allowlist, alias rejection, endpoint inventory and Host/cross-module guards plus

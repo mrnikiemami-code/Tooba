@@ -331,11 +331,16 @@ public sealed class TmarDurableGuardTests
         Assert.Equal(10, settlementAudit.GetProperty("endpointReachableRequests").GetInt32());
         Assert.Equal(10, settlementAudit.GetProperty("totalMediatRRequests").GetInt32());
         Assert.Equal(0, settlementAudit.GetProperty("workerInternalRequests").GetInt32());
-        Assert.Equal(10, settlementAudit.GetProperty("validatorRequiredCount").GetInt32());
+        Assert.Equal(4, settlementAudit.GetProperty("validatorRequiredCount").GetInt32());
         Assert.Equal(0, settlementAudit.GetProperty("validatorsPresentCount").GetInt32());
-        Assert.Equal(10, settlementAudit.GetProperty("validatorsMissingCount").GetInt32());
-        Assert.Equal(0, settlementAudit.GetProperty("noValidatorRequiredCount").GetInt32());
-        Assert.Equal("0_OF_10_REQUIRED_PRESENT_NO_VALIDATORS_EXIST",
+        Assert.Equal(4, settlementAudit.GetProperty("validatorsMissingCount").GetInt32());
+        Assert.Equal(6, settlementAudit.GetProperty("noValidatorRequiredCount").GetInt32());
+        Assert.Equal(4, settlementAudit.GetProperty("authScopedNoValidatorCount").GetInt32());
+        Assert.Equal(2, settlementAudit.GetProperty("noInputNoValidatorCount").GetInt32());
+        Assert.Equal(
+            "RequestSellerPayoutCommand,ProcessAdminPayoutCommand,RetryAdminPayoutCommand,QueryAdminPayoutGridQuery",
+            settlementAudit.GetProperty("requiredValidatorRequests").GetString());
+        Assert.Equal("0_OF_4_REQUIRED_PRESENT_6_NO_VALIDATOR_REQUIRED",
             settlementAudit.GetProperty("validatorCoverageState").GetString());
         Assert.Equal("EXACT", settlementAudit.GetProperty("pathNamespaceState").GetString());
         Assert.Equal("NO_ALIAS_NO_FOREIGN_GLOBAL_ALIAS", settlementAudit.GetProperty("aliasWorkaroundState").GetString());
