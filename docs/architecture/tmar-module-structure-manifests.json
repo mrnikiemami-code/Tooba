@@ -11,6 +11,47 @@
   ],
   "modules": [
     {
+      "module": "AccessControl",
+      "structureCertified": true,
+      "lockVersion": "ARCH-COMPLETE-002",
+      "projects": [
+        {
+          "projectName": "Tooba.AccessControl.Application",
+          "rootAllowlist": [],
+          "rootAllowlistJustification": "AccessControl.Application intentionally has no root .cs file: the capability folders Authorization/Commands/Models/Permissions/Queries/Validators carry every type, and namespace alignment is exact path-derived equality.",
+          "forbiddenRootFiles": [
+            "AccessControlContracts.cs",
+            "PermissionCatalog.cs"
+          ],
+          "forbiddenTopLevelFolders": []
+        },
+        {
+          "projectName": "Tooba.AccessControl.Endpoints",
+          "rootAllowlist": [
+            "AccessControlEndpointModule.cs"
+          ],
+          "forbiddenRootFiles": [
+            "AccessControlAdminEndpoints.cs",
+            "AccessControlAdminSellerEndpoints.cs",
+            "AccessControlSellerEndpoints.cs"
+          ],
+          "forbiddenTopLevelFolders": []
+        },
+        {
+          "projectName": "Tooba.AccessControl.Infrastructure",
+          "rootAllowlist": [
+            "AccessControlModule.cs"
+          ],
+          "forbiddenRootFiles": [
+            "AccessControlDirectory.cs",
+            "AccessControlInstrumentation.cs",
+            "AccessControlOutboxRegistration.cs"
+          ],
+          "forbiddenTopLevelFolders": []
+        }
+      ]
+    },
+    {
       "module": "Order",
       "structureCertified": true,
       "lockVersion": "ARCH-COMPLETE-002",
