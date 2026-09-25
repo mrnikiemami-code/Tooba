@@ -33,14 +33,6 @@ public static class AccessControlEndpoints
         admin.MapGet("/scope-resources/stores", AdminDeferredScopeAsync);
         admin.MapGet("/scope-resources/order-segments", AdminDeferredScopeAsync);
 
-        var adminSeller = app.MapGroup("/v1/admin/sellers/{sellerId:guid}/access-control");
-        adminSeller.MapGet("/ceiling", AdminGetCeilingAsync);
-        adminSeller.MapPut("/ceiling", AdminSetCeilingAsync);
-        adminSeller.MapGet("/assignments", AdminSellerListAssignmentsAsync);
-        adminSeller.MapPost("/assignments", AdminSellerAssignAsync);
-        adminSeller.MapDelete("/assignments/{assignmentId:guid}", AdminSellerRemoveAssignmentAsync);
-        adminSeller.MapGet("/users/{userId:guid}/effective", AdminSellerEffectiveAsync);
-
         var seller = app.MapGroup("/v1/seller/access-control");
         seller.MapGet("/users", SellerSearchUsersAsync);
         seller.MapGet("/users/{userId:guid}/effective", SellerEffectiveAsync);
@@ -144,99 +136,6 @@ public static class AccessControlEndpoints
         return demo is null
             ? Results.Json(new { title = "ACC demo seed not ready", code = "access.demo.not_ready" }, statusCode: StatusCodes.Status503ServiceUnavailable)
             : Results.Json(demo);
-    }
-
-    #endregion
-
-    #region Admin seller-scoped
-
-    private static async Task<IResult> AdminGetCeilingAsync(
-        Guid sellerId, HttpRequest request, CurrentAuthenticatedSession session, ICurrentTenant tenant, IAuthorizationGuard guard,
-        IAuthorizationService authz, IHostEnvironment env, IAccessControlDirectory directory, CancellationToken ct)
-    {
-        var actor = await AdminPanelAccess.RequireAuthorizedAsync(request, session, tenant, guard, env, ct);
-        await AccessControlCapabilityGate.EnsureAsync(actor, "accesscontrol.view", authz, tenant, ct);
-        return Results.Json(await directory.GetSellerCeilingAsync(sellerId, ct));
-    }
-
-    private sealed record CeilingBody(List<CeilingEntry> Entries);
-    private sealed record CeilingEntry(
-        string PermissionId,
-        bool Enabled,
-        AccessScopeKind ScopeKind = AccessScopeKind.GlobalWithinOwner,
-        Guid? ScopeResourceId = null);
-
-    private static async Task<IResult> AdminSetCeilingAsync(
-        Guid sellerId, CeilingBody body, HttpRequest request, CurrentAuthenticatedSession session, ICurrentTenant tenant,
-        IAuthorizationGuard guard, IAuthorizationService authz, IHostEnvironment env, IAccessControlDirectory directory, CancellationToken ct)
-    {
-        try
-        {
-            var actor = await AdminPanelAccess.RequireAuthorizedAsync(request, session, tenant, guard, env, ct);
-            await AccessControlCapabilityGate.EnsureAsync(actor, "accesscontrol.manage", authz, tenant, ct);
-            await directory.SetSellerCeilingAsync(
-                sellerId,
-                body.Entries.Select(e => (e.PermissionId, e.Enabled, e.ScopeKind, e.ScopeResourceId)).ToList(),
-                actor,
-                Trace(request),
-                ct);
-            return Results.NoContent();
-        }
-        catch (Exception ex) when (ex is AccessControlException)
-        {
-            return MapError(ex);
-        }
-    }
-
-    private static async Task<IResult> AdminSellerListAssignmentsAsync(
-        Guid sellerId, HttpRequest request, CurrentAuthenticatedSession session, ICurrentTenant tenant, IAuthorizationGuard guard,
-        IAuthorizationService authz, IHostEnvironment env, IAccessControlDirectory directory, CancellationToken ct)
-    {
-        var actor = await AdminPanelAccess.RequireAuthorizedAsync(request, session, tenant, guard, env, ct);
-        await AccessControlCapabilityGate.EnsureAsync(actor, "accesscontrol.view", authz, tenant, ct);
-        return Results.Json(await directory.ListAssignmentsAsync(SellerScope(sellerId, tenant), null, ct));
-    }
-
-    private static async Task<IResult> AdminSellerAssignAsync(
-        Guid sellerId, AssignBody body, HttpRequest request, CurrentAuthenticatedSession session, ICurrentTenant tenant,
-        IAuthorizationGuard guard, IAuthorizationService authz, IHostEnvironment env, IAccessControlDirectory directory, CancellationToken ct)
-    {
-        try
-        {
-            var actor = await AdminPanelAccess.RequireAuthorizedAsync(request, session, tenant, guard, env, ct);
-            await AccessControlCapabilityGate.EnsureAsync(actor, "accesscontrol.manage", authz, tenant, ct);
-            return Results.Json(await directory.AssignRoleAsync(SellerScope(sellerId, tenant), body.UserId, body.RoleId, actor, Trace(request), ct));
-        }
-        catch (Exception ex) when (ex is AccessControlException)
-        {
-            return MapError(ex);
-        }
-    }
-
-    private static async Task<IResult> AdminSellerRemoveAssignmentAsync(
-        Guid sellerId, Guid assignmentId, HttpRequest request, CurrentAuthenticatedSession session, ICurrentTenant tenant,
-        IAuthorizationGuard guard, IAuthorizationService authz, IHostEnvironment env, IAccessControlDirectory directory, CancellationToken ct)
-    {
-        try
-        {
-            var actor = await AdminPanelAccess.RequireAuthorizedAsync(request, session, tenant, guard, env, ct);
-            await AccessControlCapabilityGate.EnsureAsync(actor, "accesscontrol.manage", authz, tenant, ct);
-            await directory.RemoveAssignmentAsync(assignmentId, SellerScope(sellerId, tenant), actor, Trace(request), ct);
-            return Results.NoContent();
-        }
-        catch (Exception ex) when (ex is AccessControlException)
-        {
-            return MapError(ex);
-        }
-    }
-
-    private static async Task<IResult> AdminSellerEffectiveAsync(
-        Guid sellerId, Guid userId, HttpRequest request, CurrentAuthenticatedSession session, ICurrentTenant tenant,
-        IAuthorizationGuard guard, IAuthorizationService authz, IHostEnvironment env, IAccessControlDirectory directory, CancellationToken ct)
-    {
-        var actor = await AdminPanelAccess.RequireAuthorizedAsync(request, session, tenant, guard, env, ct);
-        await AccessControlCapabilityGate.EnsureAsync(actor, "accesscontrol.view", authz, tenant, ct);
-        return Results.Json(await directory.GetEffectiveAccessAsync(userId, SellerScope(sellerId, tenant), ct));
     }
 
     #endregion
