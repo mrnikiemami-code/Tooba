@@ -765,7 +765,10 @@
     "currentPhase": "CQRS_READ_LIST_GET_ONLY",
     "nextExpectedAfterFoundation": "BOUNDED_CQRS_ROUTE_SLICES",
     "accessControlClosure": "COMPLETE",
-    "nextHostFolderAfterAddressBook": "DETERMINE_AFTER_ADDRESSBOOK_CLOSURE"
+    "nextHostFolderAfterAddressBook": "Authentication",
+    "deferredHostFolders": [
+      "Admin"
+    ]
   },
   "architectCursorWorkflow": {
     "protocol": "BRIDGE-WAKE-V1",
@@ -789,5 +792,16 @@
     "validation": "FOCUSED_ESSENTIAL_BUILDS_TESTS_ONLY_TESTS_ARE_EVIDENCE_NOT_NAVIGATION",
     "recoveryDiscipline": "SYNC_SOT_FREQUENTLY_NEW_CHAT_MUST_RESUME_FROM_REPO_NOT_CONVERSATION_MEMORY",
     "minimalRecoveryPhraseFa": "برگردیم به TMAR؛ ریکاوری را انجام بده"
+  },
+  "hostTraversalOverride": {
+    "afterAddressBook": "Authentication",
+    "deferredFolders": [
+      "Admin"
+    ],
+    "rationale": {
+      "Authentication": "NEXT_AFTER_ADDRESSBOOK_USER_DIRECTIVE",
+      "Admin": "DEFER_LARGE_FOLDER_TO_LATER_AVOID_SCOPE_EXPANSION_AND_LOOP_RISK"
+    },
+    "rule": "After AddressBook closure, skip Admin for now and continue with Authentication. Do not start Admin until explicitly resumed by Architect/user."
   }
 }
