@@ -106,8 +106,8 @@ public sealed class TmarDurableGuardTests
         Assert.Equal("USER_ACCEPTED", rootEl.GetProperty("goldenWaveUserReview").GetString());
         Assert.Equal("TB-TMAR-GOLDEN-WAVE-FINAL-CLOSURE-001", rootEl.GetProperty("goldenWaveClosedBy").GetString());
         Assert.False(string.IsNullOrWhiteSpace(rootEl.GetProperty("goldenWaveClosedCommit").GetString()));
-        Assert.Equal("TB-TMAR-SETTLEMENT-ARCH-COMPLETE-002-PRECERT-REPAIR-001", rootEl.GetProperty("nextTask").GetString());
-        Assert.Equal("SETTLEMENT_NEEDS_PRECERT_REPAIR_THEN_STRUCTURE", rootEl.GetProperty("nextTaskGate").GetString());        Assert.Equal("PAUSED_AT_SAFE_W5_CHECKPOINT", rootEl.GetProperty("checkoutState").GetString());
+        Assert.Equal("TB-TMAR-SETTLEMENT-ARCH-COMPLETE-002-STRUCTURE-001", rootEl.GetProperty("nextTask").GetString());
+        Assert.Equal("NEXT_TMAR_WAVE_AFTER_SETTLEMENT_PRECERT_VALIDATION", rootEl.GetProperty("nextTaskGate").GetString());        Assert.Equal("PAUSED_AT_SAFE_W5_CHECKPOINT", rootEl.GetProperty("checkoutState").GetString());
         Assert.True(rootEl.GetProperty("frontendFrozen").GetBoolean());
         Assert.Equal("ARCH-COMPLETE-002", rootEl.GetProperty("locksVersion").GetString());
         Assert.Equal(
@@ -350,6 +350,22 @@ public sealed class TmarDurableGuardTests
         Assert.Equal("NEEDS_PRECERT_REPAIR_THEN_STRUCTURE", settlementAudit.GetProperty("auditDecision").GetString());
         Assert.DoesNotContain("Settlement", structureCertified, StringComparer.Ordinal);
         Assert.Contains("Settlement", structureUncertified, StringComparer.Ordinal);
+
+        var settlementValidation = rootEl.GetProperty("settlementPrecertValidation");
+        Assert.Equal("TB-TMAR-SETTLEMENT-ARCH-COMPLETE-002-PRECERT-REPAIR-001",
+            settlementValidation.GetProperty("task").GetString());
+        Assert.Equal(10, settlementValidation.GetProperty("endpointReachableRequests").GetInt32());
+        Assert.Equal(4, settlementValidation.GetProperty("validatorRequiredCount").GetInt32());
+        Assert.Equal(4, settlementValidation.GetProperty("validatorsPresentCount").GetInt32());
+        Assert.Equal(0, settlementValidation.GetProperty("validatorsMissingCount").GetInt32());
+        Assert.Equal(6, settlementValidation.GetProperty("noValidatorRequiredCount").GetInt32());
+        Assert.Equal("COMPLETE_4_OF_4_REQUIRED_PRESENT_6_NO_VALIDATOR_REQUIRED",
+            settlementValidation.GetProperty("validatorCoverage").GetString());
+        Assert.Equal("NONE", settlementValidation.GetProperty("directValidatorInvocation").GetString());
+        Assert.Equal("12.5.0", settlementValidation.GetProperty("mediatR").GetString());
+        Assert.Equal("ZERO", settlementValidation.GetProperty("settlementToHostDependency").GetString());
+        Assert.Equal("PENDING_TB_TMAR_SETTLEMENT_ARCH_COMPLETE_002_STRUCTURE_001",
+            settlementValidation.GetProperty("structureCertification").GetString());
         Assert.Equal(
             "TB-TMAR-CART-POSTCERT-SEMANTIC-HOST-CLOSURE-001-R1",
             cartEntry.GetProperty("lastPostCertificationRepairTask").GetString());
