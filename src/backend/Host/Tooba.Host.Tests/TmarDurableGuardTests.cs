@@ -106,8 +106,8 @@ public sealed class TmarDurableGuardTests
         Assert.Equal("USER_ACCEPTED", rootEl.GetProperty("goldenWaveUserReview").GetString());
         Assert.Equal("TB-TMAR-GOLDEN-WAVE-FINAL-CLOSURE-001", rootEl.GetProperty("goldenWaveClosedBy").GetString());
         Assert.False(string.IsNullOrWhiteSpace(rootEl.GetProperty("goldenWaveClosedCommit").GetString()));
-        Assert.Equal("USER_REVIEW_SETTLEMENT_ARCH_COMPLETE_002_STRUCTURE_001", rootEl.GetProperty("nextTask").GetString());
-        Assert.Equal("USER_REVIEW_REQUIRED_AFTER_SETTLEMENT_STRUCTURE_CERTIFICATION", rootEl.GetProperty("nextTaskGate").GetString());
+        Assert.Equal("TB-TMAR-FULFILLMENT-ARCH-COMPLETE-002-PRECERT-REPAIR-001", rootEl.GetProperty("nextTask").GetString());
+        Assert.Equal("FULFILLMENT_NEEDS_PRECERT_REPAIR_THEN_STRUCTURE", rootEl.GetProperty("nextTaskGate").GetString());
         Assert.Equal("PAUSED_AT_SAFE_W5_CHECKPOINT", rootEl.GetProperty("checkoutState").GetString());
         Assert.True(rootEl.GetProperty("frontendFrozen").GetBoolean());
         Assert.Equal("ARCH-COMPLETE-002", rootEl.GetProperty("locksVersion").GetString());
@@ -157,6 +157,31 @@ public sealed class TmarDurableGuardTests
         Assert.Contains("Cart", structureCertified);
         Assert.Contains("Offer", structureCertified);
         Assert.True(rootEl.GetProperty("hostCartBoundary").GetProperty("structureCertifiedUnderArchComplete002").GetBoolean());
+
+        var fulfillmentAudit = rootEl.GetProperty("fulfillmentArchComplete002Audit");
+        Assert.Equal("TB-TMAR-FULFILLMENT-ARCH-COMPLETE-002-AUDIT-001", fulfillmentAudit.GetProperty("task").GetString());
+        Assert.Equal("AUDIT_ONLY", fulfillmentAudit.GetProperty("state").GetString());
+        Assert.False(fulfillmentAudit.GetProperty("productionCodeChanged").GetBoolean());
+        Assert.False(fulfillmentAudit.GetProperty("structureCertifiedUnderArchComplete002").GetBoolean());
+        Assert.Equal(15, fulfillmentAudit.GetProperty("endpointReachableRequests").GetInt32());
+        Assert.Equal(15, fulfillmentAudit.GetProperty("totalMediatRRequests").GetInt32());
+        Assert.Equal(0, fulfillmentAudit.GetProperty("workerInternalRequests").GetInt32());
+        Assert.Equal(9, fulfillmentAudit.GetProperty("validatorRequiredCount").GetInt32());
+        Assert.Equal(0, fulfillmentAudit.GetProperty("validatorsPresentCount").GetInt32());
+        Assert.Equal(9, fulfillmentAudit.GetProperty("validatorsMissingCount").GetInt32());
+        Assert.Equal(6, fulfillmentAudit.GetProperty("noValidatorRequiredCount").GetInt32());
+        Assert.Equal(4, fulfillmentAudit.GetProperty("noInputNoValidatorCount").GetInt32());
+        Assert.Equal(2, fulfillmentAudit.GetProperty("authScopedNoValidatorCount").GetInt32());
+        Assert.Equal("0_OF_9_REQUIRED_PRESENT_6_NO_VALIDATOR_REQUIRED",
+            fulfillmentAudit.GetProperty("validatorCoverageState").GetString());
+        Assert.Equal("EXACT_UNGUARDED_LOOSE_PREFIX", fulfillmentAudit.GetProperty("pathNamespaceState").GetString());
+        Assert.Equal("THREE_THIN_HOST_SECURITY_ADAPTERS_ONLY",
+            fulfillmentAudit.GetProperty("hostFulfillmentResidue").GetString());
+        Assert.Equal("ZERO", fulfillmentAudit.GetProperty("fulfillmentToHostDependency").GetString());
+        Assert.Equal("NEEDS_PRECERT_REPAIR_THEN_STRUCTURE",
+            fulfillmentAudit.GetProperty("auditDecision").GetString());
+        Assert.Contains("Fulfillment", structureUncertified, StringComparer.Ordinal);
+        Assert.DoesNotContain("Fulfillment", structureCertified, StringComparer.Ordinal);
 
         var offerStructure = rootEl.GetProperty("offerArchComplete002Structure");
         Assert.True(offerStructure.GetProperty("structureCertifiedUnderArchComplete002").GetBoolean());
