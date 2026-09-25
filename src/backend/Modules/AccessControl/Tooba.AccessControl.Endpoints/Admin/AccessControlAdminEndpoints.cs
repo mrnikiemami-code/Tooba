@@ -4,6 +4,8 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using Tooba.AccessControl.Application;
 using Tooba.AccessControl.Application.Authorization;
+using Tooba.AccessControl.Application.Commands.ArchiveRole;
+using Tooba.AccessControl.Application.Commands.CloneRole;
 using Tooba.AccessControl.Application.Commands.CreateRole;
 using Tooba.AccessControl.Application.Commands.EnsureBootstrap;
 using Tooba.AccessControl.Application.Commands.UpdateRole;
@@ -32,6 +34,8 @@ public static class AccessControlAdminEndpoints
         group.MapGet("/roles/{roleId:guid}", GetRoleAsync);
         group.MapPost("/roles", CreateRoleAsync);
         group.MapPut("/roles/{roleId:guid}", UpdateRoleAsync);
+        group.MapPost("/roles/{roleId:guid}/clone", CloneRoleAsync);
+        group.MapDelete("/roles/{roleId:guid}", ArchiveRoleAsync);
     }
 
     private static async Task<IResult> BootstrapAsync(
@@ -184,6 +188,65 @@ public static class AccessControlAdminEndpoints
         catch (Exception ex) when (ex is AccessControlException or PlatformHttpException)
         {
             return MapAccessError(ex);
+        }
+    }
+
+    private static async Task<IResult> CloneRoleAsync(
+        Guid roleId,
+        CloneAccessRoleCommand body,
+        HttpRequest request,
+        ISender sender,
+        IAdminPanelAccess adminPanelAccess,
+        IAuthorizationService authz,
+        ICurrentTenant tenant,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            var actor = await adminPanelAccess.RequireAuthorizedAsync(request, cancellationToken);
+            await AccessControlCapabilityGate.EnsureAsync(actor, "accesscontrol.manage", authz, tenant, cancellationToken);
+            return Results.Json(await sender.Send(
+                new CloneRoleCommand(
+                    roleId,
+                    actor,
+                    tenant.Current?.TenantId.Value,
+                    body.Name,
+                    body.Code,
+                    body.Description,
+                    Trace(request)),
+                cancellationToken));
+        }
+        catch (AccessControlException ace)
+        {
+            return MapAccessError(ace);
+        }
+    }
+
+    private static async Task<IResult> ArchiveRoleAsync(
+        Guid roleId,
+        HttpRequest request,
+        ISender sender,
+        IAdminPanelAccess adminPanelAccess,
+        IAuthorizationService authz,
+        ICurrentTenant tenant,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            var actor = await adminPanelAccess.RequireAuthorizedAsync(request, cancellationToken);
+            await AccessControlCapabilityGate.EnsureAsync(actor, "accesscontrol.manage", authz, tenant, cancellationToken);
+            await sender.Send(
+                new ArchiveRoleCommand(
+                    roleId,
+                    actor,
+                    tenant.Current?.TenantId.Value,
+                    Trace(request)),
+                cancellationToken);
+            return Results.NoContent();
+        }
+        catch (AccessControlException ace)
+        {
+            return MapAccessError(ace);
         }
     }
 
