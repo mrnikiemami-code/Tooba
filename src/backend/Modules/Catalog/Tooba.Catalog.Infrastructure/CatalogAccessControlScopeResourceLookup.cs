@@ -42,4 +42,14 @@ internal sealed class CatalogAccessControlScopeResourceLookup(ICatalogLookupGate
             .Select(i => new AccessControlScopeResourceProduct(i.ProductId, i.Title, i.Status))
             .ToList();
     }
+
+    /// <inheritdoc />
+    public async Task<bool> CategoryExistsAsync(Guid categoryId, CancellationToken cancellationToken) =>
+        await catalog.FindCategoryAsync(categoryId, cancellationToken) is not null;
+
+    /// <inheritdoc />
+    public async Task<IReadOnlyDictionary<Guid, string>> GetCategoryNamesAsync(
+        IReadOnlyCollection<Guid> categoryIds,
+        CancellationToken cancellationToken) =>
+        await catalog.GetCategoryNamesAsync(categoryIds, cancellationToken);
 }

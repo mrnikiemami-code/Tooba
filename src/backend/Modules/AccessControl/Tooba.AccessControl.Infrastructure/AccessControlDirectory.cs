@@ -3,7 +3,7 @@ using Tooba.AccessControl.Application;
 using Tooba.AccessControl.Domain;
 using Tooba.AccessControl.Infrastructure.Persistence;
 using Tooba.BuildingBlocks;
-using Tooba.Catalog.Application;
+using Tooba.Catalog.Contracts;
 
 namespace Tooba.AccessControl.Infrastructure;
 
@@ -15,14 +15,14 @@ public sealed class AccessControlDirectory : IAccessControlDirectory
     private readonly AccessControlDbContext _db;
     private readonly IAuthorizationTupleWriter _tuples;
     private readonly AccessControlInstrumentation _telemetry;
-    private readonly ICatalogLookupGateway _catalog;
+    private readonly IAccessControlScopeResourceLookup _catalog;
 
     /// <summary>دایرکتوری را با DbContext و writer می‌سازد.</summary>
     public AccessControlDirectory(
         AccessControlDbContext db,
         IAuthorizationTupleWriter tuples,
         AccessControlInstrumentation telemetry,
-        ICatalogLookupGateway catalog)
+        IAccessControlScopeResourceLookup catalog)
     {
         _db = db;
         _tuples = tuples;
@@ -384,8 +384,8 @@ public sealed class AccessControlDirectory : IAccessControlDirectory
 
             if (scopeKind == AccessScopeKind.Category && scopeResourceId is Guid categoryId)
             {
-                var found = await _catalog.FindCategoryAsync(categoryId, cancellationToken);
-                if (found is null)
+                var found = await _catalog.CategoryExistsAsync(categoryId, cancellationToken);
+                if (!found)
                 {
                     throw new AccessControlException("access.scope.unknown_resource", "ردهٔ scope در Catalog یافت نشد.");
                 }
@@ -819,8 +819,8 @@ public sealed class AccessControlDirectory : IAccessControlDirectory
                     throw new AccessControlException("access.scope.unknown_resource", "منبع scope رده الزامی است.");
                 }
 
-                var found = await _catalog.FindCategoryAsync(categoryId, cancellationToken);
-                if (found is null)
+                var found = await _catalog.CategoryExistsAsync(categoryId, cancellationToken);
+                if (!found)
                 {
                     throw new AccessControlException("access.scope.unknown_resource", "ردهٔ scope در Catalog یافت نشد.");
                 }

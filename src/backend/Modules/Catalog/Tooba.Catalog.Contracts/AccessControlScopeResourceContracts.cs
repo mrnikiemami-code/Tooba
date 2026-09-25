@@ -55,4 +55,16 @@ public interface IAccessControlScopeResourceLookup
     Task<IReadOnlyList<AccessControlScopeResourceProduct>> ListProductsAsync(
         string? search,
         CancellationToken cancellationToken);
+
+    /// <summary>آیا ردهٔ موردنظر وجود دارد.</summary>
+    /// <param name="categoryId">شناسهٔ رده.</param>
+    /// <param name="cancellationToken">توکن لغو.</param>
+    Task<bool> CategoryExistsAsync(Guid categoryId, CancellationToken cancellationToken);
+
+    /// <summary>نام محلی رده‌ها به تفکیک شناسه.</summary>
+    /// <param name="categoryIds">شناسهٔ رده‌ها.</param>
+    /// <param name="cancellationToken">توکن لغو.</param>
+    Task<IReadOnlyDictionary<Guid, string>> GetCategoryNamesAsync(
+        IReadOnlyCollection<Guid> categoryIds,
+        CancellationToken cancellationToken);
 }

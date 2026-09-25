@@ -1,5 +1,6 @@
 using Tooba.BuildingBlocks;
 using Tooba.Catalog.Application;
+using Tooba.Catalog.Contracts;
 using Tooba.Catalog.Domain;
 
 namespace Tooba.Host.Tests;
@@ -7,7 +8,7 @@ namespace Tooba.Host.Tests;
 /// <summary>
 /// درز Catalog آزمایشی برای Access Control بدون DbContext واقعی Catalog.
 /// </summary>
-internal sealed class FakeCatalogLookupGateway : ICatalogLookupGateway
+internal sealed class FakeCatalogLookupGateway : ICatalogLookupGateway, IAccessControlScopeResourceLookup
 {
     private readonly Dictionary<Guid, CategoryReference> _categories = new();
     private readonly Dictionary<Guid, string> _categoryNames = new();
@@ -114,6 +115,34 @@ internal sealed class FakeCatalogLookupGateway : ICatalogLookupGateway
         Guid variantId,
         CancellationToken cancellationToken) =>
         Task.FromResult<EffectiveQuantityPolicy?>(null);
+
+    /// <inheritdoc />
+    public async Task<bool> CategoryExistsAsync(Guid categoryId, CancellationToken cancellationToken) =>
+        await FindCategoryAsync(categoryId, cancellationToken) is not null;
+
+    /// <inheritdoc />
+    public async Task<IReadOnlyList<AccessControlScopeResourceCategory>> ListCategoriesAsync(
+        string? search,
+        CancellationToken cancellationToken) =>
+        (await ListCategoriesForAccessControlAsync(search, cancellationToken))
+            .Select(i => new AccessControlScopeResourceCategory(i.CategoryId, i.ParentCategoryId, i.Name, i.Status))
+            .ToList();
+
+    /// <inheritdoc />
+    public async Task<IReadOnlyList<AccessControlScopeResourceBrand>> ListBrandsAsync(
+        string? search,
+        CancellationToken cancellationToken) =>
+        (await ListBrandsForAccessControlAsync(search, cancellationToken))
+            .Select(i => new AccessControlScopeResourceBrand(i.BrandId, i.Name, i.Status))
+            .ToList();
+
+    /// <inheritdoc />
+    public async Task<IReadOnlyList<AccessControlScopeResourceProduct>> ListProductsAsync(
+        string? search,
+        CancellationToken cancellationToken) =>
+        (await ListProductsForAccessControlAsync(search, cancellationToken))
+            .Select(i => new AccessControlScopeResourceProduct(i.ProductId, i.Title, i.Status))
+            .ToList();
 
     /// <inheritdoc />
     public Task<IReadOnlyDictionary<Guid, EffectiveQuantityPolicy>> GetEffectiveQuantityPoliciesForVariantIdsAsync(
