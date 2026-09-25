@@ -1,5 +1,15 @@
 TOOBA TMAR MASTER RECOVERY
 
+Canonical Architect ↔ Cursor handoff (recovery-critical)
+- Source of truth: `docs/architecture/TMAR-HOST-EVACUATION-PROTOCOL.md#architect--cursor-canonical-task-handoff`.
+- ChatGPT = Architect; Cursor = worker.
+- Tasks are delivered to the user as downloadable `<Task-ID>.task.md` artifacts, not pasted inline into chat; Cursor commits the exact file under `docs/ai/tasks/<Task-ID>.task.md`.
+- Issue one task at a time only after verifying/accepting the prior Worker Result. Repair naming uses `-R1/-R2/...`.
+- Worker returns only canonical `BEGIN_TOOBA_WORKER_RESULT ... END_TOOBA_WORKER_RESULT` and stops.
+- Task sizing: coherent family-sized where safe; target 10–12 minutes, hard max 15 minutes. On overrun risk: `INCOMPLETE` + `STOP`; no loop, retry cascade, silent split, scope expansion, or auto-next.
+- Validation: focused essential builds/tests only; tests are evidence, not navigation.
+- Recovery SoT must stay current so a new chat can resume by reading repo state. Minimal user phrase: `برگردیم به TMAR؛ ریکاوری را انجام بده`.
+
 Current Golden Wave Closure (authoritative)
 
 - Locks: ARCH-COMPLETE-002, HOST-MODULE-ENDPOINT-001, ARCH-CQRS-001/002
