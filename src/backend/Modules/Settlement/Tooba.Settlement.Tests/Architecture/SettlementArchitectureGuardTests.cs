@@ -7,7 +7,7 @@ namespace Tooba.Settlement.Tests.Architecture;
 public sealed class SettlementArchitectureGuardTests
 {
     private static readonly string[] AllowedDomainFolders = ["Aggregates", "Entities", "ValueObjects", "Events"];
-    private static readonly string[] AllowedApplicationFolders = ["Ports", "Models", "Queries", "Commands", "Errors"];
+    private static readonly string[] AllowedApplicationFolders = ["Ports", "Models", "Queries", "Commands", "Errors", "Validators"];
     private static readonly string[] AllowedInfrastructureFolders =
         ["Persistence", "Directories", "Messaging", "DependencyInjection", "Bridges", "Gateways", "Handlers", "Adapters", "Adapters",
             "Observability", "Queries", "Errors", "Migrations"];
