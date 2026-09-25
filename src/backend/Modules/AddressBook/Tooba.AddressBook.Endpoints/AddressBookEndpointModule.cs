@@ -1,33 +1,30 @@
+using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
+using Tooba.AddressBook.Endpoints.Customer;
 
 namespace Tooba.AddressBook.Endpoints;
 
 /// <summary>
-/// FOUNDATION SHELL ONLY — AddressBook HTTP ownership composition.
-/// This task creates the module boundary only. It intentionally maps ZERO routes:
-/// all six current AddressBook routes are still Host-owned in
-/// <c>Tooba.Host/AddressBook/AddressBookEndpoints.cs</c> and must not be switched yet.
-/// The <see cref="MapAddressBookModuleEndpoints"/> extension is a temporary
-/// FOUNDATION_ONLY_NO_ROUTES placeholder so a later bounded slice can move route ownership
-/// without changing its public shape.
+/// AddressBook HTTP ownership composition.
+/// Read routes (List + Get) are module-owned as of `TB-TMAR-ADDRESSBOOK-ENDPOINT-MIGRATION-READ-001`;
+/// the four write routes (create/update/delete/set-default) are still Host-owned by
+/// <c>Tooba.Host/AddressBook/AddressBookEndpoints.cs</c> and will move in a later bounded slice.
 /// </summary>
 public static class AddressBookEndpointModule
 {
-    /// <summary>
-    /// FOUNDATION_ONLY_NO_ROUTES — registers no AddressBook routes in this task.
-    /// Program.cs must not call this yet; Host keeps all six route mappings.
-    /// </summary>
+    /// <summary>Maps the currently module-owned AddressBook routes (List + Get only).</summary>
     public static IEndpointRouteBuilder MapAddressBookModuleEndpoints(this IEndpointRouteBuilder app)
     {
         ArgumentNullException.ThrowIfNull(app);
+        var group = app.MapGroup("/v1/customer/addresses");
+        AddressBookCustomerReadEndpoints.MapReads(group);
         return app;
     }
 
     /// <summary>
-    /// FOUNDATION_ONLY_NO_ROUTES — module-owned presentation registration hook.
-    /// Intentionally registers nothing yet; error catalog / admin grid normalizer / authorizer seams
-    /// are added by the later bounded AddressBook CQRS+endpoints slice.
+    /// Module-owned presentation registration hook. Intentionally registers nothing yet; error catalog /
+    /// admin grid normalizer / authorizer seams are added by later bounded AddressBook slices.
     /// </summary>
     public static IServiceCollection AddAddressBookEndpointPresentation(this IServiceCollection services)
     {

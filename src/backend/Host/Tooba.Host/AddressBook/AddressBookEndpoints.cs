@@ -1,5 +1,4 @@
 ﻿using Tooba.AddressBook.Application;
-using Tooba.Host.Storefront;
 
 namespace Tooba.Host.AddressBook;
 
@@ -8,52 +7,14 @@ public static class AddressBookEndpoints
 {
     private const string DevActorHeader = "X-Tooba-Dev-Actor-User-Id";
 
-    /// <summary>مسیرهای CRUD و پیش‌فرض را زیر مرز مشتری ثبت می‌کند.</summary>
+    /// <summary>مسیرهای نوشتن (ایجاد/ویرایش/حذف/پیش‌فرض) را زیر مرز مشتری ثبت می‌کند؛ خواندن‌ها ماژول‌محور شده‌اند.</summary>
     public static void MapAddressBookEndpoints(this WebApplication app)
     {
         var group = app.MapGroup("/v1/customer/addresses");
-        group.MapGet("", ListAsync);
-        group.MapGet("/{addressId:guid}", GetAsync);
         group.MapPost("", CreateAsync);
         group.MapPut("/{addressId:guid}", UpdateAsync);
         group.MapDelete("/{addressId:guid}", DeleteAsync);
         group.MapPost("/{addressId:guid}/default", SetDefaultAsync);
-    }
-
-    private static async Task<IResult> ListAsync(
-        HttpRequest request,
-        CurrentAuthenticatedSession session,
-        IHostEnvironment environment,
-        IAddressBookDirectory addresses,
-        CancellationToken cancellationToken)
-    {
-        var actor = ResolveActor(request, session, environment);
-        if (actor is null)
-        {
-            return Unauthorized();
-        }
-
-        return Results.Json(await addresses.ListAsync(actor.Value, cancellationToken));
-    }
-
-    private static async Task<IResult> GetAsync(
-        Guid addressId,
-        HttpRequest request,
-        CurrentAuthenticatedSession session,
-        IHostEnvironment environment,
-        IAddressBookDirectory addresses,
-        CancellationToken cancellationToken)
-    {
-        var actor = ResolveActor(request, session, environment);
-        if (actor is null)
-        {
-            return Unauthorized();
-        }
-
-        var item = await addresses.GetAsync(actor.Value, addressId, cancellationToken);
-        return item is null
-            ? Results.Json(new { title = "Not Found", errorCode = "customer.address.missing" }, statusCode: StatusCodes.Status404NotFound)
-            : Results.Json(item);
     }
 
     private static async Task<IResult> CreateAsync(
@@ -154,7 +115,7 @@ public static class AddressBookEndpoints
             return actor;
         }
 
-        return Tooba.Order.Application.Storefront.Services.StorefrontCheckoutService.StorefrontGuestActorId;
+        return Tooba.Order.Contracts.Fulfillment.StorefrontGuestActor.ActorId;
     }
 
     private static IResult Unauthorized() => Results.Json(

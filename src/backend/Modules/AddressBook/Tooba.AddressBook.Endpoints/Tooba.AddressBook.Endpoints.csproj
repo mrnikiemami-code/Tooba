@@ -13,5 +13,6 @@
   <ItemGroup>
     <ProjectReference Include="..\Tooba.AddressBook.Application\Tooba.AddressBook.Application.csproj" />
     <ProjectReference Include="..\..\..\BuildingBlocks\Tooba.BuildingBlocks\Tooba.BuildingBlocks.csproj" />
+    <ProjectReference Include="..\..\Order\Tooba.Order.Contracts\Tooba.Order.Contracts.csproj" />
   </ItemGroup>
 </Project>
