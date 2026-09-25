@@ -266,10 +266,65 @@
           "forbiddenTopLevelFolders": []
         }
       ]
+    },
+    {
+      "module": "Settlement",
+      "structureCertified": true,
+      "lockVersion": "ARCH-COMPLETE-002",
+      "projects": [
+        {
+          "projectName": "Tooba.Settlement.Application",
+          "rootAllowlist": [
+            "GlobalUsings.Domain.cs",
+            "GlobalUsings.Layout.cs"
+          ],
+          "rootAllowlistJustification": "Both are genuine project-wide Settlement imports only; no foreign module Application/Infrastructure/Domain coupling and no namespace-workaround behavior.",
+          "forbiddenRootFiles": [
+            "SettlementContracts.cs",
+            "SettlementCommands.cs",
+            "SettlementQueries.cs",
+            "SettlementHandlers.cs",
+            "SettlementErrorCodes.cs",
+            "SettlementAdminModels.cs",
+            "RequestSellerPayoutCommand.cs",
+            "QueryAdminPayoutGridQuery.cs"
+          ],
+          "forbiddenTopLevelFolders": []
+        },
+        {
+          "projectName": "Tooba.Settlement.Endpoints",
+          "rootAllowlist": [
+            "SettlementEndpointModule.cs"
+          ],
+          "forbiddenRootFiles": [
+            "SettlementSellerEndpoints.cs",
+            "SettlementAdminEndpoints.cs",
+            "ISettlementSellerAuthorizer.cs",
+            "ISettlementAdminAuthorizer.cs"
+          ],
+          "forbiddenTopLevelFolders": []
+        },
+        {
+          "projectName": "Tooba.Settlement.Infrastructure",
+          "rootAllowlist": [
+            "GlobalUsings.Domain.cs",
+            "GlobalUsings.Layout.cs"
+          ],
+          "rootAllowlistJustification": "Both are genuine project-wide Settlement Domain/Application-port/internal integration imports; no foreign module Application/Infrastructure/Domain coupling and no alias workaround.",
+          "forbiddenRootFiles": [
+            "SettlementModule.cs",
+            "SettlementDbContext.cs",
+            "SettlementDirectory.cs",
+            "SettlementOutboxRegistration.cs",
+            "SettlementEventHandlers.cs",
+            "AdminPayoutGridQueryEngine.cs"
+          ],
+          "forbiddenTopLevelFolders": []
+        }
+      ]
     }
   ],
   "uncertifiedHttpOwningModules": [
-    "Settlement",
     "Fulfillment",
     "Returns",
     "Notification",

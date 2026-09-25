@@ -186,7 +186,7 @@ public sealed class SettlementValidatorCoverageGuardTests
     }
 
     [Fact]
-    public void Settlement_remains_not_structure_certified()
+    public void Settlement_is_structure_certified_under_arch_complete_002()
     {
         var state = File.ReadAllText(Path.Combine(
             RepoRoot(), "docs", "architecture", "tmar-current-state.json"));
@@ -197,7 +197,12 @@ public sealed class SettlementValidatorCoverageGuardTests
         var at = manifests.IndexOf("\"uncertifiedHttpOwningModules\"", StringComparison.Ordinal);
         Assert.True(at >= 0, "uncertifiedHttpOwningModules missing");
         var window = manifests[at..Math.Min(manifests.Length, at + 2000)];
-        Assert.Contains("Settlement", window, StringComparison.Ordinal);
+        Assert.DoesNotContain("Settlement", window, StringComparison.Ordinal);
+
+        using var stateDoc = System.Text.Json.JsonDocument.Parse(state);
+        var certified = stateDoc.RootElement.GetProperty("structureLock").GetProperty("certifiedModules")
+            .EnumerateArray().Select(x => x.GetString()!).ToArray();
+        Assert.Contains("Settlement", certified);
     }
 
     private static IReadOnlyList<string> EndpointFiles() =>

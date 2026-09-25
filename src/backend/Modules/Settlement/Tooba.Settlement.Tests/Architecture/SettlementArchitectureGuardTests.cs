@@ -49,6 +49,7 @@ public sealed class SettlementArchitectureGuardTests
         AssertNoRootDump("Tooba.Settlement.Infrastructure", AllowedInfrastructureFolders);
         AssertNoRootDump("Tooba.Settlement.Endpoints", AllowedEndpointsFolders);
         AssertNamespacesAlign("Tooba.Settlement.Domain", "Tooba.Settlement.Domain");
+        AssertNamespacesAlign("Tooba.Settlement.Contracts", "Tooba.Settlement.Contracts");
         AssertNamespacesAlign("Tooba.Settlement.Application", "Tooba.Settlement.Application");
         AssertNamespacesAlign("Tooba.Settlement.Infrastructure", "Tooba.Settlement.Infrastructure");
         AssertNamespacesAlign("Tooba.Settlement.Endpoints", "Tooba.Settlement.Endpoints");
@@ -239,6 +240,51 @@ public sealed class SettlementArchitectureGuardTests
         Assert.True(messageHeuristics.Count == 0, "message heuristics: " + string.Join("; ", messageHeuristics));
     }
 
+    [Fact]
+    public void Settlement_host_residue_is_exactly_two_thin_security_adapters()
+    {
+        var hostRoot = Path.Combine(RepoRoot(), "src", "backend", "Host", "Tooba.Host");
+
+        var authorizers = Directory.EnumerateFiles(hostRoot, "*.cs", SearchOption.AllDirectories)
+            .Where(p => !p.Contains($"{Path.DirectorySeparatorChar}bin{Path.DirectorySeparatorChar}", StringComparison.Ordinal)
+                        && !p.Contains($"{Path.DirectorySeparatorChar}obj{Path.DirectorySeparatorChar}", StringComparison.Ordinal))
+            .Where(p => File.ReadAllText(p).Contains("ISettlement", StringComparison.Ordinal)
+                        && (File.ReadAllText(p).Contains("ISettlementAdminAuthorizer", StringComparison.Ordinal)
+                            || File.ReadAllText(p).Contains("ISettlementSellerAuthorizer", StringComparison.Ordinal)))
+            .Where(p => !p.EndsWith("Program.cs", StringComparison.Ordinal))
+            .Select(p => Path.GetRelativePath(hostRoot, p).Replace('\\', '/'))
+            .OrderBy(x => x, StringComparer.Ordinal)
+            .ToArray();
+        Assert.Equal(
+            new[] { "Admin/HostSettlementAdminAuthorizer.cs", "Seller/HostSettlementSellerAuthorizer.cs" },
+            authorizers);
+
+        // No Host Settlement business surface may exist.
+        Assert.False(Directory.Exists(Path.Combine(hostRoot, "Settlement")));
+        Assert.False(File.Exists(Path.Combine(hostRoot, "Grid", "AdminPayoutGridQueryEngine.cs")));
+        Assert.False(File.Exists(Path.Combine(hostRoot, "Settlement", "SettlementPanelComposer.cs")));
+
+        // Settlement -> Host dependency must remain ZERO.
+        var settlementSources = new[]
+        {
+            "Tooba.Settlement.Domain", "Tooba.Settlement.Contracts",
+            "Tooba.Settlement.Application", "Tooba.Settlement.Infrastructure", "Tooba.Settlement.Endpoints",
+        };
+        foreach (var project in settlementSources)
+        {
+            var csproj = Path.Combine(SettlementRoot(), project, project + ".csproj");
+            if (!File.Exists(csproj)) continue;
+            var refs = ProjectRefs(project);
+            Assert.DoesNotContain(refs, r => r.Contains("Tooba.Host", StringComparison.OrdinalIgnoreCase));
+        }
+
+        var hostDependency = AllProductionSources()
+            .Where(x => x.Text.Contains("Tooba.Host", StringComparison.Ordinal))
+            .Select(x => x.Path)
+            .ToArray();
+        Assert.True(hostDependency.Length == 0, "Settlement -> Host: " + string.Join("; ", hostDependency));
+    }
+
     private static void AssertNoRootDump(string project, string[] allowedFolders)
     {
         var root = Path.Combine(SettlementRoot(), project);
@@ -259,32 +305,172 @@ public sealed class SettlementArchitectureGuardTests
 
     private static void AssertNamespacesAlign(string projectFolder, string nsPrefix)
     {
+        var root = Path.Combine(SettlementRoot(), projectFolder);
+        var rootFull = Path.GetFullPath(root);
         var violations = new List<string>();
-        foreach (var (path, text) in Sources(projectFolder))
+        foreach (var file in Directory.EnumerateFiles(root, "*.cs", SearchOption.AllDirectories))
         {
-            if (Path.GetFileName(path).StartsWith("GlobalUsings", StringComparison.OrdinalIgnoreCase))
-                continue;
-            var ns = Regex.Match(text, @"^namespace\s+([\w.]+)", RegexOptions.Multiline).Groups[1].Value;
-            if (string.IsNullOrEmpty(ns) || !ns.StartsWith(nsPrefix, StringComparison.Ordinal))
+            var normalized = file.Replace('\\', '/');
+            if (normalized.Contains("/bin/", StringComparison.Ordinal) || normalized.Contains("/obj/", StringComparison.Ordinal))
             {
-                violations.Add($"{path}: ns={ns}");
                 continue;
             }
 
-            var rel = path.Replace('\\', '/');
-            var marker = projectFolder.Replace('\\', '/') + "/";
-            var idx = rel.IndexOf(marker, StringComparison.Ordinal);
-            if (idx < 0) continue;
-            var under = rel[(idx + marker.Length)..];
-            var folder = under.Split('/')[0];
-            if (folder.EndsWith(".cs", StringComparison.Ordinal)) continue;
-            var expected = nsPrefix + "." + folder;
-            if (!ns.Equals(nsPrefix, StringComparison.Ordinal)
-                && !ns.StartsWith(expected, StringComparison.Ordinal))
-                violations.Add($"{path}: ns={ns} expectedPrefix={expected}");
+            var relative = Path.GetRelativePath(rootFull, file).Replace('\\', '/');
+
+            // GlobalUsings files aggregate imports and declare no namespace by design; they are
+            // covered by the dedicated global-using guard.
+            if (Path.GetFileName(relative).StartsWith("GlobalUsings", StringComparison.OrdinalIgnoreCase))
+            {
+                continue;
+            }
+
+            // EF generated migrations + model snapshot keep their legitimate migrations namespace.
+            if (relative.Contains("/Migrations/", StringComparison.OrdinalIgnoreCase)
+                || relative.EndsWith("ModelSnapshot.cs", StringComparison.OrdinalIgnoreCase))
+            {
+                continue;
+            }
+
+            var dir = Path.GetDirectoryName(relative)?.Replace('\\', '/');
+            var expected = string.IsNullOrEmpty(dir)
+                ? nsPrefix
+                : nsPrefix + "." + dir.Replace('/', '.');
+
+            var text = File.ReadAllText(file);
+            var match = Regex.Match(text, @"^namespace\s+([\w.]+)", RegexOptions.Multiline);
+            if (!match.Success)
+            {
+                violations.Add($"{relative}: no namespace");
+                continue;
+            }
+
+            // Exact equality only: a name that merely starts with the expected prefix is a violation.
+            if (!string.Equals(match.Groups[1].Value, expected, StringComparison.Ordinal))
+            {
+                violations.Add($"{relative}: ns={match.Groups[1].Value} expected={expected}");
+            }
         }
 
         Assert.True(violations.Count == 0, string.Join("\n", violations));
+    }
+
+    [Fact]
+    public void Settlement_root_allowlists_and_forbidden_flattened_files_are_enforced()
+    {
+        var expected = new (string Project, string[] Allowlist, string[] Forbidden)[]
+        {
+            ("Tooba.Settlement.Application", ["GlobalUsings.Domain.cs", "GlobalUsings.Layout.cs"], [
+                "SettlementContracts.cs", "SettlementCommands.cs", "SettlementQueries.cs",
+                "SettlementHandlers.cs", "SettlementErrorCodes.cs", "SettlementAdminModels.cs",
+                "RequestSellerPayoutCommand.cs", "QueryAdminPayoutGridQuery.cs",
+            ]),
+            ("Tooba.Settlement.Endpoints", ["SettlementEndpointModule.cs"], [
+                "SettlementSellerEndpoints.cs", "SettlementAdminEndpoints.cs",
+                "ISettlementSellerAuthorizer.cs", "ISettlementAdminAuthorizer.cs",
+            ]),
+            ("Tooba.Settlement.Infrastructure", ["GlobalUsings.Domain.cs", "GlobalUsings.Layout.cs"], [
+                "SettlementModule.cs", "SettlementDbContext.cs", "SettlementDirectory.cs",
+                "SettlementOutboxRegistration.cs", "SettlementEventHandlers.cs",
+                "AdminPayoutGridQueryEngine.cs",
+            ]),
+        };
+
+        foreach (var (project, allowlist, forbidden) in expected)
+        {
+            var root = Path.Combine(SettlementRoot(), project);
+            var actual = Directory.GetFiles(root, "*.cs", SearchOption.TopDirectoryOnly)
+                .Select(Path.GetFileName!)
+                .OrderBy(x => x, StringComparer.Ordinal)
+                .ToArray();
+            Assert.Equal(allowlist.OrderBy(x => x, StringComparer.Ordinal).ToArray(), actual);
+
+            foreach (var file in forbidden)
+            {
+                Assert.False(File.Exists(Path.Combine(root, file)), $"{project} forbidden root file {file}");
+            }
+        }
+    }
+
+    [Fact]
+    public void Settlement_global_usings_are_approved_project_wide_imports_only()
+    {
+        var expected = new Dictionary<string, string[]>(StringComparer.Ordinal)
+        {
+            ["Tooba.Settlement.Application/GlobalUsings.Domain.cs"] =
+            [
+                "Tooba.Settlement.Domain.Aggregates",
+                "Tooba.Settlement.Domain.Entities",
+                "Tooba.Settlement.Domain.Events",
+                "Tooba.Settlement.Domain.ValueObjects",
+            ],
+            ["Tooba.Settlement.Application/GlobalUsings.Layout.cs"] =
+            [
+                "Tooba.Settlement.Application.Ports",
+            ],
+            ["Tooba.Settlement.Infrastructure/GlobalUsings.Domain.cs"] =
+            [
+                "Tooba.Settlement.Domain.Aggregates",
+                "Tooba.Settlement.Domain.Entities",
+                "Tooba.Settlement.Domain.Events",
+                "Tooba.Settlement.Domain.ValueObjects",
+            ],
+            ["Tooba.Settlement.Infrastructure/GlobalUsings.Layout.cs"] =
+            [
+                "Tooba.Settlement.Application.Ports",
+                "Tooba.Settlement.Infrastructure.Directories",
+                "Tooba.Settlement.Infrastructure.DependencyInjection",
+                "Tooba.Settlement.Infrastructure.Messaging",
+                "Tooba.Settlement.Infrastructure.Handlers",
+                "Tooba.Settlement.Infrastructure.Observability",
+                "Tooba.Settlement.Infrastructure.Bridges",
+                "Tooba.Settlement.Infrastructure.Gateways",
+            ],
+        };
+
+        var actual = Directory.EnumerateFiles(SettlementRoot(), "GlobalUsings*.cs", SearchOption.AllDirectories)
+            .Where(p => !p.Contains($"{Path.DirectorySeparatorChar}bin{Path.DirectorySeparatorChar}", StringComparison.Ordinal)
+                        && !p.Contains($"{Path.DirectorySeparatorChar}obj{Path.DirectorySeparatorChar}", StringComparison.Ordinal))
+            .Select(p => Path.GetRelativePath(SettlementRoot(), p).Replace('\\', '/'))
+            .OrderBy(x => x, StringComparer.Ordinal)
+            .ToArray();
+        Assert.Equal(expected.Keys.OrderBy(x => x, StringComparer.Ordinal).ToArray(), actual);
+
+        foreach (var (relative, usings) in expected)
+        {
+            var text = File.ReadAllText(Path.Combine(SettlementRoot(), relative));
+            var aliases = Regex.Matches(text, @"global\s+using\s+([\w.]+)\s*;")
+                .Select(m => m.Groups[1].Value)
+                .OrderBy(x => x, StringComparer.Ordinal)
+                .ToArray();
+            Assert.Equal(usings.OrderBy(x => x, StringComparer.Ordinal).ToArray(), aliases);
+            Assert.DoesNotContain("=", text, StringComparison.Ordinal);
+        }
+    }
+
+    [Fact]
+    public void Settlement_rejects_namespace_alias_workarounds_and_foreign_global_aliases()
+    {
+        Assert.DoesNotContain(AllProductionSources(), x => x.Text.Contains("TypeForwardedTo", StringComparison.Ordinal));
+
+        // No foreign-module global alias may be used to hide wrong physical namespaces.
+        var foreignGlobalAlias = AllProductionSources()
+            .Where(x => Regex.IsMatch(
+                x.Text,
+                @"global\s+using\s+Tooba\.(Order|Payment|Returns|Party|Cart|Offer|Wallet|Fulfillment|Notification|Support|Promotion|Inventory|Media)\.[\w.]*(Application|Infrastructure|Domain)"))
+            .Select(x => x.Path)
+            .ToArray();
+        Assert.True(foreignGlobalAlias.Length == 0, "foreign global alias: " + string.Join("; ", foreignGlobalAlias));
+
+        // No compatibility shim may preserve an old flattened Settlement path.
+        var shims = AllProductionSources()
+            .Where(x => Regex.IsMatch(x.Text, @"namespace\s+Tooba\.Settlement\.(Application|Infrastructure|Endpoints);", RegexOptions.Multiline)
+                        && (x.Path.Contains("/Commands/", StringComparison.Ordinal)
+                            || x.Path.Contains("/Queries/", StringComparison.Ordinal)
+                            || x.Path.Contains("/Validators/", StringComparison.Ordinal)))
+            .Select(x => x.Path)
+            .ToArray();
+        Assert.True(shims.Length == 0, "flattened-namespace shim: " + string.Join("; ", shims));
     }
 
     private static IEnumerable<(string Path, string Text)> AllProductionSources() =>
