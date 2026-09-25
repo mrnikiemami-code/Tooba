@@ -319,7 +319,7 @@
         "certifiedModules":  "Order,Cart,StoreContext,Offer,Payment,Settlement",
         "checkoutState":  "PAUSED_AT_SAFE_W5_CHECKPOINT",
         "frontendFrozen":  true,
-        "commit":  "PENDING_FINAL_CLOSURE_COMMIT",
+        "commit":  "54b1c8ff1f6e9214a5b5c16b6103f0285bd2a37e",
         "evidence":  "docs/evidence/TB-TMAR-SETTLEMENT-ARCH-COMPLETE-002-STRUCTURE-001/settlement-structure-certification.md"
     },
     "offerArchComplete002Structure":  {
@@ -431,7 +431,7 @@
                                          "endpointOwnership":  "MODULE_ENDPOINTS",
                                          "cqrs":  "MEDIATR_12_5",
                                          "lastAcceptedTask":  "TB-TMAR-SETTLEMENT-ARCH-COMPLETE-002-STRUCTURE-001",
-                                         "lastAcceptedCommit":  "PENDING_FINAL_CLOSURE_COMMIT",
+                                         "lastAcceptedCommit":  "54b1c8ff1f6e9214a5b5c16b6103f0285bd2a37e",
                                          "structureCertifiedUnderArchComplete002":  true,
                                          "settlementStructureCertificationState":  "STRUCTURE_CERTIFIED_UNDER_ARCH_COMPLETE_002",
                                          "settlementHostResidue":  "TWO_THIN_HOST_SECURITY_ADAPTERS_ONLY",
