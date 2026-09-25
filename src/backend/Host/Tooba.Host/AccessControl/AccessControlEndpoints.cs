@@ -20,11 +20,7 @@ public static class AccessControlEndpoints
     public static void MapAccessControlEndpoints(this WebApplication app)
     {
         var admin = app.MapGroup("/v1/admin/access-control");
-        admin.MapGet("/assignments", AdminListAssignmentsAsync);
-        admin.MapPost("/assignments", AdminAssignAsync);
-        admin.MapDelete("/assignments/{assignmentId:guid}", AdminRemoveAssignmentAsync);
         admin.MapGet("/users", AdminSearchUsersAsync);
-        admin.MapGet("/users/{userId:guid}/effective", AdminEffectiveAsync);
         admin.MapGet("/demo-preview", AdminDemoPreviewAsync);
         admin.MapGet("/scope-resources/categories", AdminListCategoriesAsync);
         admin.MapGet("/scope-resources/brands", AdminListBrandsAsync);
@@ -60,50 +56,6 @@ public static class AccessControlEndpoints
 
     #region Admin platform
 
-    private static async Task<IResult> AdminListAssignmentsAsync(
-        HttpRequest request, CurrentAuthenticatedSession session, ICurrentTenant tenant, IAuthorizationGuard guard,
-        IAuthorizationService authz, IHostEnvironment env, IAccessControlDirectory directory, CancellationToken ct, Guid? userId = null)
-    {
-        var actor = await AdminPanelAccess.RequireAuthorizedAsync(request, session, tenant, guard, env, ct);
-        await AccessControlCapabilityGate.EnsureAsync(actor, "accesscontrol.view", authz, tenant, ct);
-        return Results.Json(await directory.ListAssignmentsAsync(PlatformScope(tenant), userId, ct));
-    }
-
-    private sealed record AssignBody(Guid UserId, Guid RoleId);
-
-    private static async Task<IResult> AdminAssignAsync(
-        AssignBody body, HttpRequest request, CurrentAuthenticatedSession session, ICurrentTenant tenant, IAuthorizationGuard guard,
-        IAuthorizationService authz, IHostEnvironment env, IAccessControlDirectory directory, CancellationToken ct)
-    {
-        try
-        {
-            var actor = await AdminPanelAccess.RequireAuthorizedAsync(request, session, tenant, guard, env, ct);
-            await AccessControlCapabilityGate.EnsureAsync(actor, "accesscontrol.manage", authz, tenant, ct);
-            return Results.Json(await directory.AssignRoleAsync(PlatformScope(tenant), body.UserId, body.RoleId, actor, Trace(request), ct));
-        }
-        catch (Exception ex) when (ex is AccessControlException)
-        {
-            return MapError(ex);
-        }
-    }
-
-    private static async Task<IResult> AdminRemoveAssignmentAsync(
-        Guid assignmentId, HttpRequest request, CurrentAuthenticatedSession session, ICurrentTenant tenant, IAuthorizationGuard guard,
-        IAuthorizationService authz, IHostEnvironment env, IAccessControlDirectory directory, CancellationToken ct)
-    {
-        try
-        {
-            var actor = await AdminPanelAccess.RequireAuthorizedAsync(request, session, tenant, guard, env, ct);
-            await AccessControlCapabilityGate.EnsureAsync(actor, "accesscontrol.manage", authz, tenant, ct);
-            await directory.RemoveAssignmentAsync(assignmentId, PlatformScope(tenant), actor, Trace(request), ct);
-            return Results.NoContent();
-        }
-        catch (Exception ex) when (ex is AccessControlException)
-        {
-            return MapError(ex);
-        }
-    }
-
     private static async Task<IResult> AdminSearchUsersAsync(
         HttpRequest request, CurrentAuthenticatedSession session, ICurrentTenant tenant, IAuthorizationGuard guard,
         IAuthorizationService authz, IHostEnvironment env, IAccessControlDirectory directory,
@@ -114,15 +66,6 @@ public static class AccessControlEndpoints
         await AccessControlCapabilityGate.EnsureAsync(actor, "accesscontrol.view", authz, tenant, ct);
         var hits = await directory.SearchUsersInScopeAsync(PlatformScope(tenant), null, ct);
         return Results.Json(await EnrichUserHitsAsync(hits, contacts, profiles, identity, q, ct));
-    }
-
-    private static async Task<IResult> AdminEffectiveAsync(
-        Guid userId, HttpRequest request, CurrentAuthenticatedSession session, ICurrentTenant tenant, IAuthorizationGuard guard,
-        IAuthorizationService authz, IHostEnvironment env, IAccessControlDirectory directory, CancellationToken ct)
-    {
-        var actor = await AdminPanelAccess.RequireAuthorizedAsync(request, session, tenant, guard, env, ct);
-        await AccessControlCapabilityGate.EnsureAsync(actor, "accesscontrol.view", authz, tenant, ct);
-        return Results.Json(await directory.GetEffectiveAccessAsync(userId, PlatformScope(tenant), ct));
     }
 
     private static IResult AdminDemoPreviewAsync(IHostEnvironment env)

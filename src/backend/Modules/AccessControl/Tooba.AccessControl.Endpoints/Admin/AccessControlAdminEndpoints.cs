@@ -5,14 +5,17 @@ using Microsoft.AspNetCore.Routing;
 using Tooba.AccessControl.Application;
 using Tooba.AccessControl.Application.Authorization;
 using Tooba.AccessControl.Application.Commands.ArchiveRole;
+using Tooba.AccessControl.Application.Commands.AssignRole;
 using Tooba.AccessControl.Application.Commands.CloneRole;
 using Tooba.AccessControl.Application.Commands.CreateRole;
 using Tooba.AccessControl.Application.Commands.EnsureBootstrap;
+using Tooba.AccessControl.Application.Commands.RemoveAssignment;
 using Tooba.AccessControl.Application.Commands.SetRolePermissions;
 using Tooba.AccessControl.Application.Commands.UpdateRole;
 using Tooba.AccessControl.Application.Queries.GetEffectiveAccess;
 using Tooba.AccessControl.Application.Queries.GetRole;
 using Tooba.AccessControl.Application.Queries.GetRolePermissions;
+using Tooba.AccessControl.Application.Queries.ListAssignments;
 using Tooba.AccessControl.Application.Queries.ListPermissionCatalog;
 using Tooba.AccessControl.Application.Queries.ListRoles;
 using Tooba.AccessControl.Domain;
@@ -40,6 +43,110 @@ public static class AccessControlAdminEndpoints
         group.MapDelete("/roles/{roleId:guid}", ArchiveRoleAsync);
         group.MapGet("/roles/{roleId:guid}/permissions", GetRolePermissionsAsync);
         group.MapPut("/roles/{roleId:guid}/permissions", SetRolePermissionsAsync);
+        group.MapGet("/assignments", ListAssignmentsAsync);
+        group.MapPost("/assignments", AssignAsync);
+        group.MapDelete("/assignments/{assignmentId:guid}", RemoveAssignmentAsync);
+        group.MapGet("/users/{userId:guid}/effective", EffectiveAsync);
+    }
+
+    private static async Task<IResult> ListAssignmentsAsync(
+        HttpRequest request,
+        ISender sender,
+        IAdminPanelAccess adminPanelAccess,
+        IAuthorizationService authz,
+        ICurrentTenant tenant,
+        CancellationToken cancellationToken,
+        Guid? userId = null)
+    {
+        var actor = await adminPanelAccess.RequireAuthorizedAsync(request, cancellationToken);
+        await AccessControlCapabilityGate.EnsureAsync(actor, "accesscontrol.view", authz, tenant, cancellationToken);
+        return Results.Json(await sender.Send(
+            new ListAssignmentsQuery(
+                AccessOwnerScopeKind.Platform,
+                null,
+                tenant.Current?.TenantId.Value,
+                userId),
+            cancellationToken));
+    }
+
+    private static async Task<IResult> AssignAsync(
+        AdminAssignBody body,
+        HttpRequest request,
+        ISender sender,
+        IAdminPanelAccess adminPanelAccess,
+        IAuthorizationService authz,
+        ICurrentTenant tenant,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            var actor = await adminPanelAccess.RequireAuthorizedAsync(request, cancellationToken);
+            await AccessControlCapabilityGate.EnsureAsync(actor, "accesscontrol.manage", authz, tenant, cancellationToken);
+            return Results.Json(await sender.Send(
+                new AssignRoleCommand(
+                    AccessOwnerScopeKind.Platform,
+                    null,
+                    body.UserId,
+                    body.RoleId,
+                    actor,
+                    tenant.Current?.TenantId.Value,
+                    Trace(request)),
+                cancellationToken));
+        }
+        catch (AccessControlException ace)
+        {
+            return MapAccessError(ace);
+        }
+    }
+
+    private static async Task<IResult> RemoveAssignmentAsync(
+        Guid assignmentId,
+        HttpRequest request,
+        ISender sender,
+        IAdminPanelAccess adminPanelAccess,
+        IAuthorizationService authz,
+        ICurrentTenant tenant,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            var actor = await adminPanelAccess.RequireAuthorizedAsync(request, cancellationToken);
+            await AccessControlCapabilityGate.EnsureAsync(actor, "accesscontrol.manage", authz, tenant, cancellationToken);
+            await sender.Send(
+                new RemoveAssignmentCommand(
+                    assignmentId,
+                    AccessOwnerScopeKind.Platform,
+                    null,
+                    actor,
+                    tenant.Current?.TenantId.Value,
+                    Trace(request)),
+                cancellationToken);
+            return Results.NoContent();
+        }
+        catch (AccessControlException ace)
+        {
+            return MapAccessError(ace);
+        }
+    }
+
+    private static async Task<IResult> EffectiveAsync(
+        Guid userId,
+        HttpRequest request,
+        ISender sender,
+        IAdminPanelAccess adminPanelAccess,
+        IAuthorizationService authz,
+        ICurrentTenant tenant,
+        CancellationToken cancellationToken)
+    {
+        var actor = await adminPanelAccess.RequireAuthorizedAsync(request, cancellationToken);
+        await AccessControlCapabilityGate.EnsureAsync(actor, "accesscontrol.view", authz, tenant, cancellationToken);
+        return Results.Json(await sender.Send(
+            new GetEffectiveAccessQuery(
+                userId,
+                AccessOwnerScopeKind.Platform,
+                null,
+                tenant.Current?.TenantId.Value),
+            cancellationToken));
     }
 
     private static async Task<IResult> BootstrapAsync(
@@ -323,6 +430,9 @@ public static class AccessControlAdminEndpoints
 
     private static string? Trace(HttpRequest request) =>
         request.Headers.TryGetValue("X-Request-Id", out var v) ? v.ToString() : null;
+
+    /// <summary>بدنهٔ تخصیص نقش به کاربر در سطح Platform.</summary>
+    private sealed record AdminAssignBody(Guid UserId, Guid RoleId);
 
     private static IResult MapAccessError(Exception ex) =>
         ex is AccessControlException ace
