@@ -2,10 +2,8 @@ using MediatR;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
-using Microsoft.Extensions.Hosting;
 using Tooba.AddressBook.Application.Customer.Get;
 using Tooba.AddressBook.Application.Customer.List;
-using Tooba.BuildingBlocks.Security;
 
 namespace Tooba.AddressBook.Endpoints.Customer;
 
@@ -22,12 +20,11 @@ public static class AddressBookCustomerReadEndpoints
 
     private static async Task<IResult> ListAsync(
         HttpContext httpContext,
-        ICurrentAuthenticatedUser currentUser,
-        IHostEnvironment environment,
+        IAddressBookCustomerActorResolver actorResolver,
         ISender sender,
         CancellationToken cancellationToken)
     {
-        var actor = AddressBookCustomerActorResolver.ResolveActor(httpContext, currentUser, environment);
+        var actor = actorResolver.ResolveActor(httpContext);
         if (actor is null)
         {
             return Unauthorized();
@@ -40,12 +37,11 @@ public static class AddressBookCustomerReadEndpoints
     private static async Task<IResult> GetAsync(
         Guid addressId,
         HttpContext httpContext,
-        ICurrentAuthenticatedUser currentUser,
-        IHostEnvironment environment,
+        IAddressBookCustomerActorResolver actorResolver,
         ISender sender,
         CancellationToken cancellationToken)
     {
-        var actor = AddressBookCustomerActorResolver.ResolveActor(httpContext, currentUser, environment);
+        var actor = actorResolver.ResolveActor(httpContext);
         if (actor is null)
         {
             return Unauthorized();

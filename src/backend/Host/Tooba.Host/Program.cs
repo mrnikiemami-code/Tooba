@@ -86,6 +86,7 @@ builder.Services.AddPromotionEndpointPresentation();
 builder.Services.AddOrderEndpointPresentation();
 builder.Services.AddPricingEndpointPresentation();
 builder.Services.AddFulfillmentEndpointPresentation();
+builder.Services.AddAddressBookEndpointPresentation();
 builder.Services.AddProblemDetails();
 builder.Services.AddSingleton<IExceptionPresentationService, ExceptionPresentationService>();
 builder.Services.AddExceptionHandler<ToobaExceptionHandler>();

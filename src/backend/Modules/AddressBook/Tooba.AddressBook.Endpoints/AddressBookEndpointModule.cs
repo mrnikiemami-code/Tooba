@@ -23,12 +23,14 @@ public static class AddressBookEndpointModule
     }
 
     /// <summary>
-    /// Module-owned presentation registration hook. Intentionally registers nothing yet; error catalog /
-    /// admin grid normalizer / authorizer seams are added by later bounded AddressBook slices.
+    /// Registers module-owned AddressBook presentation seams. The customer actor resolver is the neutral
+    /// actor-authority seam used by module endpoints; it consumes the already-registered shared
+    /// <c>ICurrentAuthenticatedUser</c> and does not introduce a second auth/session system.
     /// </summary>
     public static IServiceCollection AddAddressBookEndpointPresentation(this IServiceCollection services)
     {
         ArgumentNullException.ThrowIfNull(services);
+        services.AddScoped<IAddressBookCustomerActorResolver, AddressBookCustomerActorResolver>();
         return services;
     }
 }
