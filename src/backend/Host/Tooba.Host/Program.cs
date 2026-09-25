@@ -24,6 +24,7 @@ using Tooba.Host.Seller;
 using Tooba.Returns.Endpoints;
 using Tooba.Notification.Endpoints;
 using Tooba.Host.AccessControl;
+using Tooba.AccessControl.Endpoints;
 using Tooba.Payment.Endpoints;
 using Tooba.Promotion.Endpoints;
 using Tooba.Host.Storefront;
@@ -152,7 +153,8 @@ builder.Services.AddToobaCqrsFoundation(
     typeof(Tooba.Wallet.Application.Commands.RedeemCustomerGiftCard.RedeemCustomerGiftCardCommand).Assembly,
     typeof(Tooba.Payment.Application.Commands.InitiateStorefrontPayment.InitiateStorefrontPaymentCommand).Assembly,
     typeof(Tooba.Promotion.Application.Commands.CreateSellerPromotion.CreateSellerPromotionCommand).Assembly,
-    typeof(Tooba.Order.Application.Admin.Completeness.Queries.ListAdminOrderNotes.ListAdminOrderNotesQuery).Assembly);
+    typeof(Tooba.Order.Application.Admin.Completeness.Queries.ListAdminOrderNotes.ListAdminOrderNotesQuery).Assembly,
+    typeof(Tooba.AccessControl.Application.Commands.EnsureBootstrap.EnsureAccessControlBootstrapCommand).Assembly);
 builder.Services.AddScoped<IOrderAdminAuthorizer, HostOrderAdminAuthorizer>();
 builder.Services.AddScoped<
     Tooba.Order.Application.Admin.Operations.Ports.IOrderAdminEffectiveAccessReader,
@@ -518,6 +520,7 @@ app.MapSupportEndpoints();
 app.MapWalletEndpoints();
 app.MapNotificationEndpoints();
 app.MapAccessControlEndpoints();
+app.MapAccessControlModuleEndpoints();
 app.MapContentEndpoints();
 app.MapContentCategoryEndpoints();
 app.MapContentAuthorEndpoints();

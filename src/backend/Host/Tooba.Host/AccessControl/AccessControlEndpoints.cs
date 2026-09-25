@@ -34,7 +34,6 @@ public static class AccessControlEndpoints
         admin.MapGet("/users", AdminSearchUsersAsync);
         admin.MapGet("/users/{userId:guid}/effective", AdminEffectiveAsync);
         admin.MapGet("/demo-preview", AdminDemoPreviewAsync);
-        admin.MapPost("/bootstrap", AdminBootstrapAsync);
         admin.MapGet("/me/capabilities", AdminMeCapabilitiesAsync);
         admin.MapGet("/scope-resources/categories", AdminListCategoriesAsync);
         admin.MapGet("/scope-resources/brands", AdminListBrandsAsync);
@@ -360,15 +359,6 @@ public static class AccessControlEndpoints
         return demo is null
             ? Results.Json(new { title = "ACC demo seed not ready", code = "access.demo.not_ready" }, statusCode: StatusCodes.Status503ServiceUnavailable)
             : Results.Json(demo);
-    }
-
-    private static async Task<IResult> AdminBootstrapAsync(
-        HttpRequest request, CurrentAuthenticatedSession session, ICurrentTenant tenant, IAuthorizationGuard guard,
-        IHostEnvironment env, IAccessControlDirectory directory, CancellationToken ct)
-    {
-        var actor = await AdminPanelAccess.RequireAuthorizedAsync(request, session, tenant, guard, env, ct);
-        await directory.EnsureBootstrapAsync(actor, Array.Empty<Guid>(), tenant.Current?.TenantId.Value, ct);
-        return Results.Json(new { ok = true });
     }
 
     #endregion
