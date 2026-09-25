@@ -34,7 +34,6 @@ public static class AccessControlEndpoints
         admin.MapGet("/users", AdminSearchUsersAsync);
         admin.MapGet("/users/{userId:guid}/effective", AdminEffectiveAsync);
         admin.MapGet("/demo-preview", AdminDemoPreviewAsync);
-        admin.MapGet("/me/capabilities", AdminMeCapabilitiesAsync);
         admin.MapGet("/scope-resources/categories", AdminListCategoriesAsync);
         admin.MapGet("/scope-resources/brands", AdminListBrandsAsync);
         admin.MapGet("/scope-resources/products", AdminListProductsAsync);
@@ -73,7 +72,6 @@ public static class AccessControlEndpoints
         seller.MapDelete("/assignments/{assignmentId:guid}", SellerRemoveAssignmentAsync);
         seller.MapGet("/users", SellerSearchUsersAsync);
         seller.MapGet("/users/{userId:guid}/effective", SellerEffectiveAsync);
-        seller.MapGet("/me/capabilities", SellerMeCapabilitiesAsync);
         seller.MapGet("/scope-resources/categories", SellerListCategoriesAsync);
         seller.MapGet("/scope-resources/brands", SellerListBrandsAsync);
         seller.MapGet("/scope-resources/products", SellerListProductsAsync);
@@ -873,22 +871,6 @@ public static class AccessControlEndpoints
         var (actor, sellerId) = await RequireSellerAsync(request, session, guard, env, ct);
         await EnsureCapabilityAsync(actor, "accesscontrol.view", authz, tenant, ct);
         return Results.Json(await directory.GetEffectiveAccessAsync(userId, SellerScope(sellerId, tenant), ct));
-    }
-
-    private static async Task<IResult> AdminMeCapabilitiesAsync(
-        HttpRequest request, CurrentAuthenticatedSession session, ICurrentTenant tenant, IAuthorizationGuard guard,
-        IHostEnvironment env, IAccessControlDirectory directory, CancellationToken ct)
-    {
-        var actor = await AdminPanelAccess.RequireAuthorizedAsync(request, session, tenant, guard, env, ct);
-        return Results.Json(await directory.GetEffectiveAccessAsync(actor, PlatformScope(tenant), ct));
-    }
-
-    private static async Task<IResult> SellerMeCapabilitiesAsync(
-        HttpRequest request, CurrentAuthenticatedSession session, ICurrentTenant tenant, IAuthorizationGuard guard,
-        IHostEnvironment env, IAccessControlDirectory directory, CancellationToken ct)
-    {
-        var (actor, sellerId) = await RequireSellerAsync(request, session, guard, env, ct);
-        return Results.Json(await directory.GetEffectiveAccessAsync(actor, SellerScope(sellerId, tenant), ct));
     }
 
     private static async Task<IResult> AdminListCategoriesAsync(

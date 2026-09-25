@@ -3,6 +3,8 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using Tooba.AccessControl.Application.Commands.EnsureBootstrap;
+using Tooba.AccessControl.Application.Queries.GetEffectiveAccess;
+using Tooba.AccessControl.Domain;
 using Tooba.BuildingBlocks;
 using Tooba.BuildingBlocks.Security;
 
@@ -17,6 +19,7 @@ public static class AccessControlAdminEndpoints
     {
         ArgumentNullException.ThrowIfNull(group);
         group.MapPost("/bootstrap", BootstrapAsync);
+        group.MapGet("/me/capabilities", MeCapabilitiesAsync);
     }
 
     private static async Task<IResult> BootstrapAsync(
@@ -31,5 +34,22 @@ public static class AccessControlAdminEndpoints
             new EnsureAccessControlBootstrapCommand(actor, tenant.Current?.TenantId.Value),
             cancellationToken);
         return Results.Json(new { ok = true });
+    }
+
+    private static async Task<IResult> MeCapabilitiesAsync(
+        HttpRequest request,
+        ISender sender,
+        IAdminPanelAccess adminPanelAccess,
+        ICurrentTenant tenant,
+        CancellationToken cancellationToken)
+    {
+        var actor = await adminPanelAccess.RequireAuthorizedAsync(request, cancellationToken);
+        return Results.Json(await sender.Send(
+            new GetEffectiveAccessQuery(
+                actor,
+                AccessOwnerScopeKind.Platform,
+                null,
+                tenant.Current?.TenantId.Value),
+            cancellationToken));
     }
 }
