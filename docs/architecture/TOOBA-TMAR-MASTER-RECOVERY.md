@@ -673,3 +673,64 @@ Recent accepted recovery facts:
 - Fulfillment structure certification is now the intended next task: `TB-TMAR-FULFILLMENT-ARCH-COMPLETE-002-STRUCTURE-001`.
 
 After Fulfillment, do NOT automatically continue by uncertified-module list. Start Host traversal with AccessControl, then AddressBook, then subsequent Host folders in repository order.
+
+## TMAR Host Evacuation — Current Live State (AccessControl)
+
+Latest accepted task: `TB-TMAR-HOST-ACCESSCONTROL-USER-SEARCH-EFFECTIVE-SEAM-001`
+Latest accepted commit / SoT stamp: `4a6074e62fbaf557f57aa2770d76b8d14164dc72`
+Current track: `HOST_FIRST_FOLDER_BY_FOLDER` — active Host folder = `AccessControl`
+Latest accepted parent: `TB-TMAR-HOST-ACCESSCONTROL-ADMINPLATFORM-ASSIGNMENTS-EFFECTIVE-001` at `99d59d894a4464b57d1f53a6df9800843a76a592`
+
+### Accepted AccessControl migration summary (module-owned)
+
+- Permission catalog module-owned.
+- Admin platform role reads/writes/clone/archive/permissions module-owned.
+- AdminSeller complete role + permissions family module-owned.
+- Seller complete role + permissions family module-owned.
+- Seller ceiling + assignments module-owned (`TB-TMAR-HOST-ACCESSCONTROL-SELLER-CEILING-ASSIGNMENTS-001`, `46c3777c`).
+- AdminSeller ceiling + assignments + effective module-owned (`TB-TMAR-HOST-ACCESSCONTROL-ADMINSELLER-NONROLE-FAMILY-001`, `b9dda0d7`).
+- Admin platform assignments + effective module-owned (`TB-TMAR-HOST-ACCESSCONTROL-ADMINPLATFORM-ASSIGNMENTS-EFFECTIVE-001`, `99d59d89`).
+- Admin + Seller user search and Seller effective module-owned (`TB-TMAR-HOST-ACCESSCONTROL-USER-SEARCH-EFFECTIVE-SEAM-001`, `4a6074e6`).
+
+### Contracts-only user-search boundary (no foreign Application/Domain leak)
+
+- `Tooba.Identity.Contracts/IActorContactLookup` (batch contact projection).
+- `Tooba.Identity.Contracts/IActorIdentifierResolver` (new; neutral email/phone/username -> user id; implemented by Identity as `ActorIdentifierResolverAdapter`, registered in Identity-owned DI).
+- `Tooba.OperatorProfile.Contracts/IActorDisplayLookup` (batch display projection).
+- `AccessControl.Application` references Identity.Contracts + OperatorProfile.Contracts only — ZERO `Identity.Application`/`Identity.Domain`/`OperatorProfile.Application`/`OperatorProfile.Domain`; Host `AccessControlEndpoints.cs` no longer imports the foreign Application/Domain namespaces.
+
+### Current residual Host AccessControl routes/files
+
+`src/backend/Host/Tooba.Host/AccessControl/AccessControlEndpoints.cs` still owns:
+
+- Admin scope-resources: categories, brands, products, warehouses (deferred), stores (deferred), order-segments (deferred).
+- Seller scope-resources: categories, brands, products, warehouses (deferred), stores (deferred), order-segments (deferred).
+- Admin demo-preview.
+- Residual shared helpers only as actually still used (`RequireSellerAsync`, `Trace`, `MapError`).
+
+Separate Host folder files still present:
+
+- `AccessControlEndpoints.cs`
+- `AccessControlDevelopmentSeed.cs`
+- `AccessControlDemoSnapshot.cs`
+
+`Program.cs` still has legacy AccessControl Host mapping/bootstrap residue until final cleanup.
+
+### Known test debt (not a production regression)
+
+`Tooba.Host.Tests/AccessControlFoundationTests.AccessControl_module_boundary_static_checks` is stale: it still expects old Host route/group text (`/v1/admin/sellers/{sellerId:guid}/access-control`, `/me/capabilities`). Those routes were correctly evacuated in previously accepted tasks and the assertion would already have failed at accepted parent `99d59d89`. Record as TEST-MAINTENANCE DEBT; repair only if explicitly scoped and tiny, otherwise a separate focused test-maintenance task.
+
+### Next implementation task
+
+`TB-TMAR-HOST-ACCESSCONTROL-SCOPE-RESOURCES-001` — evacuate Admin + Seller scope-resources family from Host with a proper Catalog Contracts/shared-neutral seam rather than moving `ICatalogLookupGateway` from Catalog.Application into AccessControl. The stale foundation-test assertion may be repaired in that task only if explicitly scoped and tiny.
+
+### AccessControl honest state
+
+AccessControl remains `IN_PROGRESS`; NOT `COMPLETE_REFERENCE_PATTERN`; NOT ARCH-COMPLETE-002 STRUCTURE_CERTIFIED; Host residue is NON-ZERO. It is NOT added to the certified-module list.
+
+### Global locks preserved
+
+- Mode: `BACKEND_ONLY_UNTIL_EXPLICIT_RELEASE`; frontend `FROZEN`.
+- Checkout: `PAUSED_AT_SAFE_W5_CHECKPOINT`.
+- Structure-certified modules remain: Order, Cart, StoreContext, Offer, Payment, Settlement, Fulfillment.
+
