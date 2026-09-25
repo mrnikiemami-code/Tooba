@@ -1,5 +1,6 @@
 using FluentValidation;
 using Tooba.AddressBook.Application.Customer.Get;
+using Tooba.AddressBook.Application.Validators;
 
 namespace Tooba.AddressBook.Application.Validators.Customer.Get;
 
@@ -13,6 +14,6 @@ public sealed class GetCustomerAddressQueryValidator : AbstractValidator<GetCust
     /// <summary>قاعدهٔ شکل شناسهٔ مسیر را ثبت می‌کند.</summary>
     public GetCustomerAddressQueryValidator()
     {
-        RuleFor(x => x.AddressId).NotEmpty().WithErrorCode("customer.address.id_required");
+        AddressBookFluentRules.RequireId(this, x => x.AddressId, AddressBookValidationCodes.AddressIdRequired);
     }
 }
