@@ -3,12 +3,12 @@
   "executionMode": "BACKEND_ONLY_UNTIL_EXPLICIT_RELEASE",
   "frontendFrozen": true,
   "checkoutState": "PAUSED_AT_SAFE_W5_CHECKPOINT",
-  "lastAcceptedTask": "TB-TMAR-ADDRESSBOOK-CQRS-WRITE-SLICE-002-R1",
-  "lastAcceptedCommit": "5a083e2a516f2c6b10f79872107a00fbb6059c72",
-  "lastAcceptedSoTStamp": "5a083e2a516f2c6b10f79872107a00fbb6059c72",
-  "lastAcceptedNote": "TB-TMAR-ADDRESSBOOK-CQRS-WRITE-SLICE-002-R1 Architect-ACCEPTED at 5a083e2a516f2c6b10f79872107a00fbb6059c72: AddressBook now has 6 CQRS use cases; 5 validator-required / 5 present / 1 no-validator-required; Host still owns all six routes; Endpoints still maps zero routes.",
-  "nextTask": "TB-TMAR-ADDRESSBOOK-ACTOR-SEAM-001",
-  "nextTaskGate": "ADDRESSBOOK_ACTOR_AUTHORITY_SEAM_ONLY_BEFORE_ROUTE_MIGRATION",
+  "lastAcceptedTask": "TB-TMAR-ADDRESSBOOK-ENDPOINT-MIGRATION-READ-001",
+  "lastAcceptedCommit": "e8761e244add7315dadc87ff511d5748bf07ff94",
+  "lastAcceptedSoTStamp": "e8761e244add7315dadc87ff511d5748bf07ff94",
+  "lastAcceptedNote": "TB-TMAR-ADDRESSBOOK-ENDPOINT-MIGRATION-READ-001 Architect-ACCEPTED at e8761e244add7315dadc87ff511d5748bf07ff94: List/Get routes moved to AddressBook.Endpoints via ISender; actor seam is module-owned using ICurrentAuthenticatedUser and Order.Contracts guest actor; four write routes remain Host-owned.",
+  "nextTask": "TB-TMAR-ADDRESSBOOK-ENDPOINT-MIGRATION-WRITE-001",
+  "nextTaskGate": "ADDRESSBOOK_ENDPOINT_MIGRATION_CREATE_UPDATE_ONLY",
   "cartMultiCurrency": {
     "task": "TB-TMAR-CART-MULTICURRENCY-LINES-001",
     "state": "LINE_LEVEL_CURRENCY_AUTHORITY_WITH_DEFAULT_SELECTION_AND_TOTALS_BY_CURRENCY",
@@ -761,14 +761,17 @@
     "endpointsProject": "FOUNDATION_CREATED_ZERO_ROUTES",
     "cqrs": "COMPLETE_6_USECASES_5_VALIDATORS_1_NO_VALIDATOR_REQUIRED",
     "validators": "COMPLETE_5_OF_5_REQUIRED",
-    "currentTask": "TB-TMAR-ADDRESSBOOK-ACTOR-SEAM-001",
-    "currentPhase": "ACTOR_AUTHORITY_SEAM_BEFORE_ENDPOINT_MIGRATION",
+    "currentTask": "TB-TMAR-ADDRESSBOOK-ENDPOINT-MIGRATION-WRITE-001",
+    "currentPhase": "ENDPOINT_MIGRATION_CREATE_UPDATE_ONLY",
     "nextExpectedAfterFoundation": "BOUNDED_CQRS_ROUTE_SLICES",
     "accessControlClosure": "COMPLETE",
     "nextHostFolderAfterAddressBook": "Authentication",
     "deferredHostFolders": [
       "Admin"
-    ]
+    ],
+    "moduleOwnedRouteCount": 2,
+    "hostOwnedRouteCount": 4,
+    "actorSeam": "COMPLETE_IN_READ_MIGRATION"
   },
   "architectCursorWorkflow": {
     "protocol": "BRIDGE-WAKE-V1",
@@ -803,5 +806,8 @@
       "Admin": "DEFER_LARGE_FOLDER_TO_LATER_AVOID_SCOPE_EXPANSION_AND_LOOP_RISK"
     },
     "rule": "After AddressBook closure, skip Admin for now and continue with Authentication. Do not start Admin until explicitly resumed by Architect/user."
-  }
+  },
+  "supersededTasks": [
+    "TB-TMAR-ADDRESSBOOK-ACTOR-SEAM-001"
+  ]
 }
