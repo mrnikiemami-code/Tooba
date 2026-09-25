@@ -3,12 +3,12 @@
   "executionMode": "BACKEND_ONLY_UNTIL_EXPLICIT_RELEASE",
   "frontendFrozen": true,
   "checkoutState": "PAUSED_AT_SAFE_W5_CHECKPOINT",
-  "lastAcceptedTask": "TB-TMAR-HOST-ACCESSCONTROL-USER-SEARCH-EFFECTIVE-SEAM-001",
-  "lastAcceptedCommit": "4a6074e62fbaf557f57aa2770d76b8d14164dc72",
-  "lastAcceptedSoTStamp": "4a6074e62fbaf557f57aa2770d76b8d14164dc72",
-  "lastAcceptedNote": "TB-TMAR-HOST-ACCESSCONTROL-USER-SEARCH-EFFECTIVE-SEAM-001 Architect-ACCEPTED at 4a6074e62fbaf557f57aa2770d76b8d14164dc72 (Admin + Seller user search and Seller effective evacuated from Host; Identity/OperatorProfile enrichment is now Contracts-only via IActorContactLookup + new IActorIdentifierResolver in Identity.Contracts and IActorDisplayLookup in OperatorProfile.Contracts).",
-  "nextTask": "TB-TMAR-HOST-ACCESSCONTROL-SCOPE-RESOURCES-001",
-  "nextTaskGate": "HOST_FIRST_FOLDER_BY_FOLDER_ACCESSCONTROL_SCOPE_RESOURCES",
+  "lastAcceptedTask": "TB-TMAR-ACCESSCONTROL-PRECERT-STRUCTURE-REPAIR-001",
+  "lastAcceptedCommit": "681e3639998e1090c7489e2db69c77680502ca26",
+  "lastAcceptedSoTStamp": "681e3639998e1090c7489e2db69c77680502ca26",
+  "lastAcceptedNote": "TB-TMAR-ACCESSCONTROL-PRECERT-STRUCTURE-REPAIR-001 Architect-ACCEPTED at 681e3639998e1090c7489e2db69c77680502ca26: Host AccessControl evacuation already COMPLETE/ZERO; AccessControl root structure repaired to ARCH-COMPLETE-002 shape; endpoint inventory = 19; validator classification = 6 REQUIRED / 13 NO_VALIDATOR_REQUIRED; 6 required validators remain the active pre-cert blocker.",
+  "nextTask": "TB-TMAR-ACCESSCONTROL-PRECERT-VALIDATORS-001",
+  "nextTaskGate": "ACCESSCONTROL_PRECERT_CLOSE_6_OF_6_TRANSPORT_VALIDATOR_GAP",
   "cartMultiCurrency": {
     "task": "TB-TMAR-CART-MULTICURRENCY-LINES-001",
     "state": "LINE_LEVEL_CURRENCY_AUTHORITY_WITH_DEFAULT_SELECTION_AND_TOTALS_BY_CURRENCY",
@@ -713,70 +713,27 @@
   },
   "currentHostEvacuation": {
     "activeModule": "AccessControl",
-    "activeTask": "TB-TMAR-HOST-ACCESSCONTROL-USER-SEARCH-EFFECTIVE-SEAM-001",
-    "parentAcceptedCommit": "4a6074e62fbaf557f57aa2770d76b8d14164dc72",
     "workflow": "HOST_FIRST_FOLDER_BY_FOLDER",
-    "accessControlState": "IN_PROGRESS",
-    "accessControlStructureCertification": "NOT_CERTIFIED_NOT_COMPLETE_REFERENCE_PATTERN",
-    "accessControlHostResidue": "NON_ZERO",
-    "accessControlModuleOwnedAccepted": [
-      "permission catalog",
-      "admin platform role reads/writes/clone/archive/permissions",
-      "adminSeller complete role + permissions family",
-      "seller complete role + permissions family",
-      "seller ceiling + assignments",
-      "adminSeller ceiling + assignments + effective",
-      "admin platform assignments + effective",
-      "admin + seller user search",
-      "seller effective"
-    ],
-    "accessControlContractsOnlyUserSearchBoundary": {
-      "identity": "Tooba.Identity.Contracts/IActorContactLookup + Tooba.Identity.Contracts/IActorIdentifierResolver",
-      "operatorProfile": "Tooba.OperatorProfile.Contracts/IActorDisplayLookup",
-      "forbiddenInAccessControl": "Tooba.Identity.Application,Domain; Tooba.OperatorProfile.Application,Domain"
-    },
-    "accessControlHostResidualRoutes": [
-      "GET /v1/admin/access-control/scope-resources/categories",
-      "GET /v1/admin/access-control/scope-resources/brands",
-      "GET /v1/admin/access-control/scope-resources/products",
-      "GET /v1/admin/access-control/scope-resources/warehouses (deferred)",
-      "GET /v1/admin/access-control/scope-resources/stores (deferred)",
-      "GET /v1/admin/access-control/scope-resources/order-segments (deferred)",
-      "GET /v1/seller/access-control/scope-resources/categories",
-      "GET /v1/seller/access-control/scope-resources/brands",
-      "GET /v1/seller/access-control/scope-resources/products",
-      "GET /v1/seller/access-control/scope-resources/warehouses (deferred)",
-      "GET /v1/seller/access-control/scope-resources/stores (deferred)",
-      "GET /v1/seller/access-control/scope-resources/order-segments (deferred)",
-      "GET /v1/admin/access-control/demo-preview"
-    ],
-    "accessControlHostResidualFiles": [
-      "src/backend/Host/Tooba.Host/AccessControl/AccessControlEndpoints.cs",
-      "src/backend/Host/Tooba.Host/AccessControl/AccessControlDevelopmentSeed.cs",
-      "src/backend/Host/Tooba.Host/AccessControl/AccessControlDemoSnapshot.cs"
-    ],
-    "accessControlHostProgramResidue": "Program still contains legacy AccessControl Host mapping/bootstrap residue until final cleanup.",
-    "accessControlStaleTestDebt": {
-      "test": "src/backend/Host/Tooba.Host.Tests/AccessControlFoundationTests.AccessControl_module_boundary_static_checks",
-      "state": "TEST_MAINTENANCE_DEBT_NOT_PRODUCTION_REGRESSION",
-      "staleAssertions": [
-        "/v1/admin/sellers/{sellerId:guid}/access-control",
-        "/me/capabilities"
-      ],
-      "note": "These Host paths were correctly evacuated in previously Architect-accepted tasks (AdminSeller family at b9dda0d7). The assertion is stale and would have failed at the accepted parent commit 99d59d89. Fix only if explicitly scoped and tiny, otherwise a separate focused test-maintenance task."
-    },
+    "hostEvacuationState": "COMPLETE",
+    "accessControlHostFolder": "ZERO_ABSENT",
+    "hostNamespaceResidue": "ZERO",
+    "hostSpecificMapResidue": "ZERO",
+    "moduleMap": "MapAccessControlModuleEndpoints_PRESENT",
+    "lastAcceptedTask": "TB-TMAR-ACCESSCONTROL-PRECERT-STRUCTURE-REPAIR-001",
+    "lastAcceptedCommit": "681e3639998e1090c7489e2db69c77680502ca26",
+    "currentPhase": "PRECERT_VALIDATION",
+    "structureRepairState": "ROOT_STRUCTURE_REPAIRED_PATH_NAMESPACE_EXACT",
+    "endpointReachableRequests": 19,
+    "validatorRequiredCount": 6,
+    "validatorsPresentCount": 0,
+    "noValidatorRequiredCount": 13,
+    "activeBlocker": "SIX_REQUIRED_TRANSPORT_VALIDATORS_MISSING",
+    "currentTask": "TB-TMAR-ACCESSCONTROL-PRECERT-VALIDATORS-001",
+    "structureCertification": "NOT_YET_CERTIFIED",
+    "completeReferencePattern": "NOT_YET_CLOSED",
+    "expectedAfterValidatorPass": "TB-TMAR-ACCESSCONTROL-FINAL-CERTIFICATION-AND-SOT-CLOSURE-001",
     "nextHostFolderAfterAccessControl": "AddressBook",
-    "historicalFulfillmentEvacuation": {
-      "activeTask": "TB-TMAR-FULFILLMENT-HOST-EVACUATION-001",
-      "parentAcceptedCommit": "16062d45bde71476da35f9e20622f1b6b5637fa8",
-      "fulfillmentHostFiles": [
-        "src/backend/Host/Tooba.Host/Admin/HostFulfillmentAdminAuthorizer.cs",
-        "src/backend/Host/Tooba.Host/Customer/HostFulfillmentCustomerAuthorizer.cs",
-        "src/backend/Host/Tooba.Host/Seller/HostFulfillmentSellerAuthorizer.cs"
-      ],
-      "fulfillmentHostEvacuation": "COMPLETE",
-      "fulfillmentStructureCertification": "COMPLETE_REFERENCE_PATTERN_STRUCTURE_CERTIFIED_ARCH_COMPLETE_002"
-    }
+    "repositoryWideBaselineDebt": "PRE_EXISTING_STALE_TMAR_SOURCE_SIZE_AND_INFRA_APP_BASELINES_DO_NOT_FIX_INSIDE_ACCESSCONTROL_VALIDATOR_TASK"
   },
   "architectCursorWorkflow": {
     "protocol": "BRIDGE-WAKE-V1",
