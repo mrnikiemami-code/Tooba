@@ -2,7 +2,9 @@ using MediatR;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
+using Tooba.AccessControl.Application.Authorization;
 using Tooba.AccessControl.Application.Queries.GetEffectiveAccess;
+using Tooba.AccessControl.Application.Queries.ListSellerPermissionCatalog;
 using Tooba.AccessControl.Domain;
 using Tooba.BuildingBlocks;
 using Tooba.BuildingBlocks.Security;
@@ -18,6 +20,7 @@ public static class AccessControlSellerEndpoints
     {
         ArgumentNullException.ThrowIfNull(group);
         group.MapGet("/me/capabilities", MeCapabilitiesAsync);
+        group.MapGet("/permissions", ListPermissionsAsync);
     }
 
     private static async Task<IResult> MeCapabilitiesAsync(
@@ -35,5 +38,18 @@ public static class AccessControlSellerEndpoints
                 sellerId,
                 tenant.Current?.TenantId.Value),
             cancellationToken));
+    }
+
+    private static async Task<IResult> ListPermissionsAsync(
+        HttpRequest request,
+        ISender sender,
+        ISellerPanelAccess sellerPanelAccess,
+        IAuthorizationService authz,
+        ICurrentTenant tenant,
+        CancellationToken cancellationToken)
+    {
+        var (actor, sellerId) = await sellerPanelAccess.RequireAuthorizedAsync(request, cancellationToken);
+        await AccessControlCapabilityGate.EnsureAsync(actor, "accesscontrol.view", authz, tenant, cancellationToken);
+        return Results.Json(await sender.Send(new ListSellerPermissionCatalogQuery(sellerId), cancellationToken));
     }
 }

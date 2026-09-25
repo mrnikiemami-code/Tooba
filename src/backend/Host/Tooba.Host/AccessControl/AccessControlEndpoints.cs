@@ -20,7 +20,6 @@ public static class AccessControlEndpoints
     public static void MapAccessControlEndpoints(this WebApplication app)
     {
         var admin = app.MapGroup("/v1/admin/access-control");
-        admin.MapGet("/permissions", AdminListCatalogAsync);
         admin.MapGet("/roles", AdminListRolesAsync);
         admin.MapPost("/roles", AdminCreateRoleAsync);
         admin.MapGet("/roles/{roleId:guid}", AdminGetRoleAsync);
@@ -58,7 +57,6 @@ public static class AccessControlEndpoints
         adminSeller.MapGet("/users/{userId:guid}/effective", AdminSellerEffectiveAsync);
 
         var seller = app.MapGroup("/v1/seller/access-control");
-        seller.MapGet("/permissions", SellerListCatalogAsync);
         seller.MapGet("/ceiling", SellerGetCeilingAsync);
         seller.MapGet("/roles", SellerListRolesAsync);
         seller.MapPost("/roles", SellerCreateRoleAsync);
@@ -96,15 +94,6 @@ public static class AccessControlEndpoints
             : Results.Json(new { title = "access.error", code = "access.error" }, statusCode: 500);
 
     #region Admin platform
-
-    private static async Task<IResult> AdminListCatalogAsync(
-        HttpRequest request, CurrentAuthenticatedSession session, ICurrentTenant tenant, IAuthorizationGuard guard,
-        IAuthorizationService authz, IHostEnvironment env, IAccessControlDirectory directory, CancellationToken ct)
-    {
-        var actor = await AdminPanelAccess.RequireAuthorizedAsync(request, session, tenant, guard, env, ct);
-        await AccessControlCapabilityGate.EnsureAsync(actor, "accesscontrol.view", authz, tenant, ct);
-        return Results.Json(directory.ListCatalog());
-    }
 
     private static async Task<IResult> AdminListRolesAsync(
         HttpRequest request, CurrentAuthenticatedSession session, ICurrentTenant tenant, IAuthorizationGuard guard,
@@ -520,28 +509,6 @@ public static class AccessControlEndpoints
     {
         var ctx = await SellerPanelAccess.RequireAuthorizedAsync(request, session, guard, env, ct);
         return (ctx.ActorUserId, ctx.SellerPartyId);
-    }
-
-    private static async Task<IResult> SellerListCatalogAsync(
-        HttpRequest request, CurrentAuthenticatedSession session, ICurrentTenant tenant, IAuthorizationGuard guard,
-        IAuthorizationService authz, IHostEnvironment env, IAccessControlDirectory directory, CancellationToken ct)
-    {
-        var (actor, sellerId) = await RequireSellerAsync(request, session, guard, env, ct);
-        await AccessControlCapabilityGate.EnsureAsync(actor, "accesscontrol.view", authz, tenant, ct);
-        var ceiling = await directory.GetSellerCeilingAsync(sellerId, ct);
-        var catalog = directory.ListCatalog()
-            .Select(p => new
-            {
-                p.PermissionId,
-                p.Module,
-                p.DisplayNameKey,
-                p.DescriptionKey,
-                p.Delegable,
-                p.ScopeKinds,
-                DisabledByCeiling = p.Delegable && ceiling.All(c => c.PermissionId != p.PermissionId || !c.Enabled),
-                PlatformOnly = !p.Delegable,
-            });
-        return Results.Json(catalog);
     }
 
     private static async Task<IResult> SellerGetCeilingAsync(

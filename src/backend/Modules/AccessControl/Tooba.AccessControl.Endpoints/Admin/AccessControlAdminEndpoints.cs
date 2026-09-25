@@ -2,8 +2,10 @@ using MediatR;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
+using Tooba.AccessControl.Application.Authorization;
 using Tooba.AccessControl.Application.Commands.EnsureBootstrap;
 using Tooba.AccessControl.Application.Queries.GetEffectiveAccess;
+using Tooba.AccessControl.Application.Queries.ListPermissionCatalog;
 using Tooba.AccessControl.Domain;
 using Tooba.BuildingBlocks;
 using Tooba.BuildingBlocks.Security;
@@ -20,6 +22,7 @@ public static class AccessControlAdminEndpoints
         ArgumentNullException.ThrowIfNull(group);
         group.MapPost("/bootstrap", BootstrapAsync);
         group.MapGet("/me/capabilities", MeCapabilitiesAsync);
+        group.MapGet("/permissions", ListPermissionsAsync);
     }
 
     private static async Task<IResult> BootstrapAsync(
@@ -51,5 +54,18 @@ public static class AccessControlAdminEndpoints
                 null,
                 tenant.Current?.TenantId.Value),
             cancellationToken));
+    }
+
+    private static async Task<IResult> ListPermissionsAsync(
+        HttpRequest request,
+        ISender sender,
+        IAdminPanelAccess adminPanelAccess,
+        IAuthorizationService authz,
+        ICurrentTenant tenant,
+        CancellationToken cancellationToken)
+    {
+        var actor = await adminPanelAccess.RequireAuthorizedAsync(request, cancellationToken);
+        await AccessControlCapabilityGate.EnsureAsync(actor, "accesscontrol.view", authz, tenant, cancellationToken);
+        return Results.Json(await sender.Send(new ListPermissionCatalogQuery(), cancellationToken));
     }
 }
