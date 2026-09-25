@@ -61,10 +61,19 @@ public sealed class AccessControlFoundationTests : IAsyncLifetime
         Assert.True(PermissionCatalog.IsDelegable("order.handle"));
         Assert.Contains(ToobaModuleComposition.Modules, module => module is AccessControlModule);
 
-        var endpoints = File.ReadAllText(Path.Combine(RepoRoot(), "src", "backend", "Host", "Tooba.Host", "AccessControl", "AccessControlEndpoints.cs"));
-        Assert.Contains("/v1/admin/access-control", endpoints, StringComparison.Ordinal);
-        Assert.DoesNotContain("/scope-resources/categories", endpoints, StringComparison.Ordinal);
-        Assert.DoesNotContain("/me/capabilities", endpoints, StringComparison.Ordinal);
+        var hostAccessControlFolder = Path.Combine(RepoRoot(), "src", "backend", "Host", "Tooba.Host", "AccessControl");
+        Assert.False(Directory.Exists(hostAccessControlFolder), "Host AccessControl folder must be retired (evacuation complete).");
+        var hostRoot = Path.Combine(RepoRoot(), "src", "backend", "Host", "Tooba.Host");
+        var programSource = File.ReadAllText(Path.Combine(hostRoot, "Program.cs"));
+        Assert.Contains("MapAccessControlModuleEndpoints()", programSource, StringComparison.Ordinal);
+        Assert.DoesNotContain("MapAccessControlEndpoints()", programSource, StringComparison.Ordinal);
+        foreach (var hostFile in Directory.EnumerateFiles(hostRoot, "*.cs", SearchOption.AllDirectories))
+        {
+            var hostText = File.ReadAllText(hostFile);
+            Assert.DoesNotContain("namespace Tooba.Host.AccessControl", hostText, StringComparison.Ordinal);
+            Assert.DoesNotContain("AccessControlDevelopmentSeed", hostText, StringComparison.Ordinal);
+            Assert.DoesNotContain("AccessControlDemoSnapshot", hostText, StringComparison.Ordinal);
+        }
 
         var adminEndpoints = File.ReadAllText(Path.Combine(RepoRoot(), "src", "backend", "Modules", "AccessControl", "Tooba.AccessControl.Endpoints", "Admin", "AccessControlAdminEndpoints.cs"));
         Assert.Contains("/scope-resources", adminEndpoints, StringComparison.Ordinal);

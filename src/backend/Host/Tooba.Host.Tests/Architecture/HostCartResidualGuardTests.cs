@@ -22,7 +22,6 @@ public sealed class HostCartResidualGuardTests
         ["CheckoutReservationHoldPolicy.cs"] = "Order hold port adapter (Payment options only)",
         ["Admin/HoldPolicySettingsEndpoints.cs"] = "settings admin UX; reads Cart-owned persistence hours via Cart-owned port",
         ["Admin/ProductWorkspaceDevelopmentBootstrap.cs"] = "Development-only schema migration list",
-        ["AccessControl/AccessControlDevelopmentSeed.cs"] = "Development-only seed via Cart directory",
         ["Storefront/StorefrontModels.cs"] = "storefront wire DTOs that carry CartId",
         ["Storefront/StorefrontComposer.cs"] = "storefront read composition flag",
         ["Storefront/StorefrontEndpoints.cs"] = "checkout identity policy flag name (no Cart authority)",

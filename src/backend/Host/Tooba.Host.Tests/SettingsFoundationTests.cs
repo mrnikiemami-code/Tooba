@@ -109,15 +109,6 @@ public sealed class SettingsFoundationTests
             typeof(Tooba.UserPreference.Domain.UserPreference).GetProperties().Select(x => x.Name).ToArray());
     }
 
-    [Fact]
-    public void Mobile_operator_role_seed_does_not_grant_settings_manage()
-    {
-        var source = File.ReadAllText(Path.Combine(
-            FindRepoRoot(), "src", "backend", "Host", "Tooba.Host", "AccessControl", "AccessControlDevelopmentSeed.cs"));
-        Assert.DoesNotContain("seller.settings.manage", source, StringComparison.Ordinal);
-        Assert.Contains("order.handle", source, StringComparison.Ordinal);
-    }
-
     [SkippableFact]
     public async Task Customer_preference_update_reload_and_foreign_isolation()
     {

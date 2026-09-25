@@ -23,7 +23,6 @@ using Tooba.Host.Customer;
 using Tooba.Host.Seller;
 using Tooba.Returns.Endpoints;
 using Tooba.Notification.Endpoints;
-using Tooba.Host.AccessControl;
 using Tooba.AccessControl.Endpoints;
 using Tooba.Payment.Endpoints;
 using Tooba.Promotion.Endpoints;
@@ -363,14 +362,6 @@ if (app.Environment.IsDevelopment())
             {
                 app.Logger.LogError(ex, "CatalogAttributeSchemaDevelopmentBootstrap failed; Host continues without attribute schema demo.");
             }
-            try
-            {
-                await AccessControlDevelopmentSeed.ApplyAsync(app.Services);
-            }
-            catch (Exception ex)
-            {
-                app.Logger.LogError(ex, "AccessControlDevelopmentSeed failed; Host continues without ACC demo snapshot.");
-            }
         }
         else
         {
@@ -519,7 +510,6 @@ app.MapSettlementEndpoints();
 app.MapSupportEndpoints();
 app.MapWalletEndpoints();
 app.MapNotificationEndpoints();
-app.MapAccessControlEndpoints();
 app.MapAccessControlModuleEndpoints();
 app.MapContentEndpoints();
 app.MapContentCategoryEndpoints();
