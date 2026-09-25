@@ -20,9 +20,7 @@ public static class AccessControlEndpoints
     public static void MapAccessControlEndpoints(this WebApplication app)
     {
         var admin = app.MapGroup("/v1/admin/access-control");
-        admin.MapGet("/roles", AdminListRolesAsync);
         admin.MapPost("/roles", AdminCreateRoleAsync);
-        admin.MapGet("/roles/{roleId:guid}", AdminGetRoleAsync);
         admin.MapPut("/roles/{roleId:guid}", AdminUpdateRoleAsync);
         admin.MapPost("/roles/{roleId:guid}/clone", AdminCloneRoleAsync);
         admin.MapDelete("/roles/{roleId:guid}", AdminArchiveRoleAsync);
@@ -95,15 +93,6 @@ public static class AccessControlEndpoints
 
     #region Admin platform
 
-    private static async Task<IResult> AdminListRolesAsync(
-        HttpRequest request, CurrentAuthenticatedSession session, ICurrentTenant tenant, IAuthorizationGuard guard,
-        IAuthorizationService authz, IHostEnvironment env, IAccessControlDirectory directory, CancellationToken ct, bool includeArchived = false)
-    {
-        var actor = await AdminPanelAccess.RequireAuthorizedAsync(request, session, tenant, guard, env, ct);
-        await AccessControlCapabilityGate.EnsureAsync(actor, "accesscontrol.view", authz, tenant, ct);
-        return Results.Json(await directory.ListRolesAsync(PlatformScope(tenant), includeArchived, ct));
-    }
-
     private static async Task<IResult> AdminCreateRoleAsync(
         CreateAccessRoleCommand body, HttpRequest request, CurrentAuthenticatedSession session, ICurrentTenant tenant,
         IAuthorizationGuard guard, IAuthorizationService authz, IHostEnvironment env, IAccessControlDirectory directory, CancellationToken ct)
@@ -117,23 +106,6 @@ public static class AccessControlEndpoints
         catch (Exception ex) when (ex is AccessControlException or PlatformHttpException)
         {
             return ex is PlatformHttpException ph ? Results.Json(new { title = ph.Title, code = ph.ErrorCode }, statusCode: ph.StatusCode) : MapError(ex);
-        }
-    }
-
-    private static async Task<IResult> AdminGetRoleAsync(
-        Guid roleId, HttpRequest request, CurrentAuthenticatedSession session, ICurrentTenant tenant, IAuthorizationGuard guard,
-        IAuthorizationService authz, IHostEnvironment env, IAccessControlDirectory directory, CancellationToken ct)
-    {
-        try
-        {
-            var actor = await AdminPanelAccess.RequireAuthorizedAsync(request, session, tenant, guard, env, ct);
-            await AccessControlCapabilityGate.EnsureAsync(actor, "accesscontrol.view", authz, tenant, ct);
-            var role = await directory.GetRoleAsync(roleId, PlatformScope(tenant), ct);
-            return role is null ? Results.NotFound() : Results.Json(role);
-        }
-        catch (Exception ex) when (ex is AccessControlException)
-        {
-            return MapError(ex);
         }
     }
 

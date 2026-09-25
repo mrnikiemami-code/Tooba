@@ -2,10 +2,12 @@ using MediatR;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
+using Tooba.AccessControl.Application;
 using Tooba.AccessControl.Application.Authorization;
-using Tooba.AccessControl.Application.Commands.EnsureBootstrap;
-using Tooba.AccessControl.Application.Queries.GetEffectiveAccess;
+using Tooba.AccessControl.Application.Commands.EnsureBootstrap;using Tooba.AccessControl.Application.Queries.GetEffectiveAccess;
+using Tooba.AccessControl.Application.Queries.GetRole;
 using Tooba.AccessControl.Application.Queries.ListPermissionCatalog;
+using Tooba.AccessControl.Application.Queries.ListRoles;
 using Tooba.AccessControl.Domain;
 using Tooba.BuildingBlocks;
 using Tooba.BuildingBlocks.Security;
@@ -23,6 +25,8 @@ public static class AccessControlAdminEndpoints
         group.MapPost("/bootstrap", BootstrapAsync);
         group.MapGet("/me/capabilities", MeCapabilitiesAsync);
         group.MapGet("/permissions", ListPermissionsAsync);
+        group.MapGet("/roles", ListRolesAsync);
+        group.MapGet("/roles/{roleId:guid}", GetRoleAsync);
     }
 
     private static async Task<IResult> BootstrapAsync(
@@ -67,5 +71,53 @@ public static class AccessControlAdminEndpoints
         var actor = await adminPanelAccess.RequireAuthorizedAsync(request, cancellationToken);
         await AccessControlCapabilityGate.EnsureAsync(actor, "accesscontrol.view", authz, tenant, cancellationToken);
         return Results.Json(await sender.Send(new ListPermissionCatalogQuery(), cancellationToken));
+    }
+
+    private static async Task<IResult> ListRolesAsync(
+        HttpRequest request,
+        ISender sender,
+        IAdminPanelAccess adminPanelAccess,
+        IAuthorizationService authz,
+        ICurrentTenant tenant,
+        CancellationToken cancellationToken,
+        bool includeArchived = false)
+    {
+        var actor = await adminPanelAccess.RequireAuthorizedAsync(request, cancellationToken);
+        await AccessControlCapabilityGate.EnsureAsync(actor, "accesscontrol.view", authz, tenant, cancellationToken);
+        return Results.Json(await sender.Send(
+            new ListRolesQuery(
+                AccessOwnerScopeKind.Platform,
+                null,
+                tenant.Current?.TenantId.Value,
+                includeArchived),
+            cancellationToken));
+    }
+
+    private static async Task<IResult> GetRoleAsync(
+        Guid roleId,
+        HttpRequest request,
+        ISender sender,
+        IAdminPanelAccess adminPanelAccess,
+        IAuthorizationService authz,
+        ICurrentTenant tenant,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            var actor = await adminPanelAccess.RequireAuthorizedAsync(request, cancellationToken);
+            await AccessControlCapabilityGate.EnsureAsync(actor, "accesscontrol.view", authz, tenant, cancellationToken);
+            var role = await sender.Send(
+                new GetRoleQuery(
+                    roleId,
+                    AccessOwnerScopeKind.Platform,
+                    null,
+                    tenant.Current?.TenantId.Value),
+                cancellationToken);
+            return role is null ? Results.NotFound() : Results.Json(role);
+        }
+        catch (AccessControlException ace)
+        {
+            return Results.Json(new { title = ace.Message, code = ace.Code }, statusCode: ace.Code.Contains("escalation", StringComparison.Ordinal) || ace.Code.Contains("ceiling", StringComparison.Ordinal) ? 403 : 400);
+        }
     }
 }
