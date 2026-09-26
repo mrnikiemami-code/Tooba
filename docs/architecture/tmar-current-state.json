@@ -831,6 +831,7 @@
         "task": "AUTHENTICATION-V2-CANONICALIZATION-001-R1",
         "state": "REPAIRED",
         "predecessorCommit": "4c5931cef89b63075416e1cb572998c71f7b9f0b",
+        "repairedCommit": "db4aa6da62a87af3024cda86ee69b633d5a07863",
         "parallelProblemPipeline": "ZERO",
         "authProblemPath": "AuthenticationHttpProblem.AuthProblem uses http.RequestServices.GetRequiredService<ApiResponseFactory>().FromFailure(new SemanticError(code)); the Results.Problem fallback was removed",
         "crossModuleCouplingState": "LEGAL_CONTRACTS_ONLY",
