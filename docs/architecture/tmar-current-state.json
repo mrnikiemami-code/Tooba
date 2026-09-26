@@ -775,7 +775,34 @@
     "moduleOwnedRouteCount": 6,
     "hostOwnedRouteCount": 0,
     "actorSeam": "COMPLETE_INTERFACE_BASED",
-    "hostAddressBookResidue": []
+    "hostAddressBookResidue": [],
+    "nextHostFolderAfterAddressBook": "Authentication",
+    "authenticationFolderDisposition": {
+      "task": "TB-TMAR-HOST-AUTHENTICATION-INVENTORY-001",
+      "state": "ANALYZED_MIGRATION_HALTED_NEEDS_ARCHITECT_DECISION",
+      "productionCodeChanged": false,
+      "guardsWeakened": false,
+      "filesInspected": [
+        "src/backend/Host/Tooba.Host/Authentication/AuthenticationHttpBoundary.cs",
+        "src/backend/Host/Tooba.Host/Authentication/AuthenticationInstrumentation.cs",
+        "src/backend/Host/Tooba.Host/Authentication/AuthenticationRateLimitThrottleSeam.cs",
+        "src/backend/Host/Tooba.Host/Authentication/HostCurrentAuthenticatedUser.cs"
+      ],
+      "retained": [
+        "AuthenticationInstrumentation.cs=KEEP_AS_GENERIC_HOST_PLATFORM_INFRASTRUCTURE",
+        "AuthenticationRateLimitThrottleSeam.cs=KEEP_AS_GENERIC_HOST_PLATFORM_INFRASTRUCTURE",
+        "HostCurrentAuthenticatedUser.cs=KEEP_AS_GENERIC_HOST_PLATFORM_INFRASTRUCTURE"
+      ],
+      "disputed": "AuthenticationHttpBoundary.cs=NEEDS_ARCHITECT_DECISION",
+      "identityEndpointsFoundation": "FOUNDATION_MISSING",
+      "endpointReachableRequests": 13,
+      "crossModuleJoins": "NONE",
+      "foreignDbContextAccess": "NONE",
+      "optionA": "KEEP_AS_GENERIC_HOST_PLATFORM_INFRASTRUCTURE consistent with docs/architecture/41-authentication-http-boundary.md COMPLETE (Architect accepted TB-P02-T005) and HOST-MODULE-ENDPOINT-001 global auth; then only a bounded internal split of the 702-LOC file remains",
+      "optionB": "Authorize a Tooba.Identity.Endpoints foundation wave (new project + slnx, Application CQRS for 13 requests + validator coverage guard, me/CustomerProfile.Contracts decision, repoint two path-pinned guards) then evacuate and certify Identity",
+      "blocker": "OWNERSHIP_DECISION_REQUIRED_NO_NEXT_FOLDER_STARTED",
+      "evidence": "docs/evidence/TB-TMAR-HOST-AUTHENTICATION-INVENTORY-001/authentication-host-inventory.md"
+    }
   },
   "addressBookArchComplete002Structure": {
     "task": "TB-TMAR-ADDRESSBOOK-ARCH-COMPLETE-002-STRUCTURE-001",
