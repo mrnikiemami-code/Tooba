@@ -1,4 +1,5 @@
 using Tooba.BuildingBlocks;
+using Tooba.Identity.Contracts;
 
 namespace Tooba.Identity.Domain;
 
@@ -21,37 +22,6 @@ public enum UserAccountStatus
     /// حساب قفل شده (مثلاً پس از شکست‌های امنیتی) و نباید احراز شود.
     /// </summary>
     Locked = 2,
-}
-
-/// <summary>
-/// گونهٔ شناسهٔ ورود. ستون ثابت Username/Email/Phone روی User نیست؛ نوع جدید با ثبت handler اضافه می‌شود نه بازنویسی هسته.
-/// </summary>
-public enum LoginIdentifierKind
-{
-    /// <summary>
-    /// نام کاربری انتخابی کاربر داخل همان دامنهٔ هویت.
-    /// </summary>
-    Username = 1,
-
-    /// <summary>
-    /// نشانی رایانامه پس از نرمال‌سازی مخصوص ایمیل.
-    /// </summary>
-    Email = 2,
-
-    /// <summary>
-    /// شمارهٔ تلفن پس از نرمال‌سازی رقم‌محور بدون فرض ایران‌محور.
-    /// </summary>
-    Phone = 3,
-
-    /// <summary>
-    /// شناسهٔ ملی یا معادل آینده؛ در این تسک احراز نمی‌شود ولی نوع رزرو شده است.
-    /// </summary>
-    NationalId = 4,
-
-    /// <summary>
-    /// شناسهٔ پایدار ارائه‌دهندهٔ خارجی (issuer+subject جداگانه ذخیره می‌شود).
-    /// </summary>
-    ExternalProvider = 5,
 }
 
 /// <summary>
@@ -99,32 +69,6 @@ public enum MfaFactorKind
     /// ارتقای جلسه از طریق IdP خارجی.
     /// </summary>
     ExternalIdpStepUp = 4,
-}
-
-/// <summary>
-/// هدف چالش OTP. یک هدف واحد hard-code نمی‌شود تا login/verify/reset/MFA جدا بمانند.
-/// </summary>
-public enum OtpPurpose
-{
-    /// <summary>
-    /// ورود بدون رمز یا تکمیل ورود.
-    /// </summary>
-    Login = 1,
-
-    /// <summary>
-    /// اثبات مالکیت شناسه.
-    /// </summary>
-    IdentifierVerification = 2,
-
-    /// <summary>
-    /// بازیابی رمز.
-    /// </summary>
-    PasswordReset = 3,
-
-    /// <summary>
-    /// عامل دوم MFA.
-    /// </summary>
-    Mfa = 4,
 }
 
 /// <summary>

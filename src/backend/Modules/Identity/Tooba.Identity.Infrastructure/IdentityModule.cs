@@ -6,6 +6,7 @@ using Tooba.BuildingBlocks;
 using Tooba.BuildingBlocks.Localization;
 using Tooba.BuildingBlocks.Presentation.Errors;
 using Tooba.Identity.Application;
+using Tooba.Identity.Contracts;
 using Tooba.Identity.Contracts.Problems;
 using Tooba.Identity.Infrastructure.Persistence;
 using Tooba.ModuleContracts;

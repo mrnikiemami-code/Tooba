@@ -71,8 +71,26 @@ public sealed class AuthenticationV2CanonicalizationGuardTests
         {
             var text = File.ReadAllText(file);
             Assert.DoesNotContain("using Tooba.Identity.Infrastructure", text, StringComparison.Ordinal);
+            Assert.DoesNotContain("using Tooba.Identity.Application", text, StringComparison.Ordinal);
+            Assert.DoesNotContain("using Tooba.Identity.Domain", text, StringComparison.Ordinal);
             Assert.DoesNotContain("using Tooba.CustomerProfile.Application", text, StringComparison.Ordinal);
             Assert.DoesNotContain("IdentityDuplicateIdentifierException", text, StringComparison.Ordinal);
+        }
+    }
+
+    [Fact]
+    public void Authentication_files_consume_cross_module_capability_only_through_contracts()
+    {
+        var authRoot = Path.Combine(FindRepoRoot(), "src", "backend", "Host", "Tooba.Host", "Authentication");
+        foreach (var file in Directory.GetFiles(authRoot, "*.cs"))
+        {
+            var text = File.ReadAllText(file);
+            Assert.DoesNotContain("Tooba.Identity.Application", text, StringComparison.Ordinal);
+            Assert.DoesNotContain("Tooba.Identity.Domain", text, StringComparison.Ordinal);
+            Assert.DoesNotContain("Tooba.CustomerProfile.Application", text, StringComparison.Ordinal);
+            Assert.DoesNotContain("IdentityDbContext", text, StringComparison.Ordinal);
+            Assert.DoesNotContain("AuthSession", text, StringComparison.Ordinal);
+            Assert.DoesNotContain("UserAccount", text, StringComparison.Ordinal);
         }
     }
 
@@ -83,6 +101,7 @@ public sealed class AuthenticationV2CanonicalizationGuardTests
             FindRepoRoot(), "src", "backend", "Host", "Tooba.Host", "Authentication", "AuthenticationHttpProblem.cs"));
         Assert.Contains("ApiResponseFactory", source, StringComparison.Ordinal);
         Assert.DoesNotContain("new ProblemDetails", source, StringComparison.Ordinal);
+        Assert.DoesNotContain("Results.Problem", source, StringComparison.Ordinal);
         Assert.DoesNotContain("application/problem+json", source, StringComparison.Ordinal);
     }
 

@@ -1,7 +1,6 @@
 using Tooba.BuildingBlocks;
-using Tooba.Identity.Application;
+using Tooba.Identity.Contracts;
 using Tooba.Identity.Contracts.Problems;
-using Tooba.Identity.Domain;
 using Tooba.Identity.Infrastructure;
 
 namespace Tooba.Host.Admin;

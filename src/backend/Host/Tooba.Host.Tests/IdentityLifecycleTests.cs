@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Testcontainers.PostgreSql;
 using Tooba.Identity.Application;
+using Tooba.Identity.Contracts;
 using Tooba.Identity.Domain;
 using Tooba.Identity.Infrastructure;
 using Tooba.Identity.Infrastructure.Persistence;

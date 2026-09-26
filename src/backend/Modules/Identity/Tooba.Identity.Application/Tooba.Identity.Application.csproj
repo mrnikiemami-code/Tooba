@@ -11,5 +11,6 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Tooba.Identity.Domain\Tooba.Identity.Domain.csproj" />
+    <ProjectReference Include="..\Tooba.Identity.Contracts\Tooba.Identity.Contracts.csproj" />
   </ItemGroup>
 </Project>

@@ -89,22 +89,12 @@ internal static class AuthenticationHttpProblem
     /// <summary>
     /// Canonical ProblemDetails presentation for an auth boundary machine code. Status, title,
     /// localization, and trace/correlation ids come from the shared factory; no parallel pipeline.
+    /// The canonical factory is a required dependency: missing composition infrastructure surfaces
+    /// as a wiring failure instead of silently downgrading to a local ProblemDetails response.
     /// </summary>
     public static IResult AuthProblem(HttpContext http, string errorCode)
     {
-        var factory = ResolveFactory(http);
-        if (factory is not null)
-        {
-            return factory.FromFailure(new SemanticError(errorCode));
-        }
-
-        // Composition fallback: never happens in the composed Host, keeps the method total.
-        return Results.Problem(
-            statusCode: StatusCodes.Status500InternalServerError,
-            title: "Request failed.",
-            extensions: new Dictionary<string, object?> { ["errorCode"] = errorCode });
+        var factory = http.RequestServices.GetRequiredService<ApiResponseFactory>();
+        return factory.FromFailure(new SemanticError(errorCode));
     }
-
-    private static ApiResponseFactory? ResolveFactory(HttpContext http) =>
-        http.RequestServices.GetService(typeof(ApiResponseFactory)) as ApiResponseFactory;
 }

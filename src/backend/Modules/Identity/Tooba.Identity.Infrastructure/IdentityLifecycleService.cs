@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Tooba.BuildingBlocks;
 using Tooba.Identity.Application;
+using Tooba.Identity.Contracts;
 using Tooba.Identity.Domain;
 using Tooba.Identity.Infrastructure.Persistence;
 

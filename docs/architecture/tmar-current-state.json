@@ -827,6 +827,46 @@
         ],
         "evidence": "docs/evidence/TB-TMAR-HOST-AUTHENTICATION-SPLIT-001/authentication-split.md"
       },
+      "v2CanonicalizationR1": {
+        "task": "AUTHENTICATION-V2-CANONICALIZATION-001-R1",
+        "state": "REPAIRED",
+        "predecessorCommit": "4c5931cef89b63075416e1cb572998c71f7b9f0b",
+        "parallelProblemPipeline": "ZERO",
+        "authProblemPath": "AuthenticationHttpProblem.AuthProblem uses http.RequestServices.GetRequiredService<ApiResponseFactory>().FromFailure(new SemanticError(code)); the Results.Problem fallback was removed",
+        "crossModuleCouplingState": "LEGAL_CONTRACTS_ONLY",
+        "crossModuleJoinState": "NONE",
+        "identityBusinessAuthorityInHost": "ZERO",
+        "identityPersistenceAuthorityInHost": "ZERO",
+        "behaviorChange": "NONE",
+        "authContractSurface": [
+          "src/backend/Modules/Identity/Tooba.Identity.Contracts/Auth/IdentityPrimitiveContracts.cs (LoginIdentifierKind, OtpPurpose)",
+          "src/backend/Modules/Identity/Tooba.Identity.Contracts/Auth/IdentityAuthenticationContracts.cs (auth interfaces/DTOs/enums + IdentityContactSnapshot/IIdentityContactLookup)",
+          "src/backend/Modules/Identity/Tooba.Identity.Contracts/Auth/OtpDeliveryContracts.cs (single-source IOtpDeliveryProvider port)"
+        ],
+        "removedDuplicates": [
+          "src/backend/Modules/Identity/Tooba.Identity.Application/OtpDeliveryContracts.cs (deleted; duplicate of Contracts port)",
+          "Tooba.Identity.Domain/IdentityDomain.cs LoginIdentifierKind and OtpPurpose declarations (moved to Contracts; Domain now references Identity.Contracts)"
+        ],
+        "hostFilesRepaired": [
+          "src/backend/Host/Tooba.Host/Authentication/AuthenticationHttpBoundary.cs",
+          "src/backend/Host/Tooba.Host/Authentication/CurrentAuthenticatedSession.cs",
+          "src/backend/Host/Tooba.Host/Authentication/SessionAuthenticationMiddleware.cs",
+          "src/backend/Host/Tooba.Host/Admin/AdminDevActorBootstrap.cs",
+          "src/backend/Host/Tooba.Host/Seller/SellerDevActorBootstrap.cs",
+          "src/backend/Host/Tooba.Host/Customer/CustomerPanelComposer.cs"
+        ],
+        "durableGuard": "src/backend/Host/Tooba.Host.Tests/AuthenticationV2CanonicalizationGuardTests.cs (22 pass; forbids Identity.Application/Domain + Results.Problem in Host/Authentication)",
+        "focusedTests": "AuthenticationV2CanonicalizationGuardTests + AuthenticationHttpTests + AuthSecurityHttpTests + IdentityFoundationTests + IdentityLifecycleTests + OtpDeliveryProviderTests + SellerPanelAuthorizationTests + StorefrontAccountIdentityTests + CustomerProfileFoundationTests = 49 passed / 10 skipped (Docker unavailable) / 0 failed",
+        "preExistingFailuresNotCausedByThisTask": [
+          "ErrorContractTests (unregistered Tooba.Inventory.Contracts.Cart.ICartInventoryHoldPort — not touched by this task)",
+          "TmarSourceSizeAndInfraAppTests (red at clean HEAD before this task)",
+          "Tooba.Order.Tests.OrderSellerPanelArchitectureGuardTests (pre-existing missing Tooba.AccessControl reference)"
+        ],
+        "evidence": "docs/evidence/AUTHENTICATION-V2-CANONICALIZATION-001-R1/authentication-v2-canonicalization-r1.md",
+        "currentHostFolderCheckpoint": "Authentication",
+        "nextHostFolderStarted": false,
+        "identityOrCustomerProfileIndependentRecovery": "NOT_STARTED"
+      },
       "v2ReAudit": {
         "task": "AUTHENTICATION-V2-REAUDIT",
         "state": "REPAIRED_AND_ACCEPTED_V2",

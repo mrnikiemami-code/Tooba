@@ -1,9 +1,8 @@
 ﻿using System.Text.Json;
 using Tooba.CustomerProfile.Contracts;
 using Tooba.Host.Storefront;
-using Tooba.Identity.Application;
+using Tooba.Identity.Contracts;
 using Tooba.Identity.Contracts.Problems;
-using Tooba.Identity.Domain;
 
 namespace Tooba.Host;
 

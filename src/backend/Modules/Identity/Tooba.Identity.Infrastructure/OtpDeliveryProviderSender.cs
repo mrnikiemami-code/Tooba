@@ -1,4 +1,5 @@
 using Tooba.Identity.Application;
+using Tooba.Identity.Contracts;
 using Tooba.Identity.Domain;
 
 namespace Tooba.Identity.Infrastructure;

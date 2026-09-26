@@ -1,4 +1,4 @@
-using Tooba.Identity.Application;
+using Tooba.Identity.Contracts;
 using Tooba.Identity.Domain;
 using Tooba.Identity.Infrastructure;
 using Xunit;
