@@ -4,22 +4,26 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using Tooba.AddressBook.Application;
 using Tooba.AddressBook.Application.Customer.Create;
+using Tooba.AddressBook.Application.Customer.Delete;
+using Tooba.AddressBook.Application.Customer.SetDefault;
 using Tooba.AddressBook.Application.Customer.Update;
 
 namespace Tooba.AddressBook.Endpoints.Customer;
 
 /// <summary>
-/// مرز HTTP نوشتن دفترچهٔ آدرس مشتری — ایجاد و ویرایش. فرمان‌ها فقط از طریق <see cref="ISender"/>
-/// فرستاده می‌شوند و این لایه هیچ دسترسی مستقیمی به <c>IAddressBookDirectory</c> ندارد.
+/// مرز HTTP نوشتن دفترچهٔ آدرس مشتری — ایجاد، ویرایش، حذف و پیش‌فرض. فرمان‌ها فقط از طریق
+/// <see cref="ISender"/> فرستاده می‌شوند و این لایه هیچ دسترسی مستقیمی به <c>IAddressBookDirectory</c> ندارد.
 /// </summary>
 public static class AddressBookCustomerWriteEndpoints
 {
-    /// <summary>دو مسیر نوشتن (ایجاد و ویرایش) را زیر مرز مشتری ثبت می‌کند.</summary>
+    /// <summary>مسیرهای نوشتن (ایجاد/ویرایش/حذف/پیش‌فرض) را زیر مرز مشتری ثبت می‌کند.</summary>
     public static void MapWrites(RouteGroupBuilder group)
     {
         ArgumentNullException.ThrowIfNull(group);
         group.MapPost("", CreateAsync);
         group.MapPut("/{addressId:guid}", UpdateAsync);
+        group.MapDelete("/{addressId:guid}", DeleteAsync);
+        group.MapPost("/{addressId:guid}/default", SetDefaultAsync);
     }
 
     private static async Task<IResult> CreateAsync(
@@ -57,6 +61,44 @@ public static class AddressBookCustomerWriteEndpoints
 
         var updated = await sender.Send(
             new UpdateCustomerAddressCommand(actor.Value, addressId, body.ToWrite()),
+            cancellationToken);
+        return Results.Json(updated);
+    }
+
+    private static async Task<IResult> DeleteAsync(
+        Guid addressId,
+        HttpContext httpContext,
+        IAddressBookCustomerActorResolver actorResolver,
+        ISender sender,
+        CancellationToken cancellationToken)
+    {
+        var actor = actorResolver.ResolveActor(httpContext);
+        if (actor is null)
+        {
+            return Unauthorized();
+        }
+
+        await sender.Send(
+            new DeleteCustomerAddressCommand(actor.Value, addressId),
+            cancellationToken);
+        return Results.NoContent();
+    }
+
+    private static async Task<IResult> SetDefaultAsync(
+        Guid addressId,
+        HttpContext httpContext,
+        IAddressBookCustomerActorResolver actorResolver,
+        ISender sender,
+        CancellationToken cancellationToken)
+    {
+        var actor = actorResolver.ResolveActor(httpContext);
+        if (actor is null)
+        {
+            return Unauthorized();
+        }
+
+        var updated = await sender.Send(
+            new SetDefaultCustomerAddressCommand(actor.Value, addressId),
             cancellationToken);
         return Results.Json(updated);
     }

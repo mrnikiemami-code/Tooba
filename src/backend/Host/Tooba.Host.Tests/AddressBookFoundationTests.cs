@@ -60,21 +60,24 @@ public sealed class AddressBookFoundationTests
     [Fact]
     public void Endpoint_uses_session_and_rejects_missing_production_actor()
     {
-        var hostSource = File.ReadAllText(Path.Combine(
-            FindRepoRoot(), "src", "backend", "Host", "Tooba.Host", "AddressBook", "AddressBookEndpoints.cs"));
-        var moduleActorSource = File.ReadAllText(Path.Combine(
-            FindRepoRoot(), "src", "backend", "Modules", "AddressBook", "Tooba.AddressBook.Endpoints",
-            "Customer", "AddressBookCustomerActorResolver.cs"));
-        Assert.Contains("session.IsAuthenticated", hostSource, StringComparison.Ordinal);
-        Assert.Contains("StatusCodes.Status401Unauthorized", hostSource, StringComparison.Ordinal);
-        Assert.Contains("environment.IsDevelopment()", hostSource, StringComparison.Ordinal);
-        Assert.Contains("/v1/customer/addresses", hostSource, StringComparison.Ordinal);
+        var endpointsRoot = Path.Combine(
+            FindRepoRoot(), "src", "backend", "Modules", "AddressBook", "Tooba.AddressBook.Endpoints");
+        var moduleActorSource = File.ReadAllText(Path.Combine(endpointsRoot, "Customer", "AddressBookCustomerActorResolver.cs"));
+        var moduleReadSource = File.ReadAllText(Path.Combine(endpointsRoot, "Customer", "AddressBookCustomerReadEndpoints.cs"));
+        var moduleWriteSource = File.ReadAllText(Path.Combine(endpointsRoot, "Customer", "AddressBookCustomerWriteEndpoints.cs"));
+
+        // Host AddressBook HTTP ownership is ZERO: the legacy Host endpoint file must be gone.
+        Assert.False(File.Exists(Path.Combine(
+            FindRepoRoot(), "src", "backend", "Host", "Tooba.Host", "AddressBook", "AddressBookEndpoints.cs")));
+
         Assert.Contains("currentUser.IsAuthenticated", moduleActorSource, StringComparison.Ordinal);
-        Assert.Contains("StatusCodes.Status401Unauthorized", File.ReadAllText(Path.Combine(
-            FindRepoRoot(), "src", "backend", "Modules", "AddressBook", "Tooba.AddressBook.Endpoints",
-            "Customer", "AddressBookCustomerReadEndpoints.cs")), StringComparison.Ordinal);
-        Assert.DoesNotContain("{owner", hostSource, StringComparison.OrdinalIgnoreCase);
-        Assert.DoesNotContain("OwnerUserId", hostSource, StringComparison.Ordinal);
+        Assert.Contains("environment.IsDevelopment()", moduleActorSource, StringComparison.Ordinal);
+        Assert.Contains("/v1/customer/addresses", File.ReadAllText(Path.Combine(endpointsRoot, "AddressBookEndpointModule.cs")), StringComparison.Ordinal);
+        Assert.Contains("StatusCodes.Status401Unauthorized", moduleReadSource, StringComparison.Ordinal);
+        Assert.Contains("StatusCodes.Status401Unauthorized", moduleWriteSource, StringComparison.Ordinal);
+        Assert.DoesNotContain("{owner", moduleWriteSource, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("OwnerUserId", moduleWriteSource, StringComparison.Ordinal);
+        Assert.DoesNotContain("CurrentAuthenticatedSession", moduleActorSource, StringComparison.Ordinal);
     }
 
     /// <summary>کشور تهی به IR تبدیل می‌شود و قوانین رقم‌شمار ایران در هسته نیست.</summary>

@@ -7,13 +7,14 @@ namespace Tooba.AddressBook.Endpoints;
 
 /// <summary>
 /// AddressBook HTTP ownership composition.
-/// List + Get became module-owned in `TB-TMAR-ADDRESSBOOK-ENDPOINT-MIGRATION-READ-001` and Create + Update in
-/// `TB-TMAR-ADDRESSBOOK-ENDPOINT-MIGRATION-WRITE-001`; Delete + SetDefault are still Host-owned by
-/// <c>Tooba.Host/AddressBook/AddressBookEndpoints.cs</c> and will move in a later bounded slice.
+/// List + Get became module-owned in `TB-TMAR-ADDRESSBOOK-ENDPOINT-MIGRATION-READ-001`, Create + Update in
+/// `TB-TMAR-ADDRESSBOOK-ENDPOINT-MIGRATION-WRITE-001`, and Delete + SetDefault in
+/// `TB-TMAR-ADDRESSBOOK-ENDPOINT-MIGRATION-WRITE-002`. All six AddressBook routes are module-owned and Host
+/// AddressBook HTTP ownership is ZERO; the Host legacy map call is retired.
 /// </summary>
 public static class AddressBookEndpointModule
 {
-    /// <summary>Maps the currently module-owned AddressBook routes (List, Get, Create, Update).</summary>
+    /// <summary>Maps the module-owned AddressBook routes (List, Get, Create, Update, Delete, SetDefault).</summary>
     public static IEndpointRouteBuilder MapAddressBookModuleEndpoints(this IEndpointRouteBuilder app)
     {
         ArgumentNullException.ThrowIfNull(app);
