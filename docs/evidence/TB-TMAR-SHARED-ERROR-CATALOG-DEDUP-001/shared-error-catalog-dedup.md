@@ -36,37 +36,67 @@ architecture/product STOP was required. Classification of every duplicate was
 
 ## 3. Ownership resolution
 
-Rule applied: the canonical descriptor is the one whose module owns the code's localization
-keyspace (the only `IErrorResourceSet` that `Owns()` the key) plus the domain that raises it. Modules
-keep consuming the same machine codes; they no longer re-register the descriptor.
+Rule applied: a code's canonical descriptor belongs to its **semantic / natural bounded context** —
+the domain that defines the invariant, owns the retry/authorization policy, and is the primary
+producer of the code. Localization resource ownership (`IErrorResourceSet.Owns()`) is deliberately
+**not** the deciding factor: a resource set may resolve a key it does not own. Modules keep consuming
+the same machine codes; they no longer re-register the descriptor.
 
 | Code | Final canonical owner | Reason |
 | --- | --- | --- |
-| `checkout.authentication_required` | `FoundationErrorCatalogContributor` | cross-cutting auth boundary; no module resource set owns `checkout.*` for auth |
-| `customer.session.required` | `FoundationErrorCatalogContributor` | cross-cutting session boundary |
-| `seller.authorization.denied` | `FoundationErrorCatalogContributor` | cross-cutting role authorization |
-| `admin.authorization.denied` | `FoundationErrorCatalogContributor` | cross-cutting role authorization |
-| `payment.missing` | `OrderErrorCatalogContributor` | `OrderErrorResourceSet.Owns("payment.missing")`; raised on storefront/pending surfaces |
-| `payment.rejected` | `OrderErrorCatalogContributor` | `OrderErrorResourceSet.Owns("payment.rejected")` |
-| `payment.unpaid.supply_unavailable` | `OrderErrorCatalogContributor` | `OrderErrorResourceSet.Owns(...)`, with FA resource |
-| `inventory.reservation.retry_limit_reached` | `OrderErrorCatalogContributor` | `OrderErrorResourceSet.Owns(...)`, `ReservationCycleErrors` lives in Order |
-| `customer.order.missing` | `OrderErrorCatalogContributor` | Order owns `customer.*` keyspace and the order aggregate |
-| `seller.order.missing` | `OrderErrorCatalogContributor` | Order owns `seller.*` keyspace and the order aggregate |
+| `checkout.authentication_required` | `FoundationErrorCatalogContributor` | cross-cutting auth boundary (Host identity gates), no semantic module owner; every module has its own local constant |
+| `customer.session.required` | `FoundationErrorCatalogContributor` | cross-cutting session boundary (Host/customer-panel guards) |
+| `seller.authorization.denied` | `FoundationErrorCatalogContributor` | cross-cutting role authorization (Host seller/admin access gates) |
+| `admin.authorization.denied` | `FoundationErrorCatalogContributor` | cross-cutting role authorization (Host admin access gates) |
+| `payment.missing` | `PaymentErrorCatalogContributor` | Payment bounded context; primary producer `StorefrontPaymentOrchestrator`/`PaymentAdminDirectory`/`PaymentWebhookHandler` |
+| `payment.rejected` | `PaymentErrorCatalogContributor` | Payment bounded context; produced by `ProcessPaymentWebhookCommand` |
+| `payment.unpaid.supply_unavailable` | `PaymentErrorCatalogContributor` | Payment bounded context; produced by `StorefrontPaymentOrchestrator`; Payment's `PaymentExceptionMapper` maps `inventory.supply.unavailable` → this code |
+| `inventory.reservation.retry_limit_reached` | `OrderErrorCatalogContributor` | Order bounded context; `ReservationCycleOptions.MaxReservationCycles` policy + `ReservationCycleCoordinator`/`ReservationCycleDirectory` producer live in Order; Inventory has no retry concept |
+| `customer.order.missing` | `OrderErrorCatalogContributor` | Order owns the order aggregate and `customer.*` keyspace |
+| `seller.order.missing` | `OrderErrorCatalogContributor` | Order owns the order aggregate and `seller.*` keyspace |
 
 No new cross-module Application/Infrastructure/Domain coupling was introduced: consumers reference
-only the stable machine-code constants they already had (or the new neutral
-`FoundationErrorCodes`), never another module's implementation.
+only the stable machine-code constants they already had (or the neutral `FoundationErrorCodes`),
+never another module's implementation.
+
+### 3.1 R1 bounded-context re-audit (5-point proof)
+
+R0 initially assigned the `payment.*` descriptors to `OrderErrorCatalogContributor` because
+`OrderErrorResourceSet.Owns()` claims those localization keys. R1 corrects that: resource ownership is
+not bounded-context ownership.
+
+| Code | 1. Semantic meaning | 2. Actual producers / consumers | 3. Natural owner | 4. Foundation? | 5. Not a convenience owner |
+| --- | --- | --- | --- | --- | --- |
+| `payment.missing` | A payment aggregate/record required to proceed does not exist | Producers: `StorefrontPaymentOrchestrator` (many), `PaymentAdminDirectory` (5), `PaymentWebhookHandler`, `GetStorefrontPaymentQuery`. Consumers: `StorefrontPendingPaymentService`, `AdminOrderOperationsOrchestrator` | Payment | No — a module-owned domain invariant exists | Payment defines the code in `PaymentErrorCodes` and is the dominant producer; Order only consumes it |
+| `payment.rejected` | A payment attempt was rejected (provider/business decline) | Producer: `ProcessPaymentWebhookCommand`. Consumer: Payment exception mapping | Payment | No | Order has no producer; it only re-exposed a locale string |
+| `payment.unpaid.supply_unavailable` | An unpaid order cannot be supplied/reserved for retry | Producers: `StorefrontPaymentOrchestrator`, Payment's `PaymentExceptionMapper` (`inventory.supply.unavailable` → this code). Consumers: Order retry command, pending surfaces | Payment | No | Payment originates/maps it; Order consumes the same stable code |
+| `inventory.reservation.retry_limit_reached` | The per-store/category/offer max reservation re-cycle count was reached | Producer: `ReservationCycleCoordinator` + `ReservationCycleDirectory` (`RecordRetryLimitReachedAsync`); policy: `ReservationCycleOptions.MaxReservationCycles`. Payment also carries the constant | Order | No — Order is the true domain authority | The retry policy and event log are Order-owned; Inventory has **no** `IErrorCatalogContributor` and no retry concept, so Inventory is not the owner |
+| `checkout.authentication_required` | Checkout requires an authenticated actor | Producers: Host `CheckoutIdentityGate`, `HostOrderStorefrontActor` | Foundation (platform auth boundary) | Yes — no module owns checkout authentication; every module keeps its own constant | Not centralized for convenience: no resource set owns it and no module defines the invariant |
+| `customer.session.required` | A customer session is required | Producers: Host wishlist/reviews/customer-panel gates + AddressBook/Wallet/Support customer endpoints | Foundation (platform session boundary) | Yes — pure cross-cutting identity | Host-owned, not resource-driven |
+| `seller.authorization.denied` | Seller role authorization denied | Producers: Host `SellerPanelAccess`, `SellerSettingsEndpoints`, `HostSupportSellerAuthorizer` | Foundation (platform role boundary) | Yes | Host-owned; Support/Promotion only carried local constants |
+| `admin.authorization.denied` | Admin role authorization denied | Producers: Host `AdminPanelAccess`, `ContentAdminAccess`, `HostAdminPanelAccess`, `HostSettlementAdminAuthorizer`, wallet/support admin authorizers | Foundation (platform role boundary) | Yes | Host-owned; 4 modules carried local constants |
+
+Consequence applied in R1: only the three `payment.*` descriptors moved from Order to
+`PaymentErrorCatalogContributor`. `inventory.reservation.retry_limit_reached` stays Order-owned (it was
+already Order-owned, now proven, not merely convenient). The four cross-cutting codes stay
+Foundation-owned. `payment.missing` / `payment.rejected` / `payment.unpaid.supply_unavailable` keep the
+same machine codes, classification, and HTTP status; `OrderErrorResourceSet` still resolves their
+localization keys (so FA copy is unchanged).
+
 
 ## 4. Removed redundant registrations (minimum surface)
 
 - `FoundationErrorCatalogContributor`: **added** the 4 shared cross-cutting descriptors (neutral owner).
   New `FoundationErrorCodes` holds the stable machine-code literals.
 - `OrderErrorCatalogContributor`: removed `checkout.authentication_required`, `customer.session.required`,
-  `seller.authorization.denied`, `admin.authorization.denied` (Order never registered `admin.*`).
+  `seller.authorization.denied`, `admin.authorization.denied` (Order never registered `admin.*`); **R1**
+  removed `payment.missing`, `payment.rejected`, `payment.unpaid.supply_unavailable` (moved to Payment).
+  `inventory.reservation.retry_limit_reached` stays Order-owned.
 - `CartErrorCatalogContributor`: removed `checkout.authentication_required`.
-- `PaymentErrorCatalogContributor`: removed `inventory.reservation.retry_limit_reached`,
-  `payment.missing`, `payment.rejected`, `payment.unpaid.supply_unavailable`,
-  `admin.authorization.denied`, `checkout.authentication_required`.
+- `PaymentErrorCatalogContributor`: removed `inventory.reservation.retry_limit_reached` and the two
+  cross-cutting codes (`admin.authorization.denied`, `checkout.authentication_required`); **R1**
+  re-added the three Payment-owned descriptors (`payment.missing`, `payment.rejected`,
+  `payment.unpaid.supply_unavailable`).
 - `NotificationErrorCatalogContributor`: removed `customer.session.required`.
 - `SupportErrorCatalogContributor`: removed `customer.session.required`, `seller.authorization.denied`,
   `admin.authorization.denied`.
@@ -78,8 +108,10 @@ only the stable machine-code constants they already had (or the new neutral
 
 Resource sets were **not** duplicated or moved: localization keeps resolving via the first
 `IErrorResourceSet` that `Owns()` the key (Order's fa/en resources for `payment.*` /
-`inventory.reservation.*` / `customer.order.*` / `seller.order.*` are unchanged) and via the
-descriptor `SafeTitleFallback`/`platform.*` fallback for the cross-cutting codes.
+`inventory.reservation.*` / `customer.order.*` / `seller.order.*` are unchanged — `payment.*` keys are
+still resolved by `OrderErrorResourceSet` even though the *descriptor* is now Payment-owned) and via the
+descriptor `SafeTitleFallback`/`platform.*` fallback for the cross-cutting codes. This is exactly why
+descriptor ownership and localization ownership are tracked separately.
 
 ## 5. Result
 
@@ -119,6 +151,18 @@ machine codes, and correlation/trace/request-id behavior are all preserved uncha
 | Host tests reading Order contributor text | Passed 67 / Failed 0 |
 | Cart / Support / Notification / Payment / Wallet / Promotion / Fulfillment tests | Passed 237 / Failed 0 |
 | `ErrorCatalogUniqueCodeGuardTests` | Passed 2 / Failed 0 |
+
+### 7.1 R1 focused re-validation
+
+| Validation | Result |
+| --- | --- |
+| `PaymentErrorCatalogContributor` + `OrderErrorCatalogContributor` builds | PASS, 0 errors |
+| `ErrorCatalogUniqueCodeGuardTests` (composed catalog, 0 duplicates) | Passed 2 / Failed 0 |
+| `Tooba.BuildingBlocks.Tests` | Passed 45 / Failed 0 |
+| `Tooba.Payment.Tests` | Passed 87 / Failed 0 |
+| Host `CheckoutAbusePolicy` + `StorefrontPendingPayment` + `UnpaidOrderExpiry` + `AddressBook` | Passed 51 / Failed 0 (4 skipped) |
+| `OrderEndpointPresentationTests` ownership assertions (updated) | Updated; `Tooba.Order.Tests` still blocked by pre-existing K3 |
+
 
 ## 8. Pre-existing, out of scope (not caused, not repaired)
 

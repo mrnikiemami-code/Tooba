@@ -97,21 +97,19 @@ public sealed class OrderErrorCatalogContributor : IErrorCatalogContributor
             "پس از ارسال کالا، لغو کامل سفارش امکان‌پذیر نیست."),
         D(StorefrontOrderErrors.PendingHideActiveHold, ErrorClassification.Conflict, StatusCodes.Status409Conflict,
             "تا پایان مهلت رزرو نمی‌توان این کارت را پنهان کرد."),
-        // payment.* / inventory.reservation.* descriptors are canonically owned here because Order
-        // owns this resource keyspace (OrderErrorResourceSet) and raises these on the storefront and
-        // customer-panel surfaces; Payment consumes the same machine codes without re-registering.
-        D(StorefrontOrderErrors.PaymentMissing, ErrorClassification.NotFound, StatusCodes.Status404NotFound,
-            "پرداخت پیدا نشد."),
-        D(StorefrontOrderErrors.PaymentRejected, ErrorClassification.Business, StatusCodes.Status400BadRequest,
-            "امکان انجام این عملیات در حال حاضر وجود ندارد."),
+        // payment.missing / payment.rejected / payment.unpaid.supply_unavailable descriptors are
+        // Payment-owned (PaymentErrorCatalogContributor): Payment is the natural bounded context and
+        // the primary producer. Order consumes the same stable machine codes on storefront/customer
+        // surfaces; the payment.* localization keys stay resolved by OrderErrorResourceSet. The
+        // inventory.reservation.retry_limit_reached descriptor stays Order-owned below because the
+        // reservation retry policy/producer (ReservationCycleOptions/ReservationCycleCoordinator)
+        // lives in Order.
 
         // Customer panel Order.
         // Shared code consumed here but owned by FoundationErrorCatalogContributor:
         //   customer.session.required
         D(CustomerOrderErrors.Missing, ErrorClassification.NotFound, StatusCodes.Status404NotFound,
             "Not Found"),
-        D(CustomerOrderErrors.SupplyUnavailable, ErrorClassification.Conflict, StatusCodes.Status409Conflict,
-            "این سفارش در حال حاضر قابل تأمین نیست."),
         D(ReservationCycleErrors.RetryLimitReached, ErrorClassification.Conflict, StatusCodes.Status409Conflict,
             ReservationCycleErrors.RetryLimitReachedFa),
 

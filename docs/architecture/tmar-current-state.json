@@ -1057,10 +1057,12 @@
   },
   "sharedErrorCatalogDedup": {
     "task": "TB-TMAR-SHARED-ERROR-CATALOG-DEDUP-001",
+    "iterations": ["R0", "R1"],
     "parentTask": "TB-TMAR-ADDRESSBOOK-POST-REALIGN-REPAIR-001",
     "parentCommit": "67f2d4485ac78472c30650374fa01c81a410c2c4",
-    "state": "CATALOG_CANONICAL_DUPLICATES_CLOSED",
+    "state": "CATALOG_CANONICAL_DUPLICATES_CLOSED_BOUNDED_CONTEXT_REAUDITED",
     "scope": "MINIMUM_CANONICAL_CATALOG_RESOURCE_REGISTRATION_ONLY",
+    "ownershipRule": "SEMANTIC_NATURAL_BOUNDED_CONTEXT_OWNERSHIP_NOT_RESOURCE_CONVENIENCE",
     "duplicateCodesBefore": [
       "checkout.authentication_required",
       "customer.session.required",
@@ -1085,12 +1087,28 @@
       "customer.session.required": "FoundationErrorCatalogContributor",
       "seller.authorization.denied": "FoundationErrorCatalogContributor",
       "admin.authorization.denied": "FoundationErrorCatalogContributor",
-      "payment.missing": "OrderErrorCatalogContributor",
-      "payment.rejected": "OrderErrorCatalogContributor",
-      "payment.unpaid.supply_unavailable": "OrderErrorCatalogContributor",
+      "payment.missing": "PaymentErrorCatalogContributor",
+      "payment.rejected": "PaymentErrorCatalogContributor",
+      "payment.unpaid.supply_unavailable": "PaymentErrorCatalogContributor",
       "inventory.reservation.retry_limit_reached": "OrderErrorCatalogContributor",
       "customer.order.missing": "OrderErrorCatalogContributor",
       "seller.order.missing": "OrderErrorCatalogContributor"
+    },
+    "ownershipProof": {
+      "payment.missing": "Payment bounded context; primary producers StorefrontPaymentOrchestrator/PaymentAdminDirectory/PaymentWebhookHandler",
+      "payment.rejected": "Payment bounded context; producer ProcessPaymentWebhookCommand",
+      "payment.unpaid.supply_unavailable": "Payment bounded context; producer StorefrontPaymentOrchestrator; PaymentExceptionMapper maps inventory.supply.unavailable to this code",
+      "inventory.reservation.retry_limit_reached": "Order bounded context; ReservationCycleOptions.MaxReservationCycles policy + ReservationCycleCoordinator/Directory producer; Inventory has no retry concept and no contributor",
+      "checkout.authentication_required": "Platform cross-cutting auth boundary; producers are Host CheckoutIdentityGate/HostOrderStorefrontActor; no module owns checkout authentication",
+      "customer.session.required": "Platform cross-cutting session boundary; Host gates + module customer endpoints; each module keeps its own local constant",
+      "seller.authorization.denied": "Platform cross-cutting role boundary; producers are Host seller/admin access gates",
+      "admin.authorization.denied": "Platform cross-cutting role boundary; producers are Host admin access gates"
+    },
+    "r1Change": {
+      "movedToPayment": ["payment.missing", "payment.rejected", "payment.unpaid.supply_unavailable"],
+      "keptOrderOwned": ["inventory.reservation.retry_limit_reached"],
+      "keptFoundationOwned": ["checkout.authentication_required", "customer.session.required", "seller.authorization.denied", "admin.authorization.denied"],
+      "resourceOwnershipUnchanged": "OrderErrorResourceSet still Owns() the payment.* localization keys; descriptor ownership and localization ownership are independent"
     },
     "sharedOwner": {
       "type": "FoundationErrorCatalogContributor",
@@ -1114,6 +1132,14 @@
       "hostContributorTextTests": "PASSED_67_FAILED_0",
       "affectedModuleTests": "PASSED_237_FAILED_0",
       "errorCatalogUniqueCodeGuard": "PASSED_2_FAILED_0"
+    },
+    "r1FocusedValidations": {
+      "paymentOrderContributorBuilds": "PASS_0_ERRORS",
+      "errorCatalogUniqueCodeGuard": "PASSED_2_FAILED_0",
+      "buildingBlocksTests": "PASSED_45_FAILED_0",
+      "paymentTests": "PASSED_87_FAILED_0",
+      "hostCheckoutAbuseStorefrontPendingUnpaidOrderExpiryAddressBook": "PASSED_51_FAILED_0_SKIPPED_4",
+      "orderEndpointPresentationTests": "UPDATED_OWNERSHIP_ASSERTIONS_ORDER_TESTS_STILL_BLOCKED_BY_K3"
     },
     "knownPreexistingFailures": [
       {

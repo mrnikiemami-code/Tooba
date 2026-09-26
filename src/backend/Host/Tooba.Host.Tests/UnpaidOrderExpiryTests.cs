@@ -138,7 +138,7 @@ public sealed class UnpaidOrderExpiryTests
         Assert.Contains("IReservationCycleCoordinator", retry, StringComparison.Ordinal);
         Assert.Contains("CustomerOrderErrors.SupplyUnavailable", retry, StringComparison.Ordinal);
         Assert.DoesNotContain("RetryUnpaidAsync", Read("src/backend/Host/Tooba.Host/Customer/CustomerPanelComposer.cs"), StringComparison.Ordinal);
-        var catalog = Read("src/backend/Modules/Order/Tooba.Order.Endpoints/Errors/OrderErrorCatalogContributor.cs");
+        var catalog = Read("src/backend/Modules/Payment/Tooba.Payment.Endpoints/Errors/PaymentErrorCatalogContributor.cs");
         Assert.Contains("این سفارش در حال حاضر قابل تأمین نیست.", catalog, StringComparison.Ordinal);
         Assert.Contains("PaymentExpired", Read("src/backend/Modules/Order/Tooba.Order.Application/Customer/CustomerOrderComposer.cs"), StringComparison.Ordinal);
         var reopen = Read("src/backend/Modules/Payment/Tooba.Payment.Infrastructure/Directories/PaymentExpiryDirectory.cs");

@@ -11,6 +11,7 @@ public sealed class PaymentErrorCatalogContributor : IErrorCatalogContributor
     public IReadOnlyList<ErrorDescriptor> Contribute() =>
     [
         D(PaymentErrorCodes.AlreadySucceeded, ErrorClassification.Conflict, StatusCodes.Status409Conflict, "Conflict"),
+        D(PaymentErrorCodes.Missing, ErrorClassification.NotFound, StatusCodes.Status404NotFound, "Not Found"),
         D(PaymentErrorCodes.AttemptMissing, ErrorClassification.NotFound, StatusCodes.Status404NotFound, "Not Found"),
         D(PaymentErrorCodes.AdminPaymentMissing, ErrorClassification.NotFound, StatusCodes.Status404NotFound, "Not Found"),
         D(PaymentErrorCodes.AccessDenied, ErrorClassification.Forbidden, StatusCodes.Status403Forbidden, "Forbidden"),
@@ -22,10 +23,14 @@ public sealed class PaymentErrorCatalogContributor : IErrorCatalogContributor
         D(PaymentErrorCodes.ProofForeign, ErrorClassification.Forbidden, StatusCodes.Status403Forbidden, "Forbidden"),
         D(PaymentErrorCodes.SandboxUnavailable, ErrorClassification.Forbidden, StatusCodes.Status403Forbidden, "Forbidden"),
         D(PaymentErrorCodes.UnpaidRetryInvalid, ErrorClassification.Conflict, StatusCodes.Status409Conflict, "Conflict"),
-        // inventory.reservation.retry_limit_reached / payment.missing / payment.rejected /
-        // payment.unpaid.supply_unavailable are owned by OrderErrorCatalogContributor, which owns the
-        // payment.* and inventory.reservation.* localization keyspace for storefront/pending surfaces
-        // (Payment registers no resource set for them). Payment consumes the same machine codes.
+        D(PaymentErrorCodes.Rejected, ErrorClassification.Business, StatusCodes.Status400BadRequest, "Bad Request"),
+        D(PaymentErrorCodes.UnpaidSupplyUnavailable, ErrorClassification.Conflict, StatusCodes.Status409Conflict, "این سفارش در حال حاضر قابل تأمین نیست."),
+        // inventory.reservation.retry_limit_reached (PaymentErrorCodes.ReservationRetryLimit) is NOT
+        // registered here: its natural bounded context is Order (ReservationCycleOptions /
+        // ReservationCycleCoordinator), which owns the descriptor. Payment only consumes the code.
+        // payment.missing / payment.rejected / payment.unpaid.supply_unavailable ARE Payment-owned:
+        // Payment is the natural bounded context and the primary producer. The matching localization
+        // keys are still resolved by the composed catalog contributor that owns the payment.* keyspace.
         D(PaymentErrorCodes.WebhookInvalidSignature, ErrorClassification.Forbidden, StatusCodes.Status401Unauthorized, "Unauthorized"),
         D(PaymentErrorCodes.WebhookInvalidPayload, ErrorClassification.Validation, StatusCodes.Status400BadRequest, "Bad Request"),
         D(PaymentErrorCodes.WebhookAmountMismatch, ErrorClassification.Conflict, StatusCodes.Status409Conflict, "Conflict"),

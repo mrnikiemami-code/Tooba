@@ -227,11 +227,11 @@ public sealed class StorefrontPendingPaymentTests
         var paymentCodes = File.ReadAllText(Path.Combine(root, "src", "backend", "Modules", "Payment", "Tooba.Payment.Application", "Errors", "PaymentErrorCodes.cs"));
         var reservation = File.ReadAllText(Path.Combine(root, "src", "backend", "Modules", "Order", "Tooba.Order.Application", "ReservationCycle", "Contracts", "ReservationCycleContracts.cs"));
         var pendingApi = File.ReadAllText(Path.Combine(root, "src", "frontend", "app", "storefront", "storefront-pending-payment-api.ts"));
-        var customer = File.ReadAllText(Path.Combine(root, "src", "backend", "Modules", "Order", "Tooba.Order.Endpoints", "Errors", "OrderErrorCatalogContributor.cs"));
+        var payment = File.ReadAllText(Path.Combine(root, "src", "backend", "Modules", "Payment", "Tooba.Payment.Endpoints", "Errors", "PaymentErrorCatalogContributor.cs"));
         Assert.Contains("LOCK-SF-085", locks, StringComparison.Ordinal);
         Assert.Contains("LOCK-SF-090", locks, StringComparison.Ordinal);
         Assert.Contains("payment.access.denied", paymentCodes, StringComparison.Ordinal);
-        Assert.Contains("این سفارش در حال حاضر قابل تأمین نیست.", customer, StringComparison.Ordinal);
+        Assert.Contains("این سفارش در حال حاضر قابل تأمین نیست.", payment, StringComparison.Ordinal);
         Assert.Contains("تعداد دفعات مجاز رزرو مجدد موجودی برای این سفارش به پایان رسیده است.", reservation, StringComparison.Ordinal);
         Assert.Contains("پرداخت این سفارش قبلاً با موفقیت انجام شده است.", pendingApi, StringComparison.Ordinal);
     }

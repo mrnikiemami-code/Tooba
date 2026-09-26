@@ -69,8 +69,23 @@ public sealed class OrderEndpointPresentationTests
         "seller.authorization.denied",
     ];
 
+    /// <summary>
+    /// Codes consumed by Order on storefront/customer surfaces but canonically owned by
+    /// PaymentErrorCatalogContributor (Payment is the natural bounded context and primary producer).
+    /// Order must not re-register them.
+    /// </summary>
+    private static readonly string[] SharedPaymentCodes =
+    [
+        StorefrontOrderErrors.PaymentMissing,
+        StorefrontOrderErrors.PaymentRejected,
+        CustomerOrderErrors.SupplyUnavailable,
+    ];
+
+    private static readonly string[] SharedCodes =
+        SharedFoundationCodes.Concat(SharedPaymentCodes).ToArray();
+
     private static readonly string[] OrderOwnedCodes =
-        AllCodes.Where(c => !SharedFoundationCodes.Contains(c, StringComparer.Ordinal)).ToArray();
+        AllCodes.Where(c => !SharedCodes.Contains(c, StringComparer.Ordinal)).ToArray();
 
     [Fact]
     public void Presentation_registration_adds_catalog_and_resource_set()
@@ -99,8 +114,8 @@ public sealed class OrderEndpointPresentationTests
             Assert.False(string.IsNullOrWhiteSpace(descriptor.SafeTitleFallback));
         }
 
-        // Shared cross-cutting codes must not be re-registered by Order (single canonical owner).
-        foreach (var shared in SharedFoundationCodes)
+        // Shared codes must not be re-registered by Order (single canonical owner).
+        foreach (var shared in SharedCodes)
         {
             Assert.DoesNotContain(descriptors, x => x.Code == shared);
         }
@@ -109,20 +124,23 @@ public sealed class OrderEndpointPresentationTests
     [Fact]
     public void Composed_catalog_resolves_order_and_shared_codes_without_duplicates()
     {
+        var orderDescriptors = new OrderErrorCatalogContributor().Contribute();
+
+        // Order must not own the Payment-bounded-context codes; it only consumes them.
+        foreach (var code in SharedPaymentCodes)
+        {
+            Assert.DoesNotContain(orderDescriptors, x => x.Code == code);
+        }
+
         var catalog = new ErrorDefinitionCatalog(
         [
             new FoundationErrorCatalogContributor(),
             new OrderErrorCatalogContributor(),
         ]);
 
-        foreach (var code in AllCodes)
+        foreach (var code in OrderOwnedCodes.Concat(SharedFoundationCodes))
         {
             Assert.True(catalog.TryGet(code, out _), "missing descriptor: " + code);
-        }
-
-        foreach (var shared in SharedFoundationCodes)
-        {
-            Assert.True(catalog.TryGet(shared, out _), "missing shared descriptor: " + shared);
         }
     }
 
