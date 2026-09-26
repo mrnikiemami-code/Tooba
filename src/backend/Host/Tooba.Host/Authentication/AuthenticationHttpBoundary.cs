@@ -1,326 +1,17 @@
-using System.Diagnostics;
 using System.Text.Json;
-using System.Text.Json.Serialization;
-using Microsoft.AspNetCore.Mvc;
 using Tooba.CustomerProfile.Application;
+using Tooba.Host.Storefront;
 using Tooba.Identity.Application;
 using Tooba.Identity.Domain;
 using Tooba.Identity.Infrastructure;
-using Tooba.Host.Storefront;
 
 namespace Tooba.Host;
-
-/// <summary>
-/// اصل احراز همین درخواست HTTP. مجوز کسب‌وکار اینجا حل نمی‌شود و Tenant از هدر/کوئری/بدنه جعل نمی‌شود.
-/// </summary>
-internal sealed class CurrentAuthenticatedSession
-{
-    /// <summary>
-    /// User پایدار پس از اعتبارسنجی Bearer نشست.
-    /// </summary>
-    public Guid? UserId { get; private set; }
-
-    /// <summary>
-    /// شناسهٔ نشست جاری؛ راز Refresh نیست.
-    /// </summary>
-    public Guid? SessionId { get; private set; }
-
-    /// <summary>
-    /// Edition ذخیره‌شده روی نشست، نه از Host درخواست.
-    /// </summary>
-    public string? Edition { get; private set; }
-
-    /// <summary>
-    /// Tenant پایدار نشست در Single-Store؛ از X-Tenant-Id خوانده نمی‌شود.
-    /// </summary>
-    public string? TenantId { get; private set; }
-
-    /// <summary>
-    /// آیا Bearer به نشست زنده و حساب فعال Resolve شده است.
-    /// </summary>
-    public bool IsAuthenticated => UserId is not null && SessionId is not null;
-
-    /// <summary>
-    /// اصل را پس از Resolve نشست می‌نشاند تا لایه‌های بعدی Host از EF Identity نخوانند.
-    /// </summary>
-    public void Assign(AuthenticatedIdentity identity)
-    {
-        UserId = identity.UserId;
-        SessionId = identity.SessionId;
-        Edition = identity.Edition;
-        TenantId = identity.TenantId;
-    }
-}
-
-/// <summary>
-/// درز محدودسازی نرخ auth-sensitive. هویت را فقط به IP گره نمی‌زند.
-/// </summary>
-internal interface IAuthenticationThrottleSeam
-{
-    /// <summary>
-    /// تلاش برای مصرف یک permit در پنجرهٔ IP+operation. false یعنی 429 enumeration-safe.
-    /// </summary>
-    bool TryAcquire(HttpContext context, string operation);
-}
-
-/// <summary>
-/// اعتبارسنجی Bearer به‌عنوان SessionId مات. JWT سفارشی ساخته نمی‌شود و هدر Authorization لاگ نمی‌شود.
-/// </summary>
-internal sealed class SessionAuthenticationMiddleware
-{
-    private readonly RequestDelegate _next;
-
-    /// <summary>
-    /// میان‌افزار را به pipeline وصل می‌کند.
-    /// </summary>
-    public SessionAuthenticationMiddleware(RequestDelegate next) => _next = next;
-
-    /// <summary>
-    /// نشست زنده را Resolve می‌کند. حساب Disabled/Locked یا مهر ناهماهنگ اصل نمی‌سازد.
-    /// </summary>
-    public async Task InvokeAsync(HttpContext context, CurrentAuthenticatedSession current)
-    {
-        var path = context.Request.Path;
-        if (path.StartsWithSegments("/health") || path.StartsWithSegments("/ready"))
-        {
-            await _next(context);
-            return;
-        }
-
-        if (TryReadSessionId(context, out var sessionId))
-        {
-            var sessions = context.RequestServices.GetRequiredService<IIdentitySessionResolver>();
-            var identity = await sessions.ResolveAsync(sessionId, context.RequestAborted);
-            if (identity is not null)
-            {
-                current.Assign(identity);
-            }
-        }
-
-        await _next(context);
-    }
-
-    private static bool TryReadSessionId(HttpContext context, out Guid sessionId)
-    {
-        sessionId = Guid.Empty;
-        if (context.Request.Headers.TryGetValue("Authorization", out var header))
-        {
-            var raw = header.ToString();
-            if (raw.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase)
-                && Guid.TryParse(raw["Bearer ".Length..].Trim(), out sessionId))
-            {
-                return true;
-            }
-        }
-
-        return context.Request.Cookies.TryGetValue("tooba_session", out var cookie)
-            && Guid.TryParse(cookie, out sessionId);
-    }
-}
-
-/// <summary>
-/// قراردادهای JSON مرز احراز. موجودیت EF نیستند و هش/راز persistشده را برنمی‌گردانند مگر Refresh خام در صدور/چرخش.
-/// </summary>
-internal static class AuthenticationHttpModels
-{
-    /// <summary>ثبت حساب با شناسهٔ typed.</summary>
-    internal sealed class RegisterRequest
-    {
-        /// <summary>گونهٔ شناسه؛ از Host ساخته نمی‌شود.</summary>
-        public string? IdentifierKind { get; init; }
-
-        /// <summary>مقدار خام شناسه.</summary>
-        public string? Identifier { get; init; }
-
-        /// <summary>رمز plaintext فقط در حافظهٔ درخواست.</summary>
-        public string? Password { get; init; }
-
-        /// <summary>شناسهٔ Tenant اگر کلاینت بفرستد؛ منبع اعتماد نیست و رد می‌شود.</summary>
-        public string? TenantId { get; init; }
-
-        /// <summary>فیلدهای ناشناخته برای کشف جعل Tenant در بدنه.</summary>
-        [JsonExtensionData]
-        public Dictionary<string, JsonElement>? Extra { get; init; }
-    }
-
-    /// <summary>ورود با شناسه و رمز. شکست عمومی enumeration حساب را لو نمی‌دهد.</summary>
-    internal sealed class LoginRequest
-    {
-        /// <summary>گونهٔ شناسه.</summary>
-        public string? IdentifierKind { get; init; }
-
-        /// <summary>مقدار خام شناسه.</summary>
-        public string? Identifier { get; init; }
-
-        /// <summary>رمز plaintext.</summary>
-        public string? Password { get; init; }
-
-        /// <summary>شناسهٔ Tenant جعلی در بدنه.</summary>
-        public string? TenantId { get; init; }
-
-        /// <summary>فیلدهای ناشناخته.</summary>
-        [JsonExtensionData]
-        public Dictionary<string, JsonElement>? Extra { get; init; }
-    }
-
-    /// <summary>چرخش Refresh. راز قبلی پس از موفقیت نامعتبر است.</summary>
-    internal sealed class RefreshRequest
-    {
-        /// <summary>دستهٔ نشست؛ راز Refresh نیست.</summary>
-        public Guid SessionId { get; init; }
-
-        /// <summary>راز Refresh خام فقط در این مرز.</summary>
-        public string? RefreshToken { get; init; }
-
-        /// <summary>شناسهٔ Tenant جعلی در بدنه.</summary>
-        public string? TenantId { get; init; }
-
-        /// <summary>فیلدهای ناشناخته.</summary>
-        [JsonExtensionData]
-        public Dictionary<string, JsonElement>? Extra { get; init; }
-    }
-
-    /// <summary>درخواست بازنشانی enumeration-safe.</summary>
-    internal sealed class ResetRequest
-    {
-        /// <summary>گونهٔ شناسه.</summary>
-        public string? IdentifierKind { get; init; }
-
-        /// <summary>مقدار خام شناسه.</summary>
-        public string? Identifier { get; init; }
-
-        /// <summary>شناسهٔ Tenant جعلی در بدنه.</summary>
-        public string? TenantId { get; init; }
-
-        /// <summary>فیلدهای ناشناخته.</summary>
-        [JsonExtensionData]
-        public Dictionary<string, JsonElement>? Extra { get; init; }
-    }
-
-    /// <summary>تکمیل بازنشانی تک‌مصرف.</summary>
-    internal sealed class ResetCompleteRequest
-    {
-        /// <summary>شناسهٔ چالش پایدار.</summary>
-        public Guid ChallengeId { get; init; }
-
-        /// <summary>راز یک‌بارمصرف؛ هش persistشده نیست.</summary>
-        public string? Secret { get; init; }
-
-        /// <summary>رمز جدید مطابق سیاست پیکربندی.</summary>
-        public string? NewPassword { get; init; }
-
-        /// <summary>شناسهٔ Tenant جعلی در بدنه.</summary>
-        public string? TenantId { get; init; }
-
-        /// <summary>فیلدهای ناشناخته.</summary>
-        [JsonExtensionData]
-        public Dictionary<string, JsonElement>? Extra { get; init; }
-    }
-
-    /// <summary>درخواست تأیید شناسه برای اصل احرازشده.</summary>
-    internal sealed class VerificationRequest
-    {
-        /// <summary>گونهٔ شناسه.</summary>
-        public string? IdentifierKind { get; init; }
-
-        /// <summary>مقدار خام شناسهٔ متعلق به User جاری.</summary>
-        public string? Identifier { get; init; }
-
-        /// <summary>شناسهٔ Tenant جعلی در بدنه.</summary>
-        public string? TenantId { get; init; }
-
-        /// <summary>فیلدهای ناشناخته.</summary>
-        [JsonExtensionData]
-        public Dictionary<string, JsonElement>? Extra { get; init; }
-    }
-
-    /// <summary>تکمیل تأیید با چالش معتبر.</summary>
-    internal sealed class VerificationCompleteRequest
-    {
-        /// <summary>شناسهٔ چالش.</summary>
-        public Guid ChallengeId { get; init; }
-
-        /// <summary>راز یک‌بارمصرف.</summary>
-        public string? Secret { get; init; }
-
-        /// <summary>شناسهٔ Tenant جعلی در بدنه.</summary>
-        public string? TenantId { get; init; }
-
-        /// <summary>فیلدهای ناشناخته.</summary>
-        [JsonExtensionData]
-        public Dictionary<string, JsonElement>? Extra { get; init; }
-    }
-
-    /// <summary>درخواست ورود OTP مشتری با موبایل.</summary>
-    internal sealed class OtpLoginRequest
-    {
-        public string? Identifier { get; init; }
-        public string? TenantId { get; init; }
-
-        [JsonExtensionData]
-        public Dictionary<string, JsonElement>? Extra { get; init; }
-    }
-
-    /// <summary>تکمیل ورود OTP.</summary>
-    internal sealed class OtpLoginCompleteRequest
-    {
-        public string? Identifier { get; init; }
-        public Guid ChallengeId { get; init; }
-        public string? Secret { get; init; }
-        public string? TenantId { get; init; }
-
-        [JsonExtensionData]
-        public Dictionary<string, JsonElement>? Extra { get; init; }
-    }
-
-    /// <summary>تغییر رمز فقط با نشست معتبر و رمز جاری.</summary>
-    internal sealed class ChangePasswordRequest
-    {
-        /// <summary>رمز جاری برای اثبات مالکیت.</summary>
-        public string? CurrentPassword { get; init; }
-
-        /// <summary>رمز جدید.</summary>
-        public string? NewPassword { get; init; }
-
-        /// <summary>شناسهٔ Tenant جعلی در بدنه.</summary>
-        public string? TenantId { get; init; }
-
-        /// <summary>فیلدهای ناشناخته.</summary>
-        [JsonExtensionData]
-        public Dictionary<string, JsonElement>? Extra { get; init; }
-    }
-
-    /// <summary>پاسخ ثبت بدون موجودیت EF.</summary>
-    internal sealed record RegisterResponse(Guid UserId);
-
-    /// <summary>پاسخ نشست؛ accessToken همان SessionId مات است نه JWT.</summary>
-    internal sealed record SessionResponse(Guid UserId, Guid SessionId, string AccessToken, string RefreshToken);
-
-    /// <summary>پاسخ عمومی بازنشانی بدون ChallengeId تا enumeration رخ ندهد.</summary>
-    internal sealed record AcceptedResponse(bool Accepted);
-
-    /// <summary>اصل جاری بدون راز، هش، یا SecurityStamp. نام/موبایل برای هدر ویترین است نه هویت ارسال.</summary>
-    internal sealed record MeResponse(
-        Guid UserId,
-        Guid SessionId,
-        string Edition,
-        string? TenantId,
-        string? DisplayName,
-        string? FirstName,
-        string? LastName,
-        string? Mobile);
-}
 
 /// <summary>
 /// نگاشت مسیرهای /v1/auth. مرز HTTP است نه دامنه و تماس مجوز اینجا انجام نمی‌شود.
 /// </summary>
 internal static class AuthenticationEndpointMapper
 {
-    private static readonly HashSet<string> ForbiddenTenantKeys = new(StringComparer.OrdinalIgnoreCase)
-    {
-        "X-Tenant-Id", "X-TenantId", "TenantId", "tenantId", "tenant_id",
-    };
-
     /// <summary>
     /// مسیرهای احراز نسخهٔ ۱ را ثبت می‌کند. کوکی امن پیش‌فرض ساخته نمی‌شود.
     /// </summary>
@@ -352,7 +43,7 @@ internal static class AuthenticationEndpointMapper
         IIdentityAuthenticationService auth,
         ILoggerFactory loggers)
     {
-        if (RejectUntrustedTenant(http, body.TenantId, body.Extra) is { } spoof)
+        if (AuthenticationHttpProblem.RejectUntrustedTenant(http, body.TenantId, body.Extra) is { } spoof)
         {
             return spoof;
         }
@@ -361,7 +52,7 @@ internal static class AuthenticationEndpointMapper
             || string.IsNullOrWhiteSpace(body.Identifier)
             || string.IsNullOrWhiteSpace(body.Password))
         {
-            return AuthProblem(http, StatusCodes.Status400BadRequest, "Bad Request", "identity.validation.failed");
+            return AuthenticationHttpProblem.BadRequest(http, "identity.validation.failed");
         }
 
         try
@@ -374,11 +65,11 @@ internal static class AuthenticationEndpointMapper
         }
         catch (IdentityDuplicateIdentifierException)
         {
-            return AuthProblem(http, StatusCodes.Status409Conflict, "Conflict", "identity.identifier.conflict");
+            return AuthenticationHttpProblem.AuthProblem(http, StatusCodes.Status409Conflict, "Conflict", "identity.identifier.conflict");
         }
         catch (ArgumentException)
         {
-            return AuthProblem(http, StatusCodes.Status400BadRequest, "Bad Request", "identity.validation.failed");
+            return AuthenticationHttpProblem.BadRequest(http, "identity.validation.failed");
         }
     }
 
@@ -389,26 +80,26 @@ internal static class AuthenticationEndpointMapper
         IAuthenticationThrottleSeam throttle,
         ILoggerFactory loggers)
     {
-        if (RejectUntrustedTenant(http, body.TenantId, body.Extra) is { } spoof)
+        if (AuthenticationHttpProblem.RejectUntrustedTenant(http, body.TenantId, body.Extra) is { } spoof)
         {
             return spoof;
         }
 
-        if (RejectIfThrottled(http, throttle, "login") is { } throttled)
+        if (AuthenticationHttpProblem.RejectIfThrottled(http, throttle, "login") is { } throttled)
         {
             return throttled;
         }
 
         if (!TryParseKind(body.IdentifierKind, out var kind))
         {
-            return AuthProblem(http, StatusCodes.Status401Unauthorized, "Unauthorized", "identity.authentication.failed");
+            return AuthenticationHttpProblem.Unauthorized(http, "identity.authentication.failed");
         }
 
         var result = await auth.AuthenticateWithPasswordAsync(kind, body.Identifier ?? "", body.Password ?? "", http.RequestAborted);
         if (!result.Succeeded || result.Ticket is null || string.IsNullOrEmpty(result.Ticket.RefreshToken))
         {
             loggers.CreateLogger("Tooba.Auth").LogInformation("identity.login.failed");
-            return AuthProblem(http, StatusCodes.Status401Unauthorized, "Unauthorized", "identity.authentication.failed");
+            return AuthenticationHttpProblem.Unauthorized(http, "identity.authentication.failed");
         }
 
         loggers.CreateLogger("Tooba.Auth").LogInformation("identity.login.succeeded");
@@ -422,12 +113,12 @@ internal static class AuthenticationEndpointMapper
         IAuthenticationThrottleSeam throttle,
         ILoggerFactory loggers)
     {
-        if (RejectUntrustedTenant(http, body.TenantId, body.Extra) is { } spoof)
+        if (AuthenticationHttpProblem.RejectUntrustedTenant(http, body.TenantId, body.Extra) is { } spoof)
         {
             return spoof;
         }
 
-        if (RejectIfThrottled(http, throttle, "refresh") is { } throttled)
+        if (AuthenticationHttpProblem.RejectIfThrottled(http, throttle, "refresh") is { } throttled)
         {
             return throttled;
         }
@@ -436,7 +127,7 @@ internal static class AuthenticationEndpointMapper
         if (!result.Succeeded || result.Ticket?.RefreshToken is null)
         {
             loggers.CreateLogger("Tooba.Auth").LogInformation("identity.refresh.failed");
-            return AuthProblem(http, StatusCodes.Status401Unauthorized, "Unauthorized", "identity.session.invalid");
+            return AuthenticationHttpProblem.Unauthorized(http, "identity.session.invalid");
         }
 
         return Results.Json(ToSessionResponse(result.Ticket));
@@ -455,7 +146,7 @@ internal static class AuthenticationEndpointMapper
 
         if (!current.IsAuthenticated)
         {
-            return AuthProblem(http, StatusCodes.Status401Unauthorized, "Unauthorized", "identity.session.invalid");
+            return AuthenticationHttpProblem.Unauthorized(http, "identity.session.invalid");
         }
 
         await auth.RevokeSessionAsync(current.SessionId!.Value, "http_logout", http.RequestAborted);
@@ -469,7 +160,7 @@ internal static class AuthenticationEndpointMapper
     {
         if (!current.IsAuthenticated)
         {
-            return AuthProblem(http, StatusCodes.Status401Unauthorized, "Unauthorized", "identity.session.invalid");
+            return AuthenticationHttpProblem.Unauthorized(http, "identity.session.invalid");
         }
 
         await auth.RevokeAllSessionsAsync(current.UserId!.Value, "http_logout_all", http.RequestAborted);
@@ -482,12 +173,12 @@ internal static class AuthenticationEndpointMapper
         IIdentityCredentialLifecycle lifecycle,
         IAuthenticationThrottleSeam throttle)
     {
-        if (RejectUntrustedTenant(http, body.TenantId, body.Extra) is { } spoof)
+        if (AuthenticationHttpProblem.RejectUntrustedTenant(http, body.TenantId, body.Extra) is { } spoof)
         {
             return spoof;
         }
 
-        if (RejectIfThrottled(http, throttle, "password_reset_request") is { } throttled)
+        if (AuthenticationHttpProblem.RejectIfThrottled(http, throttle, "password_reset_request") is { } throttled)
         {
             return throttled;
         }
@@ -506,12 +197,12 @@ internal static class AuthenticationEndpointMapper
         IIdentityCredentialLifecycle lifecycle,
         IAuthenticationThrottleSeam throttle)
     {
-        if (RejectUntrustedTenant(http, body.TenantId, body.Extra) is { } spoof)
+        if (AuthenticationHttpProblem.RejectUntrustedTenant(http, body.TenantId, body.Extra) is { } spoof)
         {
             return spoof;
         }
 
-        if (RejectIfThrottled(http, throttle, "password_reset_complete") is { } throttled)
+        if (AuthenticationHttpProblem.RejectIfThrottled(http, throttle, "password_reset_complete") is { } throttled)
         {
             return throttled;
         }
@@ -523,7 +214,7 @@ internal static class AuthenticationEndpointMapper
             http.RequestAborted);
         if (outcome != ChallengeConsumeOutcome.Succeeded)
         {
-            return AuthProblem(http, StatusCodes.Status400BadRequest, "Bad Request", "identity.challenge.invalid");
+            return AuthenticationHttpProblem.BadRequest(http, "identity.challenge.invalid");
         }
 
         return Results.NoContent();
@@ -538,22 +229,22 @@ internal static class AuthenticationEndpointMapper
     {
         if (!current.IsAuthenticated)
         {
-            return AuthProblem(http, StatusCodes.Status401Unauthorized, "Unauthorized", "identity.session.invalid");
+            return AuthenticationHttpProblem.Unauthorized(http, "identity.session.invalid");
         }
 
-        if (RejectUntrustedTenant(http, body.TenantId, body.Extra) is { } spoof)
+        if (AuthenticationHttpProblem.RejectUntrustedTenant(http, body.TenantId, body.Extra) is { } spoof)
         {
             return spoof;
         }
 
-        if (RejectIfThrottled(http, throttle, "identifier_verification_request") is { } throttled)
+        if (AuthenticationHttpProblem.RejectIfThrottled(http, throttle, "identifier_verification_request") is { } throttled)
         {
             return throttled;
         }
 
         if (!TryParseKind(body.IdentifierKind, out var kind))
         {
-            return AuthProblem(http, StatusCodes.Status400BadRequest, "Bad Request", "identity.validation.failed");
+            return AuthenticationHttpProblem.BadRequest(http, "identity.validation.failed");
         }
 
         try
@@ -567,7 +258,7 @@ internal static class AuthenticationEndpointMapper
         }
         catch (InvalidOperationException)
         {
-            return AuthProblem(http, StatusCodes.Status400BadRequest, "Bad Request", "identity.validation.failed");
+            return AuthenticationHttpProblem.BadRequest(http, "identity.validation.failed");
         }
     }
 
@@ -577,12 +268,12 @@ internal static class AuthenticationEndpointMapper
         IIdentityCredentialLifecycle lifecycle,
         IAuthenticationThrottleSeam throttle)
     {
-        if (RejectUntrustedTenant(http, body.TenantId, body.Extra) is { } spoof)
+        if (AuthenticationHttpProblem.RejectUntrustedTenant(http, body.TenantId, body.Extra) is { } spoof)
         {
             return spoof;
         }
 
-        if (RejectIfThrottled(http, throttle, "identifier_verification_complete") is { } throttled)
+        if (AuthenticationHttpProblem.RejectIfThrottled(http, throttle, "identifier_verification_complete") is { } throttled)
         {
             return throttled;
         }
@@ -593,7 +284,7 @@ internal static class AuthenticationEndpointMapper
             http.RequestAborted);
         if (outcome != ChallengeConsumeOutcome.Succeeded)
         {
-            return AuthProblem(http, StatusCodes.Status400BadRequest, "Bad Request", "identity.challenge.invalid");
+            return AuthenticationHttpProblem.BadRequest(http, "identity.challenge.invalid");
         }
 
         return Results.NoContent();
@@ -605,12 +296,12 @@ internal static class AuthenticationEndpointMapper
         IIdentityOtpLoginService otpLogin,
         IAuthenticationThrottleSeam throttle)
     {
-        if (RejectUntrustedTenant(http, body.TenantId, body.Extra) is { } spoof)
+        if (AuthenticationHttpProblem.RejectUntrustedTenant(http, body.TenantId, body.Extra) is { } spoof)
         {
             return spoof;
         }
 
-        if (RejectIfThrottled(http, throttle, "otp_login_request") is { } throttled)
+        if (AuthenticationHttpProblem.RejectIfThrottled(http, throttle, "otp_login_request") is { } throttled)
         {
             return throttled;
         }
@@ -622,11 +313,11 @@ internal static class AuthenticationEndpointMapper
         }
         catch (ArgumentException)
         {
-            return AuthProblem(http, StatusCodes.Status400BadRequest, "Bad Request", "identity.validation.failed");
+            return AuthenticationHttpProblem.BadRequest(http, "identity.validation.failed");
         }
         catch (InvalidOperationException)
         {
-            return AuthProblem(http, StatusCodes.Status400BadRequest, "Bad Request", "identity.otp.delivery.unavailable");
+            return AuthenticationHttpProblem.BadRequest(http, "identity.otp.delivery.unavailable");
         }
     }
 
@@ -637,12 +328,12 @@ internal static class AuthenticationEndpointMapper
         IAuthenticationThrottleSeam throttle,
         ILoggerFactory loggers)
     {
-        if (RejectUntrustedTenant(http, body.TenantId, body.Extra) is { } spoof)
+        if (AuthenticationHttpProblem.RejectUntrustedTenant(http, body.TenantId, body.Extra) is { } spoof)
         {
             return spoof;
         }
 
-        if (RejectIfThrottled(http, throttle, "otp_login_complete") is { } throttled)
+        if (AuthenticationHttpProblem.RejectIfThrottled(http, throttle, "otp_login_complete") is { } throttled)
         {
             return throttled;
         }
@@ -655,7 +346,7 @@ internal static class AuthenticationEndpointMapper
         if (!result.Succeeded || result.Ticket is null || string.IsNullOrEmpty(result.Ticket.RefreshToken))
         {
             loggers.CreateLogger("Tooba.Auth").LogInformation("identity.otp_login.failed");
-            return AuthProblem(http, StatusCodes.Status401Unauthorized, "Unauthorized", "identity.authentication.failed");
+            return AuthenticationHttpProblem.Unauthorized(http, "identity.authentication.failed");
         }
 
         loggers.CreateLogger("Tooba.Auth").LogInformation("identity.otp_login.succeeded");
@@ -670,10 +361,10 @@ internal static class AuthenticationEndpointMapper
     {
         if (!current.IsAuthenticated)
         {
-            return AuthProblem(http, StatusCodes.Status401Unauthorized, "Unauthorized", "identity.session.invalid");
+            return AuthenticationHttpProblem.Unauthorized(http, "identity.session.invalid");
         }
 
-        if (RejectUntrustedTenant(http, body.TenantId, body.Extra) is { } spoof)
+        if (AuthenticationHttpProblem.RejectUntrustedTenant(http, body.TenantId, body.Extra) is { } spoof)
         {
             return spoof;
         }
@@ -689,11 +380,11 @@ internal static class AuthenticationEndpointMapper
         }
         catch (InvalidOperationException)
         {
-            return AuthProblem(http, StatusCodes.Status400BadRequest, "Bad Request", "identity.password.change.failed");
+            return AuthenticationHttpProblem.BadRequest(http, "identity.password.change.failed");
         }
         catch (ArgumentException)
         {
-            return AuthProblem(http, StatusCodes.Status400BadRequest, "Bad Request", "identity.validation.failed");
+            return AuthenticationHttpProblem.BadRequest(http, "identity.validation.failed");
         }
     }
 
@@ -706,7 +397,7 @@ internal static class AuthenticationEndpointMapper
     {
         if (!current.IsAuthenticated)
         {
-            return AuthProblem(http, StatusCodes.Status401Unauthorized, "Unauthorized", "identity.session.invalid");
+            return AuthenticationHttpProblem.Unauthorized(http, "identity.session.invalid");
         }
 
         var userId = current.UserId!.Value;
@@ -751,73 +442,5 @@ internal static class AuthenticationEndpointMapper
         }
 
         return Guid.TryParse(raw["Bearer ".Length..].Trim(), out sessionId);
-    }
-
-    private static IResult? RejectUntrustedTenant(
-        HttpContext http,
-        string? bodyTenantId,
-        IReadOnlyDictionary<string, JsonElement>? extra)
-    {
-        if (!string.IsNullOrWhiteSpace(bodyTenantId))
-        {
-            return AuthProblem(http, StatusCodes.Status400BadRequest, "Bad Request", "identity.tenant.untrusted");
-        }
-
-        if (extra is not null)
-        {
-            foreach (var key in extra.Keys)
-            {
-                if (ForbiddenTenantKeys.Contains(key))
-                {
-                    return AuthProblem(http, StatusCodes.Status400BadRequest, "Bad Request", "identity.tenant.untrusted");
-                }
-            }
-        }
-
-        foreach (var key in ForbiddenTenantKeys)
-        {
-            if (http.Request.Headers.ContainsKey(key))
-            {
-                return AuthProblem(http, StatusCodes.Status400BadRequest, "Bad Request", "identity.tenant.untrusted");
-            }
-        }
-
-        if (http.Request.Query.ContainsKey("tenantId") || http.Request.Query.ContainsKey("tenant_id") || http.Request.Query.ContainsKey("TenantId"))
-        {
-            return AuthProblem(http, StatusCodes.Status400BadRequest, "Bad Request", "identity.tenant.untrusted");
-        }
-
-        if (http.Request.Cookies.ContainsKey("tenantId")
-            || http.Request.Cookies.ContainsKey("TenantId")
-            || http.Request.Cookies.ContainsKey("tenant_id"))
-        {
-            return AuthProblem(http, StatusCodes.Status400BadRequest, "Bad Request", "identity.tenant.untrusted");
-        }
-
-        return null;
-    }
-
-    private static IResult? RejectIfThrottled(HttpContext http, IAuthenticationThrottleSeam throttle, string operation)
-    {
-        if (throttle.TryAcquire(http, operation))
-        {
-            return null;
-        }
-
-        return AuthProblem(http, StatusCodes.Status429TooManyRequests, "Too Many Requests", "identity.rate_limited");
-    }
-
-    private static IResult AuthProblem(HttpContext http, int status, string title, string errorCode)
-    {
-        var traceId = Activity.Current?.TraceId.ToString() ?? http.TraceIdentifier;
-        var problem = new ProblemDetails
-        {
-            Status = status,
-            Title = title,
-            Type = "about:blank",
-        };
-        problem.Extensions["traceId"] = traceId;
-        problem.Extensions["errorCode"] = errorCode;
-        return Results.Json(problem, statusCode: status, contentType: "application/problem+json");
     }
 }

@@ -801,7 +801,32 @@
       "optionA": "KEEP_AS_GENERIC_HOST_PLATFORM_INFRASTRUCTURE consistent with docs/architecture/41-authentication-http-boundary.md COMPLETE (Architect accepted TB-P02-T005) and HOST-MODULE-ENDPOINT-001 global auth; then only a bounded internal split of the 702-LOC file remains",
       "optionB": "Authorize a Tooba.Identity.Endpoints foundation wave (new project + slnx, Application CQRS for 13 requests + validator coverage guard, me/CustomerProfile.Contracts decision, repoint two path-pinned guards) then evacuate and certify Identity",
       "blocker": "OWNERSHIP_DECISION_REQUIRED_NO_NEXT_FOLDER_STARTED",
-      "evidence": "docs/evidence/TB-TMAR-HOST-AUTHENTICATION-INVENTORY-001/authentication-host-inventory.md"
+      "evidence": "docs/evidence/TB-TMAR-HOST-AUTHENTICATION-INVENTORY-001/authentication-host-inventory.md",
+      "optionAExecuted": {
+        "task": "TB-TMAR-HOST-AUTHENTICATION-SPLIT-001",
+        "state": "BOUNDED_INTERNAL_SPLIT_COMPLETE_NO_OWNERSHIP_MOVE",
+        "fileLocBefore": 824,
+        "fileLocAfter": 447,
+        "extractedFiles": [
+          "Authentication/AuthenticationHttpModels.cs (294; DTOs + AuthenticationHttpProblem mapping)",
+          "Authentication/SessionAuthenticationMiddleware.cs (59)",
+          "Authentication/CurrentAuthenticatedSession.cs (46)",
+          "Authentication/IAuthenticationThrottleSeam.cs (13)"
+        ],
+        "baselineChange": "AuthenticationHttpBoundary.cs OVERSIZED_LEGACY freeze entry removed (54->53 entries); no loc raised; no threshold changed; no other entry touched",
+        "behaviorChange": "NONE",
+        "routeChange": "NONE",
+        "guardWeakened": false,
+        "programCsEdited": false,
+        "focusedGuards": "24_OF_24_PASS",
+        "preExistingFailuresNotCausedByThisTask": [
+          "TmarSourceSizeAndInfraAppTests.Hand_written_source_size_does_not_expand_beyond_baseline (red at clean HEAD 67f5ddbf)",
+          "TmarSourceSizeAndInfraAppTests.Source_size_inventory_evidence_exists_and_matches_scan_count (red at clean HEAD)",
+          "TmarSourceSizeAndInfraAppTests.Infrastructure_to_foreign_Application_edges_do_not_expand_beyond_baseline (red at clean HEAD)",
+          "ReviewsFoundationTests.Seller_host_list_exists_without_seller_response_or_moderation_routes (ReviewEndpoints.cs untouched since 178d888e)"
+        ],
+        "evidence": "docs/evidence/TB-TMAR-HOST-AUTHENTICATION-SPLIT-001/authentication-split.md"
+      }
     }
   },
   "addressBookArchComplete002Structure": {
