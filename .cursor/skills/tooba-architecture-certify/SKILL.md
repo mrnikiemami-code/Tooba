@@ -70,6 +70,20 @@ Do not certify unless all applicable conditions hold:
 
 If any condition fails, return blockers and do not claim certification.
 
+### 0. Ownership ≠ Quality
+
+Ownership and quality are independent. Host-owned ≠ quality-exempt.
+
+A canonical ownership exception applies **only** to ownership/location/runtime responsibility. It never legalizes direct foreign Application/Infrastructure/Domain coupling, foreign DbContext/DbSet access, cross-module persistence joins, non-canonical API/error mapping, unregistered error codes, localization violations, observability/correlation violations, or cohesion/foldering violations.
+
+Certification must never claim `LEGAL_CONTRACTS_ONLY` while any direct foreign Application/Infrastructure/Domain dependency remains. An ownership exception is not a quality exception.
+
+### 0a. Touched-Surface Certification
+
+Any production file changed by the current task is part of the active certification surface. Before PASS, re-read every touched production file and verify: cohesive responsibility; correct capability folder; exact path↔namespace alignment; no root dump unless explicitly allowed; no obsolete/duplicate type; no hard-coded user-facing localized text; no foreign Application/Infrastructure/Domain leakage; no parallel canonical mechanism; no unintended behavior/schema change.
+
+Do NOT expand this into a full-module audit: cover only touched files, directly affected dependencies, and the minimum destination-module surface required by the active Host-folder task. A task is NOT complete merely because the original dependency was fixed, focused tests passed, or code compiles.
+
 ## Certification Procedure
 
 ### 1. Physical Tree Audit
@@ -389,9 +403,13 @@ Run focused:
 
 All required guards must pass.
 
+**TESTS ARE EVIDENCE, NOT NAVIGATION. NO OPEN-ENDED TEST/REPAIR LOOP.** Run only the focused validation required for the bounded scope. If one focused failure has one clear deterministic local cause, perform ONE bounded repair and rerun only the affected validation; if it persists or needs speculation, STOP and report it. Do not repair unrelated pre-existing failures, do not repeatedly run the full repository suite, and never weaken a guard to reach PASS.
+
 No certification with known failing required guard.
 
 ## Certification Result
+
+Certify must NOT return a final PASS while any applicable violation remains, including: `RAW_RESULTS`, `AD_HOC`, `PARALLEL_MAPPER`, `UNREGISTERED_CODES`, `HARDCODED_TEXT`, `NON_STANDARD`, `DUPLICATE_TELEMETRY`, `SECOND_PIPELINE`, `PARALLEL_CORRELATION`, `LOST_PROPAGATION`, `VIOLATION`, `ILLEGAL`, `FOREIGN_ACCESS`, any direct foreign Application/Infrastructure/Domain dependency, an unresolved cross-module join, an unresolved path/namespace mismatch, an unresolved cohesion/root-dump violation, or an unresolved duplicate/legacy type in the touched surface — unless a canonical architecture lock explicitly exempts that exact quality concern. An ownership exception is not a quality exception.
 
 Only declare:
 
@@ -447,9 +465,15 @@ Produce evidence containing:
   - preserving illegal architecture behind aliases.
 - Never hide debt using aliases or shims.
 - Never allow cross-module persistence or joins.
+- Never certify `LEGAL_CONTRACTS_ONLY` while any direct foreign Application/Infrastructure/Domain dependency remains.
+- Never treat an ownership exception as a quality exemption; ownership ≠ quality.
+- Never PASS while any applicable violation (listed under Certification Result) remains outside an explicit canonical lock exemption.
+- Never certify a touched production file without re-reading it against the touched-surface checklist.
+- Never weaken tests/guards/baselines/assertions or enter an open-ended test/repair loop to reach PASS.
 - Never permit foreign Application/Infrastructure/Domain dependencies in the certified state.
 - Never accept a file solely because it is under a LOC ceiling.
 - Never accept a parallel localization/response/logging/telemetry mechanism.
 - Never accept sensitive-data logging.
 - Never redesign business behavior during certification.
 - If production refactor is still required, stop certification and return a repair plan.
+- Keep this skill deduplicated and bounded: merge/strengthen existing wording instead of appending duplicate rules; this skill should become clearer, not larger.

@@ -163,6 +163,24 @@ If `MIXED_AUTH_RESPONSIBILITY`:
 
 These classification values feed the `Ownership-State` field below.
 
+### 3b. Ownership ≠ Quality
+
+Ownership and quality are independent. Host-owned ≠ quality-exempt.
+
+A canonical ownership exception applies **only** to ownership/location/runtime responsibility. It never legalizes direct foreign Application/Infrastructure/Domain coupling, foreign DbContext/DbSet access, cross-module persistence joins, non-canonical API/error mapping, unregistered error codes, localization violations, observability/correlation violations, or cohesion/foldering violations.
+
+Never report `LEGAL_CONTRACTS_ONLY` while any direct foreign Application/Infrastructure/Domain dependency remains; that state is `ILLEGAL`.
+
+### 3c. Bounded Scope Discipline
+
+One Host folder = one active recovery unit. Analyze only the current bounded target; do not inspect the next Host folder until explicitly instructed.
+
+A certified/reference module (e.g. Offer) is a **read-only** canonical reference: do not modify, re-audit, re-certify, run unrelated tests for it, or broaden scope into it. Reference module != active recovery scope.
+
+Minimum destination-module changes are in scope when required to move misplaced responsibility to the correct owner, create/reuse the narrow required Contracts boundary, repair canonical error/localization/presentation infrastructure, or fix violations caused by the current Host-folder migration — but do not start an independent recovery of the destination module.
+
+Prefer the smallest repository-consistent plan. If the task cannot be completed without an unresolved architecture/product/data decision, schema redesign, public-contract redesign, or unsafe behavior change, set the disposition to `NEEDS_ARCHITECT_DECISION` (or `BLOCKED_BY_UNKNOWN_BEHAVIOR`) and report the exact blocker instead of expanding scope.
+
 ### 4. Detect Forbidden Coupling
 
 Find and report all cross-module references of these forms:
@@ -391,6 +409,8 @@ Before any future migration, enumerate behavior that must remain unchanged:
 - tenant/store scoping;
 - public Contracts.
 
+Do not keep a legacy parallel mechanism merely because canonical defaults differ. Preferred: canonical mechanism + explicit configuration/catalog + preserved observable behavior. Treat this as a blocker only if canonical behavior cannot reproduce the locked semantics without a real architecture/product/schema/security decision.
+
 ### 16. Foundation / Certified-Module State
 
 For every target module classify foundation state:
@@ -421,7 +441,7 @@ Return an architecture migration plan containing all of the following state fiel
 12. **CQRS-State** — `COMPLIANT` | `PARTIAL` | `MISSING`
 13. **Validator-Coverage-State** — `EXHAUSTIVE` | `GAPS` (with matrix)
 14. **Contracts-Boundary-State** — `CLEAN` | `VIOLATION`
-15. **Cross-Module-Coupling-State** — `NONE` | `LEGAL_CONTRACTS_ONLY` | `ILLEGAL` (list)
+15. **Cross-Module-Coupling-State** — `NONE` | `LEGAL_CONTRACTS_ONLY` | `ILLEGAL` (list). `LEGAL_CONTRACTS_ONLY` is invalid while any direct foreign Application/Infrastructure/Domain dependency remains.
 16. **Cross-Module-Join-State** — `NONE` | `FOUND` (list)
 17. **Persistence-Ownership-State** — `CORRECT` | `FOREIGN_ACCESS` | `HOST_OWNED`
 18. **Endpoint-Ownership-State** — `MODULE_OWNED` | `HOST_OWNED` | `DUPLICATED`
@@ -480,3 +500,8 @@ Return exactly one:
 - Never treat a file as acceptable solely because it is under a LOC ceiling.
 - Never classify a legitimate retained Host platform file for migration merely because it lives in Host.
 - Never chase textual Host-reference ZERO by moving legitimate platform seams into a business module.
+- Never treat an ownership exception as a quality exemption; ownership ≠ quality.
+- Keep the active recovery unit to the current Host folder; do not inspect the next one until instructed.
+- Keep certified/reference modules read-only; never broaden active scope into them.
+- Prefer the smallest repository-consistent solution; stop and report the exact blocker rather than expanding scope.
+- Keep this skill deduplicated and bounded: merge/strengthen existing wording instead of appending duplicate rules; this skill should become clearer, not larger.

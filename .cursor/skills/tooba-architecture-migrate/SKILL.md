@@ -235,6 +235,8 @@ Host is not a business owner.
 
 Host may keep only legitimate composition/platform/security adaptation.
 
+**Ownership ≠ Quality.** An ownership exception applies only to ownership/location/runtime responsibility. It never legalizes direct foreign Application/Infrastructure/Domain coupling, foreign DbContext/DbSet access, cross-module persistence joins, non-canonical API/error mapping, unregistered error codes, localization violations, observability/correlation violations, or cohesion/foldering violations. Host-owned ≠ quality-exempt.
+
 ### 8a. Authentication Ownership During Migration
 
 Never infer authentication ownership from the word "authentication" alone. Canonical architecture documents, locks and current SoT decide the boundary.
@@ -315,6 +317,7 @@ Rules:
 - Do NOT perform cosmetic splitting that creates meaningless tiny files.
 - Do NOT use file splitting as an excuse for ownership migration.
 - Do NOT create artificial parallel decompositions.
+- Do NOT keep a legacy parallel mechanism merely because canonical defaults differ. Preferred: canonical mechanism + explicit configuration/catalog + preserved observable behavior. Treat this as a blocker only if canonical behavior cannot reproduce the locked semantics without a real architecture/product/schema/security decision.
 - If the file is legitimate Host platform code (process startup, composition, global auth/session boundary, middleware, health, generic security adapters, observability hosting, tenant/runtime context):
   - split it safely **within Host** when appropriate;
   - do NOT force it into a business module.
@@ -649,7 +652,9 @@ Any unresolved item must be explicitly reported.
 
 ## 25. Focused Build/Test Strategy
 
-Prefer focused validation.
+**TESTS ARE EVIDENCE, NOT NAVIGATION. NO OPEN-ENDED TEST/REPAIR LOOP.**
+
+Never enter an open-ended fix → test → fix → test loop.
 
 Build changed projects:
 
@@ -672,9 +677,27 @@ Run focused tests for:
 - tracing/correlation guard;
 - durable architecture guards.
 
-Do not claim success while required focused guards fail.
+Bounded rules:
 
-Do not broaden the migration merely to make unrelated repository-wide tests green.
+- Run only the focused builds/tests/guards required for the current bounded task.
+- If one focused failure has one clear deterministic local cause: perform ONE bounded repair, then rerun only the affected validation.
+- If the same failure remains, or repair requires speculation/broader work: STOP repair on that failure and report it.
+- Do not repair unrelated pre-existing failures; do not broaden scope merely to make tests green; do not repeatedly run the full repository test suite.
+- Never weaken tests/guards/baselines/assertions; a failing test does not authorize unrelated refactoring.
+
+Do not claim success while required focused guards fail, and do not broaden the migration merely to make unrelated repository-wide tests green.
+
+### 25a. Touched-Surface Certification
+
+Any production file changed by the current task becomes part of the active certification surface. Before `READY_FOR_CERTIFICATION`, re-read every touched production file and verify: cohesive responsibility; correct capability folder; exact path↔namespace alignment; no root dump unless explicitly allowed; no obsolete/duplicate type; no hard-coded user-facing localized text; no foreign Application/Infrastructure/Domain leakage; no parallel canonical mechanism; no unintended behavior/schema change.
+
+Do NOT expand this into a full-module audit. Cover only touched files, directly affected dependencies, and the minimum destination-module surface required by the active Host-folder task. A task is NOT complete merely because the original dependency was fixed, focused tests passed, or code compiles.
+
+### 25b. One Host Folder = One Active Recovery Unit
+
+Process one Host folder at a time. Minimum destination-module changes are allowed within that task when required (see section 4/5/8), but do not start an independent recovery of the destination module. When the current Host folder is fully complete: STOP. Do not inspect the next Host folder until explicitly instructed.
+
+A certified/reference module used for canonical patterns is **read-only**: do not modify, re-audit, re-certify, run unrelated tests for it, or broaden active scope into it.
 
 ## 26. Migration Completion States
 
@@ -709,6 +732,16 @@ Use when work started but not all required migration criteria were safely comple
 **RECOVERY_CONFLICT**
 
 Use when repository reality conflicts with expected architecture or user work in a way that prevents safe continuation.
+
+### Durable Recovery State
+
+At the end of each completed Host-folder task, persist the checkpoint in the existing TMAR SoT/evidence system (do not invent a second recovery system). Record at minimum: Task-ID; active Host folder; final disposition; ownership state; quality/certification state; commit SHA; evidence path; focused validation result; known pre-existing failures; remaining blockers/debt; whether the next Host folder has started. The repository, not chat history, is the durable source of truth.
+
+### Bounded Work / No Task Trap
+
+Prefer the smallest repository-consistent solution; do not turn a bounded repair into broad cleanup. Do not explore multiple implementations when one canonical pattern is already evident; do not create speculative abstractions/contracts; do not refactor unrelated working code; do not inspect large unrelated history; do not remain stuck indefinitely chasing perfection outside active scope.
+
+If the task cannot be completed without an unresolved architecture decision, unresolved product/data decision, schema redesign, public-contract redesign, or unsafe behavior change: STOP and report the exact blocker.
 
 ## 27. Required Completion Report
 
@@ -766,3 +799,4 @@ Report:
 - No cosmetic god-file splitting and no god-file creation.
 - Preserve user work.
 - Verify before claiming readiness.
+- Keep this skill deduplicated and bounded: merge/strengthen existing wording instead of appending duplicate rules; this skill should become clearer, not larger.
