@@ -133,28 +133,25 @@ public sealed class AddressBookValidatorCoverageGuardTests
         Regex.Replace(text, @"///[^\r\n]*", string.Empty);
 
     [Fact]
-    public void AddressBook_remains_uncertified_and_manifest_is_a_precert_entry()
+    public void AddressBook_is_certified_with_exactly_one_manifest_entry()
     {
         var manifests = File.ReadAllText(Path.Combine(
             RepoRoot(), "docs", "architecture", "tmar-module-structure-manifests.json"));
         var at = manifests.IndexOf("\"module\": \"AddressBook\"", StringComparison.Ordinal);
-        Assert.True(at >= 0, "AddressBook pre-cert manifest entry missing");
+        Assert.True(at >= 0, "AddressBook manifest entry missing");
 
         var window = manifests[at..Math.Min(manifests.Length, at + 900)];
-        Assert.Contains("\"structureCertified\": false", window, StringComparison.Ordinal);
+        Assert.Contains("\"structureCertified\": true", window, StringComparison.Ordinal);
         Assert.Contains("\"lockVersion\": \"ARCH-COMPLETE-002\"", window, StringComparison.Ordinal);
 
         using var doc = System.Text.Json.JsonDocument.Parse(manifests);
-        var certified = new List<string>();
-        foreach (var module in doc.RootElement.GetProperty("modules").EnumerateArray())
-        {
-            if (module.GetProperty("structureCertified").GetBoolean())
-            {
-                certified.Add(module.GetProperty("module").GetString()!);
-            }
-        }
+        Assert.False(doc.RootElement.TryGetProperty("preCertModules", out _), "preCertModules must be removed after promotion");
 
-        Assert.DoesNotContain("AddressBook", certified, StringComparer.Ordinal);
+        var entries = doc.RootElement.GetProperty("modules").EnumerateArray()
+            .Where(m => m.GetProperty("module").GetString() == "AddressBook")
+            .ToArray();
+        Assert.Single(entries);
+        Assert.True(entries[0].GetProperty("structureCertified").GetBoolean());
     }
 
     [Fact]

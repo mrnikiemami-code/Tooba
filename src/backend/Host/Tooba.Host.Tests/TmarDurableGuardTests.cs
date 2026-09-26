@@ -106,8 +106,8 @@ public sealed class TmarDurableGuardTests
         Assert.Equal("USER_ACCEPTED", rootEl.GetProperty("goldenWaveUserReview").GetString());
         Assert.Equal("TB-TMAR-GOLDEN-WAVE-FINAL-CLOSURE-001", rootEl.GetProperty("goldenWaveClosedBy").GetString());
         Assert.False(string.IsNullOrWhiteSpace(rootEl.GetProperty("goldenWaveClosedCommit").GetString()));
-        Assert.Equal("TB-TMAR-HOST-ADDRESSBOOK-INVENTORY-001", rootEl.GetProperty("nextTask").GetString());
-        Assert.Equal("HOST_FIRST_FOLDER_BY_FOLDER_AFTER_ACCESSCONTROL_FINAL_CERTIFICATION", rootEl.GetProperty("nextTaskGate").GetString());
+        Assert.Equal("USER_REVIEW_ADDRESSBOOK_CHECKPOINT", rootEl.GetProperty("nextTask").GetString());
+        Assert.Equal("USER_REVIEW_REQUIRED_AFTER_ADDRESSBOOK_CERTIFICATION_STOP", rootEl.GetProperty("nextTaskGate").GetString());
         Assert.Equal("PAUSED_AT_SAFE_W5_CHECKPOINT", rootEl.GetProperty("checkoutState").GetString());
         Assert.True(rootEl.GetProperty("frontendFrozen").GetBoolean());
         Assert.Equal("ARCH-COMPLETE-002", rootEl.GetProperty("locksVersion").GetString());
@@ -117,7 +117,7 @@ public sealed class TmarDurableGuardTests
         var structureLock = rootEl.GetProperty("structureLock");
         Assert.Equal("ARCH-COMPLETE-002", structureLock.GetProperty("version").GetString());
         Assert.Equal(
-            new[] { "AccessControl", "Cart", "Fulfillment", "Offer", "Order", "Payment", "Settlement", "StoreContext" },
+            new[] { "AccessControl", "AddressBook", "Cart", "Fulfillment", "Offer", "Order", "Payment", "Settlement", "StoreContext" },
             structureLock.GetProperty("certifiedModules").EnumerateArray()
                 .Select(x => x.GetString()!)
                 .OrderBy(x => x, StringComparer.Ordinal)
@@ -248,8 +248,8 @@ public sealed class TmarDurableGuardTests
             cartEntry.GetProperty("lastAcceptedTask").GetString(),
             StringComparison.Ordinal);
         Assert.False(string.IsNullOrWhiteSpace(cartEntry.GetProperty("lastAcceptedCommit").GetString()));
-        Assert.Equal("TB-TMAR-ACCESSCONTROL-FINAL-CERTIFICATION-AND-SOT-CLOSURE-001", rootEl.GetProperty("lastAcceptedTask").GetString());
-        Assert.Equal("53365a7ec09f7d3123889cca008354857e16c56b", rootEl.GetProperty("lastAcceptedCommit").GetString());
+        Assert.Equal("TB-TMAR-ADDRESSBOOK-ARCH-COMPLETE-002-STRUCTURE-001", rootEl.GetProperty("lastAcceptedTask").GetString());
+        Assert.False(string.IsNullOrWhiteSpace(rootEl.GetProperty("lastAcceptedCommit").GetString()));
 
         var paymentHostResidue = rootEl.GetProperty("paymentHostResidueRepair");
         Assert.Equal("TB-TMAR-PAYMENT-HOST-RESIDUE-REPAIR-001", paymentHostResidue.GetProperty("task").GetString());
@@ -479,7 +479,7 @@ public sealed class TmarDurableGuardTests
         Assert.Equal("MapAccessControlModuleEndpoints", accessControlStructure.GetProperty("moduleMap").GetString());
         Assert.Equal("CLEAN_CONTRACTS_ONLY", accessControlStructure.GetProperty("contractsBoundary").GetString());
         Assert.True(accessControlStructure.GetProperty("manifestCertified").GetBoolean());
-        Assert.Equal("Order,Cart,StoreContext,Offer,Payment,Settlement,Fulfillment,AccessControl",
+        Assert.Equal("Order,Cart,StoreContext,Offer,Payment,Settlement,Fulfillment,AccessControl,AddressBook",
             accessControlStructure.GetProperty("certifiedModules").GetString());
         Assert.Equal("PAUSED_AT_SAFE_W5_CHECKPOINT", accessControlStructure.GetProperty("checkoutState").GetString());
         Assert.True(accessControlStructure.GetProperty("frontendFrozen").GetBoolean());
@@ -492,7 +492,7 @@ public sealed class TmarDurableGuardTests
         Assert.Equal("AddressBook", accessControlEvacuation.GetProperty("activeModule").GetString());
         Assert.Equal("COMPLETE", accessControlEvacuation.GetProperty("accessControlClosure").GetString());
         Assert.Equal("AddressBook", accessControlEvacuation.GetProperty("nextHostFolderAfterAccessControl").GetString());
-        Assert.Equal("TB-TMAR-HOST-ADDRESSBOOK-INVENTORY-001", accessControlEvacuation.GetProperty("currentTask").GetString());
+        Assert.Equal("TB-TMAR-ADDRESSBOOK-ARCH-COMPLETE-002-STRUCTURE-001", accessControlEvacuation.GetProperty("currentTask").GetString());
 
         var settlementAudit = rootEl.GetProperty("settlementArchComplete002Audit");
         Assert.Equal("TB-TMAR-SETTLEMENT-ARCH-COMPLETE-002-AUDIT-001", settlementAudit.GetProperty("task").GetString());
