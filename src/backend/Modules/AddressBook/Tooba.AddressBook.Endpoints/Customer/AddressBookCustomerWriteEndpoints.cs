@@ -8,6 +8,9 @@ using Tooba.AddressBook.Application.Commands.DeleteCustomerAddress;
 using Tooba.AddressBook.Application.Commands.SetDefaultCustomerAddress;
 using Tooba.AddressBook.Application.Commands.UpdateCustomerAddress;
 using Tooba.AddressBook.Contracts.Errors;
+using Tooba.BuildingBlocks;
+using Tooba.BuildingBlocks.Presentation;
+using Tooba.BuildingBlocks.Results;
 
 namespace Tooba.AddressBook.Endpoints.Customer;
 
@@ -32,12 +35,13 @@ public static class AddressBookCustomerWriteEndpoints
         HttpContext httpContext,
         IAddressBookCustomerActorResolver actorResolver,
         ISender sender,
+        ApiResponseFactory api,
         CancellationToken cancellationToken)
     {
         var actor = actorResolver.ResolveActor(httpContext);
         if (actor is null)
         {
-            return Unauthorized();
+            return api.FromFailure(new SemanticError(AddressBookErrorCodes.SessionRequired));
         }
 
         var created = await sender.Send(
@@ -52,12 +56,13 @@ public static class AddressBookCustomerWriteEndpoints
         HttpContext httpContext,
         IAddressBookCustomerActorResolver actorResolver,
         ISender sender,
+        ApiResponseFactory api,
         CancellationToken cancellationToken)
     {
         var actor = actorResolver.ResolveActor(httpContext);
         if (actor is null)
         {
-            return Unauthorized();
+            return api.FromFailure(new SemanticError(AddressBookErrorCodes.SessionRequired));
         }
 
         var updated = await sender.Send(
@@ -71,12 +76,13 @@ public static class AddressBookCustomerWriteEndpoints
         HttpContext httpContext,
         IAddressBookCustomerActorResolver actorResolver,
         ISender sender,
+        ApiResponseFactory api,
         CancellationToken cancellationToken)
     {
         var actor = actorResolver.ResolveActor(httpContext);
         if (actor is null)
         {
-            return Unauthorized();
+            return api.FromFailure(new SemanticError(AddressBookErrorCodes.SessionRequired));
         }
 
         await sender.Send(
@@ -90,12 +96,13 @@ public static class AddressBookCustomerWriteEndpoints
         HttpContext httpContext,
         IAddressBookCustomerActorResolver actorResolver,
         ISender sender,
+        ApiResponseFactory api,
         CancellationToken cancellationToken)
     {
         var actor = actorResolver.ResolveActor(httpContext);
         if (actor is null)
         {
-            return Unauthorized();
+            return api.FromFailure(new SemanticError(AddressBookErrorCodes.SessionRequired));
         }
 
         var updated = await sender.Send(
@@ -103,10 +110,6 @@ public static class AddressBookCustomerWriteEndpoints
             cancellationToken);
         return Results.Json(updated);
     }
-
-    private static IResult Unauthorized() => Results.Json(
-        new { title = "Unauthorized", errorCode = AddressBookErrorCodes.SessionRequired },
-        statusCode: StatusCodes.Status401Unauthorized);
 }
 
 /// <summary>بدنهٔ ایجاد/ویرایش نشانی؛ شناسهٔ مالک را از کلاینت نمی‌پذیرد.</summary>

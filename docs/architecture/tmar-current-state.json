@@ -1055,6 +1055,81 @@
     "manifestEntry": "PRE_CERT_IN_preCertModules",
     "nextTask": "TB-TMAR-ADDRESSBOOK-ARCH-COMPLETE-002-STRUCTURE-001"
   },
+  "addressBookPostRealignRepair": {
+    "task": "TB-TMAR-ADDRESSBOOK-POST-REALIGN-REPAIR-001",
+    "parentTask": "ADDRESSBOOK-OFFER-STYLE-FOLDERS-001",
+    "parentCommit": "160233602c6ac8cdb257478f95f13e22f2b4079a",
+    "repairedCommit": "__SHA__",
+    "state": "POST_REALIGN_REPAIR_APPLIED",
+    "scope": "ADDRESSBOOK_AND_MINIMUM_SOLUTION_TEST_METADATA_ONLY",
+    "canonicalErrorMessageState": {
+      "apiResultPatternState": "CANONICAL",
+      "stableErrorCodeState": "CATALOGUED",
+      "localizationState": "CANONICAL",
+      "parallelProblemPipeline": "ZERO",
+      "endpointRawProblemObjectsRemoved": true,
+      "endpointPresentation": "ApiResponseFactory.FromFailure(new SemanticError(code))",
+      "contributor": "src/backend/Modules/AddressBook/Tooba.AddressBook.Endpoints/Errors/AddressBookErrorCatalogContributor.cs",
+      "resourceSet": "src/backend/Modules/AddressBook/Tooba.AddressBook.Endpoints/Resources/AddressBookErrorResources.cs",
+      "resources": "src/backend/Modules/AddressBook/Tooba.AddressBook.Endpoints/Resources/AddressBookErrors.resx,AddressBookErrors.fa.resx",
+      "resourceOwnership": "customer.address. only"
+    },
+    "physicalStructureState": {
+      "state": "VALID",
+      "pathNamespaceAlignment": "EXACT",
+      "stalePhysicalCopyState": "ZERO",
+      "duplicatePhysicalCopyState": "ZERO",
+      "rootDump": "NONE",
+      "legacyLocationsAbsent": "Domain/CustomerAddress.cs,Contracts/Customer,Application/Customer,Infrastructure/Directories,Infrastructure/Development"
+    },
+    "referencePatternState": {
+      "offerReference": "REFERENCE_NOT_CLONE",
+      "developmentSeed": "Infrastructure/Adapters (correct)",
+      "adapters": "Infrastructure/Adapters (correct)",
+      "capabilityFolders": "justified by responsibility"
+    },
+    "solutionGroupingState": {
+      "state": "ADDRESSBOOK_FOLDER_PRESENT_AND_COMPLETE",
+      "solutionFile": "src/backend/Tooba.slnx",
+      "solutionFolder": "/Modules/AddressBook/",
+      "projects": [
+        "Tooba.AddressBook.Application",
+        "Tooba.AddressBook.Contracts",
+        "Tooba.AddressBook.Domain",
+        "Tooba.AddressBook.Endpoints",
+        "Tooba.AddressBook.Infrastructure"
+      ],
+      "rootDuplicates": 0,
+      "renameOrMove": "NONE"
+    },
+    "behaviorChange": "NONE",
+    "schemaMigrationChange": "NONE",
+    "routeChange": "NONE",
+    "focusedValidations": {
+      "addressbookEndpointsBuild": "PASS",
+      "hostTestsBuild": "PASS",
+      "addressbookAndGuardsTests": "PASSED_28_FAILED_0"
+    },
+    "knownPreexistingFailures": [
+      {
+        "id": "K1",
+        "state": "PRE_EXISTING_OUT_OF_SCOPE_CROSS_MODULE",
+        "item": "ErrorDefinitionCatalog fails fast on 8 duplicated codes across Notification/Support/Wallet/Order/Cart/Promotion/Payment; ApiResponseFactory/ISafeErrorMapper cannot materialize at runtime (duplicate_error_descriptor:customer.session.required)."
+      },
+      {
+        "id": "K2",
+        "state": "PRE_EXISTING_OUT_OF_SCOPE",
+        "item": "ErrorContractTests WebApplicationFactory boot fails on Tooba.Inventory.Contracts.Cart.ICartInventoryHoldPort for CartDirectory (Cart/Inventory)."
+      }
+    ],
+    "remainingBlockers": [
+      "B1_K1_NEEDS_DEDICATED_CROSS_MODULE_CATALOG_TASK",
+      "B2_customer.session.required_has_no_addressbook_resx_by_design_uses_shared_owner_or_fallback"
+    ],
+    "nextHostFolderStarted": false,
+    "workflowStop": "USER_REVIEW_ADDRESSBOOK_CHECKPOINT",
+    "evidence": "docs/evidence/TB-TMAR-ADDRESSBOOK-POST-REALIGN-REPAIR-001/addressbook-post-realign-repair.md"
+  },
   "architectCursorWorkflow": {
     "protocol": "BRIDGE-WAKE-V1",
     "source": "docs/architecture/TMAR-HOST-EVACUATION-PROTOCOL.md#architect--cursor-canonical-task-handoff",

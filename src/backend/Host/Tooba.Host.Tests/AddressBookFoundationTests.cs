@@ -74,8 +74,20 @@ public sealed class AddressBookFoundationTests
         Assert.Contains("currentUser.IsAuthenticated", moduleActorSource, StringComparison.Ordinal);
         Assert.Contains("environment.IsDevelopment()", moduleActorSource, StringComparison.Ordinal);
         Assert.Contains("/v1/customer/addresses", File.ReadAllText(Path.Combine(endpointsRoot, "AddressBookEndpointModule.cs")), StringComparison.Ordinal);
-        Assert.Contains("StatusCodes.Status401Unauthorized", moduleReadSource, StringComparison.Ordinal);
-        Assert.Contains("StatusCodes.Status401Unauthorized", moduleWriteSource, StringComparison.Ordinal);
+
+        // Canonical error presentation: 401/404 must flow through ApiResponseFactory + SemanticError + catalog codes,
+        // never through a raw ad-hoc `Results.Json(new { title = ... })` problem object.
+        foreach (var source in new[] { moduleReadSource, moduleWriteSource })
+        {
+            Assert.Contains("ApiResponseFactory", source, StringComparison.Ordinal);
+            Assert.Contains("FromFailure", source, StringComparison.Ordinal);
+            Assert.Contains("new SemanticError(", source, StringComparison.Ordinal);
+            Assert.Contains("AddressBookErrorCodes.SessionRequired", source, StringComparison.Ordinal);
+            Assert.DoesNotContain("Results.Json(new {", source, StringComparison.Ordinal);
+            Assert.DoesNotContain("\"Unauthorized\"", source, StringComparison.Ordinal);
+        }
+
+        Assert.Contains("AddressBookErrorCodes.AddressMissing", moduleReadSource, StringComparison.Ordinal);
         Assert.DoesNotContain("{owner", moduleWriteSource, StringComparison.OrdinalIgnoreCase);
         Assert.DoesNotContain("OwnerUserId", moduleWriteSource, StringComparison.Ordinal);
         Assert.DoesNotContain("CurrentAuthenticatedSession", moduleActorSource, StringComparison.Ordinal);

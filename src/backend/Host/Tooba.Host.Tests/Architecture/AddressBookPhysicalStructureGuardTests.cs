@@ -3,9 +3,10 @@ using Xunit;
 namespace Tooba.Host.Tests.Architecture;
 
 /// <summary>
-/// AddressBook physical layout is locked to the Offer COMPLETE_REFERENCE_PATTERN:
-/// production files must live under approved responsibility folders with exact
-/// path-derived namespaces, and no flat dumping ground may reappear at project roots.
+/// AddressBook physical layout follows the Offer COMPLETE_REFERENCE_PATTERN as a reference — not a
+/// mandatory clone. Production files must live under cohesive responsibility folders with exact
+/// path-derived namespaces and no flat dumping ground at project roots; a new capability folder is
+/// accepted when its project owns that capability and the namespace stays path-derived.
 /// </summary>
 public sealed class AddressBookPhysicalStructureGuardTests
 {
@@ -76,6 +77,46 @@ public sealed class AddressBookPhysicalStructureGuardTests
         Assert.False(Directory.Exists(Path.Combine(root, "Tooba.AddressBook.Application", "Customer")));
         Assert.False(Directory.Exists(Path.Combine(root, "Tooba.AddressBook.Infrastructure", "Directories")));
         Assert.False(Directory.Exists(Path.Combine(root, "Tooba.AddressBook.Infrastructure", "Development")));
+    }
+
+    [Fact]
+    public void AddressBook_has_no_stale_or_duplicate_physical_type_copies()
+    {
+        var root = AddressBookRoot();
+        var offenders = new List<string>();
+        var byName = new Dictionary<string, List<string>>(StringComparer.OrdinalIgnoreCase);
+
+        foreach (var file in Directory.EnumerateFiles(root, "*.cs", SearchOption.AllDirectories))
+        {
+            var n = file.Replace('\\', '/');
+            if (n.Contains("/bin/", StringComparison.Ordinal) || n.Contains("/obj/", StringComparison.Ordinal))
+            {
+                continue;
+            }
+
+            // Migrations/ModelSnapshot are EF-generated and intentionally excluded from type-uniqueness.
+            if (n.Contains("/Migrations/", StringComparison.OrdinalIgnoreCase)
+                || n.EndsWith("ModelSnapshot.cs", StringComparison.OrdinalIgnoreCase))
+            {
+                continue;
+            }
+
+            var name = Path.GetFileNameWithoutExtension(file);
+            if (!byName.TryGetValue(name, out var list))
+            {
+                list = [];
+                byName[name] = list;
+            }
+
+            list.Add(Path.GetRelativePath(root, file).Replace('\\', '/'));
+        }
+
+        foreach (var (name, paths) in byName.Where(kv => kv.Value.Count > 1))
+        {
+            offenders.Add($"{name}: {string.Join(" | ", paths)}");
+        }
+
+        Assert.True(offenders.Count == 0, "duplicate physical type copies:\n" + string.Join("\n", offenders));
     }
 
     private static void CheckProjectFiles(

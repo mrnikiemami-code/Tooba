@@ -5,6 +5,9 @@ using Microsoft.AspNetCore.Routing;
 using Tooba.AddressBook.Application.Queries.GetCustomerAddress;
 using Tooba.AddressBook.Application.Queries.ListCustomerAddresses;
 using Tooba.AddressBook.Contracts.Errors;
+using Tooba.BuildingBlocks;
+using Tooba.BuildingBlocks.Presentation;
+using Tooba.BuildingBlocks.Results;
 
 namespace Tooba.AddressBook.Endpoints.Customer;
 
@@ -23,12 +26,13 @@ public static class AddressBookCustomerReadEndpoints
         HttpContext httpContext,
         IAddressBookCustomerActorResolver actorResolver,
         ISender sender,
+        ApiResponseFactory api,
         CancellationToken cancellationToken)
     {
         var actor = actorResolver.ResolveActor(httpContext);
         if (actor is null)
         {
-            return Unauthorized();
+            return api.FromFailure(new SemanticError(AddressBookErrorCodes.SessionRequired));
         }
 
         var items = await sender.Send(new ListCustomerAddressesQuery(actor.Value), cancellationToken);
@@ -40,21 +44,18 @@ public static class AddressBookCustomerReadEndpoints
         HttpContext httpContext,
         IAddressBookCustomerActorResolver actorResolver,
         ISender sender,
+        ApiResponseFactory api,
         CancellationToken cancellationToken)
     {
         var actor = actorResolver.ResolveActor(httpContext);
         if (actor is null)
         {
-            return Unauthorized();
+            return api.FromFailure(new SemanticError(AddressBookErrorCodes.SessionRequired));
         }
 
         var item = await sender.Send(new GetCustomerAddressQuery(actor.Value, addressId), cancellationToken);
         return item is null
-            ? Results.Json(new { title = "Not Found", errorCode = AddressBookErrorCodes.AddressMissing }, statusCode: StatusCodes.Status404NotFound)
+            ? api.FromFailure(new SemanticError(AddressBookErrorCodes.AddressMissing))
             : Results.Json(item);
     }
-
-    private static IResult Unauthorized() => Results.Json(
-        new { title = "Unauthorized", errorCode = AddressBookErrorCodes.SessionRequired },
-        statusCode: StatusCodes.Status401Unauthorized);
 }

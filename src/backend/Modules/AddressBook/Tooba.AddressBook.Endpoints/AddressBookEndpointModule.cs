@@ -2,6 +2,10 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
 using Tooba.AddressBook.Endpoints.Customer;
+using Tooba.AddressBook.Endpoints.Errors;
+using Tooba.AddressBook.Endpoints.Resources;
+using Tooba.BuildingBlocks.Localization;
+using Tooba.BuildingBlocks.Presentation.Errors;
 
 namespace Tooba.AddressBook.Endpoints;
 
@@ -28,11 +32,15 @@ public static class AddressBookEndpointModule
     /// Registers module-owned AddressBook presentation seams. The customer actor resolver is the neutral
     /// actor-authority seam used by module endpoints; it consumes the already-registered shared
     /// <c>ICurrentAuthenticatedUser</c> and does not introduce a second auth/session system.
+    /// The AddressBook error catalog contributor and resource set feed the canonical
+    /// <c>ApiResponseFactory</c>/<c>IErrorDefinitionCatalog</c> presentation stack — no parallel problem pipeline.
     /// </summary>
     public static IServiceCollection AddAddressBookEndpointPresentation(this IServiceCollection services)
     {
         ArgumentNullException.ThrowIfNull(services);
         services.AddScoped<IAddressBookCustomerActorResolver, AddressBookCustomerActorResolver>();
+        services.AddSingleton<IErrorCatalogContributor, AddressBookErrorCatalogContributor>();
+        services.AddSingleton<IErrorResourceSet, AddressBookErrorResourceSet>();
         return services;
     }
 }

@@ -443,7 +443,7 @@
       "module": "AddressBook",
       "structureCertified": true,
       "lockVersion": "ARCH-COMPLETE-002",
-      "certificationNote": "Certified by TB-TMAR-ADDRESSBOOK-ARCH-COMPLETE-002-STRUCTURE-001; physical folder layout then realigned to the Offer COMPLETE_REFERENCE_PATTERN capability layout (Contracts Dtos/Ports/Errors, Domain Aggregates, Application Commands/Queries/Ports/Models/Validators, Infrastructure Adapters/DependencyInjection/Outbox/Persistence). Host residue ZERO, HTTP ownership ZERO, 6 module-owned routes, validator coverage 5/5 + 1 NO_VALIDATOR_REQUIRED, path<->namespace EXACT, cross-module boundary Order.Contracts-only.",
+      "certificationNote": "Certified by TB-TMAR-ADDRESSBOOK-ARCH-COMPLETE-002-STRUCTURE-001; physical folder layout then realigned to the Offer COMPLETE_REFERENCE_PATTERN capability layout (Contracts Dtos/Ports/Errors, Domain Aggregates, Application Commands/Queries/Ports/Models/Validators, Infrastructure Adapters/DependencyInjection/Outbox/Persistence). Host residue ZERO, HTTP ownership ZERO, 6 module-owned routes, validator coverage 5/5 + 1 NO_VALIDATOR_REQUIRED, path<->namespace EXACT, cross-module boundary Order.Contracts-only. TB-TMAR-ADDRESSBOOK-POST-REALIGN-REPAIR-001 then attached AddressBook to the canonical presentation stack (Errors contributor + Resources resx + IErrorResourceSet, Goals: API-Result-Pattern-State CANONICAL, Parallel-Problem-Pipeline ZERO) and grouped the five projects under one /Modules/AddressBook/ Solution Folder; Offer kept as REFERENCE_NOT_CLONE.",
       "projects": [
         {
           "projectName": "Tooba.AddressBook.Contracts",
