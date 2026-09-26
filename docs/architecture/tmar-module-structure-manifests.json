@@ -443,12 +443,12 @@
       "module": "AddressBook",
       "structureCertified": true,
       "lockVersion": "ARCH-COMPLETE-002",
-      "certificationNote": "Certified by TB-TMAR-ADDRESSBOOK-ARCH-COMPLETE-002-STRUCTURE-001 after TB-TMAR-ADDRESSBOOK-PRECERT-STRUCTURE-REPAIR-001 closed the five audit blockers. Host residue ZERO, HTTP ownership ZERO, 6 module-owned routes, validator coverage 5/5 + 1 NO_VALIDATOR_REQUIRED, path<->namespace EXACT, cross-module boundary Order.Contracts-only.",
+      "certificationNote": "Certified by TB-TMAR-ADDRESSBOOK-ARCH-COMPLETE-002-STRUCTURE-001; physical folder layout then realigned to the Offer COMPLETE_REFERENCE_PATTERN capability layout (Contracts Dtos/Ports/Errors, Domain Aggregates, Application Commands/Queries/Ports/Models/Validators, Infrastructure Adapters/DependencyInjection/Outbox/Persistence). Host residue ZERO, HTTP ownership ZERO, 6 module-owned routes, validator coverage 5/5 + 1 NO_VALIDATOR_REQUIRED, path<->namespace EXACT, cross-module boundary Order.Contracts-only.",
       "projects": [
         {
           "projectName": "Tooba.AddressBook.Contracts",
           "rootAllowlist": [],
-          "rootAllowlistJustification": "The checkout record + lookup port live under Contracts/Customer/; no root .cs remains and namespace alignment is exact path-derived equality.",
+          "rootAllowlistJustification": "The checkout record lives under Contracts/Dtos/ and the lookup port under Contracts/Ports/; no root .cs remains and namespace alignment is exact path-derived equality.",
           "forbiddenRootFiles": [
             "CustomerAddressContracts.cs"
           ],
@@ -456,17 +456,15 @@
         },
         {
           "projectName": "Tooba.AddressBook.Domain",
-          "rootAllowlist": [
-            "CustomerAddress.cs"
-          ],
-          "rootAllowlistJustification": "Single small aggregate at Domain root; certified precedent Order.Domain/AccessControl.Domain.",
+          "rootAllowlist": [],
+          "rootAllowlistJustification": "The CustomerAddress aggregate lives under Domain/Aggregates/ as in Order/AccessControl/Offer; no root .cs remains and namespace alignment is exact path-derived equality.",
           "forbiddenRootFiles": [],
           "forbiddenTopLevelFolders": []
         },
         {
           "projectName": "Tooba.AddressBook.Application",
           "rootAllowlist": [],
-          "rootAllowlistJustification": "AddressBook.Application intentionally has no root .cs file: the Customer capability folder (Create/Delete/Get/List/SetDefault/Update/Models/Ports) and the shared Validators capability carry every type, and namespace alignment is exact path-derived equality.",
+          "rootAllowlistJustification": "AddressBook.Application intentionally has no root .cs file: Commands/<UseCase>, Queries/<UseCase>, Models, Ports and the shared Validators capability carry every type, and namespace alignment is exact path-derived equality.",
           "forbiddenRootFiles": [
             "AddressBookContracts.cs"
           ],
@@ -487,11 +485,10 @@
         },
         {
           "projectName": "Tooba.AddressBook.Infrastructure",
-          "rootAllowlist": [
-            "AddressBookModule.cs"
-          ],
-          "rootAllowlistJustification": "Root holds only the module composition entry; the directory lives under Directories/ and migrations under Persistence/Migrations, and namespace alignment is exact path-derived equality.",
+          "rootAllowlist": [],
+          "rootAllowlistJustification": "No root .cs remains: the module composition entry lives under DependencyInjection/, the EF adapter and development seed under Adapters/, the outbox registration under Outbox/ and migrations under Persistence/Migrations, with exact path-derived namespaces.",
           "forbiddenRootFiles": [
+            "AddressBookModule.cs",
             "AddressBookDirectory.cs"
           ],
           "forbiddenTopLevelFolders": [

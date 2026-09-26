@@ -20,7 +20,7 @@ using Tooba.Reviews.Infrastructure;
 using Tooba.ProductQnA.Infrastructure;
 using Tooba.BulkInquiry.Infrastructure;
 using Tooba.Wishlist.Infrastructure;
-using Tooba.AddressBook.Infrastructure;
+using Tooba.AddressBook.Infrastructure.DependencyInjection;
 using Tooba.CustomerProfile.Infrastructure;
 using Tooba.Localization.Infrastructure;
 using Tooba.UserPreference.Infrastructure;

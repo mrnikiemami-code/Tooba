@@ -40,7 +40,7 @@ using Tooba.Reviews.Infrastructure.Persistence;
 using Tooba.ProductQnA.Infrastructure.Persistence;
 using Tooba.BulkInquiry.Infrastructure.Persistence;
 using Tooba.Host.Wishlist;
-using Tooba.AddressBook.Infrastructure.Development;
+using Tooba.AddressBook.Infrastructure.Adapters;
 using Tooba.Host.CustomerProfile;
 using Tooba.Host.Settings;
 using Tooba.Wishlist.Infrastructure.Persistence;

@@ -2,8 +2,9 @@ using MediatR;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
-using Tooba.AddressBook.Application.Customer.Get;
-using Tooba.AddressBook.Application.Customer.List;
+using Tooba.AddressBook.Application.Queries.GetCustomerAddress;
+using Tooba.AddressBook.Application.Queries.ListCustomerAddresses;
+using Tooba.AddressBook.Contracts.Errors;
 
 namespace Tooba.AddressBook.Endpoints.Customer;
 
@@ -49,11 +50,11 @@ public static class AddressBookCustomerReadEndpoints
 
         var item = await sender.Send(new GetCustomerAddressQuery(actor.Value, addressId), cancellationToken);
         return item is null
-            ? Results.Json(new { title = "Not Found", errorCode = "customer.address.missing" }, statusCode: StatusCodes.Status404NotFound)
+            ? Results.Json(new { title = "Not Found", errorCode = AddressBookErrorCodes.AddressMissing }, statusCode: StatusCodes.Status404NotFound)
             : Results.Json(item);
     }
 
     private static IResult Unauthorized() => Results.Json(
-        new { title = "Unauthorized", errorCode = "customer.session.required" },
+        new { title = "Unauthorized", errorCode = AddressBookErrorCodes.SessionRequired },
         statusCode: StatusCodes.Status401Unauthorized);
 }

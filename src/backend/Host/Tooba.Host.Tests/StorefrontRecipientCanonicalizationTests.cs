@@ -1,4 +1,4 @@
-﻿using Tooba.AddressBook.Domain;
+﻿using Tooba.AddressBook.Domain.Aggregates;
 using Tooba.Order.Application.Storefront;
 using Tooba.Order.Application.Storefront.Services;
 using Tooba.Order.Domain;

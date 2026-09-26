@@ -1,6 +1,7 @@
 using Tooba.Order.Application.Storefront.Services;
 using Tooba.Order.Application.Storefront.Models;
-using Tooba.AddressBook.Contracts.Customer;
+using Tooba.AddressBook.Contracts.Dtos;
+using Tooba.AddressBook.Contracts.Ports;
 using Tooba.Cart.Application.Ports;
 using Tooba.Fulfillment.Contracts.Shipping;
 using Tooba.Order.Application;

@@ -1,0 +1,19 @@
+using FluentValidation;
+using Tooba.AddressBook.Application.Queries.GetCustomerAddress;
+using Tooba.AddressBook.Application.Validators;
+
+namespace Tooba.AddressBook.Application.Validators.GetCustomerAddress;
+
+/// <summary>
+/// اعتبارسنجی شکل انتقال برای <see cref="GetCustomerAddressQuery"/> — فقط شناسهٔ مسیر.
+/// وجود/بیگانگی نشانی و مالکیت در Application/Domain می‌ماند؛
+/// <c>ActorUserId</c> اعتماد سرور است و به‌عنوان payload نامعتبر اعتبارسنجی نمی‌شود.
+/// </summary>
+public sealed class GetCustomerAddressQueryValidator : AbstractValidator<GetCustomerAddressQuery>
+{
+    /// <summary>قاعدهٔ شکل شناسهٔ مسیر را ثبت می‌کند.</summary>
+    public GetCustomerAddressQueryValidator()
+    {
+        AddressBookFluentRules.RequireId(this, x => x.AddressId, AddressBookValidationCodes.AddressIdRequired);
+    }
+}

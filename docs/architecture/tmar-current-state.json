@@ -1013,7 +1013,16 @@
     "checkoutState": "PAUSED_AT_SAFE_W5_CHECKPOINT",
     "workflow": "HOST_FIRST_FOLDER_BY_FOLDER",
     "workflowStop": "USER_REVIEW_ADDRESSBOOK_CHECKPOINT",
-    "evidence": "docs/evidence/TB-TMAR-ADDRESSBOOK-ARCH-COMPLETE-002-STRUCTURE-001/addressbook-structure-certification.md"
+    "evidence": "docs/evidence/TB-TMAR-ADDRESSBOOK-ARCH-COMPLETE-002-STRUCTURE-001/addressbook-structure-certification.md",
+    "offerStyleFolderRealignment": {
+      "state": "OFFER_COMPLETE_REFERENCE_PATTERN_FOLDERS",
+      "contracts": "Dtos/Ports/Errors",
+      "domain": "Aggregates",
+      "application": "Commands/<UseCase>/Queries/<UseCase>/Ports/Models/Validators",
+      "infrastructure": "Adapters/DependencyInjection/Outbox/Persistence/Configurations",
+      "endpoints": "Customer (unchanged routes, unchanged route ownership)",
+      "behaviorPreserved": true
+    }
   },
   "addressBookPreCertRepair": {
     "repairTask": "TB-TMAR-ADDRESSBOOK-PRECERT-STRUCTURE-REPAIR-001",

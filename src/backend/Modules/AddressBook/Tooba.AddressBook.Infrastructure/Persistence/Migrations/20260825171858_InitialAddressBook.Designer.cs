@@ -26,7 +26,7 @@ namespace Tooba.AddressBook.Infrastructure.Persistence.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
-            modelBuilder.Entity("Tooba.AddressBook.Domain.CustomerAddress", b =>
+            modelBuilder.Entity("Tooba.AddressBook.Domain.Aggregates.CustomerAddress", b =>
                 {
                     b.Property<Guid>("AddressId")
                         .HasColumnType("uuid")

@@ -2,12 +2,12 @@ using MediatR;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
-using Tooba.AddressBook.Application.Customer.Models;
-using Tooba.AddressBook.Application.Customer.Ports;
-using Tooba.AddressBook.Application.Customer.Create;
-using Tooba.AddressBook.Application.Customer.Delete;
-using Tooba.AddressBook.Application.Customer.SetDefault;
-using Tooba.AddressBook.Application.Customer.Update;
+using Tooba.AddressBook.Application.Models;
+using Tooba.AddressBook.Application.Commands.CreateCustomerAddress;
+using Tooba.AddressBook.Application.Commands.DeleteCustomerAddress;
+using Tooba.AddressBook.Application.Commands.SetDefaultCustomerAddress;
+using Tooba.AddressBook.Application.Commands.UpdateCustomerAddress;
+using Tooba.AddressBook.Contracts.Errors;
 
 namespace Tooba.AddressBook.Endpoints.Customer;
 
@@ -105,7 +105,7 @@ public static class AddressBookCustomerWriteEndpoints
     }
 
     private static IResult Unauthorized() => Results.Json(
-        new { title = "Unauthorized", errorCode = "customer.session.required" },
+        new { title = "Unauthorized", errorCode = AddressBookErrorCodes.SessionRequired },
         statusCode: StatusCodes.Status401Unauthorized);
 }
 

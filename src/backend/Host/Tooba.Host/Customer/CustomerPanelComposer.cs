@@ -1,4 +1,4 @@
-﻿using Tooba.AddressBook.Application.Customer.Ports;
+﻿using Tooba.AddressBook.Application.Ports;
 using Tooba.CustomerProfile.Contracts;
 using Tooba.Identity.Contracts;
 using Tooba.Order.Application.Customer.Models;

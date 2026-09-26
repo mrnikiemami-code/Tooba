@@ -1,6 +1,7 @@
 ﻿using System.Security.Cryptography;
 using System.Text;
-using Tooba.AddressBook.Contracts.Customer;
+using Tooba.AddressBook.Contracts.Dtos;
+using Tooba.AddressBook.Contracts.Ports;
 using Tooba.BuildingBlocks;
 using Tooba.Cart.Contracts;
 using Tooba.Fulfillment.Contracts.Shipping;
@@ -30,7 +31,7 @@ public sealed class StorefrontShippingService
     public StorefrontShippingService(
         ICartPresentationGateway carts,
         StorefrontCheckoutService checkouts,
-        Tooba.AddressBook.Contracts.Customer.IAddressBookCheckoutLookup addresses,
+        Tooba.AddressBook.Contracts.Ports.IAddressBookCheckoutLookup addresses,
         IShippingCatalogReader shippingCatalog,
         IStorefrontShippingDraftStore drafts,
         ILanguageLookup languages,

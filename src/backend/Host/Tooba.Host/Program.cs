@@ -155,7 +155,7 @@ builder.Services.AddToobaCqrsFoundation(
     typeof(Tooba.Promotion.Application.Commands.CreateSellerPromotion.CreateSellerPromotionCommand).Assembly,
     typeof(Tooba.Order.Application.Admin.Completeness.Queries.ListAdminOrderNotes.ListAdminOrderNotesQuery).Assembly,
     typeof(Tooba.AccessControl.Application.Commands.EnsureBootstrap.EnsureAccessControlBootstrapCommand).Assembly,
-    typeof(Tooba.AddressBook.Application.Customer.Ports.IAddressBookDirectory).Assembly);
+    typeof(Tooba.AddressBook.Application.Ports.IAddressBookDirectory).Assembly);
 builder.Services.AddScoped<IOrderAdminAuthorizer, HostOrderAdminAuthorizer>();
 builder.Services.AddScoped<
     Tooba.Order.Application.Admin.Operations.Ports.IOrderAdminEffectiveAccessReader,
@@ -187,7 +187,7 @@ builder.Services.AddScoped<Tooba.Host.Storefront.FashionTemplatePreviewQuery>();
 builder.Services.AddScoped<Tooba.Host.Storefront.IndustryTemplatePreviewQuery>();
 builder.Services.AddScoped<Tooba.Order.Application.Storefront.Ports.IOrderStorefrontActor, Tooba.Host.Order.HostOrderStorefrontActor>();
 builder.Services.AddScoped<Tooba.Order.Application.Storefront.Ports.IOrderStorefrontCheckoutIdentityGate, Tooba.Host.Order.HostOrderStorefrontCheckoutIdentityGate>();
-builder.Services.AddScoped<Tooba.AddressBook.Contracts.Customer.IAddressBookCheckoutLookup>(sp => sp.GetRequiredService<Tooba.AddressBook.Application.Customer.Ports.IAddressBookDirectory>());
+builder.Services.AddScoped<Tooba.AddressBook.Contracts.Ports.IAddressBookCheckoutLookup>(sp => sp.GetRequiredService<Tooba.AddressBook.Application.Ports.IAddressBookDirectory>());
 
 builder.Services.AddMemoryCache();
 builder.Services.AddScoped<Tooba.Host.Storefront.StoreAppearanceProjector>();
