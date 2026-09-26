@@ -3,6 +3,7 @@ using Microsoft.Extensions.Options;
 using Testcontainers.PostgreSql;
 using Tooba.BuildingBlocks;
 using Tooba.Identity.Application;
+using Tooba.Identity.Contracts.Problems;
 using Tooba.Identity.Domain;
 using Tooba.Identity.Infrastructure;
 using Tooba.Identity.Infrastructure.Persistence;
@@ -190,7 +191,7 @@ public sealed class IdentityPostgresTests : IAsyncLifetime
         var id = await auth.FindUserIdByIdentifierAsync(LoginIdentifierKind.Email, "alex@example.com", CancellationToken.None);
         Assert.Equal(created.UserId, id);
 
-        await Assert.ThrowsAsync<IdentityDuplicateIdentifierException>(() => auth.RegisterAsync(
+        await Assert.ThrowsAsync<IdentityDuplicateIdentifierFault>(() => auth.RegisterAsync(
             new RegisterUserCommand
             {
                 IdentifierKind = LoginIdentifierKind.Email,

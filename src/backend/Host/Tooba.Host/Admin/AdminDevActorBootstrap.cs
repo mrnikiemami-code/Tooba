@@ -1,5 +1,6 @@
 using Tooba.BuildingBlocks;
 using Tooba.Identity.Application;
+using Tooba.Identity.Contracts.Problems;
 using Tooba.Identity.Domain;
 using Tooba.Identity.Infrastructure;
 
@@ -60,7 +61,7 @@ internal static class AdminDevActorBootstrap
                     },
                     cancellationToken)).UserId;
             }
-            catch (IdentityDuplicateIdentifierException)
+            catch (IdentityDuplicateIdentifierFault)
             {
                 actor = await authentication.FindUserIdByIdentifierAsync(
                     LoginIdentifierKind.Email, AdminEmail, cancellationToken);

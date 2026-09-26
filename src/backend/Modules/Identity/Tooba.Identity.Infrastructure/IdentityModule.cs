@@ -3,7 +3,10 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Tooba.BuildingBlocks;
+using Tooba.BuildingBlocks.Localization;
+using Tooba.BuildingBlocks.Presentation.Errors;
 using Tooba.Identity.Application;
+using Tooba.Identity.Contracts.Problems;
 using Tooba.Identity.Infrastructure.Persistence;
 using Tooba.ModuleContracts;
 using Tooba.Persistence;
@@ -33,6 +36,8 @@ public sealed class IdentityModule : IToobaModule
             options.Enabled = environment.IsDevelopment() || environment.IsEnvironment("Testing");
         });
         services.AddSingleton<OtpDeliveryInstrumentation>();
+        services.AddSingleton<IErrorCatalogContributor, IdentityErrorCatalogContributor>();
+        services.AddSingleton<IErrorResourceSet, IdentityErrorResourceSet>();
         services.AddSingleton<IOutboxModuleRegistration, IdentityOutboxRegistration>();
         services.AddSingleton<IPasswordHashingService, AspNetPasswordHashingService>();
 

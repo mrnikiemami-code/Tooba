@@ -1,5 +1,5 @@
 ﻿using Tooba.AddressBook.Application.Customer.Ports;
-using Tooba.CustomerProfile.Application;
+using Tooba.CustomerProfile.Contracts;
 using Tooba.Identity.Application;
 using Tooba.Order.Application.Customer.Models;
 using Tooba.Wishlist.Application;

@@ -1,5 +1,5 @@
 using Microsoft.EntityFrameworkCore;
-using Tooba.CustomerProfile.Application;
+using Tooba.CustomerProfile.Contracts;
 using Tooba.CustomerProfile.Domain;
 using Tooba.CustomerProfile.Infrastructure.Persistence;
 

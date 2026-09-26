@@ -2,7 +2,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Tooba.BuildingBlocks;
-using Tooba.CustomerProfile.Application;
+using Tooba.CustomerProfile.Contracts;
 using Tooba.CustomerProfile.Infrastructure.Persistence;
 using Tooba.ModuleContracts;
 using Tooba.Persistence;

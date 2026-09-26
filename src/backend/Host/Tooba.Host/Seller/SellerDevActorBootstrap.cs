@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Tooba.BuildingBlocks;
 using Tooba.Identity.Application;
+using Tooba.Identity.Contracts.Problems;
 using Tooba.Identity.Domain;
 using Tooba.Identity.Infrastructure;
 using Tooba.Party.Application;
@@ -160,7 +161,7 @@ internal static class SellerDevActorBootstrap
                 cancellationToken);
             return created.UserId;
         }
-        catch (IdentityDuplicateIdentifierException)
+        catch (IdentityDuplicateIdentifierFault)
         {
             return await auth.FindUserIdByIdentifierAsync(LoginIdentifierKind.Email, email, cancellationToken)
                 ?? throw new InvalidOperationException("Seller demo actor could not be resolved after duplicate.");

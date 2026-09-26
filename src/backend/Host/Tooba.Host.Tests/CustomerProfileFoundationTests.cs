@@ -1,7 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Testcontainers.PostgreSql;
-using Tooba.CustomerProfile.Application;
+using Tooba.CustomerProfile.Contracts;
 using Tooba.CustomerProfile.Infrastructure;
 using Tooba.CustomerProfile.Infrastructure.Persistence;
 using Tooba.Host.Customer;

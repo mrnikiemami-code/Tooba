@@ -1,4 +1,4 @@
-﻿using Tooba.CustomerProfile.Application;
+﻿using Tooba.CustomerProfile.Contracts;
 using Tooba.Host.Storefront;
 using Tooba.Order.Application.Customer.Models;
 using Tooba.Order.Application.Customer.Queries.GetCustomerOrderDashboardSummary;

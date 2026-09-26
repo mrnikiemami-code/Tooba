@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Tooba.BuildingBlocks;
 using Tooba.Identity.Application;
+using Tooba.Identity.Contracts.Problems;
 using Tooba.Identity.Domain;
 using Tooba.Identity.Infrastructure.Persistence;
 
@@ -47,7 +48,7 @@ public sealed class IdentityAuthenticationService : IIdentityAuthenticationServi
             cancellationToken);
         if (exists)
         {
-            throw new IdentityDuplicateIdentifierException(command.IdentifierKind, normalized);
+            throw new IdentityDuplicateIdentifierFault(normalized);
         }
 
         var now = DateTimeOffset.UtcNow;

@@ -830,6 +830,30 @@
       "v2ReAudit": {
         "task": "AUTHENTICATION-V2-REAUDIT",
         "state": "REPAIRED_AND_ACCEPTED_V2",
+        "canonicalizationTask": "AUTHENTICATION-V2-CANONICALIZATION-001",
+        "canonicalizationState": "API_RESULT_CANONICAL_ERROR_CODES_CATALOGUED_LOCALIZED",
+        "apiResultPatternState": "CANONICAL",
+        "stableErrorCodeState": "CATALOGUED",
+        "localizationState": "CANONICAL",
+        "crossModuleCouplingState": "LEGAL_CONTRACTS_ONLY",
+        "crossModuleJoinState": "NONE",
+        "identityBusinessAuthorityInHost": "ZERO",
+        "identityPersistenceAuthorityInHost": "ZERO",
+        "behaviorChange": "NONE",
+        "identityErrorCatalog": "Tooba.Identity.Contracts.Problems.IdentityErrorCatalogContributor (identity.validation.failed=400, identity.challenge.invalid=400, identity.authentication.failed=401, identity.session.invalid=401, identity.identifier.conflict=409, identity.rate_limited=429, identity.tenant.untrusted=400, identity.otp.delivery.unavailable=400, identity.password.change.failed=400)",
+        "identityErrorCodesSource": "src/backend/Modules/Identity/Tooba.Identity.Contracts/Problems/IdentityErrorCodes.cs",
+        "identityErrorResources": "src/backend/Modules/Identity/Tooba.Identity.Contracts/Resources/IdentityErrors.resx (+ IdentityErrorResourceSet owns identity.* key space)",
+        "identityDuplicateIdentifierFault": "Tooba.Identity.Contracts.Problems.IdentityDuplicateIdentifierFault (Host no longer references Identity.Infrastructure)",
+        "customerProfileContractsProject": "src/backend/Modules/CustomerProfile/Tooba.CustomerProfile.Contracts (ICustomerProfileDirectory/CustomerProfileSnapshot/CustomerProfileWrite moved out of CustomerProfile.Application)",
+        "hostAuthenticationProblemPath": "AuthenticationHttpProblem delegates final presentation to ApiResponseFactory.FromFailure(SemanticError) — no parallel ProblemDetails pipeline, no hard-coded title",
+        "durableGuard": "src/backend/Host/Tooba.Host.Tests/AuthenticationV2CanonicalizationGuardTests.cs (21 pass)",
+        "focusedTests": "AuthenticationHttpTests + AuthSecurityHttpTests + IdentityFoundationTests + StorefrontAccountIdentityTests + CustomerProfileFoundationTests + AuthenticationV2CanonicalizationGuardTests = 38 passed / 8 skipped / 0 failed",
+        "focusedGuards": "ArchitectureBoundaryTests + TmarFoundationTests PASS; BuildingBlocks.Tests 45 PASS",
+        "preExistingFailuresNotCausedByThisTask": [
+          "ErrorContractTests (3 red; full Host DI validation fails on unregistered Tooba.Inventory.Contracts.Cart.ICartInventoryHoldPort — not touched by this task)",
+          "TmarSourceSizeAndInfraAppTests (red at clean HEAD before this task)",
+          "Tooba.Order.Tests.OrderSellerPanelArchitectureGuardTests (pre-existing missing Tooba.AccessControl reference)"
+        ],
         "skillsUsed": [
           ".cursor/skills/tooba-architecture-analyze/SKILL.md (V2)",
           ".cursor/skills/tooba-architecture-migrate/SKILL.md (V2)",
@@ -859,6 +883,7 @@
           "Identity.Infrastructure using in boundary is limited to IdentityDuplicateIdentifierException (a public exception type); relocating it to Identity.Contracts is an Identity-module Contracts decision, not terminal auth implementation leakage"
         ],
         "hostResidue": "ALLOWED_GLOBAL_AUTH_PLATFORM_BOUNDARY + ALLOWED_AUTH_RUNTIME_PLUMBING; ILLEGAL_IDENTITY_BUSINESS_AUTHORITY=ZERO; ILLEGAL_IDENTITY_PERSISTENCE_AUTHORITY=ZERO",
+        "canonicalizationEvidence": "docs/evidence/AUTHENTICATION-V2-CANONICALIZATION-001/authentication-v2-canonicalization.md",
         "behaviorChange": "NONE",
         "routeChange": "NONE",
         "guardWeakened": false,

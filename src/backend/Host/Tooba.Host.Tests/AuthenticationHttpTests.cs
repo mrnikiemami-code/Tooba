@@ -13,6 +13,7 @@ using Npgsql;
 using Testcontainers.PostgreSql;
 using Tooba.BuildingBlocks;
 using Tooba.Identity.Application;
+using Tooba.Identity.Contracts.Problems;
 using Tooba.Identity.Infrastructure;
 using Tooba.Identity.Infrastructure.Persistence;
 using Tooba.Persistence;

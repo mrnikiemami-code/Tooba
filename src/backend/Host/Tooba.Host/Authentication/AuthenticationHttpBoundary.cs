@@ -1,9 +1,9 @@
-using System.Text.Json;
-using Tooba.CustomerProfile.Application;
+﻿using System.Text.Json;
+using Tooba.CustomerProfile.Contracts;
 using Tooba.Host.Storefront;
 using Tooba.Identity.Application;
+using Tooba.Identity.Contracts.Problems;
 using Tooba.Identity.Domain;
-using Tooba.Identity.Infrastructure;
 
 namespace Tooba.Host;
 
@@ -52,7 +52,7 @@ internal static class AuthenticationEndpointMapper
             || string.IsNullOrWhiteSpace(body.Identifier)
             || string.IsNullOrWhiteSpace(body.Password))
         {
-            return AuthenticationHttpProblem.BadRequest(http, "identity.validation.failed");
+            return AuthenticationHttpProblem.BadRequest(http, IdentityErrorCodes.ValidationFailed);
         }
 
         try
@@ -63,13 +63,13 @@ internal static class AuthenticationEndpointMapper
             loggers.CreateLogger("Tooba.Auth").LogInformation("identity.register.succeeded");
             return Results.Json(new AuthenticationHttpModels.RegisterResponse(created.UserId), statusCode: StatusCodes.Status201Created);
         }
-        catch (IdentityDuplicateIdentifierException)
+        catch (IdentityDuplicateIdentifierFault)
         {
-            return AuthenticationHttpProblem.AuthProblem(http, StatusCodes.Status409Conflict, "Conflict", "identity.identifier.conflict");
+            return AuthenticationHttpProblem.BadRequest(http, IdentityErrorCodes.IdentifierConflict);
         }
         catch (ArgumentException)
         {
-            return AuthenticationHttpProblem.BadRequest(http, "identity.validation.failed");
+            return AuthenticationHttpProblem.BadRequest(http, IdentityErrorCodes.ValidationFailed);
         }
     }
 
@@ -92,14 +92,14 @@ internal static class AuthenticationEndpointMapper
 
         if (!TryParseKind(body.IdentifierKind, out var kind))
         {
-            return AuthenticationHttpProblem.Unauthorized(http, "identity.authentication.failed");
+            return AuthenticationHttpProblem.Unauthorized(http, IdentityErrorCodes.AuthenticationFailed);
         }
 
         var result = await auth.AuthenticateWithPasswordAsync(kind, body.Identifier ?? "", body.Password ?? "", http.RequestAborted);
         if (!result.Succeeded || result.Ticket is null || string.IsNullOrEmpty(result.Ticket.RefreshToken))
         {
             loggers.CreateLogger("Tooba.Auth").LogInformation("identity.login.failed");
-            return AuthenticationHttpProblem.Unauthorized(http, "identity.authentication.failed");
+            return AuthenticationHttpProblem.Unauthorized(http, IdentityErrorCodes.AuthenticationFailed);
         }
 
         loggers.CreateLogger("Tooba.Auth").LogInformation("identity.login.succeeded");
@@ -127,7 +127,7 @@ internal static class AuthenticationEndpointMapper
         if (!result.Succeeded || result.Ticket?.RefreshToken is null)
         {
             loggers.CreateLogger("Tooba.Auth").LogInformation("identity.refresh.failed");
-            return AuthenticationHttpProblem.Unauthorized(http, "identity.session.invalid");
+            return AuthenticationHttpProblem.Unauthorized(http, IdentityErrorCodes.SessionInvalid);
         }
 
         return Results.Json(ToSessionResponse(result.Ticket));
@@ -146,7 +146,7 @@ internal static class AuthenticationEndpointMapper
 
         if (!current.IsAuthenticated)
         {
-            return AuthenticationHttpProblem.Unauthorized(http, "identity.session.invalid");
+            return AuthenticationHttpProblem.Unauthorized(http, IdentityErrorCodes.SessionInvalid);
         }
 
         await auth.RevokeSessionAsync(current.SessionId!.Value, "http_logout", http.RequestAborted);
@@ -160,7 +160,7 @@ internal static class AuthenticationEndpointMapper
     {
         if (!current.IsAuthenticated)
         {
-            return AuthenticationHttpProblem.Unauthorized(http, "identity.session.invalid");
+            return AuthenticationHttpProblem.Unauthorized(http, IdentityErrorCodes.SessionInvalid);
         }
 
         await auth.RevokeAllSessionsAsync(current.UserId!.Value, "http_logout_all", http.RequestAborted);
@@ -214,7 +214,7 @@ internal static class AuthenticationEndpointMapper
             http.RequestAborted);
         if (outcome != ChallengeConsumeOutcome.Succeeded)
         {
-            return AuthenticationHttpProblem.BadRequest(http, "identity.challenge.invalid");
+            return AuthenticationHttpProblem.BadRequest(http, IdentityErrorCodes.ChallengeInvalid);
         }
 
         return Results.NoContent();
@@ -229,7 +229,7 @@ internal static class AuthenticationEndpointMapper
     {
         if (!current.IsAuthenticated)
         {
-            return AuthenticationHttpProblem.Unauthorized(http, "identity.session.invalid");
+            return AuthenticationHttpProblem.Unauthorized(http, IdentityErrorCodes.SessionInvalid);
         }
 
         if (AuthenticationHttpProblem.RejectUntrustedTenant(http, body.TenantId, body.Extra) is { } spoof)
@@ -244,7 +244,7 @@ internal static class AuthenticationEndpointMapper
 
         if (!TryParseKind(body.IdentifierKind, out var kind))
         {
-            return AuthenticationHttpProblem.BadRequest(http, "identity.validation.failed");
+            return AuthenticationHttpProblem.BadRequest(http, IdentityErrorCodes.ValidationFailed);
         }
 
         try
@@ -258,7 +258,7 @@ internal static class AuthenticationEndpointMapper
         }
         catch (InvalidOperationException)
         {
-            return AuthenticationHttpProblem.BadRequest(http, "identity.validation.failed");
+            return AuthenticationHttpProblem.BadRequest(http, IdentityErrorCodes.ValidationFailed);
         }
     }
 
@@ -284,7 +284,7 @@ internal static class AuthenticationEndpointMapper
             http.RequestAborted);
         if (outcome != ChallengeConsumeOutcome.Succeeded)
         {
-            return AuthenticationHttpProblem.BadRequest(http, "identity.challenge.invalid");
+            return AuthenticationHttpProblem.BadRequest(http, IdentityErrorCodes.ChallengeInvalid);
         }
 
         return Results.NoContent();
@@ -313,11 +313,11 @@ internal static class AuthenticationEndpointMapper
         }
         catch (ArgumentException)
         {
-            return AuthenticationHttpProblem.BadRequest(http, "identity.validation.failed");
+            return AuthenticationHttpProblem.BadRequest(http, IdentityErrorCodes.ValidationFailed);
         }
         catch (InvalidOperationException)
         {
-            return AuthenticationHttpProblem.BadRequest(http, "identity.otp.delivery.unavailable");
+            return AuthenticationHttpProblem.BadRequest(http, IdentityErrorCodes.OtpDeliveryUnavailable);
         }
     }
 
@@ -346,7 +346,7 @@ internal static class AuthenticationEndpointMapper
         if (!result.Succeeded || result.Ticket is null || string.IsNullOrEmpty(result.Ticket.RefreshToken))
         {
             loggers.CreateLogger("Tooba.Auth").LogInformation("identity.otp_login.failed");
-            return AuthenticationHttpProblem.Unauthorized(http, "identity.authentication.failed");
+            return AuthenticationHttpProblem.Unauthorized(http, IdentityErrorCodes.AuthenticationFailed);
         }
 
         loggers.CreateLogger("Tooba.Auth").LogInformation("identity.otp_login.succeeded");
@@ -361,7 +361,7 @@ internal static class AuthenticationEndpointMapper
     {
         if (!current.IsAuthenticated)
         {
-            return AuthenticationHttpProblem.Unauthorized(http, "identity.session.invalid");
+            return AuthenticationHttpProblem.Unauthorized(http, IdentityErrorCodes.SessionInvalid);
         }
 
         if (AuthenticationHttpProblem.RejectUntrustedTenant(http, body.TenantId, body.Extra) is { } spoof)
@@ -380,11 +380,11 @@ internal static class AuthenticationEndpointMapper
         }
         catch (InvalidOperationException)
         {
-            return AuthenticationHttpProblem.BadRequest(http, "identity.password.change.failed");
+            return AuthenticationHttpProblem.BadRequest(http, IdentityErrorCodes.PasswordChangeFailed);
         }
         catch (ArgumentException)
         {
-            return AuthenticationHttpProblem.BadRequest(http, "identity.validation.failed");
+            return AuthenticationHttpProblem.BadRequest(http, IdentityErrorCodes.ValidationFailed);
         }
     }
 
@@ -397,7 +397,7 @@ internal static class AuthenticationEndpointMapper
     {
         if (!current.IsAuthenticated)
         {
-            return AuthenticationHttpProblem.Unauthorized(http, "identity.session.invalid");
+            return AuthenticationHttpProblem.Unauthorized(http, IdentityErrorCodes.SessionInvalid);
         }
 
         var userId = current.UserId!.Value;
