@@ -260,6 +260,30 @@ Textual Host references may remain when legitimately compositional.
 
 Do not require migration of a legitimate Host platform seam; require only that any oversized/mixed retained Host file was split safely within Host.
 
+### 13a. Host Authentication Certification Rule
+
+Certification must NOT require Host authentication/session platform ownership to be zero.
+
+Never infer authentication ownership from the word "authentication" alone. Canonical architecture documents, locks and current SoT decide the boundary.
+
+For Authentication-related Host residue, distinguish:
+
+Allowed examples:
+
+- `ALLOWED_GLOBAL_AUTH_PLATFORM_BOUNDARY` — global authentication HTTP boundary; authentication middleware; current authenticated request principal/session projection; explicitly locked global auth/session platform seams.
+- `ALLOWED_AUTH_RUNTIME_PLUMBING` — runtime authentication plumbing.
+
+Illegal examples:
+
+- `ILLEGAL_IDENTITY_BUSINESS_AUTHORITY` — Identity business rules; module-specific credential lifecycle ownership; module-specific business policy; business state machine logic that belongs to Identity.
+- `ILLEGAL_IDENTITY_PERSISTENCE_AUTHORITY` — Identity persistence; foreign DbContext/persistence access.
+
+Only the ILLEGAL categories must be ZERO.
+
+Do not fail certification merely because legitimate global Host auth/session files remain.
+
+Boundary example only (not a naming requirement): `src/backend/Host/Tooba.Host/Authentication` currently holds the global authentication/session HTTP/runtime boundary and legitimately consumes Identity services without inheriting Identity business ownership. Do not hard-code its current file names as permanent architecture requirements.
+
 ### 14. Persistence / Migration Safety
 
 Verify architecture cleanup did not accidentally change:

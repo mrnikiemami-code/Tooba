@@ -127,10 +127,41 @@ Examples:
 - cart state -> Cart
 - offer selection -> Offer
 - address ownership/address lifecycle -> AddressBook
-- authentication identity/authentication mechanisms -> Authentication
+- identity-owned authentication business capability/state -> Identity
+- global authentication/session HTTP boundary, middleware and principal/runtime plumbing -> MAY remain Host-owned when explicitly allowed by canonical architecture locks
 - cross-module UI aggregation may remain a thin composition layer only if it owns no business policy.
 
 Never move code into a module merely because that module happens to call it most often.
+
+### 3a. Authentication Ownership Discipline (never infer from naming)
+
+Never infer authentication ownership from the word "authentication" alone.
+
+Always distinguish between:
+
+1. **IDENTITY / MODULE BUSINESS OWNERSHIP** — authentication business state; credential lifecycle; login/password/OTP business rules; session domain/application services; identity persistence; identity-owned contracts/use cases. These belong to the owning module, normally Identity.
+2. **GLOBAL HOST PLATFORM AUTHENTICATION BOUNDARY** — global HTTP authentication boundary; authentication middleware; current authenticated principal/session projection for the Host request; request authentication plumbing; global auth/session runtime seams; platform-level authentication composition explicitly allowed by canonical architecture locks. These may legitimately remain Host-owned.
+
+Canonical architecture documents, locks and current SoT decide the boundary.
+
+- Do NOT migrate a legitimate global Host authentication/session platform boundary merely because it references Identity services or because its folder/file name contains "Authentication".
+- Do NOT keep Identity business logic in Host merely because the Host owns the global HTTP/session boundary.
+
+When analyzing `Host/Authentication` specifically, or similar code, read the actual responsibilities, dependencies, canonical locks, SoT and accepted architecture decisions FIRST, then classify each responsibility independently as one of:
+
+- `IDENTITY_BUSINESS_CAPABILITY`
+- `GLOBAL_HOST_AUTH_PLATFORM_BOUNDARY`
+- `HOST_AUTH_RUNTIME_PLUMBING`
+- `MIXED_AUTH_RESPONSIBILITY`
+- `UNKNOWN_AUTH_OWNERSHIP`
+
+If `MIXED_AUTH_RESPONSIBILITY`:
+- split by responsibility;
+- migrate only the Identity-owned business parts;
+- retain legitimate Host platform parts;
+- preserve behavior.
+
+These classification values feed the `Ownership-State` field below.
 
 ### 4. Detect Forbidden Coupling
 

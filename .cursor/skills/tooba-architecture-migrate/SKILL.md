@@ -228,11 +228,38 @@ Examples:
 - offer selection/pricing-offer concern -> Offer
 - address lifecycle -> AddressBook
 - catalog product/category ownership -> Catalog
-- authentication mechanisms -> Authentication
+- identity-owned authentication business capability/state, credential lifecycle, login/password/OTP business rules -> Identity
+- global authentication/session HTTP boundary, middleware, principal/session/runtime plumbing -> MAY remain Host-owned when explicitly allowed by canonical architecture locks
 
 Host is not a business owner.
 
 Host may keep only legitimate composition/platform/security adaptation.
+
+### 8a. Authentication Ownership During Migration
+
+Never infer authentication ownership from the word "authentication" alone. Canonical architecture documents, locks and current SoT decide the boundary.
+
+If Analyze classifies a responsibility as `GLOBAL_HOST_AUTH_PLATFORM_BOUNDARY` or `HOST_AUTH_RUNTIME_PLUMBING`:
+
+- do NOT migrate it into Identity;
+- preserve its Host ownership;
+- allow safe internal file splitting/cohesion cleanup inside Host;
+- preserve routes, middleware order, session/principal semantics, error codes, telemetry, correlation, tenant isolation and security behavior;
+- do not create `Identity.Endpoints` merely to evacuate this legitimate Host platform seam.
+
+If Analyze classifies a responsibility as `IDENTITY_BUSINESS_CAPABILITY`:
+
+- migrate it to the correct Identity project/layer using the existing valid module structure;
+- use Contracts-only boundaries where cross-module access is required;
+- do not leave business authority in Host.
+
+If a file contains both (`MIXED_AUTH_RESPONSIBILITY`):
+
+- split it by true responsibility;
+- move only the Identity-owned business portion;
+- retain only legitimate Host platform code.
+
+Boundary example only (not a naming requirement): `src/backend/Host/Tooba.Host/Authentication` currently holds the global authentication/session HTTP/runtime boundary and legitimately consumes Identity services without inheriting Identity business ownership. Do not hard-code its current file names as permanent architecture requirements.
 
 ## 9. Multi-Module Migration
 
