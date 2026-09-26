@@ -32,7 +32,6 @@ using Tooba.Host.ProductQnA;
 using Tooba.Host.Wishlist;
 using Tooba.Host.AddressBook;
 using Tooba.AddressBook.Endpoints;
-using Tooba.AddressBook.Endpoints;
 using Tooba.Host.Content;
 using Tooba.Content.Infrastructure;
 using Tooba.Host.Media;

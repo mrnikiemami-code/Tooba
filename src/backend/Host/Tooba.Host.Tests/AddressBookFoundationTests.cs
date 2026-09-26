@@ -11,6 +11,7 @@ using Tooba.AddressBook.Domain;
 using Tooba.AddressBook.Infrastructure;
 using Tooba.AddressBook.Infrastructure.Persistence;
 using Tooba.Host.AddressBook;
+using Tooba.AddressBook.Endpoints.Customer;
 using Tooba.Order.Application.Storefront.Services;
 using Tooba.Order.Application.Storefront.Models;
 using Tooba.AddressBook.Contracts;
@@ -59,14 +60,21 @@ public sealed class AddressBookFoundationTests
     [Fact]
     public void Endpoint_uses_session_and_rejects_missing_production_actor()
     {
-        var source = File.ReadAllText(Path.Combine(
+        var hostSource = File.ReadAllText(Path.Combine(
             FindRepoRoot(), "src", "backend", "Host", "Tooba.Host", "AddressBook", "AddressBookEndpoints.cs"));
-        Assert.Contains("session.IsAuthenticated", source, StringComparison.Ordinal);
-        Assert.Contains("StatusCodes.Status401Unauthorized", source, StringComparison.Ordinal);
-        Assert.Contains("environment.IsDevelopment()", source, StringComparison.Ordinal);
-        Assert.Contains("/v1/customer/addresses", source, StringComparison.Ordinal);
-        Assert.DoesNotContain("{owner", source, StringComparison.OrdinalIgnoreCase);
-        Assert.DoesNotContain("OwnerUserId", source, StringComparison.Ordinal);
+        var moduleActorSource = File.ReadAllText(Path.Combine(
+            FindRepoRoot(), "src", "backend", "Modules", "AddressBook", "Tooba.AddressBook.Endpoints",
+            "Customer", "AddressBookCustomerActorResolver.cs"));
+        Assert.Contains("session.IsAuthenticated", hostSource, StringComparison.Ordinal);
+        Assert.Contains("StatusCodes.Status401Unauthorized", hostSource, StringComparison.Ordinal);
+        Assert.Contains("environment.IsDevelopment()", hostSource, StringComparison.Ordinal);
+        Assert.Contains("/v1/customer/addresses", hostSource, StringComparison.Ordinal);
+        Assert.Contains("currentUser.IsAuthenticated", moduleActorSource, StringComparison.Ordinal);
+        Assert.Contains("StatusCodes.Status401Unauthorized", File.ReadAllText(Path.Combine(
+            FindRepoRoot(), "src", "backend", "Modules", "AddressBook", "Tooba.AddressBook.Endpoints",
+            "Customer", "AddressBookCustomerReadEndpoints.cs")), StringComparison.Ordinal);
+        Assert.DoesNotContain("{owner", hostSource, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("OwnerUserId", hostSource, StringComparison.Ordinal);
     }
 
     /// <summary>کشور تهی به IR تبدیل می‌شود و قوانین رقم‌شمار ایران در هسته نیست.</summary>
