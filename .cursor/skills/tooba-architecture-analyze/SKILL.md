@@ -305,9 +305,20 @@ Report:
 - endpoints that build local `ProblemDetails` mappers;
 - endpoints that catch exceptions and map them ad hoc;
 - failure classification done by parsing `ex.Message` / `ex.Message is` / `when (ex.Message...)`;
-- stable error codes that are not registered in an `IErrorCatalogContributor`;
+- stable error codes that do not resolve to a canonical `ErrorDescriptor` in the composed `IErrorDefinitionCatalog`;
+- duplicate `ErrorDescriptor` registrations for the same machine code across contributors/modules;
+- ambiguous descriptor ownership (same code registered by several consumers instead of one natural owner);
+- duplicate-suppression behavior (`first wins`, `last wins`, `DistinctBy`, dictionary overwrite, catch-and-ignore) that hides ownership defects;
 - unknown/unexpected exceptions silently converted into business failures;
 - success DTOs whose shape/envelope differs from the shipped contract (e.g. Offer seller success is intentionally raw DTO, not an envelope).
+
+Error descriptor ownership rule:
+- **Duplicate usage is allowed; duplicate descriptor ownership is not.** A stable machine code may be consumed by multiple modules, but the composed catalog must have exactly one canonical `ErrorDescriptor` owner for that code.
+- Prefer the existing natural bounded-context owner. A consuming module must not re-register the descriptor merely because it emits/forwards that code.
+- Do **not** create a new shared-errors project/layer merely because several modules use the same code. Shared/foundation ownership is appropriate only when the semantic is genuinely cross-cutting/platform-level, no natural module owner exists, and the repository already has an appropriate neutral shared location.
+- Module-specific errors remain module-owned.
+- Preserve `ErrorDefinitionCatalog` fail-fast duplicate detection. Never solve duplicate registrations with suppression, overwrite, first/last-wins, or `DistinctBy`.
+- If the same code has conflicting HTTP/classification/localization semantics and repository locks/current behavior do not establish one canonical meaning, report `NEEDS_ARCHITECT_DECISION`; do not choose arbitrarily.
 
 ### 11. Observability / Logging Audit
 
