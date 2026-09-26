@@ -10,14 +10,13 @@ public sealed class SupportErrorCatalogContributor : IErrorCatalogContributor
     /// <inheritdoc />
     public IReadOnlyList<ErrorDescriptor> Contribute() =>
     [
-        D(SupportErrorCodes.CustomerSessionRequired, ErrorClassification.Forbidden, StatusCodes.Status401Unauthorized, "Unauthorized"),
+        // customer.session.required / seller.authorization.denied / admin.authorization.denied are
+        // shared cross-cutting codes owned by FoundationErrorCatalogContributor.
         D(SupportErrorCodes.Missing, ErrorClassification.NotFound, StatusCodes.Status404NotFound, "Not Found"),
         D(SupportErrorCodes.Rejected, ErrorClassification.Business, StatusCodes.Status400BadRequest, "Bad Request"),
         D(SupportErrorCodes.ReplyRejected, ErrorClassification.Business, StatusCodes.Status400BadRequest, "Bad Request"),
         D(SupportErrorCodes.ActionRejected, ErrorClassification.Business, StatusCodes.Status400BadRequest, "Bad Request"),
         D(SupportErrorCodes.PatchRejected, ErrorClassification.Business, StatusCodes.Status400BadRequest, "Bad Request"),
-        D(SupportErrorCodes.SellerAuthorizationDenied, ErrorClassification.Forbidden, StatusCodes.Status403Forbidden, "Forbidden"),
-        D(SupportErrorCodes.AdminAuthorizationDenied, ErrorClassification.Forbidden, StatusCodes.Status403Forbidden, "Forbidden"),
         D(SupportErrorCodes.DemoNotReady, ErrorClassification.Platform, StatusCodes.Status503ServiceUnavailable, "Support demo seed not ready"),
     ];
 

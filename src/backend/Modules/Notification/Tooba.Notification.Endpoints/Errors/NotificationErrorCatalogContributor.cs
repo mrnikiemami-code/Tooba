@@ -11,18 +11,13 @@ public sealed class NotificationErrorCatalogContributor : IErrorCatalogContribut
     public IReadOnlyList<ErrorDescriptor> Contribute() =>
     [
         new(
-            Code: NotificationErrorCodes.CustomerSessionRequired,
-            Classification: ErrorClassification.Forbidden,
-            HttpStatus: StatusCodes.Status401Unauthorized,
-            LocalizationKey: NotificationErrorCodes.CustomerSessionRequired,
-            Severity: ErrorSeverity.Warning,
-            SafeTitleFallback: "Unauthorized"),
-        new(
             Code: NotificationErrorCodes.Missing,
             Classification: ErrorClassification.NotFound,
             HttpStatus: StatusCodes.Status404NotFound,
             LocalizationKey: NotificationErrorCodes.Missing,
             Severity: ErrorSeverity.Warning,
             SafeTitleFallback: "Notification was not found."),
+        // customer.session.required is a shared cross-cutting code owned by
+        // FoundationErrorCatalogContributor; Notification consumes it without re-registering.
     ];
 }

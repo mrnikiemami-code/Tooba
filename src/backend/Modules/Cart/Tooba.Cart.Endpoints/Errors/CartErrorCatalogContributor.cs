@@ -32,8 +32,8 @@ public sealed class CartErrorCatalogContributor : IErrorCatalogContributor
             "Inventory changed. Review the quantity and retry."),
         D(CartErrorCodes.Rejected, ErrorClassification.Business, StatusCodes.Status400BadRequest,
             "Cart operation was rejected. Please retry."),
-        D(CartErrorCodes.AuthenticationRequired, ErrorClassification.Forbidden, StatusCodes.Status401Unauthorized,
-            "Sign in to continue."),
+        // checkout.authentication_required descriptor is owned by
+        // FoundationErrorCatalogContributor; Cart consumes the shared code without re-registering.
     ];
 
     private static ErrorDescriptor D(

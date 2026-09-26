@@ -33,8 +33,8 @@ public sealed class OrderErrorCatalogContributor : IErrorCatalogContributor
             "دسترسی به اطلاعات پرداخت این سفارش تأیید نشد. لطفاً از بخش سفارش‌ها دوباره وارد پرداخت شوید."),
         D(StorefrontOrderErrors.CheckoutAddressForbidden, ErrorClassification.Forbidden, StatusCodes.Status403Forbidden,
             "این نشانی متعلق به مشتری جاری نیست."),
-        D(StorefrontOrderErrors.CheckoutAuthenticationRequired, ErrorClassification.Forbidden, StatusCodes.Status401Unauthorized,
-            "برای ادامه فرایند خرید وارد حساب خود شوید."),
+        // checkout.authentication_required descriptor is owned by
+        // FoundationErrorCatalogContributor (shared cross-cutting code).
         D(StorefrontOrderErrors.CheckoutOpenUnpaidLimit, ErrorClassification.Conflict, StatusCodes.Status409Conflict,
             "شما به حداکثر تعداد سفارش‌های در انتظار پرداخت رسیده‌اید. ابتدا یکی از سفارش‌های قبلی را پرداخت یا لغو کنید."),
         D(StorefrontOrderErrors.CheckoutReservationCommitLimit, ErrorClassification.Conflict, StatusCodes.Status409Conflict,
@@ -97,22 +97,27 @@ public sealed class OrderErrorCatalogContributor : IErrorCatalogContributor
             "پس از ارسال کالا، لغو کامل سفارش امکان‌پذیر نیست."),
         D(StorefrontOrderErrors.PendingHideActiveHold, ErrorClassification.Conflict, StatusCodes.Status409Conflict,
             "تا پایان مهلت رزرو نمی‌توان این کارت را پنهان کرد."),
+        // payment.* / inventory.reservation.* descriptors are canonically owned here because Order
+        // owns this resource keyspace (OrderErrorResourceSet) and raises these on the storefront and
+        // customer-panel surfaces; Payment consumes the same machine codes without re-registering.
         D(StorefrontOrderErrors.PaymentMissing, ErrorClassification.NotFound, StatusCodes.Status404NotFound,
             "پرداخت پیدا نشد."),
         D(StorefrontOrderErrors.PaymentRejected, ErrorClassification.Business, StatusCodes.Status400BadRequest,
             "امکان انجام این عملیات در حال حاضر وجود ندارد."),
 
-        // Customer panel Order
+        // Customer panel Order.
+        // Shared code consumed here but owned by FoundationErrorCatalogContributor:
+        //   customer.session.required
         D(CustomerOrderErrors.Missing, ErrorClassification.NotFound, StatusCodes.Status404NotFound,
             "Not Found"),
-        D(CustomerOrderErrors.SessionRequired, ErrorClassification.Forbidden, StatusCodes.Status401Unauthorized,
-            "Unauthorized"),
         D(CustomerOrderErrors.SupplyUnavailable, ErrorClassification.Conflict, StatusCodes.Status409Conflict,
             "این سفارش در حال حاضر قابل تأمین نیست."),
         D(ReservationCycleErrors.RetryLimitReached, ErrorClassification.Conflict, StatusCodes.Status409Conflict,
             ReservationCycleErrors.RetryLimitReachedFa),
 
-        // Seller panel Order
+        // Seller panel Order.
+        // Shared code consumed here but owned by FoundationErrorCatalogContributor:
+        //   seller.authorization.denied
         D(SellerOrderErrors.SellerMissing, ErrorClassification.NotFound, StatusCodes.Status404NotFound,
             "Seller was not found."),
         D(SellerOrderErrors.ViewDenied, ErrorClassification.Forbidden, StatusCodes.Status403Forbidden,
@@ -124,8 +129,6 @@ public sealed class OrderErrorCatalogContributor : IErrorCatalogContributor
         D(SellerOrderErrors.IdentityMissing, ErrorClassification.Validation, StatusCodes.Status400BadRequest,
             "Seller identity is invalid."),
         D(SellerOrderErrors.PartyViewDenied, ErrorClassification.Forbidden, StatusCodes.Status403Forbidden,
-            "Seller party access denied."),
-        D("seller.authorization.denied", ErrorClassification.Forbidden, StatusCodes.Status403Forbidden,
             "Seller party access denied."),
         D("seller.authorization.unavailable", ErrorClassification.Platform, StatusCodes.Status503ServiceUnavailable,
             "Authorization service unavailable."),

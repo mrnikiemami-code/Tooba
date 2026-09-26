@@ -15,8 +15,8 @@ public sealed class AddressBookErrorCatalogContributor : IErrorCatalogContributo
     [
         D(AddressBookErrorCodes.AddressMissing, ErrorClassification.NotFound, StatusCodes.Status404NotFound,
             "Address was not found."),
-        D(AddressBookErrorCodes.SessionRequired, ErrorClassification.Forbidden, StatusCodes.Status401Unauthorized,
-            "A trusted customer session is required."),
+        // customer.session.required is a shared cross-cutting code owned by
+        // FoundationErrorCatalogContributor; AddressBook consumes it without re-registering.
     ];
 
     private static ErrorDescriptor D(

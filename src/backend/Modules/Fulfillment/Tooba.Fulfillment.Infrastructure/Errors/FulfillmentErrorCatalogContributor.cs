@@ -17,14 +17,12 @@ public sealed class FulfillmentErrorCatalogContributor : IErrorCatalogContributo
             "Fulfillment mutation was rejected."),
         D(FulfillmentErrorCodes.SellerOrderHandleDenied, ErrorClassification.Forbidden, StatusCodes.Status403Forbidden,
             "Seller lacks order.handle permission."),
-        D(FulfillmentErrorCodes.SellerOrderMissing, ErrorClassification.NotFound, StatusCodes.Status404NotFound,
-            "Seller order was not found."),
+        // seller.order.missing / customer.order.missing are owned by OrderErrorCatalogContributor
+        // (Order owns the order aggregate and the seller.*/customer.* localization keyspace).
         D(FulfillmentErrorCodes.SellerOrderHandleScopeDenied, ErrorClassification.Forbidden, StatusCodes.Status403Forbidden,
             "Order.handle category scope does not cover all lines."),
         D(FulfillmentErrorCodes.CustomerActorMissing, ErrorClassification.Forbidden, StatusCodes.Status401Unauthorized,
             "Customer actor is missing."),
-        D(FulfillmentErrorCodes.CustomerOrderMissing, ErrorClassification.NotFound, StatusCodes.Status404NotFound,
-            "Customer order was not found."),
         D(FulfillmentErrorCodes.WorkQueueBulkFailed, ErrorClassification.Business, StatusCodes.Status400BadRequest,
             "Fulfillment work-queue bulk operation failed."),
         D(FulfillmentErrorCodes.WorkQueueBulkUnsupported, ErrorClassification.Business, StatusCodes.Status400BadRequest,

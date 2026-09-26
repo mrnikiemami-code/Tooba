@@ -58,6 +58,20 @@ public sealed class OrderEndpointPresentationTests
     private static readonly string[] AllCodes =
         CompletenessCodes.Concat(StorefrontCodes).Concat(CustomerCodes).Concat(SellerCodes).ToArray();
 
+    /// <summary>
+    /// Cross-cutting codes consumed by Order but canonically owned by FoundationErrorCatalogContributor.
+    /// They must resolve through the composed catalog, not through a duplicate Order descriptor.
+    /// </summary>
+    private static readonly string[] SharedFoundationCodes =
+    [
+        StorefrontOrderErrors.CheckoutAuthenticationRequired,
+        CustomerOrderErrors.SessionRequired,
+        "seller.authorization.denied",
+    ];
+
+    private static readonly string[] OrderOwnedCodes =
+        AllCodes.Where(c => !SharedFoundationCodes.Contains(c, StringComparer.Ordinal)).ToArray();
+
     [Fact]
     public void Presentation_registration_adds_catalog_and_resource_set()
     {
@@ -72,17 +86,43 @@ public sealed class OrderEndpointPresentationTests
     }
 
     [Fact]
-    public void Every_completeness_error_code_has_an_explicit_descriptor()
+    public void Every_order_owned_error_code_has_an_explicit_descriptor()
     {
         var descriptors = new OrderErrorCatalogContributor().Contribute();
 
-        Assert.Equal(AllCodes.Length, descriptors.Count);
-        foreach (var code in AllCodes)
+        Assert.Equal(OrderOwnedCodes.Length, descriptors.Count);
+        foreach (var code in OrderOwnedCodes)
         {
             var descriptor = Assert.Single(descriptors, x => x.Code == code);
             Assert.Equal(code, descriptor.LocalizationKey);
             Assert.InRange(descriptor.HttpStatus, 400, 599);
             Assert.False(string.IsNullOrWhiteSpace(descriptor.SafeTitleFallback));
+        }
+
+        // Shared cross-cutting codes must not be re-registered by Order (single canonical owner).
+        foreach (var shared in SharedFoundationCodes)
+        {
+            Assert.DoesNotContain(descriptors, x => x.Code == shared);
+        }
+    }
+
+    [Fact]
+    public void Composed_catalog_resolves_order_and_shared_codes_without_duplicates()
+    {
+        var catalog = new ErrorDefinitionCatalog(
+        [
+            new FoundationErrorCatalogContributor(),
+            new OrderErrorCatalogContributor(),
+        ]);
+
+        foreach (var code in AllCodes)
+        {
+            Assert.True(catalog.TryGet(code, out _), "missing descriptor: " + code);
+        }
+
+        foreach (var shared in SharedFoundationCodes)
+        {
+            Assert.True(catalog.TryGet(shared, out _), "missing shared descriptor: " + shared);
         }
     }
 

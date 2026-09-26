@@ -10,7 +10,8 @@ public sealed class WalletErrorCatalogContributor : IErrorCatalogContributor
     /// <inheritdoc />
     public IReadOnlyList<ErrorDescriptor> Contribute() =>
     [
-        D(WalletErrorCodes.CustomerSessionRequired, ErrorClassification.Forbidden, StatusCodes.Status401Unauthorized, "Unauthorized"),
+        // customer.session.required / admin.authorization.denied are shared cross-cutting codes
+        // owned by FoundationErrorCatalogContributor.
         D(WalletErrorCodes.WalletRejected, ErrorClassification.Business, StatusCodes.Status400BadRequest, "Bad Request"),
         D(WalletErrorCodes.RedeemRejected, ErrorClassification.Business, StatusCodes.Status400BadRequest, "Bad Request"),
         D(WalletErrorCodes.GiftCardRejected, ErrorClassification.Business, StatusCodes.Status400BadRequest, "Bad Request"),
@@ -19,7 +20,6 @@ public sealed class WalletErrorCatalogContributor : IErrorCatalogContributor
         D(WalletErrorCodes.GiftCardMissing, ErrorClassification.NotFound, StatusCodes.Status404NotFound, "Not Found"),
         D(WalletErrorCodes.WalletMissing, ErrorClassification.NotFound, StatusCodes.Status404NotFound, "Not Found"),
         D(WalletErrorCodes.AdjustRejected, ErrorClassification.Business, StatusCodes.Status400BadRequest, "Bad Request"),
-        D(WalletErrorCodes.AdminAuthorizationDenied, ErrorClassification.Forbidden, StatusCodes.Status403Forbidden, "Forbidden"),
         D(WalletErrorCodes.DemoNotReady, ErrorClassification.Platform, StatusCodes.Status503ServiceUnavailable, "Wallet demo seed not ready"),
     ];
 

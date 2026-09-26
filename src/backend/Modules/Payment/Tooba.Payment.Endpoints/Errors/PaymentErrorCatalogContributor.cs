@@ -11,7 +11,6 @@ public sealed class PaymentErrorCatalogContributor : IErrorCatalogContributor
     public IReadOnlyList<ErrorDescriptor> Contribute() =>
     [
         D(PaymentErrorCodes.AlreadySucceeded, ErrorClassification.Conflict, StatusCodes.Status409Conflict, "Conflict"),
-        D(PaymentErrorCodes.Missing, ErrorClassification.NotFound, StatusCodes.Status404NotFound, "Not Found"),
         D(PaymentErrorCodes.AttemptMissing, ErrorClassification.NotFound, StatusCodes.Status404NotFound, "Not Found"),
         D(PaymentErrorCodes.AdminPaymentMissing, ErrorClassification.NotFound, StatusCodes.Status404NotFound, "Not Found"),
         D(PaymentErrorCodes.AccessDenied, ErrorClassification.Forbidden, StatusCodes.Status403Forbidden, "Forbidden"),
@@ -22,10 +21,11 @@ public sealed class PaymentErrorCatalogContributor : IErrorCatalogContributor
         D(PaymentErrorCodes.ProofRequired, ErrorClassification.Business, StatusCodes.Status400BadRequest, "Bad Request"),
         D(PaymentErrorCodes.ProofForeign, ErrorClassification.Forbidden, StatusCodes.Status403Forbidden, "Forbidden"),
         D(PaymentErrorCodes.SandboxUnavailable, ErrorClassification.Forbidden, StatusCodes.Status403Forbidden, "Forbidden"),
-        D(PaymentErrorCodes.UnpaidSupplyUnavailable, ErrorClassification.Conflict, StatusCodes.Status409Conflict, "Conflict"),
         D(PaymentErrorCodes.UnpaidRetryInvalid, ErrorClassification.Conflict, StatusCodes.Status409Conflict, "Conflict"),
-        D(PaymentErrorCodes.ReservationRetryLimit, ErrorClassification.Conflict, StatusCodes.Status409Conflict, "Conflict"),
-        D(PaymentErrorCodes.Rejected, ErrorClassification.Business, StatusCodes.Status400BadRequest, "Bad Request"),
+        // inventory.reservation.retry_limit_reached / payment.missing / payment.rejected /
+        // payment.unpaid.supply_unavailable are owned by OrderErrorCatalogContributor, which owns the
+        // payment.* and inventory.reservation.* localization keyspace for storefront/pending surfaces
+        // (Payment registers no resource set for them). Payment consumes the same machine codes.
         D(PaymentErrorCodes.WebhookInvalidSignature, ErrorClassification.Forbidden, StatusCodes.Status401Unauthorized, "Unauthorized"),
         D(PaymentErrorCodes.WebhookInvalidPayload, ErrorClassification.Validation, StatusCodes.Status400BadRequest, "Bad Request"),
         D(PaymentErrorCodes.WebhookAmountMismatch, ErrorClassification.Conflict, StatusCodes.Status409Conflict, "Conflict"),
@@ -35,8 +35,8 @@ public sealed class PaymentErrorCatalogContributor : IErrorCatalogContributor
         D(PaymentErrorCodes.MethodNotManual, ErrorClassification.Business, StatusCodes.Status400BadRequest, "Bad Request"),
         D(PaymentErrorCodes.ConfirmInvalidState, ErrorClassification.Business, StatusCodes.Status400BadRequest, "Bad Request"),
         D(PaymentErrorCodes.RejectInvalidState, ErrorClassification.Business, StatusCodes.Status400BadRequest, "Bad Request"),
-        D(PaymentErrorCodes.AdminAuthorizationDenied, ErrorClassification.Forbidden, StatusCodes.Status403Forbidden, "Forbidden"),
-        D(PaymentErrorCodes.CheckoutAuthenticationRequired, ErrorClassification.Forbidden, StatusCodes.Status401Unauthorized, "Unauthorized"),
+        // admin.authorization.denied / checkout.authentication_required are shared cross-cutting
+        // codes owned by FoundationErrorCatalogContributor.
     ];
 
     private static ErrorDescriptor D(

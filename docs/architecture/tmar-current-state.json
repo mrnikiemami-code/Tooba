@@ -1055,6 +1055,83 @@
     "manifestEntry": "PRE_CERT_IN_preCertModules",
     "nextTask": "TB-TMAR-ADDRESSBOOK-ARCH-COMPLETE-002-STRUCTURE-001"
   },
+  "sharedErrorCatalogDedup": {
+    "task": "TB-TMAR-SHARED-ERROR-CATALOG-DEDUP-001",
+    "parentTask": "TB-TMAR-ADDRESSBOOK-POST-REALIGN-REPAIR-001",
+    "parentCommit": "67f2d4485ac78472c30650374fa01c81a410c2c4",
+    "state": "CATALOG_CANONICAL_DUPLICATES_CLOSED",
+    "scope": "MINIMUM_CANONICAL_CATALOG_RESOURCE_REGISTRATION_ONLY",
+    "duplicateCodesBefore": [
+      "checkout.authentication_required",
+      "customer.session.required",
+      "seller.authorization.denied",
+      "admin.authorization.denied",
+      "payment.missing",
+      "payment.unpaid.supply_unavailable",
+      "inventory.reservation.retry_limit_reached",
+      "payment.rejected",
+      "customer.order.missing",
+      "seller.order.missing"
+    ],
+    "duplicateCodesAfter": [],
+    "duplicateEffectiveDescriptorCount": 0,
+    "duplicateSuppressionMechanism": "NONE",
+    "machineCodeRename": "NONE",
+    "httpSemanticChange": "NONE",
+    "localizationRegression": "NONE",
+    "parallelCatalog": "ZERO",
+    "perCodeResolution": {
+      "checkout.authentication_required": "FoundationErrorCatalogContributor",
+      "customer.session.required": "FoundationErrorCatalogContributor",
+      "seller.authorization.denied": "FoundationErrorCatalogContributor",
+      "admin.authorization.denied": "FoundationErrorCatalogContributor",
+      "payment.missing": "OrderErrorCatalogContributor",
+      "payment.rejected": "OrderErrorCatalogContributor",
+      "payment.unpaid.supply_unavailable": "OrderErrorCatalogContributor",
+      "inventory.reservation.retry_limit_reached": "OrderErrorCatalogContributor",
+      "customer.order.missing": "OrderErrorCatalogContributor",
+      "seller.order.missing": "OrderErrorCatalogContributor"
+    },
+    "sharedOwner": {
+      "type": "FoundationErrorCatalogContributor",
+      "file": "src/backend/BuildingBlocks/Tooba.BuildingBlocks/Presentation/Errors/FoundationErrorCatalogContributor.cs",
+      "codes": "src/backend/BuildingBlocks/Tooba.BuildingBlocks/Presentation/Errors/FoundationErrorCodes.cs",
+      "note": "Shared cross-cutting auth/session descriptors registered exactly once; modules consume the same machine codes without re-registering."
+    },
+    "addressBookState": {
+      "customer.address.missing": "UNIQUE_CANONICAL",
+      "customer.session.required-local-registration": "REMOVED_REDUNDANT",
+      "localizationOwnershipDeterministic": true
+    },
+    "catalogConstructionState": "PASS_COMPOSED_201_CODES",
+    "apiResponseFactoryResolutionState": "PASS",
+    "safeErrorMapperResolutionState": "PASS",
+    "durableGuard": "src/backend/Host/Tooba.Host.Tests/Architecture/ErrorCatalogUniqueCodeGuardTests.cs",
+    "focusedValidations": {
+      "affectedModuleBuilds": "PASS_10_OF_10",
+      "buildingBlocksTests": "PASSED_45_FAILED_0",
+      "hostErrorCatalogGuards": "PASSED_17_FAILED_0",
+      "hostContributorTextTests": "PASSED_67_FAILED_0",
+      "affectedModuleTests": "PASSED_237_FAILED_0",
+      "errorCatalogUniqueCodeGuard": "PASSED_2_FAILED_0"
+    },
+    "knownPreexistingFailures": [
+      {
+        "id": "K1_OLD",
+        "state": "CLOSED_BY_THIS_TASK",
+        "item": "ErrorDefinitionCatalog duplicate_error_descriptor across modules; catalog now materializes with zero duplicates."
+      },
+      {
+        "id": "K3",
+        "state": "PRE_EXISTING_OUT_OF_SCOPE",
+        "item": "Tooba.Order.Tests fails to compile: OrderSellerPanelArchitectureGuardTests.cs references Tooba.AccessControl.Application/Models/Permissions without a ProjectReference (since commit 681e3639). Not caused by this task; not repaired."
+      }
+    ],
+    "remainingBlockers": [],
+    "nextHostFolderStarted": false,
+    "workflowStop": "USER_REVIEW_SHARED_ERROR_CATALOG_CHECKPOINT",
+    "evidence": "docs/evidence/TB-TMAR-SHARED-ERROR-CATALOG-DEDUP-001/shared-error-catalog-dedup.md"
+  },
   "addressBookPostRealignRepair": {
     "task": "TB-TMAR-ADDRESSBOOK-POST-REALIGN-REPAIR-001",
     "parentTask": "ADDRESSBOOK-OFFER-STYLE-FOLDERS-001",
