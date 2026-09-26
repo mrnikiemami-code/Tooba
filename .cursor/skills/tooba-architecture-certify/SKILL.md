@@ -45,6 +45,7 @@ Do not certify unless all applicable conditions hold:
 - correct foundation usage (no parallel architecture beside a certified module);
 - correct capability-oriented structure/foldering;
 - exact path↔namespace equality;
+- files physically exist with no stale/duplicate copy and required solution grouping preserved;
 - file cohesion with no new oversized/god file;
 - Host business ownership removed;
 - Host persistence ownership removed;
@@ -109,12 +110,16 @@ Do not approve root dumping merely because it compiles.
 
 Verify every production file namespace matches the physical path-derived namespace.
 
+Namespace/manifest is not proof of physical organization. For every touched module/project also verify: files physically exist under the intended folders on disk; project includes resolve to those real paths; no stale root copy and no duplicate physical copy remains; Solution Explorer organization and filesystem organization both hold where applicable (preserve canonical Solution Folder grouping; do not change assembly names or project paths merely for visual grouping).
+
 Reject:
 - namespace mismatch;
 - alias workaround;
 - TypeForwardedTo workaround;
 - duplicate compatibility types;
-- foreign-module global aliases hiding coupling.
+- foreign-module global aliases hiding coupling;
+- stale root copy / duplicate physical copy;
+- broken project include or missing required solution grouping.
 
 ### 3. File Cohesion / No God-File (V2)
 
@@ -409,7 +414,7 @@ No certification with known failing required guard.
 
 ## Certification Result
 
-Certify must NOT return a final PASS while any applicable violation remains, including: `RAW_RESULTS`, `AD_HOC`, `PARALLEL_MAPPER`, `UNREGISTERED_CODES`, `HARDCODED_TEXT`, `NON_STANDARD`, `DUPLICATE_TELEMETRY`, `SECOND_PIPELINE`, `PARALLEL_CORRELATION`, `LOST_PROPAGATION`, `VIOLATION`, `ILLEGAL`, `FOREIGN_ACCESS`, any direct foreign Application/Infrastructure/Domain dependency, an unresolved cross-module join, an unresolved path/namespace mismatch, an unresolved cohesion/root-dump violation, or an unresolved duplicate/legacy type in the touched surface — unless a canonical architecture lock explicitly exempts that exact quality concern. An ownership exception is not a quality exception.
+Certify must NOT return a final PASS while any applicable violation remains, including: `RAW_RESULTS`, `AD_HOC`, `PARALLEL_MAPPER`, `UNREGISTERED_CODES`, `HARDCODED_TEXT`, `NON_STANDARD`, `DUPLICATE_TELEMETRY`, `SECOND_PIPELINE`, `PARALLEL_CORRELATION`, `LOST_PROPAGATION`, `VIOLATION`, `ILLEGAL`, `FOREIGN_ACCESS`, any direct foreign Application/Infrastructure/Domain dependency, an unresolved cross-module join, an unresolved path/namespace mismatch, an unresolved stale physical file/copy, an unresolved required solution grouping, an unresolved cohesion/root-dump violation, or an unresolved duplicate/legacy type in the touched surface — unless a canonical architecture lock explicitly exempts that exact quality concern. An ownership exception is not a quality exception.
 
 Only declare:
 

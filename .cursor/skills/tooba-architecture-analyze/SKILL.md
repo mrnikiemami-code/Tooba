@@ -175,7 +175,7 @@ Never report `LEGAL_CONTRACTS_ONLY` while any direct foreign Application/Infrast
 
 One Host folder = one active recovery unit. Analyze only the current bounded target; do not inspect the next Host folder until explicitly instructed.
 
-A certified/reference module (e.g. Offer) is a **read-only** canonical reference: do not modify, re-audit, re-certify, run unrelated tests for it, or broaden scope into it. Reference module != active recovery scope.
+A certified/reference module (e.g. Offer) is a **read-only** canonical reference, not a mandatory physical clone: reuse its principles (layering, CQRS, Contracts boundaries, validators, result/error handling, observability, structure discipline); do not blindly copy folder names, capability names, audience folders or internal layout when the target has different semantics. Choose folders by responsibility and capability first. Reference module != blueprint, and != active recovery scope. Do not modify, re-audit, re-certify, run unrelated tests for it, or broaden scope into it.
 
 Minimum destination-module changes are in scope when required to move misplaced responsibility to the correct owner, create/reuse the narrow required Contracts boundary, repair canonical error/localization/presentation infrastructure, or fix violations caused by the current Host-folder migration — but do not start an independent recovery of the destination module.
 
@@ -378,6 +378,8 @@ Preferred patterns:
 
 Namespace must exactly match physical path.
 
+Namespace/manifest is NOT proof of physical organization. Verify files physically exist under the intended folders on disk, project includes resolve to those real paths, no stale root copy and no duplicate physical copy remains, and path-derived namespace is correct. Solution Explorer organization and filesystem organization are separate checks: verify both where applicable. If the canonical solution groups a module's projects under a Solution Folder, preserve that grouping and assembly/project paths; do not change assembly names or project paths merely for visual grouping.
+
 ### 15. Behavior-Preservation Baseline
 
 Before any future migration, enumerate behavior that must remain unchanged:
@@ -503,5 +505,7 @@ Return exactly one:
 - Never treat an ownership exception as a quality exemption; ownership ≠ quality.
 - Keep the active recovery unit to the current Host folder; do not inspect the next one until instructed.
 - Keep certified/reference modules read-only; never broaden active scope into them.
+- Treat a reference module as a reference, never a mandatory clone; choose folders by responsibility/capability.
+- Verify physical existence on disk and project-include resolution, not only namespaces or manifests.
 - Prefer the smallest repository-consistent solution; stop and report the exact blocker rather than expanding scope.
 - Keep this skill deduplicated and bounded: merge/strengthen existing wording instead of appending duplicate rules; this skill should become clearer, not larger.

@@ -56,7 +56,7 @@ Repository reality is authoritative.
 
 ## 3. Canonical Mechanism Discovery (MANDATORY)
 
-Do not invent abstractions and do not blindly copy the reference module. Before writing new code for any cross-cutting concern, discover the repository's canonical mechanism and reuse it. If `src/backend/Modules/Offer` demonstrates the established pattern for that concern, use Offer as the reference; if another module or BuildingBlocks mechanism is authoritative, use that.
+Do not invent abstractions and do not blindly copy the reference module. A certified module is a canonical reference, not a mandatory physical clone: reuse its principles (layering, CQRS, Contracts boundaries, validators, result/error handling, observability, structure discipline); do not blindly copy folder names, capability names, audience folders or internal layout when the target has different semantics. Choose folders by responsibility and capability first. Before writing new code for any cross-cutting concern, discover the repository's canonical mechanism and reuse it. If `src/backend/Modules/Offer` demonstrates the established pattern for that concern, use Offer as the reference; if another module or BuildingBlocks mechanism is authoritative, use that.
 
 Canonical mechanisms in this repository (verify current state before relying on them):
 
@@ -548,13 +548,16 @@ Do not regenerate migrations merely because they moved folders.
 
 Namespace must exactly match physical path.
 
+Namespaces and manifest entries are NOT proof of physical organization. Verify for every touched module/project: files physically exist under the intended folders on disk; project includes resolve to those real paths; no stale root copy remains; no duplicate physical copy remains. For multi-project modules also verify the canonical solution organization and preserve the Solution Folder grouping when the repository uses one; do not change assembly names or project paths merely for visual grouping. Solution Explorer organization and filesystem organization are separate checks.
+
 Hard failures:
 
 - mismatched namespace;
 - namespace alias hiding wrong placement;
 - `TypeForwardedTo` used to preserve bad architecture;
 - duplicate compatibility type;
-- global alias hiding foreign module coupling.
+- global alias hiding foreign module coupling;
+- stale root copy or duplicate physical copy left behind.
 
 Update real consumers instead.
 
@@ -631,6 +634,8 @@ Search for all of the following:
 - missing validator classification
 - missing validator
 - namespace/path mismatch
+- stale root copy / duplicate physical copy
+- unresolved solution grouping
 - using alias workaround
 - `TypeForwardedTo`
 - duplicate route ownership
