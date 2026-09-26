@@ -1,4 +1,4 @@
-using Tooba.AddressBook.Contracts;
+using Tooba.AddressBook.Contracts.Customer;
 using Tooba.Cart.Contracts;
 using Tooba.Order.Application.Storefront.Models;
 using Tooba.Order.Application.Storefront.Ports;

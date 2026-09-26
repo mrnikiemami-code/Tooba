@@ -1,4 +1,4 @@
-namespace Tooba.AddressBook.Contracts;
+namespace Tooba.AddressBook.Contracts.Customer;
 
 /// <summary>Private customer address snapshot for checkout imaging (no owner id).</summary>
 public sealed record CustomerAddressRecord(

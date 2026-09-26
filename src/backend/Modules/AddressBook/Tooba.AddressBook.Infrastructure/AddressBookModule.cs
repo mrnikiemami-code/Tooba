@@ -1,7 +1,8 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Tooba.AddressBook.Application;
+using Tooba.AddressBook.Application.Customer.Ports;
+using Tooba.AddressBook.Infrastructure.Directories;
 using Tooba.AddressBook.Infrastructure.Persistence;
 using Tooba.BuildingBlocks;
 using Tooba.ModuleContracts;

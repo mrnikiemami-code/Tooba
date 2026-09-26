@@ -1,5 +1,6 @@
 using MediatR;
-using Tooba.AddressBook.Contracts;
+using Tooba.AddressBook.Application.Customer.Ports;
+using Tooba.AddressBook.Contracts.Customer;
 
 namespace Tooba.AddressBook.Application.Customer.List;
 

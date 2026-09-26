@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
-namespace Tooba.AddressBook.Infrastructure.Migrations
+namespace Tooba.AddressBook.Infrastructure.Persistence.Migrations
 {
     /// <inheritdoc />
     public partial class InitialAddressBook : Migration

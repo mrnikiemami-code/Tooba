@@ -4,7 +4,7 @@ using Tooba.AddressBook.Infrastructure.Persistence;
 
 #nullable disable
 
-namespace Tooba.AddressBook.Infrastructure.Migrations;
+namespace Tooba.AddressBook.Infrastructure.Persistence.Migrations;
 
 /// <summary>TB-P10-T004-R24-R1 — نام و نام خانوادگی جدا در دفترچه.</summary>
 [DbContext(typeof(AddressBookDbContext))]

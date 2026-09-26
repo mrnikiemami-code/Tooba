@@ -440,6 +440,69 @@
       ]
     }
   ],
+  "preCertModules": [
+    {
+      "module": "AddressBook",
+      "structureCertified": false,
+      "lockVersion": "ARCH-COMPLETE-002",
+      "preCertNote": "PRE-CERT entry added by TB-TMAR-ADDRESSBOOK-PRECERT-STRUCTURE-REPAIR-001 after closing the five audit blockers. structureCertified stays false until TB-TMAR-ADDRESSBOOK-ARCH-COMPLETE-002-STRUCTURE-001.",
+      "projects": [
+        {
+          "projectName": "Tooba.AddressBook.Contracts",
+          "rootAllowlist": [],
+          "rootAllowlistJustification": "The checkout record + lookup port live under Contracts/Customer/ after the pre-cert repair; no root .cs remains.",
+          "forbiddenRootFiles": [
+            "CustomerAddressContracts.cs"
+          ],
+          "forbiddenTopLevelFolders": []
+        },
+        {
+          "projectName": "Tooba.AddressBook.Domain",
+          "rootAllowlist": [
+            "CustomerAddress.cs"
+          ],
+          "rootAllowlistJustification": "Single small aggregate at Domain root; certified precedent Order.Domain/AccessControl.Domain.",
+          "forbiddenRootFiles": [],
+          "forbiddenTopLevelFolders": []
+        },
+        {
+          "projectName": "Tooba.AddressBook.Application",
+          "rootAllowlist": [],
+          "rootAllowlistJustification": "AddressBook.Application intentionally has no root .cs file: the Customer capability folder (Create/Delete/Get/List/SetDefault/Update/Models/Ports) and the shared Validators capability carry every type, and namespace alignment is exact path-derived equality.",
+          "forbiddenRootFiles": [
+            "AddressBookContracts.cs"
+          ],
+          "forbiddenTopLevelFolders": []
+        },
+        {
+          "projectName": "Tooba.AddressBook.Endpoints",
+          "rootAllowlist": [
+            "AddressBookEndpointModule.cs"
+          ],
+          "rootAllowlistJustification": "Composition entry only; Customer/ carries the read/write endpoint files and the neutral actor seam.",
+          "forbiddenRootFiles": [
+            "AddressBookCustomerReadEndpoints.cs",
+            "AddressBookCustomerWriteEndpoints.cs",
+            "AddressBookCustomerActorResolver.cs"
+          ],
+          "forbiddenTopLevelFolders": []
+        },
+        {
+          "projectName": "Tooba.AddressBook.Infrastructure",
+          "rootAllowlist": [
+            "AddressBookModule.cs"
+          ],
+          "rootAllowlistJustification": "Root holds only the module composition entry; the directory lives under Directories/ and migrations under Persistence/Migrations after the pre-cert repair.",
+          "forbiddenRootFiles": [
+            "AddressBookDirectory.cs"
+          ],
+          "forbiddenTopLevelFolders": [
+            "Migrations"
+          ]
+        }
+      ]
+    }
+  ],
   "uncertifiedHttpOwningModules": [
     "Returns",
     "Notification",

@@ -6,7 +6,7 @@ using Tooba.Host.Admin;
 using Tooba.Host.Storefront;
 using Tooba.Order.Application.Storefront.Services;
 using Tooba.Order.Application.Storefront.Models;
-using Tooba.AddressBook.Contracts;
+using Tooba.AddressBook.Contracts.Customer;
 using Tooba.Cart.Application.Ports;
 using Tooba.Fulfillment.Contracts.Shipping;
 using Tooba.Order.Application;

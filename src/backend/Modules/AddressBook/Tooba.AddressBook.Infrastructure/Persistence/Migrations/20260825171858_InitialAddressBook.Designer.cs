@@ -9,7 +9,7 @@ using Tooba.AddressBook.Infrastructure.Persistence;
 
 #nullable disable
 
-namespace Tooba.AddressBook.Infrastructure.Migrations
+namespace Tooba.AddressBook.Infrastructure.Persistence.Migrations
 {
     [DbContext(typeof(AddressBookDbContext))]
     [Migration("20260825171858_InitialAddressBook")]

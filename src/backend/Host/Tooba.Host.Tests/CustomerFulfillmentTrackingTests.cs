@@ -1,4 +1,4 @@
-﻿using Tooba.Fulfillment.Application.Ports;
+using Tooba.Fulfillment.Application.Ports;
 using Tooba.Fulfillment.Application.Models;
 using Tooba.Fulfillment.Application.Shipping;
 using Tooba.Fulfillment.Domain.Aggregates;
@@ -7,7 +7,7 @@ using Tooba.Fulfillment.Application.Queries.ListCustomerCheckoutFulfillments;
 using Tooba.Host.Storefront;
 using Tooba.Order.Application.Storefront.Services;
 using Tooba.Order.Application.Storefront.Models;
-using Tooba.AddressBook.Contracts;
+using Tooba.AddressBook.Contracts.Customer;
 using Tooba.Cart.Application.Ports;
 using Tooba.Fulfillment.Contracts.Shipping;
 using Xunit;
