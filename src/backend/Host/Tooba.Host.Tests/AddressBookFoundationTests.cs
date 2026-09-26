@@ -10,7 +10,7 @@ using Tooba.AddressBook.Application;
 using Tooba.AddressBook.Domain;
 using Tooba.AddressBook.Infrastructure;
 using Tooba.AddressBook.Infrastructure.Persistence;
-using Tooba.Host.AddressBook;
+using Tooba.AddressBook.Infrastructure.Development;
 using Tooba.AddressBook.Endpoints.Customer;
 using Tooba.Order.Application.Storefront.Services;
 using Tooba.Order.Application.Storefront.Models;
@@ -413,7 +413,7 @@ public sealed class AddressBookPostgresTests : IAsyncLifetime
         await using var provider = services.BuildServiceProvider();
         await AddressBookDevelopmentSeed.ApplyAsync(provider);
         await AddressBookDevelopmentSeed.ApplyAsync(provider);
-        var actor = Tooba.Order.Application.Storefront.Services.StorefrontCheckoutService.StorefrontGuestActorId;
+        var actor = Tooba.Order.Contracts.Fulfillment.StorefrontGuestActor.ActorId;
         var rows = await db.Addresses.AsNoTracking().Where(x => x.OwnerUserId == actor).ToListAsync();
         Assert.Equal(2, rows.Count);
         Assert.Single(rows, x => x.IsDefault);

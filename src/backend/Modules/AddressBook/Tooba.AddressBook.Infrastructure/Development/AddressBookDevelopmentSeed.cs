@@ -1,9 +1,10 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using Tooba.AddressBook.Domain;
 using Tooba.AddressBook.Infrastructure.Persistence;
-using Tooba.Host.Storefront;
+using Tooba.Order.Contracts.Fulfillment;
 
-namespace Tooba.Host.AddressBook;
+namespace Tooba.AddressBook.Infrastructure.Development;
 
 /// <summary>دانهٔ قطعی Development برای دفترچهٔ آدرس مشتری نمایشی فروشگاه.</summary>
 public static class AddressBookDevelopmentSeed
@@ -15,13 +16,13 @@ public static class AddressBookDevelopmentSeed
     public static readonly Guid AlternateAddressId = Guid.Parse("aaaaaaaa-aaaa-4aaa-8aaa-0000000000a2");
 
     /// <summary>
-    /// دو نشانی ساختگی غیرشخصی را برای <see cref="Tooba.Order.Application.Storefront.Services.StorefrontCheckoutService.StorefrontGuestActorId"/>
+    /// دو نشانی ساختگی غیرشخصی را برای <see cref="StorefrontGuestActor.ActorId"/>
     /// به‌صورت idempotent درج می‌کند؛ در Production صدا زده نمی‌شود.
     /// </summary>
     public static async Task ApplyAsync(IServiceProvider services, CancellationToken cancellationToken = default)
     {
         var db = services.GetRequiredService<AddressBookDbContext>();
-        var actor = Tooba.Order.Application.Storefront.Services.StorefrontCheckoutService.StorefrontGuestActorId;
+        var actor = StorefrontGuestActor.ActorId;
         var createdAt = new DateTimeOffset(2026, 8, 25, 14, 0, 0, TimeSpan.Zero);
         if (!await db.Addresses.AnyAsync(x => x.AddressId == DefaultAddressId, cancellationToken))
         {

@@ -1,7 +1,6 @@
 ﻿{
   "rule": "HostWrite",
   "files": [
-    "AddressBook/AddressBookDevelopmentSeed.cs",
     "Admin/AdminOrderCompletenessComposer.cs",
     "Admin/AdminOrderOperationsComposer.cs",
     "Admin/AdminPanelComposer.cs",
