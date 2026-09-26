@@ -464,7 +464,12 @@ Endpoints must use the established response/error mapping pattern, not ad-hoc re
 - Application handlers return `Result` / `Result<T>` for expected business outcomes (real `IRequest<Result<T>>`).
 - Endpoints inject `ApiResponseFactory` and return `api.From(result)` / `api.Created(location, result)`.
 - Do NOT introduce `Results.Json(...)`, `Results.BadRequest(...)`, `Results.Problem(...)`, local `ProblemDetails` builders, local error mappers, or `catch`-and-map blocks when the canonical abstraction covers the concern.
-- Stable error codes remain machine-stable and catalogue-backed.
+- Stable error codes remain machine-stable and resolve to exactly one canonical `ErrorDescriptor` in the composed catalog.
+- **Duplicate usage is allowed; duplicate descriptor ownership is not.** Multiple modules may consume the same machine code, but only its natural canonical owner registers the descriptor.
+- Before adding/registering a descriptor, inspect the composed contributor set for that code. If another module is the natural owner, reuse the code without re-registering its descriptor.
+- Do **not** create a new shared-errors project/layer merely because a code has multiple consumers. Use shared/foundation ownership only for genuinely cross-cutting/platform semantics with no natural module owner and only in an existing appropriate neutral shared location.
+- Preserve `ErrorDefinitionCatalog` fail-fast duplicate detection. Never add first-wins/last-wins, overwrite, `DistinctBy`, duplicate suppression, or catch-and-ignore behavior.
+- If duplicate registrations for one code have conflicting HTTP/classification/localization semantics and current locks/behavior do not establish the canonical meaning, STOP and request an architecture decision instead of choosing arbitrarily.
 - Expected failures are typed (`SemanticError`) or stable-code based.
 - Never classify failures by parsing `ex.Message` / `when (ex.Message is ...)`.
 - Unknown/unexpected exceptions must NOT be silently converted to business failures; they flow to the canonical global exception boundary (`IExceptionPresentationService`).
