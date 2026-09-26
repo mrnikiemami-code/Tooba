@@ -1059,7 +1059,7 @@
     "task": "TB-TMAR-ADDRESSBOOK-POST-REALIGN-REPAIR-001",
     "parentTask": "ADDRESSBOOK-OFFER-STYLE-FOLDERS-001",
     "parentCommit": "160233602c6ac8cdb257478f95f13e22f2b4079a",
-    "repairedCommit": "__SHA__",
+    "repairedCommit": "6854eaabc806f226c4f2832191fbd581df10bfb8",
     "state": "POST_REALIGN_REPAIR_APPLIED",
     "scope": "ADDRESSBOOK_AND_MINIMUM_SOLUTION_TEST_METADATA_ONLY",
     "canonicalErrorMessageState": {

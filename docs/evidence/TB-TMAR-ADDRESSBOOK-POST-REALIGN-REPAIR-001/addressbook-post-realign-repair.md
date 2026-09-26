@@ -1,4 +1,4 @@
-# TB-TMAR-ADDRESSBOOK-POST-REALIGN-REPAIR-001 — AddressBook post-realign repair
+﻿# TB-TMAR-ADDRESSBOOK-POST-REALIGN-REPAIR-001 — AddressBook post-realign repair
 
 PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
 Mode: BACKEND_ONLY_UNTIL_EXPLICIT_RELEASE
@@ -13,7 +13,7 @@ Parent-Task: ADDRESSBOOK-OFFER-STYLE-FOLDERS-001
 | Task | `TB-TMAR-ADDRESSBOOK-POST-REALIGN-REPAIR-001` |
 | Parent realign commit (pre-work HEAD) | `160233602c6ac8cdb257478f95f13e22f2b4079a` |
 | Realign commit under repair | `bb520c0dc8b1b298a618eb177c45fd45e042fc0c` |
-| Repaired commit | `__SHA__` |
+| Repaired commit | `6854eaabc806f226c4f2832191fbd581df10bfb8` |
 | Scope | AddressBook + minimum solution/test metadata only |
 
 ## 2. Canonical error presentation (gap closed)
