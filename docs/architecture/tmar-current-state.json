@@ -826,6 +826,48 @@
           "ReviewsFoundationTests.Seller_host_list_exists_without_seller_response_or_moderation_routes (ReviewEndpoints.cs untouched since 178d888e)"
         ],
         "evidence": "docs/evidence/TB-TMAR-HOST-AUTHENTICATION-SPLIT-001/authentication-split.md"
+      },
+      "v2ReAudit": {
+        "task": "AUTHENTICATION-V2-REAUDIT",
+        "state": "REPAIRED_AND_ACCEPTED_V2",
+        "skillsUsed": [
+          ".cursor/skills/tooba-architecture-analyze/SKILL.md (V2)",
+          ".cursor/skills/tooba-architecture-migrate/SKILL.md (V2)",
+          ".cursor/skills/tooba-architecture-certify/SKILL.md (V2)"
+        ],
+        "ownershipDecision": "KEEP_AS_GLOBAL_HOST_PLATFORM_BOUNDARY (docs/architecture/41-authentication-http-boundary.md COMPLETE; Host retains global auth/session HTTP/runtime boundary; Identity keeps business/persistence authority)",
+        "responsibilityClassification": {
+          "AuthenticationHttpBoundary.cs": "GLOBAL_HOST_AUTH_PLATFORM_BOUNDARY",
+          "AuthenticationHttpModels.cs": "GLOBAL_HOST_AUTH_PLATFORM_BOUNDARY (transport DTOs)",
+          "AuthenticationHttpProblem.cs": "GLOBAL_HOST_AUTH_PLATFORM_BOUNDARY (auth problem presentation)",
+          "SessionAuthenticationMiddleware.cs": "GLOBAL_HOST_AUTH_PLATFORM_BOUNDARY",
+          "CurrentAuthenticatedSession.cs": "HOST_AUTH_RUNTIME_PLUMBING",
+          "HostCurrentAuthenticatedUser.cs": "HOST_AUTH_RUNTIME_PLUMBING",
+          "IAuthenticationThrottleSeam.cs": "HOST_AUTH_RUNTIME_PLUMBING (seam)",
+          "AuthenticationRateLimitThrottleSeam.cs": "HOST_AUTH_RUNTIME_PLUMBING",
+          "AuthenticationInstrumentation.cs": "HOST_AUTH_RUNTIME_PLUMBING (canonical ToobaTelemetry.Meter)"
+        },
+        "boundedRepair": "Split AuthenticationHttpProblem (tenant-spoof guard + throttle 429 + ProblemDetails builder) out of AuthenticationHttpModels.cs into a cohesive AuthenticationHttpProblem.cs; behavior-preserving, same internal static type and Tooba.Host namespace",
+        "locAfterSplit": {
+          "AuthenticationHttpBoundary.cs": 446,
+          "AuthenticationHttpModels.cs": 197,
+          "AuthenticationHttpProblem.cs": 99
+        },
+        "deferredToArchitect": [
+          "API-Result-Pattern: ApiResponseFactory is not used by any Host production source and IErrorDefinitionCatalog registers no identity.* descriptors; converting auth ProblemDetails would change statuses (identity.validation.failed 400->401; identity.challenge.invalid 400->404) and titles, breaking locked behavior + AuthenticationHttpTests/AuthSecurityHttpTests",
+          "Localization: auth titles are fixed canonical English tokens ('Bad Request','Unauthorized','Too Many Requests') per 41-authentication-http-boundary.md, not hard-coded user text; no identity.* resx/catalog exists",
+          "Identity.Infrastructure using in boundary is limited to IdentityDuplicateIdentifierException (a public exception type); relocating it to Identity.Contracts is an Identity-module Contracts decision, not terminal auth implementation leakage"
+        ],
+        "hostResidue": "ALLOWED_GLOBAL_AUTH_PLATFORM_BOUNDARY + ALLOWED_AUTH_RUNTIME_PLUMBING; ILLEGAL_IDENTITY_BUSINESS_AUTHORITY=ZERO; ILLEGAL_IDENTITY_PERSISTENCE_AUTHORITY=ZERO",
+        "behaviorChange": "NONE",
+        "routeChange": "NONE",
+        "guardWeakened": false,
+        "baselineChanged": false,
+        "focusedTests": "AuthenticationHttpTests + AuthSecurityHttpTests + CheckoutIdentityContractTests + StorefrontAccountIdentityTests = 11 passed / 4 skipped / 0 failed",
+        "preExistingFailuresNotCausedByThisTask": [
+          "ErrorContractTests (3 red at clean HEAD db63310a; host TestServer DI/store-context wiring, unrelated)",
+          "TmarSourceSizeAndInfraAppTests (3 red at clean HEAD; identical before/after, new file 99 LOC < 800 threshold)"
+        ]
       }
     }
   },
