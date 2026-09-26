@@ -60,7 +60,7 @@ Do not certify unless all applicable conditions hold:
 - no cross-module SQL/EF joins;
 - canonical localization compliance;
 - canonical API result/error mapping;
-- stable error codes catalogue-backed;
+- stable error codes resolve to exactly one canonical descriptor in the composed catalog;
 - canonical structured logging;
 - no sensitive-data logging;
 - OpenTelemetry/correlation continuity;
@@ -185,7 +185,9 @@ Validators must emit stable machine codes, not localized text.
 
 Verify:
 - every user-facing message resolves through the canonical localizer (`IErrorMessageLocalizer` / resource sets / `.resx`);
-- each module stable error code has a catalogue descriptor (`IErrorCatalogContributor`) and an English safe fallback resource;
+- every stable error code used by the certified surface resolves to exactly one canonical `ErrorDescriptor` in the composed `IErrorDefinitionCatalog`;
+- module-owned error codes have their descriptor in the natural owning module; a module consuming a code owned elsewhere does not re-register that descriptor;
+- **duplicate usage is allowed; duplicate descriptor ownership is not**;
 - Persian resources exist for the module's user-facing error set where the module owns such errors;
 - no hard-coded Persian/English user-facing strings in Domain/Application/Endpoints/Infrastructure;
 - no `exception.Message` / `ex.Message` used as a localized or user-facing contract;
@@ -202,7 +204,11 @@ Verify:
 - no `catch`-and-map blocks in endpoints for expected failures;
 - no failure classification by parsing `ex.Message` (e.g. `when (ex.Message...)`, `switch (result.FirstError...heuristic)`);
 - unknown/unexpected exceptions are not silently converted to business failures;
-- stable error codes remain machine-stable and catalogue-backed;
+- stable error codes remain machine-stable and resolve through one canonical descriptor owner;
+- the composed `ErrorDefinitionCatalog` is constructible and contains no duplicate machine-code descriptors;
+- no duplicate-suppression mechanism (`first wins`, `last wins`, overwrite, `DistinctBy`, catch-and-ignore) was introduced;
+- no new shared-errors project/layer was created merely to centralize reused codes; shared/foundation ownership is accepted only for genuinely cross-cutting/platform semantics with no natural module owner and an existing appropriate neutral shared location;
+- if one code has unresolved conflicting HTTP/classification/localization semantics, certification must STOP for an architecture decision rather than select a winner;
 - success response shape preserved (raw DTO where that is the shipped contract).
 
 Fail if migrated endpoints invent a parallel response/error system.
@@ -414,7 +420,7 @@ No certification with known failing required guard.
 
 ## Certification Result
 
-Certify must NOT return a final PASS while any applicable violation remains, including: `RAW_RESULTS`, `AD_HOC`, `PARALLEL_MAPPER`, `UNREGISTERED_CODES`, `HARDCODED_TEXT`, `NON_STANDARD`, `DUPLICATE_TELEMETRY`, `SECOND_PIPELINE`, `PARALLEL_CORRELATION`, `LOST_PROPAGATION`, `VIOLATION`, `ILLEGAL`, `FOREIGN_ACCESS`, any direct foreign Application/Infrastructure/Domain dependency, an unresolved cross-module join, an unresolved path/namespace mismatch, an unresolved stale physical file/copy, an unresolved required solution grouping, an unresolved cohesion/root-dump violation, or an unresolved duplicate/legacy type in the touched surface — unless a canonical architecture lock explicitly exempts that exact quality concern. An ownership exception is not a quality exception.
+Certify must NOT return a final PASS while any applicable violation remains, including: `RAW_RESULTS`, `AD_HOC`, `PARALLEL_MAPPER`, `UNREGISTERED_CODES`, `DUPLICATE_ERROR_DESCRIPTOR`, `UNRESOLVED_ERROR_OWNER`, `HARDCODED_TEXT`, `NON_STANDARD`, `DUPLICATE_TELEMETRY`, `SECOND_PIPELINE`, `PARALLEL_CORRELATION`, `LOST_PROPAGATION`, `VIOLATION`, `ILLEGAL`, `FOREIGN_ACCESS`, any direct foreign Application/Infrastructure/Domain dependency, an unresolved cross-module join, an unresolved path/namespace mismatch, an unresolved stale physical file/copy, an unresolved required solution grouping, an unresolved cohesion/root-dump violation, or an unresolved duplicate/legacy type in the touched surface — unless a canonical architecture lock explicitly exempts that exact quality concern. An ownership exception is not a quality exception.
 
 Only declare:
 
@@ -441,7 +447,7 @@ Produce evidence containing:
 6. route count
 7. request→handler→validator matrix
 8. validator coverage
-9. localization coverage (codes→catalog→resources)
+9. localization coverage (codes→catalog→resources), including composed-catalog uniqueness and canonical descriptor ownership
 10. API result/error mapping proof (no ad-hoc results)
 11. logging/sensitive-data proof
 12. correlation/trace continuity proof
@@ -478,6 +484,8 @@ Produce evidence containing:
 - Never permit foreign Application/Infrastructure/Domain dependencies in the certified state.
 - Never accept a file solely because it is under a LOC ceiling.
 - Never accept a parallel localization/response/logging/telemetry mechanism.
+- Never hide duplicate error descriptors with first/last-wins, overwrite, `DistinctBy`, suppression, or catch-and-ignore behavior.
+- Never create a shared-errors project/layer merely because multiple modules consume the same machine code; prefer the natural bounded-context owner and use an existing neutral shared location only for genuinely cross-cutting/platform semantics with no natural module owner.
 - Never accept sensitive-data logging.
 - Never redesign business behavior during certification.
 - If production refactor is still required, stop certification and return a repair plan.
