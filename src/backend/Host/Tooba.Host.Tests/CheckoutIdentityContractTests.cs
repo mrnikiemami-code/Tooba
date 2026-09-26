@@ -70,7 +70,7 @@ public sealed class CheckoutIdentityContractTests
     public void Development_otp_fixture_is_environment_gated()
     {
         var module = File.ReadAllText(Path.Combine(FindRepoRoot(), "src", "backend", "Modules", "Identity", "Tooba.Identity.Infrastructure", "IdentityModule.cs"));
-        var life = File.ReadAllText(Path.Combine(FindRepoRoot(), "src", "backend", "Modules", "Identity", "Tooba.Identity.Infrastructure", "IdentityLifecycleService.cs"));
+        var life = File.ReadAllText(Path.Combine(FindRepoRoot(), "src", "backend", "Modules", "Identity", "Tooba.Identity.Infrastructure", "Sessions", "IdentityLifecycleService.cs"));
         Assert.Contains("IsDevelopment()", module, StringComparison.Ordinal);
         Assert.Contains("IsEnvironment(\"Testing\")", module, StringComparison.Ordinal);
         Assert.Contains("_otpFixture.Enabled", life, StringComparison.Ordinal);

@@ -1,4 +1,4 @@
-namespace Tooba.Identity.Infrastructure;
+﻿namespace Tooba.Identity.Infrastructure.Otp;
 
 /// <summary>
 /// پیکربندی تحویل OTP: Tooba:Identity:OtpDelivery

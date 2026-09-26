@@ -1,6 +1,6 @@
+using Tooba.Identity.Application;
 using Tooba.Identity.Contracts;
-using Tooba.Identity.Domain;
-using Tooba.Identity.Infrastructure;
+using Tooba.Identity.Infrastructure.Otp;
 using Xunit;
 
 namespace Tooba.Host.Tests;

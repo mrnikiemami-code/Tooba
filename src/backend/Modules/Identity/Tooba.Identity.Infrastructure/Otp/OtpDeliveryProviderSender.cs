@@ -1,8 +1,8 @@
-using Tooba.Identity.Application;
+﻿using Tooba.Identity.Application;
 using Tooba.Identity.Contracts;
 using Tooba.Identity.Domain;
 
-namespace Tooba.Identity.Infrastructure;
+namespace Tooba.Identity.Infrastructure.Otp;
 
 /// <summary>
 /// IOtpSender adapter over IOtpDeliveryProvider with stable Identity error codes.

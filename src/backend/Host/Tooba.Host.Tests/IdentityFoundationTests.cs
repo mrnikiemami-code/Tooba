@@ -7,7 +7,14 @@ using Tooba.Identity.Contracts;
 using Tooba.Identity.Contracts.Problems;
 using Tooba.Identity.Domain;
 using Tooba.Identity.Infrastructure;
+using Tooba.Identity.Infrastructure.Authentication;
+using Tooba.Identity.Infrastructure.ExternalIdentity;
+using Tooba.Identity.Infrastructure.Mfa;
+using Tooba.Identity.Infrastructure.Otp;
+using Tooba.Identity.Infrastructure.PasswordHashing;
 using Tooba.Identity.Infrastructure.Persistence;
+using Tooba.Identity.Infrastructure.SecurityEvents;
+using Tooba.Identity.Infrastructure.Sessions;
 using Tooba.Persistence;
 using Xunit;
 

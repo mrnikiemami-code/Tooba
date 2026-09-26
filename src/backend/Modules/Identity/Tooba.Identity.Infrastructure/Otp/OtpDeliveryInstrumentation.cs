@@ -1,7 +1,7 @@
-using System.Diagnostics.Metrics;
+﻿using System.Diagnostics.Metrics;
 using Tooba.BuildingBlocks;
 
-namespace Tooba.Identity.Infrastructure;
+namespace Tooba.Identity.Infrastructure.Otp;
 
 /// <summary>
 /// متریک تحویل OTP بدون destination/code.

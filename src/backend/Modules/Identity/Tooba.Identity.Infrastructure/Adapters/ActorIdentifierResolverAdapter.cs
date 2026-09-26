@@ -1,8 +1,8 @@
-using Tooba.Identity.Application;
+﻿using Tooba.Identity.Application;
 using Tooba.Identity.Contracts;
 using Tooba.Identity.Domain;
 
-namespace Tooba.Identity.Infrastructure;
+namespace Tooba.Identity.Infrastructure.Adapters;
 
 /// <summary>
 /// Exposes the owning Identity authentication lookup as the contracts-only neutral identifier resolver.

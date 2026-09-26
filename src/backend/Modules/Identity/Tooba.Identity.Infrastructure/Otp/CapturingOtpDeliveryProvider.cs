@@ -1,7 +1,7 @@
-using Tooba.Identity.Application;
+﻿using Tooba.Identity.Application;
 using Tooba.Identity.Contracts;
 
-namespace Tooba.Identity.Infrastructure;
+namespace Tooba.Identity.Infrastructure.Otp;
 
 /// <summary>
 /// Dev/Test provider: captures last OTP in memory, never logs code.

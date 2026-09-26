@@ -1,14 +1,15 @@
-using System.Security.Cryptography;
+﻿using System.Security.Cryptography;
 using System.Text;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Tooba.BuildingBlocks;
 using Tooba.Identity.Application;
 using Tooba.Identity.Contracts;
+using Tooba.Identity.Contracts.Problems;
 using Tooba.Identity.Domain;
 using Tooba.Identity.Infrastructure.Persistence;
 
-namespace Tooba.Identity.Infrastructure;
+namespace Tooba.Identity.Infrastructure.Sessions;
 
 /// <summary>
 /// هش SHA-256 استاندارد BCL برای رازهای Refresh/OTP. الگوریتم اختصاصی اختراع نمی‌شود و plaintext persist نمی‌شود.
@@ -357,7 +358,7 @@ public sealed class IdentityLifecycleService : IIdentityCredentialLifecycle, IOt
             cancellationToken);
         if (!owned)
         {
-            throw new InvalidOperationException("شناسه در این دامنهٔ هویت به این User تعلق ندارد.");
+            throw new InvalidOperationException(IdentityErrorCodes.ValidationFailed);
         }
 
         var raw = OpaqueSecretHasher.GenerateNumericCode(8);
@@ -412,7 +413,7 @@ public sealed class IdentityLifecycleService : IIdentityCredentialLifecycle, IOt
         var user = await _db.Users.Include(x => x.Password).FirstAsync(x => x.UserId == userId, cancellationToken);
         if (user.Password is null || _hasher.Verify(user.Password.PasswordHash, currentPassword) == PasswordVerificationOutcome.Failed)
         {
-            throw new InvalidOperationException("رمز جاری نادرست است.");
+            throw new InvalidOperationException(IdentityErrorCodes.PasswordChangeFailed);
         }
 
         var now = DateTimeOffset.UtcNow;
@@ -527,12 +528,12 @@ public sealed class IdentityLifecycleService : IIdentityCredentialLifecycle, IOt
         var policy = _passwordPolicy.Value;
         if (password.Length < policy.MinimumLength)
         {
-            throw new ArgumentException("رمز از حداقل سیاست پیکربندی کوتاه‌تر است.", nameof(password));
+            throw new ArgumentException(IdentityErrorCodes.ValidationFailed, nameof(password));
         }
 
         if (policy.RequireLetterAndDigit && !(password.Any(char.IsLetter) && password.Any(char.IsDigit)))
         {
-            throw new ArgumentException("رمز باید طبق سیاست پیکربندی حرف و رقم داشته باشد.", nameof(password));
+            throw new ArgumentException(IdentityErrorCodes.ValidationFailed, nameof(password));
         }
     }
 }

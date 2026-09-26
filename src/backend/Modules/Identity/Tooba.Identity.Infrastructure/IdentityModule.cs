@@ -8,7 +8,16 @@ using Tooba.BuildingBlocks.Presentation.Errors;
 using Tooba.Identity.Application;
 using Tooba.Identity.Contracts;
 using Tooba.Identity.Contracts.Problems;
+using Tooba.Identity.Infrastructure.Adapters;
+using Tooba.Identity.Infrastructure.Authentication;
+using Tooba.Identity.Infrastructure.Contacts;
+using Tooba.Identity.Infrastructure.ExternalIdentity;
+using Tooba.Identity.Infrastructure.Mfa;
+using Tooba.Identity.Infrastructure.Otp;
+using Tooba.Identity.Infrastructure.PasswordHashing;
 using Tooba.Identity.Infrastructure.Persistence;
+using Tooba.Identity.Infrastructure.SecurityEvents;
+using Tooba.Identity.Infrastructure.Sessions;
 using Tooba.ModuleContracts;
 using Tooba.Persistence;
 
@@ -65,8 +74,7 @@ public sealed class IdentityModule : IToobaModule
         services.AddSingleton<IOtpSender, OtpDeliveryProviderSender>();
         services.AddSingleton<IIdentitySecurityEventSink, InMemoryIdentitySecurityEventSink>();
         services.AddSingleton<IAccessCredentialBoundary, SessionAccessCredentialBoundary>();
-        services.AddScoped<IdentityLifecycleService>();
-        services.AddScoped<IOtpChallengeService>(sp => sp.GetRequiredService<IdentityLifecycleService>());
+        services.AddScoped<IdentityLifecycleService>();        services.AddScoped<IOtpChallengeService>(sp => sp.GetRequiredService<IdentityLifecycleService>());
         services.AddScoped<IIdentityCredentialLifecycle>(sp => sp.GetRequiredService<IdentityLifecycleService>());
         services.AddScoped<IIdentitySessionResolver>(sp => sp.GetRequiredService<IdentityLifecycleService>());
         services.AddScoped<IIdentityAuthenticationService, IdentityAuthenticationService>();

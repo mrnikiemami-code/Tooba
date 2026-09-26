@@ -868,6 +868,47 @@
         "nextHostFolderStarted": false,
         "identityOrCustomerProfileIndependentRecovery": "NOT_STARTED"
       },
+      "v2CanonicalizationR2": {
+        "task": "AUTHENTICATION-V2-CANONICALIZATION-001-R2",
+        "state": "REPAIRED",
+        "predecessorCommit": "1befd8c7c95d6727797847ced0236119072d52f2",
+        "scope": "touched Identity.Infrastructure surface only; no general Identity redesign",
+        "rootDumpRemoval": "src/backend/Modules/Identity/Tooba.Identity.Infrastructure/IdentityServices.cs DELETED (was a root multi-responsibility dump of 9 types)",
+        "capabilityFolders": {
+          "Authentication": "Authentication/IdentityAuthenticationService.cs",
+          "PasswordHashing": "PasswordHashing/AspNetPasswordHashingService.cs",
+          "Otp": "Otp/{IdentityOtpLoginService, OTP_Challenge/CapturingOtpSender, InMemoryOtpChallengeService, OtpDeliveryOptions, OtpDeliveryInstrumentation, OtpDeliveryProviderSender, WebhookOtpDeliveryProvider, FailClosedOtpDeliveryProvider, CapturingOtpDeliveryProvider}.cs",
+          "Sessions": "Sessions/IdentityLifecycleService.cs (session/refresh/challenge/password lifecycle)",
+          "Contacts": "Contacts/EfIdentityContactLookup.cs",
+          "Adapters": "Adapters/{ActorContactLookupAdapter, ActorIdentifierResolverAdapter}.cs",
+          "ExternalIdentity": "ExternalIdentity/EfExternalIdentityDirectory.cs",
+          "Mfa": "Mfa/EfMfaEnrollmentStore.cs",
+          "SecurityEvents": "SecurityEvents/InMemoryIdentitySecurityEventSink.cs"
+        },
+        "rootRetention": "IdentityModule.cs (composition root) + IdentityOutboxRegistration.cs (outbox module registration) only",
+        "obsoleteTypeRemoval": "IdentityDuplicateIdentifierException deleted; IdentityDuplicateIdentifierFault (Tooba.Identity.Contracts.Problems) is the only duplicate-identifier fault and the only consumer path (Host AuthenticationHttpBoundary)",
+        "hardCodedUserFacingTextRemoval": "IdentityLifecycleService + IdentityAuthenticationService password/identifier/current-password failures now throw with IdentityErrorCodes constants (identity.validation.failed / identity.password.change.failed); no second localization system introduced",
+        "namespaceAlignment": "every .cs folder maps 1:1 to its namespace (Tooba.Identity.Infrastructure.<Folder>); Persistence/Migrations retains EF-generated block-scoped namespace (generated code, untouched, schema/migrations unchanged)",
+        "crossModuleCouplingState": "LEGAL_CONTRACTS_ONLY",
+        "crossModuleJoinState": "NONE",
+        "identityBusinessAuthorityInHost": "ZERO",
+        "identityPersistenceAuthorityInHost": "ZERO",
+        "behaviorChange": "NONE",
+        "routeChange": "NONE",
+        "telemetryChange": "NONE",
+        "schemaOrMigrationChange": "NONE",
+        "telemetryEventNames": "Unchanged: identity.register.succeeded, identity.login.succeeded/failed, identity.refresh.failed, identity.otp_login.succeeded/failed, plus security events credential_change/login_success/login_failure/account_disable/account_lock/session_created/session_revoked/refresh_reuse_detected/password_reset_completed/identifier_verified/password_changed",
+        "focusedTests": "AuthenticationV2CanonicalizationGuardTests + IdentityFoundationTests + IdentityLifecycleTests + OtpDeliveryProviderTests + SellerPanelAuthorizationTests + AuthenticationHttpTests + AuthSecurityHttpTests + CheckoutIdentityContractTests + ArchitectureBoundaryTests + StorefrontAccountIdentityTests + CustomerProfileFoundationTests = 62 passed / 10 skipped (Docker unavailable) / 0 failed",
+        "durableGuard": "src/backend/Host/Tooba.Host.Tests/AuthenticationV2CanonicalizationGuardTests.cs (22 pass) + CheckoutIdentityContractTests.Development_otp_fixture_is_environment_gated (path updated to Sessions/IdentityLifecycleService.cs; assertions unchanged)",
+        "preExistingFailuresNotCausedByThisTask": [
+          "ErrorContractTests (unregistered Tooba.Inventory.Contracts.Cart.ICartInventoryHoldPort — not touched by this task)",
+          "TmarSourceSizeAndInfraAppTests (red at clean HEAD before this task)",
+          "Tooba.Order.Tests.OrderSellerPanelArchitectureGuardTests (pre-existing missing Tooba.AccessControl reference)"
+        ],
+        "evidence": "docs/evidence/AUTHENTICATION-V2-CANONICALIZATION-001-R2/authentication-v2-canonicalization-r2.md",
+        "currentHostFolderCheckpoint": "Authentication",
+        "nextHostFolderStarted": false
+      },
       "v2ReAudit": {
         "task": "AUTHENTICATION-V2-REAUDIT",
         "state": "REPAIRED_AND_ACCEPTED_V2",

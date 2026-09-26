@@ -1,10 +1,11 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Tooba.Identity.Application;
 using Tooba.Identity.Contracts;
 using Tooba.Identity.Domain;
 using Tooba.Identity.Infrastructure.Persistence;
+using Tooba.Identity.Infrastructure.Sessions;
 
-namespace Tooba.Identity.Infrastructure;
+namespace Tooba.Identity.Infrastructure.Otp;
 
 /// <summary>
 /// ورود OTP مشتری روی User و چالش موجود Identity. فروشگاه موازی ساخته نمی‌شود.

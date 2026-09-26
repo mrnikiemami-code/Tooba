@@ -1,7 +1,7 @@
-using Tooba.Identity.Application;
+﻿using Tooba.Identity.Application;
 using Tooba.Identity.Contracts;
 
-namespace Tooba.Identity.Infrastructure;
+namespace Tooba.Identity.Infrastructure.Adapters;
 
 /// <summary>
 /// Exposes the owning Identity contact lookup as the contracts-only actor contact lookup.

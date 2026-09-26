@@ -1,10 +1,10 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Tooba.Identity.Application;
 using Tooba.Identity.Contracts;
 using Tooba.Identity.Domain;
 using Tooba.Identity.Infrastructure.Persistence;
 
-namespace Tooba.Identity.Infrastructure;
+namespace Tooba.Identity.Infrastructure.Contacts;
 
 /// <summary>lookup فقط‌خواندنی شناسه‌های تماس Identity بدون افشای credential.</summary>
 public sealed class EfIdentityContactLookup : IIdentityContactLookup

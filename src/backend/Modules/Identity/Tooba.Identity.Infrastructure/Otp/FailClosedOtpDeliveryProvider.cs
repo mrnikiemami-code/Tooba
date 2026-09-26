@@ -1,7 +1,7 @@
-using Tooba.Identity.Application;
+﻿using Tooba.Identity.Application;
 using Tooba.Identity.Contracts;
 
-namespace Tooba.Identity.Infrastructure;
+namespace Tooba.Identity.Infrastructure.Otp;
 
 /// <summary>
 /// Production fail-closed when provider mode is Disabled or misconfigured.
