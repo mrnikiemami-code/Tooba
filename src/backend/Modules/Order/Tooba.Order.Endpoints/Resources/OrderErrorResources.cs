@@ -2,6 +2,7 @@ using System.Globalization;
 using System.Resources;
 using Tooba.BuildingBlocks.Localization;
 using Tooba.Order.Application;
+using Tooba.Order.Application.Admin.Settings.ReservationPolicy;
 using Tooba.Order.Application.Customer;
 using Tooba.Order.Application.ReservationCycle.Contracts;
 using Tooba.Order.Application.Seller;
@@ -31,7 +32,11 @@ public sealed class OrderErrorResourceSet : IErrorResourceSet
         || localizationKey.Equals(StorefrontOrderErrors.PaymentMissing, StringComparison.OrdinalIgnoreCase)
         || localizationKey.Equals(StorefrontOrderErrors.PaymentRejected, StringComparison.OrdinalIgnoreCase)
         || localizationKey.Equals(CustomerOrderErrors.SupplyUnavailable, StringComparison.OrdinalIgnoreCase)
-        || localizationKey.Equals(ReservationCycleErrors.RetryLimitReached, StringComparison.OrdinalIgnoreCase);
+        || localizationKey.Equals(ReservationCycleErrors.RetryLimitReached, StringComparison.OrdinalIgnoreCase)
+        || localizationKey.Equals(ReservationPolicyErrors.InitialInvalid, StringComparison.OrdinalIgnoreCase)
+        || localizationKey.Equals(ReservationPolicyErrors.RetryInvalid, StringComparison.OrdinalIgnoreCase)
+        || localizationKey.Equals(ReservationPolicyErrors.MaxInvalid, StringComparison.OrdinalIgnoreCase)
+        || localizationKey.Equals(ReservationPolicyErrors.SellerDenied, StringComparison.OrdinalIgnoreCase);
 
     /// <inheritdoc />
     public string? GetString(string localizationKey, CultureInfo culture) =>

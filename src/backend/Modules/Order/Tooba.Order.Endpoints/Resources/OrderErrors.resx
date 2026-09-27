@@ -168,4 +168,16 @@
   <data name="seller.authorization.unavailable" xml:space="preserve">
     <value>Authorization service unavailable.</value>
   </data>
+  <data name="reservation.policy.initial.invalid" xml:space="preserve">
+    <value>Initial reservation hold must be an integer between 1 and 43200 minutes.</value>
+  </data>
+  <data name="reservation.policy.retry.invalid" xml:space="preserve">
+    <value>Retry reservation hold must be an integer between 1 and 43200 minutes.</value>
+  </data>
+  <data name="reservation.policy.max.invalid" xml:space="preserve">
+    <value>Maximum reservation cycles must be an integer between 1 and 20.</value>
+  </data>
+  <data name="reservation.policy.seller.denied" xml:space="preserve">
+    <value>Seller is not allowed to change reservation policy.</value>
+  </data>
 </root>

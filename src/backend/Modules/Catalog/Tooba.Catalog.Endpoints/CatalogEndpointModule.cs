@@ -39,6 +39,7 @@ public static class CatalogEndpointModule
         ArgumentNullException.ThrowIfNull(app);
         app.MapQuantitySettingsEndpoints();
         app.MapCheckoutAbuseSettingsEndpoints();
+        app.MapCheckoutIdentitySettingsEndpoints();
         app.MapUnitOfMeasureEndpoints();
         app.MapCatalogTagEndpoints();
         app.MapCatalogMegaMenuAdminEndpoints();

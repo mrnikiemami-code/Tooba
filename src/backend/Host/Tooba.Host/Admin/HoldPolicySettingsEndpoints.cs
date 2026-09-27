@@ -5,6 +5,8 @@ using Tooba.Cart.Application.Ports;
 using Tooba.Catalog.Domain;
 using Tooba.Catalog.Infrastructure.Persistence;
 using Tooba.Order.Application;
+using Tooba.Order.Application.Admin.Settings.ReservationPolicy;
+using Tooba.Order.Application.Admin.Settings.ReservationPolicy.Models;
 using Tooba.Order.Application.Checkout.Abuse;
 using Tooba.Order.Application.Checkout.Contracts;
 using Tooba.Order.Application.Checkout.Policies;
@@ -131,7 +133,8 @@ public static class HoldPolicySettingsEndpoints
                 body.ManualPaymentInitialHoldHours,
                 body.ManualPaymentReviewHoldHours,
                 now);
-            ReservationPolicyAdminComposer.ReplaceStore(
+            // HoldPolicy remains Host BLOCK multi-owner; reservation write stays local until Architect unlock.
+            ApplyStoreReservationCycle(
                 store,
                 new ReservationPolicyWriteRequest(
                     body.InitialReservationHoldMinutes,
@@ -175,7 +178,7 @@ public static class HoldPolicySettingsEndpoints
         var store = await catalog.StoreHoldPolicySettings.AsNoTracking()
             .SingleOrDefaultAsync(x => x.SettingsId == StoreHoldPolicySettings.SingletonId, cancellationToken);
         var methods = await paymentHolds.ListMethodOverridesAsync(cancellationToken);
-        var reservation = ReservationPolicyAdminComposer.ForStore(
+        var reservation = ReservationPolicyComposer.ForStore(
             await resolver.PreviewAsync(null, null, cancellationToken),
             true);
         var platformCart = await cartPersistence.ResolvePersistenceHoursAsync(cancellationToken);
@@ -260,5 +263,62 @@ public static class HoldPolicySettingsEndpoints
         {
             throw new PlatformHttpException(400, "مقدار مهلت معتبر نیست.", error);
         }
+    }
+
+    private static void ApplyStoreReservationCycle(
+        StoreHoldPolicySettings store,
+        ReservationPolicyWriteRequest body,
+        Guid actorUserId,
+        DateTimeOffset now,
+        CatalogDbContext catalog)
+    {
+        ValidateReservationMinutes(body.InitialReservationHoldMinutes, ReservationPolicyErrors.InitialInvalid, "مدت رزرو اولیه باید عددی صحیح بین ۱ و ۴۳۲۰۰ دقیقه باشد.");
+        ValidateReservationMinutes(body.RetryReservationHoldMinutes, ReservationPolicyErrors.RetryInvalid, "مدت رزرو مجدد باید عددی صحیح بین ۱ و ۴۳۲۰۰ دقیقه باشد.");
+        if (body.MaxReservationCycles is { } max
+            && (max < ReservationPolicyComposer.MinCycles || max > ReservationPolicyComposer.MaxCycles))
+        {
+            throw new PlatformHttpException(400, "حداکثر دفعات رزرو باید عددی صحیح بین ۱ و ۲۰ باشد.", ReservationPolicyErrors.MaxInvalid);
+        }
+
+        RecordReservationField(catalog, "store", null, "InitialReservationHoldMinutes", store.InitialReservationHoldMinutes, body.InitialReservationHoldMinutes, actorUserId, now);
+        RecordReservationField(catalog, "store", null, "RetryReservationHoldMinutes", store.RetryReservationHoldMinutes, body.RetryReservationHoldMinutes, actorUserId, now);
+        RecordReservationField(catalog, "store", null, "MaxReservationCycles", store.MaxReservationCycles, body.MaxReservationCycles, actorUserId, now);
+        store.ReplaceReservationCycle(
+            body.InitialReservationHoldMinutes,
+            body.RetryReservationHoldMinutes,
+            body.MaxReservationCycles,
+            now);
+    }
+
+    private static void ValidateReservationMinutes(int? value, string code, string title)
+    {
+        if (value is null)
+        {
+            return;
+        }
+
+        if (value < ReservationPolicyComposer.MinMinutes || value > ReservationPolicyComposer.MaxMinutes)
+        {
+            throw new PlatformHttpException(400, title, code);
+        }
+    }
+
+    private static void RecordReservationField(
+        CatalogDbContext catalog,
+        string level,
+        Guid? scopeId,
+        string field,
+        int? oldValue,
+        int? newValue,
+        Guid actorUserId,
+        DateTimeOffset now)
+    {
+        if (oldValue == newValue)
+        {
+            return;
+        }
+
+        catalog.ReservationPolicyAuditEvents.Add(
+            ReservationPolicyAuditEvent.Create(level, scopeId, field, oldValue, newValue, actorUserId, now));
     }
 }

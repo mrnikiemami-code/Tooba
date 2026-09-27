@@ -2,7 +2,11 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Tooba.Catalog.Domain;
 using Tooba.Catalog.Infrastructure.Persistence;
-using Tooba.Host.Admin;
+using Tooba.BuildingBlocks;
+using Tooba.Catalog.Contracts.Reservation;
+using Tooba.Catalog.Infrastructure.Reservation;
+using Tooba.Order.Application.Admin.Settings.ReservationPolicy;
+using Tooba.Order.Application.Admin.Settings.ReservationPolicy.Models;
 using Tooba.Host.Storefront;
 using Tooba.Order.Application.Storefront.Services;
 using Tooba.Order.Application.Storefront.Models;
@@ -134,9 +138,11 @@ public sealed class ReservationLifecycleIntegrationGateTests
             checkout, ReservationCycleReason.InitialPayment, T0, T0.AddMinutes(3), offerLine,
             [Guid.NewGuid()], "commit", null, null, CancellationToken.None);
         var expires = first.ExpiresAt;
-        ReservationPolicyAdminComposer.ReplaceStore(
-            store, new ReservationPolicyWriteRequest(20, 15, 5), Guid.NewGuid(), T0.AddMinutes(1), catalog);
-        await catalog.SaveChangesAsync();
+        await new StoreReservationPolicySettingsPort(catalog, new FixedClock(T0.AddMinutes(1)))
+            .SaveStoreOverridesAsync(
+                new ReservationPolicyOverrideWrite(20, 15, 5),
+                Guid.NewGuid(),
+                CancellationToken.None);
         Assert.Equal(expires, (await dir.GetActiveAsync(checkout, CancellationToken.None))!.ExpiresAt);
         var next = await resolver.ResolveAsync([], CancellationToken.None);
         Assert.Equal(20, next.InitialHoldMinutes);

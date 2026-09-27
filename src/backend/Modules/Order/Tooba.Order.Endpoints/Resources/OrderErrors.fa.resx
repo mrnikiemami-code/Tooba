@@ -168,4 +168,16 @@
   <data name="seller.authorization.unavailable" xml:space="preserve">
     <value>سرویس مجوز در دسترس نیست.</value>
   </data>
+  <data name="reservation.policy.initial.invalid" xml:space="preserve">
+    <value>مدت رزرو اولیه باید عددی صحیح بین ۱ و ۴۳۲۰۰ دقیقه باشد.</value>
+  </data>
+  <data name="reservation.policy.retry.invalid" xml:space="preserve">
+    <value>مدت رزرو مجدد باید عددی صحیح بین ۱ و ۴۳۲۰۰ دقیقه باشد.</value>
+  </data>
+  <data name="reservation.policy.max.invalid" xml:space="preserve">
+    <value>حداکثر دفعات رزرو باید عددی صحیح بین ۱ و ۲۰ باشد.</value>
+  </data>
+  <data name="reservation.policy.seller.denied" xml:space="preserve">
+    <value>فروشنده مجوز تغییر سیاست رزرو ندارد.</value>
+  </data>
 </root>

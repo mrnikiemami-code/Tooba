@@ -1,4 +1,4 @@
-namespace Tooba.Host.Admin;
+namespace Tooba.Order.Application.Admin.Settings.ReservationPolicy.Models;
 
 /// <summary>یک فیلد سیاست رزرو با override و مؤثر و منبع backend.</summary>
 public sealed record ReservationPolicyFieldView(
@@ -51,3 +51,9 @@ public sealed record ReservationPolicyAuditView(
     string? NewOverride,
     Guid ActorUserId,
     DateTimeOffset OccurredAt);
+
+/// <summary>پاسخ دسته‌ای پیش‌نمایش Offer.</summary>
+public sealed record ReservationPolicyOfferBatchView(IReadOnlyList<ReservationPolicyEditorView> Items);
+
+/// <summary>پاسخ لیست ممیزی.</summary>
+public sealed record ReservationPolicyAuditListView(IReadOnlyList<ReservationPolicyAuditView> Items);

@@ -532,8 +532,6 @@ public sealed class OfferArchitectureGuardTests
             Path.Combine(host, "Admin", "AdminPanelComposer.cs"),
             Path.Combine(host, "Admin", "ProductWorkspaceComposer.cs"),
             Path.Combine(host, "Admin", "MerchandisingCampaignAdminEndpoints.cs"),
-            Path.Combine(host, "Admin", "ReservationPolicyAdminComposer.cs"),
-            Path.Combine(host, "Admin", "ReservationPolicyAdminEndpoints.cs"),
             Path.Combine(host, "Grid", "AdminProductGridQueryEngine.cs"),
             Path.Combine(host, "Grid", "AdminSellersGridQueryEngine.cs"),
             Path.Combine(host, "Storefront", "StorefrontComposer.cs"),
@@ -546,6 +544,21 @@ public sealed class OfferArchitectureGuardTests
             Assert.DoesNotContain("_offers.Offers", text, StringComparison.Ordinal);
             Assert.Contains("IOfferQueryGateway", text, StringComparison.Ordinal);
         }
+
+        var orderReservation = Path.Combine(
+            RepoRoot(),
+            "src",
+            "backend",
+            "Modules",
+            "Order",
+            "Tooba.Order.Application",
+            "Admin",
+            "Settings",
+            "ReservationPolicy",
+            "ReservationPolicyOfferCategoryResolver.cs");
+        var orderText = File.ReadAllText(orderReservation);
+        Assert.Contains("IOfferQueryGateway", orderText, StringComparison.Ordinal);
+        Assert.DoesNotContain("OfferDbContext", orderText, StringComparison.Ordinal);
     }
 
     private static IReadOnlyList<(string Path, string Text)> Sources(string project) =>

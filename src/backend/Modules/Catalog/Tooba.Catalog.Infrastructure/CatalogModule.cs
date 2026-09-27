@@ -12,6 +12,7 @@ using Tooba.Catalog.Application.Facets.Ports;
 using Tooba.Catalog.Application.MegaMenu.Ports;
 using Tooba.Catalog.Application.Settings.Quantity.Ports;
 using Tooba.Catalog.Application.Settings.CheckoutAbuse.Ports;
+using Tooba.Catalog.Application.Settings.CheckoutIdentity.Ports;
 using Tooba.Catalog.Application.Development.CatalogDemo;
 using Tooba.Catalog.Application.Tags.Ports;
 using Tooba.Catalog.Application.Units.Ports;
@@ -67,6 +68,7 @@ public sealed class CatalogModule : IToobaModule
         services.AddScoped<ICatalogAdminProductWorkspaceReadGateway, CatalogAdminProductWorkspaceReadGateway>();
         services.AddScoped<IStoreCheckoutAbuseSettingsReader, StoreCheckoutAbuseSettingsReader>();
         services.AddScoped<IReservationCycleHoldPolicyReader, ReservationCycleHoldPolicyReader>();
+        services.AddScoped<IStoreReservationPolicySettingsPort, StoreReservationPolicySettingsPort>();
         services.AddScoped<IStoreCartPersistenceHoursReader, StoreCartPersistenceHoursReader>();
         services.AddScoped<IStoreLandingPageDirectory, StoreLandingPageDirectory>();
         services.AddScoped<IStoreLandingPageWorkspace, StoreLandingPageWorkspace>();
@@ -75,6 +77,7 @@ public sealed class CatalogModule : IToobaModule
         services.AddScoped<IStoreAppearanceSettingsDirectory, StoreAppearanceSettingsDirectory>();
         services.AddScoped<IStoreQuantitySettingsDirectory, StoreQuantitySettingsDirectory>();
         services.AddScoped<IStoreCheckoutAbuseSettingsDirectory, StoreCheckoutAbuseSettingsDirectory>();
+        services.AddScoped<IStoreCheckoutIdentitySettingsDirectory, StoreCheckoutIdentitySettingsDirectory>();
         services.AddScoped<IUnitOfMeasureDirectory, UnitOfMeasureDirectory>();
         services.AddScoped<ITagDirectory, TagDirectory>();
         services.AddScoped<IMegaMenuDirectory, MegaMenuDirectory>();

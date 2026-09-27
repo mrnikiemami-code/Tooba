@@ -3,31 +3,19 @@ using Microsoft.Extensions.Options;
 using Tooba.BuildingBlocks;
 using Tooba.Catalog.Domain;
 using Tooba.Catalog.Infrastructure.Persistence;
-using Tooba.Host.Admin;
-using Tooba.Order.Application;
-using Tooba.Order.Application.Checkout.Abuse;
-using Tooba.Order.Application.Checkout.Contracts;
-using Tooba.Order.Application.Checkout.Policies;
-using Tooba.Order.Application.Checkout.Process;
-using Tooba.Order.Application.PurchaseVerification;
+using Tooba.Catalog.Infrastructure.Reservation;
+using Tooba.Order.Application.Admin.Settings.ReservationPolicy;
+using Tooba.Order.Application.Admin.Settings.ReservationPolicy.Models;
 using Tooba.Order.Application.ReservationCycle.Contracts;
 using Tooba.Order.Application.ReservationCycle.Policies;
-using Tooba.Order.Application.ReservationCycle.Services;
-using Tooba.Order.Application.Seller.Policies;
 using Tooba.Order.Domain;
-using Tooba.Order.Infrastructure;
-using Tooba.Order.Infrastructure.Checkout.Persistence;
-using Tooba.Order.Infrastructure.Guards;
-using Tooba.Order.Infrastructure.Integrations.Fulfillment;
-using Tooba.Order.Infrastructure.Integrations.Payment;
-using Tooba.Order.Infrastructure.Messaging;
-using Tooba.Order.Infrastructure.ReservationCycle;
 using Tooba.Order.Infrastructure.Persistence;
+using Tooba.Order.Infrastructure.ReservationCycle;
 using Xunit;
 
 namespace Tooba.Host.Tests;
 
-/// <summary>TB-P10-T004-R18 — Admin UX سیاست رزرو Store/Category/Offer.</summary>
+/// <summary>TB-P10-T004-R18 — Admin UX سیاست رزرو Store/Category/Offer (Order-owned after AMC W24).</summary>
 public sealed class ReservationPolicyAdminUxTests
 {
     [Fact]
@@ -45,14 +33,15 @@ public sealed class ReservationPolicyAdminUxTests
             ReservationCyclePolicyOverride.OfferScope, offerId, 3, 2, null, DateTimeOffset.UtcNow));
         await catalog.SaveChangesAsync();
         var resolver = Resolver(catalog, 120, 90, 3);
+        var settings = new StoreReservationPolicySettingsPort(catalog, new FixedClock(DateTimeOffset.UtcNow));
 
-        var storePreview = ReservationPolicyAdminComposer.ForStore(
+        var storePreview = ReservationPolicyComposer.ForStore(
             await resolver.PreviewAsync(null, null, CancellationToken.None), true);
         Assert.Equal(30, storePreview.InitialHold.EffectiveValue);
         Assert.Equal("store", storePreview.InitialHold.Source);
         Assert.True(storePreview.InitialHold.Overridden);
 
-        var categoryPreview = ReservationPolicyAdminComposer.ForCategory(
+        var categoryPreview = ReservationPolicyComposer.ForCategory(
             categoryId, await resolver.PreviewAsync(null, categoryId, CancellationToken.None), true);
         Assert.Equal(15, categoryPreview.InitialHold.EffectiveValue);
         Assert.Equal("category", categoryPreview.InitialHold.Source);
@@ -61,7 +50,7 @@ public sealed class ReservationPolicyAdminUxTests
         Assert.False(categoryPreview.RetryHold.Overridden);
         Assert.Equal(2, categoryPreview.MaxCycles.EffectiveValue);
 
-        var offerPreview = ReservationPolicyAdminComposer.ForOffer(
+        var offerPreview = ReservationPolicyComposer.ForOffer(
             offerId, await resolver.PreviewAsync(offerId, categoryId, CancellationToken.None), true);
         Assert.Equal(3, offerPreview.InitialHold.EffectiveValue);
         Assert.Equal("offer", offerPreview.InitialHold.Source);
@@ -71,29 +60,23 @@ public sealed class ReservationPolicyAdminUxTests
         Assert.Equal("category", offerPreview.MaxCycles.Source);
         Assert.True(offerPreview.FlashSaleStricter);
 
-        await ReservationPolicyAdminComposer.ReplaceOverrideAsync(
-            catalog,
-            ReservationCyclePolicyOverride.OfferScope,
+        await settings.SaveOfferOverrideAsync(
             offerId,
-            new ReservationPolicyWriteRequest(null, null, null),
+            new Tooba.Catalog.Contracts.Reservation.ReservationPolicyOverrideWrite(null, null, null),
             Guid.NewGuid(),
-            DateTimeOffset.UtcNow,
             CancellationToken.None);
-        var afterOfferClear = ReservationPolicyAdminComposer.ForOffer(
+        var afterOfferClear = ReservationPolicyComposer.ForOffer(
             offerId, await resolver.PreviewAsync(offerId, categoryId, CancellationToken.None), true);
         Assert.Equal(15, afterOfferClear.InitialHold.EffectiveValue);
         Assert.Equal("category", afterOfferClear.InitialHold.Source);
         Assert.False(afterOfferClear.InitialHold.Overridden);
 
-        await ReservationPolicyAdminComposer.ReplaceOverrideAsync(
-            catalog,
-            ReservationCyclePolicyOverride.CategoryScope,
+        await settings.SaveCategoryOverrideAsync(
             categoryId,
-            new ReservationPolicyWriteRequest(null, null, null),
+            new Tooba.Catalog.Contracts.Reservation.ReservationPolicyOverrideWrite(null, null, null),
             Guid.NewGuid(),
-            DateTimeOffset.UtcNow,
             CancellationToken.None);
-        var afterCategoryClear = ReservationPolicyAdminComposer.ForCategory(
+        var afterCategoryClear = ReservationPolicyComposer.ForCategory(
             categoryId, await resolver.PreviewAsync(null, categoryId, CancellationToken.None), true);
         Assert.Equal(30, afterCategoryClear.InitialHold.EffectiveValue);
         Assert.Equal("store", afterCategoryClear.InitialHold.Source);
@@ -103,21 +86,17 @@ public sealed class ReservationPolicyAdminUxTests
     [Fact]
     public void Validation_rejects_non_positive_and_out_of_range_without_coercion()
     {
-        Assert.Throws<PlatformHttpException>(() =>
-            ReservationPolicyAdminComposer.ValidateWrite(new ReservationPolicyWriteRequest(0, 10, 2)));
-        Assert.Throws<PlatformHttpException>(() =>
-            ReservationPolicyAdminComposer.ValidateWrite(new ReservationPolicyWriteRequest(10, 0, 2)));
-        Assert.Throws<PlatformHttpException>(() =>
-            ReservationPolicyAdminComposer.ValidateWrite(new ReservationPolicyWriteRequest(10, 10, 0)));
-        Assert.Throws<PlatformHttpException>(() =>
-            ReservationPolicyAdminComposer.ValidateWrite(new ReservationPolicyWriteRequest(-1, 10, 2)));
-        Assert.Throws<PlatformHttpException>(() =>
-            ReservationPolicyAdminComposer.ValidateWrite(new ReservationPolicyWriteRequest(10, 10, 21)));
-        Assert.Throws<PlatformHttpException>(() =>
-            ReservationPolicyAdminComposer.ValidateWrite(new ReservationPolicyWriteRequest(43201, 10, 2)));
-        ReservationPolicyAdminComposer.ValidateWrite(new ReservationPolicyWriteRequest(1, 1, 1));
-        ReservationPolicyAdminComposer.ValidateWrite(new ReservationPolicyWriteRequest(43200, 43200, 20));
-        ReservationPolicyAdminComposer.ValidateWrite(new ReservationPolicyWriteRequest(null, null, null));
+        var validator = new Tooba.Order.Application.Admin.Settings.ReservationPolicy.Validators
+            .SaveStoreReservationPolicyCommandValidator();
+        Assert.False(validator.Validate(Cmd(0, 10, 2)).IsValid);
+        Assert.False(validator.Validate(Cmd(10, 0, 2)).IsValid);
+        Assert.False(validator.Validate(Cmd(10, 10, 0)).IsValid);
+        Assert.False(validator.Validate(Cmd(-1, 10, 2)).IsValid);
+        Assert.False(validator.Validate(Cmd(10, 10, 21)).IsValid);
+        Assert.False(validator.Validate(Cmd(43201, 10, 2)).IsValid);
+        Assert.True(validator.Validate(Cmd(1, 1, 1)).IsValid);
+        Assert.True(validator.Validate(Cmd(43200, 43200, 20)).IsValid);
+        Assert.True(validator.Validate(Cmd(null, null, null)).IsValid);
     }
 
     [Fact]
@@ -128,13 +107,13 @@ public sealed class ReservationPolicyAdminUxTests
         var now = DateTimeOffset.Parse("2026-09-13T10:00:00Z");
         var store = StoreHoldPolicySettings.CreateDefault(now);
         catalog.StoreHoldPolicySettings.Add(store);
-        ReservationPolicyAdminComposer.ReplaceStore(
-            store,
-            new ReservationPolicyWriteRequest(1, 43200, 20),
-            actor,
-            now,
-            catalog);
         await catalog.SaveChangesAsync();
+        var settings = new StoreReservationPolicySettingsPort(catalog, new FixedClock(now));
+        await settings.SaveStoreOverridesAsync(
+            new Tooba.Catalog.Contracts.Reservation.ReservationPolicyOverrideWrite(1, 43200, 20),
+            actor,
+            CancellationToken.None);
+        await catalog.Entry(store).ReloadAsync();
         Assert.Equal(1, store.InitialReservationHoldMinutes);
         Assert.Equal(43200, store.RetryReservationHoldMinutes);
         Assert.Equal(20, store.MaxReservationCycles);
@@ -163,9 +142,12 @@ public sealed class ReservationPolicyAdminUxTests
         var expires = first.ExpiresAt;
         var store = StoreHoldPolicySettings.CreateDefault(t0);
         catalog.StoreHoldPolicySettings.Add(store);
-        ReservationPolicyAdminComposer.ReplaceStore(
-            store, new ReservationPolicyWriteRequest(10, 8, 5), Guid.NewGuid(), t0.AddMinutes(1), catalog);
         await catalog.SaveChangesAsync();
+        var settings = new StoreReservationPolicySettingsPort(catalog, new FixedClock(t0.AddMinutes(1)));
+        await settings.SaveStoreOverridesAsync(
+            new Tooba.Catalog.Contracts.Reservation.ReservationPolicyOverrideWrite(10, 8, 5),
+            Guid.NewGuid(),
+            CancellationToken.None);
         var active = await dir.GetActiveAsync(checkout, CancellationToken.None);
         Assert.Equal(expires, active!.ExpiresAt);
         Assert.Equal(3, active.EffectiveHoldMinutes);
@@ -208,12 +190,15 @@ public sealed class ReservationPolicyAdminUxTests
     [Fact]
     public void Permissions_admin_allowed_seller_denied_without_catalog_permission()
     {
-        var endpoints = Read("src/backend/Host/Tooba.Host/Admin/ReservationPolicyAdminEndpoints.cs");
-        Assert.Contains("AdminPanelAccess.RequireAuthorizedAsync", endpoints, StringComparison.Ordinal);
-        Assert.Contains("SellerPanelAccess.RequireAuthorizedAsync", endpoints, StringComparison.Ordinal);
-        Assert.Contains("reservation.policy.seller.denied", endpoints, StringComparison.Ordinal);
-        Assert.Contains("فروشنده مجوز تغییر سیاست رزرو ندارد.", endpoints, StringComparison.Ordinal);
-        Assert.Equal(ReservationPolicyAdminComposer.SellerMutatePermission, "reservation.policy.mutate");
+        var endpoints = Read("src/backend/Modules/Order/Tooba.Order.Endpoints/Admin/Settings/ReservationPolicyAdminEndpoints.cs");
+        var seller = Read("src/backend/Modules/Order/Tooba.Order.Endpoints/Seller/Settings/ReservationPolicySellerEndpoints.cs");
+        Assert.Contains("IOrderAdminAuthorizer", endpoints, StringComparison.Ordinal);
+        Assert.Contains("IOrderSellerAuthorizer", seller, StringComparison.Ordinal);
+        Assert.Contains("reservation.policy.seller.denied", Read(
+            "src/backend/Modules/Order/Tooba.Order.Application/Admin/Settings/ReservationPolicy/ReservationPolicyErrors.cs"), StringComparison.Ordinal);
+        Assert.Contains("فروشنده مجوز تغییر سیاست رزرو ندارد.", Read(
+            "src/backend/Modules/Order/Tooba.Order.Endpoints/Resources/OrderErrors.fa.resx"), StringComparison.Ordinal);
+        Assert.Equal(ReservationPolicyErrors.SellerMutatePermission, "reservation.policy.mutate");
         var access = Read("src/backend/Modules/AccessControl/Tooba.AccessControl.Domain/AccessControlDomain.cs");
         Assert.DoesNotContain("reservation.policy.mutate", access, StringComparison.Ordinal);
     }
@@ -235,7 +220,8 @@ public sealed class ReservationPolicyAdminUxTests
         Assert.Contains("id: \"reservation\"", category, StringComparison.Ordinal);
         Assert.Contains("inheritLabelFa", editor, StringComparison.Ordinal);
         Assert.Contains("inherited from", editor, StringComparison.Ordinal);
-        Assert.Contains("Inherit from store", Read("src/backend/Host/Tooba.Host/Admin/ReservationPolicyAdminComposer.cs"), StringComparison.Ordinal);
+        Assert.Contains("Inherit from store", Read(
+            "src/backend/Modules/Order/Tooba.Order.Application/Admin/Settings/ReservationPolicy/ReservationPolicyComposer.cs"), StringComparison.Ordinal);
         Assert.Contains("overridden", editor, StringComparison.Ordinal);
         Assert.Contains("dir={dir}", editor, StringComparison.Ordinal);
         Assert.Contains("offer-reservation-panel", offer, StringComparison.Ordinal);
@@ -248,7 +234,9 @@ public sealed class ReservationPolicyAdminUxTests
         Assert.Contains("EffectiveHoldMinutes", mapper, StringComparison.Ordinal);
         Assert.Contains("remainingSecondsFromServer", pending, StringComparison.Ordinal);
         Assert.DoesNotContain("TB-P10-T005", Read("src/backend/Host/Tooba.Host/Program.cs"), StringComparison.Ordinal);
-        Assert.Contains("MapReservationPolicyAdminEndpoints", Read("src/backend/Host/Tooba.Host/Program.cs"), StringComparison.Ordinal);
+        Assert.DoesNotContain("MapReservationPolicyAdminEndpoints()", Read("src/backend/Host/Tooba.Host/Program.cs"), StringComparison.Ordinal);
+        Assert.Contains("MapReservationPolicyAdminEndpoints()", Read(
+            "src/backend/Modules/Order/Tooba.Order.Endpoints/OrderEndpointModule.cs"), StringComparison.Ordinal);
         var locks = Read("docs/architecture/TOOBA-LOCKS.md");
         Assert.Contains("LOCK-SF-097", locks, StringComparison.Ordinal);
         Assert.Contains("LOCK-SF-098", locks, StringComparison.Ordinal);
@@ -263,23 +251,30 @@ public sealed class ReservationPolicyAdminUxTests
     {
         var editor = Read("src/frontend/app/admin/reservation-policy-editor.tsx");
         var api = Read("src/frontend/app/admin/reservation-policy-api.ts");
-        var composer = Read("src/backend/Host/Tooba.Host/Admin/ReservationPolicyAdminComposer.cs");
-        var endpoints = Read("src/backend/Host/Tooba.Host/Admin/ReservationPolicyAdminEndpoints.cs");
+        var composer = Read("src/backend/Modules/Order/Tooba.Order.Application/Admin/Settings/ReservationPolicy/ReservationPolicyComposer.cs");
+        var endpoints = Read("src/backend/Modules/Order/Tooba.Order.Endpoints/Admin/Settings/ReservationPolicyAdminEndpoints.cs");
         var resolver = Read("src/backend/Modules/Order/Tooba.Order.Application/ReservationCycle/Policies/ReservationCyclePolicyResolver.cs");
         Assert.DoesNotContain("Offer > Category > Store", editor, StringComparison.Ordinal);
         Assert.DoesNotContain("product-level", composer, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("PreviewAsync", resolver, StringComparison.Ordinal);
         Assert.Contains("IReservationCycleHoldPolicyReader", resolver, StringComparison.Ordinal);
         Assert.DoesNotContain("CatalogDbContext", resolver, StringComparison.Ordinal);
-        Assert.Contains("reservation.policy.seller.denied", endpoints, StringComparison.Ordinal);
+        Assert.Contains("reservation.policy.seller.denied", Read(
+            "src/backend/Modules/Order/Tooba.Order.Application/Admin/Settings/ReservationPolicy/ReservationPolicyErrors.cs"), StringComparison.Ordinal);
         Assert.DoesNotContain("ExpiresAt =", composer, StringComparison.Ordinal);
         Assert.DoesNotContain("setInterval", editor, StringComparison.Ordinal);
         Assert.DoesNotContain("setInterval", api, StringComparison.Ordinal);
         Assert.Contains("false,", composer, StringComparison.Ordinal);
-        Assert.Contains("SellerCanMutate", Read("src/backend/Host/Tooba.Host/Admin/ReservationPolicyAdminModels.cs"), StringComparison.Ordinal);
+        Assert.Contains("SellerCanMutate", Read(
+            "src/backend/Modules/Order/Tooba.Order.Application/Admin/Settings/ReservationPolicy/Models/ReservationPolicyModels.cs"), StringComparison.Ordinal);
         Assert.DoesNotContain("ReservationCyclePolicyResolver concrete", endpoints, StringComparison.Ordinal);
         Assert.DoesNotContain("is Tooba.Host.ReservationCyclePolicyResolver", endpoints, StringComparison.Ordinal);
+        Assert.DoesNotContain("CatalogDbContext", endpoints, StringComparison.Ordinal);
     }
+
+    private static Tooba.Order.Application.Admin.Settings.ReservationPolicy.Commands.SaveStoreReservationPolicyCommand Cmd(
+        int? initial, int? retry, int? max) =>
+        new(initial, retry, max, Guid.NewGuid());
 
     private static ReservationCyclePolicyResolver Resolver(
         CatalogDbContext catalog,
@@ -293,7 +288,7 @@ public sealed class ReservationPolicyAdminUxTests
                 RetryReservationHoldMinutes = retry,
                 MaxReservationCycles = max,
             }),
-            new Tooba.Catalog.Infrastructure.Reservation.ReservationCycleHoldPolicyReader(catalog));
+            new ReservationCycleHoldPolicyReader(catalog));
 
     private static CatalogDbContext CreateCatalog()
     {

@@ -10,10 +10,12 @@ using Tooba.Order.Endpoints.Admin.Detail;
 using Tooba.Order.Endpoints.Admin.InventoryRecovery;
 using Tooba.Order.Endpoints.Admin.Operations;
 using Tooba.Order.Endpoints.Admin.OrdersGrid;
+using Tooba.Order.Endpoints.Admin.Settings;
 using Tooba.Order.Endpoints.Customer;
 using Tooba.Order.Endpoints.Errors;
 using Tooba.Order.Endpoints.Resources;
 using Tooba.Order.Endpoints.Seller;
+using Tooba.Order.Endpoints.Seller.Settings;
 using Tooba.Order.Endpoints.Storefront;
 
 namespace Tooba.Order.Endpoints;
@@ -52,6 +54,8 @@ public static class OrderEndpointModule
         AdminOrderDetailEndpoints.Map(app);
         AdminOrderOperationsEndpoints.Map(app);
         AdminOrderInventoryRecoverySupplyEndpoints.Map(app);
+        app.MapReservationPolicyAdminEndpoints();
+        app.MapReservationPolicySellerEndpoints();
         StorefrontOrderEndpoints.Map(app);
         CustomerOrderEndpoints.Map(app);
         SellerOrderEndpoints.Map(app);

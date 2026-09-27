@@ -86,12 +86,17 @@ public sealed class OrderReservationCycleArchitectureGuardTests
     }
 
     [Fact]
-    public void Admin_policy_endpoints_have_no_Host_resolver_cast()
+    public void Admin_policy_endpoints_owned_by_Order_without_CatalogDbContext()
     {
         var endpoints = File.ReadAllText(Path.Combine(
-            FindRepoRoot(), "src", "backend", "Host", "Tooba.Host", "Admin", "ReservationPolicyAdminEndpoints.cs"));
+            FindRepoRoot(), "src", "backend", "Modules", "Order", "Tooba.Order.Endpoints",
+            "Admin", "Settings", "ReservationPolicyAdminEndpoints.cs"));
         Assert.DoesNotContain("is Tooba.Host.ReservationCyclePolicyResolver", endpoints, StringComparison.Ordinal);
-        Assert.Contains("PreviewManyAsync", endpoints, StringComparison.Ordinal);
+        Assert.DoesNotContain("CatalogDbContext", endpoints, StringComparison.Ordinal);
+        Assert.Contains("ISender", endpoints, StringComparison.Ordinal);
+        Assert.Contains("IOrderAdminAuthorizer", endpoints, StringComparison.Ordinal);
+        Assert.False(File.Exists(Path.Combine(
+            FindRepoRoot(), "src", "backend", "Host", "Tooba.Host", "Admin", "ReservationPolicyAdminEndpoints.cs")));
     }
 
     private static string FindRepoRoot()

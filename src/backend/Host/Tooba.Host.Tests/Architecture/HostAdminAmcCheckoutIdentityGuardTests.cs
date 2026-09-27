@@ -1,41 +1,42 @@
-using System.Text.RegularExpressions;
 using Xunit;
 
 namespace Tooba.Host.Tests.Architecture;
 
-/// <summary>Checkout-abuse Admin settings owned by Catalog after Host evacuation.</summary>
-public sealed class HostAdminAmcCheckoutAbuseGuardTests
+/// <summary>Checkout-identity Admin settings owned by Catalog after Host evacuation.</summary>
+public sealed class HostAdminAmcCheckoutIdentityGuardTests
 {
-    private static readonly Regex MapRouteRegex = new(@"Map(Get|Post|Put|Patch|Delete)\(", RegexOptions.Compiled);
-
     [Fact]
-    public void Checkout_abuse_settings_owned_by_Catalog_and_absent_from_Host_Admin()
+    public void Checkout_identity_settings_owned_by_Catalog_and_absent_from_Host_Admin()
     {
         var root = FindRepoRoot();
-        var hostFile = Path.Combine(root, "src/backend/Host/Tooba.Host/Admin/CheckoutAbuseSettingsEndpoints.cs");
+        var hostFile = Path.Combine(root, "src/backend/Host/Tooba.Host/Admin/CheckoutIdentitySettingsEndpoints.cs");
         Assert.False(File.Exists(hostFile));
 
         var catalogEndpoints = File.ReadAllText(Path.Combine(
-            root, "src/backend/Modules/Catalog/Tooba.Catalog.Endpoints/Admin/Settings/CheckoutAbuseSettingsEndpoints.cs"));
+            root, "src/backend/Modules/Catalog/Tooba.Catalog.Endpoints/Admin/Settings/CheckoutIdentitySettingsEndpoints.cs"));
         Assert.Contains("MapGet(\"/\", GetAsync)", catalogEndpoints, StringComparison.Ordinal);
         Assert.Contains("MapPut(\"/\", PutAsync)", catalogEndpoints, StringComparison.Ordinal);
-        Assert.Contains("/v1/admin/settings/checkout-abuse", catalogEndpoints, StringComparison.Ordinal);
+        Assert.Contains("/v1/admin/settings/checkout-identity", catalogEndpoints, StringComparison.Ordinal);
 
         var module = File.ReadAllText(Path.Combine(
             root, "src/backend/Modules/Catalog/Tooba.Catalog.Endpoints/CatalogEndpointModule.cs"));
-        Assert.Contains("MapCheckoutAbuseSettingsEndpoints()", module, StringComparison.Ordinal);
+        Assert.Contains("MapCheckoutIdentitySettingsEndpoints()", module, StringComparison.Ordinal);
 
         var program = File.ReadAllText(Path.Combine(root, "src/backend/Host/Tooba.Host/Program.cs"));
-        Assert.DoesNotContain("MapCheckoutAbuseSettingsEndpoints()", program, StringComparison.Ordinal);
+        Assert.DoesNotContain("MapCheckoutIdentitySettingsEndpoints()", program, StringComparison.Ordinal);
 
         Assert.True(File.Exists(Path.Combine(
-            root, "src/backend/Modules/Catalog/Tooba.Catalog.Infrastructure/StoreCheckoutAbuseSettingsDirectory.cs")));
+            root, "src/backend/Modules/Catalog/Tooba.Catalog.Infrastructure/StoreCheckoutIdentitySettingsDirectory.cs")));
         Assert.True(File.Exists(Path.Combine(
-            root, "src/backend/Modules/Catalog/Tooba.Catalog.Application/Settings/CheckoutAbuse/Queries/GetCheckoutAbuseSettingsQuery.cs")));
+            root, "src/backend/Modules/Catalog/Tooba.Catalog.Application/Settings/CheckoutIdentity/Queries/GetCheckoutIdentitySettingsQuery.cs")));
+
+        // Storefront gate stays Host-owned this wave.
+        Assert.True(File.Exists(Path.Combine(
+            root, "src/backend/Host/Tooba.Host/Storefront/CheckoutIdentityGate.cs")));
     }
 
     [Fact]
-    public void Host_Admin_count_decreased_and_StoreAppearance_still_deferred()
+    public void Host_Admin_count_32_StoreAppearance_deferred()
     {
         var root = FindRepoRoot();
         var admin = Path.Combine(root, "src/backend/Host/Tooba.Host/Admin");

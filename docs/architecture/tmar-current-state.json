@@ -2245,6 +2245,44 @@
     "workflowStop": "USER_REVIEW_HOST_ADMIN_W22_STORE_MENU_CHECKPOINT",
     "evidence": "docs/evidence/TB-TMAR-HOST-ADMIN-AMC-001-W22-STORE-MENU/"
   },
+  "hostAdminAmcCheckoutIdentity": {
+    "task": "TB-TMAR-HOST-ADMIN-AMC-001-W23-CHECKOUT-IDENTITY",
+    "parentTask": "TB-TMAR-HOST-ADMIN-AMC-001-W22-STORE-MENU",
+    "state": "HOST_ADMIN_CHECKOUT_IDENTITY_SETTINGS_CATALOG_OWNED",
+    "activeHostFolder": "Admin",
+    "owner": "Catalog",
+    "route": "/v1/admin/settings/checkout-identity",
+    "cqrsState": "GetCheckoutIdentitySettingsQuery_SaveCheckoutIdentitySettingsCommand_Result",
+    "HostAdminFileCount": 35,
+    "StoreAppearance": "DEFERRED",
+    "checkoutIdentityGate": "RETAINED_HOST_STOREFRONT",
+    "schemaMigrationState": "NONE",
+    "frontendState": "UNCHANGED",
+    "workflowStop": "USER_REVIEW_HOST_ADMIN_W23_CHECKOUT_IDENTITY_CHECKPOINT",
+    "evidence": "docs/evidence/TB-TMAR-HOST-ADMIN-AMC-001-W23-CHECKOUT-IDENTITY/"
+  },
+  "hostAdminAmcReservationPolicy": {
+    "task": "TB-TMAR-HOST-ADMIN-AMC-001-W24-RESERVATION-POLICY",
+    "parentTask": "TB-TMAR-HOST-ADMIN-AMC-001-W23-CHECKOUT-IDENTITY",
+    "state": "HOST_ADMIN_RESERVATION_POLICY_ORDER_OWNED",
+    "activeHostFolder": "Admin",
+    "owner": "Order",
+    "catalogPersistencePort": "IStoreReservationPolicySettingsPort",
+    "routes": [
+      "/v1/admin/settings/reservation-policy/*",
+      "/v1/seller/settings/reservation-policy/*"
+    ],
+    "cqrsState": "Get_Save_DenySeller_Result_ApiResponseFactory",
+    "adminAuth": "IOrderAdminAuthorizer",
+    "sellerAuth": "IOrderSellerAuthorizer",
+    "HostAdminFileCount": 32,
+    "StoreAppearance": "DEFERRED",
+    "HoldPolicy": "RETAINED_HOST_BLOCK_MULTI_OWNER",
+    "schemaMigrationState": "NONE",
+    "frontendState": "UNCHANGED",
+    "workflowStop": "USER_REVIEW_HOST_ADMIN_W24_RESERVATION_POLICY_CHECKPOINT",
+    "evidence": "docs/evidence/TB-TMAR-HOST-ADMIN-AMC-001-W24-RESERVATION-POLICY/"
+  },
   "hostAdminAmcW18": {
     "task": "TB-TMAR-HOST-ADMIN-AMC-001-W18",
     "parentTask": "TB-TMAR-HOST-ADMIN-AMC-001-W17",

@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Http;
 using Tooba.BuildingBlocks.Presentation.Errors;
 using Tooba.Order.Application;
 using Tooba.Order.Application.Admin.Completeness.Errors;
+using Tooba.Order.Application.Admin.Settings.ReservationPolicy;
 using Tooba.Order.Application.Customer;
 using Tooba.Order.Application.ReservationCycle.Contracts;
 using Tooba.Order.Application.Seller;
@@ -112,6 +113,16 @@ public sealed class OrderErrorCatalogContributor : IErrorCatalogContributor
             "Not Found"),
         D(ReservationCycleErrors.RetryLimitReached, ErrorClassification.Conflict, StatusCodes.Status409Conflict,
             ReservationCycleErrors.RetryLimitReachedFa),
+
+        // Admin/Seller reservation-policy settings (Host codes preserved).
+        D(ReservationPolicyErrors.InitialInvalid, ErrorClassification.Validation, StatusCodes.Status400BadRequest,
+            "مدت رزرو اولیه باید عددی صحیح بین ۱ و ۴۳۲۰۰ دقیقه باشد."),
+        D(ReservationPolicyErrors.RetryInvalid, ErrorClassification.Validation, StatusCodes.Status400BadRequest,
+            "مدت رزرو مجدد باید عددی صحیح بین ۱ و ۴۳۲۰۰ دقیقه باشد."),
+        D(ReservationPolicyErrors.MaxInvalid, ErrorClassification.Validation, StatusCodes.Status400BadRequest,
+            "حداکثر دفعات رزرو باید عددی صحیح بین ۱ و ۲۰ باشد."),
+        D(ReservationPolicyErrors.SellerDenied, ErrorClassification.Forbidden, StatusCodes.Status403Forbidden,
+            "فروشنده مجوز تغییر سیاست رزرو ندارد."),
 
         // Seller panel Order.
         // Shared code consumed here but owned by FoundationErrorCatalogContributor:
