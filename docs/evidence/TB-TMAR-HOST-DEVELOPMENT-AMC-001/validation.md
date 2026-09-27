@@ -6,7 +6,7 @@
 ## Focused tests
 Filter: `HostDevelopmentAmcGuardTests`
 
-Results filled after local run.
+Results: **Passed 4 / Failed 0 / Skipped 0** (`HostDevelopmentAmcGuardTests`)
 
 ## Guard coverage
 1. Exact allowlist of 3 retained files

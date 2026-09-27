@@ -1273,7 +1273,7 @@
     "modulePersistenceAuthorityState": "ZERO",
     "directForeignDbContextState": "MIGRATE_ONLY_IN_COMPOSITION",
     "schemaMigrationState": "NONE",
-    "focusedValidations": "PENDING_LOCAL_RUN",
+    "focusedValidations": "PASSED_4_FAILED_0",
     "remainingBlockers": [],
     "residualDebt": [
       "Optional future: namespace Tooba.Host.Development alignment if Architect authorizes rename"
