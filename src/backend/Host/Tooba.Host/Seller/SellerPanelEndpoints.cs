@@ -217,3 +217,9 @@ public static class SellerPanelEndpoints
         }
     }
 }
+
+/// <summary>
+/// بدنهٔ مقدار ویژگی محصول — Seller panel HTTP transport (RawValue + EnumOptionId).
+/// Relocated from Admin CatalogAttributeEndpoints in W10-R1; not a shared business contract.
+/// </summary>
+public sealed record SetProductAttributeRequest(string RawValue, Guid? EnumOptionId);

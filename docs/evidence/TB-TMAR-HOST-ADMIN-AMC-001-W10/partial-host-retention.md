@@ -19,8 +19,11 @@ Host/Admin count: **53 → 53**
 - `/category-change-preview`
 - `/primary-category`
 - `CatalogActorHttpBinding` on products group
-- `MapAttributeInvalid` (dead helper; W8/W9 guards)
-- `SetProductAttributeRequest` — still consumed by Host **Seller** `SellerPanelEndpoints`
+- Variant/category-change routes + helpers (`MapCategoryChangeInvalid`, `ToError`, variant DTOs)
+- ~~`MapAttributeInvalid` (dead helper; W8/W9 guards)~~ → **removed in W10-R1**
+- ~~`SetProductAttributeRequest` — Seller consumer~~ → **relocated to Seller in W10-R1**
+
+See `docs/evidence/TB-TMAR-HOST-ADMIN-AMC-001-W10-R1/` for authoritative repair record.
 - Offer enrichment for retained variant editor/preview/apply
 - Program `MapCatalogAttributeEndpoints()`
 

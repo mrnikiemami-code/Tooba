@@ -19,4 +19,4 @@
 | Actor/context for history | Module CatalogActorRequestBinding |
 | Tenant isolation | Catalog DbContext unchanged |
 | Expected failure HTTP | Typed CatalogErrorCodes via ApiResponseFactory (replaces generic catalog.attribute.invalid + ex.Message) |
-| Seller SetProductAttributeRequest | RETAINED in Host Admin file for Seller consumer |
+| Seller SetProductAttributeRequest | RETAINED in Host Admin → **RELOCATED to Seller in W10-R1** |

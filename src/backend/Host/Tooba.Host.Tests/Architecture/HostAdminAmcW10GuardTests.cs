@@ -23,7 +23,8 @@ public sealed class HostAdminAmcW10GuardTests
         Assert.DoesNotContain("SetProductAttributeAsync", host, StringComparison.Ordinal);
         Assert.DoesNotContain("SetProductAttributesRequest", host, StringComparison.Ordinal);
         Assert.DoesNotContain("ProductAttributeValueRequest", host, StringComparison.Ordinal);
-        Assert.Contains("SetProductAttributeRequest", host, StringComparison.Ordinal);
+        Assert.DoesNotContain("SetProductAttributeRequest", host, StringComparison.Ordinal);
+        Assert.DoesNotContain("MapAttributeInvalid", host, StringComparison.Ordinal);
         Assert.DoesNotContain("attribute-schema", host, StringComparison.Ordinal);
         Assert.DoesNotContain("/v1/admin/catalog/attribute-definitions", host, StringComparison.Ordinal);
         Assert.Contains("/variant-axes", host, StringComparison.Ordinal);
@@ -67,6 +68,7 @@ public sealed class HostAdminAmcW10GuardTests
         Assert.DoesNotContain("InvalidOperationException", admin, StringComparison.Ordinal);
         Assert.DoesNotContain("Results.Problem", admin, StringComparison.Ordinal);
         Assert.DoesNotContain("ex.Message", admin, StringComparison.Ordinal);
+        Assert.DoesNotContain("MapAttributeInvalid", admin, StringComparison.Ordinal);
 
         var binding = File.ReadAllText(Path.Combine(
             root, "src/backend/Modules/Catalog/Tooba.Catalog.Endpoints/Admin/CatalogActorRequestBinding.cs"));

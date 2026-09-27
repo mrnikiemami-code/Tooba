@@ -313,87 +313,9 @@ public static class CatalogAttributeEndpoints
             statusCode: StatusCodes.Status400BadRequest);
     }
 
-    private static IResult MapAttributeInvalid(InvalidOperationException ex)
-    {
-        if (ex.Message == "catalog.attribute.code.duplicate"
-            || (ex.Message.Contains("کد", StringComparison.Ordinal)
-                && ex.Message.Contains("تکراری", StringComparison.Ordinal)))
-        {
-            return Results.Json(
-                new
-                {
-                    title = "این کد ویژگی قبلاً استفاده شده است.",
-                    errorCode = "catalog.attribute.code.duplicate",
-                },
-                statusCode: StatusCodes.Status409Conflict);
-        }
-
-        if (ex.Message == "catalog.attribute.name.duplicate"
-            || (ex.Message.Contains("نام", StringComparison.Ordinal)
-                && ex.Message.Contains("تکراری", StringComparison.Ordinal)))
-        {
-            return Results.Json(
-                new
-                {
-                    title = "ویژگی‌ای با این نام قبلاً وجود دارد.",
-                    errorCode = "catalog.attribute.name.duplicate",
-                },
-                statusCode: StatusCodes.Status409Conflict);
-        }
-
-        if (ex.Message == "catalog.attribute.missing")
-        {
-            return Results.Json(
-                new { title = "تعریف ویژگی پیدا نشد.", errorCode = "catalog.attribute.missing" },
-                statusCode: StatusCodes.Status404NotFound);
-        }
-
-        if (ex.Message == "catalog.attribute.variant_axis.value_kind.invalid")
-        {
-            return Results.Json(
-                new
-                {
-                    title = "این نوع ویژگی برای ساخت تنوع مناسب نیست.",
-                    errorCode = "catalog.attribute.variant_axis.value_kind.invalid",
-                },
-                statusCode: StatusCodes.Status400BadRequest);
-        }
-
-        if (ex.Message == "catalog.attribute.variant_axis.capability_disabled")
-        {
-            return Results.Json(
-                new
-                {
-                    title = "امکان استفاده از این ویژگی برای تنوع در تعریف اصلی آن فعال نشده است.",
-                    errorCode = "catalog.attribute.variant_axis.capability_disabled",
-                },
-                statusCode: StatusCodes.Status400BadRequest);
-        }
-
-        if (ex.Message == "catalog.attribute.variant_axis.in_use")
-        {
-            return Results.Json(
-                new
-                {
-                    title = "این ویژگی در تنوع‌های فعال استفاده می‌شود.",
-                    errorCode = "catalog.attribute.variant_axis.in_use",
-                },
-                statusCode: StatusCodes.Status409Conflict);
-        }
-
-        return Results.Json(
-            new { title = ex.Message, errorCode = "catalog.attribute.invalid" },
-            statusCode: StatusCodes.Status400BadRequest);
-    }
-
     private static IResult ToError(PlatformHttpException ex) =>
         Results.Json(new { title = ex.Title, errorCode = ex.ErrorCode }, statusCode: ex.StatusCode);
 }
-
-/// <summary>
-/// بدنهٔ مقدار ویژگی محصول — retained for Host Seller panel consumer until a later Seller wave.
-/// </summary>
-public sealed record SetProductAttributeRequest(string RawValue, Guid? EnumOptionId);
 
 /// <summary>بدنهٔ محورهای Variant محصول.</summary>
 public sealed record SetProductVariantAxesRequest(List<Guid>? OrderedDefinitionIds);

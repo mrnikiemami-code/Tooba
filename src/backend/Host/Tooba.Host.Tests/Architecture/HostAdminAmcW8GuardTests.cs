@@ -23,7 +23,7 @@ public sealed class HostAdminAmcW8GuardTests
         Assert.DoesNotContain("SetProductAttributesRequest", host, StringComparison.Ordinal);
         Assert.Contains("/variants/", host, StringComparison.Ordinal);
         Assert.Contains("variant-axes", host, StringComparison.Ordinal);
-        Assert.Contains("MapAttributeInvalid", host, StringComparison.Ordinal);
+        Assert.DoesNotContain("MapAttributeInvalid", host, StringComparison.Ordinal);
         Assert.Contains("MapCatalogAttributeEndpoints", host, StringComparison.Ordinal);
 
         var program = File.ReadAllText(Path.Combine(root, "src/backend/Host/Tooba.Host/Program.cs"));
@@ -66,6 +66,7 @@ public sealed class HostAdminAmcW8GuardTests
         Assert.DoesNotContain("Results.Problem", admin, StringComparison.Ordinal);
         Assert.DoesNotContain("ex.Message", admin, StringComparison.Ordinal);
         Assert.DoesNotContain("تکراری", admin, StringComparison.Ordinal);
+        Assert.DoesNotContain("MapAttributeInvalid", admin, StringComparison.Ordinal);
 
         var module = File.ReadAllText(Path.Combine(
             root, "src/backend/Modules/Catalog/Tooba.Catalog.Endpoints/CatalogEndpointModule.cs"));

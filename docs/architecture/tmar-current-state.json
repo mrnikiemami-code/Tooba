@@ -1615,7 +1615,7 @@
     "frontendState": "UNCHANGED",
     "storeAppearanceState": "NOT_MOVED_DEFERRED_PRESERVED",
     "w1ThroughW9Preservation": "PRESERVED",
-    "retainedSellerTransport": "SetProductAttributeRequest_IN_HOST_ADMIN_FOR_SELLER_CONSUMER",
+    "retainedSellerTransport": "SetProductAttributeRequest_RELOCATED_TO_SELLER_IN_W10_R1",
     "remainingAdminBlockers": [
       "StoreAppearance Host.Storefront projector coupling",
       "Remaining Catalog Attribute Host routes (variants/category-change)",
@@ -1627,11 +1627,37 @@
       "Appearance redesign before evacuate",
       "ICatalogDirectory thin Product Attribute wrappers remain for CatalogDemo/legacy",
       "CatalogDirectory private ResolveEffectiveBindings retained for variant/category-change callers",
-      "SetProductAttributeRequest retained in Host Admin for Seller until Seller wave"
+      "Seller SetProductAttributeRequest relocated in W10-R1; Seller panel still Host-owned"
     ],
     "nextHostFolderStarted": false,
     "workflowStop": "USER_REVIEW_HOST_ADMIN_W10_CHECKPOINT",
-    "evidence": "docs/evidence/TB-TMAR-HOST-ADMIN-AMC-001-W10/"
+    "evidence": "docs/evidence/TB-TMAR-HOST-ADMIN-AMC-001-W10/",
+    "w10R1Repair": "docs/evidence/TB-TMAR-HOST-ADMIN-AMC-001-W10-R1/"
+  },
+  "hostAdminAmcW10R1": {
+    "task": "TB-TMAR-HOST-ADMIN-AMC-001-W10-R1",
+    "parentTask": "TB-TMAR-HOST-ADMIN-AMC-001-W10",
+    "parentCommit": "bb510b65be7e27096e061036e4e5c5335e8e0b51",
+    "state": "HOST_ADMIN_AMC_W10_R1_DEAD_HELPER_AND_SELLER_DTO_RESIDUALS_REMOVED",
+    "activeHostFolder": "Admin",
+    "productionFileCountBefore": 53,
+    "productionFileCountAfter": 53,
+    "deadHelperState": "REMOVED",
+    "deadHelperName": "MapAttributeInvalid",
+    "deadHelperRuntimeReferenceState": "ZERO",
+    "sellerTransportLeakState": "REMOVED_FROM_ADMIN_RELOCATED_TO_SELLER_OWNER",
+    "sellerDtoNewOwner": "Tooba.Host.Seller.SellerPanelEndpoints / SetProductAttributeRequest",
+    "sellerBodyParityState": "RawValue_EnumOptionId_PRESERVED",
+    "adminNamespaceLeakState": "RETAINED_FOR_SetProductVariantAxesRequest_ONLY",
+    "productAttributeMigrationState": "PRESERVED",
+    "retainedAttributeHostScope": "VARIANT_CATEGORY_CHANGE_ONLY",
+    "w8W9W10GuardRepairState": "STALE_MapAttributeInvalid_AND_SetProductAttributeRequest_ASSERTIONS_REPAIRED",
+    "storeAppearanceState": "NOT_MOVED_DEFERRED_PRESERVED",
+    "schemaMigrationState": "NONE",
+    "frontendState": "UNCHANGED",
+    "nextHostFolderStarted": false,
+    "workflowStop": "USER_REVIEW_HOST_ADMIN_W10_R1_CHECKPOINT",
+    "evidence": "docs/evidence/TB-TMAR-HOST-ADMIN-AMC-001-W10-R1/"
   },
   "hostAdminAmcW9": {
     "task": "TB-TMAR-HOST-ADMIN-AMC-001-W9",

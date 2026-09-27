@@ -29,7 +29,8 @@ Host file is **RETAINED_PARTIAL_VARIANT_CATEGORY_CHANGE_ONLY** (53 → 53).
 
 | Record | Classification | Notes |
 |---|---|---|
-| `SetProductAttributeRequest` | RETAIN | Still consumed by Host Seller `SellerPanelEndpoints` |
+| `SetProductAttributeRequest` | RETAIN → **RELOCATED_W10_R1** | Moved to Seller `SellerPanelEndpoints` (caller-local transport) |
+| `MapAttributeInvalid` | RETAIN_DEAD_HELPER → **REMOVED_W10_R1** | Zero runtime callers; guards repaired |
 | `ProductAttributeValueRequest` | MOVE_W10 | → Application Models |
 | `SetProductAttributesRequest` | MOVE_W10 | → Application Models / Command body |
 | Variant/category-change request records | RETAIN | Host |
@@ -38,7 +39,7 @@ Host file is **RETAINED_PARTIAL_VARIANT_CATEGORY_CHANGE_ONLY** (53 → 53).
 
 | Member | Classification | Notes |
 |---|---|---|
-| `MapAttributeInvalid` | RETAIN_DEAD_HELPER | Still asserted by W8/W9; unused by retained Host routes (definitions already vacated) |
+| `MapAttributeInvalid` | RETAIN_DEAD_HELPER → **REMOVED_W10_R1** | Zero runtime callers; guards repaired |
 | `MapCategoryChangeInvalid` | RETAIN | Host category-change |
 | `ToError` | RETAIN | Host retained routes |
 | `EnrichVariantEditorWithOfferCountsAsync` | RETAIN | Offer.Contracts for retained variants |
