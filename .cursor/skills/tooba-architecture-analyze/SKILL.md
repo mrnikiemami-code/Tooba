@@ -231,6 +231,8 @@ Never solve coupling by:
 - introducing a shared god-contract;
 - preserving a cross-module SQL/EF join.
 
+**Semantic contract ownership gate:** classify types by who is allowed to consume them, not by filename. `Tooba.<Module>.Contracts` is for stable module-boundary semantics (cross-module DTOs/ports/events and module-owned stable error codes). Application-internal CQRS models, snapshots, directory models and ports stay in Application. Do not move an internal type to Contracts merely because it is a DTO, and do not leave a true module-boundary type in Application. Generic/mixed `*Contracts.cs` files inside Application are a cohesion smell: split/rename them by capability and responsibility. A CQRS request must have one authoritative Application request type; do not keep a second command-shaped record in `Models` with the same use-case meaning.
+
 ### 6. No Cross-Module Join Rule
 
 Explicitly search for:
@@ -372,12 +374,17 @@ Do not plan cosmetic splitting that creates meaningless tiny files. Do not use f
 
 Propose exact physical target paths and namespaces.
 
+**Capability-first, shallow-by-default.** Prefer the business capability as the first organizing axis; Commands/Queries are secondary. Do not create one directory per request merely because it is a Command or Query.
+
 Preferred patterns:
 
-`Application/<Capability>/<UseCase>/...`
-`Application/<Capability>/Models/...`
-`Application/<Capability>/Ports/...`
-`Application/Validators/<Capability>/<UseCase>/...`
+`Application/<Capability>/Commands/*.cs`
+`Application/<Capability>/Queries/*.cs`
+`Application/<Capability>/Models/*.cs`
+`Application/<Capability>/Ports/*.cs`
+`Application/<Capability>/Validators/*.cs`
+
+A deeper `Application/<Capability>/<Commands|Queries>/<UseCase>/` folder is allowed only when that use case genuinely owns multiple cohesive production files with distinct responsibilities (for example request + handler + dedicated policy/mapper/validator) or its complexity makes the grouping materially clearer. A leaf folder whose only purpose is to contain one request file is over-foldering and must not be proposed. Shared Application folders are allowed only for genuinely cross-capability concerns.
 
 `Endpoints/Admin/...`
 `Endpoints/Seller/...`
@@ -525,6 +532,9 @@ Return exactly one:
 - Keep the active recovery unit to the current Host folder; do not inspect the next one until instructed.
 - Keep certified/reference modules read-only; never broaden active scope into them.
 - Treat a reference module as a reference, never a mandatory clone; choose folders by responsibility/capability.
+- Never confuse filename suffix with architectural ownership: `*.Contracts` project membership is determined by module-boundary semantics, while Application-internal models remain Application-owned.
+- Never propose generic/mixed `*Contracts.cs` dumps inside Application or duplicate command-shaped models alongside the authoritative CQRS request.
+- Never propose one single-file folder per Command/Query by default; capability-first shallow grouping is the default and per-use-case folders require real multi-file/complexity justification.
 - Verify physical existence on disk and project-include resolution, not only namespaces or manifests.
 - Prefer the smallest repository-consistent solution; stop and report the exact blocker rather than expanding scope.
 - A task's narrower success criteria must not downgrade these architecture gates; Host ZERO alone is never sufficient when the touched destination is non-canonical.

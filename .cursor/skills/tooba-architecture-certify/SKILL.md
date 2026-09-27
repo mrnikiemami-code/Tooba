@@ -43,7 +43,8 @@ Do not certify unless all applicable conditions hold:
 
 - correct module ownership;
 - correct foundation usage (no parallel architecture beside a certified module);
-- correct capability-oriented structure/foldering;
+- correct capability-oriented structure/foldering, using capability-first shallow grouping by default and no unjustified one-folder-per-request explosion;
+- semantic Contracts ownership is correct: module-boundary contracts in `*.Contracts`, Application-internal models/ports in Application, no misleading mixed `*Contracts.cs` Application dump, and no duplicate CQRS request shape;
 - exact path↔namespace equality;
 - files physically exist with no stale/duplicate copy and required solution grouping preserved;
 - file cohesion with no new oversized/god file;
@@ -114,6 +115,27 @@ Identify:
 
 Do not approve root dumping merely because it compiles.
 
+### 1a. Semantic Contracts + Folder Granularity Audit
+
+Certification is semantic, not just physical.
+
+Verify every public/internal model and port in the touched module by consumer boundary:
+
+- `Tooba.<Module>.Contracts`: only stable module-boundary DTOs/ports/events and module-owned stable error codes.
+- `Tooba.<Module>.Application`: internal CQRS requests/results/snapshots/models and ports used to implement the module.
+- A type does not belong in Contracts merely because it is a DTO; a type does not belong in Application if another module must reference it as the supported boundary.
+- Generic/mixed `*Contracts.cs` files under Application that bundle unrelated DTOs, snapshots and command-shaped inputs are not acceptable certification targets; split/rename by capability/responsibility.
+- Each CQRS use case has one authoritative request type. Reject duplicate command/query-shaped records kept in Models beside the real MediatR request.
+
+Verify folder granularity:
+
+- capability is the primary axis;
+- `<Capability>/Commands`, `Queries`, `Models`, `Ports`, `Validators` are the shallow default;
+- a per-use-case subfolder is allowed only when it contains multiple cohesive production files with distinct responsibilities or the use case complexity materially benefits from isolation;
+- a folder created only to contain one Command/Query source file is over-foldering and blocks structure certification in the touched/certified surface.
+
+Do not require pointless flattening of an already complex, cohesive multi-file use case.
+
 ### 2. Path / Namespace Exactness
 
 Verify every production file namespace matches the physical path-derived namespace.
@@ -138,6 +160,9 @@ Verify:
 - no new god-file / multi-responsibility file (`ARCH-MODULE-FILE-001`);
 - no artificial parallel decomposition created to game the size guard;
 - resulting files have cohesive, single-purpose responsibilities;
+- no generic Application `*Contracts.cs` bundle mixes DTOs/snapshots/command inputs with different reasons to change;
+- no duplicate Application command/query shape exists outside its authoritative MediatR request;
+- no unjustified single-file-per-request directory tree hides weak capability organization;
 - endpoint transport, request/response models, infrastructure and business logic are not collapsed into one file;
 - legitimate Host platform files were split within Host rather than migrated into a business module.
 
@@ -342,6 +367,9 @@ Ensure automated guards enforce the certified structure, including as applicable
 - root allowlists;
 - forbidden root files;
 - forbidden top-level folders;
+- capability-first folder-granularity rules (including no unjustified single-file request folders);
+- semantic Contracts/Application ownership and no mixed Application `*Contracts.cs` dumps;
+- no duplicate CQRS command/query shapes;
 - path↔namespace exactness;
 - no alias workaround;
 - endpoint-reachable request inventory;
@@ -428,7 +456,7 @@ No certification with known failing required guard.
 
 ## Certification Result
 
-Certify must NOT return a final PASS while any applicable violation remains, including: `RAW_RESULTS`, `AD_HOC`, `PARALLEL_MAPPER`, `UNREGISTERED_CODES`, `DUPLICATE_ERROR_DESCRIPTOR`, `UNRESOLVED_ERROR_OWNER`, `HARDCODED_TEXT`, `NON_STANDARD`, `DUPLICATE_TELEMETRY`, `SECOND_PIPELINE`, `PARALLEL_CORRELATION`, `LOST_PROPAGATION`, `VIOLATION`, `ILLEGAL`, `FOREIGN_ACCESS`, any direct foreign Application/Infrastructure/Domain dependency, an unresolved cross-module join, an unresolved path/namespace mismatch, an unresolved stale physical file/copy, an unresolved required solution grouping, an unresolved cohesion/root-dump violation, or an unresolved duplicate/legacy type in the touched surface — unless a canonical architecture lock explicitly exempts that exact quality concern. An ownership exception is not a quality exception.
+Certify must NOT return a final PASS while any applicable violation remains, including: `RAW_RESULTS`, `AD_HOC`, `PARALLEL_MAPPER`, `UNREGISTERED_CODES`, `DUPLICATE_ERROR_DESCRIPTOR`, `UNRESOLVED_ERROR_OWNER`, `HARDCODED_TEXT`, `NON_STANDARD`, `DUPLICATE_TELEMETRY`, `SECOND_PIPELINE`, `PARALLEL_CORRELATION`, `LOST_PROPAGATION`, `VIOLATION`, `ILLEGAL`, `FOREIGN_ACCESS`, any direct foreign Application/Infrastructure/Domain dependency, an unresolved cross-module join, an unresolved path/namespace mismatch, an unresolved stale physical file/copy, an unresolved required solution grouping, an unresolved cohesion/root-dump violation, an unresolved semantic Contracts/Application ownership violation, an unjustified single-file request-folder explosion, a duplicate CQRS request shape, or an unresolved duplicate/legacy type in the touched surface — unless a canonical architecture lock explicitly exempts that exact quality concern. An ownership exception is not a quality exception.
 
 Only declare:
 
@@ -491,6 +519,8 @@ Produce evidence containing:
 - Never weaken tests/guards/baselines/assertions or enter an open-ended test/repair loop to reach PASS.
 - Never permit foreign Application/Infrastructure/Domain dependencies in the certified state.
 - Never accept a file solely because it is under a LOC ceiling.
+- Never certify generic/mixed Application `*Contracts.cs` bundles or duplicate command/query-shaped models beside the authoritative CQRS request.
+- Never certify one-folder-per-Command/Query trees when leaf folders exist only to wrap a single request file; capability-first shallow grouping is the default unless multi-file cohesion/complexity justifies the use-case folder.
 - Never accept a parallel localization/response/logging/telemetry mechanism.
 - Never hide duplicate error descriptors with first/last-wins, overwrite, `DistinctBy`, suppression, or catch-and-ignore behavior.
 - Never create a shared-errors project/layer merely because multiple modules consume the same machine code; prefer the natural bounded-context owner and use an existing neutral shared location only for genuinely cross-cutting/platform semantics with no natural module owner.

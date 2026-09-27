@@ -119,17 +119,19 @@ Follow the established INTERNAL_ONLY precedent (e.g. Inventory).
 
 Create only the folders needed by the real capability.
 
-Application:
+Application — capability-first and shallow by default:
 
 ```text
 Application/
   <Capability>/
-    <UseCase>/
+    Commands/
+    Queries/
     Models/
     Ports/
-  Validators/
-    <Capability>/
+    Validators/
 ```
+
+Do not create one leaf directory per Command/Query when it would contain only one request file. A per-use-case subfolder under `Commands/` or `Queries/` is justified only when the use case owns multiple cohesive production files with distinct responsibilities or has enough complexity to benefit from that boundary. Reuse an already-certified module's coherent capability layout, but do not preserve or introduce request-folder explosion merely for symmetry.
 
 Endpoints:
 
@@ -162,6 +164,8 @@ Contracts/
   <Capability>/
   Errors/       (stable <Module>ErrorCodes)
 ```
+
+**Contracts semantic ownership:** move a type into `Tooba.<Module>.Contracts` only when it is a stable module-boundary contract (cross-module DTO/port/event or module-owned stable error code). Application-internal request/result/snapshot/directory models and internal ports remain Application-owned and must be named/foldered as Models/Ports, not misleading generic `*Contracts.cs` bundles. Split mixed legacy files before migration. There must be one authoritative CQRS request type per use case; remove/rename duplicate command-shaped records in `Application/Models` instead of preserving pre-CQRS shapes beside the real request.
 
 Domain structure should follow the module's actual aggregate/value-object organization and current certified precedents.
 
@@ -729,6 +733,8 @@ Use only when:
 - required foundation exists;
 - migration completed;
 - file cohesion is correct and no new god-file exists;
+- capability-first folder granularity is professional (no unjustified single-file request folders);
+- Contracts-vs-Application semantic ownership is correct, with no mixed `*Contracts.cs` Application dump or duplicate CQRS command shape;
 - illegal coupling removed;
 - no cross-module persistence/join remains;
 - CQRS/validation/endpoint rules satisfied where applicable;
@@ -815,6 +821,9 @@ Report:
 - No new parallel localization/response/logging/telemetry mechanism.
 - No sensitive-data logging.
 - No cosmetic god-file splitting and no god-file creation.
+- No generic/mixed `*Contracts.cs` file in Application as a substitute for proper capability Models/Ports/Requests.
+- No duplicate command/query shape in Application Models beside the authoritative MediatR request.
+- No one-folder-per-Command/Query pattern when the folder contains only a single request file; capability-first shallow grouping is the default, with per-use-case folders only when multi-file cohesion/complexity justifies them.
 - Preserve user work.
 - Verify before claiming readiness.
 - Task wording such as "empty/evacuate Host" never authorizes physical relocation that leaves the touched destination non-canonical.
