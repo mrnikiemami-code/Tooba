@@ -86,10 +86,11 @@ public sealed class SettingsFoundationTests
         var operatorProfile = File.ReadAllText(Path.Combine(root, "src", "backend", "Host", "Tooba.Host", "OperatorProfile", "OperatorProfileEndpoints.cs"));
         Assert.Contains("/v1/admin/operator/profile", operatorProfile, StringComparison.Ordinal);
 
-        var holds = File.ReadAllText(Path.Combine(root, "src", "backend", "Host", "Tooba.Host", "Admin", "HoldPolicySettingsEndpoints.cs"));
+        var holds = File.ReadAllText(Path.Combine(root, "src", "backend", "Modules", "Catalog", "Tooba.Catalog.Endpoints", "Admin", "Settings", "HoldPolicySettingsEndpoints.cs"));
         Assert.Contains("/v1/admin/settings/hold-policy", holds, StringComparison.Ordinal);
-        Assert.Contains("مدت نگهداری سبد خرید", holds, StringComparison.Ordinal);
-        Assert.Contains("مهلت پرداخت آنلاین", holds, StringComparison.Ordinal);
+        var holdComposer = File.ReadAllText(Path.Combine(root, "src", "backend", "Modules", "Catalog", "Tooba.Catalog.Application", "Settings", "HoldPolicy", "HoldPolicySettingsComposer.cs"));
+        Assert.Contains("مدت نگهداری سبد خرید", holdComposer, StringComparison.Ordinal);
+        Assert.Contains("مهلت پرداخت آنلاین", holdComposer, StringComparison.Ordinal);
         Assert.Contains("AdminPanelAccess.RequireAuthorizedAsync", operatorProfile, StringComparison.Ordinal);
 
         var program = File.ReadAllText(Path.Combine(root, "src", "backend", "Host", "Tooba.Host", "Program.cs"));

@@ -20,7 +20,6 @@ public sealed class HostCartResidualGuardTests
         ["Composition/ToobaModuleComposition.cs"] = "explicit module list composition",
         ["CommerceHoldPolicy.cs"] = "Payment/Order hold adapter; holds only (no Cart persistence value)",
         ["CheckoutReservationHoldPolicy.cs"] = "Order hold port adapter (Payment options only)",
-        ["Admin/HoldPolicySettingsEndpoints.cs"] = "settings admin UX; reads Cart-owned persistence hours via Cart-owned port",
         ["Development/ProductWorkspaceDevelopmentBootstrap.cs"] = "Development-only schema migration list",
         ["Storefront/StorefrontModels.cs"] = "storefront wire DTOs that carry CartId",
         ["Storefront/StorefrontComposer.cs"] = "storefront read composition flag",
@@ -164,7 +163,7 @@ public sealed class HostCartResidualGuardTests
         var files = new[]
         {
             Path.Combine(cartRoot, "Tooba.Cart.Application", "Ports", "ICartPersistenceHoursResolver.cs"),
-            Path.Combine(cartRoot, "Tooba.Cart.Application", "Ports", "ICartPersistenceHoursSource.cs"),
+            Path.Combine(cartRoot, "Tooba.Cart.Contracts", "Lifetime", "ICartPersistenceHoursSource.cs"),
             Path.Combine(cartRoot, "Tooba.Cart.Application", "Ports", "CartPersistenceHours.cs"),
             Path.Combine(cartRoot, "Tooba.Cart.Infrastructure", "Lifetime", "CatalogCartPersistenceHoursResolver.cs"),
             Path.Combine(cartRoot, "Tooba.Cart.Infrastructure", "Lifetime", "CartPersistenceHoursSource.cs"),
@@ -187,6 +186,8 @@ public sealed class HostCartResidualGuardTests
             "Task<int> ResolvePersistenceHoursAsync(CancellationToken cancellationToken)",
             File.ReadAllText(files[1]),
             StringComparison.Ordinal);
+        Assert.True(File.Exists(Path.Combine(
+            cartRoot, "Tooba.Cart.Application", "Ports", "ICartPersistenceHoursSource.cs")));
     }
 
     [Fact]
@@ -425,7 +426,7 @@ public sealed class HostCartResidualGuardTests
         var module = File.ReadAllText(Path.Combine(
             cartRoot, "Tooba.Cart.Infrastructure", "DependencyInjection", "CartModule.cs"));
         Assert.Contains("ICartExpiryReconciler, CartExpiryReconciler", module, StringComparison.Ordinal);
-        Assert.Contains("ICartPersistenceHoursSource, CartPersistenceHoursSource", module, StringComparison.Ordinal);
+        Assert.Contains("ICartPersistenceHoursSource>(sp => sp.GetRequiredService<CartPersistenceHoursSource>())", module, StringComparison.Ordinal);
         Assert.Contains("Configure<CartLifetimeOptions>", module, StringComparison.Ordinal);
     }
 

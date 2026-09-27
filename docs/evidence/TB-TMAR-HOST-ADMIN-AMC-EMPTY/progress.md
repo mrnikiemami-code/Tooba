@@ -1,6 +1,6 @@
 # Host/Admin empty progress (AMC)
 
-## Current Admin `*.cs` count: **18** (W34 template/attribute seeds evacuated)
+## Current Admin `*.cs` count: **17** (W35 HoldPolicy evacuated)
 
 ### Evacuated
 | Slice | Owner |
@@ -15,13 +15,13 @@
 | **Merchandising admin (W33)** | Promotion.Endpoints + Infrastructure |
 | **PW Host shells (W32)** | DELETED; bootstrap → Host.Development |
 | **Template + attribute seeds (W34)** | Catalog.Infrastructure/Development (+ Host SeedHost / sellable enricher) |
+| **HoldPolicy aggregate (W35)** | Catalog.Endpoints + Application Settings/HoldPolicy (+ Contracts ports) |
 
 ### Host PW routes remaining: **0**
 (shell MapProductWorkspaceEndpoints removed)
 
 ### Next
-1. HoldPolicy MUST_SPLIT
-2. StoreAppearance BLOCK
+1. StoreAppearance BLOCK
 
 ### Cannot empty yet
-KEEP platform (~16) · StoreAppearance BLOCK · HoldPolicy BLOCK
+KEEP platform (~16) · StoreAppearance BLOCK

@@ -122,4 +122,7 @@ public static class CatalogValidationCodes
 
     /// <summary>Checkout-identity actor must be non-empty after auth.</summary>
     public const string CheckoutIdentityActorRequired = "catalog.validation.checkout_identity_actor_required";
+
+    /// <summary>Hold-policy actor must be non-empty after auth.</summary>
+    public const string HoldPolicyActorRequired = "catalog.validation.hold_policy_actor_required";
 }

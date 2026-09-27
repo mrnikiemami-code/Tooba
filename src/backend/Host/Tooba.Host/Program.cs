@@ -464,7 +464,6 @@ app.UseMiddleware<RequestObservabilityEnrichmentMiddleware>();
 
 app.MapAuthenticationBoundary(enableCors: true);
 app.MapProductWorkspaceModuleEndpoints();
-app.MapHoldPolicySettingsEndpoints();
 app.MapStoreAppearanceSettingsEndpoints();
 app.MapAdminPanelEndpoints();
 app.MapOrderEndpoints();

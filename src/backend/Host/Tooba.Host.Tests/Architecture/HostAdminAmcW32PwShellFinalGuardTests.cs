@@ -38,13 +38,13 @@ public sealed class HostAdminAmcW32PwShellFinalGuardTests
     }
 
     [Fact]
-    public void Host_Admin_count_18_StoreAppearance_deferred()
+    public void Host_Admin_count_17_StoreAppearance_deferred()
     {
         var root = FindRepoRoot();
         var admin = Path.Combine(root, "src/backend/Host/Tooba.Host/Admin");
-        Assert.Equal(18, Directory.GetFiles(admin, "*.cs", SearchOption.AllDirectories).Length);
+        Assert.Equal(17, Directory.GetFiles(admin, "*.cs", SearchOption.AllDirectories).Length);
         Assert.True(File.Exists(Path.Combine(admin, "StoreAppearanceSettingsEndpoints.cs")));
-        Assert.True(File.Exists(Path.Combine(admin, "HoldPolicySettingsEndpoints.cs")));
+        Assert.False(File.Exists(Path.Combine(admin, "HoldPolicySettingsEndpoints.cs")));
     }
 
     [Fact]

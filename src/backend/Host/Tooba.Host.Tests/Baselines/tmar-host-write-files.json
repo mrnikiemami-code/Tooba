@@ -9,7 +9,6 @@
     "Admin/CatalogDemo/CatalogDemoResetService.cs",
     "Admin/CheckoutAbuseSettingsEndpoints.cs",
     "Admin/CheckoutIdentitySettingsEndpoints.cs",
-    "Admin/HoldPolicySettingsEndpoints.cs",
     "Development/ProductWorkspaceDevelopmentBootstrap.cs",
     "Admin/ReservationPolicyAdminComposer.cs",
     "Admin/ReservationPolicyAdminEndpoints.cs",

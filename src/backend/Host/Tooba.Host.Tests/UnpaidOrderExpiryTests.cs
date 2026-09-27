@@ -54,13 +54,13 @@ public sealed class UnpaidOrderExpiryTests
     [Fact]
     public void Settings_ux_uses_existing_admin_settings_and_fa_en()
     {
-        var endpoints = Read("src/backend/Host/Tooba.Host/Admin/HoldPolicySettingsEndpoints.cs");
+        var endpoints = Read("src/backend/Modules/Catalog/Tooba.Catalog.Endpoints/Admin/Settings/HoldPolicySettingsEndpoints.cs");
         Assert.Contains("/v1/admin/settings/hold-policy", endpoints, StringComparison.Ordinal);
-        Assert.Contains("مدت نگهداری سبد خرید", endpoints, StringComparison.Ordinal);
-        Assert.Contains("مهلت پرداخت آنلاین", endpoints, StringComparison.Ordinal);
-        Assert.Contains("مهلت ثبت اطلاعات پرداخت کارت‌به‌کارت", endpoints, StringComparison.Ordinal);
-        Assert.Contains("مهلت بررسی پرداخت کارت‌به‌کارت", endpoints, StringComparison.Ordinal);
-        Assert.Contains("does not reserve inventory", endpoints, StringComparison.Ordinal);
+        Assert.Contains("مدت نگهداری سبد خرید", Read("src/backend/Modules/Catalog/Tooba.Catalog.Application/Settings/HoldPolicy/HoldPolicySettingsComposer.cs"), StringComparison.Ordinal);
+        Assert.Contains("مهلت پرداخت آنلاین", Read("src/backend/Modules/Catalog/Tooba.Catalog.Application/Settings/HoldPolicy/HoldPolicySettingsComposer.cs"), StringComparison.Ordinal);
+        Assert.Contains("مهلت ثبت اطلاعات پرداخت کارت‌به‌کارت", Read("src/backend/Modules/Catalog/Tooba.Catalog.Application/Settings/HoldPolicy/HoldPolicySettingsComposer.cs"), StringComparison.Ordinal);
+        Assert.Contains("مهلت بررسی پرداخت کارت‌به‌کارت", Read("src/backend/Modules/Catalog/Tooba.Catalog.Application/Settings/HoldPolicy/HoldPolicySettingsComposer.cs"), StringComparison.Ordinal);
+        Assert.Contains("does not reserve inventory", Read("src/backend/Modules/Catalog/Tooba.Catalog.Application/Settings/HoldPolicy/HoldPolicySettingsComposer.cs"), StringComparison.Ordinal);
         var page = Read("src/frontend/app/admin/settings/page.tsx");
         Assert.Contains("admin-settings-hold-form", page, StringComparison.Ordinal);
         Assert.Contains("admin-settings-save-holds", page, StringComparison.Ordinal);
@@ -196,8 +196,8 @@ public sealed class UnpaidOrderExpiryTests
     [Fact]
     public void Validation_rejects_out_of_range_hours()
     {
-        var endpoints = Read("src/backend/Host/Tooba.Host/Admin/HoldPolicySettingsEndpoints.cs");
-        Assert.Contains("ValidateHours", endpoints, StringComparison.Ordinal);
+        var endpoints = Read("src/backend/Modules/Catalog/Tooba.Catalog.Application/Settings/HoldPolicy/Validators/SaveHoldPolicySettingsCommandValidator.cs");
+        Assert.Contains("HoursOk", endpoints, StringComparison.Ordinal);
         Assert.Contains("24 * 90", endpoints, StringComparison.Ordinal);
         Assert.Contains("24 * 30", endpoints, StringComparison.Ordinal);
     }

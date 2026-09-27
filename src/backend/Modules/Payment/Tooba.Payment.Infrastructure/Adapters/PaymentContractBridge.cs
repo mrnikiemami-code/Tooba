@@ -1,8 +1,10 @@
 #pragma warning disable CS1591
+using Microsoft.Extensions.Options;
 using Tooba.Payment.Application.Ports;
 using Tooba.Payment.Contracts.Admin;
 using Tooba.Payment.Contracts.Customer;
 using Tooba.Payment.Contracts.Hold;
+using Tooba.Payment.Infrastructure.Providers;
 
 namespace Tooba.Payment.Infrastructure.Adapters;
 
@@ -15,7 +17,8 @@ public sealed class PaymentContractBridge(
     IPaymentDirectory payments,
     IPaymentAdminDirectory admin,
     IPaymentExpiryDirectory expiry,
-    IPaymentHoldSettingsDirectory holds)
+    IPaymentHoldSettingsDirectory holds,
+    IOptions<PaymentGatewayOptions> gateway)
     : IPaymentAdminGateway, IPaymentCustomerGateway, IPaymentHoldSettingsGateway
 {
     public async Task<PaymentAdminOperationalSnapshot?> GetLatestOperationalForCheckoutAsync(
@@ -83,6 +86,21 @@ public sealed class PaymentContractBridge(
         holds.UpsertMethodOverrideAsync(
             providerCode, onlinePaymentHoldHours, manualPaymentInitialHoldHours,
             manualPaymentReviewHoldHours, now, cancellationToken);
+
+    public PaymentPlatformHoldDefaults GetPlatformDefaults()
+    {
+        var options = gateway.Value;
+        return new PaymentPlatformHoldDefaults(
+            ClampHours(options.OnlinePaymentHoldHours, fallback: 2),
+            ClampHours(options.ManualPaymentInitialHoldHours, fallback: 2),
+            ClampHours(options.ManualPaymentReviewHoldHours, fallback: 24));
+    }
+
+    private static int ClampHours(int configured, int fallback)
+    {
+        var raw = configured <= 0 ? fallback : configured;
+        return Math.Clamp(raw, 1, 24 * 30);
+    }
 
     private static PaymentAdminMutationResult Map(PaymentVerificationResult x) =>
         new(x.PaymentId, x.Status.ToString(), x.NewlySucceeded);

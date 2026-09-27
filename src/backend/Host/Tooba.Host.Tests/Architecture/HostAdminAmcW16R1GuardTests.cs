@@ -84,8 +84,8 @@ public sealed class HostAdminAmcW16R1GuardTests
         var root = FindRepoRoot();
         var admin = Path.Combine(root, "src/backend/Host/Tooba.Host/Admin");
         var files = Directory.GetFiles(admin, "*.cs", SearchOption.AllDirectories);
-        Assert.True(files.Length >= 23, $"expected Admin residue after demo/landing/PW waves; was {files.Length}");
-        Assert.Equal(18, files.Length);
+        Assert.True(files.Length >= 17, $"expected Admin residue after HoldPolicy evacuation; was {files.Length}");
+        Assert.Equal(17, files.Length);
         Assert.False(File.Exists(Path.Combine(admin, "ProductWorkspaceEndpoints.cs")));
         Assert.True(File.Exists(Path.Combine(admin, "StoreAppearanceSettingsEndpoints.cs")));
         Assert.True(Directory.Exists(Path.Combine(

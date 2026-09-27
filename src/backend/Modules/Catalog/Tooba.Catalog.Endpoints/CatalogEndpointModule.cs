@@ -41,6 +41,7 @@ public static class CatalogEndpointModule
         app.MapQuantitySettingsEndpoints();
         app.MapCheckoutAbuseSettingsEndpoints();
         app.MapCheckoutIdentitySettingsEndpoints();
+        app.MapHoldPolicySettingsEndpoints();
         app.MapUnitOfMeasureEndpoints();
         app.MapCatalogTagEndpoints();
         app.MapCatalogMegaMenuAdminEndpoints();

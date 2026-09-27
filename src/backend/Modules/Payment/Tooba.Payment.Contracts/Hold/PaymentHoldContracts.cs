@@ -7,6 +7,12 @@ public sealed record PaymentMethodHoldOverride(
     int? ManualPaymentInitialHoldHours,
     int? ManualPaymentReviewHoldHours);
 
+/// <summary>Platform-level payment hold defaults (from Payment:Gateway options).</summary>
+public sealed record PaymentPlatformHoldDefaults(
+    int OnlinePaymentHoldHours,
+    int ManualPaymentInitialHoldHours,
+    int ManualPaymentReviewHoldHours);
+
 public interface IPaymentHoldSettingsGateway
 {
     Task<IReadOnlyList<PaymentMethodHoldOverride>> ListMethodOverridesAsync(CancellationToken cancellationToken);
@@ -17,6 +23,9 @@ public interface IPaymentHoldSettingsGateway
         int? manualPaymentReviewHoldHours,
         DateTimeOffset now,
         CancellationToken cancellationToken);
+
+    /// <summary>Platform defaults used when store overrides are null.</summary>
+    PaymentPlatformHoldDefaults GetPlatformDefaults();
 }
 
 public interface ICommerceHoldPolicySource

@@ -1,4 +1,4 @@
-using Xunit;
+﻿using Xunit;
 
 namespace Tooba.Host.Tests.Architecture;
 
@@ -91,13 +91,13 @@ public sealed class HostAdminAmcW34TemplateSeedsGuardTests
     }
 
     [Fact]
-    public void Host_Admin_count_18_StoreAppearance_and_HoldPolicy_deferred()
+    public void Host_Admin_count_17_StoreAppearance_deferred_HoldPolicy_evacuated()
     {
         var root = FindRepoRoot();
         var admin = Path.Combine(root, "src/backend/Host/Tooba.Host/Admin");
-        Assert.Equal(18, Directory.GetFiles(admin, "*.cs", SearchOption.AllDirectories).Length);
+        Assert.Equal(17, Directory.GetFiles(admin, "*.cs", SearchOption.AllDirectories).Length);
         Assert.True(File.Exists(Path.Combine(admin, "StoreAppearanceSettingsEndpoints.cs")));
-        Assert.True(File.Exists(Path.Combine(admin, "HoldPolicySettingsEndpoints.cs")));
+        Assert.False(File.Exists(Path.Combine(admin, "HoldPolicySettingsEndpoints.cs")));
     }
 
     [Fact]

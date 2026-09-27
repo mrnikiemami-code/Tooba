@@ -41,7 +41,10 @@ public sealed class CartModule : IToobaModule
         services.AddScoped<ICartQueryGateway>(sp => (CartDirectory)sp.GetRequiredService<ICartDirectory>());
         services.AddScoped<ICartExpiryReconciler, CartExpiryReconciler>();
         services.AddScoped<ICartPersistenceHoursResolver, CatalogCartPersistenceHoursResolver>();
-        services.AddScoped<ICartPersistenceHoursSource, CartPersistenceHoursSource>();
+        services.AddScoped<CartPersistenceHoursSource>();
+        services.AddScoped<ICartPersistenceHoursSource>(sp => sp.GetRequiredService<CartPersistenceHoursSource>());
+        services.AddScoped<Tooba.Cart.Contracts.Lifetime.ICartPersistenceHoursSource>(
+            sp => sp.GetRequiredService<CartPersistenceHoursSource>());
         services.AddScoped<ICartCommerceContextResolver, CartCommerceContextResolver>();
         services.AddScoped<CartPresentationComposer>();
         services.AddScoped<Tooba.Cart.Contracts.ICartPresentationGateway>(sp => sp.GetRequiredService<CartPresentationComposer>());

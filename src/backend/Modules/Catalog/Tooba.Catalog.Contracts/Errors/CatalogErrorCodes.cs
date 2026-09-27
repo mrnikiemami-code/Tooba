@@ -330,6 +330,30 @@ public static class CatalogErrorCodes
     /// <summary>Max checkout commits out of domain range.</summary>
     public const string CheckoutAbuseMaxCommitsInvalid = "settings.max_checkout_commits.invalid";
 
+    /// <summary>Cart persistence hours out of range (Host: cart.persistence.invalid).</summary>
+    public const string HoldPolicyCartPersistenceInvalid = "cart.persistence.invalid";
+
+    /// <summary>Online payment hold hours out of range (Host: hold.online.invalid).</summary>
+    public const string HoldPolicyOnlineInvalid = "hold.online.invalid";
+
+    /// <summary>Manual initial hold hours out of range (Host: hold.manual_initial.invalid).</summary>
+    public const string HoldPolicyManualInitialInvalid = "hold.manual_initial.invalid";
+
+    /// <summary>Manual review hold hours out of range (Host: hold.manual_review.invalid).</summary>
+    public const string HoldPolicyManualReviewInvalid = "hold.manual_review.invalid";
+
+    /// <summary>Payment-method hold override hours out of range (Host: hold.method.invalid).</summary>
+    public const string HoldPolicyMethodInvalid = "hold.method.invalid";
+
+    /// <summary>Initial reservation minutes out of range (Host/Order: reservation.policy.initial.invalid).</summary>
+    public const string HoldPolicyReservationInitialInvalid = "reservation.policy.initial.invalid";
+
+    /// <summary>Retry reservation minutes out of range.</summary>
+    public const string HoldPolicyReservationRetryInvalid = "reservation.policy.retry.invalid";
+
+    /// <summary>Max reservation cycles out of range.</summary>
+    public const string HoldPolicyReservationMaxInvalid = "reservation.policy.max.invalid";
+
     /// <summary>Store landing page was not found (preserved landing.page.missing).</summary>
     public const string LandingPageMissing = "landing.page.missing";
 
