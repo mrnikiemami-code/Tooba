@@ -175,14 +175,6 @@ public sealed class ProductPublishReadinessReader : IProductPublishReadinessRead
 
         var parentById = await _db.Categories.AsNoTracking()
             .ToDictionaryAsync(x => x.CategoryId, x => x.ParentCategoryId, cancellationToken);
-        try
-        {
-            CatalogCategoryTreeRules.EnsureAssignableProductCategory(primaryCategoryId, parentById);
-            return true;
-        }
-        catch (InvalidOperationException)
-        {
-            return false;
-        }
+        return CatalogCategoryTreeRules.IsAssignableProductCategory(primaryCategoryId, parentById);
     }
 }

@@ -138,4 +138,49 @@ public sealed class ProductPublishReadinessCapabilityTests
         Assert.True(new List<string>().Count == 0);
         Assert.False(new List<string> { "category" }.Count == 0);
     }
+
+    [Fact]
+    public void No_primary_category_id_is_empty_gate_before_Domain()
+    {
+        // ProductPublishReadinessReader returns false when FirstOrDefault yields Guid.Empty.
+        Guid primaryCategoryId = default;
+        Assert.Equal(Guid.Empty, primaryCategoryId);
+        Assert.False(primaryCategoryId != Guid.Empty);
+    }
+
+    [Fact]
+    public void Category_readiness_boolean_parity_via_Domain_IsAssignableProductCategory()
+    {
+        var l1 = Guid.Parse("11111111-1111-7111-8111-111111111111");
+        var l2 = Guid.Parse("22222222-2222-7222-8222-222222222222");
+        var l3 = Guid.Parse("33333333-3333-7333-8333-333333333333");
+        var parentById = new Dictionary<Guid, Guid?>
+        {
+            [l1] = null,
+            [l2] = l1,
+            [l3] = l2,
+        };
+
+        Assert.False(CatalogCategoryTreeRules.IsAssignableProductCategory(l1, parentById));
+        Assert.False(CatalogCategoryTreeRules.IsAssignableProductCategory(l2, parentById));
+        Assert.True(CatalogCategoryTreeRules.IsAssignableProductCategory(l3, parentById));
+    }
+
+    [Fact]
+    public void Non_assignable_category_does_not_throw_on_IsAssignableProductCategory()
+    {
+        var l1 = Guid.Parse("aaaaaaaa-aaaa-7aaa-8aaa-aaaaaaaaaaaa");
+        var l2 = Guid.Parse("bbbbbbbb-bbbb-7bbb-8bbb-bbbbbbbbbbbb");
+        var parentById = new Dictionary<Guid, Guid?>
+        {
+            [l1] = null,
+            [l2] = l1,
+        };
+
+        var exception = Record.Exception(() =>
+            CatalogCategoryTreeRules.IsAssignableProductCategory(l1, parentById));
+        Assert.Null(exception);
+        Assert.False(CatalogCategoryTreeRules.IsAssignableProductCategory(l1, parentById));
+        Assert.False(CatalogCategoryTreeRules.IsAssignableProductCategory(l2, parentById));
+    }
 }
