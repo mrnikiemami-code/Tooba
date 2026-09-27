@@ -1,23 +1,21 @@
 # Host/Admin empty progress (AMC)
 
-## Current Admin `*.cs` count: **32** (was 52 at series start)
+## Current Admin `*.cs` count: **31** (was 52 at series start)
 
 ### Evacuated
 | Slice | Owner |
 |---|---|
 | W20 brand-options | Catalog |
 | CatalogDemo/* | Catalog |
-| CheckoutAbuse settings | Catalog |
-| StoreLandingPage* | Catalog |
-| StoreMenu* | Catalog |
-| **CheckoutIdentity settings (W23)** | Catalog |
-| **ReservationPolicy* (W24)** | Order + Catalog Contracts |
+| CheckoutAbuse / CheckoutIdentity | Catalog |
+| StoreLandingPage* / StoreMenu* | Catalog |
+| ReservationPolicy* | Order + Catalog Contracts |
+| **LandingPageDevelopmentSeed (W25)** | Catalog Development (+ thin Host commerce host) |
 
-### Next (risk order)
-1. LandingPageDevelopmentSeed → Catalog Development (Landing unlocked)
-2. ProductWorkspace W21 lifecycle (RETAIN_PARTIAL)
-3. Merchandising → Promotion (Contracts first)
-4. Template/attribute seeds (cross-module Host retain until Contracts)
+### Next
+1. ProductWorkspace W21 lifecycle (RETAIN_PARTIAL)
+2. Merchandising → Promotion (Contracts first)
+3. Template/attribute seeds (cross-module)
 
 ### Cannot empty yet
-KEEP platform (~16) · StoreAppearance BLOCK · HoldPolicy BLOCK · ProductWorkspace* until W24 lifecycle complete · Merchandising MUST_SPLIT
+KEEP platform (~16) · StoreAppearance BLOCK · HoldPolicy BLOCK · ProductWorkspace* · Merchandising MUST_SPLIT

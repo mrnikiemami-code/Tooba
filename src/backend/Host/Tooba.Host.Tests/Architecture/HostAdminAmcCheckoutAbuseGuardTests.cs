@@ -1,4 +1,4 @@
-using System.Text.RegularExpressions;
+﻿using System.Text.RegularExpressions;
 using Xunit;
 
 namespace Tooba.Host.Tests.Architecture;
@@ -40,7 +40,7 @@ public sealed class HostAdminAmcCheckoutAbuseGuardTests
         var root = FindRepoRoot();
         var admin = Path.Combine(root, "src/backend/Host/Tooba.Host/Admin");
         var adminCount = Directory.GetFiles(admin, "*.cs", SearchOption.AllDirectories).Length;
-        Assert.Equal(32, adminCount);
+        Assert.Equal(31, adminCount);
         Assert.True(File.Exists(Path.Combine(admin, "StoreAppearanceSettingsEndpoints.cs")));
     }
 

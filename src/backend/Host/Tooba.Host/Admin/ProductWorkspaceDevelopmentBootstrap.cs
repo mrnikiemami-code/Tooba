@@ -3,6 +3,7 @@ using Tooba.BuildingBlocks;
 using Tooba.Cart.Infrastructure.Persistence;
 using Tooba.Catalog.Application;
 using Tooba.Catalog.Domain;
+using Tooba.Catalog.Infrastructure.Development;
 using Tooba.Catalog.Infrastructure.Persistence;
 using Tooba.Identity.Infrastructure.Persistence;
 using Tooba.Inventory.Application.Ports;

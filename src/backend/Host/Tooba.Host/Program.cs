@@ -16,6 +16,7 @@ using Tooba.BuildingBlocks.Presentation;
 using Tooba.StoreContext.Contracts.Current;
 using Tooba.Host;
 using Tooba.Host.Admin;
+using Tooba.Host.Development;
 using Tooba.Host.Localization;
 using Tooba.Localization.Application;
 using Tooba.Catalog.Application.Development.CatalogDemo;

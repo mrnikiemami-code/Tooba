@@ -11,11 +11,11 @@ namespace Tooba.Catalog.Infrastructure.Development;
 /// <summary>دانهٔ idempotent منوی دمو برای بازرسی بعدی کاربر.</summary>
 public static class StoreMenuDevelopmentSeed
 {
-    /// <summary>Slug صفحهٔ دمو Landing (parity با Host LandingPageDevelopmentSeed.PublishedSlug).</summary>
-    public const string LandingDemoSlug = "landing-demo";
+    /// <summary>Slug صفحهٔ دمو Landing — owned by <see cref="LandingPageDevelopmentSeed"/>.</summary>
+    public const string LandingDemoSlug = LandingPageDevelopmentSeed.PublishedSlug;
 
-    /// <summary>Slug صفحهٔ کمپین Landing (parity با Host LandingPageDevelopmentSeed.CampaignSlug).</summary>
-    public const string LandingCampaignSlug = "landing-campaign";
+    /// <summary>Slug صفحهٔ کمپین Landing — owned by <see cref="LandingPageDevelopmentSeed"/>.</summary>
+    public const string LandingCampaignSlug = LandingPageDevelopmentSeed.CampaignSlug;
 
     /// <summary>منوی دمو را اگر نیست می‌سازد و آیتم‌های بازرسی را بدون بازنویسی کامل تکمیل می‌کند.</summary>
     public static async Task ApplyAsync(IServiceProvider provider, CancellationToken cancellationToken = default)

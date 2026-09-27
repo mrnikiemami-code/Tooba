@@ -1,19 +1,25 @@
-using System.Text.Json;
+﻿using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using Tooba.BuildingBlocks;
 using Tooba.Catalog.Application.StoreLandingPages.Models;
 using Tooba.Catalog.Application.StoreLandingPages.Ports;
 using Tooba.Catalog.Domain;
 using Tooba.Catalog.Infrastructure.Persistence;
 
-namespace Tooba.Host.Admin;
+namespace Tooba.Catalog.Infrastructure.Development;
 
 /// <summary>دانهٔ توسعهٔ idempotent برای صفحات دموی Composer.</summary>
-internal static class LandingPageDevelopmentSeed
+public static class LandingPageDevelopmentSeed
 {
-    internal const string PublishedSlug = "landing-demo";
-    internal const string CampaignSlug = "landing-campaign";
-    internal const string DraftSlug = "landing-demo-draft";
+    /// <summary>Slug صفحهٔ دموی منتشرشده.</summary>
+    public const string PublishedSlug = "landing-demo";
+
+    /// <summary>Slug صفحهٔ دموی کمپین.</summary>
+    public const string CampaignSlug = "landing-campaign";
+
+    /// <summary>Slug صفحهٔ دموی پیش‌نویس.</summary>
+    public const string DraftSlug = "landing-demo-draft";
 
     /// <summary>صفحات دمو را اگر نیستند می‌سازد؛ صفحات موجود را بازنویسی نمی‌کند.</summary>
     public static async Task ApplyAsync(IServiceProvider provider, CancellationToken cancellationToken = default)
@@ -230,37 +236,5 @@ internal static class LandingPageDevelopmentSeed
         {
             await composer.SetStatusAsync(page.PageId, "Published", cancellationToken);
         }
-    }
-}
-
-/// <summary>اعمال دانه روی tenant توسعه با CommerceContext.</summary>
-internal static class LandingPageDevelopmentSeedHost
-{
-    /// <summary>scope و tenant آلفا را برای دانهٔ Landing آماده می‌کند.</summary>
-    public static async Task ApplyAsync(IServiceProvider root)
-    {
-        await using var scope = root.CreateAsyncScope();
-        var provider = scope.ServiceProvider;
-        var registry = provider.GetRequiredService<ControlPlaneRegistry>();
-        if (!registry.Tenants.TryGetValue("store-alpha", out var tenant) || tenant.Status != TenantStatus.Active)
-        {
-            return;
-        }
-
-        var assigner = provider.GetRequiredService<ICommerceContextAssigner>();
-        assigner.Assign(new CommerceContext(
-            new EditionContext(registry.Edition, registry.DeploymentId),
-            new TenantContext(
-                tenant.TenantId,
-                tenant.Status,
-                tenant.ConnectionReference,
-                tenant.DisplayName,
-                tenant.ThemeReference,
-                tenant.DefaultMarketReference,
-                tenant.Hosts[0],
-                tenant.PrimaryDomain),
-            tenant.ConnectionReference,
-            "landing-dev-seed"));
-        await LandingPageDevelopmentSeed.ApplyAsync(provider);
     }
 }
