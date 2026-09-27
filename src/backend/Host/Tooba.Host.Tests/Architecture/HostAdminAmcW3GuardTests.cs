@@ -135,13 +135,14 @@ public sealed class HostAdminAmcW3GuardTests
     }
 
     [Fact]
-    public void Host_Admin_file_count_is_57_and_W2_surfaces_preserved()
+    public void Host_Admin_file_count_is_56_and_W2_surfaces_preserved()
     {
         var admin = Path.Combine(FindRepoRoot(), "src/backend/Host/Tooba.Host/Admin");
         var files = Directory.GetFiles(admin, "*.cs", SearchOption.AllDirectories);
-        Assert.Equal(57, files.Length);
+        Assert.Equal(56, files.Length);
         Assert.False(File.Exists(Path.Combine(admin, "UnitOfMeasureEndpoints.cs")));
         Assert.False(File.Exists(Path.Combine(admin, "QuantitySettingsEndpoints.cs")));
+        Assert.False(File.Exists(Path.Combine(admin, "CatalogTagEndpoints.cs")));
         Assert.True(File.Exists(Path.Combine(admin, "StoreAppearanceSettingsEndpoints.cs")));
         Assert.True(File.Exists(Path.Combine(admin, "StoreAppearanceSettingsComposer.cs")));
 

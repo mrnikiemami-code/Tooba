@@ -23,4 +23,16 @@ public static class CatalogValidationCodes
 
     /// <summary>Unit id must be non-empty on update.</summary>
     public const string UnitIdRequired = "catalog.validation.unit_id_required";
+
+    /// <summary>Tag code exceeds max length.</summary>
+    public const string TagCodeTooLong = "catalog.validation.tag_code_too_long";
+
+    /// <summary>Tag slug exceeds max length.</summary>
+    public const string TagSlugTooLong = "catalog.validation.tag_slug_too_long";
+
+    /// <summary>LocalizedNames dictionary must be present (may be empty before overlays).</summary>
+    public const string TagLocalizedNamesRequired = "catalog.validation.tag_localized_names_required";
+
+    /// <summary>LocalizedNames keys must be non-blank.</summary>
+    public const string TagLocalizedNameLocaleRequired = "catalog.validation.tag_localized_name_locale_required";
 }

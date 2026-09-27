@@ -20,6 +20,18 @@ public sealed class CatalogErrorCatalogContributor : IErrorCatalogContributor
             "Unit code already exists."),
         D(CatalogErrorCodes.UnitLanguageUnknown, ErrorClassification.Business, StatusCodes.Status400BadRequest,
             "Unit translation language is unknown."),
+        D(CatalogErrorCodes.TagInvalid, ErrorClassification.Business, StatusCodes.Status400BadRequest,
+            "Tag input is invalid."),
+        D(CatalogErrorCodes.TagCodeDuplicate, ErrorClassification.Business, StatusCodes.Status400BadRequest,
+            "Tag code already exists."),
+        D(CatalogErrorCodes.TagMissing, ErrorClassification.NotFound, StatusCodes.Status404NotFound,
+            "Tag was not found."),
+        D(CatalogErrorCodes.TagAssignDuplicate, ErrorClassification.Business, StatusCodes.Status400BadRequest,
+            "Tag is already assigned."),
+        D(CatalogErrorCodes.TagProductMissing, ErrorClassification.NotFound, StatusCodes.Status404NotFound,
+            "Product was not found for tag assignment."),
+        D(CatalogErrorCodes.TagCategoryMissing, ErrorClassification.NotFound, StatusCodes.Status404NotFound,
+            "Category was not found for tag assignment."),
     ];
 
     private static ErrorDescriptor D(

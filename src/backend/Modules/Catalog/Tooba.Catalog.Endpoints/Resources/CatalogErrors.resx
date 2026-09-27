@@ -16,4 +16,14 @@
   <data name="catalog.validation.unit_translation_name_required" xml:space="preserve"><value>Unit translation name is required.</value></data>
   <data name="catalog.validation.unit_translation_short_name_required" xml:space="preserve"><value>Unit translation short name is required.</value></data>
   <data name="catalog.validation.unit_id_required" xml:space="preserve"><value>Unit id is required.</value></data>
+  <data name="catalog.tag.invalid" xml:space="preserve"><value>Tag input is invalid.</value></data>
+  <data name="catalog.tag.code.duplicate" xml:space="preserve"><value>Tag code already exists.</value></data>
+  <data name="catalog.tag.missing" xml:space="preserve"><value>Tag was not found.</value></data>
+  <data name="catalog.tag.assign.duplicate" xml:space="preserve"><value>Tag is already assigned.</value></data>
+  <data name="catalog.tag.product.missing" xml:space="preserve"><value>Product was not found for tag assignment.</value></data>
+  <data name="catalog.tag.category.missing" xml:space="preserve"><value>Category was not found for tag assignment.</value></data>
+  <data name="catalog.validation.tag_code_too_long" xml:space="preserve"><value>Tag code is too long.</value></data>
+  <data name="catalog.validation.tag_slug_too_long" xml:space="preserve"><value>Tag slug is too long.</value></data>
+  <data name="catalog.validation.tag_localized_names_required" xml:space="preserve"><value>Tag localized names are required.</value></data>
+  <data name="catalog.validation.tag_localized_name_locale_required" xml:space="preserve"><value>Tag localized name locale is required.</value></data>
 </root>

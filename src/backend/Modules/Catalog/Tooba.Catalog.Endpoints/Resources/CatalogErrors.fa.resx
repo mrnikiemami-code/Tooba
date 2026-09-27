@@ -16,4 +16,14 @@
   <data name="catalog.validation.unit_translation_name_required" xml:space="preserve"><value>نام ترجمه واحد الزامی است.</value></data>
   <data name="catalog.validation.unit_translation_short_name_required" xml:space="preserve"><value>نام کوتاه ترجمه واحد الزامی است.</value></data>
   <data name="catalog.validation.unit_id_required" xml:space="preserve"><value>شناسه واحد الزامی است.</value></data>
+  <data name="catalog.tag.invalid" xml:space="preserve"><value>ورودی برچسب نامعتبر است.</value></data>
+  <data name="catalog.tag.code.duplicate" xml:space="preserve"><value>کد برچسب تکراری است.</value></data>
+  <data name="catalog.tag.missing" xml:space="preserve"><value>برچسب یافت نشد.</value></data>
+  <data name="catalog.tag.assign.duplicate" xml:space="preserve"><value>برچسب قبلاً اختصاص یافته است.</value></data>
+  <data name="catalog.tag.product.missing" xml:space="preserve"><value>محصول برای اختصاص برچسب یافت نشد.</value></data>
+  <data name="catalog.tag.category.missing" xml:space="preserve"><value>رده برای اختصاص برچسب یافت نشد.</value></data>
+  <data name="catalog.validation.tag_code_too_long" xml:space="preserve"><value>کد برچسب بیش از حد طولانی است.</value></data>
+  <data name="catalog.validation.tag_slug_too_long" xml:space="preserve"><value>اسلاگ برچسب بیش از حد طولانی است.</value></data>
+  <data name="catalog.validation.tag_localized_names_required" xml:space="preserve"><value>نام‌های محلی برچسب الزامی است.</value></data>
+  <data name="catalog.validation.tag_localized_name_locale_required" xml:space="preserve"><value>محل نام محلی برچسب الزامی است.</value></data>
 </root>

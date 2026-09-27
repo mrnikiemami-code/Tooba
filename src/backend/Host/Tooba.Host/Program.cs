@@ -481,7 +481,6 @@ app.MapReservationPolicyAdminEndpoints();
 app.MapCatalogAttributeEndpoints();
 app.MapCatalogFacetEndpoints();
 app.MapCatalogMegaMenuEndpoints();
-app.MapCatalogTagEndpoints();
 app.MapCatalogCategoryEndpoints();
 app.MapCatalogDemoDevEndpoints();
 app.MapAdminPanelEndpoints();

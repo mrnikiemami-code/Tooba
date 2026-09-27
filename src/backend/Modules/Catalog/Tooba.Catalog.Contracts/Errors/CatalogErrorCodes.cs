@@ -17,4 +17,22 @@ public static class CatalogErrorCodes
 
     /// <summary>Translation LanguageId is not in the language registry.</summary>
     public const string UnitLanguageUnknown = "unit.language.unknown";
+
+    /// <summary>Tag create input is invalid (e.g. missing localized name).</summary>
+    public const string TagInvalid = "catalog.tag.invalid";
+
+    /// <summary>Explicit tag code already exists.</summary>
+    public const string TagCodeDuplicate = "catalog.tag.code.duplicate";
+
+    /// <summary>Requested tag was not found.</summary>
+    public const string TagMissing = "catalog.tag.missing";
+
+    /// <summary>Tag already assigned to product or category.</summary>
+    public const string TagAssignDuplicate = "catalog.tag.assign.duplicate";
+
+    /// <summary>Referenced product was not found for tag assignment.</summary>
+    public const string TagProductMissing = "catalog.tag.product.missing";
+
+    /// <summary>Referenced category was not found for tag assignment.</summary>
+    public const string TagCategoryMissing = "catalog.tag.category.missing";
 }

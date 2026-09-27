@@ -1,6 +1,8 @@
 using Microsoft.EntityFrameworkCore;
 using Testcontainers.PostgreSql;
 using Tooba.BuildingBlocks;
+using Tooba.Catalog.Application.Tags.Models;
+using Tooba.Catalog.Contracts.Errors;
 using Tooba.Catalog.Domain;
 using Tooba.Catalog.Infrastructure;
 using Tooba.Catalog.Infrastructure.Persistence;
@@ -11,6 +13,7 @@ namespace Tooba.Host.Tests;
 
 /// <summary>
 /// بنیاد برچسب تاکسونومی Catalog (TB-P07-T032 L/M) — نه meta keywords.
+/// W4: expected failures assert stable CatalogErrorCodes (not Persian IOE messages).
 /// </summary>
 [Collection("PostgresSerial")]
 public sealed class CatalogTagFoundationTests : IAsyncLifetime
@@ -57,19 +60,24 @@ public sealed class CatalogTagFoundationTests : IAsyncLifetime
         commerce.Assign(OutboxTestContextFactory.SingleStore("tenant-catalog-tag", "tenant-catalog-tag"));
         await using var db = CreateCatalogDb(cs, commerce);
         await db.Database.EnsureCreatedAsync();
-        var dir = new CatalogDirectory(db, new OpenCatalogUseCaseGuard());
+        var guard = new OpenCatalogUseCaseGuard();
+        var tags = new TagDirectory(db, guard);
+        var dir = new CatalogDirectory(db, guard);
 
-        var tag = await dir.CreateTagAsync(
-            null,
-            null,
-            new Dictionary<string, string> { ["fa-IR"] = "پرفروش", ["en"] = "Bestseller" },
-            "fa-IR",
+        var tagResult = await tags.CreateAsync(
+            new CreateTagWriteModel(
+                null,
+                null,
+                "fa-IR",
+                new Dictionary<string, string> { ["fa-IR"] = "پرفروش", ["en"] = "Bestseller" }),
             CancellationToken.None);
+        Assert.True(tagResult.IsSuccess);
+        var tag = tagResult.Value;
         Assert.False(string.IsNullOrWhiteSpace(tag.Code));
         Assert.Equal("پرفروش", tag.Name);
         Assert.Equal(CatalogPublicationStatus.Draft, tag.Status);
 
-        var listed = await dir.ListTagsAsync("fa-IR", "فروش", CancellationToken.None);
+        var listed = await tags.ListAsync("fa-IR", "فروش", CancellationToken.None);
         Assert.Contains(listed, t => t.TagId == tag.TagId);
 
         var l1 = await dir.CreateCategoryAsync(
@@ -86,29 +94,29 @@ public sealed class CatalogTagFoundationTests : IAsyncLifetime
             CancellationToken.None);
         await dir.AssignCategoryAsync(product.ProductId, l3.CategoryId, CancellationToken.None);
 
-        await dir.AssignProductTagAsync(product.ProductId, tag.TagId, CancellationToken.None);
-        var productTags = await dir.ListProductTagsAsync(product.ProductId, "fa-IR", CancellationToken.None);
-        Assert.Single(productTags);
-        Assert.Equal(tag.TagId, productTags[0].TagId);
+        var assignProduct = await tags.AssignProductTagAsync(product.ProductId, tag.TagId, CancellationToken.None);
+        Assert.True(assignProduct.IsSuccess);
+        Assert.Single(assignProduct.Value);
 
-        var dupProduct = await Assert.ThrowsAsync<InvalidOperationException>(() =>
-            dir.AssignProductTagAsync(product.ProductId, tag.TagId, CancellationToken.None));
-        Assert.Contains("برچسب", dupProduct.Message, StringComparison.Ordinal);
+        var dupProduct = await tags.AssignProductTagAsync(product.ProductId, tag.TagId, CancellationToken.None);
+        Assert.True(dupProduct.IsFailure);
+        Assert.Equal(CatalogErrorCodes.TagAssignDuplicate, dupProduct.FirstError.Code);
 
-        await dir.RemoveProductTagAsync(product.ProductId, tag.TagId, CancellationToken.None);
-        Assert.Empty(await dir.ListProductTagsAsync(product.ProductId, "fa-IR", CancellationToken.None));
+        var removeProduct = await tags.RemoveProductTagAsync(product.ProductId, tag.TagId, CancellationToken.None);
+        Assert.True(removeProduct.IsSuccess);
+        Assert.Empty(removeProduct.Value);
 
-        await dir.AssignCategoryTagAsync(l3.CategoryId, tag.TagId, CancellationToken.None);
-        var categoryTags = await dir.ListCategoryTagsAsync(l3.CategoryId, "fa-IR", CancellationToken.None);
-        Assert.Single(categoryTags);
-        Assert.Equal("پرفروش", categoryTags[0].Name);
+        var assignCategory = await tags.AssignCategoryTagAsync(l3.CategoryId, tag.TagId, CancellationToken.None);
+        Assert.True(assignCategory.IsSuccess);
+        Assert.Equal("پرفروش", assignCategory.Value[0].Name);
 
-        var dupCategory = await Assert.ThrowsAsync<InvalidOperationException>(() =>
-            dir.AssignCategoryTagAsync(l3.CategoryId, tag.TagId, CancellationToken.None));
-        Assert.Contains("برچسب", dupCategory.Message, StringComparison.Ordinal);
+        var dupCategory = await tags.AssignCategoryTagAsync(l3.CategoryId, tag.TagId, CancellationToken.None);
+        Assert.True(dupCategory.IsFailure);
+        Assert.Equal(CatalogErrorCodes.TagAssignDuplicate, dupCategory.FirstError.Code);
 
-        await dir.RemoveCategoryTagAsync(l3.CategoryId, tag.TagId, CancellationToken.None);
-        Assert.Empty(await dir.ListCategoryTagsAsync(l3.CategoryId, "fa-IR", CancellationToken.None));
+        var removeCategory = await tags.RemoveCategoryTagAsync(l3.CategoryId, tag.TagId, CancellationToken.None);
+        Assert.True(removeCategory.IsSuccess);
+        Assert.Empty(removeCategory.Value);
     }
 
     private static CatalogDbContext CreateCatalogDb(string connectionString, ICurrentCommerceContext commerce)

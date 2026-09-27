@@ -78,14 +78,15 @@ public sealed class HostAdminAmcW2GuardTests
     }
 
     [Fact]
-    public void Host_Admin_file_count_after_quantity_evacuation_preserved_through_W3()
+    public void Host_Admin_file_count_after_quantity_evacuation_preserved_through_W4()
     {
-        // Historical W2: 59 → 58 (Quantity). W3: 58 → 57 (UnitOfMeasure). File-count lock lives in W3.
+        // Historical W2: 59 → 58 (Quantity). W3: 58 → 57 (UoM). W4: 57 → 56 (Tags). Count locked in W4.
         var admin = Path.Combine(FindRepoRoot(), "src/backend/Host/Tooba.Host/Admin");
         var files = Directory.GetFiles(admin, "*.cs", SearchOption.AllDirectories);
-        Assert.Equal(57, files.Length);
+        Assert.Equal(56, files.Length);
         Assert.False(File.Exists(Path.Combine(admin, "QuantitySettingsEndpoints.cs")));
         Assert.False(File.Exists(Path.Combine(admin, "UnitOfMeasureEndpoints.cs")));
+        Assert.False(File.Exists(Path.Combine(admin, "CatalogTagEndpoints.cs")));
         Assert.True(File.Exists(Path.Combine(admin, "StoreAppearanceSettingsEndpoints.cs")));
         Assert.True(File.Exists(Path.Combine(admin, "StoreAppearanceSettingsComposer.cs")));
     }

@@ -1570,6 +1570,55 @@
     "recoveryDiscipline": "SYNC_SOT_FREQUENTLY_NEW_CHAT_MUST_RESUME_FROM_REPO_NOT_CONVERSATION_MEMORY",
     "minimalRecoveryPhraseFa": "برگردیم به TMAR؛ ریکاوری را انجام بده"
   },
+  "hostAdminAmcW4": {
+    "task": "TB-TMAR-HOST-ADMIN-AMC-001-W4",
+    "parentTask": "TB-TMAR-HOST-ADMIN-AMC-001-W3",
+    "parentCommit": "662592be6afede7ab982b301f120210ac36da667",
+    "state": "HOST_ADMIN_AMC_W4_TAGS_EVACUATED_CQRS_RESULT",
+    "activeHostFolder": "Admin",
+    "productionFileCountBefore": 57,
+    "productionFileCountAfter": 56,
+    "tagEndpointOwnership": "MODULE_OWNED_NINE_ROUTES_CATALOG_ENDPOINTS",
+    "tagRouteInventory": [
+      "GET /v1/admin/catalog/tags/",
+      "POST /v1/admin/catalog/tags/",
+      "GET /v1/admin/catalog/tags/{tagId}",
+      "GET /v1/admin/catalog/products/{productId}/tags/",
+      "POST /v1/admin/catalog/products/{productId}/tags/{tagId}",
+      "DELETE /v1/admin/catalog/products/{productId}/tags/{tagId}",
+      "GET /v1/admin/catalog/categories/{categoryId}/tags/",
+      "POST /v1/admin/catalog/categories/{categoryId}/tags/{tagId}",
+      "DELETE /v1/admin/catalog/categories/{categoryId}/tags/{tagId}"
+    ],
+    "tagCqrsState": "List_Get_Create_AssignProduct_RemoveProduct_ListProduct_AssignCategory_RemoveCategory_ListCategory_Result",
+    "tagPersistencePortState": "ITagDirectory_TagDirectory",
+    "validatorMatrix": "Create_REQUIRED_eight_others_NO_VALIDATOR_REQUIRED",
+    "resultErrorState": "CANONICAL_RESULT_APIRESPONSEFACTORY_CatalogErrorCodes_catalog_tag_star",
+    "messageClassificationState": "NO_PERSIAN_IOE_MESSAGE_AS_CODE_ON_TAG_SURFACE",
+    "platformHttpExceptionState": "ABSENT_ON_TAG_SURFACE",
+    "invalidOperationExpectedFlowState": "ABSENT_ON_TAG_HTTP_AND_TAGDIRECTORY",
+    "actorBindingState": "NOT_REQUIRED_FOR_TAG_SLICE_NO_HOST_FILTER_COPY",
+    "applicationStructure": "Tags/{Commands,Queries,Models,Ports,Validators}",
+    "pathNamespace": "EXACT",
+    "catalogToHost": "ZERO",
+    "endpointsToInfrastructure": "ZERO",
+    "schemaMigrationState": "NONE",
+    "frontendState": "UNCHANGED",
+    "storeAppearanceState": "NOT_MOVED_DEFERRED_PRESERVED",
+    "w1W2W2R1W3Preservation": "PRESERVED",
+    "remainingAdminBlockers": [
+      "StoreAppearance Host.Storefront projector coupling",
+      "Remaining Catalog Admin HTTP still Host-owned (attributes/categories/facets/mega-menu/workspace/...)"
+    ],
+    "residualDebt": [
+      "W5+ Catalog HTTP waves",
+      "Appearance redesign before evacuate",
+      "ICatalogDirectory thin tag wrappers remain for CatalogDemo/legacy"
+    ],
+    "nextHostFolderStarted": false,
+    "workflowStop": "USER_REVIEW_HOST_ADMIN_W4_CHECKPOINT",
+    "evidence": "docs/evidence/TB-TMAR-HOST-ADMIN-AMC-001-W4/"
+  },
       "hostAdminAmcW3": {
     "task": "TB-TMAR-HOST-ADMIN-AMC-001-W3",
     "parentTask": "TB-TMAR-HOST-ADMIN-AMC-001-W2-R1",
