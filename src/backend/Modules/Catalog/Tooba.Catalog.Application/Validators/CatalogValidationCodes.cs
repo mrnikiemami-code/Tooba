@@ -107,4 +107,7 @@ public static class CatalogValidationCodes
 
     /// <summary>Category-change NewCategoryId must be non-empty.</summary>
     public const string CategoryChangeNewCategoryIdRequired = "catalog.validation.category_change_new_category_id_required";
+
+    /// <summary>Product media reorder OrderedMediaAssetIds collection must be present.</summary>
+    public const string ProductMediaOrderedIdsRequired = "catalog.validation.product_media_ordered_ids_required";
 }

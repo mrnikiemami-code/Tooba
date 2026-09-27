@@ -5,7 +5,7 @@
     {
       "path": "src/backend/Modules/Catalog/Tooba.Catalog.Infrastructure/CatalogDirectory.cs",
       "language": "cs",
-      "loc": 5124,
+      "loc": 2256,
       "classification": "CRITICAL_GOD_FILE"
     },
     {
@@ -29,7 +29,7 @@
     {
       "path": "src/backend/Host/Tooba.Host/Admin/ProductWorkspaceComposer.cs",
       "language": "cs",
-      "loc": 1910,
+      "loc": 1715,
       "classification": "CRITICAL_GOD_FILE"
     },
     {
@@ -258,12 +258,6 @@
       "path": "src/frontend/app/admin/admin-order-items-shipping-panel.tsx",
       "language": "tsx",
       "loc": 884,
-      "classification": "OVERSIZED_LEGACY"
-    },
-    {
-      "path": "src/backend/Host/Tooba.Host/Admin/ProductWorkspaceEndpoints.cs",
-      "language": "cs",
-      "loc": 879,
       "classification": "OVERSIZED_LEGACY"
     },
     {

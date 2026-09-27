@@ -96,6 +96,16 @@
   <data name="catalog.category.assignment.level.invalid" xml:space="preserve"><value>محصول باید به یک دسته‌بندی سطح سوم اختصاص داده شود.</value></data>
   <data name="catalog.category_change.invalid" xml:space="preserve"><value>تغییر رده نامعتبر است.</value></data>
   <data name="catalog.validation.category_change_new_category_id_required" xml:space="preserve"><value>شناسهٔ دستهٔ جدید الزامی است.</value></data>
+  <data name="workspace.product.missing" xml:space="preserve"><value>محصول پیدا نشد.</value></data>
+  <data name="workspace.permission.denied" xml:space="preserve"><value>Forbidden</value></data>
+  <data name="workspace.media.asset.missing" xml:space="preserve"><value>شناسهٔ رسانه لازم است.</value></data>
+  <data name="workspace.media.attach.rejected" xml:space="preserve"><value>اتصال رسانه رد شد.</value></data>
+  <data name="workspace.media.placeholder.rejected" xml:space="preserve"><value>ساخت تصویر نمایشی رد شد.</value></data>
+  <data name="workspace.media.empty" xml:space="preserve"><value>رسانه‌ای برای این محصول نیست.</value></data>
+  <data name="workspace.media.order.invalid" xml:space="preserve"><value>فهرست ترتیب باید دقیقاً همهٔ رسانه‌های فعلی را بدون تکرار پوشش دهد.</value></data>
+  <data name="workspace.media.order.rejected" xml:space="preserve"><value>ترتیب رسانه رد شد.</value></data>
+  <data name="workspace.media.missing" xml:space="preserve"><value>رسانه روی این محصول پیدا نشد.</value></data>
+  <data name="catalog.validation.product_media_ordered_ids_required" xml:space="preserve"><value>فهرست شناسهٔ ترتیب رسانه الزامی است.</value></data>
   <data name="catalog.validation.attribute_definition_code_required" xml:space="preserve"><value>کد تعریف ویژگی الزامی است.</value></data>
   <data name="catalog.validation.attribute_option_code_required" xml:space="preserve"><value>کد گزینهٔ ویژگی الزامی است.</value></data>
   <data name="catalog.validation.schema_definition_id_required" xml:space="preserve"><value>شناسهٔ تعریف ویژگی الزامی است.</value></data>

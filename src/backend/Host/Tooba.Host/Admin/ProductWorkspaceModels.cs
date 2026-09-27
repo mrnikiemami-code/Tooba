@@ -252,25 +252,6 @@ public sealed record ProductHistoryItemView(
     string ActorDisplayName,
     DateTimeOffset OccurredAt);
 
-/// <summary>بدنهٔ افزودن مرجع رسانه.</summary>
-public sealed record AdminProductMediaAttachRequest(Guid MediaAssetId, string? AltText);
-
-/// <summary>بدنهٔ افزودن تصویر نمایشی بدون Guid سمت کلاینت.</summary>
-public sealed record AdminProductMediaPlaceholderRequest(string? AltText);
-
-/// <summary>بدنهٔ ترتیب گالری.</summary>
-public sealed record AdminProductMediaOrderRequest(IReadOnlyList<Guid> OrderedMediaAssetIds);
-
-/// <summary>بدنهٔ ویرایش alt رسانه.</summary>
-public sealed record AdminProductMediaPatchRequest(string? AltText);
-
-/// <summary>آمادگی گالری رسانه برای UI و انتشار بعدی.</summary>
-public sealed record ProductMediaReadinessView(
-    bool HasPrimaryImage,
-    int MediaCount,
-    bool IsReady,
-    string? MessageFa);
-
 /// <summary>بدنهٔ به‌روزرسانی SEO محصول برای یک locale.</summary>
 public sealed record AdminProductSeoUpdateRequest(
     string Locale,

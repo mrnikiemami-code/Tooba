@@ -96,6 +96,16 @@
   <data name="catalog.category.assignment.level.invalid" xml:space="preserve"><value>Product must be assigned to a Level-3 category.</value></data>
   <data name="catalog.category_change.invalid" xml:space="preserve"><value>Category change is invalid.</value></data>
   <data name="catalog.validation.category_change_new_category_id_required" xml:space="preserve"><value>New category id is required.</value></data>
+  <data name="workspace.product.missing" xml:space="preserve"><value>Product was not found.</value></data>
+  <data name="workspace.permission.denied" xml:space="preserve"><value>Forbidden</value></data>
+  <data name="workspace.media.asset.missing" xml:space="preserve"><value>Media asset id is required.</value></data>
+  <data name="workspace.media.attach.rejected" xml:space="preserve"><value>Media attach was rejected.</value></data>
+  <data name="workspace.media.placeholder.rejected" xml:space="preserve"><value>Placeholder media was rejected.</value></data>
+  <data name="workspace.media.empty" xml:space="preserve"><value>Product has no media.</value></data>
+  <data name="workspace.media.order.invalid" xml:space="preserve"><value>Media order list is invalid.</value></data>
+  <data name="workspace.media.order.rejected" xml:space="preserve"><value>Media reorder was rejected.</value></data>
+  <data name="workspace.media.missing" xml:space="preserve"><value>Media reference was not found on the product.</value></data>
+  <data name="catalog.validation.product_media_ordered_ids_required" xml:space="preserve"><value>Ordered media asset ids are required.</value></data>
   <data name="catalog.validation.attribute_definition_code_required" xml:space="preserve"><value>Attribute definition code is required.</value></data>
   <data name="catalog.validation.attribute_option_code_required" xml:space="preserve"><value>Attribute option code is required.</value></data>
   <data name="catalog.validation.schema_definition_id_required" xml:space="preserve"><value>Attribute definition id is required.</value></data>

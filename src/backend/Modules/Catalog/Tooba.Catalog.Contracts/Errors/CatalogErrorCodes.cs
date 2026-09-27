@@ -206,4 +206,31 @@ public static class CatalogErrorCodes
 
     /// <summary>Category-change preview/replace precondition failed (non-assignment-level).</summary>
     public const string CategoryChangeInvalid = "catalog.category_change.invalid";
+
+    /// <summary>Workspace product was not found (preserved Product Workspace media code).</summary>
+    public const string WorkspaceProductMissing = "workspace.product.missing";
+
+    /// <summary>Workspace catalog edit denied (e.g. X-Tooba-Workspace-Scope=view).</summary>
+    public const string WorkspacePermissionDenied = "workspace.permission.denied";
+
+    /// <summary>Attach body MediaAssetId was empty.</summary>
+    public const string WorkspaceMediaAssetMissing = "workspace.media.asset.missing";
+
+    /// <summary>Attach existing media reference rejected (duplicate or other).</summary>
+    public const string WorkspaceMediaAttachRejected = "workspace.media.attach.rejected";
+
+    /// <summary>Generated placeholder media attach rejected.</summary>
+    public const string WorkspaceMediaPlaceholderRejected = "workspace.media.placeholder.rejected";
+
+    /// <summary>Reorder requested but product has no media.</summary>
+    public const string WorkspaceMediaEmpty = "workspace.media.empty";
+
+    /// <summary>Reorder list is not an exact match of current media set.</summary>
+    public const string WorkspaceMediaOrderInvalid = "workspace.media.order.invalid";
+
+    /// <summary>Reorder rejected for other business reasons.</summary>
+    public const string WorkspaceMediaOrderRejected = "workspace.media.order.rejected";
+
+    /// <summary>Primary/patch/detach target media reference missing on product.</summary>
+    public const string WorkspaceMediaMissing = "workspace.media.missing";
 }
