@@ -1570,6 +1570,68 @@
     "recoveryDiscipline": "SYNC_SOT_FREQUENTLY_NEW_CHAT_MUST_RESUME_FROM_REPO_NOT_CONVERSATION_MEMORY",
     "minimalRecoveryPhraseFa": "برگردیم به TMAR؛ ریکاوری را انجام بده"
   },
+  "hostAdminAmcW8": {
+    "task": "TB-TMAR-HOST-ADMIN-AMC-001-W8",
+    "parentTask": "TB-TMAR-HOST-ADMIN-AMC-001-W7",
+    "parentCommit": "d82d130643aec119a9a282654a4823421b44ff7a",
+    "state": "HOST_ADMIN_AMC_W8_ATTRIBUTE_DEFINITIONS_PARTIAL_EVACUATED_CQRS_RESULT",
+    "activeHostFolder": "Admin",
+    "productionFileCountBefore": 53,
+    "productionFileCountAfter": 53,
+    "catalogAttributeEndpointsState": "RETAINED_PARTIAL_FOR_LATER_WAVES",
+    "definitionHostRouteCountBefore": 7,
+    "definitionHostRouteCountAfter": 0,
+    "migratedRouteCount": 7,
+    "definitionEndpointOwnership": "MODULE_OWNED_SEVEN_ROUTES_CATALOG_ENDPOINTS",
+    "definitionRouteInventory": [
+      "GET /v1/admin/catalog/attribute-definitions/",
+      "GET /v1/admin/catalog/attribute-definitions/{definitionId}",
+      "POST /v1/admin/catalog/attribute-definitions/",
+      "PATCH /v1/admin/catalog/attribute-definitions/{definitionId}",
+      "GET /v1/admin/catalog/attribute-definitions/{definitionId}/variant-axis-capability/disable-preview",
+      "PUT /v1/admin/catalog/attribute-definitions/{definitionId}/variant-axis-capability",
+      "POST /v1/admin/catalog/attribute-definitions/{definitionId}/options"
+    ],
+    "remainingHostAttributeRouteGroups": [
+      "category attribute-schema",
+      "product attributes/readiness",
+      "variant-axes",
+      "variants editor/preview/apply/readiness",
+      "category-change-preview/primary-category"
+    ],
+    "definitionCqrsState": "List_Get_Create_Update_PreviewDisable_SetCapability_AddOption_Result",
+    "definitionPersistencePortState": "IAttributeDefinitionDirectory_AttributeDefinitionDirectory",
+    "validatorMatrix": "Create_AddOption_REQUIRED_five_others_NO_VALIDATOR_REQUIRED",
+    "resultErrorState": "CANONICAL_RESULT_APIRESPONSEFACTORY_CatalogErrorCodes_catalog_attribute_star",
+    "messageClassificationState": "NO_PERSIAN_IOE_MESSAGE_AS_CODE_ON_DEFINITION_SURFACE",
+    "platformHttpExceptionState": "ABSENT_ON_DEFINITION_SURFACE",
+    "invalidOperationExpectedFlowState": "ABSENT_ON_DEFINITION_HTTP_AND_ATTRIBUTEDEFINITIONDIRECTORY",
+    "offerBoundaryState": "ZERO_ON_DEFINITION_SURFACE_RETAINED_HOST_VARIANT_ENRICHMENT_ONLY",
+    "adminAuthorizationState": "ICatalogAdminAuthorizer_ON_SEVEN_ADMIN_ROUTES",
+    "applicationStructure": "Attributes/Definitions/{Commands,Queries,Models,Ports,Validators}",
+    "pathNamespace": "EXACT",
+    "catalogToHost": "ZERO",
+    "endpointsToInfrastructure": "ZERO",
+    "routeBehaviorParity": "PRESERVED",
+    "createMetadataAtomicity": "SINGLE_SAVECHANGES_IMPROVED_WITHOUT_SCHEMA_CHANGE",
+    "schemaMigrationState": "NONE",
+    "frontendState": "UNCHANGED",
+    "storeAppearanceState": "NOT_MOVED_DEFERRED_PRESERVED",
+    "w1W2W2R1W3W4W5W6W7Preservation": "PRESERVED",
+    "remainingAdminBlockers": [
+      "StoreAppearance Host.Storefront projector coupling",
+      "Remaining Catalog Attribute Host routes (schema/product/variants/category-change)",
+      "ProductWorkspace and other Admin Catalog HTTP still Host-owned"
+    ],
+    "residualDebt": [
+      "W9+ retained Attribute Host members",
+      "Appearance redesign before evacuate",
+      "ICatalogDirectory thin Attribute Definition wrappers remain for CatalogDemo/legacy"
+    ],
+    "nextHostFolderStarted": false,
+    "workflowStop": "USER_REVIEW_HOST_ADMIN_W8_CHECKPOINT",
+    "evidence": "docs/evidence/TB-TMAR-HOST-ADMIN-AMC-001-W8/"
+  },
   "hostAdminAmcW7": {
     "task": "TB-TMAR-HOST-ADMIN-AMC-001-W7",
     "parentTask": "TB-TMAR-HOST-ADMIN-AMC-001-W6",

@@ -101,4 +101,25 @@ public static class CatalogErrorCodes
 
     /// <summary>Category route locale+slug could not be resolved.</summary>
     public const string CategoryRouteMissing = "catalog.category.route.missing";
+
+    /// <summary>Requested attribute definition was not found.</summary>
+    public const string AttributeMissing = "catalog.attribute.missing";
+
+    /// <summary>Attribute definition input or business precondition is invalid.</summary>
+    public const string AttributeInvalid = "catalog.attribute.invalid";
+
+    /// <summary>Attribute definition code already exists.</summary>
+    public const string AttributeCodeDuplicate = "catalog.attribute.code.duplicate";
+
+    /// <summary>Localized attribute definition name already exists for the locale.</summary>
+    public const string AttributeNameDuplicate = "catalog.attribute.name.duplicate";
+
+    /// <summary>ValueKind cannot be used as a variant axis.</summary>
+    public const string AttributeVariantAxisValueKindInvalid = "catalog.attribute.variant_axis.value_kind.invalid";
+
+    /// <summary>Variant-axis capability cannot be disabled while in use.</summary>
+    public const string AttributeVariantAxisInUse = "catalog.attribute.variant_axis.in_use";
+
+    /// <summary>Variant-axis assignment blocked because definition capability is disabled.</summary>
+    public const string AttributeVariantAxisCapabilityDisabled = "catalog.attribute.variant_axis.capability_disabled";
 }

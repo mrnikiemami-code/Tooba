@@ -3,6 +3,7 @@ using Testcontainers.PostgreSql;
 using Tooba.AccessControl.Application;
 using Tooba.BuildingBlocks;
 using Tooba.Catalog.Application;
+using Tooba.Catalog.Contracts.Errors;
 using Tooba.Catalog.Domain;
 using Tooba.Catalog.Infrastructure;
 using Tooba.Catalog.Infrastructure.Persistence;
@@ -372,8 +373,7 @@ public sealed class CatalogAttributeSchemaTests : IAsyncLifetime
                 false,
                 new Dictionary<string, string> { ["fa-IR"] = "رنگ دیگر" },
                 CancellationToken.None));
-        Assert.Contains("کد", codeDup.Message);
-        Assert.Contains("تکراری", codeDup.Message);
+        Assert.Equal(CatalogErrorCodes.AttributeCodeDuplicate, codeDup.Message);
 
         var nameDup = await Assert.ThrowsAsync<InvalidOperationException>(() =>
             dir.CreateAttributeDefinitionAsync(
@@ -382,8 +382,7 @@ public sealed class CatalogAttributeSchemaTests : IAsyncLifetime
                 false,
                 new Dictionary<string, string> { ["fa-IR"] = "رنگ" },
                 CancellationToken.None));
-        Assert.Contains("نام", nameDup.Message);
-        Assert.Contains("تکراری", nameDup.Message);
+        Assert.Equal(CatalogErrorCodes.AttributeNameDuplicate, nameDup.Message);
     }
 
     [SkippableFact]

@@ -17,15 +17,6 @@ public static class CatalogAttributeEndpoints
     /// </summary>
     public static void MapCatalogAttributeEndpoints(this WebApplication app)
     {
-        var defs = app.MapGroup("/v1/admin/catalog/attribute-definitions");
-        defs.MapGet("/", ListDefinitionsAsync);
-        defs.MapGet("/{definitionId:guid}", GetDefinitionAsync);
-        defs.MapPost("/", CreateDefinitionAsync);
-        defs.MapPatch("/{definitionId:guid}", UpdateDefinitionAsync);
-        defs.MapGet("/{definitionId:guid}/variant-axis-capability/disable-preview", PreviewVariantAxisCapabilityDisableAsync);
-        defs.MapPut("/{definitionId:guid}/variant-axis-capability", SetVariantAxisCapabilityAsync);
-        defs.MapPost("/{definitionId:guid}/options", AddOptionAsync);
-
         var categories = app.MapGroup("/v1/admin/catalog/categories/{categoryId:guid}/attribute-schema");
         categories.MapGet("/effective", GetEffectiveSchemaAsync);
         categories.MapPost("/bindings", BindAsync);
@@ -46,232 +37,6 @@ public static class CatalogAttributeEndpoints
         products.MapGet("/variants/readiness", GetProductVariantReadinessAsync);
         products.MapPost("/category-change-preview", PreviewCategoryChangeAsync);
         products.MapPut("/primary-category", ReplacePrimaryCategoryAsync);
-    }
-
-    private static async Task<IResult> ListDefinitionsAsync(
-        ICatalogDirectory catalog,
-        HttpRequest request,
-        CurrentAuthenticatedSession session,
-        ICurrentTenant tenant,
-        IAuthorizationGuard guard,
-        IHostEnvironment environment,
-        CancellationToken cancellationToken)
-    {
-        try
-        {
-            await AdminPanelAccess.RequireAuthorizedAsync(
-                request, session, tenant, guard, environment, cancellationToken);
-            return Results.Json(await catalog.ListAttributeDefinitionsAsync(cancellationToken));
-        }
-        catch (PlatformHttpException ex)
-        {
-            return ToError(ex);
-        }
-    }
-
-    private static async Task<IResult> GetDefinitionAsync(
-        Guid definitionId,
-        ICatalogDirectory catalog,
-        HttpRequest request,
-        CurrentAuthenticatedSession session,
-        ICurrentTenant tenant,
-        IAuthorizationGuard guard,
-        IHostEnvironment environment,
-        CancellationToken cancellationToken)
-    {
-        try
-        {
-            await AdminPanelAccess.RequireAuthorizedAsync(
-                request, session, tenant, guard, environment, cancellationToken);
-            var view = await catalog.GetAttributeDefinitionAsync(definitionId, cancellationToken);
-            return view is null
-                ? Results.Json(new { title = "Not Found", errorCode = "catalog.attribute.missing" }, statusCode: StatusCodes.Status404NotFound)
-                : Results.Json(view);
-        }
-        catch (PlatformHttpException ex)
-        {
-            return ToError(ex);
-        }
-    }
-
-    private static async Task<IResult> CreateDefinitionAsync(
-        CreateAttributeDefinitionRequest body,
-        ICatalogDirectory catalog,
-        HttpRequest request,
-        CurrentAuthenticatedSession session,
-        ICurrentTenant tenant,
-        IAuthorizationGuard guard,
-        IHostEnvironment environment,
-        CancellationToken cancellationToken)
-    {
-        try
-        {
-            await AdminPanelAccess.RequireAuthorizedAsync(
-                request, session, tenant, guard, environment, cancellationToken);
-            var id = await catalog.CreateAttributeDefinitionAsync(
-                body.Code,
-                body.ValueKind,
-                body.IsVariantAxisAllowed,
-                body.LocalizedNames ?? new Dictionary<string, string>(),
-                cancellationToken);
-            if (body.Metadata is { } meta)
-            {
-                await catalog.UpdateAttributeDefinitionAsync(
-                    id,
-                    meta.Unit,
-                    meta.IsRequired,
-                    meta.IsFilterable,
-                    meta.IsComparable,
-                    meta.IsMultivalue,
-                    meta.DisplayOrder,
-                    meta.ValidationMin,
-                    meta.ValidationMax,
-                    meta.ValidationMaxLength,
-                    meta.IsActive,
-                    cancellationToken);
-            }
-
-            return Results.Json(new { definitionId = id }, statusCode: StatusCodes.Status201Created);
-        }
-        catch (PlatformHttpException ex)
-        {
-            return ToError(ex);
-        }
-        catch (InvalidOperationException ex)
-        {
-            return MapAttributeInvalid(ex);
-        }
-    }
-
-    private static async Task<IResult> UpdateDefinitionAsync(
-        Guid definitionId,
-        UpdateAttributeDefinitionRequest body,
-        ICatalogDirectory catalog,
-        HttpRequest request,
-        CurrentAuthenticatedSession session,
-        ICurrentTenant tenant,
-        IAuthorizationGuard guard,
-        IHostEnvironment environment,
-        CancellationToken cancellationToken)
-    {
-        try
-        {
-            await AdminPanelAccess.RequireAuthorizedAsync(
-                request, session, tenant, guard, environment, cancellationToken);
-            await catalog.UpdateAttributeDefinitionAsync(
-                definitionId,
-                body.Unit,
-                body.IsRequired,
-                body.IsFilterable,
-                body.IsComparable,
-                body.IsMultivalue,
-                body.DisplayOrder,
-                body.ValidationMin,
-                body.ValidationMax,
-                body.ValidationMaxLength,
-                body.IsActive,
-                cancellationToken);
-            return Results.Json(await catalog.GetAttributeDefinitionAsync(definitionId, cancellationToken));
-        }
-        catch (PlatformHttpException ex)
-        {
-            return ToError(ex);
-        }
-        catch (InvalidOperationException ex)
-        {
-            return MapAttributeInvalid(ex);
-        }
-    }
-
-    private static async Task<IResult> PreviewVariantAxisCapabilityDisableAsync(
-        Guid definitionId,
-        ICatalogDirectory catalog,
-        HttpRequest request,
-        CurrentAuthenticatedSession session,
-        ICurrentTenant tenant,
-        IAuthorizationGuard guard,
-        IHostEnvironment environment,
-        CancellationToken cancellationToken)
-    {
-        try
-        {
-            await AdminPanelAccess.RequireAuthorizedAsync(
-                request, session, tenant, guard, environment, cancellationToken);
-            return Results.Json(await catalog.PreviewVariantAxisCapabilityDisableImpactAsync(
-                definitionId,
-                cancellationToken));
-        }
-        catch (PlatformHttpException ex)
-        {
-            return ToError(ex);
-        }
-        catch (InvalidOperationException ex)
-        {
-            return MapAttributeInvalid(ex);
-        }
-    }
-
-    private static async Task<IResult> SetVariantAxisCapabilityAsync(
-        Guid definitionId,
-        SetVariantAxisCapabilityRequest body,
-        ICatalogDirectory catalog,
-        HttpRequest request,
-        CurrentAuthenticatedSession session,
-        ICurrentTenant tenant,
-        IAuthorizationGuard guard,
-        IHostEnvironment environment,
-        CancellationToken cancellationToken)
-    {
-        try
-        {
-            await AdminPanelAccess.RequireAuthorizedAsync(
-                request, session, tenant, guard, environment, cancellationToken);
-            await catalog.SetAttributeDefinitionVariantAxisCapabilityAsync(
-                definitionId,
-                body.IsVariantAxisAllowed,
-                cancellationToken);
-            return Results.Json(await catalog.GetAttributeDefinitionAsync(definitionId, cancellationToken));
-        }
-        catch (PlatformHttpException ex)
-        {
-            return ToError(ex);
-        }
-        catch (InvalidOperationException ex)
-        {
-            return MapAttributeInvalid(ex);
-        }
-    }
-
-    private static async Task<IResult> AddOptionAsync(
-        Guid definitionId,
-        AddAttributeOptionRequest body,
-        ICatalogDirectory catalog,
-        HttpRequest request,
-        CurrentAuthenticatedSession session,
-        ICurrentTenant tenant,
-        IAuthorizationGuard guard,
-        IHostEnvironment environment,
-        CancellationToken cancellationToken)
-    {
-        try
-        {
-            await AdminPanelAccess.RequireAuthorizedAsync(
-                request, session, tenant, guard, environment, cancellationToken);
-            var optionId = await catalog.AddAttributeOptionAsync(
-                definitionId,
-                body.Code,
-                body.LocalizedNames ?? new Dictionary<string, string>(),
-                cancellationToken);
-            return Results.Json(new { optionId }, statusCode: StatusCodes.Status201Created);
-        }
-        catch (PlatformHttpException ex)
-        {
-            return ToError(ex);
-        }
-        catch (InvalidOperationException ex)
-        {
-            return Results.Json(new { title = ex.Message, errorCode = "catalog.attribute.invalid" }, statusCode: StatusCodes.Status400BadRequest);
-        }
     }
 
     private static async Task<IResult> GetEffectiveSchemaAsync(
@@ -847,8 +612,9 @@ public static class CatalogAttributeEndpoints
 
     private static IResult MapAttributeInvalid(InvalidOperationException ex)
     {
-        if (ex.Message.Contains("کد", StringComparison.Ordinal)
-            && ex.Message.Contains("تکراری", StringComparison.Ordinal))
+        if (ex.Message == "catalog.attribute.code.duplicate"
+            || (ex.Message.Contains("کد", StringComparison.Ordinal)
+                && ex.Message.Contains("تکراری", StringComparison.Ordinal)))
         {
             return Results.Json(
                 new
@@ -859,8 +625,9 @@ public static class CatalogAttributeEndpoints
                 statusCode: StatusCodes.Status409Conflict);
         }
 
-        if (ex.Message.Contains("نام", StringComparison.Ordinal)
-            && ex.Message.Contains("تکراری", StringComparison.Ordinal))
+        if (ex.Message == "catalog.attribute.name.duplicate"
+            || (ex.Message.Contains("نام", StringComparison.Ordinal)
+                && ex.Message.Contains("تکراری", StringComparison.Ordinal)))
         {
             return Results.Json(
                 new
@@ -919,33 +686,6 @@ public static class CatalogAttributeEndpoints
     private static IResult ToError(PlatformHttpException ex) =>
         Results.Json(new { title = ex.Title, errorCode = ex.ErrorCode }, statusCode: ex.StatusCode);
 }
-
-/// <summary>بدنهٔ ایجاد تعریف ویژگی.</summary>
-public sealed record CreateAttributeDefinitionRequest(
-    string Code,
-    CatalogAttributeValueKind ValueKind,
-    bool IsVariantAxisAllowed,
-    Dictionary<string, string>? LocalizedNames,
-    UpdateAttributeDefinitionRequest? Metadata);
-
-/// <summary>بدنهٔ به‌روزرسانی فرادادهٔ تعریف.</summary>
-public sealed record UpdateAttributeDefinitionRequest(
-    string? Unit,
-    bool IsRequired,
-    bool IsFilterable,
-    bool IsComparable,
-    bool IsMultivalue,
-    int DisplayOrder,
-    decimal? ValidationMin,
-    decimal? ValidationMax,
-    int? ValidationMaxLength,
-    bool IsActive);
-
-/// <summary>بدنهٔ به‌روزرسانی قابلیت محور تنوع.</summary>
-public sealed record SetVariantAxisCapabilityRequest(bool IsVariantAxisAllowed);
-
-/// <summary>بدنهٔ افزودن گزینه.</summary>
-public sealed record AddAttributeOptionRequest(string Code, Dictionary<string, string>? LocalizedNames);
 
 /// <summary>بدنهٔ پیوند schema رده.</summary>
 public sealed record BindCategoryAttributeRequest(

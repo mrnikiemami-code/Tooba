@@ -1,7 +1,9 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Tooba.BuildingBlocks;
 using Tooba.BuildingBlocks.Results;
 using Tooba.Catalog.Application;
+using Tooba.Catalog.Application.Attributes.Definitions.Models;
+using Tooba.Catalog.Application.Attributes.Definitions.Ports;
 using Tooba.Catalog.Application.Categories.Models;
 using Tooba.Catalog.Application.Categories.Ports;
 using Tooba.Catalog.Application.Facets.Ports;
@@ -769,6 +771,9 @@ public sealed class CatalogDirectory :
 
     private ICategoryDirectory CategoriesPort() => new CategoryDirectory(_db, _guard);
 
+    private IAttributeDefinitionDirectory AttributeDefinitionsPort() =>
+        new AttributeDefinitionDirectory(_db, _guard);
+
     private static T Unwrap<T>(Result<T> result)
     {
         if (result.IsFailure)
@@ -795,46 +800,14 @@ public sealed class CatalogDirectory :
         IReadOnlyDictionary<string, string> localizedNames,
         CancellationToken cancellationToken)
     {
-        await _guard.EnsureCanMutateAsync(cancellationToken);
-        var normalizedCode = code.Trim().ToLowerInvariant();
-        var codeTaken = await _db.AttributeDefinitions.AsNoTracking()
-            .AnyAsync(x => x.Code == normalizedCode, cancellationToken);
-        if (codeTaken)
-        {
-            throw new InvalidOperationException("کد ویژگی تکراری است.");
-        }
-
-        foreach (var pair in localizedNames)
-        {
-            var name = pair.Value.Trim();
-            if (name.Length == 0)
-            {
-                continue;
-            }
-
-            var locale = pair.Key.Trim();
-            var nameTaken = await _db.LocalizedTexts.AsNoTracking().AnyAsync(
-                t => t.OwnerKind == CatalogLocalizedOwnerKind.AttributeDefinition
-                    && t.FieldKey == "name"
-                    && t.Locale == locale
-                    && t.Value.ToLower() == name.ToLower(),
-                cancellationToken);
-            if (nameTaken)
-            {
-                throw new InvalidOperationException("نام ویژگی برای این locale تکراری است.");
-            }
-        }
-
-        if (isVariantAxis)
-        {
-            CatalogCategoryAttributeAssignmentRules.ValidateVariantAxisCapabilityEnable(valueKind);
-        }
-
-        var definition = CatalogAttributeDefinition.Create(code, valueKind, isVariantAxis, DateTimeOffset.UtcNow);
-        _db.AttributeDefinitions.Add(definition);
-        AddLocalizedNames(CatalogLocalizedOwnerKind.AttributeDefinition, definition.DefinitionId, localizedNames);
-        await _db.SaveChangesAsync(cancellationToken);
-        return definition.DefinitionId;
+        var result = await AttributeDefinitionsPort().CreateAsync(
+            code,
+            valueKind,
+            isVariantAxis,
+            localizedNames,
+            metadata: null,
+            cancellationToken);
+        return Unwrap(result).DefinitionId;
     }
 
     /// <inheritdoc />
@@ -852,84 +825,48 @@ public sealed class CatalogDirectory :
         bool isActive,
         CancellationToken cancellationToken)
     {
-        await _guard.EnsureCanMutateAsync(cancellationToken);
-        var definition = await _db.AttributeDefinitions.SingleAsync(x => x.DefinitionId == definitionId, cancellationToken);
-        definition.UpdateMetadata(
-            unit,
-            isRequired,
-            isFilterable,
-            isComparable,
-            isMultivalue,
-            displayOrder,
-            validationMin,
-            validationMax,
-            validationMaxLength,
-            isActive);
-        await _db.SaveChangesAsync(cancellationToken);
+        _ = Unwrap(await AttributeDefinitionsPort().UpdateMetadataAsync(
+            definitionId,
+            new AttributeDefinitionMetadataWriteModel(
+                unit,
+                isRequired,
+                isFilterable,
+                isComparable,
+                isMultivalue,
+                displayOrder,
+                validationMin,
+                validationMax,
+                validationMaxLength,
+                isActive),
+            cancellationToken));
     }
 
     /// <inheritdoc />
-    public async Task<IReadOnlyList<AttributeDefinitionView>> ListAttributeDefinitionsAsync(CancellationToken cancellationToken)
-    {
-        var rows = await _db.AttributeDefinitions.AsNoTracking()
-            .OrderBy(x => x.DisplayOrder)
-            .ThenBy(x => x.Code)
-            .ToListAsync(cancellationToken);
-        return rows.Select(ToDefinitionView).ToList();
-    }
+    public async Task<IReadOnlyList<AttributeDefinitionView>> ListAttributeDefinitionsAsync(
+        CancellationToken cancellationToken) =>
+        Unwrap(await AttributeDefinitionsPort().ListAsync(cancellationToken));
 
     /// <inheritdoc />
     public async Task<AttributeDefinitionView?> GetAttributeDefinitionAsync(
         Guid definitionId,
         CancellationToken cancellationToken)
     {
-        var row = await _db.AttributeDefinitions.AsNoTracking()
-            .SingleOrDefaultAsync(x => x.DefinitionId == definitionId, cancellationToken);
-        return row is null ? null : ToDefinitionView(row);
+        var result = await AttributeDefinitionsPort().GetAsync(definitionId, cancellationToken);
+        if (result.IsFailure && result.FirstError.Code == CatalogErrorCodes.AttributeMissing)
+        {
+            return null;
+        }
+
+        return Unwrap(result);
     }
 
     /// <inheritdoc />
     public async Task<VariantAxisCapabilityDisableImpactView> PreviewVariantAxisCapabilityDisableImpactAsync(
         Guid definitionId,
-        CancellationToken cancellationToken)
-    {
-        _ = await _db.AttributeDefinitions.AsNoTracking()
-                .SingleOrDefaultAsync(x => x.DefinitionId == definitionId, cancellationToken)
-            ?? throw new InvalidOperationException("catalog.attribute.missing");
-
-        var variantBindings = await _db.CategoryAttributeBindings.AsNoTracking()
-            .Where(b => b.DefinitionId == definitionId && b.IsVariantAxis)
-            .ToListAsync(cancellationToken);
-
-        var categoryIds = variantBindings.Select(b => b.CategoryId).Distinct().ToArray();
-        var names = await GetCategoryNamesAsync(categoryIds, cancellationToken);
-
-        var affected = variantBindings
-            .GroupBy(b => b.CategoryId)
-            .Select(g => new VariantAxisAffectedCategorySummary(
-                g.Key,
-                names.GetValueOrDefault(g.Key) ?? g.Key.ToString(),
-                g.Count()))
-            .ToList();
-
-        var productCount = categoryIds.Length == 0
-            ? 0
-            : await _db.ProductCategories.AsNoTracking()
-                .Where(x => x.Role == CatalogProductCategoryRole.Primary && categoryIds.Contains(x.CategoryId))
-                .Select(x => x.ProductId)
-                .Distinct()
-                .CountAsync(cancellationToken);
-
-        var variantCombinationCount = await _db.ProductVariantAxes.AsNoTracking()
-            .CountAsync(x => x.DefinitionId == definitionId, cancellationToken);
-
-        return new VariantAxisCapabilityDisableImpactView(
-            variantBindings.Count,
-            affected,
-            productCount,
-            variantCombinationCount,
-            variantBindings.Count == 0);
-    }
+        CancellationToken cancellationToken) =>
+        Unwrap(await AttributeDefinitionsPort().PreviewVariantAxisCapabilityDisableAsync(
+            definitionId,
+            cancellationToken));
 
     /// <inheritdoc />
     public async Task SetAttributeDefinitionVariantAxisCapabilityAsync(
@@ -937,33 +874,10 @@ public sealed class CatalogDirectory :
         bool isVariantAxisAllowed,
         CancellationToken cancellationToken)
     {
-        await _guard.EnsureCanMutateAsync(cancellationToken);
-        var definition = await _db.AttributeDefinitions.SingleOrDefaultAsync(
-                x => x.DefinitionId == definitionId,
-                cancellationToken)
-            ?? throw new InvalidOperationException("catalog.attribute.missing");
-
-        if (definition.IsVariantAxis == isVariantAxisAllowed)
-        {
-            return;
-        }
-
-        if (isVariantAxisAllowed)
-        {
-            definition.SetVariantAxisAllowed(true);
-        }
-        else
-        {
-            var impact = await PreviewVariantAxisCapabilityDisableImpactAsync(definitionId, cancellationToken);
-            if (!impact.CanDisable)
-            {
-                throw new InvalidOperationException("catalog.attribute.variant_axis.in_use");
-            }
-
-            definition.SetVariantAxisAllowed(false);
-        }
-
-        await _db.SaveChangesAsync(cancellationToken);
+        _ = Unwrap(await AttributeDefinitionsPort().SetVariantAxisCapabilityAsync(
+            definitionId,
+            isVariantAxisAllowed,
+            cancellationToken));
     }
 
     /// <inheritdoc />
@@ -971,21 +885,12 @@ public sealed class CatalogDirectory :
         Guid definitionId,
         string code,
         IReadOnlyDictionary<string, string> localizedNames,
-        CancellationToken cancellationToken)
-    {
-        await _guard.EnsureCanMutateAsync(cancellationToken);
-        var definition = await _db.AttributeDefinitions.SingleAsync(x => x.DefinitionId == definitionId, cancellationToken);
-        if (definition.ValueKind != CatalogAttributeValueKind.Enumeration)
-        {
-            throw new InvalidOperationException("گزینه فقط برای ویژگی شمارشی معنا دارد.");
-        }
-
-        var option = CatalogAttributeOption.Create(definitionId, code);
-        _db.AttributeOptions.Add(option);
-        AddLocalizedNames(CatalogLocalizedOwnerKind.AttributeOption, option.OptionId, localizedNames);
-        await _db.SaveChangesAsync(cancellationToken);
-        return option.OptionId;
-    }
+        CancellationToken cancellationToken) =>
+        Unwrap(await AttributeDefinitionsPort().AddOptionAsync(
+            definitionId,
+            code,
+            localizedNames,
+            cancellationToken)).OptionId;
 
     /// <inheritdoc />
     public async Task BindCategoryAttributeAsync(
@@ -4192,24 +4097,6 @@ public sealed class CatalogDirectory :
         }
     }
 
-    private static AttributeDefinitionView ToDefinitionView(CatalogAttributeDefinition definition) =>
-        new(
-            definition.DefinitionId,
-            definition.Code,
-            definition.ValueKind,
-            definition.IsVariantAxisAllowed,
-            definition.Unit,
-            definition.IsRequired,
-            definition.IsFilterable,
-            definition.IsComparable,
-            definition.IsMultivalue,
-            definition.DisplayOrder,
-            definition.ValidationMin,
-            definition.ValidationMax,
-            definition.ValidationMaxLength,
-            definition.IsActive,
-            definition.CreatedAt);
-
     private void AddLocalizedNames(CatalogLocalizedOwnerKind ownerKind, Guid ownerId, IReadOnlyDictionary<string, string> localizedNames)
     {
         if (localizedNames.Count == 0)
@@ -4222,6 +4109,5 @@ public sealed class CatalogDirectory :
             _db.LocalizedTexts.Add(CatalogLocalizedText.Create(ownerKind, ownerId, "name", pair.Key, pair.Value));
         }
     }
-
 }
 

@@ -1,6 +1,7 @@
 using Tooba.BuildingBlocks.Localization;
 using Tooba.BuildingBlocks.Presentation.Errors;
 using Tooba.Catalog.Endpoints.Admin;
+using Tooba.Catalog.Endpoints.Admin.Attributes.Definitions;
 using Tooba.Catalog.Endpoints.Admin.Categories;
 using Tooba.Catalog.Endpoints.Admin.Facets;
 using Tooba.Catalog.Endpoints.Admin.MegaMenu;
@@ -31,6 +32,7 @@ public static class CatalogEndpointModule
         app.MapCatalogFacetStorefrontEndpoints();
         app.MapCatalogCategoryAdminEndpoints();
         app.MapCatalogCategoryStorefrontEndpoints();
+        app.MapCatalogAttributeDefinitionAdminEndpoints();
         return app;
     }
 

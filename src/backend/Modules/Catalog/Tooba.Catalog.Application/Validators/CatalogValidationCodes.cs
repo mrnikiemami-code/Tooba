@@ -74,4 +74,10 @@ public static class CatalogValidationCodes
 
     /// <summary>Category route resolve slug must be non-blank.</summary>
     public const string CategoryRouteSlugRequired = "catalog.validation.category_route_slug_required";
+
+    /// <summary>Attribute definition code must be non-blank.</summary>
+    public const string AttributeDefinitionCodeRequired = "catalog.validation.attribute_definition_code_required";
+
+    /// <summary>Attribute option code must be non-blank.</summary>
+    public const string AttributeOptionCodeRequired = "catalog.validation.attribute_option_code_required";
 }

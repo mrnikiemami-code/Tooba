@@ -61,4 +61,13 @@
   <data name="catalog.validation.category_ordered_ids_required" xml:space="preserve"><value>Category ordered ids are required.</value></data>
   <data name="catalog.validation.category_route_locale_required" xml:space="preserve"><value>Category route locale is required.</value></data>
   <data name="catalog.validation.category_route_slug_required" xml:space="preserve"><value>Category route slug is required.</value></data>
+  <data name="catalog.attribute.missing" xml:space="preserve"><value>Attribute definition was not found.</value></data>
+  <data name="catalog.attribute.invalid" xml:space="preserve"><value>Attribute definition input is invalid.</value></data>
+  <data name="catalog.attribute.code.duplicate" xml:space="preserve"><value>Attribute definition code already exists.</value></data>
+  <data name="catalog.attribute.name.duplicate" xml:space="preserve"><value>An attribute with this localized name already exists.</value></data>
+  <data name="catalog.attribute.variant_axis.value_kind.invalid" xml:space="preserve"><value>This value kind cannot be used as a variant axis.</value></data>
+  <data name="catalog.attribute.variant_axis.in_use" xml:space="preserve"><value>This attribute is used by active variant axes.</value></data>
+  <data name="catalog.attribute.variant_axis.capability_disabled" xml:space="preserve"><value>Variant-axis capability is not enabled on this definition.</value></data>
+  <data name="catalog.validation.attribute_definition_code_required" xml:space="preserve"><value>Attribute definition code is required.</value></data>
+  <data name="catalog.validation.attribute_option_code_required" xml:space="preserve"><value>Attribute option code is required.</value></data>
 </root>

@@ -76,6 +76,20 @@ public sealed class CatalogErrorCatalogContributor : IErrorCatalogContributor
             "Category route resolve input is invalid."),
         D(CatalogErrorCodes.CategoryRouteMissing, ErrorClassification.NotFound, StatusCodes.Status404NotFound,
             "Category route was not found."),
+        D(CatalogErrorCodes.AttributeMissing, ErrorClassification.NotFound, StatusCodes.Status404NotFound,
+            "Attribute definition was not found."),
+        D(CatalogErrorCodes.AttributeInvalid, ErrorClassification.Business, StatusCodes.Status400BadRequest,
+            "Attribute definition input is invalid."),
+        D(CatalogErrorCodes.AttributeCodeDuplicate, ErrorClassification.Conflict, StatusCodes.Status409Conflict,
+            "Attribute definition code already exists."),
+        D(CatalogErrorCodes.AttributeNameDuplicate, ErrorClassification.Conflict, StatusCodes.Status409Conflict,
+            "An attribute with this localized name already exists."),
+        D(CatalogErrorCodes.AttributeVariantAxisValueKindInvalid, ErrorClassification.Business, StatusCodes.Status400BadRequest,
+            "This value kind cannot be used as a variant axis."),
+        D(CatalogErrorCodes.AttributeVariantAxisInUse, ErrorClassification.Conflict, StatusCodes.Status409Conflict,
+            "This attribute is used by active variant axes."),
+        D(CatalogErrorCodes.AttributeVariantAxisCapabilityDisabled, ErrorClassification.Business, StatusCodes.Status400BadRequest,
+            "Variant-axis capability is not enabled on this definition."),
     ];
 
     private static ErrorDescriptor D(
