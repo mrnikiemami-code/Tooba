@@ -593,5 +593,63 @@
     "Support",
     "Wallet",
     "Promotion"
+  ],
+  "preCertModules": [
+    {
+      "module": "ProductWorkspace",
+      "structureCertified": false,
+      "lockVersion": "ARCH-COMPLETE-002",
+      "certificationNote": "W18 skeleton only (TB-TMAR-HOST-ADMIN-AMC-001-W18). NOT_CERTIFIED. Five projects established; zero module-owned routes; Host retains 19 ProductWorkspace aggregate routes. Do not promote to structureLock.certifiedModules until ARCH-COMPLETE-002.",
+      "projects": [
+        {
+          "projectName": "Tooba.ProductWorkspace.Contracts",
+          "rootAllowlist": [
+            "ProductWorkspaceContractsMarker.cs"
+          ],
+          "rootAllowlistJustification": "W18 Contracts marker only; Host DTOs not copied; no Errors/Ports yet.",
+          "forbiddenRootFiles": [
+            "ProductWorkspaceContracts.cs"
+          ],
+          "forbiddenTopLevelFolders": []
+        },
+        {
+          "projectName": "Tooba.ProductWorkspace.Domain",
+          "rootAllowlist": [],
+          "rootAllowlistJustification": "Empty-but-valid Domain assembly; no invented domain types in W18.",
+          "forbiddenRootFiles": [],
+          "forbiddenTopLevelFolders": []
+        },
+        {
+          "projectName": "Tooba.ProductWorkspace.Application",
+          "rootAllowlist": [],
+          "rootAllowlistJustification": "Composition/{Models,Ports,Queries,Validators} reserved for W19; no root .cs and no duplicate Host DTOs in W18.",
+          "forbiddenRootFiles": [
+            "ProductWorkspaceContracts.cs"
+          ],
+          "forbiddenTopLevelFolders": [
+            "Commands",
+            "Queries",
+            "Models",
+            "Ports"
+          ]
+        },
+        {
+          "projectName": "Tooba.ProductWorkspace.Endpoints",
+          "rootAllowlist": [
+            "ProductWorkspaceEndpointModule.cs"
+          ],
+          "forbiddenRootFiles": [],
+          "forbiddenTopLevelFolders": []
+        },
+        {
+          "projectName": "Tooba.ProductWorkspace.Infrastructure",
+          "rootAllowlist": [
+            "ProductWorkspaceModule.cs"
+          ],
+          "forbiddenRootFiles": [],
+          "forbiddenTopLevelFolders": []
+        }
+      ]
+    }
   ]
 }

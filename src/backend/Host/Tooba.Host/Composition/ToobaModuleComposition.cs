@@ -28,6 +28,7 @@ using Tooba.OperatorProfile.Infrastructure;
 using Tooba.Content.Infrastructure;
 using Tooba.Media.Infrastructure;
 using Tooba.PageComposition.Infrastructure;
+using Tooba.ProductWorkspace.Infrastructure;
 using global::Tooba.Story.Infrastructure;
 using Tooba.Fulfillment.Infrastructure.DependencyInjection;
 using Tooba.Returns.Infrastructure.DependencyInjection;
@@ -77,6 +78,7 @@ internal static class ToobaModuleComposition
         new ContentModule(),
         new MediaModule(),
         new PageCompositionModule(),
+        new ProductWorkspaceModule(),
         new StoryModule(),
         new PaymentModule(),
         new FulfillmentModule(),

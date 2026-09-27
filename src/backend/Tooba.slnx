@@ -80,6 +80,13 @@
     <Project Path="Modules/AddressBook/Tooba.AddressBook.Endpoints/Tooba.AddressBook.Endpoints.csproj" />
     <Project Path="Modules/AddressBook/Tooba.AddressBook.Infrastructure/Tooba.AddressBook.Infrastructure.csproj" />
   </Folder>
+  <Folder Name="/Modules/ProductWorkspace/">
+    <Project Path="Modules/ProductWorkspace/Tooba.ProductWorkspace.Contracts/Tooba.ProductWorkspace.Contracts.csproj" />
+    <Project Path="Modules/ProductWorkspace/Tooba.ProductWorkspace.Domain/Tooba.ProductWorkspace.Domain.csproj" />
+    <Project Path="Modules/ProductWorkspace/Tooba.ProductWorkspace.Application/Tooba.ProductWorkspace.Application.csproj" />
+    <Project Path="Modules/ProductWorkspace/Tooba.ProductWorkspace.Infrastructure/Tooba.ProductWorkspace.Infrastructure.csproj" />
+    <Project Path="Modules/ProductWorkspace/Tooba.ProductWorkspace.Endpoints/Tooba.ProductWorkspace.Endpoints.csproj" />
+  </Folder>
   <Folder Name="/Modules/Offer/">
     <Project Path="Modules/Offer/Tooba.Offer.Application/Tooba.Offer.Application.csproj" />
     <Project Path="Modules/Offer/Tooba.Offer.Contracts/Tooba.Offer.Contracts.csproj" />
