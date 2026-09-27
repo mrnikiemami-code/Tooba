@@ -83,7 +83,13 @@ Certification must never claim `LEGAL_CONTRACTS_ONLY` while any direct foreign A
 
 Any production file changed by the current task is part of the active certification surface. Before PASS, re-read every touched production file and verify: cohesive responsibility; correct capability folder; exact path↔namespace alignment; no root dump unless explicitly allowed; no obsolete/duplicate type; no hard-coded user-facing localized text; no foreign Application/Infrastructure/Domain leakage; no parallel canonical mechanism; no unintended behavior/schema change.
 
-Do NOT expand this into a full-module audit: cover only touched files, directly affected dependencies, and the minimum destination-module surface required by the active Host-folder task. A task is NOT complete merely because the original dependency was fixed, focused tests passed, or code compiles.
+For a Host folder-by-folder task, certification must also re-enumerate the **exact active Host folder** after all changes and verify every production file currently present there, including files that were not touched by the task. This is a narrow final-folder recheck, not a whole-Host scan.
+
+Do NOT expand this into a full-module audit or a whole-Host capability sweep: cover the exact active Host folder, touched files, direct references needed for behavior preservation, and the minimum destination-module surface required by that folder. Later Host folders are intentionally deferred until traversal reaches them.
+
+Default Host-folder closure requires production file count ZERO. Exception: canonical locks/current accepted SoT may explicitly allow particular Host-owned responsibilities to remain in that exact folder (notably legitimate global Authentication/session platform boundaries). In that case PASS may retain those files only when each retained responsibility is explicitly classified as allowed and the exact architecture justification is recorded. Never require zero by deleting an accepted Host platform seam.
+
+A task is NOT complete merely because the original dependency was fixed, focused tests passed, or code compiles.
 
 ## Certification Procedure
 
