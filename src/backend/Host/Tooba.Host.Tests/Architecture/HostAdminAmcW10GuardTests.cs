@@ -4,29 +4,34 @@ using Xunit;
 
 namespace Tooba.Host.Tests.Architecture;
 
-/// <summary>TB-TMAR-HOST-ADMIN-AMC-001-W9 — Category Attribute-Schema Admin evacuated; Host file retained partial.</summary>
-public sealed class HostAdminAmcW9GuardTests
+/// <summary>TB-TMAR-HOST-ADMIN-AMC-001-W10 — Product Attribute Editor/Readiness evacuated; Host file retained partial.</summary>
+public sealed class HostAdminAmcW10GuardTests
 {
     [Fact]
-    public void Host_CatalogAttribute_file_retained_without_schema_routes()
+    public void Host_CatalogAttribute_file_retained_without_product_attribute_routes()
     {
         var root = FindRepoRoot();
         var hostPath = Path.Combine(root, "src/backend/Host/Tooba.Host/Admin/CatalogAttributeEndpoints.cs");
         Assert.True(File.Exists(hostPath));
         var host = File.ReadAllText(hostPath);
-        Assert.DoesNotContain("attribute-schema", host, StringComparison.Ordinal);
-        Assert.DoesNotContain("GetEffectiveSchemaAsync", host, StringComparison.Ordinal);
-        Assert.DoesNotContain("BindCategoryAttributeRequest", host, StringComparison.Ordinal);
-        Assert.DoesNotContain("UpdateCategoryAttributeBindingRequest", host, StringComparison.Ordinal);
-        Assert.DoesNotContain("ReorderCategoryBindingsRequest", host, StringComparison.Ordinal);
-        Assert.DoesNotContain("/v1/admin/catalog/attribute-definitions", host, StringComparison.Ordinal);
         Assert.DoesNotContain("MapGet(\"/attributes\"", host, StringComparison.Ordinal);
+        Assert.DoesNotContain("MapPut(\"/attributes\"", host, StringComparison.Ordinal);
+        Assert.DoesNotContain("attributes/readiness", host, StringComparison.Ordinal);
+        Assert.DoesNotContain("GetProductAttributeEditorStateAsync", host, StringComparison.Ordinal);
+        Assert.DoesNotContain("SetProductAttributesAsync", host, StringComparison.Ordinal);
+        Assert.DoesNotContain("GetProductAttributeReadinessAsync", host, StringComparison.Ordinal);
+        Assert.DoesNotContain("SetProductAttributeAsync", host, StringComparison.Ordinal);
         Assert.DoesNotContain("SetProductAttributesRequest", host, StringComparison.Ordinal);
+        Assert.DoesNotContain("ProductAttributeValueRequest", host, StringComparison.Ordinal);
+        Assert.Contains("SetProductAttributeRequest", host, StringComparison.Ordinal);
+        Assert.DoesNotContain("attribute-schema", host, StringComparison.Ordinal);
+        Assert.DoesNotContain("/v1/admin/catalog/attribute-definitions", host, StringComparison.Ordinal);
+        Assert.Contains("/variant-axes", host, StringComparison.Ordinal);
         Assert.Contains("/variants/", host, StringComparison.Ordinal);
         Assert.Contains("category-change-preview", host, StringComparison.Ordinal);
         Assert.Contains("primary-category", host, StringComparison.Ordinal);
-        Assert.Contains("MapAttributeInvalid", host, StringComparison.Ordinal);
         Assert.Contains("MapCatalogAttributeEndpoints", host, StringComparison.Ordinal);
+        Assert.Contains("CatalogActorHttpBinding", host, StringComparison.Ordinal);
 
         var program = File.ReadAllText(Path.Combine(root, "src/backend/Host/Tooba.Host/Program.cs"));
         Assert.Contains("MapCatalogAttributeEndpoints()", program, StringComparison.Ordinal);
@@ -35,25 +40,25 @@ public sealed class HostAdminAmcW9GuardTests
     }
 
     [Fact]
-    public void Catalog_Endpoints_own_five_schema_routes_exactly_once_with_canonical_pipeline()
+    public void Catalog_Endpoints_own_four_product_attribute_routes_exactly_once_with_canonical_pipeline()
     {
         var root = FindRepoRoot();
         var adminPath = Path.Combine(
             root,
-            "src/backend/Modules/Catalog/Tooba.Catalog.Endpoints/Admin/Attributes/Schema/CatalogCategoryAttributeSchemaAdminEndpoints.cs");
+            "src/backend/Modules/Catalog/Tooba.Catalog.Endpoints/Admin/Attributes/ProductValues/CatalogProductAttributeAdminEndpoints.cs");
         Assert.True(File.Exists(adminPath));
         var admin = File.ReadAllText(adminPath);
-        Assert.Contains("/v1/admin/catalog/categories/{categoryId:guid}/attribute-schema", admin, StringComparison.Ordinal);
-        Assert.Contains("MapGet(\"/effective\", GetEffectiveSchemaAsync)", admin, StringComparison.Ordinal);
-        Assert.Contains("MapPost(\"/bindings\", BindAsync)", admin, StringComparison.Ordinal);
-        Assert.Contains("MapPatch(\"/bindings/{definitionId:guid}\", UpdateBindingAsync)", admin, StringComparison.Ordinal);
-        Assert.Contains("MapDelete(\"/bindings/{definitionId:guid}\", UnbindAsync)", admin, StringComparison.Ordinal);
-        Assert.Contains("MapPut(\"/bindings/order\", ReorderBindingsAsync)", admin, StringComparison.Ordinal);
+        Assert.Contains("/v1/admin/catalog/products/{productId:guid}", admin, StringComparison.Ordinal);
+        Assert.Contains("MapGet(\"/attributes\", GetEditorStateAsync)", admin, StringComparison.Ordinal);
+        Assert.Contains("MapPut(\"/attributes\", SetAttributesAsync)", admin, StringComparison.Ordinal);
+        Assert.Contains("MapGet(\"/attributes/readiness\", GetReadinessAsync)", admin, StringComparison.Ordinal);
+        Assert.Contains("MapPut(\"/attributes/{definitionId:guid}\", SetAttributeAsync)", admin, StringComparison.Ordinal);
         Assert.Contains("ISender", admin, StringComparison.Ordinal);
         Assert.Contains("ApiResponseFactory", admin, StringComparison.Ordinal);
         Assert.Contains("ICatalogAdminAuthorizer", admin, StringComparison.Ordinal);
+        Assert.Contains("CatalogActorRequestBinding", admin, StringComparison.Ordinal);
         Assert.DoesNotContain("ICatalogDirectory", admin, StringComparison.Ordinal);
-        Assert.DoesNotContain("ICategoryAttributeSchemaDirectory", admin, StringComparison.Ordinal);
+        Assert.DoesNotContain("IProductAttributeDirectory", admin, StringComparison.Ordinal);
         Assert.DoesNotContain("CatalogDbContext", admin, StringComparison.Ordinal);
         Assert.DoesNotContain("Tooba.Catalog.Infrastructure", admin, StringComparison.Ordinal);
         Assert.DoesNotContain("Tooba.Offer", admin, StringComparison.Ordinal);
@@ -62,48 +67,55 @@ public sealed class HostAdminAmcW9GuardTests
         Assert.DoesNotContain("InvalidOperationException", admin, StringComparison.Ordinal);
         Assert.DoesNotContain("Results.Problem", admin, StringComparison.Ordinal);
         Assert.DoesNotContain("ex.Message", admin, StringComparison.Ordinal);
-        Assert.DoesNotContain("catalog.schema.invalid", admin, StringComparison.Ordinal);
+
+        var binding = File.ReadAllText(Path.Combine(
+            root, "src/backend/Modules/Catalog/Tooba.Catalog.Endpoints/Admin/CatalogActorRequestBinding.cs"));
+        Assert.Contains("ICatalogActorContext", binding, StringComparison.Ordinal);
+        Assert.Contains("IActorDisplayLookup", binding, StringComparison.Ordinal);
+        Assert.DoesNotContain("Tooba.Host", binding, StringComparison.Ordinal);
+        Assert.DoesNotContain("OperatorProfile.Application", binding, StringComparison.Ordinal);
 
         var module = File.ReadAllText(Path.Combine(
             root, "src/backend/Modules/Catalog/Tooba.Catalog.Endpoints/CatalogEndpointModule.cs"));
+        Assert.Single(Regex.Matches(module, @"MapCatalogProductAttributeAdminEndpoints\(\)"));
         Assert.Single(Regex.Matches(module, @"MapCatalogCategoryAttributeSchemaAdminEndpoints\(\)"));
         Assert.Single(Regex.Matches(module, @"MapCatalogAttributeDefinitionAdminEndpoints\(\)"));
     }
 
     [Fact]
-    public void Attribute_Schema_Application_is_capability_first_without_Contracts_bundle()
+    public void Attribute_ProductValues_Application_is_capability_first_without_Contracts_bundle()
     {
-        var schemaRoot = Path.Combine(
+        var productRoot = Path.Combine(
             FindRepoRoot(),
-            "src/backend/Modules/Catalog/Tooba.Catalog.Application/Attributes/Schema");
-        Assert.True(Directory.Exists(schemaRoot));
+            "src/backend/Modules/Catalog/Tooba.Catalog.Application/Attributes/ProductValues");
+        Assert.True(Directory.Exists(productRoot));
         foreach (var folder in new[] { "Commands", "Queries", "Models", "Ports", "Validators" })
         {
-            Assert.True(Directory.Exists(Path.Combine(schemaRoot, folder)), folder);
+            Assert.True(Directory.Exists(Path.Combine(productRoot, folder)), folder);
         }
 
-        Assert.Empty(Directory.GetDirectories(Path.Combine(schemaRoot, "Commands")));
-        Assert.Empty(Directory.GetDirectories(Path.Combine(schemaRoot, "Queries")));
-        Assert.Empty(Directory.GetFiles(schemaRoot, "*Contracts.cs", SearchOption.AllDirectories));
+        Assert.Empty(Directory.GetDirectories(Path.Combine(productRoot, "Commands")));
+        Assert.Empty(Directory.GetDirectories(Path.Combine(productRoot, "Queries")));
+        Assert.Empty(Directory.GetFiles(productRoot, "*Contracts.cs", SearchOption.AllDirectories));
 
         var appRoot = Path.Combine(FindRepoRoot(), "src/backend/Modules/Catalog/Tooba.Catalog.Application");
-        Assert.Single(Directory.GetFiles(appRoot, "GetEffectiveCategorySchemaQuery.cs", SearchOption.AllDirectories));
-        Assert.Single(Directory.GetFiles(appRoot, "BindCategoryAttributeCommand.cs", SearchOption.AllDirectories));
-        Assert.Single(Directory.GetFiles(appRoot, "UpdateCategoryAttributeBindingCommand.cs", SearchOption.AllDirectories));
-        Assert.Single(Directory.GetFiles(appRoot, "UnbindCategoryAttributeCommand.cs", SearchOption.AllDirectories));
-        Assert.Single(Directory.GetFiles(appRoot, "ReorderCategoryAttributeBindingsCommand.cs", SearchOption.AllDirectories));
-        Assert.True(File.Exists(Path.Combine(schemaRoot, "Ports", "ICategoryAttributeSchemaDirectory.cs")));
-        Assert.False(Directory.Exists(Path.Combine(appRoot, "Attributes", "Commands")));
+        Assert.Single(Directory.GetFiles(appRoot, "GetProductAttributeEditorStateQuery.cs", SearchOption.AllDirectories));
+        Assert.Single(Directory.GetFiles(appRoot, "GetProductAttributeReadinessQuery.cs", SearchOption.AllDirectories));
+        Assert.Single(Directory.GetFiles(appRoot, "SetProductAttributesCommand.cs", SearchOption.AllDirectories));
+        Assert.Single(Directory.GetFiles(appRoot, "SetProductAttributeCommand.cs", SearchOption.AllDirectories));
+        Assert.True(File.Exists(Path.Combine(productRoot, "Ports", "IProductAttributeDirectory.cs")));
+        Assert.True(Directory.Exists(Path.Combine(appRoot, "Attributes", "Definitions")));
+        Assert.True(Directory.Exists(Path.Combine(appRoot, "Attributes", "Schema")));
     }
 
     [Fact]
-    public void Attribute_Schema_path_namespace_exact_and_validators_classified()
+    public void Attribute_ProductValues_path_namespace_exact_and_validators_classified()
     {
-        var schemaRoot = Path.Combine(
+        var productRoot = Path.Combine(
             FindRepoRoot(),
-            "src/backend/Modules/Catalog/Tooba.Catalog.Application/Attributes/Schema");
+            "src/backend/Modules/Catalog/Tooba.Catalog.Application/Attributes/ProductValues");
         var appRoot = Path.Combine(FindRepoRoot(), "src/backend/Modules/Catalog/Tooba.Catalog.Application");
-        foreach (var file in Directory.GetFiles(schemaRoot, "*.cs", SearchOption.AllDirectories))
+        foreach (var file in Directory.GetFiles(productRoot, "*.cs", SearchOption.AllDirectories))
         {
             var relative = Path.GetRelativePath(appRoot, file).Replace('\\', '/');
             var expectedNs = "Tooba.Catalog.Application." + Path.GetDirectoryName(relative)!
@@ -115,26 +127,26 @@ public sealed class HostAdminAmcW9GuardTests
                 $"{relative} expected namespace {expectedNs}");
         }
 
-        Assert.True(File.Exists(Path.Combine(schemaRoot, "Validators", "BindCategoryAttributeCommandValidator.cs")));
-        Assert.True(File.Exists(Path.Combine(schemaRoot, "Validators", "ReorderCategoryAttributeBindingsCommandValidator.cs")));
-        Assert.False(File.Exists(Path.Combine(schemaRoot, "Validators", "GetEffectiveCategorySchemaQueryValidator.cs")));
-        Assert.False(File.Exists(Path.Combine(schemaRoot, "Validators", "UpdateCategoryAttributeBindingCommandValidator.cs")));
-        Assert.False(File.Exists(Path.Combine(schemaRoot, "Validators", "UnbindCategoryAttributeCommandValidator.cs")));
+        Assert.True(File.Exists(Path.Combine(productRoot, "Validators", "SetProductAttributesCommandValidator.cs")));
+        Assert.False(File.Exists(Path.Combine(productRoot, "Validators", "GetProductAttributeEditorStateQueryValidator.cs")));
+        Assert.False(File.Exists(Path.Combine(productRoot, "Validators", "GetProductAttributeReadinessQueryValidator.cs")));
+        Assert.False(File.Exists(Path.Combine(productRoot, "Validators", "SetProductAttributeCommandValidator.cs")));
     }
 
     [Fact]
-    public void CategoryAttributeSchemaDirectory_uses_Result_not_exceptions_or_message_as_code()
+    public void ProductAttributeDirectory_uses_Result_not_exceptions_or_message_as_code()
     {
         var root = FindRepoRoot();
         var directory = File.ReadAllText(Path.Combine(
-            root, "src/backend/Modules/Catalog/Tooba.Catalog.Infrastructure/CategoryAttributeSchemaDirectory.cs"));
+            root, "src/backend/Modules/Catalog/Tooba.Catalog.Infrastructure/ProductAttributeDirectory.cs"));
         Assert.Contains("Result.Failure", directory, StringComparison.Ordinal);
         Assert.Contains("CatalogErrorCodes", directory, StringComparison.Ordinal);
-        Assert.Contains("SchemaBindingDuplicate", directory, StringComparison.Ordinal);
-        Assert.Contains("SchemaBindingMissing", directory, StringComparison.Ordinal);
-        Assert.Contains("SchemaReorderInvalid", directory, StringComparison.Ordinal);
-        Assert.Contains("SchemaCategoryMissing", directory, StringComparison.Ordinal);
-        Assert.Contains("AttributeVariantAxisCapabilityDisabled", directory, StringComparison.Ordinal);
+        Assert.Contains("ProductMissing", directory, StringComparison.Ordinal);
+        Assert.Contains("AttributeSchemaNotAllowed", directory, StringComparison.Ordinal);
+        Assert.Contains("AttributeVariantAxisOnProductForbidden", directory, StringComparison.Ordinal);
+        Assert.Contains("BeginTransactionAsync", directory, StringComparison.Ordinal);
+        Assert.Contains("EventAttributesChanged", directory, StringComparison.Ordinal);
+        Assert.Contains("CatalogAttributeCanonicalizer", directory, StringComparison.Ordinal);
         Assert.DoesNotContain("PlatformHttpException", directory, StringComparison.Ordinal);
         Assert.DoesNotContain("Contains(\"کد\"", directory, StringComparison.Ordinal);
         Assert.DoesNotContain("Tooba.Offer", directory, StringComparison.Ordinal);
@@ -147,6 +159,7 @@ public sealed class HostAdminAmcW9GuardTests
             .ToArray();
         Assert.DoesNotContain(endpointRefs, r => r.Contains(".Infrastructure", StringComparison.OrdinalIgnoreCase));
         Assert.DoesNotContain(endpointRefs, r => r.Contains("Tooba.Offer", StringComparison.OrdinalIgnoreCase));
+        Assert.Contains(endpointRefs, r => r.Contains("OperatorProfile.Contracts", StringComparison.OrdinalIgnoreCase));
 
         foreach (var csproj in Directory.GetFiles(Path.Combine(root, "src/backend/Modules/Catalog"), "*.csproj", SearchOption.AllDirectories))
         {
@@ -167,51 +180,40 @@ public sealed class HostAdminAmcW9GuardTests
         Assert.True(File.Exists(Path.Combine(admin, "CatalogAttributeEndpoints.cs")));
         Assert.False(File.Exists(Path.Combine(admin, "CatalogCategoryEndpoints.cs")));
         Assert.False(File.Exists(Path.Combine(admin, "CatalogFacetEndpoints.cs")));
-        Assert.False(File.Exists(Path.Combine(admin, "CatalogMegaMenuEndpoints.cs")));
-        Assert.False(File.Exists(Path.Combine(admin, "CatalogTagEndpoints.cs")));
-        Assert.False(File.Exists(Path.Combine(admin, "UnitOfMeasureEndpoints.cs")));
-        Assert.False(File.Exists(Path.Combine(admin, "QuantitySettingsEndpoints.cs")));
         Assert.True(File.Exists(Path.Combine(admin, "StoreAppearanceSettingsEndpoints.cs")));
-        Assert.True(File.Exists(Path.Combine(admin, "StoreAppearanceSettingsComposer.cs")));
 
-        Assert.True(Directory.Exists(Path.Combine(
-            FindRepoRoot(), "src/backend/Modules/Catalog/Tooba.Catalog.Application/Tags")));
-        Assert.True(Directory.Exists(Path.Combine(
-            FindRepoRoot(), "src/backend/Modules/Catalog/Tooba.Catalog.Application/MegaMenu")));
-        Assert.True(Directory.Exists(Path.Combine(
-            FindRepoRoot(), "src/backend/Modules/Catalog/Tooba.Catalog.Application/Facets")));
-        Assert.True(Directory.Exists(Path.Combine(
-            FindRepoRoot(), "src/backend/Modules/Catalog/Tooba.Catalog.Application/Categories")));
         Assert.True(Directory.Exists(Path.Combine(
             FindRepoRoot(), "src/backend/Modules/Catalog/Tooba.Catalog.Application/Attributes/Definitions")));
         Assert.True(Directory.Exists(Path.Combine(
             FindRepoRoot(), "src/backend/Modules/Catalog/Tooba.Catalog.Application/Attributes/Schema")));
+        Assert.True(Directory.Exists(Path.Combine(
+            FindRepoRoot(), "src/backend/Modules/Catalog/Tooba.Catalog.Application/Attributes/ProductValues")));
     }
 
     [Fact]
-    public void Error_catalog_owns_schema_codes()
+    public void Error_catalog_owns_product_attribute_codes()
     {
         var root = FindRepoRoot();
         var codes = File.ReadAllText(Path.Combine(root, "src/backend/Modules/Catalog/Tooba.Catalog.Contracts/Errors/CatalogErrorCodes.cs"));
-        Assert.Contains("catalog.schema.category.missing", codes, StringComparison.Ordinal);
-        Assert.Contains("catalog.schema.binding.duplicate", codes, StringComparison.Ordinal);
-        Assert.Contains("catalog.schema.binding.missing", codes, StringComparison.Ordinal);
-        Assert.Contains("catalog.schema.reorder.invalid", codes, StringComparison.Ordinal);
-        Assert.Contains("catalog.schema.invalid", codes, StringComparison.Ordinal);
+        Assert.Contains("catalog.product.missing", codes, StringComparison.Ordinal);
+        Assert.Contains("catalog.attribute.definition.inactive", codes, StringComparison.Ordinal);
+        Assert.Contains("catalog.attribute.schema.not_allowed", codes, StringComparison.Ordinal);
+        Assert.Contains("catalog.attribute.variant_axis.on_product_forbidden", codes, StringComparison.Ordinal);
+        Assert.Contains("catalog.attribute.enum_option.required", codes, StringComparison.Ordinal);
+        Assert.Contains("catalog.attribute.validation.bounds", codes, StringComparison.Ordinal);
 
         var contributor = File.ReadAllText(Path.Combine(
             root, "src/backend/Modules/Catalog/Tooba.Catalog.Endpoints/Errors/CatalogErrorCatalogContributor.cs"));
-        Assert.Contains("SchemaCategoryMissing", contributor, StringComparison.Ordinal);
-        Assert.Contains("SchemaBindingDuplicate", contributor, StringComparison.Ordinal);
-        Assert.Contains("SchemaBindingMissing", contributor, StringComparison.Ordinal);
-        Assert.Contains("SchemaReorderInvalid", contributor, StringComparison.Ordinal);
+        Assert.Contains("ProductMissing", contributor, StringComparison.Ordinal);
+        Assert.Contains("AttributeSchemaNotAllowed", contributor, StringComparison.Ordinal);
+        Assert.Contains("AttributeVariantAxisOnProductForbidden", contributor, StringComparison.Ordinal);
 
         var resx = File.ReadAllText(Path.Combine(
             root, "src/backend/Modules/Catalog/Tooba.Catalog.Endpoints/Resources/CatalogErrors.resx"));
-        Assert.Contains("catalog.schema.binding.duplicate", resx, StringComparison.Ordinal);
+        Assert.Contains("catalog.product.missing", resx, StringComparison.Ordinal);
         var fa = File.ReadAllText(Path.Combine(
             root, "src/backend/Modules/Catalog/Tooba.Catalog.Endpoints/Resources/CatalogErrors.fa.resx"));
-        Assert.Contains("catalog.schema.reorder.invalid", fa, StringComparison.Ordinal);
+        Assert.Contains("catalog.attribute.clear.required_forbidden", fa, StringComparison.Ordinal);
     }
 
     private static string FindRepoRoot()

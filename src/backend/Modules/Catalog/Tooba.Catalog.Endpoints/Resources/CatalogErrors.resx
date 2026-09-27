@@ -73,8 +73,22 @@
   <data name="catalog.schema.binding.missing" xml:space="preserve"><value>Category attribute binding was not found.</value></data>
   <data name="catalog.schema.reorder.invalid" xml:space="preserve"><value>Schema reorder list must match the local binding set exactly.</value></data>
   <data name="catalog.schema.invalid" xml:space="preserve"><value>Category attribute-schema input is invalid.</value></data>
+  <data name="catalog.product.missing" xml:space="preserve"><value>Product was not found.</value></data>
+  <data name="catalog.attribute.definition.inactive" xml:space="preserve"><value>Attribute definition is inactive.</value></data>
+  <data name="catalog.attribute.schema.not_allowed" xml:space="preserve"><value>Attribute is not allowed by the product effective schema.</value></data>
+  <data name="catalog.attribute.variant_axis.on_product_forbidden" xml:space="preserve"><value>Variant-axis attributes cannot be stored on the product.</value></data>
+  <data name="catalog.attribute.enum_option.required" xml:space="preserve"><value>Enumeration option id is required.</value></data>
+  <data name="catalog.attribute.enum_option.mismatch" xml:space="preserve"><value>Enumeration option does not belong to this definition.</value></data>
+  <data name="catalog.attribute.enum_option.inactive" xml:space="preserve"><value>Enumeration option is inactive.</value></data>
+  <data name="catalog.attribute.enum_option.invalid" xml:space="preserve"><value>Enumeration option payload is invalid.</value></data>
+  <data name="catalog.attribute.value.invalid" xml:space="preserve"><value>Attribute value is invalid.</value></data>
+  <data name="catalog.attribute.validation.bounds" xml:space="preserve"><value>Attribute value violates definition bounds.</value></data>
+  <data name="catalog.attribute.clear.required_forbidden" xml:space="preserve"><value>Clearing a required attribute is not allowed.</value></data>
+  <data name="catalog.attribute.value.empty" xml:space="preserve"><value>Attribute value is empty.</value></data>
   <data name="catalog.validation.attribute_definition_code_required" xml:space="preserve"><value>Attribute definition code is required.</value></data>
   <data name="catalog.validation.attribute_option_code_required" xml:space="preserve"><value>Attribute option code is required.</value></data>
   <data name="catalog.validation.schema_definition_id_required" xml:space="preserve"><value>Attribute definition id is required.</value></data>
   <data name="catalog.validation.schema_ordered_definition_ids_required" xml:space="preserve"><value>Schema ordered definition ids are required.</value></data>
+  <data name="catalog.validation.product_attribute_values_required" xml:space="preserve"><value>Product attribute values collection is required.</value></data>
+  <data name="catalog.validation.product_attribute_definition_id_required" xml:space="preserve"><value>Product attribute definition id is required.</value></data>
 </root>

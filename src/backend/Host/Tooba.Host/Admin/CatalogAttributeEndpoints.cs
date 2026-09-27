@@ -7,22 +7,18 @@ using Tooba.Offer.Contracts.Ports;
 namespace Tooba.Host.Admin;
 
 /// <summary>
-/// مسیرهای Admin برای ویژگی محصول و محورهای Variant (schema رده در Catalog.Endpoints).
+/// مسیرهای Admin برای محورهای Variant و تغییر رده (تعاریف/schema/ویژگی محصول در Catalog.Endpoints).
 /// ماتریس تنوع در همین گروه ثبت می‌شود؛ قیمت/موجودی اینجا نیستند.
 /// </summary>
 public static class CatalogAttributeEndpoints
 {
     /// <summary>
-    /// مسیرهای Admin Attribute محصول/Variant را ثبت می‌کند.
+    /// مسیرهای Admin Variant/category-change را ثبت می‌کند.
     /// </summary>
     public static void MapCatalogAttributeEndpoints(this WebApplication app)
     {
         var products = app.MapGroup("/v1/admin/catalog/products/{productId:guid}");
         products.AddEndpointFilter(CatalogActorHttpBinding.BindAsync);
-        products.MapGet("/attributes", GetProductAttributeEditorStateAsync);
-        products.MapPut("/attributes", SetProductAttributesAsync);
-        products.MapGet("/attributes/readiness", GetProductAttributeReadinessAsync);
-        products.MapPut("/attributes/{definitionId:guid}", SetProductAttributeAsync);
         products.MapPut("/variant-axes", SetProductVariantAxesAsync);
         products.MapGet("/variants/editor", GetProductVariantEditorStateAsync);
         products.MapPost("/variants/preview", PreviewProductVariantsAsync);
@@ -30,133 +26,6 @@ public static class CatalogAttributeEndpoints
         products.MapGet("/variants/readiness", GetProductVariantReadinessAsync);
         products.MapPost("/category-change-preview", PreviewCategoryChangeAsync);
         products.MapPut("/primary-category", ReplacePrimaryCategoryAsync);
-    }
-
-    private static async Task<IResult> GetProductAttributeEditorStateAsync(
-        Guid productId,
-        string? locale,
-        ICatalogDirectory catalog,
-        HttpRequest request,
-        CurrentAuthenticatedSession session,
-        ICurrentTenant tenant,
-        IAuthorizationGuard guard,
-        IHostEnvironment environment,
-        CancellationToken cancellationToken)
-    {
-        try
-        {
-            await AdminPanelAccess.RequireAuthorizedAsync(
-                request, session, tenant, guard, environment, cancellationToken);
-            var state = await catalog.GetProductAttributeEditorStateAsync(
-                productId,
-                string.IsNullOrWhiteSpace(locale) ? "fa-IR" : locale,
-                cancellationToken);
-            return Results.Json(state);
-        }
-        catch (PlatformHttpException ex)
-        {
-            return ToError(ex);
-        }
-        catch (InvalidOperationException ex)
-        {
-            return Results.Json(new { title = ex.Message, errorCode = "catalog.attribute.invalid" }, statusCode: StatusCodes.Status400BadRequest);
-        }
-    }
-
-    private static async Task<IResult> SetProductAttributesAsync(
-        Guid productId,
-        SetProductAttributesRequest body,
-        ICatalogDirectory catalog,
-        HttpRequest request,
-        CurrentAuthenticatedSession session,
-        ICurrentTenant tenant,
-        IAuthorizationGuard guard,
-        IHostEnvironment environment,
-        CancellationToken cancellationToken)
-    {
-        try
-        {
-            await AdminPanelAccess.RequireAuthorizedAsync(
-                request, session, tenant, guard, environment, cancellationToken);
-            var inputs = (body.Values ?? [])
-                .Select(v => new ProductAttributeValueInput(
-                    v.DefinitionId,
-                    v.RawValue,
-                    v.EnumOptionId,
-                    v.Clear))
-                .ToList();
-            await catalog.SetProductAttributesAsync(productId, inputs, cancellationToken);
-            var locale = string.IsNullOrWhiteSpace(body.Locale) ? "fa-IR" : body.Locale.Trim();
-            return Results.Json(await catalog.GetProductAttributeEditorStateAsync(productId, locale, cancellationToken));
-        }
-        catch (PlatformHttpException ex)
-        {
-            return ToError(ex);
-        }
-        catch (InvalidOperationException ex)
-        {
-            return Results.Json(new { title = ex.Message, errorCode = "catalog.attribute.invalid" }, statusCode: StatusCodes.Status400BadRequest);
-        }
-    }
-
-    private static async Task<IResult> GetProductAttributeReadinessAsync(
-        Guid productId,
-        ICatalogDirectory catalog,
-        HttpRequest request,
-        CurrentAuthenticatedSession session,
-        ICurrentTenant tenant,
-        IAuthorizationGuard guard,
-        IHostEnvironment environment,
-        CancellationToken cancellationToken)
-    {
-        try
-        {
-            await AdminPanelAccess.RequireAuthorizedAsync(
-                request, session, tenant, guard, environment, cancellationToken);
-            return Results.Json(await catalog.GetProductAttributeReadinessAsync(productId, cancellationToken));
-        }
-        catch (PlatformHttpException ex)
-        {
-            return ToError(ex);
-        }
-        catch (InvalidOperationException ex)
-        {
-            return Results.Json(new { title = ex.Message, errorCode = "catalog.attribute.invalid" }, statusCode: StatusCodes.Status400BadRequest);
-        }
-    }
-
-    private static async Task<IResult> SetProductAttributeAsync(
-        Guid productId,
-        Guid definitionId,
-        SetProductAttributeRequest body,
-        ICatalogDirectory catalog,
-        HttpRequest request,
-        CurrentAuthenticatedSession session,
-        ICurrentTenant tenant,
-        IAuthorizationGuard guard,
-        IHostEnvironment environment,
-        CancellationToken cancellationToken)
-    {
-        try
-        {
-            await AdminPanelAccess.RequireAuthorizedAsync(
-                request, session, tenant, guard, environment, cancellationToken);
-            await catalog.SetProductAttributeAsync(
-                productId,
-                definitionId,
-                body.RawValue,
-                body.EnumOptionId,
-                cancellationToken);
-            return Results.Json(new { ok = true });
-        }
-        catch (PlatformHttpException ex)
-        {
-            return ToError(ex);
-        }
-        catch (InvalidOperationException ex)
-        {
-            return Results.Json(new { title = ex.Message, errorCode = "catalog.attribute.invalid" }, statusCode: StatusCodes.Status400BadRequest);
-        }
     }
 
     private static async Task<IResult> SetProductVariantAxesAsync(
@@ -521,20 +390,10 @@ public static class CatalogAttributeEndpoints
         Results.Json(new { title = ex.Title, errorCode = ex.ErrorCode }, statusCode: ex.StatusCode);
 }
 
-/// <summary>بدنهٔ مقدار ویژگی محصول.</summary>
+/// <summary>
+/// بدنهٔ مقدار ویژگی محصول — retained for Host Seller panel consumer until a later Seller wave.
+/// </summary>
 public sealed record SetProductAttributeRequest(string RawValue, Guid? EnumOptionId);
-
-/// <summary>یک ردیف مقدار ویژگی برای ذخیرهٔ دسته‌ای.</summary>
-public sealed record ProductAttributeValueRequest(
-    Guid DefinitionId,
-    string? RawValue,
-    Guid? EnumOptionId,
-    bool Clear);
-
-/// <summary>بدنهٔ ذخیرهٔ دسته‌ای ویژگی‌های محصول.</summary>
-public sealed record SetProductAttributesRequest(
-    string? Locale,
-    List<ProductAttributeValueRequest>? Values);
 
 /// <summary>بدنهٔ محورهای Variant محصول.</summary>
 public sealed record SetProductVariantAxesRequest(List<Guid>? OrderedDefinitionIds);

@@ -13,9 +13,10 @@
   <ItemGroup>
     <InternalsVisibleTo Include="Tooba.Host.Tests" />
   </ItemGroup>
-  <ItemGroup>
+    <ItemGroup>
     <ProjectReference Include="..\Tooba.Catalog.Application\Tooba.Catalog.Application.csproj" />
     <ProjectReference Include="..\Tooba.Catalog.Contracts\Tooba.Catalog.Contracts.csproj" />
+    <ProjectReference Include="..\..\OperatorProfile\Tooba.OperatorProfile.Contracts\Tooba.OperatorProfile.Contracts.csproj" />
     <ProjectReference Include="..\..\..\BuildingBlocks\Tooba.BuildingBlocks\Tooba.BuildingBlocks.csproj" />
   </ItemGroup>
   <ItemGroup>

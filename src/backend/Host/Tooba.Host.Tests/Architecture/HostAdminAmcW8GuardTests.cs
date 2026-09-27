@@ -14,13 +14,15 @@ public sealed class HostAdminAmcW8GuardTests
         var hostPath = Path.Combine(root, "src/backend/Host/Tooba.Host/Admin/CatalogAttributeEndpoints.cs");
         Assert.True(File.Exists(hostPath));
         var host = File.ReadAllText(hostPath);
-        Assert.DoesNotContain("/v1/admin/catalog/attribute-definitions", host, StringComparison.Ordinal);
+        Assert.DoesNotContain("attribute-schema", host, StringComparison.Ordinal);
         Assert.DoesNotContain("ListDefinitionsAsync", host, StringComparison.Ordinal);
         Assert.DoesNotContain("CreateDefinitionAsync", host, StringComparison.Ordinal);
         Assert.DoesNotContain("CreateAttributeDefinitionRequest", host, StringComparison.Ordinal);
-        Assert.DoesNotContain("attribute-schema", host, StringComparison.Ordinal);
-        Assert.Contains("/attributes", host, StringComparison.Ordinal);
+        Assert.DoesNotContain("/v1/admin/catalog/attribute-definitions", host, StringComparison.Ordinal);
+        Assert.DoesNotContain("MapGet(\"/attributes\"", host, StringComparison.Ordinal);
+        Assert.DoesNotContain("SetProductAttributesRequest", host, StringComparison.Ordinal);
         Assert.Contains("/variants/", host, StringComparison.Ordinal);
+        Assert.Contains("variant-axes", host, StringComparison.Ordinal);
         Assert.Contains("MapAttributeInvalid", host, StringComparison.Ordinal);
         Assert.Contains("MapCatalogAttributeEndpoints", host, StringComparison.Ordinal);
 

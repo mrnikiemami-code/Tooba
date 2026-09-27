@@ -137,4 +137,40 @@ public static class CatalogErrorCodes
 
     /// <summary>Generic category attribute-schema precondition failure.</summary>
     public const string SchemaInvalid = "catalog.schema.invalid";
+
+    /// <summary>Referenced product was not found for product-attribute operations.</summary>
+    public const string ProductMissing = "catalog.product.missing";
+
+    /// <summary>Attribute definition exists but is inactive.</summary>
+    public const string AttributeDefinitionInactive = "catalog.attribute.definition.inactive";
+
+    /// <summary>Definition is not allowed by the product primary-category effective schema.</summary>
+    public const string AttributeSchemaNotAllowed = "catalog.attribute.schema.not_allowed";
+
+    /// <summary>Effective variant-axis definition cannot be stored as a normal product attribute.</summary>
+    public const string AttributeVariantAxisOnProductForbidden = "catalog.attribute.variant_axis.on_product_forbidden";
+
+    /// <summary>Enumeration value requires an option id.</summary>
+    public const string AttributeEnumOptionRequired = "catalog.attribute.enum_option.required";
+
+    /// <summary>Enumeration option does not belong to the definition.</summary>
+    public const string AttributeEnumOptionMismatch = "catalog.attribute.enum_option.mismatch";
+
+    /// <summary>Enumeration option is inactive.</summary>
+    public const string AttributeEnumOptionInactive = "catalog.attribute.enum_option.inactive";
+
+    /// <summary>Enumeration option payload is malformed (e.g. multivalue parse).</summary>
+    public const string AttributeEnumOptionInvalid = "catalog.attribute.enum_option.invalid";
+
+    /// <summary>Attribute raw/canonical value failed canonicalization.</summary>
+    public const string AttributeValueInvalid = "catalog.attribute.value.invalid";
+
+    /// <summary>Attribute value violates definition validation bounds.</summary>
+    public const string AttributeValidationBounds = "catalog.attribute.validation.bounds";
+
+    /// <summary>Clearing a required non-axis schema field is not allowed.</summary>
+    public const string AttributeClearRequiredForbidden = "catalog.attribute.clear.required_forbidden";
+
+    /// <summary>Non-enumeration attribute value is empty.</summary>
+    public const string AttributeValueEmpty = "catalog.attribute.value.empty";
 }

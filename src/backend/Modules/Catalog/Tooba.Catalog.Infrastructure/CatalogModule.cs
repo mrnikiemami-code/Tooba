@@ -5,6 +5,7 @@ using FluentValidation;
 using Tooba.BuildingBlocks;
 using Tooba.Catalog.Application;
 using Tooba.Catalog.Application.Attributes.Definitions.Ports;
+using Tooba.Catalog.Application.Attributes.ProductValues.Ports;
 using Tooba.Catalog.Application.Attributes.Schema.Ports;
 using Tooba.Catalog.Application.Categories.Ports;
 using Tooba.Catalog.Application.Facets.Ports;
@@ -64,6 +65,7 @@ public sealed class CatalogModule : IToobaModule
         services.AddScoped<ICategoryDirectory, CategoryDirectory>();
         services.AddScoped<IAttributeDefinitionDirectory, AttributeDefinitionDirectory>();
         services.AddScoped<ICategoryAttributeSchemaDirectory, CategoryAttributeSchemaDirectory>();
+        services.AddScoped<IProductAttributeDirectory, ProductAttributeDirectory>();
         services.AddSingleton<IQuantityNormalizer, QuantityNormalizer>();
         services.AddValidatorsFromAssembly(typeof(CreateStoreLandingPageCommand).Assembly);
         services.AddDbContext<CatalogDbContext>((sp, options) =>

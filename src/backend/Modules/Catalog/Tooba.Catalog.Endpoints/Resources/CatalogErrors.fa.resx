@@ -73,8 +73,22 @@
   <data name="catalog.schema.binding.missing" xml:space="preserve"><value>پیوند schema رده پیدا نشد.</value></data>
   <data name="catalog.schema.reorder.invalid" xml:space="preserve"><value>فهرست ترتیب باید دقیقاً همان پیوندهای موجود رده باشد.</value></data>
   <data name="catalog.schema.invalid" xml:space="preserve"><value>ورودی schema ویژگی رده نامعتبر است.</value></data>
+  <data name="catalog.product.missing" xml:space="preserve"><value>محصول پیدا نشد.</value></data>
+  <data name="catalog.attribute.definition.inactive" xml:space="preserve"><value>تعریف ویژگی غیرفعال است.</value></data>
+  <data name="catalog.attribute.schema.not_allowed" xml:space="preserve"><value>ویژگی در schema مؤثر رده‌های محصول نیست.</value></data>
+  <data name="catalog.attribute.variant_axis.on_product_forbidden" xml:space="preserve"><value>محور Variant روی خود Product ذخیره نمی‌شود؛ به گونه تعلق دارد.</value></data>
+  <data name="catalog.attribute.enum_option.required" xml:space="preserve"><value>گزینهٔ شمارشی باید شناسه داشته باشد.</value></data>
+  <data name="catalog.attribute.enum_option.mismatch" xml:space="preserve"><value>گزینه به این تعریف تعلق ندارد.</value></data>
+  <data name="catalog.attribute.enum_option.inactive" xml:space="preserve"><value>گزینهٔ شمارشی غیرفعال است.</value></data>
+  <data name="catalog.attribute.enum_option.invalid" xml:space="preserve"><value>شناسهٔ گزینهٔ شمارشی نامعتبر است.</value></data>
+  <data name="catalog.attribute.value.invalid" xml:space="preserve"><value>مقدار ویژگی نامعتبر است.</value></data>
+  <data name="catalog.attribute.validation.bounds" xml:space="preserve"><value>مقدار ویژگی از محدودهٔ تعریف خارج است.</value></data>
+  <data name="catalog.attribute.clear.required_forbidden" xml:space="preserve"><value>پاک‌سازی مقدار الزامی مجاز نیست.</value></data>
+  <data name="catalog.attribute.value.empty" xml:space="preserve"><value>مقدار ویژگی خالی است.</value></data>
   <data name="catalog.validation.attribute_definition_code_required" xml:space="preserve"><value>کد تعریف ویژگی الزامی است.</value></data>
   <data name="catalog.validation.attribute_option_code_required" xml:space="preserve"><value>کد گزینهٔ ویژگی الزامی است.</value></data>
   <data name="catalog.validation.schema_definition_id_required" xml:space="preserve"><value>شناسهٔ تعریف ویژگی الزامی است.</value></data>
   <data name="catalog.validation.schema_ordered_definition_ids_required" xml:space="preserve"><value>فهرست شناسه‌های ترتیب schema الزامی است.</value></data>
+  <data name="catalog.validation.product_attribute_values_required" xml:space="preserve"><value>فهرست مقادیر ویژگی محصول الزامی است.</value></data>
+  <data name="catalog.validation.product_attribute_definition_id_required" xml:space="preserve"><value>شناسهٔ تعریف ویژگی در فهرست مقادیر الزامی است.</value></data>
 </root>

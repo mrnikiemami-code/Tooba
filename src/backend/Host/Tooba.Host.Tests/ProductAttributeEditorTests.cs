@@ -193,6 +193,11 @@ public sealed class ProductAttributeEditorTests : IAsyncLifetime
             ],
             CancellationToken.None);
 
+        Assert.Contains(
+            await db.ProductHistoryEntries.AsNoTracking().Where(h => h.ProductId == product.ProductId).ToListAsync(),
+            h => h.EventType == ProductHistoryRules.EventAttributesChanged
+                && h.Section == ProductHistoryRules.SectionAttributes);
+
         editor = await dir.GetProductAttributeEditorStateAsync(product.ProductId, "fa-IR", CancellationToken.None);
         Assert.False(editor.Fields.First(f => f.DefinitionId == screenId).IsMissingRequired);
         Assert.Equal("6.1 inch", editor.Fields.First(f => f.DefinitionId == screenId).DisplayValue);

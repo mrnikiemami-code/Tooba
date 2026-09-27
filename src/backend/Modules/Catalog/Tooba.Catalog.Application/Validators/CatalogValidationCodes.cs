@@ -86,4 +86,10 @@ public static class CatalogValidationCodes
 
     /// <summary>Schema reorder orderedDefinitionIds collection must be present.</summary>
     public const string SchemaOrderedDefinitionIdsRequired = "catalog.validation.schema_ordered_definition_ids_required";
+
+    /// <summary>Bulk product-attribute Values collection must be present.</summary>
+    public const string ProductAttributeValuesRequired = "catalog.validation.product_attribute_values_required";
+
+    /// <summary>Bulk product-attribute item DefinitionId must be non-empty.</summary>
+    public const string ProductAttributeDefinitionIdRequired = "catalog.validation.product_attribute_definition_id_required";
 }
