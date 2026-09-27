@@ -1250,6 +1250,38 @@
     "workflowStop": "USER_REVIEW_HOST_CUSTOMERPROFILE_CHECKPOINT",
     "evidence": "docs/evidence/TB-TMAR-HOST-CUSTOMERPROFILE-EVACUATION-001/"
   },
+  "hostDevelopmentAmc": {
+    "task": "TB-TMAR-HOST-DEVELOPMENT-AMC-001",
+    "parentTask": "TB-TMAR-HOST-CUSTOMERPROFILE-EVACUATION-001",
+    "parentCommit": "8060ba603f96af3f4f5da88da801539faf46af65",
+    "state": "HOST_DEVELOPMENT_AMC_PASS_RETAINED_EXCEPTION",
+    "productionFileCountBefore": 3,
+    "productionFileCountAfter": 3,
+    "retainedFiles": [
+      "Development/MarketplaceDevelopmentBootstrap.cs",
+      "Development/MarketplaceAdminDevBootstrap.cs",
+      "Development/MarketplaceSellerDevBootstrap.cs"
+    ],
+    "retainedClassifications": {
+      "MarketplaceDevelopmentBootstrap.cs": "RETAINED_ALLOWED_DEVELOPMENT_COMPOSITION",
+      "MarketplaceAdminDevBootstrap.cs": "RETAINED_ALLOWED_DEVELOPMENT_RUNTIME_SEAM",
+      "MarketplaceSellerDevBootstrap.cs": "RETAINED_ALLOWED_DEVELOPMENT_RUNTIME_SEAM"
+    },
+    "developmentOnlyState": "Program.IsDevelopment + Marketplace edition gate",
+    "migrationBootstrapExceptionState": "Database.MigrateAsync_ONLY",
+    "moduleBusinessAuthorityState": "ZERO",
+    "modulePersistenceAuthorityState": "ZERO",
+    "directForeignDbContextState": "MIGRATE_ONLY_IN_COMPOSITION",
+    "schemaMigrationState": "NONE",
+    "focusedValidations": "PENDING_LOCAL_RUN",
+    "remainingBlockers": [],
+    "residualDebt": [
+      "Optional future: namespace Tooba.Host.Development alignment if Architect authorizes rename"
+    ],
+    "nextHostFolderStarted": false,
+    "workflowStop": "USER_REVIEW_HOST_DEVELOPMENT_CHECKPOINT",
+    "evidence": "docs/evidence/TB-TMAR-HOST-DEVELOPMENT-AMC-001/"
+  },
   "addressBookPostRealignRepair": {
     "task": "TB-TMAR-ADDRESSBOOK-POST-REALIGN-REPAIR-001",
     "parentTask": "ADDRESSBOOK-OFFER-STYLE-FOLDERS-001",
