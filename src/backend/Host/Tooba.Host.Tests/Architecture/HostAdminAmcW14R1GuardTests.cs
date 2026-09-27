@@ -1,4 +1,4 @@
-using System.Text.RegularExpressions;
+﻿using System.Text.RegularExpressions;
 using Xunit;
 
 namespace Tooba.Host.Tests.Architecture;
@@ -96,7 +96,7 @@ public sealed class HostAdminAmcW14R1GuardTests
         var files = Directory.GetFiles(admin, "*.cs", SearchOption.AllDirectories);
         Assert.True(files.Length <= 52 && files.Length >= 12, $"Host/Admin count expected in [12,52], was {files.Length}");
         Assert.False(File.Exists(Path.Combine(admin, "ProductWorkspaceEndpoints.cs")));
-        Assert.True(File.Exists(Path.Combine(admin, "StoreAppearanceSettingsEndpoints.cs")));
+        Assert.False(File.Exists(Path.Combine(admin, "StoreAppearanceSettingsEndpoints.cs")));
         Assert.True(Directory.Exists(Path.Combine(
             root, "src/backend/Modules/Catalog/Tooba.Catalog.Application/ProductSeo")));
         Assert.True(Directory.Exists(Path.Combine(

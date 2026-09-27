@@ -1,4 +1,4 @@
-using System.Text.RegularExpressions;
+﻿using System.Text.RegularExpressions;
 using System.Xml.Linq;
 using Xunit;
 
@@ -97,7 +97,7 @@ public sealed class HostAdminAmcW19GuardTests
         var admin = Path.Combine(root, "src/backend/Host/Tooba.Host/Admin");
         var adminCount = Directory.GetFiles(admin, "*.cs", SearchOption.AllDirectories).Length;
         Assert.True(adminCount <= 52 && adminCount >= 12, $"Host/Admin count expected in [12,52], was {adminCount}");
-        Assert.True(File.Exists(Path.Combine(admin, "StoreAppearanceSettingsEndpoints.cs")));
+        Assert.False(File.Exists(Path.Combine(admin, "StoreAppearanceSettingsEndpoints.cs")));
         Assert.False(File.Exists(Path.Combine(admin, "ProductWorkspaceComposer.cs")));
     }
 

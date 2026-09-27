@@ -1,4 +1,4 @@
-using System.Text.RegularExpressions;
+﻿using System.Text.RegularExpressions;
 using System.Xml.Linq;
 using Xunit;
 
@@ -110,7 +110,7 @@ public sealed class HostAdminAmcW1GuardTests
         var admin = Path.Combine(FindRepoRoot(), "src", "backend", "Host", "Tooba.Host", "Admin");
         Assert.True(Directory.Exists(admin));
         Assert.False(File.Exists(Path.Combine(admin, "QuantitySettingsEndpoints.cs")));
-        Assert.True(File.Exists(Path.Combine(admin, "StoreAppearanceSettingsEndpoints.cs")));
+        Assert.False(File.Exists(Path.Combine(admin, "StoreAppearanceSettingsEndpoints.cs")));
         Assert.True(File.Exists(Path.Combine(admin, "AdminPanelAccess.cs")));
         Assert.True(File.Exists(Path.Combine(admin, "HostAdminPanelAccess.cs")));
         var endpointsRoot = Path.Combine(

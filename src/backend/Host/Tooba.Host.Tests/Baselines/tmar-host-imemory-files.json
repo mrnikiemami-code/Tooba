@@ -3,7 +3,6 @@
   "files": [
     "Caching/CacheRegistration.cs",
     "Caching/MemoryToobaCache.cs",
-    "Program.cs",
-    "Storefront/StoreAppearanceProjection.cs"
+    "Program.cs"
   ]
 }

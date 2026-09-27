@@ -104,8 +104,8 @@ public sealed class HostAdminAmcW2R1GuardTests
         var admin = Path.Combine(FindRepoRoot(), "src/backend/Host/Tooba.Host/Admin");
         var adminCount = Directory.GetFiles(admin, "*.cs", SearchOption.AllDirectories).Length;
         Assert.True(adminCount <= 52 && adminCount >= 12, $"Host/Admin count expected in [12,52], was {adminCount}");
-        Assert.True(File.Exists(Path.Combine(admin, "StoreAppearanceSettingsEndpoints.cs")));
-        Assert.True(File.Exists(Path.Combine(admin, "StoreAppearanceSettingsComposer.cs")));
+        Assert.False(File.Exists(Path.Combine(admin, "StoreAppearanceSettingsEndpoints.cs")));
+        Assert.False(File.Exists(Path.Combine(admin, "StoreAppearanceSettingsComposer.cs")));
         Assert.False(File.Exists(Path.Combine(admin, "QuantitySettingsEndpoints.cs")));
         Assert.False(File.Exists(Path.Combine(admin, "UnitOfMeasureEndpoints.cs")));
         Assert.False(File.Exists(Path.Combine(admin, "CatalogTagEndpoints.cs")));

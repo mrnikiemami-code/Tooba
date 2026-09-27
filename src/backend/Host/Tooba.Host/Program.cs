@@ -191,8 +191,6 @@ builder.Services.AddScoped<Tooba.Order.Application.Storefront.Ports.IOrderStoref
 builder.Services.AddScoped<Tooba.AddressBook.Contracts.Ports.IAddressBookCheckoutLookup>(sp => sp.GetRequiredService<Tooba.AddressBook.Application.Ports.IAddressBookDirectory>());
 
 builder.Services.AddMemoryCache();
-builder.Services.AddScoped<Tooba.Host.Storefront.StoreAppearanceProjector>();
-builder.Services.AddScoped<Tooba.Host.Admin.StoreAppearanceSettingsComposer>();
 builder.Services.AddScoped<Tooba.Catalog.Application.StoreLandingPages.Ports.IStoreLandingShellPort, Tooba.Host.CatalogAdapters.StoreLandingShellAdapter>();
 builder.Services.AddScoped<Tooba.Catalog.Application.StoreLandingPages.Ports.IStoreLandingMerchandisingPort, Tooba.Host.CatalogAdapters.StoreLandingMerchandisingAdapter>();
 builder.Services.AddScoped(sp =>
@@ -464,7 +462,6 @@ app.UseMiddleware<RequestObservabilityEnrichmentMiddleware>();
 
 app.MapAuthenticationBoundary(enableCors: true);
 app.MapProductWorkspaceModuleEndpoints();
-app.MapStoreAppearanceSettingsEndpoints();
 app.MapAdminPanelEndpoints();
 app.MapOrderEndpoints();
 app.MapStorefrontEndpoints();

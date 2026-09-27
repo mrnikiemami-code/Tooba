@@ -1,4 +1,4 @@
-using System.Text.RegularExpressions;
+﻿using System.Text.RegularExpressions;
 using System.Xml.Linq;
 using Xunit;
 
@@ -128,7 +128,7 @@ public sealed class HostAdminAmcW18GuardTests
         Assert.False(File.Exists(Path.Combine(admin, "ProductWorkspaceEndpoints.cs")));
         Assert.False(File.Exists(Path.Combine(admin, "ProductWorkspaceComposer.cs")));
         Assert.False(File.Exists(Path.Combine(admin, "ProductWorkspaceModels.cs")));
-        Assert.True(File.Exists(Path.Combine(admin, "StoreAppearanceSettingsEndpoints.cs")));
+        Assert.False(File.Exists(Path.Combine(admin, "StoreAppearanceSettingsEndpoints.cs")));
     }
 
     [Fact]

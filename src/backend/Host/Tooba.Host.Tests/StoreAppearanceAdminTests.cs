@@ -5,11 +5,13 @@ using FluentValidation;
 using MediatR;
 using Tooba.BuildingBlocks;
 using Tooba.Catalog.Application;
+using Tooba.Catalog.Application.Settings.StoreAppearance;
+using Tooba.Catalog.Application.Settings.StoreAppearance.Models;
+using Tooba.Catalog.Application.Settings.StoreAppearance.Ports;
 using Tooba.Catalog.Domain;
 using Tooba.Catalog.Infrastructure;
 using Tooba.Catalog.Infrastructure.Persistence;
-using Tooba.Host.Admin;
-using Tooba.Host.Storefront;
+using Tooba.Catalog.Infrastructure.StoreAppearance;
 using Tooba.Order.Application.Storefront.Services;
 using Tooba.Order.Application.Storefront.Models;
 using Tooba.AddressBook.Contracts.Dtos;
@@ -127,9 +129,12 @@ public sealed class StoreAppearanceAdminTests
     [Fact]
     public void Admin_endpoints_reuse_existing_authorization()
     {
-        var source = File.ReadAllText(Path.Combine(FindRepoRoot(), "src/backend/Host/Tooba.Host/Admin/StoreAppearanceSettingsEndpoints.cs"));
+        var source = File.ReadAllText(Path.Combine(
+            FindRepoRoot(),
+            "src/backend/Modules/Catalog/Tooba.Catalog.Endpoints/Admin/Settings/StoreAppearanceSettingsEndpoints.cs"));
         Assert.Contains("/v1/admin/settings/appearance", source, StringComparison.Ordinal);
-        Assert.Contains("AdminPanelAccess.RequireAuthorizedAsync", source, StringComparison.Ordinal);
+        Assert.Contains("ICatalogAdminAuthorizer", source, StringComparison.Ordinal);
+        Assert.Contains("ApiResponseFactory", source, StringComparison.Ordinal);
         Assert.Contains("body.ThemeMode", source, StringComparison.Ordinal);
         Assert.Contains("body.ProductCardSkin", source, StringComparison.Ordinal);
         Assert.Contains("body.BackgroundStyle", source, StringComparison.Ordinal);
@@ -249,13 +254,16 @@ public sealed class StoreAppearanceAdminTests
         StoreAppearanceProjector projector)
     {
         var directory = new StoreAppearanceSettingsDirectory(catalog, new SystemUtcClock());
+        var commerce = new FixedCommerce(context);
         var services = new ServiceCollection();
         services.AddLogging();
         services.AddSingleton<IStoreAppearanceSettingsDirectory>(directory);
+        services.AddSingleton<IStoreAppearanceProjector>(projector);
+        services.AddSingleton<ICurrentCommerceContext>(commerce);
         services.AddValidatorsFromAssembly(typeof(SaveStoreAppearanceSettingsCommand).Assembly);
         services.AddToobaCqrsFoundation(typeof(SaveStoreAppearanceSettingsCommand).Assembly);
         var provider = services.BuildServiceProvider();
-        return new StoreAppearanceSettingsComposer(new FixedCommerce(context), projector, provider.GetRequiredService<ISender>());
+        return new StoreAppearanceSettingsComposer(projector, provider.GetRequiredService<ISender>());
     }
 
     private static CatalogDbContext CreateCatalog()

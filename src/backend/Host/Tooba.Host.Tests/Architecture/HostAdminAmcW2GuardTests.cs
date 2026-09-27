@@ -15,7 +15,7 @@ public sealed class HostAdminAmcW2GuardTests
         var program = File.ReadAllText(Path.Combine(root, "src/backend/Host/Tooba.Host/Program.cs"));
         Assert.DoesNotContain("MapQuantitySettingsEndpoints()", program, StringComparison.Ordinal);
         Assert.Contains("MapCatalogModuleEndpoints()", program, StringComparison.Ordinal);
-        Assert.Contains("MapStoreAppearanceSettingsEndpoints()", program, StringComparison.Ordinal);
+        Assert.DoesNotContain("MapStoreAppearanceSettingsEndpoints()", program, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -73,7 +73,7 @@ public sealed class HostAdminAmcW2GuardTests
 
             var text = File.ReadAllText(cs);
             Assert.DoesNotContain("Tooba.Host.Storefront", text, StringComparison.Ordinal);
-            Assert.DoesNotContain("StoreAppearanceProjector", text, StringComparison.Ordinal);
+            // StoreAppearanceProjector is Catalog-owned (W36); Host.Storefront coupling remains forbidden.
         }
     }
 
@@ -88,8 +88,8 @@ public sealed class HostAdminAmcW2GuardTests
         Assert.False(File.Exists(Path.Combine(admin, "UnitOfMeasureEndpoints.cs")));
         Assert.False(File.Exists(Path.Combine(admin, "CatalogTagEndpoints.cs")));
         Assert.False(File.Exists(Path.Combine(admin, "CatalogMegaMenuEndpoints.cs")));
-        Assert.True(File.Exists(Path.Combine(admin, "StoreAppearanceSettingsEndpoints.cs")));
-        Assert.True(File.Exists(Path.Combine(admin, "StoreAppearanceSettingsComposer.cs")));
+        Assert.False(File.Exists(Path.Combine(admin, "StoreAppearanceSettingsEndpoints.cs")));
+        Assert.False(File.Exists(Path.Combine(admin, "StoreAppearanceSettingsComposer.cs")));
     }
 
     [Fact]

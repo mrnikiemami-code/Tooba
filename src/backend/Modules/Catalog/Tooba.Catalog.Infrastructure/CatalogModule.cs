@@ -13,6 +13,7 @@ using Tooba.Catalog.Application.MegaMenu.Ports;
 using Tooba.Catalog.Application.Settings.Quantity.Ports;
 using Tooba.Catalog.Application.Settings.CheckoutAbuse.Ports;
 using Tooba.Catalog.Application.Settings.CheckoutIdentity.Ports;
+using Tooba.Catalog.Application.Settings.StoreAppearance.Ports;
 using Tooba.Catalog.Application.Development.CatalogDemo;
 using Tooba.Catalog.Application.Tags.Ports;
 using Tooba.Catalog.Application.Units.Ports;
@@ -80,6 +81,9 @@ public sealed class CatalogModule : IToobaModule
         services.AddScoped<IStoreMenuDirectory, StoreMenuDirectory>();
         services.AddScoped<IStoreMenuWorkspace, StoreMenuWorkspace>();
         services.AddScoped<IStoreAppearanceSettingsDirectory, StoreAppearanceSettingsDirectory>();
+        services.AddScoped<IStoreAppearanceProjector, StoreAppearance.StoreAppearanceProjector>();
+        services.AddScoped<StoreAppearance.StoreAppearanceProjector>(sp =>
+            (StoreAppearance.StoreAppearanceProjector)sp.GetRequiredService<IStoreAppearanceProjector>());
         services.AddScoped<IStoreQuantitySettingsDirectory, StoreQuantitySettingsDirectory>();
         services.AddScoped<IStoreCheckoutAbuseSettingsDirectory, StoreCheckoutAbuseSettingsDirectory>();
         services.AddScoped<IStoreCheckoutIdentitySettingsDirectory, StoreCheckoutIdentitySettingsDirectory>();

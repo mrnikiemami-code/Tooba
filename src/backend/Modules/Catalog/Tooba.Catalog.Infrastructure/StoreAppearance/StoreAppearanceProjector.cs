@@ -1,40 +1,20 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
 using Tooba.BuildingBlocks;
+using Tooba.Catalog.Application.Settings.StoreAppearance.Models;
+using Tooba.Catalog.Application.Settings.StoreAppearance.Ports;
 using Tooba.Catalog.Domain;
 using Tooba.Catalog.Infrastructure.Persistence;
 
-namespace Tooba.Host.Storefront;
-
-/// <summary>تصویر ظاهری مؤثر فروشگاه. توکن برند و tint؛ danger/success/warning جدا می‌مانند.</summary>
-public sealed record StoreAppearanceProjection(
-    string StoreScope,
-    string PaletteKey,
-    bool PaletteKeyWasKnown,
-    string ThemeMode,
-    string ProductCardSkin,
-    string BackgroundStyle,
-    string PrimaryRgb,
-    string PrimaryStrongRgb,
-    string OnPrimaryRgb,
-    string FocusRgb,
-    string PrimaryOnDarkRgb,
-    string PageBackgroundRgb,
-    string SectionBackgroundRgb,
-    string PageBackgroundDarkRgb,
-    string SectionBackgroundDarkRgb,
-    string SectionAlternateRgb,
-    string SectionAccentRgb,
-    string SectionAlternateDarkRgb,
-    string SectionAccentDarkRgb,
-    DateTimeOffset UpdatedAt);
+namespace Tooba.Catalog.Infrastructure.StoreAppearance;
 
 /// <summary>
 /// ظاهر Store را از Catalog می‌خواند، cache می‌کند و هرگز HTML/CSS/JS اجرا نمی‌کند.
 /// </summary>
-public sealed class StoreAppearanceProjector
+public sealed class StoreAppearanceProjector : IStoreAppearanceProjector
 {
-    internal const string CacheKeyPrefix = "store-appearance:";
+    /// <summary>پیشوند کلید cache ظاهر Store.</summary>
+    public const string CacheKeyPrefix = "store-appearance:";
 
     private readonly CatalogDbContext _catalog;
     private readonly ICurrentCommerceContext _commerce;
@@ -63,11 +43,11 @@ public sealed class StoreAppearanceProjector
         return $"marketplace:{connection}";
     }
 
-    /// <summary>ظاهر مؤثر همین Store را برمی‌گرداند.</summary>
+    /// <inheritdoc />
     public Task<StoreAppearanceProjection> GetEffectiveAsync(CancellationToken cancellationToken)
         => GetEffectiveAsync(_commerce.Current, cancellationToken);
 
-    /// <summary>ظاهر را برای یک زمینهٔ صریح می‌خواند؛ Store دیگر را برنمی‌گرداند.</summary>
+    /// <inheritdoc />
     public async Task<StoreAppearanceProjection> GetEffectiveAsync(
         CommerceContext? context,
         CancellationToken cancellationToken)
@@ -118,7 +98,7 @@ public sealed class StoreAppearanceProjector
         return projection;
     }
 
-    /// <summary>پس از تغییر تنظیمات Store، cache همان scope باطل می‌شود.</summary>
+    /// <inheritdoc />
     public void Invalidate(CommerceContext? context)
         => _cache.Remove(CacheKey(ScopeKey(context)));
 

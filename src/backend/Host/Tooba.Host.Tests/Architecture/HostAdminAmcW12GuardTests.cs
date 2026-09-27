@@ -16,7 +16,7 @@ public sealed class HostAdminAmcW12GuardTests
         Assert.DoesNotContain("MapCatalogAttributeEndpoints()", program, StringComparison.Ordinal);
         Assert.DoesNotContain("MapCatalogAttributeEndpoints", program, StringComparison.Ordinal);
         Assert.Contains("MapCatalogModuleEndpoints()", program, StringComparison.Ordinal);
-        Assert.Contains("MapStoreAppearanceSettingsEndpoints()", program, StringComparison.Ordinal);
+        Assert.DoesNotContain("MapStoreAppearanceSettingsEndpoints()", program, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -145,7 +145,7 @@ public sealed class HostAdminAmcW12GuardTests
         Assert.True(files.Length <= 52 && files.Length >= 12, $"Host/Admin count expected in [12,52], was {files.Length}");
         Assert.False(File.Exists(Path.Combine(admin, "CatalogAttributeEndpoints.cs")));
         Assert.False(File.Exists(Path.Combine(admin, "CatalogCategoryEndpoints.cs")));
-        Assert.True(File.Exists(Path.Combine(admin, "StoreAppearanceSettingsEndpoints.cs")));
+        Assert.False(File.Exists(Path.Combine(admin, "StoreAppearanceSettingsEndpoints.cs")));
 
         Assert.True(Directory.Exists(Path.Combine(
             FindRepoRoot(), "src/backend/Modules/Catalog/Tooba.Catalog.Application/Attributes/ProductValues")));

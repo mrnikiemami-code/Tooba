@@ -17,7 +17,7 @@ public sealed class HostAdminAmcW9GuardTests
         var program = File.ReadAllText(Path.Combine(root, "src/backend/Host/Tooba.Host/Program.cs"));
         Assert.DoesNotContain("MapCatalogAttributeEndpoints()", program, StringComparison.Ordinal);
         Assert.Contains("MapCatalogModuleEndpoints()", program, StringComparison.Ordinal);
-        Assert.Contains("MapStoreAppearanceSettingsEndpoints()", program, StringComparison.Ordinal);
+        Assert.DoesNotContain("MapStoreAppearanceSettingsEndpoints()", program, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -158,8 +158,8 @@ public sealed class HostAdminAmcW9GuardTests
         Assert.False(File.Exists(Path.Combine(admin, "CatalogTagEndpoints.cs")));
         Assert.False(File.Exists(Path.Combine(admin, "UnitOfMeasureEndpoints.cs")));
         Assert.False(File.Exists(Path.Combine(admin, "QuantitySettingsEndpoints.cs")));
-        Assert.True(File.Exists(Path.Combine(admin, "StoreAppearanceSettingsEndpoints.cs")));
-        Assert.True(File.Exists(Path.Combine(admin, "StoreAppearanceSettingsComposer.cs")));
+        Assert.False(File.Exists(Path.Combine(admin, "StoreAppearanceSettingsEndpoints.cs")));
+        Assert.False(File.Exists(Path.Combine(admin, "StoreAppearanceSettingsComposer.cs")));
 
         Assert.True(Directory.Exists(Path.Combine(
             FindRepoRoot(), "src/backend/Modules/Catalog/Tooba.Catalog.Application/Tags")));

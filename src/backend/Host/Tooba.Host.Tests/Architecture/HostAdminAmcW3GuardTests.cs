@@ -17,7 +17,7 @@ public sealed class HostAdminAmcW3GuardTests
         Assert.DoesNotContain("IUnitOfMeasureLanguageGate", program, StringComparison.Ordinal);
         Assert.DoesNotContain("HostUnitOfMeasureLanguageGate", program, StringComparison.Ordinal);
         Assert.Contains("MapCatalogModuleEndpoints()", program, StringComparison.Ordinal);
-        Assert.Contains("MapStoreAppearanceSettingsEndpoints()", program, StringComparison.Ordinal);
+        Assert.DoesNotContain("MapStoreAppearanceSettingsEndpoints()", program, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -143,8 +143,8 @@ public sealed class HostAdminAmcW3GuardTests
         Assert.False(File.Exists(Path.Combine(admin, "UnitOfMeasureEndpoints.cs")));
         Assert.False(File.Exists(Path.Combine(admin, "QuantitySettingsEndpoints.cs")));
         Assert.False(File.Exists(Path.Combine(admin, "CatalogTagEndpoints.cs")));
-        Assert.True(File.Exists(Path.Combine(admin, "StoreAppearanceSettingsEndpoints.cs")));
-        Assert.True(File.Exists(Path.Combine(admin, "StoreAppearanceSettingsComposer.cs")));
+        Assert.False(File.Exists(Path.Combine(admin, "StoreAppearanceSettingsEndpoints.cs")));
+        Assert.False(File.Exists(Path.Combine(admin, "StoreAppearanceSettingsComposer.cs")));
 
         var quantityRoot = Path.Combine(
             FindRepoRoot(),

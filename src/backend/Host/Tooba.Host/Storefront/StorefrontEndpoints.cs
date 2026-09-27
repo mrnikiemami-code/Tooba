@@ -1,4 +1,5 @@
-﻿using Tooba.Order.Application.Storefront.Services;
+﻿using Tooba.Catalog.Infrastructure.StoreAppearance;
+using Tooba.Order.Application.Storefront.Services;
 
 namespace Tooba.Host.Storefront;
 

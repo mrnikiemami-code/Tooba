@@ -1,25 +1,21 @@
 using MediatR;
-using Tooba.BuildingBlocks;
-using Tooba.Catalog.Application;
+using Tooba.Catalog.Application.Settings.StoreAppearance.Models;
+using Tooba.Catalog.Application.Settings.StoreAppearance.Ports;
 using Tooba.Catalog.Domain;
-using Tooba.Host.Storefront;
 
-namespace Tooba.Host.Admin;
+namespace Tooba.Catalog.Application.Settings.StoreAppearance;
 
 /// <summary>خواندن ظاهر Store و ارسال فرمان نوشتن از طریق CQRS.</summary>
 public sealed class StoreAppearanceSettingsComposer
 {
-    private readonly ICurrentCommerceContext _commerce;
-    private readonly StoreAppearanceProjector _projector;
+    private readonly IStoreAppearanceProjector _projector;
     private readonly ISender _sender;
 
     /// <summary>نویسنده ظاهر Store را به پروژکتور و ISender وصل می‌کند.</summary>
     public StoreAppearanceSettingsComposer(
-        ICurrentCommerceContext commerce,
-        StoreAppearanceProjector projector,
+        IStoreAppearanceProjector projector,
         ISender sender)
     {
-        _commerce = commerce;
         _projector = projector;
         _sender = sender;
     }
@@ -55,11 +51,12 @@ public sealed class StoreAppearanceSettingsComposer
             new SaveStoreAppearanceSettingsCommand(
                 new StoreAppearanceSettingsWriteModel(paletteKey, themeMode, productCardSkin, backgroundStyle)),
             cancellationToken);
-        _projector.Invalidate(_commerce.Current);
+        // Save handler invalidates projector cache; re-read effective view.
         return ToView(await _projector.GetEffectiveAsync(cancellationToken));
     }
 
-    private static StoreAppearanceAdminView ToView(StoreAppearanceProjection current) =>
+    /// <summary>Maps effective projection + registries to Admin view.</summary>
+    public static StoreAppearanceAdminView ToView(StoreAppearanceProjection current) =>
         new(
             current.StoreScope,
             current.PaletteKey,
@@ -107,56 +104,3 @@ public sealed class StoreAppearanceSettingsComposer
                 .Select(item => new StoreAppearanceSkinView(item.Key, item.NameFa, item.NameEn))
                 .ToArray());
 }
-
-/// <summary>نمایه Admin ظاهر Store.</summary>
-public sealed record StoreAppearanceAdminView(
-    string StoreScope,
-    string PaletteKey,
-    bool PaletteKeyWasKnown,
-    string ThemeMode,
-    StoreAppearanceTokenView Tokens,
-    string ProductCardSkin,
-    string BackgroundStyle,
-    StoreAppearanceTintView Tint,
-    IReadOnlyList<StoreAppearancePresetView> Presets,
-    IReadOnlyList<StoreAppearanceSkinView> Skins);
-
-/// <summary>یک پوستهٔ curated برای کارت انتخاب.</summary>
-public sealed record StoreAppearanceSkinView(
-    string Key,
-    string NameFa,
-    string NameEn);
-
-/// <summary>یک پالت curated برای کارت انتخاب.</summary>
-public sealed record StoreAppearancePresetView(
-    string Key,
-    string NameFa,
-    string NameEn,
-    StoreAppearanceTokenView Tokens,
-    StoreAppearanceTintView Tint);
-
-/// <summary>توکن برند بدون رنگ وضعیت.</summary>
-public sealed record StoreAppearanceTokenView(
-    string PrimaryRgb,
-    string PrimaryStrongRgb,
-    string OnPrimaryRgb,
-    string FocusRgb,
-    string PrimaryOnDarkRgb);
-
-/// <summary>توکن tint بدون رنگ وضعیت.</summary>
-public sealed record StoreAppearanceTintView(
-    string PageBackgroundRgb,
-    string SectionBackgroundRgb,
-    string PageBackgroundDarkRgb,
-    string SectionBackgroundDarkRgb,
-    string SectionAlternateRgb,
-    string SectionAccentRgb,
-    string SectionAlternateDarkRgb,
-    string SectionAccentDarkRgb);
-
-/// <summary>بدنه ذخیره ظاهر؛ PaletteKey الزامی و ThemeMode اختیاری.</summary>
-public sealed record StoreAppearanceSettingsWriteRequest(
-    string? PaletteKey,
-    string? ThemeMode = null,
-    string? ProductCardSkin = null,
-    string? BackgroundStyle = null);

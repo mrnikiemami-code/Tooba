@@ -2488,6 +2488,37 @@
     "workflowStop": "USER_REVIEW_HOST_ADMIN_W34_TEMPLATE_SEEDS_CHECKPOINT",
     "evidence": "docs/evidence/TB-TMAR-HOST-ADMIN-AMC-001-W34-TEMPLATE-SEEDS/"
   },
+  "hostAdminAmcStoreAppearance": {
+    "task": "TB-TMAR-HOST-ADMIN-AMC-001-W36-STORE-APPEARANCE",
+    "parentTask": "TB-TMAR-HOST-ADMIN-AMC-001-W35-HOLD-POLICY",
+    "state": "HOST_ADMIN_STORE_APPEARANCE_CATALOG_OWNED",
+    "activeHostFolder": "Admin",
+    "owner": "Catalog",
+    "routes": [
+      "GET /v1/admin/settings/appearance",
+      "PUT /v1/admin/settings/appearance"
+    ],
+    "cqrsState": "Get_Save_Result_ApiResponseFactory",
+    "adminAuth": "ICatalogAdminAuthorizer",
+    "projector": "Catalog.Infrastructure.StoreAppearance.StoreAppearanceProjector",
+    "projectorPort": "IStoreAppearanceProjector",
+    "deletedAdminFiles": [
+      "StoreAppearanceSettingsEndpoints.cs",
+      "StoreAppearanceSettingsComposer.cs"
+    ],
+    "deletedHostStorefrontFiles": [
+      "StoreAppearanceProjection.cs"
+    ],
+    "MapStoreAppearanceSettingsEndpoints": "CatalogEndpointModule",
+    "HostAdminFileCount": 15,
+    "partialHostRetention": "platform KEEP only",
+    "StoreAppearance": "CATALOG_OWNED",
+    "HoldPolicy": "CATALOG_OWNED",
+    "schemaMigrationState": "NONE",
+    "frontendState": "UNCHANGED",
+    "workflowStop": "USER_REVIEW_HOST_ADMIN_W36_STORE_APPEARANCE_CHECKPOINT",
+    "evidence": "docs/evidence/TB-TMAR-HOST-ADMIN-AMC-001-W36-STORE-APPEARANCE/"
+  },
   "hostAdminAmcHoldPolicy": {
     "task": "TB-TMAR-HOST-ADMIN-AMC-001-W35-HOLD-POLICY",
     "parentTask": "TB-TMAR-HOST-ADMIN-AMC-001-W34-TEMPLATE-SEEDS",
@@ -2509,9 +2540,9 @@
       "HoldPolicySettingsEndpoints.cs"
     ],
     "MapHoldPolicySettingsEndpoints": "CatalogEndpointModule",
-    "HostAdminFileCount": 17,
-    "partialHostRetention": "StoreAppearance BLOCK + platform KEEP",
-    "StoreAppearance": "DEFERRED",
+    "HostAdminFileCount": 15,
+    "partialHostRetention": "platform KEEP only (StoreAppearance evacuated W36)",
+    "StoreAppearance": "CATALOG_OWNED",
     "HoldPolicy": "CATALOG_OWNED",
     "schemaMigrationState": "NONE",
     "frontendState": "UNCHANGED",
