@@ -69,25 +69,16 @@ public sealed class ProductSeoDirectory : IProductSeoDirectory
         }
 
         string slug;
-        try
+        if (string.IsNullOrWhiteSpace(input.Slug))
         {
-            if (string.IsNullOrWhiteSpace(input.Slug))
+            var name = await ResolveProductNameForSeoAsync(productId, locale, cancellationToken);
+            if (!CatalogCategorySlugNormalizer.TrySlugifyFromName(name, out slug))
             {
-                var name = await ResolveProductNameForSeoAsync(productId, locale, cancellationToken);
-                if (string.IsNullOrWhiteSpace(name))
-                {
-                    return Result.Failure<ProductSeoDetail>(
-                        new SemanticError(CatalogErrorCodes.WorkspaceProductSlugInvalid));
-                }
-
-                slug = CatalogCategorySlugNormalizer.SlugifyFromName(name);
-            }
-            else
-            {
-                slug = CatalogCategorySlugNormalizer.NormalizeSlug(input.Slug);
+                return Result.Failure<ProductSeoDetail>(
+                    new SemanticError(CatalogErrorCodes.WorkspaceProductSlugInvalid));
             }
         }
-        catch (InvalidOperationException)
+        else if (!CatalogCategorySlugNormalizer.TryNormalizeSlug(input.Slug, out slug))
         {
             return Result.Failure<ProductSeoDetail>(
                 new SemanticError(CatalogErrorCodes.WorkspaceProductSlugInvalid));
