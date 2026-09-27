@@ -1,7 +1,7 @@
-using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Tooba.BuildingBlocks;
-using Tooba.Catalog.Domain;
-using Tooba.Catalog.Infrastructure.Persistence;
+using Tooba.Catalog.Contracts;
 using Tooba.Inventory.Application.Ports;
 using Tooba.Inventory.Application.Checkout;
 using Tooba.Inventory.Application.Orders;
@@ -17,7 +17,7 @@ using Tooba.Inventory.Domain.Events;
 using Tooba.Offer.Contracts.Dtos;
 using Tooba.Offer.Contracts.Ports;
 using Tooba.Party.Application;
-using Tooba.Party.Infrastructure.Persistence;
+using Tooba.Party.Contracts;
 using Tooba.Pricing.Application;
 using Tooba.Pricing.Contracts;
 using Tooba.Promotion.Application.Ports;
@@ -28,32 +28,14 @@ using Tooba.Promotion.Domain.ValueObjects;
 using Tooba.Promotion.Domain.Events;
 using Tooba.Promotion.Domain.Merchandising;
 
-namespace Tooba.Host.Admin;
+namespace Tooba.Promotion.Infrastructure.Development;
 
 /// <summary>
 /// دانهٔ idempotent کمپین‌های AMAZING برای Development؛ Production را لمس نمی‌کند.
 /// پنجره‌ها نسبت به UtcNow تازه می‌شوند تا سناریوهای active/future/expired پایدار بمانند.
 /// </summary>
-internal static class MerchandisingCampaignDevelopmentSeed
+public static class MerchandisingCampaignDevelopmentSeed
 {
-    /// <summary>StoreId پایدار برای tenant SingleStore store-alpha داخل DB tenant.</summary>
-    public static readonly Guid StoreAlphaId = Guid.Parse("aaaaaaaa-aaaa-7aaa-8aaa-aaaaaaaaaaa1");
-
-    /// <summary>کمپین فعال اولویت بالا.</summary>
-    public static readonly Guid ActivePrimaryId = Guid.Parse("019a16a0-0001-7000-8000-000000000001");
-
-    /// <summary>کمپین فعال بازندهٔ اولویت.</summary>
-    public static readonly Guid ActiveLoserId = Guid.Parse("019a16a0-0002-7000-8000-000000000002");
-
-    /// <summary>کمپین آینده / teasing.</summary>
-    public static readonly Guid FutureId = Guid.Parse("019a16a0-0003-7000-8000-000000000003");
-
-    /// <summary>کمپین منقضی.</summary>
-    public static readonly Guid ExpiredId = Guid.Parse("019a16a0-0004-7000-8000-000000000004");
-
-    /// <summary>کمپین پیش‌نویس.</summary>
-    public static readonly Guid DraftId = Guid.Parse("019a16a0-0005-7000-8000-000000000005");
-
     internal const string OosSellerSku = "DEV-SEED-OOS";
     internal const string MarkerActivePrimary = "[DEV-SEED] Amazing Active Primary";
     internal const string MarkerActiveLoser = "[DEV-SEED] Amazing Active Loser";
@@ -76,22 +58,17 @@ internal static class MerchandisingCampaignDevelopmentSeed
         var type = await dir.EnsureAmazingTypeSeededAsync(cancellationToken);
         var offerQueries = provider.GetRequiredService<IOfferQueryGateway>();
         var offerSeeds = provider.GetRequiredService<IOfferDevelopmentSeedGateway>();
-        var catalogDb = provider.GetRequiredService<CatalogDbContext>();
         var inventoryQuery = provider.GetRequiredService<IInventoryQueryGateway>();
         var inventory = provider.GetRequiredService<IInventoryDirectory>();
         var parties = provider.GetRequiredService<IPartyDirectory>();
-        var partyDb = provider.GetRequiredService<PartyDbContext>();
+        var partyLookup = provider.GetRequiredService<IPartyLookup>();
         var prices = provider.GetRequiredService<IPriceDirectory>();
         var priceQuery = provider.GetRequiredService<IPriceQueryGateway>();
         var now = DateTimeOffset.UtcNow;
 
         // Prefer offers whose Catalog Product is Published so Storefront ProductCards can project promo prices.
-        var publishedVariantIds = await catalogDb.Variants.AsNoTracking()
-            .Where(v => catalogDb.Products.Any(p =>
-                p.ProductId == v.ProductId && p.Status == CatalogPublicationStatus.Published))
-            .Select(v => v.VariantId)
-            .ToListAsync(cancellationToken);
-        var publishedVariantSet = publishedVariantIds.ToHashSet();
+        var catalogLookup = provider.GetRequiredService<ICatalogVariantLookup>();
+        var publishedVariantSet = (await catalogLookup.GetPublishedVariantIdsAsync(cancellationToken)).ToHashSet();
         var allActive = await offerQueries.ListActiveOffersAsync(cancellationToken);
         var activeOffers = allActive
             .Where(x => x.SellerSku != OosSellerSku && publishedVariantSet.Contains(x.CatalogVariantId))
@@ -115,7 +92,7 @@ internal static class MerchandisingCampaignDevelopmentSeed
             inventoryQuery,
             inventory,
             parties,
-            partyDb,
+            partyLookup,
             cancellationToken);
         var primaryMembers = activeOffers.ToList();
         if (oosOfferId is not null)
@@ -125,9 +102,9 @@ internal static class MerchandisingCampaignDevelopmentSeed
 
         await UpsertCampaignAsync(
             dir,
-            ActivePrimaryId,
+            MerchandisingDevelopmentIds.ActivePrimaryId,
             type.Id,
-            StoreAlphaId,
+            MerchandisingDevelopmentIds.StoreAlphaId,
             startAt: now.AddHours(-2),
             endAt: now.AddDays(7),
             priority: 100,
@@ -140,9 +117,9 @@ internal static class MerchandisingCampaignDevelopmentSeed
 
         await UpsertCampaignAsync(
             dir,
-            ActiveLoserId,
+            MerchandisingDevelopmentIds.ActiveLoserId,
             type.Id,
-            StoreAlphaId,
+            MerchandisingDevelopmentIds.StoreAlphaId,
             startAt: now.AddHours(-1),
             endAt: now.AddDays(3),
             priority: 10,
@@ -155,9 +132,9 @@ internal static class MerchandisingCampaignDevelopmentSeed
 
         await UpsertCampaignAsync(
             dir,
-            FutureId,
+            MerchandisingDevelopmentIds.FutureId,
             type.Id,
-            StoreAlphaId,
+            MerchandisingDevelopmentIds.StoreAlphaId,
             startAt: now.AddDays(1),
             endAt: now.AddDays(2),
             priority: 80,
@@ -170,9 +147,9 @@ internal static class MerchandisingCampaignDevelopmentSeed
 
         await UpsertCampaignAsync(
             dir,
-            ExpiredId,
+            MerchandisingDevelopmentIds.ExpiredId,
             type.Id,
-            StoreAlphaId,
+            MerchandisingDevelopmentIds.StoreAlphaId,
             startAt: now.AddDays(-3),
             endAt: now.AddDays(-1),
             priority: 90,
@@ -185,9 +162,9 @@ internal static class MerchandisingCampaignDevelopmentSeed
 
         await UpsertCampaignAsync(
             dir,
-            DraftId,
+            MerchandisingDevelopmentIds.DraftId,
             type.Id,
-            StoreAlphaId,
+            MerchandisingDevelopmentIds.StoreAlphaId,
             startAt: now.AddHours(-1),
             endAt: now.AddDays(1),
             priority: 50,
@@ -203,7 +180,7 @@ internal static class MerchandisingCampaignDevelopmentSeed
         await EnsureCampaignPromoPricesAsync(
             prices,
             priceQuery,
-            ActivePrimaryId,
+            MerchandisingDevelopmentIds.ActivePrimaryId,
             activeOffers.Take(3).ToList(),
             fractionOfBase: 0.7m,
             validFrom: now.AddHours(-2),
@@ -213,7 +190,7 @@ internal static class MerchandisingCampaignDevelopmentSeed
         await EnsureCampaignPromoPricesAsync(
             prices,
             priceQuery,
-            FutureId,
+            MerchandisingDevelopmentIds.FutureId,
             activeOffers.Take(1).ToList(),
             fractionOfBase: 0.5m,
             validFrom: now.AddDays(1),
@@ -325,14 +302,12 @@ internal static class MerchandisingCampaignDevelopmentSeed
         IInventoryQueryGateway inventoryQuery,
         IInventoryDirectory inventory,
         IPartyDirectory parties,
-        PartyDbContext partyDb,
+        IPartyLookup partyLookup,
         CancellationToken cancellationToken)
     {
         const string oosSellerName = "DEV-SEED OOS Seller";
-        var sellerPartyId = await partyDb.Parties.AsNoTracking()
-            .Where(x => x.DisplayName == oosSellerName)
-            .Select(x => x.PartyId)
-            .FirstOrDefaultAsync(cancellationToken);
+        var matches = await partyLookup.SearchIdsByDisplayNameAsync(oosSellerName, 5, cancellationToken);
+        var sellerPartyId = matches.FirstOrDefault();
         if (sellerPartyId == Guid.Empty)
         {
             var createdSeller = await parties.CreateOrganizationAsync(

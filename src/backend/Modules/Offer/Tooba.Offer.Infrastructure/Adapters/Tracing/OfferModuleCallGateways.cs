@@ -67,6 +67,22 @@ internal sealed class TracedCatalogVariantLookup(ICatalogVariantLookup inner, IM
             throw;
         }
     }
+
+    public async Task<IReadOnlyList<Guid>> GetPublishedVariantIdsAsync(CancellationToken cancellationToken)
+    {
+        using var trace = tracer.Begin("Offer", "Catalog", "LookupPublishedVariantIds");
+        try
+        {
+            var result = await inner.GetPublishedVariantIdsAsync(cancellationToken).ConfigureAwait(false);
+            trace.SetOk();
+            return result;
+        }
+        catch (Exception ex)
+        {
+            trace.SetError(ex);
+            throw;
+        }
+    }
 }
 
 /// <summary>Traced Offer→Catalog presentation read boundary.</summary>

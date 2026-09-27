@@ -316,5 +316,8 @@ public sealed class AdminOrderHistoryCompositionTests
             CancellationToken cancellationToken) =>
             Task.FromResult<IReadOnlyDictionary<Guid, string>>(
                 variantIds.ToDictionary(x => x, _ => "کالای آزمایشی"));
+
+        public Task<IReadOnlyList<Guid>> GetPublishedVariantIdsAsync(CancellationToken cancellationToken) =>
+            Task.FromResult<IReadOnlyList<Guid>>([]);
     }
 }

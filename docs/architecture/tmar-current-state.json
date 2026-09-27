@@ -2407,6 +2407,23 @@
     "workflowStop": "USER_REVIEW_HOST_ADMIN_W31_PW_LIST_GRID_CHECKPOINT",
     "evidence": "docs/evidence/TB-TMAR-HOST-ADMIN-AMC-001-W31-PW-LIST-GRID/"
   },
+  "hostAdminAmcMerchandising": {
+    "task": "TB-TMAR-HOST-ADMIN-AMC-001-W33-MERCHANDISING",
+    "parentTask": "TB-TMAR-HOST-ADMIN-AMC-001-W31-PW-LIST-GRID",
+    "state": "HOST_ADMIN_MERCHANDISING_OWNED_BY_PROMOTION",
+    "activeHostFolder": "Admin",
+    "merchandisingHttpOwner": "Promotion.Endpoints",
+    "merchandisingComposerOwner": "Promotion.Infrastructure",
+    "merchandisingSeedOwner": "Promotion.Infrastructure.Development",
+    "storeLandingGateAdapter": "Host.CatalogAdapters.MerchandisingStoreLandingReferenceGate",
+    "HostAdminFileCount": 28,
+    "partialHostRetention": "ProductWorkspace* shells + StoreAppearance BLOCK",
+    "StoreAppearance": "DEFERRED",
+    "schemaMigrationState": "NONE",
+    "frontendState": "UNCHANGED",
+    "workflowStop": "USER_REVIEW_HOST_ADMIN_W33_MERCHANDISING_CHECKPOINT",
+    "evidence": "docs/evidence/TB-TMAR-HOST-ADMIN-AMC-001-W33-MERCHANDISING/"
+  },
   "hostAdminAmcW18": {
     "task": "TB-TMAR-HOST-ADMIN-AMC-001-W18",
     "parentTask": "TB-TMAR-HOST-ADMIN-AMC-001-W17",

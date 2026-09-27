@@ -1,123 +1,30 @@
-using System.Globalization;
-using Microsoft.EntityFrameworkCore;
 using Tooba.BuildingBlocks;
-using Tooba.Catalog.Domain;
-using Tooba.Catalog.Infrastructure.Persistence;
+using Tooba.Catalog.Contracts;
 using Tooba.Inventory.Contracts.Availability;
-using Tooba.Inventory.Contracts.Checkout;
-using Tooba.Inventory.Contracts.Errors;
-using Tooba.Inventory.Contracts.Orders;
-using Tooba.Inventory.Contracts.Seller;
 using Tooba.Offer.Contracts.Dtos;
 using Tooba.Offer.Contracts.Ports;
-using Tooba.Party.Infrastructure.Persistence;
+using Tooba.Party.Contracts;
 using Tooba.Pricing.Application;
 using Tooba.Pricing.Contracts;
-using Tooba.Promotion.Application.Ports;
-using Tooba.Promotion.Application.Checkout;
 using Tooba.Promotion.Application.Merchandising;
-using Tooba.Promotion.Domain.Aggregates;
-using Tooba.Promotion.Domain.ValueObjects;
-using Tooba.Promotion.Domain.Events;
 using Tooba.Promotion.Domain.Merchandising;
-namespace Tooba.Host.Admin;
+
+namespace Tooba.Promotion.Infrastructure.Merchandising;
 
 #pragma warning disable CS1591
-
-public sealed record AdminMerchCampaignListItem(
-    Guid CampaignId,
-    string Title,
-    string PromotionTypeDisplayName,
-    string LifecycleStatus,
-    string RuntimeLabel,
-    DateTimeOffset StartAt,
-    DateTimeOffset? EndAt,
-    int Priority,
-    int MemberCount,
-    DateTimeOffset UpdatedAt);
-
-public sealed record AdminMerchCampaignListResponse(IReadOnlyList<AdminMerchCampaignListItem> Items, int Total);
-
-public sealed record AdminMerchCampaignTypeOption(Guid PromotionTypeId, string DisplayName);
-
-public sealed record AdminMerchCampaignTypesResponse(IReadOnlyList<AdminMerchCampaignTypeOption> Items);
-
-public sealed record AdminMerchCampaignTranslationDto(
-    string Locale,
-    string Title,
-    string? Subtitle,
-    string? BadgeText);
-
-public sealed record AdminMerchCampaignMemberDto(
-    Guid SellerOfferId,
-    int SortOrder,
-    string ProductTitle,
-    string SellerDisplayName,
-    decimal BaseAmount,
-    decimal? CampaignAmount,
-    string Currency,
-    decimal AvailableUnits,
-    bool InStock);
-
-public sealed record AdminMerchCampaignDetail(
-    Guid CampaignId,
-    Guid PromotionTypeId,
-    string PromotionTypeDisplayName,
-    string LifecycleStatus,
-    string RuntimeLabel,
-    DateTimeOffset StartAt,
-    DateTimeOffset? EndAt,
-    int Priority,
-    DateTimeOffset UpdatedAt,
-    IReadOnlyList<AdminMerchCampaignTranslationDto> Translations,
-    IReadOnlyList<AdminMerchCampaignMemberDto> Members);
-
-public sealed record AdminMerchCampaignWriteRequest(
-    Guid PromotionTypeId,
-    DateTimeOffset StartAt,
-    DateTimeOffset? EndAt,
-    int Priority,
-    IReadOnlyList<AdminMerchCampaignTranslationDto> Translations);
-
-public sealed record AdminMerchCampaignUpdateRequest(
-    DateTimeOffset StartAt,
-    DateTimeOffset? EndAt,
-    int Priority,
-    IReadOnlyList<AdminMerchCampaignTranslationDto> Translations);
-
-public sealed record AdminMerchAddMemberRequest(Guid SellerOfferId);
-
-public sealed record AdminMerchReorderMembersRequest(IReadOnlyList<Guid> OrderedSellerOfferIds);
-
-public sealed record AdminMerchMemberPriceRequest(
-    decimal Amount,
-    string? Currency,
-    string? Market,
-    string? Channel);
-
-public sealed record AdminMerchOfferCandidate(
-    Guid SellerOfferId,
-    string ProductTitle,
-    string SellerDisplayName,
-    decimal BaseAmount,
-    string Currency,
-    decimal AvailableUnits,
-    bool InStock);
-
-public sealed record AdminMerchOfferCandidateResponse(IReadOnlyList<AdminMerchOfferCandidate> Items, int Total);
 
 /// <summary>
 /// ترکیب Admin کمپین مرچندایزینگ: دایرکتوری Promotion + Pricing + نمایش Offer/Catalog.
 /// </summary>
-public sealed class MerchandisingCampaignAdminComposer
+public sealed class MerchandisingCampaignAdminComposer : IMerchandisingCampaignAdminComposer
 {
     private readonly IMerchandisingCampaignDirectory _campaigns;
     private readonly IPriceDirectory _prices;
     private readonly IPriceLookupGateway _priceLookup;
     private readonly IInventoryAvailabilityGateway _availability;
     private readonly IOfferQueryGateway _offers;
-    private readonly CatalogDbContext _catalog;
-    private readonly PartyDbContext _parties;
+    private readonly ICatalogVariantLookup _catalog;
+    private readonly IPartyLookup _parties;
     private readonly ICurrentCommerceContext _commerce;
 
     public MerchandisingCampaignAdminComposer(
@@ -126,8 +33,8 @@ public sealed class MerchandisingCampaignAdminComposer
         IPriceLookupGateway priceLookup,
         IInventoryAvailabilityGateway availability,
         IOfferQueryGateway offers,
-        CatalogDbContext catalog,
-        PartyDbContext parties,
+        ICatalogVariantLookup catalog,
+        IPartyLookup parties,
         ICurrentCommerceContext commerce)
     {
         _campaigns = campaigns;
@@ -145,7 +52,7 @@ public sealed class MerchandisingCampaignAdminComposer
         var tenantId = _commerce.Current?.Tenant?.TenantId.Value;
         if (string.Equals(tenantId, "store-alpha", StringComparison.OrdinalIgnoreCase))
         {
-            return MerchandisingCampaignDevelopmentSeed.StoreAlphaId;
+            return MerchandisingDevelopmentIds.StoreAlphaId;
         }
 
         if (Guid.TryParse(tenantId, out var parsed) && parsed != Guid.Empty)
@@ -153,7 +60,7 @@ public sealed class MerchandisingCampaignAdminComposer
             return parsed;
         }
 
-        return MerchandisingCampaignDevelopmentSeed.StoreAlphaId;
+        return MerchandisingDevelopmentIds.StoreAlphaId;
     }
 
     public async Task<AdminMerchCampaignListResponse> ListAsync(
@@ -459,29 +366,9 @@ public sealed class MerchandisingCampaignAdminComposer
         take = Math.Clamp(take, 1, 50);
         var offers = await _offers.ListRecentActiveOffersAsync(200, cancellationToken);
         var variantIds = offers.Select(o => o.CatalogVariantId).Distinct().ToArray();
-        var variants = await _catalog.Variants.AsNoTracking()
-            .Where(v => variantIds.Contains(v.VariantId))
-            .Select(v => new { v.VariantId, v.ProductId })
-            .ToListAsync(cancellationToken);
-        var productIds = variants.Select(v => v.ProductId).Distinct().ToArray();
-        var products = await _catalog.Products.AsNoTracking()
-            .Where(p => productIds.Contains(p.ProductId))
-            .Select(p => new { p.ProductId, p.SlugSeam })
-            .ToListAsync(cancellationToken);
-        var titles = await _catalog.LocalizedTexts.AsNoTracking()
-            .Where(f => f.OwnerKind == CatalogLocalizedOwnerKind.Product
-                        && productIds.Contains(f.OwnerId)
-                        && f.FieldKey == "name"
-                        && f.Locale == "fa-IR")
-            .ToListAsync(cancellationToken);
+        var variantTitles = await _catalog.GetVariantTitlesAsync(variantIds, cancellationToken);
         var sellerIds = offers.Select(o => o.SellerPartyId).Distinct().ToArray();
-        var sellers = await _parties.Parties.AsNoTracking()
-            .Where(o => sellerIds.Contains(o.PartyId))
-            .Select(o => new { o.PartyId, o.DisplayName })
-            .ToListAsync(cancellationToken);
-        var variantToProduct = variants.ToDictionary(v => v.VariantId, v => v.ProductId);
-        var productTitle = titles.ToDictionary(t => t.OwnerId, t => t.Value);
-        var sellerName = sellers.ToDictionary(s => s.PartyId, s => s.DisplayName);
+        var sellerName = await _parties.GetDisplayNamesAsync(sellerIds, cancellationToken);
         var offerIds = offers.Select(o => o.OfferId).ToArray();
         var priceMap = await _priceLookup.ResolvePricesBatchAsync(
             offerIds,
@@ -494,14 +381,10 @@ public sealed class MerchandisingCampaignAdminComposer
         var rows = new List<AdminMerchOfferCandidate>();
         foreach (var offer in offers)
         {
-            if (!variantToProduct.TryGetValue(offer.CatalogVariantId, out var productId))
+            if (!variantTitles.TryGetValue(offer.CatalogVariantId, out var title) || string.IsNullOrWhiteSpace(title))
             {
-                continue;
+                title = "کالا";
             }
-
-            var title = productTitle.GetValueOrDefault(productId)
-                ?? products.FirstOrDefault(p => p.ProductId == productId)?.SlugSeam
-                ?? "کالا";
             var seller = sellerName.GetValueOrDefault(offer.SellerPartyId) ?? "فروشنده";
             if (!string.IsNullOrWhiteSpace(search))
             {
@@ -547,24 +430,9 @@ public sealed class MerchandisingCampaignAdminComposer
         var offerIds = members.Select(m => m.SellerOfferId).ToArray();
         var offerMap = await _offers.FindOffersBatchAsync(offerIds, cancellationToken);
         var variantIds = offerMap.Values.Select(o => o.CatalogVariantId).Distinct().ToArray();
-        var variants = await _catalog.Variants.AsNoTracking()
-            .Where(v => variantIds.Contains(v.VariantId))
-            .ToListAsync(cancellationToken);
-        var productIds = variants.Select(v => v.ProductId).Distinct().ToArray();
-        var titles = await _catalog.LocalizedTexts.AsNoTracking()
-            .Where(f => f.OwnerKind == CatalogLocalizedOwnerKind.Product
-                        && productIds.Contains(f.OwnerId)
-                        && f.FieldKey == "name"
-                        && f.Locale == "fa-IR")
-            .ToListAsync(cancellationToken);
+        var variantTitles = await _catalog.GetVariantTitlesAsync(variantIds, cancellationToken);
         var sellerIds = offerMap.Values.Select(o => o.SellerPartyId).Distinct().ToArray();
-        var sellers = await _parties.Parties.AsNoTracking()
-            .Where(o => sellerIds.Contains(o.PartyId))
-            .Select(o => new { o.PartyId, o.DisplayName })
-            .ToListAsync(cancellationToken);
-        var variantToProduct = variants.ToDictionary(v => v.VariantId, v => v.ProductId);
-        var productTitle = titles.ToDictionary(t => t.OwnerId, t => t.Value);
-        var sellerName = sellers.ToDictionary(s => s.PartyId, s => s.DisplayName);
+        var sellerName = await _parties.GetDisplayNamesAsync(sellerIds, cancellationToken);
         var now = DateTimeOffset.UtcNow;
         var basePrices = await _priceLookup.ResolvePricesBatchAsync(
             offerIds, "IR", SalesChannel.Marketplace, "IRR", now, cancellationToken);
@@ -579,8 +447,7 @@ public sealed class MerchandisingCampaignAdminComposer
                 continue;
             }
 
-            variantToProduct.TryGetValue(offer.CatalogVariantId, out var productId);
-            var title = productId != Guid.Empty && productTitle.TryGetValue(productId, out var t) ? t : "کالا";
+            var title = variantTitles.TryGetValue(offer.CatalogVariantId, out var t) && !string.IsNullOrWhiteSpace(t) ? t : "کالا";
             var seller = sellerName.GetValueOrDefault(offer.SellerPartyId) ?? "فروشنده";
             basePrices.TryGetValue(member.SellerOfferId, out var baseQuote);
             campaignPrices.TryGetValue(member.SellerOfferId, out var campQuote);
@@ -646,190 +513,5 @@ public sealed class MerchandisingCampaignAdminComposer
         if (startAt > now) return "scheduled";
         if (endAt is { } end && end <= now) return "expired";
         return "active";
-    }
-}
-
-/// <summary>مسیرهای Admin کمپین‌های فروش (مرچندایزینگ).</summary>
-public static class MerchandisingCampaignAdminEndpoints
-{
-    public static void MapMerchandisingCampaignAdminEndpoints(this WebApplication app)
-    {
-        var group = app.MapGroup("/v1/admin/merchandising-campaigns");
-        group.MapGet("/", ListAsync);
-        group.MapGet("/types", ListTypesAsync);
-        group.MapGet("/offer-candidates", ListCandidatesAsync);
-        group.MapGet("/{campaignId:guid}", GetAsync);
-        group.MapPost("/", CreateAsync);
-        group.MapPut("/{campaignId:guid}", UpdateAsync);
-        group.MapPost("/{campaignId:guid}/publish", PublishAsync);
-        group.MapPost("/{campaignId:guid}/archive", ArchiveAsync);
-        group.MapPost("/{campaignId:guid}/members", AddMemberAsync);
-        group.MapDelete("/{campaignId:guid}/members/{sellerOfferId:guid}", RemoveMemberAsync);
-        group.MapPut("/{campaignId:guid}/members/order", ReorderAsync);
-        group.MapPut("/{campaignId:guid}/members/{sellerOfferId:guid}/price", SetPriceAsync);
-    }
-
-    private static async Task<IResult> ListAsync(
-        MerchandisingCampaignAdminComposer composer,
-        string? search,
-        string? lifecycle,
-        Guid? promotionTypeId,
-        string? runtimeWindow,
-        int? skip,
-        int? take,
-        string? locale,
-        CancellationToken cancellationToken)
-    {
-        var result = await composer.ListAsync(
-            search,
-            lifecycle,
-            promotionTypeId,
-            runtimeWindow,
-            skip ?? 0,
-            take ?? 25,
-            locale,
-            cancellationToken);
-        return Results.Json(result);
-    }
-
-    private static async Task<IResult> ListTypesAsync(
-        MerchandisingCampaignAdminComposer composer,
-        string? locale,
-        CancellationToken cancellationToken)
-        => Results.Json(await composer.ListTypesAsync(locale, cancellationToken));
-
-    private static async Task<IResult> ListCandidatesAsync(
-        MerchandisingCampaignAdminComposer composer,
-        string? search,
-        int? skip,
-        int? take,
-        CancellationToken cancellationToken)
-        => Results.Json(await composer.ListOfferCandidatesAsync(search, skip ?? 0, take ?? 20, cancellationToken));
-
-    private static async Task<IResult> GetAsync(
-        Guid campaignId,
-        MerchandisingCampaignAdminComposer composer,
-        string? locale,
-        CancellationToken cancellationToken)
-    {
-        var detail = await composer.GetAsync(campaignId, locale, cancellationToken);
-        return detail is null ? Results.NotFound() : Results.Json(detail);
-    }
-
-    private static async Task<IResult> CreateAsync(
-        AdminMerchCampaignWriteRequest body,
-        MerchandisingCampaignAdminComposer composer,
-        CancellationToken cancellationToken)
-    {
-        try
-        {
-            return Results.Json(await composer.CreateAsync(body, cancellationToken));
-        }
-        catch (InvalidOperationException ex)
-        {
-            return Results.BadRequest(new { title = ex.Message, errorCode = "campaign.validation" });
-        }
-    }
-
-    private static async Task<IResult> UpdateAsync(
-        Guid campaignId,
-        AdminMerchCampaignUpdateRequest body,
-        MerchandisingCampaignAdminComposer composer,
-        CancellationToken cancellationToken)
-    {
-        try
-        {
-            var detail = await composer.UpdateAsync(campaignId, body, cancellationToken);
-            return detail is null ? Results.NotFound() : Results.Json(detail);
-        }
-        catch (InvalidOperationException ex)
-        {
-            return Results.BadRequest(new { title = ex.Message, errorCode = "campaign.validation" });
-        }
-    }
-
-    private static async Task<IResult> PublishAsync(
-        Guid campaignId,
-        MerchandisingCampaignAdminComposer composer,
-        CancellationToken cancellationToken)
-    {
-        try
-        {
-            return await composer.PublishAsync(campaignId, cancellationToken)
-                ? Results.Ok()
-                : Results.NotFound();
-        }
-        catch (InvalidOperationException ex)
-        {
-            return Results.BadRequest(new { title = ex.Message, errorCode = "campaign.publish" });
-        }
-    }
-
-    private static async Task<IResult> ArchiveAsync(
-        Guid campaignId,
-        MerchandisingCampaignAdminComposer composer,
-        CancellationToken cancellationToken)
-        => await composer.ArchiveAsync(campaignId, cancellationToken) ? Results.Ok() : Results.NotFound();
-
-    private static async Task<IResult> AddMemberAsync(
-        Guid campaignId,
-        AdminMerchAddMemberRequest body,
-        MerchandisingCampaignAdminComposer composer,
-        CancellationToken cancellationToken)
-    {
-        try
-        {
-            var detail = await composer.AddMemberAsync(campaignId, body.SellerOfferId, cancellationToken);
-            return detail is null ? Results.NotFound() : Results.Json(detail);
-        }
-        catch (InvalidOperationException ex)
-        {
-            return Results.BadRequest(new { title = ex.Message, errorCode = "campaign.member" });
-        }
-    }
-
-    private static async Task<IResult> RemoveMemberAsync(
-        Guid campaignId,
-        Guid sellerOfferId,
-        MerchandisingCampaignAdminComposer composer,
-        CancellationToken cancellationToken)
-    {
-        var detail = await composer.RemoveMemberAsync(campaignId, sellerOfferId, cancellationToken);
-        return detail is null ? Results.NotFound() : Results.Json(detail);
-    }
-
-    private static async Task<IResult> ReorderAsync(
-        Guid campaignId,
-        AdminMerchReorderMembersRequest body,
-        MerchandisingCampaignAdminComposer composer,
-        CancellationToken cancellationToken)
-    {
-        try
-        {
-            var detail = await composer.ReorderMembersAsync(campaignId, body.OrderedSellerOfferIds, cancellationToken);
-            return detail is null ? Results.NotFound() : Results.Json(detail);
-        }
-        catch (InvalidOperationException ex)
-        {
-            return Results.BadRequest(new { title = ex.Message, errorCode = "campaign.reorder" });
-        }
-    }
-
-    private static async Task<IResult> SetPriceAsync(
-        Guid campaignId,
-        Guid sellerOfferId,
-        AdminMerchMemberPriceRequest body,
-        MerchandisingCampaignAdminComposer composer,
-        CancellationToken cancellationToken)
-    {
-        try
-        {
-            var detail = await composer.SetMemberPriceAsync(campaignId, sellerOfferId, body, cancellationToken);
-            return detail is null ? Results.NotFound() : Results.Json(detail);
-        }
-        catch (InvalidOperationException ex)
-        {
-            return Results.BadRequest(new { title = ex.Message, errorCode = "campaign.price" });
-        }
     }
 }

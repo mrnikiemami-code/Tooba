@@ -171,7 +171,7 @@ builder.Services.AddScoped<IOrderAdminAuthorizer, HostOrderAdminAuthorizer>();
 builder.Services.AddScoped<
     Tooba.Order.Application.Admin.Operations.Ports.IOrderAdminEffectiveAccessReader,
     Tooba.Host.Admin.HostOrderAdminEffectiveAccessReader>();
-builder.Services.AddScoped<Tooba.Catalog.Application.IStoreLandingExternalReferenceGate, Tooba.Host.Admin.MerchandisingStoreLandingReferenceGate>();
+builder.Services.AddScoped<Tooba.Catalog.Application.IStoreLandingExternalReferenceGate, Tooba.Host.CatalogAdapters.MerchandisingStoreLandingReferenceGate>();
 builder.Services.AddToobaModules(builder.Configuration, builder.Environment);
 builder.Services.AddOfferModuleCallTracing();
 builder.Services.Configure<Tooba.Order.Application.ReservationCycle.Contracts.ReservationCycleOptions>(
@@ -193,7 +193,6 @@ builder.Services.AddScoped<Tooba.AddressBook.Contracts.Ports.IAddressBookCheckou
 builder.Services.AddMemoryCache();
 builder.Services.AddScoped<Tooba.Host.Storefront.StoreAppearanceProjector>();
 builder.Services.AddScoped<Tooba.Host.Admin.StoreAppearanceSettingsComposer>();
-builder.Services.AddScoped<Tooba.Host.Admin.MerchandisingCampaignAdminComposer>();
 builder.Services.AddScoped<Tooba.Catalog.Application.StoreLandingPages.Ports.IStoreLandingShellPort, Tooba.Host.CatalogAdapters.StoreLandingShellAdapter>();
 builder.Services.AddScoped<Tooba.Catalog.Application.StoreLandingPages.Ports.IStoreLandingMerchandisingPort, Tooba.Host.CatalogAdapters.StoreLandingMerchandisingAdapter>();
 builder.Services.AddScoped(sp =>
@@ -209,7 +208,6 @@ builder.Services.AddScoped<Tooba.Payment.Application.Ports.ICheckoutActorPolicyP
 builder.Services.AddScoped<Tooba.Payment.Endpoints.Storefront.IPaymentStorefrontAuthorizer, Tooba.Host.Storefront.HostPaymentStorefrontAuthorizer>();
 builder.Services.AddScoped<Tooba.Payment.Endpoints.Admin.IPaymentAdminAuthorizer, Tooba.Host.Admin.HostPaymentAdminAuthorizer>();
 builder.Services.AddScoped<Tooba.Promotion.Endpoints.Seller.IPromotionSellerAuthorizer, Tooba.Host.Seller.HostPromotionSellerAuthorizer>();
-builder.Services.AddScoped<Tooba.Promotion.Endpoints.Admin.IPromotionAdminAuthorizer, Tooba.Host.Admin.HostPromotionAdminAuthorizer>();
 builder.Services.AddScoped<Tooba.Host.Seller.SellerPanelComposer>();
 builder.Services.AddScoped<Tooba.Offer.Endpoints.Seller.IOfferSellerAuthorizer, Tooba.Host.Seller.HostOfferSellerAuthorizer>();
 builder.Services.AddScoped<Tooba.Settlement.Endpoints.Seller.ISettlementSellerAuthorizer, Tooba.Host.Seller.HostSettlementSellerAuthorizer>();
@@ -469,7 +467,6 @@ app.MapProductWorkspaceEndpoints();
 app.MapProductWorkspaceModuleEndpoints();
 app.MapHoldPolicySettingsEndpoints();
 app.MapStoreAppearanceSettingsEndpoints();
-app.MapMerchandisingCampaignAdminEndpoints();
 app.MapAdminPanelEndpoints();
 app.MapOrderEndpoints();
 app.MapStorefrontEndpoints();

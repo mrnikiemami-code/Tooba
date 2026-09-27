@@ -38,7 +38,7 @@ public sealed class StoreLandingMerchandisingAdapter : IStoreLandingMerchandisin
 
         if (string.Equals(tenantId, "store-alpha", StringComparison.OrdinalIgnoreCase))
         {
-            return MerchandisingCampaignDevelopmentSeed.StoreAlphaId;
+            return MerchandisingDevelopmentIds.StoreAlphaId;
         }
 
         return Guid.TryParse(tenantId, out var parsed) ? parsed : null;

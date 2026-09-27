@@ -3,6 +3,7 @@ using Tooba.Promotion.Infrastructure.Messaging;
 using Tooba.Promotion.Infrastructure.Adapters;
 using Tooba.Promotion.Infrastructure.Queries;
 using Tooba.Promotion.Infrastructure.Directories;
+using Tooba.Promotion.Infrastructure.Merchandising;
 using Tooba.Promotion.Contracts.Merchandising;
 using Tooba.Promotion.Contracts.Checkout;
 using Tooba.Promotion.Application.Merchandising;
@@ -42,6 +43,7 @@ public sealed class PromotionModule : IToobaModule
         services.AddScoped<ICheckoutPromotionPort, CheckoutPromotionAdapter>();
         services.AddScoped<IMerchandisingCampaignDirectory, MerchandisingCampaignDirectory>();
         services.AddScoped<IMerchandisingCampaignQuery, MerchandisingCampaignQuery>();
+        services.AddScoped<IMerchandisingCampaignAdminComposer, MerchandisingCampaignAdminComposer>();
         services.AddScoped<Tooba.Pricing.Contracts.ICampaignCartPriceAuthority, CampaignCartPriceAuthority>();
         services.AddScoped<IPromotionSchemaMigrator, Adapters.PromotionSchemaMigrator>();
         services.AddDbContext<PromotionDbContext>((sp, options) =>

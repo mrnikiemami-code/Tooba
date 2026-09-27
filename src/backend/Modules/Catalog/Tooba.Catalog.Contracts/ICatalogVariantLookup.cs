@@ -15,6 +15,9 @@ public interface ICatalogVariantLookup
     Task<IReadOnlyDictionary<Guid, string>> GetVariantTitlesAsync(
         IReadOnlyList<Guid> variantIds,
         CancellationToken cancellationToken);
+
+    /// <summary>Variant ids whose owning product is Published (Development / merchandising seed).</summary>
+    Task<IReadOnlyList<Guid>> GetPublishedVariantIdsAsync(CancellationToken cancellationToken);
 }
 
 /// <summary>Minimal Catalog variant identity required by consumers.</summary>

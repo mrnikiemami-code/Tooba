@@ -196,6 +196,8 @@ public sealed class OfferTraceTopologyTests
             IReadOnlyList<Guid> variantIds, CancellationToken cancellationToken) =>
             Task.FromResult<IReadOnlyDictionary<Guid, string>>(
                 variantIds.ToDictionary(x => x, _ => "Product"));
+        public Task<IReadOnlyList<Guid>> GetPublishedVariantIdsAsync(CancellationToken cancellationToken) =>
+            Task.FromResult<IReadOnlyList<Guid>>([]);
     }
 
     private sealed class FixedIds(Guid id) : IIdGenerator

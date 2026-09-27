@@ -42,12 +42,12 @@ public sealed class HostAdminAmcReservationPolicyGuardTests
     }
 
     [Fact]
-    public void Host_Admin_count_31_StoreAppearance_deferred()
+    public void Host_Admin_count_28_StoreAppearance_deferred()
     {
         var root = FindRepoRoot();
         var admin = Path.Combine(root, "src/backend/Host/Tooba.Host/Admin");
         var adminCount = Directory.GetFiles(admin, "*.cs", SearchOption.AllDirectories).Length;
-        Assert.Equal(31, adminCount);
+        Assert.Equal(28, adminCount);
         Assert.True(File.Exists(Path.Combine(admin, "StoreAppearanceSettingsEndpoints.cs")));
         Assert.True(File.Exists(Path.Combine(admin, "HoldPolicySettingsEndpoints.cs")));
     }

@@ -131,6 +131,8 @@ public sealed class OfferHandlerTests
         public Task<IReadOnlyDictionary<Guid, string>> GetVariantTitlesAsync(
             IReadOnlyList<Guid> variantIds, CancellationToken token) =>
             Task.FromResult<IReadOnlyDictionary<Guid, string>>(new Dictionary<Guid, string>());
+        public Task<IReadOnlyList<Guid>> GetPublishedVariantIdsAsync(CancellationToken token) =>
+            Task.FromResult<IReadOnlyList<Guid>>([]);
     }
     private sealed class FakeParty(PartyLookupResult? result) : IPartyLookup
     {

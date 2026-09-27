@@ -115,6 +115,16 @@ public sealed class CatalogDirectory :
             .ToDictionary(x => x.VariantId, x => productNames[x.ProductId]);
     }
 
+    async Task<IReadOnlyList<Guid>> ICatalogVariantLookup.GetPublishedVariantIdsAsync(
+        CancellationToken cancellationToken)
+    {
+        return await _db.Variants.AsNoTracking()
+            .Where(v => _db.Products.Any(p =>
+                p.ProductId == v.ProductId && p.Status == CatalogPublicationStatus.Published))
+            .Select(v => v.VariantId)
+            .ToListAsync(cancellationToken);
+    }
+
     /// <inheritdoc />
     public async Task<CategoryReference?> FindCategoryAsync(Guid categoryId, CancellationToken cancellationToken)
     {
