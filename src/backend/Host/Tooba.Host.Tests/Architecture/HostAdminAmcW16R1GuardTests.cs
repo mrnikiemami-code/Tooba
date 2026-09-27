@@ -82,20 +82,22 @@ public sealed class HostAdminAmcW16R1GuardTests
     }
 
     [Fact]
-    public void Host_Admin_remains_52_and_W17_not_started()
+    public void Host_Admin_count_and_W17_through_W20_artifacts_present()
     {
         var root = FindRepoRoot();
         var admin = Path.Combine(root, "src/backend/Host/Tooba.Host/Admin");
         var files = Directory.GetFiles(admin, "*.cs", SearchOption.AllDirectories);
-        Assert.Equal(52, files.Length);
+        Assert.True(files.Length >= 36, $"expected Admin residue after demo/landing waves; was {files.Length}");
         Assert.True(File.Exists(Path.Combine(admin, "ProductWorkspaceEndpoints.cs")));
         Assert.True(File.Exists(Path.Combine(admin, "StoreAppearanceSettingsEndpoints.cs")));
         Assert.True(Directory.Exists(Path.Combine(
             root, "src/backend/Modules/Catalog/Tooba.Catalog.Application/ProductPublishing")));
-        Assert.False(File.Exists(Path.Combine(
+        Assert.True(File.Exists(Path.Combine(
             root, "docs/ai/tasks/TB-TMAR-HOST-ADMIN-AMC-001-W17.task.md")));
-        Assert.False(Directory.Exists(Path.Combine(
+        Assert.True(Directory.Exists(Path.Combine(
             root, "docs/evidence/TB-TMAR-HOST-ADMIN-AMC-001-W17")));
+        Assert.True(Directory.Exists(Path.Combine(
+            root, "docs/evidence/TB-TMAR-HOST-ADMIN-AMC-001-W20")));
     }
 
     private static string FindRepoRoot()

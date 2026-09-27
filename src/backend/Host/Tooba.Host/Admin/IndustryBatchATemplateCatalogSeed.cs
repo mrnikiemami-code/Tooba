@@ -1,3 +1,4 @@
+﻿#pragma warning disable CS1591
 using System.Globalization;
 using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
@@ -11,9 +12,9 @@ namespace Tooba.Host.Admin;
 /// Batch A industry Template Catalog seeds (TB-P10-T022-R12A).
 /// Exact Fashion architecture/persistence conventions — isolated ID namespaces + media paths.
 /// </summary>
-internal static class IndustryBatchATemplateCatalogSeed
+public static class IndustryBatchATemplateCatalogSeed
 {
-    internal const string LocaleFa = "fa-IR";
+    public const string LocaleFa = "fa-IR";
 
     private sealed record PackIds(
         string Key,
@@ -833,7 +834,7 @@ internal static class IndustryBatchATemplateCatalogSeed
 }
 
 /// <summary>اعمال دانه Batch A روی tenant توسعه.</summary>
-internal static class IndustryBatchATemplateCatalogSeedHost
+public static class IndustryBatchATemplateCatalogSeedHost
 {
     public static async Task ApplyAsync(IServiceProvider root)
     {

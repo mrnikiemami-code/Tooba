@@ -70,7 +70,7 @@ public sealed class CheckoutAbusePolicyTests
         var gate = File.ReadAllText(Path.Combine(root, "src", "backend", "Modules", "Order", "Tooba.Order.Infrastructure", "Checkout", "Abuse", "CheckoutAbuseGate.cs"));
         var hide = File.ReadAllText(Path.Combine(root, "src", "backend", "Modules", "Order", "Tooba.Order.Application", "Storefront", "Services", "StorefrontPendingPaymentService.cs"));
         var endpoints = File.ReadAllText(Path.Combine(root, "src", "backend", "Modules", "Order", "Tooba.Order.Endpoints", "Errors", "OrderErrorCatalogContributor.cs"));
-        var admin = File.ReadAllText(Path.Combine(root, "src", "backend", "Host", "Tooba.Host", "Admin", "CheckoutAbuseSettingsEndpoints.cs"));
+        var admin = File.ReadAllText(Path.Combine(root, "src", "backend", "Modules", "Catalog", "Tooba.Catalog.Infrastructure", "StoreCheckoutAbuseSettingsDirectory.cs"));
         var settings = File.ReadAllText(Path.Combine(root, "src", "frontend", "app", "admin", "settings", "page.tsx"));
         var fe = File.ReadAllText(Path.Combine(root, "src", "frontend", "app", "storefront", "storefront-checkout-api.ts"));
         var locks = File.ReadAllText(Path.Combine(root, "docs", "architecture", "TOOBA-LOCKS.md"));

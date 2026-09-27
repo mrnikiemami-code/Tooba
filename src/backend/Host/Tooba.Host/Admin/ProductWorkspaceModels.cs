@@ -38,9 +38,6 @@ public sealed record AdminProductBrandAssignRequest(
     Guid? BrandId,
     DateTimeOffset ExpectedUpdatedAt);
 
-/// <summary>گزینهٔ انتخاب برند برای Admin.</summary>
-public sealed record AdminBrandOption(Guid BrandId, string Name, string Status);
-
 /// <summary>
 /// ردیف فهرست Admin. مبلغ و واحد قابل‌فروش از Offer/Price/Inventory ترکیب می‌شوند؛ روی هویت Product نیستند.
 /// CategorySummary سازگاری قدیمی است (برگ‌ها، نه مسیر کامل). شبکهٔ Admin از PrimaryCategoryName و AdditionalCategoryNames استفاده می‌کند.

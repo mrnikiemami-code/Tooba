@@ -38,6 +38,7 @@ public sealed class MediaModule : IToobaModule
         });
         services.AddScoped<IMediaDirectory, MediaDirectory>();
         services.AddScoped<IMediaAssetUploadPort, MediaAssetUploadBridge>();
+        services.AddScoped<IMediaAssetDemoPort, MediaAssetDemoBridge>();
         services.AddScoped<IMediaAssetReadinessPort, MediaAssetReadinessBridge>();
         services.AddDbContext<MediaDbContext>((sp, options) =>
         {

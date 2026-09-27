@@ -4,6 +4,9 @@ using Tooba.Catalog.Endpoints.Admin;
 using Tooba.Catalog.Endpoints.Admin.Attributes.Definitions;
 using Tooba.Catalog.Endpoints.Admin.Attributes.ProductValues;
 using Tooba.Catalog.Endpoints.Admin.Attributes.Schema;
+using Tooba.Catalog.Endpoints.Admin.Brands;
+using Tooba.Catalog.Endpoints.Admin.CatalogDemo;
+using Tooba.Catalog.Endpoints.Admin.StoreLandingPages;
 using Tooba.Catalog.Endpoints.Admin.Categories;
 using Tooba.Catalog.Endpoints.Admin.CategoryChanges;
 using Tooba.Catalog.Endpoints.Admin.Facets;
@@ -21,6 +24,7 @@ using Tooba.Catalog.Endpoints.Resources;
 using Tooba.Catalog.Endpoints.Storefront.Categories;
 using Tooba.Catalog.Endpoints.Storefront.Facets;
 using Tooba.Catalog.Endpoints.Storefront.MegaMenu;
+using Tooba.Catalog.Endpoints.Storefront.StoreLandingPages;
 
 namespace Tooba.Catalog.Endpoints;
 
@@ -32,6 +36,7 @@ public static class CatalogEndpointModule
     {
         ArgumentNullException.ThrowIfNull(app);
         app.MapQuantitySettingsEndpoints();
+        app.MapCheckoutAbuseSettingsEndpoints();
         app.MapUnitOfMeasureEndpoints();
         app.MapCatalogTagEndpoints();
         app.MapCatalogMegaMenuAdminEndpoints();
@@ -49,6 +54,10 @@ public static class CatalogEndpointModule
         app.MapCatalogProductSeoAdminEndpoints();
         app.MapCatalogProductHistoryAdminEndpoints();
         app.MapCatalogProductPublishReadinessAdminEndpoints();
+        app.MapCatalogBrandOptionsAdminEndpoints();
+        app.MapCatalogStoreLandingPageAdminEndpoints();
+        app.MapCatalogStoreLandingPageStorefrontEndpoints();
+        app.MapCatalogDemoDevEndpoints();
         return app;
     }
 

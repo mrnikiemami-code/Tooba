@@ -1,15 +1,16 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
 using Tooba.BuildingBlocks;
 using Tooba.Catalog.Domain;
 using Tooba.Catalog.Infrastructure.Persistence;
-using Tooba.Host.Admin;
+using Tooba.Catalog.Application.StoreLandingPages.Models;
+using Tooba.Catalog.Infrastructure;
 using Xunit;
 
 namespace Tooba.Host.Tests;
 
 /// <summary>TB-P10-T012 — پیش‌نمایش، انتشار و انتخاب خانه.</summary>
-public sealed class StoreLandingPageComposerT012Tests
+public sealed class StoreLandingPageWorkspaceT012Tests
 {
     [Fact]
     public async Task Admin_can_create_page_and_add_valid_section()
@@ -108,6 +109,6 @@ public sealed class StoreLandingPageComposerT012Tests
         catalog.SaveChanges();
     }
 
-    private static StoreLandingPageComposer CreateComposer(out CatalogDbContext catalog) =>
-        StoreLandingPageComposerTestFactory.Create(out catalog);
+    private static StoreLandingPageWorkspace CreateComposer(out CatalogDbContext catalog) =>
+        StoreLandingPageWorkspaceTestFactory.Create(out catalog);
 }

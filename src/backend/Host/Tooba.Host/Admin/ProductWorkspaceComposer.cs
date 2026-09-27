@@ -982,51 +982,6 @@ public sealed class ProductWorkspaceComposer
         return (await GetAsync(productId, permissions, cancellationToken))!;
     }
 
-    /// <summary>
-    /// فهرست برندها برای انتخابگر Admin.
-    /// </summary>
-    public Task<IReadOnlyList<AdminBrandOption>> ListBrandOptionsAsync(
-        string? search,
-        CancellationToken cancellationToken) =>
-        ListBrandOptionsInternalAsync(search, cancellationToken);
-
-    private async Task<IReadOnlyList<AdminBrandOption>> ListBrandOptionsInternalAsync(
-        string? search,
-        CancellationToken cancellationToken)
-    {
-        var brands = await _catalog.Brands.AsNoTracking().ToListAsync(cancellationToken);
-        if (brands.Count == 0)
-        {
-            return [];
-        }
-
-        var brandIds = brands.Select(b => b.BrandId).ToList();
-        var nameRows = await _catalog.LocalizedTexts.AsNoTracking()
-            .Where(x => x.OwnerKind == CatalogLocalizedOwnerKind.Brand
-                && x.FieldKey == "name"
-                && brandIds.Contains(x.OwnerId))
-            .OrderByDescending(x => x.Locale == "fa-IR")
-            .ThenBy(x => x.Locale)
-            .ToListAsync(cancellationToken);
-        var names = nameRows
-            .GroupBy(x => x.OwnerId)
-            .ToDictionary(g => g.Key, g => g.First().Value);
-
-        IEnumerable<AdminBrandOption> items = brands.Select(b =>
-            new AdminBrandOption(
-                b.BrandId,
-                names.GetValueOrDefault(b.BrandId) ?? b.SlugSeam ?? "برند",
-                b.Status.ToString()));
-
-        if (!string.IsNullOrWhiteSpace(search))
-        {
-            var needle = search.Trim();
-            items = items.Where(i => i.Name.Contains(needle, StringComparison.OrdinalIgnoreCase));
-        }
-
-        return items.OrderBy(i => i.Name, StringComparer.Ordinal).Take(200).ToList();
-    }
-
     private async Task UpsertLocalizedTextAsync(
         Guid productId,
         string fieldKey,

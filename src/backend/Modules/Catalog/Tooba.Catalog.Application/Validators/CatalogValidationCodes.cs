@@ -113,4 +113,10 @@ public static class CatalogValidationCodes
 
     /// <summary>Update product SEO body Locale must be present (blank still normalizes in Domain).</summary>
     public const string ProductSeoLocaleRequired = "catalog.validation.product_seo_locale_required";
+
+    /// <summary>Checkout-abuse PUT requires all three numeric fields.</summary>
+    public const string CheckoutAbuseFieldsRequired = "catalog.validation.checkout_abuse_fields_required";
+
+    /// <summary>Checkout-abuse actor must be non-empty after auth.</summary>
+    public const string CheckoutAbuseActorRequired = "catalog.validation.checkout_abuse_actor_required";
 }

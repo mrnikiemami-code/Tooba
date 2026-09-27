@@ -9,8 +9,10 @@ using Tooba.BuildingBlocks;
 using Tooba.Catalog.Domain;
 using Tooba.Catalog.Infrastructure;
 using Tooba.Catalog.Infrastructure.Persistence;
-using Tooba.Host.Admin.CatalogDemo;
+using Tooba.Catalog.Application.Development.CatalogDemo;
+using Tooba.Catalog.Infrastructure.Development.CatalogDemo;
 using Tooba.Media.Infrastructure;
+using Tooba.Media.Infrastructure.Assets;
 using Tooba.Media.Infrastructure.Persistence;
 using Tooba.Persistence;
 using Xunit;
@@ -122,8 +124,9 @@ public sealed class CatalogDemoResetSeedTests : IAsyncLifetime
             .Build();
         var mediaDirectory = new MediaDirectory(mediaDb, store, config);
         var catalogDirectory = new CatalogDirectory(catalogDb, new OpenCatalogUseCaseGuard());
-        var mediaFactory = new CatalogDemoMediaFactory(mediaDirectory);
-        var reset = new CatalogDemoResetService(catalogDb, mediaDb, store);
+        var mediaDemo = new MediaAssetDemoBridge(mediaDirectory, mediaDb, store);
+        var mediaFactory = new CatalogDemoMediaFactory(mediaDemo);
+        var reset = new CatalogDemoResetService(catalogDb, mediaDemo);
         var productSeed = new CatalogDemoProductSeedService(
             catalogDirectory,
             catalogDb,
@@ -287,13 +290,14 @@ public sealed class CatalogDemoResetSeedTests : IAsyncLifetime
             .Build();
         var mediaDirectory = new MediaDirectory(mediaDb, store, config);
         var catalogDirectory = new CatalogDirectory(catalogDb, new OpenCatalogUseCaseGuard());
-        var mediaFactory = new CatalogDemoMediaFactory(mediaDirectory);
+        var mediaDemo = new MediaAssetDemoBridge(mediaDirectory, mediaDb, store);
+        var mediaFactory = new CatalogDemoMediaFactory(mediaDemo);
         var productSeed = new CatalogDemoProductSeedService(
             catalogDirectory,
             catalogDb,
             mediaFactory,
             NullLogger<CatalogDemoProductSeedService>.Instance);
-        var reset = new CatalogDemoResetService(catalogDb, mediaDb, store);
+        var reset = new CatalogDemoResetService(catalogDb, mediaDemo);
         var assignmentIntegrity = new CatalogDemoAssignmentIntegrityService(
             catalogDb,
             reset,

@@ -1,10 +1,11 @@
-﻿using System.Text.Json;
+using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
 using Tooba.BuildingBlocks;
 using Tooba.Catalog.Domain;
 using Tooba.Catalog.Infrastructure.Persistence;
-using Tooba.Host.Admin;
+using Tooba.Catalog.Application.StoreLandingPages.Models;
+using Tooba.Catalog.Infrastructure;
 using Xunit;
 
 namespace Tooba.Host.Tests;
@@ -192,7 +193,7 @@ public sealed class StoreLandingPageSectionTests
         Assert.Equal("right", root.GetProperty("slides")[1].GetProperty("panelSide").GetString());
     }
 
-    private static async Task<StoreLandingPageAdminView> PublishPageAsync(StoreLandingPageComposer composer)
+    private static async Task<StoreLandingPageAdminView> PublishPageAsync(StoreLandingPageWorkspace composer)
     {
         var created = await composer.CreateAsync(new StoreLandingPageWriteRequest("آزمایش بخش", "section-lab", "fa", null, null, null), CancellationToken.None);
         return await composer.SetStatusAsync(created.PageId, "Published", CancellationToken.None);
@@ -206,6 +207,6 @@ public sealed class StoreLandingPageSectionTests
         catalog.SaveChanges();
     }
 
-    private static StoreLandingPageComposer CreateComposer(out CatalogDbContext catalog) =>
-        StoreLandingPageComposerTestFactory.Create(out catalog);
+    private static StoreLandingPageWorkspace CreateComposer(out CatalogDbContext catalog) =>
+        StoreLandingPageWorkspaceTestFactory.Create(out catalog);
 }

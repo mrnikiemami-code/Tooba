@@ -1,3 +1,4 @@
+﻿#pragma warning disable CS1591
 using Microsoft.EntityFrameworkCore;
 using Tooba.BuildingBlocks;
 using Tooba.Catalog.Application;
@@ -30,10 +31,10 @@ namespace Tooba.Host.Admin;
 /// دانهٔ Development برای Category Attribute Schema + محورهای Variant موبایل.
 /// Idempotent است؛ ماتریس کامل ترکیبی تولید نمی‌کند و Brand را به‌عنوان attribute تکرار نمی‌کند.
 /// </summary>
-internal static class CatalogAttributeSchemaDevelopmentBootstrap
+public static class CatalogAttributeSchemaDevelopmentBootstrap
 {
-    internal const string MobileCategoryMarker = "schema-mobile-category";
-    internal const string DemoProductSlug = "schema-mobile-demo-phone";
+    public const string MobileCategoryMarker = "schema-mobile-category";
+    public const string DemoProductSlug = "schema-mobile-demo-phone";
     private const string DemoSellerSkuPrefix = "SCHEMA-PHONE";
 
     /// <summary>

@@ -7,7 +7,8 @@ namespace Tooba.Host.Admin;
 
 /// <summary>
 /// مسیرهای HTTP ترکیب Workspace محصول. SQL بین‌ماژولی اینجا نوشته نمی‌شود.
-/// W19: aggregate GET evacuated to ProductWorkspace.Endpoints; Host retains 18 routes.
+/// W19: aggregate GET evacuated to ProductWorkspace.Endpoints.
+/// Host ProductWorkspace surface after brand options Catalog ownership.
 /// </summary>
 public static class ProductWorkspaceEndpoints
 {
@@ -19,7 +20,6 @@ public static class ProductWorkspaceEndpoints
         var group = app.MapGroup("/v1/admin/products");
         group.AddEndpointFilter(CatalogActorHttpBinding.BindAsync);
         group.MapGet("/", ListAsync);
-        group.MapGet("/brand-options", ListBrandOptionsAsync);
         group.MapPost("/query", QueryGridAsync);
         group.MapPost("/", CreateAsync);
         group.MapPatch("/{productId:guid}/catalog-title", PatchTitleAsync);
@@ -287,28 +287,6 @@ public static class ProductWorkspaceEndpoints
             await AdminPanelAccess.RequireAuthorizedAsync(
                 request, session, tenant, guard, environment, cancellationToken);
             return Results.Json(await composer.AssignProductBrandAsync(productId, body, ReadPermissions(request), cancellationToken));
-        }
-        catch (PlatformHttpException ex)
-        {
-            return ToError(ex);
-        }
-    }
-
-    private static async Task<IResult> ListBrandOptionsAsync(
-        string? q,
-        ProductWorkspaceComposer composer,
-        HttpRequest request,
-        CurrentAuthenticatedSession session,
-        ICurrentTenant tenant,
-        IAuthorizationGuard guard,
-        IHostEnvironment environment,
-        CancellationToken cancellationToken)
-    {
-        try
-        {
-            await AdminPanelAccess.RequireAuthorizedAsync(
-                request, session, tenant, guard, environment, cancellationToken);
-            return Results.Json(await composer.ListBrandOptionsAsync(q, cancellationToken));
         }
         catch (PlatformHttpException ex)
         {

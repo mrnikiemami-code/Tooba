@@ -1,3 +1,4 @@
+﻿#pragma warning disable CS1591
 using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 using Tooba.BuildingBlocks;
@@ -7,10 +8,10 @@ using Tooba.Catalog.Infrastructure.Persistence;
 namespace Tooba.Host.Admin;
 
 /// <summary>دانهٔ idempotent Template Catalog برای قالب Fashion (TB-P10-T022-R5).</summary>
-internal static class FashionTemplateCatalogSeed
+public static class FashionTemplateCatalogSeed
 {
-    internal const string LocaleFa = "fa-IR";
-    internal const string Origin = "fashion-template-catalog-persisted";
+    public const string LocaleFa = "fa-IR";
+    public const string Origin = "fashion-template-catalog-persisted";
 
     private static readonly string[] TreeRoots =
     [
@@ -497,7 +498,7 @@ internal static class FashionTemplateCatalogSeed
 }
 
 /// <summary>مسیرهای استاتیک محلی برای رسانهٔ قالب Fashion (بدون hotlink).</summary>
-internal static class FashionTemplateMediaPaths
+public static class FashionTemplateMediaPaths
 {
     public static string PublicUrl(int index)
     {
@@ -520,7 +521,7 @@ internal static class FashionTemplateMediaPaths
 }
 
 /// <summary>اعمال دانه روی tenant توسعه.</summary>
-internal static class FashionTemplateCatalogSeedHost
+public static class FashionTemplateCatalogSeedHost
 {
     public static async Task ApplyAsync(IServiceProvider root)
     {

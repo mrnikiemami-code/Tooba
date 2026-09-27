@@ -170,6 +170,16 @@ public sealed class CatalogErrorCatalogContributor : IErrorCatalogContributor
             "Product slug is invalid."),
         D(CatalogErrorCodes.WorkspaceProductSeoRejected, ErrorClassification.Business, StatusCodes.Status400BadRequest,
             "Product SEO update was rejected."),
+        D(CatalogErrorCodes.CheckoutAbuseInvalid, ErrorClassification.Validation, StatusCodes.Status400BadRequest,
+            "Checkout abuse settings input is invalid."),
+        D(CatalogErrorCodes.CheckoutAbuseMaxOpenUnpaidInvalid, ErrorClassification.Validation, StatusCodes.Status400BadRequest,
+            "Max open unpaid orders value is invalid."),
+        D(CatalogErrorCodes.CheckoutAbuseWindowInvalid, ErrorClassification.Validation, StatusCodes.Status400BadRequest,
+            "Reservation commit window value is invalid."),
+        D(CatalogErrorCodes.CheckoutAbuseMaxCommitsInvalid, ErrorClassification.Validation, StatusCodes.Status400BadRequest,
+            "Max checkout commits value is invalid."),
+        D(CatalogErrorCodes.LandingPageMissing, ErrorClassification.NotFound, StatusCodes.Status404NotFound,
+            "Landing page was not found."),
     ];
 
     private static ErrorDescriptor D(

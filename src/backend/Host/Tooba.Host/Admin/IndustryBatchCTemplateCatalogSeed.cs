@@ -1,4 +1,5 @@
-﻿using System.Globalization;
+﻿#pragma warning disable CS1591
+using System.Globalization;
 using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 using Tooba.BuildingBlocks;
@@ -11,9 +12,9 @@ namespace Tooba.Host.Admin;
 /// Batch C industry Template Catalog seeds (TB-P10-T022-R12C).
 /// Exact Fashion architecture/persistence conventions — isolated ID namespaces + media paths.
 /// </summary>
-internal static class IndustryBatchCTemplateCatalogSeed
+public static class IndustryBatchCTemplateCatalogSeed
 {
-    internal const string LocaleFa = "fa-IR";
+    public const string LocaleFa = "fa-IR";
 
     private sealed record PackIds(
         string Key,
@@ -832,7 +833,7 @@ internal static class IndustryBatchCTemplateCatalogSeed
         ParityCategorySlugHistory: BeautyTemplateParityIds.CategorySlugHistory);
 }
 /// <summary>اعمال دانه Batch C روی tenant توسعه.</summary>
-internal static class IndustryBatchCTemplateCatalogSeedHost
+public static class IndustryBatchCTemplateCatalogSeedHost
 {
     public static async Task ApplyAsync(IServiceProvider root)
     {

@@ -1,6 +1,8 @@
 using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 using Tooba.BuildingBlocks;
+using Tooba.Catalog.Application.StoreLandingPages.Models;
+using Tooba.Catalog.Application.StoreLandingPages.Ports;
 using Tooba.Catalog.Domain;
 using Tooba.Catalog.Infrastructure.Persistence;
 
@@ -17,7 +19,7 @@ internal static class LandingPageDevelopmentSeed
     public static async Task ApplyAsync(IServiceProvider provider, CancellationToken cancellationToken = default)
     {
         var catalog = provider.GetRequiredService<CatalogDbContext>();
-        var composer = provider.GetRequiredService<StoreLandingPageComposer>();
+        var composer = provider.GetRequiredService<IStoreLandingPageWorkspace>();
         await EnsurePageAsync(
             catalog,
             composer,
@@ -52,7 +54,7 @@ internal static class LandingPageDevelopmentSeed
 
     private static async Task EnsurePageAsync(
         CatalogDbContext catalog,
-        StoreLandingPageComposer composer,
+        IStoreLandingPageWorkspace composer,
         string slug,
         string title,
         string seoTitle,

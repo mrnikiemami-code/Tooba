@@ -245,4 +245,19 @@ public static class CatalogErrorCodes
 
     /// <summary>Product SEO update rejected for other business reasons.</summary>
     public const string WorkspaceProductSeoRejected = "workspace.product.seo.rejected";
+
+    /// <summary>Checkout-abuse PUT missing required fields (Host parity).</summary>
+    public const string CheckoutAbuseInvalid = "settings.checkout_abuse.invalid";
+
+    /// <summary>Max open unpaid orders out of domain range.</summary>
+    public const string CheckoutAbuseMaxOpenUnpaidInvalid = "settings.max_open_unpaid.invalid";
+
+    /// <summary>Reservation commit window minutes out of domain range.</summary>
+    public const string CheckoutAbuseWindowInvalid = "settings.reservation_commit_window.invalid";
+
+    /// <summary>Max checkout commits out of domain range.</summary>
+    public const string CheckoutAbuseMaxCommitsInvalid = "settings.max_checkout_commits.invalid";
+
+    /// <summary>Store landing page was not found (preserved landing.page.missing).</summary>
+    public const string LandingPageMissing = "landing.page.missing";
 }

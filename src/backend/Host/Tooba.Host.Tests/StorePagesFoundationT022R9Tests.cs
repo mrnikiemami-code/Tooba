@@ -1,9 +1,10 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
 using Tooba.BuildingBlocks;
 using Tooba.Catalog.Domain;
 using Tooba.Catalog.Infrastructure.Persistence;
-using Tooba.Host.Admin;
+using Tooba.Catalog.Application.StoreLandingPages.Models;
+using Tooba.Catalog.Infrastructure;
 using Xunit;
 
 namespace Tooba.Host.Tests;
@@ -148,6 +149,6 @@ public sealed class StorePagesFoundationT022R9Tests
         Assert.Equal("H1", page.ResolvePrimaryH1());
     }
 
-    private static StoreLandingPageComposer CreateComposer(out CatalogDbContext catalog) =>
-        StoreLandingPageComposerTestFactory.Create(out catalog);
+    private static StoreLandingPageWorkspace CreateComposer(out CatalogDbContext catalog) =>
+        StoreLandingPageWorkspaceTestFactory.Create(out catalog);
 }
