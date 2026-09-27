@@ -13,10 +13,11 @@ using Tooba.Pricing.Contracts;
 using Tooba.BuildingBlocks.Grid;
 using Tooba.Persistence.Grid;
 
-namespace Tooba.Host.Grid;
+namespace Tooba.Catalog.Infrastructure.Grid;
 
 /// <summary>
 /// پرس‌وجوی گرید محصول Admin با فیلتر/مرتب‌سازی/صفحه‌بندی SQL و تجمیع ماژولی — enrich فقط روی صفحهٔ نهایی.
+/// W31: evacuated from Host.Grid into Catalog.Infrastructure behind list Contracts port.
 /// </summary>
 internal sealed class AdminProductGridQueryEngine
 {

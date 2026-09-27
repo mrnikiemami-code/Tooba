@@ -113,7 +113,7 @@ public sealed class HostAdminAmcW18GuardTests
 
         var hostEndpoints = File.ReadAllText(Path.Combine(
             root, "src/backend/Host/Tooba.Host/Admin/ProductWorkspaceEndpoints.cs"));
-        Assert.Equal(17, MapRouteRegex.Matches(hostEndpoints).Count);
+        Assert.Equal(0, MapRouteRegex.Matches(hostEndpoints).Count);
         Assert.Contains("MapProductWorkspaceEndpoints", hostEndpoints, StringComparison.Ordinal);
         Assert.DoesNotContain("MapGet(\"/{productId:guid}\"", hostEndpoints, StringComparison.Ordinal);
 

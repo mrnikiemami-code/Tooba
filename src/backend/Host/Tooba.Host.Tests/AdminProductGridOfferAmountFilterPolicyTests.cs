@@ -1,6 +1,6 @@
 using Tooba.BuildingBlocks;
 using Tooba.BuildingBlocks.Grid;
-using Tooba.Host.Grid;
+using Tooba.ProductWorkspace.Application.Composition.Grid;
 using Xunit;
 
 namespace Tooba.Host.Tests;
@@ -26,7 +26,7 @@ public sealed class AdminProductGridOfferAmountFilterPolicyTests
     [Fact]
     public void Normalize_rejects_invalid_offerAmountRange_operator()
     {
-        var ex = Assert.Throws<PlatformHttpException>(() => AdminProductGridQueryPolicy.Normalize(new GridQueryRequest(
+        var ex = Assert.Throws<GridQueryValidationException>(() => AdminProductGridQueryPolicy.Normalize(new GridQueryRequest(
             1,
             20,
             null,

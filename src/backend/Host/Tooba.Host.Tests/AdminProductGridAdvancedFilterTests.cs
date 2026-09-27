@@ -1,6 +1,6 @@
 using Tooba.BuildingBlocks;
 using Tooba.BuildingBlocks.Grid;
-using Tooba.Host.Grid;
+using Tooba.ProductWorkspace.Application.Composition.Grid;
 using Xunit;
 
 namespace Tooba.Host.Tests;
@@ -45,7 +45,7 @@ public sealed class AdminProductGridAdvancedFilterTests
             ],
             ["xor"]);
 
-        var ex = Assert.Throws<PlatformHttpException>(() => AdminProductGridQueryPolicy.Normalize(
+        var ex = Assert.Throws<GridQueryValidationException>(() => AdminProductGridQueryPolicy.Normalize(
             new GridQueryRequest(1, 20, null, [], [], expression)));
 
         Assert.Equal("grid.advancedFilter.connector.invalid", ex.ErrorCode);
@@ -58,7 +58,7 @@ public sealed class AdminProductGridAdvancedFilterTests
             [new GridAdvancedFilterCondition("1", "status", "equals", "Published", null, null)],
             ["and"]);
 
-        var ex = Assert.Throws<PlatformHttpException>(() => AdminProductGridQueryPolicy.Normalize(
+        var ex = Assert.Throws<GridQueryValidationException>(() => AdminProductGridQueryPolicy.Normalize(
             new GridQueryRequest(1, 20, null, [], [], expression)));
 
         Assert.Equal("grid.advancedFilter.connector.count", ex.ErrorCode);

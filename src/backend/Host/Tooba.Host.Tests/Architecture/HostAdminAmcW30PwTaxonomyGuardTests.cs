@@ -18,7 +18,7 @@ public sealed class HostAdminAmcW30PwTaxonomyGuardTests
         var root = FindRepoRoot();
         var host = File.ReadAllText(Path.Combine(
             root, "src/backend/Host/Tooba.Host/Admin/ProductWorkspaceEndpoints.cs"));
-        Assert.Equal(2, MapRouteRegex.Matches(host).Count);
+        Assert.Equal(0, MapRouteRegex.Matches(host).Count);
         Assert.DoesNotContain("MapPut(\"/{productId:guid}/category\"", host, StringComparison.Ordinal);
         Assert.DoesNotContain("MapPost(\"/{productId:guid}/categories/additional\"", host, StringComparison.Ordinal);
         Assert.DoesNotContain("MapDelete(\"/{productId:guid}/categories/additional/{categoryId:guid}\"", host, StringComparison.Ordinal);
@@ -27,8 +27,8 @@ public sealed class HostAdminAmcW30PwTaxonomyGuardTests
         Assert.DoesNotContain("AddAdditionalCategoryAsync", host, StringComparison.Ordinal);
         Assert.DoesNotContain("RemoveAdditionalCategoryAsync", host, StringComparison.Ordinal);
         Assert.DoesNotContain("AssignBrandAsync", host, StringComparison.Ordinal);
-        Assert.Contains("MapGet(\"/\", ListAsync)", host, StringComparison.Ordinal);
-        Assert.Contains("MapPost(\"/query\", QueryGridAsync)", host, StringComparison.Ordinal);
+        Assert.DoesNotContain("MapGet(\"/\", ListAsync)", host, StringComparison.Ordinal);
+        Assert.DoesNotContain("MapPost(\"/query\", QueryGridAsync)", host, StringComparison.Ordinal);
 
         var composer = File.ReadAllText(Path.Combine(
             root, "src/backend/Host/Tooba.Host/Admin/ProductWorkspaceComposer.cs"));
@@ -49,7 +49,7 @@ public sealed class HostAdminAmcW30PwTaxonomyGuardTests
         var module = File.ReadAllText(Path.Combine(
             root,
             "src/backend/Modules/ProductWorkspace/Tooba.ProductWorkspace.Endpoints/ProductWorkspaceEndpointModule.cs"));
-        Assert.Equal(15, MapRouteRegex.Matches(module).Count);
+        Assert.Equal(17, MapRouteRegex.Matches(module).Count);
         Assert.Contains("MapPut(\"/{productId:guid}/category\"", module, StringComparison.Ordinal);
         Assert.Contains("MapPost(\"/{productId:guid}/categories/additional\"", module, StringComparison.Ordinal);
         Assert.Contains("MapDelete(\"/{productId:guid}/categories/additional/{categoryId:guid}\"", module, StringComparison.Ordinal);

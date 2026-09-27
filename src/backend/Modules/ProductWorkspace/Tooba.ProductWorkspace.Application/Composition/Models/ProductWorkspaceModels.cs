@@ -157,3 +157,26 @@ public sealed record ProductHistoryItem(
     string? BeforeSummary = null,
     string? AfterSummary = null,
     Guid? HistoryId = null);
+
+/// <summary>
+/// Admin product list row. Offer amounts and sellable units are composed from Offer/Price/Inventory —
+/// they are not authored on Catalog Product identity.
+/// CategorySummary is legacy leaf-name join; Admin grid prefers PrimaryCategoryName / AdditionalCategoryNames.
+/// </summary>
+public sealed record AdminProductListItem(
+    Guid ProductId,
+    string Title,
+    string Status,
+    int VariantCount,
+    int OfferCount,
+    string CategorySummary,
+    string OfferAmountRange,
+    decimal SellableUnits,
+    int LocationCount,
+    DateTimeOffset UpdatedAt,
+    Guid? PrimaryMediaAssetId,
+    Guid? PrimaryCategoryId = null,
+    string? BrandName = null,
+    string? PrimaryCategoryName = null,
+    IReadOnlyList<string>? AdditionalCategoryNames = null,
+    int AdditionalCategoryCount = 0);

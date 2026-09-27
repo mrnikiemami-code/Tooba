@@ -1,18 +1,17 @@
-﻿using Tooba.BuildingBlocks;
 using Tooba.BuildingBlocks.Grid;
-using Tooba.Persistence.Grid;
 
-namespace Tooba.Host.Grid;
+namespace Tooba.ProductWorkspace.Application.Composition.Grid;
 
 /// <summary>
-/// اعتبارسنجی و نرمال‌سازی GridQuery برای گرید محصولات Admin.
+/// Validates and normalizes GridQuery for Admin product grid.
+/// Throws <see cref="GridQueryValidationException"/> — endpoints map via Result/ApiResponseFactory (no Host HTTP exception types).
 /// </summary>
 public sealed class AdminProductGridQueryPolicy : IGridQueryPolicy
 {
-    /// <summary>حداکثر اندازهٔ صفحهٔ مجاز.</summary>
+    /// <summary>Maximum allowed page size.</summary>
     public const int MaxPageSize = GridQueryPolicyBase.DefaultMaxPageSize;
 
-    /// <summary>اندازهٔ پیش‌فرض صفحه.</summary>
+    /// <summary>Default page size.</summary>
     public const int DefaultPageSize = GridQueryPolicyBase.DefaultDefaultPageSize;
 
     private static readonly HashSet<string> SortableFields =
@@ -36,18 +35,8 @@ public sealed class AdminProductGridQueryPolicy : IGridQueryPolicy
         "productId",
     ];
 
-    /// <summary>نقطهٔ ورود static برای endpointهای موجود.</summary>
-    public static GridQueryRequest Normalize(GridQueryRequest request)
-    {
-        try
-        {
-            return NormalizeInternal(request);
-        }
-        catch (GridQueryValidationException ex)
-        {
-            throw new PlatformHttpException(ex.StatusCode, ex.Message, ex.ErrorCode);
-        }
-    }
+    /// <summary>Static entry for list/grid queries.</summary>
+    public static GridQueryRequest Normalize(GridQueryRequest request) => NormalizeInternal(request);
 
     GridQueryRequest IGridQueryPolicy.Normalize(GridQueryRequest request) => Normalize(request);
 
@@ -92,7 +81,8 @@ public sealed class AdminProductGridQueryPolicy : IGridQueryPolicy
         return new GridQueryRequest(page, pageSize, search, sorts, filters, advancedFilter);
     }
 
-    internal static GridAdvancedFilterExpression? NormalizeAdvancedFilter(GridAdvancedFilterExpression? expression)
+    /// <summary>Normalizes advanced filter expression for tests and policy reuse.</summary>
+    public static GridAdvancedFilterExpression? NormalizeAdvancedFilter(GridAdvancedFilterExpression? expression)
     {
         if (expression?.Conditions is not { Count: > 0 } conditions)
         {

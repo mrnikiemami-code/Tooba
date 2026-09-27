@@ -1,5 +1,5 @@
 using Tooba.BuildingBlocks.Grid;
-using Tooba.Host.Grid;
+using Tooba.ProductWorkspace.Application.Composition.Grid;
 using Xunit;
 
 namespace Tooba.Host.Tests;

@@ -18,7 +18,7 @@ public sealed class HostAdminAmcW28PwDeleteGuardTests
         var root = FindRepoRoot();
         var host = File.ReadAllText(Path.Combine(
             root, "src/backend/Host/Tooba.Host/Admin/ProductWorkspaceEndpoints.cs"));
-        Assert.Equal(2, MapRouteRegex.Matches(host).Count);
+        Assert.Equal(0, MapRouteRegex.Matches(host).Count);
         Assert.DoesNotContain("MapDelete(\"/{productId:guid}\"", host, StringComparison.Ordinal);
         Assert.DoesNotContain("DeleteAsync", host, StringComparison.Ordinal);
 
@@ -46,7 +46,7 @@ public sealed class HostAdminAmcW28PwDeleteGuardTests
         var pw = File.ReadAllText(Path.Combine(
             root,
             "src/backend/Modules/ProductWorkspace/Tooba.ProductWorkspace.Endpoints/ProductWorkspaceEndpointModule.cs"));
-        Assert.Equal(15, MapRouteRegex.Matches(pw).Count);
+        Assert.Equal(17, MapRouteRegex.Matches(pw).Count);
         Assert.DoesNotContain("MapDelete(\"/{productId:guid}\"", pw, StringComparison.Ordinal);
         Assert.DoesNotContain("DeleteProductCommand", pw, StringComparison.Ordinal);
 

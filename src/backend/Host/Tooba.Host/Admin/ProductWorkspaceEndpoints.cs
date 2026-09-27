@@ -1,7 +1,4 @@
 ﻿using Tooba.BuildingBlocks;
-using Tooba.BuildingBlocks.Grid;
-using Tooba.Host.Grid;
-using Tooba.ProductWorkspace.Application.Composition.Models;
 
 namespace Tooba.Host.Admin;
 
@@ -13,65 +10,17 @@ namespace Tooba.Host.Admin;
 /// W28: product DELETE evacuated to Catalog.Endpoints.
 /// W29: create / catalog-title / core / quantity-policy evacuated to ProductWorkspace.Endpoints.
 /// W30: category / additional categories / brand evacuated to ProductWorkspace.Endpoints.
-/// Host ProductWorkspace surface after brand options Catalog ownership: list + grid query only.
+/// W31: list + grid query evacuated to ProductWorkspace.Endpoints (Host maps = 0).
+/// Shell retained until W32 Host ProductWorkspace* deletion.
 /// </summary>
 public static class ProductWorkspaceEndpoints
 {
     /// <summary>
-    /// مسیرهای Admin Product Workspace را ثبت می‌کند.
+    /// مسیرهای Admin Product Workspace را ثبت می‌کند (W31: no remaining Host maps).
     /// </summary>
     public static void MapProductWorkspaceEndpoints(this WebApplication app)
     {
-        var group = app.MapGroup("/v1/admin/products");
-        group.AddEndpointFilter(CatalogActorHttpBinding.BindAsync);
-        group.MapGet("/", ListAsync);
-        group.MapPost("/query", QueryGridAsync);
+        // W31: list/grid owned by ProductWorkspace.Endpoints. Keep registration no-op until W32.
+        _ = app;
     }
-
-    private static async Task<IResult> QueryGridAsync(
-        GridQueryRequest body,
-        ProductWorkspaceComposer composer,
-        HttpRequest request,
-        CurrentAuthenticatedSession session,
-        ICurrentTenant tenant,
-        IAuthorizationGuard guard,
-        IHostEnvironment environment,
-        CancellationToken cancellationToken)
-    {
-        try
-        {
-            await AdminPanelAccess.RequireAuthorizedAsync(
-                request, session, tenant, guard, environment, cancellationToken);
-            var normalized = AdminProductGridQueryPolicy.Normalize(body);
-            return Results.Json(await composer.QueryGridAsync(normalized, cancellationToken));
-        }
-        catch (PlatformHttpException ex)
-        {
-            return ToError(ex);
-        }
-    }
-
-    private static async Task<IResult> ListAsync(
-        ProductWorkspaceComposer composer,
-        HttpRequest request,
-        CurrentAuthenticatedSession session,
-        ICurrentTenant tenant,
-        IAuthorizationGuard guard,
-        IHostEnvironment environment,
-        CancellationToken cancellationToken)
-    {
-        try
-        {
-            await AdminPanelAccess.RequireAuthorizedAsync(
-                request, session, tenant, guard, environment, cancellationToken);
-            return Results.Json(await composer.ListAsync(cancellationToken));
-        }
-        catch (PlatformHttpException ex)
-        {
-            return ToError(ex);
-        }
-    }
-
-    private static IResult ToError(PlatformHttpException ex) =>
-        Results.Json(new { title = ex.Title, errorCode = ex.ErrorCode }, statusCode: ex.StatusCode);
 }

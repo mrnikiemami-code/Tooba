@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
 using Tooba.BuildingBlocks;
+using Tooba.BuildingBlocks.Grid;
 using Tooba.BuildingBlocks.Presentation;
 using Tooba.BuildingBlocks.Results;
 using Tooba.Catalog.Application;
@@ -27,6 +28,7 @@ namespace Tooba.ProductWorkspace.Endpoints;
 /// W19: aggregate GET. W26: lifecycle. W27: variant create/patch.
 /// W29: create / catalog-title / core / quantity-policy.
 /// W30: category / additional categories / brand.
+/// W31: list + grid query.
 /// </summary>
 public static class ProductWorkspaceEndpointModule
 {
@@ -35,6 +37,8 @@ public static class ProductWorkspaceEndpointModule
     {
         ArgumentNullException.ThrowIfNull(app);
         var group = app.MapGroup("/v1/admin/products");
+        group.MapGet("/", ListProductsAsync);
+        group.MapPost("/query", QueryProductGridAsync);
         group.MapGet("/{productId:guid}", GetProductWorkspaceAsync);
         group.MapPost("/", CreateProductAsync);
         group.MapPatch("/{productId:guid}/catalog-title", PatchCatalogTitleAsync);
@@ -61,6 +65,29 @@ public static class ProductWorkspaceEndpointModule
         return services;
     }
 
+    private static async Task<IResult> ListProductsAsync(
+        ISender sender,
+        IProductWorkspaceAdminAuthorizer authorizer,
+        ApiResponseFactory api,
+        HttpContext httpContext,
+        CancellationToken cancellationToken)
+    {
+        await authorizer.RequireAuthorizedAsync(httpContext, cancellationToken);
+        return api.From(await sender.Send(new ListProductWorkspaceQuery(), cancellationToken));
+    }
+
+    private static async Task<IResult> QueryProductGridAsync(
+        GridQueryRequest body,
+        ISender sender,
+        IProductWorkspaceAdminAuthorizer authorizer,
+        ApiResponseFactory api,
+        HttpContext httpContext,
+        CancellationToken cancellationToken)
+    {
+        await authorizer.RequireAuthorizedAsync(httpContext, cancellationToken);
+        return api.From(await sender.Send(new QueryProductWorkspaceGridQuery(body), cancellationToken));
+    }
+
     private static ProductWorkspacePermissions ReadPermissions(HttpRequest request)
     {
         var scope = request.Headers["X-Tooba-Workspace-Scope"].ToString();
@@ -71,6 +98,7 @@ public static class ProductWorkspaceEndpointModule
 
         return new ProductWorkspacePermissions(true, true, true, true, true);
     }
+
 
     private static async Task BindCatalogActorAsync(
         HttpContext http,

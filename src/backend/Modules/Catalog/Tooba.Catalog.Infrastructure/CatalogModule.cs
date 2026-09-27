@@ -69,6 +69,7 @@ public sealed class CatalogModule : IToobaModule
         services.AddScoped<ICatalogCartPresentationLookup>(sp => (CatalogDirectory)sp.GetRequiredService<ICatalogDirectory>());
         services.AddScoped<ICatalogOfferReadGateway, CatalogOfferReadGateway>();
         services.AddScoped<ICatalogAdminProductWorkspaceReadGateway, CatalogAdminProductWorkspaceReadGateway>();
+        services.AddScoped<ICatalogAdminProductWorkspaceListGateway, CatalogAdminProductWorkspaceListGateway>();
         services.AddScoped<IStoreCheckoutAbuseSettingsReader, StoreCheckoutAbuseSettingsReader>();
         services.AddScoped<IReservationCycleHoldPolicyReader, ReservationCycleHoldPolicyReader>();
         services.AddScoped<IStoreReservationPolicySettingsPort, StoreReservationPolicySettingsPort>();

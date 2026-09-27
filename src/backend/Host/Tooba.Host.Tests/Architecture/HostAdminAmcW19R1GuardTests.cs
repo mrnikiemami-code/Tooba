@@ -1,4 +1,4 @@
-﻿using System.Text.RegularExpressions;
+using System.Text.RegularExpressions;
 using System.Xml.Linq;
 using Xunit;
 
@@ -62,13 +62,13 @@ public sealed class HostAdminAmcW19R1GuardTests
         var moduleEndpoints = File.ReadAllText(Path.Combine(
             root,
             "src/backend/Modules/ProductWorkspace/Tooba.ProductWorkspace.Endpoints/ProductWorkspaceEndpointModule.cs"));
-        Assert.Equal(15, MapRouteRegex.Matches(moduleEndpoints).Count);
+        Assert.Equal(17, MapRouteRegex.Matches(moduleEndpoints).Count);
         Assert.Contains("MapGet(\"/{productId:guid}\"", moduleEndpoints, StringComparison.Ordinal);
         Assert.Contains("MapPost(\"/{productId:guid}/publish\"", moduleEndpoints, StringComparison.Ordinal);
 
         var hostEndpoints = File.ReadAllText(Path.Combine(
             root, "src/backend/Host/Tooba.Host/Admin/ProductWorkspaceEndpoints.cs"));
-        Assert.Equal(2, MapRouteRegex.Matches(hostEndpoints).Count);
+        Assert.Equal(0, MapRouteRegex.Matches(hostEndpoints).Count);
         Assert.DoesNotContain("MapGet(\"/{productId:guid}\"", hostEndpoints, StringComparison.Ordinal);
 
         var admin = Path.Combine(root, "src/backend/Host/Tooba.Host/Admin");

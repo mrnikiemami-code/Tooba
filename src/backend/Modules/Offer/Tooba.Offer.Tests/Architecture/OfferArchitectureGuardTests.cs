@@ -532,7 +532,15 @@ public sealed class OfferArchitectureGuardTests
             Path.Combine(host, "Admin", "AdminPanelComposer.cs"),
             Path.Combine(host, "Admin", "ProductWorkspaceComposer.cs"),
             Path.Combine(host, "Admin", "MerchandisingCampaignAdminEndpoints.cs"),
-            Path.Combine(host, "Grid", "AdminProductGridQueryEngine.cs"),
+            Path.Combine(
+                RepoRoot(),
+                "src",
+                "backend",
+                "Modules",
+                "Catalog",
+                "Tooba.Catalog.Infrastructure",
+                "Grid",
+                "AdminProductGridQueryEngine.cs"),
             Path.Combine(host, "Grid", "AdminSellersGridQueryEngine.cs"),
             Path.Combine(host, "Storefront", "StorefrontComposer.cs"),
         };

@@ -10,15 +10,16 @@
 | PW variants (W27) | ProductWorkspace.Endpoints |
 | Product DELETE (W28) | Catalog.Endpoints + Offer.Contracts gate |
 | PW identity create/title/core/quantity (W29) | ProductWorkspace.Endpoints + Catalog.ProductIdentity |
-| **PW taxonomy category/brand (W30)** | ProductWorkspace.Endpoints + Catalog.ProductTaxonomy |
+| PW taxonomy category/brand (W30) | ProductWorkspace.Endpoints + Catalog.ProductTaxonomy |
+| **PW list + grid (W31)** | ProductWorkspace.Endpoints + Catalog list Contracts |
 
-### Host PW routes remaining: **2**
-list + grid query only
+### Host PW routes remaining: **0**
+(shell MapProductWorkspaceEndpoints retained until W32)
 
 ### Next
 1. Merchandising → Promotion
 2. Template/attribute seeds
-3. W24-final: delete Host ProductWorkspace* shells (Admin count drops)
+3. W32 / W24-final: delete Host ProductWorkspace* shells (Admin count drops)
 
 ### Cannot empty yet
 KEEP platform (~16) · StoreAppearance BLOCK · HoldPolicy BLOCK · ProductWorkspace* shells · Merchandising MUST_SPLIT

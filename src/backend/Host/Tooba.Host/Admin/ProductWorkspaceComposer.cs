@@ -14,8 +14,6 @@ using Tooba.Pricing.Contracts;
 using Tooba.Party.Application;
 using Tooba.Tax.Contracts;
 
-using Tooba.BuildingBlocks.Grid;
-using Tooba.Host.Grid;
 using Tooba.ProductWorkspace.Application.Composition.Models;
 
 namespace Tooba.Host.Admin;
@@ -52,155 +50,6 @@ public sealed class ProductWorkspaceComposer
         _tax = tax;
         _parties = parties;
         _catalogDirectory = catalogDirectory;
-    }
-
-    /// <summary>
-    /// فهرست محصولات Catalog برای ورود به Workspace.
-    /// </summary>
-    public async Task<IReadOnlyList<AdminProductListItem>> ListAsync(CancellationToken cancellationToken)
-    {
-        var productIds = await _catalog.Products.AsNoTracking()
-            .OrderByDescending(x => x.UpdatedAt)
-            .Take(100)
-            .Select(x => x.ProductId)
-            .ToListAsync(cancellationToken);
-        return await BuildListItemsForProductIdsAsync(productIds, cancellationToken);
-    }
-
-    private async Task<IReadOnlyList<AdminProductListItem>> BuildListItemsForProductIdsAsync(
-        IReadOnlyList<Guid> productIds,
-        CancellationToken cancellationToken)
-    {
-        if (productIds.Count == 0)
-        {
-            return [];
-        }
-
-        var products = await _catalog.Products.AsNoTracking()
-            .Where(x => productIds.Contains(x.ProductId))
-            .ToListAsync(cancellationToken);
-        var byId = products.ToDictionary(x => x.ProductId);
-        products = productIds.Where(byId.ContainsKey).Select(id => byId[id]).ToList();
-        var names = await LoadNamesAsync(CatalogLocalizedOwnerKind.Product, productIds, cancellationToken);
-        var variantRows = await _catalog.Variants.AsNoTracking()
-            .Where(x => productIds.Contains(x.ProductId))
-            .Select(x => new { x.ProductId, x.VariantId })
-            .ToListAsync(cancellationToken);
-        var variantIds = variantRows.Select(x => x.VariantId).ToList();
-        var offerRows = variantIds.Count == 0
-            ? []
-            : (await _offers.ListOffersByCatalogVariantIdsAsync(variantIds, cancellationToken))
-                .Select(x => new { x.OfferId, x.CatalogVariantId })
-                .ToList();
-        var offerIds = offerRows.Select(x => x.OfferId).ToList();
-        var amountRows = offerIds.Count == 0
-            ? []
-            : (await _prices.ListByOfferIdsAsync(offerIds, cancellationToken))
-                .Select(x => new { x.OfferId, x.Amount, x.Currency })
-                .ToList();
-        var unitRows = offerIds.Count == 0
-            ? []
-            : (await _inventory.ListPositionsByOfferIdsAsync(offerIds, cancellationToken))
-                .Select(x => new { x.OfferId, x.OnHand, x.Reserved, x.LocationId })
-                .ToList();
-        var categoryLinks = productIds.Count == 0
-            ? []
-            : await _catalog.ProductCategories.AsNoTracking()
-                .Where(x => productIds.Contains(x.ProductId))
-                .ToListAsync(cancellationToken);
-        // شبکهٔ Admin فقط نام برگ را نیاز دارد — مسیر کامل اجداد اینجا ساخته نمی‌شود (TB-P07-T038).
-        var leafCategoryIds = categoryLinks.Select(x => x.CategoryId).Distinct().ToList();
-        var categoryLeafNames = leafCategoryIds.Count == 0
-            ? new Dictionary<Guid, string>()
-            : await LoadNamesAsync(CatalogLocalizedOwnerKind.Category, leafCategoryIds, cancellationToken);
-        var brandIds = products
-            .Where(p => p.BrandId is Guid)
-            .Select(p => p.BrandId!.Value)
-            .Distinct()
-            .ToList();
-        var brandNames = brandIds.Count == 0
-            ? new Dictionary<Guid, string>()
-            : await LoadNamesAsync(CatalogLocalizedOwnerKind.Brand, brandIds, cancellationToken);
-        var mediaRows = productIds.Count == 0
-            ? []
-            : await _catalog.MediaReferences.AsNoTracking()
-                .Where(x => productIds.Contains(x.ProductId))
-                .ToListAsync(cancellationToken);
-        return products.Select(product =>
-        {
-            var variantIds = variantRows.Where(v => v.ProductId == product.ProductId).Select(v => v.VariantId).ToList();
-            var productOffers = offerRows.Where(row => variantIds.Contains(row.CatalogVariantId)).ToList();
-            var productOfferIds = productOffers.Select(row => row.OfferId).ToHashSet();
-            var amounts = amountRows.Where(row => productOfferIds.Contains(row.OfferId)).ToList();
-            var units = unitRows.Where(row => productOfferIds.Contains(row.OfferId)).ToList();
-            var productLinks = categoryLinks
-                .Where(link => link.ProductId == product.ProductId)
-                .ToList();
-            var primaryLink = productLinks.FirstOrDefault(link => link.Role == CatalogProductCategoryRole.Primary);
-            var primaryName = primaryLink is null
-                ? null
-                : categoryLeafNames.GetValueOrDefault(primaryLink.CategoryId);
-            var additionalNames = productLinks
-                .Where(link => link.Role == CatalogProductCategoryRole.Additional)
-                .OrderBy(link => link.CategoryId)
-                .Select(link => categoryLeafNames.GetValueOrDefault(link.CategoryId))
-                .Where(name => !string.IsNullOrWhiteSpace(name))
-                .Select(name => name!)
-                .Distinct(StringComparer.Ordinal)
-                .ToList();
-            // سازگاری فیلتر/مصرف‌کننده‌های قدیمی: فقط نام برگ‌ها، نه مسیر L1>L2>L3.
-            var summaryParts = new List<string>();
-            if (!string.IsNullOrWhiteSpace(primaryName))
-            {
-                summaryParts.Add(primaryName!);
-            }
-
-            summaryParts.AddRange(additionalNames);
-            var productMedia = mediaRows
-                .Where(m => m.ProductId == product.ProductId)
-                .OrderByDescending(m => m.IsPrimary)
-                .ThenBy(m => m.DisplayOrder)
-                .ToList();
-            var primaryMedia = productMedia.FirstOrDefault(m => m.IsPrimary) ?? productMedia.FirstOrDefault();
-            var brandLabel = product.BrandId is Guid bid
-                ? (brandNames.GetValueOrDefault(bid) ?? "برند")
-                : "بدون برند";
-            return new AdminProductListItem(
-                product.ProductId,
-                names.GetValueOrDefault(product.ProductId) ?? product.SlugSeam ?? product.ProductId.ToString("N")[..8],
-                product.Status.ToString(),
-                variantIds.Count,
-                productOffers.Count,
-                summaryParts.Count == 0 ? "بدون دسته" : string.Join("، ", summaryParts),
-                FormatOfferAmountRange(amounts.Select(row => (row.Amount, row.Currency)).ToList()),
-                units.Sum(row => row.OnHand - row.Reserved),
-                units.Select(row => row.LocationId).Distinct().Count(),
-                product.UpdatedAt,
-                primaryMedia?.MediaAssetId,
-                primaryLink?.CategoryId,
-                brandLabel,
-                primaryName,
-                additionalNames,
-                additionalNames.Count);
-        }).ToList();
-    }
-
-    /// <summary>
-    /// فهرست محصولات Admin با قرارداد GridQuery/GridPage — فیلتر/مرتب‌سازی/صفحه‌بندی سمت Host.
-    /// </summary>
-    public async Task<GridPageResponse<AdminProductListItem>> QueryGridAsync(
-        GridQueryRequest request,
-        CancellationToken cancellationToken)
-    {
-        var engine = new AdminProductGridQueryEngine(_catalog, _offers, _prices, _inventory);
-        var (pageIds, totalCount) = await engine.ResolvePageProductIdsAsync(request, cancellationToken);
-        if (pageIds.Count == 0)
-        {
-            return new GridPageResponse<AdminProductListItem>([], request.Page, request.PageSize, totalCount);
-        }
-
-        var items = await BuildListItemsForProductIdsAsync(pageIds, cancellationToken);
-        return new GridPageResponse<AdminProductListItem>(items, request.Page, request.PageSize, totalCount);
     }
 
     /// <summary>
@@ -600,27 +449,6 @@ public sealed class ProductWorkspaceComposer
                 .Select(m => new ProductPublishMissingRequirementView(m.Code, m.MessageFa, m.WorkspaceTab))
                 .ToList(),
             readiness.MessageFa);
-
-    /// <summary>
-    /// بازهٔ مبلغ پیشنهادها را برای فهرست می‌سازد. مبلغ روی هویت Product ذخیره نمی‌شود.
-    /// </summary>
-    private static string FormatOfferAmountRange(IReadOnlyList<(decimal Amount, string Currency)> rows)
-    {
-        if (rows.Count == 0)
-        {
-            return "بدون مبلغ";
-        }
-
-        var min = rows.Min(x => x.Amount);
-        var max = rows.Max(x => x.Amount);
-        var currency = rows[0].Currency;
-        if (min == max)
-        {
-            return $"{min:0} {currency}".Trim();
-        }
-
-        return $"{min:0}–{max:0} {currency}".Trim();
-    }
 
     private async Task<Dictionary<Guid, string>> LoadNamesAsync(
         CatalogLocalizedOwnerKind kind,
