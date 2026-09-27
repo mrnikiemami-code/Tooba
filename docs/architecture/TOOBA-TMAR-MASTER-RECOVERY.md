@@ -667,35 +667,50 @@ Canonical protocol:
 `docs/architecture/TMAR-HOST-EVACUATION-PROTOCOL.md`
 
 Current method:
-- Finish active Fulfillment Host evacuation before Fulfillment structure certification.
-- Then traverse `src/backend/Host/Tooba.Host` folder-by-folder/file-by-file in repository order.
-- Read every Host production file completely and create a member-level Content Disposition Map.
-- A file may split across multiple module owners.
+- Traverse `src/backend/Host/Tooba.Host` folder-by-folder/file-by-file in repository order (bounded Host AMC slices).
+- Host evacuation = **responsibility evacuation**, not physical relocation. Host ZERO alone is insufficient; the touched destination must be canonical before PASS. Known certification violations cannot be residual debt.
+- Read every Host production file completely and create a member-level Content Disposition Map. A file may split across multiple module owners.
 - Never delete a Host production file before every live responsibility is rehomed and parity is proven.
 - If a destination module lacks proper Endpoints/CQRS/MediatR/validation/foldering/contracts boundaries, repair that destination before completing the Host-file evacuation.
+- **Semantic Contracts ownership:** `Tooba.<Module>.Contracts` holds stable module-boundary semantics (cross-module DTOs/ports/events and module-owned stable error codes). Application-internal CQRS requests/results/snapshots/models/ports stay Application-owned. Filename suffix does not determine ownership. Generic/mixed Application `*Contracts.cs` bundles are not certification targets. One authoritative CQRS request type per use case.
+- **Capability-first shallow foldering (Commands AND Queries):** capability is the primary axis; default shallow layout is `<Capability>/{Commands,Queries,Models,Ports,Validators}`. Do not create a separate leaf folder for each Command/Query when it would contain only one request file. Deeper per-use-case folders are allowed only for genuine multi-file cohesion or meaningful complexity. Do not flatten legitimate cohesive multi-file use cases. Certified modules are reference-for-principles, not mandatory physical clones.
 - Tests/guards are focused proof after ownership repair; they are not the navigation strategy.
 - Final target: Host = thin platform/composition shell only.
 
-Recent accepted recovery facts:
-- Settlement ARCH-COMPLETE-002 STRUCTURE_CERTIFIED at `54b1c8ff1f6e9214a5b5c16b6103f0285bd2a37e`; SoT stamp `01d15f3cb1ad38f0e91ed65e990e32c4f9d19876`.
-- Fulfillment audit R1 corrected inventory to 15 endpoint requests = 10 validator-required + 5 no-validator-required.
-- Fulfillment pre-cert repair accepted at `16062d45bde71476da35f9e20622f1b6b5637fa8`; ten transport validators are present.
-- `FulfillmentReturnsGridAliases.cs` was syntax-only alias residue with zero production consumers; its underlying canonical types were not deleted.
-- Fulfillment Host evacuation COMPLETE at task `TB-TMAR-FULFILLMENT-HOST-EVACUATION-001`: all three Host-specific authorizers (`Admin/HostFulfillmentAdminAuthorizer.cs`, `Customer/HostFulfillmentCustomerAuthorizer.cs`, `Seller/HostFulfillmentSellerAuthorizer.cs`) were rehomed to module-owned implementations in `Tooba.Fulfillment.Endpoints` after a full Content Disposition Map, with generic Host seams `HostAdminPanelAccess`/`HostSellerPanelAccess`/`HostPlatformEffectiveAccessReader` and neutral BuildingBlocks contracts; `HOST_FULFILLMENT_SPECIFIC_FILES = ZERO`; evidence `docs/evidence/TB-TMAR-FULFILLMENT-HOST-EVACUATION-001/fulfillment-host-evacuation.md`.
-- Fulfillment structure certification is now the intended next task: `TB-TMAR-FULFILLMENT-ARCH-COMPLETE-002-STRUCTURE-001`.
+Recent accepted recovery facts (Host Content lineage — latest Content checkpoint):
+- Content AMC physical evacuation `TB-TMAR-HOST-CONTENT-AMC-001` → Host/Content production files ZERO (Development retain exceptions untouched).
+- R1 destination CQRS/boundary repair `TB-TMAR-HOST-CONTENT-AMC-001-R1`.
+- R2 typed-fault/message-classification repair `TB-TMAR-HOST-CONTENT-AMC-001-R2`.
+- R3 original ARCH-COMPLETE-002 structure certification `TB-TMAR-HOST-CONTENT-AMC-001-R3`.
+- R4 semantic Contracts + capability-first shallow realignment and re-certification `TB-TMAR-HOST-CONTENT-AMC-001-R4` at accepted commit `224ec5a3c4741d104a70fd54f4f169024e4d9b74` (governance commit `d093ad25aa6bd998909c583af0096d3a11094115`): Host/Content ZERO preserved; Content ARCH-COMPLETE-002 `structureCertified`; validator matrix 17/17 + 34 NO_VALIDATOR; Content.Contracts Errors-only (no foreign Content.Application consumer); Endpoints→Infrastructure ZERO; Media/Localization Contracts-only; frontend unchanged; DB-gated Content behavior tests skipped without live Postgres remain pre-existing/non-blocking.
+- SoT: `hostContentAmcR4`; workflow stop `USER_REVIEW_HOST_CONTENT_R4_CHECKPOINT`; next Host folder **not** started.
+- Prior Host folders already evacuated/certified in lineage include AccessControl, AddressBook, Customer full-closure, CustomerProfile, Development, Caching (see SoT blocks); do not invent the next Host folder from this document alone.
 
-After Fulfillment, do NOT automatically continue by uncertified-module list. Start Host traversal with AccessControl, then AddressBook, then subsequent Host folders in repository order.
+Do NOT automatically continue by uncertified-module list. Do not start the next Host folder until the active user-review checkpoint is cleared by Architect/user.
 
-## TMAR Host Evacuation — Current Live State (AddressBook)
+## TMAR Host Evacuation — Current Live State (Content R4)
 
-AccessControl Host evacuation is CLOSED and AccessControl is fully certified. The authoritative current state is:
+Authoritative current Content / Host-evacuation checkpoint (supersedes older AddressBook/AccessControl "live next task" wording below for Host-folder sequencing):
 
-- Latest accepted task: `TB-TMAR-ACCESSCONTROL-FINAL-CERTIFICATION-AND-SOT-CLOSURE-001` (commit / SoT stamp `53365a7ec09f7d3123889cca008354857e16c56b`)
+- Latest accepted Content recovery task: `TB-TMAR-HOST-CONTENT-AMC-001-R4` at `224ec5a3c4741d104a70fd54f4f169024e4d9b74`
+- Governance skills hardened at `d093ad25aa6bd998909c583af0096d3a11094115`
+- Host/Content = ZERO; Content = ARCH-COMPLETE-002 `STRUCTURE_CERTIFIED` (manifest + `structureLock.certifiedModules` include Content)
+- Content.Contracts = Errors-only; Application = capability-first shallow (Articles/Authors/Categories/Tags/Media/Comments)
+- Workflow stop: `USER_REVIEW_HOST_CONTENT_R4_CHECKPOINT` (documentation sync `TB-TMAR-HOST-CONTENT-AMC-001-R5` does not start the next Host folder)
+- Frontend FROZEN; Checkout `PAUSED_AT_SAFE_W5_CHECKPOINT`
+- Evidence: `docs/evidence/TB-TMAR-HOST-CONTENT-AMC-001-R4/` (+ R5 governance sync evidence when present)
+
+## TMAR Host Evacuation — Historical Live State Snapshot (AddressBook / AccessControl)
+
+The following AddressBook/AccessControl block is HISTORICAL sequencing context and is no longer the authoritative Host-folder checkpoint (see Content R4 above).
+
+AccessControl Host evacuation is CLOSED and AccessControl is fully certified. Historical snapshot:
+
+- Latest accepted task (historical): `TB-TMAR-ACCESSCONTROL-FINAL-CERTIFICATION-AND-SOT-CLOSURE-001` (commit / SoT stamp `53365a7ec09f7d3123889cca008354857e16c56b`)
 - AccessControl: Host ZERO, `COMPLETE_REFERENCE_PATTERN`, ARCH-COMPLETE-002 `STRUCTURE_CERTIFIED`
 - 19 endpoint-reachable requests; 6 validator-required / 6 present / 13 no-validator-required
-- Contracts-only boundaries; `structureLock.certifiedModules = Order, Cart, StoreContext, Offer, Payment, Settlement, Fulfillment, AccessControl`
-- Current track: `HOST_FIRST_FOLDER_BY_FOLDER` — active Host folder = `AddressBook`
-- Next Host folder: `AddressBook`; next task: `TB-TMAR-HOST-ADDRESSBOOK-INVENTORY-001`
+- Contracts-only boundaries; AccessControl remains in `structureLock.certifiedModules`
+- Historical track note: AddressBook inventory/certification has since completed; do not resume `TB-TMAR-HOST-ADDRESSBOOK-INVENTORY-001` as current work
 - Frontend FROZEN; Checkout `PAUSED_AT_SAFE_W5_CHECKPOINT`
 
 Everything below this heading is HISTORICAL AccessControl evacuation history and is no longer live state.
@@ -753,5 +768,6 @@ AccessControl is `COMPLETE_REFERENCE_PATTERN` and ARCH-COMPLETE-002 `STRUCTURE_C
 
 - Mode: `BACKEND_ONLY_UNTIL_EXPLICIT_RELEASE`; frontend `FROZEN`.
 - Checkout: `PAUSED_AT_SAFE_W5_CHECKPOINT`.
-- Structure-certified modules: Order, Cart, StoreContext, Offer, Payment, Settlement, Fulfillment, AccessControl.
+- Structure-certified modules include Order, Cart, StoreContext, Offer, Payment, Settlement, Fulfillment, AccessControl, AddressBook, Content (authoritative list: `tmar-current-state.json` `structureLock.certifiedModules`).
+- Current Host-folder checkpoint: Content R4 / `USER_REVIEW_HOST_CONTENT_R4_CHECKPOINT` (next Host folder not started).
 

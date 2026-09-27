@@ -8,12 +8,16 @@ A module qualifies as `COMPLETE_REFERENCE_PATTERN` only when build, CQRS, endpoi
 ## Application standard
 
 - Capability-driven organization; capability-specific `.cs` files must not live at project root.
+- **Capability-first shallow-by-default:** group under `<Capability>/{Commands,Queries,Models,Ports,Validators}` (plus Policies/Services when needed). Capability is the primary axis for both Commands and Queries.
+- Do **not** create one-folder-per-Command/Query when the leaf folder would contain only a single request file. Per-use-case subfolders are allowed only when multi-file cohesion or meaningful complexity justifies them. Do not flatten legitimate cohesive multi-file use cases.
 - Commands/Queries/Models/Ports/Policies/Services grouped under the owning capability.
-- No miscellaneous `*Contracts.cs` dumping at root.
-- MediatR validators live with the request or under an explicit shared `Validation` rules capability.
+- No miscellaneous/mixed Application `*Contracts.cs` dump (root or capability) as a substitute for Models/Ports/request types.
+- **Semantic Contracts ownership:** put a type in `Tooba.<Module>.Contracts` only when it is a stable module-boundary contract (cross-module DTO/port/event or module-owned stable error code). Application-internal CQRS requests/results/snapshots/models/ports remain Application-owned. Filename suffix does not decide ownership. One authoritative CQRS request type per use case — no duplicate command-shaped Application models.
+- Certified modules are a reference for principles, not a mandatory physical folder clone.
+- MediatR validators live with the request or under an explicit shared `Validation` / `Validators` rules capability.
 - Business validation (entity existence, ownership, state, eligibility, limits) stays out of FluentValidation.
 
-Example (Order):
+Example (Order — reference layout; do not clone blindly):
 
 ```text
 Tooba.Order.Application
@@ -25,6 +29,20 @@ Tooba.Order.Application
 ├─ ReservationCycle/{Contracts,Services,Policies}
 ├─ PurchaseVerification/
 └─ Validation/
+```
+
+Example (Content — capability-first shallow after semantic realignment):
+
+```text
+Tooba.Content.Application
+├─ Articles/{Commands,Queries,Models,Ports,Validators}
+├─ Authors/{Commands,Queries,Models,Ports,Validators}
+├─ Categories/{Commands,Queries,Models,Ports,Validators}
+├─ Tags/{Commands,Queries,Models,Ports,Validators}
+├─ Media/{Commands,Queries,Models,Ports,Validators}
+├─ Comments/{Commands,Queries,Models,Ports,Validators}
+├─ Composition/
+└─ Validators/
 ```
 
 ## Endpoints standard
@@ -95,5 +113,5 @@ Tooba.Order.Infrastructure
 
 ## Existing modules
 
-- Order and Cart are certified under ARCH-COMPLETE-002 now.
-- All other existing COMPLETE_REFERENCE_PATTERN modules are NOT structure-certified until separately reverified; they must not be claimed as ARCH-COMPLETE-002.
+- Order, Cart, StoreContext, Offer, Payment, Settlement, Fulfillment, AccessControl, AddressBook, and Content are among the modules structure-certified under ARCH-COMPLETE-002 (see `tmar-module-structure-manifests.json` + `structureLock.certifiedModules`).
+- Other existing COMPLETE_REFERENCE_PATTERN modules are NOT structure-certified until separately reverified; they must not be claimed as ARCH-COMPLETE-002 without that gate.

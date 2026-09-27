@@ -47,7 +47,7 @@ For each Host folder:
    - Commands/Queries/Handlers,
    - FluentValidation only for untrusted transport shape,
    - Contracts-only cross-module boundaries,
-   - capability/integration foldering,
+   - capability/integration foldering (see destination-certification rules below),
    - exact path/namespace alignment,
    - Host dependency = ZERO.
 6. Move/rehome content in bounded slices.
@@ -57,6 +57,28 @@ For each Host folder:
 10. Move to the next Host folder.
 
 Do not skip a Host file because its corresponding module was previously marked COMPLETE_REFERENCE_PATTERN or STRUCTURE_CERTIFIED. Host evacuation may reopen ownership review without invalidating unrelated accepted structure locks.
+
+## Destination certification rules (mandatory with Host evacuation)
+
+Host evacuation is **responsibility evacuation**, not physical relocation. Host ZERO alone is insufficient. The touched destination must be canonical before PASS. Known certification violations cannot be left as residual debt.
+
+### Semantic Contracts ownership
+
+- `Tooba.<Module>.Contracts` contains stable module-boundary semantics only: cross-module DTOs/ports/events and module-owned stable error codes.
+- Application-internal CQRS requests/results/snapshots/models/ports stay Application-owned.
+- Filename suffix does not determine ownership.
+- Generic/mixed `*Contracts.cs` bundles inside Application are not acceptable certification targets.
+- One authoritative CQRS request type per use case (no duplicate command-shaped Application models).
+
+### Capability-first shallow Command/Query foldering
+
+- Capability is the primary axis.
+- Shallow default: `<Capability>/Commands`, `<Capability>/Queries`, `<Capability>/Models`, `<Capability>/Ports`, `<Capability>/Validators`.
+- Do not create a separate leaf folder for each Command/Query when it contains only one request file.
+- Deeper per-use-case folders are allowed only for genuine multi-file cohesion or meaningful complexity.
+- The rule applies equally to Commands **and** Queries.
+- Do not flatten legitimate cohesive multi-file use cases.
+- Offer/other certified modules provide principles, not mandatory folder replicas.
 
 ## Host end-state
 
@@ -83,21 +105,23 @@ Host must not own module-specific:
 - module-specific aliases/shims,
 - cross-module orchestration that belongs to a module/application boundary.
 
-## Current recovery checkpoint (2026-09-25)
+## Current recovery checkpoint (Content R4 — 2026-09-27)
 
-Accepted/verified recent work before this protocol:
-- Payment: ARCH-COMPLETE-002 STRUCTURE_CERTIFIED.
-- Settlement audit classification repaired to 4 required / 6 no-validator-required.
-- Settlement pre-cert validators completed.
-- Settlement: ARCH-COMPLETE-002 STRUCTURE_CERTIFIED at `54b1c8ff1f6e9214a5b5c16b6103f0285bd2a37e`, SoT stamp `01d15f3cb1ad38f0e91ed65e990e32c4f9d19876`.
-- Fulfillment audit completed and R1 corrected validator taxonomy to 15 endpoint requests = 10 VALIDATOR_REQUIRED + 5 NO_VALIDATOR_REQUIRED.
-- Fulfillment pre-cert repair accepted at `16062d45bde71476da35f9e20622f1b6b5637fa8`: 10 transport validators added; 15/10/5 coverage locked; `FulfillmentReturnsGridAliases.cs` removed only after zero-consumer proof. The file contained aliases only and its underlying Fulfillment/Returns types remained intact.
-- Fulfillment structure certification is deliberately deferred until Fulfillment-specific Host files are fully evacuated.
-- Current Host Fulfillment-specific files identified for evacuation:
-  - `Admin/HostFulfillmentAdminAuthorizer.cs`
-  - `Customer/HostFulfillmentCustomerAuthorizer.cs`
-  - `Seller/HostFulfillmentSellerAuthorizer.cs`
-- The active intended next task is `TB-TMAR-FULFILLMENT-HOST-EVACUATION-001`, then Fulfillment structure certification.
+Authoritative Host-evacuation checkpoint (do not treat older Fulfillment/AccessControl wording elsewhere as current next work):
+
+- Host/Content production files = ZERO after `TB-TMAR-HOST-CONTENT-AMC-001`.
+- Content destination lineage accepted through R4:
+  - R1 CQRS/boundary repair
+  - R2 typed-fault repair
+  - R3 ARCH-COMPLETE-002 structure certification
+  - R4 semantic Contracts + capability-first shallow realignment/re-certification at `224ec5a3c4741d104a70fd54f4f169024e4d9b74`
+  - governance skills hardened at `d093ad25aa6bd998909c583af0096d3a11094115`
+- Content remains ARCH-COMPLETE-002 `structureCertified`; `structureLock.certifiedModules` includes Content; SoT `hostContentAmcR4`.
+- Content.Contracts = Errors-only; Application capability-first shallow; validator matrix 17/17 + 34 NO_VALIDATOR; Media/Localization Contracts-only; Endpoints→Infrastructure ZERO.
+- Workflow stop: `USER_REVIEW_HOST_CONTENT_R4_CHECKPOINT`.
+- Next Host folder: **not started** (await user/Architect review). Documentation-only sync tasks do not authorize the next Host folder.
+
+Historical note (completed earlier): Fulfillment Host evacuation and Fulfillment ARCH-COMPLETE-002 structure certification, AccessControl closure, AddressBook certification, and subsequent Host folders through Caching/Development/Customer* completed before Content; see `tmar-current-state.json` for per-folder SoT blocks.
 
 ## Known post-Fulfillment Host traversal rule
 
