@@ -4,6 +4,7 @@ using Microsoft.Extensions.Hosting;
 using FluentValidation;
 using Tooba.BuildingBlocks;
 using Tooba.Catalog.Application;
+using Tooba.Catalog.Application.Facets.Ports;
 using Tooba.Catalog.Application.MegaMenu.Ports;
 using Tooba.Catalog.Application.Settings.Quantity.Ports;
 using Tooba.Catalog.Application.Tags.Ports;
@@ -56,6 +57,7 @@ public sealed class CatalogModule : IToobaModule
         services.AddScoped<IUnitOfMeasureDirectory, UnitOfMeasureDirectory>();
         services.AddScoped<ITagDirectory, TagDirectory>();
         services.AddScoped<IMegaMenuDirectory, MegaMenuDirectory>();
+        services.AddScoped<IFacetDirectory, FacetDirectory>();
         services.AddSingleton<IQuantityNormalizer, QuantityNormalizer>();
         services.AddValidatorsFromAssembly(typeof(CreateStoreLandingPageCommand).Assembly);
         services.AddDbContext<CatalogDbContext>((sp, options) =>

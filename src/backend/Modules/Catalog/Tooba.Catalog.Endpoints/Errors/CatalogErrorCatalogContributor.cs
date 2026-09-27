@@ -38,6 +38,20 @@ public sealed class CatalogErrorCatalogContributor : IErrorCatalogContributor
             "MegaMenu placement is invalid."),
         D(CatalogErrorCodes.MegaMenuRemoveHasChildren, ErrorClassification.Business, StatusCodes.Status400BadRequest,
             "MegaMenu item still has presentation children."),
+        D(CatalogErrorCodes.FacetCategoryMissing, ErrorClassification.NotFound, StatusCodes.Status404NotFound,
+            "Category was not found for Facet."),
+        D(CatalogErrorCodes.FacetDefinitionMissing, ErrorClassification.NotFound, StatusCodes.Status404NotFound,
+            "Attribute definition was not found for Facet."),
+        D(CatalogErrorCodes.FacetSchemaMissing, ErrorClassification.Business, StatusCodes.Status400BadRequest,
+            "Attribute is not in the category effective schema."),
+        D(CatalogErrorCodes.FacetNotFilterable, ErrorClassification.Business, StatusCodes.Status400BadRequest,
+            "Only filterable attributes may be configured as facets."),
+        D(CatalogErrorCodes.FacetDisplayTypeInvalid, ErrorClassification.Business, StatusCodes.Status400BadRequest,
+            "Facet display type is invalid for the attribute value kind."),
+        D(CatalogErrorCodes.FacetOverrideMissing, ErrorClassification.NotFound, StatusCodes.Status404NotFound,
+            "Local facet override was not found."),
+        D(CatalogErrorCodes.FacetReorderInvalid, ErrorClassification.Business, StatusCodes.Status400BadRequest,
+            "Facet reorder list must match the local configuration set exactly."),
     ];
 
     private static ErrorDescriptor D(

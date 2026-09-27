@@ -47,4 +47,10 @@ public static class CatalogValidationCodes
 
     /// <summary>MegaMenu short label exceeds max length.</summary>
     public const string MegaMenuShortLabelTooLong = "catalog.validation.megamenu_short_label_too_long";
+
+    /// <summary>Facet upsert body must be present on PUT.</summary>
+    public const string FacetInputRequired = "catalog.validation.facet_input_required";
+
+    /// <summary>Facet reorder orderedDefinitionIds collection must be present.</summary>
+    public const string FacetOrderedDefinitionIdsRequired = "catalog.validation.facet_ordered_definition_ids_required";
 }

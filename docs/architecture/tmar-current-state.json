@@ -1570,6 +1570,55 @@
     "recoveryDiscipline": "SYNC_SOT_FREQUENTLY_NEW_CHAT_MUST_RESUME_FROM_REPO_NOT_CONVERSATION_MEMORY",
     "minimalRecoveryPhraseFa": "برگردیم به TMAR؛ ریکاوری را انجام بده"
   },
+  "hostAdminAmcW6": {
+    "task": "TB-TMAR-HOST-ADMIN-AMC-001-W6",
+    "parentTask": "TB-TMAR-HOST-ADMIN-AMC-001-W5",
+    "parentCommit": "6642f818cd9cbdd106d8dfdc7a37a053acc00c79",
+    "state": "HOST_ADMIN_AMC_W6_FACETS_EVACUATED_CQRS_RESULT",
+    "activeHostFolder": "Admin",
+    "productionFileCountBefore": 55,
+    "productionFileCountAfter": 54,
+    "facetEndpointOwnership": "MODULE_OWNED_SIX_ROUTES_CATALOG_ENDPOINTS",
+    "facetRouteInventory": [
+      "GET /v1/admin/catalog/categories/{categoryId}/facets/effective",
+      "GET /v1/admin/catalog/categories/{categoryId}/facets/local",
+      "PUT /v1/admin/catalog/categories/{categoryId}/facets/{definitionId}",
+      "DELETE /v1/admin/catalog/categories/{categoryId}/facets/{definitionId}",
+      "PUT /v1/admin/catalog/categories/{categoryId}/facets/order",
+      "GET /v1/storefront/categories/{categoryId}/facets"
+    ],
+    "facetCqrsState": "GetEffective_ListLocal_Upsert_Remove_Reorder_GetStorefront_Result",
+    "facetPersistencePortState": "IFacetDirectory_FacetDirectory",
+    "validatorMatrix": "Upsert_Reorder_REQUIRED_four_others_NO_VALIDATOR_REQUIRED",
+    "resultErrorState": "CANONICAL_RESULT_APIRESPONSEFACTORY_CatalogErrorCodes_catalog_facet_star",
+    "messageClassificationState": "NO_PERSIAN_IOE_MESSAGE_AS_CODE_ON_FACET_SURFACE",
+    "platformHttpExceptionState": "ABSENT_ON_FACET_SURFACE",
+    "invalidOperationExpectedFlowState": "ABSENT_ON_FACET_HTTP_AND_FACETDIRECTORY",
+    "adminAuthorizationState": "ICatalogAdminAuthorizer_ON_FIVE_ADMIN_ROUTES",
+    "storefrontRouteState": "ISENDER_NO_ADMIN_AUTH_HOST_FREE",
+    "domainRuleState": "CatalogCategoryFacetRules_TYPED_DisplayTypeViolation_AUTHORITY_PRESERVED",
+    "applicationStructure": "Facets/{Commands,Queries,Models,Ports,Validators}",
+    "pathNamespace": "EXACT",
+    "catalogToHost": "ZERO",
+    "endpointsToInfrastructure": "ZERO",
+    "routeBehaviorParity": "PRESERVED",
+    "schemaMigrationState": "NONE",
+    "frontendState": "UNCHANGED",
+    "storeAppearanceState": "NOT_MOVED_DEFERRED_PRESERVED",
+    "w1W2W2R1W3W4W5Preservation": "PRESERVED",
+    "remainingAdminBlockers": [
+      "StoreAppearance Host.Storefront projector coupling",
+      "Remaining Catalog Admin HTTP still Host-owned (attributes/categories/workspace/...)"
+    ],
+    "residualDebt": [
+      "W7+ Catalog HTTP waves",
+      "Appearance redesign before evacuate",
+      "ICatalogDirectory thin Facet wrappers remain for CatalogDemo/legacy"
+    ],
+    "nextHostFolderStarted": false,
+    "workflowStop": "USER_REVIEW_HOST_ADMIN_W6_CHECKPOINT",
+    "evidence": "docs/evidence/TB-TMAR-HOST-ADMIN-AMC-001-W6/"
+  },
   "hostAdminAmcW5": {
     "task": "TB-TMAR-HOST-ADMIN-AMC-001-W5",
     "parentTask": "TB-TMAR-HOST-ADMIN-AMC-001-W4",

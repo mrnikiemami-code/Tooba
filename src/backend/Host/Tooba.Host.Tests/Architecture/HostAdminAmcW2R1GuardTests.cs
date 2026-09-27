@@ -102,7 +102,7 @@ public sealed class HostAdminAmcW2R1GuardTests
     {
         // Historical W2-R1: Admin at 58. W3 UoM (−1 → 57). W4 Tags (−1 → 56). W5 MegaMenu (−1 → 55).
         var admin = Path.Combine(FindRepoRoot(), "src/backend/Host/Tooba.Host/Admin");
-        Assert.Equal(55, Directory.GetFiles(admin, "*.cs", SearchOption.AllDirectories).Length);
+        Assert.Equal(54, Directory.GetFiles(admin, "*.cs", SearchOption.AllDirectories).Length);
         Assert.True(File.Exists(Path.Combine(admin, "StoreAppearanceSettingsEndpoints.cs")));
         Assert.True(File.Exists(Path.Combine(admin, "StoreAppearanceSettingsComposer.cs")));
         Assert.False(File.Exists(Path.Combine(admin, "QuantitySettingsEndpoints.cs")));

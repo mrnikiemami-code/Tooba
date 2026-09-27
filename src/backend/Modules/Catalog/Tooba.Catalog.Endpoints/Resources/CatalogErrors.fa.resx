@@ -33,4 +33,13 @@
   <data name="catalog.validation.megamenu_title_override_too_long" xml:space="preserve"><value>عنوان جایگزین مگامنو بیش از حد طولانی است.</value></data>
   <data name="catalog.validation.megamenu_badge_text_too_long" xml:space="preserve"><value>متن نشان مگامنو بیش از حد طولانی است.</value></data>
   <data name="catalog.validation.megamenu_short_label_too_long" xml:space="preserve"><value>برچسب کوتاه مگامنو بیش از حد طولانی است.</value></data>
+  <data name="catalog.facet.category.missing" xml:space="preserve"><value>رده برای فیلتر یافت نشد.</value></data>
+  <data name="catalog.facet.definition.missing" xml:space="preserve"><value>تعریف ویژگی برای فیلتر یافت نشد.</value></data>
+  <data name="catalog.facet.schema.missing" xml:space="preserve"><value>این ویژگی در schema مؤثر این رده نیست.</value></data>
+  <data name="catalog.facet.not_filterable" xml:space="preserve"><value>فقط ویژگی‌های قابل فیلتر برای این رده مجاز به پیکربندی فیلتر هستند.</value></data>
+  <data name="catalog.facet.display_type.invalid" xml:space="preserve"><value>نوع نمایش فیلتر برای این نوع ویژگی مجاز نیست.</value></data>
+  <data name="catalog.facet.override.missing" xml:space="preserve"><value>پیکربندی facet محلی پیدا نشد.</value></data>
+  <data name="catalog.facet.reorder.invalid" xml:space="preserve"><value>فهرست ترتیب باید دقیقاً همان پیکربندی‌های محلی رده باشد.</value></data>
+  <data name="catalog.validation.facet_input_required" xml:space="preserve"><value>بدنهٔ پیکربندی فیلتر الزامی است.</value></data>
+  <data name="catalog.validation.facet_ordered_definition_ids_required" xml:space="preserve"><value>فهرست شناسه‌های ترتیب فیلتر الزامی است.</value></data>
 </root>

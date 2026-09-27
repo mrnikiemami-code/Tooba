@@ -33,4 +33,13 @@
   <data name="catalog.validation.megamenu_title_override_too_long" xml:space="preserve"><value>MegaMenu title override is too long.</value></data>
   <data name="catalog.validation.megamenu_badge_text_too_long" xml:space="preserve"><value>MegaMenu badge text is too long.</value></data>
   <data name="catalog.validation.megamenu_short_label_too_long" xml:space="preserve"><value>MegaMenu short label is too long.</value></data>
+  <data name="catalog.facet.category.missing" xml:space="preserve"><value>Category was not found for Facet.</value></data>
+  <data name="catalog.facet.definition.missing" xml:space="preserve"><value>Attribute definition was not found for Facet.</value></data>
+  <data name="catalog.facet.schema.missing" xml:space="preserve"><value>Attribute is not in the category effective schema.</value></data>
+  <data name="catalog.facet.not_filterable" xml:space="preserve"><value>Only filterable attributes may be configured as facets.</value></data>
+  <data name="catalog.facet.display_type.invalid" xml:space="preserve"><value>Facet display type is invalid for the attribute value kind.</value></data>
+  <data name="catalog.facet.override.missing" xml:space="preserve"><value>Local facet override was not found.</value></data>
+  <data name="catalog.facet.reorder.invalid" xml:space="preserve"><value>Facet reorder list must match the local configuration set exactly.</value></data>
+  <data name="catalog.validation.facet_input_required" xml:space="preserve"><value>Facet configuration body is required.</value></data>
+  <data name="catalog.validation.facet_ordered_definition_ids_required" xml:space="preserve"><value>Facet ordered definition ids are required.</value></data>
 </root>

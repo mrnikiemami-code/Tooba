@@ -910,6 +910,36 @@ public sealed record CatalogEffectiveFacetBinding(
     CatalogAttributeDefinition Definition);
 
 /// <summary>
+/// Typed outcome for facet display-type vs ValueKind validation (no message-as-code).
+/// </summary>
+public enum CatalogFacetDisplayTypeViolation
+{
+    /// <summary>Valid combination.</summary>
+    None = 0,
+
+    /// <summary>Color swatch requires option color metadata (not yet supported).</summary>
+    ColorSwatchUnsupported = 1,
+
+    /// <summary>Boolean attributes require BooleanToggle.</summary>
+    BooleanRequiresToggle = 2,
+
+    /// <summary>Number attributes require Range.</summary>
+    NumberRequiresRange = 3,
+
+    /// <summary>Display type incompatible with Text ValueKind.</summary>
+    TextDisplayIncompatible = 4,
+
+    /// <summary>Display type incompatible with Enumeration ValueKind.</summary>
+    EnumerationDisplayIncompatible = 5,
+
+    /// <summary>Instant ValueKind facets are not supported.</summary>
+    InstantUnsupported = 6,
+
+    /// <summary>BooleanToggle used with non-boolean ValueKind.</summary>
+    BooleanToggleRequiresBoolean = 7,
+}
+
+/// <summary>
 /// اعتبارسنجی نوع نمایش facet بر اساس ValueKind.
 /// </summary>
 public static class CatalogCategoryFacetRules
@@ -928,13 +958,17 @@ public static class CatalogCategoryFacetRules
         };
 
     /// <summary>
-    /// اعتبارسنجی ترکیب ValueKind و DisplayType.
+    /// اعتبارسنجی ترکیب ValueKind و DisplayType؛ نتیجه typed است (نه exception/message).
     /// </summary>
-    public static void ValidateDisplayType(CatalogAttributeDefinition definition, CatalogFacetDisplayType displayType)
+    public static CatalogFacetDisplayTypeViolation ValidateDisplayType(
+        CatalogAttributeDefinition definition,
+        CatalogFacetDisplayType displayType)
     {
+        ArgumentNullException.ThrowIfNull(definition);
+
         if (displayType == CatalogFacetDisplayType.ColorSwatch)
         {
-            throw new InvalidOperationException("نمایش رنگ هنوز به متادیتای رنگ گزینه نیاز دارد؛ از چندانتخابی استفاده کنید.");
+            return CatalogFacetDisplayTypeViolation.ColorSwatchUnsupported;
         }
 
         switch (definition.ValueKind)
@@ -942,39 +976,41 @@ public static class CatalogCategoryFacetRules
             case CatalogAttributeValueKind.Boolean:
                 if (displayType != CatalogFacetDisplayType.BooleanToggle)
                 {
-                    throw new InvalidOperationException("برای ویژگی بولی فقط کلید روشن/خاموش مجاز است.");
+                    return CatalogFacetDisplayTypeViolation.BooleanRequiresToggle;
                 }
 
                 break;
             case CatalogAttributeValueKind.Number:
                 if (displayType != CatalogFacetDisplayType.Range)
                 {
-                    throw new InvalidOperationException("برای ویژگی عددی فقط بازه مجاز است.");
+                    return CatalogFacetDisplayTypeViolation.NumberRequiresRange;
                 }
 
                 break;
             case CatalogAttributeValueKind.Text:
                 if (displayType is CatalogFacetDisplayType.Range or CatalogFacetDisplayType.BooleanToggle or CatalogFacetDisplayType.ColorSwatch)
                 {
-                    throw new InvalidOperationException("نوع نمایش برای متن مجاز نیست.");
+                    return CatalogFacetDisplayTypeViolation.TextDisplayIncompatible;
                 }
 
                 break;
             case CatalogAttributeValueKind.Enumeration:
                 if (displayType is CatalogFacetDisplayType.Range or CatalogFacetDisplayType.BooleanToggle)
                 {
-                    throw new InvalidOperationException("نوع نمایش برای فهرست گزینه‌ها مجاز نیست.");
+                    return CatalogFacetDisplayTypeViolation.EnumerationDisplayIncompatible;
                 }
 
                 break;
             case CatalogAttributeValueKind.Instant:
-                throw new InvalidOperationException("فیلتر برای این نوع تاریخ/زمان هنوز پشتیبانی نمی‌شود.");
+                return CatalogFacetDisplayTypeViolation.InstantUnsupported;
         }
 
         if (displayType == CatalogFacetDisplayType.BooleanToggle && definition.ValueKind != CatalogAttributeValueKind.Boolean)
         {
-            throw new InvalidOperationException("کلید روشن/خاموش فقط برای بولی است.");
+            return CatalogFacetDisplayTypeViolation.BooleanToggleRequiresBoolean;
         }
+
+        return CatalogFacetDisplayTypeViolation.None;
     }
 
     /// <summary>

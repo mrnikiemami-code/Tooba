@@ -44,4 +44,25 @@ public static class CatalogErrorCodes
 
     /// <summary>Cannot remove a MegaMenu item that still has presentation children.</summary>
     public const string MegaMenuRemoveHasChildren = "catalog.megamenu.remove.has_children";
+
+    /// <summary>Referenced category was not found for Facet operations.</summary>
+    public const string FacetCategoryMissing = "catalog.facet.category.missing";
+
+    /// <summary>Referenced attribute definition was not found for Facet operations.</summary>
+    public const string FacetDefinitionMissing = "catalog.facet.definition.missing";
+
+    /// <summary>Definition is not present in the category effective schema.</summary>
+    public const string FacetSchemaMissing = "catalog.facet.schema.missing";
+
+    /// <summary>Only filterable effective-schema attributes may be configured as facets.</summary>
+    public const string FacetNotFilterable = "catalog.facet.not_filterable";
+
+    /// <summary>Facet display type is incompatible with the attribute ValueKind.</summary>
+    public const string FacetDisplayTypeInvalid = "catalog.facet.display_type.invalid";
+
+    /// <summary>Local facet override row was not found for remove.</summary>
+    public const string FacetOverrideMissing = "catalog.facet.override.missing";
+
+    /// <summary>Reorder list is incomplete, duplicate, or mismatched vs local facet set.</summary>
+    public const string FacetReorderInvalid = "catalog.facet.reorder.invalid";
 }
