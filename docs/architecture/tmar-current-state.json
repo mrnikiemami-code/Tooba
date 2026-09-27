@@ -2152,6 +2152,28 @@
     "workflowStop": "USER_REVIEW_HOST_ADMIN_W19_CHECKPOINT",
     "evidence": "docs/evidence/TB-TMAR-HOST-ADMIN-AMC-001-W19/"
   },
+  "hostAdminAmcW19R1": {
+    "task": "TB-TMAR-HOST-ADMIN-AMC-001-W19-R1",
+    "parentTask": "TB-TMAR-HOST-ADMIN-AMC-001-W19",
+    "parentCommit": "186ed01ecf7e789db5998eb2ca6747f6003b62af",
+    "state": "HOST_ADMIN_AMC_W19_R1_CATEGORY_ASSIGNABILITY_SAFE_PROBE",
+    "activeHostFolder": "Admin",
+    "W19MigrationPreserved": true,
+    "categoryTreeSafeProbeState": "TryGetCategoryLevel_TryIsAssignableProductCategory_SHARED_CORE",
+    "aggregateReadGatewayInvalidOperationExpectedFlow": "ZERO",
+    "categoryAssignabilityParity": "PRESERVED",
+    "aggregateGetOwner": "ProductWorkspace",
+    "HostRemainingProductWorkspaceRoutes": 18,
+    "ProductWorkspaceEndpointRouteCount": 1,
+    "CatalogReadBoundary": "ICatalogAdminProductWorkspaceReadGateway",
+    "HostAdminFileCount": 52,
+    "StoreAppearance": "DEFERRED",
+    "schemaMigrationState": "NONE",
+    "frontendState": "UNCHANGED",
+    "nextHostFolderStarted": false,
+    "workflowStop": "USER_REVIEW_HOST_ADMIN_W19_R1_CHECKPOINT",
+    "evidence": "docs/evidence/TB-TMAR-HOST-ADMIN-AMC-001-W19-R1/"
+  },
   "hostAdminAmcW18": {
     "task": "TB-TMAR-HOST-ADMIN-AMC-001-W18",
     "parentTask": "TB-TMAR-HOST-ADMIN-AMC-001-W17",

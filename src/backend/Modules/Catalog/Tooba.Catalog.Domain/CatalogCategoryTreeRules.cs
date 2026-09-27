@@ -58,12 +58,65 @@ public static class CatalogCategoryTreeRules
 
     /// <summary>
     /// سطح رده = ۱ + تعداد اجداد از طریق ParentId. ریشه (بدون والد) سطح ۱ است.
+    /// ردهٔ غایب یا حلقه → <see cref="InvalidOperationException"/>.
     /// </summary>
     public static int GetCategoryLevel(Guid categoryId, IReadOnlyDictionary<Guid, Guid?> parentById)
     {
+        var status = TryResolveCategoryLevel(categoryId, parentById, out var level);
+        return status switch
+        {
+            CategoryLevelResolveStatus.Ok => level,
+            CategoryLevelResolveStatus.Missing =>
+                throw new InvalidOperationException("رده در Catalog این Tenant وجود ندارد."),
+            _ => throw new InvalidOperationException("حلقهٔ موجود در درخت رده تشخیص داده شد."),
+        };
+    }
+
+    /// <summary>
+    /// پرس‌وجوی غیرپرتاب‌کنندهٔ سطح رده. ردهٔ غایب یا حلقه → <c>false</c> و <paramref name="level"/> = ۰.
+    /// درخت معتبر → همان خروجی <see cref="GetCategoryLevel"/>.
+    /// </summary>
+    public static bool TryGetCategoryLevel(
+        Guid categoryId,
+        IReadOnlyDictionary<Guid, Guid?> parentById,
+        out int level) =>
+        TryResolveCategoryLevel(categoryId, parentById, out level) == CategoryLevelResolveStatus.Ok;
+
+    /// <summary>آیا رده برای اختصاص به محصول مجاز است؟ (فقط سطح ۳)</summary>
+    public static bool IsAssignableProductCategory(
+        Guid categoryId,
+        IReadOnlyDictionary<Guid, Guid?> parentById) =>
+        GetCategoryLevel(categoryId, parentById) == ProductAssignableLevel;
+
+    /// <summary>
+    /// پرس‌وجوی غیرپرتاب‌کنندهٔ قابلیت اختصاص محصول. ردهٔ غایب/حلقه → <c>false</c> و
+    /// <paramref name="isAssignable"/> = <c>false</c>. درخت معتبر → سطح ۳ فقط.
+    /// </summary>
+    public static bool TryIsAssignableProductCategory(
+        Guid categoryId,
+        IReadOnlyDictionary<Guid, Guid?> parentById,
+        out bool isAssignable)
+    {
+        if (TryResolveCategoryLevel(categoryId, parentById, out var level) != CategoryLevelResolveStatus.Ok)
+        {
+            isAssignable = false;
+            return false;
+        }
+
+        isAssignable = level == ProductAssignableLevel;
+        return true;
+    }
+
+    /// <summary>هستهٔ یکپارچهٔ پیمایش والد برای سطح رده (Throwing و Try*).</summary>
+    private static CategoryLevelResolveStatus TryResolveCategoryLevel(
+        Guid categoryId,
+        IReadOnlyDictionary<Guid, Guid?> parentById,
+        out int level)
+    {
+        level = 0;
         if (!parentById.ContainsKey(categoryId))
         {
-            throw new InvalidOperationException("رده در Catalog این Tenant وجود ندارد.");
+            return CategoryLevelResolveStatus.Missing;
         }
 
         var ancestors = 0;
@@ -75,18 +128,20 @@ public static class CatalogCategoryTreeRules
             current = p;
             if (++guard > parentById.Count + 2)
             {
-                throw new InvalidOperationException("حلقهٔ موجود در درخت رده تشخیص داده شد.");
+                return CategoryLevelResolveStatus.Cycle;
             }
         }
 
-        return 1 + ancestors;
+        level = 1 + ancestors;
+        return CategoryLevelResolveStatus.Ok;
     }
 
-    /// <summary>آیا رده برای اختصاص به محصول مجاز است؟ (فقط سطح ۳)</summary>
-    public static bool IsAssignableProductCategory(
-        Guid categoryId,
-        IReadOnlyDictionary<Guid, Guid?> parentById) =>
-        GetCategoryLevel(categoryId, parentById) == ProductAssignableLevel;
+    private enum CategoryLevelResolveStatus
+    {
+        Ok,
+        Missing,
+        Cycle,
+    }
 
     /// <summary>اختصاص محصول به ردهٔ سطح ۱ یا ۲ را رد می‌کند.</summary>
     public static void EnsureAssignableProductCategory(

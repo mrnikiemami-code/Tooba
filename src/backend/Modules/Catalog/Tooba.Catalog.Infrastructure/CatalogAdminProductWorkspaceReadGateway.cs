@@ -120,15 +120,10 @@ public sealed class CatalogAdminProductWorkspaceReadGateway(
         {
             var parentById = await catalog.Categories.AsNoTracking()
                 .ToDictionaryAsync(x => x.CategoryId, x => x.ParentCategoryId, cancellationToken);
-            try
-            {
-                isPrimaryCategoryAssignable = CatalogCategoryTreeRules.IsAssignableProductCategory(
-                    assignableProbe, parentById);
-            }
-            catch (InvalidOperationException)
-            {
-                isPrimaryCategoryAssignable = false;
-            }
+            isPrimaryCategoryAssignable =
+                CatalogCategoryTreeRules.TryIsAssignableProductCategory(
+                    assignableProbe, parentById, out var assignable)
+                && assignable;
 
             if (!isPrimaryCategoryAssignable)
             {
