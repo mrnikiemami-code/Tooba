@@ -4,74 +4,75 @@ using Xunit;
 namespace Tooba.Host.Tests.Architecture;
 
 /// <summary>
-/// TB-TMAR-HOST-ADMIN-AMC-001-W26 — ProductWorkspace lifecycle POSTs to module + Catalog Commands.
+/// TB-TMAR-HOST-ADMIN-AMC-001-W27 — ProductWorkspace variant create/patch to module + Catalog Commands.
 /// </summary>
-public sealed class HostAdminAmcW26PwLifecycleGuardTests
+public sealed class HostAdminAmcW27PwVariantsGuardTests
 {
     private static readonly Regex MapRouteRegex = new(
         @"\bMap(Get|Post|Put|Patch|Delete)\s*\(",
         RegexOptions.Compiled | RegexOptions.CultureInvariant);
 
     [Fact]
-    public void Lifecycle_POSTs_owned_by_ProductWorkspace_and_absent_from_Host()
+    public void Variant_routes_owned_by_ProductWorkspace_and_absent_from_Host()
     {
         var root = FindRepoRoot();
         var host = File.ReadAllText(Path.Combine(
             root, "src/backend/Host/Tooba.Host/Admin/ProductWorkspaceEndpoints.cs"));
         Assert.Equal(11, MapRouteRegex.Matches(host).Count);
-        Assert.DoesNotContain("MapPost(\"/{productId:guid}/publish\"", host, StringComparison.Ordinal);
-        Assert.DoesNotContain("MapPost(\"/{productId:guid}/unpublish\"", host, StringComparison.Ordinal);
-        Assert.DoesNotContain("MapPost(\"/{productId:guid}/archive\"", host, StringComparison.Ordinal);
-        Assert.DoesNotContain("MapPost(\"/{productId:guid}/restore\"", host, StringComparison.Ordinal);
+        Assert.DoesNotContain("/variants", host, StringComparison.Ordinal);
+        Assert.DoesNotContain("CreateVariantAsync", host, StringComparison.Ordinal);
+        Assert.DoesNotContain("PatchVariantAsync", host, StringComparison.Ordinal);
 
         var composer = File.ReadAllText(Path.Combine(
             root, "src/backend/Host/Tooba.Host/Admin/ProductWorkspaceComposer.cs"));
-        Assert.DoesNotContain("public async Task<ProductWorkspaceView> PublishAsync", composer, StringComparison.Ordinal);
-        Assert.DoesNotContain("EnsurePublish", composer, StringComparison.Ordinal);
+        Assert.DoesNotContain("CreateVariantAsync", composer, StringComparison.Ordinal);
+        Assert.DoesNotContain("PatchVariantAsync", composer, StringComparison.Ordinal);
+
+        var models = File.ReadAllText(Path.Combine(
+            root, "src/backend/Host/Tooba.Host/Admin/ProductWorkspaceModels.cs"));
+        Assert.DoesNotContain("AdminProductVariantCreateRequest", models, StringComparison.Ordinal);
+        Assert.DoesNotContain("AdminProductVariantPatchRequest", models, StringComparison.Ordinal);
 
         var module = File.ReadAllText(Path.Combine(
             root,
             "src/backend/Modules/ProductWorkspace/Tooba.ProductWorkspace.Endpoints/ProductWorkspaceEndpointModule.cs"));
         Assert.Equal(7, MapRouteRegex.Matches(module).Count);
-        Assert.Contains("MapPost(\"/{productId:guid}/publish\"", module, StringComparison.Ordinal);
-        Assert.Contains("MapPost(\"/{productId:guid}/unpublish\"", module, StringComparison.Ordinal);
-        Assert.Contains("MapPost(\"/{productId:guid}/archive\"", module, StringComparison.Ordinal);
-        Assert.Contains("MapPost(\"/{productId:guid}/restore\"", module, StringComparison.Ordinal);
-        Assert.Contains("PublishProductCommand", module, StringComparison.Ordinal);
-        Assert.Contains("GetProductWorkspaceQuery", module, StringComparison.Ordinal);
-        Assert.Contains("ApiResponseFactory", module, StringComparison.Ordinal);
-        Assert.Contains("CanPublish", module, StringComparison.Ordinal);
+        Assert.Contains("MapPost(\"/{productId:guid}/variants\"", module, StringComparison.Ordinal);
+        Assert.Contains("MapPatch(\"/{productId:guid}/variants/{variantId:guid}\"", module, StringComparison.Ordinal);
+        Assert.Contains("CreateProductWorkspaceVariantCommand", module, StringComparison.Ordinal);
+        Assert.Contains("PatchProductWorkspaceVariantCommand", module, StringComparison.Ordinal);
+        Assert.Contains("CanEditCatalog", module, StringComparison.Ordinal);
+        Assert.Contains("Status201Created", module, StringComparison.Ordinal);
         Assert.DoesNotContain("PlatformHttpException", module, StringComparison.Ordinal);
         Assert.DoesNotContain("ICatalogDirectory", module, StringComparison.Ordinal);
         Assert.DoesNotContain("ex.Message", module, StringComparison.Ordinal);
 
         Assert.True(File.Exists(Path.Combine(root, "src/backend/Host/Tooba.Host/Admin/ProductWorkspaceEndpoints.cs")));
         Assert.True(File.Exists(Path.Combine(root, "src/backend/Host/Tooba.Host/Admin/ProductWorkspaceComposer.cs")));
-        Assert.True(File.Exists(Path.Combine(root, "src/backend/Host/Tooba.Host/Admin/ProductWorkspaceModels.cs")));
     }
 
     [Fact]
-    public void Catalog_ProductPublishing_Commands_and_lifecycle_port_exist()
+    public void Catalog_Variants_workspace_commands_and_codes_exist()
     {
         var root = FindRepoRoot();
-        var commands = Path.Combine(
-            root, "src/backend/Modules/Catalog/Tooba.Catalog.Application/ProductPublishing/Commands");
-        Assert.True(Directory.Exists(commands));
-        Assert.True(File.Exists(Path.Combine(commands, "PublishProductCommand.cs")));
-        Assert.True(File.Exists(Path.Combine(commands, "UnpublishProductCommand.cs")));
-        Assert.True(File.Exists(Path.Combine(commands, "ArchiveProductCommand.cs")));
-        Assert.True(File.Exists(Path.Combine(commands, "RestoreProductCommand.cs")));
         Assert.True(File.Exists(Path.Combine(
             root,
-            "src/backend/Modules/Catalog/Tooba.Catalog.Application/ProductPublishing/Ports/IProductLifecycleDirectory.cs")));
+            "src/backend/Modules/Catalog/Tooba.Catalog.Application/Variants/Commands/CreateProductWorkspaceVariantCommand.cs")));
         Assert.True(File.Exists(Path.Combine(
             root,
-            "src/backend/Modules/Catalog/Tooba.Catalog.Infrastructure/ProductLifecycleDirectory.cs")));
+            "src/backend/Modules/Catalog/Tooba.Catalog.Application/Variants/Commands/PatchProductWorkspaceVariantCommand.cs")));
+        var port = File.ReadAllText(Path.Combine(
+            root,
+            "src/backend/Modules/Catalog/Tooba.Catalog.Application/Variants/Ports/IProductVariantDirectory.cs"));
+        Assert.Contains("CreateWorkspaceVariantAsync", port, StringComparison.Ordinal);
+        Assert.Contains("PatchWorkspaceVariantAsync", port, StringComparison.Ordinal);
 
         var codes = File.ReadAllText(Path.Combine(
             root, "src/backend/Modules/Catalog/Tooba.Catalog.Contracts/Errors/CatalogErrorCodes.cs"));
-        Assert.Contains("WorkspaceProductPublishRejected", codes, StringComparison.Ordinal);
-        Assert.Contains("workspace.product.publish.rejected", codes, StringComparison.Ordinal);
+        Assert.Contains("workspace.variant.axes.missing", codes, StringComparison.Ordinal);
+        Assert.Contains("workspace.variant.create.rejected", codes, StringComparison.Ordinal);
+        Assert.Contains("workspace.variant.missing", codes, StringComparison.Ordinal);
+        Assert.Contains("workspace.variant.status.invalid", codes, StringComparison.Ordinal);
     }
 
     [Fact]

@@ -66,14 +66,3 @@ public sealed record AdminProductQuantityPolicyRequest(
     int DecimalPlaces,
     decimal? Step,
     DateTimeOffset ExpectedUpdatedAt);
-
-/// <summary>محور یک گونهٔ جدید.</summary>
-public sealed record AdminProductVariantAxisRequest(Guid DefinitionId, string? RawValue, Guid? EnumOptionId);
-
-/// <summary>بدنهٔ ایجاد گونه.</summary>
-public sealed record AdminProductVariantCreateRequest(
-    string? CatalogCodeSeam,
-    IReadOnlyList<AdminProductVariantAxisRequest> Axes);
-
-/// <summary>بدنهٔ ویرایش وضعیت/کد گونه بدون تغییر اثرانگشت.</summary>
-public sealed record AdminProductVariantPatchRequest(string? Status, string? CatalogCodeSeam);

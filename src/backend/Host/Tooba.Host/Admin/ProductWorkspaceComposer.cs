@@ -1140,73 +1140,6 @@ public sealed class ProductWorkspaceComposer
             readiness.MessageFa);
 
     /// <summary>
-    /// گونهٔ جدید با محورها می‌سازد.
-    /// </summary>
-    public async Task<ProductWorkspaceView> CreateVariantAsync(
-        Guid productId,
-        AdminProductVariantCreateRequest request,
-        ProductWorkspacePermissions permissions,
-        CancellationToken cancellationToken)
-    {
-        EnsureCatalogEdit(permissions);
-        if (request.Axes is null || request.Axes.Count == 0)
-        {
-            throw new PlatformHttpException(400, "حداقل یک محور برای گونه لازم است.", "workspace.variant.axes.missing");
-        }
-
-        try
-        {
-            await _catalogDirectory.CreateVariantAsync(
-                productId,
-                request.CatalogCodeSeam,
-                request.Axes.Select(a => (a.DefinitionId, a.RawValue ?? string.Empty, a.EnumOptionId)).ToList(),
-                cancellationToken);
-        }
-        catch (InvalidOperationException ex)
-        {
-            throw new PlatformHttpException(400, ex.Message, "workspace.variant.create.rejected");
-        }
-
-        return await RequireWorkspaceAsync(productId, permissions, cancellationToken);
-    }
-
-    /// <summary>
-    /// وضعیت یا کد گونه را بدون شکستن اثرانگشت به‌روز می‌کند.
-    /// </summary>
-    public async Task<ProductWorkspaceView> PatchVariantAsync(
-        Guid productId,
-        Guid variantId,
-        AdminProductVariantPatchRequest request,
-        ProductWorkspacePermissions permissions,
-        CancellationToken cancellationToken)
-    {
-        EnsureCatalogEdit(permissions);
-        var variant = await _catalog.Variants.SingleOrDefaultAsync(
-            x => x.ProductId == productId && x.VariantId == variantId,
-            cancellationToken)
-            ?? throw new PlatformHttpException(404, "گونه پیدا نشد.", "workspace.variant.missing");
-
-        if (!string.IsNullOrWhiteSpace(request.Status))
-        {
-            if (!Enum.TryParse<CatalogPublicationStatus>(request.Status.Trim(), ignoreCase: true, out var status))
-            {
-                throw new PlatformHttpException(400, "وضعیت گونه نامعتبر است.", "workspace.variant.status.invalid");
-            }
-
-            variant.SetStatus(status, DateTimeOffset.UtcNow);
-        }
-
-        if (request.CatalogCodeSeam is not null)
-        {
-            variant.UpdateCatalogCodeSeam(request.CatalogCodeSeam, DateTimeOffset.UtcNow);
-        }
-
-        TouchProduct(productId);
-        await _catalog.SaveChangesAsync(cancellationToken);
-        return await RequireWorkspaceAsync(productId, permissions, cancellationToken);
-    }
-
-    /// <summary>
     /// بازهٔ مبلغ پیشنهادها را برای فهرست می‌سازد. مبلغ روی هویت Product ذخیره نمی‌شود.
     /// </summary>
     private static string FormatOfferAmountRange(IReadOnlyList<(decimal Amount, string Currency)> rows)
@@ -1235,13 +1168,6 @@ public sealed class ProductWorkspaceComposer
         }
     }
 
-    private async Task<ProductWorkspaceView> RequireWorkspaceAsync(
-        Guid productId,
-        ProductWorkspacePermissions permissions,
-        CancellationToken cancellationToken) =>
-        await GetAsync(productId, permissions, cancellationToken)
-        ?? throw new PlatformHttpException(404, "محصول پیدا نشد.", "workspace.product.missing");
-
     private static bool IsAssignmentLevelInvalid(InvalidOperationException ex) =>
         string.Equals(
             ex.Message,
@@ -1254,17 +1180,6 @@ public sealed class ProductWorkspaceComposer
         {
             throw new PlatformHttpException(403, "Forbidden", "workspace.permission.denied");
         }
-    }
-
-    private void TouchProduct(Guid productId)
-    {
-        var product = _catalog.Products.Local.SingleOrDefault(x => x.ProductId == productId);
-        if (product is null)
-        {
-            product = _catalog.Products.Single(x => x.ProductId == productId);
-        }
-
-        product.UpdatedAt = DateTimeOffset.UtcNow;
     }
 
     private async Task<Dictionary<Guid, string>> LoadNamesAsync(

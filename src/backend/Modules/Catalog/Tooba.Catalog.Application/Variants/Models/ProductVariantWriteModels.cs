@@ -52,3 +52,14 @@ public static class ProductVariantPatchStatusMapper
         return true;
     }
 }
+
+/// <summary>Axis row for workspace single-variant create.</summary>
+public sealed record WorkspaceVariantAxisWriteModel(Guid DefinitionId, string? RawValue, Guid? EnumOptionId);
+
+/// <summary>Body for POST /v1/admin/products/{id}/variants (workspace).</summary>
+public sealed record WorkspaceVariantCreateWriteModel(
+    string? CatalogCodeSeam,
+    IReadOnlyList<WorkspaceVariantAxisWriteModel>? Axes);
+
+/// <summary>Body for PATCH /v1/admin/products/{id}/variants/{variantId} (workspace).</summary>
+public sealed record WorkspaceVariantPatchWriteModel(string? Status, string? CatalogCodeSeam);

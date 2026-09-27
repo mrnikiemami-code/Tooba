@@ -8,6 +8,8 @@ using Tooba.BuildingBlocks.Presentation;
 using Tooba.BuildingBlocks.Results;
 using Tooba.Catalog.Application;
 using Tooba.Catalog.Application.ProductPublishing.Commands;
+using Tooba.Catalog.Application.Variants.Commands;
+using Tooba.Catalog.Application.Variants.Models;
 using Tooba.Catalog.Contracts.Errors;
 using Tooba.OperatorProfile.Contracts;
 using Tooba.ProductWorkspace.Application.Composition.Models;
@@ -18,7 +20,7 @@ namespace Tooba.ProductWorkspace.Endpoints;
 
 /// <summary>
 /// ProductWorkspace HTTP ownership under <c>/v1/admin/products</c>.
-/// W19: aggregate GET. W26: lifecycle publish / unpublish / archive / restore.
+/// W19: aggregate GET. W26: lifecycle. W27: variant create/patch.
 /// </summary>
 public static class ProductWorkspaceEndpointModule
 {
@@ -32,6 +34,8 @@ public static class ProductWorkspaceEndpointModule
         group.MapPost("/{productId:guid}/unpublish", UnpublishAsync);
         group.MapPost("/{productId:guid}/archive", ArchiveAsync);
         group.MapPost("/{productId:guid}/restore", RestoreAsync);
+        group.MapPost("/{productId:guid}/variants", CreateVariantAsync);
+        group.MapPatch("/{productId:guid}/variants/{variantId:guid}", PatchVariantAsync);
         return app;
     }
 
@@ -102,14 +106,16 @@ public static class ProductWorkspaceEndpointModule
         ApiResponseFactory api,
         HttpContext httpContext,
         CancellationToken cancellationToken) =>
-        await MutateLifecycleAsync(
+        await MutateAsync(
             productId,
             sender,
             authorizer,
             api,
             httpContext,
             cancellationToken,
-            new PublishProductCommand(productId));
+            new PublishProductCommand(productId),
+            p => p.CanPublish,
+            created: false);
 
     private static async Task<IResult> UnpublishAsync(
         Guid productId,
@@ -118,14 +124,16 @@ public static class ProductWorkspaceEndpointModule
         ApiResponseFactory api,
         HttpContext httpContext,
         CancellationToken cancellationToken) =>
-        await MutateLifecycleAsync(
+        await MutateAsync(
             productId,
             sender,
             authorizer,
             api,
             httpContext,
             cancellationToken,
-            new UnpublishProductCommand(productId));
+            new UnpublishProductCommand(productId),
+            p => p.CanPublish,
+            created: false);
 
     private static async Task<IResult> ArchiveAsync(
         Guid productId,
@@ -134,14 +142,16 @@ public static class ProductWorkspaceEndpointModule
         ApiResponseFactory api,
         HttpContext httpContext,
         CancellationToken cancellationToken) =>
-        await MutateLifecycleAsync(
+        await MutateAsync(
             productId,
             sender,
             authorizer,
             api,
             httpContext,
             cancellationToken,
-            new ArchiveProductCommand(productId));
+            new ArchiveProductCommand(productId),
+            p => p.CanPublish,
+            created: false);
 
     private static async Task<IResult> RestoreAsync(
         Guid productId,
@@ -150,27 +160,70 @@ public static class ProductWorkspaceEndpointModule
         ApiResponseFactory api,
         HttpContext httpContext,
         CancellationToken cancellationToken) =>
-        await MutateLifecycleAsync(
+        await MutateAsync(
             productId,
             sender,
             authorizer,
             api,
             httpContext,
             cancellationToken,
-            new RestoreProductCommand(productId));
+            new RestoreProductCommand(productId),
+            p => p.CanPublish,
+            created: false);
 
-    private static async Task<IResult> MutateLifecycleAsync(
+    private static async Task<IResult> CreateVariantAsync(
+        Guid productId,
+        WorkspaceVariantCreateWriteModel body,
+        ISender sender,
+        IProductWorkspaceAdminAuthorizer authorizer,
+        ApiResponseFactory api,
+        HttpContext httpContext,
+        CancellationToken cancellationToken) =>
+        await MutateAsync(
+            productId,
+            sender,
+            authorizer,
+            api,
+            httpContext,
+            cancellationToken,
+            new CreateProductWorkspaceVariantCommand(productId, body),
+            p => p.CanEditCatalog,
+            created: true);
+
+    private static async Task<IResult> PatchVariantAsync(
+        Guid productId,
+        Guid variantId,
+        WorkspaceVariantPatchWriteModel body,
+        ISender sender,
+        IProductWorkspaceAdminAuthorizer authorizer,
+        ApiResponseFactory api,
+        HttpContext httpContext,
+        CancellationToken cancellationToken) =>
+        await MutateAsync(
+            productId,
+            sender,
+            authorizer,
+            api,
+            httpContext,
+            cancellationToken,
+            new PatchProductWorkspaceVariantCommand(productId, variantId, body),
+            p => p.CanEditCatalog,
+            created: false);
+
+    private static async Task<IResult> MutateAsync(
         Guid productId,
         ISender sender,
         IProductWorkspaceAdminAuthorizer authorizer,
         ApiResponseFactory api,
         HttpContext httpContext,
         CancellationToken cancellationToken,
-        IRequest<Result> command)
+        IRequest<Result> command,
+        Func<ProductWorkspacePermissions, bool> allow,
+        bool created)
     {
         var actorUserId = await authorizer.RequireAuthorizedAsync(httpContext, cancellationToken);
         var permissions = ReadPermissions(httpContext.Request);
-        if (!permissions.CanPublish)
+        if (!allow(permissions))
         {
             return api.FromFailure(new SemanticError(CatalogErrorCodes.WorkspacePermissionDenied));
         }
@@ -185,6 +238,13 @@ public static class ProductWorkspaceEndpointModule
         var workspace = await sender.Send(
             new GetProductWorkspaceQuery(productId, permissions),
             cancellationToken);
-        return api.From(workspace);
+        if (workspace.IsFailure)
+        {
+            return api.From(workspace);
+        }
+
+        return created
+            ? Results.Json(workspace.Value, statusCode: StatusCodes.Status201Created)
+            : api.From(workspace);
     }
 }

@@ -36,4 +36,19 @@ public interface IProductVariantDirectory
     Task<Result<ProductVariantReadiness>> GetReadinessAsync(
         Guid productId,
         CancellationToken cancellationToken);
+
+    /// <summary>Creates one workspace variant with explicit axes (Host ProductWorkspace parity).</summary>
+    Task<Result<VariantReference>> CreateWorkspaceVariantAsync(
+        Guid productId,
+        string? catalogCodeSeam,
+        IReadOnlyList<(Guid DefinitionId, string RawValue, Guid? EnumOptionId)> axes,
+        CancellationToken cancellationToken);
+
+    /// <summary>Patches workspace variant status/code without changing fingerprint.</summary>
+    Task<Result> PatchWorkspaceVariantAsync(
+        Guid productId,
+        Guid variantId,
+        string? status,
+        string? catalogCodeSeam,
+        CancellationToken cancellationToken);
 }

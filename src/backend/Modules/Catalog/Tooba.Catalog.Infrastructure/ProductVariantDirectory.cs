@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Tooba.BuildingBlocks;
 using Tooba.BuildingBlocks.Results;
 using Tooba.Catalog.Application;
+using Tooba.Catalog.Application.Variants.Models;
 using Tooba.Catalog.Application.Variants.Ports;
 using Tooba.Catalog.Contracts.Errors;
 using Tooba.Catalog.Domain;
@@ -581,6 +582,155 @@ public sealed class ProductVariantDirectory : IProductVariantDirectory
             invalidVariants.Distinct().ToList(),
             duplicates,
             noDefault));
+    }
+
+    /// <inheritdoc />
+    public async Task<Result<VariantReference>> CreateWorkspaceVariantAsync(
+        Guid productId,
+        string? catalogCodeSeam,
+        IReadOnlyList<(Guid DefinitionId, string RawValue, Guid? EnumOptionId)> axes,
+        CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(axes);
+        await _guard.EnsureCanMutateAsync(cancellationToken);
+        if (!await _db.Products.AnyAsync(x => x.ProductId == productId, cancellationToken))
+        {
+            return Result.Failure<VariantReference>(new SemanticError(CatalogErrorCodes.WorkspaceProductMissing));
+        }
+
+        if (axes.Count == 0)
+        {
+            return Result.Failure<VariantReference>(new SemanticError(CatalogErrorCodes.WorkspaceVariantAxesMissing));
+        }
+
+        try
+        {
+            var selectedAxes = await _db.ProductVariantAxes.AsNoTracking()
+                .Where(x => x.ProductId == productId)
+                .OrderBy(x => x.DisplayOrder)
+                .Select(x => x.DefinitionId)
+                .ToListAsync(cancellationToken);
+            if (selectedAxes.Count > 0)
+            {
+                var selectedSet = selectedAxes.ToHashSet();
+                var axisDefs = axes.Select(a => a.DefinitionId).ToHashSet();
+                if (!axisDefs.SetEquals(selectedSet))
+                {
+                    return Result.Failure<VariantReference>(
+                        new SemanticError(CatalogErrorCodes.WorkspaceVariantCreateRejected));
+                }
+            }
+
+            var normalized = new List<(Guid DefinitionId, string Canonical)>();
+            foreach (var axis in axes)
+            {
+                var definition = await _db.AttributeDefinitions
+                    .SingleOrDefaultAsync(x => x.DefinitionId == axis.DefinitionId, cancellationToken);
+                if (definition is null)
+                {
+                    return Result.Failure<VariantReference>(
+                        new SemanticError(CatalogErrorCodes.WorkspaceVariantCreateRejected));
+                }
+
+                if (!definition.IsVariantAxis)
+                {
+                    return Result.Failure<VariantReference>(
+                        new SemanticError(CatalogErrorCodes.WorkspaceVariantCreateRejected));
+                }
+
+                if (definition.ValueKind == CatalogAttributeValueKind.Enumeration && axis.EnumOptionId is Guid optionId)
+                {
+                    var option = await _db.AttributeOptions.SingleOrDefaultAsync(
+                        x => x.OptionId == optionId && x.DefinitionId == definition.DefinitionId,
+                        cancellationToken);
+                    if (option is null || !option.IsActive)
+                    {
+                        return Result.Failure<VariantReference>(
+                            new SemanticError(CatalogErrorCodes.WorkspaceVariantCreateRejected));
+                    }
+                }
+
+                var canonical = CatalogAttributeCanonicalizer.Canonicalize(
+                    definition.ValueKind,
+                    axis.RawValue,
+                    axis.EnumOptionId);
+                CatalogAttributeCanonicalizer.EnforceValidationBounds(definition, canonical);
+                normalized.Add((definition.DefinitionId, canonical));
+            }
+
+            var fingerprint = CatalogVariant.ComputeFingerprint(normalized);
+            if (await _db.Variants.AnyAsync(
+                    x => x.ProductId == productId && x.CombinationFingerprint == fingerprint,
+                    cancellationToken))
+            {
+                return Result.Failure<VariantReference>(
+                    new SemanticError(CatalogErrorCodes.WorkspaceVariantCreateRejected));
+            }
+
+            var variant = CatalogVariant.Create(productId, fingerprint, catalogCodeSeam, DateTimeOffset.UtcNow);
+            foreach (var item in normalized)
+            {
+                variant.AttributeValues.Add(
+                    CatalogVariantAttributeValue.Create(variant.VariantId, item.DefinitionId, item.Canonical));
+            }
+
+            _db.Variants.Add(variant);
+            await _db.SaveChangesAsync(cancellationToken);
+            return Result.Success(new VariantReference(
+                variant.VariantId,
+                variant.ProductId,
+                variant.CombinationFingerprint,
+                variant.Status));
+        }
+        catch (InvalidOperationException)
+        {
+            return Result.Failure<VariantReference>(
+                new SemanticError(CatalogErrorCodes.WorkspaceVariantCreateRejected));
+        }
+    }
+
+    /// <inheritdoc />
+    public async Task<Result> PatchWorkspaceVariantAsync(
+        Guid productId,
+        Guid variantId,
+        string? status,
+        string? catalogCodeSeam,
+        CancellationToken cancellationToken)
+    {
+        await _guard.EnsureCanMutateAsync(cancellationToken);
+        if (!await _db.Products.AnyAsync(x => x.ProductId == productId, cancellationToken))
+        {
+            return Result.Failure(new SemanticError(CatalogErrorCodes.WorkspaceProductMissing));
+        }
+
+        var variant = await _db.Variants.SingleOrDefaultAsync(
+            x => x.ProductId == productId && x.VariantId == variantId,
+            cancellationToken);
+        if (variant is null)
+        {
+            return Result.Failure(new SemanticError(CatalogErrorCodes.WorkspaceVariantMissing));
+        }
+
+        if (!ProductVariantPatchStatusMapper.TryParse(status, out var parsedStatus))
+        {
+            return Result.Failure(new SemanticError(CatalogErrorCodes.WorkspaceVariantStatusInvalid));
+        }
+
+        var now = DateTimeOffset.UtcNow;
+        if (parsedStatus is CatalogPublicationStatus domainStatus)
+        {
+            variant.SetStatus(domainStatus, now);
+        }
+
+        if (catalogCodeSeam is not null)
+        {
+            variant.UpdateCatalogCodeSeam(catalogCodeSeam, now);
+        }
+
+        var product = await _db.Products.SingleAsync(x => x.ProductId == productId, cancellationToken);
+        product.UpdatedAt = now;
+        await _db.SaveChangesAsync(cancellationToken);
+        return Result.Success();
     }
 
     private sealed record DesiredAxisValue(Guid DefinitionId, string Canonical, string DefinitionName, string ValueLabel);

@@ -198,6 +198,18 @@ public static class CatalogErrorCodes
     /// <summary>Archived variant cannot be selected as default.</summary>
     public const string VariantArchivedCannotBeDefault = "catalog.variant.default.archived_forbidden";
 
+    /// <summary>Workspace variant create missing axes.</summary>
+    public const string WorkspaceVariantAxesMissing = "workspace.variant.axes.missing";
+
+    /// <summary>Workspace variant create rejected (domain/IOE parity).</summary>
+    public const string WorkspaceVariantCreateRejected = "workspace.variant.create.rejected";
+
+    /// <summary>Workspace variant not found on product.</summary>
+    public const string WorkspaceVariantMissing = "workspace.variant.missing";
+
+    /// <summary>Workspace variant status string invalid.</summary>
+    public const string WorkspaceVariantStatusInvalid = "workspace.variant.status.invalid";
+
     /// <summary>
     /// Product category assignment rejected because target is not Level 3.
     /// Canonical code matches <c>CatalogCategoryTreeRules.AssignmentLevelInvalidErrorCode</c>.

@@ -1699,71 +1699,28 @@ public sealed class CatalogDirectory :
         IReadOnlyList<(Guid DefinitionId, string RawValue, Guid? EnumOptionId)> axes,
         CancellationToken cancellationToken)
     {
-        await _guard.EnsureCanMutateAsync(cancellationToken);
-        if (!await _db.Products.AnyAsync(x => x.ProductId == productId, cancellationToken))
+        var result = await ProductVariantsPort().CreateWorkspaceVariantAsync(
+            productId,
+            catalogCodeSeam,
+            axes,
+            cancellationToken);
+        if (result.IsFailure)
         {
-            throw new InvalidOperationException("محصول والد تنوع در Catalog این Tenant نیست.");
-        }
-
-        var selectedAxes = await _db.ProductVariantAxes.AsNoTracking()
-            .Where(x => x.ProductId == productId)
-            .OrderBy(x => x.DisplayOrder)
-            .Select(x => x.DefinitionId)
-            .ToListAsync(cancellationToken);
-        if (selectedAxes.Count > 0)
-        {
-            var selectedSet = selectedAxes.ToHashSet();
-            var axisDefs = axes.Select(a => a.DefinitionId).ToHashSet();
-            if (!axisDefs.SetEquals(selectedSet))
+            var code = result.FirstError.Code;
+            if (string.Equals(code, CatalogErrorCodes.WorkspaceProductMissing, StringComparison.Ordinal))
             {
-                throw new InvalidOperationException(
-                    "وقتی محورهای محصول انتخاب شده‌اند، ترکیب تنوع باید دقیقاً همان مجموعه‌محورها باشد.");
-            }
-        }
-
-        var normalized = new List<(Guid DefinitionId, string Canonical)>();
-        foreach (var axis in axes)
-        {
-            var definition = await _db.AttributeDefinitions.SingleAsync(x => x.DefinitionId == axis.DefinitionId, cancellationToken);
-            if (!definition.IsVariantAxis)
-            {
-                throw new InvalidOperationException("فقط ویژگی محور تنوع می‌تواند ترکیب تنوع بسازد.");
+                throw new InvalidOperationException("محصول والد تنوع در Catalog این Tenant نیست.");
             }
 
-            if (definition.ValueKind == CatalogAttributeValueKind.Enumeration && axis.EnumOptionId is Guid optionId)
+            if (string.Equals(code, CatalogErrorCodes.WorkspaceVariantAxesMissing, StringComparison.Ordinal))
             {
-                var option = await _db.AttributeOptions.SingleOrDefaultAsync(
-                    x => x.OptionId == optionId && x.DefinitionId == definition.DefinitionId,
-                    cancellationToken)
-                    ?? throw new InvalidOperationException("گزینه به این تعریف تعلق ندارد.");
-                if (!option.IsActive)
-                {
-                    throw new InvalidOperationException("گزینهٔ شمارشی غیرفعال است.");
-                }
+                throw new InvalidOperationException("حداقل یک محور برای گونه لازم است.");
             }
 
-            var canonical = CatalogAttributeCanonicalizer.Canonicalize(definition.ValueKind, axis.RawValue, axis.EnumOptionId);
-            CatalogAttributeCanonicalizer.EnforceValidationBounds(definition, canonical);
-            normalized.Add((definition.DefinitionId, canonical));
+            throw new InvalidOperationException(code);
         }
 
-        var fingerprint = CatalogVariant.ComputeFingerprint(normalized);
-        if (await _db.Variants.AnyAsync(
-                x => x.ProductId == productId && x.CombinationFingerprint == fingerprint,
-                cancellationToken))
-        {
-            throw new InvalidOperationException("ترکیب محور این تنوع برای همین محصول تکراری است؛ هویت Offer فروشنده نیست.");
-        }
-
-        var variant = CatalogVariant.Create(productId, fingerprint, catalogCodeSeam, DateTimeOffset.UtcNow);
-        foreach (var item in normalized)
-        {
-            variant.AttributeValues.Add(CatalogVariantAttributeValue.Create(variant.VariantId, item.DefinitionId, item.Canonical));
-        }
-
-        _db.Variants.Add(variant);
-        await _db.SaveChangesAsync(cancellationToken);
-        return new VariantReference(variant.VariantId, variant.ProductId, variant.CombinationFingerprint, variant.Status);
+        return result.Value;
     }
 
     private async Task<Guid?> ResolvePrimaryCategoryIdAsync(Guid productId, CancellationToken cancellationToken)

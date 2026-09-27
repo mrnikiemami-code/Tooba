@@ -2315,6 +2315,24 @@
     "workflowStop": "USER_REVIEW_HOST_ADMIN_W26_PW_LIFECYCLE_CHECKPOINT",
     "evidence": "docs/evidence/TB-TMAR-HOST-ADMIN-AMC-001-W26-PW-LIFECYCLE/"
   },
+  "hostAdminAmcPwVariants": {
+    "task": "TB-TMAR-HOST-ADMIN-AMC-001-W27-PW-VARIANTS",
+    "parentTask": "TB-TMAR-HOST-ADMIN-AMC-001-W26-PW-LIFECYCLE",
+    "w17PlanLabel": "W22 variants",
+    "state": "HOST_ADMIN_PRODUCTWORKSPACE_VARIANTS_OWNED_BY_MODULE",
+    "activeHostFolder": "Admin",
+    "variantHttpOwner": "ProductWorkspace.Endpoints",
+    "variantMutationOwner": "Catalog.Variants.Commands",
+    "HostRemainingProductWorkspaceRoutes": 11,
+    "ProductWorkspaceEndpointRouteCount": 7,
+    "HostAdminFileCount": 31,
+    "partialHostRetention": "ProductWorkspace* RETAIN until W24-final",
+    "StoreAppearance": "DEFERRED",
+    "schemaMigrationState": "NONE",
+    "frontendState": "UNCHANGED",
+    "workflowStop": "USER_REVIEW_HOST_ADMIN_W27_PW_VARIANTS_CHECKPOINT",
+    "evidence": "docs/evidence/TB-TMAR-HOST-ADMIN-AMC-001-W27-PW-VARIANTS/"
+  },
   "hostAdminAmcW18": {
     "task": "TB-TMAR-HOST-ADMIN-AMC-001-W18",
     "parentTask": "TB-TMAR-HOST-ADMIN-AMC-001-W17",

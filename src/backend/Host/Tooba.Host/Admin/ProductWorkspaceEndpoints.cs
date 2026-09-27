@@ -9,6 +9,7 @@ namespace Tooba.Host.Admin;
 /// مسیرهای HTTP ترکیب Workspace محصول. SQL بین‌ماژولی اینجا نوشته نمی‌شود.
 /// W19: aggregate GET evacuated to ProductWorkspace.Endpoints.
 /// W26: lifecycle POSTs evacuated to ProductWorkspace.Endpoints.
+/// W27: variant create/patch evacuated to ProductWorkspace.Endpoints.
 /// Host ProductWorkspace surface after brand options Catalog ownership.
 /// </summary>
 public static class ProductWorkspaceEndpoints
@@ -31,9 +32,6 @@ public static class ProductWorkspaceEndpoints
         group.MapDelete("/{productId:guid}/categories/additional/{categoryId:guid}", RemoveAdditionalCategoryAsync);
         group.MapPut("/{productId:guid}/brand", AssignBrandAsync);
         group.MapDelete("/{productId:guid}", DeleteAsync);
-
-        group.MapPost("/{productId:guid}/variants", CreateVariantAsync);
-        group.MapPatch("/{productId:guid}/variants/{variantId:guid}", PatchVariantAsync);
     }
 
     private static ProductWorkspacePermissions ReadPermissions(HttpRequest request)
@@ -314,63 +312,6 @@ public static class ProductWorkspaceEndpoints
         }
     }
 
-
-    private static async Task<IResult> CreateVariantAsync(
-        Guid productId,
-        AdminProductVariantCreateRequest body,
-        ProductWorkspaceComposer composer,
-        HttpRequest request,
-        CurrentAuthenticatedSession session,
-        ICurrentTenant tenant,
-        IAuthorizationGuard guard,
-        IHostEnvironment environment,
-        CancellationToken cancellationToken)
-    {
-        try
-        {
-            await AdminPanelAccess.RequireAuthorizedAsync(
-                request, session, tenant, guard, environment, cancellationToken);
-            var workspace = await composer.CreateVariantAsync(
-                productId,
-                body,
-                ReadPermissions(request),
-                cancellationToken);
-            return Results.Json(workspace, statusCode: StatusCodes.Status201Created);
-        }
-        catch (PlatformHttpException ex)
-        {
-            return ToError(ex);
-        }
-    }
-
-    private static async Task<IResult> PatchVariantAsync(
-        Guid productId,
-        Guid variantId,
-        AdminProductVariantPatchRequest body,
-        ProductWorkspaceComposer composer,
-        HttpRequest request,
-        CurrentAuthenticatedSession session,
-        ICurrentTenant tenant,
-        IAuthorizationGuard guard,
-        IHostEnvironment environment,
-        CancellationToken cancellationToken)
-    {
-        try
-        {
-            await AdminPanelAccess.RequireAuthorizedAsync(
-                request, session, tenant, guard, environment, cancellationToken);
-            return Results.Json(await composer.PatchVariantAsync(
-                productId,
-                variantId,
-                body,
-                ReadPermissions(request),
-                cancellationToken));
-        }
-        catch (PlatformHttpException ex)
-        {
-            return ToError(ex);
-        }
-    }
 
     private static IResult ToError(PlatformHttpException ex) =>
         Results.Json(new { title = ex.Title, errorCode = ex.ErrorCode }, statusCode: ex.StatusCode);
