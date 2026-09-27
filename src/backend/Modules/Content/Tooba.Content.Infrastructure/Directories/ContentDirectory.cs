@@ -1,13 +1,14 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Tooba.Content.Application.Models;
 using Tooba.Content.Application.Ports;
 using Tooba.Content.Contracts.Errors;
 using Tooba.BuildingBlocks;
-using Tooba.Content.Domain;
+using Tooba.Content.Domain.Aggregates;
+using Tooba.Content.Domain.Rules;
 using Tooba.Content.Infrastructure.Persistence;
 using Tooba.Localization.Contracts;
 
-namespace Tooba.Content.Infrastructure;
+namespace Tooba.Content.Infrastructure.Directories;
 
 /// <summary>دایرکتوری Content با schema مستقل.</summary>
 public sealed class ContentDirectory : IContentDirectory

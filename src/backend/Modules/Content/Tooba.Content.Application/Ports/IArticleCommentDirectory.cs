@@ -1,5 +1,6 @@
 ﻿using Tooba.Content.Application.Models;
-using Tooba.Content.Domain;
+using Tooba.Content.Domain.Aggregates;
+using Tooba.Content.Domain.Rules;
 
 namespace Tooba.Content.Application.Ports;
 

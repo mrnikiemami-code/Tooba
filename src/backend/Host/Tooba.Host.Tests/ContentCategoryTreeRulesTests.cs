@@ -1,4 +1,5 @@
-using Tooba.Content.Domain;
+﻿using Tooba.Content.Domain.Aggregates;
+using Tooba.Content.Domain.Rules;
 using Xunit;
 
 namespace Tooba.Host.Tests;

@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Tooba.BuildingBlocks;
 using Tooba.Cart.Infrastructure.Persistence;
 using Tooba.Catalog.Application;
@@ -49,6 +49,7 @@ using Tooba.CustomerProfile.Infrastructure.Persistence;
 using Tooba.UserPreference.Infrastructure.Persistence;
 using Tooba.OperatorProfile.Infrastructure.Persistence;
 using Tooba.Content.Infrastructure;
+using Tooba.Content.Infrastructure.Development;
 using Tooba.Content.Infrastructure.Persistence;
 using Tooba.Media.Infrastructure.Persistence;
 using Tooba.PageComposition.Infrastructure;

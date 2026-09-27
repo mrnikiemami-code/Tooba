@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Tooba.BuildingBlocks;
 using Tooba.Catalog.Application;
 using Tooba.Catalog.Domain;
@@ -17,6 +17,7 @@ using Tooba.Party.Application;
 using Tooba.Pricing.Application;
 using Tooba.ProductQnA.Infrastructure;
 using Tooba.Content.Infrastructure;
+using Tooba.Content.Infrastructure.Development;
 using Tooba.Tax.Application;
 using Tooba.Tax.Contracts;
 using Tooba.Tax.Domain;

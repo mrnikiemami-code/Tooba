@@ -1,10 +1,11 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Tooba.BuildingBlocks;
 using Tooba.Content.Application.Ports;
 using Tooba.Content.Infrastructure.Adapters;
+using Tooba.Content.Infrastructure.Directories;
 using Tooba.Content.Infrastructure.Persistence;
 using Tooba.ModuleContracts;
 using Tooba.Persistence;

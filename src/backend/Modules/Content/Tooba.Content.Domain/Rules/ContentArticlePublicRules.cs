@@ -1,4 +1,6 @@
-namespace Tooba.Content.Domain;
+﻿using Tooba.Content.Domain.Aggregates;
+
+namespace Tooba.Content.Domain.Rules;
 
 /// <summary>قواعد دید عمومی مقاله — انتشار مستقل و زمان‌بندی.</summary>
 public static class ContentArticlePublicRules

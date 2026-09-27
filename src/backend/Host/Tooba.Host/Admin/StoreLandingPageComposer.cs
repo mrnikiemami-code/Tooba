@@ -1,11 +1,12 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using MediatR;
 using Microsoft.Extensions.Caching.Memory;
 using Tooba.BuildingBlocks;
 using Tooba.Catalog.Application;
 using Tooba.Catalog.Domain;
 using Tooba.Catalog.Infrastructure.Persistence;
-using Tooba.Content.Domain;
+using Tooba.Content.Domain.Aggregates;
+using Tooba.Content.Domain.Rules;
 using Tooba.Host.Storefront;
 using Tooba.Promotion.Application.Ports;
 using Tooba.Promotion.Application.Checkout;

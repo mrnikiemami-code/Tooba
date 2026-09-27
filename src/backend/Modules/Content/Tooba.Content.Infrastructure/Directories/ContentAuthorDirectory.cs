@@ -1,12 +1,13 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Tooba.Content.Application.Models;
 using Tooba.Content.Application.Ports;
 using Tooba.Content.Contracts.Errors;
 using Tooba.BuildingBlocks;
-using Tooba.Content.Domain;
+using Tooba.Content.Domain.Aggregates;
+using Tooba.Content.Domain.Rules;
 using Tooba.Content.Infrastructure.Persistence;
 
-namespace Tooba.Content.Infrastructure;
+namespace Tooba.Content.Infrastructure.Directories;
 
 /// <summary>دایرکتوری نویسندهٔ مقاله — مالک Content.</summary>
 public sealed class ContentAuthorDirectory : IContentAuthorDirectory

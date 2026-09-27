@@ -496,6 +496,90 @@
           ]
         }
       ]
+    },
+    {
+      "module": "Content",
+      "structureCertified": true,
+      "lockVersion": "ARCH-COMPLETE-002",
+      "certificationNote": "Certified by TB-TMAR-HOST-CONTENT-AMC-001-R3 after Host ZERO (AMC), CQRS/typed-fault R1/R2, and physical structure repair: Domain Aggregates/Rules, Application Composition for ContentOperation, Infrastructure Directories/Development with ContentModule.cs composition root only, Endpoints Admin/Storefront/Errors/Resources, Contracts Errors-only, solution folder /Modules/Content/.",
+      "projects": [
+        {
+          "projectName": "Tooba.Content.Contracts",
+          "rootAllowlist": [],
+          "rootAllowlistJustification": "Contracts owns Errors/ContentErrorCodes.cs only; no root .cs remains.",
+          "forbiddenRootFiles": [
+            "ContentErrorCodes.cs",
+            "ContentContracts.cs"
+          ],
+          "forbiddenTopLevelFolders": []
+        },
+        {
+          "projectName": "Tooba.Content.Domain",
+          "rootAllowlist": [],
+          "rootAllowlistJustification": "Entities live under Aggregates/; rule types under Rules/; no root .cs remains.",
+          "forbiddenRootFiles": [
+            "ArticleComment.cs",
+            "ArticlePublicationReadiness.cs",
+            "ContentArticle.cs",
+            "ContentArticleHistoryEntry.cs",
+            "ContentArticleLifecycleRules.cs",
+            "ContentArticleMediaItem.cs",
+            "ContentArticlePublicRules.cs",
+            "ContentArticleSeoRules.cs",
+            "ContentAuthor.cs",
+            "ContentCategory.cs",
+            "ContentCategoryTreeRules.cs",
+            "ContentTag.cs",
+            "ContentTaxonomySeoRules.cs"
+          ],
+          "forbiddenTopLevelFolders": []
+        },
+        {
+          "projectName": "Tooba.Content.Application",
+          "rootAllowlist": [],
+          "rootAllowlistJustification": "Commands/Queries/Models/Ports/Validators plus Composition/ContentOperation.cs; no capability .cs at project root.",
+          "forbiddenRootFiles": [
+            "ContentOperation.cs"
+          ],
+          "forbiddenTopLevelFolders": []
+        },
+        {
+          "projectName": "Tooba.Content.Endpoints",
+          "rootAllowlist": [
+            "ContentEndpointModule.cs",
+            "GlobalUsings.cs"
+          ],
+          "rootAllowlistJustification": "Composition entry ContentEndpointModule.cs plus project-wide GlobalUsings.cs; Admin/Storefront/Errors/Resources hold capability and presentation files.",
+          "forbiddenRootFiles": [
+            "ContentEndpoints.cs",
+            "ContentStorefrontEndpoints.cs",
+            "ContentErrorCatalogContributor.cs",
+            "ContentErrorResources.cs",
+            "ContentPanelComposer.cs",
+            "ContentAuthorPanelComposer.cs",
+            "ContentArticleMediaPanelComposer.cs"
+          ],
+          "forbiddenTopLevelFolders": []
+        },
+        {
+          "projectName": "Tooba.Content.Infrastructure",
+          "rootAllowlist": [
+            "ContentModule.cs"
+          ],
+          "rootAllowlistJustification": "Composition entry ContentModule.cs (DI + outbox registration) only; directories under Directories/, seed under Development/, persistence/grid/adapters elsewhere.",
+          "forbiddenRootFiles": [
+            "ArticleCommentDirectory.cs",
+            "ContentArticleMediaDirectory.cs",
+            "ContentAuthorDirectory.cs",
+            "ContentCategoryDirectory.cs",
+            "ContentDevelopmentSeed.cs",
+            "ContentDirectory.cs",
+            "ContentTagDirectory.cs",
+            "ContentDbContext.cs"
+          ],
+          "forbiddenTopLevelFolders": []
+        }
+      ]
     }
   ],
   "uncertifiedHttpOwningModules": [

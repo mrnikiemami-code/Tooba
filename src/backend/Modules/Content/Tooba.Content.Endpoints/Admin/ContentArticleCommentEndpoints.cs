@@ -10,7 +10,8 @@ using Tooba.Content.Application.Commands.MarkArticleCommentPending;
 using Tooba.Content.Application.Commands.RejectArticleComment;
 using Tooba.Content.Application.Queries.ListArticleComments;
 using Tooba.Content.Contracts.Errors;
-using Tooba.Content.Domain;
+using Tooba.Content.Domain.Aggregates;
+using Tooba.Content.Domain.Rules;
 
 namespace Tooba.Content.Endpoints.Admin;
 

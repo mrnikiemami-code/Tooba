@@ -1,9 +1,10 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
-using Tooba.Content.Domain;
+using Tooba.Content.Domain.Aggregates;
+using Tooba.Content.Domain.Rules;
 using Tooba.Content.Infrastructure.Persistence;
 
-namespace Tooba.Content.Infrastructure;
+namespace Tooba.Content.Infrastructure.Development;
 
 /// <summary>دانهٔ توسعهٔ قطعی و idempotent برای مقالات Published خانه و بلاگ (fa/en).</summary>
 public static class ContentDevelopmentSeed

@@ -29,7 +29,7 @@ public sealed class HostContentAmcR2GuardTests
     {
         var path = Path.Combine(
             FindRepoRoot(), "src", "backend", "Modules", "Content",
-            "Tooba.Content.Application", "ContentOperation.cs");
+            "Tooba.Content.Application", "Composition", "ContentOperation.cs");
         var text = File.ReadAllText(path);
         Assert.Contains("catch (ContractOperationException ex)", text, StringComparison.Ordinal);
         Assert.Contains("new SemanticError(ex.Code)", text, StringComparison.Ordinal);

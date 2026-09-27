@@ -1,6 +1,6 @@
 ﻿using Tooba.BuildingBlocks;
 
-namespace Tooba.Content.Domain;
+namespace Tooba.Content.Domain.Aggregates;
 
 /// <summary>ردیف append-only تاریخچهٔ چرخهٔ عمر مقاله.</summary>
 public sealed class ContentArticleHistoryEntry

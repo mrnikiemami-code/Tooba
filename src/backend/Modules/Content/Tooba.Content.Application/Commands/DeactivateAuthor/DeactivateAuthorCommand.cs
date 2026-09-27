@@ -2,6 +2,7 @@
 using Tooba.BuildingBlocks.Results;
 using Tooba.Content.Application.Ports;
 using Tooba.Content.Contracts.Errors;
+using Tooba.Content.Application.Composition;
 
 namespace Tooba.Content.Application.Commands.DeactivateAuthor;
 

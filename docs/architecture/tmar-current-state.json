@@ -527,7 +527,8 @@
       "Settlement",
       "Fulfillment",
       "AccessControl",
-      "AddressBook"
+      "AddressBook",
+      "Content"
     ],
     "manifest": "docs/architecture/tmar-module-structure-manifests.json",
     "standard": "docs/architecture/TMAR-COMPLETE-REFERENCE-STRUCTURE-STANDARD.md",
@@ -1403,6 +1404,38 @@
     "nextHostFolderStarted": false,
     "workflowStop": "USER_REVIEW_HOST_CONTENT_R2_CHECKPOINT",
     "evidence": "docs/evidence/TB-TMAR-HOST-CONTENT-AMC-001-R2/"
+  },
+  "hostContentAmcR3": {
+    "task": "TB-TMAR-HOST-CONTENT-AMC-001-R3",
+    "parentTask": "TB-TMAR-HOST-CONTENT-AMC-001-R2",
+    "parentCommit": "9f6579b4333005fda0f9994ea7c02295a9326ed4",
+    "state": "HOST_CONTENT_AMC_R3_STRUCTURE_CERTIFIED",
+    "lockVersion": "ARCH-COMPLETE-002",
+    "structureCertified": true,
+    "hostContentZeroPreserved": true,
+    "pathNamespace": "EXACT",
+    "rootAllowlists": "ENFORCED_MATCH_DISK",
+    "solutionGrouping": "/Modules/Content/",
+    "endpointOwnership": "MODULE_OWNED",
+    "cqrsMediatRState": "COMPLETE_MEDIATR_12_5_ISENDER",
+    "validatorCoverage": "17_REQUIRED_17_PRESENT_34_NO_VALIDATOR",
+    "resultApiResponseFactoryState": "CANONICAL",
+    "messageClassificationState": "ZERO",
+    "platformHttpExceptionState": "ZERO_IN_CONTENT_APP_AND_INFRA",
+    "contentToMediaBoundary": "MEDIA_CONTRACTS_ONLY",
+    "contentToLocalizationBoundary": "LOCALIZATION_CONTRACTS_ONLY",
+    "endpointsToInfrastructure": "ZERO",
+    "crossModulePersistence": "ZERO",
+    "schemaMigrationState": "NONE",
+    "frontendState": "UNCHANGED",
+    "focusedValidations": "HostContentAmcR3GuardTests_plus_R1_R2_Content_builds",
+    "remainingBlockers": [],
+    "residualDebt": [
+      "DB-gated Content behavior tests remain skipped without live Postgres (pre-existing)"
+    ],
+    "nextHostFolderStarted": false,
+    "workflowStop": "USER_REVIEW_HOST_CONTENT_R3_FINAL_CHECKPOINT",
+    "evidence": "docs/evidence/TB-TMAR-HOST-CONTENT-AMC-001-R3/"
   },
   "addressBookPostRealignRepair": {
     "task": "TB-TMAR-ADDRESSBOOK-POST-REALIGN-REPAIR-001",

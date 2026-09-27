@@ -1,5 +1,5 @@
-using Tooba.BuildingBlocks;
-namespace Tooba.Content.Domain;
+﻿using Tooba.BuildingBlocks;
+namespace Tooba.Content.Domain.Aggregates;
 
 /// <summary>ارجاع گالری مقاله به دارایی DAM — بدون باینری.</summary>
 public sealed class ContentArticleMediaItem

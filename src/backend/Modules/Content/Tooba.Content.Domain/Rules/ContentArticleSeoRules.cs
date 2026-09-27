@@ -1,4 +1,6 @@
-namespace Tooba.Content.Domain;
+﻿using Tooba.Content.Domain.Aggregates;
+
+namespace Tooba.Content.Domain.Rules;
 
 /// <summary>مسیرهای عمومی canonical مقاله بر اساس locale.</summary>
 public static class ContentArticleSeoRules

@@ -1,7 +1,7 @@
-using Tooba.BuildingBlocks;
+﻿using Tooba.BuildingBlocks;
 using Tooba.BuildingBlocks.Results;
 
-namespace Tooba.Content.Application;
+namespace Tooba.Content.Application.Composition;
 
 /// <summary>
 /// Converts typed <see cref="ContractOperationException"/> into <see cref="Result"/> failures by stable Code.

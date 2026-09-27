@@ -1,4 +1,6 @@
-namespace Tooba.Content.Domain;
+﻿using Tooba.Content.Domain.Aggregates;
+
+namespace Tooba.Content.Domain.Rules;
 
 /// <summary>مسیرهای عمومی دسته و نویسندهٔ محتوا.</summary>
 public static class ContentTaxonomySeoRules

@@ -1,5 +1,7 @@
-using Tooba.BuildingBlocks;
-namespace Tooba.Content.Domain;
+﻿using Tooba.BuildingBlocks;
+using Tooba.Content.Domain.Aggregates;
+
+namespace Tooba.Content.Domain.Rules;
 
 /// <summary>قواعد درخت دسته‌بندی مقاله — حداکثر عمق ۲ (ریشه=۱، زیردسته=۲).</summary>
 public static class ContentCategoryTreeRules

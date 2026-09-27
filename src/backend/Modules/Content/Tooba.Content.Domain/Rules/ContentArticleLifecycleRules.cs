@@ -1,4 +1,6 @@
-namespace Tooba.Content.Domain;
+﻿using Tooba.Content.Domain.Aggregates;
+
+namespace Tooba.Content.Domain.Rules;
 
 /// <summary>سیاست حذف/بایگانی مقاله — مرجع backend برای UI.</summary>
 public static class ContentArticleLifecycleRules

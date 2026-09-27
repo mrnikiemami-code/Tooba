@@ -25,7 +25,7 @@ public sealed class TmarCompleteReferenceStructureGateTests
 
         var modules = root.GetProperty("modules").EnumerateArray().ToArray();
         Assert.Equal(
-            new[] { "AccessControl", "AddressBook", "Cart", "Fulfillment", "Offer", "Order", "Payment", "Settlement", "StoreContext" },
+            new[] { "AccessControl", "AddressBook", "Cart", "Content", "Fulfillment", "Offer", "Order", "Payment", "Settlement", "StoreContext" },
             modules.Select(m => m.GetProperty("module").GetString()!).OrderBy(x => x, StringComparer.Ordinal).ToArray());
 
         foreach (var module in modules)
@@ -36,7 +36,7 @@ public sealed class TmarCompleteReferenceStructureGateTests
 
         foreach (var other in root.GetProperty("uncertifiedHttpOwningModules").EnumerateArray())
         {
-            Assert.DoesNotContain(other.GetString(), new[] { "Order", "Cart", "StoreContext", "Offer", "Payment", "Settlement", "Fulfillment", "AccessControl", "AddressBook" }, StringComparer.Ordinal);
+            Assert.DoesNotContain(other.GetString(), new[] { "Order", "Cart", "StoreContext", "Offer", "Payment", "Settlement", "Fulfillment", "AccessControl", "AddressBook", "Content" }, StringComparer.Ordinal);
         }
     }
 
@@ -99,13 +99,14 @@ public sealed class TmarCompleteReferenceStructureGateTests
         Assert.DoesNotContain("Fulfillment", uncertified, StringComparer.Ordinal);
         Assert.DoesNotContain("AccessControl", uncertified, StringComparer.Ordinal);
         Assert.DoesNotContain("AddressBook", uncertified, StringComparer.Ordinal);
+        Assert.DoesNotContain("Content", uncertified, StringComparer.Ordinal);
         Assert.NotEmpty(uncertified);
 
         var statePath = Path.Combine(RepoRoot(), "docs", "architecture", "tmar-current-state.json");
         using var state = JsonDocument.Parse(File.ReadAllText(statePath));
         var certified = state.RootElement.GetProperty("structureLock").GetProperty("certifiedModules")
             .EnumerateArray().Select(x => x.GetString()!).OrderBy(x => x, StringComparer.Ordinal).ToArray();
-        Assert.Equal(new[] { "AccessControl", "AddressBook", "Cart", "Fulfillment", "Offer", "Order", "Payment", "Settlement", "StoreContext" }, certified);
+        Assert.Equal(new[] { "AccessControl", "AddressBook", "Cart", "Content", "Fulfillment", "Offer", "Order", "Payment", "Settlement", "StoreContext" }, certified);
     }
 
     private static void AssertNamespaceAlignment(string projectPath, string projectName)

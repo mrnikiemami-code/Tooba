@@ -1,6 +1,6 @@
-using Tooba.BuildingBlocks;
+﻿using Tooba.BuildingBlocks;
 
-namespace Tooba.Content.Domain;
+namespace Tooba.Content.Domain.Aggregates;
 
 /// <summary>وضعیت دسته‌بندی مقاله.</summary>
 public enum ContentCategoryStatus

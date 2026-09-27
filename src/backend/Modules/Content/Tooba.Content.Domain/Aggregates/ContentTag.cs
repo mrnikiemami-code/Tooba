@@ -1,6 +1,6 @@
-using Tooba.BuildingBlocks;
+﻿using Tooba.BuildingBlocks;
 
-namespace Tooba.Content.Domain;
+namespace Tooba.Content.Domain.Aggregates;
 
 /// <summary>برچسب محتوا — مالک Content، مستقل از Catalog.</summary>
 public sealed class ContentTag

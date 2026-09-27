@@ -1,6 +1,8 @@
 ﻿using System.Text.RegularExpressions;
 
-namespace Tooba.Content.Domain;
+using Tooba.Content.Domain.Aggregates;
+
+namespace Tooba.Content.Domain.Rules;
 
 /// <summary>یک بررسی آمادگی انتشار مقاله — قرارداد پایدار برای Admin و Publish.</summary>
 public sealed record ArticlePublicationCheck(

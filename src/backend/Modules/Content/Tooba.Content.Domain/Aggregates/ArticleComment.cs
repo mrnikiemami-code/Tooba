@@ -1,6 +1,6 @@
-using Tooba.BuildingBlocks;
+﻿using Tooba.BuildingBlocks;
 
-namespace Tooba.Content.Domain;
+namespace Tooba.Content.Domain.Aggregates;
 
 /// <summary>وضعیت تعدیل نظر مقاله.</summary>
 public enum ArticleCommentStatus
