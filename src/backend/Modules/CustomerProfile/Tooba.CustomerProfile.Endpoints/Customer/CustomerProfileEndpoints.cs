@@ -10,7 +10,7 @@ using Tooba.CustomerProfile.Contracts;
 
 namespace Tooba.CustomerProfile.Endpoints.Customer;
 
-/// <summary>HTTP boundary for GET/PUT /v1/customer/profile — ISender only; no directory or persistence calls.</summary>
+/// <summary>HTTP boundary for GET/PUT /v1/customer/profile — ISender + ApiResponseFactory.From(Result).</summary>
 public static class CustomerProfileEndpoints
 {
     /// <summary>Maps profile read/write under the customer group.</summary>
@@ -34,8 +34,8 @@ public static class CustomerProfileEndpoints
             return Unauthorized(api);
         }
 
-        var page = await sender.Send(new GetCustomerProfilePageQuery(actor.Value), cancellationToken);
-        return Results.Json(page);
+        var result = await sender.Send(new GetCustomerProfilePageQuery(actor.Value), cancellationToken);
+        return api.From(result);
     }
 
     private static async Task<IResult> UpdateProfileAsync(
@@ -52,10 +52,10 @@ public static class CustomerProfileEndpoints
             return Unauthorized(api);
         }
 
-        var page = await sender.Send(
+        var result = await sender.Send(
             new UpsertCustomerProfileCommand(actor.Value, body.ToWrite()),
             cancellationToken);
-        return Results.Json(page);
+        return api.From(result);
     }
 
     private static IResult Unauthorized(ApiResponseFactory api) =>

@@ -88,6 +88,11 @@ public sealed class CustomerProfileValidatorCoverageGuardTests
             Assert.Contains("ISender", text, StringComparison.Ordinal);
             Assert.DoesNotContain("ICustomerProfileDirectory", text, StringComparison.Ordinal);
             Assert.DoesNotContain("DbContextOptions", text, StringComparison.Ordinal);
+            if (relative.Contains("CustomerProfileEndpoints", StringComparison.Ordinal)
+                || relative.EndsWith(Path.Combine("CustomerDashboard", "CustomerAccountDashboardEndpoints.cs"), StringComparison.Ordinal))
+            {
+                Assert.Contains("api.From(result)", text, StringComparison.Ordinal);
+            }
         }
     }
 

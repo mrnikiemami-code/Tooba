@@ -146,6 +146,19 @@ public sealed class HostCustomerFullClosureGuardTests
             StringComparison.Ordinal);
         Assert.False(File.Exists(Path.Combine(
             FindRepoRoot(), "src", "backend", "Host", "Tooba.Host", "Composition", "CustomerPanelEndpoints.cs")));
+
+        var profileEp = File.ReadAllText(Path.Combine(
+            FindRepoRoot(),
+            "src", "backend", "Modules", "CustomerProfile", "Tooba.CustomerProfile.Endpoints",
+            "Customer", "CustomerProfileEndpoints.cs"));
+        var dashEp = File.ReadAllText(Path.Combine(
+            FindRepoRoot(),
+            "src", "backend", "Modules", "CustomerProfile", "Tooba.CustomerProfile.Endpoints",
+            "CustomerDashboard", "CustomerAccountDashboardEndpoints.cs"));
+        Assert.DoesNotContain("Results.Json(page)", profileEp, StringComparison.Ordinal);
+        Assert.DoesNotContain("Results.Json(page)", dashEp, StringComparison.Ordinal);
+        Assert.Contains("api.From(result)", profileEp, StringComparison.Ordinal);
+        Assert.Contains("api.From(result)", dashEp, StringComparison.Ordinal);
     }
 
     private static string FindRepoRoot()

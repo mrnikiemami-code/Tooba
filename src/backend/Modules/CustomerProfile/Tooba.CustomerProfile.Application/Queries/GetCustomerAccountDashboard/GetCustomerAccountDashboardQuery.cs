@@ -1,5 +1,6 @@
 using MediatR;
 using Tooba.AddressBook.Contracts.Ports;
+using Tooba.BuildingBlocks.Results;
 using Tooba.CustomerProfile.Application.Models;
 using Tooba.CustomerProfile.Application.Ports;
 using Tooba.CustomerProfile.Contracts;
@@ -12,7 +13,7 @@ namespace Tooba.CustomerProfile.Application.Queries.GetCustomerAccountDashboard;
 /// Customer-account dashboard presentation composition. Policy-free, persistence-free,
 /// Contracts-only cross-module reads. Actor is server-trusted.
 /// </summary>
-public sealed record GetCustomerAccountDashboardQuery(Guid ActorUserId) : IRequest<CustomerDashboardPage>;
+public sealed record GetCustomerAccountDashboardQuery(Guid ActorUserId) : IRequest<Result<CustomerDashboardPage>>;
 
 /// <summary>Aggregates Order/Wishlist/AddressBook/CustomerProfile Contracts snapshots into the dashboard DTO.</summary>
 public sealed class GetCustomerAccountDashboardQueryHandler(
@@ -21,10 +22,10 @@ public sealed class GetCustomerAccountDashboardQueryHandler(
     IAddressBookCountPort addresses,
     ICustomerProfileDirectory profiles,
     ICustomerAccountDisplayTexts displayTexts)
-    : IRequestHandler<GetCustomerAccountDashboardQuery, CustomerDashboardPage>
+    : IRequestHandler<GetCustomerAccountDashboardQuery, Result<CustomerDashboardPage>>
 {
     /// <inheritdoc />
-    public async Task<CustomerDashboardPage> Handle(
+    public async Task<Result<CustomerDashboardPage>> Handle(
         GetCustomerAccountDashboardQuery request,
         CancellationToken cancellationToken)
     {
@@ -36,7 +37,7 @@ public sealed class GetCustomerAccountDashboardQueryHandler(
             cancellationToken);
         var wishlistCount = await wishlist.CountAsync(request.ActorUserId, cancellationToken);
         var addressCount = await addresses.CountAsync(request.ActorUserId, cancellationToken);
-        return new CustomerDashboardPage(
+        return Result.Success(new CustomerDashboardPage(
             request.ActorUserId,
             displayName,
             summary.TotalOrders,
@@ -46,7 +47,7 @@ public sealed class GetCustomerAccountDashboardQueryHandler(
             WishlistCount: wishlistCount,
             AddressBookAvailable: true,
             AddressBookCount: addressCount,
-            summary.RecentOrders);
+            summary.RecentOrders));
     }
 
     private async Task<string> ResolveDisplayNameAsync(

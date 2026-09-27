@@ -6,9 +6,11 @@
 - `Tooba.Host.Tests` — PASS
 
 ## Focused tests
-Filter: HostCustomerFullClosureGuardTests | CustomerProfileValidatorCoverageGuardTests | CustomerPanelCompositionTests | CustomerProfileFoundationTests | HostOrderReverseAuditGuardTests | UnpaidOrderExpiryTests.Retry_uses_same_order | TmarFoundationTests.Host_write
+Filter: HostCustomerFullClosureGuardTests | CustomerProfileValidatorCoverageGuardTests | CustomerProfileResultPipelineGuardTests | CustomerProfileSolutionGroupingGuardTests | CustomerPanelCompositionTests | CustomerProfileFoundationTests
 
-**Passed: 30 / Failed: 0 / Skipped: 4** (Docker/Testcontainers profile persistence skips)
+**Parent closure:** Passed 30 / Failed 0 / Skipped 4
+
+**R1 repair:** Passed 23 / Failed 0 / Skipped 4
 
 ## Request → Handler → Validator matrix
 | Request | Route | Classification | Validator |

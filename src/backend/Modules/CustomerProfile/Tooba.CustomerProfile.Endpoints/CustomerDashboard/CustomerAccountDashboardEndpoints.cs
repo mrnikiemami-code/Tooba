@@ -26,6 +26,11 @@ public static class CustomerAccountDashboardEndpoints
         group.MapGet("/dashboard", GetDashboardAsync);
     }
 
+    /// <summary>
+    /// PLATFORM_DEV_ROUTE_EXCEPTION: not a business CQRS use-case. Non-dev/testing must remain exact 404;
+    /// success must remain raw anonymous JSON { actorUserId, label }. ApiResponseFactory has no NotFound
+    /// success/failure path that preserves this platform-only contract without inventing a new abstraction.
+    /// </summary>
     private static IResult GetDevContext(IHostEnvironment environment)
     {
         if (!environment.IsDevelopment() && !environment.IsEnvironment("Testing"))
@@ -59,8 +64,8 @@ public static class CustomerAccountDashboardEndpoints
             return Unauthorized(api);
         }
 
-        var page = await sender.Send(new GetCustomerAccountDashboardQuery(actor.Value), cancellationToken);
-        return Results.Json(page);
+        var result = await sender.Send(new GetCustomerAccountDashboardQuery(actor.Value), cancellationToken);
+        return api.From(result);
     }
 
     private static IResult Unauthorized(ApiResponseFactory api) =>

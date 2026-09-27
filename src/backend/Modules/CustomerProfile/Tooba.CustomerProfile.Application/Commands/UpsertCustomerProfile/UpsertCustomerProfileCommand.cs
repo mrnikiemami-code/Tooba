@@ -1,6 +1,6 @@
 using MediatR;
+using Tooba.BuildingBlocks.Results;
 using Tooba.CustomerProfile.Application.Models;
-using Tooba.CustomerProfile.Application.Ports;
 using Tooba.CustomerProfile.Application.Queries.GetCustomerProfilePage;
 using Tooba.CustomerProfile.Contracts;
 
@@ -11,16 +11,16 @@ namespace Tooba.CustomerProfile.Application.Commands.UpsertCustomerProfile;
 /// Email/mobile credential authority remains Identity-owned.
 /// </summary>
 public sealed record UpsertCustomerProfileCommand(Guid ActorUserId, CustomerProfileWrite Input)
-    : IRequest<CustomerProfilePage>;
+    : IRequest<Result<CustomerProfilePage>>;
 
 /// <summary>Persists via CustomerProfile directory, then reuses the profile page query composition.</summary>
 public sealed class UpsertCustomerProfileCommandHandler(
     ICustomerProfileDirectory profiles,
     ISender sender)
-    : IRequestHandler<UpsertCustomerProfileCommand, CustomerProfilePage>
+    : IRequestHandler<UpsertCustomerProfileCommand, Result<CustomerProfilePage>>
 {
     /// <inheritdoc />
-    public async Task<CustomerProfilePage> Handle(
+    public async Task<Result<CustomerProfilePage>> Handle(
         UpsertCustomerProfileCommand request,
         CancellationToken cancellationToken)
     {

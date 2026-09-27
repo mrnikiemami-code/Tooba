@@ -1,4 +1,5 @@
 using MediatR;
+using Tooba.BuildingBlocks.Results;
 using Tooba.CustomerProfile.Application.Models;
 using Tooba.CustomerProfile.Application.Ports;
 using Tooba.CustomerProfile.Contracts;
@@ -11,7 +12,7 @@ namespace Tooba.CustomerProfile.Application.Queries.GetCustomerProfilePage;
 /// Read customer-account profile page. Actor comes from the trusted server seam (not transport payload).
 /// Order/Identity enrichment is Contracts-only; no foreign Application/Infrastructure.
 /// </summary>
-public sealed record GetCustomerProfilePageQuery(Guid ActorUserId) : IRequest<CustomerProfilePage>;
+public sealed record GetCustomerProfilePageQuery(Guid ActorUserId) : IRequest<Result<CustomerProfilePage>>;
 
 /// <summary>Composes profile presentation from CustomerProfile + Identity + optional Order hints.</summary>
 public sealed class GetCustomerProfilePageQueryHandler(
@@ -19,10 +20,10 @@ public sealed class GetCustomerProfilePageQueryHandler(
     IIdentityContactLookup identityContacts,
     ICustomerOrderDashboardSummaryPort orderSummary,
     ICustomerAccountDisplayTexts displayTexts)
-    : IRequestHandler<GetCustomerProfilePageQuery, CustomerProfilePage>
+    : IRequestHandler<GetCustomerProfilePageQuery, Result<CustomerProfilePage>>
 {
     /// <inheritdoc />
-    public async Task<CustomerProfilePage> Handle(
+    public async Task<Result<CustomerProfilePage>> Handle(
         GetCustomerProfilePageQuery request,
         CancellationToken cancellationToken)
     {
@@ -39,7 +40,7 @@ public sealed class GetCustomerProfilePageQueryHandler(
             ?? (string.IsNullOrWhiteSpace(summary?.LatestContactMobile)
                 ? null
                 : summary!.LatestContactMobile);
-        return new CustomerProfilePage(
+        return Result.Success(new CustomerProfilePage(
             request.ActorUserId,
             displayName,
             stored?.FirstName,
@@ -54,6 +55,6 @@ public sealed class GetCustomerProfilePageQueryHandler(
             AvatarUploadAvailable: false,
             NationalCodeEditable: false,
             AddressEditable: false,
-            Editable: true);
+            Editable: true));
     }
 }
