@@ -1,4 +1,7 @@
 ﻿using Tooba.Content.Domain.Aggregates;
+using Tooba.Content.Application.Categories.Commands;
+using Tooba.Content.Application.Categories.Models;
+using Tooba.Content.Application.Categories.Ports;
 using Tooba.Content.Domain.Rules;
 using Xunit;
 

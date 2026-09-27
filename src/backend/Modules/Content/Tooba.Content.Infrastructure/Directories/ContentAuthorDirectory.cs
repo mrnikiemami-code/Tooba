@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using Tooba.Content.Application.Models;
-using Tooba.Content.Application.Ports;
+using Tooba.Content.Application.Authors.Commands;
+using Tooba.Content.Application.Authors.Models;
+using Tooba.Content.Application.Authors.Ports;
 using Tooba.Content.Contracts.Errors;
 using Tooba.BuildingBlocks;
 using Tooba.Content.Domain.Aggregates;
@@ -58,7 +59,7 @@ public sealed class ContentAuthorDirectory : IContentAuthorDirectory
 
     /// <inheritdoc />
     public async Task<ContentAuthorWorkspaceDto> CreateAsync(
-        CreateContentAuthorCommand command,
+        CreateAuthorCommand command,
         CancellationToken cancellationToken)
     {
         var now = DateTimeOffset.UtcNow;
@@ -87,14 +88,13 @@ public sealed class ContentAuthorDirectory : IContentAuthorDirectory
 
     /// <inheritdoc />
     public async Task<ContentAuthorWorkspaceDto> UpdateAsync(
-        Guid authorId,
-        UpdateContentAuthorCommand command,
+        UpdateAuthorCommand command,
         CancellationToken cancellationToken)
     {
-        var author = await FindTrackedAsync(authorId, cancellationToken);
+        var author = await FindTrackedAsync(command.AuthorId, cancellationToken);
         var slug = ContentAuthor.NormalizeSlug(command.Slug);
         if (await _db.Authors.AnyAsync(
-            x => x.AuthorId != authorId && x.Slug == slug,
+            x => x.AuthorId != command.AuthorId && x.Slug == slug,
             cancellationToken))
         {
             throw new ContractOperationException(ContentAuthorErrorCodes.SlugDuplicate);

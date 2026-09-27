@@ -1,7 +1,19 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Tooba.Content.Application.Articles.Commands;
+using Tooba.Content.Application.Articles.Models;
+using Tooba.Content.Application.Articles.Ports;
+using Tooba.Content.Application.Authors.Commands;
+using Tooba.Content.Application.Authors.Models;
+using Tooba.Content.Application.Authors.Ports;
+using Tooba.Content.Application.Categories.Commands;
+using Tooba.Content.Application.Categories.Models;
+using Tooba.Content.Application.Categories.Ports;
+using Tooba.Content.Application.Tags.Commands;
+using Tooba.Content.Application.Tags.Models;
+using Tooba.Content.Application.Tags.Ports;
 using Testcontainers.PostgreSql;
-using Tooba.Content.Application.Models;
-using Tooba.Content.Application.Ports;
+
+
 using Tooba.Localization.Contracts;
 using Tooba.Content.Domain.Aggregates;
 using Tooba.Content.Domain.Rules;
@@ -73,17 +85,15 @@ public sealed class ContentTaxonomyPublicRoutingTests : IAsyncLifetime
         var directory = new ContentDirectory(db, new PermissiveLanguageDirectory(), categories, authors, new ContentTagDirectory(db));
 
         var faCategory = await categories.CreateAsync(
-            new CreateContentCategoryCommand("fa-IR", null, "راهنما", "guide", "کوتاه", null, 0),
+            new CreateCategoryCommand("fa-IR", null, "راهنما", "guide", "کوتاه", null, 0),
             CancellationToken.None);
         var enCategory = await categories.CreateAsync(
-            new CreateContentCategoryCommand("en-US", null, "Guides", "guide", "Short", null, 0),
+            new CreateCategoryCommand("en-US", null, "Guides", "guide", "Short", null, 0),
             CancellationToken.None);
         var inactiveCategory = await categories.CreateAsync(
-            new CreateContentCategoryCommand("fa-IR", null, "بایگانی‌شونده", "archived-cat", null, null, 5),
+            new CreateCategoryCommand("fa-IR", null, "بایگانی‌شونده", "archived-cat", null, null, 5),
             CancellationToken.None);
-        await categories.UpdateAsync(
-            inactiveCategory.Id,
-            new UpdateContentCategoryCommand(
+        await categories.UpdateAsync(new UpdateCategoryCommand(inactiveCategory.Id, 
                 inactiveCategory.Name,
                 inactiveCategory.Slug,
                 null,
@@ -93,18 +103,18 @@ public sealed class ContentTaxonomyPublicRoutingTests : IAsyncLifetime
             CancellationToken.None);
 
         var activeAuthor = await authors.CreateAsync(
-            new CreateContentAuthorCommand("نویسنده فعال", "active-writer", "bio", null, null, null, null, null, null, null),
+            new CreateAuthorCommand("نویسنده فعال", "active-writer", "bio", null, null, null, null, null, null, null),
             CancellationToken.None);
         var otherAuthor = await authors.CreateAsync(
-            new CreateContentAuthorCommand("نویسنده دیگر", "other-writer", null, null, null, null, null, null, null, null),
+            new CreateAuthorCommand("نویسنده دیگر", "other-writer", null, null, null, null, null, null, null, null),
             CancellationToken.None);
         var inactiveAuthor = await authors.CreateAsync(
-            new CreateContentAuthorCommand("غیرفعال", "inactive-writer", null, null, null, null, null, null, null, null),
+            new CreateAuthorCommand("غیرفعال", "inactive-writer", null, null, null, null, null, null, null, null),
             CancellationToken.None);
         await authors.DeactivateAsync(inactiveAuthor.Id, CancellationToken.None);
 
         var faOnly = await categories.CreateAsync(
-            new CreateContentCategoryCommand("fa-IR", null, "فقط فارسی", "fa-only", null, null, 2),
+            new CreateCategoryCommand("fa-IR", null, "فقط فارسی", "fa-only", null, null, 2),
             CancellationToken.None);
 
         var faPublic = await categories.GetPublicBySlugAsync("fa-IR", "guide", CancellationToken.None);

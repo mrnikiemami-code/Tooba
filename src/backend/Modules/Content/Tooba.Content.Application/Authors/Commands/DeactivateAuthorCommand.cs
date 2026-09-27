@@ -1,0 +1,18 @@
+﻿using MediatR;
+using Tooba.BuildingBlocks.Results;
+using Tooba.Content.Application.Authors.Ports;
+using Tooba.Content.Contracts.Errors;
+using Tooba.Content.Application.Composition;
+
+namespace Tooba.Content.Application.Authors.Commands;
+
+public sealed record DeactivateAuthorCommand(Guid AuthorId) : IRequest<Result>;
+
+public sealed class DeactivateAuthorCommandHandler(IContentAuthorDirectory authors)
+    : IRequestHandler<DeactivateAuthorCommand, Result>
+{
+    public Task<Result> Handle(DeactivateAuthorCommand request, CancellationToken cancellationToken) =>
+        ContentOperation.ExecuteAsync(
+            () => authors.DeactivateAsync(request.AuthorId, cancellationToken),
+            ContentErrorCodes.UpdateRejected);
+}

@@ -1,7 +1,21 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Tooba.Content.Application.Articles.Commands;
+using Tooba.Content.Application.Articles.Models;
+using Tooba.Content.Application.Articles.Ports;
+using Tooba.Content.Application.Authors.Commands;
+using Tooba.Content.Application.Authors.Models;
+using Tooba.Content.Application.Authors.Ports;
+using Tooba.Content.Application.Categories.Commands;
+using Tooba.Content.Application.Categories.Models;
+using Tooba.Content.Application.Categories.Ports;
+using Tooba.Content.Application.Tags.Commands;
+using Tooba.Content.Application.Tags.Models;
+using Tooba.Content.Application.Tags.Ports;
+using Tooba.Content.Application.Media.Models;
+using Tooba.Content.Application.Media.Ports;
 using Testcontainers.PostgreSql;
-using Tooba.Content.Application.Models;
-using Tooba.Content.Application.Ports;
+
+
 using Tooba.Localization.Contracts;
 using Tooba.Content.Domain.Aggregates;
 using Tooba.Content.Domain.Rules;
@@ -64,7 +78,7 @@ public sealed class ContentArticleMediaTests : IAsyncLifetime
         var articleMedia = new ContentArticleMediaDirectory(db, media);
 
         var author = await authors.CreateAsync(
-            new CreateContentAuthorCommand("تحریریه", "editorial", null, null, null, null, null, null, null, null),
+            new CreateAuthorCommand("تحریریه", "editorial", null, null, null, null, null, null, null, null),
             CancellationToken.None);
 
         var article = await content.CreateAsync(
@@ -118,8 +132,7 @@ public sealed class ContentArticleMediaTests : IAsyncLifetime
 
         await Assert.ThrowsAsync<InvalidOperationException>(() =>
             content.UpdateAsync(
-                article.ArticleId,
-                new UpdateArticleCommand(
+                new UpdateArticleCommand(article.ArticleId, 
                     "مقاله",
                     "چکیده",
                     "<img src=\"data:image/png;base64,abc\" />",

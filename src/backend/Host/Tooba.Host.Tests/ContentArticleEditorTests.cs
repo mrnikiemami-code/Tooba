@@ -1,7 +1,19 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Tooba.Content.Application.Articles.Commands;
+using Tooba.Content.Application.Articles.Models;
+using Tooba.Content.Application.Articles.Ports;
+using Tooba.Content.Application.Authors.Commands;
+using Tooba.Content.Application.Authors.Models;
+using Tooba.Content.Application.Authors.Ports;
+using Tooba.Content.Application.Categories.Commands;
+using Tooba.Content.Application.Categories.Models;
+using Tooba.Content.Application.Categories.Ports;
+using Tooba.Content.Application.Tags.Commands;
+using Tooba.Content.Application.Tags.Models;
+using Tooba.Content.Application.Tags.Ports;
 using Testcontainers.PostgreSql;
-using Tooba.Content.Application.Models;
-using Tooba.Content.Application.Ports;
+
+
 using Tooba.Localization.Contracts;
 using Tooba.Content.Domain.Aggregates;
 using Tooba.Content.Domain.Rules;
@@ -84,8 +96,7 @@ public sealed class ContentArticleEditorTests : IAsyncLifetime
         Assert.Equal(string.Empty, draft.AuthorDisplayName);
 
         var switched = await content.UpdateAsync(
-            draft.ArticleId,
-            new UpdateArticleCommand(
+            new UpdateArticleCommand(draft.ArticleId, 
                 "پیش‌نویس",
                 "چکیده",
                 "",
@@ -103,13 +114,12 @@ public sealed class ContentArticleEditorTests : IAsyncLifetime
         Assert.Equal("en-US", switched.Locale);
 
         var author = await authors.CreateAsync(
-            new CreateContentAuthorCommand("تحریریه", "editorial", null, null, null, null, null, null, null, null),
+            new CreateAuthorCommand("تحریریه", "editorial", null, null, null, null, null, null, null, null),
             CancellationToken.None);
 
         // انتساب نویسنده با همان locale — سپس تغییر locale باید قفل شود.
         var withAuthor = await content.UpdateAsync(
-            draft.ArticleId,
-            new UpdateArticleCommand(
+            new UpdateArticleCommand(draft.ArticleId, 
                 "پیش‌نویس",
                 "چکیده",
                 "",
@@ -128,8 +138,7 @@ public sealed class ContentArticleEditorTests : IAsyncLifetime
 
         await Assert.ThrowsAsync<InvalidOperationException>(() =>
             content.UpdateAsync(
-                draft.ArticleId,
-                new UpdateArticleCommand(
+                new UpdateArticleCommand(draft.ArticleId, 
                     "پیش‌نویس",
                     "چکیده",
                     "",
@@ -147,8 +156,7 @@ public sealed class ContentArticleEditorTests : IAsyncLifetime
 
         var scheduled = DateTimeOffset.Parse("2026-09-15T12:00:00Z");
         var updated = await content.UpdateAsync(
-            draft.ArticleId,
-            new UpdateArticleCommand(
+            new UpdateArticleCommand(draft.ArticleId, 
                 "پیش‌نویس زمان‌بندی‌شده",
                 "چکیده",
                 "<p>بدنه آماده انتشار</p>",
@@ -171,8 +179,7 @@ public sealed class ContentArticleEditorTests : IAsyncLifetime
 
         await Assert.ThrowsAsync<InvalidOperationException>(() =>
             content.UpdateAsync(
-                draft.ArticleId,
-                new UpdateArticleCommand(
+                new UpdateArticleCommand(draft.ArticleId, 
                     published.Title,
                     published.Excerpt,
                     published.Body,
@@ -203,10 +210,10 @@ public sealed class ContentArticleEditorTests : IAsyncLifetime
         var content = new ContentDirectory(db, languages, categories, authors, new ContentTagDirectory(db));
 
         var faCategory = await categories.CreateAsync(
-            new CreateContentCategoryCommand("fa-IR", null, "اخبار", "akhbar", null, null, 10),
+            new CreateCategoryCommand("fa-IR", null, "اخبار", "akhbar", null, null, 10),
             CancellationToken.None);
         var enCategory = await categories.CreateAsync(
-            new CreateContentCategoryCommand("en-US", null, "News", "news", null, null, 10),
+            new CreateCategoryCommand("en-US", null, "News", "news", null, null, 10),
             CancellationToken.None);
 
         var draft = await content.CreateAsync(
@@ -229,8 +236,7 @@ public sealed class ContentArticleEditorTests : IAsyncLifetime
 
         var mismatch = await Assert.ThrowsAsync<InvalidOperationException>(() =>
             content.UpdateAsync(
-                draft.ArticleId,
-                new UpdateArticleCommand(
+                new UpdateArticleCommand(draft.ArticleId, 
                     "مقاله دسته",
                     "چکیده",
                     "",
@@ -248,8 +254,7 @@ public sealed class ContentArticleEditorTests : IAsyncLifetime
         Assert.Equal(ContentCategoryErrorCodes.LanguageMismatch, mismatch.Message);
 
         var aligned = await content.UpdateAsync(
-            draft.ArticleId,
-            new UpdateArticleCommand(
+            new UpdateArticleCommand(draft.ArticleId, 
                 "مقاله دسته",
                 "چکیده",
                 "",

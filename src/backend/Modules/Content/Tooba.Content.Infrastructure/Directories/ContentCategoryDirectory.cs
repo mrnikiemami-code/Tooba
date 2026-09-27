@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using Tooba.Content.Application.Models;
-using Tooba.Content.Application.Ports;
+using Tooba.Content.Application.Categories.Commands;
+using Tooba.Content.Application.Categories.Models;
+using Tooba.Content.Application.Categories.Ports;
 using Tooba.Content.Contracts.Errors;
 using Tooba.BuildingBlocks;
 using Tooba.Content.Domain.Aggregates;
@@ -67,7 +68,7 @@ public sealed class ContentCategoryDirectory : IContentCategoryDirectory
 
     /// <inheritdoc />
     public async Task<ContentCategoryWorkspaceDto> CreateAsync(
-        CreateContentCategoryCommand command,
+        CreateCategoryCommand command,
         CancellationToken cancellationToken)
     {
         var now = DateTimeOffset.UtcNow;
@@ -106,14 +107,13 @@ public sealed class ContentCategoryDirectory : IContentCategoryDirectory
 
     /// <inheritdoc />
     public async Task<ContentCategoryWorkspaceDto> UpdateAsync(
-        Guid categoryId,
-        UpdateContentCategoryCommand command,
+        UpdateCategoryCommand command,
         CancellationToken cancellationToken)
     {
-        var category = await FindTrackedAsync(categoryId, cancellationToken);
+        var category = await FindTrackedAsync(command.CategoryId, cancellationToken);
         var slug = ContentCategory.NormalizeSlug(command.Slug);
         if (await _db.Categories.AnyAsync(
-            x => x.CategoryId != categoryId
+            x => x.CategoryId != command.CategoryId
                 && x.LanguageCode == category.LanguageCode
                 && x.Slug == slug,
             cancellationToken))
@@ -138,11 +138,10 @@ public sealed class ContentCategoryDirectory : IContentCategoryDirectory
 
     /// <inheritdoc />
     public async Task<ContentCategoryWorkspaceDto> UpdateSeoAsync(
-        Guid categoryId,
-        UpdateContentCategorySeoCommand command,
+        UpdateCategorySeoCommand command,
         CancellationToken cancellationToken)
     {
-        var category = await FindTrackedAsync(categoryId, cancellationToken);
+        var category = await FindTrackedAsync(command.CategoryId, cancellationToken);
         category.UpdateSeo(command.SeoTitle, command.SeoDescription, DateTimeOffset.UtcNow);
         await _db.SaveChangesAsync(cancellationToken);
         return await MapWorkspaceAsync(category, cancellationToken);
@@ -150,11 +149,10 @@ public sealed class ContentCategoryDirectory : IContentCategoryDirectory
 
     /// <inheritdoc />
     public async Task<ContentCategoryWorkspaceDto> UpdateMediaAsync(
-        Guid categoryId,
-        UpdateContentCategoryMediaCommand command,
+        UpdateCategoryMediaCommand command,
         CancellationToken cancellationToken)
     {
-        var category = await FindTrackedAsync(categoryId, cancellationToken);
+        var category = await FindTrackedAsync(command.CategoryId, cancellationToken);
         category.SetImage(command.ImageMediaAssetId, DateTimeOffset.UtcNow);
         await _db.SaveChangesAsync(cancellationToken);
         return await MapWorkspaceAsync(category, cancellationToken);
@@ -162,18 +160,17 @@ public sealed class ContentCategoryDirectory : IContentCategoryDirectory
 
     /// <inheritdoc />
     public async Task<ContentCategoryWorkspaceDto> MoveAsync(
-        Guid categoryId,
-        MoveContentCategoryCommand command,
+        MoveCategoryCommand command,
         CancellationToken cancellationToken)
     {
-        var category = await FindTrackedAsync(categoryId, cancellationToken);
+        var category = await FindTrackedAsync(command.CategoryId, cancellationToken);
         if (command.NewParentId is Guid parentId)
         {
-            await ValidateParentAsync(categoryId, parentId, category.LanguageCode, cancellationToken);
+            await ValidateParentAsync(command.CategoryId, parentId, category.LanguageCode, cancellationToken);
         }
 
         var maps = await BuildMapsAsync(cancellationToken);
-        ContentCategoryTreeRules.ValidateMove(categoryId, command.NewParentId, maps.ParentById, maps.LanguageById);
+        ContentCategoryTreeRules.ValidateMove(command.CategoryId, command.NewParentId, maps.ParentById, maps.LanguageById);
         category.SetParent(command.NewParentId, DateTimeOffset.UtcNow);
         await _db.SaveChangesAsync(cancellationToken);
         return await MapWorkspaceAsync(category, cancellationToken);

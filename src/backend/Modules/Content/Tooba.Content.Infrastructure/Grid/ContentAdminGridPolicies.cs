@@ -1,6 +1,7 @@
 ﻿using Tooba.BuildingBlocks;
 using Tooba.BuildingBlocks.Grid;
-using Tooba.Content.Application.Models;
+using Tooba.Content.Application.Articles.Models;
+using Tooba.Content.Application.Authors.Models;
 
 namespace Tooba.Content.Infrastructure.Grid;
 

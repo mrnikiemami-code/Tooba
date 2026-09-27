@@ -1,19 +1,9 @@
-using MediatR;
+﻿using MediatR;
 using Microsoft.AspNetCore.Routing;
 using Tooba.BuildingBlocks.Grid;
 using Tooba.BuildingBlocks.Presentation;
-using Tooba.Content.Application.Commands.ArchiveArticle;
-using Tooba.Content.Application.Commands.CreateArticle;
-using Tooba.Content.Application.Commands.DeleteArticle;
-using Tooba.Content.Application.Commands.PublishArticle;
-using Tooba.Content.Application.Commands.UnpublishArticle;
-using Tooba.Content.Application.Commands.UpdateArticle;
-using Tooba.Content.Application.Queries.GetAdminArticle;
-using Tooba.Content.Application.Queries.GetArticlePreview;
-using Tooba.Content.Application.Queries.GetPublishReadiness;
-using Tooba.Content.Application.Queries.ListAdminArticles;
-using Tooba.Content.Application.Queries.ListArticleHistory;
-using Tooba.Content.Application.Queries.QueryAdminArticlesGrid;
+using Tooba.Content.Application.Articles.Commands;
+using Tooba.Content.Application.Articles.Queries;
 
 namespace Tooba.Content.Endpoints.Admin;
 

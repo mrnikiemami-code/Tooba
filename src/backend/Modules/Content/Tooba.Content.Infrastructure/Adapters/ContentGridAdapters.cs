@@ -1,8 +1,10 @@
-using Tooba.BuildingBlocks.Grid;
-using Tooba.Content.Application.Models;
-using Tooba.Content.Application.Ports;
+﻿using Tooba.BuildingBlocks.Grid;
 using Tooba.Content.Infrastructure.Grid;
 using Tooba.Content.Infrastructure.Persistence;
+using Tooba.Content.Application.Articles.Models;
+using Tooba.Content.Application.Articles.Ports;
+using Tooba.Content.Application.Authors.Models;
+using Tooba.Content.Application.Authors.Ports;
 
 namespace Tooba.Content.Infrastructure.Adapters;
 

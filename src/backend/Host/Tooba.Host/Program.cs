@@ -162,7 +162,7 @@ builder.Services.AddToobaCqrsFoundation(
     typeof(Tooba.AccessControl.Application.Commands.EnsureBootstrap.EnsureAccessControlBootstrapCommand).Assembly,
     typeof(Tooba.AddressBook.Application.Ports.IAddressBookDirectory).Assembly,
     typeof(Tooba.CustomerProfile.Application.Queries.GetCustomerProfilePage.GetCustomerProfilePageQuery).Assembly,
-    typeof(Tooba.Content.Application.Commands.CreateArticle.CreateArticleCommand).Assembly);
+    typeof(Tooba.Content.Application.Articles.Commands.CreateArticleCommand).Assembly);
 builder.Services.AddScoped<IOrderAdminAuthorizer, HostOrderAdminAuthorizer>();
 builder.Services.AddScoped<
     Tooba.Order.Application.Admin.Operations.Ports.IOrderAdminEffectiveAccessReader,

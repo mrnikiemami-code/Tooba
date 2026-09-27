@@ -1,7 +1,22 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Tooba.Content.Application.Articles.Commands;
+using Tooba.Content.Application.Articles.Models;
+using Tooba.Content.Application.Articles.Ports;
+using Tooba.Content.Application.Authors.Commands;
+using Tooba.Content.Application.Authors.Models;
+using Tooba.Content.Application.Authors.Ports;
+using Tooba.Content.Application.Categories.Commands;
+using Tooba.Content.Application.Categories.Models;
+using Tooba.Content.Application.Categories.Ports;
+using Tooba.Content.Application.Tags.Commands;
+using Tooba.Content.Application.Tags.Models;
+using Tooba.Content.Application.Tags.Ports;
+using Tooba.Content.Application.Comments.Commands;
+using Tooba.Content.Application.Comments.Models;
+using Tooba.Content.Application.Comments.Ports;
 using Testcontainers.PostgreSql;
-using Tooba.Content.Application.Models;
-using Tooba.Content.Application.Ports;
+
+
 using Tooba.Localization.Contracts;
 using Tooba.Content.Domain.Aggregates;
 using Tooba.Content.Domain.Rules;
@@ -106,13 +121,11 @@ public sealed class ContentArticleCommentModerationTests : IAsyncLifetime
             CancellationToken.None);
 
         var older = await comments.CreateAsync(
-            article.ArticleId,
-            new CreateArticleCommentCommand("اولی", "نظر قدیمی"),
+            new CreateArticleCommentCommand(article.ArticleId, "اولی", "نظر قدیمی", null),
             CancellationToken.None);
         await Task.Delay(20);
         var newer = await comments.CreateAsync(
-            article.ArticleId,
-            new CreateArticleCommentCommand("دومی", "نظر جدیدتر"),
+            new CreateArticleCommentCommand(article.ArticleId, "دومی", "نظر جدیدتر", null),
             CancellationToken.None);
 
         var page = await comments.ListForArticleAsync(article.ArticleId, null, null, 0, 20, CancellationToken.None);
@@ -123,18 +136,12 @@ public sealed class ContentArticleCommentModerationTests : IAsyncLifetime
 
         var moderator = Guid.NewGuid();
         var approved = await comments.ApproveAsync(
-            article.ArticleId,
-            newer.CommentId,
-            moderator,
-            new ModerateArticleCommentCommand(),
+            new ApproveArticleCommentCommand(article.ArticleId, newer.CommentId, moderator, null),
             CancellationToken.None);
         Assert.Equal(ArticleCommentStatus.Approved, approved.Status);
 
         var rejected = await comments.RejectAsync(
-            article.ArticleId,
-            older.CommentId,
-            moderator,
-            new ModerateArticleCommentCommand("نامناسب"),
+            new RejectArticleCommentCommand(article.ArticleId, older.CommentId, moderator, "نامناسب"),
             CancellationToken.None);
         Assert.Equal(ArticleCommentStatus.Rejected, rejected.Status);
 
@@ -152,7 +159,9 @@ public sealed class ContentArticleCommentModerationTests : IAsyncLifetime
         Assert.Equal(ArticleCommentCodes.ArticleNotFound, missingArticle.Message);
 
         var missingComment = await Assert.ThrowsAsync<InvalidOperationException>(() =>
-            comments.HideAsync(article.ArticleId, Guid.NewGuid(), moderator, new ModerateArticleCommentCommand(), CancellationToken.None));
+            comments.HideAsync(
+                new HideArticleCommentCommand(article.ArticleId, Guid.NewGuid(), moderator, null),
+                CancellationToken.None));
         Assert.Equal(ArticleCommentCodes.NotFound, missingComment.Message);
     }
 

@@ -1,6 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using Tooba.Content.Application.Models;
-using Tooba.Content.Application.Ports;
+using Tooba.Content.Application.Media.Models;
+using Tooba.Content.Application.Media.Ports;
 using Tooba.Content.Contracts.Errors;
 using Tooba.BuildingBlocks;
 using Tooba.Content.Domain.Aggregates;

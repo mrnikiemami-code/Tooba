@@ -1,13 +1,8 @@
-using MediatR;
+﻿using MediatR;
 using Microsoft.AspNetCore.Routing;
 using Tooba.BuildingBlocks.Presentation;
-using Tooba.Content.Application.Commands.AddGalleryMedia;
-using Tooba.Content.Application.Commands.AssignFeaturedMedia;
-using Tooba.Content.Application.Commands.AssignSeoImage;
-using Tooba.Content.Application.Commands.PatchGalleryMedia;
-using Tooba.Content.Application.Commands.RemoveGalleryMedia;
-using Tooba.Content.Application.Commands.ReorderGallery;
-using Tooba.Content.Application.Queries.GetArticleMediaWorkspace;
+using Tooba.Content.Application.Media.Commands;
+using Tooba.Content.Application.Media.Queries;
 
 namespace Tooba.Content.Endpoints.Admin;
 

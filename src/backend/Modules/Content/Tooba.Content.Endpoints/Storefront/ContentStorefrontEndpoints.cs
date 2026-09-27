@@ -1,14 +1,11 @@
-using MediatR;
+﻿using MediatR;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using Tooba.BuildingBlocks.Presentation;
-using Tooba.Content.Application.Queries.GetPublicAuthorBySlug;
-using Tooba.Content.Application.Queries.GetPublicCategoryBySlug;
-using Tooba.Content.Application.Queries.GetPublishedArticleBySlug;
-using Tooba.Content.Application.Queries.ListPublicAuthors;
-using Tooba.Content.Application.Queries.ListPublicCategories;
-using Tooba.Content.Application.Queries.ListPublishedArticles;
+using Tooba.Content.Application.Authors.Queries;
+using Tooba.Content.Application.Categories.Queries;
+using Tooba.Content.Application.Articles.Queries;
 
 namespace Tooba.Content.Endpoints.Storefront;
 

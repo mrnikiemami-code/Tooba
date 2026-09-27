@@ -1,0 +1,18 @@
+﻿using MediatR;
+using Tooba.BuildingBlocks.Results;
+using Tooba.Content.Application.Categories.Ports;
+using Tooba.Content.Contracts.Errors;
+using Tooba.Content.Application.Composition;
+
+namespace Tooba.Content.Application.Categories.Commands;
+
+public sealed record ArchiveCategoryCommand(Guid CategoryId) : IRequest<Result>;
+
+public sealed class ArchiveCategoryCommandHandler(IContentCategoryDirectory categories)
+    : IRequestHandler<ArchiveCategoryCommand, Result>
+{
+    public Task<Result> Handle(ArchiveCategoryCommand request, CancellationToken cancellationToken) =>
+        ContentOperation.ExecuteAsync(
+            () => categories.ArchiveAsync(request.CategoryId, cancellationToken),
+            ContentErrorCodes.UpdateRejected);
+}

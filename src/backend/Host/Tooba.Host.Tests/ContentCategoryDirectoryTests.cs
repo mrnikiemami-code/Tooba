@@ -1,7 +1,19 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Tooba.Content.Application.Articles.Commands;
+using Tooba.Content.Application.Articles.Models;
+using Tooba.Content.Application.Articles.Ports;
+using Tooba.Content.Application.Authors.Commands;
+using Tooba.Content.Application.Authors.Models;
+using Tooba.Content.Application.Authors.Ports;
+using Tooba.Content.Application.Categories.Commands;
+using Tooba.Content.Application.Categories.Models;
+using Tooba.Content.Application.Categories.Ports;
+using Tooba.Content.Application.Tags.Commands;
+using Tooba.Content.Application.Tags.Models;
+using Tooba.Content.Application.Tags.Ports;
 using Testcontainers.PostgreSql;
-using Tooba.Content.Application.Models;
-using Tooba.Content.Application.Ports;
+
+
 using Tooba.Localization.Contracts;
 using Tooba.Content.Domain.Aggregates;
 using Tooba.Content.Domain.Rules;
@@ -60,34 +72,30 @@ public sealed class ContentCategoryDirectoryTests : IAsyncLifetime
         var content = new ContentDirectory(db, languages, categories, authors, new ContentTagDirectory(db));
 
         var faRoot = await categories.CreateAsync(
-            new CreateContentCategoryCommand("fa-IR", null, "راهنما", "guide", null, null, 0),
+            new CreateCategoryCommand("fa-IR", null, "راهنما", "guide", null, null, 0),
             CancellationToken.None);
         var faChild = await categories.CreateAsync(
-            new CreateContentCategoryCommand("fa-IR", faRoot.Id, "خرید", "buying", null, null, 1),
+            new CreateCategoryCommand("fa-IR", faRoot.Id, "خرید", "buying", null, null, 1),
             CancellationToken.None);
         var enRoot = await categories.CreateAsync(
-            new CreateContentCategoryCommand("en-US", null, "Guides", "guides", null, null, 0),
+            new CreateCategoryCommand("en-US", null, "Guides", "guides", null, null, 0),
             CancellationToken.None);
         var author = await authors.CreateAsync(
-            new CreateContentAuthorCommand("نویسنده", "article-author", null, null, null, null, null, null, null, null),
+            new CreateAuthorCommand("نویسنده", "article-author", null, null, null, null, null, null, null, null),
             CancellationToken.None);
 
         await Assert.ThrowsAsync<InvalidOperationException>(() =>
             categories.CreateAsync(
-                new CreateContentCategoryCommand("fa-IR", null, "راهنمای دیگر", "guide", null, null, 2),
+                new CreateCategoryCommand("fa-IR", null, "راهنمای دیگر", "guide", null, null, 2),
                 CancellationToken.None));
 
         await Assert.ThrowsAsync<InvalidOperationException>(() =>
-            categories.MoveAsync(
-                faChild.Id,
-                new MoveContentCategoryCommand(enRoot.Id),
-                CancellationToken.None));
+            categories.MoveAsync(new MoveCategoryCommand(
+                faChild.Id, enRoot.Id), CancellationToken.None));
 
         await Assert.ThrowsAsync<InvalidOperationException>(() =>
-            categories.MoveAsync(
-                faRoot.Id,
-                new MoveContentCategoryCommand(faChild.Id),
-                CancellationToken.None));
+            categories.MoveAsync(new MoveCategoryCommand(
+                faRoot.Id, faChild.Id), CancellationToken.None));
 
         var article = await content.CreateAsync(
             new CreateArticleCommand(

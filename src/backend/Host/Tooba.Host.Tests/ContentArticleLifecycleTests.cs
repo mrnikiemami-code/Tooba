@@ -1,7 +1,19 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Tooba.Content.Application.Articles.Commands;
+using Tooba.Content.Application.Articles.Models;
+using Tooba.Content.Application.Articles.Ports;
+using Tooba.Content.Application.Authors.Commands;
+using Tooba.Content.Application.Authors.Models;
+using Tooba.Content.Application.Authors.Ports;
+using Tooba.Content.Application.Categories.Commands;
+using Tooba.Content.Application.Categories.Models;
+using Tooba.Content.Application.Categories.Ports;
+using Tooba.Content.Application.Tags.Commands;
+using Tooba.Content.Application.Tags.Models;
+using Tooba.Content.Application.Tags.Ports;
 using Testcontainers.PostgreSql;
-using Tooba.Content.Application.Models;
-using Tooba.Content.Application.Ports;
+
+
 using Tooba.Localization.Contracts;
 using Tooba.Content.Domain.Aggregates;
 using Tooba.Content.Domain.Rules;
@@ -64,7 +76,7 @@ public sealed class ContentArticleLifecycleTests : IAsyncLifetime
             new ContentTagDirectory(db));
 
         var author = await new ContentAuthorDirectory(db).CreateAsync(
-            new CreateContentAuthorCommand("تحریریه", "editorial", null, null, null, null, null, null, null, null),
+            new CreateAuthorCommand("تحریریه", "editorial", null, null, null, null, null, null, null, null),
             CancellationToken.None);
 
         var past = DateTimeOffset.UtcNow.AddDays(-1);

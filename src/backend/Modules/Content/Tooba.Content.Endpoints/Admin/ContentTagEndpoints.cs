@@ -1,11 +1,8 @@
-using MediatR;
+﻿using MediatR;
 using Microsoft.AspNetCore.Routing;
 using Tooba.BuildingBlocks.Presentation;
-using Tooba.Content.Application.Commands.AssignArticleTag;
-using Tooba.Content.Application.Commands.CreateTag;
-using Tooba.Content.Application.Commands.RemoveArticleTag;
-using Tooba.Content.Application.Queries.ListArticleTags;
-using Tooba.Content.Application.Queries.SearchTags;
+using Tooba.Content.Application.Tags.Commands;
+using Tooba.Content.Application.Tags.Queries;
 
 namespace Tooba.Content.Endpoints.Admin;
 

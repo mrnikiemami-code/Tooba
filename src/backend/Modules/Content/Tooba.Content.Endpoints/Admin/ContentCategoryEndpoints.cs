@@ -1,16 +1,9 @@
 ﻿using MediatR;
 using Microsoft.AspNetCore.Routing;
 using Tooba.BuildingBlocks.Presentation;
-using Tooba.Content.Application.Commands.ArchiveCategory;
-using Tooba.Content.Application.Commands.CreateCategory;
-using Tooba.Content.Application.Commands.MoveCategory;
-using Tooba.Content.Application.Commands.ReorderCategories;
-using Tooba.Content.Application.Commands.UpdateCategory;
-using Tooba.Content.Application.Commands.UpdateCategoryMedia;
-using Tooba.Content.Application.Commands.UpdateCategorySeo;
-using Tooba.Content.Application.Models;
-using Tooba.Content.Application.Queries.GetCategoryTree;
-using Tooba.Content.Application.Queries.GetCategoryWorkspace;
+using Tooba.Content.Application.Categories.Commands;
+using Tooba.Content.Application.Categories.Models;
+using Tooba.Content.Application.Categories.Queries;
 
 namespace Tooba.Content.Endpoints.Admin;
 

@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using Tooba.Content.Application.Models;
-using Tooba.Content.Application.Ports;
+using Tooba.Content.Application.Comments.Commands;
+using Tooba.Content.Application.Comments.Models;
+using Tooba.Content.Application.Comments.Ports;
 using Tooba.Content.Contracts.Errors;
 using Tooba.BuildingBlocks;
 using Tooba.Content.Domain.Aggregates;
@@ -58,14 +59,13 @@ public sealed class ArticleCommentDirectory : IArticleCommentDirectory
 
     /// <inheritdoc />
     public async Task<ArticleCommentAdminDto> CreateAsync(
-        Guid articleId,
         CreateArticleCommentCommand command,
         CancellationToken cancellationToken)
     {
-        await EnsureArticleExistsAsync(articleId, cancellationToken);
+        await EnsureArticleExistsAsync(command.ArticleId, cancellationToken);
         var now = DateTimeOffset.UtcNow;
         var entity = ArticleComment.Create(
-            articleId,
+            command.ArticleId,
             command.DisplayName,
             command.Body,
             now,
@@ -77,45 +77,52 @@ public sealed class ArticleCommentDirectory : IArticleCommentDirectory
 
     /// <inheritdoc />
     public Task<ArticleCommentAdminDto> ApproveAsync(
-        Guid articleId,
-        Guid commentId,
-        Guid moderatorUserId,
-        ModerateArticleCommentCommand command,
+        ApproveArticleCommentCommand command,
         CancellationToken cancellationToken) =>
-        ModerateAsync(articleId, commentId, moderatorUserId, command, (c, now) => c.Approve(moderatorUserId, now, command.Note), cancellationToken);
+        ModerateAsync(
+            command.ArticleId,
+            command.CommentId,
+            command.ActorUserId,
+            (c, now) => c.Approve(command.ActorUserId, now, command.Note),
+            cancellationToken);
 
     /// <inheritdoc />
     public Task<ArticleCommentAdminDto> RejectAsync(
-        Guid articleId,
-        Guid commentId,
-        Guid moderatorUserId,
-        ModerateArticleCommentCommand command,
+        RejectArticleCommentCommand command,
         CancellationToken cancellationToken) =>
-        ModerateAsync(articleId, commentId, moderatorUserId, command, (c, now) => c.Reject(moderatorUserId, now, command.Note), cancellationToken);
+        ModerateAsync(
+            command.ArticleId,
+            command.CommentId,
+            command.ActorUserId,
+            (c, now) => c.Reject(command.ActorUserId, now, command.Note),
+            cancellationToken);
 
     /// <inheritdoc />
     public Task<ArticleCommentAdminDto> HideAsync(
-        Guid articleId,
-        Guid commentId,
-        Guid moderatorUserId,
-        ModerateArticleCommentCommand command,
+        HideArticleCommentCommand command,
         CancellationToken cancellationToken) =>
-        ModerateAsync(articleId, commentId, moderatorUserId, command, (c, now) => c.Hide(moderatorUserId, now, command.Note), cancellationToken);
+        ModerateAsync(
+            command.ArticleId,
+            command.CommentId,
+            command.ActorUserId,
+            (c, now) => c.Hide(command.ActorUserId, now, command.Note),
+            cancellationToken);
 
     /// <inheritdoc />
     public Task<ArticleCommentAdminDto> MarkPendingAsync(
-        Guid articleId,
-        Guid commentId,
-        Guid moderatorUserId,
-        ModerateArticleCommentCommand command,
+        MarkArticleCommentPendingCommand command,
         CancellationToken cancellationToken) =>
-        ModerateAsync(articleId, commentId, moderatorUserId, command, (c, now) => c.MarkPending(moderatorUserId, now, command.Note), cancellationToken);
+        ModerateAsync(
+            command.ArticleId,
+            command.CommentId,
+            command.ActorUserId,
+            (c, now) => c.MarkPending(command.ActorUserId, now, command.Note),
+            cancellationToken);
 
     private async Task<ArticleCommentAdminDto> ModerateAsync(
         Guid articleId,
         Guid commentId,
         Guid moderatorUserId,
-        ModerateArticleCommentCommand _,
         Action<ArticleComment, DateTimeOffset> apply,
         CancellationToken cancellationToken)
     {

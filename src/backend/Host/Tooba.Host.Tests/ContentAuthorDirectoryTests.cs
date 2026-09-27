@@ -1,7 +1,19 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Tooba.Content.Application.Articles.Commands;
+using Tooba.Content.Application.Articles.Models;
+using Tooba.Content.Application.Articles.Ports;
+using Tooba.Content.Application.Authors.Commands;
+using Tooba.Content.Application.Authors.Models;
+using Tooba.Content.Application.Authors.Ports;
+using Tooba.Content.Application.Categories.Commands;
+using Tooba.Content.Application.Categories.Models;
+using Tooba.Content.Application.Categories.Ports;
+using Tooba.Content.Application.Tags.Commands;
+using Tooba.Content.Application.Tags.Models;
+using Tooba.Content.Application.Tags.Ports;
 using Testcontainers.PostgreSql;
-using Tooba.Content.Application.Models;
-using Tooba.Content.Application.Ports;
+
+
 using Tooba.Localization.Contracts;
 using Tooba.Content.Domain.Aggregates;
 using Tooba.Content.Domain.Rules;
@@ -63,15 +75,15 @@ public sealed class ContentAuthorDirectoryTests : IAsyncLifetime
         var content = new ContentDirectory(db, languages, categories, authors, new ContentTagDirectory(db));
 
         var active = await authors.CreateAsync(
-            new CreateContentAuthorCommand("تحریریه توبا", "tooba-editorial", null, null, null, null, null, null, null, null),
+            new CreateAuthorCommand("تحریریه توبا", "tooba-editorial", null, null, null, null, null, null, null, null),
             CancellationToken.None);
         var second = await authors.CreateAsync(
-            new CreateContentAuthorCommand("مریم احمدی", "maryam-ahmadi", null, null, null, null, null, null, null, null),
+            new CreateAuthorCommand("مریم احمدی", "maryam-ahmadi", null, null, null, null, null, null, null, null),
             CancellationToken.None);
 
         await Assert.ThrowsAsync<InvalidOperationException>(() =>
             authors.CreateAsync(
-                new CreateContentAuthorCommand("نام دیگر", "tooba-editorial", null, null, null, null, null, null, null, null),
+                new CreateAuthorCommand("نام دیگر", "tooba-editorial", null, null, null, null, null, null, null, null),
                 CancellationToken.None));
 
         var article = await content.CreateAsync(
@@ -116,8 +128,7 @@ public sealed class ContentAuthorDirectoryTests : IAsyncLifetime
                 CancellationToken.None));
 
         var updated = await content.UpdateAsync(
-            article.ArticleId,
-            new UpdateArticleCommand(
+            new UpdateArticleCommand(article.ArticleId, 
                 "مقالهٔ به‌روز",
                 "چکیده",
                 "بدنه",
@@ -138,8 +149,7 @@ public sealed class ContentAuthorDirectoryTests : IAsyncLifetime
         Assert.Equal(ContentPublicationStatus.Published, published.Status);
 
         var reassigned = await content.UpdateAsync(
-            article.ArticleId,
-            new UpdateArticleCommand(
+            new UpdateArticleCommand(article.ArticleId, 
                 "مقالهٔ به‌روز",
                 "چکیده",
                 "بدنه",

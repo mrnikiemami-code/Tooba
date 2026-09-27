@@ -1,7 +1,19 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Tooba.Content.Application.Articles.Commands;
+using Tooba.Content.Application.Articles.Models;
+using Tooba.Content.Application.Articles.Ports;
+using Tooba.Content.Application.Authors.Commands;
+using Tooba.Content.Application.Authors.Models;
+using Tooba.Content.Application.Authors.Ports;
+using Tooba.Content.Application.Categories.Commands;
+using Tooba.Content.Application.Categories.Models;
+using Tooba.Content.Application.Categories.Ports;
+using Tooba.Content.Application.Tags.Commands;
+using Tooba.Content.Application.Tags.Models;
+using Tooba.Content.Application.Tags.Ports;
 using Testcontainers.PostgreSql;
-using Tooba.Content.Application.Models;
-using Tooba.Content.Application.Ports;
+
+
 using Tooba.Localization.Contracts;
 using Tooba.Content.Domain.Aggregates;
 using Tooba.Content.Domain.Rules;
@@ -61,37 +73,37 @@ public sealed class ContentTaxonomyTagsTests : IAsyncLifetime
         var content = new ContentDirectory(db, languages, categories, authors, tags);
 
         var faRoot = await categories.CreateAsync(
-            new CreateContentCategoryCommand("fa-IR", null, "راهنمای خرید", "buying-guide", null, null, 0),
+            new CreateCategoryCommand("fa-IR", null, "راهنمای خرید", "buying-guide", null, null, 0),
             CancellationToken.None);
         var faChild = await categories.CreateAsync(
-            new CreateContentCategoryCommand("fa-IR", faRoot.Id, "موبایل", "mobile", null, null, 1),
+            new CreateCategoryCommand("fa-IR", faRoot.Id, "موبایل", "mobile", null, null, 1),
             CancellationToken.None);
 
         var level3 = await Assert.ThrowsAsync<InvalidOperationException>(() =>
             categories.CreateAsync(
-                new CreateContentCategoryCommand("fa-IR", faChild.Id, "آیفون", "iphone", null, null, 2),
+                new CreateCategoryCommand("fa-IR", faChild.Id, "آیفون", "iphone", null, null, 2),
                 CancellationToken.None));
         Assert.Equal(ContentCategoryErrorCodes.MaxDepthExceeded, level3.Message);
 
         var otherRoot = await categories.CreateAsync(
-            new CreateContentCategoryCommand("fa-IR", null, "اخبار", "news", null, null, 3),
+            new CreateCategoryCommand("fa-IR", null, "اخبار", "news", null, null, 3),
             CancellationToken.None);
         var moveDepth = await Assert.ThrowsAsync<InvalidOperationException>(() =>
-            categories.MoveAsync(faRoot.Id, new MoveContentCategoryCommand(otherRoot.Id), CancellationToken.None));
+            categories.MoveAsync(new MoveCategoryCommand(faRoot.Id, otherRoot.Id), CancellationToken.None));
         // moving L1 with child under another L1 would make child depth 3
         Assert.Equal(ContentCategoryErrorCodes.MaxDepthExceeded, moveDepth.Message);
 
         var enRoot = await categories.CreateAsync(
-            new CreateContentCategoryCommand("en-US", null, "Guides", "guides", null, null, 0),
+            new CreateCategoryCommand("en-US", null, "Guides", "guides", null, null, 0),
             CancellationToken.None);
         var crossLang = await Assert.ThrowsAsync<InvalidOperationException>(() =>
             categories.CreateAsync(
-                new CreateContentCategoryCommand("fa-IR", enRoot.Id, "bad", "bad-child", null, null, 4),
+                new CreateCategoryCommand("fa-IR", enRoot.Id, "bad", "bad-child", null, null, 4),
                 CancellationToken.None));
         Assert.Equal(ContentCategoryErrorCodes.CrossLanguageParent, crossLang.Message);
 
         var author = await authors.CreateAsync(
-            new CreateContentAuthorCommand("نویسنده", "tax-author", null, null, null, null, null, null, null, null),
+            new CreateAuthorCommand("نویسنده", "tax-author", null, null, null, null, null, null, null, null),
             CancellationToken.None);
 
         var articleL1 = await content.CreateAsync(
@@ -114,8 +126,7 @@ public sealed class ContentTaxonomyTagsTests : IAsyncLifetime
         Assert.Equal(faRoot.Id, articleL1.CategoryId);
 
         var articleL2 = await content.UpdateAsync(
-            articleL1.ArticleId,
-            new UpdateArticleCommand(
+            new UpdateArticleCommand(articleL1.ArticleId, 
                 articleL1.Title,
                 articleL1.Excerpt,
                 articleL1.Body,
@@ -134,8 +145,7 @@ public sealed class ContentTaxonomyTagsTests : IAsyncLifetime
 
         var mismatch = await Assert.ThrowsAsync<InvalidOperationException>(() =>
             content.UpdateAsync(
-                articleL2.ArticleId,
-                new UpdateArticleCommand(
+                new UpdateArticleCommand(articleL2.ArticleId, 
                     articleL2.Title,
                     articleL2.Excerpt,
                     articleL2.Body,
@@ -152,10 +162,10 @@ public sealed class ContentTaxonomyTagsTests : IAsyncLifetime
                 CancellationToken.None));
         Assert.Equal(ContentCategoryErrorCodes.LanguageMismatch, mismatch.Message);
 
-        var tagA = await tags.CreateAsync(new CreateContentTagCommand("fa-IR", "راهنما", null), CancellationToken.None);
-        var tagB = await tags.CreateAsync(new CreateContentTagCommand("fa-IR", "خرید", null), CancellationToken.None);
+        var tagA = await tags.CreateAsync(new CreateTagCommand("fa-IR", "راهنما", null), CancellationToken.None);
+        var tagB = await tags.CreateAsync(new CreateTagCommand("fa-IR", "خرید", null), CancellationToken.None);
         var dup = await Assert.ThrowsAsync<InvalidOperationException>(() =>
-            tags.CreateAsync(new CreateContentTagCommand("fa-IR", "  راهنما  ", null), CancellationToken.None));
+            tags.CreateAsync(new CreateTagCommand("fa-IR", "  راهنما  ", null), CancellationToken.None));
         Assert.Equal(ContentTagErrorCodes.DuplicateName, dup.Message);
 
         var assigned = await tags.AssignToArticleAsync(articleL2.ArticleId, tagA.TagId, CancellationToken.None);
@@ -168,7 +178,7 @@ public sealed class ContentTaxonomyTagsTests : IAsyncLifetime
         Assert.DoesNotContain(afterRemove, t => t.TagId == tagA.TagId);
         Assert.Contains(afterRemove, t => t.TagId == tagB.TagId);
 
-        var enTag = await tags.CreateAsync(new CreateContentTagCommand("en-US", "guide", null), CancellationToken.None);
+        var enTag = await tags.CreateAsync(new CreateTagCommand("en-US", "guide", null), CancellationToken.None);
         var tagLang = await Assert.ThrowsAsync<InvalidOperationException>(() =>
             tags.AssignToArticleAsync(articleL2.ArticleId, enTag.TagId, CancellationToken.None));
         Assert.Equal(ContentTagErrorCodes.LanguageMismatch, tagLang.Message);

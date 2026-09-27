@@ -501,12 +501,12 @@
       "module": "Content",
       "structureCertified": true,
       "lockVersion": "ARCH-COMPLETE-002",
-      "certificationNote": "Certified by TB-TMAR-HOST-CONTENT-AMC-001-R3 after Host ZERO (AMC), CQRS/typed-fault R1/R2, and physical structure repair: Domain Aggregates/Rules, Application Composition for ContentOperation, Infrastructure Directories/Development with ContentModule.cs composition root only, Endpoints Admin/Storefront/Errors/Resources, Contracts Errors-only, solution folder /Modules/Content/.",
+      "certificationNote": "Re-certified by TB-TMAR-HOST-CONTENT-AMC-001-R4 under hardened semantic-Contracts + capability-first foldering rules. Application is capability-first (Articles/Authors/Categories/Tags/Media/Comments) with Composition/ContentOperation and shared Validators/ContentValidationCodes; zero Application *Contracts.cs bundles; zero unjustified one-file Command/Query leaf folders; Contracts remains Errors-only (no foreign module Content.Application consumers). R1/R2 typed faults and R3 Host ZERO / Contracts-only Media+Localization preserved.",
       "projects": [
         {
           "projectName": "Tooba.Content.Contracts",
           "rootAllowlist": [],
-          "rootAllowlistJustification": "Contracts owns Errors/ContentErrorCodes.cs only; no root .cs remains.",
+          "rootAllowlistJustification": "Contracts owns Errors/ContentErrorCodes.cs only; no root .cs remains. No additional cross-module boundary DTOs required after consumer audit.",
           "forbiddenRootFiles": [
             "ContentErrorCodes.cs",
             "ContentContracts.cs"
@@ -537,11 +537,16 @@
         {
           "projectName": "Tooba.Content.Application",
           "rootAllowlist": [],
-          "rootAllowlistJustification": "Commands/Queries/Models/Ports/Validators plus Composition/ContentOperation.cs; no capability .cs at project root.",
+          "rootAllowlistJustification": "Capability-first shallow foldering: Articles/Authors/Categories/Tags/Media/Comments (Commands/Queries/Models/Ports/Validators) plus Composition/ContentOperation.cs and shared Validators/ContentValidationCodes.cs. No project-root capability .cs.",
           "forbiddenRootFiles": [
             "ContentOperation.cs"
           ],
-          "forbiddenTopLevelFolders": []
+          "forbiddenTopLevelFolders": [
+            "Commands",
+            "Queries",
+            "Models",
+            "Ports"
+          ]
         },
         {
           "projectName": "Tooba.Content.Endpoints",

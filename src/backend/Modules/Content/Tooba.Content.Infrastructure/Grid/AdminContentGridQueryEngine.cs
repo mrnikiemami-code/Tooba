@@ -1,10 +1,10 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Tooba.BuildingBlocks.Grid;
 using Tooba.Persistence.Grid;
-using Tooba.Content.Application.Models;
 using Tooba.Content.Domain.Aggregates;
 using Tooba.Content.Domain.Rules;
 using Tooba.Content.Infrastructure.Persistence;
+using Tooba.Content.Application.Articles.Models;
 
 namespace Tooba.Content.Infrastructure.Grid;
 

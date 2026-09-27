@@ -1,7 +1,7 @@
 ﻿using Tooba.BuildingBlocks;
-using Tooba.Content.Application.Ports;
 using Tooba.Content.Contracts.Errors;
 using Tooba.Media.Contracts.Ports;
+using Tooba.Content.Application.Media.Ports;
 
 namespace Tooba.Content.Infrastructure.Adapters;
 

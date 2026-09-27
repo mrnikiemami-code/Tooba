@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using Tooba.Content.Application.Models;
-using Tooba.Content.Application.Ports;
+using Tooba.Content.Application.Tags.Commands;
+using Tooba.Content.Application.Tags.Models;
+using Tooba.Content.Application.Tags.Ports;
 using Tooba.Content.Contracts.Errors;
 using Tooba.BuildingBlocks;
 using Tooba.Content.Domain.Aggregates;
@@ -53,7 +54,7 @@ public sealed class ContentTagDirectory : IContentTagDirectory
 
     /// <inheritdoc />
     public async Task<ContentTagDto> CreateAsync(
-        CreateContentTagCommand command,
+        CreateTagCommand command,
         CancellationToken cancellationToken)
     {
         var now = DateTimeOffset.UtcNow;

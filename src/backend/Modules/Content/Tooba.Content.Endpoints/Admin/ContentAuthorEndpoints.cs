@@ -1,13 +1,9 @@
-using MediatR;
+﻿using MediatR;
 using Microsoft.AspNetCore.Routing;
 using Tooba.BuildingBlocks.Grid;
 using Tooba.BuildingBlocks.Presentation;
-using Tooba.Content.Application.Commands.CreateAuthor;
-using Tooba.Content.Application.Commands.DeactivateAuthor;
-using Tooba.Content.Application.Commands.UpdateAuthor;
-using Tooba.Content.Application.Queries.GetAuthorPickerList;
-using Tooba.Content.Application.Queries.GetAuthorWorkspace;
-using Tooba.Content.Application.Queries.QueryAdminAuthorsGrid;
+using Tooba.Content.Application.Authors.Commands;
+using Tooba.Content.Application.Authors.Queries;
 
 namespace Tooba.Content.Endpoints.Admin;
 

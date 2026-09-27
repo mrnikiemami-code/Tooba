@@ -18,8 +18,8 @@ using Tooba.Promotion.Application.Checkout;
 using Tooba.Promotion.Application.Merchandising;
 using Tooba.Tax.Contracts;
 using Tooba.Reviews.Application;
-using Tooba.Content.Application.Models;
-using Tooba.Content.Application.Ports;
+using Tooba.Content.Application.Articles.Models;
+using Tooba.Content.Application.Articles.Ports;
 using Tooba.Content.Domain.Aggregates;
 using Tooba.Content.Domain.Rules;
 

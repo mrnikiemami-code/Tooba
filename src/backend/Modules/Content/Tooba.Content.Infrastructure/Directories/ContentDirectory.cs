@@ -1,6 +1,10 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using Tooba.Content.Application.Models;
-using Tooba.Content.Application.Ports;
+using Tooba.Content.Application.Articles.Commands;
+using Tooba.Content.Application.Articles.Models;
+using Tooba.Content.Application.Articles.Ports;
+using Tooba.Content.Application.Authors.Ports;
+using Tooba.Content.Application.Categories.Ports;
+using Tooba.Content.Application.Tags.Ports;
 using Tooba.Content.Contracts.Errors;
 using Tooba.BuildingBlocks;
 using Tooba.Content.Domain.Aggregates;
@@ -215,11 +219,10 @@ public sealed class ContentDirectory : IContentDirectory
 
     /// <inheritdoc />
     public async Task<AdminArticleSnapshot> UpdateAsync(
-        Guid articleId,
         UpdateArticleCommand command,
         CancellationToken cancellationToken)
     {
-        var article = await _db.Articles.FirstOrDefaultAsync(row => row.ArticleId == articleId, cancellationToken)
+        var article = await _db.Articles.FirstOrDefaultAsync(row => row.ArticleId == command.ArticleId, cancellationToken)
             ?? throw new ContractOperationException(ContentErrorCodes.ArticleMissing);
         var now = DateTimeOffset.UtcNow;
         var locale = string.IsNullOrWhiteSpace(command.Locale) ? article.Locale : command.Locale.Trim();
@@ -230,12 +233,12 @@ public sealed class ContentDirectory : IContentDirectory
                 throw new ContractOperationException(ContentArticleErrorCodes.LocaleLocked);
             }
 
-            if (await _db.ArticleMedia.AnyAsync(row => row.ArticleId == articleId, cancellationToken))
+            if (await _db.ArticleMedia.AnyAsync(row => row.ArticleId == command.ArticleId, cancellationToken))
             {
                 throw new ContractOperationException(ContentArticleErrorCodes.LocaleLocked);
             }
 
-            if (await _db.ArticleTags.AnyAsync(row => row.ArticleId == articleId, cancellationToken))
+            if (await _db.ArticleTags.AnyAsync(row => row.ArticleId == command.ArticleId, cancellationToken))
             {
                 throw new ContractOperationException(ContentArticleErrorCodes.LocaleLocked);
             }
