@@ -21,10 +21,6 @@
     <Project Path="Modules/Party/Tooba.Party.Contracts/Tooba.Party.Contracts.csproj" />
     <Project Path="Modules/Party/Tooba.Party.Application/Tooba.Party.Application.csproj" />
     <Project Path="Modules/Party/Tooba.Party.Infrastructure/Tooba.Party.Infrastructure.csproj" />
-    <Project Path="Modules/Catalog/Tooba.Catalog.Domain/Tooba.Catalog.Domain.csproj" />
-    <Project Path="Modules/Catalog/Tooba.Catalog.Contracts/Tooba.Catalog.Contracts.csproj" />
-    <Project Path="Modules/Catalog/Tooba.Catalog.Application/Tooba.Catalog.Application.csproj" />
-    <Project Path="Modules/Catalog/Tooba.Catalog.Infrastructure/Tooba.Catalog.Infrastructure.csproj" />
     <Project Path="Modules/Localization/Tooba.Localization.Contracts/Tooba.Localization.Contracts.csproj" />
     <Project Path="Modules/Localization/Tooba.Localization.Domain/Tooba.Localization.Domain.csproj" />
     <Project Path="Modules/Localization/Tooba.Localization.Application/Tooba.Localization.Application.csproj" />
@@ -55,6 +51,13 @@
     <Project Path="Modules/Story/Tooba.Story.Domain/Tooba.Story.Domain.csproj" />
     <Project Path="Modules/Story/Tooba.Story.Application/Tooba.Story.Application.csproj" />
     <Project Path="Modules/Story/Tooba.Story.Infrastructure/Tooba.Story.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/Modules/Catalog/">
+    <Project Path="Modules/Catalog/Tooba.Catalog.Application/Tooba.Catalog.Application.csproj" />
+    <Project Path="Modules/Catalog/Tooba.Catalog.Contracts/Tooba.Catalog.Contracts.csproj" />
+    <Project Path="Modules/Catalog/Tooba.Catalog.Domain/Tooba.Catalog.Domain.csproj" />
+    <Project Path="Modules/Catalog/Tooba.Catalog.Endpoints/Tooba.Catalog.Endpoints.csproj" />
+    <Project Path="Modules/Catalog/Tooba.Catalog.Infrastructure/Tooba.Catalog.Infrastructure.csproj" />
   </Folder>
   <Folder Name="/Modules/Content/">
     <Project Path="Modules/Content/Tooba.Content.Application/Tooba.Content.Application.csproj" />

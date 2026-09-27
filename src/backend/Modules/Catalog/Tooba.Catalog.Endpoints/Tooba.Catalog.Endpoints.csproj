@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <NoWarn>$(NoWarn);1591</NoWarn>
+    <RootNamespace>Tooba.Catalog.Endpoints</RootNamespace>
+    <AssemblyName>Tooba.Catalog.Endpoints</AssemblyName>
+  </PropertyGroup>
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+  <ItemGroup>
+    <InternalsVisibleTo Include="Tooba.Host.Tests" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Tooba.Catalog.Application\Tooba.Catalog.Application.csproj" />
+    <ProjectReference Include="..\Tooba.Catalog.Contracts\Tooba.Catalog.Contracts.csproj" />
+    <ProjectReference Include="..\..\..\BuildingBlocks\Tooba.BuildingBlocks\Tooba.BuildingBlocks.csproj" />
+  </ItemGroup>
+</Project>

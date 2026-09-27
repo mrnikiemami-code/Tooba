@@ -1570,16 +1570,51 @@
     "recoveryDiscipline": "SYNC_SOT_FREQUENTLY_NEW_CHAT_MUST_RESUME_FROM_REPO_NOT_CONVERSATION_MEMORY",
     "minimalRecoveryPhraseFa": "برگردیم به TMAR؛ ریکاوری را انجام بده"
   },
+  "hostAdminAmc": {
+    "task": "TB-TMAR-HOST-ADMIN-AMC-001",
+    "wave": "W1",
+    "parentTask": "USER_AUTHORIZED_ADMIN_AMC_START",
+    "state": "HOST_ADMIN_AMC_W1_CATALOG_ENDPOINTS_FOUNDATION",
+    "activeHostFolder": "Admin",
+    "productionFileCountBefore": 59,
+    "productionFileCountAfter": 59,
+    "hostFilesMoved": 0,
+    "endpointsProject": "Modules/Catalog/Tooba.Catalog.Endpoints",
+    "solutionGrouping": "/Modules/Catalog/",
+    "endpointMap": "MapCatalogModuleEndpoints_EMPTY",
+    "presentation": "AddCatalogEndpointPresentation_ICatalogAdminAuthorizer",
+    "adminAuthorizer": "CatalogAdminAuthorizer_OVER_IAdminPanelAccess",
+    "hostThinAuthorizersUnchanged": true,
+    "iAdminPanelAccessUnchanged": true,
+    "optionalThinMigrate": "DEFERRED_TO_W2_QuantitySettings_StoreAppearance",
+    "schemaMigrationState": "NONE",
+    "frontendState": "UNCHANGED",
+    "focusedValidations": "PASSED_HostAdminAmcW1GuardTests_5_FAILED_0_CatalogEndpoints_Host_BUILD_OK",
+    "remainingBlockers": [
+      "Most Catalog Admin HTTP still Host-owned",
+      "Catalog lacks Contracts.Errors / Endpoints error catalog until first Result endpoint",
+      "Illegal Host→Module.Application/Domain/Infra on merch/landing/reservation/hold/workspace"
+    ],
+    "residualDebt": [
+      "W2+ evacuate Catalog HTTP wave-by-wave",
+      "Canonical ApiResponseFactory on migrated endpoints",
+      "SPLIT HoldPolicy/ReservationPolicy/Merchandising/ProductWorkspace"
+    ],
+    "nextWave": "W2",
+    "nextWaveGoal": "QuantitySettingsEndpoints and/or StoreAppearanceSettings* into Catalog.Endpoints",
+    "nextHostFolderStarted": false,
+    "workflowStop": "USER_REVIEW",
+    "evidence": "docs/evidence/TB-TMAR-HOST-ADMIN-AMC-001/"
+  },
   "hostTraversalOverride": {
     "afterAddressBook": "Authentication",
-    "deferredFolders": [
-      "Admin"
-    ],
+    "deferredFolders": [],
+    "activeAmcFolder": "Admin",
     "rationale": {
-      "Authentication": "NEXT_AFTER_ADDRESSBOOK_USER_DIRECTIVE",
-      "Admin": "DEFER_LARGE_FOLDER_TO_LATER_AVOID_SCOPE_EXPANSION_AND_LOOP_RISK"
+      "Authentication": "WAS_NEXT_AFTER_ADDRESSBOOK_USER_DIRECTIVE",
+      "Admin": "USER_AUTHORIZED_AMC_START_W1_CATALOG_ENDPOINTS_FOUNDATION"
     },
-    "rule": "After AddressBook closure, skip Admin for now and continue with Authentication. Do not start Admin until explicitly resumed by Architect/user."
+    "rule": "Admin AMC started by user authorization. W1 = Catalog.Endpoints foundation only; do not start other Host folders until Admin waves complete or Architect redirects."
   },
   "supersededTasks": []
 }
