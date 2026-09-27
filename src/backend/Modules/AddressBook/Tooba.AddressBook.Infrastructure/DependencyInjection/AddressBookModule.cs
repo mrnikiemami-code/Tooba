@@ -22,6 +22,8 @@ public sealed class AddressBookModule : IToobaModule
     {
         services.AddSingleton<IOutboxModuleRegistration, AddressBookOutboxRegistration>();
         services.AddScoped<IAddressBookDirectory, AddressBookDirectory>();
+        services.AddScoped<Tooba.AddressBook.Contracts.Ports.IAddressBookCountPort>(
+            sp => sp.GetRequiredService<AddressBookDirectory>());
         services.AddDbContext<AddressBookDbContext>((sp, options) =>
         {
             var connection = ToobaNpgsql.ResolveForContext(

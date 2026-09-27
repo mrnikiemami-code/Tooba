@@ -19,7 +19,7 @@ using Tooba.Host.Admin;
 using Tooba.Host.Localization;
 using Tooba.Localization.Application;
 using Tooba.Host.Admin.CatalogDemo;
-using Tooba.Host.Customer;
+using Tooba.CustomerProfile.Endpoints;
 using Tooba.Host.Seller;
 using Tooba.Returns.Endpoints;
 using Tooba.Notification.Endpoints;
@@ -86,6 +86,7 @@ builder.Services.AddPricingEndpointPresentation();
 builder.Services.AddFulfillmentEndpointPresentation();
 builder.Services.AddReturnEndpointPresentation();
 builder.Services.AddAddressBookEndpointPresentation();
+builder.Services.AddCustomerProfileEndpointPresentation();
 builder.Services.AddProblemDetails();
 builder.Services.AddSingleton<IExceptionPresentationService, ExceptionPresentationService>();
 builder.Services.AddExceptionHandler<ToobaExceptionHandler>();
@@ -156,7 +157,8 @@ builder.Services.AddToobaCqrsFoundation(
     typeof(Tooba.Promotion.Application.Commands.CreateSellerPromotion.CreateSellerPromotionCommand).Assembly,
     typeof(Tooba.Order.Application.Admin.Completeness.Queries.ListAdminOrderNotes.ListAdminOrderNotesQuery).Assembly,
     typeof(Tooba.AccessControl.Application.Commands.EnsureBootstrap.EnsureAccessControlBootstrapCommand).Assembly,
-    typeof(Tooba.AddressBook.Application.Ports.IAddressBookDirectory).Assembly);
+    typeof(Tooba.AddressBook.Application.Ports.IAddressBookDirectory).Assembly,
+    typeof(Tooba.CustomerProfile.Application.Queries.GetCustomerProfilePage.GetCustomerProfilePageQuery).Assembly);
 builder.Services.AddScoped<IOrderAdminAuthorizer, HostOrderAdminAuthorizer>();
 builder.Services.AddScoped<
     Tooba.Order.Application.Admin.Operations.Ports.IOrderAdminEffectiveAccessReader,
@@ -222,7 +224,6 @@ builder.Services.AddScoped<Tooba.Notification.Endpoints.Seller.INotificationSell
 builder.Services.AddScoped<Tooba.Support.Endpoints.Seller.ISupportSellerAuthorizer, Tooba.Host.Seller.HostSupportSellerAuthorizer>();
 builder.Services.AddScoped<Tooba.Support.Endpoints.Admin.ISupportAdminAuthorizer, Tooba.Host.Admin.HostSupportAdminAuthorizer>();
 builder.Services.AddScoped<Tooba.Wallet.Endpoints.Admin.IWalletAdminAuthorizer, Tooba.Host.Admin.HostWalletAdminAuthorizer>();
-builder.Services.AddScoped<Tooba.Host.Customer.CustomerPanelComposer>();
 builder.Services.AddScoped<Tooba.Host.Admin.AdminPanelComposer>();
 builder.Services.AddScoped<Tooba.Host.Wishlist.WishlistComposer>();
 builder.Services.AddScoped<Tooba.Host.Content.ContentPanelComposer>();
@@ -494,7 +495,7 @@ app.MapOfferModule();
 app.MapTaxModule();
 app.MapPricingModule();
 app.MapSellerSettingsEndpoints();
-app.MapCustomerPanelEndpoints();
+app.MapCustomerProfileModuleEndpoints();
 app.MapUserPreferenceEndpoints();
 app.MapUiPreferenceEndpoints();
 app.MapOperatorProfileEndpoints();

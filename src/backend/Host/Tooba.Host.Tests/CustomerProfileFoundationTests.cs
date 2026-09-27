@@ -2,9 +2,9 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Testcontainers.PostgreSql;
 using Tooba.CustomerProfile.Contracts;
+using Tooba.CustomerProfile.Endpoints.Customer;
 using Tooba.CustomerProfile.Infrastructure;
 using Tooba.CustomerProfile.Infrastructure.Persistence;
-using Tooba.Host.Customer;
 using Tooba.Host.CustomerProfile;
 using Tooba.Host.Storefront;
 using Tooba.Order.Application.Storefront.Services;
@@ -65,9 +65,16 @@ public sealed class CustomerProfileFoundationTests
     public void Endpoint_uses_session_and_supports_profile_update()
     {
         var source = File.ReadAllText(Path.Combine(
-            FindRepoRoot(), "src", "backend", "Host", "Tooba.Host", "Customer", "CustomerPanelEndpoints.cs"));
+            FindRepoRoot(),
+            "src",
+            "backend",
+            "Modules",
+            "CustomerProfile",
+            "Tooba.CustomerProfile.Endpoints",
+            "Customer",
+            "CustomerProfileEndpoints.cs"));
         Assert.Contains("MapPut(\"/profile\"", source, StringComparison.Ordinal);
-        Assert.Contains("session.IsAuthenticated", source, StringComparison.Ordinal);
+        Assert.Contains("ICustomerAccountActorResolver", source, StringComparison.Ordinal);
         Assert.Contains("ApiResponseFactory", source, StringComparison.Ordinal);
         Assert.Contains("customer.session.required", source, StringComparison.Ordinal);
     }

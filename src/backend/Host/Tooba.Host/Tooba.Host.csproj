@@ -49,6 +49,7 @@
     <ProjectReference Include="..\..\Modules\AddressBook\Tooba.AddressBook.Endpoints\Tooba.AddressBook.Endpoints.csproj" />
     <ProjectReference Include="..\..\Modules\CustomerProfile\Tooba.CustomerProfile.Application\Tooba.CustomerProfile.Application.csproj" />
     <ProjectReference Include="..\..\Modules\CustomerProfile\Tooba.CustomerProfile.Infrastructure\Tooba.CustomerProfile.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\Modules\CustomerProfile\Tooba.CustomerProfile.Endpoints\Tooba.CustomerProfile.Endpoints.csproj" />
     <ProjectReference Include="..\..\Modules\UserPreference\Tooba.UserPreference.Application\Tooba.UserPreference.Application.csproj" />
     <ProjectReference Include="..\..\Modules\UserPreference\Tooba.UserPreference.Infrastructure\Tooba.UserPreference.Infrastructure.csproj" />
     <ProjectReference Include="..\..\Modules\OperatorProfile\Tooba.OperatorProfile.Application\Tooba.OperatorProfile.Application.csproj" />

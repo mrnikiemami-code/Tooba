@@ -2,13 +2,14 @@ using Microsoft.EntityFrameworkCore;
 using Tooba.Catalog.Application;
 using Tooba.Catalog.Domain;
 using Tooba.Wishlist.Application;
+using Tooba.Wishlist.Contracts;
 using Tooba.Wishlist.Domain;
 using Tooba.Wishlist.Infrastructure.Persistence;
 
 namespace Tooba.Wishlist.Infrastructure;
 
 /// <summary>پیاده‌سازی Wishlist که فقط schema خود و درگاه کاربردی Catalog را مصرف می‌کند.</summary>
-public sealed class WishlistDirectory : IWishlistDirectory
+public sealed class WishlistDirectory : IWishlistDirectory, IWishlistCountPort
 {
     private readonly WishlistDbContext _db;
     private readonly ICatalogLookupGateway _catalog;

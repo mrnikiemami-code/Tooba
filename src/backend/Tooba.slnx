@@ -34,11 +34,13 @@
     <Project Path="Modules/AccessControl/Tooba.AccessControl.Infrastructure/Tooba.AccessControl.Infrastructure.csproj" />
     <Project Path="Modules/Wishlist/Tooba.Wishlist.Domain/Tooba.Wishlist.Domain.csproj" />
     <Project Path="Modules/Wishlist/Tooba.Wishlist.Application/Tooba.Wishlist.Application.csproj" />
+    <Project Path="Modules/Wishlist/Tooba.Wishlist.Contracts/Tooba.Wishlist.Contracts.csproj" />
     <Project Path="Modules/Wishlist/Tooba.Wishlist.Infrastructure/Tooba.Wishlist.Infrastructure.csproj" />
     <Project Path="Modules/CustomerProfile/Tooba.CustomerProfile.Domain/Tooba.CustomerProfile.Domain.csproj" />
     <Project Path="Modules/CustomerProfile/Tooba.CustomerProfile.Contracts/Tooba.CustomerProfile.Contracts.csproj" />
     <Project Path="Modules/CustomerProfile/Tooba.CustomerProfile.Application/Tooba.CustomerProfile.Application.csproj" />
     <Project Path="Modules/CustomerProfile/Tooba.CustomerProfile.Infrastructure/Tooba.CustomerProfile.Infrastructure.csproj" />
+    <Project Path="Modules/CustomerProfile/Tooba.CustomerProfile.Endpoints/Tooba.CustomerProfile.Endpoints.csproj" />
     <Project Path="Modules/UserPreference/Tooba.UserPreference.Domain/Tooba.UserPreference.Domain.csproj" />
     <Project Path="Modules/UserPreference/Tooba.UserPreference.Application/Tooba.UserPreference.Application.csproj" />
     <Project Path="Modules/UserPreference/Tooba.UserPreference.Infrastructure/Tooba.UserPreference.Infrastructure.csproj" />

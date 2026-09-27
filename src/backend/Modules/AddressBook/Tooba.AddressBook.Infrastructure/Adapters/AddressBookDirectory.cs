@@ -2,13 +2,14 @@ using Microsoft.EntityFrameworkCore;
 using Tooba.AddressBook.Application.Models;
 using Tooba.AddressBook.Application.Ports;
 using Tooba.AddressBook.Contracts.Dtos;
+using Tooba.AddressBook.Contracts.Ports;
 using Tooba.AddressBook.Domain.Aggregates;
 using Tooba.AddressBook.Infrastructure.Persistence;
 
 namespace Tooba.AddressBook.Infrastructure.Adapters;
 
 /// <summary>پیاده‌سازی دفترچه که فقط schema خود را لمس می‌کند و مالکیت را سرورمحور اعمال می‌کند.</summary>
-public sealed class AddressBookDirectory : IAddressBookDirectory
+public sealed class AddressBookDirectory : IAddressBookDirectory, IAddressBookCountPort
 {
     private readonly AddressBookDbContext _db;
 

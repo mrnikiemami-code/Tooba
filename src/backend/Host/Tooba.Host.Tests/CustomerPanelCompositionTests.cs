@@ -1,11 +1,13 @@
-using Tooba.Host.Customer;
+using Tooba.CustomerProfile.Application.Models;
 using Tooba.Order.Application.Customer.Models;
+using Tooba.Order.Contracts.Customer;
 using Xunit;
 
 namespace Tooba.Host.Tests;
 
 /// <summary>
-/// قفل قرارداد پنل مشتری پس از R9: مالکیت سفارش در Order CQRS؛ Host فقط ترکیب نازک داشبورد/پروفایل.
+/// Customer-account panel contracts after Host/Customer full closure:
+/// Order list/detail remain Order.Application; dashboard RecentOrders cross via Order.Contracts.
 /// </summary>
 public sealed class CustomerPanelCompositionTests
 {
@@ -24,6 +26,9 @@ public sealed class CustomerPanelCompositionTests
         Assert.Contains("SellerOrders", detail);
         Assert.Contains("PostalAddress", detail);
         Assert.Contains("ShippingMethodLabel", detail);
+
+        var dto = typeof(CustomerOrderListItemDto).GetProperties().Select(x => x.Name).ToHashSet(StringComparer.Ordinal);
+        Assert.True(list.SetEquals(dto));
     }
 
     [Fact]
@@ -80,35 +85,42 @@ public sealed class CustomerPanelCompositionTests
     }
 
     [Fact]
-    public void Host_composer_has_no_OrderDbContext_and_dashboard_uses_summary_query()
+    public void Customer_account_presentation_is_module_owned_and_contracts_only()
     {
-        var hostComposer = File.ReadAllText(Path.Combine(
-            FindRepoRoot(),
-            "src",
-            "backend",
-            "Host",
-            "Tooba.Host",
-            "Customer",
-            "CustomerPanelComposer.cs"));
-        Assert.DoesNotContain("OrderDbContext", hostComposer, StringComparison.Ordinal);
-        Assert.DoesNotContain("RetryUnpaidAsync", hostComposer, StringComparison.Ordinal);
-        Assert.Contains("ComposeDashboardAsync", hostComposer, StringComparison.Ordinal);
-        Assert.Contains("CustomerOrderDashboardSummary", hostComposer, StringComparison.Ordinal);
+        var root = FindRepoRoot();
+        var hostCustomer = Path.Combine(root, "src", "backend", "Host", "Tooba.Host", "Customer");
+        Assert.Empty(Directory.Exists(hostCustomer)
+            ? Directory.GetFiles(hostCustomer, "*.cs", SearchOption.AllDirectories)
+            : []);
 
         var endpoints = File.ReadAllText(Path.Combine(
-            FindRepoRoot(),
+            root,
             "src",
             "backend",
-            "Host",
-            "Tooba.Host",
+            "Modules",
+            "CustomerProfile",
+            "Tooba.CustomerProfile.Endpoints",
             "Customer",
-            "CustomerPanelEndpoints.cs"));
-        Assert.Contains("session.IsAuthenticated", endpoints, StringComparison.Ordinal);
-        Assert.Contains("session.UserId", endpoints, StringComparison.Ordinal);
-        Assert.Contains("environment.IsDevelopment()", endpoints, StringComparison.Ordinal);
+            "CustomerProfileEndpoints.cs"));
+        Assert.Contains("MapPut(\"/profile\"", endpoints, StringComparison.Ordinal);
+        Assert.Contains("ISender", endpoints, StringComparison.Ordinal);
         Assert.Contains("customer.session.required", endpoints, StringComparison.Ordinal);
-        Assert.Contains("GetCustomerOrderDashboardSummaryQuery", endpoints, StringComparison.Ordinal);
-        Assert.DoesNotContain("MapGet(\"/orders\"", endpoints, StringComparison.Ordinal);
+        Assert.DoesNotContain("Tooba.Order.Application", endpoints, StringComparison.Ordinal);
+        Assert.DoesNotContain("Tooba.Wishlist.Application", endpoints, StringComparison.Ordinal);
+        Assert.DoesNotContain("Tooba.AddressBook.Application", endpoints, StringComparison.Ordinal);
+
+        var dashboard = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "backend",
+            "Modules",
+            "CustomerProfile",
+            "Tooba.CustomerProfile.Endpoints",
+            "CustomerDashboard",
+            "CustomerAccountDashboardEndpoints.cs"));
+        Assert.Contains("GetCustomerAccountDashboardQuery", dashboard, StringComparison.Ordinal);
+        Assert.DoesNotContain("GetCustomerOrderDashboardSummaryQuery", dashboard, StringComparison.Ordinal);
+        Assert.DoesNotContain("OrderDbContext", dashboard, StringComparison.Ordinal);
     }
 
     private static string FindRepoRoot()

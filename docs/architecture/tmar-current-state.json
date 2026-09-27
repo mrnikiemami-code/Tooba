@@ -1197,6 +1197,32 @@
     "evidence": "docs/evidence/TB-TMAR-HOST-CUSTOMER-EVACUATION-001/host-customer-evacuation.md",
     "analyzeEvidence": "docs/evidence/TB-TMAR-HOST-CUSTOMER-EVACUATION-001/analyze.md"
   },
+  "hostCustomerFullClosure": {
+    "task": "TB-TMAR-HOST-CUSTOMER-FULL-CLOSURE-001",
+    "parentTask": "TB-TMAR-HOST-CUSTOMER-EVACUATION-001",
+    "parentAcceptedCommit": "877e43ba802ab951bab52a029d9854c1788f757d",
+    "state": "HOST_CUSTOMER_FULL_CLOSURE_PASS",
+    "hostCustomerProductionFileCount": 0,
+    "profileRouteOwner": "CustomerProfile.Endpoints",
+    "dashboardRouteOwner": "CustomerProfile.Endpoints.CustomerDashboard",
+    "devContextRouteOwner": "CustomerProfile.Endpoints.CustomerDashboard",
+    "crossModuleBoundary": "Contracts-only",
+    "customerModuleCreated": false,
+    "applicationLeakage": "ZERO",
+    "schemaMigration": "NONE",
+    "validatorCoverage": "EXHAUSTIVE_3_REQUESTS_1_REQUIRED_2_NO_VALIDATOR",
+    "apiResultPattern": "ApiResponseFactory.FromFailure(SemanticError(customer.session.required))",
+    "localizationState": "CustomerAccountPresentation.resx",
+    "errorCatalogDuplicateCount": 0,
+    "focusedValidations": "PASSED_30_FAILED_0_SKIPPED_4",
+    "residualDebt": [
+      "Host Wishlist HTTP still Host-owned (outside Host/Customer)",
+      "CustomerProfile/Wishlist not COMPLETE_REFERENCE_PATTERN (minimum foundation only)"
+    ],
+    "nextHostFolderStarted": false,
+    "workflowStop": "USER_REVIEW_HOST_CUSTOMER_FULL_CLOSURE",
+    "evidence": "docs/evidence/TB-TMAR-HOST-CUSTOMER-FULL-CLOSURE-001/"
+  },
   "addressBookPostRealignRepair": {
     "task": "TB-TMAR-ADDRESSBOOK-POST-REALIGN-REPAIR-001",
     "parentTask": "ADDRESSBOOK-OFFER-STYLE-FOLDERS-001",

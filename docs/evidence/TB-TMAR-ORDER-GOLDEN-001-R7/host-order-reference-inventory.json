@@ -83,10 +83,27 @@
     ],
     "note": "Host/Customer module-specific authorizers evacuated to owning Endpoints (Fulfillment precedent). Stale HostFulfillmentCustomerAuthorizer inventory entry removed (file already gone). Panel BFF remains Host until CustomerProfile.Endpoints foundation."
   },
+  "hostCustomerFullClosureUpdate": {
+    "updatedBy": "TB-TMAR-HOST-CUSTOMER-FULL-CLOSURE-001",
+    "removedFiles": [
+      "Customer/CustomerPanelComposer.cs",
+      "Customer/CustomerPanelEndpoints.cs",
+      "Customer/CustomerPanelModels.cs"
+    ],
+    "hostCustomerProductionFileCount": 0,
+    "moduleOwnedRehomes": [
+      "CustomerProfile.Endpoints/Customer/CustomerProfileEndpoints.cs",
+      "CustomerProfile.Endpoints/CustomerDashboard/CustomerAccountDashboardEndpoints.cs",
+      "CustomerProfile.Endpoints/Customer/CustomerAccountActorResolver.cs",
+      "Order.Contracts/Customer/CustomerOrderDashboardContracts.cs",
+      "Wishlist.Contracts/IWishlistCountPort.cs",
+      "AddressBook.Contracts/Ports/IAddressBookCountPort.cs"
+    ],
+    "note": "Host/Customer panel BFF closed. Profile/dashboard/dev-context owned by CustomerProfile.Endpoints as Contracts-only presentation. No Modules/Customer."
+  },
   "extraFiles": [
     "Admin/AdminPanelEndpoints.cs",
     "Admin/HostOrderAdminAuthorizer.cs",
-    "Customer/CustomerPanelEndpoints.cs",
     "Seller/SellerPanelEndpoints.cs"
   ],
   "files": [
@@ -103,9 +120,6 @@
     "CheckoutReservationHoldPolicy.cs",
     "CommerceHoldPolicy.cs",
     "Composition/ToobaModuleComposition.cs",
-    "Customer/CustomerPanelComposer.cs",
-    "Customer/CustomerPanelEndpoints.cs",
-    "Customer/CustomerPanelModels.cs",
     "CustomerProfile/CustomerProfileDevelopmentSeed.cs",
     "Development/MarketplaceDevelopmentBootstrap.cs",
     "Grid/AdminListGridPolicies.cs",

@@ -1,10 +1,9 @@
-using Tooba.Order.Application.Customer.Models;
+using Tooba.Order.Contracts.Customer;
 
-namespace Tooba.Host.Customer;
+namespace Tooba.CustomerProfile.Application.Models;
 
 /// <summary>
-/// خلاصهٔ داشبورد مشتری از سفارش‌های متعلق به کاربر احراز‌شده.
-/// آمار علاقه‌مندی و آدرس فقط وضعیت قابلیت را نشان می‌دهد و دادهٔ جعلی نمی‌سازد.
+/// Customer-account dashboard presentation DTO (JSON field parity with former Host CustomerDashboardPage).
 /// </summary>
 public sealed record CustomerDashboardPage(
     Guid ActorUserId,
@@ -16,10 +15,10 @@ public sealed record CustomerDashboardPage(
     long WishlistCount,
     bool AddressBookAvailable,
     long AddressBookCount,
-    IReadOnlyList<CustomerOrderListItem> RecentOrders);
+    IReadOnlyList<CustomerOrderListItemDto> RecentOrders);
 
 /// <summary>
-/// پروفایل مشتری با مرز واضح بین فیلدهای توصیفی قابل‌ویرایش و شناسه‌های Identity.
+/// Customer profile presentation DTO (JSON field parity with former Host CustomerProfilePage).
 /// </summary>
 public sealed record CustomerProfilePage(
     Guid ActorUserId,

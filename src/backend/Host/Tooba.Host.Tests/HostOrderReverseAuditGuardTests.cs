@@ -80,15 +80,20 @@ public sealed class HostOrderReverseAuditGuardTests
         Assert.Contains("MapGet(\"/v1/admin/customers\"", orderAdminCustomers, StringComparison.Ordinal);
         Assert.Contains("MapPost(\"/v1/admin/customers/query\"", orderAdminCustomers, StringComparison.Ordinal);
 
-        var customer = File.ReadAllText(Path.Combine(host, "Customer", "CustomerPanelEndpoints.cs"));
-        Assert.DoesNotContain("MapGet(\"/orders\"", customer, StringComparison.Ordinal);
-        Assert.DoesNotContain("MapPost(\"/orders/{checkoutId:guid}/retry-unpaid\"", customer, StringComparison.Ordinal);
-        Assert.Contains("GetCustomerOrderDashboardSummaryQuery", customer, StringComparison.Ordinal);
-        Assert.Contains(files, f => f.Equals("Customer/CustomerPanelEndpoints.cs", StringComparison.Ordinal));
+        Assert.False(File.Exists(Path.Combine(host, "Customer", "CustomerPanelEndpoints.cs")));
+        Assert.False(File.Exists(Path.Combine(host, "Customer", "CustomerPanelComposer.cs")));
+        Assert.False(File.Exists(Path.Combine(host, "Customer", "CustomerPanelModels.cs")));
+        Assert.DoesNotContain(files, f => f.Equals("Customer/CustomerPanelEndpoints.cs", StringComparison.Ordinal));
         Assert.DoesNotContain(files, f => f.Equals("Customer/HostOrderCustomerAuthorizer.cs", StringComparison.Ordinal));
         Assert.True(File.Exists(Path.Combine(
             root, "src", "backend", "Modules", "Order", "Tooba.Order.Endpoints", "Customer", "OrderCustomerAuthorizer.cs")));
         Assert.False(File.Exists(Path.Combine(host, "Customer", "HostOrderCustomerAuthorizer.cs")));
+
+        var customerAccount = File.ReadAllText(Path.Combine(
+            root, "src", "backend", "Modules", "CustomerProfile", "Tooba.CustomerProfile.Endpoints", "CustomerDashboard", "CustomerAccountDashboardEndpoints.cs"));
+        Assert.Contains("GetCustomerAccountDashboardQuery", customerAccount, StringComparison.Ordinal);
+        Assert.DoesNotContain("GetCustomerOrderDashboardSummaryQuery", customerAccount, StringComparison.Ordinal);
+        Assert.DoesNotContain("Tooba.Order.Application", customerAccount, StringComparison.Ordinal);
 
         var orderCustomerEndpoints = File.ReadAllText(Path.Combine(
             root, "src", "backend", "Modules", "Order", "Tooba.Order.Endpoints", "Customer", "CustomerOrderEndpoints.cs"));
@@ -197,10 +202,12 @@ public sealed class HostOrderReverseAuditGuardTests
             r9.GetProperty("note").GetString()!,
             StringComparison.Ordinal);
         Assert.True(doc.RootElement.TryGetProperty("r8InventoryUpdate", out _));
+        Assert.True(doc.RootElement.TryGetProperty("hostCustomerFullClosureUpdate", out var closure));
+        Assert.Equal("TB-TMAR-HOST-CUSTOMER-FULL-CLOSURE-001", closure.GetProperty("updatedBy").GetString());
+        Assert.Equal(0, closure.GetProperty("hostCustomerProductionFileCount").GetInt32());
 
-        var hostComposer = File.ReadAllText(Path.Combine(
-            root, "src", "backend", "Host", "Tooba.Host", "Customer", "CustomerPanelComposer.cs"));
-        Assert.DoesNotContain("OrderDbContext", hostComposer, StringComparison.Ordinal);
+        Assert.False(File.Exists(Path.Combine(
+            root, "src", "backend", "Host", "Tooba.Host", "Customer", "CustomerPanelComposer.cs")));
     }
 
     [Fact]

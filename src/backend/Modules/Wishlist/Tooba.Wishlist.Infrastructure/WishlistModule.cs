@@ -5,6 +5,7 @@ using Tooba.BuildingBlocks;
 using Tooba.ModuleContracts;
 using Tooba.Persistence;
 using Tooba.Wishlist.Application;
+using Tooba.Wishlist.Contracts;
 using Tooba.Wishlist.Infrastructure.Persistence;
 
 namespace Tooba.Wishlist.Infrastructure;
@@ -19,6 +20,7 @@ public sealed class WishlistModule : IToobaModule
     {
         services.AddSingleton<IOutboxModuleRegistration, WishlistOutboxRegistration>();
         services.AddScoped<IWishlistDirectory, WishlistDirectory>();
+        services.AddScoped<IWishlistCountPort>(sp => sp.GetRequiredService<WishlistDirectory>());
         services.AddDbContext<WishlistDbContext>((sp, options) =>
         {
             var connection = ToobaNpgsql.ResolveForContext(sp.GetRequiredService<ICurrentCommerceContext>(), sp.GetRequiredService<IDatabaseConnectionResolver>());
