@@ -144,15 +144,15 @@ public sealed class HostAdminAmcW4GuardTests
     {
         var admin = Path.Combine(FindRepoRoot(), "src/backend/Host/Tooba.Host/Admin");
         var files = Directory.GetFiles(admin, "*.cs", SearchOption.AllDirectories);
-        // W4 locked 56; W5→55; W6 evacuated Facets → 54.
-        Assert.Equal(54, files.Length);
+        // W4 locked 56; W5→55; W6→54; W7 evacuated Categories → 53.
+        Assert.Equal(53, files.Length);
         Assert.False(File.Exists(Path.Combine(admin, "CatalogTagEndpoints.cs")));
         Assert.False(File.Exists(Path.Combine(admin, "UnitOfMeasureEndpoints.cs")));
         Assert.False(File.Exists(Path.Combine(admin, "QuantitySettingsEndpoints.cs")));
         Assert.True(File.Exists(Path.Combine(admin, "StoreAppearanceSettingsEndpoints.cs")));
         Assert.True(File.Exists(Path.Combine(admin, "StoreAppearanceSettingsComposer.cs")));
         Assert.True(File.Exists(Path.Combine(admin, "CatalogAttributeEndpoints.cs")));
-        Assert.True(File.Exists(Path.Combine(admin, "CatalogCategoryEndpoints.cs")));
+        Assert.False(File.Exists(Path.Combine(admin, "CatalogCategoryEndpoints.cs")));
 
         var quantityRoot = Path.Combine(
             FindRepoRoot(),

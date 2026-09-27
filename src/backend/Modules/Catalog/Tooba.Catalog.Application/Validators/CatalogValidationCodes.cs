@@ -53,4 +53,25 @@ public static class CatalogValidationCodes
 
     /// <summary>Facet reorder orderedDefinitionIds collection must be present.</summary>
     public const string FacetOrderedDefinitionIdsRequired = "catalog.validation.facet_ordered_definition_ids_required";
+
+    /// <summary>Category tree locale query must be non-blank.</summary>
+    public const string CategoryLocaleRequired = "catalog.validation.category_locale_required";
+
+    /// <summary>Category create must supply Translations or LocalizedNames.</summary>
+    public const string CategoryCreateShapeRequired = "catalog.validation.category_create_shape_required";
+
+    /// <summary>Category translation name must be non-blank.</summary>
+    public const string CategoryTranslationNameRequired = "catalog.validation.category_translation_name_required";
+
+    /// <summary>Category translation slug must be non-blank.</summary>
+    public const string CategoryTranslationSlugRequired = "catalog.validation.category_translation_slug_required";
+
+    /// <summary>Category reorder orderedCategoryIds collection must be present.</summary>
+    public const string CategoryOrderedIdsRequired = "catalog.validation.category_ordered_ids_required";
+
+    /// <summary>Category route resolve locale must be non-blank.</summary>
+    public const string CategoryRouteLocaleRequired = "catalog.validation.category_route_locale_required";
+
+    /// <summary>Category route resolve slug must be non-blank.</summary>
+    public const string CategoryRouteSlugRequired = "catalog.validation.category_route_slug_required";
 }

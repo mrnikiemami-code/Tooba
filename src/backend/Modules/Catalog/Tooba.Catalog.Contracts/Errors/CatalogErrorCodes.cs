@@ -65,4 +65,40 @@ public static class CatalogErrorCodes
 
     /// <summary>Reorder list is incomplete, duplicate, or mismatched vs local facet set.</summary>
     public const string FacetReorderInvalid = "catalog.facet.reorder.invalid";
+
+    /// <summary>Requested category was not found.</summary>
+    public const string CategoryMissing = "catalog.category.missing";
+
+    /// <summary>Category input or business precondition is invalid.</summary>
+    public const string CategoryInvalid = "catalog.category.invalid";
+
+    /// <summary>Category slug is empty or invalid after normalization.</summary>
+    public const string CategorySlugInvalid = "catalog.category.slug.invalid";
+
+    /// <summary>Category slug already used by another category for the locale.</summary>
+    public const string CategorySlugDuplicate = "catalog.category.slug.duplicate";
+
+    /// <summary>Referenced parent category was not found.</summary>
+    public const string CategoryParentMissing = "catalog.category.parent.missing";
+
+    /// <summary>Category cannot be its own parent.</summary>
+    public const string CategorySelfParent = "catalog.category.parent.self";
+
+    /// <summary>Category cannot be moved under its own descendant.</summary>
+    public const string CategoryDescendantParent = "catalog.category.parent.descendant";
+
+    /// <summary>Category hierarchy would exceed max depth of 3.</summary>
+    public const string CategoryMaxDepth = "catalog.category.depth.max";
+
+    /// <summary>Reorder list must match the exact sibling set under the parent.</summary>
+    public const string CategoryReorderInvalid = "catalog.category.reorder.invalid";
+
+    /// <summary>ExpectedUpdatedAt concurrency token does not match.</summary>
+    public const string CategoryConcurrencyConflict = "catalog.category.concurrency.conflict";
+
+    /// <summary>Storefront/admin category route resolve input is invalid.</summary>
+    public const string CategoryRouteInvalid = "catalog.category.route.invalid";
+
+    /// <summary>Category route locale+slug could not be resolved.</summary>
+    public const string CategoryRouteMissing = "catalog.category.route.missing";
 }

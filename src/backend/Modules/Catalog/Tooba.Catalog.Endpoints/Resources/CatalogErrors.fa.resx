@@ -42,4 +42,23 @@
   <data name="catalog.facet.reorder.invalid" xml:space="preserve"><value>فهرست ترتیب باید دقیقاً همان پیکربندی‌های محلی رده باشد.</value></data>
   <data name="catalog.validation.facet_input_required" xml:space="preserve"><value>بدنهٔ پیکربندی فیلتر الزامی است.</value></data>
   <data name="catalog.validation.facet_ordered_definition_ids_required" xml:space="preserve"><value>فهرست شناسه‌های ترتیب فیلتر الزامی است.</value></data>
+  <data name="catalog.category.missing" xml:space="preserve"><value>رده یافت نشد.</value></data>
+  <data name="catalog.category.invalid" xml:space="preserve"><value>ورودی رده نامعتبر است.</value></data>
+  <data name="catalog.category.slug.invalid" xml:space="preserve"><value>نامک رده نامعتبر است.</value></data>
+  <data name="catalog.category.slug.duplicate" xml:space="preserve"><value>این نامک برای یک دسته‌بندی دیگر استفاده شده است. یک نامک متفاوت انتخاب کنید.</value></data>
+  <data name="catalog.category.parent.missing" xml:space="preserve"><value>ردهٔ والد یافت نشد.</value></data>
+  <data name="catalog.category.parent.self" xml:space="preserve"><value>رده نمی‌تواند والد خودش باشد.</value></data>
+  <data name="catalog.category.parent.descendant" xml:space="preserve"><value>نمی‌توان رده را زیر نوادهٔ خودش قرار داد.</value></data>
+  <data name="catalog.category.depth.max" xml:space="preserve"><value>عمیق‌تر از سطح سوم برای دسته‌بندی مجاز نیست.</value></data>
+  <data name="catalog.category.reorder.invalid" xml:space="preserve"><value>فهرست ترتیب باید دقیقاً همهٔ خواهر/برادرهای همان والد را پوشش دهد.</value></data>
+  <data name="catalog.category.concurrency.conflict" xml:space="preserve"><value>تعارض همزمانی روی رده؛ UpdatedAt تغییر کرده است.</value></data>
+  <data name="catalog.category.route.invalid" xml:space="preserve"><value>locale و slug الزامی هستند.</value></data>
+  <data name="catalog.category.route.missing" xml:space="preserve"><value>مسیر رده یافت نشد.</value></data>
+  <data name="catalog.validation.category_locale_required" xml:space="preserve"><value>locale الزامی است.</value></data>
+  <data name="catalog.validation.category_create_shape_required" xml:space="preserve"><value>ایجاد رده نیازمند ترجمه یا نام محلی است.</value></data>
+  <data name="catalog.validation.category_translation_name_required" xml:space="preserve"><value>نام ترجمهٔ رده الزامی است.</value></data>
+  <data name="catalog.validation.category_translation_slug_required" xml:space="preserve"><value>نامک ترجمهٔ رده الزامی است.</value></data>
+  <data name="catalog.validation.category_ordered_ids_required" xml:space="preserve"><value>فهرست شناسه‌های ترتیب رده الزامی است.</value></data>
+  <data name="catalog.validation.category_route_locale_required" xml:space="preserve"><value>locale مسیر رده الزامی است.</value></data>
+  <data name="catalog.validation.category_route_slug_required" xml:space="preserve"><value>slug مسیر رده الزامی است.</value></data>
 </root>

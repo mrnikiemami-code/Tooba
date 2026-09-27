@@ -83,7 +83,7 @@ public sealed class HostAdminAmcW2GuardTests
         // Historical W2: 59 → 58 (Quantity). W3: 58 → 57 (UoM). W4: 57 → 56 (Tags). W5: 56 → 55 (MegaMenu).
         var admin = Path.Combine(FindRepoRoot(), "src/backend/Host/Tooba.Host/Admin");
         var files = Directory.GetFiles(admin, "*.cs", SearchOption.AllDirectories);
-        Assert.Equal(54, files.Length);
+        Assert.Equal(53, files.Length);
         Assert.False(File.Exists(Path.Combine(admin, "QuantitySettingsEndpoints.cs")));
         Assert.False(File.Exists(Path.Combine(admin, "UnitOfMeasureEndpoints.cs")));
         Assert.False(File.Exists(Path.Combine(admin, "CatalogTagEndpoints.cs")));
