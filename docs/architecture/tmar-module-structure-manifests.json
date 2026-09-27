@@ -599,14 +599,14 @@
       "module": "ProductWorkspace",
       "structureCertified": false,
       "lockVersion": "ARCH-COMPLETE-002",
-      "certificationNote": "W18 skeleton only (TB-TMAR-HOST-ADMIN-AMC-001-W18). NOT_CERTIFIED. Five projects established; zero module-owned routes; Host retains 19 ProductWorkspace aggregate routes. Do not promote to structureLock.certifiedModules until ARCH-COMPLETE-002.",
+      "certificationNote": "W19: aggregate GET owned by ProductWorkspace (Contracts composition). NOT_CERTIFIED for ARCH-COMPLETE-002. Host retains 18 ProductWorkspace routes. Do not promote to structureLock.certifiedModules until ARCH-COMPLETE-002.",
       "projects": [
         {
           "projectName": "Tooba.ProductWorkspace.Contracts",
           "rootAllowlist": [
             "ProductWorkspaceContractsMarker.cs"
           ],
-          "rootAllowlistJustification": "W18 Contracts marker only; Host DTOs not copied; no Errors/Ports yet.",
+          "rootAllowlistJustification": "Contracts marker retained; Errors deferred until broader module certification.",
           "forbiddenRootFiles": [
             "ProductWorkspaceContracts.cs"
           ],
@@ -615,14 +615,14 @@
         {
           "projectName": "Tooba.ProductWorkspace.Domain",
           "rootAllowlist": [],
-          "rootAllowlistJustification": "Empty-but-valid Domain assembly; no invented domain types in W18.",
+          "rootAllowlistJustification": "Empty-but-valid Domain assembly; no invented domain types.",
           "forbiddenRootFiles": [],
           "forbiddenTopLevelFolders": []
         },
         {
           "projectName": "Tooba.ProductWorkspace.Application",
           "rootAllowlist": [],
-          "rootAllowlistJustification": "Composition/{Models,Ports,Queries,Validators} reserved for W19; no root .cs and no duplicate Host DTOs in W18.",
+          "rootAllowlistJustification": "Composition/{Models,Queries} owns aggregate GET; Validators/Ports reserved; no root .cs.",
           "forbiddenRootFiles": [
             "ProductWorkspaceContracts.cs"
           ],

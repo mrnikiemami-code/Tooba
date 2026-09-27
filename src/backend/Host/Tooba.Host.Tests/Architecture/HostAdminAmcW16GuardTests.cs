@@ -19,7 +19,8 @@ public sealed class HostAdminAmcW16GuardTests
         Assert.Contains("MapProductWorkspaceEndpoints", endpoints, StringComparison.Ordinal);
         Assert.Contains("MapPost(\"/{productId:guid}/publish\"", endpoints, StringComparison.Ordinal);
         Assert.Contains("MapPost(\"/{productId:guid}/unpublish\"", endpoints, StringComparison.Ordinal);
-        Assert.Contains("MapGet(\"/{productId:guid}\"", endpoints, StringComparison.Ordinal);
+        // W19 moved aggregate GET to ProductWorkspace.Endpoints; Host must not remount it.
+        Assert.DoesNotContain("MapGet(\"/{productId:guid}\"", endpoints, StringComparison.Ordinal);
 
         Assert.True(File.Exists(Path.Combine(root, "src/backend/Host/Tooba.Host/Admin/ProductWorkspaceEndpoints.cs")));
         Assert.True(File.Exists(Path.Combine(root, "src/backend/Host/Tooba.Host/Admin/ProductWorkspaceComposer.cs")));
@@ -32,7 +33,8 @@ public sealed class HostAdminAmcW16GuardTests
         Assert.Contains("GetProductPublishReadinessAsync", composer, StringComparison.Ordinal);
 
         var models = File.ReadAllText(Path.Combine(
-            root, "src/backend/Host/Tooba.Host/Admin/ProductWorkspaceModels.cs"));
+            root,
+            "src/backend/Modules/ProductWorkspace/Tooba.ProductWorkspace.Application/Composition/Models/ProductWorkspaceModels.cs"));
         Assert.Contains("record ProductPublishReadinessView", models, StringComparison.Ordinal);
         Assert.Contains("record ProductPublishMissingRequirementView", models, StringComparison.Ordinal);
         Assert.Contains("AggregateReadiness", models, StringComparison.Ordinal);

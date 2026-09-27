@@ -1,16 +1,6 @@
 namespace Tooba.Host.Admin;
 
 /// <summary>
-/// پرچم مجوز Workspace از لایهٔ ویژگی Host. SpiceDB در کامپوننت عمومی UI صدا زده نمی‌شود.
-/// </summary>
-public sealed record ProductWorkspacePermissions(
-    bool CanView,
-    bool CanEditCatalog,
-    bool CanEditCommercial,
-    bool CanEditInventory,
-    bool CanPublish);
-
-/// <summary>
 /// فرمان ایجاد محصول Catalog به‌صورت پیش‌نویس؛ قیمت و موجودی اینجا نیست.
 /// </summary>
 public sealed record AdminProductCreateRequest(
@@ -18,16 +8,6 @@ public sealed record AdminProductCreateRequest(
     string? Slug,
     Guid? CategoryId,
     string? Locale);
-
-/// <summary>ترجمهٔ محلی محصول از LocalizedText + SlugSeam (معماری locale-based بدون NameFa/NameEn).</summary>
-public sealed record ProductTranslationView(
-    string Locale,
-    string Name,
-    string? Slug,
-    string? ShortDescription,
-    string? Description,
-    string? SeoTitle,
-    string? SeoDescription);
 
 /// <summary>
 /// به‌روزرسانی هستهٔ محصول در یک locale (عنوان، slug انسانی، شرح‌ها، SEO).
@@ -83,155 +63,12 @@ public sealed record AdminProductListItem(
     IReadOnlyList<string>? AdditionalCategoryNames = null,
     int AdditionalCategoryCount = 0);
 
-/// <summary>
-/// مدل نمایش ترکیب‌شده. aggregate دامنه نیست.
-/// IsPrimaryCategoryAssignable: دستهٔ اصلی سطح سوم است (بدون دسته = false).
-/// </summary>
-public sealed record ProductWorkspaceView(
-    Guid ProductId,
-    string Title,
-    string Status,
-    string Kind,
-    string? BrandName,
-    IReadOnlyList<string> CategoryNames,
-    IReadOnlyList<ProductAttributeView> Attributes,
-    IReadOnlyList<ProductVariantView> Variants,
-    IReadOnlyList<ProductMediaView> Media,
-    IReadOnlyList<ProductOfferView> Offers,
-    IReadOnlyList<ProductPriceView> Prices,
-    IReadOnlyList<ProductTaxView> TaxClassifications,
-    IReadOnlyList<ProductStockView> Stock,
-    ProductSeoView Seo,
-    ProductPublicationView Publication,
-    IReadOnlyList<ProductHistoryItem> Activity,
-    IReadOnlyList<ProductHistoryItem> Audit,
-    ProductWorkspacePermissions Permissions,
-    DateTimeOffset CatalogUpdatedAt,
-    IReadOnlyList<string> ReadinessWarnings,
-    IReadOnlyList<string> UnsupportedMutations,
-    Guid? PrimaryCategoryId = null,
-    string? CategoryPath = null,
-    string? Slug = null,
-    string? ShortDescription = null,
-    IReadOnlyList<ProductTranslationView>? Translations = null,
-    bool IsPrimaryCategoryAssignable = false,
-    Guid? BrandId = null,
-    IReadOnlyList<ProductCategoryAssignmentView>? CategoryAssignments = null,
-    Guid? UnitOfMeasureId = null,
-    int QuantityDecimalPlaces = 0,
-    decimal? QuantityStep = null,
-    string? UnitCode = null,
-    string? UnitDisplayName = null,
-    IReadOnlyList<UnitOfMeasureOptionView>? Units = null);
-
-/// <summary>گزینه واحد اندازه‌گیری برای Workspace.</summary>
-public sealed record UnitOfMeasureOptionView(Guid UnitOfMeasureId, string Code, string Name, string ShortName);
-
 /// <summary>بدنهٔ به‌روزرسانی سیاست مقدار محصول.</summary>
 public sealed record AdminProductQuantityPolicyRequest(
     Guid UnitOfMeasureId,
     int DecimalPlaces,
     decimal? Step,
     DateTimeOffset ExpectedUpdatedAt);
-
-/// <summary>پیوند دسته در Workspace (اصلی / اضافی).</summary>
-public sealed record ProductCategoryAssignmentView(
-    Guid CategoryId,
-    string CategoryPath,
-    string Role);
-
-/// <summary>مشخصهٔ Catalog.</summary>
-public sealed record ProductAttributeView(string Code, string Value, bool VariantAxis);
-
-/// <summary>گونهٔ Catalog بدون قیمت.</summary>
-public sealed record ProductVariantView(
-    Guid VariantId,
-    string Fingerprint,
-    string Status,
-    string? CatalogCodeSeam,
-    int OfferCount,
-    int LocationCount);
-
-/// <summary>مرجع رسانهٔ مات با ترتیب و تصویر اصلی.</summary>
-public sealed record ProductMediaView(
-    Guid MediaAssetId,
-    bool Primary,
-    int DisplayOrder,
-    string? AltText);
-
-/// <summary>Offer فروشنده جدا از Product. SellerDisplayName برچسب انسانی است نه کلید دامنه.</summary>
-public sealed record ProductOfferView(
-    Guid OfferId,
-    Guid CatalogVariantId,
-    Guid SellerPartyId,
-    string SellerDisplayName,
-    string Status,
-    string Channel,
-    string? SellerSku);
-
-/// <summary>قیمت نوشته‌شده جدا از Offer. مبلغ بدون مالیات است.</summary>
-public sealed record ProductPriceView(
-    Guid PriceId,
-    Guid OfferId,
-    string Market,
-    string Currency,
-    decimal AmountExclusiveOfTax,
-    string Status,
-    DateTimeOffset ValidFrom,
-    DateTimeOffset? ValidTo);
-
-/// <summary>طبقهٔ مالیاتی Offer.</summary>
-public sealed record ProductTaxView(Guid OfferId, Guid CategoryId, string CategoryCode, string DisplayName);
-
-/// <summary>موجودی محل‌دار روی Offer. LocationName برچسب عملیاتی است؛ حقیقت موجودی روی Offer می‌ماند.</summary>
-public sealed record ProductStockView(
-    Guid OfferId,
-    Guid LocationId,
-    string LocationCode,
-    string LocationName,
-    decimal OnHand,
-    decimal Reserved,
-    decimal Available);
-
-/// <summary>درز SEO. ترکیب صفحه نیست.</summary>
-public sealed record ProductSeoView(string? SlugSeam, string? SeoTitleSeam, string SemanticNote);
-
-/// <summary>آمادگی انتشار UI. Published با قابل‌خرید یکی نیست. Checks فقط Catalog است.</summary>
-public sealed record ProductPublicationView(
-    string CatalogStatus,
-    bool PurchasableHint,
-    IReadOnlyList<string> Checks,
-    ProductPublishReadinessView AggregateReadiness,
-    DateTimeOffset StatusUpdatedAt);
-
-/// <summary>مورد ناقص آمادگی انتشار برای چک‌لیست فارسی.</summary>
-public sealed record ProductPublishMissingRequirementView(
-    string Code,
-    string MessageFa,
-    string WorkspaceTab);
-
-/// <summary>آمادگی تجمیعی انتشار — بدون Offer/Price/Stock.</summary>
-public sealed record ProductPublishReadinessView(
-    bool IsReady,
-    bool CategoryReady,
-    bool TranslationReady,
-    bool AttributeReady,
-    bool VariantReady,
-    bool MediaReady,
-    bool SeoReady,
-    IReadOnlyList<ProductPublishMissingRequirementView> MissingRequirements,
-    string MessageFa);
-
-/// <summary>رویداد Activity یا Audit.</summary>
-public sealed record ProductHistoryItem(
-    string Kind,
-    string Summary,
-    DateTimeOffset At,
-    string Actor = "سیستم",
-    string? Section = null,
-    string? BeforeSummary = null,
-    string? AfterSummary = null,
-    Guid? HistoryId = null);
 
 /// <summary>محور یک گونهٔ جدید.</summary>
 public sealed record AdminProductVariantAxisRequest(Guid DefinitionId, string? RawValue, Guid? EnumOptionId);

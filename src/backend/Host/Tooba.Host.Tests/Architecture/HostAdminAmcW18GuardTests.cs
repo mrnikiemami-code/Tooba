@@ -68,6 +68,12 @@ public sealed class HostAdminAmcW18GuardTests
         Assert.DoesNotContain(applicationRefs, r => ContainsSegment(r, "Party.Application"));
         Assert.DoesNotContain(applicationRefs, r => ContainsSegment(r, ".Infrastructure"));
         Assert.DoesNotContain(applicationRefs, r => ContainsSegment(r, "Tooba.Host"));
+        Assert.Contains(applicationRefs, r => ContainsSegment(r, "Catalog.Contracts"));
+        Assert.Contains(applicationRefs, r => ContainsSegment(r, "Offer.Contracts"));
+        Assert.Contains(applicationRefs, r => ContainsSegment(r, "Pricing.Contracts"));
+        Assert.Contains(applicationRefs, r => ContainsSegment(r, "Inventory.Contracts"));
+        Assert.Contains(applicationRefs, r => ContainsSegment(r, "Tax.Contracts"));
+        Assert.Contains(applicationRefs, r => ContainsSegment(r, "Party.Contracts"));
 
         var infrastructureRefs = GetProjectRefs(
             Path.Combine(moduleRoot, "Tooba.ProductWorkspace.Infrastructure", "Tooba.ProductWorkspace.Infrastructure.csproj"));
@@ -95,38 +101,26 @@ public sealed class HostAdminAmcW18GuardTests
     }
 
     [Fact]
-    public void ProductWorkspace_endpoints_map_zero_admin_product_routes_and_Host_retains_19()
+    public void ProductWorkspace_endpoints_preserve_module_map_entry_and_Host_retains_remaining_routes()
     {
         var root = FindRepoRoot();
-        var moduleEndpoints = Directory.GetFiles(
-            Path.Combine(root, "src/backend/Modules/ProductWorkspace/Tooba.ProductWorkspace.Endpoints"),
-            "*.cs",
-            SearchOption.AllDirectories);
-        var moduleRouteMaps = 0;
-        foreach (var file in moduleEndpoints)
-        {
-            moduleRouteMaps += MapRouteRegex.Matches(File.ReadAllText(file)).Count;
-        }
-
-        Assert.Equal(0, moduleRouteMaps);
-
         var endpointModule = File.ReadAllText(Path.Combine(
             root,
             "src/backend/Modules/ProductWorkspace/Tooba.ProductWorkspace.Endpoints/ProductWorkspaceEndpointModule.cs"));
         Assert.Contains("MapProductWorkspaceModuleEndpoints", endpointModule, StringComparison.Ordinal);
         Assert.DoesNotContain("static void MapProductWorkspaceEndpoints", endpointModule, StringComparison.Ordinal);
         Assert.DoesNotContain("MapProductWorkspaceEndpoints(this", endpointModule, StringComparison.Ordinal);
-        Assert.DoesNotContain("MapGroup(\"/v1/admin/products", endpointModule, StringComparison.Ordinal);
 
         var hostEndpoints = File.ReadAllText(Path.Combine(
             root, "src/backend/Host/Tooba.Host/Admin/ProductWorkspaceEndpoints.cs"));
-        Assert.Equal(19, MapRouteRegex.Matches(hostEndpoints).Count);
+        Assert.Equal(18, MapRouteRegex.Matches(hostEndpoints).Count);
         Assert.Contains("MapProductWorkspaceEndpoints", hostEndpoints, StringComparison.Ordinal);
+        Assert.DoesNotContain("MapGet(\"/{productId:guid}\"", hostEndpoints, StringComparison.Ordinal);
 
         var program = File.ReadAllText(Path.Combine(root, "src/backend/Host/Tooba.Host/Program.cs"));
         Assert.Contains("MapProductWorkspaceEndpoints()", program, StringComparison.Ordinal);
-        Assert.DoesNotContain("MapProductWorkspaceModuleEndpoints", program, StringComparison.Ordinal);
-        Assert.DoesNotContain("AddProductWorkspaceEndpointPresentation", program, StringComparison.Ordinal);
+        Assert.Contains("MapProductWorkspaceModuleEndpoints", program, StringComparison.Ordinal);
+        Assert.Contains("AddProductWorkspaceEndpointPresentation", program, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -140,11 +134,6 @@ public sealed class HostAdminAmcW18GuardTests
         Assert.True(File.Exists(Path.Combine(admin, "ProductWorkspaceComposer.cs")));
         Assert.True(File.Exists(Path.Combine(admin, "ProductWorkspaceModels.cs")));
         Assert.True(File.Exists(Path.Combine(admin, "StoreAppearanceSettingsEndpoints.cs")));
-
-        Assert.False(Directory.Exists(Path.Combine(
-            root, "docs/evidence/TB-TMAR-HOST-ADMIN-AMC-001-W19")));
-        Assert.False(File.Exists(Path.Combine(
-            root, "docs/ai/tasks/TB-TMAR-HOST-ADMIN-AMC-001-W19.task.md")));
     }
 
     [Fact]

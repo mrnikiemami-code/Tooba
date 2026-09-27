@@ -1,4 +1,5 @@
 using Tooba.Host.Admin;
+using Tooba.ProductWorkspace.Application.Composition.Models;
 using Xunit;
 
 namespace Tooba.Host.Tests;

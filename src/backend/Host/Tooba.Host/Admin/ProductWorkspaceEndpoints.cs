@@ -1,11 +1,13 @@
 ﻿using Tooba.BuildingBlocks;
 using Tooba.BuildingBlocks.Grid;
 using Tooba.Host.Grid;
+using Tooba.ProductWorkspace.Application.Composition.Models;
 
 namespace Tooba.Host.Admin;
 
 /// <summary>
 /// مسیرهای HTTP ترکیب Workspace محصول. SQL بین‌ماژولی اینجا نوشته نمی‌شود.
+/// W19: aggregate GET evacuated to ProductWorkspace.Endpoints; Host retains 18 routes.
 /// </summary>
 public static class ProductWorkspaceEndpoints
 {
@@ -20,7 +22,6 @@ public static class ProductWorkspaceEndpoints
         group.MapGet("/brand-options", ListBrandOptionsAsync);
         group.MapPost("/query", QueryGridAsync);
         group.MapPost("/", CreateAsync);
-        group.MapGet("/{productId:guid}", GetAsync);
         group.MapPatch("/{productId:guid}/catalog-title", PatchTitleAsync);
         group.MapPatch("/{productId:guid}/core", PatchCoreAsync);
         group.MapPatch("/{productId:guid}/quantity-policy", PatchQuantityPolicyAsync);
@@ -109,31 +110,6 @@ public static class ProductWorkspaceEndpoints
                 request, session, tenant, guard, environment, cancellationToken);
             var workspace = await composer.CreateSimpleProductAsync(body, ReadPermissions(request), cancellationToken);
             return Results.Json(workspace, statusCode: StatusCodes.Status201Created);
-        }
-        catch (PlatformHttpException ex)
-        {
-            return ToError(ex);
-        }
-    }
-
-    private static async Task<IResult> GetAsync(
-        Guid productId,
-        ProductWorkspaceComposer composer,
-        HttpRequest request,
-        CurrentAuthenticatedSession session,
-        ICurrentTenant tenant,
-        IAuthorizationGuard guard,
-        IHostEnvironment environment,
-        CancellationToken cancellationToken)
-    {
-        try
-        {
-            await AdminPanelAccess.RequireAuthorizedAsync(
-                request, session, tenant, guard, environment, cancellationToken);
-            var workspace = await composer.GetAsync(productId, ReadPermissions(request), cancellationToken);
-            return workspace is null
-                ? Results.Json(new { title = "Not Found", errorCode = "workspace.product.missing" }, statusCode: StatusCodes.Status404NotFound)
-                : Results.Json(workspace);
         }
         catch (PlatformHttpException ex)
         {

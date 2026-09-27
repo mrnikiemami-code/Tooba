@@ -16,6 +16,7 @@ using Tooba.Tax.Contracts;
 
 using Tooba.BuildingBlocks.Grid;
 using Tooba.Host.Grid;
+using Tooba.ProductWorkspace.Application.Composition.Models;
 
 namespace Tooba.Host.Admin;
 

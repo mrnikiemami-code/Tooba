@@ -33,6 +33,7 @@ using Tooba.Host.Wishlist;
 using Tooba.AddressBook.Endpoints;
 using Tooba.Catalog.Endpoints;
 using Tooba.Content.Endpoints;
+using Tooba.ProductWorkspace.Endpoints;
 using Tooba.Content.Infrastructure;
 using Tooba.Content.Infrastructure.Development;
 using Tooba.Host.Composition;
@@ -163,7 +164,8 @@ builder.Services.AddToobaCqrsFoundation(
     typeof(Tooba.AccessControl.Application.Commands.EnsureBootstrap.EnsureAccessControlBootstrapCommand).Assembly,
     typeof(Tooba.AddressBook.Application.Ports.IAddressBookDirectory).Assembly,
     typeof(Tooba.CustomerProfile.Application.Queries.GetCustomerProfilePage.GetCustomerProfilePageQuery).Assembly,
-    typeof(Tooba.Content.Application.Articles.Commands.CreateArticleCommand).Assembly);
+    typeof(Tooba.Content.Application.Articles.Commands.CreateArticleCommand).Assembly,
+    typeof(Tooba.ProductWorkspace.Application.Composition.Queries.GetProductWorkspaceQuery).Assembly);
 builder.Services.AddScoped<IOrderAdminAuthorizer, HostOrderAdminAuthorizer>();
 builder.Services.AddScoped<
     Tooba.Order.Application.Admin.Operations.Ports.IOrderAdminEffectiveAccessReader,
@@ -230,6 +232,7 @@ builder.Services.AddScoped<Tooba.Wallet.Endpoints.Admin.IWalletAdminAuthorizer, 
 builder.Services.AddScoped<Tooba.Host.Admin.AdminPanelComposer>();
 builder.Services.AddScoped<Tooba.Host.Wishlist.WishlistComposer>();
 builder.Services.AddCatalogEndpointPresentation();
+builder.Services.AddProductWorkspaceEndpointPresentation();
 builder.Services.AddContentEndpointPresentation();
 builder.Services.AddScoped<Tooba.Host.Reviews.ReviewPanelComposer>();
 builder.Services.AddScoped<Tooba.Host.PageComposition.PageCompositionPanelComposer>();
@@ -470,6 +473,7 @@ app.UseMiddleware<RequestObservabilityEnrichmentMiddleware>();
 
 app.MapAuthenticationBoundary(enableCors: true);
 app.MapProductWorkspaceEndpoints();
+app.MapProductWorkspaceModuleEndpoints();
 app.MapHoldPolicySettingsEndpoints();
 app.MapCheckoutIdentitySettingsEndpoints();
 app.MapCheckoutAbuseSettingsEndpoints();
