@@ -91,6 +91,8 @@ Default Host-folder closure requires production file count ZERO. Exception: cano
 
 A task is NOT complete merely because the original dependency was fixed, focused tests passed, or code compiles.
 
+For Host evacuation, certification covers the **touched destination surface as well as the Host folder**. Host ZERO cannot override destination violations. A known certification prerequisite violation (for example Endpoints→Infrastructure, missing CQRS/ISender, missing validator classification, foreign Application/Infrastructure/Domain dependency, ad-hoc result/error mapping, message parsing, non-canonical localization/observability) is a **blocker**, not residual debt. Any such violation forbids PASS unless an explicit canonical lock exempts it.
+
 ## Certification Procedure
 
 ### 1. Physical Tree Audit
@@ -494,5 +496,6 @@ Produce evidence containing:
 - Never create a shared-errors project/layer merely because multiple modules consume the same machine code; prefer the natural bounded-context owner and use an existing neutral shared location only for genuinely cross-cutting/platform semantics with no natural module owner.
 - Never accept sensitive-data logging.
 - Never redesign business behavior during certification.
+- Task success criteria cannot downgrade certification prerequisites; known prerequisite violations cannot be converted to residual debt to justify PASS.
 - If production refactor is still required, stop certification and return a repair plan.
 - Keep this skill deduplicated and bounded: merge/strengthen existing wording instead of appending duplicate rules; this skill should become clearer, not larger.

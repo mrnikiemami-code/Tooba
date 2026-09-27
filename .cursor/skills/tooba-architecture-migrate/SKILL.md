@@ -711,7 +711,9 @@ At both the start and end of the migration, enumerate the **exact active Host fo
 
 Do **not** scan the entire Host for same-capability/name residue during normal folder-by-folder recovery. Search outside the active folder only for direct symbol/call-site references needed to preserve behavior for files discovered in that folder. Later Host folders are deliberately deferred until traversal reaches them.
 
-Default completion rule: the active Host folder must end with ZERO production files unless canonical locks/current accepted SoT explicitly permit specific Host-owned responsibilities to remain in that exact folder. For an allowed exception (for example accepted global Authentication/session platform boundaries), retain only the explicitly permitted files/responsibilities and record the exact architecture justification. Never delete/move legitimate retained Host platform files merely to satisfy a zero-count rule.
+Default completion rule: the active Host folder must end with ZERO production files unless canonical locks/current accepted SoT explicitly permit specific Host-owned responsibilities to remain in that exact folder.
+
+**ZERO is a consequence, not the migration goal.** Never relocate legacy Host endpoint/composer/service structure unchanged into a module merely to empty the folder. Any responsibility moved from Host makes the touched destination part of this migration and must satisfy the applicable canonical foundation (including CQRS/ISender, validation, result/error, boundaries, structure and observability where applicable) before `READY_FOR_CERTIFICATION`. If that foundation cannot be completed safely in the bounded scope, stop with `FOUNDATION_REQUIRES_SEPARATE_BOUNDED_TASK` or `INCOMPLETE`; do not perform a dirty move. For an allowed exception (for example accepted global Authentication/session platform boundaries), retain only the explicitly permitted files/responsibilities and record the exact architecture justification. Never delete/move legitimate retained Host platform files merely to satisfy a zero-count rule.
 
 A certified/reference module used for canonical patterns is **read-only**: do not modify, re-audit, re-certify, run unrelated tests for it, or broaden active scope into it.
 
@@ -815,4 +817,5 @@ Report:
 - No cosmetic god-file splitting and no god-file creation.
 - Preserve user work.
 - Verify before claiming readiness.
+- Task wording such as "empty/evacuate Host" never authorizes physical relocation that leaves the touched destination non-canonical.
 - Keep this skill deduplicated and bounded: merge/strengthen existing wording instead of appending duplicate rules; this skill should become clearer, not larger.

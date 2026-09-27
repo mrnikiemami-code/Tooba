@@ -179,7 +179,9 @@ For Host folder-by-folder recovery, enumerate and read **every production file i
 
 Do **not** perform a whole-Host capability/name sweep as part of normal folder recovery. Residue in later Host folders will be handled when traversal reaches those folders. Outside the active Host folder, follow only direct references/call sites needed to understand or safely rehome files discovered in the active folder.
 
-Default closure expectation: every production file in the active Host folder must receive an explicit disposition and, unless a canonical architecture lock/accepted SoT decision says specific Host-owned responsibilities may remain there, the folder's production file count must reach ZERO. If files are intentionally retained (for example legitimate global Authentication/session platform boundaries), list each retained file/responsibility and cite the exact lock/accepted decision that permits it; do not force zero against an accepted ownership exception.
+Default closure expectation: every production file in the active Host folder must receive an explicit disposition and, unless a canonical architecture lock/accepted SoT decision says specific Host-owned responsibilities may remain there, the folder's production file count must reach ZERO.
+
+**Host evacuation means responsibility evacuation, not file-count relocation.** If code leaves Host, every touched destination responsibility becomes part of the same recovery surface. A `FOUNDATION_PARTIAL` destination makes foundation completion part of the migration plan; if that cannot be completed safely in scope, the analysis must require `FOUNDATION_REQUIRES_SEPARATE_BOUNDED_TASK` / `NEEDS_ARCHITECT_DECISION` rather than permitting a dirty move. If files are intentionally retained (for example legitimate global Authentication/session platform boundaries), list each retained file/responsibility and cite the exact lock/accepted decision that permits it; do not force zero against an accepted ownership exception.
 
 A certified/reference module (e.g. Offer) is a **read-only** canonical reference, not a mandatory physical clone: reuse its principles (layering, CQRS, Contracts boundaries, validators, result/error handling, observability, structure discipline); do not blindly copy folder names, capability names, audience folders or internal layout when the target has different semantics. Choose folders by responsibility and capability first. Reference module != blueprint, and != active recovery scope. Do not modify, re-audit, re-certify, run unrelated tests for it, or broaden scope into it.
 
@@ -525,4 +527,5 @@ Return exactly one:
 - Treat a reference module as a reference, never a mandatory clone; choose folders by responsibility/capability.
 - Verify physical existence on disk and project-include resolution, not only namespaces or manifests.
 - Prefer the smallest repository-consistent solution; stop and report the exact blocker rather than expanding scope.
+- A task's narrower success criteria must not downgrade these architecture gates; Host ZERO alone is never sufficient when the touched destination is non-canonical.
 - Keep this skill deduplicated and bounded: merge/strengthen existing wording instead of appending duplicate rules; this skill should become clearer, not larger.
