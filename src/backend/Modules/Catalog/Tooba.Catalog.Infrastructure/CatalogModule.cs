@@ -92,6 +92,7 @@ public sealed class CatalogModule : IToobaModule
         services.AddScoped<IProductSeoDirectory, ProductSeoDirectory>();
         services.AddScoped<IProductHistoryReader, ProductHistoryReader>();
         services.AddScoped<IProductPublishReadinessReader, ProductPublishReadinessReader>();
+        services.AddScoped<IProductLifecycleDirectory, ProductLifecycleDirectory>();
         services.AddScoped<IBrandOptionReader, BrandOptionReader>();
         services.AddScoped<IVariantOfferLookup, VariantOfferLookupAdapter>();
         services.Configure<CatalogDemoSeedOptions>(

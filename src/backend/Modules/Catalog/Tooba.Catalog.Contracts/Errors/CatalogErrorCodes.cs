@@ -246,6 +246,18 @@ public static class CatalogErrorCodes
     /// <summary>Product SEO update rejected for other business reasons.</summary>
     public const string WorkspaceProductSeoRejected = "workspace.product.seo.rejected";
 
+    /// <summary>Product publish rejected (readiness / archived / domain gate).</summary>
+    public const string WorkspaceProductPublishRejected = "workspace.product.publish.rejected";
+
+    /// <summary>Product unpublish rejected.</summary>
+    public const string WorkspaceProductUnpublishRejected = "workspace.product.unpublish.rejected";
+
+    /// <summary>Product archive rejected.</summary>
+    public const string WorkspaceProductArchiveRejected = "workspace.product.archive.rejected";
+
+    /// <summary>Product restore-from-archive rejected.</summary>
+    public const string WorkspaceProductRestoreRejected = "workspace.product.restore.rejected";
+
     /// <summary>Checkout-abuse PUT missing required fields (Host parity).</summary>
     public const string CheckoutAbuseInvalid = "settings.checkout_abuse.invalid";
 

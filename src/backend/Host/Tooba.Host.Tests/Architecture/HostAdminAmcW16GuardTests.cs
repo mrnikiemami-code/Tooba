@@ -17,8 +17,9 @@ public sealed class HostAdminAmcW16GuardTests
         Assert.DoesNotContain("/publish/readiness", endpoints, StringComparison.Ordinal);
         Assert.DoesNotContain("GetPublishReadinessAsync", endpoints, StringComparison.Ordinal);
         Assert.Contains("MapProductWorkspaceEndpoints", endpoints, StringComparison.Ordinal);
-        Assert.Contains("MapPost(\"/{productId:guid}/publish\"", endpoints, StringComparison.Ordinal);
-        Assert.Contains("MapPost(\"/{productId:guid}/unpublish\"", endpoints, StringComparison.Ordinal);
+        // W26 moved lifecycle POSTs to ProductWorkspace.Endpoints.
+        Assert.DoesNotContain("MapPost(\"/{productId:guid}/publish\"", endpoints, StringComparison.Ordinal);
+        Assert.DoesNotContain("MapPost(\"/{productId:guid}/unpublish\"", endpoints, StringComparison.Ordinal);
         // W19 moved aggregate GET to ProductWorkspace.Endpoints; Host must not remount it.
         Assert.DoesNotContain("MapGet(\"/{productId:guid}\"", endpoints, StringComparison.Ordinal);
 
@@ -80,17 +81,19 @@ public sealed class HostAdminAmcW16GuardTests
             FindRepoRoot(),
             "src/backend/Modules/Catalog/Tooba.Catalog.Application/ProductPublishing");
         Assert.True(Directory.Exists(capabilityRoot));
-        foreach (var folder in new[] { "Queries", "Models", "Ports", "Validators" })
+        foreach (var folder in new[] { "Commands", "Queries", "Models", "Ports", "Validators" })
         {
             Assert.True(Directory.Exists(Path.Combine(capabilityRoot, folder)), folder);
         }
 
-        Assert.False(Directory.Exists(Path.Combine(capabilityRoot, "Commands")));
+        Assert.Empty(Directory.GetDirectories(Path.Combine(capabilityRoot, "Commands")));
         Assert.Empty(Directory.GetDirectories(Path.Combine(capabilityRoot, "Queries")));
         Assert.Empty(Directory.GetFiles(capabilityRoot, "*Contracts.cs", SearchOption.AllDirectories));
         Assert.True(File.Exists(Path.Combine(capabilityRoot, "Ports", "IProductPublishReadinessReader.cs")));
+        Assert.True(File.Exists(Path.Combine(capabilityRoot, "Ports", "IProductLifecycleDirectory.cs")));
         Assert.True(File.Exists(Path.Combine(capabilityRoot, "Queries", "GetProductPublishReadinessQuery.cs")));
         Assert.True(File.Exists(Path.Combine(capabilityRoot, "Queries", "GetProductPublishReadinessHandler.cs")));
+        Assert.True(File.Exists(Path.Combine(capabilityRoot, "Commands", "PublishProductCommand.cs")));
         Assert.Empty(Directory.GetFiles(Path.Combine(capabilityRoot, "Validators"), "*Validator.cs"));
     }
 

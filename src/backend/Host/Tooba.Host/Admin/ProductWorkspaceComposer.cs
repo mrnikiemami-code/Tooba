@@ -1070,90 +1070,6 @@ public sealed class ProductWorkspaceComposer
     }
 
     /// <summary>
-    /// محصول را در Catalog منتشر می‌کند.
-    /// </summary>
-    public async Task<ProductWorkspaceView> PublishAsync(
-        Guid productId,
-        ProductWorkspacePermissions permissions,
-        CancellationToken cancellationToken)
-    {
-        EnsurePublish(permissions);
-        try
-        {
-            await _catalogDirectory.PublishProductAsync(productId, cancellationToken);
-        }
-        catch (InvalidOperationException ex)
-        {
-            throw new PlatformHttpException(400, ex.Message, "workspace.product.publish.rejected");
-        }
-
-        return await RequireWorkspaceAsync(productId, permissions, cancellationToken);
-    }
-
-    /// <summary>
-    /// انتشار را لغو و وضعیت را به پیش‌نویس می‌برد.
-    /// </summary>
-    public async Task<ProductWorkspaceView> UnpublishAsync(
-        Guid productId,
-        ProductWorkspacePermissions permissions,
-        CancellationToken cancellationToken)
-    {
-        EnsurePublish(permissions);
-        try
-        {
-            await _catalogDirectory.UnpublishProductAsync(productId, cancellationToken);
-        }
-        catch (InvalidOperationException ex)
-        {
-            throw new PlatformHttpException(400, ex.Message, "workspace.product.unpublish.rejected");
-        }
-
-        return await RequireWorkspaceAsync(productId, permissions, cancellationToken);
-    }
-
-    /// <summary>
-    /// محصول را آرشیو می‌کند.
-    /// </summary>
-    public async Task<ProductWorkspaceView> ArchiveAsync(
-        Guid productId,
-        ProductWorkspacePermissions permissions,
-        CancellationToken cancellationToken)
-    {
-        EnsurePublish(permissions);
-        try
-        {
-            await _catalogDirectory.ArchiveProductAsync(productId, cancellationToken);
-        }
-        catch (InvalidOperationException ex)
-        {
-            throw new PlatformHttpException(400, ex.Message, "workspace.product.archive.rejected");
-        }
-
-        return await RequireWorkspaceAsync(productId, permissions, cancellationToken);
-    }
-
-    /// <summary>
-    /// بازیابی صریح از بایگانی به پیش‌نویس.
-    /// </summary>
-    public async Task<ProductWorkspaceView> RestoreAsync(
-        Guid productId,
-        ProductWorkspacePermissions permissions,
-        CancellationToken cancellationToken)
-    {
-        EnsurePublish(permissions);
-        try
-        {
-            await _catalogDirectory.RestoreProductAsync(productId, cancellationToken);
-        }
-        catch (InvalidOperationException ex)
-        {
-            throw new PlatformHttpException(400, ex.Message, "workspace.product.restore.rejected");
-        }
-
-        return await RequireWorkspaceAsync(productId, permissions, cancellationToken);
-    }
-
-    /// <summary>
     /// حذف امن؛ در صورت ارجاع Offer آرشیو نرم و تعارض فارسی.
     /// </summary>
     public async Task DeleteOrSoftArchiveAsync(
@@ -1335,14 +1251,6 @@ public sealed class ProductWorkspaceComposer
     private static void EnsureCatalogEdit(ProductWorkspacePermissions permissions)
     {
         if (!permissions.CanEditCatalog)
-        {
-            throw new PlatformHttpException(403, "Forbidden", "workspace.permission.denied");
-        }
-    }
-
-    private static void EnsurePublish(ProductWorkspacePermissions permissions)
-    {
-        if (!permissions.CanPublish)
         {
             throw new PlatformHttpException(403, "Forbidden", "workspace.permission.denied");
         }

@@ -811,6 +811,49 @@ public sealed class CatalogDirectory :
             ProductVariantsPort(),
             ProductMediaPort());
 
+    private IProductLifecycleDirectory LifecyclePort() =>
+        new ProductLifecycleDirectory(_db, _guard, PublishReadinessPort(), _actor);
+
+    /// <summary>
+    /// Legacy ICatalogDirectory unwrap for lifecycle: maps missing-product / reject codes to prior IOE
+    /// so ProductPublishTests keep prior contract. Migrated HTTP uses Result.
+    /// </summary>
+    private static void UnwrapLifecycle(Result result)
+    {
+        if (result.IsSuccess)
+        {
+            return;
+        }
+
+        var code = result.FirstError.Code;
+        if (string.Equals(code, CatalogErrorCodes.WorkspaceProductMissing, StringComparison.Ordinal))
+        {
+            throw new InvalidOperationException("محصول در Catalog این Tenant نیست.");
+        }
+
+        if (string.Equals(code, CatalogErrorCodes.WorkspaceProductPublishRejected, StringComparison.Ordinal))
+        {
+            throw new InvalidOperationException(ProductPublishRules.MessageNotReadyFa);
+        }
+
+        if (string.Equals(code, CatalogErrorCodes.WorkspaceProductUnpublishRejected, StringComparison.Ordinal))
+        {
+            throw new InvalidOperationException("محصول آرشیو شده را با لغو انتشار به پیش‌نویس برنمی‌گردانیم.");
+        }
+
+        if (string.Equals(code, CatalogErrorCodes.WorkspaceProductArchiveRejected, StringComparison.Ordinal))
+        {
+            throw new InvalidOperationException(code);
+        }
+
+        if (string.Equals(code, CatalogErrorCodes.WorkspaceProductRestoreRejected, StringComparison.Ordinal))
+        {
+            throw new InvalidOperationException("فقط محصول بایگانی‌شده را می‌توان به پیش‌نویس بازگرداند.");
+        }
+
+        throw new InvalidOperationException(code);
+    }
+
     /// <summary>
     /// Legacy ICatalogDirectory unwrap for history list: maps missing-product Result to prior IOE
     /// so Host aggregate shell / ProductHistoryTests keep prior contract. Migrated HTTP uses Result.
@@ -1577,88 +1620,20 @@ public sealed class CatalogDirectory :
         UnwrapHistory(await PublishReadinessPort().GetAsync(productId, locale, cancellationToken));
 
     /// <inheritdoc />
-    public async Task PublishProductAsync(Guid productId, CancellationToken cancellationToken)
-    {
-        await _guard.EnsureCanMutateAsync(cancellationToken);
-        var product = await _db.Products.SingleAsync(x => x.ProductId == productId, cancellationToken);
-        if (product.Status == CatalogPublicationStatus.Published)
-        {
-            return;
-        }
-
-        if (product.Status == CatalogPublicationStatus.Archived)
-        {
-            throw new InvalidOperationException(ProductPublishRules.MessageRestoreBeforePublishFa);
-        }
-
-        var readiness = await GetProductPublishReadinessAsync(productId, "fa-IR", cancellationToken);
-        if (!readiness.IsReady)
-        {
-            var detail = readiness.MissingRequirements.Count > 0
-                ? string.Join(" ", readiness.MissingRequirements.Select(m => m.MessageFa))
-                : ProductPublishRules.MessageNotReadyFa;
-            throw new InvalidOperationException($"{readiness.MessageFa} {detail}".Trim());
-        }
-
-        product.Publish(DateTimeOffset.UtcNow);
-        QueueProductHistory(
-            productId,
-            ProductHistoryRules.EventPublished,
-            ProductHistoryRules.SectionLifecycle,
-            ProductHistoryRules.SummaryPublishedFa,
-            ProductPublishRules.LifecycleLabelFa(CatalogPublicationStatus.Draft),
-            ProductPublishRules.LifecycleLabelFa(CatalogPublicationStatus.Published));
-        await _db.SaveChangesAsync(cancellationToken);
-    }
+    public async Task PublishProductAsync(Guid productId, CancellationToken cancellationToken) =>
+        UnwrapLifecycle(await LifecyclePort().PublishAsync(productId, cancellationToken));
 
     /// <inheritdoc />
-    public async Task UnpublishProductAsync(Guid productId, CancellationToken cancellationToken)
-    {
-        await _guard.EnsureCanMutateAsync(cancellationToken);
-        var product = await _db.Products.SingleAsync(x => x.ProductId == productId, cancellationToken);
-        product.Unpublish(DateTimeOffset.UtcNow);
-        QueueProductHistory(
-            productId,
-            ProductHistoryRules.EventUnpublished,
-            ProductHistoryRules.SectionLifecycle,
-            ProductHistoryRules.SummaryUnpublishedFa,
-            ProductPublishRules.LifecycleLabelFa(CatalogPublicationStatus.Published),
-            ProductPublishRules.LifecycleLabelFa(CatalogPublicationStatus.Draft));
-        await _db.SaveChangesAsync(cancellationToken);
-    }
+    public async Task UnpublishProductAsync(Guid productId, CancellationToken cancellationToken) =>
+        UnwrapLifecycle(await LifecyclePort().UnpublishAsync(productId, cancellationToken));
 
     /// <inheritdoc />
-    public async Task ArchiveProductAsync(Guid productId, CancellationToken cancellationToken)
-    {
-        await _guard.EnsureCanMutateAsync(cancellationToken);
-        var product = await _db.Products.SingleAsync(x => x.ProductId == productId, cancellationToken);
-        var before = ProductPublishRules.LifecycleLabelFa(product.Status);
-        product.Archive(DateTimeOffset.UtcNow);
-        QueueProductHistory(
-            productId,
-            ProductHistoryRules.EventArchived,
-            ProductHistoryRules.SectionLifecycle,
-            ProductHistoryRules.SummaryArchivedFa,
-            before,
-            ProductPublishRules.LifecycleLabelFa(CatalogPublicationStatus.Archived));
-        await _db.SaveChangesAsync(cancellationToken);
-    }
+    public async Task ArchiveProductAsync(Guid productId, CancellationToken cancellationToken) =>
+        UnwrapLifecycle(await LifecyclePort().ArchiveAsync(productId, cancellationToken));
 
     /// <inheritdoc />
-    public async Task RestoreProductAsync(Guid productId, CancellationToken cancellationToken)
-    {
-        await _guard.EnsureCanMutateAsync(cancellationToken);
-        var product = await _db.Products.SingleAsync(x => x.ProductId == productId, cancellationToken);
-        product.RestoreFromArchive(DateTimeOffset.UtcNow);
-        QueueProductHistory(
-            productId,
-            ProductHistoryRules.EventRestored,
-            ProductHistoryRules.SectionLifecycle,
-            ProductHistoryRules.SummaryRestoredFa,
-            ProductPublishRules.LifecycleLabelFa(CatalogPublicationStatus.Archived),
-            ProductPublishRules.LifecycleLabelFa(CatalogPublicationStatus.Draft));
-        await _db.SaveChangesAsync(cancellationToken);
-    }
+    public async Task RestoreProductAsync(Guid productId, CancellationToken cancellationToken) =>
+        UnwrapLifecycle(await LifecyclePort().RestoreAsync(productId, cancellationToken));
 
     /// <inheritdoc />
     public async Task<ProductHistoryPage> ListProductHistoryAsync(

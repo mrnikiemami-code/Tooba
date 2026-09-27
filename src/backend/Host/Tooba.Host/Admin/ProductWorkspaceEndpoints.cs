@@ -8,6 +8,7 @@ namespace Tooba.Host.Admin;
 /// <summary>
 /// مسیرهای HTTP ترکیب Workspace محصول. SQL بین‌ماژولی اینجا نوشته نمی‌شود.
 /// W19: aggregate GET evacuated to ProductWorkspace.Endpoints.
+/// W26: lifecycle POSTs evacuated to ProductWorkspace.Endpoints.
 /// Host ProductWorkspace surface after brand options Catalog ownership.
 /// </summary>
 public static class ProductWorkspaceEndpoints
@@ -29,10 +30,6 @@ public static class ProductWorkspaceEndpoints
         group.MapPost("/{productId:guid}/categories/additional", AddAdditionalCategoryAsync);
         group.MapDelete("/{productId:guid}/categories/additional/{categoryId:guid}", RemoveAdditionalCategoryAsync);
         group.MapPut("/{productId:guid}/brand", AssignBrandAsync);
-        group.MapPost("/{productId:guid}/publish", PublishAsync);
-        group.MapPost("/{productId:guid}/unpublish", UnpublishAsync);
-        group.MapPost("/{productId:guid}/archive", ArchiveAsync);
-        group.MapPost("/{productId:guid}/restore", RestoreAsync);
         group.MapDelete("/{productId:guid}", DeleteAsync);
 
         group.MapPost("/{productId:guid}/variants", CreateVariantAsync);
@@ -287,94 +284,6 @@ public static class ProductWorkspaceEndpoints
             await AdminPanelAccess.RequireAuthorizedAsync(
                 request, session, tenant, guard, environment, cancellationToken);
             return Results.Json(await composer.AssignProductBrandAsync(productId, body, ReadPermissions(request), cancellationToken));
-        }
-        catch (PlatformHttpException ex)
-        {
-            return ToError(ex);
-        }
-    }
-
-    private static async Task<IResult> PublishAsync(
-        Guid productId,
-        ProductWorkspaceComposer composer,
-        HttpRequest request,
-        CurrentAuthenticatedSession session,
-        ICurrentTenant tenant,
-        IAuthorizationGuard guard,
-        IHostEnvironment environment,
-        CancellationToken cancellationToken)
-    {
-        try
-        {
-            await AdminPanelAccess.RequireAuthorizedAsync(
-                request, session, tenant, guard, environment, cancellationToken);
-            return Results.Json(await composer.PublishAsync(productId, ReadPermissions(request), cancellationToken));
-        }
-        catch (PlatformHttpException ex)
-        {
-            return ToError(ex);
-        }
-    }
-
-    private static async Task<IResult> UnpublishAsync(
-        Guid productId,
-        ProductWorkspaceComposer composer,
-        HttpRequest request,
-        CurrentAuthenticatedSession session,
-        ICurrentTenant tenant,
-        IAuthorizationGuard guard,
-        IHostEnvironment environment,
-        CancellationToken cancellationToken)
-    {
-        try
-        {
-            await AdminPanelAccess.RequireAuthorizedAsync(
-                request, session, tenant, guard, environment, cancellationToken);
-            return Results.Json(await composer.UnpublishAsync(productId, ReadPermissions(request), cancellationToken));
-        }
-        catch (PlatformHttpException ex)
-        {
-            return ToError(ex);
-        }
-    }
-
-    private static async Task<IResult> ArchiveAsync(
-        Guid productId,
-        ProductWorkspaceComposer composer,
-        HttpRequest request,
-        CurrentAuthenticatedSession session,
-        ICurrentTenant tenant,
-        IAuthorizationGuard guard,
-        IHostEnvironment environment,
-        CancellationToken cancellationToken)
-    {
-        try
-        {
-            await AdminPanelAccess.RequireAuthorizedAsync(
-                request, session, tenant, guard, environment, cancellationToken);
-            return Results.Json(await composer.ArchiveAsync(productId, ReadPermissions(request), cancellationToken));
-        }
-        catch (PlatformHttpException ex)
-        {
-            return ToError(ex);
-        }
-    }
-
-    private static async Task<IResult> RestoreAsync(
-        Guid productId,
-        ProductWorkspaceComposer composer,
-        HttpRequest request,
-        CurrentAuthenticatedSession session,
-        ICurrentTenant tenant,
-        IAuthorizationGuard guard,
-        IHostEnvironment environment,
-        CancellationToken cancellationToken)
-    {
-        try
-        {
-            await AdminPanelAccess.RequireAuthorizedAsync(
-                request, session, tenant, guard, environment, cancellationToken);
-            return Results.Json(await composer.RestoreAsync(productId, ReadPermissions(request), cancellationToken));
         }
         catch (PlatformHttpException ex)
         {

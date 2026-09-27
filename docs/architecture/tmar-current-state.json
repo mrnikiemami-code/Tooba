@@ -2297,6 +2297,24 @@
     "workflowStop": "USER_REVIEW_HOST_ADMIN_W25_LANDING_SEED_CHECKPOINT",
     "evidence": "docs/evidence/TB-TMAR-HOST-ADMIN-AMC-001-W25-LANDING-SEED/"
   },
+  "hostAdminAmcPwLifecycle": {
+    "task": "TB-TMAR-HOST-ADMIN-AMC-001-W26-PW-LIFECYCLE",
+    "parentTask": "TB-TMAR-HOST-ADMIN-AMC-001-W25-LANDING-SEED",
+    "w17PlanLabel": "W21 lifecycle",
+    "state": "HOST_ADMIN_PRODUCTWORKSPACE_LIFECYCLE_OWNED_BY_MODULE",
+    "activeHostFolder": "Admin",
+    "lifecycleHttpOwner": "ProductWorkspace.Endpoints",
+    "lifecycleMutationOwner": "Catalog.ProductPublishing.Commands",
+    "HostRemainingProductWorkspaceRoutes": 13,
+    "ProductWorkspaceEndpointRouteCount": 5,
+    "HostAdminFileCount": 31,
+    "partialHostRetention": "ProductWorkspace* RETAIN until W24-final",
+    "StoreAppearance": "DEFERRED",
+    "schemaMigrationState": "NONE",
+    "frontendState": "UNCHANGED",
+    "workflowStop": "USER_REVIEW_HOST_ADMIN_W26_PW_LIFECYCLE_CHECKPOINT",
+    "evidence": "docs/evidence/TB-TMAR-HOST-ADMIN-AMC-001-W26-PW-LIFECYCLE/"
+  },
   "hostAdminAmcW18": {
     "task": "TB-TMAR-HOST-ADMIN-AMC-001-W18",
     "parentTask": "TB-TMAR-HOST-ADMIN-AMC-001-W17",
