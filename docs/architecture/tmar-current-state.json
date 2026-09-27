@@ -1341,6 +1341,46 @@
     "workflowStop": "USER_REVIEW_HOST_CONTENT_CHECKPOINT",
     "evidence": "docs/evidence/TB-TMAR-HOST-CONTENT-AMC-001/"
   },
+  "hostContentAmcR1": {
+    "task": "TB-TMAR-HOST-CONTENT-AMC-001-R1",
+    "parentTask": "TB-TMAR-HOST-CONTENT-AMC-001",
+    "parentCommit": "86a3d7ced96316e0c79c67c52902f6d668d99a00",
+    "state": "HOST_CONTENT_AMC_R1_PASS",
+    "hostContentZeroPreserved": true,
+    "contentProjects": [
+      "Tooba.Content.Contracts",
+      "Tooba.Content.Domain",
+      "Tooba.Content.Application",
+      "Tooba.Content.Infrastructure",
+      "Tooba.Content.Endpoints"
+    ],
+    "endpointOwnership": "MODULE_OWNED",
+    "cqrsMediatRState": "COMPLETE_MEDIATR_12_5_ISENDER",
+    "endpointReachableRequestCount": 51,
+    "validatorRequiredCount": 17,
+    "validatorPresentCount": 17,
+    "noValidatorRequiredCount": 34,
+    "resultApiResponseFactoryState": "CANONICAL",
+    "messageClassificationState": "ZERO",
+    "errorCatalogLocalizationState": "CANONICAL",
+    "loggingState": "CANONICAL_FOUNDATION",
+    "telemetryCorrelationState": "CANONICAL_FOUNDATION",
+    "contentToMediaBoundary": "MEDIA_CONTRACTS_ONLY",
+    "endpointsToInfrastructure": "ZERO",
+    "pathNamespace": "EXACT",
+    "rootAllowlists": "ENFORCED_VIA_GUARDS",
+    "sourceCohesion": "CAPABILITY_ORIENTED",
+    "schemaMigrationState": "NONE",
+    "focusedValidations": "PASSED_HostContentAmc_9_ContentFilter_29_FAILED_0",
+    "remainingBlockers": [],
+    "residualDebt": [
+      "Full ARCH-COMPLETE-002 structureCertified manifest promotion deferred to explicit certify gate if Architect requires separate STRUCTURE_CERTIFIED entry",
+      "DB-gated Content behavior tests remain skipped without live Postgres (pre-existing)"
+    ],
+    "nextHostFolderStarted": false,
+    "workflowStop": "USER_REVIEW_HOST_CONTENT_R1_CHECKPOINT",
+    "evidence": "docs/evidence/TB-TMAR-HOST-CONTENT-AMC-001-R1/"
+  },
   "addressBookPostRealignRepair": {
     "task": "TB-TMAR-ADDRESSBOOK-POST-REALIGN-REPAIR-001",
     "parentTask": "ADDRESSBOOK-OFFER-STYLE-FOLDERS-001",
