@@ -1,3 +1,4 @@
+using Tooba.BuildingBlocks;
 using Tooba.Media.Application;
 using Tooba.Media.Contracts.Ports;
 
@@ -11,6 +12,6 @@ public sealed class MediaAssetReadinessBridge(IMediaDirectory media) : IMediaAss
     {
         var asset = await media.GetAsync(mediaAssetId, cancellationToken);
         if (asset is null)
-            throw new InvalidOperationException("media.asset.missing");
+            throw new ContractOperationException(MediaAssetContractCodes.AssetMissing);
     }
 }

@@ -63,7 +63,7 @@ public static class ContentAdminGridPolicies
         }
         catch (GridQueryValidationException ex)
         {
-            throw new PlatformHttpException(ex.StatusCode, ex.Message, ex.ErrorCode);
+            throw new ContractOperationException(ex.ErrorCode);
         }
     }
 

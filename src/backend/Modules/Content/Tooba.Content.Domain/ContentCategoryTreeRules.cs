@@ -1,3 +1,4 @@
+using Tooba.BuildingBlocks;
 namespace Tooba.Content.Domain;
 
 /// <summary>قواعد درخت دسته‌بندی مقاله — حداکثر عمق ۲ (ریشه=۱، زیردسته=۲).</summary>
@@ -16,7 +17,7 @@ public static class ContentCategoryTreeRules
 
         if (!parentById.ContainsKey(categoryId.Value))
         {
-            throw new InvalidOperationException(ContentCategoryErrorCodes.NotFound);
+            throw new ContractOperationException(ContentCategoryErrorCodes.NotFound);
         }
 
         var depth = 1;
@@ -28,7 +29,7 @@ public static class ContentCategoryTreeRules
             current = p;
             if (++guard > parentById.Count + 2)
             {
-                throw new InvalidOperationException(ContentCategoryErrorCodes.CycleDetected);
+                throw new ContractOperationException(ContentCategoryErrorCodes.CycleDetected);
             }
         }
 
@@ -99,7 +100,7 @@ public static class ContentCategoryTreeRules
             current = p;
             if (++guard > parentById.Count + 2)
             {
-                throw new InvalidOperationException(ContentCategoryErrorCodes.CycleDetected);
+                throw new ContractOperationException(ContentCategoryErrorCodes.CycleDetected);
             }
         }
 
@@ -113,13 +114,13 @@ public static class ContentCategoryTreeRules
     {
         if (!parentById.ContainsKey(parentId))
         {
-            throw new InvalidOperationException(ContentCategoryErrorCodes.InvalidParent);
+            throw new ContractOperationException(ContentCategoryErrorCodes.InvalidParent);
         }
 
         var parentDepth = ComputeDepth(parentId, parentById);
         if (parentDepth >= MaxDepth)
         {
-            throw new InvalidOperationException(ContentCategoryErrorCodes.MaxDepthExceeded);
+            throw new ContractOperationException(ContentCategoryErrorCodes.MaxDepthExceeded);
         }
     }
 
@@ -137,29 +138,29 @@ public static class ContentCategoryTreeRules
 
         if (newParentId == categoryId)
         {
-            throw new InvalidOperationException(ContentCategoryErrorCodes.SelfParent);
+            throw new ContractOperationException(ContentCategoryErrorCodes.SelfParent);
         }
 
         if (!parentById.ContainsKey(categoryId) || !parentById.ContainsKey(newParentId.Value))
         {
-            throw new InvalidOperationException(ContentCategoryErrorCodes.NotFound);
+            throw new ContractOperationException(ContentCategoryErrorCodes.NotFound);
         }
 
         if (!string.Equals(languageById[categoryId], languageById[newParentId.Value], StringComparison.Ordinal))
         {
-            throw new InvalidOperationException(ContentCategoryErrorCodes.CrossLanguageParent);
+            throw new ContractOperationException(ContentCategoryErrorCodes.CrossLanguageParent);
         }
 
         if (IsDescendant(categoryId, newParentId.Value, parentById))
         {
-            throw new InvalidOperationException(ContentCategoryErrorCodes.DescendantParent);
+            throw new ContractOperationException(ContentCategoryErrorCodes.DescendantParent);
         }
 
         var parentDepth = ComputeDepth(newParentId.Value, parentById);
         var subtreeHeight = ComputeSubtreeHeight(categoryId, parentById);
         if (parentDepth + subtreeHeight > MaxDepth)
         {
-            throw new InvalidOperationException(ContentCategoryErrorCodes.MaxDepthExceeded);
+            throw new ContractOperationException(ContentCategoryErrorCodes.MaxDepthExceeded);
         }
     }
 }

@@ -73,32 +73,4 @@ public static class ContentErrorCodes
     public const string CommentInvalidTransition = "content.comment.invalid_transition";
     public const string CommentInvalidPayload = "content.comment.invalid_payload";
     public const string CommentForbidden = "content.comment.forbidden";
-
-    /// <summary>Exact-equality set for mapping InvalidOperationException.Message when directories still throw code-as-message.</summary>
-    public static readonly HashSet<string> KnownCodes = new(StringComparer.Ordinal)
-    {
-        AuthorizationDenied, AuthorizationUnavailable,
-        ArticleMissing, SlugDuplicate, CreateRejected, UpdateRejected, DeleteRejected,
-        ArticleMediaRejected, CommentRejected,
-        LocaleLocked, UnsafeBodyMedia, MediaNotFound, DeleteNotAllowed, AlreadyArchived, ArchiveNotAllowed,
-        GalleryItemMissing,
-        PublishNotReady, PublishInvalidSchedule, PublishForbidden, UnpublishInvalid, PreviewUnavailable,
-        CategoryNotFound, CategorySlugDuplicate, CategoryCycleDetected, CategoryCrossLanguageParent,
-        CategorySelfParent, CategoryDescendantParent, CategoryMaxDepthExceeded, CategoryInvalidParent,
-        CategoryInactive, CategoryLanguageMismatch, CategoryHasArticles, CategoryHasChildren,
-        CategoryInvalidLanguage, CategoryInvalidName, CategoryInvalidSlug, CategoryInvalidShortDescription,
-        CategoryInvalidDescription, CategoryInvalidSeoTitle, CategoryInvalidSeoDescription, CategoryInvalidField,
-        AuthorNotFound, AuthorSlugDuplicate, AuthorInactive, AuthorRequiredForPublish,
-        AuthorInvalidDisplayName, AuthorInvalidSlug, AuthorInvalidShortBio, AuthorInvalidFullBio,
-        AuthorInvalidUrl, AuthorInvalidField,
-        TagNotFound, TagDuplicateName, TagLanguageMismatch, TagInactive, TagInvalidLanguage, TagInvalidName,
-        TagArticleNotFound,
-        CommentNotFound, CommentArticleNotFound, CommentInvalidTransition, CommentInvalidPayload, CommentForbidden,
-        "localization.language.inactive",
-        "localization.language.not_found",
-    };
-
-    /// <summary>True when message is exactly a known stable Content (or consumed Localization) code.</summary>
-    public static bool IsKnownCode(string? message) =>
-        !string.IsNullOrWhiteSpace(message) && KnownCodes.Contains(message);
 }

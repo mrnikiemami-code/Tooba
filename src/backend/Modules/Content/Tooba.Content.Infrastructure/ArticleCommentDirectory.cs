@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Tooba.Content.Application.Models;
 using Tooba.Content.Application.Ports;
 using Tooba.Content.Contracts.Errors;
@@ -122,7 +122,7 @@ public sealed class ArticleCommentDirectory : IArticleCommentDirectory
         var entity = await _db.ArticleComments
             .FirstOrDefaultAsync(x => x.ArticleId == articleId && x.CommentId == commentId, cancellationToken);
         if (entity is null)
-            throw new PlatformHttpException(404, "Request rejected", ArticleCommentCodes.NotFound);
+            throw new ContractOperationException(ArticleCommentCodes.NotFound);
 
         var now = DateTimeOffset.UtcNow;
         apply(entity, now);
@@ -134,7 +134,7 @@ public sealed class ArticleCommentDirectory : IArticleCommentDirectory
     {
         var exists = await _db.Articles.AsNoTracking().AnyAsync(x => x.ArticleId == articleId, cancellationToken);
         if (!exists)
-            throw new PlatformHttpException(404, "Request rejected", ArticleCommentCodes.ArticleNotFound);
+            throw new ContractOperationException(ArticleCommentCodes.ArticleNotFound);
     }
 
     private static ArticleCommentAdminDto Map(ArticleComment x) =>

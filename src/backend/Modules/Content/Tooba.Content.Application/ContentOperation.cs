@@ -1,33 +1,30 @@
 using Tooba.BuildingBlocks;
 using Tooba.BuildingBlocks.Results;
-using Tooba.Content.Contracts.Errors;
 
 namespace Tooba.Content.Application;
 
 /// <summary>
-/// Maps directory PlatformHttpException / exact-code InvalidOperationException into Result failures.
+/// Converts typed <see cref="ContractOperationException"/> into <see cref="Result"/> failures by stable Code.
 /// Unknown exceptions propagate to the global exception boundary.
 /// </summary>
 public static class ContentOperation
 {
-    public static async Task<Result<T>> ExecuteAsync<T>(Func<Task<T>> action, string unusedFallbackCode = "")
+    /// <summary>Executes an operation and maps typed contract faults to <see cref="Result{T}"/>.</summary>
+    public static async Task<Result<T>> ExecuteAsync<T>(Func<Task<T>> action, string? unusedFallbackCode = null)
     {
         _ = unusedFallbackCode;
         try
         {
             return Result.Success(await action());
         }
-        catch (PlatformHttpException ex) when (!string.IsNullOrWhiteSpace(ex.ErrorCode))
+        catch (ContractOperationException ex)
         {
-            return Result.Failure<T>(new SemanticError(ex.ErrorCode!));
-        }
-        catch (InvalidOperationException ex) when (ContentErrorCodes.IsKnownCode(ex.Message))
-        {
-            return Result.Failure<T>(new SemanticError(ex.Message));
+            return Result.Failure<T>(new SemanticError(ex.Code));
         }
     }
 
-    public static async Task<Result> ExecuteAsync(Func<Task> action, string unusedFallbackCode = "")
+    /// <summary>Executes an operation and maps typed contract faults to <see cref="Result"/>.</summary>
+    public static async Task<Result> ExecuteAsync(Func<Task> action, string? unusedFallbackCode = null)
     {
         _ = unusedFallbackCode;
         try
@@ -35,13 +32,9 @@ public static class ContentOperation
             await action();
             return Result.Success();
         }
-        catch (PlatformHttpException ex) when (!string.IsNullOrWhiteSpace(ex.ErrorCode))
+        catch (ContractOperationException ex)
         {
-            return Result.Failure(new SemanticError(ex.ErrorCode!));
-        }
-        catch (InvalidOperationException ex) when (ContentErrorCodes.IsKnownCode(ex.Message))
-        {
-            return Result.Failure(new SemanticError(ex.Message));
+            return Result.Failure(new SemanticError(ex.Code));
         }
     }
 

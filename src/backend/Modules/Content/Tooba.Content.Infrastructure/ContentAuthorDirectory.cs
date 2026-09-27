@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Tooba.Content.Application.Models;
 using Tooba.Content.Application.Ports;
 using Tooba.Content.Contracts.Errors;
@@ -64,7 +64,7 @@ public sealed class ContentAuthorDirectory : IContentAuthorDirectory
         var slug = ContentAuthor.NormalizeSlug(command.Slug);
         if (await _db.Authors.AnyAsync(x => x.Slug == slug, cancellationToken))
         {
-            throw new PlatformHttpException(409, "Request rejected", ContentAuthorErrorCodes.SlugDuplicate);
+            throw new ContractOperationException(ContentAuthorErrorCodes.SlugDuplicate);
         }
 
         var author = ContentAuthor.Create(
@@ -96,7 +96,7 @@ public sealed class ContentAuthorDirectory : IContentAuthorDirectory
             x => x.AuthorId != authorId && x.Slug == slug,
             cancellationToken))
         {
-            throw new PlatformHttpException(409, "Request rejected", ContentAuthorErrorCodes.SlugDuplicate);
+            throw new ContractOperationException(ContentAuthorErrorCodes.SlugDuplicate);
         }
 
         author.Update(
@@ -162,10 +162,10 @@ public sealed class ContentAuthorDirectory : IContentAuthorDirectory
 
         var author = await _db.Authors.AsNoTracking()
             .FirstOrDefaultAsync(x => x.AuthorId == authorId, cancellationToken)
-            ?? throw new PlatformHttpException(404, "Request rejected", ContentAuthorErrorCodes.NotFound);
+            ?? throw new ContractOperationException(ContentAuthorErrorCodes.NotFound);
         if (isNewAssignment && !author.IsActive)
         {
-            throw new PlatformHttpException(400, "Request rejected", ContentAuthorErrorCodes.Inactive);
+            throw new ContractOperationException(ContentAuthorErrorCodes.Inactive);
         }
     }
 
@@ -174,17 +174,17 @@ public sealed class ContentAuthorDirectory : IContentAuthorDirectory
     {
         if (authorId is null)
         {
-            throw new PlatformHttpException(400, "Request rejected", ContentAuthorErrorCodes.RequiredForPublish);
+            throw new ContractOperationException(ContentAuthorErrorCodes.RequiredForPublish);
         }
 
         _ = await _db.Authors.AsNoTracking()
             .FirstOrDefaultAsync(x => x.AuthorId == authorId, cancellationToken)
-            ?? throw new PlatformHttpException(404, "Request rejected", ContentAuthorErrorCodes.NotFound);
+            ?? throw new ContractOperationException(ContentAuthorErrorCodes.NotFound);
     }
 
     private async Task<ContentAuthor> FindTrackedAsync(Guid authorId, CancellationToken cancellationToken) =>
         await _db.Authors.FirstOrDefaultAsync(x => x.AuthorId == authorId, cancellationToken)
-        ?? throw new PlatformHttpException(404, "Request rejected", ContentAuthorErrorCodes.NotFound);
+        ?? throw new ContractOperationException(ContentAuthorErrorCodes.NotFound);
 
     private async Task<ContentAuthorWorkspaceDto> MapWorkspaceAsync(
         ContentAuthor row,

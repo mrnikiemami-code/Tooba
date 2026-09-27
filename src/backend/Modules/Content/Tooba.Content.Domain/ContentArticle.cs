@@ -150,7 +150,7 @@ public sealed class ContentArticle
         var resolvedLocale = string.IsNullOrWhiteSpace(locale) ? Locale : locale.Trim();
         if (!string.Equals(resolvedLocale, Locale, StringComparison.Ordinal) && !CanChangeLocale())
         {
-            throw new InvalidOperationException(ContentArticleErrorCodes.LocaleLocked);
+            throw new ContractOperationException(ContentArticleErrorCodes.LocaleLocked);
         }
 
         Validate(Slug, title, excerpt, body, authorDisplayName, resolvedLocale, seoTitle, seoDescription, category);
@@ -188,7 +188,7 @@ public sealed class ContentArticle
     {
         if (string.IsNullOrWhiteSpace(authorDisplayName) || authorDisplayName.Trim().Length > AuthorDisplayNameMaxLength)
         {
-            throw new InvalidOperationException("نام نمایشی نویسنده معتبر نیست.");
+            throw new ContractOperationException("نام نمایشی نویسنده معتبر نیست.");
         }
 
         AuthorId = authorId;
@@ -200,7 +200,7 @@ public sealed class ContentArticle
     public void Publish(DateTimeOffset now)
     {
         if (Status == ContentPublicationStatus.Archived)
-            throw new InvalidOperationException(ContentArticleErrorCodes.AlreadyArchived);
+            throw new ContractOperationException(ContentArticleErrorCodes.AlreadyArchived);
         Status = ContentPublicationStatus.Published;
         UpdatedAt = now;
     }
@@ -209,7 +209,7 @@ public sealed class ContentArticle
     public void Unpublish(DateTimeOffset now)
     {
         if (Status == ContentPublicationStatus.Archived)
-            throw new InvalidOperationException(ContentArticleErrorCodes.AlreadyArchived);
+            throw new ContractOperationException(ContentArticleErrorCodes.AlreadyArchived);
         Status = ContentPublicationStatus.Draft;
         UpdatedAt = now;
     }
@@ -218,7 +218,7 @@ public sealed class ContentArticle
     public void Archive(DateTimeOffset now)
     {
         if (Status == ContentPublicationStatus.Archived)
-            throw new InvalidOperationException(ContentArticleErrorCodes.AlreadyArchived);
+            throw new ContractOperationException(ContentArticleErrorCodes.AlreadyArchived);
         Status = ContentPublicationStatus.Archived;
         UpdatedAt = now;
     }
@@ -277,7 +277,7 @@ public sealed class ContentArticle
         if (string.IsNullOrWhiteSpace(value)) return null;
         var trimmed = value.Trim();
         if (trimmed.Length > maxLength)
-            throw new InvalidOperationException("مقدار اختیاری مقاله از سقف مجاز بلندتر است.");
+            throw new ContractOperationException("مقدار اختیاری مقاله از سقف مجاز بلندتر است.");
         return trimmed;
     }
 
@@ -293,23 +293,23 @@ public sealed class ContentArticle
         string? category)
     {
         if (string.IsNullOrWhiteSpace(slug) || slug.Trim().Length > SlugMaxLength)
-            throw new InvalidOperationException("slug مقاله معتبر نیست.");
+            throw new ContractOperationException("slug مقاله معتبر نیست.");
         if (string.IsNullOrWhiteSpace(title) || title.Trim().Length > TitleMaxLength)
-            throw new InvalidOperationException("عنوان مقاله معتبر نیست.");
+            throw new ContractOperationException("عنوان مقاله معتبر نیست.");
         if (string.IsNullOrWhiteSpace(excerpt) || excerpt.Trim().Length > ExcerptMaxLength)
-            throw new InvalidOperationException("چکیدهٔ مقاله معتبر نیست.");
+            throw new ContractOperationException("چکیدهٔ مقاله معتبر نیست.");
         if (body is null || body.Trim().Length > BodyMaxLength)
-            throw new InvalidOperationException("بدنهٔ مقاله معتبر نیست.");
+            throw new ContractOperationException("بدنهٔ مقاله معتبر نیست.");
         if ((authorDisplayName ?? string.Empty).Trim().Length > AuthorDisplayNameMaxLength)
-            throw new InvalidOperationException("نام نمایشی نویسنده معتبر نیست.");
+            throw new ContractOperationException("نام نمایشی نویسنده معتبر نیست.");
         if (string.IsNullOrWhiteSpace(locale) || locale.Trim().Length > LocaleMaxLength)
-            throw new InvalidOperationException("locale مقاله معتبر نیست.");
+            throw new ContractOperationException("locale مقاله معتبر نیست.");
         if (seoTitle is not null && seoTitle.Trim().Length > SeoTitleMaxLength)
-            throw new InvalidOperationException("عنوان SEO مقاله معتبر نیست.");
+            throw new ContractOperationException("عنوان SEO مقاله معتبر نیست.");
         if (seoDescription is not null && seoDescription.Trim().Length > SeoDescriptionMaxLength)
-            throw new InvalidOperationException("توضیح SEO مقاله معتبر نیست.");
+            throw new ContractOperationException("توضیح SEO مقاله معتبر نیست.");
         if (category is not null && category.Trim().Length > CategoryMaxLength)
-            throw new InvalidOperationException("دستهٔ مقاله معتبر نیست.");
+            throw new ContractOperationException("دستهٔ مقاله معتبر نیست.");
     }
 }
 

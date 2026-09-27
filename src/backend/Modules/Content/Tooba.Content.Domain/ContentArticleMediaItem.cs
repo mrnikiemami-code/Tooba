@@ -1,3 +1,4 @@
+using Tooba.BuildingBlocks;
 namespace Tooba.Content.Domain;
 
 /// <summary>ارجاع گالری مقاله به دارایی DAM — بدون باینری.</summary>
@@ -52,16 +53,16 @@ public sealed class ContentArticleMediaItem
     private static void ValidateMetadata(string? altText, string? caption)
     {
         if (altText is not null && altText.Trim().Length > AltTextMaxLength)
-            throw new InvalidOperationException("متن جایگزین گالری مقاله معتبر نیست.");
+            throw new ContractOperationException("متن جایگزین گالری مقاله معتبر نیست.");
         if (caption is not null && caption.Trim().Length > CaptionMaxLength)
-            throw new InvalidOperationException("زیرنویس گالری مقاله معتبر نیست.");
+            throw new ContractOperationException("زیرنویس گالری مقاله معتبر نیست.");
     }
 
     private static string? NormalizeOptional(string? value, int maxLength)
     {
         if (string.IsNullOrWhiteSpace(value)) return null;
         var trimmed = value.Trim();
-        return trimmed.Length > maxLength ? throw new InvalidOperationException("متادیتای گالری مقاله معتبر نیست.") : trimmed;
+        return trimmed.Length > maxLength ? throw new ContractOperationException("متادیتای گالری مقاله معتبر نیست.") : trimmed;
     }
 }
 
@@ -75,7 +76,7 @@ public static class ContentArticleBodyRules
         if (body.Contains("data:image", StringComparison.OrdinalIgnoreCase)
             || body.Contains("data:application", StringComparison.OrdinalIgnoreCase))
         {
-            throw new InvalidOperationException(ContentArticleErrorCodes.UnsafeBodyMedia);
+            throw new ContractOperationException(ContentArticleErrorCodes.UnsafeBodyMedia);
         }
     }
 }

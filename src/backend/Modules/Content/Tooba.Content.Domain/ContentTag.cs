@@ -77,12 +77,12 @@ public sealed class ContentTag
     {
         if (string.IsNullOrWhiteSpace(languageCode) || languageCode.Trim().Length > LanguageCodeMaxLength)
         {
-            throw new InvalidOperationException(ContentTagErrorCodes.InvalidLanguage);
+            throw new ContractOperationException(ContentTagErrorCodes.InvalidLanguage);
         }
 
         if (string.IsNullOrWhiteSpace(name) || name.Trim().Length > NameMaxLength)
         {
-            throw new InvalidOperationException(ContentTagErrorCodes.InvalidName);
+            throw new ContractOperationException(ContentTagErrorCodes.InvalidName);
         }
     }
 }

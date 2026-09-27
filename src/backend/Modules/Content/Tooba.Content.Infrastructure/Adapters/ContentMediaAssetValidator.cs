@@ -1,10 +1,11 @@
-﻿using Tooba.Content.Application.Ports;
+﻿using Tooba.BuildingBlocks;
+using Tooba.Content.Application.Ports;
 using Tooba.Content.Contracts.Errors;
 using Tooba.Media.Contracts.Ports;
 
 namespace Tooba.Content.Infrastructure.Adapters;
 
-/// <summary>Content→Media Contracts readiness adapter.</summary>
+/// <summary>Content→Media Contracts readiness adapter; translates Media code to Content-owned code.</summary>
 public sealed class ContentMediaAssetValidator(IMediaAssetReadinessPort media) : IContentMediaAssetValidator
 {
     /// <inheritdoc />
@@ -14,9 +15,9 @@ public sealed class ContentMediaAssetValidator(IMediaAssetReadinessPort media) :
         {
             await media.EnsureReadyAsync(mediaAssetId, cancellationToken);
         }
-        catch (InvalidOperationException)
+        catch (ContractOperationException ex) when (ex.Code == MediaAssetContractCodes.AssetMissing)
         {
-            throw new InvalidOperationException(ContentErrorCodes.MediaNotFound);
+            throw new ContractOperationException(ContentErrorCodes.MediaNotFound, ex);
         }
     }
 }

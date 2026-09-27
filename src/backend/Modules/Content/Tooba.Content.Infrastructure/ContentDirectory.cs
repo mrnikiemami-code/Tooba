@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Tooba.Content.Application.Models;
 using Tooba.Content.Application.Ports;
 using Tooba.Content.Contracts.Errors;
@@ -172,7 +172,7 @@ public sealed class ContentDirectory : IContentDirectory
                 article => article.Slug == slug && article.Locale == locale,
                 cancellationToken))
         {
-            throw new PlatformHttpException(409, "Conflict", ContentErrorCodes.SlugDuplicate);
+            throw new ContractOperationException(ContentErrorCodes.SlugDuplicate);
         }
 
         await _languages.EnsureActiveAsync(locale, cancellationToken);
@@ -219,24 +219,24 @@ public sealed class ContentDirectory : IContentDirectory
         CancellationToken cancellationToken)
     {
         var article = await _db.Articles.FirstOrDefaultAsync(row => row.ArticleId == articleId, cancellationToken)
-            ?? throw new PlatformHttpException(404, "Not Found", ContentErrorCodes.ArticleMissing);
+            ?? throw new ContractOperationException(ContentErrorCodes.ArticleMissing);
         var now = DateTimeOffset.UtcNow;
         var locale = string.IsNullOrWhiteSpace(command.Locale) ? article.Locale : command.Locale.Trim();
         if (!string.Equals(locale, article.Locale, StringComparison.Ordinal))
         {
             if (!article.CanChangeLocale())
             {
-                throw new PlatformHttpException(400, "Bad Request", ContentArticleErrorCodes.LocaleLocked);
+                throw new ContractOperationException(ContentArticleErrorCodes.LocaleLocked);
             }
 
             if (await _db.ArticleMedia.AnyAsync(row => row.ArticleId == articleId, cancellationToken))
             {
-                throw new PlatformHttpException(400, "Bad Request", ContentArticleErrorCodes.LocaleLocked);
+                throw new ContractOperationException(ContentArticleErrorCodes.LocaleLocked);
             }
 
             if (await _db.ArticleTags.AnyAsync(row => row.ArticleId == articleId, cancellationToken))
             {
-                throw new PlatformHttpException(400, "Bad Request", ContentArticleErrorCodes.LocaleLocked);
+                throw new ContractOperationException(ContentArticleErrorCodes.LocaleLocked);
             }
         }
 
@@ -289,17 +289,17 @@ public sealed class ContentDirectory : IContentDirectory
     public async Task<AdminArticleSnapshot> PublishAsync(Guid articleId, CancellationToken cancellationToken)
     {
         var article = await _db.Articles.FirstOrDefaultAsync(row => row.ArticleId == articleId, cancellationToken)
-            ?? throw new PlatformHttpException(404, "Not Found", ContentErrorCodes.ArticleMissing);
+            ?? throw new ContractOperationException(ContentErrorCodes.ArticleMissing);
         if (article.Status == ContentPublicationStatus.Archived)
         {
-            throw new PlatformHttpException(400, "Bad Request", ArticlePublicationCodes.PublishForbidden);
+            throw new ContractOperationException(ArticlePublicationCodes.PublishForbidden);
         }
 
         var readiness = await EvaluateReadinessAsync(article, cancellationToken);
         if (!readiness.CanPublish)
         {
             var codes = string.Join(",", readiness.RequiredMissing.Select(c => c.Key));
-            throw new PlatformHttpException(400, "Publish not ready", ContentErrorCodes.PublishNotReady);
+            throw new ContractOperationException(ContentErrorCodes.PublishNotReady);
         }
 
         var now = DateTimeOffset.UtcNow;
@@ -346,10 +346,10 @@ public sealed class ContentDirectory : IContentDirectory
     public async Task<AdminArticleSnapshot> UnpublishAsync(Guid articleId, CancellationToken cancellationToken)
     {
         var article = await _db.Articles.FirstOrDefaultAsync(row => row.ArticleId == articleId, cancellationToken)
-            ?? throw new PlatformHttpException(404, "Not Found", ContentErrorCodes.ArticleMissing);
+            ?? throw new ContractOperationException(ContentErrorCodes.ArticleMissing);
         if (article.Status != ContentPublicationStatus.Published)
         {
-            throw new PlatformHttpException(400, "Bad Request", ArticlePublicationCodes.UnpublishInvalid);
+            throw new ContractOperationException(ArticlePublicationCodes.UnpublishInvalid);
         }
 
         var now = DateTimeOffset.UtcNow;
@@ -371,9 +371,9 @@ public sealed class ContentDirectory : IContentDirectory
     public async Task<AdminArticleSnapshot> ArchiveAsync(Guid articleId, CancellationToken cancellationToken)
     {
         var article = await _db.Articles.FirstOrDefaultAsync(row => row.ArticleId == articleId, cancellationToken)
-            ?? throw new PlatformHttpException(404, "Not Found", ContentErrorCodes.ArticleMissing);
+            ?? throw new ContractOperationException(ContentErrorCodes.ArticleMissing);
         if (!ContentArticleLifecycleRules.CanArchive(article.Status))
-            throw new PlatformHttpException(400, "Bad Request", ContentArticleErrorCodes.ArchiveNotAllowed);
+            throw new ContractOperationException(ContentArticleErrorCodes.ArchiveNotAllowed);
         var now = DateTimeOffset.UtcNow;
         var previous = article.Status;
         article.Archive(now);
@@ -393,9 +393,9 @@ public sealed class ContentDirectory : IContentDirectory
     public async Task DeleteDraftAsync(Guid articleId, CancellationToken cancellationToken)
     {
         var article = await _db.Articles.FirstOrDefaultAsync(row => row.ArticleId == articleId, cancellationToken)
-            ?? throw new PlatformHttpException(404, "Not Found", ContentErrorCodes.ArticleMissing);
+            ?? throw new ContractOperationException(ContentErrorCodes.ArticleMissing);
         if (!ContentArticleLifecycleRules.CanHardDelete(article.Status))
-            throw new PlatformHttpException(400, "Bad Request", ContentArticleErrorCodes.DeleteNotAllowed);
+            throw new ContractOperationException(ContentArticleErrorCodes.DeleteNotAllowed);
 
         var gallery = await _db.ArticleMedia.Where(row => row.ArticleId == articleId).ToListAsync(cancellationToken);
         if (gallery.Count > 0)
@@ -414,7 +414,7 @@ public sealed class ContentDirectory : IContentDirectory
     {
         var article = await _db.Articles.AsNoTracking()
             .FirstOrDefaultAsync(row => row.ArticleId == articleId, cancellationToken)
-            ?? throw new PlatformHttpException(404, "Not Found", ContentErrorCodes.ArticleMissing);
+            ?? throw new ContractOperationException(ContentErrorCodes.ArticleMissing);
         return await EvaluateReadinessAsync(article, cancellationToken);
     }
 
@@ -483,7 +483,7 @@ public sealed class ContentDirectory : IContentDirectory
         var exists = await _db.Articles.AsNoTracking().AnyAsync(row => row.ArticleId == articleId, cancellationToken);
         if (!exists)
         {
-            throw new PlatformHttpException(404, "Not Found", ContentErrorCodes.ArticleMissing);
+            throw new ContractOperationException(ContentErrorCodes.ArticleMissing);
         }
 
         var query = _db.ArticleHistory.AsNoTracking().Where(row => row.ArticleId == articleId);
@@ -527,7 +527,7 @@ public sealed class ContentDirectory : IContentDirectory
                 await _languages.EnsureActiveAsync(article.Locale, cancellationToken);
                 languageActive = true;
             }
-            catch (InvalidOperationException)
+            catch (ContractOperationException)
             {
                 languageActive = false;
             }
@@ -769,7 +769,7 @@ public sealed class ContentDirectory : IContentDirectory
         }
 
         var workspace = await _authors.GetWorkspaceAsync(authorId.Value, cancellationToken)
-            ?? throw new PlatformHttpException(404, "Request rejected", ContentAuthorErrorCodes.NotFound);
+            ?? throw new ContractOperationException(ContentAuthorErrorCodes.NotFound);
         return workspace.DisplayName;
     }
 

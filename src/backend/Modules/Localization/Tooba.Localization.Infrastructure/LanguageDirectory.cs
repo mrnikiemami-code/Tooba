@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Tooba.BuildingBlocks;
 using Tooba.Localization.Application;
 using Tooba.Localization.Domain;
 using Tooba.Localization.Infrastructure.Persistence;
@@ -64,7 +65,7 @@ public sealed class LanguageDirectory : ILanguageDirectory
             .FirstOrDefaultAsync(x => x.Code == normalized, cancellationToken);
         if (row is null || !row.IsActive)
         {
-            throw new InvalidOperationException(LanguageErrorCodes.Inactive);
+            throw new ContractOperationException(LanguageErrorCodes.Inactive);
         }
     }
 

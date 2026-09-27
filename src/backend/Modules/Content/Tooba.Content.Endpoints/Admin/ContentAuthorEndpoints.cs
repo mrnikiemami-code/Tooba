@@ -60,7 +60,7 @@ public static class ContentAuthorEndpoints
             body.ProfileImageMediaAssetId, body.CoverImageMediaAssetId,
             body.WebsiteUrl, body.InstagramUrl, body.TwitterUrl, body.LinkedInUrl), cancellationToken);
         return result.IsSuccess
-            ? Results.Json(result.Value, statusCode: StatusCodes.Status201Created)
+            ? api.Created($"/v1/admin/content/authors/{result.Value.Id}", result)
             : api.From(result);
     }
 

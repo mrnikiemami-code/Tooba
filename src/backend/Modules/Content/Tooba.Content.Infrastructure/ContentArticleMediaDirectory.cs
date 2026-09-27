@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Tooba.Content.Application.Models;
 using Tooba.Content.Application.Ports;
 using Tooba.Content.Contracts.Errors;
@@ -146,7 +146,7 @@ public sealed class ContentArticleMediaDirectory : IContentArticleMediaDirectory
         var row = await _db.ArticleMedia.FirstOrDefaultAsync(
             item => item.ArticleId == articleId && item.MediaAssetId == mediaAssetId,
             cancellationToken)
-            ?? throw new PlatformHttpException(404, "Not Found", ContentErrorCodes.GalleryItemMissing);
+            ?? throw new ContractOperationException(ContentErrorCodes.GalleryItemMissing);
         row.UpdateMetadata(altText, caption, row.DisplayOrder);
         await TouchArticleAsync(articleId, cancellationToken);
         await _db.SaveChangesAsync(cancellationToken);
@@ -205,11 +205,11 @@ public sealed class ContentArticleMediaDirectory : IContentArticleMediaDirectory
 
     private async Task<ContentArticle> RequireArticleAsync(Guid articleId, CancellationToken cancellationToken) =>
         await _db.Articles.AsNoTracking().FirstOrDefaultAsync(row => row.ArticleId == articleId, cancellationToken)
-        ?? throw new PlatformHttpException(404, "Not Found", ContentErrorCodes.ArticleMissing);
+        ?? throw new ContractOperationException(ContentErrorCodes.ArticleMissing);
 
     private async Task<ContentArticle> RequireArticleTrackedAsync(Guid articleId, CancellationToken cancellationToken) =>
         await _db.Articles.FirstOrDefaultAsync(row => row.ArticleId == articleId, cancellationToken)
-        ?? throw new PlatformHttpException(404, "Not Found", ContentErrorCodes.ArticleMissing);
+        ?? throw new ContractOperationException(ContentErrorCodes.ArticleMissing);
 
     private async Task TouchArticleAsync(Guid articleId, CancellationToken cancellationToken)
     {
@@ -222,14 +222,7 @@ public sealed class ContentArticleMediaDirectory : IContentArticleMediaDirectory
 
     private async Task EnsureMediaExistsAsync(Guid mediaAssetId, CancellationToken cancellationToken)
     {
-        try
-        {
-            await _media.EnsureReadyAssetExistsAsync(mediaAssetId, cancellationToken);
-        }
-        catch (InvalidOperationException)
-        {
-            throw new PlatformHttpException(400, "Bad Request", ContentArticleErrorCodes.MediaNotFound);
-        }
+        await _media.EnsureReadyAssetExistsAsync(mediaAssetId, cancellationToken);
     }
 }
 

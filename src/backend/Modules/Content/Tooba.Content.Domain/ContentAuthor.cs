@@ -131,22 +131,22 @@ public sealed class ContentAuthor
     {
         if (string.IsNullOrWhiteSpace(displayName) || displayName.Trim().Length > DisplayNameMaxLength)
         {
-            throw new InvalidOperationException(ContentAuthorErrorCodes.InvalidDisplayName);
+            throw new ContractOperationException(ContentAuthorErrorCodes.InvalidDisplayName);
         }
 
         if (string.IsNullOrWhiteSpace(slug) || slug.Trim().Length > SlugMaxLength)
         {
-            throw new InvalidOperationException(ContentAuthorErrorCodes.InvalidSlug);
+            throw new ContractOperationException(ContentAuthorErrorCodes.InvalidSlug);
         }
 
         if (shortBio is not null && shortBio.Trim().Length > ShortBioMaxLength)
         {
-            throw new InvalidOperationException(ContentAuthorErrorCodes.InvalidShortBio);
+            throw new ContractOperationException(ContentAuthorErrorCodes.InvalidShortBio);
         }
 
         if (fullBio is not null && fullBio.Trim().Length > FullBioMaxLength)
         {
-            throw new InvalidOperationException(ContentAuthorErrorCodes.InvalidFullBio);
+            throw new ContractOperationException(ContentAuthorErrorCodes.InvalidFullBio);
         }
 
         ValidateOptionalUrl(websiteUrl);
@@ -159,7 +159,7 @@ public sealed class ContentAuthor
     {
         if (value is not null && value.Trim().Length > UrlMaxLength)
         {
-            throw new InvalidOperationException(ContentAuthorErrorCodes.InvalidUrl);
+            throw new ContractOperationException(ContentAuthorErrorCodes.InvalidUrl);
         }
     }
 
@@ -172,7 +172,7 @@ public sealed class ContentAuthor
 
         var trimmed = value.Trim();
         return trimmed.Length > maxLength
-            ? throw new InvalidOperationException(ContentAuthorErrorCodes.InvalidField)
+            ? throw new ContractOperationException(ContentAuthorErrorCodes.InvalidField)
             : trimmed;
     }
 }

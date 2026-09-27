@@ -130,7 +130,7 @@ public static class ContentEndpoints
                 body.Category, body.CategoryId),
             cancellationToken);
         return result.IsSuccess
-            ? Results.Json(result.Value, statusCode: StatusCodes.Status201Created)
+            ? api.Created($"/v1/admin/content/articles/{result.Value.ArticleId}", result)
             : api.From(result);
     }
 

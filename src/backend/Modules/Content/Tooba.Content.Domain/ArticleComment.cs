@@ -81,7 +81,7 @@ public sealed class ArticleComment
         Guid? authorPartyId = null)
     {
         if (articleId == Guid.Empty)
-            throw new InvalidOperationException($"{ArticleCommentCodes.InvalidPayload}:article");
+            throw new ContractOperationException(ArticleCommentCodes.InvalidPayload);
         var name = NormalizeRequired(displayName, DisplayNameMaxLength, "displayName");
         var text = NormalizeRequired(body, BodyMaxLength, "body");
         return new ArticleComment
@@ -139,7 +139,7 @@ public sealed class ArticleComment
     private void EnsureTransition(ArticleCommentStatus next)
     {
         if (Status == next)
-            throw new InvalidOperationException($"{ArticleCommentCodes.InvalidTransition}:{Status}->{next}");
+            throw new ContractOperationException(ArticleCommentCodes.InvalidTransition);
 
         var allowed = Status switch
         {
@@ -158,22 +158,22 @@ public sealed class ArticleComment
             _ => false,
         };
         if (!allowed)
-            throw new InvalidOperationException($"{ArticleCommentCodes.InvalidTransition}:{Status}->{next}");
+            throw new ContractOperationException(ArticleCommentCodes.InvalidTransition);
     }
 
     private static void EnsureModerator(Guid moderatorUserId)
     {
         if (moderatorUserId == Guid.Empty)
-            throw new InvalidOperationException(ArticleCommentCodes.Forbidden);
+            throw new ContractOperationException(ArticleCommentCodes.Forbidden);
     }
 
     private static string NormalizeRequired(string value, int max, string field)
     {
         if (string.IsNullOrWhiteSpace(value))
-            throw new InvalidOperationException($"{ArticleCommentCodes.InvalidPayload}:{field}");
+            throw new ContractOperationException(ArticleCommentCodes.InvalidPayload);
         var trimmed = value.Trim();
         if (trimmed.Length > max)
-            throw new InvalidOperationException($"{ArticleCommentCodes.InvalidPayload}:{field}");
+            throw new ContractOperationException(ArticleCommentCodes.InvalidPayload);
         return trimmed;
     }
 

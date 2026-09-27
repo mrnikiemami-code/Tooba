@@ -160,37 +160,37 @@ public sealed class ContentCategory
     {
         if (string.IsNullOrWhiteSpace(languageCode) || languageCode.Trim().Length > LanguageCodeMaxLength)
         {
-            throw new InvalidOperationException(ContentCategoryErrorCodes.InvalidLanguage);
+            throw new ContractOperationException(ContentCategoryErrorCodes.InvalidLanguage);
         }
 
         if (string.IsNullOrWhiteSpace(name) || name.Trim().Length > NameMaxLength)
         {
-            throw new InvalidOperationException(ContentCategoryErrorCodes.InvalidName);
+            throw new ContractOperationException(ContentCategoryErrorCodes.InvalidName);
         }
 
         if (string.IsNullOrWhiteSpace(slug) || slug.Trim().Length > SlugMaxLength)
         {
-            throw new InvalidOperationException(ContentCategoryErrorCodes.InvalidSlug);
+            throw new ContractOperationException(ContentCategoryErrorCodes.InvalidSlug);
         }
 
         if (shortDescription is not null && shortDescription.Trim().Length > ShortDescriptionMaxLength)
         {
-            throw new InvalidOperationException(ContentCategoryErrorCodes.InvalidShortDescription);
+            throw new ContractOperationException(ContentCategoryErrorCodes.InvalidShortDescription);
         }
 
         if (description is not null && description.Trim().Length > DescriptionMaxLength)
         {
-            throw new InvalidOperationException(ContentCategoryErrorCodes.InvalidDescription);
+            throw new ContractOperationException(ContentCategoryErrorCodes.InvalidDescription);
         }
 
         if (seoTitle is not null && seoTitle.Trim().Length > SeoTitleMaxLength)
         {
-            throw new InvalidOperationException(ContentCategoryErrorCodes.InvalidSeoTitle);
+            throw new ContractOperationException(ContentCategoryErrorCodes.InvalidSeoTitle);
         }
 
         if (seoDescription is not null && seoDescription.Trim().Length > SeoDescriptionMaxLength)
         {
-            throw new InvalidOperationException(ContentCategoryErrorCodes.InvalidSeoDescription);
+            throw new ContractOperationException(ContentCategoryErrorCodes.InvalidSeoDescription);
         }
     }
 
@@ -202,7 +202,7 @@ public sealed class ContentCategory
         }
 
         var trimmed = value.Trim();
-        return trimmed.Length > maxLength ? throw new InvalidOperationException(ContentCategoryErrorCodes.InvalidField) : trimmed;
+        return trimmed.Length > maxLength ? throw new ContractOperationException(ContentCategoryErrorCodes.InvalidField) : trimmed;
     }
 }
 
