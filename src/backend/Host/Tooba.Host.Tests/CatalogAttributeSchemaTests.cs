@@ -309,13 +309,14 @@ public sealed class CatalogAttributeSchemaTests : IAsyncLifetime
         Assert.True(rowB.IsVariantAxis);
         Assert.True(rowB.IsComparable);
 
-        await Assert.ThrowsAnyAsync<Exception>(() =>
+        var dup = await Assert.ThrowsAsync<InvalidOperationException>(() =>
             dir.BindCategoryAttributeAsync(
                 catB.CategoryId,
                 brandId,
                 1,
                 new CategoryAttributeAssignmentFlags(false, false, true, false),
                 CancellationToken.None));
+        Assert.Equal(CatalogErrorCodes.SchemaBindingDuplicate, dup.Message);
     }
 
     [SkippableFact]
@@ -338,13 +339,14 @@ public sealed class CatalogAttributeSchemaTests : IAsyncLifetime
             new Dictionary<string, string> { ["fa-IR"] = "وزن" },
             CancellationToken.None);
 
-        await Assert.ThrowsAnyAsync<Exception>(() =>
+        var blocked = await Assert.ThrowsAsync<InvalidOperationException>(() =>
             dir.BindCategoryAttributeAsync(
                 category.CategoryId,
                 weightId,
                 0,
                 new CategoryAttributeAssignmentFlags(false, false, true, false),
                 CancellationToken.None));
+        Assert.Equal(CatalogErrorCodes.AttributeVariantAxisCapabilityDisabled, blocked.Message);
     }
 
     [SkippableFact]
@@ -534,6 +536,108 @@ public sealed class CatalogAttributeSchemaTests : IAsyncLifetime
         var view = await dir.GetAttributeDefinitionAsync(defId, CancellationToken.None);
         Assert.NotNull(view);
         Assert.False(view!.IsVariantAxisAllowed);
+    }
+
+    [SkippableFact]
+    public async Task CategoryAttributeSchemaDirectory_returns_typed_Result_codes()
+    {
+        Skip.If(!_dockerAvailable || _container is null, "Docker/Testcontainers PostgreSQL is not available.");
+
+        var cs = _container.GetConnectionString();
+        var commerce = new FixedCommerceContext();
+        commerce.Assign(OutboxTestContextFactory.SingleStore("tenant-schema-result", "tenant-schema-result"));
+        await using var db = CreateCatalogDb(cs, commerce);
+        await db.Database.EnsureCreatedAsync();
+        var guard = new OpenCatalogUseCaseGuard();
+        var catalog = new CatalogDirectory(db, guard);
+        var schema = new CategoryAttributeSchemaDirectory(db, guard);
+
+        var missingCategory = await schema.GetEffectiveAsync(Guid.NewGuid(), CancellationToken.None);
+        Assert.True(missingCategory.IsFailure);
+        Assert.Equal(CatalogErrorCodes.SchemaCategoryMissing, missingCategory.FirstError.Code);
+
+        var category = await catalog.CreateCategoryAsync(
+            null,
+            new Dictionary<string, string> { ["fa-IR"] = "SchemaResult" },
+            CancellationToken.None);
+        var colorId = await catalog.CreateAttributeDefinitionAsync(
+            "schema_result_color",
+            CatalogAttributeValueKind.Enumeration,
+            true,
+            new Dictionary<string, string> { ["fa-IR"] = "رنگ schema" },
+            CancellationToken.None);
+        var sizeId = await catalog.CreateAttributeDefinitionAsync(
+            "schema_result_size",
+            CatalogAttributeValueKind.Enumeration,
+            true,
+            new Dictionary<string, string> { ["fa-IR"] = "سایز schema" },
+            CancellationToken.None);
+
+        var missingDef = await schema.BindAsync(
+            category.CategoryId,
+            Guid.NewGuid(),
+            0,
+            new CategoryAttributeAssignmentFlags(false, true, false, false),
+            CancellationToken.None);
+        Assert.True(missingDef.IsFailure);
+        Assert.Equal(CatalogErrorCodes.AttributeMissing, missingDef.FirstError.Code);
+
+        var bind = await schema.BindAsync(
+            category.CategoryId,
+            colorId,
+            0,
+            new CategoryAttributeAssignmentFlags(false, true, false, false),
+            CancellationToken.None);
+        Assert.True(bind.IsSuccess);
+        Assert.True(bind.Value.Ok);
+
+        var duplicate = await schema.BindAsync(
+            category.CategoryId,
+            colorId,
+            1,
+            new CategoryAttributeAssignmentFlags(false, true, false, false),
+            CancellationToken.None);
+        Assert.True(duplicate.IsFailure);
+        Assert.Equal(CatalogErrorCodes.SchemaBindingDuplicate, duplicate.FirstError.Code);
+
+        var missingBinding = await schema.UpdateBindingAsync(
+            category.CategoryId,
+            sizeId,
+            new CategoryAttributeAssignmentFlags(true, false, false, false),
+            CancellationToken.None);
+        Assert.True(missingBinding.IsFailure);
+        Assert.Equal(CatalogErrorCodes.SchemaBindingMissing, missingBinding.FirstError.Code);
+
+        await schema.BindAsync(
+            category.CategoryId,
+            sizeId,
+            1,
+            new CategoryAttributeAssignmentFlags(false, false, false, false),
+            CancellationToken.None);
+
+        var badReorder = await schema.ReorderAsync(
+            category.CategoryId,
+            new[] { colorId },
+            CancellationToken.None);
+        Assert.True(badReorder.IsFailure);
+        Assert.Equal(CatalogErrorCodes.SchemaReorderInvalid, badReorder.FirstError.Code);
+
+        var goodReorder = await schema.ReorderAsync(
+            category.CategoryId,
+            new[] { sizeId, colorId },
+            CancellationToken.None);
+        Assert.True(goodReorder.IsSuccess);
+
+        var unbind = await schema.UnbindAsync(category.CategoryId, sizeId, CancellationToken.None);
+        Assert.True(unbind.IsSuccess);
+
+        var unbindMissing = await schema.UnbindAsync(category.CategoryId, sizeId, CancellationToken.None);
+        Assert.True(unbindMissing.IsFailure);
+        Assert.Equal(CatalogErrorCodes.SchemaBindingMissing, unbindMissing.FirstError.Code);
+
+        var effective = await schema.GetEffectiveAsync(category.CategoryId, CancellationToken.None);
+        Assert.True(effective.IsSuccess);
+        Assert.Single(effective.Value);
     }
 
     private static CatalogDbContext CreateCatalogDb(string connectionString, ICurrentCommerceContext commerce)

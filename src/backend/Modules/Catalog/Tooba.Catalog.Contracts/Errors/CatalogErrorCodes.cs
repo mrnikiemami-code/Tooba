@@ -122,4 +122,19 @@ public static class CatalogErrorCodes
 
     /// <summary>Variant-axis assignment blocked because definition capability is disabled.</summary>
     public const string AttributeVariantAxisCapabilityDisabled = "catalog.attribute.variant_axis.capability_disabled";
+
+    /// <summary>Category was not found for attribute-schema operations.</summary>
+    public const string SchemaCategoryMissing = "catalog.schema.category.missing";
+
+    /// <summary>Category attribute binding already exists.</summary>
+    public const string SchemaBindingDuplicate = "catalog.schema.binding.duplicate";
+
+    /// <summary>Category attribute binding was not found.</summary>
+    public const string SchemaBindingMissing = "catalog.schema.binding.missing";
+
+    /// <summary>Reorder list is incomplete, duplicate, or mismatched vs local binding set.</summary>
+    public const string SchemaReorderInvalid = "catalog.schema.reorder.invalid";
+
+    /// <summary>Generic category attribute-schema precondition failure.</summary>
+    public const string SchemaInvalid = "catalog.schema.invalid";
 }

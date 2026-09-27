@@ -4,6 +4,7 @@ using Tooba.BuildingBlocks.Results;
 using Tooba.Catalog.Application;
 using Tooba.Catalog.Application.Attributes.Definitions.Models;
 using Tooba.Catalog.Application.Attributes.Definitions.Ports;
+using Tooba.Catalog.Application.Attributes.Schema.Ports;
 using Tooba.Catalog.Application.Categories.Models;
 using Tooba.Catalog.Application.Categories.Ports;
 using Tooba.Catalog.Application.Facets.Ports;
@@ -774,6 +775,9 @@ public sealed class CatalogDirectory :
     private IAttributeDefinitionDirectory AttributeDefinitionsPort() =>
         new AttributeDefinitionDirectory(_db, _guard);
 
+    private ICategoryAttributeSchemaDirectory SchemaPort() =>
+        new CategoryAttributeSchemaDirectory(_db, _guard);
+
     private static T Unwrap<T>(Result<T> result)
     {
         if (result.IsFailure)
@@ -898,134 +902,45 @@ public sealed class CatalogDirectory :
         Guid definitionId,
         int displayOrder,
         CategoryAttributeAssignmentFlags flags,
-        CancellationToken cancellationToken)
-    {
-        await _guard.EnsureCanMutateAsync(cancellationToken);
-        ArgumentNullException.ThrowIfNull(flags);
-        var definition = await _db.AttributeDefinitions.SingleOrDefaultAsync(
-            x => x.DefinitionId == definitionId,
-            cancellationToken)
-            ?? throw new InvalidOperationException("رده یا تعریف ویژگی در Catalog این Tenant نیست.");
-        if (!await _db.Categories.AnyAsync(x => x.CategoryId == categoryId, cancellationToken))
-        {
-            throw new InvalidOperationException("رده یا تعریف ویژگی در Catalog این Tenant نیست.");
-        }
-
-        CatalogCategoryAttributeAssignmentRules.ValidateVariantAxis(definition, flags.IsVariantAxis);
-
-        if (await _db.CategoryAttributeBindings.AnyAsync(
-                x => x.CategoryId == categoryId && x.DefinitionId == definitionId,
-                cancellationToken))
-        {
-            throw new InvalidOperationException(
-                "این ویژگی از قبل به این دسته پیوند شده است و نمی‌توان دوباره آن را افزود.");
-        }
-
-        _db.CategoryAttributeBindings.Add(
-            CatalogCategoryAttributeBinding.Bind(
-                categoryId,
-                definitionId,
-                displayOrder,
-                flags.IsRequired,
-                flags.IsFilterable,
-                flags.IsVariantAxis,
-                flags.IsComparable,
-                DateTimeOffset.UtcNow));
-        await _db.SaveChangesAsync(cancellationToken);
-    }
+        CancellationToken cancellationToken) =>
+        _ = Unwrap(await SchemaPort().BindAsync(
+            categoryId,
+            definitionId,
+            displayOrder,
+            flags,
+            cancellationToken));
 
     /// <inheritdoc />
     public async Task UpdateCategoryAttributeBindingAsync(
         Guid categoryId,
         Guid definitionId,
         CategoryAttributeAssignmentFlags flags,
-        CancellationToken cancellationToken)
-    {
-        await _guard.EnsureCanMutateAsync(cancellationToken);
-        ArgumentNullException.ThrowIfNull(flags);
-        var definition = await _db.AttributeDefinitions.SingleOrDefaultAsync(
-            x => x.DefinitionId == definitionId,
-            cancellationToken)
-            ?? throw new InvalidOperationException("تعریف ویژگی در Catalog این Tenant نیست.");
-        var binding = await _db.CategoryAttributeBindings.SingleOrDefaultAsync(
-            x => x.CategoryId == categoryId && x.DefinitionId == definitionId,
-            cancellationToken)
-            ?? throw new InvalidOperationException("پیوند schema رده پیدا نشد.");
-
-        CatalogCategoryAttributeAssignmentRules.ValidateVariantAxis(definition, flags.IsVariantAxis);
-
-        binding.IsRequired = flags.IsRequired;
-        binding.IsFilterable = flags.IsFilterable;
-        binding.IsVariantAxis = flags.IsVariantAxis;
-        binding.IsComparable = flags.IsComparable;
-        await _db.SaveChangesAsync(cancellationToken);
-    }
+        CancellationToken cancellationToken) =>
+        _ = Unwrap(await SchemaPort().UpdateBindingAsync(
+            categoryId,
+            definitionId,
+            flags,
+            cancellationToken));
 
     /// <inheritdoc />
     public async Task UnbindCategoryAttributeAsync(
         Guid categoryId,
         Guid definitionId,
-        CancellationToken cancellationToken)
-    {
-        await _guard.EnsureCanMutateAsync(cancellationToken);
-        var binding = await _db.CategoryAttributeBindings.SingleOrDefaultAsync(
-            x => x.CategoryId == categoryId && x.DefinitionId == definitionId,
-            cancellationToken)
-            ?? throw new InvalidOperationException("پیوند schema رده پیدا نشد.");
-        _db.CategoryAttributeBindings.Remove(binding);
-        await _db.SaveChangesAsync(cancellationToken);
-    }
+        CancellationToken cancellationToken) =>
+        _ = Unwrap(await SchemaPort().UnbindAsync(categoryId, definitionId, cancellationToken));
 
     /// <inheritdoc />
     public async Task ReorderCategoryAttributeBindingsAsync(
         Guid categoryId,
         IReadOnlyList<Guid> orderedDefinitionIds,
-        CancellationToken cancellationToken)
-    {
-        await _guard.EnsureCanMutateAsync(cancellationToken);
-        ArgumentNullException.ThrowIfNull(orderedDefinitionIds);
-        var bindings = await _db.CategoryAttributeBindings
-            .Where(x => x.CategoryId == categoryId)
-            .ToListAsync(cancellationToken);
-        if (bindings.Count != orderedDefinitionIds.Count
-            || orderedDefinitionIds.Distinct().Count() != orderedDefinitionIds.Count
-            || bindings.Select(b => b.DefinitionId).ToHashSet().SetEquals(orderedDefinitionIds) is false)
-        {
-            throw new InvalidOperationException("فهرست ترتیب باید دقیقاً همان پیوندهای موجود رده باشد.");
-        }
-
-        for (var i = 0; i < orderedDefinitionIds.Count; i++)
-        {
-            var binding = bindings.Single(b => b.DefinitionId == orderedDefinitionIds[i]);
-            binding.DisplayOrder = i;
-        }
-
-        await _db.SaveChangesAsync(cancellationToken);
-    }
+        CancellationToken cancellationToken) =>
+        _ = Unwrap(await SchemaPort().ReorderAsync(categoryId, orderedDefinitionIds, cancellationToken));
 
     /// <inheritdoc />
     public async Task<IReadOnlyList<EffectiveSchemaEntry>> GetEffectiveCategorySchemaAsync(
         Guid categoryId,
-        CancellationToken cancellationToken)
-    {
-        var resolved = await ResolveEffectiveBindingsAsync(categoryId, cancellationToken);
-        return resolved.Select(x => new EffectiveSchemaEntry(
-            x.DefinitionId,
-            x.Definition.Code,
-            x.Definition.ValueKind,
-            x.Definition.IsVariantAxisAllowed,
-            x.IsVariantAxis,
-            x.Definition.Unit,
-            x.IsRequired,
-            x.IsFilterable,
-            x.IsComparable,
-            x.Definition.IsMultivalue,
-            x.DisplayOrder,
-            x.InheritedFromCategoryId,
-            x.Definition.IsActive,
-            x.OverriddenFromCategoryId is Guid,
-            x.OverriddenFromCategoryId)).ToList();
-    }
+        CancellationToken cancellationToken) =>
+        Unwrap(await SchemaPort().GetEffectiveAsync(categoryId, cancellationToken));
 
     /// <inheritdoc />
     public async Task<IReadOnlyList<EffectiveCategoryFacet>> GetEffectiveCategoryFacetsAsync(

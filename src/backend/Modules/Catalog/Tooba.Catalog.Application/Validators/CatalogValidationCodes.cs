@@ -80,4 +80,10 @@ public static class CatalogValidationCodes
 
     /// <summary>Attribute option code must be non-blank.</summary>
     public const string AttributeOptionCodeRequired = "catalog.validation.attribute_option_code_required";
+
+    /// <summary>Bind definition id must be non-empty.</summary>
+    public const string SchemaDefinitionIdRequired = "catalog.validation.schema_definition_id_required";
+
+    /// <summary>Schema reorder orderedDefinitionIds collection must be present.</summary>
+    public const string SchemaOrderedDefinitionIdsRequired = "catalog.validation.schema_ordered_definition_ids_required";
 }

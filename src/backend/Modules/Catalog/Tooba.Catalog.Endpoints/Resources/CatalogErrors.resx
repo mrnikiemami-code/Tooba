@@ -68,6 +68,13 @@
   <data name="catalog.attribute.variant_axis.value_kind.invalid" xml:space="preserve"><value>This value kind cannot be used as a variant axis.</value></data>
   <data name="catalog.attribute.variant_axis.in_use" xml:space="preserve"><value>This attribute is used by active variant axes.</value></data>
   <data name="catalog.attribute.variant_axis.capability_disabled" xml:space="preserve"><value>Variant-axis capability is not enabled on this definition.</value></data>
+  <data name="catalog.schema.category.missing" xml:space="preserve"><value>Category was not found for attribute-schema.</value></data>
+  <data name="catalog.schema.binding.duplicate" xml:space="preserve"><value>This attribute is already bound to the category.</value></data>
+  <data name="catalog.schema.binding.missing" xml:space="preserve"><value>Category attribute binding was not found.</value></data>
+  <data name="catalog.schema.reorder.invalid" xml:space="preserve"><value>Schema reorder list must match the local binding set exactly.</value></data>
+  <data name="catalog.schema.invalid" xml:space="preserve"><value>Category attribute-schema input is invalid.</value></data>
   <data name="catalog.validation.attribute_definition_code_required" xml:space="preserve"><value>Attribute definition code is required.</value></data>
   <data name="catalog.validation.attribute_option_code_required" xml:space="preserve"><value>Attribute option code is required.</value></data>
+  <data name="catalog.validation.schema_definition_id_required" xml:space="preserve"><value>Attribute definition id is required.</value></data>
+  <data name="catalog.validation.schema_ordered_definition_ids_required" xml:space="preserve"><value>Schema ordered definition ids are required.</value></data>
 </root>

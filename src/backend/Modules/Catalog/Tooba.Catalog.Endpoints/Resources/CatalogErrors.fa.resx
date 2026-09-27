@@ -68,6 +68,13 @@
   <data name="catalog.attribute.variant_axis.value_kind.invalid" xml:space="preserve"><value>این نوع ویژگی برای ساخت تنوع مناسب نیست.</value></data>
   <data name="catalog.attribute.variant_axis.in_use" xml:space="preserve"><value>این ویژگی در تنوع‌های فعال استفاده می‌شود.</value></data>
   <data name="catalog.attribute.variant_axis.capability_disabled" xml:space="preserve"><value>امکان استفاده از این ویژگی برای تنوع در تعریف اصلی آن فعال نشده است.</value></data>
+  <data name="catalog.schema.category.missing" xml:space="preserve"><value>رده برای schema ویژگی پیدا نشد.</value></data>
+  <data name="catalog.schema.binding.duplicate" xml:space="preserve"><value>این ویژگی از قبل به این دسته پیوند شده است و نمی‌توان دوباره آن را افزود.</value></data>
+  <data name="catalog.schema.binding.missing" xml:space="preserve"><value>پیوند schema رده پیدا نشد.</value></data>
+  <data name="catalog.schema.reorder.invalid" xml:space="preserve"><value>فهرست ترتیب باید دقیقاً همان پیوندهای موجود رده باشد.</value></data>
+  <data name="catalog.schema.invalid" xml:space="preserve"><value>ورودی schema ویژگی رده نامعتبر است.</value></data>
   <data name="catalog.validation.attribute_definition_code_required" xml:space="preserve"><value>کد تعریف ویژگی الزامی است.</value></data>
   <data name="catalog.validation.attribute_option_code_required" xml:space="preserve"><value>کد گزینهٔ ویژگی الزامی است.</value></data>
+  <data name="catalog.validation.schema_definition_id_required" xml:space="preserve"><value>شناسهٔ تعریف ویژگی الزامی است.</value></data>
+  <data name="catalog.validation.schema_ordered_definition_ids_required" xml:space="preserve"><value>فهرست شناسه‌های ترتیب schema الزامی است.</value></data>
 </root>

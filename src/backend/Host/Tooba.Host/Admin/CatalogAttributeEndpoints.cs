@@ -7,23 +7,16 @@ using Tooba.Offer.Contracts.Ports;
 namespace Tooba.Host.Admin;
 
 /// <summary>
-/// مسیرهای Admin برای schema ویژگی Catalog و محورهای Variant محصول.
+/// مسیرهای Admin برای ویژگی محصول و محورهای Variant (schema رده در Catalog.Endpoints).
 /// ماتریس تنوع در همین گروه ثبت می‌شود؛ قیمت/موجودی اینجا نیستند.
 /// </summary>
 public static class CatalogAttributeEndpoints
 {
     /// <summary>
-    /// مسیرهای Admin Attribute Schema را ثبت می‌کند.
+    /// مسیرهای Admin Attribute محصول/Variant را ثبت می‌کند.
     /// </summary>
     public static void MapCatalogAttributeEndpoints(this WebApplication app)
     {
-        var categories = app.MapGroup("/v1/admin/catalog/categories/{categoryId:guid}/attribute-schema");
-        categories.MapGet("/effective", GetEffectiveSchemaAsync);
-        categories.MapPost("/bindings", BindAsync);
-        categories.MapPatch("/bindings/{definitionId:guid}", UpdateBindingAsync);
-        categories.MapDelete("/bindings/{definitionId:guid}", UnbindAsync);
-        categories.MapPut("/bindings/order", ReorderBindingsAsync);
-
         var products = app.MapGroup("/v1/admin/catalog/products/{productId:guid}");
         products.AddEndpointFilter(CatalogActorHttpBinding.BindAsync);
         products.MapGet("/attributes", GetProductAttributeEditorStateAsync);
@@ -37,165 +30,6 @@ public static class CatalogAttributeEndpoints
         products.MapGet("/variants/readiness", GetProductVariantReadinessAsync);
         products.MapPost("/category-change-preview", PreviewCategoryChangeAsync);
         products.MapPut("/primary-category", ReplacePrimaryCategoryAsync);
-    }
-
-    private static async Task<IResult> GetEffectiveSchemaAsync(
-        Guid categoryId,
-        ICatalogDirectory catalog,
-        HttpRequest request,
-        CurrentAuthenticatedSession session,
-        ICurrentTenant tenant,
-        IAuthorizationGuard guard,
-        IHostEnvironment environment,
-        CancellationToken cancellationToken)
-    {
-        try
-        {
-            await AdminPanelAccess.RequireAuthorizedAsync(
-                request, session, tenant, guard, environment, cancellationToken);
-            return Results.Json(await catalog.GetEffectiveCategorySchemaAsync(categoryId, cancellationToken));
-        }
-        catch (PlatformHttpException ex)
-        {
-            return ToError(ex);
-        }
-        catch (InvalidOperationException ex)
-        {
-            return Results.Json(new { title = ex.Message, errorCode = "catalog.schema.invalid" }, statusCode: StatusCodes.Status400BadRequest);
-        }
-    }
-
-    private static async Task<IResult> BindAsync(
-        Guid categoryId,
-        BindCategoryAttributeRequest body,
-        ICatalogDirectory catalog,
-        HttpRequest request,
-        CurrentAuthenticatedSession session,
-        ICurrentTenant tenant,
-        IAuthorizationGuard guard,
-        IHostEnvironment environment,
-        CancellationToken cancellationToken)
-    {
-        try
-        {
-            await AdminPanelAccess.RequireAuthorizedAsync(
-                request, session, tenant, guard, environment, cancellationToken);
-            await catalog.BindCategoryAttributeAsync(
-                categoryId,
-                body.DefinitionId,
-                body.DisplayOrder,
-                new CategoryAttributeAssignmentFlags(
-                    body.IsRequired,
-                    body.IsFilterable,
-                    body.IsVariantAxis,
-                    body.IsComparable),
-                cancellationToken);
-            return Results.Json(new { ok = true }, statusCode: StatusCodes.Status201Created);
-        }
-        catch (PlatformHttpException ex)
-        {
-            return ToError(ex);
-        }
-        catch (InvalidOperationException ex)
-        {
-            return Results.Json(new { title = ex.Message, errorCode = "catalog.schema.invalid" }, statusCode: StatusCodes.Status400BadRequest);
-        }
-    }
-
-    private static async Task<IResult> UpdateBindingAsync(
-        Guid categoryId,
-        Guid definitionId,
-        UpdateCategoryAttributeBindingRequest body,
-        ICatalogDirectory catalog,
-        HttpRequest request,
-        CurrentAuthenticatedSession session,
-        ICurrentTenant tenant,
-        IAuthorizationGuard guard,
-        IHostEnvironment environment,
-        CancellationToken cancellationToken)
-    {
-        try
-        {
-            await AdminPanelAccess.RequireAuthorizedAsync(
-                request, session, tenant, guard, environment, cancellationToken);
-            await catalog.UpdateCategoryAttributeBindingAsync(
-                categoryId,
-                definitionId,
-                new CategoryAttributeAssignmentFlags(
-                    body.IsRequired,
-                    body.IsFilterable,
-                    body.IsVariantAxis,
-                    body.IsComparable),
-                cancellationToken);
-            return Results.Json(new { ok = true });
-        }
-        catch (PlatformHttpException ex)
-        {
-            return ToError(ex);
-        }
-        catch (InvalidOperationException ex)
-        {
-            return Results.Json(new { title = ex.Message, errorCode = "catalog.schema.invalid" }, statusCode: StatusCodes.Status400BadRequest);
-        }
-    }
-
-    private static async Task<IResult> UnbindAsync(
-        Guid categoryId,
-        Guid definitionId,
-        ICatalogDirectory catalog,
-        HttpRequest request,
-        CurrentAuthenticatedSession session,
-        ICurrentTenant tenant,
-        IAuthorizationGuard guard,
-        IHostEnvironment environment,
-        CancellationToken cancellationToken)
-    {
-        try
-        {
-            await AdminPanelAccess.RequireAuthorizedAsync(
-                request, session, tenant, guard, environment, cancellationToken);
-            await catalog.UnbindCategoryAttributeAsync(categoryId, definitionId, cancellationToken);
-            return Results.Json(new { ok = true });
-        }
-        catch (PlatformHttpException ex)
-        {
-            return ToError(ex);
-        }
-        catch (InvalidOperationException ex)
-        {
-            return Results.Json(new { title = ex.Message, errorCode = "catalog.schema.invalid" }, statusCode: StatusCodes.Status400BadRequest);
-        }
-    }
-
-    private static async Task<IResult> ReorderBindingsAsync(
-        Guid categoryId,
-        ReorderCategoryBindingsRequest body,
-        ICatalogDirectory catalog,
-        HttpRequest request,
-        CurrentAuthenticatedSession session,
-        ICurrentTenant tenant,
-        IAuthorizationGuard guard,
-        IHostEnvironment environment,
-        CancellationToken cancellationToken)
-    {
-        try
-        {
-            await AdminPanelAccess.RequireAuthorizedAsync(
-                request, session, tenant, guard, environment, cancellationToken);
-            await catalog.ReorderCategoryAttributeBindingsAsync(
-                categoryId,
-                body.OrderedDefinitionIds ?? [],
-                cancellationToken);
-            return Results.Json(new { ok = true });
-        }
-        catch (PlatformHttpException ex)
-        {
-            return ToError(ex);
-        }
-        catch (InvalidOperationException ex)
-        {
-            return Results.Json(new { title = ex.Message, errorCode = "catalog.schema.invalid" }, statusCode: StatusCodes.Status400BadRequest);
-        }
     }
 
     private static async Task<IResult> GetProductAttributeEditorStateAsync(
@@ -686,25 +520,6 @@ public static class CatalogAttributeEndpoints
     private static IResult ToError(PlatformHttpException ex) =>
         Results.Json(new { title = ex.Title, errorCode = ex.ErrorCode }, statusCode: ex.StatusCode);
 }
-
-/// <summary>بدنهٔ پیوند schema رده.</summary>
-public sealed record BindCategoryAttributeRequest(
-    Guid DefinitionId,
-    int DisplayOrder,
-    bool IsRequired,
-    bool IsFilterable,
-    bool IsVariantAxis,
-    bool IsComparable);
-
-/// <summary>بدنهٔ به‌روزرسانی assignment محلی.</summary>
-public sealed record UpdateCategoryAttributeBindingRequest(
-    bool IsRequired,
-    bool IsFilterable,
-    bool IsVariantAxis,
-    bool IsComparable);
-
-/// <summary>بدنهٔ ترتیب پیوندها.</summary>
-public sealed record ReorderCategoryBindingsRequest(List<Guid>? OrderedDefinitionIds);
 
 /// <summary>بدنهٔ مقدار ویژگی محصول.</summary>
 public sealed record SetProductAttributeRequest(string RawValue, Guid? EnumOptionId);

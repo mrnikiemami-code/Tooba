@@ -90,6 +90,16 @@ public sealed class CatalogErrorCatalogContributor : IErrorCatalogContributor
             "This attribute is used by active variant axes."),
         D(CatalogErrorCodes.AttributeVariantAxisCapabilityDisabled, ErrorClassification.Business, StatusCodes.Status400BadRequest,
             "Variant-axis capability is not enabled on this definition."),
+        D(CatalogErrorCodes.SchemaCategoryMissing, ErrorClassification.NotFound, StatusCodes.Status404NotFound,
+            "Category was not found for attribute-schema."),
+        D(CatalogErrorCodes.SchemaBindingDuplicate, ErrorClassification.Conflict, StatusCodes.Status409Conflict,
+            "This attribute is already bound to the category."),
+        D(CatalogErrorCodes.SchemaBindingMissing, ErrorClassification.NotFound, StatusCodes.Status404NotFound,
+            "Category attribute binding was not found."),
+        D(CatalogErrorCodes.SchemaReorderInvalid, ErrorClassification.Business, StatusCodes.Status400BadRequest,
+            "Schema reorder list must match the local binding set exactly."),
+        D(CatalogErrorCodes.SchemaInvalid, ErrorClassification.Business, StatusCodes.Status400BadRequest,
+            "Category attribute-schema input is invalid."),
     ];
 
     private static ErrorDescriptor D(

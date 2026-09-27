@@ -1570,6 +1570,65 @@
     "recoveryDiscipline": "SYNC_SOT_FREQUENTLY_NEW_CHAT_MUST_RESUME_FROM_REPO_NOT_CONVERSATION_MEMORY",
     "minimalRecoveryPhraseFa": "برگردیم به TMAR؛ ریکاوری را انجام بده"
   },
+  "hostAdminAmcW9": {
+    "task": "TB-TMAR-HOST-ADMIN-AMC-001-W9",
+    "parentTask": "TB-TMAR-HOST-ADMIN-AMC-001-W8",
+    "parentCommit": "e1838903265fc11b6172fe73c39641c50c677de3",
+    "state": "HOST_ADMIN_AMC_W9_CATEGORY_ATTRIBUTE_SCHEMA_PARTIAL_EVACUATED_CQRS_RESULT",
+    "activeHostFolder": "Admin",
+    "productionFileCountBefore": 53,
+    "productionFileCountAfter": 53,
+    "catalogAttributeEndpointsState": "RETAINED_PARTIAL_PRODUCT_VARIANT_ONLY",
+    "schemaHostRouteCountBefore": 5,
+    "schemaHostRouteCountAfter": 0,
+    "migratedRouteCount": 5,
+    "schemaEndpointOwnership": "MODULE_OWNED_FIVE_ROUTES_CATALOG_ENDPOINTS",
+    "schemaRouteInventory": [
+      "GET /v1/admin/catalog/categories/{categoryId}/attribute-schema/effective",
+      "POST /v1/admin/catalog/categories/{categoryId}/attribute-schema/bindings",
+      "PATCH /v1/admin/catalog/categories/{categoryId}/attribute-schema/bindings/{definitionId}",
+      "DELETE /v1/admin/catalog/categories/{categoryId}/attribute-schema/bindings/{definitionId}",
+      "PUT /v1/admin/catalog/categories/{categoryId}/attribute-schema/bindings/order"
+    ],
+    "remainingHostAttributeRouteGroups": [
+      "product attributes/readiness",
+      "variant-axes",
+      "variants editor/preview/apply/readiness",
+      "category-change-preview/primary-category"
+    ],
+    "schemaCqrsState": "GetEffective_Bind_Update_Unbind_Reorder_Result",
+    "schemaPersistencePortState": "ICategoryAttributeSchemaDirectory_CategoryAttributeSchemaDirectory",
+    "validatorMatrix": "Bind_Reorder_REQUIRED_Get_Update_Unbind_NO_VALIDATOR_REQUIRED",
+    "resultErrorState": "CANONICAL_RESULT_APIRESPONSEFACTORY_CatalogErrorCodes_catalog_schema_star",
+    "domainRuleState": "CatalogCategoryAttributeAssignmentRules_PRESERVED_PRECHECK_RESULT",
+    "messageClassificationState": "NO_PERSIAN_IOE_MESSAGE_AS_CODE_ON_SCHEMA_SURFACE",
+    "platformHttpExceptionState": "ABSENT_ON_SCHEMA_SURFACE",
+    "invalidOperationExpectedFlowState": "ABSENT_ON_SCHEMA_HTTP_AND_CATEGORYATTRIBUTESCHEMADIRECTORY",
+    "adminAuthorizationState": "ICatalogAdminAuthorizer_ON_FIVE_ADMIN_ROUTES",
+    "applicationStructure": "Attributes/Schema/{Commands,Queries,Models,Ports,Validators}",
+    "pathNamespace": "EXACT",
+    "catalogToHost": "ZERO",
+    "endpointsToInfrastructure": "ZERO",
+    "routeBehaviorParity": "PRESERVED",
+    "schemaMigrationState": "NONE",
+    "frontendState": "UNCHANGED",
+    "storeAppearanceState": "NOT_MOVED_DEFERRED_PRESERVED",
+    "w1W2W2R1W3W4W5W6W7W8Preservation": "PRESERVED",
+    "remainingAdminBlockers": [
+      "StoreAppearance Host.Storefront projector coupling",
+      "Remaining Catalog Attribute Host routes (product/variants/category-change)",
+      "ProductWorkspace and other Admin Catalog HTTP still Host-owned"
+    ],
+    "residualDebt": [
+      "W10+ retained Attribute Host product/variant members",
+      "Appearance redesign before evacuate",
+      "ICatalogDirectory thin Attribute Schema wrappers remain for CatalogDemo/legacy",
+      "CatalogDirectory private ResolveEffectiveBindings retained for product/variant callers"
+    ],
+    "nextHostFolderStarted": false,
+    "workflowStop": "USER_REVIEW_HOST_ADMIN_W9_CHECKPOINT",
+    "evidence": "docs/evidence/TB-TMAR-HOST-ADMIN-AMC-001-W9/"
+  },
   "hostAdminAmcW8": {
     "task": "TB-TMAR-HOST-ADMIN-AMC-001-W8",
     "parentTask": "TB-TMAR-HOST-ADMIN-AMC-001-W7",
