@@ -61,7 +61,7 @@ public static class CatalogProductMediaAdminEndpoints
         CancellationToken cancellationToken)
     {
         var actorUserId = await auth.RequireAuthorizedAsync(http, cancellationToken);
-        if (!CatalogWorkspaceMediaScope.AllowsCatalogEdit(http.Request))
+        if (!CatalogWorkspaceScope.AllowsCatalogEdit(http.Request))
         {
             return api.FromFailure(new SemanticError(CatalogErrorCodes.WorkspacePermissionDenied));
         }
@@ -81,7 +81,7 @@ public static class CatalogProductMediaAdminEndpoints
         CancellationToken cancellationToken)
     {
         var actorUserId = await auth.RequireAuthorizedAsync(http, cancellationToken);
-        if (!CatalogWorkspaceMediaScope.AllowsCatalogEdit(http.Request))
+        if (!CatalogWorkspaceScope.AllowsCatalogEdit(http.Request))
         {
             return api.FromFailure(new SemanticError(CatalogErrorCodes.WorkspacePermissionDenied));
         }
@@ -103,7 +103,7 @@ public static class CatalogProductMediaAdminEndpoints
         CancellationToken cancellationToken)
     {
         var actorUserId = await auth.RequireAuthorizedAsync(http, cancellationToken);
-        if (!CatalogWorkspaceMediaScope.AllowsCatalogEdit(http.Request))
+        if (!CatalogWorkspaceScope.AllowsCatalogEdit(http.Request))
         {
             return api.FromFailure(new SemanticError(CatalogErrorCodes.WorkspacePermissionDenied));
         }
@@ -126,7 +126,7 @@ public static class CatalogProductMediaAdminEndpoints
         CancellationToken cancellationToken)
     {
         var actorUserId = await auth.RequireAuthorizedAsync(http, cancellationToken);
-        if (!CatalogWorkspaceMediaScope.AllowsCatalogEdit(http.Request))
+        if (!CatalogWorkspaceScope.AllowsCatalogEdit(http.Request))
         {
             return api.FromFailure(new SemanticError(CatalogErrorCodes.WorkspacePermissionDenied));
         }
@@ -148,7 +148,7 @@ public static class CatalogProductMediaAdminEndpoints
         CancellationToken cancellationToken)
     {
         var actorUserId = await auth.RequireAuthorizedAsync(http, cancellationToken);
-        if (!CatalogWorkspaceMediaScope.AllowsCatalogEdit(http.Request))
+        if (!CatalogWorkspaceScope.AllowsCatalogEdit(http.Request))
         {
             return api.FromFailure(new SemanticError(CatalogErrorCodes.WorkspacePermissionDenied));
         }
@@ -169,7 +169,7 @@ public static class CatalogProductMediaAdminEndpoints
         CancellationToken cancellationToken)
     {
         var actorUserId = await auth.RequireAuthorizedAsync(http, cancellationToken);
-        if (!CatalogWorkspaceMediaScope.AllowsCatalogEdit(http.Request))
+        if (!CatalogWorkspaceScope.AllowsCatalogEdit(http.Request))
         {
             return api.FromFailure(new SemanticError(CatalogErrorCodes.WorkspacePermissionDenied));
         }
@@ -197,17 +197,11 @@ public static class CatalogProductMediaAdminEndpoints
 }
 
 /// <summary>
-/// Smallest module-owned policy for live <c>X-Tooba-Workspace-Scope</c> transport used by Product Workspace media writes.
+/// W13-compatible alias — delegates to shared <see cref="CatalogWorkspaceScope"/>.
 /// </summary>
 public static class CatalogWorkspaceMediaScope
 {
-    /// <summary>
-    /// Returns false when header is <c>view</c> (Host ReadPermissions.CanEditCatalog=false); otherwise true.
-    /// </summary>
-    public static bool AllowsCatalogEdit(HttpRequest request)
-    {
-        ArgumentNullException.ThrowIfNull(request);
-        var scope = request.Headers["X-Tooba-Workspace-Scope"].ToString();
-        return !string.Equals(scope, "view", StringComparison.OrdinalIgnoreCase);
-    }
+    /// <inheritdoc cref="CatalogWorkspaceScope.AllowsCatalogEdit"/>
+    public static bool AllowsCatalogEdit(HttpRequest request) =>
+        CatalogWorkspaceScope.AllowsCatalogEdit(request);
 }

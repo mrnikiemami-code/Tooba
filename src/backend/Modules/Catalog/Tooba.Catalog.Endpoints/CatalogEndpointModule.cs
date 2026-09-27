@@ -9,6 +9,7 @@ using Tooba.Catalog.Endpoints.Admin.CategoryChanges;
 using Tooba.Catalog.Endpoints.Admin.Facets;
 using Tooba.Catalog.Endpoints.Admin.MegaMenu;
 using Tooba.Catalog.Endpoints.Admin.ProductMedia;
+using Tooba.Catalog.Endpoints.Admin.ProductSeo;
 using Tooba.Catalog.Endpoints.Admin.Settings;
 using Tooba.Catalog.Endpoints.Admin.Tags;
 using Tooba.Catalog.Endpoints.Admin.Units;
@@ -43,6 +44,7 @@ public static class CatalogEndpointModule
         app.MapCatalogProductVariantAdminEndpoints();
         app.MapCatalogProductCategoryChangeAdminEndpoints();
         app.MapCatalogProductMediaAdminEndpoints();
+        app.MapCatalogProductSeoAdminEndpoints();
         return app;
     }
 

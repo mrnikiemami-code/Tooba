@@ -110,4 +110,7 @@ public static class CatalogValidationCodes
 
     /// <summary>Product media reorder OrderedMediaAssetIds collection must be present.</summary>
     public const string ProductMediaOrderedIdsRequired = "catalog.validation.product_media_ordered_ids_required";
+
+    /// <summary>Update product SEO body Locale must be present (blank still normalizes in Domain).</summary>
+    public const string ProductSeoLocaleRequired = "catalog.validation.product_seo_locale_required";
 }

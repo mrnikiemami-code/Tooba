@@ -4,25 +4,23 @@ using Xunit;
 
 namespace Tooba.Host.Tests.Architecture;
 
-/// <summary>TB-TMAR-HOST-ADMIN-AMC-001-W13 — Product Workspace Media Admin evacuated to Catalog ProductMedia.</summary>
-public sealed class HostAdminAmcW13GuardTests
+/// <summary>TB-TMAR-HOST-ADMIN-AMC-001-W14 — Product Workspace SEO Admin evacuated to Catalog ProductSeo.</summary>
+public sealed class HostAdminAmcW14GuardTests
 {
     [Fact]
-    public void Host_ProductWorkspace_has_zero_media_routes_and_files_retained()
+    public void Host_ProductWorkspace_has_zero_seo_routes_and_files_retained()
     {
         var root = FindRepoRoot();
         var endpoints = File.ReadAllText(Path.Combine(
             root, "src/backend/Host/Tooba.Host/Admin/ProductWorkspaceEndpoints.cs"));
-        Assert.DoesNotContain("MapGet(\"/{productId:guid}/media\"", endpoints, StringComparison.Ordinal);
-        Assert.DoesNotContain("/media/readiness", endpoints, StringComparison.Ordinal);
-        Assert.DoesNotContain("/media/placeholder", endpoints, StringComparison.Ordinal);
-        Assert.DoesNotContain("/media/order", endpoints, StringComparison.Ordinal);
-        Assert.DoesNotContain("/primary", endpoints, StringComparison.Ordinal);
-        Assert.DoesNotContain("ListMediaAsync", endpoints, StringComparison.Ordinal);
-        Assert.DoesNotContain("AttachMediaAsync", endpoints, StringComparison.Ordinal);
-        Assert.DoesNotContain("DetachMediaAsync", endpoints, StringComparison.Ordinal);
         Assert.DoesNotContain("MapGet(\"/{productId:guid}/seo\"", endpoints, StringComparison.Ordinal);
+        Assert.DoesNotContain("MapPut(\"/{productId:guid}/seo\"", endpoints, StringComparison.Ordinal);
+        Assert.DoesNotContain("/seo/readiness", endpoints, StringComparison.Ordinal);
+        Assert.DoesNotContain("GetSeoAsync", endpoints, StringComparison.Ordinal);
+        Assert.DoesNotContain("PutSeoAsync", endpoints, StringComparison.Ordinal);
+        Assert.DoesNotContain("GetSeoReadinessAsync", endpoints, StringComparison.Ordinal);
         Assert.Contains("MapProductWorkspaceEndpoints", endpoints, StringComparison.Ordinal);
+        Assert.Contains("MapPost(\"/{productId:guid}/variants\"", endpoints, StringComparison.Ordinal);
 
         Assert.True(File.Exists(Path.Combine(root, "src/backend/Host/Tooba.Host/Admin/ProductWorkspaceEndpoints.cs")));
         Assert.True(File.Exists(Path.Combine(root, "src/backend/Host/Tooba.Host/Admin/ProductWorkspaceComposer.cs")));
@@ -30,48 +28,42 @@ public sealed class HostAdminAmcW13GuardTests
 
         var composer = File.ReadAllText(Path.Combine(
             root, "src/backend/Host/Tooba.Host/Admin/ProductWorkspaceComposer.cs"));
-        Assert.DoesNotContain("ListMediaAsync", composer, StringComparison.Ordinal);
-        Assert.DoesNotContain("AttachMediaAsync", composer, StringComparison.Ordinal);
-        Assert.DoesNotContain("MapMediaViews", composer, StringComparison.Ordinal);
-        Assert.DoesNotContain("GetMediaReadinessAsync", composer, StringComparison.Ordinal);
+        Assert.DoesNotContain("GetSeoAsync", composer, StringComparison.Ordinal);
+        Assert.DoesNotContain("UpdateSeoAsync", composer, StringComparison.Ordinal);
+        Assert.DoesNotContain("GetSeoReadinessAsync", composer, StringComparison.Ordinal);
+        Assert.DoesNotContain("MapSeoDetail", composer, StringComparison.Ordinal);
+        Assert.DoesNotContain("workspace.product.seo.rejected", composer, StringComparison.Ordinal);
+        Assert.DoesNotContain("ProductSeoDetail", composer, StringComparison.Ordinal);
+        Assert.DoesNotContain("ProductSeoUpdateInput", composer, StringComparison.Ordinal);
 
         var models = File.ReadAllText(Path.Combine(
             root, "src/backend/Host/Tooba.Host/Admin/ProductWorkspaceModels.cs"));
-        Assert.DoesNotContain("AdminProductMediaAttachRequest", models, StringComparison.Ordinal);
-        Assert.DoesNotContain("AdminProductMediaOrderRequest", models, StringComparison.Ordinal);
-        Assert.DoesNotContain("ProductMediaReadinessView", models, StringComparison.Ordinal);
-        Assert.Contains("record ProductMediaView", models, StringComparison.Ordinal);
+        Assert.DoesNotContain("AdminProductSeoUpdateRequest", models, StringComparison.Ordinal);
+        Assert.DoesNotContain("ProductSeoDetailView", models, StringComparison.Ordinal);
+        Assert.DoesNotContain("ProductSeoReadinessView", models, StringComparison.Ordinal);
+        Assert.Contains("record ProductSeoView", models, StringComparison.Ordinal);
     }
 
     [Fact]
-    public void Catalog_Endpoints_own_eight_media_routes_exactly_once_with_canonical_pipeline()
+    public void Catalog_Endpoints_own_three_seo_routes_exactly_once_with_canonical_pipeline()
     {
         var root = FindRepoRoot();
         var adminPath = Path.Combine(
             root,
-            "src/backend/Modules/Catalog/Tooba.Catalog.Endpoints/Admin/ProductMedia/CatalogProductMediaAdminEndpoints.cs");
+            "src/backend/Modules/Catalog/Tooba.Catalog.Endpoints/Admin/ProductSeo/CatalogProductSeoAdminEndpoints.cs");
         Assert.True(File.Exists(adminPath));
         var admin = File.ReadAllText(adminPath);
         Assert.Contains("/v1/admin/products/{productId:guid}", admin, StringComparison.Ordinal);
-        Assert.Contains("MapGet(\"/media\", ListAsync)", admin, StringComparison.Ordinal);
-        Assert.Contains("MapGet(\"/media/readiness\", GetReadinessAsync)", admin, StringComparison.Ordinal);
-        Assert.Contains("MapPost(\"/media\", AttachAsync)", admin, StringComparison.Ordinal);
-        Assert.Contains("MapPost(\"/media/placeholder\", AttachPlaceholderAsync)", admin, StringComparison.Ordinal);
-        Assert.Contains("MapPut(\"/media/order\", ReorderAsync)", admin, StringComparison.Ordinal);
-        Assert.Contains("MapPut(\"/media/{assetId:guid}/primary\", SetPrimaryAsync)", admin, StringComparison.Ordinal);
-        Assert.Contains("MapPatch(\"/media/{assetId:guid}\", PatchAsync)", admin, StringComparison.Ordinal);
-        Assert.Contains("MapDelete(\"/media/{assetId:guid}\", DetachAsync)", admin, StringComparison.Ordinal);
+        Assert.Contains("MapGet(\"/seo\", GetAsync)", admin, StringComparison.Ordinal);
+        Assert.Contains("MapPut(\"/seo\", PutAsync)", admin, StringComparison.Ordinal);
+        Assert.Contains("MapGet(\"/seo/readiness\", GetReadinessAsync)", admin, StringComparison.Ordinal);
         Assert.Contains("ISender", admin, StringComparison.Ordinal);
         Assert.Contains("ApiResponseFactory", admin, StringComparison.Ordinal);
         Assert.Contains("ICatalogAdminAuthorizer", admin, StringComparison.Ordinal);
-        Assert.Contains("CatalogWorkspaceMediaScope", admin, StringComparison.Ordinal);
         Assert.Contains("CatalogWorkspaceScope", admin, StringComparison.Ordinal);
         Assert.Contains("CatalogActorRequestBinding", admin, StringComparison.Ordinal);
-        var workspaceScope = File.ReadAllText(Path.Combine(
-            root, "src/backend/Modules/Catalog/Tooba.Catalog.Endpoints/Admin/CatalogWorkspaceScope.cs"));
-        Assert.Contains("X-Tooba-Workspace-Scope", workspaceScope, StringComparison.Ordinal);
         Assert.DoesNotContain("ICatalogDirectory", admin, StringComparison.Ordinal);
-        Assert.DoesNotContain("IProductMediaDirectory", admin, StringComparison.Ordinal);
+        Assert.DoesNotContain("IProductSeoDirectory", admin, StringComparison.Ordinal);
         Assert.DoesNotContain("CatalogDbContext", admin, StringComparison.Ordinal);
         Assert.DoesNotContain("ProductWorkspaceComposer", admin, StringComparison.Ordinal);
         Assert.DoesNotContain("Tooba.Catalog.Infrastructure", admin, StringComparison.Ordinal);
@@ -82,16 +74,16 @@ public sealed class HostAdminAmcW13GuardTests
 
         var module = File.ReadAllText(Path.Combine(
             root, "src/backend/Modules/Catalog/Tooba.Catalog.Endpoints/CatalogEndpointModule.cs"));
+        Assert.Single(Regex.Matches(module, @"MapCatalogProductSeoAdminEndpoints\(\)"));
         Assert.Single(Regex.Matches(module, @"MapCatalogProductMediaAdminEndpoints\(\)"));
-        Assert.Single(Regex.Matches(module, @"MapCatalogProductCategoryChangeAdminEndpoints\(\)"));
     }
 
     [Fact]
-    public void ProductMedia_Application_is_capability_first_without_Contracts_bundle()
+    public void ProductSeo_Application_is_capability_first_without_Contracts_bundle()
     {
         var capabilityRoot = Path.Combine(
             FindRepoRoot(),
-            "src/backend/Modules/Catalog/Tooba.Catalog.Application/ProductMedia");
+            "src/backend/Modules/Catalog/Tooba.Catalog.Application/ProductSeo");
         Assert.True(Directory.Exists(capabilityRoot));
         foreach (var folder in new[] { "Commands", "Queries", "Models", "Ports", "Validators" })
         {
@@ -101,17 +93,16 @@ public sealed class HostAdminAmcW13GuardTests
         Assert.Empty(Directory.GetDirectories(Path.Combine(capabilityRoot, "Commands")));
         Assert.Empty(Directory.GetDirectories(Path.Combine(capabilityRoot, "Queries")));
         Assert.Empty(Directory.GetFiles(capabilityRoot, "*Contracts.cs", SearchOption.AllDirectories));
-        Assert.True(File.Exists(Path.Combine(capabilityRoot, "Ports", "IProductMediaDirectory.cs")));
-        Assert.True(File.Exists(Path.Combine(capabilityRoot, "Validators", "AttachProductMediaCommandValidator.cs")));
-        Assert.True(File.Exists(Path.Combine(capabilityRoot, "Validators", "ReorderProductMediaCommandValidator.cs")));
+        Assert.True(File.Exists(Path.Combine(capabilityRoot, "Ports", "IProductSeoDirectory.cs")));
+        Assert.True(File.Exists(Path.Combine(capabilityRoot, "Validators", "UpdateProductSeoCommandValidator.cs")));
     }
 
     [Fact]
-    public void ProductMedia_path_namespace_exact_and_Result_typed_directory()
+    public void ProductSeo_path_namespace_exact_and_Result_typed_directory()
     {
         var root = FindRepoRoot();
         var capabilityRoot = Path.Combine(
-            root, "src/backend/Modules/Catalog/Tooba.Catalog.Application/ProductMedia");
+            root, "src/backend/Modules/Catalog/Tooba.Catalog.Application/ProductSeo");
         var appRoot = Path.Combine(root, "src/backend/Modules/Catalog/Tooba.Catalog.Application");
         foreach (var file in Directory.GetFiles(capabilityRoot, "*.cs", SearchOption.AllDirectories))
         {
@@ -126,12 +117,15 @@ public sealed class HostAdminAmcW13GuardTests
         }
 
         var directory = File.ReadAllText(Path.Combine(
-            root, "src/backend/Modules/Catalog/Tooba.Catalog.Infrastructure/ProductMediaDirectory.cs"));
+            root, "src/backend/Modules/Catalog/Tooba.Catalog.Infrastructure/ProductSeoDirectory.cs"));
         Assert.Contains("Result.Failure", directory, StringComparison.Ordinal);
         Assert.Contains("CatalogErrorCodes", directory, StringComparison.Ordinal);
-        Assert.Contains("WorkspaceMedia", directory, StringComparison.Ordinal);
-        Assert.Contains("EnforcePrimaryUniqueness", directory, StringComparison.Ordinal);
-        Assert.Contains("EventMediaChanged", directory, StringComparison.Ordinal);
+        Assert.Contains("WorkspaceCatalogStale", directory, StringComparison.Ordinal);
+        Assert.Contains("WorkspaceProductSlugDuplicate", directory, StringComparison.Ordinal);
+        Assert.Contains("WorkspaceProductSlugInvalid", directory, StringComparison.Ordinal);
+        Assert.Contains("ProductSeoRules", directory, StringComparison.Ordinal);
+        Assert.Contains("EventSeoChanged", directory, StringComparison.Ordinal);
+        Assert.Contains("SaveChangesAsync", directory, StringComparison.Ordinal);
         Assert.DoesNotContain("PlatformHttpException", directory, StringComparison.Ordinal);
         Assert.DoesNotContain("Tooba.Host", directory, StringComparison.Ordinal);
         Assert.DoesNotContain("ex.Message", directory, StringComparison.Ordinal);
@@ -165,17 +159,18 @@ public sealed class HostAdminAmcW13GuardTests
         Assert.False(File.Exists(Path.Combine(admin, "CatalogAttributeEndpoints.cs")));
 
         Assert.True(Directory.Exists(Path.Combine(
-            FindRepoRoot(), "src/backend/Modules/Catalog/Tooba.Catalog.Application/CategoryChanges")));
-        Assert.True(Directory.Exists(Path.Combine(
             FindRepoRoot(), "src/backend/Modules/Catalog/Tooba.Catalog.Application/ProductMedia")));
         Assert.True(Directory.Exists(Path.Combine(
             FindRepoRoot(), "src/backend/Modules/Catalog/Tooba.Catalog.Application/ProductSeo")));
         Assert.True(Directory.Exists(Path.Combine(
-            FindRepoRoot(), "src/backend/Modules/Catalog/Tooba.Catalog.Application/Variants")));
+            FindRepoRoot(), "src/backend/Modules/Catalog/Tooba.Catalog.Application/CategoryChanges")));
+        Assert.True(File.Exists(Path.Combine(
+            FindRepoRoot(),
+            "src/backend/Modules/Catalog/Tooba.Catalog.Endpoints/Admin/CatalogWorkspaceScope.cs")));
     }
 
     [Fact]
-    public void Error_catalog_owns_workspace_media_codes()
+    public void Error_catalog_owns_workspace_seo_codes()
     {
         var root = FindRepoRoot();
         var codes = File.ReadAllText(Path.Combine(
@@ -184,13 +179,10 @@ public sealed class HostAdminAmcW13GuardTests
                  {
                      "workspace.product.missing",
                      "workspace.permission.denied",
-                     "workspace.media.asset.missing",
-                     "workspace.media.attach.rejected",
-                     "workspace.media.placeholder.rejected",
-                     "workspace.media.empty",
-                     "workspace.media.order.invalid",
-                     "workspace.media.order.rejected",
-                     "workspace.media.missing",
+                     "workspace.catalog.stale",
+                     "workspace.product.slug.duplicate",
+                     "workspace.product.slug.invalid",
+                     "workspace.product.seo.rejected",
                  })
         {
             Assert.Contains(code, codes, StringComparison.Ordinal);
@@ -198,15 +190,33 @@ public sealed class HostAdminAmcW13GuardTests
 
         var contributor = File.ReadAllText(Path.Combine(
             root, "src/backend/Modules/Catalog/Tooba.Catalog.Endpoints/Errors/CatalogErrorCatalogContributor.cs"));
-        Assert.Contains("WorkspaceMediaMissing", contributor, StringComparison.Ordinal);
-        Assert.Contains("WorkspacePermissionDenied", contributor, StringComparison.Ordinal);
+        Assert.Contains("WorkspaceCatalogStale", contributor, StringComparison.Ordinal);
+        Assert.Contains("WorkspaceProductSlugDuplicate", contributor, StringComparison.Ordinal);
+        Assert.Contains("WorkspaceProductSlugInvalid", contributor, StringComparison.Ordinal);
+        Assert.Contains("WorkspaceProductSeoRejected", contributor, StringComparison.Ordinal);
 
         var resx = File.ReadAllText(Path.Combine(
             root, "src/backend/Modules/Catalog/Tooba.Catalog.Endpoints/Resources/CatalogErrors.resx"));
-        Assert.Contains("workspace.media.order.invalid", resx, StringComparison.Ordinal);
+        Assert.Contains("workspace.product.slug.duplicate", resx, StringComparison.Ordinal);
         var resxFa = File.ReadAllText(Path.Combine(
             root, "src/backend/Modules/Catalog/Tooba.Catalog.Endpoints/Resources/CatalogErrors.fa.resx"));
-        Assert.Contains("شناسهٔ رسانه لازم است.", resxFa, StringComparison.Ordinal);
+        Assert.Contains("نشانی صفحه نامعتبر است.", resxFa, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void Workspace_scope_generalization_preserves_media_alias()
+    {
+        var root = FindRepoRoot();
+        var scope = File.ReadAllText(Path.Combine(
+            root, "src/backend/Modules/Catalog/Tooba.Catalog.Endpoints/Admin/CatalogWorkspaceScope.cs"));
+        Assert.Contains("X-Tooba-Workspace-Scope", scope, StringComparison.Ordinal);
+        Assert.Contains("view", scope, StringComparison.OrdinalIgnoreCase);
+
+        var media = File.ReadAllText(Path.Combine(
+            root,
+            "src/backend/Modules/Catalog/Tooba.Catalog.Endpoints/Admin/ProductMedia/CatalogProductMediaAdminEndpoints.cs"));
+        Assert.Contains("CatalogWorkspaceMediaScope", media, StringComparison.Ordinal);
+        Assert.Contains("CatalogWorkspaceScope.AllowsCatalogEdit", media, StringComparison.Ordinal);
     }
 
     private static string FindRepoRoot()

@@ -16,6 +16,7 @@ using Tooba.Catalog.Application.Units.Ports;
 using Tooba.Catalog.Application.Variants.Ports;
 using Tooba.Catalog.Application.CategoryChanges.Ports;
 using Tooba.Catalog.Application.ProductMedia.Ports;
+using Tooba.Catalog.Application.ProductSeo.Ports;
 using Tooba.Catalog.Contracts;
 using Tooba.Catalog.Contracts.Checkout;
 using Tooba.Catalog.Contracts.Reservation;
@@ -73,6 +74,7 @@ public sealed class CatalogModule : IToobaModule
         services.AddScoped<IProductVariantDirectory, ProductVariantDirectory>();
         services.AddScoped<ICategoryChangeDirectory, CategoryChangeDirectory>();
         services.AddScoped<IProductMediaDirectory, ProductMediaDirectory>();
+        services.AddScoped<IProductSeoDirectory, ProductSeoDirectory>();
         services.AddScoped<IVariantOfferLookup, VariantOfferLookupAdapter>();
         services.AddSingleton<IQuantityNormalizer, QuantityNormalizer>();
         services.AddValidatorsFromAssembly(typeof(CreateStoreLandingPageCommand).Assembly);

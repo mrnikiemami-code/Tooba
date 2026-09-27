@@ -233,4 +233,16 @@ public static class CatalogErrorCodes
 
     /// <summary>Primary/patch/detach target media reference missing on product.</summary>
     public const string WorkspaceMediaMissing = "workspace.media.missing";
+
+    /// <summary>Optimistic concurrency conflict on catalog product update.</summary>
+    public const string WorkspaceCatalogStale = "workspace.catalog.stale";
+
+    /// <summary>Product slug already used by another product in the tenant.</summary>
+    public const string WorkspaceProductSlugDuplicate = "workspace.product.slug.duplicate";
+
+    /// <summary>Product slug invalid or cannot be derived from product name.</summary>
+    public const string WorkspaceProductSlugInvalid = "workspace.product.slug.invalid";
+
+    /// <summary>Product SEO update rejected for other business reasons.</summary>
+    public const string WorkspaceProductSeoRejected = "workspace.product.seo.rejected";
 }

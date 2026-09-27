@@ -105,6 +105,10 @@
   <data name="workspace.media.order.invalid" xml:space="preserve"><value>Media order list is invalid.</value></data>
   <data name="workspace.media.order.rejected" xml:space="preserve"><value>Media reorder was rejected.</value></data>
   <data name="workspace.media.missing" xml:space="preserve"><value>Media reference was not found on the product.</value></data>
+  <data name="workspace.catalog.stale" xml:space="preserve"><value>Catalog data is stale.</value></data>
+  <data name="workspace.product.slug.duplicate" xml:space="preserve"><value>Product slug is already in use.</value></data>
+  <data name="workspace.product.slug.invalid" xml:space="preserve"><value>Product slug is invalid.</value></data>
+  <data name="workspace.product.seo.rejected" xml:space="preserve"><value>Product SEO update was rejected.</value></data>
   <data name="catalog.validation.product_media_ordered_ids_required" xml:space="preserve"><value>Ordered media asset ids are required.</value></data>
   <data name="catalog.validation.attribute_definition_code_required" xml:space="preserve"><value>Attribute definition code is required.</value></data>
   <data name="catalog.validation.attribute_option_code_required" xml:space="preserve"><value>Attribute option code is required.</value></data>

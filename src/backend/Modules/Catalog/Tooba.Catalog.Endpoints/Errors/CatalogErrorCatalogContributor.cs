@@ -162,6 +162,14 @@ public sealed class CatalogErrorCatalogContributor : IErrorCatalogContributor
             "Media reorder was rejected."),
         D(CatalogErrorCodes.WorkspaceMediaMissing, ErrorClassification.NotFound, StatusCodes.Status404NotFound,
             "Media reference was not found on the product."),
+        D(CatalogErrorCodes.WorkspaceCatalogStale, ErrorClassification.Conflict, StatusCodes.Status409Conflict,
+            "Catalog data is stale."),
+        D(CatalogErrorCodes.WorkspaceProductSlugDuplicate, ErrorClassification.Conflict, StatusCodes.Status409Conflict,
+            "Product slug is already in use."),
+        D(CatalogErrorCodes.WorkspaceProductSlugInvalid, ErrorClassification.Validation, StatusCodes.Status400BadRequest,
+            "Product slug is invalid."),
+        D(CatalogErrorCodes.WorkspaceProductSeoRejected, ErrorClassification.Business, StatusCodes.Status400BadRequest,
+            "Product SEO update was rejected."),
     ];
 
     private static ErrorDescriptor D(
