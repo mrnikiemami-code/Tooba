@@ -1198,35 +1198,6 @@ public sealed class ProductWorkspaceComposer
     }
 
     /// <summary>
-    /// آمادگی تجمیعی انتشار Catalog-only.
-    /// </summary>
-    public async Task<ProductPublishReadinessView> GetPublishReadinessAsync(
-        Guid productId,
-        string? locale,
-        ProductWorkspacePermissions permissions,
-        CancellationToken cancellationToken)
-    {
-        if (!permissions.CanView)
-        {
-            throw new PlatformHttpException(403, "Forbidden", "workspace.permission.denied");
-        }
-
-        await EnsureProductExistsAsync(productId, cancellationToken);
-        try
-        {
-            var readiness = await _catalogDirectory.GetProductPublishReadinessAsync(
-                productId,
-                locale ?? "fa-IR",
-                cancellationToken);
-            return MapPublishReadiness(readiness);
-        }
-        catch (InvalidOperationException ex)
-        {
-            throw new PlatformHttpException(404, ex.Message, "workspace.product.missing");
-        }
-    }
-
-    /// <summary>
     /// حذف امن؛ در صورت ارجاع Offer آرشیو نرم و تعارض فارسی.
     /// </summary>
     public async Task DeleteOrSoftArchiveAsync(

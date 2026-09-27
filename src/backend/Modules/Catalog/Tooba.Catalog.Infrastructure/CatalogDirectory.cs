@@ -16,6 +16,7 @@ using Tooba.Catalog.Application.Variants.Ports;
 using Tooba.Catalog.Application.CategoryChanges.Ports;
 using Tooba.Catalog.Application.ProductMedia.Ports;
 using Tooba.Catalog.Application.ProductHistory.Ports;
+using Tooba.Catalog.Application.ProductPublishing.Ports;
 using Tooba.Catalog.Application.ProductSeo.Ports;
 using Tooba.Catalog.Contracts;
 using Tooba.Catalog.Contracts.Errors;
@@ -802,6 +803,14 @@ public sealed class CatalogDirectory :
     private IProductHistoryReader ProductHistoryPort() =>
         new ProductHistoryReader(_db);
 
+    private IProductPublishReadinessReader PublishReadinessPort() =>
+        new ProductPublishReadinessReader(
+            _db,
+            ProductSeoPort(),
+            ProductAttributesPort(),
+            ProductVariantsPort(),
+            ProductMediaPort());
+
     /// <summary>
     /// Legacy ICatalogDirectory unwrap for history list: maps missing-product Result to prior IOE
     /// so Host aggregate shell / ProductHistoryTests keep prior contract. Migrated HTTP uses Result.
@@ -1564,95 +1573,8 @@ public sealed class CatalogDirectory :
     public async Task<ProductPublishReadiness> GetProductPublishReadinessAsync(
         Guid productId,
         string? locale,
-        CancellationToken cancellationToken)
-    {
-        if (!await _db.Products.AnyAsync(x => x.ProductId == productId, cancellationToken))
-        {
-            throw new InvalidOperationException("محصول در Catalog این Tenant نیست.");
-        }
-
-        var normalizedLocale = ProductSeoRules.NormalizeLocale(locale);
-        var categoryReady = await IsProductPrimaryCategoryAssignableAsync(productId, cancellationToken);
-        var seoDetail = await GetProductSeoAsync(productId, normalizedLocale, cancellationToken);
-        var translationReady = !string.IsNullOrWhiteSpace(seoDetail.ProductName);
-
-        var attributes = await GetProductAttributeReadinessAsync(productId, cancellationToken);
-        var attributeReady = attributes.IsComplete;
-
-        var variants = await GetProductVariantReadinessAsync(productId, cancellationToken);
-        var variantReady = variants.IsValid;
-
-        var media = await GetProductMediaReadinessAsync(productId, cancellationToken);
-        var mediaReady = media.IsReady;
-
-        var seo = seoDetail.Readiness;
-        var seoReady = seo.IsReady;
-
-        var missing = new List<ProductPublishMissingRequirement>();
-        if (!categoryReady)
-        {
-            missing.Add(new ProductPublishMissingRequirement(
-                "category",
-                ProductPublishRules.MessageCategoryIncompleteFa,
-                "general"));
-        }
-
-        if (!translationReady)
-        {
-            missing.Add(new ProductPublishMissingRequirement(
-                "identity",
-                ProductPublishRules.MessageIdentityIncompleteFa,
-                "general"));
-        }
-
-        if (!attributeReady)
-        {
-            var attrMessage = attributes.MissingRequiredCodes.Count > 0
-                ? $"{ProductPublishRules.MessageAttributesIncompleteFa} ({string.Join("، ", attributes.MissingRequiredCodes)})"
-                : ProductPublishRules.MessageAttributesIncompleteFa;
-            missing.Add(new ProductPublishMissingRequirement("attributes", attrMessage, "attributes"));
-        }
-
-        if (!variantReady)
-        {
-            missing.Add(new ProductPublishMissingRequirement(
-                "variants",
-                ProductPublishRules.MessageVariantsIncompleteFa,
-                "variants"));
-        }
-
-        if (!mediaReady)
-        {
-            missing.Add(new ProductPublishMissingRequirement(
-                "media",
-                media.MessageFa ?? ProductPublishRules.MessageMediaIncompleteFa,
-                "media"));
-        }
-
-        if (!seoReady)
-        {
-            missing.Add(new ProductPublishMissingRequirement(
-                "seo",
-                seo.MessageFa ?? ProductPublishRules.MessageSeoIncompleteFa,
-                "seo"));
-        }
-
-        var isReady = missing.Count == 0;
-        var messageFa = isReady
-            ? ProductPublishRules.MessageReadyFa
-            : ProductPublishRules.SummarizeMissingFa(missing.Count);
-
-        return new ProductPublishReadiness(
-            isReady,
-            categoryReady,
-            translationReady,
-            attributeReady,
-            variantReady,
-            mediaReady,
-            seoReady,
-            missing,
-            messageFa);
-    }
+        CancellationToken cancellationToken) =>
+        UnwrapHistory(await PublishReadinessPort().GetAsync(productId, locale, cancellationToken));
 
     /// <inheritdoc />
     public async Task PublishProductAsync(Guid productId, CancellationToken cancellationToken)
@@ -1784,29 +1706,6 @@ public sealed class CatalogDirectory :
             _actor?.ActorDisplayName,
             beforeSummary,
             afterSummary));
-    }
-
-    private async Task<bool> IsProductPrimaryCategoryAssignableAsync(
-        Guid productId,
-        CancellationToken cancellationToken)
-    {
-        var primaryCategoryId = await ResolvePrimaryCategoryIdAsync(productId, cancellationToken);
-        if (primaryCategoryId is not Guid categoryId)
-        {
-            return false;
-        }
-
-        var parentById = await _db.Categories.AsNoTracking()
-            .ToDictionaryAsync(x => x.CategoryId, x => x.ParentCategoryId, cancellationToken);
-        try
-        {
-            CatalogCategoryTreeRules.EnsureAssignableProductCategory(categoryId, parentById);
-            return true;
-        }
-        catch (InvalidOperationException)
-        {
-            return false;
-        }
     }
 
     /// <inheritdoc />
