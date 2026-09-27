@@ -104,4 +104,7 @@ public static class CatalogValidationCodes
 
     /// <summary>Variant patch Status string is not a valid CatalogPublicationStatus.</summary>
     public const string VariantPatchStatusInvalid = "catalog.validation.variant_patch_status_invalid";
+
+    /// <summary>Category-change NewCategoryId must be non-empty.</summary>
+    public const string CategoryChangeNewCategoryIdRequired = "catalog.validation.category_change_new_category_id_required";
 }

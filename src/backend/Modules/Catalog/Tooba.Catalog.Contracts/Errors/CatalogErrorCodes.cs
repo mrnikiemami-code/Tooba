@@ -197,4 +197,13 @@ public static class CatalogErrorCodes
 
     /// <summary>Archived variant cannot be selected as default.</summary>
     public const string VariantArchivedCannotBeDefault = "catalog.variant.default.archived_forbidden";
+
+    /// <summary>
+    /// Product category assignment rejected because target is not Level 3.
+    /// Canonical code matches <c>CatalogCategoryTreeRules.AssignmentLevelInvalidErrorCode</c>.
+    /// </summary>
+    public const string CategoryAssignmentLevelInvalid = "catalog.category.assignment.level.invalid";
+
+    /// <summary>Category-change preview/replace precondition failed (non-assignment-level).</summary>
+    public const string CategoryChangeInvalid = "catalog.category_change.invalid";
 }

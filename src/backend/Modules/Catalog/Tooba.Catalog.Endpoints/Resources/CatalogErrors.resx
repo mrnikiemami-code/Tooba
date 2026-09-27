@@ -93,6 +93,9 @@
   <data name="catalog.variant.patch.status_invalid" xml:space="preserve"><value>Variant patch status is invalid.</value></data>
   <data name="catalog.variant.default.missing" xml:space="preserve"><value>Default variant was not found on the product.</value></data>
   <data name="catalog.variant.default.archived_forbidden" xml:space="preserve"><value>An archived variant cannot be the default.</value></data>
+  <data name="catalog.category.assignment.level.invalid" xml:space="preserve"><value>Product must be assigned to a Level-3 category.</value></data>
+  <data name="catalog.category_change.invalid" xml:space="preserve"><value>Category change is invalid.</value></data>
+  <data name="catalog.validation.category_change_new_category_id_required" xml:space="preserve"><value>New category id is required.</value></data>
   <data name="catalog.validation.attribute_definition_code_required" xml:space="preserve"><value>Attribute definition code is required.</value></data>
   <data name="catalog.validation.attribute_option_code_required" xml:space="preserve"><value>Attribute option code is required.</value></data>
   <data name="catalog.validation.schema_definition_id_required" xml:space="preserve"><value>Attribute definition id is required.</value></data>

@@ -478,7 +478,6 @@ app.MapStoreLandingPageEndpoints();
 app.MapMerchandisingCampaignAdminEndpoints();
 app.MapStoreMenuEndpoints();
 app.MapReservationPolicyAdminEndpoints();
-app.MapCatalogAttributeEndpoints();
 app.MapCatalogDemoDevEndpoints();
 app.MapAdminPanelEndpoints();
 app.MapOrderEndpoints();

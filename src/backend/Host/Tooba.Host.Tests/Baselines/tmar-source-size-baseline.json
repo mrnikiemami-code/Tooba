@@ -183,12 +183,6 @@
       "classification": "CRITICAL_GOD_FILE"
     },
     {
-      "path": "src/backend/Host/Tooba.Host/Admin/CatalogAttributeEndpoints.cs",
-      "language": "cs",
-      "loc": 1014,
-      "classification": "OVERSIZED_LEGACY"
-    },
-    {
       "path": "src/frontend/app/admin/admin-error-map.ts",
       "language": "ts",
       "loc": 1002,

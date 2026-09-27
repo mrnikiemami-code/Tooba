@@ -5,6 +5,7 @@ using Tooba.Catalog.Endpoints.Admin.Attributes.Definitions;
 using Tooba.Catalog.Endpoints.Admin.Attributes.ProductValues;
 using Tooba.Catalog.Endpoints.Admin.Attributes.Schema;
 using Tooba.Catalog.Endpoints.Admin.Categories;
+using Tooba.Catalog.Endpoints.Admin.CategoryChanges;
 using Tooba.Catalog.Endpoints.Admin.Facets;
 using Tooba.Catalog.Endpoints.Admin.MegaMenu;
 using Tooba.Catalog.Endpoints.Admin.Settings;
@@ -39,6 +40,7 @@ public static class CatalogEndpointModule
         app.MapCatalogCategoryAttributeSchemaAdminEndpoints();
         app.MapCatalogProductAttributeAdminEndpoints();
         app.MapCatalogProductVariantAdminEndpoints();
+        app.MapCatalogProductCategoryChangeAdminEndpoints();
         return app;
     }
 

@@ -93,6 +93,9 @@
   <data name="catalog.variant.patch.status_invalid" xml:space="preserve"><value>وضعیت تنوع نامعتبر است.</value></data>
   <data name="catalog.variant.default.missing" xml:space="preserve"><value>تنوع پیش‌فرض در این محصول نیست.</value></data>
   <data name="catalog.variant.default.archived_forbidden" xml:space="preserve"><value>تنوع بایگانی‌شده نمی‌تواند پیش‌فرض باشد.</value></data>
+  <data name="catalog.category.assignment.level.invalid" xml:space="preserve"><value>محصول باید به یک دسته‌بندی سطح سوم اختصاص داده شود.</value></data>
+  <data name="catalog.category_change.invalid" xml:space="preserve"><value>تغییر رده نامعتبر است.</value></data>
+  <data name="catalog.validation.category_change_new_category_id_required" xml:space="preserve"><value>شناسهٔ دستهٔ جدید الزامی است.</value></data>
   <data name="catalog.validation.attribute_definition_code_required" xml:space="preserve"><value>کد تعریف ویژگی الزامی است.</value></data>
   <data name="catalog.validation.attribute_option_code_required" xml:space="preserve"><value>کد گزینهٔ ویژگی الزامی است.</value></data>
   <data name="catalog.validation.schema_definition_id_required" xml:space="preserve"><value>شناسهٔ تعریف ویژگی الزامی است.</value></data>

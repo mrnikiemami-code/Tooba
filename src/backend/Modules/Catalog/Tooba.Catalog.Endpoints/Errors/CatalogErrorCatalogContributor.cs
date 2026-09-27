@@ -140,6 +140,10 @@ public sealed class CatalogErrorCatalogContributor : IErrorCatalogContributor
             "Default variant was not found on the product."),
         D(CatalogErrorCodes.VariantArchivedCannotBeDefault, ErrorClassification.Business, StatusCodes.Status400BadRequest,
             "An archived variant cannot be the default."),
+        D(CatalogErrorCodes.CategoryAssignmentLevelInvalid, ErrorClassification.Business, StatusCodes.Status400BadRequest,
+            "Product must be assigned to a Level-3 category."),
+        D(CatalogErrorCodes.CategoryChangeInvalid, ErrorClassification.Business, StatusCodes.Status400BadRequest,
+            "Category change is invalid."),
     ];
 
     private static ErrorDescriptor D(

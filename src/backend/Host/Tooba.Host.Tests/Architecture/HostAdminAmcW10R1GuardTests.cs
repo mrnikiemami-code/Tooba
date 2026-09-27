@@ -1,4 +1,4 @@
-using System.Text.RegularExpressions;
+﻿using System.Text.RegularExpressions;
 using Xunit;
 
 namespace Tooba.Host.Tests.Architecture;
@@ -9,21 +9,11 @@ namespace Tooba.Host.Tests.Architecture;
 public sealed class HostAdminAmcW10R1GuardTests
 {
     [Fact]
-    public void Host_Attribute_file_has_neither_dead_helper_nor_Seller_DTO()
+    public void Host_Attribute_file_deleted_after_W12_and_Seller_DTO_relocation_preserved()
     {
         var root = FindRepoRoot();
         var hostPath = Path.Combine(root, "src/backend/Host/Tooba.Host/Admin/CatalogAttributeEndpoints.cs");
-        Assert.True(File.Exists(hostPath));
-        var host = File.ReadAllText(hostPath);
-        Assert.DoesNotContain("MapAttributeInvalid", host, StringComparison.Ordinal);
-        Assert.DoesNotContain("SetProductAttributeRequest", host, StringComparison.Ordinal);
-        Assert.DoesNotContain("SetProductVariantAxesRequest", host, StringComparison.Ordinal);
-        Assert.DoesNotContain("/variant-axes", host, StringComparison.Ordinal);
-        Assert.DoesNotContain("/variants/", host, StringComparison.Ordinal);
-        Assert.Contains("category-change-preview", host, StringComparison.Ordinal);
-        Assert.Contains("primary-category", host, StringComparison.Ordinal);
-        Assert.DoesNotContain("MapGet(\"/attributes\"", host, StringComparison.Ordinal);
-        Assert.DoesNotContain("attributes/readiness", host, StringComparison.Ordinal);
+        Assert.False(File.Exists(hostPath));
     }
 
     [Fact]
@@ -68,10 +58,8 @@ public sealed class HostAdminAmcW10R1GuardTests
         Assert.Contains("SetProductVariantAxesRequest", seller, StringComparison.Ordinal);
         Assert.DoesNotContain("using Tooba.Host.Admin;", seller, StringComparison.Ordinal);
 
-        var adminPath = Path.Combine(root, "src/backend/Host/Tooba.Host/Admin/CatalogAttributeEndpoints.cs");
-        var admin = File.ReadAllText(adminPath);
-        Assert.DoesNotContain("SetProductAttributeRequest", admin, StringComparison.Ordinal);
-        Assert.DoesNotContain("SetProductVariantAxesRequest", admin, StringComparison.Ordinal);
+        var hostPath = Path.Combine(root, "src/backend/Host/Tooba.Host/Admin/CatalogAttributeEndpoints.cs");
+        Assert.False(File.Exists(hostPath));
     }
 
     [Fact]
@@ -94,12 +82,12 @@ public sealed class HostAdminAmcW10R1GuardTests
     }
 
     [Fact]
-    public void Host_Admin_file_count_remains_53()
+    public void Host_Admin_file_count_remains_52()
     {
         var admin = Path.Combine(FindRepoRoot(), "src/backend/Host/Tooba.Host/Admin");
         var files = Directory.GetFiles(admin, "*.cs", SearchOption.AllDirectories);
-        Assert.Equal(53, files.Length);
-        Assert.True(File.Exists(Path.Combine(admin, "CatalogAttributeEndpoints.cs")));
+        Assert.Equal(52, files.Length);
+        Assert.False(File.Exists(Path.Combine(admin, "CatalogAttributeEndpoints.cs")));
         Assert.True(File.Exists(Path.Combine(admin, "StoreAppearanceSettingsEndpoints.cs")));
     }
 
