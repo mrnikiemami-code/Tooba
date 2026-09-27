@@ -707,6 +707,12 @@ Do NOT expand this into a full-module audit. Cover only touched files, directly 
 
 Process one Host folder at a time. Minimum destination-module changes are allowed within that task when required (see section 4/5/8), but do not start an independent recovery of the destination module. When the current Host folder is fully complete: STOP. Do not inspect the next Host folder until explicitly instructed.
 
+At both the start and end of the migration, enumerate the **exact active Host folder** and account for every production file in it. Re-read the final folder contents after moves/deletions; a green build or successful migration of the originally named files is not enough.
+
+Do **not** scan the entire Host for same-capability/name residue during normal folder-by-folder recovery. Search outside the active folder only for direct symbol/call-site references needed to preserve behavior for files discovered in that folder. Later Host folders are deliberately deferred until traversal reaches them.
+
+Default completion rule: the active Host folder must end with ZERO production files unless canonical locks/current accepted SoT explicitly permit specific Host-owned responsibilities to remain in that exact folder. For an allowed exception (for example accepted global Authentication/session platform boundaries), retain only the explicitly permitted files/responsibilities and record the exact architecture justification. Never delete/move legitimate retained Host platform files merely to satisfy a zero-count rule.
+
 A certified/reference module used for canonical patterns is **read-only**: do not modify, re-audit, re-certify, run unrelated tests for it, or broaden active scope into it.
 
 ## 26. Migration Completion States
