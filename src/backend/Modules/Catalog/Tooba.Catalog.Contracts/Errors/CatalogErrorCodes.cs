@@ -213,12 +213,29 @@ public static class CatalogErrorCodes
     /// <summary>Hard delete blocked because Offer references product variants; product soft-archived.</summary>
     public const string WorkspaceProductDeleteReferenced = "workspace.product.delete.referenced";
 
+    /// <summary>Workspace product create rejected title empty.</summary>
+    public const string WorkspaceProductTitleMissing = "workspace.product.title.missing";
+
+    /// <summary>Workspace product create missing category id.</summary>
+    public const string WorkspaceProductCategoryMissing = "workspace.product.category.missing";
+
+    /// <summary>Workspace product create category id not found.</summary>
+    public const string WorkspaceProductCategoryInvalid = "workspace.product.category.invalid";
+
+    /// <summary>Workspace product create rejected (domain/IOE parity).</summary>
+    public const string WorkspaceProductCreateRejected = "workspace.product.create.rejected";
+
+    /// <summary>Primary slug missing when editing a non-primary locale.</summary>
+    public const string WorkspaceProductSlugMissing = "workspace.product.slug.missing";
+
+    /// <summary>Quantity policy update rejected (domain gate).</summary>
+    public const string WorkspaceQuantityRejected = "workspace.quantity.rejected";
+
     /// <summary>
     /// Product category assignment rejected because target is not Level 3.
     /// Canonical code matches <c>CatalogCategoryTreeRules.AssignmentLevelInvalidErrorCode</c>.
     /// </summary>
     public const string CategoryAssignmentLevelInvalid = "catalog.category.assignment.level.invalid";
-
     /// <summary>Category-change preview/replace precondition failed (non-assignment-level).</summary>
     public const string CategoryChangeInvalid = "catalog.category_change.invalid";
 

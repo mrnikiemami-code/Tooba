@@ -37,6 +37,7 @@
     <ProjectReference Include="..\..\Modules\Wallet\Tooba.Wallet.Domain\Tooba.Wallet.Domain.csproj" />
     <ProjectReference Include="..\..\Modules\Offer\Tooba.Offer.Contracts\Tooba.Offer.Contracts.csproj" />
     <ProjectReference Include="..\..\Modules\Catalog\Tooba.Catalog.Contracts\Tooba.Catalog.Contracts.csproj" />
+    <ProjectReference Include="..\..\Modules\Catalog\Tooba.Catalog.Application\Tooba.Catalog.Application.csproj" />
     <ProjectReference Include="..\..\Modules\Party\Tooba.Party.Contracts\Tooba.Party.Contracts.csproj" />
     <ProjectReference Include="..\..\Modules\Inventory\Tooba.Inventory.Contracts\Tooba.Inventory.Contracts.csproj" />
   </ItemGroup>

@@ -2352,6 +2352,24 @@
     "workflowStop": "USER_REVIEW_HOST_ADMIN_W28_PW_DELETE_CHECKPOINT",
     "evidence": "docs/evidence/TB-TMAR-HOST-ADMIN-AMC-001-W28-PW-DELETE/"
   },
+  "hostAdminAmcPwIdentity": {
+    "task": "TB-TMAR-HOST-ADMIN-AMC-001-W29-PW-IDENTITY",
+    "parentTask": "TB-TMAR-HOST-ADMIN-AMC-001-W28-PW-DELETE",
+    "w17PlanLabel": "W24 identity writes",
+    "state": "HOST_ADMIN_PRODUCTWORKSPACE_IDENTITY_OWNED_BY_MODULE",
+    "activeHostFolder": "Admin",
+    "identityHttpOwner": "ProductWorkspace.Endpoints",
+    "identityMutationOwner": "Catalog.ProductIdentity.Commands",
+    "HostRemainingProductWorkspaceRoutes": 6,
+    "ProductWorkspaceEndpointRouteCount": 11,
+    "HostAdminFileCount": 31,
+    "partialHostRetention": "ProductWorkspace* RETAIN until W24-final (list/grid/category/brand)",
+    "StoreAppearance": "DEFERRED",
+    "schemaMigrationState": "NONE",
+    "frontendState": "UNCHANGED",
+    "workflowStop": "USER_REVIEW_HOST_ADMIN_W29_PW_IDENTITY_CHECKPOINT",
+    "evidence": "docs/evidence/TB-TMAR-HOST-ADMIN-AMC-001-W29-PW-IDENTITY/"
+  },
   "hostAdminAmcW18": {
     "task": "TB-TMAR-HOST-ADMIN-AMC-001-W18",
     "parentTask": "TB-TMAR-HOST-ADMIN-AMC-001-W17",

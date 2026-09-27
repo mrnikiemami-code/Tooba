@@ -1,27 +1,5 @@
 namespace Tooba.Host.Admin;
 
-/// <summary>
-/// فرمان ایجاد محصول Catalog به‌صورت پیش‌نویس؛ قیمت و موجودی اینجا نیست.
-/// </summary>
-public sealed record AdminProductCreateRequest(
-    string Title,
-    string? Slug,
-    Guid? CategoryId,
-    string? Locale);
-
-/// <summary>
-/// به‌روزرسانی هستهٔ محصول در یک locale (عنوان، slug انسانی، شرح‌ها، SEO).
-/// </summary>
-public sealed record AdminProductCoreUpdateRequest(
-    string Locale,
-    string Title,
-    string? Slug,
-    string? ShortDescription,
-    string? Description,
-    string? SeoTitle,
-    string? SeoDescription,
-    DateTimeOffset ExpectedUpdatedAt);
-
 /// <summary>انتساب دستهٔ اضافی (کشف/PLP) بدون تغییر schema.</summary>
 public sealed record AdminProductAdditionalCategoryRequest(
     Guid CategoryId,
@@ -59,10 +37,3 @@ public sealed record AdminProductListItem(
     string? PrimaryCategoryName = null,
     IReadOnlyList<string>? AdditionalCategoryNames = null,
     int AdditionalCategoryCount = 0);
-
-/// <summary>بدنهٔ به‌روزرسانی سیاست مقدار محصول.</summary>
-public sealed record AdminProductQuantityPolicyRequest(
-    Guid UnitOfMeasureId,
-    int DecimalPlaces,
-    decimal? Step,
-    DateTimeOffset ExpectedUpdatedAt);

@@ -1,3 +1,4 @@
+using Tooba.Catalog.Application.ProductIdentity.Models;
 using Tooba.Host.Admin;
 using Tooba.ProductWorkspace.Application.Composition.Models;
 using Xunit;
@@ -13,7 +14,7 @@ public sealed class ProductCatalogAdminFoundationTests
     public void Create_request_carries_category_and_slug_without_price_fields()
     {
         var json = System.Text.Json.JsonSerializer.Serialize(
-            new AdminProductCreateRequest("آیفون ۱۶", "iphone-16", Guid.Parse("aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"), "fa-IR"),
+            new WorkspaceProductCreateWriteModel("آیفون ۱۶", "iphone-16", Guid.Parse("aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"), "fa-IR"),
             new System.Text.Json.JsonSerializerOptions { PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase });
         Assert.Contains("\"categoryId\"", json, StringComparison.Ordinal);
         Assert.Contains("\"slug\":\"iphone-16\"", json, StringComparison.Ordinal);

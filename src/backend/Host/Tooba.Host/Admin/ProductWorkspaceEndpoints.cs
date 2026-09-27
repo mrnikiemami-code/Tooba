@@ -11,6 +11,7 @@ namespace Tooba.Host.Admin;
 /// W26: lifecycle POSTs evacuated to ProductWorkspace.Endpoints.
 /// W27: variant create/patch evacuated to ProductWorkspace.Endpoints.
 /// W28: product DELETE evacuated to Catalog.Endpoints.
+/// W29: create / catalog-title / core / quantity-policy evacuated to ProductWorkspace.Endpoints.
 /// Host ProductWorkspace surface after brand options Catalog ownership.
 /// </summary>
 public static class ProductWorkspaceEndpoints
@@ -24,10 +25,6 @@ public static class ProductWorkspaceEndpoints
         group.AddEndpointFilter(CatalogActorHttpBinding.BindAsync);
         group.MapGet("/", ListAsync);
         group.MapPost("/query", QueryGridAsync);
-        group.MapPost("/", CreateAsync);
-        group.MapPatch("/{productId:guid}/catalog-title", PatchTitleAsync);
-        group.MapPatch("/{productId:guid}/core", PatchCoreAsync);
-        group.MapPatch("/{productId:guid}/quantity-policy", PatchQuantityPolicyAsync);
         group.MapPut("/{productId:guid}/category", AssignCategoryAsync);
         group.MapPost("/{productId:guid}/categories/additional", AddAdditionalCategoryAsync);
         group.MapDelete("/{productId:guid}/categories/additional/{categoryId:guid}", RemoveAdditionalCategoryAsync);
@@ -82,105 +79,6 @@ public static class ProductWorkspaceEndpoints
             await AdminPanelAccess.RequireAuthorizedAsync(
                 request, session, tenant, guard, environment, cancellationToken);
             return Results.Json(await composer.ListAsync(cancellationToken));
-        }
-        catch (PlatformHttpException ex)
-        {
-            return ToError(ex);
-        }
-    }
-
-    private static async Task<IResult> CreateAsync(
-        AdminProductCreateRequest body,
-        ProductWorkspaceComposer composer,
-        HttpRequest request,
-        CurrentAuthenticatedSession session,
-        ICurrentTenant tenant,
-        IAuthorizationGuard guard,
-        IHostEnvironment environment,
-        CancellationToken cancellationToken)
-    {
-        try
-        {
-            await AdminPanelAccess.RequireAuthorizedAsync(
-                request, session, tenant, guard, environment, cancellationToken);
-            var workspace = await composer.CreateSimpleProductAsync(body, ReadPermissions(request), cancellationToken);
-            return Results.Json(workspace, statusCode: StatusCodes.Status201Created);
-        }
-        catch (PlatformHttpException ex)
-        {
-            return ToError(ex);
-        }
-    }
-
-    private static async Task<IResult> PatchTitleAsync(
-        Guid productId,
-        CatalogTitlePatch body,
-        ProductWorkspaceComposer composer,
-        HttpRequest request,
-        CurrentAuthenticatedSession session,
-        ICurrentTenant tenant,
-        IAuthorizationGuard guard,
-        IHostEnvironment environment,
-        CancellationToken cancellationToken)
-    {
-        try
-        {
-            await AdminPanelAccess.RequireAuthorizedAsync(
-                request, session, tenant, guard, environment, cancellationToken);
-            var workspace = await composer.UpdateCatalogTitleAsync(
-                productId,
-                body.Locale,
-                body.Title,
-                body.ExpectedUpdatedAt,
-                ReadPermissions(request),
-                cancellationToken);
-            return Results.Json(workspace);
-        }
-        catch (PlatformHttpException ex)
-        {
-            return ToError(ex);
-        }
-    }
-
-    private static async Task<IResult> PatchCoreAsync(
-        Guid productId,
-        AdminProductCoreUpdateRequest body,
-        ProductWorkspaceComposer composer,
-        HttpRequest request,
-        CurrentAuthenticatedSession session,
-        ICurrentTenant tenant,
-        IAuthorizationGuard guard,
-        IHostEnvironment environment,
-        CancellationToken cancellationToken)
-    {
-        try
-        {
-            await AdminPanelAccess.RequireAuthorizedAsync(
-                request, session, tenant, guard, environment, cancellationToken);
-            return Results.Json(await composer.UpdateProductCoreAsync(productId, body, ReadPermissions(request), cancellationToken));
-        }
-        catch (PlatformHttpException ex)
-        {
-            return ToError(ex);
-        }
-    }
-
-    private static async Task<IResult> PatchQuantityPolicyAsync(
-        Guid productId,
-        AdminProductQuantityPolicyRequest body,
-        ProductWorkspaceComposer composer,
-        HttpRequest request,
-        CurrentAuthenticatedSession session,
-        ICurrentTenant tenant,
-        IAuthorizationGuard guard,
-        IHostEnvironment environment,
-        CancellationToken cancellationToken)
-    {
-        try
-        {
-            await AdminPanelAccess.RequireAuthorizedAsync(
-                request, session, tenant, guard, environment, cancellationToken);
-            return Results.Json(await composer.UpdateQuantityPolicyAsync(productId, body, ReadPermissions(request), cancellationToken));
         }
         catch (PlatformHttpException ex)
         {
@@ -292,8 +190,3 @@ public static class ProductWorkspaceEndpoints
     private static IResult ToError(PlatformHttpException ex) =>
         Results.Json(new { title = ex.Title, errorCode = ex.ErrorCode }, statusCode: ex.StatusCode);
 }
-
-/// <summary>
-/// بدنهٔ به‌روزرسانی عنوان Catalog با قفل خوش‌بینانه.
-/// </summary>
-public sealed record CatalogTitlePatch(string Locale, string Title, DateTimeOffset ExpectedUpdatedAt);
