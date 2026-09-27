@@ -6,4 +6,14 @@
   <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
   <data name="quantity.rounding.invalid" xml:space="preserve"><value>Quantity rounding mode is invalid.</value></data>
   <data name="catalog.validation.quantity_rounding_mode_required" xml:space="preserve"><value>Quantity rounding mode is required.</value></data>
+  <data name="unit.missing" xml:space="preserve"><value>Unit of measure was not found.</value></data>
+  <data name="unit.dimension.invalid" xml:space="preserve"><value>Unit dimension is invalid.</value></data>
+  <data name="unit.code.duplicate" xml:space="preserve"><value>Unit code already exists.</value></data>
+  <data name="unit.language.unknown" xml:space="preserve"><value>Unit translation language is unknown.</value></data>
+  <data name="catalog.validation.unit_code_required" xml:space="preserve"><value>Unit code is required.</value></data>
+  <data name="catalog.validation.unit_dimension_required" xml:space="preserve"><value>Unit dimension is required.</value></data>
+  <data name="catalog.validation.unit_translations_required" xml:space="preserve"><value>Unit translations are required.</value></data>
+  <data name="catalog.validation.unit_translation_name_required" xml:space="preserve"><value>Unit translation name is required.</value></data>
+  <data name="catalog.validation.unit_translation_short_name_required" xml:space="preserve"><value>Unit translation short name is required.</value></data>
+  <data name="catalog.validation.unit_id_required" xml:space="preserve"><value>Unit id is required.</value></data>
 </root>

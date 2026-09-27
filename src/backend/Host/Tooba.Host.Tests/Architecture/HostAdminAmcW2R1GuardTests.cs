@@ -98,13 +98,15 @@ public sealed class HostAdminAmcW2R1GuardTests
     }
 
     [Fact]
-    public void Host_Admin_remains_58_and_appearance_deferred()
+    public void Host_Admin_appearance_deferred_and_quantity_still_gone()
     {
+        // Historical W2-R1: Admin at 58. W3 evacuated UnitOfMeasure (−1 → 57); count locked in W3.
         var admin = Path.Combine(FindRepoRoot(), "src/backend/Host/Tooba.Host/Admin");
-        Assert.Equal(58, Directory.GetFiles(admin, "*.cs", SearchOption.AllDirectories).Length);
+        Assert.Equal(57, Directory.GetFiles(admin, "*.cs", SearchOption.AllDirectories).Length);
         Assert.True(File.Exists(Path.Combine(admin, "StoreAppearanceSettingsEndpoints.cs")));
         Assert.True(File.Exists(Path.Combine(admin, "StoreAppearanceSettingsComposer.cs")));
         Assert.False(File.Exists(Path.Combine(admin, "QuantitySettingsEndpoints.cs")));
+        Assert.False(File.Exists(Path.Combine(admin, "UnitOfMeasureEndpoints.cs")));
     }
 
     private static string AppRoot() =>

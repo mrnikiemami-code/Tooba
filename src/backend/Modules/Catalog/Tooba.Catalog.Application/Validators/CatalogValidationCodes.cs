@@ -5,4 +5,22 @@ public static class CatalogValidationCodes
 {
     /// <summary>Global rounding mode must be non-blank on PUT.</summary>
     public const string QuantityRoundingModeRequired = "catalog.validation.quantity_rounding_mode_required";
+
+    /// <summary>Unit code must be non-blank.</summary>
+    public const string UnitCodeRequired = "catalog.validation.unit_code_required";
+
+    /// <summary>Unit dimension must be non-blank.</summary>
+    public const string UnitDimensionRequired = "catalog.validation.unit_dimension_required";
+
+    /// <summary>Translations collection must be present.</summary>
+    public const string UnitTranslationsRequired = "catalog.validation.unit_translations_required";
+
+    /// <summary>Translation name must be non-blank.</summary>
+    public const string UnitTranslationNameRequired = "catalog.validation.unit_translation_name_required";
+
+    /// <summary>Translation short name must be non-blank.</summary>
+    public const string UnitTranslationShortNameRequired = "catalog.validation.unit_translation_short_name_required";
+
+    /// <summary>Unit id must be non-empty on update.</summary>
+    public const string UnitIdRequired = "catalog.validation.unit_id_required";
 }

@@ -12,6 +12,14 @@ public sealed class CatalogErrorCatalogContributor : IErrorCatalogContributor
     [
         D(CatalogErrorCodes.QuantityRoundingInvalid, ErrorClassification.Business, StatusCodes.Status400BadRequest,
             "Quantity rounding mode is invalid."),
+        D(CatalogErrorCodes.UnitMissing, ErrorClassification.NotFound, StatusCodes.Status404NotFound,
+            "Unit of measure was not found."),
+        D(CatalogErrorCodes.UnitDimensionInvalid, ErrorClassification.Business, StatusCodes.Status400BadRequest,
+            "Unit dimension is invalid."),
+        D(CatalogErrorCodes.UnitCodeDuplicate, ErrorClassification.Business, StatusCodes.Status400BadRequest,
+            "Unit code already exists."),
+        D(CatalogErrorCodes.UnitLanguageUnknown, ErrorClassification.Business, StatusCodes.Status400BadRequest,
+            "Unit translation language is unknown."),
     ];
 
     private static ErrorDescriptor D(

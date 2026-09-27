@@ -17,6 +17,7 @@ public sealed class CatalogErrorResourceSet : IErrorResourceSet
     /// <inheritdoc />
     public bool Owns(string localizationKey) =>
         localizationKey.StartsWith("quantity.", StringComparison.OrdinalIgnoreCase)
+        || localizationKey.StartsWith("unit.", StringComparison.OrdinalIgnoreCase)
         || localizationKey.StartsWith("catalog.", StringComparison.OrdinalIgnoreCase);
 
     /// <inheritdoc />

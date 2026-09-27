@@ -169,7 +169,6 @@ builder.Services.AddScoped<
     Tooba.Order.Application.Admin.Operations.Ports.IOrderAdminEffectiveAccessReader,
     Tooba.Host.Admin.HostOrderAdminEffectiveAccessReader>();
 builder.Services.AddScoped<Tooba.Catalog.Application.IStoreLandingExternalReferenceGate, Tooba.Host.Admin.MerchandisingStoreLandingReferenceGate>();
-builder.Services.AddScoped<Tooba.Catalog.Application.IUnitOfMeasureLanguageGate, Tooba.Host.Admin.HostUnitOfMeasureLanguageGate>();
 builder.Services.AddToobaModules(builder.Configuration, builder.Environment);
 builder.Services.AddOfferModuleCallTracing();
 builder.Services.Configure<Tooba.Order.Application.ReservationCycle.Contracts.ReservationCycleOptions>(
@@ -479,7 +478,6 @@ app.MapStoreLandingPageEndpoints();
 app.MapMerchandisingCampaignAdminEndpoints();
 app.MapStoreMenuEndpoints();
 app.MapReservationPolicyAdminEndpoints();
-app.MapUnitOfMeasureEndpoints();
 app.MapCatalogAttributeEndpoints();
 app.MapCatalogFacetEndpoints();
 app.MapCatalogMegaMenuEndpoints();

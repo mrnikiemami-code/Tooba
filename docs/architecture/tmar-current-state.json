@@ -1570,6 +1570,41 @@
     "recoveryDiscipline": "SYNC_SOT_FREQUENTLY_NEW_CHAT_MUST_RESUME_FROM_REPO_NOT_CONVERSATION_MEMORY",
     "minimalRecoveryPhraseFa": "برگردیم به TMAR؛ ریکاوری را انجام بده"
   },
+      "hostAdminAmcW3": {
+    "task": "TB-TMAR-HOST-ADMIN-AMC-001-W3",
+    "parentTask": "TB-TMAR-HOST-ADMIN-AMC-001-W2-R1",
+    "parentCommit": "f90215dd02bf8c475997e132589bc9598a5958dc",
+    "state": "HOST_ADMIN_AMC_W3_UOM_EVACUATED_LOCALIZATION_CONTRACTS",
+    "activeHostFolder": "Admin",
+    "productionFileCountBefore": 58,
+    "productionFileCountAfter": 57,
+    "uomEndpointOwnership": "MODULE_OWNED_FIVE_ROUTES_CATALOG_ENDPOINTS",
+    "uomCqrsState": "List_Get_Create_Update_Deactivate_Result",
+    "validatorMatrix": "Create_Update_REQUIRED_List_Get_Deactivate_NO_VALIDATOR_REQUIRED",
+    "localizationBoundaryState": "ILanguageLookup_Localization_Contracts_ONLY",
+    "hostLanguageGateState": "REMOVED",
+    "resultErrorState": "CANONICAL_RESULT_APIRESPONSEFACTORY_CatalogErrorCodes_unit_star",
+    "applicationStructure": "Units/{Commands,Queries,Models,Ports,Validators}",
+    "legacyContractsBundleState": "ELIMINATED",
+    "catalogToHost": "ZERO",
+    "catalogToLocalizationApplication": "ZERO",
+    "endpointsToInfrastructure": "ZERO",
+    "schemaMigrationState": "NONE",
+    "frontendState": "UNCHANGED",
+    "storeAppearanceState": "NOT_MOVED_DEFERRED_PRESERVED",
+    "w1W2W2R1Preservation": "PRESERVED",
+    "remainingAdminBlockers": [
+      "StoreAppearance Host.Storefront projector coupling",
+      "Most Catalog Admin HTTP still Host-owned"
+    ],
+    "residualDebt": [
+      "W4+ Catalog HTTP waves",
+      "Appearance redesign before evacuate"
+    ],
+    "nextHostFolderStarted": false,
+    "workflowStop": "USER_REVIEW_HOST_ADMIN_W3_CHECKPOINT",
+    "evidence": "docs/evidence/TB-TMAR-HOST-ADMIN-AMC-001-W3/"
+  },
       "hostAdminAmcW2R1": {
     "task": "TB-TMAR-HOST-ADMIN-AMC-001-W2-R1",
     "parentTask": "TB-TMAR-HOST-ADMIN-AMC-001-W2",
