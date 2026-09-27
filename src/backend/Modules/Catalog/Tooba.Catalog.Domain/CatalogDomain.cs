@@ -1195,6 +1195,25 @@ public sealed class CatalogMegaMenuItemTranslation
         };
 }
 
+/// <summary>نتیجهٔ اعتبارسنجی placement مگامنو (بدون exception برای expected failure).</summary>
+public enum CatalogMegaMenuPlacementViolation
+{
+    /// <summary>معتبر.</summary>
+    None = 0,
+
+    /// <summary>آیتم نمی‌تواند والد خودش باشد.</summary>
+    SelfParent = 1,
+
+    /// <summary>والد presentation یافت نشد.</summary>
+    ParentMissing = 2,
+
+    /// <summary>حلقه در درخت presentation.</summary>
+    Cycle = 3,
+
+    /// <summary>عمق از حداکثر مجاز بیشتر است.</summary>
+    MaxDepthExceeded = 4,
+}
+
 /// <summary>
 /// اعتبارسنجی placement مگامنو — جدا از درخت taxonomy.
 /// </summary>
@@ -1204,26 +1223,26 @@ public static class CatalogMegaMenuTreeRules
     public const int MaxPresentationDepth = 3;
 
     /// <summary>
-    /// والد و عمق presentation را بررسی می‌کند.
+    /// والد و عمق presentation را بررسی می‌کند؛ expected failure به‌صورت enum برمی‌گردد.
     /// </summary>
-    public static void ValidatePlacement(
+    public static CatalogMegaMenuPlacementViolation ValidatePlacement(
         Guid megaMenuItemId,
         Guid? parentMegaMenuItemId,
         IReadOnlyDictionary<Guid, CatalogMegaMenuItem> itemsById)
     {
         if (parentMegaMenuItemId is null)
         {
-            return;
+            return CatalogMegaMenuPlacementViolation.None;
         }
 
         if (parentMegaMenuItemId == megaMenuItemId)
         {
-            throw new InvalidOperationException("آیتم منو نمی‌تواند والد خودش باشد.");
+            return CatalogMegaMenuPlacementViolation.SelfParent;
         }
 
         if (!itemsById.ContainsKey(parentMegaMenuItemId.Value))
         {
-            throw new InvalidOperationException("والد presentation در مگامنو یافت نشد.");
+            return CatalogMegaMenuPlacementViolation.ParentMissing;
         }
 
         var depth = 1;
@@ -1233,13 +1252,13 @@ public static class CatalogMegaMenuTreeRules
         {
             if (!seen.Add(current))
             {
-                throw new InvalidOperationException("حلقه در درخت presentation مگامنو.");
+                return CatalogMegaMenuPlacementViolation.Cycle;
             }
 
             depth++;
             if (depth > MaxPresentationDepth)
             {
-                throw new InvalidOperationException("حداکثر سه سطح در مگامنو پشتیبانی می‌شود.");
+                return CatalogMegaMenuPlacementViolation.MaxDepthExceeded;
             }
 
             if (!itemsById.TryGetValue(current, out var parent) || parent.ParentMegaMenuItemId is not Guid next)
@@ -1249,6 +1268,8 @@ public static class CatalogMegaMenuTreeRules
 
             current = next;
         }
+
+        return CatalogMegaMenuPlacementViolation.None;
     }
 }
 

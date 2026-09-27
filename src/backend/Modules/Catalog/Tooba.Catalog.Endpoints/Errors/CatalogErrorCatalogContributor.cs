@@ -32,6 +32,12 @@ public sealed class CatalogErrorCatalogContributor : IErrorCatalogContributor
             "Product was not found for tag assignment."),
         D(CatalogErrorCodes.TagCategoryMissing, ErrorClassification.NotFound, StatusCodes.Status404NotFound,
             "Category was not found for tag assignment."),
+        D(CatalogErrorCodes.MegaMenuCategoryMissing, ErrorClassification.NotFound, StatusCodes.Status404NotFound,
+            "Category was not found for MegaMenu."),
+        D(CatalogErrorCodes.MegaMenuPlacementInvalid, ErrorClassification.Business, StatusCodes.Status400BadRequest,
+            "MegaMenu placement is invalid."),
+        D(CatalogErrorCodes.MegaMenuRemoveHasChildren, ErrorClassification.Business, StatusCodes.Status400BadRequest,
+            "MegaMenu item still has presentation children."),
     ];
 
     private static ErrorDescriptor D(

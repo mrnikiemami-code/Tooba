@@ -35,4 +35,16 @@ public static class CatalogValidationCodes
 
     /// <summary>LocalizedNames keys must be non-blank.</summary>
     public const string TagLocalizedNameLocaleRequired = "catalog.validation.tag_localized_name_locale_required";
+
+    /// <summary>MegaMenu binding body must be present on PUT.</summary>
+    public const string MegaMenuBindingInputRequired = "catalog.validation.megamenu_binding_input_required";
+
+    /// <summary>MegaMenu title override exceeds max length.</summary>
+    public const string MegaMenuTitleOverrideTooLong = "catalog.validation.megamenu_title_override_too_long";
+
+    /// <summary>MegaMenu badge text exceeds max length.</summary>
+    public const string MegaMenuBadgeTextTooLong = "catalog.validation.megamenu_badge_text_too_long";
+
+    /// <summary>MegaMenu short label exceeds max length.</summary>
+    public const string MegaMenuShortLabelTooLong = "catalog.validation.megamenu_short_label_too_long";
 }

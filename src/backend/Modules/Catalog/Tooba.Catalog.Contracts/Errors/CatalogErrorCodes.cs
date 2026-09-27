@@ -35,4 +35,13 @@ public static class CatalogErrorCodes
 
     /// <summary>Referenced category was not found for tag assignment.</summary>
     public const string TagCategoryMissing = "catalog.tag.category.missing";
+
+    /// <summary>Referenced category was not found for MegaMenu Admin operations.</summary>
+    public const string MegaMenuCategoryMissing = "catalog.megamenu.category.missing";
+
+    /// <summary>MegaMenu presentation tree placement rule violated.</summary>
+    public const string MegaMenuPlacementInvalid = "catalog.megamenu.placement.invalid";
+
+    /// <summary>Cannot remove a MegaMenu item that still has presentation children.</summary>
+    public const string MegaMenuRemoveHasChildren = "catalog.megamenu.remove.has_children";
 }

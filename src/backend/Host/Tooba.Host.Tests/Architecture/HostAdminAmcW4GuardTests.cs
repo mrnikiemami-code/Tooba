@@ -144,7 +144,8 @@ public sealed class HostAdminAmcW4GuardTests
     {
         var admin = Path.Combine(FindRepoRoot(), "src/backend/Host/Tooba.Host/Admin");
         var files = Directory.GetFiles(admin, "*.cs", SearchOption.AllDirectories);
-        Assert.Equal(56, files.Length);
+        // W4 locked 56; W5 evacuated MegaMenu → 55. Prior Tag/UoM/Quantity absences still required.
+        Assert.Equal(55, files.Length);
         Assert.False(File.Exists(Path.Combine(admin, "CatalogTagEndpoints.cs")));
         Assert.False(File.Exists(Path.Combine(admin, "UnitOfMeasureEndpoints.cs")));
         Assert.False(File.Exists(Path.Combine(admin, "QuantitySettingsEndpoints.cs")));

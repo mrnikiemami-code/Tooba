@@ -26,4 +26,11 @@
   <data name="catalog.validation.tag_slug_too_long" xml:space="preserve"><value>Tag slug is too long.</value></data>
   <data name="catalog.validation.tag_localized_names_required" xml:space="preserve"><value>Tag localized names are required.</value></data>
   <data name="catalog.validation.tag_localized_name_locale_required" xml:space="preserve"><value>Tag localized name locale is required.</value></data>
+  <data name="catalog.megamenu.category.missing" xml:space="preserve"><value>Category was not found for MegaMenu.</value></data>
+  <data name="catalog.megamenu.placement.invalid" xml:space="preserve"><value>MegaMenu placement is invalid.</value></data>
+  <data name="catalog.megamenu.remove.has_children" xml:space="preserve"><value>MegaMenu item still has presentation children.</value></data>
+  <data name="catalog.validation.megamenu_binding_input_required" xml:space="preserve"><value>MegaMenu binding body is required.</value></data>
+  <data name="catalog.validation.megamenu_title_override_too_long" xml:space="preserve"><value>MegaMenu title override is too long.</value></data>
+  <data name="catalog.validation.megamenu_badge_text_too_long" xml:space="preserve"><value>MegaMenu badge text is too long.</value></data>
+  <data name="catalog.validation.megamenu_short_label_too_long" xml:space="preserve"><value>MegaMenu short label is too long.</value></data>
 </root>
