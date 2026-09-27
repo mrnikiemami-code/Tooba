@@ -148,6 +148,8 @@ public sealed class CatalogErrorCatalogContributor : IErrorCatalogContributor
             "Variant was not found."),
         D(CatalogErrorCodes.WorkspaceVariantStatusInvalid, ErrorClassification.Validation, StatusCodes.Status400BadRequest,
             "Variant status is invalid."),
+        D(CatalogErrorCodes.WorkspaceProductDeleteReferenced, ErrorClassification.Conflict, StatusCodes.Status409Conflict,
+            "Product cannot be hard-deleted because seller offers reference its variants; product was archived."),
         D(CatalogErrorCodes.CategoryAssignmentLevelInvalid, ErrorClassification.Business, StatusCodes.Status400BadRequest,
             "Product must be assigned to a Level-3 category."),
         D(CatalogErrorCodes.CategoryChangeInvalid, ErrorClassification.Business, StatusCodes.Status400BadRequest,

@@ -15,6 +15,7 @@ using Tooba.Catalog.Endpoints.Admin.MegaMenu;
 using Tooba.Catalog.Endpoints.Admin.ProductMedia;
 using Tooba.Catalog.Endpoints.Admin.ProductHistory;
 using Tooba.Catalog.Endpoints.Admin.ProductPublishing;
+using Tooba.Catalog.Endpoints.Admin.ProductDeletion;
 using Tooba.Catalog.Endpoints.Admin.ProductSeo;
 using Tooba.Catalog.Endpoints.Admin.Settings;
 using Tooba.Catalog.Endpoints.Admin.Tags;
@@ -57,6 +58,7 @@ public static class CatalogEndpointModule
         app.MapCatalogProductSeoAdminEndpoints();
         app.MapCatalogProductHistoryAdminEndpoints();
         app.MapCatalogProductPublishReadinessAdminEndpoints();
+        app.MapCatalogProductDeletionAdminEndpoints();
         app.MapCatalogBrandOptionsAdminEndpoints();
         app.MapCatalogStoreLandingPageAdminEndpoints();
         app.MapCatalogStoreLandingPageStorefrontEndpoints();

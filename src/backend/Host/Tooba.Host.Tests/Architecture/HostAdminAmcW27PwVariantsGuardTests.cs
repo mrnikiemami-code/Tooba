@@ -18,7 +18,7 @@ public sealed class HostAdminAmcW27PwVariantsGuardTests
         var root = FindRepoRoot();
         var host = File.ReadAllText(Path.Combine(
             root, "src/backend/Host/Tooba.Host/Admin/ProductWorkspaceEndpoints.cs"));
-        Assert.Equal(11, MapRouteRegex.Matches(host).Count);
+        Assert.Equal(10, MapRouteRegex.Matches(host).Count);
         Assert.DoesNotContain("/variants", host, StringComparison.Ordinal);
         Assert.DoesNotContain("CreateVariantAsync", host, StringComparison.Ordinal);
         Assert.DoesNotContain("PatchVariantAsync", host, StringComparison.Ordinal);

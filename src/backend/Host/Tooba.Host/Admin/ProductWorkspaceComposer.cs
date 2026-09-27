@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Tooba.BuildingBlocks;
 using Tooba.Catalog.Application;
 using Tooba.Catalog.Domain;
@@ -1069,61 +1069,6 @@ public sealed class ProductWorkspaceComposer
         return (await GetAsync(productId, permissions, cancellationToken))!;
     }
 
-    /// <summary>
-    /// حذف امن؛ در صورت ارجاع Offer آرشیو نرم و تعارض فارسی.
-    /// </summary>
-    public async Task DeleteOrSoftArchiveAsync(
-        Guid productId,
-        ProductWorkspacePermissions permissions,
-        CancellationToken cancellationToken)
-    {
-        if (!permissions.CanEditCatalog)
-        {
-            throw new PlatformHttpException(403, "Forbidden", "workspace.permission.denied");
-        }
-
-        var product = await _catalog.Products.SingleOrDefaultAsync(x => x.ProductId == productId, cancellationToken)
-            ?? throw new PlatformHttpException(404, "محصول پیدا نشد.", "workspace.product.missing");
-
-        var variantIds = await _catalog.Variants.AsNoTracking()
-            .Where(x => x.ProductId == productId)
-            .Select(x => x.VariantId)
-            .ToListAsync(cancellationToken);
-        var hasOffers = variantIds.Count > 0
-            && await _offers.AnyOffersForCatalogVariantIdsAsync(variantIds, cancellationToken);
-
-        if (hasOffers)
-        {
-            product.Archive(DateTimeOffset.UtcNow);
-            await _catalog.SaveChangesAsync(cancellationToken);
-            throw new PlatformHttpException(
-                409,
-                "حذف قطعی ممکن نیست چون پیشنهاد فروشنده به گونه‌های این محصول ارجاع دارد؛ محصول آرشیو شد.",
-                "workspace.product.delete.referenced");
-        }
-
-        var media = await _catalog.MediaReferences.Where(x => x.ProductId == productId).ToListAsync(cancellationToken);
-        var productAttrs = await _catalog.ProductAttributeValues.Where(x => x.ProductId == productId).ToListAsync(cancellationToken);
-        var axes = await _catalog.ProductVariantAxes.Where(x => x.ProductId == productId).ToListAsync(cancellationToken);
-        var categories = await _catalog.ProductCategories.Where(x => x.ProductId == productId).ToListAsync(cancellationToken);
-        var names = await _catalog.LocalizedTexts
-            .Where(x => x.OwnerKind == CatalogLocalizedOwnerKind.Product && x.OwnerId == productId)
-            .ToListAsync(cancellationToken);
-        var variants = await _catalog.Variants.Where(x => x.ProductId == productId).ToListAsync(cancellationToken);
-        var variantAttr = variantIds.Count == 0
-            ? []
-            : await _catalog.VariantAttributeValues.Where(x => variantIds.Contains(x.VariantId)).ToListAsync(cancellationToken);
-
-        _catalog.MediaReferences.RemoveRange(media);
-        _catalog.ProductAttributeValues.RemoveRange(productAttrs);
-        _catalog.ProductVariantAxes.RemoveRange(axes);
-        _catalog.ProductCategories.RemoveRange(categories);
-        _catalog.LocalizedTexts.RemoveRange(names);
-        _catalog.VariantAttributeValues.RemoveRange(variantAttr);
-        _catalog.Variants.RemoveRange(variants);
-        _catalog.Products.Remove(product);
-        await _catalog.SaveChangesAsync(cancellationToken);
-    }
 
     private static ProductPublishReadinessView MapPublishReadiness(ProductPublishReadiness readiness) =>
         new(

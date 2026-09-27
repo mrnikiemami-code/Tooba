@@ -2333,6 +2333,25 @@
     "workflowStop": "USER_REVIEW_HOST_ADMIN_W27_PW_VARIANTS_CHECKPOINT",
     "evidence": "docs/evidence/TB-TMAR-HOST-ADMIN-AMC-001-W27-PW-VARIANTS/"
   },
+  "hostAdminAmcPwDelete": {
+    "task": "TB-TMAR-HOST-ADMIN-AMC-001-W28-PW-DELETE",
+    "parentTask": "TB-TMAR-HOST-ADMIN-AMC-001-W27-PW-VARIANTS",
+    "w17PlanLabel": "W23 delete",
+    "state": "HOST_ADMIN_PRODUCT_DELETE_OWNED_BY_CATALOG",
+    "activeHostFolder": "Admin",
+    "deleteHttpOwner": "Catalog.Endpoints",
+    "deleteMutationOwner": "Catalog.ProductDeletion.Commands",
+    "offerReferenceGate": "Offer.Contracts.IOfferQueryGateway",
+    "HostRemainingProductWorkspaceRoutes": 10,
+    "ProductWorkspaceEndpointRouteCount": 7,
+    "HostAdminFileCount": 31,
+    "partialHostRetention": "ProductWorkspace* RETAIN until W24-final",
+    "StoreAppearance": "DEFERRED",
+    "schemaMigrationState": "NONE",
+    "frontendState": "UNCHANGED",
+    "workflowStop": "USER_REVIEW_HOST_ADMIN_W28_PW_DELETE_CHECKPOINT",
+    "evidence": "docs/evidence/TB-TMAR-HOST-ADMIN-AMC-001-W28-PW-DELETE/"
+  },
   "hostAdminAmcW18": {
     "task": "TB-TMAR-HOST-ADMIN-AMC-001-W18",
     "parentTask": "TB-TMAR-HOST-ADMIN-AMC-001-W17",

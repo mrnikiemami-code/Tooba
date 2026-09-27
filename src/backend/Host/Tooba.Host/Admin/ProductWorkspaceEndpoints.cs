@@ -10,6 +10,7 @@ namespace Tooba.Host.Admin;
 /// W19: aggregate GET evacuated to ProductWorkspace.Endpoints.
 /// W26: lifecycle POSTs evacuated to ProductWorkspace.Endpoints.
 /// W27: variant create/patch evacuated to ProductWorkspace.Endpoints.
+/// W28: product DELETE evacuated to Catalog.Endpoints.
 /// Host ProductWorkspace surface after brand options Catalog ownership.
 /// </summary>
 public static class ProductWorkspaceEndpoints
@@ -31,7 +32,6 @@ public static class ProductWorkspaceEndpoints
         group.MapPost("/{productId:guid}/categories/additional", AddAdditionalCategoryAsync);
         group.MapDelete("/{productId:guid}/categories/additional/{categoryId:guid}", RemoveAdditionalCategoryAsync);
         group.MapPut("/{productId:guid}/brand", AssignBrandAsync);
-        group.MapDelete("/{productId:guid}", DeleteAsync);
     }
 
     private static ProductWorkspacePermissions ReadPermissions(HttpRequest request)
@@ -288,30 +288,6 @@ public static class ProductWorkspaceEndpoints
             return ToError(ex);
         }
     }
-
-    private static async Task<IResult> DeleteAsync(
-        Guid productId,
-        ProductWorkspaceComposer composer,
-        HttpRequest request,
-        CurrentAuthenticatedSession session,
-        ICurrentTenant tenant,
-        IAuthorizationGuard guard,
-        IHostEnvironment environment,
-        CancellationToken cancellationToken)
-    {
-        try
-        {
-            await AdminPanelAccess.RequireAuthorizedAsync(
-                request, session, tenant, guard, environment, cancellationToken);
-            await composer.DeleteOrSoftArchiveAsync(productId, ReadPermissions(request), cancellationToken);
-            return Results.NoContent();
-        }
-        catch (PlatformHttpException ex)
-        {
-            return ToError(ex);
-        }
-    }
-
 
     private static IResult ToError(PlatformHttpException ex) =>
         Results.Json(new { title = ex.Title, errorCode = ex.ErrorCode }, statusCode: ex.StatusCode);

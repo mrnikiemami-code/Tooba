@@ -17,7 +17,7 @@ public sealed class HostAdminAmcW20GuardTests
         var root = FindRepoRoot();
         var hostEndpoints = File.ReadAllText(Path.Combine(
             root, "src/backend/Host/Tooba.Host/Admin/ProductWorkspaceEndpoints.cs"));
-        Assert.Equal(11, MapRouteRegex.Matches(hostEndpoints).Count);
+        Assert.Equal(10, MapRouteRegex.Matches(hostEndpoints).Count);
         Assert.DoesNotContain("brand-options", hostEndpoints, StringComparison.Ordinal);
         Assert.DoesNotContain("ListBrandOptionsAsync", hostEndpoints, StringComparison.Ordinal);
 

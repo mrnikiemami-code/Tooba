@@ -210,6 +210,9 @@ public static class CatalogErrorCodes
     /// <summary>Workspace variant status string invalid.</summary>
     public const string WorkspaceVariantStatusInvalid = "workspace.variant.status.invalid";
 
+    /// <summary>Hard delete blocked because Offer references product variants; product soft-archived.</summary>
+    public const string WorkspaceProductDeleteReferenced = "workspace.product.delete.referenced";
+
     /// <summary>
     /// Product category assignment rejected because target is not Level 3.
     /// Canonical code matches <c>CatalogCategoryTreeRules.AssignmentLevelInvalidErrorCode</c>.
