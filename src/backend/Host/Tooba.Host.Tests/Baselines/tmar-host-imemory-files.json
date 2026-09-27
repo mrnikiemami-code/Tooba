@@ -1,8 +1,6 @@
-{
+﻿{
   "rule": "HostIMemoryCache",
   "files": [
-    "Admin/StoreLandingPageComposer.cs",
-    "Admin/StoreMenuComposer.cs",
     "Caching/CacheRegistration.cs",
     "Caching/MemoryToobaCache.cs",
     "Program.cs",

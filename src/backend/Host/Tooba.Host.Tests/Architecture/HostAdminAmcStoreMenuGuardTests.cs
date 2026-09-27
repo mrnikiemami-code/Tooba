@@ -2,27 +2,28 @@ using Xunit;
 
 namespace Tooba.Host.Tests.Architecture;
 
-/// <summary>Store Landing Admin/Storefront HTTP owned by Catalog after Host evacuation.</summary>
-public sealed class HostAdminAmcStoreLandingGuardTests
+/// <summary>Store Menu Admin/Storefront HTTP owned by Catalog after Host evacuation.</summary>
+public sealed class HostAdminAmcStoreMenuGuardTests
 {
     [Fact]
-    public void Store_landing_owned_by_Catalog_and_absent_from_Host_Admin()
+    public void Store_menu_owned_by_Catalog_and_absent_from_Host_Admin()
     {
         var root = FindRepoRoot();
-        Assert.False(File.Exists(Path.Combine(root, "src/backend/Host/Tooba.Host/Admin/StoreLandingPageEndpoints.cs")));
-        Assert.False(File.Exists(Path.Combine(root, "src/backend/Host/Tooba.Host/Admin/StoreLandingPageComposer.cs")));
+        Assert.False(File.Exists(Path.Combine(root, "src/backend/Host/Tooba.Host/Admin/StoreMenuEndpoints.cs")));
+        Assert.False(File.Exists(Path.Combine(root, "src/backend/Host/Tooba.Host/Admin/StoreMenuComposer.cs")));
+        Assert.False(File.Exists(Path.Combine(root, "src/backend/Host/Tooba.Host/Admin/StoreMenuDevelopmentSeed.cs")));
 
         var module = File.ReadAllText(Path.Combine(
             root, "src/backend/Modules/Catalog/Tooba.Catalog.Endpoints/CatalogEndpointModule.cs"));
-        Assert.Contains("MapCatalogStoreLandingPageAdminEndpoints()", module, StringComparison.Ordinal);
-        Assert.Contains("MapCatalogStoreLandingPageStorefrontEndpoints()", module, StringComparison.Ordinal);
+        Assert.Contains("MapCatalogStoreMenuAdminEndpoints()", module, StringComparison.Ordinal);
+        Assert.Contains("MapCatalogStoreMenuStorefrontEndpoints()", module, StringComparison.Ordinal);
 
         var program = File.ReadAllText(Path.Combine(root, "src/backend/Host/Tooba.Host/Program.cs"));
-        Assert.DoesNotContain("MapStoreLandingPageEndpoints()", program, StringComparison.Ordinal);
-        Assert.DoesNotContain("StoreLandingPageComposer", program, StringComparison.Ordinal);
+        Assert.DoesNotContain("MapStoreMenuEndpoints()", program, StringComparison.Ordinal);
+        Assert.DoesNotContain("StoreMenuComposer", program, StringComparison.Ordinal);
 
         Assert.True(File.Exists(Path.Combine(
-            root, "src/backend/Modules/Catalog/Tooba.Catalog.Infrastructure/StoreLandingPageWorkspace.cs")));
+            root, "src/backend/Modules/Catalog/Tooba.Catalog.Infrastructure/StoreMenuWorkspace.cs")));
     }
 
     [Fact]

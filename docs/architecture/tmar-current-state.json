@@ -2233,6 +2233,18 @@
     "workflowStop": "USER_REVIEW_HOST_ADMIN_W21_STORE_LANDING_CHECKPOINT",
     "evidence": "docs/evidence/TB-TMAR-HOST-ADMIN-AMC-001-W21-STORE-LANDING/"
   },
+  "hostAdminAmcStoreMenu": {
+    "task": "TB-TMAR-HOST-ADMIN-AMC-001-W22-STORE-MENU",
+    "parentTask": "TB-TMAR-HOST-ADMIN-AMC-001-W21-STORE-LANDING",
+    "state": "HOST_ADMIN_AMC_W22_STORE_MENU_CATALOG_OWNED",
+    "activeHostFolder": "Admin",
+    "owner": "Catalog",
+    "HostAdminFileCount": 36,
+    "StoreAppearance": "DEFERRED",
+    "evacuated": ["StoreMenuEndpoints.cs", "StoreMenuComposer.cs", "StoreMenuDevelopmentSeed.cs"],
+    "workflowStop": "USER_REVIEW_HOST_ADMIN_W22_STORE_MENU_CHECKPOINT",
+    "evidence": "docs/evidence/TB-TMAR-HOST-ADMIN-AMC-001-W22-STORE-MENU/"
+  },
   "hostAdminAmcW18": {
     "task": "TB-TMAR-HOST-ADMIN-AMC-001-W18",
     "parentTask": "TB-TMAR-HOST-ADMIN-AMC-001-W17",

@@ -300,7 +300,7 @@ public sealed class StoreLandingPageWorkspace : IStoreLandingPageWorkspace
 
     private void InvalidateHome() => _cache.Remove(HomeCacheKey(Scope()));
 
-    private string Scope() => CommerceScopeKey(_commerce.Current);
+    private string Scope() => CatalogStoreScope.ScopeKey(_commerce.Current);
 
     private static string PageCacheKey(string scope, string locale, string slug) =>
         $"{PageCachePrefix}{scope}:{locale}:{slug}";
@@ -676,16 +676,5 @@ public sealed class StoreLandingPageWorkspace : IStoreLandingPageWorkspace
         }
 
         return result;
-    }
-
-    private static string CommerceScopeKey(CommerceContext? context)
-    {
-        if (context?.Tenant is { } tenant)
-        {
-            return $"tenant:{tenant.TenantId.Value}";
-        }
-
-        var connection = context?.DatabaseConnectionReference.Value ?? "marketplace";
-        return $"marketplace:{connection}";
     }
 }

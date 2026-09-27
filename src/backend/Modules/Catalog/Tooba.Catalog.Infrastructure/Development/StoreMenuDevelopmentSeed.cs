@@ -1,18 +1,27 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using Tooba.BuildingBlocks;
+using Tooba.Catalog.Application.StoreMenus.Models;
+using Tooba.Catalog.Application.StoreMenus.Ports;
 using Tooba.Catalog.Domain;
 using Tooba.Catalog.Infrastructure.Persistence;
 
-namespace Tooba.Host.Admin;
+namespace Tooba.Catalog.Infrastructure.Development;
 
 /// <summary>دانهٔ idempotent منوی دمو برای بازرسی بعدی کاربر.</summary>
-internal static class StoreMenuDevelopmentSeed
+public static class StoreMenuDevelopmentSeed
 {
+    /// <summary>Slug صفحهٔ دمو Landing (parity با Host LandingPageDevelopmentSeed.PublishedSlug).</summary>
+    public const string LandingDemoSlug = "landing-demo";
+
+    /// <summary>Slug صفحهٔ کمپین Landing (parity با Host LandingPageDevelopmentSeed.CampaignSlug).</summary>
+    public const string LandingCampaignSlug = "landing-campaign";
+
     /// <summary>منوی دمو را اگر نیست می‌سازد و آیتم‌های بازرسی را بدون بازنویسی کامل تکمیل می‌کند.</summary>
     public static async Task ApplyAsync(IServiceProvider provider, CancellationToken cancellationToken = default)
     {
         var catalog = provider.GetRequiredService<CatalogDbContext>();
-        var composer = provider.GetRequiredService<StoreMenuComposer>();
+        var workspace = provider.GetRequiredService<IStoreMenuWorkspace>();
         var existingId = await catalog.StoreMenus.AsNoTracking()
             .Where(x => x.Locale == "fa" && x.MenuKey == StoreMenu.DemoMenuKey)
             .Select(x => (Guid?)x.MenuId)
@@ -24,22 +33,22 @@ internal static class StoreMenuDevelopmentSeed
         }
         else
         {
-            var menu = await composer.CreateAsync(
+            var menu = await workspace.CreateAsync(
                 new StoreMenuWriteRequest("منوی دموی فروشگاه", "fa", StoreMenu.DemoMenuKey, true),
                 cancellationToken);
             menuId = menu.MenuId;
         }
 
-        await EnsureDemoItemsAsync(catalog, composer, menuId, cancellationToken);
+        await EnsureDemoItemsAsync(catalog, workspace, menuId, cancellationToken);
     }
 
     private static async Task EnsureDemoItemsAsync(
         CatalogDbContext catalog,
-        StoreMenuComposer composer,
+        IStoreMenuWorkspace workspace,
         Guid menuId,
         CancellationToken cancellationToken)
     {
-        var detail = await composer.GetAsync(menuId, cancellationToken);
+        var detail = await workspace.GetAsync(menuId, cancellationToken);
         StoreMenuItemAdminView? Find(string label) =>
             detail.Items.FirstOrDefault(x => x.Label == label);
 
@@ -53,11 +62,11 @@ internal static class StoreMenuDevelopmentSeed
 
             try
             {
-                var created = await composer.AddItemAsync(
+                var created = await workspace.AddItemAsync(
                     menuId,
                     new StoreMenuItemWriteRequest(label, linkType, parentId, targetId, null, sortOrder, true),
                     cancellationToken);
-                detail = await composer.GetAsync(menuId, cancellationToken);
+                detail = await workspace.GetAsync(menuId, cancellationToken);
                 return created;
             }
             catch (PlatformHttpException)
@@ -71,7 +80,9 @@ internal static class StoreMenuDevelopmentSeed
 
         try
         {
-            var categoryId = await catalog.Categories.AsNoTracking().Select(x => (Guid?)x.CategoryId).FirstOrDefaultAsync(cancellationToken);
+            var categoryId = await catalog.Categories.AsNoTracking()
+                .Select(x => (Guid?)x.CategoryId)
+                .FirstOrDefaultAsync(cancellationToken);
             StoreMenuItemAdminView? l2 = null;
             if (categoryId is { } cat && group is not null)
             {
@@ -94,7 +105,9 @@ internal static class StoreMenuDevelopmentSeed
         try
         {
             var landing = await catalog.StoreLandingPages.AsNoTracking()
-                .Where(x => x.Locale == "fa" && x.Slug == LandingPageDevelopmentSeed.PublishedSlug && x.Status == StoreLandingPageStatus.Published)
+                .Where(x => x.Locale == "fa"
+                    && x.Slug == LandingDemoSlug
+                    && x.Status == StoreLandingPageStatus.Published)
                 .Select(x => (Guid?)x.PageId)
                 .FirstOrDefaultAsync(cancellationToken);
             if (landing is { } pageId)
@@ -103,7 +116,9 @@ internal static class StoreMenuDevelopmentSeed
             }
 
             var campaign = await catalog.StoreLandingPages.AsNoTracking()
-                .Where(x => x.Locale == "fa" && x.Slug == LandingPageDevelopmentSeed.CampaignSlug && x.Status == StoreLandingPageStatus.Published)
+                .Where(x => x.Locale == "fa"
+                    && x.Slug == LandingCampaignSlug
+                    && x.Status == StoreLandingPageStatus.Published)
                 .Select(x => (Guid?)x.PageId)
                 .FirstOrDefaultAsync(cancellationToken);
             if (campaign is { } campaignId)
@@ -114,37 +129,5 @@ internal static class StoreMenuDevelopmentSeed
         catch (PlatformHttpException)
         {
         }
-    }
-}
-
-/// <summary>اعمال دانه با زمینهٔ فروشگاه توسعه.</summary>
-internal static class StoreMenuDevelopmentSeedHost
-{
-    /// <summary>دانه را روی Host توسعه اجرا می‌کند.</summary>
-    public static async Task ApplyAsync(IServiceProvider services)
-    {
-        await using var scope = services.CreateAsyncScope();
-        var provider = scope.ServiceProvider;
-        var registry = provider.GetRequiredService<ControlPlaneRegistry>();
-        if (!registry.Tenants.TryGetValue("store-alpha", out var tenant) || tenant.Status != TenantStatus.Active)
-        {
-            return;
-        }
-
-        var assigner = provider.GetRequiredService<ICommerceContextAssigner>();
-        assigner.Assign(new CommerceContext(
-            new EditionContext(registry.Edition, registry.DeploymentId),
-            new TenantContext(
-                tenant.TenantId,
-                tenant.Status,
-                tenant.ConnectionReference,
-                tenant.DisplayName,
-                tenant.ThemeReference,
-                tenant.DefaultMarketReference,
-                tenant.Hosts[0],
-                tenant.PrimaryDomain),
-            tenant.ConnectionReference,
-            "menu-dev-seed"));
-        await StoreMenuDevelopmentSeed.ApplyAsync(provider);
     }
 }

@@ -260,4 +260,55 @@ public static class CatalogErrorCodes
 
     /// <summary>Store landing page was not found (preserved landing.page.missing).</summary>
     public const string LandingPageMissing = "landing.page.missing";
+
+    /// <summary>Store menu was not found.</summary>
+    public const string MenuMissing = "menu.missing";
+
+    /// <summary>Menu title is required.</summary>
+    public const string MenuTitleRequired = "menu.title.required";
+
+    /// <summary>Menu key is required.</summary>
+    public const string MenuKeyRequired = "menu.key.required";
+
+    /// <summary>Menu key already exists for locale.</summary>
+    public const string MenuKeyDuplicate = "menu.key.duplicate";
+
+    /// <summary>Menu delete blocked by references.</summary>
+    public const string MenuDeleteReferenced = "menu.delete.referenced";
+
+    /// <summary>Menu item was not found.</summary>
+    public const string MenuItemMissing = "menu.item.missing";
+
+    /// <summary>Menu item label is required.</summary>
+    public const string MenuItemLabelRequired = "menu.item.label.required";
+
+    /// <summary>Menu item parent is invalid.</summary>
+    public const string MenuItemParentInvalid = "menu.item.parent.invalid";
+
+    /// <summary>Menu item tree cycle rejected.</summary>
+    public const string MenuItemCycle = "menu.item.cycle";
+
+    /// <summary>Menu item depth exceeded.</summary>
+    public const string MenuItemDepth = "menu.item.depth";
+
+    /// <summary>Menu item reorder list incomplete.</summary>
+    public const string MenuItemReorderInvalid = "menu.item.reorder.invalid";
+
+    /// <summary>Menu link type invalid.</summary>
+    public const string MenuLinkInvalid = "menu.link.invalid";
+
+    /// <summary>External URL required.</summary>
+    public const string MenuUrlRequired = "menu.url.required";
+
+    /// <summary>External URL unsafe.</summary>
+    public const string MenuUrlUnsafe = "menu.url.unsafe";
+
+    /// <summary>Internal target required.</summary>
+    public const string MenuTargetRequired = "menu.target.required";
+
+    /// <summary>Internal target missing in store.</summary>
+    public const string MenuTargetMissing = "menu.target.missing";
+
+    /// <summary>Disabled menu cannot be header.</summary>
+    public const string MenuHeaderIneligible = "menu.header.ineligible";
 }

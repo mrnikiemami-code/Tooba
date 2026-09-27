@@ -195,7 +195,6 @@ builder.Services.AddScoped<Tooba.Host.Admin.StoreAppearanceSettingsComposer>();
 builder.Services.AddScoped<Tooba.Host.Admin.MerchandisingCampaignAdminComposer>();
 builder.Services.AddScoped<Tooba.Catalog.Application.StoreLandingPages.Ports.IStoreLandingShellPort, Tooba.Host.CatalogAdapters.StoreLandingShellAdapter>();
 builder.Services.AddScoped<Tooba.Catalog.Application.StoreLandingPages.Ports.IStoreLandingMerchandisingPort, Tooba.Host.CatalogAdapters.StoreLandingMerchandisingAdapter>();
-builder.Services.AddScoped<Tooba.Host.Admin.StoreMenuComposer>();
 builder.Services.AddScoped(sp =>
     new CheckoutIdentityGate(
         sp.GetRequiredService<Tooba.Catalog.Infrastructure.Persistence.CatalogDbContext>(),
@@ -404,7 +403,7 @@ if (app.Environment.IsDevelopment())
 
         try
         {
-            await StoreMenuDevelopmentSeedHost.ApplyAsync(app.Services);
+            await Tooba.Host.Development.StoreMenuDevelopmentSeedHost.ApplyAsync(app.Services);
         }
         catch (Exception ex)
         {
@@ -471,7 +470,6 @@ app.MapHoldPolicySettingsEndpoints();
 app.MapCheckoutIdentitySettingsEndpoints();
 app.MapStoreAppearanceSettingsEndpoints();
 app.MapMerchandisingCampaignAdminEndpoints();
-app.MapStoreMenuEndpoints();
 app.MapReservationPolicyAdminEndpoints();
 app.MapAdminPanelEndpoints();
 app.MapOrderEndpoints();

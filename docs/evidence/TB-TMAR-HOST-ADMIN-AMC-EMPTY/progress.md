@@ -1,8 +1,8 @@
 # Host/Admin empty progress (AMC)
 
-## Current Admin `*.cs` count: **39** (was 52)
+## Current Admin `*.cs` count: **36** (was 39)
 
-Live disposition (reconciled with Analyze): `disposition-map-live-39.md`.
+Live disposition (reconciled with Analyze): `disposition-map-remaining-52.md` / session maps.
 
 ### Evacuated this session
 | Slice | Owner | Notes |
@@ -11,12 +11,12 @@ Live disposition (reconciled with Analyze): `disposition-map-live-39.md`.
 | CatalogDemo/* (10) | Catalog | Development under Catalog.Infrastructure |
 | CheckoutAbuse settings | Catalog | Settings CQRS + ApiResponseFactory |
 | StoreLandingPage Endpoints+Composer | Catalog | Host adapters for shell/merch |
+| **StoreMenu*** (3) | Catalog | Workspace + Admin/Storefront endpoints; seed in Catalog.Infrastructure/Development |
 
 ### Next (from Analyze, risk order)
-1. **StoreMenu*** → Catalog
-2. CheckoutIdentity → Catalog; ReservationPolicy* → Order
-3. ProductWorkspace W21 lifecycle (RETAIN_PARTIAL files)
-4. Merchandising → Promotion (Contracts first)
+1. CheckoutIdentity → Catalog; ReservationPolicy* → Order
+2. ProductWorkspace W21 lifecycle (RETAIN_PARTIAL files)
+3. Merchandising → Promotion (Contracts first)
 
 ### Cannot empty yet
 KEEP platform (16) · StoreAppearance BLOCK · HoldPolicy BLOCK · ProductWorkspace* until W24 · remaining MOVE queue.

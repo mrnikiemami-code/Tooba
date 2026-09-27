@@ -20,6 +20,7 @@ using Tooba.Catalog.Application.CategoryChanges.Ports;
 using Tooba.Catalog.Application.ProductMedia.Ports;
 using Tooba.Catalog.Application.Brands.Ports;
 using Tooba.Catalog.Application.StoreLandingPages.Ports;
+using Tooba.Catalog.Application.StoreMenus.Ports;
 using Tooba.Catalog.Application.ProductHistory.Ports;
 using Tooba.Catalog.Application.ProductPublishing.Ports;
 using Tooba.Catalog.Application.ProductSeo.Ports;
@@ -70,6 +71,7 @@ public sealed class CatalogModule : IToobaModule
         services.AddScoped<IStoreLandingPageDirectory, StoreLandingPageDirectory>();
         services.AddScoped<IStoreLandingPageWorkspace, StoreLandingPageWorkspace>();
         services.AddScoped<IStoreMenuDirectory, StoreMenuDirectory>();
+        services.AddScoped<IStoreMenuWorkspace, StoreMenuWorkspace>();
         services.AddScoped<IStoreAppearanceSettingsDirectory, StoreAppearanceSettingsDirectory>();
         services.AddScoped<IStoreQuantitySettingsDirectory, StoreQuantitySettingsDirectory>();
         services.AddScoped<IStoreCheckoutAbuseSettingsDirectory, StoreCheckoutAbuseSettingsDirectory>();

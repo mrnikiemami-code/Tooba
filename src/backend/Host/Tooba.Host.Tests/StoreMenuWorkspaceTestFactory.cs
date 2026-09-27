@@ -7,15 +7,14 @@ using Tooba.BuildingBlocks;
 using Tooba.Catalog.Application;
 using Tooba.Catalog.Infrastructure;
 using Tooba.Catalog.Infrastructure.Persistence;
-using Tooba.Host.Admin;
 
 namespace Tooba.Host.Tests;
 
-/// <summary>ساخت StoreMenuComposer با MediatR + Directory.</summary>
-internal static class StoreMenuComposerTestFactory
+/// <summary>ساخت StoreMenuWorkspace با MediatR + Directory.</summary>
+internal static class StoreMenuWorkspaceTestFactory
 {
-    /// <summary>Composer و Catalog در-حافظه.</summary>
-    public static StoreMenuComposer Create(out CatalogDbContext catalog)
+    /// <summary>Workspace و Catalog در-حافظه.</summary>
+    public static StoreMenuWorkspace Create(out CatalogDbContext catalog)
     {
         catalog = new CatalogDbContext(new DbContextOptionsBuilder<CatalogDbContext>()
             .UseInMemoryDatabase(Guid.NewGuid().ToString("N"))
@@ -28,7 +27,11 @@ internal static class StoreMenuComposerTestFactory
         services.AddValidatorsFromAssembly(typeof(CreateStoreMenuCommand).Assembly);
         services.AddToobaCqrsFoundation(typeof(CreateStoreMenuCommand).Assembly);
         var provider = services.BuildServiceProvider();
-        return new StoreMenuComposer(catalog, commerce, new MemoryCache(new MemoryCacheOptions()), provider.GetRequiredService<ISender>());
+        return new StoreMenuWorkspace(
+            catalog,
+            commerce,
+            new MemoryCache(new MemoryCacheOptions()),
+            provider.GetRequiredService<ISender>());
     }
 
     private sealed class FixedMenuCommerce : ICurrentCommerceContext

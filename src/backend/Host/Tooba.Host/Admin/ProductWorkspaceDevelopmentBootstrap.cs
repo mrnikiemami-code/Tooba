@@ -166,7 +166,7 @@ internal static class ProductWorkspaceDevelopmentBootstrap
             await PageCompositionDevelopmentSeed.ApplyAsync(provider);
             await StoryDevelopmentSeed.ApplyAsync(provider);
             await LandingPageDevelopmentSeed.ApplyAsync(provider);
-            await StoreMenuDevelopmentSeed.ApplyAsync(provider);
+            await Tooba.Catalog.Infrastructure.Development.StoreMenuDevelopmentSeed.ApplyAsync(provider);
             await MerchandisingCampaignDevelopmentSeed.EnsureAsync(provider, CancellationToken.None);
             return;
         }
@@ -292,7 +292,7 @@ internal static class ProductWorkspaceDevelopmentBootstrap
         await PageCompositionDevelopmentSeed.ApplyAsync(provider, cancellation);
         await StoryDevelopmentSeed.ApplyAsync(provider, cancellation);
         await LandingPageDevelopmentSeed.ApplyAsync(provider, cancellation);
-        await StoreMenuDevelopmentSeed.ApplyAsync(provider, cancellation);
+        await Tooba.Catalog.Infrastructure.Development.StoreMenuDevelopmentSeed.ApplyAsync(provider, cancellation);
         await EnsureAdminR3PreviewSeedAsync(provider, cancellation);
         await MerchandisingCampaignDevelopmentSeed.EnsureAsync(provider, cancellation);
     }

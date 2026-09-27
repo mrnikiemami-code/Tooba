@@ -7,6 +7,7 @@ using Tooba.Catalog.Endpoints.Admin.Attributes.Schema;
 using Tooba.Catalog.Endpoints.Admin.Brands;
 using Tooba.Catalog.Endpoints.Admin.CatalogDemo;
 using Tooba.Catalog.Endpoints.Admin.StoreLandingPages;
+using Tooba.Catalog.Endpoints.Admin.StoreMenus;
 using Tooba.Catalog.Endpoints.Admin.Categories;
 using Tooba.Catalog.Endpoints.Admin.CategoryChanges;
 using Tooba.Catalog.Endpoints.Admin.Facets;
@@ -25,6 +26,7 @@ using Tooba.Catalog.Endpoints.Storefront.Categories;
 using Tooba.Catalog.Endpoints.Storefront.Facets;
 using Tooba.Catalog.Endpoints.Storefront.MegaMenu;
 using Tooba.Catalog.Endpoints.Storefront.StoreLandingPages;
+using Tooba.Catalog.Endpoints.Storefront.StoreMenus;
 
 namespace Tooba.Catalog.Endpoints;
 
@@ -57,6 +59,8 @@ public static class CatalogEndpointModule
         app.MapCatalogBrandOptionsAdminEndpoints();
         app.MapCatalogStoreLandingPageAdminEndpoints();
         app.MapCatalogStoreLandingPageStorefrontEndpoints();
+        app.MapCatalogStoreMenuAdminEndpoints();
+        app.MapCatalogStoreMenuStorefrontEndpoints();
         app.MapCatalogDemoDevEndpoints();
         return app;
     }
