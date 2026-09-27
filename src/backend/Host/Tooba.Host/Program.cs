@@ -172,6 +172,7 @@ builder.Services.AddScoped<
     Tooba.Order.Application.Admin.Operations.Ports.IOrderAdminEffectiveAccessReader,
     Tooba.Host.Admin.HostOrderAdminEffectiveAccessReader>();
 builder.Services.AddScoped<Tooba.Catalog.Application.IStoreLandingExternalReferenceGate, Tooba.Host.CatalogAdapters.MerchandisingStoreLandingReferenceGate>();
+builder.Services.AddScoped<Tooba.Catalog.Application.Development.ICatalogAttributeSchemaSellableEnricher, Tooba.Host.Development.CatalogAttributeSchemaSellableEnricher>();
 builder.Services.AddToobaModules(builder.Configuration, builder.Environment);
 builder.Services.AddOfferModuleCallTracing();
 builder.Services.Configure<Tooba.Order.Application.ReservationCycle.Contracts.ReservationCycleOptions>(
@@ -349,11 +350,11 @@ if (app.Environment.IsDevelopment())
             await StorefrontDemoCatalogBootstrap.ApplyAsync(app.Services);
             try
             {
-                await CatalogAttributeSchemaDevelopmentBootstrap.ApplyAsync(app.Services);
+                await CatalogAttributeSchemaDevelopmentSeedHost.ApplyAsync(app.Services);
             }
             catch (Exception ex)
             {
-                app.Logger.LogError(ex, "CatalogAttributeSchemaDevelopmentBootstrap failed; Host continues without attribute schema demo.");
+                app.Logger.LogError(ex, "CatalogAttributeSchemaDevelopmentSeed failed; Host continues without attribute schema demo.");
             }
         }
         else

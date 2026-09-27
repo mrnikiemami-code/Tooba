@@ -2450,6 +2450,44 @@
     "workflowStop": "USER_REVIEW_HOST_ADMIN_W32_PW_SHELL_FINAL_CHECKPOINT",
     "evidence": "docs/evidence/TB-TMAR-HOST-ADMIN-AMC-001-W32-PW-SHELL-FINAL/"
   },
+  "hostAdminAmcTemplateSeeds": {
+    "task": "TB-TMAR-HOST-ADMIN-AMC-001-W34-TEMPLATE-SEEDS",
+    "parentTask": "TB-TMAR-HOST-ADMIN-AMC-001-W32-PW-SHELL-FINAL",
+    "state": "HOST_ADMIN_TEMPLATE_ATTRIBUTE_SEEDS_CATALOG_OWNED",
+    "activeHostFolder": "Admin",
+    "owner": "Catalog",
+    "evacuatedAdminFiles": [
+      "FashionTemplateCatalogSeed.cs",
+      "IndustryBatchATemplateCatalogSeed.cs",
+      "IndustryBatchBTemplateCatalogSeed.cs",
+      "IndustryBatchCTemplateCatalogSeed.cs",
+      "CatalogAttributeSchemaDevelopmentBootstrap.cs"
+    ],
+    "catalogDevelopmentSeeds": [
+      "FashionTemplateCatalogSeed.cs",
+      "IndustryBatchATemplateCatalogSeed.cs",
+      "IndustryBatchBTemplateCatalogSeed.cs",
+      "IndustryBatchCTemplateCatalogSeed.cs",
+      "CatalogAttributeSchemaDevelopmentSeed.cs"
+    ],
+    "hostCommerceWrappers": [
+      "Host/Development/FashionTemplateCatalogSeedHost.cs",
+      "Host/Development/IndustryBatchATemplateCatalogSeedHost.cs",
+      "Host/Development/IndustryBatchBTemplateCatalogSeedHost.cs",
+      "Host/Development/IndustryBatchCTemplateCatalogSeedHost.cs",
+      "Host/Development/CatalogAttributeSchemaDevelopmentSeedHost.cs"
+    ],
+    "hostSellableEnricher": "Host/Development/CatalogAttributeSchemaSellableEnricher.cs",
+    "sellableEnricherInterface": "Catalog.Application.Development.ICatalogAttributeSchemaSellableEnricher",
+    "HostAdminFileCount": 18,
+    "partialHostRetention": "StoreAppearance BLOCK + HoldPolicy BLOCK + platform KEEP",
+    "StoreAppearance": "DEFERRED",
+    "HoldPolicy": "DEFERRED",
+    "schemaMigrationState": "NONE",
+    "frontendState": "GUARD_PATH_UPDATED_INDUSTRY_BATCH_C",
+    "workflowStop": "USER_REVIEW_HOST_ADMIN_W34_TEMPLATE_SEEDS_CHECKPOINT",
+    "evidence": "docs/evidence/TB-TMAR-HOST-ADMIN-AMC-001-W34-TEMPLATE-SEEDS/"
+  },
   "hostAdminAmcW18": {
     "task": "TB-TMAR-HOST-ADMIN-AMC-001-W18",
     "parentTask": "TB-TMAR-HOST-ADMIN-AMC-001-W17",

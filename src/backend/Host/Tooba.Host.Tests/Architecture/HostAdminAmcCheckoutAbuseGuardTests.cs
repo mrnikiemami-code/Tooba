@@ -40,7 +40,7 @@ public sealed class HostAdminAmcCheckoutAbuseGuardTests
         var root = FindRepoRoot();
         var admin = Path.Combine(root, "src/backend/Host/Tooba.Host/Admin");
         var adminCount = Directory.GetFiles(admin, "*.cs", SearchOption.AllDirectories).Length;
-        Assert.Equal(23, adminCount);
+        Assert.Equal(18, adminCount);
         Assert.True(File.Exists(Path.Combine(admin, "StoreAppearanceSettingsEndpoints.cs")));
     }
 

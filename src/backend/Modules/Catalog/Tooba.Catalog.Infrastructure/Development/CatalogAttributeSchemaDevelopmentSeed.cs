@@ -1,76 +1,34 @@
 ﻿#pragma warning disable CS1591
 using Microsoft.EntityFrameworkCore;
-using Tooba.BuildingBlocks;
+using Microsoft.Extensions.DependencyInjection;
 using Tooba.Catalog.Application;
+using Tooba.Catalog.Application.Development;
 using Tooba.Catalog.Domain;
 using Tooba.Catalog.Infrastructure.Persistence;
-using Tooba.Inventory.Application.Ports;
-using Tooba.Inventory.Application.Checkout;
-using Tooba.Inventory.Application.Orders;
-using Tooba.Inventory.Contracts.Returns;
-using Tooba.Inventory.Contracts.Availability;
-using Tooba.Inventory.Contracts.Checkout;
-using Tooba.Inventory.Contracts.Errors;
-using Tooba.Inventory.Contracts.Orders;
-using Tooba.Inventory.Contracts.Seller;
-using Tooba.Inventory.Domain.Aggregates;
-using Tooba.Inventory.Domain.ValueObjects;
-using Tooba.Inventory.Domain.Events;
-using Tooba.Offer.Application.Ports;
-using Tooba.Offer.Contracts.Dtos;
-using Tooba.Offer.Contracts.Ports;
-using Tooba.Party.Application;
-using Tooba.Party.Infrastructure.Persistence;
-using Tooba.Pricing.Application;
-using Tooba.Tax.Application;
-using Tooba.Tax.Domain;
 
-namespace Tooba.Host.Admin;
+namespace Tooba.Catalog.Infrastructure.Development;
 
 /// <summary>
 /// دانهٔ Development برای Category Attribute Schema + محورهای Variant موبایل.
 /// Idempotent است؛ ماتریس کامل ترکیبی تولید نمی‌کند و Brand را به‌عنوان attribute تکرار نمی‌کند.
+/// Offer/Pricing/Inventory/Tax/Party via <see cref="ICatalogAttributeSchemaSellableEnricher"/>.
 /// </summary>
-public static class CatalogAttributeSchemaDevelopmentBootstrap
+public static class CatalogAttributeSchemaDevelopmentSeed
 {
     public const string MobileCategoryMarker = "schema-mobile-category";
     public const string DemoProductSlug = "schema-mobile-demo-phone";
-    private const string DemoSellerSkuPrefix = "SCHEMA-PHONE";
 
     /// <summary>
-    /// schema موبایل و یک محصول نمونه را در صورت نبودن درج می‌کند.
+    /// schema موبایل و یک محصول نمونه را در صورت نبودن درج می‌کند؛ سپس enricher فروش‌پذیری را صدا می‌زند.
     /// </summary>
-    public static async Task ApplyAsync(IServiceProvider services)
+    public static async Task ApplyAsync(IServiceProvider provider, CancellationToken cancellationToken = default)
     {
-        await using var scope = services.CreateAsyncScope();
-        var provider = scope.ServiceProvider;
-        var registry = provider.GetRequiredService<ControlPlaneRegistry>();
-        if (!registry.Tenants.TryGetValue("store-alpha", out var tenant) || tenant.Status != TenantStatus.Active)
-        {
-            return;
-        }
-
-        var assigner = provider.GetRequiredService<ICommerceContextAssigner>();
-        assigner.Assign(new CommerceContext(
-            new EditionContext(registry.Edition, registry.DeploymentId),
-            new TenantContext(
-                tenant.TenantId,
-                tenant.Status,
-                tenant.ConnectionReference,
-                tenant.DisplayName,
-                tenant.ThemeReference,
-                tenant.DefaultMarketReference,
-                tenant.Hosts[0],
-                tenant.PrimaryDomain),
-            tenant.ConnectionReference,
-            "catalog-attribute-schema-seed"));
-
         var catalog = provider.GetRequiredService<ICatalogDirectory>();
         var db = provider.GetRequiredService<CatalogDbContext>();
 
-        if (await db.Products.AnyAsync(p => p.SlugSeam == DemoProductSlug))
+        if (await db.Products.AnyAsync(p => p.SlugSeam == DemoProductSlug, cancellationToken))
         {
-            await EnsurePublishedAndSellableAsync(provider, db, CancellationToken.None);
+            await InvokeEnricherAsync(provider, cancellationToken);
             return;
         }
 
@@ -124,143 +82,30 @@ public static class CatalogAttributeSchemaDevelopmentBootstrap
             DemoProductSlug,
             null,
             new Dictionary<string, string> { ["fa-IR"] = "گوشی نمونه schema", ["en-US"] = "Schema demo phone" },
-            CancellationToken.None);
-        await catalog.AssignCategoryAsync(product.ProductId, mobile, CancellationToken.None);
-        await catalog.SetProductAttributeAsync(product.ProductId, screenId, "6.1", null, CancellationToken.None);
-        await catalog.SetProductAttributeAsync(product.ProductId, ramId, "ignored", ram8, CancellationToken.None);
-        await catalog.SetProductVariantAxesAsync(product.ProductId, [colorId, storageId], CancellationToken.None);
+            cancellationToken);
+        await catalog.AssignCategoryAsync(product.ProductId, mobile, cancellationToken);
+        await catalog.SetProductAttributeAsync(product.ProductId, screenId, "6.1", null, cancellationToken);
+        await catalog.SetProductAttributeAsync(product.ProductId, ramId, "ignored", ram8, cancellationToken);
+        await catalog.SetProductVariantAxesAsync(product.ProductId, [colorId, storageId], cancellationToken);
 
         // چند ترکیب نمونه برای اثبات محورها؛ FULL_VARIANT_MATRIX تولید نمی‌شود.
-        await catalog.CreateVariantAsync(product.ProductId, "PHONE-BLK-128", [(colorId, "ignored", black), (storageId, "ignored", storage128)], CancellationToken.None);
-        await catalog.CreateVariantAsync(product.ProductId, "PHONE-BLU-256", [(colorId, "ignored", blue), (storageId, "ignored", storage256)], CancellationToken.None);
+        await catalog.CreateVariantAsync(product.ProductId, "PHONE-BLK-128", [(colorId, "ignored", black), (storageId, "ignored", storage128)], cancellationToken);
+        await catalog.CreateVariantAsync(product.ProductId, "PHONE-BLU-256", [(colorId, "ignored", blue), (storageId, "ignored", storage256)], cancellationToken);
         await catalog.AttachMediaReferenceAsync(
-            product.ProductId, Guid.Parse("aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"), CancellationToken.None);
+            product.ProductId, Guid.Parse("aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"), cancellationToken);
         await ProductPublishPrep.EnsureMinimalSeoForPublishAsync(
-            catalog, product.ProductId, "توضیح سئو گوشی نمونه schema", CancellationToken.None);
-        await catalog.PublishCategoryAsync(mobile, CancellationToken.None);
-        await catalog.PublishProductAsync(product.ProductId, CancellationToken.None);
-        await EnsurePublishedAndSellableAsync(provider, db, CancellationToken.None);
+            catalog, product.ProductId, "توضیح سئو گوشی نمونه schema", cancellationToken);
+        await catalog.PublishCategoryAsync(mobile, cancellationToken);
+        await catalog.PublishProductAsync(product.ProductId, cancellationToken);
+        await InvokeEnricherAsync(provider, cancellationToken);
     }
 
-    /// <summary>
-    /// انتشار و Offer/قیمت/موجودی حداقلی برای PDP سازگار با فروش فعلی؛ ماتریس کامل نیست.
-    /// </summary>
-    private static async Task EnsurePublishedAndSellableAsync(
-        IServiceProvider provider,
-        CatalogDbContext catalogDb,
-        CancellationToken cancellationToken)
+    private static async Task InvokeEnricherAsync(IServiceProvider provider, CancellationToken cancellationToken)
     {
-        var catalog = provider.GetRequiredService<ICatalogDirectory>();
-        var product = await catalogDb.Products.SingleAsync(p => p.SlugSeam == DemoProductSlug, cancellationToken);
-        var categoryIds = await catalogDb.ProductCategories.AsNoTracking()
-            .Where(x => x.ProductId == product.ProductId)
-            .Select(x => x.CategoryId)
-            .ToListAsync(cancellationToken);
-        foreach (var categoryId in categoryIds)
+        var enricher = provider.GetService<ICatalogAttributeSchemaSellableEnricher>();
+        if (enricher is not null)
         {
-            await catalog.PublishCategoryAsync(categoryId, cancellationToken);
-        }
-
-        if (product.Status != CatalogPublicationStatus.Published)
-        {
-            var parentById = await catalogDb.Categories.AsNoTracking()
-                .ToDictionaryAsync(x => x.CategoryId, x => x.ParentCategoryId, cancellationToken);
-            var assignable = categoryIds.Count > 0
-                && categoryIds.All(id => CatalogCategoryTreeRules.IsAssignableProductCategory(id, parentById));
-            if (assignable)
-            {
-                if (!await catalogDb.MediaReferences.AsNoTracking()
-                        .AnyAsync(m => m.ProductId == product.ProductId, cancellationToken))
-                {
-                    await catalog.AttachMediaReferenceAsync(
-                        product.ProductId,
-                        Guid.Parse("aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"),
-                        CancellationToken.None);
-                }
-
-                await ProductPublishPrep.EnsureMinimalSeoForPublishAsync(
-                    catalog, product.ProductId, "توضیح سئو گوشی نمونه schema", CancellationToken.None);
-                await catalog.PublishProductAsync(product.ProductId, CancellationToken.None);
-            }
-        }
-
-        var variants = await catalogDb.Variants.AsNoTracking()
-            .Where(v => v.ProductId == product.ProductId)
-            .OrderBy(v => v.CatalogCodeSeam)
-            .ToListAsync(cancellationToken);
-        if (variants.Count == 0)
-        {
-            return;
-        }
-
-        var offers = provider.GetRequiredService<MediatR.ISender>();
-        var offerQueries = provider.GetRequiredService<IOfferQueryGateway>();
-        var parties = provider.GetRequiredService<IPartyDirectory>();
-        var partyDb = provider.GetRequiredService<PartyDbContext>();
-        var prices = provider.GetRequiredService<IPriceDirectory>();
-        var tax = provider.GetRequiredService<ITaxDirectory>();
-        var inventory = provider.GetRequiredService<IInventoryDirectory>();
-        var inventoryQuery = provider.GetRequiredService<IInventoryQueryGateway>();
-
-        var seller = await partyDb.Parties.AsNoTracking()
-            .OrderBy(p => p.CreatedAt)
-            .FirstOrDefaultAsync(cancellationToken);
-        Guid sellerPartyId;
-        if (seller is null)
-        {
-            var created = await parties.CreateOrganizationAsync(
-                "فروشنده schema موبایل",
-                "Schema Mobile Seller Legal",
-                cancellationToken);
-            sellerPartyId = created.PartyId;
-        }
-        else
-        {
-            sellerPartyId = seller.PartyId;
-        }
-
-        var start = DateTimeOffset.Parse("2026-01-01T00:00:00Z");
-        var amount = 12_500_000m;
-        var locationCode = "WH-SCHEMA-MOBILE";
-        var location = await inventoryQuery.FindLocationByCodeAsync(locationCode, cancellationToken);
-        var locationId = location?.LocationId
-            ?? await inventory.CreateLocationAsync(locationCode, "انبار schema موبایل", cancellationToken);
-
-        foreach (var variant in variants)
-        {
-            var sku = $"{DemoSellerSkuPrefix}-{variant.CatalogCodeSeam ?? variant.VariantId.ToString("N")[..8]}";
-            if (await offerQueries.ExistsBySellerSkuAsync(sellerPartyId, sku, cancellationToken))
-            {
-                continue;
-            }
-
-            var created = await offers.Send(new Tooba.Offer.Application.Commands.CreateOffer.CreateOfferCommand(
-                variant.VariantId, sellerPartyId, SalesChannel.Marketplace, sku), cancellationToken);
-            if (created.IsFailure)
-                throw new InvalidOperationException(created.FirstError.Code);
-            var offer = created.Value;
-            var activated = await offers.Send(new Tooba.Offer.Application.Commands.ActivateOffer.ActivateOfferCommand(
-                offer.OfferId, sellerPartyId), cancellationToken);
-            if (activated.IsFailure)
-                throw new InvalidOperationException(activated.FirstError.Code);
-            var price = await prices.CreatePriceAsync(
-                offer.OfferId,
-                "IR",
-                SalesChannel.Marketplace,
-                amount,
-                "IRR",
-                start,
-                null,
-                cancellationToken);
-            await prices.ActivateAsync(price.PriceId, cancellationToken);
-
-            var taxCode = $"sch-{offer.OfferId:N}"[..20];
-            var taxCategory = await tax.CreateCategoryAsync(taxCode, "schema phone", cancellationToken);
-            await tax.AssignOfferCategoryAsync(offer.OfferId, taxCategory.CategoryId, cancellationToken);
-
-            var stock = await inventory.OpenPositionAsync(offer.OfferId, locationId, cancellationToken);
-            await inventory.AdjustAsync(stock, StockAdjustmentKind.Increase, 5, "schema-seed", null, cancellationToken);
-            amount += 500_000m;
+            await enricher.EnsurePublishedAndSellableAsync(cancellationToken);
         }
     }
 

@@ -2,11 +2,11 @@
 using System.Globalization;
 using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
-using Tooba.BuildingBlocks;
+using Microsoft.Extensions.DependencyInjection;
 using Tooba.Catalog.Domain;
 using Tooba.Catalog.Infrastructure.Persistence;
 
-namespace Tooba.Host.Admin;
+namespace Tooba.Catalog.Infrastructure.Development;
 
 /// <summary>
 /// Batch A industry Template Catalog seeds (TB-P10-T022-R12A).
@@ -831,35 +831,4 @@ public static class IndustryBatchATemplateCatalogSeed
         ParityVariantAttrValue: ToolsHardwareTemplateParityIds.VariantAttrValue,
         ParityProductHistory: ToolsHardwareTemplateParityIds.ProductHistory,
         ParityCategorySlugHistory: ToolsHardwareTemplateParityIds.CategorySlugHistory);
-}
-
-/// <summary>اعمال دانه Batch A روی tenant توسعه.</summary>
-public static class IndustryBatchATemplateCatalogSeedHost
-{
-    public static async Task ApplyAsync(IServiceProvider root)
-    {
-        await using var scope = root.CreateAsyncScope();
-        var provider = scope.ServiceProvider;
-        var registry = provider.GetRequiredService<ControlPlaneRegistry>();
-        if (!registry.Tenants.TryGetValue("store-alpha", out var tenant) || tenant.Status != TenantStatus.Active)
-        {
-            return;
-        }
-
-        var assigner = provider.GetRequiredService<ICommerceContextAssigner>();
-        assigner.Assign(new CommerceContext(
-            new EditionContext(registry.Edition, registry.DeploymentId),
-            new TenantContext(
-                tenant.TenantId,
-                tenant.Status,
-                tenant.ConnectionReference,
-                tenant.DisplayName,
-                tenant.ThemeReference,
-                tenant.DefaultMarketReference,
-                tenant.Hosts[0],
-                tenant.PrimaryDomain),
-            tenant.ConnectionReference,
-            "industry-batch-a-template-catalog-seed"));
-        await IndustryBatchATemplateCatalogSeed.ApplyAsync(provider);
-    }
 }

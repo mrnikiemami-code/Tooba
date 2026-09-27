@@ -1,4 +1,4 @@
-import assert from "node:assert/strict";
+﻿import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -76,10 +76,10 @@ describe("TB-P10-T022-R12C Batch C industry templates", () => {
 
   it("beauty seed/demo copy avoids medical-therapeutic claims", () => {
     const seed = readFileSync(
-      join(root, "src/backend/Host/Tooba.Host/Admin/IndustryBatchCTemplateCatalogSeed.cs"),
+      join(root, "src/backend/Modules/Catalog/Tooba.Catalog.Infrastructure/Development/IndustryBatchCTemplateCatalogSeed.cs"),
       "utf8",
     );
-    const beautySlice = seed.slice(seed.indexOf("CreateBeautyPack"), seed.indexOf("IndustryBatchCTemplateCatalogSeedHost"));
+    const beautySlice = seed.slice(seed.indexOf("CreateBeautyPack"), seed.length);
     assert.doesNotMatch(beautySlice, /درمان|دارو|پزشکی|therapeutic|medical|cure|heal/i);
     assert.match(beautySlice, /ژل شستشوی صورت ملایم/);
   });

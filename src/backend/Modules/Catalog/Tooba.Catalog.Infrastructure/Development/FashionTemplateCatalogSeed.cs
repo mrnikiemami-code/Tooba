@@ -1,11 +1,11 @@
 ﻿#pragma warning disable CS1591
 using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
-using Tooba.BuildingBlocks;
+using Microsoft.Extensions.DependencyInjection;
 using Tooba.Catalog.Domain;
 using Tooba.Catalog.Infrastructure.Persistence;
 
-namespace Tooba.Host.Admin;
+namespace Tooba.Catalog.Infrastructure.Development;
 
 /// <summary>دانهٔ idempotent Template Catalog برای قالب Fashion (TB-P10-T022-R5).</summary>
 public static class FashionTemplateCatalogSeed
@@ -517,36 +517,5 @@ public static class FashionTemplateMediaPaths
         }
 
         return null;
-    }
-}
-
-/// <summary>اعمال دانه روی tenant توسعه.</summary>
-public static class FashionTemplateCatalogSeedHost
-{
-    public static async Task ApplyAsync(IServiceProvider root)
-    {
-        await using var scope = root.CreateAsyncScope();
-        var provider = scope.ServiceProvider;
-        var registry = provider.GetRequiredService<ControlPlaneRegistry>();
-        if (!registry.Tenants.TryGetValue("store-alpha", out var tenant) || tenant.Status != TenantStatus.Active)
-        {
-            return;
-        }
-
-        var assigner = provider.GetRequiredService<ICommerceContextAssigner>();
-        assigner.Assign(new CommerceContext(
-            new EditionContext(registry.Edition, registry.DeploymentId),
-            new TenantContext(
-                tenant.TenantId,
-                tenant.Status,
-                tenant.ConnectionReference,
-                tenant.DisplayName,
-                tenant.ThemeReference,
-                tenant.DefaultMarketReference,
-                tenant.Hosts[0],
-                tenant.PrimaryDomain),
-            tenant.ConnectionReference,
-            "fashion-template-catalog-seed"));
-        await FashionTemplateCatalogSeed.ApplyAsync(provider);
     }
 }

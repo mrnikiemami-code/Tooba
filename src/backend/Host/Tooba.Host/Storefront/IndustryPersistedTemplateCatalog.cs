@@ -1,4 +1,4 @@
-using Tooba.Host.Admin;
+using Tooba.Catalog.Infrastructure.Development;
 
 namespace Tooba.Host.Storefront;
 

@@ -88,11 +88,11 @@ public sealed class HostAdminAmcW33MerchandisingGuardTests
     }
 
     [Fact]
-    public void Host_Admin_count_23_StoreAppearance_deferred_PW_shells_ABSENT()
+    public void Host_Admin_count_18_StoreAppearance_deferred_PW_shells_ABSENT()
     {
         var root = FindRepoRoot();
         var admin = Path.Combine(root, "src/backend/Host/Tooba.Host/Admin");
-        Assert.Equal(23, Directory.GetFiles(admin, "*.cs", SearchOption.AllDirectories).Length);
+        Assert.Equal(18, Directory.GetFiles(admin, "*.cs", SearchOption.AllDirectories).Length);
         Assert.True(File.Exists(Path.Combine(admin, "StoreAppearanceSettingsEndpoints.cs")));
         Assert.False(File.Exists(Path.Combine(admin, "ProductWorkspaceEndpoints.cs")));
         Assert.False(File.Exists(Path.Combine(admin, "MerchandisingCampaignAdminEndpoints.cs")));
