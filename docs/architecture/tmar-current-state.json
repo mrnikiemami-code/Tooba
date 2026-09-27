@@ -1282,6 +1282,41 @@
     "workflowStop": "USER_REVIEW_HOST_DEVELOPMENT_CHECKPOINT",
     "evidence": "docs/evidence/TB-TMAR-HOST-DEVELOPMENT-AMC-001/"
   },
+  "hostCachingArchitectDirect": {
+    "execution": "ARCHITECT_DIRECT_ANALYZE_MIGRATE_CERTIFY",
+    "parentCommit": "0139fb89fcf7dfe48e957bb4aad62a575a41413f",
+    "state": "HOST_CACHING_PLATFORM_INFRASTRUCTURE_RETAINED_WITH_RUNTIME_REGISTRATION_REPAIR",
+    "productionFileCountBefore": 4,
+    "productionFileCountAfter": 4,
+    "retainedFiles": [
+      "Caching/CacheHostOptions.cs",
+      "Caching/CacheInstrumentation.cs",
+      "Caching/CacheRegistration.cs",
+      "Caching/MemoryToobaCache.cs"
+    ],
+    "retainedClassifications": {
+      "CacheHostOptions.cs": "RETAINED_ALLOWED_PLATFORM_CACHE_CONFIGURATION",
+      "CacheInstrumentation.cs": "RETAINED_ALLOWED_PLATFORM_CACHE_OBSERVABILITY",
+      "CacheRegistration.cs": "RETAINED_ALLOWED_PLATFORM_CACHE_COMPOSITION",
+      "MemoryToobaCache.cs": "RETAINED_ALLOWED_PLATFORM_CACHE_PROVIDER"
+    },
+    "platformCacheOwnershipState": "HOST_LEGAL_GENERIC_PLATFORM_INFRASTRUCTURE",
+    "moduleBusinessAuthorityState": "ZERO",
+    "modulePersistenceAuthorityState": "ZERO",
+    "runtimeRegistrationRepair": "Program.cs now calls AddToobaCache after CacheHostOptions validation registration",
+    "telemetryState": "CANONICAL_ToobaTelemetry_Meter_BOUNDED_LABELS",
+    "providerState": "MEMORY_OR_NONE_REDIS_REJECTED",
+    "schemaMigrationState": "NONE",
+    "frontendState": "UNCHANGED",
+    "validationState": "STATIC_ARCHITECT_VERIFIED_GUARD_ADDED_LOCAL_DOTNET_EXECUTION_UNAVAILABLE",
+    "remainingBlockers": [
+      "Focused dotnet build/test execution must be run in repository-capable environment before claiming runtime PASS"
+    ],
+    "residualDebt": [],
+    "nextHostFolderStarted": false,
+    "workflowStop": "USER_REVIEW_HOST_CACHING_CHECKPOINT",
+    "evidence": "docs/evidence/TB-TMAR-HOST-CACHING-ARCHITECT-DIRECT-001/"
+  },
   "addressBookPostRealignRepair": {
     "task": "TB-TMAR-ADDRESSBOOK-POST-REALIGN-REPAIR-001",
     "parentTask": "ADDRESSBOOK-OFFER-STYLE-FOLDERS-001",

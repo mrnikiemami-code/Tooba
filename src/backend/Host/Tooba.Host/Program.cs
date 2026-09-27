@@ -117,6 +117,7 @@ builder.Services.AddOptions<CacheHostOptions>()
     .Bind(builder.Configuration.GetSection("Tooba:Cache"))
     .ValidateOnStart();
 builder.Services.AddSingleton<IValidateOptions<CacheHostOptions>, CacheOptionsValidator>();
+builder.Services.AddToobaCache();
 builder.Services.AddOptions<AuthorizationHostOptions>()
     .Bind(builder.Configuration.GetSection("Tooba:Authorization"))
     .ValidateOnStart();
