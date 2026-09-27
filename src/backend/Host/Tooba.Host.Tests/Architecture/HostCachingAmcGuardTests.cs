@@ -55,12 +55,12 @@ public sealed class HostCachingAmcGuardTests
         var text = Read("CacheInstrumentation.cs");
 
         Assert.Contains("ToobaTelemetry.Meter", text, StringComparison.Ordinal);
-        Assert.Contains(""cache.provider"", text, StringComparison.Ordinal);
-        Assert.Contains(""cache.namespace"", text, StringComparison.Ordinal);
-        Assert.Contains(""cache.edition"", text, StringComparison.Ordinal);
+        Assert.Contains("cache.provider", text, StringComparison.Ordinal);
+        Assert.Contains("cache.namespace", text, StringComparison.Ordinal);
+        Assert.Contains("cache.edition", text, StringComparison.Ordinal);
 
-        Assert.DoesNotContain(""tenant", text, StringComparison.OrdinalIgnoreCase);
-        Assert.DoesNotContain(""user", text, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("tenant", text, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("user", text, StringComparison.OrdinalIgnoreCase);
         Assert.DoesNotContain("key.Value", text, StringComparison.Ordinal);
     }
 
