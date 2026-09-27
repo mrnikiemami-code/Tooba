@@ -17,9 +17,9 @@ public sealed class HostAdminAmcW10R1GuardTests
         var host = File.ReadAllText(hostPath);
         Assert.DoesNotContain("MapAttributeInvalid", host, StringComparison.Ordinal);
         Assert.DoesNotContain("SetProductAttributeRequest", host, StringComparison.Ordinal);
-        Assert.Contains("SetProductVariantAxesRequest", host, StringComparison.Ordinal);
-        Assert.Contains("/variant-axes", host, StringComparison.Ordinal);
-        Assert.Contains("/variants/", host, StringComparison.Ordinal);
+        Assert.DoesNotContain("SetProductVariantAxesRequest", host, StringComparison.Ordinal);
+        Assert.DoesNotContain("/variant-axes", host, StringComparison.Ordinal);
+        Assert.DoesNotContain("/variants/", host, StringComparison.Ordinal);
         Assert.Contains("category-change-preview", host, StringComparison.Ordinal);
         Assert.Contains("primary-category", host, StringComparison.Ordinal);
         Assert.DoesNotContain("MapGet(\"/attributes\"", host, StringComparison.Ordinal);
@@ -66,12 +66,12 @@ public sealed class HostAdminAmcW10R1GuardTests
         Assert.Contains("body.RawValue", seller, StringComparison.Ordinal);
         Assert.Contains("body.EnumOptionId", seller, StringComparison.Ordinal);
         Assert.Contains("SetProductVariantAxesRequest", seller, StringComparison.Ordinal);
-        Assert.Contains("using Tooba.Host.Admin;", seller, StringComparison.Ordinal);
+        Assert.DoesNotContain("using Tooba.Host.Admin;", seller, StringComparison.Ordinal);
 
         var adminPath = Path.Combine(root, "src/backend/Host/Tooba.Host/Admin/CatalogAttributeEndpoints.cs");
         var admin = File.ReadAllText(adminPath);
         Assert.DoesNotContain("SetProductAttributeRequest", admin, StringComparison.Ordinal);
-        Assert.Contains("SetProductVariantAxesRequest", admin, StringComparison.Ordinal);
+        Assert.DoesNotContain("SetProductVariantAxesRequest", admin, StringComparison.Ordinal);
     }
 
     [Fact]

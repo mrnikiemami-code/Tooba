@@ -22,7 +22,8 @@ public sealed class HostAdminAmcW9GuardTests
         Assert.DoesNotContain("/v1/admin/catalog/attribute-definitions", host, StringComparison.Ordinal);
         Assert.DoesNotContain("MapGet(\"/attributes\"", host, StringComparison.Ordinal);
         Assert.DoesNotContain("SetProductAttributesRequest", host, StringComparison.Ordinal);
-        Assert.Contains("/variants/", host, StringComparison.Ordinal);
+        Assert.DoesNotContain("/variants/", host, StringComparison.Ordinal);
+        Assert.DoesNotContain("variant-axes", host, StringComparison.Ordinal);
         Assert.Contains("category-change-preview", host, StringComparison.Ordinal);
         Assert.Contains("primary-category", host, StringComparison.Ordinal);
         Assert.DoesNotContain("MapAttributeInvalid", host, StringComparison.Ordinal);

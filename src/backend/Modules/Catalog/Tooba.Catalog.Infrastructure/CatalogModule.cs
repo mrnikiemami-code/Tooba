@@ -13,9 +13,11 @@ using Tooba.Catalog.Application.MegaMenu.Ports;
 using Tooba.Catalog.Application.Settings.Quantity.Ports;
 using Tooba.Catalog.Application.Tags.Ports;
 using Tooba.Catalog.Application.Units.Ports;
+using Tooba.Catalog.Application.Variants.Ports;
 using Tooba.Catalog.Contracts;
 using Tooba.Catalog.Contracts.Checkout;
 using Tooba.Catalog.Contracts.Reservation;
+using Tooba.Catalog.Infrastructure.Adapters;
 using Tooba.Catalog.Infrastructure.Checkout;
 using Tooba.Catalog.Infrastructure.Persistence;
 using Tooba.Catalog.Infrastructure.Reservation;
@@ -66,6 +68,8 @@ public sealed class CatalogModule : IToobaModule
         services.AddScoped<IAttributeDefinitionDirectory, AttributeDefinitionDirectory>();
         services.AddScoped<ICategoryAttributeSchemaDirectory, CategoryAttributeSchemaDirectory>();
         services.AddScoped<IProductAttributeDirectory, ProductAttributeDirectory>();
+        services.AddScoped<IProductVariantDirectory, ProductVariantDirectory>();
+        services.AddScoped<IVariantOfferLookup, VariantOfferLookupAdapter>();
         services.AddSingleton<IQuantityNormalizer, QuantityNormalizer>();
         services.AddValidatorsFromAssembly(typeof(CreateStoreLandingPageCommand).Assembly);
         services.AddDbContext<CatalogDbContext>((sp, options) =>

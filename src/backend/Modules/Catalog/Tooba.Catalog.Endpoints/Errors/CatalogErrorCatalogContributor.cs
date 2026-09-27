@@ -124,6 +124,22 @@ public sealed class CatalogErrorCatalogContributor : IErrorCatalogContributor
             "Clearing a required attribute is not allowed."),
         D(CatalogErrorCodes.AttributeValueEmpty, ErrorClassification.Validation, StatusCodes.Status400BadRequest,
             "Attribute value is empty."),
+        D(CatalogErrorCodes.VariantAxesDuplicate, ErrorClassification.Business, StatusCodes.Status400BadRequest,
+            "Product variant axes must not contain duplicates."),
+        D(CatalogErrorCodes.VariantAxisSchemaNotEnabled, ErrorClassification.Business, StatusCodes.Status400BadRequest,
+            "Variant axis is not enabled in the effective category schema."),
+        D(CatalogErrorCodes.VariantEffectiveAxesMissing, ErrorClassification.Business, StatusCodes.Status400BadRequest,
+            "No effective variant axes are available for this product."),
+        D(CatalogErrorCodes.VariantCombinationLimitExceeded, ErrorClassification.Business, StatusCodes.Status400BadRequest,
+            "Variant combination count exceeds the safe limit."),
+        D(CatalogErrorCodes.VariantPatchTargetMissing, ErrorClassification.Business, StatusCodes.Status400BadRequest,
+            "Variant patch target was not found on the product."),
+        D(CatalogErrorCodes.VariantPatchStatusInvalid, ErrorClassification.Validation, StatusCodes.Status400BadRequest,
+            "Variant patch status is invalid."),
+        D(CatalogErrorCodes.VariantDefaultMissing, ErrorClassification.Business, StatusCodes.Status400BadRequest,
+            "Default variant was not found on the product."),
+        D(CatalogErrorCodes.VariantArchivedCannotBeDefault, ErrorClassification.Business, StatusCodes.Status400BadRequest,
+            "An archived variant cannot be the default."),
     ];
 
     private static ErrorDescriptor D(

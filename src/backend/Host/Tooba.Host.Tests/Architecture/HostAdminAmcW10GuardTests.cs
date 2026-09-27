@@ -27,8 +27,9 @@ public sealed class HostAdminAmcW10GuardTests
         Assert.DoesNotContain("MapAttributeInvalid", host, StringComparison.Ordinal);
         Assert.DoesNotContain("attribute-schema", host, StringComparison.Ordinal);
         Assert.DoesNotContain("/v1/admin/catalog/attribute-definitions", host, StringComparison.Ordinal);
-        Assert.Contains("/variant-axes", host, StringComparison.Ordinal);
-        Assert.Contains("/variants/", host, StringComparison.Ordinal);
+        Assert.DoesNotContain("/variant-axes", host, StringComparison.Ordinal);
+        Assert.DoesNotContain("/variants/", host, StringComparison.Ordinal);
+        Assert.DoesNotContain("SetProductVariantAxesRequest", host, StringComparison.Ordinal);
         Assert.Contains("category-change-preview", host, StringComparison.Ordinal);
         Assert.Contains("primary-category", host, StringComparison.Ordinal);
         Assert.Contains("MapCatalogAttributeEndpoints", host, StringComparison.Ordinal);

@@ -85,10 +85,22 @@
   <data name="catalog.attribute.validation.bounds" xml:space="preserve"><value>Attribute value violates definition bounds.</value></data>
   <data name="catalog.attribute.clear.required_forbidden" xml:space="preserve"><value>Clearing a required attribute is not allowed.</value></data>
   <data name="catalog.attribute.value.empty" xml:space="preserve"><value>Attribute value is empty.</value></data>
+  <data name="catalog.variant.axes.duplicate" xml:space="preserve"><value>Product variant axes must not contain duplicates.</value></data>
+  <data name="catalog.variant.axis.schema_not_enabled" xml:space="preserve"><value>Variant axis is not enabled in the effective category schema.</value></data>
+  <data name="catalog.variant.effective_axes.missing" xml:space="preserve"><value>No effective variant axes are available for this product.</value></data>
+  <data name="catalog.variant.combination.limit_exceeded" xml:space="preserve"><value>Variant combination count exceeds the safe limit.</value></data>
+  <data name="catalog.variant.patch.target_missing" xml:space="preserve"><value>Variant patch target was not found on the product.</value></data>
+  <data name="catalog.variant.patch.status_invalid" xml:space="preserve"><value>Variant patch status is invalid.</value></data>
+  <data name="catalog.variant.default.missing" xml:space="preserve"><value>Default variant was not found on the product.</value></data>
+  <data name="catalog.variant.default.archived_forbidden" xml:space="preserve"><value>An archived variant cannot be the default.</value></data>
   <data name="catalog.validation.attribute_definition_code_required" xml:space="preserve"><value>Attribute definition code is required.</value></data>
   <data name="catalog.validation.attribute_option_code_required" xml:space="preserve"><value>Attribute option code is required.</value></data>
   <data name="catalog.validation.schema_definition_id_required" xml:space="preserve"><value>Attribute definition id is required.</value></data>
   <data name="catalog.validation.schema_ordered_definition_ids_required" xml:space="preserve"><value>Schema ordered definition ids are required.</value></data>
   <data name="catalog.validation.product_attribute_values_required" xml:space="preserve"><value>Product attribute values collection is required.</value></data>
   <data name="catalog.validation.product_attribute_definition_id_required" xml:space="preserve"><value>Product attribute definition id is required.</value></data>
+  <data name="catalog.validation.variant_axes_ordered_ids_required" xml:space="preserve"><value>Variant axes ordered definition ids are required.</value></data>
+  <data name="catalog.validation.variant_axis_definition_id_required" xml:space="preserve"><value>Variant axis definition id is required.</value></data>
+  <data name="catalog.validation.variant_selected_axes_required" xml:space="preserve"><value>Selected variant axes are required.</value></data>
+  <data name="catalog.validation.variant_patch_status_invalid" xml:space="preserve"><value>Variant patch status is invalid.</value></data>
 </root>

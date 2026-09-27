@@ -1,6 +1,5 @@
 using Tooba.BuildingBlocks;
 using Tooba.Catalog.Application;
-using Tooba.Host.Admin;
 using Tooba.Order.Application.Seller.Queries.GetSellerOrderDashboardSummary;
 
 namespace Tooba.Host.Seller;
@@ -223,3 +222,9 @@ public static class SellerPanelEndpoints
 /// Relocated from Admin CatalogAttributeEndpoints in W10-R1; not a shared business contract.
 /// </summary>
 public sealed record SetProductAttributeRequest(string RawValue, Guid? EnumOptionId);
+
+/// <summary>
+/// بدنهٔ محورهای Variant محصول — Seller panel HTTP transport.
+/// Relocated from Admin CatalogAttributeEndpoints in W11; not a shared business contract.
+/// </summary>
+public sealed record SetProductVariantAxesRequest(List<Guid>? OrderedDefinitionIds);

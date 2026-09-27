@@ -173,4 +173,28 @@ public static class CatalogErrorCodes
 
     /// <summary>Non-enumeration attribute value is empty.</summary>
     public const string AttributeValueEmpty = "catalog.attribute.value.empty";
+
+    /// <summary>Product variant-axis list contains duplicate definition ids.</summary>
+    public const string VariantAxesDuplicate = "catalog.variant.axes.duplicate";
+
+    /// <summary>Selected axis is not enabled as a variant axis in the effective schema.</summary>
+    public const string VariantAxisSchemaNotEnabled = "catalog.variant.axis.schema_not_enabled";
+
+    /// <summary>Operation requires effective variant axes but none are available.</summary>
+    public const string VariantEffectiveAxesMissing = "catalog.variant.effective_axes.missing";
+
+    /// <summary>Desired combination count exceeds the safe MaxVariantCombinations cap.</summary>
+    public const string VariantCombinationLimitExceeded = "catalog.variant.combination.limit_exceeded";
+
+    /// <summary>Variant patch targets a variant id that is not on the product.</summary>
+    public const string VariantPatchTargetMissing = "catalog.variant.patch.target_missing";
+
+    /// <summary>Variant patch Status string is not a valid CatalogPublicationStatus.</summary>
+    public const string VariantPatchStatusInvalid = "catalog.variant.patch.status_invalid";
+
+    /// <summary>Requested default variant id is not on the product.</summary>
+    public const string VariantDefaultMissing = "catalog.variant.default.missing";
+
+    /// <summary>Archived variant cannot be selected as default.</summary>
+    public const string VariantArchivedCannotBeDefault = "catalog.variant.default.archived_forbidden";
 }

@@ -92,4 +92,16 @@ public static class CatalogValidationCodes
 
     /// <summary>Bulk product-attribute item DefinitionId must be non-empty.</summary>
     public const string ProductAttributeDefinitionIdRequired = "catalog.validation.product_attribute_definition_id_required";
+
+    /// <summary>Variant axes OrderedDefinitionIds collection must be present.</summary>
+    public const string VariantAxesOrderedIdsRequired = "catalog.validation.variant_axes_ordered_ids_required";
+
+    /// <summary>Variant axis definition id must be non-empty.</summary>
+    public const string VariantAxisDefinitionIdRequired = "catalog.validation.variant_axis_definition_id_required";
+
+    /// <summary>Variant preview/apply SelectedAxes collection must be present.</summary>
+    public const string VariantSelectedAxesRequired = "catalog.validation.variant_selected_axes_required";
+
+    /// <summary>Variant patch Status string is not a valid CatalogPublicationStatus.</summary>
+    public const string VariantPatchStatusInvalid = "catalog.validation.variant_patch_status_invalid";
 }

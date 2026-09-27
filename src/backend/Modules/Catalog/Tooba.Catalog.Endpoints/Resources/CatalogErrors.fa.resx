@@ -85,10 +85,22 @@
   <data name="catalog.attribute.validation.bounds" xml:space="preserve"><value>مقدار ویژگی از محدودهٔ تعریف خارج است.</value></data>
   <data name="catalog.attribute.clear.required_forbidden" xml:space="preserve"><value>پاک‌سازی مقدار الزامی مجاز نیست.</value></data>
   <data name="catalog.attribute.value.empty" xml:space="preserve"><value>مقدار ویژگی خالی است.</value></data>
+  <data name="catalog.variant.axes.duplicate" xml:space="preserve"><value>محورهای Variant محصول نباید تکراری باشند.</value></data>
+  <data name="catalog.variant.axis.schema_not_enabled" xml:space="preserve"><value>محور تنوع در schema مؤثر رده‌های محصول فعال نیست.</value></data>
+  <data name="catalog.variant.effective_axes.missing" xml:space="preserve"><value>برای این دسته‌بندی ویژگی تنوع تعریف نشده است.</value></data>
+  <data name="catalog.variant.combination.limit_exceeded" xml:space="preserve"><value>تعداد ترکیب‌ها از سقف امن بیشتر است.</value></data>
+  <data name="catalog.variant.patch.target_missing" xml:space="preserve"><value>تنوع موردنظر در این محصول نیست.</value></data>
+  <data name="catalog.variant.patch.status_invalid" xml:space="preserve"><value>وضعیت تنوع نامعتبر است.</value></data>
+  <data name="catalog.variant.default.missing" xml:space="preserve"><value>تنوع پیش‌فرض در این محصول نیست.</value></data>
+  <data name="catalog.variant.default.archived_forbidden" xml:space="preserve"><value>تنوع بایگانی‌شده نمی‌تواند پیش‌فرض باشد.</value></data>
   <data name="catalog.validation.attribute_definition_code_required" xml:space="preserve"><value>کد تعریف ویژگی الزامی است.</value></data>
   <data name="catalog.validation.attribute_option_code_required" xml:space="preserve"><value>کد گزینهٔ ویژگی الزامی است.</value></data>
   <data name="catalog.validation.schema_definition_id_required" xml:space="preserve"><value>شناسهٔ تعریف ویژگی الزامی است.</value></data>
   <data name="catalog.validation.schema_ordered_definition_ids_required" xml:space="preserve"><value>فهرست شناسه‌های ترتیب schema الزامی است.</value></data>
   <data name="catalog.validation.product_attribute_values_required" xml:space="preserve"><value>فهرست مقادیر ویژگی محصول الزامی است.</value></data>
   <data name="catalog.validation.product_attribute_definition_id_required" xml:space="preserve"><value>شناسهٔ تعریف ویژگی در فهرست مقادیر الزامی است.</value></data>
+  <data name="catalog.validation.variant_axes_ordered_ids_required" xml:space="preserve"><value>فهرست شناسهٔ محورهای Variant الزامی است.</value></data>
+  <data name="catalog.validation.variant_axis_definition_id_required" xml:space="preserve"><value>شناسهٔ تعریف محور Variant الزامی است.</value></data>
+  <data name="catalog.validation.variant_selected_axes_required" xml:space="preserve"><value>فهرست محورهای انتخاب‌شده الزامی است.</value></data>
+  <data name="catalog.validation.variant_patch_status_invalid" xml:space="preserve"><value>وضعیت پچ تنوع نامعتبر است.</value></data>
 </root>
