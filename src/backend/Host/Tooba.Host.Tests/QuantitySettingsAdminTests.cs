@@ -3,7 +3,9 @@ using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Tooba.BuildingBlocks;
-using Tooba.Catalog.Application;
+using Tooba.BuildingBlocks.Results;
+using Tooba.Catalog.Application.Settings;
+using Tooba.Catalog.Contracts.Errors;
 using Tooba.Catalog.Domain;
 using Tooba.Catalog.Infrastructure;
 using Tooba.Catalog.Infrastructure.Persistence;
@@ -11,14 +13,15 @@ using Xunit;
 
 namespace Tooba.Host.Tests;
 
-/// <summary>TB-TMAR-HOST-W4 — characterization for quantity-rounding settings write via CQRS Directory.</summary>
+/// <summary>Quantity-rounding settings via Catalog CQRS (Admin AMC W2).</summary>
 public sealed class QuantitySettingsAdminTests
 {
     [Fact]
     public async Task Default_missing_row_reads_as_nearest()
     {
         await using var catalog = CreateCatalog();
-        var mode = await CreateLookup(catalog).GetGlobalRoundingModeAsync(CancellationToken.None);
+        var mode = await new StoreQuantitySettingsDirectory(catalog, new SystemUtcClock())
+            .GetAsync(CancellationToken.None);
         Assert.Equal(QuantityRoundingMode.Nearest, mode);
     }
 
@@ -27,8 +30,9 @@ public sealed class QuantitySettingsAdminTests
     {
         await using var catalog = CreateCatalog();
         var sender = CreateSender(catalog);
-        var mode = await sender.Send(new SaveStoreQuantitySettingsCommand("Floor"), CancellationToken.None);
-        Assert.Equal(QuantityRoundingMode.Floor, mode);
+        var result = await sender.Send(new SaveStoreQuantitySettingsCommand("Floor"), CancellationToken.None);
+        Assert.True(result.IsSuccess);
+        Assert.Equal("Floor", result.Value.GlobalRoundingMode);
         var row = await catalog.StoreQuantitySettings.SingleAsync();
         Assert.Equal(QuantityRoundingMode.Floor, row.RoundingMode);
     }
@@ -38,8 +42,9 @@ public sealed class QuantitySettingsAdminTests
     {
         await using var catalog = CreateCatalog();
         var sender = CreateSender(catalog);
-        var mode = await sender.Send(new SaveStoreQuantitySettingsCommand("ceiling"), CancellationToken.None);
-        Assert.Equal(QuantityRoundingMode.Ceiling, mode);
+        var result = await sender.Send(new SaveStoreQuantitySettingsCommand("ceiling"), CancellationToken.None);
+        Assert.True(result.IsSuccess);
+        Assert.Equal("Ceiling", result.Value.GlobalRoundingMode);
     }
 
     [Fact]
@@ -47,10 +52,9 @@ public sealed class QuantitySettingsAdminTests
     {
         await using var catalog = CreateCatalog();
         var sender = CreateSender(catalog);
-        var error = await Assert.ThrowsAsync<PlatformHttpException>(
-            () => sender.Send(new SaveStoreQuantitySettingsCommand("RoundHalfEven"), CancellationToken.None));
-        Assert.Equal(400, error.StatusCode);
-        Assert.Equal("quantity.rounding.invalid", error.ErrorCode);
+        var result = await sender.Send(new SaveStoreQuantitySettingsCommand("RoundHalfEven"), CancellationToken.None);
+        Assert.True(result.IsFailure);
+        Assert.Contains(result.Errors, e => e.Code == CatalogErrorCodes.QuantityRoundingInvalid);
         Assert.Empty(catalog.StoreQuantitySettings);
     }
 
@@ -66,14 +70,32 @@ public sealed class QuantitySettingsAdminTests
     }
 
     [Fact]
-    public void Admin_endpoints_reuse_authorization_and_cqrs()
+    public async Task Get_query_returns_view()
     {
-        var source = File.ReadAllText(Path.Combine(FindRepoRoot(), "src/backend/Host/Tooba.Host/Admin/QuantitySettingsEndpoints.cs"));
+        await using var catalog = CreateCatalog();
+        var sender = CreateSender(catalog);
+        await sender.Send(new SaveStoreQuantitySettingsCommand("Floor"), CancellationToken.None);
+        var result = await sender.Send(new GetStoreQuantitySettingsQuery(), CancellationToken.None);
+        Assert.True(result.IsSuccess);
+        Assert.Equal("Floor", result.Value.GlobalRoundingMode);
+        Assert.Equal("رو به پایین", result.Value.LabelFa);
+    }
+
+    [Fact]
+    public void Module_endpoints_own_quantity_routes_not_host()
+    {
+        var root = FindRepoRoot();
+        Assert.False(File.Exists(Path.Combine(root, "src/backend/Host/Tooba.Host/Admin/QuantitySettingsEndpoints.cs")));
+        var source = File.ReadAllText(Path.Combine(
+            root,
+            "src/backend/Modules/Catalog/Tooba.Catalog.Endpoints/Admin/Settings/QuantitySettingsEndpoints.cs"));
         Assert.Contains("/v1/admin/settings/quantity-rounding", source, StringComparison.Ordinal);
-        Assert.Contains("AdminPanelAccess.RequireAuthorizedAsync", source, StringComparison.Ordinal);
+        Assert.Contains("ICatalogAdminAuthorizer", source, StringComparison.Ordinal);
         Assert.Contains("SaveStoreQuantitySettingsCommand", source, StringComparison.Ordinal);
-        Assert.Contains("ICatalogLookupGateway", source, StringComparison.Ordinal);
-        Assert.DoesNotContain("SaveChangesAsync", source, StringComparison.Ordinal);
+        Assert.Contains("GetStoreQuantitySettingsQuery", source, StringComparison.Ordinal);
+        Assert.Contains("ApiResponseFactory", source, StringComparison.Ordinal);
+        Assert.DoesNotContain("ICatalogLookupGateway", source, StringComparison.Ordinal);
+        Assert.DoesNotContain("AdminPanelAccess", source, StringComparison.Ordinal);
         Assert.DoesNotContain("CatalogDbContext", source, StringComparison.Ordinal);
     }
 
@@ -95,9 +117,6 @@ public sealed class QuantitySettingsAdminTests
         services.AddToobaCqrsFoundation(typeof(SaveStoreQuantitySettingsCommand).Assembly);
         return services.BuildServiceProvider().GetRequiredService<ISender>();
     }
-
-    private static ICatalogLookupGateway CreateLookup(CatalogDbContext catalog)
-        => new CatalogDirectory(catalog, new OpenCatalogUseCaseGuard());
 
     private static string FindRepoRoot()
     {

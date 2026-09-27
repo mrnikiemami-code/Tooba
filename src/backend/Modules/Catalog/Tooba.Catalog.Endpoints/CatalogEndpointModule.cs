@@ -1,28 +1,30 @@
+using Tooba.BuildingBlocks.Localization;
+using Tooba.BuildingBlocks.Presentation.Errors;
 using Tooba.Catalog.Endpoints.Admin;
+using Tooba.Catalog.Endpoints.Admin.Settings;
+using Tooba.Catalog.Endpoints.Errors;
+using Tooba.Catalog.Endpoints.Resources;
 
 namespace Tooba.Catalog.Endpoints;
 
-/// <summary>Thin composition for Catalog HTTP ownership (Admin AMC W1 foundation).</summary>
+/// <summary>Thin composition for Catalog HTTP ownership.</summary>
 public static class CatalogEndpointModule
 {
-    /// <summary>
-    /// Maps Catalog module HTTP routes. W1 leaves Host Admin Catalog routes in place;
-    /// subsequent waves register audience groups here as files evacuate.
-    /// </summary>
+    /// <summary>Maps Catalog module HTTP routes (Admin settings slice and later waves).</summary>
     public static IEndpointRouteBuilder MapCatalogModuleEndpoints(this IEndpointRouteBuilder app)
     {
         ArgumentNullException.ThrowIfNull(app);
+        app.MapQuantitySettingsEndpoints();
         return app;
     }
 
-    /// <summary>
-    /// Registers Catalog endpoint presentation seams (admin authorizer).
-    /// Error catalog / resources land with the first canonical Result endpoints.
-    /// </summary>
+    /// <summary>Registers Catalog endpoint presentation seams.</summary>
     public static IServiceCollection AddCatalogEndpointPresentation(this IServiceCollection services)
     {
         ArgumentNullException.ThrowIfNull(services);
         services.AddScoped<ICatalogAdminAuthorizer, CatalogAdminAuthorizer>();
+        services.AddSingleton<IErrorCatalogContributor, CatalogErrorCatalogContributor>();
+        services.AddSingleton<IErrorResourceSet, CatalogErrorResourceSet>();
         return services;
     }
 }

@@ -18,4 +18,12 @@
     <ProjectReference Include="..\Tooba.Catalog.Contracts\Tooba.Catalog.Contracts.csproj" />
     <ProjectReference Include="..\..\..\BuildingBlocks\Tooba.BuildingBlocks\Tooba.BuildingBlocks.csproj" />
   </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Update="Resources\CatalogErrors.resx">
+      <Generator></Generator>
+    </EmbeddedResource>
+    <EmbeddedResource Update="Resources\CatalogErrors.fa.resx">
+      <Generator></Generator>
+    </EmbeddedResource>
+  </ItemGroup>
 </Project>

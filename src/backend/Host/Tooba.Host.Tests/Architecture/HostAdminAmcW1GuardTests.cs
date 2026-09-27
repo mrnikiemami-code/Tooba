@@ -105,13 +105,17 @@ public sealed class HostAdminAmcW1GuardTests
     [Fact]
     public void Host_Admin_still_has_production_files_w1_did_not_evacuate()
     {
+        // Historical W1 assertion: W1 left Admin at 59. W2 evacuated QuantitySettingsEndpoints (−1 → 58).
+        // Keep foundation checks; file-count lock moved to HostAdminAmcW2GuardTests.
         var admin = Path.Combine(FindRepoRoot(), "src", "backend", "Host", "Tooba.Host", "Admin");
-        var files = Directory.GetFiles(admin, "*.cs", SearchOption.AllDirectories);
-        Assert.Equal(59, files.Length);
-        Assert.True(File.Exists(Path.Combine(admin, "QuantitySettingsEndpoints.cs")));
+        Assert.True(Directory.Exists(admin));
+        Assert.False(File.Exists(Path.Combine(admin, "QuantitySettingsEndpoints.cs")));
         Assert.True(File.Exists(Path.Combine(admin, "StoreAppearanceSettingsEndpoints.cs")));
         Assert.True(File.Exists(Path.Combine(admin, "AdminPanelAccess.cs")));
         Assert.True(File.Exists(Path.Combine(admin, "HostAdminPanelAccess.cs")));
+        var endpointsRoot = Path.Combine(
+            FindRepoRoot(), "src", "backend", "Modules", "Catalog", "Tooba.Catalog.Endpoints");
+        Assert.True(File.Exists(Path.Combine(endpointsRoot, "CatalogEndpointModule.cs")));
     }
 
     private static string FindRepoRoot()

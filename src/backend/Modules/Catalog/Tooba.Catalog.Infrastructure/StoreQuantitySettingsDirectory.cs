@@ -1,18 +1,20 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Tooba.BuildingBlocks;
-using Tooba.Catalog.Application;
+using Tooba.BuildingBlocks.Results;
+using Tooba.Catalog.Application.Settings;
+using Tooba.Catalog.Contracts.Errors;
 using Tooba.Catalog.Domain;
 using Tooba.Catalog.Infrastructure.Persistence;
 
 namespace Tooba.Catalog.Infrastructure;
 
-/// <summary>orchestration موقت نوشتن StoreQuantitySettings روی Catalog DbContext.</summary>
+/// <summary>Catalog persistence for store quantity rounding settings.</summary>
 public sealed class StoreQuantitySettingsDirectory : IStoreQuantitySettingsDirectory
 {
     private readonly CatalogDbContext _catalog;
     private readonly IClock _clock;
 
-    /// <summary>دایرکتوری را به schema catalog وصل می‌کند.</summary>
+    /// <summary>Creates the directory.</summary>
     public StoreQuantitySettingsDirectory(CatalogDbContext catalog, IClock clock)
     {
         _catalog = catalog;
@@ -20,12 +22,20 @@ public sealed class StoreQuantitySettingsDirectory : IStoreQuantitySettingsDirec
     }
 
     /// <inheritdoc />
-    public async Task<QuantityRoundingMode> SaveAsync(string? globalRoundingMode, CancellationToken cancellationToken)
+    public async Task<QuantityRoundingMode> GetAsync(CancellationToken cancellationToken)
+    {
+        var settings = await _catalog.StoreQuantitySettings.AsNoTracking()
+            .SingleOrDefaultAsync(s => s.SettingsId == StoreQuantitySettings.SingletonId, cancellationToken);
+        return settings?.RoundingMode ?? QuantityRoundingMode.Nearest;
+    }
+
+    /// <inheritdoc />
+    public async Task<Result<QuantityRoundingMode>> SaveAsync(string? globalRoundingMode, CancellationToken cancellationToken)
     {
         if (!Enum.TryParse<QuantityRoundingMode>(globalRoundingMode, ignoreCase: true, out var mode)
             || mode is not (QuantityRoundingMode.Floor or QuantityRoundingMode.Ceiling or QuantityRoundingMode.Nearest))
         {
-            throw new PlatformHttpException(400, "حالت گرد کردن نامعتبر است.", "quantity.rounding.invalid");
+            return Result.Failure<QuantityRoundingMode>(new SemanticError(CatalogErrorCodes.QuantityRoundingInvalid));
         }
 
         var now = _clock.UtcNow;
@@ -39,6 +49,6 @@ public sealed class StoreQuantitySettingsDirectory : IStoreQuantitySettingsDirec
 
         row.SetRoundingMode(mode, now);
         await _catalog.SaveChangesAsync(cancellationToken);
-        return mode;
+        return Result.Success(mode);
     }
 }

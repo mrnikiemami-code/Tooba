@@ -1570,9 +1570,46 @@
     "recoveryDiscipline": "SYNC_SOT_FREQUENTLY_NEW_CHAT_MUST_RESUME_FROM_REPO_NOT_CONVERSATION_MEMORY",
     "minimalRecoveryPhraseFa": "برگردیم به TMAR؛ ریکاوری را انجام بده"
   },
-  "hostAdminAmc": {
+    "hostAdminAmcW2": {
+    "task": "TB-TMAR-HOST-ADMIN-AMC-001-W2",
+    "parentTask": "TB-TMAR-HOST-ADMIN-AMC-001",
+    "parentCommit": "3d15c27cf3b60f972e6401873a4a8ecc56cb3ee6",
+    "state": "HOST_ADMIN_AMC_W2_QUANTITY_EVACUATED_APPEARANCE_DEFERRED",
+    "activeHostFolder": "Admin",
+    "productionFileCountBefore": 59,
+    "productionFileCountAfter": 58,
+    "quantitySettingsDisposition": "MOVED_TO_CATALOG_ENDPOINTS",
+    "storeAppearanceDisposition": "NOT_MOVED_DEFERRED_HOST_STOREFRONT_PROJECTOR_COUPLING",
+    "retainedMixedHostResponsibility": [
+      "StoreAppearanceSettingsEndpoints.cs",
+      "StoreAppearanceSettingsComposer.cs"
+    ],
+    "catalogEndpointOwnership": "MODULE_OWNED_QUANTITY_ROUTES",
+    "catalogCqrsState": "GetStoreQuantitySettingsQuery_SaveStoreQuantitySettingsCommand_Result",
+    "validatorCoverage": "Save_REQUIRED_PRESENT_Get_NO_VALIDATOR_REQUIRED_NO_INPUT",
+    "resultPipelineState": "CANONICAL_RESULT_APIRESPONSEFACTORY",
+    "catalogErrorLocalizationState": "CatalogErrorCodes_CatalogErrorCatalogContributor_resx",
+    "adminAuthorizationState": "ICatalogAdminAuthorizer",
+    "endpointsToInfrastructure": "ZERO",
+    "catalogToHost": "ZERO",
+    "hostStorefrontCouplingState": "RETAINED_IN_HOST_APPEARANCE_COMPOSER_ONLY",
+    "foreignModuleDependencyState": "NONE_IN_MIGRATED_SURFACE",
+    "schemaMigrationState": "NONE",
+    "frontendState": "UNCHANGED",
+    "remainingAdminBlockers": [
+      "StoreAppearance Host.Storefront projector coupling",
+      "Most Catalog Admin HTTP still Host-owned"
+    ],
+    "residualDebt": [
+      "W3+ Catalog HTTP waves",
+      "Appearance redesign before evacuate"
+    ],
+    "nextHostFolderStarted": false,
+    "workflowStop": "USER_REVIEW_HOST_ADMIN_W2_CHECKPOINT",
+    "evidence": "docs/evidence/TB-TMAR-HOST-ADMIN-AMC-001-W2/"
+  },  "hostAdminAmc": {
     "task": "TB-TMAR-HOST-ADMIN-AMC-001",
-    "wave": "W1",
+    "wave": "W1_FOUNDATION_PRESERVED",
     "parentTask": "USER_AUTHORIZED_ADMIN_AMC_START",
     "state": "HOST_ADMIN_AMC_W1_CATALOG_ENDPOINTS_FOUNDATION",
     "activeHostFolder": "Admin",
@@ -1600,10 +1637,10 @@
       "Canonical ApiResponseFactory on migrated endpoints",
       "SPLIT HoldPolicy/ReservationPolicy/Merchandising/ProductWorkspace"
     ],
-    "nextWave": "W2",
+    "nextWave": "W3",
     "nextWaveGoal": "QuantitySettingsEndpoints and/or StoreAppearanceSettings* into Catalog.Endpoints",
     "nextHostFolderStarted": false,
-    "workflowStop": "USER_REVIEW",
+    "workflowStop": "SUPERSEDED_BY_hostAdminAmcW2",
     "evidence": "docs/evidence/TB-TMAR-HOST-ADMIN-AMC-001/"
   },
   "hostTraversalOverride": {

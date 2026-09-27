@@ -4,6 +4,7 @@ using Microsoft.Extensions.Hosting;
 using FluentValidation;
 using Tooba.BuildingBlocks;
 using Tooba.Catalog.Application;
+using Tooba.Catalog.Application.Settings;
 using Tooba.Catalog.Contracts;
 using Tooba.Catalog.Contracts.Checkout;
 using Tooba.Catalog.Contracts.Reservation;
