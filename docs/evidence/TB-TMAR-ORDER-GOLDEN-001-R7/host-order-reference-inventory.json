@@ -101,6 +101,15 @@
     ],
     "note": "Host/Customer panel BFF closed. Profile/dashboard/dev-context owned by CustomerProfile.Endpoints as Contracts-only presentation. No Modules/Customer."
   },
+  "hostCustomerProfileEvacuationUpdate": {
+    "updatedBy": "TB-TMAR-HOST-CUSTOMERPROFILE-EVACUATION-001",
+    "removedFiles": [
+      "CustomerProfile/CustomerProfileDevelopmentSeed.cs"
+    ],
+    "moduleOwnedRehome": "CustomerProfile.Infrastructure/Development/CustomerProfileDevelopmentSeed.cs",
+    "guestActorAuthority": "StorefrontGuestActor.ActorId",
+    "note": "Host/CustomerProfile Development seed evacuated to CustomerProfile.Infrastructure/Development; Order.Application guest actor dependency removed."
+  },
   "extraFiles": [
     "Admin/AdminPanelEndpoints.cs",
     "Admin/HostOrderAdminAuthorizer.cs",
@@ -120,7 +129,6 @@
     "CheckoutReservationHoldPolicy.cs",
     "CommerceHoldPolicy.cs",
     "Composition/ToobaModuleComposition.cs",
-    "CustomerProfile/CustomerProfileDevelopmentSeed.cs",
     "Development/MarketplaceDevelopmentBootstrap.cs",
     "Grid/AdminListGridPolicies.cs",
     "Grid/AdminSellersGridQueryEngine.cs",

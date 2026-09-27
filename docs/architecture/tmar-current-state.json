@@ -1228,6 +1228,28 @@
     "workflowStop": "USER_REVIEW_HOST_CUSTOMER_FULL_CLOSURE_R1",
     "evidence": "docs/evidence/TB-TMAR-HOST-CUSTOMER-FULL-CLOSURE-001/"
   },
+  "hostCustomerProfileEvacuation": {
+    "task": "TB-TMAR-HOST-CUSTOMERPROFILE-EVACUATION-001",
+    "parentTask": "TB-TMAR-HOST-CUSTOMER-FULL-CLOSURE-001-R1",
+    "parentCommit": "34fca8c6e89e30f007354cc15f2fadc84a64ae69",
+    "state": "HOST_CUSTOMERPROFILE_EVACUATION_PASS",
+    "hostCustomerProfileProductionFileCountBefore": 1,
+    "hostCustomerProfileProductionFileCountAfter": 0,
+    "seedState": "REHOMED_LIVE",
+    "seedDestination": "CustomerProfile.Infrastructure/Development/CustomerProfileDevelopmentSeed.cs",
+    "guestActorAuthority": "StorefrontGuestActor.ActorId",
+    "orderApplicationDependency": "ZERO",
+    "behaviorParity": "PRESERVED",
+    "schemaMigration": "NONE",
+    "resultPipelineRegressionState": "PRESERVED",
+    "solutionGroupingRegressionState": "PRESERVED",
+    "focusedValidations": "PASSED_19_FAILED_0_SKIPPED_4",
+    "remainingBlockers": [],
+    "residualDebt": [],
+    "nextHostFolderStarted": false,
+    "workflowStop": "USER_REVIEW_HOST_CUSTOMERPROFILE_CHECKPOINT",
+    "evidence": "docs/evidence/TB-TMAR-HOST-CUSTOMERPROFILE-EVACUATION-001/"
+  },
   "addressBookPostRealignRepair": {
     "task": "TB-TMAR-ADDRESSBOOK-POST-REALIGN-REPAIR-001",
     "parentTask": "ADDRESSBOOK-OFFER-STYLE-FOLDERS-001",

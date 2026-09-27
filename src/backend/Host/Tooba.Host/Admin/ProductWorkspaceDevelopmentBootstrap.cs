@@ -41,7 +41,7 @@ using Tooba.ProductQnA.Infrastructure.Persistence;
 using Tooba.BulkInquiry.Infrastructure.Persistence;
 using Tooba.Host.Wishlist;
 using Tooba.AddressBook.Infrastructure.Adapters;
-using Tooba.Host.CustomerProfile;
+using Tooba.CustomerProfile.Infrastructure.Development;
 using Tooba.Host.Settings;
 using Tooba.Wishlist.Infrastructure.Persistence;
 using Tooba.AddressBook.Infrastructure.Persistence;

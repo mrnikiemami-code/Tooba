@@ -1,21 +1,21 @@
-﻿using Microsoft.EntityFrameworkCore;
-using Tooba.CustomerProfile.Domain;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using Tooba.CustomerProfile.Infrastructure.Persistence;
-using Tooba.Host.Storefront;
+using Tooba.Order.Contracts.Fulfillment;
 
-namespace Tooba.Host.CustomerProfile;
+namespace Tooba.CustomerProfile.Infrastructure.Development;
 
 /// <summary>دانهٔ قطعی Development برای پروفایل مشتری نمایشی فروشگاه.</summary>
 public static class CustomerProfileDevelopmentSeed
 {
     /// <summary>
-    /// پروفایل ساختگی غیرشخصی را برای <see cref="Tooba.Order.Application.Storefront.Services.StorefrontCheckoutService.StorefrontGuestActorId"/>
+    /// پروفایل ساختگی غیرشخصی را برای <see cref="StorefrontGuestActor.ActorId"/>
     /// به‌صورت idempotent درج می‌کند؛ در Production صدا زده نمی‌شود.
     /// </summary>
     public static async Task ApplyAsync(IServiceProvider services, CancellationToken cancellationToken = default)
     {
         var db = services.GetRequiredService<CustomerProfileDbContext>();
-        var actor = Tooba.Order.Application.Storefront.Services.StorefrontCheckoutService.StorefrontGuestActorId;
+        var actor = StorefrontGuestActor.ActorId;
         if (await db.Profiles.AnyAsync(x => x.OwnerUserId == actor, cancellationToken))
         {
             return;
