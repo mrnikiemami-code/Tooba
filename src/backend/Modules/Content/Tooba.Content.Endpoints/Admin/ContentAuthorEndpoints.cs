@@ -1,9 +1,13 @@
+using MediatR;
 using Microsoft.AspNetCore.Routing;
-using Tooba.BuildingBlocks;
-using Tooba.BuildingBlocks.Security;
 using Tooba.BuildingBlocks.Grid;
-using Tooba.Content.Application;
-using Tooba.Content.Domain;
+using Tooba.BuildingBlocks.Presentation;
+using Tooba.Content.Application.Commands.CreateAuthor;
+using Tooba.Content.Application.Commands.DeactivateAuthor;
+using Tooba.Content.Application.Commands.UpdateAuthor;
+using Tooba.Content.Application.Queries.GetAuthorPickerList;
+using Tooba.Content.Application.Queries.GetAuthorWorkspace;
+using Tooba.Content.Application.Queries.QueryAdminAuthorsGrid;
 
 namespace Tooba.Content.Endpoints.Admin;
 
@@ -23,175 +27,70 @@ public static class ContentAuthorEndpoints
     }
 
     private static async Task<IResult> QueryGridAsync(
-        GridQueryRequest body,
-        ContentAuthorPanelComposer composer,
-        HttpRequest request,
-        IAdminPanelAccess adminPanelAccess,
-        ICurrentTenant tenant,
-        IAuthorizationService authz,
-        CancellationToken cancellationToken)
+        GridQueryRequest body, ISender sender, ApiResponseFactory api,
+        IContentAdminAuthorizer auth, HttpContext http, CancellationToken cancellationToken)
     {
-        try
-        {
-            await ContentAdminAccess.RequireAsync(
-                request, adminPanelAccess, tenant, authz, ContentAdminAccess.View, cancellationToken);
-            return Results.Json(await composer.QueryGridAsync(body, cancellationToken));
-        }
-        catch (PlatformHttpException ex) { return ToError(ex); }
+        await auth.RequireAsync(http, ContentAdminPermissions.View, cancellationToken);
+        return api.From(await sender.Send(new QueryAdminAuthorsGridQuery(body), cancellationToken));
     }
 
     private static async Task<IResult> GetPickerListAsync(
-        string? search,
-        bool activeOnly,
-        ContentAuthorPanelComposer composer,
-        HttpRequest request,
-        IAdminPanelAccess adminPanelAccess,
-        ICurrentTenant tenant,
-        IAuthorizationService authz,
-        CancellationToken cancellationToken)
+        string? search, bool activeOnly, ISender sender, ApiResponseFactory api,
+        IContentAdminAuthorizer auth, HttpContext http, CancellationToken cancellationToken)
     {
-        try
-        {
-            await ContentAdminAccess.RequireAsync(
-                request, adminPanelAccess, tenant, authz, ContentAdminAccess.View, cancellationToken);
-            return Results.Json(await composer.GetPickerListAsync(search, activeOnly, cancellationToken));
-        }
-        catch (PlatformHttpException ex) { return ToError(ex); }
-        catch (InvalidOperationException ex) { return MapInvalid(ex); }
+        await auth.RequireAsync(http, ContentAdminPermissions.View, cancellationToken);
+        return api.From(await sender.Send(new GetAuthorPickerListQuery(search, activeOnly), cancellationToken));
     }
 
     private static async Task<IResult> GetWorkspaceAsync(
-        Guid id,
-        ContentAuthorPanelComposer composer,
-        HttpRequest request,
-        IAdminPanelAccess adminPanelAccess,
-        ICurrentTenant tenant,
-        IAuthorizationService authz,
-        CancellationToken cancellationToken)
+        Guid id, ISender sender, ApiResponseFactory api,
+        IContentAdminAuthorizer auth, HttpContext http, CancellationToken cancellationToken)
     {
-        try
-        {
-            await ContentAdminAccess.RequireAsync(
-                request, adminPanelAccess, tenant, authz, ContentAdminAccess.View, cancellationToken);
-            var workspace = await composer.GetWorkspaceAsync(id, cancellationToken);
-            return workspace is null
-                ? Results.Json(new { title = "Not Found", errorCode = ContentAuthorErrorCodes.NotFound }, statusCode: StatusCodes.Status404NotFound)
-                : Results.Json(workspace);
-        }
-        catch (PlatformHttpException ex) { return ToError(ex); }
-        catch (InvalidOperationException ex) { return MapInvalid(ex); }
+        await auth.RequireAsync(http, ContentAdminPermissions.View, cancellationToken);
+        return api.From(await sender.Send(new GetAuthorWorkspaceQuery(id), cancellationToken));
     }
 
     private static async Task<IResult> CreateAsync(
-        CreateContentAuthorHttpRequest body,
-        ContentAuthorPanelComposer composer,
-        HttpRequest request,
-        IAdminPanelAccess adminPanelAccess,
-        ICurrentTenant tenant,
-        IAuthorizationService authz,
-        CancellationToken cancellationToken)
+        CreateContentAuthorHttpRequest body, ISender sender, ApiResponseFactory api,
+        IContentAdminAuthorizer auth, HttpContext http, CancellationToken cancellationToken)
     {
-        try
-        {
-            await ContentAdminAccess.RequireAsync(
-                request, adminPanelAccess, tenant, authz, ContentAdminAccess.Create, cancellationToken);
-            var created = await composer.CreateAsync(new CreateContentAuthorCommand(
-                body.DisplayName ?? "",
-                body.Slug ?? "",
-                body.ShortBio,
-                body.FullBio,
-                body.ProfileImageMediaAssetId,
-                body.CoverImageMediaAssetId,
-                body.WebsiteUrl,
-                body.InstagramUrl,
-                body.TwitterUrl,
-                body.LinkedInUrl), cancellationToken);
-            return Results.Json(created, statusCode: StatusCodes.Status201Created);
-        }
-        catch (PlatformHttpException ex) { return ToError(ex); }
-        catch (InvalidOperationException ex) { return MapInvalid(ex); }
+        await auth.RequireAsync(http, ContentAdminPermissions.Create, cancellationToken);
+        var result = await sender.Send(new CreateAuthorCommand(
+            body.DisplayName ?? "", body.Slug ?? "", body.ShortBio, body.FullBio,
+            body.ProfileImageMediaAssetId, body.CoverImageMediaAssetId,
+            body.WebsiteUrl, body.InstagramUrl, body.TwitterUrl, body.LinkedInUrl), cancellationToken);
+        return result.IsSuccess
+            ? Results.Json(result.Value, statusCode: StatusCodes.Status201Created)
+            : api.From(result);
     }
 
     private static async Task<IResult> UpdateAsync(
-        Guid id,
-        UpdateContentAuthorHttpRequest body,
-        ContentAuthorPanelComposer composer,
-        HttpRequest request,
-        IAdminPanelAccess adminPanelAccess,
-        ICurrentTenant tenant,
-        IAuthorizationService authz,
-        CancellationToken cancellationToken)
+        Guid id, UpdateContentAuthorHttpRequest body, ISender sender, ApiResponseFactory api,
+        IContentAdminAuthorizer auth, HttpContext http, CancellationToken cancellationToken)
     {
-        try
-        {
-            await ContentAdminAccess.RequireAsync(
-                request, adminPanelAccess, tenant, authz, ContentAdminAccess.Edit, cancellationToken);
-            var updated = await composer.UpdateAsync(id, new UpdateContentAuthorCommand(
-                body.DisplayName ?? "",
-                body.Slug ?? "",
-                body.ShortBio,
-                body.FullBio,
-                body.ProfileImageMediaAssetId,
-                body.CoverImageMediaAssetId,
-                body.WebsiteUrl,
-                body.InstagramUrl,
-                body.TwitterUrl,
-                body.LinkedInUrl), cancellationToken);
-            return Results.Json(updated);
-        }
-        catch (PlatformHttpException ex) { return ToError(ex); }
-        catch (InvalidOperationException ex) { return MapInvalid(ex); }
+        await auth.RequireAsync(http, ContentAdminPermissions.Edit, cancellationToken);
+        return api.From(await sender.Send(new UpdateAuthorCommand(
+            id, body.DisplayName ?? "", body.Slug ?? "", body.ShortBio, body.FullBio,
+            body.ProfileImageMediaAssetId, body.CoverImageMediaAssetId,
+            body.WebsiteUrl, body.InstagramUrl, body.TwitterUrl, body.LinkedInUrl), cancellationToken));
     }
 
     private static async Task<IResult> DeactivateAsync(
-        Guid id,
-        ContentAuthorPanelComposer composer,
-        HttpRequest request,
-        IAdminPanelAccess adminPanelAccess,
-        ICurrentTenant tenant,
-        IAuthorizationService authz,
-        CancellationToken cancellationToken)
+        Guid id, ISender sender, ApiResponseFactory api,
+        IContentAdminAuthorizer auth, HttpContext http, CancellationToken cancellationToken)
     {
-        try
-        {
-            await ContentAdminAccess.RequireAsync(
-                request, adminPanelAccess, tenant, authz, ContentAdminAccess.Edit, cancellationToken);
-            await composer.DeactivateAsync(id, cancellationToken);
-            return Results.Ok();
-        }
-        catch (PlatformHttpException ex) { return ToError(ex); }
-        catch (InvalidOperationException ex) { return MapInvalid(ex); }
+        await auth.RequireAsync(http, ContentAdminPermissions.Edit, cancellationToken);
+        var result = await sender.Send(new DeactivateAuthorCommand(id), cancellationToken);
+        return result.IsSuccess ? Results.Ok() : api.From(result);
     }
-
-    private static IResult ToError(PlatformHttpException ex) =>
-        Results.Json(new { title = ex.Title, errorCode = ex.ErrorCode }, statusCode: ex.StatusCode);
-
-    private static IResult MapInvalid(InvalidOperationException ex) =>
-        Results.Json(new { title = ex.Message, errorCode = ex.Message }, statusCode: StatusCodes.Status400BadRequest);
 }
 
-/// <summary>بدنهٔ ایجاد نویسنده.</summary>
 public sealed record CreateContentAuthorHttpRequest(
-    string? DisplayName,
-    string? Slug,
-    string? ShortBio,
-    string? FullBio,
-    Guid? ProfileImageMediaAssetId,
-    Guid? CoverImageMediaAssetId,
-    string? WebsiteUrl,
-    string? InstagramUrl,
-    string? TwitterUrl,
-    string? LinkedInUrl);
+    string? DisplayName, string? Slug, string? ShortBio, string? FullBio,
+    Guid? ProfileImageMediaAssetId, Guid? CoverImageMediaAssetId,
+    string? WebsiteUrl, string? InstagramUrl, string? TwitterUrl, string? LinkedInUrl);
 
-/// <summary>بدنهٔ به‌روزرسانی نویسنده.</summary>
 public sealed record UpdateContentAuthorHttpRequest(
-    string? DisplayName,
-    string? Slug,
-    string? ShortBio,
-    string? FullBio,
-    Guid? ProfileImageMediaAssetId,
-    Guid? CoverImageMediaAssetId,
-    string? WebsiteUrl,
-    string? InstagramUrl,
-    string? TwitterUrl,
-    string? LinkedInUrl);
+    string? DisplayName, string? Slug, string? ShortBio, string? FullBio,
+    Guid? ProfileImageMediaAssetId, Guid? CoverImageMediaAssetId,
+    string? WebsiteUrl, string? InstagramUrl, string? TwitterUrl, string? LinkedInUrl);

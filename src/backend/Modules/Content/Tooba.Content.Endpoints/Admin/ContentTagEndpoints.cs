@@ -1,8 +1,11 @@
+using MediatR;
 using Microsoft.AspNetCore.Routing;
-using Tooba.BuildingBlocks;
-using Tooba.BuildingBlocks.Security;
-using Tooba.Content.Application;
-using Tooba.Content.Domain;
+using Tooba.BuildingBlocks.Presentation;
+using Tooba.Content.Application.Commands.AssignArticleTag;
+using Tooba.Content.Application.Commands.CreateTag;
+using Tooba.Content.Application.Commands.RemoveArticleTag;
+using Tooba.Content.Application.Queries.ListArticleTags;
+using Tooba.Content.Application.Queries.SearchTags;
 
 namespace Tooba.Content.Endpoints.Admin;
 
@@ -23,119 +26,47 @@ public static class ContentTagEndpoints
     }
 
     private static async Task<IResult> SearchAsync(
-        string languageCode,
-        string? search,
-        int? limit,
-        bool? activeOnly,
-        IContentTagDirectory directory,
-        HttpRequest request,
-        IAdminPanelAccess adminPanelAccess,
-        ICurrentTenant tenant,
-        IAuthorizationService authz,
+        string languageCode, string? search, int? limit, bool? activeOnly,
+        ISender sender, ApiResponseFactory api, IContentAdminAuthorizer auth, HttpContext http,
         CancellationToken cancellationToken)
     {
-        try
-        {
-            await ContentAdminAccess.RequireAsync(
-                request, adminPanelAccess, tenant, authz, ContentAdminAccess.View, cancellationToken);
-            return Results.Json(await directory.SearchAsync(
-                languageCode,
-                search,
-                limit ?? 30,
-                activeOnly ?? true,
-                cancellationToken));
-        }
-        catch (PlatformHttpException ex) { return ToError(ex); }
-        catch (InvalidOperationException ex) { return MapInvalid(ex); }
+        await auth.RequireAsync(http, ContentAdminPermissions.View, cancellationToken);
+        return api.From(await sender.Send(
+            new SearchTagsQuery(languageCode, search, limit ?? 30, activeOnly ?? true), cancellationToken));
     }
 
     private static async Task<IResult> CreateAsync(
-        CreateContentTagHttpRequest body,
-        IContentTagDirectory directory,
-        HttpRequest request,
-        IAdminPanelAccess adminPanelAccess,
-        ICurrentTenant tenant,
-        IAuthorizationService authz,
-        CancellationToken cancellationToken)
+        CreateContentTagHttpRequest body, ISender sender, ApiResponseFactory api,
+        IContentAdminAuthorizer auth, HttpContext http, CancellationToken cancellationToken)
     {
-        try
-        {
-            await ContentAdminAccess.RequireAsync(
-                request, adminPanelAccess, tenant, authz, ContentAdminAccess.Edit, cancellationToken);
-            var created = await directory.CreateAsync(
-                new CreateContentTagCommand(body.LanguageCode ?? "", body.Name ?? "", body.Slug),
-                cancellationToken);
-            return Results.Json(created);
-        }
-        catch (PlatformHttpException ex) { return ToError(ex); }
-        catch (InvalidOperationException ex) { return MapInvalid(ex); }
+        await auth.RequireAsync(http, ContentAdminPermissions.Edit, cancellationToken);
+        return api.From(await sender.Send(
+            new CreateTagCommand(body.LanguageCode ?? "", body.Name ?? "", body.Slug), cancellationToken));
     }
 
     private static async Task<IResult> ListArticleTagsAsync(
-        Guid articleId,
-        IContentTagDirectory directory,
-        HttpRequest request,
-        IAdminPanelAccess adminPanelAccess,
-        ICurrentTenant tenant,
-        IAuthorizationService authz,
-        CancellationToken cancellationToken)
+        Guid articleId, ISender sender, ApiResponseFactory api,
+        IContentAdminAuthorizer auth, HttpContext http, CancellationToken cancellationToken)
     {
-        try
-        {
-            await ContentAdminAccess.RequireAsync(
-                request, adminPanelAccess, tenant, authz, ContentAdminAccess.View, cancellationToken);
-            return Results.Json(await directory.ListArticleTagsAsync(articleId, cancellationToken));
-        }
-        catch (PlatformHttpException ex) { return ToError(ex); }
-        catch (InvalidOperationException ex) { return MapInvalid(ex); }
+        await auth.RequireAsync(http, ContentAdminPermissions.View, cancellationToken);
+        return api.From(await sender.Send(new ListArticleTagsQuery(articleId), cancellationToken));
     }
 
     private static async Task<IResult> AssignAsync(
-        Guid articleId,
-        Guid tagId,
-        IContentTagDirectory directory,
-        HttpRequest request,
-        IAdminPanelAccess adminPanelAccess,
-        ICurrentTenant tenant,
-        IAuthorizationService authz,
-        CancellationToken cancellationToken)
+        Guid articleId, Guid tagId, ISender sender, ApiResponseFactory api,
+        IContentAdminAuthorizer auth, HttpContext http, CancellationToken cancellationToken)
     {
-        try
-        {
-            await ContentAdminAccess.RequireAsync(
-                request, adminPanelAccess, tenant, authz, ContentAdminAccess.Edit, cancellationToken);
-            return Results.Json(await directory.AssignToArticleAsync(articleId, tagId, cancellationToken));
-        }
-        catch (PlatformHttpException ex) { return ToError(ex); }
-        catch (InvalidOperationException ex) { return MapInvalid(ex); }
+        await auth.RequireAsync(http, ContentAdminPermissions.Edit, cancellationToken);
+        return api.From(await sender.Send(new AssignArticleTagCommand(articleId, tagId), cancellationToken));
     }
 
     private static async Task<IResult> RemoveAsync(
-        Guid articleId,
-        Guid tagId,
-        IContentTagDirectory directory,
-        HttpRequest request,
-        IAdminPanelAccess adminPanelAccess,
-        ICurrentTenant tenant,
-        IAuthorizationService authz,
-        CancellationToken cancellationToken)
+        Guid articleId, Guid tagId, ISender sender, ApiResponseFactory api,
+        IContentAdminAuthorizer auth, HttpContext http, CancellationToken cancellationToken)
     {
-        try
-        {
-            await ContentAdminAccess.RequireAsync(
-                request, adminPanelAccess, tenant, authz, ContentAdminAccess.Edit, cancellationToken);
-            return Results.Json(await directory.RemoveFromArticleAsync(articleId, tagId, cancellationToken));
-        }
-        catch (PlatformHttpException ex) { return ToError(ex); }
-        catch (InvalidOperationException ex) { return MapInvalid(ex); }
+        await auth.RequireAsync(http, ContentAdminPermissions.Edit, cancellationToken);
+        return api.From(await sender.Send(new RemoveArticleTagCommand(articleId, tagId), cancellationToken));
     }
-
-    private static IResult ToError(PlatformHttpException ex) =>
-        Results.Json(new { title = ex.Title, errorCode = ex.ErrorCode }, statusCode: ex.StatusCode);
-
-    private static IResult MapInvalid(InvalidOperationException ex) =>
-        Results.Json(new { title = ex.Message, errorCode = ex.Message }, statusCode: StatusCodes.Status400BadRequest);
 }
 
-/// <summary>بدنهٔ ایجاد برچسب محتوا.</summary>
 public sealed record CreateContentTagHttpRequest(string? LanguageCode, string? Name, string? Slug);

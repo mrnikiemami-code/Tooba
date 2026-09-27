@@ -1,7 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Tooba.BuildingBlocks.Grid;
 using Tooba.Persistence.Grid;
-using Tooba.Content.Application;
+using Tooba.Content.Application.Models;
 using Tooba.Content.Domain;
 using Tooba.Content.Infrastructure.Persistence;
 
@@ -108,3 +108,4 @@ public sealed class AdminContentAuthorGridQueryEngine
             row.UpdatedAt)).ToList();
     }
 }
+

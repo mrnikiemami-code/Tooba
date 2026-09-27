@@ -1,5 +1,8 @@
-using Microsoft.EntityFrameworkCore;
-using Tooba.Content.Application;
+﻿using Microsoft.EntityFrameworkCore;
+using Tooba.Content.Application.Models;
+using Tooba.Content.Application.Ports;
+using Tooba.Content.Contracts.Errors;
+using Tooba.BuildingBlocks;
 using Tooba.Content.Domain;
 using Tooba.Content.Infrastructure.Persistence;
 
@@ -58,7 +61,7 @@ public sealed class ContentTagDirectory : IContentTagDirectory
                 x => x.LanguageCode == tag.LanguageCode && x.NormalizedName == tag.NormalizedName,
                 cancellationToken))
         {
-            throw new InvalidOperationException(ContentTagErrorCodes.DuplicateName);
+            throw new PlatformHttpException(409, "Request rejected", ContentTagErrorCodes.DuplicateName);
         }
 
         _db.Tags.Add(tag);
@@ -88,18 +91,18 @@ public sealed class ContentTagDirectory : IContentTagDirectory
         CancellationToken cancellationToken)
     {
         var article = await _db.Articles.FirstOrDefaultAsync(x => x.ArticleId == articleId, cancellationToken)
-            ?? throw new InvalidOperationException(ContentTagErrorCodes.ArticleNotFound);
+            ?? throw new PlatformHttpException(404, "Request rejected", ContentTagErrorCodes.ArticleNotFound);
         var tag = await _db.Tags.AsNoTracking().FirstOrDefaultAsync(x => x.TagId == tagId, cancellationToken)
-            ?? throw new InvalidOperationException(ContentTagErrorCodes.NotFound);
+            ?? throw new PlatformHttpException(404, "Request rejected", ContentTagErrorCodes.NotFound);
 
         if (!string.Equals(tag.LanguageCode, article.Locale, StringComparison.Ordinal))
         {
-            throw new InvalidOperationException(ContentTagErrorCodes.LanguageMismatch);
+            throw new PlatformHttpException(400, "Request rejected", ContentTagErrorCodes.LanguageMismatch);
         }
 
         if (!tag.IsActive)
         {
-            throw new InvalidOperationException(ContentTagErrorCodes.Inactive);
+            throw new PlatformHttpException(400, "Request rejected", ContentTagErrorCodes.Inactive);
         }
 
         var exists = await _db.ArticleTags.AnyAsync(
@@ -122,7 +125,7 @@ public sealed class ContentTagDirectory : IContentTagDirectory
         CancellationToken cancellationToken)
     {
         var article = await _db.Articles.FirstOrDefaultAsync(x => x.ArticleId == articleId, cancellationToken)
-            ?? throw new InvalidOperationException(ContentTagErrorCodes.ArticleNotFound);
+            ?? throw new PlatformHttpException(404, "Request rejected", ContentTagErrorCodes.ArticleNotFound);
         var link = await _db.ArticleTags.FirstOrDefaultAsync(
             x => x.ArticleId == articleId && x.TagId == tagId,
             cancellationToken);
@@ -164,7 +167,7 @@ public sealed class ContentTagDirectory : IContentTagDirectory
     {
         if (!await _db.Articles.AnyAsync(x => x.ArticleId == articleId, cancellationToken))
         {
-            throw new InvalidOperationException(ContentTagErrorCodes.ArticleNotFound);
+            throw new PlatformHttpException(404, "Request rejected", ContentTagErrorCodes.ArticleNotFound);
         }
     }
 
@@ -230,3 +233,5 @@ public sealed class ContentTagDirectory : IContentTagDirectory
         tag.CreatedAt,
         tag.UpdatedAt);
 }
+
+

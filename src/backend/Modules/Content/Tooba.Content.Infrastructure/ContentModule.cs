@@ -3,8 +3,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Tooba.BuildingBlocks;
-using Tooba.Content.Application;
-using Tooba.Content.Domain;
+using Tooba.Content.Application.Ports;
 using Tooba.Content.Infrastructure.Adapters;
 using Tooba.Content.Infrastructure.Persistence;
 using Tooba.ModuleContracts;
@@ -29,6 +28,8 @@ public sealed class ContentModule : IToobaModule
         services.AddScoped<IContentArticleMediaDirectory, ContentArticleMediaDirectory>();
         services.AddScoped<IArticleCommentDirectory, ArticleCommentDirectory>();
         services.AddScoped<IContentMediaAssetValidator, ContentMediaAssetValidator>();
+        services.AddScoped<IContentArticleGridPort, ContentArticleGridAdapter>();
+        services.AddScoped<IContentAuthorGridPort, ContentAuthorGridAdapter>();
         services.AddDbContext<ContentDbContext>((sp, options) =>
         {
             var connection = ToobaNpgsql.ResolveForContext(sp.GetRequiredService<ICurrentCommerceContext>(), sp.GetRequiredService<IDatabaseConnectionResolver>());

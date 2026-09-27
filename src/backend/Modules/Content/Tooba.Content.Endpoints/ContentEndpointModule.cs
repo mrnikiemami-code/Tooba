@@ -1,7 +1,11 @@
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
+using Tooba.BuildingBlocks.Localization;
+using Tooba.BuildingBlocks.Presentation.Errors;
 using Tooba.Content.Endpoints.Admin;
+using Tooba.Content.Endpoints.Errors;
+using Tooba.Content.Endpoints.Resources;
 using Tooba.Content.Endpoints.Storefront;
 
 namespace Tooba.Content.Endpoints;
@@ -23,13 +27,13 @@ public static class ContentEndpointModule
         return app;
     }
 
-    /// <summary>ثبت composers و سرویس‌های presentation مرز Content.</summary>
+    /// <summary>ثبت presentation seams مرز Content (authorizer + error catalog/resources).</summary>
     public static IServiceCollection AddContentEndpointPresentation(this IServiceCollection services)
     {
         ArgumentNullException.ThrowIfNull(services);
-        services.AddScoped<ContentPanelComposer>();
-        services.AddScoped<ContentAuthorPanelComposer>();
-        services.AddScoped<ContentArticleMediaPanelComposer>();
+        services.AddScoped<IContentAdminAuthorizer, ContentAdminAuthorizer>();
+        services.AddSingleton<IErrorCatalogContributor, ContentErrorCatalogContributor>();
+        services.AddSingleton<IErrorResourceSet, ContentErrorResourceSet>();
         return services;
     }
 }

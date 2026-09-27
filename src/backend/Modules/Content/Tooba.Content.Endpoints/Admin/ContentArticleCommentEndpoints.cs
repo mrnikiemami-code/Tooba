@@ -1,7 +1,15 @@
+﻿using MediatR;
 using Microsoft.AspNetCore.Routing;
 using Tooba.BuildingBlocks;
-using Tooba.BuildingBlocks.Security;
-using Tooba.Content.Application;
+using Tooba.BuildingBlocks.Presentation;
+using Tooba.BuildingBlocks.Results;
+using Tooba.Content.Application.Commands.ApproveArticleComment;
+using Tooba.Content.Application.Commands.CreateArticleComment;
+using Tooba.Content.Application.Commands.HideArticleComment;
+using Tooba.Content.Application.Commands.MarkArticleCommentPending;
+using Tooba.Content.Application.Commands.RejectArticleComment;
+using Tooba.Content.Application.Queries.ListArticleComments;
+using Tooba.Content.Contracts.Errors;
 using Tooba.Content.Domain;
 
 namespace Tooba.Content.Endpoints.Admin;
@@ -21,173 +29,75 @@ public static class ContentArticleCommentEndpoints
         admin.MapPost("/{commentId:guid}/pending", MarkPendingAsync);
     }
 
-    private static IResult ToError(PlatformHttpException ex) =>
-        Results.Json(new { title = ex.Title, errorCode = ex.ErrorCode }, statusCode: ex.StatusCode);
-
-    private static IResult MapInvalid(InvalidOperationException ex)
-    {
-        var message = ex.Message ?? "";
-        string[] known =
-        [
-            ArticleCommentCodes.NotFound,
-            ArticleCommentCodes.ArticleNotFound,
-            ArticleCommentCodes.InvalidTransition,
-            ArticleCommentCodes.InvalidPayload,
-            ArticleCommentCodes.Forbidden,
-        ];
-
-        var errorCode = "content.comment.rejected";
-        foreach (var code in known)
-        {
-            if (message.Contains(code, StringComparison.Ordinal))
-            {
-                errorCode = code;
-                break;
-            }
-        }
-
-        var status = errorCode is ArticleCommentCodes.NotFound or ArticleCommentCodes.ArticleNotFound
-            ? StatusCodes.Status404NotFound
-            : errorCode is ArticleCommentCodes.Forbidden
-                ? StatusCodes.Status403Forbidden
-                : StatusCodes.Status400BadRequest;
-
-        return Results.Json(new { title = "Request rejected", errorCode }, statusCode: status);
-    }
-
     private static async Task<IResult> ListAsync(
-        Guid articleId,
-        IArticleCommentDirectory directory,
-        HttpRequest request,
-        IAdminPanelAccess adminPanelAccess,
-        ICurrentTenant tenant,
-        IAuthorizationService authz,
-        string? status = null,
-        string? search = null,
-        int skip = 0,
-        int take = 20,
+        Guid articleId, ISender sender, ApiResponseFactory api,
+        IContentAdminAuthorizer auth, HttpContext http,
+        string? status = null, string? search = null, int skip = 0, int take = 20,
         CancellationToken cancellationToken = default)
     {
-        try
+        await auth.RequireAsync(http, ContentAdminPermissions.View, cancellationToken);
+        ArticleCommentStatus? parsed = null;
+        if (!string.IsNullOrWhiteSpace(status))
         {
-            await ContentAdminAccess.RequireAsync(
-                request, adminPanelAccess, tenant, authz, ContentAdminAccess.View, cancellationToken);
-            ArticleCommentStatus? parsed = null;
-            if (!string.IsNullOrWhiteSpace(status))
-            {
-                if (!Enum.TryParse<ArticleCommentStatus>(status, ignoreCase: true, out var value))
-                    return Results.Json(new { title = "Request rejected", errorCode = ArticleCommentCodes.InvalidPayload }, statusCode: 400);
-                parsed = value;
-            }
-
-            return Results.Json(await directory.ListForArticleAsync(articleId, parsed, search, skip, take, cancellationToken));
+            if (!Enum.TryParse<ArticleCommentStatus>(status, ignoreCase: true, out var value))
+                return api.FromFailure(new SemanticError(ContentErrorCodes.CommentInvalidPayload));
+            parsed = value;
         }
-        catch (PlatformHttpException ex) { return ToError(ex); }
-        catch (InvalidOperationException ex) { return MapInvalid(ex); }
+
+        return api.From(await sender.Send(
+            new ListArticleCommentsQuery(articleId, parsed, search, skip, take), cancellationToken));
     }
 
     private static async Task<IResult> CreateAsync(
-        Guid articleId,
-        CreateArticleCommentBody body,
-        IArticleCommentDirectory directory,
-        HttpRequest request,
-        IAdminPanelAccess adminPanelAccess,
-        ICurrentTenant tenant,
-        IAuthorizationService authz,
-        CancellationToken cancellationToken)
+        Guid articleId, CreateArticleCommentBody body, ISender sender, ApiResponseFactory api,
+        IContentAdminAuthorizer auth, HttpContext http, CancellationToken cancellationToken)
     {
-        try
-        {
-            await ContentAdminAccess.RequireAsync(
-                request, adminPanelAccess, tenant, authz, ContentAdminAccess.Edit, cancellationToken);
-            var created = await directory.CreateAsync(
-                articleId,
-                new CreateArticleCommentCommand(body.DisplayName, body.Body, body.AuthorPartyId),
-                cancellationToken);
-            return Results.Json(created);
-        }
-        catch (PlatformHttpException ex) { return ToError(ex); }
-        catch (InvalidOperationException ex) { return MapInvalid(ex); }
+        await auth.RequireAsync(http, ContentAdminPermissions.Edit, cancellationToken);
+        return api.From(await sender.Send(
+            new CreateArticleCommentCommand(articleId, body.DisplayName, body.Body, body.AuthorPartyId),
+            cancellationToken));
     }
 
-    private static Task<IResult> ApproveAsync(
-        Guid articleId,
-        Guid commentId,
-        ModerateArticleCommentBody? body,
-        IArticleCommentDirectory directory,
-        HttpRequest request,
-        IAdminPanelAccess adminPanelAccess,
-        ICurrentTenant tenant,
-        IAuthorizationService authz,
-        CancellationToken cancellationToken) =>
-        ModerateAsync(articleId, commentId, body, directory, request, adminPanelAccess, tenant, authz, cancellationToken,
-            (dir, aid, cid, actor, cmd, ct) => dir.ApproveAsync(aid, cid, actor, cmd, ct));
-
-    private static Task<IResult> RejectAsync(
-        Guid articleId,
-        Guid commentId,
-        ModerateArticleCommentBody? body,
-        IArticleCommentDirectory directory,
-        HttpRequest request,
-        IAdminPanelAccess adminPanelAccess,
-        ICurrentTenant tenant,
-        IAuthorizationService authz,
-        CancellationToken cancellationToken) =>
-        ModerateAsync(articleId, commentId, body, directory, request, adminPanelAccess, tenant, authz, cancellationToken,
-            (dir, aid, cid, actor, cmd, ct) => dir.RejectAsync(aid, cid, actor, cmd, ct));
-
-    private static Task<IResult> HideAsync(
-        Guid articleId,
-        Guid commentId,
-        ModerateArticleCommentBody? body,
-        IArticleCommentDirectory directory,
-        HttpRequest request,
-        IAdminPanelAccess adminPanelAccess,
-        ICurrentTenant tenant,
-        IAuthorizationService authz,
-        CancellationToken cancellationToken) =>
-        ModerateAsync(articleId, commentId, body, directory, request, adminPanelAccess, tenant, authz, cancellationToken,
-            (dir, aid, cid, actor, cmd, ct) => dir.HideAsync(aid, cid, actor, cmd, ct));
-
-    private static Task<IResult> MarkPendingAsync(
-        Guid articleId,
-        Guid commentId,
-        ModerateArticleCommentBody? body,
-        IArticleCommentDirectory directory,
-        HttpRequest request,
-        IAdminPanelAccess adminPanelAccess,
-        ICurrentTenant tenant,
-        IAuthorizationService authz,
-        CancellationToken cancellationToken) =>
-        ModerateAsync(articleId, commentId, body, directory, request, adminPanelAccess, tenant, authz, cancellationToken,
-            (dir, aid, cid, actor, cmd, ct) => dir.MarkPendingAsync(aid, cid, actor, cmd, ct));
-
-    private static async Task<IResult> ModerateAsync(
-        Guid articleId,
-        Guid commentId,
-        ModerateArticleCommentBody? body,
-        IArticleCommentDirectory directory,
-        HttpRequest request,
-        IAdminPanelAccess adminPanelAccess,
-        ICurrentTenant tenant,
-        IAuthorizationService authz,
-        CancellationToken cancellationToken,
-        Func<IArticleCommentDirectory, Guid, Guid, Guid, ModerateArticleCommentCommand, CancellationToken, Task<ArticleCommentAdminDto>> action)
+    private static async Task<IResult> ApproveAsync(
+        Guid articleId, Guid commentId, ModerateArticleCommentBody? body,
+        ISender sender, ApiResponseFactory api, IContentAdminAuthorizer auth, HttpContext http,
+        CancellationToken cancellationToken)
     {
-        try
-        {
-            var actor = await ContentAdminAccess.RequireAsync(
-                request, adminPanelAccess, tenant, authz, ContentAdminAccess.Edit, cancellationToken);
-            var cmd = new ModerateArticleCommentCommand(body?.Note);
-            return Results.Json(await action(directory, articleId, commentId, actor, cmd, cancellationToken));
-        }
-        catch (PlatformHttpException ex) { return ToError(ex); }
-        catch (InvalidOperationException ex) { return MapInvalid(ex); }
+        var actor = await auth.RequireAsync(http, ContentAdminPermissions.Edit, cancellationToken);
+        return api.From(await sender.Send(
+            new ApproveArticleCommentCommand(articleId, commentId, actor, body?.Note), cancellationToken));
+    }
+
+    private static async Task<IResult> RejectAsync(
+        Guid articleId, Guid commentId, ModerateArticleCommentBody? body,
+        ISender sender, ApiResponseFactory api, IContentAdminAuthorizer auth, HttpContext http,
+        CancellationToken cancellationToken)
+    {
+        var actor = await auth.RequireAsync(http, ContentAdminPermissions.Edit, cancellationToken);
+        return api.From(await sender.Send(
+            new RejectArticleCommentCommand(articleId, commentId, actor, body?.Note), cancellationToken));
+    }
+
+    private static async Task<IResult> HideAsync(
+        Guid articleId, Guid commentId, ModerateArticleCommentBody? body,
+        ISender sender, ApiResponseFactory api, IContentAdminAuthorizer auth, HttpContext http,
+        CancellationToken cancellationToken)
+    {
+        var actor = await auth.RequireAsync(http, ContentAdminPermissions.Edit, cancellationToken);
+        return api.From(await sender.Send(
+            new HideArticleCommentCommand(articleId, commentId, actor, body?.Note), cancellationToken));
+    }
+
+    private static async Task<IResult> MarkPendingAsync(
+        Guid articleId, Guid commentId, ModerateArticleCommentBody? body,
+        ISender sender, ApiResponseFactory api, IContentAdminAuthorizer auth, HttpContext http,
+        CancellationToken cancellationToken)
+    {
+        var actor = await auth.RequireAsync(http, ContentAdminPermissions.Edit, cancellationToken);
+        return api.From(await sender.Send(
+            new MarkArticleCommentPendingCommand(articleId, commentId, actor, body?.Note), cancellationToken));
     }
 }
 
-/// <summary>بدنهٔ ایجاد نظر Admin.</summary>
 public sealed record CreateArticleCommentBody(string DisplayName, string Body, Guid? AuthorPartyId = null);
-
-/// <summary>بدنهٔ تعدیل با یادداشت اختیاری.</summary>
 public sealed record ModerateArticleCommentBody(string? Note = null);

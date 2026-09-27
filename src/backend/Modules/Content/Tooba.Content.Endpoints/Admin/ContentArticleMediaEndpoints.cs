@@ -1,8 +1,13 @@
+using MediatR;
 using Microsoft.AspNetCore.Routing;
-using Tooba.BuildingBlocks;
-using Tooba.BuildingBlocks.Security;
-using Tooba.Content.Application;
-using Tooba.Content.Domain;
+using Tooba.BuildingBlocks.Presentation;
+using Tooba.Content.Application.Commands.AddGalleryMedia;
+using Tooba.Content.Application.Commands.AssignFeaturedMedia;
+using Tooba.Content.Application.Commands.AssignSeoImage;
+using Tooba.Content.Application.Commands.PatchGalleryMedia;
+using Tooba.Content.Application.Commands.RemoveGalleryMedia;
+using Tooba.Content.Application.Commands.ReorderGallery;
+using Tooba.Content.Application.Queries.GetArticleMediaWorkspace;
 
 namespace Tooba.Content.Endpoints.Admin;
 
@@ -22,194 +27,67 @@ public static class ContentArticleMediaEndpoints
         admin.MapPatch("/gallery/{mediaAssetId:guid}", PatchGalleryAsync);
     }
 
-    private static IResult ToError(PlatformHttpException ex) =>
-        Results.Json(new { title = ex.Title, errorCode = ex.ErrorCode }, statusCode: ex.StatusCode);
-
-    private static IResult MapInvalid(InvalidOperationException ex)
-    {
-        var missing = ex.Message.Contains("یافت نشد", StringComparison.Ordinal);
-        string[] known =
-        [
-            ContentArticleErrorCodes.MediaNotFound,
-            ContentArticleErrorCodes.UnsafeBodyMedia,
-            "content.article.missing",
-        ];
-        var errorCode = "content.article.media.rejected";
-        if (missing) errorCode = "content.article.missing";
-        else
-        {
-            foreach (var code in known)
-            {
-                if (ex.Message.Contains(code, StringComparison.Ordinal))
-                {
-                    errorCode = code;
-                    break;
-                }
-            }
-        }
-
-        return Results.Json(
-            new
-            {
-                title = missing ? "Not Found" : "Bad Request",
-                errorCode,
-                detail = ex.Message,
-            },
-            statusCode: missing ? StatusCodes.Status404NotFound : StatusCodes.Status400BadRequest);
-    }
-
     private static async Task<IResult> GetWorkspaceAsync(
-        Guid articleId,
-        ContentArticleMediaPanelComposer composer,
-        HttpRequest request,
-        IAdminPanelAccess adminPanelAccess,
-        ICurrentTenant tenant,
-        IAuthorizationService authz,
-        CancellationToken cancellationToken)
+        Guid articleId, ISender sender, ApiResponseFactory api,
+        IContentAdminAuthorizer auth, HttpContext http, CancellationToken cancellationToken)
     {
-        try
-        {
-            await ContentAdminAccess.RequireAsync(
-                request, adminPanelAccess, tenant, authz, ContentAdminAccess.View, cancellationToken);
-            return Results.Json(await composer.GetWorkspaceAsync(articleId, cancellationToken));
-        }
-        catch (PlatformHttpException ex) { return ToError(ex); }
-        catch (InvalidOperationException ex) { return MapInvalid(ex); }
+        await auth.RequireAsync(http, ContentAdminPermissions.View, cancellationToken);
+        return api.From(await sender.Send(new GetArticleMediaWorkspaceQuery(articleId), cancellationToken));
     }
 
     private static async Task<IResult> AssignFeaturedAsync(
-        Guid articleId,
-        AssignArticleFeaturedBody body,
-        ContentArticleMediaPanelComposer composer,
-        HttpRequest request,
-        IAdminPanelAccess adminPanelAccess,
-        ICurrentTenant tenant,
-        IAuthorizationService authz,
-        CancellationToken cancellationToken)
+        Guid articleId, AssignMediaBody body, ISender sender, ApiResponseFactory api,
+        IContentAdminAuthorizer auth, HttpContext http, CancellationToken cancellationToken)
     {
-        try
-        {
-            await ContentAdminAccess.RequireAsync(
-                request, adminPanelAccess, tenant, authz, ContentAdminAccess.Edit, cancellationToken);
-            return Results.Json(await composer.AssignFeaturedAsync(articleId, body.MediaAssetId, cancellationToken));
-        }
-        catch (PlatformHttpException ex) { return ToError(ex); }
-        catch (InvalidOperationException ex) { return MapInvalid(ex); }
+        await auth.RequireAsync(http, ContentAdminPermissions.Edit, cancellationToken);
+        return api.From(await sender.Send(new AssignFeaturedMediaCommand(articleId, body.MediaAssetId), cancellationToken));
     }
 
     private static async Task<IResult> AssignSeoImageAsync(
-        Guid articleId,
-        AssignArticleSeoImageBody body,
-        ContentArticleMediaPanelComposer composer,
-        HttpRequest request,
-        IAdminPanelAccess adminPanelAccess,
-        ICurrentTenant tenant,
-        IAuthorizationService authz,
-        CancellationToken cancellationToken)
+        Guid articleId, AssignMediaBody body, ISender sender, ApiResponseFactory api,
+        IContentAdminAuthorizer auth, HttpContext http, CancellationToken cancellationToken)
     {
-        try
-        {
-            await ContentAdminAccess.RequireAsync(
-                request, adminPanelAccess, tenant, authz, ContentAdminAccess.Edit, cancellationToken);
-            return Results.Json(await composer.AssignSeoImageAsync(articleId, body.MediaAssetId, cancellationToken));
-        }
-        catch (PlatformHttpException ex) { return ToError(ex); }
-        catch (InvalidOperationException ex) { return MapInvalid(ex); }
+        await auth.RequireAsync(http, ContentAdminPermissions.Edit, cancellationToken);
+        return api.From(await sender.Send(new AssignSeoImageCommand(articleId, body.MediaAssetId), cancellationToken));
     }
 
     private static async Task<IResult> AddGalleryAsync(
-        Guid articleId,
-        AddArticleGalleryBody body,
-        ContentArticleMediaPanelComposer composer,
-        HttpRequest request,
-        IAdminPanelAccess adminPanelAccess,
-        ICurrentTenant tenant,
-        IAuthorizationService authz,
-        CancellationToken cancellationToken)
+        Guid articleId, AddGalleryBody body, ISender sender, ApiResponseFactory api,
+        IContentAdminAuthorizer auth, HttpContext http, CancellationToken cancellationToken)
     {
-        try
-        {
-            await ContentAdminAccess.RequireAsync(
-                request, adminPanelAccess, tenant, authz, ContentAdminAccess.Edit, cancellationToken);
-            return Results.Json(await composer.AddGalleryAsync(articleId, body.MediaAssetIds ?? [], cancellationToken));
-        }
-        catch (PlatformHttpException ex) { return ToError(ex); }
-        catch (InvalidOperationException ex) { return MapInvalid(ex); }
+        await auth.RequireAsync(http, ContentAdminPermissions.Edit, cancellationToken);
+        return api.From(await sender.Send(
+            new AddGalleryMediaCommand(articleId, body.MediaAssetIds ?? []), cancellationToken));
     }
 
     private static async Task<IResult> RemoveGalleryAsync(
-        Guid articleId,
-        Guid mediaAssetId,
-        ContentArticleMediaPanelComposer composer,
-        HttpRequest request,
-        IAdminPanelAccess adminPanelAccess,
-        ICurrentTenant tenant,
-        IAuthorizationService authz,
-        CancellationToken cancellationToken)
+        Guid articleId, Guid mediaAssetId, ISender sender, ApiResponseFactory api,
+        IContentAdminAuthorizer auth, HttpContext http, CancellationToken cancellationToken)
     {
-        try
-        {
-            await ContentAdminAccess.RequireAsync(
-                request, adminPanelAccess, tenant, authz, ContentAdminAccess.Edit, cancellationToken);
-            return Results.Json(await composer.RemoveGalleryAsync(articleId, mediaAssetId, cancellationToken));
-        }
-        catch (PlatformHttpException ex) { return ToError(ex); }
-        catch (InvalidOperationException ex) { return MapInvalid(ex); }
+        await auth.RequireAsync(http, ContentAdminPermissions.Edit, cancellationToken);
+        return api.From(await sender.Send(new RemoveGalleryMediaCommand(articleId, mediaAssetId), cancellationToken));
     }
 
     private static async Task<IResult> ReorderGalleryAsync(
-        Guid articleId,
-        ReorderArticleGalleryBody body,
-        ContentArticleMediaPanelComposer composer,
-        HttpRequest request,
-        IAdminPanelAccess adminPanelAccess,
-        ICurrentTenant tenant,
-        IAuthorizationService authz,
-        CancellationToken cancellationToken)
+        Guid articleId, ReorderGalleryBody body, ISender sender, ApiResponseFactory api,
+        IContentAdminAuthorizer auth, HttpContext http, CancellationToken cancellationToken)
     {
-        try
-        {
-            await ContentAdminAccess.RequireAsync(
-                request, adminPanelAccess, tenant, authz, ContentAdminAccess.Edit, cancellationToken);
-            return Results.Json(await composer.ReorderGalleryAsync(articleId, body.OrderedMediaAssetIds ?? [], cancellationToken));
-        }
-        catch (PlatformHttpException ex) { return ToError(ex); }
-        catch (InvalidOperationException ex) { return MapInvalid(ex); }
+        await auth.RequireAsync(http, ContentAdminPermissions.Edit, cancellationToken);
+        return api.From(await sender.Send(
+            new ReorderGalleryCommand(articleId, body.OrderedMediaAssetIds ?? []), cancellationToken));
     }
 
     private static async Task<IResult> PatchGalleryAsync(
-        Guid articleId,
-        Guid mediaAssetId,
-        PatchArticleGalleryBody body,
-        ContentArticleMediaPanelComposer composer,
-        HttpRequest request,
-        IAdminPanelAccess adminPanelAccess,
-        ICurrentTenant tenant,
-        IAuthorizationService authz,
-        CancellationToken cancellationToken)
+        Guid articleId, Guid mediaAssetId, PatchGalleryBody body, ISender sender, ApiResponseFactory api,
+        IContentAdminAuthorizer auth, HttpContext http, CancellationToken cancellationToken)
     {
-        try
-        {
-            await ContentAdminAccess.RequireAsync(
-                request, adminPanelAccess, tenant, authz, ContentAdminAccess.Edit, cancellationToken);
-            return Results.Json(await composer.PatchGalleryAsync(articleId, mediaAssetId, body.AltText, body.Caption, cancellationToken));
-        }
-        catch (PlatformHttpException ex) { return ToError(ex); }
-        catch (InvalidOperationException ex) { return MapInvalid(ex); }
+        await auth.RequireAsync(http, ContentAdminPermissions.Edit, cancellationToken);
+        return api.From(await sender.Send(
+            new PatchGalleryMediaCommand(articleId, mediaAssetId, body.AltText, body.Caption), cancellationToken));
     }
 }
 
-/// <summary>بدنهٔ تنظیم تصویر شاخص.</summary>
-public sealed record AssignArticleFeaturedBody(Guid? MediaAssetId);
-
-/// <summary>بدنهٔ تنظیم تصویر SEO.</summary>
-public sealed record AssignArticleSeoImageBody(Guid? MediaAssetId);
-
-/// <summary>بدنهٔ افزودن به گالری.</summary>
-public sealed record AddArticleGalleryBody(IReadOnlyList<Guid>? MediaAssetIds);
-
-/// <summary>بدنهٔ مرتب‌سازی گالری.</summary>
-public sealed record ReorderArticleGalleryBody(IReadOnlyList<Guid>? OrderedMediaAssetIds);
-
-/// <summary>بدنهٔ به‌روزرسانی متادیتای گالری.</summary>
-public sealed record PatchArticleGalleryBody(string? AltText, string? Caption);
+public sealed record AssignMediaBody(Guid? MediaAssetId);
+public sealed record AddGalleryBody(IReadOnlyList<Guid>? MediaAssetIds);
+public sealed record ReorderGalleryBody(IReadOnlyList<Guid>? OrderedMediaAssetIds);
+public sealed record PatchGalleryBody(string? AltText, string? Caption);

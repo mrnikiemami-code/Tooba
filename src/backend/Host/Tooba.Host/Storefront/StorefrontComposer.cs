@@ -18,7 +18,8 @@ using Tooba.Promotion.Application.Checkout;
 using Tooba.Promotion.Application.Merchandising;
 using Tooba.Tax.Contracts;
 using Tooba.Reviews.Application;
-using Tooba.Content.Application;
+using Tooba.Content.Application.Models;
+using Tooba.Content.Application.Ports;
 using Tooba.Content.Domain;
 
 namespace Tooba.Host.Storefront;
@@ -1614,3 +1615,4 @@ public sealed class StorefrontComposer
     }
 
 }
+

@@ -13,9 +13,10 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Tooba.Content.Application\Tooba.Content.Application.csproj" />
-    <ProjectReference Include="..\..\Localization\Tooba.Localization.Application\Tooba.Localization.Application.csproj" />
-    <ProjectReference Include="..\..\Media\Tooba.Media.Application\Tooba.Media.Application.csproj" />
+    <ProjectReference Include="..\Tooba.Content.Contracts\Tooba.Content.Contracts.csproj" />
     <ProjectReference Include="..\Tooba.Content.Domain\Tooba.Content.Domain.csproj" />
+    <ProjectReference Include="..\..\Localization\Tooba.Localization.Contracts\Tooba.Localization.Contracts.csproj" />
+    <ProjectReference Include="..\..\Media\Tooba.Media.Contracts\Tooba.Media.Contracts.csproj" />
     <ProjectReference Include="..\..\Tooba.ModuleContracts\Tooba.ModuleContracts.csproj" />
     <ProjectReference Include="..\..\..\BuildingBlocks\Tooba.Persistence\Tooba.Persistence.csproj" />
   </ItemGroup>

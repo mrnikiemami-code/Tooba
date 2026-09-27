@@ -1,0 +1,71 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="content.article.already_archived" xml:space="preserve"><value>خطای محتوا: content.article.already_archived</value></data>
+  <data name="content.article.archive_not_allowed" xml:space="preserve"><value>خطای محتوا: content.article.archive_not_allowed</value></data>
+  <data name="content.article.delete_not_allowed" xml:space="preserve"><value>خطای محتوا: content.article.delete_not_allowed</value></data>
+  <data name="content.article.gallery_item_missing" xml:space="preserve"><value>خطای محتوا: content.article.gallery_item_missing</value></data>
+  <data name="content.article.locale_locked" xml:space="preserve"><value>خطای محتوا: content.article.locale_locked</value></data>
+  <data name="content.article.media.rejected" xml:space="preserve"><value>خطای محتوا: content.article.media.rejected</value></data>
+  <data name="content.article.media_not_found" xml:space="preserve"><value>خطای محتوا: content.article.media_not_found</value></data>
+  <data name="content.article.missing" xml:space="preserve"><value>خطای محتوا: content.article.missing</value></data>
+  <data name="content.article.unsafe_body_media" xml:space="preserve"><value>خطای محتوا: content.article.unsafe_body_media</value></data>
+  <data name="content.author.inactive" xml:space="preserve"><value>خطای محتوا: content.author.inactive</value></data>
+  <data name="content.author.invalid_display_name" xml:space="preserve"><value>خطای محتوا: content.author.invalid_display_name</value></data>
+  <data name="content.author.invalid_field" xml:space="preserve"><value>خطای محتوا: content.author.invalid_field</value></data>
+  <data name="content.author.invalid_full_bio" xml:space="preserve"><value>خطای محتوا: content.author.invalid_full_bio</value></data>
+  <data name="content.author.invalid_short_bio" xml:space="preserve"><value>خطای محتوا: content.author.invalid_short_bio</value></data>
+  <data name="content.author.invalid_slug" xml:space="preserve"><value>خطای محتوا: content.author.invalid_slug</value></data>
+  <data name="content.author.invalid_url" xml:space="preserve"><value>خطای محتوا: content.author.invalid_url</value></data>
+  <data name="content.author.not_found" xml:space="preserve"><value>خطای محتوا: content.author.not_found</value></data>
+  <data name="content.author.required_for_publish" xml:space="preserve"><value>خطای محتوا: content.author.required_for_publish</value></data>
+  <data name="content.author.slug_duplicate" xml:space="preserve"><value>خطای محتوا: content.author.slug_duplicate</value></data>
+  <data name="content.authorization.denied" xml:space="preserve"><value>خطای محتوا: content.authorization.denied</value></data>
+  <data name="content.authorization.unavailable" xml:space="preserve"><value>خطای محتوا: content.authorization.unavailable</value></data>
+  <data name="content.category.cross_language_parent" xml:space="preserve"><value>خطای محتوا: content.category.cross_language_parent</value></data>
+  <data name="content.category.cycle_detected" xml:space="preserve"><value>خطای محتوا: content.category.cycle_detected</value></data>
+  <data name="content.category.descendant_parent" xml:space="preserve"><value>خطای محتوا: content.category.descendant_parent</value></data>
+  <data name="content.category.has_articles" xml:space="preserve"><value>خطای محتوا: content.category.has_articles</value></data>
+  <data name="content.category.has_children" xml:space="preserve"><value>خطای محتوا: content.category.has_children</value></data>
+  <data name="content.category.inactive" xml:space="preserve"><value>خطای محتوا: content.category.inactive</value></data>
+  <data name="content.category.invalid_description" xml:space="preserve"><value>خطای محتوا: content.category.invalid_description</value></data>
+  <data name="content.category.invalid_field" xml:space="preserve"><value>خطای محتوا: content.category.invalid_field</value></data>
+  <data name="content.category.invalid_language" xml:space="preserve"><value>خطای محتوا: content.category.invalid_language</value></data>
+  <data name="content.category.invalid_name" xml:space="preserve"><value>خطای محتوا: content.category.invalid_name</value></data>
+  <data name="content.category.invalid_parent" xml:space="preserve"><value>خطای محتوا: content.category.invalid_parent</value></data>
+  <data name="content.category.invalid_seo_description" xml:space="preserve"><value>خطای محتوا: content.category.invalid_seo_description</value></data>
+  <data name="content.category.invalid_seo_title" xml:space="preserve"><value>خطای محتوا: content.category.invalid_seo_title</value></data>
+  <data name="content.category.invalid_short_description" xml:space="preserve"><value>خطای محتوا: content.category.invalid_short_description</value></data>
+  <data name="content.category.invalid_slug" xml:space="preserve"><value>خطای محتوا: content.category.invalid_slug</value></data>
+  <data name="content.category.language_mismatch" xml:space="preserve"><value>خطای محتوا: content.category.language_mismatch</value></data>
+  <data name="content.category.max_depth_exceeded" xml:space="preserve"><value>خطای محتوا: content.category.max_depth_exceeded</value></data>
+  <data name="content.category.not_found" xml:space="preserve"><value>خطای محتوا: content.category.not_found</value></data>
+  <data name="content.category.self_parent" xml:space="preserve"><value>خطای محتوا: content.category.self_parent</value></data>
+  <data name="content.category.slug_duplicate" xml:space="preserve"><value>خطای محتوا: content.category.slug_duplicate</value></data>
+  <data name="content.comment.article_not_found" xml:space="preserve"><value>خطای محتوا: content.comment.article_not_found</value></data>
+  <data name="content.comment.forbidden" xml:space="preserve"><value>خطای محتوا: content.comment.forbidden</value></data>
+  <data name="content.comment.invalid_payload" xml:space="preserve"><value>خطای محتوا: content.comment.invalid_payload</value></data>
+  <data name="content.comment.invalid_transition" xml:space="preserve"><value>خطای محتوا: content.comment.invalid_transition</value></data>
+  <data name="content.comment.not_found" xml:space="preserve"><value>خطای محتوا: content.comment.not_found</value></data>
+  <data name="content.comment.rejected" xml:space="preserve"><value>خطای محتوا: content.comment.rejected</value></data>
+  <data name="content.create.rejected" xml:space="preserve"><value>خطای محتوا: content.create.rejected</value></data>
+  <data name="content.delete.rejected" xml:space="preserve"><value>خطای محتوا: content.delete.rejected</value></data>
+  <data name="content.preview.unavailable" xml:space="preserve"><value>خطای محتوا: content.preview.unavailable</value></data>
+  <data name="content.publish.forbidden" xml:space="preserve"><value>خطای محتوا: content.publish.forbidden</value></data>
+  <data name="content.publish.invalid_schedule" xml:space="preserve"><value>خطای محتوا: content.publish.invalid_schedule</value></data>
+  <data name="content.publish.not_ready" xml:space="preserve"><value>خطای محتوا: content.publish.not_ready</value></data>
+  <data name="content.slug.duplicate" xml:space="preserve"><value>خطای محتوا: content.slug.duplicate</value></data>
+  <data name="content.tag.article_not_found" xml:space="preserve"><value>خطای محتوا: content.tag.article_not_found</value></data>
+  <data name="content.tag.duplicate_name" xml:space="preserve"><value>خطای محتوا: content.tag.duplicate_name</value></data>
+  <data name="content.tag.inactive" xml:space="preserve"><value>خطای محتوا: content.tag.inactive</value></data>
+  <data name="content.tag.invalid_language" xml:space="preserve"><value>خطای محتوا: content.tag.invalid_language</value></data>
+  <data name="content.tag.invalid_name" xml:space="preserve"><value>خطای محتوا: content.tag.invalid_name</value></data>
+  <data name="content.tag.language_mismatch" xml:space="preserve"><value>خطای محتوا: content.tag.language_mismatch</value></data>
+  <data name="content.tag.not_found" xml:space="preserve"><value>خطای محتوا: content.tag.not_found</value></data>
+  <data name="content.unpublish.invalid_state" xml:space="preserve"><value>خطای محتوا: content.unpublish.invalid_state</value></data>
+  <data name="content.update.rejected" xml:space="preserve"><value>خطای محتوا: content.update.rejected</value></data>
+</root>
+

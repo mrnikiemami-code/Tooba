@@ -1,6 +1,8 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Testcontainers.PostgreSql;
-using Tooba.Content.Application;
+using Tooba.Content.Application.Models;
+using Tooba.Content.Application.Ports;
+using Tooba.Localization.Contracts;
 using Tooba.Content.Domain;
 using Tooba.Content.Infrastructure;
 using Tooba.Content.Infrastructure.Persistence;
@@ -138,23 +140,11 @@ public sealed class ContentCategoryDirectoryTests : IAsyncLifetime
         return new ContentDbContext(options.Options);
     }
 
-    private sealed class PermissiveLanguageDirectory : Tooba.Localization.Application.ILanguageDirectory
+    private sealed class PermissiveLanguageDirectory : Tooba.Localization.Contracts.ILanguageActivationPort
     {
-        public Task EnsureActiveLanguageCodeAsync(string code, CancellationToken cancellationToken) => Task.CompletedTask;
-        public Task<IReadOnlyList<Tooba.Localization.Application.LanguageSnapshot>> ListAsync(CancellationToken cancellationToken) =>
-            Task.FromResult<IReadOnlyList<Tooba.Localization.Application.LanguageSnapshot>>([]);
-        public Task<IReadOnlyList<Tooba.Localization.Application.LanguageAdminSnapshot>> ListAdminAsync(CancellationToken cancellationToken) =>
-            Task.FromResult<IReadOnlyList<Tooba.Localization.Application.LanguageAdminSnapshot>>([]);
-        public Task<Tooba.Localization.Application.LanguageSnapshot?> GetByCodeAsync(string code, CancellationToken cancellationToken) =>
-            Task.FromResult<Tooba.Localization.Application.LanguageSnapshot?>(null);
-        public Task<Tooba.Localization.Application.LanguageAdminSnapshot?> GetAdminByCodeAsync(string code, CancellationToken cancellationToken) =>
-            Task.FromResult<Tooba.Localization.Application.LanguageAdminSnapshot?>(null);
-        public Task<Tooba.Localization.Application.LanguageSnapshot> CreateAsync(Tooba.Localization.Application.CreateLanguageCommand command, CancellationToken cancellationToken) =>
-            throw new NotSupportedException();
-        public Task<Tooba.Localization.Application.LanguageSnapshot> UpdateAsync(string code, Tooba.Localization.Application.UpdateLanguageCommand command, CancellationToken cancellationToken) =>
-            throw new NotSupportedException();
-        public Task<Tooba.Localization.Application.LanguageSnapshot> PatchAsync(string code, Tooba.Localization.Application.PatchLanguageCommand command, CancellationToken cancellationToken) =>
-            throw new NotSupportedException();
-        public Task BootstrapAsync(CancellationToken cancellationToken) => Task.CompletedTask;
+        public Task EnsureActiveAsync(string languageCode, CancellationToken cancellationToken) => Task.CompletedTask;
+        public Task<bool> IsActiveAsync(string languageCode, CancellationToken cancellationToken) => Task.FromResult(true);
     }
 }
+
+

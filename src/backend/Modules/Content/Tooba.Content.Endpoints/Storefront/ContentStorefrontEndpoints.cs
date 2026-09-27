@@ -1,6 +1,14 @@
+using MediatR;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
+using Tooba.BuildingBlocks.Presentation;
+using Tooba.Content.Application.Queries.GetPublicAuthorBySlug;
+using Tooba.Content.Application.Queries.GetPublicCategoryBySlug;
+using Tooba.Content.Application.Queries.GetPublishedArticleBySlug;
+using Tooba.Content.Application.Queries.ListPublicAuthors;
+using Tooba.Content.Application.Queries.ListPublicCategories;
+using Tooba.Content.Application.Queries.ListPublishedArticles;
 
 namespace Tooba.Content.Endpoints.Storefront;
 
@@ -20,7 +28,8 @@ public static class ContentStorefrontEndpoints
     }
 
     private static async Task<IResult> ListPublishedAsync(
-        ContentPanelComposer composer,
+        ISender sender,
+        ApiResponseFactory api,
         int page = 1,
         int pageSize = 20,
         string? category = null,
@@ -28,54 +37,45 @@ public static class ContentStorefrontEndpoints
         string? categorySlug = null,
         string? authorSlug = null,
         CancellationToken cancellationToken = default) =>
-        Results.Json(await composer.ListPublishedAsync(
-            page,
-            pageSize,
-            category,
-            locale,
-            categorySlug,
-            authorSlug,
+        api.From(await sender.Send(
+            new ListPublishedArticlesQuery(page, pageSize, category, locale, categorySlug, authorSlug),
             cancellationToken));
 
     private static async Task<IResult> GetPublishedBySlugAsync(
         string slug,
-        ContentPanelComposer composer,
-        string? locale = null,
-        CancellationToken cancellationToken = default)
-    {
-        var article = await composer.GetPublishedBySlugAsync(slug, locale, cancellationToken);
-        return article is null ? Results.NotFound() : Results.Json(article);
-    }
-
-    private static async Task<IResult> ListPublicCategoriesAsync(
-        ContentPanelComposer composer,
+        ISender sender,
+        ApiResponseFactory api,
         string? locale = null,
         CancellationToken cancellationToken = default) =>
-        Results.Json(await composer.ListPublicCategoriesAsync(locale, cancellationToken));
+        api.From(await sender.Send(new GetPublishedArticleBySlugQuery(slug, locale), cancellationToken));
+
+    private static async Task<IResult> ListPublicCategoriesAsync(
+        ISender sender,
+        ApiResponseFactory api,
+        string? locale = null,
+        CancellationToken cancellationToken = default) =>
+        api.From(await sender.Send(new ListPublicCategoriesQuery(locale), cancellationToken));
 
     private static async Task<IResult> GetPublicCategoryBySlugAsync(
         string slug,
-        ContentPanelComposer composer,
-        string? locale = null,
-        CancellationToken cancellationToken = default)
-    {
-        var category = await composer.GetPublicCategoryBySlugAsync(locale, slug, cancellationToken);
-        return category is null ? Results.NotFound() : Results.Json(category);
-    }
-
-    private static async Task<IResult> ListPublicAuthorsAsync(
-        ContentPanelComposer composer,
+        ISender sender,
+        ApiResponseFactory api,
         string? locale = null,
         CancellationToken cancellationToken = default) =>
-        Results.Json(await composer.ListPublicAuthorsAsync(locale, cancellationToken));
+        api.From(await sender.Send(new GetPublicCategoryBySlugQuery(slug, locale), cancellationToken));
+
+    private static async Task<IResult> ListPublicAuthorsAsync(
+        ISender sender,
+        ApiResponseFactory api,
+        string? locale = null,
+        CancellationToken cancellationToken = default) =>
+        api.From(await sender.Send(new ListPublicAuthorsQuery(locale), cancellationToken));
 
     private static async Task<IResult> GetPublicAuthorBySlugAsync(
         string slug,
-        ContentPanelComposer composer,
+        ISender sender,
+        ApiResponseFactory api,
         string? locale = null,
-        CancellationToken cancellationToken = default)
-    {
-        var author = await composer.GetPublicAuthorBySlugAsync(slug, locale, cancellationToken);
-        return author is null ? Results.NotFound() : Results.Json(author);
-    }
+        CancellationToken cancellationToken = default) =>
+        api.From(await sender.Send(new GetPublicAuthorBySlugQuery(slug, locale), cancellationToken));
 }

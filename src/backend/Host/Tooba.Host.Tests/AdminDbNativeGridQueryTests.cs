@@ -79,7 +79,7 @@ public sealed class AdminDbNativeGridQueryTests
     {
         var root = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", "Tooba.Host"));
         var contentComposer = Path.GetFullPath(Path.Combine(
-            root, "..", "..", "Modules", "Content", "Tooba.Content.Endpoints", "ContentPanelComposer.cs"));
+            root, "..", "..", "Modules", "Content", "Tooba.Content.Infrastructure", "Adapters", "ContentGridAdapters.cs"));
         var files = new[]
         {
             Path.Combine(root, "Admin", "AdminPanelComposer.cs"),
@@ -196,3 +196,4 @@ public sealed class AdminDbNativeGridQueryTests
         return new ContentDbContext(options);
     }
 }
+

@@ -15,7 +15,15 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Tooba.Content.Application\Tooba.Content.Application.csproj" />
-    <ProjectReference Include="..\Tooba.Content.Infrastructure\Tooba.Content.Infrastructure.csproj" />
+    <ProjectReference Include="..\Tooba.Content.Contracts\Tooba.Content.Contracts.csproj" />
     <ProjectReference Include="..\..\..\BuildingBlocks\Tooba.BuildingBlocks\Tooba.BuildingBlocks.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Update="Resources\ContentErrors.resx">
+      <Generator></Generator>
+    </EmbeddedResource>
+    <EmbeddedResource Update="Resources\ContentErrors.fa.resx">
+      <Generator></Generator>
+    </EmbeddedResource>
   </ItemGroup>
 </Project>

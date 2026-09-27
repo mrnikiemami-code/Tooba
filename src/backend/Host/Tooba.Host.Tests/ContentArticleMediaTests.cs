@@ -1,6 +1,8 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Testcontainers.PostgreSql;
-using Tooba.Content.Application;
+using Tooba.Content.Application.Models;
+using Tooba.Content.Application.Ports;
+using Tooba.Localization.Contracts;
 using Tooba.Content.Domain;
 using Tooba.Content.Infrastructure;
 using Tooba.Content.Infrastructure.Persistence;
@@ -145,16 +147,11 @@ public sealed class ContentArticleMediaTests : IAsyncLifetime
             Task.CompletedTask;
     }
 
-    private sealed class PermissiveLanguageDirectory : ILanguageDirectory
+    private sealed class PermissiveLanguageDirectory : Tooba.Localization.Contracts.ILanguageActivationPort
     {
-        public Task EnsureActiveLanguageCodeAsync(string code, CancellationToken cancellationToken) => Task.CompletedTask;
-        public Task<IReadOnlyList<LanguageSnapshot>> ListAsync(CancellationToken cancellationToken) => Task.FromResult<IReadOnlyList<LanguageSnapshot>>([]);
-        public Task<IReadOnlyList<LanguageAdminSnapshot>> ListAdminAsync(CancellationToken cancellationToken) => Task.FromResult<IReadOnlyList<LanguageAdminSnapshot>>([]);
-        public Task<LanguageSnapshot?> GetByCodeAsync(string code, CancellationToken cancellationToken) => Task.FromResult<LanguageSnapshot?>(null);
-        public Task<LanguageAdminSnapshot?> GetAdminByCodeAsync(string code, CancellationToken cancellationToken) => Task.FromResult<LanguageAdminSnapshot?>(null);
-        public Task<LanguageSnapshot> CreateAsync(CreateLanguageCommand command, CancellationToken cancellationToken) => throw new NotSupportedException();
-        public Task<LanguageSnapshot> UpdateAsync(string code, UpdateLanguageCommand command, CancellationToken cancellationToken) => throw new NotSupportedException();
-        public Task<LanguageSnapshot> PatchAsync(string code, PatchLanguageCommand command, CancellationToken cancellationToken) => throw new NotSupportedException();
-        public Task BootstrapAsync(CancellationToken cancellationToken) => Task.CompletedTask;
+        public Task EnsureActiveAsync(string languageCode, CancellationToken cancellationToken) => Task.CompletedTask;
+        public Task<bool> IsActiveAsync(string languageCode, CancellationToken cancellationToken) => Task.FromResult(true);
     }
 }
+
+

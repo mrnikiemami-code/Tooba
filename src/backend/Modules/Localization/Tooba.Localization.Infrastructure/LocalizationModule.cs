@@ -20,6 +20,7 @@ public sealed class LocalizationModule : IToobaModule
         services.AddSingleton<IOutboxModuleRegistration, LocalizationOutboxRegistration>();
         services.AddScoped<ILanguageDirectory, LanguageDirectory>();
         services.AddScoped<ILanguageLookup, LanguageLookupBridge>();
+        services.AddScoped<ILanguageActivationPort, LanguageActivationBridge>();
         services.AddHostedService<LanguageBootstrapHostedService>();
         services.AddDbContext<LocalizationDbContext>((sp, options) =>
         {

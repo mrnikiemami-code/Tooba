@@ -1,6 +1,6 @@
-using Tooba.BuildingBlocks;
+﻿using Tooba.BuildingBlocks;
 using Tooba.BuildingBlocks.Grid;
-using Tooba.Content.Application;
+using Tooba.Content.Application.Models;
 
 namespace Tooba.Content.Infrastructure.Grid;
 
@@ -162,3 +162,4 @@ public static class ContentAdminGridPolicies
         return new GridAdvancedFilterExpression(normalized, connectors);
     }
 }
+

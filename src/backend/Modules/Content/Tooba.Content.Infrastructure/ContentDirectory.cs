@@ -1,8 +1,11 @@
-using Microsoft.EntityFrameworkCore;
-using Tooba.Content.Application;
+﻿using Microsoft.EntityFrameworkCore;
+using Tooba.Content.Application.Models;
+using Tooba.Content.Application.Ports;
+using Tooba.Content.Contracts.Errors;
+using Tooba.BuildingBlocks;
 using Tooba.Content.Domain;
 using Tooba.Content.Infrastructure.Persistence;
-using Tooba.Localization.Application;
+using Tooba.Localization.Contracts;
 
 namespace Tooba.Content.Infrastructure;
 
@@ -10,7 +13,7 @@ namespace Tooba.Content.Infrastructure;
 public sealed class ContentDirectory : IContentDirectory
 {
     private readonly ContentDbContext _db;
-    private readonly ILanguageDirectory _languages;
+    private readonly ILanguageActivationPort _languages;
     private readonly IContentCategoryDirectory _categories;
     private readonly IContentAuthorDirectory _authors;
     private readonly IContentTagDirectory _tags;
@@ -18,7 +21,7 @@ public sealed class ContentDirectory : IContentDirectory
     /// <summary>DbContext مالک را تزریق می‌کند.</summary>
     public ContentDirectory(
         ContentDbContext db,
-        ILanguageDirectory languages,
+        ILanguageActivationPort languages,
         IContentCategoryDirectory categories,
         IContentAuthorDirectory authors,
         IContentTagDirectory tags)
@@ -169,10 +172,10 @@ public sealed class ContentDirectory : IContentDirectory
                 article => article.Slug == slug && article.Locale == locale,
                 cancellationToken))
         {
-            throw new InvalidOperationException("slug مقاله تکراری است.");
+            throw new PlatformHttpException(409, "Conflict", ContentErrorCodes.SlugDuplicate);
         }
 
-        await _languages.EnsureActiveLanguageCodeAsync(locale, cancellationToken);
+        await _languages.EnsureActiveAsync(locale, cancellationToken);
         await _categories.EnsureArticleCategoryLanguageMatchAsync(locale, command.CategoryId, cancellationToken, isNewAssignment: true);
         await _authors.EnsureArticleAuthorAssignmentAsync(command.AuthorId, isNewAssignment: true, cancellationToken);
         var categoryLabel = await ResolveCategoryLabelAsync(command.CategoryId, command.Category, cancellationToken);
@@ -216,28 +219,28 @@ public sealed class ContentDirectory : IContentDirectory
         CancellationToken cancellationToken)
     {
         var article = await _db.Articles.FirstOrDefaultAsync(row => row.ArticleId == articleId, cancellationToken)
-            ?? throw new InvalidOperationException("مقاله یافت نشد.");
+            ?? throw new PlatformHttpException(404, "Not Found", ContentErrorCodes.ArticleMissing);
         var now = DateTimeOffset.UtcNow;
         var locale = string.IsNullOrWhiteSpace(command.Locale) ? article.Locale : command.Locale.Trim();
         if (!string.Equals(locale, article.Locale, StringComparison.Ordinal))
         {
             if (!article.CanChangeLocale())
             {
-                throw new InvalidOperationException(ContentArticleErrorCodes.LocaleLocked);
+                throw new PlatformHttpException(400, "Bad Request", ContentArticleErrorCodes.LocaleLocked);
             }
 
             if (await _db.ArticleMedia.AnyAsync(row => row.ArticleId == articleId, cancellationToken))
             {
-                throw new InvalidOperationException(ContentArticleErrorCodes.LocaleLocked);
+                throw new PlatformHttpException(400, "Bad Request", ContentArticleErrorCodes.LocaleLocked);
             }
 
             if (await _db.ArticleTags.AnyAsync(row => row.ArticleId == articleId, cancellationToken))
             {
-                throw new InvalidOperationException(ContentArticleErrorCodes.LocaleLocked);
+                throw new PlatformHttpException(400, "Bad Request", ContentArticleErrorCodes.LocaleLocked);
             }
         }
 
-        await _languages.EnsureActiveLanguageCodeAsync(locale, cancellationToken);
+        await _languages.EnsureActiveAsync(locale, cancellationToken);
         var isNewCategoryAssignment = command.CategoryId != article.CategoryId;
         await _categories.EnsureArticleCategoryLanguageMatchAsync(
             locale,
@@ -286,17 +289,17 @@ public sealed class ContentDirectory : IContentDirectory
     public async Task<AdminArticleSnapshot> PublishAsync(Guid articleId, CancellationToken cancellationToken)
     {
         var article = await _db.Articles.FirstOrDefaultAsync(row => row.ArticleId == articleId, cancellationToken)
-            ?? throw new InvalidOperationException("مقاله یافت نشد.");
+            ?? throw new PlatformHttpException(404, "Not Found", ContentErrorCodes.ArticleMissing);
         if (article.Status == ContentPublicationStatus.Archived)
         {
-            throw new InvalidOperationException(ArticlePublicationCodes.PublishForbidden);
+            throw new PlatformHttpException(400, "Bad Request", ArticlePublicationCodes.PublishForbidden);
         }
 
         var readiness = await EvaluateReadinessAsync(article, cancellationToken);
         if (!readiness.CanPublish)
         {
             var codes = string.Join(",", readiness.RequiredMissing.Select(c => c.Key));
-            throw new InvalidOperationException($"{ArticlePublicationCodes.NotReady}:{codes}");
+            throw new PlatformHttpException(400, "Publish not ready", ContentErrorCodes.PublishNotReady);
         }
 
         var now = DateTimeOffset.UtcNow;
@@ -343,10 +346,10 @@ public sealed class ContentDirectory : IContentDirectory
     public async Task<AdminArticleSnapshot> UnpublishAsync(Guid articleId, CancellationToken cancellationToken)
     {
         var article = await _db.Articles.FirstOrDefaultAsync(row => row.ArticleId == articleId, cancellationToken)
-            ?? throw new InvalidOperationException("مقاله یافت نشد.");
+            ?? throw new PlatformHttpException(404, "Not Found", ContentErrorCodes.ArticleMissing);
         if (article.Status != ContentPublicationStatus.Published)
         {
-            throw new InvalidOperationException(ArticlePublicationCodes.UnpublishInvalid);
+            throw new PlatformHttpException(400, "Bad Request", ArticlePublicationCodes.UnpublishInvalid);
         }
 
         var now = DateTimeOffset.UtcNow;
@@ -368,9 +371,9 @@ public sealed class ContentDirectory : IContentDirectory
     public async Task<AdminArticleSnapshot> ArchiveAsync(Guid articleId, CancellationToken cancellationToken)
     {
         var article = await _db.Articles.FirstOrDefaultAsync(row => row.ArticleId == articleId, cancellationToken)
-            ?? throw new InvalidOperationException("مقاله یافت نشد.");
+            ?? throw new PlatformHttpException(404, "Not Found", ContentErrorCodes.ArticleMissing);
         if (!ContentArticleLifecycleRules.CanArchive(article.Status))
-            throw new InvalidOperationException(ContentArticleErrorCodes.ArchiveNotAllowed);
+            throw new PlatformHttpException(400, "Bad Request", ContentArticleErrorCodes.ArchiveNotAllowed);
         var now = DateTimeOffset.UtcNow;
         var previous = article.Status;
         article.Archive(now);
@@ -390,9 +393,9 @@ public sealed class ContentDirectory : IContentDirectory
     public async Task DeleteDraftAsync(Guid articleId, CancellationToken cancellationToken)
     {
         var article = await _db.Articles.FirstOrDefaultAsync(row => row.ArticleId == articleId, cancellationToken)
-            ?? throw new InvalidOperationException("مقاله یافت نشد.");
+            ?? throw new PlatformHttpException(404, "Not Found", ContentErrorCodes.ArticleMissing);
         if (!ContentArticleLifecycleRules.CanHardDelete(article.Status))
-            throw new InvalidOperationException(ContentArticleErrorCodes.DeleteNotAllowed);
+            throw new PlatformHttpException(400, "Bad Request", ContentArticleErrorCodes.DeleteNotAllowed);
 
         var gallery = await _db.ArticleMedia.Where(row => row.ArticleId == articleId).ToListAsync(cancellationToken);
         if (gallery.Count > 0)
@@ -411,7 +414,7 @@ public sealed class ContentDirectory : IContentDirectory
     {
         var article = await _db.Articles.AsNoTracking()
             .FirstOrDefaultAsync(row => row.ArticleId == articleId, cancellationToken)
-            ?? throw new InvalidOperationException("مقاله یافت نشد.");
+            ?? throw new PlatformHttpException(404, "Not Found", ContentErrorCodes.ArticleMissing);
         return await EvaluateReadinessAsync(article, cancellationToken);
     }
 
@@ -480,7 +483,7 @@ public sealed class ContentDirectory : IContentDirectory
         var exists = await _db.Articles.AsNoTracking().AnyAsync(row => row.ArticleId == articleId, cancellationToken);
         if (!exists)
         {
-            throw new InvalidOperationException("مقاله یافت نشد.");
+            throw new PlatformHttpException(404, "Not Found", ContentErrorCodes.ArticleMissing);
         }
 
         var query = _db.ArticleHistory.AsNoTracking().Where(row => row.ArticleId == articleId);
@@ -515,15 +518,13 @@ public sealed class ContentDirectory : IContentDirectory
         ContentArticle article,
         CancellationToken cancellationToken)
     {
-        var language = await _languages.GetByCodeAsync(article.Locale, cancellationToken);
-        var languageActive = language is not null && language.IsActive;
-        // Permissive test doubles may return null for every language — treat as active when Ensure is no-op in tests.
-        // Production LanguageDirectory returns rows for known codes; missing code = inactive.
-        if (language is null)
+        var languageActive = await _languages.IsActiveAsync(article.Locale, cancellationToken);
+        // Permissive test doubles may return false for every language — treat Ensure as secondary probe.
+        if (!languageActive)
         {
             try
             {
-                await _languages.EnsureActiveLanguageCodeAsync(article.Locale, cancellationToken);
+                await _languages.EnsureActiveAsync(article.Locale, cancellationToken);
                 languageActive = true;
             }
             catch (InvalidOperationException)
@@ -768,7 +769,7 @@ public sealed class ContentDirectory : IContentDirectory
         }
 
         var workspace = await _authors.GetWorkspaceAsync(authorId.Value, cancellationToken)
-            ?? throw new InvalidOperationException(ContentAuthorErrorCodes.NotFound);
+            ?? throw new PlatformHttpException(404, "Request rejected", ContentAuthorErrorCodes.NotFound);
         return workspace.DisplayName;
     }
 
@@ -777,3 +778,6 @@ public sealed class ContentDirectory : IContentDirectory
             ? []
             : tagsCsv.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
 }
+
+
+

@@ -1,5 +1,8 @@
-using Microsoft.EntityFrameworkCore;
-using Tooba.Content.Application;
+﻿using Microsoft.EntityFrameworkCore;
+using Tooba.Content.Application.Models;
+using Tooba.Content.Application.Ports;
+using Tooba.Content.Contracts.Errors;
+using Tooba.BuildingBlocks;
 using Tooba.Content.Domain;
 using Tooba.Content.Infrastructure.Persistence;
 
@@ -143,7 +146,7 @@ public sealed class ContentArticleMediaDirectory : IContentArticleMediaDirectory
         var row = await _db.ArticleMedia.FirstOrDefaultAsync(
             item => item.ArticleId == articleId && item.MediaAssetId == mediaAssetId,
             cancellationToken)
-            ?? throw new InvalidOperationException("ردیف گالری مقاله یافت نشد.");
+            ?? throw new PlatformHttpException(404, "Not Found", ContentErrorCodes.GalleryItemMissing);
         row.UpdateMetadata(altText, caption, row.DisplayOrder);
         await TouchArticleAsync(articleId, cancellationToken);
         await _db.SaveChangesAsync(cancellationToken);
@@ -202,11 +205,11 @@ public sealed class ContentArticleMediaDirectory : IContentArticleMediaDirectory
 
     private async Task<ContentArticle> RequireArticleAsync(Guid articleId, CancellationToken cancellationToken) =>
         await _db.Articles.AsNoTracking().FirstOrDefaultAsync(row => row.ArticleId == articleId, cancellationToken)
-        ?? throw new InvalidOperationException("مقاله یافت نشد.");
+        ?? throw new PlatformHttpException(404, "Not Found", ContentErrorCodes.ArticleMissing);
 
     private async Task<ContentArticle> RequireArticleTrackedAsync(Guid articleId, CancellationToken cancellationToken) =>
         await _db.Articles.FirstOrDefaultAsync(row => row.ArticleId == articleId, cancellationToken)
-        ?? throw new InvalidOperationException("مقاله یافت نشد.");
+        ?? throw new PlatformHttpException(404, "Not Found", ContentErrorCodes.ArticleMissing);
 
     private async Task TouchArticleAsync(Guid articleId, CancellationToken cancellationToken)
     {
@@ -225,7 +228,11 @@ public sealed class ContentArticleMediaDirectory : IContentArticleMediaDirectory
         }
         catch (InvalidOperationException)
         {
-            throw new InvalidOperationException(ContentArticleErrorCodes.MediaNotFound);
+            throw new PlatformHttpException(400, "Bad Request", ContentArticleErrorCodes.MediaNotFound);
         }
     }
 }
+
+
+
+

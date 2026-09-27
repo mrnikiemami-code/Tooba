@@ -1,22 +1,22 @@
-﻿using Tooba.Content.Application;
-using Tooba.Content.Domain;
-using Tooba.Media.Application;
+﻿using Tooba.Content.Application.Ports;
+using Tooba.Content.Contracts.Errors;
+using Tooba.Media.Contracts.Ports;
 
 namespace Tooba.Content.Infrastructure.Adapters;
 
-/// <summary>پل Content↔Media برای اعتبارسنج ارجاع DAM.</summary>
-public sealed class ContentMediaAssetValidator : IContentMediaAssetValidator
+/// <summary>Content→Media Contracts readiness adapter.</summary>
+public sealed class ContentMediaAssetValidator(IMediaAssetReadinessPort media) : IContentMediaAssetValidator
 {
-    private readonly IMediaDirectory _media;
-
-    /// <summary>دایرکتوری Media را تزریق می‌کند.</summary>
-    public ContentMediaAssetValidator(IMediaDirectory media) => _media = media;
-
     /// <inheritdoc />
     public async Task EnsureReadyAssetExistsAsync(Guid mediaAssetId, CancellationToken cancellationToken)
     {
-        var asset = await _media.GetAsync(mediaAssetId, cancellationToken);
-        if (asset is null)
-            throw new InvalidOperationException(ContentArticleErrorCodes.MediaNotFound);
+        try
+        {
+            await media.EnsureReadyAsync(mediaAssetId, cancellationToken);
+        }
+        catch (InvalidOperationException)
+        {
+            throw new InvalidOperationException(ContentErrorCodes.MediaNotFound);
+        }
     }
 }

@@ -25,137 +25,88 @@ public sealed class ContentPermissionEnforcementTests
     public void Catalog_exposes_four_content_permission_codes()
     {
         var ids = PermissionCatalog.All.Select(p => p.PermissionId).ToHashSet(StringComparer.Ordinal);
-        Assert.Contains(ContentAdminAccess.View, ids);
-        Assert.Contains(ContentAdminAccess.Create, ids);
-        Assert.Contains(ContentAdminAccess.Edit, ids);
-        Assert.Contains(ContentAdminAccess.Publish, ids);
-        Assert.Equal("content.view", ContentAdminAccess.View);
-        Assert.Equal("content.create", ContentAdminAccess.Create);
-        Assert.Equal("content.edit", ContentAdminAccess.Edit);
-        Assert.Equal("content.publish", ContentAdminAccess.Publish);
+        Assert.Contains(ContentAdminPermissions.View, ids);
+        Assert.Contains(ContentAdminPermissions.Create, ids);
+        Assert.Contains(ContentAdminPermissions.Edit, ids);
+        Assert.Contains(ContentAdminPermissions.Publish, ids);
+        Assert.Equal("content.view", ContentAdminPermissions.View);
+        Assert.Equal("content.create", ContentAdminPermissions.Create);
+        Assert.Equal("content.edit", ContentAdminPermissions.Edit);
+        Assert.Equal("content.publish", ContentAdminPermissions.Publish);
     }
 
     [Fact]
     public async Task Tenant_member_with_content_view_can_list_get()
     {
-        var harness = await CreateHarnessAsync(grant: ContentAdminAccess.View);
-        var actor = await ContentAdminAccess.RequireAsync(
-            Request(AdminActor),
-            harness.AdminAccess,
-            harness.Tenant,
-            harness.Authz,
-            ContentAdminAccess.View,
-            CancellationToken.None);
+        var harness = await CreateHarnessAsync(grant: ContentAdminPermissions.View);
+        var actor = await RequireAsync(harness, ContentAdminPermissions.View);
         Assert.Equal(AdminActor, actor);
     }
 
     [Fact]
     public async Task Tenant_member_without_content_edit_denied_on_put_article_gate()
     {
-        var harness = await CreateHarnessAsync(grant: ContentAdminAccess.View);
+        var harness = await CreateHarnessAsync(grant: ContentAdminPermissions.View);
         var denied = await Assert.ThrowsAsync<PlatformHttpException>(() =>
-            ContentAdminAccess.RequireAsync(
-                Request(AdminActor),
-                harness.AdminAccess,
-                harness.Tenant,
-                harness.Authz,
-                ContentAdminAccess.Edit,
-                CancellationToken.None));
+            RequireAsync(harness, ContentAdminPermissions.Edit));
         Assert.Equal(403, denied.StatusCode);
-        Assert.Equal("admin.authorization.denied", denied.ErrorCode);
-        Assert.Equal("دسترسی محتوا مجاز نیست.", denied.Title);
-        Assert.DoesNotContain("content.edit", denied.Title, StringComparison.Ordinal);
+        Assert.Equal("content.authorization.denied", denied.ErrorCode);
+        Assert.Equal("Authorization denied", denied.Title);
     }
 
     [Fact]
     public async Task Tenant_member_without_content_publish_denied_on_publish_gate()
     {
-        var harness = await CreateHarnessAsync(grant: ContentAdminAccess.Edit);
+        var harness = await CreateHarnessAsync(grant: ContentAdminPermissions.Edit);
         var denied = await Assert.ThrowsAsync<PlatformHttpException>(() =>
-            ContentAdminAccess.RequireAsync(
-                Request(AdminActor),
-                harness.AdminAccess,
-                harness.Tenant,
-                harness.Authz,
-                ContentAdminAccess.Publish,
-                CancellationToken.None));
+            RequireAsync(harness, ContentAdminPermissions.Publish));
         Assert.Equal(403, denied.StatusCode);
-        Assert.Equal("admin.authorization.denied", denied.ErrorCode);
+        Assert.Equal("content.authorization.denied", denied.ErrorCode);
     }
 
     [Fact]
     public async Task Tenant_member_without_content_create_denied_on_post_create_gate()
     {
-        var harness = await CreateHarnessAsync(grant: ContentAdminAccess.View);
+        var harness = await CreateHarnessAsync(grant: ContentAdminPermissions.View);
         var denied = await Assert.ThrowsAsync<PlatformHttpException>(() =>
-            ContentAdminAccess.RequireAsync(
-                Request(AdminActor),
-                harness.AdminAccess,
-                harness.Tenant,
-                harness.Authz,
-                ContentAdminAccess.Create,
-                CancellationToken.None));
+            RequireAsync(harness, ContentAdminPermissions.Create));
         Assert.Equal(403, denied.StatusCode);
-        Assert.Equal("admin.authorization.denied", denied.ErrorCode);
+        Assert.Equal("content.authorization.denied", denied.ErrorCode);
     }
 
     [Fact]
     public async Task Category_patch_without_edit_denied()
     {
-        var harness = await CreateHarnessAsync(grant: ContentAdminAccess.View);
+        var harness = await CreateHarnessAsync(grant: ContentAdminPermissions.View);
         var denied = await Assert.ThrowsAsync<PlatformHttpException>(() =>
-            ContentAdminAccess.RequireAsync(
-                Request(AdminActor),
-                harness.AdminAccess,
-                harness.Tenant,
-                harness.Authz,
-                ContentAdminAccess.Edit,
-                CancellationToken.None));
+            RequireAsync(harness, ContentAdminPermissions.Edit));
         Assert.Equal(403, denied.StatusCode);
-        Assert.Equal("admin.authorization.denied", denied.ErrorCode);
+        Assert.Equal("content.authorization.denied", denied.ErrorCode);
     }
 
     [Fact]
     public async Task Author_deactivate_without_edit_denied()
     {
-        var harness = await CreateHarnessAsync(grant: ContentAdminAccess.Create);
+        var harness = await CreateHarnessAsync(grant: ContentAdminPermissions.Create);
         var denied = await Assert.ThrowsAsync<PlatformHttpException>(() =>
-            ContentAdminAccess.RequireAsync(
-                Request(AdminActor),
-                harness.AdminAccess,
-                harness.Tenant,
-                harness.Authz,
-                ContentAdminAccess.Edit,
-                CancellationToken.None));
+            RequireAsync(harness, ContentAdminPermissions.Edit));
         Assert.Equal(403, denied.StatusCode);
-        Assert.Equal("admin.authorization.denied", denied.ErrorCode);
+        Assert.Equal("content.authorization.denied", denied.ErrorCode);
     }
 
     [Fact]
     public async Task Edit_capability_allows_edit_gate()
     {
-        var harness = await CreateHarnessAsync(grant: ContentAdminAccess.Edit);
-        var actor = await ContentAdminAccess.RequireAsync(
-            Request(AdminActor),
-            harness.AdminAccess,
-            harness.Tenant,
-            harness.Authz,
-            ContentAdminAccess.Edit,
-            CancellationToken.None);
+        var harness = await CreateHarnessAsync(grant: ContentAdminPermissions.Edit);
+        var actor = await RequireAsync(harness, ContentAdminPermissions.Edit);
         Assert.Equal(AdminActor, actor);
     }
 
     [Fact]
     public async Task Publish_capability_allows_publish_gate()
     {
-        var harness = await CreateHarnessAsync(grant: ContentAdminAccess.Publish);
-        var actor = await ContentAdminAccess.RequireAsync(
-            Request(AdminActor),
-            harness.AdminAccess,
-            harness.Tenant,
-            harness.Authz,
-            ContentAdminAccess.Publish,
-            CancellationToken.None);
+        var harness = await CreateHarnessAsync(grant: ContentAdminPermissions.Publish);
+        var actor = await RequireAsync(harness, ContentAdminPermissions.Publish);
         Assert.Equal(AdminActor, actor);
     }
 
@@ -190,24 +141,39 @@ public sealed class ContentPermissionEnforcementTests
 
         foreach (var permission in new[]
                  {
-                     ContentAdminAccess.Create,
-                     ContentAdminAccess.Edit,
-                     ContentAdminAccess.Publish,
+                     ContentAdminPermissions.Create,
+                     ContentAdminPermissions.Edit,
+                     ContentAdminPermissions.Publish,
                  })
         {
             var denied = await Assert.ThrowsAsync<PlatformHttpException>(() =>
-                ContentAdminAccess.RequireAsync(
-                    Request(AdminActor),
-                    adminAccess,
-                    tenant,
-                    unavailable,
-                    permission,
-                    CancellationToken.None));
+                RequireAsync(adminAccess, tenant, unavailable, permission));
             Assert.Equal(503, denied.StatusCode);
-            Assert.Equal("admin.authorization.unavailable", denied.ErrorCode);
-            Assert.Equal("سرویس مجوز در دسترس نیست.", denied.Title);
-            Assert.DoesNotContain(permission, denied.Title, StringComparison.Ordinal);
+            Assert.Equal("content.authorization.unavailable", denied.ErrorCode);
+            Assert.Equal("Authorization unavailable", denied.Title);
         }
+    }
+
+    
+    private static Task<Guid> RequireAsync(
+        (StubCurrentTenant Tenant, IAdminPanelAccess AdminAccess, IAuthorizationService Authz) harness,
+        string permission) =>
+        new ContentAdminAuthorizer(harness.AdminAccess, harness.Tenant, harness.Authz)
+            .RequireAsync(Http(AdminActor), permission, CancellationToken.None);
+
+    private static Task<Guid> RequireAsync(
+        IAdminPanelAccess adminAccess,
+        ICurrentTenant tenant,
+        IAuthorizationService authz,
+        string permission) =>
+        new ContentAdminAuthorizer(adminAccess, tenant, authz)
+            .RequireAsync(Http(AdminActor), permission, CancellationToken.None);
+
+    private static HttpContext Http(Guid actor)
+    {
+        var http = new DefaultHttpContext();
+        http.Request.Headers[AdminPanelAccess.DevActorHeader] = actor.ToString("D");
+        return http;
     }
 
     private static async Task<(
@@ -291,3 +257,4 @@ public sealed class ContentPermissionEnforcementTests
                 request, session, tenant, guard, environment, cancellationToken);
     }
 }
+

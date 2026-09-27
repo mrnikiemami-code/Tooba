@@ -1,5 +1,8 @@
-using Microsoft.EntityFrameworkCore;
-using Tooba.Content.Application;
+﻿using Microsoft.EntityFrameworkCore;
+using Tooba.Content.Application.Models;
+using Tooba.Content.Application.Ports;
+using Tooba.Content.Contracts.Errors;
+using Tooba.BuildingBlocks;
 using Tooba.Content.Domain;
 using Tooba.Content.Infrastructure.Persistence;
 
@@ -61,7 +64,7 @@ public sealed class ContentAuthorDirectory : IContentAuthorDirectory
         var slug = ContentAuthor.NormalizeSlug(command.Slug);
         if (await _db.Authors.AnyAsync(x => x.Slug == slug, cancellationToken))
         {
-            throw new InvalidOperationException(ContentAuthorErrorCodes.SlugDuplicate);
+            throw new PlatformHttpException(409, "Request rejected", ContentAuthorErrorCodes.SlugDuplicate);
         }
 
         var author = ContentAuthor.Create(
@@ -93,7 +96,7 @@ public sealed class ContentAuthorDirectory : IContentAuthorDirectory
             x => x.AuthorId != authorId && x.Slug == slug,
             cancellationToken))
         {
-            throw new InvalidOperationException(ContentAuthorErrorCodes.SlugDuplicate);
+            throw new PlatformHttpException(409, "Request rejected", ContentAuthorErrorCodes.SlugDuplicate);
         }
 
         author.Update(
@@ -159,10 +162,10 @@ public sealed class ContentAuthorDirectory : IContentAuthorDirectory
 
         var author = await _db.Authors.AsNoTracking()
             .FirstOrDefaultAsync(x => x.AuthorId == authorId, cancellationToken)
-            ?? throw new InvalidOperationException(ContentAuthorErrorCodes.NotFound);
+            ?? throw new PlatformHttpException(404, "Request rejected", ContentAuthorErrorCodes.NotFound);
         if (isNewAssignment && !author.IsActive)
         {
-            throw new InvalidOperationException(ContentAuthorErrorCodes.Inactive);
+            throw new PlatformHttpException(400, "Request rejected", ContentAuthorErrorCodes.Inactive);
         }
     }
 
@@ -171,17 +174,17 @@ public sealed class ContentAuthorDirectory : IContentAuthorDirectory
     {
         if (authorId is null)
         {
-            throw new InvalidOperationException(ContentAuthorErrorCodes.RequiredForPublish);
+            throw new PlatformHttpException(400, "Request rejected", ContentAuthorErrorCodes.RequiredForPublish);
         }
 
         _ = await _db.Authors.AsNoTracking()
             .FirstOrDefaultAsync(x => x.AuthorId == authorId, cancellationToken)
-            ?? throw new InvalidOperationException(ContentAuthorErrorCodes.NotFound);
+            ?? throw new PlatformHttpException(404, "Request rejected", ContentAuthorErrorCodes.NotFound);
     }
 
     private async Task<ContentAuthor> FindTrackedAsync(Guid authorId, CancellationToken cancellationToken) =>
         await _db.Authors.FirstOrDefaultAsync(x => x.AuthorId == authorId, cancellationToken)
-        ?? throw new InvalidOperationException(ContentAuthorErrorCodes.NotFound);
+        ?? throw new PlatformHttpException(404, "Request rejected", ContentAuthorErrorCodes.NotFound);
 
     private async Task<ContentAuthorWorkspaceDto> MapWorkspaceAsync(
         ContentAuthor row,
@@ -217,3 +220,5 @@ public sealed class ContentAuthorDirectory : IContentAuthorDirectory
         row.CoverImageMediaAssetId,
         ContentTaxonomySeoRules.BuildAuthorPublicPath(routeLocale, row.Slug));
 }
+
+

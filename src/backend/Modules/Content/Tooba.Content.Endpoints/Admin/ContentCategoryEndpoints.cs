@@ -1,8 +1,16 @@
+﻿using MediatR;
 using Microsoft.AspNetCore.Routing;
-using Tooba.BuildingBlocks;
-using Tooba.BuildingBlocks.Security;
-using Tooba.Content.Application;
-using Tooba.Content.Domain;
+using Tooba.BuildingBlocks.Presentation;
+using Tooba.Content.Application.Commands.ArchiveCategory;
+using Tooba.Content.Application.Commands.CreateCategory;
+using Tooba.Content.Application.Commands.MoveCategory;
+using Tooba.Content.Application.Commands.ReorderCategories;
+using Tooba.Content.Application.Commands.UpdateCategory;
+using Tooba.Content.Application.Commands.UpdateCategoryMedia;
+using Tooba.Content.Application.Commands.UpdateCategorySeo;
+using Tooba.Content.Application.Models;
+using Tooba.Content.Application.Queries.GetCategoryTree;
+using Tooba.Content.Application.Queries.GetCategoryWorkspace;
 
 namespace Tooba.Content.Endpoints.Admin;
 
@@ -25,244 +33,100 @@ public static class ContentCategoryEndpoints
     }
 
     private static async Task<IResult> GetTreeAsync(
-        string languageCode,
-        string? search,
-        IContentCategoryDirectory directory,
-        HttpRequest request,
-        IAdminPanelAccess adminPanelAccess,
-        ICurrentTenant tenant,
-        IAuthorizationService authz,
-        CancellationToken cancellationToken)
+        string languageCode, string? search, ISender sender, ApiResponseFactory api,
+        IContentAdminAuthorizer auth, HttpContext http, CancellationToken cancellationToken)
     {
-        try
-        {
-            await ContentAdminAccess.RequireAsync(
-                request, adminPanelAccess, tenant, authz, ContentAdminAccess.View, cancellationToken);
-            return Results.Json(await directory.GetTreeAsync(languageCode, search, cancellationToken));
-        }
-        catch (PlatformHttpException ex) { return ToError(ex); }
-        catch (InvalidOperationException ex) { return MapInvalid(ex); }
+        await auth.RequireAsync(http, ContentAdminPermissions.View, cancellationToken);
+        return api.From(await sender.Send(new GetCategoryTreeQuery(languageCode, search), cancellationToken));
     }
 
     private static async Task<IResult> GetWorkspaceAsync(
-        Guid id,
-        IContentCategoryDirectory directory,
-        HttpRequest request,
-        IAdminPanelAccess adminPanelAccess,
-        ICurrentTenant tenant,
-        IAuthorizationService authz,
-        CancellationToken cancellationToken)
+        Guid id, ISender sender, ApiResponseFactory api,
+        IContentAdminAuthorizer auth, HttpContext http, CancellationToken cancellationToken)
     {
-        try
-        {
-            await ContentAdminAccess.RequireAsync(
-                request, adminPanelAccess, tenant, authz, ContentAdminAccess.View, cancellationToken);
-            var workspace = await directory.GetWorkspaceAsync(id, cancellationToken);
-            return workspace is null
-                ? Results.Json(new { title = "Not Found", errorCode = ContentCategoryErrorCodes.NotFound }, statusCode: StatusCodes.Status404NotFound)
-                : Results.Json(workspace);
-        }
-        catch (PlatformHttpException ex) { return ToError(ex); }
-        catch (InvalidOperationException ex) { return MapInvalid(ex); }
+        await auth.RequireAsync(http, ContentAdminPermissions.View, cancellationToken);
+        return api.From(await sender.Send(new GetCategoryWorkspaceQuery(id), cancellationToken));
     }
 
     private static async Task<IResult> CreateAsync(
-        CreateContentCategoryHttpRequest body,
-        IContentCategoryDirectory directory,
-        HttpRequest request,
-        IAdminPanelAccess adminPanelAccess,
-        ICurrentTenant tenant,
-        IAuthorizationService authz,
-        CancellationToken cancellationToken)
+        CreateContentCategoryHttpRequest body, ISender sender, ApiResponseFactory api,
+        IContentAdminAuthorizer auth, HttpContext http, CancellationToken cancellationToken)
     {
-        try
-        {
-            await ContentAdminAccess.RequireAsync(
-                request, adminPanelAccess, tenant, authz, ContentAdminAccess.Create, cancellationToken);
-            var created = await directory.CreateAsync(new CreateContentCategoryCommand(
-                body.LanguageCode ?? "",
-                body.ParentCategoryId,
-                body.Name ?? "",
-                body.Slug ?? "",
-                body.ShortDescription,
-                body.Description,
-                body.SortOrder ?? 0), cancellationToken);
-            return Results.Json(created);
-        }
-        catch (PlatformHttpException ex) { return ToError(ex); }
-        catch (InvalidOperationException ex) { return MapInvalid(ex); }
+        await auth.RequireAsync(http, ContentAdminPermissions.Create, cancellationToken);
+        return api.From(await sender.Send(new CreateCategoryCommand(
+            body.LanguageCode ?? "", body.ParentCategoryId, body.Name ?? "", body.Slug ?? "",
+            body.ShortDescription, body.Description, body.SortOrder ?? 0), cancellationToken));
     }
 
     private static async Task<IResult> UpdateAsync(
-        Guid id,
-        UpdateContentCategoryHttpRequest body,
-        IContentCategoryDirectory directory,
-        HttpRequest request,
-        IAdminPanelAccess adminPanelAccess,
-        ICurrentTenant tenant,
-        IAuthorizationService authz,
-        CancellationToken cancellationToken)
+        Guid id, UpdateContentCategoryHttpRequest body, ISender sender, ApiResponseFactory api,
+        IContentAdminAuthorizer auth, HttpContext http, CancellationToken cancellationToken)
     {
-        try
-        {
-            await ContentAdminAccess.RequireAsync(
-                request, adminPanelAccess, tenant, authz, ContentAdminAccess.Edit, cancellationToken);
-            var updated = await directory.UpdateAsync(id, new UpdateContentCategoryCommand(
-                body.Name ?? "",
-                body.Slug ?? "",
-                body.ShortDescription,
-                body.Description,
-                body.SortOrder ?? 0,
-                body.Status ?? "Active"), cancellationToken);
-            return Results.Json(updated);
-        }
-        catch (PlatformHttpException ex) { return ToError(ex); }
-        catch (InvalidOperationException ex) { return MapInvalid(ex); }
+        await auth.RequireAsync(http, ContentAdminPermissions.Edit, cancellationToken);
+        return api.From(await sender.Send(new UpdateCategoryCommand(
+            id, body.Name ?? "", body.Slug ?? "", body.ShortDescription, body.Description,
+            body.SortOrder ?? 0, body.Status ?? "Active"), cancellationToken));
     }
 
     private static async Task<IResult> UpdateSeoAsync(
-        Guid id,
-        UpdateContentCategorySeoHttpRequest body,
-        IContentCategoryDirectory directory,
-        HttpRequest request,
-        IAdminPanelAccess adminPanelAccess,
-        ICurrentTenant tenant,
-        IAuthorizationService authz,
-        CancellationToken cancellationToken)
+        Guid id, UpdateContentCategorySeoHttpRequest body, ISender sender, ApiResponseFactory api,
+        IContentAdminAuthorizer auth, HttpContext http, CancellationToken cancellationToken)
     {
-        try
-        {
-            await ContentAdminAccess.RequireAsync(
-                request, adminPanelAccess, tenant, authz, ContentAdminAccess.Edit, cancellationToken);
-            var updated = await directory.UpdateSeoAsync(id, new UpdateContentCategorySeoCommand(body.SeoTitle, body.SeoDescription), cancellationToken);
-            return Results.Json(updated);
-        }
-        catch (PlatformHttpException ex) { return ToError(ex); }
-        catch (InvalidOperationException ex) { return MapInvalid(ex); }
+        await auth.RequireAsync(http, ContentAdminPermissions.Edit, cancellationToken);
+        return api.From(await sender.Send(new UpdateCategorySeoCommand(id, body.SeoTitle, body.SeoDescription), cancellationToken));
     }
 
     private static async Task<IResult> UpdateMediaAsync(
-        Guid id,
-        UpdateContentCategoryMediaHttpRequest body,
-        IContentCategoryDirectory directory,
-        HttpRequest request,
-        IAdminPanelAccess adminPanelAccess,
-        ICurrentTenant tenant,
-        IAuthorizationService authz,
-        CancellationToken cancellationToken)
+        Guid id, UpdateContentCategoryMediaHttpRequest body, ISender sender, ApiResponseFactory api,
+        IContentAdminAuthorizer auth, HttpContext http, CancellationToken cancellationToken)
     {
-        try
-        {
-            await ContentAdminAccess.RequireAsync(
-                request, adminPanelAccess, tenant, authz, ContentAdminAccess.Edit, cancellationToken);
-            var updated = await directory.UpdateMediaAsync(id, new UpdateContentCategoryMediaCommand(body.ImageMediaAssetId), cancellationToken);
-            return Results.Json(updated);
-        }
-        catch (PlatformHttpException ex) { return ToError(ex); }
-        catch (InvalidOperationException ex) { return MapInvalid(ex); }
+        await auth.RequireAsync(http, ContentAdminPermissions.Edit, cancellationToken);
+        return api.From(await sender.Send(new UpdateCategoryMediaCommand(id, body.ImageMediaAssetId), cancellationToken));
     }
 
     private static async Task<IResult> MoveAsync(
-        Guid id,
-        MoveContentCategoryHttpRequest body,
-        IContentCategoryDirectory directory,
-        HttpRequest request,
-        IAdminPanelAccess adminPanelAccess,
-        ICurrentTenant tenant,
-        IAuthorizationService authz,
-        CancellationToken cancellationToken)
+        Guid id, MoveContentCategoryHttpRequest body, ISender sender, ApiResponseFactory api,
+        IContentAdminAuthorizer auth, HttpContext http, CancellationToken cancellationToken)
     {
-        try
-        {
-            await ContentAdminAccess.RequireAsync(
-                request, adminPanelAccess, tenant, authz, ContentAdminAccess.Edit, cancellationToken);
-            var updated = await directory.MoveAsync(id, new MoveContentCategoryCommand(body.NewParentId), cancellationToken);
-            return Results.Json(updated);
-        }
-        catch (PlatformHttpException ex) { return ToError(ex); }
-        catch (InvalidOperationException ex) { return MapInvalid(ex); }
+        await auth.RequireAsync(http, ContentAdminPermissions.Edit, cancellationToken);
+        return api.From(await sender.Send(new MoveCategoryCommand(id, body.NewParentId), cancellationToken));
     }
 
     private static async Task<IResult> ReorderAsync(
-        ReorderContentCategoryHttpRequest body,
-        IContentCategoryDirectory directory,
-        HttpRequest request,
-        IAdminPanelAccess adminPanelAccess,
-        ICurrentTenant tenant,
-        IAuthorizationService authz,
-        CancellationToken cancellationToken)
+        ReorderContentCategoriesHttpRequest body, ISender sender, ApiResponseFactory api,
+        IContentAdminAuthorizer auth, HttpContext http, CancellationToken cancellationToken)
     {
-        try
-        {
-            await ContentAdminAccess.RequireAsync(
-                request, adminPanelAccess, tenant, authz, ContentAdminAccess.Edit, cancellationToken);
-            var items = (body.Items ?? [])
-                .Select(x => new ReorderContentCategoryItem(x.CategoryId, x.SortOrder))
-                .ToList();
-            await directory.ReorderAsync(items, cancellationToken);
-            return Results.Ok();
-        }
-        catch (PlatformHttpException ex) { return ToError(ex); }
-        catch (InvalidOperationException ex) { return MapInvalid(ex); }
+        await auth.RequireAsync(http, ContentAdminPermissions.Edit, cancellationToken);
+        var items = (body.Items ?? [])
+            .Select(x => new ReorderContentCategoryItem(x.CategoryId, x.SortOrder))
+            .ToList();
+        return api.From(await sender.Send(new ReorderCategoriesCommand(items), cancellationToken));
     }
 
     private static async Task<IResult> ArchiveAsync(
-        Guid id,
-        IContentCategoryDirectory directory,
-        HttpRequest request,
-        IAdminPanelAccess adminPanelAccess,
-        ICurrentTenant tenant,
-        IAuthorizationService authz,
-        CancellationToken cancellationToken)
+        Guid id, ISender sender, ApiResponseFactory api,
+        IContentAdminAuthorizer auth, HttpContext http, CancellationToken cancellationToken)
     {
-        try
-        {
-            await ContentAdminAccess.RequireAsync(
-                request, adminPanelAccess, tenant, authz, ContentAdminAccess.Edit, cancellationToken);
-            await directory.ArchiveAsync(id, cancellationToken);
-            return Results.Ok();
-        }
-        catch (PlatformHttpException ex) { return ToError(ex); }
-        catch (InvalidOperationException ex) { return MapInvalid(ex); }
+        await auth.RequireAsync(http, ContentAdminPermissions.Edit, cancellationToken);
+        var result = await sender.Send(new ArchiveCategoryCommand(id), cancellationToken);
+        return result.IsSuccess ? Results.Ok() : api.From(result);
     }
-
-    private static IResult ToError(PlatformHttpException ex) =>
-        Results.Json(new { title = ex.Title, errorCode = ex.ErrorCode }, statusCode: ex.StatusCode);
-
-    private static IResult MapInvalid(InvalidOperationException ex) =>
-        Results.Json(new { title = ex.Message, errorCode = ex.Message }, statusCode: StatusCodes.Status400BadRequest);
 }
 
-/// <summary>بدنهٔ ایجاد دستهٔ مقاله.</summary>
 public sealed record CreateContentCategoryHttpRequest(
-    string? LanguageCode,
-    Guid? ParentCategoryId,
-    string? Name,
-    string? Slug,
-    string? ShortDescription,
-    string? Description,
-    int? SortOrder);
+    string? LanguageCode, Guid? ParentCategoryId, string? Name, string? Slug,
+    string? ShortDescription, string? Description, int? SortOrder);
 
-/// <summary>بدنهٔ به‌روزرسانی عمومی دسته.</summary>
 public sealed record UpdateContentCategoryHttpRequest(
-    string? Name,
-    string? Slug,
-    string? ShortDescription,
-    string? Description,
-    int? SortOrder,
-    string? Status);
+    string? Name, string? Slug, string? ShortDescription, string? Description, int? SortOrder, string? Status);
 
-/// <summary>بدنهٔ SEO دسته.</summary>
 public sealed record UpdateContentCategorySeoHttpRequest(string? SeoTitle, string? SeoDescription);
 
-/// <summary>بدنهٔ رسانه دسته.</summary>
 public sealed record UpdateContentCategoryMediaHttpRequest(Guid? ImageMediaAssetId);
 
-/// <summary>بدنهٔ جابه‌جایی والد.</summary>
 public sealed record MoveContentCategoryHttpRequest(Guid? NewParentId);
 
-/// <summary>بدنهٔ مرتب‌سازی مجدد.</summary>
-public sealed record ReorderContentCategoryHttpRequest(IReadOnlyList<ReorderContentCategoryHttpItem>? Items);
+public sealed record ReorderContentCategoriesHttpRequest(IReadOnlyList<ReorderContentCategoryHttpItem>? Items);
 
-/// <summary>آیتم مرتب‌سازی.</summary>
 public sealed record ReorderContentCategoryHttpItem(Guid CategoryId, int SortOrder);
+
