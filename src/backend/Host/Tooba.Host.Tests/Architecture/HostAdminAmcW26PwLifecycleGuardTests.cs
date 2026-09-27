@@ -18,7 +18,7 @@ public sealed class HostAdminAmcW26PwLifecycleGuardTests
         var root = FindRepoRoot();
         var host = File.ReadAllText(Path.Combine(
             root, "src/backend/Host/Tooba.Host/Admin/ProductWorkspaceEndpoints.cs"));
-        Assert.Equal(6, MapRouteRegex.Matches(host).Count);
+        Assert.Equal(2, MapRouteRegex.Matches(host).Count);
         Assert.DoesNotContain("MapPost(\"/{productId:guid}/publish\"", host, StringComparison.Ordinal);
         Assert.DoesNotContain("MapPost(\"/{productId:guid}/unpublish\"", host, StringComparison.Ordinal);
         Assert.DoesNotContain("MapPost(\"/{productId:guid}/archive\"", host, StringComparison.Ordinal);
@@ -32,7 +32,7 @@ public sealed class HostAdminAmcW26PwLifecycleGuardTests
         var module = File.ReadAllText(Path.Combine(
             root,
             "src/backend/Modules/ProductWorkspace/Tooba.ProductWorkspace.Endpoints/ProductWorkspaceEndpointModule.cs"));
-        Assert.Equal(11, MapRouteRegex.Matches(module).Count);
+        Assert.Equal(15, MapRouteRegex.Matches(module).Count);
         Assert.Contains("MapPost(\"/{productId:guid}/publish\"", module, StringComparison.Ordinal);
         Assert.Contains("MapPost(\"/{productId:guid}/unpublish\"", module, StringComparison.Ordinal);
         Assert.Contains("MapPost(\"/{productId:guid}/archive\"", module, StringComparison.Ordinal);

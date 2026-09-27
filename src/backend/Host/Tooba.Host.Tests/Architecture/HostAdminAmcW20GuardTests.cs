@@ -17,7 +17,7 @@ public sealed class HostAdminAmcW20GuardTests
         var root = FindRepoRoot();
         var hostEndpoints = File.ReadAllText(Path.Combine(
             root, "src/backend/Host/Tooba.Host/Admin/ProductWorkspaceEndpoints.cs"));
-        Assert.Equal(6, MapRouteRegex.Matches(hostEndpoints).Count);
+        Assert.Equal(2, MapRouteRegex.Matches(hostEndpoints).Count);
         Assert.DoesNotContain("brand-options", hostEndpoints, StringComparison.Ordinal);
         Assert.DoesNotContain("ListBrandOptionsAsync", hostEndpoints, StringComparison.Ordinal);
 
@@ -57,7 +57,7 @@ public sealed class HostAdminAmcW20GuardTests
         var pw = File.ReadAllText(Path.Combine(
             root,
             "src/backend/Modules/ProductWorkspace/Tooba.ProductWorkspace.Endpoints/ProductWorkspaceEndpointModule.cs"));
-        Assert.Equal(11, MapRouteRegex.Matches(pw).Count);
+        Assert.Equal(15, MapRouteRegex.Matches(pw).Count);
         Assert.Contains("MapGet(\"/{productId:guid}\"", pw, StringComparison.Ordinal);
         Assert.Contains("MapPost(\"/{productId:guid}/publish\"", pw, StringComparison.Ordinal);
 

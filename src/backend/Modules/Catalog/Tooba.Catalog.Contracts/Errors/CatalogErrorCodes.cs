@@ -236,8 +236,36 @@ public static class CatalogErrorCodes
     /// Canonical code matches <c>CatalogCategoryTreeRules.AssignmentLevelInvalidErrorCode</c>.
     /// </summary>
     public const string CategoryAssignmentLevelInvalid = "catalog.category.assignment.level.invalid";
+
     /// <summary>Category-change preview/replace precondition failed (non-assignment-level).</summary>
     public const string CategoryChangeInvalid = "catalog.category_change.invalid";
+
+    /// <summary>Primary category change needs explicit ConfirmSchemaImpact when attrs/variants exist.</summary>
+    public const string WorkspaceProductCategorySchemaImpact = "workspace.product.category.schema-impact";
+
+    /// <summary>Primary category assign/replace rejected (non-level domain gate).</summary>
+    public const string WorkspaceProductCategoryAssignRejected = "workspace.product.category.assign.rejected";
+
+    /// <summary>Brand id not found for product brand assign.</summary>
+    public const string WorkspaceProductBrandInvalid = "workspace.product.brand.invalid";
+
+    /// <summary>Additional category is already the product primary.</summary>
+    public const string CategoryAssignmentDuplicatePrimary = "catalog.category.assignment.duplicate_primary";
+
+    /// <summary>Additional category already assigned.</summary>
+    public const string CategoryAssignmentDuplicate = "catalog.category.assignment.duplicate";
+
+    /// <summary>Additional category assign rejected for other business reasons.</summary>
+    public const string CategoryAssignmentInvalid = "catalog.category.assignment.invalid";
+
+    /// <summary>Cannot remove the primary category via additional-remove.</summary>
+    public const string CategoryAssignmentCannotRemovePrimary = "catalog.category.assignment.cannot_remove_primary";
+
+    /// <summary>Additional category link was not found.</summary>
+    public const string CategoryAssignmentMissing = "catalog.category.assignment.missing";
+
+    /// <summary>expectedUpdatedAt query missing on additional-category DELETE.</summary>
+    public const string CategoryAssignmentStale = "catalog.category.assignment.stale";
 
     /// <summary>Workspace product was not found (preserved Product Workspace media code).</summary>
     public const string WorkspaceProductMissing = "workspace.product.missing";

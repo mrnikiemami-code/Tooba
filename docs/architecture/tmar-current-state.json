@@ -2370,6 +2370,24 @@
     "workflowStop": "USER_REVIEW_HOST_ADMIN_W29_PW_IDENTITY_CHECKPOINT",
     "evidence": "docs/evidence/TB-TMAR-HOST-ADMIN-AMC-001-W29-PW-IDENTITY/"
   },
+  "hostAdminAmcPwTaxonomy": {
+    "task": "TB-TMAR-HOST-ADMIN-AMC-001-W30-PW-TAXONOMY",
+    "parentTask": "TB-TMAR-HOST-ADMIN-AMC-001-W29-PW-IDENTITY",
+    "w17PlanLabel": "W25 taxonomy writes",
+    "state": "HOST_ADMIN_PRODUCTWORKSPACE_TAXONOMY_OWNED_BY_MODULE",
+    "activeHostFolder": "Admin",
+    "taxonomyHttpOwner": "ProductWorkspace.Endpoints",
+    "taxonomyMutationOwner": "Catalog.ProductTaxonomy.Commands",
+    "HostRemainingProductWorkspaceRoutes": 2,
+    "ProductWorkspaceEndpointRouteCount": 15,
+    "HostAdminFileCount": 31,
+    "partialHostRetention": "ProductWorkspace* RETAIN until W24-final (list/grid only)",
+    "StoreAppearance": "DEFERRED",
+    "schemaMigrationState": "NONE",
+    "frontendState": "UNCHANGED",
+    "workflowStop": "USER_REVIEW_HOST_ADMIN_W30_PW_TAXONOMY_CHECKPOINT",
+    "evidence": "docs/evidence/TB-TMAR-HOST-ADMIN-AMC-001-W30-PW-TAXONOMY/"
+  },
   "hostAdminAmcW18": {
     "task": "TB-TMAR-HOST-ADMIN-AMC-001-W18",
     "parentTask": "TB-TMAR-HOST-ADMIN-AMC-001-W17",

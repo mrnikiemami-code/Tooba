@@ -1,5 +1,5 @@
 using Tooba.Catalog.Application.ProductIdentity.Models;
-using Tooba.Host.Admin;
+using Tooba.Catalog.Application.ProductTaxonomy.Models;
 using Tooba.ProductWorkspace.Application.Composition.Models;
 using Xunit;
 
@@ -82,7 +82,7 @@ public sealed class ProductCatalogAdminFoundationTests
     [Fact]
     public void Category_assign_request_requires_explicit_schema_confirmation_flag()
     {
-        var body = new AdminProductCategoryAssignRequest(
+        var body = new WorkspaceProductCategoryAssignWriteModel(
             Guid.Parse("aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"),
             ConfirmSchemaImpact: false,
             DateTimeOffset.UtcNow);

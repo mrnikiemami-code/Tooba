@@ -18,7 +18,7 @@ public sealed class HostAdminAmcW27PwVariantsGuardTests
         var root = FindRepoRoot();
         var host = File.ReadAllText(Path.Combine(
             root, "src/backend/Host/Tooba.Host/Admin/ProductWorkspaceEndpoints.cs"));
-        Assert.Equal(6, MapRouteRegex.Matches(host).Count);
+        Assert.Equal(2, MapRouteRegex.Matches(host).Count);
         Assert.DoesNotContain("/variants", host, StringComparison.Ordinal);
         Assert.DoesNotContain("CreateVariantAsync", host, StringComparison.Ordinal);
         Assert.DoesNotContain("PatchVariantAsync", host, StringComparison.Ordinal);
@@ -36,7 +36,7 @@ public sealed class HostAdminAmcW27PwVariantsGuardTests
         var module = File.ReadAllText(Path.Combine(
             root,
             "src/backend/Modules/ProductWorkspace/Tooba.ProductWorkspace.Endpoints/ProductWorkspaceEndpointModule.cs"));
-        Assert.Equal(11, MapRouteRegex.Matches(module).Count);
+        Assert.Equal(15, MapRouteRegex.Matches(module).Count);
         Assert.Contains("MapPost(\"/{productId:guid}/variants\"", module, StringComparison.Ordinal);
         Assert.Contains("MapPatch(\"/{productId:guid}/variants/{variantId:guid}\"", module, StringComparison.Ordinal);
         Assert.Contains("CreateProductWorkspaceVariantCommand", module, StringComparison.Ordinal);

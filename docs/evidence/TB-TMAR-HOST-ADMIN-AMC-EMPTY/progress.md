@@ -9,16 +9,16 @@
 | PW lifecycle (W26) | ProductWorkspace.Endpoints |
 | PW variants (W27) | ProductWorkspace.Endpoints |
 | Product DELETE (W28) | Catalog.Endpoints + Offer.Contracts gate |
-| **PW identity create/title/core/quantity (W29)** | ProductWorkspace.Endpoints + Catalog.ProductIdentity |
+| PW identity create/title/core/quantity (W29) | ProductWorkspace.Endpoints + Catalog.ProductIdentity |
+| **PW taxonomy category/brand (W30)** | ProductWorkspace.Endpoints + Catalog.ProductTaxonomy |
 
-### Host PW routes remaining: **6**
-list/grid/category×3/brand
+### Host PW routes remaining: **2**
+list + grid query only
 
 ### Next
-1. Category/brand writes still on Host — or W24-final shell purge after remaining migration
-2. Merchandising → Promotion
-3. Template/attribute seeds
-4. W24-final: delete Host ProductWorkspace* shells (Admin count drops)
+1. Merchandising → Promotion
+2. Template/attribute seeds
+3. W24-final: delete Host ProductWorkspace* shells (Admin count drops)
 
 ### Cannot empty yet
 KEEP platform (~16) · StoreAppearance BLOCK · HoldPolicy BLOCK · ProductWorkspace* shells · Merchandising MUST_SPLIT

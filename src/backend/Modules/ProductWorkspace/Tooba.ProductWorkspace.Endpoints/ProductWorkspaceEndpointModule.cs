@@ -10,6 +10,8 @@ using Tooba.Catalog.Application;
 using Tooba.Catalog.Application.ProductIdentity.Commands;
 using Tooba.Catalog.Application.ProductIdentity.Models;
 using Tooba.Catalog.Application.ProductPublishing.Commands;
+using Tooba.Catalog.Application.ProductTaxonomy.Commands;
+using Tooba.Catalog.Application.ProductTaxonomy.Models;
 using Tooba.Catalog.Application.Variants.Commands;
 using Tooba.Catalog.Application.Variants.Models;
 using Tooba.Catalog.Contracts.Errors;
@@ -24,6 +26,7 @@ namespace Tooba.ProductWorkspace.Endpoints;
 /// ProductWorkspace HTTP ownership under <c>/v1/admin/products</c>.
 /// W19: aggregate GET. W26: lifecycle. W27: variant create/patch.
 /// W29: create / catalog-title / core / quantity-policy.
+/// W30: category / additional categories / brand.
 /// </summary>
 public static class ProductWorkspaceEndpointModule
 {
@@ -37,6 +40,10 @@ public static class ProductWorkspaceEndpointModule
         group.MapPatch("/{productId:guid}/catalog-title", PatchCatalogTitleAsync);
         group.MapPatch("/{productId:guid}/core", PatchCoreAsync);
         group.MapPatch("/{productId:guid}/quantity-policy", PatchQuantityPolicyAsync);
+        group.MapPut("/{productId:guid}/category", AssignCategoryAsync);
+        group.MapPost("/{productId:guid}/categories/additional", AddAdditionalCategoryAsync);
+        group.MapDelete("/{productId:guid}/categories/additional/{categoryId:guid}", RemoveAdditionalCategoryAsync);
+        group.MapPut("/{productId:guid}/brand", AssignBrandAsync);
         group.MapPost("/{productId:guid}/publish", PublishAsync);
         group.MapPost("/{productId:guid}/unpublish", UnpublishAsync);
         group.MapPost("/{productId:guid}/archive", ArchiveAsync);
@@ -193,6 +200,90 @@ public static class ProductWorkspaceEndpointModule
             httpContext,
             cancellationToken,
             new UpdateProductQuantityPolicyCommand(productId, body),
+            p => p.CanEditCatalog,
+            created: false);
+
+    private static async Task<IResult> AssignCategoryAsync(
+        Guid productId,
+        WorkspaceProductCategoryAssignWriteModel body,
+        ISender sender,
+        IProductWorkspaceAdminAuthorizer authorizer,
+        ApiResponseFactory api,
+        HttpContext httpContext,
+        CancellationToken cancellationToken) =>
+        await MutateAsync(
+            productId,
+            sender,
+            authorizer,
+            api,
+            httpContext,
+            cancellationToken,
+            new AssignProductCategoryCommand(productId, body),
+            p => p.CanEditCatalog,
+            created: false);
+
+    private static async Task<IResult> AddAdditionalCategoryAsync(
+        Guid productId,
+        WorkspaceProductAdditionalCategoryWriteModel body,
+        ISender sender,
+        IProductWorkspaceAdminAuthorizer authorizer,
+        ApiResponseFactory api,
+        HttpContext httpContext,
+        CancellationToken cancellationToken) =>
+        await MutateAsync(
+            productId,
+            sender,
+            authorizer,
+            api,
+            httpContext,
+            cancellationToken,
+            new AddAdditionalCategoryCommand(productId, body),
+            p => p.CanEditCatalog,
+            created: false);
+
+    private static async Task<IResult> RemoveAdditionalCategoryAsync(
+        Guid productId,
+        Guid categoryId,
+        DateTimeOffset? expectedUpdatedAt,
+        ISender sender,
+        IProductWorkspaceAdminAuthorizer authorizer,
+        ApiResponseFactory api,
+        HttpContext httpContext,
+        CancellationToken cancellationToken)
+    {
+        if (expectedUpdatedAt is null)
+        {
+            return api.FromFailure(new SemanticError(CatalogErrorCodes.CategoryAssignmentStale));
+        }
+
+        return await MutateAsync(
+            productId,
+            sender,
+            authorizer,
+            api,
+            httpContext,
+            cancellationToken,
+            new RemoveAdditionalCategoryCommand(productId, categoryId, expectedUpdatedAt.Value),
+            p => p.CanEditCatalog,
+            created: false);
+    }
+
+    private static async Task<IResult> AssignBrandAsync(
+        Guid productId,
+        WorkspaceProductBrandAssignWriteModel body,
+        ISender sender,
+        IProductWorkspaceAdminAuthorizer authorizer,
+        ApiResponseFactory api,
+        HttpContext httpContext,
+        CancellationToken cancellationToken) =>
+        await MutateAsync(
+            productId,
+            sender,
+            authorizer,
+            api,
+            httpContext,
+            cancellationToken,
+            new AssignProductBrandCommand(productId, body),
             p => p.CanEditCatalog,
             created: false);
 
