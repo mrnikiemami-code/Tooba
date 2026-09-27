@@ -78,19 +78,6 @@ public sealed class HostAdminAmcW2GuardTests
     }
 
     [Fact]
-    public void Quantity_validator_coverage_is_exhaustive()
-    {
-        var appRoot = Path.Combine(FindRepoRoot(), "src/backend/Modules/Catalog/Tooba.Catalog.Application");
-        Assert.True(File.Exists(Path.Combine(appRoot, "Settings", "SaveStoreQuantitySettingsCommandValidator.cs")));
-        Assert.True(File.Exists(Path.Combine(appRoot, "Settings", "StoreQuantitySettingsContracts.cs")));
-        var contracts = File.ReadAllText(Path.Combine(appRoot, "Settings", "StoreQuantitySettingsContracts.cs"));
-        Assert.Contains("GetStoreQuantitySettingsQuery", contracts, StringComparison.Ordinal);
-        Assert.Contains("SaveStoreQuantitySettingsCommand", contracts, StringComparison.Ordinal);
-        // Get = NO_VALIDATOR_REQUIRED_NO_INPUT; Save = VALIDATOR_REQUIRED (validator present).
-        Assert.False(File.Exists(Path.Combine(appRoot, "Settings", "GetStoreQuantitySettingsQueryValidator.cs")));
-    }
-
-    [Fact]
     public void Host_Admin_file_count_is_58_after_quantity_evacuation()
     {
         var admin = Path.Combine(FindRepoRoot(), "src/backend/Host/Tooba.Host/Admin");

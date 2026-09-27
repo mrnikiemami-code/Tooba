@@ -1,6 +1,7 @@
 ﻿using MediatR;
 using Tooba.BuildingBlocks.Presentation;
-using Tooba.Catalog.Application.Settings;
+using Tooba.Catalog.Application.Settings.Quantity.Commands;
+using Tooba.Catalog.Application.Settings.Quantity.Queries;
 using Tooba.Catalog.Endpoints.Admin;
 
 namespace Tooba.Catalog.Endpoints.Admin.Settings;

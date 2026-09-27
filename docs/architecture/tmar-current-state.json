@@ -1570,11 +1570,25 @@
     "recoveryDiscipline": "SYNC_SOT_FREQUENTLY_NEW_CHAT_MUST_RESUME_FROM_REPO_NOT_CONVERSATION_MEMORY",
     "minimalRecoveryPhraseFa": "برگردیم به TMAR؛ ریکاوری را انجام بده"
   },
-    "hostAdminAmcW2": {
+      "hostAdminAmcW2R1": {
+    "task": "TB-TMAR-HOST-ADMIN-AMC-001-W2-R1",
+    "parentTask": "TB-TMAR-HOST-ADMIN-AMC-001-W2",
+    "parentCommit": "50ee7da5cbbb46822b900842d89503b434cc93d7",
+    "state": "HOST_ADMIN_AMC_W2_R1_QUANTITY_SEMANTIC_STRUCTURE_REPAIRED",
+    "applicationContractsBundleState": "ELIMINATED",
+    "quantityCapabilityFoldering": "Settings/Quantity/{Commands,Queries,Models,Ports,Validators,Mapping}",
+    "pathNamespace": "EXACT",
+    "hostAdminFileCount": 58,
+    "storeAppearanceState": "NOT_MOVED_DEFERRED_PRESERVED",
+    "w2BehaviorPreservation": "PRESERVED",
+    "nextHostFolderStarted": false,
+    "workflowStop": "USER_REVIEW_HOST_ADMIN_W2_CHECKPOINT",
+    "evidence": "docs/evidence/TB-TMAR-HOST-ADMIN-AMC-001-W2-R1/"
+  },  "hostAdminAmcW2": {
     "task": "TB-TMAR-HOST-ADMIN-AMC-001-W2",
     "parentTask": "TB-TMAR-HOST-ADMIN-AMC-001",
     "parentCommit": "3d15c27cf3b60f972e6401873a4a8ecc56cb3ee6",
-    "state": "HOST_ADMIN_AMC_W2_QUANTITY_EVACUATED_APPEARANCE_DEFERRED",
+    "state": "HOST_ADMIN_AMC_W2_QUANTITY_EVACUATED_APPEARANCE_DEFERRED_REPAIRED_BY_W2_R1",
     "activeHostFolder": "Admin",
     "productionFileCountBefore": 59,
     "productionFileCountAfter": 58,

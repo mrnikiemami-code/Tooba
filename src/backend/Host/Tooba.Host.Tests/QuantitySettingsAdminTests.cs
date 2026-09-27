@@ -1,10 +1,12 @@
-using FluentValidation;
+﻿using FluentValidation;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Tooba.BuildingBlocks;
 using Tooba.BuildingBlocks.Results;
-using Tooba.Catalog.Application.Settings;
+using Tooba.Catalog.Application.Settings.Quantity.Commands;
+using Tooba.Catalog.Application.Settings.Quantity.Ports;
+using Tooba.Catalog.Application.Settings.Quantity.Queries;
 using Tooba.Catalog.Contracts.Errors;
 using Tooba.Catalog.Domain;
 using Tooba.Catalog.Infrastructure;
