@@ -1,8 +1,8 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Tooba.BuildingBlocks.Grid;
 using Tooba.Content.Domain;
+using Tooba.Content.Infrastructure.Grid;
 using Tooba.Content.Infrastructure.Persistence;
-using Tooba.Host.Grid;
 using Xunit;
 
 namespace Tooba.Host.Tests;
@@ -38,7 +38,7 @@ public sealed class AdminDbNativeGridQueryTests
         await db.SaveChangesAsync();
 
         var engine = new AdminContentGridQueryEngine(db);
-        var request = AdminListGridPolicies.Content.Normalize(
+        var request = ContentAdminGridPolicies.NormalizeArticles(
             new GridQueryRequest(1, 2, null, [new GridSortRequest("updated", "desc")], [], null));
 
         var page = await engine.QueryAsync(request, CancellationToken.None);
@@ -60,7 +60,7 @@ public sealed class AdminDbNativeGridQueryTests
         await db.SaveChangesAsync();
 
         var engine = new AdminContentGridQueryEngine(db);
-        var request = AdminListGridPolicies.Content.Normalize(
+        var request = ContentAdminGridPolicies.NormalizeArticles(
             new GridQueryRequest(
                 1,
                 20,
@@ -78,10 +78,12 @@ public sealed class AdminDbNativeGridQueryTests
     public void Non_trivial_composers_do_not_call_in_memory_Execute()
     {
         var root = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", "Tooba.Host"));
+        var contentComposer = Path.GetFullPath(Path.Combine(
+            root, "..", "..", "Modules", "Content", "Tooba.Content.Endpoints", "ContentPanelComposer.cs"));
         var files = new[]
         {
             Path.Combine(root, "Admin", "AdminPanelComposer.cs"),
-            Path.Combine(root, "Content", "ContentPanelComposer.cs"),
+            contentComposer,
             Path.Combine(root, "Reviews", "ReviewPanelComposer.cs"),
             Path.Combine(root, "Story", "StoryPanelComposer.cs"),
         };
@@ -127,17 +129,18 @@ public sealed class AdminDbNativeGridQueryTests
     public void Non_trivial_engines_keep_iqueryable_until_page()
     {
         var root = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", "Tooba.Host", "Grid"));
+        var contentEngine = Path.GetFullPath(Path.Combine(
+            root, "..", "..", "..", "Modules", "Content", "Tooba.Content.Infrastructure", "Grid", "AdminContentGridQueryEngine.cs"));
         var engines = new[]
         {
-            "AdminContentGridQueryEngine.cs",
-            "AdminSellersGridQueryEngine.cs",
-            "AdminReviewGridQueryEngine.cs",
-            "AdminStoryGridQueryEngine.cs",
+            contentEngine,
+            Path.Combine(root, "AdminSellersGridQueryEngine.cs"),
+            Path.Combine(root, "AdminReviewGridQueryEngine.cs"),
+            Path.Combine(root, "AdminStoryGridQueryEngine.cs"),
         };
 
-        foreach (var name in engines)
+        foreach (var path in engines)
         {
-            var path = Path.Combine(root, name);
             Assert.True(File.Exists(path), $"missing {path}");
             var text = File.ReadAllText(path);
             Assert.True(
@@ -146,12 +149,14 @@ public sealed class AdminDbNativeGridQueryTests
                 || (text.Contains("CountAsync", StringComparison.Ordinal)
                     && text.Contains("Skip(", StringComparison.Ordinal)
                     && text.Contains("Take(", StringComparison.Ordinal)),
-                $"{name} must page via EfGridQuery.PageAsync or CountAsync+Skip+Take");
+                $"{Path.GetFileName(path)} must page via EfGridQuery.PageAsync or CountAsync+Skip+Take");
             Assert.DoesNotContain("BoundedListGridQueryEngine", text);
             Assert.DoesNotContain("InMemoryGridQueryEngine", text);
         }
 
         Assert.False(File.Exists(Path.Combine(root, "AdminCustomersGridQueryEngine.cs")));
+        Assert.False(File.Exists(Path.Combine(root, "AdminContentGridQueryEngine.cs")));
+        Assert.False(File.Exists(Path.Combine(root, "AdminContentAuthorGridQueryEngine.cs")));
         var sellersEngine = File.ReadAllText(Path.Combine(root, "AdminSellersGridQueryEngine.cs"));
         Assert.DoesNotContain("OrderDbContext", sellersEngine, StringComparison.Ordinal);
         Assert.Contains("ISellerOrderCountReader", sellersEngine, StringComparison.Ordinal);
@@ -191,4 +196,3 @@ public sealed class AdminDbNativeGridQueryTests
         return new ContentDbContext(options);
     }
 }
-

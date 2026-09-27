@@ -1,14 +1,16 @@
+using Microsoft.AspNetCore.Routing;
 using Tooba.BuildingBlocks;
+using Tooba.BuildingBlocks.Security;
 using Tooba.Content.Application;
 using Tooba.Content.Domain;
 
-namespace Tooba.Host.Content;
+namespace Tooba.Content.Endpoints.Admin;
 
 /// <summary>مسیرهای Admin دسته‌بندی مقاله.</summary>
 public static class ContentCategoryEndpoints
 {
     /// <summary>مسیرهای Admin دسته‌بندی مقاله را ثبت می‌کند.</summary>
-    public static void MapContentCategoryEndpoints(this WebApplication app)
+    public static void MapContentCategoryEndpoints(this IEndpointRouteBuilder app)
     {
         var admin = app.MapGroup("/v1/admin/content/categories");
         admin.MapGet("/tree", GetTreeAsync);
@@ -27,17 +29,15 @@ public static class ContentCategoryEndpoints
         string? search,
         IContentCategoryDirectory directory,
         HttpRequest request,
-        CurrentAuthenticatedSession session,
+        IAdminPanelAccess adminPanelAccess,
         ICurrentTenant tenant,
-        IAuthorizationGuard guard,
         IAuthorizationService authz,
-        IHostEnvironment environment,
         CancellationToken cancellationToken)
     {
         try
         {
             await ContentAdminAccess.RequireAsync(
-                request, session, tenant, guard, environment, authz, ContentAdminAccess.View, cancellationToken);
+                request, adminPanelAccess, tenant, authz, ContentAdminAccess.View, cancellationToken);
             return Results.Json(await directory.GetTreeAsync(languageCode, search, cancellationToken));
         }
         catch (PlatformHttpException ex) { return ToError(ex); }
@@ -48,17 +48,15 @@ public static class ContentCategoryEndpoints
         Guid id,
         IContentCategoryDirectory directory,
         HttpRequest request,
-        CurrentAuthenticatedSession session,
+        IAdminPanelAccess adminPanelAccess,
         ICurrentTenant tenant,
-        IAuthorizationGuard guard,
         IAuthorizationService authz,
-        IHostEnvironment environment,
         CancellationToken cancellationToken)
     {
         try
         {
             await ContentAdminAccess.RequireAsync(
-                request, session, tenant, guard, environment, authz, ContentAdminAccess.View, cancellationToken);
+                request, adminPanelAccess, tenant, authz, ContentAdminAccess.View, cancellationToken);
             var workspace = await directory.GetWorkspaceAsync(id, cancellationToken);
             return workspace is null
                 ? Results.Json(new { title = "Not Found", errorCode = ContentCategoryErrorCodes.NotFound }, statusCode: StatusCodes.Status404NotFound)
@@ -72,17 +70,15 @@ public static class ContentCategoryEndpoints
         CreateContentCategoryHttpRequest body,
         IContentCategoryDirectory directory,
         HttpRequest request,
-        CurrentAuthenticatedSession session,
+        IAdminPanelAccess adminPanelAccess,
         ICurrentTenant tenant,
-        IAuthorizationGuard guard,
         IAuthorizationService authz,
-        IHostEnvironment environment,
         CancellationToken cancellationToken)
     {
         try
         {
             await ContentAdminAccess.RequireAsync(
-                request, session, tenant, guard, environment, authz, ContentAdminAccess.Create, cancellationToken);
+                request, adminPanelAccess, tenant, authz, ContentAdminAccess.Create, cancellationToken);
             var created = await directory.CreateAsync(new CreateContentCategoryCommand(
                 body.LanguageCode ?? "",
                 body.ParentCategoryId,
@@ -102,17 +98,15 @@ public static class ContentCategoryEndpoints
         UpdateContentCategoryHttpRequest body,
         IContentCategoryDirectory directory,
         HttpRequest request,
-        CurrentAuthenticatedSession session,
+        IAdminPanelAccess adminPanelAccess,
         ICurrentTenant tenant,
-        IAuthorizationGuard guard,
         IAuthorizationService authz,
-        IHostEnvironment environment,
         CancellationToken cancellationToken)
     {
         try
         {
             await ContentAdminAccess.RequireAsync(
-                request, session, tenant, guard, environment, authz, ContentAdminAccess.Edit, cancellationToken);
+                request, adminPanelAccess, tenant, authz, ContentAdminAccess.Edit, cancellationToken);
             var updated = await directory.UpdateAsync(id, new UpdateContentCategoryCommand(
                 body.Name ?? "",
                 body.Slug ?? "",
@@ -131,17 +125,15 @@ public static class ContentCategoryEndpoints
         UpdateContentCategorySeoHttpRequest body,
         IContentCategoryDirectory directory,
         HttpRequest request,
-        CurrentAuthenticatedSession session,
+        IAdminPanelAccess adminPanelAccess,
         ICurrentTenant tenant,
-        IAuthorizationGuard guard,
         IAuthorizationService authz,
-        IHostEnvironment environment,
         CancellationToken cancellationToken)
     {
         try
         {
             await ContentAdminAccess.RequireAsync(
-                request, session, tenant, guard, environment, authz, ContentAdminAccess.Edit, cancellationToken);
+                request, adminPanelAccess, tenant, authz, ContentAdminAccess.Edit, cancellationToken);
             var updated = await directory.UpdateSeoAsync(id, new UpdateContentCategorySeoCommand(body.SeoTitle, body.SeoDescription), cancellationToken);
             return Results.Json(updated);
         }
@@ -154,17 +146,15 @@ public static class ContentCategoryEndpoints
         UpdateContentCategoryMediaHttpRequest body,
         IContentCategoryDirectory directory,
         HttpRequest request,
-        CurrentAuthenticatedSession session,
+        IAdminPanelAccess adminPanelAccess,
         ICurrentTenant tenant,
-        IAuthorizationGuard guard,
         IAuthorizationService authz,
-        IHostEnvironment environment,
         CancellationToken cancellationToken)
     {
         try
         {
             await ContentAdminAccess.RequireAsync(
-                request, session, tenant, guard, environment, authz, ContentAdminAccess.Edit, cancellationToken);
+                request, adminPanelAccess, tenant, authz, ContentAdminAccess.Edit, cancellationToken);
             var updated = await directory.UpdateMediaAsync(id, new UpdateContentCategoryMediaCommand(body.ImageMediaAssetId), cancellationToken);
             return Results.Json(updated);
         }
@@ -177,17 +167,15 @@ public static class ContentCategoryEndpoints
         MoveContentCategoryHttpRequest body,
         IContentCategoryDirectory directory,
         HttpRequest request,
-        CurrentAuthenticatedSession session,
+        IAdminPanelAccess adminPanelAccess,
         ICurrentTenant tenant,
-        IAuthorizationGuard guard,
         IAuthorizationService authz,
-        IHostEnvironment environment,
         CancellationToken cancellationToken)
     {
         try
         {
             await ContentAdminAccess.RequireAsync(
-                request, session, tenant, guard, environment, authz, ContentAdminAccess.Edit, cancellationToken);
+                request, adminPanelAccess, tenant, authz, ContentAdminAccess.Edit, cancellationToken);
             var updated = await directory.MoveAsync(id, new MoveContentCategoryCommand(body.NewParentId), cancellationToken);
             return Results.Json(updated);
         }
@@ -199,17 +187,15 @@ public static class ContentCategoryEndpoints
         ReorderContentCategoryHttpRequest body,
         IContentCategoryDirectory directory,
         HttpRequest request,
-        CurrentAuthenticatedSession session,
+        IAdminPanelAccess adminPanelAccess,
         ICurrentTenant tenant,
-        IAuthorizationGuard guard,
         IAuthorizationService authz,
-        IHostEnvironment environment,
         CancellationToken cancellationToken)
     {
         try
         {
             await ContentAdminAccess.RequireAsync(
-                request, session, tenant, guard, environment, authz, ContentAdminAccess.Edit, cancellationToken);
+                request, adminPanelAccess, tenant, authz, ContentAdminAccess.Edit, cancellationToken);
             var items = (body.Items ?? [])
                 .Select(x => new ReorderContentCategoryItem(x.CategoryId, x.SortOrder))
                 .ToList();
@@ -224,17 +210,15 @@ public static class ContentCategoryEndpoints
         Guid id,
         IContentCategoryDirectory directory,
         HttpRequest request,
-        CurrentAuthenticatedSession session,
+        IAdminPanelAccess adminPanelAccess,
         ICurrentTenant tenant,
-        IAuthorizationGuard guard,
         IAuthorizationService authz,
-        IHostEnvironment environment,
         CancellationToken cancellationToken)
     {
         try
         {
             await ContentAdminAccess.RequireAsync(
-                request, session, tenant, guard, environment, authz, ContentAdminAccess.Edit, cancellationToken);
+                request, adminPanelAccess, tenant, authz, ContentAdminAccess.Edit, cancellationToken);
             await directory.ArchiveAsync(id, cancellationToken);
             return Results.Ok();
         }

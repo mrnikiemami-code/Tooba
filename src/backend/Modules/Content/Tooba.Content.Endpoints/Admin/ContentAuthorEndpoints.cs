@@ -1,15 +1,17 @@
+using Microsoft.AspNetCore.Routing;
 using Tooba.BuildingBlocks;
+using Tooba.BuildingBlocks.Security;
 using Tooba.BuildingBlocks.Grid;
 using Tooba.Content.Application;
 using Tooba.Content.Domain;
 
-namespace Tooba.Host.Content;
+namespace Tooba.Content.Endpoints.Admin;
 
 /// <summary>مسیرهای Admin نویسندهٔ مقاله.</summary>
 public static class ContentAuthorEndpoints
 {
     /// <summary>مسیرهای Admin نویسندهٔ مقاله را ثبت می‌کند.</summary>
-    public static void MapContentAuthorEndpoints(this WebApplication app)
+    public static void MapContentAuthorEndpoints(this IEndpointRouteBuilder app)
     {
         var admin = app.MapGroup("/v1/admin/content/authors");
         admin.MapPost("/query", QueryGridAsync);
@@ -24,17 +26,15 @@ public static class ContentAuthorEndpoints
         GridQueryRequest body,
         ContentAuthorPanelComposer composer,
         HttpRequest request,
-        CurrentAuthenticatedSession session,
+        IAdminPanelAccess adminPanelAccess,
         ICurrentTenant tenant,
-        IAuthorizationGuard guard,
         IAuthorizationService authz,
-        IHostEnvironment environment,
         CancellationToken cancellationToken)
     {
         try
         {
             await ContentAdminAccess.RequireAsync(
-                request, session, tenant, guard, environment, authz, ContentAdminAccess.View, cancellationToken);
+                request, adminPanelAccess, tenant, authz, ContentAdminAccess.View, cancellationToken);
             return Results.Json(await composer.QueryGridAsync(body, cancellationToken));
         }
         catch (PlatformHttpException ex) { return ToError(ex); }
@@ -45,17 +45,15 @@ public static class ContentAuthorEndpoints
         bool activeOnly,
         ContentAuthorPanelComposer composer,
         HttpRequest request,
-        CurrentAuthenticatedSession session,
+        IAdminPanelAccess adminPanelAccess,
         ICurrentTenant tenant,
-        IAuthorizationGuard guard,
         IAuthorizationService authz,
-        IHostEnvironment environment,
         CancellationToken cancellationToken)
     {
         try
         {
             await ContentAdminAccess.RequireAsync(
-                request, session, tenant, guard, environment, authz, ContentAdminAccess.View, cancellationToken);
+                request, adminPanelAccess, tenant, authz, ContentAdminAccess.View, cancellationToken);
             return Results.Json(await composer.GetPickerListAsync(search, activeOnly, cancellationToken));
         }
         catch (PlatformHttpException ex) { return ToError(ex); }
@@ -66,17 +64,15 @@ public static class ContentAuthorEndpoints
         Guid id,
         ContentAuthorPanelComposer composer,
         HttpRequest request,
-        CurrentAuthenticatedSession session,
+        IAdminPanelAccess adminPanelAccess,
         ICurrentTenant tenant,
-        IAuthorizationGuard guard,
         IAuthorizationService authz,
-        IHostEnvironment environment,
         CancellationToken cancellationToken)
     {
         try
         {
             await ContentAdminAccess.RequireAsync(
-                request, session, tenant, guard, environment, authz, ContentAdminAccess.View, cancellationToken);
+                request, adminPanelAccess, tenant, authz, ContentAdminAccess.View, cancellationToken);
             var workspace = await composer.GetWorkspaceAsync(id, cancellationToken);
             return workspace is null
                 ? Results.Json(new { title = "Not Found", errorCode = ContentAuthorErrorCodes.NotFound }, statusCode: StatusCodes.Status404NotFound)
@@ -90,17 +86,15 @@ public static class ContentAuthorEndpoints
         CreateContentAuthorHttpRequest body,
         ContentAuthorPanelComposer composer,
         HttpRequest request,
-        CurrentAuthenticatedSession session,
+        IAdminPanelAccess adminPanelAccess,
         ICurrentTenant tenant,
-        IAuthorizationGuard guard,
         IAuthorizationService authz,
-        IHostEnvironment environment,
         CancellationToken cancellationToken)
     {
         try
         {
             await ContentAdminAccess.RequireAsync(
-                request, session, tenant, guard, environment, authz, ContentAdminAccess.Create, cancellationToken);
+                request, adminPanelAccess, tenant, authz, ContentAdminAccess.Create, cancellationToken);
             var created = await composer.CreateAsync(new CreateContentAuthorCommand(
                 body.DisplayName ?? "",
                 body.Slug ?? "",
@@ -123,17 +117,15 @@ public static class ContentAuthorEndpoints
         UpdateContentAuthorHttpRequest body,
         ContentAuthorPanelComposer composer,
         HttpRequest request,
-        CurrentAuthenticatedSession session,
+        IAdminPanelAccess adminPanelAccess,
         ICurrentTenant tenant,
-        IAuthorizationGuard guard,
         IAuthorizationService authz,
-        IHostEnvironment environment,
         CancellationToken cancellationToken)
     {
         try
         {
             await ContentAdminAccess.RequireAsync(
-                request, session, tenant, guard, environment, authz, ContentAdminAccess.Edit, cancellationToken);
+                request, adminPanelAccess, tenant, authz, ContentAdminAccess.Edit, cancellationToken);
             var updated = await composer.UpdateAsync(id, new UpdateContentAuthorCommand(
                 body.DisplayName ?? "",
                 body.Slug ?? "",
@@ -155,17 +147,15 @@ public static class ContentAuthorEndpoints
         Guid id,
         ContentAuthorPanelComposer composer,
         HttpRequest request,
-        CurrentAuthenticatedSession session,
+        IAdminPanelAccess adminPanelAccess,
         ICurrentTenant tenant,
-        IAuthorizationGuard guard,
         IAuthorizationService authz,
-        IHostEnvironment environment,
         CancellationToken cancellationToken)
     {
         try
         {
             await ContentAdminAccess.RequireAsync(
-                request, session, tenant, guard, environment, authz, ContentAdminAccess.Edit, cancellationToken);
+                request, adminPanelAccess, tenant, authz, ContentAdminAccess.Edit, cancellationToken);
             await composer.DeactivateAsync(id, cancellationToken);
             return Results.Ok();
         }

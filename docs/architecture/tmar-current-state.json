@@ -1317,6 +1317,30 @@
     "workflowStop": "USER_REVIEW_HOST_CACHING_CHECKPOINT",
     "evidence": "docs/evidence/TB-TMAR-HOST-CACHING-ARCHITECT-DIRECT-001/"
   },
+  "hostContentAmc": {
+    "task": "TB-TMAR-HOST-CONTENT-AMC-001",
+    "parentTask": "TB-TMAR-HOST-DEVELOPMENT-AMC-001",
+    "parentCommit": "0139fb89fcf7dfe48e957bb4aad62a575a41413f",
+    "state": "HOST_CONTENT_AMC_PASS_ZERO",
+    "productionFileCountBefore": 12,
+    "productionFileCountAfter": 0,
+    "endpointsProject": "Modules/Content/Tooba.Content.Endpoints",
+    "compositionSeed": "Host/Composition/ContentDevelopmentSeedHost.cs",
+    "gridEnginesMovedTo": "Modules/Content/Tooba.Content.Infrastructure/Grid",
+    "developmentAllowlistUntouched": true,
+    "schemaMigrationState": "NONE",
+    "focusedValidations": "PASSED_4_FAILED_0",
+    "remainingBlockers": [],
+    "residualDebt": [
+      "Content lacks Contracts/CQRS/structure certification",
+      "Endpoints references Infrastructure for composers/DbContext/grid",
+      "Content.Infrastructure references Media.Application (IMediaDirectory)",
+      "Thin composers not dissolved to Application CQRS; ApiResponseFactory deferred"
+    ],
+    "nextHostFolderStarted": false,
+    "workflowStop": "USER_REVIEW_HOST_CONTENT_CHECKPOINT",
+    "evidence": "docs/evidence/TB-TMAR-HOST-CONTENT-AMC-001/"
+  },
   "addressBookPostRealignRepair": {
     "task": "TB-TMAR-ADDRESSBOOK-POST-REALIGN-REPAIR-001",
     "parentTask": "ADDRESSBOOK-OFFER-STYLE-FOLDERS-001",

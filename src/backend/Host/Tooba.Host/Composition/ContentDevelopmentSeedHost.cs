@@ -1,11 +1,11 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Tooba.BuildingBlocks;
 using Tooba.Content.Infrastructure;
 using Tooba.Content.Infrastructure.Persistence;
 using Tooba.Localization.Infrastructure.Persistence;
 using Tooba.Media.Infrastructure.Persistence;
 
-namespace Tooba.Host.Content;
+namespace Tooba.Host.Composition;
 
 /// <summary>
 /// دانهٔ توسعه Content وقتی Catalog legacy خاموش است: scope + CommerceContext + migrate، نه resolve از root.

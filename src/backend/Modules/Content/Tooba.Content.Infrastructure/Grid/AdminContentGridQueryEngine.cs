@@ -1,19 +1,21 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Tooba.BuildingBlocks.Grid;
 using Tooba.Persistence.Grid;
 using Tooba.Content.Application;
 using Tooba.Content.Domain;
 using Tooba.Content.Infrastructure.Persistence;
 
-namespace Tooba.Host.Grid;
+namespace Tooba.Content.Infrastructure.Grid;
 
 /// <summary>پرس‌وجوی DB-native گرید مقالات Admin — CountAsync + Skip/Take قبل از materialize.</summary>
-internal sealed class AdminContentGridQueryEngine
+public sealed class AdminContentGridQueryEngine
 {
     private readonly ContentDbContext _db;
 
+    /// <summary>DbContext مالک Content را تزریق می‌کند.</summary>
     public AdminContentGridQueryEngine(ContentDbContext db) => _db = db;
 
+    /// <summary>صفحهٔ گرید مقالات Admin را برمی‌گرداند.</summary>
     public async Task<GridPageResponse<AdminArticleSnapshot>> QueryAsync(
         GridQueryRequest request,
         CancellationToken cancellationToken)

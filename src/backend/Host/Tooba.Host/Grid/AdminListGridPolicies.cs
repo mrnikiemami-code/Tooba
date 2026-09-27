@@ -1,5 +1,4 @@
-﻿using Tooba.Content.Application;
-using Tooba.Host.Admin;
+﻿using Tooba.Host.Admin;
 using Tooba.Host.Reviews;
 using Tooba.Host.Story;
 using Tooba.Order.Application.Admin.OrdersGrid.Models;
@@ -41,32 +40,7 @@ public static class AdminListGridPolicies
 
     // R11: Admin customers grid policy/normalize owned by Order.Application.Admin.Customers.AdminCustomersGridPolicy.
     // R12: Admin payments grid policy/normalize owned by Payment.Endpoints.Admin.PaymentAdminGridQueryNormalizer.
-
-    /// <summary>گرید مقالات Admin.</summary>
-    public static readonly AdminListGridQueryPolicy<AdminArticleSnapshot> Content = new(
-    [
-        new("articleId", x => x.ArticleId.ToString("D"), InMemoryGridFieldKind.Enum, sortable: false),
-        new("title", x => x.Title, InMemoryGridFieldKind.Text, searchable: true),
-        new("slug", x => x.Slug, InMemoryGridFieldKind.Text, searchable: true),
-        new("status", x => x.Status.ToString(), InMemoryGridFieldKind.Enum),
-        new("category", x => x.Category, InMemoryGridFieldKind.Text, searchable: true),
-        new("locale", x => x.Locale, InMemoryGridFieldKind.Text, searchable: true),
-        new("authorDisplayName", x => x.AuthorDisplayName, InMemoryGridFieldKind.Text, searchable: true),
-        new("updated", x => x.UpdatedAt, InMemoryGridFieldKind.Date),
-    ],
-        defaultSortField: "updated",
-        tieBreakerField: "title");
-
-    /// <summary>گرید نویسندگان Admin.</summary>
-    public static readonly AdminListGridQueryPolicy<ContentAuthorGridRowDto> ContentAuthors = new(
-    [
-        new("displayName", x => x.DisplayName, InMemoryGridFieldKind.Text, searchable: true),
-        new("slug", x => x.Slug, InMemoryGridFieldKind.Text, searchable: true),
-        new("isActive", x => x.IsActive, InMemoryGridFieldKind.Enum),
-        new("updated", x => x.UpdatedAt, InMemoryGridFieldKind.Date),
-    ],
-        defaultSortField: "updated",
-        tieBreakerField: "displayName");
+    // Content / ContentAuthors grid policies owned by Tooba.Content.Infrastructure.Grid.ContentAdminGridPolicies.
 
     /// <summary>گرید نظرات Admin.</summary>
     public static readonly AdminListGridQueryPolicy<AdminReviewItem> Reviews = new(

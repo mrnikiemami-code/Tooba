@@ -2,14 +2,15 @@
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Hosting;
 using Tooba.AccessControl.Application;
+using Tooba.AccessControl.Application.Models;
+using Tooba.AccessControl.Application.Permissions;
 using Tooba.BuildingBlocks;
+using Tooba.BuildingBlocks.Security;
+using Tooba.Content.Endpoints.Admin;
 using Tooba.Host.Admin;
-using Tooba.Host.Content;
 using Tooba.Identity.Application;
 using Xunit;
 
-using Tooba.AccessControl.Application.Models;
-using Tooba.AccessControl.Application.Permissions;
 namespace Tooba.Host.Tests;
 
 /// <summary>
@@ -40,10 +41,8 @@ public sealed class ContentPermissionEnforcementTests
         var harness = await CreateHarnessAsync(grant: ContentAdminAccess.View);
         var actor = await ContentAdminAccess.RequireAsync(
             Request(AdminActor),
-            new CurrentAuthenticatedSession(),
+            harness.AdminAccess,
             harness.Tenant,
-            harness.Guard,
-            new StubEnvironment(),
             harness.Authz,
             ContentAdminAccess.View,
             CancellationToken.None);
@@ -57,10 +56,8 @@ public sealed class ContentPermissionEnforcementTests
         var denied = await Assert.ThrowsAsync<PlatformHttpException>(() =>
             ContentAdminAccess.RequireAsync(
                 Request(AdminActor),
-                new CurrentAuthenticatedSession(),
+                harness.AdminAccess,
                 harness.Tenant,
-                harness.Guard,
-                new StubEnvironment(),
                 harness.Authz,
                 ContentAdminAccess.Edit,
                 CancellationToken.None));
@@ -77,10 +74,8 @@ public sealed class ContentPermissionEnforcementTests
         var denied = await Assert.ThrowsAsync<PlatformHttpException>(() =>
             ContentAdminAccess.RequireAsync(
                 Request(AdminActor),
-                new CurrentAuthenticatedSession(),
+                harness.AdminAccess,
                 harness.Tenant,
-                harness.Guard,
-                new StubEnvironment(),
                 harness.Authz,
                 ContentAdminAccess.Publish,
                 CancellationToken.None));
@@ -95,10 +90,8 @@ public sealed class ContentPermissionEnforcementTests
         var denied = await Assert.ThrowsAsync<PlatformHttpException>(() =>
             ContentAdminAccess.RequireAsync(
                 Request(AdminActor),
-                new CurrentAuthenticatedSession(),
+                harness.AdminAccess,
                 harness.Tenant,
-                harness.Guard,
-                new StubEnvironment(),
                 harness.Authz,
                 ContentAdminAccess.Create,
                 CancellationToken.None));
@@ -113,10 +106,8 @@ public sealed class ContentPermissionEnforcementTests
         var denied = await Assert.ThrowsAsync<PlatformHttpException>(() =>
             ContentAdminAccess.RequireAsync(
                 Request(AdminActor),
-                new CurrentAuthenticatedSession(),
+                harness.AdminAccess,
                 harness.Tenant,
-                harness.Guard,
-                new StubEnvironment(),
                 harness.Authz,
                 ContentAdminAccess.Edit,
                 CancellationToken.None));
@@ -131,10 +122,8 @@ public sealed class ContentPermissionEnforcementTests
         var denied = await Assert.ThrowsAsync<PlatformHttpException>(() =>
             ContentAdminAccess.RequireAsync(
                 Request(AdminActor),
-                new CurrentAuthenticatedSession(),
+                harness.AdminAccess,
                 harness.Tenant,
-                harness.Guard,
-                new StubEnvironment(),
                 harness.Authz,
                 ContentAdminAccess.Edit,
                 CancellationToken.None));
@@ -148,10 +137,8 @@ public sealed class ContentPermissionEnforcementTests
         var harness = await CreateHarnessAsync(grant: ContentAdminAccess.Edit);
         var actor = await ContentAdminAccess.RequireAsync(
             Request(AdminActor),
-            new CurrentAuthenticatedSession(),
+            harness.AdminAccess,
             harness.Tenant,
-            harness.Guard,
-            new StubEnvironment(),
             harness.Authz,
             ContentAdminAccess.Edit,
             CancellationToken.None);
@@ -164,10 +151,8 @@ public sealed class ContentPermissionEnforcementTests
         var harness = await CreateHarnessAsync(grant: ContentAdminAccess.Publish);
         var actor = await ContentAdminAccess.RequireAsync(
             Request(AdminActor),
-            new CurrentAuthenticatedSession(),
+            harness.AdminAccess,
             harness.Tenant,
-            harness.Guard,
-            new StubEnvironment(),
             harness.Authz,
             ContentAdminAccess.Publish,
             CancellationToken.None);
@@ -197,6 +182,11 @@ public sealed class ContentPermissionEnforcementTests
         var unavailable = new FailClosedAuthorizationAdapter(
             "test-unavailable",
             new AuthorizationInstrumentation());
+        var adminAccess = new StubAdminPanelAccess(
+            new CurrentAuthenticatedSession(),
+            tenant,
+            new AuthorizationGuard(adapter),
+            new StubEnvironment());
 
         foreach (var permission in new[]
                  {
@@ -208,10 +198,8 @@ public sealed class ContentPermissionEnforcementTests
             var denied = await Assert.ThrowsAsync<PlatformHttpException>(() =>
                 ContentAdminAccess.RequireAsync(
                     Request(AdminActor),
-                    new CurrentAuthenticatedSession(),
+                    adminAccess,
                     tenant,
-                    new AuthorizationGuard(adapter),
-                    new StubEnvironment(),
                     unavailable,
                     permission,
                     CancellationToken.None));
@@ -224,7 +212,7 @@ public sealed class ContentPermissionEnforcementTests
 
     private static async Task<(
         StubCurrentTenant Tenant,
-        IAuthorizationGuard Guard,
+        IAdminPanelAccess AdminAccess,
         IAuthorizationService Authz)> CreateHarnessAsync(string grant)
     {
         var tenant = CurrentTenant();
@@ -255,7 +243,10 @@ public sealed class ContentPermissionEnforcementTests
                 Relation = AuthorizationRelations.Granted,
             },
             CancellationToken.None);
-        return (tenant, new AuthorizationGuard(adapter), adapter);
+        var guard = new AuthorizationGuard(adapter);
+        var env = new StubEnvironment();
+        var adminAccess = new StubAdminPanelAccess(new CurrentAuthenticatedSession(), tenant, guard, env);
+        return (tenant, adminAccess, adapter);
     }
 
     private static HttpRequest Request(Guid actor)
@@ -287,5 +278,16 @@ public sealed class ContentPermissionEnforcementTests
         public string ApplicationName { get; set; } = "Tooba.Host.Tests";
         public string ContentRootPath { get; set; } = AppContext.BaseDirectory;
         public IFileProvider ContentRootFileProvider { get; set; } = new NullFileProvider();
+    }
+
+    private sealed class StubAdminPanelAccess(
+        CurrentAuthenticatedSession session,
+        ICurrentTenant tenant,
+        IAuthorizationGuard guard,
+        IHostEnvironment environment) : IAdminPanelAccess
+    {
+        public Task<Guid> RequireAuthorizedAsync(HttpRequest request, CancellationToken cancellationToken) =>
+            AdminPanelAccess.RequireAuthorizedAsync(
+                request, session, tenant, guard, environment, cancellationToken);
     }
 }

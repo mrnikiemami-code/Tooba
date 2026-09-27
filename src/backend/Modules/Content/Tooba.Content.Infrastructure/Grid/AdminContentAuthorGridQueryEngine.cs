@@ -1,14 +1,14 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Tooba.BuildingBlocks.Grid;
 using Tooba.Persistence.Grid;
 using Tooba.Content.Application;
 using Tooba.Content.Domain;
 using Tooba.Content.Infrastructure.Persistence;
 
-namespace Tooba.Host.Grid;
+namespace Tooba.Content.Infrastructure.Grid;
 
 /// <summary>پرس‌وجوی DB-native گرید نویسندگان Admin.</summary>
-internal sealed class AdminContentAuthorGridQueryEngine
+public sealed class AdminContentAuthorGridQueryEngine
 {
     private readonly ContentDbContext _db;
 

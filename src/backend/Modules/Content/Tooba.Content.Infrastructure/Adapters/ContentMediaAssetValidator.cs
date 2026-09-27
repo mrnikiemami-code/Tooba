@@ -1,10 +1,10 @@
-using Tooba.Content.Application;
+﻿using Tooba.Content.Application;
 using Tooba.Content.Domain;
 using Tooba.Media.Application;
 
-namespace Tooba.Host.Content;
+namespace Tooba.Content.Infrastructure.Adapters;
 
-/// <summary>پل Host برای اعتبارسنج ارجاع DAM در Content.</summary>
+/// <summary>پل Content↔Media برای اعتبارسنج ارجاع DAM.</summary>
 public sealed class ContentMediaAssetValidator : IContentMediaAssetValidator
 {
     private readonly IMediaDirectory _media;

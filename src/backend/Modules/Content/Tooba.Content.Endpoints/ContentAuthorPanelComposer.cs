@@ -1,9 +1,9 @@
-using Tooba.BuildingBlocks.Grid;
+﻿using Tooba.BuildingBlocks.Grid;
 using Tooba.Content.Application;
 using Tooba.Content.Infrastructure.Persistence;
-using Tooba.Host.Grid;
+using Tooba.Content.Infrastructure.Grid;
 
-namespace Tooba.Host.Content;
+namespace Tooba.Content.Endpoints;
 
 /// <summary>ترکیب HTTP برای مسیرهای مدیریتی نویسندهٔ Content.</summary>
 public sealed class ContentAuthorPanelComposer
@@ -23,7 +23,7 @@ public sealed class ContentAuthorPanelComposer
         GridQueryRequest request,
         CancellationToken cancellationToken)
     {
-        var q = AdminListGridPolicies.ContentAuthors.Normalize(request);
+        var q = ContentAdminGridPolicies.NormalizeAuthors(request);
         return _grid.QueryAsync(q, cancellationToken);
     }
 

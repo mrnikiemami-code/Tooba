@@ -1,14 +1,16 @@
+using Microsoft.AspNetCore.Routing;
 using Tooba.BuildingBlocks;
+using Tooba.BuildingBlocks.Security;
 using Tooba.Content.Application;
 using Tooba.Content.Domain;
 
-namespace Tooba.Host.Content;
+namespace Tooba.Content.Endpoints.Admin;
 
 /// <summary>مسیرهای Admin تعدیل نظرات مقاله.</summary>
 public static class ContentArticleCommentEndpoints
 {
     /// <summary>مسیرهای نظرات مقاله را ثبت می‌کند.</summary>
-    public static void MapContentArticleCommentEndpoints(this WebApplication app)
+    public static void MapContentArticleCommentEndpoints(this IEndpointRouteBuilder app)
     {
         var admin = app.MapGroup("/v1/admin/content/articles/{articleId:guid}/comments");
         admin.MapGet("/", ListAsync);
@@ -57,11 +59,9 @@ public static class ContentArticleCommentEndpoints
         Guid articleId,
         IArticleCommentDirectory directory,
         HttpRequest request,
-        CurrentAuthenticatedSession session,
+        IAdminPanelAccess adminPanelAccess,
         ICurrentTenant tenant,
-        IAuthorizationGuard guard,
         IAuthorizationService authz,
-        IHostEnvironment environment,
         string? status = null,
         string? search = null,
         int skip = 0,
@@ -71,7 +71,7 @@ public static class ContentArticleCommentEndpoints
         try
         {
             await ContentAdminAccess.RequireAsync(
-                request, session, tenant, guard, environment, authz, ContentAdminAccess.View, cancellationToken);
+                request, adminPanelAccess, tenant, authz, ContentAdminAccess.View, cancellationToken);
             ArticleCommentStatus? parsed = null;
             if (!string.IsNullOrWhiteSpace(status))
             {
@@ -91,17 +91,15 @@ public static class ContentArticleCommentEndpoints
         CreateArticleCommentBody body,
         IArticleCommentDirectory directory,
         HttpRequest request,
-        CurrentAuthenticatedSession session,
+        IAdminPanelAccess adminPanelAccess,
         ICurrentTenant tenant,
-        IAuthorizationGuard guard,
         IAuthorizationService authz,
-        IHostEnvironment environment,
         CancellationToken cancellationToken)
     {
         try
         {
             await ContentAdminAccess.RequireAsync(
-                request, session, tenant, guard, environment, authz, ContentAdminAccess.Edit, cancellationToken);
+                request, adminPanelAccess, tenant, authz, ContentAdminAccess.Edit, cancellationToken);
             var created = await directory.CreateAsync(
                 articleId,
                 new CreateArticleCommentCommand(body.DisplayName, body.Body, body.AuthorPartyId),
@@ -118,13 +116,11 @@ public static class ContentArticleCommentEndpoints
         ModerateArticleCommentBody? body,
         IArticleCommentDirectory directory,
         HttpRequest request,
-        CurrentAuthenticatedSession session,
+        IAdminPanelAccess adminPanelAccess,
         ICurrentTenant tenant,
-        IAuthorizationGuard guard,
         IAuthorizationService authz,
-        IHostEnvironment environment,
         CancellationToken cancellationToken) =>
-        ModerateAsync(articleId, commentId, body, directory, request, session, tenant, guard, authz, environment, cancellationToken,
+        ModerateAsync(articleId, commentId, body, directory, request, adminPanelAccess, tenant, authz, cancellationToken,
             (dir, aid, cid, actor, cmd, ct) => dir.ApproveAsync(aid, cid, actor, cmd, ct));
 
     private static Task<IResult> RejectAsync(
@@ -133,13 +129,11 @@ public static class ContentArticleCommentEndpoints
         ModerateArticleCommentBody? body,
         IArticleCommentDirectory directory,
         HttpRequest request,
-        CurrentAuthenticatedSession session,
+        IAdminPanelAccess adminPanelAccess,
         ICurrentTenant tenant,
-        IAuthorizationGuard guard,
         IAuthorizationService authz,
-        IHostEnvironment environment,
         CancellationToken cancellationToken) =>
-        ModerateAsync(articleId, commentId, body, directory, request, session, tenant, guard, authz, environment, cancellationToken,
+        ModerateAsync(articleId, commentId, body, directory, request, adminPanelAccess, tenant, authz, cancellationToken,
             (dir, aid, cid, actor, cmd, ct) => dir.RejectAsync(aid, cid, actor, cmd, ct));
 
     private static Task<IResult> HideAsync(
@@ -148,13 +142,11 @@ public static class ContentArticleCommentEndpoints
         ModerateArticleCommentBody? body,
         IArticleCommentDirectory directory,
         HttpRequest request,
-        CurrentAuthenticatedSession session,
+        IAdminPanelAccess adminPanelAccess,
         ICurrentTenant tenant,
-        IAuthorizationGuard guard,
         IAuthorizationService authz,
-        IHostEnvironment environment,
         CancellationToken cancellationToken) =>
-        ModerateAsync(articleId, commentId, body, directory, request, session, tenant, guard, authz, environment, cancellationToken,
+        ModerateAsync(articleId, commentId, body, directory, request, adminPanelAccess, tenant, authz, cancellationToken,
             (dir, aid, cid, actor, cmd, ct) => dir.HideAsync(aid, cid, actor, cmd, ct));
 
     private static Task<IResult> MarkPendingAsync(
@@ -163,13 +155,11 @@ public static class ContentArticleCommentEndpoints
         ModerateArticleCommentBody? body,
         IArticleCommentDirectory directory,
         HttpRequest request,
-        CurrentAuthenticatedSession session,
+        IAdminPanelAccess adminPanelAccess,
         ICurrentTenant tenant,
-        IAuthorizationGuard guard,
         IAuthorizationService authz,
-        IHostEnvironment environment,
         CancellationToken cancellationToken) =>
-        ModerateAsync(articleId, commentId, body, directory, request, session, tenant, guard, authz, environment, cancellationToken,
+        ModerateAsync(articleId, commentId, body, directory, request, adminPanelAccess, tenant, authz, cancellationToken,
             (dir, aid, cid, actor, cmd, ct) => dir.MarkPendingAsync(aid, cid, actor, cmd, ct));
 
     private static async Task<IResult> ModerateAsync(
@@ -178,18 +168,16 @@ public static class ContentArticleCommentEndpoints
         ModerateArticleCommentBody? body,
         IArticleCommentDirectory directory,
         HttpRequest request,
-        CurrentAuthenticatedSession session,
+        IAdminPanelAccess adminPanelAccess,
         ICurrentTenant tenant,
-        IAuthorizationGuard guard,
         IAuthorizationService authz,
-        IHostEnvironment environment,
         CancellationToken cancellationToken,
         Func<IArticleCommentDirectory, Guid, Guid, Guid, ModerateArticleCommentCommand, CancellationToken, Task<ArticleCommentAdminDto>> action)
     {
         try
         {
             var actor = await ContentAdminAccess.RequireAsync(
-                request, session, tenant, guard, environment, authz, ContentAdminAccess.Edit, cancellationToken);
+                request, adminPanelAccess, tenant, authz, ContentAdminAccess.Edit, cancellationToken);
             var cmd = new ModerateArticleCommentCommand(body?.Note);
             return Results.Json(await action(directory, articleId, commentId, actor, cmd, cancellationToken));
         }

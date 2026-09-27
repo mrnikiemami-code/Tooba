@@ -1,6 +1,6 @@
-using Tooba.Content.Application;
+﻿using Tooba.Content.Application;
 
-namespace Tooba.Host.Content;
+namespace Tooba.Content.Endpoints;
 
 /// <summary>ترکیب HTTP برای رسانهٔ مقاله.</summary>
 public sealed class ContentArticleMediaPanelComposer

@@ -1,14 +1,14 @@
 using Tooba.BuildingBlocks;
-using Tooba.Host.Admin;
+using Tooba.BuildingBlocks.Security;
 
-namespace Tooba.Host.Content;
+namespace Tooba.Content.Endpoints.Admin;
 
 /// <summary>
 /// مجوز ریزدانهٔ Admin برای Content.
 /// کاتالوگ فقط چهار کد دارد (بدون content.article.* و مشابه)؛
 /// عملیات article / category / author / media روی همین کدها نگاشت می‌شوند — هم‌تراز FE T009.
 /// </summary>
-internal static class ContentAdminAccess
+public static class ContentAdminAccess
 {
     /// <summary>لیست/جزئیات/query/picker/tree/workspace/media GET.</summary>
     public const string View = "content.view";
@@ -26,21 +26,19 @@ internal static class ContentAdminAccess
     public const string Publish = "content.publish";
 
     /// <summary>
-    /// ابتدا <see cref="AdminPanelAccess.RequireAuthorizedAsync"/> سپس capability روی permissionId.
+    /// ابتدا <see cref="IAdminPanelAccess.RequireAuthorizedAsync"/> سپس capability روی permissionId.
     /// Unavailable / indeterminate = fail-closed (۵۰۳)؛ Deny = ۴۰۳. هرگز پس از tenant#view اجازهٔ ضمنی نمی‌دهد.
     /// </summary>
     public static async Task<Guid> RequireAsync(
         HttpRequest request,
-        CurrentAuthenticatedSession session,
+        IAdminPanelAccess adminPanelAccess,
         ICurrentTenant tenant,
-        IAuthorizationGuard guard,
-        IHostEnvironment environment,
         IAuthorizationService authz,
         string permissionId,
         CancellationToken cancellationToken)
     {
-        var actorUserId = await AdminPanelAccess.RequireAuthorizedAsync(
-            request, session, tenant, guard, environment, cancellationToken);
+        ArgumentNullException.ThrowIfNull(adminPanelAccess);
+        var actorUserId = await adminPanelAccess.RequireAuthorizedAsync(request, cancellationToken);
 
         var decision = await authz.CanAsync(
             new AuthorizationCheck

@@ -1,10 +1,12 @@
-using Tooba.BuildingBlocks.Grid;
+﻿using Tooba.BuildingBlocks.Grid;
 using Tooba.Content.Application;
 using Tooba.Content.Domain;
 using Tooba.Content.Infrastructure.Persistence;
-using Tooba.Host.Grid;
+using Tooba.Content.Infrastructure.Grid;
 
-namespace Tooba.Host.Content;
+using Tooba.Content.Endpoints.Admin;
+
+namespace Tooba.Content.Endpoints;
 
 /// <summary>ترکیب HTTP برای مسیرهای عمومی و مدیریتی Content.</summary>
 public sealed class ContentPanelComposer
@@ -139,7 +141,7 @@ public sealed class ContentPanelComposer
         GridQueryRequest request,
         CancellationToken cancellationToken)
     {
-        var q = AdminListGridPolicies.Content.Normalize(request);
+        var q = ContentAdminGridPolicies.NormalizeArticles(request);
         return _grid.QueryAsync(q, cancellationToken);
     }
 

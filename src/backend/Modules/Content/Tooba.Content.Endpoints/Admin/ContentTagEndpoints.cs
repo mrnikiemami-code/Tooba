@@ -1,14 +1,16 @@
+using Microsoft.AspNetCore.Routing;
 using Tooba.BuildingBlocks;
+using Tooba.BuildingBlocks.Security;
 using Tooba.Content.Application;
 using Tooba.Content.Domain;
 
-namespace Tooba.Host.Content;
+namespace Tooba.Content.Endpoints.Admin;
 
 /// <summary>مسیرهای Admin برچسب محتوا و انتساب به مقاله.</summary>
 public static class ContentTagEndpoints
 {
     /// <summary>مسیرهای Admin برچسب محتوا را ثبت می‌کند.</summary>
-    public static void MapContentTagEndpoints(this WebApplication app)
+    public static void MapContentTagEndpoints(this IEndpointRouteBuilder app)
     {
         var tags = app.MapGroup("/v1/admin/content/tags");
         tags.MapGet("/", SearchAsync);
@@ -27,17 +29,15 @@ public static class ContentTagEndpoints
         bool? activeOnly,
         IContentTagDirectory directory,
         HttpRequest request,
-        CurrentAuthenticatedSession session,
+        IAdminPanelAccess adminPanelAccess,
         ICurrentTenant tenant,
-        IAuthorizationGuard guard,
         IAuthorizationService authz,
-        IHostEnvironment environment,
         CancellationToken cancellationToken)
     {
         try
         {
             await ContentAdminAccess.RequireAsync(
-                request, session, tenant, guard, environment, authz, ContentAdminAccess.View, cancellationToken);
+                request, adminPanelAccess, tenant, authz, ContentAdminAccess.View, cancellationToken);
             return Results.Json(await directory.SearchAsync(
                 languageCode,
                 search,
@@ -53,17 +53,15 @@ public static class ContentTagEndpoints
         CreateContentTagHttpRequest body,
         IContentTagDirectory directory,
         HttpRequest request,
-        CurrentAuthenticatedSession session,
+        IAdminPanelAccess adminPanelAccess,
         ICurrentTenant tenant,
-        IAuthorizationGuard guard,
         IAuthorizationService authz,
-        IHostEnvironment environment,
         CancellationToken cancellationToken)
     {
         try
         {
             await ContentAdminAccess.RequireAsync(
-                request, session, tenant, guard, environment, authz, ContentAdminAccess.Edit, cancellationToken);
+                request, adminPanelAccess, tenant, authz, ContentAdminAccess.Edit, cancellationToken);
             var created = await directory.CreateAsync(
                 new CreateContentTagCommand(body.LanguageCode ?? "", body.Name ?? "", body.Slug),
                 cancellationToken);
@@ -77,17 +75,15 @@ public static class ContentTagEndpoints
         Guid articleId,
         IContentTagDirectory directory,
         HttpRequest request,
-        CurrentAuthenticatedSession session,
+        IAdminPanelAccess adminPanelAccess,
         ICurrentTenant tenant,
-        IAuthorizationGuard guard,
         IAuthorizationService authz,
-        IHostEnvironment environment,
         CancellationToken cancellationToken)
     {
         try
         {
             await ContentAdminAccess.RequireAsync(
-                request, session, tenant, guard, environment, authz, ContentAdminAccess.View, cancellationToken);
+                request, adminPanelAccess, tenant, authz, ContentAdminAccess.View, cancellationToken);
             return Results.Json(await directory.ListArticleTagsAsync(articleId, cancellationToken));
         }
         catch (PlatformHttpException ex) { return ToError(ex); }
@@ -99,17 +95,15 @@ public static class ContentTagEndpoints
         Guid tagId,
         IContentTagDirectory directory,
         HttpRequest request,
-        CurrentAuthenticatedSession session,
+        IAdminPanelAccess adminPanelAccess,
         ICurrentTenant tenant,
-        IAuthorizationGuard guard,
         IAuthorizationService authz,
-        IHostEnvironment environment,
         CancellationToken cancellationToken)
     {
         try
         {
             await ContentAdminAccess.RequireAsync(
-                request, session, tenant, guard, environment, authz, ContentAdminAccess.Edit, cancellationToken);
+                request, adminPanelAccess, tenant, authz, ContentAdminAccess.Edit, cancellationToken);
             return Results.Json(await directory.AssignToArticleAsync(articleId, tagId, cancellationToken));
         }
         catch (PlatformHttpException ex) { return ToError(ex); }
@@ -121,17 +115,15 @@ public static class ContentTagEndpoints
         Guid tagId,
         IContentTagDirectory directory,
         HttpRequest request,
-        CurrentAuthenticatedSession session,
+        IAdminPanelAccess adminPanelAccess,
         ICurrentTenant tenant,
-        IAuthorizationGuard guard,
         IAuthorizationService authz,
-        IHostEnvironment environment,
         CancellationToken cancellationToken)
     {
         try
         {
             await ContentAdminAccess.RequireAsync(
-                request, session, tenant, guard, environment, authz, ContentAdminAccess.Edit, cancellationToken);
+                request, adminPanelAccess, tenant, authz, ContentAdminAccess.Edit, cancellationToken);
             return Results.Json(await directory.RemoveFromArticleAsync(articleId, tagId, cancellationToken));
         }
         catch (PlatformHttpException ex) { return ToError(ex); }
