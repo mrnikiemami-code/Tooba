@@ -15,20 +15,8 @@ public sealed class HostAdminAmcW20GuardTests
     public void Brand_options_owned_once_by_Catalog_and_absent_from_Host_ProductWorkspace()
     {
         var root = FindRepoRoot();
-        var hostEndpoints = File.ReadAllText(Path.Combine(
-            root, "src/backend/Host/Tooba.Host/Admin/ProductWorkspaceEndpoints.cs"));
-        Assert.Equal(0, MapRouteRegex.Matches(hostEndpoints).Count);
-        Assert.DoesNotContain("brand-options", hostEndpoints, StringComparison.Ordinal);
-        Assert.DoesNotContain("ListBrandOptionsAsync", hostEndpoints, StringComparison.Ordinal);
 
-        var composer = File.ReadAllText(Path.Combine(
-            root, "src/backend/Host/Tooba.Host/Admin/ProductWorkspaceComposer.cs"));
-        Assert.DoesNotContain("ListBrandOptionsAsync", composer, StringComparison.Ordinal);
-        Assert.DoesNotContain("ListBrandOptionsInternalAsync", composer, StringComparison.Ordinal);
 
-        var models = File.ReadAllText(Path.Combine(
-            root, "src/backend/Host/Tooba.Host/Admin/ProductWorkspaceModels.cs"));
-        Assert.DoesNotContain("AdminBrandOption", models, StringComparison.Ordinal);
 
         var catalogEndpoints = File.ReadAllText(Path.Combine(
             root,
@@ -61,9 +49,6 @@ public sealed class HostAdminAmcW20GuardTests
         Assert.Contains("MapGet(\"/{productId:guid}\"", pw, StringComparison.Ordinal);
         Assert.Contains("MapPost(\"/{productId:guid}/publish\"", pw, StringComparison.Ordinal);
 
-        var host = File.ReadAllText(Path.Combine(
-            root, "src/backend/Host/Tooba.Host/Admin/ProductWorkspaceEndpoints.cs"));
-        Assert.DoesNotContain("MapGet(\"/{productId:guid}\"", host, StringComparison.Ordinal);
     }
 
     [Fact]

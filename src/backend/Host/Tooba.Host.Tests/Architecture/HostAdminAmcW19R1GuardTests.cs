@@ -66,10 +66,6 @@ public sealed class HostAdminAmcW19R1GuardTests
         Assert.Contains("MapGet(\"/{productId:guid}\"", moduleEndpoints, StringComparison.Ordinal);
         Assert.Contains("MapPost(\"/{productId:guid}/publish\"", moduleEndpoints, StringComparison.Ordinal);
 
-        var hostEndpoints = File.ReadAllText(Path.Combine(
-            root, "src/backend/Host/Tooba.Host/Admin/ProductWorkspaceEndpoints.cs"));
-        Assert.Equal(0, MapRouteRegex.Matches(hostEndpoints).Count);
-        Assert.DoesNotContain("MapGet(\"/{productId:guid}\"", hostEndpoints, StringComparison.Ordinal);
 
         var admin = Path.Combine(root, "src/backend/Host/Tooba.Host/Admin");
         var adminCount = Directory.GetFiles(admin, "*.cs", SearchOption.AllDirectories).Length;

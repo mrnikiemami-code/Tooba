@@ -63,10 +63,8 @@ public sealed class ProductHistoryTests : IAsyncLifetime
     public void Product_workspace_history_endpoint_is_authorized_and_read_only()
     {
         var root = FindRepoRoot();
-        var hostEndpoints = File.ReadAllText(Path.Combine(
-            root, "src", "backend", "Host", "Tooba.Host", "Admin", "ProductWorkspaceEndpoints.cs"));
-        Assert.DoesNotContain("MapGet(\"/{productId:guid}/history\"", hostEndpoints, StringComparison.Ordinal);
-        Assert.DoesNotContain("GetHistoryAsync", hostEndpoints, StringComparison.Ordinal);
+        Assert.False(File.Exists(Path.Combine(
+            root, "src", "backend", "Host", "Tooba.Host", "Admin", "ProductWorkspaceEndpoints.cs")));
 
         var catalogEndpoints = File.ReadAllText(Path.Combine(
             root,

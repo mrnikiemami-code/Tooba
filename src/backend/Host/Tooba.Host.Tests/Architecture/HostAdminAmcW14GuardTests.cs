@@ -1,4 +1,4 @@
-﻿using System.Text.RegularExpressions;
+using System.Text.RegularExpressions;
 using System.Xml.Linq;
 using Xunit;
 
@@ -11,37 +11,12 @@ public sealed class HostAdminAmcW14GuardTests
     public void Host_ProductWorkspace_has_zero_seo_routes_and_files_retained()
     {
         var root = FindRepoRoot();
-        var endpoints = File.ReadAllText(Path.Combine(
-            root, "src/backend/Host/Tooba.Host/Admin/ProductWorkspaceEndpoints.cs"));
-        Assert.DoesNotContain("MapGet(\"/{productId:guid}/seo\"", endpoints, StringComparison.Ordinal);
-        Assert.DoesNotContain("MapPut(\"/{productId:guid}/seo\"", endpoints, StringComparison.Ordinal);
-        Assert.DoesNotContain("/seo/readiness", endpoints, StringComparison.Ordinal);
-        Assert.DoesNotContain("GetSeoAsync", endpoints, StringComparison.Ordinal);
-        Assert.DoesNotContain("PutSeoAsync", endpoints, StringComparison.Ordinal);
-        Assert.DoesNotContain("GetSeoReadinessAsync", endpoints, StringComparison.Ordinal);
-        Assert.Contains("MapProductWorkspaceEndpoints", endpoints, StringComparison.Ordinal);
-        Assert.Contains("MapPost(\"/{productId:guid}/variants\"", endpoints, StringComparison.Ordinal);
 
-        Assert.True(File.Exists(Path.Combine(root, "src/backend/Host/Tooba.Host/Admin/ProductWorkspaceEndpoints.cs")));
-        Assert.True(File.Exists(Path.Combine(root, "src/backend/Host/Tooba.Host/Admin/ProductWorkspaceComposer.cs")));
-        Assert.True(File.Exists(Path.Combine(root, "src/backend/Host/Tooba.Host/Admin/ProductWorkspaceModels.cs")));
+        Assert.False(File.Exists(Path.Combine(root, "src/backend/Host/Tooba.Host/Admin/ProductWorkspaceEndpoints.cs")));
+        Assert.False(File.Exists(Path.Combine(root, "src/backend/Host/Tooba.Host/Admin/ProductWorkspaceComposer.cs")));
+        Assert.False(File.Exists(Path.Combine(root, "src/backend/Host/Tooba.Host/Admin/ProductWorkspaceModels.cs")));
 
-        var composer = File.ReadAllText(Path.Combine(
-            root, "src/backend/Host/Tooba.Host/Admin/ProductWorkspaceComposer.cs"));
-        Assert.DoesNotContain("GetSeoAsync", composer, StringComparison.Ordinal);
-        Assert.DoesNotContain("UpdateSeoAsync", composer, StringComparison.Ordinal);
-        Assert.DoesNotContain("GetSeoReadinessAsync", composer, StringComparison.Ordinal);
-        Assert.DoesNotContain("MapSeoDetail", composer, StringComparison.Ordinal);
-        Assert.DoesNotContain("workspace.product.seo.rejected", composer, StringComparison.Ordinal);
-        Assert.DoesNotContain("ProductSeoDetail", composer, StringComparison.Ordinal);
-        Assert.DoesNotContain("ProductSeoUpdateInput", composer, StringComparison.Ordinal);
 
-        var models = File.ReadAllText(Path.Combine(
-            root, "src/backend/Host/Tooba.Host/Admin/ProductWorkspaceModels.cs"));
-        Assert.DoesNotContain("AdminProductSeoUpdateRequest", models, StringComparison.Ordinal);
-        Assert.DoesNotContain("ProductSeoDetailView", models, StringComparison.Ordinal);
-        Assert.DoesNotContain("ProductSeoReadinessView", models, StringComparison.Ordinal);
-        Assert.Contains("record ProductSeoView", models, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -154,7 +129,7 @@ public sealed class HostAdminAmcW14GuardTests
         var admin = Path.Combine(FindRepoRoot(), "src/backend/Host/Tooba.Host/Admin");
         var files = Directory.GetFiles(admin, "*.cs", SearchOption.AllDirectories);
         Assert.True(files.Length <= 52 && files.Length >= 12, $"Host/Admin count expected in [12,52], was {files.Length}");
-        Assert.True(File.Exists(Path.Combine(admin, "ProductWorkspaceEndpoints.cs")));
+        Assert.False(File.Exists(Path.Combine(admin, "ProductWorkspaceEndpoints.cs")));
         Assert.True(File.Exists(Path.Combine(admin, "StoreAppearanceSettingsEndpoints.cs")));
         Assert.False(File.Exists(Path.Combine(admin, "CatalogAttributeEndpoints.cs")));
 

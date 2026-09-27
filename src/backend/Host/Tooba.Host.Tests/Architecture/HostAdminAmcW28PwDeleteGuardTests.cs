@@ -16,16 +16,7 @@ public sealed class HostAdminAmcW28PwDeleteGuardTests
     public void Product_DELETE_owned_by_Catalog_and_absent_from_Host_ProductWorkspace()
     {
         var root = FindRepoRoot();
-        var host = File.ReadAllText(Path.Combine(
-            root, "src/backend/Host/Tooba.Host/Admin/ProductWorkspaceEndpoints.cs"));
-        Assert.Equal(0, MapRouteRegex.Matches(host).Count);
-        Assert.DoesNotContain("MapDelete(\"/{productId:guid}\"", host, StringComparison.Ordinal);
-        Assert.DoesNotContain("DeleteAsync", host, StringComparison.Ordinal);
 
-        var composer = File.ReadAllText(Path.Combine(
-            root, "src/backend/Host/Tooba.Host/Admin/ProductWorkspaceComposer.cs"));
-        Assert.DoesNotContain("DeleteOrSoftArchiveAsync", composer, StringComparison.Ordinal);
-        Assert.DoesNotContain("AnyOffersForCatalogVariantIdsAsync", composer, StringComparison.Ordinal);
 
         var catalogEndpoints = File.ReadAllText(Path.Combine(
             root,
@@ -50,8 +41,8 @@ public sealed class HostAdminAmcW28PwDeleteGuardTests
         Assert.DoesNotContain("MapDelete(\"/{productId:guid}\"", pw, StringComparison.Ordinal);
         Assert.DoesNotContain("DeleteProductCommand", pw, StringComparison.Ordinal);
 
-        Assert.True(File.Exists(Path.Combine(root, "src/backend/Host/Tooba.Host/Admin/ProductWorkspaceEndpoints.cs")));
-        Assert.True(File.Exists(Path.Combine(root, "src/backend/Host/Tooba.Host/Admin/ProductWorkspaceComposer.cs")));
+        Assert.False(File.Exists(Path.Combine(root, "src/backend/Host/Tooba.Host/Admin/ProductWorkspaceEndpoints.cs")));
+        Assert.False(File.Exists(Path.Combine(root, "src/backend/Host/Tooba.Host/Admin/ProductWorkspaceComposer.cs")));
     }
 
     [Fact]
@@ -87,13 +78,13 @@ public sealed class HostAdminAmcW28PwDeleteGuardTests
     }
 
     [Fact]
-    public void Host_Admin_count_28_StoreAppearance_deferred_RETAIN_PARTIAL()
+    public void Host_Admin_count_23_StoreAppearance_deferred_PW_shells_ABSENT()
     {
         var root = FindRepoRoot();
         var admin = Path.Combine(root, "src/backend/Host/Tooba.Host/Admin");
-        Assert.Equal(28, Directory.GetFiles(admin, "*.cs", SearchOption.AllDirectories).Length);
+        Assert.Equal(23, Directory.GetFiles(admin, "*.cs", SearchOption.AllDirectories).Length);
         Assert.True(File.Exists(Path.Combine(admin, "StoreAppearanceSettingsEndpoints.cs")));
-        Assert.True(File.Exists(Path.Combine(admin, "ProductWorkspaceEndpoints.cs")));
+        Assert.False(File.Exists(Path.Combine(admin, "ProductWorkspaceEndpoints.cs")));
     }
 
     private static string FindRepoRoot()

@@ -1,4 +1,4 @@
-using System.Text.RegularExpressions;
+﻿using System.Text.RegularExpressions;
 using Xunit;
 
 namespace Tooba.Host.Tests.Architecture;
@@ -88,13 +88,13 @@ public sealed class HostAdminAmcW33MerchandisingGuardTests
     }
 
     [Fact]
-    public void Host_Admin_count_28_StoreAppearance_deferred_Merchandising_evacuated()
+    public void Host_Admin_count_23_StoreAppearance_deferred_PW_shells_ABSENT()
     {
         var root = FindRepoRoot();
         var admin = Path.Combine(root, "src/backend/Host/Tooba.Host/Admin");
-        Assert.Equal(28, Directory.GetFiles(admin, "*.cs", SearchOption.AllDirectories).Length);
+        Assert.Equal(23, Directory.GetFiles(admin, "*.cs", SearchOption.AllDirectories).Length);
         Assert.True(File.Exists(Path.Combine(admin, "StoreAppearanceSettingsEndpoints.cs")));
-        Assert.True(File.Exists(Path.Combine(admin, "ProductWorkspaceEndpoints.cs")));
+        Assert.False(File.Exists(Path.Combine(admin, "ProductWorkspaceEndpoints.cs")));
         Assert.False(File.Exists(Path.Combine(admin, "MerchandisingCampaignAdminEndpoints.cs")));
     }
 

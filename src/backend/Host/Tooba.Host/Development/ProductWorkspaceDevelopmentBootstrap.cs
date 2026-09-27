@@ -61,8 +61,10 @@ using global::Tooba.Story.Infrastructure.Persistence;
 using Tooba.Notification.Infrastructure.Persistence;
 using Tooba.AccessControl.Infrastructure.Persistence;
 using Tooba.Reviews.Infrastructure;
+using Tooba.Host.Admin;
+using Tooba.Host.Seller;
 
-namespace Tooba.Host.Admin;
+namespace Tooba.Host.Development;
 
 /// <summary>
 /// مهاجرت Development و درج نمونه از مسیر دایرکتوری‌های ماژول، نه JSON جعلی UI.
@@ -157,7 +159,7 @@ internal static class ProductWorkspaceDevelopmentBootstrap
         {
             await RefreshOperatorFacingCopyAsync(catalogDb, partyDb);
             await EnsureAdminR3PreviewSeedAsync(provider, CancellationToken.None);
-            await Seller.SellerDevActorBootstrap.EnsureAsync(provider, CancellationToken.None);
+            await SellerDevActorBootstrap.EnsureAsync(provider, CancellationToken.None);
             await AdminDevActorBootstrap.EnsureAsync(provider, CancellationToken.None);
             await ReviewsDevelopmentSeed.ApplyAsync(provider);
             await WishlistDevelopmentSeed.ApplyAsync(provider);
@@ -283,7 +285,7 @@ internal static class ProductWorkspaceDevelopmentBootstrap
         await inventory.AdjustAsync(stockB1, StockAdjustmentKind.Increase, 4, "seed-receipt", null, cancellation);
         await inventory.ReserveAsync(stockA1, 3, "workspace-live-hold", "workspace-live-hold", null, cancellation);
 
-        await Seller.SellerDevActorBootstrap.EnsureAsync(provider, cancellation);
+        await SellerDevActorBootstrap.EnsureAsync(provider, cancellation);
         await AdminDevActorBootstrap.EnsureAsync(provider, cancellation);
         await ReviewsDevelopmentSeed.ApplyAsync(provider, cancellation);
         await WishlistDevelopmentSeed.ApplyAsync(provider, cancellation);

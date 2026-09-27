@@ -16,22 +16,8 @@ public sealed class HostAdminAmcW27PwVariantsGuardTests
     public void Variant_routes_owned_by_ProductWorkspace_and_absent_from_Host()
     {
         var root = FindRepoRoot();
-        var host = File.ReadAllText(Path.Combine(
-            root, "src/backend/Host/Tooba.Host/Admin/ProductWorkspaceEndpoints.cs"));
-        Assert.Equal(0, MapRouteRegex.Matches(host).Count);
-        Assert.DoesNotContain("/variants", host, StringComparison.Ordinal);
-        Assert.DoesNotContain("CreateVariantAsync", host, StringComparison.Ordinal);
-        Assert.DoesNotContain("PatchVariantAsync", host, StringComparison.Ordinal);
 
-        var composer = File.ReadAllText(Path.Combine(
-            root, "src/backend/Host/Tooba.Host/Admin/ProductWorkspaceComposer.cs"));
-        Assert.DoesNotContain("CreateVariantAsync", composer, StringComparison.Ordinal);
-        Assert.DoesNotContain("PatchVariantAsync", composer, StringComparison.Ordinal);
 
-        var models = File.ReadAllText(Path.Combine(
-            root, "src/backend/Host/Tooba.Host/Admin/ProductWorkspaceModels.cs"));
-        Assert.DoesNotContain("AdminProductVariantCreateRequest", models, StringComparison.Ordinal);
-        Assert.DoesNotContain("AdminProductVariantPatchRequest", models, StringComparison.Ordinal);
 
         var module = File.ReadAllText(Path.Combine(
             root,
@@ -47,8 +33,8 @@ public sealed class HostAdminAmcW27PwVariantsGuardTests
         Assert.DoesNotContain("ICatalogDirectory", module, StringComparison.Ordinal);
         Assert.DoesNotContain("ex.Message", module, StringComparison.Ordinal);
 
-        Assert.True(File.Exists(Path.Combine(root, "src/backend/Host/Tooba.Host/Admin/ProductWorkspaceEndpoints.cs")));
-        Assert.True(File.Exists(Path.Combine(root, "src/backend/Host/Tooba.Host/Admin/ProductWorkspaceComposer.cs")));
+        Assert.False(File.Exists(Path.Combine(root, "src/backend/Host/Tooba.Host/Admin/ProductWorkspaceEndpoints.cs")));
+        Assert.False(File.Exists(Path.Combine(root, "src/backend/Host/Tooba.Host/Admin/ProductWorkspaceComposer.cs")));
     }
 
     [Fact]
@@ -76,13 +62,13 @@ public sealed class HostAdminAmcW27PwVariantsGuardTests
     }
 
     [Fact]
-    public void Host_Admin_count_28_StoreAppearance_deferred_RETAIN_PARTIAL()
+    public void Host_Admin_count_23_StoreAppearance_deferred_PW_shells_ABSENT()
     {
         var root = FindRepoRoot();
         var admin = Path.Combine(root, "src/backend/Host/Tooba.Host/Admin");
-        Assert.Equal(28, Directory.GetFiles(admin, "*.cs", SearchOption.AllDirectories).Length);
+        Assert.Equal(23, Directory.GetFiles(admin, "*.cs", SearchOption.AllDirectories).Length);
         Assert.True(File.Exists(Path.Combine(admin, "StoreAppearanceSettingsEndpoints.cs")));
-        Assert.True(File.Exists(Path.Combine(admin, "ProductWorkspaceEndpoints.cs")));
+        Assert.False(File.Exists(Path.Combine(admin, "ProductWorkspaceEndpoints.cs")));
     }
 
     private static string FindRepoRoot()

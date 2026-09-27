@@ -21,7 +21,7 @@ public sealed class HostCartResidualGuardTests
         ["CommerceHoldPolicy.cs"] = "Payment/Order hold adapter; holds only (no Cart persistence value)",
         ["CheckoutReservationHoldPolicy.cs"] = "Order hold port adapter (Payment options only)",
         ["Admin/HoldPolicySettingsEndpoints.cs"] = "settings admin UX; reads Cart-owned persistence hours via Cart-owned port",
-        ["Admin/ProductWorkspaceDevelopmentBootstrap.cs"] = "Development-only schema migration list",
+        ["Development/ProductWorkspaceDevelopmentBootstrap.cs"] = "Development-only schema migration list",
         ["Storefront/StorefrontModels.cs"] = "storefront wire DTOs that carry CartId",
         ["Storefront/StorefrontComposer.cs"] = "storefront read composition flag",
         ["Storefront/StorefrontEndpoints.cs"] = "checkout identity policy flag name (no Cart authority)",
@@ -66,7 +66,7 @@ public sealed class HostCartResidualGuardTests
             var text = File.ReadAllText(path);
 
             if (text.Contains("CartDbContext", StringComparison.Ordinal)
-                && relative is not "Admin/ProductWorkspaceDevelopmentBootstrap.cs")
+                && relative is not "Development/ProductWorkspaceDevelopmentBootstrap.cs")
             {
                 forbidden.Add($"{relative}: CartDbContext");
             }
@@ -78,7 +78,7 @@ public sealed class HostCartResidualGuardTests
             }
 
             if (text.Contains("Tooba.Cart.Infrastructure.Persistence", StringComparison.Ordinal)
-                && relative is not "Admin/ProductWorkspaceDevelopmentBootstrap.cs")
+                && relative is not "Development/ProductWorkspaceDevelopmentBootstrap.cs")
             {
                 forbidden.Add($"{relative}: Cart.Infrastructure persistence import");
             }

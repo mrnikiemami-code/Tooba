@@ -3,7 +3,7 @@ using Tooba.BuildingBlocks;
 namespace Tooba.Catalog.Application;
 
 /// <summary>
-/// Isolation key for Catalog store-scoped caches (parity with former Host StoreAppearanceProjector.ScopeKey).
+/// Isolation key for Catalog store-scoped caches (parity with former Host store-appearance projector ScopeKey).
 /// </summary>
 public static class CatalogStoreScope
 {

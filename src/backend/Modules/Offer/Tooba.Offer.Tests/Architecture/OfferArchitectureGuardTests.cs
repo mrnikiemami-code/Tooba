@@ -530,8 +530,25 @@ public sealed class OfferArchitectureGuardTests
         var files = new[]
         {
             Path.Combine(host, "Admin", "AdminPanelComposer.cs"),
-            Path.Combine(host, "Admin", "ProductWorkspaceComposer.cs"),
-            Path.Combine(host, "Admin", "MerchandisingCampaignAdminEndpoints.cs"),
+            Path.Combine(
+                RepoRoot(),
+                "src",
+                "backend",
+                "Modules",
+                "ProductWorkspace",
+                "Tooba.ProductWorkspace.Application",
+                "Composition",
+                "Queries",
+                "GetProductWorkspaceHandler.cs"),
+            Path.Combine(
+                RepoRoot(),
+                "src",
+                "backend",
+                "Modules",
+                "Promotion",
+                "Tooba.Promotion.Infrastructure",
+                "Merchandising",
+                "MerchandisingCampaignAdminComposer.cs"),
             Path.Combine(
                 RepoRoot(),
                 "src",

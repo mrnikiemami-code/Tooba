@@ -16,33 +16,8 @@ public sealed class HostAdminAmcW29PwIdentityGuardTests
     public void Identity_routes_owned_by_ProductWorkspace_and_absent_from_Host()
     {
         var root = FindRepoRoot();
-        var host = File.ReadAllText(Path.Combine(
-            root, "src/backend/Host/Tooba.Host/Admin/ProductWorkspaceEndpoints.cs"));
-        Assert.Equal(0, MapRouteRegex.Matches(host).Count);
-        Assert.DoesNotContain("MapPost(\"/\", CreateAsync)", host, StringComparison.Ordinal);
-        Assert.DoesNotContain("MapPost(\"/\",", host, StringComparison.Ordinal);
-        Assert.DoesNotContain("MapPatch(\"/{productId:guid}/catalog-title\"", host, StringComparison.Ordinal);
-        Assert.DoesNotContain("MapPatch(\"/{productId:guid}/core\"", host, StringComparison.Ordinal);
-        Assert.DoesNotContain("MapPatch(\"/{productId:guid}/quantity-policy\"", host, StringComparison.Ordinal);
-        Assert.DoesNotContain("CreateAsync", host, StringComparison.Ordinal);
-        Assert.DoesNotContain("PatchTitleAsync", host, StringComparison.Ordinal);
-        Assert.DoesNotContain("PatchCoreAsync", host, StringComparison.Ordinal);
-        Assert.DoesNotContain("PatchQuantityPolicyAsync", host, StringComparison.Ordinal);
-        Assert.DoesNotContain("CatalogTitlePatch", host, StringComparison.Ordinal);
 
-        var composer = File.ReadAllText(Path.Combine(
-            root, "src/backend/Host/Tooba.Host/Admin/ProductWorkspaceComposer.cs"));
-        Assert.DoesNotContain("CreateSimpleProductAsync", composer, StringComparison.Ordinal);
-        Assert.DoesNotContain("UpdateCatalogTitleAsync", composer, StringComparison.Ordinal);
-        Assert.DoesNotContain("UpdateProductCoreAsync", composer, StringComparison.Ordinal);
-        Assert.DoesNotContain("UpdateQuantityPolicyAsync", composer, StringComparison.Ordinal);
-        Assert.DoesNotContain("UpsertLocalizedTextAsync", composer, StringComparison.Ordinal);
 
-        var models = File.ReadAllText(Path.Combine(
-            root, "src/backend/Host/Tooba.Host/Admin/ProductWorkspaceModels.cs"));
-        Assert.DoesNotContain("AdminProductCreateRequest", models, StringComparison.Ordinal);
-        Assert.DoesNotContain("AdminProductCoreUpdateRequest", models, StringComparison.Ordinal);
-        Assert.DoesNotContain("AdminProductQuantityPolicyRequest", models, StringComparison.Ordinal);
 
         var module = File.ReadAllText(Path.Combine(
             root,
@@ -63,8 +38,8 @@ public sealed class HostAdminAmcW29PwIdentityGuardTests
         Assert.DoesNotContain("ICatalogDirectory", module, StringComparison.Ordinal);
         Assert.DoesNotContain("ex.Message", module, StringComparison.Ordinal);
 
-        Assert.True(File.Exists(Path.Combine(root, "src/backend/Host/Tooba.Host/Admin/ProductWorkspaceEndpoints.cs")));
-        Assert.True(File.Exists(Path.Combine(root, "src/backend/Host/Tooba.Host/Admin/ProductWorkspaceComposer.cs")));
+        Assert.False(File.Exists(Path.Combine(root, "src/backend/Host/Tooba.Host/Admin/ProductWorkspaceEndpoints.cs")));
+        Assert.False(File.Exists(Path.Combine(root, "src/backend/Host/Tooba.Host/Admin/ProductWorkspaceComposer.cs")));
     }
 
     [Fact]
@@ -118,13 +93,13 @@ public sealed class HostAdminAmcW29PwIdentityGuardTests
     }
 
     [Fact]
-    public void Host_Admin_count_28_StoreAppearance_deferred_RETAIN_PARTIAL()
+    public void Host_Admin_count_23_StoreAppearance_deferred_PW_shells_ABSENT()
     {
         var root = FindRepoRoot();
         var admin = Path.Combine(root, "src/backend/Host/Tooba.Host/Admin");
-        Assert.Equal(28, Directory.GetFiles(admin, "*.cs", SearchOption.AllDirectories).Length);
+        Assert.Equal(23, Directory.GetFiles(admin, "*.cs", SearchOption.AllDirectories).Length);
         Assert.True(File.Exists(Path.Combine(admin, "StoreAppearanceSettingsEndpoints.cs")));
-        Assert.True(File.Exists(Path.Combine(admin, "ProductWorkspaceEndpoints.cs")));
+        Assert.False(File.Exists(Path.Combine(admin, "ProductWorkspaceEndpoints.cs")));
     }
 
     private static string FindRepoRoot()

@@ -27,12 +27,6 @@
       "classification": "CRITICAL_GOD_FILE"
     },
     {
-      "path": "src/backend/Host/Tooba.Host/Admin/ProductWorkspaceComposer.cs",
-      "language": "cs",
-      "loc": 1579,
-      "classification": "CRITICAL_GOD_FILE"
-    },
-    {
       "path": "src/backend/Host/Tooba.Host/Storefront/StorefrontComposer.cs",
       "language": "cs",
       "loc": 1579,

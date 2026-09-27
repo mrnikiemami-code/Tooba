@@ -1,4 +1,4 @@
-﻿using System.Text.RegularExpressions;
+using System.Text.RegularExpressions;
 using System.Xml.Linq;
 using Xunit;
 
@@ -111,14 +111,9 @@ public sealed class HostAdminAmcW18GuardTests
         Assert.DoesNotContain("static void MapProductWorkspaceEndpoints", endpointModule, StringComparison.Ordinal);
         Assert.DoesNotContain("MapProductWorkspaceEndpoints(this", endpointModule, StringComparison.Ordinal);
 
-        var hostEndpoints = File.ReadAllText(Path.Combine(
-            root, "src/backend/Host/Tooba.Host/Admin/ProductWorkspaceEndpoints.cs"));
-        Assert.Equal(0, MapRouteRegex.Matches(hostEndpoints).Count);
-        Assert.Contains("MapProductWorkspaceEndpoints", hostEndpoints, StringComparison.Ordinal);
-        Assert.DoesNotContain("MapGet(\"/{productId:guid}\"", hostEndpoints, StringComparison.Ordinal);
 
         var program = File.ReadAllText(Path.Combine(root, "src/backend/Host/Tooba.Host/Program.cs"));
-        Assert.Contains("MapProductWorkspaceEndpoints()", program, StringComparison.Ordinal);
+        Assert.DoesNotContain("MapProductWorkspaceEndpoints()", program, StringComparison.Ordinal);
         Assert.Contains("MapProductWorkspaceModuleEndpoints", program, StringComparison.Ordinal);
         Assert.Contains("AddProductWorkspaceEndpointPresentation", program, StringComparison.Ordinal);
     }
@@ -130,9 +125,9 @@ public sealed class HostAdminAmcW18GuardTests
         var admin = Path.Combine(root, "src/backend/Host/Tooba.Host/Admin");
         var files = Directory.GetFiles(admin, "*.cs", SearchOption.AllDirectories);
         Assert.True(files.Length <= 52 && files.Length >= 12, $"Host/Admin count expected in [12,52], was {files.Length}");
-        Assert.True(File.Exists(Path.Combine(admin, "ProductWorkspaceEndpoints.cs")));
-        Assert.True(File.Exists(Path.Combine(admin, "ProductWorkspaceComposer.cs")));
-        Assert.True(File.Exists(Path.Combine(admin, "ProductWorkspaceModels.cs")));
+        Assert.False(File.Exists(Path.Combine(admin, "ProductWorkspaceEndpoints.cs")));
+        Assert.False(File.Exists(Path.Combine(admin, "ProductWorkspaceComposer.cs")));
+        Assert.False(File.Exists(Path.Combine(admin, "ProductWorkspaceModels.cs")));
         Assert.True(File.Exists(Path.Combine(admin, "StoreAppearanceSettingsEndpoints.cs")));
     }
 

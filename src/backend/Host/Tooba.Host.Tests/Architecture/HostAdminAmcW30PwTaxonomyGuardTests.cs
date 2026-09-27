@@ -16,35 +16,8 @@ public sealed class HostAdminAmcW30PwTaxonomyGuardTests
     public void Taxonomy_routes_owned_by_ProductWorkspace_and_absent_from_Host()
     {
         var root = FindRepoRoot();
-        var host = File.ReadAllText(Path.Combine(
-            root, "src/backend/Host/Tooba.Host/Admin/ProductWorkspaceEndpoints.cs"));
-        Assert.Equal(0, MapRouteRegex.Matches(host).Count);
-        Assert.DoesNotContain("MapPut(\"/{productId:guid}/category\"", host, StringComparison.Ordinal);
-        Assert.DoesNotContain("MapPost(\"/{productId:guid}/categories/additional\"", host, StringComparison.Ordinal);
-        Assert.DoesNotContain("MapDelete(\"/{productId:guid}/categories/additional/{categoryId:guid}\"", host, StringComparison.Ordinal);
-        Assert.DoesNotContain("MapPut(\"/{productId:guid}/brand\"", host, StringComparison.Ordinal);
-        Assert.DoesNotContain("AssignCategoryAsync", host, StringComparison.Ordinal);
-        Assert.DoesNotContain("AddAdditionalCategoryAsync", host, StringComparison.Ordinal);
-        Assert.DoesNotContain("RemoveAdditionalCategoryAsync", host, StringComparison.Ordinal);
-        Assert.DoesNotContain("AssignBrandAsync", host, StringComparison.Ordinal);
-        Assert.DoesNotContain("MapGet(\"/\", ListAsync)", host, StringComparison.Ordinal);
-        Assert.DoesNotContain("MapPost(\"/query\", QueryGridAsync)", host, StringComparison.Ordinal);
 
-        var composer = File.ReadAllText(Path.Combine(
-            root, "src/backend/Host/Tooba.Host/Admin/ProductWorkspaceComposer.cs"));
-        Assert.DoesNotContain("AssignProductCategoryAsync", composer, StringComparison.Ordinal);
-        Assert.DoesNotContain("AddAdditionalCategoryAsync", composer, StringComparison.Ordinal);
-        Assert.DoesNotContain("RemoveAdditionalCategoryAsync", composer, StringComparison.Ordinal);
-        Assert.DoesNotContain("AssignProductBrandAsync", composer, StringComparison.Ordinal);
-        Assert.DoesNotContain("ReplaceProductPrimaryCategoryAsync", composer, StringComparison.Ordinal);
-        Assert.DoesNotContain("AddProductAdditionalCategoryAsync", composer, StringComparison.Ordinal);
-        Assert.DoesNotContain("RemoveProductAdditionalCategoryAsync", composer, StringComparison.Ordinal);
 
-        var models = File.ReadAllText(Path.Combine(
-            root, "src/backend/Host/Tooba.Host/Admin/ProductWorkspaceModels.cs"));
-        Assert.DoesNotContain("AdminProductCategoryAssignRequest", models, StringComparison.Ordinal);
-        Assert.DoesNotContain("AdminProductAdditionalCategoryRequest", models, StringComparison.Ordinal);
-        Assert.DoesNotContain("AdminProductBrandAssignRequest", models, StringComparison.Ordinal);
 
         var module = File.ReadAllText(Path.Combine(
             root,
@@ -66,8 +39,8 @@ public sealed class HostAdminAmcW30PwTaxonomyGuardTests
         Assert.DoesNotContain("ICatalogDirectory", module, StringComparison.Ordinal);
         Assert.DoesNotContain("ex.Message", module, StringComparison.Ordinal);
 
-        Assert.True(File.Exists(Path.Combine(root, "src/backend/Host/Tooba.Host/Admin/ProductWorkspaceEndpoints.cs")));
-        Assert.True(File.Exists(Path.Combine(root, "src/backend/Host/Tooba.Host/Admin/ProductWorkspaceComposer.cs")));
+        Assert.False(File.Exists(Path.Combine(root, "src/backend/Host/Tooba.Host/Admin/ProductWorkspaceEndpoints.cs")));
+        Assert.False(File.Exists(Path.Combine(root, "src/backend/Host/Tooba.Host/Admin/ProductWorkspaceComposer.cs")));
     }
 
     [Fact]
@@ -125,13 +98,13 @@ public sealed class HostAdminAmcW30PwTaxonomyGuardTests
     }
 
     [Fact]
-    public void Host_Admin_count_28_StoreAppearance_deferred_RETAIN_PARTIAL()
+    public void Host_Admin_count_23_StoreAppearance_deferred_PW_shells_ABSENT()
     {
         var root = FindRepoRoot();
         var admin = Path.Combine(root, "src/backend/Host/Tooba.Host/Admin");
-        Assert.Equal(28, Directory.GetFiles(admin, "*.cs", SearchOption.AllDirectories).Length);
+        Assert.Equal(23, Directory.GetFiles(admin, "*.cs", SearchOption.AllDirectories).Length);
         Assert.True(File.Exists(Path.Combine(admin, "StoreAppearanceSettingsEndpoints.cs")));
-        Assert.True(File.Exists(Path.Combine(admin, "ProductWorkspaceEndpoints.cs")));
+        Assert.False(File.Exists(Path.Combine(admin, "ProductWorkspaceEndpoints.cs")));
     }
 
     private static string FindRepoRoot()

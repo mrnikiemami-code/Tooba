@@ -1,4 +1,4 @@
-﻿using System.Text.RegularExpressions;
+using System.Text.RegularExpressions;
 using System.Xml.Linq;
 using Xunit;
 
@@ -11,27 +11,9 @@ public sealed class HostAdminAmcW16GuardTests
     public void Host_ProductWorkspace_has_zero_publish_readiness_routes_and_files_retained()
     {
         var root = FindRepoRoot();
-        var endpoints = File.ReadAllText(Path.Combine(
-            root, "src/backend/Host/Tooba.Host/Admin/ProductWorkspaceEndpoints.cs"));
-        Assert.DoesNotContain("MapGet(\"/{productId:guid}/publish/readiness\"", endpoints, StringComparison.Ordinal);
-        Assert.DoesNotContain("/publish/readiness", endpoints, StringComparison.Ordinal);
-        Assert.DoesNotContain("GetPublishReadinessAsync", endpoints, StringComparison.Ordinal);
-        Assert.Contains("MapProductWorkspaceEndpoints", endpoints, StringComparison.Ordinal);
-        // W26 moved lifecycle POSTs to ProductWorkspace.Endpoints.
-        Assert.DoesNotContain("MapPost(\"/{productId:guid}/publish\"", endpoints, StringComparison.Ordinal);
-        Assert.DoesNotContain("MapPost(\"/{productId:guid}/unpublish\"", endpoints, StringComparison.Ordinal);
-        // W19 moved aggregate GET to ProductWorkspace.Endpoints; Host must not remount it.
-        Assert.DoesNotContain("MapGet(\"/{productId:guid}\"", endpoints, StringComparison.Ordinal);
-
-        Assert.True(File.Exists(Path.Combine(root, "src/backend/Host/Tooba.Host/Admin/ProductWorkspaceEndpoints.cs")));
-        Assert.True(File.Exists(Path.Combine(root, "src/backend/Host/Tooba.Host/Admin/ProductWorkspaceComposer.cs")));
-        Assert.True(File.Exists(Path.Combine(root, "src/backend/Host/Tooba.Host/Admin/ProductWorkspaceModels.cs")));
-
-        var composer = File.ReadAllText(Path.Combine(
-            root, "src/backend/Host/Tooba.Host/Admin/ProductWorkspaceComposer.cs"));
-        Assert.DoesNotContain("public async Task<ProductPublishReadinessView> GetPublishReadinessAsync", composer, StringComparison.Ordinal);
-        Assert.Contains("MapPublishReadiness", composer, StringComparison.Ordinal);
-        Assert.Contains("GetProductPublishReadinessAsync", composer, StringComparison.Ordinal);
+        Assert.False(File.Exists(Path.Combine(root, "src/backend/Host/Tooba.Host/Admin/ProductWorkspaceEndpoints.cs")));
+        Assert.False(File.Exists(Path.Combine(root, "src/backend/Host/Tooba.Host/Admin/ProductWorkspaceComposer.cs")));
+        Assert.False(File.Exists(Path.Combine(root, "src/backend/Host/Tooba.Host/Admin/ProductWorkspaceModels.cs")));
 
         var models = File.ReadAllText(Path.Combine(
             root,
@@ -174,7 +156,7 @@ public sealed class HostAdminAmcW16GuardTests
         var admin = Path.Combine(FindRepoRoot(), "src/backend/Host/Tooba.Host/Admin");
         var files = Directory.GetFiles(admin, "*.cs", SearchOption.AllDirectories);
         Assert.True(files.Length <= 52 && files.Length >= 12, $"Host/Admin count expected in [12,52], was {files.Length}");
-        Assert.True(File.Exists(Path.Combine(admin, "ProductWorkspaceEndpoints.cs")));
+        Assert.False(File.Exists(Path.Combine(admin, "ProductWorkspaceEndpoints.cs")));
         Assert.True(File.Exists(Path.Combine(admin, "StoreAppearanceSettingsEndpoints.cs")));
         Assert.False(File.Exists(Path.Combine(admin, "CatalogAttributeEndpoints.cs")));
 

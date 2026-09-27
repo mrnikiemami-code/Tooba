@@ -2424,6 +2424,32 @@
     "workflowStop": "USER_REVIEW_HOST_ADMIN_W33_MERCHANDISING_CHECKPOINT",
     "evidence": "docs/evidence/TB-TMAR-HOST-ADMIN-AMC-001-W33-MERCHANDISING/"
   },
+  "hostAdminAmcPwShellFinal": {
+    "task": "TB-TMAR-HOST-ADMIN-AMC-001-W32-PW-SHELL-FINAL",
+    "parentTask": "TB-TMAR-HOST-ADMIN-AMC-001-W33-MERCHANDISING",
+    "w17PlanLabel": "W24-final ProductWorkspace Host shell deletion",
+    "state": "HOST_ADMIN_PRODUCTWORKSPACE_SHELLS_DELETED",
+    "activeHostFolder": "Admin",
+    "deletedAdminFiles": [
+      "ProductWorkspaceEndpoints.cs",
+      "ProductWorkspaceComposer.cs",
+      "ProductWorkspaceModels.cs",
+      "CatalogActorHttpBinding.cs"
+    ],
+    "relocatedBootstrap": "Host/Development/ProductWorkspaceDevelopmentBootstrap.cs",
+    "bootstrapNamespace": "Tooba.Host.Development",
+    "MapProductWorkspaceEndpoints": "ABSENT",
+    "MapProductWorkspaceModuleEndpoints": "PRESENT",
+    "AddProductWorkspaceEndpointPresentation": "PRESENT",
+    "HostRemainingProductWorkspaceRoutes": 0,
+    "HostAdminFileCount": 23,
+    "partialHostRetention": "StoreAppearance BLOCK + HoldPolicy BLOCK + platform KEEP",
+    "StoreAppearance": "DEFERRED",
+    "schemaMigrationState": "NONE",
+    "frontendState": "UNCHANGED",
+    "workflowStop": "USER_REVIEW_HOST_ADMIN_W32_PW_SHELL_FINAL_CHECKPOINT",
+    "evidence": "docs/evidence/TB-TMAR-HOST-ADMIN-AMC-001-W32-PW-SHELL-FINAL/"
+  },
   "hostAdminAmcW18": {
     "task": "TB-TMAR-HOST-ADMIN-AMC-001-W18",
     "parentTask": "TB-TMAR-HOST-ADMIN-AMC-001-W17",

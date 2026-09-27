@@ -66,7 +66,7 @@ public sealed class HostCustomerProfileEvacuationGuardTests
             "backend",
             "Host",
             "Tooba.Host",
-            "Admin",
+            "Development",
             "ProductWorkspaceDevelopmentBootstrap.cs"));
         Assert.Contains("using Tooba.CustomerProfile.Infrastructure.Development;", bootstrap, StringComparison.Ordinal);
         Assert.DoesNotContain("using Tooba.Host.CustomerProfile;", bootstrap, StringComparison.Ordinal);

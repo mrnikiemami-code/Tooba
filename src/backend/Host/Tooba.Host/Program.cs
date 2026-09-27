@@ -179,7 +179,6 @@ builder.Services.Configure<Tooba.Order.Application.ReservationCycle.Contracts.Re
 builder.Services.AddScoped<CommerceHoldPolicy>();
 builder.Services.AddScoped<Tooba.Payment.Contracts.Hold.ICommerceHoldPolicySource>(sp => sp.GetRequiredService<CommerceHoldPolicy>());
 builder.Services.AddScoped<Tooba.Order.Application.Checkout.Contracts.ICheckoutReservationHoldPolicy>(sp => sp.GetRequiredService<CommerceHoldPolicy>());
-builder.Services.AddScoped<Tooba.Host.Admin.ProductWorkspaceComposer>();
 builder.Services.AddScoped<Tooba.Host.Grid.AdminStoryGridQueryEngine>();
 builder.Services.AddScoped<Tooba.Host.Grid.AdminReviewGridQueryEngine>();
 builder.Services.AddScoped<Tooba.Host.Grid.AdminSellersGridQueryEngine>();
@@ -463,7 +462,6 @@ app.UseMiddleware<SessionAuthenticationMiddleware>();
 app.UseMiddleware<RequestObservabilityEnrichmentMiddleware>();
 
 app.MapAuthenticationBoundary(enableCors: true);
-app.MapProductWorkspaceEndpoints();
 app.MapProductWorkspaceModuleEndpoints();
 app.MapHoldPolicySettingsEndpoints();
 app.MapStoreAppearanceSettingsEndpoints();

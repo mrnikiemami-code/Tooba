@@ -32,11 +32,6 @@ public sealed class HostAdminAmcW19GuardTests
         Assert.DoesNotContain("ex.Message", moduleEndpoints, StringComparison.Ordinal);
         Assert.DoesNotContain("CatalogActorHttpBinding", moduleEndpoints, StringComparison.Ordinal);
 
-        var hostEndpoints = File.ReadAllText(Path.Combine(
-            root, "src/backend/Host/Tooba.Host/Admin/ProductWorkspaceEndpoints.cs"));
-        Assert.Equal(0, MapRouteRegex.Matches(hostEndpoints).Count);
-        Assert.DoesNotContain("MapGet(\"/{productId:guid}\"", hostEndpoints, StringComparison.Ordinal);
-        Assert.DoesNotContain("GetAsync(", hostEndpoints, StringComparison.Ordinal);
 
         var program = File.ReadAllText(Path.Combine(root, "src/backend/Host/Tooba.Host/Program.cs"));
         Assert.Contains("MapProductWorkspaceModuleEndpoints", program, StringComparison.Ordinal);
@@ -103,8 +98,7 @@ public sealed class HostAdminAmcW19GuardTests
         var adminCount = Directory.GetFiles(admin, "*.cs", SearchOption.AllDirectories).Length;
         Assert.True(adminCount <= 52 && adminCount >= 12, $"Host/Admin count expected in [12,52], was {adminCount}");
         Assert.True(File.Exists(Path.Combine(admin, "StoreAppearanceSettingsEndpoints.cs")));
-        Assert.True(File.Exists(Path.Combine(admin, "ProductWorkspaceComposer.cs")));
-        Assert.Contains("GetAsync", File.ReadAllText(Path.Combine(admin, "ProductWorkspaceComposer.cs")), StringComparison.Ordinal);
+        Assert.False(File.Exists(Path.Combine(admin, "ProductWorkspaceComposer.cs")));
     }
 
     [Fact]

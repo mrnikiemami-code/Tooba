@@ -1,6 +1,6 @@
 # Host/Admin empty progress (AMC)
 
-## Current Admin `*.cs` count: **28** (W33 Merchandising evacuated)
+## Current Admin `*.cs` count: **23** (W32 PW shells deleted)
 
 ### Evacuated
 | Slice | Owner |
@@ -13,14 +13,15 @@
 | PW taxonomy category/brand (W30) | ProductWorkspace.Endpoints + Catalog.ProductTaxonomy |
 | **PW list + grid (W31)** | ProductWorkspace.Endpoints + Catalog list Contracts |
 | **Merchandising admin (W33)** | Promotion.Endpoints + Infrastructure |
+| **PW Host shells (W32)** | DELETED; bootstrap → Host.Development |
 
 ### Host PW routes remaining: **0**
-(shell MapProductWorkspaceEndpoints retained until W32)
+(shell MapProductWorkspaceEndpoints removed)
 
 ### Next
 1. Template/attribute seeds
 2. HoldPolicy MUST_SPLIT
-3. W32 / W24-final: delete Host ProductWorkspace* shells (Admin count drops)
+3. StoreAppearance BLOCK
 
 ### Cannot empty yet
-KEEP platform (~16) · StoreAppearance BLOCK · HoldPolicy BLOCK · ProductWorkspace* shells
+KEEP platform (~16) · StoreAppearance BLOCK · HoldPolicy BLOCK

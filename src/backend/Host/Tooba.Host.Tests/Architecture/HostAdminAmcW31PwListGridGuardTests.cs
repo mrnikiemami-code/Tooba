@@ -16,23 +16,7 @@ public sealed class HostAdminAmcW31PwListGridGuardTests
     public void List_grid_owned_by_ProductWorkspace_and_absent_from_Host()
     {
         var root = FindRepoRoot();
-        var host = File.ReadAllText(Path.Combine(
-            root, "src/backend/Host/Tooba.Host/Admin/ProductWorkspaceEndpoints.cs"));
-        Assert.Equal(0, MapRouteRegex.Matches(host).Count);
-        Assert.DoesNotContain("MapGet(\"/\", ListAsync)", host, StringComparison.Ordinal);
-        Assert.DoesNotContain("MapPost(\"/query\", QueryGridAsync)", host, StringComparison.Ordinal);
-        Assert.DoesNotContain("ListAsync", host, StringComparison.Ordinal);
-        Assert.DoesNotContain("QueryGridAsync", host, StringComparison.Ordinal);
-        Assert.DoesNotContain("PlatformHttpException", host, StringComparison.Ordinal);
-        Assert.Contains("MapProductWorkspaceEndpoints", host, StringComparison.Ordinal);
 
-        var composer = File.ReadAllText(Path.Combine(
-            root, "src/backend/Host/Tooba.Host/Admin/ProductWorkspaceComposer.cs"));
-        Assert.DoesNotContain("IReadOnlyList<AdminProductListItem>> ListAsync", composer, StringComparison.Ordinal);
-        Assert.DoesNotContain("QueryGridAsync", composer, StringComparison.Ordinal);
-        Assert.DoesNotContain("BuildListItemsForProductIdsAsync", composer, StringComparison.Ordinal);
-        Assert.DoesNotContain("AdminProductGridQueryEngine", composer, StringComparison.Ordinal);
-        Assert.Contains("GetAsync", composer, StringComparison.Ordinal);
 
         Assert.False(File.Exists(Path.Combine(
             root, "src/backend/Host/Tooba.Host/Grid/AdminProductGridQueryEngine.cs")));
@@ -80,19 +64,19 @@ public sealed class HostAdminAmcW31PwListGridGuardTests
             Assert.DoesNotContain("PlatformHttpException", text, StringComparison.Ordinal);
         }
 
-        Assert.True(File.Exists(Path.Combine(root, "src/backend/Host/Tooba.Host/Admin/ProductWorkspaceEndpoints.cs")));
-        Assert.True(File.Exists(Path.Combine(root, "src/backend/Host/Tooba.Host/Admin/ProductWorkspaceComposer.cs")));
-        Assert.True(File.Exists(Path.Combine(root, "src/backend/Host/Tooba.Host/Admin/ProductWorkspaceModels.cs")));
+        Assert.False(File.Exists(Path.Combine(root, "src/backend/Host/Tooba.Host/Admin/ProductWorkspaceEndpoints.cs")));
+        Assert.False(File.Exists(Path.Combine(root, "src/backend/Host/Tooba.Host/Admin/ProductWorkspaceComposer.cs")));
+        Assert.False(File.Exists(Path.Combine(root, "src/backend/Host/Tooba.Host/Admin/ProductWorkspaceModels.cs")));
     }
 
     [Fact]
-    public void Host_Admin_count_28_StoreAppearance_deferred_RETAIN_PARTIAL()
+    public void Host_Admin_count_23_StoreAppearance_deferred_PW_shells_ABSENT()
     {
         var root = FindRepoRoot();
         var admin = Path.Combine(root, "src/backend/Host/Tooba.Host/Admin");
-        Assert.Equal(28, Directory.GetFiles(admin, "*.cs", SearchOption.AllDirectories).Length);
+        Assert.Equal(23, Directory.GetFiles(admin, "*.cs", SearchOption.AllDirectories).Length);
         Assert.True(File.Exists(Path.Combine(admin, "StoreAppearanceSettingsEndpoints.cs")));
-        Assert.True(File.Exists(Path.Combine(admin, "ProductWorkspaceEndpoints.cs")));
+        Assert.False(File.Exists(Path.Combine(admin, "ProductWorkspaceEndpoints.cs")));
     }
 
     private static string FindRepoRoot()

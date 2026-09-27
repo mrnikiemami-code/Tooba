@@ -106,11 +106,18 @@ public sealed class AdminPanelCompositionTests
     [Fact]
     public void Every_admin_product_handler_invokes_server_authorization()
     {
+        Assert.False(File.Exists(Path.Combine(
+            FindRepoRoot(), "src", "backend", "Host", "Tooba.Host", "Admin", "ProductWorkspaceEndpoints.cs")));
         var source = File.ReadAllText(Path.Combine(
-            FindRepoRoot(), "src", "backend", "Host", "Tooba.Host", "Admin", "ProductWorkspaceEndpoints.cs"));
-        Assert.Equal(32, Count(source, "AdminPanelAccess.RequireAuthorizedAsync"));
-        Assert.Contains("IAuthorizationGuard", source, StringComparison.Ordinal);
-        Assert.Contains("ICurrentTenant", source, StringComparison.Ordinal);
+            FindRepoRoot(),
+            "src",
+            "backend",
+            "Modules",
+            "ProductWorkspace",
+            "Tooba.ProductWorkspace.Endpoints",
+            "ProductWorkspaceEndpointModule.cs"));
+        Assert.Contains("IProductWorkspaceAdminAuthorizer", source, StringComparison.Ordinal);
+        Assert.Contains("RequireAuthorizedAsync", source, StringComparison.Ordinal);
     }
 
     [Fact]
