@@ -60,9 +60,17 @@ public sealed class OrderCustomerPanelArchitectureGuardTests
         Assert.DoesNotContain("OrderDbContext", endpoints, StringComparison.Ordinal);
         Assert.DoesNotContain("ex.Message", endpoints, StringComparison.Ordinal);
 
+        var authorizer = File.ReadAllText(Path.Combine(
+            OrderRoot(), "Tooba.Order.Endpoints", "Customer", "OrderCustomerAuthorizer.cs"));
+        Assert.Contains("ICurrentAuthenticatedUser", authorizer, StringComparison.Ordinal);
+        Assert.Contains("StorefrontGuestActor", authorizer, StringComparison.Ordinal);
+        Assert.False(File.Exists(Path.Combine(
+            RepoRoot(), "src", "backend", "Host", "Tooba.Host", "Customer", "HostOrderCustomerAuthorizer.cs")));
+
         var module = File.ReadAllText(Path.Combine(
             OrderRoot(), "Tooba.Order.Endpoints", "OrderEndpointModule.cs"));
         Assert.Contains("CustomerOrderEndpoints.Map", module, StringComparison.Ordinal);
+        Assert.Contains("OrderCustomerAuthorizer", module, StringComparison.Ordinal);
     }
 
     [Fact]

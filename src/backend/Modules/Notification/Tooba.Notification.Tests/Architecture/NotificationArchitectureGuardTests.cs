@@ -179,7 +179,7 @@ public sealed class NotificationArchitectureGuardTests
         var programCs = File.ReadAllText(Path.Combine(hostRoot, "Program.cs"));
         Assert.Contains("MapNotificationEndpoints()", programCs, StringComparison.Ordinal);
         Assert.Contains("AddNotificationEndpointPresentation()", programCs, StringComparison.Ordinal);
-        Assert.Contains("HostNotificationCustomerAuthorizer", programCs, StringComparison.Ordinal);
+        Assert.DoesNotContain("HostNotificationCustomerAuthorizer", programCs, StringComparison.Ordinal);
         Assert.Contains("HostNotificationSellerAuthorizer", programCs, StringComparison.Ordinal);
 
         var bypass = AllProductionSources()
@@ -271,18 +271,22 @@ public sealed class NotificationArchitectureGuardTests
             || (x.Text.Contains(".Contains(\"", StringComparison.Ordinal) && x.Path.Contains("ExceptionMapper", StringComparison.Ordinal)));
 
         var hostRoot = Path.Combine(RepoRoot(), "src", "backend", "Host", "Tooba.Host");
-        Assert.True(File.Exists(Path.Combine(hostRoot, "Customer", "HostNotificationCustomerAuthorizer.cs")));
+        var endpointsRoot = Path.Combine(NotificationRoot(), "Tooba.Notification.Endpoints");
+        Assert.False(File.Exists(Path.Combine(hostRoot, "Customer", "HostNotificationCustomerAuthorizer.cs")));
         Assert.True(File.Exists(Path.Combine(hostRoot, "Seller", "HostNotificationSellerAuthorizer.cs")));
+        Assert.True(File.Exists(Path.Combine(endpointsRoot, "Customer", "NotificationCustomerAuthorizer.cs")));
 
-        var hostCustomer = File.ReadAllText(Path.Combine(hostRoot, "Customer", "HostNotificationCustomerAuthorizer.cs"));
+        var moduleCustomer = File.ReadAllText(Path.Combine(endpointsRoot, "Customer", "NotificationCustomerAuthorizer.cs"));
         var hostSeller = File.ReadAllText(Path.Combine(hostRoot, "Seller", "HostNotificationSellerAuthorizer.cs"));
-        Assert.Contains("StorefrontGuestActorId", hostCustomer, StringComparison.Ordinal);
-        Assert.Contains("X-Tooba-Dev-Actor-User-Id", hostCustomer, StringComparison.Ordinal);
+        Assert.Contains("StorefrontGuestActor", moduleCustomer, StringComparison.Ordinal);
+        Assert.Contains("X-Tooba-Dev-Actor-User-Id", moduleCustomer, StringComparison.Ordinal);
+        Assert.Contains("ICurrentAuthenticatedUser", moduleCustomer, StringComparison.Ordinal);
         Assert.Contains("SellerPanelAccess.RequireAuthorizedAsync", hostSeller, StringComparison.Ordinal);
-        Assert.DoesNotContain("INotificationDirectory", hostCustomer, StringComparison.Ordinal);
+        Assert.DoesNotContain("INotificationDirectory", moduleCustomer, StringComparison.Ordinal);
         Assert.DoesNotContain("INotificationDirectory", hostSeller, StringComparison.Ordinal);
-        Assert.DoesNotContain("NotificationRecipientQuery", hostCustomer, StringComparison.Ordinal);
+        Assert.DoesNotContain("NotificationRecipientQuery", moduleCustomer, StringComparison.Ordinal);
         Assert.DoesNotContain("NotificationRecipientQuery", hostSeller, StringComparison.Ordinal);
+        Assert.Contains("NotificationCustomerAuthorizer", module, StringComparison.Ordinal);
     }
 
     private static void AssertNoRootDump(string project, string[] allowedFolders)

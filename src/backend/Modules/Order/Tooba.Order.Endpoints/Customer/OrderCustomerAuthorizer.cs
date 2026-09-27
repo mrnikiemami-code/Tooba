@@ -1,12 +1,19 @@
+using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Hosting;
 using Tooba.BuildingBlocks;
-using Tooba.Host.Storefront;
+using Tooba.BuildingBlocks.Security;
 using Tooba.Order.Application.Customer;
-using Tooba.Order.Endpoints.Customer;
+using Tooba.Order.Contracts.Fulfillment;
 
-namespace Tooba.Host.Customer;
+namespace Tooba.Order.Endpoints.Customer;
 
-/// <summary>Host transport adapter — customer Actor for Order customer panel routes.</summary>
-public sealed class HostOrderCustomerAuthorizer : IOrderCustomerAuthorizer
+/// <summary>
+/// Module-owned customer Actor resolver for Order customer panel routes.
+/// Uses the platform <see cref="ICurrentAuthenticatedUser"/> seam; no Host dependency.
+/// </summary>
+public sealed class OrderCustomerAuthorizer(
+    ICurrentAuthenticatedUser currentUser,
+    IHostEnvironment environment) : IOrderCustomerAuthorizer
 {
     private const string DevActorHeader = "X-Tooba-Dev-Actor-User-Id";
 
@@ -16,9 +23,7 @@ public sealed class HostOrderCustomerAuthorizer : IOrderCustomerAuthorizer
         CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(httpContext);
-        var session = httpContext.RequestServices.GetRequiredService<CurrentAuthenticatedSession>();
-        var environment = httpContext.RequestServices.GetRequiredService<IHostEnvironment>();
-        var actor = ResolveActor(httpContext.Request, session, environment);
+        var actor = ResolveActor(httpContext, currentUser, environment);
         if (actor is null)
         {
             return Task.FromResult<(Guid?, SemanticError?)>(
@@ -29,13 +34,13 @@ public sealed class HostOrderCustomerAuthorizer : IOrderCustomerAuthorizer
     }
 
     private static Guid? ResolveActor(
-        HttpRequest request,
-        CurrentAuthenticatedSession session,
+        HttpContext httpContext,
+        ICurrentAuthenticatedUser currentUser,
         IHostEnvironment environment)
     {
-        if (session.IsAuthenticated)
+        if (currentUser.IsAuthenticated && currentUser.UserId is { } authenticated)
         {
-            return session.UserId;
+            return authenticated;
         }
 
         if (!environment.IsDevelopment() && !environment.IsEnvironment("Testing"))
@@ -43,13 +48,13 @@ public sealed class HostOrderCustomerAuthorizer : IOrderCustomerAuthorizer
             return null;
         }
 
-        if (request.Headers.TryGetValue(DevActorHeader, out var raw)
+        if (httpContext.Request.Headers.TryGetValue(DevActorHeader, out var raw)
             && Guid.TryParse(raw.ToString(), out var devActor)
             && devActor != Guid.Empty)
         {
             return devActor;
         }
 
-        return Tooba.Order.Application.Storefront.Services.StorefrontCheckoutService.StorefrontGuestActorId;
+        return StorefrontGuestActor.ActorId;
     }
 }

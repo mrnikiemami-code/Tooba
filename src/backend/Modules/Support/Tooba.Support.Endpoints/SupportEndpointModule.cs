@@ -30,6 +30,7 @@ public static class SupportEndpointModule
     {
         ArgumentNullException.ThrowIfNull(services);
         services.AddSingleton<IErrorCatalogContributor, SupportErrorCatalogContributor>();
+        services.AddScoped<ISupportCustomerAuthorizer, SupportCustomerAuthorizer>();
         return services;
     }
 }

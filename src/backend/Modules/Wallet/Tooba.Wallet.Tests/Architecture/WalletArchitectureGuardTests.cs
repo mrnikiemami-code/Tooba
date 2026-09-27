@@ -220,25 +220,32 @@ public sealed class WalletArchitectureGuardTests
             || (x.Text.Contains(".Contains(\"", StringComparison.Ordinal) && x.Path.Contains("ExceptionMapper", StringComparison.Ordinal)));
 
         var hostRoot = Path.Combine(RepoRoot(), "src", "backend", "Host", "Tooba.Host");
+        var endpointsRoot = Path.Combine(WalletRoot(), "Tooba.Wallet.Endpoints");
         Assert.False(File.Exists(Path.Combine(hostRoot, "Wallet", "WalletEndpoints.cs")));
         Assert.True(File.Exists(Path.Combine(hostRoot, "Wallet", "WalletDevelopmentSeedHost.cs")));
-        Assert.True(File.Exists(Path.Combine(hostRoot, "Customer", "HostWalletCustomerAuthorizer.cs")));
+        Assert.False(File.Exists(Path.Combine(hostRoot, "Customer", "HostWalletCustomerAuthorizer.cs")));
         Assert.True(File.Exists(Path.Combine(hostRoot, "Admin", "HostWalletAdminAuthorizer.cs")));
+        Assert.True(File.Exists(Path.Combine(endpointsRoot, "Customer", "WalletCustomerAuthorizer.cs")));
 
-        var hostCustomer = File.ReadAllText(Path.Combine(hostRoot, "Customer", "HostWalletCustomerAuthorizer.cs"));
+        var moduleCustomer = File.ReadAllText(Path.Combine(endpointsRoot, "Customer", "WalletCustomerAuthorizer.cs"));
         var hostAdmin = File.ReadAllText(Path.Combine(hostRoot, "Admin", "HostWalletAdminAuthorizer.cs"));
-        Assert.Contains("X-Tooba-Dev-Actor-User-Id", hostCustomer, StringComparison.Ordinal);
+        Assert.Contains("X-Tooba-Dev-Actor-User-Id", moduleCustomer, StringComparison.Ordinal);
+        Assert.Contains("ICurrentAuthenticatedUser", moduleCustomer, StringComparison.Ordinal);
         Assert.Contains("AdminPanelAccess.RequireAuthorizedAsync", hostAdmin, StringComparison.Ordinal);
         Assert.Contains("AuthorizationDecisionKind.Unavailable", hostAdmin, StringComparison.Ordinal);
-        Assert.DoesNotContain("IWalletDirectory", hostCustomer, StringComparison.Ordinal);
+        Assert.DoesNotContain("IWalletDirectory", moduleCustomer, StringComparison.Ordinal);
         Assert.DoesNotContain("IWalletDirectory", hostAdmin, StringComparison.Ordinal);
 
         var programCs = File.ReadAllText(Path.Combine(hostRoot, "Program.cs"));
         Assert.Contains("MapWalletEndpoints()", programCs, StringComparison.Ordinal);
         Assert.Contains("AddWalletEndpointPresentation()", programCs, StringComparison.Ordinal);
-        Assert.Contains("HostWalletCustomerAuthorizer", programCs, StringComparison.Ordinal);
+        Assert.DoesNotContain("HostWalletCustomerAuthorizer", programCs, StringComparison.Ordinal);
         Assert.Contains("HostWalletAdminAuthorizer", programCs, StringComparison.Ordinal);
         Assert.Contains("RedeemCustomerGiftCardCommand", programCs, StringComparison.Ordinal);
+        Assert.Contains(
+            "WalletCustomerAuthorizer",
+            File.ReadAllText(Path.Combine(endpointsRoot, "WalletEndpointModule.cs")),
+            StringComparison.Ordinal);
 
         var hostHits = Directory.EnumerateFiles(hostRoot, "*.cs", SearchOption.AllDirectories)
             .Where(path => !path.Contains($"{Path.DirectorySeparatorChar}bin{Path.DirectorySeparatorChar}")

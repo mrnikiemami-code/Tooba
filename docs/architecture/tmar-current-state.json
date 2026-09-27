@@ -1158,6 +1158,45 @@
     "workflowStop": "USER_REVIEW_SHARED_ERROR_CATALOG_CHECKPOINT",
     "evidence": "docs/evidence/TB-TMAR-SHARED-ERROR-CATALOG-DEDUP-001/shared-error-catalog-dedup.md"
   },
+  "hostCustomerEvacuation": {
+    "task": "TB-TMAR-HOST-CUSTOMER-EVACUATION-001",
+    "skills": ["tooba-architecture-analyze", "tooba-architecture-migrate", "tooba-architecture-certify"],
+    "state": "CUSTOMER_AUTHORIZER_EVACUATION_COMPLETE_PANEL_BFF_RETAINED",
+    "currentHostFolderCheckpoint": "Customer",
+    "hostCustomerModuleSpecificAuthorizerFileCount": 0,
+    "moduleOwnedCustomerAuthorizers": [
+      "Order.Endpoints/Customer/OrderCustomerAuthorizer.cs",
+      "Notification.Endpoints/Customer/NotificationCustomerAuthorizer.cs",
+      "Returns.Endpoints/Customer/ReturnCustomerAuthorizer.cs",
+      "Support.Endpoints/Customer/SupportCustomerAuthorizer.cs",
+      "Wallet.Endpoints/Customer/WalletCustomerAuthorizer.cs"
+    ],
+    "retainedHostBff": [
+      "Customer/CustomerPanelComposer.cs",
+      "Customer/CustomerPanelEndpoints.cs",
+      "Customer/CustomerPanelModels.cs"
+    ],
+    "panelRepairs": {
+      "guestActorAuthority": "StorefrontGuestActor.ActorId",
+      "unauthorizedPath": "ApiResponseFactory.FromFailure(SemanticError(customer.session.required))"
+    },
+    "deferred": [
+      "CustomerProfile.Endpoints foundation for /profile (+ dashboard Contracts composition)",
+      "Wishlist Contracts/Endpoints to remove Host Wishlist HTTP and Application ports from Host composer",
+      "Hard-coded Persian display fallbacks"
+    ],
+    "focusedValidations": {
+      "hostBuild": "PASS",
+      "notificationArchitecture": "PASSED_7_FAILED_0",
+      "returnsArchitecture": "PASSED_3_FAILED_0",
+      "supportArchitecture": "PASSED_3_FAILED_0",
+      "walletArchitecture": "PASSED_8_FAILED_0",
+      "hostCustomerRelated": "PASSED_25_FAILED_0_SKIPPED_4"
+    },
+    "nextHostFolderStarted": false,
+    "evidence": "docs/evidence/TB-TMAR-HOST-CUSTOMER-EVACUATION-001/host-customer-evacuation.md",
+    "analyzeEvidence": "docs/evidence/TB-TMAR-HOST-CUSTOMER-EVACUATION-001/analyze.md"
+  },
   "addressBookPostRealignRepair": {
     "task": "TB-TMAR-ADDRESSBOOK-POST-REALIGN-REPAIR-001",
     "parentTask": "ADDRESSBOOK-OFFER-STYLE-FOLDERS-001",

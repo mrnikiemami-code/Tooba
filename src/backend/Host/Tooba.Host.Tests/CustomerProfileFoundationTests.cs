@@ -68,7 +68,8 @@ public sealed class CustomerProfileFoundationTests
             FindRepoRoot(), "src", "backend", "Host", "Tooba.Host", "Customer", "CustomerPanelEndpoints.cs"));
         Assert.Contains("MapPut(\"/profile\"", source, StringComparison.Ordinal);
         Assert.Contains("session.IsAuthenticated", source, StringComparison.Ordinal);
-        Assert.Contains("StatusCodes.Status401Unauthorized", source, StringComparison.Ordinal);
+        Assert.Contains("ApiResponseFactory", source, StringComparison.Ordinal);
+        Assert.Contains("customer.session.required", source, StringComparison.Ordinal);
     }
 
     [SkippableFact]

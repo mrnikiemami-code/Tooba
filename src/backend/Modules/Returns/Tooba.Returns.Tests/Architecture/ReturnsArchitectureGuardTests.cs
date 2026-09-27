@@ -192,9 +192,19 @@ public sealed class ReturnsArchitectureGuardTests
             || (x.Text.Contains(".Contains(\"", StringComparison.Ordinal) && x.Path.Contains("ExceptionMapper", StringComparison.Ordinal)));
 
         var hostRoot = Path.Combine(RepoRoot(), "src", "backend", "Host", "Tooba.Host");
-        Assert.True(File.Exists(Path.Combine(hostRoot, "Customer", "HostReturnCustomerAuthorizer.cs")));
+        var endpointsRoot = Path.Combine(ModuleRoot(), "Tooba.Returns.Endpoints");
+        Assert.False(File.Exists(Path.Combine(hostRoot, "Customer", "HostReturnCustomerAuthorizer.cs")));
         Assert.True(File.Exists(Path.Combine(hostRoot, "Seller", "HostReturnSellerAuthorizer.cs")));
         Assert.True(File.Exists(Path.Combine(hostRoot, "Admin", "HostReturnAdminAuthorizer.cs")));
+        Assert.True(File.Exists(Path.Combine(endpointsRoot, "Customer", "ReturnCustomerAuthorizer.cs")));
+        Assert.Contains(
+            "ReturnCustomerAuthorizer",
+            File.ReadAllText(Path.Combine(endpointsRoot, "ReturnEndpointModule.cs")),
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "AddReturnEndpointPresentation",
+            File.ReadAllText(Path.Combine(hostRoot, "Program.cs")),
+            StringComparison.Ordinal);
     }
 
     private static void AssertNoRootDump(string project, string[] allowedFolders)

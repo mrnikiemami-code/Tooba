@@ -173,32 +173,39 @@ public sealed class SupportArchitectureGuardTests
         Assert.False(File.Exists(Path.Combine(SupportRoot(), "Tooba.Support.Application", "Queries", "SupportQueries.cs")));
 
         var hostRoot = Path.Combine(RepoRoot(), "src", "backend", "Host", "Tooba.Host");
+        var endpointsRoot = Path.Combine(SupportRoot(), "Tooba.Support.Endpoints");
         Assert.False(File.Exists(Path.Combine(hostRoot, "Support", "SupportEndpoints.cs")));
         Assert.True(File.Exists(Path.Combine(hostRoot, "Support", "SupportDevelopmentSeedHost.cs")));
-        Assert.True(File.Exists(Path.Combine(hostRoot, "Customer", "HostSupportCustomerAuthorizer.cs")));
+        Assert.False(File.Exists(Path.Combine(hostRoot, "Customer", "HostSupportCustomerAuthorizer.cs")));
         Assert.True(File.Exists(Path.Combine(hostRoot, "Seller", "HostSupportSellerAuthorizer.cs")));
         Assert.True(File.Exists(Path.Combine(hostRoot, "Admin", "HostSupportAdminAuthorizer.cs")));
+        Assert.True(File.Exists(Path.Combine(endpointsRoot, "Customer", "SupportCustomerAuthorizer.cs")));
 
-        var hostCustomer = File.ReadAllText(Path.Combine(hostRoot, "Customer", "HostSupportCustomerAuthorizer.cs"));
+        var moduleCustomer = File.ReadAllText(Path.Combine(endpointsRoot, "Customer", "SupportCustomerAuthorizer.cs"));
         var hostSeller = File.ReadAllText(Path.Combine(hostRoot, "Seller", "HostSupportSellerAuthorizer.cs"));
         var hostAdmin = File.ReadAllText(Path.Combine(hostRoot, "Admin", "HostSupportAdminAuthorizer.cs"));
-        Assert.Contains("X-Tooba-Dev-Actor-User-Id", hostCustomer, StringComparison.Ordinal);
+        Assert.Contains("X-Tooba-Dev-Actor-User-Id", moduleCustomer, StringComparison.Ordinal);
+        Assert.Contains("ICurrentAuthenticatedUser", moduleCustomer, StringComparison.Ordinal);
         Assert.Contains("SellerPanelAccess.RequireAuthorizedAsync", hostSeller, StringComparison.Ordinal);
         Assert.Contains("SellerAuthorizationDenied", hostSeller, StringComparison.Ordinal);
         Assert.Contains("GetEffectiveAccessAsync", hostSeller, StringComparison.Ordinal);
         Assert.Contains("AdminPanelAccess.RequireAuthorizedAsync", hostAdmin, StringComparison.Ordinal);
         Assert.Contains("AuthorizationDecisionKind.Unavailable", hostAdmin, StringComparison.Ordinal);
-        Assert.DoesNotContain("ISupportDirectory", hostCustomer, StringComparison.Ordinal);
+        Assert.DoesNotContain("ISupportDirectory", moduleCustomer, StringComparison.Ordinal);
         Assert.DoesNotContain("ISupportDirectory", hostSeller, StringComparison.Ordinal);
         Assert.DoesNotContain("ISupportDirectory", hostAdmin, StringComparison.Ordinal);
 
         var programCs = File.ReadAllText(Path.Combine(hostRoot, "Program.cs"));
         Assert.Contains("MapSupportEndpoints()", programCs, StringComparison.Ordinal);
         Assert.Contains("AddSupportEndpointPresentation()", programCs, StringComparison.Ordinal);
-        Assert.Contains("HostSupportCustomerAuthorizer", programCs, StringComparison.Ordinal);
+        Assert.DoesNotContain("HostSupportCustomerAuthorizer", programCs, StringComparison.Ordinal);
         Assert.Contains("HostSupportSellerAuthorizer", programCs, StringComparison.Ordinal);
         Assert.Contains("HostSupportAdminAuthorizer", programCs, StringComparison.Ordinal);
         Assert.Contains("CreateCustomerTicketCommand", programCs, StringComparison.Ordinal);
+        Assert.Contains(
+            "SupportCustomerAuthorizer",
+            File.ReadAllText(Path.Combine(endpointsRoot, "SupportEndpointModule.cs")),
+            StringComparison.Ordinal);
 
         var hostHits = Directory.EnumerateFiles(hostRoot, "*.cs", SearchOption.AllDirectories)
             .Where(path => !path.Contains($"{Path.DirectorySeparatorChar}bin{Path.DirectorySeparatorChar}")

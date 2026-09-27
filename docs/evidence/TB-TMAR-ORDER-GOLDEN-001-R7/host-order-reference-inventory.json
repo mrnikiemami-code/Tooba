@@ -59,6 +59,30 @@
     "discoveryExpanded": "filename/type Order symbols + Contracts/Endpoints refs",
     "note": "Symbolic Host Order sweep closed AdminOrderCompletenessModels dead residue (no production callers). Inventory discovery strengthened beyond namespace/DbContext-only. Historical r7–r11 updates left intact."
   },
+  "hostCustomerEvacuationUpdate": {
+    "updatedBy": "TB-TMAR-HOST-CUSTOMER-EVACUATION-001",
+    "removedFiles": [
+      "Customer/HostOrderCustomerAuthorizer.cs",
+      "Customer/HostNotificationCustomerAuthorizer.cs",
+      "Customer/HostReturnCustomerAuthorizer.cs",
+      "Customer/HostSupportCustomerAuthorizer.cs",
+      "Customer/HostWalletCustomerAuthorizer.cs",
+      "Customer/HostFulfillmentCustomerAuthorizer.cs"
+    ],
+    "moduleOwnedRehomes": [
+      "Order.Endpoints/Customer/OrderCustomerAuthorizer.cs",
+      "Notification.Endpoints/Customer/NotificationCustomerAuthorizer.cs",
+      "Returns.Endpoints/Customer/ReturnCustomerAuthorizer.cs",
+      "Support.Endpoints/Customer/SupportCustomerAuthorizer.cs",
+      "Wallet.Endpoints/Customer/WalletCustomerAuthorizer.cs"
+    ],
+    "retainedHostBff": [
+      "Customer/CustomerPanelComposer.cs",
+      "Customer/CustomerPanelEndpoints.cs",
+      "Customer/CustomerPanelModels.cs"
+    ],
+    "note": "Host/Customer module-specific authorizers evacuated to owning Endpoints (Fulfillment precedent). Stale HostFulfillmentCustomerAuthorizer inventory entry removed (file already gone). Panel BFF remains Host until CustomerProfile.Endpoints foundation."
+  },
   "extraFiles": [
     "Admin/AdminPanelEndpoints.cs",
     "Admin/HostOrderAdminAuthorizer.cs",
@@ -66,9 +90,6 @@
     "Seller/SellerPanelEndpoints.cs"
   ],
   "files": [
-    "AccessControl/AccessControlDevelopmentSeed.cs",
-    "AddressBook/AddressBookDevelopmentSeed.cs",
-    "AddressBook/AddressBookEndpoints.cs",
     "Admin/AdminPanelComposer.cs",
     "Admin/AdminPanelEndpoints.cs",
     "Admin/AdminPanelModels.cs",
@@ -85,9 +106,6 @@
     "Customer/CustomerPanelComposer.cs",
     "Customer/CustomerPanelEndpoints.cs",
     "Customer/CustomerPanelModels.cs",
-    "Customer/HostFulfillmentCustomerAuthorizer.cs",
-    "Customer/HostNotificationCustomerAuthorizer.cs",
-    "Customer/HostOrderCustomerAuthorizer.cs",
     "CustomerProfile/CustomerProfileDevelopmentSeed.cs",
     "Development/MarketplaceDevelopmentBootstrap.cs",
     "Grid/AdminListGridPolicies.cs",

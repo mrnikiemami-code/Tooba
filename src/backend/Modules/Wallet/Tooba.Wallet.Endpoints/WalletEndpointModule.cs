@@ -25,6 +25,7 @@ public static class WalletEndpointModule
     {
         ArgumentNullException.ThrowIfNull(services);
         services.AddSingleton<IErrorCatalogContributor, WalletErrorCatalogContributor>();
+        services.AddScoped<IWalletCustomerAuthorizer, WalletCustomerAuthorizer>();
         return services;
     }
 }

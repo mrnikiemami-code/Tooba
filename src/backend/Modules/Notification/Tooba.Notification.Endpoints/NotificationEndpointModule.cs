@@ -27,6 +27,7 @@ public static class NotificationEndpointModule
     {
         ArgumentNullException.ThrowIfNull(services);
         services.AddSingleton<IErrorCatalogContributor, NotificationErrorCatalogContributor>();
+        services.AddScoped<INotificationCustomerAuthorizer, NotificationCustomerAuthorizer>();
         return services;
     }
 }

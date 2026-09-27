@@ -39,6 +39,7 @@ public static class OrderEndpointModule
         ArgumentNullException.ThrowIfNull(services);
         services.AddSingleton<IErrorCatalogContributor, OrderErrorCatalogContributor>();
         services.AddSingleton<IErrorResourceSet, OrderErrorResourceSet>();
+        services.AddScoped<IOrderCustomerAuthorizer, OrderCustomerAuthorizer>();
         return services;
     }
 

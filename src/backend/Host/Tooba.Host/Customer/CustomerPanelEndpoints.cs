@@ -1,7 +1,10 @@
-﻿using Tooba.CustomerProfile.Contracts;
+﻿using Tooba.BuildingBlocks;
+using Tooba.BuildingBlocks.Presentation;
+using Tooba.CustomerProfile.Contracts;
 using Tooba.Host.Storefront;
 using Tooba.Order.Application.Customer.Models;
 using Tooba.Order.Application.Customer.Queries.GetCustomerOrderDashboardSummary;
+using Tooba.Order.Contracts.Fulfillment;
 
 namespace Tooba.Host.Customer;
 
@@ -35,7 +38,7 @@ public static class CustomerPanelEndpoints
 
         return Results.Json(new
         {
-            actorUserId = Tooba.Order.Application.Storefront.Services.StorefrontCheckoutService.StorefrontGuestActorId,
+            actorUserId = StorefrontGuestActor.ActorId,
             label = "مشتری آزمایشی فروشگاه",
         });
     }
@@ -46,12 +49,13 @@ public static class CustomerPanelEndpoints
         IHostEnvironment environment,
         CustomerPanelComposer composer,
         MediatR.ISender sender,
+        ApiResponseFactory api,
         CancellationToken cancellationToken)
     {
         var actor = ResolveActor(request, session, environment);
         if (actor is null)
         {
-            return Unauthorized();
+            return Unauthorized(api);
         }
 
         var summaryResult = await sender.Send(
@@ -59,9 +63,7 @@ public static class CustomerPanelEndpoints
             cancellationToken);
         if (summaryResult.IsFailure)
         {
-            return Results.Json(
-                new { title = "Unauthorized", errorCode = summaryResult.FirstError.Code },
-                statusCode: StatusCodes.Status401Unauthorized);
+            return api.FromFailure(summaryResult.FirstError);
         }
 
         return Results.Json(
@@ -74,12 +76,13 @@ public static class CustomerPanelEndpoints
         IHostEnvironment environment,
         CustomerPanelComposer composer,
         MediatR.ISender sender,
+        ApiResponseFactory api,
         CancellationToken cancellationToken)
     {
         var actor = ResolveActor(request, session, environment);
         if (actor is null)
         {
-            return Unauthorized();
+            return Unauthorized(api);
         }
 
         var summaryResult = await sender.Send(
@@ -97,12 +100,13 @@ public static class CustomerPanelEndpoints
         IHostEnvironment environment,
         CustomerPanelComposer composer,
         MediatR.ISender sender,
+        ApiResponseFactory api,
         CancellationToken cancellationToken)
     {
         var actor = ResolveActor(request, session, environment);
         if (actor is null)
         {
-            return Unauthorized();
+            return Unauthorized(api);
         }
 
         await composer.UpsertProfileAsync(actor.Value, body.ToWrite(), cancellationToken);
@@ -136,13 +140,11 @@ public static class CustomerPanelEndpoints
             return devActor;
         }
 
-        return Tooba.Order.Application.Storefront.Services.StorefrontCheckoutService.StorefrontGuestActorId;
+        return StorefrontGuestActor.ActorId;
     }
 
-    private static IResult Unauthorized() =>
-        Results.Json(
-            new { title = "Unauthorized", errorCode = "customer.session.required" },
-            statusCode: StatusCodes.Status401Unauthorized);
+    private static IResult Unauthorized(ApiResponseFactory api) =>
+        api.FromFailure(new SemanticError("customer.session.required"));
 }
 
 /// <summary>بدنهٔ ویرایش پروفایل؛ شناسه‌های Identity و credential دریافت نمی‌کند.</summary>

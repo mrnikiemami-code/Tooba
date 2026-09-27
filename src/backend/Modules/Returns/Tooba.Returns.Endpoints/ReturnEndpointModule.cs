@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Routing;
+using Microsoft.Extensions.DependencyInjection;
 using Tooba.Returns.Endpoints.Admin;
 using Tooba.Returns.Endpoints.Customer;
 using Tooba.Returns.Endpoints.Seller;
@@ -20,5 +21,13 @@ public static class ReturnEndpointModule
         var admin = app.MapGroup("/v1/admin");
         ReturnAdminEndpoints.Map(admin);
         return app;
+    }
+
+    /// <summary>Registers module-owned Returns customer authorizer.</summary>
+    public static IServiceCollection AddReturnEndpointPresentation(this IServiceCollection services)
+    {
+        ArgumentNullException.ThrowIfNull(services);
+        services.AddScoped<IReturnCustomerAuthorizer, ReturnCustomerAuthorizer>();
+        return services;
     }
 }

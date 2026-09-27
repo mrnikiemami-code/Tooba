@@ -102,6 +102,7 @@ public sealed class WalletFoundationTests
             "backend",
             "Host",
             "Tooba.Host",
+            "Composition",
             "ToobaModuleComposition.cs"));
         Assert.Contains("WalletModule", composition, StringComparison.Ordinal);
 
@@ -115,7 +116,7 @@ public sealed class WalletFoundationTests
         Assert.Contains("MapWalletEndpoints", program, StringComparison.Ordinal);
         Assert.Contains("AddWalletEndpointPresentation", program, StringComparison.Ordinal);
         Assert.Contains("WalletDevelopmentSeedHost", program, StringComparison.Ordinal);
-        Assert.Contains("HostWalletCustomerAuthorizer", program, StringComparison.Ordinal);
+        Assert.DoesNotContain("HostWalletCustomerAuthorizer", program, StringComparison.Ordinal);
         Assert.Contains("HostWalletAdminAuthorizer", program, StringComparison.Ordinal);
     }
 

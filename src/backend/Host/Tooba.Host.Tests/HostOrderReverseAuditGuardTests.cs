@@ -85,7 +85,10 @@ public sealed class HostOrderReverseAuditGuardTests
         Assert.DoesNotContain("MapPost(\"/orders/{checkoutId:guid}/retry-unpaid\"", customer, StringComparison.Ordinal);
         Assert.Contains("GetCustomerOrderDashboardSummaryQuery", customer, StringComparison.Ordinal);
         Assert.Contains(files, f => f.Equals("Customer/CustomerPanelEndpoints.cs", StringComparison.Ordinal));
-        Assert.Contains(files, f => f.Equals("Customer/HostOrderCustomerAuthorizer.cs", StringComparison.Ordinal));
+        Assert.DoesNotContain(files, f => f.Equals("Customer/HostOrderCustomerAuthorizer.cs", StringComparison.Ordinal));
+        Assert.True(File.Exists(Path.Combine(
+            root, "src", "backend", "Modules", "Order", "Tooba.Order.Endpoints", "Customer", "OrderCustomerAuthorizer.cs")));
+        Assert.False(File.Exists(Path.Combine(host, "Customer", "HostOrderCustomerAuthorizer.cs")));
 
         var orderCustomerEndpoints = File.ReadAllText(Path.Combine(
             root, "src", "backend", "Modules", "Order", "Tooba.Order.Endpoints", "Customer", "CustomerOrderEndpoints.cs"));
