@@ -21,7 +21,6 @@ public static class ProductWorkspaceEndpoints
         group.MapPost("/query", QueryGridAsync);
         group.MapPost("/", CreateAsync);
         group.MapGet("/{productId:guid}", GetAsync);
-        group.MapGet("/{productId:guid}/history", GetHistoryAsync);
         group.MapPatch("/{productId:guid}/catalog-title", PatchTitleAsync);
         group.MapPatch("/{productId:guid}/core", PatchCoreAsync);
         group.MapPatch("/{productId:guid}/quantity-policy", PatchQuantityPolicyAsync);
@@ -136,37 +135,6 @@ public static class ProductWorkspaceEndpoints
             return workspace is null
                 ? Results.Json(new { title = "Not Found", errorCode = "workspace.product.missing" }, statusCode: StatusCodes.Status404NotFound)
                 : Results.Json(workspace);
-        }
-        catch (PlatformHttpException ex)
-        {
-            return ToError(ex);
-        }
-    }
-
-    private static async Task<IResult> GetHistoryAsync(
-        Guid productId,
-        string? section,
-        int? skip,
-        int? take,
-        ProductWorkspaceComposer composer,
-        HttpRequest request,
-        CurrentAuthenticatedSession session,
-        ICurrentTenant tenant,
-        IAuthorizationGuard guard,
-        IHostEnvironment environment,
-        CancellationToken cancellationToken)
-    {
-        try
-        {
-            await AdminPanelAccess.RequireAuthorizedAsync(
-                request, session, tenant, guard, environment, cancellationToken);
-            return Results.Json(await composer.GetHistoryPageAsync(
-                productId,
-                section,
-                skip ?? 0,
-                take ?? 50,
-                ReadPermissions(request),
-                cancellationToken));
         }
         catch (PlatformHttpException ex)
         {

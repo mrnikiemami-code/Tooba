@@ -1,0 +1,4 @@
+# ProductHistory Validators
+
+GetProductHistoryQuery is classified NO_VALIDATOR_REQUIRED:
+route Guid is constrained; section is optional; skip/take are normalized/clamped by the read seam.

@@ -63,14 +63,27 @@ public sealed class ProductHistoryTests : IAsyncLifetime
     public void Product_workspace_history_endpoint_is_authorized_and_read_only()
     {
         var root = FindRepoRoot();
-        var endpoints = File.ReadAllText(Path.Combine(
+        var hostEndpoints = File.ReadAllText(Path.Combine(
             root, "src", "backend", "Host", "Tooba.Host", "Admin", "ProductWorkspaceEndpoints.cs"));
-        Assert.Contains("MapGet(\"/{productId:guid}/history\"", endpoints, StringComparison.Ordinal);
-        Assert.Contains("GetHistoryAsync", endpoints, StringComparison.Ordinal);
-        Assert.DoesNotContain("MapDelete(\"/{productId:guid}/history\"", endpoints, StringComparison.Ordinal);
-        Assert.DoesNotContain("MapPatch(\"/{productId:guid}/history\"", endpoints, StringComparison.Ordinal);
-        Assert.DoesNotContain("MapPut(\"/{productId:guid}/history\"", endpoints, StringComparison.Ordinal);
-        Assert.DoesNotContain("MapPost(\"/{productId:guid}/history\"", endpoints, StringComparison.Ordinal);
+        Assert.DoesNotContain("MapGet(\"/{productId:guid}/history\"", hostEndpoints, StringComparison.Ordinal);
+        Assert.DoesNotContain("GetHistoryAsync", hostEndpoints, StringComparison.Ordinal);
+
+        var catalogEndpoints = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "backend",
+            "Modules",
+            "Catalog",
+            "Tooba.Catalog.Endpoints",
+            "Admin",
+            "ProductHistory",
+            "CatalogProductHistoryAdminEndpoints.cs"));
+        Assert.Contains("MapGet(\"/history\", GetAsync)", catalogEndpoints, StringComparison.Ordinal);
+        Assert.Contains("ICatalogAdminAuthorizer", catalogEndpoints, StringComparison.Ordinal);
+        Assert.DoesNotContain("MapDelete(\"/history\"", catalogEndpoints, StringComparison.Ordinal);
+        Assert.DoesNotContain("MapPatch(\"/history\"", catalogEndpoints, StringComparison.Ordinal);
+        Assert.DoesNotContain("MapPut(\"/history\"", catalogEndpoints, StringComparison.Ordinal);
+        Assert.DoesNotContain("MapPost(\"/history\"", catalogEndpoints, StringComparison.Ordinal);
 
         var directory = File.ReadAllText(Path.Combine(
             root, "src", "backend", "Modules", "Catalog", "Tooba.Catalog.Infrastructure", "CatalogDirectory.cs"));

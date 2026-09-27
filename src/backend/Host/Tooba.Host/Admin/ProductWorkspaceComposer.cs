@@ -482,43 +482,6 @@ public sealed class ProductWorkspaceComposer
             await ListUnitOptionsAsync(product.UnitOfMeasureId, cancellationToken));
     }
 
-    /// <summary>
-    /// صفحهٔ تاریخچهٔ محصول برای تب تاریخچه (append-only، Catalog-only).
-    /// </summary>
-    public async Task<ProductHistoryPageView> GetHistoryPageAsync(
-        Guid productId,
-        string? section,
-        int skip,
-        int take,
-        ProductWorkspacePermissions permissions,
-        CancellationToken cancellationToken)
-    {
-        if (!permissions.CanView)
-        {
-            throw new PlatformHttpException(403, "Forbidden", "workspace.permission.denied");
-        }
-
-        if (!await _catalog.Products.AsNoTracking().AnyAsync(x => x.ProductId == productId, cancellationToken))
-        {
-            throw new PlatformHttpException(404, "Not Found", "workspace.product.missing");
-        }
-
-        try
-        {
-            var page = await _catalogDirectory.ListProductHistoryAsync(
-                productId, section, skip, take, cancellationToken);
-            return new ProductHistoryPageView(
-                page.Items.Select(ToHistoryItemView).ToList(),
-                page.TotalCount,
-                page.Skip,
-                page.Take);
-        }
-        catch (InvalidOperationException)
-        {
-            throw new PlatformHttpException(404, "Not Found", "workspace.product.missing");
-        }
-    }
-
     private async Task<IReadOnlyList<ProductHistoryItem>> BuildHistoryShellListsAsync(
         Guid productId,
         CancellationToken cancellationToken,
@@ -546,18 +509,6 @@ public sealed class ProductWorkspaceComposer
             return [];
         }
     }
-
-    private static ProductHistoryItemView ToHistoryItemView(ProductHistoryEntryDto row) =>
-        new(
-            row.HistoryId,
-            row.EventType,
-            row.Section,
-            row.SectionLabelFa,
-            row.SummaryFa,
-            row.BeforeSummary,
-            row.AfterSummary,
-            row.ActorDisplayName,
-            row.OccurredAt);
 
     private async Task<string> BuildCategoryPathAsync(Guid categoryId, CancellationToken cancellationToken)
     {

@@ -1939,6 +1939,67 @@
     "workflowStop": "USER_REVIEW_HOST_ADMIN_W14_R1_CHECKPOINT",
     "evidence": "docs/evidence/TB-TMAR-HOST-ADMIN-AMC-001-W14-R1/"
   },
+  "hostAdminAmcW15": {
+    "task": "TB-TMAR-HOST-ADMIN-AMC-001-W15",
+    "parentTask": "TB-TMAR-HOST-ADMIN-AMC-001-W14-R1",
+    "parentCommit": "7f35f60c430e782b75ac65e32d9471fbf90985a9",
+    "state": "HOST_ADMIN_AMC_W15_PRODUCT_HISTORY_READ_EVACUATED_PRODUCTWORKSPACE_RETAINED_PARTIAL",
+    "activeHostFolder": "Admin",
+    "productionFileCountBefore": 52,
+    "productionFileCountAfter": 52,
+    "productWorkspaceEndpointFileState": "RETAINED_PARTIAL",
+    "productWorkspaceComposerState": "RETAINED_PARTIAL_HISTORY_PAGE_REMOVED_SHELL_KEPT",
+    "productWorkspaceModelsState": "RETAINED_PARTIAL_HISTORY_PAGE_VIEWS_REMOVED_ProductHistoryItem_KEPT",
+    "historyHostRouteCountBefore": 1,
+    "historyHostRouteCountAfter": 0,
+    "migratedRouteCount": 1,
+    "historyEndpointOwnership": "MODULE_OWNED_ONE_ROUTE_CATALOG_ENDPOINTS",
+    "historyRouteInventory": [
+      "GET /v1/admin/products/{productId}/history"
+    ],
+    "historyCqrsState": "GetProductHistory_Result",
+    "historyApplicationStructure": "ProductHistory/{Queries,Models,Ports,Validators}",
+    "historyReadPortState": "IProductHistoryReader_ProductHistoryReader",
+    "validatorMatrix": "GetProductHistory_NO_VALIDATOR_REQUIRED",
+    "resultErrorState": "CANONICAL_RESULT_APIRESPONSEFACTORY_workspace_product_missing_preserved",
+    "pagingFilterOrderParity": "PRESERVED_skip_take_section_OccurredAt_DESC_HistoryId_DESC",
+    "actorFallbackState": "PRESERVED_ProductHistoryRules_ActorSystemFa",
+    "aggregateActivityAuditState": "PRESERVED_BuildHistoryShellListsAsync",
+    "workspaceViewScopeState": "PRESERVED_GET_ALLOWED_NO_EDIT_SCOPE_GATE",
+    "messageClassificationState": "NO_MESSAGE_AS_CODE_ON_PRODUCT_HISTORY_READ_SURFACE",
+    "platformHttpExceptionState": "ABSENT_ON_PRODUCT_HISTORY_HTTP_AND_READER",
+    "invalidOperationExpectedFlowState": "ABSENT_ON_PRODUCT_HISTORY_HTTP_AND_READER_LEGACY_UNWRAP_OUTSIDE",
+    "adminAuthorizationState": "ICatalogAdminAuthorizer_ON_HISTORY_GET",
+    "pathNamespace": "EXACT",
+    "catalogToHost": "ZERO",
+    "endpointsToInfrastructure": "ZERO",
+    "routeBehaviorParity": "PRESERVED",
+    "schemaMigrationState": "NONE",
+    "frontendState": "UNCHANGED",
+    "storeAppearanceState": "NOT_MOVED_DEFERRED_PRESERVED",
+    "w1ThroughW14R1Preservation": "PRESERVED",
+    "remainingProductWorkspaceSlices": [
+      "workspace list/get/grid",
+      "create/core/title/quantity",
+      "category/brand",
+      "lifecycle/publish/readiness/delete",
+      "workspace variant create/patch",
+      "aggregate Activity/Audit shell via ListProductHistoryAsync wrapper"
+    ],
+    "remainingAdminBlockers": [
+      "StoreAppearance Host.Storefront projector coupling",
+      "Remaining ProductWorkspace non-history Host Admin HTTP",
+      "Host Seller panel still Host-owned"
+    ],
+    "residualDebt": [
+      "ICatalogDirectory thin ListProductHistoryAsync UnwrapHistory wrapper remains for aggregate shell/ProductHistoryTests/PrimaryCategoryMigrationTests",
+      "Appearance redesign before evacuate",
+      "Seller panel still Host-owned"
+    ],
+    "nextHostFolderStarted": false,
+    "workflowStop": "USER_REVIEW_HOST_ADMIN_W15_CHECKPOINT",
+    "evidence": "docs/evidence/TB-TMAR-HOST-ADMIN-AMC-001-W15/"
+  },
   "hostAdminAmcW9": {
     "task": "TB-TMAR-HOST-ADMIN-AMC-001-W9",
     "parentTask": "TB-TMAR-HOST-ADMIN-AMC-001-W8",

@@ -15,6 +15,7 @@ using Tooba.Catalog.Application.Tags.Ports;
 using Tooba.Catalog.Application.Variants.Ports;
 using Tooba.Catalog.Application.CategoryChanges.Ports;
 using Tooba.Catalog.Application.ProductMedia.Ports;
+using Tooba.Catalog.Application.ProductHistory.Ports;
 using Tooba.Catalog.Application.ProductSeo.Ports;
 using Tooba.Catalog.Contracts;
 using Tooba.Catalog.Contracts.Errors;
@@ -797,6 +798,29 @@ public sealed class CatalogDirectory :
 
     private IProductSeoDirectory ProductSeoPort() =>
         new ProductSeoDirectory(_db, _guard, _actor);
+
+    private IProductHistoryReader ProductHistoryPort() =>
+        new ProductHistoryReader(_db);
+
+    /// <summary>
+    /// Legacy ICatalogDirectory unwrap for history list: maps missing-product Result to prior IOE
+    /// so Host aggregate shell / ProductHistoryTests keep prior contract. Migrated HTTP uses Result.
+    /// </summary>
+    private static T UnwrapHistory<T>(Result<T> result)
+    {
+        if (result.IsFailure)
+        {
+            var code = result.FirstError.Code;
+            if (string.Equals(code, CatalogErrorCodes.WorkspaceProductMissing, StringComparison.Ordinal))
+            {
+                throw new InvalidOperationException("محصول در Catalog این Tenant نیست.");
+            }
+
+            throw new InvalidOperationException(code);
+        }
+
+        return result.Value;
+    }
 
     private static T Unwrap<T>(Result<T> result)
     {
@@ -1720,32 +1744,8 @@ public sealed class CatalogDirectory :
         string? section,
         int skip,
         int take,
-        CancellationToken cancellationToken)
-    {
-        if (!await _db.Products.AnyAsync(x => x.ProductId == productId, cancellationToken))
-        {
-            throw new InvalidOperationException("محصول در Catalog این Tenant نیست.");
-        }
-
-        skip = Math.Max(0, skip);
-        take = Math.Clamp(take <= 0 ? 50 : take, 1, 100);
-        var query = _db.ProductHistoryEntries.AsNoTracking().Where(x => x.ProductId == productId);
-        if (!string.IsNullOrWhiteSpace(section))
-        {
-            var normalized = section.Trim();
-            query = query.Where(x => x.Section == normalized);
-        }
-
-        var total = await query.CountAsync(cancellationToken);
-        var rows = await query
-            .OrderByDescending(x => x.OccurredAt)
-            .ThenByDescending(x => x.HistoryId)
-            .Skip(skip)
-            .Take(take)
-            .ToListAsync(cancellationToken);
-
-        return new ProductHistoryPage(rows.Select(ToHistoryDto).ToList(), total, skip, take);
-    }
+        CancellationToken cancellationToken) =>
+        UnwrapHistory(await ProductHistoryPort().ListAsync(productId, section, skip, take, cancellationToken));
 
     /// <inheritdoc />
     public async Task AppendProductHistoryAsync(
@@ -1785,22 +1785,6 @@ public sealed class CatalogDirectory :
             beforeSummary,
             afterSummary));
     }
-
-    private static ProductHistoryEntryDto ToHistoryDto(CatalogProductHistoryEntry row) =>
-        new(
-            row.HistoryId,
-            row.ProductId,
-            row.EventType,
-            row.Section,
-            ProductHistoryRules.SectionLabelFa(row.Section),
-            row.SummaryFa,
-            row.BeforeSummary,
-            row.AfterSummary,
-            row.ActorUserId,
-            string.IsNullOrWhiteSpace(row.ActorDisplayName)
-                ? ProductHistoryRules.ActorSystemFa
-                : row.ActorDisplayName!,
-            row.OccurredAt);
 
     private async Task<bool> IsProductPrimaryCategoryAssignableAsync(
         Guid productId,

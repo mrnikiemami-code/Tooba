@@ -233,25 +233,6 @@ public sealed record ProductHistoryItem(
     string? AfterSummary = null,
     Guid? HistoryId = null);
 
-/// <summary>صفحهٔ تاریخچهٔ محصول برای تب تاریخچه.</summary>
-public sealed record ProductHistoryPageView(
-    IReadOnlyList<ProductHistoryItemView> Items,
-    int TotalCount,
-    int Skip,
-    int Take);
-
-/// <summary>ردیف تاریخچهٔ انسانی محصول.</summary>
-public sealed record ProductHistoryItemView(
-    Guid HistoryId,
-    string EventType,
-    string Section,
-    string SectionLabelFa,
-    string SummaryFa,
-    string? BeforeSummary,
-    string? AfterSummary,
-    string ActorDisplayName,
-    DateTimeOffset OccurredAt);
-
 /// <summary>محور یک گونهٔ جدید.</summary>
 public sealed record AdminProductVariantAxisRequest(Guid DefinitionId, string? RawValue, Guid? EnumOptionId);
 

@@ -94,7 +94,7 @@ public sealed class HostAdminAmcW14R1GuardTests
     }
 
     [Fact]
-    public void Host_Admin_remains_52_and_W15_not_started()
+    public void Host_Admin_remains_52_and_W14R1_seo_surface_preserved()
     {
         var root = FindRepoRoot();
         var admin = Path.Combine(root, "src/backend/Host/Tooba.Host/Admin");
@@ -106,10 +106,12 @@ public sealed class HostAdminAmcW14R1GuardTests
             root, "src/backend/Modules/Catalog/Tooba.Catalog.Application/ProductSeo")));
         Assert.True(Directory.Exists(Path.Combine(
             root, "src/backend/Modules/Catalog/Tooba.Catalog.Application/ProductMedia")));
-        Assert.False(Directory.Exists(Path.Combine(
-            root, "docs/evidence/TB-TMAR-HOST-ADMIN-AMC-001-W15")));
-        Assert.False(File.Exists(Path.Combine(
-            root, "docs/ai/tasks/TB-TMAR-HOST-ADMIN-AMC-001-W15.task.md")));
+        Assert.True(File.Exists(Path.Combine(
+            root, "src/backend/Modules/Catalog/Tooba.Catalog.Domain/CatalogCategorySlugNormalizer.cs")));
+        var seoDirectory = File.ReadAllText(Path.Combine(
+            root, "src/backend/Modules/Catalog/Tooba.Catalog.Infrastructure/ProductSeoDirectory.cs"));
+        Assert.Contains("TryNormalizeSlug", seoDirectory, StringComparison.Ordinal);
+        Assert.Contains("TrySlugifyFromName", seoDirectory, StringComparison.Ordinal);
     }
 
     private static string FindRepoRoot()
