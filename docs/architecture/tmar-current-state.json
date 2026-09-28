@@ -2545,6 +2545,24 @@
     "schemaMigrationState": "NONE",
     "workflowStop": "USER_REVIEW_HOST_ADMIN_CANON_001"
   },
+  "hostAdminCanon002": {
+    "task": "TB-TMAR-HOST-ADMIN-CANON-002",
+    "parentTask": "TB-TMAR-HOST-ADMIN-CANON-001",
+    "state": "SIMPLE_HOST_ADMIN_AUTHORIZERS_ON_IADMINPANELACCESS",
+    "parentCommit": "9a159bbc594735bc78f416ecbd8a8078954ce6a3",
+    "simpleAuthorizers": "CANONICAL_IADMINPANELACCESS",
+    "serviceLocator": "ZERO_ON_IN_SCOPE",
+    "settlementDuplicateAccessLogic": "ZERO",
+    "adminFileCount": 15,
+    "canon001": "PRESERVED",
+    "singleStoreBehavior": "PRESERVED",
+    "marketplaceDevelopmentBehavior": "PRESERVED",
+    "routes": "PRESERVED",
+    "frontendState": "UNTOUCHED",
+    "schemaMigrationState": "NONE",
+    "evidence": "docs/evidence/TB-TMAR-HOST-ADMIN-CANON-002/",
+    "workflowStop": "USER_REVIEW_HOST_ADMIN_CANON_002"
+  },
   "hostAdminAmcHoldPolicy": {
     "task": "TB-TMAR-HOST-ADMIN-AMC-001-W35-HOLD-POLICY",
     "parentTask": "TB-TMAR-HOST-ADMIN-AMC-001-W34-TEMPLATE-SEEDS",

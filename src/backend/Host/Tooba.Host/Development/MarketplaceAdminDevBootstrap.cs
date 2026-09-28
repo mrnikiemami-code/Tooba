@@ -22,7 +22,7 @@ internal static class MarketplaceAdminDevBootstrap
                     Resource = new AuthorizationResource
                     {
                         Type = AuthorizationObjectTypes.Tenant,
-                        Id = HostSettlementAdminAuthorizer.MarketplacePlatformTenantId,
+                        Id = HostAdminPanelAccess.MarketplacePlatformTenantId,
                     },
                     Relation = AuthorizationRelations.Member,
                 },
