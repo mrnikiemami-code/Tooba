@@ -44,6 +44,7 @@ public sealed class PaymentModule : IToobaModule
         services.AddHostedService<PaymentReconciliationWorker>();
         services.AddSingleton<IOutboxModuleRegistration, PaymentOutboxRegistration>();
         services.AddScoped<IPaymentUseCaseGuard, OpenPaymentUseCaseGuard>();
+        services.AddScoped<ICommerceHoldPolicySource, CommerceHoldPolicySource>();
         services.AddScoped<ICommerceHoldPolicy, CommerceHoldPolicyAdapter>();
         services.AddScoped<PaymentGatewayActorContext>();
         services.AddScoped<IPaymentGatewayRegistry, PaymentGatewayRegistry>();

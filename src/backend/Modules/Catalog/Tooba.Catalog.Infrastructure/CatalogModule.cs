@@ -76,6 +76,7 @@ public sealed class CatalogModule : IToobaModule
         services.AddScoped<IReservationCycleHoldPolicyReader, ReservationCycleHoldPolicyReader>();
         services.AddScoped<IStoreReservationPolicySettingsPort, StoreReservationPolicySettingsPort>();
         services.AddScoped<IStoreHoldPolicySettingsPort, StoreHoldPolicySettingsPort>();
+        services.AddScoped<IStoreHoldPolicyHoursReader>(sp => sp.GetRequiredService<IStoreHoldPolicySettingsPort>());
         services.AddScoped<IStoreCartPersistenceHoursReader, StoreCartPersistenceHoursReader>();
         services.AddScoped<IStoreLandingPageDirectory, StoreLandingPageDirectory>();
         services.AddScoped<IStoreLandingPageWorkspace, StoreLandingPageWorkspace>();

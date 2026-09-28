@@ -113,7 +113,6 @@ builder.Services.AddScoped<ICurrentEdition>(sp => sp.GetRequiredService<HttpComm
 builder.Services.AddScoped<ICurrentTenant>(sp => sp.GetRequiredService<HttpCommerceContextAccessor>());
 builder.Services.AddScoped<ICommerceContextAssigner>(sp => sp.GetRequiredService<HttpCommerceContextAccessor>());
 builder.Services.Configure<OutboxHostOptions>(builder.Configuration.GetSection("Tooba:Outbox"));
-builder.Services.Configure<UnpaidOrderExpiryHostOptions>(builder.Configuration.GetSection("Tooba:UnpaidOrderExpiry"));
 builder.Services.AddSingleton<BackgroundWorkerRegistry>();
 builder.Services.AddSingleton<IBackgroundWorkerRegistry>(sp => sp.GetRequiredService<BackgroundWorkerRegistry>());
 builder.Services.AddScoped<ILanguageReferenceGuard, ContentLanguageReferenceGuard>();
@@ -147,7 +146,6 @@ builder.Configuration.GetSection("Tooba:Messaging").Bind(messagingOptions);
 builder.Services.AddToobaIntegrationPublisher(builder.Environment, messagingOptions);
 builder.Services.AddScoped<OutboxSaveChangesInterceptor>();
 builder.Services.AddHostedService<OutboxDispatcherHostedService>();
-builder.Services.AddHostedService<UnpaidOrderExpiryHostedService>();
 builder.Services.AddToobaCqrsFoundation(
     typeof(Tooba.Catalog.Application.CreateStoreLandingPageCommand).Assembly,
     typeof(Tooba.Fulfillment.Application.Commands.CreateShippingService.CreateShippingServiceCommand).Assembly,
@@ -176,9 +174,6 @@ builder.Services.AddToobaModules(builder.Configuration, builder.Environment);
 builder.Services.AddOfferModuleCallTracing();
 builder.Services.Configure<Tooba.Order.Application.ReservationCycle.Contracts.ReservationCycleOptions>(
     builder.Configuration.GetSection(Tooba.Order.Application.ReservationCycle.Contracts.ReservationCycleOptions.SectionName));
-builder.Services.AddScoped<CommerceHoldPolicy>();
-builder.Services.AddScoped<Tooba.Payment.Contracts.Hold.ICommerceHoldPolicySource>(sp => sp.GetRequiredService<CommerceHoldPolicy>());
-builder.Services.AddScoped<Tooba.Order.Application.Checkout.Contracts.ICheckoutReservationHoldPolicy>(sp => sp.GetRequiredService<CommerceHoldPolicy>());
 builder.Services.AddScoped<Tooba.Host.Grid.AdminStoryGridQueryEngine>();
 builder.Services.AddScoped<Tooba.Host.Grid.AdminReviewGridQueryEngine>();
 builder.Services.AddScoped<Tooba.Host.Grid.AdminSellersGridQueryEngine>();
