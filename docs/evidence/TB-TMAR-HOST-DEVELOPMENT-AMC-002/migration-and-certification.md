@@ -63,7 +63,9 @@ Trace labels preserved exactly: `catalog-attribute-schema-seed`, `landing-dev-se
 
 ## Focused validation
 - `dotnet build src/backend/Host/Tooba.Host` → **succeeded, 0 errors**
-- `dotnet test Tooba.Host.Tests` filter (`HostDevelopmentAmcGuardTests`, `HostAdminAmcW34TemplateSeedsGuardTests`, `HostAdminAmcLandingPageSeedGuardTests`, `HostAdminCanon002GuardTests`, `HostCartResidualGuardTests`, `HostAdminCanon009GuardTests`, `HostAdminCanonicalCertificationGuardTests`) → **Passed 57 / Failed 0**
+- `dotnet test Tooba.Host.Tests` filter (`HostDevelopmentAmcGuardTests`, `HostAdminAmcW34TemplateSeedsGuardTests`, `HostAdminAmcLandingPageSeedGuardTests`, `HostAdminCanon002GuardTests`, `HostCartResidualGuardTests`, `HostAdminCanon009GuardTests`, `HostAdminCanonicalCertificationGuardTests`, `TmarDurableGuardTests`) → **Passed 63 / Failed 0**
+
+**Canonical validation count = 63/63** (reconciled by `TB-TMAR-HOST-DEVELOPMENT-AMC-002-R1`). An earlier draft recorded **57/57**, which was the first focused run *before* the stale `HostDevelopmentAmcGuardTests` allowlist was repaired and before the `TmarDurableGuardTests` fleet was added to the filter. 63/63 is the deterministically re-proven count over the same focused filter on current main.
 
 ## Destination integrity check (Analyze §3d / Migrate §25c / Certify §13b)
 | Destination | Classification | Change |

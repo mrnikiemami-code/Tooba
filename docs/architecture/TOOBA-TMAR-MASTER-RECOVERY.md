@@ -12,17 +12,19 @@ Canonical Architect ↔ Cursor handoff (recovery-critical)
 
 Latest Accepted TMAR Checkpoint — authoritative
 
-Reconciled by `TB-TMAR-RECOVERY-SOT-SYNC-001`. A fresh chat/architect MUST recover the CURRENT checkpoint from here and from `docs/architecture/tmar-current-state.json`, NOT from any older "Next task:" line below.
+Reconciled by `TB-TMAR-HOST-DEVELOPMENT-AMC-002-R1`. A fresh chat/architect MUST recover the CURRENT checkpoint from here and from `docs/architecture/tmar-current-state.json`, NOT from any older "Next task:" line below.
 
-- Latest accepted TMAR task: `TB-TMAR-AUTHORIZATION-POSTCERT-CLEANUP-001` — state `CERTIFIED` (both Authorization post-cert debts closed).
+- Latest accepted implementation wave: `TB-TMAR-HOST-DEVELOPMENT-AMC-002` — state `ACCEPTED` (Host/Development 12 → 6 production files; 7 duplicated Catalog seed wrappers evacuated into the single Host seam `Development/DevelopmentTenantCommerceContext.cs`; stale `HostDevelopmentAmcGuardTests` allowlist that was RED at clean HEAD repaired; two explicit unresolved bounded debts retained).
+- Current Host checkpoint: `Development`.
 - Commit semantics (explicit and truthful):
-  - `lastAcceptedCommit` (implementation commit) = `498c46bd36c1d72934e97b137625cb07de84272a`
-  - `lastAcceptedSoTStamp` (later docs-only SoT stamp commit) = `736f23d34acb4f3989144f27675d1768fc7a65a9`
+  - `lastAcceptedCommit` (implementation commit) = `ba6cf54c738d443dcb61efc4264aedc8608f2b63`
+  - `lastAcceptedSoTStamp` (later docs-only SoT stamp commit) = `5919039b2313ddc8d02864e47e9f636328990cfe`
   - These are deliberately distinct commits; never conflate an implementation commit with the docs-only acceptance stamp.
-  - Root Global Boundaries R3 lineage: implementation commit `c63f6ebb818e7e35a548c5b3e20eb18a25a244c8`, docs-only SoT stamp commit `7d8ea21155109def56866eee2acdab2067fb457b`.
+- Prior accepted TMAR task (now HISTORICAL, superseded as current pointer): `TB-TMAR-AUTHORIZATION-POSTCERT-CLEANUP-001` — state `CERTIFIED`; implementation commit `498c46bd36c1d72934e97b137625cb07de84272a`, docs-only SoT stamp `736f23d34acb4f3989144f27675d1768fc7a65a9`. Root Global Boundaries R3 lineage: implementation commit `c63f6ebb818e7e35a548c5b3e20eb18a25a244c8`, docs-only SoT stamp commit `7d8ea21155109def56866eee2acdab2067fb457b`.
 - Root Global Boundaries R3: `CERTIFIED` and `PRESERVED`.
-- Current Host evacuation: `RECONCILED_NOT_HISTORICAL_ADDRESSBOOK`. There is NO active Host folder. AccessControl/AddressBook/Authentication/Admin/Content and later folder checkpoints are HISTORICAL, not the current continuation point.
-- Current stop state: `workflowStop = USER_REVIEW_AFTER_RECOVERY_SOT_SYNC_001`; `nextTask = USER_REVIEW_AFTER_RECOVERY_SOT_SYNC_001`; `nextTaskState = USER_DECISION_REQUIRED`; `automaticNextImplementationTask = NONE`.
+- Current Host evacuation: `RECONCILED_NOT_HISTORICAL_ADDRESSBOOK`. There is NO automatic next Host folder. AccessControl/AddressBook/Authentication/Admin/Content and later folder checkpoints are HISTORICAL, not the current continuation point.
+- Open Development bounded debts (deferred, NOT started): `CatalogAttributeSchemaSellableEnricher.cs` and `ProductWorkspaceDevelopmentBootstrap.cs`.
+- Current stop state: `workflowStop = USER_REVIEW_HOST_DEVELOPMENT_AMC_002_R1`; `nextTask = USER_REVIEW_HOST_DEVELOPMENT_AMC_002_R1`; `nextTaskState = USER_DECISION_REQUIRED`; `automaticNextImplementationTask = NONE`.
 - There is intentionally NO automatic next implementation task and NO next Host folder. Do not invent one and do not resume any historical next-task marker below.
 
 Non-authoritative historical pointers warning
