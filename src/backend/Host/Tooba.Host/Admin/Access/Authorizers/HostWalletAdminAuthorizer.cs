@@ -1,7 +1,7 @@
 #pragma warning disable CS1591
 using Tooba.BuildingBlocks;
+using Tooba.BuildingBlocks.Presentation.Errors;
 using Tooba.BuildingBlocks.Security;
-using Tooba.Wallet.Application.Errors;
 using Tooba.Wallet.Endpoints.Admin;
 
 namespace Tooba.Host.Admin.Access.Authorizers;
@@ -62,9 +62,12 @@ public sealed class HostWalletAdminAuthorizer(
             throw new PlatformHttpException(
                 503,
                 "سرویس مجوز در دسترس نیست.",
-                WalletErrorCodes.AuthorizationUnavailable);
+                WalletAdminAuthorizationCodes.AuthorizationUnavailable);
         }
 
-        throw new PlatformHttpException(403, "مجوز کیف پول/کارت هدیه وجود ندارد.", WalletErrorCodes.AdminAuthorizationDenied);
+        throw new PlatformHttpException(
+            403,
+            "مجوز کیف پول/کارت هدیه وجود ندارد.",
+            FoundationErrorCodes.AdminAuthorizationDenied);
     }
 }

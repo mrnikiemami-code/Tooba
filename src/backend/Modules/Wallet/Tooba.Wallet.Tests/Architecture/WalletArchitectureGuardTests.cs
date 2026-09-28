@@ -224,16 +224,16 @@ public sealed class WalletArchitectureGuardTests
         Assert.False(File.Exists(Path.Combine(hostRoot, "Wallet", "WalletEndpoints.cs")));
         Assert.True(File.Exists(Path.Combine(hostRoot, "Wallet", "WalletDevelopmentSeedHost.cs")));
         Assert.False(File.Exists(Path.Combine(hostRoot, "Customer", "HostWalletCustomerAuthorizer.cs")));
-        Assert.True(File.Exists(Path.Combine(hostRoot, "Admin", "HostWalletAdminAuthorizer.cs")));
+        Assert.True(File.Exists(Path.Combine(hostRoot, "Admin", "Access", "Authorizers", "HostWalletAdminAuthorizer.cs")));
         Assert.True(File.Exists(Path.Combine(endpointsRoot, "Customer", "WalletCustomerAuthorizer.cs")));
 
         var moduleCustomer = File.ReadAllText(Path.Combine(endpointsRoot, "Customer", "WalletCustomerAuthorizer.cs"));
-        var hostAdmin = File.ReadAllText(Path.Combine(hostRoot, "Admin", "HostWalletAdminAuthorizer.cs"));
+        var hostAdmin = File.ReadAllText(Path.Combine(hostRoot, "Admin", "Access", "Authorizers", "HostWalletAdminAuthorizer.cs"));
         Assert.Contains("X-Tooba-Dev-Actor-User-Id", moduleCustomer, StringComparison.Ordinal);
         Assert.Contains("ICurrentAuthenticatedUser", moduleCustomer, StringComparison.Ordinal);
         Assert.Contains("IAdminPanelAccess", hostAdmin, StringComparison.Ordinal);
         Assert.Contains("AuthorizationDecisionKind.Unavailable", hostAdmin, StringComparison.Ordinal);
-        Assert.Contains("WalletErrorCodes.AuthorizationUnavailable", hostAdmin, StringComparison.Ordinal);
+        Assert.Contains("WalletAdminAuthorizationCodes.AuthorizationUnavailable", hostAdmin, StringComparison.Ordinal);
         Assert.DoesNotContain("RequestServices", hostAdmin, StringComparison.Ordinal);
         Assert.DoesNotContain("IWalletDirectory", moduleCustomer, StringComparison.Ordinal);
         Assert.DoesNotContain("IWalletDirectory", hostAdmin, StringComparison.Ordinal);

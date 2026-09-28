@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Http;
 using Tooba.BuildingBlocks.Presentation.Errors;
 using Tooba.Wallet.Application.Errors;
+using Tooba.Wallet.Endpoints.Admin;
 
 namespace Tooba.Wallet.Endpoints.Errors;
 
@@ -20,7 +21,7 @@ public sealed class WalletErrorCatalogContributor : IErrorCatalogContributor
         D(WalletErrorCodes.GiftCardMissing, ErrorClassification.NotFound, StatusCodes.Status404NotFound, "Not Found"),
         D(WalletErrorCodes.WalletMissing, ErrorClassification.NotFound, StatusCodes.Status404NotFound, "Not Found"),
         D(WalletErrorCodes.AdjustRejected, ErrorClassification.Business, StatusCodes.Status400BadRequest, "Bad Request"),
-        D(WalletErrorCodes.AuthorizationUnavailable, ErrorClassification.Platform, StatusCodes.Status503ServiceUnavailable, "Wallet authorization unavailable."),
+        D(WalletAdminAuthorizationCodes.AuthorizationUnavailable, ErrorClassification.Platform, StatusCodes.Status503ServiceUnavailable, "Wallet authorization unavailable."),
         D(WalletErrorCodes.DemoNotReady, ErrorClassification.Platform, StatusCodes.Status503ServiceUnavailable, "Wallet demo seed not ready"),
     ];
 

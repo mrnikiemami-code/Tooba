@@ -24,10 +24,12 @@ public static class SupportErrorCodes
     /// <summary>Seller capability denied.</summary>
     public const string SellerAuthorizationDenied = "seller.authorization.denied";
 
-    /// <summary>Admin capability denied.</summary>
-    public const string AdminAuthorizationDenied = "admin.authorization.denied";
-
-    /// <summary>Authorization service unavailable; admin capability must fail closed (503).</summary>
+    /// <summary>
+    /// Authorization service unavailable; admin capability must fail closed (503).
+    /// The canonical Host-facing authority for this admin-auth code is
+    /// <c>Tooba.Support.Endpoints.Admin.SupportAdminAuthorizationCodes.AuthorizationUnavailable</c>,
+    /// colocated with <c>ISupportAdminAuthorizer</c> so Host never references this Application project.
+    /// </summary>
     public const string AuthorizationUnavailable = "support.authorization.unavailable";
 
     /// <summary>Development demo seed not ready.</summary>

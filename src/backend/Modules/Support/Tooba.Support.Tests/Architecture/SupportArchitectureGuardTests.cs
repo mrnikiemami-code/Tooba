@@ -178,12 +178,12 @@ public sealed class SupportArchitectureGuardTests
         Assert.True(File.Exists(Path.Combine(hostRoot, "Support", "SupportDevelopmentSeedHost.cs")));
         Assert.False(File.Exists(Path.Combine(hostRoot, "Customer", "HostSupportCustomerAuthorizer.cs")));
         Assert.True(File.Exists(Path.Combine(hostRoot, "Seller", "HostSupportSellerAuthorizer.cs")));
-        Assert.True(File.Exists(Path.Combine(hostRoot, "Admin", "HostSupportAdminAuthorizer.cs")));
+        Assert.True(File.Exists(Path.Combine(hostRoot, "Admin", "Access", "Authorizers", "HostSupportAdminAuthorizer.cs")));
         Assert.True(File.Exists(Path.Combine(endpointsRoot, "Customer", "SupportCustomerAuthorizer.cs")));
 
         var moduleCustomer = File.ReadAllText(Path.Combine(endpointsRoot, "Customer", "SupportCustomerAuthorizer.cs"));
         var hostSeller = File.ReadAllText(Path.Combine(hostRoot, "Seller", "HostSupportSellerAuthorizer.cs"));
-        var hostAdmin = File.ReadAllText(Path.Combine(hostRoot, "Admin", "HostSupportAdminAuthorizer.cs"));
+        var hostAdmin = File.ReadAllText(Path.Combine(hostRoot, "Admin", "Access", "Authorizers", "HostSupportAdminAuthorizer.cs"));
         Assert.Contains("X-Tooba-Dev-Actor-User-Id", moduleCustomer, StringComparison.Ordinal);
         Assert.Contains("ICurrentAuthenticatedUser", moduleCustomer, StringComparison.Ordinal);
         Assert.Contains("SellerPanelAccess.RequireAuthorizedAsync", hostSeller, StringComparison.Ordinal);
@@ -191,7 +191,7 @@ public sealed class SupportArchitectureGuardTests
         Assert.Contains("GetEffectiveAccessAsync", hostSeller, StringComparison.Ordinal);
         Assert.Contains("IAdminPanelAccess", hostAdmin, StringComparison.Ordinal);
         Assert.Contains("AuthorizationDecisionKind.Unavailable", hostAdmin, StringComparison.Ordinal);
-        Assert.Contains("SupportErrorCodes.AuthorizationUnavailable", hostAdmin, StringComparison.Ordinal);
+        Assert.Contains("SupportAdminAuthorizationCodes.AuthorizationUnavailable", hostAdmin, StringComparison.Ordinal);
         Assert.DoesNotContain("RequestServices", hostAdmin, StringComparison.Ordinal);
         Assert.DoesNotContain("ISupportDirectory", moduleCustomer, StringComparison.Ordinal);
         Assert.DoesNotContain("ISupportDirectory", hostSeller, StringComparison.Ordinal);

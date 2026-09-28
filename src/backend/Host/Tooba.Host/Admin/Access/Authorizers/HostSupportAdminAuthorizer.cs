@@ -1,7 +1,7 @@
 #pragma warning disable CS1591
 using Tooba.BuildingBlocks;
+using Tooba.BuildingBlocks.Presentation.Errors;
 using Tooba.BuildingBlocks.Security;
-using Tooba.Support.Application.Errors;
 using Tooba.Support.Endpoints.Admin;
 
 namespace Tooba.Host.Admin.Access.Authorizers;
@@ -62,9 +62,12 @@ public sealed class HostSupportAdminAuthorizer(
             throw new PlatformHttpException(
                 503,
                 "سرویس مجوز در دسترس نیست.",
-                SupportErrorCodes.AuthorizationUnavailable);
+                SupportAdminAuthorizationCodes.AuthorizationUnavailable);
         }
 
-        throw new PlatformHttpException(403, "مجوز پشتیبانی وجود ندارد.", SupportErrorCodes.AdminAuthorizationDenied);
+        throw new PlatformHttpException(
+            403,
+            "مجوز پشتیبانی وجود ندارد.",
+            FoundationErrorCodes.AdminAuthorizationDenied);
     }
 }

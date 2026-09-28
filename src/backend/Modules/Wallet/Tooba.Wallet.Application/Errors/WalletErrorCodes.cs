@@ -12,7 +12,13 @@ public static class WalletErrorCodes
     public const string GiftCardMissing = "giftcard.missing";
     public const string WalletMissing = "wallet.missing";
     public const string AdjustRejected = "wallet.adjust.rejected";
-    public const string AdminAuthorizationDenied = "admin.authorization.denied";
+
+    /// <summary>
+    /// Authorization service unavailable; admin capability must fail closed (503).
+    /// The canonical Host-facing authority for this admin-auth code is
+    /// <c>Tooba.Wallet.Endpoints.Admin.WalletAdminAuthorizationCodes.AuthorizationUnavailable</c>,
+    /// colocated with <c>IWalletAdminAuthorizer</c> so Host never references this Application project.
+    /// </summary>
     public const string AuthorizationUnavailable = "wallet.authorization.unavailable";
     public const string DemoNotReady = "wallet.demo.not_ready";
 }

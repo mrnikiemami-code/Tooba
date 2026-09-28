@@ -1,9 +1,10 @@
 using Microsoft.AspNetCore.Http;
 using Tooba.BuildingBlocks;
+using Tooba.BuildingBlocks.Presentation.Errors;
 using Tooba.BuildingBlocks.Security;
 using Tooba.Host.Admin.Access.Authorizers;
-using Tooba.Support.Application.Errors;
-using Tooba.Wallet.Application.Errors;
+using Tooba.Support.Endpoints.Admin;
+using Tooba.Wallet.Endpoints.Admin;
 using Xunit;
 
 namespace Tooba.Host.Tests.Architecture;
@@ -65,14 +66,20 @@ public sealed class HostAdminCanon003GuardTests
     public void Support_and_wallet_unavailable_paths_use_stable_module_codes()
     {
         var support = ReadAdmin("HostSupportAdminAuthorizer.cs");
-        Assert.Contains("SupportErrorCodes.AuthorizationUnavailable", support, StringComparison.Ordinal);
-        Assert.Contains("SupportErrorCodes.AdminAuthorizationDenied", support, StringComparison.Ordinal);
-        Assert.Equal("support.authorization.unavailable", SupportErrorCodes.AuthorizationUnavailable);
+        Assert.Contains("SupportAdminAuthorizationCodes.AuthorizationUnavailable", support, StringComparison.Ordinal);
+        Assert.DoesNotContain("Support.Application", support, StringComparison.Ordinal);
+        Assert.DoesNotContain("Support.Application", support, StringComparison.Ordinal);
+        Assert.Contains("FoundationErrorCodes.AdminAuthorizationDenied", support, StringComparison.Ordinal);
+        Assert.Equal("support.authorization.unavailable", SupportAdminAuthorizationCodes.AuthorizationUnavailable);
 
         var wallet = ReadAdmin("HostWalletAdminAuthorizer.cs");
-        Assert.Contains("WalletErrorCodes.AuthorizationUnavailable", wallet, StringComparison.Ordinal);
-        Assert.Contains("WalletErrorCodes.AdminAuthorizationDenied", wallet, StringComparison.Ordinal);
-        Assert.Equal("wallet.authorization.unavailable", WalletErrorCodes.AuthorizationUnavailable);
+        Assert.Contains("WalletAdminAuthorizationCodes.AuthorizationUnavailable", wallet, StringComparison.Ordinal);
+        Assert.DoesNotContain("Wallet.Application", wallet, StringComparison.Ordinal);
+        Assert.DoesNotContain("Wallet.Application", wallet, StringComparison.Ordinal);
+        Assert.Contains("FoundationErrorCodes.AdminAuthorizationDenied", wallet, StringComparison.Ordinal);
+        Assert.Equal("wallet.authorization.unavailable", WalletAdminAuthorizationCodes.AuthorizationUnavailable);
+
+        Assert.Equal("admin.authorization.denied", FoundationErrorCodes.AdminAuthorizationDenied);
     }
 
     [Fact]
@@ -80,11 +87,11 @@ public sealed class HostAdminCanon003GuardTests
     {
         var support = File.ReadAllText(RepoFile(
             "src/backend/Modules/Support/Tooba.Support.Endpoints/Errors/SupportErrorCatalogContributor.cs"));
-        Assert.Contains("SupportErrorCodes.AuthorizationUnavailable", support, StringComparison.Ordinal);
+        Assert.Contains("SupportAdminAuthorizationCodes.AuthorizationUnavailable", support, StringComparison.Ordinal);
 
         var wallet = File.ReadAllText(RepoFile(
             "src/backend/Modules/Wallet/Tooba.Wallet.Endpoints/Errors/WalletErrorCatalogContributor.cs"));
-        Assert.Contains("WalletErrorCodes.AuthorizationUnavailable", wallet, StringComparison.Ordinal);
+        Assert.Contains("WalletAdminAuthorizationCodes.AuthorizationUnavailable", wallet, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -121,7 +128,7 @@ public sealed class HostAdminCanon003GuardTests
         var denied = await Assert.ThrowsAsync<PlatformHttpException>(() =>
             authorizer.RequireAuthorizedAsync(Http(), "support.manage", CancellationToken.None));
         Assert.Equal(403, denied.StatusCode);
-        Assert.Equal(SupportErrorCodes.AdminAuthorizationDenied, denied.ErrorCode);
+        Assert.Equal(SupportAdminAuthorizationCodes.AdminAuthorizationDenied, denied.ErrorCode);
     }
 
     [Fact]
@@ -134,7 +141,7 @@ public sealed class HostAdminCanon003GuardTests
         var unavailable = await Assert.ThrowsAsync<PlatformHttpException>(() =>
             authorizer.RequireAuthorizedAsync(Http(), "support.view", CancellationToken.None));
         Assert.Equal(503, unavailable.StatusCode);
-        Assert.Equal(SupportErrorCodes.AuthorizationUnavailable, unavailable.ErrorCode);
+        Assert.Equal(SupportAdminAuthorizationCodes.AuthorizationUnavailable, unavailable.ErrorCode);
     }
 
     [Fact]
@@ -165,7 +172,7 @@ public sealed class HostAdminCanon003GuardTests
         var denied = await Assert.ThrowsAsync<PlatformHttpException>(() =>
             authorizer.RequireAuthorizedAsync(Http(), "wallet.adjust", CancellationToken.None));
         Assert.Equal(403, denied.StatusCode);
-        Assert.Equal(WalletErrorCodes.AdminAuthorizationDenied, denied.ErrorCode);
+        Assert.Equal(WalletAdminAuthorizationCodes.AdminAuthorizationDenied, denied.ErrorCode);
     }
 
     [Fact]
@@ -178,7 +185,7 @@ public sealed class HostAdminCanon003GuardTests
         var unavailable = await Assert.ThrowsAsync<PlatformHttpException>(() =>
             authorizer.RequireAuthorizedAsync(Http(), "wallet.view", CancellationToken.None));
         Assert.Equal(503, unavailable.StatusCode);
-        Assert.Equal(WalletErrorCodes.AuthorizationUnavailable, unavailable.ErrorCode);
+        Assert.Equal(WalletAdminAuthorizationCodes.AuthorizationUnavailable, unavailable.ErrorCode);
     }
 
     [Fact]
