@@ -1,4 +1,5 @@
 using Tooba.Order.Application.Admin.Operations.Models;
+using Tooba.Order.Contracts.Admin.Operations;
 using Tooba.Order.Domain;
 
 using Tooba.Order.Application.Checkout.Abuse;
@@ -35,19 +36,6 @@ public interface IAdminOrderOperationsCheckoutReader
 {
     /// <summary>Returns null when the checkout is missing.</summary>
     Task<AdminOrderOpsCheckoutSnapshot?> GetAsync(Guid checkoutId, CancellationToken cancellationToken);
-}
-
-/// <summary>One effective permission grant for admin ops authorization.</summary>
-public sealed record OrderAdminPermissionGrant(string PermissionId, bool DeniedByCeiling);
-
-/// <summary>Effective access for the actor performing admin order operations.</summary>
-public sealed record OrderAdminEffectiveAccess(IReadOnlyList<OrderAdminPermissionGrant> Permissions);
-
-/// <summary>Host/thin adapter over AccessControl — no AccessControl Application in Order handlers.</summary>
-public interface IOrderAdminEffectiveAccessReader
-{
-    /// <summary>Loads platform-scoped effective permissions for the actor.</summary>
-    Task<OrderAdminEffectiveAccess> GetAsync(Guid actorUserId, CancellationToken cancellationToken);
 }
 
 /// <summary>Inventory recovery assessment visible to admin operations.</summary>

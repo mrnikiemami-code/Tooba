@@ -2612,6 +2612,23 @@
     "evidence": "docs/evidence/TB-TMAR-HOST-ADMIN-CANON-004/",
     "workflowStop": "USER_REVIEW_HOST_ADMIN_CANON_004"
   },
+  "hostAdminCanon005": {
+    "task": "TB-TMAR-HOST-ADMIN-CANON-005",
+    "parentTask": "TB-TMAR-HOST-ADMIN-CANON-004",
+    "state": "ORDER_ADMIN_EFFECTIVE_ACCESS_AUTHORITY_IN_ORDER_CONTRACTS",
+    "parentCommit": "e693c432b515a385e97cc7acd275245222f125f3",
+    "orderEffectiveAccessContractOwner": "ORDER_CONTRACTS",
+    "contractPath": "Tooba.Order.Contracts/Admin/Operations/AdminOrderEffectiveAccessContracts.cs",
+    "hostOrderEffectiveAccessOrderApplicationReference": "ZERO",
+    "orderApplicationDuplicatePublicAuthority": "NONE",
+    "accessControlCoupling": "DEFERRED_UNCHANGED",
+    "behaviorState": "UNCHANGED",
+    "adminFileCount": 15,
+    "canon004": "PRESERVED",
+    "focusedValidation": "CANON_005_CANON_004_GUARDS_PASS_22_22",
+    "evidence": "docs/evidence/TB-TMAR-HOST-ADMIN-CANON-005/",
+    "workflowStop": "USER_REVIEW_HOST_ADMIN_CANON_005"
+  },
   "hostAdminAmcHoldPolicy": {
     "task": "TB-TMAR-HOST-ADMIN-AMC-001-W35-HOLD-POLICY",
     "parentTask": "TB-TMAR-HOST-ADMIN-AMC-001-W34-TEMPLATE-SEEDS",

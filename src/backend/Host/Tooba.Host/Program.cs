@@ -169,7 +169,7 @@ builder.Services.AddToobaCqrsFoundation(
     typeof(Tooba.ProductWorkspace.Application.Composition.Queries.GetProductWorkspaceQuery).Assembly);
 builder.Services.AddScoped<IOrderAdminAuthorizer, HostOrderAdminAuthorizer>();
 builder.Services.AddScoped<
-    Tooba.Order.Application.Admin.Operations.Ports.IOrderAdminEffectiveAccessReader,
+    Tooba.Order.Contracts.Admin.Operations.IOrderAdminEffectiveAccessReader,
     Tooba.Host.Admin.HostOrderAdminEffectiveAccessReader>();
 builder.Services.AddScoped<Tooba.Catalog.Application.IStoreLandingExternalReferenceGate, Tooba.Host.CatalogAdapters.MerchandisingStoreLandingReferenceGate>();
 builder.Services.AddScoped<Tooba.Catalog.Application.Development.ICatalogAttributeSchemaSellableEnricher, Tooba.Host.Development.CatalogAttributeSchemaSellableEnricher>();

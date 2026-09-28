@@ -90,6 +90,8 @@ public sealed class HostAdminCanon004GuardTests
     public void Effective_access_reader_remains_out_of_scope()
     {
         var reader = ReadAdmin("HostOrderAdminEffectiveAccessReader.cs");
+        Assert.Contains("Tooba.Order.Contracts.Admin.Operations", reader, StringComparison.Ordinal);
+        Assert.DoesNotContain("Tooba.Order.Application", reader, StringComparison.Ordinal);
         Assert.Contains("IAccessControlDirectory", reader, StringComparison.Ordinal);
         Assert.Contains("GetEffectiveAccessAsync", reader, StringComparison.Ordinal);
     }
