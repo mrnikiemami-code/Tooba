@@ -173,9 +173,9 @@ public static class StorefrontEndpoints
         Tooba.Media.Application.IMediaObjectStore store,
         CancellationToken cancellationToken)
     {
-        var served = await Tooba.Host.Media.MediaEndpoints.TryServeStoredMediaAsync(
+        var served = await Tooba.Media.Endpoints.Admin.MediaAssetServing.TryServeStoredMediaAsync(
             assetId, directory, store, cancellationToken);
-        return served ?? Tooba.Host.Media.MediaEndpoints.PlaceholderSvg(assetId);
+        return served ?? Tooba.Media.Endpoints.Admin.MediaAssetServing.PlaceholderSvg(assetId);
     }
 
     private static async Task<IResult> GetCheckoutIdentityPolicyAsync(

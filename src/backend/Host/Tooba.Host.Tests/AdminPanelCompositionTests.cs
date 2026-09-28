@@ -126,8 +126,9 @@ public sealed class AdminPanelCompositionTests
     public void Every_admin_media_dam_handler_invokes_server_authorization()
     {
         var source = File.ReadAllText(Path.Combine(
-            FindRepoRoot(), "src", "backend", "Host", "Tooba.Host", "Media", "MediaEndpoints.cs"));
-        Assert.Equal(3, Count(source, "AdminPanelAccess.RequireAuthorizedAsync"));
+            FindRepoRoot(), "src", "backend", "Modules", "Media", "Tooba.Media.Endpoints",
+            "Admin", "MediaAdminEndpoints.cs"));
+        Assert.Equal(3, Count(source, "adminAccess.RequireAuthorizedAsync"));
     }
 
     private static int Count(string source, string value)

@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Testcontainers.PostgreSql;
 using Tooba.BuildingBlocks;
-using Tooba.Host.Media;
+using Tooba.Media.Endpoints.Admin;
 using Tooba.Media.Application;
 using Tooba.Media.Infrastructure;
 using Tooba.Media.Infrastructure.Persistence;
@@ -114,7 +114,7 @@ public sealed class MediaDamTests : IAsyncLifetime
         Assert.NotEqual(page1.Items[0].MediaAssetId, page2.Items[0].MediaAssetId);
 
         // همان helper که /v1/storefront/media/{id} و /v1/media/{id} استفاده می‌کنند.
-        var served = await MediaEndpoints.TryServeStoredMediaAsync(
+        var served = await MediaAssetServing.TryServeStoredMediaAsync(
             uploaded.MediaAssetId, directory, store, CancellationToken.None);
         var file = Assert.IsType<FileStreamHttpResult>(served);
         Assert.Equal("image/jpeg", file.ContentType);

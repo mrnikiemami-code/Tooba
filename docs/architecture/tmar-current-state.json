@@ -2849,6 +2849,37 @@
     "evidence": "docs/evidence/TB-TMAR-HOST-REMAINDER-AUDIT-001/",
     "workflowStop": "USER_REVIEW_HOST_REMAINDER_AUDIT_001"
   },
+  "hostMediaEvacuate001": {
+    "task": "TB-TMAR-HOST-MEDIA-EVACUATE-001",
+    "parentTask": "TB-TMAR-HOST-REMAINDER-AUDIT-001",
+    "parentCommit": "045dbb44ec521ddb6a2987d4e846f27ed7e7f570",
+    "state": "HOST_MEDIA_HTTP_BOUNDARY_EVACUATED_TO_MEDIA_ENDPOINTS",
+    "hostMediaEndpointOwnership": "ZERO",
+    "mediaEndpointOwner": "MEDIA_ENDPOINTS",
+    "hostMediaApplicationReference": "ZERO",
+    "routeParity": "PRESERVED",
+    "adminCertification": "PRESERVED",
+    "hostMediaFolderState": "ABSENT",
+    "mediaEndpointsProjectState": "CREATED_CANONICAL_FIVE_PROJECT_PATTERN",
+    "mediaEndpointsToHostReference": "ZERO",
+    "adminAuthorizationSeam": "Tooba.BuildingBlocks.Security.IAdminPanelAccess",
+    "routesOwnedByMedia": [
+      "POST /v1/admin/media/upload (DisableAntiforgery)",
+      "GET /v1/admin/media/",
+      "GET /v1/admin/media/{id:guid}",
+      "GET /v1/media/{id:guid}"
+    ],
+    "storefrontServingHelper": "Tooba.Media.Endpoints.Admin.MediaAssetServing",
+    "errorCodesPreserved": [
+      "media.upload.failed",
+      "media.missing"
+    ],
+    "focusedValidation": "build Media.Endpoints + build Tooba.Host + build Host.Tests + focused guard/behavior run (HostMediaEvacuationGuardTests, MediaDamTests, AdminPanelCompositionTests, HostAdminCanonicalCertificationGuardTests) = 32 passed, 1 docker-skipped",
+    "repairIterations": 2,
+    "validationCommandRuns": 5,
+    "evidence": "docs/evidence/TB-TMAR-HOST-MEDIA-EVACUATE-001/",
+    "workflowStop": "USER_REVIEW_HOST_MEDIA_EVACUATE_001"
+  },
   "hostAdminAmcHoldPolicy": {
     "task": "TB-TMAR-HOST-ADMIN-AMC-001-W35-HOLD-POLICY",
     "parentTask": "TB-TMAR-HOST-ADMIN-AMC-001-W34-TEMPLATE-SEEDS",
