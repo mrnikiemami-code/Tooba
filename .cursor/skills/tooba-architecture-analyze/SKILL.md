@@ -189,6 +189,20 @@ Minimum destination-module changes are in scope when required to move misplaced 
 
 Prefer the smallest repository-consistent plan. If the task cannot be completed without an unresolved architecture/product/data decision, schema redesign, public-contract redesign, or unsafe behavior change, set the disposition to `NEEDS_ARCHITECT_DECISION` (or `BLOCKED_BY_UNKNOWN_BEHAVIOR`) and report the exact blocker instead of expanding scope.
 
+### 3d. Closed-Folder / Destination Integrity Guard
+
+Treat every previously accepted folder disposition as a protected baseline, not as spare capacity. This applies generally to Host folders and to any other folder whose accepted SoT/evidence/guard records an exact retained-file set, allowlist, ZERO state, final file count, or explicit closure.
+
+Before proposing any move/create whose destination is outside the exact active recovery folder:
+- inspect the destination's current files and accepted SoT/evidence/guards;
+- determine whether that destination is OPEN_FOR_CURRENT_TASK, LOCKED_BY_ACCEPTED_DISPOSITION, or NEW_LOCATION;
+- if it is locked, preserve its accepted file set exactly unless the current task explicitly reopens that folder and the Architect has authorized the expansion;
+- if it is a new Host folder/location, do not invent it as a staging/sink destination without explicit Architect authorization.
+
+A migration plan must never make a previously closed/non-active folder worse merely to make the active folder look clean. Moving a file from the active folder into another closed Host folder is a `SINK_FOLDER_REGRESSION`, not evacuation. If an architectural exception genuinely requires changing a locked retained set, the plan must call out the exact old/new set, justification, SoT update, and durable guard update; otherwise return `NEEDS_ARCHITECT_DECISION`.
+
+At analysis end, include a destination-integrity check for every proposed destination: no silent folder resurrection, no unapproved new Host folder, and no growth of a protected retained-file allowlist.
+
 ### 4. Detect Forbidden Coupling
 
 Find and report all cross-module references of these forms:
