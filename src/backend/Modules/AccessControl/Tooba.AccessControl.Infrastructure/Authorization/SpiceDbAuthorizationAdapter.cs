@@ -6,15 +6,15 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Tooba.BuildingBlocks;
 
-namespace Tooba.Host;
+namespace Tooba.AccessControl.Infrastructure.Authorization;
 
 /// <summary>
 /// آداپتر واقعی SpiceDB با Authzed.Net 1.6.0. نوع‌های gRPC از Domain/Application/ModuleContracts بیرون نمی‌مانند.
 /// شکست شبکه ALLOW نیست. InMemory اینجا fallback تولید نیست.
 /// </summary>
-internal sealed class SpiceDbAuthorizationAdapter : IAuthorizationService, IAuthorizationTupleWriter, IDisposable
+public sealed class SpiceDbAuthorizationAdapter : IAuthorizationService, IAuthorizationTupleWriter, IDisposable
 {
-    private readonly AuthorizationHostOptions _options;
+    private readonly SpiceDbAuthorizationOptions _options;
     private readonly AuthorizationInstrumentation _telemetry;
     private readonly IAuthorizationSecurityEventSink _audit;
     private readonly ILogger<SpiceDbAuthorizationAdapter> _logger;
@@ -26,7 +26,7 @@ internal sealed class SpiceDbAuthorizationAdapter : IAuthorizationService, IAuth
     /// کانال gRPC را طبق TLS و توکن می‌سازد. توکن به لاگ نمی‌رود تا credential در stdout نشت نکند.
     /// </summary>
     public SpiceDbAuthorizationAdapter(
-        IOptions<AuthorizationHostOptions> options,
+        IOptions<SpiceDbAuthorizationOptions> options,
         AuthorizationInstrumentation telemetry,
         IAuthorizationSecurityEventSink audit,
         ILogger<SpiceDbAuthorizationAdapter> logger)
@@ -167,10 +167,10 @@ internal sealed class SpiceDbAuthorizationAdapter : IAuthorizationService, IAuth
                 Stopwatch.GetElapsedTime(started).Milliseconds);
             return decision;
         }
-        catch (InvalidOperationException ex) when (ex.Message == "authorization.unavailable")
+        catch (SpiceDbUnavailableException)
         {
             _telemetry.RecordInfrastructure("unavailable", check.Resource.Type);
-            _logger.LogWarning(ex, "SpiceDB permission check unavailable after retries. ResourceType {ResourceType} Permission {Permission}", check.Resource.Type, check.Permission);
+            _logger.LogWarning("SpiceDB permission check unavailable after retries. ResourceType {ResourceType} Permission {Permission}", check.Resource.Type, check.Permission);
             _telemetry.Record(
                 AuthorizationDecisionKind.Unavailable,
                 check.Resource.Type,
@@ -251,7 +251,7 @@ internal sealed class SpiceDbAuthorizationAdapter : IAuthorizationService, IAuth
             }
         }
 
-        throw new InvalidOperationException("authorization.unavailable", last);
+        throw new SpiceDbUnavailableException(last);
     }
 
     private async Task ExecuteWithRetryAsync(
@@ -281,14 +281,14 @@ internal sealed class SpiceDbAuthorizationAdapter : IAuthorizationService, IAuth
     }
 
     /// <summary>
-    /// مهلت gRPC را از TimeoutSeconds می‌سازد تا تماس بی‌پایان Host را باز نگذارد.
+    /// مهلت gRPC را از TimeoutSeconds می‌سازد تا تماس بی‌پایان باز نگذارد.
     /// </summary>
     private DateTime Deadline() => DateTime.UtcNow.AddSeconds(Math.Max(1, _options.SpiceDb.TimeoutSeconds));
 
     /// <summary>
-    /// کانال را با TLS یا HTTP/2 بدون رمز می‌سازد. توکن فقط در metadata Bearer است نه در لاog.
+    /// کانال را با TLS یا HTTP/2 بدون رمز می‌سازد. توکن فقط در metadata Bearer است نه در لاگ.
     /// </summary>
-    private static GrpcChannel CreateChannel(AuthorizationHostOptions options)
+    private static GrpcChannel CreateChannel(SpiceDbAuthorizationOptions options)
     {
         var endpoint = options.SpiceDb.Endpoint.Trim();
         var token = options.SpiceDb.Token;
@@ -349,5 +349,29 @@ internal sealed class SpiceDbAuthorizationAdapter : IAuthorizationService, IAuth
         }
 
         return tls ? $"https://{endpoint}" : $"http://{endpoint}";
+    }
+}
+
+/// <summary>
+/// خطای typed داخلی برای ناموجود بودن موقت زیرساخت مجوز. جایگزین تطبیق متن پیام است.
+/// </summary>
+public sealed class SpiceDbUnavailableException : Exception
+{
+    /// <summary>
+    /// کد علت داخلی؛ قرارداد کاربر-facing نیست.
+    /// </summary>
+    public const string UnavailableCode = "authorization.unavailable";
+
+    /// <summary>
+    /// کد علت داخلی.
+    /// </summary>
+    public string ReasonCode => UnavailableCode;
+
+    /// <summary>
+    /// خطا را با علت اصلی می‌سازد.
+    /// </summary>
+    public SpiceDbUnavailableException(Exception? inner)
+        : base(UnavailableCode, inner)
+    {
     }
 }

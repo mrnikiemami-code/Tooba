@@ -1,24 +1,28 @@
+using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Tooba.BuildingBlocks;
 
-namespace Tooba.Host;
+namespace Tooba.AccessControl.Infrastructure.Authorization;
 
 /// <summary>
-/// ثبت مجوز Host. SDK SpiceDB به Domain/Application نشت نمی‌کند.
+/// ثبت مجوز Access Control. SDK SpiceDB به Domain/Application نشت نمی‌کند.
 /// </summary>
-internal static class AuthorizationRegistration
+public static class AuthorizationRegistration
 {
     /// <summary>
     /// قراردادهای Tooba و adapter مطابق Mode را ثبت می‌کند.
     /// </summary>
     public static IServiceCollection AddToobaAuthorization(this IServiceCollection services)
     {
+        ArgumentNullException.ThrowIfNull(services);
         services.AddSingleton<AuthorizationInstrumentation>();
         services.AddSingleton<IAuthorizationSchemaProvider, FoundationAuthorizationSchemaProvider>();
         services.AddSingleton<IAuthorizationSchemaBootstrapper>(sp =>
             new ConfiguredAuthorizationSchemaBootstrapper(
-                sp.GetRequiredService<IOptions<AuthorizationHostOptions>>(),
+                sp.GetRequiredService<IOptions<SpiceDbAuthorizationOptions>>(),
                 sp.GetRequiredService<IAuthorizationSchemaProvider>(),
                 sp.GetRequiredService<ILogger<ConfiguredAuthorizationSchemaBootstrapper>>(),
                 sp));
@@ -37,7 +41,7 @@ internal static class AuthorizationRegistration
 
     private static IAuthorizationService ResolveEngine(IServiceProvider sp)
     {
-        var mode = sp.GetRequiredService<IOptions<AuthorizationHostOptions>>().Value.Mode;
+        var mode = sp.GetRequiredService<IOptions<SpiceDbAuthorizationOptions>>().Value.Mode;
         return mode switch
         {
             "InMemory" => sp.GetRequiredService<InMemoryAuthorizationAdapter>(),
@@ -45,4 +49,26 @@ internal static class AuthorizationRegistration
             _ => sp.GetRequiredService<FailClosedAuthorizationAdapter>(),
         };
     }
+}
+
+/// <summary>
+/// در استارت میزبان، schema را فقط وقتی ApplySchemaOnStartup روشن باشد اعمال می‌کند.
+/// تولید با مقدار پیش‌فرض false هر بار schema را بازنویسی نمی‌کند.
+/// </summary>
+public sealed class AuthorizationSchemaHostedService : IHostedService
+{
+    private readonly IAuthorizationSchemaBootstrapper _bootstrapper;
+
+    /// <summary>
+    /// hosted service را روی bootstrapper می‌سازد.
+    /// </summary>
+    public AuthorizationSchemaHostedService(IAuthorizationSchemaBootstrapper bootstrapper) =>
+        _bootstrapper = bootstrapper;
+
+    /// <inheritdoc />
+    public Task StartAsync(CancellationToken cancellationToken) =>
+        _bootstrapper.BootstrapIfConfiguredAsync(cancellationToken);
+
+    /// <inheritdoc />
+    public Task StopAsync(CancellationToken cancellationToken) => Task.CompletedTask;
 }

@@ -6,6 +6,7 @@ using Tooba.AccessControl.Application;
 using Tooba.AccessControl.Domain;
 using Tooba.AccessControl.Infrastructure;
 using Tooba.AccessControl.Infrastructure.Persistence;
+using Tooba.AccessControl.Infrastructure.Authorization;
 using Tooba.BuildingBlocks;
 using Tooba.Persistence;
 using Xunit;

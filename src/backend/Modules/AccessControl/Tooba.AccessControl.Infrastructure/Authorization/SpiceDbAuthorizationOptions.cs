@@ -1,13 +1,17 @@
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
-using Tooba.BuildingBlocks;
 
-namespace Tooba.Host;
+namespace Tooba.AccessControl.Infrastructure.Authorization;
 
 /// <summary>
-/// پیکربندی مجوز. توکن در مخزن نیست و لاگ نمی‌شود.
+/// پیکربندی مجوز SpiceDB. توکن در مخزن نیست و لاگ نمی‌شود.
+/// بخش پیکربندی <c>Tooba:Authorization</c> بدون تغییر حفظ می‌شود.
 /// </summary>
-public sealed class AuthorizationHostOptions
+public sealed class SpiceDbAuthorizationOptions
 {
+    /// <summary>نام بخش پیکربندی canonical.</summary>
+    public const string SectionName = "Tooba:Authorization";
+
     /// <summary>
     /// Disabled = همهٔ checkها Unavailable (fail-closed). InMemory فقط تست/توسعه. SpiceDb = adapter واقعی.
     /// </summary>
@@ -21,13 +25,13 @@ public sealed class AuthorizationHostOptions
     /// <summary>
     /// تنظیمات اتصال SpiceDB.
     /// </summary>
-    public SpiceDbHostOptions SpiceDb { get; set; } = new();
+    public SpiceDbConnectionOptions SpiceDb { get; set; } = new();
 }
 
 /// <summary>
 /// اتصال SpiceDB بدون secret در git.
 /// </summary>
-public sealed class SpiceDbHostOptions
+public sealed class SpiceDbConnectionOptions
 {
     /// <summary>
     /// آدرس gRPC/HTTP؛ خالی یعنی پیکربندی ناقص.
@@ -73,17 +77,17 @@ public sealed class SpiceDbHostOptions
 /// <summary>
 /// اعتبارسنجی Mode در Production: InMemory و allow-all ممنوع است.
 /// </summary>
-internal sealed class AuthorizationOptionsValidator : IValidateOptions<AuthorizationHostOptions>
+public sealed class SpiceDbAuthorizationOptionsValidator : IValidateOptions<SpiceDbAuthorizationOptions>
 {
     private readonly IHostEnvironment _environment;
 
     /// <summary>
-    /// اعتبارسنج را با محیط Host می‌سازد.
+    /// اعتبارسنج را با محیط میزبان می‌سازد.
     /// </summary>
-    public AuthorizationOptionsValidator(IHostEnvironment environment) => _environment = environment;
+    public SpiceDbAuthorizationOptionsValidator(IHostEnvironment environment) => _environment = environment;
 
     /// <inheritdoc />
-    public ValidateOptionsResult Validate(string? name, AuthorizationHostOptions options)
+    public ValidateOptionsResult Validate(string? name, SpiceDbAuthorizationOptions options)
     {
         var mode = options.Mode.Trim();
         if (mode is not ("Disabled" or "InMemory" or "SpiceDb"))

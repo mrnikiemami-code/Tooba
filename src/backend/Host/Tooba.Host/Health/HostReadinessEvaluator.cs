@@ -1,5 +1,6 @@
 using MassTransit;
 using Microsoft.Extensions.Options;
+using Tooba.AccessControl.Infrastructure.Authorization;
 using Tooba.BuildingBlocks;
 
 namespace Tooba.Host;
@@ -22,7 +23,7 @@ internal static class HostReadinessEvaluator
         ControlPlaneRegistry registry,
         ToobaPlatformOptions platformOptions,
         MessagingHostOptions messagingOptions,
-        AuthorizationHostOptions authorizationOptions,
+        SpiceDbAuthorizationOptions authorizationOptions,
         IServiceProvider services,
         CancellationToken cancellationToken = default)
     {

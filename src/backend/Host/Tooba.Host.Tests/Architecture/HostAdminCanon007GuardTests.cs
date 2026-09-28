@@ -74,10 +74,23 @@ public sealed class HostAdminCanon007GuardTests
         var seam = File.ReadAllText(RepoFile(
             "src/backend/BuildingBlocks/Tooba.BuildingBlocks/Authorization.cs"));
         Assert.Contains("AuthorizationRelationshipOperation.Delete => RelationshipUpdate.Types.Operation.Delete", File.ReadAllText(RepoFile(
-            "src/backend/Host/Tooba.Host/Authorization/SpiceDbAuthorizationAdapter.cs")), StringComparison.Ordinal);
+            "src/backend/Modules/AccessControl/Tooba.AccessControl.Infrastructure/Authorization/SpiceDbAuthorizationAdapter.cs")), StringComparison.Ordinal);
         Assert.Contains("_tuples[key] = 1;", File.ReadAllText(RepoFile(
-            "src/backend/Host/Tooba.Host/Authorization/AuthorizationAdapters.cs")), StringComparison.Ordinal);
+            "src/backend/Modules/AccessControl/Tooba.AccessControl.Infrastructure/Authorization/AuthorizationAdapters.cs")), StringComparison.Ordinal);
         Assert.Contains("public interface IAuthorizationTupleWriter", seam, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void Spicedb_authorization_authority_lives_in_access_control_module()
+    {
+        Assert.False(
+            Directory.Exists(RepoFile("src/backend/Host/Tooba.Host/Authorization")),
+            "Host/Authorization must stay evacuated into the AccessControl module");
+        Assert.True(File.Exists(RepoFile(
+            "src/backend/Modules/AccessControl/Tooba.AccessControl.Infrastructure/Authorization/SpiceDbAuthorizationAdapter.cs")));
+        Assert.False(
+            File.Exists(RepoFile("src/backend/Host/Tooba.Host/Health/SpiceDbHealthProbe.cs")),
+            "SpiceDB readiness probe must live with the AccessControl authorization slice");
     }
 
     [Fact]

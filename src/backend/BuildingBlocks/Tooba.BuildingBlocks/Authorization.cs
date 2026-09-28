@@ -326,6 +326,11 @@ public interface IAuthorizationSchemaBootstrapper
     /// اگر ApplySchemaOnStartup روشن باشد schema را اعمال می‌کند؛ در غیر این صورت no-op.
     /// </summary>
     Task BootstrapIfConfiguredAsync(CancellationToken cancellationToken);
+
+    /// <summary>
+    /// نسخهٔ schema اعمال‌شده؛ null یعنی bootstrap اجرا نشده. قرارداد بدون وابستگی به میزبان.
+    /// </summary>
+    int? AppliedVersion { get; }
 }
 
 /// <summary>

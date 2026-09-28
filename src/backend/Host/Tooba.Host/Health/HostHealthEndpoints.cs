@@ -1,4 +1,5 @@
 using Microsoft.Extensions.Options;
+using Tooba.AccessControl.Infrastructure.Authorization;
 
 namespace Tooba.Host;
 
@@ -31,7 +32,7 @@ internal static class HostHealthEndpoints
         ControlPlaneRegistry registry,
         IOptions<ToobaPlatformOptions> platformOptions,
         IOptions<MessagingHostOptions> messagingOptions,
-        IOptions<AuthorizationHostOptions> authorizationOptions,
+        IOptions<SpiceDbAuthorizationOptions> authorizationOptions,
         IServiceProvider services,
         CancellationToken cancellationToken)
     {

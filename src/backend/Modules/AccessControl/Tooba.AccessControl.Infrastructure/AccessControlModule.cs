@@ -2,7 +2,8 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Tooba.AccessControl.Application;
+using Microsoft.Extensions.Options;
+using Tooba.AccessControl.Infrastructure.Authorization;
 using Tooba.AccessControl.Infrastructure.Persistence;
 using Tooba.BuildingBlocks;
 using Tooba.ModuleContracts;
@@ -34,6 +35,12 @@ public sealed class AccessControlModule : IToobaModule
         services.AddSingleton<IOutboxModuleRegistration, AccessControlOutboxRegistration>();
         services.AddScoped<AccessControlDirectory>();
         services.AddScoped<IAccessControlDirectory>(sp => sp.GetRequiredService<AccessControlDirectory>());
+
+        services.AddOptions<SpiceDbAuthorizationOptions>()
+            .Bind(configuration.GetSection(SpiceDbAuthorizationOptions.SectionName))
+            .ValidateOnStart();
+        services.AddSingleton<IValidateOptions<SpiceDbAuthorizationOptions>, SpiceDbAuthorizationOptionsValidator>();
+        services.AddToobaAuthorization();
 
         services.AddDbContext<AccessControlDbContext>((sp, options) =>
         {

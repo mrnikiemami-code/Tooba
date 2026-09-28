@@ -1,23 +1,92 @@
 using Authzed.Api.V1;
 using Grpc.Core;
 using Grpc.Net.Client;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Tooba.BuildingBlocks;
 
-namespace Tooba.Host;
+namespace Tooba.AccessControl.Infrastructure.Authorization;
+
+/// <summary>
+/// bootstrap فقط وقتی ApplySchemaOnStartup روشن باشد. تولید هر استارت را بازنویسی نمی‌کند.
+/// </summary>
+public sealed class ConfiguredAuthorizationSchemaBootstrapper : IAuthorizationSchemaBootstrapper
+{
+    private readonly SpiceDbAuthorizationOptions _options;
+    private readonly IAuthorizationSchemaProvider _schema;
+    private readonly ILogger<ConfiguredAuthorizationSchemaBootstrapper> _logger;
+    private int? _appliedVersion;
+
+    private readonly IServiceProvider? _services;
+
+    /// <summary>
+    /// bootstrap را با پیکربندی صریح می‌سازد. بدون SpiceDB زنده schema شبکه نمی‌نویسد.
+    /// </summary>
+    public ConfiguredAuthorizationSchemaBootstrapper(
+        IOptions<SpiceDbAuthorizationOptions> options,
+        IAuthorizationSchemaProvider schema,
+        ILogger<ConfiguredAuthorizationSchemaBootstrapper> logger)
+        : this(options, schema, logger, services: null)
+    {
+    }
+
+    /// <summary>
+    /// adapter واقعی فقط وقتی Mode=SpiceDb و ApplySchemaOnStartup روشن باشد resolve می‌شود تا کانال بی‌دلیل ساخته نشود.
+    /// </summary>
+    public ConfiguredAuthorizationSchemaBootstrapper(
+        IOptions<SpiceDbAuthorizationOptions> options,
+        IAuthorizationSchemaProvider schema,
+        ILogger<ConfiguredAuthorizationSchemaBootstrapper> logger,
+        IServiceProvider? services)
+    {
+        _options = options.Value;
+        _schema = schema;
+        _logger = logger;
+        _services = services;
+    }
+
+    /// <inheritdoc />
+    public async Task BootstrapIfConfiguredAsync(CancellationToken cancellationToken)
+    {
+        if (!_options.ApplySchemaOnStartup)
+        {
+            return;
+        }
+
+        _appliedVersion = _schema.SchemaVersion;
+        _logger.LogInformation(
+            "Authorization schema bootstrap requested. Version {SchemaVersion}. Token is not logged.",
+            _schema.SchemaVersion);
+
+        if (!string.Equals(_options.Mode, "SpiceDb", StringComparison.Ordinal) || _services is null)
+        {
+            return;
+        }
+
+        var adapter = _services.GetRequiredService<SpiceDbAuthorizationAdapter>();
+        await adapter.WriteSchemaAsync(_schema.SchemaText, cancellationToken);
+    }
+
+    /// <summary>
+    /// نسخهٔ اعمال‌شده برای تست؛ null یعنی bootstrap اجرا نشده.
+    /// </summary>
+    public int? AppliedVersion => _appliedVersion;
+}
 
 /// <summary>
 /// probe سبک readiness برای SpiceDB بدون full permission scan.
 /// </summary>
-internal sealed class SpiceDbHealthProbe : IDisposable
+public sealed class SpiceDbHealthProbe : IDisposable
 {
-    private readonly AuthorizationHostOptions _options;
+    private readonly SpiceDbAuthorizationOptions _options;
     private readonly GrpcChannel? _channel;
     private readonly PermissionsService.PermissionsServiceClient? _permissions;
 
     /// <summary>
     /// probe را فقط وقتی Mode=SpiceDb می‌سازد.
     /// </summary>
-    public SpiceDbHealthProbe(IOptions<AuthorizationHostOptions> options)
+    public SpiceDbHealthProbe(IOptions<SpiceDbAuthorizationOptions> options)
     {
         _options = options.Value;
         if (!string.Equals(_options.Mode, "SpiceDb", StringComparison.Ordinal))
@@ -32,7 +101,7 @@ internal sealed class SpiceDbHealthProbe : IDisposable
     /// <summary>
     /// CheckPermission سبک با deadline کوتاه؛ هر پاسخ gRPC غیر Unavailable یعنی SpiceDB زنده است.
     /// </summary>
-    internal async Task<bool> CheckAsync(CancellationToken cancellationToken)
+    public async Task<bool> CheckAsync(CancellationToken cancellationToken)
     {
         if (_permissions is null || !_options.SpiceDb.ReadinessProbeEnabled)
         {
@@ -83,7 +152,7 @@ internal sealed class SpiceDbHealthProbe : IDisposable
         return ex is RpcException or HttpRequestException or TaskCanceledException or IOException;
     }
 
-    private static GrpcChannel CreateChannel(AuthorizationHostOptions options)
+    private static GrpcChannel CreateChannel(SpiceDbAuthorizationOptions options)
     {
         var endpoint = options.SpiceDb.Endpoint.Trim();
         var token = options.SpiceDb.Token;

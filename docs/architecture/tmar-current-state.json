@@ -2880,6 +2880,67 @@
     "evidence": "docs/evidence/TB-TMAR-HOST-MEDIA-EVACUATE-001/",
     "workflowStop": "USER_REVIEW_HOST_MEDIA_EVACUATE_001"
   },
+  "hostAuthorizationAmc": {
+    "task": "TB-TMAR-HOST-AUTHORIZATION-AMC-001",
+    "parentTask": "TB-TMAR-HOST-REMAINDER-AUDIT-001",
+    "parentCommit": "3ad429dcfef9b8b254ca81e02a4097d520a3eae7",
+    "skills": [
+      ".cursor/skills/tooba-architecture-analyze/SKILL.md",
+      ".cursor/skills/tooba-architecture-migrate/SKILL.md",
+      ".cursor/skills/tooba-architecture-certify/SKILL.md"
+    ],
+    "transport": "ARCHITECT_DIRECT_ANALYZE_MIGRATE_CERTIFY",
+    "scope": "ANALYZE_MIGRATE_CERTIFY_FULL",
+    "state": "HOST_AUTHORIZATION_EVACUATED_TO_ACCESSCONTROL_INFRASTRUCTURE",
+    "destination": "Modules/AccessControl/Tooba.AccessControl.Infrastructure/Authorization",
+    "hostAuthorizationFolder": "ABSENT",
+    "hostAuthorizationFolderBefore": 6,
+    "hostAuthorizationFolderAfter": 0,
+    "hostSpiceDbHealthProbe": "ABSENT",
+    "hostAuthzedPackageReference": "REMOVED",
+    "accessControlInfrastructureAuthzedPackageReference": "ADDED_PINNED_1_6_0",
+    "hostOwnedAuthorizationRoutes": "ZERO",
+    "hostOwnedAuthorizationPersistence": "ZERO",
+    "hostAuthorizationBusinessAuthority": "ZERO",
+    "moduleAuthorizationSliceFileCount": 7,
+    "moduleAuthorizationSliceFiles": [
+      "AuthorizationAdapters.cs",
+      "AuthorizationInstrumentation.cs",
+      "AuthorizationRegistration.cs",
+      "SpiceDbAuthorizationAdapter.cs",
+      "SpiceDbAuthorizationBootstrapper.cs",
+      "SpiceDbAuthorizationOptions.cs",
+      "authorization-foundation.zed"
+    ],
+    "compositionSeam": "AccessControlModule.AddServices binds SpiceDbAuthorizationOptions + AddToobaAuthorization; Program.cs composition-only import",
+    "configurationSection": "Tooba:Authorization",
+    "configurationModesPreserved": "Disabled,InMemory,SpiceDb",
+    "schemaVersion": 3,
+    "schemaMigrationState": "NONE",
+    "routeChange": "NONE",
+    "typedFaultState": "SpiceDbUnavailableException replaces ex.Message sentinel matching",
+    "schemaProviderState": "CERTIFIED_ACCESS_CONTROL",
+    "localizationState": "NOT_APPLICABLE_NO_USER_FACING_MESSAGE_IN_SLICE",
+    "apiResultMappingState": "NOT_APPLICABLE_NO_HTTP_RESPONSE_IN_SLICE",
+    "crossModuleForeignAccess": "ZERO",
+    "distanceHostToModuleInfrastructure": "ALLOWED_COMPOSITION_OPTIONS_AND_READINESS_PROBE_ONLY",
+    "manifestPromotion": "NOT_REQUIRED_ACCESS_CONTROL_ALREADY_SINGLE_CERTIFIED_ENTRY",
+    "focusedValidations": "BUILDS_2_PASS_0_ERRORS; GUARDS_PASSED_32_FAILED_0; CONSUMERS_PASSED_20_SKIPPED_8_FAILED_0",
+    "preExistingUnrelatedFailures": [
+      "TmarSourceSizeAndInfraAppTests.Hand_written_source_size_does_not_expand_beyond_baseline (red at clean HEAD 3ad429dc; no entry references the evacuated slice)",
+      "TmarSourceSizeAndInfraAppTests.Infrastructure_to_foreign_Application_edges_do_not_expand_beyond_baseline (red at clean HEAD; pre-existing module edges)",
+      "TmarSourceSizeAndInfraAppTests.Source_size_inventory_evidence_exists_and_matches_scan_count (stale inventory evidence)"
+    ],
+    "residualDebt": [
+      "Host readiness consumes the full SpiceDbAuthorizationOptions; a narrower readiness port would reduce surface",
+      "Repository-wide stale size/inventory baselines (not repaired here)",
+      "Other Host folders remain deferred; none started by this task"
+    ],
+    "frontendFrozen": true,
+    "nextHostFolderStarted": false,
+    "evidence": "docs/evidence/TB-TMAR-HOST-AUTHORIZATION-AMC-001/",
+    "workflowStop": "USER_REVIEW_HOST_AUTHORIZATION_AMC_001"
+  },
   "hostAdminAmcHoldPolicy": {
     "task": "TB-TMAR-HOST-ADMIN-AMC-001-W35-HOLD-POLICY",
     "parentTask": "TB-TMAR-HOST-ADMIN-AMC-001-W34-TEMPLATE-SEEDS",

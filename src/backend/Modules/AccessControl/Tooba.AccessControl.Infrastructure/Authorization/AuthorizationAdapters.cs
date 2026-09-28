@@ -1,14 +1,13 @@
 using System.Collections.Concurrent;
 using System.Diagnostics;
-using Microsoft.Extensions.Options;
 using Tooba.BuildingBlocks;
 
-namespace Tooba.Host;
+namespace Tooba.AccessControl.Infrastructure.Authorization;
 
 /// <summary>
 /// schema خنثی foundation برای اثبات user+tenant، عضویت Party، و قابلیت Access Control (role/permission/category).
 /// </summary>
-internal sealed class FoundationAuthorizationSchemaProvider : IAuthorizationSchemaProvider
+public sealed class FoundationAuthorizationSchemaProvider : IAuthorizationSchemaProvider
 {
     /// <inheritdoc />
     public int SchemaVersion => 3;
@@ -45,75 +44,9 @@ internal sealed class FoundationAuthorizationSchemaProvider : IAuthorizationSche
 }
 
 /// <summary>
-/// bootstrap فقط وقتی ApplySchemaOnStartup روشن باشد. تولید هر استارت را بازنویسی نمی‌کند.
-/// </summary>
-internal sealed class ConfiguredAuthorizationSchemaBootstrapper : IAuthorizationSchemaBootstrapper
-{
-    private readonly IOptions<AuthorizationHostOptions> _options;
-    private readonly IAuthorizationSchemaProvider _schema;
-    private readonly ILogger<ConfiguredAuthorizationSchemaBootstrapper> _logger;
-    private int? _appliedVersion;
-
-    private readonly IServiceProvider? _services;
-
-    /// <summary>
-    /// bootstrap را با پیکربندی صریح می‌سازد. بدون SpiceDB زنده schema شبکه نمی‌نویسد.
-    /// </summary>
-    public ConfiguredAuthorizationSchemaBootstrapper(
-        IOptions<AuthorizationHostOptions> options,
-        IAuthorizationSchemaProvider schema,
-        ILogger<ConfiguredAuthorizationSchemaBootstrapper> logger)
-        : this(options, schema, logger, services: null)
-    {
-    }
-
-    /// <summary>
-    /// در Host، adapter واقعی فقط وقتی Mode=SpiceDb و ApplySchemaOnStartup روشن باشد resolve می‌شود تا کانال بی‌دلیل ساخته نشود.
-    /// </summary>
-    public ConfiguredAuthorizationSchemaBootstrapper(
-        IOptions<AuthorizationHostOptions> options,
-        IAuthorizationSchemaProvider schema,
-        ILogger<ConfiguredAuthorizationSchemaBootstrapper> logger,
-        IServiceProvider? services)
-    {
-        _options = options;
-        _schema = schema;
-        _logger = logger;
-        _services = services;
-    }
-
-    /// <inheritdoc />
-    public async Task BootstrapIfConfiguredAsync(CancellationToken cancellationToken)
-    {
-        if (!_options.Value.ApplySchemaOnStartup)
-        {
-            return;
-        }
-
-        _appliedVersion = _schema.SchemaVersion;
-        _logger.LogInformation(
-            "Authorization schema bootstrap requested. Version {SchemaVersion}. Token is not logged.",
-            _schema.SchemaVersion);
-
-        if (!string.Equals(_options.Value.Mode, "SpiceDb", StringComparison.Ordinal) || _services is null)
-        {
-            return;
-        }
-
-        var adapter = _services.GetRequiredService<SpiceDbAuthorizationAdapter>();
-        await adapter.WriteSchemaAsync(_schema.SchemaText, cancellationToken);
-    }
-
-    /// <summary>
-    /// نسخهٔ اعمال‌شده برای تست؛ null یعنی bootstrap اجرا نشده.
-    /// </summary>
-    public int? AppliedVersion => _appliedVersion;
-}
-
-/// <summary>
 /// موتور درون‌حافظه‌ای معادل معنایی schema خنثی. تصمیم ALLOW/DENY را cache سراسری نمی‌کند.
 /// </summary>
-internal sealed class InMemoryAuthorizationAdapter : IAuthorizationService, IAuthorizationTupleWriter
+public sealed class InMemoryAuthorizationAdapter : IAuthorizationService, IAuthorizationTupleWriter
 {
     private readonly ConcurrentDictionary<string, byte> _tuples = new(StringComparer.Ordinal);
     private readonly AuthorizationInstrumentation _telemetry;
@@ -204,7 +137,7 @@ internal sealed class InMemoryAuthorizationAdapter : IAuthorizationService, IAut
 /// <summary>
 /// adapter شکست‌بسته وقتی Mode=Disabled یا SpiceDB پیکربندی/شبکه خراب است. ALLOW برنمی‌گرداند.
 /// </summary>
-internal sealed class FailClosedAuthorizationAdapter : IAuthorizationService, IAuthorizationTupleWriter
+public sealed class FailClosedAuthorizationAdapter : IAuthorizationService, IAuthorizationTupleWriter
 {
     private readonly string _reason;
     private readonly AuthorizationInstrumentation _telemetry;
@@ -242,7 +175,7 @@ internal sealed class FailClosedAuthorizationAdapter : IAuthorizationService, IA
 /// <summary>
 /// مرز use-case بدون MediatR و بدون SDK در Domain.
 /// </summary>
-internal sealed class AuthorizationGuard : IAuthorizationGuard
+public sealed class AuthorizationGuard : IAuthorizationGuard
 {
     private readonly IAuthorizationService _authorization;
 
@@ -259,7 +192,7 @@ internal sealed class AuthorizationGuard : IAuthorizationGuard
 /// <summary>
 /// جمع‌آوری رخداد امنیتی مجوز در حافظه.
 /// </summary>
-internal sealed class InMemoryAuthorizationSecurityEventSink : IAuthorizationSecurityEventSink
+public sealed class InMemoryAuthorizationSecurityEventSink : IAuthorizationSecurityEventSink
 {
     private readonly List<(string Event, string? ResourceType, string? Permission)> _events = [];
 

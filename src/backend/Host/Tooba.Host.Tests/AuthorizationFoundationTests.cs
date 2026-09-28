@@ -1,6 +1,7 @@
-using Microsoft.Extensions.Hosting;
+﻿using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Tooba.AccessControl.Infrastructure.Authorization;
 using Tooba.BuildingBlocks;
 using Tooba.Host;
 using Xunit;
@@ -117,14 +118,14 @@ public sealed class AuthorizationFoundationTests
         Assert.Contains("definition category", schema.SchemaText, StringComparison.Ordinal);
         var logger = LoggerFactory.Create(b => { }).CreateLogger<ConfiguredAuthorizationSchemaBootstrapper>();
         var skipped = new ConfiguredAuthorizationSchemaBootstrapper(
-            Options.Create(new AuthorizationHostOptions { ApplySchemaOnStartup = false }),
+            Options.Create(new SpiceDbAuthorizationOptions { ApplySchemaOnStartup = false }),
             schema,
             logger);
         await skipped.BootstrapIfConfiguredAsync(CancellationToken.None);
         Assert.Null(skipped.AppliedVersion);
 
         var applied = new ConfiguredAuthorizationSchemaBootstrapper(
-            Options.Create(new AuthorizationHostOptions { ApplySchemaOnStartup = true }),
+            Options.Create(new SpiceDbAuthorizationOptions { ApplySchemaOnStartup = true }),
             schema,
             logger);
         await applied.BootstrapIfConfiguredAsync(CancellationToken.None);
@@ -136,10 +137,10 @@ public sealed class AuthorizationFoundationTests
     {
         var logger = new ListLogger<ConfiguredAuthorizationSchemaBootstrapper>();
         var bootstrapper = new ConfiguredAuthorizationSchemaBootstrapper(
-            Options.Create(new AuthorizationHostOptions
+            Options.Create(new SpiceDbAuthorizationOptions
             {
                 ApplySchemaOnStartup = true,
-                SpiceDb = new SpiceDbHostOptions { Token = "super-secret-token" },
+                SpiceDb = new SpiceDbConnectionOptions { Token = "super-secret-token" },
             }),
             new FoundationAuthorizationSchemaProvider(),
             logger);
@@ -151,10 +152,10 @@ public sealed class AuthorizationFoundationTests
     public async Task SpiceDb_adapter_does_not_claim_allow_without_a_running_server()
     {
         IAuthorizationService adapter = new SpiceDbAuthorizationAdapter(
-            Options.Create(new AuthorizationHostOptions
+            Options.Create(new SpiceDbAuthorizationOptions
             {
                 Mode = "SpiceDb",
-                SpiceDb = new SpiceDbHostOptions
+                SpiceDb = new SpiceDbConnectionOptions
                 {
                     Endpoint = "127.0.0.1:1",
                     Token = "test-only-not-for-production",
@@ -180,8 +181,8 @@ public sealed class AuthorizationFoundationTests
     [Fact]
     public void SpiceDb_mode_without_endpoint_fails_validation()
     {
-        var validator = new AuthorizationOptionsValidator(new FakeHostEnvironment { EnvironmentName = Environments.Development });
-        var result = validator.Validate(null, new AuthorizationHostOptions { Mode = "SpiceDb" });
+        var validator = new SpiceDbAuthorizationOptionsValidator(new FakeHostEnvironment { EnvironmentName = Environments.Development });
+        var result = validator.Validate(null, new SpiceDbAuthorizationOptions { Mode = "SpiceDb" });
         Assert.True(result.Failed);
     }
 

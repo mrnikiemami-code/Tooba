@@ -28,6 +28,7 @@ using Tooba.Host.Seller;
 using Tooba.Returns.Endpoints;
 using Tooba.Notification.Endpoints;
 using Tooba.AccessControl.Endpoints;
+using Tooba.AccessControl.Infrastructure.Authorization;
 using Tooba.Payment.Endpoints;
 using Tooba.Promotion.Endpoints;
 using Tooba.Host.Storefront;
@@ -126,11 +127,6 @@ builder.Services.AddOptions<CacheHostOptions>()
     .ValidateOnStart();
 builder.Services.AddSingleton<IValidateOptions<CacheHostOptions>, CacheOptionsValidator>();
 builder.Services.AddToobaCache();
-builder.Services.AddOptions<AuthorizationHostOptions>()
-    .Bind(builder.Configuration.GetSection("Tooba:Authorization"))
-    .ValidateOnStart();
-builder.Services.AddSingleton<IValidateOptions<AuthorizationHostOptions>, AuthorizationOptionsValidator>();
-builder.Services.AddToobaAuthorization();
 builder.Services.AddOptions<AuthSecurityHostOptions>()
     .Bind(builder.Configuration.GetSection(AuthSecurityHostOptions.SectionName))
     .ValidateOnStart();

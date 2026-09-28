@@ -2,12 +2,12 @@ using System.Diagnostics;
 using System.Diagnostics.Metrics;
 using Tooba.BuildingBlocks;
 
-namespace Tooba.Host;
+namespace Tooba.AccessControl.Infrastructure.Authorization;
 
 /// <summary>
 /// تله‌متری مجوز بدون برچسب UserId/TenantId/ResourceId.
 /// </summary>
-internal sealed class AuthorizationInstrumentation
+public sealed class AuthorizationInstrumentation
 {
     private readonly Counter<long> _checks;
     private readonly Counter<long> _infrastructure;

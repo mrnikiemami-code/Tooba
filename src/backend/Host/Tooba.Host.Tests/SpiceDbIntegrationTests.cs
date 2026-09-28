@@ -1,8 +1,9 @@
-using DotNet.Testcontainers.Builders;
+﻿using DotNet.Testcontainers.Builders;
 using DotNet.Testcontainers.Containers;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
+using Tooba.AccessControl.Infrastructure.Authorization;
 using Tooba.BuildingBlocks;
 using Tooba.Host;
 using Xunit;
@@ -152,10 +153,10 @@ public sealed class SpiceDbIntegrationTests : IAsyncLifetime
         var endpoint = $"127.0.0.1:{_container.GetMappedPublicPort(50051)}";
         using var adapter = CreateAdapter(endpoint);
         await WaitForSchemaAsync(adapter, new FoundationAuthorizationSchemaProvider().SchemaText);
-        using var probe = new SpiceDbHealthProbe(Options.Create(new AuthorizationHostOptions
+        using var probe = new SpiceDbHealthProbe(Options.Create(new SpiceDbAuthorizationOptions
         {
             Mode = "SpiceDb",
-            SpiceDb = new SpiceDbHostOptions
+            SpiceDb = new SpiceDbConnectionOptions
             {
                 Endpoint = endpoint,
                 Token = TestPresharedKey,
@@ -174,10 +175,10 @@ public sealed class SpiceDbIntegrationTests : IAsyncLifetime
     {
         Skip.If(!_dockerAvailable, "Docker/Testcontainers SpiceDB is not available.");
 
-        using var probe = new SpiceDbHealthProbe(Options.Create(new AuthorizationHostOptions
+        using var probe = new SpiceDbHealthProbe(Options.Create(new SpiceDbAuthorizationOptions
         {
             Mode = "SpiceDb",
-            SpiceDb = new SpiceDbHostOptions
+            SpiceDb = new SpiceDbConnectionOptions
             {
                 Endpoint = "127.0.0.1:59999",
                 Token = TestPresharedKey,
@@ -194,12 +195,12 @@ public sealed class SpiceDbIntegrationTests : IAsyncLifetime
     [Fact]
     public void Production_rejects_insecure_tls_and_inmemory_mode()
     {
-        var validator = new AuthorizationOptionsValidator(new FakeHostEnvironment { EnvironmentName = Environments.Production });
-        var inMemory = validator.Validate(null, new AuthorizationHostOptions { Mode = "InMemory" });
-        var noTls = validator.Validate(null, new AuthorizationHostOptions
+        var validator = new SpiceDbAuthorizationOptionsValidator(new FakeHostEnvironment { EnvironmentName = Environments.Production });
+        var inMemory = validator.Validate(null, new SpiceDbAuthorizationOptions { Mode = "InMemory" });
+        var noTls = validator.Validate(null, new SpiceDbAuthorizationOptions
         {
             Mode = "SpiceDb",
-            SpiceDb = new SpiceDbHostOptions
+            SpiceDb = new SpiceDbConnectionOptions
             {
                 Endpoint = "spicedb.prod.example:443",
                 Token = "secret",
@@ -213,11 +214,11 @@ public sealed class SpiceDbIntegrationTests : IAsyncLifetime
 
     private static SpiceDbAuthorizationAdapter CreateAdapter(string endpoint) =>
         new(
-            Options.Create(new AuthorizationHostOptions
+            Options.Create(new SpiceDbAuthorizationOptions
             {
                 Mode = "SpiceDb",
                 ApplySchemaOnStartup = true,
-                SpiceDb = new SpiceDbHostOptions
+                SpiceDb = new SpiceDbConnectionOptions
                 {
                     Endpoint = endpoint,
                     Token = TestPresharedKey,
