@@ -342,6 +342,19 @@ Do not fail certification merely because legitimate global Host auth/session fil
 
 Boundary example only (not a naming requirement): `src/backend/Host/Tooba.Host/Authentication` currently holds the global authentication/session HTTP/runtime boundary and legitimately consumes Identity services without inheriting Identity business ownership. Do not hard-code its current file names as permanent architecture requirements.
 
+### 13b. Closed-Folder Regression Audit
+
+Certification must verify that the task did not make any previously closed/non-active folder a new sink for production code.
+
+For every production destination outside the exact active recovery folder:
+- inspect accepted SoT/evidence/guards for prior ZERO state, exact retained-file set, allowlist, final file count, or explicit closure;
+- compare the accepted baseline with the post-task physical tree;
+- fail certification on any unapproved added file, resurrected closed folder, newly invented Host folder, or growth of a protected retained-file set.
+
+A previously accepted retained set is a locked baseline until a task explicitly reopens that destination with Architect authorization. If such an exception is authorized, certification requires an explicit before/after set, architectural justification, SoT update, and durable guard update.
+
+Classify any silent transfer of files from the active folder into another closed/non-active Host folder as `SINK_FOLDER_REGRESSION` and do not PASS.
+
 ### 14. Persistence / Migration Safety
 
 Verify architecture cleanup did not accidentally change:
