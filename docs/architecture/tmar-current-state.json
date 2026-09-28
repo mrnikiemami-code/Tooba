@@ -769,7 +769,7 @@
     "nextExpectedAfterFoundation": "USER_REVIEW_ADDRESSBOOK_CHECKPOINT",
     "accessControlClosure": "COMPLETE",
     "nextHostFolderAfterAccessControl": "AddressBook",
-    "nextHostFolderAfterAddressBook": "USER_REVIEW_ADDRESSBOOK_CHECKPOINT",
+    "nextHostFolderAfterAddressBook": "Authentication",
     "deferredHostFolders": [
       "Admin"
     ],
@@ -777,7 +777,6 @@
     "hostOwnedRouteCount": 0,
     "actorSeam": "COMPLETE_INTERFACE_BASED",
     "hostAddressBookResidue": [],
-    "nextHostFolderAfterAddressBook": "Authentication",
     "authenticationFolderDisposition": {
       "task": "TB-TMAR-HOST-AUTHENTICATION-INVENTORY-001",
       "state": "ANALYZED_MIGRATION_HALTED_NEEDS_ARCHITECT_DECISION",
@@ -930,12 +929,11 @@
         "customerProfileContractsProject": "src/backend/Modules/CustomerProfile/Tooba.CustomerProfile.Contracts (ICustomerProfileDirectory/CustomerProfileSnapshot/CustomerProfileWrite moved out of CustomerProfile.Application)",
         "hostAuthenticationProblemPath": "AuthenticationHttpProblem delegates final presentation to ApiResponseFactory.FromFailure(SemanticError) — no parallel ProblemDetails pipeline, no hard-coded title",
         "durableGuard": "src/backend/Host/Tooba.Host.Tests/AuthenticationV2CanonicalizationGuardTests.cs (21 pass)",
-        "focusedTests": "AuthenticationHttpTests + AuthSecurityHttpTests + IdentityFoundationTests + StorefrontAccountIdentityTests + CustomerProfileFoundationTests + AuthenticationV2CanonicalizationGuardTests = 38 passed / 8 skipped / 0 failed",
+        "focusedTests": "AuthenticationHttpTests + AuthSecurityHttpTests + CheckoutIdentityContractTests + StorefrontAccountIdentityTests = 11 passed / 4 skipped / 0 failed",
         "focusedGuards": "ArchitectureBoundaryTests + TmarFoundationTests PASS; BuildingBlocks.Tests 45 PASS",
         "preExistingFailuresNotCausedByThisTask": [
-          "ErrorContractTests (3 red; full Host DI validation fails on unregistered Tooba.Inventory.Contracts.Cart.ICartInventoryHoldPort — not touched by this task)",
-          "TmarSourceSizeAndInfraAppTests (red at clean HEAD before this task)",
-          "Tooba.Order.Tests.OrderSellerPanelArchitectureGuardTests (pre-existing missing Tooba.AccessControl reference)"
+          "ErrorContractTests (3 red at clean HEAD db63310a; host TestServer DI/store-context wiring, unrelated)",
+          "TmarSourceSizeAndInfraAppTests (3 red at clean HEAD; identical before/after, new file 99 LOC < 800 threshold)"
         ],
         "skillsUsed": [
           ".cursor/skills/tooba-architecture-analyze/SKILL.md (V2)",
@@ -967,15 +965,9 @@
         ],
         "hostResidue": "ALLOWED_GLOBAL_AUTH_PLATFORM_BOUNDARY + ALLOWED_AUTH_RUNTIME_PLUMBING; ILLEGAL_IDENTITY_BUSINESS_AUTHORITY=ZERO; ILLEGAL_IDENTITY_PERSISTENCE_AUTHORITY=ZERO",
         "canonicalizationEvidence": "docs/evidence/AUTHENTICATION-V2-CANONICALIZATION-001/authentication-v2-canonicalization.md",
-        "behaviorChange": "NONE",
         "routeChange": "NONE",
         "guardWeakened": false,
-        "baselineChanged": false,
-        "focusedTests": "AuthenticationHttpTests + AuthSecurityHttpTests + CheckoutIdentityContractTests + StorefrontAccountIdentityTests = 11 passed / 4 skipped / 0 failed",
-        "preExistingFailuresNotCausedByThisTask": [
-          "ErrorContractTests (3 red at clean HEAD db63310a; host TestServer DI/store-context wiring, unrelated)",
-          "TmarSourceSizeAndInfraAppTests (3 red at clean HEAD; identical before/after, new file 99 LOC < 800 threshold)"
-        ]
+        "baselineChanged": false
       }
     }
   },
@@ -1058,7 +1050,10 @@
   },
   "sharedErrorCatalogDedup": {
     "task": "TB-TMAR-SHARED-ERROR-CATALOG-DEDUP-001",
-    "iterations": ["R0", "R1"],
+    "iterations": [
+      "R0",
+      "R1"
+    ],
     "parentTask": "TB-TMAR-ADDRESSBOOK-POST-REALIGN-REPAIR-001",
     "parentCommit": "67f2d4485ac78472c30650374fa01c81a410c2c4",
     "state": "CATALOG_CANONICAL_DUPLICATES_CLOSED_BOUNDED_CONTEXT_REAUDITED",
@@ -1106,9 +1101,20 @@
       "admin.authorization.denied": "Platform cross-cutting role boundary; producers are Host admin access gates"
     },
     "r1Change": {
-      "movedToPayment": ["payment.missing", "payment.rejected", "payment.unpaid.supply_unavailable"],
-      "keptOrderOwned": ["inventory.reservation.retry_limit_reached"],
-      "keptFoundationOwned": ["checkout.authentication_required", "customer.session.required", "seller.authorization.denied", "admin.authorization.denied"],
+      "movedToPayment": [
+        "payment.missing",
+        "payment.rejected",
+        "payment.unpaid.supply_unavailable"
+      ],
+      "keptOrderOwned": [
+        "inventory.reservation.retry_limit_reached"
+      ],
+      "keptFoundationOwned": [
+        "checkout.authentication_required",
+        "customer.session.required",
+        "seller.authorization.denied",
+        "admin.authorization.denied"
+      ],
       "resourceOwnershipUnchanged": "OrderErrorResourceSet still Owns() the payment.* localization keys; descriptor ownership and localization ownership are independent"
     },
     "sharedOwner": {
@@ -1161,7 +1167,11 @@
   },
   "hostCustomerEvacuation": {
     "task": "TB-TMAR-HOST-CUSTOMER-EVACUATION-001",
-    "skills": ["tooba-architecture-analyze", "tooba-architecture-migrate", "tooba-architecture-certify"],
+    "skills": [
+      "tooba-architecture-analyze",
+      "tooba-architecture-migrate",
+      "tooba-architecture-certify"
+    ],
     "state": "CUSTOMER_AUTHORIZER_EVACUATION_COMPLETE_PANEL_BFF_RETAINED",
     "currentHostFolderCheckpoint": "Customer",
     "hostCustomerModuleSpecificAuthorizerFileCount": 0,
@@ -2229,7 +2239,11 @@
     "owner": "Catalog",
     "HostAdminFileCount": 39,
     "StoreAppearance": "DEFERRED",
-    "hostAdapters": ["StoreLandingShellAdapter", "StoreLandingMerchandisingAdapter", "MerchandisingStoreLandingReferenceGate"],
+    "hostAdapters": [
+      "StoreLandingShellAdapter",
+      "StoreLandingMerchandisingAdapter",
+      "MerchandisingStoreLandingReferenceGate"
+    ],
     "workflowStop": "USER_REVIEW_HOST_ADMIN_W21_STORE_LANDING_CHECKPOINT",
     "evidence": "docs/evidence/TB-TMAR-HOST-ADMIN-AMC-001-W21-STORE-LANDING/"
   },
@@ -2241,7 +2255,11 @@
     "owner": "Catalog",
     "HostAdminFileCount": 36,
     "StoreAppearance": "DEFERRED",
-    "evacuated": ["StoreMenuEndpoints.cs", "StoreMenuComposer.cs", "StoreMenuDevelopmentSeed.cs"],
+    "evacuated": [
+      "StoreMenuEndpoints.cs",
+      "StoreMenuComposer.cs",
+      "StoreMenuDevelopmentSeed.cs"
+    ],
     "workflowStop": "USER_REVIEW_HOST_ADMIN_W22_STORE_MENU_CHECKPOINT",
     "evidence": "docs/evidence/TB-TMAR-HOST-ADMIN-AMC-001-W22-STORE-MENU/"
   },
@@ -3265,7 +3283,7 @@
     "workflowStop": "USER_REVIEW_HOST_ADMIN_W4_CHECKPOINT",
     "evidence": "docs/evidence/TB-TMAR-HOST-ADMIN-AMC-001-W4/"
   },
-      "hostAdminAmcW3": {
+  "hostAdminAmcW3": {
     "task": "TB-TMAR-HOST-ADMIN-AMC-001-W3",
     "parentTask": "TB-TMAR-HOST-ADMIN-AMC-001-W2-R1",
     "parentCommit": "f90215dd02bf8c475997e132589bc9598a5958dc",
@@ -3300,7 +3318,7 @@
     "workflowStop": "USER_REVIEW_HOST_ADMIN_W3_CHECKPOINT",
     "evidence": "docs/evidence/TB-TMAR-HOST-ADMIN-AMC-001-W3/"
   },
-      "hostAdminAmcW2R1": {
+  "hostAdminAmcW2R1": {
     "task": "TB-TMAR-HOST-ADMIN-AMC-001-W2-R1",
     "parentTask": "TB-TMAR-HOST-ADMIN-AMC-001-W2",
     "parentCommit": "50ee7da5cbbb46822b900842d89503b434cc93d7",
@@ -3314,7 +3332,8 @@
     "nextHostFolderStarted": false,
     "workflowStop": "USER_REVIEW_HOST_ADMIN_W2_CHECKPOINT",
     "evidence": "docs/evidence/TB-TMAR-HOST-ADMIN-AMC-001-W2-R1/"
-  },  "hostAdminAmcW2": {
+  },
+  "hostAdminAmcW2": {
     "task": "TB-TMAR-HOST-ADMIN-AMC-001-W2",
     "parentTask": "TB-TMAR-HOST-ADMIN-AMC-001",
     "parentCommit": "3d15c27cf3b60f972e6401873a4a8ecc56cb3ee6",
@@ -3351,7 +3370,8 @@
     "nextHostFolderStarted": false,
     "workflowStop": "USER_REVIEW_HOST_ADMIN_W2_CHECKPOINT",
     "evidence": "docs/evidence/TB-TMAR-HOST-ADMIN-AMC-001-W2/"
-  },  "hostAdminAmc": {
+  },
+  "hostAdminAmc": {
     "task": "TB-TMAR-HOST-ADMIN-AMC-001",
     "wave": "W1_FOUNDATION_PRESERVED",
     "parentTask": "USER_AUTHORIZED_ADMIN_AMC_START",
@@ -3397,5 +3417,28 @@
     },
     "rule": "Admin AMC started by user authorization. W1 = Catalog.Endpoints foundation only; do not start other Host folders until Admin waves complete or Architect redirects."
   },
-  "supersededTasks": []
+  "supersededTasks": [],
+  "hostRootGlobalBoundaries001": {
+    "task": "TB-TMAR-HOST-ROOT-GLOBAL-BOUNDARIES-001",
+    "parentTask": "TB-TMAR-HOST-MEDIA-EVACUATE-001",
+    "branch": "chatgpt/host-root-boundaries-001",
+    "state": "MIGRATED_NOT_CERTIFIED_YET",
+    "requestedRootFiles": 6,
+    "hostRootResidue": "ZERO",
+    "checkoutReservationHoldPolicyOwner": "ORDER_ADAPTER_OVER_PAYMENT_CONTRACTS",
+    "commerceHoldPolicyOwner": "PAYMENT_INFRASTRUCTURE",
+    "catalogHoldReadBoundary": "CATALOG_CONTRACTS_ONLY",
+    "settlementGlobalUsings": "REMOVED",
+    "unpaidOrderExpiryWorkerOwner": "ORDER_INFRASTRUCTURE",
+    "hostBusinessRegistrations": "REMOVED",
+    "newCrossModuleDependencies": "CONTRACTS_ONLY_IN_NEW_FILES",
+    "executableValidation": "NOT_AVAILABLE_IN_CONNECTOR_ENVIRONMENT",
+    "certificationBlockers": [
+      "Focused dotnet build/tests not executed",
+      "Touched Order.Infrastructure registration/project surface contains pre-existing direct foreign Application dependencies"
+    ],
+    "certificationState": "NOT_CERTIFIED",
+    "evidence": "docs/evidence/TB-TMAR-HOST-ROOT-GLOBAL-BOUNDARIES-001/",
+    "workflowStop": "USER_REVIEW_HOST_ROOT_GLOBAL_BOUNDARIES_001"
+  }
 }
