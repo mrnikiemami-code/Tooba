@@ -13,7 +13,9 @@ public sealed class HostAdminAmcLandingPageSeedGuardTests
             root, "src/backend/Host/Tooba.Host/Admin/LandingPageDevelopmentSeed.cs")));
         Assert.True(File.Exists(Path.Combine(
             root, "src/backend/Modules/Catalog/Tooba.Catalog.Infrastructure/Development/LandingPageDevelopmentSeed.cs")));
-        Assert.True(File.Exists(Path.Combine(
+        // The Host wrapper was evacuated; Program now invokes the Catalog-owned seed
+        // through the single Host development composition seam.
+        Assert.False(File.Exists(Path.Combine(
             root, "src/backend/Host/Tooba.Host/Development/LandingPageDevelopmentSeedHost.cs")));
 
         var catalogSeed = File.ReadAllText(Path.Combine(
@@ -23,7 +25,8 @@ public sealed class HostAdminAmcLandingPageSeedGuardTests
         Assert.DoesNotContain("ControlPlaneRegistry", catalogSeed, StringComparison.Ordinal);
 
         var program = File.ReadAllText(Path.Combine(root, "src/backend/Host/Tooba.Host/Program.cs"));
-        Assert.Contains("LandingPageDevelopmentSeedHost.ApplyAsync", program, StringComparison.Ordinal);
+        Assert.Contains("LandingPageDevelopmentSeed.ApplyAsync", program, StringComparison.Ordinal);
+        Assert.Contains("DevelopmentTenantCommerceContext.RunForDevelopmentTenantAsync", program, StringComparison.Ordinal);
     }
 
     [Fact]

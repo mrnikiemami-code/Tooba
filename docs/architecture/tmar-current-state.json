@@ -1321,8 +1321,69 @@
       "Optional future: namespace Tooba.Host.Development alignment if Architect authorizes rename"
     ],
     "nextHostFolderStarted": false,
-    "workflowStop": "USER_REVIEW_HOST_DEVELOPMENT_CHECKPOINT",
+    "workflowStop": "SUPERSEDED_BY_hostDevelopmentAmc002",
     "evidence": "docs/evidence/TB-TMAR-HOST-DEVELOPMENT-AMC-001/"
+  },
+  "hostDevelopmentAmc002": {
+    "task": "TB-TMAR-HOST-DEVELOPMENT-AMC-002",
+    "parentTask": "TB-TMAR-RECOVERY-SOT-SYNC-001",
+    "parentCommit": "4376ee82ee6bf508c46606cb9e7ed74708816d5f",
+    "activeHostFolder": "Development",
+    "state": "HOST_DEVELOPMENT_SEED_WRAPPERS_EVACUATED_SINGLE_HOST_SEAM",
+    "analyzeFindings": [
+      "Prior TB-TMAR-HOST-DEVELOPMENT-AMC-001 evidence was stale: folder had grown 3 -> 12",
+      "HostDevelopmentAmcGuardTests allowlist was RED at clean HEAD 4376ee82 (allowed 3)",
+      "ControlPlaneRegistry is internal to Tooba.Host; no public tenant-catalog port exists in BuildingBlocks"
+    ],
+    "productionFileCountBefore": 12,
+    "productionFileCountAfter": 6,
+    "deletedFiles": [
+      "Development/CatalogAttributeSchemaDevelopmentSeedHost.cs",
+      "Development/FashionTemplateCatalogSeedHost.cs",
+      "Development/IndustryBatchATemplateCatalogSeedHost.cs",
+      "Development/IndustryBatchBTemplateCatalogSeedHost.cs",
+      "Development/IndustryBatchCTemplateCatalogSeedHost.cs",
+      "Development/LandingPageDevelopmentSeedHost.cs",
+      "Development/StoreMenuDevelopmentSeedHost.cs"
+    ],
+    "createdFiles": [
+      "Development/DevelopmentTenantCommerceContext.cs"
+    ],
+    "modifiedFiles": [
+      "Host/Tooba.Host/Program.cs"
+    ],
+    "retainedClassifications": {
+      "MarketplaceDevelopmentBootstrap.cs": "ALLOWED_DEVELOPMENT_COMPOSITION",
+      "MarketplaceAdminDevBootstrap.cs": "ALLOWED_DEVELOPMENT_RUNTIME_SEAM",
+      "MarketplaceSellerDevBootstrap.cs": "ALLOWED_DEVELOPMENT_RUNTIME_SEAM",
+      "DevelopmentTenantCommerceContext.cs": "ALLOWED_DEVELOPMENT_COMPOSITION",
+      "CatalogAttributeSchemaSellableEnricher.cs": "STRUCTURAL_DEBT_ONLY",
+      "ProductWorkspaceDevelopmentBootstrap.cs": "STRUCTURAL_DEBT_ONLY"
+    },
+    "traceLabelsPreserved": [
+      "catalog-attribute-schema-seed",
+      "landing-dev-seed",
+      "menu-dev-seed",
+      "fashion-template-catalog-seed",
+      "industry-batch-a-template-catalog-seed",
+      "industry-batch-b-template-catalog-seed",
+      "industry-batch-c-template-catalog-seed"
+    ],
+    "guardState": "HostDevelopmentAmcGuardTests allowlist repaired to classified dict (unclassified new file fails)",
+    "schemaMigrationState": "NONE",
+    "routeChange": "NONE",
+    "frontendState": "UNCHANGED",
+    "focusedValidations": "BUILD_1_PASS_0_ERRORS; GUARDS_PASSED_57_FAILED_0",
+    "remainingBlockers": [
+      "CatalogAttributeSchemaSellableEnricher: requires dev-seed ports in Offer/Party/Pricing/Inventory/Tax Contracts before Catalog can own it (touches read-only reference module Offer) -> NEEDS_ARCHITECT_DECISION",
+      "ProductWorkspaceDevelopmentBootstrap.cs: cross-module dev-seed orchestrator -> FOUNDATION_REQUIRES_SEPARATE_BOUNDED_TASK"
+    ],
+    "residualDebt": [
+      "Repository-wide pre-existing source-size/inventory baseline redness (unrelated; not repaired here)"
+    ],
+    "nextHostFolderStarted": false,
+    "workflowStop": "USER_REVIEW_HOST_DEVELOPMENT_AMC_002",
+    "evidence": "docs/evidence/TB-TMAR-HOST-DEVELOPMENT-AMC-002/"
   },
   "hostCachingArchitectDirect": {
     "execution": "ARCHITECT_DIRECT_ANALYZE_MIGRATE_CERTIFY",

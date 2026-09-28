@@ -9,15 +9,22 @@ namespace Tooba.Host.Tests.Architecture;
 /// </summary>
 public sealed class HostDevelopmentAmcGuardTests
 {
-    private static readonly string[] Allowlist =
-    [
-        "MarketplaceDevelopmentBootstrap.cs",
-        "MarketplaceAdminDevBootstrap.cs",
-        "MarketplaceSellerDevBootstrap.cs",
-    ];
+    /// <summary>
+    /// Every retained Development file with its classification. New files must be
+    /// explicitly classified (TB-TMAR-HOST-DEVELOPMENT-AMC-002) rather than silently added.
+    /// </summary>
+    private static readonly Dictionary<string, string> ClassifiedAllowlist = new(StringComparer.Ordinal)
+    {
+        ["MarketplaceDevelopmentBootstrap.cs"] = "ALLOWED_DEVELOPMENT_COMPOSITION (Marketplace migrate + module seed orchestration)",
+        ["MarketplaceAdminDevBootstrap.cs"] = "ALLOWED_DEVELOPMENT_RUNTIME_SEAM (authorization tuple)",
+        ["MarketplaceSellerDevBootstrap.cs"] = "ALLOWED_DEVELOPMENT_RUNTIME_SEAM (tuple + seller snapshot)",
+        ["DevelopmentTenantCommerceContext.cs"] = "ALLOWED_DEVELOPMENT_COMPOSITION (single tenant/commerce seam for module seeds)",
+        ["CatalogAttributeSchemaSellableEnricher.cs"] = "STRUCTURAL_DEBT_ONLY (bounded blocker: needs Offer/Party/Pricing/Inventory/Tax dev-seed ports)",
+        ["ProductWorkspaceDevelopmentBootstrap.cs"] = "STRUCTURAL_DEBT_ONLY (bounded blocker: cross-module dev-seed orchestration)",
+    };
 
     [Fact]
-    public void Development_folder_matches_exact_retained_allowlist()
+    public void Development_folder_contains_only_classified_files()
     {
         var folder = Path.Combine(FindRepoRoot(), "src", "backend", "Host", "Tooba.Host", "Development");
         Assert.True(Directory.Exists(folder));
@@ -25,7 +32,28 @@ public sealed class HostDevelopmentAmcGuardTests
             .Select(Path.GetFileName)
             .OrderBy(x => x, StringComparer.Ordinal)
             .ToArray();
-        Assert.Equal(Allowlist.OrderBy(x => x, StringComparer.Ordinal).ToArray(), files);
+        Assert.Equal(ClassifiedAllowlist.Keys.OrderBy(x => x, StringComparer.Ordinal).ToArray(), files);
+    }
+
+    [Fact]
+    public void Development_folder_seed_wrappers_are_evacuated()
+    {
+        var folder = Path.Combine(FindRepoRoot(), "src", "backend", "Host", "Tooba.Host", "Development");
+        foreach (var evacuated in new[]
+        {
+            "FashionTemplateCatalogSeedHost.cs",
+            "IndustryBatchATemplateCatalogSeedHost.cs",
+            "IndustryBatchBTemplateCatalogSeedHost.cs",
+            "IndustryBatchCTemplateCatalogSeedHost.cs",
+            "CatalogAttributeSchemaDevelopmentSeedHost.cs",
+            "LandingPageDevelopmentSeedHost.cs",
+            "StoreMenuDevelopmentSeedHost.cs",
+        })
+        {
+            Assert.False(File.Exists(Path.Combine(folder, evacuated)), evacuated);
+        }
+
+        Assert.True(File.Exists(Path.Combine(folder, "DevelopmentTenantCommerceContext.cs")));
     }
 
     [Fact]

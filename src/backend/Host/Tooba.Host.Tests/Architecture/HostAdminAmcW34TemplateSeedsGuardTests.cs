@@ -28,7 +28,7 @@ public sealed class HostAdminAmcW34TemplateSeedsGuardTests
     }
 
     [Fact]
-    public void Catalog_Development_owns_seeds_and_Host_wrappers_exist()
+    public void Catalog_Development_owns_seeds_and_Host_keeps_no_seed_wrappers()
     {
         var root = FindRepoRoot();
         var catalogDev = Path.Combine(
@@ -48,30 +48,47 @@ public sealed class HostAdminAmcW34TemplateSeedsGuardTests
         Assert.DoesNotContain("ControlPlaneRegistry", attr, StringComparison.Ordinal);
         Assert.DoesNotContain("IOfferQueryGateway", attr, StringComparison.Ordinal);
 
+        // Catalog owns the seeds; the eight Host seed wrappers were evacuated into Catalog
+        // and replaced by a single Host composition seam.
         var hostDev = Path.Combine(root, "src/backend/Host/Tooba.Host/Development");
-        Assert.True(File.Exists(Path.Combine(hostDev, "FashionTemplateCatalogSeedHost.cs")));
-        Assert.True(File.Exists(Path.Combine(hostDev, "IndustryBatchATemplateCatalogSeedHost.cs")));
-        Assert.True(File.Exists(Path.Combine(hostDev, "IndustryBatchBTemplateCatalogSeedHost.cs")));
-        Assert.True(File.Exists(Path.Combine(hostDev, "IndustryBatchCTemplateCatalogSeedHost.cs")));
-        Assert.True(File.Exists(Path.Combine(hostDev, "CatalogAttributeSchemaDevelopmentSeedHost.cs")));
-        Assert.True(File.Exists(Path.Combine(hostDev, "CatalogAttributeSchemaSellableEnricher.cs")));
+        foreach (var evacuated in new[]
+        {
+            "FashionTemplateCatalogSeedHost.cs",
+            "IndustryBatchATemplateCatalogSeedHost.cs",
+            "IndustryBatchBTemplateCatalogSeedHost.cs",
+            "IndustryBatchCTemplateCatalogSeedHost.cs",
+            "CatalogAttributeSchemaDevelopmentSeedHost.cs",
+            "LandingPageDevelopmentSeedHost.cs",
+            "StoreMenuDevelopmentSeedHost.cs",
+        })
+        {
+            Assert.False(File.Exists(Path.Combine(hostDev, evacuated)), evacuated);
+        }
 
+        Assert.True(File.Exists(Path.Combine(hostDev, "DevelopmentTenantCommerceContext.cs")));
+
+        // The cross-module sellable enricher remains a Host-owned Development orchestration
+        // (bounded blocker: Catalog cannot own its Offer/Party/Pricing/Inventory/Tax dev ports).
+        Assert.True(File.Exists(Path.Combine(hostDev, "CatalogAttributeSchemaSellableEnricher.cs")));
         var enricher = File.ReadAllText(Path.Combine(hostDev, "CatalogAttributeSchemaSellableEnricher.cs"));
         Assert.Contains("ICatalogAttributeSchemaSellableEnricher", enricher, StringComparison.Ordinal);
         Assert.Contains("namespace Tooba.Host.Development", enricher, StringComparison.Ordinal);
     }
 
     [Fact]
-    public void Program_wires_Catalog_seed_hosts_and_sellable_enricher()
+    public void Program_wires_Catalog_seeds_via_single_Host_seam_and_sellable_enricher()
     {
         var root = FindRepoRoot();
         var program = File.ReadAllText(Path.Combine(root, "src/backend/Host/Tooba.Host/Program.cs"));
-        Assert.Contains("CatalogAttributeSchemaDevelopmentSeedHost.ApplyAsync", program, StringComparison.Ordinal);
+        Assert.Contains("DevelopmentTenantCommerceContext.RunForDevelopmentTenantAsync", program, StringComparison.Ordinal);
+        Assert.Contains("CatalogAttributeSchemaDevelopmentSeed.ApplyAsync", program, StringComparison.Ordinal);
         Assert.DoesNotContain("CatalogAttributeSchemaDevelopmentBootstrap", program, StringComparison.Ordinal);
-        Assert.Contains("FashionTemplateCatalogSeedHost.ApplyAsync", program, StringComparison.Ordinal);
-        Assert.Contains("IndustryBatchATemplateCatalogSeedHost.ApplyAsync", program, StringComparison.Ordinal);
-        Assert.Contains("IndustryBatchBTemplateCatalogSeedHost.ApplyAsync", program, StringComparison.Ordinal);
-        Assert.Contains("IndustryBatchCTemplateCatalogSeedHost.ApplyAsync", program, StringComparison.Ordinal);
+        Assert.Contains("FashionTemplateCatalogSeed.ApplyAsync", program, StringComparison.Ordinal);
+        Assert.Contains("IndustryBatchATemplateCatalogSeed.ApplyAsync", program, StringComparison.Ordinal);
+        Assert.Contains("IndustryBatchBTemplateCatalogSeed.ApplyAsync", program, StringComparison.Ordinal);
+        Assert.Contains("IndustryBatchCTemplateCatalogSeed.ApplyAsync", program, StringComparison.Ordinal);
+        Assert.DoesNotContain("CatalogAttributeSchemaDevelopmentSeedHost", program, StringComparison.Ordinal);
+        Assert.DoesNotContain("FashionTemplateCatalogSeedHost", program, StringComparison.Ordinal);
         Assert.Contains("ICatalogAttributeSchemaSellableEnricher", program, StringComparison.Ordinal);
         Assert.Contains("CatalogAttributeSchemaSellableEnricher", program, StringComparison.Ordinal);
     }

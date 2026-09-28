@@ -23,6 +23,7 @@ using Tooba.Host.Development;
 using Tooba.Host.Localization;
 using Tooba.Localization.Application;
 using Tooba.Catalog.Application.Development.CatalogDemo;
+using Tooba.Catalog.Infrastructure.Development;
 using Tooba.CustomerProfile.Endpoints;
 using Tooba.Host.Seller;
 using Tooba.Returns.Endpoints;
@@ -343,7 +344,10 @@ if (app.Environment.IsDevelopment())
             await StorefrontDemoCatalogBootstrap.ApplyAsync(app.Services);
             try
             {
-                await CatalogAttributeSchemaDevelopmentSeedHost.ApplyAsync(app.Services);
+                await DevelopmentTenantCommerceContext.RunForDevelopmentTenantAsync(
+                    app.Services,
+                    "catalog-attribute-schema-seed",
+                    static (provider, ct) => CatalogAttributeSchemaDevelopmentSeed.ApplyAsync(provider, ct));
             }
             catch (Exception ex)
             {
@@ -386,7 +390,10 @@ if (app.Environment.IsDevelopment())
 
         try
         {
-            await LandingPageDevelopmentSeedHost.ApplyAsync(app.Services);
+            await DevelopmentTenantCommerceContext.RunForDevelopmentTenantAsync(
+                app.Services,
+                "landing-dev-seed",
+                static (provider, ct) => LandingPageDevelopmentSeed.ApplyAsync(provider, ct));
         }
         catch (Exception ex)
         {
@@ -395,7 +402,10 @@ if (app.Environment.IsDevelopment())
 
         try
         {
-            await Tooba.Host.Development.StoreMenuDevelopmentSeedHost.ApplyAsync(app.Services);
+            await DevelopmentTenantCommerceContext.RunForDevelopmentTenantAsync(
+                app.Services,
+                "menu-dev-seed",
+                static (provider, ct) => StoreMenuDevelopmentSeed.ApplyAsync(provider, ct));
         }
         catch (Exception ex)
         {
@@ -404,7 +414,10 @@ if (app.Environment.IsDevelopment())
 
         try
         {
-            await FashionTemplateCatalogSeedHost.ApplyAsync(app.Services);
+            await DevelopmentTenantCommerceContext.RunForDevelopmentTenantAsync(
+                app.Services,
+                "fashion-template-catalog-seed",
+                static (provider, ct) => FashionTemplateCatalogSeed.ApplyAsync(provider, ct));
         }
         catch (Exception ex)
         {
@@ -413,7 +426,10 @@ if (app.Environment.IsDevelopment())
 
         try
         {
-            await IndustryBatchATemplateCatalogSeedHost.ApplyAsync(app.Services);
+            await DevelopmentTenantCommerceContext.RunForDevelopmentTenantAsync(
+                app.Services,
+                "industry-batch-a-template-catalog-seed",
+                static (provider, ct) => IndustryBatchATemplateCatalogSeed.ApplyAsync(provider, ct));
         }
         catch (Exception ex)
         {
@@ -422,7 +438,10 @@ if (app.Environment.IsDevelopment())
 
         try
         {
-            await IndustryBatchBTemplateCatalogSeedHost.ApplyAsync(app.Services);
+            await DevelopmentTenantCommerceContext.RunForDevelopmentTenantAsync(
+                app.Services,
+                "industry-batch-b-template-catalog-seed",
+                static (provider, ct) => IndustryBatchBTemplateCatalogSeed.ApplyAsync(provider, ct));
         }
         catch (Exception ex)
         {
@@ -431,7 +450,10 @@ if (app.Environment.IsDevelopment())
 
         try
         {
-            await IndustryBatchCTemplateCatalogSeedHost.ApplyAsync(app.Services);
+            await DevelopmentTenantCommerceContext.RunForDevelopmentTenantAsync(
+                app.Services,
+                "industry-batch-c-template-catalog-seed",
+                static (provider, ct) => IndustryBatchCTemplateCatalogSeed.ApplyAsync(provider, ct));
         }
         catch (Exception ex)
         {
