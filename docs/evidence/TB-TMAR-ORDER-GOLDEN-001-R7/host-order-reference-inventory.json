@@ -41,8 +41,8 @@
       "Admin/AdminReservationCycleMapper.cs"
     ],
     "removedOrderAuthorityFrom": [
-      "Admin/AdminPanelComposer.cs",
-      "Admin/AdminPanelEndpoints.cs",
+      "Admin/Panel/AdminPanelComposer.cs",
+      "Admin/Panel/AdminPanelEndpoints.cs",
       "Grid/AdminSellersGridQueryEngine.cs"
     ],
     "note": "AdminPanel Order residuals moved Host→Order CQRS: GET /v1/admin/orders, GET/POST /v1/admin/customers*; dashboard Order metrics + seller order counts via Order Application; Host composers/grids have no OrderDbContext. Historical R7 audit markdown and r8–r10InventoryUpdate left intact; files list refreshed after R11."
@@ -111,17 +111,17 @@
     "note": "Host/CustomerProfile Development seed evacuated to CustomerProfile.Infrastructure/Development; Order.Application guest actor dependency removed."
   },
   "extraFiles": [
-    "Admin/AdminPanelEndpoints.cs",
-    "Admin/HostOrderAdminAuthorizer.cs",
+    "Admin/Panel/AdminPanelEndpoints.cs",
+    "Admin/Access/Authorizers/HostOrderAdminAuthorizer.cs",
     "Seller/SellerPanelEndpoints.cs"
   ],
   "files": [
-    "Admin/AdminPanelComposer.cs",
-    "Admin/AdminPanelEndpoints.cs",
-    "Admin/AdminPanelModels.cs",
+    "Admin/Panel/AdminPanelComposer.cs",
+    "Admin/Panel/AdminPanelEndpoints.cs",
+    "Admin/Panel/AdminPanelModels.cs",
     "Admin/HoldPolicySettingsEndpoints.cs",
-    "Admin/HostOrderAdminAuthorizer.cs",
-    "Admin/HostOrderAdminEffectiveAccessReader.cs",
+    "Admin/Access/Authorizers/HostOrderAdminAuthorizer.cs",
+    "Admin/Access/Authorizers/HostOrderAdminEffectiveAccessReader.cs",
     "Admin/ProductWorkspaceDevelopmentBootstrap.cs",
     "Admin/ProductWorkspaceModels.cs",
     "Admin/ReservationPolicyAdminComposer.cs",

@@ -2,7 +2,7 @@ using Tooba.BuildingBlocks;
 using Tooba.Identity.Contracts;
 using Tooba.Identity.Contracts.Problems;
 
-namespace Tooba.Host.Admin;
+namespace Tooba.Host.Admin.Development;
 
 /// <summary>
 /// Actor مستقل مدیر را فقط برای Development ایجاد می‌کند و تنها برای Tenant جاری tuple عضویت می‌نویسد.

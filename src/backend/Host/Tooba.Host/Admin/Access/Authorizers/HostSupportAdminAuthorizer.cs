@@ -1,38 +1,29 @@
-﻿using Microsoft.AspNetCore.Http;
+#pragma warning disable CS1591
 using Tooba.BuildingBlocks;
 using Tooba.BuildingBlocks.Security;
-using Tooba.Order.Endpoints;
-using Tooba.Order.Endpoints.Errors;
+using Tooba.Support.Application.Errors;
+using Tooba.Support.Endpoints.Admin;
 
-namespace Tooba.Host.Admin;
+namespace Tooba.Host.Admin.Access.Authorizers;
 
 /// <summary>
-/// Host transport adapter for Order admin Endpoints auth + capability checks.
-/// Panel gate delegates to <see cref="IAdminPanelAccess"/>; the capability gate uses the neutral
-/// authorization abstraction and fails closed on <see cref="AuthorizationDecisionKind.Unavailable"/>.
+/// Host transport adapter for Support admin Endpoints auth + capabilities.
+/// Panel gate delegates to <see cref="IAdminPanelAccess"/>; capability checks fail closed on
+/// <see cref="AuthorizationDecisionKind.Unavailable"/>.
 /// </summary>
-internal sealed class HostOrderAdminAuthorizer(
+public sealed class HostSupportAdminAuthorizer(
     IAdminPanelAccess adminAccess,
     IAuthorizationService authz,
-    ICurrentTenant tenant) : IOrderAdminAuthorizer
+    ICurrentTenant tenant) : ISupportAdminAuthorizer
 {
     /// <inheritdoc />
-    public Task<Guid> RequireAdminAsync(HttpContext context, CancellationToken cancellationToken)
+    public async Task<Guid> RequireAuthorizedAsync(
+        HttpContext httpContext, string permissionId, CancellationToken cancellationToken)
     {
-        ArgumentNullException.ThrowIfNull(context);
-        return adminAccess.RequireAuthorizedAsync(context.Request, cancellationToken);
-    }
-
-    /// <inheritdoc />
-    public async Task<Guid> RequirePermissionAsync(
-        HttpContext context,
-        string permissionId,
-        CancellationToken cancellationToken)
-    {
-        ArgumentNullException.ThrowIfNull(context);
+        ArgumentNullException.ThrowIfNull(httpContext);
         ArgumentException.ThrowIfNullOrWhiteSpace(permissionId);
 
-        var actor = await adminAccess.RequireAuthorizedAsync(context.Request, cancellationToken);
+        var actor = await adminAccess.RequireAuthorizedAsync(httpContext.Request, cancellationToken);
         await EnsureAdminCapabilityAsync(actor, permissionId, cancellationToken);
         return actor;
     }
@@ -69,14 +60,11 @@ internal sealed class HostOrderAdminAuthorizer(
         if (decision.Kind == AuthorizationDecisionKind.Unavailable)
         {
             throw new PlatformHttpException(
-                StatusCodes.Status503ServiceUnavailable,
+                503,
                 "سرویس مجوز در دسترس نیست.",
-                OrderErrorCodes.AuthorizationUnavailable);
+                SupportErrorCodes.AuthorizationUnavailable);
         }
 
-        throw new PlatformHttpException(
-            StatusCodes.Status403Forbidden,
-            "مجوز انجام این عملیات وجود ندارد.",
-            OrderErrorCodes.OperationDenied);
+        throw new PlatformHttpException(403, "مجوز پشتیبانی وجود ندارد.", SupportErrorCodes.AdminAuthorizationDenied);
     }
 }

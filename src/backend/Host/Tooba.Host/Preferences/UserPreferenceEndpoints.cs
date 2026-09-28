@@ -1,5 +1,5 @@
 ﻿using Tooba.BuildingBlocks;
-using Tooba.Host.Admin;
+using Tooba.Host.Admin.Access;
 using Tooba.Host.Storefront;
 using Tooba.UserPreference.Application;
 using UserPreferenceEntity = Tooba.UserPreference.Domain.UserPreference;

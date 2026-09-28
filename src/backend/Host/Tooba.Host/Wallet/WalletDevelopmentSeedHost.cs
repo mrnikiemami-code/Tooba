@@ -1,7 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Tooba.BuildingBlocks;
-using Tooba.Host.Admin;
+using Tooba.Host.Admin.Development;
 using Tooba.Wallet.Infrastructure.Adapters;
 using Tooba.Wallet.Infrastructure.DependencyInjection;
 using Tooba.Wallet.Infrastructure.Directories;

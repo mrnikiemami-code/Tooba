@@ -104,14 +104,16 @@ public sealed class HostAdminCanon002GuardTests
     {
         Assert.True(File.Exists(RepoFile(
             "src/backend/Host/Tooba.Host.Tests/Architecture/HostAdminCanon001GuardTests.cs")));
-        var composer = File.ReadAllText(RepoFile("src/backend/Host/Tooba.Host/Admin/AdminPanelComposer.cs"));
+        var composer = File.ReadAllText(RepoFile("src/backend/Host/Tooba.Host/Admin/Panel/AdminPanelComposer.cs"));
         Assert.Contains("ICatalogAdminProductCountGateway", composer, StringComparison.Ordinal);
         Assert.Contains("IPartyAdminSellerReadGateway", composer, StringComparison.Ordinal);
     }
 
     private static string ReadAdmin(string fileName) =>
-        File.ReadAllText(Path.Combine(
-            FindRepoRoot(), "src", "backend", "Host", "Tooba.Host", "Admin", fileName));
+        File.ReadAllText(Directory.GetFiles(
+            Path.Combine(FindRepoRoot(), "src", "backend", "Host", "Tooba.Host", "Admin"),
+            fileName,
+            SearchOption.AllDirectories).Single());
 
     private static string RepoFile(string relative) =>
         Path.Combine(FindRepoRoot(), relative.Replace('/', Path.DirectorySeparatorChar));

@@ -4,7 +4,7 @@ using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Hosting;
 using Testcontainers.PostgreSql;
 using Tooba.BuildingBlocks;
-using Tooba.Host.Admin;
+using Tooba.Host.Admin.Access;
 using Tooba.Host.Seller;
 using Tooba.Persistence;
 using global::Tooba.Story.Application;

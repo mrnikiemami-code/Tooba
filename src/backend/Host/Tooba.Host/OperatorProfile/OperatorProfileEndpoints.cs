@@ -1,5 +1,5 @@
 using Tooba.BuildingBlocks;
-using Tooba.Host.Admin;
+using Tooba.Host.Admin.Access;
 using Tooba.OperatorProfile.Application;
 
 namespace Tooba.Host.OperatorProfile;

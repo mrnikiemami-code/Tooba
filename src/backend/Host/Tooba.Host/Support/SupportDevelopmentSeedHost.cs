@@ -1,7 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Tooba.BuildingBlocks;
-using Tooba.Host.Admin;
+using Tooba.Host.Admin.Development;
 using Tooba.Host.Seller;
 using Tooba.Host.Storefront;
 using Tooba.Support.Infrastructure.Adapters;

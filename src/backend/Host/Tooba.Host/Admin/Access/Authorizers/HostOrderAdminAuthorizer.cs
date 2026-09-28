@@ -1,29 +1,38 @@
-#pragma warning disable CS1591
+﻿using Microsoft.AspNetCore.Http;
 using Tooba.BuildingBlocks;
 using Tooba.BuildingBlocks.Security;
-using Tooba.Wallet.Application.Errors;
-using Tooba.Wallet.Endpoints.Admin;
+using Tooba.Order.Endpoints;
+using Tooba.Order.Endpoints.Errors;
 
-namespace Tooba.Host.Admin;
+namespace Tooba.Host.Admin.Access.Authorizers;
 
 /// <summary>
-/// Host transport adapter for Wallet admin Endpoints auth + capabilities.
-/// Panel gate delegates to <see cref="IAdminPanelAccess"/>; capability checks fail closed on
-/// <see cref="AuthorizationDecisionKind.Unavailable"/>.
+/// Host transport adapter for Order admin Endpoints auth + capability checks.
+/// Panel gate delegates to <see cref="IAdminPanelAccess"/>; the capability gate uses the neutral
+/// authorization abstraction and fails closed on <see cref="AuthorizationDecisionKind.Unavailable"/>.
 /// </summary>
-public sealed class HostWalletAdminAuthorizer(
+internal sealed class HostOrderAdminAuthorizer(
     IAdminPanelAccess adminAccess,
     IAuthorizationService authz,
-    ICurrentTenant tenant) : IWalletAdminAuthorizer
+    ICurrentTenant tenant) : IOrderAdminAuthorizer
 {
     /// <inheritdoc />
-    public async Task<Guid> RequireAuthorizedAsync(
-        HttpContext httpContext, string permissionId, CancellationToken cancellationToken)
+    public Task<Guid> RequireAdminAsync(HttpContext context, CancellationToken cancellationToken)
     {
-        ArgumentNullException.ThrowIfNull(httpContext);
+        ArgumentNullException.ThrowIfNull(context);
+        return adminAccess.RequireAuthorizedAsync(context.Request, cancellationToken);
+    }
+
+    /// <inheritdoc />
+    public async Task<Guid> RequirePermissionAsync(
+        HttpContext context,
+        string permissionId,
+        CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(context);
         ArgumentException.ThrowIfNullOrWhiteSpace(permissionId);
 
-        var actor = await adminAccess.RequireAuthorizedAsync(httpContext.Request, cancellationToken);
+        var actor = await adminAccess.RequireAuthorizedAsync(context.Request, cancellationToken);
         await EnsureAdminCapabilityAsync(actor, permissionId, cancellationToken);
         return actor;
     }
@@ -60,11 +69,14 @@ public sealed class HostWalletAdminAuthorizer(
         if (decision.Kind == AuthorizationDecisionKind.Unavailable)
         {
             throw new PlatformHttpException(
-                503,
+                StatusCodes.Status503ServiceUnavailable,
                 "سرویس مجوز در دسترس نیست.",
-                WalletErrorCodes.AuthorizationUnavailable);
+                OrderErrorCodes.AuthorizationUnavailable);
         }
 
-        throw new PlatformHttpException(403, "مجوز کیف پول/کارت هدیه وجود ندارد.", WalletErrorCodes.AdminAuthorizationDenied);
+        throw new PlatformHttpException(
+            StatusCodes.Status403Forbidden,
+            "مجوز انجام این عملیات وجود ندارد.",
+            OrderErrorCodes.OperationDenied);
     }
 }

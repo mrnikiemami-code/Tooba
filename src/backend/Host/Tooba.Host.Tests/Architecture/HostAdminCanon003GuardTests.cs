@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Http;
 using Tooba.BuildingBlocks;
 using Tooba.BuildingBlocks.Security;
-using Tooba.Host.Admin;
+using Tooba.Host.Admin.Access.Authorizers;
 using Tooba.Support.Application.Errors;
 using Tooba.Wallet.Application.Errors;
 using Xunit;
@@ -258,8 +258,10 @@ public sealed class HostAdminCanon003GuardTests
 
     /// <summary>Reads the module-owned Support contributor without duplicating its descriptor list.</summary>
     private static string ReadAdmin(string fileName) =>
-        File.ReadAllText(Path.Combine(
-            FindRepoRoot(), "src", "backend", "Host", "Tooba.Host", "Admin", fileName));
+        File.ReadAllText(Directory.GetFiles(
+            Path.Combine(FindRepoRoot(), "src", "backend", "Host", "Tooba.Host", "Admin"),
+            fileName,
+            SearchOption.AllDirectories).Single());
 
     private static string RepoFile(string relative) =>
         Path.Combine(FindRepoRoot(), relative.Replace('/', Path.DirectorySeparatorChar));

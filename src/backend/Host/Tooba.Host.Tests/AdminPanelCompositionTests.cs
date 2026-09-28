@@ -1,4 +1,4 @@
-using Tooba.Host.Admin;
+using Tooba.Host.Admin.Panel;
 using Tooba.Order.Application.Admin.Customers.Models;
 using Tooba.Order.Application.Admin.Detail.Models;
 using Tooba.Order.Application.Admin.OrdersGrid.Models;
@@ -65,7 +65,7 @@ public sealed class AdminPanelCompositionTests
     public void Composer_reads_module_contracts_separately_and_composes_in_memory()
     {
         var source = File.ReadAllText(Path.Combine(
-            FindRepoRoot(), "src", "backend", "Host", "Tooba.Host", "Admin", "AdminPanelComposer.cs"));
+            FindRepoRoot(), "src", "backend", "Host", "Tooba.Host", "Admin", "Panel", "AdminPanelComposer.cs"));
         Assert.Contains("ICatalogAdminProductCountGateway", source, StringComparison.Ordinal);
         Assert.Contains("IOfferQueryGateway", source, StringComparison.Ordinal);
         Assert.Contains("CountActiveOffersAsync", source, StringComparison.Ordinal);
@@ -95,7 +95,7 @@ public sealed class AdminPanelCompositionTests
     public void Host_admin_endpoints_no_longer_own_order_or_customer_routes()
     {
         var source = File.ReadAllText(Path.Combine(
-            FindRepoRoot(), "src", "backend", "Host", "Tooba.Host", "Admin", "AdminPanelEndpoints.cs"));
+            FindRepoRoot(), "src", "backend", "Host", "Tooba.Host", "Admin", "Panel", "AdminPanelEndpoints.cs"));
         Assert.DoesNotContain("MapGet(\"/orders\"", source, StringComparison.Ordinal);
         Assert.DoesNotContain("MapGet(\"/orders/{checkoutId:guid}\"", source, StringComparison.Ordinal);
         Assert.DoesNotContain("MapGet(\"/customers\"", source, StringComparison.Ordinal);

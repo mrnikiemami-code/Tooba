@@ -2,7 +2,7 @@
 using Tooba.BuildingBlocks.Security;
 using Tooba.Promotion.Endpoints.Admin;
 
-namespace Tooba.Host.Admin;
+namespace Tooba.Host.Admin.Access.Authorizers;
 
 /// <summary>Host transport adapter for Promotion admin Endpoints auth (thin panel-gate adapter).</summary>
 public sealed class HostPromotionAdminAuthorizer(IAdminPanelAccess adminAccess) : IPromotionAdminAuthorizer

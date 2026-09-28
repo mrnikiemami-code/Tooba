@@ -1,4 +1,4 @@
-﻿using System.Text.RegularExpressions;
+using System.Text.RegularExpressions;
 using Xunit;
 
 namespace Tooba.Host.Tests.Architecture;
@@ -54,7 +54,7 @@ public sealed class HostAdminAmcW33MerchandisingGuardTests
             "src/backend/Host/Tooba.Host/CatalogAdapters/MerchandisingStoreLandingReferenceGate.cs")));
         Assert.True(File.Exists(Path.Combine(
             root,
-            "src/backend/Host/Tooba.Host/Admin/HostPromotionAdminAuthorizer.cs")));
+            "src/backend/Host/Tooba.Host/Admin/Access/Authorizers/HostPromotionAdminAuthorizer.cs")));
     }
 
     [Fact]

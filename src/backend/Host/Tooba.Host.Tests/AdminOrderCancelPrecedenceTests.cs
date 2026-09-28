@@ -1,5 +1,5 @@
 using Tooba.Order.Application.Admin.Operations.Policies;
-using Tooba.Host.Admin;
+using Tooba.Host.Admin.Panel;
 using Tooba.Offer.Domain;
 using Tooba.Order.Domain;
 using Xunit;
@@ -57,7 +57,7 @@ public sealed class AdminOrderCancelPrecedenceTests
         var composer = File.ReadAllText(Path.Combine(
             root, "src", "backend", "Modules", "Order", "Tooba.Order.Application", "Admin", "Operations", "Services", "AdminOrderOperationsOrchestrator.cs"));
         var panel = File.ReadAllText(Path.Combine(
-            root, "src", "backend", "Host", "Tooba.Host", "Admin", "AdminPanelComposer.cs"));
+            root, "src", "backend", "Host", "Tooba.Host", "Admin", "Panel", "AdminPanelComposer.cs"));
         Assert.Contains("if (!IsCheckoutCancelled(group))", composer, StringComparison.Ordinal);
         Assert.Contains("ProjectPaymentActions", composer, StringComparison.Ordinal);
         Assert.Contains("CancelledBlockedCodes.Contains(expectedCode)", composer, StringComparison.Ordinal);

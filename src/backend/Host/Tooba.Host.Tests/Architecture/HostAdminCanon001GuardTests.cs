@@ -121,7 +121,7 @@ public sealed class HostAdminCanon001GuardTests
     [Fact]
     public void Host_admin_endpoints_and_routes_are_preserved()
     {
-        var endpoints = File.ReadAllText(RepoFile("src/backend/Host/Tooba.Host/Admin/AdminPanelEndpoints.cs"));
+        var endpoints = File.ReadAllText(RepoFile("src/backend/Host/Tooba.Host/Admin/Panel/AdminPanelEndpoints.cs"));
         Assert.Contains("MapGet(\"/dashboard\"", endpoints, StringComparison.Ordinal);
         Assert.Contains("MapGet(\"/sellers\"", endpoints, StringComparison.Ordinal);
         Assert.Contains("MapPost(\"/sellers/query\"", endpoints, StringComparison.Ordinal);
@@ -169,7 +169,7 @@ public sealed class HostAdminCanon001GuardTests
             "src/backend/Modules/Catalog/Tooba.Catalog.Infrastructure/StoreAppearance/StoreAppearanceProjector.cs")));
     }
 
-    private static string ComposerPath() => RepoFile("src/backend/Host/Tooba.Host/Admin/AdminPanelComposer.cs");
+    private static string ComposerPath() => RepoFile("src/backend/Host/Tooba.Host/Admin/Panel/AdminPanelComposer.cs");
 
     private static string SellersGridPath() => RepoFile("src/backend/Host/Tooba.Host/Grid/AdminSellersGridQueryEngine.cs");
 

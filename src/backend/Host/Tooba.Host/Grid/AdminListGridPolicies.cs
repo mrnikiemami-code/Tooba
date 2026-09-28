@@ -1,4 +1,4 @@
-﻿using Tooba.Host.Admin;
+﻿using Tooba.Host.Admin.Panel;
 using Tooba.Host.Reviews;
 using Tooba.Host.Story;
 using Tooba.Order.Application.Admin.OrdersGrid.Models;

@@ -1,6 +1,5 @@
 using Tooba.BuildingBlocks;
 using Tooba.Catalog.Application.StoreLandingPages.Ports;
-using Tooba.Host.Admin;
 using Tooba.Promotion.Application.Merchandising;
 using Tooba.Promotion.Domain.Merchandising;
 

@@ -6,7 +6,7 @@ using Tooba.Offer.Contracts.Ports;
 using Tooba.Order.Contracts.Admin;
 using Tooba.Party.Contracts;
 
-namespace Tooba.Host.Admin;
+namespace Tooba.Host.Admin.Panel;
 
 /// <summary>
 /// ترکیب باریک Host برای سطوح cross-module مدیر (داشبورد / فروشندگان).

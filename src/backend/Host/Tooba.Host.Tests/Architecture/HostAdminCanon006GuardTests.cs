@@ -102,8 +102,10 @@ public sealed class HostAdminCanon006GuardTests
     }
 
     private static string ReadAdmin(string fileName) =>
-        File.ReadAllText(Path.Combine(
-            FindRepoRoot(), "src", "backend", "Host", "Tooba.Host", "Admin", fileName));
+        File.ReadAllText(Directory.GetFiles(
+            Path.Combine(FindRepoRoot(), "src", "backend", "Host", "Tooba.Host", "Admin"),
+            fileName,
+            SearchOption.AllDirectories).Single());
 
     private static string RepoFile(string relative) =>
         Path.Combine(FindRepoRoot(), relative.Replace('/', Path.DirectorySeparatorChar));

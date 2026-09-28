@@ -1,7 +1,7 @@
 ﻿using Tooba.BuildingBlocks.Security;
 using Tooba.Order.Contracts.Admin.Operations;
 
-namespace Tooba.Host.Admin;
+namespace Tooba.Host.Admin.Access.Authorizers;
 
 /// <summary>
 /// Thin Host adapter: maps the neutral platform effective-access seam

@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Hosting;
 using Tooba.AccessControl.Application;
@@ -7,7 +7,7 @@ using Tooba.AccessControl.Application.Permissions;
 using Tooba.BuildingBlocks;
 using Tooba.BuildingBlocks.Security;
 using Tooba.Content.Endpoints.Admin;
-using Tooba.Host.Admin;
+using Tooba.Host.Admin.Access;
 using Tooba.Identity.Application;
 using Xunit;
 

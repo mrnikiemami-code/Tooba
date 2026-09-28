@@ -1,7 +1,10 @@
 ﻿using Tooba.BuildingBlocks;
 using Tooba.BuildingBlocks.Grid;
+using Tooba.Host.Admin.Access;
+using Tooba.Host.Admin.Development;
+using Tooba.Host.Admin.Grid;
 
-namespace Tooba.Host.Admin;
+namespace Tooba.Host.Admin.Panel;
 
 /// <summary>
 /// مسیرهای فقط‌خواندنی عملیات مدیر برای سطوح cross-module.

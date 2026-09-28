@@ -133,7 +133,7 @@ public sealed class AdminReservationCycleAuditTests
         Assert.Contains("GetProjectionAsync", detail, StringComparison.Ordinal);
         Assert.Contains("ListEventsAsync", detail, StringComparison.Ordinal);
         Assert.Contains("ToAudit", detail, StringComparison.Ordinal);
-        var hostComposer = File.ReadAllText(Host("Admin/AdminPanelComposer.cs"));
+        var hostComposer = File.ReadAllText(Host("Admin/Panel/AdminPanelComposer.cs"));
         Assert.DoesNotContain("GetProjectionAsync", hostComposer, StringComparison.Ordinal);
         Assert.DoesNotContain("ToAudit", hostComposer, StringComparison.Ordinal);
         var orders = File.ReadAllText(OrderModule(

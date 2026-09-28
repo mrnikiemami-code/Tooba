@@ -1,6 +1,6 @@
 using Tooba.BuildingBlocks;
 
-namespace Tooba.Host.Admin;
+namespace Tooba.Host.Admin.Access;
 
 /// <summary>
 /// مرز مجوز پنل مدیر که Actor نشست را به Tenant حل‌شدهٔ سرور متصل می‌کند.

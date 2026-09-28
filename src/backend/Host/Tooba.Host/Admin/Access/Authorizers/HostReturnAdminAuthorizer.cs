@@ -2,7 +2,7 @@
 using Tooba.BuildingBlocks.Security;
 using Tooba.Returns.Endpoints.Admin;
 
-namespace Tooba.Host.Admin;
+namespace Tooba.Host.Admin.Access.Authorizers;
 
 /// <summary>Host transport adapter for Returns admin Endpoints auth (thin panel-gate adapter).</summary>
 public sealed class HostReturnAdminAuthorizer(IAdminPanelAccess adminAccess) : IReturnAdminAuthorizer

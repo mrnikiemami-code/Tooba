@@ -1,5 +1,5 @@
 using Tooba.BuildingBlocks.Grid;
-using Tooba.Host.Admin;
+using Tooba.Host.Admin.Panel;
 using Tooba.Offer.Contracts.Ports;
 using Tooba.Order.Contracts.Admin;
 using Tooba.Party.Contracts;

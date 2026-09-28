@@ -83,7 +83,7 @@ public sealed class AdminDbNativeGridQueryTests
             root, "..", "..", "Modules", "Content", "Tooba.Content.Infrastructure", "Adapters", "ContentGridAdapters.cs"));
         var files = new[]
         {
-            Path.Combine(root, "Admin", "AdminPanelComposer.cs"),
+            Path.Combine(root, "Admin", "Panel", "AdminPanelComposer.cs"),
             contentComposer,
             Path.Combine(root, "Reviews", "ReviewPanelComposer.cs"),
             Path.Combine(root, "Story", "StoryPanelComposer.cs"),

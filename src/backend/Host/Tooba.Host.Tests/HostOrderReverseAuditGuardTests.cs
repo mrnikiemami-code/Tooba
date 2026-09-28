@@ -64,11 +64,11 @@ public sealed class HostOrderReverseAuditGuardTests
             .Select(x => x.GetString()!)
             .ToHashSet(StringComparer.Ordinal);
 
-        var admin = File.ReadAllText(Path.Combine(host, "Admin", "AdminPanelEndpoints.cs"));
+        var admin = File.ReadAllText(Path.Combine(host, "Admin", "Panel", "AdminPanelEndpoints.cs"));
         Assert.DoesNotContain("MapGet(\"/orders\"", admin, StringComparison.Ordinal);
         Assert.DoesNotContain("MapGet(\"/customers\"", admin, StringComparison.Ordinal);
         Assert.DoesNotContain("MapPost(\"/customers/query\"", admin, StringComparison.Ordinal);
-        Assert.Contains(files, f => f.Equals("Admin/AdminPanelEndpoints.cs", StringComparison.Ordinal));
+        Assert.Contains(files, f => f.Equals("Admin/Panel/AdminPanelEndpoints.cs", StringComparison.Ordinal));
 
         var orderAdminOrders = File.ReadAllText(Path.Combine(
             root, "src", "backend", "Modules", "Order", "Tooba.Order.Endpoints", "Admin", "OrdersGrid", "AdminOrdersGridEndpoints.cs"));
@@ -148,7 +148,7 @@ public sealed class HostOrderReverseAuditGuardTests
 
         Assert.DoesNotContain("Customer/CustomerPanelComposer.cs", dbConsumers);
         Assert.DoesNotContain("Seller/SellerPanelComposer.cs", dbConsumers);
-        Assert.DoesNotContain("Admin/AdminPanelComposer.cs", dbConsumers);
+        Assert.DoesNotContain("Admin/Panel/AdminPanelComposer.cs", dbConsumers);
         Assert.DoesNotContain("Grid/AdminCustomersGridQueryEngine.cs", dbConsumers);
         Assert.DoesNotContain("Grid/AdminSellersGridQueryEngine.cs", dbConsumers);
     }
@@ -251,7 +251,7 @@ public sealed class HostOrderReverseAuditGuardTests
         var host = Path.Combine(root, "src", "backend", "Host", "Tooba.Host");
         Assert.DoesNotContain(
             "OrderDbContext",
-            File.ReadAllText(Path.Combine(host, "Admin", "AdminPanelComposer.cs")),
+            File.ReadAllText(Path.Combine(host, "Admin", "Panel", "AdminPanelComposer.cs")),
             StringComparison.Ordinal);
         Assert.DoesNotContain(
             "OrderDbContext",

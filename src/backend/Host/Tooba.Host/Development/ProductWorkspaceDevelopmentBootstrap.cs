@@ -61,7 +61,7 @@ using global::Tooba.Story.Infrastructure.Persistence;
 using Tooba.Notification.Infrastructure.Persistence;
 using Tooba.AccessControl.Infrastructure.Persistence;
 using Tooba.Reviews.Infrastructure;
-using Tooba.Host.Admin;
+using Tooba.Host.Admin.Development;
 using Tooba.Host.Seller;
 
 namespace Tooba.Host.Development;

@@ -1,20 +1,20 @@
 #pragma warning disable CS1591
 using Tooba.BuildingBlocks;
 using Tooba.BuildingBlocks.Security;
-using Tooba.Support.Application.Errors;
-using Tooba.Support.Endpoints.Admin;
+using Tooba.Wallet.Application.Errors;
+using Tooba.Wallet.Endpoints.Admin;
 
-namespace Tooba.Host.Admin;
+namespace Tooba.Host.Admin.Access.Authorizers;
 
 /// <summary>
-/// Host transport adapter for Support admin Endpoints auth + capabilities.
+/// Host transport adapter for Wallet admin Endpoints auth + capabilities.
 /// Panel gate delegates to <see cref="IAdminPanelAccess"/>; capability checks fail closed on
 /// <see cref="AuthorizationDecisionKind.Unavailable"/>.
 /// </summary>
-public sealed class HostSupportAdminAuthorizer(
+public sealed class HostWalletAdminAuthorizer(
     IAdminPanelAccess adminAccess,
     IAuthorizationService authz,
-    ICurrentTenant tenant) : ISupportAdminAuthorizer
+    ICurrentTenant tenant) : IWalletAdminAuthorizer
 {
     /// <inheritdoc />
     public async Task<Guid> RequireAuthorizedAsync(
@@ -62,9 +62,9 @@ public sealed class HostSupportAdminAuthorizer(
             throw new PlatformHttpException(
                 503,
                 "سرویس مجوز در دسترس نیست.",
-                SupportErrorCodes.AuthorizationUnavailable);
+                WalletErrorCodes.AuthorizationUnavailable);
         }
 
-        throw new PlatformHttpException(403, "مجوز پشتیبانی وجود ندارد.", SupportErrorCodes.AdminAuthorizationDenied);
+        throw new PlatformHttpException(403, "مجوز کیف پول/کارت هدیه وجود ندارد.", WalletErrorCodes.AdminAuthorizationDenied);
     }
 }

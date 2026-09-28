@@ -1,7 +1,8 @@
 using Tooba.BuildingBlocks;
 using Tooba.BuildingBlocks.Grid;
+using Tooba.Host.Admin.Access;
 
-namespace Tooba.Host.Admin;
+namespace Tooba.Host.Admin.Grid;
 
 /// <summary>الگوی مشترک endpointهای POST .../query برای گریدهای Admin.</summary>
 internal static class AdminGridQueryEndpoint

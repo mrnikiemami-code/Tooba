@@ -1,7 +1,7 @@
 using Tooba.BuildingBlocks;
 using Tooba.BuildingBlocks.Security;
 
-namespace Tooba.Host.Admin;
+namespace Tooba.Host.Admin.Access;
 
 /// <summary>
 /// درز عمومی Host برای دسترسی پنل مدیر: Single-Store از Tenant موجود و در Development/Marketplace

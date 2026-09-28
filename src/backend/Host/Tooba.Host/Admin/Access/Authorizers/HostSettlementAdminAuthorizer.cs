@@ -2,7 +2,7 @@
 using Tooba.BuildingBlocks.Security;
 using Tooba.Settlement.Endpoints.Admin;
 
-namespace Tooba.Host.Admin;
+namespace Tooba.Host.Admin.Access.Authorizers;
 
 /// <summary>
 /// اتصال Host به درز احراز Settlement admin Endpoints.

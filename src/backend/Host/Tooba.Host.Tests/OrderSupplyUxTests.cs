@@ -12,7 +12,7 @@ public sealed class OrderSupplyUxTests
     [Fact]
     public void List_items_carry_supply_status()
     {
-        var models = Host(Path.Combine("Admin", "AdminPanelModels.cs"));
+        var models = Host(Path.Combine("Admin", "Panel", "AdminPanelModels.cs"));
         Assert.Contains("SupplyStatus", models, StringComparison.Ordinal);
         var orders = Host(Path.Combine(
             "..", "..", "Modules", "Order", "Tooba.Order.Infrastructure",

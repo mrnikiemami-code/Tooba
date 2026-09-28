@@ -2669,6 +2669,37 @@
     "evidence": "docs/evidence/TB-TMAR-HOST-ADMIN-CANON-007/",
     "workflowStop": "USER_REVIEW_HOST_ADMIN_CANON_007"
   },
+  "hostAdminCanon008": {
+    "task": "TB-TMAR-HOST-ADMIN-CANON-008",
+    "parentTask": "TB-TMAR-HOST-ADMIN-CANON-007",
+    "state": "HOST_ADMIN_PLATFORM_SHALLOW_CAPABILITY_STRUCTURE_AND_NAMESPACE_ALIGNMENT",
+    "parentCommit": "9a6be0fb9ae91970038d6a576f20e6f826badb13",
+    "adminRootFlatFiles": "ZERO",
+    "adminRecursiveFileCount": 15,
+    "accessFolder": "CANONICAL",
+    "authorizersFolder": "CANONICAL",
+    "panelFolder": "CANONICAL",
+    "gridFolder": "CANONICAL",
+    "developmentFolder": "CANONICAL",
+    "pathNamespace": "EXACT",
+    "duplicateOldPath": "ZERO",
+    "compatibilityShim": "ZERO",
+    "behavior": "PRESERVED",
+    "diLifetimes": "PRESERVED",
+    "routes": "PRESERVED",
+    "errorCodes": "PRESERVED",
+    "canon001Through007": "PRESERVED",
+    "preExistingDriftDiscovered": [
+      "TmarSourceSizeAndInfraAppTests.Hand_written_source_size_does_not_expand_beyond_baseline stale before CANON-008 (deleted Host Admin composer entries + unrelated module renames/growth at HEAD)",
+      "HostOrderReverseAuditGuardTests stale at HEAD (R7 inventory lists Host/CustomerProfile removed in 8060ba60)",
+      "dev_actor_canon_007",
+      "whole_order_cancel_until_dispatch",
+      "StoryFoundationTests consumer of AdminPanelAccess"
+    ],
+    "focusedValidation": "CANON_008_GUARD_6_PASS_CANON_007_006_PASS_AFFECTED_GUARDS_PASS",
+    "evidence": "docs/evidence/TB-TMAR-HOST-ADMIN-CANON-008/",
+    "workflowStop": "USER_REVIEW_HOST_ADMIN_CANON_008"
+  },
   "hostAdminAmcHoldPolicy": {
     "task": "TB-TMAR-HOST-ADMIN-AMC-001-W35-HOLD-POLICY",
     "parentTask": "TB-TMAR-HOST-ADMIN-AMC-001-W34-TEMPLATE-SEEDS",

@@ -1,5 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using Tooba.Host.Admin;
+using Tooba.Host.Admin.Development;
 using Tooba.Host.Seller;
 using Tooba.Host.Storefront;
 using Tooba.OperatorProfile.Application;

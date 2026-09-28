@@ -1,4 +1,4 @@
-namespace Tooba.Host.Admin;
+namespace Tooba.Host.Admin.Panel;
 
 /// <summary>
 /// شمارنده‌های عملیاتی داشبورد مدیر که فقط از دادهٔ واقعی ماژول‌ها ساخته می‌شوند.
