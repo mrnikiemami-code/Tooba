@@ -33,7 +33,7 @@ no new AccessControl/Identity redesign.
 
 ## Final state
 
-- Commit-SHA: `__PENDING__`
+- Commit-SHA: `ca11d31e058fdd1704f04a0eec11a749e7461af3`
 - HEAD == origin/main: YES
 - Tracked working tree: clean
 - User work preserved: yes
