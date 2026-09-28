@@ -168,6 +168,9 @@
   <data name="seller.authorization.unavailable" xml:space="preserve">
     <value>سرویس مجوز در دسترس نیست.</value>
   </data>
+  <data name="order.authorization.unavailable" xml:space="preserve">
+    <value>سرویس مجوز سفارش در دسترس نیست.</value>
+  </data>
   <data name="reservation.policy.initial.invalid" xml:space="preserve">
     <value>مدت رزرو اولیه باید عددی صحیح بین ۱ و ۴۳۲۰۰ دقیقه باشد.</value>
   </data>

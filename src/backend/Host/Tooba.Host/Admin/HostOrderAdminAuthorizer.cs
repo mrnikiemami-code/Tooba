@@ -1,46 +1,82 @@
-﻿using Tooba.BuildingBlocks;
-using Tooba.AccessControl.Application;
-using Tooba.AccessControl.Domain;
+﻿using Microsoft.AspNetCore.Http;
+using Tooba.BuildingBlocks;
+using Tooba.BuildingBlocks.Security;
 using Tooba.Order.Endpoints;
+using Tooba.Order.Endpoints.Errors;
 
-using Tooba.AccessControl.Application.Models;
-using Tooba.AccessControl.Application.Permissions;
 namespace Tooba.Host.Admin;
 
+/// <summary>
+/// Host transport adapter for Order admin Endpoints auth + capability checks.
+/// Panel gate delegates to <see cref="IAdminPanelAccess"/>; the capability gate uses the neutral
+/// authorization abstraction and fails closed on <see cref="AuthorizationDecisionKind.Unavailable"/>.
+/// </summary>
 internal sealed class HostOrderAdminAuthorizer(
-    CurrentAuthenticatedSession session,
-    ICurrentTenant tenant,
-    IAuthorizationGuard guard,
-    IHostEnvironment environment,
-    IAccessControlDirectory access) : IOrderAdminAuthorizer
+    IAdminPanelAccess adminAccess,
+    IAuthorizationService authz,
+    ICurrentTenant tenant) : IOrderAdminAuthorizer
 {
-    public Task<Guid> RequireAdminAsync(HttpContext context, CancellationToken cancellationToken) =>
-        AdminPanelAccess.RequireAuthorizedAsync(
-            context.Request, session, tenant, guard, environment, cancellationToken);
+    /// <inheritdoc />
+    public Task<Guid> RequireAdminAsync(HttpContext context, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(context);
+        return adminAccess.RequireAuthorizedAsync(context.Request, cancellationToken);
+    }
 
+    /// <inheritdoc />
     public async Task<Guid> RequirePermissionAsync(
         HttpContext context,
         string permissionId,
         CancellationToken cancellationToken)
     {
-        var actor = await AdminPanelAccess.RequireAuthorizedAsync(
-            context.Request, session, tenant, guard, environment, cancellationToken);
-        var scope = new AccessOwnerScope(
-            AccessOwnerScopeKind.Platform,
-            null,
-            tenant.Current?.TenantId.Value);
-        var effective = await access.GetEffectiveAccessAsync(actor, scope, cancellationToken);
-        var granted = effective.Permissions.Any(permission =>
-            !permission.DeniedByCeiling
-            && string.Equals(permission.PermissionId, permissionId, StringComparison.OrdinalIgnoreCase));
-        if (!granted)
+        ArgumentNullException.ThrowIfNull(context);
+        ArgumentException.ThrowIfNullOrWhiteSpace(permissionId);
+
+        var actor = await adminAccess.RequireAuthorizedAsync(context.Request, cancellationToken);
+        await EnsureAdminCapabilityAsync(actor, permissionId, cancellationToken);
+        return actor;
+    }
+
+    private async Task EnsureAdminCapabilityAsync(
+        Guid actorUserId,
+        string permissionId,
+        CancellationToken cancellationToken)
+    {
+        var decision = await authz.CanAsync(
+            new AuthorizationCheck
+            {
+                Subject = AuthorizationSubject.ForUser(actorUserId),
+                Resource = new AuthorizationResource
+                {
+                    Type = AuthorizationObjectTypes.Permission,
+                    Id = permissionId,
+                },
+                Permission = AuthorizationRelations.Check,
+                CallContext = new AuthorizationCallContext
+                {
+                    Edition = ToobaEdition.SingleStore,
+                    TenantId = tenant.Current?.TenantId.Value ?? "unknown",
+                },
+            },
+            cancellationToken);
+
+        if (decision.Kind == AuthorizationDecisionKind.Allow)
         {
-            throw new PlatformHttpException(
-                StatusCodes.Status403Forbidden,
-                "مجوز انجام این عملیات وجود ندارد.",
-                "order.operation.denied");
+            return;
         }
 
-        return actor;
+        // شکست زیرساخت مجوز هرگز ALLOW نیست؛ capability باید fail-closed بماند.
+        if (decision.Kind == AuthorizationDecisionKind.Unavailable)
+        {
+            throw new PlatformHttpException(
+                StatusCodes.Status503ServiceUnavailable,
+                "سرویس مجوز در دسترس نیست.",
+                OrderErrorCodes.AuthorizationUnavailable);
+        }
+
+        throw new PlatformHttpException(
+            StatusCodes.Status403Forbidden,
+            "مجوز انجام این عملیات وجود ندارد.",
+            OrderErrorCodes.OperationDenied);
     }
 }

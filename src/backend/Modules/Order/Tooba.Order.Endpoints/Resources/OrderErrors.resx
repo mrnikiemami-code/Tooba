@@ -168,6 +168,9 @@
   <data name="seller.authorization.unavailable" xml:space="preserve">
     <value>Authorization service unavailable.</value>
   </data>
+  <data name="order.authorization.unavailable" xml:space="preserve">
+    <value>Order authorization service is unavailable.</value>
+  </data>
   <data name="reservation.policy.initial.invalid" xml:space="preserve">
     <value>Initial reservation hold must be an integer between 1 and 43200 minutes.</value>
   </data>

@@ -55,8 +55,14 @@ public sealed class OrderEndpointPresentationTests
         "seller.authorization.unavailable",
     ];
 
+    private static readonly string[] AdminPanelCodes =
+    [
+        OrderErrorCodes.AuthorizationUnavailable,
+    ];
+
     private static readonly string[] AllCodes =
-        CompletenessCodes.Concat(StorefrontCodes).Concat(CustomerCodes).Concat(SellerCodes).ToArray();
+        CompletenessCodes.Concat(StorefrontCodes).Concat(CustomerCodes).Concat(SellerCodes)
+            .Concat(AdminPanelCodes).ToArray();
 
     /// <summary>
     /// Cross-cutting codes consumed by Order but canonically owned by FoundationErrorCatalogContributor.

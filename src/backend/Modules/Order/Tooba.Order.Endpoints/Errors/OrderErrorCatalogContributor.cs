@@ -141,6 +141,10 @@ public sealed class OrderErrorCatalogContributor : IErrorCatalogContributor
             "Seller party access denied."),
         D("seller.authorization.unavailable", ErrorClassification.Platform, StatusCodes.Status503ServiceUnavailable,
             "Authorization service unavailable."),
+
+        // Admin order capability gate: infrastructure outage must stay fail-closed (503).
+        D(OrderErrorCodes.AuthorizationUnavailable, ErrorClassification.Platform, StatusCodes.Status503ServiceUnavailable,
+            "Order authorization service unavailable."),
     ];
 
     private static ErrorDescriptor D(
