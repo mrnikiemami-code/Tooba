@@ -1,7 +1,6 @@
 using Tooba.BuildingBlocks;
 using Tooba.Identity.Contracts;
 using Tooba.Identity.Contracts.Problems;
-using Tooba.Identity.Infrastructure;
 
 namespace Tooba.Host.Admin;
 
@@ -72,25 +71,20 @@ internal static class AdminDevActorBootstrap
             return;
         }
 
-        try
-        {
-            await provider.GetRequiredService<IAuthorizationTupleWriter>().WriteAsync(
-                new AuthorizationRelationshipWrite
+        // قرارداد IAuthorizationTupleWriter رابطه را upsert (Touch) می‌کند و idempotent است؛
+        // بنابراین تکرار عضویت خطا نیست و هیچ catch عمومی برای «جریان موردانتظار» لازم نیست.
+        await provider.GetRequiredService<IAuthorizationTupleWriter>().WriteAsync(
+            new AuthorizationRelationshipWrite
+            {
+                Subject = AuthorizationSubject.ForUser(actor.Value),
+                Resource = new AuthorizationResource
                 {
-                    Subject = AuthorizationSubject.ForUser(actor.Value),
-                    Resource = new AuthorizationResource
-                    {
-                        Type = AuthorizationObjectTypes.Tenant,
-                        Id = tenant.TenantId.Value,
-                    },
-                    Relation = AuthorizationRelations.Member,
+                    Type = AuthorizationObjectTypes.Tenant,
+                    Id = tenant.TenantId.Value,
                 },
-                cancellationToken);
-        }
-        catch (InvalidOperationException)
-        {
-            return;
-        }
+                Relation = AuthorizationRelations.Member,
+            },
+            cancellationToken);
 
         lock (Gate)
         {

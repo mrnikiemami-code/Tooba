@@ -2650,6 +2650,25 @@
     "evidence": "docs/evidence/TB-TMAR-HOST-ADMIN-CANON-006/",
     "workflowStop": "USER_REVIEW_HOST_ADMIN_CANON_006"
   },
+  "hostAdminCanon007": {
+    "task": "TB-TMAR-HOST-ADMIN-CANON-007",
+    "parentTask": "TB-TMAR-HOST-ADMIN-CANON-006",
+    "state": "DEV_ADMIN_ACTOR_BOOTSTRAP_CONTRACTS_ONLY_AND_IDEMPOTENT_TUPLE_WRITE",
+    "parentCommit": "031b27c420a63e2532acaa862a86af02333a3e58",
+    "adminDevActorIdentityInfrastructure": "ZERO",
+    "adminDevActorIdentityBoundary": "CONTRACTS",
+    "adminDevActorRegistrationDuplicate": "TYPED_IDENTITY_DUPLICATE_IDENTIFIER_FAULT",
+    "adminDevActorInvalidOperationExpectedFlow": "ZERO",
+    "tupleWriteSemantics": "IDEMPOTENT_UPSERT_TOUCH_NO_CATCH_REQUIRED",
+    "adminDevActorBehavior": "PRESERVED_DEVELOPMENT_ONLY",
+    "adminFileCount": 15,
+    "canon006": "PRESERVED",
+    "canon005": "PRESERVED",
+    "canon004": "PRESERVED",
+    "focusedValidation": "CANON_007_006_GUARDS_PASS_17_17",
+    "evidence": "docs/evidence/TB-TMAR-HOST-ADMIN-CANON-007/",
+    "workflowStop": "USER_REVIEW_HOST_ADMIN_CANON_007"
+  },
   "hostAdminAmcHoldPolicy": {
     "task": "TB-TMAR-HOST-ADMIN-AMC-001-W35-HOLD-POLICY",
     "parentTask": "TB-TMAR-HOST-ADMIN-AMC-001-W34-TEMPLATE-SEEDS",
