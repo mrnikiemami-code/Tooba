@@ -721,6 +721,27 @@ Default completion rule: the active Host folder must end with ZERO production fi
 
 A certified/reference module used for canonical patterns is **read-only**: do not modify, re-audit, re-certify, run unrelated tests for it, or broaden active scope into it.
 
+### 25c. No Sink-Folder Regression / Closed-Folder Immutability
+
+A completed migration must not transfer debt from the active folder into another previously closed or retained folder.
+
+Before creating or moving a production file into any destination outside the exact active Host folder, inspect current SoT/evidence/guards and classify that destination as:
+- `OPEN_FOR_CURRENT_TASK`
+- `LOCKED_BY_ACCEPTED_DISPOSITION`
+- `NEW_LOCATION`
+
+If an accepted task/SoT/guard records an exact retained-file set, allowlist, ZERO state, final file count, or explicit closure for that destination, treat that set as immutable for ordinary later waves. Do not add a file there, resurrect a deleted folder, or create a new Host folder as a convenient staging/sink location unless the current task explicitly opens that destination and the Architect has authorized the expansion.
+
+Global invariant: **the current migration may reduce or preserve architectural debt outside the active folder, but must not silently increase it.**
+
+If an authorized exception changes a protected destination:
+- record the before/after file set;
+- justify why the destination is canonically correct;
+- update the relevant SoT/allowlist;
+- add or update a durable guard so later waves cannot grow it silently.
+
+Otherwise STOP with `INCOMPLETE` / `NEEDS_ARCHITECT_DECISION`; never achieve Host-folder ZERO by relocating responsibility into another closed Host folder.
+
 ## 26. Migration Completion States
 
 Return exactly one conceptual state:
