@@ -54,22 +54,30 @@ public sealed class ConfiguredAuthorizationSchemaBootstrapper : IAuthorizationSc
             return;
         }
 
-        _appliedVersion = _schema.SchemaVersion;
         _logger.LogInformation(
             "Authorization schema bootstrap requested. Version {SchemaVersion}. Token is not logged.",
             _schema.SchemaVersion);
 
         if (!string.Equals(_options.Mode, "SpiceDb", StringComparison.Ordinal) || _services is null)
         {
+            _logger.LogInformation(
+                "Authorization schema bootstrap skipped: no SpiceDB write. Mode {Mode}.",
+                _options.Mode);
             return;
         }
 
         var adapter = _services.GetRequiredService<SpiceDbAuthorizationAdapter>();
         await adapter.WriteSchemaAsync(_schema.SchemaText, cancellationToken);
+
+        _appliedVersion = _schema.SchemaVersion;
+        _logger.LogInformation(
+            "Authorization schema applied. Version {SchemaVersion}.",
+            _schema.SchemaVersion);
     }
 
     /// <summary>
-    /// نسخهٔ اعمال‌شده برای تست؛ null یعنی bootstrap اجرا نشده.
+    /// نسخهٔ schema که واقعاً و با موفقیت روی SpiceDB اعمال شده؛ null یعنی bootstrap اجرا نشده،
+    /// درخواست نشده، یا نوشتن schema با شکست/بدون نوشتن واقعی تمام شده است.
     /// </summary>
     public int? AppliedVersion => _appliedVersion;
 }

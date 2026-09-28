@@ -64,9 +64,12 @@ public sealed class HostAuthorizationEvacuationGuardTests
     public void Host_composition_binds_the_module_authorization_slice()
     {
         var program = File.ReadAllText(RepoFile("src/backend/Host/Tooba.Host/Program.cs"));
-        Assert.Contains("using Tooba.AccessControl.Infrastructure.Authorization;", program, StringComparison.Ordinal);
         Assert.Contains("AddToobaModules", program, StringComparison.Ordinal);
         Assert.DoesNotContain("AddToobaAuthorization()", program, StringComparison.Ordinal);
+        Assert.DoesNotContain(
+            "using Tooba.AccessControl.Infrastructure.Authorization;",
+            program,
+            StringComparison.Ordinal);
 
         var module = File.ReadAllText(RepoFile(
             "src/backend/Modules/AccessControl/Tooba.AccessControl.Infrastructure/AccessControlModule.cs"));

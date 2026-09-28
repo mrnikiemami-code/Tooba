@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Hosting;
+﻿using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Tooba.AccessControl.Infrastructure.Authorization;
@@ -123,13 +124,60 @@ public sealed class AuthorizationFoundationTests
             logger);
         await skipped.BootstrapIfConfiguredAsync(CancellationToken.None);
         Assert.Null(skipped.AppliedVersion);
+    }
 
-        var applied = new ConfiguredAuthorizationSchemaBootstrapper(
-            Options.Create(new SpiceDbAuthorizationOptions { ApplySchemaOnStartup = true }),
+    [Fact]
+    public async Task AppliedVersion_means_successfully_applied_only()
+    {
+        var schema = new FoundationAuthorizationSchemaProvider();
+        var logger = LoggerFactory.Create(b => { }).CreateLogger<ConfiguredAuthorizationSchemaBootstrapper>();
+
+        // requested but no actual SpiceDb write (mode not SpiceDb / no services) => stays null.
+        var requestedNoWrite = new ConfiguredAuthorizationSchemaBootstrapper(
+            Options.Create(new SpiceDbAuthorizationOptions { ApplySchemaOnStartup = true, Mode = "InMemory" }),
             schema,
             logger);
-        await applied.BootstrapIfConfiguredAsync(CancellationToken.None);
-        Assert.Equal(3, applied.AppliedVersion);
+        await requestedNoWrite.BootstrapIfConfiguredAsync(CancellationToken.None);
+        Assert.Null(requestedNoWrite.AppliedVersion);
+
+        // requested, SpiceDb mode, but the real write fails => stays null.
+        var failingWrite = new ConfiguredAuthorizationSchemaBootstrapper(
+            Options.Create(new SpiceDbAuthorizationOptions
+            {
+                ApplySchemaOnStartup = true,
+                Mode = "SpiceDb",
+                SpiceDb = new SpiceDbConnectionOptions
+                {
+                    Endpoint = "127.0.0.1:1",
+                    Token = "test-only-not-for-production",
+                    UseTls = false,
+                    TimeoutSeconds = 1,
+                    RetryMaxAttempts = 1,
+                },
+            }),
+            schema,
+            logger,
+            new ServiceCollection()
+                .AddSingleton(new SpiceDbAuthorizationAdapter(
+                    Options.Create(new SpiceDbAuthorizationOptions
+                    {
+                        Mode = "SpiceDb",
+                        SpiceDb = new SpiceDbConnectionOptions
+                        {
+                            Endpoint = "127.0.0.1:1",
+                            Token = "test-only-not-for-production",
+                            UseTls = false,
+                            TimeoutSeconds = 1,
+                            RetryMaxAttempts = 1,
+                        },
+                    }),
+                    new AuthorizationInstrumentation(),
+                    new InMemoryAuthorizationSecurityEventSink(),
+                    Microsoft.Extensions.Logging.Abstractions.NullLogger<SpiceDbAuthorizationAdapter>.Instance))
+                .BuildServiceProvider());
+        await Assert.ThrowsAnyAsync<Exception>(() =>
+            failingWrite.BootstrapIfConfiguredAsync(CancellationToken.None));
+        Assert.Null(failingWrite.AppliedVersion);
     }
 
     [Fact]

@@ -1,6 +1,5 @@
 using MassTransit;
-using Microsoft.Extensions.Options;
-using Tooba.AccessControl.Infrastructure.Authorization;
+using Tooba.AccessControl.Contracts.Readiness;
 using Tooba.BuildingBlocks;
 
 namespace Tooba.Host;
@@ -8,6 +7,7 @@ namespace Tooba.Host;
 /// <summary>
 /// ارزیابی readiness بدون باز کردن DbContext یا نشت connection string.
 /// فقط وابستگی‌های بحرانی پیکربندی و messaging (در صورت فعال بودن) را بررسی می‌کند.
+/// آمادگی مجوز فقط از درز باریک <see cref="IAuthorizationReadinessProbe"/> خوانده می‌شود.
 /// </summary>
 internal static class HostReadinessEvaluator
 {
@@ -17,13 +17,13 @@ internal static class HostReadinessEvaluator
     internal sealed record Evaluation(bool Ready, IReadOnlyDictionary<string, string> Checks);
 
     /// <summary>
-    /// readiness را از registry و options می‌سازد؛ SpiceDB probe فقط وقتی Mode=SpiceDb فعال است.
+    /// readiness را از registry، options و درز آمادگی مجوز می‌سازد.
     /// </summary>
     internal static async Task<Evaluation> EvaluateAsync(
         ControlPlaneRegistry registry,
         ToobaPlatformOptions platformOptions,
         MessagingHostOptions messagingOptions,
-        SpiceDbAuthorizationOptions authorizationOptions,
+        IAuthorizationReadinessProbe authorizationReadiness,
         IServiceProvider services,
         CancellationToken cancellationToken = default)
     {
@@ -49,34 +49,12 @@ internal static class HostReadinessEvaluator
 
         checks["postgresql"] = "configured";
 
-        var authMode = authorizationOptions.Mode.Trim();
-        if (authMode.Equals("SpiceDb", StringComparison.OrdinalIgnoreCase))
+        var readiness = await authorizationReadiness.EvaluateAsync(cancellationToken);
+        checks["authorization"] = readiness.CheckLabel;
+        if (!readiness.Ready)
         {
-            if (string.IsNullOrWhiteSpace(authorizationOptions.SpiceDb.Endpoint))
-            {
-                checks["authorization"] = "spicedb-endpoint-missing";
-                return new Evaluation(false, checks);
-            }
-
-            if (string.IsNullOrWhiteSpace(authorizationOptions.SpiceDb.Token))
-            {
-                checks["authorization"] = "spicedb-token-missing";
-                return new Evaluation(false, checks);
-            }
-
-            var probe = services.GetService<SpiceDbHealthProbe>();
-            if (probe is not null && authorizationOptions.SpiceDb.ReadinessProbeEnabled)
-            {
-                var reachable = await probe.CheckAsync(cancellationToken);
-                if (!reachable)
-                {
-                    checks["authorization"] = "spicedb-unreachable";
-                    return new Evaluation(false, checks);
-                }
-            }
+            return new Evaluation(false, checks);
         }
-
-        checks["authorization"] = authMode.ToLowerInvariant();
 
         if (messagingOptions.Enabled)
         {

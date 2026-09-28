@@ -38,6 +38,9 @@ public sealed class AccessControlModule : IToobaModule
         services.AddScoped<
             Tooba.AccessControl.Contracts.Access.IAccessControlEffectiveAccessReader,
             Adapters.AccessControlEffectiveAccessReader>();
+        services.AddScoped<
+            Tooba.AccessControl.Contracts.Readiness.IAuthorizationReadinessProbe,
+            Adapters.AuthorizationReadinessProbe>();
 
         services.AddOptions<SpiceDbAuthorizationOptions>()
             .Bind(configuration.GetSection(SpiceDbAuthorizationOptions.SectionName))

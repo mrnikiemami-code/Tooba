@@ -28,7 +28,6 @@ using Tooba.Host.Seller;
 using Tooba.Returns.Endpoints;
 using Tooba.Notification.Endpoints;
 using Tooba.AccessControl.Endpoints;
-using Tooba.AccessControl.Infrastructure.Authorization;
 using Tooba.Payment.Endpoints;
 using Tooba.Promotion.Endpoints;
 using Tooba.Host.Storefront;
