@@ -15,14 +15,21 @@ public sealed record StoreHoldPolicyHoursWrite(
     int? ManualPaymentReviewHoldHours);
 
 /// <summary>
-/// Catalog persistence boundary for StoreHoldPolicySettings cart/payment hour fields.
-/// Reservation-cycle fields use <see cref="IStoreReservationPolicySettingsPort"/>.
+/// Read-only module boundary for store cart/payment hold-hour overrides.
+/// Consumers outside Catalog must depend on this narrow seam rather than Catalog persistence.
 /// </summary>
-public interface IStoreHoldPolicySettingsPort
+public interface IStoreHoldPolicyHoursReader
 {
     /// <summary>Reads store cart/payment hold-hour overrides (null = inherit platform).</summary>
     Task<StoreHoldPolicyHoursSnapshot> GetHoursAsync(CancellationToken cancellationToken);
+}
 
+/// <summary>
+/// Catalog persistence boundary for StoreHoldPolicySettings cart/payment hour fields.
+/// Reservation-cycle fields use <see cref="IStoreReservationPolicySettingsPort"/>.
+/// </summary>
+public interface IStoreHoldPolicySettingsPort : IStoreHoldPolicyHoursReader
+{
     /// <summary>Writes store cart/payment hold-hour overrides; creates singleton row when missing.</summary>
     Task SaveHoursAsync(StoreHoldPolicyHoursWrite write, CancellationToken cancellationToken);
 }
