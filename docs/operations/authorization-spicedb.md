@@ -4,7 +4,7 @@
 
 ```text
 Authorization engine = SpiceDB (ReBAC)
-SDK = Authzed.Net 1.6.0 (Host only)
+SDK = Authzed.Net 1.6.0 (Tooba.AccessControl.Infrastructure only)
 Modes = Disabled | InMemory (dev/test) | SpiceDb (production)
 Production = fail-fast; no InMemory; TLS required
 Fail-closed = infrastructure uncertainty never becomes ALLOW
@@ -27,13 +27,15 @@ Fail-closed = infrastructure uncertainty never becomes ALLOW
 
 ## Topology
 
-- **Host** owns SpiceDB adapter, schema bootstrap, health probe, and use-case guards.
+- **AccessControl module** owns the SpiceDB adapter, schema bootstrap, health probe, and use-case guards
+  (`Modules/AccessControl/Tooba.AccessControl.Infrastructure/Authorization`).
+- **Host** only composes the module and consumes readiness; it owns no adapter code.
 - **Modules** write tuples via `IAuthorizationTupleWriter` / outbox projections only.
 - **Domain/Application** must not reference Authzed.Net.
 
 ## Schema governance
 
-- Versioned schema: `src/backend/Host/Tooba.Host/authorization-foundation.zed` (v2 foundation).
+- Versioned schema: `src/backend/Modules/AccessControl/Tooba.AccessControl.Infrastructure/Authorization/authorization-foundation.zed` (v3 foundation).
 - Code mirror: `FoundationAuthorizationSchemaProvider`.
 - Production apply: explicit ops process or controlled `ApplySchemaOnStartup=true`.
 - Rollback: SpiceDB schema changes are forward-only; plan compensating schema writes.
