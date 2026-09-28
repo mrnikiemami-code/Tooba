@@ -4,8 +4,8 @@
   "frontendFrozen": true,
   "checkoutState": "PAUSED_AT_SAFE_W5_CHECKPOINT",
   "lastAcceptedTask": "TB-TMAR-HOST-ROOT-GLOBAL-BOUNDARIES-001-R2",
-  "lastAcceptedCommit": "PENDING_PUSH",
-  "lastAcceptedSoTStamp": "PENDING_PUSH",
+  "lastAcceptedCommit": "ba29c839ca64e0f37f36ad68af25ba08f7ba9f1f",
+  "lastAcceptedSoTStamp": "ba29c839ca64e0f37f36ad68af25ba08f7ba9f1f",
   "lastAcceptedNote": "TB-TMAR-HOST-ROOT-GLOBAL-BOUNDARIES-001-R2 closes the R1 false-positive certification. Tooba.Order.Infrastructure (touched destination project) is now genuinely Contracts-only: foreign Application/Infrastructure/Domain = ZERO and Payment.Contracts is an explicit direct reference. Authorization preserved; behavior parity preserved; no schema/route/frontend change.",
   "nextTask": "USER_REVIEW_HOST_ROOT_GLOBAL_BOUNDARIES_001_R2",
   "nextTaskGate": "USER_REVIEW_REQUIRED_AFTER_HOST_ROOT_GLOBAL_BOUNDARIES_001_R2_STOP",
@@ -3556,6 +3556,7 @@
     "focusedTestState": "PASS_HOST_FOCUSED_27_OF_27_ORDER_INFRA_GUARD_4_OF_4",
     "durableGuardState": "OrderInfrastructureForeignLayerBoundaryGuardTests_NO_WHITELIST",
     "certificationState": "PASS",
+    "certificationCommit": "ba29c839ca64e0f37f36ad68af25ba08f7ba9f1f",
     "evidence": "docs/evidence/TB-TMAR-HOST-ROOT-GLOBAL-BOUNDARIES-001-R2/",
     "workflowStop": "USER_REVIEW_HOST_ROOT_GLOBAL_BOUNDARIES_001_R2"
   }
