@@ -18,17 +18,11 @@ public sealed class HostCartResidualGuardTests
     {
         ["Program.cs"] = "endpoint/MediatR/module composition only (no Cart implementation)",
         ["Composition/ToobaModuleComposition.cs"] = "explicit module list composition",
-        ["CommerceHoldPolicy.cs"] = "Payment/Order hold adapter; holds only (no Cart persistence value)",
-        ["CheckoutReservationHoldPolicy.cs"] = "Order hold port adapter (Payment options only)",
         ["Development/ProductWorkspaceDevelopmentBootstrap.cs"] = "Development-only schema migration list",
         ["Storefront/StorefrontModels.cs"] = "storefront wire DTOs that carry CartId",
         ["Storefront/StorefrontComposer.cs"] = "storefront read composition flag",
         ["Storefront/StorefrontEndpoints.cs"] = "checkout identity policy flag name (no Cart authority)",
         ["Order/HostOrderStorefrontActor.cs"] = "thin session → CartAccess adapter",
-        ["GlobalUsings.SettlementApp.cs"] = "Settlement-only global usings (no Cart import)",
-        ["GlobalUsings.SettlementDomain.cs"] = "Settlement-only global usings (no Cart import)",
-        ["UnpaidOrderExpiryHostedService.cs"] = "Order worker shell (no Cart authority)",
-        ["UnpaidOrderExpiryHostOptions.cs"] = "Order worker scheduling knobs",
     };
 
     [Fact]

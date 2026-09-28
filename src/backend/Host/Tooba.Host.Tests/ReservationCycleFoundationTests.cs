@@ -265,9 +265,9 @@ public sealed class ReservationCycleFoundationTests
         Assert.DoesNotContain("ReservationCycleCoordinator", Read("src/backend/Host/Tooba.Host/Program.cs"), StringComparison.Ordinal);
         Assert.Contains("IReservationCyclePolicyResolver", Read("src/backend/Modules/Order/Tooba.Order.Infrastructure/OrderModule.cs"), StringComparison.Ordinal);
         Assert.Contains("IReservationCycleCoordinator", Read("src/backend/Modules/Order/Tooba.Order.Infrastructure/OrderModule.cs"), StringComparison.Ordinal);
-        Assert.Contains("IUnpaidOrderExpiryReconciler", Read("src/backend/Host/Tooba.Host/UnpaidOrderExpiryHostedService.cs"), StringComparison.Ordinal);
-        Assert.DoesNotContain("IReservationCycleDirectory", Read("src/backend/Host/Tooba.Host/UnpaidOrderExpiryHostedService.cs"), StringComparison.Ordinal);
-        Assert.DoesNotContain("DateTimeOffset.UtcNow", Read("src/backend/Host/Tooba.Host/UnpaidOrderExpiryHostedService.cs"), StringComparison.Ordinal);
+        Assert.Contains("IUnpaidOrderExpiryReconciler", Read("src/backend/Modules/Order/Tooba.Order.Infrastructure/ReservationCycle/UnpaidOrderExpiryWorker.cs"), StringComparison.Ordinal);
+        Assert.DoesNotContain("IReservationCycleDirectory", Read("src/backend/Modules/Order/Tooba.Order.Infrastructure/ReservationCycle/UnpaidOrderExpiryWorker.cs"), StringComparison.Ordinal);
+        Assert.DoesNotContain("DateTimeOffset.UtcNow", Read("src/backend/Modules/Order/Tooba.Order.Infrastructure/ReservationCycle/UnpaidOrderExpiryWorker.cs"), StringComparison.Ordinal);
         Assert.Contains("LOCK-SF-076", Read("docs/architecture/TOOBA-LOCKS.md"), StringComparison.Ordinal);
         Assert.Contains("Reservation Cycle is not a Payment Attempt", Read("docs/architecture/TOOBA-LOCKS.md"), StringComparison.Ordinal);
     }

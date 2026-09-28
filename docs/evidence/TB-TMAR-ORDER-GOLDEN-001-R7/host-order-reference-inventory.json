@@ -110,6 +110,24 @@
     "guestActorAuthority": "StorefrontGuestActor.ActorId",
     "note": "Host/CustomerProfile Development seed evacuated to CustomerProfile.Infrastructure/Development; Order.Application guest actor dependency removed."
   },
+  "hostRootGlobalBoundariesR1Update": {
+    "updatedBy": "TB-TMAR-HOST-ROOT-GLOBAL-BOUNDARIES-001-R1",
+    "removedFiles": [
+      "CheckoutReservationHoldPolicy.cs",
+      "CommerceHoldPolicy.cs",
+      "GlobalUsings.SettlementApp.cs",
+      "GlobalUsings.SettlementDomain.cs",
+      "UnpaidOrderExpiryHostedService.cs",
+      "UnpaidOrderExpiryHostOptions.cs"
+    ],
+    "moduleOwnedRehomes": [
+      "Order.Infrastructure/Integrations/Payment/CheckoutReservationHoldPolicyAdapter.cs",
+      "Order.Infrastructure/ReservationCycle/UnpaidOrderExpiryWorker.cs",
+      "Order.Infrastructure/ReservationCycle/UnpaidOrderExpiryWorkerOptions.cs",
+      "Payment.Infrastructure/Adapters/CommerceHoldPolicySource.cs"
+    ],
+    "note": "All six former Host-root global-boundary files evacuated: commerce hold to Payment, checkout hold adapter + unpaid-expiry worker to Order, Settlement global-using shims deleted. Historical r7-r11r1 and earlier evacuation updates left intact; files list refreshed."
+  },
   "extraFiles": [
     "Admin/Panel/AdminPanelEndpoints.cs",
     "Admin/Access/Authorizers/HostOrderAdminAuthorizer.cs",
@@ -119,17 +137,11 @@
     "Admin/Panel/AdminPanelComposer.cs",
     "Admin/Panel/AdminPanelEndpoints.cs",
     "Admin/Panel/AdminPanelModels.cs",
-    "Admin/HoldPolicySettingsEndpoints.cs",
     "Admin/Access/Authorizers/HostOrderAdminAuthorizer.cs",
     "Admin/Access/Authorizers/HostOrderAdminEffectiveAccessReader.cs",
-    "Admin/ProductWorkspaceDevelopmentBootstrap.cs",
-    "Admin/ProductWorkspaceModels.cs",
-    "Admin/ReservationPolicyAdminComposer.cs",
-    "Admin/ReservationPolicyAdminEndpoints.cs",
-    "CheckoutReservationHoldPolicy.cs",
-    "CommerceHoldPolicy.cs",
     "Composition/ToobaModuleComposition.cs",
     "Development/MarketplaceDevelopmentBootstrap.cs",
+    "Development/ProductWorkspaceDevelopmentBootstrap.cs",
     "Grid/AdminListGridPolicies.cs",
     "Grid/AdminSellersGridQueryEngine.cs",
     "Order/HostOrderStorefrontActor.cs",
@@ -141,8 +153,6 @@
     "Settings/SettingsFoundationDevelopmentSeed.cs",
     "Storefront/StorefrontEndpoints.cs",
     "Support/SupportDevelopmentSeedHost.cs",
-    "UnpaidOrderExpiryHostedService.cs",
-    "UnpaidOrderExpiryHostOptions.cs",
     "Wishlist/WishlistDevelopmentSeed.cs",
     "Wishlist/WishlistEndpoints.cs"
   ]

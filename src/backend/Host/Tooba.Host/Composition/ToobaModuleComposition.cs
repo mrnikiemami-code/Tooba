@@ -32,7 +32,7 @@ using Tooba.ProductWorkspace.Infrastructure;
 using global::Tooba.Story.Infrastructure;
 using Tooba.Fulfillment.Infrastructure.DependencyInjection;
 using Tooba.Returns.Infrastructure.DependencyInjection;
-using Tooba.Settlement.Infrastructure;
+using Tooba.Settlement.Infrastructure.DependencyInjection;
 using Tooba.Notification.Infrastructure.DependencyInjection;
 using Tooba.AccessControl.Infrastructure;
 using Tooba.Support.Infrastructure.DependencyInjection;

@@ -1,45 +1,39 @@
 using System.Diagnostics.Metrics;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Tooba.BuildingBlocks;
-using Tooba.Order.Application;
-using Tooba.Order.Application.Checkout.Abuse;
-using Tooba.Order.Application.Checkout.Contracts;
-using Tooba.Order.Application.Checkout.Policies;
-using Tooba.Order.Application.Checkout.Process;
-using Tooba.Order.Application.PurchaseVerification;
 using Tooba.Order.Application.ReservationCycle.Contracts;
-using Tooba.Order.Application.ReservationCycle.Policies;
-using Tooba.Order.Application.ReservationCycle.Services;
-using Tooba.Order.Application.Seller.Policies;
 using Tooba.Persistence;
 
-namespace Tooba.Host;
+namespace Tooba.Order.Infrastructure.ReservationCycle;
 
 /// <summary>
-/// Host shell only: tenant loop, config, logging, telemetry.
-/// Business reconciliation lives in <see cref="IUnpaidOrderExpiryReconciler"/>.
+/// Order-owned worker shell for unpaid-payment expiry. Host supplies only neutral worker/context seams.
+/// Business reconciliation remains in <see cref="IUnpaidOrderExpiryReconciler"/>.
 /// </summary>
-internal sealed class UnpaidOrderExpiryHostedService : BackgroundService
+internal sealed class UnpaidOrderExpiryWorker : BackgroundService
 {
     public const string WorkerName = "unpaid-order-expiry";
 
-    private static readonly Counter<long> ExpiredPayments = ToobaTelemetry.Meter.CreateCounter<long>("tooba.unpaid_expiry.expired");
+    private static readonly Counter<long> ExpiredPayments =
+        ToobaTelemetry.Meter.CreateCounter<long>("tooba.unpaid_expiry.expired");
 
     private readonly IOutboxPollTargetSource _targets;
-    private readonly WorkerCommerceContextFactory _workerContext;
+    private readonly IWorkerCommerceContextFactory _workerContext;
     private readonly IServiceScopeFactory _scopes;
-    private readonly UnpaidOrderExpiryHostOptions _options;
-    private readonly BackgroundWorkerRegistry _registry;
-    private readonly ILogger<UnpaidOrderExpiryHostedService> _logger;
+    private readonly UnpaidOrderExpiryWorkerOptions _options;
+    private readonly IBackgroundWorkerRegistry _registry;
+    private readonly ILogger<UnpaidOrderExpiryWorker> _logger;
 
-    /// <summary>کارگر را به اهداف Tenant وصل می‌کند.</summary>
-    public UnpaidOrderExpiryHostedService(
+    public UnpaidOrderExpiryWorker(
         IOutboxPollTargetSource targets,
-        WorkerCommerceContextFactory workerContext,
+        IWorkerCommerceContextFactory workerContext,
         IServiceScopeFactory scopes,
-        IOptions<UnpaidOrderExpiryHostOptions> options,
-        BackgroundWorkerRegistry registry,
-        ILogger<UnpaidOrderExpiryHostedService> logger)
+        IOptions<UnpaidOrderExpiryWorkerOptions> options,
+        IBackgroundWorkerRegistry registry,
+        ILogger<UnpaidOrderExpiryWorker> logger)
     {
         _targets = targets;
         _workerContext = workerContext;
@@ -49,7 +43,6 @@ internal sealed class UnpaidOrderExpiryHostedService : BackgroundService
         _logger = logger;
     }
 
-    /// <inheritdoc />
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         if (!_options.Enabled)

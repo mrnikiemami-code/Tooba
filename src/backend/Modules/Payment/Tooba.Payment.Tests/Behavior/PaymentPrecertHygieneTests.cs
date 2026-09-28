@@ -136,6 +136,8 @@ public sealed class PaymentPrecertHygieneTests
         services.AddSingleton<IIdGenerator, UuidV7IdGenerator>();
         services.AddScoped<IPayableCheckoutReader, PermissivePayableCheckoutReader>();
         services.AddScoped<ICommerceHoldPolicySource, PermissiveCommerceHoldPolicySource>();
+        services.AddScoped<Tooba.Catalog.Contracts.Reservation.IStoreHoldPolicyHoursReader, PermissiveStoreHoldPolicyHoursReader>();
+        services.AddScoped<Tooba.Payment.Application.Ports.IPaymentHoldSettingsDirectory, PermissivePaymentHoldSettingsDirectory>();
         services.AddScoped<IWalletOrderPaymentPort, RecordingWalletPort>();
         services.AddSingleton<IModuleCallTracer, ModuleCallTracer>();
         services.AddScoped<OutboxSaveChangesInterceptor>();
@@ -548,6 +550,36 @@ public sealed class PaymentPrecertHygieneTests
             utcNow.AddMinutes(30);
 
         public DateTimeOffset ResolveManualReviewExpiresAt(DateTimeOffset utcNow) => utcNow.AddHours(1);
+    }
+
+    /// <summary>خوانندهٔ حد نگه‌داشت فروشگاه؛ طبق مرز فقط‌قراردادی Catalog در تست تکمیل می‌شود.</summary>
+    private sealed class PermissiveStoreHoldPolicyHoursReader
+        : Tooba.Catalog.Contracts.Reservation.IStoreHoldPolicyHoursReader
+    {
+        public Task<Tooba.Catalog.Contracts.Reservation.StoreHoldPolicyHoursSnapshot> GetHoursAsync(
+            CancellationToken cancellationToken) =>
+            Task.FromResult(new Tooba.Catalog.Contracts.Reservation.StoreHoldPolicyHoursSnapshot(
+                null,
+                null,
+                null,
+                null));
+    }
+
+    /// <summary>فهرست override روش پرداخت؛ فقط برای کامل‌شدن گراف DI تست.</summary>
+    private sealed class PermissivePaymentHoldSettingsDirectory
+        : Tooba.Payment.Application.Ports.IPaymentHoldSettingsDirectory
+    {
+        public Task<IReadOnlyList<Tooba.Payment.Application.Ports.PaymentMethodHoldOverrideDto>>
+            ListMethodOverridesAsync(CancellationToken cancellationToken) =>
+            Task.FromResult<IReadOnlyList<Tooba.Payment.Application.Ports.PaymentMethodHoldOverrideDto>>([]);
+
+        public Task UpsertMethodOverrideAsync(
+            string providerCode,
+            int? onlinePaymentHoldHours,
+            int? manualPaymentInitialHoldHours,
+            int? manualPaymentReviewHoldHours,
+            DateTimeOffset updatedAtUtc,
+            CancellationToken cancellationToken) => Task.CompletedTask;
     }
 
     private sealed class ThrowingCommerceContextFactory : IWorkerCommerceContextFactory

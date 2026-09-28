@@ -9,13 +9,6 @@ public sealed class HostFolderStructureTests
     private static readonly HashSet<string> RootCsAllowlist = new(StringComparer.OrdinalIgnoreCase)
     {
         "Program.cs",
-        // W1 deferred: checkout/order/payment-adjacent root leftovers
-        "CheckoutReservationHoldPolicy.cs",
-        "CommerceHoldPolicy.cs",
-        "GlobalUsings.SettlementApp.cs",
-        "GlobalUsings.SettlementDomain.cs",
-        "UnpaidOrderExpiryHostedService.cs",
-        "UnpaidOrderExpiryHostOptions.cs",
     };
 
     [Fact]
