@@ -56,14 +56,10 @@ public sealed class CartLifetimeSeparationTests
         Assert.Contains("ManualPaymentReviewHoldHours", app, StringComparison.Ordinal);
         Assert.Contains("CartLifetimeOptions", Read("src/backend/Modules/Cart/Tooba.Cart.Application/Lifetime/CartLifetimeOptions.cs"), StringComparison.Ordinal);
         Assert.Contains(nameof(ICheckoutReservationHoldPolicy), typeof(ICheckoutReservationHoldPolicy).Name);
-        var policy = new CheckoutReservationHoldPolicy(
-            Microsoft.Extensions.Options.Options.Create(new PaymentGatewayOptions
-            {
-                OnlinePaymentHoldHours = 2,
-                ManualPaymentInitialHoldHours = 3,
-            }));
-        var now = DateTimeOffset.Parse("2026-09-12T00:00:00Z");
-        Assert.Equal(now.AddHours(3), policy.ResolveInitialExpiresAt(now));
+        Assert.Contains(
+            "AddOrderReservationCycleBoundaries",
+            Read("src/backend/Modules/Order/Tooba.Order.Infrastructure/ReservationCycle/ReservationCycleRegistration.cs"),
+            StringComparison.Ordinal);
     }
 
     [Fact]
@@ -78,12 +74,16 @@ public sealed class CartLifetimeSeparationTests
     }
 
     [Fact]
-    public void Host_registers_hold_policy_and_cart_lifetime()
+    public void Module_registers_hold_policy_and_cart_lifetime()
     {
         var program = Read("src/backend/Host/Tooba.Host/Program.cs");
-        Assert.Contains("ICheckoutReservationHoldPolicy", program, StringComparison.Ordinal);
+        Assert.DoesNotContain("ICheckoutReservationHoldPolicy", program, StringComparison.Ordinal);
         Assert.DoesNotContain("ICartPersistenceHoursResolver", program, StringComparison.Ordinal);
         Assert.DoesNotContain("CartLifetimeOptions", program, StringComparison.Ordinal);
+        Assert.Contains(
+            "ICheckoutReservationHoldPolicy, CheckoutReservationHoldPolicyAdapter",
+            Read("src/backend/Modules/Order/Tooba.Order.Infrastructure/ReservationCycle/ReservationCycleRegistration.cs"),
+            StringComparison.Ordinal);
         Assert.Contains("CartLifetimeOptions", Read("src/backend/Modules/Cart/Tooba.Cart.Infrastructure/DependencyInjection/CartModule.cs"), StringComparison.Ordinal);
         Assert.Contains("ICartPersistenceHoursResolver, CatalogCartPersistenceHoursResolver", Read("src/backend/Modules/Cart/Tooba.Cart.Infrastructure/DependencyInjection/CartModule.cs"), StringComparison.Ordinal);
     }

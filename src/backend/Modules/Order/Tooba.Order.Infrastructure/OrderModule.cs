@@ -92,12 +92,8 @@ public sealed class OrderModule : IToobaModule
         services.AddScoped<Tooba.Order.Contracts.Reservation.IReservationCyclePolicyPreviewPort, ReservationCyclePolicyPreviewPort>();
         services.AddScoped<IReservationCycleCoordinator, ReservationCycleCoordinator>();
         services.AddScoped<IUnpaidOrderExpiryReconciler, UnpaidOrderExpiryReconciler>();
-        services.AddScoped<ICheckoutReservationHoldPolicy, CheckoutReservationHoldPolicyAdapter>();
         services.Configure<ReservationCycleOptions>(
             configuration.GetSection(ReservationCycleOptions.SectionName));
-        services.Configure<UnpaidOrderExpiryWorkerOptions>(
-            configuration.GetSection(UnpaidOrderExpiryWorkerOptions.SectionName));
-        services.AddHostedService<UnpaidOrderExpiryWorker>();
         services.AddScoped<IOrderPurchaseVerificationGateway, OrderPurchaseVerificationGateway>();
         services.AddScoped<IPayableCheckoutReader, OrderPaymentBridge>();
         services.AddScoped<IOrderPaymentProjection, OrderPaymentBridge>();

@@ -182,7 +182,12 @@ public sealed class HostOrderReverseAuditGuardTests
             .ToHashSet(StringComparer.Ordinal);
         Assert.DoesNotContain("ReservationCycleCoordinator.cs", files);
         Assert.DoesNotContain("ReservationCyclePolicyResolver.cs", files);
-        Assert.Contains("UnpaidOrderExpiryHostedService.cs", files);
+        Assert.DoesNotContain("UnpaidOrderExpiryHostedService.cs", files);
+        var r1Removed = doc.RootElement.GetProperty("hostRootGlobalBoundariesR1Update")
+            .GetProperty("removedFiles").EnumerateArray()
+            .Select(x => x.GetString()!)
+            .ToHashSet(StringComparer.Ordinal);
+        Assert.Contains("UnpaidOrderExpiryHostedService.cs", r1Removed);
 
         var r8 = doc.RootElement.GetProperty("r8InventoryUpdate");
         Assert.Equal("TB-TMAR-ORDER-GOLDEN-001-R8", r8.GetProperty("updatedBy").GetString());
@@ -288,9 +293,10 @@ public sealed class HostOrderReverseAuditGuardTests
             .Select(x => x.GetString()!)
             .ToHashSet(StringComparer.Ordinal);
         Assert.DoesNotContain("Admin/AdminOrderCompletenessModels.cs", files);
-        Assert.Contains(files, f => f.Equals("UnpaidOrderExpiryHostOptions.cs", StringComparison.Ordinal));
-        Assert.Contains(files, f => f.Equals("Admin/ProductWorkspaceModels.cs", StringComparison.Ordinal));
-
+        var r11r1Update = doc.RootElement.GetProperty("r11r1InventoryUpdate");
+        Assert.Equal("TB-TMAR-ORDER-GOLDEN-001-R11-R1", r11r1Update.GetProperty("updatedBy").GetString());
+        Assert.Equal("Admin/ProductWorkspaceModels.cs", r11r1.GetProperty("addedSymbolicFiles")[0].GetString());
+        Assert.DoesNotContain("UnpaidOrderExpiryHostOptions.cs", files);
         var audit = File.ReadAllText(Path.Combine(
             root, "docs", "evidence", "TB-TMAR-ORDER-GOLDEN-001-R11-R1", "final-host-symbolic-audit.md"));
         Assert.Contains("ILLEGAL_ORDER_AUTHORITY", audit, StringComparison.Ordinal);

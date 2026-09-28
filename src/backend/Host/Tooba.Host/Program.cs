@@ -62,6 +62,7 @@ using Tooba.Offer.Infrastructure.Adapters.Tracing;
 using Tooba.Tax.Endpoints;
 using Tooba.Pricing.Endpoints;
 using Tooba.Order.Endpoints;
+using Tooba.Order.Infrastructure.ReservationCycle;
 using Tooba.Persistence;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -171,6 +172,7 @@ builder.Services.AddScoped<
 builder.Services.AddScoped<Tooba.Catalog.Application.IStoreLandingExternalReferenceGate, Tooba.Host.CatalogAdapters.MerchandisingStoreLandingReferenceGate>();
 builder.Services.AddScoped<Tooba.Catalog.Application.Development.ICatalogAttributeSchemaSellableEnricher, Tooba.Host.Development.CatalogAttributeSchemaSellableEnricher>();
 builder.Services.AddToobaModules(builder.Configuration, builder.Environment);
+builder.Services.AddOrderReservationCycleBoundaries(builder.Configuration);
 builder.Services.AddOfferModuleCallTracing();
 builder.Services.Configure<Tooba.Order.Application.ReservationCycle.Contracts.ReservationCycleOptions>(
     builder.Configuration.GetSection(Tooba.Order.Application.ReservationCycle.Contracts.ReservationCycleOptions.SectionName));

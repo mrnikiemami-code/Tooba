@@ -3483,7 +3483,7 @@
     "task": "TB-TMAR-HOST-ROOT-GLOBAL-BOUNDARIES-001",
     "parentTask": "TB-TMAR-HOST-MEDIA-EVACUATE-001",
     "branch": "chatgpt/host-root-boundaries-001",
-    "state": "MIGRATED_NOT_CERTIFIED_YET",
+    "state": "CERTIFIED",
     "requestedRootFiles": 6,
     "hostRootResidue": "ZERO",
     "checkoutReservationHoldPolicyOwner": "ORDER_ADAPTER_OVER_PAYMENT_CONTRACTS",
@@ -3493,13 +3493,37 @@
     "unpaidOrderExpiryWorkerOwner": "ORDER_INFRASTRUCTURE",
     "hostBusinessRegistrations": "REMOVED",
     "newCrossModuleDependencies": "CONTRACTS_ONLY_IN_NEW_FILES",
-    "executableValidation": "NOT_AVAILABLE_IN_CONNECTOR_ENVIRONMENT",
-    "certificationBlockers": [
-      "Focused dotnet build/tests not executed",
-      "Touched Order.Infrastructure registration/project surface contains pre-existing direct foreign Application dependencies"
+    "executableValidation": "PASSED_ON_R1_INTEGRATION_BRANCH",
+    "certificationBlockers": [],
+    "certificationState": "PASS",
+    "blockerState": "RESOLVED",
+    "mergedToMain": true,
+    "evidence": "docs/evidence/TB-TMAR-HOST-ROOT-GLOBAL-BOUNDARIES-001-R1/",
+    "workflowStop": "USER_REVIEW_HOST_ROOT_GLOBAL_BOUNDARIES_001_R1"
+  },
+  "hostRootGlobalBoundaries001R1": {
+    "task": "TB-TMAR-HOST-ROOT-GLOBAL-BOUNDARIES-001-R1",
+    "parentTask": "TB-TMAR-HOST-ROOT-GLOBAL-BOUNDARIES-001",
+    "branch": "cursor/host-root-global-boundaries-001-r1",
+    "state": "CERTIFIED",
+    "latestMainBeforeReconcile": "a2e01cf59525591793feb5a2e8cc6719979252c4",
+    "chatgptBranchSource": "70d1375969af80177983735b02614056d427d6f9",
+    "reconciliation": "MERGE_NO_CONFLICTS_ONTO_LATEST_MAIN",
+    "orderCertificationBlockerState": "ISOLATED_FROM_TOUCHED_SURFACE_AND_CERTIFIABLE",
+    "orderRegistrationOwner": "ORDER_INFRASTRUCTURE_RESERVATIONCYCLE_REGISTRATION",
+    "preExistingDirtySurfaceUntouched": [
+      "src/backend/Modules/Order/Tooba.Order.Infrastructure/OrderModule.cs",
+      "src/backend/Modules/Order/Tooba.Order.Infrastructure/Tooba.Order.Infrastructure.csproj"
     ],
-    "certificationState": "NOT_CERTIFIED",
-    "evidence": "docs/evidence/TB-TMAR-HOST-ROOT-GLOBAL-BOUNDARIES-001/",
-    "workflowStop": "USER_REVIEW_HOST_ROOT_GLOBAL_BOUNDARIES_001"
+    "foreignApplicationState": "ZERO_IN_TOUCHED_SURFACE",
+    "foreignInfrastructureState": "ZERO",
+    "foreignDomainState": "ZERO",
+    "crossModulePersistenceState": "ZERO",
+    "behaviorParityState": "PRESERVED",
+    "focusedBuildState": "PASS",
+    "focusedTestState": "PASS_58_OF_58_HOST_GUARDS_NO_MODULE_REGRESSION",
+    "certificationState": "PASS",
+    "evidence": "docs/evidence/TB-TMAR-HOST-ROOT-GLOBAL-BOUNDARIES-001-R1/",
+    "workflowStop": "USER_REVIEW_HOST_ROOT_GLOBAL_BOUNDARIES_001_R1"
   }
 }

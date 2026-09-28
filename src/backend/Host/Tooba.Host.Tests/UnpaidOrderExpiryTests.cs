@@ -46,7 +46,7 @@ public sealed class UnpaidOrderExpiryTests
         Assert.Contains("ManualPaymentInitialHoldHours", app, StringComparison.Ordinal);
         Assert.Contains("ManualPaymentReviewHoldHours", app, StringComparison.Ordinal);
         Assert.Contains("ICommerceHoldPolicy", Read("src/backend/Modules/Payment/Tooba.Payment.Application/Ports/CommerceHoldPolicyPorts.cs"), StringComparison.Ordinal);
-        Assert.Contains("FindMethod", Read("src/backend/Host/Tooba.Host/CommerceHoldPolicy.cs"), StringComparison.Ordinal);
+        Assert.Contains("FindMethod", Read("src/backend/Modules/Payment/Tooba.Payment.Infrastructure/Adapters/CommerceHoldPolicySource.cs"), StringComparison.Ordinal);
         Assert.Contains("store_hold_policy_settings", Read("src/backend/Modules/Catalog/Tooba.Catalog.Infrastructure/Persistence/CatalogDbContext.cs"), StringComparison.Ordinal);
         Assert.Contains("payment_method_hold_overrides", Read("src/backend/Modules/Payment/Tooba.Payment.Infrastructure/Persistence/PaymentDbContext.cs"), StringComparison.Ordinal);
     }
@@ -74,11 +74,10 @@ public sealed class UnpaidOrderExpiryTests
     {
         Assert.Contains("ICartPersistenceHoursSource", Read("src/backend/Modules/Cart/Tooba.Cart.Application/Ports/ICartPersistenceHoursSource.cs"), StringComparison.Ordinal);
         Assert.Contains("ICartPersistenceHoursResolver", Read("src/backend/Modules/Cart/Tooba.Cart.Application/Ports/ICartPersistenceHoursResolver.cs"), StringComparison.Ordinal);
-        var cart = Read("src/backend/Modules/Cart/Tooba.Cart.Infrastructure/Directories/CartDirectory.cs");
-        Assert.Contains("ResolvePersistenceTtlAsync", cart, StringComparison.Ordinal);
+        var cart = Read("src/backend/Modules/Cart/Tooba.Cart.Infrastructure/Directories/CartDirectory.cs");        Assert.Contains("ResolvePersistenceTtlAsync", cart, StringComparison.Ordinal);
         Assert.DoesNotContain("ReserveAsync", cart, StringComparison.Ordinal);
         Assert.Contains("CartPersistenceHours", Read("src/backend/Modules/Cart/Tooba.Cart.Application/Ports/CartPersistenceHours.cs"), StringComparison.Ordinal);
-        var holdPolicy = Read("src/backend/Host/Tooba.Host/CommerceHoldPolicy.cs");
+        var holdPolicy = Read("src/backend/Modules/Payment/Tooba.Payment.Infrastructure/Adapters/CommerceHoldPolicySource.cs");
         Assert.DoesNotContain("CartLifetimeOptions", holdPolicy, StringComparison.Ordinal);
         Assert.DoesNotContain("24 * 90", holdPolicy, StringComparison.Ordinal);
         Assert.DoesNotContain("ResolveCartPersistenceHours", holdPolicy, StringComparison.Ordinal);
@@ -117,13 +116,13 @@ public sealed class UnpaidOrderExpiryTests
         Assert.Contains("ExpireDueUnpaidAsync", dir, StringComparison.Ordinal);
         Assert.Contains("FOR UPDATE SKIP LOCKED", dir, StringComparison.Ordinal);
         Assert.Contains("unpaid_timeout_at", dir, StringComparison.Ordinal);
-        Assert.Contains("UnpaidOrderExpiryHostedService", Read("src/backend/Host/Tooba.Host/Program.cs"), StringComparison.Ordinal);
-        Assert.Contains("IUnpaidOrderExpiryReconciler", Read("src/backend/Host/Tooba.Host/UnpaidOrderExpiryHostedService.cs"), StringComparison.Ordinal);
-        Assert.DoesNotContain("ReleaseReservationsAfterManualRejectAsync", Read("src/backend/Host/Tooba.Host/UnpaidOrderExpiryHostedService.cs"), StringComparison.Ordinal);
+        Assert.Contains("UnpaidOrderExpiryWorker", Read("src/backend/Modules/Order/Tooba.Order.Infrastructure/ReservationCycle/ReservationCycleRegistration.cs"), StringComparison.Ordinal);
+        Assert.Contains("IUnpaidOrderExpiryReconciler", Read("src/backend/Modules/Order/Tooba.Order.Infrastructure/ReservationCycle/UnpaidOrderExpiryWorker.cs"), StringComparison.Ordinal);
+        Assert.DoesNotContain("ReleaseReservationsAfterManualRejectAsync", Read("src/backend/Modules/Order/Tooba.Order.Infrastructure/ReservationCycle/UnpaidOrderExpiryWorker.cs"), StringComparison.Ordinal);
         Assert.Contains("ReleaseReservationsAfterManualRejectAsync", Read("src/backend/Modules/Order/Tooba.Order.Infrastructure/ReservationCycle/UnpaidOrderExpiryReconciler.cs"), StringComparison.Ordinal);
-        Assert.DoesNotContain("IReservationCycleDirectory", Read("src/backend/Host/Tooba.Host/UnpaidOrderExpiryHostedService.cs"), StringComparison.Ordinal);
-        Assert.DoesNotContain("IOrderPaymentProjectionPort", Read("src/backend/Host/Tooba.Host/UnpaidOrderExpiryHostedService.cs"), StringComparison.Ordinal);
-        Assert.DoesNotContain("DateTimeOffset.UtcNow", Read("src/backend/Host/Tooba.Host/UnpaidOrderExpiryHostedService.cs"), StringComparison.Ordinal);
+        Assert.DoesNotContain("IReservationCycleDirectory", Read("src/backend/Modules/Order/Tooba.Order.Infrastructure/ReservationCycle/UnpaidOrderExpiryWorker.cs"), StringComparison.Ordinal);
+        Assert.DoesNotContain("IOrderPaymentProjectionPort", Read("src/backend/Modules/Order/Tooba.Order.Infrastructure/ReservationCycle/UnpaidOrderExpiryWorker.cs"), StringComparison.Ordinal);
+        Assert.DoesNotContain("DateTimeOffset.UtcNow", Read("src/backend/Modules/Order/Tooba.Order.Infrastructure/ReservationCycle/UnpaidOrderExpiryWorker.cs"), StringComparison.Ordinal);
     }
 
     [Fact]
