@@ -1,10 +1,11 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Tooba.BuildingBlocks;
 using Tooba.ModuleContracts;
 using Tooba.Payment.Application.Models;
+using Tooba.Payment.Contracts.Checkout;
 using Tooba.Payment.Application.Ports;
 using Tooba.Payment.Contracts.Settlement;
 using Tooba.Payment.Contracts.Storefront;

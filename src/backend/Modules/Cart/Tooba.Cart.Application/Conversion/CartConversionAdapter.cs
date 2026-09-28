@@ -16,6 +16,8 @@ public sealed class CartConversionAdapter : ICartConversionPort
         CartConversionRequest request,
         CancellationToken cancellationToken)
     {
+        ArgumentNullException.ThrowIfNull(request);
+
         var snapshot = await _carts.ConvertAsync(
             request.CartId,
             request.Access,

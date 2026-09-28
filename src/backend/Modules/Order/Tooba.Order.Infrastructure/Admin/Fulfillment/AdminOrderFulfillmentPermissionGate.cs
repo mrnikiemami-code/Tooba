@@ -1,9 +1,6 @@
-﻿using Tooba.AccessControl.Application;
-using Tooba.AccessControl.Domain;
+﻿using Tooba.AccessControl.Contracts;
 using Tooba.BuildingBlocks;
 
-using Tooba.AccessControl.Application.Models;
-using Tooba.AccessControl.Application.Permissions;
 namespace Tooba.Order.Infrastructure.Admin.Fulfillment;
 
 /// <summary>Permission evaluation for fulfillment admin ops (legacy-admin compatible).</summary>
@@ -25,11 +22,11 @@ public sealed class AdminOrderFulfillmentPermissionGate : IAdminOrderFulfillment
         "payment.",
     ];
 
-    private readonly IAccessControlDirectory _access;
+    private readonly IAccessControlEffectiveAccessReader _access;
     private readonly ICurrentTenant _tenant;
 
     /// <summary>Gate را می‌سازد.</summary>
-    public AdminOrderFulfillmentPermissionGate(IAccessControlDirectory access, ICurrentTenant tenant)
+    public AdminOrderFulfillmentPermissionGate(IAccessControlEffectiveAccessReader access, ICurrentTenant tenant)
     {
         _access = access;
         _tenant = tenant;
@@ -44,7 +41,7 @@ public sealed class AdminOrderFulfillmentPermissionGate : IAdminOrderFulfillment
         return HasAny(effective, "order.handle", "fulfillment.manage");
     }
 
-    private static bool Has(EffectiveAccessDto effective, string permissionId)
+    private static bool Has(EffectiveAccess effective, string permissionId)
     {
         var grants = effective.Permissions.Where(p => !p.DeniedByCeiling).ToList();
         var hasOpsFamily = grants.Any(p => OpsFamilyPrefixes.Any(prefix =>
@@ -57,6 +54,6 @@ public sealed class AdminOrderFulfillmentPermissionGate : IAdminOrderFulfillment
         return grants.Any(p => string.Equals(p.PermissionId, permissionId, StringComparison.OrdinalIgnoreCase));
     }
 
-    private static bool HasAny(EffectiveAccessDto effective, params string[] permissionIds) =>
+    private static bool HasAny(EffectiveAccess effective, params string[] permissionIds) =>
         permissionIds.Any(p => Has(effective, p));
 }

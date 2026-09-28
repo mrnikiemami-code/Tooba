@@ -41,5 +41,8 @@
     <ProjectReference Include="..\..\Modules\Catalog\Tooba.Catalog.Application\Tooba.Catalog.Application.csproj" />
     <ProjectReference Include="..\..\Modules\Party\Tooba.Party.Contracts\Tooba.Party.Contracts.csproj" />
     <ProjectReference Include="..\..\Modules\Inventory\Tooba.Inventory.Contracts\Tooba.Inventory.Contracts.csproj" />
+    <ProjectReference Include="..\..\Modules\Payment\Tooba.Payment.Contracts\Tooba.Payment.Contracts.csproj" />
+    <ProjectReference Include="..\..\Modules\Payment\Tooba.Payment.Application\Tooba.Payment.Application.csproj" />
+    <ProjectReference Include="..\..\Modules\Payment\Tooba.Payment.Infrastructure\Tooba.Payment.Infrastructure.csproj" />
   </ItemGroup>
 </Project>

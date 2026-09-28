@@ -15,6 +15,7 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Tooba.AccessControl.Application\Tooba.AccessControl.Application.csproj" />
+    <ProjectReference Include="..\Tooba.AccessControl.Contracts\Tooba.AccessControl.Contracts.csproj" />
     <ProjectReference Include="..\Tooba.AccessControl.Domain\Tooba.AccessControl.Domain.csproj" />
     <ProjectReference Include="..\..\Catalog\Tooba.Catalog.Contracts\Tooba.Catalog.Contracts.csproj" />
     <ProjectReference Include="..\..\Tooba.ModuleContracts\Tooba.ModuleContracts.csproj" />

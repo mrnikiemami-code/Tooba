@@ -1,5 +1,5 @@
 using Microsoft.EntityFrameworkCore;
-using Tooba.Catalog.Application;
+using Tooba.Catalog.Contracts.Checkout;
 using Tooba.Order.Contracts.Fulfillment;
 using Tooba.Order.Infrastructure.Persistence;
 
@@ -11,10 +11,10 @@ namespace Tooba.Order.Infrastructure.Seller;
 public sealed class SellerOrderAuthBridge : ISellerOrderAuthReader
 {
     private readonly OrderDbContext _db;
-    private readonly ICatalogLookupGateway _catalog;
+    private readonly ICatalogCheckoutLookup _catalog;
 
     /// <summary>پل را به Order + Catalog lookup وصل می‌کند.</summary>
-    public SellerOrderAuthBridge(OrderDbContext db, ICatalogLookupGateway catalog)
+    public SellerOrderAuthBridge(OrderDbContext db, ICatalogCheckoutLookup catalog)
     {
         _db = db;
         _catalog = catalog;

@@ -1,6 +1,7 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Tooba.BuildingBlocks;
 using Tooba.Payment.Application.Models;
+using Tooba.Payment.Contracts.Checkout;
 using Tooba.Payment.Application.Ports;
 using Tooba.Payment.Domain.Aggregates;
 using Tooba.Payment.Domain.ValueObjects;

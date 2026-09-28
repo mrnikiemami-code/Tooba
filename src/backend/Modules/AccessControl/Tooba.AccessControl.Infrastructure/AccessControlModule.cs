@@ -35,6 +35,9 @@ public sealed class AccessControlModule : IToobaModule
         services.AddSingleton<IOutboxModuleRegistration, AccessControlOutboxRegistration>();
         services.AddScoped<AccessControlDirectory>();
         services.AddScoped<IAccessControlDirectory>(sp => sp.GetRequiredService<AccessControlDirectory>());
+        services.AddScoped<
+            Tooba.AccessControl.Contracts.IAccessControlEffectiveAccessReader,
+            Adapters.AccessControlEffectiveAccessReader>();
 
         services.AddOptions<SpiceDbAuthorizationOptions>()
             .Bind(configuration.GetSection(SpiceDbAuthorizationOptions.SectionName))

@@ -12,8 +12,7 @@ using Tooba.Order.Application.ReservationCycle.Policies;
 using Tooba.Order.Application.ReservationCycle.Services;
 using Tooba.Order.Application.Seller.Policies;
 using Tooba.Order.Infrastructure.Persistence;
-using Tooba.Payment.Application.Models;
-using Tooba.Payment.Application.Ports;
+using Tooba.Payment.Contracts.Checkout;
 
 namespace Tooba.Order.Infrastructure.Events.Payment;
 

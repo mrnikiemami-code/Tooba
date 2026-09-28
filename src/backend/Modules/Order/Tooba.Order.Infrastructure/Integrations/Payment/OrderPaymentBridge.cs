@@ -17,8 +17,7 @@ using Tooba.Order.Application.Seller.Policies;
 using Tooba.Order.Domain;
 using Tooba.Order.Infrastructure.Persistence;
 using Tooba.Order.Contracts.Payments;
-using Tooba.Payment.Application.Models;
-using Tooba.Payment.Application.Ports;
+using Tooba.Payment.Contracts.Checkout;
 
 namespace Tooba.Order.Infrastructure.Integrations.Payment;
 

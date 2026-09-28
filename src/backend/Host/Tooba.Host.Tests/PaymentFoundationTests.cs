@@ -1,4 +1,4 @@
-using Tooba.Payment.Contracts.Events;
+﻿using Tooba.Payment.Contracts.Events;
 using Tooba.Promotion.Application.Ports;
 using Tooba.Promotion.Infrastructure.Queries;
 using Tooba.Promotion.Infrastructure.Messaging;
@@ -38,6 +38,7 @@ using Tooba.Order.Infrastructure.Integrations.Notifications;
 using Tooba.Order.Infrastructure.ReservationCycle;
 using Tooba.Order.Infrastructure.Persistence;
 using Tooba.Payment.Application.Models;
+using Tooba.Payment.Contracts.Checkout;
 using Tooba.Payment.Application.Ports;
 using Tooba.Payment.Domain.Aggregates;
 using Tooba.Payment.Domain.ValueObjects;
@@ -124,6 +125,10 @@ public sealed class PaymentFoundationTests : IAsyncLifetime
             File.ReadAllText(Path.Combine(root, "src", "backend", "Modules", "Order", "Tooba.Order.Infrastructure", "Tooba.Order.Infrastructure.csproj")),
             StringComparison.Ordinal);
         Assert.Contains(
+            "Tooba.Payment.Contracts",
+            File.ReadAllText(Path.Combine(root, "src", "backend", "Modules", "Order", "Tooba.Order.Infrastructure", "Tooba.Order.Infrastructure.csproj")),
+            StringComparison.Ordinal);
+        Assert.DoesNotContain(
             "Tooba.Payment.Application",
             File.ReadAllText(Path.Combine(root, "src", "backend", "Modules", "Order", "Tooba.Order.Infrastructure", "Tooba.Order.Infrastructure.csproj")),
             StringComparison.Ordinal);

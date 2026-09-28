@@ -4,10 +4,8 @@ using System.Transactions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Tooba.BuildingBlocks;
-using Tooba.Cart.Application.Ports;
 using Tooba.Cart.Contracts;
-using Tooba.Cart.Application.Conversion;
-using Tooba.Catalog.Application;
+using Tooba.Catalog.Contracts.Checkout;
 using Tooba.Inventory.Contracts.Availability;
 using Tooba.Inventory.Contracts.Checkout;
 using Tooba.Inventory.Contracts.Errors;
@@ -42,13 +40,12 @@ public sealed partial class CheckoutDirectory : ICheckoutDirectory
     internal readonly OrderDbContext _db;
     internal readonly IOrderUseCaseGuard _guard;
     internal readonly ICartQueryGateway _carts;
-    internal readonly ICartDirectory _cartMutations;
     internal readonly IOfferLookupGateway _offers;
     internal readonly IPriceLookupGateway _prices;
     internal readonly IOrderInventoryLifecyclePort _inventoryLifecycle;
     internal readonly ITaxCalculator _taxes;
     internal readonly ICheckoutPromotionPort _promotions;
-    internal readonly ICatalogLookupGateway _catalog;
+    internal readonly ICatalogCheckoutLookup _catalog;
     internal readonly ISellerOrderCancelFulfillmentGate _cancelFulfillmentGate;
     internal readonly IReturnPolicyResolver _returnPolicies;
     internal readonly ICheckoutReservationHoldPolicy? _holdPolicy;
@@ -71,13 +68,12 @@ public sealed partial class CheckoutDirectory : ICheckoutDirectory
         OrderDbContext db,
         IOrderUseCaseGuard guard,
         ICartQueryGateway carts,
-        ICartDirectory cartMutations,
         IOfferLookupGateway offers,
         IPriceLookupGateway prices,
         IOrderInventoryLifecyclePort inventoryLifecycle,
         ITaxCalculator taxes,
         ICheckoutPromotionPort promotions,
-        ICatalogLookupGateway catalog,
+        ICatalogCheckoutLookup catalog,
         ISellerOrderCancelFulfillmentGate cancelFulfillmentGate,
         IClock clock,
         IIdGenerator ids,
@@ -96,7 +92,6 @@ public sealed partial class CheckoutDirectory : ICheckoutDirectory
         _db = db;
         _guard = guard;
         _carts = carts;
-        _cartMutations = cartMutations;
         _offers = offers;
         _prices = prices;
         _inventoryLifecycle = inventoryLifecycle;
@@ -117,7 +112,8 @@ public sealed partial class CheckoutDirectory : ICheckoutDirectory
         _processes = processes;
         _inventoryReservation = inventoryReservation
             ?? throw new InvalidOperationException("درز رزرو موجودی checkout لازم است.");
-        _cartConversion = cartConversion ?? new CartConversionAdapter(_cartMutations);
+        _cartConversion = cartConversion
+            ?? throw new InvalidOperationException("درز تبدیل سبد checkout لازم است.");
     }
 
     /// <inheritdoc />
@@ -795,7 +791,15 @@ public sealed partial class CheckoutDirectory : ICheckoutDirectory
             : CartConversionIntent.OnlinePurchase;
         try
         {
-            await _cartMutations.ConvertAsync(group.CartId, command.CartAccess, latest.Version, intent, cancellationToken);
+            await _cartConversion.ConvertForCheckoutAsync(
+                new CartConversionRequest(
+                    group.CartId,
+                    command.CartAccess,
+                    latest.Version,
+                    intent,
+                    null,
+                    $"checkout-reconcile:{group.CheckoutId:N}"),
+                cancellationToken);
         }
         catch (InvalidOperationException)
         {

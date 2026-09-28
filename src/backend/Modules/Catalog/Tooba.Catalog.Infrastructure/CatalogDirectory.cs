@@ -2,6 +2,7 @@
 using Tooba.BuildingBlocks;
 using Tooba.BuildingBlocks.Results;
 using Tooba.Catalog.Application;
+using Tooba.Catalog.Contracts.Checkout;
 using Tooba.Catalog.Application.Attributes.Definitions.Models;
 using Tooba.Catalog.Application.Attributes.Definitions.Ports;
 using Tooba.Catalog.Application.Attributes.ProductValues.Ports;
@@ -40,6 +41,7 @@ public sealed class OpenCatalogUseCaseGuard : ICatalogUseCaseGuard
 public sealed class CatalogDirectory :
     ICatalogDirectory,
     ICatalogLookupGateway,
+    ICatalogCheckoutLookup,
     ICatalogVariantLookup,
     ICatalogCartQuantityPolicyGateway,
     ICatalogCartPresentationLookup

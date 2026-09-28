@@ -37,8 +37,7 @@ using Tooba.Order.Infrastructure.Persistence;
 using Tooba.Order.Infrastructure.PurchaseVerification;
 using Tooba.Order.Infrastructure.ReservationCycle;
 using Tooba.Order.Infrastructure.Seller;
-using Tooba.Payment.Application.Models;
-using Tooba.Payment.Application.Ports;
+using Tooba.Payment.Contracts.Checkout;
 using Tooba.Persistence;
 
 namespace Tooba.Order.Infrastructure;

@@ -1,14 +1,12 @@
-using Tooba.Fulfillment.Application.Models;
-using Tooba.Fulfillment.Application.Ports;
-using Tooba.Fulfillment.Application.Shipping;
+using Tooba.Fulfillment.Contracts.Operations;
 using Tooba.Fulfillment.Contracts.Shipping;
-using Tooba.Fulfillment.Domain.ValueObjects;
 using Tooba.Order.Contracts.Fulfillment;
 
 namespace Tooba.Order.Infrastructure.Admin.Fulfillment;
 
 /// <summary>
-/// Order-owned <see cref="IAdminOrderFulfillmentOperations"/> — Host-free; reuses IFulfillmentDirectory.
+/// Order-owned <see cref="IAdminOrderFulfillmentOperations"/> — Host-free; consumes the Fulfillment-owned
+/// admin operations contract (<see cref="IFulfillmentAdminOperations"/>) without foreign Application/Domain types.
 /// Expected business failures return stable outcome codes (no HTTP exception types / localized prose).
 /// </summary>
 public sealed class AdminOrderFulfillmentOperations : IAdminOrderFulfillmentOperations
@@ -26,20 +24,17 @@ public sealed class AdminOrderFulfillmentOperations : IAdminOrderFulfillmentOper
 
     private readonly IAdminOrderFulfillmentCheckoutReader _checkouts;
     private readonly IAdminOrderFulfillmentPermissionGate _permissions;
-    private readonly IFulfillmentDirectory _fulfillment;
-    private readonly ShippingMethodsOptions _shippingMethods;
+    private readonly IFulfillmentAdminOperations _fulfillment;
 
     /// <summary>Creates the operations adapter.</summary>
     public AdminOrderFulfillmentOperations(
         IAdminOrderFulfillmentCheckoutReader checkouts,
         IAdminOrderFulfillmentPermissionGate permissions,
-        IFulfillmentDirectory fulfillment,
-        ShippingMethodsOptions? shippingMethods = null)
+        IFulfillmentAdminOperations fulfillment)
     {
         _checkouts = checkouts;
         _permissions = permissions;
         _fulfillment = fulfillment;
-        _shippingMethods = shippingMethods ?? new ShippingMethodsOptions();
     }
 
     /// <inheritdoc />
@@ -135,7 +130,7 @@ public sealed class AdminOrderFulfillmentOperations : IAdminOrderFulfillmentOper
         }
 
         var snapshot = linked.Snapshot!;
-        if (snapshot.Status == FulfillmentStatus.ReadyToFulfill)
+        if (snapshot.Status == FulfillmentOperationStatus.ReadyToFulfill)
         {
             return Fail("fulfillment.pack.requires_processing");
         }
@@ -172,14 +167,14 @@ public sealed class AdminOrderFulfillmentOperations : IAdminOrderFulfillmentOper
 
         if (!string.IsNullOrWhiteSpace(methodCode))
         {
-            var enabled = ShippingMethodRegistry.Enabled(_shippingMethods).Any(x =>
+            var enabled = _fulfillment.ListEnabledShippingMethods().Any(x =>
                 string.Equals(x.Code, methodCode, StringComparison.OrdinalIgnoreCase));
             if (!enabled)
             {
                 return Fail("order.operation.invalid");
             }
 
-            carrier = ShippingMethodRegistry.ResolveLabel(methodCode, carrier);
+            carrier = _fulfillment.ResolveShippingMethodLabel(methodCode, carrier);
         }
 
         var linked = await EnsureFulfillmentLinkedAsync(fulfillmentId, request.SellerOrderId, cancellationToken);
@@ -199,8 +194,9 @@ public sealed class AdminOrderFulfillmentOperations : IAdminOrderFulfillmentOper
             actorUserId,
             carrier!,
             lines,
-            cancellationToken,
-            methodCode);
+            methodCode,
+            providerMetadataJson: null,
+            cancellationToken);
         return Ok();
     }
 
@@ -318,7 +314,7 @@ public sealed class AdminOrderFulfillmentOperations : IAdminOrderFulfillmentOper
             .Select(item =>
             {
                 var open = snapshot.Shipments
-                    .Where(s => s.Status != ShipmentStatus.Cancelled)
+                    .Where(s => s.Status != ShipmentOperationStatus.Cancelled)
                     .SelectMany(s => s.Items)
                     .Where(line => line.OrderLineId == item.OrderLineId)
                     .Sum(line => line.Quantity);

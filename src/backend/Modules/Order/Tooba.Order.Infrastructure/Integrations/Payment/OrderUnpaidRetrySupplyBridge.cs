@@ -1,7 +1,7 @@
 #pragma warning disable CS1591
 using Microsoft.EntityFrameworkCore;
 using Tooba.BuildingBlocks;
-using Tooba.Fulfillment.Application.Ports;
+using Tooba.Fulfillment.Contracts.Operations;
 using Tooba.Inventory.Contracts.Orders;
 using Tooba.Order.Application;
 using Tooba.Order.Application.Checkout.Abuse;
@@ -23,8 +23,7 @@ public sealed class OrderUnpaidRetrySupplyBridge(
     OrderDbContext orders,
     IOrderInventoryLifecyclePort inventory,
     IReservationCycleDirectory cycles,
-    IFulfillmentShippedQuantityReader shippedReader,
-    IFulfillmentDirectory fulfillment,
+    IFulfillmentAdminOperations fulfillment,
     IClock clock) : IOrderUnpaidRetrySupplyPort
 {
     public async Task EnsureRetrySupplyAsync(Guid checkoutId, CancellationToken cancellationToken)
@@ -89,7 +88,7 @@ public sealed class OrderUnpaidRetrySupplyBridge(
     private async Task<IReadOnlyList<OrderInventorySupplyLine>> BuildLinesAsync(
         CheckoutGroup group, CancellationToken cancellationToken)
     {
-        var shipped = await shippedReader.GetShippedByOrderLineIdsForCheckoutsAsync(
+        var shipped = await fulfillment.GetShippedByOrderLineIdsForCheckoutsAsync(
             [group.CheckoutId], cancellationToken);
         return group.SellerOrders.Where(x => x.Status != SellerOrderStatus.Cancelled)
             .SelectMany(x => x.Lines)

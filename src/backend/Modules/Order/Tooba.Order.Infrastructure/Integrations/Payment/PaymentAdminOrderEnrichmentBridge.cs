@@ -1,7 +1,7 @@
 #pragma warning disable CS1591
 using Microsoft.EntityFrameworkCore;
 using Tooba.BuildingBlocks;
-using Tooba.Fulfillment.Application.Ports;
+using Tooba.Fulfillment.Contracts.Operations;
 using Tooba.Inventory.Contracts.Orders;
 using Tooba.Order.Application;
 using Tooba.Order.Application.Checkout.Abuse;
@@ -23,7 +23,7 @@ public sealed class PaymentAdminOrderEnrichmentBridge(
     OrderDbContext orders,
     IOrderInventoryLifecyclePort inventory,
     IReservationCycleDirectory cycles,
-    IFulfillmentShippedQuantityReader shippedReader,
+    IFulfillmentAdminOperations fulfillment,
     IClock clock) : IPaymentAdminOrderEnrichmentReader
 {
     public async Task<IReadOnlyList<Guid>> ResolveSearchCheckoutIdsAsync(string search, CancellationToken cancellationToken)
@@ -94,7 +94,7 @@ public sealed class PaymentAdminOrderEnrichmentBridge(
     {
         var groups = await orders.Checkouts.AsNoTracking().Include(x => x.SellerOrders)
             .ThenInclude(x => x.Lines).Where(x => ids.Contains(x.CheckoutId)).ToListAsync(cancellationToken);
-        var shipped = await shippedReader.GetShippedByOrderLineIdsForCheckoutsAsync(ids, cancellationToken);
+        var shipped = await fulfillment.GetShippedByOrderLineIdsForCheckoutsAsync(ids, cancellationToken);
         var input = groups.ToDictionary(x => x.CheckoutId, x => (IReadOnlyList<OrderInventorySupplyLine>)
             x.SellerOrders.Where(o => o.Status != SellerOrderStatus.Cancelled).SelectMany(o => o.Lines)
             .Select(line => new OrderInventorySupplyLine(

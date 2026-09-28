@@ -6,6 +6,7 @@ using Microsoft.Extensions.Logging;
 using Tooba.BuildingBlocks;
 using Tooba.BuildingBlocks.Observability.Tracing;
 using Tooba.Payment.Application.Models;
+using Tooba.Payment.Contracts.Checkout;
 using Tooba.Payment.Application.Ports;
 using Tooba.Payment.Domain.Aggregates;
 using Tooba.Payment.Domain.ValueObjects;

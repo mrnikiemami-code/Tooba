@@ -1,8 +1,5 @@
 using Tooba.Order.Application.Admin.Operations.Policies;
-using Tooba.Fulfillment.Application.Models;
-using Tooba.Fulfillment.Application.Ports;
-using Tooba.Fulfillment.Application.Shipping;
-using Tooba.Fulfillment.Domain.ValueObjects;
+using Tooba.Fulfillment.Contracts.Operations;
 using Tooba.Order.Contracts.Fulfillment;
 using Tooba.Order.Infrastructure.Admin.Fulfillment;
 using Xunit;
@@ -181,7 +178,7 @@ public sealed class AdminOrderFulfillmentOperationsTests
             Task.FromResult(allowed);
     }
 
-    private sealed class StubDirectory : IFulfillmentDirectory
+    private sealed class StubDirectory : IFulfillmentAdminOperations
     {
         private readonly Guid _fulfillmentId;
         private readonly Guid _sellerOrderId;
@@ -222,7 +219,7 @@ public sealed class AdminOrderFulfillmentOperationsTests
                 _sellerOrderId,
                 _checkoutId,
                 Guid.NewGuid(),
-                FulfillmentStatus.Processing,
+                FulfillmentOperationStatus.Processing,
                 "r",
                 "09",
                 "p",
@@ -234,25 +231,25 @@ public sealed class AdminOrderFulfillmentOperationsTests
                 [new FulfillmentItemSnapshot(Guid.NewGuid(), Guid.NewGuid(), 2m, 0m, null, 0m, 1m)],
                 []);
 
-        public Task<FulfillmentSnapshot?> GetBySellerOrderAsync(Guid sellerOrderId, CancellationToken cancellationToken) =>
-            throw new NotImplementedException();
-        public Task<IReadOnlyList<FulfillmentSnapshot>> ListForSellerAsync(Guid sellerPartyId, CancellationToken cancellationToken) =>
-            throw new NotImplementedException();
-        public Task<IReadOnlyList<FulfillmentSnapshot>> ListAllAsync(CancellationToken cancellationToken) =>
-            throw new NotImplementedException();
         public Task<IReadOnlyList<FulfillmentSnapshot>> ListForCheckoutAsync(Guid checkoutId, CancellationToken cancellationToken) =>
+            throw new NotImplementedException();
+        public Task<IReadOnlyList<ConsolidatedPackageSnapshot>> GetPackagesForCheckoutAsync(Guid checkoutId, CancellationToken cancellationToken) =>
+            throw new NotImplementedException();
+        public Task<IReadOnlyList<ActivePackageMembershipSnapshot>> GetActiveMembershipByShipmentIdsAsync(IReadOnlyList<Guid> shipmentIds, CancellationToken cancellationToken) =>
+            throw new NotImplementedException();
+        public IReadOnlyList<ShippingMethodOption> ListEnabledShippingMethods() =>
+            throw new NotImplementedException();
+        public string ResolveShippingMethodLabel(string? code, string? fallbackDisplayName) =>
             throw new NotImplementedException();
         public Task<FulfillmentSnapshot> ProcessSelectionsAsync(Guid fulfillmentId, Guid actorUserId, IReadOnlyList<FulfillmentSelectionCommand> selections, CancellationToken cancellationToken) =>
             throw new NotImplementedException();
         public Task<FulfillmentSnapshot> UnprocessSelectionsAsync(Guid fulfillmentId, Guid actorUserId, IReadOnlyList<FulfillmentSelectionCommand> selections, CancellationToken cancellationToken) =>
             throw new NotImplementedException();
-        public Task<FulfillmentSnapshot> MarkPackedAsync(Guid fulfillmentId, Guid actorUserId, CancellationToken cancellationToken) =>
-            throw new NotImplementedException();
         public Task<FulfillmentSnapshot> PackSelectionsAsync(Guid fulfillmentId, Guid actorUserId, IReadOnlyList<FulfillmentSelectionCommand> selections, CancellationToken cancellationToken) =>
             throw new NotImplementedException();
         public Task<FulfillmentSnapshot> UnpackSelectionsAsync(Guid fulfillmentId, Guid actorUserId, IReadOnlyList<FulfillmentSelectionCommand> selections, CancellationToken cancellationToken) =>
             throw new NotImplementedException();
-        public Task<FulfillmentSnapshot> CreateShipmentAsync(Guid fulfillmentId, Guid actorUserId, string carrierDisplayName, IReadOnlyList<ShipmentLineCommand> items, CancellationToken cancellationToken, string? shippingMethodCode = null, string? providerMetadataJson = null) =>
+        public Task<FulfillmentSnapshot> CreateShipmentAsync(Guid fulfillmentId, Guid actorUserId, string carrierDisplayName, IReadOnlyList<ShipmentLineCommand> items, string? shippingMethodCode, string? providerMetadataJson, CancellationToken cancellationToken) =>
             throw new NotImplementedException();
         public Task<FulfillmentSnapshot> CancelShipmentAsync(Guid fulfillmentId, Guid shipmentId, Guid actorUserId, CancellationToken cancellationToken) =>
             throw new NotImplementedException();
@@ -261,22 +258,6 @@ public sealed class AdminOrderFulfillmentOperationsTests
         public Task<FulfillmentSnapshot> CorrectTrackingAsync(Guid fulfillmentId, Guid shipmentId, Guid actorUserId, string trackingReference, CancellationToken cancellationToken) =>
             throw new NotImplementedException();
         public Task<FulfillmentSnapshot> DeliverShipmentAsync(Guid fulfillmentId, Guid shipmentId, Guid actorUserId, CancellationToken cancellationToken) =>
-            throw new NotImplementedException();
-        public Task VoidUnstartedForCheckoutAsync(Guid checkoutId, CancellationToken cancellationToken) =>
-            throw new NotImplementedException();
-        public Task EnsureCreatedForPaidCheckoutAsync(Guid checkoutId, IReadOnlyList<Guid> sellerOrderIds, CancellationToken cancellationToken) =>
-            throw new NotImplementedException();
-        public Task AbortForCheckoutCancelAsync(Guid checkoutId, CancellationToken cancellationToken) =>
-            throw new NotImplementedException();
-        public Task ReactivateAfterOrderRestoreAsync(Guid checkoutId, CancellationToken cancellationToken) =>
-            throw new NotImplementedException();
-        public Task RebindActiveReservationsFromOrderAsync(Guid checkoutId, CancellationToken cancellationToken) =>
-            throw new NotImplementedException();
-        public Task<IReadOnlyList<ConsolidatedPackageSnapshot>> GetPackagesForCheckoutAsync(Guid checkoutId, CancellationToken cancellationToken) =>
-            throw new NotImplementedException();
-        public Task<IReadOnlyList<ActivePackageMembershipSnapshot>> GetActiveMembershipByShipmentIdsAsync(IReadOnlyList<Guid> shipmentIds, CancellationToken cancellationToken) =>
-            throw new NotImplementedException();
-        public Task<bool> IsShipmentLockedByPackageAsync(Guid shipmentId, CancellationToken cancellationToken) =>
             throw new NotImplementedException();
         public Task<ConsolidatedPackageSnapshot> CreateConsolidatedPackageAsync(Guid checkoutId, IReadOnlyList<Guid> shipmentIds, string? shippingMethodCode, string? trackingReference, string? note, Guid actorUserId, CancellationToken cancellationToken) =>
             throw new NotImplementedException();
@@ -288,7 +269,17 @@ public sealed class AdminOrderFulfillmentOperationsTests
             throw new NotImplementedException();
         public Task<ConsolidatedPackageSnapshot> DeliverConsolidatedPackageAsync(Guid consolidatedPackageId, Guid actorUserId, CancellationToken cancellationToken) =>
             throw new NotImplementedException();
-        public Task VoidActivePackagesForCheckoutCancelAsync(Guid checkoutId, CancellationToken cancellationToken) =>
+        public Task AbortForCheckoutCancelAsync(Guid checkoutId, CancellationToken cancellationToken) =>
+            throw new NotImplementedException();
+        public Task ReactivateAfterOrderRestoreAsync(Guid checkoutId, CancellationToken cancellationToken) =>
+            throw new NotImplementedException();
+        public Task EnsureCreatedForPaidCheckoutAsync(Guid checkoutId, IReadOnlyList<Guid> sellerOrderIds, CancellationToken cancellationToken) =>
+            throw new NotImplementedException();
+        public Task VoidUnstartedForCheckoutAsync(Guid checkoutId, CancellationToken cancellationToken) =>
+            throw new NotImplementedException();
+        public Task RebindActiveReservationsFromOrderAsync(Guid checkoutId, CancellationToken cancellationToken) =>
+            throw new NotImplementedException();
+        public Task<IReadOnlyDictionary<Guid, decimal>> GetShippedByOrderLineIdsForCheckoutsAsync(IReadOnlyList<Guid> checkoutIds, CancellationToken cancellationToken) =>
             throw new NotImplementedException();
     }
 }

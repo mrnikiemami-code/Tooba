@@ -1,4 +1,5 @@
-using Tooba.BuildingBlocks;
+﻿using Tooba.BuildingBlocks;
+using Tooba.Payment.Contracts.Checkout;
 using Tooba.Payment.Application.Ports;
 using Tooba.Payment.Domain.Aggregates;
 

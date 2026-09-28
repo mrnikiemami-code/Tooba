@@ -1,4 +1,4 @@
-using Tooba.Promotion.Infrastructure.Queries;
+﻿using Tooba.Promotion.Infrastructure.Queries;
 using Tooba.Promotion.Infrastructure.Messaging;
 using Tooba.Promotion.Infrastructure.Adapters;
 using Tooba.Promotion.Infrastructure.Directories;
@@ -283,7 +283,7 @@ public sealed class CheckoutOrderFoundationTests : IAsyncLifetime
             new UuidV7IdGenerator());
         var taxDirA = new TaxDirectory(taxA, new OpenTaxUseCaseGuard());
         var promoDirA = new PromotionDirectory(promotionA, new OpenPromotionUseCaseGuard(), new DeferredPromotionRedemptionLedger(), new SystemUtcClock(), new UuidV7IdGenerator());
-        var checkoutA = new CheckoutDirectory(orderA, new OpenOrderUseCaseGuard(), cartDirA, cartDirA, offerDirA, priceDirA, new OrderInventoryLifecycleAdapter(inventoryDirA), taxDirA, new CheckoutPromotionAdapter(promoDirA), catalogDirA, new NullCancelGate(), new SystemUtcClock(), new UuidV7IdGenerator(), NullLogger<CheckoutProcessManager>.Instance, inventoryReservation: new CheckoutInventoryReservationAdapter(inventoryDirA, inventoryDirA), cartConversion: new CartConversionAdapter(cartDirA));
+        var checkoutA = new CheckoutDirectory(orderA, new OpenOrderUseCaseGuard(), cartDirA, offerDirA, priceDirA, new OrderInventoryLifecycleAdapter(inventoryDirA), taxDirA, new CheckoutPromotionAdapter(promoDirA), catalogDirA, new NullCancelGate(), new SystemUtcClock(), new UuidV7IdGenerator(), NullLogger<CheckoutProcessManager>.Instance, inventoryReservation: new CheckoutInventoryReservationAdapter(inventoryDirA, inventoryDirA), cartConversion: new CartConversionAdapter(cartDirA));
 
         var names = new Dictionary<string, string> { ["fa-IR"] = "پیراهن سفارش", ["en-US"] = "Order shirt" };
         var product = await catalogDirA.CreateProductAsync(CatalogProductKind.PhysicalGood, "shirt-order", null, names, CancellationToken.None);
@@ -447,14 +447,14 @@ public sealed class CheckoutOrderFoundationTests : IAsyncLifetime
             new UuidV7IdGenerator());
         var taxDirB = new TaxDirectory(taxB, new OpenTaxUseCaseGuard());
         var promoDirB = new PromotionDirectory(promotionB, new OpenPromotionUseCaseGuard(), new DeferredPromotionRedemptionLedger(), new SystemUtcClock(), new UuidV7IdGenerator());
-        var checkoutB = new CheckoutDirectory(orderB, new OpenOrderUseCaseGuard(), cartDirB, cartDirB, offerDirB, priceDirB, new OrderInventoryLifecycleAdapter(inventoryDirB), taxDirB, new CheckoutPromotionAdapter(promoDirB), catalogDirB, new NullCancelGate(), new SystemUtcClock(), new UuidV7IdGenerator(), NullLogger<CheckoutProcessManager>.Instance, inventoryReservation: new CheckoutInventoryReservationAdapter(inventoryDirB, inventoryDirB), cartConversion: new CartConversionAdapter(cartDirB));
+        var checkoutB = new CheckoutDirectory(orderB, new OpenOrderUseCaseGuard(), cartDirB, offerDirB, priceDirB, new OrderInventoryLifecycleAdapter(inventoryDirB), taxDirB, new CheckoutPromotionAdapter(promoDirB), catalogDirB, new NullCancelGate(), new SystemUtcClock(), new UuidV7IdGenerator(), NullLogger<CheckoutProcessManager>.Instance, inventoryReservation: new CheckoutInventoryReservationAdapter(inventoryDirB, inventoryDirB), cartConversion: new CartConversionAdapter(cartDirB));
         Assert.Null(await checkoutB.GetCheckoutAsync(submitted.CheckoutId, orderAccess, CancellationToken.None));
         Assert.Null(await checkoutA.GetCheckoutAsync(Guid.Parse("dddddddd-dddd-dddd-dddd-dddddddddddd"), orderAccess, CancellationToken.None));
 
         var repairCart = await cartDirA.CreateAuthenticatedAsync(actor, "IR", "IRR", SalesChannel.Marketplace, CancellationToken.None);
         var repairLined = await cartDirA.AddOrIncreaseLineAsync(repairCart.CartId, access, repairCart.Version, offer2.OfferId, 1, CancellationToken.None);
         var failOnce = new FailOnceCartDirectory(cartDirA);
-        var checkoutFail = new CheckoutDirectory(orderA, new OpenOrderUseCaseGuard(), cartDirA, failOnce, offerDirA, priceDirA, new OrderInventoryLifecycleAdapter(inventoryDirA), taxDirA, new CheckoutPromotionAdapter(promoDirA), catalogDirA, new NullCancelGate(), new SystemUtcClock(), new UuidV7IdGenerator(), NullLogger<CheckoutProcessManager>.Instance, inventoryReservation: new CheckoutInventoryReservationAdapter(inventoryDirA, inventoryDirA), cartConversion: new CartConversionAdapter(failOnce));
+        var checkoutFail = new CheckoutDirectory(orderA, new OpenOrderUseCaseGuard(), cartDirA, offerDirA, priceDirA, new OrderInventoryLifecycleAdapter(inventoryDirA), taxDirA, new CheckoutPromotionAdapter(promoDirA), catalogDirA, new NullCancelGate(), new SystemUtcClock(), new UuidV7IdGenerator(), NullLogger<CheckoutProcessManager>.Instance, inventoryReservation: new CheckoutInventoryReservationAdapter(inventoryDirA, inventoryDirA), cartConversion: new CartConversionAdapter(failOnce));
         var repairCommand = new SubmitCheckoutCommand(
             repairLined.CartId,
             access,
@@ -500,7 +500,7 @@ public sealed class CheckoutOrderFoundationTests : IAsyncLifetime
             new UuidV7IdGenerator());
         var taxDirA2 = new TaxDirectory(taxA2, new OpenTaxUseCaseGuard());
         var promoDirA2 = new PromotionDirectory(promotionA2, new OpenPromotionUseCaseGuard(), new DeferredPromotionRedemptionLedger(), new SystemUtcClock(), new UuidV7IdGenerator());
-        var checkoutA2 = new CheckoutDirectory(orderA2, new OpenOrderUseCaseGuard(), cartDirA2, cartDirA2, offerDirA2, priceDirA2, new OrderInventoryLifecycleAdapter(inventoryDirA2), taxDirA2, new CheckoutPromotionAdapter(promoDirA2), catalogDirA2, new NullCancelGate(), new SystemUtcClock(), new UuidV7IdGenerator(), NullLogger<CheckoutProcessManager>.Instance, inventoryReservation: new CheckoutInventoryReservationAdapter(inventoryDirA2, inventoryDirA2), cartConversion: new CartConversionAdapter(cartDirA2));
+        var checkoutA2 = new CheckoutDirectory(orderA2, new OpenOrderUseCaseGuard(), cartDirA2, offerDirA2, priceDirA2, new OrderInventoryLifecycleAdapter(inventoryDirA2), taxDirA2, new CheckoutPromotionAdapter(promoDirA2), catalogDirA2, new NullCancelGate(), new SystemUtcClock(), new UuidV7IdGenerator(), NullLogger<CheckoutProcessManager>.Instance, inventoryReservation: new CheckoutInventoryReservationAdapter(inventoryDirA2, inventoryDirA2), cartConversion: new CartConversionAdapter(cartDirA2));
         var concLeft = checkoutA.SubmitAsync(
             new SubmitCheckoutCommand(concLined.CartId, access, concLined.Version, OrderMode.OnlinePurchase, buyer.PartyId, actor, "idem-conc-a", "IR-NAT"),
             CancellationToken.None);
