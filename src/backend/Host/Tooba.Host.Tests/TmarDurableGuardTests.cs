@@ -106,8 +106,11 @@ public sealed class TmarDurableGuardTests
         Assert.Equal("USER_ACCEPTED", rootEl.GetProperty("goldenWaveUserReview").GetString());
         Assert.Equal("TB-TMAR-GOLDEN-WAVE-FINAL-CLOSURE-001", rootEl.GetProperty("goldenWaveClosedBy").GetString());
         Assert.False(string.IsNullOrWhiteSpace(rootEl.GetProperty("goldenWaveClosedCommit").GetString()));
-        Assert.Equal("USER_REVIEW_ADDRESSBOOK_CHECKPOINT", rootEl.GetProperty("nextTask").GetString());
-        Assert.Equal("USER_REVIEW_REQUIRED_AFTER_ADDRESSBOOK_CERTIFICATION_STOP", rootEl.GetProperty("nextTaskGate").GetString());
+        Assert.Equal("USER_REVIEW_AFTER_RECOVERY_SOT_SYNC_001", rootEl.GetProperty("nextTask").GetString());
+        Assert.Equal("USER_DECISION_REQUIRED_NO_AUTOMATIC_NEXT_IMPLEMENTATION_TASK", rootEl.GetProperty("nextTaskGate").GetString());
+        Assert.Equal("USER_DECISION_REQUIRED", rootEl.GetProperty("nextTaskState").GetString());
+        Assert.Equal("USER_REVIEW_AFTER_RECOVERY_SOT_SYNC_001", rootEl.GetProperty("workflowStop").GetString());
+        Assert.Equal("NONE", rootEl.GetProperty("automaticNextImplementationTask").GetString());
         Assert.Equal("PAUSED_AT_SAFE_W5_CHECKPOINT", rootEl.GetProperty("checkoutState").GetString());
         Assert.True(rootEl.GetProperty("frontendFrozen").GetBoolean());
         Assert.Equal("ARCH-COMPLETE-002", rootEl.GetProperty("locksVersion").GetString());
@@ -117,7 +120,7 @@ public sealed class TmarDurableGuardTests
         var structureLock = rootEl.GetProperty("structureLock");
         Assert.Equal("ARCH-COMPLETE-002", structureLock.GetProperty("version").GetString());
         Assert.Equal(
-            new[] { "AccessControl", "AddressBook", "Cart", "Fulfillment", "Offer", "Order", "Payment", "Settlement", "StoreContext" },
+            new[] { "AccessControl", "AddressBook", "Cart", "Content", "Fulfillment", "Offer", "Order", "Payment", "Settlement", "StoreContext" },
             structureLock.GetProperty("certifiedModules").EnumerateArray()
                 .Select(x => x.GetString()!)
                 .OrderBy(x => x, StringComparer.Ordinal)
@@ -248,7 +251,7 @@ public sealed class TmarDurableGuardTests
             cartEntry.GetProperty("lastAcceptedTask").GetString(),
             StringComparison.Ordinal);
         Assert.False(string.IsNullOrWhiteSpace(cartEntry.GetProperty("lastAcceptedCommit").GetString()));
-        Assert.Equal("TB-TMAR-ADDRESSBOOK-ARCH-COMPLETE-002-STRUCTURE-001", rootEl.GetProperty("lastAcceptedTask").GetString());
+        Assert.Equal("TB-TMAR-AUTHORIZATION-POSTCERT-CLEANUP-001", rootEl.GetProperty("lastAcceptedTask").GetString());
         Assert.False(string.IsNullOrWhiteSpace(rootEl.GetProperty("lastAcceptedCommit").GetString()));
 
         var paymentHostResidue = rootEl.GetProperty("paymentHostResidueRepair");
@@ -489,10 +492,23 @@ public sealed class TmarDurableGuardTests
         Assert.DoesNotContain("AccessControl", structureUncertified, StringComparer.Ordinal);
 
         var accessControlEvacuation = rootEl.GetProperty("currentHostEvacuation");
-        Assert.Equal("AddressBook", accessControlEvacuation.GetProperty("activeModule").GetString());
+        Assert.Equal("NONE", accessControlEvacuation.GetProperty("activeModule").GetString());
+        Assert.Equal("NO_HOST_FOLDER_ACTIVE_USER_DECISION_REQUIRED", accessControlEvacuation.GetProperty("activeModuleState").GetString());
+        Assert.Equal("RECONCILED_NOT_HISTORICAL_ADDRESSBOOK",
+            accessControlEvacuation.GetProperty("currentHostEvacuationState").GetString());
+        Assert.Equal("ZERO", accessControlEvacuation.GetProperty("staleCurrentPointerState").GetString());
+        Assert.Equal("NONE", accessControlEvacuation.GetProperty("automaticNextImplementationTask").GetString());
+        Assert.Equal("NONE_USER_DECISION_REQUIRED", accessControlEvacuation.GetProperty("nextHostFolder").GetString());
+        Assert.False(accessControlEvacuation.GetProperty("nextHostFolderStarted").GetBoolean());
+        Assert.Equal("USER_REVIEW_AFTER_RECOVERY_SOT_SYNC_001",
+            accessControlEvacuation.GetProperty("workflowStop").GetString());
+        Assert.Equal("TB-TMAR-AUTHORIZATION-POSTCERT-CLEANUP-001",
+            accessControlEvacuation.GetProperty("currentTask").GetString());
+        Assert.Equal("HISTORICAL_COMPLETED_NOT_CURRENT",
+            accessControlEvacuation.GetProperty("addressBookLineage").GetProperty("state").GetString());
+        Assert.Equal("HISTORICAL_COMPLETED_NOT_CURRENT",
+            accessControlEvacuation.GetProperty("accessControlHistory").GetProperty("state").GetString());
         Assert.Equal("COMPLETE", accessControlEvacuation.GetProperty("accessControlClosure").GetString());
-        Assert.Equal("AddressBook", accessControlEvacuation.GetProperty("nextHostFolderAfterAccessControl").GetString());
-        Assert.Equal("TB-TMAR-ADDRESSBOOK-ARCH-COMPLETE-002-STRUCTURE-001", accessControlEvacuation.GetProperty("currentTask").GetString());
 
         var settlementAudit = rootEl.GetProperty("settlementArchComplete002Audit");
         Assert.Equal("TB-TMAR-SETTLEMENT-ARCH-COMPLETE-002-AUDIT-001", settlementAudit.GetProperty("task").GetString());
@@ -675,6 +691,140 @@ public sealed class TmarDurableGuardTests
             Assert.DoesNotContain("next task: " + stale, masterCurrent, StringComparison.OrdinalIgnoreCase);
             Assert.DoesNotContain("next task: " + stale, bootstrapCurrent, StringComparison.OrdinalIgnoreCase);
         }
+    }
+
+    [Fact]
+    public void Recovery_sot_sync_001_current_checkpoint_is_unique_and_stop_is_authoritative()
+    {
+        var root = FindRepoRoot();
+        var statePath = Path.Combine(root, "docs", "architecture", "tmar-current-state.json");
+        using var doc = JsonDocument.Parse(File.ReadAllText(statePath));
+        var rootEl = doc.RootElement;
+
+        // 1. Latest accepted task is the Authorization post-cert cleanup, and commit/stamp semantics are explicit.
+        Assert.Equal("TB-TMAR-AUTHORIZATION-POSTCERT-CLEANUP-001", rootEl.GetProperty("lastAcceptedTask").GetString());
+        var implementationCommit = rootEl.GetProperty("lastAcceptedCommit").GetString()!;
+        var sotStamp = rootEl.GetProperty("lastAcceptedSoTStamp").GetString()!;
+        Assert.Equal("IMPLEMENTATION_COMMIT", rootEl.GetProperty("lastAcceptedCommitKind").GetString());
+        Assert.Equal("RECOVERY_DOCS_ONLY_STAMP_COMMIT", rootEl.GetProperty("lastAcceptedSoTStampKind").GetString());
+        Assert.NotEqual(implementationCommit, sotStamp);
+
+        // 2. Recorded current SHAs exist on main (deterministic git history check).
+        foreach (var sha in new[] { implementationCommit, sotStamp })
+        {
+            var resolve = RunGit(root, "rev-list", "--max-count=1", sha).ToArray();
+            Assert.Single(resolve);
+            Assert.Equal(sha, resolve[0]);
+            RunGit(root, "merge-base", "--is-ancestor", sha, "HEAD");
+        }
+
+        // 3. Current stop/gate is user review/decision, never an implementation task.
+        Assert.Equal("USER_REVIEW_AFTER_RECOVERY_SOT_SYNC_001", rootEl.GetProperty("nextTask").GetString());
+        Assert.Equal("USER_DECISION_REQUIRED_NO_AUTOMATIC_NEXT_IMPLEMENTATION_TASK", rootEl.GetProperty("nextTaskGate").GetString());
+        Assert.Equal("USER_DECISION_REQUIRED", rootEl.GetProperty("nextTaskState").GetString());
+        Assert.Equal("USER_REVIEW_AFTER_RECOVERY_SOT_SYNC_001", rootEl.GetProperty("workflowStop").GetString());
+        Assert.Equal("NONE", rootEl.GetProperty("automaticNextImplementationTask").GetString());
+
+        // 4. currentHostEvacuation does NOT regress to the historical AddressBook task.
+        var evacuation = rootEl.GetProperty("currentHostEvacuation");
+        Assert.Equal("RECONCILED_NOT_HISTORICAL_ADDRESSBOOK", evacuation.GetProperty("currentHostEvacuationState").GetString());
+        Assert.Equal("NONE", evacuation.GetProperty("activeModule").GetString());
+        Assert.Equal("ZERO", evacuation.GetProperty("staleCurrentPointerState").GetString());
+        Assert.Equal("NONE", evacuation.GetProperty("automaticNextImplementationTask").GetString());
+        Assert.False(evacuation.GetProperty("nextHostFolderStarted").GetBoolean());
+        Assert.Equal("HISTORICAL_COMPLETED_NOT_CURRENT", evacuation.GetProperty("addressBookLineage").GetProperty("state").GetString());
+        Assert.Equal("HISTORICAL_COMPLETED_NOT_CURRENT", evacuation.GetProperty("accessControlHistory").GetProperty("state").GetString());
+
+        // 5. Dedicated reconciled block exists with the required PASS fields.
+        var block = rootEl.GetProperty("recoverySotSync001");
+        Assert.Equal("TB-TMAR-RECOVERY-SOT-SYNC-001", block.GetProperty("task").GetString());
+        Assert.Equal("TB-TMAR-AUTHORIZATION-POSTCERT-CLEANUP-001", block.GetProperty("latestAcceptedTask").GetString());
+        Assert.Equal("CERTIFIED", block.GetProperty("authorizationPostcertCleanupState").GetString());
+        Assert.Equal("CERTIFIED_PRESERVED", block.GetProperty("rootGlobalBoundariesR3State").GetString());
+        Assert.Equal("ZERO", block.GetProperty("staleCurrentPointersState").GetString());
+        Assert.Equal("RECONCILED_NOT_HISTORICAL_ADDRESSBOOK", block.GetProperty("currentHostEvacuationState").GetString());
+        Assert.Equal("NONE", block.GetProperty("automaticNextImplementationTask").GetString());
+        Assert.Equal("USER_REVIEW_AFTER_RECOVERY_SOT_SYNC_001", block.GetProperty("workflowStop").GetString());
+        Assert.Equal("PASS", block.GetProperty("certificationState").GetString());
+        Assert.Equal("ZERO", block.GetProperty("productionCodeChangeState").GetString());
+        foreach (var sha in new[]
+                 {
+                     block.GetProperty("implementationCommit").GetString()!,
+                     block.GetProperty("sotStampCommit").GetString()!,
+                     block.GetProperty("rootGlobalBoundariesR3ImplementationCommit").GetString()!,
+                     block.GetProperty("rootGlobalBoundariesR3SotStampCommit").GetString()!,
+                 })
+        {
+            Assert.Single(RunGit(root, "rev-list", "--max-count=1", sha));
+            RunGit(root, "merge-base", "--is-ancestor", sha, "HEAD");
+        }
+
+        // 6. Master Recovery / Bootstrap authoritative regions carry the current checkpoint and the stop marker,
+        //    and no authoritative top-level "Next task:" points at a historical implementation task.
+        var master = File.ReadAllText(Path.Combine(root, "docs", "architecture", "TOOBA-TMAR-MASTER-RECOVERY.md"));
+        var bootstrap = File.ReadAllText(Path.Combine(root, "docs", "architecture", "TOOBA-ARCHITECT-BOOTSTRAP.md"));
+        var masterCurrent = CurrentAuthority(master);
+        var bootstrapCurrent = CurrentAuthority(bootstrap);
+
+        Assert.Contains("TB-TMAR-AUTHORIZATION-POSTCERT-CLEANUP-001", masterCurrent, StringComparison.Ordinal);
+        Assert.Contains("TB-TMAR-AUTHORIZATION-POSTCERT-CLEANUP-001", bootstrapCurrent, StringComparison.Ordinal);
+        Assert.Contains(sotStamp, masterCurrent, StringComparison.Ordinal);
+        Assert.Contains(implementationCommit, masterCurrent, StringComparison.Ordinal);
+        Assert.Contains("USER_REVIEW_AFTER_RECOVERY_SOT_SYNC_001", masterCurrent, StringComparison.Ordinal);
+        Assert.Contains("USER_REVIEW_AFTER_RECOVERY_SOT_SYNC_001", bootstrapCurrent, StringComparison.Ordinal);
+        Assert.Contains("USER_DECISION_REQUIRED_NO_AUTOMATIC_NEXT_IMPLEMENTATION_TASK", masterCurrent, StringComparison.Ordinal);
+        Assert.Contains("USER_DECISION_REQUIRED_NO_AUTOMATIC_NEXT_IMPLEMENTATION_TASK", bootstrapCurrent, StringComparison.Ordinal);
+        Assert.Contains("RECONCILED_NOT_HISTORICAL_ADDRESSBOOK", masterCurrent, StringComparison.Ordinal);
+
+        foreach (var historical in new[]
+                 {
+                     "TB-TMAR-HOST-ADDRESSBOOK-INVENTORY-001",
+                     "TB-TMAR-FULFILLMENT-ARCH-COMPLETE-002-STRUCTURE-001",
+                     "TB-TMAR-PAYMENT-ARCH-COMPLETE-002-STRUCTURE-001",
+                     "TB-TMAR-SETTLEMENT-ARCH-COMPLETE-002-STRUCTURE-001",
+                 })
+        {
+            Assert.Contains(historical, master, StringComparison.Ordinal);
+        }
+
+        // No authoritative current-section line may present a historical implementation task as the next task.
+        // Only explicit task-pointer lines count; prose that merely mentions a historical "next task" inside an
+        // accepted-evidence sentence must be marked historical/non-authoritative to remain in the current region.
+        var nextTaskIdPattern = new Regex(
+            @"^\s*(?:[-*]\s*)?(?:(?:current|next|intended)\s+)*next[\s\-]*task\s*[:=]\s*(?<v>[^\r\n]*)$",
+            RegexOptions.IgnoreCase);
+        foreach (var current in new[] { masterCurrent, bootstrapCurrent })
+        {
+            foreach (Match m in nextTaskIdPattern.Matches(current))
+            {
+                var value = m.Groups["v"].Value;
+                if (!value.Contains("TB-TMAR-", StringComparison.OrdinalIgnoreCase))
+                {
+                    continue;
+                }
+
+                Assert.True(
+                    value.Contains("HISTORICAL", StringComparison.OrdinalIgnoreCase)
+                        || value.Contains("NON-AUTHORITATIVE", StringComparison.OrdinalIgnoreCase)
+                        || value.Contains("superseded", StringComparison.OrdinalIgnoreCase),
+                    "authoritative current line must not present a historical task as next: " + m.Value.Trim());
+            }
+        }
+
+        // The Master Recovery stale Content R4 "current" heading must no longer claim currency.
+        Assert.DoesNotContain("Current Live State (Content R4)", masterCurrent, StringComparison.Ordinal);
+        Assert.DoesNotContain("Content R4 above", masterCurrent, StringComparison.Ordinal);
+
+        // 7. Current checkpoint and stop marker are unique: the reconciled stop value appears only in its
+        //    top-level, currentHostEvacuation, and recoverySotSync001 slots (never in historical blocks).
+        var stateText = File.ReadAllText(statePath);
+        Assert.Equal(3, Regex.Matches(stateText, @"""workflowStop"":\s*""USER_REVIEW_AFTER_RECOVERY_SOT_SYNC_001""").Count);
+        Assert.Equal(2, Regex.Matches(stateText, @"""nextTask"":\s*""USER_REVIEW_AFTER_RECOVERY_SOT_SYNC_001""").Count);
+
+        // 8. Zero production-code change requirement: no src/backend or src/frontend file may be touched by this task's
+        //    reconciliation (documented here as the guard's own scope assertion).
+        Assert.False(File.Exists(Path.Combine(root, "docs", "evidence", "TB-TMAR-RECOVERY-SOT-SYNC-001", "production-code-change")),
+            "production-code-change marker must never exist");
     }
 
     private static string CurrentAuthority(string text)

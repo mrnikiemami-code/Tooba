@@ -25,6 +25,27 @@ BRIDGE-WAKE-V1
 Channel: tooba-main
 ```
 
+Latest Accepted TMAR Checkpoint — authoritative (reconciled by TB-TMAR-RECOVERY-SOT-SYNC-001)
+
+A fresh chat MUST recover the CURRENT checkpoint from `docs/architecture/tmar-current-state.json` and the latest accepted recovery block below, NOT from historical "Next task" / "Next-Recommended-Task" lines further down this file (they are lineage evidence, NON-AUTHORITATIVE).
+
+```text
+Latest-Accepted-Task: TB-TMAR-AUTHORIZATION-POSTCERT-CLEANUP-001
+Latest-Accepted-Task-State: CERTIFIED
+Implementation-Commit: 498c46bd36c1d72934e97b137625cb07de84272a
+Docs-Only-SoT-Stamp-Commit: 736f23d34acb4f3989144f27675d1768fc7a65a9
+Commit-Semantics: EXPLICIT_IMPLEMENTATION_COMMIT_VS_DOCS_ONLY_SOT_STAMP
+Root-Global-Boundaries-R3: CERTIFIED_PRESERVED
+Root-Global-Boundaries-R3-Implementation-Commit: c63f6ebb818e7e35a548c5b3e20eb18a25a244c8
+Root-Global-Boundaries-R3-SoT-Stamp-Commit: 7d8ea21155109def56866eee2acdab2067fb457b
+Current-Host-Evacuation: RECONCILED_NOT_HISTORICAL_ADDRESSBOOK
+Active-Host-Folder: NONE
+workflowStop: USER_REVIEW_AFTER_RECOVERY_SOT_SYNC_001
+Next-Task: USER_REVIEW_AFTER_RECOVERY_SOT_SYNC_001 (USER_DECISION_REQUIRED)
+Next-Task-Gate: USER_DECISION_REQUIRED_NO_AUTOMATIC_NEXT_IMPLEMENTATION_TASK
+Automatic-Next-Implementation-Task: NONE
+```
+
 Last Architect Accepted Task:
 
 ```text
