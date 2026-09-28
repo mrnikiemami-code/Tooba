@@ -1,4 +1,4 @@
-namespace Tooba.AccessControl.Contracts;
+namespace Tooba.AccessControl.Contracts.Access;
 
 /// <summary>
 /// Scope kind of a platform/seller owner as seen by external modules. Mirrors the AccessControl
