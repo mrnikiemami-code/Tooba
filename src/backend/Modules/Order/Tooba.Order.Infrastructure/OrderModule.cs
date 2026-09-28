@@ -66,6 +66,8 @@ public sealed class OrderModule : IToobaModule
         services.AddScoped<Application.Admin.Customers.Ports.IAdminCustomersGridReader, Admin.Customers.AdminCustomersGridReader>();
         services.AddScoped<Application.Admin.Dashboard.Ports.IAdminOrderDashboardMetricsStore, Admin.Dashboard.AdminOrderDashboardMetricsStore>();
         services.AddScoped<Application.Admin.Sellers.Ports.ISellerOrderCountReader, Admin.Sellers.SellerOrderCountReader>();
+        services.AddScoped<Tooba.Order.Contracts.Admin.IAdminOrderDashboardMetricsPort, Admin.AdminOrderDashboardMetricsPort>();
+        services.AddScoped<Tooba.Order.Contracts.Admin.IAdminSellerOrderCountPort, Admin.AdminSellerOrderCountPort>();
         services.AddScoped<Application.Admin.Detail.Ports.IAdminOrderDetailCheckoutStore, Admin.Detail.AdminOrderDetailCheckoutStore>();
         services.AddScoped<Application.Admin.Detail.AdminOrderDetailComposer>();
         services.AddScoped<Application.Customer.Ports.ICustomerOrderCheckoutStore, CustomerOrderCheckoutStore>();

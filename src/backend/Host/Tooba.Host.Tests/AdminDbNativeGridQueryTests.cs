@@ -135,7 +135,6 @@ public sealed class AdminDbNativeGridQueryTests
         var engines = new[]
         {
             contentEngine,
-            Path.Combine(root, "AdminSellersGridQueryEngine.cs"),
             Path.Combine(root, "AdminReviewGridQueryEngine.cs"),
             Path.Combine(root, "AdminStoryGridQueryEngine.cs"),
         };
@@ -147,10 +146,11 @@ public sealed class AdminDbNativeGridQueryTests
             Assert.True(
                 text.Contains("EfGridQuery.PageAsync", StringComparison.Ordinal)
                 || text.Contains("AdminEfGridQuery.PageAsync", StringComparison.Ordinal)
-                || (text.Contains("CountAsync", StringComparison.Ordinal)
-                    && text.Contains("Skip(", StringComparison.Ordinal)
-                    && text.Contains("Take(", StringComparison.Ordinal)),
-                $"{Path.GetFileName(path)} must page via EfGridQuery.PageAsync or CountAsync+Skip+Take");
+                || (text.Contains("Skip(", StringComparison.Ordinal)
+                    && text.Contains("Take(", StringComparison.Ordinal)
+                    && (text.Contains("CountAsync", StringComparison.Ordinal)
+                        || text.Contains("Count(", StringComparison.Ordinal))),
+                $"{Path.GetFileName(path)} must page via EfGridQuery.PageAsync or Count+Skip+Take");
             Assert.DoesNotContain("BoundedListGridQueryEngine", text);
             Assert.DoesNotContain("InMemoryGridQueryEngine", text);
         }
@@ -160,7 +160,10 @@ public sealed class AdminDbNativeGridQueryTests
         Assert.False(File.Exists(Path.Combine(root, "AdminContentAuthorGridQueryEngine.cs")));
         var sellersEngine = File.ReadAllText(Path.Combine(root, "AdminSellersGridQueryEngine.cs"));
         Assert.DoesNotContain("OrderDbContext", sellersEngine, StringComparison.Ordinal);
-        Assert.Contains("ISellerOrderCountReader", sellersEngine, StringComparison.Ordinal);
+        Assert.DoesNotContain("DbContext", sellersEngine, StringComparison.Ordinal);
+        Assert.Contains("IAdminSellerOrderCountPort", sellersEngine, StringComparison.Ordinal);
+        Assert.Contains("Skip(", sellersEngine, StringComparison.Ordinal);
+        Assert.Contains("Take(", sellersEngine, StringComparison.Ordinal);
 
         var moduleEngines = new[]
         {

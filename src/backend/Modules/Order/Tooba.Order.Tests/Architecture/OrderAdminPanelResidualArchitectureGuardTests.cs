@@ -85,15 +85,19 @@ public sealed class OrderAdminPanelResidualArchitectureGuardTests
         Assert.DoesNotContain("SellerOrderStatus", composer, StringComparison.Ordinal);
         Assert.DoesNotContain("ListOrdersAsync", composer, StringComparison.Ordinal);
         Assert.DoesNotContain("ListCustomersAsync", composer, StringComparison.Ordinal);
-        Assert.Contains("GetAdminOrderDashboardMetricsQuery", composer, StringComparison.Ordinal);
-        Assert.Contains("ISellerOrderCountReader", composer, StringComparison.Ordinal);
+        Assert.Contains("IAdminOrderDashboardMetricsPort", composer, StringComparison.Ordinal);
+        Assert.Contains("IAdminSellerOrderCountPort", composer, StringComparison.Ordinal);
+        Assert.DoesNotContain("GetAdminOrderDashboardMetricsQuery", composer, StringComparison.Ordinal);
+        Assert.DoesNotContain("ISellerOrderCountReader", composer, StringComparison.Ordinal);
+        Assert.DoesNotContain("Tooba.Order.Application", composer, StringComparison.Ordinal);
 
         Assert.False(File.Exists(Path.Combine(host, "Grid", "AdminCustomersGridQueryEngine.cs")));
         Assert.False(File.Exists(Path.Combine(host, "Admin", "AdminReservationCycleMapper.cs")));
 
         var sellers = File.ReadAllText(Path.Combine(host, "Grid", "AdminSellersGridQueryEngine.cs"));
         Assert.DoesNotContain("OrderDbContext", sellers, StringComparison.Ordinal);
-        Assert.Contains("ISellerOrderCountReader", sellers, StringComparison.Ordinal);
+        Assert.Contains("IAdminSellerOrderCountPort", sellers, StringComparison.Ordinal);
+        Assert.DoesNotContain("Tooba.Order.Application", sellers, StringComparison.Ordinal);
     }
 
     [Fact]

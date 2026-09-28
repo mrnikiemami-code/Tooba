@@ -1,60 +1,56 @@
-﻿using MediatR;
-using Microsoft.EntityFrameworkCore;
-using Tooba.BuildingBlocks.Grid;
-using Tooba.Catalog.Domain;
-using Tooba.Catalog.Infrastructure.Persistence;
+﻿using Tooba.BuildingBlocks.Grid;
+using Tooba.Catalog.Contracts;
 using Tooba.Host.Grid;
 using Tooba.Offer.Contracts.Dtos;
 using Tooba.Offer.Contracts.Ports;
-using Tooba.Order.Application.Admin.Dashboard.Queries.GetAdminOrderDashboardMetrics;
-using Tooba.Order.Application.Admin.Sellers.Ports;
-using Tooba.Party.Infrastructure.Persistence;
+using Tooba.Order.Contracts.Admin;
+using Tooba.Party.Contracts;
 
 namespace Tooba.Host.Admin;
 
 /// <summary>
 /// ترکیب باریک Host برای سطوح cross-module مدیر (داشبورد / فروشندگان).
 /// مسیرهای Order-owned (orders list، customers) در Order.Endpoints هستند.
+/// تمام خواندن ماژول‌های کسب‌وکار فقط از طریق Contracts انجام می‌شود.
 /// </summary>
 public sealed class AdminPanelComposer
 {
-    private readonly CatalogDbContext _catalog;
+    private readonly ICatalogAdminProductCountGateway _catalogProducts;
     private readonly IOfferQueryGateway _offers;
-    private readonly PartyDbContext _parties;
-    private readonly ISender _sender;
-    private readonly ISellerOrderCountReader _sellerOrderCounts;
+    private readonly IPartyAdminSellerReadGateway _parties;
+    private readonly IAdminOrderDashboardMetricsPort _orderMetrics;
+    private readonly IAdminSellerOrderCountPort _sellerOrderCounts;
     private readonly AdminSellersGridQueryEngine _sellersGrid;
 
     /// <summary>
-    /// ترکیب‌گر Host را با contextهای غیر-Order و مرزهای Order Application می‌سازد.
+    /// ترکیب‌گر Host را فقط با مرزهای Contracts ماژول‌ها می‌سازد.
     /// </summary>
     public AdminPanelComposer(
-        CatalogDbContext catalog,
+        ICatalogAdminProductCountGateway catalogProducts,
         IOfferQueryGateway offers,
-        PartyDbContext parties,
-        ISender sender,
-        ISellerOrderCountReader sellerOrderCounts,
+        IPartyAdminSellerReadGateway parties,
+        IAdminOrderDashboardMetricsPort orderMetrics,
+        IAdminSellerOrderCountPort sellerOrderCounts,
         AdminSellersGridQueryEngine sellersGrid)
     {
-        _catalog = catalog;
+        _catalogProducts = catalogProducts;
         _offers = offers;
         _parties = parties;
-        _sender = sender;
+        _orderMetrics = orderMetrics;
         _sellerOrderCounts = sellerOrderCounts;
         _sellersGrid = sellersGrid;
     }
 
     /// <summary>
     /// خلاصهٔ واقعی داشبورد را بدون نمودار یا درآمد ساختگی برمی‌گرداند.
-    /// شمارنده‌های Order از CQRS Order می‌آیند؛ Catalog/Offer در Host ترکیب می‌شوند.
+    /// شمارنده‌های Order از مرز Contracts Order می‌آیند؛ Catalog/Offer در Host ترکیب می‌شوند.
     /// </summary>
     public async Task<AdminDashboardSummary> GetDashboardAsync(CancellationToken cancellationToken)
     {
-        var publishedProducts = await _catalog.Products.AsNoTracking()
-            .CountAsync(x => x.Status == CatalogPublicationStatus.Published, cancellationToken);
+        var publishedProducts = await _catalogProducts.CountPublishedProductsAsync(cancellationToken);
         var activeOffers = await _offers.CountActiveOffersAsync(cancellationToken);
         var sellerIds = await _offers.ListDistinctSellerPartyIdsAsync(cancellationToken);
-        var orderMetrics = (await _sender.Send(new GetAdminOrderDashboardMetricsQuery(), cancellationToken)).Value;
+        var orderMetrics = await _orderMetrics.GetMetricsAsync(cancellationToken);
 
         return new AdminDashboardSummary(
             publishedProducts,
@@ -68,26 +64,23 @@ public sealed class AdminPanelComposer
 
     /// <summary>
     /// فروشندگان دارای Offer را با وضعیت Party و شمارنده‌های مستقل فهرست می‌کند.
-    /// شمارش سفارش از مرز Order Application است.
+    /// وضعیت Party از مرز Contracts Party و شمارش سفارش از مرز Contracts Order است.
     /// </summary>
     public async Task<IReadOnlyList<AdminSellerListItem>> ListSellersAsync(CancellationToken cancellationToken)
     {
         var offerRows = await _offers.ListSellerStatusRowsAsync(cancellationToken);
         var sellerIds = offerRows.Select(x => x.SellerPartyId).Distinct().ToList();
-        var parties = await _parties.Parties.AsNoTracking()
-            .Where(x => sellerIds.Contains(x.PartyId))
-            .Select(x => new { x.PartyId, x.DisplayName, x.Status })
-            .ToListAsync(cancellationToken);
+        var parties = await _parties.GetStatusProjectionsAsync(sellerIds, cancellationToken);
         var orderMap = await _sellerOrderCounts.GetCountsBySellerAsync(sellerIds, cancellationToken);
         return parties.Select(party => new AdminSellerListItem(
             party.PartyId,
             party.DisplayName,
-            party.Status.ToString(),
+            party.Status,
             offerRows.Count(x => x.SellerPartyId == party.PartyId && x.Status == OfferStatus.Active),
             orderMap.GetValueOrDefault(party.PartyId))).ToList();
     }
 
-    /// <summary>صفحه‌بندی server-side گرید فروشندگان Admin (DB-native؛ Order metric از مرز Order).</summary>
+    /// <summary>صفحه‌بندی server-side گرید فروشندگان Admin (مرز Contracts Party؛ Order metric از Contracts Order).</summary>
     public Task<GridPageResponse<AdminSellerListItem>> QuerySellersGridAsync(
         GridQueryRequest request,
         CancellationToken cancellationToken)

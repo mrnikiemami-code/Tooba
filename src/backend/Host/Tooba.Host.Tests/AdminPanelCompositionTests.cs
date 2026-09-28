@@ -62,18 +62,20 @@ public sealed class AdminPanelCompositionTests
     }
 
     [Fact]
-    public void Composer_reads_module_contexts_separately_and_composes_in_memory()
+    public void Composer_reads_module_contracts_separately_and_composes_in_memory()
     {
         var source = File.ReadAllText(Path.Combine(
             FindRepoRoot(), "src", "backend", "Host", "Tooba.Host", "Admin", "AdminPanelComposer.cs"));
-        Assert.Contains("_catalog.Products", source, StringComparison.Ordinal);
+        Assert.Contains("ICatalogAdminProductCountGateway", source, StringComparison.Ordinal);
         Assert.Contains("IOfferQueryGateway", source, StringComparison.Ordinal);
         Assert.Contains("CountActiveOffersAsync", source, StringComparison.Ordinal);
-        Assert.Contains("GetAdminOrderDashboardMetricsQuery", source, StringComparison.Ordinal);
-        Assert.Contains("ISellerOrderCountReader", source, StringComparison.Ordinal);
-        Assert.Contains("_parties.Parties", source, StringComparison.Ordinal);
+        Assert.Contains("IAdminOrderDashboardMetricsPort", source, StringComparison.Ordinal);
+        Assert.Contains("IAdminSellerOrderCountPort", source, StringComparison.Ordinal);
+        Assert.Contains("IPartyAdminSellerReadGateway", source, StringComparison.Ordinal);
         Assert.DoesNotContain("OrderDbContext", source, StringComparison.Ordinal);
         Assert.DoesNotContain("OfferDbContext", source, StringComparison.Ordinal);
+        Assert.DoesNotContain("CatalogDbContext", source, StringComparison.Ordinal);
+        Assert.DoesNotContain("PartyDbContext", source, StringComparison.Ordinal);
         Assert.DoesNotContain("_offers.Offers", source, StringComparison.Ordinal);
         Assert.DoesNotContain("_catalog.Products.Join(", source, StringComparison.Ordinal);
         Assert.DoesNotContain("_parties.Parties.Join(", source, StringComparison.Ordinal);

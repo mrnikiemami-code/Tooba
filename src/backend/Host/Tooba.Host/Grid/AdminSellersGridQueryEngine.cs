@@ -1,31 +1,29 @@
-using Microsoft.EntityFrameworkCore;
 using Tooba.BuildingBlocks.Grid;
-using Tooba.Persistence.Grid;
 using Tooba.Host.Admin;
 using Tooba.Offer.Contracts.Ports;
-using Tooba.Order.Application.Admin.Sellers.Ports;
-using Tooba.Party.Domain;
-using Tooba.Party.Infrastructure.Persistence;
+using Tooba.Order.Contracts.Admin;
+using Tooba.Party.Contracts;
 
 namespace Tooba.Host.Grid;
 
 /// <summary>
 /// پرس‌وجوی فروشندگان Admin.
-/// Party scalars در SQL؛ شمارنده‌های Offer/Order جدا (بدون JOIN بین schema).
-/// Order count از مرز Order Application؛ بدون تزریق DbContext سفارش.
-/// مرتب‌سازی name/status در Party SQL؛ مرتب‌سازی offers/orders با الگوی محصول (IDهای فیلترشده سپس sort در حافظه).
+/// Party scalars از مرز Contracts Party؛ شمارنده‌های Offer/Order از Contracts.
+/// بدون تزریق context سفارش/فروشنده و بدون JOIN بین schema.
+/// مرتب‌سازی name/status سمت adapter Party؛
+/// مرتب‌سازی offers/orders با الگوی محصول (IDهای فیلترشده سپس sort در حافظه).
 /// </summary>
 public sealed class AdminSellersGridQueryEngine
 {
     private readonly IOfferQueryGateway _offers;
-    private readonly PartyDbContext _parties;
-    private readonly ISellerOrderCountReader _orderCounts;
+    private readonly IPartyAdminSellerReadGateway _parties;
+    private readonly IAdminSellerOrderCountPort _orderCounts;
 
     /// <summary>موتور گرید فروشندگان را با مرزهای Offer/Party/Order می‌سازد.</summary>
     public AdminSellersGridQueryEngine(
         IOfferQueryGateway offers,
-        PartyDbContext parties,
-        ISellerOrderCountReader orderCounts)
+        IPartyAdminSellerReadGateway parties,
+        IAdminSellerOrderCountPort orderCounts)
     {
         _offers = offers;
         _parties = parties;
@@ -39,93 +37,80 @@ public sealed class AdminSellersGridQueryEngine
     {
         var sellerIds = await _offers.ListDistinctSellerPartyIdsAsync(cancellationToken);
 
-        IQueryable<BusinessParty> parties = _parties.Parties.AsNoTracking()
-            .Where(p => sellerIds.Contains(p.PartyId));
-
-        if (!string.IsNullOrWhiteSpace(request.Search))
-        {
-            parties = EfGridQuery.ApplySearchAny(parties, request.Search, x => x.DisplayName);
-        }
-
-        foreach (var filter in request.Filters.Where(f => f.Field is "name" or "status"))
-        {
-            parties = ApplyPartyFilter(parties, filter);
-        }
-
         var offerMetrics = await BuildOfferCountMetricsAsync(cancellationToken);
         var orderMetrics = await BuildOrderCountMetricsAsync(sellerIds, cancellationToken);
+
+        // Party scalars come from the Contracts boundary (no Host persistence context).
+        var projections = await _parties.GetStatusProjectionsAsync(sellerIds, cancellationToken);
+        IReadOnlyList<PartyGridRow> partyRows = projections
+            .Select(p => new PartyGridRow(p.PartyId, p.DisplayName, p.Status))
+            .ToList();
+
+        partyRows = ApplySearch(partyRows, request.Search);
+        foreach (var filter in request.Filters.Where(f => f.Field is "name" or "status"))
+        {
+            partyRows = ApplyPartyFilter(partyRows, filter);
+        }
 
         foreach (var filter in request.Filters.Where(f => f.Field is "offers" or "orders"))
         {
             var ids = filter.Field == "offers"
                 ? FilterMetrics(offerMetrics, filter)
                 : FilterMetrics(orderMetrics, filter);
-            parties = parties.Where(p => ids.Contains(p.PartyId));
+            partyRows = partyRows.Where(p => ids.Contains(p.PartyId)).ToList();
         }
 
-        var advancedIds = await EvaluateAdvancedAsync(
-            sellerIds,
-            offerMetrics,
-            orderMetrics,
-            request.AdvancedFilter,
-            cancellationToken);
+        var advancedIds = EvaluateAdvanced(partyRows, offerMetrics, orderMetrics, request.AdvancedFilter);
         if (advancedIds is not null)
         {
-            parties = parties.Where(p => advancedIds.Contains(p.PartyId));
+            partyRows = partyRows.Where(p => advancedIds.Contains(p.PartyId)).ToList();
         }
 
-        var total = await parties.CountAsync(cancellationToken);
+        var total = partyRows.Count();
         if (total == 0)
         {
             return new GridPageResponse<AdminSellerListItem>([], request.Page, request.PageSize, 0);
         }
 
         var sort = request.Sort.FirstOrDefault() ?? new GridSortRequest("name", "asc");
-        List<BusinessParty> pageParties;
-        if (sort.Field is "offers" or "orders")
-        {
+        var ordered = sort.Field is "offers" or "orders"
             // Same compromise as AdminProductGridQueryEngine.OrderAndPageByMetricAsync:
-            // load filtered IDs then metric-sort in memory (cross-module JOIN forbidden).
-            var filteredIds = await parties.Select(p => p.PartyId).ToListAsync(cancellationToken);
-            var metrics = sort.Field == "offers" ? offerMetrics : orderMetrics;
-            IEnumerable<Guid> orderedIds = sort.Direction == "asc"
-                ? filteredIds.OrderBy(id => metrics.GetValueOrDefault(id)).ThenBy(id => id)
-                : filteredIds.OrderByDescending(id => metrics.GetValueOrDefault(id)).ThenBy(id => id);
-            var pageIds = orderedIds
-                .Skip((request.Page - 1) * request.PageSize)
-                .Take(request.PageSize)
-                .ToList();
-            var loaded = await _parties.Parties.AsNoTracking()
-                .Where(p => pageIds.Contains(p.PartyId))
-                .ToListAsync(cancellationToken);
-            var byId = loaded.ToDictionary(x => x.PartyId);
-            pageParties = pageIds.Where(byId.ContainsKey).Select(id => byId[id]).ToList();
-        }
-        else
-        {
-            var ordered = OrderParty(parties, sort);
-            pageParties = await ordered
-                .Skip((request.Page - 1) * request.PageSize)
-                .Take(request.PageSize)
-                .ToListAsync(cancellationToken);
-        }
+            // metric-sort in memory after Contracts filtering (cross-module JOIN forbidden).
+            ? OrderByMetric(partyRows, sort, sort.Field == "offers" ? offerMetrics : orderMetrics)
+            : OrderParty(partyRows, sort);
 
-        var items = pageParties.Select(party => new AdminSellerListItem(
-            party.PartyId,
-            party.DisplayName,
-            party.Status.ToString(),
-            offerMetrics.GetValueOrDefault(party.PartyId),
-            orderMetrics.GetValueOrDefault(party.PartyId))).ToList();
+        var items = ordered
+            .Skip((request.Page - 1) * request.PageSize)
+            .Take(request.PageSize)
+            .Select(party => new AdminSellerListItem(
+                party.PartyId,
+                party.DisplayName,
+                party.Status,
+                offerMetrics.GetValueOrDefault(party.PartyId),
+                orderMetrics.GetValueOrDefault(party.PartyId)))
+            .ToList();
 
         return new GridPageResponse<AdminSellerListItem>(items, request.Page, request.PageSize, total);
     }
 
-    private async Task<HashSet<Guid>?> EvaluateAdvancedAsync(
-        IReadOnlyList<Guid> sellerIds,
+    private static IReadOnlyList<PartyGridRow> ApplySearch(IReadOnlyList<PartyGridRow> source, string? search)
+    {
+        if (string.IsNullOrWhiteSpace(search))
+        {
+            return source;
+        }
+
+        var term = search.Trim();
+        return source
+            .Where(p => p.DisplayName.Contains(term, StringComparison.OrdinalIgnoreCase))
+            .ToList();
+    }
+
+    private static HashSet<Guid>? EvaluateAdvanced(
+        IReadOnlyList<PartyGridRow> partyRows,
         Dictionary<Guid, int> offerMetrics,
         Dictionary<Guid, int> orderMetrics,
-        GridAdvancedFilterExpression? expression,
-        CancellationToken cancellationToken)
+        GridAdvancedFilterExpression? expression)
     {
         if (expression?.Conditions is not { Count: > 0 })
         {
@@ -152,10 +137,7 @@ public sealed class AdminSellersGridQueryEngine
             }
             else
             {
-                var q = ApplyPartyFilter(
-                    _parties.Parties.AsNoTracking().Where(p => sellerIds.Contains(p.PartyId)),
-                    filter);
-                ids = (await q.Select(p => p.PartyId).ToListAsync(cancellationToken)).ToHashSet();
+                ids = ApplyPartyFilter(partyRows, filter).Select(p => p.PartyId).ToHashSet();
             }
 
             sets.Add(ids);
@@ -164,29 +146,89 @@ public sealed class AdminSellersGridQueryEngine
         return GridAdvancedFilterEvaluator.EvaluateLeftToRight(sets, expression.Connectors);
     }
 
-    private static IQueryable<BusinessParty> ApplyPartyFilter(
-        IQueryable<BusinessParty> source,
+    private static IReadOnlyList<PartyGridRow> ApplyPartyFilter(
+        IReadOnlyList<PartyGridRow> source,
         GridFilterRequest filter) =>
         filter.Field switch
         {
-            "name" => EfGridQuery.ApplyTextFilter(source, x => x.DisplayName, filter),
-            "status" => EfGridQuery.ApplyEnumFilter(source, x => x.Status, filter),
+            "name" => ApplyTextFilter(source, filter, x => x.DisplayName),
+            "status" => ApplyStatusFilter(source, filter),
             _ => source,
         };
 
-    private static IQueryable<BusinessParty> OrderParty(IQueryable<BusinessParty> source, GridSortRequest sort)
+    private static IReadOnlyList<PartyGridRow> ApplyTextFilter(
+        IReadOnlyList<PartyGridRow> source,
+        GridFilterRequest filter,
+        Func<PartyGridRow, string> selector)
+    {
+        var op = (filter.Operator ?? string.Empty).Trim();
+        var value = (filter.Value ?? string.Empty).Trim();
+        return op switch
+        {
+            "blank" => source.Where(x => string.IsNullOrWhiteSpace(selector(x))).ToList(),
+            "notBlank" => source.Where(x => !string.IsNullOrWhiteSpace(selector(x))).ToList(),
+            "equals" => source.Where(x => string.Equals(selector(x), value, StringComparison.OrdinalIgnoreCase)).ToList(),
+            "notEqual" => source.Where(x => !string.Equals(selector(x), value, StringComparison.OrdinalIgnoreCase)).ToList(),
+            "startsWith" => source.Where(x => selector(x).StartsWith(value, StringComparison.OrdinalIgnoreCase)).ToList(),
+            "endsWith" => source.Where(x => selector(x).EndsWith(value, StringComparison.OrdinalIgnoreCase)).ToList(),
+            "notContains" => source.Where(x => !selector(x).Contains(value, StringComparison.OrdinalIgnoreCase)).ToList(),
+            _ => source.Where(x => selector(x).Contains(value, StringComparison.OrdinalIgnoreCase)).ToList(),
+        };
+    }
+
+    private static IReadOnlyList<PartyGridRow> ApplyStatusFilter(
+        IReadOnlyList<PartyGridRow> source,
+        GridFilterRequest filter)
+    {
+        var op = (filter.Operator ?? string.Empty).Trim();
+        if (op is "blank")
+        {
+            return source;
+        }
+
+        if (op is "notBlank")
+        {
+            return source;
+        }
+
+        var values = (filter.Values ?? [])
+            .Concat(string.IsNullOrWhiteSpace(filter.Value) ? [] : [filter.Value!])
+            .Where(v => !string.IsNullOrWhiteSpace(v))
+            .Select(v => v.Trim())
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToList();
+
+        if (values.Count == 0)
+        {
+            return [];
+        }
+
+        return op is "notEqual" or "notIn"
+            ? source.Where(x => !values.Contains(x.Status, StringComparer.OrdinalIgnoreCase)).ToList()
+            : source.Where(x => values.Contains(x.Status, StringComparer.OrdinalIgnoreCase)).ToList();
+    }
+
+    private static IReadOnlyList<PartyGridRow> OrderParty(IReadOnlyList<PartyGridRow> source, GridSortRequest sort)
     {
         var asc = sort.Direction == "asc";
         return sort.Field switch
         {
             "status" => asc
-                ? source.OrderBy(x => x.Status).ThenBy(x => x.DisplayName)
-                : source.OrderByDescending(x => x.Status).ThenBy(x => x.DisplayName),
+                ? source.OrderBy(x => x.Status, StringComparer.Ordinal).ThenBy(x => x.DisplayName, StringComparer.Ordinal).ToList()
+                : source.OrderByDescending(x => x.Status, StringComparer.Ordinal).ThenBy(x => x.DisplayName, StringComparer.Ordinal).ToList(),
             _ => asc
-                ? source.OrderBy(x => x.DisplayName).ThenBy(x => x.PartyId)
-                : source.OrderByDescending(x => x.DisplayName).ThenBy(x => x.PartyId),
+                ? source.OrderBy(x => x.DisplayName, StringComparer.Ordinal).ThenBy(x => x.PartyId).ToList()
+                : source.OrderByDescending(x => x.DisplayName, StringComparer.Ordinal).ThenBy(x => x.PartyId).ToList(),
         };
     }
+
+    private static IReadOnlyList<PartyGridRow> OrderByMetric(
+        IReadOnlyList<PartyGridRow> source,
+        GridSortRequest sort,
+        Dictionary<Guid, int> metrics) =>
+        sort.Direction == "asc"
+            ? source.OrderBy(x => metrics.GetValueOrDefault(x.PartyId)).ThenBy(x => x.PartyId).ToList()
+            : source.OrderByDescending(x => metrics.GetValueOrDefault(x.PartyId)).ThenBy(x => x.PartyId).ToList();
 
     private async Task<Dictionary<Guid, int>> BuildOfferCountMetricsAsync(CancellationToken cancellationToken)
     {
@@ -236,4 +278,6 @@ public sealed class AdminSellersGridQueryEngine
         "between" when nTo.HasValue => value >= n && value <= nTo.Value,
         _ => true,
     };
+
+    private sealed record PartyGridRow(Guid PartyId, string DisplayName, string Status);
 }
