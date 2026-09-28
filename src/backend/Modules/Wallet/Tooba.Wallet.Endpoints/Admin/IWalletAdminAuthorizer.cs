@@ -7,7 +7,7 @@ public interface IWalletAdminAuthorizer
 {
     /// <summary>
     /// Requires admin panel authorization plus the named Wallet/GiftCard capability.
-    /// Preserves Unavailable fail-open compatibility.
+    /// Authorization-service unavailability fails closed (503).
     /// </summary>
     Task<Guid> RequireAuthorizedAsync(
         HttpContext httpContext, string permissionId, CancellationToken cancellationToken);

@@ -1,37 +1,29 @@
 #pragma warning disable CS1591
 using Tooba.BuildingBlocks;
-using Tooba.Host.Admin;
+using Tooba.BuildingBlocks.Security;
 using Tooba.Wallet.Application.Errors;
 using Tooba.Wallet.Endpoints.Admin;
 
 namespace Tooba.Host.Admin;
 
-/// <summary>Host transport adapter for Wallet admin Endpoints auth + capabilities.</summary>
-public sealed class HostWalletAdminAuthorizer : IWalletAdminAuthorizer
+/// <summary>
+/// Host transport adapter for Wallet admin Endpoints auth + capabilities.
+/// Panel gate delegates to <see cref="IAdminPanelAccess"/>; capability checks fail closed on
+/// <see cref="AuthorizationDecisionKind.Unavailable"/>.
+/// </summary>
+public sealed class HostWalletAdminAuthorizer(
+    IAdminPanelAccess adminAccess,
+    IAuthorizationService authz,
+    ICurrentTenant tenant) : IWalletAdminAuthorizer
 {
-    private readonly IAuthorizationService _authz;
-    private readonly ICurrentTenant _tenant;
-
-    public HostWalletAdminAuthorizer(IAuthorizationService authz, ICurrentTenant tenant)
-    {
-        _authz = authz;
-        _tenant = tenant;
-    }
-
+    /// <inheritdoc />
     public async Task<Guid> RequireAuthorizedAsync(
         HttpContext httpContext, string permissionId, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(httpContext);
         ArgumentException.ThrowIfNullOrWhiteSpace(permissionId);
 
-        var session = httpContext.RequestServices.GetRequiredService<CurrentAuthenticatedSession>();
-        var tenant = httpContext.RequestServices.GetRequiredService<ICurrentTenant>();
-        var guard = httpContext.RequestServices.GetRequiredService<IAuthorizationGuard>();
-        var environment = httpContext.RequestServices.GetRequiredService<IHostEnvironment>();
-
-        var actor = await AdminPanelAccess.RequireAuthorizedAsync(
-            httpContext.Request, session, tenant, guard, environment, cancellationToken);
-
+        var actor = await adminAccess.RequireAuthorizedAsync(httpContext.Request, cancellationToken);
         await EnsureAdminCapabilityAsync(actor, permissionId, cancellationToken);
         return actor;
     }
@@ -41,7 +33,7 @@ public sealed class HostWalletAdminAuthorizer : IWalletAdminAuthorizer
         string permissionId,
         CancellationToken cancellationToken)
     {
-        var decision = await _authz.CanAsync(
+        var decision = await authz.CanAsync(
             new AuthorizationCheck
             {
                 Subject = AuthorizationSubject.ForUser(actorUserId),
@@ -54,15 +46,25 @@ public sealed class HostWalletAdminAuthorizer : IWalletAdminAuthorizer
                 CallContext = new AuthorizationCallContext
                 {
                     Edition = ToobaEdition.SingleStore,
-                    TenantId = _tenant.Current?.TenantId.Value ?? "unknown",
+                    TenantId = tenant.Current?.TenantId.Value ?? "unknown",
                 },
             },
             cancellationToken);
+
         if (decision.Kind == AuthorizationDecisionKind.Allow)
+        {
             return;
-        // پنل Admin قبلاً tenant#view را پاس کرده؛ تا tupleهای capability پایدار شوند fail-open.
+        }
+
+        // شکست زیرساخت مجوز هرگز ALLOW نیست؛ capability باید fail-closed بماند.
         if (decision.Kind == AuthorizationDecisionKind.Unavailable)
-            return;
+        {
+            throw new PlatformHttpException(
+                503,
+                "سرویس مجوز در دسترس نیست.",
+                WalletErrorCodes.AuthorizationUnavailable);
+        }
+
         throw new PlatformHttpException(403, "مجوز کیف پول/کارت هدیه وجود ندارد.", WalletErrorCodes.AdminAuthorizationDenied);
     }
 }

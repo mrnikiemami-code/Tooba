@@ -27,6 +27,9 @@ public static class SupportErrorCodes
     /// <summary>Admin capability denied.</summary>
     public const string AdminAuthorizationDenied = "admin.authorization.denied";
 
+    /// <summary>Authorization service unavailable; admin capability must fail closed (503).</summary>
+    public const string AuthorizationUnavailable = "support.authorization.unavailable";
+
     /// <summary>Development demo seed not ready.</summary>
     public const string DemoNotReady = "support.demo.not_ready";
 }

@@ -231,8 +231,10 @@ public sealed class WalletArchitectureGuardTests
         var hostAdmin = File.ReadAllText(Path.Combine(hostRoot, "Admin", "HostWalletAdminAuthorizer.cs"));
         Assert.Contains("X-Tooba-Dev-Actor-User-Id", moduleCustomer, StringComparison.Ordinal);
         Assert.Contains("ICurrentAuthenticatedUser", moduleCustomer, StringComparison.Ordinal);
-        Assert.Contains("AdminPanelAccess.RequireAuthorizedAsync", hostAdmin, StringComparison.Ordinal);
+        Assert.Contains("IAdminPanelAccess", hostAdmin, StringComparison.Ordinal);
         Assert.Contains("AuthorizationDecisionKind.Unavailable", hostAdmin, StringComparison.Ordinal);
+        Assert.Contains("WalletErrorCodes.AuthorizationUnavailable", hostAdmin, StringComparison.Ordinal);
+        Assert.DoesNotContain("RequestServices", hostAdmin, StringComparison.Ordinal);
         Assert.DoesNotContain("IWalletDirectory", moduleCustomer, StringComparison.Ordinal);
         Assert.DoesNotContain("IWalletDirectory", hostAdmin, StringComparison.Ordinal);
 

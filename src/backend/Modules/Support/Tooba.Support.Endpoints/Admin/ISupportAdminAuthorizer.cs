@@ -7,7 +7,7 @@ public interface ISupportAdminAuthorizer
 {
     /// <summary>
     /// Requires admin panel authorization plus the named Support capability
-    /// (support.view / support.manage). Preserves Unavailable fail-open compatibility.
+    /// (support.view / support.manage). Authorization-service unavailability fails closed (503).
     /// </summary>
     Task<Guid> RequireAuthorizedAsync(
         HttpContext httpContext, string permissionId, CancellationToken cancellationToken);

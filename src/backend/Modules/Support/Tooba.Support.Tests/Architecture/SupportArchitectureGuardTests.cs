@@ -189,8 +189,10 @@ public sealed class SupportArchitectureGuardTests
         Assert.Contains("SellerPanelAccess.RequireAuthorizedAsync", hostSeller, StringComparison.Ordinal);
         Assert.Contains("SellerAuthorizationDenied", hostSeller, StringComparison.Ordinal);
         Assert.Contains("GetEffectiveAccessAsync", hostSeller, StringComparison.Ordinal);
-        Assert.Contains("AdminPanelAccess.RequireAuthorizedAsync", hostAdmin, StringComparison.Ordinal);
+        Assert.Contains("IAdminPanelAccess", hostAdmin, StringComparison.Ordinal);
         Assert.Contains("AuthorizationDecisionKind.Unavailable", hostAdmin, StringComparison.Ordinal);
+        Assert.Contains("SupportErrorCodes.AuthorizationUnavailable", hostAdmin, StringComparison.Ordinal);
+        Assert.DoesNotContain("RequestServices", hostAdmin, StringComparison.Ordinal);
         Assert.DoesNotContain("ISupportDirectory", moduleCustomer, StringComparison.Ordinal);
         Assert.DoesNotContain("ISupportDirectory", hostSeller, StringComparison.Ordinal);
         Assert.DoesNotContain("ISupportDirectory", hostAdmin, StringComparison.Ordinal);

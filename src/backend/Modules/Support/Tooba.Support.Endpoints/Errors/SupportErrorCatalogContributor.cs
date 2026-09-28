@@ -17,6 +17,7 @@ public sealed class SupportErrorCatalogContributor : IErrorCatalogContributor
         D(SupportErrorCodes.ReplyRejected, ErrorClassification.Business, StatusCodes.Status400BadRequest, "Bad Request"),
         D(SupportErrorCodes.ActionRejected, ErrorClassification.Business, StatusCodes.Status400BadRequest, "Bad Request"),
         D(SupportErrorCodes.PatchRejected, ErrorClassification.Business, StatusCodes.Status400BadRequest, "Bad Request"),
+        D(SupportErrorCodes.AuthorizationUnavailable, ErrorClassification.Platform, StatusCodes.Status503ServiceUnavailable, "Support authorization unavailable."),
         D(SupportErrorCodes.DemoNotReady, ErrorClassification.Platform, StatusCodes.Status503ServiceUnavailable, "Support demo seed not ready"),
     ];
 

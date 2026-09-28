@@ -156,14 +156,15 @@ public sealed class WalletCqrsAndHttpContractTests
     }
 
     [Fact]
-    public void Admin_authorizer_contract_documents_fail_open_unavailable()
+    public void Admin_authorizer_contract_documents_fail_closed_unavailable()
     {
         var path = Path.Combine(
             FindRepoRoot(),
             "src", "backend", "Modules", "Wallet", "Tooba.Wallet.Endpoints",
             "Admin", "IWalletAdminAuthorizer.cs");
         var text = File.ReadAllText(path);
-        Assert.Contains("Unavailable fail-open", text, StringComparison.Ordinal);
+        Assert.Contains("fails closed", text, StringComparison.Ordinal);
+        Assert.DoesNotContain("fail-open", text, StringComparison.Ordinal);
         Assert.Contains("RequireAuthorizedAsync", text, StringComparison.Ordinal);
     }
 

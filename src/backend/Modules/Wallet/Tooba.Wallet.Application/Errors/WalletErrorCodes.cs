@@ -13,5 +13,6 @@ public static class WalletErrorCodes
     public const string WalletMissing = "wallet.missing";
     public const string AdjustRejected = "wallet.adjust.rejected";
     public const string AdminAuthorizationDenied = "admin.authorization.denied";
+    public const string AuthorizationUnavailable = "wallet.authorization.unavailable";
     public const string DemoNotReady = "wallet.demo.not_ready";
 }
