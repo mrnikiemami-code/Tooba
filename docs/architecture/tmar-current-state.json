@@ -2629,6 +2629,27 @@
     "evidence": "docs/evidence/TB-TMAR-HOST-ADMIN-CANON-005/",
     "workflowStop": "USER_REVIEW_HOST_ADMIN_CANON_005"
   },
+  "hostAdminCanon006": {
+    "task": "TB-TMAR-HOST-ADMIN-CANON-006",
+    "parentTask": "TB-TMAR-HOST-ADMIN-CANON-005",
+    "state": "ORDER_ADMIN_EFFECTIVE_ACCESS_READER_ON_NEUTRAL_PLATFORM_SEAM",
+    "parentCommit": "bbe8d21404aa162d72037a5e6620998993503dfc",
+    "hostOrderEffectiveAccessAccessControlApplication": "ZERO",
+    "hostOrderEffectiveAccessAccessControlDomain": "ZERO",
+    "hostOrderEffectiveAccessDirectory": "ZERO",
+    "accessControlBoundary": "REUSED_NEUTRAL_BUILDINGBLOCKS_SEAM_IPLATFORMEFFECTIVEACCESSREADER",
+    "accessControlImplementationOwnership": "ACCESS_CONTROL_MODULE_ADAPTER",
+    "orderContractsAuthority": "PRESERVED",
+    "permissionIdSemantics": "PRESERVED",
+    "deniedByCeilingSemantics": "PRESERVED",
+    "crossModuleForbiddenEdge": "NONE",
+    "adminFileCount": 15,
+    "canon005": "PRESERVED",
+    "canon004": "PRESERVED",
+    "focusedValidation": "CANON_006_005_004_GUARDS_PASS_30_30",
+    "evidence": "docs/evidence/TB-TMAR-HOST-ADMIN-CANON-006/",
+    "workflowStop": "USER_REVIEW_HOST_ADMIN_CANON_006"
+  },
   "hostAdminAmcHoldPolicy": {
     "task": "TB-TMAR-HOST-ADMIN-AMC-001-W35-HOLD-POLICY",
     "parentTask": "TB-TMAR-HOST-ADMIN-AMC-001-W34-TEMPLATE-SEEDS",

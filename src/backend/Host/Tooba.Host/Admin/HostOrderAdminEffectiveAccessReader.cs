@@ -1,26 +1,25 @@
-﻿using Tooba.AccessControl.Application;
-using Tooba.AccessControl.Domain;
-using Tooba.BuildingBlocks;
+﻿using Tooba.BuildingBlocks.Security;
 using Tooba.Order.Contracts.Admin.Operations;
 
-using Tooba.AccessControl.Application.Models;
-using Tooba.AccessControl.Application.Permissions;
 namespace Tooba.Host.Admin;
 
-/// <summary>Thin Host adapter: AccessControl effective grants for Order admin operations.</summary>
+/// <summary>
+/// Thin Host adapter: maps the neutral platform effective-access seam
+/// (<see cref="IPlatformEffectiveAccessReader"/>, AccessControl-owned implementation) onto the
+/// Order admin effective-access contract. No AccessControl Application/Domain types are referenced.
+/// </summary>
 internal sealed class HostOrderAdminEffectiveAccessReader(
-    IAccessControlDirectory access,
-    ICurrentTenant tenant) : IOrderAdminEffectiveAccessReader
+    IPlatformEffectiveAccessReader access) : IOrderAdminEffectiveAccessReader
 {
     public async Task<OrderAdminEffectiveAccess> GetAsync(Guid actorUserId, CancellationToken cancellationToken)
     {
-        var scope = new AccessOwnerScope(
-            AccessOwnerScopeKind.Platform,
+        var grants = await access.GetEffectivePermissionsAsync(
+            actorUserId,
+            PlatformAccessOwnerKind.Platform,
             null,
-            tenant.Current?.TenantId.Value);
-        var effective = await access.GetEffectiveAccessAsync(actorUserId, scope, cancellationToken);
+            cancellationToken);
         return new OrderAdminEffectiveAccess(
-            effective.Permissions
+            grants
                 .Select(p => new OrderAdminPermissionGrant(p.PermissionId, p.DeniedByCeiling))
                 .ToList());
     }

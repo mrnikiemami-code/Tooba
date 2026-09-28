@@ -92,8 +92,8 @@ public sealed class HostAdminCanon004GuardTests
         var reader = ReadAdmin("HostOrderAdminEffectiveAccessReader.cs");
         Assert.Contains("Tooba.Order.Contracts.Admin.Operations", reader, StringComparison.Ordinal);
         Assert.DoesNotContain("Tooba.Order.Application", reader, StringComparison.Ordinal);
-        Assert.Contains("IAccessControlDirectory", reader, StringComparison.Ordinal);
-        Assert.Contains("GetEffectiveAccessAsync", reader, StringComparison.Ordinal);
+        Assert.Contains("IPlatformEffectiveAccessReader", reader, StringComparison.Ordinal);
+        Assert.Contains("GetEffectivePermissionsAsync", reader, StringComparison.Ordinal);
     }
 
     [Fact]

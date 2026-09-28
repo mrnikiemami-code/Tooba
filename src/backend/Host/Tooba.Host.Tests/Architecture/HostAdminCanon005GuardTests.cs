@@ -7,7 +7,8 @@ namespace Tooba.Host.Tests.Architecture;
 /// owned by <c>Tooba.Order.Contracts</c>; the Host reader path must have ZERO
 /// <c>Tooba.Order.Application</c> reference, with exactly one authoritative definition of each
 /// contract type and no duplicate public authority left in Order.Application.
-/// AccessControl coupling on the reader is explicitly deferred and must remain unchanged here.
+/// AccessControl coupling on the reader is additionally pinned to the neutral platform seam
+/// (CANON-006) and must never regress to AccessControl Application/Domain.
 /// </summary>
 public sealed class HostAdminCanon005GuardTests
 {
@@ -23,11 +24,12 @@ public sealed class HostAdminCanon005GuardTests
     }
 
     [Fact]
-    public void Host_reader_accesscontrol_coupling_is_deferred_and_unchanged()
+    public void Host_reader_accesscontrol_dependency_is_contracts_or_neutral_seam_only()
     {
         var text = ReadAdmin(ReaderFile);
-        Assert.Contains("IAccessControlDirectory", text, StringComparison.Ordinal);
-        Assert.Contains("GetEffectiveAccessAsync", text, StringComparison.Ordinal);
+        Assert.Contains("IPlatformEffectiveAccessReader", text, StringComparison.Ordinal);
+        Assert.DoesNotContain("IAccessControlDirectory", text, StringComparison.Ordinal);
+        Assert.DoesNotContain("Tooba.AccessControl", text, StringComparison.Ordinal);
     }
 
     [Fact]
