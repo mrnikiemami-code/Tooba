@@ -1370,6 +1370,7 @@
       "industry-batch-c-template-catalog-seed"
     ],
     "guardState": "HostDevelopmentAmcGuardTests allowlist repaired to classified dict (unclassified new file fails)",
+    "destinationIntegrityState": "NO_SINK_FOLDER_REGRESSION_ACTIVE_FOLDER_ONLY",
     "schemaMigrationState": "NONE",
     "routeChange": "NONE",
     "frontendState": "UNCHANGED",

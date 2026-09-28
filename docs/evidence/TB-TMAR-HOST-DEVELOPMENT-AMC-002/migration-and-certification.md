@@ -65,6 +65,19 @@ Trace labels preserved exactly: `catalog-attribute-schema-seed`, `landing-dev-se
 - `dotnet build src/backend/Host/Tooba.Host` → **succeeded, 0 errors**
 - `dotnet test Tooba.Host.Tests` filter (`HostDevelopmentAmcGuardTests`, `HostAdminAmcW34TemplateSeedsGuardTests`, `HostAdminAmcLandingPageSeedGuardTests`, `HostAdminCanon002GuardTests`, `HostCartResidualGuardTests`, `HostAdminCanon009GuardTests`, `HostAdminCanonicalCertificationGuardTests`) → **Passed 57 / Failed 0**
 
+## Destination integrity check (Analyze §3d / Migrate §25c / Certify §13b)
+| Destination | Classification | Change |
+| --- | --- | --- |
+| Host/Development/ (active folder) | OPEN_FOR_CURRENT_TASK | -7 wrappers, +1 `DevelopmentTenantCommerceContext.cs` |
+| Host/Admin, Host/Content, Host/Composition, Host/Wallet, Host/Storefront, all other Host folders | NOT A DESTINATION | untouched |
+| Modules/Catalog/** | LOCKED_BY_ACCEPTED_DISPOSITION | untouched (0 files changed) |
+| Modules/** (all others) | LOCKED_BY_ACCEPTED_DISPOSITION | untouched |
+
+- No file was moved **into** any other Host folder or resurrected folder.
+- No new Host folder was invented.
+- The only protected-set change is the **active** Development folder's own allowlist, which the task explicitly reopens; its stale 3-file set (RED at clean HEAD) was replaced by a classified 6-file set with a durable guard, recorded in SoT `hostDevelopmentAmc002`.
+- Result: `SINK_FOLDER_REGRESSION` = **NONE**.
+
 ## Residual debt / blockers
 1. `CatalogAttributeSchemaSellableEnricher` (cross-module) — needs dev-seed ports in Offer/Party/Pricing/Inventory/Tax before Catalog can own it. Requires Architect decision + touching reference module Offer.
 2. `ProductWorkspaceDevelopmentBootstrap` — cross-module dev-seed orchestrator; separate bounded task.
