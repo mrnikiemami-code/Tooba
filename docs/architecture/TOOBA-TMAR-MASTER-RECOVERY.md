@@ -27,6 +27,7 @@ Reconciled by `TB-TMAR-HOST-SELLER-AMC-001-R2`. A fresh chat/architect MUST reco
 - Root Global Boundaries R3: `CERTIFIED` and `PRESERVED`.
 - Current Host evacuation: `RECONCILED_NOT_HISTORICAL_ADDRESSBOOK`. Current Host checkpoint = `Seller`; the accepted Seller implementation wave is `TB-TMAR-HOST-SELLER-AMC-001-R2` (implementation commit `bc7f43cf04eccd068c12fdc13dcca7901df1c476`). There is NO automatic next Host folder and `nextHostFolderStarted = false`; `nextHostFolder = NONE_USER_DECISION_REQUIRED`. AccessControl/AddressBook/Authentication/Admin/Content/Development and later folder checkpoints are HISTORICAL, not the current continuation point.
 - Current stop state: `workflowStop = USER_REVIEW_HOST_SELLER_AMC_001_R2`; `nextTask = USER_REVIEW_HOST_SELLER_AMC_001_R2`; `nextTaskState = USER_DECISION_REQUIRED`; `nextTaskGate = USER_DECISION_REQUIRED_NO_AUTOMATIC_NEXT_IMPLEMENTATION_TASK`; `automaticNextImplementationTask = NONE`; `staleCurrentPointerState = ZERO`.
+- Historical checkpoints preserved as accepted lineage: Seller R1A/R1B `USER_REVIEW_HOST_SELLER_AMC_001_R1B` / `USER_REVIEW_HOST_SELLER_AMC_001_R1A`, and the Development closure stop `USER_REVIEW_HOST_DEVELOPMENT_PRODUCTWORKSPACE_MIGRATION_SEAM_001_R1` (implementation `ec906591`) — all NON-AUTHORITATIVE history.
 - There is intentionally NO automatic next implementation task and NO next Host folder. User/Architect decision is required before any next Host folder. Do not invent one and do not resume any historical next-task marker below.
 
 Non-authoritative historical pointers warning

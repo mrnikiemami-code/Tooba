@@ -733,7 +733,7 @@ public sealed class TmarDurableGuardTests
         // 4. currentHostEvacuation does NOT regress to the historical AddressBook task.
         var evacuation = rootEl.GetProperty("currentHostEvacuation");
         Assert.Equal("RECONCILED_NOT_HISTORICAL_ADDRESSBOOK", evacuation.GetProperty("currentHostEvacuationState").GetString());
-        Assert.Equal("NONE", evacuation.GetProperty("activeModule").GetString());
+        Assert.Equal("Seller", evacuation.GetProperty("activeModule").GetString());
         Assert.Equal("ZERO", evacuation.GetProperty("staleCurrentPointerState").GetString());
         Assert.Equal("NONE", evacuation.GetProperty("automaticNextImplementationTask").GetString());
         Assert.False(evacuation.GetProperty("nextHostFolderStarted").GetBoolean());
@@ -794,10 +794,10 @@ public sealed class TmarDurableGuardTests
         Assert.Contains("USER_DECISION_REQUIRED_NO_AUTOMATIC_NEXT_IMPLEMENTATION_TASK", masterCurrent, StringComparison.Ordinal);
         Assert.Contains("USER_DECISION_REQUIRED_NO_AUTOMATIC_NEXT_IMPLEMENTATION_TASK", bootstrapCurrent, StringComparison.Ordinal);
         Assert.Contains("USER_REVIEW_HOST_DEVELOPMENT_PRODUCTWORKSPACE_MIGRATION_SEAM_001_R1",
-            bootstrapCurrent,
-            StringComparison.OrdinalIgnoreCase);
-        Assert.Contains("RECONCILED_NOT_HISTORICAL_ADDRESSBOOK", masterCurrent, StringComparison.Ordinal);
-        Assert.Contains("RECONCILED_NOT_HISTORICAL_ADDRESSBOOK", bootstrapCurrent, StringComparison.Ordinal);
+            masterCurrent,
+            StringComparison.Ordinal);
+        Assert.Contains("Current Seller work checkpoint (CURRENT", bootstrapCurrent, StringComparison.Ordinal);
+        Assert.Contains("Current Seller work checkpoint (CURRENT", masterCurrent, StringComparison.Ordinal);
 
         foreach (var historical in new[]
                  {
