@@ -29,8 +29,10 @@ Focused-Validation-State: PASS (JSON parse OK; SoT consistency verified; four ev
 Evidence-Path: docs/evidence/TB-TMAR-HOST-DEVELOPMENT-PRODUCTWORKSPACE-ANALYZE-001/
 SoT-State: hostDevelopmentProductWorkspaceAnalyze001 ADDED (productionCodeChangeState ZERO, responsibilityMapState COMPLETE, dependencyMapState COMPLETE, implementationWaveCount 2, finalTargetState ABSENT, automaticNextImplementationTask NONE, workflowStop USER_REVIEW_HOST_DEVELOPMENT_PRODUCTWORKSPACE_ANALYZE_001, analysisState PASS, wave1Executed false, wave1TaskArtifactCreated false)
 Commit-SHA: 6616e785601501a50ab3ccc6d7e268bce1d6f148
-Push-State: PUSHED (db2f791a..6616e785 main -> main)
-HEAD-Equals-Origin-Main: YES (6616e785601501a50ab3ccc6d7e268bce1d6f148)
+Commit-SHA-Kind: ANALYSIS_EVIDENCE_SOT_COMMIT
+Result-Artifact-Commit-SHA: 0670be32b229ec234759e11a92f3b0ed62bf8f2c
+Push-State: PUSHED (db2f791a..0670be32 main -> main)
+HEAD-Equals-Origin-Main: YES (0670be32b229ec234759e11a92f3b0ed62bf8f2c)
 Working-Tree-Tracked-State: CLEAN
 User-Work-Preserved: YES
 STOP
