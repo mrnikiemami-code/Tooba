@@ -1,13 +1,15 @@
 using Tooba.BuildingBlocks.Security;
 using Tooba.Order.Application.Seller.Ports;
 
-namespace Tooba.Host.Security.Seller;
+namespace Tooba.Order.Infrastructure.Seller;
 
 /// <summary>
-/// Thin Host adapter: neutral platform effective-access snapshot for Seller Order CQRS.
-/// No AccessControl Application/Domain type is referenced.
+/// پیاده‌سازی مالک‌شدهٔ Order برای خواندن دسترسی مؤثر <c>order.view</c> فروشنده.
+/// تنها به درز خنثی پلتفرم (<see cref="IPlatformEffectiveAccessReader"/>) تکیه دارد و هیچ نوع
+/// AccessControl Application/Domain را مصرف نمی‌کند.
 /// </summary>
-public sealed class HostSellerOrderViewAccessReader(IPlatformEffectiveAccessReader access) : ISellerOrderViewAccessReader
+internal sealed class SellerOrderViewAccessReader(
+    IPlatformEffectiveAccessReader access) : ISellerOrderViewAccessReader
 {
     /// <inheritdoc />
     public async Task<SellerOrderViewAccessSnapshot> GetOrderViewAccessAsync(

@@ -4,21 +4,26 @@ using Xunit;
 namespace Tooba.Host.Tests.Architecture;
 
 /// <summary>
-/// TB-TMAR-HOST-SELLER-AMC-001-R1 — durable guard for the Host seller platform security boundary.
+/// TB-TMAR-HOST-SELLER-AMC-001-R1 / R1A — durable guard for the Host seller platform security boundary.
 ///
-/// The Host seller panel gate and its nine thin module-endpoint auth adapters live under
+/// The Host seller panel gate and its thin module-endpoint auth adapters live under
 /// <c>Host/Security/Seller</c> (Host security platform boundary, not a business owner), the panel
 /// gate resolves its runtime dependencies from DI instead of the service locator, the effective
 /// permission projection consumes only the neutral platform seam, and no foreign
 /// Application/Infrastructure/Domain module type is referenced from the boundary.
+///
+/// R1A tightens the R1 boundary from "no AccessControl Application/Domain" to ZERO foreign
+/// Application/Domain/Infrastructure/Persistence reference across the entire boundary: the Order
+/// view-access port implementation moved into Order-owned Infrastructure and the stable seller
+/// security codes are Host-boundary owned.
 /// </summary>
 public sealed class HostSellerAmcR1GuardTests
 {
     private static readonly string[] BoundaryFiles =
     [
         "SellerPanelAccess.cs",
+        "SellerSecurityErrorCodes.cs",
         "HostSellerPanelAccess.cs",
-        "HostSellerOrderViewAccessReader.cs",
         "HostSupportSellerAuthorizer.cs",
         "HostOfferSellerAuthorizer.cs",
         "HostOrderSellerAuthorizer.cs",
@@ -37,22 +42,14 @@ public sealed class HostSellerAmcR1GuardTests
         "HostSettlementSellerAuthorizer.cs",
         "HostNotificationSellerAuthorizer.cs",
         "HostPromotionSellerAuthorizer.cs",
-        "HostSellerOrderViewAccessReader.cs",
         "HostSellerPanelAccess.cs",
     ];
 
-    // Accepted pre-R1 Host→module security-port references only: a module-owned stable error-code
-    // set and one module-owned seller access port. Anything else is forbidden coupling.
-    private static readonly Regex ForeignModuleApplicationOrDomain = new(
-        @"Tooba\.(Catalog|Party|AccessControl|Identity|Order|Offer|Promotion|Returns|Settlement|Notification|Support)\.(Application|Domain)",
+    // R1A: the whole Host seller security boundary must be ZERO foreign
+    // Application/Domain/Infrastructure/Persistence. No line allowance exists any more.
+    private static readonly Regex ForeignModuleLayer = new(
+        @"Tooba\.(Catalog|Party|AccessControl|Identity|Order|Offer|Promotion|Returns|Settlement|Notification|Support|Persistence)\.(Application|Domain|Infrastructure|Persistence)",
         RegexOptions.Compiled | RegexOptions.CultureInvariant);
-
-    private static readonly string[] AcceptedForeignNamespaceLines =
-    [
-        "using Tooba.Order.Application.Seller;",
-        "using Tooba.Order.Application.Seller.Ports;",
-        "using Tooba.Support.Application.Errors;",
-    ];
 
     [Fact]
     public void Seller_platform_security_boundary_files_exist_under_host_security_and_not_under_host_seller()
@@ -72,7 +69,7 @@ public sealed class HostSellerAmcR1GuardTests
     }
 
     [Fact]
-    public void Seller_security_boundary_references_no_foreign_module_application_or_domain()
+    public void Seller_security_boundary_references_zero_foreign_module_layers()
     {
         var boundaryRoot = Path.Combine(HostRoot(), "Security", "Seller");
         var violations = new List<string>();
@@ -82,21 +79,75 @@ public sealed class HostSellerAmcR1GuardTests
             foreach (var raw in File.ReadLines(path))
             {
                 var line = raw.Trim();
-                if (!ForeignModuleApplicationOrDomain.IsMatch(line))
+                if (ForeignModuleLayer.IsMatch(line))
                 {
-                    continue;
+                    violations.Add(Path.GetFileName(path) + ": " + line);
                 }
-
-                if (AcceptedForeignNamespaceLines.Contains(line, StringComparer.Ordinal))
-                {
-                    continue;
-                }
-
-                violations.Add(Path.GetFileName(path) + ": " + line);
             }
         }
 
         Assert.True(violations.Count == 0, "foreign module coupling: " + string.Join("; ", violations));
+    }
+
+    [Fact]
+    public void Host_no_longer_implements_the_order_view_access_port_and_order_owns_it()
+    {
+        var hostRoot = HostRoot();
+        Assert.False(
+            File.Exists(Path.Combine(hostRoot, "Security", "Seller", "HostSellerOrderViewAccessReader.cs")),
+            "Host must no longer implement the Order Application view-access port");
+
+        var orderOwned = Path.Combine(
+            FindRepoRoot(), "src", "backend", "Modules", "Order", "Tooba.Order.Infrastructure",
+            "Seller", "SellerOrderViewAccessReader.cs");
+        Assert.True(File.Exists(orderOwned), "Order-owned view-access implementation is required");
+        var text = File.ReadAllText(orderOwned);
+        Assert.Contains(": ISellerOrderViewAccessReader", text, StringComparison.Ordinal);
+        Assert.Contains("IPlatformEffectiveAccessReader", text, StringComparison.Ordinal);
+        Assert.Contains("PlatformAccessOwnerKind.Seller", text, StringComparison.Ordinal);
+        Assert.Contains("PlatformAccessScopeKind.Category", text, StringComparison.Ordinal);
+        Assert.Contains("DeniedByCeiling", text, StringComparison.Ordinal);
+        Assert.DoesNotContain("Tooba.AccessControl", text, StringComparison.Ordinal);
+
+        var module = File.ReadAllText(Path.Combine(
+            FindRepoRoot(), "src", "backend", "Modules", "Order", "Tooba.Order.Infrastructure", "OrderModule.cs"));
+        Assert.Contains("Application.Seller.Ports.ISellerOrderViewAccessReader, SellerOrderViewAccessReader", module, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void Host_order_and_support_authorizers_no_longer_reference_foreign_application_error_codes()
+    {
+        var boundaryRoot = Path.Combine(HostRoot(), "Security", "Seller");
+
+        var order = File.ReadAllText(Path.Combine(boundaryRoot, "HostOrderSellerAuthorizer.cs"));
+        Assert.DoesNotContain("SellerOrderErrors", order, StringComparison.Ordinal);
+        Assert.DoesNotContain("Tooba.Order.Application", order, StringComparison.Ordinal);
+        Assert.Contains("SellerSecurityErrorCodes.ActorMissing", order, StringComparison.Ordinal);
+
+        var support = File.ReadAllText(Path.Combine(boundaryRoot, "HostSupportSellerAuthorizer.cs"));
+        Assert.DoesNotContain("SupportErrorCodes", support, StringComparison.Ordinal);
+        Assert.DoesNotContain("Tooba.Support.Application", support, StringComparison.Ordinal);
+        Assert.Contains("SellerSecurityErrorCodes.AuthorizationDenied", support, StringComparison.Ordinal);
+        Assert.Contains("IPlatformEffectiveAccessReader", support, StringComparison.Ordinal);
+        Assert.Contains("PlatformAccessOwnerKind.Seller", support, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void Host_owned_seller_security_error_codes_are_stable_and_unchanged()
+    {
+        var codes = File.ReadAllText(Path.Combine(
+            HostRoot(), "Security", "Seller", "SellerSecurityErrorCodes.cs"));
+        Assert.Contains("namespace Tooba.Host.Security.Seller;", codes, StringComparison.Ordinal);
+        Assert.Contains("\"seller.actor.missing\"", codes, StringComparison.Ordinal);
+        Assert.Contains("\"seller.identity.missing\"", codes, StringComparison.Ordinal);
+        Assert.Contains("\"seller.authorization.denied\"", codes, StringComparison.Ordinal);
+        Assert.Contains("\"seller.authorization.unavailable\"", codes, StringComparison.Ordinal);
+
+        var gate = File.ReadAllText(Path.Combine(HostRoot(), "Security", "Seller", "SellerPanelAccess.cs"));
+        Assert.Contains("SellerSecurityErrorCodes.ActorMissing", gate, StringComparison.Ordinal);
+        Assert.Contains("SellerSecurityErrorCodes.IdentityMissing", gate, StringComparison.Ordinal);
+        Assert.Contains("SellerSecurityErrorCodes.AuthorizationDenied", gate, StringComparison.Ordinal);
+        Assert.Contains("SellerSecurityErrorCodes.AuthorizationUnavailable", gate, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -107,10 +158,6 @@ public sealed class HostSellerAmcR1GuardTests
 
         Assert.Contains("IAuthorizationGuard guard", gate, StringComparison.Ordinal);
         Assert.Contains("CurrentAuthenticatedSession session", gate, StringComparison.Ordinal);
-        Assert.Contains("seller.actor.missing", gate, StringComparison.Ordinal);
-        Assert.Contains("seller.identity.missing", gate, StringComparison.Ordinal);
-        Assert.Contains("seller.authorization.denied", gate, StringComparison.Ordinal);
-        Assert.Contains("seller.authorization.unavailable", gate, StringComparison.Ordinal);
         Assert.Contains("SellerPartyHeader", gate, StringComparison.Ordinal);
         Assert.Contains("DevActorHeader", gate, StringComparison.Ordinal);
 
@@ -119,7 +166,7 @@ public sealed class HostSellerAmcR1GuardTests
     }
 
     [Fact]
-    public void Thin_adapters_delegate_to_the_neutral_panel_seam_and_reference_no_access_control_application_or_domain()
+    public void Thin_adapters_delegate_to_the_neutral_panel_seam_and_reference_no_access_control_or_persistence()
     {
         var boundaryRoot = Path.Combine(HostRoot(), "Security", "Seller");
 
@@ -134,17 +181,6 @@ public sealed class HostSellerAmcR1GuardTests
         var offer = File.ReadAllText(Path.Combine(boundaryRoot, "HostOfferSellerAuthorizer.cs"));
         Assert.Contains("ISellerPanelAccess sellerAccess", offer, StringComparison.Ordinal);
         Assert.Contains("IOfferSellerAuthorizer", offer, StringComparison.Ordinal);
-
-        var orderReader = File.ReadAllText(Path.Combine(boundaryRoot, "HostSellerOrderViewAccessReader.cs"));
-        Assert.Contains("IPlatformEffectiveAccessReader", orderReader, StringComparison.Ordinal);
-        Assert.Contains("PlatformAccessOwnerKind.Seller", orderReader, StringComparison.Ordinal);
-        Assert.Contains("GetEffectivePermissionsAsync", orderReader, StringComparison.Ordinal);
-        Assert.Contains("DeniedByCeiling", orderReader, StringComparison.Ordinal);
-
-        var support = File.ReadAllText(Path.Combine(boundaryRoot, "HostSupportSellerAuthorizer.cs"));
-        Assert.Contains("IPlatformEffectiveAccessReader", support, StringComparison.Ordinal);
-        Assert.Contains("PlatformAccessOwnerKind.Seller", support, StringComparison.Ordinal);
-        Assert.Contains("SellerAuthorizationDenied", support, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -160,12 +196,15 @@ public sealed class HostSellerAmcR1GuardTests
         Assert.Contains("Tooba.Host.Security.Seller.HostNotificationSellerAuthorizer", program, StringComparison.Ordinal);
         Assert.Contains("Tooba.Host.Security.Seller.HostSupportSellerAuthorizer", program, StringComparison.Ordinal);
         Assert.Contains("Tooba.Host.Security.Seller.HostPromotionSellerAuthorizer", program, StringComparison.Ordinal);
-        Assert.Contains(
-            "Tooba.Host.Security.Seller.HostSellerOrderViewAccessReader", program, StringComparison.Ordinal);
 
         Assert.DoesNotContain("Tooba.Host.Seller.HostOfferSellerAuthorizer", program, StringComparison.Ordinal);
         Assert.DoesNotContain("Tooba.Host.Seller.HostOrderSellerAuthorizer", program, StringComparison.Ordinal);
         Assert.DoesNotContain("Tooba.Host.Seller.HostSellerPanelAccess", program, StringComparison.Ordinal);
+        Assert.DoesNotContain("HostSellerOrderViewAccessReader", program, StringComparison.Ordinal);
+        Assert.DoesNotContain(
+            "Tooba.Order.Application.Seller.Ports.ISellerOrderViewAccessReader",
+            program,
+            StringComparison.Ordinal);
     }
 
     [Fact]

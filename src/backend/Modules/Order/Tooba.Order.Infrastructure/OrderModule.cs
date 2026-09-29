@@ -4,6 +4,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Tooba.BuildingBlocks;
+using Tooba.BuildingBlocks.Security;
 using Tooba.ModuleContracts;
 using Tooba.Order.Application;
 using Tooba.Order.Application.Admin.Completeness.Ports;
@@ -73,6 +74,7 @@ public sealed class OrderModule : IToobaModule
         services.AddScoped<Application.Customer.CustomerOrderComposer>();
         services.AddScoped<Tooba.Order.Contracts.Customer.ICustomerOrderDashboardSummaryPort, Adapters.CustomerOrderDashboardSummaryAdapter>();
         services.AddScoped<Application.Seller.Ports.ISellerOrderStore, SellerOrderStore>();
+        services.AddScoped<Application.Seller.Ports.ISellerOrderViewAccessReader, SellerOrderViewAccessReader>();
         services.AddScoped<Application.Seller.SellerOrderComposer>();
         services.AddScoped<Application.Admin.Operations.Ports.IAdminOrderOperationsCheckoutReader, Admin.Operations.AdminOrderOperationsCheckoutReader>();
         services.AddScoped<Application.Admin.Supply.Ports.IOrderSupplyCheckoutStore, Admin.Supply.OrderSupplyCheckoutStore>();

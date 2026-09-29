@@ -187,12 +187,14 @@ public sealed class SupportArchitectureGuardTests
         Assert.Contains("X-Tooba-Dev-Actor-User-Id", moduleCustomer, StringComparison.Ordinal);
         Assert.Contains("ICurrentAuthenticatedUser", moduleCustomer, StringComparison.Ordinal);
         Assert.Contains("sellerAccess.RequireAuthorizedAsync", hostSeller, StringComparison.Ordinal);
-        Assert.Contains("SellerAuthorizationDenied", hostSeller, StringComparison.Ordinal);
+        Assert.Contains("SellerSecurityErrorCodes.AuthorizationDenied", hostSeller, StringComparison.Ordinal);
         Assert.Contains("GetEffectivePermissionsAsync", hostSeller, StringComparison.Ordinal);
         Assert.Contains("PlatformAccessOwnerKind.Seller", hostSeller, StringComparison.Ordinal);
         Assert.DoesNotContain("IAccessControlDirectory", hostSeller, StringComparison.Ordinal);
         Assert.DoesNotContain("Tooba.AccessControl.Application", hostSeller, StringComparison.Ordinal);
         Assert.DoesNotContain("Tooba.AccessControl.Domain", hostSeller, StringComparison.Ordinal);
+        Assert.DoesNotContain("SupportErrorCodes", hostSeller, StringComparison.Ordinal);
+        Assert.DoesNotContain("Tooba.Support.Application", hostSeller, StringComparison.Ordinal);
         Assert.Contains("IAdminPanelAccess", hostAdmin, StringComparison.Ordinal);
         Assert.Contains("AuthorizationDecisionKind.Unavailable", hostAdmin, StringComparison.Ordinal);
         Assert.Contains("SupportAdminAuthorizationCodes.AuthorizationUnavailable", hostAdmin, StringComparison.Ordinal);

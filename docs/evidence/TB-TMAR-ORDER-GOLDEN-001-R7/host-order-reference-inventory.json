@@ -139,6 +139,20 @@
     ],
     "note": "Host seller platform security boundary relocated from Host/Seller to Host/Security/Seller. Host/Seller now keeps only Catalog/Party HTTP composition residue pending Seller-R2..R5. Order seller auth seam behavior unchanged; Order.Application/Ports reference retained. Dead entry Development/ProductWorkspaceDevelopmentBootstrap.cs removed (file was migrated away in TB-TMAR-HOST-DEVELOPMENT-PRODUCTWORKSPACE-MIGRATION-SEAM-001; the ignored write-files baseline entry is left untouched)."
   },
+  "hostSellerR1ASecurityBoundaryUpdate": {
+    "updatedBy": "TB-TMAR-HOST-SELLER-AMC-001-R1A",
+    "removedFiles": [
+      "Security/Seller/HostSellerOrderViewAccessReader.cs"
+    ],
+    "note": "Host no longer implements the Order Application view-access port. ISellerOrderViewAccessReader is now implemented Order-Infrastructure-owned (Modules/Order/Tooba.Order.Infrastructure/Seller/SellerOrderViewAccessReader.cs) and registered by OrderModule. Host/Security/Seller is ZERO foreign Application/Domain/Infrastructure/Persistence; seller security codes are Host-boundary owned (SellerSecurityErrorCodes.cs). Host Order/Seller authorizers no longer reference Order/Seller or Support Application error codes. No route/header/status/DTO/schema/frontend change."
+  },
+  "hostSellerR1ASecurityBoundaryUpdate": {
+    "updatedBy": "TB-TMAR-HOST-SELLER-AMC-001-R1A",
+    "removedFiles": [
+      "Security/Seller/HostSellerOrderViewAccessReader.cs"
+    ],
+    "note": "Host no longer implements the Order Application view-access port. ISellerOrderViewAccessReader is now implemented Order-Infrastructure-owned (Modules/Order/Tooba.Order.Infrastructure/Seller/SellerOrderViewAccessReader.cs) and registered by OrderModule. Host/Security/Seller is ZERO foreign Application/Domain/Infrastructure/Persistence; seller security codes are Host-boundary owned (SellerSecurityErrorCodes.cs). Host Order/Seller authorizers no longer reference Order/Seller or Support Application error codes. No route/header/status/DTO/schema/frontend change."
+  },
   "extraFiles": [
     "Admin/Panel/AdminPanelEndpoints.cs",
     "Admin/Access/Authorizers/HostOrderAdminAuthorizer.cs",
@@ -158,7 +172,6 @@
     "Preferences/UserPreferenceEndpoints.cs",
     "Program.cs",
     "Security/Seller/HostOrderSellerAuthorizer.cs",
-    "Security/Seller/HostSellerOrderViewAccessReader.cs",
     "Seller/SellerPanelEndpoints.cs",
     "Settings/SettingsFoundationDevelopmentSeed.cs",
     "Storefront/StorefrontEndpoints.cs",

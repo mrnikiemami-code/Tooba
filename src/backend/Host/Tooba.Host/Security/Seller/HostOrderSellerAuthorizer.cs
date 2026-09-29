@@ -1,6 +1,5 @@
 using Tooba.BuildingBlocks;
 using Tooba.BuildingBlocks.Security;
-using Tooba.Order.Application.Seller;
 using Tooba.Order.Endpoints.Seller;
 
 namespace Tooba.Host.Security.Seller;
@@ -22,7 +21,7 @@ public sealed class HostOrderSellerAuthorizer(ISellerPanelAccess sellerAccess) :
         }
         catch (PlatformHttpException ex)
         {
-            return (Guid.Empty, Guid.Empty, new SemanticError(ex.ErrorCode ?? SellerOrderErrors.ActorMissing));
+            return (Guid.Empty, Guid.Empty, new SemanticError(ex.ErrorCode ?? SellerSecurityErrorCodes.ActorMissing));
         }
     }
 }

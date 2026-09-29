@@ -206,7 +206,6 @@ builder.Services.AddScoped<Tooba.Offer.Endpoints.Seller.IOfferSellerAuthorizer, 
 builder.Services.AddScoped<Tooba.Settlement.Endpoints.Seller.ISettlementSellerAuthorizer, Tooba.Host.Security.Seller.HostSettlementSellerAuthorizer>();
 builder.Services.AddScoped<Tooba.Settlement.Endpoints.Admin.ISettlementAdminAuthorizer, Tooba.Host.Admin.Access.Authorizers.HostSettlementAdminAuthorizer>();
 builder.Services.AddScoped<Tooba.Order.Endpoints.Seller.IOrderSellerAuthorizer, Tooba.Host.Security.Seller.HostOrderSellerAuthorizer>();
-builder.Services.AddScoped<Tooba.Order.Application.Seller.Ports.ISellerOrderViewAccessReader, Tooba.Host.Security.Seller.HostSellerOrderViewAccessReader>();
 builder.Services.AddScoped<Tooba.Returns.Endpoints.Seller.IReturnSellerAuthorizer, Tooba.Host.Security.Seller.HostReturnSellerAuthorizer>();
 builder.Services.AddScoped<Tooba.Returns.Endpoints.Admin.IReturnAdminAuthorizer, Tooba.Host.Admin.Access.Authorizers.HostReturnAdminAuthorizer>();
 builder.Services.AddScoped<Tooba.Notification.Endpoints.Seller.INotificationSellerAuthorizer, Tooba.Host.Security.Seller.HostNotificationSellerAuthorizer>();

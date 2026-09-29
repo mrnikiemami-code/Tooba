@@ -48,6 +48,7 @@ public sealed class OrderInfrastructureOrganizationGuardTests
         ("ReservationCycle/ReservationCycleCheckoutLineSource.cs", "Tooba.Order.Infrastructure.ReservationCycle"),
         ("ReservationCycle/UnpaidOrderExpiryReconciler.cs", "Tooba.Order.Infrastructure.ReservationCycle"),
         ("Seller/SellerOrderAuthBridge.cs", "Tooba.Order.Infrastructure.Seller"),
+        ("Seller/SellerOrderViewAccessReader.cs", "Tooba.Order.Infrastructure.Seller"),
         ("Customer/CustomerCheckoutOwnershipBridge.cs", "Tooba.Order.Infrastructure.Customer"),
         ("PurchaseVerification/OrderPurchaseVerificationGateway.cs", "Tooba.Order.Infrastructure.PurchaseVerification"),
         ("Integrations/Fulfillment/OrderFulfillmentBridge.cs", "Tooba.Order.Infrastructure.Integrations.Fulfillment"),

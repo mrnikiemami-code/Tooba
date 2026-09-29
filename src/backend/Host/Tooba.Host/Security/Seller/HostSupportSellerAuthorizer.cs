@@ -1,6 +1,5 @@
 using Tooba.BuildingBlocks;
 using Tooba.BuildingBlocks.Security;
-using Tooba.Support.Application.Errors;
 using Tooba.Support.Endpoints.Seller;
 
 namespace Tooba.Host.Security.Seller;
@@ -46,7 +45,7 @@ public sealed class HostSupportSellerAuthorizer(
             && p.ScopeKind == PlatformAccessScopeKind.GlobalWithinOwner);
         if (!allowed)
         {
-            throw new PlatformHttpException(403, "مجوز پشتیبانی وجود ندارد.", SupportErrorCodes.SellerAuthorizationDenied);
+            throw new PlatformHttpException(403, "مجوز پشتیبانی وجود ندارد.", SellerSecurityErrorCodes.AuthorizationDenied);
         }
     }
 }

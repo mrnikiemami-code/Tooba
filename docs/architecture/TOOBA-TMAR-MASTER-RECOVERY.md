@@ -290,14 +290,17 @@ SAFE_WITH_TMAR_PARALLEL
 User choice:
 Continue TMAR for now until user explicitly says to return to product feature work.
 
-Next TMAR task (CURRENT — reconciled by TB-TMAR-HOST-DEVELOPMENT-PRODUCTWORKSPACE-MIGRATION-SEAM-001-R1):
-USER_REVIEW_HOST_DEVELOPMENT_PRODUCTWORKSPACE_MIGRATION_SEAM_001_R1
+Next TMAR task (CURRENT — reconciled by TB-TMAR-HOST-SELLER-AMC-001-R1A):
+USER_REVIEW_HOST_SELLER_AMC_001_R1A
 
 Gate (CURRENT):
 USER_DECISION_REQUIRED_NO_AUTOMATIC_NEXT_IMPLEMENTATION_TASK
 
 Automatic next implementation task:
 NONE
+
+Current Seller work checkpoint (CURRENT — reconciled by TB-TMAR-HOST-SELLER-AMC-001-R1A):
+TB-TMAR-HOST-SELLER-AMC-001-R1A — the R1 parent boundary is repaired: `Host/Security/Seller` no longer implements the Order Application view-access port and has ZERO foreign Application/Domain/Infrastructure/Persistence reference. `ISellerOrderViewAccessReader` is implemented Order-Infrastructure-owned (`Modules/Order/Tooba.Order.Infrastructure/Seller/SellerOrderViewAccessReader.cs`) and registered by `OrderModule`; the Host Order/Seller and Support seller authorizers no longer reference foreign Application error-code types; the stable seller security codes live in the Host-boundary-owned `Security/Seller/SellerSecurityErrorCodes.cs`; the neutral `Tooba.BuildingBlocks.Security.IPlatformEffectiveAccessReader` seam is preserved and there is no service locator. Full Host/Seller certification remains OPEN (5 Host business files remain for Seller-R2..R6); Seller-R2 is NOT auto-started; the Development closure lineage is preserved as HISTORICAL.
 
 HISTORICAL / SUPERSEDED (the following inventory applicability snapshot is not current authority)
 

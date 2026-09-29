@@ -120,6 +120,22 @@ public sealed class OrderSellerPanelArchitectureGuardTests
             OrderRoot(), "Tooba.Order.Infrastructure", "Seller", "SellerOrderStore.cs"));
         Assert.Contains("x.SellerPartyId == sellerPartyId", store, StringComparison.Ordinal);
         Assert.Contains("SellerOrderId == sellerOrderId && x.SellerPartyId == sellerPartyId", store, StringComparison.Ordinal);
+
+        var viewAccess = File.ReadAllText(Path.Combine(
+            OrderRoot(), "Tooba.Order.Infrastructure", "Seller", "SellerOrderViewAccessReader.cs"));
+        Assert.Contains(": ISellerOrderViewAccessReader", viewAccess, StringComparison.Ordinal);
+        Assert.Contains("IPlatformEffectiveAccessReader", viewAccess, StringComparison.Ordinal);
+        Assert.Contains("PlatformAccessOwnerKind.Seller", viewAccess, StringComparison.Ordinal);
+        Assert.Contains("PlatformAccessScopeKind.Category", viewAccess, StringComparison.Ordinal);
+        Assert.DoesNotContain("Tooba.AccessControl", viewAccess, StringComparison.Ordinal);
+        Assert.DoesNotContain("PlatformHttpException", viewAccess, StringComparison.Ordinal);
+
+        var orderModule = File.ReadAllText(Path.Combine(
+            OrderRoot(), "Tooba.Order.Infrastructure", "OrderModule.cs"));
+        Assert.Contains(
+            "Application.Seller.Ports.ISellerOrderViewAccessReader, SellerOrderViewAccessReader",
+            orderModule,
+            StringComparison.Ordinal);
     }
 
     [Fact]

@@ -55,7 +55,7 @@ internal static class SellerPanelAccess
             return devActor;
         }
 
-        throw new PlatformHttpException(401, "هویت بازیگر احراز نشده است.", "seller.actor.missing");
+        throw new PlatformHttpException(401, "هویت بازیگر احراز نشده است.", SellerSecurityErrorCodes.ActorMissing);
     }
 
     /// <summary>
@@ -66,7 +66,7 @@ internal static class SellerPanelAccess
         var raw = request.Headers[SellerPartyHeader].ToString();
         if (!Guid.TryParse(raw, out var sellerPartyId) || sellerPartyId == Guid.Empty)
         {
-            throw new PlatformHttpException(400, "شناسهٔ فروشنده نامعتبر است.", "seller.identity.missing");
+            throw new PlatformHttpException(400, "شناسهٔ فروشنده نامعتبر است.", SellerSecurityErrorCodes.IdentityMissing);
         }
 
         return sellerPartyId;
@@ -83,7 +83,7 @@ internal static class SellerPanelAccess
     {
         if (actorUserId == Guid.Empty || sellerPartyId == Guid.Empty)
         {
-            throw new PlatformHttpException(401, "هویت بازیگر احراز نشده است.", "seller.actor.missing");
+            throw new PlatformHttpException(401, "هویت بازیگر احراز نشده است.", SellerSecurityErrorCodes.ActorMissing);
         }
 
         var decision = await guard.AuthorizeUseCaseAsync(
@@ -110,9 +110,9 @@ internal static class SellerPanelAccess
 
         if (decision.Kind == AuthorizationDecisionKind.Unavailable)
         {
-            throw new PlatformHttpException(503, "سرویس مجوز در دسترس نیست.", "seller.authorization.unavailable");
+            throw new PlatformHttpException(503, "سرویس مجوز در دسترس نیست.", SellerSecurityErrorCodes.AuthorizationUnavailable);
         }
 
-        throw new PlatformHttpException(403, "دسترسی به این فروشنده مجاز نیست.", "seller.authorization.denied");
+        throw new PlatformHttpException(403, "دسترسی به این فروشنده مجاز نیست.", SellerSecurityErrorCodes.AuthorizationDenied);
     }
 }
