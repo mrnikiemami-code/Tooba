@@ -59,6 +59,7 @@ public static class OrderEndpointModule
         StorefrontOrderEndpoints.Map(app);
         CustomerOrderEndpoints.Map(app);
         SellerOrderEndpoints.Map(app);
+        SellerDashboardEndpoints.Map(app);
         return app;
     }
 }

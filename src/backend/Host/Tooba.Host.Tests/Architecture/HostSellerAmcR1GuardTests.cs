@@ -221,7 +221,8 @@ public sealed class HostSellerAmcR1GuardTests
             .Select(p => Path.GetFileName(p))
             .ToArray();
 
-        Assert.Equal(["SellerPanelModels.cs"], aliasFiles);
+        // R4 deleted the zero-consumer SellerPanelModels alias file; no foreign seller DTO global alias remains.
+        Assert.Empty(aliasFiles);
     }
 
     private static string HostRoot() =>

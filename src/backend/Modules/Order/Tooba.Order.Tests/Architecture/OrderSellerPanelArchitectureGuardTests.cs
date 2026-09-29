@@ -73,16 +73,27 @@ public sealed class OrderSellerPanelArchitectureGuardTests
         Assert.DoesNotContain("MapGet(\"/orders/{sellerOrderId:guid}\"", hostEndpoints, StringComparison.Ordinal);
         Assert.DoesNotContain("ListOrdersAsync", hostEndpoints, StringComparison.Ordinal);
         Assert.DoesNotContain("GetOrderAsync", hostEndpoints, StringComparison.Ordinal);
-        Assert.Contains("GetSellerOrderDashboardSummaryQuery", hostEndpoints, StringComparison.Ordinal);
+        // R4 evacuated the seller dashboard into Order.Endpoints; Host/Seller now owns only /dev-contexts.
+        Assert.DoesNotContain("group.MapGet(\"/dashboard\"", hostEndpoints, StringComparison.Ordinal);
+        Assert.DoesNotContain("GetSellerOrderDashboardSummaryQuery", hostEndpoints, StringComparison.Ordinal);
 
-        var composer = File.ReadAllText(Path.Combine(
-            RepoRoot(), "src", "backend", "Host", "Tooba.Host", "Seller", "SellerPanelComposer.cs"));
-        Assert.DoesNotContain("OrderDbContext", composer, StringComparison.Ordinal);
-        Assert.DoesNotContain("ListOrdersAsync", composer, StringComparison.Ordinal);
-        Assert.DoesNotContain("GetOrderAsync", composer, StringComparison.Ordinal);
-        Assert.DoesNotContain("ResolveOrderViewScopeAsync", composer, StringComparison.Ordinal);
-        Assert.DoesNotContain("SellerOrderStatus", composer, StringComparison.Ordinal);
-        Assert.DoesNotContain("IAccessControlDirectory", composer, StringComparison.Ordinal);
+        // R4 removed the zero-consumer Host SellerPanelComposer.cs and SellerPanelModels.cs.
+        var hostSeller = Path.Combine(RepoRoot(), "src", "backend", "Host", "Tooba.Host", "Seller");
+        Assert.False(File.Exists(Path.Combine(hostSeller, "SellerPanelComposer.cs")));
+        Assert.False(File.Exists(Path.Combine(hostSeller, "SellerPanelModels.cs")));
+
+        var dashboard = File.ReadAllText(Path.Combine(
+            OrderRoot(), "Tooba.Order.Endpoints", "Seller", "SellerDashboardEndpoints.cs"));
+        Assert.Contains("MapGet(\"/dashboard\"", dashboard, StringComparison.Ordinal);
+        Assert.Contains("ISender sender", dashboard, StringComparison.Ordinal);
+        Assert.Contains("GetSellerOrderDashboardSummaryQuery", dashboard, StringComparison.Ordinal);
+        Assert.Contains("IOrderSellerAuthorizer", dashboard, StringComparison.Ordinal);
+        Assert.DoesNotContain("OrderDbContext", dashboard, StringComparison.Ordinal);
+        Assert.DoesNotContain("PlatformHttpException", dashboard, StringComparison.Ordinal);
+
+        var module = File.ReadAllText(Path.Combine(
+            OrderRoot(), "Tooba.Order.Endpoints", "OrderEndpointModule.cs"));
+        Assert.Contains("SellerDashboardEndpoints.Map", module, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -104,7 +115,8 @@ public sealed class OrderSellerPanelArchitectureGuardTests
             OrderRoot(), "Tooba.Order.Application", "Seller", "Queries", "GetSellerOrderDashboardSummary",
             "GetSellerOrderDashboardSummaryQuery.cs"));
         Assert.Contains("IRequestHandler", summary, StringComparison.Ordinal);
-        Assert.Contains("Result<SellerOrderDashboardSummary>", summary, StringComparison.Ordinal);
+        Assert.Contains("Result<SellerDashboardView>", summary, StringComparison.Ordinal);
+        Assert.Contains("GetDashboardViewAsync", summary, StringComparison.Ordinal);
 
         var composer = File.ReadAllText(Path.Combine(
             OrderRoot(), "Tooba.Order.Application", "Seller", "SellerOrderComposer.cs"));
@@ -112,6 +124,7 @@ public sealed class OrderSellerPanelArchitectureGuardTests
         Assert.Contains("IsAllowed", composer, StringComparison.Ordinal);
         Assert.Contains("ICatalogVariantLookup", composer, StringComparison.Ordinal);
         Assert.Contains("IPartyLookup", composer, StringComparison.Ordinal);
+        Assert.Contains("IRequestHandler<", list, StringComparison.Ordinal);
         Assert.DoesNotContain("IAccessControlDirectory", composer, StringComparison.Ordinal);
         Assert.DoesNotContain("ICatalogLookupGateway", composer, StringComparison.Ordinal);
         Assert.DoesNotContain("IPartyLookupGateway", composer, StringComparison.Ordinal);

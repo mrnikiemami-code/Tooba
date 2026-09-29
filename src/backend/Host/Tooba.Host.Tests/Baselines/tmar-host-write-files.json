@@ -23,7 +23,6 @@
     "Grid/AdminStoryGridQueryEngine.cs",
     "Program.cs",
     "ReservationCyclePolicyResolver.cs",
-    "Seller/SellerPanelComposer.cs",
     "Storefront/StorefrontComposer.cs",
     "Storefront/StorefrontDemoCatalogBootstrap.cs",
     "Wishlist/WishlistDevelopmentSeed.cs"

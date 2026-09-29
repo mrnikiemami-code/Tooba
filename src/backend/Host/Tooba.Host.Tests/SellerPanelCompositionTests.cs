@@ -1,6 +1,5 @@
 ﻿using System.Text.Json;
 using Tooba.Host.Seller;
-using Tooba.Offer.Contracts.Dtos;
 using Tooba.Order.Application.Seller.Models;
 using Xunit;
 
@@ -12,25 +11,23 @@ namespace Tooba.Host.Tests;
 public sealed class SellerPanelCompositionTests
 {
     [Fact]
-    public void Offer_list_contract_has_no_product_price_or_stock_identity()
+    public void Order_seller_dashboard_view_keeps_dashboard_field_names_and_active_offers_zero()
     {
-        var names = typeof(SellerOfferListItem).GetProperties().Select(p => p.Name).ToHashSet(StringComparer.Ordinal);
-        Assert.DoesNotContain("Price", names);
-        Assert.DoesNotContain("Stock", names);
-        Assert.Contains("OfferId", names);
-        Assert.Contains("Amount", names);
-        Assert.Contains("AvailableUnits", names);
-        Assert.Contains("SellerSku", names);
-    }
+        // The dashboard response shape is preserved by moving the SellerDashboardSummary into the
+        // Order-owned SellerDashboardView (display name enriched from Party.Contracts, ActiveOffers = 0).
+        var names = typeof(SellerDashboardView).GetProperties().Select(p => p.Name).ToArray();
+        Assert.Equal(
+            ["SellerPartyId", "SellerDisplayName", "ActiveOffers", "OpenOrders", "PaidOrders"],
+            names);
 
-    [Fact]
-    public void Offer_detail_marks_catalog_read_only()
-    {
-        var names = typeof(SellerOfferDetailPage).GetProperties().Select(p => p.Name).ToHashSet(StringComparer.Ordinal);
-        Assert.Contains("CatalogReadOnly", names);
-        Assert.Contains("SellerSku", names);
-        Assert.Contains("Amount", names);
-        Assert.DoesNotContain("ProductPrice", names);
+        var json = JsonSerializer.Serialize(
+            new SellerDashboardView(Guid.Empty, "فروشگاه آرمان", 0, 3, 7),
+            new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase });
+        Assert.Contains("\"sellerPartyId\"", json, StringComparison.Ordinal);
+        Assert.Contains("\"sellerDisplayName\"", json, StringComparison.Ordinal);
+        Assert.Contains("\"activeOffers\":0", json, StringComparison.Ordinal);
+        Assert.Contains("\"openOrders\":3", json, StringComparison.Ordinal);
+        Assert.Contains("\"paidOrders\":7", json, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -47,42 +44,16 @@ public sealed class SellerPanelCompositionTests
     }
 
     [Fact]
-    public void Serialized_offer_row_keeps_offer_amount_not_product_price()
-    {
-        var item = new SellerOfferListItem(
-            Guid.Parse("aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"),
-            Guid.Parse("bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb"),
-            Guid.Parse("cccccccc-cccc-4ccc-8ccc-cccccccccccc"),
-            "پیراهن",
-            "LIVE-A",
-            "Active",
-            1850000m,
-            "IRR",
-            12,
-            null);
-        var json = JsonSerializer.Serialize(item, new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase });
-        Assert.Contains("\"offerId\"", json, StringComparison.Ordinal);
-        Assert.Contains("\"amount\":1850000", json, StringComparison.Ordinal);
-        Assert.DoesNotContain("\"price\":", json, StringComparison.OrdinalIgnoreCase);
-        Assert.DoesNotContain("\"stock\":", json, StringComparison.OrdinalIgnoreCase);
-    }
-
-    [Fact]
-    public void Endpoints_require_seller_party_header_and_no_longer_own_orders()
+    public void Endpoints_require_seller_party_header_and_own_no_catalog_order_settings_or_dashboard_routes()
     {
         Assert.Equal("X-Tooba-Seller-Party-Id", SellerPanelEndpoints.SellerPartyHeader);
         Assert.Equal("X-Tooba-Dev-Actor-User-Id", SellerPanelEndpoints.DevActorHeader);
-        var source = File.ReadAllText(Path.Combine(
-            FindRepoRoot(),
-            "src",
-            "backend",
-            "Host",
-            "Tooba.Host",
-            "Seller",
-            "SellerPanelComposer.cs"));
-        Assert.DoesNotContain("OrderDbContext", source, StringComparison.Ordinal);
-        Assert.DoesNotContain(".Join(", source, StringComparison.Ordinal);
-        Assert.DoesNotContain("FromSql", source, StringComparison.OrdinalIgnoreCase);
+
+        // R4 deleted the zero-consumer composer/models residue from Host/Seller.
+        Assert.False(File.Exists(Path.Combine(
+            FindRepoRoot(), "src", "backend", "Host", "Tooba.Host", "Seller", "SellerPanelComposer.cs")));
+        Assert.False(File.Exists(Path.Combine(
+            FindRepoRoot(), "src", "backend", "Host", "Tooba.Host", "Seller", "SellerPanelModels.cs")));
 
         var endpoints = File.ReadAllText(Path.Combine(
             FindRepoRoot(),
@@ -92,10 +63,12 @@ public sealed class SellerPanelCompositionTests
             "Tooba.Host",
             "Seller",
             "SellerPanelEndpoints.cs"));
-        Assert.Contains("RequireAuthorizedAsync", endpoints, StringComparison.Ordinal);
-        Assert.Contains("IAuthorizationGuard", endpoints, StringComparison.Ordinal);
+        Assert.Contains("group.MapGet(\"/dev-contexts\"", endpoints, StringComparison.Ordinal);
         Assert.DoesNotContain("MapGet(\"/orders\"", endpoints, StringComparison.Ordinal);
-        Assert.Contains("GetSellerOrderDashboardSummaryQuery", endpoints, StringComparison.Ordinal);
+        Assert.DoesNotContain("group.MapGet(\"/dashboard\"", endpoints, StringComparison.Ordinal);
+        Assert.DoesNotContain("SellerPanelComposer", endpoints, StringComparison.Ordinal);
+        Assert.DoesNotContain("SellerDashboardSummary", endpoints, StringComparison.Ordinal);
+        Assert.DoesNotContain("GetSellerOrderDashboardSummaryQuery", endpoints, StringComparison.Ordinal);
     }
 
     private static string FindRepoRoot()

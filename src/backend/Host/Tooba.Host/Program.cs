@@ -204,7 +204,6 @@ builder.Services.AddScoped<Tooba.Payment.Application.Ports.ICheckoutActorPolicyP
 builder.Services.AddScoped<Tooba.Payment.Endpoints.Storefront.IPaymentStorefrontAuthorizer, Tooba.Host.Storefront.HostPaymentStorefrontAuthorizer>();
 builder.Services.AddScoped<Tooba.Payment.Endpoints.Admin.IPaymentAdminAuthorizer, Tooba.Host.Admin.Access.Authorizers.HostPaymentAdminAuthorizer>();
 builder.Services.AddScoped<Tooba.Promotion.Endpoints.Seller.IPromotionSellerAuthorizer, Tooba.Host.Security.Seller.HostPromotionSellerAuthorizer>();
-builder.Services.AddScoped<Tooba.Host.Seller.SellerPanelComposer>();
 builder.Services.AddScoped<Tooba.Offer.Endpoints.Seller.IOfferSellerAuthorizer, Tooba.Host.Security.Seller.HostOfferSellerAuthorizer>();
 builder.Services.AddScoped<Tooba.Catalog.Endpoints.Seller.ICatalogSellerAuthorizer, Tooba.Host.Security.Seller.HostCatalogSellerAuthorizer>();
 builder.Services.AddScoped<Tooba.Settlement.Endpoints.Seller.ISettlementSellerAuthorizer, Tooba.Host.Security.Seller.HostSettlementSellerAuthorizer>();

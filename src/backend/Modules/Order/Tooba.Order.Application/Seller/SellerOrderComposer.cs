@@ -177,6 +177,35 @@ public sealed class SellerOrderComposer
         return Result.Success(new SellerOrderDashboardSummary(open, paid));
     }
 
+    /// <summary>
+    /// نمای داشبورد فروشنده: شمارش سفارش Order-owned بعلاوهٔ نام نمایشی از Party.Contracts.
+    /// seller.missing زمانی برمی‌گردد که Party پیدا نشود؛ ActiveOffers ثابت صفر می‌ماند.
+    /// </summary>
+    public async Task<Result<SellerDashboardView>> GetDashboardViewAsync(
+        Guid sellerPartyId,
+        Guid actorUserId,
+        CancellationToken cancellationToken)
+    {
+        var seller = await _parties.FindByIdAsync(sellerPartyId, cancellationToken);
+        if (seller is null)
+        {
+            return Result.Failure<SellerDashboardView>(new SemanticError(SellerOrderErrors.SellerMissing));
+        }
+
+        var summary = await GetDashboardSummaryAsync(sellerPartyId, actorUserId, cancellationToken);
+        if (summary.IsFailure)
+        {
+            return Result.Failure<SellerDashboardView>(summary.FirstError);
+        }
+
+        return Result.Success(new SellerDashboardView(
+            sellerPartyId,
+            seller.DisplayName ?? string.Empty,
+            ActiveOffers: 0,
+            summary.Value.OpenOrders,
+            summary.Value.PaidOrders));
+    }
+
     private async Task<IReadOnlyList<SellerOrder>> FilterOrdersByScopeAsync(
         IReadOnlyList<SellerOrder> rows,
         SellerOrderViewAccessSnapshot scope,

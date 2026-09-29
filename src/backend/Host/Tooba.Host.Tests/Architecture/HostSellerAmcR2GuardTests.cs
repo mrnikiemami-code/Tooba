@@ -23,12 +23,12 @@ public sealed class HostSellerAmcR2GuardTests
         RegexOptions.Compiled | RegexOptions.CultureInvariant);
 
     [Fact]
-    public void Host_seller_owns_exactly_two_routes_and_no_catalog_or_settings_route()
+    public void Host_seller_owns_exactly_one_route_and_no_catalog_settings_or_dashboard_route()
     {
         var endpoints = Read("src/backend/Host/Tooba.Host/Seller/SellerPanelEndpoints.cs");
 
-        Assert.Contains("group.MapGet(\"/dashboard\"", endpoints, StringComparison.Ordinal);
         Assert.Contains("group.MapGet(\"/dev-contexts\"", endpoints, StringComparison.Ordinal);
+        Assert.DoesNotContain("group.MapGet(\"/dashboard\"", endpoints, StringComparison.Ordinal);
 
         foreach (var route in EvacuatedCatalogSellerRoutes)
         {
@@ -41,10 +41,10 @@ public sealed class HostSellerAmcR2GuardTests
         Assert.DoesNotContain("SetProductAttributeRequest", endpoints, StringComparison.Ordinal);
         Assert.DoesNotContain("SetProductVariantAxesRequest", endpoints, StringComparison.Ordinal);
 
-        // R2 evacuated the two Catalog routes; the following R3 wave evacuated the settings GET/PUT
-        // pair into Party, so Host/Seller now owns exactly two routes and no settings route/file.
+        // R2 evacuated the two Catalog routes; R3 evacuated the settings GET/PUT pair into Party and
+        // R4 evacuated the dashboard into Order, so Host/Seller now owns exactly one route (/dev-contexts).
         var hostMappings = Regex.Matches(endpoints, @"group\.Map(?:Get|Post|Put|Patch|Delete)\(").Count;
-        Assert.Equal(2, hostMappings);
+        Assert.Equal(1, hostMappings);
 
         Assert.False(File.Exists(Path.Combine(
             FindRepoRoot(), "src", "backend", "Host", "Tooba.Host", "Seller", "SellerSettingsEndpoints.cs")));
@@ -114,12 +114,14 @@ public sealed class HostSellerAmcR2GuardTests
 
         Assert.True(violations.Count == 0, "Catalog leakage in Host/Seller: " + string.Join("; ", violations));
 
-        var composer = Read("src/backend/Host/Tooba.Host/Seller/SellerPanelComposer.cs");
-        Assert.DoesNotContain("ListCatalogVariantsAsync", composer, StringComparison.Ordinal);
-        Assert.DoesNotContain("CatalogPublicationStatus", composer, StringComparison.Ordinal);
-        Assert.DoesNotContain("LocalizedTexts", composer, StringComparison.Ordinal);
+        // R4 deleted the zero-consumer SellerPanelComposer.cs; the Catalog-evacuation invariants are
+        // preserved on the remaining Host/Seller surface (no Catalog composition residue).
+        var endpoints = Read("src/backend/Host/Tooba.Host/Seller/SellerPanelEndpoints.cs");
+        Assert.DoesNotContain("ListCatalogVariantsAsync", endpoints, StringComparison.Ordinal);
+        Assert.DoesNotContain("CatalogPublicationStatus", endpoints, StringComparison.Ordinal);
+        Assert.DoesNotContain("LocalizedTexts", endpoints, StringComparison.Ordinal);
 
-        var models = Read("src/backend/Host/Tooba.Host/Seller/SellerPanelModels.cs");
+        var models = Read("src/backend/Host/Tooba.Host/Seller/SellerPanelEndpoints.cs");
         Assert.DoesNotContain("SellerCatalogVariantOption", models, StringComparison.Ordinal);
     }
 
@@ -198,8 +200,10 @@ public sealed class HostSellerAmcR2GuardTests
             .OrderBy(x => x, StringComparer.Ordinal)
             .ToArray();
 
+        // R3 removed SellerSettingsEndpoints.cs and R4 removed the zero-consumer SellerPanelComposer.cs
+        // and SellerPanelModels.cs; Host/Seller now owns exactly two production files.
         Assert.Equal(
-            ["SellerDevActorBootstrap.cs", "SellerPanelComposer.cs", "SellerPanelEndpoints.cs", "SellerPanelModels.cs"],
+            ["SellerDevActorBootstrap.cs", "SellerPanelEndpoints.cs"],
             files);
 
         Assert.False(File.Exists(Path.Combine(hostSeller, "HostCatalogSellerAuthorizer.cs")));

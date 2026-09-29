@@ -45,3 +45,14 @@ public sealed record SellerOrderDetailPage(
 
 /// <summary>خلاصهٔ شمارش سفارش برای داشبورد فروشنده (فقط Order-owned).</summary>
 public sealed record SellerOrderDashboardSummary(int OpenOrders, int PaidOrders);
+
+/// <summary>
+/// نمای داشبورد فروشنده: معیارهای سفارش Order-owned + غنی‌سازی نام نمایشی از Party.Contracts.
+/// ActiveOffers هنوز صفر ثابت است (مالکیت Offer خارج از این موج).
+/// </summary>
+public sealed record SellerDashboardView(
+    Guid SellerPartyId,
+    string SellerDisplayName,
+    int ActiveOffers,
+    int OpenOrders,
+    int PaidOrders);

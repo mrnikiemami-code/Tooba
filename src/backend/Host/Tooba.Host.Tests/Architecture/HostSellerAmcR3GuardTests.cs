@@ -57,7 +57,7 @@ public sealed class HostSellerAmcR3GuardTests
     }
 
     [Fact]
-    public void Host_seller_settings_file_is_absent_and_folder_shrinks_to_four_files()
+    public void Host_seller_settings_file_is_absent_and_folder_shrinks_to_two_files()
     {
         var hostSeller = Path.Combine(FindRepoRoot(), "src", "backend", "Host", "Tooba.Host", "Seller");
         Assert.False(File.Exists(Path.Combine(hostSeller, "SellerSettingsEndpoints.cs")));
@@ -67,20 +67,24 @@ public sealed class HostSellerAmcR3GuardTests
             .OrderBy(x => x, StringComparer.Ordinal)
             .ToArray();
 
+        // R3 shrank Host/Seller to four files; R4 then removed the now-zero-consumer SellerPanelComposer.cs
+        // and SellerPanelModels.cs, leaving exactly two production files.
         Assert.Equal(
-            ["SellerDevActorBootstrap.cs", "SellerPanelComposer.cs", "SellerPanelEndpoints.cs", "SellerPanelModels.cs"],
+            ["SellerDevActorBootstrap.cs", "SellerPanelEndpoints.cs"],
             files);
     }
 
     [Fact]
-    public void Host_seller_owns_exactly_two_routes_and_zero_settings_route()
+    public void Host_seller_owns_exactly_one_route_and_zero_settings_route()
     {
         var endpoints = Read("src/backend/Host/Tooba.Host/Seller/SellerPanelEndpoints.cs");
-        Assert.Contains("group.MapGet(\"/dashboard\"", endpoints, StringComparison.Ordinal);
         Assert.Contains("group.MapGet(\"/dev-contexts\"", endpoints, StringComparison.Ordinal);
-        Assert.DoesNotContain("settings", endpoints, StringComparison.Ordinal);
+        Assert.DoesNotContain("group.MapGet(\"/dashboard\"", endpoints, StringComparison.Ordinal);
+        Assert.DoesNotContain("MapGet(\"/settings\"", endpoints, StringComparison.Ordinal);
+        Assert.DoesNotContain("MapPut(\"/settings\"", endpoints, StringComparison.Ordinal);
 
-        Assert.Equal(2, Regex.Matches(endpoints, @"group\.Map(?:Get|Post|Put|Patch|Delete)\(").Count);
+        // R3 removed the settings pair, R4 removed the dashboard, leaving a single Host seller route.
+        Assert.Equal(1, Regex.Matches(endpoints, @"group\.Map(?:Get|Post|Put|Patch|Delete)\(").Count);
     }
 
     [Fact]

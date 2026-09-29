@@ -1,12 +1,12 @@
 using Tooba.BuildingBlocks;
 using Tooba.Host.Security.Seller;
-using Tooba.Order.Application.Seller.Queries.GetSellerOrderDashboardSummary;
 
 namespace Tooba.Host.Seller;
 
 /// <summary>
-/// مسیرهای پنل فروشنده. مجوز از Actor احرازشده و SpiceDB/موتور مجوز می‌آید؛ هدر Seller فقط زمینه است.
-/// مسیرهای /orders* به Order.Endpoints و مسیرهای Catalog فروشنده به Catalog.Endpoints منتقل شده‌اند.
+/// مسیرهای باقی‌ماندهٔ پنل فروشنده. مجوز از Actor احرازشده و SpiceDB/موتور مجوز می‌آید؛ هدر Seller فقط زمینه است.
+/// مسیر داشبورد به Order.Endpoints، مسیرهای /orders* به Order.Endpoints، مسیرهای Catalog فروشنده به Catalog.Endpoints
+/// و Seller settings به Party.Endpoints منتقل شده‌اند. تنها مسیر باقی‌مانده: GET /v1/seller/dev-contexts.
 /// </summary>
 public static class SellerPanelEndpoints
 {
@@ -21,60 +21,16 @@ public static class SellerPanelEndpoints
     public const string DevActorHeader = SellerPanelAccess.DevActorHeader;
 
     /// <summary>
-    /// مسیرهای Seller Panel را ثبت می‌کند (بدون /orders* و بدون Catalog seller).
+    /// مسیر باقی‌ماندهٔ Seller Panel را ثبت می‌کند (فقط /dev-contexts).
     /// </summary>
     public static void MapSellerPanelEndpoints(this WebApplication app)
     {
         var group = app.MapGroup("/v1/seller");
-        group.MapGet("/dashboard", GetDashboardAsync);
-        // Offer HTTP routes live in Tooba.Offer.Endpoints (MapOfferModule).
-        // The three Seller Catalog routes live in Tooba.Catalog.Endpoints (MapCatalogSellerEndpoints).
+        // Dashboard has moved to Tooba.Order.Endpoints.
+        // Offer HTTP routes live in Tooba.Offer.Endpoints.
+        // The three Seller Catalog routes live in Tooba.Catalog.Endpoints.
+        // Seller settings routes live in Tooba.Party.Endpoints.
         group.MapGet("/dev-contexts", GetDevContexts);
-    }
-
-    private static IResult ToError(PlatformHttpException ex) =>
-        Results.Json(new { title = ex.Title, errorCode = ex.ErrorCode }, statusCode: ex.StatusCode);
-
-    private static async Task<IResult> GetDashboardAsync(
-        SellerPanelComposer composer,
-        MediatR.ISender sender,
-        HttpRequest request,
-        CurrentAuthenticatedSession session,
-        IAuthorizationGuard guard,
-        IHostEnvironment environment,
-        CancellationToken cancellationToken)
-    {
-        try
-        {
-            var (actorUserId, sellerPartyId) = await SellerPanelAccess.RequireAuthorizedAsync(
-                request, session, guard, environment, cancellationToken);
-            var (displayName, found) = await composer.GetSellerDisplayAsync(sellerPartyId, cancellationToken);
-            if (!found)
-            {
-                throw new PlatformHttpException(404, "Seller was not found.", "seller.missing");
-            }
-
-            var orderSummary = await sender.Send(
-                new GetSellerOrderDashboardSummaryQuery(sellerPartyId, actorUserId),
-                cancellationToken);
-            if (orderSummary.IsFailure)
-            {
-                return Results.Json(
-                    new { title = orderSummary.FirstError.Code, errorCode = orderSummary.FirstError.Code },
-                    statusCode: StatusCodes.Status400BadRequest);
-            }
-
-            return Results.Json(new SellerDashboardSummary(
-                sellerPartyId,
-                displayName,
-                ActiveOffers: 0,
-                orderSummary.Value.OpenOrders,
-                orderSummary.Value.PaidOrders));
-        }
-        catch (PlatformHttpException ex)
-        {
-            return ToError(ex);
-        }
     }
 
     private static IResult GetDevContexts(IHostEnvironment environment)

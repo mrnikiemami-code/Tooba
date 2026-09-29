@@ -103,7 +103,9 @@ public sealed class HostOrderReverseAuditGuardTests
         var seller = File.ReadAllText(Path.Combine(host, "Seller", "SellerPanelEndpoints.cs"));
         Assert.DoesNotContain("MapGet(\"/orders\"", seller, StringComparison.Ordinal);
         Assert.DoesNotContain("MapGet(\"/orders/{sellerOrderId:guid}\"", seller, StringComparison.Ordinal);
-        Assert.Contains("GetSellerOrderDashboardSummaryQuery", seller, StringComparison.Ordinal);
+        // R4 evacuated the seller dashboard into Order.Endpoints; Host/Seller now owns only /dev-contexts.
+        Assert.DoesNotContain("group.MapGet(\"/dashboard\"", seller, StringComparison.Ordinal);
+        Assert.Contains("group.MapGet(\"/dev-contexts\"", seller, StringComparison.Ordinal);
         Assert.Contains(files, f => f.Equals("Seller/SellerPanelEndpoints.cs", StringComparison.Ordinal));
         Assert.Contains(files, f => f.Equals("Security/Seller/HostOrderSellerAuthorizer.cs", StringComparison.Ordinal));
         Assert.DoesNotContain("Security/Seller/HostSellerOrderViewAccessReader.cs", files);
@@ -112,6 +114,11 @@ public sealed class HostOrderReverseAuditGuardTests
             root, "src", "backend", "Modules", "Order", "Tooba.Order.Endpoints", "Seller", "SellerOrderEndpoints.cs"));
         Assert.Contains("MapGet(\"/orders\"", orderSellerEndpoints, StringComparison.Ordinal);
         Assert.Contains("MapGet(\"/orders/{sellerOrderId:guid}\"", orderSellerEndpoints, StringComparison.Ordinal);
+
+        var orderSellerDashboard = File.ReadAllText(Path.Combine(
+            root, "src", "backend", "Modules", "Order", "Tooba.Order.Endpoints", "Seller", "SellerDashboardEndpoints.cs"));
+        Assert.Contains("MapGet(\"/dashboard\"", orderSellerDashboard, StringComparison.Ordinal);
+        Assert.Contains("GetSellerOrderDashboardSummaryQuery", orderSellerDashboard, StringComparison.Ordinal);
 
         var program = File.ReadAllText(Path.Combine(host, "Program.cs"));
         Assert.Contains("MapOrderEndpoints()", program, StringComparison.Ordinal);
@@ -231,9 +238,14 @@ public sealed class HostOrderReverseAuditGuardTests
         Assert.True(doc.RootElement.TryGetProperty("r9InventoryUpdate", out _));
         Assert.True(doc.RootElement.TryGetProperty("r8InventoryUpdate", out _));
 
-        var hostComposer = File.ReadAllText(Path.Combine(
-            root, "src", "backend", "Host", "Tooba.Host", "Seller", "SellerPanelComposer.cs"));
-        Assert.DoesNotContain("OrderDbContext", hostComposer, StringComparison.Ordinal);
+        // R4 removed the zero-consumer Host SellerPanelComposer.cs; the R10 invariant (no Host Seller
+        // OrderDbContext access) now holds vacuously and is asserted over the whole Host/Seller folder.
+        var hostSeller = Path.Combine(root, "src", "backend", "Host", "Tooba.Host", "Seller");
+        Assert.False(File.Exists(Path.Combine(hostSeller, "SellerPanelComposer.cs")));
+        foreach (var file in Directory.EnumerateFiles(hostSeller, "*.cs", SearchOption.AllDirectories))
+        {
+            Assert.DoesNotContain("OrderDbContext", File.ReadAllText(file), StringComparison.Ordinal);
+        }
     }
 
     [Fact]

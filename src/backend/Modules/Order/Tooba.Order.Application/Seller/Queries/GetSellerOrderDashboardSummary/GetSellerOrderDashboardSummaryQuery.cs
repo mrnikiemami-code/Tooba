@@ -5,16 +5,20 @@ using Tooba.Order.Application.Seller.Models;
 
 namespace Tooba.Order.Application.Seller.Queries.GetSellerOrderDashboardSummary;
 
-/// <summary>شمارش open/paid سفارش فروشنده برای داشبورد.</summary>
+/// <summary>
+/// نمای داشبورد فروشنده: شمارش open/paid سفارش Order-owned بعلاوهٔ غنی‌سازی نام نمایشی از Party.Contracts.
+/// مسیر GET /v1/seller/dashboard به Order.Endpoints منتقل شده و از همین request استفاده می‌کند.
+/// </summary>
 public sealed record GetSellerOrderDashboardSummaryQuery(Guid SellerPartyId, Guid ActorUserId)
-    : IRequest<Result<SellerOrderDashboardSummary>>;
+    : IRequest<Result<SellerDashboardView>>;
 
 /// <summary>Handler خلاصهٔ داشبورد سفارش فروشنده.</summary>
 public sealed class GetSellerOrderDashboardSummaryHandler(SellerOrderComposer composer)
-    : IRequestHandler<GetSellerOrderDashboardSummaryQuery, Result<SellerOrderDashboardSummary>>
+    : IRequestHandler<GetSellerOrderDashboardSummaryQuery, Result<SellerDashboardView>>
 {
-    public Task<Result<SellerOrderDashboardSummary>> Handle(
+    public Task<Result<SellerDashboardView>> Handle(
         GetSellerOrderDashboardSummaryQuery request,
         CancellationToken cancellationToken) =>
-        composer.GetDashboardSummaryAsync(request.SellerPartyId, request.ActorUserId, cancellationToken);
+        composer.GetDashboardViewAsync(request.SellerPartyId, request.ActorUserId, cancellationToken);
 }
+
