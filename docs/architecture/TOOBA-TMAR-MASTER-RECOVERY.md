@@ -12,19 +12,21 @@ Canonical Architect ↔ Cursor handoff (recovery-critical)
 
 Latest Accepted TMAR Checkpoint — authoritative
 
-Reconciled by `TB-TMAR-HOST-DEVELOPMENT-ENRICHER-CLOSURE-001`. A fresh chat/architect MUST recover the CURRENT checkpoint from here and from `docs/architecture/tmar-current-state.json`, NOT from any older "Next task:" line below.
+Reconciled by `TB-TMAR-HOST-DEVELOPMENT-PRODUCTWORKSPACE-MIGRATION-SEAM-001-R1`. A fresh chat/architect MUST recover the CURRENT checkpoint from here and from `docs/architecture/tmar-current-state.json`, NOT from any older "Next task:" line below.
 
-- Latest accepted implementation wave: `TB-TMAR-HOST-DEVELOPMENT-ENRICHER-CLOSURE-001` — state `ACCEPTED` (Host/Development bounded debt #1 closed: `CatalogAttributeSchemaSellableEnricher.cs` deleted from Host and the schema sellable workflow became Catalog-owned under `Catalog.Infrastructure/Development`, reaching Offer/Party/Pricing/Inventory/Tax only through narrow module Contracts ports; Host/Development 6 → 5 production files; `ProductWorkspaceDevelopmentBootstrap.cs` retained as open debt and NOT modified).
+- Latest accepted implementation wave: `TB-TMAR-HOST-DEVELOPMENT-PRODUCTWORKSPACE-MIGRATION-SEAM-001` — state `ACCEPTED` (Host foreign-DbContext migration orchestration replaced by the neutral `IModuleSchemaMigrator` seam in `BuildingBlocks/Tooba.Persistence`; `Host/Development/ProductWorkspaceDevelopmentBootstrap.cs` DELETED and replaced by the thin `Host/Development/DevelopmentSchemaMigrator.cs`; all 28 modules register their own migrator from their own Infrastructure composition root; the five accepted special migrators `IOffer/IPricing/IInventory/ITax/IPromotionSchemaMigrator` preserved unchanged; migration order parity 28 of 28; Host/Development remains exactly 5 production files; Host/Development foreign DbContext/persistence = ZERO; no schema/route/frontend change).
+- Preceding accepted implementation waves in this family (HISTORICAL, superseded as current pointer): `TB-TMAR-HOST-DEVELOPMENT-PRODUCTWORKSPACE-CATALOG-SEED-REHOME-001` (Wave 1, accepted; Catalog Development demo seed rehomed into `Catalog.Infrastructure/Development`; commit `e16781dc1899456aec20824afc01e19f53c9a70b`) and its parent analyze `TB-TMAR-HOST-DEVELOPMENT-PRODUCTWORKSPACE-ANALYZE-001`.
 - Current Host checkpoint: `Development`.
-- Commit semantics: this wave keeps the explicit implementation-commit vs docs-only-SoT-stamp discipline — `lastAcceptedCommit` is the enricher-closure implementation commit `44e6dde059a85d749846a403a40d33f87e07ac6e`; `lastAcceptedSoTStamp` is the later docs-only checkpoint/stamp commit `9e27fe75198e02dc0bf9e63966a90b744577104f`. They are distinct and must not be conflated.
-- Prior accepted implementation wave (now HISTORICAL, superseded as current pointer): `TB-TMAR-HOST-DEVELOPMENT-AMC-002` — state `ACCEPTED` (Host/Development 12 → 6 production files; 7 duplicated Catalog seed wrappers evacuated into the single Host seam `Development/DevelopmentTenantCommerceContext.cs`; stale `HostDevelopmentAmcGuardTests` allowlist that was RED at clean HEAD repaired; two explicit unresolved bounded debts retained), with distinct implementation commit `ba6cf54c738d443dcb61efc4264aedc8608f2b63` and docs-only SoT stamp commit `5919039b2313ddc8d02864e47e9f636328990cfe`. Never conflate an implementation commit with a docs-only acceptance stamp.
-- Recovery/governance closure for that wave: `TB-TMAR-HOST-DEVELOPMENT-AMC-002-R1` — commit `2a51556a5ac562b7f0ec3ee0679ec9f31ed45dce`.
+- ProductWorkspace debt: `CLOSED`. `ProductWorkspaceDevelopmentBootstrap.cs` = ABSENT. `DevelopmentSchemaMigrator.cs` = PRESENT / ALLOWED_DEVELOPMENT_COMPOSITION. Wave 1 Catalog business seed PRESERVED.
+- Commit semantics: this family keeps the explicit implementation-commit vs result/docs-stamp discipline — `lastAcceptedCommit` is the Migration Seam implementation commit `ec906591a9749feed05c9ae7b599c329aa17a66f` with kind `IMPLEMENTATION_COMMIT`; the later result/evidence/docs commit `2d74a54cbfe85759f2936f97a8b1ebbc264b42a8` may only be recorded as a result/evidence stamp and must NEVER be mislabeled as an implementation commit. The earlier Enricher Closure wave kept its own distinct pair: implementation `44e6dde059a85d749846a403a40d33f87e07ac6e`, docs-only SoT stamp `9e27fe75198e02dc0bf9e63966a90b744577104f`.
+- Prior accepted implementation wave (HISTORICAL, superseded as current pointer): `TB-TMAR-HOST-DEVELOPMENT-ENRICHER-CLOSURE-001` — state `ACCEPTED` (Host/Development bounded debt #1 closed: `CatalogAttributeSchemaSellableEnricher.cs` evacuated from Host into `Catalog.Infrastructure/Development` with Contracts-only foreign access; Host/Development 6 → 5 production files). Its open debt `ProductWorkspaceDevelopmentBootstrap.cs` is now CLOSED by Migration Seam 001.
+- Prior accepted implementation wave (HISTORICAL, superseded as current pointer): `TB-TMAR-HOST-DEVELOPMENT-AMC-002` — state `ACCEPTED` (Host/Development 12 → 6 production files; 7 duplicated Catalog seed wrappers evacuated into the single Host seam `Development/DevelopmentTenantCommerceContext.cs`; stale `HostDevelopmentAmcGuardTests` allowlist that was RED at clean HEAD repaired; two explicit unresolved bounded debts retained), with distinct implementation commit `ba6cf54c738d443dcb61efc4264aedc8608f2b63` and docs-only SoT stamp commit `5919039b2313ddc8d02864e47e9f636328990cfe`. Never conflate an implementation commit with a docs-only acceptance stamp.
+- Recovery/governance closure for that wave: `TB-TMAR-HOST-DEVELOPMENT-AMC-002-R1` — commit `2a51556a5ac562b7f0ec3ee0679ec9f31ed45dce` (HISTORICAL).
 - Prior accepted TMAR task (HISTORICAL, superseded as current pointer): `TB-TMAR-AUTHORIZATION-POSTCERT-CLEANUP-001` (CERTIFIED), implementation commit `498c46bd36c1d72934e97b137625cb07de84272a`, docs-only SoT stamp commit `736f23d34acb4f3989144f27675d1768fc7a65a9`.
 - Root Global Boundaries R3: `CERTIFIED` and `PRESERVED`.
-- Current Host evacuation: `RECONCILED_NOT_HISTORICAL_ADDRESSBOOK`. There is NO automatic next Host folder. AccessControl/AddressBook/Authentication/Admin/Content and later folder checkpoints are HISTORICAL, not the current continuation point.
-- Open Development bounded debt (deferred, NOT started): `ProductWorkspaceDevelopmentBootstrap.cs`.
-- Current stop state: `workflowStop = USER_REVIEW_HOST_DEVELOPMENT_ENRICHER_CLOSURE_001`; `nextTask = USER_REVIEW_HOST_DEVELOPMENT_ENRICHER_CLOSURE_001`; `nextTaskState = USER_DECISION_REQUIRED`; `automaticNextImplementationTask = NONE`.
-- There is intentionally NO automatic next implementation task and NO next Host folder. Do not invent one and do not resume any historical next-task marker below.
+- Current Host evacuation: `RECONCILED_NOT_HISTORICAL_ADDRESSBOOK`. There is NO automatic next Host folder and `nextHostFolderStarted = false`; `nextHostFolder = NONE_USER_DECISION_REQUIRED`. AccessControl/AddressBook/Authentication/Admin/Content and later folder checkpoints are HISTORICAL, not the current continuation point.
+- Current stop state: `workflowStop = USER_REVIEW_HOST_DEVELOPMENT_PRODUCTWORKSPACE_MIGRATION_SEAM_001_R1`; `nextTask = USER_REVIEW_HOST_DEVELOPMENT_PRODUCTWORKSPACE_MIGRATION_SEAM_001_R1`; `nextTaskState = USER_DECISION_REQUIRED`; `nextTaskGate = USER_DECISION_REQUIRED_NO_AUTOMATIC_NEXT_IMPLEMENTATION_TASK`; `automaticNextImplementationTask = NONE`; `staleCurrentPointerState = ZERO`.
+- There is intentionally NO automatic next implementation task and NO next Host folder. User/Architect decision is required before any next Host folder. Do not invent one and do not resume any historical next-task marker below.
 
 Non-authoritative historical pointers warning
 
@@ -288,8 +290,8 @@ SAFE_WITH_TMAR_PARALLEL
 User choice:
 Continue TMAR for now until user explicitly says to return to product feature work.
 
-Next TMAR task (CURRENT — reconciled):
-USER_REVIEW_AFTER_RECOVERY_SOT_SYNC_001
+Next TMAR task (CURRENT — reconciled by TB-TMAR-HOST-DEVELOPMENT-PRODUCTWORKSPACE-MIGRATION-SEAM-001-R1):
+USER_REVIEW_HOST_DEVELOPMENT_PRODUCTWORKSPACE_MIGRATION_SEAM_001_R1
 
 Gate (CURRENT):
 USER_DECISION_REQUIRED_NO_AUTOMATIC_NEXT_IMPLEMENTATION_TASK
