@@ -33,6 +33,7 @@ A fresh chat MUST recover the CURRENT checkpoint from `docs/architecture/tmar-cu
 Latest-Accepted-Implementation-Wave: TB-TMAR-HOST-DEVELOPMENT-ENRICHER-CLOSURE-001
 Latest-Accepted-Implementation-Wave-State: ACCEPTED (Host/Development bounded debt #1 closed; one open bounded debt remains)
 Latest-Accepted-Task: TB-TMAR-HOST-DEVELOPMENT-ENRICHER-CLOSURE-001
+Implementation-Commit: 44e6dde059a85d749846a403a40d33f87e07ac6e
 Commit-Semantics: IMPLEMENTATION_AND_SOT_IN_ONE_COMMIT
 Current-Host-Checkpoint: Development
 Prior-Accepted-Task-HISTORICAL: TB-TMAR-HOST-DEVELOPMENT-AMC-002 (ACCEPTED)

@@ -106,10 +106,10 @@ public sealed class TmarDurableGuardTests
         Assert.Equal("USER_ACCEPTED", rootEl.GetProperty("goldenWaveUserReview").GetString());
         Assert.Equal("TB-TMAR-GOLDEN-WAVE-FINAL-CLOSURE-001", rootEl.GetProperty("goldenWaveClosedBy").GetString());
         Assert.False(string.IsNullOrWhiteSpace(rootEl.GetProperty("goldenWaveClosedCommit").GetString()));
-        Assert.Equal("USER_REVIEW_HOST_DEVELOPMENT_AMC_002_R1", rootEl.GetProperty("nextTask").GetString());
+        Assert.Equal("USER_REVIEW_HOST_DEVELOPMENT_ENRICHER_CLOSURE_001", rootEl.GetProperty("nextTask").GetString());
         Assert.Equal("USER_DECISION_REQUIRED_NO_AUTOMATIC_NEXT_IMPLEMENTATION_TASK", rootEl.GetProperty("nextTaskGate").GetString());
         Assert.Equal("USER_DECISION_REQUIRED", rootEl.GetProperty("nextTaskState").GetString());
-        Assert.Equal("USER_REVIEW_HOST_DEVELOPMENT_AMC_002_R1", rootEl.GetProperty("workflowStop").GetString());
+        Assert.Equal("USER_REVIEW_HOST_DEVELOPMENT_ENRICHER_CLOSURE_001", rootEl.GetProperty("workflowStop").GetString());
         Assert.Equal("NONE", rootEl.GetProperty("automaticNextImplementationTask").GetString());
         Assert.Equal("PAUSED_AT_SAFE_W5_CHECKPOINT", rootEl.GetProperty("checkoutState").GetString());
         Assert.True(rootEl.GetProperty("frontendFrozen").GetBoolean());
@@ -251,7 +251,7 @@ public sealed class TmarDurableGuardTests
             cartEntry.GetProperty("lastAcceptedTask").GetString(),
             StringComparison.Ordinal);
         Assert.False(string.IsNullOrWhiteSpace(cartEntry.GetProperty("lastAcceptedCommit").GetString()));
-        Assert.Equal("TB-TMAR-HOST-DEVELOPMENT-AMC-002", rootEl.GetProperty("lastAcceptedTask").GetString());
+        Assert.Equal("TB-TMAR-HOST-DEVELOPMENT-ENRICHER-CLOSURE-001", rootEl.GetProperty("lastAcceptedTask").GetString());
         Assert.False(string.IsNullOrWhiteSpace(rootEl.GetProperty("lastAcceptedCommit").GetString()));
 
         var paymentHostResidue = rootEl.GetProperty("paymentHostResidueRepair");
@@ -500,9 +500,9 @@ public sealed class TmarDurableGuardTests
         Assert.Equal("NONE", accessControlEvacuation.GetProperty("automaticNextImplementationTask").GetString());
         Assert.Equal("NONE_USER_DECISION_REQUIRED", accessControlEvacuation.GetProperty("nextHostFolder").GetString());
         Assert.False(accessControlEvacuation.GetProperty("nextHostFolderStarted").GetBoolean());
-        Assert.Equal("USER_REVIEW_HOST_DEVELOPMENT_AMC_002_R1",
+        Assert.Equal("USER_REVIEW_HOST_DEVELOPMENT_ENRICHER_CLOSURE_001",
             accessControlEvacuation.GetProperty("workflowStop").GetString());
-        Assert.Equal("TB-TMAR-HOST-DEVELOPMENT-AMC-002",
+        Assert.Equal("TB-TMAR-HOST-DEVELOPMENT-ENRICHER-CLOSURE-001",
             accessControlEvacuation.GetProperty("currentTask").GetString());
         Assert.Equal("HISTORICAL_COMPLETED_NOT_CURRENT",
             accessControlEvacuation.GetProperty("addressBookLineage").GetProperty("state").GetString());
@@ -701,9 +701,9 @@ public sealed class TmarDurableGuardTests
         using var doc = JsonDocument.Parse(File.ReadAllText(statePath));
         var rootEl = doc.RootElement;
 
-        // 1. Latest accepted task is the accepted Host/Development AMC-002 wave; commit/stamp semantics are explicit.
-        //    (Historical Authorization post-cert acceptance is preserved in recoverySotSync001 history below.)
-        Assert.Equal("TB-TMAR-HOST-DEVELOPMENT-AMC-002", rootEl.GetProperty("lastAcceptedTask").GetString());
+        // 1. Latest accepted task is the accepted Host/Development Enricher Closure wave; commit/stamp semantics are explicit.
+        //    (Historical AMC-002 and Authorization post-cert acceptances are preserved in their history blocks.)
+        Assert.Equal("TB-TMAR-HOST-DEVELOPMENT-ENRICHER-CLOSURE-001", rootEl.GetProperty("lastAcceptedTask").GetString());
         var implementationCommit = rootEl.GetProperty("lastAcceptedCommit").GetString()!;
         var sotStamp = rootEl.GetProperty("lastAcceptedSoTStamp").GetString()!;
         Assert.Equal("IMPLEMENTATION_COMMIT", rootEl.GetProperty("lastAcceptedCommitKind").GetString());
@@ -720,10 +720,10 @@ public sealed class TmarDurableGuardTests
         }
 
         // 3. Current stop/gate is user review/decision, never an implementation task.
-        Assert.Equal("USER_REVIEW_HOST_DEVELOPMENT_AMC_002_R1", rootEl.GetProperty("nextTask").GetString());
+        Assert.Equal("USER_REVIEW_HOST_DEVELOPMENT_ENRICHER_CLOSURE_001", rootEl.GetProperty("nextTask").GetString());
         Assert.Equal("USER_DECISION_REQUIRED_NO_AUTOMATIC_NEXT_IMPLEMENTATION_TASK", rootEl.GetProperty("nextTaskGate").GetString());
         Assert.Equal("USER_DECISION_REQUIRED", rootEl.GetProperty("nextTaskState").GetString());
-        Assert.Equal("USER_REVIEW_HOST_DEVELOPMENT_AMC_002_R1", rootEl.GetProperty("workflowStop").GetString());
+        Assert.Equal("USER_REVIEW_HOST_DEVELOPMENT_ENRICHER_CLOSURE_001", rootEl.GetProperty("workflowStop").GetString());
         Assert.Equal("NONE", rootEl.GetProperty("automaticNextImplementationTask").GetString());
 
         // 4. currentHostEvacuation does NOT regress to the historical AddressBook task.
@@ -771,10 +771,12 @@ public sealed class TmarDurableGuardTests
         Assert.Contains("TB-TMAR-AUTHORIZATION-POSTCERT-CLEANUP-001", bootstrapCurrent, StringComparison.Ordinal);
         Assert.Contains("TB-TMAR-HOST-DEVELOPMENT-AMC-002", masterCurrent, StringComparison.Ordinal);
         Assert.Contains("TB-TMAR-HOST-DEVELOPMENT-AMC-002", bootstrapCurrent, StringComparison.Ordinal);
+        Assert.Contains("TB-TMAR-HOST-DEVELOPMENT-ENRICHER-CLOSURE-001", masterCurrent, StringComparison.Ordinal);
+        Assert.Contains("TB-TMAR-HOST-DEVELOPMENT-ENRICHER-CLOSURE-001", bootstrapCurrent, StringComparison.Ordinal);
         Assert.Contains(sotStamp, masterCurrent, StringComparison.Ordinal);
         Assert.Contains(implementationCommit, masterCurrent, StringComparison.Ordinal);
-        Assert.Contains("USER_REVIEW_HOST_DEVELOPMENT_AMC_002_R1", masterCurrent, StringComparison.Ordinal);
-        Assert.Contains("USER_REVIEW_HOST_DEVELOPMENT_AMC_002_R1", bootstrapCurrent, StringComparison.Ordinal);
+        Assert.Contains("USER_REVIEW_HOST_DEVELOPMENT_ENRICHER_CLOSURE_001", masterCurrent, StringComparison.Ordinal);
+        Assert.Contains("USER_REVIEW_HOST_DEVELOPMENT_ENRICHER_CLOSURE_001", bootstrapCurrent, StringComparison.Ordinal);
         Assert.Contains("USER_DECISION_REQUIRED_NO_AUTOMATIC_NEXT_IMPLEMENTATION_TASK", masterCurrent, StringComparison.Ordinal);
         Assert.Contains("USER_DECISION_REQUIRED_NO_AUTOMATIC_NEXT_IMPLEMENTATION_TASK", bootstrapCurrent, StringComparison.Ordinal);
         Assert.Contains("RECONCILED_NOT_HISTORICAL_ADDRESSBOOK", masterCurrent, StringComparison.Ordinal);
@@ -819,13 +821,16 @@ public sealed class TmarDurableGuardTests
         Assert.DoesNotContain("Content R4 above", masterCurrent, StringComparison.Ordinal);
 
         // 7. Current checkpoint and stop marker are unique: the reconciled stop value appears only in its
-        //    top-level, currentHostEvacuation, and recoverySotSync001 slots (never in historical blocks).
+        //    top-level, currentHostEvacuation, and hostDevelopmentEnricherClosure001 slots (never in historical blocks).
         var stateText = File.ReadAllText(statePath);
-        Assert.Equal(3, Regex.Matches(stateText, @"""workflowStop"":\s*""USER_REVIEW_HOST_DEVELOPMENT_AMC_002_R1""").Count);
-        Assert.Equal(1, Regex.Matches(stateText, @"""nextTask"":\s*""USER_REVIEW_HOST_DEVELOPMENT_AMC_002_R1""").Count);
+        Assert.Equal(3, Regex.Matches(stateText, @"""workflowStop"":\s*""USER_REVIEW_HOST_DEVELOPMENT_ENRICHER_CLOSURE_001""").Count);
+        Assert.Equal(1, Regex.Matches(stateText, @"""nextTask"":\s*""USER_REVIEW_HOST_DEVELOPMENT_ENRICHER_CLOSURE_001""").Count);
         // The historical Authorization/RECOVERY-SOT-SYNC checkpoint must remain recorded as history.
         Assert.Contains("USER_REVIEW_AFTER_RECOVERY_SOT_SYNC_001", stateText, StringComparison.Ordinal);
         Assert.Contains("\"recoverySotSync001\"", stateText, StringComparison.Ordinal);
+        // The immediately prior Host/Development AMC-002-R1 stop must remain recorded history, not the current pointer.
+        Assert.Contains("\"hostDevelopmentAmc002R1\"", stateText, StringComparison.Ordinal);
+        Assert.Contains("\"hostDevelopmentEnricherClosure001\"", stateText, StringComparison.Ordinal);
 
         // 8. Zero production-code change requirement: no src/backend or src/frontend file may be touched by this task's
         //    reconciliation (documented here as the guard's own scope assertion).
