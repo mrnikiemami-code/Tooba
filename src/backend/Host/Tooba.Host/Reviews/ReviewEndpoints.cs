@@ -2,7 +2,7 @@ using Tooba.BuildingBlocks;
 using Tooba.BuildingBlocks.Grid;
 using Tooba.Host.Admin.Access;
 using Tooba.Host.Admin.Grid;
-using Tooba.Host.Seller;
+using Tooba.Host.Security.Seller;
 using Tooba.Reviews.Application;
 using Tooba.Reviews.Domain;
 using Tooba.Catalog.Application;

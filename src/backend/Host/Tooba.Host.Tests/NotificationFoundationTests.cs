@@ -96,8 +96,8 @@ public sealed class NotificationFoundationTests : IAsyncLifetime
         Assert.Contains("ISender", customer, StringComparison.Ordinal);
         Assert.Contains("ISender", seller, StringComparison.Ordinal);
 
-        var hostSeller = File.ReadAllText(Path.Combine(RepoRoot(), "src", "backend", "Host", "Tooba.Host", "Seller", "HostNotificationSellerAuthorizer.cs"));
-        Assert.Contains("SellerPanelAccess.RequireAuthorizedAsync", hostSeller, StringComparison.Ordinal);
+        var hostSeller = File.ReadAllText(Path.Combine(RepoRoot(), "src", "backend", "Host", "Tooba.Host", "Security", "Seller", "HostNotificationSellerAuthorizer.cs"));
+        Assert.Contains("sellerAccess.RequireAuthorizedAsync", hostSeller, StringComparison.Ordinal);
     }
 
     /// <summary>ایجاد با SourceEventId تکراری، mark-read idempotent و ایزولهٔ فروشنده.</summary>

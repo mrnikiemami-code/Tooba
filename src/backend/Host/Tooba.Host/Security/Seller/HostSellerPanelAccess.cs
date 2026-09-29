@@ -1,7 +1,7 @@
 using Tooba.BuildingBlocks;
 using Tooba.BuildingBlocks.Security;
 
-namespace Tooba.Host.Seller;
+namespace Tooba.Host.Security.Seller;
 
 /// <summary>
 /// درز عمومی Host برای دسترسی پنل فروشنده: Actor از نشست/Development و مجوز از موتور مجوز.

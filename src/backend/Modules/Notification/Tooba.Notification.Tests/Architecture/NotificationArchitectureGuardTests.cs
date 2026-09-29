@@ -273,15 +273,15 @@ public sealed class NotificationArchitectureGuardTests
         var hostRoot = Path.Combine(RepoRoot(), "src", "backend", "Host", "Tooba.Host");
         var endpointsRoot = Path.Combine(NotificationRoot(), "Tooba.Notification.Endpoints");
         Assert.False(File.Exists(Path.Combine(hostRoot, "Customer", "HostNotificationCustomerAuthorizer.cs")));
-        Assert.True(File.Exists(Path.Combine(hostRoot, "Seller", "HostNotificationSellerAuthorizer.cs")));
+        Assert.True(File.Exists(Path.Combine(hostRoot, "Security", "Seller", "HostNotificationSellerAuthorizer.cs")));
         Assert.True(File.Exists(Path.Combine(endpointsRoot, "Customer", "NotificationCustomerAuthorizer.cs")));
 
         var moduleCustomer = File.ReadAllText(Path.Combine(endpointsRoot, "Customer", "NotificationCustomerAuthorizer.cs"));
-        var hostSeller = File.ReadAllText(Path.Combine(hostRoot, "Seller", "HostNotificationSellerAuthorizer.cs"));
+        var hostSeller = File.ReadAllText(Path.Combine(hostRoot, "Security", "Seller", "HostNotificationSellerAuthorizer.cs"));
         Assert.Contains("StorefrontGuestActor", moduleCustomer, StringComparison.Ordinal);
         Assert.Contains("X-Tooba-Dev-Actor-User-Id", moduleCustomer, StringComparison.Ordinal);
         Assert.Contains("ICurrentAuthenticatedUser", moduleCustomer, StringComparison.Ordinal);
-        Assert.Contains("SellerPanelAccess.RequireAuthorizedAsync", hostSeller, StringComparison.Ordinal);
+        Assert.Contains("sellerAccess.RequireAuthorizedAsync", hostSeller, StringComparison.Ordinal);
         Assert.DoesNotContain("INotificationDirectory", moduleCustomer, StringComparison.Ordinal);
         Assert.DoesNotContain("INotificationDirectory", hostSeller, StringComparison.Ordinal);
         Assert.DoesNotContain("NotificationRecipientQuery", moduleCustomer, StringComparison.Ordinal);

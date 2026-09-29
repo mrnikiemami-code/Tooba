@@ -417,7 +417,7 @@ public sealed class OfferArchitectureGuardTests
             OfferRoot(), "Tooba.Offer.Application", "Policies", "PrimaryOfferSelectionPolicy.cs")));
 
         // The allowed thin Host security adapter stays thin and business-free.
-        var adapter = File.ReadAllText(Path.Combine(hostRoot, "Seller", "HostOfferSellerAuthorizer.cs"));
+        var adapter = File.ReadAllText(Path.Combine(hostRoot, "Security", "Seller", "HostOfferSellerAuthorizer.cs"));
         Assert.Contains("IOfferSellerAuthorizer", adapter, StringComparison.Ordinal);
         Assert.DoesNotContain("PrimaryOfferSelectionPolicy", adapter, StringComparison.Ordinal);
 
@@ -529,7 +529,7 @@ public sealed class OfferArchitectureGuardTests
         var host = Path.Combine(RepoRoot(), "src", "backend", "Host", "Tooba.Host");
         var files = new[]
         {
-            Path.Combine(host, "Admin", "AdminPanelComposer.cs"),
+            Path.Combine(host, "Admin", "Panel", "AdminPanelComposer.cs"),
             Path.Combine(
                 RepoRoot(),
                 "src",

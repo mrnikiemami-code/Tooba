@@ -128,6 +128,17 @@
     ],
     "note": "All six former Host-root global-boundary files evacuated: commerce hold to Payment, checkout hold adapter + unpaid-expiry worker to Order, Settlement global-using shims deleted. Historical r7-r11r1 and earlier evacuation updates left intact; files list refreshed."
   },
+  "hostSellerR1SecurityBoundaryUpdate": {
+    "updatedBy": "TB-TMAR-HOST-SELLER-AMC-001-R1",
+    "movedFiles": [
+      "Seller/HostOrderSellerAuthorizer.cs -> Security/Seller/HostOrderSellerAuthorizer.cs",
+      "Seller/HostSellerOrderViewAccessReader.cs -> Security/Seller/HostSellerOrderViewAccessReader.cs"
+    ],
+    "removedDeadEntries": [
+      "Development/ProductWorkspaceDevelopmentBootstrap.cs"
+    ],
+    "note": "Host seller platform security boundary relocated from Host/Seller to Host/Security/Seller. Host/Seller now keeps only Catalog/Party HTTP composition residue pending Seller-R2..R5. Order seller auth seam behavior unchanged; Order.Application/Ports reference retained. Dead entry Development/ProductWorkspaceDevelopmentBootstrap.cs removed (file was migrated away in TB-TMAR-HOST-DEVELOPMENT-PRODUCTWORKSPACE-MIGRATION-SEAM-001; the ignored write-files baseline entry is left untouched)."
+  },
   "extraFiles": [
     "Admin/Panel/AdminPanelEndpoints.cs",
     "Admin/Access/Authorizers/HostOrderAdminAuthorizer.cs",
@@ -141,14 +152,13 @@
     "Admin/Access/Authorizers/HostOrderAdminEffectiveAccessReader.cs",
     "Composition/ToobaModuleComposition.cs",
     "Development/MarketplaceDevelopmentBootstrap.cs",
-    "Development/ProductWorkspaceDevelopmentBootstrap.cs",
     "Grid/AdminListGridPolicies.cs",
     "Grid/AdminSellersGridQueryEngine.cs",
     "Order/HostOrderStorefrontActor.cs",
     "Preferences/UserPreferenceEndpoints.cs",
     "Program.cs",
-    "Seller/HostOrderSellerAuthorizer.cs",
-    "Seller/HostSellerOrderViewAccessReader.cs",
+    "Security/Seller/HostOrderSellerAuthorizer.cs",
+    "Security/Seller/HostSellerOrderViewAccessReader.cs",
     "Seller/SellerPanelEndpoints.cs",
     "Settings/SettingsFoundationDevelopmentSeed.cs",
     "Storefront/StorefrontEndpoints.cs",

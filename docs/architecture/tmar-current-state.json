@@ -1815,6 +1815,68 @@
     "workflowStop": "USER_REVIEW_HOST_DEVELOPMENT_PRODUCTWORKSPACE_MIGRATION_SEAM_001_R1",
     "nextTask": "USER_REVIEW_HOST_DEVELOPMENT_PRODUCTWORKSPACE_MIGRATION_SEAM_001_R1"
   },
+  "hostSellerAmcR1": {
+    "task": "TB-TMAR-HOST-SELLER-AMC-001-R1",
+    "parentTask": "TB-TMAR-HOST-SELLER-AMC-001",
+    "state": "HOST_SELLER_AMC_R1_SLICE_PASS",
+    "sliceScope": "SELLER_SECURITY_BOUNDARY_REHOME_ONLY",
+    "skillsApplied": [
+      ".cursor/skills/tooba-architecture-analyze/SKILL.md",
+      ".cursor/skills/tooba-architecture-migrate/SKILL.md",
+      ".cursor/skills/tooba-architecture-certify/SKILL.md"
+    ],
+    "hostSellerFolderBoundary": "Security/Seller",
+    "boundaryNamespace": "Tooba.Host.Security.Seller",
+    "boundaryFileCountBefore": 0,
+    "boundaryFileCountAfter": 10,
+    "hostSellerSecurityFileCountBefore": 10,
+    "hostSellerSecurityFileCountAfter": 0,
+    "hostSellerRemainingBusinessFileCount": 5,
+    "hostSellerRemainingBusinessFiles": [
+      "Seller/SellerPanelEndpoints.cs",
+      "Seller/SellerSettingsEndpoints.cs",
+      "Seller/SellerPanelComposer.cs",
+      "Seller/SellerPanelModels.cs",
+      "Seller/SellerDevActorBootstrap.cs"
+    ],
+    "movedFiles": [
+      "SellerPanelAccess.cs",
+      "HostSellerPanelAccess.cs",
+      "HostSellerOrderViewAccessReader.cs",
+      "HostSupportSellerAuthorizer.cs",
+      "HostOfferSellerAuthorizer.cs",
+      "HostOrderSellerAuthorizer.cs",
+      "HostReturnSellerAuthorizer.cs",
+      "HostSettlementSellerAuthorizer.cs",
+      "HostNotificationSellerAuthorizer.cs",
+      "HostPromotionSellerAuthorizer.cs"
+    ],
+    "neutralSeamAdopted": "Tooba.BuildingBlocks.Security.IPlatformEffectiveAccessReader",
+    "accessControlApplicationOrDomainInBoundary": "ZERO",
+    "serviceLocatorInBoundary": "ZERO",
+    "foreignPersistenceInBoundary": "ZERO",
+    "namespaceAliasWorkaroundInBoundary": "ZERO",
+    "pathNamespace": "EXACT",
+    "routeCountChange": "NONE",
+    "headerChange": "NONE",
+    "statusCodeChange": "NONE",
+    "responseDtoChange": "NONE",
+    "schemaMigrationState": "NONE",
+    "frontendState": "UNCHANGED",
+    "durableGuard": "HostSellerAmcR1GuardTests",
+    "focusedBuildState": "PASS_0_ERRORS",
+    "focusedValidations": "PASSED_HostSellerAmcR1_22_Settlement_7_Support_3_Returns_3_Offer_29_Notification_7_HostOrderReverseAudit_13_FAILED_0",
+    "remainingBlockers": [],
+    "residualDebt": [
+      "Host/Seller still owns 7 /v1/seller routes + composer + models + dev bootstrap (Seller-R2..R6)",
+      "seller.* / catalog.attribute.invalid / catalog.variant_axes.invalid codes and hardcoded Persian titles remain until Seller-R2/R3/R6",
+      "Pre-existing unrelated focused-test drift and DB-gated skips (documented in R1 validation.md)"
+    ],
+    "fullSellerFolderCertification": "NOT_YET_DEFERRED_TO_SELLER_R6",
+    "nextHostFolderStarted": false,
+    "workflowStop": "USER_REVIEW_HOST_SELLER_AMC_001_R1",
+    "evidence": "docs/evidence/TB-TMAR-HOST-SELLER-AMC-001-R1/"
+  },
   "hostCachingArchitectDirect": {
     "execution": "ARCHITECT_DIRECT_ANALYZE_MIGRATE_CERTIFY",
     "parentCommit": "0139fb89fcf7dfe48e957bb4aad62a575a41413f",

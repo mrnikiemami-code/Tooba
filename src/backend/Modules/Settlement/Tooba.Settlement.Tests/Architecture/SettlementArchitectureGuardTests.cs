@@ -256,7 +256,7 @@ public sealed class SettlementArchitectureGuardTests
             .OrderBy(x => x, StringComparer.Ordinal)
             .ToArray();
         Assert.Equal(
-            new[] { "Admin/HostSettlementAdminAuthorizer.cs", "Seller/HostSettlementSellerAuthorizer.cs" },
+            new[] { "Admin/Access/Authorizers/HostSettlementAdminAuthorizer.cs", "Security/Seller/HostSettlementSellerAuthorizer.cs" },
             authorizers);
 
         // No Host Settlement business surface may exist.

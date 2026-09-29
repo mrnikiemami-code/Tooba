@@ -177,18 +177,22 @@ public sealed class SupportArchitectureGuardTests
         Assert.False(File.Exists(Path.Combine(hostRoot, "Support", "SupportEndpoints.cs")));
         Assert.True(File.Exists(Path.Combine(hostRoot, "Support", "SupportDevelopmentSeedHost.cs")));
         Assert.False(File.Exists(Path.Combine(hostRoot, "Customer", "HostSupportCustomerAuthorizer.cs")));
-        Assert.True(File.Exists(Path.Combine(hostRoot, "Seller", "HostSupportSellerAuthorizer.cs")));
+        Assert.True(File.Exists(Path.Combine(hostRoot, "Security", "Seller", "HostSupportSellerAuthorizer.cs")));
         Assert.True(File.Exists(Path.Combine(hostRoot, "Admin", "Access", "Authorizers", "HostSupportAdminAuthorizer.cs")));
         Assert.True(File.Exists(Path.Combine(endpointsRoot, "Customer", "SupportCustomerAuthorizer.cs")));
 
         var moduleCustomer = File.ReadAllText(Path.Combine(endpointsRoot, "Customer", "SupportCustomerAuthorizer.cs"));
-        var hostSeller = File.ReadAllText(Path.Combine(hostRoot, "Seller", "HostSupportSellerAuthorizer.cs"));
+        var hostSeller = File.ReadAllText(Path.Combine(hostRoot, "Security", "Seller", "HostSupportSellerAuthorizer.cs"));
         var hostAdmin = File.ReadAllText(Path.Combine(hostRoot, "Admin", "Access", "Authorizers", "HostSupportAdminAuthorizer.cs"));
         Assert.Contains("X-Tooba-Dev-Actor-User-Id", moduleCustomer, StringComparison.Ordinal);
         Assert.Contains("ICurrentAuthenticatedUser", moduleCustomer, StringComparison.Ordinal);
-        Assert.Contains("SellerPanelAccess.RequireAuthorizedAsync", hostSeller, StringComparison.Ordinal);
+        Assert.Contains("sellerAccess.RequireAuthorizedAsync", hostSeller, StringComparison.Ordinal);
         Assert.Contains("SellerAuthorizationDenied", hostSeller, StringComparison.Ordinal);
-        Assert.Contains("GetEffectiveAccessAsync", hostSeller, StringComparison.Ordinal);
+        Assert.Contains("GetEffectivePermissionsAsync", hostSeller, StringComparison.Ordinal);
+        Assert.Contains("PlatformAccessOwnerKind.Seller", hostSeller, StringComparison.Ordinal);
+        Assert.DoesNotContain("IAccessControlDirectory", hostSeller, StringComparison.Ordinal);
+        Assert.DoesNotContain("Tooba.AccessControl.Application", hostSeller, StringComparison.Ordinal);
+        Assert.DoesNotContain("Tooba.AccessControl.Domain", hostSeller, StringComparison.Ordinal);
         Assert.Contains("IAdminPanelAccess", hostAdmin, StringComparison.Ordinal);
         Assert.Contains("AuthorizationDecisionKind.Unavailable", hostAdmin, StringComparison.Ordinal);
         Assert.Contains("SupportAdminAuthorizationCodes.AuthorizationUnavailable", hostAdmin, StringComparison.Ordinal);

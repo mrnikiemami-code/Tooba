@@ -1,9 +1,10 @@
 using Tooba.BuildingBlocks;
 
-namespace Tooba.Host.Seller;
+namespace Tooba.Host.Security.Seller;
 
 /// <summary>
 /// درز احراز و مجوز پنل فروشنده. هدر SellerPartyId فقط زمینهٔ درخواست است؛ مرجع مجوز نیست.
+/// مسئولیت این فایل مرز پلتفرم امنیت Host است، نه مالکیت کسب‌وکار هیچ ماژولی.
 /// </summary>
 internal static class SellerPanelAccess
 {
@@ -18,7 +19,7 @@ internal static class SellerPanelAccess
     public const string DevActorHeader = "X-Tooba-Dev-Actor-User-Id";
 
     /// <summary>
-    /// Actor احرازشده و SellerPartyId مجاز را پس از بررسی SpiceDB/موتور مجوز برمی‌گرداند.
+    /// Actor احرازشده و SellerPartyId مجاز را پس از بررسی موتور مجوز برمی‌گرداند.
     /// </summary>
     public static async Task<(Guid ActorUserId, Guid SellerPartyId)> RequireAuthorizedAsync(
         HttpRequest request,

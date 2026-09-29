@@ -194,8 +194,8 @@ public sealed class ReturnsArchitectureGuardTests
         var hostRoot = Path.Combine(RepoRoot(), "src", "backend", "Host", "Tooba.Host");
         var endpointsRoot = Path.Combine(ModuleRoot(), "Tooba.Returns.Endpoints");
         Assert.False(File.Exists(Path.Combine(hostRoot, "Customer", "HostReturnCustomerAuthorizer.cs")));
-        Assert.True(File.Exists(Path.Combine(hostRoot, "Seller", "HostReturnSellerAuthorizer.cs")));
-        Assert.True(File.Exists(Path.Combine(hostRoot, "Admin", "HostReturnAdminAuthorizer.cs")));
+        Assert.True(File.Exists(Path.Combine(hostRoot, "Security", "Seller", "HostReturnSellerAuthorizer.cs")));
+        Assert.True(File.Exists(Path.Combine(hostRoot, "Admin", "Access", "Authorizers", "HostReturnAdminAuthorizer.cs")));
         Assert.True(File.Exists(Path.Combine(endpointsRoot, "Customer", "ReturnCustomerAuthorizer.cs")));
         Assert.Contains(
             "ReturnCustomerAuthorizer",

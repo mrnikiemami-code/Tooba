@@ -9,6 +9,7 @@ using Tooba.BuildingBlocks;
 using Tooba.Host.OperatorProfile;
 using Tooba.Host.Preferences;
 using Tooba.Host.Seller;
+using Tooba.Host.Security.Seller;
 using Tooba.Host.Settings;
 using Tooba.Host.Storefront;
 using Tooba.Order.Application.Storefront.Services;

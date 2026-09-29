@@ -1,5 +1,6 @@
 using Tooba.BuildingBlocks;
 using Tooba.Catalog.Application;
+using Tooba.Host.Security.Seller;
 using Tooba.Order.Application.Seller.Queries.GetSellerOrderDashboardSummary;
 
 namespace Tooba.Host.Seller;

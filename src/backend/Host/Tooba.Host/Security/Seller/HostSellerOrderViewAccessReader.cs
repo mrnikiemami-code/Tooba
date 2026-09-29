@@ -1,13 +1,13 @@
-﻿using Tooba.AccessControl.Application;
-using Tooba.AccessControl.Domain;
+using Tooba.BuildingBlocks.Security;
 using Tooba.Order.Application.Seller.Ports;
 
-using Tooba.AccessControl.Application.Models;
-using Tooba.AccessControl.Application.Permissions;
-namespace Tooba.Host.Seller;
+namespace Tooba.Host.Security.Seller;
 
-/// <summary>Thin Host adapter: AccessControl order.view snapshot for Seller Order CQRS.</summary>
-public sealed class HostSellerOrderViewAccessReader(IAccessControlDirectory access) : ISellerOrderViewAccessReader
+/// <summary>
+/// Thin Host adapter: neutral platform effective-access snapshot for Seller Order CQRS.
+/// No AccessControl Application/Domain type is referenced.
+/// </summary>
+public sealed class HostSellerOrderViewAccessReader(IPlatformEffectiveAccessReader access) : ISellerOrderViewAccessReader
 {
     /// <inheritdoc />
     public async Task<SellerOrderViewAccessSnapshot> GetOrderViewAccessAsync(
@@ -15,11 +15,12 @@ public sealed class HostSellerOrderViewAccessReader(IAccessControlDirectory acce
         Guid sellerPartyId,
         CancellationToken cancellationToken)
     {
-        var effective = await access.GetEffectiveAccessAsync(
+        var grants = await access.GetEffectivePermissionsAsync(
             actorUserId,
-            new AccessOwnerScope(AccessOwnerScopeKind.Seller, sellerPartyId),
+            PlatformAccessOwnerKind.Seller,
+            sellerPartyId,
             cancellationToken);
-        var permissions = effective.Permissions
+        var permissions = grants
             .Where(x => x.PermissionId == "order.view" && !x.DeniedByCeiling)
             .ToList();
         if (permissions.Count == 0)
@@ -27,13 +28,13 @@ public sealed class HostSellerOrderViewAccessReader(IAccessControlDirectory acce
             return new SellerOrderViewAccessSnapshot(Denied: true, GlobalWithinOwner: false, AllowedCategoryIds: []);
         }
 
-        if (permissions.Any(x => x.ScopeKind == AccessScopeKind.GlobalWithinOwner))
+        if (permissions.Any(x => x.ScopeKind == PlatformAccessScopeKind.GlobalWithinOwner))
         {
             return new SellerOrderViewAccessSnapshot(Denied: false, GlobalWithinOwner: true, AllowedCategoryIds: []);
         }
 
         var allowed = permissions
-            .Where(x => x.ScopeKind == AccessScopeKind.Category && x.ScopeResourceId != null)
+            .Where(x => x.ScopeKind == PlatformAccessScopeKind.Category && x.ScopeResourceId != null)
             .Select(x => x.ScopeResourceId!.Value)
             .ToHashSet();
         return new SellerOrderViewAccessSnapshot(

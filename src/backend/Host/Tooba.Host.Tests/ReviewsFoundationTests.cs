@@ -6,7 +6,7 @@ using Testcontainers.PostgreSql;
 using Tooba.AccessControl.Infrastructure.Authorization;
 using Tooba.BuildingBlocks;
 using Tooba.Host.Reviews;
-using Tooba.Host.Seller;
+using Tooba.Host.Security.Seller;
 using Tooba.Host.Storefront;
 using Tooba.Order.Application.Storefront.Services;
 using Tooba.Order.Application.Storefront.Models;

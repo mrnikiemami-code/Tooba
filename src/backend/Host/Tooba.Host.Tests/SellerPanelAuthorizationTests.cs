@@ -3,7 +3,7 @@ using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Hosting;
 using Tooba.AccessControl.Infrastructure.Authorization;
 using Tooba.BuildingBlocks;
-using Tooba.Host.Seller;
+using Tooba.Host.Security.Seller;
 using Tooba.Identity.Contracts;
 using Xunit;
 

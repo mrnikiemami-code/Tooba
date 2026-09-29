@@ -1,11 +1,12 @@
 using Tooba.BuildingBlocks;
+using Tooba.BuildingBlocks.Security;
 using Tooba.Order.Application.Seller;
 using Tooba.Order.Endpoints.Seller;
 
-namespace Tooba.Host.Seller;
+namespace Tooba.Host.Security.Seller;
 
 /// <summary>Host transport adapter — seller Actor + SellerPartyId for Order seller routes.</summary>
-public sealed class HostOrderSellerAuthorizer : IOrderSellerAuthorizer
+public sealed class HostOrderSellerAuthorizer(ISellerPanelAccess sellerAccess) : IOrderSellerAuthorizer
 {
     /// <inheritdoc />
     public async Task<(Guid ActorUserId, Guid SellerPartyId, SemanticError? Error)> ResolveAsync(
@@ -15,15 +16,8 @@ public sealed class HostOrderSellerAuthorizer : IOrderSellerAuthorizer
         ArgumentNullException.ThrowIfNull(httpContext);
         try
         {
-            var session = httpContext.RequestServices.GetRequiredService<CurrentAuthenticatedSession>();
-            var guard = httpContext.RequestServices.GetRequiredService<IAuthorizationGuard>();
-            var environment = httpContext.RequestServices.GetRequiredService<IHostEnvironment>();
-            var (actor, seller) = await SellerPanelAccess.RequireAuthorizedAsync(
-                httpContext.Request,
-                session,
-                guard,
-                environment,
-                cancellationToken);
+            var (actor, seller) = await sellerAccess.RequireAuthorizedAsync(
+                httpContext.Request, cancellationToken);
             return (actor, seller, null);
         }
         catch (PlatformHttpException ex)

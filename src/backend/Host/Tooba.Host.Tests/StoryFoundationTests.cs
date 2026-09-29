@@ -6,7 +6,7 @@ using Testcontainers.PostgreSql;
 using Tooba.AccessControl.Infrastructure.Authorization;
 using Tooba.BuildingBlocks;
 using Tooba.Host.Admin.Access;
-using Tooba.Host.Seller;
+using Tooba.Host.Security.Seller;
 using Tooba.Persistence;
 using global::Tooba.Story.Application;
 using global::Tooba.Story.Domain;
