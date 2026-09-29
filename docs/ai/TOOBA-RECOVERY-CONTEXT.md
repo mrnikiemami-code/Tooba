@@ -35,7 +35,7 @@ Latest-Accepted-Implementation-Wave-State: ACCEPTED
 Latest-Accepted-Task: TB-TMAR-HOST-SELLER-AMC-001-R5
 Implementation-Commit: c08c4afaf194c3dbcf414275484622378150fbb5
 Implementation-Commit-Kind: IMPLEMENTATION_COMMIT
-Result-Evidence-Docs-Stamp-Commit: __R5_SOT_STAMP_COMMIT__
+Result-Evidence-Docs-Stamp-Commit: a4129ca42adc137fbf543d3c1caf01b88b92a8d9
 Commit-Semantics: IMPLEMENTATION_COMMIT_IS_R5_THE_LATER_RESULT_EVIDENCE_COMMIT_IS_A_DOCS_STAMP_ONLY_NEVER_MISLABEL_IT_AS_IMPLEMENTATION
 Dev-Context-Route-Ownership-State: ACCESSCONTROL_ENDPOINTS_OWNED
 Dev-Context-Route-Count-Migrated: 1
