@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <NoWarn>$(NoWarn);1591</NoWarn>
+    <RootNamespace>Tooba.Party.Endpoints</RootNamespace>
+    <AssemblyName>Tooba.Party.Endpoints</AssemblyName>
+  </PropertyGroup>
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Tooba.Party.Application\Tooba.Party.Application.csproj" />
+    <ProjectReference Include="..\Tooba.Party.Contracts\Tooba.Party.Contracts.csproj" />
+    <ProjectReference Include="..\..\..\BuildingBlocks\Tooba.BuildingBlocks\Tooba.BuildingBlocks.csproj" />
+  </ItemGroup>
+</Project>

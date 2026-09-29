@@ -21,6 +21,7 @@
     <Project Path="Modules/Party/Tooba.Party.Contracts/Tooba.Party.Contracts.csproj" />
     <Project Path="Modules/Party/Tooba.Party.Application/Tooba.Party.Application.csproj" />
     <Project Path="Modules/Party/Tooba.Party.Infrastructure/Tooba.Party.Infrastructure.csproj" />
+    <Project Path="Modules/Party/Tooba.Party.Endpoints/Tooba.Party.Endpoints.csproj" />
     <Project Path="Modules/Localization/Tooba.Localization.Contracts/Tooba.Localization.Contracts.csproj" />
     <Project Path="Modules/Localization/Tooba.Localization.Domain/Tooba.Localization.Domain.csproj" />
     <Project Path="Modules/Localization/Tooba.Localization.Application/Tooba.Localization.Application.csproj" />

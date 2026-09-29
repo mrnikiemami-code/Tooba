@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Testcontainers.PostgreSql;
@@ -6,6 +7,7 @@ using Tooba.AccessControl.Application;
 using Tooba.AccessControl.Domain;
 using Tooba.AccessControl.Infrastructure.Authorization;
 using Tooba.BuildingBlocks;
+using Tooba.BuildingBlocks.Security;
 using Tooba.Host.OperatorProfile;
 using Tooba.Host.Preferences;
 using Tooba.Host.Seller;
@@ -70,12 +72,21 @@ public sealed class SettingsFoundationTests
     public void Settings_http_routes_are_wired()
     {
         var root = FindRepoRoot();
-        var seller = File.ReadAllText(Path.Combine(root, "src", "backend", "Host", "Tooba.Host", "Seller", "SellerSettingsEndpoints.cs"));
+        var seller = File.ReadAllText(Path.Combine(root, "src", "backend", "Modules", "Party", "Tooba.Party.Endpoints", "Seller", "PartySellerSettingsEndpoints.cs"));
         Assert.Contains("/v1/seller/settings", seller, StringComparison.Ordinal);
-        Assert.Contains("seller.settings.view", seller, StringComparison.Ordinal);
-        Assert.Contains("seller.settings.manage", seller, StringComparison.Ordinal);
         Assert.Contains("canManage", seller, StringComparison.Ordinal);
-        Assert.Contains("SellerPanelAccess.RequireAuthorizedAsync", seller, StringComparison.Ordinal);
+        Assert.Contains("MapGet", seller, StringComparison.Ordinal);
+        Assert.Contains("MapPut", seller, StringComparison.Ordinal);
+
+        // Capability literals now live in the Host security adapter, not in the module Endpoints.
+        var authorizer = File.ReadAllText(Path.Combine(root, "src", "backend", "Host", "Tooba.Host", "Security", "Seller", "HostPartySellerAuthorizer.cs"));
+        Assert.Contains("seller.settings.view", authorizer, StringComparison.Ordinal);
+        Assert.Contains("seller.settings.manage", authorizer, StringComparison.Ordinal);
+        Assert.Contains("ISellerPanelAccess", authorizer, StringComparison.Ordinal);
+        Assert.Contains("IPlatformEffectiveAccessReader", authorizer, StringComparison.Ordinal);
+
+        // The evacuated Host seller settings surface must be gone.
+        Assert.False(File.Exists(Path.Combine(root, "src", "backend", "Host", "Tooba.Host", "Seller", "SellerSettingsEndpoints.cs")));
 
         var preference = File.ReadAllText(Path.Combine(root, "src", "backend", "Host", "Tooba.Host", "Preferences", "UserPreferenceEndpoints.cs"));
         Assert.Contains("/v1/customer/preferences", preference, StringComparison.Ordinal);
@@ -96,7 +107,8 @@ public sealed class SettingsFoundationTests
         Assert.Contains("AdminPanelAccess.RequireAuthorizedAsync", operatorProfile, StringComparison.Ordinal);
 
         var program = File.ReadAllText(Path.Combine(root, "src", "backend", "Host", "Tooba.Host", "Program.cs"));
-        Assert.Contains("MapSellerSettingsEndpoints", program, StringComparison.Ordinal);
+        Assert.Contains("MapPartyEndpoints", program, StringComparison.Ordinal);
+        Assert.DoesNotContain("MapSellerSettingsEndpoints", program, StringComparison.Ordinal);
         Assert.Contains("MapUserPreferenceEndpoints", program, StringComparison.Ordinal);
         Assert.Contains("MapUiPreferenceEndpoints", program, StringComparison.Ordinal);
         Assert.Contains("MapOperatorProfileEndpoints", program, StringComparison.Ordinal);
@@ -181,26 +193,31 @@ public sealed class SettingsFoundationTests
                 CancellationToken.None));
     }
 
-    [SkippableFact]
+    [Fact]
     public async Task Seller_settings_capability_allow_and_deny()
     {
         var seller = Guid.NewGuid();
         var owner = Guid.NewGuid();
         var employee = Guid.NewGuid();
-        var access = new SelectiveAccessControlDirectory(
+        var reader = new SelectiveEffectiveAccessReader(
             (owner, seller, "seller.settings.view"),
             (owner, seller, "seller.settings.manage"),
             (employee, seller, "seller.settings.view"));
 
-        await SellerSettingsEndpoints.EnsureSellerCapabilityAsync(
-            owner, seller, "seller.settings.view", access, CancellationToken.None);
-        await SellerSettingsEndpoints.EnsureSellerCapabilityAsync(
-            owner, seller, "seller.settings.manage", access, CancellationToken.None);
+        var ownerAuthorizer = new HostPartySellerAuthorizer(new StubSellerPanelAccess(owner, seller), reader);
+        var ownerView = await ownerAuthorizer.RequireViewAsync(Context(), CancellationToken.None);
+        Assert.True(ownerView.CanManage, "owner holds seller.settings.manage");
+        await ownerAuthorizer.RequireManageAsync(Context(), CancellationToken.None);
+
+        // Employee holds view but NOT manage: read route must still succeed with CanManage=false.
+        var employeeAuthorizer = new HostPartySellerAuthorizer(new StubSellerPanelAccess(employee, seller), reader);
+        var employeeView = await employeeAuthorizer.RequireViewAsync(Context(), CancellationToken.None);
+        Assert.False(employeeView.CanManage, "employee lacks seller.settings.manage");
 
         var denied = await Assert.ThrowsAsync<PlatformHttpException>(() =>
-            SellerSettingsEndpoints.EnsureSellerCapabilityAsync(
-                employee, seller, "seller.settings.manage", access, CancellationToken.None));
+            employeeAuthorizer.RequireManageAsync(Context(), CancellationToken.None));
         Assert.Equal(403, denied.StatusCode);
+        Assert.Equal("seller.authorization.denied", denied.ErrorCode);
     }
 
     [Fact]
@@ -320,40 +337,49 @@ public sealed class SettingsFoundationTests
         throw new InvalidOperationException("repo root not found");
     }
 
-    private sealed class SelectiveAccessControlDirectory : FakeAccessControlDirectory
+    private static HttpContext Context() =>
+        new DefaultHttpContext();
+
+    /// <summary>
+    /// درز خنثی دسترسی پنل فروشنده: Actor/SellerPartyId ثابت را بدون موتور مجوز برمی‌گرداند.
+    /// فقط برای تست درزهای نازک امنیتی Host استفاده می‌شود.
+    /// </summary>
+    private sealed class StubSellerPanelAccess(Guid actorUserId, Guid sellerPartyId) : ISellerPanelAccess
+    {
+        public Task<(Guid ActorUserId, Guid SellerPartyId)> RequireAuthorizedAsync(
+            HttpRequest request,
+            CancellationToken cancellationToken) =>
+            Task.FromResult((actorUserId, sellerPartyId));
+    }
+
+    /// <summary>
+    /// درز خنثی مجوز مؤثر بر پایهٔ گرنت‌های صریح؛ جایگزین دایرکتوری AccessControl در تست.
+    /// </summary>
+    private sealed class SelectiveEffectiveAccessReader
+        : IPlatformEffectiveAccessReader
     {
         private readonly HashSet<(Guid UserId, Guid SellerId, string PermissionId)> _grants;
 
-        public SelectiveAccessControlDirectory(params (Guid UserId, Guid SellerId, string PermissionId)[] grants)
+        public SelectiveEffectiveAccessReader(params (Guid UserId, Guid SellerId, string PermissionId)[] grants)
         {
             _grants = grants.ToHashSet();
         }
 
-        public override Task<EffectiveAccessDto> GetEffectiveAccessAsync(
+        public Task<IReadOnlyList<PlatformPermissionGrant>> GetEffectivePermissionsAsync(
             Guid userId,
-            AccessOwnerScope owner,
+            PlatformAccessOwnerKind ownerKind,
+            Guid? ownerScopeId,
             CancellationToken cancellationToken)
         {
-            var permissions = _grants
-                .Where(g => g.UserId == userId && g.SellerId == owner.OwnerScopeId)
-                .Select(g =>
-                {
-                    var def = PermissionCatalog.Require(g.PermissionId);
-                    return new EffectivePermissionDto(
-                        g.PermissionId,
-                        def.Module,
-                        AccessScopeKind.GlobalWithinOwner,
-                        null,
-                        ["test-role"],
-                        false);
-                })
+            var grants = _grants
+                .Where(g => g.UserId == userId && g.SellerId == ownerScopeId)
+                .Select(g => new PlatformPermissionGrant(
+                    g.PermissionId,
+                    PlatformAccessScopeKind.GlobalWithinOwner,
+                    null,
+                    false))
                 .ToList();
-            return Task.FromResult(new EffectiveAccessDto(
-                userId,
-                owner.Kind,
-                owner.OwnerScopeId,
-                permissions,
-                permissions.Count == 0 ? [] : ["test-role"]));
+            return Task.FromResult<IReadOnlyList<PlatformPermissionGrant>>(grants);
         }
     }
 

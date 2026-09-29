@@ -23,7 +23,7 @@ public sealed class HostSellerAmcR2GuardTests
         RegexOptions.Compiled | RegexOptions.CultureInvariant);
 
     [Fact]
-    public void Host_seller_owns_exactly_four_routes_and_no_catalog_route()
+    public void Host_seller_owns_exactly_two_routes_and_no_catalog_or_settings_route()
     {
         var endpoints = Read("src/backend/Host/Tooba.Host/Seller/SellerPanelEndpoints.cs");
 
@@ -41,14 +41,13 @@ public sealed class HostSellerAmcR2GuardTests
         Assert.DoesNotContain("SetProductAttributeRequest", endpoints, StringComparison.Ordinal);
         Assert.DoesNotContain("SetProductVariantAxesRequest", endpoints, StringComparison.Ordinal);
 
-        // Two Host route mappings remain in this file; the other two Host-owned seller routes are
-        // the settings GET/PUT pair in SellerSettingsEndpoints.cs => Host-owned total = 4.
+        // R2 evacuated the two Catalog routes; the following R3 wave evacuated the settings GET/PUT
+        // pair into Party, so Host/Seller now owns exactly two routes and no settings route/file.
         var hostMappings = Regex.Matches(endpoints, @"group\.Map(?:Get|Post|Put|Patch|Delete)\(").Count;
         Assert.Equal(2, hostMappings);
 
-        var settings = Read("src/backend/Host/Tooba.Host/Seller/SellerSettingsEndpoints.cs");
-        var settingsMappings = Regex.Matches(settings, @"Map(?:Get|Post|Put|Patch|Delete)\(").Count;
-        Assert.Equal(2, settingsMappings);
+        Assert.False(File.Exists(Path.Combine(
+            FindRepoRoot(), "src", "backend", "Host", "Tooba.Host", "Seller", "SellerSettingsEndpoints.cs")));
     }
 
     [Fact]
@@ -200,7 +199,7 @@ public sealed class HostSellerAmcR2GuardTests
             .ToArray();
 
         Assert.Equal(
-            ["SellerDevActorBootstrap.cs", "SellerPanelComposer.cs", "SellerPanelEndpoints.cs", "SellerPanelModels.cs", "SellerSettingsEndpoints.cs"],
+            ["SellerDevActorBootstrap.cs", "SellerPanelComposer.cs", "SellerPanelEndpoints.cs", "SellerPanelModels.cs"],
             files);
 
         Assert.False(File.Exists(Path.Combine(hostSeller, "HostCatalogSellerAuthorizer.cs")));

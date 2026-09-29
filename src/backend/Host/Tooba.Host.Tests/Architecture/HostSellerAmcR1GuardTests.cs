@@ -31,6 +31,7 @@ public sealed class HostSellerAmcR1GuardTests
         "HostSettlementSellerAuthorizer.cs",
         "HostNotificationSellerAuthorizer.cs",
         "HostPromotionSellerAuthorizer.cs",
+        "HostPartySellerAuthorizer.cs",
     ];
 
     private static readonly string[] ThinAdapterFiles =
@@ -42,6 +43,7 @@ public sealed class HostSellerAmcR1GuardTests
         "HostSettlementSellerAuthorizer.cs",
         "HostNotificationSellerAuthorizer.cs",
         "HostPromotionSellerAuthorizer.cs",
+        "HostPartySellerAuthorizer.cs",
         "HostSellerPanelAccess.cs",
     ];
 
@@ -196,6 +198,7 @@ public sealed class HostSellerAmcR1GuardTests
         Assert.Contains("Tooba.Host.Security.Seller.HostNotificationSellerAuthorizer", program, StringComparison.Ordinal);
         Assert.Contains("Tooba.Host.Security.Seller.HostSupportSellerAuthorizer", program, StringComparison.Ordinal);
         Assert.Contains("Tooba.Host.Security.Seller.HostPromotionSellerAuthorizer", program, StringComparison.Ordinal);
+        Assert.Contains("Tooba.Host.Security.Seller.HostPartySellerAuthorizer", program, StringComparison.Ordinal);
 
         Assert.DoesNotContain("Tooba.Host.Seller.HostOfferSellerAuthorizer", program, StringComparison.Ordinal);
         Assert.DoesNotContain("Tooba.Host.Seller.HostOrderSellerAuthorizer", program, StringComparison.Ordinal);

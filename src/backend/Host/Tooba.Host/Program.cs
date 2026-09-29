@@ -52,6 +52,7 @@ using Tooba.Host.Wallet;
 using Tooba.Wallet.Endpoints;
 using Tooba.Offer.Endpoints;
 using Tooba.Offer.Endpoints.Seller;
+using Tooba.Party.Endpoints;
 using Tooba.Cart.Endpoints;
 using Tooba.Settlement.Endpoints;
 using Tooba.Fulfillment.Endpoints;
@@ -97,6 +98,7 @@ builder.Services.AddFulfillmentEndpointPresentation();
 builder.Services.AddReturnEndpointPresentation();
 builder.Services.AddAddressBookEndpointPresentation();
 builder.Services.AddCustomerProfileEndpointPresentation();
+builder.Services.AddPartyEndpointPresentation();
 builder.Services.AddProblemDetails();
 builder.Services.AddSingleton<IExceptionPresentationService, ExceptionPresentationService>();
 builder.Services.AddExceptionHandler<ToobaExceptionHandler>();
@@ -164,7 +166,8 @@ builder.Services.AddToobaCqrsFoundation(
     typeof(Tooba.AddressBook.Application.Ports.IAddressBookDirectory).Assembly,
     typeof(Tooba.CustomerProfile.Application.Queries.GetCustomerProfilePage.GetCustomerProfilePageQuery).Assembly,
     typeof(Tooba.Content.Application.Articles.Commands.CreateArticleCommand).Assembly,
-    typeof(Tooba.ProductWorkspace.Application.Composition.Queries.GetProductWorkspaceQuery).Assembly);
+    typeof(Tooba.ProductWorkspace.Application.Composition.Queries.GetProductWorkspaceQuery).Assembly,
+    typeof(Tooba.Party.Application.Seller.Queries.GetSellerSettingsQuery).Assembly);
 builder.Services.AddScoped<IOrderAdminAuthorizer, HostOrderAdminAuthorizer>();
 builder.Services.AddScoped<
     Tooba.Order.Contracts.Admin.Operations.IOrderAdminEffectiveAccessReader,
@@ -213,6 +216,7 @@ builder.Services.AddScoped<Tooba.Notification.Endpoints.Seller.INotificationSell
 builder.Services.AddScoped<Tooba.Support.Endpoints.Seller.ISupportSellerAuthorizer, Tooba.Host.Security.Seller.HostSupportSellerAuthorizer>();
 builder.Services.AddScoped<Tooba.Support.Endpoints.Admin.ISupportAdminAuthorizer, Tooba.Host.Admin.Access.Authorizers.HostSupportAdminAuthorizer>();
 builder.Services.AddScoped<Tooba.Wallet.Endpoints.Admin.IWalletAdminAuthorizer, Tooba.Host.Admin.Access.Authorizers.HostWalletAdminAuthorizer>();
+builder.Services.AddScoped<Tooba.Party.Endpoints.Seller.IPartySellerAuthorizer, Tooba.Host.Security.Seller.HostPartySellerAuthorizer>();
 builder.Services.AddScoped<Tooba.Host.Admin.Panel.AdminPanelComposer>();
 builder.Services.AddScoped<Tooba.Host.Wishlist.WishlistComposer>();
 builder.Services.AddCatalogEndpointPresentation();
@@ -403,7 +407,7 @@ app.MapSellerPanelEndpoints();
 app.MapOfferModule();
 app.MapTaxModule();
 app.MapPricingModule();
-app.MapSellerSettingsEndpoints();
+app.MapPartyEndpoints();
 app.MapCustomerProfileModuleEndpoints();
 app.MapUserPreferenceEndpoints();
 app.MapUiPreferenceEndpoints();
