@@ -33,7 +33,7 @@ A fresh chat MUST recover the CURRENT checkpoint from `docs/architecture/tmar-cu
 Latest-Accepted-Implementation-Wave: TB-TMAR-HOST-SELLER-AMC-001-R2
 Latest-Accepted-Implementation-Wave-State: ACCEPTED
 Latest-Accepted-Task: TB-TMAR-HOST-SELLER-AMC-001-R2
-Implementation-Commit: __R2_IMPLEMENTATION_COMMIT__
+Implementation-Commit: bc7f43cf04eccd068c12fdc13dcca7901df1c476
 Implementation-Commit-Kind: IMPLEMENTATION_COMMIT
 Result-Evidence-Docs-Stamp-Commit: __R2_RESULT_EVIDENCE_COMMIT__
 Commit-Semantics: IMPLEMENTATION_COMMIT_IS_R2_THE_LATER_RESULT_EVIDENCE_COMMIT_IS_A_DOCS_STAMP_ONLY_NEVER_MISLABEL_IT_AS_IMPLEMENTATION

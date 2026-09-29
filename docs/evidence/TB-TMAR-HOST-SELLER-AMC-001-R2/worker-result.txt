@@ -1,0 +1,46 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-TMAR-HOST-SELLER-AMC-001-R2
+Parent-Task: TB-TMAR-HOST-SELLER-AMC-001-R1B
+Channel: tooba-main
+WorkerId: tooba-worker-01
+AgentType: cursor
+Status: PASS
+Summary: Evacuated the three Host-owned seller Catalog routes (GET /v1/seller/catalog-variants, PUT /v1/seller/products/{productId:guid}/attributes/{definitionId:guid}, PUT /v1/seller/products/{productId:guid}/variant-axes) and the Catalog-owned portion of Host/Seller/SellerPanelComposer.cs into Catalog. Catalog.Endpoints/Seller now owns the three routes via ISender (MediatR 12.5) + ApiResponseFactory + a narrow ICatalogSellerAuthorizer port; Catalog.Application/Seller owns ListSellerCatalogVariantsQuery/Handler, SellerCatalogVariantOption, ISellerCatalogVariantDirectory and SellerCatalogErrorCodes and reuses the canonical SetProductAttributeCommand / SetProductVariantAxesCommand; Catalog.Infrastructure/Seller/SellerCatalogVariantDirectory preserves the published-variant projection exactly (Published only, newest 100 by UpdatedAt, fa-first localized name, variants by CatalogCodeSeam, ProductStatus.ToString()) and is registered by CatalogModule; the seller-existence guard goes through Tooba.Party.Contracts.IPartyLookup instead of a cross-module join. Host/Seller now maps only dashboard + dev-contexts in SellerPanelEndpoints, SellerPanelComposer lost CatalogDbContext / Catalog Domain / Catalog Infrastructure.Persistence / ListCatalogVariantsAsync and dropped 934 -> 27 LOC, SellerPanelModels no longer owns SellerCatalogVariantOption, and Host-owned seller routes went 7 -> 4 with ZERO duplicate ownership and ZERO Catalog layer leakage in Host/Seller. The R1A Host/Security/Seller boundary is unchanged and only gained the thin HostCatalogSellerAuthorizer adapter. seller.missing (Order-owned descriptor, consumed not re-registered), catalog.attribute.invalid and catalog.variant.axes.duplicate keep descriptor-backed stable codes; the Host-local ex.Message title classification and the non-canonical catalog.variant_axes.invalid string were removed. A durable HostSellerAmcR2GuardTests guards all R2 invariants, the W10 Seller DTO guard assertion was repointed to the Catalog-owned surface, TmarDurableGuardTests was updated in place to the R2 checkpoint, and the stale SellerPanelComposer OVERSIZED_LEGACY source-size entry was removed. Recovery/SoT is synchronized in the same task.
+R1B-Recovery-State: RECONCILED_SELLER_R1A_ACCEPTED_LINEAGE
+Catalog-Seller-Route-Ownership-State: CATALOG_ENDPOINTS_OWNED
+Catalog-Seller-Route-Count-Migrated: 3
+Host-Seller-Route-Count-Before: 7
+Host-Seller-Route-Count-After: 4
+Duplicate-Route-State: ZERO
+Catalog-Endpoints-ISender-State: ISENDER_ONLY
+Catalog-Endpoint-DbContext-State: ZERO
+Catalog-Seller-CQRS-State: COMPLETE_QUERY_PLUS_REUSED_MODULE_COMMANDS
+Validator-State: AUTH_SCOPED_QUERY_NO_VALIDATOR_REQUIRED_REUSED_W10_W11_CLASSIFICATION_UNCHANGED
+Host-Seller-Catalog-Persistence-State: ZERO
+Host-Seller-Catalog-Layer-Leakage-State: ZERO
+Seller-Panel-Composer-State: CATALOG_COMPOSITION_EVACUATED_DISPLAY_ONLY_REMAINS_934_TO_27_LOC
+Seller-Catalog-Model-State: HOST_OWNERSHIP_REMOVED_CATALOG_OWNED
+Behavior-Parity-State: PRESERVED_PATHS_VERBS_PARAMS_AUTH_STATUS_DTO_PROJECTION_NULL_AXES_MEANING
+Error-Code-State: seller.missing_PLUS_catalog.attribute.invalid_PLUS_catalog.variant.axes.duplicate_PRESERVED
+Host-Security-Seller-R1A-State: CANONICAL_UNCHANGED
+Schema-Change-State: NONE
+Frontend-State: UNCHANGED
+Sink-Folder-Regression-State: NONE
+Full-Seller-Folder-Certification-State: NOT_YET
+Seller-R3-State: NOT_STARTED
+Focused-Build-State: PASS_CATALOG_APPLICATION_CATALOG_INFRASTRUCTURE_CATALOG_ENDPOINTS_HOST_HOST_TESTS_0_ERRORS
+Focused-Test-State: PASS_40_OF_40_HOST_SELLER_R2_R1_ORDER_REVERSE_ENDPOINT_OWNERSHIP_W10_SELLER_PANEL_COMPOSITION
+Recovery-State: SYNCHRONIZED_TB_TMAR_HOST_SELLER_AMC_001_R2
+Stale-Current-Pointer-State: ZERO
+Automatic-Next-Implementation-Task-State: NONE
+Workflow-Stop-State: USER_REVIEW_HOST_SELLER_AMC_001_R2
+Certification-State: PASS
+Evidence-Path: docs/evidence/TB-TMAR-HOST-SELLER-AMC-001-R2/
+Commit-SHA: bc7f43cf04eccd068c12fdc13dcca7901df1c476
+Push-State: PUSHED_ORIGIN_MAIN
+HEAD-Equals-Origin-Main: TRUE
+Working-Tree-Tracked-State: CLEAN
+User-Work-Preserved: TRUE
+STOP
+END_TOOBA_WORKER_RESULT
