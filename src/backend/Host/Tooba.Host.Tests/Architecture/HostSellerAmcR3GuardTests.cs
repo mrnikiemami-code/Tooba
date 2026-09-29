@@ -10,14 +10,11 @@ namespace Tooba.Host.Tests.Architecture;
 /// with a narrow neutral <c>IPartySellerAuthorizer</c> port in <c>Party.Endpoints.Seller</c> and a thin
 /// Host adapter inside the unchanged R1A <c>Host/Security/Seller</c> boundary.
 /// Host/Seller route count 4 -> 2, file count 5 -> 4, and the evacuated Host settings layer leakage is ZERO.
+/// R5 then evacuated the last Host/Seller file and route, so the folder is ABSENT and both invariants hold.
 /// </summary>
 public sealed class HostSellerAmcR3GuardTests
 {
     private static readonly string[] EvacuatedSettingsRoutes = ["MapGet(\"/\"", "MapPut(\"/\""];
-
-    private static readonly Regex HostSellerSettingsLayerLeakage = new(
-        @"Tooba\.AccessControl\.(Application|Domain)|IAccessControlDirectory|SellerSettingsEndpoints|OrganizationProfileWriteRequest|EnsureSellerCapabilityAsync",
-        RegexOptions.Compiled | RegexOptions.CultureInvariant);
 
     [Fact]
     public void Party_endpoints_own_both_seller_settings_routes_exactly_once()
@@ -57,53 +54,35 @@ public sealed class HostSellerAmcR3GuardTests
     }
 
     [Fact]
-    public void Host_seller_settings_file_is_absent_and_folder_shrinks_to_two_files()
+    public void Host_seller_settings_file_is_absent_and_folder_is_gone()
     {
         var hostSeller = Path.Combine(FindRepoRoot(), "src", "backend", "Host", "Tooba.Host", "Seller");
         Assert.False(File.Exists(Path.Combine(hostSeller, "SellerSettingsEndpoints.cs")));
 
-        var files = Directory.EnumerateFiles(hostSeller, "*.cs", SearchOption.TopDirectoryOnly)
-            .Select(Path.GetFileName)
-            .OrderBy(x => x, StringComparer.Ordinal)
-            .ToArray();
-
         // R3 shrank Host/Seller to four files; R4 then removed the now-zero-consumer SellerPanelComposer.cs
-        // and SellerPanelModels.cs, leaving exactly two production files.
-        Assert.Equal(
-            ["SellerDevActorBootstrap.cs", "SellerPanelEndpoints.cs"],
-            files);
+        // and SellerPanelModels.cs, and R5 evacuated the final two files: Host/Seller is ABSENT.
+        Assert.False(Directory.Exists(hostSeller), "Host/Seller must be absent after R5");
     }
 
     [Fact]
-    public void Host_seller_owns_exactly_one_route_and_zero_settings_route()
+    public void AccessControl_owns_the_dev_contexts_route_and_host_owns_zero_seller_route()
     {
-        var endpoints = Read("src/backend/Host/Tooba.Host/Seller/SellerPanelEndpoints.cs");
-        Assert.Contains("group.MapGet(\"/dev-contexts\"", endpoints, StringComparison.Ordinal);
-        Assert.DoesNotContain("group.MapGet(\"/dashboard\"", endpoints, StringComparison.Ordinal);
+        var endpoints = Read(
+            "src/backend/Modules/AccessControl/Tooba.AccessControl.Endpoints/Seller/Development/SellerDevContextEndpoints.cs");
+        Assert.Contains("MapGet(\"/dev-contexts\"", endpoints, StringComparison.Ordinal);
         Assert.DoesNotContain("MapGet(\"/settings\"", endpoints, StringComparison.Ordinal);
         Assert.DoesNotContain("MapPut(\"/settings\"", endpoints, StringComparison.Ordinal);
 
-        // R3 removed the settings pair, R4 removed the dashboard, leaving a single Host seller route.
-        Assert.Equal(1, Regex.Matches(endpoints, @"group\.Map(?:Get|Post|Put|Patch|Delete)\(").Count);
+        var hostSeller = Path.Combine(FindRepoRoot(), "src", "backend", "Host", "Tooba.Host", "Seller");
+        Assert.False(Directory.Exists(hostSeller), "Host/Seller must be absent after R5");
     }
 
     [Fact]
     public void Host_seller_has_zero_settings_layer_leakage()
     {
+        // R5 removed the whole Host/Seller folder, so the settings-layer leakage invariant holds vacuously.
         var hostSeller = Path.Combine(FindRepoRoot(), "src", "backend", "Host", "Tooba.Host", "Seller");
-        var violations = new List<string>();
-        foreach (var path in Directory.EnumerateFiles(hostSeller, "*.cs", SearchOption.AllDirectories))
-        {
-            foreach (var raw in File.ReadLines(path))
-            {
-                if (HostSellerSettingsLayerLeakage.IsMatch(raw))
-                {
-                    violations.Add(Path.GetFileName(path) + ": " + raw.Trim());
-                }
-            }
-        }
-
-        Assert.True(violations.Count == 0, "settings layer leakage in Host/Seller: " + string.Join("; ", violations));
+        Assert.False(Directory.Exists(hostSeller), "Host/Seller must be absent after R5");
     }
 
     [Fact]
@@ -208,8 +187,8 @@ public sealed class HostSellerAmcR3GuardTests
             FindRepoRoot(), "src/backend/Host/Tooba.Host/Security/Seller/HostCatalogSellerAuthorizer.cs")));
 
         // No route sink-folder regression: the evacuated surface lives in the module, not Host.
-        Assert.False(File.Exists(Path.Combine(
-            FindRepoRoot(), "src/backend/Host/Tooba.Host/Seller/PartySellerSettingsEndpoints.cs")));
+        Assert.False(Directory.Exists(Path.Combine(
+            FindRepoRoot(), "src", "backend", "Host", "Tooba.Host", "Seller")));
     }
 
     private static string Read(string relativePath) =>

@@ -153,10 +153,23 @@
     ],
     "note": "Host no longer implements the Order Application view-access port. ISellerOrderViewAccessReader is now implemented Order-Infrastructure-owned (Modules/Order/Tooba.Order.Infrastructure/Seller/SellerOrderViewAccessReader.cs) and registered by OrderModule. Host/Security/Seller is ZERO foreign Application/Domain/Infrastructure/Persistence; seller security codes are Host-boundary owned (SellerSecurityErrorCodes.cs). Host Order/Seller authorizers no longer reference Order/Seller or Support Application error codes. No route/header/status/DTO/schema/frontend change."
   },
+  "hostSellerR5ClosureUpdate": {
+    "updatedBy": "TB-TMAR-HOST-SELLER-AMC-001-R5",
+    "removedFiles": [
+      "Seller/SellerDevActorBootstrap.cs",
+      "Seller/SellerPanelEndpoints.cs"
+    ],
+    "hostSellerRouteCountBefore": 1,
+    "hostSellerRouteCountAfter": 0,
+    "hostSellerProductionFileCountBefore": 2,
+    "hostSellerProductionFileCountAfter": 0,
+    "hostSellerDirectoryState": "ABSENT",
+    "moduleOwnedRehome": "AccessControl.Endpoints/Seller/Development/SellerDevContextEndpoints.cs (GET /v1/seller/dev-contexts) + AccessControl.Infrastructure/Development/Seller/SellerDevContextBootstrap.cs",
+    "note": "Final Host/Seller dev-context route and its Development bootstrap evacuated to AccessControl development capability via Party.Contracts/Identity.Contracts only. Host/Seller directory deleted; no Host/Development sink regression. Historical r7-r11r1, customer, root-global and seller R1/R1A updates left intact; files list refreshed."
+  },
   "extraFiles": [
     "Admin/Panel/AdminPanelEndpoints.cs",
-    "Admin/Access/Authorizers/HostOrderAdminAuthorizer.cs",
-    "Seller/SellerPanelEndpoints.cs"
+    "Admin/Access/Authorizers/HostOrderAdminAuthorizer.cs"
   ],
   "files": [
     "Admin/Panel/AdminPanelComposer.cs",
@@ -172,7 +185,6 @@
     "Preferences/UserPreferenceEndpoints.cs",
     "Program.cs",
     "Security/Seller/HostOrderSellerAuthorizer.cs",
-    "Seller/SellerPanelEndpoints.cs",
     "Settings/SettingsFoundationDevelopmentSeed.cs",
     "Storefront/StorefrontEndpoints.cs",
     "Support/SupportDevelopmentSeedHost.cs",

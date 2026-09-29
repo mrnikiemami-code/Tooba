@@ -204,6 +204,9 @@ public sealed class HostSellerAmcR1GuardTests
         Assert.DoesNotContain("Tooba.Host.Seller.HostOrderSellerAuthorizer", program, StringComparison.Ordinal);
         Assert.DoesNotContain("Tooba.Host.Seller.HostSellerPanelAccess", program, StringComparison.Ordinal);
         Assert.DoesNotContain("HostSellerOrderViewAccessReader", program, StringComparison.Ordinal);
+        // R5 removed the final Host/Seller surface: no Host seller panel mapping remains.
+        Assert.DoesNotContain("MapSellerPanelEndpoints", program, StringComparison.Ordinal);
+        Assert.DoesNotContain("Tooba.Host.Seller", program, StringComparison.Ordinal);
         Assert.DoesNotContain(
             "Tooba.Order.Application.Seller.Ports.ISellerOrderViewAccessReader",
             program,

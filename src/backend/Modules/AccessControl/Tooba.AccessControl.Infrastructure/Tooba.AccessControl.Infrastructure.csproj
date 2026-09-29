@@ -18,6 +18,8 @@
     <ProjectReference Include="..\Tooba.AccessControl.Contracts\Tooba.AccessControl.Contracts.csproj" />
     <ProjectReference Include="..\Tooba.AccessControl.Domain\Tooba.AccessControl.Domain.csproj" />
     <ProjectReference Include="..\..\Catalog\Tooba.Catalog.Contracts\Tooba.Catalog.Contracts.csproj" />
+    <ProjectReference Include="..\..\Identity\Tooba.Identity.Contracts\Tooba.Identity.Contracts.csproj" />
+    <ProjectReference Include="..\..\Party\Tooba.Party.Contracts\Tooba.Party.Contracts.csproj" />
     <ProjectReference Include="..\..\Tooba.ModuleContracts\Tooba.ModuleContracts.csproj" />
     <ProjectReference Include="..\..\..\BuildingBlocks\Tooba.BuildingBlocks\Tooba.BuildingBlocks.csproj" />
     <ProjectReference Include="..\..\..\BuildingBlocks\Tooba.Persistence\Tooba.Persistence.csproj" />

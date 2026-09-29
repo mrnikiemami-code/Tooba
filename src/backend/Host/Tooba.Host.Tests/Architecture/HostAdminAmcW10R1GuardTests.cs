@@ -60,11 +60,9 @@ public sealed class HostAdminAmcW10R1GuardTests
         Assert.Contains("SetProductVariantAxesRequest", seller, StringComparison.Ordinal);
         Assert.DoesNotContain("using Tooba.Host.Admin;", seller, StringComparison.Ordinal);
 
-        var hostSellerPath = Path.Combine(root, "src/backend/Host/Tooba.Host/Seller/SellerPanelEndpoints.cs");
-        Assert.DoesNotContain(
-            "SetProductAttributeRequest",
-            File.ReadAllText(hostSellerPath),
-            StringComparison.Ordinal);
+        var hostSellerPath = Path.Combine(root, "src/backend/Host/Tooba.Host/Seller");
+        // R5 removed the whole Host/Seller folder; the Seller attribute transport is Catalog-owned only.
+        Assert.False(Directory.Exists(hostSellerPath), "Host/Seller must be absent after R5");
 
         var hostPath = Path.Combine(root, "src/backend/Host/Tooba.Host/Admin/CatalogAttributeEndpoints.cs");
         Assert.False(File.Exists(hostPath));

@@ -17,7 +17,7 @@ public sealed class HostDevelopmentAmcGuardTests
     {
         ["MarketplaceDevelopmentBootstrap.cs"] = "ALLOWED_DEVELOPMENT_COMPOSITION (Marketplace migrate + module seed orchestration)",
         ["MarketplaceAdminDevBootstrap.cs"] = "ALLOWED_DEVELOPMENT_RUNTIME_SEAM (authorization tuple)",
-        ["MarketplaceSellerDevBootstrap.cs"] = "ALLOWED_DEVELOPMENT_RUNTIME_SEAM (tuple + seller snapshot)",
+        ["MarketplaceSellerDevBootstrap.cs"] = "ALLOWED_DEVELOPMENT_RUNTIME_SEAM (tuple + AccessControl seller snapshot publish)",
         ["DevelopmentTenantCommerceContext.cs"] = "ALLOWED_DEVELOPMENT_COMPOSITION (single tenant/commerce seam for module seeds)",
         ["DevelopmentSchemaMigrator.cs"] = "ALLOWED_DEVELOPMENT_COMPOSITION (neutral IModuleSchemaMigrator ordering seam; no foreign DbContext)",
     };
@@ -74,6 +74,9 @@ public sealed class HostDevelopmentAmcGuardTests
         Assert.Contains("ContentDevelopmentSeed.ApplyAsync", text, StringComparison.Ordinal);
         Assert.Contains("PageCompositionDevelopmentSeed.ApplyAsync", text, StringComparison.Ordinal);
         Assert.Contains("StoryDevelopmentSeed.ApplyAsync", text, StringComparison.Ordinal);
+        // R5: seller development snapshot publication is AccessControl-owned, consumed via its port.
+        Assert.Contains("ISellerDevContextStore", text, StringComparison.Ordinal);
+        Assert.DoesNotContain("Tooba.Host.Seller", text, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -98,7 +101,9 @@ public sealed class HostDevelopmentAmcGuardTests
         var seller = Read("MarketplaceSellerDevBootstrap.cs");
         Assert.Contains("DefaultSellerParty", seller, StringComparison.Ordinal);
         Assert.Contains("DefaultSellerActor", seller, StringComparison.Ordinal);
-        Assert.Contains("SellerDevActorBootstrap.PublishSnapshot", seller, StringComparison.Ordinal);
+        Assert.Contains("ISellerDevContextStore", seller, StringComparison.Ordinal);
+        Assert.Contains(".Publish(", seller, StringComparison.Ordinal);
+        Assert.DoesNotContain("Tooba.Host.Seller", seller, StringComparison.Ordinal);
     }
 
     [Fact]

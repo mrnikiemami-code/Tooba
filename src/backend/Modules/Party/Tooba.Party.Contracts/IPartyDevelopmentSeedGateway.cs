@@ -37,4 +37,29 @@ public interface IPartyDevelopmentSeedGateway
     Task EnsureDevelopmentOrganizationDisplayNamesAsync(
         IReadOnlyCollection<DevelopmentOrganizationRename> renames,
         CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Finds an existing development organization by exact display name without creating one.
+    /// Returns <see langword="null"/> when no such organization exists yet.
+    /// </summary>
+    Task<Guid?> FindDevelopmentOrganizationByDisplayNameAsync(
+        string displayName,
+        CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Resolves the seller party a development actor already belongs to through the earliest
+    /// membership, without creating data. Returns <see langword="null"/> when no membership exists.
+    /// </summary>
+    Task<Guid?> FindDevelopmentMembershipSellerPartyAsync(
+        Guid userId,
+        CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Idempotently establishes the canonical member relation between a development actor and a
+    /// seller party. No-ops when the membership already exists.
+    /// </summary>
+    Task EnsureDevelopmentMemberMembershipAsync(
+        Guid userId,
+        Guid sellerPartyId,
+        CancellationToken cancellationToken);
 }

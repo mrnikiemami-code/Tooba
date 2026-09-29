@@ -67,18 +67,9 @@ public sealed class OrderSellerPanelArchitectureGuardTests
     [Fact]
     public void Host_no_longer_registers_seller_order_routes_or_OrderDbContext()
     {
-        var hostEndpoints = File.ReadAllText(Path.Combine(
-            RepoRoot(), "src", "backend", "Host", "Tooba.Host", "Seller", "SellerPanelEndpoints.cs"));
-        Assert.DoesNotContain("MapGet(\"/orders\"", hostEndpoints, StringComparison.Ordinal);
-        Assert.DoesNotContain("MapGet(\"/orders/{sellerOrderId:guid}\"", hostEndpoints, StringComparison.Ordinal);
-        Assert.DoesNotContain("ListOrdersAsync", hostEndpoints, StringComparison.Ordinal);
-        Assert.DoesNotContain("GetOrderAsync", hostEndpoints, StringComparison.Ordinal);
-        // R4 evacuated the seller dashboard into Order.Endpoints; Host/Seller now owns only /dev-contexts.
-        Assert.DoesNotContain("group.MapGet(\"/dashboard\"", hostEndpoints, StringComparison.Ordinal);
-        Assert.DoesNotContain("GetSellerOrderDashboardSummaryQuery", hostEndpoints, StringComparison.Ordinal);
-
-        // R4 removed the zero-consumer Host SellerPanelComposer.cs and SellerPanelModels.cs.
+        // R5 removed the whole Host/Seller folder; no Host seller endpoint can own Order routes.
         var hostSeller = Path.Combine(RepoRoot(), "src", "backend", "Host", "Tooba.Host", "Seller");
+        Assert.False(Directory.Exists(hostSeller), "Host/Seller must be absent after R5");
         Assert.False(File.Exists(Path.Combine(hostSeller, "SellerPanelComposer.cs")));
         Assert.False(File.Exists(Path.Combine(hostSeller, "SellerPanelModels.cs")));
 

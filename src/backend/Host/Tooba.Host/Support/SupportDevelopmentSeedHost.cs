@@ -1,8 +1,8 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Tooba.AccessControl.Application.Development.Seller;
 using Tooba.BuildingBlocks;
 using Tooba.Host.Admin.Development;
-using Tooba.Host.Seller;
 using Tooba.Host.Storefront;
 using Tooba.Support.Infrastructure.Adapters;
 using Tooba.Support.Infrastructure.Persistence;
@@ -43,9 +43,10 @@ internal static class SupportDevelopmentSeedHost
         await db.Database.MigrateAsync();
 
         await AdminDevActorBootstrap.EnsureAsync(provider, CancellationToken.None);
-        await SellerDevActorBootstrap.EnsureAsync(provider, CancellationToken.None);
+        var sellerDevContexts = provider.GetRequiredService<ISellerDevContextStore>();
+        await sellerDevContexts.EnsureAsync(CancellationToken.None);
 
-        var seller = SellerDevActorBootstrap.Snapshot;
+        var seller = sellerDevContexts.Current;
         var admin = AdminDevActorBootstrap.Snapshot;
         if (seller is null || admin is null)
             return;

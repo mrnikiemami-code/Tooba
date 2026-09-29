@@ -10,7 +10,7 @@ using Tooba.BuildingBlocks;
 using Tooba.BuildingBlocks.Security;
 using Tooba.Host.OperatorProfile;
 using Tooba.Host.Preferences;
-using Tooba.Host.Seller;
+using Tooba.AccessControl.Infrastructure.Development.Seller;
 using Tooba.Host.Security.Seller;
 using Tooba.Host.Settings;
 using Tooba.Host.Storefront;
@@ -252,7 +252,7 @@ public sealed class SettingsFoundationTests
 
         var parties = new PartyDirectory(partyDb);
         var org = await parties.CreateOrganizationAsync(
-            SellerDevActorBootstrap.SellerADisplayName,
+            SellerDevContextBootstrap.SellerADisplayName,
             "Arman Legal",
             CancellationToken.None);
 

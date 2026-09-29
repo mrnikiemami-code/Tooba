@@ -23,28 +23,24 @@ public sealed class HostSellerAmcR2GuardTests
         RegexOptions.Compiled | RegexOptions.CultureInvariant);
 
     [Fact]
-    public void Host_seller_owns_exactly_one_route_and_no_catalog_settings_or_dashboard_route()
+    public void Host_seller_owns_zero_route_and_no_catalog_settings_or_dashboard_route()
     {
-        var endpoints = Read("src/backend/Host/Tooba.Host/Seller/SellerPanelEndpoints.cs");
+        // R5 evacuated the final Host-owned seller route (/dev-contexts) into AccessControl.Endpoints.
+        var hostSeller = Path.Combine(FindRepoRoot(), "src", "backend", "Host", "Tooba.Host", "Seller");
+        Assert.False(Directory.Exists(hostSeller), "Host/Seller must be absent after R5");
 
-        Assert.Contains("group.MapGet(\"/dev-contexts\"", endpoints, StringComparison.Ordinal);
-        Assert.DoesNotContain("group.MapGet(\"/dashboard\"", endpoints, StringComparison.Ordinal);
-
+        var accessControlSellerDevelopment = Read(
+            "src/backend/Modules/AccessControl/Tooba.AccessControl.Endpoints/Seller/Development/SellerDevContextEndpoints.cs");
+        Assert.Contains("MapGet(\"/dev-contexts\"", accessControlSellerDevelopment, StringComparison.Ordinal);
+        Assert.DoesNotContain("MapGet(\"/dashboard\"", accessControlSellerDevelopment, StringComparison.Ordinal);
         foreach (var route in EvacuatedCatalogSellerRoutes)
         {
-            Assert.DoesNotContain(route, endpoints, StringComparison.Ordinal);
+            Assert.DoesNotContain(route, accessControlSellerDevelopment, StringComparison.Ordinal);
         }
 
-        Assert.DoesNotContain("catalog-variants", endpoints, StringComparison.Ordinal);
-        Assert.DoesNotContain("ICatalogDirectory", endpoints, StringComparison.Ordinal);
-        Assert.DoesNotContain("Tooba.Catalog.Application", endpoints, StringComparison.Ordinal);
-        Assert.DoesNotContain("SetProductAttributeRequest", endpoints, StringComparison.Ordinal);
-        Assert.DoesNotContain("SetProductVariantAxesRequest", endpoints, StringComparison.Ordinal);
-
-        // R2 evacuated the two Catalog routes; R3 evacuated the settings GET/PUT pair into Party and
-        // R4 evacuated the dashboard into Order, so Host/Seller now owns exactly one route (/dev-contexts).
-        var hostMappings = Regex.Matches(endpoints, @"group\.Map(?:Get|Post|Put|Patch|Delete)\(").Count;
-        Assert.Equal(1, hostMappings);
+        Assert.DoesNotContain("catalog-variants", accessControlSellerDevelopment, StringComparison.Ordinal);
+        Assert.DoesNotContain("ICatalogDirectory", accessControlSellerDevelopment, StringComparison.Ordinal);
+        Assert.DoesNotContain("Tooba.Catalog.Application", accessControlSellerDevelopment, StringComparison.Ordinal);
 
         Assert.False(File.Exists(Path.Combine(
             FindRepoRoot(), "src", "backend", "Host", "Tooba.Host", "Seller", "SellerSettingsEndpoints.cs")));
@@ -99,30 +95,17 @@ public sealed class HostSellerAmcR2GuardTests
     [Fact]
     public void Host_seller_has_zero_catalog_persistence_and_zero_catalog_layer_leakage()
     {
+        // R5 removed the whole Host/Seller folder; the Catalog-evacuation invariants are now asserted
+        // on the retained module surface (AccessControl-owned seller/development endpoint).
         var hostSeller = Path.Combine(FindRepoRoot(), "src", "backend", "Host", "Tooba.Host", "Seller");
-        var violations = new List<string>();
-        foreach (var path in Directory.EnumerateFiles(hostSeller, "*.cs", SearchOption.AllDirectories))
-        {
-            foreach (var raw in File.ReadLines(path))
-            {
-                if (CatalogLayerInHostSeller.IsMatch(raw))
-                {
-                    violations.Add(Path.GetFileName(path) + ": " + raw.Trim());
-                }
-            }
-        }
+        Assert.False(Directory.Exists(hostSeller), "Host/Seller must be absent after R5");
 
-        Assert.True(violations.Count == 0, "Catalog leakage in Host/Seller: " + string.Join("; ", violations));
-
-        // R4 deleted the zero-consumer SellerPanelComposer.cs; the Catalog-evacuation invariants are
-        // preserved on the remaining Host/Seller surface (no Catalog composition residue).
-        var endpoints = Read("src/backend/Host/Tooba.Host/Seller/SellerPanelEndpoints.cs");
+        var endpoints = Read(
+            "src/backend/Modules/AccessControl/Tooba.AccessControl.Endpoints/Seller/Development/SellerDevContextEndpoints.cs");
         Assert.DoesNotContain("ListCatalogVariantsAsync", endpoints, StringComparison.Ordinal);
         Assert.DoesNotContain("CatalogPublicationStatus", endpoints, StringComparison.Ordinal);
         Assert.DoesNotContain("LocalizedTexts", endpoints, StringComparison.Ordinal);
-
-        var models = Read("src/backend/Host/Tooba.Host/Seller/SellerPanelEndpoints.cs");
-        Assert.DoesNotContain("SellerCatalogVariantOption", models, StringComparison.Ordinal);
+        Assert.DoesNotContain("SellerCatalogVariantOption", endpoints, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -192,20 +175,13 @@ public sealed class HostSellerAmcR2GuardTests
     }
 
     [Fact]
-    public void No_route_sink_regression_and_no_new_host_seller_business_file_was_added()
+    public void No_route_sink_regression_and_no_host_seller_business_file_remains()
     {
         var hostSeller = Path.Combine(FindRepoRoot(), "src", "backend", "Host", "Tooba.Host", "Seller");
-        var files = Directory.EnumerateFiles(hostSeller, "*.cs", SearchOption.TopDirectoryOnly)
-            .Select(Path.GetFileName)
-            .OrderBy(x => x, StringComparer.Ordinal)
-            .ToArray();
 
-        // R3 removed SellerSettingsEndpoints.cs and R4 removed the zero-consumer SellerPanelComposer.cs
-        // and SellerPanelModels.cs; Host/Seller now owns exactly two production files.
-        Assert.Equal(
-            ["SellerDevActorBootstrap.cs", "SellerPanelEndpoints.cs"],
-            files);
-
+        // R3 removed SellerSettingsEndpoints.cs, R4 removed the zero-consumer SellerPanelComposer.cs and
+        // SellerPanelModels.cs, and R5 evacuated the final two files: Host/Seller is ABSENT.
+        Assert.False(Directory.Exists(hostSeller), "Host/Seller must be absent after R5");
         Assert.False(File.Exists(Path.Combine(hostSeller, "HostCatalogSellerAuthorizer.cs")));
     }
 

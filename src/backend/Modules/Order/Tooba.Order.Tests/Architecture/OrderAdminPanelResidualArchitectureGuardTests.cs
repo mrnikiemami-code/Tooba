@@ -149,12 +149,9 @@ public sealed class OrderAdminPanelResidualArchitectureGuardTests
 
         var customer = File.ReadAllText(Path.Combine(host, "Customer", "CustomerPanelComposer.cs"));
         Assert.DoesNotContain("OrderDbContext", customer, StringComparison.Ordinal);
-        // R4 removed the zero-consumer Host SellerPanelComposer.cs; no Host/Seller file may own Order access.
-        Assert.False(File.Exists(Path.Combine(host, "Seller", "SellerPanelComposer.cs")));
-        foreach (var file in Directory.EnumerateFiles(Path.Combine(host, "Seller"), "*.cs", SearchOption.AllDirectories))
-        {
-            Assert.DoesNotContain("OrderDbContext", File.ReadAllText(file), StringComparison.Ordinal);
-        }
+        // R4 removed the zero-consumer Host SellerPanelComposer.cs and R5 removed the whole Host/Seller
+        // folder; no Host/Seller file may own Order access.
+        Assert.False(Directory.Exists(Path.Combine(host, "Seller")), "Host/Seller must be absent after R5");
     }
 
     private static IEnumerable<(string Path, string Text)> R11Sources()

@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Tooba.BuildingBlocks;
+using Tooba.Party.Application;
 using Tooba.Party.Contracts;
 using Tooba.Party.Domain;
 using Tooba.Party.Infrastructure.Persistence;
@@ -9,6 +10,7 @@ namespace Tooba.Party.Infrastructure;
 /// <summary>Development-only Party seed capability owned by Party.Infrastructure.</summary>
 public sealed class PartyDevelopmentSeedGateway(
     PartyDbContext db,
+    IPartyDirectory parties,
     IClock clock) : IPartyDevelopmentSeedGateway
 {
     /// <inheritdoc />
@@ -86,5 +88,48 @@ public sealed class PartyDevelopmentSeedGateway(
         {
             await db.SaveChangesAsync(cancellationToken);
         }
+    }
+
+    /// <inheritdoc />
+    public async Task<Guid?> FindDevelopmentOrganizationByDisplayNameAsync(
+        string displayName,
+        CancellationToken cancellationToken)
+    {
+        var existing = await db.Parties.AsNoTracking()
+            .Where(p => p.Kind == PartyKind.Organization && p.DisplayName == displayName)
+            .OrderBy(p => p.CreatedAt)
+            .Select(p => (Guid?)p.PartyId)
+            .FirstOrDefaultAsync(cancellationToken);
+        return existing;
+    }
+
+    /// <inheritdoc />
+    public async Task<Guid?> FindDevelopmentMembershipSellerPartyAsync(
+        Guid userId,
+        CancellationToken cancellationToken)
+    {
+        var membership = await db.Memberships.AsNoTracking()
+            .Where(x => x.UserId == userId && x.RelationCode == MembershipRelationCodes.Member)
+            .OrderBy(x => x.PartyId)
+            .Select(x => (Guid?)x.PartyId)
+            .FirstOrDefaultAsync(cancellationToken);
+        return membership;
+    }
+
+    /// <inheritdoc />
+    public async Task EnsureDevelopmentMemberMembershipAsync(
+        Guid userId,
+        Guid sellerPartyId,
+        CancellationToken cancellationToken)
+    {
+        var exists = await db.Memberships.AsNoTracking().AnyAsync(
+            x => x.UserId == userId && x.PartyId == sellerPartyId && x.RelationCode == MembershipRelationCodes.Member,
+            cancellationToken);
+        if (exists)
+        {
+            return;
+        }
+
+        await parties.EstablishMembershipAsync(userId, sellerPartyId, MembershipRelationCodes.Member, cancellationToken);
     }
 }

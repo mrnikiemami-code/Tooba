@@ -9,15 +9,59 @@ namespace Tooba.Host.Tests.Architecture;
 /// were evacuated from <c>Host/Seller</c> into Order (Endpoints -> Application), that the zero-consumer
 /// <c>SellerPanelComposer.cs</c> and <c>SellerPanelModels.cs</c> residue is deleted, and that the Host
 /// seller surface is now exactly one Host-owned route (<c>/dev-contexts</c>) with two production files.
+/// R5 then evacuated that final route and its bootstrap, so Host/Seller is ABSENT and the dashboard
+/// invariants hold over the module-owned surfaces.
 /// </summary>
 public sealed class HostSellerAmcR4GuardTests
 {
-    private static readonly string[] RetainedHostSellerFiles =
-        ["SellerDevActorBootstrap.cs", "SellerPanelEndpoints.cs"];
+    private static readonly string[] RetainedHostSellerFiles = [];
 
-    private static readonly Regex DashboardHostLayerLeakage = new(
-        @"SellerPanelComposer|SellerPanelModels|SellerDashboardSummary|GetSellerOrderDashboardSummaryQuery|GetSellerOrderDashboardSummary",
-        RegexOptions.Compiled | RegexOptions.CultureInvariant);
+    [Fact]
+    public void Host_seller_dashboard_is_absent_and_folder_is_gone()
+    {
+        var hostSeller = Path.Combine(FindRepoRoot(), "src", "backend", "Host", "Tooba.Host", "Seller");
+        Assert.False(File.Exists(Path.Combine(hostSeller, "SellerPanelComposer.cs")));
+        Assert.False(File.Exists(Path.Combine(hostSeller, "SellerPanelModels.cs")));
+        Assert.False(File.Exists(Path.Combine(hostSeller, "SellerSettingsEndpoints.cs")));
+        Assert.False(File.Exists(Path.Combine(hostSeller, "SellerPanelEndpoints.cs")));
+        Assert.False(File.Exists(Path.Combine(hostSeller, "SellerDevActorBootstrap.cs")));
+
+        // R4 retained two Host/Seller files; R5 evacuated them, so the folder is ABSENT.
+        Assert.False(Directory.Exists(hostSeller), "Host/Seller must be absent after R5");
+        Assert.Empty(RetainedHostSellerFiles);
+    }
+
+    [Fact]
+    public void Host_owns_zero_seller_routes_and_the_dev_contexts_route_is_accesscontrol_owned()
+    {
+        var hostSeller = Path.Combine(FindRepoRoot(), "src", "backend", "Host", "Tooba.Host", "Seller");
+        Assert.False(Directory.Exists(hostSeller), "Host/Seller must be absent after R5");
+
+        var devContexts = Read(
+            "src/backend/Modules/AccessControl/Tooba.AccessControl.Endpoints/Seller/Development/SellerDevContextEndpoints.cs");
+        Assert.Contains("MapGet(\"/dev-contexts\"", devContexts, StringComparison.Ordinal);
+        Assert.DoesNotContain("MapGet(\"/dashboard\"", devContexts, StringComparison.Ordinal);
+        Assert.Equal(1, Regex.Matches(devContexts, @"Map(?:Get|Post|Put|Patch|Delete)\(").Count);
+    }
+
+    [Fact]
+    public void Host_seller_has_zero_dashboard_layer_leakage_and_zero_order_or_party_application_leakage()
+    {
+        // R5 removed the whole Host/Seller folder, so dashboard-layer leakage is ZERO by construction.
+        var hostSeller = Path.Combine(FindRepoRoot(), "src", "backend", "Host", "Tooba.Host", "Seller");
+        Assert.False(Directory.Exists(hostSeller), "Host/Seller must be absent after R5");
+    }
+
+    [Fact]
+    public void Program_no_longer_registers_the_host_seller_composer_dashboard_or_panel_mapping()
+    {
+        var program = Read("src/backend/Host/Tooba.Host/Program.cs");
+        Assert.DoesNotContain("Tooba.Host.Seller.SellerPanelComposer", program, StringComparison.Ordinal);
+        Assert.DoesNotContain("MapSellerPanelEndpoints", program, StringComparison.Ordinal);
+        Assert.DoesNotContain("Tooba.Host.Seller", program, StringComparison.Ordinal);
+        Assert.Contains("MapOrderEndpoints()", program, StringComparison.Ordinal);
+        Assert.Contains("MapAccessControlModuleEndpoints()", program, StringComparison.Ordinal);
+    }
 
     [Fact]
     public void Order_endpoints_own_the_seller_dashboard_route_exactly_once()
@@ -63,66 +107,6 @@ public sealed class HostSellerAmcR4GuardTests
     }
 
     [Fact]
-    public void Host_seller_dashboard_is_absent_and_folder_shrinks_to_two_files()
-    {
-        var hostSeller = Path.Combine(FindRepoRoot(), "src", "backend", "Host", "Tooba.Host", "Seller");
-        Assert.False(File.Exists(Path.Combine(hostSeller, "SellerPanelComposer.cs")));
-        Assert.False(File.Exists(Path.Combine(hostSeller, "SellerPanelModels.cs")));
-        Assert.False(File.Exists(Path.Combine(hostSeller, "SellerSettingsEndpoints.cs")));
-
-        var files = Directory.EnumerateFiles(hostSeller, "*.cs", SearchOption.TopDirectoryOnly)
-            .Select(Path.GetFileName)
-            .OrderBy(x => x, StringComparer.Ordinal)
-            .ToArray();
-
-        Assert.Equal(RetainedHostSellerFiles, files);
-    }
-
-    [Fact]
-    public void Host_seller_owns_exactly_one_route_and_zero_dashboard_route()
-    {
-        var endpoints = Read("src/backend/Host/Tooba.Host/Seller/SellerPanelEndpoints.cs");
-        Assert.Contains("group.MapGet(\"/dev-contexts\"", endpoints, StringComparison.Ordinal);
-        Assert.DoesNotContain("group.MapGet(\"/dashboard\"", endpoints, StringComparison.Ordinal);
-
-        Assert.Equal(1, Regex.Matches(endpoints, @"group\.Map(?:Get|Post|Put|Patch|Delete)\(").Count);
-    }
-
-    [Fact]
-    public void Host_seller_has_zero_dashboard_layer_leakage_and_zero_order_or_party_application_leakage()
-    {
-        var hostSeller = Path.Combine(FindRepoRoot(), "src", "backend", "Host", "Tooba.Host", "Seller");
-        var violations = new List<string>();
-        foreach (var path in Directory.EnumerateFiles(hostSeller, "*.cs", SearchOption.AllDirectories))
-        {
-            foreach (var raw in File.ReadLines(path))
-            {
-                if (DashboardHostLayerLeakage.IsMatch(raw))
-                {
-                    violations.Add(Path.GetFileName(path) + ": " + raw.Trim());
-                }
-            }
-        }
-
-        Assert.True(violations.Count == 0, "dashboard layer leakage in Host/Seller: " + string.Join("; ", violations));
-
-        // The retained dev-contexts file legitimately consumes Party/Identity development seams, but the
-        // production endpoint file must not reference Order.Application or Party.Application.
-        var endpoints = File.ReadAllText(Path.Combine(hostSeller, "SellerPanelEndpoints.cs"));
-        Assert.DoesNotContain("Tooba.Order.Application", endpoints, StringComparison.Ordinal);
-        Assert.DoesNotContain("Tooba.Party.Application", endpoints, StringComparison.Ordinal);
-    }
-
-    [Fact]
-    public void Program_no_longer_registers_the_host_seller_composer_and_dashboard()
-    {
-        var program = Read("src/backend/Host/Tooba.Host/Program.cs");
-        Assert.DoesNotContain("Tooba.Host.Seller.SellerPanelComposer", program, StringComparison.Ordinal);
-        Assert.Contains("MapOrderEndpoints()", program, StringComparison.Ordinal);
-        Assert.Contains("MapSellerPanelEndpoints()", program, StringComparison.Ordinal);
-    }
-
-    [Fact]
     public void Behavior_parity_and_recovery_invariants_are_preserved()
     {
         // Exact path, verb and dashboard field set preserved (Order-owned view, Party enrichment).
@@ -145,9 +129,9 @@ public sealed class HostSellerAmcR4GuardTests
         Assert.True(File.Exists(Path.Combine(
             FindRepoRoot(), "src/backend/Host/Tooba.Host/Security/Seller/HostOrderSellerAuthorizer.cs")));
 
-        // No route sink-folder regression: the dashboard lives in Order, not Host.
-        Assert.False(File.Exists(Path.Combine(
-            FindRepoRoot(), "src/backend/Host/Tooba.Host/Seller/SellerDashboardEndpoints.cs")));
+        // No route sink-folder regression: the whole Host/Seller folder is gone after R5.
+        Assert.False(Directory.Exists(Path.Combine(
+            FindRepoRoot(), "src", "backend", "Host", "Tooba.Host", "Seller")));
     }
 
     private static string Read(string relativePath) =>

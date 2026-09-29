@@ -5,8 +5,8 @@ using Tooba.AddressBook.Infrastructure.Adapters;
 using Tooba.Catalog.Application.Development;
 using Tooba.Catalog.Infrastructure.Development;
 using Tooba.CustomerProfile.Infrastructure.Development;
+using Tooba.AccessControl.Application.Development.Seller;
 using Tooba.Host.Admin.Development;
-using Tooba.Host.Seller;
 using Tooba.Host.Settings;
 using Tooba.Content.Infrastructure.Development;
 using Tooba.PageComposition.Infrastructure;
@@ -73,11 +73,12 @@ internal static class DevelopmentSchemaMigrator
         }
 
         var workspaceDemo = provider.GetRequiredService<IWorkspaceDemoSeed>();
+        var sellerDevContexts = provider.GetRequiredService<ISellerDevContextStore>();
         if (await workspaceDemo.IsLiveProductSeededAsync(CancellationToken.None))
         {
             await workspaceDemo.RefreshExistingCopyAsync(CancellationToken.None);
             await workspaceDemo.EnsureAdminR3PreviewAsync(CancellationToken.None);
-            await SellerDevActorBootstrap.EnsureAsync(provider, CancellationToken.None);
+            await sellerDevContexts.EnsureAsync(CancellationToken.None);
             await AdminDevActorBootstrap.EnsureAsync(provider, CancellationToken.None);
             await ReviewsDevelopmentSeed.ApplyAsync(provider);
             await WishlistDevelopmentSeed.ApplyAsync(provider);
@@ -94,7 +95,7 @@ internal static class DevelopmentSchemaMigrator
 
         await workspaceDemo.SeedNewProductAsync(CancellationToken.None);
 
-        await SellerDevActorBootstrap.EnsureAsync(provider, CancellationToken.None);
+        await sellerDevContexts.EnsureAsync(CancellationToken.None);
         await AdminDevActorBootstrap.EnsureAsync(provider, CancellationToken.None);
         await ReviewsDevelopmentSeed.ApplyAsync(provider, CancellationToken.None);
         await WishlistDevelopmentSeed.ApplyAsync(provider, CancellationToken.None);

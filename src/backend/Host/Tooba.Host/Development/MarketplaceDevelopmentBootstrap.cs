@@ -58,7 +58,8 @@ internal static class MarketplaceDevelopmentBootstrap
         await ContentDevelopmentSeed.ApplyAsync(provider, CancellationToken.None);
         await PageCompositionDevelopmentSeed.ApplyAsync(provider, CancellationToken.None);
         await StoryDevelopmentSeed.ApplyAsync(provider, CancellationToken.None);
-        await Seller.SellerDevActorBootstrap.EnsureAsync(provider, CancellationToken.None);
+        var sellerDevContexts = provider.GetRequiredService<Tooba.AccessControl.Application.Development.Seller.ISellerDevContextStore>();
+        await sellerDevContexts.EnsureAsync(CancellationToken.None);
         await MarketplaceSellerDevBootstrap.EnsureAsync(provider, CancellationToken.None);
         await MarketplaceAdminDevBootstrap.EnsureAsync(provider, CancellationToken.None);
     }

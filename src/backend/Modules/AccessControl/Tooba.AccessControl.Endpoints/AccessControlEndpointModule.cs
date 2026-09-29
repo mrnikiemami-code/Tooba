@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Routing;
 using Tooba.AccessControl.Endpoints.Admin;
 using Tooba.AccessControl.Endpoints.Seller;
+using Tooba.AccessControl.Endpoints.Seller.Development;
 
 namespace Tooba.AccessControl.Endpoints;
 
@@ -20,6 +21,8 @@ public static class AccessControlEndpointModule
         AccessControlAdminSellerEndpoints.Map(adminSeller);
         var seller = app.MapGroup("/v1/seller/access-control");
         AccessControlSellerEndpoints.Map(seller);
+        var sellerDevelopment = app.MapGroup("/v1/seller");
+        SellerDevContextEndpoints.Map(sellerDevelopment);
         return app;
     }
 }

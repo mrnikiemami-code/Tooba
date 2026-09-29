@@ -100,13 +100,16 @@ public sealed class HostOrderReverseAuditGuardTests
         Assert.Contains("MapGet(\"/orders\"", orderCustomerEndpoints, StringComparison.Ordinal);
         Assert.Contains("MapPost(\"/orders/{checkoutId:guid}/retry-unpaid\"", orderCustomerEndpoints, StringComparison.Ordinal);
 
-        var seller = File.ReadAllText(Path.Combine(host, "Seller", "SellerPanelEndpoints.cs"));
-        Assert.DoesNotContain("MapGet(\"/orders\"", seller, StringComparison.Ordinal);
-        Assert.DoesNotContain("MapGet(\"/orders/{sellerOrderId:guid}\"", seller, StringComparison.Ordinal);
-        // R4 evacuated the seller dashboard into Order.Endpoints; Host/Seller now owns only /dev-contexts.
-        Assert.DoesNotContain("group.MapGet(\"/dashboard\"", seller, StringComparison.Ordinal);
-        Assert.Contains("group.MapGet(\"/dev-contexts\"", seller, StringComparison.Ordinal);
-        Assert.Contains(files, f => f.Equals("Seller/SellerPanelEndpoints.cs", StringComparison.Ordinal));
+        // R5 evacuated the final Host/Seller route (/dev-contexts) into AccessControl.Endpoints; Host/Seller
+        // is now ABSENT and Host owns no seller route at all.
+        Assert.False(Directory.Exists(Path.Combine(host, "Seller")));
+        Assert.Contains(
+            "MapGet(\"/dev-contexts\"",
+            File.ReadAllText(Path.Combine(
+                root, "src", "backend", "Modules", "AccessControl", "Tooba.AccessControl.Endpoints",
+                "Seller", "Development", "SellerDevContextEndpoints.cs")),
+            StringComparison.Ordinal);
+        Assert.DoesNotContain(files, f => f.Equals("Seller/SellerPanelEndpoints.cs", StringComparison.Ordinal));
         Assert.Contains(files, f => f.Equals("Security/Seller/HostOrderSellerAuthorizer.cs", StringComparison.Ordinal));
         Assert.DoesNotContain("Security/Seller/HostSellerOrderViewAccessReader.cs", files);
 
@@ -238,14 +241,10 @@ public sealed class HostOrderReverseAuditGuardTests
         Assert.True(doc.RootElement.TryGetProperty("r9InventoryUpdate", out _));
         Assert.True(doc.RootElement.TryGetProperty("r8InventoryUpdate", out _));
 
-        // R4 removed the zero-consumer Host SellerPanelComposer.cs; the R10 invariant (no Host Seller
-        // OrderDbContext access) now holds vacuously and is asserted over the whole Host/Seller folder.
+        // R4 removed the zero-consumer Host SellerPanelComposer.cs; R5 removed the whole Host/Seller folder,
+        // so the R10 invariant (no Host Seller OrderDbContext access) now holds vacuously.
         var hostSeller = Path.Combine(root, "src", "backend", "Host", "Tooba.Host", "Seller");
-        Assert.False(File.Exists(Path.Combine(hostSeller, "SellerPanelComposer.cs")));
-        foreach (var file in Directory.EnumerateFiles(hostSeller, "*.cs", SearchOption.AllDirectories))
-        {
-            Assert.DoesNotContain("OrderDbContext", File.ReadAllText(file), StringComparison.Ordinal);
-        }
+        Assert.False(Directory.Exists(hostSeller), "Host/Seller must be absent after R5");
     }
 
     [Fact]

@@ -179,18 +179,9 @@ public sealed class OfferPhysicalStructureGuardTests
     [Fact]
     public void ARCH_MODULE_PHYSICAL_001_offer_routes_absent_from_host_seller_endpoints()
     {
-        var hostEndpoints = Path.Combine(
-            RepoRoot(),
-            "src",
-            "backend",
-            "Host",
-            "Tooba.Host",
-            "Seller",
-            "SellerPanelEndpoints.cs");
-        var text = File.ReadAllText(hostEndpoints);
-        Assert.DoesNotContain("MapGet(\"/offers\"", text, StringComparison.Ordinal);
-        Assert.DoesNotContain("MapPost(\"/offers\"", text, StringComparison.Ordinal);
-        Assert.DoesNotContain("MapPatch(\"/offers/", text, StringComparison.Ordinal);
+        // R5 removed the whole Host/Seller folder; no Host seller panel endpoint can own Offer routes.
+        var hostSeller = Path.Combine(RepoRoot(), "src", "backend", "Host", "Tooba.Host", "Seller");
+        Assert.False(Directory.Exists(hostSeller), "Host/Seller must be absent after R5");
 
         var moduleEndpoints = Path.Combine(
             OfferRoot(),
@@ -198,6 +189,10 @@ public sealed class OfferPhysicalStructureGuardTests
             "Seller",
             "OfferSellerEndpoints.cs");
         Assert.True(File.Exists(moduleEndpoints), "Offer seller endpoints must live in module Endpoints project");
+        var text = File.ReadAllText(moduleEndpoints);
+        Assert.DoesNotContain("MapGet(\"/offers\"", text, StringComparison.Ordinal);
+        Assert.DoesNotContain("MapPost(\"/offers\"", text, StringComparison.Ordinal);
+        Assert.DoesNotContain("MapPatch(\"/offers/", text, StringComparison.Ordinal);
     }
 
     [Fact]

@@ -1,5 +1,4 @@
 ﻿using System.Text.Json;
-using Tooba.Host.Seller;
 using Tooba.Order.Application.Seller.Models;
 using Xunit;
 
@@ -7,6 +6,8 @@ namespace Tooba.Host.Tests;
 
 /// <summary>
 /// قفل قرارداد و ایزولهٔ پنل فروشنده: فیلتر در سرور است و Product.Price وجود ندارد.
+/// R5: پنل Host/Seller کاملاً حذف شده و مسیر dev-contexts در مالکیت AccessControl است؛ هدرهای
+/// قراردادی از درز امنیتی Host/Security/Seller می‌آیند.
 /// </summary>
 public sealed class SellerPanelCompositionTests
 {
@@ -44,28 +45,33 @@ public sealed class SellerPanelCompositionTests
     }
 
     [Fact]
-    public void Endpoints_require_seller_party_header_and_own_no_catalog_order_settings_or_dashboard_routes()
+    public void Endpoints_require_seller_party_header_and_host_owns_no_seller_panel_folder()
     {
-        Assert.Equal("X-Tooba-Seller-Party-Id", SellerPanelEndpoints.SellerPartyHeader);
-        Assert.Equal("X-Tooba-Dev-Actor-User-Id", SellerPanelEndpoints.DevActorHeader);
+        // R5 evacuated the final Host/Seller surface; the shared header contract now lives on the
+        // canonical Host security adapter boundary.
+        Assert.Equal("X-Tooba-Seller-Party-Id", Tooba.Host.Security.Seller.SellerPanelAccess.SellerPartyHeader);
+        Assert.Equal("X-Tooba-Dev-Actor-User-Id", Tooba.Host.Security.Seller.SellerPanelAccess.DevActorHeader);
 
-        // R4 deleted the zero-consumer composer/models residue from Host/Seller.
-        Assert.False(File.Exists(Path.Combine(
-            FindRepoRoot(), "src", "backend", "Host", "Tooba.Host", "Seller", "SellerPanelComposer.cs")));
-        Assert.False(File.Exists(Path.Combine(
-            FindRepoRoot(), "src", "backend", "Host", "Tooba.Host", "Seller", "SellerPanelModels.cs")));
+        // R4 deleted the zero-consumer composer/models residue from Host/Seller; R5 removed the folder.
+        var hostSeller = Path.Combine(
+            FindRepoRoot(), "src", "backend", "Host", "Tooba.Host", "Seller");
+        Assert.False(Directory.Exists(hostSeller), "Host/Seller must be absent after R5");
+        Assert.False(File.Exists(Path.Combine(hostSeller, "SellerPanelComposer.cs")));
+        Assert.False(File.Exists(Path.Combine(hostSeller, "SellerPanelModels.cs")));
 
         var endpoints = File.ReadAllText(Path.Combine(
             FindRepoRoot(),
             "src",
             "backend",
-            "Host",
-            "Tooba.Host",
+            "Modules",
+            "AccessControl",
+            "Tooba.AccessControl.Endpoints",
             "Seller",
-            "SellerPanelEndpoints.cs"));
-        Assert.Contains("group.MapGet(\"/dev-contexts\"", endpoints, StringComparison.Ordinal);
+            "Development",
+            "SellerDevContextEndpoints.cs"));
+        Assert.Contains("MapGet(\"/dev-contexts\"", endpoints, StringComparison.Ordinal);
         Assert.DoesNotContain("MapGet(\"/orders\"", endpoints, StringComparison.Ordinal);
-        Assert.DoesNotContain("group.MapGet(\"/dashboard\"", endpoints, StringComparison.Ordinal);
+        Assert.DoesNotContain("MapGet(\"/dashboard\"", endpoints, StringComparison.Ordinal);
         Assert.DoesNotContain("SellerPanelComposer", endpoints, StringComparison.Ordinal);
         Assert.DoesNotContain("SellerDashboardSummary", endpoints, StringComparison.Ordinal);
         Assert.DoesNotContain("GetSellerOrderDashboardSummaryQuery", endpoints, StringComparison.Ordinal);

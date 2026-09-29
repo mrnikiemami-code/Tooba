@@ -1,6 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Tooba.AccessControl.Infrastructure.Development.Seller;
 using Tooba.Host.Admin.Development;
-using Tooba.Host.Seller;
 using Tooba.Host.Storefront;
 using Tooba.OperatorProfile.Application;
 using Tooba.Party.Application;
@@ -50,7 +50,7 @@ public static class SettingsFoundationDevelopmentSeed
         var partyDb = provider.GetRequiredService<PartyDbContext>();
         var parties = provider.GetRequiredService<IPartyDirectory>();
         var seller = await partyDb.Parties.AsNoTracking()
-            .SingleOrDefaultAsync(x => x.DisplayName == SellerDevActorBootstrap.SellerADisplayName, cancellationToken);
+            .SingleOrDefaultAsync(x => x.DisplayName == SellerDevContextBootstrap.SellerADisplayName, cancellationToken);
         if (seller is null)
         {
             return;

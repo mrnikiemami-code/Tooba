@@ -34,17 +34,22 @@ public sealed class HostModuleEndpointOwnershipTests
     ];
 
     [Fact]
-    public void SellerPanelEndpoints_do_not_map_offer_http_routes()
+    public void SellerPanel_route_no_longer_exists_in_host_and_dev_contexts_is_module_owned()
     {
-        var path = Path.Combine(
+        // R5 evacuated the final Host/Seller route into AccessControl.Endpoints.
+        Assert.False(Directory.Exists(Path.Combine(
+            FindRepoRoot(), "src", "backend", "Host", "Tooba.Host", "Seller")));
+
+        var text = File.ReadAllText(Path.Combine(
             FindRepoRoot(),
             "src",
             "backend",
-            "Host",
-            "Tooba.Host",
+            "Modules",
+            "AccessControl",
+            "Tooba.AccessControl.Endpoints",
             "Seller",
-            "SellerPanelEndpoints.cs");
-        var text = File.ReadAllText(path);
+            "Development",
+            "SellerDevContextEndpoints.cs"));
         Assert.DoesNotContain("MapGet(\"/offers\"", text, StringComparison.Ordinal);
         Assert.DoesNotContain("MapPost(\"/offers\"", text, StringComparison.Ordinal);
         Assert.DoesNotContain("MapPatch(\"/offers/", text, StringComparison.Ordinal);

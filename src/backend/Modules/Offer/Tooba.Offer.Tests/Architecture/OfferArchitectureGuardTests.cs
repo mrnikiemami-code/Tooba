@@ -88,18 +88,13 @@ public sealed class OfferArchitectureGuardTests
     [Fact]
     public void Host_seller_panel_does_not_map_offer_routes()
     {
-        var hostEndpoints = Path.Combine(
-            RepoRoot(),
-            "src",
-            "backend",
-            "Host",
-            "Tooba.Host",
-            "Seller",
-            "SellerPanelEndpoints.cs");
-        var text = File.ReadAllText(hostEndpoints);
-        Assert.DoesNotContain("MapGet(\"/offers\"", text, StringComparison.Ordinal);
-        Assert.DoesNotContain("MapPost(\"/offers\"", text, StringComparison.Ordinal);
-        Assert.DoesNotContain("MapPatch(\"/offers/", text, StringComparison.Ordinal);
+        // R5 removed the whole Host/Seller folder; no Host seller panel endpoint can map Offer routes.
+        var hostSeller = Path.Combine(RepoRoot(), "src", "backend", "Host", "Tooba.Host", "Seller");
+        Assert.False(Directory.Exists(hostSeller), "Host/Seller must be absent after R5");
+
+        var offerEndpoints = File.ReadAllText(Path.Combine(
+            OfferRoot(), "Tooba.Offer.Endpoints", "Seller", "OfferSellerEndpoints.cs"));
+        Assert.Contains("MapGet(\"/offers\"", offerEndpoints, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -128,20 +123,10 @@ public sealed class OfferArchitectureGuardTests
         Assert.DoesNotContain("panel.CreateOfferAsync", endpoint, StringComparison.Ordinal);
         Assert.DoesNotContain("panel.PatchOfferAsync", endpoint, StringComparison.Ordinal);
 
-        // R4 removed the zero-consumer Host SellerPanelComposer.cs; the invariant is now that no
-        // Host/Seller production file contains Offer write composition.
+        // R4 removed the zero-consumer Host SellerPanelComposer.cs; R5 removed the whole Host/Seller folder,
+        // so the invariant that no Host/Seller production file contains Offer write composition holds vacuously.
         var hostSeller = Path.Combine(RepoRoot(), "src", "backend", "Host", "Tooba.Host", "Seller");
-        Assert.False(File.Exists(Path.Combine(hostSeller, "SellerPanelComposer.cs")));
-        foreach (var file in Directory.EnumerateFiles(hostSeller, "*.cs", SearchOption.AllDirectories))
-        {
-            var composer = File.ReadAllText(file);
-            Assert.DoesNotContain("CreateOfferAsync(", composer, StringComparison.Ordinal);
-            Assert.DoesNotContain("PatchOfferAsync(", composer, StringComparison.Ordinal);
-            Assert.DoesNotContain(".Activate(", composer, StringComparison.Ordinal);
-            Assert.DoesNotContain(".SetReturnPolicy(", composer, StringComparison.Ordinal);
-            Assert.DoesNotContain(".SetOrderQuantityLimits(", composer, StringComparison.Ordinal);
-            Assert.DoesNotContain("_offers.SaveChanges", composer, StringComparison.Ordinal);
-        }
+        Assert.False(Directory.Exists(hostSeller), "Host/Seller must be absent after R5");
     }
 
     [Fact]
@@ -218,16 +203,8 @@ public sealed class OfferArchitectureGuardTests
                          || File.Exists(Path.Combine(OfferRoot(), "Tooba.Offer.Application", "Queries", obsolete)));
 
         var hostSeller = Path.Combine(RepoRoot(), "src", "backend", "Host", "Tooba.Host", "Seller");
-        Assert.False(File.Exists(Path.Combine(hostSeller, "SellerPanelComposer.cs")));
-        foreach (var file in Directory.EnumerateFiles(hostSeller, "*.cs", SearchOption.AllDirectories))
-        {
-            var composer = File.ReadAllText(file);
-            Assert.DoesNotContain("OfferDbContext", composer, StringComparison.Ordinal);
-            Assert.DoesNotContain("SellerOfferListItem", composer, StringComparison.Ordinal);
-            Assert.DoesNotContain("SellerOfferDetailPage", composer, StringComparison.Ordinal);
-            Assert.DoesNotContain("PricingDbContext", composer, StringComparison.Ordinal);
-            Assert.DoesNotContain("InventoryDbContext", composer, StringComparison.Ordinal);
-        }
+        // R5 removed the whole Host/Seller folder, so no Host seller file can own Offer persistence.
+        Assert.False(Directory.Exists(hostSeller), "Host/Seller must be absent after R5");
     }
 
     [Fact]

@@ -1,5 +1,5 @@
+using Tooba.AccessControl.Application.Development.Seller;
 using Tooba.BuildingBlocks;
-using Tooba.Host.Seller;
 
 namespace Tooba.Host;
 
@@ -34,10 +34,8 @@ internal static class MarketplaceSellerDevBootstrap
             return;
         }
 
-        SellerDevActorBootstrap.PublishSnapshot(
-            DefaultSellerActor,
-            "اپراتور marketplace",
-            DefaultSellerParty,
-            "فروشگاه marketplace");
+        provider.GetRequiredService<ISellerDevContextStore>().Publish(
+            new SellerDevActorPair(DefaultSellerActor, "اپراتور marketplace", DefaultSellerParty, "فروشگاه marketplace"),
+            new SellerDevActorPair(DefaultSellerActor, "اپراتور marketplace", DefaultSellerParty, "فروشگاه marketplace"));
     }
 }
