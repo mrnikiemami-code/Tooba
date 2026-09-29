@@ -16,13 +16,3 @@ public sealed record SellerDashboardSummary(
     int ActiveOffers,
     int OpenOrders,
     int PaidOrders);
-
-/// <summary>
-/// گزینهٔ انتخاب گونهٔ Catalog منتشرشده برای ایجاد Offer؛ فقط‌خواندنی است.
-/// </summary>
-public sealed record SellerCatalogVariantOption(
-    Guid CatalogVariantId,
-    Guid ProductId,
-    string ProductTitle,
-    string? CatalogCode,
-    string ProductStatus);

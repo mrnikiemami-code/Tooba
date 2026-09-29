@@ -42,10 +42,12 @@ public sealed class HostAdminAmcW10R1GuardTests
     }
 
     [Fact]
-    public void Seller_owns_SetProductAttributeRequest_with_RawValue_EnumOptionId_shape()
+    public void Seller_SetProductAttributeRequest_with_RawValue_EnumOptionId_shape_is_Catalog_owned()
     {
         var root = FindRepoRoot();
-        var sellerPath = Path.Combine(root, "src/backend/Host/Tooba.Host/Seller/SellerPanelEndpoints.cs");
+        // R2 evacuated the Seller attribute/variant-axes transport from Host/Seller into Catalog.Endpoints.
+        var sellerPath = Path.Combine(
+            root, "src/backend/Modules/Catalog/Tooba.Catalog.Endpoints/Seller/CatalogSellerEndpoints.cs");
         Assert.True(File.Exists(sellerPath));
         var seller = File.ReadAllText(sellerPath);
         Assert.Contains(
@@ -57,6 +59,12 @@ public sealed class HostAdminAmcW10R1GuardTests
         Assert.Contains("body.EnumOptionId", seller, StringComparison.Ordinal);
         Assert.Contains("SetProductVariantAxesRequest", seller, StringComparison.Ordinal);
         Assert.DoesNotContain("using Tooba.Host.Admin;", seller, StringComparison.Ordinal);
+
+        var hostSellerPath = Path.Combine(root, "src/backend/Host/Tooba.Host/Seller/SellerPanelEndpoints.cs");
+        Assert.DoesNotContain(
+            "SetProductAttributeRequest",
+            File.ReadAllText(hostSellerPath),
+            StringComparison.Ordinal);
 
         var hostPath = Path.Combine(root, "src/backend/Host/Tooba.Host/Admin/CatalogAttributeEndpoints.cs");
         Assert.False(File.Exists(hostPath));

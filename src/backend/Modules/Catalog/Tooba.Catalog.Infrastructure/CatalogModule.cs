@@ -31,6 +31,7 @@ using Tooba.Catalog.Application.ProductDeletion.Ports;
 using Tooba.Catalog.Application.ProductIdentity.Ports;
 using Tooba.Catalog.Application.ProductTaxonomy.Ports;
 using Tooba.Catalog.Application.ProductSeo.Ports;
+using Tooba.Catalog.Application.Seller.Ports;
 using Tooba.Catalog.Contracts;
 using Tooba.Catalog.Contracts.Checkout;
 using Tooba.Catalog.Contracts.Reservation;
@@ -113,6 +114,7 @@ public sealed class CatalogModule : IToobaModule
         services.AddScoped<IProductTaxonomyDirectory, ProductTaxonomyDirectory>();
         services.AddScoped<IBrandOptionReader, BrandOptionReader>();
         services.AddScoped<IVariantOfferLookup, VariantOfferLookupAdapter>();
+        services.AddScoped<ISellerCatalogVariantDirectory, Seller.SellerCatalogVariantDirectory>();
         services.Configure<CatalogDemoSeedOptions>(
             configuration.GetSection(CatalogDemoSeedOptions.SectionName));
         services.AddScoped<CatalogDemoMediaFactory>();

@@ -25,34 +25,45 @@ BRIDGE-WAKE-V1
 Channel: tooba-main
 ```
 
-Latest Accepted TMAR Checkpoint — authoritative (reconciled by TB-TMAR-HOST-SELLER-AMC-001-R1B)
+Latest Accepted TMAR Checkpoint — authoritative (reconciled by TB-TMAR-HOST-SELLER-AMC-001-R2)
 
 A fresh chat MUST recover the CURRENT checkpoint from `docs/architecture/tmar-current-state.json` and the latest accepted recovery block below, NOT from historical "Next task" / "Next-Recommended-Task" lines further down this file (they are lineage evidence, NON-AUTHORITATIVE).
 
 ```text
-Latest-Accepted-Implementation-Wave: TB-TMAR-HOST-SELLER-AMC-001-R1A
+Latest-Accepted-Implementation-Wave: TB-TMAR-HOST-SELLER-AMC-001-R2
 Latest-Accepted-Implementation-Wave-State: ACCEPTED
-Latest-Accepted-Task: TB-TMAR-HOST-SELLER-AMC-001-R1A
-Implementation-Commit: 520c9918fefeedd245e54b28792fb16c5d0da41d
+Latest-Accepted-Task: TB-TMAR-HOST-SELLER-AMC-001-R2
+Implementation-Commit: __R2_IMPLEMENTATION_COMMIT__
 Implementation-Commit-Kind: IMPLEMENTATION_COMMIT
-Result-Evidence-Docs-Stamp-Commit: 09b47f5fc5259f5afa3e707b75b92b5975c14df7
-Commit-Semantics: IMPLEMENTATION_COMMIT_IS_520c9918_THE_LATER_09b47f5f_IS_A_RESULT_EVIDENCE_DOCS_STAMP_ONLY_NEVER_MISLABEL_IT_AS_IMPLEMENTATION
+Result-Evidence-Docs-Stamp-Commit: __R2_RESULT_EVIDENCE_COMMIT__
+Commit-Semantics: IMPLEMENTATION_COMMIT_IS_R2_THE_LATER_RESULT_EVIDENCE_COMMIT_IS_A_DOCS_STAMP_ONLY_NEVER_MISLABEL_IT_AS_IMPLEMENTATION
+Catalog-Seller-Route-Ownership-State: CATALOG_ENDPOINTS_OWNED
+Catalog-Seller-Route-Count-Migrated: 3
+Host-Seller-Route-Count-Before: 7
+Host-Seller-Route-Count-After: 4
+Duplicate-Route-State: ZERO
+Catalog-Endpoints-ISender-State: ISENDER_ONLY
+Catalog-Endpoint-DbContext-State: ZERO
+Catalog-Seller-CQRS-State: COMPLETE_QUERY_PLUS_REUSED_MODULE_COMMANDS
+Validator-State: AUTH_SCOPED_QUERY_NO_VALIDATOR_REQUIRED_REUSED_W10_W11_CLASSIFICATION_UNCHANGED
+Host-Seller-Catalog-Persistence-State: ZERO
+Host-Seller-Catalog-Layer-Leakage-State: ZERO
+Seller-Panel-Composer-State: CATALOG_COMPOSITION_EVACUATED_DISPLAY_ONLY_REMAINS
+Seller-Catalog-Model-State: HOST_OWNERSHIP_REMOVED_CATALOG_OWNED
+Behavior-Parity-State: PRESERVED
+Error-Code-State: seller.missing + catalog.attribute.invalid + catalog.variant.axes.duplicate_PARITY_PRESERVED
+Host-Security-Seller-R1A-State: CANONICAL_UNCHANGED
 Host-Seller-Security-Boundary-State: CANONICAL_HOST_SECURITY_PLATFORM_BOUNDARY_10_FILES
-Host-Seller-Foreign-Application-State: ZERO
-Host-Seller-Foreign-Domain-State: ZERO
-Host-Seller-Foreign-Infrastructure-State: ZERO
-Host-Seller-Foreign-Persistence-State: ZERO
 Order-View-Access-Implementation-State: ORDER_INFRASTRUCTURE_OWNED
-Order-Application-Port-In-Host-State: ZERO
-Seller-Security-Error-Code-State: HOST_BOUNDARY_OWNED_STABLE_CODES_UNCHANGED_VALUES
 Neutral-Effective-Access-Seam-State: IPlatformEffectiveAccessReader_PRESERVED
 Full-Seller-Folder-Certification: NOT_YET
 Host-Seller-Remaining-Business-Files: 5
-Seller-R2-State: NOT_STARTED
+Seller-R3-State: NOT_STARTED
 Current-Host-Checkpoint: Seller
 Active-Host-Folder: Seller
 Active-Module-State: SELLER_IN_PROGRESS_USER_REVIEW_REQUIRED
 Current-Host-Evacuation: RECONCILED_NOT_HISTORICAL_ADDRESSBOOK
+Seller-R1A-Lineage: ACCEPTED (implementation commit 520c9918fefeedd245e54b28792fb16c5d0da41d; result/evidence stamp 09b47f5fc5259f5afa3e707b75b92b5975c14df7; R1B recovery-pointer repair c9c02913 is docs-only)
 Development-Closure-Lineage: PRESERVED_HISTORICAL
 Prior-Accepted-Task-HISTORICAL: TB-TMAR-HOST-DEVELOPMENT-PRODUCTWORKSPACE-MIGRATION-SEAM-001 (implementation commit ec906591a9749feed05c9ae7b599c329aa17a66f; docs-only SoT stamp 2d74a54cbfe85759f2936f97a8b1ebbc264b42a8)
 Prior-Accepted-Task-HISTORICAL-2: TB-TMAR-HOST-DEVELOPMENT-PRODUCTWORKSPACE-CATALOG-SEED-REHOME-001 (ACCEPTED Wave 1, commit e16781dc1899456aec20824afc01e19f53c9a70b; Wave 1 Catalog seed PRESERVED)
@@ -71,12 +82,12 @@ Host-Development-Foreign-Persistence: ZERO (historical)
 Next-Host-Folder-Started: false
 Next-Host-Folder: NONE_USER_DECISION_REQUIRED
 Stale-Current-Pointer-State: ZERO
-workflowStop: USER_REVIEW_HOST_SELLER_AMC_001_R1B
-Next-Task: USER_REVIEW_HOST_SELLER_AMC_001_R1B (USER_DECISION_REQUIRED)
+workflowStop: USER_REVIEW_HOST_SELLER_AMC_001_R2
+Next-Task: USER_REVIEW_HOST_SELLER_AMC_001_R2 (USER_DECISION_REQUIRED)
 Next-Task-Gate: USER_DECISION_REQUIRED_NO_AUTOMATIC_NEXT_IMPLEMENTATION_TASK
 Automatic-Next-Implementation-Task: NONE
-Current-Seller-Work-Checkpoint: TB-TMAR-HOST-SELLER-AMC-001-R1A
-Current-Seller-Boundary-State: ZERO_FOREIGN_APPLICATION_DOMAIN_INFRASTRUCTURE_PERSISTENCE
+Current-Seller-Work-Checkpoint: TB-TMAR-HOST-SELLER-AMC-001-R2
+Current-Seller-Boundary-State: CATALOG_EVACUATED_HOST_OWNED_ROUTES_4
 Order-View-Access-Implementation-State: ORDER_INFRASTRUCTURE_OWNED
 Full-Seller-Folder-Certification: NOT_YET_SELLER_R2_R6_NOT_AUTO_STARTED
 ```

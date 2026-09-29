@@ -1,13 +1,12 @@
 using Tooba.BuildingBlocks;
-using Tooba.Catalog.Application;
 using Tooba.Host.Security.Seller;
 using Tooba.Order.Application.Seller.Queries.GetSellerOrderDashboardSummary;
 
 namespace Tooba.Host.Seller;
 
 /// <summary>
-/// مسیرهای HTTP پنل فروشنده. مجوز از Actor احرازشده و SpiceDB/موتور مجوز می‌آید؛ هدر Seller فقط زمینه است.
-/// مسیرهای /orders* به Order.Endpoints منتقل شده‌اند.
+/// مسیرهای پنل فروشنده. مجوز از Actor احرازشده و SpiceDB/موتور مجوز می‌آید؛ هدر Seller فقط زمینه است.
+/// مسیرهای /orders* به Order.Endpoints و مسیرهای Catalog فروشنده به Catalog.Endpoints منتقل شده‌اند.
 /// </summary>
 public static class SellerPanelEndpoints
 {
@@ -22,17 +21,15 @@ public static class SellerPanelEndpoints
     public const string DevActorHeader = SellerPanelAccess.DevActorHeader;
 
     /// <summary>
-    /// مسیرهای Seller Panel را ثبت می‌کند (بدون /orders*).
+    /// مسیرهای Seller Panel را ثبت می‌کند (بدون /orders* و بدون Catalog seller).
     /// </summary>
     public static void MapSellerPanelEndpoints(this WebApplication app)
     {
         var group = app.MapGroup("/v1/seller");
         group.MapGet("/dashboard", GetDashboardAsync);
-        group.MapGet("/catalog-variants", ListCatalogVariantsAsync);
         // Offer HTTP routes live in Tooba.Offer.Endpoints (MapOfferModule).
+        // The three Seller Catalog routes live in Tooba.Catalog.Endpoints (MapCatalogSellerEndpoints).
         group.MapGet("/dev-contexts", GetDevContexts);
-        group.MapPut("/products/{productId:guid}/attributes/{definitionId:guid}", SetProductAttributeAsync);
-        group.MapPut("/products/{productId:guid}/variant-axes", SetProductVariantAxesAsync);
     }
 
     private static IResult ToError(PlatformHttpException ex) =>
@@ -73,27 +70,6 @@ public static class SellerPanelEndpoints
                 ActiveOffers: 0,
                 orderSummary.Value.OpenOrders,
                 orderSummary.Value.PaidOrders));
-        }
-        catch (PlatformHttpException ex)
-        {
-            return ToError(ex);
-        }
-    }
-
-    private static async Task<IResult> ListCatalogVariantsAsync(
-        SellerPanelComposer composer,
-        HttpRequest request,
-        CurrentAuthenticatedSession session,
-        IAuthorizationGuard guard,
-        IHostEnvironment environment,
-        CancellationToken cancellationToken)
-    {
-        try
-        {
-            var (_, sellerPartyId) = await SellerPanelAccess.RequireAuthorizedAsync(
-                request, session, guard, environment, cancellationToken);
-            var items = await composer.ListCatalogVariantsAsync(sellerPartyId, cancellationToken);
-            return Results.Json(items);
         }
         catch (PlatformHttpException ex)
         {
@@ -152,80 +128,4 @@ public static class SellerPanelEndpoints
 
         return new { actors = rows };
     }
-
-    private static async Task<IResult> SetProductAttributeAsync(
-        Guid productId,
-        Guid definitionId,
-        SetProductAttributeRequest body,
-        ICatalogDirectory catalog,
-        HttpRequest request,
-        CurrentAuthenticatedSession session,
-        IAuthorizationGuard guard,
-        IHostEnvironment environment,
-        CancellationToken cancellationToken)
-    {
-        try
-        {
-            await SellerPanelAccess.RequireAuthorizedAsync(
-                request, session, guard, environment, cancellationToken);
-            // فروشنده فقط مقدار محصول را می‌نویسد؛ تعریف schema را بازتعریف نمی‌کند.
-            await catalog.SetProductAttributeAsync(
-                productId,
-                definitionId,
-                body.RawValue,
-                body.EnumOptionId,
-                cancellationToken);
-            return Results.Json(new { ok = true });
-        }
-        catch (PlatformHttpException ex)
-        {
-            return ToError(ex);
-        }
-        catch (InvalidOperationException ex)
-        {
-            return Results.Json(new { title = ex.Message, errorCode = "catalog.attribute.invalid" }, statusCode: StatusCodes.Status400BadRequest);
-        }
-    }
-
-    private static async Task<IResult> SetProductVariantAxesAsync(
-        Guid productId,
-        SetProductVariantAxesRequest body,
-        ICatalogDirectory catalog,
-        HttpRequest request,
-        CurrentAuthenticatedSession session,
-        IAuthorizationGuard guard,
-        IHostEnvironment environment,
-        CancellationToken cancellationToken)
-    {
-        try
-        {
-            await SellerPanelAccess.RequireAuthorizedAsync(
-                request, session, guard, environment, cancellationToken);
-            await catalog.SetProductVariantAxesAsync(
-                productId,
-                body.OrderedDefinitionIds ?? [],
-                cancellationToken);
-            return Results.Json(new { ok = true });
-        }
-        catch (PlatformHttpException ex)
-        {
-            return ToError(ex);
-        }
-        catch (InvalidOperationException ex)
-        {
-            return Results.Json(new { title = ex.Message, errorCode = "catalog.variant_axes.invalid" }, statusCode: StatusCodes.Status400BadRequest);
-        }
-    }
 }
-
-/// <summary>
-/// بدنهٔ مقدار ویژگی محصول — Seller panel HTTP transport (RawValue + EnumOptionId).
-/// Relocated from Admin CatalogAttributeEndpoints in W10-R1; not a shared business contract.
-/// </summary>
-public sealed record SetProductAttributeRequest(string RawValue, Guid? EnumOptionId);
-
-/// <summary>
-/// بدنهٔ محورهای Variant محصول — Seller panel HTTP transport.
-/// Relocated from Admin CatalogAttributeEndpoints in W11; not a shared business contract.
-/// </summary>
-public sealed record SetProductVariantAxesRequest(List<Guid>? OrderedDefinitionIds);
