@@ -94,7 +94,7 @@ Latest accepted implementation wave:
 TB-TMAR-HOST-SELLER-AMC-001-R4
 
 Prior accepted TMAR task (ACCEPTED lineage, superseded as current pointer):
-TB-TMAR-HOST-SELLER-AMC-001-R3
+TB-TMAR-HOST-SELLER-AMC-001-R3 (its stop USER_REVIEW_HOST_SELLER_AMC_001_R3 is preserved lineage)
 
 Current recovery summary (consistent with the authoritative closure above):
 COMPLETE HTTP-owning: Cart, Settlement, Fulfillment, Returns, Notification, Support, Wallet, Payment, Promotion, Offer, Order.
