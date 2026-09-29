@@ -1,0 +1,40 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-TMAR-HOST-DEVELOPMENT-ENRICHER-CLOSURE-001
+Parent-Task: TB-TMAR-HOST-DEVELOPMENT-AMC-002-R1
+Channel: tooba-main
+WorkerId: tooba-worker-01
+AgentType: cursor
+Status: PASS
+Summary: Host/Development bounded debt #1 is closed. CatalogAttributeSchemaSellableEnricher.cs was deleted from Host/Tooba.Host/Development and its Program.cs registration removed; the schema demo-product sellable workflow is now Catalog-owned at Modules/Catalog/Tooba.Catalog.Infrastructure/Development/CatalogAttributeSchemaSellableEnricher.cs and registered by CatalogModule. The moved implementation reaches Offer/Party/Pricing/Inventory/Tax only through narrow capability-first module Contracts development-seed ports (new IPartyDevelopmentSeedGateway, IPricingDevelopmentSeedGateway, IInventoryDevelopmentSeedGateway, ITaxDevelopmentSeedGateway plus one authorized minimum new method EnsureActiveSellerOfferAsync on the existing Tooba.Offer.Contracts IOfferDevelopmentSeedGateway; the Authorized REFERENCE-MODULE EXCEPTION was used only for that exact capability and Offer was otherwise untouched). Zero foreign Application/Infrastructure/Domain/DbContext/DbSet and zero cross-module EF/SQL join remain in the Catalog code. Host/Development shrank 6 -> 5 production files; DevelopmentTenantCommerceContext.cs stays the single accepted tenant-commerce seam and no Host replacement/orchestration file or folder was created. ProductWorkspaceDevelopmentBootstrap.cs remains open debt and was NOT modified. New durable guard HostDevelopmentEnricherClosureGuardTests proves host absence, Catalog ownership, Contracts-only imports and foreign-persistence absence; the Development allowlist/test guards and CatalogFoundationTests were updated only for the new legal state. Behavior and 7 preserved development trace labels are intact (3 documented, behavior-equivalent deviations). No schema, migration, route, endpoint or frontend change. Focused build 0 errors; focused test filter Failed 0, Passed 36, Skipped 1, Total 37; the remaining repository-wide reds are pre-existing on clean main and were neither caused nor weakened. Committed and pushed to origin/main.
+Development-Checkpoint-Preservation-State: PRESERVED_DEVELOPMENT
+Host-Enricher-State: ABSENT
+Catalog-Development-Ownership-State: MODULE_OWNED
+Contract-Reuse-State: REUSED_EXISTING_OFFER_QUERY_AND_LOOKUP_GATEWAYS_PLUS_INVENTORY_AND_OFFER_LOOKUP_CONTRACTS
+New-Contracts-State: PARTY_PRICING_INVENTORY_TAX_DEVELOPMENT_SEED_PORTS_PLUS_ONE_MINIMUM_OFFER_METHOD
+Offer-Reference-Module-Exception-State: AUTHORIZED_MINIMUM_CONTRACTS_PLUS_INFRASTRUCTURE_ONLY_NO_BROAD_REFACTOR
+Foreign-Application-Reference-State: ZERO
+Foreign-Infrastructure-Reference-State: ZERO
+Foreign-Domain-Reference-State: ZERO
+Foreign-Persistence-Reference-State: ZERO
+Cross-Module-Boundary-State: CONTRACTS_ONLY
+Behavior-Parity-State: PRESERVED
+Idempotency-State: STRENGTHENED
+Host-Development-File-Count: 5
+ProductWorkspace-Debt-State: OPEN_UNCHANGED
+Sink-Folder-Regression-State: NONE
+Schema-Change-State: NONE
+Route-Change-State: NONE
+Frontend-State: UNCHANGED
+Focused-Build-State: PASS_0_ERRORS
+Focused-Test-State: PASSED_36_FAILED_0_SKIPPED_1_OF_37
+Certification-State: PASS
+Evidence-Path: docs/evidence/TB-TMAR-HOST-DEVELOPMENT-ENRICHER-CLOSURE-001/
+SoT-State: UPDATED
+Commit-SHA: f4251bd83af1929d31fb5732b6371661ff25fcef
+Push-State: PUSHED
+HEAD-Equals-Origin-Main: TRUE
+Working-Tree-Tracked-State: CLEAN
+User-Work-Preserved: TRUE
+STOP
+END_TOOBA_WORKER_RESULT
