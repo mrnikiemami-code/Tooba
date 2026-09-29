@@ -25,42 +25,54 @@ BRIDGE-WAKE-V1
 Channel: tooba-main
 ```
 
-Latest Accepted TMAR Checkpoint — authoritative (reconciled by TB-TMAR-HOST-DEVELOPMENT-PRODUCTWORKSPACE-MIGRATION-SEAM-001-R1)
+Latest Accepted TMAR Checkpoint — authoritative (reconciled by TB-TMAR-HOST-SELLER-AMC-001-R1B)
 
 A fresh chat MUST recover the CURRENT checkpoint from `docs/architecture/tmar-current-state.json` and the latest accepted recovery block below, NOT from historical "Next task" / "Next-Recommended-Task" lines further down this file (they are lineage evidence, NON-AUTHORITATIVE).
 
 ```text
-Latest-Accepted-Implementation-Wave: TB-TMAR-HOST-DEVELOPMENT-PRODUCTWORKSPACE-MIGRATION-SEAM-001
+Latest-Accepted-Implementation-Wave: TB-TMAR-HOST-SELLER-AMC-001-R1A
 Latest-Accepted-Implementation-Wave-State: ACCEPTED
-Latest-Accepted-Task: TB-TMAR-HOST-DEVELOPMENT-PRODUCTWORKSPACE-MIGRATION-SEAM-001
-Implementation-Commit: ec906591a9749feed05c9ae7b599c329aa17a66f
+Latest-Accepted-Task: TB-TMAR-HOST-SELLER-AMC-001-R1A
+Implementation-Commit: 520c9918fefeedd245e54b28792fb16c5d0da41d
 Implementation-Commit-Kind: IMPLEMENTATION_COMMIT
-Result-Evidence-Docs-Stamp-Commit: 2d74a54cbfe85759f2936f97a8b1ebbc264b42a8
-Commit-Semantics: IMPLEMENTATION_COMMIT_IS_ec906591_THE_LATER_2d74a54c_IS_A_RESULT_EVIDENCE_DOCS_STAMP_ONLY_NEVER_MISLABEL_IT_AS_IMPLEMENTATION
-ProductWorkspace-Debt: CLOSED
-ProductWorkspaceDevelopmentBootstrap-State: ABSENT
-DevelopmentSchemaMigrator-State: PRESENT_ALLOWED_DEVELOPMENT_COMPOSITION
-Host-Development-File-Count: 5
-Host-Development-Foreign-Persistence: ZERO
-Current-Host-Checkpoint: Development
-Prior-Accepted-Task-HISTORICAL: TB-TMAR-HOST-DEVELOPMENT-PRODUCTWORKSPACE-CATALOG-SEED-REHOME-001 (ACCEPTED Wave 1, commit e16781dc1899456aec20824afc01e19f53c9a70b; Wave 1 Catalog seed PRESERVED)
-Prior-Accepted-Task-HISTORICAL-2: TB-TMAR-HOST-DEVELOPMENT-ENRICHER-CLOSURE-001 (implementation commit 44e6dde059a85d749846a403a40d33f87e07ac6e; docs-only SoT stamp 9e27fe75198e02dc0bf9e63966a90b744577104f)
-Prior-Accepted-Task-HISTORICAL-3: TB-TMAR-HOST-DEVELOPMENT-AMC-002 (ACCEPTED)
+Result-Evidence-Docs-Stamp-Commit: 09b47f5fc5259f5afa3e707b75b92b5975c14df7
+Commit-Semantics: IMPLEMENTATION_COMMIT_IS_520c9918_THE_LATER_09b47f5f_IS_A_RESULT_EVIDENCE_DOCS_STAMP_ONLY_NEVER_MISLABEL_IT_AS_IMPLEMENTATION
+Host-Seller-Security-Boundary-State: CANONICAL_HOST_SECURITY_PLATFORM_BOUNDARY_10_FILES
+Host-Seller-Foreign-Application-State: ZERO
+Host-Seller-Foreign-Domain-State: ZERO
+Host-Seller-Foreign-Infrastructure-State: ZERO
+Host-Seller-Foreign-Persistence-State: ZERO
+Order-View-Access-Implementation-State: ORDER_INFRASTRUCTURE_OWNED
+Order-Application-Port-In-Host-State: ZERO
+Seller-Security-Error-Code-State: HOST_BOUNDARY_OWNED_STABLE_CODES_UNCHANGED_VALUES
+Neutral-Effective-Access-Seam-State: IPlatformEffectiveAccessReader_PRESERVED
+Full-Seller-Folder-Certification: NOT_YET
+Host-Seller-Remaining-Business-Files: 5
+Seller-R2-State: NOT_STARTED
+Current-Host-Checkpoint: Seller
+Active-Host-Folder: Seller
+Active-Module-State: SELLER_IN_PROGRESS_USER_REVIEW_REQUIRED
+Current-Host-Evacuation: RECONCILED_NOT_HISTORICAL_ADDRESSBOOK
+Development-Closure-Lineage: PRESERVED_HISTORICAL
+Prior-Accepted-Task-HISTORICAL: TB-TMAR-HOST-DEVELOPMENT-PRODUCTWORKSPACE-MIGRATION-SEAM-001 (implementation commit ec906591a9749feed05c9ae7b599c329aa17a66f; docs-only SoT stamp 2d74a54cbfe85759f2936f97a8b1ebbc264b42a8)
+Prior-Accepted-Task-HISTORICAL-2: TB-TMAR-HOST-DEVELOPMENT-PRODUCTWORKSPACE-CATALOG-SEED-REHOME-001 (ACCEPTED Wave 1, commit e16781dc1899456aec20824afc01e19f53c9a70b; Wave 1 Catalog seed PRESERVED)
+Prior-Accepted-Task-HISTORICAL-3: TB-TMAR-HOST-DEVELOPMENT-ENRICHER-CLOSURE-001 (implementation commit 44e6dde059a85d749846a403a40d33f87e07ac6e; docs-only SoT stamp 9e27fe75198e02dc0bf9e63966a90b744577104f)
+Prior-Accepted-Task-HISTORICAL-4: TB-TMAR-HOST-DEVELOPMENT-AMC-002 (ACCEPTED)
 Prior-Accepted-Task-Implementation-Commit: ba6cf54c738d443dcb61efc4264aedc8608f2b63
 Prior-Accepted-Task-Docs-Only-SoT-Stamp-Commit: 5919039b2313ddc8d02864e47e9f636328990cfe
 Prior-Accepted-Recovery-Closure: TB-TMAR-HOST-DEVELOPMENT-AMC-002-R1 (commit 2a51556a5ac562b7f0ec3ee0679ec9f31ed45dce)
 Root-Global-Boundaries-R3: CERTIFIED_PRESERVED
 Root-Global-Boundaries-R3-Implementation-Commit: c63f6ebb818e7e35a548c5b3e20eb18a25a244c8
 Root-Global-Boundaries-R3-SoT-Stamp-Commit: 7d8ea21155109def56866eee2acdab2067fb457b
-Current-Host-Evacuation: RECONCILED_NOT_HISTORICAL_ADDRESSBOOK
-Active-Host-Folder: NONE
-Host-Enricher-State: ABSENT (Catalog owns the schema sellable workflow)
-Open-Development-Bounded-Debts: NONE
+ProductWorkspace-Debt: CLOSED (historical, Development closure preserved)
+DevelopmentSchemaMigrator-State: PRESENT_ALLOWED_DEVELOPMENT_COMPOSITION (historical)
+Host-Development-File-Count: 5 (historical)
+Host-Development-Foreign-Persistence: ZERO (historical)
 Next-Host-Folder-Started: false
 Next-Host-Folder: NONE_USER_DECISION_REQUIRED
 Stale-Current-Pointer-State: ZERO
-workflowStop: USER_REVIEW_HOST_SELLER_AMC_001_R1A
-Next-Task: USER_REVIEW_HOST_SELLER_AMC_001_R1A (USER_DECISION_REQUIRED)
+workflowStop: USER_REVIEW_HOST_SELLER_AMC_001_R1B
+Next-Task: USER_REVIEW_HOST_SELLER_AMC_001_R1B (USER_DECISION_REQUIRED)
 Next-Task-Gate: USER_DECISION_REQUIRED_NO_AUTOMATIC_NEXT_IMPLEMENTATION_TASK
 Automatic-Next-Implementation-Task: NONE
 Current-Seller-Work-Checkpoint: TB-TMAR-HOST-SELLER-AMC-001-R1A
