@@ -111,12 +111,92 @@ public sealed class HostDevelopmentEnricherClosureGuardTests
     }
 
     [Fact]
-    public void ProductWorkspace_bootstrap_remains_open_debt_and_untouched()
+    public void ProductWorkspace_bootstrap_remains_migration_only_debt()
     {
         var folder = Path.Combine(FindRepoRoot(), "src", "backend", "Host", "Tooba.Host", "Development");
         var debt = Path.Combine(folder, "ProductWorkspaceDevelopmentBootstrap.cs");
         Assert.True(File.Exists(debt));
-        Assert.Contains("ProductWorkspace", File.ReadAllText(debt), StringComparison.Ordinal);
+        var text = File.ReadAllText(debt);
+        Assert.Contains("ProductWorkspace", text, StringComparison.Ordinal);
+        Assert.Contains("IWorkspaceDemoSeed", text, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void Workspace_demo_seed_is_catalog_owned_and_contracts_only()
+    {
+        var root = FindRepoRoot();
+        var productSeed = File.ReadAllText(Path.Combine(
+            root, "src/backend/Modules/Catalog/Tooba.Catalog.Infrastructure/Development/WorkspaceDemoProductSeed.cs"));
+        var marketplaceSeed = File.ReadAllText(Path.Combine(
+            root, "src/backend/Modules/Catalog/Tooba.Catalog.Infrastructure/Development/WorkspaceDemoMarketplaceSeed.cs"));
+        var orchestration = File.ReadAllText(Path.Combine(
+            root, "src/backend/Modules/Catalog/Tooba.Catalog.Infrastructure/Development/WorkspaceDemoSeed.cs"));
+
+        foreach (var forbidden in new[]
+                 {
+                     "Tooba.Offer.Application", "Tooba.Offer.Infrastructure", "Tooba.Offer.Domain",
+                     "Tooba.Party.Application", "Tooba.Party.Infrastructure", "Tooba.Party.Domain",
+                     "Tooba.Pricing.Application", "Tooba.Pricing.Infrastructure", "Tooba.Pricing.Domain",
+                     "Tooba.Inventory.Application", "Tooba.Inventory.Infrastructure", "Tooba.Inventory.Domain",
+                     "Tooba.Tax.Application", "Tooba.Tax.Infrastructure", "Tooba.Tax.Domain",
+                     "OfferDbContext", "PartyDbContext", "PricingDbContext", "InventoryDbContext", "TaxDbContext",
+                     "IServiceProvider", "MediatR",
+                 })
+        {
+            Assert.DoesNotContain(forbidden, productSeed, StringComparison.Ordinal);
+            Assert.DoesNotContain(forbidden, marketplaceSeed, StringComparison.Ordinal);
+            Assert.DoesNotContain(forbidden, orchestration, StringComparison.Ordinal);
+        }
+
+        // Exact development parity values stay pinned.
+        Assert.Contains("workspace-live-shirt", productSeed, StringComparison.Ordinal);
+        Assert.Contains("LIVE-SHIRT-BLK", productSeed, StringComparison.Ordinal);
+        Assert.Contains("tooba-live", productSeed, StringComparison.Ordinal);
+        Assert.Contains("aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa", productSeed, StringComparison.Ordinal);
+        Assert.Contains("ARM-LN-01", marketplaceSeed, StringComparison.Ordinal);
+        Assert.Contains("DGS-LN-01", marketplaceSeed, StringComparison.Ordinal);
+        Assert.Contains("workspace-live-hold", marketplaceSeed, StringComparison.Ordinal);
+        Assert.Contains("WH-KSH", marketplaceSeed, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void ProductWorkspace_host_file_has_zero_business_seed_authority()
+    {
+        var text = File.ReadAllText(Path.Combine(
+            FindRepoRoot(),
+            "src/backend/Host/Tooba.Host/Development/ProductWorkspaceDevelopmentBootstrap.cs"));
+        foreach (var forbidden in new[]
+                 {
+                     "Tooba.Catalog.Application.Commands",
+                     "Tooba.Catalog.Application.Queries",
+                     "Tooba.Party.Application",
+                     "Tooba.Offer.Application",
+                     "Tooba.Pricing.Application",
+                     "Tooba.Tax.Application",
+                     "Tooba.Tax.Domain",
+                     "Tooba.Inventory.Application",
+                     "Tooba.Inventory.Domain",
+                     "ICatalogDirectory",
+                     "IPartyDirectory",
+                     "IPriceDirectory",
+                     "ITaxDirectory",
+                     "IInventoryDirectory",
+                     "MediatR.ISender",
+                     "CreateOfferCommand",
+                     "ActivateOfferCommand",
+                     "CreatePriceAsync",
+                     "CreateRuleAsync",
+                     "CreateLocationAsync",
+                     "workspace-live-shirt",
+                     "ARM-LN-01",
+                     "DGS-LN-01",
+                 })
+        {
+            Assert.DoesNotContain(forbidden, text, StringComparison.Ordinal);
+        }
+
+        Assert.Contains("IWorkspaceDemoSeed", text, StringComparison.Ordinal);
+        Assert.Contains("MigrateAsync", text, StringComparison.Ordinal);
     }
 
     private static string FindRepoRoot()

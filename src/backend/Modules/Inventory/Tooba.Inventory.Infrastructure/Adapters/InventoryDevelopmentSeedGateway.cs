@@ -2,6 +2,7 @@ using Tooba.BuildingBlocks;
 using Tooba.BuildingBlocks.Results;
 using Tooba.Inventory.Application.Ports;
 using Tooba.Inventory.Contracts.Availability;
+using Tooba.Inventory.Contracts.Errors;
 using Tooba.Inventory.Domain.ValueObjects;
 
 namespace Tooba.Inventory.Infrastructure.Adapters;
@@ -35,7 +36,7 @@ public sealed class InventoryDevelopmentSeedGateway(
         ArgumentNullException.ThrowIfNull(request);
         if (request.Quantity < 0)
         {
-            return Result.Failure(new SemanticError(Contracts.Errors.InventoryErrorCodes.QuantityInvalid));
+            return Result.Failure(new SemanticError(InventoryErrorCodes.QuantityInvalid));
         }
 
         var stockItemId = await inventory.OpenPositionAsync(request.OfferId, request.LocationId, cancellationToken);
@@ -44,6 +45,37 @@ public sealed class InventoryDevelopmentSeedGateway(
             StockAdjustmentKind.Increase,
             request.Quantity,
             request.Reason,
+            null,
+            cancellationToken);
+        return Result.Success();
+    }
+
+    /// <inheritdoc />
+    public async Task<Result> ReserveDevelopmentHoldAsync(
+        SeedDevelopmentStockHold request,
+        CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(request);
+        if (request.Quantity <= 0)
+        {
+            return Result.Failure(new SemanticError(InventoryErrorCodes.QuantityInvalid));
+        }
+
+        var location = await EnsureDevelopmentLocationAsync(
+            request.LocationCode,
+            request.LocationCode,
+            cancellationToken);
+        if (location.IsFailure)
+        {
+            return Result.Failure(location.FirstError);
+        }
+
+        var stockItemId = await inventory.OpenPositionAsync(request.OfferId, location.Value, cancellationToken);
+        await inventory.ReserveAsync(
+            stockItemId,
+            request.Quantity,
+            request.ExternalReference,
+            request.IdempotencyKey,
             null,
             cancellationToken);
         return Result.Success();

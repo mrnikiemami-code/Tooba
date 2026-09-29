@@ -1,79 +1,57 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Tooba.BuildingBlocks;
 using Tooba.Cart.Infrastructure.Persistence;
-using Tooba.Catalog.Application;
-using Tooba.Catalog.Domain;
-using Tooba.Catalog.Infrastructure.Development;
+using Tooba.Catalog.Application.Development;
 using Tooba.Catalog.Infrastructure.Persistence;
+using Tooba.Fulfillment.Infrastructure.Persistence;
 using Tooba.Identity.Infrastructure.Persistence;
-using Tooba.Inventory.Application.Ports;
-using Tooba.Inventory.Application.Checkout;
-using Tooba.Inventory.Application.Orders;
-using Tooba.Inventory.Contracts.Returns;
 using Tooba.Inventory.Contracts.Availability;
-using Tooba.Inventory.Contracts.Checkout;
-using Tooba.Inventory.Contracts.Errors;
-using Tooba.Inventory.Contracts.Orders;
-using Tooba.Inventory.Contracts.Seller;
-using Tooba.Inventory.Domain.Aggregates;
-using Tooba.Inventory.Domain.ValueObjects;
-using Tooba.Inventory.Domain.Events;
-using Tooba.Offer.Application.Ports;
-using Tooba.Offer.Contracts.Dtos;
 using Tooba.Offer.Contracts.Ports;
 using Tooba.Order.Infrastructure.Persistence;
-using Tooba.Party.Application;
 using Tooba.Party.Infrastructure.Persistence;
 using Tooba.Payment.Infrastructure.Persistence;
-using Tooba.Fulfillment.Infrastructure.Persistence;
 using Tooba.PlatformProbe.Infrastructure.Persistence;
-using Tooba.Pricing.Application;
 using Tooba.Pricing.Contracts;
-using Tooba.Promotion.Application.Ports;
-using Tooba.Promotion.Application.Checkout;
 using Tooba.Promotion.Application.Merchandising;
-using Tooba.Promotion.Infrastructure.Development;
-using Tooba.Promotion.Contracts.Checkout;
 using Tooba.Promotion.Contracts.Merchandising;
-using Tooba.Tax.Application;
+using Tooba.Promotion.Infrastructure.Development;
+using Tooba.Reviews.Infrastructure;
 using Tooba.Tax.Contracts;
-using Tooba.Tax.Domain;
-using Tooba.Reviews.Infrastructure.Persistence;
-using Tooba.ProductQnA.Infrastructure.Persistence;
-using Tooba.BulkInquiry.Infrastructure.Persistence;
 using Tooba.Host.Wishlist;
 using Tooba.AddressBook.Infrastructure.Adapters;
+using Tooba.Catalog.Infrastructure.Development;
 using Tooba.CustomerProfile.Infrastructure.Development;
+using Tooba.Host.Admin.Development;
+using Tooba.Host.Seller;
 using Tooba.Host.Settings;
+using Tooba.Content.Infrastructure;
+using Tooba.Content.Infrastructure.Development;
+using Tooba.PageComposition.Infrastructure;
+using global::Tooba.Story.Infrastructure;
 using Tooba.Wishlist.Infrastructure.Persistence;
 using Tooba.AddressBook.Infrastructure.Persistence;
 using Tooba.CustomerProfile.Infrastructure.Persistence;
 using Tooba.UserPreference.Infrastructure.Persistence;
 using Tooba.OperatorProfile.Infrastructure.Persistence;
-using Tooba.Content.Infrastructure;
-using Tooba.Content.Infrastructure.Development;
 using Tooba.Content.Infrastructure.Persistence;
 using Tooba.Media.Infrastructure.Persistence;
-using Tooba.PageComposition.Infrastructure;
 using Tooba.PageComposition.Infrastructure.Persistence;
-using global::Tooba.Story.Infrastructure;
 using global::Tooba.Story.Infrastructure.Persistence;
 using Tooba.Notification.Infrastructure.Persistence;
 using Tooba.AccessControl.Infrastructure.Persistence;
-using Tooba.Reviews.Infrastructure;
-using Tooba.Host.Admin.Development;
-using Tooba.Host.Seller;
+using Tooba.Reviews.Infrastructure.Persistence;
+using Tooba.ProductQnA.Infrastructure.Persistence;
+using Tooba.BulkInquiry.Infrastructure.Persistence;
 
 namespace Tooba.Host.Development;
 
 /// <summary>
-/// مهاجرت Development و درج نمونه از مسیر دایرکتوری‌های ماژول، نه JSON جعلی UI.
-/// داده فقط پس از خواندن مجدد HTTP به‌عنوان شواهد زنده پذیرفته می‌شود.
+/// مهاجرت Development و ترتیب اجرای دانه‌های Development.
+/// Host هیچ داده یا policy تجاری ندارد: دانهٔ Catalog/Offer/Price/Tax/Inventory از
+/// <see cref="IWorkspaceDemoSeed"/> ماژول Catalog می‌آید و بقیهٔ دانه‌ها مالکیت ماژول خود را دارند.
 /// </summary>
 internal static class ProductWorkspaceDevelopmentBootstrap
 {
-    internal const string SeedSlug = "workspace-live-shirt";
-
     /// <summary>
     /// فقط schema Tenant Development را اعمال می‌کند و دانهٔ Catalog را نمی‌نویسد.
     /// وقتی RunLegacyBootstraps=false است باید صدا زده شود تا مهاجرت‌های رزرو اعمال شوند.
@@ -82,7 +60,8 @@ internal static class ProductWorkspaceDevelopmentBootstrap
         => ApplyCoreAsync(services, seedCatalog: false);
 
     /// <summary>
-    /// schemaها را روی Tenant Development اعمال می‌کند و در صورت نبودن نمونه، Catalog/Offer/Price/Tax/Inventory را از دایرکتوری می‌نویسد.
+    /// schemaها را روی Tenant Development اعمال می‌کند و در صورت نبودن نمونه،
+    /// دانهٔ Catalog و بقیهٔ دانه‌های ماژول‌محور را با همان ترتیب قبلی اجرا می‌کند.
     /// در Production صدا زده نمی‌شود. SQL بین‌ماژولی نوشته نمی‌شود.
     /// </summary>
     public static Task ApplyAsync(IServiceProvider services)
@@ -153,12 +132,11 @@ internal static class ProductWorkspaceDevelopmentBootstrap
             return;
         }
 
-        var catalogDb = provider.GetRequiredService<CatalogDbContext>();
-        var partyDb = provider.GetRequiredService<PartyDbContext>();
-        if (await catalogDb.Products.AnyAsync(product => product.SlugSeam == SeedSlug))
+        var workspaceDemo = provider.GetRequiredService<IWorkspaceDemoSeed>();
+        if (await workspaceDemo.IsLiveProductSeededAsync(CancellationToken.None))
         {
-            await RefreshOperatorFacingCopyAsync(catalogDb, partyDb);
-            await EnsureAdminR3PreviewSeedAsync(provider, CancellationToken.None);
+            await workspaceDemo.RefreshExistingCopyAsync(CancellationToken.None);
+            await workspaceDemo.EnsureAdminR3PreviewAsync(CancellationToken.None);
             await SellerDevActorBootstrap.EnsureAsync(provider, CancellationToken.None);
             await AdminDevActorBootstrap.EnsureAsync(provider, CancellationToken.None);
             await ReviewsDevelopmentSeed.ApplyAsync(provider);
@@ -169,259 +147,28 @@ internal static class ProductWorkspaceDevelopmentBootstrap
             await ContentDevelopmentSeed.ApplyAsync(provider);
             await PageCompositionDevelopmentSeed.ApplyAsync(provider);
             await StoryDevelopmentSeed.ApplyAsync(provider);
-            await LandingPageDevelopmentSeed.ApplyAsync(provider);
+            await Tooba.Catalog.Infrastructure.Development.LandingPageDevelopmentSeed.ApplyAsync(provider);
             await Tooba.Catalog.Infrastructure.Development.StoreMenuDevelopmentSeed.ApplyAsync(provider);
             await MerchandisingCampaignDevelopmentSeed.EnsureAsync(provider, CancellationToken.None);
             return;
         }
 
-        var catalog = provider.GetRequiredService<ICatalogDirectory>();
-        var parties = provider.GetRequiredService<IPartyDirectory>();
-        var offers = provider.GetRequiredService<MediatR.ISender>();
-        var prices = provider.GetRequiredService<IPriceDirectory>();
-        var inventory = provider.GetRequiredService<IInventoryDirectory>();
-        var tax = provider.GetRequiredService<ITaxDirectory>();
-        var cancellation = CancellationToken.None;
+        await workspaceDemo.SeedNewProductAsync(CancellationToken.None);
 
-        var productNames = new Dictionary<string, string>
-        {
-            ["fa-IR"] = "پیراهن مردانه لینن",
-            ["en-US"] = "Men's Linen Shirt",
-        };
-        var categoryNames = new Dictionary<string, string>
-        {
-            ["fa-IR"] = "پوشاک",
-            ["en-US"] = "Apparel",
-        };
-        var midNames = new Dictionary<string, string>
-        {
-            ["fa-IR"] = "پوشاک مردانه",
-            ["en-US"] = "Men's apparel",
-        };
-        var leafNames = new Dictionary<string, string>
-        {
-            ["fa-IR"] = "پیراهن مردانه",
-            ["en-US"] = "Men's shirts",
-        };
-        var brandNames = new Dictionary<string, string>
-        {
-            ["fa-IR"] = "آرمان",
-            ["en-US"] = "Arman",
-        };
-        var root = await catalog.CreateCategoryAsync(null, categoryNames, cancellation);
-        var mid = await catalog.CreateCategoryAsync(root.CategoryId, midNames, cancellation);
-        var category = await catalog.CreateCategoryAsync(mid.CategoryId, leafNames, cancellation);
-        var brand = await catalog.CreateBrandAsync("tooba-live", brandNames, cancellation);
-        var colorId = await catalog.CreateAttributeDefinitionAsync(
-            "color",
-            CatalogAttributeValueKind.Enumeration,
-            isVariantAxis: true,
-            new Dictionary<string, string> { ["fa-IR"] = "رنگ", ["en-US"] = "Color" },
-            cancellation);
-        var black = await catalog.AddAttributeOptionAsync(
-            colorId,
-            "black",
-            new Dictionary<string, string> { ["fa-IR"] = "سیاه", ["en-US"] = "Black" },
-            cancellation);
-
-        var product = await catalog.CreateProductAsync(CatalogProductKind.PhysicalGood, SeedSlug, brand.BrandId, productNames, cancellation);
-        await catalog.AssignCategoryAsync(product.ProductId, category.CategoryId, cancellation);
-        await catalog.AttachMediaReferenceAsync(product.ProductId, Guid.Parse("aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"), "نمای جلو", cancellation);
-        await catalog.AttachMediaReferenceAsync(product.ProductId, Guid.Parse("bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb"), "نمای پشت", cancellation);
-        await catalog.AttachMediaReferenceAsync(product.ProductId, Guid.Parse("cccccccc-cccc-4ccc-8ccc-cccccccccccc"), "جزئیات یقه", cancellation);
-        await catalog.AttachMediaReferenceAsync(product.ProductId, Guid.Parse("dddddddd-dddd-4ddd-8ddd-dddddddddddd"), "جزئیات آستین", cancellation);
-        await ProductPublishPrep.EnsureMinimalSeoForPublishAsync(
-            catalog, product.ProductId, "توضیح سئو پیراهن زنده Workspace", cancellation);
-        await catalog.PublishProductAsync(product.ProductId, cancellation);
-        var variant = await catalog.CreateVariantAsync(
-            product.ProductId,
-            "LIVE-SHIRT-BLK",
-            [(colorId, "ignored", black)],
-            cancellation);
-
-        var sellerA = await parties.CreateOrganizationAsync("فروشگاه آرمان", "Arman Store Legal", cancellation);
-        var sellerB = await parties.CreateOrganizationAsync("دیجی‌استایل نمونه", "Digistyle Sample Legal", cancellation);
-        var createdA = await offers.Send(new Tooba.Offer.Application.Commands.CreateOffer.CreateOfferCommand(variant.VariantId, sellerA.PartyId, SalesChannel.Marketplace, "ARM-LN-01"), cancellation);
-        var createdB = await offers.Send(new Tooba.Offer.Application.Commands.CreateOffer.CreateOfferCommand(variant.VariantId, sellerB.PartyId, SalesChannel.Marketplace, "DGS-LN-01"), cancellation);
-        if (createdA.IsFailure) throw new InvalidOperationException(createdA.FirstError.Code);
-        if (createdB.IsFailure) throw new InvalidOperationException(createdB.FirstError.Code);
-        var offerA = createdA.Value;
-        var offerB = createdB.Value;
-        var activatedA = await offers.Send(new Tooba.Offer.Application.Commands.ActivateOffer.ActivateOfferCommand(offerA.OfferId, sellerA.PartyId), cancellation);
-        var activatedB = await offers.Send(new Tooba.Offer.Application.Commands.ActivateOffer.ActivateOfferCommand(offerB.OfferId, sellerB.PartyId), cancellation);
-        if (activatedA.IsFailure) throw new InvalidOperationException(activatedA.FirstError.Code);
-        if (activatedB.IsFailure) throw new InvalidOperationException(activatedB.FirstError.Code);
-
-        var start = DateTimeOffset.Parse("2026-01-01T00:00:00Z");
-        var priceA = await prices.CreatePriceAsync(offerA.OfferId, "IR", SalesChannel.Marketplace, 1850000, "IRR", start, null, cancellation);
-        var priceB = await prices.CreatePriceAsync(offerB.OfferId, "IR", SalesChannel.Marketplace, 1790000, "IRR", start, null, cancellation);
-        await prices.ActivateAsync(priceA.PriceId, cancellation);
-        await prices.ActivateAsync(priceB.PriceId, cancellation);
-
-        var taxCategory = await tax.CreateCategoryAsync("standard", "استاندارد", cancellation);
-        await tax.AssignOfferCategoryAsync(offerA.OfferId, taxCategory.CategoryId, cancellation);
-        await tax.AssignOfferCategoryAsync(offerB.OfferId, taxCategory.CategoryId, cancellation);
-        var rule = await tax.CreateRuleAsync(
-            "IR-NAT",
-            "IR",
-            taxCategory.CategoryId,
-            TaxRuleKind.Percentage,
-            0.09m,
-            start,
-            null,
-            10,
-            TaxOverridePolicy.Disabled,
-            cancellation);
-        await tax.ActivateRuleAsync(rule.RuleId, cancellation);
-
-        var locThr = await inventory.CreateLocationAsync("WH-THR", "انبار مرکزی تهران", cancellation);
-        var locIsf = await inventory.CreateLocationAsync("WH-ISF", "انبار اصفهان", cancellation);
-        var locKsh = await inventory.CreateLocationAsync("WH-KSH", "انبار کاشان", cancellation);
-        var stockA1 = await inventory.OpenPositionAsync(offerA.OfferId, locThr, cancellation);
-        var stockA2 = await inventory.OpenPositionAsync(offerA.OfferId, locIsf, cancellation);
-        var stockB1 = await inventory.OpenPositionAsync(offerB.OfferId, locKsh, cancellation);
-        await inventory.AdjustAsync(stockA1, StockAdjustmentKind.Increase, 12, "seed-receipt", null, cancellation);
-        await inventory.AdjustAsync(stockA2, StockAdjustmentKind.Increase, 7, "seed-receipt", null, cancellation);
-        await inventory.AdjustAsync(stockB1, StockAdjustmentKind.Increase, 4, "seed-receipt", null, cancellation);
-        await inventory.ReserveAsync(stockA1, 3, "workspace-live-hold", "workspace-live-hold", null, cancellation);
-
-        await SellerDevActorBootstrap.EnsureAsync(provider, cancellation);
-        await AdminDevActorBootstrap.EnsureAsync(provider, cancellation);
-        await ReviewsDevelopmentSeed.ApplyAsync(provider, cancellation);
-        await WishlistDevelopmentSeed.ApplyAsync(provider, cancellation);
-        await AddressBookDevelopmentSeed.ApplyAsync(provider, cancellation);
-        await CustomerProfileDevelopmentSeed.ApplyAsync(provider, cancellation);
-        await SettingsFoundationDevelopmentSeed.ApplyAsync(provider, cancellation);
-        await ContentDevelopmentSeed.ApplyAsync(provider, cancellation);
-        await PageCompositionDevelopmentSeed.ApplyAsync(provider, cancellation);
-        await StoryDevelopmentSeed.ApplyAsync(provider, cancellation);
-        await LandingPageDevelopmentSeed.ApplyAsync(provider, cancellation);
-        await Tooba.Catalog.Infrastructure.Development.StoreMenuDevelopmentSeed.ApplyAsync(provider, cancellation);
-        await EnsureAdminR3PreviewSeedAsync(provider, cancellation);
-        await MerchandisingCampaignDevelopmentSeed.EnsureAsync(provider, cancellation);
-    }
-
-    /// <summary>
-    /// غنی‌سازی idempotent برای پیش‌نمایش Admin R3: گالری ۴+ تصویر، پیش‌نویس و بایگانی.
-    /// </summary>
-    private static async Task EnsureAdminR3PreviewSeedAsync(IServiceProvider provider, CancellationToken cancellation)
-    {
-        var catalog = provider.GetRequiredService<ICatalogDirectory>();
-        var catalogDb = provider.GetRequiredService<CatalogDbContext>();
-        var live = await catalogDb.Products.AsNoTracking()
-            .SingleOrDefaultAsync(p => p.SlugSeam == SeedSlug, cancellation);
-        if (live is null)
-        {
-            return;
-        }
-
-        var mediaIds = new (Guid Id, string Alt)[]
-        {
-            (Guid.Parse("aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"), "نمای جلو"),
-            (Guid.Parse("bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb"), "نمای پشت"),
-            (Guid.Parse("cccccccc-cccc-4ccc-8ccc-cccccccccccc"), "جزئیات یقه"),
-            (Guid.Parse("dddddddd-dddd-4ddd-8ddd-dddddddddddd"), "جزئیات آستین"),
-            (Guid.Parse("eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee"), "روی مانکن"),
-        };
-        foreach (var (id, alt) in mediaIds)
-        {
-            var exists = await catalogDb.MediaReferences.AsNoTracking()
-                .AnyAsync(m => m.ProductId == live.ProductId && m.MediaAssetId == id, cancellation);
-            if (!exists)
-            {
-                try
-                {
-                    await catalog.AttachMediaReferenceAsync(live.ProductId, id, alt, cancellation);
-                }
-                catch (InvalidOperationException)
-                {
-                    // هم‌زمانی یا اتصال تکراری — نادیده
-                }
-            }
-        }
-
-        const string draftSlug = "admin-r3-draft-scarf";
-        if (!await catalogDb.Products.AnyAsync(p => p.SlugSeam == draftSlug, cancellation))
-        {
-            var draft = await catalog.CreateProductAsync(
-                CatalogProductKind.PhysicalGood,
-                draftSlug,
-                live.BrandId,
-                new Dictionary<string, string> { ["fa-IR"] = "شال پیش‌نویس R3", ["en-US"] = "R3 Draft Scarf" },
-                cancellation);
-            await catalog.AttachMediaReferenceAsync(
-                draft.ProductId,
-                Guid.Parse("11111111-aaaa-4aaa-8aaa-aaaaaaaaaaa1"),
-                "پیش‌نمایش شال",
-                cancellation);
-        }
-
-        const string archivedSlug = "admin-r3-archived-hat";
-        if (!await catalogDb.Products.AnyAsync(p => p.SlugSeam == archivedSlug, cancellation))
-        {
-            var archived = await catalog.CreateProductAsync(
-                CatalogProductKind.PhysicalGood,
-                archivedSlug,
-                live.BrandId,
-                new Dictionary<string, string> { ["fa-IR"] = "کلاه بایگانی R3", ["en-US"] = "R3 Archived Hat" },
-                cancellation);
-            var liveCategoryId = await catalogDb.ProductCategories.AsNoTracking()
-                .Where(x => x.ProductId == live.ProductId)
-                .Select(x => x.CategoryId)
-                .FirstAsync(cancellation);
-            await catalog.AssignCategoryAsync(archived.ProductId, liveCategoryId, cancellation);
-            await catalog.AttachMediaReferenceAsync(
-                archived.ProductId,
-                Guid.Parse("22222222-bbbb-4bbb-8bbb-bbbbbbbbbbb2"),
-                "پیش‌نمایش کلاه",
-                cancellation);
-            await ProductPublishPrep.EnsureMinimalSeoForPublishAsync(
-                catalog, archived.ProductId, "توضیح سئو کلاه بایگانی", cancellation);
-            await catalog.PublishProductAsync(archived.ProductId, cancellation);
-            await catalog.ArchiveProductAsync(archived.ProductId, cancellation);
-        }
-    }
-
-    /// <summary>
-    /// برچسب‌های نمایشی نمونهٔ زنده را برای اپراتور فارسی به‌روز می‌کند؛ schema را بازنویسی نمی‌کند.
-    /// </summary>
-    private static async Task RefreshOperatorFacingCopyAsync(CatalogDbContext catalogDb, PartyDbContext partyDb)
-    {
-        var product = await catalogDb.Products.AsNoTracking().SingleAsync(item => item.SlugSeam == SeedSlug);
-        foreach (var text in catalogDb.LocalizedTexts.Where(item => item.FieldKey == "name"))
-        {
-            var persian = text.Locale.StartsWith("fa", StringComparison.OrdinalIgnoreCase);
-            if (text.OwnerKind == CatalogLocalizedOwnerKind.Product
-                && text.Value is "پیراهن Workspace زنده" or "Live Workspace Shirt")
-            {
-                text.Value = persian ? "پیراهن مردانه لینن" : "Men's Linen Shirt";
-            }
-            else if (text.OwnerKind == CatalogLocalizedOwnerKind.Category
-                && text.Value is "پیراهن Workspace زنده" or "Live Workspace Shirt" or "پیراهن مردانه لینن" or "Men's Linen Shirt")
-            {
-                text.Value = persian ? "پوشاک مردانه" : "Men's apparel";
-            }
-            else if (text.OwnerKind == CatalogLocalizedOwnerKind.Brand
-                && text.Value is "پیراهن Workspace زنده" or "Live Workspace Shirt" or "پیراهن مردانه لینن" or "Men's Linen Shirt")
-            {
-                text.Value = persian ? "آرمان" : "Arman";
-            }
-        }
-
-        foreach (var party in partyDb.Parties)
-        {
-            if (party.DisplayName is "فروشنده الف" or "Seller A")
-            {
-                party.DisplayName = "فروشگاه آرمان";
-            }
-            else if (party.DisplayName is "فروشنده ب" or "Seller B")
-            {
-                party.DisplayName = "دیجی‌استایل نمونه";
-            }
-        }
-
-        await catalogDb.SaveChangesAsync();
-        await partyDb.SaveChangesAsync();
+        await SellerDevActorBootstrap.EnsureAsync(provider, CancellationToken.None);
+        await AdminDevActorBootstrap.EnsureAsync(provider, CancellationToken.None);
+        await ReviewsDevelopmentSeed.ApplyAsync(provider, CancellationToken.None);
+        await WishlistDevelopmentSeed.ApplyAsync(provider, CancellationToken.None);
+        await AddressBookDevelopmentSeed.ApplyAsync(provider, CancellationToken.None);
+        await CustomerProfileDevelopmentSeed.ApplyAsync(provider, CancellationToken.None);
+        await SettingsFoundationDevelopmentSeed.ApplyAsync(provider, CancellationToken.None);
+        await ContentDevelopmentSeed.ApplyAsync(provider, CancellationToken.None);
+        await PageCompositionDevelopmentSeed.ApplyAsync(provider, CancellationToken.None);
+        await StoryDevelopmentSeed.ApplyAsync(provider, CancellationToken.None);
+        await Tooba.Catalog.Infrastructure.Development.LandingPageDevelopmentSeed.ApplyAsync(provider, CancellationToken.None);
+        await Tooba.Catalog.Infrastructure.Development.StoreMenuDevelopmentSeed.ApplyAsync(provider, CancellationToken.None);
+        await workspaceDemo.EnsureAdminR3PreviewAsync(CancellationToken.None);
+        await MerchandisingCampaignDevelopmentSeed.EnsureAsync(provider, CancellationToken.None);
     }
 
     private static Task MigrateAsync(DbContext context) => context.Database.MigrateAsync();

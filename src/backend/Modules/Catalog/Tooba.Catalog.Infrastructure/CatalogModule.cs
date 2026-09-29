@@ -15,6 +15,7 @@ using Tooba.Catalog.Application.Settings.CheckoutAbuse.Ports;
 using Tooba.Catalog.Application.Settings.CheckoutIdentity.Ports;
 using Tooba.Catalog.Application.Settings.StoreAppearance.Ports;
 using Tooba.Catalog.Application.Development;
+using Tooba.Catalog.Application.Development;
 using Tooba.Catalog.Application.Development.CatalogDemo;
 using Tooba.Catalog.Application.Tags.Ports;
 using Tooba.Catalog.Application.Units.Ports;
@@ -121,6 +122,9 @@ public sealed class CatalogModule : IToobaModule
         services.AddScoped<CatalogDemoSeedService>();
         services.AddScoped<ICatalogDemoResetAndSeedGateway, CatalogDemoResetAndSeedHost>();
         services.AddScoped<ICatalogAttributeSchemaSellableEnricher, CatalogAttributeSchemaSellableEnricher>();
+        services.AddScoped<WorkspaceDemoProductSeed>();
+        services.AddScoped<WorkspaceDemoMarketplaceSeed>();
+        services.AddScoped<IWorkspaceDemoSeed, WorkspaceDemoSeed>();
         services.AddSingleton<IQuantityNormalizer, QuantityNormalizer>();
         services.AddValidatorsFromAssembly(typeof(CreateStoreLandingPageCommand).Assembly);
         services.AddDbContext<CatalogDbContext>((sp, options) =>

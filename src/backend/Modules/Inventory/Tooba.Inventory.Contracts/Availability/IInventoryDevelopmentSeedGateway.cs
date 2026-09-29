@@ -9,9 +9,17 @@ public sealed record SeedDevelopmentStock(
     decimal Quantity,
     string Reason);
 
+/// <summary>Inventory-owned Development-support request for a demo stock hold.</summary>
+public sealed record SeedDevelopmentStockHold(
+    Guid OfferId,
+    string LocationCode,
+    decimal Quantity,
+    string ExternalReference,
+    string IdempotencyKey);
+
 /// <summary>
-/// Inventory-owned Development-support capability used by the Catalog attribute-schema seed
-/// so Catalog can ensure demo location/position/stock without touching Inventory persistence.
+/// Inventory-owned Development-support capability used by module-owned Development seeds
+/// so they can ensure demo location/position/stock without touching Inventory persistence.
 /// </summary>
 public interface IInventoryDevelopmentSeedGateway
 {
@@ -24,5 +32,13 @@ public interface IInventoryDevelopmentSeedGateway
     /// <summary>Opens the offer position when absent and increases on-hand by the given quantity.</summary>
     Task<Result> IncreaseDevelopmentStockAsync(
         SeedDevelopmentStock request,
+        CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Holds the given quantity on the offer's position at the location (opening the position
+    /// when absent). Reuses an existing hold with the same idempotency key.
+    /// </summary>
+    Task<Result> ReserveDevelopmentHoldAsync(
+        SeedDevelopmentStockHold request,
         CancellationToken cancellationToken);
 }
