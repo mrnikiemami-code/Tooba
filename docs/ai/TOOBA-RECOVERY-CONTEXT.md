@@ -35,7 +35,7 @@ Latest-Accepted-Implementation-Wave-State: ACCEPTED
 Latest-Accepted-Task: TB-TMAR-HOST-SELLER-AMC-001-R4
 Implementation-Commit: a5f353c02329a1667b74a09e7ba4bf6eb1a12b38
 Implementation-Commit-Kind: IMPLEMENTATION_COMMIT
-Result-Evidence-Docs-Stamp-Commit: __R4_SOT_STAMP_COMMIT__
+Result-Evidence-Docs-Stamp-Commit: 48d5e0efc1e53b7ab3872da707a22d1b0f04004f
 Commit-Semantics: IMPLEMENTATION_COMMIT_IS_R4_THE_LATER_RESULT_EVIDENCE_COMMIT_IS_A_DOCS_STAMP_ONLY_NEVER_MISLABEL_IT_AS_IMPLEMENTATION
 Seller-Dashboard-Route-Ownership-State: ORDER_ENDPOINTS_OWNED
 Seller-Dashboard-Route-Count-Migrated: 1
