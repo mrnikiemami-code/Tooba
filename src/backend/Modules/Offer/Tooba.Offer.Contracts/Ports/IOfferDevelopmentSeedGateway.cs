@@ -12,6 +12,16 @@ public interface IOfferDevelopmentSeedGateway
     Task EnsureActiveAsync(Guid offerId, CancellationToken cancellationToken);
 
     /// <summary>
+    /// Creates an Active offer for the given variant/seller SKU (idempotent on the seller SKU)
+    /// or activates the existing SKU row. Returns the offer id.
+    /// </summary>
+    Task<Guid> EnsureActiveSellerOfferAsync(
+        Guid catalogVariantId,
+        Guid sellerPartyId,
+        string sellerSku,
+        CancellationToken cancellationToken);
+
+    /// <summary>
     /// Creates an Active offer cloned from any existing Active template for the given seller SKU,
     /// or activates the existing SKU row. Returns null when no template offer exists.
     /// </summary>

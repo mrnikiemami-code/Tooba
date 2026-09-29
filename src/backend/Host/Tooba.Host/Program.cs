@@ -170,7 +170,6 @@ builder.Services.AddScoped<
     Tooba.Order.Contracts.Admin.Operations.IOrderAdminEffectiveAccessReader,
     Tooba.Host.Admin.Access.Authorizers.HostOrderAdminEffectiveAccessReader>();
 builder.Services.AddScoped<Tooba.Catalog.Application.IStoreLandingExternalReferenceGate, Tooba.Host.CatalogAdapters.MerchandisingStoreLandingReferenceGate>();
-builder.Services.AddScoped<Tooba.Catalog.Application.Development.ICatalogAttributeSchemaSellableEnricher, Tooba.Host.Development.CatalogAttributeSchemaSellableEnricher>();
 builder.Services.AddToobaModules(builder.Configuration, builder.Environment);
 builder.Services.AddOrderReservationCycleBoundaries(builder.Configuration);
 builder.Services.AddOfferModuleCallTracing();

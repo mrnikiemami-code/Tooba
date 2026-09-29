@@ -82,7 +82,11 @@ public sealed class CatalogFoundationTests : IAsyncLifetime
             Assert.DoesNotContain("MassTransit", csproj, StringComparison.OrdinalIgnoreCase);
             Assert.DoesNotContain("Authzed", csproj, StringComparison.OrdinalIgnoreCase);
             Assert.DoesNotContain("Tooba.Identity", csproj, StringComparison.Ordinal);
-            Assert.DoesNotContain("Tooba.Party", csproj, StringComparison.Ordinal);
+            // Catalog may consume Party/Offer/... Contracts only; foreign Application/Infrastructure/Domain internals stay forbidden.
+            Assert.DoesNotContain("Tooba.Party.Application", csproj, StringComparison.Ordinal);
+            Assert.DoesNotContain("Tooba.Party.Infrastructure", csproj, StringComparison.Ordinal);
+            Assert.DoesNotContain("Tooba.Party.Domain", csproj, StringComparison.Ordinal);
+            Assert.DoesNotContain("PartyDbContext", csproj, StringComparison.Ordinal);
         }
 
         Assert.Equal("catalog", CatalogDbContext.Schema);

@@ -30,6 +30,7 @@ public sealed class PricingModule : IToobaModule
         services.AddSingleton<IOutboxModuleRegistration, PricingOutboxRegistration>();
         services.AddScoped<IPricingUseCaseGuard, OpenPricingUseCaseGuard>();
         services.AddScoped<IPriceDirectory, PriceDirectory>();
+        services.AddScoped<IPricingDevelopmentSeedGateway, PricingDevelopmentSeedGateway>();
         services.AddScoped<IPriceLookupGateway>(sp => (PriceDirectory)sp.GetRequiredService<IPriceDirectory>());
         services.AddScoped<ISellerOfferPricingGateway>(sp => (PriceDirectory)sp.GetRequiredService<IPriceDirectory>());
         services.AddScoped<IPriceQueryGateway>(sp => (PriceDirectory)sp.GetRequiredService<IPriceDirectory>());

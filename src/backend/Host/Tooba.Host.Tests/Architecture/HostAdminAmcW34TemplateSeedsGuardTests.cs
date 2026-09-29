@@ -67,16 +67,16 @@ public sealed class HostAdminAmcW34TemplateSeedsGuardTests
 
         Assert.True(File.Exists(Path.Combine(hostDev, "DevelopmentTenantCommerceContext.cs")));
 
-        // The cross-module sellable enricher remains a Host-owned Development orchestration
-        // (bounded blocker: Catalog cannot own its Offer/Party/Pricing/Inventory/Tax dev ports).
-        Assert.True(File.Exists(Path.Combine(hostDev, "CatalogAttributeSchemaSellableEnricher.cs")));
-        var enricher = File.ReadAllText(Path.Combine(hostDev, "CatalogAttributeSchemaSellableEnricher.cs"));
-        Assert.Contains("ICatalogAttributeSchemaSellableEnricher", enricher, StringComparison.Ordinal);
-        Assert.Contains("namespace Tooba.Host.Development", enricher, StringComparison.Ordinal);
+        // Catalog owns the schema/demo sellable workflow; the cross-module enricher moved out of Host
+        // into Catalog.Infrastructure and reaches Offer/Party/Pricing/Inventory/Tax only via Contracts.
+        Assert.False(File.Exists(Path.Combine(hostDev, "CatalogAttributeSchemaSellableEnricher.cs")));
+        Assert.True(File.Exists(Path.Combine(
+            root,
+            "src/backend/Modules/Catalog/Tooba.Catalog.Infrastructure/Development/CatalogAttributeSchemaSellableEnricher.cs")));
     }
 
     [Fact]
-    public void Program_wires_Catalog_seeds_via_single_Host_seam_and_sellable_enricher()
+    public void Program_wires_Catalog_seeds_via_single_Host_seam_and_catalog_owned_enricher()
     {
         var root = FindRepoRoot();
         var program = File.ReadAllText(Path.Combine(root, "src/backend/Host/Tooba.Host/Program.cs"));
@@ -89,8 +89,9 @@ public sealed class HostAdminAmcW34TemplateSeedsGuardTests
         Assert.Contains("IndustryBatchCTemplateCatalogSeed.ApplyAsync", program, StringComparison.Ordinal);
         Assert.DoesNotContain("CatalogAttributeSchemaDevelopmentSeedHost", program, StringComparison.Ordinal);
         Assert.DoesNotContain("FashionTemplateCatalogSeedHost", program, StringComparison.Ordinal);
-        Assert.Contains("ICatalogAttributeSchemaSellableEnricher", program, StringComparison.Ordinal);
-        Assert.Contains("CatalogAttributeSchemaSellableEnricher", program, StringComparison.Ordinal);
+        // Host no longer owns or registers the Catalog enricher; Catalog registers its own implementation.
+        Assert.DoesNotContain("ICatalogAttributeSchemaSellableEnricher", program, StringComparison.Ordinal);
+        Assert.DoesNotContain("CatalogAttributeSchemaSellableEnricher", program, StringComparison.Ordinal);
     }
 
     [Fact]

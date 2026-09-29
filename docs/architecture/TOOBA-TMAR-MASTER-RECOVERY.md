@@ -12,19 +12,17 @@ Canonical Architect ↔ Cursor handoff (recovery-critical)
 
 Latest Accepted TMAR Checkpoint — authoritative
 
-Reconciled by `TB-TMAR-HOST-DEVELOPMENT-AMC-002-R1`. A fresh chat/architect MUST recover the CURRENT checkpoint from here and from `docs/architecture/tmar-current-state.json`, NOT from any older "Next task:" line below.
+Reconciled by `TB-TMAR-HOST-DEVELOPMENT-ENRICHER-CLOSURE-001`. A fresh chat/architect MUST recover the CURRENT checkpoint from here and from `docs/architecture/tmar-current-state.json`, NOT from any older "Next task:" line below.
 
-- Latest accepted implementation wave: `TB-TMAR-HOST-DEVELOPMENT-AMC-002` — state `ACCEPTED` (Host/Development 12 → 6 production files; 7 duplicated Catalog seed wrappers evacuated into the single Host seam `Development/DevelopmentTenantCommerceContext.cs`; stale `HostDevelopmentAmcGuardTests` allowlist that was RED at clean HEAD repaired; two explicit unresolved bounded debts retained).
+- Latest accepted implementation wave: `TB-TMAR-HOST-DEVELOPMENT-ENRICHER-CLOSURE-001` — state `ACCEPTED` (Host/Development bounded debt #1 closed: `CatalogAttributeSchemaSellableEnricher.cs` deleted from Host and the schema sellable workflow became Catalog-owned under `Catalog.Infrastructure/Development`, reaching Offer/Party/Pricing/Inventory/Tax only through narrow module Contracts ports; Host/Development 6 → 5 production files; `ProductWorkspaceDevelopmentBootstrap.cs` retained as open debt and NOT modified).
 - Current Host checkpoint: `Development`.
-- Commit semantics (explicit and truthful):
-  - `lastAcceptedCommit` (implementation commit) = `ba6cf54c738d443dcb61efc4264aedc8608f2b63`
-  - `lastAcceptedSoTStamp` (later docs-only SoT stamp commit) = `5919039b2313ddc8d02864e47e9f636328990cfe`
-  - These are deliberately distinct commits; never conflate an implementation commit with the docs-only acceptance stamp.
-- Prior accepted TMAR task (now HISTORICAL, superseded as current pointer): `TB-TMAR-AUTHORIZATION-POSTCERT-CLEANUP-001` — state `CERTIFIED`; implementation commit `498c46bd36c1d72934e97b137625cb07de84272a`, docs-only SoT stamp `736f23d34acb4f3989144f27675d1768fc7a65a9`. Root Global Boundaries R3 lineage: implementation commit `c63f6ebb818e7e35a548c5b3e20eb18a25a244c8`, docs-only SoT stamp commit `7d8ea21155109def56866eee2acdab2067fb457b`.
+- Commit semantics: for this wave implementation and evidence/SoT landing in ONE commit, so `lastAcceptedCommit` and `lastAcceptedSoTStamp` are the same commit.
+- Prior accepted implementation wave (now HISTORICAL, superseded as current pointer): `TB-TMAR-HOST-DEVELOPMENT-AMC-002` — state `ACCEPTED` (Host/Development 12 → 6 production files; 7 duplicated Catalog seed wrappers evacuated into the single Host seam `Development/DevelopmentTenantCommerceContext.cs`; stale `HostDevelopmentAmcGuardTests` allowlist that was RED at clean HEAD repaired; two explicit unresolved bounded debts retained), with distinct implementation commit `ba6cf54c738d443dcb61efc4264aedc8608f2b63` and docs-only SoT stamp commit `5919039b2313ddc8d02864e47e9f636328990cfe`. Never conflate an implementation commit with a docs-only acceptance stamp.
+- Recovery/governance closure for that wave: `TB-TMAR-HOST-DEVELOPMENT-AMC-002-R1` — commit `2a51556a5ac562b7f0ec3ee0679ec9f31ed45dce`.
 - Root Global Boundaries R3: `CERTIFIED` and `PRESERVED`.
 - Current Host evacuation: `RECONCILED_NOT_HISTORICAL_ADDRESSBOOK`. There is NO automatic next Host folder. AccessControl/AddressBook/Authentication/Admin/Content and later folder checkpoints are HISTORICAL, not the current continuation point.
-- Open Development bounded debts (deferred, NOT started): `CatalogAttributeSchemaSellableEnricher.cs` and `ProductWorkspaceDevelopmentBootstrap.cs`.
-- Current stop state: `workflowStop = USER_REVIEW_HOST_DEVELOPMENT_AMC_002_R1`; `nextTask = USER_REVIEW_HOST_DEVELOPMENT_AMC_002_R1`; `nextTaskState = USER_DECISION_REQUIRED`; `automaticNextImplementationTask = NONE`.
+- Open Development bounded debt (deferred, NOT started): `ProductWorkspaceDevelopmentBootstrap.cs`.
+- Current stop state: `workflowStop = USER_REVIEW_HOST_DEVELOPMENT_ENRICHER_CLOSURE_001`; `nextTask = USER_REVIEW_HOST_DEVELOPMENT_ENRICHER_CLOSURE_001`; `nextTaskState = USER_DECISION_REQUIRED`; `automaticNextImplementationTask = NONE`.
 - There is intentionally NO automatic next implementation task and NO next Host folder. Do not invent one and do not resume any historical next-task marker below.
 
 Non-authoritative historical pointers warning

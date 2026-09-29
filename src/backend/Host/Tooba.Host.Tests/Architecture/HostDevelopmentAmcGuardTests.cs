@@ -19,7 +19,6 @@ public sealed class HostDevelopmentAmcGuardTests
         ["MarketplaceAdminDevBootstrap.cs"] = "ALLOWED_DEVELOPMENT_RUNTIME_SEAM (authorization tuple)",
         ["MarketplaceSellerDevBootstrap.cs"] = "ALLOWED_DEVELOPMENT_RUNTIME_SEAM (tuple + seller snapshot)",
         ["DevelopmentTenantCommerceContext.cs"] = "ALLOWED_DEVELOPMENT_COMPOSITION (single tenant/commerce seam for module seeds)",
-        ["CatalogAttributeSchemaSellableEnricher.cs"] = "STRUCTURAL_DEBT_ONLY (bounded blocker: needs Offer/Party/Pricing/Inventory/Tax dev-seed ports)",
         ["ProductWorkspaceDevelopmentBootstrap.cs"] = "STRUCTURAL_DEBT_ONLY (bounded blocker: cross-module dev-seed orchestration)",
     };
 

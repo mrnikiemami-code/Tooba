@@ -25,29 +25,29 @@ BRIDGE-WAKE-V1
 Channel: tooba-main
 ```
 
-Latest Accepted TMAR Checkpoint — authoritative (reconciled by TB-TMAR-HOST-DEVELOPMENT-AMC-002-R1)
+Latest Accepted TMAR Checkpoint — authoritative (reconciled by TB-TMAR-HOST-DEVELOPMENT-ENRICHER-CLOSURE-001)
 
 A fresh chat MUST recover the CURRENT checkpoint from `docs/architecture/tmar-current-state.json` and the latest accepted recovery block below, NOT from historical "Next task" / "Next-Recommended-Task" lines further down this file (they are lineage evidence, NON-AUTHORITATIVE).
 
 ```text
-Latest-Accepted-Implementation-Wave: TB-TMAR-HOST-DEVELOPMENT-AMC-002
-Latest-Accepted-Implementation-Wave-State: ACCEPTED (two explicit unresolved bounded debts)
-Latest-Accepted-Task: TB-TMAR-HOST-DEVELOPMENT-AMC-002
-Implementation-Commit: ba6cf54c738d443dcb61efc4264aedc8608f2b63
-Docs-Only-SoT-Stamp-Commit: 5919039b2313ddc8d02864e47e9f636328990cfe
-Commit-Semantics: EXPLICIT_IMPLEMENTATION_COMMIT_VS_DOCS_ONLY_SOT_STAMP
+Latest-Accepted-Implementation-Wave: TB-TMAR-HOST-DEVELOPMENT-ENRICHER-CLOSURE-001
+Latest-Accepted-Implementation-Wave-State: ACCEPTED (Host/Development bounded debt #1 closed; one open bounded debt remains)
+Latest-Accepted-Task: TB-TMAR-HOST-DEVELOPMENT-ENRICHER-CLOSURE-001
+Commit-Semantics: IMPLEMENTATION_AND_SOT_IN_ONE_COMMIT
 Current-Host-Checkpoint: Development
-Prior-Accepted-Task-HISTORICAL: TB-TMAR-AUTHORIZATION-POSTCERT-CLEANUP-001 (CERTIFIED)
-Prior-Accepted-Task-Implementation-Commit: 498c46bd36c1d72934e97b137625cb07de84272a
-Prior-Accepted-Task-Docs-Only-SoT-Stamp-Commit: 736f23d34acb4f3989144f27675d1768fc7a65a9
+Prior-Accepted-Task-HISTORICAL: TB-TMAR-HOST-DEVELOPMENT-AMC-002 (ACCEPTED)
+Prior-Accepted-Task-Implementation-Commit: ba6cf54c738d443dcb61efc4264aedc8608f2b63
+Prior-Accepted-Task-Docs-Only-SoT-Stamp-Commit: 5919039b2313ddc8d02864e47e9f636328990cfe
+Prior-Accepted-Recovery-Closure: TB-TMAR-HOST-DEVELOPMENT-AMC-002-R1 (commit 2a51556a5ac562b7f0ec3ee0679ec9f31ed45dce)
 Root-Global-Boundaries-R3: CERTIFIED_PRESERVED
 Root-Global-Boundaries-R3-Implementation-Commit: c63f6ebb818e7e35a548c5b3e20eb18a25a244c8
 Root-Global-Boundaries-R3-SoT-Stamp-Commit: 7d8ea21155109def56866eee2acdab2067fb457b
 Current-Host-Evacuation: RECONCILED_NOT_HISTORICAL_ADDRESSBOOK
 Active-Host-Folder: NONE
-Open-Development-Bounded-Debts: CatalogAttributeSchemaSellableEnricher.cs, ProductWorkspaceDevelopmentBootstrap.cs
-workflowStop: USER_REVIEW_HOST_DEVELOPMENT_AMC_002_R1
-Next-Task: USER_REVIEW_HOST_DEVELOPMENT_AMC_002_R1 (USER_DECISION_REQUIRED)
+Host-Enricher-State: ABSENT (Catalog owns the schema sellable workflow)
+Open-Development-Bounded-Debts: ProductWorkspaceDevelopmentBootstrap.cs
+workflowStop: USER_REVIEW_HOST_DEVELOPMENT_ENRICHER_CLOSURE_001
+Next-Task: USER_REVIEW_HOST_DEVELOPMENT_ENRICHER_CLOSURE_001 (USER_DECISION_REQUIRED)
 Next-Task-Gate: USER_DECISION_REQUIRED_NO_AUTOMATIC_NEXT_IMPLEMENTATION_TASK
 Automatic-Next-Implementation-Task: NONE
 ```

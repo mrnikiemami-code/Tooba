@@ -32,6 +32,7 @@ public sealed class TaxModule : IToobaModule
         services.AddScoped<ITaxDirectory, TaxDirectory>();
         services.AddScoped<ITaxCalculator>(sp => sp.GetRequiredService<ITaxDirectory>());
         services.AddScoped<ITaxQueryGateway>(sp => (TaxDirectory)sp.GetRequiredService<ITaxDirectory>());
+        services.AddScoped<ITaxDevelopmentSeedGateway, TaxDevelopmentSeedGateway>();
         services.AddScoped<ITaxSchemaMigrator, TaxSchemaMigrator>();
         services.AddDbContext<TaxDbContext>((sp, options) =>
         {
