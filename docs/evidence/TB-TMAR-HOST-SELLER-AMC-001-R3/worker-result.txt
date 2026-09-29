@@ -1,0 +1,47 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-TMAR-HOST-SELLER-AMC-001-R3
+Parent-Task: TB-TMAR-HOST-SELLER-AMC-001-R2
+Channel: tooba-main
+WorkerId: tooba-worker-01
+AgentType: cursor
+Status: PASS
+Summary: Evacuated the two Host-owned seller settings routes (GET /v1/seller/settings, PUT /v1/seller/settings) and the seller settings capability checks (seller.settings.view / seller.settings.manage, the duplicated Host EnsureSellerCapabilityAsync helper and the OrganizationProfileWriteRequest transport record) from Host/Seller/SellerSettingsEndpoints.cs into Party. A minimal canonical Tooba.Party.Endpoints project was created (PartyEndpointModule.AddPartyEndpointPresentation/MapPartyEndpoints) owning the /v1/seller/settings group via ISender (MediatR 12.5) + ApiResponseFactory + a narrow Party-owned IPartySellerAuthorizer port. Party.Application/Seller owns GetSellerSettingsQuery/Handler, UpdateSellerSettingsCommand/Handler, UpdateSellerSettingsCommandValidator, PartySellerSettingsView and PartySellerSettingsErrorCodes; Party.Contracts owns IPartySellerSettings plus PartySellerSettingsSnapshot/PartySellerSettingsWrite; Party.Infrastructure/Seller/PartySellerSettingsAdapter implements the seam over the module IPartyDirectory (no DbContext, no EF) and is registered by PartyModule. Party.Endpoints references only Party.Application, Party.Contracts and Tooba.BuildingBlocks with ZERO DbContext and ZERO foreign module reference. The Host security boundary is unchanged under Host/Security/Seller; only the thin HostPartySellerAuthorizer adapter was added, composing ISellerPanelAccess and the neutral IPlatformEffectiveAccessReader (Seller owner kind, GlobalWithinOwner scope, DeniedByCeiling respected) and throwing PlatformHttpException 403 with SellerSecurityErrorCodes.AuthorizationDenied. SellerSettingsEndpoints.cs is DELETED; Host/Seller now has exactly 4 files (SellerPanelEndpoints, SellerPanelComposer, SellerPanelModels, SellerDevActorBootstrap) and Host-owned seller routes went 4 -> 2 (dashboard, dev-contexts) with ZERO duplicate ownership and ZERO seller-settings layer leakage (no Tooba.AccessControl.Application/Domain, no IAccessControlDirectory, no EnsureSellerCapabilityAsync). Behavior parity preserved: identical paths/verbs, SellerPartyId still from the auth boundary (never the body), identical success JSON shape (partyId/displayName/legalName/description/supportPhone/supportEmail/addressLine/updatedAt/canManage; PUT canManage = true), view mandatory / manage optional on read, manage mandatory on write, 404 seller.settings.missing, 400 seller.settings.rejected, 403 seller.authorization.denied (Foundation/Host-owned descriptor, not re-registered). ex.Message HTTP classification removed. A durable HostSellerAmcR3GuardTests guards all R3 invariants; HostSellerAmcR1GuardTests and HostSellerAmcR2GuardTests still pass; SettingsFoundationTests repointed to the Party surface; TmarDurableGuardTests advanced to the R3 checkpoint. Recovery/SoT synchronized in the same task. No schema/migration change; frontend unchanged.
+R2-State: ACCEPTED_PRESERVED_LINEAGE
+Party-Endpoints-Foundation-State: CREATED_MINIMAL_CANONICAL_ENDPOINTS_PROJECT
+Party-Seller-Settings-Route-Ownership-State: PARTY_ENDPOINTS_OWNED
+Routes-Migrated: 2
+Host-Seller-Route-Count-Before: 4
+Host-Seller-Route-Count-After: 2
+Host-Seller-File-Count-Before: 5
+Host-Seller-File-Count-After: 4
+SellerSettingsEndpoints-State: ABSENT
+Party-Endpoints-ISender-State: ISENDER_ONLY
+Party-Endpoint-DbContext-State: ZERO
+Party-Seller-CQRS-State: COMPLETE_QUERY_PLUS_COMMAND_WITH_HANDLERS
+Validator-State: WRITE_VALIDATOR_REQUIRED_PRESENT_AUTH_SCOPED_READ_NO_VALIDATOR_REQUIRED
+Host-Seller-Settings-Layer-Leakage-State: ZERO
+Seller-Authorization-State: HOST_OWNED_THIN_ADAPTER_PORT_NEUTRAL
+Behavior-Parity-State: PRESERVED_PATHS_VERBS_PARAMS_AUTH_STATUS_DTO_SEMANTICS
+Error-Code-State: seller.settings.missing_PLUS_seller.settings.rejected_PLUS_seller.authorization.denied_PRESERVED
+Host-Security-Seller-State: CANONICAL_UNCHANGED
+Schema-Change-State: NONE
+Frontend-State: UNCHANGED
+Sink-Folder-Regression-State: NONE
+Full-Seller-Folder-Certification-State: NOT_YET
+Seller-R4-State: NOT_STARTED
+Focused-Build-State: PASS_PARTY_APPLICATION_PARTY_INFRASTRUCTURE_PARTY_ENDPOINTS_HOST_0_ERRORS
+Focused-Test-State: PASS_35_OF_35_R3_R1_R2_SETTINGS_FOUNDATION_PLUS_DURABLE_RECOVERY_9_OF_9
+Recovery-State: SYNCHRONIZED_TB_TMAR_HOST_SELLER_AMC_001_R3
+Stale-Current-Pointer-State: ZERO
+Automatic-Next-Implementation-Task-State: NONE
+Workflow-Stop-State: USER_REVIEW_HOST_SELLER_AMC_001_R3
+Certification-State: PASS
+Evidence-Path: docs/evidence/TB-TMAR-HOST-SELLER-AMC-001-R3/
+Commit-SHA: 5ab8bdc7f5e75c599313d8b444d18a4f6c80ffdf
+Push-State: PUSHED_ORIGIN_MAIN
+HEAD-Equals-Origin-Main: TRUE
+Working-Tree-Tracked-State: CLEAN
+User-Work-Preserved: TRUE
+STOP
+END_TOOBA_WORKER_RESULT
