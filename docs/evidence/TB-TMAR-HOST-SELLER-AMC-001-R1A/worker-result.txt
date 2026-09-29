@@ -1,0 +1,44 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-TMAR-HOST-SELLER-AMC-001-R1A
+Parent-Task: TB-TMAR-HOST-SELLER-AMC-001-R1
+Channel: tooba-main
+WorkerId: tooba-worker-01
+AgentType: cursor
+Status: PASS
+Summary: Removed all foreign Application leakage from Host/Tooba.Host/Security/Seller and reconciled Recovery/SoT. The Order Application port ISellerOrderViewAccessReader is no longer implemented by Host; its implementation is Order-Infrastructure-owned (Modules/Order/Tooba.Order.Infrastructure/Seller/SellerOrderViewAccessReader.cs) and registered by OrderModule, preserving order.view / DeniedByCeiling / GlobalWithinOwner / category-scope projection / denied-snapshot semantics via the neutral IPlatformEffectiveAccessReader seam. HostOrderSellerAuthorizer no longer references Tooba.Order.Application.Seller.SellerOrderErrors and HostSupportSellerAuthorizer no longer references Tooba.Support.Application.Errors.SupportErrorCodes; the stable seller security codes now live in the Host-boundary-owned Security/Seller/SellerSecurityErrorCodes.cs with byte-identical values (seller.actor.missing, seller.identity.missing, seller.authorization.denied, seller.authorization.unavailable). The whole Host/Security/Seller boundary (10 files, namespace Tooba.Host.Security.Seller exact) is ZERO foreign Application/Domain/Infrastructure/Persistence, no service locator, no foreign DbContext. The R1 durable guard was tightened from an allowlist to ZERO-tolerance; no guard weakened or skipped. No route/header/status/DTO/schema/frontend change. Full Host/Seller certification remains NOT YET (5 Host business files remain for Seller-R2..R6); Seller-R2 is NOT auto-started.
+Parent-R1-State: PRESERVED_HISTORICAL_ACCEPTED_LINEAGE
+Host-Seller-Security-Boundary-State: CANONICAL_HOST_SECURITY_PLATFORM_BOUNDARY_10_FILES
+Foreign-Application-State: ZERO
+Foreign-Domain-State: ZERO
+Foreign-Infrastructure-State: ZERO
+Foreign-Persistence-State: ZERO
+Order-View-Access-Implementation-State: ORDER_INFRASTRUCTURE_OWNED
+Order-Application-Port-In-Host-State: ZERO
+Order-Authorizer-Application-Reference-State: ZERO
+Support-Authorizer-Application-Reference-State: ZERO
+Seller-Security-Error-Code-State: HOST_BOUNDARY_OWNED_STABLE_CODES_UNCHANGED_VALUES
+Neutral-Effective-Access-Seam-State: IPlatformEffectiveAccessReader_PRESERVED_SINGLE_SEAM
+Service-Locator-State: ZERO
+Route-Change-State: NONE
+Header-Change-State: NONE
+Status-Code-Change-State: NONE
+Dto-Change-State: NONE
+Schema-Change-State: NONE
+Frontend-State: UNCHANGED
+Sink-Folder-Regression-State: NONE
+Full-Seller-Folder-Certification-State: NOT_YET
+Focused-Build-State: PASS_0_ERRORS_Tooba.Host_Tooba.Order.Infrastructure_Tooba.Host.Tests
+Focused-Test-State: PASS_HostSellerAmcR1Guard_9_HostOrderReverseAudit_10_TmarDurable_6_Support_3_Order_12of13_1_pre_existing_out_of_scope
+Recovery-State: RECONCILED_tmar-current-state.json_hostSellerAmcR1A_MASTER-RECOVERY_ARCHITECT-BOOTSTRAP_TOOBA-RECOVERY-CONTEXT
+Automatic-Next-Implementation-Task-State: NONE
+Workflow-Stop-State: USER_REVIEW_HOST_SELLER_AMC_001_R1A
+Certification-State: PASS_SLICE_SCOPED
+Evidence-Path: docs/evidence/TB-TMAR-HOST-SELLER-AMC-001-R1A/
+Commit-SHA: 520c9918fefeedd245e54b28792fb16c5d0da41d
+Push-State: PUSHED_ORIGIN_MAIN
+HEAD-Equals-Origin-Main: TRUE
+Working-Tree-Tracked-State: CLEAN
+User-Work-Preserved: TRUE
+STOP
+END_TOOBA_WORKER_RESULT
