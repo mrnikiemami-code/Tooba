@@ -46,6 +46,11 @@ public sealed class PromotionModule : IToobaModule
         services.AddScoped<IMerchandisingCampaignAdminComposer, MerchandisingCampaignAdminComposer>();
         services.AddScoped<Tooba.Pricing.Contracts.ICampaignCartPriceAuthority, CampaignCartPriceAuthority>();
         services.AddScoped<IPromotionSchemaMigrator, Adapters.PromotionSchemaMigrator>();
+        services.AddModuleSchemaMigrator("Promotion", ModuleSchemaMigrationOrder.Promotion, (sp, ct) => sp.GetRequiredService<IPromotionSchemaMigrator>().MigrateAsync(ct));
+        services.AddModuleSchemaMigrationStep(
+            "Promotion",
+            ModuleSchemaMigrationOrder.Promotion,
+            static (sp, ct) => PromotionDevelopmentSeed.EnsureAsync(sp, ct));
         services.AddDbContext<PromotionDbContext>((sp, options) =>
         {
             var connectionString = ToobaNpgsql.ResolveForContext(

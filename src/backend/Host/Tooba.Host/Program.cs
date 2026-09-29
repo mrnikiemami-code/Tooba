@@ -335,29 +335,17 @@ if (app.Environment.IsDevelopment())
     {
         var catalogDemoOptions = app.Services.GetRequiredService<Microsoft.Extensions.Options.IOptions<CatalogDemoSeedOptions>>().Value;
         // TB-P07-T033: bootstrapهای قدیمی Catalog به‌طور پیش‌فرض خاموش‌اند تا reset+seed تمیز بماند.
+        // Host فقط ترکیب است: مهاجرت schema و دانه‌های Development در مالکیت ماژول‌ها اجرا می‌شوند.
         if (catalogDemoOptions.RunLegacyBootstraps)
         {
-            await ProductWorkspaceDevelopmentBootstrap.ApplyAsync(app.Services);
-            // دانهٔ نمایشی فروشگاه پس از bootstrap اصلی اجرا می‌شود و با slug نگهبان idempotent است؛
-            // معنای bootstrap تولیدی عوض نمی‌شود چون فقط در Development صدا زده می‌شود.
-            await StorefrontDemoCatalogBootstrap.ApplyAsync(app.Services);
-            try
-            {
-                await DevelopmentTenantCommerceContext.RunForDevelopmentTenantAsync(
-                    app.Services,
-                    "catalog-attribute-schema-seed",
-                    static (provider, ct) => CatalogAttributeSchemaDevelopmentSeed.ApplyAsync(provider, ct));
-            }
-            catch (Exception ex)
-            {
-                app.Logger.LogError(ex, "CatalogAttributeSchemaDevelopmentSeed failed; Host continues without attribute schema demo.");
-            }
+            await DevelopmentSchemaMigrator.ApplyAsync(app.Services);
+            await CatalogDevelopmentSeed.EnsureLegacyBootstrapsAsync(app.Services, CancellationToken.None);
         }
         else
         {
             app.Logger.LogInformation(
                 "Legacy Catalog Development bootstraps skipped (Tooba:CatalogDemo:RunLegacyBootstraps=false). Use POST /v1/admin/catalog/demo/reset-and-seed.");
-            await ProductWorkspaceDevelopmentBootstrap.MigrateSchemaOnlyAsync(app.Services);
+            await DevelopmentSchemaMigrator.MigrateSchemaOnlyAsync(app.Services);
             // TB-P08-T009: Content demo بدون Catalog legacy.
             try
             {
@@ -385,78 +373,6 @@ if (app.Environment.IsDevelopment())
         catch (Exception ex)
         {
             app.Logger.LogError(ex, "WalletDevelopmentSeed failed; Host continues without Wallet demo snapshot.");
-        }
-
-        try
-        {
-            await DevelopmentTenantCommerceContext.RunForDevelopmentTenantAsync(
-                app.Services,
-                "landing-dev-seed",
-                static (provider, ct) => LandingPageDevelopmentSeed.ApplyAsync(provider, ct));
-        }
-        catch (Exception ex)
-        {
-            app.Logger.LogError(ex, "LandingPageDevelopmentSeed failed; Host continues without landing demo pages.");
-        }
-
-        try
-        {
-            await DevelopmentTenantCommerceContext.RunForDevelopmentTenantAsync(
-                app.Services,
-                "menu-dev-seed",
-                static (provider, ct) => StoreMenuDevelopmentSeed.ApplyAsync(provider, ct));
-        }
-        catch (Exception ex)
-        {
-            app.Logger.LogError(ex, "StoreMenuDevelopmentSeed failed; Host continues without demo menu.");
-        }
-
-        try
-        {
-            await DevelopmentTenantCommerceContext.RunForDevelopmentTenantAsync(
-                app.Services,
-                "fashion-template-catalog-seed",
-                static (provider, ct) => FashionTemplateCatalogSeed.ApplyAsync(provider, ct));
-        }
-        catch (Exception ex)
-        {
-            app.Logger.LogError(ex, "FashionTemplateCatalogSeed failed; Host continues without Fashion Template Catalog seed.");
-        }
-
-        try
-        {
-            await DevelopmentTenantCommerceContext.RunForDevelopmentTenantAsync(
-                app.Services,
-                "industry-batch-a-template-catalog-seed",
-                static (provider, ct) => IndustryBatchATemplateCatalogSeed.ApplyAsync(provider, ct));
-        }
-        catch (Exception ex)
-        {
-            app.Logger.LogError(ex, "IndustryBatchATemplateCatalogSeed failed; Host continues without Batch A Template Catalog seed.");
-        }
-
-        try
-        {
-            await DevelopmentTenantCommerceContext.RunForDevelopmentTenantAsync(
-                app.Services,
-                "industry-batch-b-template-catalog-seed",
-                static (provider, ct) => IndustryBatchBTemplateCatalogSeed.ApplyAsync(provider, ct));
-        }
-        catch (Exception ex)
-        {
-            app.Logger.LogError(ex, "IndustryBatchBTemplateCatalogSeed failed; Host continues without Batch B Template Catalog seed.");
-        }
-
-        try
-        {
-            await DevelopmentTenantCommerceContext.RunForDevelopmentTenantAsync(
-                app.Services,
-                "industry-batch-c-template-catalog-seed",
-                static (provider, ct) => IndustryBatchCTemplateCatalogSeed.ApplyAsync(provider, ct));
-        }
-        catch (Exception ex)
-        {
-            app.Logger.LogError(ex, "IndustryBatchCTemplateCatalogSeed failed; Host continues without Batch C Template Catalog seed.");
         }
     }
 }

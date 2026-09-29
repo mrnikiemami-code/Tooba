@@ -35,6 +35,7 @@ public sealed class PricingModule : IToobaModule
         services.AddScoped<ISellerOfferPricingGateway>(sp => (PriceDirectory)sp.GetRequiredService<IPriceDirectory>());
         services.AddScoped<IPriceQueryGateway>(sp => (PriceDirectory)sp.GetRequiredService<IPriceDirectory>());
         services.AddScoped<IPricingSchemaMigrator, PricingSchemaMigrator>();
+        services.AddModuleSchemaMigrator("Pricing", ModuleSchemaMigrationOrder.Pricing, (sp, ct) => sp.GetRequiredService<IPricingSchemaMigrator>().MigrateAsync(ct));
         services.AddDbContext<PricingDbContext>((sp, options) =>
         {
             var connectionString = ToobaNpgsql.ResolveForContext(

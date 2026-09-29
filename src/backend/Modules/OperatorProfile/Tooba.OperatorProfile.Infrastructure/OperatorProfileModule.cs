@@ -21,6 +21,7 @@ public sealed class OperatorProfileModule : IToobaModule
         services.AddSingleton<IOutboxModuleRegistration, OperatorProfileOutboxRegistration>();
         services.AddScoped<IOperatorProfileDirectory, OperatorProfileDirectory>();
         services.AddScoped<Contracts.IActorDisplayLookup, ActorDisplayLookupAdapter>();
+        services.AddModuleSchemaMigrator<OperatorProfileDbContext>("OperatorProfile", ModuleSchemaMigrationOrder.OperatorProfile);
         services.AddDbContext<OperatorProfileDbContext>((sp, options) =>
         {
             var connection = ToobaNpgsql.ResolveForContext(

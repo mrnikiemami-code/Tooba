@@ -19,7 +19,7 @@ public sealed class HostDevelopmentAmcGuardTests
         ["MarketplaceAdminDevBootstrap.cs"] = "ALLOWED_DEVELOPMENT_RUNTIME_SEAM (authorization tuple)",
         ["MarketplaceSellerDevBootstrap.cs"] = "ALLOWED_DEVELOPMENT_RUNTIME_SEAM (tuple + seller snapshot)",
         ["DevelopmentTenantCommerceContext.cs"] = "ALLOWED_DEVELOPMENT_COMPOSITION (single tenant/commerce seam for module seeds)",
-        ["ProductWorkspaceDevelopmentBootstrap.cs"] = "STRUCTURAL_DEBT_ONLY (bounded blocker: Development schema-migration list only; Wave 2 TB-TMAR-HOST-DEVELOPMENT-PRODUCTWORKSPACE-MIGRATION-SEAM-001)",
+        ["DevelopmentSchemaMigrator.cs"] = "ALLOWED_DEVELOPMENT_COMPOSITION (neutral IModuleSchemaMigrator ordering seam; no foreign DbContext)",
     };
 
     [Fact]

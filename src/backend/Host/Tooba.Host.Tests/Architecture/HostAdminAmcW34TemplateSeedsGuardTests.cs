@@ -80,13 +80,19 @@ public sealed class HostAdminAmcW34TemplateSeedsGuardTests
     {
         var root = FindRepoRoot();
         var program = File.ReadAllText(Path.Combine(root, "src/backend/Host/Tooba.Host/Program.cs"));
-        Assert.Contains("DevelopmentTenantCommerceContext.RunForDevelopmentTenantAsync", program, StringComparison.Ordinal);
-        Assert.Contains("CatalogAttributeSchemaDevelopmentSeed.ApplyAsync", program, StringComparison.Ordinal);
+        Assert.Contains("DevelopmentSchemaMigrator.ApplyAsync", program, StringComparison.Ordinal);
+        Assert.Contains("CatalogDevelopmentSeed.EnsureLegacyBootstrapsAsync", program, StringComparison.Ordinal);
         Assert.DoesNotContain("CatalogAttributeSchemaDevelopmentBootstrap", program, StringComparison.Ordinal);
-        Assert.Contains("FashionTemplateCatalogSeed.ApplyAsync", program, StringComparison.Ordinal);
-        Assert.Contains("IndustryBatchATemplateCatalogSeed.ApplyAsync", program, StringComparison.Ordinal);
-        Assert.Contains("IndustryBatchBTemplateCatalogSeed.ApplyAsync", program, StringComparison.Ordinal);
-        Assert.Contains("IndustryBatchCTemplateCatalogSeed.ApplyAsync", program, StringComparison.Ordinal);
+
+        // Catalog-owned legacy seed orchestration lives in the Catalog Infrastructure seam, not in Host.
+        var catalogSeam = File.ReadAllText(Path.Combine(
+            root,
+            "src/backend/Modules/Catalog/Tooba.Catalog.Infrastructure/Development/CatalogDevelopmentSeed.cs"));
+        Assert.Contains("CatalogAttributeSchemaDevelopmentSeed.ApplyAsync", catalogSeam, StringComparison.Ordinal);
+        Assert.Contains("FashionTemplateCatalogSeed.ApplyAsync", catalogSeam, StringComparison.Ordinal);
+        Assert.Contains("IndustryBatchATemplateCatalogSeed.ApplyAsync", catalogSeam, StringComparison.Ordinal);
+        Assert.Contains("IndustryBatchBTemplateCatalogSeed.ApplyAsync", catalogSeam, StringComparison.Ordinal);
+        Assert.Contains("IndustryBatchCTemplateCatalogSeed.ApplyAsync", catalogSeam, StringComparison.Ordinal);
         Assert.DoesNotContain("CatalogAttributeSchemaDevelopmentSeedHost", program, StringComparison.Ordinal);
         Assert.DoesNotContain("FashionTemplateCatalogSeedHost", program, StringComparison.Ordinal);
         // Host no longer owns or registers the Catalog enricher; Catalog registers its own implementation.

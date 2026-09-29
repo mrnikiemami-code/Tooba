@@ -24,6 +24,7 @@ public sealed class AddressBookModule : IToobaModule
         services.AddScoped<IAddressBookDirectory, AddressBookDirectory>();
         services.AddScoped<Tooba.AddressBook.Contracts.Ports.IAddressBookCountPort>(
             sp => sp.GetRequiredService<AddressBookDirectory>());
+        services.AddModuleSchemaMigrator<AddressBookDbContext>("AddressBook", ModuleSchemaMigrationOrder.AddressBook);
         services.AddDbContext<AddressBookDbContext>((sp, options) =>
         {
             var connection = ToobaNpgsql.ResolveForContext(

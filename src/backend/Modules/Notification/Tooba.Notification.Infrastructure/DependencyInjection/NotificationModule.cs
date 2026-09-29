@@ -49,6 +49,7 @@ public sealed class NotificationModule : IToobaModule
         services.AddScoped<IIntegrationEventHandler<ReturnApprovedIntegrationEvent>, NotificationReturnApprovedHandler>();
         services.AddScoped<IIntegrationEventHandler<RefundSucceededIntegrationEvent>, NotificationRefundSucceededHandler>();
 
+        services.AddModuleSchemaMigrator<NotificationDbContext>("Notification", ModuleSchemaMigrationOrder.Notification);
         services.AddDbContext<NotificationDbContext>((sp, options) =>
         {
             var connectionString = ToobaNpgsql.ResolveForContext(

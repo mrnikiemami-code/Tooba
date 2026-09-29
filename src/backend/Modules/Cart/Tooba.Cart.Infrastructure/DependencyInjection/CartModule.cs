@@ -49,6 +49,7 @@ public sealed class CartModule : IToobaModule
         services.AddScoped<CartPresentationComposer>();
         services.AddScoped<Tooba.Cart.Contracts.ICartPresentationGateway>(sp => sp.GetRequiredService<CartPresentationComposer>());
         services.AddHostedService<CartExpiryWorker>();
+        services.AddModuleSchemaMigrator<CartDbContext>("Cart", ModuleSchemaMigrationOrder.Cart);
         services.AddDbContext<CartDbContext>((sp, options) =>
         {
             var connectionString = ToobaNpgsql.ResolveForContext(

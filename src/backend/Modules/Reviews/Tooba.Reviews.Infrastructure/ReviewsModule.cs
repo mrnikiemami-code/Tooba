@@ -20,6 +20,7 @@ public sealed class ReviewsModule : IToobaModule
     {
         services.AddSingleton<IOutboxModuleRegistration, ReviewsOutboxRegistration>();
         services.AddScoped<IReviewDirectory, ReviewDirectory>();
+        services.AddModuleSchemaMigrator<ReviewsDbContext>("Reviews", ModuleSchemaMigrationOrder.Reviews);
         services.AddDbContext<ReviewsDbContext>((sp, options) =>
         {
             var connection = ToobaNpgsql.ResolveForContext(sp.GetRequiredService<ICurrentCommerceContext>(), sp.GetRequiredService<IDatabaseConnectionResolver>());

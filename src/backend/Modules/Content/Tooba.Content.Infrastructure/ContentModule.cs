@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -36,6 +36,7 @@ public sealed class ContentModule : IToobaModule
         services.AddScoped<IContentMediaAssetValidator, ContentMediaAssetValidator>();
         services.AddScoped<IContentArticleGridPort, ContentArticleGridAdapter>();
         services.AddScoped<IContentAuthorGridPort, ContentAuthorGridAdapter>();
+        services.AddModuleSchemaMigrator<ContentDbContext>("Content", ModuleSchemaMigrationOrder.Content);
         services.AddDbContext<ContentDbContext>((sp, options) =>
         {
             var connection = ToobaNpgsql.ResolveForContext(sp.GetRequiredService<ICurrentCommerceContext>(), sp.GetRequiredService<IDatabaseConnectionResolver>());

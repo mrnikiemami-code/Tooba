@@ -21,6 +21,7 @@ public sealed class StoryModule : IToobaModule
     {
         services.AddSingleton<IOutboxModuleRegistration, StoryOutboxRegistration>();
         services.AddScoped<IStoryDirectory, StoryDirectory>();
+        services.AddModuleSchemaMigrator<StoryDbContext>("Story", ModuleSchemaMigrationOrder.Story);
         services.AddDbContext<StoryDbContext>((sp, options) =>
         {
             var connection = ToobaNpgsql.ResolveForContext(

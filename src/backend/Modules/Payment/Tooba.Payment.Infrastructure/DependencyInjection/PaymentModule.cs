@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -126,6 +126,7 @@ public sealed class PaymentModule : IToobaModule
             services.AddScoped<IPaymentRefundGateway, FailClosedPaymentRefundGateway>();
         }
 
+        services.AddModuleSchemaMigrator<PaymentDbContext>("Payment", ModuleSchemaMigrationOrder.Payment);
         services.AddDbContext<PaymentDbContext>((sp, options) =>
         {
             var connectionString = ToobaNpgsql.ResolveForContext(

@@ -84,6 +84,7 @@ public sealed class IdentityModule : IToobaModule
         services.AddScoped<Contracts.IActorIdentifierResolver, ActorIdentifierResolverAdapter>();
         services.AddScoped<IExternalIdentityDirectory, EfExternalIdentityDirectory>();
         services.AddScoped<IMfaEnrollmentStore, EfMfaEnrollmentStore>();
+        services.AddModuleSchemaMigrator<IdentityDbContext>("Identity", ModuleSchemaMigrationOrder.Identity);
         services.AddDbContext<IdentityDbContext>((sp, options) =>
         {
             var connectionString = ToobaNpgsql.ResolveForContext(

@@ -21,6 +21,7 @@ public sealed class BulkInquiryModule : IToobaModule
     {
         services.AddSingleton<IOutboxModuleRegistration, BulkInquiryOutboxRegistration>();
         services.AddScoped<IBulkInquiryDirectory, BulkInquiryDirectory>();
+        services.AddModuleSchemaMigrator<BulkInquiryDbContext>("BulkInquiry", ModuleSchemaMigrationOrder.BulkInquiry);
         services.AddDbContext<BulkInquiryDbContext>((sp, options) =>
         {
             var connection = ToobaNpgsql.ResolveForContext(sp.GetRequiredService<ICurrentCommerceContext>(), sp.GetRequiredService<IDatabaseConnectionResolver>());

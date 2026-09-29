@@ -56,6 +56,7 @@ public sealed class OfferModule : IToobaModule
         services.AddScoped<IOfferQueryGateway>(sp => (OfferStore)sp.GetRequiredService<IOfferStore>());
         services.AddScoped<IOfferSchemaMigrator, OfferSchemaMigrator>();
         services.AddScoped<IOfferDevelopmentSeedGateway, OfferDevelopmentSeedGateway>();
+        services.AddModuleSchemaMigrator("Offer", ModuleSchemaMigrationOrder.Offer, (sp, ct) => sp.GetRequiredService<IOfferSchemaMigrator>().MigrateAsync(ct));
         services.AddDbContext<OfferDbContext>((sp, options) =>
         {
             var connectionString = ToobaNpgsql.ResolveForContext(

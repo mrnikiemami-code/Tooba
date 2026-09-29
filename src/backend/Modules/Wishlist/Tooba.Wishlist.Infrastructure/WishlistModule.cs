@@ -21,6 +21,7 @@ public sealed class WishlistModule : IToobaModule
         services.AddSingleton<IOutboxModuleRegistration, WishlistOutboxRegistration>();
         services.AddScoped<IWishlistDirectory, WishlistDirectory>();
         services.AddScoped<IWishlistCountPort>(sp => sp.GetRequiredService<WishlistDirectory>());
+        services.AddModuleSchemaMigrator<WishlistDbContext>("Wishlist", ModuleSchemaMigrationOrder.Wishlist);
         services.AddDbContext<WishlistDbContext>((sp, options) =>
         {
             var connection = ToobaNpgsql.ResolveForContext(sp.GetRequiredService<ICurrentCommerceContext>(), sp.GetRequiredService<IDatabaseConnectionResolver>());

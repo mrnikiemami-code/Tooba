@@ -25,6 +25,7 @@ public sealed class PlatformProbeModule : IToobaModule
         ArgumentNullException.ThrowIfNull(environment);
 
         services.AddSingleton<IOutboxModuleRegistration, PlatformProbeOutboxRegistration>();
+        services.AddModuleSchemaMigrator<PlatformProbeDbContext>("PlatformProbe", ModuleSchemaMigrationOrder.PlatformProbe);
         services.AddDbContext<PlatformProbeDbContext>((sp, options) =>
         {
             var connectionString = ToobaNpgsql.ResolveForContext(

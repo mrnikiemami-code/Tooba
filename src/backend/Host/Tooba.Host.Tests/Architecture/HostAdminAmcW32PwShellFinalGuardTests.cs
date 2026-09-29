@@ -18,23 +18,23 @@ public sealed class HostAdminAmcW32PwShellFinalGuardTests
     }
 
     [Fact]
-    public void Development_bootstrap_exists_and_Program_maps_module_only()
+    public void Development_schema_migrator_exists_and_Program_maps_module_only()
     {
         var root = FindRepoRoot();
-        Assert.True(File.Exists(Path.Combine(
-            root,
-            "src/backend/Host/Tooba.Host/Development/ProductWorkspaceDevelopmentBootstrap.cs")));
-        var bootstrap = File.ReadAllText(Path.Combine(
-            root,
-            "src/backend/Host/Tooba.Host/Development/ProductWorkspaceDevelopmentBootstrap.cs"));
-        Assert.Contains("namespace Tooba.Host.Development", bootstrap, StringComparison.Ordinal);
+        var migratorPath = Path.Combine(
+            root, "src/backend/Host/Tooba.Host/Development/DevelopmentSchemaMigrator.cs");
+        Assert.True(File.Exists(migratorPath));
+        var migrator = File.ReadAllText(migratorPath);
+        Assert.Contains("namespace Tooba.Host.Development", migrator, StringComparison.Ordinal);
+        Assert.Contains("IModuleSchemaMigrator", migrator, StringComparison.Ordinal);
 
         var program = File.ReadAllText(Path.Combine(root, "src/backend/Host/Tooba.Host/Program.cs"));
         Assert.DoesNotContain("MapProductWorkspaceEndpoints()", program, StringComparison.Ordinal);
         Assert.DoesNotContain("ProductWorkspaceComposer", program, StringComparison.Ordinal);
         Assert.Contains("MapProductWorkspaceModuleEndpoints", program, StringComparison.Ordinal);
         Assert.Contains("AddProductWorkspaceEndpointPresentation", program, StringComparison.Ordinal);
-        Assert.Contains("ProductWorkspaceDevelopmentBootstrap", program, StringComparison.Ordinal);
+        Assert.Contains("DevelopmentSchemaMigrator", program, StringComparison.Ordinal);
+        Assert.DoesNotContain("ProductWorkspaceDevelopmentBootstrap", program, StringComparison.Ordinal);
     }
 
     [Fact]

@@ -34,6 +34,7 @@ public sealed class TaxModule : IToobaModule
         services.AddScoped<ITaxQueryGateway>(sp => (TaxDirectory)sp.GetRequiredService<ITaxDirectory>());
         services.AddScoped<ITaxDevelopmentSeedGateway, TaxDevelopmentSeedGateway>();
         services.AddScoped<ITaxSchemaMigrator, TaxSchemaMigrator>();
+        services.AddModuleSchemaMigrator("Tax", ModuleSchemaMigrationOrder.Tax, (sp, ct) => sp.GetRequiredService<ITaxSchemaMigrator>().MigrateAsync(ct));
         services.AddDbContext<TaxDbContext>((sp, options) =>
         {
             var connectionString = ToobaNpgsql.ResolveForContext(

@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -48,6 +48,7 @@ public sealed class AccessControlModule : IToobaModule
         services.AddSingleton<IValidateOptions<SpiceDbAuthorizationOptions>, SpiceDbAuthorizationOptionsValidator>();
         services.AddToobaAuthorization();
 
+        services.AddModuleSchemaMigrator<AccessControlDbContext>("AccessControl", ModuleSchemaMigrationOrder.AccessControl);
         services.AddDbContext<AccessControlDbContext>((sp, options) =>
         {
             var connectionString = ToobaNpgsql.ResolveForContext(

@@ -115,6 +115,7 @@ public sealed class OrderModule : IToobaModule
         services.AddScoped<Application.Storefront.Services.StorefrontShippingService>();
         services.AddScoped<Application.Storefront.Services.StorefrontPendingPaymentService>();
         services.AddScoped<IIntegrationEventHandler<PaymentSucceededIntegrationEvent>, OrderPaymentSucceededHandler>();
+        services.AddModuleSchemaMigrator<OrderDbContext>("Order", ModuleSchemaMigrationOrder.Order);
         services.AddDbContext<OrderDbContext>((sp, options) =>
         {
             var connectionString = ToobaNpgsql.ResolveForContext(

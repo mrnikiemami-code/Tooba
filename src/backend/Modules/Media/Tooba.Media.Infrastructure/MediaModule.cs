@@ -40,6 +40,7 @@ public sealed class MediaModule : IToobaModule
         services.AddScoped<IMediaAssetUploadPort, MediaAssetUploadBridge>();
         services.AddScoped<IMediaAssetDemoPort, MediaAssetDemoBridge>();
         services.AddScoped<IMediaAssetReadinessPort, MediaAssetReadinessBridge>();
+        services.AddModuleSchemaMigrator<MediaDbContext>("Media", ModuleSchemaMigrationOrder.Media);
         services.AddDbContext<MediaDbContext>((sp, options) =>
         {
             var connection = ToobaNpgsql.ResolveForContext(

@@ -111,14 +111,15 @@ public sealed class HostDevelopmentEnricherClosureGuardTests
     }
 
     [Fact]
-    public void ProductWorkspace_bootstrap_remains_migration_only_debt()
+    public void Neutral_development_schema_migrator_replaces_migration_only_debt()
     {
         var folder = Path.Combine(FindRepoRoot(), "src", "backend", "Host", "Tooba.Host", "Development");
-        var debt = Path.Combine(folder, "ProductWorkspaceDevelopmentBootstrap.cs");
-        Assert.True(File.Exists(debt));
-        var text = File.ReadAllText(debt);
-        Assert.Contains("ProductWorkspace", text, StringComparison.Ordinal);
-        Assert.Contains("IWorkspaceDemoSeed", text, StringComparison.Ordinal);
+        Assert.False(File.Exists(Path.Combine(folder, "ProductWorkspaceDevelopmentBootstrap.cs")));
+        var migrator = Path.Combine(folder, "DevelopmentSchemaMigrator.cs");
+        Assert.True(File.Exists(migrator));
+        var text = File.ReadAllText(migrator);
+        Assert.Contains("IModuleSchemaMigrator", text, StringComparison.Ordinal);
+        Assert.Contains("DevelopmentTenantCommerceContext.DevelopmentTenantId", text, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -160,11 +161,11 @@ public sealed class HostDevelopmentEnricherClosureGuardTests
     }
 
     [Fact]
-    public void ProductWorkspace_host_file_has_zero_business_seed_authority()
+    public void Development_schema_migrator_has_zero_business_seed_authority()
     {
         var text = File.ReadAllText(Path.Combine(
             FindRepoRoot(),
-            "src/backend/Host/Tooba.Host/Development/ProductWorkspaceDevelopmentBootstrap.cs"));
+            "src/backend/Host/Tooba.Host/Development/DevelopmentSchemaMigrator.cs"));
         foreach (var forbidden in new[]
                  {
                      "Tooba.Catalog.Application.Commands",
@@ -190,12 +191,19 @@ public sealed class HostDevelopmentEnricherClosureGuardTests
                      "workspace-live-shirt",
                      "ARM-LN-01",
                      "DGS-LN-01",
+                     "CatalogDbContext",
+                     "PartyDbContext",
+                     "IdentityDbContext",
+                     "CartDbContext",
+                     "OrderDbContext",
+                     "PaymentDbContext",
+                     "SupportDbContext",
                  })
         {
             Assert.DoesNotContain(forbidden, text, StringComparison.Ordinal);
         }
 
-        Assert.Contains("IWorkspaceDemoSeed", text, StringComparison.Ordinal);
+        Assert.Contains("IModuleSchemaMigrator", text, StringComparison.Ordinal);
         Assert.Contains("MigrateAsync", text, StringComparison.Ordinal);
     }
 

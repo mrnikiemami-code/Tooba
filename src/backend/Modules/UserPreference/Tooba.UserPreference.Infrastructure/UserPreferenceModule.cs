@@ -21,6 +21,7 @@ public sealed class UserPreferenceModule : IToobaModule
         services.AddSingleton<IOutboxModuleRegistration, UserPreferenceOutboxRegistration>();
         services.AddScoped<IUserPreferenceDirectory, UserPreferenceDirectory>();
         services.AddScoped<IUiPreferenceDirectory, UiPreferenceDirectory>();
+        services.AddModuleSchemaMigrator<UserPreferenceDbContext>("UserPreference", ModuleSchemaMigrationOrder.UserPreference);
         services.AddDbContext<UserPreferenceDbContext>((sp, options) =>
         {
             var connection = ToobaNpgsql.ResolveForContext(

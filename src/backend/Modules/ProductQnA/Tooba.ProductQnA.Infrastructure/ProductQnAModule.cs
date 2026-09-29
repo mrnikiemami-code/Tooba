@@ -21,6 +21,7 @@ public sealed class ProductQnAModule : IToobaModule
     {
         services.AddSingleton<IOutboxModuleRegistration, ProductQnAOutboxRegistration>();
         services.AddScoped<IProductQaDirectory, ProductQaDirectory>();
+        services.AddModuleSchemaMigrator<ProductQnADbContext>("ProductQnA", ModuleSchemaMigrationOrder.ProductQnA);
         services.AddDbContext<ProductQnADbContext>((sp, options) =>
         {
             var connection = ToobaNpgsql.ResolveForContext(sp.GetRequiredService<ICurrentCommerceContext>(), sp.GetRequiredService<IDatabaseConnectionResolver>());

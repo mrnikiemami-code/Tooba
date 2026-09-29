@@ -127,6 +127,11 @@ public sealed class CatalogModule : IToobaModule
         services.AddScoped<IWorkspaceDemoSeed, WorkspaceDemoSeed>();
         services.AddSingleton<IQuantityNormalizer, QuantityNormalizer>();
         services.AddValidatorsFromAssembly(typeof(CreateStoreLandingPageCommand).Assembly);
+        services.AddModuleSchemaMigrator<CatalogDbContext>("Catalog", ModuleSchemaMigrationOrder.Catalog);
+        services.AddModuleSchemaMigrationStep(
+            "Catalog",
+            ModuleSchemaMigrationOrder.Catalog,
+            static (sp, ct) => CatalogDevelopmentSeed.PostMigration.EnsureAsync(sp, ct));
         services.AddDbContext<CatalogDbContext>((sp, options) =>
         {
             var connectionString = ToobaNpgsql.ResolveForContext(

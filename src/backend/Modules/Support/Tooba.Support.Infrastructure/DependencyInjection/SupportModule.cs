@@ -25,6 +25,7 @@ public sealed class SupportModule : IToobaModule
         services.AddSingleton<IOutboxModuleRegistration, SupportOutboxRegistration>();
         services.AddScoped<ISupportDirectory, SupportDirectory>();
         services.AddSingleton<ISupportDemoPreviewPort, SupportDemoPreviewAdapter>();
+        services.AddModuleSchemaMigrator<SupportDbContext>("Support", ModuleSchemaMigrationOrder.Support);
         services.AddDbContext<SupportDbContext>((sp, options) =>
         {
             var connection = ToobaNpgsql.ResolveForContext(

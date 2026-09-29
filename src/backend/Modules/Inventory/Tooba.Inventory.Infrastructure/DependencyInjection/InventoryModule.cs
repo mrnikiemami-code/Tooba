@@ -1,4 +1,4 @@
-﻿using Tooba.Inventory.Infrastructure.Messaging;
+using Tooba.Inventory.Infrastructure.Messaging;
 using Tooba.Inventory.Infrastructure.Adapters;
 using Tooba.Inventory.Infrastructure.Directories;
 using Tooba.Inventory.Contracts.Seller;
@@ -49,6 +49,7 @@ public sealed class InventoryModule : IToobaModule
         services.AddScoped<IInventorySchemaMigrator, Adapters.InventorySchemaMigrator>();
         services.AddScoped<ICheckoutInventoryReservationPort, CheckoutInventoryReservationAdapter>();
         services.AddScoped<IOrderInventoryLifecyclePort, OrderInventoryLifecycleAdapter>();
+        services.AddModuleSchemaMigrator("Inventory", ModuleSchemaMigrationOrder.Inventory, (sp, ct) => sp.GetRequiredService<IInventorySchemaMigrator>().MigrateAsync(ct));
         services.AddDbContext<InventoryDbContext>((sp, options) =>
         {
             var connectionString = ToobaNpgsql.ResolveForContext(

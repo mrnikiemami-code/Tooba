@@ -25,8 +25,11 @@ public sealed class HostAdminAmcLandingPageSeedGuardTests
         Assert.DoesNotContain("ControlPlaneRegistry", catalogSeed, StringComparison.Ordinal);
 
         var program = File.ReadAllText(Path.Combine(root, "src/backend/Host/Tooba.Host/Program.cs"));
-        Assert.Contains("LandingPageDevelopmentSeed.ApplyAsync", program, StringComparison.Ordinal);
-        Assert.Contains("DevelopmentTenantCommerceContext.RunForDevelopmentTenantAsync", program, StringComparison.Ordinal);
+        Assert.Contains("CatalogDevelopmentSeed.EnsureLegacyBootstrapsAsync", program, StringComparison.Ordinal);
+
+        var hostSeam = File.ReadAllText(Path.Combine(
+            root, "src/backend/Modules/Catalog/Tooba.Catalog.Infrastructure/Development/CatalogDevelopmentSeed.cs"));
+        Assert.Contains("IHostEnvironment", hostSeam, StringComparison.Ordinal);
     }
 
     [Fact]

@@ -60,6 +60,8 @@ public sealed class HostCustomerProfileEvacuationGuardTests
     [Fact]
     public void Bootstrap_call_sites_use_module_owned_seed()
     {
+        // The migration-only Host debt file was replaced by the neutral DevelopmentSchemaMigrator seam;
+        // the CustomerProfile module-owned seed now runs through that seam only.
         var bootstrap = File.ReadAllText(Path.Combine(
             FindRepoRoot(),
             "src",
@@ -67,7 +69,7 @@ public sealed class HostCustomerProfileEvacuationGuardTests
             "Host",
             "Tooba.Host",
             "Development",
-            "ProductWorkspaceDevelopmentBootstrap.cs"));
+            "DevelopmentSchemaMigrator.cs"));
         Assert.Contains("using Tooba.CustomerProfile.Infrastructure.Development;", bootstrap, StringComparison.Ordinal);
         Assert.DoesNotContain("using Tooba.Host.CustomerProfile;", bootstrap, StringComparison.Ordinal);
         Assert.Equal(2, Regex.Matches(bootstrap, @"CustomerProfileDevelopmentSeed\.ApplyAsync").Count);

@@ -1,4 +1,4 @@
-﻿using Tooba.Payment.Contracts.Events;
+using Tooba.Payment.Contracts.Events;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -110,6 +110,7 @@ public sealed class FulfillmentModule : IToobaModule
         services.AddScoped<IFulfillmentReturnReader, FulfillmentReturnBridge>();
         services.AddScoped<ISellerOrderCancelFulfillmentGate, FulfillmentSellerOrderCancelGate>();
         services.AddScoped<IIntegrationEventHandler<PaymentSucceededIntegrationEvent>, FulfillmentPaymentSucceededHandler>();
+        services.AddModuleSchemaMigrator<FulfillmentDbContext>("Fulfillment", ModuleSchemaMigrationOrder.Fulfillment);
         services.AddDbContext<FulfillmentDbContext>((sp, options) =>
         {
             var connectionString = ToobaNpgsql.ResolveForContext(

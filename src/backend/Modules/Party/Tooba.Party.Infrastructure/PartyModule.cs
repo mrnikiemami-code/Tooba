@@ -34,6 +34,7 @@ public sealed class PartyModule : IToobaModule
         services.AddScoped<IPartyLookup>(sp => (PartyDirectory)sp.GetRequiredService<IPartyDirectory>());
         services.AddScoped<IPartyAdminSellerReadGateway, Tooba.Party.Infrastructure.Admin.PartyAdminSellerReadGateway>();
         services.AddScoped<IIntegrationEventHandler<PartyMembershipEstablishedIntegrationEvent>, PartyMembershipProjectionHandler>();
+        services.AddModuleSchemaMigrator<PartyDbContext>("Party", ModuleSchemaMigrationOrder.Party);
         services.AddDbContext<PartyDbContext>((sp, options) =>
         {
             var connectionString = ToobaNpgsql.ResolveForContext(

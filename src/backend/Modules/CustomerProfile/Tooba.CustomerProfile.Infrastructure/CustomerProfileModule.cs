@@ -20,6 +20,7 @@ public sealed class CustomerProfileModule : IToobaModule
     {
         services.AddSingleton<IOutboxModuleRegistration, CustomerProfileOutboxRegistration>();
         services.AddScoped<ICustomerProfileDirectory, CustomerProfileDirectory>();
+        services.AddModuleSchemaMigrator<CustomerProfileDbContext>("CustomerProfile", ModuleSchemaMigrationOrder.CustomerProfile);
         services.AddDbContext<CustomerProfileDbContext>((sp, options) =>
         {
             var connection = ToobaNpgsql.ResolveForContext(
