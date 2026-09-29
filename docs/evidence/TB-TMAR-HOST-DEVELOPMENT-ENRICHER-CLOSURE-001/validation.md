@@ -22,7 +22,7 @@ No solution-wide build. No broad module recertification.
 | `CatalogFoundationTests` | Catalog boundaries | PASS |
 | `TmarDurableGuardTests` | focused recovery | PASS |
 | `TmarCompleteReferenceStructureGateTests` | manifest/structure | PASS |
-| Combined focused filter | 7 classes | **Failed 0, Passed 36, Skipped 1, Total 37** |
+| Combined focused filter | 7 classes | **Failed 0, Passed 36, Skipped 1, Total 37** (final post-metadata-reconciliation run) |
 | `Tooba.Offer.Tests` `OfferQueryGatewayTests` (development seed gateway behavior) | behavior parity | 2/2 PASS |
 | `Tooba.Pricing.Tests` Architecture | module guards | 6/7 — 1 pre-existing failure (below) |
 | `Tooba.Inventory.Tests` Architecture | module guards | 5/5 PASS |

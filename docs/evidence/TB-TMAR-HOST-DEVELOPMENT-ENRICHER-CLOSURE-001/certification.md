@@ -61,6 +61,20 @@ tenant-commerce development seam. The 3 retained Marketplace files were not touc
   before this task; they were deliberately not modified to keep this task bounded and to avoid
   weakening unrelated guards.
 
+## Commit / SoT stamp discipline
+
+This wave keeps the explicit implementation-commit vs docs-only-SoT-stamp discipline:
+
+| Kind | Commit |
+| --- | --- |
+| Implementation commit (Host enricher deletion, Catalog rehome, Contracts ports, guards) | `44e6dde059a85d749846a403a40d33f87e07ac6e` |
+| Docs-only checkpoint/SoT stamp commit (records the SHA into `tmar-current-state.json` and reconciles checkpoint pointers) | `9e27fe75198e02dc0bf9e63966a90b744577104f` |
+
+The checkpoint metadata commit also updated three durable SoT guards (`TmarDurableGuardTests`) that pinned
+the previous `TB-TMAR-HOST-DEVELOPMENT-AMC-002-R1` checkpoint, so the manifest remains self-consistent and
+the reconciliation-metadata guard stays green (not weakened: the previous checkpoint is still required as
+history and the accepted-history assertions were extended with the new wave).
+
 ## Evidence path
 
 `docs/evidence/TB-TMAR-HOST-DEVELOPMENT-ENRICHER-CLOSURE-001/`
