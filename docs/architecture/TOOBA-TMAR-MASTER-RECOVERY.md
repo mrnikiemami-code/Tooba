@@ -12,6 +12,15 @@ Canonical Architect ↔ Cursor handoff (recovery-critical)
 
 Latest Accepted TMAR Checkpoint — authoritative
 
+Reconciled by `TB-TMAR-HOST-STOREFRONT-AMC-001-R4`. A fresh chat/architect MUST recover the CURRENT checkpoint from here and from `docs/architecture/tmar-current-state.json`.
+
+- Latest accepted implementation wave: `TB-TMAR-HOST-STOREFRONT-AMC-001-R4` — state `ACCEPTED`, implementation commit `d2235ecebb6d2e8af4626c50927acf79ab50dc0d`.
+- Host/Storefront = `ABSENT`; production files = 0; Host-owned Storefront routes = 0; full folder state = `CLOSED_HOST_ZERO`.
+- R1: template preview -> Catalog CQRS/Endpoints. R2: appearance + checkout identity -> Catalog, media -> Media, thin security adapters -> Host/Security. R3: browse/composer/models -> Catalog, geography -> Order, enrichments Contracts-only. R4: demo seed -> Catalog.Infrastructure/Development/StorefrontDemo; account identity -> Host/Authentication; Host/Storefront deleted.
+- Durable Storefront AMC guards R1-R4 passed; no Host/Development sink regression; frontend unchanged; schema unchanged. Optional Postgres demo-seed runtime test remains non-blocking until Docker is available.
+- Current Host checkpoint = `Storefront` (CLOSED). Current stop = `USER_REVIEW_HOST_STOREFRONT_AMC_001_R4_CLOSED_HOST_ZERO`; `automaticNextImplementationTask = NONE`; `staleCurrentPointerState = ZERO`.
+- Seller R5 remains accepted historical lineage immediately preceding this Storefront closure.
+
 Reconciled by `TB-TMAR-HOST-SELLER-AMC-001-R2`. A fresh chat/architect MUST recover the CURRENT checkpoint from here and from `docs/architecture/tmar-current-state.json`, NOT from any older "Next task:" line below.
 
 Reconciled by `TB-TMAR-HOST-SELLER-AMC-001-R3`. A fresh chat/architect MUST recover the CURRENT checkpoint from here and from `docs/architecture/tmar-current-state.json`, NOT from any older "Next task:" line below.
