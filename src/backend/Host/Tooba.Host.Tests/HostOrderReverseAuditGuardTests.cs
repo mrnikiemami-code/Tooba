@@ -271,8 +271,10 @@ public sealed class HostOrderReverseAuditGuardTests
             StringComparison.Ordinal);
         Assert.DoesNotContain(
             "OrderDbContext",
-            File.ReadAllText(Path.Combine(host, "Grid", "AdminSellersGridQueryEngine.cs")),
+            File.ReadAllText(Path.Combine(
+                root, "src", "backend", "Modules", "Party", "Tooba.Party.Infrastructure", "Grid", "AdminSellersGridQueryEngine.cs")),
             StringComparison.Ordinal);
+        Assert.False(File.Exists(Path.Combine(host, "Grid", "AdminSellersGridQueryEngine.cs")));
         Assert.False(File.Exists(Path.Combine(host, "Grid", "AdminCustomersGridQueryEngine.cs")));
         Assert.False(File.Exists(Path.Combine(host, "Admin", "AdminReservationCycleMapper.cs")));
         var files = doc.RootElement.GetProperty("files").EnumerateArray()

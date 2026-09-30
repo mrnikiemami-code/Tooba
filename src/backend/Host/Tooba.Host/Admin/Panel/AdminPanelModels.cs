@@ -17,13 +17,4 @@ public sealed record AdminDashboardSummary(
 // R11: AdminCustomerListItem moved to Tooba.Order.Application.Admin.Customers.Models.
 // R11: AdminReservationCycleMapper / Host reservation summary DTOs removed (Order Detail owns mapping).
 // R12: AdminReceiptListItem removed — the admin payments grid row is Payment-owned (AdminPaymentGridItemDto).
-
-/// <summary>
-/// ردیف فروشنده از Party و شمارنده‌های جداگانهٔ Offer/Order.
-/// </summary>
-public sealed record AdminSellerListItem(
-    Guid SellerPartyId,
-    string DisplayName,
-    string Status,
-    int ActiveOffers,
-    int OrderCount);
+// TB-TMAR-HOST-GRID-AMC-001-R4: AdminSellerListItem moved to Tooba.Party.Contracts.

@@ -6,15 +6,17 @@ using Tooba.Story.Domain;
 using Tooba.Story.Infrastructure.Persistence;
 using StoryEntity = Tooba.Story.Domain.Story;
 
-namespace Tooba.Host.Grid;
+namespace Tooba.Story.Infrastructure.Grid;
 
 /// <summary>پرس‌وجوی DB-native گرید استوری Admin؛ آیتم‌ها فقط برای صفحه enrich می‌شوند.</summary>
-internal sealed class AdminStoryGridQueryEngine
+public sealed class AdminStoryGridQueryEngine
 {
     private readonly StoryDbContext _db;
 
+    /// <summary>موتور گرید استوری Admin.</summary>
     public AdminStoryGridQueryEngine(StoryDbContext db) => _db = db;
 
+    /// <summary>صفحه‌بندی DB-native گرید استوری.</summary>
     public async Task<GridPageResponse<AdminStorySnapshot>> QueryAsync(
         Guid tenantId,
         StoryReviewStatus? reviewStatus,

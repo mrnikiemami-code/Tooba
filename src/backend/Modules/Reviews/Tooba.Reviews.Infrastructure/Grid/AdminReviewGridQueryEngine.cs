@@ -1,35 +1,36 @@
 using Microsoft.EntityFrameworkCore;
 using Tooba.BuildingBlocks.Grid;
-using Tooba.Persistence.Grid;
 using Tooba.Catalog.Application;
-using Tooba.Catalog.Domain;
-using Tooba.Catalog.Infrastructure.Persistence;
-using Tooba.Host.Reviews;
+using Tooba.Catalog.Contracts;
+using Tooba.Persistence.Grid;
+using Tooba.Reviews.Application;
 using Tooba.Reviews.Domain;
 using Tooba.Reviews.Infrastructure.Persistence;
 
-namespace Tooba.Host.Grid;
+namespace Tooba.Reviews.Infrastructure.Grid;
 
 /// <summary>
 /// پرس‌وجوی DB-native صف نظرات Pending Admin.
-/// عنوان محصول برای filter/search از Catalog ID resolve می‌شود؛ enrich عنوان فقط روی صفحه.
+/// عنوان محصول برای filter/search از Catalog Contracts resolve می‌شود؛ enrich عنوان فقط روی صفحه.
 /// </summary>
-internal sealed class AdminReviewGridQueryEngine
+public sealed class AdminReviewGridQueryEngine
 {
     private readonly ReviewsDbContext _reviews;
-    private readonly CatalogDbContext _catalog;
+    private readonly ICatalogAdminProductTitleIdLookup _productTitles;
     private readonly ICatalogLookupGateway _catalogLookup;
 
+    /// <summary>موتور گرید نظرات Admin.</summary>
     public AdminReviewGridQueryEngine(
         ReviewsDbContext reviews,
-        CatalogDbContext catalog,
+        ICatalogAdminProductTitleIdLookup productTitles,
         ICatalogLookupGateway catalogLookup)
     {
         _reviews = reviews;
-        _catalog = catalog;
+        _productTitles = productTitles;
         _catalogLookup = catalogLookup;
     }
 
+    /// <summary>صفحه‌بندی DB-native گرید نظرات Pending.</summary>
     public async Task<GridPageResponse<AdminReviewItem>> QueryAsync(
         GridQueryRequest request,
         CancellationToken cancellationToken)
@@ -40,7 +41,7 @@ internal sealed class AdminReviewGridQueryEngine
         if (!string.IsNullOrWhiteSpace(request.Search))
         {
             var term = request.Search.Trim();
-            var productIds = await ResolveProductIdsByTitleContainsAsync(term, cancellationToken);
+            var productIds = await _productTitles.ResolveProductIdsByTitleContainsAsync(term, cancellationToken);
             var lower = term.ToLower();
             q = q.Where(x =>
                 x.AuthorDisplayName.ToLower().Contains(lower)
@@ -107,7 +108,9 @@ internal sealed class AdminReviewGridQueryEngine
                 return EfGridQuery.ApplyTextFilter(source, x => x.AuthorDisplayName, filter);
             case "product":
             {
-                var ids = await ResolveProductIdsByTitleFilterAsync(filter, cancellationToken);
+                var ids = await _productTitles.ResolveProductIdsByTitleFilterAsync(
+                    new CatalogProductTitleTextFilter(filter.Operator ?? string.Empty, filter.Value),
+                    cancellationToken);
                 return source.Where(x => ids.Contains(x.ProductId));
             }
             case "rating":
@@ -173,66 +176,6 @@ internal sealed class AdminReviewGridQueryEngine
             "notEqual" or "notIn" => source.Where(x => !bools.Contains(x.IsVerifiedPurchase)),
             _ => source.Where(x => bools.Contains(x.IsVerifiedPurchase)),
         };
-    }
-
-    private async Task<HashSet<Guid>> ResolveProductIdsByTitleContainsAsync(
-        string term,
-        CancellationToken cancellationToken)
-    {
-        var ids = await _catalog.LocalizedTexts.AsNoTracking()
-            .Where(t =>
-                t.OwnerKind == CatalogLocalizedOwnerKind.Product
-                && t.FieldKey == "name"
-                && t.Value.ToLower().Contains(term.ToLower()))
-            .Select(t => t.OwnerId)
-            .Distinct()
-            .ToListAsync(cancellationToken);
-        return ids.ToHashSet();
-    }
-
-    private async Task<HashSet<Guid>> ResolveProductIdsByTitleFilterAsync(
-        GridFilterRequest filter,
-        CancellationToken cancellationToken)
-    {
-        if (filter.Operator is "blank")
-        {
-            var withTitle = await _catalog.LocalizedTexts.AsNoTracking()
-                .Where(t => t.OwnerKind == CatalogLocalizedOwnerKind.Product && t.FieldKey == "name" && t.Value != "")
-                .Select(t => t.OwnerId)
-                .Distinct()
-                .ToListAsync(cancellationToken);
-            var allProducts = await _catalog.Products.AsNoTracking().Select(p => p.ProductId).ToListAsync(cancellationToken);
-            var blank = allProducts.Except(withTitle).ToHashSet();
-            return (await _reviews.Reviews.AsNoTracking()
-                .Where(x => x.Status == ReviewStatus.Pending && blank.Contains(x.ProductId))
-                .Select(x => x.ProductId)
-                .Distinct()
-                .ToListAsync(cancellationToken)).ToHashSet();
-        }
-
-        if (filter.Operator is "notBlank")
-        {
-            return (await _catalog.LocalizedTexts.AsNoTracking()
-                .Where(t => t.OwnerKind == CatalogLocalizedOwnerKind.Product && t.FieldKey == "name" && t.Value != "")
-                .Select(t => t.OwnerId)
-                .Distinct()
-                .ToListAsync(cancellationToken)).ToHashSet();
-        }
-
-        var q = _catalog.LocalizedTexts.AsNoTracking()
-            .Where(t => t.OwnerKind == CatalogLocalizedOwnerKind.Product && t.FieldKey == "name");
-        var value = filter.Value ?? string.Empty;
-        q = filter.Operator switch
-        {
-            "equals" => q.Where(t => t.Value.ToLower() == value.ToLower()),
-            "notEqual" => q.Where(t => t.Value.ToLower() != value.ToLower()),
-            "notContains" => q.Where(t => !t.Value.ToLower().Contains(value.ToLower())),
-            "startsWith" => q.Where(t => t.Value.ToLower().StartsWith(value.ToLower())),
-            "endsWith" => q.Where(t => t.Value.ToLower().EndsWith(value.ToLower())),
-            _ => q.Where(t => t.Value.ToLower().Contains(value.ToLower())),
-        };
-
-        return (await q.Select(t => t.OwnerId).Distinct().ToListAsync(cancellationToken)).ToHashSet();
     }
 
     private static IQueryable<ProductReview> Order(IQueryable<ProductReview> source, GridSortRequest sort)

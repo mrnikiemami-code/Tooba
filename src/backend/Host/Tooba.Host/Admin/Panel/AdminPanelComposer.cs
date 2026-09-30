@@ -1,6 +1,5 @@
 ﻿using Tooba.BuildingBlocks.Grid;
 using Tooba.Catalog.Contracts;
-using Tooba.Host.Grid;
 using Tooba.Offer.Contracts.Dtos;
 using Tooba.Offer.Contracts.Ports;
 using Tooba.Order.Contracts.Admin;
@@ -20,7 +19,7 @@ public sealed class AdminPanelComposer
     private readonly IPartyAdminSellerReadGateway _parties;
     private readonly IAdminOrderDashboardMetricsPort _orderMetrics;
     private readonly IAdminSellerOrderCountPort _sellerOrderCounts;
-    private readonly AdminSellersGridQueryEngine _sellersGrid;
+    private readonly IAdminSellersGridPort _sellersGrid;
 
     /// <summary>
     /// ترکیب‌گر Host را فقط با مرزهای Contracts ماژول‌ها می‌سازد.
@@ -31,7 +30,7 @@ public sealed class AdminPanelComposer
         IPartyAdminSellerReadGateway parties,
         IAdminOrderDashboardMetricsPort orderMetrics,
         IAdminSellerOrderCountPort sellerOrderCounts,
-        AdminSellersGridQueryEngine sellersGrid)
+        IAdminSellersGridPort sellersGrid)
     {
         _catalogProducts = catalogProducts;
         _offers = offers;
@@ -83,9 +82,6 @@ public sealed class AdminPanelComposer
     /// <summary>صفحه‌بندی server-side گرید فروشندگان Admin (مرز Contracts Party؛ Order metric از Contracts Order).</summary>
     public Task<GridPageResponse<AdminSellerListItem>> QuerySellersGridAsync(
         GridQueryRequest request,
-        CancellationToken cancellationToken)
-    {
-        var q = AdminListGridPolicies.Sellers.Normalize(request);
-        return _sellersGrid.QueryAsync(q, cancellationToken);
-    }
+        CancellationToken cancellationToken) =>
+        _sellersGrid.QueryAsync(request, cancellationToken);
 }

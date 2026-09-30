@@ -176,9 +176,6 @@ builder.Services.AddOrderReservationCycleBoundaries(builder.Configuration);
 builder.Services.AddOfferModuleCallTracing();
 builder.Services.Configure<Tooba.Order.Application.ReservationCycle.Contracts.ReservationCycleOptions>(
     builder.Configuration.GetSection(Tooba.Order.Application.ReservationCycle.Contracts.ReservationCycleOptions.SectionName));
-builder.Services.AddScoped<Tooba.Host.Grid.AdminStoryGridQueryEngine>();
-builder.Services.AddScoped<Tooba.Host.Grid.AdminReviewGridQueryEngine>();
-builder.Services.AddScoped<Tooba.Host.Grid.AdminSellersGridQueryEngine>();
 builder.Services.AddScoped<Tooba.Order.Application.Storefront.Ports.IOrderStorefrontActor, Tooba.Host.Order.HostOrderStorefrontActor>();
 builder.Services.AddScoped<Tooba.Order.Application.Storefront.Ports.IOrderStorefrontCheckoutIdentityGate, Tooba.Host.Order.HostOrderStorefrontCheckoutIdentityGate>();
 builder.Services.AddScoped<Tooba.AddressBook.Contracts.Ports.IAddressBookCheckoutLookup>(sp => sp.GetRequiredService<Tooba.AddressBook.Application.Ports.IAddressBookDirectory>());

@@ -6,6 +6,7 @@ using Tooba.BuildingBlocks;
 using Tooba.ModuleContracts;
 using Tooba.Party.Application;
 using Tooba.Party.Contracts;
+using Tooba.Party.Infrastructure.Adapters;
 using Tooba.Party.Infrastructure.Events;
 using Tooba.Party.Infrastructure.Persistence;
 using Tooba.Persistence;
@@ -34,6 +35,7 @@ public sealed class PartyModule : IToobaModule
         services.AddScoped<IPartyLookupGateway>(sp => (PartyDirectory)sp.GetRequiredService<IPartyDirectory>());
         services.AddScoped<IPartyLookup>(sp => (PartyDirectory)sp.GetRequiredService<IPartyDirectory>());
         services.AddScoped<IPartyAdminSellerReadGateway, Tooba.Party.Infrastructure.Admin.PartyAdminSellerReadGateway>();
+        services.AddScoped<IAdminSellersGridPort, AdminSellersGridAdapter>();
         services.AddScoped<IIntegrationEventHandler<PartyMembershipEstablishedIntegrationEvent>, PartyMembershipProjectionHandler>();
         services.AddModuleSchemaMigrator<PartyDbContext>("Party", ModuleSchemaMigrationOrder.Party);
         services.AddDbContext<PartyDbContext>((sp, options) =>

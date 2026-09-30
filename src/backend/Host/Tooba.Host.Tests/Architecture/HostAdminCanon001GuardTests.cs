@@ -67,7 +67,7 @@ public sealed class HostAdminCanon001GuardTests
         Assert.DoesNotContain("DbContext", text, StringComparison.Ordinal);
         Assert.DoesNotContain("IQueryable", text, StringComparison.Ordinal);
         Assert.DoesNotContain("using Microsoft.EntityFrameworkCore", text, StringComparison.Ordinal);
-        foreach (var module in ForeignBusinessModules)
+        foreach (var module in ForeignBusinessModules.Where(m => m is not "Tooba.Party"))
         {
             Assert.DoesNotContain("using " + module + ".Infrastructure", text, StringComparison.Ordinal);
             Assert.DoesNotContain("using " + module + ".Application", text, StringComparison.Ordinal);
@@ -171,7 +171,8 @@ public sealed class HostAdminCanon001GuardTests
 
     private static string ComposerPath() => RepoFile("src/backend/Host/Tooba.Host/Admin/Panel/AdminPanelComposer.cs");
 
-    private static string SellersGridPath() => RepoFile("src/backend/Host/Tooba.Host/Grid/AdminSellersGridQueryEngine.cs");
+    private static string SellersGridPath() => RepoFile(
+        "src/backend/Modules/Party/Tooba.Party.Infrastructure/Grid/AdminSellersGridQueryEngine.cs");
 
     private static string RepoFile(string relative) => Path.Combine(FindRepoRoot(), relative.Replace('/', Path.DirectorySeparatorChar));
 

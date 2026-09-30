@@ -53,7 +53,6 @@ public sealed class HostSellerAmcR5GuardTests
             .Where(p => !p.Contains("/obj/", StringComparison.Ordinal) && !p.Contains("/bin/", StringComparison.Ordinal))
             .Where(p => !p.Contains("/Security/Seller/", StringComparison.Ordinal))
             .Where(p => !p.EndsWith("/Development/MarketplaceSellerDevBootstrap.cs", StringComparison.Ordinal))
-            .Where(p => !p.EndsWith("/Grid/AdminSellersGridQueryEngine.cs", StringComparison.Ordinal))
             .ToArray();
         Assert.Empty(hostSellerResidue);
 

@@ -1,29 +1,19 @@
 using Tooba.BuildingBlocks.Grid;
-using Tooba.Catalog.Application;
-using Tooba.Catalog.Infrastructure.Persistence;
-using Tooba.Host.Grid;
-using Tooba.Reviews.Infrastructure.Persistence;
+using Tooba.Reviews.Application;
 
 namespace Tooba.Host.Reviews;
 
 /// <summary>ترکیب GridQuery برای صف نظرات Admin.</summary>
 public sealed class ReviewPanelComposer
 {
-    private readonly AdminReviewGridQueryEngine _grid;
+    private readonly IAdminReviewGridPort _grid;
 
     /// <summary>سازنده.</summary>
-    public ReviewPanelComposer(
-        ReviewsDbContext reviews,
-        CatalogDbContext catalog,
-        ICatalogLookupGateway catalogLookup) =>
-        _grid = new AdminReviewGridQueryEngine(reviews, catalog, catalogLookup);
+    public ReviewPanelComposer(IAdminReviewGridPort grid) => _grid = grid;
 
     /// <summary>صفحه‌بندی server-side گرید نظرات در انتظار Admin (DB-native).</summary>
     public Task<GridPageResponse<AdminReviewItem>> QueryPendingGridAsync(
         GridQueryRequest request,
-        CancellationToken cancellationToken)
-    {
-        var q = AdminListGridPolicies.Reviews.Normalize(request);
-        return _grid.QueryAsync(q, cancellationToken);
-    }
+        CancellationToken cancellationToken) =>
+        _grid.QueryAsync(request, cancellationToken);
 }

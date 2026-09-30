@@ -129,14 +129,16 @@ public sealed class AdminDbNativeGridQueryTests
     [Fact]
     public void Non_trivial_engines_keep_iqueryable_until_page()
     {
-        var root = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", "Tooba.Host", "Grid"));
-        var contentEngine = Path.GetFullPath(Path.Combine(
-            root, "..", "..", "..", "Modules", "Content", "Tooba.Content.Infrastructure", "Grid", "AdminContentGridQueryEngine.cs"));
+        var hostRoot = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", "Tooba.Host"));
+        var modules = Path.GetFullPath(Path.Combine(hostRoot, "..", "..", "Modules"));
+        Assert.False(Directory.Exists(Path.Combine(hostRoot, "Grid")));
+
+        var contentEngine = Path.Combine(modules, "Content", "Tooba.Content.Infrastructure", "Grid", "AdminContentGridQueryEngine.cs");
         var engines = new[]
         {
             contentEngine,
-            Path.Combine(root, "AdminReviewGridQueryEngine.cs"),
-            Path.Combine(root, "AdminStoryGridQueryEngine.cs"),
+            Path.Combine(modules, "Story", "Tooba.Story.Infrastructure", "Grid", "AdminStoryGridQueryEngine.cs"),
+            Path.Combine(modules, "Reviews", "Tooba.Reviews.Infrastructure", "Grid", "AdminReviewGridQueryEngine.cs"),
         };
 
         foreach (var path in engines)
@@ -155,10 +157,8 @@ public sealed class AdminDbNativeGridQueryTests
             Assert.DoesNotContain("InMemoryGridQueryEngine", text);
         }
 
-        Assert.False(File.Exists(Path.Combine(root, "AdminCustomersGridQueryEngine.cs")));
-        Assert.False(File.Exists(Path.Combine(root, "AdminContentGridQueryEngine.cs")));
-        Assert.False(File.Exists(Path.Combine(root, "AdminContentAuthorGridQueryEngine.cs")));
-        var sellersEngine = File.ReadAllText(Path.Combine(root, "AdminSellersGridQueryEngine.cs"));
+        var sellersEngine = File.ReadAllText(Path.Combine(
+            modules, "Party", "Tooba.Party.Infrastructure", "Grid", "AdminSellersGridQueryEngine.cs"));
         Assert.DoesNotContain("OrderDbContext", sellersEngine, StringComparison.Ordinal);
         Assert.DoesNotContain("DbContext", sellersEngine, StringComparison.Ordinal);
         Assert.Contains("IAdminSellerOrderCountPort", sellersEngine, StringComparison.Ordinal);
@@ -167,11 +167,11 @@ public sealed class AdminDbNativeGridQueryTests
 
         var moduleEngines = new[]
         {
-            Path.GetFullPath(Path.Combine(root, "..", "..", "..", "Modules", "Order", "Tooba.Order.Infrastructure", "Admin", "OrdersGrid", "AdminOrdersGridReader.cs")),
-            Path.GetFullPath(Path.Combine(root, "..", "..", "..", "Modules", "Order", "Tooba.Order.Infrastructure", "Admin", "Customers", "AdminCustomersGridReader.cs")),
-            Path.GetFullPath(Path.Combine(root, "..", "..", "..", "Modules", "Fulfillment", "Tooba.Fulfillment.Infrastructure", "Queries", "AdminFulfillmentWorkQueueQueryEngine.cs")),
-            Path.GetFullPath(Path.Combine(root, "..", "..", "..", "Modules", "Returns", "Tooba.Returns.Infrastructure", "Queries", "AdminReturnGridQueryEngine.cs")),
-            Path.GetFullPath(Path.Combine(root, "..", "..", "..", "Modules", "Settlement", "Tooba.Settlement.Infrastructure", "Queries", "AdminPayoutGridQueryEngine.cs")),
+            Path.Combine(modules, "Order", "Tooba.Order.Infrastructure", "Admin", "OrdersGrid", "AdminOrdersGridReader.cs"),
+            Path.Combine(modules, "Order", "Tooba.Order.Infrastructure", "Admin", "Customers", "AdminCustomersGridReader.cs"),
+            Path.Combine(modules, "Fulfillment", "Tooba.Fulfillment.Infrastructure", "Queries", "AdminFulfillmentWorkQueueQueryEngine.cs"),
+            Path.Combine(modules, "Returns", "Tooba.Returns.Infrastructure", "Queries", "AdminReturnGridQueryEngine.cs"),
+            Path.Combine(modules, "Settlement", "Tooba.Settlement.Infrastructure", "Queries", "AdminPayoutGridQueryEngine.cs"),
         };
         foreach (var path in moduleEngines)
         {
@@ -185,8 +185,8 @@ public sealed class AdminDbNativeGridQueryTests
                 $"{Path.GetFileName(path)} must page via EfGridQuery.PageAsync or CountAsync+Skip+Take");
         }
 
-        var helper = File.ReadAllText(Path.GetFullPath(Path.Combine(
-            root, "..", "..", "..", "BuildingBlocks", "Tooba.Persistence", "Grid", "EfGridQuery.cs")));
+        var helper = File.ReadAllText(Path.Combine(
+            hostRoot, "..", "..", "BuildingBlocks", "Tooba.Persistence", "Grid", "EfGridQuery.cs"));
         Assert.Contains("CountAsync", helper);
         Assert.Contains("Skip(", helper);
         Assert.Contains("Take(", helper);

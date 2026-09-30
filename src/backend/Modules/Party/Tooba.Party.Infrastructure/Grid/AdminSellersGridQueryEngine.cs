@@ -1,10 +1,9 @@
 using Tooba.BuildingBlocks.Grid;
-using Tooba.Host.Admin.Panel;
 using Tooba.Offer.Contracts.Ports;
 using Tooba.Order.Contracts.Admin;
 using Tooba.Party.Contracts;
 
-namespace Tooba.Host.Grid;
+namespace Tooba.Party.Infrastructure.Grid;
 
 /// <summary>
 /// پرس‌وجوی فروشندگان Admin.

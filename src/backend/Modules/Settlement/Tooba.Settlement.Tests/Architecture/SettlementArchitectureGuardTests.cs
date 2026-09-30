@@ -106,11 +106,8 @@ public sealed class SettlementArchitectureGuardTests
         Assert.False(File.Exists(Path.Combine(hostRoot, "Settlement", "SettlementAdminAccess.cs")));
         Assert.False(File.Exists(Path.Combine(hostRoot, "Settlement", "SettlementPanelComposer.cs")));
         Assert.False(File.Exists(Path.Combine(hostRoot, "Grid", "AdminPayoutGridQueryEngine.cs")));
+        Assert.False(Directory.Exists(Path.Combine(hostRoot, "Grid")));
         Assert.True(File.Exists(Path.Combine(SettlementRoot(), "Tooba.Settlement.Infrastructure", "Queries", "AdminPayoutGridQueryEngine.cs")));
-
-        var hostGrid = File.ReadAllText(Path.Combine(hostRoot, "Grid", "AdminListGridPolicies.cs"));
-        Assert.DoesNotContain("Payouts", hostGrid, StringComparison.Ordinal);
-        Assert.DoesNotContain("PayoutRequestSnapshot", hostGrid, StringComparison.Ordinal);
 
         var bypass = AllProductionSources()
             .Where(x => x.Text.Contains("DateTimeOffset.UtcNow", StringComparison.Ordinal)

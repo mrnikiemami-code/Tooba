@@ -545,8 +545,24 @@ public sealed class OfferArchitectureGuardTests
                 "Tooba.Catalog.Infrastructure",
                 "Grid",
                 "AdminProductGridQueryEngine.cs"),
-            Path.Combine(host, "Grid", "AdminSellersGridQueryEngine.cs"),
-            Path.Combine(host, "Storefront", "StorefrontComposer.cs"),
+            Path.Combine(
+                RepoRoot(),
+                "src",
+                "backend",
+                "Modules",
+                "Party",
+                "Tooba.Party.Infrastructure",
+                "Grid",
+                "AdminSellersGridQueryEngine.cs"),
+            Path.Combine(
+                RepoRoot(),
+                "src",
+                "backend",
+                "Modules",
+                "Catalog",
+                "Tooba.Catalog.Infrastructure",
+                "Storefront",
+                "StorefrontComposer.cs"),
         };
         foreach (var file in files)
         {

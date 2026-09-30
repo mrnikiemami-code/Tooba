@@ -98,9 +98,8 @@ public sealed class FulfillmentArchitectureGuardTests
         Assert.False(File.Exists(Path.Combine(hostRoot, "Fulfillment", "FulfillmentPanelComposer.cs")));
         Assert.False(File.Exists(Path.Combine(hostRoot, "Admin", "ShippingServiceEndpoints.cs")));
 
-        var hostGrid = File.ReadAllText(Path.Combine(hostRoot, "Grid", "AdminListGridPolicies.cs"));
-        Assert.DoesNotContain("Fulfillments", hostGrid, StringComparison.Ordinal);
-        Assert.DoesNotContain("AdminFulfillmentWorkQueueRow", hostGrid, StringComparison.Ordinal);
+        Assert.False(Directory.Exists(Path.Combine(hostRoot, "Grid")));
+        Assert.False(File.Exists(Path.Combine(hostRoot, "Grid", "AdminListGridPolicies.cs")));
 
         var orderOpsEndpoint = File.ReadAllText(Path.Combine(
             RepoRoot(),

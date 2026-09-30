@@ -1,6 +1,5 @@
 using Tooba.BuildingBlocks;
 using Tooba.BuildingBlocks.Observability.Tracing;
-using Tooba.Host.Grid;
 using Tooba.Order.Domain;
 using Tooba.Payment.Infrastructure.Adapters;
 using Tooba.Payment.Infrastructure.DependencyInjection;

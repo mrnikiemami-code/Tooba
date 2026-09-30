@@ -6,6 +6,7 @@ using Tooba.BuildingBlocks;
 using Tooba.ModuleContracts;
 using Tooba.Persistence;
 using Tooba.Story.Application;
+using Tooba.Story.Infrastructure.Adapters;
 using Tooba.Story.Infrastructure.Persistence;
 
 namespace Tooba.Story.Infrastructure;
@@ -21,6 +22,7 @@ public sealed class StoryModule : IToobaModule
     {
         services.AddSingleton<IOutboxModuleRegistration, StoryOutboxRegistration>();
         services.AddScoped<IStoryDirectory, StoryDirectory>();
+        services.AddScoped<IAdminStoryGridPort, AdminStoryGridAdapter>();
         services.AddModuleSchemaMigrator<StoryDbContext>("Story", ModuleSchemaMigrationOrder.Story);
         services.AddDbContext<StoryDbContext>((sp, options) =>
         {

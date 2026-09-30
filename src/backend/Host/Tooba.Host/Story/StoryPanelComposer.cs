@@ -2,8 +2,6 @@ using Tooba.BuildingBlocks;
 using Tooba.BuildingBlocks.Grid;
 using global::Tooba.Story.Application;
 using global::Tooba.Story.Domain;
-using Tooba.Host.Grid;
-using Tooba.Story.Infrastructure.Persistence;
 
 namespace Tooba.Host.Story;
 
@@ -11,13 +9,13 @@ namespace Tooba.Host.Story;
 public sealed class StoryPanelComposer
 {
     private readonly IStoryDirectory _stories;
-    private readonly AdminStoryGridQueryEngine _grid;
+    private readonly IAdminStoryGridPort _grid;
 
-    /// <summary>دایرکتوری Story و DbContext را تزریق می‌کند.</summary>
-    public StoryPanelComposer(IStoryDirectory stories, StoryDbContext db)
+    /// <summary>دایرکتوری Story و پورت گرید ماژول را تزریق می‌کند.</summary>
+    public StoryPanelComposer(IStoryDirectory stories, IAdminStoryGridPort grid)
     {
         _stories = stories;
-        _grid = new AdminStoryGridQueryEngine(db);
+        _grid = grid;
     }
 
     /// <summary>استوری‌های عمومی.</summary>
@@ -40,11 +38,8 @@ public sealed class StoryPanelComposer
         Guid tenantId,
         StoryReviewStatus? reviewStatus,
         GridQueryRequest request,
-        CancellationToken cancellationToken)
-    {
-        var q = AdminListGridPolicies.Stories.Normalize(request);
-        return _grid.QueryAsync(tenantId, reviewStatus, q, cancellationToken);
-    }
+        CancellationToken cancellationToken) =>
+        _grid.QueryAsync(tenantId, reviewStatus, request, cancellationToken);
 
     /// <summary>فهرست در انتظار بازبینی.</summary>
     public Task<IReadOnlyList<AdminStorySnapshot>> AdminListPendingReviewAsync(

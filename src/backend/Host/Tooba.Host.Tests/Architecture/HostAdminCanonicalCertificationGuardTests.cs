@@ -405,7 +405,7 @@ public sealed class HostAdminCanonicalCertificationGuardTests
     public void Seller_grid_boundary_is_contracts_only()
     {
         var text = File.ReadAllText(RepoFile(
-            "src/backend/Host/Tooba.Host/Grid/AdminSellersGridQueryEngine.cs"));
+            "src/backend/Modules/Party/Tooba.Party.Infrastructure/Grid/AdminSellersGridQueryEngine.cs"));
 
         Assert.DoesNotContain("DbContext", text, StringComparison.Ordinal);
         Assert.DoesNotContain("IQueryable", text, StringComparison.Ordinal);
@@ -413,8 +413,9 @@ public sealed class HostAdminCanonicalCertificationGuardTests
         Assert.Contains("IAdminSellerOrderCountPort", text, StringComparison.Ordinal);
 
         var composer = File.ReadAllText(Path.Combine(AdminRoot(), "Panel", "AdminPanelComposer.cs"));
-        Assert.Contains("AdminSellersGridQueryEngine", composer, StringComparison.Ordinal);
-        Assert.Contains("AdminListGridPolicies.Sellers.Normalize", composer, StringComparison.Ordinal);
+        Assert.Contains("IAdminSellersGridPort", composer, StringComparison.Ordinal);
+        Assert.DoesNotContain("AdminListGridPolicies", composer, StringComparison.Ordinal);
+        Assert.DoesNotContain("AdminSellersGridQueryEngine", composer, StringComparison.Ordinal);
     }
 
     [Fact]

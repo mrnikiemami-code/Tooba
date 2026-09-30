@@ -301,10 +301,9 @@ public sealed class PaymentArchitectureGuardTests
         Assert.Contains("HostPaymentAdminAuthorizer", programCs, StringComparison.Ordinal);
         Assert.Contains("HostPaymentStorefrontAuthorizer", programCs, StringComparison.Ordinal);
 
-        // Host admin grid policies must not own the payments whitelist or its row model.
-        var hostGrid = File.ReadAllText(Path.Combine(hostRoot, "Grid", "AdminListGridPolicies.cs"));
-        Assert.DoesNotContain("Payments", hostGrid, StringComparison.Ordinal);
-        Assert.DoesNotContain("AdminReceiptListItem", hostGrid, StringComparison.Ordinal);
+        // Host Grid evacuated — Payment owns admin payments grid normalizer; no Host policy residue.
+        Assert.False(Directory.Exists(Path.Combine(hostRoot, "Grid")));
+        Assert.False(File.Exists(Path.Combine(hostRoot, "Grid", "AdminListGridPolicies.cs")));
 
         // Only the two approved thin Payment security adapters remain in Host.
         var paymentNamedHostFiles = Directory

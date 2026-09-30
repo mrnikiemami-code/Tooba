@@ -75,12 +75,12 @@ public sealed class OrderAdminPanelResidualArchitectureGuardTests
     public void Host_no_longer_owns_admin_orders_customers_or_OrderDbContext_in_admin_composers()
     {
         var host = Path.Combine(RepoRoot(), "src", "backend", "Host", "Tooba.Host");
-        var endpoints = File.ReadAllText(Path.Combine(host, "Admin", "AdminPanelEndpoints.cs"));
+        var endpoints = File.ReadAllText(Path.Combine(host, "Admin", "Panel", "AdminPanelEndpoints.cs"));
         Assert.DoesNotContain("MapGet(\"/orders\"", endpoints, StringComparison.Ordinal);
         Assert.DoesNotContain("MapGet(\"/customers\"", endpoints, StringComparison.Ordinal);
         Assert.DoesNotContain("MapPost(\"/customers/query\"", endpoints, StringComparison.Ordinal);
 
-        var composer = File.ReadAllText(Path.Combine(host, "Admin", "AdminPanelComposer.cs"));
+        var composer = File.ReadAllText(Path.Combine(host, "Admin", "Panel", "AdminPanelComposer.cs"));
         Assert.DoesNotContain("OrderDbContext", composer, StringComparison.Ordinal);
         Assert.DoesNotContain("SellerOrderStatus", composer, StringComparison.Ordinal);
         Assert.DoesNotContain("ListOrdersAsync", composer, StringComparison.Ordinal);
@@ -94,7 +94,8 @@ public sealed class OrderAdminPanelResidualArchitectureGuardTests
         Assert.False(File.Exists(Path.Combine(host, "Grid", "AdminCustomersGridQueryEngine.cs")));
         Assert.False(File.Exists(Path.Combine(host, "Admin", "AdminReservationCycleMapper.cs")));
 
-        var sellers = File.ReadAllText(Path.Combine(host, "Grid", "AdminSellersGridQueryEngine.cs"));
+        var sellers = File.ReadAllText(Path.Combine(
+            RepoRoot(), "src", "backend", "Modules", "Party", "Tooba.Party.Infrastructure", "Grid", "AdminSellersGridQueryEngine.cs"));
         Assert.DoesNotContain("OrderDbContext", sellers, StringComparison.Ordinal);
         Assert.Contains("IAdminSellerOrderCountPort", sellers, StringComparison.Ordinal);
         Assert.DoesNotContain("Tooba.Order.Application", sellers, StringComparison.Ordinal);

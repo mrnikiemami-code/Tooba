@@ -97,9 +97,8 @@ public sealed class ReturnsArchitectureGuardTests
         Assert.False(File.Exists(Path.Combine(hostRoot, "Returns", "ReturnEndpoints.cs")));
         Assert.False(File.Exists(Path.Combine(hostRoot, "Returns", "ReturnPanelComposer.cs")));
 
-        var hostGrid = File.ReadAllText(Path.Combine(hostRoot, "Grid", "AdminListGridPolicies.cs"));
-        Assert.DoesNotContain("AdminReturnWorkQueueRow", hostGrid, StringComparison.Ordinal);
-        Assert.DoesNotContain("AdminListGridPolicies.Returns", hostGrid, StringComparison.Ordinal);
+        Assert.False(Directory.Exists(Path.Combine(hostRoot, "Grid")));
+        Assert.False(File.Exists(Path.Combine(hostRoot, "Grid", "AdminListGridPolicies.cs")));
 
         var programCs = File.ReadAllText(Path.Combine(hostRoot, "Program.cs"));
         Assert.Contains("MapReturnEndpoints()", programCs, StringComparison.Ordinal);
