@@ -12,6 +12,12 @@ Canonical Architect ↔ Cursor handoff (recovery-critical)
 
 Latest Accepted TMAR Checkpoint — authoritative
 
+Reconciled by `TB-TMAR-HOST-WISHLIST-AMC-001`. Current implementation commit: `cb573a8d8bf47c430483d4fd5ff604e3404bc60a`.
+- Host/Wishlist = `ABSENT` / `CLOSED_HOST_ZERO`; 4 routes owned by Wishlist.Endpoints via CQRS/MediatR.
+- Wishlist cross-module Catalog usage is Contracts-only; Host Wishlist business authority = ZERO.
+- Current Host checkpoint = `Wishlist`; workflowStop = `USER_REVIEW_HOST_WISHLIST_AMC_001_CLOSED_HOST_ZERO`; automatic next = NONE; stale pointer = ZERO.
+- Grid R5-R1 remains accepted historical lineage.
+
 Reconciled by `TB-TMAR-HOST-GRID-AMC-001-R5-R1`. A fresh chat/architect MUST recover the CURRENT checkpoint from here and from `docs/architecture/tmar-current-state.json`.
 
 - Latest accepted implementation wave: `TB-TMAR-HOST-GRID-AMC-001-R5-R1` — state `ACCEPTED` (implementation commit recorded at `lastAcceptedCommit`). Reviews → Catalog.Application / Domain = ZERO; admin grid title enrich uses `ICatalogAdminProductTitleIdLookup.GetProductTitlesByIdsAsync`; ReviewDirectory/seed use `ICatalogReviewProductLookup` (Contracts). Host/Grid remains `ABSENT` / `CLOSED_HOST_ZERO`. Story/Party grid destinations audited CLEAN (no Catalog Application/Domain leakage). Storefront R4 remains accepted historical lineage.
