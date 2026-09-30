@@ -1,12 +1,11 @@
 using MediatR;
 using Tooba.BuildingBlocks.Grid;
 using Tooba.Story.Application.Presentation;
-using Tooba.Story.Domain;
 
 namespace Tooba.Story.Application.Queries.Admin;
 
-/// <summary>فهرست مدیریتی استوری.</summary>
-public sealed record ListAdminStoriesQuery(Guid TenantId, StoryReviewStatus? ReviewStatus, bool PendingReview)
+/// <summary>فهرست مدیریتی استوری — ReviewStatus transport string parsed in Application.</summary>
+public sealed record ListAdminStoriesQuery(Guid TenantId, string? ReviewStatus, bool PendingReview)
     : IRequest<IReadOnlyList<AdminStorySnapshot>>;
 
 /// <summary>Handler فهرست مدیریتی.</summary>
@@ -15,15 +14,19 @@ public sealed class ListAdminStoriesQueryHandler(StoryPresentationComposer compo
 {
     /// <inheritdoc />
     public Task<IReadOnlyList<AdminStorySnapshot>> Handle(ListAdminStoriesQuery request, CancellationToken cancellationToken)
-        => request.PendingReview
-            ? composer.AdminListPendingReviewAsync(request.TenantId, cancellationToken)
-            : composer.AdminListAsync(request.TenantId, request.ReviewStatus, cancellationToken);
+    {
+        if (request.PendingReview)
+            return composer.AdminListPendingReviewAsync(request.TenantId, cancellationToken);
+
+        var parsed = StoryFailureMapper.RequireReviewStatus(request.ReviewStatus);
+        return composer.AdminListAsync(request.TenantId, parsed, cancellationToken);
+    }
 }
 
 /// <summary>گرید DB-native استوری Admin.</summary>
 public sealed record QueryAdminStoryGridQuery(
     Guid TenantId,
-    StoryReviewStatus? ReviewStatus,
+    string? ReviewStatus,
     GridQueryRequest Request) : IRequest<GridPageResponse<AdminStorySnapshot>>;
 
 /// <summary>Handler گرید Admin.</summary>
@@ -33,7 +36,10 @@ public sealed class QueryAdminStoryGridQueryHandler(StoryPresentationComposer co
     /// <inheritdoc />
     public Task<GridPageResponse<AdminStorySnapshot>> Handle(
         QueryAdminStoryGridQuery request, CancellationToken cancellationToken)
-        => composer.QueryAdminGridAsync(request.TenantId, request.ReviewStatus, request.Request, cancellationToken);
+    {
+        var parsed = StoryFailureMapper.RequireReviewStatus(request.ReviewStatus);
+        return composer.QueryAdminGridAsync(request.TenantId, parsed, request.Request, cancellationToken);
+    }
 }
 
 /// <summary>جزئیات مدیریتی یک استوری.</summary>

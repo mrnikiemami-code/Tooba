@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using Tooba.BuildingBlocks;
+using Tooba.BuildingBlocks.Presentation;
 using Tooba.Story.Application.Queries.GetPublicStories;
 
 namespace Tooba.Story.Endpoints.Storefront;
@@ -20,6 +21,7 @@ public static class StoryStorefrontEndpoints
     private static async Task<IResult> GetPublicStoriesAsync(
         ISender sender,
         ICurrentTenant tenant,
+        ApiResponseFactory api,
         string? locale = null,
         string? market = null,
         CancellationToken cancellationToken = default)
@@ -30,9 +32,9 @@ public static class StoryStorefrontEndpoints
             return Results.Json(await sender.Send(
                 new GetPublicStoriesQuery(tenantId, locale, market), cancellationToken));
         }
-        catch (InvalidOperationException ex)
+        catch (Exception ex) when (ex is SemanticException or PlatformHttpException)
         {
-            return StoryHttpErrors.TenantMissing(ex);
+            return StoryHttpErrors.From(ex, api);
         }
     }
 }

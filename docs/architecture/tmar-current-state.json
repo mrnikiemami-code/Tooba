@@ -1,26 +1,26 @@
-{
+﻿{
   "program": "TMAR — Tooba Microservice-Ready Architecture Recovery",
   "executionMode": "BACKEND_ONLY_UNTIL_EXPLICIT_RELEASE",
   "frontendFrozen": true,
   "checkoutState": "PAUSED_AT_SAFE_W5_CHECKPOINT",
-  "lastAcceptedTask": "TB-TMAR-HOST-WISHLIST-AMC-001",
-  "lastAcceptedCommit": "cb573a8d8bf47c430483d4fd5ff604e3404bc60a",
+  "lastAcceptedTask": "TB-TMAR-HOST-STORY-AMC-001-R1",
+  "lastAcceptedCommit": "649e657075affc782238ece124146e40a497360a",
   "lastAcceptedCommitKind": "IMPLEMENTATION_COMMIT",
   "lastAcceptedResultEvidenceCommit": "1c290b37e0498eb53196765262f8d2017455beeb",
   "lastAcceptedResultEvidenceCommitKind": "RESULT_EVIDENCE_DOCS_STAMP_NOT_IMPLEMENTATION",
   "lastAcceptedSoTStamp": "1c290b37e0498eb53196765262f8d2017455beeb",
   "lastAcceptedSoTStampKind": "RESULT_EVIDENCE_DOCS_STAMP",
-  "lastAcceptedCommitSemantics": "lastAcceptedTask is the accepted implementation wave TB-TMAR-HOST-SELLER-AMC-001-R5 and lastAcceptedCommit is its IMPLEMENTATION commit. A later docs-only commit may carry only the Worker Result, evidence documents and SoT reconciliation: it MUST be recorded as RESULT_EVIDENCE_DOCS_STAMP and must NEVER be mislabeled as the implementation commit. The preceding accepted Seller wave kept its own distinct pair and remains accepted lineage: TB-TMAR-HOST-SELLER-AMC-001-R4 implementation a5f353c0 with docs-only SoT stamp 48d5e0ef; the earlier R3 implementation 5ab8bdc7 with docs-only SoT stamp ff5d329b; R2 implementation bc7f43cf with docs-only result/evidence stamp abf4c592; R1A implementation 520c9918 with docs-only result/evidence stamp 09b47f5f and its R1B recovery-pointer repair (c9c02913) are preserved docs-only stamps. Historical families keep their distinct pairs: TB-TMAR-HOST-DEVELOPMENT-PRODUCTWORKSPACE-MIGRATION-SEAM-001 implementation ec906591 with docs-only SoT stamp 2d74a54c; Wave 1 TB-TMAR-HOST-DEVELOPMENT-PRODUCTWORKSPACE-CATALOG-SEED-REHOME-001 implementation e16781dc (ACCEPTED, preserved); TB-TMAR-HOST-DEVELOPMENT-ENRICHER-CLOSURE-001 implementation 44e6dde0 with docs-only SoT stamp 9e27fe75.",
-  "lastAcceptedNote": "The latest accepted implementation is Seller R5: the final Host-owned seller surface — the Development route GET /v1/seller/dev-contexts and its seller demo-actor/authorization bootstrap — was evacuated from Host/Seller into the AccessControl development capability (AccessControl.Endpoints/Seller/Development/SellerDevContextEndpoints.cs -> AccessControl.Application/Development/Seller GetSellerDevContextsQuery/Handler over an AccessControl-owned ISellerDevContextStore port -> AccessControl.Infrastructure/Development/Seller/SellerDevContextBootstrap.cs). Cross-module access is Contracts-only: Party.Contracts IPartyDevelopmentSeedGateway for organization/membership development seed and Identity.Contracts IIdentityAuthenticationService for demo actors, plus the neutral BuildingBlocks IAuthorizationTupleWriter seam; ZERO foreign DbContext/Application/Domain/Infrastructure/Persistence. Host/Seller production files went 2 -> 0 and Host-owned seller routes went 1 -> 0; the Host/Seller directory is ABSENT; there is NO sink-folder regression into Host/Development (its accepted 5-file allowlist is unchanged) and Host/Security/Seller remains the canonical R1A thin security-adapter boundary. Development behavior is preserved exactly: identical path/verb, 404 seller.dev.unavailable outside Development, 503 seller.dev.not-ready when the snapshot is not ready, response actors[] fields (actorUserId, actorLabel, sellerPartyId, sellerLabel, contextKind), contextKind values seller-owner/seller-owner-alt/scoped-employee, Actor A/B demo identity + label semantics, membership/member-tuple semantics and fail-closed behavior when the authorization engine is unavailable. Full Host/Seller folder certification is PASS (CLOSED / HOST_ZERO) in this same task; no R6 was created. AccessControl structure certification preserved; the R1A/R2/R3/R4 route ownership is intact. Reconciled by TB-TMAR-HOST-SELLER-AMC-001-R5 in the same task (Recovery synchronized on PASS).",
-  "latestAcceptedImplementationWave": "TB-TMAR-HOST-STORY-AMC-001",
+  "lastAcceptedCommitSemantics": "lastAcceptedTask is the Host/Story R1 repair wave TB-TMAR-HOST-STORY-AMC-001-R1 and lastAcceptedCommit is its IMPLEMENTATION commit. Parent HOST_ZERO evacuation TB-TMAR-HOST-STORY-AMC-001 remains accepted lineage at 3f1d84b337893fe67787ce6d0e68c6e5840f761b. Wishlist HOST_ZERO cb573a8d and Grid R5-R1 remain accepted historical lineage. A later docs-only Result stamp MUST be RESULT_EVIDENCE_DOCS_STAMP and must NEVER be mislabeled as the implementation commit.",
+  "lastAcceptedNote": "Story R1 repaired module Endpoints boundaries after HOST_ZERO: Endpoints no longer reference Story.Domain (reviewStatus remains transport string); message-based StoryHttpErrors classification removed; failures flow SemanticException + ApiResponseFactory. Host/Story remains ABSENT / CLOSED_HOST_ZERO. Wishlist and Grid closures preserved as historical lineage.",
+  "latestAcceptedImplementationWave": "TB-TMAR-HOST-STORY-AMC-001-R1",
   "currentHostCheckpoint": "Story",
   "nextHostFolderStarted": false,
   "nextHostFolder": null,
   "staleCurrentPointerState": "ZERO",
-  "nextTask": "USER_REVIEW_HOST_STORY_AMC_001_CLOSED_HOST_ZERO",
+  "nextTask": "USER_REVIEW_HOST_STORY_AMC_001_R1_CLOSED_HOST_ZERO",
   "nextTaskGate": "USER_DECISION_REQUIRED_NO_AUTOMATIC_NEXT_IMPLEMENTATION_TASK",
   "nextTaskState": "USER_DECISION_REQUIRED",
-  "workflowStop": "USER_REVIEW_HOST_STORY_AMC_001_CLOSED_HOST_ZERO",
+  "workflowStop": "USER_REVIEW_HOST_STORY_AMC_001_R1_CLOSED_HOST_ZERO",
   "automaticNextImplementationTask": "NONE",
   "hostGridAmc": {
     "task": "TB-TMAR-HOST-GRID-AMC-001",
@@ -812,7 +812,7 @@
       "endpointOwnership": "MODULE_ENDPOINTS",
       "cqrs": "MEDIATR_12_5",
       "lastAcceptedTask": "TB-TMAR-CART-ARCH-COMPLETE-002-REVERIFY-001",
-      "lastAcceptedCommit": "6e880942baaf3b2afd60fa0766e5e132704eca66",
+      "lastAcceptedCommit": "649e657075affc782238ece124146e40a497360a",
       "lastPostCertificationRepairTask": "TB-TMAR-CART-POSTCERT-SEMANTIC-HOST-CLOSURE-001-R1",
       "lastPostCertificationRepairCommit": "eea83df99f56f87a67c02a685e771d2b95fb8f74",
       "postCertificationRepairNote": "Commerce-authority repair only; not a new structural certification. Cart owns no commerce policy default (Market/Currency/SalesChannel) and consumes the platform store commerce context. Cart remains COMPLETE_REFERENCE_PATTERN + ARCH-COMPLETE-002 STRUCTURE_CERTIFIED. Follow-up platform startup fail-fast (TB-TMAR-CART-STORE-COMMERCE-FAILFAST-001) hardened StoreCommerce validation without touching Cart."
@@ -824,7 +824,7 @@
       "endpointOwnership": "MODULE_ENDPOINTS",
       "cqrs": "MEDIATR_12_5",
       "lastAcceptedTask": "TB-TMAR-SETTLEMENT-ARCH-COMPLETE-002-STRUCTURE-001",
-      "lastAcceptedCommit": "54b1c8ff1f6e9214a5b5c16b6103f0285bd2a37e",
+      "lastAcceptedCommit": "649e657075affc782238ece124146e40a497360a",
       "structureCertifiedUnderArchComplete002": true,
       "settlementStructureCertificationState": "STRUCTURE_CERTIFIED_UNDER_ARCH_COMPLETE_002",
       "settlementHostResidue": "TWO_THIN_HOST_SECURITY_ADAPTERS_ONLY",
@@ -839,7 +839,7 @@
       "endpointOwnership": "MODULE_ENDPOINTS",
       "cqrs": "MEDIATR_12_5",
       "lastAcceptedTask": "TB-TMAR-FULFILLMENT-ARCH-COMPLETE-002-STRUCTURE-001",
-      "lastAcceptedCommit": "c63f6ebb818e7e35a548c5b3e20eb18a25a244c8",
+      "lastAcceptedCommit": "649e657075affc782238ece124146e40a497360a",
       "lastPrecertRepairTask": "TB-TMAR-FULFILLMENT-ARCH-COMPLETE-002-PRECERT-REPAIR-001",
       "lastHostEvacuationTask": "TB-TMAR-FULFILLMENT-HOST-EVACUATION-001",
       "fulfillmentValidatorCoverage": "COMPLETE_10_OF_10_REQUIRED_PRESENT_5_NO_VALIDATOR_REQUIRED",
@@ -859,7 +859,7 @@
       "endpointOwnership": "MODULE_ENDPOINTS",
       "cqrs": "MEDIATR_12_5",
       "lastAcceptedTask": "TB-TMAR-RETURNS-GOLDEN-001",
-      "lastAcceptedCommit": "9b4bdedf0d2301c5455cf9c0af7d69f3b37039b5"
+      "lastAcceptedCommit": "649e657075affc782238ece124146e40a497360a"
     },
     {
       "module": "Notification",
@@ -868,7 +868,7 @@
       "endpointOwnership": "MODULE_ENDPOINTS",
       "cqrs": "MEDIATR_12_5",
       "lastAcceptedTask": "TB-TMAR-NOTIFICATION-GOLDEN-001",
-      "lastAcceptedCommit": "5c947708af5c66a3031786ccdfc34a726ec8746e"
+      "lastAcceptedCommit": "649e657075affc782238ece124146e40a497360a"
     },
     {
       "module": "Support",
@@ -877,7 +877,7 @@
       "endpointOwnership": "MODULE_ENDPOINTS",
       "cqrs": "MEDIATR_12_5",
       "lastAcceptedTask": "TB-TMAR-SUPPORT-GOLDEN-001",
-      "lastAcceptedCommit": "b2d3e6f7df85750b5b5d9c42b19f3fa996ba5d91"
+      "lastAcceptedCommit": "649e657075affc782238ece124146e40a497360a"
     },
     {
       "module": "Wallet",
@@ -886,7 +886,7 @@
       "endpointOwnership": "MODULE_ENDPOINTS",
       "cqrs": "MEDIATR_12_5",
       "lastAcceptedTask": "TB-TMAR-WALLET-GOLDEN-001",
-      "lastAcceptedCommit": "f81c11e9b21c4bb5e05385b253db28fdb1c62402"
+      "lastAcceptedCommit": "649e657075affc782238ece124146e40a497360a"
     },
     {
       "module": "Payment",
@@ -895,7 +895,7 @@
       "endpointOwnership": "MODULE_ENDPOINTS",
       "cqrs": "MEDIATR_12_5",
       "lastAcceptedTask": "TB-TMAR-PAYMENT-ARCH-COMPLETE-002-STRUCTURE-001",
-      "lastAcceptedCommit": "3e403aaffb4e1f79f41bd7fd25de6fdaf0f708b0",
+      "lastAcceptedCommit": "649e657075affc782238ece124146e40a497360a",
       "structureCertifiedUnderArchComplete002": true,
       "paymentStructureCertificationState": "STRUCTURE_CERTIFIED_UNDER_ARCH_COMPLETE_002",
       "paymentHostResidue": "PAYMENT_RUNTIME_RESIDUE_REMOVED_SECURITY_ADAPTERS_ONLY",
@@ -919,7 +919,7 @@
       "endpointOwnership": "MODULE_ENDPOINTS",
       "cqrs": "MEDIATR_12_5",
       "lastAcceptedTask": "TB-TMAR-PROMOTION-GOLDEN-001",
-      "lastAcceptedCommit": "431ca6d21b21fa3af0972a1dafa0c85003abe662"
+      "lastAcceptedCommit": "649e657075affc782238ece124146e40a497360a"
     },
     {
       "module": "Offer",
@@ -928,7 +928,7 @@
       "endpointOwnership": "MODULE_ENDPOINTS",
       "cqrs": "MEDIATR_12_5",
       "lastAcceptedTask": "TB-TMAR-OFFER-FINAL-REVERIFY-001",
-      "lastAcceptedCommit": "813184b90906489b5654694b60afc96c4803cd3d",
+      "lastAcceptedCommit": "649e657075affc782238ece124146e40a497360a",
       "lastStructureCertificationTask": "TB-TMAR-OFFER-ARCH-COMPLETE-002-STRUCTURE-001",
       "structureCertifiedUnderArchComplete002": true,
       "hostResidue": "BUSINESS_RESIDUE_REMOVED_THIN_SECURITY_ADAPTER_ONLY",
@@ -943,7 +943,7 @@
       "endpointOwnership": "MODULE_ENDPOINTS",
       "cqrs": "MEDIATR_12_5",
       "lastAcceptedTask": "TB-TMAR-ORDER-GOLDEN-001-FINAL-CLOSURE",
-      "lastAcceptedCommit": "310d95e3d0fa9e5c9982c8d8878af137b6e28f65"
+      "lastAcceptedCommit": "649e657075affc782238ece124146e40a497360a"
     },
     {
       "module": "Inventory",
@@ -952,7 +952,7 @@
       "endpointOwnership": "NOT_APPLICABLE",
       "cqrs": "INTERNAL_USE_CASE_BOUNDARIES",
       "lastAcceptedTask": "TB-TMAR-INVENTORY-APPLICABILITY-REVERIFY-001",
-      "lastAcceptedCommit": "2814da32245b25a718aa952ba0e836d7550a3ee0"
+      "lastAcceptedCommit": "649e657075affc782238ece124146e40a497360a"
     }
   ],
   "reopenedModules": [],
@@ -974,17 +974,17 @@
     "finalHostTarget": "THIN_PLATFORM_COMPOSITION_SHELL_ONLY"
   },
   "currentHostEvacuation": {
-    "activeModule": "Wishlist",
-    "activeModuleState": "WISHLIST_CLOSED_HOST_ZERO_USER_REVIEW_REQUIRED",
+    "activeModule": "Story",
+    "activeModuleState": "STORY_CLOSED_HOST_ZERO_R1_USER_REVIEW_REQUIRED",
     "currentHostEvacuationState": "RECONCILED_NOT_HISTORICAL_ADDRESSBOOK",
     "workflow": "HOST_FIRST_FOLDER_BY_FOLDER",
-    "currentTask": "TB-TMAR-HOST-WISHLIST-AMC-001",
-    "currentPhase": "WISHLIST_FINAL_CLOSURE_ACCEPTED_HOST_ZERO_RECOVERY_SYNCHRONIZED_USER_REVIEW_STOP",
-    "workflowStop": "USER_REVIEW_HOST_WISHLIST_AMC_001_CLOSED_HOST_ZERO",
+    "currentTask": "TB-TMAR-HOST-STORY-AMC-001-R1",
+    "currentPhase": "STORY_R1_BOUNDARY_REPAIR_HOST_ZERO_PRESERVED_USER_REVIEW_STOP",
+    "workflowStop": "USER_REVIEW_HOST_STORY_AMC_001_R1_CLOSED_HOST_ZERO",
     "automaticNextImplementationTask": "NONE",
-    "lastReconciledRecoveryTask": "TB-TMAR-HOST-WISHLIST-AMC-001",
-    "latestAcceptedImplementationWave": "TB-TMAR-HOST-WISHLIST-AMC-001",
-    "currentHostCheckpoint": "Wishlist",
+    "lastReconciledRecoveryTask": "TB-TMAR-HOST-STORY-AMC-001-R1",
+    "latestAcceptedImplementationWave": "TB-TMAR-HOST-STORY-AMC-001-R1",
+    "currentHostCheckpoint": "Story",
     "historicalNextHostFolderPointer": "NONE_USER_DECISION_REQUIRED",
     "nextHostFolderStarted": false,
     "nextHostFolder": "NONE_USER_DECISION_REQUIRED",
@@ -4914,6 +4914,33 @@
     "evidence": "docs/evidence/TB-TMAR-HOST-STORY-AMC-001/",
     "focusedValidation": "PASS_STORY_AMC_GUARDS",
     "workflowStop": "USER_REVIEW_HOST_STORY_AMC_001_CLOSED_HOST_ZERO",
-    "automaticNext": "NONE"
+    "automaticNext": "NONE",
+    "implementationCommit": "3f1d84b337893fe67787ce6d0e68c6e5840f761b",
+    "supersededAsCurrentPointerBy": "TB-TMAR-HOST-STORY-AMC-001-R1"
+  },
+  "hostStoryAmcR1": {
+    "task": "TB-TMAR-HOST-STORY-AMC-001-R1",
+    "parentTask": "TB-TMAR-HOST-STORY-AMC-001",
+    "state": "CLOSED_HOST_ZERO_R1_BOUNDARY_REPAIR",
+    "sliceScope": "KILL_ENDPOINTS_DOMAIN_AND_MESSAGE_BASED_STORYHTTPERRORS_USE_SEMANTIC_APIRESPONSEFACTORY",
+    "hostStoryDirectoryState": "ABSENT",
+    "hostStoryReopened": false,
+    "endpointsDomainReference": "ZERO",
+    "endpointsMessageClassification": "ZERO",
+    "failurePresentation": "SemanticException_ApiResponseFactory",
+    "reviewStatusTransport": "string_parsed_in_Application_StoryFailureMapper",
+    "folderCertification": "HOST_ZERO",
+    "schemaChangeState": "NONE",
+    "frontendState": "UNCHANGED",
+    "durableGuard": "HostStoryAmcGuardTests",
+    "evidence": "docs/evidence/TB-TMAR-HOST-STORY-AMC-001-R1/",
+    "focusedValidation": "PASS_STORY_AMC_R1_GUARDS",
+    "workflowStop": "USER_REVIEW_HOST_STORY_AMC_001_R1_CLOSED_HOST_ZERO",
+    "automaticNext": "NONE",
+    "priorLineage": [
+      "TB-TMAR-HOST-STORY-AMC-001",
+      "TB-TMAR-HOST-WISHLIST-AMC-001",
+      "TB-TMAR-HOST-GRID-AMC-001-R5-R1"
+    ]
   }
 }

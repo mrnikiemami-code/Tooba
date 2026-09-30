@@ -2,7 +2,7 @@ using Xunit;
 
 namespace Tooba.Host.Tests.Architecture;
 
-/// <summary>Durable guards for TB-TMAR-HOST-STORY-AMC-001 — Host Story HOST_ZERO.</summary>
+/// <summary>Durable guards for TB-TMAR-HOST-STORY-AMC-001 / R1 — Host Story HOST_ZERO + Endpoints boundary.</summary>
 public sealed class HostStoryAmcGuardTests
 {
     [Fact]
@@ -28,17 +28,8 @@ public sealed class HostStoryAmcGuardTests
     public void Story_endpoints_do_not_reference_host_access_helpers()
     {
         var root = FindRepoRoot();
-        foreach (var file in Directory.EnumerateFiles(
-                     Path.Combine(root, "src/backend/Modules/Story/Tooba.Story.Endpoints"),
-                     "*.cs",
-                     SearchOption.AllDirectories))
+        foreach (var file in EnumerateStoryEndpointSources(root))
         {
-            if (file.Contains($"{Path.DirectorySeparatorChar}obj{Path.DirectorySeparatorChar}", StringComparison.Ordinal)
-                || file.Contains($"{Path.DirectorySeparatorChar}bin{Path.DirectorySeparatorChar}", StringComparison.Ordinal))
-            {
-                continue;
-            }
-
             var text = File.ReadAllText(file);
             Assert.DoesNotContain("Tooba.Host.", text, StringComparison.Ordinal);
             Assert.DoesNotContain("AdminPanelAccess.RequireAuthorizedAsync", text, StringComparison.Ordinal);
@@ -48,12 +39,53 @@ public sealed class HostStoryAmcGuardTests
     }
 
     [Fact]
+    public void Story_endpoints_do_not_reference_domain_or_message_classify_errors()
+    {
+        var root = FindRepoRoot();
+        var csproj = File.ReadAllText(Path.Combine(
+            root, "src/backend/Modules/Story/Tooba.Story.Endpoints/Tooba.Story.Endpoints.csproj"));
+        Assert.DoesNotContain("Tooba.Story.Domain", csproj, StringComparison.Ordinal);
+
+        foreach (var file in EnumerateStoryEndpointSources(root))
+        {
+            var text = File.ReadAllText(file);
+            Assert.DoesNotContain("Tooba.Story.Domain", text, StringComparison.Ordinal);
+            Assert.DoesNotContain("StoryReviewStatus", text, StringComparison.Ordinal);
+            Assert.DoesNotContain("message.Contains", text, StringComparison.Ordinal);
+            Assert.DoesNotContain("یافت نشد", text, StringComparison.Ordinal);
+            Assert.DoesNotContain("ناامن", text, StringComparison.Ordinal);
+        }
+
+        var httpErrors = File.ReadAllText(Path.Combine(
+            root, "src/backend/Modules/Story/Tooba.Story.Endpoints/StoryHttpErrors.cs"));
+        Assert.Contains("ApiResponseFactory", httpErrors, StringComparison.Ordinal);
+        Assert.Contains("FromSemanticException", httpErrors, StringComparison.Ordinal);
+
+        var admin = File.ReadAllText(Path.Combine(
+            root, "src/backend/Modules/Story/Tooba.Story.Endpoints/Admin/StoryAdminEndpoints.cs"));
+        Assert.Contains("ApiResponseFactory", admin, StringComparison.Ordinal);
+        Assert.Contains("string? reviewStatus", admin, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public void SoT_hostStoryAmc_present()
     {
         var sot = File.ReadAllText(Path.Combine(FindRepoRoot(), "docs/architecture/tmar-current-state.json"));
         Assert.Contains("\"hostStoryAmc\"", sot, StringComparison.Ordinal);
         Assert.Contains("TB-TMAR-HOST-STORY-AMC-001", sot, StringComparison.Ordinal);
+        Assert.Contains("\"hostStoryAmcR1\"", sot, StringComparison.Ordinal);
+        Assert.Contains("TB-TMAR-HOST-STORY-AMC-001-R1", sot, StringComparison.Ordinal);
+        Assert.Contains("USER_REVIEW_HOST_STORY_AMC_001_R1_CLOSED_HOST_ZERO", sot, StringComparison.Ordinal);
     }
+
+    private static IEnumerable<string> EnumerateStoryEndpointSources(string root) =>
+        Directory.EnumerateFiles(
+                Path.Combine(root, "src/backend/Modules/Story/Tooba.Story.Endpoints"),
+                "*.cs",
+                SearchOption.AllDirectories)
+            .Where(file =>
+                !file.Contains($"{Path.DirectorySeparatorChar}obj{Path.DirectorySeparatorChar}", StringComparison.Ordinal)
+                && !file.Contains($"{Path.DirectorySeparatorChar}bin{Path.DirectorySeparatorChar}", StringComparison.Ordinal));
 
     private static string FindRepoRoot()
     {

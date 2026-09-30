@@ -25,27 +25,29 @@ BRIDGE-WAKE-V1
 Channel: tooba-main
 ```
 
-Latest Accepted TMAR Checkpoint — authoritative (reconciled by TB-TMAR-HOST-WISHLIST-AMC-001)
+Latest Accepted TMAR Checkpoint — authoritative (reconciled by TB-TMAR-HOST-STORY-AMC-001-R1)
 
 ```text
-Latest-Accepted-Implementation-Wave: TB-TMAR-HOST-WISHLIST-AMC-001
-Latest-Accepted-Task: TB-TMAR-HOST-WISHLIST-AMC-001
-Implementation-Commit: cb573a8d8bf47c430483d4fd5ff604e3404bc60a
+Latest-Accepted-Implementation-Wave: TB-TMAR-HOST-STORY-AMC-001-R1
+Latest-Accepted-Task: TB-TMAR-HOST-STORY-AMC-001-R1
+Implementation-Commit: 649e657075affc782238ece124146e40a497360a
 Implementation-Commit-Kind: IMPLEMENTATION_COMMIT
-Current-Host-Checkpoint: Wishlist_CLOSED_HOST_ZERO
-Active-Host-Folder: Wishlist
-Host-Wishlist-Directory-State: ABSENT
-Host-Wishlist-Production-Files: 0
-Wishlist-HTTP-Owner: Tooba.Wishlist.Endpoints
-Wishlist-CQRS-State: MEDIATR
-Wishlist-Catalog-Boundary: CONTRACTS_ONLY
-Full-Wishlist-Folder-Certification: PASS_CLOSED_HOST_ZERO
-Prior-Accepted-Lineage: TB-TMAR-HOST-GRID-AMC-001-R5-R1_CLOSED_HOST_ZERO
+Current-Host-Checkpoint: Story_CLOSED_HOST_ZERO_R1
+Active-Host-Folder: Story
+Host-Story-Directory-State: ABSENT
+Host-Story-Production-Files: 0
+Host-Story-Reopened: false
+Story-HTTP-Owner: Tooba.Story.Endpoints
+Story-Endpoints-Domain-Reference: ZERO
+Story-Endpoints-Message-Classification: ZERO
+Story-Failure-Presentation: SemanticException_ApiResponseFactory
+Full-Story-Folder-Certification: PASS_CLOSED_HOST_ZERO
+Prior-Accepted-Lineage: TB-TMAR-HOST-STORY-AMC-001_CLOSED_HOST_ZERO ; TB-TMAR-HOST-WISHLIST-AMC-001_CLOSED_HOST_ZERO ; TB-TMAR-HOST-GRID-AMC-001-R5-R1_CLOSED_HOST_ZERO
 Next-Host-Folder-Started: false
 Next-Host-Folder: NONE_USER_DECISION_REQUIRED
 Stale-Current-Pointer-State: ZERO
-workflowStop: USER_REVIEW_HOST_WISHLIST_AMC_001_CLOSED_HOST_ZERO
-Next-Task: USER_REVIEW_HOST_WISHLIST_AMC_001_CLOSED_HOST_ZERO
+workflowStop: USER_REVIEW_HOST_STORY_AMC_001_R1_CLOSED_HOST_ZERO
+Next-Task: USER_REVIEW_HOST_STORY_AMC_001_R1_CLOSED_HOST_ZERO
 Automatic-Next-Implementation-Task: NONE
 ```
 
