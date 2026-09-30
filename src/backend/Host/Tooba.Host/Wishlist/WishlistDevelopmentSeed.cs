@@ -1,7 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Tooba.Catalog.Domain;
 using Tooba.Catalog.Infrastructure.Persistence;
-using Tooba.Host.Storefront;
 using Tooba.Wishlist.Domain;
 using Tooba.Wishlist.Infrastructure.Persistence;
 

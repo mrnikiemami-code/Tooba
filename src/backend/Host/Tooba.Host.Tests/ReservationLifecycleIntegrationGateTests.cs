@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Tooba.Catalog.Domain;
 using Tooba.Catalog.Infrastructure.Persistence;
@@ -7,7 +7,6 @@ using Tooba.Catalog.Contracts.Reservation;
 using Tooba.Catalog.Infrastructure.Reservation;
 using Tooba.Order.Application.Admin.Settings.ReservationPolicy;
 using Tooba.Order.Application.Admin.Settings.ReservationPolicy.Models;
-using Tooba.Host.Storefront;
 using Tooba.Order.Application.Storefront.Services;
 using Tooba.Order.Application.Storefront.Models;
 using Tooba.AddressBook.Contracts.Dtos;

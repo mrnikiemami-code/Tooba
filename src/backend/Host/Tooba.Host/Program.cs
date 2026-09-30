@@ -30,7 +30,6 @@ using Tooba.Notification.Endpoints;
 using Tooba.AccessControl.Endpoints;
 using Tooba.Payment.Endpoints;
 using Tooba.Promotion.Endpoints;
-using Tooba.Host.Storefront;
 using Tooba.Host.Reviews;
 using Tooba.Host.ProductQnA;
 using Tooba.Host.Wishlist;
@@ -180,9 +179,6 @@ builder.Services.Configure<Tooba.Order.Application.ReservationCycle.Contracts.Re
 builder.Services.AddScoped<Tooba.Host.Grid.AdminStoryGridQueryEngine>();
 builder.Services.AddScoped<Tooba.Host.Grid.AdminReviewGridQueryEngine>();
 builder.Services.AddScoped<Tooba.Host.Grid.AdminSellersGridQueryEngine>();
-builder.Services.AddScoped<Tooba.Host.Storefront.StorefrontComposer>();
-builder.Services.AddScoped<Tooba.Host.Storefront.FashionTemplatePreviewQuery>();
-builder.Services.AddScoped<Tooba.Host.Storefront.IndustryTemplatePreviewQuery>();
 builder.Services.AddScoped<Tooba.Order.Application.Storefront.Ports.IOrderStorefrontActor, Tooba.Host.Order.HostOrderStorefrontActor>();
 builder.Services.AddScoped<Tooba.Order.Application.Storefront.Ports.IOrderStorefrontCheckoutIdentityGate, Tooba.Host.Order.HostOrderStorefrontCheckoutIdentityGate>();
 builder.Services.AddScoped<Tooba.AddressBook.Contracts.Ports.IAddressBookCheckoutLookup>(sp => sp.GetRequiredService<Tooba.AddressBook.Application.Ports.IAddressBookDirectory>());
@@ -191,16 +187,16 @@ builder.Services.AddMemoryCache();
 builder.Services.AddScoped<Tooba.Catalog.Application.StoreLandingPages.Ports.IStoreLandingShellPort, Tooba.Host.CatalogAdapters.StoreLandingShellAdapter>();
 builder.Services.AddScoped<Tooba.Catalog.Application.StoreLandingPages.Ports.IStoreLandingMerchandisingPort, Tooba.Host.CatalogAdapters.StoreLandingMerchandisingAdapter>();
 builder.Services.AddScoped(sp =>
-    new CheckoutIdentityGate(
-        sp.GetRequiredService<Tooba.Catalog.Infrastructure.Persistence.CatalogDbContext>(),
+    new Tooba.Host.Security.Checkout.CheckoutIdentityGate(
+        sp.GetRequiredService<Tooba.Catalog.Contracts.Checkout.ICatalogCheckoutIdentityPolicyLookup>(),
         sp.GetRequiredService<CurrentAuthenticatedSession>()));
 builder.Services.AddScoped<Tooba.BuildingBlocks.Security.ICurrentAuthenticatedUser, HostCurrentAuthenticatedUser>();
 builder.Services.AddScoped<Tooba.BuildingBlocks.Security.IAdminPanelAccess, Tooba.Host.Admin.Access.HostAdminPanelAccess>();
 builder.Services.AddScoped<Tooba.BuildingBlocks.Security.ISellerPanelAccess, Tooba.Host.Security.Seller.HostSellerPanelAccess>();
 builder.Services.AddScoped<Tooba.BuildingBlocks.Security.IPlatformEffectiveAccessReader, Tooba.AccessControl.Infrastructure.Adapters.Security.PlatformEffectiveAccessReader>();
 builder.Services.AddScoped<Tooba.Payment.Application.Orchestration.StorefrontPaymentOrchestrator>();
-builder.Services.AddScoped<Tooba.Payment.Application.Ports.ICheckoutActorPolicyPort, Tooba.Host.Storefront.HostCheckoutActorPolicyAdapter>();
-builder.Services.AddScoped<Tooba.Payment.Endpoints.Storefront.IPaymentStorefrontAuthorizer, Tooba.Host.Storefront.HostPaymentStorefrontAuthorizer>();
+builder.Services.AddScoped<Tooba.Payment.Application.Ports.ICheckoutActorPolicyPort, Tooba.Host.Security.Checkout.HostCheckoutActorPolicyAdapter>();
+builder.Services.AddScoped<Tooba.Payment.Endpoints.Storefront.IPaymentStorefrontAuthorizer, Tooba.Host.Security.Payment.HostPaymentStorefrontAuthorizer>();
 builder.Services.AddScoped<Tooba.Payment.Endpoints.Admin.IPaymentAdminAuthorizer, Tooba.Host.Admin.Access.Authorizers.HostPaymentAdminAuthorizer>();
 builder.Services.AddScoped<Tooba.Promotion.Endpoints.Seller.IPromotionSellerAuthorizer, Tooba.Host.Security.Seller.HostPromotionSellerAuthorizer>();
 builder.Services.AddScoped<Tooba.Offer.Endpoints.Seller.IOfferSellerAuthorizer, Tooba.Host.Security.Seller.HostOfferSellerAuthorizer>();
@@ -398,7 +394,6 @@ app.MapAuthenticationBoundary(enableCors: true);
 app.MapProductWorkspaceModuleEndpoints();
 app.MapAdminPanelEndpoints();
 app.MapOrderEndpoints();
-app.MapStorefrontEndpoints();
 app.MapCartEndpoints();
 app.MapPaymentEndpoints();
 app.MapOfferModule();

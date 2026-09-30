@@ -14,6 +14,7 @@ using Tooba.Order.Application.Storefront.Ports;
 using Tooba.Order.Application.Storefront.Shipping.Commands.CommitStorefrontShipping;
 using Tooba.Order.Application.Storefront.Shipping.Commands.SaveStorefrontShippingSelection;
 using Tooba.Order.Application.Storefront.Shipping.Queries.ProjectStorefrontShipping;
+using Tooba.Order.Application.Storefront.Services;
 
 namespace Tooba.Order.Endpoints.Storefront;
 
@@ -31,6 +32,7 @@ internal static class StorefrontOrderEndpoints
         group.MapPost("/shipping/projection", ProjectShippingAsync);
         group.MapPut("/shipping/selection", SaveShippingSelectionAsync);
         group.MapPost("/shipping/commit", CommitShippingAsync);
+        group.MapGet("/geography/provinces", () => Results.Json(StorefrontIranGeography.Provinces));
     }
 
     private static async Task<IResult> ListPendingPaymentsAsync(

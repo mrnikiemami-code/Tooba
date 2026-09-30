@@ -1,28 +1,16 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using Tooba.BuildingBlocks;
+using Microsoft.Extensions.DependencyInjection;
 using Tooba.Catalog.Application;
 using Tooba.Catalog.Domain;
 using Tooba.Catalog.Infrastructure.Persistence;
-using Tooba.Inventory.Application.Ports;
-using Tooba.Inventory.Application.Checkout;
-using Tooba.Inventory.Application.Orders;
-using Tooba.Inventory.Contracts.Returns;
-using Tooba.Inventory.Domain.Aggregates;
-using Tooba.Inventory.Domain.ValueObjects;
-using Tooba.Inventory.Domain.Events;
-using Tooba.Offer.Application.Ports;
+using Tooba.Inventory.Contracts.Availability;
 using Tooba.Offer.Contracts.Dtos;
 using Tooba.Offer.Contracts.Ports;
-using Tooba.Party.Application;
-using Tooba.Pricing.Application;
-using Tooba.ProductQnA.Infrastructure;
-using Tooba.Content.Infrastructure;
-using Tooba.Content.Infrastructure.Development;
-using Tooba.Tax.Application;
+using Tooba.Party.Contracts;
+using Tooba.Pricing.Contracts;
 using Tooba.Tax.Contracts;
-using Tooba.Tax.Domain;
 
-namespace Tooba.Host.Storefront;
+namespace Tooba.Catalog.Infrastructure.Development.StorefrontDemo;
 
 /// <summary>
 /// جمع‌بندی شمارشی دانهٔ نمایشی فروشگاه برای شواهد و تست.
@@ -35,7 +23,7 @@ namespace Tooba.Host.Storefront;
 /// <param name="PublishedBrands">تعداد برند منتشرشدهٔ تحریری.</param>
 /// <param name="Offers">تعداد Offer قطعی که دانه برای این ماتریس ایجاد می‌کند.</param>
 /// <param name="AlreadySeeded">اگر true باشد اجرای جاری چیزی ننوشته و فقط وضعیت موجود را گزارش کرده است.</param>
-internal sealed record StorefrontDemoSeedSummary(
+public sealed record StorefrontDemoSeedSummary(
     int TopLevelCategories,
     int ChildCategories,
     int ThirdLevelCategories,
@@ -46,18 +34,16 @@ internal sealed record StorefrontDemoSeedSummary(
 
 /// <summary>
 /// دانهٔ نمایشی Development برای عمق واقعی درخت رده، برند و کارت محصول فروشگاه.
-/// این دانه فقط در محیط Development اجرا می‌شود و معنای bootstrap تولیدی را عوض نمی‌کند.
-/// همهٔ نوشتن‌ها از قرارداد دایرکتوری ماژول مالک انجام می‌شود: Catalog محصول توصیفی،
-/// Offer عرضهٔ فروشنده، Pricing مبلغ روی OfferId و Inventory موجودی روی OfferId.
+/// Catalog-owned; foreign Offer/Pricing/Inventory/Tax/Party writes go through Development Contracts gateways only.
 /// Product هیچ‌گاه قیمت یا موجودی نمی‌گیرد و هیچ JOIN بین schemaهای ماژول نوشته نمی‌شود.
 /// </summary>
-internal static class StorefrontDemoCatalogBootstrap
+public static class StorefrontDemoCatalogBootstrap
 {
     /// <summary>
     /// slug نگهبان idempotency. تا وقتی این محصول در Catalog باشد، دانه دوباره نوشته نمی‌شود
     /// تا راه‌اندازی مکرر Development دادهٔ تکراری نسازد.
     /// </summary>
-    internal const string SentinelProductSlug = "demo-mobile-1";
+    public const string SentinelProductSlug = "demo-mobile-1";
 
     /// <summary>
     /// بازار و کانال قطعی دانهٔ نمایشی؛ فروشگاه عمومی با همین ترکیب خوانده می‌شود.
@@ -81,55 +67,26 @@ internal static class StorefrontDemoCatalogBootstrap
     ];
 
     /// <summary>
-    /// schemaهای Development را فرض‌گرفته و دانهٔ نمایشی را روی Tenant توسعه اجرا می‌کند.
-    /// در Production صدا زده نمی‌شود و پس از bootstrap اصلی Development اجرا می‌شود.
+    /// Resolves Catalog-owned demo seed dependencies from DI. Caller must already assign Development commerce context.
     /// </summary>
-    /// <param name="services">ریشهٔ سرویس برنامه؛ scope مستقل ساخته می‌شود تا DbContext درخواستی آلوده نشود.</param>
-    /// <returns>جمع‌بندی شمارشی دانه برای شواهد.</returns>
-    /// <exception cref="InvalidOperationException">اگر Tenant توسعه فعال نباشد، دانه fail-closed می‌شود.</exception>
-    public static async Task<StorefrontDemoSeedSummary> ApplyAsync(IServiceProvider services)
+    public static async Task<StorefrontDemoSeedSummary> ApplyAsync(
+        IServiceProvider provider,
+        CancellationToken cancellationToken = default)
     {
-        await using var scope = services.CreateAsyncScope();
-        var provider = scope.ServiceProvider;
-        var registry = provider.GetRequiredService<ControlPlaneRegistry>();
-        if (!registry.Tenants.TryGetValue("store-alpha", out var tenant) || tenant.Status != TenantStatus.Active)
-        {
-            throw new InvalidOperationException("Storefront demo seed requires Active tenant store-alpha.");
-        }
-
-        var assigner = provider.GetRequiredService<ICommerceContextAssigner>();
-        assigner.Assign(new CommerceContext(
-            new EditionContext(registry.Edition, registry.DeploymentId),
-            new TenantContext(
-                tenant.TenantId,
-                tenant.Status,
-                tenant.ConnectionReference,
-                tenant.DisplayName,
-                tenant.ThemeReference,
-                tenant.DefaultMarketReference,
-                tenant.Hosts[0],
-                tenant.PrimaryDomain),
-            tenant.ConnectionReference,
-            "storefront-demo-seed"));
-
+        ArgumentNullException.ThrowIfNull(provider);
         var summary = await SeedAsync(
             provider.GetRequiredService<CatalogDbContext>(),
             provider.GetRequiredService<ICatalogDirectory>(),
-            provider.GetRequiredService<IPartyDirectory>(),
-            provider.GetRequiredService<MediatR.ISender>(),
-            provider.GetRequiredService<IPriceDirectory>(),
-            provider.GetRequiredService<IInventoryDirectory>(),
-            provider.GetRequiredService<ITaxDirectory>(),
-            provider.GetRequiredService<ITaxQueryGateway>(),
-            CancellationToken.None);
+            provider.GetRequiredService<IPartyDevelopmentSeedGateway>(),
+            provider.GetRequiredService<IOfferDevelopmentSeedGateway>(),
+            provider.GetRequiredService<IPricingDevelopmentSeedGateway>(),
+            provider.GetRequiredService<IInventoryDevelopmentSeedGateway>(),
+            provider.GetRequiredService<ITaxDevelopmentSeedGateway>(),
+            cancellationToken);
         await EnsureDemoTaxCoverageAsync(
             provider.GetRequiredService<IOfferQueryGateway>(),
-            provider.GetRequiredService<ITaxQueryGateway>(),
-            provider.GetRequiredService<ITaxDirectory>(),
-            CancellationToken.None);
-        // پرسش‌وپاسخ نمایشی پس از وجود demo-mobile-1؛ همان CommerceContext همین scope.
-        await ProductQnADevelopmentSeed.ApplyAsync(provider);
-        await ContentDevelopmentSeed.ApplyAsync(provider);
+            provider.GetRequiredService<ITaxDevelopmentSeedGateway>(),
+            cancellationToken);
         return summary;
     }
 
@@ -137,25 +94,14 @@ internal static class StorefrontDemoCatalogBootstrap
     /// ماتریس نمایشی را از قرارداد ماژول‌ها می‌نویسد. اگر slug نگهبان موجود باشد هیچ نوشتنی انجام نمی‌شود،
     /// بنابراین اجرای دوباره دادهٔ تکراری نمی‌سازد. همهٔ slug، SKU و مبلغ‌ها قطعی‌اند و از تصادف یا ساعت اجرا مشتق نمی‌شوند.
     /// </summary>
-    /// <param name="catalogRead">فقط برای شمارش و بررسی نگهبان در schema همان ماژول Catalog؛ نوشتن از دایرکتوری انجام می‌شود.</param>
-    /// <param name="catalog">قرارداد نوشتن Catalog.</param>
-    /// <param name="parties">قرارداد نوشتن Party برای سازمان فروشندهٔ نمایشی.</param>
-    /// <param name="offers">قرارداد نوشتن Offer؛ هویت فروشنده اینجاست نه در Catalog.</param>
-    /// <param name="prices">قرارداد نوشتن Pricing؛ مبلغ فقط با کلید OfferId نوشته می‌شود.</param>
-    /// <param name="inventory">قرارداد نوشتن Inventory؛ موجودی فقط با کلید OfferId نوشته می‌شود.</param>
-    /// <param name="tax">قرارداد Tax برای طبقه و قاعدهٔ نمایشی روی Offer.</param>
-    /// <param name="taxQuery">Idempotent tax category and rule reads through the Tax contract.</param>
-    /// <param name="cancellationToken">توکن لغو عملیات.</param>
-    /// <returns>جمع‌بندی شمارشی وضعیت پس از اجرا.</returns>
     public static async Task<StorefrontDemoSeedSummary> SeedAsync(
         CatalogDbContext catalogRead,
         ICatalogDirectory catalog,
-        IPartyDirectory parties,
-        MediatR.ISender offers,
-        IPriceDirectory prices,
-        IInventoryDirectory inventory,
-        ITaxDirectory tax,
-        ITaxQueryGateway taxQuery,
+        IPartyDevelopmentSeedGateway parties,
+        IOfferDevelopmentSeedGateway offers,
+        IPricingDevelopmentSeedGateway prices,
+        IInventoryDevelopmentSeedGateway inventory,
+        ITaxDevelopmentSeedGateway tax,
         CancellationToken cancellationToken)
     {
         if (await catalogRead.Products.AsNoTracking()
@@ -209,14 +155,25 @@ internal static class StorefrontDemoCatalogBootstrap
         var sellerPartyIds = new List<Guid>();
         foreach (var seller in StorefrontDemoCatalogMatrix.Sellers)
         {
-            var organization = await parties.CreateOrganizationAsync(seller.DisplayName, seller.LegalName, cancellationToken);
-            sellerPartyIds.Add(organization.PartyId);
+            sellerPartyIds.Add(await parties.EnsureDevelopmentOrganizationAsync(
+                seller.DisplayName,
+                seller.LegalName,
+                cancellationToken));
         }
 
         var locationIds = new List<Guid>();
         foreach (var location in StorefrontDemoCatalogMatrix.Locations)
         {
-            locationIds.Add(await inventory.CreateLocationAsync(location.Code, location.Name, cancellationToken));
+            var ensured = await inventory.EnsureDevelopmentLocationAsync(
+                location.Code,
+                location.Name,
+                cancellationToken);
+            if (ensured.IsFailure)
+            {
+                throw new InvalidOperationException(ensured.FirstError.Code);
+            }
+
+            locationIds.Add(ensured.Value);
         }
 
         var offerCount = 0;
@@ -299,7 +256,6 @@ internal static class StorefrontDemoCatalogBootstrap
                         prices,
                         inventory,
                         tax,
-                        taxQuery,
                         variant.VariantId,
                         sellerPartyIds[productOrdinal % sellerPartyIds.Count],
                         $"{child.Token.ToUpperInvariant()}-{index + 1}-A",
@@ -321,7 +277,6 @@ internal static class StorefrontDemoCatalogBootstrap
                             prices,
                             inventory,
                             tax,
-                            taxQuery,
                             specialVariant.VariantId,
                             sellerPartyIds[productOrdinal % sellerPartyIds.Count],
                             $"{child.Token.ToUpperInvariant()}-{index + 1}-SPECIAL",
@@ -341,7 +296,6 @@ internal static class StorefrontDemoCatalogBootstrap
                             prices,
                             inventory,
                             tax,
-                            taxQuery,
                             variant.VariantId,
                             sellerPartyIds[(productOrdinal + 1) % sellerPartyIds.Count],
                             $"{child.Token.ToUpperInvariant()}-{index + 1}-B",
@@ -424,14 +378,13 @@ internal static class StorefrontDemoCatalogBootstrap
 
     /// <summary>
     /// یک عرضهٔ کامل و قابل نمایش می‌سازد: Offer فعال، قیمت فعال در بازهٔ اعتبار، موقعیت موجودی و طبقهٔ مالیاتی.
-    /// هر بخش در ماژول مالک خودش نوشته می‌شود و کلید مشترکشان فقط OfferId است.
+    /// هر بخش از Development Contracts ماژول مالک نوشته می‌شود و کلید مشترکشان فقط OfferId است.
     /// </summary>
     private static async Task PublishOfferAsync(
-        MediatR.ISender offers,
-        IPriceDirectory prices,
-        IInventoryDirectory inventory,
-        ITaxDirectory tax,
-        ITaxQueryGateway taxQuery,
+        IOfferDevelopmentSeedGateway offers,
+        IPricingDevelopmentSeedGateway prices,
+        IInventoryDevelopmentSeedGateway inventory,
+        ITaxDevelopmentSeedGateway tax,
         Guid variantId,
         Guid sellerPartyId,
         string skuSuffix,
@@ -440,39 +393,61 @@ internal static class StorefrontDemoCatalogBootstrap
         int quantity,
         CancellationToken cancellationToken)
     {
-        var created = await offers.Send(new Tooba.Offer.Application.Commands.CreateOffer.CreateOfferCommand(
-            variantId, sellerPartyId, SalesChannel.Marketplace, $"DEMO-{skuSuffix}"), cancellationToken);
-        if (created.IsFailure)
-            throw new InvalidOperationException(created.FirstError.Code);
-        var offer = created.Value;
-        var activated = await offers.Send(new Tooba.Offer.Application.Commands.ActivateOffer.ActivateOfferCommand(
-            offer.OfferId, sellerPartyId), cancellationToken);
-        if (activated.IsFailure)
-            throw new InvalidOperationException(activated.FirstError.Code);
-
-        var price = await prices.CreatePriceAsync(
-            offer.OfferId,
-            DemoMarket,
-            SalesChannel.Marketplace,
-            amount,
-            "IRR",
-            PriceValidFrom,
-            null,
-            cancellationToken);
-        await prices.ActivateAsync(price.PriceId, cancellationToken);
-
-        var stockItemId = await inventory.OpenPositionAsync(offer.OfferId, locationId, cancellationToken);
-        await inventory.AdjustAsync(
-            stockItemId,
-            StockAdjustmentKind.Increase,
-            quantity,
-            "storefront-demo-seed-receipt",
-            null,
+        var offerId = await offers.EnsureActiveSellerOfferAsync(
+            variantId,
+            sellerPartyId,
+            $"DEMO-{skuSuffix}",
             cancellationToken);
 
-        var taxCategory = await EnsureStandardTaxCategoryAsync(tax, taxQuery, cancellationToken);
-        await EnsureStandardTaxRuleAsync(tax, taxQuery, taxCategory.CategoryId, cancellationToken);
-        await tax.AssignOfferCategoryAsync(offer.OfferId, taxCategory.CategoryId, cancellationToken);
+        var price = await prices.EnsureDevelopmentBasePriceAsync(
+            new SetDevelopmentBasePrice(
+                offerId,
+                DemoMarket,
+                SalesChannel.Marketplace,
+                amount,
+                "IRR",
+                PriceValidFrom),
+            cancellationToken);
+        if (price.IsFailure)
+        {
+            throw new InvalidOperationException(price.FirstError.Code);
+        }
+
+        var stock = await inventory.IncreaseDevelopmentStockAsync(
+            new SeedDevelopmentStock(
+                offerId,
+                locationId,
+                quantity,
+                "storefront-demo-seed-receipt"),
+            cancellationToken);
+        if (stock.IsFailure)
+        {
+            throw new InvalidOperationException(stock.FirstError.Code);
+        }
+
+        var classified = await tax.EnsureDevelopmentOfferCategoryAsync(
+            new EnsureDevelopmentOfferCategory(offerId, "standard", "استاندارد"),
+            cancellationToken);
+        if (classified.IsFailure)
+        {
+            throw new InvalidOperationException(classified.FirstError.Code);
+        }
+
+        var rule = await tax.EnsureDevelopmentRuleAsync(
+            new EnsureDevelopmentTaxRule(
+                "IR-NAT",
+                DemoMarket,
+                "standard",
+                DevelopmentTaxRuleKind.Percentage,
+                0.09m,
+                PriceValidFrom,
+                10,
+                DevelopmentTaxOverridePolicy.Disabled),
+            cancellationToken);
+        if (rule.IsFailure)
+        {
+            throw new InvalidOperationException(rule.FirstError.Code);
+        }
     }
 
     /// <summary>
@@ -481,58 +456,36 @@ internal static class StorefrontDemoCatalogBootstrap
     /// </summary>
     private static async Task EnsureDemoTaxCoverageAsync(
         IOfferQueryGateway offers,
-        ITaxQueryGateway taxQuery,
-        ITaxDirectory tax,
+        ITaxDevelopmentSeedGateway tax,
         CancellationToken cancellationToken)
     {
-        var category = await EnsureStandardTaxCategoryAsync(tax, taxQuery, cancellationToken);
-        await EnsureStandardTaxRuleAsync(tax, taxQuery, category.CategoryId, cancellationToken);
+        var rule = await tax.EnsureDevelopmentRuleAsync(
+            new EnsureDevelopmentTaxRule(
+                "IR-NAT",
+                DemoMarket,
+                "standard",
+                DevelopmentTaxRuleKind.Percentage,
+                0.09m,
+                PriceValidFrom,
+                10,
+                DevelopmentTaxOverridePolicy.Disabled),
+            cancellationToken);
+        if (rule.IsFailure)
+        {
+            throw new InvalidOperationException(rule.FirstError.Code);
+        }
 
         var demoOfferIds = await offers.ListOfferIdsBySellerSkuPrefixAsync("DEMO-", cancellationToken);
         foreach (var offerId in demoOfferIds)
         {
-            await tax.AssignOfferCategoryAsync(offerId, category.CategoryId, cancellationToken);
+            var classified = await tax.EnsureDevelopmentOfferCategoryAsync(
+                new EnsureDevelopmentOfferCategory(offerId, "standard", "استاندارد"),
+                cancellationToken);
+            if (classified.IsFailure)
+            {
+                throw new InvalidOperationException(classified.FirstError.Code);
+            }
         }
-    }
-
-    private static async Task<TaxCategoryReference> EnsureStandardTaxCategoryAsync(
-        ITaxDirectory tax,
-        ITaxQueryGateway taxQuery,
-        CancellationToken cancellationToken)
-    {
-        var existing = await taxQuery.FindCategoryByCodesAsync(["standard", "standard-demo"], cancellationToken);
-        if (existing is not null)
-        {
-            return new TaxCategoryReference(existing.CategoryId, existing.Code, existing.DisplayName);
-        }
-
-        return await tax.CreateCategoryAsync("standard", "استاندارد", cancellationToken);
-    }
-
-    private static async Task EnsureStandardTaxRuleAsync(
-        ITaxDirectory tax,
-        ITaxQueryGateway taxQuery,
-        Guid categoryId,
-        CancellationToken cancellationToken)
-    {
-        var active = await taxQuery.HasActiveRuleAsync(categoryId, "IR-NAT", DemoMarket, cancellationToken);
-        if (active)
-        {
-            return;
-        }
-
-        var rule = await tax.CreateRuleAsync(
-            "IR-NAT",
-            DemoMarket,
-            categoryId,
-            TaxRuleKind.Percentage,
-            0.09m,
-            PriceValidFrom,
-            null,
-            10,
-            TaxOverridePolicy.Disabled,
-            cancellationToken);
-        await tax.ActivateRuleAsync(rule.RuleId, cancellationToken);
     }
 
     /// <summary>

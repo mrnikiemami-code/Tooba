@@ -1,4 +1,4 @@
-namespace Tooba.Host.Storefront;
+﻿namespace Tooba.Host.Authentication;
 
 /// <summary>
 /// هویت نمایشی هدر ویترین: نام پروفایل، وگرنه موبایل Identity. Recipient ارسال منبع هویت نیست.

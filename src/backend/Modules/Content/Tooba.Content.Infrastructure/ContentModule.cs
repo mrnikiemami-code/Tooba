@@ -36,6 +36,7 @@ public sealed class ContentModule : IToobaModule
         services.AddScoped<IContentMediaAssetValidator, ContentMediaAssetValidator>();
         services.AddScoped<IContentArticleGridPort, ContentArticleGridAdapter>();
         services.AddScoped<IContentAuthorGridPort, ContentAuthorGridAdapter>();
+        services.AddScoped<Tooba.Content.Contracts.Storefront.IContentStorefrontArticlesPort, ContentStorefrontArticlesAdapter>();
         services.AddModuleSchemaMigrator<ContentDbContext>("Content", ModuleSchemaMigrationOrder.Content);
         services.AddDbContext<ContentDbContext>((sp, options) =>
         {

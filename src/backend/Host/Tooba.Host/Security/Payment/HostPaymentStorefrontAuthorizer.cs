@@ -1,7 +1,7 @@
 #pragma warning disable CS1591
 using Tooba.Payment.Endpoints.Storefront;
 
-namespace Tooba.Host.Storefront;
+namespace Tooba.Host.Security.Payment;
 
 /// <summary>Host transport adapter for Payment storefront actor resolution.</summary>
 public sealed class HostPaymentStorefrontAuthorizer : IPaymentStorefrontAuthorizer

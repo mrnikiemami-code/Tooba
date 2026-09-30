@@ -16,7 +16,7 @@ public sealed class StorefrontPaymentActorOwnershipTests
             "src", "backend", "Modules", "Payment", "Tooba.Payment.Application", "Orchestration", "StorefrontPaymentOrchestrator.cs"));
         var authorizer = File.ReadAllText(Path.Combine(
             root,
-            "src", "backend", "Host", "Tooba.Host", "Storefront", "HostPaymentStorefrontAuthorizer.cs"));
+            "src", "backend", "Host", "Tooba.Host", "Security", "Payment", "HostPaymentStorefrontAuthorizer.cs"));
         Assert.Contains("ResolvePaymentActor", orchestrator, StringComparison.Ordinal);
         Assert.Contains("authenticatedUserId", orchestrator, StringComparison.Ordinal);
         Assert.Contains("CurrentAuthenticatedSession", authorizer, StringComparison.Ordinal);

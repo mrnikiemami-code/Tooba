@@ -6,6 +6,8 @@ using Tooba.BuildingBlocks;
 using Tooba.ModuleContracts;
 using Tooba.Persistence;
 using Tooba.Reviews.Application;
+using Tooba.Reviews.Contracts.Storefront;
+using Tooba.Reviews.Infrastructure.Adapters;
 using Tooba.Reviews.Infrastructure.Persistence;
 
 namespace Tooba.Reviews.Infrastructure;
@@ -20,6 +22,7 @@ public sealed class ReviewsModule : IToobaModule
     {
         services.AddSingleton<IOutboxModuleRegistration, ReviewsOutboxRegistration>();
         services.AddScoped<IReviewDirectory, ReviewDirectory>();
+        services.AddScoped<IReviewsStorefrontLookup, ReviewsStorefrontLookupAdapter>();
         services.AddModuleSchemaMigrator<ReviewsDbContext>("Reviews", ModuleSchemaMigrationOrder.Reviews);
         services.AddDbContext<ReviewsDbContext>((sp, options) =>
         {

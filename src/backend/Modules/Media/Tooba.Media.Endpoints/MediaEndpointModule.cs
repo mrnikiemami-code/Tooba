@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Routing;
 using Tooba.Media.Endpoints.Admin;
+using Tooba.Media.Endpoints.Storefront;
 
 namespace Tooba.Media.Endpoints;
 
@@ -13,6 +14,7 @@ public static class MediaEndpointModule
         ArgumentNullException.ThrowIfNull(app);
         MediaAdminEndpoints.Map(app);
         app.MapGet("/v1/media/{id:guid}", MediaAssetServing.ServeAsync);
+        app.MapMediaStorefrontEndpoints();
         return app;
     }
 }

@@ -1,17 +1,17 @@
+using Tooba.Catalog.Application.Storefront.Models;
+using Tooba.Catalog.Application.Storefront.Ports;
 using Tooba.Catalog.Application.StoreLandingPages.Models;
 using Tooba.Catalog.Application.StoreLandingPages.Ports;
-using Tooba.Content.Domain.Rules;
-using Tooba.Host.Storefront;
 
 namespace Tooba.Host.CatalogAdapters;
 
-/// <summary>Host adapter: StorefrontComposer → Catalog Landing shell port.</summary>
+/// <summary>Host adapter: Catalog IStorefrontComposer → Catalog Landing shell port.</summary>
 public sealed class StoreLandingShellAdapter : IStoreLandingShellPort
 {
-    private readonly StorefrontComposer _storefront;
+    private readonly IStorefrontComposer _storefront;
 
     /// <summary>Creates the adapter.</summary>
-    public StoreLandingShellAdapter(StorefrontComposer storefront) => _storefront = storefront;
+    public StoreLandingShellAdapter(IStorefrontComposer storefront) => _storefront = storefront;
 
     /// <inheritdoc />
     public async Task<IReadOnlyDictionary<Guid, StoreLandingShellProductCard>> ComposeProductCardsAsync(
@@ -47,8 +47,7 @@ public sealed class StoreLandingShellAdapter : IStoreLandingShellPort
         string pageLocale,
         CancellationToken cancellationToken)
     {
-        var contentLocale = ContentTaxonomySeoRules.ResolveContentLocale(pageLocale);
-        var items = await _storefront.BuildLatestArticlesAsync(contentLocale, cancellationToken);
+        var items = await _storefront.BuildLatestArticlesAsync(pageLocale, cancellationToken);
         return items.Select(x => new StoreLandingShellArticleItem(
             x.ArticleId,
             x.Slug,

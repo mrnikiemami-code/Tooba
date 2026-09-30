@@ -1,4 +1,4 @@
-using Tooba.Host.Storefront;
+using Tooba.Host.Authentication;
 using Tooba.Order.Application.Storefront.Services;
 using Tooba.Order.Application.Storefront.Models;
 using Tooba.AddressBook.Contracts.Dtos;

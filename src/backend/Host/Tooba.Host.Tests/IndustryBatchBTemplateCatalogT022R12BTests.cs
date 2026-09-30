@@ -2,7 +2,7 @@
 using Tooba.Catalog.Domain;
 using Tooba.Catalog.Infrastructure.Persistence;
 using Tooba.Catalog.Infrastructure.Development;
-using Tooba.Host.Storefront;
+using Tooba.Catalog.Infrastructure.Development.TemplateCatalog;
 using Tooba.Order.Application.Storefront.Services;
 using Tooba.Order.Application.Storefront.Models;
 using Tooba.AddressBook.Contracts.Dtos;

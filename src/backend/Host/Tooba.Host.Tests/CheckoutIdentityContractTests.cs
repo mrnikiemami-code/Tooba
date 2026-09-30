@@ -41,7 +41,8 @@ public sealed class CheckoutIdentityContractTests
     {
         var auth = File.ReadAllText(Path.Combine(FindRepoRoot(), "src", "backend", "Host", "Tooba.Host", "Authentication", "AuthenticationHttpBoundary.cs"));
         var orderEndpoints = File.ReadAllText(Path.Combine(FindRepoRoot(), "src", "backend", "Modules", "Order", "Tooba.Order.Endpoints", "Storefront", "StorefrontOrderEndpoints.cs"));
-        var hostEndpoints = File.ReadAllText(Path.Combine(FindRepoRoot(), "src", "backend", "Host", "Tooba.Host", "Storefront", "StorefrontEndpoints.cs"));
+        Assert.False(Directory.Exists(Path.Combine(FindRepoRoot(), "src", "backend", "Host", "Tooba.Host", "Storefront")));
+        var catalogSettings = File.ReadAllText(Path.Combine(FindRepoRoot(), "src", "backend", "Modules", "Catalog", "Tooba.Catalog.Endpoints", "Storefront", "Settings", "CatalogStorefrontSettingsEndpoints.cs"));
         var orderErrors = File.ReadAllText(Path.Combine(FindRepoRoot(), "src", "backend", "Modules", "Order", "Tooba.Order.Application", "Storefront", "StorefrontOrderErrors.cs"));
         var cartEndpoints = File.ReadAllText(Path.Combine(FindRepoRoot(), "src", "backend", "Modules", "Cart", "Tooba.Cart.Endpoints", "Storefront", "CartStorefrontEndpoints.cs"));
         var actor = File.ReadAllText(Path.Combine(FindRepoRoot(), "src", "backend", "Host", "Tooba.Host", "Order", "HostOrderStorefrontActor.cs"));
@@ -50,7 +51,7 @@ public sealed class CheckoutIdentityContractTests
         Assert.Contains("/otp-login/complete", auth, StringComparison.Ordinal);
         Assert.Contains("checkout.authentication_required", orderErrors, StringComparison.Ordinal);
         Assert.Contains("/cart/merge", cartEndpoints, StringComparison.Ordinal);
-        Assert.Contains("checkout-identity-policy", hostEndpoints, StringComparison.Ordinal);
+        Assert.Contains("checkout-identity-policy", catalogSettings, StringComparison.Ordinal);
         Assert.Contains("session.IsAuthenticated", actor, StringComparison.Ordinal);
         Assert.DoesNotContain("type=\"password\"", login, StringComparison.Ordinal);
         Assert.DoesNotContain("TB-P10-T005", orderEndpoints, StringComparison.Ordinal);

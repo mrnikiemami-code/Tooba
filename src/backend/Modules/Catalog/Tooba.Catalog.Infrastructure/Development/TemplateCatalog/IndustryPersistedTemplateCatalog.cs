@@ -1,6 +1,6 @@
-using Tooba.Catalog.Infrastructure.Development;
+﻿using Tooba.Catalog.Infrastructure.Development;
 
-namespace Tooba.Host.Storefront;
+namespace Tooba.Catalog.Infrastructure.Development.TemplateCatalog;
 
 /// <summary>Facade over Batch A/B persisted industry Template Catalog seeds.</summary>
 internal static class IndustryPersistedTemplateCatalog

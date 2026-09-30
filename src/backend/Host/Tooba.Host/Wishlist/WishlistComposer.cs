@@ -1,4 +1,5 @@
-using Tooba.Host.Storefront;
+using Tooba.Catalog.Application.Storefront.Models;
+using Tooba.Catalog.Application.Storefront.Ports;
 using Tooba.Wishlist.Application;
 
 namespace Tooba.Host.Wishlist;
@@ -7,10 +8,10 @@ namespace Tooba.Host.Wishlist;
 public sealed class WishlistComposer
 {
     private readonly IWishlistDirectory _wishlist;
-    private readonly StorefrontComposer _storefront;
+    private readonly IStorefrontComposer _storefront;
 
-    /// <summary>دایرکتوری مالک و ترکیب‌گر Host را دریافت می‌کند.</summary>
-    public WishlistComposer(IWishlistDirectory wishlist, StorefrontComposer storefront)
+    /// <summary>دایرکتوری مالک و ترکیب‌گر Catalog را دریافت می‌کند.</summary>
+    public WishlistComposer(IWishlistDirectory wishlist, IStorefrontComposer storefront)
     {
         _wishlist = wishlist;
         _storefront = storefront;

@@ -105,13 +105,19 @@ public sealed class HostAdminAmcW34TemplateSeedsGuardTests
     {
         var root = FindRepoRoot();
         var fashion = File.ReadAllText(Path.Combine(
-            root, "src/backend/Host/Tooba.Host/Storefront/FashionTemplatePreviewQuery.cs"));
+            root, "src/backend/Modules/Catalog/Tooba.Catalog.Infrastructure/Development/TemplateCatalog/FashionTemplatePreviewQuery.cs"));
         var industry = File.ReadAllText(Path.Combine(
-            root, "src/backend/Host/Tooba.Host/Storefront/IndustryPersistedTemplateCatalog.cs"));
+            root, "src/backend/Modules/Catalog/Tooba.Catalog.Infrastructure/Development/TemplateCatalog/IndustryPersistedTemplateCatalog.cs"));
         Assert.DoesNotContain("using Tooba.Host.Admin;", fashion, StringComparison.Ordinal);
         Assert.DoesNotContain("using Tooba.Host.Admin;", industry, StringComparison.Ordinal);
         Assert.Contains("Tooba.Catalog.Infrastructure.Development", fashion, StringComparison.Ordinal);
         Assert.Contains("Tooba.Catalog.Infrastructure.Development", industry, StringComparison.Ordinal);
+        Assert.False(File.Exists(Path.Combine(
+            root, "src/backend/Host/Tooba.Host/Storefront/FashionTemplatePreviewQuery.cs")));
+        Assert.False(File.Exists(Path.Combine(
+            root, "src/backend/Host/Tooba.Host/Storefront/IndustryPersistedTemplateCatalog.cs")));
+        Assert.False(File.Exists(Path.Combine(
+            root, "src/backend/Host/Tooba.Host/Storefront/IndustryTemplatePreviewQuery.cs")));
     }
 
     [Fact]

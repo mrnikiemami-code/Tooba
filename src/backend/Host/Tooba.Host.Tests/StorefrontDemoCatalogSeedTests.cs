@@ -1,4 +1,4 @@
-using Tooba.Promotion.Application.Ports;
+﻿using Tooba.Promotion.Application.Ports;
 using Tooba.Promotion.Infrastructure.Queries;
 using Tooba.Promotion.Infrastructure.Messaging;
 using Tooba.Promotion.Infrastructure.Adapters;
@@ -14,7 +14,9 @@ using Tooba.BuildingBlocks.Observability.Tracing;
 using Tooba.Catalog.Domain;
 using Tooba.Catalog.Infrastructure;
 using Tooba.Catalog.Infrastructure.Persistence;
-using Tooba.Host.Storefront;
+using Tooba.Catalog.Infrastructure.Development.StorefrontDemo;
+using Tooba.Catalog.Application.Storefront.Models;
+using Tooba.Catalog.Infrastructure.Storefront;
 using Tooba.Order.Application.Storefront.Services;
 using Tooba.Order.Application.Storefront.Models;
 using Tooba.AddressBook.Contracts.Dtos;
@@ -33,8 +35,10 @@ using Tooba.Party.Infrastructure.Persistence;
 using Tooba.Persistence;
 using Tooba.Pricing.Domain;
 using Tooba.Pricing.Infrastructure;
+using Tooba.Pricing.Infrastructure.Adapters;
 using Tooba.Pricing.Infrastructure.Persistence;
 using Tooba.Tax.Infrastructure;
+using Tooba.Tax.Infrastructure.Adapters;
 using Tooba.Tax.Infrastructure.Persistence;
 using Xunit;
 
@@ -158,20 +162,28 @@ public sealed class StorefrontDemoCatalogSeedTests : IAsyncLifetime
 
         var catalogDirectory = new CatalogDirectory(catalogDb, new OpenCatalogUseCaseGuard());
         var partyDirectory = new PartyDirectory(partyDb);
-        var offerDirectory = new OfferDirectory(offerDb, new OpenOfferUseCaseGuard(), catalogDirectory, partyDirectory, new SystemUtcClock(), new UuidV7IdGenerator());
-        var priceDirectory = new PriceDirectory(pricingDb, new OpenPricingUseCaseGuard(), offerDirectory);
-        var inventoryDirectory = new InventoryDirectory(inventoryDb, new OpenInventoryUseCaseGuard(), offerDirectory, catalogDirectory, new SystemUtcClock(), new UuidV7IdGenerator(), new ModuleCallTracer());
+        var clock = new SystemUtcClock();
+        var ids = new UuidV7IdGenerator();
+        var offerDirectory = new OfferDirectory(offerDb, new OpenOfferUseCaseGuard(), catalogDirectory, partyDirectory, clock, ids);
+        var offerStore = new OfferStore(offerDb);
+        var offerSeeds = new OfferDevelopmentSeedGateway(offerDb, ids, clock);
+        var partySeeds = new PartyDevelopmentSeedGateway(partyDb, partyDirectory, clock);
+        var priceSeeds = new PricingDevelopmentSeedGateway(
+            pricingDb, new OpenPricingUseCaseGuard(), offerStore, clock, ids);
+        var inventoryDirectory = new InventoryDirectory(inventoryDb, new OpenInventoryUseCaseGuard(), offerDirectory, catalogDirectory, clock, ids, new ModuleCallTracer());
+        var inventoryQueries = new InventoryQueryGateway(inventoryDb);
+        var inventorySeeds = new InventoryDevelopmentSeedGateway(inventoryDirectory, inventoryQueries);
         var taxDirectory = new TaxDirectory(taxDb, new OpenTaxUseCaseGuard());
+        var taxSeeds = new TaxDevelopmentSeedGateway(taxDirectory, taxDirectory);
 
         var first = await StorefrontDemoCatalogBootstrap.SeedAsync(
             catalogDb,
             catalogDirectory,
-            partyDirectory,
-            new OfferTestSender(offerDirectory),
-            priceDirectory,
-            inventoryDirectory,
-            taxDirectory,
-            taxDirectory,
+            partySeeds,
+            offerSeeds,
+            priceSeeds,
+            inventorySeeds,
+            taxSeeds,
             CancellationToken.None);
 
         Assert.False(first.AlreadySeeded);
@@ -244,12 +256,11 @@ public sealed class StorefrontDemoCatalogSeedTests : IAsyncLifetime
         var second = await StorefrontDemoCatalogBootstrap.SeedAsync(
             catalogDb,
             catalogDirectory,
-            partyDirectory,
-            new OfferTestSender(offerDirectory),
-            priceDirectory,
-            inventoryDirectory,
-            taxDirectory,
-            taxDirectory,
+            partySeeds,
+            offerSeeds,
+            priceSeeds,
+            inventorySeeds,
+            taxSeeds,
             CancellationToken.None);
 
         Assert.True(second.AlreadySeeded);

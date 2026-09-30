@@ -1,4 +1,4 @@
-﻿namespace Tooba.Host.Storefront;
+﻿namespace Tooba.Catalog.Application.Storefront.Models;
 
 /// <summary>
 /// کاندیدای انتخاب Offer نمایشی. مبلغ از Pricing و موجودی از Inventory می‌آید نه از Product.

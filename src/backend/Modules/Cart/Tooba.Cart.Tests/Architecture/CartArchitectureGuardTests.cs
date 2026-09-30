@@ -162,27 +162,18 @@ public sealed class CartArchitectureGuardTests
         Assert.Contains(application, x => x.Text.Contains("using MediatR", StringComparison.Ordinal));
         Assert.DoesNotContain(application, x => x.Path.EndsWith("CartHandlers.cs", StringComparison.OrdinalIgnoreCase));
 
+        Assert.False(Directory.Exists(Path.Combine(
+            RepoRoot(), "src", "backend", "Host", "Tooba.Host", "Storefront")));
         Assert.DoesNotContain(application, x =>
             x.Text.Contains("Catalog.Application", StringComparison.Ordinal)
             || x.Text.Contains("Party.Application", StringComparison.Ordinal)
             || x.Text.Contains("CatalogDbContext", StringComparison.Ordinal));
 
-        var hostEndpoints = File.ReadAllText(Path.Combine(
-            RepoRoot(), "src", "backend", "Host", "Tooba.Host", "Storefront", "StorefrontEndpoints.cs"));
-        Assert.DoesNotContain("MapPost(\"/cart\"", hostEndpoints, StringComparison.Ordinal);
-        Assert.DoesNotContain("MapGet(\"/cart/", hostEndpoints, StringComparison.Ordinal);
-        Assert.DoesNotContain("MapPatch(\"/cart/", hostEndpoints, StringComparison.Ordinal);
-        Assert.DoesNotContain("MapDelete(\"/cart/", hostEndpoints, StringComparison.Ordinal);
-        Assert.DoesNotContain("ExecuteCartAsync", hostEndpoints, StringComparison.Ordinal);
-        Assert.DoesNotContain("MapCartException", hostEndpoints, StringComparison.Ordinal);
-
-        Assert.False(File.Exists(Path.Combine(
-            RepoRoot(), "src", "backend", "Host", "Tooba.Host", "Storefront", "StorefrontCartComposer.cs")));
-
         var hostProgram = File.ReadAllText(Path.Combine(
             RepoRoot(), "src", "backend", "Host", "Tooba.Host", "Program.cs"));
         Assert.Contains("MapCartEndpoints()", hostProgram, StringComparison.Ordinal);
         Assert.DoesNotContain("new StorefrontCartComposer(", hostProgram, StringComparison.Ordinal);
+        Assert.DoesNotContain("MapStorefrontEndpoints()", hostProgram, StringComparison.Ordinal);
 
         var presentation = File.ReadAllText(Path.Combine(
             CartRoot(), "Tooba.Cart.Application", "Presentation", "CartPresentationComposer.cs"));

@@ -1,5 +1,4 @@
-﻿using Tooba.Host.Storefront;
-using Tooba.Wishlist.Application;
+﻿using Tooba.Wishlist.Application;
 
 namespace Tooba.Host.Wishlist;
 

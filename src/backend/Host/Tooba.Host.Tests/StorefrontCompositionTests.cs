@@ -1,7 +1,8 @@
-using System.Text.Json;
+﻿using System.Text.Json;
 using Tooba.Catalog.Application;
 using Tooba.Catalog.Domain;
-using Tooba.Host.Storefront;
+using Tooba.Catalog.Application.Storefront.Models;
+using Tooba.Catalog.Infrastructure.Storefront;
 using Tooba.Order.Application.Storefront.Services;
 using Tooba.Order.Application.Storefront.Models;
 using Tooba.AddressBook.Contracts.Dtos;

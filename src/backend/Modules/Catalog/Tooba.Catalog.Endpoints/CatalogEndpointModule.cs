@@ -24,11 +24,14 @@ using Tooba.Catalog.Endpoints.Admin.Variants;
 using Tooba.Catalog.Endpoints.Errors;
 using Tooba.Catalog.Endpoints.Resources;
 using Tooba.Catalog.Endpoints.Seller;
+using Tooba.Catalog.Endpoints.Storefront.Browse;
 using Tooba.Catalog.Endpoints.Storefront.Categories;
 using Tooba.Catalog.Endpoints.Storefront.Facets;
 using Tooba.Catalog.Endpoints.Storefront.MegaMenu;
 using Tooba.Catalog.Endpoints.Storefront.StoreLandingPages;
 using Tooba.Catalog.Endpoints.Storefront.StoreMenus;
+using Tooba.Catalog.Endpoints.Storefront.Settings;
+using Tooba.Catalog.Endpoints.Storefront.TemplateCatalog;
 
 namespace Tooba.Catalog.Endpoints;
 
@@ -67,6 +70,9 @@ public static class CatalogEndpointModule
         app.MapCatalogStoreLandingPageStorefrontEndpoints();
         app.MapCatalogStoreMenuAdminEndpoints();
         app.MapCatalogStoreMenuStorefrontEndpoints();
+        app.MapCatalogTemplateCatalogStorefrontEndpoints();
+        app.MapCatalogStorefrontSettingsEndpoints();
+        app.MapCatalogStorefrontBrowseEndpoints();
         app.MapCatalogDemoDevEndpoints();
         app.MapCatalogSellerEndpoints();
         return app;

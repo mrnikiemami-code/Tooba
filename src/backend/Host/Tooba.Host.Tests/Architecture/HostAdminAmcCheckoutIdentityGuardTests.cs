@@ -30,9 +30,15 @@ public sealed class HostAdminAmcCheckoutIdentityGuardTests
         Assert.True(File.Exists(Path.Combine(
             root, "src/backend/Modules/Catalog/Tooba.Catalog.Application/Settings/CheckoutIdentity/Queries/GetCheckoutIdentitySettingsQuery.cs")));
 
-        // Storefront gate stays Host-owned this wave.
+        // Storefront gate is Host Security enforcement over Catalog Contracts (R2 evacuated Admin; R2 storefront read → Catalog).
         Assert.True(File.Exists(Path.Combine(
+            root, "src/backend/Host/Tooba.Host/Security/Checkout/CheckoutIdentityGate.cs")));
+        Assert.False(File.Exists(Path.Combine(
             root, "src/backend/Host/Tooba.Host/Storefront/CheckoutIdentityGate.cs")));
+        Assert.Contains("ICatalogCheckoutIdentityPolicyLookup", File.ReadAllText(Path.Combine(
+            root, "src/backend/Host/Tooba.Host/Security/Checkout/CheckoutIdentityGate.cs")), StringComparison.Ordinal);
+        Assert.DoesNotContain("CatalogDbContext", File.ReadAllText(Path.Combine(
+            root, "src/backend/Host/Tooba.Host/Security/Checkout/CheckoutIdentityGate.cs")), StringComparison.Ordinal);
     }
 
     [Fact]

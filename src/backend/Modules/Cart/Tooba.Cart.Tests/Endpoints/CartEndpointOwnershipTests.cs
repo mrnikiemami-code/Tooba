@@ -29,9 +29,10 @@ public sealed class CartEndpointOwnershipTests
         var module = File.ReadAllText(Path.Combine(
             RepoRoot(),
             "src", "backend", "Modules", "Cart", "Tooba.Cart.Endpoints", "CartEndpointModule.cs"));
-        var host = File.ReadAllText(Path.Combine(
+        var host = Path.Combine(
             RepoRoot(),
-            "src", "backend", "Host", "Tooba.Host", "Storefront", "StorefrontEndpoints.cs"));
+            "src", "backend", "Host", "Tooba.Host", "Storefront");
+        Assert.False(Directory.Exists(host));
         var program = File.ReadAllText(Path.Combine(
             RepoRoot(),
             "src", "backend", "Host", "Tooba.Host", "Program.cs"));
@@ -54,7 +55,6 @@ public sealed class CartEndpointOwnershipTests
         Assert.Contains("X-Tooba-Cart-Version", endpoint, StringComparison.Ordinal);
         Assert.Contains("X-Tooba-Guest-Secret", endpoint, StringComparison.Ordinal);
 
-        Assert.DoesNotContain("MapPost(\"/cart\"", host, StringComparison.Ordinal);
         Assert.Contains("MapCartEndpoints()", program, StringComparison.Ordinal);
         Assert.False(File.Exists(Path.Combine(
             RepoRoot(), "src", "backend", "Host", "Tooba.Host", "Storefront", "StorefrontCartComposer.cs")));

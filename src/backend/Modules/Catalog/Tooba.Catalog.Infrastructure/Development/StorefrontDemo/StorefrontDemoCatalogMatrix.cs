@@ -1,4 +1,4 @@
-namespace Tooba.Host.Storefront;
+﻿namespace Tooba.Catalog.Infrastructure.Development.StorefrontDemo;
 
 /// <summary>
 /// مشخصهٔ برند نمایشی. برند در Tooba تحریری است و مالکیت فروشنده یا کمیسیون ندارد.
@@ -7,14 +7,14 @@ namespace Tooba.Host.Storefront;
 /// <param name="Slug">درز slug برند برای مسیر عمومی landing برند.</param>
 /// <param name="PersianName">نام نمایشی فارسی.</param>
 /// <param name="LatinName">نام لاتین برای فهرست دوزبانه.</param>
-internal sealed record StorefrontDemoBrandSpec(string Key, string Slug, string PersianName, string LatinName);
+public sealed record StorefrontDemoBrandSpec(string Key, string Slug, string PersianName, string LatinName);
 
 /// <summary>
 /// مشخصهٔ محصول نمایشی. قیمت و موجودی در این مشخصه نیست چون به Product تعلق ندارد.
 /// </summary>
 /// <param name="Name">نام نمایشی فارسی محصول.</param>
 /// <param name="BrandKey">کلید برند یا null وقتی محصول برند تحریری ندارد؛ برند جعلی ساخته نمی‌شود.</param>
-internal sealed record StorefrontDemoProductSpec(string Name, string? BrandKey);
+public sealed record StorefrontDemoProductSpec(string Name, string? BrandKey);
 
 /// <summary>
 /// مشخصهٔ ردهٔ فرزند نمایشی همراه محصولات آن.
@@ -23,7 +23,7 @@ internal sealed record StorefrontDemoProductSpec(string Name, string? BrandKey);
 /// <param name="Token">توکن قطعی برای ساخت slug و SKU؛ باید در کل ماتریس یکتا باشد.</param>
 /// <param name="BasePrice">مبلغ پایهٔ قطعی به ریال که مبلغ Offer از آن مشتق می‌شود؛ خودِ رده قیمت ندارد.</param>
 /// <param name="Products">محصولات این رده.</param>
-internal sealed record StorefrontDemoChildSpec(
+public sealed record StorefrontDemoChildSpec(
     string Name,
     string Token,
     decimal BasePrice,
@@ -34,33 +34,33 @@ internal sealed record StorefrontDemoChildSpec(
 /// </summary>
 /// <param name="Name">نام نمایشی فارسی ردهٔ ریشه.</param>
 /// <param name="Children">رده‌های فرزند که عمق ناوبری را می‌سازند.</param>
-internal sealed record StorefrontDemoFamilySpec(string Name, IReadOnlyList<StorefrontDemoChildSpec> Children);
+public sealed record StorefrontDemoFamilySpec(string Name, IReadOnlyList<StorefrontDemoChildSpec> Children);
 
 /// <summary>
 /// مشخصهٔ سازمان فروشندهٔ نمایشی برای نشان دادن تنوع Marketplace.
 /// </summary>
 /// <param name="DisplayName">نام نمایشی عمومی فروشنده.</param>
 /// <param name="LegalName">نام حقوقی نمونه؛ ادعای ثبت واقعی نیست.</param>
-internal sealed record StorefrontDemoSellerSpec(string DisplayName, string LegalName);
+public sealed record StorefrontDemoSellerSpec(string DisplayName, string LegalName);
 
 /// <summary>
 /// مشخصهٔ محل نگهداری نمایشی ماژول Inventory.
 /// </summary>
 /// <param name="Code">کد یکتای محل.</param>
 /// <param name="Name">نام نمایشی محل.</param>
-internal sealed record StorefrontDemoLocationSpec(string Code, string Name);
+public sealed record StorefrontDemoLocationSpec(string Code, string Name);
 
 /// <summary>
 /// ماتریس قطعی دادهٔ نمایشی فروشگاه: هشت خانوادهٔ ریشه، سه ردهٔ فرزند برای هر خانواده و
 /// سه محصول برای هر ردهٔ فرزند. هیچ مقداری از تصادف یا زمان اجرا مشتق نمی‌شود تا دانه تکرارپذیر بماند.
 /// این ماتریس فقط دادهٔ توصیفی و مبلغ پایهٔ نمایشی است؛ حقیقت قیمت در Pricing و حقیقت موجودی در Inventory نوشته می‌شود.
 /// </summary>
-internal static class StorefrontDemoCatalogMatrix
+public static class StorefrontDemoCatalogMatrix
 {
     /// <summary>
     /// برندهای نمایشی منتشرشده که سطوح عمومی برند را پرمی‌کنند.
     /// </summary>
-    internal static readonly IReadOnlyList<StorefrontDemoBrandSpec> Brands =
+    public static readonly IReadOnlyList<StorefrontDemoBrandSpec> Brands =
     [
         new("xiaomi", "xiaomi", "شیائومی", "Xiaomi"),
         new("samsung", "samsung", "سامسونگ", "Samsung"),
@@ -75,7 +75,7 @@ internal static class StorefrontDemoCatalogMatrix
     /// <summary>
     /// سازمان‌های فروشندهٔ نمایشی که Offerها بین آن‌ها به‌صورت قطعی توزیع می‌شود.
     /// </summary>
-    internal static readonly IReadOnlyList<StorefrontDemoSellerSpec> Sellers =
+    public static readonly IReadOnlyList<StorefrontDemoSellerSpec> Sellers =
     [
         new("فروشگاه توبا مارکت", "Tooba Market Demo Legal"),
         new("تجارت الکترونیک پارس", "Pars E-Commerce Demo Legal"),
@@ -87,7 +87,7 @@ internal static class StorefrontDemoCatalogMatrix
     /// <summary>
     /// محل‌های نگهداری نمایشی ماژول Inventory.
     /// </summary>
-    internal static readonly IReadOnlyList<StorefrontDemoLocationSpec> Locations =
+    public static readonly IReadOnlyList<StorefrontDemoLocationSpec> Locations =
     [
         new("WH-DEMO-THR", "انبار نمایشی تهران"),
         new("WH-DEMO-MSH", "انبار نمایشی مشهد"),
@@ -96,7 +96,7 @@ internal static class StorefrontDemoCatalogMatrix
     /// <summary>
     /// خانواده‌های ردهٔ الزامی و عمق فرزند آن‌ها.
     /// </summary>
-    internal static readonly IReadOnlyList<StorefrontDemoFamilySpec> Families =
+    public static readonly IReadOnlyList<StorefrontDemoFamilySpec> Families =
     [
         new("محصولات دیجیتال",
         [
@@ -271,26 +271,26 @@ internal static class StorefrontDemoCatalogMatrix
     /// <summary>
     /// تعداد ردهٔ ریشهٔ ماتریس.
     /// </summary>
-    internal static int TopLevelCategoryCount => Families.Count;
+    public static int TopLevelCategoryCount => Families.Count;
 
     /// <summary>
     /// تعداد ردهٔ فرزند ماتریس.
     /// </summary>
-    internal static int ChildCategoryCount => Families.Sum(family => family.Children.Count);
+    public static int ChildCategoryCount => Families.Sum(family => family.Children.Count);
 
     /// <summary>
     /// تعداد ردهٔ سطح سوم ماتریس (برگ‌های ناوبری Mega Menu).
     /// </summary>
-    internal static int ThirdLevelCategoryCount =>
+    public static int ThirdLevelCategoryCount =>
         Families.Sum(family => family.Children.Sum(child => child.Products.Count));
 
     /// <summary>
     /// تعداد محصول نمایشی ماتریس.
     /// </summary>
-    internal static int ProductCount => Families.Sum(family => family.Children.Sum(child => child.Products.Count));
+    public static int ProductCount => Families.Sum(family => family.Children.Sum(child => child.Products.Count));
 
     /// <summary>
     /// تعداد Offer قطعی ماتریس: Offer پایه، فروشندهٔ دوم رده‌ها و سه Offer برای گونه‌های نمایشی اضافه.
     /// </summary>
-    internal static int ExpectedOfferCount => ProductCount + ChildCategoryCount + 3;
+    public static int ExpectedOfferCount => ProductCount + ChildCategoryCount + 3;
 }

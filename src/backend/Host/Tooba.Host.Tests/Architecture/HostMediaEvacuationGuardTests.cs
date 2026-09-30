@@ -98,10 +98,11 @@ public sealed class HostMediaEvacuationGuardTests
     [Fact]
     public void Storefront_consumes_the_media_module_serving_helper()
     {
-        var storefront = File.ReadAllText(Path.Combine(HostRoot(), "Storefront", "StorefrontEndpoints.cs"));
-        Assert.Contains("Tooba.Media.Endpoints.Admin.MediaAssetServing.TryServeStoredMediaAsync", storefront, StringComparison.Ordinal);
-        Assert.Contains("Tooba.Media.Endpoints.Admin.MediaAssetServing.PlaceholderSvg", storefront, StringComparison.Ordinal);
-        Assert.DoesNotContain("Tooba.Host.Media.MediaEndpoints", storefront, StringComparison.Ordinal);
+        Assert.False(Directory.Exists(Path.Combine(HostRoot(), "Storefront")));
+
+        var mediaModule = File.ReadAllText(Path.Combine(
+            FindRepoRoot(), "src", "backend", "Modules", "Media", "Tooba.Media.Endpoints", "MediaEndpointModule.cs"));
+        Assert.Contains("MapMediaStorefrontEndpoints()", mediaModule, StringComparison.Ordinal);
     }
 
     [Fact]

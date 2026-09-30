@@ -19,9 +19,6 @@ public sealed class HostCartResidualGuardTests
         ["Program.cs"] = "endpoint/MediatR/module composition only (no Cart implementation)",
         ["Composition/ToobaModuleComposition.cs"] = "explicit module list composition",
         ["Development/ProductWorkspaceDevelopmentBootstrap.cs"] = "Development-only schema migration list",
-        ["Storefront/StorefrontModels.cs"] = "storefront wire DTOs that carry CartId",
-        ["Storefront/StorefrontComposer.cs"] = "storefront read composition flag",
-        ["Storefront/StorefrontEndpoints.cs"] = "checkout identity policy flag name (no Cart authority)",
         ["Order/HostOrderStorefrontActor.cs"] = "thin session → CartAccess adapter",
     };
 

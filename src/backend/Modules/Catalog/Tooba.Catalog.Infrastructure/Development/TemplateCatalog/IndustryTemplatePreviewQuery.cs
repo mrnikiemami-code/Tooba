@@ -1,13 +1,16 @@
-#pragma warning disable CS1591
+﻿#pragma warning disable CS1591
 using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 using Tooba.Catalog.Domain;
 using Tooba.Catalog.Infrastructure.Persistence;
 
-namespace Tooba.Host.Storefront;
+using Tooba.Catalog.Application.TemplateCatalog.Models;
+using Tooba.Catalog.Application.TemplateCatalog.Ports;
+
+namespace Tooba.Catalog.Infrastructure.Development.TemplateCatalog;
 
 /// <summary>خواندن Sample Batch A/B فقط از Template Catalog — بدون union با Catalog عملیاتی.</summary>
-public sealed class IndustryTemplatePreviewQuery
+public sealed class IndustryTemplatePreviewQuery : IIndustryTemplatePreviewReader
 {
     private readonly CatalogDbContext _catalog;
 

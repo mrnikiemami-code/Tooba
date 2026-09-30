@@ -41,20 +41,11 @@ public sealed class OrderStorefrontArchitectureGuardTests
     [Fact]
     public void Host_storefront_endpoints_no_longer_own_migrated_routes()
     {
-        var hostEndpoints = File.ReadAllText(Path.Combine(
-            RepoRoot(), "src", "backend", "Host", "Tooba.Host", "Storefront", "StorefrontEndpoints.cs"));
-        Assert.DoesNotContain("/checkout/preview", hostEndpoints, StringComparison.Ordinal);
-        Assert.DoesNotContain("MapPost(\"/checkout\"", hostEndpoints, StringComparison.Ordinal);
-        Assert.DoesNotContain("/pending-payments", hostEndpoints, StringComparison.Ordinal);
-        Assert.DoesNotContain("hide-pending-card", hostEndpoints, StringComparison.Ordinal);
-        Assert.DoesNotContain("/shipping/projection", hostEndpoints, StringComparison.Ordinal);
-        Assert.DoesNotContain("/shipping/selection", hostEndpoints, StringComparison.Ordinal);
-        Assert.DoesNotContain("/shipping/commit", hostEndpoints, StringComparison.Ordinal);
-        Assert.DoesNotContain("OrderDbContext", hostEndpoints, StringComparison.Ordinal);
-        Assert.DoesNotContain("CatalogDbContext", hostEndpoints, StringComparison.Ordinal);
-        Assert.DoesNotContain("ex.Message", hostEndpoints, StringComparison.Ordinal);
-        Assert.DoesNotContain("Message.Contains", hostEndpoints, StringComparison.Ordinal);
-        Assert.DoesNotContain("Message.StartsWith", hostEndpoints, StringComparison.Ordinal);
+        Assert.False(Directory.Exists(Path.Combine(
+            RepoRoot(), "src", "backend", "Host", "Tooba.Host", "Storefront")));
+        var program = File.ReadAllText(Path.Combine(
+            RepoRoot(), "src", "backend", "Host", "Tooba.Host", "Program.cs"));
+        Assert.DoesNotContain("MapStorefrontEndpoints()", program, StringComparison.Ordinal);
     }
 
     [Fact]

@@ -203,18 +203,20 @@ public sealed class PaymentArchitectureGuardTests
         Assert.False(File.Exists(Path.Combine(hostRoot, "Storefront", "HostPaymentUnpaidRetrySupplyAdapter.cs")));
         Assert.False(File.Exists(Path.Combine(hostRoot, "Storefront", "HostPaymentProofMediaAdapter.cs")));
         Assert.False(File.Exists(Path.Combine(hostRoot, "Storefront", "HostStorefrontCheckoutPaymentAccessAdapter.cs")));
-        Assert.True(File.Exists(Path.Combine(hostRoot, "Storefront", "HostPaymentStorefrontAuthorizer.cs")));
-        Assert.True(File.Exists(Path.Combine(hostRoot, "Admin", "HostPaymentAdminAuthorizer.cs")));
+        Assert.True(File.Exists(Path.Combine(hostRoot, "Security", "Payment", "HostPaymentStorefrontAuthorizer.cs")));
+        Assert.False(File.Exists(Path.Combine(hostRoot, "Storefront", "HostPaymentStorefrontAuthorizer.cs")));
+        Assert.True(File.Exists(Path.Combine(hostRoot, "Admin", "Access", "Authorizers", "HostPaymentAdminAuthorizer.cs")));
+        Assert.False(File.Exists(Path.Combine(hostRoot, "Admin", "HostPaymentAdminAuthorizer.cs")));
 
-        var storefrontHost = File.ReadAllText(Path.Combine(hostRoot, "Storefront", "StorefrontEndpoints.cs"));
-        Assert.DoesNotContain("MapPost(\"/checkout/{checkoutId:guid}/payments\"", storefrontHost, StringComparison.Ordinal);
-        Assert.DoesNotContain("MapGet(\"/payment-methods\"", storefrontHost, StringComparison.Ordinal);
-        Assert.DoesNotContain("MapPaymentException", storefrontHost, StringComparison.Ordinal);
-        Assert.DoesNotContain("ExecutePaymentAsync", storefrontHost, StringComparison.Ordinal);
+        Assert.False(Directory.Exists(Path.Combine(hostRoot, "Storefront")));
 
-        var adminHost = File.ReadAllText(Path.Combine(hostRoot, "Admin", "AdminPanelEndpoints.cs"));
-        Assert.DoesNotContain("MapGet(\"/payments/{paymentId:guid}\"", adminHost, StringComparison.Ordinal);
-        Assert.DoesNotContain("MapPost(\"/payments/query\"", adminHost, StringComparison.Ordinal);
+        var adminPanelPath = Path.Combine(hostRoot, "Admin", "AdminPanelEndpoints.cs");
+        if (File.Exists(adminPanelPath))
+        {
+            var adminHost = File.ReadAllText(adminPanelPath);
+            Assert.DoesNotContain("MapGet(\"/payments/{paymentId:guid}\"", adminHost, StringComparison.Ordinal);
+            Assert.DoesNotContain("MapPost(\"/payments/query\"", adminHost, StringComparison.Ordinal);
+        }
 
         var programCs = File.ReadAllText(Path.Combine(hostRoot, "Program.cs"));
         Assert.Contains("MapPaymentEndpoints()", programCs, StringComparison.Ordinal);

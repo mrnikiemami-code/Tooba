@@ -1,7 +1,7 @@
 using Tooba.BuildingBlocks;
 using Tooba.Cart.Contracts;
 using Tooba.Host;
-using Tooba.Host.Storefront;
+using Tooba.Host.Security.Checkout;
 using Tooba.Order.Application.Storefront;
 using Tooba.Order.Application.Storefront.Ports;
 using Tooba.Order.Application.Storefront.Services;

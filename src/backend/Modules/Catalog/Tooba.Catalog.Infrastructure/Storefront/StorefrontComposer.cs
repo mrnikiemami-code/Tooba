@@ -11,25 +11,23 @@ using Tooba.Inventory.Contracts.Orders;
 using Tooba.Inventory.Contracts.Seller;
 using Tooba.Offer.Contracts.Dtos;
 using Tooba.Offer.Contracts.Ports;
-using Tooba.Party.Application;
+using Tooba.Party.Contracts;
 using Tooba.Pricing.Contracts;
-using Tooba.Promotion.Application.Ports;
-using Tooba.Promotion.Application.Checkout;
-using Tooba.Promotion.Application.Merchandising;
+using Tooba.Promotion.Contracts.Checkout;
 using Tooba.Tax.Contracts;
-using Tooba.Reviews.Application;
-using Tooba.Content.Application.Articles.Models;
-using Tooba.Content.Application.Articles.Ports;
-using Tooba.Content.Domain.Aggregates;
-using Tooba.Content.Domain.Rules;
+using Tooba.Reviews.Contracts.Storefront;
+using Tooba.Content.Contracts.Storefront;
 
-namespace Tooba.Host.Storefront;
+using Tooba.Catalog.Application.Storefront.Models;
+using Tooba.Catalog.Application.Storefront.Ports;
+
+namespace Tooba.Catalog.Infrastructure.Storefront;
 
 /// <summary>
-/// ترکیب خواندنی فروشگاه در Host. هر DbContext جدا خوانده می‌شود و SQL بین schemaها JOIN نمی‌شود.
+/// ترکیب خواندنی فروشگاه در Catalog. هر DbContext جدا خوانده می‌شود و SQL بین schemaها JOIN نمی‌شود.
 /// مبلغ از Pricing و موجودی از Inventory روی Offer است؛ هویت Product قیمت یا موجودی ندارد.
 /// </summary>
-public sealed class StorefrontComposer
+public sealed class StorefrontComposer : IStorefrontComposer
 {
     /// <summary>
     /// کد facet سراسری برند در PLP (نه AttributeDefinition).
@@ -42,10 +40,10 @@ public sealed class StorefrontComposer
     private readonly IPriceQueryGateway _prices;
     private readonly IInventoryQueryGateway _inventory;
     private readonly ITaxQueryGateway _tax;
-    private readonly IPartyLookupGateway _parties;
-    private readonly IPromotionEvaluator _promotions;
-    private readonly IReviewDirectory _reviews;
-    private readonly IContentDirectory _content;
+    private readonly IPartyLookup _parties;
+    private readonly ICheckoutPromotionPort _promotions;
+    private readonly IReviewsStorefrontLookup _reviews;
+    private readonly IContentStorefrontArticlesPort _content;
     private readonly ICatalogDirectory _catalogDirectory;
     private readonly IPrimaryOfferSelectionPolicy _primaryOffers;
 
@@ -58,10 +56,10 @@ public sealed class StorefrontComposer
         IPriceQueryGateway prices,
         IInventoryQueryGateway inventory,
         ITaxQueryGateway tax,
-        IPartyLookupGateway parties,
-        IPromotionEvaluator promotions,
-        IReviewDirectory reviews,
-        IContentDirectory content,
+        IPartyLookup parties,
+        ICheckoutPromotionPort promotions,
+        IReviewsStorefrontLookup reviews,
+        IContentStorefrontArticlesPort content,
         ICatalogDirectory catalogDirectory,
         IPrimaryOfferSelectionPolicy primaryOffers)
     {
@@ -100,8 +98,7 @@ public sealed class StorefrontComposer
             .Take(12)
             .ToList();
         var featuredReviews = await BuildFeaturedReviewsAsync(cancellationToken);
-        var contentLocale = ContentTaxonomySeoRules.ResolveContentLocale(locale);
-        var latestArticles = await BuildLatestArticlesAsync(contentLocale, cancellationToken);
+        var latestArticles = await BuildLatestArticlesAsync(locale, cancellationToken);
         return new StorefrontHomePage(
             categories,
             products.Take(24).ToList(),
@@ -141,7 +138,7 @@ public sealed class StorefrontComposer
     /// مقالات Published اخیر را برای ریل خانه / Landing می‌خواند.
     /// </summary>
     public async Task<IReadOnlyList<StorefrontArticleItem>> BuildLatestArticlesAsync(
-        string locale,
+        string? locale,
         CancellationToken cancellationToken)
     {
         var articles = await _content.ListPublishedForHomeAsync(6, locale, cancellationToken);
@@ -952,8 +949,8 @@ public sealed class StorefrontComposer
         var slug = string.IsNullOrWhiteSpace(product.SlugSeam)
             ? product.ProductId.ToString("N")
             : product.SlugSeam;
-        var promotion = await _promotions.EvaluateAsync(
-            new PromotionEvaluationRequest(
+        var promotion = await _promotions.EvaluateForCheckoutAsync(
+            new CheckoutPromotionEvaluationRequest(
                 primary.OfferId,
                 primary.CatalogVariantId,
                 categoryId,
