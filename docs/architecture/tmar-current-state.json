@@ -1,10 +1,10 @@
-﻿{
+{
   "program": "TMAR — Tooba Microservice-Ready Architecture Recovery",
   "executionMode": "BACKEND_ONLY_UNTIL_EXPLICIT_RELEASE",
   "frontendFrozen": true,
   "checkoutState": "PAUSED_AT_SAFE_W5_CHECKPOINT",
-  "lastAcceptedTask": "TB-TMAR-HOST-SELLER-AMC-001-R5",
-  "lastAcceptedCommit": "c08c4afaf194c3dbcf414275484622378150fbb5",
+  "lastAcceptedTask": "TB-TMAR-HOST-STOREFRONT-AMC-001-R4",
+  "lastAcceptedCommit": "d2235ecebb6d2e8af4626c50927acf79ab50dc0d",
   "lastAcceptedCommitKind": "IMPLEMENTATION_COMMIT",
   "lastAcceptedResultEvidenceCommit": "a4129ca42adc137fbf543d3c1caf01b88b92a8d9",
   "lastAcceptedResultEvidenceCommitKind": "RESULT_EVIDENCE_DOCS_STAMP_NOT_IMPLEMENTATION",
@@ -17,9 +17,9 @@
   "nextHostFolderStarted": false,
   "nextHostFolder": null,
   "staleCurrentPointerState": "ZERO",
-  "nextTask": "USER_REVIEW_HOST_STOREFRONT_AMC_001_R4",
+  "nextTask": "USER_REVIEW_HOST_STOREFRONT_AMC_001_R4_CLOSED_HOST_ZERO",
   "nextTaskGate": "USER_REVIEW",
-  "nextTaskState": "READY_FOR_USER_REVIEW",
+  "nextTaskState": "USER_DECISION_REQUIRED",
   "workflowStop": "USER_REVIEW_HOST_STOREFRONT_AMC_001_R4_CLOSED_HOST_ZERO",
   "automaticNextImplementationTask": "NONE",
   "hostStorefrontAmc": {
@@ -32,7 +32,12 @@
     ],
     "ownerDecision": "CATALOG_OWNS_RESIDUAL_BROWSE_COMPOSER_NO_STOREFRONT_BFF_MODULE",
     "foundationState": "FOUNDATION_PARTIAL_CATALOG_AUTHORIZED",
-    "wavePlan": ["R1", "R2", "R3", "R4"],
+    "wavePlan": [
+      "R1",
+      "R2",
+      "R3",
+      "R4"
+    ],
     "analyzeEvidence": "docs/evidence/TB-TMAR-HOST-STOREFRONT-AMC-001/analyze.md",
     "architectDecisions": "docs/evidence/TB-TMAR-HOST-STOREFRONT-AMC-001/architect-decisions.md"
   },
@@ -134,8 +139,11 @@
     "durableGuard": "HostStorefrontAmcR4GuardTests",
     "evidence": "docs/evidence/TB-TMAR-HOST-STOREFRONT-AMC-001-R4/",
     "nextWave": "NONE",
-    "workflowStop": "USER_REVIEW",
-    "automaticNext": "NONE"
+    "workflowStop": "USER_REVIEW_HOST_STOREFRONT_AMC_001_R4_CLOSED_HOST_ZERO",
+    "automaticNext": "NONE",
+    "automaticNextImplementationTask": "NONE",
+    "implementationCommit": "d2235ecebb6d2e8af4626c50927acf79ab50dc0d",
+    "certificationState": "CLOSED_HOST_ZERO"
   },
   "cartMultiCurrency": {
     "task": "TB-TMAR-CART-MULTICURRENCY-LINES-001",
@@ -877,24 +885,22 @@
     "finalHostTarget": "THIN_PLATFORM_COMPOSITION_SHELL_ONLY"
   },
   "currentHostEvacuation": {
-    "activeModule": "Seller",
-    "activeModuleState": "SELLER_CLOSED_HOST_ZERO_USER_REVIEW_REQUIRED",
+    "activeModule": "Storefront",
+    "activeModuleState": "STOREFRONT_CLOSED_HOST_ZERO_USER_REVIEW_REQUIRED",
     "currentHostEvacuationState": "RECONCILED_NOT_HISTORICAL_ADDRESSBOOK",
     "workflow": "HOST_FIRST_FOLDER_BY_FOLDER",
-    "currentTask": "TB-TMAR-HOST-SELLER-AMC-001-R5",
-    "currentPhase": "SELLER_R5_FINAL_DEV_CONTEXT_CLOSURE_ACCEPTED_HOST_ZERO_RECOVERY_SYNCHRONIZED_USER_REVIEW_STOP",
-    "workflowStop": "USER_REVIEW_HOST_SELLER_AMC_001_R5_FINAL_CLOSURE",
+    "currentTask": "TB-TMAR-HOST-STOREFRONT-AMC-001-R4",
+    "currentPhase": "STOREFRONT_R4_FINAL_CLOSURE_ACCEPTED_HOST_ZERO_RECOVERY_SYNCHRONIZED_USER_REVIEW_STOP",
+    "workflowStop": "USER_REVIEW_HOST_STOREFRONT_AMC_001_R4_CLOSED_HOST_ZERO",
     "automaticNextImplementationTask": "NONE",
-    "lastReconciledRecoveryTask": "TB-TMAR-HOST-SELLER-AMC-001-R5",
-    "latestAcceptedImplementationWave": "TB-TMAR-HOST-SELLER-AMC-001-R5",
-    "currentHostCheckpoint": "Seller",
+    "lastReconciledRecoveryTask": "TB-TMAR-HOST-STOREFRONT-AMC-001-R4",
+    "latestAcceptedImplementationWave": "TB-TMAR-HOST-STOREFRONT-AMC-001-R4",
+    "currentHostCheckpoint": "Storefront",
     "historicalNextHostFolderPointer": "NONE_USER_DECISION_REQUIRED",
     "nextHostFolderStarted": false,
     "nextHostFolder": "NONE_USER_DECISION_REQUIRED",
     "staleCurrentPointerState": "ZERO",
     "historicalCheckpointNote": "USER_REVIEW_AFTER_RECOVERY_SOT_SYNC_001 / TB-TMAR-AUTHORIZATION-POSTCERT-CLEANUP-001 / TB-TMAR-HOST-DEVELOPMENT-AMC-002-R1 / TB-TMAR-HOST-DEVELOPMENT-ENRICHER-CLOSURE-001 / TB-TMAR-HOST-DEVELOPMENT-PRODUCTWORKSPACE-CATALOG-SEED-REHOME-001 / TB-TMAR-HOST-DEVELOPMENT-PRODUCTWORKSPACE-MIGRATION-SEAM-001 / TB-TMAR-HOST-SELLER-AMC-001-R1A / TB-TMAR-HOST-SELLER-AMC-001-R1B / TB-TMAR-HOST-SELLER-AMC-001-R2 / TB-TMAR-HOST-SELLER-AMC-001-R3 are HISTORICAL checkpoints; they remain recorded in their own history blocks and are superseded as the current pointer by TB-TMAR-HOST-SELLER-AMC-001-R4 (seller dashboard route + display-name composition evacuation to Order, implementation commit recorded at lastAcceptedCommit).",
-    "nextHostFolderStarted": false,
-    "nextHostFolder": "NONE_USER_DECISION_REQUIRED",
     "historicalHostFolderLineage": [
       "AccessControl",
       "AddressBook",
@@ -937,7 +943,6 @@
     "deferredHostFolders": [
       "Admin"
     ],
-    "staleCurrentPointerState": "ZERO",
     "authenticationFolderDisposition": {
       "task": "TB-TMAR-HOST-AUTHENTICATION-INVENTORY-001",
       "state": "ANALYZED_MIGRATION_HALTED_NEEDS_ARCHITECT_DECISION",
@@ -1666,7 +1671,17 @@
         "index": 1,
         "taskId": "TB-TMAR-HOST-DEVELOPMENT-PRODUCTWORKSPACE-CATALOG-SEED-REHOME-001",
         "purpose": "Rehome Catalog demo product/attribute/variant/media/SEO/publish seed, Admin R3 preview seed and operator copy refresh into Catalog.Infrastructure/Development, reaching Party/Offer/Pricing/Tax/Inventory only through existing Contracts development-seed gateways.",
-        "responsibilitiesClosed": [17, 18, 19, 20, 21, 22, 23, 24, 25],
+        "responsibilitiesClosed": [
+          17,
+          18,
+          19,
+          20,
+          21,
+          22,
+          23,
+          24,
+          25
+        ],
         "hostDevelopmentFileCountBefore": 5,
         "hostDevelopmentFileCountAfter": 5,
         "hostFileDeleted": false
@@ -1675,7 +1690,18 @@
         "index": 2,
         "taskId": "TB-TMAR-HOST-DEVELOPMENT-PRODUCTWORKSPACE-MIGRATION-SEAM-001",
         "purpose": "Replace 28-context from-Host migration orchestration with a neutral IModuleSchemaMigrator seam implemented by thin module-owned adapters, keep the accepted migration order, and delete ProductWorkspaceDevelopmentBootstrap.cs.",
-        "responsibilitiesClosed": [3, 9, 10, 11, 12, 13, 14, 15, 16, 37],
+        "responsibilitiesClosed": [
+          3,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16,
+          37
+        ],
         "hostDevelopmentFileCountBefore": 5,
         "hostDevelopmentFileCountAfter": 5,
         "hostFileDeleted": true
@@ -1831,11 +1857,34 @@
     "registeredModuleMigratorCount": 28,
     "migrationOrderParityState": "EXACT_MATCH_28_OF_28_WITH_DELETED_BOOTSTRAP",
     "migrationOrder": [
-      "Catalog", "Offer", "Pricing", "Inventory", "Tax", "Party", "Identity", "Cart", "Order",
-      "Payment", "Fulfillment", "Promotion", "PlatformProbe", "Reviews", "ProductQnA",
-      "BulkInquiry", "Wishlist", "AddressBook", "CustomerProfile", "UserPreference",
-      "OperatorProfile", "Content", "Media", "PageComposition", "Story", "Notification",
-      "AccessControl", "Support"
+      "Catalog",
+      "Offer",
+      "Pricing",
+      "Inventory",
+      "Tax",
+      "Party",
+      "Identity",
+      "Cart",
+      "Order",
+      "Payment",
+      "Fulfillment",
+      "Promotion",
+      "PlatformProbe",
+      "Reviews",
+      "ProductQnA",
+      "BulkInquiry",
+      "Wishlist",
+      "AddressBook",
+      "CustomerProfile",
+      "UserPreference",
+      "OperatorProfile",
+      "Content",
+      "Media",
+      "PageComposition",
+      "Story",
+      "Notification",
+      "AccessControl",
+      "Support"
     ],
     "moduleOwnedPostMigrationSteps": {
       "Catalog": "CatalogAttributeSchemaDevelopmentSeed (guarded by Development + RunLegacyBootstraps)",
