@@ -17,17 +17,10 @@
   "nextHostFolderStarted": false,
   "nextHostFolder": null,
   "staleCurrentPointerState": "ZERO",
-<<<<<<< HEAD
-  "nextTask": "USER_REVIEW_HOST_STOREFRONT_AMC_001_R4_CLOSED_HOST_ZERO",
-  "nextTaskGate": "USER_REVIEW",
-  "nextTaskState": "USER_DECISION_REQUIRED",
-  "workflowStop": "USER_REVIEW_HOST_STOREFRONT_AMC_001_R4_CLOSED_HOST_ZERO",
-=======
   "nextTask": "USER_REVIEW_HOST_GRID_AMC_001_R5",
   "nextTaskGate": "USER_REVIEW",
   "nextTaskState": "READY_FOR_USER_REVIEW",
   "workflowStop": "USER_REVIEW_HOST_GRID_AMC_001_R5",
->>>>>>> 57df2428 (TB-TMAR-HOST-GRID-AMC-001: evacuate Host/Grid engines to Story/Reviews/Party and close HOST_ZERO.)
   "automaticNextImplementationTask": "NONE",
   "hostGridAmc": {
     "task": "TB-TMAR-HOST-GRID-AMC-001",
