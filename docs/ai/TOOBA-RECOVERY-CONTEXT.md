@@ -1,4 +1,4 @@
-# Tooba — Recovery Context
+﻿# Tooba — Recovery Context
 
 Canonical repository:
 
@@ -30,7 +30,7 @@ Latest Accepted TMAR Checkpoint — authoritative (reconciled by TB-TMAR-HOST-PA
 ```text
 Latest-Accepted-Implementation-Wave: TB-TMAR-HOST-PAGECOMPOSITION-AMC-001
 Latest-Accepted-Task: TB-TMAR-HOST-PAGECOMPOSITION-AMC-001
-Implementation-Commit: PLACEHOLDER_STAMP_AFTER_COMMIT
+Implementation-Commit: 03781986735e1eb20f2e951c9ee20796537b317a
 Implementation-Commit-Kind: IMPLEMENTATION_COMMIT
 Current-Host-Checkpoint: PageComposition_HOST_ZERO
 Active-Host-Folder: PageComposition
