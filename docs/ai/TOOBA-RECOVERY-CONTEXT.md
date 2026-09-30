@@ -1,4 +1,4 @@
-﻿# Tooba — Recovery Context
+# Tooba — Recovery Context
 
 Canonical repository:
 
