@@ -3,8 +3,8 @@
   "executionMode": "BACKEND_ONLY_UNTIL_EXPLICIT_RELEASE",
   "frontendFrozen": true,
   "checkoutState": "PAUSED_AT_SAFE_W5_CHECKPOINT",
-  "lastAcceptedTask": "TB-TMAR-HOST-GRID-AMC-001-R5-R1",
-  "lastAcceptedCommit": "da97c710790b0ec7646ef6cda871980bc844f967",
+  "lastAcceptedTask": "TB-TMAR-HOST-WISHLIST-AMC-001",
+  "lastAcceptedCommit": "cb573a8d8bf47c430483d4fd5ff604e3404bc60a",
   "lastAcceptedCommitKind": "IMPLEMENTATION_COMMIT",
   "lastAcceptedResultEvidenceCommit": "1c290b37e0498eb53196765262f8d2017455beeb",
   "lastAcceptedResultEvidenceCommitKind": "RESULT_EVIDENCE_DOCS_STAMP_NOT_IMPLEMENTATION",
@@ -974,17 +974,17 @@
     "finalHostTarget": "THIN_PLATFORM_COMPOSITION_SHELL_ONLY"
   },
   "currentHostEvacuation": {
-    "activeModule": "Grid",
-    "activeModuleState": "GRID_CLOSED_HOST_ZERO_USER_REVIEW_REQUIRED",
+    "activeModule": "Wishlist",
+    "activeModuleState": "WISHLIST_CLOSED_HOST_ZERO_USER_REVIEW_REQUIRED",
     "currentHostEvacuationState": "RECONCILED_NOT_HISTORICAL_ADDRESSBOOK",
     "workflow": "HOST_FIRST_FOLDER_BY_FOLDER",
-    "currentTask": "TB-TMAR-HOST-GRID-AMC-001-R5-R1",
-    "currentPhase": "GRID_R5_R1_CONTRACTS_REPAIR_CLOSED_HOST_ZERO_USER_REVIEW_STOP",
-    "workflowStop": "USER_REVIEW_HOST_GRID_AMC_001_R5_R1_CLOSED_HOST_ZERO",
+    "currentTask": "TB-TMAR-HOST-WISHLIST-AMC-001",
+    "currentPhase": "WISHLIST_FINAL_CLOSURE_ACCEPTED_HOST_ZERO_RECOVERY_SYNCHRONIZED_USER_REVIEW_STOP",
+    "workflowStop": "USER_REVIEW_HOST_WISHLIST_AMC_001_CLOSED_HOST_ZERO",
     "automaticNextImplementationTask": "NONE",
-    "lastReconciledRecoveryTask": "TB-TMAR-HOST-GRID-AMC-001-R5-R1",
-    "latestAcceptedImplementationWave": "TB-TMAR-HOST-GRID-AMC-001-R5-R1",
-    "currentHostCheckpoint": "Grid",
+    "lastReconciledRecoveryTask": "TB-TMAR-HOST-WISHLIST-AMC-001",
+    "latestAcceptedImplementationWave": "TB-TMAR-HOST-WISHLIST-AMC-001",
+    "currentHostCheckpoint": "Wishlist",
     "historicalNextHostFolderPointer": "NONE_USER_DECISION_REQUIRED",
     "nextHostFolderStarted": false,
     "nextHostFolder": "NONE_USER_DECISION_REQUIRED",
@@ -4886,6 +4886,9 @@
     "evidence": "docs/evidence/TB-TMAR-HOST-WISHLIST-AMC-001/",
     "focusedValidation": "PASS_WISHLIST_AMC_GUARDS_AND_FOUNDATION",
     "workflowStop": "USER_REVIEW_HOST_WISHLIST_AMC_001_CLOSED_HOST_ZERO",
-    "automaticNext": "NONE"
+    "automaticNext": "NONE",
+    "implementationCommit": "cb573a8d8bf47c430483d4fd5ff604e3404bc60a",
+    "certificationState": "CLOSED_HOST_ZERO",
+    "automaticNextImplementationTask": "NONE"
   }
 }
