@@ -30,7 +30,7 @@ Latest Accepted TMAR Checkpoint — authoritative (reconciled by TB-TMAR-HOST-ST
 ```text
 Latest-Accepted-Implementation-Wave: TB-TMAR-HOST-STORY-AMC-001-R1
 Latest-Accepted-Task: TB-TMAR-HOST-STORY-AMC-001-R1
-Implementation-Commit: 649e657075affc782238ece124146e40a497360a
+Implementation-Commit: 6d093a2fab9161b4705c827b21a70f494ae0bc0a
 Implementation-Commit-Kind: IMPLEMENTATION_COMMIT
 Current-Host-Checkpoint: Story_CLOSED_HOST_ZERO_R1
 Active-Host-Folder: Story
