@@ -4,6 +4,7 @@ using Tooba.Payment.Application.Errors;
 using Tooba.Payment.Application.Models;
 using Tooba.Payment.Application.Ports;
 using Tooba.Payment.Contracts.Checkout;
+using Tooba.Payment.Contracts.Ports;
 using Tooba.Payment.Domain.ValueObjects;
 using Tooba.Wallet.Contracts.Payments;
 using Tooba.Order.Contracts.Payments;

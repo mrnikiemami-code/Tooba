@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -238,7 +238,7 @@ public sealed class SettingsFoundationTests
             },
             CancellationToken.None);
         var denied = await Assert.ThrowsAsync<PlatformHttpException>(() =>
-            SellerPanelAccess.AuthorizeActorForSellerAsync(guard, actorA, sellerB, CancellationToken.None));
+            SellerPanelAccess.AuthorizeActorForSellerAsync(guard, actorA, sellerB, new FixedCurrentEdition(ToobaEdition.SingleStore), CancellationToken.None));
         Assert.Equal(403, denied.StatusCode);
     }
 
@@ -390,5 +390,10 @@ public sealed class SettingsFoundationTests
         public string ContentRootPath { get; set; } = AppContext.BaseDirectory;
         public Microsoft.Extensions.FileProviders.IFileProvider ContentRootFileProvider { get; set; } =
             new Microsoft.Extensions.FileProviders.NullFileProvider();
+    }
+
+    private sealed class FixedCurrentEdition(ToobaEdition edition) : ICurrentEdition
+    {
+        public EditionContext? Current { get; } = new EditionContext(edition, "test");
     }
 }

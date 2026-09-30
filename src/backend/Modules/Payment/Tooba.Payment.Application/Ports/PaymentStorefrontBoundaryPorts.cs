@@ -1,10 +1,5 @@
 namespace Tooba.Payment.Application.Ports;
 
-public interface ICheckoutActorPolicyPort
-{
-    Task EnsureCheckoutActorAsync(CancellationToken cancellationToken);
-}
-
 /// <summary>Gateway catalog / sandbox / manual policy (Infrastructure-backed).</summary>
 public interface IPaymentGatewayCatalogPort
 {

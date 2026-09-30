@@ -25,28 +25,30 @@ BRIDGE-WAKE-V1
 Channel: tooba-main
 ```
 
-Latest Accepted TMAR Checkpoint — authoritative (reconciled by TB-TMAR-HOST-SECURITY-AMC-001)
+Latest Accepted TMAR Checkpoint — authoritative (reconciled by TB-TMAR-HOST-SECURITY-AMC-001-R1)
 
 ```text
-Latest-Accepted-Implementation-Wave: TB-TMAR-HOST-SECURITY-AMC-001
-Latest-Accepted-Task: TB-TMAR-HOST-SECURITY-AMC-001
-Implementation-Commit: 468f14c0bca4ba814c6b98bf01cce227643012a9
+Latest-Accepted-Implementation-Wave: TB-TMAR-HOST-SECURITY-AMC-001-R1
+Latest-Accepted-Task: TB-TMAR-HOST-SECURITY-AMC-001-R1
+Implementation-Commit: PLACEHOLDER_SECURITY_R1_IMPLEMENTATION_COMMIT
 Implementation-Commit-Kind: IMPLEMENTATION_COMMIT
-Current-Host-Checkpoint: Security_KEEP_THIN_PLATFORM
+Current-Host-Checkpoint: Security_KEEP_THIN_PLATFORM_CERTIFIED
 Active-Host-Folder: Security
-Host-Security-Directory-State: PRESENT
-Host-Security-Production-Files: 18
 Host-Security-Disposition: KEEP_THIN_PLATFORM_SECURITY_BOUNDARY
+Host-Security-Production-Files: 18
 Host-Security-Host-Zero: false
-Seller-R1A-Boundary: CANONICAL_UNCHANGED
-Prior-Accepted-Lineage: TB-TMAR-HOST-STORY-AMC-001-R1 ; TB-TMAR-HOST-SELLER-AMC-001-R1A ; TB-TMAR-HOST-STOREFRONT-AMC-001-R2
+Checkout-Payment-Application-Leakage: ZERO
+Seller-Edition-Hardcode: ZERO
+Checkout-Expected-Failure: SemanticException
+Prior-Accepted-Lineage: TB-TMAR-HOST-SECURITY-AMC-001 ; TB-TMAR-HOST-STORY-AMC-001-R1
 Next-Host-Folder-Started: false
 Next-Host-Folder: NONE_USER_DECISION_REQUIRED
 Stale-Current-Pointer-State: ZERO
-workflowStop: USER_REVIEW_HOST_SECURITY_AMC_001_KEEP_THIN_PLATFORM
-Next-Task: USER_REVIEW_HOST_SECURITY_AMC_001_KEEP_THIN_PLATFORM
+workflowStop: USER_REVIEW_HOST_SECURITY_AMC_001_R1_KEEP_THIN_PLATFORM_CERTIFIED
+Next-Task: USER_REVIEW_HOST_SECURITY_AMC_001_R1_KEEP_THIN_PLATFORM_CERTIFIED
 Automatic-Next-Implementation-Task: NONE
 ```
+
 
 Last Architect Accepted Task:
 

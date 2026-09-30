@@ -1,6 +1,6 @@
-using Microsoft.Extensions.Options;
+﻿using Microsoft.Extensions.Options;
 
-namespace Tooba.Host;
+namespace Tooba.Host.Security;
 
 /// <summary>
 /// هدرهای امنیتی پایه بدون CSP سخت که Shopeiva را نشکند.

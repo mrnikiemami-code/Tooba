@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Hosting;
@@ -308,6 +308,7 @@ public sealed class StoryFoundationTests : IAsyncLifetime
                 new CurrentAuthenticatedSession(),
                 auth.Guard,
                 new StubEnvironment(),
+                new StoryFixedEdition(ToobaEdition.SingleStore),
                 CancellationToken.None));
         Assert.Equal(401, missingSellerActor.StatusCode);
 
@@ -317,6 +318,7 @@ public sealed class StoryFoundationTests : IAsyncLifetime
                 new CurrentAuthenticatedSession(),
                 auth.Guard,
                 new StubEnvironment(),
+                new StoryFixedEdition(ToobaEdition.SingleStore),
                 CancellationToken.None));
         Assert.Equal(403, crossSellerDenied.StatusCode);
     }
@@ -378,6 +380,11 @@ public sealed class StoryFoundationTests : IAsyncLifetime
             new AuthorizationInstrumentation(),
             new InMemoryAuthorizationSecurityEventSink());
         return (adapter, new AuthorizationGuard(adapter));
+    }
+
+    private sealed class StoryFixedEdition(ToobaEdition edition) : ICurrentEdition
+    {
+        public EditionContext? Current { get; } = new EditionContext(edition, "test");
     }
 
     private sealed class StubEnvironment : IHostEnvironment

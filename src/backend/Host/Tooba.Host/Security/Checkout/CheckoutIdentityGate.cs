@@ -1,3 +1,5 @@
+using Tooba.BuildingBlocks;
+using Tooba.BuildingBlocks.Presentation.Errors;
 using Tooba.Catalog.Contracts.Checkout;
 
 namespace Tooba.Host.Security.Checkout;
@@ -48,6 +50,6 @@ public sealed class CheckoutIdentityGate
             return;
         }
 
-        throw new InvalidOperationException("checkout.authentication_required");
+        throw new SemanticException(new SemanticError(FoundationErrorCodes.CheckoutAuthenticationRequired));
     }
 }

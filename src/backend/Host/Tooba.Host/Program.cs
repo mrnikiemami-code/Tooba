@@ -1,4 +1,4 @@
-// ریشهٔ ترکیب Host: Observability، resolve Edition/Tenant، ماژول‌های صریح، Outbox dispatcher، MassTransit SQL Transport، کش درون‌فرآیندی.
+﻿// ریشهٔ ترکیب Host: Observability، resolve Edition/Tenant، ماژول‌های صریح، Outbox dispatcher، MassTransit SQL Transport، کش درون‌فرآیندی.
 // Host ورودی routing است نه TenantId. کارگر Outbox و مصرف‌کننده Tenant را از Host نمی‌خوانند.
 // مسیرهای /__platform-* فقط Development/Testing هستند و قبل از استقرار عمومی باید محدود شوند.
 // لاگ فنی جایگزین Audit نیست. DbContext و Outbox برای /health و /ready باز نمی‌شوند.
@@ -16,6 +16,7 @@ using Tooba.BuildingBlocks.Presentation;
 using Tooba.StoreContext.Contracts.Current;
 using Tooba.Host;
 using Tooba.Host.Security.Seller;
+using Tooba.Host.Security;
 using Tooba.Host.Admin.Access;
 using Tooba.Host.Admin.Access.Authorizers;
 using Tooba.Host.Admin.Panel;
@@ -196,7 +197,7 @@ builder.Services.AddScoped<Tooba.BuildingBlocks.Security.IAdminPanelAccess, Toob
 builder.Services.AddScoped<Tooba.BuildingBlocks.Security.ISellerPanelAccess, Tooba.Host.Security.Seller.HostSellerPanelAccess>();
 builder.Services.AddScoped<Tooba.BuildingBlocks.Security.IPlatformEffectiveAccessReader, Tooba.AccessControl.Infrastructure.Adapters.Security.PlatformEffectiveAccessReader>();
 builder.Services.AddScoped<Tooba.Payment.Application.Orchestration.StorefrontPaymentOrchestrator>();
-builder.Services.AddScoped<Tooba.Payment.Application.Ports.ICheckoutActorPolicyPort, Tooba.Host.Security.Checkout.HostCheckoutActorPolicyAdapter>();
+builder.Services.AddScoped<Tooba.Payment.Contracts.Ports.ICheckoutActorPolicyPort, Tooba.Host.Security.Checkout.HostCheckoutActorPolicyAdapter>();
 builder.Services.AddScoped<Tooba.Payment.Endpoints.Storefront.IPaymentStorefrontAuthorizer, Tooba.Host.Security.Payment.HostPaymentStorefrontAuthorizer>();
 builder.Services.AddScoped<Tooba.Payment.Endpoints.Admin.IPaymentAdminAuthorizer, Tooba.Host.Admin.Access.Authorizers.HostPaymentAdminAuthorizer>();
 builder.Services.AddScoped<Tooba.Promotion.Endpoints.Seller.IPromotionSellerAuthorizer, Tooba.Host.Security.Seller.HostPromotionSellerAuthorizer>();

@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Hosting;
 using Tooba.AccessControl.Infrastructure.Authorization;
@@ -40,16 +40,16 @@ public sealed class SellerPanelAuthorizationTests
             },
             CancellationToken.None);
 
-        await SellerPanelAccess.AuthorizeActorForSellerAsync(auth.Guard, actorA, sellerA, CancellationToken.None);
-        await SellerPanelAccess.AuthorizeActorForSellerAsync(auth.Guard, actorB, sellerB, CancellationToken.None);
+        await SellerPanelAccess.AuthorizeActorForSellerAsync(auth.Guard, actorA, sellerA, new FixedCurrentEdition(ToobaEdition.SingleStore), CancellationToken.None);
+        await SellerPanelAccess.AuthorizeActorForSellerAsync(auth.Guard, actorB, sellerB, new FixedCurrentEdition(ToobaEdition.SingleStore), CancellationToken.None);
 
         var denyAb = await Assert.ThrowsAsync<PlatformHttpException>(() =>
-            SellerPanelAccess.AuthorizeActorForSellerAsync(auth.Guard, actorA, sellerB, CancellationToken.None));
+            SellerPanelAccess.AuthorizeActorForSellerAsync(auth.Guard, actorA, sellerB, new FixedCurrentEdition(ToobaEdition.SingleStore), CancellationToken.None));
         Assert.Equal(403, denyAb.StatusCode);
         Assert.Equal("seller.authorization.denied", denyAb.ErrorCode);
 
         var denyBa = await Assert.ThrowsAsync<PlatformHttpException>(() =>
-            SellerPanelAccess.AuthorizeActorForSellerAsync(auth.Guard, actorB, sellerA, CancellationToken.None));
+            SellerPanelAccess.AuthorizeActorForSellerAsync(auth.Guard, actorB, sellerA, new FixedCurrentEdition(ToobaEdition.SingleStore), CancellationToken.None));
         Assert.Equal(403, denyBa.StatusCode);
     }
 
@@ -62,12 +62,7 @@ public sealed class SellerPanelAuthorizationTests
         request.Headers[SellerPanelAccess.SellerPartyHeader] = "01a030d1-40cb-7000-8abe-6d31739956c5";
 
         var ex = await Assert.ThrowsAsync<PlatformHttpException>(() =>
-            SellerPanelAccess.RequireAuthorizedAsync(
-                request,
-                session,
-                auth.Guard,
-                new StubHostEnvironment(isDevelopment: true),
-                CancellationToken.None));
+            SellerPanelAccess.RequireAuthorizedAsync(request, session, auth.Guard, new StubHostEnvironment(isDevelopment: true), new FixedCurrentEdition(ToobaEdition.SingleStore), CancellationToken.None));
         Assert.Equal(401, ex.StatusCode);
         Assert.Equal("seller.actor.missing", ex.ErrorCode);
     }
@@ -97,24 +92,14 @@ public sealed class SellerPanelAuthorizationTests
 
         var allowed = new DefaultHttpContext().Request;
         allowed.Headers[SellerPanelAccess.SellerPartyHeader] = sellerA.ToString("D");
-        var ok = await SellerPanelAccess.RequireAuthorizedAsync(
-            allowed,
-            session,
-            auth.Guard,
-            new StubHostEnvironment(isDevelopment: false),
-            CancellationToken.None);
+        var ok = await SellerPanelAccess.RequireAuthorizedAsync(allowed, session, auth.Guard, new StubHostEnvironment(isDevelopment: false), new FixedCurrentEdition(ToobaEdition.SingleStore), CancellationToken.None);
         Assert.Equal(actorA, ok.ActorUserId);
         Assert.Equal(sellerA, ok.SellerPartyId);
 
         var spoof = new DefaultHttpContext().Request;
         spoof.Headers[SellerPanelAccess.SellerPartyHeader] = sellerB.ToString("D");
         var denied = await Assert.ThrowsAsync<PlatformHttpException>(() =>
-            SellerPanelAccess.RequireAuthorizedAsync(
-                spoof,
-                session,
-                auth.Guard,
-                new StubHostEnvironment(isDevelopment: false),
-                CancellationToken.None));
+            SellerPanelAccess.RequireAuthorizedAsync(spoof, session, auth.Guard, new StubHostEnvironment(isDevelopment: false), new FixedCurrentEdition(ToobaEdition.SingleStore), CancellationToken.None));
         Assert.Equal(403, denied.StatusCode);
     }
 
@@ -138,12 +123,7 @@ public sealed class SellerPanelAuthorizationTests
         request.Headers[SellerPanelAccess.SellerPartyHeader] = sellerA.ToString("D");
         Assert.NotEqual(actorA, sellerA);
 
-        var result = await SellerPanelAccess.RequireAuthorizedAsync(
-            request,
-            new CurrentAuthenticatedSession(),
-            auth.Guard,
-            new StubHostEnvironment(isDevelopment: true),
-            CancellationToken.None);
+        var result = await SellerPanelAccess.RequireAuthorizedAsync(request, new CurrentAuthenticatedSession(), auth.Guard, new StubHostEnvironment(isDevelopment: true), new FixedCurrentEdition(ToobaEdition.SingleStore), CancellationToken.None);
         Assert.Equal(actorA, result.ActorUserId);
         Assert.Equal(sellerA, result.SellerPartyId);
     }
@@ -155,10 +135,7 @@ public sealed class SellerPanelAuthorizationTests
         IAuthorizationGuard guard = new AuthorizationGuard(new FailClosedAuthorizationAdapter("authorization.disabled", telemetry));
         var ex = await Assert.ThrowsAsync<PlatformHttpException>(() =>
             SellerPanelAccess.AuthorizeActorForSellerAsync(
-                guard,
-                Guid.Parse("aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaa0001"),
-                Guid.Parse("01a030d1-40cb-7000-8abe-6d31739956c5"),
-                CancellationToken.None));
+                guard, Guid.Parse("aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaa0001"), Guid.Parse("01a030d1-40cb-7000-8abe-6d31739956c5"), new FixedCurrentEdition(ToobaEdition.SingleStore), CancellationToken.None));
         Assert.Equal(503, ex.StatusCode);
         Assert.Equal("seller.authorization.unavailable", ex.ErrorCode);
     }
@@ -180,5 +157,10 @@ public sealed class SellerPanelAuthorizationTests
         public string ApplicationName { get; set; } = "Tooba.Host.Tests";
         public string ContentRootPath { get; set; } = AppContext.BaseDirectory;
         public IFileProvider ContentRootFileProvider { get; set; } = new NullFileProvider();
+    }
+
+    private sealed class FixedCurrentEdition(ToobaEdition edition) : ICurrentEdition
+    {
+        public EditionContext? Current { get; } = new EditionContext(edition, "test");
     }
 }

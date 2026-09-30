@@ -10,7 +10,8 @@ namespace Tooba.Host.Security.Seller;
 internal sealed class HostSellerPanelAccess(
     CurrentAuthenticatedSession session,
     IAuthorizationGuard guard,
-    IHostEnvironment environment) : ISellerPanelAccess
+    IHostEnvironment environment,
+    ICurrentEdition edition) : ISellerPanelAccess
 {
     /// <inheritdoc />
     public Task<(Guid ActorUserId, Guid SellerPartyId)> RequireAuthorizedAsync(
@@ -19,6 +20,6 @@ internal sealed class HostSellerPanelAccess(
     {
         ArgumentNullException.ThrowIfNull(request);
         return SellerPanelAccess.RequireAuthorizedAsync(
-            request, session, guard, environment, cancellationToken);
+            request, session, guard, environment, edition, cancellationToken);
     }
 }

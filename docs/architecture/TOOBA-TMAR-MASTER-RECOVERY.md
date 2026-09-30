@@ -1,4 +1,4 @@
-﻿TOOBA TMAR MASTER RECOVERY
+TOOBA TMAR MASTER RECOVERY
 
 Canonical Architect ↔ Cursor handoff (recovery-critical)
 - Source of truth: `docs/architecture/TMAR-HOST-EVACUATION-PROTOCOL.md#architect--cursor-canonical-task-handoff`.
@@ -12,13 +12,15 @@ Canonical Architect ↔ Cursor handoff (recovery-critical)
 
 Latest Accepted TMAR Checkpoint — authoritative
 
-Reconciled by `TB-TMAR-HOST-SECURITY-AMC-001`. Current implementation commit recorded at `lastAcceptedCommit` after PASS.
+Reconciled by `TB-TMAR-HOST-SECURITY-AMC-001-R1`. Current implementation commit recorded at `lastAcceptedCommit` after PASS.
 - Host/Security = `PRESENT` / `KEEP_THIN_PLATFORM_SECURITY_BOUNDARY` (18 files). **Not HOST_ZERO.**
-- Seller R1A boundary CANONICAL_UNCHANGED; Checkout/Payment thin adapters retained; AuthSecurity options + security headers remain Host platform.
-- Hygiene: Reviews seller list uses `ISellerPanelAccess`; Payment storefront authorizer constructor-injects session.
-- Current Host checkpoint = `Security`; workflowStop = `USER_REVIEW_HOST_SECURITY_AMC_001_KEEP_THIN_PLATFORM`; automatic next = NONE; stale pointer = ZERO.
-- Story R1 / Wishlist / Grid R5-R1 remain accepted historical lineage.
+- Host/Security → Payment.Application = ZERO; checkout actor port = Payment.Contracts.Ports.ICheckoutActorPolicyPort.
+- Seller edition from ICurrentEdition (no hardcoded ToobaEdition.SingleStore).
+- CheckoutIdentityGate expected auth failure = SemanticException(checkout.authentication_required).
+- Current Host checkpoint = `Security`; workflowStop = `USER_REVIEW_HOST_SECURITY_AMC_001_R1_KEEP_THIN_PLATFORM_CERTIFIED`; automatic next = NONE; stale pointer = ZERO.
+- Parent Security AMC KEEP remains accepted lineage; Story R1 / Wishlist / Grid remain historical.
 
+Reconciled by `TB-TMAR-HOST-SECURITY-AMC-001` (HISTORICAL parent KEEP certification; superseded as current pointer by R1).
 Reconciled by `TB-TMAR-HOST-STORY-AMC-001-R1` (HISTORICAL). Host/Story = `ABSENT` / `CLOSED_HOST_ZERO` (not reopened).
 
 Reconciled by `TB-TMAR-HOST-STORY-AMC-001` (HISTORICAL parent HOST_ZERO evacuation).

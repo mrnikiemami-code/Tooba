@@ -1,5 +1,5 @@
 #pragma warning disable CS1591
-using Tooba.Payment.Application.Ports;
+using Tooba.Payment.Contracts.Ports;
 
 namespace Tooba.Host.Security.Checkout;
 

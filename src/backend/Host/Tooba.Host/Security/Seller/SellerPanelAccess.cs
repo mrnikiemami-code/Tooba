@@ -26,11 +26,12 @@ internal static class SellerPanelAccess
         CurrentAuthenticatedSession session,
         IAuthorizationGuard guard,
         IHostEnvironment environment,
+        ICurrentEdition edition,
         CancellationToken cancellationToken)
     {
         var actorUserId = ResolveActorUserId(request, session, environment);
         var sellerPartyId = RequireSellerPartyId(request);
-        await AuthorizeActorForSellerAsync(guard, actorUserId, sellerPartyId, cancellationToken);
+        await AuthorizeActorForSellerAsync(guard, actorUserId, sellerPartyId, edition, cancellationToken);
         return (actorUserId, sellerPartyId);
     }
 
@@ -79,12 +80,16 @@ internal static class SellerPanelAccess
         IAuthorizationGuard guard,
         Guid actorUserId,
         Guid sellerPartyId,
+        ICurrentEdition edition,
         CancellationToken cancellationToken)
     {
         if (actorUserId == Guid.Empty || sellerPartyId == Guid.Empty)
         {
             throw new PlatformHttpException(401, "هویت بازیگر احراز نشده است.", SellerSecurityErrorCodes.ActorMissing);
         }
+
+        var effectiveEdition = edition.Current?.Edition
+            ?? throw new PlatformHttpException(503, "سرویس مجوز در دسترس نیست.", SellerSecurityErrorCodes.AuthorizationUnavailable);
 
         var decision = await guard.AuthorizeUseCaseAsync(
             new AuthorizationCheck
@@ -98,7 +103,7 @@ internal static class SellerPanelAccess
                 Permission = AuthorizationRelations.View,
                 CallContext = new AuthorizationCallContext
                 {
-                    Edition = ToobaEdition.SingleStore,
+                    Edition = effectiveEdition,
                 },
             },
             cancellationToken);

@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Hosting;
@@ -147,7 +147,7 @@ public sealed class ReviewsFoundationTests
     {
         var source = File.ReadAllText(Path.Combine(RepoRoot(), "src", "backend", "Host", "Tooba.Host", "Reviews", "ReviewEndpoints.cs"));
         Assert.Contains("/v1/seller/reviews", source, StringComparison.Ordinal);
-        Assert.Contains("SellerPanelAccess.RequireAuthorizedAsync", source, StringComparison.Ordinal);
+        Assert.Contains("ISellerPanelAccess", source, StringComparison.Ordinal);
         Assert.Contains("ListSellerOffersQuery", source, StringComparison.Ordinal);
         Assert.Contains("SellerResponseSupported: false", source, StringComparison.Ordinal);
         Assert.DoesNotContain("/v1/seller/reviews/", source, StringComparison.Ordinal);
@@ -189,12 +189,7 @@ public sealed class ReviewsFoundationTests
         request.Headers[SellerPanelAccess.SellerPartyHeader] = sellerB.ToString("D");
         request.Headers[SellerPanelAccess.DevActorHeader] = actorA.ToString("D");
         var denied = await Assert.ThrowsAsync<PlatformHttpException>(() =>
-            SellerPanelAccess.RequireAuthorizedAsync(
-                request,
-                new CurrentAuthenticatedSession(),
-                auth.Guard,
-                new ReviewsStubHostEnvironment(),
-                CancellationToken.None));
+            SellerPanelAccess.RequireAuthorizedAsync(request, new CurrentAuthenticatedSession(), auth.Guard, new ReviewsStubHostEnvironment(), new ReviewsFixedEdition(ToobaEdition.SingleStore), CancellationToken.None));
         Assert.Equal(403, denied.StatusCode);
         Assert.Equal("seller.authorization.denied", denied.ErrorCode);
     }
@@ -233,6 +228,11 @@ public sealed class ReviewsFoundationTests
         public string ApplicationName { get; set; } = "Tooba.Host.Tests";
         public string ContentRootPath { get; set; } = AppContext.BaseDirectory;
         public IFileProvider ContentRootFileProvider { get; set; } = new NullFileProvider();
+    }
+
+    private sealed class ReviewsFixedEdition(ToobaEdition edition) : ICurrentEdition
+    {
+        public EditionContext? Current { get; } = new EditionContext(edition, "test");
     }
 }
 

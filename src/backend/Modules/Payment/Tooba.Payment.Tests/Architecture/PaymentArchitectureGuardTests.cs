@@ -385,9 +385,14 @@ public sealed class PaymentArchitectureGuardTests
         Assert.DoesNotContain("IPaymentUnpaidRetrySupplyPort", ports, StringComparison.Ordinal);
         Assert.DoesNotContain("IPaymentAdminOrderEnrichmentPort", ports, StringComparison.Ordinal);
         Assert.DoesNotContain("AdminPaymentOrderEnrichmentDto", ports, StringComparison.Ordinal);
-        Assert.Contains("ICheckoutActorPolicyPort", ports, StringComparison.Ordinal);
+        Assert.DoesNotContain("ICheckoutActorPolicyPort", ports, StringComparison.Ordinal);
         Assert.Contains("IPaymentGatewayCatalogPort", ports, StringComparison.Ordinal);
         Assert.Contains("IPaymentWebhookSignatureVerifier", ports, StringComparison.Ordinal);
+
+        var checkoutActorPort = File.ReadAllText(Path.Combine(
+            PaymentRoot(), "Tooba.Payment.Contracts", "Ports", "ICheckoutActorPolicyPort.cs"));
+        Assert.Contains("interface ICheckoutActorPolicyPort", checkoutActorPort, StringComparison.Ordinal);
+        Assert.Contains("namespace Tooba.Payment.Contracts.Ports", checkoutActorPort, StringComparison.Ordinal);
 
         var adapters = Path.Combine(PaymentRoot(), "Tooba.Payment.Infrastructure", "Adapters");
         Assert.False(File.Exists(Path.Combine(adapters, "PaymentHostContractBridge.cs")));
