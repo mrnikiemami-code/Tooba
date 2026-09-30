@@ -100,12 +100,16 @@ public sealed class HostStorefrontAmcR3GuardTests
     [Fact]
     public void Downstream_host_adapters_use_catalog_composer_port()
     {
-        var hostRoot = HostRoot();
-        var wishlist = File.ReadAllText(Path.Combine(hostRoot, "Wishlist", "WishlistComposer.cs"));
-        Assert.Contains("IStorefrontComposer", wishlist, StringComparison.Ordinal);
-        Assert.DoesNotContain("Tooba.Host.Storefront.StorefrontComposer", wishlist, StringComparison.Ordinal);
+        var root = FindRepoRoot();
+        var wishlistComposer = File.ReadAllText(Path.Combine(
+            root,
+            "src/backend/Modules/Wishlist/Tooba.Wishlist.Application/Presentation/WishlistPresentationComposer.cs"));
+        Assert.Contains("ICatalogStorefrontProductCardLookup", wishlistComposer, StringComparison.Ordinal);
+        Assert.DoesNotContain("IStorefrontComposer", wishlistComposer, StringComparison.Ordinal);
+        Assert.DoesNotContain("Tooba.Catalog.Application", wishlistComposer, StringComparison.Ordinal);
+        Assert.False(Directory.Exists(Path.Combine(HostRoot(), "Wishlist")));
 
-        var landing = File.ReadAllText(Path.Combine(hostRoot, "CatalogAdapters", "StoreLandingShellAdapter.cs"));
+        var landing = File.ReadAllText(Path.Combine(HostRoot(), "CatalogAdapters", "StoreLandingShellAdapter.cs"));
         Assert.Contains("IStorefrontComposer", landing, StringComparison.Ordinal);
         Assert.DoesNotContain("Tooba.Host.Storefront", landing, StringComparison.Ordinal);
         Assert.DoesNotContain("Content.Domain", landing, StringComparison.Ordinal);

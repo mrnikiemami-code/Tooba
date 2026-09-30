@@ -82,6 +82,8 @@ public sealed class CatalogModule : IToobaModule
         services.AddScoped<ICatalogAdminProductWorkspaceListGateway, CatalogAdminProductWorkspaceListGateway>();
         services.AddScoped<ICatalogAdminProductTitleIdLookup, Admin.CatalogAdminProductTitleIdLookup>();
         services.AddScoped<ICatalogReviewProductLookup, Adapters.CatalogReviewProductLookup>();
+        services.AddScoped<ICatalogStorefrontProductCardLookup, Adapters.CatalogStorefrontProductCardLookup>();
+        services.AddScoped<ICatalogDevelopmentPublishedProductSampler, Adapters.CatalogDevelopmentPublishedProductSampler>();
         services.AddScoped<IStoreCheckoutAbuseSettingsReader, StoreCheckoutAbuseSettingsReader>();
         services.AddScoped<ICatalogCheckoutIdentityPolicyLookup, Checkout.CatalogCheckoutIdentityPolicyLookup>();
         services.AddScoped<IReservationCycleHoldPolicyReader, ReservationCycleHoldPolicyReader>();

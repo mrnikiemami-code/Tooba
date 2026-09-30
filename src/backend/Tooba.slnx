@@ -34,6 +34,7 @@
     <Project Path="Modules/Wishlist/Tooba.Wishlist.Application/Tooba.Wishlist.Application.csproj" />
     <Project Path="Modules/Wishlist/Tooba.Wishlist.Contracts/Tooba.Wishlist.Contracts.csproj" />
     <Project Path="Modules/Wishlist/Tooba.Wishlist.Infrastructure/Tooba.Wishlist.Infrastructure.csproj" />
+    <Project Path="Modules/Wishlist/Tooba.Wishlist.Endpoints/Tooba.Wishlist.Endpoints.csproj" />
     <Project Path="Modules/Media/Tooba.Media.Domain/Tooba.Media.Domain.csproj" />
     <Project Path="Modules/Media/Tooba.Media.Contracts/Tooba.Media.Contracts.csproj" />
     <Project Path="Modules/Media/Tooba.Media.Application/Tooba.Media.Application.csproj" />

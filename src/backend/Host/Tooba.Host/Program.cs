@@ -32,7 +32,7 @@ using Tooba.Payment.Endpoints;
 using Tooba.Promotion.Endpoints;
 using Tooba.Host.Reviews;
 using Tooba.Host.ProductQnA;
-using Tooba.Host.Wishlist;
+using Tooba.Wishlist.Endpoints;
 using Tooba.AddressBook.Endpoints;
 using Tooba.Catalog.Endpoints;
 using Tooba.Content.Endpoints;
@@ -95,6 +95,7 @@ builder.Services.AddPricingEndpointPresentation();
 builder.Services.AddFulfillmentEndpointPresentation();
 builder.Services.AddReturnEndpointPresentation();
 builder.Services.AddAddressBookEndpointPresentation();
+builder.Services.AddWishlistEndpointPresentation();
 builder.Services.AddCustomerProfileEndpointPresentation();
 builder.Services.AddPartyEndpointPresentation();
 builder.Services.AddProblemDetails();
@@ -162,6 +163,7 @@ builder.Services.AddToobaCqrsFoundation(
     typeof(Tooba.Order.Application.Admin.Completeness.Queries.ListAdminOrderNotes.ListAdminOrderNotesQuery).Assembly,
     typeof(Tooba.AccessControl.Application.Commands.EnsureBootstrap.EnsureAccessControlBootstrapCommand).Assembly,
     typeof(Tooba.AddressBook.Application.Ports.IAddressBookDirectory).Assembly,
+    typeof(Tooba.Wishlist.Application.Commands.AddWishlistItem.AddWishlistItemCommand).Assembly,
     typeof(Tooba.CustomerProfile.Application.Queries.GetCustomerProfilePage.GetCustomerProfilePageQuery).Assembly,
     typeof(Tooba.Content.Application.Articles.Commands.CreateArticleCommand).Assembly,
     typeof(Tooba.ProductWorkspace.Application.Composition.Queries.GetProductWorkspaceQuery).Assembly,
@@ -209,7 +211,6 @@ builder.Services.AddScoped<Tooba.Support.Endpoints.Admin.ISupportAdminAuthorizer
 builder.Services.AddScoped<Tooba.Wallet.Endpoints.Admin.IWalletAdminAuthorizer, Tooba.Host.Admin.Access.Authorizers.HostWalletAdminAuthorizer>();
 builder.Services.AddScoped<Tooba.Party.Endpoints.Seller.IPartySellerAuthorizer, Tooba.Host.Security.Seller.HostPartySellerAuthorizer>();
 builder.Services.AddScoped<Tooba.Host.Admin.Panel.AdminPanelComposer>();
-builder.Services.AddScoped<Tooba.Host.Wishlist.WishlistComposer>();
 builder.Services.AddCatalogEndpointPresentation();
 builder.Services.AddProductWorkspaceEndpointPresentation();
 builder.Services.AddContentEndpointPresentation();
@@ -403,7 +404,7 @@ app.MapUiPreferenceEndpoints();
 app.MapOperatorProfileEndpoints();
 app.MapReviewEndpoints();
 app.MapProductQnAEndpoints();
-app.MapWishlistEndpoints();
+app.MapWishlistModuleEndpoints();
 app.MapAddressBookModuleEndpoints();
 app.MapFulfillmentEndpoints();
 app.MapReturnEndpoints();

@@ -1,9 +1,10 @@
 using Microsoft.EntityFrameworkCore;
 using Testcontainers.PostgreSql;
-using Tooba.Host.Wishlist;
 using Tooba.Persistence;
-using Tooba.Wishlist.Application;
+using Tooba.Wishlist.Application.Models;
+using Tooba.Wishlist.Application.Ports;
 using Tooba.Wishlist.Domain;
+using Tooba.Wishlist.Endpoints.Customer;
 using Tooba.Wishlist.Infrastructure.Persistence;
 using Xunit;
 
@@ -48,17 +49,35 @@ public sealed class WishlistFoundationTests
         Assert.Equal("product-unavailable", item.UnavailableReason);
     }
 
-    /// <summary>مرز HTTP در production بدون نشست 401 می‌دهد و هیچ owner از route/body نمی‌خواند.</summary>
+    /// <summary>مرز HTTP ماژول در production بدون نشست 401 می‌دهد و هیچ owner از route/body نمی‌خواند.</summary>
     [Fact]
     public void Endpoint_uses_session_and_rejects_missing_production_actor()
     {
         var source = File.ReadAllText(Path.Combine(
-            FindRepoRoot(), "src", "backend", "Host", "Tooba.Host", "Wishlist", "WishlistEndpoints.cs"));
-        Assert.Contains("session.IsAuthenticated", source, StringComparison.Ordinal);
-        Assert.Contains("StatusCodes.Status401Unauthorized", source, StringComparison.Ordinal);
-        Assert.Contains("environment.IsDevelopment()", source, StringComparison.Ordinal);
+            FindRepoRoot(),
+            "src",
+            "backend",
+            "Modules",
+            "Wishlist",
+            "Tooba.Wishlist.Endpoints",
+            "Customer",
+            "WishlistCustomerEndpoints.cs"));
+        var resolver = File.ReadAllText(Path.Combine(
+            FindRepoRoot(),
+            "src",
+            "backend",
+            "Modules",
+            "Wishlist",
+            "Tooba.Wishlist.Endpoints",
+            "Customer",
+            "WishlistCustomerActorResolver.cs"));
+        Assert.Contains("IWishlistCustomerActorResolver", source, StringComparison.Ordinal);
+        Assert.Contains("WishlistErrorCodes.SessionRequired", source, StringComparison.Ordinal);
+        Assert.Contains("IsDevelopment()", resolver, StringComparison.Ordinal);
         Assert.DoesNotContain("{owner", source, StringComparison.OrdinalIgnoreCase);
         Assert.DoesNotContain("OwnerUserId", source, StringComparison.Ordinal);
+        Assert.False(Directory.Exists(Path.Combine(
+            FindRepoRoot(), "src", "backend", "Host", "Tooba.Host", "Wishlist")));
     }
 
     private static string FindRepoRoot()

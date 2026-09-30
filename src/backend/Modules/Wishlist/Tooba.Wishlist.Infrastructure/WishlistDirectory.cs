@@ -1,21 +1,23 @@
 using Microsoft.EntityFrameworkCore;
-using Tooba.Catalog.Application;
-using Tooba.Catalog.Domain;
-using Tooba.Wishlist.Application;
+using Tooba.BuildingBlocks;
+using Tooba.Catalog.Contracts;
+using Tooba.Wishlist.Application.Models;
+using Tooba.Wishlist.Application.Ports;
 using Tooba.Wishlist.Contracts;
+using Tooba.Wishlist.Contracts.Errors;
 using Tooba.Wishlist.Domain;
 using Tooba.Wishlist.Infrastructure.Persistence;
 
 namespace Tooba.Wishlist.Infrastructure;
 
-/// <summary>پیاده‌سازی Wishlist که فقط schema خود و درگاه کاربردی Catalog را مصرف می‌کند.</summary>
+/// <summary>پیاده‌سازی Wishlist که فقط schema خود و درگاه Contracts Catalog را مصرف می‌کند.</summary>
 public sealed class WishlistDirectory : IWishlistDirectory, IWishlistCountPort
 {
     private readonly WishlistDbContext _db;
-    private readonly ICatalogLookupGateway _catalog;
+    private readonly ICatalogReviewProductLookup _catalog;
 
     /// <summary>وابستگی‌های مالک را بدون DbContext خارجی دریافت می‌کند.</summary>
-    public WishlistDirectory(WishlistDbContext db, ICatalogLookupGateway catalog)
+    public WishlistDirectory(WishlistDbContext db, ICatalogReviewProductLookup catalog)
     {
         _db = db;
         _catalog = catalog;
@@ -25,9 +27,13 @@ public sealed class WishlistDirectory : IWishlistDirectory, IWishlistCountPort
     public async Task<WishlistAddResult> AddAsync(Guid actorUserId, Guid productId, CancellationToken cancellationToken)
     {
         EnsureActor(actorUserId);
-        var product = await _catalog.FindReviewableProductByIdAsync(productId, cancellationToken);
-        if (product is null || product.Status != CatalogPublicationStatus.Published)
-            throw new InvalidOperationException("محصول منتشرشده پیدا نشد.");
+        var product = await _catalog.FindByIdAsync(productId, cancellationToken);
+        if (product is null
+            || !string.Equals(product.Status, "Published", StringComparison.Ordinal))
+        {
+            throw new SemanticException(new SemanticError(WishlistErrorCodes.ProductUnavailable));
+        }
+
         var existing = await _db.Items.AsNoTracking()
             .SingleOrDefaultAsync(x => x.OwnerUserId == actorUserId && x.ProductId == productId, cancellationToken);
         if (existing is not null) return new(existing.WishlistItemId, false);
