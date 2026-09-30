@@ -4,7 +4,7 @@
   "frontendFrozen": true,
   "checkoutState": "PAUSED_AT_SAFE_W5_CHECKPOINT",
   "lastAcceptedTask": "TB-TMAR-HOST-SECURITY-AMC-001",
-  "lastAcceptedCommit": "PLACEHOLDER_SECURITY_AMC_IMPLEMENTATION_COMMIT",
+  "lastAcceptedCommit": "468f14c0bca4ba814c6b98bf01cce227643012a9",
   "lastAcceptedCommitKind": "IMPLEMENTATION_COMMIT",
   "lastAcceptedResultEvidenceCommit": "1c290b37e0498eb53196765262f8d2017455beeb",
   "lastAcceptedResultEvidenceCommitKind": "RESULT_EVIDENCE_DOCS_STAMP_NOT_IMPLEMENTATION",
