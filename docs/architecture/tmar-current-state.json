@@ -12,15 +12,15 @@
   "lastAcceptedSoTStampKind": "RESULT_EVIDENCE_DOCS_STAMP",
   "lastAcceptedCommitSemantics": "lastAcceptedTask is the accepted implementation wave TB-TMAR-HOST-SELLER-AMC-001-R5 and lastAcceptedCommit is its IMPLEMENTATION commit. A later docs-only commit may carry only the Worker Result, evidence documents and SoT reconciliation: it MUST be recorded as RESULT_EVIDENCE_DOCS_STAMP and must NEVER be mislabeled as the implementation commit. The preceding accepted Seller wave kept its own distinct pair and remains accepted lineage: TB-TMAR-HOST-SELLER-AMC-001-R4 implementation a5f353c0 with docs-only SoT stamp 48d5e0ef; the earlier R3 implementation 5ab8bdc7 with docs-only SoT stamp ff5d329b; R2 implementation bc7f43cf with docs-only result/evidence stamp abf4c592; R1A implementation 520c9918 with docs-only result/evidence stamp 09b47f5f and its R1B recovery-pointer repair (c9c02913) are preserved docs-only stamps. Historical families keep their distinct pairs: TB-TMAR-HOST-DEVELOPMENT-PRODUCTWORKSPACE-MIGRATION-SEAM-001 implementation ec906591 with docs-only SoT stamp 2d74a54c; Wave 1 TB-TMAR-HOST-DEVELOPMENT-PRODUCTWORKSPACE-CATALOG-SEED-REHOME-001 implementation e16781dc (ACCEPTED, preserved); TB-TMAR-HOST-DEVELOPMENT-ENRICHER-CLOSURE-001 implementation 44e6dde0 with docs-only SoT stamp 9e27fe75.",
   "lastAcceptedNote": "The latest accepted implementation is Seller R5: the final Host-owned seller surface — the Development route GET /v1/seller/dev-contexts and its seller demo-actor/authorization bootstrap — was evacuated from Host/Seller into the AccessControl development capability (AccessControl.Endpoints/Seller/Development/SellerDevContextEndpoints.cs -> AccessControl.Application/Development/Seller GetSellerDevContextsQuery/Handler over an AccessControl-owned ISellerDevContextStore port -> AccessControl.Infrastructure/Development/Seller/SellerDevContextBootstrap.cs). Cross-module access is Contracts-only: Party.Contracts IPartyDevelopmentSeedGateway for organization/membership development seed and Identity.Contracts IIdentityAuthenticationService for demo actors, plus the neutral BuildingBlocks IAuthorizationTupleWriter seam; ZERO foreign DbContext/Application/Domain/Infrastructure/Persistence. Host/Seller production files went 2 -> 0 and Host-owned seller routes went 1 -> 0; the Host/Seller directory is ABSENT; there is NO sink-folder regression into Host/Development (its accepted 5-file allowlist is unchanged) and Host/Security/Seller remains the canonical R1A thin security-adapter boundary. Development behavior is preserved exactly: identical path/verb, 404 seller.dev.unavailable outside Development, 503 seller.dev.not-ready when the snapshot is not ready, response actors[] fields (actorUserId, actorLabel, sellerPartyId, sellerLabel, contextKind), contextKind values seller-owner/seller-owner-alt/scoped-employee, Actor A/B demo identity + label semantics, membership/member-tuple semantics and fail-closed behavior when the authorization engine is unavailable. Full Host/Seller folder certification is PASS (CLOSED / HOST_ZERO) in this same task; no R6 was created. AccessControl structure certification preserved; the R1A/R2/R3/R4 route ownership is intact. Reconciled by TB-TMAR-HOST-SELLER-AMC-001-R5 in the same task (Recovery synchronized on PASS).",
-  "latestAcceptedImplementationWave": "TB-TMAR-HOST-WISHLIST-AMC-001",
-  "currentHostCheckpoint": "Wishlist",
+  "latestAcceptedImplementationWave": "TB-TMAR-HOST-STORY-AMC-001",
+  "currentHostCheckpoint": "Story",
   "nextHostFolderStarted": false,
   "nextHostFolder": null,
   "staleCurrentPointerState": "ZERO",
-  "nextTask": "USER_REVIEW_HOST_WISHLIST_AMC_001_CLOSED_HOST_ZERO",
+  "nextTask": "USER_REVIEW_HOST_STORY_AMC_001_CLOSED_HOST_ZERO",
   "nextTaskGate": "USER_DECISION_REQUIRED_NO_AUTOMATIC_NEXT_IMPLEMENTATION_TASK",
   "nextTaskState": "USER_DECISION_REQUIRED",
-  "workflowStop": "USER_REVIEW_HOST_WISHLIST_AMC_001_CLOSED_HOST_ZERO",
+  "workflowStop": "USER_REVIEW_HOST_STORY_AMC_001_CLOSED_HOST_ZERO",
   "automaticNextImplementationTask": "NONE",
   "hostGridAmc": {
     "task": "TB-TMAR-HOST-GRID-AMC-001",
@@ -4020,7 +4020,6 @@
     ],
     "needsPrecertRepairAreas": [
       "PageComposition",
-      "Story",
       "Reviews",
       "Localization",
       "Grid-admin-query-engines"
@@ -4890,5 +4889,31 @@
     "implementationCommit": "cb573a8d8bf47c430483d4fd5ff604e3404bc60a",
     "certificationState": "CLOSED_HOST_ZERO",
     "automaticNextImplementationTask": "NONE"
+  },
+  "hostStoryAmc": {
+    "task": "TB-TMAR-HOST-STORY-AMC-001",
+    "execution": "ARCHITECT_DIRECT_ANALYZE_MIGRATE_CERTIFY",
+    "skillsApplied": [
+      ".cursor/skills/tooba-architecture-analyze/SKILL.md",
+      ".cursor/skills/tooba-architecture-migrate/SKILL.md",
+      ".cursor/skills/tooba-architecture-certify/SKILL.md"
+    ],
+    "state": "CLOSED_HOST_ZERO",
+    "sliceScope": "EVACUATE_HOST_STORY_TO_MODULE_ENDPOINTS_CQRS",
+    "hostStoryDirectoryState": "ABSENT",
+    "hostStoryProductionFilesAfter": 0,
+    "httpOwner": "Tooba.Story.Endpoints.StoryEndpointModule",
+    "presentationComposer": "Story.Application.Presentation.StoryPresentationComposer",
+    "adminAuth": "IStoryAdminAuthorizer -> IAdminPanelAccess",
+    "sellerAuth": "IStorySellerAuthorizer -> HostStorySellerAuthorizer -> ISellerPanelAccess",
+    "folderCertification": "HOST_ZERO",
+    "moduleStructureCertification": "PARTIAL_FOUNDATION_IMPROVED_ENDPOINTS_CQRS_PRESENT",
+    "schemaChangeState": "NONE",
+    "frontendState": "UNCHANGED",
+    "durableGuard": "HostStoryAmcGuardTests",
+    "evidence": "docs/evidence/TB-TMAR-HOST-STORY-AMC-001/",
+    "focusedValidation": "PASS_STORY_AMC_GUARDS",
+    "workflowStop": "USER_REVIEW_HOST_STORY_AMC_001_CLOSED_HOST_ZERO",
+    "automaticNext": "NONE"
   }
 }

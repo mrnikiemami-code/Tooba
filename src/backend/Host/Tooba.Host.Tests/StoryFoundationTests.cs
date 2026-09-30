@@ -60,8 +60,10 @@ public sealed class StoryFoundationTests : IAsyncLifetime
         Assert.NotNull(typeof(IStoryDirectory).GetMethod(nameof(IStoryDirectory.GetPublicStoriesAsync)));
         Assert.NotNull(typeof(IStoryDirectory).GetMethod(nameof(IStoryDirectory.AdminSoftDisableAsync)));
         Assert.Equal(StoryStatus.Active, (StoryStatus)2);
-        var endpoints = File.ReadAllText(Path.Combine(RepoRoot(), "src", "backend", "Host", "Tooba.Host", "Story", "StoryEndpoints.cs"));
-        Assert.Contains("AdminPanelAccess.RequireAuthorizedAsync", endpoints, StringComparison.Ordinal);
+        var endpoints = File.ReadAllText(Path.Combine(
+            RepoRoot(), "src", "backend", "Modules", "Story", "Tooba.Story.Endpoints", "Admin", "StoryAdminEndpoints.cs"));
+        Assert.Contains("IStoryAdminAuthorizer", endpoints, StringComparison.Ordinal);
+        Assert.DoesNotContain("AdminPanelAccess.RequireAuthorizedAsync", endpoints, StringComparison.Ordinal);
     }
 
     /// <summary>seed فعال عمومی است؛ draft/scheduled/expired/disabled پنهان؛ CTA ناامن رد؛ reorder و locale فیلتر می‌شوند.</summary>
@@ -199,12 +201,15 @@ public sealed class StoryFoundationTests : IAsyncLifetime
         var actorB = Guid.Parse("bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbb0002");
         var adminActor = Guid.Parse("cccccccc-cccc-4ccc-8ccc-cccccccc0003");
 
-        var endpoints = File.ReadAllText(Path.Combine(RepoRoot(), "src", "backend", "Host", "Tooba.Host", "Story", "StoryEndpoints.cs"));
+        var endpoints = File.ReadAllText(Path.Combine(
+            RepoRoot(), "src", "backend", "Modules", "Story", "Tooba.Story.Endpoints", "Seller", "StorySellerEndpoints.cs"));
+        var adminEndpoints = File.ReadAllText(Path.Combine(
+            RepoRoot(), "src", "backend", "Modules", "Story", "Tooba.Story.Endpoints", "Admin", "StoryAdminEndpoints.cs"));
         Assert.DoesNotContain("seller.MapPost(\"/{id:guid}/enable\"", endpoints, StringComparison.Ordinal);
         Assert.DoesNotContain("seller.MapPost(\"/{id:guid}/approve\"", endpoints, StringComparison.Ordinal);
         Assert.DoesNotContain("seller.MapPost(\"/{id:guid}/activate\"", endpoints, StringComparison.Ordinal);
         Assert.Contains("/v1/seller/stories", endpoints, StringComparison.Ordinal);
-        Assert.Contains("AdminApproveAsync", endpoints, StringComparison.Ordinal);
+        Assert.Contains("ApproveAdminStoryCommand", adminEndpoints, StringComparison.Ordinal);
 
         var draft = await directory.SellerCreateDraftAsync(
             tenantId,

@@ -23,6 +23,7 @@ public sealed class StoryModule : IToobaModule
         services.AddSingleton<IOutboxModuleRegistration, StoryOutboxRegistration>();
         services.AddScoped<IStoryDirectory, StoryDirectory>();
         services.AddScoped<IAdminStoryGridPort, AdminStoryGridAdapter>();
+        services.AddScoped<Tooba.Story.Application.Presentation.StoryPresentationComposer>();
         services.AddModuleSchemaMigrator<StoryDbContext>("Story", ModuleSchemaMigrationOrder.Story);
         services.AddDbContext<StoryDbContext>((sp, options) =>
         {

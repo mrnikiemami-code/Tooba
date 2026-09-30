@@ -41,7 +41,7 @@ using Tooba.Content.Infrastructure;
 using Tooba.Content.Infrastructure.Development;
 using Tooba.Host.Composition;
 using Tooba.Host.PageComposition;
-using Tooba.Host.Story;
+using Tooba.Story.Endpoints;
 using Tooba.Host.Preferences;
 using Tooba.Host.OperatorProfile;
 using Tooba.Host.Support;
@@ -96,6 +96,7 @@ builder.Services.AddFulfillmentEndpointPresentation();
 builder.Services.AddReturnEndpointPresentation();
 builder.Services.AddAddressBookEndpointPresentation();
 builder.Services.AddWishlistEndpointPresentation();
+builder.Services.AddStoryEndpointPresentation();
 builder.Services.AddCustomerProfileEndpointPresentation();
 builder.Services.AddPartyEndpointPresentation();
 builder.Services.AddProblemDetails();
@@ -164,6 +165,7 @@ builder.Services.AddToobaCqrsFoundation(
     typeof(Tooba.AccessControl.Application.Commands.EnsureBootstrap.EnsureAccessControlBootstrapCommand).Assembly,
     typeof(Tooba.AddressBook.Application.Ports.IAddressBookDirectory).Assembly,
     typeof(Tooba.Wishlist.Application.Commands.AddWishlistItem.AddWishlistItemCommand).Assembly,
+    typeof(Tooba.Story.Application.Queries.GetPublicStories.GetPublicStoriesQuery).Assembly,
     typeof(Tooba.CustomerProfile.Application.Queries.GetCustomerProfilePage.GetCustomerProfilePageQuery).Assembly,
     typeof(Tooba.Content.Application.Articles.Commands.CreateArticleCommand).Assembly,
     typeof(Tooba.ProductWorkspace.Application.Composition.Queries.GetProductWorkspaceQuery).Assembly,
@@ -200,6 +202,7 @@ builder.Services.AddScoped<Tooba.Payment.Endpoints.Admin.IPaymentAdminAuthorizer
 builder.Services.AddScoped<Tooba.Promotion.Endpoints.Seller.IPromotionSellerAuthorizer, Tooba.Host.Security.Seller.HostPromotionSellerAuthorizer>();
 builder.Services.AddScoped<Tooba.Offer.Endpoints.Seller.IOfferSellerAuthorizer, Tooba.Host.Security.Seller.HostOfferSellerAuthorizer>();
 builder.Services.AddScoped<Tooba.Catalog.Endpoints.Seller.ICatalogSellerAuthorizer, Tooba.Host.Security.Seller.HostCatalogSellerAuthorizer>();
+builder.Services.AddScoped<Tooba.Story.Endpoints.Seller.IStorySellerAuthorizer, Tooba.Host.Security.Seller.HostStorySellerAuthorizer>();
 builder.Services.AddScoped<Tooba.Settlement.Endpoints.Seller.ISettlementSellerAuthorizer, Tooba.Host.Security.Seller.HostSettlementSellerAuthorizer>();
 builder.Services.AddScoped<Tooba.Settlement.Endpoints.Admin.ISettlementAdminAuthorizer, Tooba.Host.Admin.Access.Authorizers.HostSettlementAdminAuthorizer>();
 builder.Services.AddScoped<Tooba.Order.Endpoints.Seller.IOrderSellerAuthorizer, Tooba.Host.Security.Seller.HostOrderSellerAuthorizer>();
@@ -216,7 +219,6 @@ builder.Services.AddProductWorkspaceEndpointPresentation();
 builder.Services.AddContentEndpointPresentation();
 builder.Services.AddScoped<Tooba.Host.Reviews.ReviewPanelComposer>();
 builder.Services.AddScoped<Tooba.Host.PageComposition.PageCompositionPanelComposer>();
-builder.Services.AddScoped<Tooba.Host.Story.StoryPanelComposer>();
 builder.Services.ConfigureHttpJsonOptions(options =>
 {
     options.SerializerOptions.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
@@ -418,7 +420,7 @@ app.MapContentModuleEndpoints();
 app.MapLocaleAdminEndpoints();
 app.MapMediaModuleEndpoints();
 app.MapPageCompositionEndpoints();
-app.MapStoryEndpoints();
+app.MapStoryModuleEndpoints();
 app.MapPromotionEndpoints();
 
 HostHealthEndpoints.Map(app, enableCors: true);

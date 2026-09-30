@@ -42,12 +42,21 @@ public sealed class HostGridAmcR2GuardTests
     [Fact]
     public void StoryPanelComposer_consumes_module_port_only()
     {
-        var composer = File.ReadAllText(Path.Combine(HostRoot(), "Story", "StoryPanelComposer.cs"));
+        var composer = File.ReadAllText(Path.Combine(
+            FindRepoRoot(),
+            "src",
+            "backend",
+            "Modules",
+            "Story",
+            "Tooba.Story.Application",
+            "Presentation",
+            "StoryPresentationComposer.cs"));
         Assert.Contains("IAdminStoryGridPort", composer, StringComparison.Ordinal);
         Assert.DoesNotContain("Tooba.Host.Grid", composer, StringComparison.Ordinal);
         Assert.DoesNotContain("AdminListGridPolicies", composer, StringComparison.Ordinal);
         Assert.DoesNotContain("StoryDbContext", composer, StringComparison.Ordinal);
         Assert.DoesNotContain("new AdminStoryGridQueryEngine", composer, StringComparison.Ordinal);
+        Assert.False(Directory.Exists(Path.Combine(HostRoot(), "Story")));
     }
 
     [Fact]

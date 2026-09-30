@@ -58,7 +58,9 @@
     <Project Path="Modules/PageComposition/Tooba.PageComposition.Infrastructure/Tooba.PageComposition.Infrastructure.csproj" />
     <Project Path="Modules/Story/Tooba.Story.Domain/Tooba.Story.Domain.csproj" />
     <Project Path="Modules/Story/Tooba.Story.Application/Tooba.Story.Application.csproj" />
+    <Project Path="Modules/Story/Tooba.Story.Contracts/Tooba.Story.Contracts.csproj" />
     <Project Path="Modules/Story/Tooba.Story.Infrastructure/Tooba.Story.Infrastructure.csproj" />
+    <Project Path="Modules/Story/Tooba.Story.Endpoints/Tooba.Story.Endpoints.csproj" />
   </Folder>
   <Folder Name="/Modules/Catalog/">
     <Project Path="Modules/Catalog/Tooba.Catalog.Application/Tooba.Catalog.Application.csproj" />
