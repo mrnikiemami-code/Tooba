@@ -25,36 +25,33 @@ BRIDGE-WAKE-V1
 Channel: tooba-main
 ```
 
-Latest Accepted TMAR Checkpoint — authoritative (reconciled by TB-TMAR-HOST-STOREFRONT-AMC-001-R4)
+Latest Accepted TMAR Checkpoint — authoritative (reconciled by TB-TMAR-HOST-GRID-AMC-001-R5-R1)
 
 A fresh chat MUST recover the CURRENT checkpoint from `docs/architecture/tmar-current-state.json` and this block, not historical next-task lines below.
 
 ```text
-Latest-Accepted-Implementation-Wave: TB-TMAR-HOST-STOREFRONT-AMC-001-R4
+Latest-Accepted-Implementation-Wave: TB-TMAR-HOST-GRID-AMC-001-R5-R1
 Latest-Accepted-Implementation-Wave-State: ACCEPTED
-Latest-Accepted-Task: TB-TMAR-HOST-STOREFRONT-AMC-001-R4
-Implementation-Commit: d2235ecebb6d2e8af4626c50927acf79ab50dc0d
+Latest-Accepted-Task: TB-TMAR-HOST-GRID-AMC-001-R5-R1
 Implementation-Commit-Kind: IMPLEMENTATION_COMMIT
-Current-Host-Checkpoint: Storefront_CLOSED_HOST_ZERO
-Active-Host-Folder: Storefront
-Host-Storefront-Directory-State: ABSENT
-Host-Storefront-Production-Files: 0
-Host-Storefront-Owned-Routes: 0
-Storefront-R1: TEMPLATE_PREVIEW_TO_CATALOG
-Storefront-R2: APPEARANCE_CHECKOUT_IDENTITY_TO_CATALOG_MEDIA_TO_MEDIA_SECURITY_TO_HOST_SECURITY
-Storefront-R3: COMPOSER_MODELS_BROWSE_TO_CATALOG_GEOGRAPHY_TO_ORDER_CONTRACTS_ONLY_ENRICHMENT
-Storefront-R4: DEMO_SEED_TO_CATALOG_INFRASTRUCTURE_DEVELOPMENT_STOREFRONTDEMO_ACCOUNT_IDENTITY_TO_HOST_AUTHENTICATION_HOST_STOREFRONT_DELETED
-Full-Storefront-Folder-Certification: PASS_CLOSED_HOST_ZERO
+Current-Host-Checkpoint: Grid_CLOSED_HOST_ZERO
+Active-Host-Folder: Grid
+Host-Grid-Directory-State: ABSENT
+Reviews-Catalog-Application-State: ZERO
+Reviews-Catalog-Domain-State: ZERO
+Catalog-Contracts-Title-Batch: ICatalogAdminProductTitleIdLookup.GetProductTitlesByIdsAsync
+Catalog-Contracts-Review-Product: ICatalogReviewProductLookup
+Story-Party-Grid-Foreign-Leakage-Audit: CLEAN
+Full-Grid-Folder-Certification: PASS_CLOSED_HOST_ZERO
 Host-Development-Sink-Regression-State: ZERO
 Schema-Change-State: NONE
 Frontend-State: UNCHANGED
-Optional-Residual: POSTGRES_DEMO_SEED_RUNTIME_TEST_WHEN_DOCKER_AVAILABLE_NON_BLOCKING
-Prior-Accepted-Lineage: TB-TMAR-HOST-SELLER-AMC-001-R5_CLOSED_HOST_ZERO
+Prior-Accepted-Lineage: TB-TMAR-HOST-STOREFRONT-AMC-001-R4_CLOSED_HOST_ZERO; TB-TMAR-HOST-SELLER-AMC-001-R5_CLOSED_HOST_ZERO
 Next-Host-Folder-Started: false
 Next-Host-Folder: NONE_USER_DECISION_REQUIRED
 Stale-Current-Pointer-State: ZERO
-workflowStop: USER_REVIEW_HOST_STOREFRONT_AMC_001_R4_CLOSED_HOST_ZERO
-Next-Task: USER_REVIEW_HOST_STOREFRONT_AMC_001_R4_CLOSED_HOST_ZERO (USER_DECISION_REQUIRED)
+workflowStop: USER_REVIEW_HOST_GRID_AMC_001_R5_R1_CLOSED_HOST_ZERO
+Next-Task: USER_REVIEW_HOST_GRID_AMC_001_R5_R1_CLOSED_HOST_ZERO (USER_DECISION_REQUIRED)
 Next-Task-Gate: USER_DECISION_REQUIRED_NO_AUTOMATIC_NEXT_IMPLEMENTATION_TASK
 Automatic-Next-Implementation-Task: NONE
 ```

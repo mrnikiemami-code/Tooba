@@ -12,14 +12,20 @@ Canonical Architect ↔ Cursor handoff (recovery-critical)
 
 Latest Accepted TMAR Checkpoint — authoritative
 
-Reconciled by `TB-TMAR-HOST-STOREFRONT-AMC-001-R4`. A fresh chat/architect MUST recover the CURRENT checkpoint from here and from `docs/architecture/tmar-current-state.json`.
+Reconciled by `TB-TMAR-HOST-GRID-AMC-001-R5-R1`. A fresh chat/architect MUST recover the CURRENT checkpoint from here and from `docs/architecture/tmar-current-state.json`.
 
-- Latest accepted implementation wave: `TB-TMAR-HOST-STOREFRONT-AMC-001-R4` — state `ACCEPTED`, implementation commit `d2235ecebb6d2e8af4626c50927acf79ab50dc0d`.
+- Latest accepted implementation wave: `TB-TMAR-HOST-GRID-AMC-001-R5-R1` — state `ACCEPTED` (implementation commit recorded at `lastAcceptedCommit`). Reviews → Catalog.Application / Domain = ZERO; admin grid title enrich uses `ICatalogAdminProductTitleIdLookup.GetProductTitlesByIdsAsync`; ReviewDirectory/seed use `ICatalogReviewProductLookup` (Contracts). Host/Grid remains `ABSENT` / `CLOSED_HOST_ZERO`. Story/Party grid destinations audited CLEAN (no Catalog Application/Domain leakage). Storefront R4 remains accepted historical lineage.
+- Current Host checkpoint = `Grid` (CLOSED). Current stop = `USER_REVIEW_HOST_GRID_AMC_001_R5_R1_CLOSED_HOST_ZERO`; `automaticNextImplementationTask = NONE`; `staleCurrentPointerState = ZERO`; `nextTaskState = USER_DECISION_REQUIRED`; `nextTaskGate = USER_DECISION_REQUIRED_NO_AUTOMATIC_NEXT_IMPLEMENTATION_TASK`.
+- Current Grid work checkpoint (CURRENT — reconciled by TB-TMAR-HOST-GRID-AMC-001-R5-R1): Host/Grid HOST_ZERO preserved; Contracts-only Reviews↔Catalog boundary restored.
+
+Reconciled by `TB-TMAR-HOST-STOREFRONT-AMC-001-R4` (HISTORICAL / NON-AUTHORITATIVE as current pointer). Storefront R4 remains accepted lineage preceding Grid R5-R1.
+
+- Latest accepted implementation wave (HISTORICAL lineage): `TB-TMAR-HOST-STOREFRONT-AMC-001-R4` — state `ACCEPTED`, implementation commit `d2235ecebb6d2e8af4626c50927acf79ab50dc0d`.
 - Host/Storefront = `ABSENT`; production files = 0; Host-owned Storefront routes = 0; full folder state = `CLOSED_HOST_ZERO`.
 - R1: template preview -> Catalog CQRS/Endpoints. R2: appearance + checkout identity -> Catalog, media -> Media, thin security adapters -> Host/Security. R3: browse/composer/models -> Catalog, geography -> Order, enrichments Contracts-only. R4: demo seed -> Catalog.Infrastructure/Development/StorefrontDemo; account identity -> Host/Authentication; Host/Storefront deleted.
 - Durable Storefront AMC guards R1-R4 passed; no Host/Development sink regression; frontend unchanged; schema unchanged. Optional Postgres demo-seed runtime test remains non-blocking until Docker is available.
-- Current Host checkpoint = `Storefront` (CLOSED). Current stop = `USER_REVIEW_HOST_STOREFRONT_AMC_001_R4_CLOSED_HOST_ZERO`; `automaticNextImplementationTask = NONE`; `staleCurrentPointerState = ZERO`.
-- Seller R5 remains accepted historical lineage immediately preceding this Storefront closure.
+- Historical Host checkpoint = `Storefront` (CLOSED). Historical stop = `USER_REVIEW_HOST_STOREFRONT_AMC_001_R4_CLOSED_HOST_ZERO`.
+- Seller R5 remains accepted historical lineage immediately preceding Storefront closure.
 
 Reconciled by `TB-TMAR-HOST-SELLER-AMC-001-R2`. A fresh chat/architect MUST recover the CURRENT checkpoint from here and from `docs/architecture/tmar-current-state.json`, NOT from any older "Next task:" line below.
 
@@ -43,9 +49,9 @@ Reconciled by `TB-TMAR-HOST-SELLER-AMC-001-R5`. A fresh chat/architect MUST reco
 - Recovery/governance closure for that wave: `TB-TMAR-HOST-DEVELOPMENT-AMC-002-R1` — commit `2a51556a5ac562b7f0ec3ee0679ec9f31ed45dce` (HISTORICAL).
 - Prior accepted TMAR task (HISTORICAL, superseded as current pointer): `TB-TMAR-AUTHORIZATION-POSTCERT-CLEANUP-001` (CERTIFIED), implementation commit `498c46bd36c1d72934e97b137625cb07de84272a`, docs-only SoT stamp commit `736f23d34acb4f3989144f27675d1768fc7a65a9`.
 - Root Global Boundaries R3: `CERTIFIED` and `PRESERVED`.
-- Current Host evacuation: `RECONCILED_NOT_HISTORICAL_ADDRESSBOOK`. Current Host checkpoint = `Seller` and it is now `CLOSED` / `HOST_ZERO`; the accepted Seller implementation wave is `TB-TMAR-HOST-SELLER-AMC-001-R5` (implementation commit recorded at `lastAcceptedCommit`; the preceding R4 dashboard evacuation implementation commit is `a5f353c02329a1667b74a09e7ba4bf6eb1a12b38`; the R3 settings wave implementation commit is `5ab8bdc7f5e75c599313d8b444d18a4f6c80ffdf`). There is NO automatic next Host folder and `nextHostFolderStarted = false`; `nextHostFolder = NONE_USER_DECISION_REQUIRED`. AccessControl/AddressBook/Authentication/Admin/Content/Development and later folder checkpoints are HISTORICAL, not the current continuation point.
-- Current stop state: `workflowStop = USER_REVIEW_HOST_SELLER_AMC_001_R5_FINAL_CLOSURE`; `nextTask = USER_REVIEW_HOST_SELLER_AMC_001_R5_FINAL_CLOSURE`; `nextTaskState = USER_DECISION_REQUIRED`; `nextTaskGate = USER_DECISION_REQUIRED_NO_AUTOMATIC_NEXT_IMPLEMENTATION_TASK`; `automaticNextImplementationTask = NONE`; `staleCurrentPointerState = ZERO`.
-- Historical checkpoints preserved as accepted lineage: Seller R4 `USER_REVIEW_HOST_SELLER_AMC_001_R4`, Seller R3 `USER_REVIEW_HOST_SELLER_AMC_001_R3`, Seller R2 `USER_REVIEW_HOST_SELLER_AMC_001_R2`, Seller R1A/R1B `USER_REVIEW_HOST_SELLER_AMC_001_R1B` / `USER_REVIEW_HOST_SELLER_AMC_001_R1A`, and the Development closure stop `USER_REVIEW_HOST_DEVELOPMENT_PRODUCTWORKSPACE_MIGRATION_SEAM_001_R1` (implementation `ec906591`) — all NON-AUTHORITATIVE history.
+- Current Host evacuation: `RECONCILED_NOT_HISTORICAL_ADDRESSBOOK`. Current Host checkpoint = `Grid` and it is now `CLOSED` / `HOST_ZERO`; the accepted Grid repair wave is `TB-TMAR-HOST-GRID-AMC-001-R5-R1` (implementation commit recorded at `lastAcceptedCommit`). There is NO automatic next Host folder and `nextHostFolderStarted = false`; `nextHostFolder = NONE_USER_DECISION_REQUIRED`. AccessControl/AddressBook/Authentication/Admin/Content/Development/Seller/Storefront and later folder checkpoints are HISTORICAL, not the current continuation point.
+- Current stop state: `workflowStop = USER_REVIEW_HOST_GRID_AMC_001_R5_R1_CLOSED_HOST_ZERO`; `nextTask = USER_REVIEW_HOST_GRID_AMC_001_R5_R1_CLOSED_HOST_ZERO`; `nextTaskState = USER_DECISION_REQUIRED`; `nextTaskGate = USER_DECISION_REQUIRED_NO_AUTOMATIC_NEXT_IMPLEMENTATION_TASK`; `automaticNextImplementationTask = NONE`; `staleCurrentPointerState = ZERO`.
+- Historical checkpoints preserved as accepted lineage: Storefront R4 `USER_REVIEW_HOST_STOREFRONT_AMC_001_R4_CLOSED_HOST_ZERO`, Seller R5 `USER_REVIEW_HOST_SELLER_AMC_001_R5_FINAL_CLOSURE`, Seller R4 `USER_REVIEW_HOST_SELLER_AMC_001_R4`, Seller R3 `USER_REVIEW_HOST_SELLER_AMC_001_R3`, Seller R2 `USER_REVIEW_HOST_SELLER_AMC_001_R2`, Seller R1A/R1B `USER_REVIEW_HOST_SELLER_AMC_001_R1B` / `USER_REVIEW_HOST_SELLER_AMC_001_R1A`, and the Development closure stop `USER_REVIEW_HOST_DEVELOPMENT_PRODUCTWORKSPACE_MIGRATION_SEAM_001_R1` (implementation `ec906591`) — all NON-AUTHORITATIVE history.
 - There is intentionally NO automatic next implementation task and NO next Host folder. User/Architect decision is required before any next Host folder. Do not invent one and do not resume any historical next-task marker below.
 
 Non-authoritative historical pointers warning
@@ -322,10 +328,20 @@ NONE
 Latest accepted implementation (CURRENT — reconciled by TB-TMAR-HOST-SELLER-AMC-001-R5):
 TB-TMAR-HOST-SELLER-AMC-001-R5 — final Host/Seller Dev-context closure. Current Host checkpoint = Seller (CLOSED / HOST_ZERO). The preceding Seller R4 dashboard evacuation (implementation a5f353c0), the Seller R3 settings wave (implementation 5ab8bdc7), the Seller R2 Catalog evacuation (implementation bc7f43cf), the R1A/R1B boundary repair and the Development closure (TB-TMAR-HOST-DEVELOPMENT-PRODUCTWORKSPACE-MIGRATION-SEAM-001, implementation ec906591) are preserved as accepted lineage (Development HISTORICAL).
 
-Current Seller work checkpoint (CURRENT — reconciled by TB-TMAR-HOST-SELLER-AMC-001-R5):
+Current Grid work checkpoint (CURRENT — reconciled by TB-TMAR-HOST-GRID-AMC-001-R5-R1):
+
+- Host/Grid = ABSENT / CLOSED_HOST_ZERO
+- Reviews Catalog.Application/Domain = ZERO (Contracts-only)
+- workflowStop / nextTask = USER_REVIEW_HOST_GRID_AMC_001_R5_R1_CLOSED_HOST_ZERO
+- automaticNextImplementationTask = NONE
+
+Current Seller work checkpoint (HISTORICAL — reconciled by TB-TMAR-HOST-SELLER-AMC-001-R5):
 TB-TMAR-HOST-SELLER-AMC-001-R5 — the final Host-owned seller surface (the Development route GET /v1/seller/dev-contexts and its seller demo-actor/authorization bootstrap) was evacuated from Host/Seller into the AccessControl development capability (AccessControl.Endpoints/Seller/Development/SellerDevContextEndpoints.cs -> AccessControl.Application/Development/Seller GetSellerDevContextsQuery/Handler over an AccessControl-owned ISellerDevContextStore port -> AccessControl.Infrastructure/Development/Seller/SellerDevContextBootstrap.cs). Cross-module access is Contracts-only (Party.Contracts IPartyDevelopmentSeedGateway, Identity.Contracts IIdentityAuthenticationService, neutral BuildingBlocks IAuthorizationTupleWriter) with ZERO foreign DbContext/Application/Domain/Infrastructure/Persistence. Host/Seller production files went 2 -> 0; Host-owned seller routes went 1 -> 0; Host/Seller directory = ABSENT; Host/Development sink regression = ZERO; Host/Security/Seller remains the canonical R1A thin security-adapter boundary. Development behavior preserved exactly (path/verb, 404 seller.dev.unavailable, 503 seller.dev.not-ready, actors[] fields, context kinds seller-owner/seller-owner-alt/scoped-employee, demo identity, membership/member-tuple and scoped-employee semantics, fail-closed). Full Host/Seller folder certification = PASS (CLOSED_HOST_ZERO) proven in this same task; no R6 created.
 
 workflowStop (CURRENT):
+USER_REVIEW_HOST_GRID_AMC_001_R5_R1_CLOSED_HOST_ZERO
+
+workflowStop (HISTORICAL Seller R5):
 USER_REVIEW_HOST_SELLER_AMC_001_R5_FINAL_CLOSURE
 
 HISTORICAL / SUPERSEDED (the following inventory applicability snapshot is not current authority)

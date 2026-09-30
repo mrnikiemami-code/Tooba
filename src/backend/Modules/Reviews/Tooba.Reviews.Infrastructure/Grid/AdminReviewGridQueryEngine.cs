@@ -1,6 +1,5 @@
 using Microsoft.EntityFrameworkCore;
 using Tooba.BuildingBlocks.Grid;
-using Tooba.Catalog.Application;
 using Tooba.Catalog.Contracts;
 using Tooba.Persistence.Grid;
 using Tooba.Reviews.Application;
@@ -11,23 +10,20 @@ namespace Tooba.Reviews.Infrastructure.Grid;
 
 /// <summary>
 /// پرس‌وجوی DB-native صف نظرات Pending Admin.
-/// عنوان محصول برای filter/search از Catalog Contracts resolve می‌شود؛ enrich عنوان فقط روی صفحه.
+/// عنوان محصول برای filter/search/enrich از Catalog Contracts resolve می‌شود.
 /// </summary>
 public sealed class AdminReviewGridQueryEngine
 {
     private readonly ReviewsDbContext _reviews;
     private readonly ICatalogAdminProductTitleIdLookup _productTitles;
-    private readonly ICatalogLookupGateway _catalogLookup;
 
     /// <summary>موتور گرید نظرات Admin.</summary>
     public AdminReviewGridQueryEngine(
         ReviewsDbContext reviews,
-        ICatalogAdminProductTitleIdLookup productTitles,
-        ICatalogLookupGateway catalogLookup)
+        ICatalogAdminProductTitleIdLookup productTitles)
     {
         _reviews = reviews;
         _productTitles = productTitles;
-        _catalogLookup = catalogLookup;
     }
 
     /// <summary>صفحه‌بندی DB-native گرید نظرات Pending.</summary>
@@ -216,7 +212,7 @@ public sealed class AdminReviewGridQueryEngine
             return [];
         }
 
-        var titles = await _catalogLookup.GetProductTitlesAsync(
+        var titles = await _productTitles.GetProductTitlesByIdsAsync(
             rows.Select(x => x.ProductId).Distinct().ToArray(),
             cancellationToken);
 

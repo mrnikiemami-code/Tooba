@@ -148,7 +148,7 @@ public sealed class ReviewsFoundationTests
         var source = File.ReadAllText(Path.Combine(RepoRoot(), "src", "backend", "Host", "Tooba.Host", "Reviews", "ReviewEndpoints.cs"));
         Assert.Contains("/v1/seller/reviews", source, StringComparison.Ordinal);
         Assert.Contains("SellerPanelAccess.RequireAuthorizedAsync", source, StringComparison.Ordinal);
-        Assert.Contains("ListOwnedProductIdsAsync", source, StringComparison.Ordinal);
+        Assert.Contains("ListSellerOffersQuery", source, StringComparison.Ordinal);
         Assert.Contains("SellerResponseSupported: false", source, StringComparison.Ordinal);
         Assert.DoesNotContain("/v1/seller/reviews/", source, StringComparison.Ordinal);
         Assert.Contains("/v1/admin/reviews", source, StringComparison.Ordinal);

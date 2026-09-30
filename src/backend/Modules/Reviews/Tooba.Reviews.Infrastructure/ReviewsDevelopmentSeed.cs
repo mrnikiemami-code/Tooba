@@ -1,6 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
-using Tooba.Catalog.Application;
+using Tooba.Catalog.Contracts;
 using Tooba.Reviews.Domain;
 using Tooba.Reviews.Infrastructure.Persistence;
 
@@ -13,7 +13,7 @@ public static class ReviewsDevelopmentSeed
     public static async Task ApplyAsync(IServiceProvider services, CancellationToken cancellationToken = default)
     {
         var db = services.GetRequiredService<ReviewsDbContext>();
-        var catalog = services.GetRequiredService<ICatalogLookupGateway>();
+        var catalog = services.GetRequiredService<ICatalogReviewProductLookup>();
         var now = new DateTimeOffset(2026, 8, 25, 12, 0, 0, TimeSpan.Zero);
         var moderator = Guid.Parse("12000000-0000-4000-8000-000000000099");
 
@@ -43,7 +43,7 @@ public static class ReviewsDevelopmentSeed
 
         foreach (var target in targets)
         {
-            var product = await catalog.FindReviewableProductBySlugAsync(target.Slug, cancellationToken);
+            var product = await catalog.FindBySlugAsync(target.Slug, cancellationToken);
             if (product is null) continue;
             foreach (var row in target.Rows)
             {

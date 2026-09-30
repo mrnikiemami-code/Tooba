@@ -67,4 +67,24 @@ public sealed class CatalogAdminProductTitleIdLookup(CatalogDbContext catalog) :
 
         return (await q.Select(t => t.OwnerId).Distinct().ToListAsync(cancellationToken)).ToHashSet();
     }
+
+    /// <inheritdoc />
+    public async Task<IReadOnlyDictionary<Guid, string>> GetProductTitlesByIdsAsync(
+        IReadOnlyCollection<Guid> productIds,
+        CancellationToken cancellationToken)
+    {
+        if (productIds.Count == 0)
+        {
+            return new Dictionary<Guid, string>();
+        }
+
+        var rows = await catalog.LocalizedTexts.AsNoTracking()
+            .Where(x => x.OwnerKind == CatalogLocalizedOwnerKind.Product
+                && x.FieldKey == "name"
+                && productIds.Contains(x.OwnerId))
+            .OrderByDescending(x => x.Locale == "fa-IR")
+            .ThenBy(x => x.Locale)
+            .ToListAsync(cancellationToken);
+        return rows.GroupBy(x => x.OwnerId).ToDictionary(x => x.Key, x => x.First().Value);
+    }
 }

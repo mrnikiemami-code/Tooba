@@ -50,8 +50,15 @@ public sealed class HostGridAmcR3GuardTests
 
         var engine = File.ReadAllText(Path.Combine(reviewsInfra, "Grid", "AdminReviewGridQueryEngine.cs"));
         Assert.Contains("ICatalogAdminProductTitleIdLookup", engine, StringComparison.Ordinal);
+        Assert.Contains("GetProductTitlesByIdsAsync", engine, StringComparison.Ordinal);
         Assert.DoesNotContain("CatalogDbContext", engine, StringComparison.Ordinal);
+        Assert.DoesNotContain("ICatalogLookupGateway", engine, StringComparison.Ordinal);
+        Assert.DoesNotContain("Tooba.Catalog.Application", engine, StringComparison.Ordinal);
         Assert.DoesNotContain("Tooba.Host", engine, StringComparison.Ordinal);
+
+        var csproj = File.ReadAllText(Path.Combine(reviewsInfra, "Tooba.Reviews.Infrastructure.csproj"));
+        Assert.Contains("Tooba.Catalog.Contracts", csproj, StringComparison.Ordinal);
+        Assert.DoesNotContain("Tooba.Catalog.Application", csproj, StringComparison.Ordinal);
     }
 
     [Fact]

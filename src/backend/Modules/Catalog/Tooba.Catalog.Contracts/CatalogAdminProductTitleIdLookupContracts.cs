@@ -9,7 +9,7 @@ public sealed record CatalogProductTitleTextFilter(
     string? Value);
 
 /// <summary>
-/// مرز Contracts برای resolve شناسهٔ محصول از روی عنوان محلی (filter/search گرید نظرات Admin).
+/// مرز Contracts برای resolve شناسه/عنوان محصول در گریدهای Admin ماژول‌های دیگر.
 /// </summary>
 public interface ICatalogAdminProductTitleIdLookup
 {
@@ -21,5 +21,10 @@ public interface ICatalogAdminProductTitleIdLookup
     /// <summary>شناسه محصولاتی که عنوانشان با عملگر فیلتر متنی مطابقت دارد.</summary>
     Task<IReadOnlySet<Guid>> ResolveProductIdsByTitleFilterAsync(
         CatalogProductTitleTextFilter filter,
+        CancellationToken cancellationToken);
+
+    /// <summary>عنوان محلی محصولات برای enrich صفحهٔ گرید (fa-IR ترجیح).</summary>
+    Task<IReadOnlyDictionary<Guid, string>> GetProductTitlesByIdsAsync(
+        IReadOnlyCollection<Guid> productIds,
         CancellationToken cancellationToken);
 }

@@ -1,6 +1,5 @@
 using Microsoft.EntityFrameworkCore;
-using Tooba.Catalog.Application;
-using Tooba.Catalog.Domain;
+using Tooba.Catalog.Contracts;
 using Tooba.Order.Application;
 using Tooba.Order.Application.PurchaseVerification;
 using Tooba.Reviews.Application;
@@ -12,12 +11,14 @@ namespace Tooba.Reviews.Infrastructure;
 /// <summary>دایرکتوری Reviews با خواندن فقط از قرارداد Catalog/Order و schema خودش.</summary>
 public sealed class ReviewDirectory : IReviewDirectory
 {
+    private const string PublishedStatus = "Published";
+
     private readonly ReviewsDbContext _db;
-    private readonly ICatalogLookupGateway _catalog;
+    private readonly ICatalogReviewProductLookup _catalog;
     private readonly IOrderPurchaseVerificationGateway _orders;
 
     /// <summary>وابستگی‌های مالک را تزریق می‌کند؛ DbContext خارجی پذیرفته نمی‌شود.</summary>
-    public ReviewDirectory(ReviewsDbContext db, ICatalogLookupGateway catalog, IOrderPurchaseVerificationGateway orders)
+    public ReviewDirectory(ReviewsDbContext db, ICatalogReviewProductLookup catalog, IOrderPurchaseVerificationGateway orders)
     {
         _db = db; _catalog = catalog; _orders = orders;
     }
@@ -25,8 +26,8 @@ public sealed class ReviewDirectory : IReviewDirectory
     /// <inheritdoc />
     public async Task<Guid> SubmitAsync(Guid actorUserId, SubmitProductReview request, CancellationToken cancellationToken)
     {
-        var product = await _catalog.FindReviewableProductByIdAsync(request.ProductId, cancellationToken);
-        if (product is null || product.Status != CatalogPublicationStatus.Published)
+        var product = await _catalog.FindByIdAsync(request.ProductId, cancellationToken);
+        if (product is null || !string.Equals(product.Status, PublishedStatus, StringComparison.Ordinal))
             throw new InvalidOperationException("محصول منتشرشده پیدا نشد.");
         if (await _db.Reviews.AnyAsync(x => x.ProductId == product.ProductId && x.AuthorUserId == actorUserId, cancellationToken))
             throw new InvalidOperationException("برای این محصول قبلاً بررسی ثبت شده است.");
@@ -70,7 +71,7 @@ public sealed class ReviewDirectory : IReviewDirectory
             .Take(limit)
             .ToListAsync(cancellationToken);
         if (reviews.Count == 0) return [];
-        var products = await _catalog.GetReviewableProductsByIdsAsync(
+        var products = await _catalog.GetByIdsAsync(
             reviews.Select(x => x.ProductId).Distinct().ToArray(),
             cancellationToken);
         return reviews
@@ -96,8 +97,8 @@ public sealed class ReviewDirectory : IReviewDirectory
     /// <inheritdoc />
     public async Task<PublishedReviewPage?> GetPublishedAsync(string productSlug, int page, int pageSize, CancellationToken cancellationToken)
     {
-        var product = await _catalog.FindReviewableProductBySlugAsync(productSlug, cancellationToken);
-        if (product is null || product.Status != CatalogPublicationStatus.Published) return null;
+        var product = await _catalog.FindBySlugAsync(productSlug, cancellationToken);
+        if (product is null || !string.Equals(product.Status, PublishedStatus, StringComparison.Ordinal)) return null;
         page = Math.Max(1, page); pageSize = Math.Clamp(pageSize, 1, 100);
         var query = _db.Reviews.AsNoTracking().Where(x => x.ProductId == product.ProductId && x.Status == ReviewStatus.Published);
         var ratings = await query.GroupBy(x => x.Rating).Select(x => new { Rating = x.Key, Count = x.LongCount() }).ToListAsync(cancellationToken);
