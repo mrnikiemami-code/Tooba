@@ -266,6 +266,7 @@ public sealed class HostSellerAmcR5GuardTests
                      "HostPartySellerAuthorizer.cs",
                      "HostSupportSellerAuthorizer.cs",
                      "HostCatalogSellerAuthorizer.cs",
+                     "HostStorySellerAuthorizer.cs",
                  })
         {
             Assert.True(File.Exists(Path.Combine(boundaryRoot, file)), file);

@@ -12,19 +12,22 @@ Canonical Architect ↔ Cursor handoff (recovery-critical)
 
 Latest Accepted TMAR Checkpoint — authoritative
 
-Reconciled by `TB-TMAR-HOST-STORY-AMC-001-R1`. Current implementation commit recorded at `lastAcceptedCommit` after PASS.
-- Host/Story = `ABSENT` / `CLOSED_HOST_ZERO` (not reopened).
-- Story.Endpoints → Domain = ZERO; message-based StoryHttpErrors classification = ZERO; failures use SemanticException + ApiResponseFactory; reviewStatus transport parsed in Application.
-- Current Host checkpoint = `Story`; workflowStop = `USER_REVIEW_HOST_STORY_AMC_001_R1_CLOSED_HOST_ZERO`; automatic next = NONE; stale pointer = ZERO.
-- Parent Story HOST_ZERO, Wishlist HOST_ZERO, and Grid R5-R1 remain accepted historical lineage.
+Reconciled by `TB-TMAR-HOST-SECURITY-AMC-001`. Current implementation commit recorded at `lastAcceptedCommit` after PASS.
+- Host/Security = `PRESENT` / `KEEP_THIN_PLATFORM_SECURITY_BOUNDARY` (18 files). **Not HOST_ZERO.**
+- Seller R1A boundary CANONICAL_UNCHANGED; Checkout/Payment thin adapters retained; AuthSecurity options + security headers remain Host platform.
+- Hygiene: Reviews seller list uses `ISellerPanelAccess`; Payment storefront authorizer constructor-injects session.
+- Current Host checkpoint = `Security`; workflowStop = `USER_REVIEW_HOST_SECURITY_AMC_001_KEEP_THIN_PLATFORM`; automatic next = NONE; stale pointer = ZERO.
+- Story R1 / Wishlist / Grid R5-R1 remain accepted historical lineage.
 
-Reconciled by `TB-TMAR-HOST-STORY-AMC-001` (HISTORICAL parent HOST_ZERO evacuation; superseded as current pointer by R1).
+Reconciled by `TB-TMAR-HOST-STORY-AMC-001-R1` (HISTORICAL). Host/Story = `ABSENT` / `CLOSED_HOST_ZERO` (not reopened).
+
+Reconciled by `TB-TMAR-HOST-STORY-AMC-001` (HISTORICAL parent HOST_ZERO evacuation).
 
 Reconciled by `TB-TMAR-HOST-WISHLIST-AMC-001` (HISTORICAL). Implementation commit: `cb573a8d8bf47c430483d4fd5ff604e3404bc60a`.
 - Host/Wishlist = `ABSENT` / `CLOSED_HOST_ZERO`; 4 routes owned by Wishlist.Endpoints via CQRS/MediatR.
 - Wishlist cross-module Catalog usage is Contracts-only; Host Wishlist business authority = ZERO.
 
-Reconciled by `TB-TMAR-HOST-GRID-AMC-001-R5-R1` (HISTORICAL). A fresh chat/architect MUST recover the CURRENT checkpoint from Story R1 above and from `docs/architecture/tmar-current-state.json`.
+Reconciled by `TB-TMAR-HOST-GRID-AMC-001-R5-R1` (HISTORICAL). A fresh chat/architect MUST recover the CURRENT checkpoint from Security AMC above and from `docs/architecture/tmar-current-state.json`.
 
 - Latest accepted implementation wave (HISTORICAL): `TB-TMAR-HOST-GRID-AMC-001-R5-R1` — Reviews → Catalog.Application / Domain = ZERO; admin grid title enrich uses `ICatalogAdminProductTitleIdLookup.GetProductTitlesByIdsAsync`; ReviewDirectory/seed use `ICatalogReviewProductLookup` (Contracts). Host/Grid remains `ABSENT` / `CLOSED_HOST_ZERO`. Story/Party grid destinations audited CLEAN (no Catalog Application/Domain leakage). Storefront R4 remains accepted historical lineage.
 - Historical Host checkpoint = `Grid` (CLOSED). Historical stop = `USER_REVIEW_HOST_GRID_AMC_001_R5_R1_CLOSED_HOST_ZERO`; `automaticNextImplementationTask = NONE`; `staleCurrentPointerState = ZERO`.

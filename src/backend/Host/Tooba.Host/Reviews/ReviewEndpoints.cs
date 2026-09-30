@@ -1,8 +1,8 @@
 using Tooba.BuildingBlocks;
 using Tooba.BuildingBlocks.Grid;
+using Tooba.BuildingBlocks.Security;
 using Tooba.Host.Admin.Access;
 using Tooba.Host.Admin.Grid;
-using Tooba.Host.Security.Seller;
 using Tooba.Reviews.Application;
 using Tooba.Reviews.Domain;
 using Tooba.Catalog.Application;
@@ -66,9 +66,7 @@ public static class ReviewEndpoints
     /// </summary>
     private static async Task<IResult> SellerListAsync(
         HttpRequest request,
-        CurrentAuthenticatedSession session,
-        IAuthorizationGuard guard,
-        IHostEnvironment environment,
+        ISellerPanelAccess sellerAccess,
         MediatR.ISender sender,
         IReviewDirectory reviews,
         ICatalogLookupGateway catalog,
@@ -79,8 +77,7 @@ public static class ReviewEndpoints
     {
         try
         {
-            var (_, sellerPartyId) = await SellerPanelAccess.RequireAuthorizedAsync(
-                request, session, guard, environment, cancellationToken);
+            var (_, sellerPartyId) = await sellerAccess.RequireAuthorizedAsync(request, cancellationToken);
             var offersResult = await sender.Send(
                 new Tooba.Offer.Application.Queries.ListSellerOffers.ListSellerOffersQuery(sellerPartyId),
                 cancellationToken);

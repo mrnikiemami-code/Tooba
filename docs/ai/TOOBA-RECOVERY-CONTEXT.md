@@ -25,29 +25,26 @@ BRIDGE-WAKE-V1
 Channel: tooba-main
 ```
 
-Latest Accepted TMAR Checkpoint — authoritative (reconciled by TB-TMAR-HOST-STORY-AMC-001-R1)
+Latest Accepted TMAR Checkpoint — authoritative (reconciled by TB-TMAR-HOST-SECURITY-AMC-001)
 
 ```text
-Latest-Accepted-Implementation-Wave: TB-TMAR-HOST-STORY-AMC-001-R1
-Latest-Accepted-Task: TB-TMAR-HOST-STORY-AMC-001-R1
-Implementation-Commit: 6d093a2fab9161b4705c827b21a70f494ae0bc0a
+Latest-Accepted-Implementation-Wave: TB-TMAR-HOST-SECURITY-AMC-001
+Latest-Accepted-Task: TB-TMAR-HOST-SECURITY-AMC-001
+Implementation-Commit: PLACEHOLDER_SECURITY_AMC_IMPLEMENTATION_COMMIT
 Implementation-Commit-Kind: IMPLEMENTATION_COMMIT
-Current-Host-Checkpoint: Story_CLOSED_HOST_ZERO_R1
-Active-Host-Folder: Story
-Host-Story-Directory-State: ABSENT
-Host-Story-Production-Files: 0
-Host-Story-Reopened: false
-Story-HTTP-Owner: Tooba.Story.Endpoints
-Story-Endpoints-Domain-Reference: ZERO
-Story-Endpoints-Message-Classification: ZERO
-Story-Failure-Presentation: SemanticException_ApiResponseFactory
-Full-Story-Folder-Certification: PASS_CLOSED_HOST_ZERO
-Prior-Accepted-Lineage: TB-TMAR-HOST-STORY-AMC-001_CLOSED_HOST_ZERO ; TB-TMAR-HOST-WISHLIST-AMC-001_CLOSED_HOST_ZERO ; TB-TMAR-HOST-GRID-AMC-001-R5-R1_CLOSED_HOST_ZERO
+Current-Host-Checkpoint: Security_KEEP_THIN_PLATFORM
+Active-Host-Folder: Security
+Host-Security-Directory-State: PRESENT
+Host-Security-Production-Files: 18
+Host-Security-Disposition: KEEP_THIN_PLATFORM_SECURITY_BOUNDARY
+Host-Security-Host-Zero: false
+Seller-R1A-Boundary: CANONICAL_UNCHANGED
+Prior-Accepted-Lineage: TB-TMAR-HOST-STORY-AMC-001-R1 ; TB-TMAR-HOST-SELLER-AMC-001-R1A ; TB-TMAR-HOST-STOREFRONT-AMC-001-R2
 Next-Host-Folder-Started: false
 Next-Host-Folder: NONE_USER_DECISION_REQUIRED
 Stale-Current-Pointer-State: ZERO
-workflowStop: USER_REVIEW_HOST_STORY_AMC_001_R1_CLOSED_HOST_ZERO
-Next-Task: USER_REVIEW_HOST_STORY_AMC_001_R1_CLOSED_HOST_ZERO
+workflowStop: USER_REVIEW_HOST_SECURITY_AMC_001_KEEP_THIN_PLATFORM
+Next-Task: USER_REVIEW_HOST_SECURITY_AMC_001_KEEP_THIN_PLATFORM
 Automatic-Next-Implementation-Task: NONE
 ```
 

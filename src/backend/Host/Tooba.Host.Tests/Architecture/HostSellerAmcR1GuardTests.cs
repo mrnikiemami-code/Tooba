@@ -32,6 +32,8 @@ public sealed class HostSellerAmcR1GuardTests
         "HostNotificationSellerAuthorizer.cs",
         "HostPromotionSellerAuthorizer.cs",
         "HostPartySellerAuthorizer.cs",
+        "HostCatalogSellerAuthorizer.cs",
+        "HostStorySellerAuthorizer.cs",
     ];
 
     private static readonly string[] ThinAdapterFiles =
@@ -44,13 +46,15 @@ public sealed class HostSellerAmcR1GuardTests
         "HostNotificationSellerAuthorizer.cs",
         "HostPromotionSellerAuthorizer.cs",
         "HostPartySellerAuthorizer.cs",
+        "HostCatalogSellerAuthorizer.cs",
+        "HostStorySellerAuthorizer.cs",
         "HostSellerPanelAccess.cs",
     ];
 
     // R1A: the whole Host seller security boundary must be ZERO foreign
     // Application/Domain/Infrastructure/Persistence. No line allowance exists any more.
     private static readonly Regex ForeignModuleLayer = new(
-        @"Tooba\.(Catalog|Party|AccessControl|Identity|Order|Offer|Promotion|Returns|Settlement|Notification|Support|Persistence)\.(Application|Domain|Infrastructure|Persistence)",
+        @"Tooba\.(Catalog|Party|AccessControl|Identity|Order|Offer|Promotion|Returns|Settlement|Notification|Support|Story|Persistence)\.(Application|Domain|Infrastructure|Persistence)",
         RegexOptions.Compiled | RegexOptions.CultureInvariant);
 
     [Fact]
