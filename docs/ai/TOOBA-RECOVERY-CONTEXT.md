@@ -25,34 +25,27 @@ BRIDGE-WAKE-V1
 Channel: tooba-main
 ```
 
-Latest Accepted TMAR Checkpoint — authoritative (reconciled by TB-TMAR-HOST-GRID-AMC-001-R5-R1)
-
-A fresh chat MUST recover the CURRENT checkpoint from `docs/architecture/tmar-current-state.json` and this block, not historical next-task lines below.
+Latest Accepted TMAR Checkpoint — authoritative (reconciled by TB-TMAR-HOST-WISHLIST-AMC-001)
 
 ```text
-Latest-Accepted-Implementation-Wave: TB-TMAR-HOST-GRID-AMC-001-R5-R1
-Latest-Accepted-Implementation-Wave-State: ACCEPTED
-Latest-Accepted-Task: TB-TMAR-HOST-GRID-AMC-001-R5-R1
+Latest-Accepted-Implementation-Wave: TB-TMAR-HOST-WISHLIST-AMC-001
+Latest-Accepted-Task: TB-TMAR-HOST-WISHLIST-AMC-001
+Implementation-Commit: cb573a8d8bf47c430483d4fd5ff604e3404bc60a
 Implementation-Commit-Kind: IMPLEMENTATION_COMMIT
-Current-Host-Checkpoint: Grid_CLOSED_HOST_ZERO
-Active-Host-Folder: Grid
-Host-Grid-Directory-State: ABSENT
-Reviews-Catalog-Application-State: ZERO
-Reviews-Catalog-Domain-State: ZERO
-Catalog-Contracts-Title-Batch: ICatalogAdminProductTitleIdLookup.GetProductTitlesByIdsAsync
-Catalog-Contracts-Review-Product: ICatalogReviewProductLookup
-Story-Party-Grid-Foreign-Leakage-Audit: CLEAN
-Full-Grid-Folder-Certification: PASS_CLOSED_HOST_ZERO
-Host-Development-Sink-Regression-State: ZERO
-Schema-Change-State: NONE
-Frontend-State: UNCHANGED
-Prior-Accepted-Lineage: TB-TMAR-HOST-STOREFRONT-AMC-001-R4_CLOSED_HOST_ZERO; TB-TMAR-HOST-SELLER-AMC-001-R5_CLOSED_HOST_ZERO
+Current-Host-Checkpoint: Wishlist_CLOSED_HOST_ZERO
+Active-Host-Folder: Wishlist
+Host-Wishlist-Directory-State: ABSENT
+Host-Wishlist-Production-Files: 0
+Wishlist-HTTP-Owner: Tooba.Wishlist.Endpoints
+Wishlist-CQRS-State: MEDIATR
+Wishlist-Catalog-Boundary: CONTRACTS_ONLY
+Full-Wishlist-Folder-Certification: PASS_CLOSED_HOST_ZERO
+Prior-Accepted-Lineage: TB-TMAR-HOST-GRID-AMC-001-R5-R1_CLOSED_HOST_ZERO
 Next-Host-Folder-Started: false
 Next-Host-Folder: NONE_USER_DECISION_REQUIRED
 Stale-Current-Pointer-State: ZERO
-workflowStop: USER_REVIEW_HOST_GRID_AMC_001_R5_R1_CLOSED_HOST_ZERO
-Next-Task: USER_REVIEW_HOST_GRID_AMC_001_R5_R1_CLOSED_HOST_ZERO (USER_DECISION_REQUIRED)
-Next-Task-Gate: USER_DECISION_REQUIRED_NO_AUTOMATIC_NEXT_IMPLEMENTATION_TASK
+workflowStop: USER_REVIEW_HOST_WISHLIST_AMC_001_CLOSED_HOST_ZERO
+Next-Task: USER_REVIEW_HOST_WISHLIST_AMC_001_CLOSED_HOST_ZERO
 Automatic-Next-Implementation-Task: NONE
 ```
 
