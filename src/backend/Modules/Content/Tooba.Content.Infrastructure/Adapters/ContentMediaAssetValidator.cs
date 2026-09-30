@@ -1,4 +1,4 @@
-﻿using Tooba.BuildingBlocks;
+using Tooba.BuildingBlocks;
 using Tooba.Content.Contracts.Errors;
 using Tooba.Media.Contracts.Ports;
 using Tooba.Content.Application.Media.Ports;

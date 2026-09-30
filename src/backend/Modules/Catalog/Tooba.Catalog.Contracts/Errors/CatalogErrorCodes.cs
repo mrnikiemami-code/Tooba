@@ -1,4 +1,4 @@
-﻿namespace Tooba.Catalog.Contracts.Errors;
+namespace Tooba.Catalog.Contracts.Errors;
 
 /// <summary>Stable Catalog semantic error codes for HTTP presentation.</summary>
 public static class CatalogErrorCodes

@@ -1,4 +1,4 @@
-﻿using Tooba.BuildingBlocks.Security;
+using Tooba.BuildingBlocks.Security;
 using Tooba.Cart.Application.Errors;
 using Tooba.Cart.Contracts;
 using Tooba.Catalog.Contracts;

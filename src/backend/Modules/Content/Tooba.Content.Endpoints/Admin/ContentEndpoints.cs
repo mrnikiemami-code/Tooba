@@ -1,4 +1,4 @@
-﻿using MediatR;
+using MediatR;
 using Microsoft.AspNetCore.Routing;
 using Tooba.BuildingBlocks.Grid;
 using Tooba.BuildingBlocks.Presentation;

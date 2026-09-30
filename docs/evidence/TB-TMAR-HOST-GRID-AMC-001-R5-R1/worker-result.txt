@@ -1,0 +1,36 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-TMAR-HOST-GRID-AMC-001-R5-R1
+Parent-Task: TB-TMAR-HOST-GRID-AMC-001-R5
+Channel: tooba-main
+WorkerId: tooba-worker-01
+AgentType: cursor
+Status: PASS
+Summary: Removed Reviews->Catalog.Application leakage. AdminReviewGridQueryEngine title enrich uses Catalog.Contracts ICatalogAdminProductTitleIdLookup.GetProductTitlesByIdsAsync. ReviewDirectory and ReviewsDevelopmentSeed use new Catalog.Contracts ICatalogReviewProductLookup (status as string) implemented in Catalog.Infrastructure CatalogReviewProductLookup. Reviews.Infrastructure ProjectReference to Catalog.Application removed (Contracts-only). Story/Party grid destinations audited CLEAN (no Catalog Application/Domain). Host/Grid remains ABSENT/HOST_ZERO. Recovery/SoT reconciled to Grid R5-R1 user-review stop; Storefront R4 preserved historical lineage. Focused builds/tests PASS (HostGridAmc R3/R5/R5-R1, TmarDurableGuardTests, ReviewsFoundationTests, AdminDbNativeGridQueryTests = 39/39).
+Reviews-Catalog-Application-State: ZERO
+Reviews-Catalog-Domain-State: ZERO
+Catalog-Contracts-Title-Batch-State: GetProductTitlesByIdsAsync_PRESENT
+Catalog-Contracts-Review-Product-State: ICatalogReviewProductLookup_PRESENT
+Story-Party-Grid-Foreign-Leakage-Audit: CLEAN
+Host-Grid-Directory-State: ABSENT
+Host-Grid-State: CLOSED_HOST_ZERO
+Behavior-Parity-State: PRESERVED_PENDING_GRID_TITLE_ENRICH_REVIEW_DIRECTORY_SEED
+Schema-Change-State: NONE
+Frontend-State: UNCHANGED
+Focused-Build-State: PASS_CATALOG_CONTRACTS_INFRA_REVIEWS_INFRA_HOST
+Focused-Test-State: PASS_39_OF_39_SELECTED_GRID_R3_R5_R5R1_DURABLE_REVIEWS_FOUNDATION_ADMIN_DB_NATIVE
+Recovery-State: SYNCHRONIZED_TB_TMAR_HOST_GRID_AMC_001_R5_R1
+Recovery-Placeholder-State: NONE
+Stale-Current-Pointer-State: ZERO
+Automatic-Next-Implementation-Task-State: NONE
+Workflow-Stop-State: USER_REVIEW_HOST_GRID_AMC_001_R5_R1_CLOSED_HOST_ZERO
+Active-State: GRID_CLOSED_HOST_ZERO_USER_REVIEW_REQUIRED
+Certification-State: PASS
+Evidence-Path: docs/evidence/TB-TMAR-HOST-GRID-AMC-001-R5-R1/
+Commit-SHA: da97c710790b0ec7646ef6cda871980bc844f967
+Push-State: PUSHED_ORIGIN_MAIN
+HEAD-Equals-Origin-Main: TRUE
+Working-Tree-Tracked-State: CLEAN_FOR_TASK_FILES
+User-Work-Preserved: TRUE
+STOP
+END_TOOBA_WORKER_RESULT

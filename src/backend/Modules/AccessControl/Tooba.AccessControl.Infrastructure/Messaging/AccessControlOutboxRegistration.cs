@@ -1,4 +1,4 @@
-﻿using Tooba.BuildingBlocks;
+using Tooba.BuildingBlocks;
 using Tooba.AccessControl.Infrastructure.Persistence;
 using Tooba.Persistence;
 

@@ -1,4 +1,4 @@
-﻿namespace Tooba.Catalog.Application.Validators;
+namespace Tooba.Catalog.Application.Validators;
 
 /// <summary>Stable Catalog transport validation codes.</summary>
 public static class CatalogValidationCodes
