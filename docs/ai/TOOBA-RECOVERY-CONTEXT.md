@@ -25,27 +25,26 @@ BRIDGE-WAKE-V1
 Channel: tooba-main
 ```
 
-Latest Accepted TMAR Checkpoint — authoritative (reconciled by TB-TMAR-HOST-SECURITY-AMC-001-R1)
+Latest Accepted TMAR Checkpoint — authoritative (reconciled by TB-TMAR-HOST-PAGECOMPOSITION-AMC-001)
 
 ```text
-Latest-Accepted-Implementation-Wave: TB-TMAR-HOST-SECURITY-AMC-001-R1
-Latest-Accepted-Task: TB-TMAR-HOST-SECURITY-AMC-001-R1
-Implementation-Commit: 49a91c806ae5fcbf7e52b5a138ae9d9a2a99b768
+Latest-Accepted-Implementation-Wave: TB-TMAR-HOST-PAGECOMPOSITION-AMC-001
+Latest-Accepted-Task: TB-TMAR-HOST-PAGECOMPOSITION-AMC-001
+Implementation-Commit: PLACEHOLDER_STAMP_AFTER_COMMIT
 Implementation-Commit-Kind: IMPLEMENTATION_COMMIT
-Current-Host-Checkpoint: Security_KEEP_THIN_PLATFORM_CERTIFIED
-Active-Host-Folder: Security
-Host-Security-Disposition: KEEP_THIN_PLATFORM_SECURITY_BOUNDARY
-Host-Security-Production-Files: 18
-Host-Security-Host-Zero: false
-Checkout-Payment-Application-Leakage: ZERO
-Seller-Edition-Hardcode: ZERO
-Checkout-Expected-Failure: SemanticException
-Prior-Accepted-Lineage: TB-TMAR-HOST-SECURITY-AMC-001 ; TB-TMAR-HOST-STORY-AMC-001-R1
+Current-Host-Checkpoint: PageComposition_HOST_ZERO
+Active-Host-Folder: PageComposition
+Host-PageComposition-Directory: ABSENT
+Host-PageComposition-Host-Zero: true
+Endpoints-Domain-Reference: ZERO
+Endpoints-Message-Classification: ZERO
+Failure-Presentation: SemanticException_ApiResponseFactory
+Prior-Accepted-Lineage: TB-TMAR-HOST-SECURITY-AMC-001-R1 ; TB-TMAR-HOST-STORY-AMC-001-R1
 Next-Host-Folder-Started: false
 Next-Host-Folder: NONE_USER_DECISION_REQUIRED
 Stale-Current-Pointer-State: ZERO
-workflowStop: USER_REVIEW_HOST_SECURITY_AMC_001_R1_KEEP_THIN_PLATFORM_CERTIFIED
-Next-Task: USER_REVIEW_HOST_SECURITY_AMC_001_R1_KEEP_THIN_PLATFORM_CERTIFIED
+workflowStop: USER_REVIEW_HOST_PAGECOMPOSITION_AMC_001_CLOSED_HOST_ZERO
+Next-Task: USER_REVIEW_HOST_PAGECOMPOSITION_AMC_001_CLOSED_HOST_ZERO
 Automatic-Next-Implementation-Task: NONE
 ```
 

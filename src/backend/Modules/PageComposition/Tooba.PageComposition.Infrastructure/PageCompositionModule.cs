@@ -22,6 +22,7 @@ public sealed class PageCompositionModule : IToobaModule
     {
         services.AddSingleton<IOutboxModuleRegistration, PageCompositionOutboxRegistration>();
         services.AddScoped<IPageCompositionDirectory, PageCompositionDirectory>();
+        services.AddScoped<Tooba.PageComposition.Application.Presentation.PageCompositionPresentationComposer>();
         services.AddModuleSchemaMigrator<PageCompositionDbContext>("PageComposition", ModuleSchemaMigrationOrder.PageComposition);
         services.AddDbContext<PageCompositionDbContext>((sp, options) =>
         {

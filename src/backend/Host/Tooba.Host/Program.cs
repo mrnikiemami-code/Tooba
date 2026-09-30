@@ -41,7 +41,7 @@ using Tooba.ProductWorkspace.Endpoints;
 using Tooba.Content.Infrastructure;
 using Tooba.Content.Infrastructure.Development;
 using Tooba.Host.Composition;
-using Tooba.Host.PageComposition;
+using Tooba.PageComposition.Endpoints;
 using Tooba.Story.Endpoints;
 using Tooba.Host.Preferences;
 using Tooba.Host.OperatorProfile;
@@ -98,6 +98,7 @@ builder.Services.AddReturnEndpointPresentation();
 builder.Services.AddAddressBookEndpointPresentation();
 builder.Services.AddWishlistEndpointPresentation();
 builder.Services.AddStoryEndpointPresentation();
+builder.Services.AddPageCompositionEndpointPresentation();
 builder.Services.AddCustomerProfileEndpointPresentation();
 builder.Services.AddPartyEndpointPresentation();
 builder.Services.AddProblemDetails();
@@ -167,6 +168,7 @@ builder.Services.AddToobaCqrsFoundation(
     typeof(Tooba.AddressBook.Application.Ports.IAddressBookDirectory).Assembly,
     typeof(Tooba.Wishlist.Application.Commands.AddWishlistItem.AddWishlistItemCommand).Assembly,
     typeof(Tooba.Story.Application.Queries.GetPublicStories.GetPublicStoriesQuery).Assembly,
+    typeof(Tooba.PageComposition.Application.Queries.GetHomeCompositionQuery).Assembly,
     typeof(Tooba.CustomerProfile.Application.Queries.GetCustomerProfilePage.GetCustomerProfilePageQuery).Assembly,
     typeof(Tooba.Content.Application.Articles.Commands.CreateArticleCommand).Assembly,
     typeof(Tooba.ProductWorkspace.Application.Composition.Queries.GetProductWorkspaceQuery).Assembly,
@@ -219,7 +221,6 @@ builder.Services.AddCatalogEndpointPresentation();
 builder.Services.AddProductWorkspaceEndpointPresentation();
 builder.Services.AddContentEndpointPresentation();
 builder.Services.AddScoped<Tooba.Host.Reviews.ReviewPanelComposer>();
-builder.Services.AddScoped<Tooba.Host.PageComposition.PageCompositionPanelComposer>();
 builder.Services.ConfigureHttpJsonOptions(options =>
 {
     options.SerializerOptions.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
@@ -420,7 +421,7 @@ app.MapCatalogModuleEndpoints();
 app.MapContentModuleEndpoints();
 app.MapLocaleAdminEndpoints();
 app.MapMediaModuleEndpoints();
-app.MapPageCompositionEndpoints();
+app.MapPageCompositionModuleEndpoints();
 app.MapStoryModuleEndpoints();
 app.MapPromotionEndpoints();
 

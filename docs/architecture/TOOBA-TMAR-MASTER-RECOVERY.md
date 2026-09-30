@@ -1,4 +1,4 @@
-TOOBA TMAR MASTER RECOVERY
+﻿TOOBA TMAR MASTER RECOVERY
 
 Canonical Architect ↔ Cursor handoff (recovery-critical)
 - Source of truth: `docs/architecture/TMAR-HOST-EVACUATION-PROTOCOL.md#architect--cursor-canonical-task-handoff`.
@@ -12,15 +12,20 @@ Canonical Architect ↔ Cursor handoff (recovery-critical)
 
 Latest Accepted TMAR Checkpoint — authoritative
 
-Reconciled by `TB-TMAR-HOST-SECURITY-AMC-001-R1`. Current implementation commit recorded at `lastAcceptedCommit` after PASS.
-- Host/Security = `PRESENT` / `KEEP_THIN_PLATFORM_SECURITY_BOUNDARY` (18 files). **Not HOST_ZERO.**
+Reconciled by `TB-TMAR-HOST-PAGECOMPOSITION-AMC-001`. Current implementation commit recorded at `lastAcceptedCommit` after PASS.
+- Host/PageComposition = `ABSENT` / `CLOSED_HOST_ZERO`.
+- HTTP owner = `Tooba.PageComposition.Endpoints.PageCompositionEndpointModule` (Storefront + Admin).
+- CQRS/MediatR over `PageCompositionPresentationComposer`; admin auth = `IPageCompositionAdminAuthorizer` → `IAdminPanelAccess`.
+- Endpoints → Domain = ZERO; Endpoints message classification = ZERO; failures via SemanticException + ApiResponseFactory.
+- Current Host checkpoint = `PageComposition`; workflowStop = `USER_REVIEW_HOST_PAGECOMPOSITION_AMC_001_CLOSED_HOST_ZERO`; automatic next = NONE; stale pointer = ZERO.
+- Security R1 KEEP / Story R1 / Wishlist / Grid remain historical accepted lineage.
+
+Reconciled by `TB-TMAR-HOST-SECURITY-AMC-001-R1` (HISTORICAL). Host/Security = `PRESENT` / `KEEP_THIN_PLATFORM_SECURITY_BOUNDARY` (18 files). **Not HOST_ZERO.**
 - Host/Security → Payment.Application = ZERO; checkout actor port = Payment.Contracts.Ports.ICheckoutActorPolicyPort.
 - Seller edition from ICurrentEdition (no hardcoded ToobaEdition.SingleStore).
 - CheckoutIdentityGate expected auth failure = SemanticException(checkout.authentication_required).
-- Current Host checkpoint = `Security`; workflowStop = `USER_REVIEW_HOST_SECURITY_AMC_001_R1_KEEP_THIN_PLATFORM_CERTIFIED`; automatic next = NONE; stale pointer = ZERO.
-- Parent Security AMC KEEP remains accepted lineage; Story R1 / Wishlist / Grid remain historical.
 
-Reconciled by `TB-TMAR-HOST-SECURITY-AMC-001` (HISTORICAL parent KEEP certification; superseded as current pointer by R1).
+Reconciled by `TB-TMAR-HOST-SECURITY-AMC-001` (HISTORICAL parent KEEP certification; superseded as current pointer by R1 then PageComposition AMC).
 Reconciled by `TB-TMAR-HOST-STORY-AMC-001-R1` (HISTORICAL). Host/Story = `ABSENT` / `CLOSED_HOST_ZERO` (not reopened).
 
 Reconciled by `TB-TMAR-HOST-STORY-AMC-001` (HISTORICAL parent HOST_ZERO evacuation).

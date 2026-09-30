@@ -67,6 +67,7 @@
     <ProjectReference Include="..\..\Modules\Media\Tooba.Media.Endpoints\Tooba.Media.Endpoints.csproj" />
     <ProjectReference Include="..\..\Modules\Media\Tooba.Media.Infrastructure\Tooba.Media.Infrastructure.csproj" />
     <ProjectReference Include="..\..\Modules\PageComposition\Tooba.PageComposition.Infrastructure\Tooba.PageComposition.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\Modules\PageComposition\Tooba.PageComposition.Endpoints\Tooba.PageComposition.Endpoints.csproj" />
     <ProjectReference Include="..\..\Modules\ProductWorkspace\Tooba.ProductWorkspace.Infrastructure\Tooba.ProductWorkspace.Infrastructure.csproj" />
     <ProjectReference Include="..\..\Modules\ProductWorkspace\Tooba.ProductWorkspace.Endpoints\Tooba.ProductWorkspace.Endpoints.csproj" />
     <ProjectReference Include="..\..\Modules\ProductWorkspace\Tooba.ProductWorkspace.Application\Tooba.ProductWorkspace.Application.csproj" />
