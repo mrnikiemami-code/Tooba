@@ -25,31 +25,29 @@ BRIDGE-WAKE-V1
 Channel: tooba-main
 ```
 
-Latest Accepted TMAR Checkpoint — authoritative (reconciled by TB-TMAR-HOST-SECURITY-AMC-001-W1-R1)
+Latest Accepted TMAR Checkpoint — authoritative (reconciled by TB-TMAR-HOST-SECURITY-AMC-001-W2)
 
 ```text
 Latest-Accepted-Implementation-Wave: TB-TMAR-HOST-SECURITY-AMC-001-W1
-Latest-Accepted-Task: TB-TMAR-HOST-SECURITY-AMC-001-W1
+Latest-Accepted-Task: TB-TMAR-HOST-SECURITY-AMC-001-W2
 Implementation-Commit: baa05e6b7fa373cb6d354a80ca2eab37d4472f7b
 Implementation-Commit-Kind: IMPLEMENTATION_COMMIT
-Result-Evidence-Docs-Stamp: bbfaf865b65d0f2934417a032db63c369e45d5e6
+Result-Evidence-Docs-Stamp: PLACEHOLDER_W2_DOCS_STAMP
 Result-Evidence-Docs-Stamp-Kind: RESULT_EVIDENCE_DOCS_STAMP_NOT_IMPLEMENTATION
-Mode: HOST_SECURITY_W1_ACCEPTED_RECOVERY_SOT_RECONCILED
+Mode: HOST_SECURITY_STRUCTURE_GUARD_SOT_RECONCILED
 Seller-Security-Failure-Semantics: SEMANTIC_EXCEPTION_CODE_BASED
 Seller-Security-Hardcoded-Runtime-Text: ZERO
-Host-Order-Seller-Adapter-Parity: PRESERVED_SEMANTIC_ERROR_RETURN
 Host-Security-Production-File-Count: 19
-Structure-Guard-Reconcile: DEFERRED_W2
-Historical-Security-Certification: NOT_REASSERTED_YET
+Seller-Production-File-Count: 14
+Structure-Guard-Reconcile: COMPLETE_W2
+Historical-18-File-Cert: HISTORICAL_SUPERSEDED_STALE_METADATA
+Current-Security-Certification: NOT_YET_REASSERTED
 Whole-Host-Admin-State: HOST_ADMIN_FULLY_CERTIFIED
-Admin-Grid-State: HOST_ZERO_CERTIFIED
-Panel-State: PANEL_KEEP_CERTIFIED_PRESERVED
-Development-State: ADMIN_DEVELOPMENT_DEV_CONTEXT_CERTIFIED_PRESERVED
 Current-Host-Checkpoint: Security
 Next-Host-Folder-Started: false
 Stale-Current-Pointer-State: ZERO
-workflowStop: USER_REVIEW_HOST_SECURITY_AMC_001_W1_R1
-Next-Task: USER_REVIEW_HOST_SECURITY_AMC_001_W1_R1
+workflowStop: USER_REVIEW_HOST_SECURITY_AMC_001_W2
+Next-Task: USER_REVIEW_HOST_SECURITY_AMC_001_W2
 Next-Task-Gate: USER_DECISION_REQUIRED_NO_AUTOMATIC_NEXT_IMPLEMENTATION_TASK
 Automatic-Next-Implementation-Task: NONE
 ```

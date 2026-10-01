@@ -12,10 +12,12 @@ Canonical Architect ↔ Cursor handoff (recovery-critical)
 
 Latest Accepted TMAR Checkpoint — authoritative
 
-Reconciled by `TB-TMAR-HOST-SECURITY-AMC-001-W1-R1`. Implementation remains W1 at `lastAcceptedCommit` = `baa05e6b7fa373cb6d354a80ca2eab37d4472f7b`. R1 is docs/recovery SoT stamp only. Gate: `USER_DECISION_REQUIRED_NO_AUTOMATIC_NEXT_IMPLEMENTATION_TASK`.
-- Current Host checkpoint = `Security`; workflowStop / Next-Task = `USER_REVIEW_HOST_SECURITY_AMC_001_W1_R1`; automatic next = NONE; stale pointer = ZERO.
-- Security W1: seller failures = SemanticException code-based; hardcoded runtime titles = ZERO; HostOrder ResolveAsync parity preserved; structure 18→19 deferred W2.
-- Host/Admin remains HOST_ADMIN_FULLY_CERTIFIED (historical Admin Access W3-CERT preserved; not current pointer).
+Reconciled by `TB-TMAR-HOST-SECURITY-AMC-001-W2`. Implementation remains W1 at `lastAcceptedCommit` = `baa05e6b7fa373cb6d354a80ca2eab37d4472f7b`. W2 is docs/tests structure-guard/SoT reconciliation only. Gate: `USER_DECISION_REQUIRED_NO_AUTOMATIC_NEXT_IMPLEMENTATION_TASK`.
+- Current Host checkpoint = `Security`; workflowStop / Next-Task = `USER_REVIEW_HOST_SECURITY_AMC_001_W2`; automatic next = NONE; stale pointer = ZERO.
+- Security production files = 19 exact (Seller=14 incl. HostReviewsSellerAuthorizer); historical 18-file CERT = HISTORICAL_SUPERSEDED_STALE_METADATA; current certification = NOT_YET_REASSERTED (W3 pending).
+- W1 seller SemanticException hygiene preserved; Host/Admin remains HOST_ADMIN_FULLY_CERTIFIED.
+
+Reconciled by `TB-TMAR-HOST-SECURITY-AMC-001-W1-R1` (HISTORICAL for current pointer). Recovery/SoT stamp split repair only.
 
 Reconciled by `TB-TMAR-HOST-ADMIN-ACCESS-AMC-001-W3-CERT` (HISTORICAL for current pointer). Implementation lineage remains W2 at that time. Certification docs/guards only. Parent Panel CERT preserved.
 - Dashboard remains Host thin cross-module composition; auth = `IAdminPanelAccess`; success = `Result` + `ApiResponseFactory`.
