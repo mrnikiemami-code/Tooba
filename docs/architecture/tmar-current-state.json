@@ -3,24 +3,24 @@
   "executionMode": "BACKEND_ONLY_UNTIL_EXPLICIT_RELEASE",
   "frontendFrozen": true,
   "checkoutState": "PAUSED_AT_SAFE_W5_CHECKPOINT",
-  "lastAcceptedTask": "TB-TMAR-HOST-COMPOSITION-AMC-001",
-  "lastAcceptedCommit": "aa6c98c212769a1f860e5d6cf51265ef0c32f433",
+  "lastAcceptedTask": "TB-TMAR-HOST-COMPOSITION-AMC-001-R1",
+  "lastAcceptedCommit": "PLACEHOLDER_STAMP_AFTER_COMMIT",
   "lastAcceptedCommitKind": "IMPLEMENTATION_COMMIT",
   "lastAcceptedResultEvidenceCommit": "b898135dc3e0c7ef4ea5ecb56f2a5003baebdf43",
   "lastAcceptedResultEvidenceCommitKind": "RESULT_EVIDENCE_DOCS_STAMP_NOT_IMPLEMENTATION",
   "lastAcceptedSoTStamp": "b898135dc3e0c7ef4ea5ecb56f2a5003baebdf43",
   "lastAcceptedSoTStampKind": "RESULT_EVIDENCE_DOCS_STAMP",
-  "lastAcceptedCommitSemantics": "lastAcceptedTask is TB-TMAR-HOST-COMPOSITION-AMC-001 IMPLEMENTATION commit. Host/Composition KEEP_AS_GENERIC_HOST_COMPOSITION_ROOT; Content binder DbContext ZERO; Localization schema migrator registered.",
-  "lastAcceptedNote": "Composition AMC: KEEP generic Host composition root; USER_REVIEW before next Host AMC.",
-  "latestAcceptedImplementationWave": "TB-TMAR-HOST-COMPOSITION-AMC-001",
+  "lastAcceptedCommitSemantics": "lastAcceptedTask is TB-TMAR-HOST-COMPOSITION-AMC-001-R1 IMPLEMENTATION commit. Host/Composition KEEP preserved; exact path-namespace Tooba.Host.Composition for all 5 files.",
+  "lastAcceptedNote": "Composition AMC R1: exact path-namespace CLOSED; USER_REVIEW before next Host AMC.",
+  "latestAcceptedImplementationWave": "TB-TMAR-HOST-COMPOSITION-AMC-001-R1",
   "currentHostCheckpoint": "Composition",
   "nextHostFolderStarted": false,
   "nextHostFolder": null,
   "staleCurrentPointerState": "ZERO",
-  "nextTask": "USER_REVIEW_HOST_COMPOSITION_AMC_001_KEEP_GENERIC_HOST_COMPOSITION_ROOT",
+  "nextTask": "USER_REVIEW_HOST_COMPOSITION_AMC_001_R1_KEEP_GENERIC_HOST_COMPOSITION_ROOT",
   "nextTaskGate": "USER_DECISION_REQUIRED_NO_AUTOMATIC_NEXT_IMPLEMENTATION_TASK",
   "nextTaskState": "USER_DECISION_REQUIRED",
-  "workflowStop": "USER_REVIEW_HOST_COMPOSITION_AMC_001_KEEP_GENERIC_HOST_COMPOSITION_ROOT",
+  "workflowStop": "USER_REVIEW_HOST_COMPOSITION_AMC_001_R1_KEEP_GENERIC_HOST_COMPOSITION_ROOT",
   "automaticNextImplementationTask": "NONE",
   "hostGridAmc": {
     "task": "TB-TMAR-HOST-GRID-AMC-001",
@@ -975,15 +975,15 @@
   },
   "currentHostEvacuation": {
     "activeModule": "Composition",
-    "activeModuleState": "COMPOSITION_KEEP_GENERIC_HOST_COMPOSITION_ROOT_USER_REVIEW_REQUIRED",
+    "activeModuleState": "COMPOSITION_KEEP_GENERIC_HOST_COMPOSITION_ROOT_R1_USER_REVIEW_REQUIRED",
     "currentHostEvacuationState": "RECONCILED_NOT_HISTORICAL_ADDRESSBOOK",
     "workflow": "HOST_FIRST_FOLDER_BY_FOLDER",
-    "currentTask": "TB-TMAR-HOST-COMPOSITION-AMC-001",
-    "currentPhase": "COMPOSITION_AMC_KEEP_GENERIC_HOST_COMPOSITION_ROOT",
-    "workflowStop": "USER_REVIEW_HOST_COMPOSITION_AMC_001_KEEP_GENERIC_HOST_COMPOSITION_ROOT",
+    "currentTask": "TB-TMAR-HOST-COMPOSITION-AMC-001-R1",
+    "currentPhase": "COMPOSITION_AMC_R1_KEEP_GENERIC_HOST_COMPOSITION_ROOT",
+    "workflowStop": "USER_REVIEW_HOST_COMPOSITION_AMC_001_R1_KEEP_GENERIC_HOST_COMPOSITION_ROOT",
     "automaticNextImplementationTask": "NONE",
-    "lastReconciledRecoveryTask": "TB-TMAR-HOST-COMPOSITION-AMC-001",
-    "latestAcceptedImplementationWave": "TB-TMAR-HOST-COMPOSITION-AMC-001",
+    "lastReconciledRecoveryTask": "TB-TMAR-HOST-COMPOSITION-AMC-001-R1",
+    "latestAcceptedImplementationWave": "TB-TMAR-HOST-COMPOSITION-AMC-001-R1",
     "currentHostCheckpoint": "Composition",
     "historicalNextHostFolderPointer": "NONE_USER_DECISION_REQUIRED",
     "nextHostFolderStarted": false,
@@ -5054,17 +5054,22 @@
   },
   "hostEvacuationProgress": {
     "activeModule": "Composition",
-    "activeModuleState": "COMPOSITION_KEEP_GENERIC_HOST_COMPOSITION_ROOT_USER_REVIEW_REQUIRED",
+    "activeModuleState": "COMPOSITION_KEEP_GENERIC_HOST_COMPOSITION_ROOT_R1_USER_REVIEW_REQUIRED",
     "blockedReason": null,
     "nextAllowedTaskFamily": "HOST_SLICE_OR_FOLDER_AMC",
-    "note": "Host Composition AMC: KEEP generic composition root; Content binder thinned; USER_REVIEW required."
+    "note": "Host Composition AMC R1: exact path-namespace; USER_REVIEW required."
   },
   "nextAllowedTask": {
     "kind": "USER_REVIEW_REQUIRED",
     "blockerOwner": "USER",
-    "note": "Do not start the next Host AMC until USER reviews Composition AMC KEEP closure."
+    "note": "Do not start the next Host AMC until USER reviews Composition AMC R1 KEEP closure."
   },
   "progressLedger": [
+    {
+      "taskId": "TB-TMAR-HOST-COMPOSITION-AMC-001-R1",
+      "status": "KEEP_AS_GENERIC_HOST_COMPOSITION_ROOT_R1_NAMESPACE",
+      "note": "Exact path-namespace Tooba.Host.Composition for all 5 files; USER_REVIEW before next Host AMC."
+    },
     {
       "taskId": "TB-TMAR-HOST-COMPOSITION-AMC-001",
       "status": "KEEP_AS_GENERIC_HOST_COMPOSITION_ROOT",
@@ -5389,5 +5394,18 @@
     "evidenceRoot": "docs/evidence/TB-TMAR-HOST-WALLET-AMC-001",
     "workflowStop": "USER_REVIEW_HOST_WALLET_AMC_001_CLOSED_HOST_ZERO",
     "note": "Historical HOST_ZERO; Host retains thin Composition Wallet seed binder."
+  },
+  "hostCompositionAmcR1": {
+    "taskId": "TB-TMAR-HOST-COMPOSITION-AMC-001-R1",
+    "parentTaskId": "TB-TMAR-HOST-COMPOSITION-AMC-001",
+    "status": "KEEP_AS_GENERIC_HOST_COMPOSITION_ROOT_R1_NAMESPACE",
+    "classification": "KEEP_AS_GENERIC_HOST_COMPOSITION_ROOT",
+    "pathNamespace": "EXACT_Tooba.Host.Composition",
+    "toobaModuleCompositionNamespace": "Tooba.Host.Composition",
+    "oldNamespaceResidue": "ZERO",
+    "durableGuard": "HostCompositionAmcGuardTests",
+    "evidenceRoot": "docs/evidence/TB-TMAR-HOST-COMPOSITION-AMC-001-R1",
+    "workflowStop": "USER_REVIEW_HOST_COMPOSITION_AMC_001_R1_KEEP_GENERIC_HOST_COMPOSITION_ROOT",
+    "note": "Implementation commit PLACEHOLDER_STAMP_AFTER_COMMIT; Composition AMC R1 namespace CLOSED."
   }
 }

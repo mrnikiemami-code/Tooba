@@ -25,27 +25,28 @@ BRIDGE-WAKE-V1
 Channel: tooba-main
 ```
 
-Latest Accepted TMAR Checkpoint — authoritative (reconciled by TB-TMAR-HOST-COMPOSITION-AMC-001)
+Latest Accepted TMAR Checkpoint — authoritative (reconciled by TB-TMAR-HOST-COMPOSITION-AMC-001-R1)
 
 ```text
-Latest-Accepted-Implementation-Wave: TB-TMAR-HOST-COMPOSITION-AMC-001
-Latest-Accepted-Task: TB-TMAR-HOST-COMPOSITION-AMC-001
-Implementation-Commit: aa6c98c212769a1f860e5d6cf51265ef0c32f433
+Latest-Accepted-Implementation-Wave: TB-TMAR-HOST-COMPOSITION-AMC-001-R1
+Latest-Accepted-Task: TB-TMAR-HOST-COMPOSITION-AMC-001-R1
+Implementation-Commit: PLACEHOLDER_STAMP_AFTER_COMMIT
 Implementation-Commit-Kind: IMPLEMENTATION_COMMIT
-Current-Host-Checkpoint: Composition_KEEP
+Current-Host-Checkpoint: Composition_KEEP_R1
 Active-Host-Folder: Composition
 Host-Composition-Directory: PRESENT
 Host-Composition-Disposition: KEEP_AS_GENERIC_HOST_COMPOSITION_ROOT
+Path-Namespace: EXACT_Tooba.Host.Composition
+ToobaModuleComposition-Namespace: Tooba.Host.Composition
+Old-Namespace-Residue: ZERO
 Retained-Files: 5
 Content-Binder-DbContext: ZERO
-Content-Bootstrap: Content.Infrastructure.Development.ContentDevelopmentSeedBootstrap
-Localization-Schema-Migrator: LocalizationModule_order_22
-Prior-Accepted-Lineage: TB-TMAR-HOST-LOCALIZATION-AMC-001-R1 ; TB-TMAR-HOST-LOCALIZATION-AMC-001 ; TB-TMAR-HOST-CATALOGADAPTERS-AMC-001 ; TB-TMAR-HOST-ORDER-AMC-001-R1
+Prior-Accepted-Lineage: TB-TMAR-HOST-COMPOSITION-AMC-001 ; TB-TMAR-HOST-LOCALIZATION-AMC-001-R1 ; TB-TMAR-HOST-LOCALIZATION-AMC-001
 Next-Host-Folder-Started: false
 Next-Host-Folder: NONE_USER_DECISION_REQUIRED
 Stale-Current-Pointer-State: ZERO
-workflowStop: USER_REVIEW_HOST_COMPOSITION_AMC_001_KEEP_GENERIC_HOST_COMPOSITION_ROOT
-Next-Task: USER_REVIEW_HOST_COMPOSITION_AMC_001_KEEP_GENERIC_HOST_COMPOSITION_ROOT
+workflowStop: USER_REVIEW_HOST_COMPOSITION_AMC_001_R1_KEEP_GENERIC_HOST_COMPOSITION_ROOT
+Next-Task: USER_REVIEW_HOST_COMPOSITION_AMC_001_R1_KEEP_GENERIC_HOST_COMPOSITION_ROOT
 Automatic-Next-Implementation-Task: NONE
 ```
 

@@ -41,7 +41,7 @@ using Tooba.Wallet.Infrastructure.DependencyInjection;
 using Tooba.Wallet.Infrastructure.Directories;
 using Tooba.StoreContext.Infrastructure;
 
-namespace Tooba.Host;
+namespace Tooba.Host.Composition;
 
 /// <summary>
 /// ریشهٔ ترکیب صریح ماژول‌ها. فهرست دستی است تا استخراج بعدی سرویس بدون وابستگی مصرف‌کننده به جزئیات in-process بماند.

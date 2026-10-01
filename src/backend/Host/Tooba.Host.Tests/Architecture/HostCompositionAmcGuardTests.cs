@@ -1,10 +1,9 @@
-using System.Text.RegularExpressions;
 using Xunit;
 
 namespace Tooba.Host.Tests.Architecture;
 
 /// <summary>
-/// TB-TMAR-HOST-COMPOSITION-AMC-001 — KEEP_AS_GENERIC_HOST_COMPOSITION_ROOT.
+/// TB-TMAR-HOST-COMPOSITION-AMC-001 / R1 — KEEP_AS_GENERIC_HOST_COMPOSITION_ROOT + exact path↔namespace.
 /// </summary>
 public sealed class HostCompositionAmcGuardTests
 {
@@ -29,6 +28,20 @@ public sealed class HostCompositionAmcGuardTests
             .ToArray();
 
         Assert.Equal(Allowlist.OrderBy(x => x, StringComparer.Ordinal).ToArray(), files);
+    }
+
+    [Fact]
+    public void Every_composition_file_has_exact_path_namespace()
+    {
+        var composition = Path.Combine(FindRepoRoot(), "src", "backend", "Host", "Tooba.Host", "Composition");
+        foreach (var file in Allowlist)
+        {
+            var text = File.ReadAllText(Path.Combine(composition, file));
+            Assert.Contains("namespace Tooba.Host.Composition", text, StringComparison.Ordinal);
+            Assert.DoesNotContain("namespace Tooba.Host;", text, StringComparison.Ordinal);
+            Assert.DoesNotContain("namespace Tooba.Host\n", text, StringComparison.Ordinal);
+            Assert.DoesNotContain("namespace Tooba.Host\r", text, StringComparison.Ordinal);
+        }
     }
 
     [Fact]
@@ -79,7 +92,8 @@ public sealed class HostCompositionAmcGuardTests
             FindRepoRoot(), "src", "backend", "Host", "Tooba.Host", "Composition", "ToobaModuleComposition.cs"));
         Assert.Contains("AddToobaModules", text, StringComparison.Ordinal);
         Assert.Contains("IToobaModule", text, StringComparison.Ordinal);
-        Assert.Contains("namespace Tooba.Host", text, StringComparison.Ordinal);
+        Assert.Contains("namespace Tooba.Host.Composition", text, StringComparison.Ordinal);
+        Assert.DoesNotContain("namespace Tooba.Host;", text, StringComparison.Ordinal);
         Assert.DoesNotContain("MapGet(", text, StringComparison.Ordinal);
         Assert.DoesNotContain("MapPost(", text, StringComparison.Ordinal);
         Assert.DoesNotContain("Database.MigrateAsync", text, StringComparison.Ordinal);
@@ -91,19 +105,21 @@ public sealed class HostCompositionAmcGuardTests
         var program = File.ReadAllText(Path.Combine(
             FindRepoRoot(), "src", "backend", "Host", "Tooba.Host", "Program.cs"));
         Assert.Contains("AddToobaModules", program, StringComparison.Ordinal);
+        Assert.Contains("using Tooba.Host.Composition", program, StringComparison.Ordinal);
         Assert.Contains("ContentDevelopmentSeedHost.ApplyAsync", program, StringComparison.Ordinal);
         Assert.Contains("SupportDevelopmentSeedHost.ApplyAsync", program, StringComparison.Ordinal);
         Assert.Contains("WalletDevelopmentSeedHost.ApplyAsync", program, StringComparison.Ordinal);
     }
 
     [Fact]
-    public void SoT_records_composition_keep()
+    public void SoT_records_composition_keep_r1()
     {
         var sot = File.ReadAllText(Path.Combine(FindRepoRoot(), "docs", "architecture", "tmar-current-state.json"));
         Assert.Contains("\"hostCompositionAmc\"", sot, StringComparison.Ordinal);
-        Assert.Contains("TB-TMAR-HOST-COMPOSITION-AMC-001", sot, StringComparison.Ordinal);
+        Assert.Contains("\"hostCompositionAmcR1\"", sot, StringComparison.Ordinal);
+        Assert.Contains("TB-TMAR-HOST-COMPOSITION-AMC-001-R1", sot, StringComparison.Ordinal);
         Assert.Contains("KEEP_AS_GENERIC_HOST_COMPOSITION_ROOT", sot, StringComparison.Ordinal);
-        Assert.Contains("USER_REVIEW_HOST_COMPOSITION_AMC_001_KEEP_GENERIC_HOST_COMPOSITION_ROOT", sot, StringComparison.Ordinal);
+        Assert.Contains("USER_REVIEW_HOST_COMPOSITION_AMC_001_R1_KEEP_GENERIC_HOST_COMPOSITION_ROOT", sot, StringComparison.Ordinal);
     }
 
     private static string FindRepoRoot()

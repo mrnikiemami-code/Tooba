@@ -12,12 +12,16 @@ Canonical Architect ↔ Cursor handoff (recovery-critical)
 
 Latest Accepted TMAR Checkpoint — authoritative
 
-Reconciled by `TB-TMAR-HOST-COMPOSITION-AMC-001`. Current implementation commit recorded at `lastAcceptedCommit` after PASS.
-- Host/Composition = `PRESENT` / `KEEP_AS_GENERIC_HOST_COMPOSITION_ROOT` (exact 5 files).
-- Content Development binder thinned: migrate+seed owned by `Content.Infrastructure.Development.ContentDevelopmentSeedBootstrap`; Host binder DbContext/MigrateAsync = ZERO.
-- Localization registers `IModuleSchemaMigrator` (order 22, before Content).
-- Current Host checkpoint = `Composition`; workflowStop = `USER_REVIEW_HOST_COMPOSITION_AMC_001_KEEP_GENERIC_HOST_COMPOSITION_ROOT`; automatic next = NONE; stale pointer = ZERO.
-- Localization AMC R1 / Localization parent / CatalogAdapters / Order R1 remain accepted historical lineage.
+Reconciled by `TB-TMAR-HOST-COMPOSITION-AMC-001-R1`. Current implementation commit recorded at `lastAcceptedCommit` after PASS.
+- Host/Composition = `PRESENT` / `KEEP_AS_GENERIC_HOST_COMPOSITION_ROOT` preserved (exact 5 files).
+- Exact path↔namespace = `Tooba.Host.Composition` for all retained files including `ToobaModuleComposition.cs`.
+- Content Development binder remains thin (DbContext/MigrateAsync ZERO); Content bootstrap ownership unchanged.
+- Current Host checkpoint = `Composition`; workflowStop = `USER_REVIEW_HOST_COMPOSITION_AMC_001_R1_KEEP_GENERIC_HOST_COMPOSITION_ROOT`; automatic next = NONE; stale pointer = ZERO.
+- Parent Composition AMC / Localization AMC R1 / Localization parent remain accepted historical lineage.
+
+Reconciled by `TB-TMAR-HOST-COMPOSITION-AMC-001` (HISTORICAL). Host/Composition = `PRESENT` / `KEEP_AS_GENERIC_HOST_COMPOSITION_ROOT`.
+- Content Development binder thinned to Content.Infrastructure bootstrap; Localization IModuleSchemaMigrator registered.
+- Historical stop = `USER_REVIEW_HOST_COMPOSITION_AMC_001_KEEP_GENERIC_HOST_COMPOSITION_ROOT`.
 
 Reconciled by `TB-TMAR-HOST-LOCALIZATION-AMC-001-R1` (HISTORICAL). Host/Localization = `ABSENT` / `CLOSED_HOST_ZERO` preserved.
 - Failure transport = `SemanticException` + `SemanticError(LanguageErrorCodes.*)`; message-text classification = ZERO.
