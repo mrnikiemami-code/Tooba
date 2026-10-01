@@ -30,7 +30,7 @@ Latest Accepted TMAR Checkpoint — authoritative (reconciled by TB-TMAR-HOST-CA
 ```text
 Latest-Accepted-Implementation-Wave: TB-TMAR-HOST-CACHING-AMC-001
 Latest-Accepted-Task: TB-TMAR-HOST-CACHING-AMC-001
-Implementation-Commit: PLACEHOLDER_STAMP_AFTER_COMMIT
+Implementation-Commit: 8b2e97c7375b2b0ebe0e468346917b9a708b6b55
 Implementation-Commit-Kind: IMPLEMENTATION_COMMIT
 Current-Host-Checkpoint: Caching_KEEP_GENERIC_HOST_CACHE_INFRASTRUCTURE
 Active-Host-Folder: Caching
