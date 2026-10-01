@@ -30,7 +30,7 @@ Latest Accepted TMAR Checkpoint — authoritative (reconciled by TB-TMAR-HOST-OR
 ```text
 Latest-Accepted-Implementation-Wave: TB-TMAR-HOST-ORDER-AMC-001-R1
 Latest-Accepted-Task: TB-TMAR-HOST-ORDER-AMC-001-R1
-Implementation-Commit: PLACEHOLDER_STAMP_AFTER_COMMIT
+Implementation-Commit: 63580abfce525c66b09ced2ee2dbbdd3e62acc77
 Implementation-Commit-Kind: IMPLEMENTATION_COMMIT
 Current-Host-Checkpoint: Order_KEEP_THIN_HOST_ORDER_STOREFRONT_ADAPTER_R1
 Active-Host-Folder: Order
