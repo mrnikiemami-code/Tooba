@@ -2,10 +2,10 @@ using System.Diagnostics;
 using System.Diagnostics.Metrics;
 using Tooba.BuildingBlocks;
 
-namespace Tooba.Host;
+namespace Tooba.Host.Caching;
 
 /// <summary>
-/// متریک کش با برچسب کران‌دار. TenantId و کلید کامل و شناسهٔ کاربر بعد متریک نیستند.
+/// متریک کش با برچسب کران‌دار. هویت فروشگاه و کلید کامل و هویت اپراتور بعد متریک نیستند.
 /// </summary>
 internal sealed class CacheInstrumentation
 {
@@ -16,6 +16,8 @@ internal sealed class CacheInstrumentation
     private readonly Counter<long> _invalidations;
     private readonly Counter<long> _evictions;
     private readonly Counter<long> _stampedeWaits;
+    private readonly Counter<long> _typeMismatches;
+    private readonly Counter<long> _factoryFailures;
     private readonly Histogram<double> _factoryDurationMs;
 
     /// <summary>
@@ -31,6 +33,8 @@ internal sealed class CacheInstrumentation
         _invalidations = meter.CreateCounter<long>("tooba.cache.invalidation");
         _evictions = meter.CreateCounter<long>("tooba.cache.eviction");
         _stampedeWaits = meter.CreateCounter<long>("tooba.cache.stampede.wait");
+        _typeMismatches = meter.CreateCounter<long>("tooba.cache.type_mismatch");
+        _factoryFailures = meter.CreateCounter<long>("tooba.cache.factory.failure");
         _factoryDurationMs = meter.CreateHistogram<double>("tooba.cache.factory.duration", "ms");
     }
 
@@ -73,6 +77,12 @@ internal sealed class CacheInstrumentation
 
     /// <summary>منتظر ماندن پشت single-flight همان کلید.</summary>
     public void StampedeWait(string provider, CacheKey key) => _stampedeWaits.Add(1, Tags(provider, key));
+
+    /// <summary>ورود ناسازگار نوعی حذف شد و miss تلقی شد.</summary>
+    public void TypeMismatch(string provider, CacheKey key) => _typeMismatches.Add(1, Tags(provider, key));
+
+    /// <summary>شکست کارخانه؛ نتیجه ذخیره نشد.</summary>
+    public void FactoryFailure(string provider, CacheKey key) => _factoryFailures.Add(1, Tags(provider, key));
 
     /// <summary>مدت کارخانهٔ منبع حقیقت.</summary>
     public void FactoryDuration(string provider, CacheKey key, double milliseconds) =>

@@ -39,7 +39,7 @@ public sealed record CachePolicy(
         new(absoluteExpiration, slidingExpiration, tags ?? Array.Empty<string>(), false, null);
 
     /// <summary>
-    /// بررسی می‌کند انقضا کران‌دار است و ورود منفی بدون TTL کوتاه مجاز نیست.
+    /// بررسی می‌کند انقضا کران‌دار و مدت‌ها مثبت هستند؛ TTL صفر/منفی و کش منفی بدون TTL کوتاه رد می‌شود.
     /// </summary>
     public void EnsureBounded()
     {
@@ -49,10 +49,31 @@ public sealed record CachePolicy(
                 "CachePolicy requires AbsoluteExpiration or SlidingExpiration; unbounded mutable cache is not allowed.");
         }
 
-        if (CacheNull && NullAbsoluteExpiration is null)
+        if (AbsoluteExpiration is { } absolute && absolute <= TimeSpan.Zero)
         {
             throw new InvalidOperationException(
-                "Negative caching requires an explicit short NullAbsoluteExpiration; not-found is not cached by default.");
+                "CachePolicy AbsoluteExpiration must be a positive duration.");
+        }
+
+        if (SlidingExpiration is { } sliding && sliding <= TimeSpan.Zero)
+        {
+            throw new InvalidOperationException(
+                "CachePolicy SlidingExpiration must be a positive duration.");
+        }
+
+        if (CacheNull)
+        {
+            if (NullAbsoluteExpiration is null)
+            {
+                throw new InvalidOperationException(
+                    "Negative caching requires an explicit short NullAbsoluteExpiration; not-found is not cached by default.");
+            }
+
+            if (NullAbsoluteExpiration.Value <= TimeSpan.Zero)
+            {
+                throw new InvalidOperationException(
+                    "CachePolicy NullAbsoluteExpiration must be a positive duration.");
+            }
         }
     }
 }

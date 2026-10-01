@@ -1,7 +1,7 @@
 using Microsoft.Extensions.Options;
 using Tooba.BuildingBlocks;
 
-namespace Tooba.Host;
+namespace Tooba.Host.Caching;
 
 /// <summary>
 /// ثبت abstraction کش. ماژول‌ها فقط ICache/ICacheKeyBuilder/ICacheInvalidator را می‌بینند و IMemoryCache در DI عمومی ثبت نمی‌شود.

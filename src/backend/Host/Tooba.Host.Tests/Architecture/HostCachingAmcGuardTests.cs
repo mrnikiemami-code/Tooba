@@ -4,8 +4,7 @@ using Xunit;
 namespace Tooba.Host.Tests.Architecture;
 
 /// <summary>
-/// Architect-direct AMC guard for Host/Caching.
-/// The folder is a legal Host platform seam, but its retained surface is explicitly allowlisted.
+/// TB-TMAR-HOST-CACHING-AMC-001 — KEEP_AS_GENERIC_HOST_CACHE_INFRASTRUCTURE.
 /// </summary>
 public sealed class HostCachingAmcGuardTests
 {
@@ -16,6 +15,10 @@ public sealed class HostCachingAmcGuardTests
         "CacheRegistration.cs",
         "MemoryToobaCache.cs",
     ];
+
+    private static readonly Regex ForeignModuleLayers = new(
+        @"Tooba\.(Catalog|Party|AccessControl|Identity|Order|Offer|Payment|Reviews|Cart|Wallet|Support|ProductQnA|Preferences|Story|Wishlist|Fulfillment|Settlement|Notification|Returns|Promotion|Inventory|Pricing|Tax|Media|Content|User|OperatorProfile)\.(Application|Domain|Infrastructure|Persistence)",
+        RegexOptions.Compiled | RegexOptions.CultureInvariant);
 
     [Fact]
     public void Caching_folder_matches_exact_retained_allowlist()
@@ -32,11 +35,14 @@ public sealed class HostCachingAmcGuardTests
     }
 
     [Fact]
-    public void Caching_surface_has_no_business_persistence_or_http_ownership()
+    public void Path_namespace_exact_and_platform_boundary_invariants()
     {
         foreach (var file in Allowlist)
         {
             var text = Read(file);
+            var nsMatch = Regex.Match(text, @"^namespace\s+([^\s;{]+)", RegexOptions.Multiline);
+            Assert.True(nsMatch.Success, file);
+            Assert.Equal("Tooba.Host.Caching", nsMatch.Groups[1].Value);
 
             Assert.DoesNotContain("DbContext", text, StringComparison.Ordinal);
             Assert.DoesNotContain("DbSet<", text, StringComparison.Ordinal);
@@ -46,6 +52,16 @@ public sealed class HostCachingAmcGuardTests
             Assert.DoesNotContain("MapPost(", text, StringComparison.Ordinal);
             Assert.DoesNotContain("MapPut(", text, StringComparison.Ordinal);
             Assert.DoesNotContain("MapDelete(", text, StringComparison.Ordinal);
+            Assert.DoesNotContain("HttpContext", text, StringComparison.Ordinal);
+            Assert.DoesNotContain("StackExchange.Redis", text, StringComparison.OrdinalIgnoreCase);
+            Assert.DoesNotContain("ex.Message", text, StringComparison.Ordinal);
+            Assert.DoesNotContain("message.Contains", text, StringComparison.OrdinalIgnoreCase);
+
+            foreach (var raw in text.Split('\n'))
+            {
+                var line = raw.Trim();
+                Assert.False(ForeignModuleLayers.IsMatch(line), $"{file}: {line}");
+            }
         }
     }
 
@@ -58,10 +74,47 @@ public sealed class HostCachingAmcGuardTests
         Assert.Contains("cache.provider", text, StringComparison.Ordinal);
         Assert.Contains("cache.namespace", text, StringComparison.Ordinal);
         Assert.Contains("cache.edition", text, StringComparison.Ordinal);
+        Assert.Contains("tooba.cache.type_mismatch", text, StringComparison.Ordinal);
+        Assert.Contains("tooba.cache.factory.failure", text, StringComparison.Ordinal);
+        Assert.Contains("tooba.cache.stampede.wait", text, StringComparison.Ordinal);
 
         Assert.DoesNotContain("tenant", text, StringComparison.OrdinalIgnoreCase);
         Assert.DoesNotContain("user", text, StringComparison.OrdinalIgnoreCase);
         Assert.DoesNotContain("key.Value", text, StringComparison.Ordinal);
+        Assert.DoesNotContain("ResourceId", text, StringComparison.Ordinal);
+        Assert.DoesNotContain("payload", text, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public void Single_flight_uses_reference_counted_inflight_slot_not_currentcount_remove()
+    {
+        var text = Read("MemoryToobaCache.cs");
+        Assert.Contains("InflightSlot", text, StringComparison.Ordinal);
+        Assert.Contains("RefCount", text, StringComparison.Ordinal);
+        Assert.Contains("AcquireInflight", text, StringComparison.Ordinal);
+        Assert.Contains("ReleaseInflight", text, StringComparison.Ordinal);
+        Assert.DoesNotContain("CurrentCount == 1", text, StringComparison.Ordinal);
+        Assert.DoesNotContain("CurrentCount==1", text, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void Type_mismatch_removes_entry_and_does_not_cast_as_hit_null()
+    {
+        var text = Read("MemoryToobaCache.cs");
+        Assert.Contains("TypeMismatch", text, StringComparison.Ordinal);
+        Assert.Contains("box.Payload is T typed", text, StringComparison.Ordinal);
+        Assert.DoesNotContain("box.Payload as T", text, StringComparison.Ordinal);
+        Assert.Contains("NullSentinel", text, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void Provider_parity_rejects_blank_tag_and_namespace_on_both_implementations()
+    {
+        var text = Read("MemoryToobaCache.cs");
+        Assert.Equal(2, Regex.Matches(text, @"Cache tag is required for invalidation\.").Count);
+        Assert.Equal(2, Regex.Matches(text, @"Cache namespace is required for invalidation\.").Count);
+        Assert.Contains("class DisabledToobaCache", text, StringComparison.Ordinal);
+        Assert.Contains("class MemoryToobaCache", text, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -70,6 +123,7 @@ public sealed class HostCachingAmcGuardTests
         var program = File.ReadAllText(Path.Combine(
             FindRepoRoot(), "src", "backend", "Host", "Tooba.Host", "Program.cs"));
 
+        Assert.Contains("using Tooba.Host.Caching;", program, StringComparison.Ordinal);
         Assert.Contains("AddOptions<CacheHostOptions>()", program, StringComparison.Ordinal);
         Assert.Contains("AddSingleton<IValidateOptions<CacheHostOptions>, CacheOptionsValidator>()", program, StringComparison.Ordinal);
         Assert.Equal(
@@ -86,6 +140,16 @@ public sealed class HostCachingAmcGuardTests
         Assert.Contains("None", text, StringComparison.Ordinal);
         Assert.Contains("Redis", text, StringComparison.Ordinal);
         Assert.Contains("StackExchange", text, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void Sot_keep_disposition_and_exact_namespace_are_recorded()
+    {
+        var sot = File.ReadAllText(Path.Combine(FindRepoRoot(), "docs", "architecture", "tmar-current-state.json"));
+        Assert.Contains("\"hostCachingAmc\"", sot, StringComparison.Ordinal);
+        Assert.Contains("KEEP_AS_GENERIC_HOST_CACHE_INFRASTRUCTURE", sot, StringComparison.Ordinal);
+        Assert.Contains("TB-TMAR-HOST-CACHING-AMC-001", sot, StringComparison.Ordinal);
+        Assert.Contains("EXACT_Tooba.Host.Caching", sot, StringComparison.Ordinal);
     }
 
     private static string Read(string fileName) =>

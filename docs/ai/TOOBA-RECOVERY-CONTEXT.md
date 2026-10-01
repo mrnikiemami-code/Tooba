@@ -25,27 +25,27 @@ BRIDGE-WAKE-V1
 Channel: tooba-main
 ```
 
-Latest Accepted TMAR Checkpoint — authoritative (reconciled by TB-TMAR-HOST-OPERATORPROFILE-AMC-001-R1)
+Latest Accepted TMAR Checkpoint — authoritative (reconciled by TB-TMAR-HOST-CACHING-AMC-001)
 
 ```text
-Latest-Accepted-Implementation-Wave: TB-TMAR-HOST-OPERATORPROFILE-AMC-001-R1
-Latest-Accepted-Task: TB-TMAR-HOST-OPERATORPROFILE-AMC-001-R1
-Implementation-Commit: 930916f7fa3141cae30f1976f86b38003c683682
+Latest-Accepted-Implementation-Wave: TB-TMAR-HOST-CACHING-AMC-001
+Latest-Accepted-Task: TB-TMAR-HOST-CACHING-AMC-001
+Implementation-Commit: PLACEHOLDER_STAMP_AFTER_COMMIT
 Implementation-Commit-Kind: IMPLEMENTATION_COMMIT
-Current-Host-Checkpoint: OperatorProfile_HOST_ZERO_R1
-Active-Host-Folder: OperatorProfile
-Host-OperatorProfile-Directory: ABSENT
-Host-OperatorProfile-Host-Zero: true
-Broad-InvalidOperation-Remap: ZERO
-Expected-Rejection: operator.profile.rejected_via_Domain_SemanticException
-Http-Owner: Tooba.OperatorProfile.Endpoints.OperatorProfileEndpointModule
-Host-Authorizer: HostOperatorProfileAdminAuthorizer
-Prior-Accepted-Lineage: TB-TMAR-HOST-OPERATORPROFILE-AMC-001 ; TB-TMAR-HOST-SUPPORT-AMC-001-R1 ; TB-TMAR-HOST-TRANSPORT-AMC-001 ; TB-TMAR-HOST-SUPPORT-AMC-001
+Current-Host-Checkpoint: Caching_KEEP_GENERIC_HOST_CACHE_INFRASTRUCTURE
+Active-Host-Folder: Caching
+Host-Caching-Directory: PRESENT
+Host-Caching-Disposition: KEEP_AS_GENERIC_HOST_CACHE_INFRASTRUCTURE
+Path-Namespace: EXACT_Tooba.Host.Caching
+Single-Flight: REFERENCE_COUNTED_INFLIGHT_SLOT
+Type-Mismatch: REMOVE_ENTRY_TELEMETRY_MISS
+Redis: ZERO
+Prior-Accepted-Lineage: TB-TMAR-HOST-OPERATORPROFILE-AMC-001-R1 ; TB-TMAR-HOST-OPERATORPROFILE-AMC-001 ; TB-TMAR-HOST-SUPPORT-AMC-001-R1 ; TB-TMAR-HOST-TRANSPORT-AMC-001 ; TB-TMAR-HOST-SUPPORT-AMC-001
 Next-Host-Folder-Started: false
 Next-Host-Folder: NONE_USER_DECISION_REQUIRED
 Stale-Current-Pointer-State: ZERO
-workflowStop: USER_REVIEW_HOST_OPERATORPROFILE_AMC_001_R1_CLOSED_HOST_ZERO
-Next-Task: USER_REVIEW_HOST_OPERATORPROFILE_AMC_001_R1_CLOSED_HOST_ZERO
+workflowStop: USER_REVIEW_HOST_CACHING_AMC_001_KEEP_GENERIC_HOST_INFRASTRUCTURE
+Next-Task: USER_REVIEW_HOST_CACHING_AMC_001_KEEP_GENERIC_HOST_INFRASTRUCTURE
 Automatic-Next-Implementation-Task: NONE
 ```
 

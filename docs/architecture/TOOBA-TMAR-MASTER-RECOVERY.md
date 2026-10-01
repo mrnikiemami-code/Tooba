@@ -12,12 +12,18 @@ Canonical Architect ↔ Cursor handoff (recovery-critical)
 
 Latest Accepted TMAR Checkpoint — authoritative
 
-Reconciled by `TB-TMAR-HOST-OPERATORPROFILE-AMC-001-R1`. Current implementation commit recorded at `lastAcceptedCommit` after PASS.
-- Host/OperatorProfile = `ABSENT` / `CLOSED_HOST_ZERO` preserved.
+Reconciled by `TB-TMAR-HOST-CACHING-AMC-001`. Current implementation commit recorded at `lastAcceptedCommit` after PASS.
+- Host/Caching = `PRESENT` / `KEEP_AS_GENERIC_HOST_CACHE_INFRASTRUCTURE`.
+- Retained allowlist (exact 4): `CacheHostOptions.cs`, `CacheInstrumentation.cs`, `CacheRegistration.cs`, `MemoryToobaCache.cs`.
+- Path↔namespace = `EXACT` (`Tooba.Host.Caching`); foreign module Application/Domain/Infrastructure/Persistence = ZERO; module DbContext = ZERO.
+- Single-flight = reference-counted in-flight slot; type mismatch = remove entry + telemetry + miss; Memory/None argument parity; Redis = ZERO.
+- Current Host checkpoint = `Caching`; workflowStop = `USER_REVIEW_HOST_CACHING_AMC_001_KEEP_GENERIC_HOST_INFRASTRUCTURE`; automatic next = NONE; stale pointer = ZERO.
+- OperatorProfile R1 / Support R1 / Transport remain accepted historical lineage.
+
+Reconciled by `TB-TMAR-HOST-OPERATORPROFILE-AMC-001-R1` (HISTORICAL). Host/OperatorProfile = `ABSENT` / `CLOSED_HOST_ZERO` preserved.
 - Domain throws `SemanticException` with `operator.profile.rejected`; Directory broad `InvalidOperationException` remap = ZERO; unknown exceptions propagate.
 - HTTP owner = `Tooba.OperatorProfile.Endpoints`; Host `HostOperatorProfileAdminAuthorizer` thin only.
-- Current Host checkpoint = `OperatorProfile`; workflowStop = `USER_REVIEW_HOST_OPERATORPROFILE_AMC_001_R1_CLOSED_HOST_ZERO`; automatic next = NONE; stale pointer = ZERO.
-- Parent OperatorProfile AMC / Support R1 / Transport remain accepted historical lineage.
+- Historical stop = `USER_REVIEW_HOST_OPERATORPROFILE_AMC_001_R1_CLOSED_HOST_ZERO`.
 
 Reconciled by `TB-TMAR-HOST-OPERATORPROFILE-AMC-001` (HISTORICAL). Host/OperatorProfile = `ABSENT` / `CLOSED_HOST_ZERO`.
 - HTTP owner = `Tooba.OperatorProfile.Endpoints` (`MapOperatorProfileModuleEndpoints` → CQRS/MediatR GET/PUT `/v1/admin/operator/profile`).

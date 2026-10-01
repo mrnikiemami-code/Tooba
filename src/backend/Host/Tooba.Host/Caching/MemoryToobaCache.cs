@@ -4,10 +4,12 @@ using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Options;
 using Tooba.BuildingBlocks;
 
-namespace Tooba.Host;
+namespace Tooba.Host.Caching;
 
 /// <summary>
 /// ارائه‌دهندهٔ درون‌فرآیندی. بین نمونه‌های Host مشترک نیست. IMemoryCache را به ماژول‌ها لو نمی‌دهد.
+/// Single-flight با شمارش مرجع روی شیء هماهنگی per-key است تا حذف زودهنگام semaphore رخ ندهد.
+/// ناسازگاری نوع: ورود حذف می‌شود، تله‌متری type_mismatch ثبت می‌شود، و miss برمی‌گردد (نه hit-null خاموش).
 /// </summary>
 internal sealed class MemoryToobaCache : ICache, ICacheInvalidator, IDisposable
 {
@@ -18,13 +20,10 @@ internal sealed class MemoryToobaCache : ICache, ICacheInvalidator, IDisposable
     private readonly CacheHostOptions _options;
     private readonly CacheInstrumentation _telemetry;
     private readonly ILogger<MemoryToobaCache> _logger;
-    private readonly ConcurrentDictionary<string, SemaphoreSlim> _gates = new(StringComparer.Ordinal);
+    private readonly ConcurrentDictionary<string, InflightSlot> _inflight = new(StringComparer.Ordinal);
     private readonly ConcurrentDictionary<string, ConcurrentDictionary<string, byte>> _tagToKeys = new(StringComparer.Ordinal);
     private readonly ConcurrentDictionary<string, string[]> _keyToTags = new(StringComparer.Ordinal);
 
-    /// <summary>
-    /// حافظه، تله‌متری و سیاست stampede را می‌گیرد. کلید از Host ساخته نمی‌شود.
-    /// </summary>
     /// <summary>
     /// حافظهٔ اختصاصی فرآیند را می‌سازد تا IMemoryCache به ماژول‌های کسب‌وکار تزریق نشود.
     /// </summary>
@@ -92,32 +91,35 @@ internal sealed class MemoryToobaCache : ICache, ICacheInvalidator, IDisposable
             return await RunFactoryAndStore(key, factory, policy, cancellationToken).ConfigureAwait(false);
         }
 
-        var gate = _gates.GetOrAdd(key.Value, static _ => new SemaphoreSlim(1, 1));
-        var entered = await gate.WaitAsync(0, cancellationToken).ConfigureAwait(false);
-        if (!entered)
-        {
-            _telemetry.StampedeWait(ProviderName, key);
-            await gate.WaitAsync(cancellationToken).ConfigureAwait(false);
-        }
-
+        var slot = AcquireInflight(key.Value);
         try
         {
-            if (TryRead(key, out existing, out hit) && hit)
+            var entered = await slot.Gate.WaitAsync(0, cancellationToken).ConfigureAwait(false);
+            if (!entered)
             {
-                _telemetry.Hit(ProviderName, key);
-                return existing;
+                _telemetry.StampedeWait(ProviderName, key);
+                await slot.Gate.WaitAsync(cancellationToken).ConfigureAwait(false);
             }
 
-            _telemetry.Miss(ProviderName, key);
-            return await RunFactoryAndStore(key, factory, policy, cancellationToken).ConfigureAwait(false);
+            try
+            {
+                if (TryRead(key, out existing, out hit) && hit)
+                {
+                    _telemetry.Hit(ProviderName, key);
+                    return existing;
+                }
+
+                _telemetry.Miss(ProviderName, key);
+                return await RunFactoryAndStore(key, factory, policy, cancellationToken).ConfigureAwait(false);
+            }
+            finally
+            {
+                slot.Gate.Release();
+            }
         }
         finally
         {
-            gate.Release();
-            if (gate.CurrentCount == 1)
-            {
-                _gates.TryRemove(key.Value, out _);
-            }
+            ReleaseInflight(key.Value, slot);
         }
     }
 
@@ -162,6 +164,32 @@ internal sealed class MemoryToobaCache : ICache, ICacheInvalidator, IDisposable
         return Task.CompletedTask;
     }
 
+    private InflightSlot AcquireInflight(string cacheKey)
+    {
+        while (true)
+        {
+            var slot = _inflight.GetOrAdd(cacheKey, static _ => new InflightSlot());
+            Interlocked.Increment(ref slot.RefCount);
+            if (_inflight.TryGetValue(cacheKey, out var current) && ReferenceEquals(current, slot))
+            {
+                return slot;
+            }
+
+            Interlocked.Decrement(ref slot.RefCount);
+        }
+    }
+
+    private void ReleaseInflight(string cacheKey, InflightSlot slot)
+    {
+        if (Interlocked.Decrement(ref slot.RefCount) != 0)
+        {
+            return;
+        }
+
+        // حذف فقط وقتی این همان slot است؛ Gate را Dispose نمی‌کنیم تا از use-after-dispose جلوگیری شود.
+        _inflight.TryRemove(KeyValuePair.Create(cacheKey, slot));
+    }
+
     private async Task<T?> RunFactoryAndStore<T>(
         CacheKey key,
         Func<CancellationToken, Task<T?>> factory,
@@ -178,6 +206,7 @@ internal sealed class MemoryToobaCache : ICache, ICacheInvalidator, IDisposable
         }
         catch
         {
+            _telemetry.FactoryFailure(ProviderName, key);
             _logger.LogWarning("Cache factory failed; result not stored. Namespace={Namespace} Edition={Edition}", key.Namespace, key.EditionLabel);
             throw;
         }
@@ -241,6 +270,10 @@ internal sealed class MemoryToobaCache : ICache, ICacheInvalidator, IDisposable
         _logger.LogDebug("Cache set. Namespace={Namespace} Edition={Edition}", key.Namespace, key.EditionLabel);
     }
 
+    /// <summary>
+    /// خواندن typed. اگر payload غیر null با نوع ناسازگار باشد، ورود حذف و miss برمی‌گردد (نه hit با null).
+    /// نشان منفی از type mismatch جدا می‌ماند.
+    /// </summary>
     private bool TryRead<T>(CacheKey key, out T? value, out bool hit)
         where T : class
     {
@@ -251,14 +284,27 @@ internal sealed class MemoryToobaCache : ICache, ICacheInvalidator, IDisposable
             return false;
         }
 
-        hit = true;
         if (ReferenceEquals(box.Payload, NullSentinel.Instance))
         {
+            hit = true;
             return true;
         }
 
-        value = box.Payload as T;
-        return true;
+        if (box.Payload is T typed)
+        {
+            value = typed;
+            hit = true;
+            return true;
+        }
+
+        _memory.Remove(key.Value);
+        DropTagIndex(key.Value);
+        _telemetry.TypeMismatch(ProviderName, key);
+        _logger.LogWarning(
+            "Cache type mismatch entry removed. Namespace={Namespace} Edition={Edition}",
+            key.Namespace,
+            key.EditionLabel);
+        return false;
     }
 
     private void OnEvicted(object key, object? _, EvictionReason reason, object? state)
@@ -317,6 +363,15 @@ internal sealed class MemoryToobaCache : ICache, ICacheInvalidator, IDisposable
     }
 
     /// <summary>
+    /// هماهنگی single-flight per-key با شمارش مرجع؛ Gate هرگز Dispose نمی‌شود.
+    /// </summary>
+    private sealed class InflightSlot
+    {
+        public int RefCount;
+        public readonly SemaphoreSlim Gate = new(1, 1);
+    }
+
+    /// <summary>
     /// جعبهٔ ورود حافظه تا payload از فرادادهٔ کلید جدا بماند و موجودیت EF در قرارداد عمومی نباشد.
     /// </summary>
     private sealed record CacheBox(CacheKey Key, object Payload);
@@ -339,6 +394,7 @@ internal sealed class MemoryToobaCache : ICache, ICacheInvalidator, IDisposable
 
 /// <summary>
 /// وقتی کش غیرفعال است همیشه miss می‌دهد. کارخانه اجرا می‌شود و چیزی ذخیره نمی‌شود تا منبع حقیقت تنها مرجع بماند.
+/// قرارداد اعتبارسنجی با Memory یکسان است؛ پس از تأیید، invalidation/storage no-op است.
 /// </summary>
 internal sealed class DisabledToobaCache : ICache, ICacheInvalidator
 {
@@ -382,11 +438,17 @@ internal sealed class DisabledToobaCache : ICache, ICacheInvalidator
     {
         ArgumentNullException.ThrowIfNull(factory);
         policy.EnsureBounded();
+        cancellationToken.ThrowIfCancellationRequested();
         _telemetry.Miss("None", key);
         var clock = Stopwatch.StartNew();
         try
         {
             return await factory(cancellationToken).ConfigureAwait(false);
+        }
+        catch
+        {
+            _telemetry.FactoryFailure("None", key);
+            throw;
         }
         finally
         {
@@ -405,6 +467,11 @@ internal sealed class DisabledToobaCache : ICache, ICacheInvalidator
     public Task InvalidateByTagAsync(string tag, CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
+        if (string.IsNullOrWhiteSpace(tag))
+        {
+            throw new InvalidOperationException("Cache tag is required for invalidation.");
+        }
+
         _logger.LogDebug("Disabled cache ignored tag invalidation.");
         return Task.CompletedTask;
     }
@@ -413,6 +480,11 @@ internal sealed class DisabledToobaCache : ICache, ICacheInvalidator
     public Task InvalidateByNamespaceAsync(string ns, CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
+        if (string.IsNullOrWhiteSpace(ns))
+        {
+            throw new InvalidOperationException("Cache namespace is required for invalidation.");
+        }
+
         return Task.CompletedTask;
     }
 }

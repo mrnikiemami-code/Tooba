@@ -3,6 +3,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Tooba.BuildingBlocks;
+using Tooba.Host.Caching;
 using Xunit;
 
 namespace Tooba.Host.Tests;
@@ -71,6 +72,43 @@ public sealed class CacheFoundationTests
             Edition = ToobaEdition.Marketplace,
             DeploymentId = "dep-1",
             TenantId = "should-not-exist",
+        }));
+    }
+
+    [Fact]
+    public void Unset_edition_is_rejected()
+    {
+        Assert.Throws<InvalidOperationException>(() => Keys.Build(new CacheKeyParts
+        {
+            Namespace = "catalog",
+            ResourceType = "product",
+            ResourceId = "sku-1",
+            Edition = ToobaEdition.Unset,
+            DeploymentId = "dep-1",
+        }));
+    }
+
+    [Fact]
+    public void Tenant_scoped_requires_singlestore_and_tenant_id()
+    {
+        Assert.Throws<InvalidOperationException>(() => Keys.Build(new CacheKeyParts
+        {
+            Namespace = "catalog",
+            ResourceType = "product",
+            ResourceId = "sku-1",
+            Edition = ToobaEdition.Marketplace,
+            DeploymentId = "dep-1",
+            TenantScoped = true,
+        }));
+
+        Assert.Throws<InvalidOperationException>(() => Keys.Build(new CacheKeyParts
+        {
+            Namespace = "catalog",
+            ResourceType = "product",
+            ResourceId = "sku-1",
+            Edition = ToobaEdition.SingleStore,
+            DeploymentId = "dep-1",
+            TenantScoped = true,
         }));
     }
 
@@ -163,6 +201,121 @@ public sealed class CacheFoundationTests
     }
 
     [Fact]
+    public async Task Cancelled_waiter_does_not_corrupt_inflight_for_other_callers()
+    {
+        using var fixture = CreateFixture();
+        var cache = fixture.Cache;
+        var key = TenantKey("tenant-a", "sku-cancel-waiter");
+        var policy = CachePolicy.Expiring(TimeSpan.FromMinutes(1));
+        using var leaderCts = new CancellationTokenSource();
+        using var waiterCts = new CancellationTokenSource();
+        var factoryStarted = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var factoryRelease = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var runs = 0;
+
+        var leader = cache.GetOrCreateAsync(
+            key,
+            async ct =>
+            {
+                Interlocked.Increment(ref runs);
+                factoryStarted.TrySetResult();
+                await factoryRelease.Task.WaitAsync(ct);
+                return new CatalogProjection("sku-cancel-waiter", "leader");
+            },
+            policy,
+            leaderCts.Token);
+
+        await factoryStarted.Task;
+
+        var waiter = cache.GetOrCreateAsync(
+            key,
+            _ => Task.FromResult<CatalogProjection?>(new CatalogProjection("sku-cancel-waiter", "waiter")),
+            policy,
+            waiterCts.Token);
+
+        await Task.Delay(50);
+        waiterCts.Cancel();
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(() => waiter);
+
+        factoryRelease.TrySetResult();
+        var result = await leader;
+        Assert.Equal("leader", result?.Title);
+        Assert.Equal(1, runs);
+        Assert.Equal("leader", (await cache.GetAsync<CatalogProjection>(key, CancellationToken.None))?.Title);
+    }
+
+    [Fact]
+    public async Task Type_mismatch_removes_entry_and_returns_miss_not_hit_null()
+    {
+        using var fixture = CreateFixture();
+        var cache = fixture.Cache;
+        var key = TenantKey("tenant-a", "sku-type");
+        var policy = CachePolicy.Expiring(TimeSpan.FromMinutes(1));
+        await cache.SetAsync(key, new CatalogProjection("sku-type", "A"), policy, CancellationToken.None);
+
+        var wrong = await cache.GetAsync<OtherProjection>(key, CancellationToken.None);
+        Assert.Null(wrong);
+
+        var recovered = await cache.GetAsync<CatalogProjection>(key, CancellationToken.None);
+        Assert.Null(recovered);
+
+        await cache.SetAsync(key, new CatalogProjection("sku-type", "B"), policy, CancellationToken.None);
+        Assert.Equal("B", (await cache.GetAsync<CatalogProjection>(key, CancellationToken.None))?.Title);
+    }
+
+    [Fact]
+    public void Zero_and_negative_ttl_are_rejected()
+    {
+        Assert.Throws<InvalidOperationException>(() =>
+            new CachePolicy(TimeSpan.Zero, null, Array.Empty<string>(), false, null).EnsureBounded());
+        Assert.Throws<InvalidOperationException>(() =>
+            new CachePolicy(TimeSpan.FromSeconds(-1), null, Array.Empty<string>(), false, null).EnsureBounded());
+        Assert.Throws<InvalidOperationException>(() =>
+            new CachePolicy(null, TimeSpan.Zero, Array.Empty<string>(), false, null).EnsureBounded());
+        Assert.Throws<InvalidOperationException>(() =>
+            new CachePolicy(TimeSpan.FromMinutes(1), TimeSpan.FromSeconds(-1), Array.Empty<string>(), false, null).EnsureBounded());
+        Assert.Throws<InvalidOperationException>(() =>
+            new CachePolicy(TimeSpan.FromMinutes(1), null, Array.Empty<string>(), true, null).EnsureBounded());
+        Assert.Throws<InvalidOperationException>(() =>
+            new CachePolicy(TimeSpan.FromMinutes(1), null, Array.Empty<string>(), true, TimeSpan.Zero).EnsureBounded());
+        Assert.Throws<InvalidOperationException>(() =>
+            new CachePolicy(null, null, Array.Empty<string>(), false, null).EnsureBounded());
+
+        new CachePolicy(TimeSpan.FromMinutes(1), TimeSpan.FromSeconds(30), Array.Empty<string>(), false, null)
+            .EnsureBounded();
+    }
+
+    [Fact]
+    public async Task Memory_and_none_reject_blank_tag_and_namespace_consistently()
+    {
+        using var memory = CreateFixture();
+        using var none = CreateFixture(provider: "None");
+
+        await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            memory.Invalidator.InvalidateByTagAsync(" ", CancellationToken.None));
+        await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            none.Invalidator.InvalidateByTagAsync(" ", CancellationToken.None));
+        await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            memory.Invalidator.InvalidateByNamespaceAsync("", CancellationToken.None));
+        await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            none.Invalidator.InvalidateByNamespaceAsync("", CancellationToken.None));
+
+        var key = TenantKey("tenant-a", "sku-policy");
+        await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            memory.Cache.SetAsync(
+                key,
+                new CatalogProjection("sku-policy", "x"),
+                new CachePolicy(TimeSpan.Zero, null, Array.Empty<string>(), false, null),
+                CancellationToken.None));
+        await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            none.Cache.SetAsync(
+                key,
+                new CatalogProjection("sku-policy", "x"),
+                new CachePolicy(TimeSpan.Zero, null, Array.Empty<string>(), false, null),
+                CancellationToken.None));
+    }
+
+    [Fact]
     public async Task Remove_invalidates_key()
     {
         using var fixture = CreateFixture();
@@ -247,13 +400,12 @@ public sealed class CacheFoundationTests
         Assert.NotNull(provider.GetService<ICacheKeyBuilder>());
     }
 
-    private static CacheFixture CreateFixture()
+    private static CacheFixture CreateFixture(string provider = "Memory")
     {
-        var provider = CreateProvider();
-        return new CacheFixture(provider);
+        return new CacheFixture(CreateProvider(provider));
     }
 
-    private static ServiceProvider CreateProvider()
+    private static ServiceProvider CreateProvider(string provider = "Memory")
     {
         var services = new ServiceCollection();
         services.AddLogging();
@@ -261,7 +413,7 @@ public sealed class CacheFoundationTests
             .Configure(options =>
             {
                 options.Enabled = true;
-                options.Provider = "Memory";
+                options.Provider = provider;
                 options.EntryCountLimit = 1000;
                 options.StampedeProtection = true;
             });
@@ -338,4 +490,9 @@ public sealed class CacheFoundationTests
     /// نمونهٔ projection خواندنی برای تست؛ موجودیت tracked نیست و الگوی مجاز کش است.
     /// </summary>
     private sealed record CatalogProjection(string Id, string Title);
+
+    /// <summary>
+    /// نوع ناسازگار برای آزمون type mismatch.
+    /// </summary>
+    private sealed record OtherProjection(string Id, string Title);
 }

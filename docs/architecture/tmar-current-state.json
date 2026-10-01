@@ -3,24 +3,24 @@
   "executionMode": "BACKEND_ONLY_UNTIL_EXPLICIT_RELEASE",
   "frontendFrozen": true,
   "checkoutState": "PAUSED_AT_SAFE_W5_CHECKPOINT",
-  "lastAcceptedTask": "TB-TMAR-HOST-OPERATORPROFILE-AMC-001-R1",
-  "lastAcceptedCommit": "930916f7fa3141cae30f1976f86b38003c683682",
+  "lastAcceptedTask": "TB-TMAR-HOST-CACHING-AMC-001",
+  "lastAcceptedCommit": "PLACEHOLDER_STAMP_AFTER_COMMIT",
   "lastAcceptedCommitKind": "IMPLEMENTATION_COMMIT",
-  "lastAcceptedResultEvidenceCommit": "5986dcc7ba8236354fc84bd92738bbeb90839d7c",
+  "lastAcceptedResultEvidenceCommit": "b898135dc3e0c7ef4ea5ecb56f2a5003baebdf43",
   "lastAcceptedResultEvidenceCommitKind": "RESULT_EVIDENCE_DOCS_STAMP_NOT_IMPLEMENTATION",
-  "lastAcceptedSoTStamp": "5986dcc7ba8236354fc84bd92738bbeb90839d7c",
+  "lastAcceptedSoTStamp": "b898135dc3e0c7ef4ea5ecb56f2a5003baebdf43",
   "lastAcceptedSoTStampKind": "RESULT_EVIDENCE_DOCS_STAMP",
-  "lastAcceptedCommitSemantics": "lastAcceptedTask is TB-TMAR-HOST-OPERATORPROFILE-AMC-001-R1 IMPLEMENTATION commit. Host OperatorProfile HOST_ZERO preserved; Domain throws SemanticException ProfileRejected; Directory broad InvalidOperationException remap removed.",
-  "lastAcceptedNote": "OperatorProfile AMC R1: expected rejection via Domain SemanticException operator.profile.rejected; unknown exceptions propagate; USER_REVIEW before next Host AMC.",
-  "latestAcceptedImplementationWave": "TB-TMAR-HOST-OPERATORPROFILE-AMC-001-R1",
-  "currentHostCheckpoint": "OperatorProfile",
+  "lastAcceptedCommitSemantics": "lastAcceptedTask is TB-TMAR-HOST-CACHING-AMC-001 IMPLEMENTATION commit. Host Caching KEEP_AS_GENERIC_HOST_CACHE_INFRASTRUCTURE; EXACT Tooba.Host.Caching; single-flight refcount; type-mismatch miss; TTL/provider parity.",
+  "lastAcceptedNote": "Caching AMC: KEEP generic Host cache infrastructure; USER_REVIEW before next Host AMC.",
+  "latestAcceptedImplementationWave": "TB-TMAR-HOST-CACHING-AMC-001",
+  "currentHostCheckpoint": "Caching",
   "nextHostFolderStarted": false,
   "nextHostFolder": null,
   "staleCurrentPointerState": "ZERO",
-  "nextTask": "USER_REVIEW_HOST_OPERATORPROFILE_AMC_001_R1_CLOSED_HOST_ZERO",
+  "nextTask": "USER_REVIEW_HOST_CACHING_AMC_001_KEEP_GENERIC_HOST_INFRASTRUCTURE",
   "nextTaskGate": "USER_DECISION_REQUIRED_NO_AUTOMATIC_NEXT_IMPLEMENTATION_TASK",
   "nextTaskState": "USER_DECISION_REQUIRED",
-  "workflowStop": "USER_REVIEW_HOST_OPERATORPROFILE_AMC_001_R1_CLOSED_HOST_ZERO",
+  "workflowStop": "USER_REVIEW_HOST_CACHING_AMC_001_KEEP_GENERIC_HOST_INFRASTRUCTURE",
   "automaticNextImplementationTask": "NONE",
   "hostGridAmc": {
     "task": "TB-TMAR-HOST-GRID-AMC-001",
@@ -974,17 +974,17 @@
     "finalHostTarget": "THIN_PLATFORM_COMPOSITION_SHELL_ONLY"
   },
   "currentHostEvacuation": {
-    "activeModule": "OperatorProfile",
-    "activeModuleState": "OPERATORPROFILE_CLOSED_HOST_ZERO_R1_USER_REVIEW_REQUIRED",
+    "activeModule": "Caching",
+    "activeModuleState": "CACHING_KEEP_GENERIC_HOST_INFRASTRUCTURE_USER_REVIEW_REQUIRED",
     "currentHostEvacuationState": "RECONCILED_NOT_HISTORICAL_ADDRESSBOOK",
     "workflow": "HOST_FIRST_FOLDER_BY_FOLDER",
-    "currentTask": "TB-TMAR-HOST-OPERATORPROFILE-AMC-001-R1",
-    "currentPhase": "OPERATORPROFILE_AMC_R1_FAILURE_SEMANTICS_CLOSED",
-    "workflowStop": "USER_REVIEW_HOST_OPERATORPROFILE_AMC_001_R1_CLOSED_HOST_ZERO",
+    "currentTask": "TB-TMAR-HOST-CACHING-AMC-001",
+    "currentPhase": "CACHING_AMC_KEEP_GENERIC_HOST_INFRASTRUCTURE_CLOSED",
+    "workflowStop": "USER_REVIEW_HOST_CACHING_AMC_001_KEEP_GENERIC_HOST_INFRASTRUCTURE",
     "automaticNextImplementationTask": "NONE",
-    "lastReconciledRecoveryTask": "TB-TMAR-HOST-OPERATORPROFILE-AMC-001-R1",
-    "latestAcceptedImplementationWave": "TB-TMAR-HOST-OPERATORPROFILE-AMC-001-R1",
-    "currentHostCheckpoint": "OperatorProfile",
+    "lastReconciledRecoveryTask": "TB-TMAR-HOST-CACHING-AMC-001",
+    "latestAcceptedImplementationWave": "TB-TMAR-HOST-CACHING-AMC-001",
+    "currentHostCheckpoint": "Caching",
     "historicalNextHostFolderPointer": "NONE_USER_DECISION_REQUIRED",
     "nextHostFolderStarted": false,
     "nextHostFolder": "NONE_USER_DECISION_REQUIRED",
@@ -2478,9 +2478,8 @@
     "staleCurrentPointerState": "ZERO",
     "automaticNextImplementationTask": "NONE",
     "nextTaskState": "USER_DECISION_REQUIRED",
-    "workflowStop": "USER_REVIEW_HOST_OPERATORPROFILE_AMC_001_R1_CLOSED_HOST_ZERO",
-    "evidence": "docs/evidence/TB-TMAR-HOST-SELLER-AMC-001-R5/",
-    "taskArtifact": "docs/ai/tasks/TB-TMAR-HOST-SELLER-AMC-001-R5.task.md"
+    "workflowStop": "USER_REVIEW_HOST_SELLER_AMC_001_R5_FINAL_CLOSURE",
+    PLACEHOLDER
   },
   "hostCachingArchitectDirect": {
     "execution": "ARCHITECT_DIRECT_ANALYZE_MIGRATE_CERTIFY",
@@ -5053,18 +5052,23 @@
     "supersededAsCurrentPointerBy": "TB-TMAR-HOST-REVIEWS-AMC-001"
   },
   "hostEvacuationProgress": {
-    "activeModule": "OperatorProfile",
-    "activeModuleState": "OPERATORPROFILE_CLOSED_HOST_ZERO_R1_USER_REVIEW_REQUIRED",
+    "activeModule": "Caching",
+    "activeModuleState": "CACHING_KEEP_GENERIC_HOST_INFRASTRUCTURE_USER_REVIEW_REQUIRED",
     "blockedReason": null,
     "nextAllowedTaskFamily": "HOST_SLICE_OR_FOLDER_AMC",
-    "note": "Host OperatorProfile AMC R1: Domain SemanticException ProfileRejected; Directory broad InvalidOperationException remap ZERO. HOST_ZERO preserved. USER_REVIEW required."
+    "note": "Host Caching AMC: KEEP_AS_GENERIC_HOST_CACHE_INFRASTRUCTURE; EXACT Tooba.Host.Caching; single-flight/type-safety/TTL/provider parity certified. USER_REVIEW required."
   },
   "nextAllowedTask": {
     "kind": "USER_REVIEW_REQUIRED",
     "blockerOwner": "USER",
-    "note": "Do not start the next Host AMC until USER reviews OperatorProfile AMC R1 failure-semantics repair."
+    "note": "Do not start the next Host AMC until USER reviews Caching AMC KEEP generic Host cache infrastructure."
   },
   "progressLedger": [
+    {
+      "taskId": "TB-TMAR-HOST-CACHING-AMC-001",
+      "status": "KEEP_AS_GENERIC_HOST_CACHE_INFRASTRUCTURE",
+      "note": "Host Caching KEEP certified; EXACT Tooba.Host.Caching; single-flight/type-safety/TTL/provider parity; USER_REVIEW before next Host AMC."
+    },
     {
       "taskId": "TB-TMAR-HOST-PREFERENCES-AMC-001",
       "status": "CLOSED_HOST_ZERO",
@@ -5182,5 +5186,28 @@
     "durableGuard": "HostOperatorProfileAmcGuardTests",
     "evidenceRoot": "docs/evidence/TB-TMAR-HOST-OPERATORPROFILE-AMC-001-R1",
     "note": "Implementation commit 930916f7fa3141cae30f1976f86b38003c683682; OperatorProfile AMC R1 failure-semantics closed."
+  },
+  "hostCachingAmc": {
+    "taskId": "TB-TMAR-HOST-CACHING-AMC-001",
+    "status": "KEEP_AS_GENERIC_HOST_CACHE_INFRASTRUCTURE",
+    "classification": "KEEP_AS_GENERIC_HOST_CACHE_INFRASTRUCTURE",
+    "hostFolderPresent": "src/backend/Host/Tooba.Host/Caching",
+    "retainedFiles": [
+      "Caching/CacheHostOptions.cs",
+      "Caching/CacheInstrumentation.cs",
+      "Caching/CacheRegistration.cs",
+      "Caching/MemoryToobaCache.cs"
+    ],
+    "pathNamespace": "EXACT_Tooba.Host.Caching",
+    "foreignModuleLayers": "ZERO",
+    "moduleDbContext": "ZERO",
+    "singleFlight": "REFERENCE_COUNTED_INFLIGHT_SLOT",
+    "typeMismatch": "REMOVE_ENTRY_TELEMETRY_MISS",
+    "providerParity": "MEMORY_NONE_ARGUMENT_CONTRACT_ALIGNED",
+    "redis": "ZERO",
+    "durableGuard": "HostCachingAmcGuardTests",
+    "evidenceRoot": "docs/evidence/TB-TMAR-HOST-CACHING-AMC-001",
+    "workflowStop": "USER_REVIEW_HOST_CACHING_AMC_001_KEEP_GENERIC_HOST_INFRASTRUCTURE",
+    "note": "Implementation commit PLACEHOLDER_STAMP_AFTER_COMMIT; Host Caching KEEP certified."
   }
 }
