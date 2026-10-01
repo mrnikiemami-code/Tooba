@@ -25,30 +25,27 @@ BRIDGE-WAKE-V1
 Channel: tooba-main
 ```
 
-Latest Accepted TMAR Checkpoint — authoritative (reconciled by TB-TMAR-HOST-LOCALIZATION-AMC-001-R1)
+Latest Accepted TMAR Checkpoint — authoritative (reconciled by TB-TMAR-HOST-COMPOSITION-AMC-001)
 
 ```text
-Latest-Accepted-Implementation-Wave: TB-TMAR-HOST-LOCALIZATION-AMC-001-R1
-Latest-Accepted-Task: TB-TMAR-HOST-LOCALIZATION-AMC-001-R1
-Implementation-Commit: 3a393a463ce586c16107d0e55cc432d0d882b97f
+Latest-Accepted-Implementation-Wave: TB-TMAR-HOST-COMPOSITION-AMC-001
+Latest-Accepted-Task: TB-TMAR-HOST-COMPOSITION-AMC-001
+Implementation-Commit: PLACEHOLDER_STAMP_AFTER_COMMIT
 Implementation-Commit-Kind: IMPLEMENTATION_COMMIT
-Current-Host-Checkpoint: Localization_HOST_ZERO_R1
-Active-Host-Folder: Localization
-Host-Localization-Directory: ABSENT
-Host-Localization-Disposition: CLOSED_HOST_ZERO_R1_FAILURE_SEMANTICS
-Destination-Endpoints: Localization.Endpoints
-Expected-Failure-Transport: SemanticException_LanguageErrorCodes
-Message-Text-Classification: ZERO
-Ex-Message-Code-Selection: ZERO
-Broad-InvalidOperation-Remap: ZERO
-Language-Reference-Guard: Content.Infrastructure.Adapters.ContentLanguageReferenceGuard
-Language-Reference-Guard-Contract: Localization.Contracts.ILanguageReferenceGuard
-Prior-Accepted-Lineage: TB-TMAR-HOST-LOCALIZATION-AMC-001 ; TB-TMAR-HOST-CATALOGADAPTERS-AMC-001 ; TB-TMAR-HOST-ORDER-AMC-001-R1 ; TB-TMAR-HOST-ORDER-AMC-001 ; TB-TMAR-HOST-SETTINGS-AMC-001
+Current-Host-Checkpoint: Composition_KEEP
+Active-Host-Folder: Composition
+Host-Composition-Directory: PRESENT
+Host-Composition-Disposition: KEEP_AS_GENERIC_HOST_COMPOSITION_ROOT
+Retained-Files: 5
+Content-Binder-DbContext: ZERO
+Content-Bootstrap: Content.Infrastructure.Development.ContentDevelopmentSeedBootstrap
+Localization-Schema-Migrator: LocalizationModule_order_22
+Prior-Accepted-Lineage: TB-TMAR-HOST-LOCALIZATION-AMC-001-R1 ; TB-TMAR-HOST-LOCALIZATION-AMC-001 ; TB-TMAR-HOST-CATALOGADAPTERS-AMC-001 ; TB-TMAR-HOST-ORDER-AMC-001-R1
 Next-Host-Folder-Started: false
 Next-Host-Folder: NONE_USER_DECISION_REQUIRED
 Stale-Current-Pointer-State: ZERO
-workflowStop: USER_REVIEW_HOST_LOCALIZATION_AMC_001_R1_CLOSED_HOST_ZERO
-Next-Task: USER_REVIEW_HOST_LOCALIZATION_AMC_001_R1_CLOSED_HOST_ZERO
+workflowStop: USER_REVIEW_HOST_COMPOSITION_AMC_001_KEEP_GENERIC_HOST_COMPOSITION_ROOT
+Next-Task: USER_REVIEW_HOST_COMPOSITION_AMC_001_KEEP_GENERIC_HOST_COMPOSITION_ROOT
 Automatic-Next-Implementation-Task: NONE
 ```
 

@@ -12,13 +12,16 @@ Canonical Architect ↔ Cursor handoff (recovery-critical)
 
 Latest Accepted TMAR Checkpoint — authoritative
 
-Reconciled by `TB-TMAR-HOST-LOCALIZATION-AMC-001-R1`. Current implementation commit recorded at `lastAcceptedCommit` after PASS.
-- Host/Localization = `ABSENT` / `CLOSED_HOST_ZERO` preserved.
+Reconciled by `TB-TMAR-HOST-COMPOSITION-AMC-001`. Current implementation commit recorded at `lastAcceptedCommit` after PASS.
+- Host/Composition = `PRESENT` / `KEEP_AS_GENERIC_HOST_COMPOSITION_ROOT` (exact 5 files).
+- Content Development binder thinned: migrate+seed owned by `Content.Infrastructure.Development.ContentDevelopmentSeedBootstrap`; Host binder DbContext/MigrateAsync = ZERO.
+- Localization registers `IModuleSchemaMigrator` (order 22, before Content).
+- Current Host checkpoint = `Composition`; workflowStop = `USER_REVIEW_HOST_COMPOSITION_AMC_001_KEEP_GENERIC_HOST_COMPOSITION_ROOT`; automatic next = NONE; stale pointer = ZERO.
+- Localization AMC R1 / Localization parent / CatalogAdapters / Order R1 remain accepted historical lineage.
+
+Reconciled by `TB-TMAR-HOST-LOCALIZATION-AMC-001-R1` (HISTORICAL). Host/Localization = `ABSENT` / `CLOSED_HOST_ZERO` preserved.
 - Failure transport = `SemanticException` + `SemanticError(LanguageErrorCodes.*)`; message-text classification = ZERO.
-- Endpoints map only `PlatformHttpException` / `SemanticException` via `ApiResponseFactory`; `TryMapLanguageFault` removed; unknown exceptions propagate.
-- Language reference guard = `Content.Infrastructure.Adapters.ContentLanguageReferenceGuard` via `Localization.Contracts.ILanguageReferenceGuard`.
-- Current Host checkpoint = `Localization`; workflowStop = `USER_REVIEW_HOST_LOCALIZATION_AMC_001_R1_CLOSED_HOST_ZERO`; automatic next = NONE; stale pointer = ZERO.
-- Parent Localization AMC / CatalogAdapters / Order R1 / Order parent / Settings remain accepted historical lineage.
+- Historical stop = `USER_REVIEW_HOST_LOCALIZATION_AMC_001_R1_CLOSED_HOST_ZERO`.
 
 Reconciled by `TB-TMAR-HOST-LOCALIZATION-AMC-001` (HISTORICAL). Host/Localization = `ABSENT` / `CLOSED_HOST_ZERO`.
 - Admin languages HTTP = `Localization.Endpoints` (`LocaleAdminEndpoints` + `ILocalizationAdminAuthorizer`).

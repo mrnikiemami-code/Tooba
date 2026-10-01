@@ -3,24 +3,24 @@
   "executionMode": "BACKEND_ONLY_UNTIL_EXPLICIT_RELEASE",
   "frontendFrozen": true,
   "checkoutState": "PAUSED_AT_SAFE_W5_CHECKPOINT",
-  "lastAcceptedTask": "TB-TMAR-HOST-LOCALIZATION-AMC-001-R1",
-  "lastAcceptedCommit": "3a393a463ce586c16107d0e55cc432d0d882b97f",
+  "lastAcceptedTask": "TB-TMAR-HOST-COMPOSITION-AMC-001",
+  "lastAcceptedCommit": "PLACEHOLDER_STAMP_AFTER_COMMIT",
   "lastAcceptedCommitKind": "IMPLEMENTATION_COMMIT",
   "lastAcceptedResultEvidenceCommit": "b898135dc3e0c7ef4ea5ecb56f2a5003baebdf43",
   "lastAcceptedResultEvidenceCommitKind": "RESULT_EVIDENCE_DOCS_STAMP_NOT_IMPLEMENTATION",
   "lastAcceptedSoTStamp": "b898135dc3e0c7ef4ea5ecb56f2a5003baebdf43",
   "lastAcceptedSoTStampKind": "RESULT_EVIDENCE_DOCS_STAMP",
-  "lastAcceptedCommitSemantics": "lastAcceptedTask is TB-TMAR-HOST-LOCALIZATION-AMC-001-R1 IMPLEMENTATION commit. Host/Localization HOST_ZERO preserved; message-text classification ZERO; expected faults SemanticException+LanguageErrorCodes.",
-  "lastAcceptedNote": "Localization AMC R1: failure-semantics repair CLOSED; USER_REVIEW before next Host AMC.",
-  "latestAcceptedImplementationWave": "TB-TMAR-HOST-LOCALIZATION-AMC-001-R1",
-  "currentHostCheckpoint": "Localization",
+  "lastAcceptedCommitSemantics": "lastAcceptedTask is TB-TMAR-HOST-COMPOSITION-AMC-001 IMPLEMENTATION commit. Host/Composition KEEP_AS_GENERIC_HOST_COMPOSITION_ROOT; Content binder DbContext ZERO; Localization schema migrator registered.",
+  "lastAcceptedNote": "Composition AMC: KEEP generic Host composition root; USER_REVIEW before next Host AMC.",
+  "latestAcceptedImplementationWave": "TB-TMAR-HOST-COMPOSITION-AMC-001",
+  "currentHostCheckpoint": "Composition",
   "nextHostFolderStarted": false,
   "nextHostFolder": null,
   "staleCurrentPointerState": "ZERO",
-  "nextTask": "USER_REVIEW_HOST_LOCALIZATION_AMC_001_R1_CLOSED_HOST_ZERO",
+  "nextTask": "USER_REVIEW_HOST_COMPOSITION_AMC_001_KEEP_GENERIC_HOST_COMPOSITION_ROOT",
   "nextTaskGate": "USER_DECISION_REQUIRED_NO_AUTOMATIC_NEXT_IMPLEMENTATION_TASK",
   "nextTaskState": "USER_DECISION_REQUIRED",
-  "workflowStop": "USER_REVIEW_HOST_LOCALIZATION_AMC_001_R1_CLOSED_HOST_ZERO",
+  "workflowStop": "USER_REVIEW_HOST_COMPOSITION_AMC_001_KEEP_GENERIC_HOST_COMPOSITION_ROOT",
   "automaticNextImplementationTask": "NONE",
   "hostGridAmc": {
     "task": "TB-TMAR-HOST-GRID-AMC-001",
@@ -974,17 +974,17 @@
     "finalHostTarget": "THIN_PLATFORM_COMPOSITION_SHELL_ONLY"
   },
   "currentHostEvacuation": {
-    "activeModule": "Localization",
-    "activeModuleState": "LOCALIZATION_CLOSED_HOST_ZERO_R1_USER_REVIEW_REQUIRED",
+    "activeModule": "Composition",
+    "activeModuleState": "COMPOSITION_KEEP_GENERIC_HOST_COMPOSITION_ROOT_USER_REVIEW_REQUIRED",
     "currentHostEvacuationState": "RECONCILED_NOT_HISTORICAL_ADDRESSBOOK",
     "workflow": "HOST_FIRST_FOLDER_BY_FOLDER",
-    "currentTask": "TB-TMAR-HOST-LOCALIZATION-AMC-001-R1",
-    "currentPhase": "LOCALIZATION_AMC_R1_CLOSED_HOST_ZERO",
-    "workflowStop": "USER_REVIEW_HOST_LOCALIZATION_AMC_001_R1_CLOSED_HOST_ZERO",
+    "currentTask": "TB-TMAR-HOST-COMPOSITION-AMC-001",
+    "currentPhase": "COMPOSITION_AMC_KEEP_GENERIC_HOST_COMPOSITION_ROOT",
+    "workflowStop": "USER_REVIEW_HOST_COMPOSITION_AMC_001_KEEP_GENERIC_HOST_COMPOSITION_ROOT",
     "automaticNextImplementationTask": "NONE",
-    "lastReconciledRecoveryTask": "TB-TMAR-HOST-LOCALIZATION-AMC-001-R1",
-    "latestAcceptedImplementationWave": "TB-TMAR-HOST-LOCALIZATION-AMC-001-R1",
-    "currentHostCheckpoint": "Localization",
+    "lastReconciledRecoveryTask": "TB-TMAR-HOST-COMPOSITION-AMC-001",
+    "latestAcceptedImplementationWave": "TB-TMAR-HOST-COMPOSITION-AMC-001",
+    "currentHostCheckpoint": "Composition",
     "historicalNextHostFolderPointer": "NONE_USER_DECISION_REQUIRED",
     "nextHostFolderStarted": false,
     "nextHostFolder": "NONE_USER_DECISION_REQUIRED",
@@ -5053,18 +5053,23 @@
     "supersededAsCurrentPointerBy": "TB-TMAR-HOST-REVIEWS-AMC-001"
   },
   "hostEvacuationProgress": {
-    "activeModule": "Localization",
-    "activeModuleState": "LOCALIZATION_CLOSED_HOST_ZERO_R1_USER_REVIEW_REQUIRED",
+    "activeModule": "Composition",
+    "activeModuleState": "COMPOSITION_KEEP_GENERIC_HOST_COMPOSITION_ROOT_USER_REVIEW_REQUIRED",
     "blockedReason": null,
     "nextAllowedTaskFamily": "HOST_SLICE_OR_FOLDER_AMC",
-    "note": "Host Localization AMC R1: message-text failure classification ZERO; SemanticException transport; USER_REVIEW required."
+    "note": "Host Composition AMC: KEEP generic composition root; Content binder thinned; USER_REVIEW required."
   },
   "nextAllowedTask": {
     "kind": "USER_REVIEW_REQUIRED",
     "blockerOwner": "USER",
-    "note": "Do not start the next Host AMC until USER reviews Localization AMC R1 HOST_ZERO closure."
+    "note": "Do not start the next Host AMC until USER reviews Composition AMC KEEP closure."
   },
   "progressLedger": [
+    {
+      "taskId": "TB-TMAR-HOST-COMPOSITION-AMC-001",
+      "status": "KEEP_AS_GENERIC_HOST_COMPOSITION_ROOT",
+      "note": "Host Composition KEEP; Content binder DbContext ZERO; Localization migrator registered; USER_REVIEW before next Host AMC."
+    },
     {
       "taskId": "TB-TMAR-HOST-LOCALIZATION-AMC-001-R1",
       "status": "CLOSED_HOST_ZERO_R1_FAILURE_SEMANTICS",
@@ -5314,7 +5319,7 @@
     "evidenceRoot": "docs/evidence/TB-TMAR-HOST-CATALOGADAPTERS-AMC-001",
     "workflowStop": "USER_REVIEW_HOST_CATALOGADAPTERS_AMC_001_CLOSED_HOST_ZERO",
     "note": "Implementation commit 49d2388a9cb8b5aae3f68b483356573b90d0a604; Host CatalogAdapters HOST_ZERO closed."
-   },
+  },
   "hostLocalizationAmc": {
     "taskId": "TB-TMAR-HOST-LOCALIZATION-AMC-001",
     "status": "CLOSED_HOST_ZERO",
@@ -5346,5 +5351,43 @@
     "evidenceRoot": "docs/evidence/TB-TMAR-HOST-LOCALIZATION-AMC-001-R1",
     "workflowStop": "USER_REVIEW_HOST_LOCALIZATION_AMC_001_R1_CLOSED_HOST_ZERO",
     "note": "Implementation commit 3a393a463ce586c16107d0e55cc432d0d882b97f; Localization AMC R1 failure-semantics CLOSED."
+  },
+  "hostCompositionAmc": {
+    "taskId": "TB-TMAR-HOST-COMPOSITION-AMC-001",
+    "status": "KEEP_AS_GENERIC_HOST_COMPOSITION_ROOT",
+    "classification": "KEEP_AS_GENERIC_HOST_COMPOSITION_ROOT",
+    "hostFolderPresent": "src/backend/Host/Tooba.Host/Composition",
+    "retainedFiles": [
+      "Composition/ContentDevelopmentSeedHost.cs",
+      "Composition/SettingsFoundationDevelopmentSeedHost.cs",
+      "Composition/SupportDevelopmentSeedHost.cs",
+      "Composition/ToobaModuleComposition.cs",
+      "Composition/WalletDevelopmentSeedHost.cs"
+    ],
+    "pathNamespace": "Tooba.Host.Composition_seed_hosts_and_Tooba.Host_module_composition_root",
+    "moduleBootstrapContent": "Content.Infrastructure/Development/ContentDevelopmentSeedBootstrap.cs",
+    "localizationSchemaMigrator": "LocalizationModule_order_22",
+    "hostBinderDbContext": "ZERO",
+    "hostBinderMigrateAsync": "ZERO",
+    "durableGuard": "HostCompositionAmcGuardTests",
+    "evidenceRoot": "docs/evidence/TB-TMAR-HOST-COMPOSITION-AMC-001",
+    "workflowStop": "USER_REVIEW_HOST_COMPOSITION_AMC_001_KEEP_GENERIC_HOST_COMPOSITION_ROOT",
+    "note": "Implementation commit PLACEHOLDER_STAMP_AFTER_COMMIT; Host Composition KEEP certified."
+  },
+  "hostWalletAmc": {
+    "taskId": "TB-TMAR-HOST-WALLET-AMC-001",
+    "status": "CLOSED_HOST_ZERO",
+    "classification": "HOST_ZERO",
+    "hostFolderDeleted": "src/backend/Host/Tooba.Host/Wallet",
+    "destinationEndpoints": "Wallet.Endpoints",
+    "moduleBootstrap": "Wallet.Infrastructure.Development.WalletDevelopmentSeedBootstrap",
+    "hostRetained": [
+      "Composition/WalletDevelopmentSeedHost.cs",
+      "HostWalletAdminAuthorizer"
+    ],
+    "durableGuard": "HostWalletAmcGuardTests",
+    "evidenceRoot": "docs/evidence/TB-TMAR-HOST-WALLET-AMC-001",
+    "workflowStop": "USER_REVIEW_HOST_WALLET_AMC_001_CLOSED_HOST_ZERO",
+    "note": "Historical HOST_ZERO; Host retains thin Composition Wallet seed binder."
   }
 }

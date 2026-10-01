@@ -2,7 +2,7 @@ using Xunit;
 
 namespace Tooba.Host.Tests;
 
-/// <summary>TB-P08-T010-R1: دانهٔ Content از root provider resolve نمی‌شود.</summary>
+/// <summary>TB-P08-T010-R1 + Composition AMC: Content seed uses scoped Host binder → module bootstrap.</summary>
 public sealed class ContentDevelopmentSeedHostSourceTests
 {
     [Fact]
@@ -16,8 +16,11 @@ public sealed class ContentDevelopmentSeedHostSourceTests
         Assert.Contains("ContentDevelopmentSeedHost.ApplyAsync(app.Services)", program);
         Assert.DoesNotContain("ContentDevelopmentSeed.ApplyAsync(app.Services)", program);
         Assert.Contains("CreateAsyncScope()", host);
-        Assert.Contains("GetRequiredService<ContentDbContext>()", host);
-        Assert.Contains("ContentDevelopmentSeed.ApplyAsync(provider)", host);
+        Assert.Contains("ContentDevelopmentSeedBootstrap.ApplyAsync", host, StringComparison.Ordinal);
+        Assert.DoesNotContain("ContentDbContext", host, StringComparison.Ordinal);
+        Assert.DoesNotContain("LocalizationDbContext", host, StringComparison.Ordinal);
+        Assert.DoesNotContain("MediaDbContext", host, StringComparison.Ordinal);
+        Assert.DoesNotContain("Database.MigrateAsync", host, StringComparison.Ordinal);
         Assert.Contains("namespace Tooba.Host.Composition", host);
         Assert.DoesNotContain("namespace Tooba.Host.Content", host);
     }

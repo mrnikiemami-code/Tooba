@@ -33,6 +33,7 @@ public sealed class HostDevelopmentMigrationSeamGuardTests
         "CustomerProfile/Tooba.CustomerProfile.Infrastructure/CustomerProfileModule.cs",
         "UserPreference/Tooba.UserPreference.Infrastructure/UserPreferenceModule.cs",
         "OperatorProfile/Tooba.OperatorProfile.Infrastructure/OperatorProfileModule.cs",
+        "Localization/Tooba.Localization.Infrastructure/LocalizationModule.cs",
         "Content/Tooba.Content.Infrastructure/ContentModule.cs",
         "Media/Tooba.Media.Infrastructure/MediaModule.cs",
         "PageComposition/Tooba.PageComposition.Infrastructure/PageCompositionModule.cs",
@@ -58,7 +59,7 @@ public sealed class HostDevelopmentMigrationSeamGuardTests
     }
 
     [Fact]
-    public void All_twenty_eight_modules_register_their_own_schema_migrator()
+    public void All_twenty_nine_modules_register_their_own_schema_migrator()
     {
         var modules = Path.Combine(FindRepoRoot(), "src/backend/Modules");
         var registrations = 0;
@@ -73,7 +74,7 @@ public sealed class HostDevelopmentMigrationSeamGuardTests
             }
         }
 
-        Assert.Equal(28, registrations);
+        Assert.Equal(29, registrations);
     }
 
     [Fact]

@@ -22,6 +22,7 @@ public sealed class LocalizationModule : IToobaModule
         services.AddScoped<ILanguageLookup, LanguageLookupBridge>();
         services.AddScoped<ILanguageActivationPort, LanguageActivationBridge>();
         services.AddHostedService<LanguageBootstrapHostedService>();
+        services.AddModuleSchemaMigrator<LocalizationDbContext>("Localization", ModuleSchemaMigrationOrder.Localization);
         services.AddDbContext<LocalizationDbContext>((sp, options) =>
         {
             var connection = ToobaNpgsql.ResolveForContext(

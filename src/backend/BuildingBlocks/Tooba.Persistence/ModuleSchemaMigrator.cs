@@ -51,20 +51,22 @@ public static class ModuleSchemaMigrationOrder
     public const int UserPreference = 20;
     /// <summary>OperatorProfile migration order.</summary>
     public const int OperatorProfile = 21;
+    /// <summary>Localization migration order (before Content).</summary>
+    public const int Localization = 22;
     /// <summary>Content migration order.</summary>
-    public const int Content = 22;
+    public const int Content = 23;
     /// <summary>Media migration order.</summary>
-    public const int Media = 23;
+    public const int Media = 24;
     /// <summary>PageComposition migration order.</summary>
-    public const int PageComposition = 24;
+    public const int PageComposition = 25;
     /// <summary>Story migration order.</summary>
-    public const int Story = 25;
+    public const int Story = 26;
     /// <summary>Notification migration order.</summary>
-    public const int Notification = 26;
+    public const int Notification = 27;
     /// <summary>AccessControl migration order.</summary>
-    public const int AccessControl = 27;
+    public const int AccessControl = 28;
     /// <summary>Support migration order.</summary>
-    public const int Support = 28;
+    public const int Support = 29;
 }
 
 /// <summary>

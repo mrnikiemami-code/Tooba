@@ -1,19 +1,16 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.Extensions.DependencyInjection;
 using Tooba.BuildingBlocks;
-using Tooba.Content.Infrastructure;
 using Tooba.Content.Infrastructure.Development;
-using Tooba.Content.Infrastructure.Persistence;
-using Tooba.Localization.Infrastructure.Persistence;
-using Tooba.Media.Infrastructure.Persistence;
 
 namespace Tooba.Host.Composition;
 
 /// <summary>
-/// دانهٔ توسعه Content وقتی Catalog legacy خاموش است: scope + CommerceContext + migrate، نه resolve از root.
+/// Thin Host composition seam for Content Development seed: binds store-alpha CommerceContext,
+/// then delegates migrate/seed to Content.Infrastructure.
 /// </summary>
 internal static class ContentDevelopmentSeedHost
 {
-    /// <summary>اعمال مهاجرت Localization/Content/Media و دانهٔ idempotent مقالات دمو روی tenant Development.</summary>
+    /// <summary>Runs only when store-alpha is Active.</summary>
     public static async Task ApplyAsync(IServiceProvider root)
     {
         await using var scope = root.CreateAsyncScope();
@@ -39,9 +36,6 @@ internal static class ContentDevelopmentSeedHost
             tenant.ConnectionReference,
             "content-dev-seed"));
 
-        await provider.GetRequiredService<LocalizationDbContext>().Database.MigrateAsync();
-        await provider.GetRequiredService<ContentDbContext>().Database.MigrateAsync();
-        await provider.GetRequiredService<MediaDbContext>().Database.MigrateAsync();
-        await ContentDevelopmentSeed.ApplyAsync(provider);
+        await ContentDevelopmentSeedBootstrap.ApplyAsync(provider);
     }
 }
