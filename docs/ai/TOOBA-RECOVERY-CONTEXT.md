@@ -25,27 +25,26 @@ BRIDGE-WAKE-V1
 Channel: tooba-main
 ```
 
-Latest Accepted TMAR Checkpoint — authoritative (reconciled by TB-TMAR-HOST-ADMIN-PANEL-AMC-001-W2-R1)
+Latest Accepted TMAR Checkpoint — authoritative (reconciled by TB-TMAR-HOST-ADMIN-PANEL-AMC-001-W3)
 
 ```text
-Latest-Accepted-Implementation-Wave: TB-TMAR-HOST-ADMIN-PANEL-AMC-001-W2-R1
-Latest-Accepted-Task: TB-TMAR-HOST-ADMIN-PANEL-AMC-001-W2-R1
+Latest-Accepted-Implementation-Wave: TB-TMAR-HOST-ADMIN-PANEL-AMC-001-W3
+Latest-Accepted-Task: TB-TMAR-HOST-ADMIN-PANEL-AMC-001-W3
 Implementation-Commit: 86c2ac7308ab90c17f1d5d125fa59e97cdaaac8c
 Implementation-Commit-Kind: IMPLEMENTATION_COMMIT
 Current-Host-Checkpoint: Admin/Panel
 Active-Host-Folder: Admin/Panel
-Get-Sellers-Owner: Party.Endpoints
-Post-Sellers-Query-Owner: Party.Endpoints
-W2-Behavior: POST_SELLERS_QUERY_MOVED_TO_PARTY
-W2-R1-State: PARTY_ADMIN_SELLERS_VALIDATOR_STRUCTURE_REPAIRED
-Validator-Path: Admin/Sellers/Validators/
+Dashboard-Disposition: KEEP_AS_THIN_HOST_CROSS_MODULE_PRESENTATION_COMPOSITION
+Dashboard-Authorization: IAdminPanelAccess
+Dashboard-ApiResult: ApiResponseFactory
+Dashboard-CQRS: HOST_PRESENTATION_COMPOSITION_CQRS_EXCEPTION
+Dev-Context: DEFERRED_UNCHANGED_W4_TARGET
 Host-Admin-Panel-Files: 3
-Prior-Accepted-Lineage: TB-TMAR-HOST-ADMIN-PANEL-AMC-001-W2 ; TB-TMAR-HOST-ADMIN-PANEL-AMC-001-W1
+Prior-Accepted-Lineage: TB-TMAR-HOST-ADMIN-PANEL-AMC-001-W2-R1 ; TB-TMAR-HOST-ADMIN-PANEL-AMC-001-W2 ; TB-TMAR-HOST-ADMIN-PANEL-AMC-001-W1
 Next-Host-Folder-Started: false
-Next-Host-Folder: NONE_USER_DECISION_REQUIRED
 Stale-Current-Pointer-State: ZERO
-workflowStop: USER_REVIEW_HOST_ADMIN_PANEL_AMC_001_W2_R1
-Next-Task: USER_REVIEW_HOST_ADMIN_PANEL_AMC_001_W2_R1
+workflowStop: USER_REVIEW_HOST_ADMIN_PANEL_AMC_001_W3
+Next-Task: USER_REVIEW_HOST_ADMIN_PANEL_AMC_001_W3
 Automatic-Next-Implementation-Task: NONE
 ```
 

@@ -1,5 +1,6 @@
-﻿using Tooba.BuildingBlocks;
-using Tooba.Host.Admin.Access;
+﻿using Tooba.BuildingBlocks.Presentation;
+using Tooba.BuildingBlocks.Results;
+using Tooba.BuildingBlocks.Security;
 using Tooba.Host.Admin.Development;
 
 namespace Tooba.Host.Admin.Panel;
@@ -7,6 +8,7 @@ namespace Tooba.Host.Admin.Panel;
 /// <summary>
 /// مسیرهای فقط‌خواندنی عملیات مدیر برای سطوح cross-module.
 /// GET/POST sellers به Party.Endpoints منتقل شده‌اند.
+/// Dashboard: HOST_PRESENTATION_COMPOSITION_CQRS_EXCEPTION (composition without module request handlers).
 /// </summary>
 public static class AdminPanelEndpoints
 {
@@ -24,39 +26,20 @@ public static class AdminPanelEndpoints
         // R11: GET/POST /v1/admin/customers* owned by Order.Endpoints (AdminCustomersEndpoints).
         // W1: GET /v1/admin/sellers owned by Party.Endpoints (PartyAdminSellersEndpoints).
         // W2: POST /v1/admin/sellers/query owned by Party.Endpoints (PartyAdminSellersEndpoints).
+        // W3: dashboard auth/presentation canonicalized; ownership remains Host Panel.
         group.MapGet("/dev-context", GetDevContext);
     }
 
     private static async Task<IResult> GetDashboardAsync(
         AdminPanelComposer composer,
         HttpRequest request,
-        CurrentAuthenticatedSession session,
-        ICurrentTenant tenant,
-        IAuthorizationGuard guard,
-        IHostEnvironment environment,
-        CancellationToken cancellationToken) =>
-        await ExecuteAsync(request, session, tenant, guard, environment, cancellationToken,
-            () => composer.GetDashboardAsync(cancellationToken));
-
-    private static async Task<IResult> ExecuteAsync<T>(
-        HttpRequest request,
-        CurrentAuthenticatedSession session,
-        ICurrentTenant tenant,
-        IAuthorizationGuard guard,
-        IHostEnvironment environment,
-        CancellationToken cancellationToken,
-        Func<Task<T>> action)
+        IAdminPanelAccess adminAccess,
+        ApiResponseFactory api,
+        CancellationToken cancellationToken)
     {
-        try
-        {
-            await AdminPanelAccess.RequireAuthorizedAsync(
-                request, session, tenant, guard, environment, cancellationToken);
-            return Results.Json(await action());
-        }
-        catch (PlatformHttpException ex)
-        {
-            return ToError(ex);
-        }
+        await adminAccess.RequireAuthorizedAsync(request, cancellationToken).ConfigureAwait(false);
+        var summary = await composer.GetDashboardAsync(cancellationToken).ConfigureAwait(false);
+        return api.From(Result.Success(summary));
     }
 
     private static IResult GetDevContext(IHostEnvironment environment)
@@ -73,7 +56,4 @@ public static class AdminPanelEndpoints
             tenantId = snapshot.TenantId,
         });
     }
-
-    private static IResult ToError(PlatformHttpException ex) =>
-        Results.Json(new { title = ex.Title, errorCode = ex.ErrorCode }, statusCode: ex.StatusCode);
 }

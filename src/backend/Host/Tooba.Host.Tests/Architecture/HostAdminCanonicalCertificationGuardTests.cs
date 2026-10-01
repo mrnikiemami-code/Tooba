@@ -509,9 +509,17 @@ public sealed class HostAdminCanonicalCertificationGuardTests
         Assert.DoesNotContain("MapGet(\"/customers\"", endpoints, StringComparison.Ordinal);
         Assert.DoesNotContain("MapPost(\"/orders/query\"", endpoints, StringComparison.Ordinal);
         Assert.Contains("MapGet(\"/dashboard\"", endpoints, StringComparison.Ordinal);
+        Assert.Contains("IAdminPanelAccess", endpoints, StringComparison.Ordinal);
+        Assert.Contains("ApiResponseFactory", endpoints, StringComparison.Ordinal);
+        Assert.Contains("Result.Success", endpoints, StringComparison.Ordinal);
+        Assert.DoesNotContain("AdminPanelAccess.RequireAuthorizedAsync", endpoints, StringComparison.Ordinal);
+        Assert.DoesNotContain("catch (PlatformHttpException", endpoints, StringComparison.Ordinal);
+        Assert.DoesNotContain("ToError", endpoints, StringComparison.Ordinal);
         Assert.DoesNotContain("MapGet(\"/sellers\"", endpoints, StringComparison.Ordinal);
         Assert.DoesNotContain("MapPost(\"/sellers/query\"", endpoints, StringComparison.Ordinal);
         Assert.DoesNotContain("AdminGridQueryEndpoint", endpoints, StringComparison.Ordinal);
+        Assert.Contains("MapGet(\"/dev-context\"", endpoints, StringComparison.Ordinal);
+        Assert.Contains("admin.dev.unavailable", endpoints, StringComparison.Ordinal);
 
         var partySellers = File.ReadAllText(RepoFile(
             "src/backend/Modules/Party/Tooba.Party.Endpoints/Admin/Sellers/PartyAdminSellersEndpoints.cs"));

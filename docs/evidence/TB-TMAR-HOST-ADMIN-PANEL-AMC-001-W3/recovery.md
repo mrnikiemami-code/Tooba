@@ -1,0 +1,14 @@
+# recovery — W3
+task=TB-TMAR-HOST-ADMIN-PANEL-AMC-001-W3
+dashboardDisposition=KEEP_AS_THIN_HOST_CROSS_MODULE_PRESENTATION_COMPOSITION
+dashboardAuthorization=IAdminPanelAccess
+dashboardApiResult=ApiResponseFactory
+dashboardRawResultsJson=ZERO
+dashboardLocalPlatformExceptionMapping=ZERO
+dashboardCqrsState=HOST_PRESENTATION_COMPOSITION_CQRS_EXCEPTION
+devContext=DEFERRED_UNCHANGED_W4_TARGET
+hostAdminPanelFileCount=3
+workflowStop=USER_REVIEW_HOST_ADMIN_PANEL_AMC_001_W3
+automaticNextImplementationTask=NONE
+staleCurrentPointerState=ZERO
+nextHostFolderStarted=false

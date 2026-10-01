@@ -12,11 +12,13 @@ Canonical Architect ↔ Cursor handoff (recovery-critical)
 
 Latest Accepted TMAR Checkpoint — authoritative
 
-Reconciled by `TB-TMAR-HOST-ADMIN-PANEL-AMC-001-W2-R1`. Implementation commit recorded at `lastAcceptedCommit` after PASS.
-- Party Admin/Sellers validator + validation codes under `Admin/Sellers/Validators/` with exact path-derived namespace.
-- W2 POST sellers/query behavior preserved; Host/Admin/Panel unchanged (3 files).
-- Current Host checkpoint = `Admin/Panel`; workflowStop = `USER_REVIEW_HOST_ADMIN_PANEL_AMC_001_W2_R1`; automatic next = NONE; stale pointer = ZERO.
-- W2 and W1 remain accepted historical lineage.
+Reconciled by `TB-TMAR-HOST-ADMIN-PANEL-AMC-001-W3`. Implementation commit recorded at `lastAcceptedCommit` after PASS.
+- Dashboard remains Host thin cross-module composition; auth = `IAdminPanelAccess`; success = `Result` + `ApiResponseFactory`.
+- CQRS exception = `HOST_PRESENTATION_COMPOSITION_CQRS_EXCEPTION`; raw Results.Json / local PlatformHttp catch on dashboard = ZERO.
+- Dev-context deferred unchanged (W4); Panel files = 3; workflowStop = `USER_REVIEW_HOST_ADMIN_PANEL_AMC_001_W3`; automatic next = NONE.
+
+Reconciled by `TB-TMAR-HOST-ADMIN-PANEL-AMC-001-W2-R1` (HISTORICAL). Implementation commit `86c2ac7308ab90c17f1d5d125fa59e97cdaaac8c`.
+- Party Admin/Sellers validator under Validators/; historical stop = `USER_REVIEW_HOST_ADMIN_PANEL_AMC_001_W2_R1`.
 
 Reconciled by `TB-TMAR-HOST-ADMIN-PANEL-AMC-001-W2` (HISTORICAL). Implementation commit `5179aeac3b247948f35f0c8d40edb11abb8442b3`.
 - POST `/v1/admin/sellers/query` moved to Party; Host POST residue ZERO.
