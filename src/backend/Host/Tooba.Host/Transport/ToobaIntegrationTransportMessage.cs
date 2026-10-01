@@ -1,4 +1,4 @@
-namespace Tooba.Host;
+namespace Tooba.Host.Transport;
 
 /// <summary>
 /// پاکت transport پایدار Tooba. قرارداد کسب‌وکار ماژول نیست و جایگزین Domain Event نمی‌شود.
@@ -7,7 +7,7 @@ namespace Tooba.Host;
 public sealed class ToobaIntegrationTransportMessage
 {
     /// <summary>
-    /// نام قراردادی type map؛ AssemblyQualifiedName نیست.
+    /// نام قراردادی type map؛ نام اسمبلی/CLR کاملاً واجد شرایط نیست.
     /// </summary>
     public string EventType { get; init; } = "";
 
@@ -47,7 +47,7 @@ public sealed class ToobaIntegrationTransportMessage
     public string? CorrelationId { get; init; }
 
     /// <summary>
-    /// JSON فیلدهای کسب‌وکار بدون $type. هرگز لاگ نشود.
+    /// JSON فیلدهای کسب‌وکار بدون type discriminator اسمبلی. هرگز لاگ نشود.
     /// </summary>
     public string PayloadJson { get; init; } = "";
 }

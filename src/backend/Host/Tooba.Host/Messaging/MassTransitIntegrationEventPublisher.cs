@@ -5,6 +5,7 @@ using Tooba.BuildingBlocks;
 using Tooba.BuildingBlocks.Observability.Correlation;
 using Tooba.BuildingBlocks.Observability.Messaging;
 using Tooba.BuildingBlocks.Observability.Tracing;
+using Tooba.Host.Transport;
 using Tooba.Persistence;
 
 namespace Tooba.Host;

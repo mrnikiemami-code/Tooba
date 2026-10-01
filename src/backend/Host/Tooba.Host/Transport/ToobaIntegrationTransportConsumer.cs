@@ -8,7 +8,7 @@ using Tooba.BuildingBlocks.Observability.Logging;
 using Tooba.BuildingBlocks.Observability.Messaging;
 using Tooba.Persistence;
 
-namespace Tooba.Host;
+namespace Tooba.Host.Transport;
 
 /// <summary>
 /// آداپتور مصرف MassTransit. handlerهای Tooba را صدا می‌زند و Tenant را از پاکت پایدار بازسازی می‌کند نه از Host.

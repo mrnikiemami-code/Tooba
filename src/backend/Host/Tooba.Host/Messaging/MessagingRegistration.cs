@@ -2,6 +2,7 @@ using MassTransit;
 using Microsoft.Extensions.Options;
 using Npgsql;
 using Tooba.BuildingBlocks;
+using Tooba.Host.Transport;
 
 namespace Tooba.Host;
 

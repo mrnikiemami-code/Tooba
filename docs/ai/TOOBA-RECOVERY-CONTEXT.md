@@ -25,27 +25,26 @@ BRIDGE-WAKE-V1
 Channel: tooba-main
 ```
 
-Latest Accepted TMAR Checkpoint — authoritative (reconciled by TB-TMAR-HOST-SUPPORT-AMC-001)
+Latest Accepted TMAR Checkpoint — authoritative (reconciled by TB-TMAR-HOST-TRANSPORT-AMC-001)
 
 ```text
-Latest-Accepted-Implementation-Wave: TB-TMAR-HOST-SUPPORT-AMC-001
-Latest-Accepted-Task: TB-TMAR-HOST-SUPPORT-AMC-001
-Implementation-Commit: 023d26c1e844658245fbcf4bc666dbfe9e410c55
+Latest-Accepted-Implementation-Wave: TB-TMAR-HOST-TRANSPORT-AMC-001
+Latest-Accepted-Task: TB-TMAR-HOST-TRANSPORT-AMC-001
+Implementation-Commit: PLACEHOLDER_STAMP_AFTER_COMMIT
 Implementation-Commit-Kind: IMPLEMENTATION_COMMIT
-Current-Host-Checkpoint: Support_HOST_ZERO
-Active-Host-Folder: Support
-Host-Support-Directory: ABSENT
-Host-Support-Host-Zero: true
-Module-Bootstrap: Tooba.Support.Infrastructure.Development.SupportDevelopmentSeedBootstrap
-Host-Composition-Binder: Composition/SupportDevelopmentSeedHost (ControlPlane+Admin/Seller+AccessControl; no SupportDbContext)
-Guest-Actor: Order.Contracts.Fulfillment.StorefrontGuestActor
-Http-Owner: Tooba.Support.Endpoints.SupportEndpointModule (pre-existing)
-Prior-Accepted-Lineage: TB-TMAR-HOST-WALLET-AMC-001 ; TB-TMAR-HOST-PRODUCTQNA-AMC-001 ; TB-TMAR-HOST-PREFERENCES-AMC-001
+Current-Host-Checkpoint: Transport_KEEP_GENERIC_HOST_TRANSPORT
+Active-Host-Folder: Transport
+Host-Transport-Directory: PRESENT
+Host-Transport-Disposition: KEEP_AS_GENERIC_HOST_TRANSPORT_INFRASTRUCTURE
+Host-Transport-Files: SqlTransportOptionsMapper.cs ; ToobaIntegrationTransportConsumer.cs ; ToobaIntegrationTransportMessage.cs
+Path-Namespace: EXACT_Tooba.Host.Transport
+Foreign-Module-Layers: ZERO
+Prior-Accepted-Lineage: TB-TMAR-HOST-SUPPORT-AMC-001 ; TB-TMAR-HOST-WALLET-AMC-001 ; TB-TMAR-HOST-PRODUCTQNA-AMC-001 ; TB-TMAR-HOST-PREFERENCES-AMC-001
 Next-Host-Folder-Started: false
 Next-Host-Folder: NONE_USER_DECISION_REQUIRED
 Stale-Current-Pointer-State: ZERO
-workflowStop: USER_REVIEW_HOST_SUPPORT_AMC_001_CLOSED_HOST_ZERO
-Next-Task: USER_REVIEW_HOST_SUPPORT_AMC_001_CLOSED_HOST_ZERO
+workflowStop: USER_REVIEW_HOST_TRANSPORT_AMC_001_KEEP_GENERIC_HOST_INFRASTRUCTURE
+Next-Task: USER_REVIEW_HOST_TRANSPORT_AMC_001_KEEP_GENERIC_HOST_INFRASTRUCTURE
 Automatic-Next-Implementation-Task: NONE
 ```
 

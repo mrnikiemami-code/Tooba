@@ -12,13 +12,18 @@ Canonical Architect ↔ Cursor handoff (recovery-critical)
 
 Latest Accepted TMAR Checkpoint — authoritative
 
-Reconciled by `TB-TMAR-HOST-SUPPORT-AMC-001`. Current implementation commit recorded at `lastAcceptedCommit` after PASS.
-- Host/Support = `ABSENT` / `CLOSED_HOST_ZERO`.
+Reconciled by `TB-TMAR-HOST-TRANSPORT-AMC-001`. Current implementation commit recorded at `lastAcceptedCommit` after PASS.
+- Host/Transport = `PRESENT` / `KEEP_AS_GENERIC_HOST_TRANSPORT_INFRASTRUCTURE`.
+- Retained allowlist (exact 3): `SqlTransportOptionsMapper.cs`, `ToobaIntegrationTransportConsumer.cs`, `ToobaIntegrationTransportMessage.cs`.
+- Path↔namespace = `EXACT` (`Tooba.Host.Transport`); foreign module Application/Domain/Infrastructure/Persistence = ZERO.
+- Shared platform deps (`Tooba.Persistence` OutboxMessage / IIntegrationEventSerializer, BuildingBlocks handler/tenant seams, Host `WorkerCommerceContextFactory`) = GENERIC_PLATFORM_ALLOWED.
+- Current Host checkpoint = `Transport`; workflowStop = `USER_REVIEW_HOST_TRANSPORT_AMC_001_KEEP_GENERIC_HOST_INFRASTRUCTURE`; automatic next = NONE; stale pointer = ZERO.
+- Support / Wallet / ProductQnA / Preferences / Reviews / Security remain accepted historical lineage.
+
+Reconciled by `TB-TMAR-HOST-SUPPORT-AMC-001` (HISTORICAL). Host/Support = `ABSENT` / `CLOSED_HOST_ZERO`.
 - Support migrate+seed owner = `Tooba.Support.Infrastructure.Development.SupportDevelopmentSeedBootstrap`.
 - Host retained thin Composition binder (`Composition/SupportDevelopmentSeedHost`) + HostSupportAdmin/Seller authorizers (not Support folder).
 - Guest actor = Order.Contracts `StorefrontGuestActor` (Order.Application ZERO).
-- Current Host checkpoint = `Support`; workflowStop = `USER_REVIEW_HOST_SUPPORT_AMC_001_CLOSED_HOST_ZERO`; automatic next = NONE; stale pointer = ZERO.
-- Wallet / ProductQnA / Preferences remain historical accepted lineage.
 
 Reconciled by `TB-TMAR-HOST-WALLET-AMC-001` (HISTORICAL). Host/Wallet = `ABSENT` / `CLOSED_HOST_ZERO`.
 

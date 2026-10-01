@@ -1,7 +1,7 @@
 using MassTransit;
 using Npgsql;
 
-namespace Tooba.Host;
+namespace Tooba.Host.Transport;
 
 /// <summary>
 /// نگاشت ConnectionReference استقرار به <see cref="SqlTransportOptions"/> بدون لاگ رشتهٔ اتصال.
