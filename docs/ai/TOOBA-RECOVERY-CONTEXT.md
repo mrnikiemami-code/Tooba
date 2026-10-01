@@ -25,26 +25,26 @@ BRIDGE-WAKE-V1
 Channel: tooba-main
 ```
 
-Latest Accepted TMAR Checkpoint — authoritative (reconciled by TB-TMAR-HOST-SETTINGS-AMC-001)
+Latest Accepted TMAR Checkpoint — authoritative (reconciled by TB-TMAR-HOST-ORDER-AMC-001)
 
 ```text
-Latest-Accepted-Implementation-Wave: TB-TMAR-HOST-SETTINGS-AMC-001
-Latest-Accepted-Task: TB-TMAR-HOST-SETTINGS-AMC-001
-Implementation-Commit: 86bfb80afe37b57ab385fe5bb294d45682648cdf
+Latest-Accepted-Implementation-Wave: TB-TMAR-HOST-ORDER-AMC-001
+Latest-Accepted-Task: TB-TMAR-HOST-ORDER-AMC-001
+Implementation-Commit: PLACEHOLDER_STAMP_AFTER_COMMIT
 Implementation-Commit-Kind: IMPLEMENTATION_COMMIT
-Current-Host-Checkpoint: Settings_HOST_ZERO
-Active-Host-Folder: Settings
-Host-Settings-Directory: ABSENT
-Host-Settings-Host-Zero: true
-Module-Seeds: Party.OrganizationProfile + UserPreference + OperatorProfile Development
-Host-Binder: Composition/SettingsFoundationDevelopmentSeedHost
+Current-Host-Checkpoint: Order_KEEP_THIN_HOST_ORDER_STOREFRONT_ADAPTER
+Active-Host-Folder: Order
+Host-Order-Directory: PRESENT
+Host-Order-Disposition: KEEP_AS_THIN_HOST_ORDER_STOREFRONT_ADAPTER
+Retained-Allowlist: HostOrderStorefrontActor.cs
 Guest-Actor: Order.Contracts.StorefrontGuestActor
-Prior-Accepted-Lineage: TB-TMAR-HOST-CACHING-AMC-001-R1 ; TB-TMAR-HOST-CACHING-AMC-001 ; TB-TMAR-HOST-OPERATORPROFILE-AMC-001-R1
+Auth-Code: FoundationErrorCodes.CheckoutAuthenticationRequired
+Prior-Accepted-Lineage: TB-TMAR-HOST-SETTINGS-AMC-001 ; TB-TMAR-HOST-CACHING-AMC-001-R1 ; TB-TMAR-HOST-CACHING-AMC-001
 Next-Host-Folder-Started: false
 Next-Host-Folder: NONE_USER_DECISION_REQUIRED
 Stale-Current-Pointer-State: ZERO
-workflowStop: USER_REVIEW_HOST_SETTINGS_AMC_001_CLOSED_HOST_ZERO
-Next-Task: USER_REVIEW_HOST_SETTINGS_AMC_001_CLOSED_HOST_ZERO
+workflowStop: USER_REVIEW_HOST_ORDER_AMC_001_KEEP_THIN_HOST_ADAPTER
+Next-Task: USER_REVIEW_HOST_ORDER_AMC_001_KEEP_THIN_HOST_ADAPTER
 Automatic-Next-Implementation-Task: NONE
 ```
 

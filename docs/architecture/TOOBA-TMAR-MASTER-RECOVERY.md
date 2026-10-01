@@ -12,12 +12,17 @@ Canonical Architect ↔ Cursor handoff (recovery-critical)
 
 Latest Accepted TMAR Checkpoint — authoritative
 
-Reconciled by `TB-TMAR-HOST-SETTINGS-AMC-001`. Current implementation commit recorded at `lastAcceptedCommit` after PASS.
-- Host/Settings = `ABSENT` / `CLOSED_HOST_ZERO`.
+Reconciled by `TB-TMAR-HOST-ORDER-AMC-001`. Current implementation commit recorded at `lastAcceptedCommit` after PASS.
+- Host/Order = `PRESENT` / `KEEP_AS_THIN_HOST_ORDER_STOREFRONT_ADAPTER`.
+- Retained allowlist (exact 1): `HostOrderStorefrontActor.cs` (`HostOrderStorefrontActor` + `HostOrderStorefrontCheckoutIdentityGate`).
+- Guest actor = Order.Contracts `StorefrontGuestActor`; auth code = `FoundationErrorCodes.CheckoutAuthenticationRequired`.
+- Current Host checkpoint = `Order`; workflowStop = `USER_REVIEW_HOST_ORDER_AMC_001_KEEP_THIN_HOST_ADAPTER`; automatic next = NONE; stale pointer = ZERO.
+- Settings / Caching R1 / Caching parent / OperatorProfile R1 remain accepted historical lineage.
+
+Reconciled by `TB-TMAR-HOST-SETTINGS-AMC-001` (HISTORICAL). Host/Settings = `ABSENT` / `CLOSED_HOST_ZERO`.
 - Seeds owned by Party / UserPreference / OperatorProfile Infrastructure.Development; Host retained thin `Composition/SettingsFoundationDevelopmentSeedHost` only.
 - Guest actor = Order.Contracts `StorefrontGuestActor`; PartyDbContext / Order.Application ZERO on Host Settings path.
-- Current Host checkpoint = `Settings`; workflowStop = `USER_REVIEW_HOST_SETTINGS_AMC_001_CLOSED_HOST_ZERO`; automatic next = NONE; stale pointer = ZERO.
-- Caching R1 / Caching parent / OperatorProfile R1 remain accepted historical lineage.
+- Historical stop = `USER_REVIEW_HOST_SETTINGS_AMC_001_CLOSED_HOST_ZERO`.
 
 Reconciled by `TB-TMAR-HOST-CACHING-AMC-001-R1` (HISTORICAL). Host/Caching = `PRESENT` / `KEEP_AS_GENERIC_HOST_CACHE_INFRASTRUCTURE` preserved.
 - Single-flight retirement/acquire race = `CLOSED` (lock-protected slot + RefCount recheck before remove).

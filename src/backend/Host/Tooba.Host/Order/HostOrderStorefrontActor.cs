@@ -1,15 +1,16 @@
 using Tooba.BuildingBlocks;
+using Tooba.BuildingBlocks.Presentation.Errors;
 using Tooba.Cart.Contracts;
-using Tooba.Host;
 using Tooba.Host.Security.Checkout;
 using Tooba.Order.Application.Storefront;
 using Tooba.Order.Application.Storefront.Ports;
-using Tooba.Order.Application.Storefront.Services;
+using Tooba.Order.Contracts.Fulfillment;
 
 namespace Tooba.Host.Order;
 
 /// <summary>
 /// Thin Host adapter: session / Dev-Testing actor header / guest — no business decisions.
+/// Host/Order remains PRESENT as KEEP_AS_THIN_HOST_ORDER_STOREFRONT_ADAPTER (not HOST_ZERO).
 /// </summary>
 internal sealed class HostOrderStorefrontActor(
     CurrentAuthenticatedSession session,
@@ -18,7 +19,7 @@ internal sealed class HostOrderStorefrontActor(
 {
     private const string DevActorHeader = "X-Tooba-Dev-Actor-User-Id";
 
-    public Guid GuestActorId => StorefrontCheckoutService.StorefrontGuestActorId;
+    public Guid GuestActorId => StorefrontGuestActor.ActorId;
 
     public bool IsAuthenticated => session.IsAuthenticated;
 
@@ -47,8 +48,10 @@ internal sealed class HostOrderStorefrontActor(
 
         if (usingSavedAddress && !isDevSeam)
         {
+            // Same stable code as FoundationErrorCodes.CheckoutAuthenticationRequired;
+            // StorefrontOrderException preserves Order Result mapping via StorefrontOrderResult.
             throw new StorefrontOrderException(
-                StorefrontOrderErrors.CheckoutAuthenticationRequired,
+                FoundationErrorCodes.CheckoutAuthenticationRequired,
                 "saved address requires authenticated session outside Dev/Testing");
         }
 
