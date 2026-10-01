@@ -12,10 +12,10 @@ Canonical Architect ↔ Cursor handoff (recovery-critical)
 
 Latest Accepted TMAR Checkpoint — authoritative
 
-Reconciled by `TB-TMAR-HOST-ADMIN-PANEL-AMC-001-W4`. Implementation commit recorded at `lastAcceptedCommit` after PASS.
+Reconciled by `TB-TMAR-HOST-ADMIN-PANEL-AMC-001-CERT`. Implementation commit remains W4 at `lastAcceptedCommit` after PASS.
 - Dashboard remains Host thin cross-module composition; auth = `IAdminPanelAccess`; success = `Result` + `ApiResponseFactory`.
 - CQRS exception = `HOST_PRESENTATION_COMPOSITION_CQRS_EXCEPTION`; raw Results.Json / local PlatformHttp catch on dashboard = ZERO.
-- Dev-context owner Host/Admin/Development; Host/Admin = 19; Panel files = 3; Development files = 2; workflowStop = `USER_REVIEW_HOST_ADMIN_PANEL_AMC_001_W4`; automatic next = NONE.
+- Certification = `HOST_ADMIN_PANEL_AMC_CERTIFIED` (Panel/Development/Party sellers); Access/Grid NOT certified; Host/Admin = 19; workflowStop = `USER_REVIEW_HOST_ADMIN_PANEL_AMC_001_CERT`; automatic next = NONE.
 
 Reconciled by `TB-TMAR-HOST-ADMIN-PANEL-AMC-001-W2-R1` (HISTORICAL). Implementation commit `86c2ac7308ab90c17f1d5d125fa59e97cdaaac8c`.
 - Party Admin/Sellers validator under Validators/; historical stop = `USER_REVIEW_HOST_ADMIN_PANEL_AMC_001_W2_R1`.
