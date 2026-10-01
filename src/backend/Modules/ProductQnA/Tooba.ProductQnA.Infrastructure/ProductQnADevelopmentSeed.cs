@@ -1,6 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
-using Tooba.Catalog.Application;
+using Tooba.Catalog.Contracts;
 using Tooba.ProductQnA.Domain;
 using Tooba.ProductQnA.Infrastructure.Persistence;
 
@@ -17,8 +17,8 @@ public static class ProductQnADevelopmentSeed
     public static async Task ApplyAsync(IServiceProvider services, CancellationToken cancellationToken = default)
     {
         var db = services.GetRequiredService<ProductQnADbContext>();
-        var catalog = services.GetRequiredService<ICatalogLookupGateway>();
-        var product = await catalog.FindReviewableProductBySlugAsync("demo-mobile-1", cancellationToken);
+        var catalog = services.GetRequiredService<ICatalogReviewProductLookup>();
+        var product = await catalog.FindBySlugAsync("demo-mobile-1", cancellationToken);
         if (product is null) return;
 
         var rows = new[]

@@ -1,4 +1,5 @@
 using Tooba.BuildingBlocks;
+using Tooba.ProductQnA.Contracts.Errors;
 
 namespace Tooba.ProductQnA.Domain;
 
@@ -58,10 +59,12 @@ public sealed class ProductQuestion
     /// <summary>پرسش Pending معتبر می‌سازد.</summary>
     public static ProductQuestion Create(Guid productId, Guid authorUserId, string authorDisplayName, string body, DateTimeOffset now)
     {
-        if (productId == Guid.Empty || authorUserId == Guid.Empty) throw new InvalidOperationException("هویت محصول و نویسنده الزامی است.");
+        if (productId == Guid.Empty || authorUserId == Guid.Empty)
+            throw new SemanticException(new SemanticError(ProductQnAErrorCodes.Rejected));
         if (string.IsNullOrWhiteSpace(authorDisplayName) || authorDisplayName.Trim().Length > AuthorDisplayNameMaxLength)
-            throw new InvalidOperationException("نام نمایشی معتبر نیست.");
-        if (string.IsNullOrWhiteSpace(body) || body.Trim().Length > BodyMaxLength) throw new InvalidOperationException("متن پرسش معتبر نیست.");
+            throw new SemanticException(new SemanticError(ProductQnAErrorCodes.Rejected));
+        if (string.IsNullOrWhiteSpace(body) || body.Trim().Length > BodyMaxLength)
+            throw new SemanticException(new SemanticError(ProductQnAErrorCodes.Rejected));
         return new ProductQuestion
         {
             QuestionId = UuidV7.New(), ProductId = productId, AuthorUserId = authorUserId,
@@ -85,7 +88,8 @@ public sealed class ProductQuestion
     public void Reject(Guid moderatorUserId, string reason, DateTimeOffset now)
     {
         EnsurePending();
-        if (string.IsNullOrWhiteSpace(reason) || reason.Trim().Length > 500) throw new InvalidOperationException("دلیل رد معتبر نیست.");
+        if (string.IsNullOrWhiteSpace(reason) || reason.Trim().Length > 500)
+            throw new SemanticException(new SemanticError(ProductQnAErrorCodes.Rejected));
         Status = ProductQuestionStatus.Rejected;
         ModeratedByUserId = moderatorUserId;
         ModeratedAt = now;
@@ -95,7 +99,8 @@ public sealed class ProductQuestion
 
     private void EnsurePending()
     {
-        if (Status != ProductQuestionStatus.Pending) throw new InvalidOperationException("فقط پرسش Pending قابل تعدیل است.");
+        if (Status != ProductQuestionStatus.Pending)
+            throw new SemanticException(new SemanticError(ProductQnAErrorCodes.Rejected));
     }
 }
 
@@ -125,10 +130,12 @@ public sealed class ProductAnswer
     /// <summary>پاسخ Pending معتبر می‌سازد.</summary>
     public static ProductAnswer Create(Guid questionId, string authorDisplayName, string body, DateTimeOffset now)
     {
-        if (questionId == Guid.Empty) throw new InvalidOperationException("شناسهٔ پرسش الزامی است.");
+        if (questionId == Guid.Empty)
+            throw new SemanticException(new SemanticError(ProductQnAErrorCodes.Rejected));
         if (string.IsNullOrWhiteSpace(authorDisplayName) || authorDisplayName.Trim().Length > AuthorDisplayNameMaxLength)
-            throw new InvalidOperationException("نام نمایشی معتبر نیست.");
-        if (string.IsNullOrWhiteSpace(body) || body.Trim().Length > BodyMaxLength) throw new InvalidOperationException("متن پاسخ معتبر نیست.");
+            throw new SemanticException(new SemanticError(ProductQnAErrorCodes.Rejected));
+        if (string.IsNullOrWhiteSpace(body) || body.Trim().Length > BodyMaxLength)
+            throw new SemanticException(new SemanticError(ProductQnAErrorCodes.Rejected));
         return new ProductAnswer
         {
             AnswerId = UuidV7.New(), QuestionId = questionId,
@@ -140,7 +147,8 @@ public sealed class ProductAnswer
     /// <summary>پاسخ Pending را منتشر می‌کند.</summary>
     public void Publish()
     {
-        if (Status != ProductAnswerStatus.Pending) throw new InvalidOperationException("فقط پاسخ Pending قابل انتشار است.");
+        if (Status != ProductAnswerStatus.Pending)
+            throw new SemanticException(new SemanticError(ProductQnAErrorCodes.Rejected));
         Status = ProductAnswerStatus.Published;
     }
 }

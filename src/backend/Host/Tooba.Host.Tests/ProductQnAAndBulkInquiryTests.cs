@@ -1,11 +1,12 @@
 using Microsoft.EntityFrameworkCore;
 using Testcontainers.PostgreSql;
+using Tooba.BuildingBlocks;
 using Tooba.BulkInquiry.Domain;
 using Tooba.BulkInquiry.Infrastructure.Persistence;
-using Tooba.Host.ProductQnA;
 using Tooba.Persistence;
 using Tooba.ProductQnA.Application;
 using Tooba.ProductQnA.Domain;
+using Tooba.ProductQnA.Endpoints.Customer;
 using Tooba.ProductQnA.Infrastructure;
 using Tooba.ProductQnA.Infrastructure.Persistence;
 using Xunit;
@@ -57,7 +58,7 @@ public sealed class ProductQnAAndBulkInquiryTests
     [InlineData(9)]
     [InlineData(1001)]
     public void Invalid_quantity_is_rejected(int quantity) =>
-        Assert.Throws<InvalidOperationException>(() => BulkPurchaseInquiry.Create(
+        Assert.Throws<SemanticException>(() => BulkPurchaseInquiry.Create(
             Guid.NewGuid(), "علی رضایی", "09121234567", null, null,
             "تهران، خیابان نمونه شماره ۱۲", quantity, null, DateTimeOffset.UtcNow));
 
@@ -65,13 +66,25 @@ public sealed class ProductQnAAndBulkInquiryTests
     [Fact]
     public void Submit_question_endpoint_requires_actor()
     {
+        var root = FindRepoRoot();
         var source = File.ReadAllText(Path.Combine(
-            FindRepoRoot(), "src", "backend", "Host", "Tooba.Host", "ProductQnA", "ProductQnAEndpoints.cs"));
-        Assert.Contains("session.IsAuthenticated", source, StringComparison.Ordinal);
-        Assert.Contains("customer.session.required", source, StringComparison.Ordinal);
-        Assert.Contains("environment.IsDevelopment()", source, StringComparison.Ordinal);
+            root, "src", "backend", "Modules", "ProductQnA", "Tooba.ProductQnA.Endpoints", "Customer", "ProductQnACustomerEndpoints.cs"));
+        Assert.Contains("ProductQnAErrorCodes.SessionRequired", source, StringComparison.Ordinal);
         Assert.Contains("/v1/customer/product-questions", source, StringComparison.Ordinal);
-        Assert.Equal("X-Tooba-Dev-Actor-User-Id", ProductQnAEndpoints.DevActorHeader);
+        Assert.Contains("IProductQnACustomerActorResolver", source, StringComparison.Ordinal);
+        Assert.Equal("X-Tooba-Dev-Actor-User-Id", ProductQnACustomerActorResolver.DevActorHeader);
+
+        var actorSource = File.ReadAllText(Path.Combine(
+            root, "src", "backend", "Modules", "ProductQnA", "Tooba.ProductQnA.Endpoints", "Customer", "ProductQnACustomerActorResolver.cs"));
+        Assert.Contains("IsAuthenticated", actorSource, StringComparison.Ordinal);
+        Assert.Contains("IsDevelopment()", actorSource, StringComparison.Ordinal);
+        Assert.DoesNotContain("StorefrontGuestActor", actorSource, StringComparison.Ordinal);
+
+        var program = File.ReadAllText(Path.Combine(root, "src", "backend", "Host", "Tooba.Host", "Program.cs"));
+        Assert.Contains("MapProductQnAModuleEndpoints", program, StringComparison.Ordinal);
+        Assert.Contains("MapBulkInquiryModuleEndpoints", program, StringComparison.Ordinal);
+        Assert.DoesNotContain("MapProductQnAEndpoints()", program, StringComparison.Ordinal);
+        Assert.False(Directory.Exists(Path.Combine(root, "src", "backend", "Host", "Tooba.Host", "ProductQnA")));
     }
 
     private static string FindRepoRoot()

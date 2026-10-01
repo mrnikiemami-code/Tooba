@@ -1,20 +1,21 @@
 using Microsoft.EntityFrameworkCore;
-using Tooba.Catalog.Application;
-using Tooba.Catalog.Domain;
+using Tooba.BuildingBlocks;
+using Tooba.Catalog.Contracts;
 using Tooba.ProductQnA.Application;
+using Tooba.ProductQnA.Contracts.Errors;
 using Tooba.ProductQnA.Domain;
 using Tooba.ProductQnA.Infrastructure.Persistence;
 
 namespace Tooba.ProductQnA.Infrastructure;
 
-/// <summary>دایرکتوری ProductQnA با خواندن فقط از قرارداد Catalog و schema خودش.</summary>
+/// <summary>دایرکتوری ProductQnA با خواندن فقط از Catalog.Contracts و schema خودش.</summary>
 public sealed class ProductQaDirectory : IProductQaDirectory
 {
     private readonly ProductQnADbContext _db;
-    private readonly ICatalogLookupGateway _catalog;
+    private readonly ICatalogReviewProductLookup _catalog;
 
     /// <summary>وابستگی‌های مالک را تزریق می‌کند.</summary>
-    public ProductQaDirectory(ProductQnADbContext db, ICatalogLookupGateway catalog)
+    public ProductQaDirectory(ProductQnADbContext db, ICatalogReviewProductLookup catalog)
     {
         _db = db;
         _catalog = catalog;
@@ -23,9 +24,9 @@ public sealed class ProductQaDirectory : IProductQaDirectory
     /// <inheritdoc />
     public async Task<Guid> SubmitQuestionAsync(Guid actorUserId, SubmitProductQuestion request, CancellationToken cancellationToken)
     {
-        var product = await _catalog.FindReviewableProductByIdAsync(request.ProductId, cancellationToken);
-        if (product is null || product.Status != CatalogPublicationStatus.Published)
-            throw new InvalidOperationException("محصول منتشرشده پیدا نشد.");
+        var product = await _catalog.FindByIdAsync(request.ProductId, cancellationToken);
+        if (product is null || !IsPublished(product.Status))
+            throw new SemanticException(new SemanticError(ProductQnAErrorCodes.Rejected));
 
         var now = DateTimeOffset.UtcNow;
         var question = ProductQuestion.Create(product.ProductId, actorUserId, "مشتری توبا", request.Body, now);
@@ -37,8 +38,8 @@ public sealed class ProductQaDirectory : IProductQaDirectory
     /// <inheritdoc />
     public async Task<PublishedQaPage?> GetPublishedAsync(string productSlug, int page, int pageSize, CancellationToken cancellationToken)
     {
-        var product = await _catalog.FindReviewableProductBySlugAsync(productSlug, cancellationToken);
-        if (product is null || product.Status != CatalogPublicationStatus.Published) return null;
+        var product = await _catalog.FindBySlugAsync(productSlug, cancellationToken);
+        if (product is null || !IsPublished(product.Status)) return null;
 
         page = Math.Max(1, page);
         pageSize = Math.Clamp(pageSize, 1, 100);
@@ -81,9 +82,9 @@ public sealed class ProductQaDirectory : IProductQaDirectory
         string answerBody,
         CancellationToken cancellationToken)
     {
-        var product = await _catalog.FindReviewableProductByIdAsync(productId, cancellationToken);
-        if (product is null || product.Status != CatalogPublicationStatus.Published)
-            throw new InvalidOperationException("محصول منتشرشده پیدا نشد.");
+        var product = await _catalog.FindByIdAsync(productId, cancellationToken);
+        if (product is null || !IsPublished(product.Status))
+            throw new SemanticException(new SemanticError(ProductQnAErrorCodes.Rejected));
 
         var now = DateTimeOffset.UtcNow;
         var moderator = Guid.Parse("12000000-0000-4000-8000-000000000099");
@@ -97,4 +98,7 @@ public sealed class ProductQaDirectory : IProductQaDirectory
 
         await _db.SaveChangesAsync(cancellationToken);
     }
+
+    private static bool IsPublished(string status) =>
+        string.Equals(status, "Published", StringComparison.Ordinal);
 }

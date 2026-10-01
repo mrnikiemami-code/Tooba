@@ -1,19 +1,20 @@
+using Tooba.BuildingBlocks;
 using Tooba.BulkInquiry.Application;
+using Tooba.BulkInquiry.Contracts.Errors;
 using Tooba.BulkInquiry.Domain;
 using Tooba.BulkInquiry.Infrastructure.Persistence;
-using Tooba.Catalog.Application;
-using Tooba.Catalog.Domain;
+using Tooba.Catalog.Contracts;
 
 namespace Tooba.BulkInquiry.Infrastructure;
 
-/// <summary>دایرکتوری BulkInquiry با خواندن فقط از قرارداد Catalog و schema خودش.</summary>
+/// <summary>دایرکتوری BulkInquiry با خواندن فقط از Catalog.Contracts و schema خودش.</summary>
 public sealed class BulkInquiryDirectory : IBulkInquiryDirectory
 {
     private readonly BulkInquiryDbContext _db;
-    private readonly ICatalogLookupGateway _catalog;
+    private readonly ICatalogReviewProductLookup _catalog;
 
     /// <summary>وابستگی‌های مالک را تزریق می‌کند.</summary>
-    public BulkInquiryDirectory(BulkInquiryDbContext db, ICatalogLookupGateway catalog)
+    public BulkInquiryDirectory(BulkInquiryDbContext db, ICatalogReviewProductLookup catalog)
     {
         _db = db;
         _catalog = catalog;
@@ -22,9 +23,9 @@ public sealed class BulkInquiryDirectory : IBulkInquiryDirectory
     /// <inheritdoc />
     public async Task<Guid> SubmitAsync(SubmitBulkInquiryRequest request, CancellationToken cancellationToken)
     {
-        var product = await _catalog.FindReviewableProductBySlugAsync(request.ProductSlug, cancellationToken);
-        if (product is null || product.Status != CatalogPublicationStatus.Published)
-            throw new InvalidOperationException("محصول منتشرشده پیدا نشد.");
+        var product = await _catalog.FindBySlugAsync(request.ProductSlug, cancellationToken);
+        if (product is null || !string.Equals(product.Status, "Published", StringComparison.Ordinal))
+            throw new SemanticException(new SemanticError(BulkInquiryErrorCodes.Rejected));
 
         var inquiry = BulkPurchaseInquiry.Create(
             product.ProductId,

@@ -7,5 +7,6 @@
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\..\BuildingBlocks\Tooba.BuildingBlocks\Tooba.BuildingBlocks.csproj" />
+    <ProjectReference Include="..\Tooba.ProductQnA.Contracts\Tooba.ProductQnA.Contracts.csproj" />
   </ItemGroup>
 </Project>

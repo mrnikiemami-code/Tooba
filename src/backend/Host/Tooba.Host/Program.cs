@@ -33,7 +33,8 @@ using Tooba.AccessControl.Endpoints;
 using Tooba.Payment.Endpoints;
 using Tooba.Promotion.Endpoints;
 using Tooba.Reviews.Endpoints;
-using Tooba.Host.ProductQnA;
+using Tooba.BulkInquiry.Endpoints;
+using Tooba.ProductQnA.Endpoints;
 using Tooba.Wishlist.Endpoints;
 using Tooba.AddressBook.Endpoints;
 using Tooba.Catalog.Endpoints;
@@ -102,6 +103,8 @@ builder.Services.AddStoryEndpointPresentation();
 builder.Services.AddPageCompositionEndpointPresentation();
 builder.Services.AddReviewsEndpointPresentation();
 builder.Services.AddUserPreferenceEndpointPresentation();
+builder.Services.AddProductQnAEndpointPresentation();
+builder.Services.AddBulkInquiryEndpointPresentation();
 builder.Services.AddCustomerProfileEndpointPresentation();
 builder.Services.AddPartyEndpointPresentation();
 builder.Services.AddProblemDetails();
@@ -174,6 +177,8 @@ builder.Services.AddToobaCqrsFoundation(
     typeof(Tooba.PageComposition.Application.Queries.GetHomeCompositionQuery).Assembly,
     typeof(Tooba.Reviews.Application.Queries.GetPublishedReviewsQuery).Assembly,
     typeof(Tooba.UserPreference.Application.LocalePreferences.Commands.UpsertUserPreferenceCommand).Assembly,
+    typeof(Tooba.ProductQnA.Application.Commands.SubmitProductQuestionCommand).Assembly,
+    typeof(Tooba.BulkInquiry.Application.Commands.SubmitBulkInquiryCommand).Assembly,
     typeof(Tooba.CustomerProfile.Application.Queries.GetCustomerProfilePage.GetCustomerProfilePageQuery).Assembly,
     typeof(Tooba.Content.Application.Articles.Commands.CreateArticleCommand).Assembly,
     typeof(Tooba.ProductWorkspace.Application.Composition.Queries.GetProductWorkspaceQuery).Assembly,
@@ -412,7 +417,8 @@ app.MapCustomerProfileModuleEndpoints();
 app.MapUserPreferenceModuleEndpoints();
 app.MapOperatorProfileEndpoints();
 app.MapReviewsModuleEndpoints();
-app.MapProductQnAEndpoints();
+app.MapProductQnAModuleEndpoints();
+app.MapBulkInquiryModuleEndpoints();
 app.MapWishlistModuleEndpoints();
 app.MapAddressBookModuleEndpoints();
 app.MapFulfillmentEndpoints();

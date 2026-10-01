@@ -45,7 +45,9 @@
     <ProjectReference Include="..\..\Modules\Reviews\Tooba.Reviews.Infrastructure\Tooba.Reviews.Infrastructure.csproj" />
     <ProjectReference Include="..\..\Modules\Reviews\Tooba.Reviews.Endpoints\Tooba.Reviews.Endpoints.csproj" />
     <ProjectReference Include="..\..\Modules\ProductQnA\Tooba.ProductQnA.Infrastructure\Tooba.ProductQnA.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\Modules\ProductQnA\Tooba.ProductQnA.Endpoints\Tooba.ProductQnA.Endpoints.csproj" />
     <ProjectReference Include="..\..\Modules\BulkInquiry\Tooba.BulkInquiry.Infrastructure\Tooba.BulkInquiry.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\Modules\BulkInquiry\Tooba.BulkInquiry.Endpoints\Tooba.BulkInquiry.Endpoints.csproj" />
     <ProjectReference Include="..\..\Modules\Wishlist\Tooba.Wishlist.Infrastructure\Tooba.Wishlist.Infrastructure.csproj" />
     <ProjectReference Include="..\..\Modules\Wishlist\Tooba.Wishlist.Endpoints\Tooba.Wishlist.Endpoints.csproj" />
     <ProjectReference Include="..\..\Modules\AddressBook\Tooba.AddressBook.Application\Tooba.AddressBook.Application.csproj" />

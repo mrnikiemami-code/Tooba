@@ -12,13 +12,14 @@ Canonical Architect ↔ Cursor handoff (recovery-critical)
 
 Latest Accepted TMAR Checkpoint — authoritative
 
-Reconciled by `TB-TMAR-HOST-PREFERENCES-AMC-001`. Current implementation commit recorded at `lastAcceptedCommit` after PASS.
-- Host/Preferences = `ABSENT` / `CLOSED_HOST_ZERO`.
-- HTTP owner = `Tooba.UserPreference.Endpoints.UserPreferenceEndpointModule` (customer locale + admin locale + admin UI preferences).
-- CQRS/MediatR over LocalePreferences/UiPreferences; admin auth = `HostUserPreferenceAdminAuthorizer` → `IAdminPanelAccess`; customer guest via `Order.Contracts.StorefrontGuestActor`.
-- Endpoints → Domain = ZERO; Order.Application leakage = ZERO; failures via SemanticException + ApiResponseFactory.
-- Current Host checkpoint = `Preferences`; workflowStop = `USER_REVIEW_HOST_PREFERENCES_AMC_001_CLOSED_HOST_ZERO`; automatic next = NONE; stale pointer = ZERO.
-- Reviews R1 / Persistence KEEP / PageComposition remain historical accepted lineage.
+Reconciled by `TB-TMAR-HOST-PRODUCTQNA-AMC-001`. Current implementation commit recorded at `lastAcceptedCommit` after PASS.
+- Host/ProductQnA = `ABSENT` / `CLOSED_HOST_ZERO`.
+- HTTP owners = `Tooba.ProductQnA.Endpoints.ProductQnAEndpointModule` + `Tooba.BulkInquiry.Endpoints.BulkInquiryEndpointModule` (MUST_SPLIT of former Host mixed file).
+- CQRS/MediatR; Catalog via `ICatalogReviewProductLookup`; customer actor for QnA (no guest); failures via SemanticException + ApiResponseFactory.
+- Current Host checkpoint = `ProductQnA`; workflowStop = `USER_REVIEW_HOST_PRODUCTQNA_AMC_001_CLOSED_HOST_ZERO`; automatic next = NONE; stale pointer = ZERO.
+- Preferences / Reviews R1 / Persistence KEEP remain historical accepted lineage.
+
+Reconciled by `TB-TMAR-HOST-PREFERENCES-AMC-001` (HISTORICAL). Host/Preferences = `ABSENT` / `CLOSED_HOST_ZERO`.
 
 Reconciled by `TB-TMAR-HOST-REVIEWS-AMC-001-R1` (HISTORICAL). Host/Reviews = `ABSENT` / `CLOSED_HOST_ZERO`; message-text classification ZERO.
 

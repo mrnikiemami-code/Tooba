@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <NoWarn>$(NoWarn);1591</NoWarn>
+    <RootNamespace>Tooba.ProductQnA.Endpoints</RootNamespace>
+    <AssemblyName>Tooba.ProductQnA.Endpoints</AssemblyName>
+  </PropertyGroup>
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Update="Resources\ProductQnAErrors.resx"><Generator></Generator></EmbeddedResource>
+    <EmbeddedResource Update="Resources\ProductQnAErrors.fa.resx"><Generator></Generator></EmbeddedResource>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Tooba.ProductQnA.Application\Tooba.ProductQnA.Application.csproj" />
+    <ProjectReference Include="..\Tooba.ProductQnA.Contracts\Tooba.ProductQnA.Contracts.csproj" />
+    <ProjectReference Include="..\..\..\BuildingBlocks\Tooba.BuildingBlocks\Tooba.BuildingBlocks.csproj" />
+  </ItemGroup>
+</Project>
