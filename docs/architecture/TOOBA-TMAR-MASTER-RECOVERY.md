@@ -1,4 +1,4 @@
-TOOBA TMAR MASTER RECOVERY
+﻿TOOBA TMAR MASTER RECOVERY
 
 Canonical Architect ↔ Cursor handoff (recovery-critical)
 - Source of truth: `docs/architecture/TMAR-HOST-EVACUATION-PROTOCOL.md#architect--cursor-canonical-task-handoff`.
@@ -12,11 +12,15 @@ Canonical Architect ↔ Cursor handoff (recovery-critical)
 
 Latest Accepted TMAR Checkpoint — authoritative
 
-Reconciled by `TB-TMAR-HOST-ADMIN-PANEL-AMC-001-W2`. Implementation commit recorded at `lastAcceptedCommit` after PASS.
-- Host/Admin/Panel remains present (3 files); POST `/v1/admin/sellers/query` owned by `Party.Endpoints`.
-- Host POST sellers/query residue = ZERO; Panel → AdminGridQueryEndpoint = ZERO; GET sellers remains Party; dashboard KEEP; dev-context deferred.
-- Current Host checkpoint = `Admin/Panel`; workflowStop = `USER_REVIEW_HOST_ADMIN_PANEL_AMC_001_W2`; automatic next = NONE; stale pointer = ZERO.
-- W1 GET sellers migration remains accepted historical lineage.
+Reconciled by `TB-TMAR-HOST-ADMIN-PANEL-AMC-001-W2-R1`. Implementation commit recorded at `lastAcceptedCommit` after PASS.
+- Party Admin/Sellers validator + validation codes under `Admin/Sellers/Validators/` with exact path-derived namespace.
+- W2 POST sellers/query behavior preserved; Host/Admin/Panel unchanged (3 files).
+- Current Host checkpoint = `Admin/Panel`; workflowStop = `USER_REVIEW_HOST_ADMIN_PANEL_AMC_001_W2_R1`; automatic next = NONE; stale pointer = ZERO.
+- W2 and W1 remain accepted historical lineage.
+
+Reconciled by `TB-TMAR-HOST-ADMIN-PANEL-AMC-001-W2` (HISTORICAL). Implementation commit `5179aeac3b247948f35f0c8d40edb11abb8442b3`.
+- POST `/v1/admin/sellers/query` moved to Party; Host POST residue ZERO.
+- Historical stop = `USER_REVIEW_HOST_ADMIN_PANEL_AMC_001_W2`.
 
 Reconciled by `TB-TMAR-HOST-ADMIN-PANEL-AMC-001-W1` (HISTORICAL). Implementation commit `dd90aa90033eeace6c602d88b0ed5dbda611cd0a`.
 - GET `/v1/admin/sellers` moved to Party; Host GET residue ZERO.

@@ -1,0 +1,8 @@
+# recovery — W2-R1
+task=TB-TMAR-HOST-ADMIN-PANEL-AMC-001-W2-R1
+state=PARTY_ADMIN_SELLERS_VALIDATOR_STRUCTURE_REPAIRED
+w2Behavior=POST_SELLERS_QUERY_MOVED_TO_PARTY
+activeHostFolder=Admin/Panel
+workflowStop=USER_REVIEW_HOST_ADMIN_PANEL_AMC_001_W2_R1
+automaticNextImplementationTask=NONE
+staleCurrentPointerState=ZERO

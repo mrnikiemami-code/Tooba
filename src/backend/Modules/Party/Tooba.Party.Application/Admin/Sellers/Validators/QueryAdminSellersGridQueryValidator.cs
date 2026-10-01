@@ -1,6 +1,7 @@
 using FluentValidation;
+using Tooba.Party.Application.Admin.Sellers.Queries;
 
-namespace Tooba.Party.Application.Admin.Sellers.Queries;
+namespace Tooba.Party.Application.Admin.Sellers.Validators;
 
 /// <summary>
 /// VALIDATOR_REQUIRED — فقط envelope ورودی؛ whitelist فیلد/عملگر در
