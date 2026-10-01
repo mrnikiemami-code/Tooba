@@ -85,7 +85,7 @@ public sealed class AdminDbNativeGridQueryTests
         {
             Path.Combine(root, "Admin", "Panel", "AdminPanelComposer.cs"),
             contentComposer,
-            Path.Combine(root, "Reviews", "ReviewPanelComposer.cs"),
+            Path.Combine(root, "..", "..", "Modules", "Reviews", "Tooba.Reviews.Application", "Presentation", "ReviewsPresentationComposer.cs"),
             Path.Combine(root, "..", "..", "Modules", "Story", "Tooba.Story.Application", "Presentation", "StoryPresentationComposer.cs"),
         };
 

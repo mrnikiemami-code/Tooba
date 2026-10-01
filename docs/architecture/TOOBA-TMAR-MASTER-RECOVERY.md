@@ -12,20 +12,23 @@ Canonical Architect ↔ Cursor handoff (recovery-critical)
 
 Latest Accepted TMAR Checkpoint — authoritative
 
-Reconciled by `TB-TMAR-HOST-PAGECOMPOSITION-AMC-001`. Current implementation commit recorded at `lastAcceptedCommit` after PASS.
-- Host/PageComposition = `ABSENT` / `CLOSED_HOST_ZERO`.
-- HTTP owner = `Tooba.PageComposition.Endpoints.PageCompositionEndpointModule` (Storefront + Admin).
-- CQRS/MediatR over `PageCompositionPresentationComposer`; admin auth = `IPageCompositionAdminAuthorizer` → `IAdminPanelAccess`.
-- Endpoints → Domain = ZERO; Endpoints message classification = ZERO; failures via SemanticException + ApiResponseFactory.
-- Current Host checkpoint = `PageComposition`; workflowStop = `USER_REVIEW_HOST_PAGECOMPOSITION_AMC_001_CLOSED_HOST_ZERO`; automatic next = NONE; stale pointer = ZERO.
-- Security R1 KEEP / Story R1 / Wishlist / Grid remain historical accepted lineage.
+Reconciled by `TB-TMAR-HOST-REVIEWS-AMC-001`. Current implementation commit recorded at `lastAcceptedCommit` after PASS.
+- Host/Reviews = `ABSENT` / `CLOSED_HOST_ZERO`.
+- HTTP owner = `Tooba.Reviews.Endpoints.ReviewsEndpointModule` (Storefront + Customer + Seller + Admin).
+- CQRS/MediatR over `ReviewsPresentationComposer`; seller product scope via `Offer.Contracts.IOfferSellerProductIdLookup`; titles via `Catalog.Contracts.ICatalogAdminProductTitleIdLookup`.
+- Seller auth = Host thin `HostReviewsSellerAuthorizer` over `ISellerPanelAccess`.
+- Endpoints → Domain = ZERO; Offer/Catalog Application leakage from Reviews = ZERO; failures via SemanticException + ApiResponseFactory.
+- Current Host checkpoint = `Reviews`; workflowStop = `USER_REVIEW_HOST_REVIEWS_AMC_001_CLOSED_HOST_ZERO`; automatic next = NONE; stale pointer = ZERO.
+- PageComposition AMC / Security R1 / Story R1 / Wishlist remain historical accepted lineage.
+
+Reconciled by `TB-TMAR-HOST-PAGECOMPOSITION-AMC-001` (HISTORICAL). Host/PageComposition = `ABSENT` / `CLOSED_HOST_ZERO`.
 
 Reconciled by `TB-TMAR-HOST-SECURITY-AMC-001-R1` (HISTORICAL). Host/Security = `PRESENT` / `KEEP_THIN_PLATFORM_SECURITY_BOUNDARY` (18 files). **Not HOST_ZERO.**
 - Host/Security → Payment.Application = ZERO; checkout actor port = Payment.Contracts.Ports.ICheckoutActorPolicyPort.
 - Seller edition from ICurrentEdition (no hardcoded ToobaEdition.SingleStore).
 - CheckoutIdentityGate expected auth failure = SemanticException(checkout.authentication_required).
 
-Reconciled by `TB-TMAR-HOST-SECURITY-AMC-001` (HISTORICAL parent KEEP certification; superseded as current pointer by R1 then PageComposition AMC).
+Reconciled by `TB-TMAR-HOST-SECURITY-AMC-001` (HISTORICAL parent KEEP certification; superseded as current pointer by R1 then PageComposition then Reviews AMC).
 Reconciled by `TB-TMAR-HOST-STORY-AMC-001-R1` (HISTORICAL). Host/Story = `ABSENT` / `CLOSED_HOST_ZERO` (not reopened).
 
 Reconciled by `TB-TMAR-HOST-STORY-AMC-001` (HISTORICAL parent HOST_ZERO evacuation).

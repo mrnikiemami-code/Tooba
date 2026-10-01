@@ -25,26 +25,28 @@ BRIDGE-WAKE-V1
 Channel: tooba-main
 ```
 
-Latest Accepted TMAR Checkpoint — authoritative (reconciled by TB-TMAR-HOST-PAGECOMPOSITION-AMC-001)
+Latest Accepted TMAR Checkpoint — authoritative (reconciled by TB-TMAR-HOST-REVIEWS-AMC-001)
 
 ```text
-Latest-Accepted-Implementation-Wave: TB-TMAR-HOST-PAGECOMPOSITION-AMC-001
-Latest-Accepted-Task: TB-TMAR-HOST-PAGECOMPOSITION-AMC-001
-Implementation-Commit: 03781986735e1eb20f2e951c9ee20796537b317a
+Latest-Accepted-Implementation-Wave: TB-TMAR-HOST-REVIEWS-AMC-001
+Latest-Accepted-Task: TB-TMAR-HOST-REVIEWS-AMC-001
+Implementation-Commit: PLACEHOLDER_STAMP_AFTER_COMMIT
 Implementation-Commit-Kind: IMPLEMENTATION_COMMIT
-Current-Host-Checkpoint: PageComposition_HOST_ZERO
-Active-Host-Folder: PageComposition
-Host-PageComposition-Directory: ABSENT
-Host-PageComposition-Host-Zero: true
+Current-Host-Checkpoint: Reviews_HOST_ZERO
+Active-Host-Folder: Reviews
+Host-Reviews-Directory: ABSENT
+Host-Reviews-Host-Zero: true
+Offer-Application-Leakage: ZERO
+Catalog-Application-Leakage: ZERO
 Endpoints-Domain-Reference: ZERO
 Endpoints-Message-Classification: ZERO
 Failure-Presentation: SemanticException_ApiResponseFactory
-Prior-Accepted-Lineage: TB-TMAR-HOST-SECURITY-AMC-001-R1 ; TB-TMAR-HOST-STORY-AMC-001-R1
+Prior-Accepted-Lineage: TB-TMAR-HOST-PAGECOMPOSITION-AMC-001 ; TB-TMAR-HOST-SECURITY-AMC-001-R1
 Next-Host-Folder-Started: false
 Next-Host-Folder: NONE_USER_DECISION_REQUIRED
 Stale-Current-Pointer-State: ZERO
-workflowStop: USER_REVIEW_HOST_PAGECOMPOSITION_AMC_001_CLOSED_HOST_ZERO
-Next-Task: USER_REVIEW_HOST_PAGECOMPOSITION_AMC_001_CLOSED_HOST_ZERO
+workflowStop: USER_REVIEW_HOST_REVIEWS_AMC_001_CLOSED_HOST_ZERO
+Next-Task: USER_REVIEW_HOST_REVIEWS_AMC_001_CLOSED_HOST_ZERO
 Automatic-Next-Implementation-Task: NONE
 ```
 

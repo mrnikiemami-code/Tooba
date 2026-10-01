@@ -64,7 +64,10 @@ public sealed class HostGridAmcR3GuardTests
     [Fact]
     public void ReviewPanelComposer_consumes_module_port_without_CatalogDbContext()
     {
-        var composer = File.ReadAllText(Path.Combine(HostRoot(), "Reviews", "ReviewPanelComposer.cs"));
+        var composer = File.ReadAllText(Path.Combine(
+            FindRepoRoot(),
+            "src", "backend", "Modules", "Reviews",
+            "Tooba.Reviews.Application", "Presentation", "ReviewsPresentationComposer.cs"));
         Assert.Contains("IAdminReviewGridPort", composer, StringComparison.Ordinal);
         Assert.DoesNotContain("CatalogDbContext", composer, StringComparison.Ordinal);
         Assert.DoesNotContain("Tooba.Host.Grid", composer, StringComparison.Ordinal);
@@ -75,9 +78,13 @@ public sealed class HostGridAmcR3GuardTests
     [Fact]
     public void Host_AdminReviewItem_definition_removed()
     {
-        var endpoints = File.ReadAllText(Path.Combine(HostRoot(), "Reviews", "ReviewEndpoints.cs"));
+        Assert.False(Directory.Exists(Path.Combine(HostRoot(), "Reviews")));
+        var endpoints = File.ReadAllText(Path.Combine(
+            FindRepoRoot(),
+            "src", "backend", "Modules", "Reviews",
+            "Tooba.Reviews.Endpoints", "Admin", "ReviewsAdminEndpoints.cs"));
         Assert.DoesNotContain("public sealed record AdminReviewItem(", endpoints, StringComparison.Ordinal);
-        Assert.Contains("using Tooba.Reviews.Application;", endpoints, StringComparison.Ordinal);
+        Assert.Contains("using Tooba.Reviews.Application", endpoints, StringComparison.Ordinal);
     }
 
     [Fact]

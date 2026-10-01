@@ -96,9 +96,15 @@ public sealed class HostSecurityAmcGuardTests
         Assert.DoesNotContain("ToobaEdition.SingleStore", seller, StringComparison.Ordinal);
         Assert.Contains("ICurrentEdition", seller, StringComparison.Ordinal);
 
-        var reviews = File.ReadAllText(Path.Combine(root, "src/backend/Host/Tooba.Host/Reviews/ReviewEndpoints.cs"));
-        Assert.Contains("ISellerPanelAccess", reviews, StringComparison.Ordinal);
+        var reviews = File.ReadAllText(Path.Combine(
+            root, "src/backend/Modules/Reviews/Tooba.Reviews.Endpoints/Seller/ReviewsSellerEndpoints.cs"));
+        Assert.Contains("IReviewsSellerAuthorizer", reviews, StringComparison.Ordinal);
         Assert.DoesNotContain("SellerPanelAccess.RequireAuthorizedAsync", reviews, StringComparison.Ordinal);
+        Assert.DoesNotContain("Tooba.Host.", reviews, StringComparison.Ordinal);
+
+        var hostAdapter = File.ReadAllText(Path.Combine(
+            root, "src/backend/Host/Tooba.Host/Security/Seller/HostReviewsSellerAuthorizer.cs"));
+        Assert.Contains("ISellerPanelAccess", hostAdapter, StringComparison.Ordinal);
     }
 
     [Fact]

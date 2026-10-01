@@ -31,7 +31,7 @@ using Tooba.Notification.Endpoints;
 using Tooba.AccessControl.Endpoints;
 using Tooba.Payment.Endpoints;
 using Tooba.Promotion.Endpoints;
-using Tooba.Host.Reviews;
+using Tooba.Reviews.Endpoints;
 using Tooba.Host.ProductQnA;
 using Tooba.Wishlist.Endpoints;
 using Tooba.AddressBook.Endpoints;
@@ -99,6 +99,7 @@ builder.Services.AddAddressBookEndpointPresentation();
 builder.Services.AddWishlistEndpointPresentation();
 builder.Services.AddStoryEndpointPresentation();
 builder.Services.AddPageCompositionEndpointPresentation();
+builder.Services.AddReviewsEndpointPresentation();
 builder.Services.AddCustomerProfileEndpointPresentation();
 builder.Services.AddPartyEndpointPresentation();
 builder.Services.AddProblemDetails();
@@ -169,6 +170,7 @@ builder.Services.AddToobaCqrsFoundation(
     typeof(Tooba.Wishlist.Application.Commands.AddWishlistItem.AddWishlistItemCommand).Assembly,
     typeof(Tooba.Story.Application.Queries.GetPublicStories.GetPublicStoriesQuery).Assembly,
     typeof(Tooba.PageComposition.Application.Queries.GetHomeCompositionQuery).Assembly,
+    typeof(Tooba.Reviews.Application.Queries.GetPublishedReviewsQuery).Assembly,
     typeof(Tooba.CustomerProfile.Application.Queries.GetCustomerProfilePage.GetCustomerProfilePageQuery).Assembly,
     typeof(Tooba.Content.Application.Articles.Commands.CreateArticleCommand).Assembly,
     typeof(Tooba.ProductWorkspace.Application.Composition.Queries.GetProductWorkspaceQuery).Assembly,
@@ -206,6 +208,7 @@ builder.Services.AddScoped<Tooba.Promotion.Endpoints.Seller.IPromotionSellerAuth
 builder.Services.AddScoped<Tooba.Offer.Endpoints.Seller.IOfferSellerAuthorizer, Tooba.Host.Security.Seller.HostOfferSellerAuthorizer>();
 builder.Services.AddScoped<Tooba.Catalog.Endpoints.Seller.ICatalogSellerAuthorizer, Tooba.Host.Security.Seller.HostCatalogSellerAuthorizer>();
 builder.Services.AddScoped<Tooba.Story.Endpoints.Seller.IStorySellerAuthorizer, Tooba.Host.Security.Seller.HostStorySellerAuthorizer>();
+builder.Services.AddScoped<Tooba.Reviews.Endpoints.Seller.IReviewsSellerAuthorizer, Tooba.Host.Security.Seller.HostReviewsSellerAuthorizer>();
 builder.Services.AddScoped<Tooba.Settlement.Endpoints.Seller.ISettlementSellerAuthorizer, Tooba.Host.Security.Seller.HostSettlementSellerAuthorizer>();
 builder.Services.AddScoped<Tooba.Settlement.Endpoints.Admin.ISettlementAdminAuthorizer, Tooba.Host.Admin.Access.Authorizers.HostSettlementAdminAuthorizer>();
 builder.Services.AddScoped<Tooba.Order.Endpoints.Seller.IOrderSellerAuthorizer, Tooba.Host.Security.Seller.HostOrderSellerAuthorizer>();
@@ -220,7 +223,6 @@ builder.Services.AddScoped<Tooba.Host.Admin.Panel.AdminPanelComposer>();
 builder.Services.AddCatalogEndpointPresentation();
 builder.Services.AddProductWorkspaceEndpointPresentation();
 builder.Services.AddContentEndpointPresentation();
-builder.Services.AddScoped<Tooba.Host.Reviews.ReviewPanelComposer>();
 builder.Services.ConfigureHttpJsonOptions(options =>
 {
     options.SerializerOptions.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
@@ -406,7 +408,7 @@ app.MapCustomerProfileModuleEndpoints();
 app.MapUserPreferenceEndpoints();
 app.MapUiPreferenceEndpoints();
 app.MapOperatorProfileEndpoints();
-app.MapReviewEndpoints();
+app.MapReviewsModuleEndpoints();
 app.MapProductQnAEndpoints();
 app.MapWishlistModuleEndpoints();
 app.MapAddressBookModuleEndpoints();

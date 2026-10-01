@@ -5,20 +5,13 @@ using Microsoft.Extensions.Hosting;
 using Testcontainers.PostgreSql;
 using Tooba.AccessControl.Infrastructure.Authorization;
 using Tooba.BuildingBlocks;
-using Tooba.Host.Reviews;
-using Tooba.Host.Security.Seller;
 using Tooba.Catalog.Application.Storefront.Models;
-using Tooba.Catalog.Infrastructure.Storefront;
-using Tooba.Order.Application.Storefront.Services;
-using Tooba.Order.Application.Storefront.Models;
-using Tooba.AddressBook.Contracts.Dtos;
-using Tooba.AddressBook.Contracts.Ports;
-using Tooba.Cart.Application.Ports;
-using Tooba.Fulfillment.Contracts.Shipping;
-using Tooba.Identity.Application;
+using Tooba.Host.Security.Seller;
 using Tooba.Persistence;
 using Tooba.Reviews.Application;
+using Tooba.Reviews.Application.Models;
 using Tooba.Reviews.Domain;
+using Tooba.Reviews.Endpoints.Admin;
 using Tooba.Reviews.Infrastructure;
 using Tooba.Reviews.Infrastructure.Persistence;
 using Xunit;
@@ -135,7 +128,7 @@ public sealed class ReviewsFoundationTests
     [Fact]
     public void Reject_body_parameter_is_optional()
     {
-        var method = typeof(ReviewEndpoints).GetMethod("RejectAsync", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static);
+        var method = typeof(ReviewsAdminEndpoints).GetMethod("RejectAsync", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static);
         var body = method!.GetParameters().Single(x => x.ParameterType == typeof(RejectReviewRequest));
         Assert.True(body.HasDefaultValue);
         Assert.Null(body.DefaultValue);
@@ -145,14 +138,22 @@ public sealed class ReviewsFoundationTests
     [Fact]
     public void Seller_host_list_exists_without_seller_response_or_moderation_routes()
     {
-        var source = File.ReadAllText(Path.Combine(RepoRoot(), "src", "backend", "Host", "Tooba.Host", "Reviews", "ReviewEndpoints.cs"));
+        var source = File.ReadAllText(Path.Combine(
+            RepoRoot(), "src", "backend", "Modules", "Reviews", "Tooba.Reviews.Endpoints", "Seller", "ReviewsSellerEndpoints.cs"));
         Assert.Contains("/v1/seller/reviews", source, StringComparison.Ordinal);
-        Assert.Contains("ISellerPanelAccess", source, StringComparison.Ordinal);
-        Assert.Contains("ListSellerOffersQuery", source, StringComparison.Ordinal);
-        Assert.Contains("SellerResponseSupported: false", source, StringComparison.Ordinal);
+        Assert.Contains("IReviewsSellerAuthorizer", source, StringComparison.Ordinal);
+        Assert.DoesNotContain("ListSellerOffersQuery", source, StringComparison.Ordinal);
         Assert.DoesNotContain("/v1/seller/reviews/", source, StringComparison.Ordinal);
-        Assert.Contains("/v1/admin/reviews", source, StringComparison.Ordinal);
-        Assert.Contains("/v1/admin/reviews/{reviewId:guid}/publish", source, StringComparison.Ordinal);
+
+        var adminSource = File.ReadAllText(Path.Combine(
+            RepoRoot(), "src", "backend", "Modules", "Reviews", "Tooba.Reviews.Endpoints", "Admin", "ReviewsAdminEndpoints.cs"));
+        Assert.Contains("/v1/admin/reviews", adminSource, StringComparison.Ordinal);
+        Assert.Contains("/{reviewId:guid}/publish", adminSource, StringComparison.Ordinal);
+
+        var composer = File.ReadAllText(Path.Combine(
+            RepoRoot(), "src", "backend", "Modules", "Reviews", "Tooba.Reviews.Application", "Presentation", "ReviewsPresentationComposer.cs"));
+        Assert.Contains("SellerResponseSupported: false", composer, StringComparison.Ordinal);
+        Assert.Contains("IOfferSellerProductIdLookup", composer, StringComparison.Ordinal);
 
         var page = typeof(SellerReviewsResponse).GetProperties().Select(x => x.Name).ToArray();
         Assert.Equal(

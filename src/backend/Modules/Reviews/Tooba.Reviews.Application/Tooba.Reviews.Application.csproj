@@ -3,10 +3,15 @@
     <TargetFramework>net8.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    <NoWarn>$(NoWarn);1591</NoWarn>
     <RootNamespace>Tooba.Reviews.Application</RootNamespace>
+    <AssemblyName>Tooba.Reviews.Application</AssemblyName>
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\Tooba.Reviews.Domain\Tooba.Reviews.Domain.csproj" />
+    <ProjectReference Include="..\Tooba.Reviews.Contracts\Tooba.Reviews.Contracts.csproj" />
     <ProjectReference Include="..\..\..\BuildingBlocks\Tooba.BuildingBlocks\Tooba.BuildingBlocks.csproj" />
+    <ProjectReference Include="..\..\Catalog\Tooba.Catalog.Contracts\Tooba.Catalog.Contracts.csproj" />
+    <ProjectReference Include="..\..\Offer\Tooba.Offer.Contracts\Tooba.Offer.Contracts.csproj" />
   </ItemGroup>
 </Project>

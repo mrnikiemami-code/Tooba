@@ -24,6 +24,7 @@ public sealed class ReviewsModule : IToobaModule
         services.AddScoped<IReviewDirectory, ReviewDirectory>();
         services.AddScoped<IReviewsStorefrontLookup, ReviewsStorefrontLookupAdapter>();
         services.AddScoped<IAdminReviewGridPort, AdminReviewGridAdapter>();
+        services.AddScoped<Tooba.Reviews.Application.Presentation.ReviewsPresentationComposer>();
         services.AddModuleSchemaMigrator<ReviewsDbContext>("Reviews", ModuleSchemaMigrationOrder.Reviews);
         services.AddDbContext<ReviewsDbContext>((sp, options) =>
         {

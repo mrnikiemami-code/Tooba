@@ -52,6 +52,7 @@ public sealed class OfferModule : IToobaModule
         services.AddScoped<IOfferStore, OfferStore>();
         services.AddSingleton<IPrimaryOfferSelectionPolicy, PrimaryOfferSelectionPolicy>();
         services.AddScoped<OfferReadModelComposer>();
+        services.AddScoped<IOfferSellerProductIdLookup, OfferSellerProductIdLookup>();
         services.AddScoped<IOfferLookupGateway>(sp => (OfferStore)sp.GetRequiredService<IOfferStore>());
         services.AddScoped<IOfferQueryGateway>(sp => (OfferStore)sp.GetRequiredService<IOfferStore>());
         services.AddScoped<IOfferSchemaMigrator, OfferSchemaMigrator>();
