@@ -30,7 +30,7 @@ Latest Accepted TMAR Checkpoint — authoritative (reconciled by TB-TMAR-HOST-PR
 ```text
 Latest-Accepted-Implementation-Wave: TB-TMAR-HOST-PRODUCTQNA-AMC-001
 Latest-Accepted-Task: TB-TMAR-HOST-PRODUCTQNA-AMC-001
-Implementation-Commit: PLACEHOLDER_STAMP_AFTER_COMMIT
+Implementation-Commit: 8fa9e736bfda9f5c6097ba3eb9075da885e610db
 Implementation-Commit-Kind: IMPLEMENTATION_COMMIT
 Current-Host-Checkpoint: ProductQnA_HOST_ZERO
 Active-Host-Folder: ProductQnA
