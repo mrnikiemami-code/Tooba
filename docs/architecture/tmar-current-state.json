@@ -4,7 +4,7 @@
   "frontendFrozen": true,
   "checkoutState": "PAUSED_AT_SAFE_W5_CHECKPOINT",
   "lastAcceptedTask": "TB-TMAR-HOST-ORDER-AMC-001",
-  "lastAcceptedCommit": "PLACEHOLDER_STAMP_AFTER_COMMIT",
+  "lastAcceptedCommit": "d93df23ca26b7396ad8a492ddb18e7a49006b803",
   "lastAcceptedCommitKind": "IMPLEMENTATION_COMMIT",
   "lastAcceptedResultEvidenceCommit": "b898135dc3e0c7ef4ea5ecb56f2a5003baebdf43",
   "lastAcceptedResultEvidenceCommitKind": "RESULT_EVIDENCE_DOCS_STAMP_NOT_IMPLEMENTATION",
@@ -5266,6 +5266,6 @@
     "durableGuard": "HostOrderAmcGuardTests",
     "evidenceRoot": "docs/evidence/TB-TMAR-HOST-ORDER-AMC-001",
     "workflowStop": "USER_REVIEW_HOST_ORDER_AMC_001_KEEP_THIN_HOST_ADAPTER",
-    "note": "Implementation commit PLACEHOLDER_STAMP_AFTER_COMMIT; Host Order KEEP thin storefront adapters."
+    "note": "Implementation commit d93df23ca26b7396ad8a492ddb18e7a49006b803; Host Order KEEP thin storefront adapters."
   }
 }
