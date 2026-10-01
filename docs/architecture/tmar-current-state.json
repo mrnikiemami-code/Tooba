@@ -5303,6 +5303,6 @@
     "durableGuard": "HostCatalogAdaptersAmcGuardTests",
     "evidenceRoot": "docs/evidence/TB-TMAR-HOST-CATALOGADAPTERS-AMC-001",
     "workflowStop": "USER_REVIEW_HOST_CATALOGADAPTERS_AMC_001_CLOSED_HOST_ZERO",
-    "note": "Implementation commit PLACEHOLDER_STAMP_AFTER_COMMIT; Host CatalogAdapters HOST_ZERO closed."
+    "note": "Implementation commit 49d2388a9cb8b5aae3f68b483356573b90d0a604; Host CatalogAdapters HOST_ZERO closed."
   }
 }
