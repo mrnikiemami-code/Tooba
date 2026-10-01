@@ -6,9 +6,9 @@
   "lastAcceptedTask": "TB-TMAR-HOST-ERRORS-AMC-001",
   "lastAcceptedCommit": "baa05e6b7fa373cb6d354a80ca2eab37d4472f7b",
   "lastAcceptedCommitKind": "IMPLEMENTATION_COMMIT",
-  "lastAcceptedResultEvidenceCommit": "73a80ee28ed9dc054be5adae0f7115e72c115ded",
+  "lastAcceptedResultEvidenceCommit": "31c0e20d6573a4f35b0a0eefa68ad9dfe1ca4a0d",
   "lastAcceptedResultEvidenceCommitKind": "RESULT_EVIDENCE_DOCS_STAMP_NOT_IMPLEMENTATION",
-  "lastAcceptedSoTStamp": "73a80ee28ed9dc054be5adae0f7115e72c115ded",
+  "lastAcceptedSoTStamp": "31c0e20d6573a4f35b0a0eefa68ad9dfe1ca4a0d",
   "lastAcceptedSoTStampKind": "RESULT_EVIDENCE_DOCS_STAMP",
   "lastAcceptedCommitSemantics": "lastAcceptedTask is TB-TMAR-HOST-ERRORS-AMC-001 (ANALYSIS_ONLY docs). IMPLEMENTATION commit remains Security W1 SHA at lastAcceptedCommit (baa05e6b7fa373cb6d354a80ca2eab37d4472f7b). Analyze docs stamp in lastAcceptedResultEvidenceCommit/lastAcceptedSoTStamp is NOT an implementation commit.",
   "lastAcceptedNote": "Host/Errors ANALYSIS_ONLY: 2 files; PlatformExceptionMapper ACTIVE_LEGACY via MultiTenancy; ToobaExceptionHandler KEEP thin; path↔namespace VIOLATION; Security/Admin CERT preserved; recommended W1 then CERT.",
@@ -5864,6 +5864,7 @@
     "automaticNextImplementationTask": "NONE",
     "workflowStop": "USER_REVIEW_HOST_ERRORS_AMC_001",
     "evidenceRoot": "docs/evidence/TB-TMAR-HOST-ERRORS-AMC-001",
-    "note": "Docs-only analyze; does not advance implementation SHA."
+    "note": "Docs-only analyze; does not advance implementation SHA.",
+    "docsStamp": "31c0e20d6573a4f35b0a0eefa68ad9dfe1ca4a0d"
   }
 }
