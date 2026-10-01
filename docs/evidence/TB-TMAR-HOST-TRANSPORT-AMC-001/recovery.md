@@ -1,4 +1,4 @@
-﻿# Recovery — Host/Transport AMC-001
+# Recovery — Host/Transport AMC-001
 
 Reconciled surfaces:
 
@@ -12,7 +12,7 @@ Pointers:
 | Field | Value |
 | --- | --- |
 | lastAcceptedTask | TB-TMAR-HOST-TRANSPORT-AMC-001 |
-| lastAcceptedCommit | PLACEHOLDER_STAMP_AFTER_COMMIT → stamped to implementation SHA |
+| lastAcceptedCommit | dd950bc275b2f41391b72bbedd1245e6b2835b91 → stamped to implementation SHA |
 | lastAcceptedCommitKind | IMPLEMENTATION_COMMIT |
 | currentHostCheckpoint / activeModule | Transport |
 | activeModuleState | TRANSPORT_KEEP_GENERIC_HOST_INFRASTRUCTURE_USER_REVIEW_REQUIRED |

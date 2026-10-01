@@ -30,7 +30,7 @@ Latest Accepted TMAR Checkpoint — authoritative (reconciled by TB-TMAR-HOST-TR
 ```text
 Latest-Accepted-Implementation-Wave: TB-TMAR-HOST-TRANSPORT-AMC-001
 Latest-Accepted-Task: TB-TMAR-HOST-TRANSPORT-AMC-001
-Implementation-Commit: PLACEHOLDER_STAMP_AFTER_COMMIT
+Implementation-Commit: dd950bc275b2f41391b72bbedd1245e6b2835b91
 Implementation-Commit-Kind: IMPLEMENTATION_COMMIT
 Current-Host-Checkpoint: Transport_KEEP_GENERIC_HOST_TRANSPORT
 Active-Host-Folder: Transport

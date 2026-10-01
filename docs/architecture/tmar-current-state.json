@@ -4,7 +4,7 @@
   "frontendFrozen": true,
   "checkoutState": "PAUSED_AT_SAFE_W5_CHECKPOINT",
   "lastAcceptedTask": "TB-TMAR-HOST-TRANSPORT-AMC-001",
-  "lastAcceptedCommit": "PLACEHOLDER_STAMP_AFTER_COMMIT",
+  "lastAcceptedCommit": "dd950bc275b2f41391b72bbedd1245e6b2835b91",
   "lastAcceptedCommitKind": "IMPLEMENTATION_COMMIT",
   "lastAcceptedResultEvidenceCommit": "5986dcc7ba8236354fc84bd92738bbeb90839d7c",
   "lastAcceptedResultEvidenceCommitKind": "RESULT_EVIDENCE_DOCS_STAMP_NOT_IMPLEMENTATION",
@@ -5123,6 +5123,6 @@
     "sharedPersistenceDependency": "GENERIC_PLATFORM_ALLOWED_Tooba.Persistence_OutboxMessage_IIntegrationEventSerializer",
     "durableGuard": "HostTransportAmcGuardTests",
     "evidenceRoot": "docs/evidence/TB-TMAR-HOST-TRANSPORT-AMC-001",
-    "note": "PLACEHOLDER_COMMIT_SHA stamped after implementation commit + push."
+    "note": "Implementation commit dd950bc275b2f41391b72bbedd1245e6b2835b91; Host Transport KEEP certified."
   }
 }
