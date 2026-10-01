@@ -30,7 +30,7 @@ Latest Accepted TMAR Checkpoint — authoritative (reconciled by TB-TMAR-HOST-CA
 ```text
 Latest-Accepted-Implementation-Wave: TB-TMAR-HOST-CATALOGADAPTERS-AMC-001
 Latest-Accepted-Task: TB-TMAR-HOST-CATALOGADAPTERS-AMC-001
-Implementation-Commit: PLACEHOLDER_STAMP_AFTER_COMMIT
+Implementation-Commit: 49d2388a9cb8b5aae3f68b483356573b90d0a604
 Implementation-Commit-Kind: IMPLEMENTATION_COMMIT
 Current-Host-Checkpoint: CatalogAdapters_HOST_ZERO
 Active-Host-Folder: CatalogAdapters
