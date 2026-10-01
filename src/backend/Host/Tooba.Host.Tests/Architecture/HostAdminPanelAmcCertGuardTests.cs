@@ -23,7 +23,7 @@ public sealed class HostAdminPanelAmcCertGuardTests
         Assert.Equal(
             ["AdminDevActorBootstrap.cs", "AdminDevContextEndpoints.cs"],
             Directory.GetFiles(development, "*.cs").Select(Path.GetFileName).OrderBy(x => x, StringComparer.Ordinal).ToArray());
-        Assert.Equal(19, Directory.GetFiles(admin, "*.cs", SearchOption.AllDirectories).Length);
+        Assert.Equal(18, Directory.GetFiles(admin, "*.cs", SearchOption.AllDirectories).Length);
 
         AssertNamespace(Path.Combine(panel, "AdminPanelComposer.cs"), "Tooba.Host.Admin.Panel");
         AssertNamespace(Path.Combine(panel, "AdminPanelEndpoints.cs"), "Tooba.Host.Admin.Panel");
@@ -159,11 +159,11 @@ public sealed class HostAdminPanelAmcCertGuardTests
     }
 
     [Fact]
-    public void Certification_scope_explicitly_excludes_access_and_grid_recovery()
+    public void Certification_scope_explicitly_excludes_access_and_marks_grid_absent()
     {
-        // Structural presence of Access/Grid files is expected and NOT certified here.
         Assert.True(Directory.Exists(Dir("src/backend/Host/Tooba.Host/Admin/Access")));
-        Assert.True(Directory.Exists(Dir("src/backend/Host/Tooba.Host/Admin/Grid")));
+        Assert.False(Directory.Exists(Dir("src/backend/Host/Tooba.Host/Admin/Grid")));
+        Assert.False(File.Exists(Repo("src/backend/Host/Tooba.Host/Admin/Grid/AdminGridQueryEndpoint.cs")));
         Assert.Contains("HOST_ADMIN_PANEL_AMC_CERTIFIED",
             "HOST_ADMIN_PANEL_AMC_CERTIFIED", StringComparison.Ordinal);
     }

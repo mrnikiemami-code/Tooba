@@ -76,10 +76,6 @@ public sealed class HostAdminCanonicalCertificationGuardTests
             "AdminPanelEndpoints.cs",
             "AdminPanelModels.cs",
         ],
-        ["Grid"] =
-        [
-            "AdminGridQueryEndpoint.cs",
-        ],
         ["Development"] =
         [
             "AdminDevActorBootstrap.cs",
@@ -105,7 +101,7 @@ public sealed class HostAdminCanonicalCertificationGuardTests
     // ---------------------------------------------------------------------
 
     [Fact]
-    public void Certified_structure_is_exactly_19_recursive_files_with_zero_flat_root()
+    public void Certified_structure_is_exactly_18_recursive_files_with_zero_flat_root()
     {
         var root = AdminRoot();
         Assert.Empty(Directory.GetFiles(root, "*.cs", SearchOption.TopDirectoryOnly));
@@ -120,14 +116,14 @@ public sealed class HostAdminCanonicalCertificationGuardTests
             .OrderBy(x => x, StringComparer.Ordinal)
             .ToArray();
 
-        Assert.Equal(19, discovered.Length);
+        Assert.Equal(18, discovered.Length);
         Assert.Equal(expected, discovered);
 
         var folders = Directory.GetDirectories(root)
             .Select(Path.GetFileName)
             .OrderBy(x => x, StringComparer.Ordinal)
             .ToArray();
-        Assert.Equal(["Access", "Development", "Grid", "Panel"], folders);
+        Assert.Equal(["Access", "Development", "Panel"], folders);
 
         var nested = Directory.GetDirectories(Path.Combine(root, "Access"))
             .Select(Path.GetFileName)

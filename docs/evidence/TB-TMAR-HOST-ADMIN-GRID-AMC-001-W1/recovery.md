@@ -1,0 +1,17 @@
+# recovery — W1
+task=TB-TMAR-HOST-ADMIN-GRID-AMC-001-W1
+adminGridDirectory=ABSENT
+adminGridQueryEndpoint=REMOVED
+productionConsumerCountBeforeRemoval=0
+runtimeBehaviorChange=NONE
+hostAdminRecursiveFileCount=18
+parentPanelCertification=PRESERVED
+adminDevelopmentCertification=PRESERVED
+partySellersCertification=PRESERVED
+adminAccess=NOT_OPENED
+automaticNextImplementationTask=NONE
+workflowStop=USER_REVIEW_HOST_ADMIN_GRID_AMC_001_W1
+staleCurrentPointerState=ZERO
+nextHostFolderStarted=false
+lastAcceptedCommit=PENDING_IMPL
+lastAcceptedCommitKind=IMPLEMENTATION_COMMIT
