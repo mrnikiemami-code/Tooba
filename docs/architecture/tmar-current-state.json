@@ -11,16 +11,16 @@
   "lastAcceptedSoTStamp": "23acf1bfa514f48d4a111a732d5bcaae45f78cbd",
   "lastAcceptedSoTStampKind": "RESULT_EVIDENCE_DOCS_STAMP",
   "lastAcceptedCommitSemantics": "lastAcceptedTask is TB-TMAR-HOST-ADMIN-ACCESS-AMC-001-W3-CERT. IMPLEMENTATION commit remains W2 SHA at lastAcceptedCommit. Certification docs/guards stamp recorded separately.",
-  "lastAcceptedNote": "Admin/Access W3-CERT: HOST_ADMIN_ACCESS_AMC_CERTIFIED + HOST_ADMIN_FULLY_CERTIFIED; Host/Admin=17 Grid HOST_ZERO; USER_REVIEW.",
+  "lastAcceptedNote": "Admin/Access W3-CERT remains last accepted CERT. Host/Security re-analyzed under TB-TMAR-HOST-SECURITY-AMC-001 as ANALYSIS_ONLY (19 files; historical 18-file CERT STALE_METADATA). Impl SHA unchanged 7a0d79b4…",
   "latestAcceptedImplementationWave": "TB-TMAR-HOST-ADMIN-ACCESS-AMC-001-W2",
-  "currentHostCheckpoint": "Admin/Access",
+  "currentHostCheckpoint": "Security",
   "nextHostFolderStarted": false,
   "nextHostFolder": null,
   "staleCurrentPointerState": "ZERO",
-  "nextTask": "USER_REVIEW_HOST_ADMIN_ACCESS_AMC_001_W3_CERT",
+  "nextTask": "USER_REVIEW_HOST_SECURITY_AMC_001",
   "nextTaskGate": "USER_DECISION_REQUIRED_NO_AUTOMATIC_NEXT_IMPLEMENTATION_TASK",
   "nextTaskState": "USER_DECISION_REQUIRED",
-  "workflowStop": "USER_REVIEW_HOST_ADMIN_ACCESS_AMC_001_W3_CERT",
+  "workflowStop": "USER_REVIEW_HOST_SECURITY_AMC_001",
   "automaticNextImplementationTask": "NONE",
   "hostGridAmc": {
     "task": "TB-TMAR-HOST-GRID-AMC-001",
@@ -4979,7 +4979,9 @@
       "TB-TMAR-HOST-STOREFRONT-AMC-001-R2"
     ],
     "supersededAsCurrentPointerBy": "TB-TMAR-HOST-SECURITY-AMC-001-R1",
-    "parentKeepDisposition": "KEEP_THIN_PLATFORM_SECURITY_BOUNDARY"
+    "parentKeepDisposition": "KEEP_THIN_PLATFORM_SECURITY_BOUNDARY",
+    "historicalNote": "STALE_METADATA_FOR_FILE_COUNT_AND_CERT_CLAIM — live production file count is 19; see hostSecurityAmc001Analyze",
+    "liveReconcileTask": "TB-TMAR-HOST-SECURITY-AMC-001"
   },
   "hostSecurityAmcR1": {
     "task": "TB-TMAR-HOST-SECURITY-AMC-001-R1",
@@ -5001,7 +5003,9 @@
     "evidence": "docs/evidence/TB-TMAR-HOST-SECURITY-AMC-001-R1/",
     "workflowStop": "USER_REVIEW_HOST_SECURITY_AMC_001_R1_KEEP_THIN_PLATFORM_CERTIFIED",
     "automaticNext": "NONE",
-    "supersededAsCurrentPointerBy": "TB-TMAR-HOST-PAGECOMPOSITION-AMC-001"
+    "supersededAsCurrentPointerBy": "TB-TMAR-HOST-PAGECOMPOSITION-AMC-001",
+    "historicalNote": "STALE_METADATA_FOR_FILE_COUNT_AND_CERT_CLAIM — live production file count is 19; see hostSecurityAmc001Analyze",
+    "liveReconcileTask": "TB-TMAR-HOST-SECURITY-AMC-001"
   },
   "hostPageCompositionAmc": {
     "task": "TB-TMAR-HOST-PAGECOMPOSITION-AMC-001",
@@ -5699,5 +5703,43 @@
     "workflowStop": "USER_REVIEW_HOST_ADMIN_ACCESS_AMC_001_W3_CERT",
     "evidenceRoot": "docs/evidence/TB-TMAR-HOST-ADMIN-ACCESS-AMC-001-W3-CERT",
     "note": "Certification docs/guards only; lastAcceptedCommit remains W2 implementation SHA."
+  },
+  "hostSecurityAmc001Analyze": {
+    "taskId": "TB-TMAR-HOST-SECURITY-AMC-001",
+    "parentTaskId": "TB-TMAR-HOST-ADMIN-ACCESS-AMC-001-W3-CERT",
+    "mode": "ANALYSIS_ONLY_NOT_MIGRATED_NOT_CERTIFIED",
+    "currentHostCheckpoint": "Security",
+    "securityProductionFileCount": 19,
+    "subfolders": [
+      "Checkout",
+      "Payment",
+      "Seller"
+    ],
+    "dispositionSummary": "2_KEEP_GLOBAL_PLATFORM_PLUS_17_KEEP_THIN_ADAPTER",
+    "keepGlobalPlatformCount": 2,
+    "keepThinAdapterCount": 17,
+    "moveToModuleCount": 0,
+    "deadZeroConsumerCount": 0,
+    "mustSplitCount": 0,
+    "blockedCount": 0,
+    "activeAdapterCount": 14,
+    "deadAdapterCount": 0,
+    "hardcodedTitleSiteCount": 8,
+    "exceptionMessageClassification": "ZERO",
+    "foreignApplicationDependency": "ZERO",
+    "foreignInfrastructureDependency": "ZERO",
+    "foreignDomainDependency": "ZERO",
+    "foreignDbContext": "ZERO",
+    "hostAdminCertification": "HOST_ADMIN_FULLY_CERTIFIED_PRESERVED",
+    "recommendedWaveCount": 3,
+    "recommendedNextTask": "TB-TMAR-HOST-SECURITY-AMC-001-W1",
+    "automaticNextImplementationTask": "NONE",
+    "workflowStop": "USER_REVIEW_HOST_SECURITY_AMC_001",
+    "staleCurrentPointerState": "ZERO",
+    "nextHostFolderStarted": false,
+    "lastAcceptedCommitUnchanged": "7a0d79b407c618d503acd1ef9866c519b4e5f070",
+    "historicalSecurityCertClaims": "STALE_METADATA",
+    "evidenceRoot": "docs/evidence/TB-TMAR-HOST-SECURITY-AMC-001",
+    "note": "Analyze docs-only; do not auto-start W1; production ZERO."
   }
 }

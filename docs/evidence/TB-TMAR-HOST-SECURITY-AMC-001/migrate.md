@@ -1,19 +1,9 @@
-# Migrate — Host/Security AMC-001
+# migrate — TB-TMAR-HOST-SECURITY-AMC-001
 
-## Disposition
+## Status
 
-**No folder evacuation.** Host/Security remains the intentional thin platform security boundary.
+**NOT_EXECUTED**
 
-## Hygiene executed
+This task is ANALYSIS_ONLY. Migrate skill was not run. No production hygiene or adapter moves performed.
 
-| Item | Before | After |
-| --- | --- | --- |
-| `ReviewEndpoints` seller list auth | static `SellerPanelAccess.RequireAuthorizedAsync` | `ISellerPanelAccess` DI |
-| `HostPaymentStorefrontAuthorizer` | `RequestServices.GetRequiredService` | constructor-injected `CurrentAuthenticatedSession` |
-| Seller R1/R5 guard file lists | missing Catalog/Story adapters | includes `HostCatalogSellerAuthorizer`, `HostStorySellerAuthorizer` |
-
-## Explicit non-goals
-
-- Deleting `Host/Security`
-- Moving authorizers into AccessControl / Identity modules
-- Schema / frontend change
+Any prior `migrate.md` content claiming hygiene execution for this Task-ID is **superseded / invalid** for TB-TMAR-HOST-SECURITY-AMC-001 Analyze.

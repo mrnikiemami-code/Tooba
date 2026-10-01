@@ -1,25 +1,9 @@
-# Certify — Host/Security AMC-001
+# certify — TB-TMAR-HOST-SECURITY-AMC-001
 
-## Verdict
+## Status
 
-**PASS — KEEP_THIN_PLATFORM_SECURITY_BOUNDARY**
+**NOT_CERTIFIED**
 
-Host/Security is certified as intentional Host platform residue. Not HOST_ZERO.
+This task is ANALYSIS_ONLY. Certify skill was not run. Host/Security is **not** certified by this task.
 
-## Checklist
-
-| Goal | State |
-| --- | --- |
-| Host/Security present | 18 files |
-| Seller R1A foreign layers | ZERO |
-| Checkout Contracts-only | PASS |
-| Payment authorizer no service locator | PASS |
-| Reviews seller uses `ISellerPanelAccess` | PASS |
-| Durable guard | `HostSecurityAmcGuardTests` |
-| SoT `hostSecurityAmc` | KEEP |
-| Schema / frontend | UNCHANGED |
-
-## Residual
-
-- `HostCheckoutActorPolicyAdapter` still references `Payment.Application.Ports` (allowed thin port adapter).
-- Full Host/Reviews evacuation remains a separate future Host folder wave.
+Historical Security AMC KEEP/CERT claims remain subject to reconciliation in `historical-claims.md` and `stale-guard-and-historical-sot.md` (18-file allowlist STALE vs live 19).
