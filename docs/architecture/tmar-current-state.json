@@ -4,7 +4,7 @@
   "frontendFrozen": true,
   "checkoutState": "PAUSED_AT_SAFE_W5_CHECKPOINT",
   "lastAcceptedTask": "TB-TMAR-HOST-CACHING-AMC-001-R1",
-  "lastAcceptedCommit": "PLACEHOLDER_STAMP_AFTER_COMMIT",
+  "lastAcceptedCommit": "1a4de40410486c74835245645e63f11f54ed91cd",
   "lastAcceptedCommitKind": "IMPLEMENTATION_COMMIT",
   "lastAcceptedResultEvidenceCommit": "b898135dc3e0c7ef4ea5ecb56f2a5003baebdf43",
   "lastAcceptedResultEvidenceCommitKind": "RESULT_EVIDENCE_DOCS_STAMP_NOT_IMPLEMENTATION",
@@ -5226,6 +5226,6 @@
     "durableGuard": "HostCachingAmcGuardTests",
     "evidenceRoot": "docs/evidence/TB-TMAR-HOST-CACHING-AMC-001-R1",
     "workflowStop": "USER_REVIEW_HOST_CACHING_AMC_001_R1_KEEP_GENERIC_HOST_INFRASTRUCTURE",
-    "note": "Implementation commit PLACEHOLDER_STAMP_AFTER_COMMIT; Caching AMC R1 single-flight retirement race closed."
+    "note": "Implementation commit 1a4de40410486c74835245645e63f11f54ed91cd; Caching AMC R1 single-flight retirement race closed."
   }
 }
