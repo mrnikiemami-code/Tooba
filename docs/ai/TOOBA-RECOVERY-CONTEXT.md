@@ -1,4 +1,4 @@
-﻿# Tooba — Recovery Context
+# Tooba — Recovery Context
 
 Canonical repository:
 
@@ -30,7 +30,7 @@ Latest Accepted TMAR Checkpoint — authoritative (reconciled by TB-TMAR-HOST-WA
 ```text
 Latest-Accepted-Implementation-Wave: TB-TMAR-HOST-WALLET-AMC-001
 Latest-Accepted-Task: TB-TMAR-HOST-WALLET-AMC-001
-Implementation-Commit: PLACEHOLDER_STAMP_AFTER_COMMIT
+Implementation-Commit: 377647da1cfa5bff01938934319037619605f7e8
 Implementation-Commit-Kind: IMPLEMENTATION_COMMIT
 Current-Host-Checkpoint: Wallet_HOST_ZERO
 Active-Host-Folder: Wallet
