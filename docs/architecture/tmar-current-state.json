@@ -4,7 +4,7 @@
   "frontendFrozen": true,
   "checkoutState": "PAUSED_AT_SAFE_W5_CHECKPOINT",
   "lastAcceptedTask": "TB-TMAR-HOST-LOCALIZATION-AMC-001-R1",
-  "lastAcceptedCommit": "PLACEHOLDER_STAMP_AFTER_COMMIT",
+  "lastAcceptedCommit": "3a393a463ce586c16107d0e55cc432d0d882b97f",
   "lastAcceptedCommitKind": "IMPLEMENTATION_COMMIT",
   "lastAcceptedResultEvidenceCommit": "b898135dc3e0c7ef4ea5ecb56f2a5003baebdf43",
   "lastAcceptedResultEvidenceCommitKind": "RESULT_EVIDENCE_DOCS_STAMP_NOT_IMPLEMENTATION",
@@ -5345,6 +5345,6 @@
     "durableGuard": "HostLocalizationAmcGuardTests",
     "evidenceRoot": "docs/evidence/TB-TMAR-HOST-LOCALIZATION-AMC-001-R1",
     "workflowStop": "USER_REVIEW_HOST_LOCALIZATION_AMC_001_R1_CLOSED_HOST_ZERO",
-    "note": "Implementation commit PLACEHOLDER_STAMP_AFTER_COMMIT; Localization AMC R1 failure-semantics CLOSED."
+    "note": "Implementation commit 3a393a463ce586c16107d0e55cc432d0d882b97f; Localization AMC R1 failure-semantics CLOSED."
   }
 }

@@ -30,7 +30,7 @@ Latest Accepted TMAR Checkpoint — authoritative (reconciled by TB-TMAR-HOST-LO
 ```text
 Latest-Accepted-Implementation-Wave: TB-TMAR-HOST-LOCALIZATION-AMC-001-R1
 Latest-Accepted-Task: TB-TMAR-HOST-LOCALIZATION-AMC-001-R1
-Implementation-Commit: PLACEHOLDER_STAMP_AFTER_COMMIT
+Implementation-Commit: 3a393a463ce586c16107d0e55cc432d0d882b97f
 Implementation-Commit-Kind: IMPLEMENTATION_COMMIT
 Current-Host-Checkpoint: Localization_HOST_ZERO_R1
 Active-Host-Folder: Localization
