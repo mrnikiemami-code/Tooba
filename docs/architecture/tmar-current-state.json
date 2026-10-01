@@ -1,10 +1,10 @@
-{
+﻿{
   "program": "TMAR — Tooba Microservice-Ready Architecture Recovery",
   "executionMode": "BACKEND_ONLY_UNTIL_EXPLICIT_RELEASE",
   "frontendFrozen": true,
   "checkoutState": "PAUSED_AT_SAFE_W5_CHECKPOINT",
   "lastAcceptedTask": "TB-TMAR-HOST-SETTINGS-AMC-001",
-  "lastAcceptedCommit": "PLACEHOLDER_STAMP_AFTER_COMMIT",
+  "lastAcceptedCommit": "86bfb80afe37b57ab385fe5bb294d45682648cdf",
   "lastAcceptedCommitKind": "IMPLEMENTATION_COMMIT",
   "lastAcceptedResultEvidenceCommit": "b898135dc3e0c7ef4ea5ecb56f2a5003baebdf43",
   "lastAcceptedResultEvidenceCommitKind": "RESULT_EVIDENCE_DOCS_STAMP_NOT_IMPLEMENTATION",
@@ -5250,6 +5250,6 @@
     "durableGuard": "HostSettingsAmcGuardTests",
     "evidenceRoot": "docs/evidence/TB-TMAR-HOST-SETTINGS-AMC-001",
     "workflowStop": "USER_REVIEW_HOST_SETTINGS_AMC_001_CLOSED_HOST_ZERO",
-    "note": "Implementation commit PLACEHOLDER_STAMP_AFTER_COMMIT; Host Settings HOST_ZERO closed."
+    "note": "Implementation commit 86bfb80afe37b57ab385fe5bb294d45682648cdf; Host Settings HOST_ZERO closed."
   }
 }
