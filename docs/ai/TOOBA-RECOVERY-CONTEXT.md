@@ -30,7 +30,7 @@ Latest Accepted TMAR Checkpoint — authoritative (reconciled by TB-TMAR-HOST-PE
 ```text
 Latest-Accepted-Implementation-Wave: TB-TMAR-HOST-PERSISTENCE-AMC-001
 Latest-Accepted-Task: TB-TMAR-HOST-PERSISTENCE-AMC-001
-Implementation-Commit: PLACEHOLDER_STAMP_AFTER_COMMIT
+Implementation-Commit: f791c86a3001cad329a29bbbae3f0c34c8c39d5f
 Implementation-Commit-Kind: IMPLEMENTATION_COMMIT
 Current-Host-Checkpoint: Persistence_KEEP_PLATFORM
 Active-Host-Folder: Persistence

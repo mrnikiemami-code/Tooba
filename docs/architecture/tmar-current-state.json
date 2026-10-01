@@ -1,10 +1,10 @@
-{
+﻿{
   "program": "TMAR — Tooba Microservice-Ready Architecture Recovery",
   "executionMode": "BACKEND_ONLY_UNTIL_EXPLICIT_RELEASE",
   "frontendFrozen": true,
   "checkoutState": "PAUSED_AT_SAFE_W5_CHECKPOINT",
   "lastAcceptedTask": "TB-TMAR-HOST-PERSISTENCE-AMC-001",
-  "lastAcceptedCommit": "PLACEHOLDER_STAMP_AFTER_COMMIT",
+  "lastAcceptedCommit": "f791c86a3001cad329a29bbbae3f0c34c8c39d5f",
   "lastAcceptedCommitKind": "IMPLEMENTATION_COMMIT",
   "lastAcceptedResultEvidenceCommit": "5986dcc7ba8236354fc84bd92738bbeb90839d7c",
   "lastAcceptedResultEvidenceCommitKind": "RESULT_EVIDENCE_DOCS_STAMP_NOT_IMPLEMENTATION",
@@ -5141,6 +5141,6 @@
     ],
     "certificationState": "KEEP_PLATFORM_CERTIFIED",
     "automaticNextImplementationTask": "NONE",
-    "implementationCommit": "PLACEHOLDER_STAMP_AFTER_COMMIT"
+    "implementationCommit": "f791c86a3001cad329a29bbbae3f0c34c8c39d5f"
   }
 }
