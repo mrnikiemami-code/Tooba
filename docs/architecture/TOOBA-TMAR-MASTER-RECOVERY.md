@@ -12,10 +12,15 @@ Canonical Architect ↔ Cursor handoff (recovery-critical)
 
 Latest Accepted TMAR Checkpoint — authoritative
 
-Reconciled by `TB-TMAR-HOST-ADMIN-ACCESS-AMC-001-W3-CERT`. Implementation lineage remains W2 at `lastAcceptedCommit`. Certification docs/guards only. Parent Panel CERT preserved. Gate: `USER_DECISION_REQUIRED_NO_AUTOMATIC_NEXT_IMPLEMENTATION_TASK`.
+Reconciled by `TB-TMAR-HOST-SECURITY-AMC-001-W1-R1`. Implementation remains W1 at `lastAcceptedCommit` = `baa05e6b7fa373cb6d354a80ca2eab37d4472f7b`. R1 is docs/recovery SoT stamp only. Gate: `USER_DECISION_REQUIRED_NO_AUTOMATIC_NEXT_IMPLEMENTATION_TASK`.
+- Current Host checkpoint = `Security`; workflowStop / Next-Task = `USER_REVIEW_HOST_SECURITY_AMC_001_W1_R1`; automatic next = NONE; stale pointer = ZERO.
+- Security W1: seller failures = SemanticException code-based; hardcoded runtime titles = ZERO; HostOrder ResolveAsync parity preserved; structure 18→19 deferred W2.
+- Host/Admin remains HOST_ADMIN_FULLY_CERTIFIED (historical Admin Access W3-CERT preserved; not current pointer).
+
+Reconciled by `TB-TMAR-HOST-ADMIN-ACCESS-AMC-001-W3-CERT` (HISTORICAL for current pointer). Implementation lineage remains W2 at that time. Certification docs/guards only. Parent Panel CERT preserved.
 - Dashboard remains Host thin cross-module composition; auth = `IAdminPanelAccess`; success = `Result` + `ApiResponseFactory`.
 - CQRS exception = `HOST_PRESENTATION_COMPOSITION_CQRS_EXCEPTION`; raw Results.Json / local PlatformHttp catch on dashboard = ZERO.
-- Admin/Access W3-CERT: HOST_ADMIN_ACCESS_AMC_CERTIFIED + HOST_ADMIN_FULLY_CERTIFIED; Access=12; Host/Admin=17; Grid HOST_ZERO; Panel/Development preserved; workflowStop = `USER_REVIEW_HOST_ADMIN_ACCESS_AMC_001_W3_CERT`; automatic next = NONE.
+- Admin/Access W3-CERT: HOST_ADMIN_ACCESS_AMC_CERTIFIED + HOST_ADMIN_FULLY_CERTIFIED; Access=12; Host/Admin=17; Grid HOST_ZERO; Panel/Development preserved; historical stop = `USER_REVIEW_HOST_ADMIN_ACCESS_AMC_001_W3_CERT`.
 
 Reconciled by `TB-TMAR-HOST-ADMIN-ACCESS-AMC-001-W2` (HISTORICAL). Implementation commit `7a0d79b407c618d503acd1ef9866c519b4e5f070`.
 - Admin/Access W2 authorizer-family hygiene; historical stop = `USER_REVIEW_HOST_ADMIN_ACCESS_AMC_001_W2`.

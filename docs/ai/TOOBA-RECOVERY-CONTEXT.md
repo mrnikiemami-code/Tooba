@@ -25,14 +25,16 @@ BRIDGE-WAKE-V1
 Channel: tooba-main
 ```
 
-Latest Accepted TMAR Checkpoint — authoritative (reconciled by TB-TMAR-HOST-SECURITY-AMC-001-W1)
+Latest Accepted TMAR Checkpoint — authoritative (reconciled by TB-TMAR-HOST-SECURITY-AMC-001-W1-R1)
 
 ```text
 Latest-Accepted-Implementation-Wave: TB-TMAR-HOST-SECURITY-AMC-001-W1
 Latest-Accepted-Task: TB-TMAR-HOST-SECURITY-AMC-001-W1
 Implementation-Commit: baa05e6b7fa373cb6d354a80ca2eab37d4472f7b
 Implementation-Commit-Kind: IMPLEMENTATION_COMMIT
-Mode: HOST_SECURITY_SELLER_FAILURE_HYGIENE_COMPLETE
+Result-Evidence-Docs-Stamp: PLACEHOLDER_R1_DOCS_STAMP
+Result-Evidence-Docs-Stamp-Kind: RESULT_EVIDENCE_DOCS_STAMP_NOT_IMPLEMENTATION
+Mode: HOST_SECURITY_W1_ACCEPTED_RECOVERY_SOT_RECONCILED
 Seller-Security-Failure-Semantics: SEMANTIC_EXCEPTION_CODE_BASED
 Seller-Security-Hardcoded-Runtime-Text: ZERO
 Host-Order-Seller-Adapter-Parity: PRESERVED_SEMANTIC_ERROR_RETURN
@@ -46,8 +48,8 @@ Development-State: ADMIN_DEVELOPMENT_DEV_CONTEXT_CERTIFIED_PRESERVED
 Current-Host-Checkpoint: Security
 Next-Host-Folder-Started: false
 Stale-Current-Pointer-State: ZERO
-workflowStop: USER_REVIEW_HOST_SECURITY_AMC_001_W1
-Next-Task: USER_REVIEW_HOST_SECURITY_AMC_001_W1
+workflowStop: USER_REVIEW_HOST_SECURITY_AMC_001_W1_R1
+Next-Task: USER_REVIEW_HOST_SECURITY_AMC_001_W1_R1
 Next-Task-Gate: USER_DECISION_REQUIRED_NO_AUTOMATIC_NEXT_IMPLEMENTATION_TASK
 Automatic-Next-Implementation-Task: NONE
 ```
