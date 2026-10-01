@@ -25,28 +25,30 @@ BRIDGE-WAKE-V1
 Channel: tooba-main
 ```
 
-Latest Accepted TMAR Checkpoint — authoritative (reconciled by TB-TMAR-HOST-COMPOSITION-AMC-001-R1)
+Latest Accepted TMAR Checkpoint — authoritative (reconciled by TB-TMAR-HOST-JOBS-DEAD-REGISTRY-CLEANUP-001-R1)
 
 ```text
-Latest-Accepted-Implementation-Wave: TB-TMAR-HOST-COMPOSITION-AMC-001-R1
-Latest-Accepted-Task: TB-TMAR-HOST-COMPOSITION-AMC-001-R1
-Implementation-Commit: 1259600fd0e44b41005239a2aee2500443260ebd
+Latest-Accepted-Implementation-Wave: TB-TMAR-HOST-JOBS-DEAD-REGISTRY-CLEANUP-001-R1
+Latest-Accepted-Task: TB-TMAR-HOST-JOBS-DEAD-REGISTRY-CLEANUP-001-R1
+Implementation-Commit: 913ce3ca6c7e89a04f6ed9ebb74d1bc8a8660179
 Implementation-Commit-Kind: IMPLEMENTATION_COMMIT
-Current-Host-Checkpoint: Composition_KEEP_R1
-Active-Host-Folder: Composition
-Host-Composition-Directory: PRESENT
-Host-Composition-Disposition: KEEP_AS_GENERIC_HOST_COMPOSITION_ROOT
-Path-Namespace: EXACT_Tooba.Host.Composition
-ToobaModuleComposition-Namespace: Tooba.Host.Composition
-Old-Namespace-Residue: ZERO
-Retained-Files: 5
-Content-Binder-DbContext: ZERO
-Prior-Accepted-Lineage: TB-TMAR-HOST-COMPOSITION-AMC-001 ; TB-TMAR-HOST-LOCALIZATION-AMC-001-R1 ; TB-TMAR-HOST-LOCALIZATION-AMC-001
+Current-Host-Checkpoint: Jobs
+Active-Host-Folder: Jobs
+Host-Jobs-Directory: ABSENT
+Host-Jobs-Disposition: HOST_ZERO_DEAD_INFRA_REMOVED
+BackgroundWorkerRegistry: REMOVED
+IBackgroundWorkerRegistry: REMOVED
+GetState: REMOVED
+Production-Readers-Before-Removal: ZERO
+Writer-Consumers-Removed: Outbox_Cart_Payment_Order
+Worker-Metrics-Logging: PRESERVED
+Platform-Keep-Areas-Jobs: REMOVED
+Prior-Accepted-Lineage: TB-TMAR-HOST-COMPOSITION-AMC-001-R1 ; TB-TMAR-HOST-COMPOSITION-AMC-001 ; TB-TMAR-HOST-LOCALIZATION-AMC-001-R1
 Next-Host-Folder-Started: false
 Next-Host-Folder: NONE_USER_DECISION_REQUIRED
 Stale-Current-Pointer-State: ZERO
-workflowStop: USER_REVIEW_HOST_COMPOSITION_AMC_001_R1_KEEP_GENERIC_HOST_COMPOSITION_ROOT
-Next-Task: USER_REVIEW_HOST_COMPOSITION_AMC_001_R1_KEEP_GENERIC_HOST_COMPOSITION_ROOT
+workflowStop: USER_REVIEW_HOST_JOBS_DEAD_REGISTRY_CLEANUP_001_R1
+Next-Task: USER_REVIEW_HOST_JOBS_DEAD_REGISTRY_CLEANUP_001_R1
 Automatic-Next-Implementation-Task: NONE
 ```
 

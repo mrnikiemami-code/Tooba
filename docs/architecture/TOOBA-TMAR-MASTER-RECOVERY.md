@@ -12,12 +12,19 @@ Canonical Architect ↔ Cursor handoff (recovery-critical)
 
 Latest Accepted TMAR Checkpoint — authoritative
 
-Reconciled by `TB-TMAR-HOST-COMPOSITION-AMC-001-R1`. Current implementation commit recorded at `lastAcceptedCommit` after PASS.
+Reconciled by `TB-TMAR-HOST-JOBS-DEAD-REGISTRY-CLEANUP-001-R1`. Implementation commit recorded at `lastAcceptedCommit` = `913ce3ca6c7e89a04f6ed9ebb74d1bc8a8660179` (`IMPLEMENTATION_COMMIT`). Docs/stamp SHA recorded separately.
+- Host/Jobs = `ABSENT` / `HOST_ZERO_DEAD_INFRA_REMOVED`.
+- `BackgroundWorkerRegistry` / `IBackgroundWorkerRegistry` / `GetState` / `BackgroundWorkerRunState` = `REMOVED`.
+- Production readers before removal = `ZERO`; writer-only consumers removed from Outbox/Cart/Payment/Order; real worker metrics/logging preserved.
+- `Jobs` removed from `platformKeepAreas`; generic worker seams no longer list `IBackgroundWorkerRegistry`.
+- Current Host checkpoint = `Jobs`; workflowStop = `USER_REVIEW_HOST_JOBS_DEAD_REGISTRY_CLEANUP_001_R1`; automatic next = NONE; stale pointer = ZERO.
+- Historical Composition AMC R1 / Composition AMC / Localization AMC R1 lineage remains intact and is NOT current.
+
+Reconciled by `TB-TMAR-HOST-COMPOSITION-AMC-001-R1` (HISTORICAL). Current implementation commit recorded at historical Composition R1 acceptance.
 - Host/Composition = `PRESENT` / `KEEP_AS_GENERIC_HOST_COMPOSITION_ROOT` preserved (exact 5 files).
 - Exact path↔namespace = `Tooba.Host.Composition` for all retained files including `ToobaModuleComposition.cs`.
 - Content Development binder remains thin (DbContext/MigrateAsync ZERO); Content bootstrap ownership unchanged.
-- Current Host checkpoint = `Composition`; workflowStop = `USER_REVIEW_HOST_COMPOSITION_AMC_001_R1_KEEP_GENERIC_HOST_COMPOSITION_ROOT`; automatic next = NONE; stale pointer = ZERO.
-- Parent Composition AMC / Localization AMC R1 / Localization parent remain accepted historical lineage.
+- Historical stop = `USER_REVIEW_HOST_COMPOSITION_AMC_001_R1_KEEP_GENERIC_HOST_COMPOSITION_ROOT`.
 
 Reconciled by `TB-TMAR-HOST-COMPOSITION-AMC-001` (HISTORICAL). Host/Composition = `PRESENT` / `KEEP_AS_GENERIC_HOST_COMPOSITION_ROOT`.
 - Content Development binder thinned to Content.Infrastructure bootstrap; Localization IModuleSchemaMigrator registered.
