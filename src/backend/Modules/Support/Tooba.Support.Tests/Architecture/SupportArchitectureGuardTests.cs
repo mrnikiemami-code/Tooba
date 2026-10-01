@@ -9,14 +9,13 @@ public sealed class SupportArchitectureGuardTests
     private static readonly string[] AllowedDomainFolders = ["Aggregates", "Entities", "ValueObjects", "Events", "Policies"];
     private static readonly string[] AllowedApplicationFolders = ["Ports", "Models", "Commands", "Queries", "Errors"];
     private static readonly string[] AllowedInfrastructureFolders =
-        ["Persistence", "Directories", "Adapters", "Seeds", "Messaging", "DependencyInjection", "Migrations"];
+        ["Persistence", "Directories", "Adapters", "Seeds", "Messaging", "DependencyInjection", "Migrations", "Development"];
     private static readonly string[] AllowedEndpointsFolders = ["Customer", "Seller", "Admin", "Errors", "Resources"];
 
     private static readonly HashSet<string> HostDbContextAllowlist = new(StringComparer.OrdinalIgnoreCase)
     {
         "Program.cs",
         "ModuleMigrationRegistry.cs",
-        "SupportDevelopmentSeedHost.cs",
         "ProductWorkspaceDevelopmentBootstrap.cs",
     };
 
@@ -174,12 +173,22 @@ public sealed class SupportArchitectureGuardTests
 
         var hostRoot = Path.Combine(RepoRoot(), "src", "backend", "Host", "Tooba.Host");
         var endpointsRoot = Path.Combine(SupportRoot(), "Tooba.Support.Endpoints");
+        Assert.False(Directory.Exists(Path.Combine(hostRoot, "Support")));
         Assert.False(File.Exists(Path.Combine(hostRoot, "Support", "SupportEndpoints.cs")));
-        Assert.True(File.Exists(Path.Combine(hostRoot, "Support", "SupportDevelopmentSeedHost.cs")));
+        Assert.False(File.Exists(Path.Combine(hostRoot, "Support", "SupportDevelopmentSeedHost.cs")));
+        Assert.True(File.Exists(Path.Combine(SupportRoot(), "Tooba.Support.Infrastructure", "Development", "SupportDevelopmentSeedBootstrap.cs")));
+        Assert.True(File.Exists(Path.Combine(hostRoot, "Composition", "SupportDevelopmentSeedHost.cs")));
         Assert.False(File.Exists(Path.Combine(hostRoot, "Customer", "HostSupportCustomerAuthorizer.cs")));
         Assert.True(File.Exists(Path.Combine(hostRoot, "Security", "Seller", "HostSupportSellerAuthorizer.cs")));
         Assert.True(File.Exists(Path.Combine(hostRoot, "Admin", "Access", "Authorizers", "HostSupportAdminAuthorizer.cs")));
         Assert.True(File.Exists(Path.Combine(endpointsRoot, "Customer", "SupportCustomerAuthorizer.cs")));
+
+        var compositionSeed = File.ReadAllText(Path.Combine(hostRoot, "Composition", "SupportDevelopmentSeedHost.cs"));
+        Assert.Contains("SupportDevelopmentSeedBootstrap.ApplyAsync", compositionSeed, StringComparison.Ordinal);
+        Assert.Contains("StorefrontGuestActor.ActorId", compositionSeed, StringComparison.Ordinal);
+        Assert.DoesNotContain("SupportDbContext", compositionSeed, StringComparison.Ordinal);
+        Assert.DoesNotContain("Database.MigrateAsync", compositionSeed, StringComparison.Ordinal);
+        Assert.DoesNotContain("Order.Application", compositionSeed, StringComparison.Ordinal);
 
         var moduleCustomer = File.ReadAllText(Path.Combine(endpointsRoot, "Customer", "SupportCustomerAuthorizer.cs"));
         var hostSeller = File.ReadAllText(Path.Combine(hostRoot, "Security", "Seller", "HostSupportSellerAuthorizer.cs"));

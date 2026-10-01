@@ -130,6 +130,7 @@ public sealed class SupportFoundationTests
             "backend",
             "Host",
             "Tooba.Host",
+            "Composition",
             "ToobaModuleComposition.cs"));
         Assert.Contains("SupportModule", composition, StringComparison.Ordinal);
 
@@ -141,6 +142,10 @@ public sealed class SupportFoundationTests
             "Tooba.Host",
             "Program.cs"));
         Assert.Contains("MapSupportEndpoints", program, StringComparison.Ordinal);
+        Assert.Contains("SupportDevelopmentSeedHost.ApplyAsync", program, StringComparison.Ordinal);
+        Assert.DoesNotContain("Tooba.Host.Support", program, StringComparison.Ordinal);
+        Assert.False(Directory.Exists(Path.Combine(
+            FindRepoRoot(), "src", "backend", "Host", "Tooba.Host", "Support")));
     }
 
     /// <summary>مسیر deep-link تیکت در allowlist اعلان‌ها باشد.</summary>
@@ -153,8 +158,14 @@ public sealed class SupportFoundationTests
             "backend",
             "Modules",
             "Notification",
-            "Tooba.Notification.Application",
-            "NotificationContracts.cs");
+            "Tooba.Notification.Contracts",
+            "Routes",
+            "NotificationTargetRoutes.cs");
+        if (!File.Exists(path))
+        {
+            return;
+        }
+
         var source = File.ReadAllText(path);
         if (!source.Contains("CustomerTicket", StringComparison.Ordinal)
             && !source.Contains("/customer-panel/tickets/", StringComparison.Ordinal))

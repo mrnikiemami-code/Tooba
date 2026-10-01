@@ -25,26 +25,27 @@ BRIDGE-WAKE-V1
 Channel: tooba-main
 ```
 
-Latest Accepted TMAR Checkpoint — authoritative (reconciled by TB-TMAR-HOST-WALLET-AMC-001)
+Latest Accepted TMAR Checkpoint — authoritative (reconciled by TB-TMAR-HOST-SUPPORT-AMC-001)
 
 ```text
-Latest-Accepted-Implementation-Wave: TB-TMAR-HOST-WALLET-AMC-001
-Latest-Accepted-Task: TB-TMAR-HOST-WALLET-AMC-001
-Implementation-Commit: 377647da1cfa5bff01938934319037619605f7e8
+Latest-Accepted-Implementation-Wave: TB-TMAR-HOST-SUPPORT-AMC-001
+Latest-Accepted-Task: TB-TMAR-HOST-SUPPORT-AMC-001
+Implementation-Commit: PLACEHOLDER_STAMP_AFTER_COMMIT
 Implementation-Commit-Kind: IMPLEMENTATION_COMMIT
-Current-Host-Checkpoint: Wallet_HOST_ZERO
-Active-Host-Folder: Wallet
-Host-Wallet-Directory: ABSENT
-Host-Wallet-Host-Zero: true
-Module-Bootstrap: Tooba.Wallet.Infrastructure.Development.WalletDevelopmentSeedBootstrap
-Host-Composition-Binder: Composition/WalletDevelopmentSeedHost (ControlPlane+AdminDev only; no WalletDbContext)
-Http-Owner: Tooba.Wallet.Endpoints.WalletEndpointModule (pre-existing)
-Prior-Accepted-Lineage: TB-TMAR-HOST-PRODUCTQNA-AMC-001 ; TB-TMAR-HOST-PREFERENCES-AMC-001 ; TB-TMAR-HOST-REVIEWS-AMC-001-R1
+Current-Host-Checkpoint: Support_HOST_ZERO
+Active-Host-Folder: Support
+Host-Support-Directory: ABSENT
+Host-Support-Host-Zero: true
+Module-Bootstrap: Tooba.Support.Infrastructure.Development.SupportDevelopmentSeedBootstrap
+Host-Composition-Binder: Composition/SupportDevelopmentSeedHost (ControlPlane+Admin/Seller+AccessControl; no SupportDbContext)
+Guest-Actor: Order.Contracts.Fulfillment.StorefrontGuestActor
+Http-Owner: Tooba.Support.Endpoints.SupportEndpointModule (pre-existing)
+Prior-Accepted-Lineage: TB-TMAR-HOST-WALLET-AMC-001 ; TB-TMAR-HOST-PRODUCTQNA-AMC-001 ; TB-TMAR-HOST-PREFERENCES-AMC-001
 Next-Host-Folder-Started: false
 Next-Host-Folder: NONE_USER_DECISION_REQUIRED
 Stale-Current-Pointer-State: ZERO
-workflowStop: USER_REVIEW_HOST_WALLET_AMC_001_CLOSED_HOST_ZERO
-Next-Task: USER_REVIEW_HOST_WALLET_AMC_001_CLOSED_HOST_ZERO
+workflowStop: USER_REVIEW_HOST_SUPPORT_AMC_001_CLOSED_HOST_ZERO
+Next-Task: USER_REVIEW_HOST_SUPPORT_AMC_001_CLOSED_HOST_ZERO
 Automatic-Next-Implementation-Task: NONE
 ```
 
