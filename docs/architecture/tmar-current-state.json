@@ -4,7 +4,7 @@
   "frontendFrozen": true,
   "checkoutState": "PAUSED_AT_SAFE_W5_CHECKPOINT",
   "lastAcceptedTask": "TB-TMAR-HOST-PREFERENCES-AMC-001",
-  "lastAcceptedCommit": "PLACEHOLDER_STAMP_AFTER_COMMIT",
+  "lastAcceptedCommit": "e7a6692d3e14fbdf9d2df52e0298861126eada20",
   "lastAcceptedCommitKind": "IMPLEMENTATION_COMMIT",
   "lastAcceptedResultEvidenceCommit": "5986dcc7ba8236354fc84bd92738bbeb90839d7c",
   "lastAcceptedResultEvidenceCommitKind": "RESULT_EVIDENCE_DOCS_STAMP_NOT_IMPLEMENTATION",
@@ -5088,7 +5088,7 @@
     ],
     "durableGuard": "HostPreferencesAmcGuardTests",
     "evidenceRoot": "docs/evidence/TB-TMAR-HOST-PREFERENCES-AMC-001",
-    "note": "PLACEHOLDER_COMMIT_SHA stamped after implementation commit + push."
+    "note": "Implementation commit e7a6692d3e14fbdf9d2df52e0298861126eada20; HOST_ZERO Preferences closed."
   },
   "progressLedger": [
     {
