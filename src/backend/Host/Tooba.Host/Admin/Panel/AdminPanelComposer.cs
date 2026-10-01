@@ -1,14 +1,12 @@
-﻿using Tooba.BuildingBlocks.Grid;
-using Tooba.Catalog.Contracts;
+﻿using Tooba.Catalog.Contracts;
 using Tooba.Offer.Contracts.Ports;
 using Tooba.Order.Contracts.Admin;
-using Tooba.Party.Contracts;
 
 namespace Tooba.Host.Admin.Panel;
 
 /// <summary>
-/// ترکیب باریک Host برای سطوح cross-module مدیر (داشبورد / گرید فروشندگان).
-/// GET /v1/admin/sellers به Party.Endpoints منتقل شده است.
+/// ترکیب باریک Host برای داشبورد Admin.
+/// GET/POST sellers به Party.Endpoints منتقل شده‌اند.
 /// تمام خواندن ماژول‌های کسب‌وکار فقط از طریق Contracts انجام می‌شود.
 /// </summary>
 public sealed class AdminPanelComposer
@@ -16,7 +14,6 @@ public sealed class AdminPanelComposer
     private readonly ICatalogAdminProductCountGateway _catalogProducts;
     private readonly IOfferQueryGateway _offers;
     private readonly IAdminOrderDashboardMetricsPort _orderMetrics;
-    private readonly IAdminSellersGridPort _sellersGrid;
 
     /// <summary>
     /// ترکیب‌گر Host را فقط با مرزهای Contracts ماژول‌ها می‌سازد.
@@ -24,13 +21,11 @@ public sealed class AdminPanelComposer
     public AdminPanelComposer(
         ICatalogAdminProductCountGateway catalogProducts,
         IOfferQueryGateway offers,
-        IAdminOrderDashboardMetricsPort orderMetrics,
-        IAdminSellersGridPort sellersGrid)
+        IAdminOrderDashboardMetricsPort orderMetrics)
     {
         _catalogProducts = catalogProducts;
         _offers = offers;
         _orderMetrics = orderMetrics;
-        _sellersGrid = sellersGrid;
     }
 
     /// <summary>
@@ -53,10 +48,4 @@ public sealed class AdminPanelComposer
             sellerIds.Count,
             orderMetrics.Customers);
     }
-
-    /// <summary>صفحه‌بندی server-side گرید فروشندگان Admin (مرز Contracts Party؛ Order metric از Contracts Order).</summary>
-    public Task<GridPageResponse<AdminSellerListItem>> QuerySellersGridAsync(
-        GridQueryRequest request,
-        CancellationToken cancellationToken) =>
-        _sellersGrid.QueryAsync(request, cancellationToken);
 }

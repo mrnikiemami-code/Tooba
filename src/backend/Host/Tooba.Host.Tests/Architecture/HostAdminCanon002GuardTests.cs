@@ -106,8 +106,9 @@ public sealed class HostAdminCanon002GuardTests
             "src/backend/Host/Tooba.Host.Tests/Architecture/HostAdminCanon001GuardTests.cs")));
         var composer = File.ReadAllText(RepoFile("src/backend/Host/Tooba.Host/Admin/Panel/AdminPanelComposer.cs"));
         Assert.Contains("ICatalogAdminProductCountGateway", composer, StringComparison.Ordinal);
-        Assert.Contains("IAdminSellersGridPort", composer, StringComparison.Ordinal);
+        Assert.DoesNotContain("IAdminSellersGridPort", composer, StringComparison.Ordinal);
         Assert.DoesNotContain("ListSellersAsync", composer, StringComparison.Ordinal);
+        Assert.DoesNotContain("QuerySellersGridAsync", composer, StringComparison.Ordinal);
     }
 
     private static string ReadAdmin(string fileName) =>

@@ -12,11 +12,15 @@ Canonical Architect ↔ Cursor handoff (recovery-critical)
 
 Latest Accepted TMAR Checkpoint — authoritative
 
-Reconciled by `TB-TMAR-HOST-ADMIN-PANEL-AMC-001-W1`. Implementation commit recorded at `lastAcceptedCommit` after PASS.
-- Host/Admin/Panel remains present (3 files); GET `/v1/admin/sellers` owned by `Party.Endpoints`.
-- Host GET sellers residue = ZERO; POST `/sellers/query` deferred unchanged; dashboard KEEP; dev-context deferred.
-- Current Host checkpoint = `Admin/Panel`; workflowStop = `USER_REVIEW_HOST_ADMIN_PANEL_AMC_001_W1`; automatic next = NONE; stale pointer = ZERO.
-- Parent Analyze `TB-TMAR-HOST-ADMIN-PANEL-AMC-001` accepted; Jobs dead-registry R1 remains historical lineage.
+Reconciled by `TB-TMAR-HOST-ADMIN-PANEL-AMC-001-W2`. Implementation commit recorded at `lastAcceptedCommit` after PASS.
+- Host/Admin/Panel remains present (3 files); POST `/v1/admin/sellers/query` owned by `Party.Endpoints`.
+- Host POST sellers/query residue = ZERO; Panel → AdminGridQueryEndpoint = ZERO; GET sellers remains Party; dashboard KEEP; dev-context deferred.
+- Current Host checkpoint = `Admin/Panel`; workflowStop = `USER_REVIEW_HOST_ADMIN_PANEL_AMC_001_W2`; automatic next = NONE; stale pointer = ZERO.
+- W1 GET sellers migration remains accepted historical lineage.
+
+Reconciled by `TB-TMAR-HOST-ADMIN-PANEL-AMC-001-W1` (HISTORICAL). Implementation commit `dd90aa90033eeace6c602d88b0ed5dbda611cd0a`.
+- GET `/v1/admin/sellers` moved to Party; Host GET residue ZERO.
+- Historical stop = `USER_REVIEW_HOST_ADMIN_PANEL_AMC_001_W1`.
 
 Reconciled by `TB-TMAR-HOST-JOBS-DEAD-REGISTRY-CLEANUP-001-R1` (HISTORICAL). Implementation commit `913ce3ca6c7e89a04f6ed9ebb74d1bc8a8660179`.
 - Host/Jobs = `ABSENT` / `HOST_ZERO_DEAD_INFRA_REMOVED`.

@@ -50,11 +50,12 @@ public sealed class HostAdminCanon001GuardTests
         Assert.Contains("ICatalogAdminProductCountGateway", text, StringComparison.Ordinal);
         Assert.Contains("IAdminOrderDashboardMetricsPort", text, StringComparison.Ordinal);
         Assert.Contains("IOfferQueryGateway", text, StringComparison.Ordinal);
-        Assert.Contains("IAdminSellersGridPort", text, StringComparison.Ordinal);
+        Assert.DoesNotContain("IAdminSellersGridPort", text, StringComparison.Ordinal);
         Assert.DoesNotContain("ListSellersAsync", text, StringComparison.Ordinal);
+        Assert.DoesNotContain("QuerySellersGridAsync", text, StringComparison.Ordinal);
 
         Assert.Contains("using Tooba.Catalog.Contracts;", text, StringComparison.Ordinal);
-        Assert.Contains("using Tooba.Party.Contracts;", text, StringComparison.Ordinal);
+        Assert.DoesNotContain("using Tooba.Party.Contracts;", text, StringComparison.Ordinal);
         Assert.Contains("using Tooba.Order.Contracts.Admin;", text, StringComparison.Ordinal);
         Assert.Contains("using Tooba.Offer.Contracts.Ports;", text, StringComparison.Ordinal);
 
@@ -63,6 +64,13 @@ public sealed class HostAdminCanon001GuardTests
         Assert.Contains("IPartyAdminSellerReadGateway", sellersQuery, StringComparison.Ordinal);
         Assert.Contains("IAdminSellerOrderCountPort", sellersQuery, StringComparison.Ordinal);
         Assert.Contains("IOfferQueryGateway", sellersQuery, StringComparison.Ordinal);
+
+        var sellersGridQuery = File.ReadAllText(RepoFile(
+            "src/backend/Modules/Party/Tooba.Party.Application/Admin/Sellers/Queries/QueryAdminSellersGridQuery.cs"));
+        Assert.Contains("IAdminSellersGridPort", sellersGridQuery, StringComparison.Ordinal);
+        Assert.Contains("GridQueryValidationException", sellersGridQuery, StringComparison.Ordinal);
+        Assert.Contains("ex.ErrorCode", sellersGridQuery, StringComparison.Ordinal);
+        Assert.DoesNotContain("ex.Message", sellersGridQuery, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -130,10 +138,12 @@ public sealed class HostAdminCanon001GuardTests
         var endpoints = File.ReadAllText(RepoFile("src/backend/Host/Tooba.Host/Admin/Panel/AdminPanelEndpoints.cs"));
         Assert.Contains("MapGet(\"/dashboard\"", endpoints, StringComparison.Ordinal);
         Assert.DoesNotContain("MapGet(\"/sellers\"", endpoints, StringComparison.Ordinal);
-        Assert.Contains("MapPost(\"/sellers/query\"", endpoints, StringComparison.Ordinal);
+        Assert.DoesNotContain("MapPost(\"/sellers/query\"", endpoints, StringComparison.Ordinal);
+        Assert.DoesNotContain("AdminGridQueryEndpoint", endpoints, StringComparison.Ordinal);
         var partySellers = File.ReadAllText(RepoFile(
             "src/backend/Modules/Party/Tooba.Party.Endpoints/Admin/Sellers/PartyAdminSellersEndpoints.cs"));
         Assert.Contains("MapGet(\"/v1/admin/sellers\"", partySellers, StringComparison.Ordinal);
+        Assert.Contains("MapPost(\"/v1/admin/sellers/query\"", partySellers, StringComparison.Ordinal);
         Assert.DoesNotContain("MapGet(\"/orders\"", endpoints, StringComparison.Ordinal);
         Assert.DoesNotContain("MapGet(\"/customers\"", endpoints, StringComparison.Ordinal);
     }

@@ -1,19 +1,17 @@
 ﻿using Tooba.BuildingBlocks;
-using Tooba.BuildingBlocks.Grid;
 using Tooba.Host.Admin.Access;
 using Tooba.Host.Admin.Development;
-using Tooba.Host.Admin.Grid;
 
 namespace Tooba.Host.Admin.Panel;
 
 /// <summary>
 /// مسیرهای فقط‌خواندنی عملیات مدیر برای سطوح cross-module.
-/// GET /v1/admin/sellers به Party.Endpoints منتقل شده است.
+/// GET/POST sellers به Party.Endpoints منتقل شده‌اند.
 /// </summary>
 public static class AdminPanelEndpoints
 {
     /// <summary>
-    /// مسیرهای داشبورد و گرید فروشندگان مدیر را ثبت می‌کند.
+    /// مسیرهای داشبورد و dev-context مدیر را ثبت می‌کند.
     /// </summary>
     public static void MapAdminPanelEndpoints(this WebApplication app)
     {
@@ -25,7 +23,7 @@ public static class AdminPanelEndpoints
         // R2_REMAINDER: payment detail/actions owned by Payment.Endpoints (MapPaymentEndpoints).
         // R11: GET/POST /v1/admin/customers* owned by Order.Endpoints (AdminCustomersEndpoints).
         // W1: GET /v1/admin/sellers owned by Party.Endpoints (PartyAdminSellersEndpoints).
-        group.MapPost("/sellers/query", QuerySellersGridAsync);
+        // W2: POST /v1/admin/sellers/query owned by Party.Endpoints (PartyAdminSellersEndpoints).
         group.MapGet("/dev-context", GetDevContext);
     }
 
@@ -39,25 +37,6 @@ public static class AdminPanelEndpoints
         CancellationToken cancellationToken) =>
         await ExecuteAsync(request, session, tenant, guard, environment, cancellationToken,
             () => composer.GetDashboardAsync(cancellationToken));
-
-    private static Task<IResult> QuerySellersGridAsync(
-        GridQueryRequest body,
-        AdminPanelComposer composer,
-        HttpRequest request,
-        CurrentAuthenticatedSession session,
-        ICurrentTenant tenant,
-        IAuthorizationGuard guard,
-        IHostEnvironment environment,
-        CancellationToken cancellationToken) =>
-        AdminGridQueryEndpoint.ExecuteAsync(
-            body,
-            request,
-            session,
-            tenant,
-            guard,
-            environment,
-            composer.QuerySellersGridAsync,
-            cancellationToken);
 
     private static async Task<IResult> ExecuteAsync<T>(
         HttpRequest request,

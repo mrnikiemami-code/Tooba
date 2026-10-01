@@ -39,16 +39,21 @@ public sealed class HostGridAmcR4GuardTests
     }
 
     [Fact]
-    public void AdminPanelComposer_consumes_Party_contracts_port_only()
+    public void AdminPanelComposer_no_longer_consumes_sellers_grid_port()
     {
         var composer = File.ReadAllText(Path.Combine(HostRoot(), "Admin", "Panel", "AdminPanelComposer.cs"));
-        Assert.Contains("IAdminSellersGridPort", composer, StringComparison.Ordinal);
-        Assert.Contains("using Tooba.Party.Contracts;", composer, StringComparison.Ordinal);
+        Assert.DoesNotContain("IAdminSellersGridPort", composer, StringComparison.Ordinal);
+        Assert.DoesNotContain("using Tooba.Party.Contracts;", composer, StringComparison.Ordinal);
         Assert.DoesNotContain("Tooba.Host.Grid", composer, StringComparison.Ordinal);
         Assert.DoesNotContain("AdminListGridPolicies", composer, StringComparison.Ordinal);
         Assert.DoesNotContain("AdminSellersGridQueryEngine", composer, StringComparison.Ordinal);
         Assert.DoesNotContain("Tooba.Party.Application", composer, StringComparison.Ordinal);
         Assert.DoesNotContain("Tooba.Party.Infrastructure", composer, StringComparison.Ordinal);
+
+        var query = File.ReadAllText(Path.Combine(
+            FindRepoRoot(), "src", "backend", "Modules", "Party",
+            "Tooba.Party.Application", "Admin", "Sellers", "Queries", "QueryAdminSellersGridQuery.cs"));
+        Assert.Contains("IAdminSellersGridPort", query, StringComparison.Ordinal);
     }
 
     [Fact]

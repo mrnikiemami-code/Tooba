@@ -1,4 +1,3 @@
-using Tooba.BuildingBlocks;
 using Tooba.BuildingBlocks.Grid;
 
 namespace Tooba.Party.Infrastructure.Grid;
@@ -25,22 +24,14 @@ public static class PartyAdminSellersGridPolicies
         ["orders"] = GridQueryOperators.Number,
     };
 
-    /// <summary>Normalize درخواست گرید فروشندگان Admin.</summary>
+    /// <summary>
+    /// Normalize درخواست گرید فروشندگان Admin.
+    /// خطاها به‌صورت <see cref="GridQueryValidationException"/> با ErrorCode پایدار پرتاب می‌شوند
+    /// تا Application به <c>SemanticError(ex.ErrorCode)</c> نگاشت کند — بدون message متنی exception.
+    /// </summary>
     public static GridQueryRequest Normalize(GridQueryRequest request)
     {
         ArgumentNullException.ThrowIfNull(request);
-        try
-        {
-            return NormalizeCore(request);
-        }
-        catch (GridQueryValidationException ex)
-        {
-            throw new PlatformHttpException(ex.StatusCode, ex.Message, ex.ErrorCode);
-        }
-    }
-
-    private static GridQueryRequest NormalizeCore(GridQueryRequest request)
-    {
         var (page, pageSize) = GridQueryPolicyBase.NormalizePaging(
             request.Page,
             request.PageSize,

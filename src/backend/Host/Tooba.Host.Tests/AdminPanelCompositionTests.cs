@@ -71,7 +71,8 @@ public sealed class AdminPanelCompositionTests
         Assert.Contains("IOfferQueryGateway", source, StringComparison.Ordinal);
         Assert.Contains("CountActiveOffersAsync", source, StringComparison.Ordinal);
         Assert.Contains("IAdminOrderDashboardMetricsPort", source, StringComparison.Ordinal);
-        Assert.Contains("IAdminSellersGridPort", source, StringComparison.Ordinal);
+        Assert.DoesNotContain("IAdminSellersGridPort", source, StringComparison.Ordinal);
+        Assert.DoesNotContain("QuerySellersGridAsync", source, StringComparison.Ordinal);
         Assert.DoesNotContain("ListSellersAsync", source, StringComparison.Ordinal);
         Assert.DoesNotContain("OrderDbContext", source, StringComparison.Ordinal);
         Assert.DoesNotContain("OfferDbContext", source, StringComparison.Ordinal);
