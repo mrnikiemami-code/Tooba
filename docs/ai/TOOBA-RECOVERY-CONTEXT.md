@@ -32,7 +32,7 @@ Latest-Accepted-Implementation-Wave: TB-TMAR-HOST-SECURITY-AMC-001-W1
 Latest-Accepted-Task: TB-TMAR-HOST-SECURITY-AMC-001-W1
 Implementation-Commit: baa05e6b7fa373cb6d354a80ca2eab37d4472f7b
 Implementation-Commit-Kind: IMPLEMENTATION_COMMIT
-Result-Evidence-Docs-Stamp: PLACEHOLDER_R1_DOCS_STAMP
+Result-Evidence-Docs-Stamp: bbfaf865b65d0f2934417a032db63c369e45d5e6
 Result-Evidence-Docs-Stamp-Kind: RESULT_EVIDENCE_DOCS_STAMP_NOT_IMPLEMENTATION
 Mode: HOST_SECURITY_W1_ACCEPTED_RECOVERY_SOT_RECONCILED
 Seller-Security-Failure-Semantics: SEMANTIC_EXCEPTION_CODE_BASED
