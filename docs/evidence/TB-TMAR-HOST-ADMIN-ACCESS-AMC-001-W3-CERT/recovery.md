@@ -1,10 +1,10 @@
-# recovery — TB-TMAR-HOST-ADMIN-ACCESS-AMC-001-W3-CERT
+﻿# recovery — TB-TMAR-HOST-ADMIN-ACCESS-AMC-001-W3-CERT
 
 ```text
 lastAcceptedTask = TB-TMAR-HOST-ADMIN-ACCESS-AMC-001-W3-CERT
 lastAcceptedCommit = 7a0d79b407c618d503acd1ef9866c519b4e5f070
 lastAcceptedCommitKind = IMPLEMENTATION_COMMIT
-certificationDocsStamp = <CERT_COMMIT_SHA>
+certificationDocsStamp = 23acf1bfa514f48d4a111a732d5bcaae45f78cbd
 accessCertificationState = HOST_ADMIN_ACCESS_AMC_CERTIFIED
 coreAccessState = PLATFORM_ACCESS_SEAM_CERTIFIED
 authorizerFamilyState = THIN_HOST_AUTH_ADAPTERS_CERTIFIED

@@ -1,4 +1,4 @@
-﻿{
+{
   "program": "TMAR — Tooba Microservice-Ready Architecture Recovery",
   "executionMode": "BACKEND_ONLY_UNTIL_EXPLICIT_RELEASE",
   "frontendFrozen": true,
@@ -6,9 +6,9 @@
   "lastAcceptedTask": "TB-TMAR-HOST-ADMIN-ACCESS-AMC-001-W3-CERT",
   "lastAcceptedCommit": "7a0d79b407c618d503acd1ef9866c519b4e5f070",
   "lastAcceptedCommitKind": "IMPLEMENTATION_COMMIT",
-  "lastAcceptedResultEvidenceCommit": "55fbe106254a35dff8eccea328fa355e1382a955",
+  "lastAcceptedResultEvidenceCommit": "23acf1bfa514f48d4a111a732d5bcaae45f78cbd",
   "lastAcceptedResultEvidenceCommitKind": "RESULT_EVIDENCE_DOCS_STAMP_NOT_IMPLEMENTATION",
-  "lastAcceptedSoTStamp": "55fbe106254a35dff8eccea328fa355e1382a955",
+  "lastAcceptedSoTStamp": "23acf1bfa514f48d4a111a732d5bcaae45f78cbd",
   "lastAcceptedSoTStampKind": "RESULT_EVIDENCE_DOCS_STAMP",
   "lastAcceptedCommitSemantics": "lastAcceptedTask is TB-TMAR-HOST-ADMIN-ACCESS-AMC-001-W3-CERT. IMPLEMENTATION commit remains W2 SHA at lastAcceptedCommit. Certification docs/guards stamp recorded separately.",
   "lastAcceptedNote": "Admin/Access W3-CERT: HOST_ADMIN_ACCESS_AMC_CERTIFIED + HOST_ADMIN_FULLY_CERTIFIED; Host/Admin=17 Grid HOST_ZERO; USER_REVIEW.",
