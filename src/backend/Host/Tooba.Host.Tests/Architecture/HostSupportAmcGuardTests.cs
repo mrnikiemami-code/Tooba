@@ -85,10 +85,10 @@ public sealed class HostSupportAmcGuardTests
     {
         var sot = File.ReadAllText(Path.Combine(FindRepoRoot(), "docs/architecture/tmar-current-state.json"));
         Assert.Contains("\"hostSupportAmc\"", sot, StringComparison.Ordinal);
+        Assert.Contains("\"hostSupportAmcR1\"", sot, StringComparison.Ordinal);
         Assert.Contains("TB-TMAR-HOST-SUPPORT-AMC-001-R1", sot, StringComparison.Ordinal);
-        Assert.Contains("USER_REVIEW_HOST_SUPPORT_AMC_001_R1_CLOSED_HOST_ZERO", sot, StringComparison.Ordinal);
-        Assert.Contains("SUPPORT_CLOSED_HOST_ZERO_R1_USER_REVIEW_REQUIRED", sot, StringComparison.Ordinal);
         Assert.Contains("IAccessControlDevelopmentSeedPrelude", sot, StringComparison.Ordinal);
+        Assert.Contains("CLOSED_HOST_ZERO_R1_ACCESSCONTROL_CONTRACTS_SEAM", sot, StringComparison.Ordinal);
     }
 
     private static string FindRepoRoot()

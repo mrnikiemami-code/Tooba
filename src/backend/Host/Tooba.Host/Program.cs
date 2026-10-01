@@ -46,7 +46,7 @@ using Tooba.Host.Composition;
 using Tooba.PageComposition.Endpoints;
 using Tooba.Story.Endpoints;
 using Tooba.UserPreference.Endpoints;
-using Tooba.Host.OperatorProfile;
+using Tooba.OperatorProfile.Endpoints;
 using Tooba.Support.Endpoints;
 using Tooba.Wallet.Endpoints;
 using Tooba.Offer.Endpoints;
@@ -101,6 +101,7 @@ builder.Services.AddStoryEndpointPresentation();
 builder.Services.AddPageCompositionEndpointPresentation();
 builder.Services.AddReviewsEndpointPresentation();
 builder.Services.AddUserPreferenceEndpointPresentation();
+builder.Services.AddOperatorProfileEndpointPresentation();
 builder.Services.AddProductQnAEndpointPresentation();
 builder.Services.AddBulkInquiryEndpointPresentation();
 builder.Services.AddCustomerProfileEndpointPresentation();
@@ -175,6 +176,7 @@ builder.Services.AddToobaCqrsFoundation(
     typeof(Tooba.PageComposition.Application.Queries.GetHomeCompositionQuery).Assembly,
     typeof(Tooba.Reviews.Application.Queries.GetPublishedReviewsQuery).Assembly,
     typeof(Tooba.UserPreference.Application.LocalePreferences.Commands.UpsertUserPreferenceCommand).Assembly,
+    typeof(Tooba.OperatorProfile.Application.Admin.Commands.UpsertOperatorProfileCommand).Assembly,
     typeof(Tooba.ProductQnA.Application.Commands.SubmitProductQuestionCommand).Assembly,
     typeof(Tooba.BulkInquiry.Application.Commands.SubmitBulkInquiryCommand).Assembly,
     typeof(Tooba.CustomerProfile.Application.Queries.GetCustomerProfilePage.GetCustomerProfilePageQuery).Assembly,
@@ -211,6 +213,7 @@ builder.Services.AddScoped<Tooba.Payment.Contracts.Ports.ICheckoutActorPolicyPor
 builder.Services.AddScoped<Tooba.Payment.Endpoints.Storefront.IPaymentStorefrontAuthorizer, Tooba.Host.Security.Payment.HostPaymentStorefrontAuthorizer>();
 builder.Services.AddScoped<Tooba.Payment.Endpoints.Admin.IPaymentAdminAuthorizer, Tooba.Host.Admin.Access.Authorizers.HostPaymentAdminAuthorizer>();
 builder.Services.AddScoped<Tooba.UserPreference.Endpoints.Admin.IUserPreferenceAdminAuthorizer, HostUserPreferenceAdminAuthorizer>();
+builder.Services.AddScoped<Tooba.OperatorProfile.Endpoints.Admin.IOperatorProfileAdminAuthorizer, HostOperatorProfileAdminAuthorizer>();
 builder.Services.AddScoped<Tooba.Promotion.Endpoints.Seller.IPromotionSellerAuthorizer, Tooba.Host.Security.Seller.HostPromotionSellerAuthorizer>();
 builder.Services.AddScoped<Tooba.Offer.Endpoints.Seller.IOfferSellerAuthorizer, Tooba.Host.Security.Seller.HostOfferSellerAuthorizer>();
 builder.Services.AddScoped<Tooba.Catalog.Endpoints.Seller.ICatalogSellerAuthorizer, Tooba.Host.Security.Seller.HostCatalogSellerAuthorizer>();
@@ -413,7 +416,7 @@ app.MapPricingModule();
 app.MapPartyEndpoints();
 app.MapCustomerProfileModuleEndpoints();
 app.MapUserPreferenceModuleEndpoints();
-app.MapOperatorProfileEndpoints();
+app.MapOperatorProfileModuleEndpoints();
 app.MapReviewsModuleEndpoints();
 app.MapProductQnAModuleEndpoints();
 app.MapBulkInquiryModuleEndpoints();

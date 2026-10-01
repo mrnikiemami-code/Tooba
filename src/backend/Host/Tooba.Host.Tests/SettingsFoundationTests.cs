@@ -8,7 +8,7 @@ using Tooba.AccessControl.Domain;
 using Tooba.AccessControl.Infrastructure.Authorization;
 using Tooba.BuildingBlocks;
 using Tooba.BuildingBlocks.Security;
-using Tooba.Host.OperatorProfile;
+using Tooba.OperatorProfile.Endpoints.Admin;
 using Tooba.AccessControl.Infrastructure.Development.Seller;
 using Tooba.Host.Security.Seller;
 using Tooba.Host.Settings;
@@ -103,7 +103,9 @@ public sealed class SettingsFoundationTests
         var holdComposer = File.ReadAllText(Path.Combine(root, "src", "backend", "Modules", "Catalog", "Tooba.Catalog.Application", "Settings", "HoldPolicy", "HoldPolicySettingsComposer.cs"));
         Assert.Contains("مدت نگهداری سبد خرید", holdComposer, StringComparison.Ordinal);
         Assert.Contains("مهلت پرداخت آنلاین", holdComposer, StringComparison.Ordinal);
-        Assert.Contains("AdminPanelAccess.RequireAuthorizedAsync", operatorProfile, StringComparison.Ordinal);
+        Assert.DoesNotContain("AdminPanelAccess.RequireAuthorizedAsync", operatorProfile, StringComparison.Ordinal);
+        Assert.Contains("IOperatorProfileAdminAuthorizer", operatorProfile, StringComparison.Ordinal);
+        Assert.Contains("ApiResponseFactory", operatorProfile, StringComparison.Ordinal);
 
         var program = File.ReadAllText(Path.Combine(root, "src", "backend", "Host", "Tooba.Host", "Program.cs"));
         Assert.Contains("MapPartyEndpoints", program, StringComparison.Ordinal);
@@ -111,7 +113,8 @@ public sealed class SettingsFoundationTests
         Assert.Contains("MapUserPreferenceModuleEndpoints", program, StringComparison.Ordinal);
         Assert.DoesNotContain("MapUserPreferenceEndpoints()", program, StringComparison.Ordinal);
         Assert.DoesNotContain("MapUiPreferenceEndpoints()", program, StringComparison.Ordinal);
-        Assert.Contains("MapOperatorProfileEndpoints", program, StringComparison.Ordinal);
+        Assert.Contains("MapOperatorProfileModuleEndpoints", program, StringComparison.Ordinal);
+        Assert.DoesNotContain("MapOperatorProfileEndpoints()", program, StringComparison.Ordinal);
     }
 
     [Fact]

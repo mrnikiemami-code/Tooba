@@ -3,24 +3,24 @@
   "executionMode": "BACKEND_ONLY_UNTIL_EXPLICIT_RELEASE",
   "frontendFrozen": true,
   "checkoutState": "PAUSED_AT_SAFE_W5_CHECKPOINT",
-  "lastAcceptedTask": "TB-TMAR-HOST-SUPPORT-AMC-001-R1",
-  "lastAcceptedCommit": "646a2a445705c76d7b6890e4597ff2999d8bff4e",
+  "lastAcceptedTask": "TB-TMAR-HOST-OPERATORPROFILE-AMC-001",
+  "lastAcceptedCommit": "PLACEHOLDER_STAMP_AFTER_COMMIT",
   "lastAcceptedCommitKind": "IMPLEMENTATION_COMMIT",
   "lastAcceptedResultEvidenceCommit": "5986dcc7ba8236354fc84bd92738bbeb90839d7c",
   "lastAcceptedResultEvidenceCommitKind": "RESULT_EVIDENCE_DOCS_STAMP_NOT_IMPLEMENTATION",
   "lastAcceptedSoTStamp": "5986dcc7ba8236354fc84bd92738bbeb90839d7c",
   "lastAcceptedSoTStampKind": "RESULT_EVIDENCE_DOCS_STAMP",
-  "lastAcceptedCommitSemantics": "lastAcceptedTask is TB-TMAR-HOST-SUPPORT-AMC-001-R1 IMPLEMENTATION commit. Host Support HOST_ZERO preserved; AccessControl Application/Domain leakage removed from SupportDevelopmentSeedHost via Contracts IAccessControlDevelopmentSeedPrelude.",
-  "lastAcceptedNote": "Support AMC R1: Host SupportDevelopmentSeedHost uses AccessControl.Contracts.Development prelude only; ZERO AccessControl Application/Domain/Infrastructure/Persistence in binder; USER_REVIEW before next Host AMC.",
-  "latestAcceptedImplementationWave": "TB-TMAR-HOST-SUPPORT-AMC-001-R1",
-  "currentHostCheckpoint": "Support",
+  "lastAcceptedCommitSemantics": "lastAcceptedTask is TB-TMAR-HOST-OPERATORPROFILE-AMC-001 IMPLEMENTATION commit. Host/OperatorProfile ABSENT HOST_ZERO; HTTP owned by OperatorProfile.Endpoints CQRS/MediatR; HostOperatorProfileAdminAuthorizer thin adapter.",
+  "lastAcceptedNote": "OperatorProfile AMC: Host folder deleted; module Endpoints own GET/PUT /v1/admin/operator/profile; ApiResponseFactory; ZERO title=ex.Message; USER_REVIEW before next Host AMC.",
+  "latestAcceptedImplementationWave": "TB-TMAR-HOST-OPERATORPROFILE-AMC-001",
+  "currentHostCheckpoint": "OperatorProfile",
   "nextHostFolderStarted": false,
   "nextHostFolder": null,
   "staleCurrentPointerState": "ZERO",
-  "nextTask": "USER_REVIEW_HOST_SUPPORT_AMC_001_R1_CLOSED_HOST_ZERO",
+  "nextTask": "USER_REVIEW_HOST_OPERATORPROFILE_AMC_001_CLOSED_HOST_ZERO",
   "nextTaskGate": "USER_DECISION_REQUIRED_NO_AUTOMATIC_NEXT_IMPLEMENTATION_TASK",
   "nextTaskState": "USER_DECISION_REQUIRED",
-  "workflowStop": "USER_REVIEW_HOST_SUPPORT_AMC_001_R1_CLOSED_HOST_ZERO",
+  "workflowStop": "USER_REVIEW_HOST_OPERATORPROFILE_AMC_001_CLOSED_HOST_ZERO",
   "automaticNextImplementationTask": "NONE",
   "hostGridAmc": {
     "task": "TB-TMAR-HOST-GRID-AMC-001",
@@ -974,17 +974,17 @@
     "finalHostTarget": "THIN_PLATFORM_COMPOSITION_SHELL_ONLY"
   },
   "currentHostEvacuation": {
-    "activeModule": "Support",
-    "activeModuleState": "SUPPORT_CLOSED_HOST_ZERO_R1_USER_REVIEW_REQUIRED",
+    "activeModule": "OperatorProfile",
+    "activeModuleState": "OPERATORPROFILE_HOST_ZERO_USER_REVIEW_REQUIRED",
     "currentHostEvacuationState": "RECONCILED_NOT_HISTORICAL_ADDRESSBOOK",
     "workflow": "HOST_FIRST_FOLDER_BY_FOLDER",
-    "currentTask": "TB-TMAR-HOST-SUPPORT-AMC-001-R1",
-    "currentPhase": "SUPPORT_AMC_R1_HOST_ZERO_ACCESSCONTROL_SEAM_CLOSED",
-    "workflowStop": "USER_REVIEW_HOST_SUPPORT_AMC_001_R1_CLOSED_HOST_ZERO",
+    "currentTask": "TB-TMAR-HOST-OPERATORPROFILE-AMC-001",
+    "currentPhase": "OPERATORPROFILE_AMC_HOST_ZERO_CLOSED",
+    "workflowStop": "USER_REVIEW_HOST_OPERATORPROFILE_AMC_001_CLOSED_HOST_ZERO",
     "automaticNextImplementationTask": "NONE",
-    "lastReconciledRecoveryTask": "TB-TMAR-HOST-SUPPORT-AMC-001-R1",
-    "latestAcceptedImplementationWave": "TB-TMAR-HOST-SUPPORT-AMC-001-R1",
-    "currentHostCheckpoint": "Support",
+    "lastReconciledRecoveryTask": "TB-TMAR-HOST-OPERATORPROFILE-AMC-001",
+    "latestAcceptedImplementationWave": "TB-TMAR-HOST-OPERATORPROFILE-AMC-001",
+    "currentHostCheckpoint": "OperatorProfile",
     "historicalNextHostFolderPointer": "NONE_USER_DECISION_REQUIRED",
     "nextHostFolderStarted": false,
     "nextHostFolder": "NONE_USER_DECISION_REQUIRED",
@@ -2478,7 +2478,7 @@
     "staleCurrentPointerState": "ZERO",
     "automaticNextImplementationTask": "NONE",
     "nextTaskState": "USER_DECISION_REQUIRED",
-    "workflowStop": "USER_REVIEW_HOST_SUPPORT_AMC_001_R1_CLOSED_HOST_ZERO",
+    "workflowStop": "USER_REVIEW_HOST_OPERATORPROFILE_AMC_001_CLOSED_HOST_ZERO",
     "evidence": "docs/evidence/TB-TMAR-HOST-SELLER-AMC-001-R5/",
     "taskArtifact": "docs/ai/tasks/TB-TMAR-HOST-SELLER-AMC-001-R5.task.md"
   },
@@ -5053,16 +5053,16 @@
     "supersededAsCurrentPointerBy": "TB-TMAR-HOST-REVIEWS-AMC-001"
   },
   "hostEvacuationProgress": {
-    "activeModule": "Support",
-    "activeModuleState": "SUPPORT_CLOSED_HOST_ZERO_R1_USER_REVIEW_REQUIRED",
+    "activeModule": "OperatorProfile",
+    "activeModuleState": "OPERATORPROFILE_HOST_ZERO_USER_REVIEW_REQUIRED",
     "blockedReason": null,
     "nextAllowedTaskFamily": "HOST_SLICE_OR_FOLDER_AMC",
-    "note": "Host Support AMC R1: AccessControl.Contracts.Development IAccessControlDevelopmentSeedPrelude removes Application/Domain leakage from SupportDevelopmentSeedHost. HOST_ZERO preserved. Transport/Wallet/ProductQnA/Preferences remain historical. USER_REVIEW required."
+    "note": "Host OperatorProfile AMC CLOSED HOST_ZERO. OperatorProfile.Endpoints owns HTTP via CQRS. Host retains thin HostOperatorProfileAdminAuthorizer. Support R1 / Transport remain historical. USER_REVIEW required."
   },
   "nextAllowedTask": {
     "kind": "USER_REVIEW_REQUIRED",
     "blockerOwner": "USER",
-    "note": "Do not start the next Host AMC until USER reviews Support AMC R1 AccessControl Contracts seam repair."
+    "note": "Do not start the next Host AMC until USER reviews OperatorProfile HOST_ZERO closure."
   },
   "progressLedger": [
     {
@@ -5094,6 +5094,11 @@
       "taskId": "TB-TMAR-HOST-SUPPORT-AMC-001-R1",
       "status": "CLOSED_HOST_ZERO_R1_ACCESSCONTROL_CONTRACTS_SEAM",
       "note": "SupportDevelopmentSeedHost AccessControl Application/Domain leakage repaired via Contracts prelude; USER_REVIEW before next Host AMC."
+    },
+    {
+      "taskId": "TB-TMAR-HOST-OPERATORPROFILE-AMC-001",
+      "status": "CLOSED_HOST_ZERO",
+      "note": "Host OperatorProfile evacuated to OperatorProfile.Endpoints CQRS; Host folder deleted; USER_REVIEW before next Host AMC."
     }
   ],
   "hostSupportAmc": {
@@ -5145,5 +5150,19 @@
     "durableGuard": "HostSupportAmcGuardTests",
     "evidenceRoot": "docs/evidence/TB-TMAR-HOST-SUPPORT-AMC-001-R1",
     "note": "Implementation commit 646a2a445705c76d7b6890e4597ff2999d8bff4e; Support AMC R1 AccessControl Contracts seam closed."
+  },
+  "hostOperatorProfileAmc": {
+    "taskId": "TB-TMAR-HOST-OPERATORPROFILE-AMC-001",
+    "status": "CLOSED_HOST_ZERO",
+    "classification": "HOST_ZERO",
+    "owningModule": "OperatorProfile",
+    "hostFolderDeleted": "src/backend/Host/Tooba.Host/OperatorProfile",
+    "moduleEndpoints": "src/backend/Modules/OperatorProfile/Tooba.OperatorProfile.Endpoints",
+    "hostRetained": [
+      "Admin/Access/Authorizers/HostOperatorProfileAdminAuthorizer.cs"
+    ],
+    "durableGuard": "HostOperatorProfileAmcGuardTests",
+    "evidenceRoot": "docs/evidence/TB-TMAR-HOST-OPERATORPROFILE-AMC-001",
+    "note": "PLACEHOLDER_COMMIT_SHA stamped after implementation commit + push."
   }
 }

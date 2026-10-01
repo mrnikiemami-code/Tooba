@@ -1,5 +1,7 @@
 using Microsoft.EntityFrameworkCore;
+using Tooba.BuildingBlocks;
 using Tooba.OperatorProfile.Application;
+using Tooba.OperatorProfile.Contracts.Errors;
 using Tooba.OperatorProfile.Infrastructure.Persistence;
 
 namespace Tooba.OperatorProfile.Infrastructure;
@@ -51,31 +53,38 @@ public sealed class OperatorProfileDirectory : IOperatorProfileDirectory
         CancellationToken cancellationToken)
     {
         EnsureActor(actorUserId);
-        var now = DateTimeOffset.UtcNow;
-        var profile = await _db.Profiles.SingleOrDefaultAsync(x => x.OwnerUserId == actorUserId, cancellationToken);
-        if (profile is null)
+        try
         {
-            profile = Domain.OperatorProfile.Create(
-                actorUserId,
-                input.DisplayName,
-                input.FirstName,
-                input.LastName,
-                input.Bio,
-                now);
-            _db.Profiles.Add(profile);
-        }
-        else
-        {
-            profile.Update(
-                input.DisplayName,
-                input.FirstName,
-                input.LastName,
-                input.Bio,
-                now);
-        }
+            var now = DateTimeOffset.UtcNow;
+            var profile = await _db.Profiles.SingleOrDefaultAsync(x => x.OwnerUserId == actorUserId, cancellationToken);
+            if (profile is null)
+            {
+                profile = Domain.OperatorProfile.Create(
+                    actorUserId,
+                    input.DisplayName,
+                    input.FirstName,
+                    input.LastName,
+                    input.Bio,
+                    now);
+                _db.Profiles.Add(profile);
+            }
+            else
+            {
+                profile.Update(
+                    input.DisplayName,
+                    input.FirstName,
+                    input.LastName,
+                    input.Bio,
+                    now);
+            }
 
-        await _db.SaveChangesAsync(cancellationToken);
-        return Map(profile);
+            await _db.SaveChangesAsync(cancellationToken);
+            return Map(profile);
+        }
+        catch (InvalidOperationException)
+        {
+            throw new SemanticException(new SemanticError(OperatorProfileErrorCodes.ProfileRejected));
+        }
     }
 
     private static OperatorProfileSnapshot Map(Domain.OperatorProfile profile) =>
@@ -91,7 +100,7 @@ public sealed class OperatorProfileDirectory : IOperatorProfileDirectory
     {
         if (actorUserId == Guid.Empty)
         {
-            throw new InvalidOperationException("Actor معتبر الزامی است.");
+            throw new SemanticException(new SemanticError(OperatorProfileErrorCodes.ProfileRejected));
         }
     }
 }

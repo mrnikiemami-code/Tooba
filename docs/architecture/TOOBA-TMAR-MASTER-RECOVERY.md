@@ -12,13 +12,16 @@ Canonical Architect ↔ Cursor handoff (recovery-critical)
 
 Latest Accepted TMAR Checkpoint — authoritative
 
-Reconciled by `TB-TMAR-HOST-SUPPORT-AMC-001-R1`. Current implementation commit recorded at `lastAcceptedCommit` after PASS.
-- Host/Support = `ABSENT` / `CLOSED_HOST_ZERO` preserved.
-- Support migrate+seed owner = `Tooba.Support.Infrastructure.Development.SupportDevelopmentSeedBootstrap`.
-- Host binder `Composition/SupportDevelopmentSeedHost` uses AccessControl.Contracts.Development `IAccessControlDevelopmentSeedPrelude` only — ZERO AccessControl Application/Domain/Infrastructure/Persistence.
-- Guest actor = Order.Contracts `StorefrontGuestActor`.
-- Current Host checkpoint = `Support`; workflowStop = `USER_REVIEW_HOST_SUPPORT_AMC_001_R1_CLOSED_HOST_ZERO`; automatic next = NONE; stale pointer = ZERO.
-- Transport / Wallet / ProductQnA / Preferences / Reviews / Security remain accepted historical lineage.
+Reconciled by `TB-TMAR-HOST-OPERATORPROFILE-AMC-001`. Current implementation commit recorded at `lastAcceptedCommit` after PASS.
+- Host/OperatorProfile = `ABSENT` / `CLOSED_HOST_ZERO`.
+- HTTP owner = `Tooba.OperatorProfile.Endpoints` (`MapOperatorProfileModuleEndpoints` → CQRS/MediatR GET/PUT `/v1/admin/operator/profile`).
+- Host retained thin `HostOperatorProfileAdminAuthorizer` only (not OperatorProfile folder).
+- ApiResponseFactory; `title = ex.Message` ZERO; InvalidOperation domain rejects → SemanticException `operator.profile.rejected`.
+- Current Host checkpoint = `OperatorProfile`; workflowStop = `USER_REVIEW_HOST_OPERATORPROFILE_AMC_001_CLOSED_HOST_ZERO`; automatic next = NONE; stale pointer = ZERO.
+- Support R1 / Transport / Wallet / ProductQnA / Preferences remain accepted historical lineage.
+
+Reconciled by `TB-TMAR-HOST-SUPPORT-AMC-001-R1` (HISTORICAL). Host/Support = `ABSENT` / `CLOSED_HOST_ZERO` preserved.
+- AccessControl.Contracts.Development `IAccessControlDevelopmentSeedPrelude` removes Application/Domain leakage from SupportDevelopmentSeedHost.
 
 Reconciled by `TB-TMAR-HOST-TRANSPORT-AMC-001` (HISTORICAL). Host/Transport = `PRESENT` / `KEEP_AS_GENERIC_HOST_TRANSPORT_INFRASTRUCTURE`.
 - Retained allowlist (exact 3): `SqlTransportOptionsMapper.cs`, `ToobaIntegrationTransportConsumer.cs`, `ToobaIntegrationTransportMessage.cs`.

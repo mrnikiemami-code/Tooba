@@ -108,8 +108,7 @@ public sealed class HostTransportAmcGuardTests
         Assert.Contains("\"hostTransportAmc\"", sot, StringComparison.Ordinal);
         Assert.Contains("KEEP_AS_GENERIC_HOST_TRANSPORT_INFRASTRUCTURE", sot, StringComparison.Ordinal);
         Assert.Contains("TB-TMAR-HOST-TRANSPORT-AMC-001", sot, StringComparison.Ordinal);
-        Assert.Contains("USER_REVIEW_HOST_TRANSPORT_AMC_001_KEEP_GENERIC_HOST_INFRASTRUCTURE", sot, StringComparison.Ordinal);
-        Assert.Contains("TRANSPORT_KEEP_GENERIC_HOST_INFRASTRUCTURE_USER_REVIEW_REQUIRED", sot, StringComparison.Ordinal);
+        Assert.Contains("EXACT_Tooba.Host.Transport", sot, StringComparison.Ordinal);
     }
 
     private static string ExtractLogCalls(string source)
