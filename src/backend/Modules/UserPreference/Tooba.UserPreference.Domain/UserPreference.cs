@@ -1,3 +1,6 @@
+using Tooba.BuildingBlocks;
+using Tooba.UserPreference.Contracts.Errors;
+
 namespace Tooba.UserPreference.Domain;
 
 /// <summary>
@@ -35,7 +38,7 @@ public sealed class UserPreference
     {
         if (ownerUserId == Guid.Empty)
         {
-            throw new InvalidOperationException("Actor معتبر الزامی است.");
+            throw new SemanticException(new SemanticError(UserPreferenceErrorCodes.PreferenceRejected));
         }
 
         var preference = new UserPreference
@@ -63,7 +66,7 @@ public sealed class UserPreference
         var trimmed = locale?.Trim().ToLowerInvariant() ?? string.Empty;
         if (trimmed is not (LocaleFa or LocaleEn))
         {
-            throw new InvalidOperationException("فقط localeهای fa و en مجاز هستند.");
+            throw new SemanticException(new SemanticError(UserPreferenceErrorCodes.PreferenceRejected));
         }
 
         return trimmed;

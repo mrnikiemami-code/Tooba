@@ -1,3 +1,6 @@
+using Tooba.BuildingBlocks;
+using Tooba.UserPreference.Contracts.Errors;
+
 namespace Tooba.UserPreference.Domain;
 
 /// <summary>
@@ -32,7 +35,7 @@ public sealed class UiPreference
     {
         if (actorUserId == Guid.Empty)
         {
-            throw new InvalidOperationException("Actor معتبر الزامی است.");
+            throw new SemanticException(new SemanticError(UserPreferenceErrorCodes.UiPreferenceRejected));
         }
 
         var preference = new UiPreference
@@ -53,7 +56,7 @@ public sealed class UiPreference
         Key = NormalizeKey(key);
         if (string.IsNullOrWhiteSpace(jsonPayload))
         {
-            throw new InvalidOperationException("JsonPayload خالی مجاز نیست.");
+            throw new SemanticException(new SemanticError(UserPreferenceErrorCodes.UiPreferenceJsonRequired));
         }
 
         JsonPayload = jsonPayload;
@@ -66,7 +69,7 @@ public sealed class UiPreference
         var trimmed = key?.Trim() ?? string.Empty;
         if (trimmed.Length is 0 or > KeyMaxLength)
         {
-            throw new InvalidOperationException("کلید ترجیح UI نامعتبر است.");
+            throw new SemanticException(new SemanticError(UserPreferenceErrorCodes.UiPreferenceRejected));
         }
 
         return trimmed;

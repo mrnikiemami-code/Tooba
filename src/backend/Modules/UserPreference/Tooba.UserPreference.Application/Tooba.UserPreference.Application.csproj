@@ -1,4 +1,15 @@
 <Project Sdk="Microsoft.NET.Sdk">
-  <PropertyGroup><TargetFramework>net8.0</TargetFramework><Nullable>enable</Nullable><ImplicitUsings>enable</ImplicitUsings></PropertyGroup>
-  <ItemGroup><ProjectReference Include="..\Tooba.UserPreference.Domain\Tooba.UserPreference.Domain.csproj" /></ItemGroup>
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <NoWarn>$(NoWarn);1591</NoWarn>
+    <RootNamespace>Tooba.UserPreference.Application</RootNamespace>
+    <AssemblyName>Tooba.UserPreference.Application</AssemblyName>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\BuildingBlocks\Tooba.BuildingBlocks\Tooba.BuildingBlocks.csproj" />
+    <ProjectReference Include="..\Tooba.UserPreference.Domain\Tooba.UserPreference.Domain.csproj" />
+    <ProjectReference Include="..\Tooba.UserPreference.Contracts\Tooba.UserPreference.Contracts.csproj" />
+  </ItemGroup>
 </Project>

@@ -25,35 +25,28 @@ BRIDGE-WAKE-V1
 Channel: tooba-main
 ```
 
-Latest Accepted TMAR Checkpoint — authoritative (reconciled by TB-TMAR-HOST-REVIEWS-AMC-001-R1)
+Latest Accepted TMAR Checkpoint — authoritative (reconciled by TB-TMAR-HOST-PREFERENCES-AMC-001)
 
 ```text
-Latest-Accepted-Implementation-Wave: TB-TMAR-HOST-REVIEWS-AMC-001-R1
-Latest-Accepted-Task: TB-TMAR-HOST-REVIEWS-AMC-001-R1
-Implementation-Commit: d3cfe575dbedf78d02f46988250b42fd01513580
+Latest-Accepted-Implementation-Wave: TB-TMAR-HOST-PREFERENCES-AMC-001
+Latest-Accepted-Task: TB-TMAR-HOST-PREFERENCES-AMC-001
+Implementation-Commit: PLACEHOLDER_STAMP_AFTER_COMMIT
 Implementation-Commit-Kind: IMPLEMENTATION_COMMIT
-Current-Host-Checkpoint: Reviews_HOST_ZERO_R1
-Active-Host-Folder: Reviews
-Host-Reviews-Directory: ABSENT
-Host-Reviews-Host-Zero: true
-Message-Text-Classification: ZERO
-Reviews-Failure-Mapper: ABSENT
-Expected-Failure-Transport: SemanticException_at_Domain_Directory
-Duplicate-Code: reviews.duplicate
-Rejected-Code: reviews.rejected
-Moderation-Rejected-Code: reviews.moderation.rejected
-Unknown-Exception-Propagation: YES
+Current-Host-Checkpoint: Preferences_HOST_ZERO
+Active-Host-Folder: Preferences
+Host-Preferences-Directory: ABSENT
+Host-Preferences-Host-Zero: true
+Http-Owner: Tooba.UserPreference.Endpoints.UserPreferenceEndpointModule
+Admin-Auth: HostUserPreferenceAdminAuthorizer
+Order-Application-Leakage: ZERO
 Endpoints-Domain-Reference: ZERO
-Endpoints-Host-Reference: ZERO
-Offer-Application-Leakage: ZERO
-Catalog-Application-Leakage: ZERO
 Failure-Presentation: SemanticException_ApiResponseFactory
-Prior-Accepted-Lineage: TB-TMAR-HOST-REVIEWS-AMC-001 ; TB-TMAR-HOST-PERSISTENCE-AMC-001 ; TB-TMAR-HOST-PAGECOMPOSITION-AMC-001
+Prior-Accepted-Lineage: TB-TMAR-HOST-REVIEWS-AMC-001-R1 ; TB-TMAR-HOST-PERSISTENCE-AMC-001 ; TB-TMAR-HOST-REVIEWS-AMC-001
 Next-Host-Folder-Started: false
 Next-Host-Folder: NONE_USER_DECISION_REQUIRED
 Stale-Current-Pointer-State: ZERO
-workflowStop: USER_REVIEW_HOST_REVIEWS_AMC_001_R1_CLOSED_HOST_ZERO
-Next-Task: USER_REVIEW_HOST_REVIEWS_AMC_001_R1_CLOSED_HOST_ZERO
+workflowStop: USER_REVIEW_HOST_PREFERENCES_AMC_001_CLOSED_HOST_ZERO
+Next-Task: USER_REVIEW_HOST_PREFERENCES_AMC_001_CLOSED_HOST_ZERO
 Automatic-Next-Implementation-Task: NONE
 ```
 

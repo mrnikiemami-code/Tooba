@@ -9,7 +9,6 @@ using Tooba.AccessControl.Infrastructure.Authorization;
 using Tooba.BuildingBlocks;
 using Tooba.BuildingBlocks.Security;
 using Tooba.Host.OperatorProfile;
-using Tooba.Host.Preferences;
 using Tooba.AccessControl.Infrastructure.Development.Seller;
 using Tooba.Host.Security.Seller;
 using Tooba.Host.Settings;
@@ -28,6 +27,7 @@ using Tooba.Party.Infrastructure;
 using Tooba.Party.Infrastructure.Persistence;
 using Tooba.Persistence;
 using Tooba.UserPreference.Application;
+using Tooba.UserPreference.Endpoints.Customer;
 using Tooba.UserPreference.Infrastructure;
 using Tooba.UserPreference.Infrastructure.Persistence;
 using Xunit;
@@ -87,13 +87,13 @@ public sealed class SettingsFoundationTests
         // The evacuated Host seller settings surface must be gone.
         Assert.False(File.Exists(Path.Combine(root, "src", "backend", "Host", "Tooba.Host", "Seller", "SellerSettingsEndpoints.cs")));
 
-        var preference = File.ReadAllText(Path.Combine(root, "src", "backend", "Host", "Tooba.Host", "Preferences", "UserPreferenceEndpoints.cs"));
-        Assert.Contains("/v1/customer/preferences", preference, StringComparison.Ordinal);
-        Assert.Contains("/v1/admin/operator/preferences", preference, StringComparison.Ordinal);
+        Assert.Contains("/v1/customer/preferences", File.ReadAllText(Path.Combine(root, "src", "backend", "Modules", "UserPreference", "Tooba.UserPreference.Endpoints", "UserPreferenceEndpointModule.cs")), StringComparison.Ordinal);
+        Assert.Contains("/v1/admin/operator/preferences", File.ReadAllText(Path.Combine(root, "src", "backend", "Modules", "UserPreference", "Tooba.UserPreference.Endpoints", "UserPreferenceEndpointModule.cs")), StringComparison.Ordinal);
 
-        var uiPreference = File.ReadAllText(Path.Combine(root, "src", "backend", "Host", "Tooba.Host", "Preferences", "UiPreferenceEndpoints.cs"));
-        Assert.Contains("/v1/admin/ui-preferences", uiPreference, StringComparison.Ordinal);
-        Assert.Contains("AdminPanelAccess.RequireAuthorizedAsync", uiPreference, StringComparison.Ordinal);
+        var uiPreference = File.ReadAllText(Path.Combine(root, "src", "backend", "Modules", "UserPreference", "Tooba.UserPreference.Endpoints", "Admin", "UiPreferenceAdminEndpoints.cs"));
+        Assert.Contains("/v1/admin/ui-preferences", File.ReadAllText(Path.Combine(root, "src", "backend", "Modules", "UserPreference", "Tooba.UserPreference.Endpoints", "UserPreferenceEndpointModule.cs")), StringComparison.Ordinal);
+        Assert.Contains("IUserPreferenceAdminAuthorizer", uiPreference, StringComparison.Ordinal);
+        Assert.DoesNotContain("AdminPanelAccess.RequireAuthorizedAsync", uiPreference, StringComparison.Ordinal);
 
         var operatorProfile = File.ReadAllText(Path.Combine(root, "src", "backend", "Host", "Tooba.Host", "OperatorProfile", "OperatorProfileEndpoints.cs"));
         Assert.Contains("/v1/admin/operator/profile", operatorProfile, StringComparison.Ordinal);
@@ -108,8 +108,9 @@ public sealed class SettingsFoundationTests
         var program = File.ReadAllText(Path.Combine(root, "src", "backend", "Host", "Tooba.Host", "Program.cs"));
         Assert.Contains("MapPartyEndpoints", program, StringComparison.Ordinal);
         Assert.DoesNotContain("MapSellerSettingsEndpoints", program, StringComparison.Ordinal);
-        Assert.Contains("MapUserPreferenceEndpoints", program, StringComparison.Ordinal);
-        Assert.Contains("MapUiPreferenceEndpoints", program, StringComparison.Ordinal);
+        Assert.Contains("MapUserPreferenceModuleEndpoints", program, StringComparison.Ordinal);
+        Assert.DoesNotContain("MapUserPreferenceEndpoints()", program, StringComparison.Ordinal);
+        Assert.DoesNotContain("MapUiPreferenceEndpoints()", program, StringComparison.Ordinal);
         Assert.Contains("MapOperatorProfileEndpoints", program, StringComparison.Ordinal);
     }
 

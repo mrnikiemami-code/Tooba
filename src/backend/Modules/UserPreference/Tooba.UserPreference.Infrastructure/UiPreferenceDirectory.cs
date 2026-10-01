@@ -1,5 +1,7 @@
 using Microsoft.EntityFrameworkCore;
+using Tooba.BuildingBlocks;
 using Tooba.UserPreference.Application;
+using Tooba.UserPreference.Contracts.Errors;
 using Tooba.UserPreference.Domain;
 using Tooba.UserPreference.Infrastructure.Persistence;
 
@@ -66,7 +68,7 @@ public sealed class UiPreferenceDirectory : IUiPreferenceDirectory
     {
         if (actorUserId == Guid.Empty)
         {
-            throw new InvalidOperationException("Actor معتبر الزامی است.");
+            throw new SemanticException(new SemanticError(UserPreferenceErrorCodes.UiPreferenceRejected));
         }
     }
 }
