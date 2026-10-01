@@ -1,4 +1,4 @@
-using Microsoft.Extensions.DependencyInjection;
+﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Npgsql;
@@ -6,6 +6,7 @@ using Testcontainers.PostgreSql;
 using Tooba.BuildingBlocks;
 using Tooba.Catalog.Infrastructure.Persistence;
 using Tooba.Host;
+using Tooba.Host.Persistence;
 using Tooba.MigrationRunner;
 using Xunit;
 

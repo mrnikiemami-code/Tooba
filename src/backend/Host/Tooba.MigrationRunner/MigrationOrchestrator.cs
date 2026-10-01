@@ -1,8 +1,9 @@
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Tooba.BuildingBlocks;
 using Tooba.Host;
+using Tooba.Host.Persistence;
 
 namespace Tooba.MigrationRunner;
 

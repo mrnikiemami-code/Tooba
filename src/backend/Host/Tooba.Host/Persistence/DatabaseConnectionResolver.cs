@@ -1,7 +1,7 @@
 using Npgsql;
 using Tooba.BuildingBlocks;
 
-namespace Tooba.Host;
+namespace Tooba.Host.Persistence;
 
 /// <summary>
 /// پیاده‌سازی Host برای تبدیل <see cref="ConnectionReference"/> به رشتهٔ Npgsql از پیکربندی.

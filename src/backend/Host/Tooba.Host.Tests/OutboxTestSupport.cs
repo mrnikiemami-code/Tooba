@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -7,6 +7,8 @@ using Tooba.Persistence;
 using Tooba.PlatformProbe.Infrastructure;
 using Tooba.PlatformProbe.Infrastructure.Events;
 using Tooba.PlatformProbe.Infrastructure.Persistence;
+
+using Tooba.Host.Persistence;
 
 namespace Tooba.Host.Tests;
 

@@ -1,4 +1,4 @@
-using System.Collections.Concurrent;
+﻿using System.Collections.Concurrent;
 using System.Diagnostics;
 using MassTransit;
 using Microsoft.AspNetCore.Http;
@@ -15,6 +15,8 @@ using Tooba.PlatformProbe.Infrastructure;
 using Tooba.PlatformProbe.Infrastructure.Events;
 using Tooba.PlatformProbe.Infrastructure.Persistence;
 using Xunit;
+
+using Tooba.Host.Persistence;
 
 namespace Tooba.Host.Tests;
 

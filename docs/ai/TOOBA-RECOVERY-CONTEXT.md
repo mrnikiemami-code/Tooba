@@ -25,28 +25,29 @@ BRIDGE-WAKE-V1
 Channel: tooba-main
 ```
 
-Latest Accepted TMAR Checkpoint — authoritative (reconciled by TB-TMAR-HOST-REVIEWS-AMC-001)
+Latest Accepted TMAR Checkpoint — authoritative (reconciled by TB-TMAR-HOST-PERSISTENCE-AMC-001)
 
 ```text
-Latest-Accepted-Implementation-Wave: TB-TMAR-HOST-REVIEWS-AMC-001
-Latest-Accepted-Task: TB-TMAR-HOST-REVIEWS-AMC-001
-Implementation-Commit: b30190cd5e806785dcff2e6a0ab7f3673baa1045
+Latest-Accepted-Implementation-Wave: TB-TMAR-HOST-PERSISTENCE-AMC-001
+Latest-Accepted-Task: TB-TMAR-HOST-PERSISTENCE-AMC-001
+Implementation-Commit: PLACEHOLDER_STAMP_AFTER_COMMIT
 Implementation-Commit-Kind: IMPLEMENTATION_COMMIT
-Current-Host-Checkpoint: Reviews_HOST_ZERO
-Active-Host-Folder: Reviews
-Host-Reviews-Directory: ABSENT
-Host-Reviews-Host-Zero: true
-Offer-Application-Leakage: ZERO
-Catalog-Application-Leakage: ZERO
-Endpoints-Domain-Reference: ZERO
-Endpoints-Message-Classification: ZERO
-Failure-Presentation: SemanticException_ApiResponseFactory
-Prior-Accepted-Lineage: TB-TMAR-HOST-PAGECOMPOSITION-AMC-001 ; TB-TMAR-HOST-SECURITY-AMC-001-R1
+Current-Host-Checkpoint: Persistence_KEEP_PLATFORM
+Active-Host-Folder: Persistence
+Host-Persistence-Directory: PRESENT
+Host-Persistence-Production-Files: 1
+Host-Persistence-Host-Zero: false
+Disposition: KEEP_AS_GENERIC_HOST_PLATFORM_INFRASTRUCTURE
+Path-Namespace: EXACT_Tooba.Host.Persistence
+Contract-Seam: Tooba.BuildingBlocks.IDatabaseConnectionResolver
+Fail-Closed-Code: platform.connection.unconfigured
+Sensitive-Logging: ZERO
+Prior-Accepted-Lineage: TB-TMAR-HOST-REVIEWS-AMC-001 ; TB-TMAR-HOST-PAGECOMPOSITION-AMC-001 ; TB-TMAR-HOST-SECURITY-AMC-001-R1
 Next-Host-Folder-Started: false
 Next-Host-Folder: NONE_USER_DECISION_REQUIRED
 Stale-Current-Pointer-State: ZERO
-workflowStop: USER_REVIEW_HOST_REVIEWS_AMC_001_CLOSED_HOST_ZERO
-Next-Task: USER_REVIEW_HOST_REVIEWS_AMC_001_CLOSED_HOST_ZERO
+workflowStop: USER_REVIEW_HOST_PERSISTENCE_AMC_001_KEEP_PLATFORM
+Next-Task: USER_REVIEW_HOST_PERSISTENCE_AMC_001_KEEP_PLATFORM
 Automatic-Next-Implementation-Task: NONE
 ```
 

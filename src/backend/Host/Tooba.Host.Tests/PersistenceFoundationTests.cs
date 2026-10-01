@@ -1,8 +1,10 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Tooba.BuildingBlocks;
 using Tooba.Persistence;
 using Tooba.PlatformProbe.Infrastructure.Persistence;
 using Xunit;
+
+using Tooba.Host.Persistence;
 
 namespace Tooba.Host.Tests;
 
