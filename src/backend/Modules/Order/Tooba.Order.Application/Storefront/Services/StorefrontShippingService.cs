@@ -8,6 +8,7 @@ using Tooba.Fulfillment.Contracts.Shipping;
 using Tooba.Localization.Contracts;
 using Tooba.Order.Application.Storefront.Models;
 using Tooba.Order.Application.Storefront.Ports;
+using Tooba.Order.Contracts.Storefront;
 using Tooba.Order.Domain;
 
 namespace Tooba.Order.Application.Storefront.Services;

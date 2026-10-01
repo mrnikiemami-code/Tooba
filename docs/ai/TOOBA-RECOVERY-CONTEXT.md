@@ -25,26 +25,27 @@ BRIDGE-WAKE-V1
 Channel: tooba-main
 ```
 
-Latest Accepted TMAR Checkpoint — authoritative (reconciled by TB-TMAR-HOST-ORDER-AMC-001)
+Latest Accepted TMAR Checkpoint — authoritative (reconciled by TB-TMAR-HOST-ORDER-AMC-001-R1)
 
 ```text
-Latest-Accepted-Implementation-Wave: TB-TMAR-HOST-ORDER-AMC-001
-Latest-Accepted-Task: TB-TMAR-HOST-ORDER-AMC-001
-Implementation-Commit: d93df23ca26b7396ad8a492ddb18e7a49006b803
+Latest-Accepted-Implementation-Wave: TB-TMAR-HOST-ORDER-AMC-001-R1
+Latest-Accepted-Task: TB-TMAR-HOST-ORDER-AMC-001-R1
+Implementation-Commit: PLACEHOLDER_STAMP_AFTER_COMMIT
 Implementation-Commit-Kind: IMPLEMENTATION_COMMIT
-Current-Host-Checkpoint: Order_KEEP_THIN_HOST_ORDER_STOREFRONT_ADAPTER
+Current-Host-Checkpoint: Order_KEEP_THIN_HOST_ORDER_STOREFRONT_ADAPTER_R1
 Active-Host-Folder: Order
 Host-Order-Directory: PRESENT
 Host-Order-Disposition: KEEP_AS_THIN_HOST_ORDER_STOREFRONT_ADAPTER
-Retained-Allowlist: HostOrderStorefrontActor.cs
+Host-Facing-Ports: Order.Contracts.Storefront
+Order-Application-On-Host-Order: ZERO
+Failure-Transport: SemanticException_FoundationErrorCodes.CheckoutAuthenticationRequired
 Guest-Actor: Order.Contracts.StorefrontGuestActor
-Auth-Code: FoundationErrorCodes.CheckoutAuthenticationRequired
-Prior-Accepted-Lineage: TB-TMAR-HOST-SETTINGS-AMC-001 ; TB-TMAR-HOST-CACHING-AMC-001-R1 ; TB-TMAR-HOST-CACHING-AMC-001
+Prior-Accepted-Lineage: TB-TMAR-HOST-ORDER-AMC-001 ; TB-TMAR-HOST-SETTINGS-AMC-001 ; TB-TMAR-HOST-CACHING-AMC-001-R1
 Next-Host-Folder-Started: false
 Next-Host-Folder: NONE_USER_DECISION_REQUIRED
 Stale-Current-Pointer-State: ZERO
-workflowStop: USER_REVIEW_HOST_ORDER_AMC_001_KEEP_THIN_HOST_ADAPTER
-Next-Task: USER_REVIEW_HOST_ORDER_AMC_001_KEEP_THIN_HOST_ADAPTER
+workflowStop: USER_REVIEW_HOST_ORDER_AMC_001_R1_KEEP_THIN_HOST_ADAPTER
+Next-Task: USER_REVIEW_HOST_ORDER_AMC_001_R1_KEEP_THIN_HOST_ADAPTER
 Automatic-Next-Implementation-Task: NONE
 ```
 

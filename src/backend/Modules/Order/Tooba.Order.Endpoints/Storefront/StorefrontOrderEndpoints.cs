@@ -1,4 +1,4 @@
-using MediatR;
+﻿using MediatR;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
@@ -10,7 +10,7 @@ using Tooba.Order.Application.Storefront.Models;
 using Tooba.Order.Application.Storefront.PendingPayment.Commands.CancelPendingCheckout;
 using Tooba.Order.Application.Storefront.PendingPayment.Commands.HidePendingPaymentCard;
 using Tooba.Order.Application.Storefront.PendingPayment.Queries.ListStorefrontPendingPayments;
-using Tooba.Order.Application.Storefront.Ports;
+using Tooba.Order.Contracts.Storefront;
 using Tooba.Order.Application.Storefront.Shipping.Commands.CommitStorefrontShipping;
 using Tooba.Order.Application.Storefront.Shipping.Commands.SaveStorefrontShippingSelection;
 using Tooba.Order.Application.Storefront.Shipping.Queries.ProjectStorefrontShipping;

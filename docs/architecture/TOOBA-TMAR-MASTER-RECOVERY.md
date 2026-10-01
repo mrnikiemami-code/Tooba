@@ -12,12 +12,16 @@ Canonical Architect ↔ Cursor handoff (recovery-critical)
 
 Latest Accepted TMAR Checkpoint — authoritative
 
-Reconciled by `TB-TMAR-HOST-ORDER-AMC-001`. Current implementation commit recorded at `lastAcceptedCommit` after PASS.
-- Host/Order = `PRESENT` / `KEEP_AS_THIN_HOST_ORDER_STOREFRONT_ADAPTER`.
-- Retained allowlist (exact 1): `HostOrderStorefrontActor.cs` (`HostOrderStorefrontActor` + `HostOrderStorefrontCheckoutIdentityGate`).
-- Guest actor = Order.Contracts `StorefrontGuestActor`; auth code = `FoundationErrorCodes.CheckoutAuthenticationRequired`.
-- Current Host checkpoint = `Order`; workflowStop = `USER_REVIEW_HOST_ORDER_AMC_001_KEEP_THIN_HOST_ADAPTER`; automatic next = NONE; stale pointer = ZERO.
-- Settings / Caching R1 / Caching parent / OperatorProfile R1 remain accepted historical lineage.
+Reconciled by `TB-TMAR-HOST-ORDER-AMC-001-R1`. Current implementation commit recorded at `lastAcceptedCommit` after PASS.
+- Host/Order = `PRESENT` / `KEEP_AS_THIN_HOST_ORDER_STOREFRONT_ADAPTER` preserved.
+- Host-facing ports = `Order.Contracts.Storefront` (`IOrderStorefrontActor`, `IOrderStorefrontCheckoutIdentityGate`).
+- Host → Order.Application/Domain/Infrastructure/Persistence = ZERO; failure = `SemanticException` + Foundation auth code.
+- Current Host checkpoint = `Order`; workflowStop = `USER_REVIEW_HOST_ORDER_AMC_001_R1_KEEP_THIN_HOST_ADAPTER`; automatic next = NONE; stale pointer = ZERO.
+- Parent Order AMC / Settings / Caching R1 remain accepted historical lineage.
+
+Reconciled by `TB-TMAR-HOST-ORDER-AMC-001` (HISTORICAL). Host/Order = `PRESENT` / `KEEP_AS_THIN_HOST_ORDER_STOREFRONT_ADAPTER`.
+- Retained allowlist (exact 1): `HostOrderStorefrontActor.cs`.
+- Historical stop = `USER_REVIEW_HOST_ORDER_AMC_001_KEEP_THIN_HOST_ADAPTER`.
 
 Reconciled by `TB-TMAR-HOST-SETTINGS-AMC-001` (HISTORICAL). Host/Settings = `ABSENT` / `CLOSED_HOST_ZERO`.
 - Seeds owned by Party / UserPreference / OperatorProfile Infrastructure.Development; Host retained thin `Composition/SettingsFoundationDevelopmentSeedHost` only.

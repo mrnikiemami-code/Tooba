@@ -6,4 +6,7 @@
     <RootNamespace>Tooba.Order.Contracts</RootNamespace>
     <AssemblyName>Tooba.Order.Contracts</AssemblyName>
   </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\Cart\Tooba.Cart.Contracts\Tooba.Cart.Contracts.csproj" />
+  </ItemGroup>
 </Project>

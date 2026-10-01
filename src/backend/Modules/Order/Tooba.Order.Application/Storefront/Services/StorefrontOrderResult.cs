@@ -46,6 +46,10 @@ public static class StorefrontOrderResult
         {
             return Result.Failure<T>(new SemanticError(exception.Code));
         }
+        catch (SemanticException exception)
+        {
+            return Result.Failure<T>(exception.Error);
+        }
         catch (InvalidOperationException exception) when (TryMapCheckoutDirectoryCode(exception.Message, out var code))
         {
             return Result.Failure<T>(new SemanticError(code));
