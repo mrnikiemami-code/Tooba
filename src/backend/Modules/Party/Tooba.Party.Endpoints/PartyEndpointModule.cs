@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
 using Tooba.BuildingBlocks.Localization;
 using Tooba.BuildingBlocks.Presentation.Errors;
+using Tooba.Party.Endpoints.Admin.Sellers;
 using Tooba.Party.Endpoints.Errors;
 using Tooba.Party.Endpoints.Resources;
 using Tooba.Party.Endpoints.Seller;
@@ -21,12 +22,13 @@ public static class PartyEndpointModule
         return services;
     }
 
-    /// <summary>مسیرهای Party را ثبت می‌کند (تنظیمات فروشنده).</summary>
+    /// <summary>مسیرهای Party را ثبت می‌کند (تنظیمات فروشنده + Admin sellers list).</summary>
     public static IEndpointRouteBuilder MapPartyEndpoints(this IEndpointRouteBuilder app)
     {
         ArgumentNullException.ThrowIfNull(app);
         var seller = app.MapGroup("/v1/seller/settings");
         PartySellerSettingsEndpoints.Map(seller);
+        PartyAdminSellersEndpoints.Map(app);
         return app;
     }
 }

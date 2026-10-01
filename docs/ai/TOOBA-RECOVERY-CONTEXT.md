@@ -25,30 +25,27 @@ BRIDGE-WAKE-V1
 Channel: tooba-main
 ```
 
-Latest Accepted TMAR Checkpoint — authoritative (reconciled by TB-TMAR-HOST-JOBS-DEAD-REGISTRY-CLEANUP-001-R1)
+Latest Accepted TMAR Checkpoint — authoritative (reconciled by TB-TMAR-HOST-ADMIN-PANEL-AMC-001-W1)
 
 ```text
-Latest-Accepted-Implementation-Wave: TB-TMAR-HOST-JOBS-DEAD-REGISTRY-CLEANUP-001-R1
-Latest-Accepted-Task: TB-TMAR-HOST-JOBS-DEAD-REGISTRY-CLEANUP-001-R1
-Implementation-Commit: 913ce3ca6c7e89a04f6ed9ebb74d1bc8a8660179
+Latest-Accepted-Implementation-Wave: TB-TMAR-HOST-ADMIN-PANEL-AMC-001-W1
+Latest-Accepted-Task: TB-TMAR-HOST-ADMIN-PANEL-AMC-001-W1
+Implementation-Commit: PENDING_W1_IMPL_STAMP_AFTER_COMMIT
 Implementation-Commit-Kind: IMPLEMENTATION_COMMIT
-Current-Host-Checkpoint: Jobs
-Active-Host-Folder: Jobs
-Host-Jobs-Directory: ABSENT
-Host-Jobs-Disposition: HOST_ZERO_DEAD_INFRA_REMOVED
-BackgroundWorkerRegistry: REMOVED
-IBackgroundWorkerRegistry: REMOVED
-GetState: REMOVED
-Production-Readers-Before-Removal: ZERO
-Writer-Consumers-Removed: Outbox_Cart_Payment_Order
-Worker-Metrics-Logging: PRESERVED
-Platform-Keep-Areas-Jobs: REMOVED
-Prior-Accepted-Lineage: TB-TMAR-HOST-COMPOSITION-AMC-001-R1 ; TB-TMAR-HOST-COMPOSITION-AMC-001 ; TB-TMAR-HOST-LOCALIZATION-AMC-001-R1
+Current-Host-Checkpoint: Admin/Panel
+Active-Host-Folder: Admin/Panel
+Get-Sellers-Owner: Party.Endpoints
+Host-Get-Sellers-Residue: ZERO
+Post-Sellers-Query: DEFERRED_UNCHANGED
+Dashboard: KEEP_UNCHANGED
+Dev-Context: DEFERRED_UNCHANGED
+Host-Admin-Panel-Files: 3
+Prior-Accepted-Lineage: TB-TMAR-HOST-ADMIN-PANEL-AMC-001 ; TB-TMAR-HOST-JOBS-DEAD-REGISTRY-CLEANUP-001-R1 ; TB-TMAR-HOST-COMPOSITION-AMC-001-R1
 Next-Host-Folder-Started: false
 Next-Host-Folder: NONE_USER_DECISION_REQUIRED
 Stale-Current-Pointer-State: ZERO
-workflowStop: USER_REVIEW_HOST_JOBS_DEAD_REGISTRY_CLEANUP_001_R1
-Next-Task: USER_REVIEW_HOST_JOBS_DEAD_REGISTRY_CLEANUP_001_R1
+workflowStop: USER_REVIEW_HOST_ADMIN_PANEL_AMC_001_W1
+Next-Task: USER_REVIEW_HOST_ADMIN_PANEL_AMC_001_W1
 Automatic-Next-Implementation-Task: NONE
 ```
 

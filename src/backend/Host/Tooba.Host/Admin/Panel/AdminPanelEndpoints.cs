@@ -8,12 +8,12 @@ namespace Tooba.Host.Admin.Panel;
 
 /// <summary>
 /// مسیرهای فقط‌خواندنی عملیات مدیر برای سطوح cross-module.
-/// مسیرهای /orders و /customers به Order.Endpoints منتقل شده‌اند.
+/// GET /v1/admin/sellers به Party.Endpoints منتقل شده است.
 /// </summary>
 public static class AdminPanelEndpoints
 {
     /// <summary>
-    /// مسیرهای داشبورد و فروشندگان مدیر را ثبت می‌کند.
+    /// مسیرهای داشبورد و گرید فروشندگان مدیر را ثبت می‌کند.
     /// </summary>
     public static void MapAdminPanelEndpoints(this WebApplication app)
     {
@@ -24,7 +24,7 @@ public static class AdminPanelEndpoints
         // R6: GET /v1/admin/orders/{checkoutId} is owned by Order.Endpoints (AdminOrderDetailEndpoints).
         // R2_REMAINDER: payment detail/actions owned by Payment.Endpoints (MapPaymentEndpoints).
         // R11: GET/POST /v1/admin/customers* owned by Order.Endpoints (AdminCustomersEndpoints).
-        group.MapGet("/sellers", ListSellersAsync);
+        // W1: GET /v1/admin/sellers owned by Party.Endpoints (PartyAdminSellersEndpoints).
         group.MapPost("/sellers/query", QuerySellersGridAsync);
         group.MapGet("/dev-context", GetDevContext);
     }
@@ -39,17 +39,6 @@ public static class AdminPanelEndpoints
         CancellationToken cancellationToken) =>
         await ExecuteAsync(request, session, tenant, guard, environment, cancellationToken,
             () => composer.GetDashboardAsync(cancellationToken));
-
-    private static async Task<IResult> ListSellersAsync(
-        AdminPanelComposer composer,
-        HttpRequest request,
-        CurrentAuthenticatedSession session,
-        ICurrentTenant tenant,
-        IAuthorizationGuard guard,
-        IHostEnvironment environment,
-        CancellationToken cancellationToken) =>
-        await ExecuteAsync(request, session, tenant, guard, environment, cancellationToken,
-            () => composer.ListSellersAsync(cancellationToken));
 
     private static Task<IResult> QuerySellersGridAsync(
         GridQueryRequest body,

@@ -71,8 +71,8 @@ public sealed class AdminPanelCompositionTests
         Assert.Contains("IOfferQueryGateway", source, StringComparison.Ordinal);
         Assert.Contains("CountActiveOffersAsync", source, StringComparison.Ordinal);
         Assert.Contains("IAdminOrderDashboardMetricsPort", source, StringComparison.Ordinal);
-        Assert.Contains("IAdminSellerOrderCountPort", source, StringComparison.Ordinal);
-        Assert.Contains("IPartyAdminSellerReadGateway", source, StringComparison.Ordinal);
+        Assert.Contains("IAdminSellersGridPort", source, StringComparison.Ordinal);
+        Assert.DoesNotContain("ListSellersAsync", source, StringComparison.Ordinal);
         Assert.DoesNotContain("OrderDbContext", source, StringComparison.Ordinal);
         Assert.DoesNotContain("OfferDbContext", source, StringComparison.Ordinal);
         Assert.DoesNotContain("CatalogDbContext", source, StringComparison.Ordinal);
@@ -101,6 +101,7 @@ public sealed class AdminPanelCompositionTests
         Assert.DoesNotContain("MapGet(\"/orders/{checkoutId:guid}\"", source, StringComparison.Ordinal);
         Assert.DoesNotContain("MapGet(\"/customers\"", source, StringComparison.Ordinal);
         Assert.DoesNotContain("MapPost(\"/customers/query\"", source, StringComparison.Ordinal);
+        Assert.DoesNotContain("MapGet(\"/sellers\"", source, StringComparison.Ordinal);
         Assert.DoesNotContain("GetOrderAsync", source, StringComparison.Ordinal);
         Assert.DoesNotContain("ListOrdersAsync", source, StringComparison.Ordinal);
         Assert.DoesNotContain("ListCustomersAsync", source, StringComparison.Ordinal);

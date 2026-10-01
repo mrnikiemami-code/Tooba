@@ -1,6 +1,5 @@
 ﻿using Tooba.BuildingBlocks.Grid;
 using Tooba.Catalog.Contracts;
-using Tooba.Offer.Contracts.Dtos;
 using Tooba.Offer.Contracts.Ports;
 using Tooba.Order.Contracts.Admin;
 using Tooba.Party.Contracts;
@@ -8,17 +7,15 @@ using Tooba.Party.Contracts;
 namespace Tooba.Host.Admin.Panel;
 
 /// <summary>
-/// ترکیب باریک Host برای سطوح cross-module مدیر (داشبورد / فروشندگان).
-/// مسیرهای Order-owned (orders list، customers) در Order.Endpoints هستند.
+/// ترکیب باریک Host برای سطوح cross-module مدیر (داشبورد / گرید فروشندگان).
+/// GET /v1/admin/sellers به Party.Endpoints منتقل شده است.
 /// تمام خواندن ماژول‌های کسب‌وکار فقط از طریق Contracts انجام می‌شود.
 /// </summary>
 public sealed class AdminPanelComposer
 {
     private readonly ICatalogAdminProductCountGateway _catalogProducts;
     private readonly IOfferQueryGateway _offers;
-    private readonly IPartyAdminSellerReadGateway _parties;
     private readonly IAdminOrderDashboardMetricsPort _orderMetrics;
-    private readonly IAdminSellerOrderCountPort _sellerOrderCounts;
     private readonly IAdminSellersGridPort _sellersGrid;
 
     /// <summary>
@@ -27,16 +24,12 @@ public sealed class AdminPanelComposer
     public AdminPanelComposer(
         ICatalogAdminProductCountGateway catalogProducts,
         IOfferQueryGateway offers,
-        IPartyAdminSellerReadGateway parties,
         IAdminOrderDashboardMetricsPort orderMetrics,
-        IAdminSellerOrderCountPort sellerOrderCounts,
         IAdminSellersGridPort sellersGrid)
     {
         _catalogProducts = catalogProducts;
         _offers = offers;
-        _parties = parties;
         _orderMetrics = orderMetrics;
-        _sellerOrderCounts = sellerOrderCounts;
         _sellersGrid = sellersGrid;
     }
 
@@ -59,24 +52,6 @@ public sealed class AdminPanelComposer
             orderMetrics.PendingOrders,
             sellerIds.Count,
             orderMetrics.Customers);
-    }
-
-    /// <summary>
-    /// فروشندگان دارای Offer را با وضعیت Party و شمارنده‌های مستقل فهرست می‌کند.
-    /// وضعیت Party از مرز Contracts Party و شمارش سفارش از مرز Contracts Order است.
-    /// </summary>
-    public async Task<IReadOnlyList<AdminSellerListItem>> ListSellersAsync(CancellationToken cancellationToken)
-    {
-        var offerRows = await _offers.ListSellerStatusRowsAsync(cancellationToken);
-        var sellerIds = offerRows.Select(x => x.SellerPartyId).Distinct().ToList();
-        var parties = await _parties.GetStatusProjectionsAsync(sellerIds, cancellationToken);
-        var orderMap = await _sellerOrderCounts.GetCountsBySellerAsync(sellerIds, cancellationToken);
-        return parties.Select(party => new AdminSellerListItem(
-            party.PartyId,
-            party.DisplayName,
-            party.Status,
-            offerRows.Count(x => x.SellerPartyId == party.PartyId && x.Status == OfferStatus.Active),
-            orderMap.GetValueOrDefault(party.PartyId))).ToList();
     }
 
     /// <summary>صفحه‌بندی server-side گرید فروشندگان Admin (مرز Contracts Party؛ Order metric از Contracts Order).</summary>

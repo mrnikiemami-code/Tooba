@@ -12,13 +12,15 @@ Canonical Architect ↔ Cursor handoff (recovery-critical)
 
 Latest Accepted TMAR Checkpoint — authoritative
 
-Reconciled by `TB-TMAR-HOST-JOBS-DEAD-REGISTRY-CLEANUP-001-R1`. Implementation commit recorded at `lastAcceptedCommit` = `913ce3ca6c7e89a04f6ed9ebb74d1bc8a8660179` (`IMPLEMENTATION_COMMIT`). Docs/stamp SHA recorded separately.
+Reconciled by `TB-TMAR-HOST-ADMIN-PANEL-AMC-001-W1`. Implementation commit recorded at `lastAcceptedCommit` after PASS.
+- Host/Admin/Panel remains present (3 files); GET `/v1/admin/sellers` owned by `Party.Endpoints`.
+- Host GET sellers residue = ZERO; POST `/sellers/query` deferred unchanged; dashboard KEEP; dev-context deferred.
+- Current Host checkpoint = `Admin/Panel`; workflowStop = `USER_REVIEW_HOST_ADMIN_PANEL_AMC_001_W1`; automatic next = NONE; stale pointer = ZERO.
+- Parent Analyze `TB-TMAR-HOST-ADMIN-PANEL-AMC-001` accepted; Jobs dead-registry R1 remains historical lineage.
+
+Reconciled by `TB-TMAR-HOST-JOBS-DEAD-REGISTRY-CLEANUP-001-R1` (HISTORICAL). Implementation commit `913ce3ca6c7e89a04f6ed9ebb74d1bc8a8660179`.
 - Host/Jobs = `ABSENT` / `HOST_ZERO_DEAD_INFRA_REMOVED`.
-- `BackgroundWorkerRegistry` / `IBackgroundWorkerRegistry` / `GetState` / `BackgroundWorkerRunState` = `REMOVED`.
-- Production readers before removal = `ZERO`; writer-only consumers removed from Outbox/Cart/Payment/Order; real worker metrics/logging preserved.
-- `Jobs` removed from `platformKeepAreas`; generic worker seams no longer list `IBackgroundWorkerRegistry`.
-- Current Host checkpoint = `Jobs`; workflowStop = `USER_REVIEW_HOST_JOBS_DEAD_REGISTRY_CLEANUP_001_R1`; automatic next = NONE; stale pointer = ZERO.
-- Historical Composition AMC R1 / Composition AMC / Localization AMC R1 lineage remains intact and is NOT current.
+- Historical stop = `USER_REVIEW_HOST_JOBS_DEAD_REGISTRY_CLEANUP_001_R1`.
 
 Reconciled by `TB-TMAR-HOST-COMPOSITION-AMC-001-R1` (HISTORICAL). Current implementation commit recorded at historical Composition R1 acceptance.
 - Host/Composition = `PRESENT` / `KEEP_AS_GENERIC_HOST_COMPOSITION_ROOT` preserved (exact 5 files).

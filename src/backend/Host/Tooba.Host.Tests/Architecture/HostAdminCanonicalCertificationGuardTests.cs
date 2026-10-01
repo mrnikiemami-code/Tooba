@@ -58,6 +58,8 @@ public sealed class HostAdminCanonicalCertificationGuardTests
         ],
         ["Access/Authorizers"] =
         [
+            "HostLocalizationAdminAuthorizer.cs",
+            "HostOperatorProfileAdminAuthorizer.cs",
             "HostOrderAdminAuthorizer.cs",
             "HostOrderAdminEffectiveAccessReader.cs",
             "HostPaymentAdminAuthorizer.cs",
@@ -65,6 +67,7 @@ public sealed class HostAdminCanonicalCertificationGuardTests
             "HostReturnAdminAuthorizer.cs",
             "HostSettlementAdminAuthorizer.cs",
             "HostSupportAdminAuthorizer.cs",
+            "HostUserPreferenceAdminAuthorizer.cs",
             "HostWalletAdminAuthorizer.cs",
         ],
         ["Panel"] =
@@ -101,7 +104,7 @@ public sealed class HostAdminCanonicalCertificationGuardTests
     // ---------------------------------------------------------------------
 
     [Fact]
-    public void Certified_structure_is_exactly_15_recursive_files_with_zero_flat_root()
+    public void Certified_structure_is_exactly_18_recursive_files_with_zero_flat_root()
     {
         var root = AdminRoot();
         Assert.Empty(Directory.GetFiles(root, "*.cs", SearchOption.TopDirectoryOnly));
@@ -116,7 +119,7 @@ public sealed class HostAdminCanonicalCertificationGuardTests
             .OrderBy(x => x, StringComparer.Ordinal)
             .ToArray();
 
-        Assert.Equal(15, discovered.Length);
+        Assert.Equal(18, discovered.Length);
         Assert.Equal(expected, discovered);
 
         var folders = Directory.GetDirectories(root)
@@ -198,6 +201,9 @@ public sealed class HostAdminCanonicalCertificationGuardTests
             "Tooba.Settlement.Endpoints",
             "Tooba.Support.Endpoints",
             "Tooba.Wallet.Endpoints",
+            "Tooba.Localization.Endpoints",
+            "Tooba.OperatorProfile.Endpoints",
+            "Tooba.UserPreference.Endpoints",
             "Microsoft.AspNetCore.Http",
         };
 
@@ -396,9 +402,16 @@ public sealed class HostAdminCanonicalCertificationGuardTests
         Assert.Contains("using Tooba.Order.Contracts.Admin;", text, StringComparison.Ordinal);
         Assert.Contains("using Tooba.Offer.Contracts.Ports;", text, StringComparison.Ordinal);
         Assert.Contains("ICatalogAdminProductCountGateway", text, StringComparison.Ordinal);
-        Assert.Contains("IPartyAdminSellerReadGateway", text, StringComparison.Ordinal);
         Assert.Contains("IAdminOrderDashboardMetricsPort", text, StringComparison.Ordinal);
-        Assert.Contains("IAdminSellerOrderCountPort", text, StringComparison.Ordinal);
+        Assert.Contains("IAdminSellersGridPort", text, StringComparison.Ordinal);
+        Assert.DoesNotContain("ListSellersAsync", text, StringComparison.Ordinal);
+        Assert.DoesNotContain("IPartyAdminSellerReadGateway", text, StringComparison.Ordinal);
+        Assert.DoesNotContain("IAdminSellerOrderCountPort", text, StringComparison.Ordinal);
+
+        var sellersQuery = File.ReadAllText(RepoFile(
+            "src/backend/Modules/Party/Tooba.Party.Application/Admin/Sellers/Queries/ListAdminSellersQuery.cs"));
+        Assert.Contains("IPartyAdminSellerReadGateway", sellersQuery, StringComparison.Ordinal);
+        Assert.Contains("IAdminSellerOrderCountPort", sellersQuery, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -489,8 +502,12 @@ public sealed class HostAdminCanonicalCertificationGuardTests
         Assert.DoesNotContain("MapGet(\"/customers\"", endpoints, StringComparison.Ordinal);
         Assert.DoesNotContain("MapPost(\"/orders/query\"", endpoints, StringComparison.Ordinal);
         Assert.Contains("MapGet(\"/dashboard\"", endpoints, StringComparison.Ordinal);
-        Assert.Contains("MapGet(\"/sellers\"", endpoints, StringComparison.Ordinal);
+        Assert.DoesNotContain("MapGet(\"/sellers\"", endpoints, StringComparison.Ordinal);
         Assert.Contains("MapPost(\"/sellers/query\"", endpoints, StringComparison.Ordinal);
+
+        var partySellers = File.ReadAllText(RepoFile(
+            "src/backend/Modules/Party/Tooba.Party.Endpoints/Admin/Sellers/PartyAdminSellersEndpoints.cs"));
+        Assert.Contains("MapGet(\"/v1/admin/sellers\"", partySellers, StringComparison.Ordinal);
     }
 
     // ---------------------------------------------------------------------

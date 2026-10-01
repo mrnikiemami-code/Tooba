@@ -16,6 +16,8 @@ public sealed class HostAdminCanon009GuardTests
     [
         "Access/AdminPanelAccess.cs",
         "Access/HostAdminPanelAccess.cs",
+        "Access/Authorizers/HostLocalizationAdminAuthorizer.cs",
+        "Access/Authorizers/HostOperatorProfileAdminAuthorizer.cs",
         "Access/Authorizers/HostOrderAdminAuthorizer.cs",
         "Access/Authorizers/HostOrderAdminEffectiveAccessReader.cs",
         "Access/Authorizers/HostPaymentAdminAuthorizer.cs",
@@ -23,6 +25,7 @@ public sealed class HostAdminCanon009GuardTests
         "Access/Authorizers/HostReturnAdminAuthorizer.cs",
         "Access/Authorizers/HostSettlementAdminAuthorizer.cs",
         "Access/Authorizers/HostSupportAdminAuthorizer.cs",
+        "Access/Authorizers/HostUserPreferenceAdminAuthorizer.cs",
         "Access/Authorizers/HostWalletAdminAuthorizer.cs",
         "Panel/AdminPanelComposer.cs",
         "Panel/AdminPanelEndpoints.cs",
@@ -98,7 +101,7 @@ public sealed class HostAdminCanon009GuardTests
     }
 
     [Fact]
-    public void Admin_recursive_file_count_is_15_and_canon008_structure_is_preserved()
+    public void Admin_recursive_file_count_is_18_and_canon008_structure_is_preserved()
     {
         var root = AdminRoot();
         Assert.Empty(Directory.GetFiles(root, "*.cs", SearchOption.TopDirectoryOnly));
@@ -108,7 +111,7 @@ public sealed class HostAdminCanon009GuardTests
             .OrderBy(x => x, StringComparer.Ordinal)
             .ToArray();
 
-        Assert.Equal(15, discovered.Length);
+        Assert.Equal(18, discovered.Length);
         Assert.Equal(AdminFiles.OrderBy(x => x, StringComparer.Ordinal).ToArray(), discovered);
     }
 
