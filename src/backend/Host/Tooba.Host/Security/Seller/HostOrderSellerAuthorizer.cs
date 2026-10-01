@@ -19,9 +19,9 @@ public sealed class HostOrderSellerAuthorizer(ISellerPanelAccess sellerAccess) :
                 httpContext.Request, cancellationToken);
             return (actor, seller, null);
         }
-        catch (PlatformHttpException ex)
+        catch (SemanticException ex)
         {
-            return (Guid.Empty, Guid.Empty, new SemanticError(ex.ErrorCode ?? SellerSecurityErrorCodes.ActorMissing));
+            return (Guid.Empty, Guid.Empty, ex.Error);
         }
     }
 }

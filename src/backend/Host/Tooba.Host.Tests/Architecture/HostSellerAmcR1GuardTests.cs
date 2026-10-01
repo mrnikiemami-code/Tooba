@@ -128,7 +128,9 @@ public sealed class HostSellerAmcR1GuardTests
         var order = File.ReadAllText(Path.Combine(boundaryRoot, "HostOrderSellerAuthorizer.cs"));
         Assert.DoesNotContain("SellerOrderErrors", order, StringComparison.Ordinal);
         Assert.DoesNotContain("Tooba.Order.Application", order, StringComparison.Ordinal);
-        Assert.Contains("SellerSecurityErrorCodes.ActorMissing", order, StringComparison.Ordinal);
+        Assert.Contains("catch (SemanticException", order, StringComparison.Ordinal);
+        Assert.DoesNotContain("catch (PlatformHttpException", order, StringComparison.Ordinal);
+        Assert.Contains("ex.Error", order, StringComparison.Ordinal);
 
         var support = File.ReadAllText(Path.Combine(boundaryRoot, "HostSupportSellerAuthorizer.cs"));
         Assert.DoesNotContain("SupportErrorCodes", support, StringComparison.Ordinal);

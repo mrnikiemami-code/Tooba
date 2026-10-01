@@ -56,7 +56,7 @@ internal static class SellerPanelAccess
             return devActor;
         }
 
-        throw new PlatformHttpException(401, "هویت بازیگر احراز نشده است.", SellerSecurityErrorCodes.ActorMissing);
+        throw new SemanticException(new SemanticError(SellerSecurityErrorCodes.ActorMissing));
     }
 
     /// <summary>
@@ -67,7 +67,7 @@ internal static class SellerPanelAccess
         var raw = request.Headers[SellerPartyHeader].ToString();
         if (!Guid.TryParse(raw, out var sellerPartyId) || sellerPartyId == Guid.Empty)
         {
-            throw new PlatformHttpException(400, "شناسهٔ فروشنده نامعتبر است.", SellerSecurityErrorCodes.IdentityMissing);
+            throw new SemanticException(new SemanticError(SellerSecurityErrorCodes.IdentityMissing));
         }
 
         return sellerPartyId;
@@ -85,11 +85,11 @@ internal static class SellerPanelAccess
     {
         if (actorUserId == Guid.Empty || sellerPartyId == Guid.Empty)
         {
-            throw new PlatformHttpException(401, "هویت بازیگر احراز نشده است.", SellerSecurityErrorCodes.ActorMissing);
+            throw new SemanticException(new SemanticError(SellerSecurityErrorCodes.ActorMissing));
         }
 
         var effectiveEdition = edition.Current?.Edition
-            ?? throw new PlatformHttpException(503, "سرویس مجوز در دسترس نیست.", SellerSecurityErrorCodes.AuthorizationUnavailable);
+            ?? throw new SemanticException(new SemanticError(SellerSecurityErrorCodes.AuthorizationUnavailable));
 
         var decision = await guard.AuthorizeUseCaseAsync(
             new AuthorizationCheck
@@ -115,9 +115,9 @@ internal static class SellerPanelAccess
 
         if (decision.Kind == AuthorizationDecisionKind.Unavailable)
         {
-            throw new PlatformHttpException(503, "سرویس مجوز در دسترس نیست.", SellerSecurityErrorCodes.AuthorizationUnavailable);
+            throw new SemanticException(new SemanticError(SellerSecurityErrorCodes.AuthorizationUnavailable));
         }
 
-        throw new PlatformHttpException(403, "دسترسی به این فروشنده مجاز نیست.", SellerSecurityErrorCodes.AuthorizationDenied);
+        throw new SemanticException(new SemanticError(SellerSecurityErrorCodes.AuthorizationDenied));
     }
 }

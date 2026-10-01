@@ -43,14 +43,13 @@ public sealed class SellerPanelAuthorizationTests
         await SellerPanelAccess.AuthorizeActorForSellerAsync(auth.Guard, actorA, sellerA, new FixedCurrentEdition(ToobaEdition.SingleStore), CancellationToken.None);
         await SellerPanelAccess.AuthorizeActorForSellerAsync(auth.Guard, actorB, sellerB, new FixedCurrentEdition(ToobaEdition.SingleStore), CancellationToken.None);
 
-        var denyAb = await Assert.ThrowsAsync<PlatformHttpException>(() =>
+        var denyAb = await Assert.ThrowsAsync<SemanticException>(() =>
             SellerPanelAccess.AuthorizeActorForSellerAsync(auth.Guard, actorA, sellerB, new FixedCurrentEdition(ToobaEdition.SingleStore), CancellationToken.None));
-        Assert.Equal(403, denyAb.StatusCode);
-        Assert.Equal("seller.authorization.denied", denyAb.ErrorCode);
+        Assert.Equal("seller.authorization.denied", denyAb.Error.Code);
 
-        var denyBa = await Assert.ThrowsAsync<PlatformHttpException>(() =>
+        var denyBa = await Assert.ThrowsAsync<SemanticException>(() =>
             SellerPanelAccess.AuthorizeActorForSellerAsync(auth.Guard, actorB, sellerA, new FixedCurrentEdition(ToobaEdition.SingleStore), CancellationToken.None));
-        Assert.Equal(403, denyBa.StatusCode);
+        Assert.Equal("seller.authorization.denied", denyBa.Error.Code);
     }
 
     [Fact]
@@ -61,10 +60,9 @@ public sealed class SellerPanelAuthorizationTests
         var request = new DefaultHttpContext().Request;
         request.Headers[SellerPanelAccess.SellerPartyHeader] = "01a030d1-40cb-7000-8abe-6d31739956c5";
 
-        var ex = await Assert.ThrowsAsync<PlatformHttpException>(() =>
+        var ex = await Assert.ThrowsAsync<SemanticException>(() =>
             SellerPanelAccess.RequireAuthorizedAsync(request, session, auth.Guard, new StubHostEnvironment(isDevelopment: true), new FixedCurrentEdition(ToobaEdition.SingleStore), CancellationToken.None));
-        Assert.Equal(401, ex.StatusCode);
-        Assert.Equal("seller.actor.missing", ex.ErrorCode);
+        Assert.Equal("seller.actor.missing", ex.Error.Code);
     }
 
     [Fact]
@@ -98,9 +96,9 @@ public sealed class SellerPanelAuthorizationTests
 
         var spoof = new DefaultHttpContext().Request;
         spoof.Headers[SellerPanelAccess.SellerPartyHeader] = sellerB.ToString("D");
-        var denied = await Assert.ThrowsAsync<PlatformHttpException>(() =>
+        var denied = await Assert.ThrowsAsync<SemanticException>(() =>
             SellerPanelAccess.RequireAuthorizedAsync(spoof, session, auth.Guard, new StubHostEnvironment(isDevelopment: false), new FixedCurrentEdition(ToobaEdition.SingleStore), CancellationToken.None));
-        Assert.Equal(403, denied.StatusCode);
+        Assert.Equal("seller.authorization.denied", denied.Error.Code);
     }
 
     [Fact]
@@ -133,11 +131,10 @@ public sealed class SellerPanelAuthorizationTests
     {
         var telemetry = new AuthorizationInstrumentation();
         IAuthorizationGuard guard = new AuthorizationGuard(new FailClosedAuthorizationAdapter("authorization.disabled", telemetry));
-        var ex = await Assert.ThrowsAsync<PlatformHttpException>(() =>
+        var ex = await Assert.ThrowsAsync<SemanticException>(() =>
             SellerPanelAccess.AuthorizeActorForSellerAsync(
                 guard, Guid.Parse("aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaa0001"), Guid.Parse("01a030d1-40cb-7000-8abe-6d31739956c5"), new FixedCurrentEdition(ToobaEdition.SingleStore), CancellationToken.None));
-        Assert.Equal(503, ex.StatusCode);
-        Assert.Equal("seller.authorization.unavailable", ex.ErrorCode);
+        Assert.Equal("seller.authorization.unavailable", ex.Error.Code);
     }
 
     private static (IAuthorizationService Service, IAuthorizationTupleWriter Writer, IAuthorizationGuard Guard) CreateInMemory()

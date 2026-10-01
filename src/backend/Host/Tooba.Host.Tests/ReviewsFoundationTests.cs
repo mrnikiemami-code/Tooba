@@ -194,10 +194,9 @@ public sealed class ReviewsFoundationTests
         var request = new DefaultHttpContext().Request;
         request.Headers[SellerPanelAccess.SellerPartyHeader] = sellerB.ToString("D");
         request.Headers[SellerPanelAccess.DevActorHeader] = actorA.ToString("D");
-        var denied = await Assert.ThrowsAsync<PlatformHttpException>(() =>
+        var denied = await Assert.ThrowsAsync<SemanticException>(() =>
             SellerPanelAccess.RequireAuthorizedAsync(request, new CurrentAuthenticatedSession(), auth.Guard, new ReviewsStubHostEnvironment(), new ReviewsFixedEdition(ToobaEdition.SingleStore), CancellationToken.None));
-        Assert.Equal(403, denied.StatusCode);
-        Assert.Equal("seller.authorization.denied", denied.ErrorCode);
+        Assert.Equal("seller.authorization.denied", denied.Error.Code);
     }
 
     private static ProductReview Create(int rating) => ProductReview.Create(

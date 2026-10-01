@@ -219,10 +219,9 @@ public sealed class SettingsFoundationTests
         var employeeView = await employeeAuthorizer.RequireViewAsync(Context(), CancellationToken.None);
         Assert.False(employeeView.CanManage, "employee lacks seller.settings.manage");
 
-        var denied = await Assert.ThrowsAsync<PlatformHttpException>(() =>
+        var denied = await Assert.ThrowsAsync<SemanticException>(() =>
             employeeAuthorizer.RequireManageAsync(Context(), CancellationToken.None));
-        Assert.Equal(403, denied.StatusCode);
-        Assert.Equal("seller.authorization.denied", denied.ErrorCode);
+        Assert.Equal("seller.authorization.denied", denied.Error.Code);
     }
 
     [Fact]
@@ -243,9 +242,9 @@ public sealed class SettingsFoundationTests
                 Relation = AuthorizationRelations.Member,
             },
             CancellationToken.None);
-        var denied = await Assert.ThrowsAsync<PlatformHttpException>(() =>
+        var denied = await Assert.ThrowsAsync<SemanticException>(() =>
             SellerPanelAccess.AuthorizeActorForSellerAsync(guard, actorA, sellerB, new FixedCurrentEdition(ToobaEdition.SingleStore), CancellationToken.None));
-        Assert.Equal(403, denied.StatusCode);
+        Assert.Equal("seller.authorization.denied", denied.Error.Code);
     }
 
     [SkippableFact]

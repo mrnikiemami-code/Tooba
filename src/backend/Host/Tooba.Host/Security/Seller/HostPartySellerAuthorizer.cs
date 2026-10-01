@@ -61,8 +61,7 @@ public sealed class HostPartySellerAuthorizer(
     {
         if (!await HasSellerCapabilityAsync(actorUserId, sellerPartyId, permissionId, cancellationToken))
         {
-            throw new PlatformHttpException(
-                403, "مجوز تنظیمات فروشنده وجود ندارد.", SellerSecurityErrorCodes.AuthorizationDenied);
+            throw new SemanticException(new SemanticError(SellerSecurityErrorCodes.AuthorizationDenied));
         }
     }
 

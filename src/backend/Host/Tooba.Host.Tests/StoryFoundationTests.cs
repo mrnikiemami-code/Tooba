@@ -303,7 +303,7 @@ public sealed class StoryFoundationTests : IAsyncLifetime
             },
             CancellationToken.None);
 
-        var missingSellerActor = await Assert.ThrowsAsync<PlatformHttpException>(() =>
+        var missingSellerActor = await Assert.ThrowsAsync<SemanticException>(() =>
             SellerPanelAccess.RequireAuthorizedAsync(
                 SellerRequest(sellerPartyId: sellerA, actorUserId: null),
                 new CurrentAuthenticatedSession(),
@@ -311,9 +311,9 @@ public sealed class StoryFoundationTests : IAsyncLifetime
                 new StubEnvironment(),
                 new StoryFixedEdition(ToobaEdition.SingleStore),
                 CancellationToken.None));
-        Assert.Equal(401, missingSellerActor.StatusCode);
+        Assert.Equal("seller.actor.missing", missingSellerActor.Error.Code);
 
-        var crossSellerDenied = await Assert.ThrowsAsync<PlatformHttpException>(() =>
+        var crossSellerDenied = await Assert.ThrowsAsync<SemanticException>(() =>
             SellerPanelAccess.RequireAuthorizedAsync(
                 SellerRequest(sellerPartyId: sellerB, actorUserId: actorA),
                 new CurrentAuthenticatedSession(),
@@ -321,7 +321,7 @@ public sealed class StoryFoundationTests : IAsyncLifetime
                 new StubEnvironment(),
                 new StoryFixedEdition(ToobaEdition.SingleStore),
                 CancellationToken.None));
-        Assert.Equal(403, crossSellerDenied.StatusCode);
+        Assert.Equal("seller.authorization.denied", crossSellerDenied.Error.Code);
     }
 
     private static StoryDbContext CreateDb(string connectionString)

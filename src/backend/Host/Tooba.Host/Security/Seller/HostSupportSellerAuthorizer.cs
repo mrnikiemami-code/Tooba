@@ -45,7 +45,7 @@ public sealed class HostSupportSellerAuthorizer(
             && p.ScopeKind == PlatformAccessScopeKind.GlobalWithinOwner);
         if (!allowed)
         {
-            throw new PlatformHttpException(403, "مجوز پشتیبانی وجود ندارد.", SellerSecurityErrorCodes.AuthorizationDenied);
+            throw new SemanticException(new SemanticError(SellerSecurityErrorCodes.AuthorizationDenied));
         }
     }
 }
