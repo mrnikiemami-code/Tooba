@@ -118,7 +118,6 @@ public sealed class HostCartResidualGuardTests
         Assert.Contains("ReconcileAsync(_options.BatchSize, cancellationToken)", worker, StringComparison.Ordinal);
         Assert.Contains("IOutboxPollTargetSource", worker, StringComparison.Ordinal);
         Assert.Contains("IWorkerCommerceContextFactory", worker, StringComparison.Ordinal);
-        Assert.Contains("IBackgroundWorkerRegistry", worker, StringComparison.Ordinal);
         Assert.Contains("ICommerceContextAssigner", worker, StringComparison.Ordinal);
         Assert.DoesNotContain("ICartDirectory", worker, StringComparison.Ordinal);
         Assert.DoesNotContain("ExpireDueCartsAsync", worker, StringComparison.Ordinal);

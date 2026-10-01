@@ -12,19 +12,15 @@ namespace Tooba.Payment.Infrastructure.Workers;
 
 /// <summary>
 /// Payment-owned stale-payment reconciliation worker: tenant loop, scoped <see cref="ISender"/> dispatch,
-/// per-tenant failure isolation, and reconciliation telemetry. The tenant target source, commerce-context
-/// factory, and worker registry are generic platform seams supplied by Host; Payment never references Host.
+/// per-tenant failure isolation, and reconciliation telemetry. The tenant target source and commerce-context
+/// factory are generic platform seams supplied by Host; Payment never references Host.
 /// </summary>
 public sealed class PaymentReconciliationWorker : BackgroundService
 {
-    /// <summary>نام پایدار کارگر در <see cref="IBackgroundWorkerRegistry"/>.</summary>
-    public const string WorkerName = "payment-reconciliation";
-
     private readonly IOutboxPollTargetSource _targets;
     private readonly IWorkerCommerceContextFactory _workerContext;
     private readonly IServiceScopeFactory _scopes;
     private readonly PaymentReconciliationOptions _options;
-    private readonly IBackgroundWorkerRegistry _registry;
     private readonly PaymentGatewayInstrumentation _telemetry;
     private readonly ILogger<PaymentReconciliationWorker> _logger;
 
@@ -35,7 +31,6 @@ public sealed class PaymentReconciliationWorker : BackgroundService
     /// <param name="workerContext">سازندهٔ زمینهٔ کارگر بدون خواندن هدر HTTP.</param>
     /// <param name="scopes">سازندهٔ scope برای هر هدف.</param>
     /// <param name="options">knobs زمان‌بندی Payment-owned.</param>
-    /// <param name="registry">رجیستری وضعیت کارگر.</param>
     /// <param name="telemetry">تله‌متری reconciliation درگاه.</param>
     /// <param name="logger">لاگر.</param>
     public PaymentReconciliationWorker(
@@ -43,7 +38,6 @@ public sealed class PaymentReconciliationWorker : BackgroundService
         IWorkerCommerceContextFactory workerContext,
         IServiceScopeFactory scopes,
         IOptions<PaymentReconciliationOptions> options,
-        IBackgroundWorkerRegistry registry,
         PaymentGatewayInstrumentation telemetry,
         ILogger<PaymentReconciliationWorker> logger)
     {
@@ -51,7 +45,6 @@ public sealed class PaymentReconciliationWorker : BackgroundService
         _workerContext = workerContext;
         _scopes = scopes;
         _options = options.Value;
-        _registry = registry;
         _telemetry = telemetry;
         _logger = logger;
     }
@@ -71,7 +64,6 @@ public sealed class PaymentReconciliationWorker : BackgroundService
             try
             {
                 var processed = await ReconcileOnceAsync(stoppingToken).ConfigureAwait(false);
-                _registry.RecordSuccess(WorkerName, processed);
                 if (processed > 0)
                 {
                     _telemetry.RecordReconcile(processed);
@@ -86,7 +78,6 @@ public sealed class PaymentReconciliationWorker : BackgroundService
             }
             catch (Exception ex)
             {
-                _registry.RecordFailure(WorkerName, ex.GetType().Name);
                 _logger.LogWarning(ex, "Payment reconciliation loop error. ErrorType={ErrorType}", ex.GetType().Name);
             }
 
@@ -124,7 +115,6 @@ public sealed class PaymentReconciliationWorker : BackgroundService
             }
             catch (Exception ex)
             {
-                _registry.RecordFailure(WorkerName, ex.GetType().Name);
                 _logger.LogWarning(
                     ex,
                     "Payment reconciliation failed for one tenant. TenantId={TenantId} ErrorType={ErrorType}",

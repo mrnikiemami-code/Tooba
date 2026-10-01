@@ -66,7 +66,6 @@ public sealed class HostRootGlobalBoundariesGuardTests
         Assert.Contains("namespace Tooba.Order.Infrastructure.ReservationCycle;", worker, StringComparison.Ordinal);
         Assert.Contains("IUnpaidOrderExpiryReconciler", worker, StringComparison.Ordinal);
         Assert.Contains("IWorkerCommerceContextFactory", worker, StringComparison.Ordinal);
-        Assert.Contains("IBackgroundWorkerRegistry", worker, StringComparison.Ordinal);
         Assert.DoesNotContain("Tooba.Host", worker, StringComparison.Ordinal);
 
         Assert.Contains("Tooba:UnpaidOrderExpiry", options, StringComparison.Ordinal);

@@ -82,7 +82,6 @@ public sealed class PaymentReconciliationWorkerTests
         services.AddLogging();
         services.AddSingleton<IOutboxPollTargetSource, NullTargetSource>();
         services.AddSingleton<IWorkerCommerceContextFactory, ThrowingCommerceContextFactory>();
-        services.AddSingleton<IBackgroundWorkerRegistry, NullWorkerRegistry>();
         var module = new PaymentModule();
         module.AddServices(services, new ConfigurationBuilder().Build(), new EnvironmentStub());
 
@@ -97,7 +96,6 @@ public sealed class PaymentReconciliationWorkerTests
         services.AddSingleton(Options.Create(options));
         services.AddSingleton<IOutboxPollTargetSource>(targets);
         services.AddSingleton<IWorkerCommerceContextFactory, ThrowingCommerceContextFactory>();
-        services.AddSingleton<IBackgroundWorkerRegistry, NullWorkerRegistry>();
         services.AddSingleton<PaymentGatewayInstrumentation>();
         services.AddSingleton<PaymentReconciliationWorker>();
         return services.BuildServiceProvider();
@@ -123,17 +121,6 @@ public sealed class PaymentReconciliationWorkerTests
     {
         public CommerceContext FromPollTarget(OutboxPollTarget target, string traceId) =>
             throw new InvalidOperationException("commerce.context.not_expected_in_test");
-    }
-
-    private sealed class NullWorkerRegistry : IBackgroundWorkerRegistry
-    {
-        public void RecordSuccess(string workerName, int processedCount)
-        {
-        }
-
-        public void RecordFailure(string workerName, string errorType)
-        {
-        }
     }
 
     private sealed class EnvironmentStub : IHostEnvironment

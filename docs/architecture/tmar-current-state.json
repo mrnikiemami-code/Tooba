@@ -1,4 +1,4 @@
-{
+﻿{
   "program": "TMAR — Tooba Microservice-Ready Architecture Recovery",
   "executionMode": "BACKEND_ONLY_UNTIL_EXPLICIT_RELEASE",
   "frontendFrozen": true,
@@ -321,7 +321,7 @@
     "optionsPath": "src/backend/Modules/Payment/Tooba.Payment.Infrastructure/Workers/PaymentReconciliationOptions.cs",
     "optionsSection": "Tooba:PaymentReconciliation",
     "gridNormalizerPath": "src/backend/Modules/Payment/Tooba.Payment.Endpoints/Admin/PaymentAdminGridQueryNormalizer.cs",
-    "genericWorkerSeams": "IOutboxPollTargetSource,IWorkerCommerceContextFactory,IBackgroundWorkerRegistry,ICommerceContextAssigner,IIdGenerator",
+    "genericWorkerSeams": "IOutboxPollTargetSource,IWorkerCommerceContextFactory,ICommerceContextAssigner,IIdGenerator",
     "hostResidueFilesRemoved": 3,
     "paymentToHostDependency": "ZERO",
     "hostAdminGridPaymentsPolicy": "REMOVED",
@@ -3995,7 +3995,6 @@
       "Messaging",
       "Outbox",
       "Transport",
-      "Jobs",
       "Persistence",
       "Configuration",
       "Health",

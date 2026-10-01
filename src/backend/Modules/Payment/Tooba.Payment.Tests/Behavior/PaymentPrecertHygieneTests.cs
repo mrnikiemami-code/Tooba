@@ -128,7 +128,6 @@ public sealed class PaymentPrecertHygieneTests
         services.AddLogging();
         services.AddSingleton<IOutboxPollTargetSource, NullTargetSource>();
         services.AddSingleton<IWorkerCommerceContextFactory, ThrowingCommerceContextFactory>();
-        services.AddSingleton<IBackgroundWorkerRegistry, NullWorkerRegistry>();
         services.AddSingleton<IIntegrationEventSerializer, NoopIntegrationEventSerializer>();
         services.AddSingleton<ICurrentCommerceContext>(new FixedCurrentCommerceContext());
         services.AddSingleton<IDatabaseConnectionResolver, FixedDatabaseConnectionResolver>();
@@ -587,17 +586,6 @@ public sealed class PaymentPrecertHygieneTests
     {
         public CommerceContext FromPollTarget(OutboxPollTarget target, string traceId) =>
             throw new InvalidOperationException("commerce.context.not_expected_in_test");
-    }
-
-    private sealed class NullWorkerRegistry : IBackgroundWorkerRegistry
-    {
-        public void RecordSuccess(string workerName, int processedCount)
-        {
-        }
-
-        public void RecordFailure(string workerName, string errorType)
-        {
-        }
     }
 
     private sealed class EnvironmentStub : IHostEnvironment

@@ -15,8 +15,6 @@ namespace Tooba.Order.Infrastructure.ReservationCycle;
 /// </summary>
 internal sealed class UnpaidOrderExpiryWorker : BackgroundService
 {
-    public const string WorkerName = "unpaid-order-expiry";
-
     private static readonly Counter<long> ExpiredPayments =
         ToobaTelemetry.Meter.CreateCounter<long>("tooba.unpaid_expiry.expired");
 
@@ -24,7 +22,6 @@ internal sealed class UnpaidOrderExpiryWorker : BackgroundService
     private readonly IWorkerCommerceContextFactory _workerContext;
     private readonly IServiceScopeFactory _scopes;
     private readonly UnpaidOrderExpiryWorkerOptions _options;
-    private readonly IBackgroundWorkerRegistry _registry;
     private readonly ILogger<UnpaidOrderExpiryWorker> _logger;
 
     public UnpaidOrderExpiryWorker(
@@ -32,14 +29,12 @@ internal sealed class UnpaidOrderExpiryWorker : BackgroundService
         IWorkerCommerceContextFactory workerContext,
         IServiceScopeFactory scopes,
         IOptions<UnpaidOrderExpiryWorkerOptions> options,
-        IBackgroundWorkerRegistry registry,
         ILogger<UnpaidOrderExpiryWorker> logger)
     {
         _targets = targets;
         _workerContext = workerContext;
         _scopes = scopes;
         _options = options.Value;
-        _registry = registry;
         _logger = logger;
     }
 
@@ -57,7 +52,6 @@ internal sealed class UnpaidOrderExpiryWorker : BackgroundService
             try
             {
                 var processed = await ReconcileOnceAsync(stoppingToken).ConfigureAwait(false);
-                _registry.RecordSuccess(WorkerName, processed);
                 if (processed > 0)
                 {
                     ExpiredPayments.Add(processed);
@@ -72,7 +66,6 @@ internal sealed class UnpaidOrderExpiryWorker : BackgroundService
             }
             catch (Exception ex)
             {
-                _registry.RecordFailure(WorkerName, ex.GetType().Name);
                 _logger.LogWarning(ex, "Unpaid expiry loop error. ErrorType={ErrorType}", ex.GetType().Name);
             }
 
@@ -103,7 +96,6 @@ internal sealed class UnpaidOrderExpiryWorker : BackgroundService
             }
             catch (Exception ex)
             {
-                _registry.RecordFailure(WorkerName, ex.GetType().Name);
                 _logger.LogWarning(
                     ex,
                     "Unpaid expiry failed for one tenant. TenantId={TenantId} ErrorType={ErrorType}",

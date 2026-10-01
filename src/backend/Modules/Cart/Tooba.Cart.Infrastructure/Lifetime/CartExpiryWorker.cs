@@ -12,14 +12,11 @@ namespace Tooba.Cart.Infrastructure.Lifetime;
 
 /// <summary>
 /// Cart-owned expiry worker: tenant loop, cancellation, per-tenant failure isolation, and telemetry.
-/// Business reconciliation stays in <see cref="ICartExpiryReconciler"/>; the tenant target source,
-/// commerce-context factory, and worker registry are generic platform seams supplied by Host.
+/// Business reconciliation stays in <see cref="ICartExpiryReconciler"/>; the tenant target source
+/// and commerce-context factory are generic platform seams supplied by Host.
 /// </summary>
 public sealed class CartExpiryWorker : BackgroundService
 {
-    /// <summary>نام پایدار کارگر در <see cref="IBackgroundWorkerRegistry"/>.</summary>
-    public const string WorkerName = "cart-expiry";
-
     private static readonly Counter<long> ExpiredCarts = ToobaTelemetry.Meter.CreateCounter<long>("tooba.cart_expiry.expired");
     private static readonly Counter<long> TenantFailures = ToobaTelemetry.Meter.CreateCounter<long>("tooba.cart_expiry.tenant_failures");
 
@@ -29,7 +26,6 @@ public sealed class CartExpiryWorker : BackgroundService
     private readonly IIdGenerator _ids;
     private readonly IServiceScopeFactory _scopes;
     private readonly CartExpiryOptions _options;
-    private readonly IBackgroundWorkerRegistry _registry;
     private readonly ILogger<CartExpiryWorker> _logger;
 
     /// <summary>
@@ -41,7 +37,6 @@ public sealed class CartExpiryWorker : BackgroundService
     /// <param name="ids">تولید شناسهٔ همبستگی.</param>
     /// <param name="scopes">سازندهٔ scope.</param>
     /// <param name="options">knobs اجرای کارگر.</param>
-    /// <param name="registry">رجیستری وضعیت کارگر.</param>
     /// <param name="logger">لاگر.</param>
     public CartExpiryWorker(
         IOutboxPollTargetSource targets,
@@ -50,7 +45,6 @@ public sealed class CartExpiryWorker : BackgroundService
         IIdGenerator ids,
         IServiceScopeFactory scopes,
         IOptions<CartExpiryOptions> options,
-        IBackgroundWorkerRegistry registry,
         ILogger<CartExpiryWorker> logger)
     {
         _targets = targets;
@@ -59,7 +53,6 @@ public sealed class CartExpiryWorker : BackgroundService
         _ids = ids;
         _scopes = scopes;
         _options = options.Value;
-        _registry = registry;
         _logger = logger;
     }
 
@@ -78,7 +71,6 @@ public sealed class CartExpiryWorker : BackgroundService
             try
             {
                 var processed = await ReconcileOnceAsync(stoppingToken).ConfigureAwait(false);
-                _registry.RecordSuccess(WorkerName, processed);
                 if (processed > 0)
                 {
                     ExpiredCarts.Add(processed);
@@ -94,7 +86,6 @@ public sealed class CartExpiryWorker : BackgroundService
             catch (Exception ex)
             {
                 TenantFailures.Add(1);
-                _registry.RecordFailure(WorkerName, ex.GetType().Name);
                 _logger.LogWarning(ex, "Cart expiry loop error. ErrorType={ErrorType}", ex.GetType().Name);
             }
 
@@ -131,7 +122,6 @@ public sealed class CartExpiryWorker : BackgroundService
             catch (Exception ex)
             {
                 TenantFailures.Add(1);
-                _registry.RecordFailure(WorkerName, ex.GetType().Name);
                 _logger.LogWarning(
                     ex,
                     "Cart expiry failed for one tenant. TenantId={TenantId} ErrorType={ErrorType}",

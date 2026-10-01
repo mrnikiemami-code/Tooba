@@ -261,7 +261,6 @@ public sealed class PaymentArchitectureGuardTests
         Assert.Contains("ISender", worker, StringComparison.Ordinal);
         Assert.Contains("IOutboxPollTargetSource", worker, StringComparison.Ordinal);
         Assert.Contains("IWorkerCommerceContextFactory", worker, StringComparison.Ordinal);
-        Assert.Contains("IBackgroundWorkerRegistry", worker, StringComparison.Ordinal);
         Assert.Contains("ICommerceContextAssigner", worker, StringComparison.Ordinal);
         Assert.Contains("PaymentGatewayInstrumentation", worker, StringComparison.Ordinal);
         Assert.DoesNotContain("Tooba.Host", worker, StringComparison.Ordinal);

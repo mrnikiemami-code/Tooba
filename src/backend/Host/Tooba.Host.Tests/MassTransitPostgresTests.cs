@@ -294,7 +294,6 @@ public sealed class MassTransitPostgresTests : IAsyncLifetime
                     RetryBaseDelaySeconds = 1,
                     LockSeconds = 30,
                 }));
-                services.AddSingleton<BackgroundWorkerRegistry>();
                 services.AddSingleton<OutboxDispatcher>();
                 services.AddSingleton<IHttpContextAccessor, SpoofHostAccessor>();
                 services.AddScoped<HttpCommerceContextAccessor>();
