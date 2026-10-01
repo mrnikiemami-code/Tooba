@@ -30,7 +30,7 @@ Latest Accepted TMAR Checkpoint — authoritative (reconciled by TB-TMAR-HOST-CO
 ```text
 Latest-Accepted-Implementation-Wave: TB-TMAR-HOST-COMPOSITION-AMC-001-R1
 Latest-Accepted-Task: TB-TMAR-HOST-COMPOSITION-AMC-001-R1
-Implementation-Commit: PLACEHOLDER_STAMP_AFTER_COMMIT
+Implementation-Commit: 1259600fd0e44b41005239a2aee2500443260ebd
 Implementation-Commit-Kind: IMPLEMENTATION_COMMIT
 Current-Host-Checkpoint: Composition_KEEP_R1
 Active-Host-Folder: Composition

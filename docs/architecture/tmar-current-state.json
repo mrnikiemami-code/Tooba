@@ -4,7 +4,7 @@
   "frontendFrozen": true,
   "checkoutState": "PAUSED_AT_SAFE_W5_CHECKPOINT",
   "lastAcceptedTask": "TB-TMAR-HOST-COMPOSITION-AMC-001-R1",
-  "lastAcceptedCommit": "PLACEHOLDER_STAMP_AFTER_COMMIT",
+  "lastAcceptedCommit": "1259600fd0e44b41005239a2aee2500443260ebd",
   "lastAcceptedCommitKind": "IMPLEMENTATION_COMMIT",
   "lastAcceptedResultEvidenceCommit": "b898135dc3e0c7ef4ea5ecb56f2a5003baebdf43",
   "lastAcceptedResultEvidenceCommitKind": "RESULT_EVIDENCE_DOCS_STAMP_NOT_IMPLEMENTATION",
@@ -5406,6 +5406,6 @@
     "durableGuard": "HostCompositionAmcGuardTests",
     "evidenceRoot": "docs/evidence/TB-TMAR-HOST-COMPOSITION-AMC-001-R1",
     "workflowStop": "USER_REVIEW_HOST_COMPOSITION_AMC_001_R1_KEEP_GENERIC_HOST_COMPOSITION_ROOT",
-    "note": "Implementation commit PLACEHOLDER_STAMP_AFTER_COMMIT; Composition AMC R1 namespace CLOSED."
+    "note": "Implementation commit 1259600fd0e44b41005239a2aee2500443260ebd; Composition AMC R1 namespace CLOSED."
   }
 }
