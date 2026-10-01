@@ -6,9 +6,9 @@
   "lastAcceptedTask": "TB-TMAR-HOST-SECURITY-AMC-001-W3-CERT",
   "lastAcceptedCommit": "baa05e6b7fa373cb6d354a80ca2eab37d4472f7b",
   "lastAcceptedCommitKind": "IMPLEMENTATION_COMMIT",
-  "lastAcceptedResultEvidenceCommit": "b7a55c9905049c3419713c8142a054d581705c26",
+  "lastAcceptedResultEvidenceCommit": "73a80ee28ed9dc054be5adae0f7115e72c115ded",
   "lastAcceptedResultEvidenceCommitKind": "RESULT_EVIDENCE_DOCS_STAMP_NOT_IMPLEMENTATION",
-  "lastAcceptedSoTStamp": "b7a55c9905049c3419713c8142a054d581705c26",
+  "lastAcceptedSoTStamp": "73a80ee28ed9dc054be5adae0f7115e72c115ded",
   "lastAcceptedSoTStampKind": "RESULT_EVIDENCE_DOCS_STAMP",
   "lastAcceptedCommitSemantics": "lastAcceptedTask is TB-TMAR-HOST-SECURITY-AMC-001-W3-CERT (independent certification docs/tests). IMPLEMENTATION commit remains W1 SHA at lastAcceptedCommit (baa05e6b7fa373cb6d354a80ca2eab37d4472f7b). W3 Cert docs/tests stamp is recorded in lastAcceptedResultEvidenceCommit/lastAcceptedSoTStamp and is NOT an implementation commit.",
   "lastAcceptedNote": "Security W3-CERT: HOST_SECURITY_AMC_CERTIFIED; KEEP_THIN_PLATFORM_SECURITY_BOUNDARY_CERTIFIED_CURRENT_19; global+thin adapters certified; exact 19-file tree; production ZERO; impl SHA baa05e6b…; Host/Admin FULLY_CERTIFIED preserved.",
@@ -5841,6 +5841,7 @@
     "automaticNextImplementationTask": "NONE",
     "workflowStop": "USER_REVIEW_HOST_SECURITY_AMC_001_W3_CERT",
     "evidenceRoot": "docs/evidence/TB-TMAR-HOST-SECURITY-AMC-001-W3-CERT",
-    "note": "Certification docs/tests only; does not advance implementation SHA."
+    "note": "Certification docs/tests only; does not advance implementation SHA.",
+    "docsStamp": "73a80ee28ed9dc054be5adae0f7115e72c115ded"
   }
 }

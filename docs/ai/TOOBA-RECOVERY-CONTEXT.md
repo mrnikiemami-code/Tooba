@@ -32,7 +32,7 @@ Latest-Accepted-Implementation-Wave: TB-TMAR-HOST-SECURITY-AMC-001-W1
 Latest-Accepted-Task: TB-TMAR-HOST-SECURITY-AMC-001-W3-CERT
 Implementation-Commit: baa05e6b7fa373cb6d354a80ca2eab37d4472f7b
 Implementation-Commit-Kind: IMPLEMENTATION_COMMIT
-Result-Evidence-Docs-Stamp: PENDING_W3_CERT_COMMIT
+Result-Evidence-Docs-Stamp: 73a80ee28ed9dc054be5adae0f7115e72c115ded
 Result-Evidence-Docs-Stamp-Kind: RESULT_EVIDENCE_DOCS_STAMP_NOT_IMPLEMENTATION
 Mode: HOST_SECURITY_AMC_CERTIFIED
 Seller-Security-Failure-Semantics: SEMANTIC_EXCEPTION_CODE_BASED
