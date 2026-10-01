@@ -88,7 +88,7 @@ internal static class AdminDevActorBootstrap
 
         lock (Gate)
         {
-            _snapshot = new AdminDevActorSnapshot(actor.Value, "مدیر نمونهٔ توبا", tenant.TenantId.Value);
+            _snapshot = new AdminDevActorSnapshot(actor.Value, AdminEmail, tenant.TenantId.Value);
         }
     }
 }

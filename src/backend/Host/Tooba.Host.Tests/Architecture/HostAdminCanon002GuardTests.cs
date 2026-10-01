@@ -84,10 +84,10 @@ public sealed class HostAdminCanon002GuardTests
     }
 
     [Fact]
-    public void Host_admin_count_remains_platform_floor_18()
+    public void Host_admin_count_remains_platform_floor_19()
     {
         var admin = RepoFile("src/backend/Host/Tooba.Host/Admin");
-        Assert.Equal(18, Directory.GetFiles(admin, "*.cs", SearchOption.AllDirectories).Length);
+        Assert.Equal(19, Directory.GetFiles(admin, "*.cs", SearchOption.AllDirectories).Length);
     }
 
     [Fact]

@@ -40,6 +40,8 @@ public sealed class FoundationErrorCatalogContributor : IErrorCatalogContributor
             StatusCodes.Status403Forbidden, "Forbidden"),
         D(FoundationErrorCodes.AdminAuthorizationDenied, ErrorClassification.Forbidden,
             StatusCodes.Status403Forbidden, "Forbidden"),
+        D("admin.dev.unavailable", ErrorClassification.NotFound,
+            StatusCodes.Status404NotFound, "Unavailable"),
     ];
 
     private static ErrorDescriptor D(

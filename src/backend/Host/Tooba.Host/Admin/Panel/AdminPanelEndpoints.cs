@@ -1,19 +1,18 @@
 ﻿using Tooba.BuildingBlocks.Presentation;
 using Tooba.BuildingBlocks.Results;
 using Tooba.BuildingBlocks.Security;
-using Tooba.Host.Admin.Development;
 
 namespace Tooba.Host.Admin.Panel;
 
 /// <summary>
-/// مسیرهای فقط‌خواندنی عملیات مدیر برای سطوح cross-module.
-/// GET/POST sellers به Party.Endpoints منتقل شده‌اند.
+/// مسیر داشبورد Admin برای ترکیب cross-module.
+/// GET/POST sellers به Party.Endpoints؛ dev-context به Admin/Development منتقل شده است.
 /// Dashboard: HOST_PRESENTATION_COMPOSITION_CQRS_EXCEPTION (composition without module request handlers).
 /// </summary>
 public static class AdminPanelEndpoints
 {
     /// <summary>
-    /// مسیرهای داشبورد و dev-context مدیر را ثبت می‌کند.
+    /// مسیر داشبورد مدیر را ثبت می‌کند.
     /// </summary>
     public static void MapAdminPanelEndpoints(this WebApplication app)
     {
@@ -27,7 +26,7 @@ public static class AdminPanelEndpoints
         // W1: GET /v1/admin/sellers owned by Party.Endpoints (PartyAdminSellersEndpoints).
         // W2: POST /v1/admin/sellers/query owned by Party.Endpoints (PartyAdminSellersEndpoints).
         // W3: dashboard auth/presentation canonicalized; ownership remains Host Panel.
-        group.MapGet("/dev-context", GetDevContext);
+        // W4: GET /v1/admin/dev-context owned by Admin/Development (AdminDevContextEndpoints).
     }
 
     private static async Task<IResult> GetDashboardAsync(
@@ -40,20 +39,5 @@ public static class AdminPanelEndpoints
         await adminAccess.RequireAuthorizedAsync(request, cancellationToken).ConfigureAwait(false);
         var summary = await composer.GetDashboardAsync(cancellationToken).ConfigureAwait(false);
         return api.From(Result.Success(summary));
-    }
-
-    private static IResult GetDevContext(IHostEnvironment environment)
-    {
-        if (!environment.IsDevelopment() || AdminDevActorBootstrap.Snapshot is not { } snapshot)
-        {
-            return Results.Json(new { title = "Not Found", errorCode = "admin.dev.unavailable" }, statusCode: 404);
-        }
-
-        return Results.Json(new
-        {
-            actorUserId = snapshot.ActorUserId,
-            actorLabel = snapshot.ActorLabel,
-            tenantId = snapshot.TenantId,
-        });
     }
 }

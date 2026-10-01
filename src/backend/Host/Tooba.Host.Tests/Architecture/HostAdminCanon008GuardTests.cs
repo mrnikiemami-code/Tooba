@@ -45,6 +45,7 @@ public sealed class HostAdminCanon008GuardTests
         ["Development"] =
         [
             "AdminDevActorBootstrap.cs",
+            "AdminDevContextEndpoints.cs",
         ],
     };
 
@@ -56,7 +57,7 @@ public sealed class HostAdminCanon008GuardTests
     }
 
     [Fact]
-    public void Admin_recursive_cs_file_count_is_18_and_membership_matches_target()
+    public void Admin_recursive_cs_file_count_is_19_and_membership_matches_target()
     {
         var root = AdminRoot();
         var discovered = Directory.GetFiles(root, "*.cs", SearchOption.AllDirectories)
@@ -69,7 +70,7 @@ public sealed class HostAdminCanon008GuardTests
             .OrderBy(x => x, StringComparer.Ordinal)
             .ToArray();
 
-        Assert.Equal(18, discovered.Length);
+        Assert.Equal(19, discovered.Length);
         Assert.Equal(expected, discovered);
     }
 
@@ -120,6 +121,7 @@ public sealed class HostAdminCanon008GuardTests
         Assert.Contains("Tooba.Host.Admin.Access.Authorizers.HostWalletAdminAuthorizer", program, StringComparison.Ordinal);
         Assert.Contains("Tooba.Host.Admin.Panel.AdminPanelComposer", program, StringComparison.Ordinal);
         Assert.Contains("MapAdminPanelEndpoints()", program, StringComparison.Ordinal);
+        Assert.Contains("MapAdminDevContextEndpoints()", program, StringComparison.Ordinal);
 
         var reader = File.ReadAllText(Path.Combine(host, "Admin", "Access", "Authorizers", "HostOrderAdminEffectiveAccessReader.cs"));
         Assert.Contains("Tooba.Order.Contracts.Admin.Operations", reader, StringComparison.Ordinal);
@@ -130,6 +132,14 @@ public sealed class HostAdminCanon008GuardTests
         var bootstrap = File.ReadAllText(Path.Combine(host, "Admin", "Development", "AdminDevActorBootstrap.cs"));
         Assert.Contains("Tooba.Identity.Contracts", bootstrap, StringComparison.Ordinal);
         Assert.DoesNotContain("Tooba.Identity.Infrastructure", bootstrap, StringComparison.Ordinal);
+        Assert.Contains("AdminEmail", bootstrap, StringComparison.Ordinal);
+        Assert.DoesNotContain("مدیر نمونهٔ توبا", bootstrap, StringComparison.Ordinal);
+
+        var catalog = File.ReadAllText(Path.Combine(FindRepoRoot(),
+            "src", "backend", "BuildingBlocks", "Tooba.BuildingBlocks", "Presentation", "Errors",
+            "FoundationErrorCatalogContributor.cs"));
+        Assert.Equal(1, Regex.Matches(catalog, @"admin\.dev\.unavailable").Count);
+        Assert.Contains("StatusCodes.Status404NotFound", catalog, StringComparison.Ordinal);
     }
 
     [Fact]

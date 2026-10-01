@@ -83,6 +83,7 @@ public sealed class HostAdminCanonicalCertificationGuardTests
         ["Development"] =
         [
             "AdminDevActorBootstrap.cs",
+            "AdminDevContextEndpoints.cs",
         ],
     };
 
@@ -104,7 +105,7 @@ public sealed class HostAdminCanonicalCertificationGuardTests
     // ---------------------------------------------------------------------
 
     [Fact]
-    public void Certified_structure_is_exactly_18_recursive_files_with_zero_flat_root()
+    public void Certified_structure_is_exactly_19_recursive_files_with_zero_flat_root()
     {
         var root = AdminRoot();
         Assert.Empty(Directory.GetFiles(root, "*.cs", SearchOption.TopDirectoryOnly));
@@ -119,7 +120,7 @@ public sealed class HostAdminCanonicalCertificationGuardTests
             .OrderBy(x => x, StringComparer.Ordinal)
             .ToArray();
 
-        Assert.Equal(18, discovered.Length);
+        Assert.Equal(19, discovered.Length);
         Assert.Equal(expected, discovered);
 
         var folders = Directory.GetDirectories(root)
@@ -518,8 +519,17 @@ public sealed class HostAdminCanonicalCertificationGuardTests
         Assert.DoesNotContain("MapGet(\"/sellers\"", endpoints, StringComparison.Ordinal);
         Assert.DoesNotContain("MapPost(\"/sellers/query\"", endpoints, StringComparison.Ordinal);
         Assert.DoesNotContain("AdminGridQueryEndpoint", endpoints, StringComparison.Ordinal);
-        Assert.Contains("MapGet(\"/dev-context\"", endpoints, StringComparison.Ordinal);
-        Assert.Contains("admin.dev.unavailable", endpoints, StringComparison.Ordinal);
+        Assert.DoesNotContain("MapGet(\"/dev-context\"", endpoints, StringComparison.Ordinal);
+        Assert.DoesNotContain("admin.dev.unavailable", endpoints, StringComparison.Ordinal);
+        Assert.DoesNotContain("using Tooba.Host.Admin.Development", endpoints, StringComparison.Ordinal);
+
+        var devContext = File.ReadAllText(Path.Combine(AdminRoot(), "Development", "AdminDevContextEndpoints.cs"));
+        Assert.Contains("MapGet(\"/v1/admin/dev-context\"", devContext, StringComparison.Ordinal);
+        Assert.Contains("admin.dev.unavailable", devContext, StringComparison.Ordinal);
+        Assert.Contains("ApiResponseFactory", devContext, StringComparison.Ordinal);
+        Assert.Contains("HOST_DEVELOPMENT_PRESENTATION_CQRS_EXCEPTION", devContext, StringComparison.Ordinal);
+        Assert.DoesNotContain("Not Found", devContext, StringComparison.Ordinal);
+        Assert.DoesNotContain("Results.Json", devContext, StringComparison.Ordinal);
 
         var partySellers = File.ReadAllText(RepoFile(
             "src/backend/Modules/Party/Tooba.Party.Endpoints/Admin/Sellers/PartyAdminSellersEndpoints.cs"));
@@ -548,6 +558,7 @@ public sealed class HostAdminCanonicalCertificationGuardTests
         Assert.Contains("Tooba.Host.Admin.Panel.AdminPanelComposer", program, StringComparison.Ordinal);
         Assert.Contains("Tooba.Order.Contracts.Admin.Operations.IOrderAdminEffectiveAccessReader,", program, StringComparison.Ordinal);
         Assert.Contains("MapAdminPanelEndpoints()", program, StringComparison.Ordinal);
+        Assert.Contains("MapAdminDevContextEndpoints()", program, StringComparison.Ordinal);
     }
 
     // ---------------------------------------------------------------------

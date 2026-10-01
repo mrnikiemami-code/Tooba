@@ -32,6 +32,7 @@ public sealed class HostAdminCanon009GuardTests
         "Panel/AdminPanelModels.cs",
         "Grid/AdminGridQueryEndpoint.cs",
         "Development/AdminDevActorBootstrap.cs",
+        "Development/AdminDevContextEndpoints.cs",
     ];
 
     [Fact]
@@ -101,7 +102,7 @@ public sealed class HostAdminCanon009GuardTests
     }
 
     [Fact]
-    public void Admin_recursive_file_count_is_18_and_canon008_structure_is_preserved()
+    public void Admin_recursive_file_count_is_19_and_canon008_structure_is_preserved()
     {
         var root = AdminRoot();
         Assert.Empty(Directory.GetFiles(root, "*.cs", SearchOption.TopDirectoryOnly));
@@ -111,7 +112,7 @@ public sealed class HostAdminCanon009GuardTests
             .OrderBy(x => x, StringComparer.Ordinal)
             .ToArray();
 
-        Assert.Equal(18, discovered.Length);
+        Assert.Equal(19, discovered.Length);
         Assert.Equal(AdminFiles.OrderBy(x => x, StringComparer.Ordinal).ToArray(), discovered);
     }
 
