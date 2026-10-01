@@ -2479,7 +2479,8 @@
     "automaticNextImplementationTask": "NONE",
     "nextTaskState": "USER_DECISION_REQUIRED",
     "workflowStop": "USER_REVIEW_HOST_SELLER_AMC_001_R5_FINAL_CLOSURE",
-    PLACEHOLDER
+    "evidence": "docs/evidence/TB-TMAR-HOST-SELLER-AMC-001-R5/",
+    "taskArtifact": "docs/ai/tasks/TB-TMAR-HOST-SELLER-AMC-001-R5.task.md"
   },
   "hostCachingArchitectDirect": {
     "execution": "ARCHITECT_DIRECT_ANALYZE_MIGRATE_CERTIFY",
