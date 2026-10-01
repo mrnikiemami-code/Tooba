@@ -49,7 +49,6 @@ using Tooba.UserPreference.Endpoints;
 using Tooba.Host.OperatorProfile;
 using Tooba.Host.Support;
 using Tooba.Support.Endpoints;
-using Tooba.Host.Wallet;
 using Tooba.Wallet.Endpoints;
 using Tooba.Offer.Endpoints;
 using Tooba.Offer.Endpoints.Seller;

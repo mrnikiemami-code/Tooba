@@ -25,28 +25,26 @@ BRIDGE-WAKE-V1
 Channel: tooba-main
 ```
 
-Latest Accepted TMAR Checkpoint — authoritative (reconciled by TB-TMAR-HOST-PRODUCTQNA-AMC-001)
+Latest Accepted TMAR Checkpoint — authoritative (reconciled by TB-TMAR-HOST-WALLET-AMC-001)
 
 ```text
-Latest-Accepted-Implementation-Wave: TB-TMAR-HOST-PRODUCTQNA-AMC-001
-Latest-Accepted-Task: TB-TMAR-HOST-PRODUCTQNA-AMC-001
-Implementation-Commit: 8fa9e736bfda9f5c6097ba3eb9075da885e610db
+Latest-Accepted-Implementation-Wave: TB-TMAR-HOST-WALLET-AMC-001
+Latest-Accepted-Task: TB-TMAR-HOST-WALLET-AMC-001
+Implementation-Commit: PLACEHOLDER_STAMP_AFTER_COMMIT
 Implementation-Commit-Kind: IMPLEMENTATION_COMMIT
-Current-Host-Checkpoint: ProductQnA_HOST_ZERO
-Active-Host-Folder: ProductQnA
-Host-ProductQnA-Directory: ABSENT
-Host-ProductQnA-Host-Zero: true
-Http-Owners: Tooba.ProductQnA.Endpoints.ProductQnAEndpointModule ; Tooba.BulkInquiry.Endpoints.BulkInquiryEndpointModule
-Catalog-Boundary: Catalog.Contracts.ICatalogReviewProductLookup
-Endpoints-Domain-Reference: ZERO
-Catalog-Application-Leakage: ZERO
-Failure-Presentation: SemanticException_ApiResponseFactory
-Prior-Accepted-Lineage: TB-TMAR-HOST-PREFERENCES-AMC-001 ; TB-TMAR-HOST-REVIEWS-AMC-001-R1 ; TB-TMAR-HOST-PERSISTENCE-AMC-001
+Current-Host-Checkpoint: Wallet_HOST_ZERO
+Active-Host-Folder: Wallet
+Host-Wallet-Directory: ABSENT
+Host-Wallet-Host-Zero: true
+Module-Bootstrap: Tooba.Wallet.Infrastructure.Development.WalletDevelopmentSeedBootstrap
+Host-Composition-Binder: Composition/WalletDevelopmentSeedHost (ControlPlane+AdminDev only; no WalletDbContext)
+Http-Owner: Tooba.Wallet.Endpoints.WalletEndpointModule (pre-existing)
+Prior-Accepted-Lineage: TB-TMAR-HOST-PRODUCTQNA-AMC-001 ; TB-TMAR-HOST-PREFERENCES-AMC-001 ; TB-TMAR-HOST-REVIEWS-AMC-001-R1
 Next-Host-Folder-Started: false
 Next-Host-Folder: NONE_USER_DECISION_REQUIRED
 Stale-Current-Pointer-State: ZERO
-workflowStop: USER_REVIEW_HOST_PRODUCTQNA_AMC_001_CLOSED_HOST_ZERO
-Next-Task: USER_REVIEW_HOST_PRODUCTQNA_AMC_001_CLOSED_HOST_ZERO
+workflowStop: USER_REVIEW_HOST_WALLET_AMC_001_CLOSED_HOST_ZERO
+Next-Task: USER_REVIEW_HOST_WALLET_AMC_001_CLOSED_HOST_ZERO
 Automatic-Next-Implementation-Task: NONE
 ```
 

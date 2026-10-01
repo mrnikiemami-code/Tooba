@@ -1,18 +1,17 @@
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Tooba.BuildingBlocks;
 using Tooba.Host.Admin.Development;
-using Tooba.Wallet.Infrastructure.Adapters;
-using Tooba.Wallet.Infrastructure.DependencyInjection;
-using Tooba.Wallet.Infrastructure.Directories;
-using Tooba.Wallet.Infrastructure.Persistence;
+using Tooba.Wallet.Infrastructure.Development;
 
-namespace Tooba.Host.Wallet;
+namespace Tooba.Host.Composition;
 
-/// <summary>اعمال دانهٔ توسعه Wallet روی scope با CommerceContext.</summary>
+/// <summary>
+/// Thin Host composition seam for Wallet Development seed: binds store-alpha CommerceContext
+/// and Admin demo actor, then delegates migrate/seed to Wallet.Infrastructure.
+/// </summary>
 internal static class WalletDevelopmentSeedHost
 {
-    /// <summary>دانه را فقط در Development و با Actor آماده اجرا می‌کند.</summary>
+    /// <summary>Runs only when store-alpha is Active and Admin actor is ready.</summary>
     public static async Task ApplyAsync(IServiceProvider root)
     {
         await using var scope = root.CreateAsyncScope();
@@ -36,20 +35,14 @@ internal static class WalletDevelopmentSeedHost
             tenant.ConnectionReference,
             "wallet-dev-seed"));
 
-        var db = provider.GetRequiredService<WalletDbContext>();
-        await db.Database.MigrateAsync();
-
         await AdminDevActorBootstrap.EnsureAsync(provider, CancellationToken.None);
         var admin = AdminDevActorBootstrap.Snapshot;
         if (admin is null)
             return;
 
-        // همان Actor مشتری demo که Support استفاده می‌کند.
-        var customerActorUserId = Guid.Parse("aaaaaaaa-aaaa-4aaa-8aaa-000000000009");
-
-        await WalletDevelopmentSeed.ApplyAsync(
+        await WalletDevelopmentSeedBootstrap.ApplyAsync(
             provider,
-            customerActorUserId,
+            WalletDevelopmentSeedBootstrap.DemoCustomerActorUserId,
             admin.ActorUserId,
             CancellationToken.None);
     }

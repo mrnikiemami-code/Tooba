@@ -10,14 +10,13 @@ public sealed class WalletArchitectureGuardTests
     private static readonly string[] AllowedApplicationFolders = ["Ports", "Models", "Commands", "Queries", "Errors"];
     private static readonly string[] AllowedContractsFolders = ["Payments", "Refunds", "Dtos", "Ports", "Errors"];
     private static readonly string[] AllowedInfrastructureFolders =
-        ["Persistence", "Directories", "Adapters", "Events", "Messaging", "DependencyInjection", "Migrations"];
+        ["Persistence", "Directories", "Adapters", "Events", "Messaging", "DependencyInjection", "Migrations", "Development"];
     private static readonly string[] AllowedEndpointsFolders = ["Customer", "Admin", "Errors", "Resources"];
 
     private static readonly HashSet<string> HostDbContextAllowlist = new(StringComparer.OrdinalIgnoreCase)
     {
         "Program.cs",
         "ModuleMigrationRegistry.cs",
-        "WalletDevelopmentSeedHost.cs",
         "ProductWorkspaceDevelopmentBootstrap.cs",
     };
 
@@ -221,11 +220,19 @@ public sealed class WalletArchitectureGuardTests
 
         var hostRoot = Path.Combine(RepoRoot(), "src", "backend", "Host", "Tooba.Host");
         var endpointsRoot = Path.Combine(WalletRoot(), "Tooba.Wallet.Endpoints");
+        Assert.False(Directory.Exists(Path.Combine(hostRoot, "Wallet")));
         Assert.False(File.Exists(Path.Combine(hostRoot, "Wallet", "WalletEndpoints.cs")));
-        Assert.True(File.Exists(Path.Combine(hostRoot, "Wallet", "WalletDevelopmentSeedHost.cs")));
+        Assert.False(File.Exists(Path.Combine(hostRoot, "Wallet", "WalletDevelopmentSeedHost.cs")));
+        Assert.True(File.Exists(Path.Combine(WalletRoot(), "Tooba.Wallet.Infrastructure", "Development", "WalletDevelopmentSeedBootstrap.cs")));
+        Assert.True(File.Exists(Path.Combine(hostRoot, "Composition", "WalletDevelopmentSeedHost.cs")));
         Assert.False(File.Exists(Path.Combine(hostRoot, "Customer", "HostWalletCustomerAuthorizer.cs")));
         Assert.True(File.Exists(Path.Combine(hostRoot, "Admin", "Access", "Authorizers", "HostWalletAdminAuthorizer.cs")));
         Assert.True(File.Exists(Path.Combine(endpointsRoot, "Customer", "WalletCustomerAuthorizer.cs")));
+
+        var compositionSeed = File.ReadAllText(Path.Combine(hostRoot, "Composition", "WalletDevelopmentSeedHost.cs"));
+        Assert.Contains("WalletDevelopmentSeedBootstrap.ApplyAsync", compositionSeed, StringComparison.Ordinal);
+        Assert.DoesNotContain("WalletDbContext", compositionSeed, StringComparison.Ordinal);
+        Assert.DoesNotContain("Database.MigrateAsync", compositionSeed, StringComparison.Ordinal);
 
         var moduleCustomer = File.ReadAllText(Path.Combine(endpointsRoot, "Customer", "WalletCustomerAuthorizer.cs"));
         var hostAdmin = File.ReadAllText(Path.Combine(hostRoot, "Admin", "Access", "Authorizers", "HostWalletAdminAuthorizer.cs"));

@@ -12,12 +12,14 @@ Canonical Architect ↔ Cursor handoff (recovery-critical)
 
 Latest Accepted TMAR Checkpoint — authoritative
 
-Reconciled by `TB-TMAR-HOST-PRODUCTQNA-AMC-001`. Current implementation commit recorded at `lastAcceptedCommit` after PASS.
-- Host/ProductQnA = `ABSENT` / `CLOSED_HOST_ZERO`.
-- HTTP owners = `Tooba.ProductQnA.Endpoints.ProductQnAEndpointModule` + `Tooba.BulkInquiry.Endpoints.BulkInquiryEndpointModule` (MUST_SPLIT of former Host mixed file).
-- CQRS/MediatR; Catalog via `ICatalogReviewProductLookup`; customer actor for QnA (no guest); failures via SemanticException + ApiResponseFactory.
-- Current Host checkpoint = `ProductQnA`; workflowStop = `USER_REVIEW_HOST_PRODUCTQNA_AMC_001_CLOSED_HOST_ZERO`; automatic next = NONE; stale pointer = ZERO.
-- Preferences / Reviews R1 / Persistence KEEP remain historical accepted lineage.
+Reconciled by `TB-TMAR-HOST-WALLET-AMC-001`. Current implementation commit recorded at `lastAcceptedCommit` after PASS.
+- Host/Wallet = `ABSENT` / `CLOSED_HOST_ZERO`.
+- Wallet migrate+seed owner = `Tooba.Wallet.Infrastructure.Development.WalletDevelopmentSeedBootstrap`.
+- Host retained thin Composition binder (`Composition/WalletDevelopmentSeedHost`) + `HostWalletAdminAuthorizer` (not Wallet folder).
+- Current Host checkpoint = `Wallet`; workflowStop = `USER_REVIEW_HOST_WALLET_AMC_001_CLOSED_HOST_ZERO`; automatic next = NONE; stale pointer = ZERO.
+- ProductQnA / Preferences / Reviews R1 remain historical accepted lineage.
+
+Reconciled by `TB-TMAR-HOST-PRODUCTQNA-AMC-001` (HISTORICAL). Host/ProductQnA = `ABSENT` / `CLOSED_HOST_ZERO`.
 
 Reconciled by `TB-TMAR-HOST-PREFERENCES-AMC-001` (HISTORICAL). Host/Preferences = `ABSENT` / `CLOSED_HOST_ZERO`.
 

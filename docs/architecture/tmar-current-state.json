@@ -3,24 +3,24 @@
   "executionMode": "BACKEND_ONLY_UNTIL_EXPLICIT_RELEASE",
   "frontendFrozen": true,
   "checkoutState": "PAUSED_AT_SAFE_W5_CHECKPOINT",
-  "lastAcceptedTask": "TB-TMAR-HOST-PRODUCTQNA-AMC-001",
-  "lastAcceptedCommit": "8fa9e736bfda9f5c6097ba3eb9075da885e610db",
+  "lastAcceptedTask": "TB-TMAR-HOST-WALLET-AMC-001",
+  "lastAcceptedCommit": "PLACEHOLDER_STAMP_AFTER_COMMIT",
   "lastAcceptedCommitKind": "IMPLEMENTATION_COMMIT",
   "lastAcceptedResultEvidenceCommit": "5986dcc7ba8236354fc84bd92738bbeb90839d7c",
   "lastAcceptedResultEvidenceCommitKind": "RESULT_EVIDENCE_DOCS_STAMP_NOT_IMPLEMENTATION",
   "lastAcceptedSoTStamp": "5986dcc7ba8236354fc84bd92738bbeb90839d7c",
   "lastAcceptedSoTStampKind": "RESULT_EVIDENCE_DOCS_STAMP",
-  "lastAcceptedCommitSemantics": "lastAcceptedTask is TB-TMAR-HOST-PRODUCTQNA-AMC-001 IMPLEMENTATION commit. Host/ProductQnA ABSENT HOST_ZERO; ProductQnA+BulkInquiry Endpoints/CQRS; Catalog.Contracts lookup; SemanticException.",
-  "lastAcceptedNote": "ProductQnA AMC: Host/ProductQnA deleted (MUST_SPLIT BulkInquiry); MapProductQnAModuleEndpoints + MapBulkInquiryModuleEndpoints; USER_REVIEW before next Host AMC.",
-  "latestAcceptedImplementationWave": "TB-TMAR-HOST-PRODUCTQNA-AMC-001",
-  "currentHostCheckpoint": "ProductQnA",
+  "lastAcceptedCommitSemantics": "lastAcceptedTask is TB-TMAR-HOST-WALLET-AMC-001 IMPLEMENTATION commit. Host/Wallet ABSENT HOST_ZERO; migrate/seed in Wallet.Infrastructure.Development; Host Composition thin binder only.",
+  "lastAcceptedNote": "Wallet AMC: Host/Wallet deleted; WalletDevelopmentSeedBootstrap owns migrate+seed; Composition WalletDevelopmentSeedHost binds ControlPlane+AdminDev only; USER_REVIEW before next Host AMC.",
+  "latestAcceptedImplementationWave": "TB-TMAR-HOST-WALLET-AMC-001",
+  "currentHostCheckpoint": "Wallet",
   "nextHostFolderStarted": false,
   "nextHostFolder": null,
   "staleCurrentPointerState": "ZERO",
-  "nextTask": "USER_REVIEW_HOST_PRODUCTQNA_AMC_001_CLOSED_HOST_ZERO",
+  "nextTask": "USER_REVIEW_HOST_WALLET_AMC_001_CLOSED_HOST_ZERO",
   "nextTaskGate": "USER_DECISION_REQUIRED_NO_AUTOMATIC_NEXT_IMPLEMENTATION_TASK",
   "nextTaskState": "USER_DECISION_REQUIRED",
-  "workflowStop": "USER_REVIEW_HOST_PRODUCTQNA_AMC_001_CLOSED_HOST_ZERO",
+  "workflowStop": "USER_REVIEW_HOST_WALLET_AMC_001_CLOSED_HOST_ZERO",
   "automaticNextImplementationTask": "NONE",
   "hostGridAmc": {
     "task": "TB-TMAR-HOST-GRID-AMC-001",
@@ -974,17 +974,17 @@
     "finalHostTarget": "THIN_PLATFORM_COMPOSITION_SHELL_ONLY"
   },
   "currentHostEvacuation": {
-    "activeModule": "ProductQnA",
-    "activeModuleState": "PRODUCTQNA_HOST_ZERO_USER_REVIEW_REQUIRED",
+    "activeModule": "Wallet",
+    "activeModuleState": "WALLET_HOST_ZERO_USER_REVIEW_REQUIRED",
     "currentHostEvacuationState": "RECONCILED_NOT_HISTORICAL_ADDRESSBOOK",
     "workflow": "HOST_FIRST_FOLDER_BY_FOLDER",
-    "currentTask": "TB-TMAR-HOST-PRODUCTQNA-AMC-001",
-    "currentPhase": "PRODUCTQNA_AMC_HOST_ZERO_CLOSED",
-    "workflowStop": "USER_REVIEW_HOST_PRODUCTQNA_AMC_001_CLOSED_HOST_ZERO",
+    "currentTask": "TB-TMAR-HOST-WALLET-AMC-001",
+    "currentPhase": "WALLET_AMC_HOST_ZERO_CLOSED",
+    "workflowStop": "USER_REVIEW_HOST_WALLET_AMC_001_CLOSED_HOST_ZERO",
     "automaticNextImplementationTask": "NONE",
-    "lastReconciledRecoveryTask": "TB-TMAR-HOST-PRODUCTQNA-AMC-001",
-    "latestAcceptedImplementationWave": "TB-TMAR-HOST-PRODUCTQNA-AMC-001",
-    "currentHostCheckpoint": "ProductQnA",
+    "lastReconciledRecoveryTask": "TB-TMAR-HOST-WALLET-AMC-001",
+    "latestAcceptedImplementationWave": "TB-TMAR-HOST-WALLET-AMC-001",
+    "currentHostCheckpoint": "Wallet",
     "historicalNextHostFolderPointer": "NONE_USER_DECISION_REQUIRED",
     "nextHostFolderStarted": false,
     "nextHostFolder": "NONE_USER_DECISION_REQUIRED",
@@ -2478,7 +2478,7 @@
     "staleCurrentPointerState": "ZERO",
     "automaticNextImplementationTask": "NONE",
     "nextTaskState": "USER_DECISION_REQUIRED",
-    "workflowStop": "USER_REVIEW_HOST_PRODUCTQNA_AMC_001_CLOSED_HOST_ZERO",
+    "workflowStop": "USER_REVIEW_HOST_WALLET_AMC_001_CLOSED_HOST_ZERO",
     "evidence": "docs/evidence/TB-TMAR-HOST-SELLER-AMC-001-R5/",
     "taskArtifact": "docs/ai/tasks/TB-TMAR-HOST-SELLER-AMC-001-R5.task.md"
   },
@@ -5053,16 +5053,16 @@
     "supersededAsCurrentPointerBy": "TB-TMAR-HOST-REVIEWS-AMC-001"
   },
   "hostEvacuationProgress": {
-    "activeModule": "ProductQnA",
-    "activeModuleState": "PRODUCTQNA_HOST_ZERO_USER_REVIEW_REQUIRED",
+    "activeModule": "Wallet",
+    "activeModuleState": "WALLET_HOST_ZERO_USER_REVIEW_REQUIRED",
     "blockedReason": null,
     "nextAllowedTaskFamily": "HOST_SLICE_OR_FOLDER_AMC",
-    "note": "Host ProductQnA AMC CLOSED HOST_ZERO. Split BulkInquiry route into BulkInquiry.Endpoints. ProductQnA.Endpoints owns QnA HTTP. Catalog via ICatalogReviewProductLookup. USER_REVIEW required before next Host AMC."
+    "note": "Host Wallet AMC CLOSED HOST_ZERO. Wallet.Infrastructure.Development owns migrate+seed. Host Composition retains thin ControlPlane/AdminDev binder. USER_REVIEW required before next Host AMC."
   },
   "nextAllowedTask": {
     "kind": "USER_REVIEW_REQUIRED",
     "blockerOwner": "USER",
-    "note": "Do not start the next Host AMC until USER reviews ProductQnA HOST_ZERO closure."
+    "note": "Do not start the next Host AMC until USER reviews Wallet HOST_ZERO closure."
   },
   "progressLedger": [
     {
@@ -5074,27 +5074,26 @@
       "taskId": "TB-TMAR-HOST-PRODUCTQNA-AMC-001",
       "status": "CLOSED_HOST_ZERO",
       "note": "Host ProductQnA evacuated/split to ProductQnA+BulkInquiry; Host folder deleted; USER_REVIEW before next Host AMC."
+    },
+    {
+      "taskId": "TB-TMAR-HOST-WALLET-AMC-001",
+      "status": "CLOSED_HOST_ZERO",
+      "note": "Host Wallet evacuated; Development migrate/seed module-owned; USER_REVIEW before next Host AMC."
     }
   ],
-  "hostProductQnAAmc": {
-    "taskId": "TB-TMAR-HOST-PRODUCTQNA-AMC-001",
+  "hostWalletAmc": {
+    "taskId": "TB-TMAR-HOST-WALLET-AMC-001",
     "status": "CLOSED_HOST_ZERO",
     "classification": "HOST_ZERO",
-    "owningModules": [
-      "ProductQnA",
-      "BulkInquiry"
+    "owningModule": "Wallet",
+    "hostFolderDeleted": "src/backend/Host/Tooba.Host/Wallet",
+    "moduleBootstrap": "src/backend/Modules/Wallet/Tooba.Wallet.Infrastructure/Development/WalletDevelopmentSeedBootstrap.cs",
+    "hostRetained": [
+      "Composition/WalletDevelopmentSeedHost.cs (ControlPlane + AdminDev binder only)",
+      "Admin/Access/Authorizers/HostWalletAdminAuthorizer.cs"
     ],
-    "routesMigrated": [
-      "GET /v1/storefront/products/{slug}/questions",
-      "POST /v1/customer/product-questions",
-      "POST /v1/storefront/products/{slug}/bulk-inquiries"
-    ],
-    "hostFolderDeleted": "src/backend/Host/Tooba.Host/ProductQnA",
-    "productQnAEndpoints": "src/backend/Modules/ProductQnA/Tooba.ProductQnA.Endpoints",
-    "bulkInquiryEndpoints": "src/backend/Modules/BulkInquiry/Tooba.BulkInquiry.Endpoints",
-    "catalogBoundary": "Catalog.Contracts ICatalogReviewProductLookup",
-    "durableGuard": "HostProductQnAAmcGuardTests",
-    "evidenceRoot": "docs/evidence/TB-TMAR-HOST-PRODUCTQNA-AMC-001",
-    "note": "Implementation commit 8fa9e736bfda9f5c6097ba3eb9075da885e610db; HOST_ZERO ProductQnA closed."
+    "durableGuard": "HostWalletAmcGuardTests",
+    "evidenceRoot": "docs/evidence/TB-TMAR-HOST-WALLET-AMC-001",
+    "note": "PLACEHOLDER_COMMIT_SHA stamped after implementation commit + push."
   }
 }
