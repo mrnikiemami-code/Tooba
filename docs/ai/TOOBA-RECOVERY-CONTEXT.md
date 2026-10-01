@@ -25,29 +25,29 @@ BRIDGE-WAKE-V1
 Channel: tooba-main
 ```
 
-Latest Accepted TMAR Checkpoint — authoritative (reconciled by TB-TMAR-HOST-SECURITY-AMC-001-W2)
+Latest Accepted TMAR Checkpoint — authoritative (reconciled by TB-TMAR-HOST-SECURITY-AMC-001-W3-CERT)
 
 ```text
 Latest-Accepted-Implementation-Wave: TB-TMAR-HOST-SECURITY-AMC-001-W1
-Latest-Accepted-Task: TB-TMAR-HOST-SECURITY-AMC-001-W2
+Latest-Accepted-Task: TB-TMAR-HOST-SECURITY-AMC-001-W3-CERT
 Implementation-Commit: baa05e6b7fa373cb6d354a80ca2eab37d4472f7b
 Implementation-Commit-Kind: IMPLEMENTATION_COMMIT
-Result-Evidence-Docs-Stamp: b7a55c9905049c3419713c8142a054d581705c26
+Result-Evidence-Docs-Stamp: PENDING_W3_CERT_COMMIT
 Result-Evidence-Docs-Stamp-Kind: RESULT_EVIDENCE_DOCS_STAMP_NOT_IMPLEMENTATION
-Mode: HOST_SECURITY_STRUCTURE_GUARD_SOT_RECONCILED
+Mode: HOST_SECURITY_AMC_CERTIFIED
 Seller-Security-Failure-Semantics: SEMANTIC_EXCEPTION_CODE_BASED
 Seller-Security-Hardcoded-Runtime-Text: ZERO
 Host-Security-Production-File-Count: 19
 Seller-Production-File-Count: 14
-Structure-Guard-Reconcile: COMPLETE_W2
+Certification-State: HOST_SECURITY_AMC_CERTIFIED
+Boundary-State: KEEP_THIN_PLATFORM_SECURITY_BOUNDARY_CERTIFIED_CURRENT_19
 Historical-18-File-Cert: HISTORICAL_SUPERSEDED_STALE_METADATA
-Current-Security-Certification: NOT_YET_REASSERTED
 Whole-Host-Admin-State: HOST_ADMIN_FULLY_CERTIFIED
 Current-Host-Checkpoint: Security
 Next-Host-Folder-Started: false
 Stale-Current-Pointer-State: ZERO
-workflowStop: USER_REVIEW_HOST_SECURITY_AMC_001_W2
-Next-Task: USER_REVIEW_HOST_SECURITY_AMC_001_W2
+workflowStop: USER_REVIEW_HOST_SECURITY_AMC_001_W3_CERT
+Next-Task: USER_REVIEW_HOST_SECURITY_AMC_001_W3_CERT
 Next-Task-Gate: USER_DECISION_REQUIRED_NO_AUTOMATIC_NEXT_IMPLEMENTATION_TASK
 Automatic-Next-Implementation-Task: NONE
 ```

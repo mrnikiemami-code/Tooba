@@ -5,7 +5,7 @@ namespace Tooba.Host.Tests.Architecture;
 
 /// <summary>
 /// TB-TMAR-HOST-SECURITY-AMC-001-W2 — exact Host/Security structure guard (19 files).
-/// Historical KEEP_THIN_PLATFORM CERT claims remain SoT history only; current certification is NOT_YET_REASSERTED.
+/// Historical KEEP_THIN_PLATFORM CERT claims remain SoT history only; current authority is W3 Cert (19-file).
 /// </summary>
 public sealed class HostSecurityAmcGuardTests
 {
@@ -192,12 +192,14 @@ public sealed class HostSecurityAmcGuardTests
         Assert.Contains("USER_REVIEW_HOST_SECURITY_AMC_001_R1_KEEP_THIN_PLATFORM_CERTIFIED", sot, StringComparison.Ordinal);
         Assert.Contains("HISTORICAL_SUPERSEDED_STALE_METADATA", sot, StringComparison.Ordinal);
         Assert.Contains("HISTORICAL_SNAPSHOT_18", sot, StringComparison.Ordinal);
-        // Current structure authority after W2.
+        // W2 structure reconciliation retained; W3 Cert is current certification authority.
         Assert.Contains("\"hostSecurityAmc001W2\"", sot, StringComparison.Ordinal);
         Assert.Contains("STRUCTURE_GUARD_SOT_RECONCILED", sot, StringComparison.Ordinal);
-        Assert.Contains("NOT_YET_REASSERTED", sot, StringComparison.Ordinal);
         Assert.Contains("\"securityProductionFileCount\": 19", sot, StringComparison.Ordinal);
-        Assert.Contains("USER_REVIEW_HOST_SECURITY_AMC_001_W2", sot, StringComparison.Ordinal);
+        Assert.Contains("\"hostSecurityAmc001W3Cert\"", sot, StringComparison.Ordinal);
+        Assert.Contains("HOST_SECURITY_AMC_CERTIFIED", sot, StringComparison.Ordinal);
+        Assert.Contains("KEEP_THIN_PLATFORM_SECURITY_BOUNDARY_CERTIFIED_CURRENT_19", sot, StringComparison.Ordinal);
+        Assert.Contains("USER_REVIEW_HOST_SECURITY_AMC_001_W3_CERT", sot, StringComparison.Ordinal);
     }
 
     private static void AssertExactFolderFiles(string folder, string[] expected)

@@ -12,10 +12,12 @@ Canonical Architect ↔ Cursor handoff (recovery-critical)
 
 Latest Accepted TMAR Checkpoint — authoritative
 
-Reconciled by `TB-TMAR-HOST-SECURITY-AMC-001-W2`. Implementation remains W1 at `lastAcceptedCommit` = `baa05e6b7fa373cb6d354a80ca2eab37d4472f7b`. W2 is docs/tests structure-guard/SoT reconciliation only. Gate: `USER_DECISION_REQUIRED_NO_AUTOMATIC_NEXT_IMPLEMENTATION_TASK`.
-- Current Host checkpoint = `Security`; workflowStop / Next-Task = `USER_REVIEW_HOST_SECURITY_AMC_001_W2`; automatic next = NONE; stale pointer = ZERO.
-- Security production files = 19 exact (Seller=14 incl. HostReviewsSellerAuthorizer); historical 18-file CERT = HISTORICAL_SUPERSEDED_STALE_METADATA; current certification = NOT_YET_REASSERTED (W3 pending).
+Reconciled by `TB-TMAR-HOST-SECURITY-AMC-001-W3-CERT`. Implementation remains W1 at `lastAcceptedCommit` = `baa05e6b7fa373cb6d354a80ca2eab37d4472f7b`. W3 is independent certification docs/tests/guards only. Gate: `USER_DECISION_REQUIRED_NO_AUTOMATIC_NEXT_IMPLEMENTATION_TASK`.
+- Current Host checkpoint = `Security`; workflowStop / Next-Task = `USER_REVIEW_HOST_SECURITY_AMC_001_W3_CERT`; automatic next = NONE; stale pointer = ZERO.
+- Security production files = 19 exact (Seller=14 incl. HostReviewsSellerAuthorizer); labels = HOST_SECURITY_AMC_CERTIFIED + KEEP_THIN_PLATFORM_SECURITY_BOUNDARY_CERTIFIED_CURRENT_19; historical 18-file CERT = HISTORICAL_SUPERSEDED_STALE_METADATA.
 - W1 seller SemanticException hygiene preserved; Host/Admin remains HOST_ADMIN_FULLY_CERTIFIED.
+
+Reconciled by `TB-TMAR-HOST-SECURITY-AMC-001-W2` (HISTORICAL for current pointer). Structure guard/SoT reconciliation only; certification was NOT_YET_REASSERTED pending W3.
 
 Reconciled by `TB-TMAR-HOST-SECURITY-AMC-001-W1-R1` (HISTORICAL for current pointer). Recovery/SoT stamp split repair only.
 

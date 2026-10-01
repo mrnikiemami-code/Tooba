@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
@@ -29,6 +29,7 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Tooba.Host\Tooba.Host.csproj" />
+    <ProjectReference Include="..\..\Modules\Order\Tooba.Order.Endpoints\Tooba.Order.Endpoints.csproj" />
     <ProjectReference Include="..\..\Modules\Content\Tooba.Content.Endpoints\Tooba.Content.Endpoints.csproj" />
     <ProjectReference Include="..\..\Modules\AddressBook\Tooba.AddressBook.Endpoints\Tooba.AddressBook.Endpoints.csproj" />
     <ProjectReference Include="..\..\Modules\Wishlist\Tooba.Wishlist.Endpoints\Tooba.Wishlist.Endpoints.csproj" />
