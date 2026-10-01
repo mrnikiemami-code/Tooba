@@ -1,7 +1,5 @@
 using Microsoft.Extensions.DependencyInjection;
-using Tooba.AccessControl.Application.Development.Seller;
-using Tooba.AccessControl.Application.Models;
-using Tooba.AccessControl.Domain;
+using Tooba.AccessControl.Contracts.Development;
 using Tooba.BuildingBlocks;
 using Tooba.Host.Admin.Development;
 using Tooba.Order.Contracts.Fulfillment;
@@ -11,7 +9,7 @@ namespace Tooba.Host.Composition;
 
 /// <summary>
 /// Thin Host composition seam for Support Development seed: binds store-alpha CommerceContext,
-/// Admin/Seller demo actors, and AccessControl bootstrap tuples, then delegates migrate/seed
+/// Admin demo actor, and AccessControl Contracts prelude, then delegates migrate/seed
 /// to Support.Infrastructure.
 /// </summary>
 internal static class SupportDevelopmentSeedHost
@@ -41,33 +39,23 @@ internal static class SupportDevelopmentSeedHost
             "support-dev-seed"));
 
         await AdminDevActorBootstrap.EnsureAsync(provider, CancellationToken.None);
-        var sellerDevContexts = provider.GetRequiredService<ISellerDevContextStore>();
-        await sellerDevContexts.EnsureAsync(CancellationToken.None);
-
-        var seller = sellerDevContexts.Current;
         var admin = AdminDevActorBootstrap.Snapshot;
-        if (seller is null || admin is null)
+        if (admin is null)
             return;
 
-        var access = provider.GetRequiredService<IAccessControlDirectory>();
-        await access.EnsureBootstrapAsync(
+        var prelude = provider.GetRequiredService<IAccessControlDevelopmentSeedPrelude>();
+        var actors = await prelude.EnsureSupportSeedPrerequisitesAsync(
             admin.ActorUserId,
-            [seller.ActorA.SellerPartyId],
             tenant.TenantId.Value,
             CancellationToken.None);
-        await access.SyncUserCapabilityTuplesAsync(
-            seller.ActorA.ActorUserId,
-            new AccessOwnerScope(
-                AccessOwnerScopeKind.Seller,
-                seller.ActorA.SellerPartyId,
-                tenant.TenantId.Value),
-            CancellationToken.None);
+        if (actors is null)
+            return;
 
         await SupportDevelopmentSeedBootstrap.ApplyAsync(
             provider,
             StorefrontGuestActor.ActorId,
-            seller.ActorA.SellerPartyId,
-            seller.ActorA.ActorUserId,
+            actors.SellerPartyId,
+            actors.SellerActorUserId,
             admin.ActorUserId,
             CancellationToken.None);
     }

@@ -12,6 +12,8 @@ using Tooba.Persistence;
 using Tooba.AccessControl.Application.Models;
 using Tooba.AccessControl.Application.Permissions;
 using Tooba.AccessControl.Application.Development.Seller;
+using Tooba.AccessControl.Contracts.Development;
+using Tooba.AccessControl.Infrastructure.Development;
 using Tooba.AccessControl.Infrastructure.Development.Seller;
 using Tooba.AccessControl.Infrastructure.Directories;
 using Tooba.AccessControl.Infrastructure.Observability;
@@ -39,6 +41,7 @@ public sealed class AccessControlModule : IToobaModule
         services.AddScoped<IAccessControlDirectory>(sp => sp.GetRequiredService<AccessControlDirectory>());
         services.AddScoped<SellerDevContextBootstrap>();
         services.AddScoped<ISellerDevContextStore>(sp => sp.GetRequiredService<SellerDevContextBootstrap>());
+        services.AddScoped<IAccessControlDevelopmentSeedPrelude, AccessControlDevelopmentSeedPrelude>();
         services.AddScoped<
             Tooba.AccessControl.Contracts.Access.IAccessControlEffectiveAccessReader,
             Adapters.AccessControlEffectiveAccessReader>();

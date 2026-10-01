@@ -3,24 +3,24 @@
   "executionMode": "BACKEND_ONLY_UNTIL_EXPLICIT_RELEASE",
   "frontendFrozen": true,
   "checkoutState": "PAUSED_AT_SAFE_W5_CHECKPOINT",
-  "lastAcceptedTask": "TB-TMAR-HOST-TRANSPORT-AMC-001",
-  "lastAcceptedCommit": "dd950bc275b2f41391b72bbedd1245e6b2835b91",
+  "lastAcceptedTask": "TB-TMAR-HOST-SUPPORT-AMC-001-R1",
+  "lastAcceptedCommit": "PLACEHOLDER_STAMP_AFTER_COMMIT",
   "lastAcceptedCommitKind": "IMPLEMENTATION_COMMIT",
   "lastAcceptedResultEvidenceCommit": "5986dcc7ba8236354fc84bd92738bbeb90839d7c",
   "lastAcceptedResultEvidenceCommitKind": "RESULT_EVIDENCE_DOCS_STAMP_NOT_IMPLEMENTATION",
   "lastAcceptedSoTStamp": "5986dcc7ba8236354fc84bd92738bbeb90839d7c",
   "lastAcceptedSoTStampKind": "RESULT_EVIDENCE_DOCS_STAMP",
-  "lastAcceptedCommitSemantics": "lastAcceptedTask is TB-TMAR-HOST-TRANSPORT-AMC-001 IMPLEMENTATION commit. Host/Transport PRESENT KEEP_AS_GENERIC_HOST_TRANSPORT_INFRASTRUCTURE; exact namespace Tooba.Host.Transport; 3-file allowlist; ZERO foreign module layers.",
-  "lastAcceptedNote": "Transport AMC: Host/Transport retained as generic MassTransit SQL transport + integration envelope/consumer; path↔namespace EXACT; USER_REVIEW before next Host AMC.",
-  "latestAcceptedImplementationWave": "TB-TMAR-HOST-TRANSPORT-AMC-001",
-  "currentHostCheckpoint": "Transport",
+  "lastAcceptedCommitSemantics": "lastAcceptedTask is TB-TMAR-HOST-SUPPORT-AMC-001-R1 IMPLEMENTATION commit. Host Support HOST_ZERO preserved; AccessControl Application/Domain leakage removed from SupportDevelopmentSeedHost via Contracts IAccessControlDevelopmentSeedPrelude.",
+  "lastAcceptedNote": "Support AMC R1: Host SupportDevelopmentSeedHost uses AccessControl.Contracts.Development prelude only; ZERO AccessControl Application/Domain/Infrastructure/Persistence in binder; USER_REVIEW before next Host AMC.",
+  "latestAcceptedImplementationWave": "TB-TMAR-HOST-SUPPORT-AMC-001-R1",
+  "currentHostCheckpoint": "Support",
   "nextHostFolderStarted": false,
   "nextHostFolder": null,
   "staleCurrentPointerState": "ZERO",
-  "nextTask": "USER_REVIEW_HOST_TRANSPORT_AMC_001_KEEP_GENERIC_HOST_INFRASTRUCTURE",
+  "nextTask": "USER_REVIEW_HOST_SUPPORT_AMC_001_R1_CLOSED_HOST_ZERO",
   "nextTaskGate": "USER_DECISION_REQUIRED_NO_AUTOMATIC_NEXT_IMPLEMENTATION_TASK",
   "nextTaskState": "USER_DECISION_REQUIRED",
-  "workflowStop": "USER_REVIEW_HOST_TRANSPORT_AMC_001_KEEP_GENERIC_HOST_INFRASTRUCTURE",
+  "workflowStop": "USER_REVIEW_HOST_SUPPORT_AMC_001_R1_CLOSED_HOST_ZERO",
   "automaticNextImplementationTask": "NONE",
   "hostGridAmc": {
     "task": "TB-TMAR-HOST-GRID-AMC-001",
@@ -974,17 +974,17 @@
     "finalHostTarget": "THIN_PLATFORM_COMPOSITION_SHELL_ONLY"
   },
   "currentHostEvacuation": {
-    "activeModule": "Transport",
-    "activeModuleState": "TRANSPORT_KEEP_GENERIC_HOST_INFRASTRUCTURE_USER_REVIEW_REQUIRED",
+    "activeModule": "Support",
+    "activeModuleState": "SUPPORT_CLOSED_HOST_ZERO_R1_USER_REVIEW_REQUIRED",
     "currentHostEvacuationState": "RECONCILED_NOT_HISTORICAL_ADDRESSBOOK",
     "workflow": "HOST_FIRST_FOLDER_BY_FOLDER",
-    "currentTask": "TB-TMAR-HOST-TRANSPORT-AMC-001",
-    "currentPhase": "TRANSPORT_AMC_KEEP_GENERIC_HOST_INFRASTRUCTURE",
-    "workflowStop": "USER_REVIEW_HOST_TRANSPORT_AMC_001_KEEP_GENERIC_HOST_INFRASTRUCTURE",
+    "currentTask": "TB-TMAR-HOST-SUPPORT-AMC-001-R1",
+    "currentPhase": "SUPPORT_AMC_R1_HOST_ZERO_ACCESSCONTROL_SEAM_CLOSED",
+    "workflowStop": "USER_REVIEW_HOST_SUPPORT_AMC_001_R1_CLOSED_HOST_ZERO",
     "automaticNextImplementationTask": "NONE",
-    "lastReconciledRecoveryTask": "TB-TMAR-HOST-TRANSPORT-AMC-001",
-    "latestAcceptedImplementationWave": "TB-TMAR-HOST-TRANSPORT-AMC-001",
-    "currentHostCheckpoint": "Transport",
+    "lastReconciledRecoveryTask": "TB-TMAR-HOST-SUPPORT-AMC-001-R1",
+    "latestAcceptedImplementationWave": "TB-TMAR-HOST-SUPPORT-AMC-001-R1",
+    "currentHostCheckpoint": "Support",
     "historicalNextHostFolderPointer": "NONE_USER_DECISION_REQUIRED",
     "nextHostFolderStarted": false,
     "nextHostFolder": "NONE_USER_DECISION_REQUIRED",
@@ -2478,7 +2478,7 @@
     "staleCurrentPointerState": "ZERO",
     "automaticNextImplementationTask": "NONE",
     "nextTaskState": "USER_DECISION_REQUIRED",
-    "workflowStop": "USER_REVIEW_HOST_TRANSPORT_AMC_001_KEEP_GENERIC_HOST_INFRASTRUCTURE",
+    "workflowStop": "USER_REVIEW_HOST_SUPPORT_AMC_001_R1_CLOSED_HOST_ZERO",
     "evidence": "docs/evidence/TB-TMAR-HOST-SELLER-AMC-001-R5/",
     "taskArtifact": "docs/ai/tasks/TB-TMAR-HOST-SELLER-AMC-001-R5.task.md"
   },
@@ -5053,16 +5053,16 @@
     "supersededAsCurrentPointerBy": "TB-TMAR-HOST-REVIEWS-AMC-001"
   },
   "hostEvacuationProgress": {
-    "activeModule": "Transport",
-    "activeModuleState": "TRANSPORT_KEEP_GENERIC_HOST_INFRASTRUCTURE_USER_REVIEW_REQUIRED",
+    "activeModule": "Support",
+    "activeModuleState": "SUPPORT_CLOSED_HOST_ZERO_R1_USER_REVIEW_REQUIRED",
     "blockedReason": null,
     "nextAllowedTaskFamily": "HOST_SLICE_OR_FOLDER_AMC",
-    "note": "Host Transport AMC KEEP generic Host transport infrastructure (3 files, Tooba.Host.Transport). USER_REVIEW required before next Host AMC. Support/Wallet/ProductQnA/Preferences/Reviews remain accepted historical lineage."
+    "note": "Host Support AMC R1: AccessControl.Contracts.Development IAccessControlDevelopmentSeedPrelude removes Application/Domain leakage from SupportDevelopmentSeedHost. HOST_ZERO preserved. Transport/Wallet/ProductQnA/Preferences remain historical. USER_REVIEW required."
   },
   "nextAllowedTask": {
     "kind": "USER_REVIEW_REQUIRED",
     "blockerOwner": "USER",
-    "note": "Do not start the next Host AMC until USER reviews Transport KEEP_AS_GENERIC_HOST_TRANSPORT_INFRASTRUCTURE certification."
+    "note": "Do not start the next Host AMC until USER reviews Support AMC R1 AccessControl Contracts seam repair."
   },
   "progressLedger": [
     {
@@ -5089,6 +5089,11 @@
       "taskId": "TB-TMAR-HOST-TRANSPORT-AMC-001",
       "status": "KEEP_AS_GENERIC_HOST_TRANSPORT_INFRASTRUCTURE",
       "note": "Host Transport certified KEEP; namespace Tooba.Host.Transport; 3-file allowlist; USER_REVIEW before next Host AMC."
+    },
+    {
+      "taskId": "TB-TMAR-HOST-SUPPORT-AMC-001-R1",
+      "status": "CLOSED_HOST_ZERO_R1_ACCESSCONTROL_CONTRACTS_SEAM",
+      "note": "SupportDevelopmentSeedHost AccessControl Application/Domain leakage repaired via Contracts prelude; USER_REVIEW before next Host AMC."
     }
   ],
   "hostSupportAmc": {
@@ -5106,7 +5111,13 @@
     "guestActor": "Order.Contracts.Fulfillment.StorefrontGuestActor",
     "durableGuard": "HostSupportAmcGuardTests",
     "evidenceRoot": "docs/evidence/TB-TMAR-HOST-SUPPORT-AMC-001",
-    "note": "Implementation commit 023d26c1e844658245fbcf4bc666dbfe9e410c55; HOST_ZERO Support closed."
+    "note": "PLACEHOLDER_COMMIT_SHA stamped after implementation commit + push.",
+    "r1TaskId": "TB-TMAR-HOST-SUPPORT-AMC-001-R1",
+    "r1Status": "CLOSED_HOST_ZERO_R1_ACCESSCONTROL_CONTRACTS_SEAM",
+    "accessControlSeam": "IAccessControlDevelopmentSeedPrelude",
+    "accessControlSeamPath": "Tooba.AccessControl.Contracts/Development/AccessControlDevelopmentSeedContracts.cs",
+    "hostAccessControlApplication": "ZERO",
+    "hostAccessControlDomain": "ZERO"
   },
   "hostTransportAmc": {
     "taskId": "TB-TMAR-HOST-TRANSPORT-AMC-001",
@@ -5124,5 +5135,15 @@
     "durableGuard": "HostTransportAmcGuardTests",
     "evidenceRoot": "docs/evidence/TB-TMAR-HOST-TRANSPORT-AMC-001",
     "note": "Implementation commit dd950bc275b2f41391b72bbedd1245e6b2835b91; Host Transport KEEP certified."
+  },
+  "hostSupportAmcR1": {
+    "taskId": "TB-TMAR-HOST-SUPPORT-AMC-001-R1",
+    "parentTaskId": "TB-TMAR-HOST-SUPPORT-AMC-001",
+    "status": "CLOSED_HOST_ZERO_R1_ACCESSCONTROL_CONTRACTS_SEAM",
+    "classification": "HOST_ZERO_PRESERVED_ACCESSCONTROL_CONTRACTS_SEAM",
+    "accessControlSeam": "IAccessControlDevelopmentSeedPrelude",
+    "durableGuard": "HostSupportAmcGuardTests",
+    "evidenceRoot": "docs/evidence/TB-TMAR-HOST-SUPPORT-AMC-001-R1",
+    "note": "PLACEHOLDER_COMMIT_SHA stamped after implementation commit + push."
   }
 }

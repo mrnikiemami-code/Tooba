@@ -1,8 +1,9 @@
+using System.Text.RegularExpressions;
 using Xunit;
 
 namespace Tooba.Host.Tests.Architecture;
 
-/// <summary>Durable guards for TB-TMAR-HOST-SUPPORT-AMC-001 — Host Support HOST_ZERO.</summary>
+/// <summary>Durable guards for TB-TMAR-HOST-SUPPORT-AMC-001 / R1 — Host Support HOST_ZERO + AccessControl Contracts seam.</summary>
 public sealed class HostSupportAmcGuardTests
 {
     [Fact]
@@ -26,18 +27,68 @@ public sealed class HostSupportAmcGuardTests
             root, "src/backend/Host/Tooba.Host/Composition/SupportDevelopmentSeedHost.cs"));
         Assert.Contains("SupportDevelopmentSeedBootstrap.ApplyAsync", composition, StringComparison.Ordinal);
         Assert.Contains("StorefrontGuestActor.ActorId", composition, StringComparison.Ordinal);
+        Assert.Contains("IAccessControlDevelopmentSeedPrelude", composition, StringComparison.Ordinal);
+        Assert.Contains("Tooba.AccessControl.Contracts.Development", composition, StringComparison.Ordinal);
         Assert.DoesNotContain("SupportDbContext", composition, StringComparison.Ordinal);
         Assert.DoesNotContain("Database.MigrateAsync", composition, StringComparison.Ordinal);
         Assert.DoesNotContain("Order.Application", composition, StringComparison.Ordinal);
+        Assert.DoesNotContain("AccessControl.Application", composition, StringComparison.Ordinal);
+        Assert.DoesNotContain("AccessControl.Domain", composition, StringComparison.Ordinal);
+        Assert.DoesNotContain("AccessControl.Infrastructure", composition, StringComparison.Ordinal);
+        Assert.DoesNotContain("AccessControl.Persistence", composition, StringComparison.Ordinal);
+        Assert.DoesNotContain("ISellerDevContextStore", composition, StringComparison.Ordinal);
+        Assert.DoesNotContain("IAccessControlDirectory", composition, StringComparison.Ordinal);
+        Assert.DoesNotContain("AccessOwnerScope", composition, StringComparison.Ordinal);
+        Assert.DoesNotContain("AccessOwnerScopeKind", composition, StringComparison.Ordinal);
     }
 
     [Fact]
-    public void SoT_hostSupportAmc_present()
+    public void AccessControl_development_seed_contract_is_neutral_and_path_exact()
+    {
+        var root = FindRepoRoot();
+        var contractPath = Path.Combine(
+            root,
+            "src/backend/Modules/AccessControl/Tooba.AccessControl.Contracts/Development/AccessControlDevelopmentSeedContracts.cs");
+        Assert.True(File.Exists(contractPath));
+        var text = File.ReadAllText(contractPath);
+
+        var nsMatch = Regex.Match(text, @"^namespace\s+([^\s;{]+)", RegexOptions.Multiline);
+        Assert.True(nsMatch.Success);
+        Assert.Equal("Tooba.AccessControl.Contracts.Development", nsMatch.Groups[1].Value);
+
+        Assert.Contains("IAccessControlDevelopmentSeedPrelude", text, StringComparison.Ordinal);
+        Assert.Contains("AccessControlDevelopmentSeedActors", text, StringComparison.Ordinal);
+        Assert.DoesNotContain("AccessControl.Application", text, StringComparison.Ordinal);
+        Assert.DoesNotContain("AccessControl.Domain", text, StringComparison.Ordinal);
+        Assert.DoesNotContain("AccessControl.Infrastructure", text, StringComparison.Ordinal);
+        Assert.DoesNotContain("Tooba.Host", text, StringComparison.Ordinal);
+        Assert.DoesNotContain("dynamic", text, StringComparison.Ordinal);
+        Assert.DoesNotContain("object?", text, StringComparison.Ordinal);
+
+        var implPath = Path.Combine(
+            root,
+            "src/backend/Modules/AccessControl/Tooba.AccessControl.Infrastructure/Development/AccessControlDevelopmentSeedPrelude.cs");
+        Assert.True(File.Exists(implPath));
+        var impl = File.ReadAllText(implPath);
+        Assert.Contains("IAccessControlDevelopmentSeedPrelude", impl, StringComparison.Ordinal);
+        Assert.Contains("namespace Tooba.AccessControl.Infrastructure.Development", impl, StringComparison.Ordinal);
+        Assert.DoesNotContain("Tooba.Host", impl, StringComparison.Ordinal);
+
+        var module = File.ReadAllText(Path.Combine(
+            root,
+            "src/backend/Modules/AccessControl/Tooba.AccessControl.Infrastructure/AccessControlModule.cs"));
+        Assert.Contains("IAccessControlDevelopmentSeedPrelude, AccessControlDevelopmentSeedPrelude", module, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void SoT_hostSupportAmc_r1_present()
     {
         var sot = File.ReadAllText(Path.Combine(FindRepoRoot(), "docs/architecture/tmar-current-state.json"));
         Assert.Contains("\"hostSupportAmc\"", sot, StringComparison.Ordinal);
-        Assert.Contains("TB-TMAR-HOST-SUPPORT-AMC-001", sot, StringComparison.Ordinal);
-        Assert.Contains("USER_REVIEW_HOST_SUPPORT_AMC_001_CLOSED_HOST_ZERO", sot, StringComparison.Ordinal);
+        Assert.Contains("TB-TMAR-HOST-SUPPORT-AMC-001-R1", sot, StringComparison.Ordinal);
+        Assert.Contains("USER_REVIEW_HOST_SUPPORT_AMC_001_R1_CLOSED_HOST_ZERO", sot, StringComparison.Ordinal);
+        Assert.Contains("SUPPORT_CLOSED_HOST_ZERO_R1_USER_REVIEW_REQUIRED", sot, StringComparison.Ordinal);
+        Assert.Contains("IAccessControlDevelopmentSeedPrelude", sot, StringComparison.Ordinal);
     }
 
     private static string FindRepoRoot()
