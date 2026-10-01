@@ -12,10 +12,13 @@ Canonical Architect ↔ Cursor handoff (recovery-critical)
 
 Latest Accepted TMAR Checkpoint — authoritative
 
-Reconciled by `TB-TMAR-HOST-ADMIN-ACCESS-AMC-001-W1`. Implementation commit recorded at `lastAcceptedCommit` after PASS. Parent Panel CERT preserved. Gate: `USER_DECISION_REQUIRED_NO_AUTOMATIC_NEXT_IMPLEMENTATION_TASK`.
+Reconciled by `TB-TMAR-HOST-ADMIN-ACCESS-AMC-001-W2`. Implementation commit recorded at `lastAcceptedCommit` after PASS. Parent Panel CERT preserved. Gate: `USER_DECISION_REQUIRED_NO_AUTOMATIC_NEXT_IMPLEMENTATION_TASK`.
 - Dashboard remains Host thin cross-module composition; auth = `IAdminPanelAccess`; success = `Result` + `ApiResponseFactory`.
 - CQRS exception = `HOST_PRESENTATION_COMPOSITION_CQRS_EXCEPTION`; raw Results.Json / local PlatformHttp catch on dashboard = ZERO.
-- Admin/Access W1: core AdminPanelAccess + HostAdminPanelAccess use Foundation SemanticException codes + EN/FA resources; hardcoded runtime titles ZERO; Host/Admin = 18; Grid HOST_ZERO; Promotion dead residue DEFERRED_W2; workflowStop = `USER_REVIEW_HOST_ADMIN_ACCESS_AMC_001_W1`; automatic next = NONE.
+- Admin/Access W2: Order/Support/Wallet Host authorizers use SemanticException + module EN/FA localization; `order.operation.denied` registered; HostPromotionAdminAuthorizer REMOVED; Host/Admin = 17; Access = 12; dead Host authorizers = 0; authorizer hard-coded runtime titles ZERO; core W1 PRESERVED; workflowStop = `USER_REVIEW_HOST_ADMIN_ACCESS_AMC_001_W2`; automatic next = NONE.
+
+Reconciled by `TB-TMAR-HOST-ADMIN-ACCESS-AMC-001-W1` (HISTORICAL). Implementation commit `6f06f76631413e94efbcbaeabc8b7218688389d7`.
+- Admin/Access W1: core AdminPanelAccess + HostAdminPanelAccess Foundation SemanticException + EN/FA; historical stop = `USER_REVIEW_HOST_ADMIN_ACCESS_AMC_001_W1`.
 
 Reconciled by `TB-TMAR-HOST-ADMIN-PANEL-AMC-001-W2-R1` (HISTORICAL). Implementation commit `86c2ac7308ab90c17f1d5d125fa59e97cdaaac8c`.
 - Party Admin/Sellers validator under Validators/; historical stop = `USER_REVIEW_HOST_ADMIN_PANEL_AMC_001_W2_R1`.

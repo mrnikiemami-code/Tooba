@@ -183,4 +183,7 @@
   <data name="reservation.policy.seller.denied" xml:space="preserve">
     <value>فروشنده مجوز تغییر سیاست رزرو ندارد.</value>
   </data>
+  <data name="order.operation.denied" xml:space="preserve">
+    <value>مجوز انجام این عملیات وجود ندارد.</value>
+  </data>
 </root>

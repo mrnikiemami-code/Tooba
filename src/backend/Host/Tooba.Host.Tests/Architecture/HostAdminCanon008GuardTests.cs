@@ -25,7 +25,6 @@ public sealed class HostAdminCanon008GuardTests
             "HostOrderAdminAuthorizer.cs",
             "HostOrderAdminEffectiveAccessReader.cs",
             "HostPaymentAdminAuthorizer.cs",
-            "HostPromotionAdminAuthorizer.cs",
             "HostReturnAdminAuthorizer.cs",
             "HostSettlementAdminAuthorizer.cs",
             "HostSupportAdminAuthorizer.cs",
@@ -66,7 +65,7 @@ public sealed class HostAdminCanon008GuardTests
             .OrderBy(x => x, StringComparer.Ordinal)
             .ToArray();
 
-        Assert.Equal(18, discovered.Length);
+        Assert.Equal(17, discovered.Length);
         Assert.Equal(expected, discovered);
     }
 
@@ -134,7 +133,7 @@ public sealed class HostAdminCanon008GuardTests
         var catalog = File.ReadAllText(Path.Combine(FindRepoRoot(),
             "src", "backend", "BuildingBlocks", "Tooba.BuildingBlocks", "Presentation", "Errors",
             "FoundationErrorCatalogContributor.cs"));
-        Assert.Equal(1, Regex.Matches(catalog, @"admin\.dev\.unavailable").Count);
+        Assert.Equal(1, Regex.Matches(catalog, @"FoundationErrorCodes\.AdminDevUnavailable|admin\.dev\.unavailable").Count);
         Assert.Contains("StatusCodes.Status404NotFound", catalog, StringComparison.Ordinal);
     }
 

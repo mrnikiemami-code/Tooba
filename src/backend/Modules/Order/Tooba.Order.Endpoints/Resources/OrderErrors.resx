@@ -183,4 +183,7 @@
   <data name="reservation.policy.seller.denied" xml:space="preserve">
     <value>Seller is not allowed to change reservation policy.</value>
   </data>
+  <data name="order.operation.denied" xml:space="preserve">
+    <value>This order operation is not permitted.</value>
+  </data>
 </root>

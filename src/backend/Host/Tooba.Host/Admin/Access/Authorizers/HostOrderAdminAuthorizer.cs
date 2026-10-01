@@ -1,5 +1,4 @@
-﻿using Microsoft.AspNetCore.Http;
-using Tooba.BuildingBlocks;
+﻿using Tooba.BuildingBlocks;
 using Tooba.BuildingBlocks.Security;
 using Tooba.Order.Endpoints;
 using Tooba.Order.Endpoints.Errors;
@@ -68,15 +67,9 @@ internal sealed class HostOrderAdminAuthorizer(
         // شکست زیرساخت مجوز هرگز ALLOW نیست؛ capability باید fail-closed بماند.
         if (decision.Kind == AuthorizationDecisionKind.Unavailable)
         {
-            throw new PlatformHttpException(
-                StatusCodes.Status503ServiceUnavailable,
-                "سرویس مجوز در دسترس نیست.",
-                OrderErrorCodes.AuthorizationUnavailable);
+            throw new SemanticException(new SemanticError(OrderErrorCodes.AuthorizationUnavailable));
         }
 
-        throw new PlatformHttpException(
-            StatusCodes.Status403Forbidden,
-            "مجوز انجام این عملیات وجود ندارد.",
-            OrderErrorCodes.OperationDenied);
+        throw new SemanticException(new SemanticError(OrderErrorCodes.OperationDenied));
     }
 }

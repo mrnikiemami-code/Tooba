@@ -145,6 +145,8 @@ public sealed class OrderErrorCatalogContributor : IErrorCatalogContributor
         // Admin order capability gate: infrastructure outage must stay fail-closed (503).
         D(OrderErrorCodes.AuthorizationUnavailable, ErrorClassification.Platform, StatusCodes.Status503ServiceUnavailable,
             "Order authorization service unavailable."),
+        D(OrderErrorCodes.OperationDenied, ErrorClassification.Forbidden, StatusCodes.Status403Forbidden,
+            "Order operation denied."),
     ];
 
     private static ErrorDescriptor D(

@@ -21,7 +21,6 @@ public sealed class HostAdminCanon009GuardTests
         "Access/Authorizers/HostOrderAdminAuthorizer.cs",
         "Access/Authorizers/HostOrderAdminEffectiveAccessReader.cs",
         "Access/Authorizers/HostPaymentAdminAuthorizer.cs",
-        "Access/Authorizers/HostPromotionAdminAuthorizer.cs",
         "Access/Authorizers/HostReturnAdminAuthorizer.cs",
         "Access/Authorizers/HostSettlementAdminAuthorizer.cs",
         "Access/Authorizers/HostSupportAdminAuthorizer.cs",
@@ -65,21 +64,23 @@ public sealed class HostAdminCanon009GuardTests
     }
 
     [Fact]
-    public void Admin_authorizers_keep_403_and_fail_closed_503_statuses()
+    public void Admin_authorizers_keep_fail_closed_unavailable_and_denied_codes()
     {
         var support = ReadAdmin("Access/Authorizers/HostSupportAdminAuthorizer.cs");
-        Assert.Contains("PlatformHttpException(", support, StringComparison.Ordinal);
-        Assert.Contains("403", support, StringComparison.Ordinal);
+        Assert.Contains("SemanticException", support, StringComparison.Ordinal);
+        Assert.Contains("FoundationErrorCodes.AdminAuthorizationDenied", support, StringComparison.Ordinal);
         Assert.Contains("AuthorizationDecisionKind.Unavailable", support, StringComparison.Ordinal);
-        Assert.Contains("503", support, StringComparison.Ordinal);
+        Assert.Contains("SupportAdminAuthorizationCodes.AuthorizationUnavailable", support, StringComparison.Ordinal);
         Assert.Contains("AuthorizationDecisionKind.Allow", support, StringComparison.Ordinal);
+        Assert.DoesNotContain("PlatformHttpException", support, StringComparison.Ordinal);
 
         var wallet = ReadAdmin("Access/Authorizers/HostWalletAdminAuthorizer.cs");
-        Assert.Contains("PlatformHttpException(", wallet, StringComparison.Ordinal);
-        Assert.Contains("403", wallet, StringComparison.Ordinal);
+        Assert.Contains("SemanticException", wallet, StringComparison.Ordinal);
+        Assert.Contains("FoundationErrorCodes.AdminAuthorizationDenied", wallet, StringComparison.Ordinal);
         Assert.Contains("AuthorizationDecisionKind.Unavailable", wallet, StringComparison.Ordinal);
-        Assert.Contains("503", wallet, StringComparison.Ordinal);
+        Assert.Contains("WalletAdminAuthorizationCodes.AuthorizationUnavailable", wallet, StringComparison.Ordinal);
         Assert.Contains("AuthorizationDecisionKind.Allow", wallet, StringComparison.Ordinal);
+        Assert.DoesNotContain("PlatformHttpException", wallet, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -101,7 +102,7 @@ public sealed class HostAdminCanon009GuardTests
     }
 
     [Fact]
-    public void Admin_recursive_file_count_is_18_and_canon008_structure_is_preserved()
+    public void Admin_recursive_file_count_is_17_and_canon008_structure_is_preserved()
     {
         var root = AdminRoot();
         Assert.Empty(Directory.GetFiles(root, "*.cs", SearchOption.TopDirectoryOnly));
@@ -111,7 +112,7 @@ public sealed class HostAdminCanon009GuardTests
             .OrderBy(x => x, StringComparer.Ordinal)
             .ToArray();
 
-        Assert.Equal(18, discovered.Length);
+        Assert.Equal(17, discovered.Length);
         Assert.Equal(AdminFiles.OrderBy(x => x, StringComparer.Ordinal).ToArray(), discovered);
     }
 

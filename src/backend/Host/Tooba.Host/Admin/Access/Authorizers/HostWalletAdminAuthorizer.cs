@@ -59,15 +59,9 @@ public sealed class HostWalletAdminAuthorizer(
         // شکست زیرساخت مجوز هرگز ALLOW نیست؛ capability باید fail-closed بماند.
         if (decision.Kind == AuthorizationDecisionKind.Unavailable)
         {
-            throw new PlatformHttpException(
-                503,
-                "سرویس مجوز در دسترس نیست.",
-                WalletAdminAuthorizationCodes.AuthorizationUnavailable);
+            throw new SemanticException(new SemanticError(WalletAdminAuthorizationCodes.AuthorizationUnavailable));
         }
 
-        throw new PlatformHttpException(
-            403,
-            "مجوز کیف پول/کارت هدیه وجود ندارد.",
-            FoundationErrorCodes.AdminAuthorizationDenied);
+        throw new SemanticException(new SemanticError(FoundationErrorCodes.AdminAuthorizationDenied));
     }
 }

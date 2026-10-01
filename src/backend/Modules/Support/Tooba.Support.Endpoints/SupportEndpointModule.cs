@@ -1,10 +1,12 @@
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
+using Tooba.BuildingBlocks.Localization;
 using Tooba.BuildingBlocks.Presentation.Errors;
 using Tooba.Support.Endpoints.Admin;
 using Tooba.Support.Endpoints.Customer;
 using Tooba.Support.Endpoints.Errors;
+using Tooba.Support.Endpoints.Resources;
 using Tooba.Support.Endpoints.Seller;
 
 namespace Tooba.Support.Endpoints;
@@ -30,6 +32,7 @@ public static class SupportEndpointModule
     {
         ArgumentNullException.ThrowIfNull(services);
         services.AddSingleton<IErrorCatalogContributor, SupportErrorCatalogContributor>();
+        services.AddSingleton<IErrorResourceSet, SupportErrorResourceSet>();
         services.AddScoped<ISupportCustomerAuthorizer, SupportCustomerAuthorizer>();
         return services;
     }

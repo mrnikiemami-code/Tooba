@@ -63,7 +63,6 @@ public sealed class HostAdminCanonicalCertificationGuardTests
             "HostOrderAdminAuthorizer.cs",
             "HostOrderAdminEffectiveAccessReader.cs",
             "HostPaymentAdminAuthorizer.cs",
-            "HostPromotionAdminAuthorizer.cs",
             "HostReturnAdminAuthorizer.cs",
             "HostSettlementAdminAuthorizer.cs",
             "HostSupportAdminAuthorizer.cs",
@@ -116,7 +115,7 @@ public sealed class HostAdminCanonicalCertificationGuardTests
             .OrderBy(x => x, StringComparer.Ordinal)
             .ToArray();
 
-        Assert.Equal(18, discovered.Length);
+        Assert.Equal(17, discovered.Length);
         Assert.Equal(expected, discovered);
 
         var folders = Directory.GetDirectories(root)
@@ -331,8 +330,8 @@ public sealed class HostAdminCanonicalCertificationGuardTests
 
             if (text.Contains("AuthorizationDecisionKind.Unavailable", StringComparison.Ordinal))
             {
-                Assert.Contains("PlatformHttpException", text, StringComparison.Ordinal);
-                Assert.Contains("503", text, StringComparison.Ordinal);
+                Assert.Contains("SemanticException", text, StringComparison.Ordinal);
+                Assert.DoesNotContain("PlatformHttpException", text, StringComparison.Ordinal);
             }
         }
     }
@@ -367,7 +366,6 @@ public sealed class HostAdminCanonicalCertificationGuardTests
         foreach (var file in new[]
                  {
                      "HostPaymentAdminAuthorizer.cs",
-                     "HostPromotionAdminAuthorizer.cs",
                      "HostReturnAdminAuthorizer.cs",
                      "HostSettlementAdminAuthorizer.cs",
                  })

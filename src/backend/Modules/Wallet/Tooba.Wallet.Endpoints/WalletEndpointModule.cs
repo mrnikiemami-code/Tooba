@@ -1,10 +1,12 @@
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
+using Tooba.BuildingBlocks.Localization;
 using Tooba.BuildingBlocks.Presentation.Errors;
 using Tooba.Wallet.Endpoints.Admin;
 using Tooba.Wallet.Endpoints.Customer;
 using Tooba.Wallet.Endpoints.Errors;
+using Tooba.Wallet.Endpoints.Resources;
 
 namespace Tooba.Wallet.Endpoints;
 
@@ -25,6 +27,7 @@ public static class WalletEndpointModule
     {
         ArgumentNullException.ThrowIfNull(services);
         services.AddSingleton<IErrorCatalogContributor, WalletErrorCatalogContributor>();
+        services.AddSingleton<IErrorResourceSet, WalletErrorResourceSet>();
         services.AddScoped<IWalletCustomerAuthorizer, WalletCustomerAuthorizer>();
         return services;
     }

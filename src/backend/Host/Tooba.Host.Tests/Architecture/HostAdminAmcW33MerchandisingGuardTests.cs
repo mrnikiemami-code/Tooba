@@ -61,7 +61,7 @@ public sealed class HostAdminAmcW33MerchandisingGuardTests
         Assert.False(Directory.Exists(Path.Combine(
             root,
             "src/backend/Host/Tooba.Host/CatalogAdapters")));
-        Assert.True(File.Exists(Path.Combine(
+        Assert.False(File.Exists(Path.Combine(
             root,
             "src/backend/Host/Tooba.Host/Admin/Access/Authorizers/HostPromotionAdminAuthorizer.cs")));
     }

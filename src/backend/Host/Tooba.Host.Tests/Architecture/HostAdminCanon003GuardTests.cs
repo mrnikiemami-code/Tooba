@@ -57,9 +57,8 @@ public sealed class HostAdminCanon003GuardTests
             var text = ReadAdmin(name);
             Assert.DoesNotContain("fail-open", text, StringComparison.Ordinal);
             Assert.Contains("AuthorizationDecisionKind.Unavailable", text, StringComparison.Ordinal);
-            Assert.Contains("throw new PlatformHttpException(", text, StringComparison.Ordinal);
-            Assert.Contains("503", text, StringComparison.Ordinal);
-            Assert.Contains("403", text, StringComparison.Ordinal);
+            Assert.Contains("throw new SemanticException(", text, StringComparison.Ordinal);
+            Assert.DoesNotContain("PlatformHttpException", text, StringComparison.Ordinal);
         }
     }
 
@@ -99,7 +98,7 @@ public sealed class HostAdminCanon003GuardTests
     public void Host_admin_count_remains_platform_floor_18()
     {
         var admin = RepoFile("src/backend/Host/Tooba.Host/Admin");
-        Assert.Equal(18, Directory.GetFiles(admin, "*.cs", SearchOption.AllDirectories).Length);
+        Assert.Equal(17, Directory.GetFiles(admin, "*.cs", SearchOption.AllDirectories).Length);
     }
 
     [Fact]
@@ -126,10 +125,9 @@ public sealed class HostAdminCanon003GuardTests
     public async Task Support_deny_returns_403_with_stable_code()
     {
         var authorizer = await SupportWith(grant: "support.view");
-        var denied = await Assert.ThrowsAsync<PlatformHttpException>(() =>
+        var denied = await Assert.ThrowsAsync<SemanticException>(() =>
             authorizer.RequireAuthorizedAsync(Http(), "support.manage", CancellationToken.None));
-        Assert.Equal(403, denied.StatusCode);
-        Assert.Equal(SupportAdminAuthorizationCodes.AdminAuthorizationDenied, denied.ErrorCode);
+        Assert.Equal(FoundationErrorCodes.AdminAuthorizationDenied, denied.Error.Code);
     }
 
     [Fact]
@@ -139,10 +137,9 @@ public sealed class HostAdminCanon003GuardTests
             new StubAdminPanelAccess(),
             UnavailableAuthz(),
             CurrentTenant());
-        var unavailable = await Assert.ThrowsAsync<PlatformHttpException>(() =>
+        var unavailable = await Assert.ThrowsAsync<SemanticException>(() =>
             authorizer.RequireAuthorizedAsync(Http(), "support.view", CancellationToken.None));
-        Assert.Equal(503, unavailable.StatusCode);
-        Assert.Equal(SupportAdminAuthorizationCodes.AuthorizationUnavailable, unavailable.ErrorCode);
+        Assert.Equal(SupportAdminAuthorizationCodes.AuthorizationUnavailable, unavailable.Error.Code);
     }
 
     [Fact]
@@ -170,10 +167,9 @@ public sealed class HostAdminCanon003GuardTests
     public async Task Wallet_deny_returns_403_with_stable_code()
     {
         var authorizer = await WalletWith(grant: "wallet.view");
-        var denied = await Assert.ThrowsAsync<PlatformHttpException>(() =>
+        var denied = await Assert.ThrowsAsync<SemanticException>(() =>
             authorizer.RequireAuthorizedAsync(Http(), "wallet.adjust", CancellationToken.None));
-        Assert.Equal(403, denied.StatusCode);
-        Assert.Equal(WalletAdminAuthorizationCodes.AdminAuthorizationDenied, denied.ErrorCode);
+        Assert.Equal(FoundationErrorCodes.AdminAuthorizationDenied, denied.Error.Code);
     }
 
     [Fact]
@@ -183,10 +179,9 @@ public sealed class HostAdminCanon003GuardTests
             new StubAdminPanelAccess(),
             UnavailableAuthz(),
             CurrentTenant());
-        var unavailable = await Assert.ThrowsAsync<PlatformHttpException>(() =>
+        var unavailable = await Assert.ThrowsAsync<SemanticException>(() =>
             authorizer.RequireAuthorizedAsync(Http(), "wallet.view", CancellationToken.None));
-        Assert.Equal(503, unavailable.StatusCode);
-        Assert.Equal(WalletAdminAuthorizationCodes.AuthorizationUnavailable, unavailable.ErrorCode);
+        Assert.Equal(WalletAdminAuthorizationCodes.AuthorizationUnavailable, unavailable.Error.Code);
     }
 
     [Fact]

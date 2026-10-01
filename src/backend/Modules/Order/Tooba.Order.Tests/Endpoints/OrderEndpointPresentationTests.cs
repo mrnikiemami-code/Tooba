@@ -6,6 +6,7 @@ using Tooba.BuildingBlocks.Presentation.Errors;
 using Tooba.Order.Application;
 using Tooba.Order.Application.Admin.Completeness.Errors;
 using Tooba.Order.Application.Customer;
+using Tooba.Order.Application.Admin.Settings.ReservationPolicy;
 using Tooba.Order.Application.ReservationCycle.Contracts;
 using Tooba.Order.Application.Seller;
 using Tooba.Order.Application.Storefront;
@@ -58,11 +59,20 @@ public sealed class OrderEndpointPresentationTests
     private static readonly string[] AdminPanelCodes =
     [
         OrderErrorCodes.AuthorizationUnavailable,
+        OrderErrorCodes.OperationDenied,
+    ];
+
+    private static readonly string[] ReservationPolicyCodes =
+    [
+        ReservationPolicyErrors.InitialInvalid,
+        ReservationPolicyErrors.RetryInvalid,
+        ReservationPolicyErrors.MaxInvalid,
+        ReservationPolicyErrors.SellerDenied,
     ];
 
     private static readonly string[] AllCodes =
         CompletenessCodes.Concat(StorefrontCodes).Concat(CustomerCodes).Concat(SellerCodes)
-            .Concat(AdminPanelCodes).ToArray();
+            .Concat(AdminPanelCodes).Concat(ReservationPolicyCodes).ToArray();
 
     /// <summary>
     /// Cross-cutting codes consumed by Order but canonically owned by FoundationErrorCatalogContributor.

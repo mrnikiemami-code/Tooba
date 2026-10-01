@@ -23,7 +23,7 @@ public sealed class HostAdminPanelAmcCertGuardTests
         Assert.Equal(
             ["AdminDevActorBootstrap.cs", "AdminDevContextEndpoints.cs"],
             Directory.GetFiles(development, "*.cs").Select(Path.GetFileName).OrderBy(x => x, StringComparer.Ordinal).ToArray());
-        Assert.Equal(18, Directory.GetFiles(admin, "*.cs", SearchOption.AllDirectories).Length);
+        Assert.Equal(17, Directory.GetFiles(admin, "*.cs", SearchOption.AllDirectories).Length);
 
         AssertNamespace(Path.Combine(panel, "AdminPanelComposer.cs"), "Tooba.Host.Admin.Panel");
         AssertNamespace(Path.Combine(panel, "AdminPanelEndpoints.cs"), "Tooba.Host.Admin.Panel");

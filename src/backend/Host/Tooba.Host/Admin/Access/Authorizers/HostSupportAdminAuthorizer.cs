@@ -59,15 +59,9 @@ public sealed class HostSupportAdminAuthorizer(
         // شکست زیرساخت مجوز هرگز ALLOW نیست؛ capability باید fail-closed بماند.
         if (decision.Kind == AuthorizationDecisionKind.Unavailable)
         {
-            throw new PlatformHttpException(
-                503,
-                "سرویس مجوز در دسترس نیست.",
-                SupportAdminAuthorizationCodes.AuthorizationUnavailable);
+            throw new SemanticException(new SemanticError(SupportAdminAuthorizationCodes.AuthorizationUnavailable));
         }
 
-        throw new PlatformHttpException(
-            403,
-            "مجوز پشتیبانی وجود ندارد.",
-            FoundationErrorCodes.AdminAuthorizationDenied);
+        throw new SemanticException(new SemanticError(FoundationErrorCodes.AdminAuthorizationDenied));
     }
 }

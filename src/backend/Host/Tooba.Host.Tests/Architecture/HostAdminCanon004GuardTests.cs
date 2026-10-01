@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Http;
 using Tooba.AccessControl.Infrastructure.Authorization;
 using Tooba.BuildingBlocks;
+using Tooba.BuildingBlocks.Presentation.Errors;
 using Tooba.BuildingBlocks.Security;
 using Tooba.Host.Admin.Access.Authorizers;
 using Tooba.Order.Endpoints.Errors;
@@ -44,12 +45,13 @@ public sealed class HostAdminCanon004GuardTests
     }
 
     [Fact]
-    public void Order_authorizer_fails_closed_on_unavailable_with_distinct_503_code()
+    public void Order_authorizer_fails_closed_on_unavailable_with_distinct_codes()
     {
         var text = ReadAdmin(AuthorizerFile);
         Assert.DoesNotContain("fail-open", text, StringComparison.Ordinal);
         Assert.Contains("AuthorizationDecisionKind.Unavailable", text, StringComparison.Ordinal);
-        Assert.Contains("StatusCodes.Status503ServiceUnavailable", text, StringComparison.Ordinal);
+        Assert.Contains("SemanticException", text, StringComparison.Ordinal);
+        Assert.DoesNotContain("PlatformHttpException", text, StringComparison.Ordinal);
         Assert.Contains("OrderErrorCodes.AuthorizationUnavailable", text, StringComparison.Ordinal);
         Assert.Contains("OrderErrorCodes.OperationDenied", text, StringComparison.Ordinal);
         Assert.NotEqual(OrderErrorCodes.OperationDenied, OrderErrorCodes.AuthorizationUnavailable);
@@ -64,13 +66,16 @@ public sealed class HostAdminCanon004GuardTests
         var catalog = File.ReadAllText(RepoFile(
             "src/backend/Modules/Order/Tooba.Order.Endpoints/Errors/OrderErrorCatalogContributor.cs"));
         Assert.Contains("OrderErrorCodes.AuthorizationUnavailable", catalog, StringComparison.Ordinal);
+        Assert.Contains("OrderErrorCodes.OperationDenied", catalog, StringComparison.Ordinal);
 
         var en = File.ReadAllText(RepoFile(
             "src/backend/Modules/Order/Tooba.Order.Endpoints/Resources/OrderErrors.resx"));
         Assert.Contains("order.authorization.unavailable", en, StringComparison.Ordinal);
+        Assert.Contains("order.operation.denied", en, StringComparison.Ordinal);
         var fa = File.ReadAllText(RepoFile(
             "src/backend/Modules/Order/Tooba.Order.Endpoints/Resources/OrderErrors.fa.resx"));
         Assert.Contains("order.authorization.unavailable", fa, StringComparison.Ordinal);
+        Assert.Contains("order.operation.denied", fa, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -81,10 +86,10 @@ public sealed class HostAdminCanon004GuardTests
     }
 
     [Fact]
-    public void Host_admin_count_remains_platform_floor_18()
+    public void Host_admin_count_remains_platform_floor_17()
     {
         var admin = RepoFile("src/backend/Host/Tooba.Host/Admin");
-        Assert.Equal(18, Directory.GetFiles(admin, "*.cs", SearchOption.AllDirectories).Length);
+        Assert.Equal(17, Directory.GetFiles(admin, "*.cs", SearchOption.AllDirectories).Length);
     }
 
     [Fact]
@@ -124,10 +129,9 @@ public sealed class HostAdminCanon004GuardTests
     public async Task Deny_throws_403_with_stable_order_code()
     {
         var authorizer = await AuthorizerWith(grant: "order.view");
-        var denied = await Assert.ThrowsAsync<PlatformHttpException>(() =>
+        var denied = await Assert.ThrowsAsync<SemanticException>(() =>
             authorizer.RequirePermissionAsync(Http(), "order.handle", CancellationToken.None));
-        Assert.Equal(403, denied.StatusCode);
-        Assert.Equal(OrderErrorCodes.OperationDenied, denied.ErrorCode);
+        Assert.Equal(OrderErrorCodes.OperationDenied, denied.Error.Code);
     }
 
     [Fact]
@@ -137,10 +141,9 @@ public sealed class HostAdminCanon004GuardTests
             new StubAdminPanelAccess(),
             UnavailableAuthz(),
             CurrentTenant());
-        var unavailable = await Assert.ThrowsAsync<PlatformHttpException>(() =>
+        var unavailable = await Assert.ThrowsAsync<SemanticException>(() =>
             authorizer.RequirePermissionAsync(Http(), "order.view", CancellationToken.None));
-        Assert.Equal(503, unavailable.StatusCode);
-        Assert.Equal(OrderErrorCodes.AuthorizationUnavailable, unavailable.ErrorCode);
+        Assert.Equal(OrderErrorCodes.AuthorizationUnavailable, unavailable.Error.Code);
     }
 
     [Fact]
