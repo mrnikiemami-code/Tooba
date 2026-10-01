@@ -1,4 +1,4 @@
-﻿# Tooba — Recovery Context
+# Tooba — Recovery Context
 
 Canonical repository:
 
@@ -25,26 +25,31 @@ BRIDGE-WAKE-V1
 Channel: tooba-main
 ```
 
-Latest Accepted TMAR Checkpoint — authoritative (reconciled by TB-TMAR-HOST-ADMIN-PANEL-AMC-001-W3)
+Latest Accepted TMAR Checkpoint — authoritative (reconciled by TB-TMAR-HOST-ADMIN-PANEL-AMC-001-W4)
 
 ```text
-Latest-Accepted-Implementation-Wave: TB-TMAR-HOST-ADMIN-PANEL-AMC-001-W3
-Latest-Accepted-Task: TB-TMAR-HOST-ADMIN-PANEL-AMC-001-W3
-Implementation-Commit: 1cc1659cc31e98adab04479a92a3ff107b5f3727
+Latest-Accepted-Implementation-Wave: TB-TMAR-HOST-ADMIN-PANEL-AMC-001-W4
+Latest-Accepted-Task: TB-TMAR-HOST-ADMIN-PANEL-AMC-001-W4
+Implementation-Commit: 39ea2e66d188cab7719ac99dd624c22778d7fb18
 Implementation-Commit-Kind: IMPLEMENTATION_COMMIT
 Current-Host-Checkpoint: Admin/Panel
 Active-Host-Folder: Admin/Panel
-Dashboard-Disposition: KEEP_AS_THIN_HOST_CROSS_MODULE_PRESENTATION_COMPOSITION
-Dashboard-Authorization: IAdminPanelAccess
-Dashboard-ApiResult: ApiResponseFactory
-Dashboard-CQRS: HOST_PRESENTATION_COMPOSITION_CQRS_EXCEPTION
-Dev-Context: DEFERRED_UNCHANGED_W4_TARGET
+Dev-Context-Owner: Host/Admin/Development
+Panel-Dev-Context-Residue: ZERO
+Dev-Context-Error-Code: admin.dev.unavailable
+Dev-Context-Error-Http: 404
+Dev-Context-Hardcoded-NotFound: ZERO
+Dev-Context-CQRS: HOST_DEVELOPMENT_PRESENTATION_CQRS_EXCEPTION
+Host-Admin-Development-Files: 2
+Host-Admin-Recursive-Files: 19
 Host-Admin-Panel-Files: 3
-Prior-Accepted-Lineage: TB-TMAR-HOST-ADMIN-PANEL-AMC-001-W2-R1 ; TB-TMAR-HOST-ADMIN-PANEL-AMC-001-W2 ; TB-TMAR-HOST-ADMIN-PANEL-AMC-001-W1
+Dashboard: W3_PRESERVED
+Sellers-GET-POST: Party.Endpoints
+Prior-Accepted-Lineage: TB-TMAR-HOST-ADMIN-PANEL-AMC-001-W3 ; TB-TMAR-HOST-ADMIN-PANEL-AMC-001-W2-R1 ; TB-TMAR-HOST-ADMIN-PANEL-AMC-001-W2 ; TB-TMAR-HOST-ADMIN-PANEL-AMC-001-W1
 Next-Host-Folder-Started: false
 Stale-Current-Pointer-State: ZERO
-workflowStop: USER_REVIEW_HOST_ADMIN_PANEL_AMC_001_W3
-Next-Task: USER_REVIEW_HOST_ADMIN_PANEL_AMC_001_W3
+workflowStop: USER_REVIEW_HOST_ADMIN_PANEL_AMC_001_W4
+Next-Task: USER_REVIEW_HOST_ADMIN_PANEL_AMC_001_W4
 Automatic-Next-Implementation-Task: NONE
 ```
 
