@@ -5447,5 +5447,18 @@
     "evidenceRoot": "docs/evidence/TB-TMAR-HOST-JOBS-DEAD-REGISTRY-CLEANUP-001-R1",
     "workflowStop": "USER_REVIEW_HOST_JOBS_DEAD_REGISTRY_CLEANUP_001_R1",
     "note": "Recovery/SoT reconciliation only; production behavior unchanged from implementation commit 913ce3ca6c7e89a04f6ed9ebb74d1bc8a8660179."
+  },
+  "hostAdminPanelAmc": {
+    "taskId": "TB-TMAR-HOST-ADMIN-PANEL-AMC-001",
+    "parentTaskId": "TB-TMAR-HOST-JOBS-DEAD-REGISTRY-CLEANUP-001-R1",
+    "mode": "ANALYSIS_ONLY_NOT_MIGRATED_NOT_CERTIFIED",
+    "activeHostFolder": "Admin/Panel",
+    "productionFileCount": 3,
+    "dispositionSummary": "KEEP_DASHBOARD_COMPOSITION_MOVE_SELLERS_TO_PARTY_SPLIT_DEV_CONTEXT_NEEDS_ARCHITECT_DECISION",
+    "doesNotAdvanceLastAcceptedImplementation": true,
+    "evidenceRoot": "docs/evidence/TB-TMAR-HOST-ADMIN-PANEL-AMC-001",
+    "workflowStop": "USER_REVIEW_HOST_ADMIN_PANEL_AMC_001_ANALYZE",
+    "recommendedNextTask": "TB-TMAR-HOST-ADMIN-PANEL-AMC-001-W1",
+    "note": "Analysis complete; lastAcceptedTask/Commit unchanged (Jobs R1 / 913ce3ca)."
   }
 }
