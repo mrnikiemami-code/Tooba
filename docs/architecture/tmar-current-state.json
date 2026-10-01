@@ -6,9 +6,9 @@
   "lastAcceptedTask": "TB-TMAR-HOST-SECURITY-AMC-001-W2",
   "lastAcceptedCommit": "baa05e6b7fa373cb6d354a80ca2eab37d4472f7b",
   "lastAcceptedCommitKind": "IMPLEMENTATION_COMMIT",
-  "lastAcceptedResultEvidenceCommit": "PLACEHOLDER_W2_DOCS_STAMP",
+  "lastAcceptedResultEvidenceCommit": "b7a55c9905049c3419713c8142a054d581705c26",
   "lastAcceptedResultEvidenceCommitKind": "RESULT_EVIDENCE_DOCS_STAMP_NOT_IMPLEMENTATION",
-  "lastAcceptedSoTStamp": "PLACEHOLDER_W2_DOCS_STAMP",
+  "lastAcceptedSoTStamp": "b7a55c9905049c3419713c8142a054d581705c26",
   "lastAcceptedSoTStampKind": "RESULT_EVIDENCE_DOCS_STAMP",
   "lastAcceptedCommitSemantics": "lastAcceptedTask is TB-TMAR-HOST-SECURITY-AMC-001-W2 (structure guard/SoT reconciliation docs/tests). IMPLEMENTATION commit remains W1 SHA at lastAcceptedCommit (baa05e6b7fa373cb6d354a80ca2eab37d4472f7b). W2 docs/tests stamp is recorded in lastAcceptedResultEvidenceCommit/lastAcceptedSoTStamp and is NOT an implementation commit.",
   "lastAcceptedNote": "Security W2: HostSecurity exact 19-file guard + historical 18-file CERT metadata classified STALE; W1 hygiene preserved; certification NOT_YET_REASSERTED; Host/Admin FULLY_CERTIFIED preserved.",
@@ -5805,7 +5805,7 @@
     "automaticNextImplementationTask": "NONE",
     "workflowStop": "USER_REVIEW_HOST_SECURITY_AMC_001_W2",
     "evidenceRoot": "docs/evidence/TB-TMAR-HOST-SECURITY-AMC-001-W2",
-    "docsStamp": "PLACEHOLDER_W2_DOCS_STAMP",
+    "docsStamp": "b7a55c9905049c3419713c8142a054d581705c26",
     "note": "Docs/tests only; does not advance implementation SHA."
   }
 }
