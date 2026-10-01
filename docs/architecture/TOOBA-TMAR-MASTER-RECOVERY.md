@@ -12,14 +12,17 @@ Canonical Architect ↔ Cursor handoff (recovery-critical)
 
 Latest Accepted TMAR Checkpoint — authoritative
 
-Reconciled by `TB-TMAR-HOST-PERSISTENCE-AMC-001`. Current implementation commit recorded at `lastAcceptedCommit` after PASS.
-- Host/Persistence = `PRESENT` / `KEEP_AS_GENERIC_HOST_PLATFORM_INFRASTRUCTURE` (1 file: `DatabaseConnectionResolver.cs`). **Not HOST_ZERO.**
-- Path↔namespace = `Tooba.Host.Persistence` EXACT; implements BuildingBlocks `IDatabaseConnectionResolver`; fail-closed `platform.connection.unconfigured`; connection strings never logged.
-- Current Host checkpoint = `Persistence`; workflowStop = `USER_REVIEW_HOST_PERSISTENCE_AMC_001_KEEP_PLATFORM`; automatic next = NONE; stale pointer = ZERO.
-- Reviews / PageComposition / Security R1 / Story R1 / Wishlist remain historical accepted lineage.
+Reconciled by `TB-TMAR-HOST-REVIEWS-AMC-001-R1`. Current implementation commit recorded at `lastAcceptedCommit` after PASS.
+- Host/Reviews = `ABSENT` / `CLOSED_HOST_ZERO` (preserved; not reopened).
+- Message-text failure classification = ZERO; `ReviewsFailureMapper` ABSENT.
+- Expected failures = `SemanticException` + stable codes `reviews.duplicate` / `reviews.rejected` / `reviews.moderation.rejected` at Domain/Directory.
+- Unknown exceptions propagate (no InvalidOperationException catch-all remap).
+- Current Host checkpoint = `Reviews`; workflowStop = `USER_REVIEW_HOST_REVIEWS_AMC_001_R1_CLOSED_HOST_ZERO`; automatic next = NONE; stale pointer = ZERO.
+- Parent Reviews AMC / Persistence KEEP / PageComposition / Security R1 remain historical accepted lineage.
 
-Reconciled by `TB-TMAR-HOST-REVIEWS-AMC-001` (HISTORICAL). Host/Reviews = `ABSENT` / `CLOSED_HOST_ZERO`.
-- HTTP owner = `Tooba.Reviews.Endpoints.ReviewsEndpointModule`; Offer/Catalog Contracts-only seller scope; HostReviewsSellerAuthorizer.
+Reconciled by `TB-TMAR-HOST-PERSISTENCE-AMC-001` (HISTORICAL). Host/Persistence = `PRESENT` / `KEEP_AS_GENERIC_HOST_PLATFORM_INFRASTRUCTURE`.
+
+Reconciled by `TB-TMAR-HOST-REVIEWS-AMC-001` (HISTORICAL parent). Host/Reviews = `ABSENT` / `CLOSED_HOST_ZERO`.
 
 Reconciled by `TB-TMAR-HOST-PAGECOMPOSITION-AMC-001` (HISTORICAL). Host/PageComposition = `ABSENT` / `CLOSED_HOST_ZERO`.
 

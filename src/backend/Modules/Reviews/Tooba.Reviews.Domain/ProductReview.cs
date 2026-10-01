@@ -1,4 +1,5 @@
 using Tooba.BuildingBlocks;
+using Tooba.Reviews.Contracts.Errors;
 
 namespace Tooba.Reviews.Domain;
 
@@ -53,11 +54,16 @@ public sealed class ProductReview
     public static ProductReview Create(Guid productId, Guid authorUserId, string authorDisplayName, int rating,
         string? title, string body, bool verified, Guid? verificationOrderId, DateTimeOffset now)
     {
-        if (productId == Guid.Empty || authorUserId == Guid.Empty) throw new InvalidOperationException("هویت محصول و نویسنده الزامی است.");
-        if (rating is < 1 or > 5) throw new InvalidOperationException("امتیاز باید بین ۱ و ۵ باشد.");
-        if (string.IsNullOrWhiteSpace(authorDisplayName) || authorDisplayName.Trim().Length > 100) throw new InvalidOperationException("نام نمایشی معتبر نیست.");
-        if (string.IsNullOrWhiteSpace(body) || body.Trim().Length > 4000) throw new InvalidOperationException("متن بررسی معتبر نیست.");
-        if (title?.Trim().Length > 200) throw new InvalidOperationException("عنوان بررسی بیش از حد بلند است.");
+        if (productId == Guid.Empty || authorUserId == Guid.Empty)
+            throw new SemanticException(new SemanticError(ReviewsErrorCodes.Rejected));
+        if (rating is < 1 or > 5)
+            throw new SemanticException(new SemanticError(ReviewsErrorCodes.Rejected));
+        if (string.IsNullOrWhiteSpace(authorDisplayName) || authorDisplayName.Trim().Length > 100)
+            throw new SemanticException(new SemanticError(ReviewsErrorCodes.Rejected));
+        if (string.IsNullOrWhiteSpace(body) || body.Trim().Length > 4000)
+            throw new SemanticException(new SemanticError(ReviewsErrorCodes.Rejected));
+        if (title?.Trim().Length > 200)
+            throw new SemanticException(new SemanticError(ReviewsErrorCodes.Rejected));
         return new ProductReview
         {
             ReviewId = UuidV7.New(), ProductId = productId, AuthorUserId = authorUserId,
@@ -79,13 +85,15 @@ public sealed class ProductReview
     public void Reject(Guid moderatorUserId, string reason, DateTimeOffset now)
     {
         EnsurePending();
-        if (string.IsNullOrWhiteSpace(reason) || reason.Trim().Length > 500) throw new InvalidOperationException("دلیل رد معتبر نیست.");
+        if (string.IsNullOrWhiteSpace(reason) || reason.Trim().Length > 500)
+            throw new SemanticException(new SemanticError(ReviewsErrorCodes.ModerationRejected));
         Status = ReviewStatus.Rejected; ModeratedByUserId = moderatorUserId; ModeratedAt = now;
         ModerationReason = reason.Trim(); UpdatedAt = now;
     }
 
     private void EnsurePending()
     {
-        if (Status != ReviewStatus.Pending) throw new InvalidOperationException("فقط بررسی Pending قابل تعدیل است.");
+        if (Status != ReviewStatus.Pending)
+            throw new SemanticException(new SemanticError(ReviewsErrorCodes.ModerationRejected));
     }
 }

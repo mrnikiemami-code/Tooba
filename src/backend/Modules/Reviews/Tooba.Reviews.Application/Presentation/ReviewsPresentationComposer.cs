@@ -3,7 +3,6 @@ using Tooba.BuildingBlocks.Grid;
 using Tooba.Catalog.Contracts;
 using Tooba.Offer.Contracts.Ports;
 using Tooba.Reviews.Application.Models;
-using Tooba.Reviews.Contracts.Errors;
 using Tooba.Reviews.Domain;
 
 namespace Tooba.Reviews.Application.Presentation;
@@ -33,7 +32,7 @@ public sealed class ReviewsPresentationComposer
     public async Task<PublicReviewsResponse?> GetPublishedAsync(
         string slug, int page, int pageSize, CancellationToken cancellationToken)
     {
-        var result = await Guard(() => _reviews.GetPublishedAsync(slug, page, pageSize, cancellationToken));
+        var result = await _reviews.GetPublishedAsync(slug, page, pageSize, cancellationToken);
         if (result is null) return null;
         return new PublicReviewsResponse(
             result.Summary.Count == 0 ? null : result.Summary.Average,
@@ -49,7 +48,7 @@ public sealed class ReviewsPresentationComposer
 
     /// <summary>ثبت نظر مشتری.</summary>
     public Task<Guid> SubmitAsync(Guid actorUserId, SubmitProductReview body, CancellationToken cancellationToken) =>
-        Guard(() => _reviews.SubmitAsync(actorUserId, body, cancellationToken));
+        _reviews.SubmitAsync(actorUserId, body, cancellationToken);
 
     /// <summary>فهرست فروشنده روی محصولات Offerهای خودش.</summary>
     public async Task<SellerReviewsResponse> ListSellerAsync(
@@ -59,83 +58,69 @@ public sealed class ReviewsPresentationComposer
         int pageSize,
         CancellationToken cancellationToken)
     {
-        try
-        {
-            var productIds = await _sellerProducts.ListDistinctProductIdsForSellerAsync(sellerPartyId, cancellationToken);
-            var statusFilter = ParseSellerStatus(status);
-            var scoped = await _reviews.ListForProductsAsync(productIds, statusFilter, page, pageSize, cancellationToken);
-            var titles = await _titles.GetProductTitlesByIdsAsync(
-                scoped.Items.Select(x => x.ProductId).Distinct().ToArray(),
-                cancellationToken);
-            return new SellerReviewsResponse(
-                scoped.Items.Select(x => new SellerReviewItem(
-                    x.ReviewId,
-                    titles.GetValueOrDefault(x.ProductId) ?? "محصول",
-                    x.AuthorDisplayName,
-                    x.Rating,
-                    x.Title,
-                    x.Body,
-                    MapSellerStatusLabel(x.Status),
-                    x.Status.ToString(),
-                    x.IsVerifiedPurchase,
-                    x.CreatedAt)).ToList(),
-                scoped.Page,
-                scoped.PageSize,
-                scoped.TotalCount,
-                scoped.PublishedCount,
-                scoped.PendingCount,
-                scoped.RejectedCount,
-                SellerResponseSupported: false);
-        }
-        catch (InvalidOperationException ex)
-        {
-            throw ReviewsFailureMapper.ToSemantic(ex);
-        }
+        var productIds = await _sellerProducts.ListDistinctProductIdsForSellerAsync(sellerPartyId, cancellationToken);
+        var statusFilter = ParseSellerStatus(status);
+        var scoped = await _reviews.ListForProductsAsync(productIds, statusFilter, page, pageSize, cancellationToken);
+        var titles = await _titles.GetProductTitlesByIdsAsync(
+            scoped.Items.Select(x => x.ProductId).Distinct().ToArray(),
+            cancellationToken);
+        return new SellerReviewsResponse(
+            scoped.Items.Select(x => new SellerReviewItem(
+                x.ReviewId,
+                titles.GetValueOrDefault(x.ProductId) ?? "محصول",
+                x.AuthorDisplayName,
+                x.Rating,
+                x.Title,
+                x.Body,
+                MapSellerStatusLabel(x.Status),
+                x.Status.ToString(),
+                x.IsVerifiedPurchase,
+                x.CreatedAt)).ToList(),
+            scoped.Page,
+            scoped.PageSize,
+            scoped.TotalCount,
+            scoped.PublishedCount,
+            scoped.PendingCount,
+            scoped.RejectedCount,
+            SellerResponseSupported: false);
     }
 
     /// <summary>صف Pending مدیر.</summary>
     public async Task<AdminReviewsResponse> GetPendingAsync(int page, int pageSize, CancellationToken cancellationToken)
     {
-        try
-        {
-            var pending = await _reviews.GetPendingAsync(page, pageSize, cancellationToken);
-            var titles = await _titles.GetProductTitlesByIdsAsync(
-                pending.Items.Select(x => x.ProductId).Distinct().ToArray(),
-                cancellationToken);
-            return new AdminReviewsResponse(
-                pending.Items.Select(x => new AdminReviewItem(
-                    x.ReviewId,
-                    titles.GetValueOrDefault(x.ProductId) ?? "محصول",
-                    x.AuthorDisplayName,
-                    x.Rating,
-                    x.Title,
-                    x.Body,
-                    x.Status.ToString(),
-                    x.IsVerifiedPurchase,
-                    x.CreatedAt)).ToList(),
-                pending.Page,
-                pending.PageSize,
-                pending.TotalCount);
-        }
-        catch (InvalidOperationException ex)
-        {
-            throw ReviewsFailureMapper.ToSemantic(ex);
-        }
+        var pending = await _reviews.GetPendingAsync(page, pageSize, cancellationToken);
+        var titles = await _titles.GetProductTitlesByIdsAsync(
+            pending.Items.Select(x => x.ProductId).Distinct().ToArray(),
+            cancellationToken);
+        return new AdminReviewsResponse(
+            pending.Items.Select(x => new AdminReviewItem(
+                x.ReviewId,
+                titles.GetValueOrDefault(x.ProductId) ?? "محصول",
+                x.AuthorDisplayName,
+                x.Rating,
+                x.Title,
+                x.Body,
+                x.Status.ToString(),
+                x.IsVerifiedPurchase,
+                x.CreatedAt)).ToList(),
+            pending.Page,
+            pending.PageSize,
+            pending.TotalCount);
     }
 
     /// <summary>گرید Pending مدیر.</summary>
     public Task<GridPageResponse<AdminReviewItem>> QueryPendingGridAsync(
         GridQueryRequest request,
         CancellationToken cancellationToken) =>
-        Guard(() => _grid.QueryAsync(request, cancellationToken));
+        _grid.QueryAsync(request, cancellationToken);
 
     /// <summary>انتشار.</summary>
     public Task PublishAsync(Guid reviewId, Guid moderatorUserId, CancellationToken cancellationToken) =>
-        GuardModeration(() => _reviews.PublishAsync(reviewId, moderatorUserId, cancellationToken));
+        _reviews.PublishAsync(reviewId, moderatorUserId, cancellationToken);
 
     /// <summary>رد.</summary>
     public Task RejectAsync(Guid reviewId, Guid moderatorUserId, string reason, CancellationToken cancellationToken) =>
-        GuardModeration(() => _reviews.RejectAsync(reviewId, moderatorUserId, reason, cancellationToken));
+        _reviews.RejectAsync(reviewId, moderatorUserId, reason, cancellationToken);
 
     private static ReviewStatus? ParseSellerStatus(string? status)
     {
@@ -164,36 +149,4 @@ public sealed class ReviewsPresentationComposer
         ReviewStatus.Rejected => "رد شده",
         _ => status.ToString(),
     };
-
-    private static async Task<T> Guard<T>(Func<Task<T>> action)
-    {
-        try
-        {
-            return await action();
-        }
-        catch (SemanticException)
-        {
-            throw;
-        }
-        catch (InvalidOperationException ex)
-        {
-            throw ReviewsFailureMapper.ToSemantic(ex);
-        }
-    }
-
-    private static async Task GuardModeration(Func<Task> action)
-    {
-        try
-        {
-            await action();
-        }
-        catch (SemanticException)
-        {
-            throw;
-        }
-        catch (InvalidOperationException ex)
-        {
-            throw ReviewsFailureMapper.ToModerationSemantic(ex);
-        }
-    }
 }

@@ -36,8 +36,11 @@ public sealed class ReviewsFoundationTests
     [Theory]
     [InlineData(0)]
     [InlineData(6)]
-    public void Invalid_ratings_are_rejected(int rating) =>
-        Assert.Throws<InvalidOperationException>(() => Create(rating));
+    public void Invalid_ratings_are_rejected(int rating)
+    {
+        var ex = Assert.Throws<SemanticException>(() => Create(rating));
+        Assert.Equal("reviews.rejected", ex.Error.Code);
+    }
 
     /// <summary>چرخهٔ تعدیل فقط از Pending یک‌بار عبور می‌کند و دلیل رد اجباری است.</summary>
     [Fact]
@@ -46,10 +49,12 @@ public sealed class ReviewsFoundationTests
         var published = Create(5);
         published.Publish(Guid.NewGuid(), DateTimeOffset.UtcNow);
         Assert.Equal(ReviewStatus.Published, published.Status);
-        Assert.Throws<InvalidOperationException>(() => published.Reject(Guid.NewGuid(), "دلیل", DateTimeOffset.UtcNow));
+        var afterPublish = Assert.Throws<SemanticException>(() => published.Reject(Guid.NewGuid(), "دلیل", DateTimeOffset.UtcNow));
+        Assert.Equal("reviews.moderation.rejected", afterPublish.Error.Code);
 
         var rejected = Create(1);
-        Assert.Throws<InvalidOperationException>(() => rejected.Reject(Guid.NewGuid(), "", DateTimeOffset.UtcNow));
+        var emptyReason = Assert.Throws<SemanticException>(() => rejected.Reject(Guid.NewGuid(), "", DateTimeOffset.UtcNow));
+        Assert.Equal("reviews.moderation.rejected", emptyReason.Error.Code);
         rejected.Reject(Guid.NewGuid(), "محتوای نامناسب", DateTimeOffset.UtcNow);
         Assert.Equal(ReviewStatus.Rejected, rejected.Status);
     }

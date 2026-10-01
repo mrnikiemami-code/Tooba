@@ -1,8 +1,10 @@
 using Microsoft.EntityFrameworkCore;
+using Tooba.BuildingBlocks;
 using Tooba.Catalog.Contracts;
 using Tooba.Order.Application;
 using Tooba.Order.Application.PurchaseVerification;
 using Tooba.Reviews.Application;
+using Tooba.Reviews.Contracts.Errors;
 using Tooba.Reviews.Domain;
 using Tooba.Reviews.Infrastructure.Persistence;
 
@@ -28,9 +30,9 @@ public sealed class ReviewDirectory : IReviewDirectory
     {
         var product = await _catalog.FindByIdAsync(request.ProductId, cancellationToken);
         if (product is null || !string.Equals(product.Status, PublishedStatus, StringComparison.Ordinal))
-            throw new InvalidOperationException("محصول منتشرشده پیدا نشد.");
+            throw new SemanticException(new SemanticError(ReviewsErrorCodes.Rejected));
         if (await _db.Reviews.AnyAsync(x => x.ProductId == product.ProductId && x.AuthorUserId == actorUserId, cancellationToken))
-            throw new InvalidOperationException("برای این محصول قبلاً بررسی ثبت شده است.");
+            throw new SemanticException(new SemanticError(ReviewsErrorCodes.Duplicate));
 
         var proof = await _orders.VerifyPaidPurchaseAsync(actorUserId, product.VariantIds, cancellationToken);
         var review = ProductReview.Create(product.ProductId, actorUserId, "مشتری توبا", request.Rating,
@@ -41,7 +43,7 @@ public sealed class ReviewDirectory : IReviewDirectory
         {
             _db.Entry(review).State = EntityState.Detached;
             if (await _db.Reviews.AnyAsync(x => x.ProductId == product.ProductId && x.AuthorUserId == actorUserId, cancellationToken))
-                throw new InvalidOperationException("برای این محصول قبلاً بررسی ثبت شده است.");
+                throw new SemanticException(new SemanticError(ReviewsErrorCodes.Duplicate));
             throw;
         }
         return review.ReviewId;
@@ -180,7 +182,7 @@ public sealed class ReviewDirectory : IReviewDirectory
     public async Task PublishAsync(Guid reviewId, Guid moderatorUserId, CancellationToken cancellationToken)
     {
         var review = await _db.Reviews.SingleOrDefaultAsync(x => x.ReviewId == reviewId, cancellationToken)
-            ?? throw new InvalidOperationException("بررسی پیدا نشد.");
+            ?? throw new SemanticException(new SemanticError(ReviewsErrorCodes.ModerationRejected));
         review.Publish(moderatorUserId, DateTimeOffset.UtcNow); await _db.SaveChangesAsync(cancellationToken);
     }
 
@@ -188,7 +190,7 @@ public sealed class ReviewDirectory : IReviewDirectory
     public async Task RejectAsync(Guid reviewId, Guid moderatorUserId, string reason, CancellationToken cancellationToken)
     {
         var review = await _db.Reviews.SingleOrDefaultAsync(x => x.ReviewId == reviewId, cancellationToken)
-            ?? throw new InvalidOperationException("بررسی پیدا نشد.");
+            ?? throw new SemanticException(new SemanticError(ReviewsErrorCodes.ModerationRejected));
         review.Reject(moderatorUserId, reason, DateTimeOffset.UtcNow); await _db.SaveChangesAsync(cancellationToken);
     }
 }

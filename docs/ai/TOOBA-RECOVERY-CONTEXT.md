@@ -25,29 +25,35 @@ BRIDGE-WAKE-V1
 Channel: tooba-main
 ```
 
-Latest Accepted TMAR Checkpoint — authoritative (reconciled by TB-TMAR-HOST-PERSISTENCE-AMC-001)
+Latest Accepted TMAR Checkpoint — authoritative (reconciled by TB-TMAR-HOST-REVIEWS-AMC-001-R1)
 
 ```text
-Latest-Accepted-Implementation-Wave: TB-TMAR-HOST-PERSISTENCE-AMC-001
-Latest-Accepted-Task: TB-TMAR-HOST-PERSISTENCE-AMC-001
-Implementation-Commit: f791c86a3001cad329a29bbbae3f0c34c8c39d5f
+Latest-Accepted-Implementation-Wave: TB-TMAR-HOST-REVIEWS-AMC-001-R1
+Latest-Accepted-Task: TB-TMAR-HOST-REVIEWS-AMC-001-R1
+Implementation-Commit: PLACEHOLDER_STAMP_AFTER_COMMIT
 Implementation-Commit-Kind: IMPLEMENTATION_COMMIT
-Current-Host-Checkpoint: Persistence_KEEP_PLATFORM
-Active-Host-Folder: Persistence
-Host-Persistence-Directory: PRESENT
-Host-Persistence-Production-Files: 1
-Host-Persistence-Host-Zero: false
-Disposition: KEEP_AS_GENERIC_HOST_PLATFORM_INFRASTRUCTURE
-Path-Namespace: EXACT_Tooba.Host.Persistence
-Contract-Seam: Tooba.BuildingBlocks.IDatabaseConnectionResolver
-Fail-Closed-Code: platform.connection.unconfigured
-Sensitive-Logging: ZERO
-Prior-Accepted-Lineage: TB-TMAR-HOST-REVIEWS-AMC-001 ; TB-TMAR-HOST-PAGECOMPOSITION-AMC-001 ; TB-TMAR-HOST-SECURITY-AMC-001-R1
+Current-Host-Checkpoint: Reviews_HOST_ZERO_R1
+Active-Host-Folder: Reviews
+Host-Reviews-Directory: ABSENT
+Host-Reviews-Host-Zero: true
+Message-Text-Classification: ZERO
+Reviews-Failure-Mapper: ABSENT
+Expected-Failure-Transport: SemanticException_at_Domain_Directory
+Duplicate-Code: reviews.duplicate
+Rejected-Code: reviews.rejected
+Moderation-Rejected-Code: reviews.moderation.rejected
+Unknown-Exception-Propagation: YES
+Endpoints-Domain-Reference: ZERO
+Endpoints-Host-Reference: ZERO
+Offer-Application-Leakage: ZERO
+Catalog-Application-Leakage: ZERO
+Failure-Presentation: SemanticException_ApiResponseFactory
+Prior-Accepted-Lineage: TB-TMAR-HOST-REVIEWS-AMC-001 ; TB-TMAR-HOST-PERSISTENCE-AMC-001 ; TB-TMAR-HOST-PAGECOMPOSITION-AMC-001
 Next-Host-Folder-Started: false
 Next-Host-Folder: NONE_USER_DECISION_REQUIRED
 Stale-Current-Pointer-State: ZERO
-workflowStop: USER_REVIEW_HOST_PERSISTENCE_AMC_001_KEEP_PLATFORM
-Next-Task: USER_REVIEW_HOST_PERSISTENCE_AMC_001_KEEP_PLATFORM
+workflowStop: USER_REVIEW_HOST_REVIEWS_AMC_001_R1_CLOSED_HOST_ZERO
+Next-Task: USER_REVIEW_HOST_REVIEWS_AMC_001_R1_CLOSED_HOST_ZERO
 Automatic-Next-Implementation-Task: NONE
 ```
 
