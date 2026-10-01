@@ -1,8 +1,8 @@
-# recovery — TB-TMAR-HOST-ADMIN-ACCESS-AMC-001-W2
+﻿# recovery — TB-TMAR-HOST-ADMIN-ACCESS-AMC-001-W2
 
 ```text
 lastAcceptedTask = TB-TMAR-HOST-ADMIN-ACCESS-AMC-001-W2
-lastAcceptedCommit = <IMPLEMENTATION_COMMIT_SHA>
+lastAcceptedCommit = 7a0d79b407c618d503acd1ef9866c519b4e5f070
 lastAcceptedCommitKind = IMPLEMENTATION_COMMIT
 currentHostCheckpoint = Admin/Access
 authorizerFamilyHygiene = COMPLETE

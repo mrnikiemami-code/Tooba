@@ -1,4 +1,4 @@
-# Tooba — Recovery Context
+﻿# Tooba — Recovery Context
 
 Canonical repository:
 
@@ -30,7 +30,7 @@ Latest Accepted TMAR Checkpoint — authoritative (reconciled by TB-TMAR-HOST-AD
 ```text
 Latest-Accepted-Implementation-Wave: TB-TMAR-HOST-ADMIN-ACCESS-AMC-001-W2
 Latest-Accepted-Task: TB-TMAR-HOST-ADMIN-ACCESS-AMC-001-W2
-Implementation-Commit: 6f06f76631413e94efbcbaeabc8b7218688389d7
+Implementation-Commit: 7a0d79b407c618d503acd1ef9866c519b4e5f070
 Implementation-Commit-Kind: IMPLEMENTATION_COMMIT
 Mode: AUTHORIZER_FAMILY_HYGIENE
 Authorizer-Family-Hygiene: COMPLETE
@@ -53,8 +53,6 @@ Next-Task: USER_REVIEW_HOST_ADMIN_ACCESS_AMC_001_W2
 Next-Task-Gate: USER_DECISION_REQUIRED_NO_AUTOMATIC_NEXT_IMPLEMENTATION_TASK
 Automatic-Next-Implementation-Task: NONE
 ```
-
-Note: Implementation-Commit above is temporarily the prior W1 SHA until the W2 implementation commit is stamped.
 
 
 Last Architect Accepted Task:
