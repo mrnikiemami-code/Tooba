@@ -11,9 +11,11 @@ using Tooba.BuildingBlocks.Security;
 using Tooba.OperatorProfile.Endpoints.Admin;
 using Tooba.AccessControl.Infrastructure.Development.Seller;
 using Tooba.Host.Security.Seller;
-using Tooba.Host.Settings;
-using Tooba.Order.Application.Storefront.Services;
+using Tooba.Catalog.Infrastructure.Development;
+using Tooba.Host.Composition;
+using Tooba.Order.Contracts.Fulfillment;
 using Tooba.Order.Application.Storefront.Models;
+using Tooba.Party.Infrastructure.Development;
 using Tooba.AddressBook.Contracts.Dtos;
 using Tooba.AddressBook.Contracts.Ports;
 using Tooba.Cart.Application.Ports;
@@ -95,8 +97,8 @@ public sealed class SettingsFoundationTests
         Assert.Contains("IUserPreferenceAdminAuthorizer", uiPreference, StringComparison.Ordinal);
         Assert.DoesNotContain("AdminPanelAccess.RequireAuthorizedAsync", uiPreference, StringComparison.Ordinal);
 
-        var operatorProfile = File.ReadAllText(Path.Combine(root, "src", "backend", "Host", "Tooba.Host", "OperatorProfile", "OperatorProfileEndpoints.cs"));
-        Assert.Contains("/v1/admin/operator/profile", operatorProfile, StringComparison.Ordinal);
+        var operatorProfile = File.ReadAllText(Path.Combine(root, "src", "backend", "Modules", "OperatorProfile", "Tooba.OperatorProfile.Endpoints", "Admin", "OperatorProfileAdminEndpoints.cs"));
+        Assert.Contains("/v1/admin/operator/profile", File.ReadAllText(Path.Combine(root, "src", "backend", "Modules", "OperatorProfile", "Tooba.OperatorProfile.Endpoints", "OperatorProfileEndpointModule.cs")), StringComparison.Ordinal);
 
         var holds = File.ReadAllText(Path.Combine(root, "src", "backend", "Modules", "Catalog", "Tooba.Catalog.Endpoints", "Admin", "Settings", "HoldPolicySettingsEndpoints.cs"));
         Assert.Contains("/v1/admin/settings/hold-policy", holds, StringComparison.Ordinal);
@@ -255,13 +257,15 @@ public sealed class SettingsFoundationTests
 
         var parties = new PartyDirectory(partyDb);
         var org = await parties.CreateOrganizationAsync(
-            SellerDevContextBootstrap.SellerADisplayName,
+            WorkspaceDemoMarketplaceSeed.SellerADisplayName,
             "Arman Legal",
             CancellationToken.None);
 
         var services = new ServiceCollection();
         services.AddSingleton(partyDb);
         services.AddSingleton<IPartyDirectory>(parties);
+        services.AddSingleton<Tooba.Party.Contracts.IPartyDevelopmentSeedGateway>(
+            new StubPartyDevelopmentSeedGateway(org.PartyId, WorkspaceDemoMarketplaceSeed.SellerADisplayName));
         services.AddSingleton(preferenceDb);
         services.AddSingleton<IUserPreferenceDirectory>(new UserPreferenceDirectory(preferenceDb));
         services.AddSingleton(operatorDb);
@@ -270,16 +274,49 @@ public sealed class SettingsFoundationTests
         await using var provider = services.BuildServiceProvider();
 
         // Admin snapshot خالی است؛ ترجیح مهمان و پروفایل سازمانی باید دو بار ایمن باشند.
-        await SettingsFoundationDevelopmentSeed.ApplyAsync(provider);
-        await SettingsFoundationDevelopmentSeed.ApplyAsync(provider);
+        await SettingsFoundationDevelopmentSeedHost.ApplyAsync(provider);
+        await SettingsFoundationDevelopmentSeedHost.ApplyAsync(provider);
 
         var profile = await parties.GetOrganizationProfileAsync(org.PartyId, CancellationToken.None);
-        Assert.Equal(SettingsFoundationDevelopmentSeed.SellerASupportPhone, profile!.SupportPhone);
+        Assert.Equal(PartyOrganizationProfileDevelopmentSeed.SellerASupportPhone, profile!.SupportPhone);
         var guestPref = await preferenceDb.Preferences.AsNoTracking()
-            .Where(x => x.OwnerUserId == Tooba.Order.Application.Storefront.Services.StorefrontCheckoutService.StorefrontGuestActorId)
+            .Where(x => x.OwnerUserId == StorefrontGuestActor.ActorId)
             .ToListAsync();
         Assert.Single(guestPref);
         Assert.Equal("fa", guestPref[0].Locale);
+    }
+
+    private sealed class StubPartyDevelopmentSeedGateway(Guid partyId, string expectedDisplayName)
+        : Tooba.Party.Contracts.IPartyDevelopmentSeedGateway
+    {
+        public Task<Guid> ResolveDevelopmentSellerPartyAsync(
+            string displayName,
+            string? legalName,
+            CancellationToken cancellationToken) => Task.FromResult(partyId);
+
+        public Task<Guid> EnsureDevelopmentOrganizationAsync(
+            string displayName,
+            string? legalName,
+            CancellationToken cancellationToken) => Task.FromResult(partyId);
+
+        public Task EnsureDevelopmentOrganizationDisplayNamesAsync(
+            IReadOnlyCollection<Tooba.Party.Contracts.DevelopmentOrganizationRename> renames,
+            CancellationToken cancellationToken) => Task.CompletedTask;
+
+        public Task<Guid?> FindDevelopmentOrganizationByDisplayNameAsync(
+            string displayName,
+            CancellationToken cancellationToken) =>
+            Task.FromResult<Guid?>(
+                string.Equals(displayName, expectedDisplayName, StringComparison.Ordinal) ? partyId : null);
+
+        public Task<Guid?> FindDevelopmentMembershipSellerPartyAsync(
+            Guid userId,
+            CancellationToken cancellationToken) => Task.FromResult<Guid?>(null);
+
+        public Task EnsureDevelopmentMemberMembershipAsync(
+            Guid userId,
+            Guid sellerPartyId,
+            CancellationToken cancellationToken) => Task.CompletedTask;
     }
 
     private async Task<UserPreferenceDbContext> OpenPreferenceAsync()

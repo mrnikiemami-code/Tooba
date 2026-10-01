@@ -25,27 +25,26 @@ BRIDGE-WAKE-V1
 Channel: tooba-main
 ```
 
-Latest Accepted TMAR Checkpoint — authoritative (reconciled by TB-TMAR-HOST-CACHING-AMC-001-R1)
+Latest Accepted TMAR Checkpoint — authoritative (reconciled by TB-TMAR-HOST-SETTINGS-AMC-001)
 
 ```text
-Latest-Accepted-Implementation-Wave: TB-TMAR-HOST-CACHING-AMC-001-R1
-Latest-Accepted-Task: TB-TMAR-HOST-CACHING-AMC-001-R1
-Implementation-Commit: 1a4de40410486c74835245645e63f11f54ed91cd
+Latest-Accepted-Implementation-Wave: TB-TMAR-HOST-SETTINGS-AMC-001
+Latest-Accepted-Task: TB-TMAR-HOST-SETTINGS-AMC-001
+Implementation-Commit: PLACEHOLDER_STAMP_AFTER_COMMIT
 Implementation-Commit-Kind: IMPLEMENTATION_COMMIT
-Current-Host-Checkpoint: Caching_KEEP_GENERIC_HOST_CACHE_INFRASTRUCTURE_R1
-Active-Host-Folder: Caching
-Host-Caching-Directory: PRESENT
-Host-Caching-Disposition: KEEP_AS_GENERIC_HOST_CACHE_INFRASTRUCTURE
-Single-Flight-Retirement-Acquire-Race: CLOSED_LOCK_RECHECK
-Active-Slot-Removal-After-Attach: IMPOSSIBLE_BY_DESIGN
-Path-Namespace: EXACT_Tooba.Host.Caching
-Redis: ZERO
-Prior-Accepted-Lineage: TB-TMAR-HOST-CACHING-AMC-001 ; TB-TMAR-HOST-OPERATORPROFILE-AMC-001-R1 ; TB-TMAR-HOST-OPERATORPROFILE-AMC-001 ; TB-TMAR-HOST-SUPPORT-AMC-001-R1 ; TB-TMAR-HOST-TRANSPORT-AMC-001
+Current-Host-Checkpoint: Settings_HOST_ZERO
+Active-Host-Folder: Settings
+Host-Settings-Directory: ABSENT
+Host-Settings-Host-Zero: true
+Module-Seeds: Party.OrganizationProfile + UserPreference + OperatorProfile Development
+Host-Binder: Composition/SettingsFoundationDevelopmentSeedHost
+Guest-Actor: Order.Contracts.StorefrontGuestActor
+Prior-Accepted-Lineage: TB-TMAR-HOST-CACHING-AMC-001-R1 ; TB-TMAR-HOST-CACHING-AMC-001 ; TB-TMAR-HOST-OPERATORPROFILE-AMC-001-R1
 Next-Host-Folder-Started: false
 Next-Host-Folder: NONE_USER_DECISION_REQUIRED
 Stale-Current-Pointer-State: ZERO
-workflowStop: USER_REVIEW_HOST_CACHING_AMC_001_R1_KEEP_GENERIC_HOST_INFRASTRUCTURE
-Next-Task: USER_REVIEW_HOST_CACHING_AMC_001_R1_KEEP_GENERIC_HOST_INFRASTRUCTURE
+workflowStop: USER_REVIEW_HOST_SETTINGS_AMC_001_CLOSED_HOST_ZERO
+Next-Task: USER_REVIEW_HOST_SETTINGS_AMC_001_CLOSED_HOST_ZERO
 Automatic-Next-Implementation-Task: NONE
 ```
 

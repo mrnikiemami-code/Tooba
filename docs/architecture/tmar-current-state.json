@@ -3,24 +3,24 @@
   "executionMode": "BACKEND_ONLY_UNTIL_EXPLICIT_RELEASE",
   "frontendFrozen": true,
   "checkoutState": "PAUSED_AT_SAFE_W5_CHECKPOINT",
-  "lastAcceptedTask": "TB-TMAR-HOST-CACHING-AMC-001-R1",
-  "lastAcceptedCommit": "1a4de40410486c74835245645e63f11f54ed91cd",
+  "lastAcceptedTask": "TB-TMAR-HOST-SETTINGS-AMC-001",
+  "lastAcceptedCommit": "PLACEHOLDER_STAMP_AFTER_COMMIT",
   "lastAcceptedCommitKind": "IMPLEMENTATION_COMMIT",
   "lastAcceptedResultEvidenceCommit": "b898135dc3e0c7ef4ea5ecb56f2a5003baebdf43",
   "lastAcceptedResultEvidenceCommitKind": "RESULT_EVIDENCE_DOCS_STAMP_NOT_IMPLEMENTATION",
   "lastAcceptedSoTStamp": "b898135dc3e0c7ef4ea5ecb56f2a5003baebdf43",
   "lastAcceptedSoTStampKind": "RESULT_EVIDENCE_DOCS_STAMP",
-  "lastAcceptedCommitSemantics": "lastAcceptedTask is TB-TMAR-HOST-CACHING-AMC-001-R1 IMPLEMENTATION commit. Host Caching KEEP preserved; single-flight retirement/acquire race closed via lock+recheck.",
-  "lastAcceptedNote": "Caching AMC R1: single-flight retirement/acquire race CLOSED; USER_REVIEW before next Host AMC.",
-  "latestAcceptedImplementationWave": "TB-TMAR-HOST-CACHING-AMC-001-R1",
-  "currentHostCheckpoint": "Caching",
+  "lastAcceptedCommitSemantics": "lastAcceptedTask is TB-TMAR-HOST-SETTINGS-AMC-001 IMPLEMENTATION commit. Host/Settings HOST_ZERO; seeds owned by Party/UserPreference/OperatorProfile Development; thin Composition binder.",
+  "lastAcceptedNote": "Settings AMC: Host/Settings ABSENT HOST_ZERO; module-owned Development seeds; USER_REVIEW before next Host AMC.",
+  "latestAcceptedImplementationWave": "TB-TMAR-HOST-SETTINGS-AMC-001",
+  "currentHostCheckpoint": "Settings",
   "nextHostFolderStarted": false,
   "nextHostFolder": null,
   "staleCurrentPointerState": "ZERO",
-  "nextTask": "USER_REVIEW_HOST_CACHING_AMC_001_R1_KEEP_GENERIC_HOST_INFRASTRUCTURE",
+  "nextTask": "USER_REVIEW_HOST_SETTINGS_AMC_001_CLOSED_HOST_ZERO",
   "nextTaskGate": "USER_DECISION_REQUIRED_NO_AUTOMATIC_NEXT_IMPLEMENTATION_TASK",
   "nextTaskState": "USER_DECISION_REQUIRED",
-  "workflowStop": "USER_REVIEW_HOST_CACHING_AMC_001_R1_KEEP_GENERIC_HOST_INFRASTRUCTURE",
+  "workflowStop": "USER_REVIEW_HOST_SETTINGS_AMC_001_CLOSED_HOST_ZERO",
   "automaticNextImplementationTask": "NONE",
   "hostGridAmc": {
     "task": "TB-TMAR-HOST-GRID-AMC-001",
@@ -974,17 +974,17 @@
     "finalHostTarget": "THIN_PLATFORM_COMPOSITION_SHELL_ONLY"
   },
   "currentHostEvacuation": {
-    "activeModule": "Caching",
-    "activeModuleState": "CACHING_KEEP_GENERIC_HOST_INFRASTRUCTURE_R1_USER_REVIEW_REQUIRED",
+    "activeModule": "Settings",
+    "activeModuleState": "SETTINGS_CLOSED_HOST_ZERO_USER_REVIEW_REQUIRED",
     "currentHostEvacuationState": "RECONCILED_NOT_HISTORICAL_ADDRESSBOOK",
     "workflow": "HOST_FIRST_FOLDER_BY_FOLDER",
-    "currentTask": "TB-TMAR-HOST-CACHING-AMC-001-R1",
-    "currentPhase": "CACHING_AMC_R1_SINGLE_FLIGHT_RETIREMENT_RACE_CLOSED",
-    "workflowStop": "USER_REVIEW_HOST_CACHING_AMC_001_R1_KEEP_GENERIC_HOST_INFRASTRUCTURE",
+    "currentTask": "TB-TMAR-HOST-SETTINGS-AMC-001",
+    "currentPhase": "SETTINGS_AMC_CLOSED_HOST_ZERO",
+    "workflowStop": "USER_REVIEW_HOST_SETTINGS_AMC_001_CLOSED_HOST_ZERO",
     "automaticNextImplementationTask": "NONE",
-    "lastReconciledRecoveryTask": "TB-TMAR-HOST-CACHING-AMC-001-R1",
-    "latestAcceptedImplementationWave": "TB-TMAR-HOST-CACHING-AMC-001-R1",
-    "currentHostCheckpoint": "Caching",
+    "lastReconciledRecoveryTask": "TB-TMAR-HOST-SETTINGS-AMC-001",
+    "latestAcceptedImplementationWave": "TB-TMAR-HOST-SETTINGS-AMC-001",
+    "currentHostCheckpoint": "Settings",
     "historicalNextHostFolderPointer": "NONE_USER_DECISION_REQUIRED",
     "nextHostFolderStarted": false,
     "nextHostFolder": "NONE_USER_DECISION_REQUIRED",
@@ -5053,18 +5053,23 @@
     "supersededAsCurrentPointerBy": "TB-TMAR-HOST-REVIEWS-AMC-001"
   },
   "hostEvacuationProgress": {
-    "activeModule": "Caching",
-    "activeModuleState": "CACHING_KEEP_GENERIC_HOST_INFRASTRUCTURE_R1_USER_REVIEW_REQUIRED",
+    "activeModule": "Settings",
+    "activeModuleState": "SETTINGS_CLOSED_HOST_ZERO_USER_REVIEW_REQUIRED",
     "blockedReason": null,
     "nextAllowedTaskFamily": "HOST_SLICE_OR_FOLDER_AMC",
-    "note": "Host Caching AMC R1: single-flight retirement/acquire race CLOSED by lock+recheck; KEEP preserved. USER_REVIEW required."
+    "note": "Host Settings AMC: Host/Settings ABSENT HOST_ZERO; Party/UserPreference/OperatorProfile own Development seeds; thin Composition binder. USER_REVIEW required."
   },
   "nextAllowedTask": {
     "kind": "USER_REVIEW_REQUIRED",
     "blockerOwner": "USER",
-    "note": "Do not start the next Host AMC until USER reviews Caching AMC R1 single-flight retirement repair."
+    "note": "Do not start the next Host AMC until USER reviews Settings AMC HOST_ZERO closure."
   },
   "progressLedger": [
+    {
+      "taskId": "TB-TMAR-HOST-SETTINGS-AMC-001",
+      "status": "CLOSED_HOST_ZERO",
+      "note": "Host Settings evacuated; module-owned Development seeds; USER_REVIEW before next Host AMC."
+    },
     {
       "taskId": "TB-TMAR-HOST-CACHING-AMC-001-R1",
       "status": "KEEP_AS_GENERIC_HOST_CACHE_INFRASTRUCTURE_R1",
@@ -5227,5 +5232,24 @@
     "evidenceRoot": "docs/evidence/TB-TMAR-HOST-CACHING-AMC-001-R1",
     "workflowStop": "USER_REVIEW_HOST_CACHING_AMC_001_R1_KEEP_GENERIC_HOST_INFRASTRUCTURE",
     "note": "Implementation commit 1a4de40410486c74835245645e63f11f54ed91cd; Caching AMC R1 single-flight retirement race closed."
+  },
+  "hostSettingsAmc": {
+    "taskId": "TB-TMAR-HOST-SETTINGS-AMC-001",
+    "status": "CLOSED_HOST_ZERO",
+    "classification": "HOST_ZERO",
+    "hostFolderDeleted": "src/backend/Host/Tooba.Host/Settings",
+    "moduleSeeds": [
+      "Party.Infrastructure.Development.PartyOrganizationProfileDevelopmentSeed",
+      "UserPreference.Infrastructure.Development.UserPreferenceDevelopmentSeed",
+      "OperatorProfile.Infrastructure.Development.OperatorProfileDevelopmentSeed"
+    ],
+    "hostRetained": [
+      "Composition/SettingsFoundationDevelopmentSeedHost.cs"
+    ],
+    "guestActor": "Order.Contracts.Fulfillment.StorefrontGuestActor",
+    "durableGuard": "HostSettingsAmcGuardTests",
+    "evidenceRoot": "docs/evidence/TB-TMAR-HOST-SETTINGS-AMC-001",
+    "workflowStop": "USER_REVIEW_HOST_SETTINGS_AMC_001_CLOSED_HOST_ZERO",
+    "note": "Implementation commit PLACEHOLDER_STAMP_AFTER_COMMIT; Host Settings HOST_ZERO closed."
   }
 }

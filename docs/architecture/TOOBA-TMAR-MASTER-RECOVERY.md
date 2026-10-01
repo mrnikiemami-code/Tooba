@@ -1,4 +1,4 @@
-﻿TOOBA TMAR MASTER RECOVERY
+TOOBA TMAR MASTER RECOVERY
 
 Canonical Architect ↔ Cursor handoff (recovery-critical)
 - Source of truth: `docs/architecture/TMAR-HOST-EVACUATION-PROTOCOL.md#architect--cursor-canonical-task-handoff`.
@@ -12,11 +12,17 @@ Canonical Architect ↔ Cursor handoff (recovery-critical)
 
 Latest Accepted TMAR Checkpoint — authoritative
 
-Reconciled by `TB-TMAR-HOST-CACHING-AMC-001-R1`. Current implementation commit recorded at `lastAcceptedCommit` after PASS.
-- Host/Caching = `PRESENT` / `KEEP_AS_GENERIC_HOST_CACHE_INFRASTRUCTURE` preserved.
+Reconciled by `TB-TMAR-HOST-SETTINGS-AMC-001`. Current implementation commit recorded at `lastAcceptedCommit` after PASS.
+- Host/Settings = `ABSENT` / `CLOSED_HOST_ZERO`.
+- Seeds owned by Party / UserPreference / OperatorProfile Infrastructure.Development; Host retained thin `Composition/SettingsFoundationDevelopmentSeedHost` only.
+- Guest actor = Order.Contracts `StorefrontGuestActor`; PartyDbContext / Order.Application ZERO on Host Settings path.
+- Current Host checkpoint = `Settings`; workflowStop = `USER_REVIEW_HOST_SETTINGS_AMC_001_CLOSED_HOST_ZERO`; automatic next = NONE; stale pointer = ZERO.
+- Caching R1 / Caching parent / OperatorProfile R1 remain accepted historical lineage.
+
+Reconciled by `TB-TMAR-HOST-CACHING-AMC-001-R1` (HISTORICAL). Host/Caching = `PRESENT` / `KEEP_AS_GENERIC_HOST_CACHE_INFRASTRUCTURE` preserved.
 - Single-flight retirement/acquire race = `CLOSED` (lock-protected slot + RefCount recheck before remove).
 - Active slot removal after new attachment = `IMPOSSIBLE_BY_DESIGN`.
-- Current Host checkpoint = `Caching`; workflowStop = `USER_REVIEW_HOST_CACHING_AMC_001_R1_KEEP_GENERIC_HOST_INFRASTRUCTURE`; automatic next = NONE; stale pointer = ZERO.
+- Historical stop = `USER_REVIEW_HOST_CACHING_AMC_001_R1_KEEP_GENERIC_HOST_INFRASTRUCTURE`.
 - Parent Caching AMC / OperatorProfile R1 / Support R1 / Transport remain accepted historical lineage.
 
 Reconciled by `TB-TMAR-HOST-CACHING-AMC-001` (HISTORICAL). Host/Caching = `PRESENT` / `KEEP_AS_GENERIC_HOST_CACHE_INFRASTRUCTURE`.

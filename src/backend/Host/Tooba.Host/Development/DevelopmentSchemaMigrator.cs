@@ -7,7 +7,7 @@ using Tooba.Catalog.Infrastructure.Development;
 using Tooba.CustomerProfile.Infrastructure.Development;
 using Tooba.AccessControl.Application.Development.Seller;
 using Tooba.Host.Admin.Development;
-using Tooba.Host.Settings;
+using Tooba.Host.Composition;
 using Tooba.Content.Infrastructure.Development;
 using Tooba.PageComposition.Infrastructure;
 using global::Tooba.Story.Infrastructure;
@@ -84,7 +84,7 @@ internal static class DevelopmentSchemaMigrator
             await WishlistDevelopmentSeed.ApplyAsync(provider);
             await AddressBookDevelopmentSeed.ApplyAsync(provider);
             await CustomerProfileDevelopmentSeed.ApplyAsync(provider);
-            await SettingsFoundationDevelopmentSeed.ApplyAsync(provider);
+            await SettingsFoundationDevelopmentSeedHost.ApplyAsync(provider);
             await ContentDevelopmentSeed.ApplyAsync(provider);
             await PageCompositionDevelopmentSeed.ApplyAsync(provider);
             await StoryDevelopmentSeed.ApplyAsync(provider);
@@ -101,7 +101,7 @@ internal static class DevelopmentSchemaMigrator
         await WishlistDevelopmentSeed.ApplyAsync(provider, CancellationToken.None);
         await AddressBookDevelopmentSeed.ApplyAsync(provider, CancellationToken.None);
         await CustomerProfileDevelopmentSeed.ApplyAsync(provider, CancellationToken.None);
-        await SettingsFoundationDevelopmentSeed.ApplyAsync(provider, CancellationToken.None);
+        await SettingsFoundationDevelopmentSeedHost.ApplyAsync(provider, CancellationToken.None);
         await ContentDevelopmentSeed.ApplyAsync(provider, CancellationToken.None);
         await PageCompositionDevelopmentSeed.ApplyAsync(provider, CancellationToken.None);
         await StoryDevelopmentSeed.ApplyAsync(provider, CancellationToken.None);
