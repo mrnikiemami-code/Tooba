@@ -1,6 +1,7 @@
 using Tooba.Promotion.Domain.Merchandising;
+using Tooba.Promotion.Contracts.Merchandising;
 using Tooba.Promotion.Application.Merchandising;
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Tooba.BuildingBlocks;
 using Tooba.Promotion.Application.Ports;
 using Tooba.Promotion.Application.Checkout;

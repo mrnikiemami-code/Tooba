@@ -1,6 +1,6 @@
 using Tooba.Offer.Contracts.Dtos;
 
-namespace Tooba.Promotion.Application.Merchandising;
+namespace Tooba.Promotion.Contracts.Merchandising;
 
 /// <summary>
 /// سقف take اعضای کمپین؛ هم‌تراز Product Showcase / MaxTake=48.
@@ -15,6 +15,35 @@ public static class MerchandisingCampaignRuntimeLimits
 
     /// <summary>ارز پیش‌فرض قیمت.</summary>
     public const string DefaultCurrency = "IRR";
+}
+
+/// <summary>کدهای پایدار گونهٔ مرچندایزینگ (قرارداد؛ نه Domain entity).</summary>
+public static class MerchandisingPromotionTypeCodes
+{
+    /// <summary>کد سیستمی پیشنهاد شگفت‌انگیز.</summary>
+    public const string Amazing = "AMAZING";
+}
+
+/// <summary>Stable Development merchandising campaign / store identifiers.</summary>
+public static class MerchandisingDevelopmentIds
+{
+    /// <summary>شناسهٔ فروشگاه توسعه store-alpha.</summary>
+    public static readonly Guid StoreAlphaId = Guid.Parse("aaaaaaaa-aaaa-7aaa-8aaa-aaaaaaaaaaa1");
+
+    /// <summary>کمپین فعال برنده.</summary>
+    public static readonly Guid ActivePrimaryId = Guid.Parse("019a16a0-0001-7000-8000-000000000001");
+
+    /// <summary>کمپین فعال بازنده.</summary>
+    public static readonly Guid ActiveLoserId = Guid.Parse("019a16a0-0002-7000-8000-000000000002");
+
+    /// <summary>کمپین آینده.</summary>
+    public static readonly Guid FutureId = Guid.Parse("019a16a0-0003-7000-8000-000000000003");
+
+    /// <summary>کمپین منقضی.</summary>
+    public static readonly Guid ExpiredId = Guid.Parse("019a16a0-0004-7000-8000-000000000004");
+
+    /// <summary>کمپین پیش‌نویس.</summary>
+    public static readonly Guid DraftId = Guid.Parse("019a16a0-0005-7000-8000-000000000005");
 }
 
 /// <summary>
@@ -36,8 +65,6 @@ public sealed record MerchandisingCampaignRuntimeModel(
 
 /// <summary>
 /// عضو زمان‌اجرا با حقیقت Offer/Price/Inventory؛ بدون ProductCard کامل.
-/// PriceAmount = فروش مؤثر (کمپین در صورت اعمال، وگرنه پایه).
-/// CompareAtAmount = قیمت پایه فقط وقتی اکیداً بیشتر از فروش مؤثر است.
 /// </summary>
 public sealed record MerchandisingCampaignMemberRuntimeModel(
     Guid SellerOfferId,
@@ -53,7 +80,6 @@ public sealed record MerchandisingCampaignMemberRuntimeModel(
 
 /// <summary>
 /// واجدشرایطی نمایش در source فروشگاهی «پیشنهاد شگفت‌انگیز».
-/// عضویت Campaign می‌تواند بدون promo بماند؛ storefront فقط تخفیف مؤثر را نشان می‌دهد.
 /// </summary>
 public static class MerchandisingCampaignStorefrontEligibility
 {
@@ -84,13 +110,12 @@ public sealed record MerchandisingPriceScope(
 }
 
 /// <summary>
-/// کوئری خوانش زمان‌اجرای کمپین مرچندایزینگ برای مصرف بعدی Builder/Storefront.
+/// کوئری خوانش زمان‌اجرای کمپین مرچندایزینگ برای Catalog Landing و سایر مصرف‌کنندگان Contracts.
 /// </summary>
 public interface IMerchandisingCampaignQuery
 {
     /// <summary>
     /// برندهٔ runtime-active برای فروشگاه + کد گونه؛ اعضا با فیلتر موجودی/قابل‌فروش.
-    /// ترتیب کمپین: Priority DESC، StartAt DESC، Id ASC.
     /// </summary>
     Task<MerchandisingCampaignRuntimeModel?> ResolveActiveByTypeAsync(
         Guid storeId,
@@ -103,7 +128,6 @@ public interface IMerchandisingCampaignQuery
 
     /// <summary>
     /// نزدیک‌ترین کمپین Published آینده (StartAt &gt; now)؛ هرگز از active برنمی‌گردد.
-    /// ترتیب: StartAt ASC، Priority DESC، Id ASC.
     /// </summary>
     Task<MerchandisingCampaignRuntimeModel?> ResolveFutureByTypeAsync(
         Guid storeId,

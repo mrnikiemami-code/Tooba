@@ -3,37 +3,29 @@ using Tooba.Catalog.Application.Storefront.Ports;
 using Tooba.Catalog.Application.StoreLandingPages.Models;
 using Tooba.Catalog.Application.StoreLandingPages.Ports;
 
-namespace Tooba.Host.CatalogAdapters;
+namespace Tooba.Catalog.Infrastructure.StoreLanding;
 
-/// <summary>Host adapter: Catalog IStorefrontComposer → Catalog Landing shell port.</summary>
-public sealed class StoreLandingShellAdapter : IStoreLandingShellPort
+/// <summary>Catalog adapter: IStorefrontComposer → Catalog Landing shell port.</summary>
+internal sealed class StoreLandingShellAdapter(IStorefrontComposer storefront) : IStoreLandingShellPort
 {
-    private readonly IStorefrontComposer _storefront;
-
-    /// <summary>Creates the adapter.</summary>
-    public StoreLandingShellAdapter(IStorefrontComposer storefront) => _storefront = storefront;
-
-    /// <inheritdoc />
     public async Task<IReadOnlyDictionary<Guid, StoreLandingShellProductCard>> ComposeProductCardsAsync(
         IReadOnlyCollection<Guid> productIds,
         CancellationToken cancellationToken)
     {
-        var composed = await _storefront.ComposeProductCardsAsync(productIds, cancellationToken);
+        var composed = await storefront.ComposeProductCardsAsync(productIds, cancellationToken);
         return composed.ToDictionary(kv => kv.Key, kv => Map(kv.Value));
     }
 
-    /// <inheritdoc />
     public async Task<IReadOnlyList<StoreLandingShellCategoryItem>> ListCategoriesAsync(
         CancellationToken cancellationToken)
     {
-        var items = await _storefront.ListCategoriesAsync(cancellationToken);
+        var items = await storefront.ListCategoriesAsync(cancellationToken);
         return items.Select(x => new StoreLandingShellCategoryItem(x.CategoryId, x.ParentCategoryId, x.Name)).ToList();
     }
 
-    /// <inheritdoc />
     public async Task<IReadOnlyList<StoreLandingShellBrandItem>> ListBrandsAsync(CancellationToken cancellationToken)
     {
-        var items = await _storefront.ListBrandsAsync(cancellationToken);
+        var items = await storefront.ListBrandsAsync(cancellationToken);
         return items.Select(x => new StoreLandingShellBrandItem(
             x.BrandId,
             x.Slug,
@@ -42,12 +34,11 @@ public sealed class StoreLandingShellAdapter : IStoreLandingShellPort
             x.LogoMediaAssetId)).ToList();
     }
 
-    /// <inheritdoc />
     public async Task<IReadOnlyList<StoreLandingShellArticleItem>> BuildLatestArticlesAsync(
         string pageLocale,
         CancellationToken cancellationToken)
     {
-        var items = await _storefront.BuildLatestArticlesAsync(pageLocale, cancellationToken);
+        var items = await storefront.BuildLatestArticlesAsync(pageLocale, cancellationToken);
         return items.Select(x => new StoreLandingShellArticleItem(
             x.ArticleId,
             x.Slug,
@@ -60,11 +51,10 @@ public sealed class StoreLandingShellAdapter : IStoreLandingShellPort
             x.IsFeatured)).ToList();
     }
 
-    /// <inheritdoc />
     public async Task<IReadOnlyList<StoreLandingShellFeaturedReviewItem>> BuildFeaturedReviewsAsync(
         CancellationToken cancellationToken)
     {
-        var items = await _storefront.BuildFeaturedReviewsAsync(cancellationToken);
+        var items = await storefront.BuildFeaturedReviewsAsync(cancellationToken);
         return items.Select(x => new StoreLandingShellFeaturedReviewItem(
             x.PublicId,
             x.AuthorDisplayName,

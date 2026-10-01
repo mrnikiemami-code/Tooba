@@ -25,7 +25,13 @@ public sealed class HostAdminAmcW33MerchandisingGuardTests
         Assert.DoesNotContain("MapMerchandisingCampaignAdminEndpoints", program, StringComparison.Ordinal);
         Assert.DoesNotContain("MerchandisingCampaignAdminComposer", program, StringComparison.Ordinal);
         Assert.Contains("MapPromotionEndpoints", program, StringComparison.Ordinal);
-        Assert.Contains("CatalogAdapters.MerchandisingStoreLandingReferenceGate", program, StringComparison.Ordinal);
+        Assert.DoesNotContain("CatalogAdapters.MerchandisingStoreLandingReferenceGate", program, StringComparison.Ordinal);
+        Assert.DoesNotContain("Tooba.Host.CatalogAdapters", program, StringComparison.Ordinal);
+
+        var catalogModule = File.ReadAllText(Path.Combine(
+            root,
+            "src/backend/Modules/Catalog/Tooba.Catalog.Infrastructure/CatalogModule.cs"));
+        Assert.Contains("MerchandisingStoreLandingReferenceGate", catalogModule, StringComparison.Ordinal);
 
         var module = File.ReadAllText(Path.Combine(
             root,
@@ -51,7 +57,10 @@ public sealed class HostAdminAmcW33MerchandisingGuardTests
             "src/backend/Modules/Promotion/Tooba.Promotion.Infrastructure/Development/MerchandisingCampaignDevelopmentSeed.cs")));
         Assert.True(File.Exists(Path.Combine(
             root,
-            "src/backend/Host/Tooba.Host/CatalogAdapters/MerchandisingStoreLandingReferenceGate.cs")));
+            "src/backend/Modules/Catalog/Tooba.Catalog.Infrastructure/StoreLanding/MerchandisingStoreLandingReferenceGate.cs")));
+        Assert.False(Directory.Exists(Path.Combine(
+            root,
+            "src/backend/Host/Tooba.Host/CatalogAdapters")));
         Assert.True(File.Exists(Path.Combine(
             root,
             "src/backend/Host/Tooba.Host/Admin/Access/Authorizers/HostPromotionAdminAuthorizer.cs")));
@@ -88,11 +97,11 @@ public sealed class HostAdminAmcW33MerchandisingGuardTests
     }
 
     [Fact]
-    public void Host_Admin_count_15_StoreAppearance_evacuated_PW_shells_ABSENT()
+    public void Host_Admin_count_17_StoreAppearance_evacuated_PW_shells_ABSENT()
     {
         var root = FindRepoRoot();
         var admin = Path.Combine(root, "src/backend/Host/Tooba.Host/Admin");
-        Assert.Equal(15, Directory.GetFiles(admin, "*.cs", SearchOption.AllDirectories).Length);
+        Assert.Equal(17, Directory.GetFiles(admin, "*.cs", SearchOption.AllDirectories).Length);
         Assert.False(File.Exists(Path.Combine(admin, "StoreAppearanceSettingsEndpoints.cs")));
         Assert.False(File.Exists(Path.Combine(admin, "ProductWorkspaceEndpoints.cs")));
         Assert.False(File.Exists(Path.Combine(admin, "MerchandisingCampaignAdminEndpoints.cs")));

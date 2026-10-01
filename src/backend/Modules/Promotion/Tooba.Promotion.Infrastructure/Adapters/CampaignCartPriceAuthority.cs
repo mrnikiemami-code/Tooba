@@ -1,4 +1,4 @@
-using Tooba.Promotion.Application.Merchandising;
+﻿using Tooba.Promotion.Contracts.Merchandising;
 using Microsoft.EntityFrameworkCore;
 using Tooba.BuildingBlocks;
 using Tooba.Offer.Contracts.Dtos;

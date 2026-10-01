@@ -25,27 +25,27 @@ BRIDGE-WAKE-V1
 Channel: tooba-main
 ```
 
-Latest Accepted TMAR Checkpoint — authoritative (reconciled by TB-TMAR-HOST-ORDER-AMC-001-R1)
+Latest Accepted TMAR Checkpoint — authoritative (reconciled by TB-TMAR-HOST-CATALOGADAPTERS-AMC-001)
 
 ```text
-Latest-Accepted-Implementation-Wave: TB-TMAR-HOST-ORDER-AMC-001-R1
-Latest-Accepted-Task: TB-TMAR-HOST-ORDER-AMC-001-R1
-Implementation-Commit: 63580abfce525c66b09ced2ee2dbbdd3e62acc77
+Latest-Accepted-Implementation-Wave: TB-TMAR-HOST-CATALOGADAPTERS-AMC-001
+Latest-Accepted-Task: TB-TMAR-HOST-CATALOGADAPTERS-AMC-001
+Implementation-Commit: PLACEHOLDER_STAMP_AFTER_COMMIT
 Implementation-Commit-Kind: IMPLEMENTATION_COMMIT
-Current-Host-Checkpoint: Order_KEEP_THIN_HOST_ORDER_STOREFRONT_ADAPTER_R1
-Active-Host-Folder: Order
-Host-Order-Directory: PRESENT
-Host-Order-Disposition: KEEP_AS_THIN_HOST_ORDER_STOREFRONT_ADAPTER
-Host-Facing-Ports: Order.Contracts.Storefront
-Order-Application-On-Host-Order: ZERO
-Failure-Transport: SemanticException_FoundationErrorCodes.CheckoutAuthenticationRequired
-Guest-Actor: Order.Contracts.StorefrontGuestActor
-Prior-Accepted-Lineage: TB-TMAR-HOST-ORDER-AMC-001 ; TB-TMAR-HOST-SETTINGS-AMC-001 ; TB-TMAR-HOST-CACHING-AMC-001-R1
+Current-Host-Checkpoint: CatalogAdapters_HOST_ZERO
+Active-Host-Folder: CatalogAdapters
+Host-CatalogAdapters-Directory: ABSENT
+Host-CatalogAdapters-Disposition: CLOSED_HOST_ZERO
+Destination-Adapters: Catalog.Infrastructure.StoreLanding
+Promotion-Contracts-Seam: Promotion.Contracts.Merchandising
+Promotion-Application-Runtime-Ports: ABSENT
+DI-Owner: CatalogModule
+Prior-Accepted-Lineage: TB-TMAR-HOST-ORDER-AMC-001-R1 ; TB-TMAR-HOST-ORDER-AMC-001 ; TB-TMAR-HOST-SETTINGS-AMC-001 ; TB-TMAR-HOST-CACHING-AMC-001-R1
 Next-Host-Folder-Started: false
 Next-Host-Folder: NONE_USER_DECISION_REQUIRED
 Stale-Current-Pointer-State: ZERO
-workflowStop: USER_REVIEW_HOST_ORDER_AMC_001_R1_KEEP_THIN_HOST_ADAPTER
-Next-Task: USER_REVIEW_HOST_ORDER_AMC_001_R1_KEEP_THIN_HOST_ADAPTER
+workflowStop: USER_REVIEW_HOST_CATALOGADAPTERS_AMC_001_CLOSED_HOST_ZERO
+Next-Task: USER_REVIEW_HOST_CATALOGADAPTERS_AMC_001_CLOSED_HOST_ZERO
 Automatic-Next-Implementation-Task: NONE
 ```
 

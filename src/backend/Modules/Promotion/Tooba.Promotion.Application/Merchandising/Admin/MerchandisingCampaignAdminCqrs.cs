@@ -1,7 +1,7 @@
-using MediatR;
+﻿using MediatR;
 using Tooba.BuildingBlocks;
 using Tooba.BuildingBlocks.Results;
-using Tooba.Promotion.Application.Merchandising;
+using Tooba.Promotion.Contracts.Merchandising;
 
 namespace Tooba.Promotion.Application.Merchandising.Admin;
 

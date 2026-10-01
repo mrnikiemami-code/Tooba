@@ -93,6 +93,9 @@ public sealed class CatalogModule : IToobaModule
         services.AddScoped<IStoreCartPersistenceHoursReader, StoreCartPersistenceHoursReader>();
         services.AddScoped<IStoreLandingPageDirectory, StoreLandingPageDirectory>();
         services.AddScoped<IStoreLandingPageWorkspace, StoreLandingPageWorkspace>();
+        services.AddScoped<IStoreLandingExternalReferenceGate, StoreLanding.MerchandisingStoreLandingReferenceGate>();
+        services.AddScoped<IStoreLandingShellPort, StoreLanding.StoreLandingShellAdapter>();
+        services.AddScoped<IStoreLandingMerchandisingPort, StoreLanding.StoreLandingMerchandisingAdapter>();
         services.AddScoped<IStoreMenuDirectory, StoreMenuDirectory>();
         services.AddScoped<IStoreMenuWorkspace, StoreMenuWorkspace>();
         services.AddScoped<IStoreAppearanceSettingsDirectory, StoreAppearanceSettingsDirectory>();

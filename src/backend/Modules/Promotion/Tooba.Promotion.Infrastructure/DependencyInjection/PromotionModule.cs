@@ -1,4 +1,4 @@
-using Tooba.Pricing.Contracts;
+﻿using Tooba.Pricing.Contracts;
 using Tooba.Promotion.Infrastructure.Messaging;
 using Tooba.Promotion.Infrastructure.Adapters;
 using Tooba.Promotion.Infrastructure.Queries;
@@ -6,8 +6,8 @@ using Tooba.Promotion.Infrastructure.Directories;
 using Tooba.Promotion.Infrastructure.Merchandising;
 using Tooba.Promotion.Contracts.Merchandising;
 using Tooba.Promotion.Contracts.Checkout;
-using Tooba.Promotion.Application.Merchandising;
 using Tooba.Promotion.Application.Checkout;
+using Tooba.Promotion.Application.Merchandising;
 using Tooba.Promotion.Application.Ports;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;

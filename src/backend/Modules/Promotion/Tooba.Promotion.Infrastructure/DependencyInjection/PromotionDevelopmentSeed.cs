@@ -1,5 +1,6 @@
-using Microsoft.Extensions.DependencyInjection;
+﻿using Microsoft.Extensions.DependencyInjection;
 using Tooba.Promotion.Application.Merchandising;
+using Tooba.Promotion.Contracts.Merchandising;
 using Tooba.Promotion.Infrastructure.Development;
 
 namespace Tooba.Promotion.Infrastructure.DependencyInjection;

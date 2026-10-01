@@ -1,35 +1,21 @@
 using Tooba.BuildingBlocks;
 using Tooba.Catalog.Application.StoreLandingPages.Ports;
-using Tooba.Promotion.Application.Merchandising;
-using Tooba.Promotion.Domain.Merchandising;
+using Tooba.Promotion.Contracts.Merchandising;
 
-namespace Tooba.Host.CatalogAdapters;
+namespace Tooba.Catalog.Infrastructure.StoreLanding;
 
-/// <summary>Host adapter: Promotion merchandising query → Catalog Landing port.</summary>
-public sealed class StoreLandingMerchandisingAdapter : IStoreLandingMerchandisingPort
+/// <summary>Catalog adapter: Promotion merchandising query → Catalog Landing port.</summary>
+internal sealed class StoreLandingMerchandisingAdapter(
+    IMerchandisingCampaignQuery campaigns,
+    ICurrentCommerceContext commerce) : IStoreLandingMerchandisingPort
 {
-    private readonly IMerchandisingCampaignQuery _campaigns;
-    private readonly ICurrentCommerceContext _commerce;
-
-    /// <summary>Creates the adapter.</summary>
-    public StoreLandingMerchandisingAdapter(
-        IMerchandisingCampaignQuery campaigns,
-        ICurrentCommerceContext commerce)
-    {
-        _campaigns = campaigns;
-        _commerce = commerce;
-    }
-
-    /// <inheritdoc />
     public int MaxMemberTake => MerchandisingCampaignRuntimeLimits.MaxMemberTake;
 
-    /// <inheritdoc />
-    public string AmazingTypeCode => MerchandisingPromotionType.AmazingCode;
+    public string AmazingTypeCode => MerchandisingPromotionTypeCodes.Amazing;
 
-    /// <inheritdoc />
     public Guid? ResolveStoreId()
     {
-        var tenantId = _commerce.Current?.Tenant?.TenantId.Value;
+        var tenantId = commerce.Current?.Tenant?.TenantId.Value;
         if (string.IsNullOrWhiteSpace(tenantId))
         {
             return null;
@@ -43,7 +29,6 @@ public sealed class StoreLandingMerchandisingAdapter : IStoreLandingMerchandisin
         return Guid.TryParse(tenantId, out var parsed) ? parsed : null;
     }
 
-    /// <inheritdoc />
     public async Task<IReadOnlyList<StoreLandingMerchandisingMember>> ResolveCampaignMembersAsync(
         Guid campaignId,
         Guid storeId,
@@ -52,7 +37,7 @@ public sealed class StoreLandingMerchandisingAdapter : IStoreLandingMerchandisin
         int take,
         CancellationToken cancellationToken)
     {
-        var members = await _campaigns.ResolveCampaignMembersAsync(
+        var members = await campaigns.ResolveCampaignMembersAsync(
             campaignId,
             storeId,
             locale,
@@ -63,7 +48,6 @@ public sealed class StoreLandingMerchandisingAdapter : IStoreLandingMerchandisin
         return members.Select(Map).ToList();
     }
 
-    /// <inheritdoc />
     public async Task<StoreLandingMerchandisingCampaign?> ResolveActiveByTypeAsync(
         Guid storeId,
         string typeCode,
@@ -72,7 +56,7 @@ public sealed class StoreLandingMerchandisingAdapter : IStoreLandingMerchandisin
         int take,
         CancellationToken cancellationToken)
     {
-        var active = await _campaigns.ResolveActiveByTypeAsync(
+        var active = await campaigns.ResolveActiveByTypeAsync(
             storeId,
             typeCode,
             locale,

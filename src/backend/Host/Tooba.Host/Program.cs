@@ -188,7 +188,6 @@ builder.Services.AddScoped<IOrderAdminAuthorizer, HostOrderAdminAuthorizer>();
 builder.Services.AddScoped<
     Tooba.Order.Contracts.Admin.Operations.IOrderAdminEffectiveAccessReader,
     Tooba.Host.Admin.Access.Authorizers.HostOrderAdminEffectiveAccessReader>();
-builder.Services.AddScoped<Tooba.Catalog.Application.IStoreLandingExternalReferenceGate, Tooba.Host.CatalogAdapters.MerchandisingStoreLandingReferenceGate>();
 builder.Services.AddToobaModules(builder.Configuration, builder.Environment);
 builder.Services.AddOrderReservationCycleBoundaries(builder.Configuration);
 builder.Services.AddOfferModuleCallTracing();
@@ -199,8 +198,6 @@ builder.Services.AddScoped<Tooba.Order.Contracts.Storefront.IOrderStorefrontChec
 builder.Services.AddScoped<Tooba.AddressBook.Contracts.Ports.IAddressBookCheckoutLookup>(sp => sp.GetRequiredService<Tooba.AddressBook.Application.Ports.IAddressBookDirectory>());
 
 builder.Services.AddMemoryCache();
-builder.Services.AddScoped<Tooba.Catalog.Application.StoreLandingPages.Ports.IStoreLandingShellPort, Tooba.Host.CatalogAdapters.StoreLandingShellAdapter>();
-builder.Services.AddScoped<Tooba.Catalog.Application.StoreLandingPages.Ports.IStoreLandingMerchandisingPort, Tooba.Host.CatalogAdapters.StoreLandingMerchandisingAdapter>();
 builder.Services.AddScoped(sp =>
     new Tooba.Host.Security.Checkout.CheckoutIdentityGate(
         sp.GetRequiredService<Tooba.Catalog.Contracts.Checkout.ICatalogCheckoutIdentityPolicyLookup>(),

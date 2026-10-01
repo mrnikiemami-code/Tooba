@@ -1,4 +1,4 @@
-using FluentValidation;
+﻿using FluentValidation;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
@@ -8,7 +8,7 @@ using Tooba.Catalog.Application;
 using Tooba.Catalog.Application.StoreLandingPages.Ports;
 using Tooba.Catalog.Infrastructure;
 using Tooba.Catalog.Infrastructure.Persistence;
-using Tooba.Promotion.Application.Merchandising;
+using Tooba.Promotion.Contracts.Merchandising;
 
 namespace Tooba.Host.Tests;
 

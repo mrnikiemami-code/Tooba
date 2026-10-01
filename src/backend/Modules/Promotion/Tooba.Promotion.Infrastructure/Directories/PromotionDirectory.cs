@@ -1,10 +1,10 @@
-using Tooba.Promotion.Domain.ValueObjects;
+﻿using Tooba.Promotion.Domain.ValueObjects;
 using Tooba.Promotion.Domain.Aggregates;
 using Tooba.Promotion.Application.Ports;
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Tooba.BuildingBlocks;
 using Tooba.Promotion.Application.Checkout;
-using Tooba.Promotion.Application.Merchandising;
+using Tooba.Promotion.Contracts.Merchandising;
 using Tooba.Promotion.Domain.Events;
 using Tooba.Promotion.Domain.Merchandising;
 using Tooba.Promotion.Infrastructure.Persistence;

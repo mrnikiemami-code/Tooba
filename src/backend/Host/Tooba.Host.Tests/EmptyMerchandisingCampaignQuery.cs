@@ -1,6 +1,6 @@
-using Tooba.Promotion.Application.Ports;
+﻿using Tooba.Promotion.Application.Ports;
 using Tooba.Promotion.Application.Checkout;
-using Tooba.Promotion.Application.Merchandising;
+using Tooba.Promotion.Contracts.Merchandising;
 
 namespace Tooba.Host.Tests;
 

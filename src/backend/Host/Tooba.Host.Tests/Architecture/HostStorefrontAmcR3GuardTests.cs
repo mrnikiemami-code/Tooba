@@ -109,10 +109,13 @@ public sealed class HostStorefrontAmcR3GuardTests
         Assert.DoesNotContain("Tooba.Catalog.Application", wishlistComposer, StringComparison.Ordinal);
         Assert.False(Directory.Exists(Path.Combine(HostRoot(), "Wishlist")));
 
-        var landing = File.ReadAllText(Path.Combine(HostRoot(), "CatalogAdapters", "StoreLandingShellAdapter.cs"));
+        var landing = File.ReadAllText(Path.Combine(
+            root,
+            "src/backend/Modules/Catalog/Tooba.Catalog.Infrastructure/StoreLanding/StoreLandingShellAdapter.cs"));
         Assert.Contains("IStorefrontComposer", landing, StringComparison.Ordinal);
         Assert.DoesNotContain("Tooba.Host.Storefront", landing, StringComparison.Ordinal);
         Assert.DoesNotContain("Content.Domain", landing, StringComparison.Ordinal);
+        Assert.False(Directory.Exists(Path.Combine(HostRoot(), "CatalogAdapters")));
     }
 
     [Fact]

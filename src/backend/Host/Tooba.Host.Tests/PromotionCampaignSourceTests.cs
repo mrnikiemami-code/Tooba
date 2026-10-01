@@ -1,9 +1,9 @@
-using System.Text.Json;
+﻿using System.Text.Json;
 using Tooba.Catalog.Domain;
 using Tooba.BuildingBlocks;
 using Tooba.Promotion.Application.Ports;
 using Tooba.Promotion.Application.Checkout;
-using Tooba.Promotion.Application.Merchandising;
+using Tooba.Promotion.Contracts.Merchandising;
 using Xunit;
 
 namespace Tooba.Host.Tests;

@@ -1,5 +1,5 @@
-using Tooba.Promotion.Domain.Merchandising;
-using Tooba.Promotion.Application.Merchandising;
+﻿using Tooba.Promotion.Domain.Merchandising;
+using Tooba.Promotion.Contracts.Merchandising;
 using Microsoft.EntityFrameworkCore;
 using Tooba.BuildingBlocks;
 using Tooba.BuildingBlocks.Observability.Tracing;
