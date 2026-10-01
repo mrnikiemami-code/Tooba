@@ -1,3 +1,6 @@
+using Tooba.BuildingBlocks;
+using Tooba.OperatorProfile.Contracts.Errors;
+
 namespace Tooba.OperatorProfile.Domain;
 
 /// <summary>
@@ -54,7 +57,7 @@ public sealed class OperatorProfile
     {
         if (ownerUserId == Guid.Empty)
         {
-            throw new InvalidOperationException("Actor معتبر الزامی است.");
+            throw new SemanticException(new SemanticError(OperatorProfileErrorCodes.ProfileRejected));
         }
 
         var profile = new OperatorProfile
@@ -83,12 +86,12 @@ public sealed class OperatorProfile
         string? bio,
         DateTimeOffset now)
     {
-        DisplayName = RequireBounded(displayName, DisplayNameMinLength, DisplayNameMaxLength, "نام نمایشی معتبر نیست.");
-        FirstName = OptionalBounded(firstName, NamePartMaxLength, "نام بیش از حد بلند است.")
+        DisplayName = RequireBounded(displayName, DisplayNameMinLength, DisplayNameMaxLength);
+        FirstName = OptionalBounded(firstName, NamePartMaxLength)
             ?? DeriveFirstName(DisplayName);
-        LastName = OptionalBounded(lastName, NamePartMaxLength, "نام خانوادگی بیش از حد بلند است.")
+        LastName = OptionalBounded(lastName, NamePartMaxLength)
             ?? DeriveLastName(DisplayName);
-        Bio = OptionalBounded(bio, BioMaxLength, "بیوگرافی بیش از حد بلند است.");
+        Bio = OptionalBounded(bio, BioMaxLength);
         UpdatedAt = now;
     }
 
@@ -104,18 +107,18 @@ public sealed class OperatorProfile
         return parts.Length <= 1 ? string.Empty : string.Join(' ', parts.Skip(1));
     }
 
-    private static string RequireBounded(string? value, int min, int max, string message)
+    private static string RequireBounded(string? value, int min, int max)
     {
         var trimmed = value?.Trim() ?? string.Empty;
         if (trimmed.Length < min || trimmed.Length > max)
         {
-            throw new InvalidOperationException(message);
+            throw new SemanticException(new SemanticError(OperatorProfileErrorCodes.ProfileRejected));
         }
 
         return trimmed;
     }
 
-    private static string? OptionalBounded(string? value, int max, string message)
+    private static string? OptionalBounded(string? value, int max)
     {
         if (string.IsNullOrWhiteSpace(value))
         {
@@ -125,7 +128,7 @@ public sealed class OperatorProfile
         var trimmed = value.Trim();
         if (trimmed.Length > max)
         {
-            throw new InvalidOperationException(message);
+            throw new SemanticException(new SemanticError(OperatorProfileErrorCodes.ProfileRejected));
         }
 
         return trimmed;

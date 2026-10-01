@@ -53,38 +53,31 @@ public sealed class OperatorProfileDirectory : IOperatorProfileDirectory
         CancellationToken cancellationToken)
     {
         EnsureActor(actorUserId);
-        try
+        var now = DateTimeOffset.UtcNow;
+        var profile = await _db.Profiles.SingleOrDefaultAsync(x => x.OwnerUserId == actorUserId, cancellationToken);
+        if (profile is null)
         {
-            var now = DateTimeOffset.UtcNow;
-            var profile = await _db.Profiles.SingleOrDefaultAsync(x => x.OwnerUserId == actorUserId, cancellationToken);
-            if (profile is null)
-            {
-                profile = Domain.OperatorProfile.Create(
-                    actorUserId,
-                    input.DisplayName,
-                    input.FirstName,
-                    input.LastName,
-                    input.Bio,
-                    now);
-                _db.Profiles.Add(profile);
-            }
-            else
-            {
-                profile.Update(
-                    input.DisplayName,
-                    input.FirstName,
-                    input.LastName,
-                    input.Bio,
-                    now);
-            }
+            profile = Domain.OperatorProfile.Create(
+                actorUserId,
+                input.DisplayName,
+                input.FirstName,
+                input.LastName,
+                input.Bio,
+                now);
+            _db.Profiles.Add(profile);
+        }
+        else
+        {
+            profile.Update(
+                input.DisplayName,
+                input.FirstName,
+                input.LastName,
+                input.Bio,
+                now);
+        }
 
-            await _db.SaveChangesAsync(cancellationToken);
-            return Map(profile);
-        }
-        catch (InvalidOperationException)
-        {
-            throw new SemanticException(new SemanticError(OperatorProfileErrorCodes.ProfileRejected));
-        }
+        await _db.SaveChangesAsync(cancellationToken);
+        return Map(profile);
     }
 
     private static OperatorProfileSnapshot Map(Domain.OperatorProfile profile) =>

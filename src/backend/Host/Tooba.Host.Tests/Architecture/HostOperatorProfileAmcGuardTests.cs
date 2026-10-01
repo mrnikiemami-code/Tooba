@@ -2,7 +2,7 @@ using Xunit;
 
 namespace Tooba.Host.Tests.Architecture;
 
-/// <summary>Durable guards for TB-TMAR-HOST-OPERATORPROFILE-AMC-001 — Host OperatorProfile HOST_ZERO.</summary>
+/// <summary>Durable guards for TB-TMAR-HOST-OPERATORPROFILE-AMC-001 / R1 — Host OperatorProfile HOST_ZERO.</summary>
 public sealed class HostOperatorProfileAmcGuardTests
 {
     [Fact]
@@ -43,17 +43,26 @@ public sealed class HostOperatorProfileAmcGuardTests
             Assert.DoesNotContain("title = ex.Message", text, StringComparison.Ordinal);
             Assert.DoesNotContain("ex.Message", text, StringComparison.Ordinal);
             Assert.DoesNotContain("message.Contains", text, StringComparison.Ordinal);
+            Assert.DoesNotContain("catch (InvalidOperationException)", text, StringComparison.Ordinal);
         }
+
+        var directory = File.ReadAllText(Path.Combine(
+            root,
+            "src/backend/Modules/OperatorProfile/Tooba.OperatorProfile.Infrastructure/OperatorProfileDirectory.cs"));
+        Assert.DoesNotContain("catch (InvalidOperationException)", directory, StringComparison.Ordinal);
+        Assert.DoesNotContain("ex.Message", directory, StringComparison.Ordinal);
+        Assert.Contains("OperatorProfileErrorCodes.ProfileRejected", directory, StringComparison.Ordinal);
     }
 
     [Fact]
-    public void SoT_hostOperatorProfileAmc_present()
+    public void SoT_hostOperatorProfileAmc_r1_present()
     {
         var sot = File.ReadAllText(Path.Combine(FindRepoRoot(), "docs/architecture/tmar-current-state.json"));
         Assert.Contains("\"hostOperatorProfileAmc\"", sot, StringComparison.Ordinal);
-        Assert.Contains("TB-TMAR-HOST-OPERATORPROFILE-AMC-001", sot, StringComparison.Ordinal);
-        Assert.Contains("USER_REVIEW_HOST_OPERATORPROFILE_AMC_001_CLOSED_HOST_ZERO", sot, StringComparison.Ordinal);
-        Assert.Contains("OPERATORPROFILE_HOST_ZERO_USER_REVIEW_REQUIRED", sot, StringComparison.Ordinal);
+        Assert.Contains("\"hostOperatorProfileAmcR1\"", sot, StringComparison.Ordinal);
+        Assert.Contains("TB-TMAR-HOST-OPERATORPROFILE-AMC-001-R1", sot, StringComparison.Ordinal);
+        Assert.Contains("USER_REVIEW_HOST_OPERATORPROFILE_AMC_001_R1_CLOSED_HOST_ZERO", sot, StringComparison.Ordinal);
+        Assert.Contains("OPERATORPROFILE_CLOSED_HOST_ZERO_R1_USER_REVIEW_REQUIRED", sot, StringComparison.Ordinal);
     }
 
     private static IEnumerable<string> EnumerateEndpointSources(string root) =>

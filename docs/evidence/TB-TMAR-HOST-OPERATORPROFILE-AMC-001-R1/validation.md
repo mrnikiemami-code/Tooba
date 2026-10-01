@@ -1,0 +1,2 @@
+﻿# Validation
+HostOperatorProfileAmcGuardTests, OperatorProfileFailureSemanticsTests, TmarDurableGuardTests.
