@@ -201,6 +201,53 @@ public sealed class CacheFoundationTests
     }
 
     [Fact]
+    public async Task Inflight_retirement_does_not_remove_slot_after_new_attachment()
+    {
+        using var fixture = CreateFixture();
+        var memory = Assert.IsType<MemoryToobaCache>(fixture.Cache);
+        var coordinator = memory.InflightForTests;
+        const string cacheKey = "retirement-race-key";
+
+        var retirementWindow = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var allowRemoveRecheck = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var attachedSlot = new TaskCompletionSource<InflightSlot>(TaskCreationOptions.RunContinuationsAsynchronously);
+
+        memory.AfterRefCountZeroBeforeRecheckRemove = () =>
+        {
+            retirementWindow.TrySetResult();
+            allowRemoveRecheck.Task.GetAwaiter().GetResult();
+        };
+
+        var first = coordinator.Acquire(cacheKey);
+        var releaser = Task.Run(() => coordinator.Release(cacheKey, first));
+        await retirementWindow.Task;
+
+        var attach = Task.Run(() =>
+        {
+            var acquired = coordinator.Acquire(cacheKey);
+            attachedSlot.TrySetResult(acquired);
+            return acquired;
+        });
+
+        var second = await attachedSlot.Task;
+        Assert.Same(first, second);
+        Assert.True(coordinator.TryGet(cacheKey, out var live) && ReferenceEquals(live, first));
+
+        allowRemoveRecheck.TrySetResult();
+        await releaser;
+        await attach;
+
+        Assert.True(coordinator.TryGet(cacheKey, out live) && ReferenceEquals(live, first));
+        Assert.Equal(1, first.RefCount);
+        Assert.False(first.Retired);
+
+        coordinator.Release(cacheKey, second);
+        Assert.False(coordinator.TryGet(cacheKey, out _));
+        Assert.Equal(0, coordinator.Count);
+        Assert.True(first.Retired);
+    }
+
+    [Fact]
     public async Task Cancelled_waiter_does_not_corrupt_inflight_for_other_callers()
     {
         using var fixture = CreateFixture();

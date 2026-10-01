@@ -8,7 +8,7 @@ namespace Tooba.Host.Caching;
 
 /// <summary>
 /// ارائه‌دهندهٔ درون‌فرآیندی. بین نمونه‌های Host مشترک نیست. IMemoryCache را به ماژول‌ها لو نمی‌دهد.
-/// Single-flight با شمارش مرجع روی شیء هماهنگی per-key است تا حذف زودهنگام semaphore رخ ندهد.
+/// Single-flight با هماهنگی قفل‌دار per-key است تا acquire و retire به split-brain منجر نشود.
 /// ناسازگاری نوع: ورود حذف می‌شود، تله‌متری type_mismatch ثبت می‌شود، و miss برمی‌گردد (نه hit-null خاموش).
 /// </summary>
 internal sealed class MemoryToobaCache : ICache, ICacheInvalidator, IDisposable
@@ -20,9 +20,23 @@ internal sealed class MemoryToobaCache : ICache, ICacheInvalidator, IDisposable
     private readonly CacheHostOptions _options;
     private readonly CacheInstrumentation _telemetry;
     private readonly ILogger<MemoryToobaCache> _logger;
-    private readonly ConcurrentDictionary<string, InflightSlot> _inflight = new(StringComparer.Ordinal);
+    private readonly CacheInflightCoordinator _inflight = new();
     private readonly ConcurrentDictionary<string, ConcurrentDictionary<string, byte>> _tagToKeys = new(StringComparer.Ordinal);
     private readonly ConcurrentDictionary<string, string[]> _keyToTags = new(StringComparer.Ordinal);
+
+    /// <summary>
+    /// درز تست برای اثبات race بازنشستگی؛ در تولید null می‌ماند.
+    /// </summary>
+    internal Action? AfterRefCountZeroBeforeRecheckRemove
+    {
+        get => _inflight.AfterRefCountZeroBeforeRecheckRemove;
+        set => _inflight.AfterRefCountZeroBeforeRecheckRemove = value;
+    }
+
+    /// <summary>
+    /// دسترسی تست به هماهنگی inflight.
+    /// </summary>
+    internal CacheInflightCoordinator InflightForTests => _inflight;
 
     /// <summary>
     /// حافظهٔ اختصاصی فرآیند را می‌سازد تا IMemoryCache به ماژول‌های کسب‌وکار تزریق نشود.
@@ -91,7 +105,7 @@ internal sealed class MemoryToobaCache : ICache, ICacheInvalidator, IDisposable
             return await RunFactoryAndStore(key, factory, policy, cancellationToken).ConfigureAwait(false);
         }
 
-        var slot = AcquireInflight(key.Value);
+        var slot = _inflight.Acquire(key.Value);
         try
         {
             var entered = await slot.Gate.WaitAsync(0, cancellationToken).ConfigureAwait(false);
@@ -119,7 +133,7 @@ internal sealed class MemoryToobaCache : ICache, ICacheInvalidator, IDisposable
         }
         finally
         {
-            ReleaseInflight(key.Value, slot);
+            _inflight.Release(key.Value, slot);
         }
     }
 
@@ -162,32 +176,6 @@ internal sealed class MemoryToobaCache : ICache, ICacheInvalidator, IDisposable
         _telemetry.Invalidation(ProviderName, normalized, "n/a");
         _logger.LogInformation("Cache namespace invalidation. Namespace={Namespace}", normalized);
         return Task.CompletedTask;
-    }
-
-    private InflightSlot AcquireInflight(string cacheKey)
-    {
-        while (true)
-        {
-            var slot = _inflight.GetOrAdd(cacheKey, static _ => new InflightSlot());
-            Interlocked.Increment(ref slot.RefCount);
-            if (_inflight.TryGetValue(cacheKey, out var current) && ReferenceEquals(current, slot))
-            {
-                return slot;
-            }
-
-            Interlocked.Decrement(ref slot.RefCount);
-        }
-    }
-
-    private void ReleaseInflight(string cacheKey, InflightSlot slot)
-    {
-        if (Interlocked.Decrement(ref slot.RefCount) != 0)
-        {
-            return;
-        }
-
-        // حذف فقط وقتی این همان slot است؛ Gate را Dispose نمی‌کنیم تا از use-after-dispose جلوگیری شود.
-        _inflight.TryRemove(KeyValuePair.Create(cacheKey, slot));
     }
 
     private async Task<T?> RunFactoryAndStore<T>(
@@ -363,15 +351,6 @@ internal sealed class MemoryToobaCache : ICache, ICacheInvalidator, IDisposable
     }
 
     /// <summary>
-    /// هماهنگی single-flight per-key با شمارش مرجع؛ Gate هرگز Dispose نمی‌شود.
-    /// </summary>
-    private sealed class InflightSlot
-    {
-        public int RefCount;
-        public readonly SemaphoreSlim Gate = new(1, 1);
-    }
-
-    /// <summary>
     /// جعبهٔ ورود حافظه تا payload از فرادادهٔ کلید جدا بماند و موجودیت EF در قرارداد عمومی نباشد.
     /// </summary>
     private sealed record CacheBox(CacheKey Key, object Payload);
@@ -390,6 +369,105 @@ internal sealed class MemoryToobaCache : ICache, ICacheInvalidator, IDisposable
         {
         }
     }
+}
+
+/// <summary>
+/// هماهنگی single-flight per-key با قفل slot و بازنشستگی فقط وقتی RefCount هنوز صفر است.
+/// Gate هرگز Dispose نمی‌شود. Acquire نمی‌تواند به slot در حال retire که از dictionary حذف شده بچسبد.
+/// </summary>
+internal sealed class CacheInflightCoordinator
+{
+    private readonly ConcurrentDictionary<string, InflightSlot> _slots = new(StringComparer.Ordinal);
+
+    /// <summary>
+    /// درز تست: بین صفر شدن RefCount و بازبینی/حذف صدا زده می‌شود تا attach همزمان شبیه‌سازی شود.
+    /// </summary>
+    internal Action? AfterRefCountZeroBeforeRecheckRemove { get; set; }
+
+    /// <summary>
+    /// اتصال به slot فعال برای کلید؛ slot بازنشسته‌شده رد می‌شود.
+    /// </summary>
+    internal InflightSlot Acquire(string cacheKey)
+    {
+        while (true)
+        {
+            var slot = _slots.GetOrAdd(cacheKey, static _ => new InflightSlot());
+            lock (slot.Sync)
+            {
+                if (slot.Retired)
+                {
+                    _slots.TryRemove(KeyValuePair.Create(cacheKey, slot));
+                    continue;
+                }
+
+                if (!_slots.TryGetValue(cacheKey, out var current) || !ReferenceEquals(current, slot))
+                {
+                    continue;
+                }
+
+                slot.RefCount++;
+                return slot;
+            }
+        }
+    }
+
+    /// <summary>
+    /// آزادسازی اتصال؛ حذف dictionary فقط وقتی هیچ attach جدیدی پذیرفته نشده باشد.
+    /// </summary>
+    internal void Release(string cacheKey, InflightSlot slot)
+    {
+        lock (slot.Sync)
+        {
+            slot.RefCount--;
+            if (slot.RefCount > 0)
+            {
+                return;
+            }
+        }
+
+        // پنجرهٔ تعمدی برای تست race؛ در تولید معمولاً فوری است.
+        AfterRefCountZeroBeforeRecheckRemove?.Invoke();
+
+        lock (slot.Sync)
+        {
+            // attach جدید در پنجرهٔ بالا RefCount را بالا برده؛ slot فعال حذف نمی‌شود.
+            if (slot.RefCount != 0 || slot.Retired)
+            {
+                return;
+            }
+
+            slot.Retired = true;
+            _slots.TryRemove(KeyValuePair.Create(cacheKey, slot));
+        }
+    }
+
+    /// <summary>
+    /// آیا کلید هنوز در dictionary با همین نمونه است (برای تست).
+    /// </summary>
+    internal bool TryGet(string cacheKey, out InflightSlot? slot) => _slots.TryGetValue(cacheKey, out slot);
+
+    /// <summary>
+    /// تعداد ورودی‌های هماهنگی باقی‌مانده (برای تست نشتی).
+    /// </summary>
+    internal int Count => _slots.Count;
+}
+
+/// <summary>
+/// شیء هماهنگی per-key؛ Gate هرگز Dispose نمی‌شود.
+/// </summary>
+internal sealed class InflightSlot
+{
+    /// <summary>قفل چرخهٔ عمر RefCount/Retire.</summary>
+    public readonly object Sync = new();
+
+    /// <summary>تعداد callers متصل.</summary>
+    public int RefCount;
+
+    /// <summary>پس از بازنشستگی دیگر attach نمی‌پذیرد.</summary>
+    public bool Retired;
+
+    /// <summary>قفل اجرای کارخانه؛ Dispose نمی‌شود.</summary>
+    public readonly SemaphoreSlim Gate = new(1, 1);
 }
 
 /// <summary>

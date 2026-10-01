@@ -86,15 +86,27 @@ public sealed class HostCachingAmcGuardTests
     }
 
     [Fact]
-    public void Single_flight_uses_reference_counted_inflight_slot_not_currentcount_remove()
+    public void Single_flight_retirement_rechecks_refcount_before_remove()
     {
         var text = Read("MemoryToobaCache.cs");
-        Assert.Contains("InflightSlot", text, StringComparison.Ordinal);
-        Assert.Contains("RefCount", text, StringComparison.Ordinal);
-        Assert.Contains("AcquireInflight", text, StringComparison.Ordinal);
-        Assert.Contains("ReleaseInflight", text, StringComparison.Ordinal);
+        Assert.Contains("class CacheInflightCoordinator", text, StringComparison.Ordinal);
+        Assert.Contains("AfterRefCountZeroBeforeRecheckRemove", text, StringComparison.Ordinal);
+        Assert.Contains("slot.Retired", text, StringComparison.Ordinal);
+        Assert.Contains("lock (slot.Sync)", text, StringComparison.Ordinal);
+        Assert.Contains("if (slot.RefCount != 0 || slot.Retired)", text, StringComparison.Ordinal);
         Assert.DoesNotContain("CurrentCount == 1", text, StringComparison.Ordinal);
         Assert.DoesNotContain("CurrentCount==1", text, StringComparison.Ordinal);
+        // Parent race: Interlocked.Decrement then unconditional TryRemove without recheck under lock.
+        Assert.DoesNotContain("Interlocked.Decrement(ref slot.RefCount)", text, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void Deterministic_retirement_race_test_exists()
+    {
+        var tests = File.ReadAllText(Path.Combine(
+            FindRepoRoot(), "src", "backend", "Host", "Tooba.Host.Tests", "CacheFoundationTests.cs"));
+        Assert.Contains("Inflight_retirement_does_not_remove_slot_after_new_attachment", tests, StringComparison.Ordinal);
+        Assert.Contains("AfterRefCountZeroBeforeRecheckRemove", tests, StringComparison.Ordinal);
     }
 
     [Fact]

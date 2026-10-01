@@ -3,24 +3,24 @@
   "executionMode": "BACKEND_ONLY_UNTIL_EXPLICIT_RELEASE",
   "frontendFrozen": true,
   "checkoutState": "PAUSED_AT_SAFE_W5_CHECKPOINT",
-  "lastAcceptedTask": "TB-TMAR-HOST-CACHING-AMC-001",
-  "lastAcceptedCommit": "8b2e97c7375b2b0ebe0e468346917b9a708b6b55",
+  "lastAcceptedTask": "TB-TMAR-HOST-CACHING-AMC-001-R1",
+  "lastAcceptedCommit": "PLACEHOLDER_STAMP_AFTER_COMMIT",
   "lastAcceptedCommitKind": "IMPLEMENTATION_COMMIT",
   "lastAcceptedResultEvidenceCommit": "b898135dc3e0c7ef4ea5ecb56f2a5003baebdf43",
   "lastAcceptedResultEvidenceCommitKind": "RESULT_EVIDENCE_DOCS_STAMP_NOT_IMPLEMENTATION",
   "lastAcceptedSoTStamp": "b898135dc3e0c7ef4ea5ecb56f2a5003baebdf43",
   "lastAcceptedSoTStampKind": "RESULT_EVIDENCE_DOCS_STAMP",
-  "lastAcceptedCommitSemantics": "lastAcceptedTask is TB-TMAR-HOST-CACHING-AMC-001 IMPLEMENTATION commit. Host Caching KEEP_AS_GENERIC_HOST_CACHE_INFRASTRUCTURE; EXACT Tooba.Host.Caching; single-flight refcount; type-mismatch miss; TTL/provider parity.",
-  "lastAcceptedNote": "Caching AMC: KEEP generic Host cache infrastructure; USER_REVIEW before next Host AMC.",
-  "latestAcceptedImplementationWave": "TB-TMAR-HOST-CACHING-AMC-001",
+  "lastAcceptedCommitSemantics": "lastAcceptedTask is TB-TMAR-HOST-CACHING-AMC-001-R1 IMPLEMENTATION commit. Host Caching KEEP preserved; single-flight retirement/acquire race closed via lock+recheck.",
+  "lastAcceptedNote": "Caching AMC R1: single-flight retirement/acquire race CLOSED; USER_REVIEW before next Host AMC.",
+  "latestAcceptedImplementationWave": "TB-TMAR-HOST-CACHING-AMC-001-R1",
   "currentHostCheckpoint": "Caching",
   "nextHostFolderStarted": false,
   "nextHostFolder": null,
   "staleCurrentPointerState": "ZERO",
-  "nextTask": "USER_REVIEW_HOST_CACHING_AMC_001_KEEP_GENERIC_HOST_INFRASTRUCTURE",
+  "nextTask": "USER_REVIEW_HOST_CACHING_AMC_001_R1_KEEP_GENERIC_HOST_INFRASTRUCTURE",
   "nextTaskGate": "USER_DECISION_REQUIRED_NO_AUTOMATIC_NEXT_IMPLEMENTATION_TASK",
   "nextTaskState": "USER_DECISION_REQUIRED",
-  "workflowStop": "USER_REVIEW_HOST_CACHING_AMC_001_KEEP_GENERIC_HOST_INFRASTRUCTURE",
+  "workflowStop": "USER_REVIEW_HOST_CACHING_AMC_001_R1_KEEP_GENERIC_HOST_INFRASTRUCTURE",
   "automaticNextImplementationTask": "NONE",
   "hostGridAmc": {
     "task": "TB-TMAR-HOST-GRID-AMC-001",
@@ -975,15 +975,15 @@
   },
   "currentHostEvacuation": {
     "activeModule": "Caching",
-    "activeModuleState": "CACHING_KEEP_GENERIC_HOST_INFRASTRUCTURE_USER_REVIEW_REQUIRED",
+    "activeModuleState": "CACHING_KEEP_GENERIC_HOST_INFRASTRUCTURE_R1_USER_REVIEW_REQUIRED",
     "currentHostEvacuationState": "RECONCILED_NOT_HISTORICAL_ADDRESSBOOK",
     "workflow": "HOST_FIRST_FOLDER_BY_FOLDER",
-    "currentTask": "TB-TMAR-HOST-CACHING-AMC-001",
-    "currentPhase": "CACHING_AMC_KEEP_GENERIC_HOST_INFRASTRUCTURE_CLOSED",
-    "workflowStop": "USER_REVIEW_HOST_CACHING_AMC_001_KEEP_GENERIC_HOST_INFRASTRUCTURE",
+    "currentTask": "TB-TMAR-HOST-CACHING-AMC-001-R1",
+    "currentPhase": "CACHING_AMC_R1_SINGLE_FLIGHT_RETIREMENT_RACE_CLOSED",
+    "workflowStop": "USER_REVIEW_HOST_CACHING_AMC_001_R1_KEEP_GENERIC_HOST_INFRASTRUCTURE",
     "automaticNextImplementationTask": "NONE",
-    "lastReconciledRecoveryTask": "TB-TMAR-HOST-CACHING-AMC-001",
-    "latestAcceptedImplementationWave": "TB-TMAR-HOST-CACHING-AMC-001",
+    "lastReconciledRecoveryTask": "TB-TMAR-HOST-CACHING-AMC-001-R1",
+    "latestAcceptedImplementationWave": "TB-TMAR-HOST-CACHING-AMC-001-R1",
     "currentHostCheckpoint": "Caching",
     "historicalNextHostFolderPointer": "NONE_USER_DECISION_REQUIRED",
     "nextHostFolderStarted": false,
@@ -5054,17 +5054,22 @@
   },
   "hostEvacuationProgress": {
     "activeModule": "Caching",
-    "activeModuleState": "CACHING_KEEP_GENERIC_HOST_INFRASTRUCTURE_USER_REVIEW_REQUIRED",
+    "activeModuleState": "CACHING_KEEP_GENERIC_HOST_INFRASTRUCTURE_R1_USER_REVIEW_REQUIRED",
     "blockedReason": null,
     "nextAllowedTaskFamily": "HOST_SLICE_OR_FOLDER_AMC",
-    "note": "Host Caching AMC: KEEP_AS_GENERIC_HOST_CACHE_INFRASTRUCTURE; EXACT Tooba.Host.Caching; single-flight/type-safety/TTL/provider parity certified. USER_REVIEW required."
+    "note": "Host Caching AMC R1: single-flight retirement/acquire race CLOSED by lock+recheck; KEEP preserved. USER_REVIEW required."
   },
   "nextAllowedTask": {
     "kind": "USER_REVIEW_REQUIRED",
     "blockerOwner": "USER",
-    "note": "Do not start the next Host AMC until USER reviews Caching AMC KEEP generic Host cache infrastructure."
+    "note": "Do not start the next Host AMC until USER reviews Caching AMC R1 single-flight retirement repair."
   },
   "progressLedger": [
+    {
+      "taskId": "TB-TMAR-HOST-CACHING-AMC-001-R1",
+      "status": "KEEP_AS_GENERIC_HOST_CACHE_INFRASTRUCTURE_R1",
+      "note": "Single-flight retirement/acquire race CLOSED; lock+recheck; USER_REVIEW before next Host AMC."
+    },
     {
       "taskId": "TB-TMAR-HOST-CACHING-AMC-001",
       "status": "KEEP_AS_GENERIC_HOST_CACHE_INFRASTRUCTURE",
@@ -5210,5 +5215,17 @@
     "evidenceRoot": "docs/evidence/TB-TMAR-HOST-CACHING-AMC-001",
     "workflowStop": "USER_REVIEW_HOST_CACHING_AMC_001_KEEP_GENERIC_HOST_INFRASTRUCTURE",
     "note": "Implementation commit 8b2e97c7375b2b0ebe0e468346917b9a708b6b55; Host Caching KEEP certified."
+  },
+  "hostCachingAmcR1": {
+    "taskId": "TB-TMAR-HOST-CACHING-AMC-001-R1",
+    "parentTaskId": "TB-TMAR-HOST-CACHING-AMC-001",
+    "status": "KEEP_AS_GENERIC_HOST_CACHE_INFRASTRUCTURE_R1_SINGLE_FLIGHT_RETIREMENT_CLOSED",
+    "classification": "KEEP_AS_GENERIC_HOST_CACHE_INFRASTRUCTURE",
+    "retirementAcquireRace": "CLOSED_LOCK_RECHECK",
+    "activeSlotRemovalAfterAttach": "IMPOSSIBLE_BY_DESIGN",
+    "durableGuard": "HostCachingAmcGuardTests",
+    "evidenceRoot": "docs/evidence/TB-TMAR-HOST-CACHING-AMC-001-R1",
+    "workflowStop": "USER_REVIEW_HOST_CACHING_AMC_001_R1_KEEP_GENERIC_HOST_INFRASTRUCTURE",
+    "note": "Implementation commit PLACEHOLDER_STAMP_AFTER_COMMIT; Caching AMC R1 single-flight retirement race closed."
   }
 }
