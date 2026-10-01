@@ -4,7 +4,7 @@
   "frontendFrozen": true,
   "checkoutState": "PAUSED_AT_SAFE_W5_CHECKPOINT",
   "lastAcceptedTask": "TB-TMAR-HOST-OPERATORPROFILE-AMC-001-R1",
-  "lastAcceptedCommit": "PLACEHOLDER_STAMP_AFTER_COMMIT",
+  "lastAcceptedCommit": "930916f7fa3141cae30f1976f86b38003c683682",
   "lastAcceptedCommitKind": "IMPLEMENTATION_COMMIT",
   "lastAcceptedResultEvidenceCommit": "5986dcc7ba8236354fc84bd92738bbeb90839d7c",
   "lastAcceptedResultEvidenceCommitKind": "RESULT_EVIDENCE_DOCS_STAMP_NOT_IMPLEMENTATION",
@@ -5181,6 +5181,6 @@
     "expectedRejection": "operator.profile.rejected",
     "durableGuard": "HostOperatorProfileAmcGuardTests",
     "evidenceRoot": "docs/evidence/TB-TMAR-HOST-OPERATORPROFILE-AMC-001-R1",
-    "note": "PLACEHOLDER_COMMIT_SHA stamped after implementation commit + push."
+    "note": "Implementation commit 930916f7fa3141cae30f1976f86b38003c683682; OperatorProfile AMC R1 failure-semantics closed."
   }
 }

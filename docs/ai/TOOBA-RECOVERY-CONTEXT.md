@@ -30,7 +30,7 @@ Latest Accepted TMAR Checkpoint — authoritative (reconciled by TB-TMAR-HOST-OP
 ```text
 Latest-Accepted-Implementation-Wave: TB-TMAR-HOST-OPERATORPROFILE-AMC-001-R1
 Latest-Accepted-Task: TB-TMAR-HOST-OPERATORPROFILE-AMC-001-R1
-Implementation-Commit: PLACEHOLDER_STAMP_AFTER_COMMIT
+Implementation-Commit: 930916f7fa3141cae30f1976f86b38003c683682
 Implementation-Commit-Kind: IMPLEMENTATION_COMMIT
 Current-Host-Checkpoint: OperatorProfile_HOST_ZERO_R1
 Active-Host-Folder: OperatorProfile
