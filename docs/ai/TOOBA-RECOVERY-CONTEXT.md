@@ -30,7 +30,7 @@ Latest Accepted TMAR Checkpoint — authoritative (reconciled by TB-TMAR-HOST-AD
 ```text
 Latest-Accepted-Implementation-Wave: TB-TMAR-HOST-ADMIN-ACCESS-AMC-001-W1
 Latest-Accepted-Task: TB-TMAR-HOST-ADMIN-ACCESS-AMC-001-W1
-Implementation-Commit: ecbb1cae559a90b503e0fc299b71d43d336adc71
+Implementation-Commit: 6f06f76631413e94efbcbaeabc8b7218688389d7
 Implementation-Commit-Kind: IMPLEMENTATION_COMMIT
 Mode: CORE_ADMIN_ACCESS_ERROR_LOCALIZATION_HYGIENE
 Core-Admin-Access-State: CANONICAL_CODE_BASED_ERRORS_LOCALIZED

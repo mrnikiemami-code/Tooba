@@ -2,7 +2,7 @@
 
 ```text
 lastAcceptedTask = TB-TMAR-HOST-ADMIN-ACCESS-AMC-001-W1
-lastAcceptedCommit = ecbb1cae559a90b503e0fc299b71d43d336adc71
+lastAcceptedCommit = 6f06f76631413e94efbcbaeabc8b7218688389d7
 lastAcceptedCommitKind = IMPLEMENTATION_COMMIT
 currentHostCheckpoint = Admin/Access
 coreAdminAccessState = CANONICAL_CODE_BASED_ERRORS_LOCALIZED
