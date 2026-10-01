@@ -4,13 +4,13 @@
   "frontendFrozen": true,
   "checkoutState": "PAUSED_AT_SAFE_W5_CHECKPOINT",
   "lastAcceptedTask": "TB-TMAR-HOST-ERRORS-AMC-001-W1",
-  "lastAcceptedCommit": "baa05e6b7fa373cb6d354a80ca2eab37d4472f7b",
+  "lastAcceptedCommit": "e190e213c491fd530d86c7e5680cb0607b5e98d3",
   "lastAcceptedCommitKind": "IMPLEMENTATION_COMMIT",
   "lastAcceptedResultEvidenceCommit": "31c0e20d6573a4f35b0a0eefa68ad9dfe1ca4a0d",
   "lastAcceptedResultEvidenceCommitKind": "RESULT_EVIDENCE_DOCS_STAMP_NOT_IMPLEMENTATION",
   "lastAcceptedSoTStamp": "31c0e20d6573a4f35b0a0eefa68ad9dfe1ca4a0d",
   "lastAcceptedSoTStampKind": "RESULT_EVIDENCE_DOCS_STAMP",
-  "lastAcceptedCommitSemantics": "lastAcceptedTask is TB-TMAR-HOST-ERRORS-AMC-001-W1 (IMPLEMENTATION). lastAcceptedCommit temporarily holds prior Security W1 SHA until the post-commit SHA-record stamp. Docs stamp remains analyze SHA until W1 SHA-record stamp.",
+  "lastAcceptedCommitSemantics": "lastAcceptedTask is TB-TMAR-HOST-ERRORS-AMC-001-W1 (IMPLEMENTATION). IMPLEMENTATION commit is W1 SHA at lastAcceptedCommit (e190e213c491fd530d86c7e5680cb0607b5e98d3). Analyze docs stamp in lastAcceptedSoTStamp is NOT an implementation commit.",
   "lastAcceptedNote": "Host/Errors W1: PlatformExceptionMapper REMOVED; ToobaExceptionHandler KEEP thin namespace Tooba.Host.Errors; MultiTenancy via IExceptionPresentationService + Foundation platform.* codes; MultiTenancy structure NOT opened; Security/Admin CERT preserved.",
   "latestAcceptedImplementationWave": "TB-TMAR-HOST-ERRORS-AMC-001-W1",
   "currentHostCheckpoint": "Errors",
@@ -5888,7 +5888,7 @@
     "automaticNextImplementationTask": "NONE",
     "workflowStop": "USER_REVIEW_HOST_ERRORS_AMC_001_W1",
     "evidenceRoot": "docs/evidence/TB-TMAR-HOST-ERRORS-AMC-001-W1",
-    "implementationCommit": "baa05e6b7fa373cb6d354a80ca2eab37d4472f7b",
-    "note": "IMPLEMENTATION commit SHA recorded in follow-up stamp commit after this migrate lands."
+    "implementationCommit": "e190e213c491fd530d86c7e5680cb0607b5e98d3",
+    "note": "W1 migrate implementation SHA recorded."
   }
 }

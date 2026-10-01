@@ -15,7 +15,7 @@ Latest Accepted TMAR Checkpoint — authoritative
 Reconciled by `TB-TMAR-HOST-ERRORS-AMC-001-W1`. MIGRATE of Host/Errors: PlatformExceptionMapper REMOVED; ToobaExceptionHandler KEEP thin under `Tooba.Host.Errors`; MultiTenancy resolution failures via `IExceptionPresentationService` + Foundation `platform.*` codes; MultiTenancy structure NOT opened. Gate: `USER_DECISION_REQUIRED_NO_AUTOMATIC_NEXT_IMPLEMENTATION_TASK`.
 - Current Host checkpoint = `Errors`; workflowStop / Next-Task = `USER_REVIEW_HOST_ERRORS_AMC_001_W1`; automatic next = NONE; stale pointer = ZERO.
 - Errors production file count = 1; path↔namespace EXACT; Security/Admin CERT preserved.
-- `lastAcceptedCommit` recorded to W1 implementation SHA in follow-up stamp (temporarily prior Security W1 SHA until stamp lands).
+`lastAcceptedCommit` = `e190e213c491fd530d86c7e5680cb0607b5e98d3` (W1 implementation).
 
 Reconciled by `TB-TMAR-HOST-ERRORS-AMC-001` (HISTORICAL for current pointer). ANALYSIS_ONLY of Host/Errors (2 files). Implementation remained Security W1 at that time.
 

@@ -713,7 +713,7 @@ public sealed class TmarDurableGuardTests
         Assert.Equal(
             "RESULT_EVIDENCE_DOCS_STAMP_NOT_IMPLEMENTATION",
             rootEl.GetProperty("lastAcceptedResultEvidenceCommitKind").GetString());
-        Assert.Equal("baa05e6b7fa373cb6d354a80ca2eab37d4472f7b", implementationCommit);
+        Assert.Equal("e190e213c491fd530d86c7e5680cb0607b5e98d3", implementationCommit);
 
         // 2. Recorded current SHAs exist on main (deterministic git history check).
         foreach (var sha in new[] { implementationCommit, sotStamp })
