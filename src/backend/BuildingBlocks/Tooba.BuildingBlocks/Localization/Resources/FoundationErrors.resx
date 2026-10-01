@@ -36,4 +36,13 @@
   <data name="admin.dev.unavailable" xml:space="preserve">
     <value>Development context is unavailable.</value>
   </data>
+  <data name="platform.edition.unconfigured" xml:space="preserve">
+    <value>Platform edition is not configured.</value>
+  </data>
+  <data name="platform.connection.unconfigured" xml:space="preserve">
+    <value>Platform connection is not configured.</value>
+  </data>
+  <data name="platform.resolution.failed" xml:space="preserve">
+    <value>Store not found.</value>
+  </data>
 </root>

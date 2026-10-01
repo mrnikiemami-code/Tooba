@@ -3,7 +3,9 @@ using System.Net.Http.Json;
 using System.Text.Json;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Hosting;
 using Tooba.BuildingBlocks;
@@ -441,6 +443,87 @@ public sealed class TenantResolutionTests
                     ["Tooba:PostgreSQL:ConnectionReferences:marketplace"] = "Host=127.0.0.1;Username=tooba;Password=dev-placeholder;Database=tooba_marketplace",
                     ["Tooba:Outbox:Enabled"] = "false",
                 });
+            });
+        }
+    }
+}
+
+/// <summary>
+/// Fail-closed edition/connection paths via ControlPlaneRegistry test doubles.
+/// </summary>
+public sealed class TenantResolutionPlatformErrorTests
+{
+    [Fact]
+    public async Task Unset_edition_returns_503_platform_edition_unconfigured()
+    {
+        await using var factory = new RegistryOverrideFactory(new ControlPlaneRegistry
+        {
+            Edition = ToobaEdition.Unset,
+            DeploymentId = "test-unset",
+            MarketplaceConnectionReference = null,
+            Hosts = new Dictionary<string, TenantRecord>(StringComparer.Ordinal),
+            Tenants = new Dictionary<string, TenantRecord>(StringComparer.Ordinal),
+        });
+        var client = factory.CreateClient();
+        var response = await client.GetAsync("/__platform-commerce");
+        Assert.Equal(HttpStatusCode.ServiceUnavailable, response.StatusCode);
+        var json = await response.Content.ReadFromJsonAsync<JsonElement>();
+        Assert.Equal(503, json.GetProperty("status").GetInt32());
+        Assert.Equal("platform.edition.unconfigured", json.GetProperty("errorCode").GetString());
+        Assert.True(json.TryGetProperty("traceId", out _));
+        Assert.False(json.TryGetProperty("detail", out _));
+    }
+
+    [Fact]
+    public async Task Marketplace_missing_connection_returns_503_platform_connection_unconfigured()
+    {
+        await using var factory = new RegistryOverrideFactory(new ControlPlaneRegistry
+        {
+            Edition = ToobaEdition.Marketplace,
+            DeploymentId = "test-marketplace-null-conn",
+            MarketplaceConnectionReference = null,
+            Hosts = new Dictionary<string, TenantRecord>(StringComparer.Ordinal),
+            Tenants = new Dictionary<string, TenantRecord>(StringComparer.Ordinal),
+        });
+        var client = factory.CreateClient();
+        var response = await client.GetAsync("/__platform-commerce");
+        Assert.Equal(HttpStatusCode.ServiceUnavailable, response.StatusCode);
+        var json = await response.Content.ReadFromJsonAsync<JsonElement>();
+        Assert.Equal(503, json.GetProperty("status").GetInt32());
+        Assert.Equal("platform.connection.unconfigured", json.GetProperty("errorCode").GetString());
+        Assert.True(json.TryGetProperty("traceId", out _));
+    }
+
+    private sealed class RegistryOverrideFactory : WebApplicationFactory<Program>
+    {
+        private readonly ControlPlaneRegistry _registry;
+
+        public RegistryOverrideFactory(ControlPlaneRegistry registry) => _registry = registry;
+
+        protected override void ConfigureWebHost(IWebHostBuilder builder)
+        {
+            builder.UseEnvironment("Testing");
+            builder.ConfigureAppConfiguration((_, config) =>
+            {
+                config.AddInMemoryCollection(new Dictionary<string, string?>
+                {
+                    ["Tooba:Edition"] = "SingleStore",
+                    ["Tooba:DeploymentId"] = "placeholder",
+                    ["Tooba:SingleStore:Tenants:0:TenantId"] = "store-alpha",
+                    ["Tooba:SingleStore:Tenants:0:Status"] = "Active",
+                    ["Tooba:SingleStore:Tenants:0:ConnectionReference"] = "tenant-alpha",
+                    ["Tooba:SingleStore:Tenants:0:Hosts:0"] = "alpha.localhost",
+                    ["Tooba:PostgreSQL:ConnectionReferences:tenant-alpha"] =
+                        "Host=127.0.0.1;Username=tooba;Password=dev-placeholder;Database=tooba_alpha",
+                    ["Tooba:Outbox:Enabled"] = "false",
+                });
+            });
+            builder.ConfigureTestServices(services =>
+            {
+                var prior = services.Where(d => d.ServiceType == typeof(ControlPlaneRegistry)).ToList();
+                foreach (var d in prior)
+                    services.Remove(d);
+                services.AddSingleton(_registry);
             });
         }
     }

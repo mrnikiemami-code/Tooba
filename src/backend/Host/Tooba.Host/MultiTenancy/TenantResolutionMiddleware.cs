@@ -1,5 +1,7 @@
 using System.Diagnostics;
 using Tooba.BuildingBlocks;
+using Tooba.BuildingBlocks.Presentation;
+using Tooba.BuildingBlocks.Presentation.Errors;
 using Tooba.StoreContext.Contracts.Current;
 
 namespace Tooba.Host;
@@ -62,7 +64,7 @@ internal sealed class TenantResolutionMiddleware
     private readonly ControlPlaneRegistry _registry;
     private readonly IDatabaseConnectionResolver _connections;
     private readonly ILogger<TenantResolutionMiddleware> _logger;
-    private readonly IProblemDetailsService _problemDetails;
+    private readonly IExceptionPresentationService _presentation;
 
     /// <summary>
     /// میان‌افزار resolve را با registry پیکربندی و resolver اتصال می‌سازد.
@@ -72,17 +74,17 @@ internal sealed class TenantResolutionMiddleware
         ControlPlaneRegistry registry,
         IDatabaseConnectionResolver connections,
         ILogger<TenantResolutionMiddleware> logger,
-        IProblemDetailsService problemDetails)
+        IExceptionPresentationService presentation)
     {
         _next = next;
         _registry = registry;
         _connections = connections;
         _logger = logger;
-        _problemDetails = problemDetails;
+        _presentation = presentation;
     }
 
     /// <summary>
-    /// زمینه را می‌سازد یا ProblemDetails fail-closed می‌نویسد. جزئیات اتصال در پاسخ نیست.
+    /// زمینه را می‌سازد یا پاسخ استاندارد fail-closed می‌نویسد. جزئیات اتصال در پاسخ نیست.
     /// </summary>
     public async Task InvokeAsync(HttpContext httpContext)
     {
@@ -116,14 +118,15 @@ internal sealed class TenantResolutionMiddleware
                 await _next(httpContext);
             }
         }
-        catch (PlatformHttpException ex)
+        catch (SemanticException ex)
         {
+            // Unique operational signal for commerce resolution; presentation service also logs canonically.
             _logger.LogWarning(
                 "Commerce resolution failed. TraceId={TraceId} ErrorCode={ErrorCode} Path={Path}",
                 traceId,
-                ex.ErrorCode,
+                ex.Error.Code,
                 httpContext.Request.Path.Value);
-            await WriteProblemAsync(httpContext, ex, traceId);
+            await _presentation.WriteAsync(httpContext, ex, httpContext.RequestAborted);
         }
     }
 
@@ -137,19 +140,13 @@ internal sealed class TenantResolutionMiddleware
 
         if (_registry.Edition == ToobaEdition.Unset)
         {
-            throw new PlatformHttpException(
-                StatusCodes.Status503ServiceUnavailable,
-                "Service Unavailable",
-                "platform.edition.unconfigured");
+            throw new SemanticException(new SemanticError(FoundationErrorCodes.PlatformEditionUnconfigured));
         }
 
         if (_registry.Edition == ToobaEdition.Marketplace)
         {
             var marketplaceRef = _registry.MarketplaceConnectionReference
-                ?? throw new PlatformHttpException(
-                    StatusCodes.Status503ServiceUnavailable,
-                    "Service Unavailable",
-                    "platform.connection.unconfigured");
+                ?? throw new SemanticException(new SemanticError(FoundationErrorCodes.PlatformConnectionUnconfigured));
             _ = _connections.Resolve(marketplaceRef);
             var marketplaceContext = new CommerceContext(
                 editionContext,
@@ -194,28 +191,12 @@ internal sealed class TenantResolutionMiddleware
     /// <summary>
     /// ۴۰۴ یکسان برای Host ناشناخته، Disabled و Suspended تا enumeration نشود.
     /// </summary>
-    private static PlatformHttpException FailClosed() =>
-        new(StatusCodes.Status404NotFound, "Not Found", "platform.resolution.failed");
+    private static SemanticException FailClosed() =>
+        new(new SemanticError(FoundationErrorCodes.PlatformResolutionFailed));
 
     /// <summary>
     /// health/ready و probeهای تشخیصی از resolve و باز شدن DB معاف‌اند.
     /// </summary>
     private static bool ShouldSkip(PathString path) =>
         SkipPrefixes.Any(prefix => path.StartsWithSegments(prefix));
-
-    /// <summary>
-    /// ProblemDetails بدون جزئیات پیکربندی می‌نویسد.
-    /// </summary>
-    private async Task WriteProblemAsync(HttpContext httpContext, PlatformHttpException exception, string traceId)
-    {
-        var mapped = PlatformExceptionMapper.Map(exception);
-        var problem = PlatformExceptionMapper.ToProblemDetails(mapped, traceId, developmentDetail: null);
-        httpContext.Response.StatusCode = mapped.StatusCode;
-        await _problemDetails.WriteAsync(new ProblemDetailsContext
-        {
-            HttpContext = httpContext,
-            Exception = exception,
-            ProblemDetails = problem,
-        });
-    }
 }

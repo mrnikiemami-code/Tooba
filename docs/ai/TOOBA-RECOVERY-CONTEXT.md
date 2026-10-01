@@ -25,31 +25,35 @@ BRIDGE-WAKE-V1
 Channel: tooba-main
 ```
 
-Latest Accepted TMAR Checkpoint — authoritative (reconciled by TB-TMAR-HOST-ERRORS-AMC-001)
+Latest Accepted TMAR Checkpoint — authoritative (reconciled by TB-TMAR-HOST-ERRORS-AMC-001-W1)
 
 ```text
-Latest-Accepted-Implementation-Wave: TB-TMAR-HOST-SECURITY-AMC-001-W1
-Latest-Accepted-Task: TB-TMAR-HOST-ERRORS-AMC-001
+Latest-Accepted-Implementation-Wave: TB-TMAR-HOST-ERRORS-AMC-001-W1
+Latest-Accepted-Task: TB-TMAR-HOST-ERRORS-AMC-001-W1
 Implementation-Commit: baa05e6b7fa373cb6d354a80ca2eab37d4472f7b
 Implementation-Commit-Kind: IMPLEMENTATION_COMMIT
 Result-Evidence-Docs-Stamp: 31c0e20d6573a4f35b0a0eefa68ad9dfe1ca4a0d
 Result-Evidence-Docs-Stamp-Kind: RESULT_EVIDENCE_DOCS_STAMP_NOT_IMPLEMENTATION
-Mode: HOST_ERRORS_ANALYSIS_ONLY
-Errors-Production-File-Count: 2
-PlatformExceptionMapper: ACTIVE_LEGACY_PARALLEL_PRESENTATION
-ToobaExceptionHandler: KEEP_AS_THIN_GLOBAL_HOST_EXCEPTION_ADAPTER
+Mode: HOST_ERRORS_W1_MIGRATE
+Errors-Production-File-Count: 1
+PlatformExceptionMapper: REMOVED
+MappedPlatformError: REMOVED
+ToobaExceptionHandler: KEEP_THIN_CANONICAL
 Canonical-Presentation-Authority: IExceptionPresentationService
-Path-Namespace: VIOLATION_Tooba.Host_vs_Errors
+Path-Namespace: EXACT_Tooba.Host.Errors
+TenantResolution-Presentation: CANONICAL_IExceptionPresentationService
+TenantResolution-Platform-Errors: FOUNDATION_CODE_BASED
+MultiTenancy-Structure: NOT_OPENED_DEFERRED
 Host-Security-State: HOST_SECURITY_AMC_CERTIFIED_PRESERVED
 Whole-Host-Admin-State: HOST_ADMIN_FULLY_CERTIFIED
 Current-Host-Checkpoint: Errors
 Next-Host-Folder-Started: false
 Stale-Current-Pointer-State: ZERO
-workflowStop: USER_REVIEW_HOST_ERRORS_AMC_001
-Next-Task: USER_REVIEW_HOST_ERRORS_AMC_001
+workflowStop: USER_REVIEW_HOST_ERRORS_AMC_001_W1
+Next-Task: USER_REVIEW_HOST_ERRORS_AMC_001_W1
 Next-Task-Gate: USER_DECISION_REQUIRED_NO_AUTOMATIC_NEXT_IMPLEMENTATION_TASK
 Automatic-Next-Implementation-Task: NONE
-Recommended-Next-Implementation: TB-TMAR-HOST-ERRORS-AMC-001-W1
+Recommended-Next-Implementation: NONE
 ```
 
 

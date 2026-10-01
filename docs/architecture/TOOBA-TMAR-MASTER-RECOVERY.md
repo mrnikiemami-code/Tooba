@@ -12,10 +12,12 @@ Canonical Architect ↔ Cursor handoff (recovery-critical)
 
 Latest Accepted TMAR Checkpoint — authoritative
 
-Reconciled by `TB-TMAR-HOST-ERRORS-AMC-001`. ANALYSIS_ONLY of Host/Errors (2 files). Implementation remains Security W1 at `lastAcceptedCommit` = `baa05e6b7fa373cb6d354a80ca2eab37d4472f7b`. Gate: `USER_DECISION_REQUIRED_NO_AUTOMATIC_NEXT_IMPLEMENTATION_TASK`.
-- Current Host checkpoint = `Errors`; workflowStop / Next-Task = `USER_REVIEW_HOST_ERRORS_AMC_001`; automatic next = NONE; stale pointer = ZERO.
-- PlatformExceptionMapper = ACTIVE_LEGACY_PARALLEL_PRESENTATION (MultiTenancy consumer); ToobaExceptionHandler = KEEP thin; path↔namespace VIOLATION; recommended W1 then CERT.
-- Host/Security HOST_SECURITY_AMC_CERTIFIED and Host/Admin HOST_ADMIN_FULLY_CERTIFIED preserved.
+Reconciled by `TB-TMAR-HOST-ERRORS-AMC-001-W1`. MIGRATE of Host/Errors: PlatformExceptionMapper REMOVED; ToobaExceptionHandler KEEP thin under `Tooba.Host.Errors`; MultiTenancy resolution failures via `IExceptionPresentationService` + Foundation `platform.*` codes; MultiTenancy structure NOT opened. Gate: `USER_DECISION_REQUIRED_NO_AUTOMATIC_NEXT_IMPLEMENTATION_TASK`.
+- Current Host checkpoint = `Errors`; workflowStop / Next-Task = `USER_REVIEW_HOST_ERRORS_AMC_001_W1`; automatic next = NONE; stale pointer = ZERO.
+- Errors production file count = 1; path↔namespace EXACT; Security/Admin CERT preserved.
+- `lastAcceptedCommit` recorded to W1 implementation SHA in follow-up stamp (temporarily prior Security W1 SHA until stamp lands).
+
+Reconciled by `TB-TMAR-HOST-ERRORS-AMC-001` (HISTORICAL for current pointer). ANALYSIS_ONLY of Host/Errors (2 files). Implementation remained Security W1 at that time.
 
 Reconciled by `TB-TMAR-HOST-SECURITY-AMC-001-W3-CERT` (HISTORICAL for current pointer). Independent certification docs/tests only.
 

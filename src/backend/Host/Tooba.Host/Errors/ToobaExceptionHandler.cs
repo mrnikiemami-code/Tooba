@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Diagnostics;
 using Tooba.BuildingBlocks.Presentation;
 
-namespace Tooba.Host;
+namespace Tooba.Host.Errors;
 
 /// <summary>
 /// handler نازک استثنای مدیریت‌نشده — ارکستراسیون در IExceptionPresentationService.

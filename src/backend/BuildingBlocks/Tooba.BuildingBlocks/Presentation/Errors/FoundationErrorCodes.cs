@@ -30,4 +30,13 @@ public static class FoundationErrorCodes
 
     /// <summary>زمینهٔ Development پنل مدیر در دسترس نیست (404).</summary>
     public const string AdminDevUnavailable = "admin.dev.unavailable";
+
+    /// <summary>Edition پلتفرم پیکربندی نشده است (503).</summary>
+    public const string PlatformEditionUnconfigured = "platform.edition.unconfigured";
+
+    /// <summary>مرجع اتصال پلتفرم پیکربندی نشده است (503).</summary>
+    public const string PlatformConnectionUnconfigured = "platform.connection.unconfigured";
+
+    /// <summary>Resolve Host/Tenant با شکست fail-closed مواجه شد (404؛ بدون افشای وجود).</summary>
+    public const string PlatformResolutionFailed = "platform.resolution.failed";
 }

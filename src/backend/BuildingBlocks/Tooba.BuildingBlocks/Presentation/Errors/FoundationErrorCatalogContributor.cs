@@ -48,6 +48,12 @@ public sealed class FoundationErrorCatalogContributor : IErrorCatalogContributor
             StatusCodes.Status503ServiceUnavailable, "Authorization unavailable"),
         D(FoundationErrorCodes.AdminDevUnavailable, ErrorClassification.NotFound,
             StatusCodes.Status404NotFound, "Unavailable"),
+        D(FoundationErrorCodes.PlatformEditionUnconfigured, ErrorClassification.Platform,
+            StatusCodes.Status503ServiceUnavailable, "Service configuration unavailable"),
+        D(FoundationErrorCodes.PlatformConnectionUnconfigured, ErrorClassification.Platform,
+            StatusCodes.Status503ServiceUnavailable, "Service configuration unavailable"),
+        D(FoundationErrorCodes.PlatformResolutionFailed, ErrorClassification.NotFound,
+            StatusCodes.Status404NotFound, "Not found"),
     ];
 
     private static ErrorDescriptor D(

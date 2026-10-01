@@ -36,4 +36,13 @@
   <data name="admin.dev.unavailable" xml:space="preserve">
     <value>زمینهٔ Development در دسترس نیست.</value>
   </data>
+  <data name="platform.edition.unconfigured" xml:space="preserve">
+    <value>Edition پلتفرم پیکربندی نشده است.</value>
+  </data>
+  <data name="platform.connection.unconfigured" xml:space="preserve">
+    <value>اتصال پلتفرم پیکربندی نشده است.</value>
+  </data>
+  <data name="platform.resolution.failed" xml:space="preserve">
+    <value>فروشگاه یافت نشد.</value>
+  </data>
 </root>

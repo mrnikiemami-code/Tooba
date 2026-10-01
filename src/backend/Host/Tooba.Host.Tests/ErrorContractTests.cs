@@ -20,11 +20,19 @@ public sealed class ErrorContractTests : IClassFixture<WebApplicationFactory<Pro
     {
         _factory = factory.WithWebHostBuilder(builder =>
         {
-            builder.UseEnvironment("Development");
+            builder.UseEnvironment("Testing");
             builder.ConfigureAppConfiguration((_, config) =>
             {
                 config.AddInMemoryCollection(new Dictionary<string, string?>
                 {
+                    ["Tooba:Edition"] = "SingleStore",
+                    ["Tooba:DeploymentId"] = "error-contract-tests",
+                    ["Tooba:SingleStore:Tenants:0:TenantId"] = "store-alpha",
+                    ["Tooba:SingleStore:Tenants:0:Status"] = "Active",
+                    ["Tooba:SingleStore:Tenants:0:ConnectionReference"] = "tenant-alpha",
+                    ["Tooba:SingleStore:Tenants:0:Hosts:0"] = "localhost",
+                    ["Tooba:PostgreSQL:ConnectionReferences:tenant-alpha"] =
+                        "Host=127.0.0.1;Username=tooba;Password=dev-placeholder;Database=tooba_alpha",
                     ["Tooba:Messaging:Enabled"] = "false",
                     ["Tooba:Outbox:Enabled"] = "false",
                 });
@@ -78,22 +86,5 @@ public sealed class ErrorContractTests : IClassFixture<WebApplicationFactory<Pro
         Assert.Equal(HttpStatusCode.OK, ready.StatusCode);
         Assert.Equal(HttpStatusCode.OK, live.StatusCode);
         Assert.Equal(HttpStatusCode.OK, readyProbe.StatusCode);
-    }
-}
-
-/// <summary>
-/// نگاشت استثنا باید در حالت غیر Development فیلد Detail را خالی بگذارد.
-/// </summary>
-public sealed class PlatformExceptionMapperTests
-{
-    [Fact]
-    public void Production_problem_details_omit_implementation_detail()
-    {
-        var mapped = PlatformExceptionMapper.Map(new InvalidOperationException("secret-path C:\\internal\\sql"));
-        var problem = PlatformExceptionMapper.ToProblemDetails(mapped, "abc", developmentDetail: null);
-        Assert.Equal(500, problem.Status);
-        Assert.Null(problem.Detail);
-        Assert.Equal("abc", problem.Extensions["traceId"]?.ToString());
-        Assert.False(problem.Extensions.ContainsKey("errorCode"));
     }
 }

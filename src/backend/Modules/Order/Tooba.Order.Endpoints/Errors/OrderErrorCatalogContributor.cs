@@ -114,13 +114,10 @@ public sealed class OrderErrorCatalogContributor : IErrorCatalogContributor
         D(ReservationCycleErrors.RetryLimitReached, ErrorClassification.Conflict, StatusCodes.Status409Conflict,
             ReservationCycleErrors.RetryLimitReachedFa),
 
-        // Admin/Seller reservation-policy settings (Host codes preserved).
-        D(ReservationPolicyErrors.InitialInvalid, ErrorClassification.Validation, StatusCodes.Status400BadRequest,
-            "مدت رزرو اولیه باید عددی صحیح بین ۱ و ۴۳۲۰۰ دقیقه باشد."),
-        D(ReservationPolicyErrors.RetryInvalid, ErrorClassification.Validation, StatusCodes.Status400BadRequest,
-            "مدت رزرو مجدد باید عددی صحیح بین ۱ و ۴۳۲۰۰ دقیقه باشد."),
-        D(ReservationPolicyErrors.MaxInvalid, ErrorClassification.Validation, StatusCodes.Status400BadRequest,
-            "حداکثر دفعات رزرو باید عددی صحیح بین ۱ و ۲۰ باشد."),
+        // Admin/Seller reservation-policy settings.
+        // reservation.policy.initial|retry|max.invalid descriptors are Catalog-owned
+        // (CatalogErrorCatalogContributor / HoldPolicyReservation*). Order keeps the stable
+        // machine codes + FA resources but must not double-register descriptors.
         D(ReservationPolicyErrors.SellerDenied, ErrorClassification.Forbidden, StatusCodes.Status403Forbidden,
             "فروشنده مجوز تغییر سیاست رزرو ندارد."),
 
