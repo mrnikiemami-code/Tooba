@@ -1,6 +1,8 @@
 using Microsoft.EntityFrameworkCore;
 using Xunit;
 using Tooba.Localization.Application;
+using Tooba.Localization.Contracts;
+using Tooba.Localization.Contracts.Errors;
 using Tooba.Localization.Domain;
 using Tooba.Localization.Infrastructure;
 using Tooba.Localization.Infrastructure.Persistence;
@@ -57,8 +59,9 @@ public sealed class LanguageDirectoryPersistenceTests : IDisposable
     public async Task EnsureActiveLanguageCode_rejects_unknown_locale()
     {
         await _directory.BootstrapAsync(CancellationToken.None);
-        await Assert.ThrowsAsync<InvalidOperationException>(() =>
+        var ex = await Assert.ThrowsAsync<Tooba.BuildingBlocks.ContractOperationException>(() =>
             _directory.EnsureActiveLanguageCodeAsync("de-DE", CancellationToken.None));
+        Assert.Equal(LanguageErrorCodes.Inactive, ex.Code);
     }
 
     [Fact]

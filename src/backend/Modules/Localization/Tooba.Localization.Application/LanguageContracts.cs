@@ -1,3 +1,4 @@
+using Tooba.Localization.Contracts.Errors;
 using Tooba.Localization.Domain;
 
 namespace Tooba.Localization.Application;
@@ -69,12 +70,6 @@ public interface ILanguageDirectory
     Task<LanguageSnapshot> UpdateAsync(string code, UpdateLanguageCommand command, CancellationToken cancellationToken);
     Task<LanguageSnapshot> PatchAsync(string code, PatchLanguageCommand command, CancellationToken cancellationToken);
     Task BootstrapAsync(CancellationToken cancellationToken);
-}
-
-/// <summary>بررسی ارجاع زبان در ماژول‌های دیگر.</summary>
-public interface ILanguageReferenceGuard
-{
-    Task<bool> IsReferencedAsync(string languageCode, CancellationToken cancellationToken);
 }
 
 public static class LanguageMappings

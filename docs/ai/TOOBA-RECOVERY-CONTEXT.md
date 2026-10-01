@@ -25,27 +25,27 @@ BRIDGE-WAKE-V1
 Channel: tooba-main
 ```
 
-Latest Accepted TMAR Checkpoint — authoritative (reconciled by TB-TMAR-HOST-CATALOGADAPTERS-AMC-001)
+Latest Accepted TMAR Checkpoint — authoritative (reconciled by TB-TMAR-HOST-LOCALIZATION-AMC-001)
 
 ```text
-Latest-Accepted-Implementation-Wave: TB-TMAR-HOST-CATALOGADAPTERS-AMC-001
-Latest-Accepted-Task: TB-TMAR-HOST-CATALOGADAPTERS-AMC-001
-Implementation-Commit: 49d2388a9cb8b5aae3f68b483356573b90d0a604
+Latest-Accepted-Implementation-Wave: TB-TMAR-HOST-LOCALIZATION-AMC-001
+Latest-Accepted-Task: TB-TMAR-HOST-LOCALIZATION-AMC-001
+Implementation-Commit: PLACEHOLDER_STAMP_AFTER_COMMIT
 Implementation-Commit-Kind: IMPLEMENTATION_COMMIT
-Current-Host-Checkpoint: CatalogAdapters_HOST_ZERO
-Active-Host-Folder: CatalogAdapters
-Host-CatalogAdapters-Directory: ABSENT
-Host-CatalogAdapters-Disposition: CLOSED_HOST_ZERO
-Destination-Adapters: Catalog.Infrastructure.StoreLanding
-Promotion-Contracts-Seam: Promotion.Contracts.Merchandising
-Promotion-Application-Runtime-Ports: ABSENT
-DI-Owner: CatalogModule
-Prior-Accepted-Lineage: TB-TMAR-HOST-ORDER-AMC-001-R1 ; TB-TMAR-HOST-ORDER-AMC-001 ; TB-TMAR-HOST-SETTINGS-AMC-001 ; TB-TMAR-HOST-CACHING-AMC-001-R1
+Current-Host-Checkpoint: Localization_HOST_ZERO
+Active-Host-Folder: Localization
+Host-Localization-Directory: ABSENT
+Host-Localization-Disposition: CLOSED_HOST_ZERO
+Destination-Endpoints: Localization.Endpoints
+Language-Reference-Guard: Content.Infrastructure.Adapters.ContentLanguageReferenceGuard
+Language-Reference-Guard-Contract: Localization.Contracts.ILanguageReferenceGuard
+Message-As-Code-Residue: ZERO
+Prior-Accepted-Lineage: TB-TMAR-HOST-CATALOGADAPTERS-AMC-001 ; TB-TMAR-HOST-ORDER-AMC-001-R1 ; TB-TMAR-HOST-ORDER-AMC-001 ; TB-TMAR-HOST-SETTINGS-AMC-001
 Next-Host-Folder-Started: false
 Next-Host-Folder: NONE_USER_DECISION_REQUIRED
 Stale-Current-Pointer-State: ZERO
-workflowStop: USER_REVIEW_HOST_CATALOGADAPTERS_AMC_001_CLOSED_HOST_ZERO
-Next-Task: USER_REVIEW_HOST_CATALOGADAPTERS_AMC_001_CLOSED_HOST_ZERO
+workflowStop: USER_REVIEW_HOST_LOCALIZATION_AMC_001_CLOSED_HOST_ZERO
+Next-Task: USER_REVIEW_HOST_LOCALIZATION_AMC_001_CLOSED_HOST_ZERO
 Automatic-Next-Implementation-Task: NONE
 ```
 

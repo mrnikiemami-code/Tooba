@@ -1,6 +1,8 @@
 using Microsoft.EntityFrameworkCore;
 using Tooba.BuildingBlocks;
 using Tooba.Localization.Application;
+using Tooba.Localization.Contracts;
+using Tooba.Localization.Contracts.Errors;
 using Tooba.Localization.Domain;
 using Tooba.Localization.Infrastructure.Persistence;
 

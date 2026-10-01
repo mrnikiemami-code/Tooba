@@ -7,5 +7,6 @@
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\Tooba.Localization.Domain\Tooba.Localization.Domain.csproj" />
+    <ProjectReference Include="..\Tooba.Localization.Contracts\Tooba.Localization.Contracts.csproj" />
   </ItemGroup>
 </Project>

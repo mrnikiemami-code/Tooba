@@ -1,17 +1,20 @@
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Routing;
 using Tooba.BuildingBlocks;
-using Tooba.Host.Admin.Access;
+using Tooba.BuildingBlocks.Presentation;
+using Tooba.BuildingBlocks.Results;
 using Tooba.Localization.Application;
-using Tooba.Localization.Domain;
 
-namespace Tooba.Host.Localization;
+namespace Tooba.Localization.Endpoints.Admin;
 
-/// <summary>API Admin برای رجیستری زبان پایدار DB-backed.</summary>
+/// <summary>مرز HTTP رجیستری زبان Admin — Host/Localization HOST_ZERO.</summary>
 public static class LocaleAdminEndpoints
 {
     /// <summary>مسیرهای زبان Admin را ثبت می‌کند.</summary>
-    public static void MapLocaleAdminEndpoints(this WebApplication app)
+    public static void Map(RouteGroupBuilder group)
     {
-        var group = app.MapGroup("/v1/admin/languages");
+        ArgumentNullException.ThrowIfNull(group);
         group.MapGet("/", ListAsync);
         group.MapPost("/", CreateAsync);
         group.MapPut("/{code}", UpdateAsync);
@@ -19,41 +22,39 @@ public static class LocaleAdminEndpoints
     }
 
     private static async Task<IResult> ListAsync(
-        HttpRequest request,
-        CurrentAuthenticatedSession session,
-        ICurrentTenant tenant,
-        IAuthorizationGuard guard,
-        IHostEnvironment environment,
+        HttpContext httpContext,
+        ILocalizationAdminAuthorizer adminAuthorizer,
         ILanguageDirectory directory,
+        ApiResponseFactory api,
         CancellationToken cancellationToken)
     {
         try
         {
-            await AdminPanelAccess.RequireAuthorizedAsync(
-                request, session, tenant, guard, environment, cancellationToken);
+            await adminAuthorizer.RequireAuthorizedAsync(httpContext, cancellationToken);
             var rows = await directory.ListAdminAsync(cancellationToken);
             return Results.Json(rows.Select(ToApiModel));
         }
         catch (PlatformHttpException ex)
         {
-            return Results.Json(new { title = ex.Title, errorCode = ex.ErrorCode }, statusCode: ex.StatusCode);
+            return api.FromPlatformException(ex);
+        }
+        catch (SemanticException ex)
+        {
+            return api.FromSemanticException(ex);
         }
     }
 
     private static async Task<IResult> CreateAsync(
         LanguageWriteRequest body,
-        HttpRequest request,
-        CurrentAuthenticatedSession session,
-        ICurrentTenant tenant,
-        IAuthorizationGuard guard,
-        IHostEnvironment environment,
+        HttpContext httpContext,
+        ILocalizationAdminAuthorizer adminAuthorizer,
         ILanguageDirectory directory,
+        ApiResponseFactory api,
         CancellationToken cancellationToken)
     {
         try
         {
-            await AdminPanelAccess.RequireAuthorizedAsync(
-                request, session, tenant, guard, environment, cancellationToken);
+            await adminAuthorizer.RequireAuthorizedAsync(httpContext, cancellationToken);
             var created = await directory.CreateAsync(new CreateLanguageCommand(
                 body.Code ?? "",
                 body.UrlPrefix ?? "",
@@ -69,29 +70,30 @@ public static class LocaleAdminEndpoints
         }
         catch (PlatformHttpException ex)
         {
-            return Results.Json(new { title = ex.Title, errorCode = ex.ErrorCode }, statusCode: ex.StatusCode);
+            return api.FromPlatformException(ex);
         }
-        catch (InvalidOperationException ex)
+        catch (SemanticException ex)
         {
-            return LanguageError(ex);
+            return api.FromSemanticException(ex);
+        }
+        catch (Exception ex) when (TryMapLanguageFault(ex, out var semantic))
+        {
+            return api.FromSemanticException(semantic);
         }
     }
 
     private static async Task<IResult> UpdateAsync(
         string code,
         LanguageWriteRequest body,
-        HttpRequest request,
-        CurrentAuthenticatedSession session,
-        ICurrentTenant tenant,
-        IAuthorizationGuard guard,
-        IHostEnvironment environment,
+        HttpContext httpContext,
+        ILocalizationAdminAuthorizer adminAuthorizer,
         ILanguageDirectory directory,
+        ApiResponseFactory api,
         CancellationToken cancellationToken)
     {
         try
         {
-            await AdminPanelAccess.RequireAuthorizedAsync(
-                request, session, tenant, guard, environment, cancellationToken);
+            await adminAuthorizer.RequireAuthorizedAsync(httpContext, cancellationToken);
             var updated = await directory.UpdateAsync(code, new UpdateLanguageCommand(
                 body.Code,
                 body.UrlPrefix,
@@ -108,46 +110,56 @@ public static class LocaleAdminEndpoints
         }
         catch (PlatformHttpException ex)
         {
-            return Results.Json(new { title = ex.Title, errorCode = ex.ErrorCode }, statusCode: ex.StatusCode);
+            return api.FromPlatformException(ex);
         }
-        catch (InvalidOperationException ex)
+        catch (SemanticException ex)
         {
-            return LanguageError(ex);
+            return api.FromSemanticException(ex);
+        }
+        catch (Exception ex) when (TryMapLanguageFault(ex, out var semantic))
+        {
+            return api.FromSemanticException(semantic);
         }
     }
 
     private static async Task<IResult> PatchAsync(
         string code,
         LocalePatchRequest body,
-        HttpRequest request,
-        CurrentAuthenticatedSession session,
-        ICurrentTenant tenant,
-        IAuthorizationGuard guard,
-        IHostEnvironment environment,
+        HttpContext httpContext,
+        ILocalizationAdminAuthorizer adminAuthorizer,
         ILanguageDirectory directory,
+        ApiResponseFactory api,
         CancellationToken cancellationToken)
     {
         try
         {
-            await AdminPanelAccess.RequireAuthorizedAsync(
-                request, session, tenant, guard, environment, cancellationToken);
+            await adminAuthorizer.RequireAuthorizedAsync(httpContext, cancellationToken);
             var updated = await directory.PatchAsync(code, new PatchLanguageCommand(body.Active, body.IsDefault, body.SortOrder), cancellationToken);
             var admin = await directory.GetAdminByCodeAsync(updated.Code, cancellationToken);
             return Results.Json(admin is null ? ToApiModel(updated, false) : ToApiModel(admin));
         }
         catch (PlatformHttpException ex)
         {
-            return Results.Json(new { title = ex.Title, errorCode = ex.ErrorCode }, statusCode: ex.StatusCode);
+            return api.FromPlatformException(ex);
         }
-        catch (InvalidOperationException ex)
+        catch (SemanticException ex)
         {
-            return LanguageError(ex);
+            return api.FromSemanticException(ex);
+        }
+        catch (Exception ex) when (TryMapLanguageFault(ex, out var semantic))
+        {
+            return api.FromSemanticException(semantic);
         }
     }
 
-    private static object ToApiModel(LanguageAdminSnapshot row) => ToApiModel(row.Snapshot, row.IsReferenced, row.CanEditCode, row.CanEditUrlPrefix);
+    private static object ToApiModel(LanguageAdminSnapshot row) =>
+        ToApiModel(row.Snapshot, row.IsReferenced, row.CanEditCode, row.CanEditUrlPrefix);
 
-    private static object ToApiModel(LanguageSnapshot row, bool isReferenced, bool? canEditCode = null, bool? canEditUrlPrefix = null) => new
+    private static object ToApiModel(
+        LanguageSnapshot row,
+        bool isReferenced,
+        bool? canEditCode = null,
+        bool? canEditUrlPrefix = null) => new
     {
         languageId = row.LanguageId,
         code = row.Code,
@@ -167,8 +179,24 @@ public static class LocaleAdminEndpoints
         canEditUrlPrefix = canEditUrlPrefix ?? !isReferenced,
     };
 
-    private static IResult LanguageError(InvalidOperationException ex) =>
-        Results.Json(new { title = ex.Message, errorCode = ex.Message }, statusCode: StatusCodes.Status400BadRequest);
+    private static bool TryMapLanguageFault(Exception ex, out SemanticException semantic)
+    {
+        semantic = null!;
+        var code = ex switch
+        {
+            InvalidOperationException ioe => ioe.Message,
+            ContractOperationException coe => coe.Code,
+            _ => null,
+        };
+        if (string.IsNullOrWhiteSpace(code)
+            || !code.StartsWith("localization.language.", StringComparison.Ordinal))
+        {
+            return false;
+        }
+
+        semantic = new SemanticException(new SemanticError(code));
+        return true;
+    }
 }
 
 /// <summary>بدنهٔ PATCH زبان.</summary>

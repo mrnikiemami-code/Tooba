@@ -12,13 +12,19 @@ Canonical Architect ↔ Cursor handoff (recovery-critical)
 
 Latest Accepted TMAR Checkpoint — authoritative
 
-Reconciled by `TB-TMAR-HOST-CATALOGADAPTERS-AMC-001`. Current implementation commit recorded at `lastAcceptedCommit` after PASS.
-- Host/CatalogAdapters = `ABSENT` / `CLOSED_HOST_ZERO`.
+Reconciled by `TB-TMAR-HOST-LOCALIZATION-AMC-001`. Current implementation commit recorded at `lastAcceptedCommit` after PASS.
+- Host/Localization = `ABSENT` / `CLOSED_HOST_ZERO`.
+- Admin languages HTTP = `Localization.Endpoints` (`LocaleAdminEndpoints` + `ILocalizationAdminAuthorizer`).
+- Language reference guard = `Content.Infrastructure.Adapters.ContentLanguageReferenceGuard` via `Localization.Contracts.ILanguageReferenceGuard`.
+- Message-as-code (`errorCode = ex.Message`) = ZERO; faults → `SemanticException` + `ApiResponseFactory`.
+- Current Host checkpoint = `Localization`; workflowStop = `USER_REVIEW_HOST_LOCALIZATION_AMC_001_CLOSED_HOST_ZERO`; automatic next = NONE; stale pointer = ZERO.
+- CatalogAdapters / Order R1 / Order parent / Settings remain accepted historical lineage.
+
+Reconciled by `TB-TMAR-HOST-CATALOGADAPTERS-AMC-001` (HISTORICAL). Host/CatalogAdapters = `ABSENT` / `CLOSED_HOST_ZERO`.
 - Destination adapters = `Catalog.Infrastructure.StoreLanding` (gate + merchandising + shell).
 - Promotion runtime seam = `Promotion.Contracts.Merchandising` (`IMerchandisingCampaignQuery`); Application runtime ports ABSENT.
 - DI owner = `CatalogModule`; Host Program CatalogAdapters regs = ZERO.
-- Current Host checkpoint = `CatalogAdapters`; workflowStop = `USER_REVIEW_HOST_CATALOGADAPTERS_AMC_001_CLOSED_HOST_ZERO`; automatic next = NONE; stale pointer = ZERO.
-- Order R1 / Order parent / Settings / Caching R1 remain accepted historical lineage.
+- Historical stop = `USER_REVIEW_HOST_CATALOGADAPTERS_AMC_001_CLOSED_HOST_ZERO`.
 
 Reconciled by `TB-TMAR-HOST-ORDER-AMC-001-R1` (HISTORICAL). Host/Order = `PRESENT` / `KEEP_AS_THIN_HOST_ORDER_STOREFRONT_ADAPTER` preserved.
 - Host-facing ports = `Order.Contracts.Storefront` (`IOrderStorefrontActor`, `IOrderStorefrontCheckoutIdentityGate`).
