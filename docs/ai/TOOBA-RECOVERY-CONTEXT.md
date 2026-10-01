@@ -30,7 +30,7 @@ Latest Accepted TMAR Checkpoint — authoritative (reconciled by TB-TMAR-HOST-RE
 ```text
 Latest-Accepted-Implementation-Wave: TB-TMAR-HOST-REVIEWS-AMC-001-R1
 Latest-Accepted-Task: TB-TMAR-HOST-REVIEWS-AMC-001-R1
-Implementation-Commit: PLACEHOLDER_STAMP_AFTER_COMMIT
+Implementation-Commit: d3cfe575dbedf78d02f46988250b42fd01513580
 Implementation-Commit-Kind: IMPLEMENTATION_COMMIT
 Current-Host-Checkpoint: Reviews_HOST_ZERO_R1
 Active-Host-Folder: Reviews
