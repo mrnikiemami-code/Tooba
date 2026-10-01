@@ -12,10 +12,13 @@ Canonical Architect ↔ Cursor handoff (recovery-critical)
 
 Latest Accepted TMAR Checkpoint — authoritative
 
-Reconciled by `TB-TMAR-HOST-ADMIN-ACCESS-AMC-001-W2`. Implementation commit recorded at `lastAcceptedCommit` after PASS. Parent Panel CERT preserved. Gate: `USER_DECISION_REQUIRED_NO_AUTOMATIC_NEXT_IMPLEMENTATION_TASK`.
+Reconciled by `TB-TMAR-HOST-ADMIN-ACCESS-AMC-001-W3-CERT`. Implementation lineage remains W2 at `lastAcceptedCommit`. Certification docs/guards only. Parent Panel CERT preserved. Gate: `USER_DECISION_REQUIRED_NO_AUTOMATIC_NEXT_IMPLEMENTATION_TASK`.
 - Dashboard remains Host thin cross-module composition; auth = `IAdminPanelAccess`; success = `Result` + `ApiResponseFactory`.
 - CQRS exception = `HOST_PRESENTATION_COMPOSITION_CQRS_EXCEPTION`; raw Results.Json / local PlatformHttp catch on dashboard = ZERO.
-- Admin/Access W2: Order/Support/Wallet Host authorizers use SemanticException + module EN/FA localization; `order.operation.denied` registered; HostPromotionAdminAuthorizer REMOVED; Host/Admin = 17; Access = 12; dead Host authorizers = 0; authorizer hard-coded runtime titles ZERO; core W1 PRESERVED; workflowStop = `USER_REVIEW_HOST_ADMIN_ACCESS_AMC_001_W2`; automatic next = NONE.
+- Admin/Access W3-CERT: HOST_ADMIN_ACCESS_AMC_CERTIFIED + HOST_ADMIN_FULLY_CERTIFIED; Access=12; Host/Admin=17; Grid HOST_ZERO; Panel/Development preserved; workflowStop = `USER_REVIEW_HOST_ADMIN_ACCESS_AMC_001_W3_CERT`; automatic next = NONE.
+
+Reconciled by `TB-TMAR-HOST-ADMIN-ACCESS-AMC-001-W2` (HISTORICAL). Implementation commit `7a0d79b407c618d503acd1ef9866c519b4e5f070`.
+- Admin/Access W2 authorizer-family hygiene; historical stop = `USER_REVIEW_HOST_ADMIN_ACCESS_AMC_001_W2`.
 
 Reconciled by `TB-TMAR-HOST-ADMIN-ACCESS-AMC-001-W1` (HISTORICAL). Implementation commit `6f06f76631413e94efbcbaeabc8b7218688389d7`.
 - Admin/Access W1: core AdminPanelAccess + HostAdminPanelAccess Foundation SemanticException + EN/FA; historical stop = `USER_REVIEW_HOST_ADMIN_ACCESS_AMC_001_W1`.

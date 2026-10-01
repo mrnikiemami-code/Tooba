@@ -1,4 +1,4 @@
-﻿# Tooba — Recovery Context
+# Tooba — Recovery Context
 
 Canonical repository:
 
@@ -25,31 +25,28 @@ BRIDGE-WAKE-V1
 Channel: tooba-main
 ```
 
-Latest Accepted TMAR Checkpoint — authoritative (reconciled by TB-TMAR-HOST-ADMIN-ACCESS-AMC-001-W2)
+Latest Accepted TMAR Checkpoint — authoritative (reconciled by TB-TMAR-HOST-ADMIN-ACCESS-AMC-001-W3-CERT)
 
 ```text
 Latest-Accepted-Implementation-Wave: TB-TMAR-HOST-ADMIN-ACCESS-AMC-001-W2
-Latest-Accepted-Task: TB-TMAR-HOST-ADMIN-ACCESS-AMC-001-W2
+Latest-Accepted-Task: TB-TMAR-HOST-ADMIN-ACCESS-AMC-001-W3-CERT
 Implementation-Commit: 7a0d79b407c618d503acd1ef9866c519b4e5f070
 Implementation-Commit-Kind: IMPLEMENTATION_COMMIT
-Mode: AUTHORIZER_FAMILY_HYGIENE
-Authorizer-Family-Hygiene: COMPLETE
-Authorizer-Hardcoded-Runtime-Text: ZERO
-HostPromotionAdminAuthorizer: REMOVED
-Dead-Host-Authorizer-Count: 0
-Active-Host-Authorizer-Adapter-Count: 10
+Mode: HOST_ADMIN_ACCESS_CERTIFIED_WHOLE_ADMIN_CLOSED
+Access-Certification-State: HOST_ADMIN_ACCESS_AMC_CERTIFIED
+Core-Access-State: PLATFORM_ACCESS_SEAM_CERTIFIED
+Authorizer-Family-State: THIN_HOST_AUTH_ADAPTERS_CERTIFIED
+Whole-Host-Admin-State: HOST_ADMIN_FULLY_CERTIFIED
+Admin-Grid-State: HOST_ZERO_CERTIFIED
+Panel-State: PANEL_KEEP_CERTIFIED_PRESERVED
+Development-State: ADMIN_DEVELOPMENT_DEV_CONTEXT_CERTIFIED_PRESERVED
 Access-Production-File-Count: 12
 Host-Admin-Recursive-Files: 17
-Host-Admin-Grid: ABSENT_HOST_ZERO
-Core-W1-State: PRESERVED
-Parent-Panel-Certification: PRESERVED
-Admin-Development-Certification: PRESERVED
-Party-Sellers-Certification: PRESERVED
 Current-Host-Checkpoint: Admin/Access
 Next-Host-Folder-Started: false
 Stale-Current-Pointer-State: ZERO
-workflowStop: USER_REVIEW_HOST_ADMIN_ACCESS_AMC_001_W2
-Next-Task: USER_REVIEW_HOST_ADMIN_ACCESS_AMC_001_W2
+workflowStop: USER_REVIEW_HOST_ADMIN_ACCESS_AMC_001_W3_CERT
+Next-Task: USER_REVIEW_HOST_ADMIN_ACCESS_AMC_001_W3_CERT
 Next-Task-Gate: USER_DECISION_REQUIRED_NO_AUTOMATIC_NEXT_IMPLEMENTATION_TASK
 Automatic-Next-Implementation-Task: NONE
 ```

@@ -5,13 +5,14 @@ namespace Tooba.Host.Tests.Architecture;
 
 /// <summary>
 /// TB-TMAR-HOST-ADMIN-CANON-010-FINAL-CERT — durable certification guard for the whole recursive
-/// Host/Admin tree. Host/Admin is CERTIFIED as a canonical Host platform boundary: it may hold only
-/// platform panel authorization, thin module endpoint-authorizer adapters, cross-module admin panel
-/// composition through lawful Contracts/seams, the generic admin grid HTTP boundary, and the
-/// Development-only admin bootstrap.
+/// Host/Admin tree. Host/Admin is CERTIFIED (HOST_ADMIN_FULLY_CERTIFIED via Access W3-CERT) as a
+/// canonical Host platform boundary: it may hold only platform panel authorization, thin module
+/// endpoint-authorizer adapters, cross-module admin panel composition through lawful Contracts/seams,
+/// and the Development-only admin bootstrap. Admin/Grid is ABSENT / HOST_ZERO (not part of this tree).
+/// Exact recursive production file count = 17 (Access 12 + Development 2 + Panel 3).
 /// </summary>
 /// <remarks>
-/// Service-locator posture: <c>HttpContext.RequestServices</c> is ZERO across all 15 files. The
+/// Service-locator posture: <c>HttpContext.RequestServices</c> is ZERO across all 17 files. The
 /// explicit <c>IServiceProvider provider</c> parameter of the Development bootstrap is the canonical
 /// repo DI composition pattern accepted by CANON-007 and is therefore the ONLY place where
 /// <c>GetRequiredService</c> may appear.
@@ -100,7 +101,7 @@ public sealed class HostAdminCanonicalCertificationGuardTests
     // ---------------------------------------------------------------------
 
     [Fact]
-    public void Certified_structure_is_exactly_18_recursive_files_with_zero_flat_root()
+    public void Certified_structure_is_exactly_17_recursive_files_with_zero_flat_root()
     {
         var root = AdminRoot();
         Assert.Empty(Directory.GetFiles(root, "*.cs", SearchOption.TopDirectoryOnly));
