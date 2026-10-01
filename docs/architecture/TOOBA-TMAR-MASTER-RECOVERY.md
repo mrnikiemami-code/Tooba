@@ -12,13 +12,18 @@ Canonical Architect ↔ Cursor handoff (recovery-critical)
 
 Latest Accepted TMAR Checkpoint — authoritative
 
-Reconciled by `TB-TMAR-HOST-LOCALIZATION-AMC-001`. Current implementation commit recorded at `lastAcceptedCommit` after PASS.
-- Host/Localization = `ABSENT` / `CLOSED_HOST_ZERO`.
+Reconciled by `TB-TMAR-HOST-LOCALIZATION-AMC-001-R1`. Current implementation commit recorded at `lastAcceptedCommit` after PASS.
+- Host/Localization = `ABSENT` / `CLOSED_HOST_ZERO` preserved.
+- Failure transport = `SemanticException` + `SemanticError(LanguageErrorCodes.*)`; message-text classification = ZERO.
+- Endpoints map only `PlatformHttpException` / `SemanticException` via `ApiResponseFactory`; `TryMapLanguageFault` removed; unknown exceptions propagate.
+- Language reference guard = `Content.Infrastructure.Adapters.ContentLanguageReferenceGuard` via `Localization.Contracts.ILanguageReferenceGuard`.
+- Current Host checkpoint = `Localization`; workflowStop = `USER_REVIEW_HOST_LOCALIZATION_AMC_001_R1_CLOSED_HOST_ZERO`; automatic next = NONE; stale pointer = ZERO.
+- Parent Localization AMC / CatalogAdapters / Order R1 / Order parent / Settings remain accepted historical lineage.
+
+Reconciled by `TB-TMAR-HOST-LOCALIZATION-AMC-001` (HISTORICAL). Host/Localization = `ABSENT` / `CLOSED_HOST_ZERO`.
 - Admin languages HTTP = `Localization.Endpoints` (`LocaleAdminEndpoints` + `ILocalizationAdminAuthorizer`).
 - Language reference guard = `Content.Infrastructure.Adapters.ContentLanguageReferenceGuard` via `Localization.Contracts.ILanguageReferenceGuard`.
-- Message-as-code (`errorCode = ex.Message`) = ZERO; faults → `SemanticException` + `ApiResponseFactory`.
-- Current Host checkpoint = `Localization`; workflowStop = `USER_REVIEW_HOST_LOCALIZATION_AMC_001_CLOSED_HOST_ZERO`; automatic next = NONE; stale pointer = ZERO.
-- CatalogAdapters / Order R1 / Order parent / Settings remain accepted historical lineage.
+- Historical stop = `USER_REVIEW_HOST_LOCALIZATION_AMC_001_CLOSED_HOST_ZERO`.
 
 Reconciled by `TB-TMAR-HOST-CATALOGADAPTERS-AMC-001` (HISTORICAL). Host/CatalogAdapters = `ABSENT` / `CLOSED_HOST_ZERO`.
 - Destination adapters = `Catalog.Infrastructure.StoreLanding` (gate + merchandising + shell).

@@ -62,7 +62,7 @@ public sealed class Language
         ValidateIdentity(code, urlPrefix, displayName, nativeName, culture);
         if (!isActive && isDefault)
         {
-            throw new InvalidOperationException(LanguageErrorCodes.DefaultMustBeActive);
+            throw new SemanticException(new SemanticError(LanguageErrorCodes.DefaultMustBeActive));
         }
 
         return new Language
@@ -97,7 +97,7 @@ public sealed class Language
         ValidateIdentity(Code, UrlPrefix, displayName, nativeName, culture);
         if (!isActive && isDefault)
         {
-            throw new InvalidOperationException(LanguageErrorCodes.DefaultMustBeActive);
+            throw new SemanticException(new SemanticError(LanguageErrorCodes.DefaultMustBeActive));
         }
 
         DisplayName = displayName.Trim();
@@ -123,7 +123,7 @@ public sealed class Language
     {
         if (isDefault && !IsActive)
         {
-            throw new InvalidOperationException(LanguageErrorCodes.DefaultMustBeActive);
+            throw new SemanticException(new SemanticError(LanguageErrorCodes.DefaultMustBeActive));
         }
 
         IsDefault = isDefault;
@@ -134,7 +134,7 @@ public sealed class Language
     {
         if (!isActive && IsDefault)
         {
-            throw new InvalidOperationException(LanguageErrorCodes.DefaultMustBeActive);
+            throw new SemanticException(new SemanticError(LanguageErrorCodes.DefaultMustBeActive));
         }
 
         IsActive = isActive;
@@ -154,27 +154,27 @@ public sealed class Language
     {
         if (string.IsNullOrWhiteSpace(code) || code.Trim().Length > CodeMaxLength)
         {
-            throw new InvalidOperationException(LanguageErrorCodes.InvalidCode);
+            throw new SemanticException(new SemanticError(LanguageErrorCodes.InvalidCode));
         }
 
         if (string.IsNullOrWhiteSpace(urlPrefix) || urlPrefix.Trim().Length > UrlPrefixMaxLength)
         {
-            throw new InvalidOperationException(LanguageErrorCodes.InvalidUrlPrefix);
+            throw new SemanticException(new SemanticError(LanguageErrorCodes.InvalidUrlPrefix));
         }
 
         if (string.IsNullOrWhiteSpace(displayName) || displayName.Trim().Length > DisplayNameMaxLength)
         {
-            throw new InvalidOperationException(LanguageErrorCodes.InvalidDisplayName);
+            throw new SemanticException(new SemanticError(LanguageErrorCodes.InvalidDisplayName));
         }
 
         if (string.IsNullOrWhiteSpace(nativeName) || nativeName.Trim().Length > NativeNameMaxLength)
         {
-            throw new InvalidOperationException(LanguageErrorCodes.InvalidNativeName);
+            throw new SemanticException(new SemanticError(LanguageErrorCodes.InvalidNativeName));
         }
 
         if (string.IsNullOrWhiteSpace(culture) || culture.Trim().Length > CultureMaxLength)
         {
-            throw new InvalidOperationException(LanguageErrorCodes.InvalidCulture);
+            throw new SemanticException(new SemanticError(LanguageErrorCodes.InvalidCulture));
         }
     }
 }

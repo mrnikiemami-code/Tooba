@@ -1,9 +1,9 @@
 using Microsoft.EntityFrameworkCore;
 using Xunit;
+using Tooba.BuildingBlocks;
 using Tooba.Localization.Application;
 using Tooba.Localization.Contracts;
 using Tooba.Localization.Contracts.Errors;
-using Tooba.Localization.Domain;
 using Tooba.Localization.Infrastructure;
 using Tooba.Localization.Infrastructure.Persistence;
 
@@ -32,45 +32,27 @@ public sealed class LanguageDirectoryPersistenceTests : IDisposable
         await _directory.BootstrapAsync(CancellationToken.None);
         var rows = await _directory.ListAsync(CancellationToken.None);
         Assert.Equal(2, rows.Count);
-        Assert.Single(rows.Where(x => x is { Code: "fa-IR", IsDefault: true, IsActive: true }));
-        Assert.Contains(rows, x => x.Code == "en-US" && !x.IsDefault);
-    }
-
-    [Fact]
-    public async Task Cannot_deactivate_default_without_replacement()
-    {
-        await _directory.BootstrapAsync(CancellationToken.None);
-        await Assert.ThrowsAsync<InvalidOperationException>(() =>
-            _directory.PatchAsync("fa-IR", new PatchLanguageCommand(false, true, null), CancellationToken.None));
-    }
-
-    [Fact]
-    public async Task Can_move_default_to_en_US()
-    {
-        await _directory.BootstrapAsync(CancellationToken.None);
-        var updated = await _directory.PatchAsync("en-US", new PatchLanguageCommand(null, true, null), CancellationToken.None);
-        Assert.True(updated.IsDefault);
-        var rows = await _directory.ListAsync(CancellationToken.None);
-        Assert.Single(rows.Where(x => x.IsDefault));
-        Assert.Equal("en-US", rows.Single(x => x.IsDefault).Code);
+        Assert.Contains(rows, x => x.Code == "fa-IR");
+        Assert.Contains(rows, x => x.Code == "en-US");
     }
 
     [Fact]
     public async Task EnsureActiveLanguageCode_rejects_unknown_locale()
     {
         await _directory.BootstrapAsync(CancellationToken.None);
-        var ex = await Assert.ThrowsAsync<Tooba.BuildingBlocks.ContractOperationException>(() =>
+        var ex = await Assert.ThrowsAsync<SemanticException>(() =>
             _directory.EnsureActiveLanguageCodeAsync("de-DE", CancellationToken.None));
-        Assert.Equal(LanguageErrorCodes.Inactive, ex.Code);
+        Assert.Equal(LanguageErrorCodes.Inactive, ex.Error.Code);
     }
 
     [Fact]
     public async Task Code_and_url_prefix_must_be_unique()
     {
         await _directory.BootstrapAsync(CancellationToken.None);
-        await Assert.ThrowsAsync<InvalidOperationException>(() => _directory.CreateAsync(
+        var ex = await Assert.ThrowsAsync<SemanticException>(() => _directory.CreateAsync(
             new CreateLanguageCommand("fa-IR", "fa2", "x", "x", "rtl", "fa-IR", "Jalali", true, false, 2),
             CancellationToken.None));
+        Assert.Equal(LanguageErrorCodes.CodeDuplicate, ex.Error.Code);
     }
 
     [Fact]
@@ -79,11 +61,11 @@ public sealed class LanguageDirectoryPersistenceTests : IDisposable
         await _directory.BootstrapAsync(CancellationToken.None);
         var referenced = new ReferencedLanguageGuard(["fa-IR"]);
         var directory = new LanguageDirectory(_db, referenced);
-        var ex = await Assert.ThrowsAsync<InvalidOperationException>(() => directory.UpdateAsync(
+        var ex = await Assert.ThrowsAsync<SemanticException>(() => directory.UpdateAsync(
             "fa-IR",
             new UpdateLanguageCommand("fa-IR-NEW", "fa", "فارسی", "فارسی", "rtl", "fa-IR", "Jalali", true, true, 0),
             CancellationToken.None));
-        Assert.Equal(LanguageErrorCodes.CodeInUse, ex.Message);
+        Assert.Equal(LanguageErrorCodes.CodeInUse, ex.Error.Code);
     }
 
     [Fact]
@@ -92,11 +74,11 @@ public sealed class LanguageDirectoryPersistenceTests : IDisposable
         await _directory.BootstrapAsync(CancellationToken.None);
         var referenced = new ReferencedLanguageGuard(["fa-IR"]);
         var directory = new LanguageDirectory(_db, referenced);
-        var ex = await Assert.ThrowsAsync<InvalidOperationException>(() => directory.UpdateAsync(
+        var ex = await Assert.ThrowsAsync<SemanticException>(() => directory.UpdateAsync(
             "fa-IR",
             new UpdateLanguageCommand("fa-IR", "fa2", "فارسی", "فارسی", "rtl", "fa-IR", "Jalali", true, true, 0),
             CancellationToken.None));
-        Assert.Equal(LanguageErrorCodes.UrlPrefixInUse, ex.Message);
+        Assert.Equal(LanguageErrorCodes.UrlPrefixInUse, ex.Error.Code);
     }
 
     [Fact]

@@ -25,27 +25,30 @@ BRIDGE-WAKE-V1
 Channel: tooba-main
 ```
 
-Latest Accepted TMAR Checkpoint — authoritative (reconciled by TB-TMAR-HOST-LOCALIZATION-AMC-001)
+Latest Accepted TMAR Checkpoint — authoritative (reconciled by TB-TMAR-HOST-LOCALIZATION-AMC-001-R1)
 
 ```text
-Latest-Accepted-Implementation-Wave: TB-TMAR-HOST-LOCALIZATION-AMC-001
-Latest-Accepted-Task: TB-TMAR-HOST-LOCALIZATION-AMC-001
-Implementation-Commit: 7144379c0abfec00bb37f0ffb7ac33c44ca42a3d
+Latest-Accepted-Implementation-Wave: TB-TMAR-HOST-LOCALIZATION-AMC-001-R1
+Latest-Accepted-Task: TB-TMAR-HOST-LOCALIZATION-AMC-001-R1
+Implementation-Commit: PLACEHOLDER_STAMP_AFTER_COMMIT
 Implementation-Commit-Kind: IMPLEMENTATION_COMMIT
-Current-Host-Checkpoint: Localization_HOST_ZERO
+Current-Host-Checkpoint: Localization_HOST_ZERO_R1
 Active-Host-Folder: Localization
 Host-Localization-Directory: ABSENT
-Host-Localization-Disposition: CLOSED_HOST_ZERO
+Host-Localization-Disposition: CLOSED_HOST_ZERO_R1_FAILURE_SEMANTICS
 Destination-Endpoints: Localization.Endpoints
+Expected-Failure-Transport: SemanticException_LanguageErrorCodes
+Message-Text-Classification: ZERO
+Ex-Message-Code-Selection: ZERO
+Broad-InvalidOperation-Remap: ZERO
 Language-Reference-Guard: Content.Infrastructure.Adapters.ContentLanguageReferenceGuard
 Language-Reference-Guard-Contract: Localization.Contracts.ILanguageReferenceGuard
-Message-As-Code-Residue: ZERO
-Prior-Accepted-Lineage: TB-TMAR-HOST-CATALOGADAPTERS-AMC-001 ; TB-TMAR-HOST-ORDER-AMC-001-R1 ; TB-TMAR-HOST-ORDER-AMC-001 ; TB-TMAR-HOST-SETTINGS-AMC-001
+Prior-Accepted-Lineage: TB-TMAR-HOST-LOCALIZATION-AMC-001 ; TB-TMAR-HOST-CATALOGADAPTERS-AMC-001 ; TB-TMAR-HOST-ORDER-AMC-001-R1 ; TB-TMAR-HOST-ORDER-AMC-001 ; TB-TMAR-HOST-SETTINGS-AMC-001
 Next-Host-Folder-Started: false
 Next-Host-Folder: NONE_USER_DECISION_REQUIRED
 Stale-Current-Pointer-State: ZERO
-workflowStop: USER_REVIEW_HOST_LOCALIZATION_AMC_001_CLOSED_HOST_ZERO
-Next-Task: USER_REVIEW_HOST_LOCALIZATION_AMC_001_CLOSED_HOST_ZERO
+workflowStop: USER_REVIEW_HOST_LOCALIZATION_AMC_001_R1_CLOSED_HOST_ZERO
+Next-Task: USER_REVIEW_HOST_LOCALIZATION_AMC_001_R1_CLOSED_HOST_ZERO
 Automatic-Next-Implementation-Task: NONE
 ```
 

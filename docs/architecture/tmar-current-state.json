@@ -3,24 +3,24 @@
   "executionMode": "BACKEND_ONLY_UNTIL_EXPLICIT_RELEASE",
   "frontendFrozen": true,
   "checkoutState": "PAUSED_AT_SAFE_W5_CHECKPOINT",
-  "lastAcceptedTask": "TB-TMAR-HOST-LOCALIZATION-AMC-001",
-  "lastAcceptedCommit": "7144379c0abfec00bb37f0ffb7ac33c44ca42a3d",
+  "lastAcceptedTask": "TB-TMAR-HOST-LOCALIZATION-AMC-001-R1",
+  "lastAcceptedCommit": "PLACEHOLDER_STAMP_AFTER_COMMIT",
   "lastAcceptedCommitKind": "IMPLEMENTATION_COMMIT",
   "lastAcceptedResultEvidenceCommit": "b898135dc3e0c7ef4ea5ecb56f2a5003baebdf43",
   "lastAcceptedResultEvidenceCommitKind": "RESULT_EVIDENCE_DOCS_STAMP_NOT_IMPLEMENTATION",
   "lastAcceptedSoTStamp": "b898135dc3e0c7ef4ea5ecb56f2a5003baebdf43",
   "lastAcceptedSoTStampKind": "RESULT_EVIDENCE_DOCS_STAMP",
-  "lastAcceptedCommitSemantics": "lastAcceptedTask is TB-TMAR-HOST-LOCALIZATION-AMC-001 IMPLEMENTATION commit. Host/Localization ABSENT HOST_ZERO; Localization.Endpoints owns admin languages; Content.Infrastructure owns language reference guard via Localization.Contracts.",
-  "lastAcceptedNote": "Localization AMC: Host/Localization ABSENT CLOSED_HOST_ZERO; USER_REVIEW before next Host AMC.",
-  "latestAcceptedImplementationWave": "TB-TMAR-HOST-LOCALIZATION-AMC-001",
+  "lastAcceptedCommitSemantics": "lastAcceptedTask is TB-TMAR-HOST-LOCALIZATION-AMC-001-R1 IMPLEMENTATION commit. Host/Localization HOST_ZERO preserved; message-text classification ZERO; expected faults SemanticException+LanguageErrorCodes.",
+  "lastAcceptedNote": "Localization AMC R1: failure-semantics repair CLOSED; USER_REVIEW before next Host AMC.",
+  "latestAcceptedImplementationWave": "TB-TMAR-HOST-LOCALIZATION-AMC-001-R1",
   "currentHostCheckpoint": "Localization",
   "nextHostFolderStarted": false,
   "nextHostFolder": null,
   "staleCurrentPointerState": "ZERO",
-  "nextTask": "USER_REVIEW_HOST_LOCALIZATION_AMC_001_CLOSED_HOST_ZERO",
+  "nextTask": "USER_REVIEW_HOST_LOCALIZATION_AMC_001_R1_CLOSED_HOST_ZERO",
   "nextTaskGate": "USER_DECISION_REQUIRED_NO_AUTOMATIC_NEXT_IMPLEMENTATION_TASK",
   "nextTaskState": "USER_DECISION_REQUIRED",
-  "workflowStop": "USER_REVIEW_HOST_LOCALIZATION_AMC_001_CLOSED_HOST_ZERO",
+  "workflowStop": "USER_REVIEW_HOST_LOCALIZATION_AMC_001_R1_CLOSED_HOST_ZERO",
   "automaticNextImplementationTask": "NONE",
   "hostGridAmc": {
     "task": "TB-TMAR-HOST-GRID-AMC-001",
@@ -975,15 +975,15 @@
   },
   "currentHostEvacuation": {
     "activeModule": "Localization",
-    "activeModuleState": "LOCALIZATION_CLOSED_HOST_ZERO_USER_REVIEW_REQUIRED",
+    "activeModuleState": "LOCALIZATION_CLOSED_HOST_ZERO_R1_USER_REVIEW_REQUIRED",
     "currentHostEvacuationState": "RECONCILED_NOT_HISTORICAL_ADDRESSBOOK",
     "workflow": "HOST_FIRST_FOLDER_BY_FOLDER",
-    "currentTask": "TB-TMAR-HOST-LOCALIZATION-AMC-001",
-    "currentPhase": "LOCALIZATION_AMC_CLOSED_HOST_ZERO",
-    "workflowStop": "USER_REVIEW_HOST_LOCALIZATION_AMC_001_CLOSED_HOST_ZERO",
+    "currentTask": "TB-TMAR-HOST-LOCALIZATION-AMC-001-R1",
+    "currentPhase": "LOCALIZATION_AMC_R1_CLOSED_HOST_ZERO",
+    "workflowStop": "USER_REVIEW_HOST_LOCALIZATION_AMC_001_R1_CLOSED_HOST_ZERO",
     "automaticNextImplementationTask": "NONE",
-    "lastReconciledRecoveryTask": "TB-TMAR-HOST-LOCALIZATION-AMC-001",
-    "latestAcceptedImplementationWave": "TB-TMAR-HOST-LOCALIZATION-AMC-001",
+    "lastReconciledRecoveryTask": "TB-TMAR-HOST-LOCALIZATION-AMC-001-R1",
+    "latestAcceptedImplementationWave": "TB-TMAR-HOST-LOCALIZATION-AMC-001-R1",
     "currentHostCheckpoint": "Localization",
     "historicalNextHostFolderPointer": "NONE_USER_DECISION_REQUIRED",
     "nextHostFolderStarted": false,
@@ -5054,17 +5054,22 @@
   },
   "hostEvacuationProgress": {
     "activeModule": "Localization",
-    "activeModuleState": "LOCALIZATION_CLOSED_HOST_ZERO_USER_REVIEW_REQUIRED",
+    "activeModuleState": "LOCALIZATION_CLOSED_HOST_ZERO_R1_USER_REVIEW_REQUIRED",
     "blockedReason": null,
     "nextAllowedTaskFamily": "HOST_SLICE_OR_FOLDER_AMC",
-    "note": "Host Localization AMC: Host/Localization ABSENT HOST_ZERO; Localization.Endpoints + Content.Infrastructure reference guard; USER_REVIEW required."
+    "note": "Host Localization AMC R1: message-text failure classification ZERO; SemanticException transport; USER_REVIEW required."
   },
   "nextAllowedTask": {
     "kind": "USER_REVIEW_REQUIRED",
     "blockerOwner": "USER",
-    "note": "Do not start the next Host AMC until USER reviews Localization AMC HOST_ZERO closure."
+    "note": "Do not start the next Host AMC until USER reviews Localization AMC R1 HOST_ZERO closure."
   },
   "progressLedger": [
+    {
+      "taskId": "TB-TMAR-HOST-LOCALIZATION-AMC-001-R1",
+      "status": "CLOSED_HOST_ZERO_R1_FAILURE_SEMANTICS",
+      "note": "Message-text classification ZERO; SemanticException+LanguageErrorCodes; USER_REVIEW before next Host AMC."
+    },
     {
       "taskId": "TB-TMAR-HOST-LOCALIZATION-AMC-001",
       "status": "CLOSED_HOST_ZERO",
@@ -5326,5 +5331,20 @@
     "evidenceRoot": "docs/evidence/TB-TMAR-HOST-LOCALIZATION-AMC-001",
     "workflowStop": "USER_REVIEW_HOST_LOCALIZATION_AMC_001_CLOSED_HOST_ZERO",
     "note": "Implementation commit 7144379c0abfec00bb37f0ffb7ac33c44ca42a3d; Host Localization HOST_ZERO closed."
+  },
+  "hostLocalizationAmcR1": {
+    "taskId": "TB-TMAR-HOST-LOCALIZATION-AMC-001-R1",
+    "parentTaskId": "TB-TMAR-HOST-LOCALIZATION-AMC-001",
+    "status": "CLOSED_HOST_ZERO_R1_FAILURE_SEMANTICS",
+    "classification": "HOST_ZERO_PRESERVED_FAILURE_SEMANTICS",
+    "messageTextClassification": "ZERO",
+    "exMessageCodeSelection": "ZERO",
+    "broadInvalidOperationRemap": "ZERO",
+    "expectedFailureTransport": "SemanticException_LanguageErrorCodes",
+    "unknownExceptionPropagation": "YES",
+    "durableGuard": "HostLocalizationAmcGuardTests",
+    "evidenceRoot": "docs/evidence/TB-TMAR-HOST-LOCALIZATION-AMC-001-R1",
+    "workflowStop": "USER_REVIEW_HOST_LOCALIZATION_AMC_001_R1_CLOSED_HOST_ZERO",
+    "note": "Implementation commit PLACEHOLDER_STAMP_AFTER_COMMIT; Localization AMC R1 failure-semantics CLOSED."
   }
 }

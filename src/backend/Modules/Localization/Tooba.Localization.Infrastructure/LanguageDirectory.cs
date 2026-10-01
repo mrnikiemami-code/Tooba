@@ -67,7 +67,7 @@ public sealed class LanguageDirectory : ILanguageDirectory
             .FirstOrDefaultAsync(x => x.Code == normalized, cancellationToken);
         if (row is null || !row.IsActive)
         {
-            throw new ContractOperationException(LanguageErrorCodes.Inactive);
+            throw new SemanticException(new SemanticError(LanguageErrorCodes.Inactive));
         }
     }
 
@@ -78,12 +78,12 @@ public sealed class LanguageDirectory : ILanguageDirectory
         var urlPrefix = Language.NormalizeUrlPrefix(command.UrlPrefix);
         if (await _db.Languages.AnyAsync(x => x.Code == code, cancellationToken))
         {
-            throw new InvalidOperationException(LanguageErrorCodes.CodeDuplicate);
+            throw new SemanticException(new SemanticError(LanguageErrorCodes.CodeDuplicate));
         }
 
         if (await _db.Languages.AnyAsync(x => x.UrlPrefix == urlPrefix, cancellationToken))
         {
-            throw new InvalidOperationException(LanguageErrorCodes.UrlPrefixDuplicate);
+            throw new SemanticException(new SemanticError(LanguageErrorCodes.UrlPrefixDuplicate));
         }
 
         var language = Language.Create(
@@ -115,7 +115,7 @@ public sealed class LanguageDirectory : ILanguageDirectory
         CancellationToken cancellationToken)
     {
         var language = await FindByCodeTrackedAsync(code, cancellationToken)
-            ?? throw new InvalidOperationException(LanguageErrorCodes.NotFound);
+            ?? throw new SemanticException(new SemanticError(LanguageErrorCodes.NotFound));
         var referenced = await _referenceGuard.IsReferencedAsync(language.Code, cancellationToken);
         var nextCode = string.IsNullOrWhiteSpace(command.Code)
             ? language.Code
@@ -128,12 +128,12 @@ public sealed class LanguageDirectory : ILanguageDirectory
         {
             if (!string.Equals(nextCode, language.Code, StringComparison.Ordinal))
             {
-                throw new InvalidOperationException(LanguageErrorCodes.CodeInUse);
+                throw new SemanticException(new SemanticError(LanguageErrorCodes.CodeInUse));
             }
 
             if (!string.Equals(nextUrlPrefix, language.UrlPrefix, StringComparison.Ordinal))
             {
-                throw new InvalidOperationException(LanguageErrorCodes.UrlPrefixInUse);
+                throw new SemanticException(new SemanticError(LanguageErrorCodes.UrlPrefixInUse));
             }
         }
         else if (!string.Equals(nextCode, language.Code, StringComparison.Ordinal)
@@ -142,13 +142,13 @@ public sealed class LanguageDirectory : ILanguageDirectory
             if (!string.Equals(nextCode, language.Code, StringComparison.Ordinal)
                 && await _db.Languages.AnyAsync(x => x.Code == nextCode && x.LanguageId != language.LanguageId, cancellationToken))
             {
-                throw new InvalidOperationException(LanguageErrorCodes.CodeDuplicate);
+                throw new SemanticException(new SemanticError(LanguageErrorCodes.CodeDuplicate));
             }
 
             if (!string.Equals(nextUrlPrefix, language.UrlPrefix, StringComparison.Ordinal)
                 && await _db.Languages.AnyAsync(x => x.UrlPrefix == nextUrlPrefix && x.LanguageId != language.LanguageId, cancellationToken))
             {
-                throw new InvalidOperationException(LanguageErrorCodes.UrlPrefixDuplicate);
+                throw new SemanticException(new SemanticError(LanguageErrorCodes.UrlPrefixDuplicate));
             }
 
             var nowIdentity = DateTimeOffset.UtcNow;
@@ -179,7 +179,7 @@ public sealed class LanguageDirectory : ILanguageDirectory
     public async Task<LanguageSnapshot> PatchAsync(string code, PatchLanguageCommand command, CancellationToken cancellationToken)
     {
         var language = await FindByCodeTrackedAsync(code, cancellationToken)
-            ?? throw new InvalidOperationException(LanguageErrorCodes.NotFound);
+            ?? throw new SemanticException(new SemanticError(LanguageErrorCodes.NotFound));
         var now = DateTimeOffset.UtcNow;
         var nextActive = command.IsActive ?? language.IsActive;
         var nextDefault = command.IsDefault ?? language.IsDefault;
@@ -247,7 +247,7 @@ public sealed class LanguageDirectory : ILanguageDirectory
         var activeCount = await _db.Languages.CountAsync(x => x.IsActive, cancellationToken);
         if (activeCount == 0)
         {
-            throw new InvalidOperationException(LanguageErrorCodes.AtLeastOneActive);
+            throw new SemanticException(new SemanticError(LanguageErrorCodes.AtLeastOneActive));
         }
 
         var defaultCount = await _db.Languages.CountAsync(
@@ -255,7 +255,7 @@ public sealed class LanguageDirectory : ILanguageDirectory
             cancellationToken);
         if (defaultCount != 1)
         {
-            throw new InvalidOperationException(LanguageErrorCodes.ExactlyOneDefault);
+            throw new SemanticException(new SemanticError(LanguageErrorCodes.ExactlyOneDefault));
         }
     }
 }

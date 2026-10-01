@@ -1,3 +1,4 @@
+using Tooba.BuildingBlocks;
 using Tooba.Localization.Contracts.Errors;
 using Tooba.Localization.Domain;
 
@@ -109,7 +110,7 @@ public static class LanguageMappings
             return LanguageDirection.Ltr;
         }
 
-        throw new InvalidOperationException(LanguageErrorCodes.InvalidDirection);
+        throw new SemanticException(new SemanticError(LanguageErrorCodes.InvalidDirection));
     }
 
     public static LanguageCalendarPolicy ParseCalendar(string? raw)
@@ -127,6 +128,6 @@ public static class LanguageMappings
             return LanguageCalendarPolicy.Gregorian;
         }
 
-        throw new InvalidOperationException(LanguageErrorCodes.InvalidCalendar);
+        throw new SemanticException(new SemanticError(LanguageErrorCodes.InvalidCalendar));
     }
 }

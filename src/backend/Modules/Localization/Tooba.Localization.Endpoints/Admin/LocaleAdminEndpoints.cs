@@ -3,7 +3,6 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using Tooba.BuildingBlocks;
 using Tooba.BuildingBlocks.Presentation;
-using Tooba.BuildingBlocks.Results;
 using Tooba.Localization.Application;
 
 namespace Tooba.Localization.Endpoints.Admin;
@@ -76,10 +75,6 @@ public static class LocaleAdminEndpoints
         {
             return api.FromSemanticException(ex);
         }
-        catch (Exception ex) when (TryMapLanguageFault(ex, out var semantic))
-        {
-            return api.FromSemanticException(semantic);
-        }
     }
 
     private static async Task<IResult> UpdateAsync(
@@ -116,10 +111,6 @@ public static class LocaleAdminEndpoints
         {
             return api.FromSemanticException(ex);
         }
-        catch (Exception ex) when (TryMapLanguageFault(ex, out var semantic))
-        {
-            return api.FromSemanticException(semantic);
-        }
     }
 
     private static async Task<IResult> PatchAsync(
@@ -145,10 +136,6 @@ public static class LocaleAdminEndpoints
         catch (SemanticException ex)
         {
             return api.FromSemanticException(ex);
-        }
-        catch (Exception ex) when (TryMapLanguageFault(ex, out var semantic))
-        {
-            return api.FromSemanticException(semantic);
         }
     }
 
@@ -178,25 +165,6 @@ public static class LocaleAdminEndpoints
         canEditCode = canEditCode ?? !isReferenced,
         canEditUrlPrefix = canEditUrlPrefix ?? !isReferenced,
     };
-
-    private static bool TryMapLanguageFault(Exception ex, out SemanticException semantic)
-    {
-        semantic = null!;
-        var code = ex switch
-        {
-            InvalidOperationException ioe => ioe.Message,
-            ContractOperationException coe => coe.Code,
-            _ => null,
-        };
-        if (string.IsNullOrWhiteSpace(code)
-            || !code.StartsWith("localization.language.", StringComparison.Ordinal))
-        {
-            return false;
-        }
-
-        semantic = new SemanticException(new SemanticError(code));
-        return true;
-    }
 }
 
 /// <summary>بدنهٔ PATCH زبان.</summary>
