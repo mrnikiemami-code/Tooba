@@ -12,10 +12,10 @@ Canonical Architect ↔ Cursor handoff (recovery-critical)
 
 Latest Accepted TMAR Checkpoint — authoritative
 
-Reconciled by `TB-TMAR-HOST-ADMIN-ACCESS-AMC-001` (ANALYSIS_ONLY). Implementation commit remains Grid W1 `aee55d7f6ede1d3d817fc8afabe6ac4ab68fd80a`. Parent Panel CERT preserved. Gate: `USER_DECISION_REQUIRED_NO_AUTOMATIC_NEXT_IMPLEMENTATION_TASK`.
+Reconciled by `TB-TMAR-HOST-ADMIN-ACCESS-AMC-001-W1`. Implementation commit recorded at `lastAcceptedCommit` after PASS. Parent Panel CERT preserved. Gate: `USER_DECISION_REQUIRED_NO_AUTOMATIC_NEXT_IMPLEMENTATION_TASK`.
 - Dashboard remains Host thin cross-module composition; auth = `IAdminPanelAccess`; success = `Result` + `ApiResponseFactory`.
 - CQRS exception = `HOST_PRESENTATION_COMPOSITION_CQRS_EXCEPTION`; raw Results.Json / local PlatformHttp catch on dashboard = ZERO.
-- Admin/Access analyze: 13 files; 1 dead HostPromotionAdminAuthorizer; hard-coded title debt; Admin/Grid = ABSENT HOST_ZERO; Host/Admin = 18; Panel/Development/Party CERT preserved; workflowStop = `USER_REVIEW_HOST_ADMIN_ACCESS_AMC_001`; automatic next = NONE.
+- Admin/Access W1: core AdminPanelAccess + HostAdminPanelAccess use Foundation SemanticException codes + EN/FA resources; hardcoded runtime titles ZERO; Host/Admin = 18; Grid HOST_ZERO; Promotion dead residue DEFERRED_W2; workflowStop = `USER_REVIEW_HOST_ADMIN_ACCESS_AMC_001_W1`; automatic next = NONE.
 
 Reconciled by `TB-TMAR-HOST-ADMIN-PANEL-AMC-001-W2-R1` (HISTORICAL). Implementation commit `86c2ac7308ab90c17f1d5d125fa59e97cdaaac8c`.
 - Party Admin/Sellers validator under Validators/; historical stop = `USER_REVIEW_HOST_ADMIN_PANEL_AMC_001_W2_R1`.

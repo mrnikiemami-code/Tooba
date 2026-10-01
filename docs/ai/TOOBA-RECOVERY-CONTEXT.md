@@ -25,27 +25,28 @@ BRIDGE-WAKE-V1
 Channel: tooba-main
 ```
 
-Latest Accepted TMAR Checkpoint — authoritative (reconciled by TB-TMAR-HOST-ADMIN-ACCESS-AMC-001)
+Latest Accepted TMAR Checkpoint — authoritative (reconciled by TB-TMAR-HOST-ADMIN-ACCESS-AMC-001-W1)
 
 ```text
-Latest-Accepted-Implementation-Wave: TB-TMAR-HOST-ADMIN-GRID-AMC-001-W1
-Latest-Accepted-Task: TB-TMAR-HOST-ADMIN-ACCESS-AMC-001
-Implementation-Commit: aee55d7f6ede1d3d817fc8afabe6ac4ab68fd80a
+Latest-Accepted-Implementation-Wave: TB-TMAR-HOST-ADMIN-ACCESS-AMC-001-W1
+Latest-Accepted-Task: TB-TMAR-HOST-ADMIN-ACCESS-AMC-001-W1
+Implementation-Commit: ecbb1cae559a90b503e0fc299b71d43d336adc71
 Implementation-Commit-Kind: IMPLEMENTATION_COMMIT
-Mode: ANALYSIS_ONLY_NOT_MIGRATED_NOT_CERTIFIED
-Host-Admin-Access: 13 files enumerated/dispositioned
-Host-Admin-Grid: ABSENT_HOST_ZERO
+Mode: CORE_ADMIN_ACCESS_ERROR_LOCALIZATION_HYGIENE
+Core-Admin-Access-State: CANONICAL_CODE_BASED_ERRORS_LOCALIZED
+Core-Admin-Hardcoded-Runtime-Text: ZERO
 Host-Admin-Recursive-Files: 18
+Host-Admin-Grid: ABSENT_HOST_ZERO
 Parent-Panel-Certification: PRESERVED
 Admin-Development-Certification: PRESERVED
 Party-Sellers-Certification: PRESERVED
+Promotion-Dead-Residue: DEFERRED_W2
+Authorizer-Family-Hygiene: DEFERRED_W2
 Current-Host-Checkpoint: Admin/Access
-Runtime-Behavior-Change: NONE
-Production-Code-Change: NONE
 Next-Host-Folder-Started: false
 Stale-Current-Pointer-State: ZERO
-workflowStop: USER_REVIEW_HOST_ADMIN_ACCESS_AMC_001
-Next-Task: USER_REVIEW_HOST_ADMIN_ACCESS_AMC_001
+workflowStop: USER_REVIEW_HOST_ADMIN_ACCESS_AMC_001_W1
+Next-Task: USER_REVIEW_HOST_ADMIN_ACCESS_AMC_001_W1
 Next-Task-Gate: USER_DECISION_REQUIRED_NO_AUTOMATIC_NEXT_IMPLEMENTATION_TASK
 Automatic-Next-Implementation-Task: NONE
 ```

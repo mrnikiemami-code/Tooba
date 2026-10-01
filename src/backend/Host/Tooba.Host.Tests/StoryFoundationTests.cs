@@ -5,6 +5,7 @@ using Microsoft.Extensions.Hosting;
 using Testcontainers.PostgreSql;
 using Tooba.AccessControl.Infrastructure.Authorization;
 using Tooba.BuildingBlocks;
+using Tooba.BuildingBlocks.Presentation.Errors;
 using Tooba.Host.Admin.Access;
 using Tooba.Host.Security.Seller;
 using Tooba.Persistence;
@@ -160,7 +161,7 @@ public sealed class StoryFoundationTests : IAsyncLifetime
         var reordered = await directory.AdminReorderStoriesAsync(tenantId, reorderedIds, CancellationToken.None);
         Assert.Equal(reorderedIds, reordered.Select(story => story.StoryId).ToList());
 
-        var missingActor = await Assert.ThrowsAsync<PlatformHttpException>(() =>
+        var missingActor = await Assert.ThrowsAsync<SemanticException>(() =>
             AdminPanelAccess.RequireAuthorizedAsync(
                 new DefaultHttpContext().Request,
                 new CurrentAuthenticatedSession(),
@@ -168,9 +169,9 @@ public sealed class StoryFoundationTests : IAsyncLifetime
                 CreateAdapter().Guard,
                 new StubEnvironment(),
                 CancellationToken.None));
-        Assert.Equal(401, missingActor.StatusCode);
+        Assert.Equal(FoundationErrorCodes.AdminActorMissing, missingActor.Error.Code);
 
-        var sellerDenied = await Assert.ThrowsAsync<PlatformHttpException>(() =>
+        var sellerDenied = await Assert.ThrowsAsync<SemanticException>(() =>
             AdminPanelAccess.RequireAuthorizedAsync(
                 Request(Guid.Parse("bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbb0002")),
                 new CurrentAuthenticatedSession(),
@@ -178,7 +179,7 @@ public sealed class StoryFoundationTests : IAsyncLifetime
                 CreateAdapter().Guard,
                 new StubEnvironment(),
                 CancellationToken.None));
-        Assert.Equal(403, sellerDenied.StatusCode);
+        Assert.Equal(FoundationErrorCodes.AdminAuthorizationDenied, sellerDenied.Error.Code);
     }
 
     /// <summary>

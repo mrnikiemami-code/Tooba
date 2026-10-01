@@ -21,4 +21,19 @@
   <data name="platform.error" xml:space="preserve">
     <value>درخواست ناموفق بود.</value>
   </data>
+  <data name="admin.actor.missing" xml:space="preserve">
+    <value>هویت مدیر احراز نشده است.</value>
+  </data>
+  <data name="admin.tenant.missing" xml:space="preserve">
+    <value>زمینهٔ فروشگاه در دسترس نیست.</value>
+  </data>
+  <data name="admin.authorization.unavailable" xml:space="preserve">
+    <value>سرویس مجوز در دسترس نیست.</value>
+  </data>
+  <data name="admin.authorization.denied" xml:space="preserve">
+    <value>دسترسی مدیریت این فروشگاه مجاز نیست.</value>
+  </data>
+  <data name="admin.dev.unavailable" xml:space="preserve">
+    <value>زمینهٔ Development در دسترس نیست.</value>
+  </data>
 </root>

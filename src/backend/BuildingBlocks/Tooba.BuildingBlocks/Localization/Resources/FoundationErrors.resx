@@ -21,4 +21,19 @@
   <data name="platform.error" xml:space="preserve">
     <value>Request failed.</value>
   </data>
+  <data name="admin.actor.missing" xml:space="preserve">
+    <value>Administrator identity is not authenticated.</value>
+  </data>
+  <data name="admin.tenant.missing" xml:space="preserve">
+    <value>Store context is unavailable.</value>
+  </data>
+  <data name="admin.authorization.unavailable" xml:space="preserve">
+    <value>Authorization service is unavailable.</value>
+  </data>
+  <data name="admin.authorization.denied" xml:space="preserve">
+    <value>Access to manage this store is not permitted.</value>
+  </data>
+  <data name="admin.dev.unavailable" xml:space="preserve">
+    <value>Development context is unavailable.</value>
+  </data>
 </root>

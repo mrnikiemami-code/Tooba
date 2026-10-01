@@ -18,4 +18,16 @@ public static class FoundationErrorCodes
 
     /// <summary>مجوز مدیر برای این عملیات رد شد (403).</summary>
     public const string AdminAuthorizationDenied = "admin.authorization.denied";
+
+    /// <summary>هویت مدیر احراز نشده است (401).</summary>
+    public const string AdminActorMissing = "admin.actor.missing";
+
+    /// <summary>زمینهٔ Tenant/فروشگاه برای پنل مدیر موجود نیست (503).</summary>
+    public const string AdminTenantMissing = "admin.tenant.missing";
+
+    /// <summary>زیرساخت مجوز برای پنل مدیر در دسترس نیست (503).</summary>
+    public const string AdminAuthorizationUnavailable = "admin.authorization.unavailable";
+
+    /// <summary>زمینهٔ Development پنل مدیر در دسترس نیست (404).</summary>
+    public const string AdminDevUnavailable = "admin.dev.unavailable";
 }

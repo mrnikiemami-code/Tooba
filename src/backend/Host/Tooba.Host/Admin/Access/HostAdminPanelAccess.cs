@@ -1,4 +1,5 @@
 using Tooba.BuildingBlocks;
+using Tooba.BuildingBlocks.Presentation.Errors;
 using Tooba.BuildingBlocks.Security;
 
 namespace Tooba.Host.Admin.Access;
@@ -30,7 +31,7 @@ internal sealed class HostAdminPanelAccess(
 
         if (!environment.IsDevelopment() || registry.Edition != ToobaEdition.Marketplace)
         {
-            throw new PlatformHttpException(503, "زمینهٔ فروشگاه در دسترس نیست.", "admin.tenant.missing");
+            throw new SemanticException(new SemanticError(FoundationErrorCodes.AdminTenantMissing));
         }
 
         var actorUserId = AdminPanelAccess.ResolveActorUserId(request, session, environment);
@@ -58,9 +59,9 @@ internal sealed class HostAdminPanelAccess(
 
         if (decision.Kind == AuthorizationDecisionKind.Unavailable)
         {
-            throw new PlatformHttpException(503, "سرویس مجوز در دسترس نیست.", "admin.authorization.unavailable");
+            throw new SemanticException(new SemanticError(FoundationErrorCodes.AdminAuthorizationUnavailable));
         }
 
-        throw new PlatformHttpException(403, "دسترسی مدیریت marketplace مجاز نیست.", "admin.authorization.denied");
+        throw new SemanticException(new SemanticError(FoundationErrorCodes.AdminAuthorizationDenied));
     }
 }

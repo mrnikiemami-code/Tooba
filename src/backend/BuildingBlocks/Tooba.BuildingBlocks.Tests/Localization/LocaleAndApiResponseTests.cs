@@ -82,6 +82,25 @@ public sealed class FoundationResourceLocalizerTests
         Assert.Equal("Validation failed.", en);
         Assert.Contains("اعتبارسنجی", fa, StringComparison.Ordinal);
 
+        foreach (var key in new[]
+                 {
+                     "admin.actor.missing",
+                     "admin.tenant.missing",
+                     "admin.authorization.unavailable",
+                     "admin.authorization.denied",
+                     "admin.dev.unavailable",
+                 })
+        {
+            var enAdmin = localizer.Localize(key, CultureInfo.GetCultureInfo("en"), new Dictionary<string, string?>(), "fallback");
+            var faAdmin = localizer.Localize(key, CultureInfo.GetCultureInfo("fa"), new Dictionary<string, string?>(), "fallback");
+            Assert.False(string.Equals(enAdmin, key, StringComparison.Ordinal), key);
+            Assert.False(string.Equals(faAdmin, key, StringComparison.Ordinal), key);
+            Assert.NotEqual("fallback", enAdmin);
+            Assert.NotEqual("fallback", faAdmin);
+            Assert.False(string.IsNullOrWhiteSpace(enAdmin));
+            Assert.False(string.IsNullOrWhiteSpace(faAdmin));
+        }
+
         var tr = localizer.Localize(
             "validation.failed",
             CultureInfo.GetCultureInfo("tr-TR"),

@@ -147,14 +147,15 @@ public sealed class HostAdminPanelAmcCertGuardTests
     {
         var catalog = Read(
             "src/backend/BuildingBlocks/Tooba.BuildingBlocks/Presentation/Errors/FoundationErrorCatalogContributor.cs");
-        Assert.Equal(1, Regex.Matches(catalog, @"admin\.dev\.unavailable").Count);
+        Assert.Equal(1, Regex.Matches(catalog, @"FoundationErrorCodes\.AdminDevUnavailable|admin\.dev\.unavailable").Count);
         Assert.Contains("ErrorClassification.NotFound", catalog, StringComparison.Ordinal);
         Assert.Contains("StatusCodes.Status404NotFound", catalog, StringComparison.Ordinal);
 
         var allDescriptors = Directory.GetFiles(Dir("src/backend"), "*ErrorCatalogContributor.cs", SearchOption.AllDirectories)
             .Select(File.ReadAllText)
             .Count(t => t.Contains("\"admin.dev.unavailable\"", StringComparison.Ordinal)
-                        || t.Contains("admin.dev.unavailable\",", StringComparison.Ordinal));
+                        || t.Contains("admin.dev.unavailable\",", StringComparison.Ordinal)
+                        || t.Contains("FoundationErrorCodes.AdminDevUnavailable", StringComparison.Ordinal));
         Assert.Equal(1, allDescriptors);
     }
 

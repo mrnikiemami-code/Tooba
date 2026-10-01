@@ -1,4 +1,5 @@
 using Tooba.BuildingBlocks;
+using Tooba.BuildingBlocks.Presentation.Errors;
 
 namespace Tooba.Host.Admin.Access;
 
@@ -26,7 +27,7 @@ internal static class AdminPanelAccess
     {
         var actorUserId = ResolveActorUserId(request, session, environment);
         var tenant = currentTenant.Current
-            ?? throw new PlatformHttpException(503, "زمینهٔ فروشگاه در دسترس نیست.", "admin.tenant.missing");
+            ?? throw new SemanticException(new SemanticError(FoundationErrorCodes.AdminTenantMissing));
 
         var decision = await guard.AuthorizeUseCaseAsync(
             new AuthorizationCheck
@@ -53,10 +54,10 @@ internal static class AdminPanelAccess
 
         if (decision.Kind == AuthorizationDecisionKind.Unavailable)
         {
-            throw new PlatformHttpException(503, "سرویس مجوز در دسترس نیست.", "admin.authorization.unavailable");
+            throw new SemanticException(new SemanticError(FoundationErrorCodes.AdminAuthorizationUnavailable));
         }
 
-        throw new PlatformHttpException(403, "دسترسی مدیریت این فروشگاه مجاز نیست.", "admin.authorization.denied");
+        throw new SemanticException(new SemanticError(FoundationErrorCodes.AdminAuthorizationDenied));
     }
 
     /// <summary>
@@ -80,6 +81,6 @@ internal static class AdminPanelAccess
             return actor;
         }
 
-        throw new PlatformHttpException(401, "هویت مدیر احراز نشده است.", "admin.actor.missing");
+        throw new SemanticException(new SemanticError(FoundationErrorCodes.AdminActorMissing));
     }
 }

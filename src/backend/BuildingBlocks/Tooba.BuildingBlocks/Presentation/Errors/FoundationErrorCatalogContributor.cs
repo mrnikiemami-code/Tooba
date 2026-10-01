@@ -40,7 +40,13 @@ public sealed class FoundationErrorCatalogContributor : IErrorCatalogContributor
             StatusCodes.Status403Forbidden, "Forbidden"),
         D(FoundationErrorCodes.AdminAuthorizationDenied, ErrorClassification.Forbidden,
             StatusCodes.Status403Forbidden, "Forbidden"),
-        D("admin.dev.unavailable", ErrorClassification.NotFound,
+        D(FoundationErrorCodes.AdminActorMissing, ErrorClassification.Forbidden,
+            StatusCodes.Status401Unauthorized, "Unauthorized"),
+        D(FoundationErrorCodes.AdminTenantMissing, ErrorClassification.Platform,
+            StatusCodes.Status503ServiceUnavailable, "Store context unavailable"),
+        D(FoundationErrorCodes.AdminAuthorizationUnavailable, ErrorClassification.Platform,
+            StatusCodes.Status503ServiceUnavailable, "Authorization unavailable"),
+        D(FoundationErrorCodes.AdminDevUnavailable, ErrorClassification.NotFound,
             StatusCodes.Status404NotFound, "Unavailable"),
     ];
 

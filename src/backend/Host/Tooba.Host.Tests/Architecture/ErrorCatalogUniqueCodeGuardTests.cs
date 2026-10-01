@@ -72,6 +72,41 @@ public sealed class ErrorCatalogUniqueCodeGuardTests
         Assert.Equal(401, checkout.StatusCode);
     }
 
+    [Fact]
+    public void Foundation_admin_codes_resolve_unique_statuses_through_foundation_catalog()
+    {
+        var catalog = new ErrorDefinitionCatalog([new FoundationErrorCatalogContributor()]);
+        var mapper = new SafeErrorMapper(catalog);
+
+        Assert.True(catalog.TryGet(FoundationErrorCodes.AdminActorMissing, out var actor));
+        Assert.Equal(401, actor.HttpStatus);
+        Assert.True(catalog.TryGet(FoundationErrorCodes.AdminTenantMissing, out var tenant));
+        Assert.Equal(503, tenant.HttpStatus);
+        Assert.True(catalog.TryGet(FoundationErrorCodes.AdminAuthorizationUnavailable, out var unavailable));
+        Assert.Equal(503, unavailable.HttpStatus);
+        Assert.True(catalog.TryGet(FoundationErrorCodes.AdminAuthorizationDenied, out var denied));
+        Assert.Equal(403, denied.HttpStatus);
+        Assert.True(catalog.TryGet(FoundationErrorCodes.AdminDevUnavailable, out var dev));
+        Assert.Equal(404, dev.HttpStatus);
+
+        Assert.Equal(401, mapper.Map(new SemanticException(new SemanticError(FoundationErrorCodes.AdminActorMissing))).StatusCode);
+        Assert.Equal(503, mapper.Map(new SemanticException(new SemanticError(FoundationErrorCodes.AdminTenantMissing))).StatusCode);
+        Assert.Equal(503, mapper.Map(new SemanticException(new SemanticError(FoundationErrorCodes.AdminAuthorizationUnavailable))).StatusCode);
+        Assert.Equal(403, mapper.Map(new SemanticException(new SemanticError(FoundationErrorCodes.AdminAuthorizationDenied))).StatusCode);
+        Assert.Equal(404, mapper.Map(new SemanticException(new SemanticError(FoundationErrorCodes.AdminDevUnavailable))).StatusCode);
+
+        var adminCodes = new FoundationErrorCatalogContributor().Contribute()
+            .Select(d => d.Code)
+            .Where(c => c.StartsWith("admin.", StringComparison.Ordinal))
+            .ToArray();
+        Assert.Equal(adminCodes.Length, adminCodes.Distinct(StringComparer.Ordinal).Count());
+        Assert.Contains(FoundationErrorCodes.AdminActorMissing, adminCodes);
+        Assert.Contains(FoundationErrorCodes.AdminTenantMissing, adminCodes);
+        Assert.Contains(FoundationErrorCodes.AdminAuthorizationUnavailable, adminCodes);
+        Assert.Contains(FoundationErrorCodes.AdminAuthorizationDenied, adminCodes);
+        Assert.Contains(FoundationErrorCodes.AdminDevUnavailable, adminCodes);
+    }
+
     private static IReadOnlyList<IErrorCatalogContributor> DiscoverProductionContributors()
     {
         LoadToobaAssemblies();

@@ -13,7 +13,7 @@ public interface IErrorResourceSet
     string? GetString(string localizationKey, CultureInfo culture);
 }
 
-/// <summary>منابع foundation عمومی (validation / platform).</summary>
+/// <summary>منابع foundation عمومی (validation / platform / admin).</summary>
 public static class FoundationErrorResources
 {
     /// <summary>ResourceManager برای FoundationErrors.resx.</summary>
@@ -27,8 +27,8 @@ public sealed class FoundationErrorResourceSet : IErrorResourceSet
     /// <inheritdoc />
     public bool Owns(string localizationKey) =>
         localizationKey.StartsWith("validation.", StringComparison.OrdinalIgnoreCase)
-        || localizationKey.StartsWith("platform.", StringComparison.OrdinalIgnoreCase);
-
+        || localizationKey.StartsWith("platform.", StringComparison.OrdinalIgnoreCase)
+        || localizationKey.StartsWith("admin.", StringComparison.OrdinalIgnoreCase);
     /// <inheritdoc />
     public string? GetString(string localizationKey, CultureInfo culture) =>
         FoundationErrorResources.Manager.GetString(localizationKey, culture);

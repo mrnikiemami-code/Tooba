@@ -3,6 +3,7 @@ using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Hosting;
 using Tooba.AccessControl.Infrastructure.Authorization;
 using Tooba.BuildingBlocks;
+using Tooba.BuildingBlocks.Presentation.Errors;
 using Tooba.Host.Admin.Access;
 using Tooba.Identity.Application;
 using Xunit;
@@ -39,7 +40,7 @@ public sealed class AdminPanelAuthorizationTests
             CancellationToken.None);
         Assert.Equal(admin, allowed);
 
-        var denied = await Assert.ThrowsAsync<PlatformHttpException>(() =>
+        var denied = await Assert.ThrowsAsync<SemanticException>(() =>
             AdminPanelAccess.RequireAuthorizedAsync(
                 Request(seller),
                 new CurrentAuthenticatedSession(),
@@ -47,15 +48,14 @@ public sealed class AdminPanelAuthorizationTests
                 adapter.Guard,
                 new StubEnvironment(),
                 CancellationToken.None));
-        Assert.Equal(403, denied.StatusCode);
-        Assert.Equal("admin.authorization.denied", denied.ErrorCode);
+        Assert.Equal(FoundationErrorCodes.AdminAuthorizationDenied, denied.Error.Code);
     }
 
     [Fact]
     public async Task Missing_actor_fails_closed()
     {
         var adapter = CreateAdapter();
-        var ex = await Assert.ThrowsAsync<PlatformHttpException>(() =>
+        var ex = await Assert.ThrowsAsync<SemanticException>(() =>
             AdminPanelAccess.RequireAuthorizedAsync(
                 new DefaultHttpContext().Request,
                 new CurrentAuthenticatedSession(),
@@ -63,15 +63,14 @@ public sealed class AdminPanelAuthorizationTests
                 adapter.Guard,
                 new StubEnvironment(),
                 CancellationToken.None));
-        Assert.Equal(401, ex.StatusCode);
-        Assert.Equal("admin.actor.missing", ex.ErrorCode);
+        Assert.Equal(FoundationErrorCodes.AdminActorMissing, ex.Error.Code);
     }
 
     [Fact]
     public async Task Missing_tenant_fails_closed_before_authorization()
     {
         var adapter = CreateAdapter();
-        var ex = await Assert.ThrowsAsync<PlatformHttpException>(() =>
+        var ex = await Assert.ThrowsAsync<SemanticException>(() =>
             AdminPanelAccess.RequireAuthorizedAsync(
                 Request(Guid.NewGuid()),
                 new CurrentAuthenticatedSession(),
@@ -79,8 +78,28 @@ public sealed class AdminPanelAuthorizationTests
                 adapter.Guard,
                 new StubEnvironment(),
                 CancellationToken.None));
-        Assert.Equal(503, ex.StatusCode);
-        Assert.Equal("admin.tenant.missing", ex.ErrorCode);
+        Assert.Equal(FoundationErrorCodes.AdminTenantMissing, ex.Error.Code);
+    }
+
+    [Fact]
+    public void Core_access_files_have_no_hardcoded_runtime_user_facing_titles()
+    {
+        var root = FindRepoRoot();
+        foreach (var relative in new[]
+                 {
+                     Path.Combine("src", "backend", "Host", "Tooba.Host", "Admin", "Access", "AdminPanelAccess.cs"),
+                     Path.Combine("src", "backend", "Host", "Tooba.Host", "Admin", "Access", "HostAdminPanelAccess.cs"),
+                 })
+        {
+            var text = File.ReadAllText(Path.Combine(root, relative));
+            Assert.DoesNotContain("PlatformHttpException", text, StringComparison.Ordinal);
+            Assert.DoesNotContain("\"سرویس", text, StringComparison.Ordinal);
+            Assert.DoesNotContain("\"زمینه", text, StringComparison.Ordinal);
+            Assert.DoesNotContain("\"هویت", text, StringComparison.Ordinal);
+            Assert.DoesNotContain("\"دسترسی", text, StringComparison.Ordinal);
+            Assert.Contains("SemanticException", text, StringComparison.Ordinal);
+            Assert.Contains("FoundationErrorCodes.", text, StringComparison.Ordinal);
+        }
     }
 
     private static HttpRequest Request(Guid actor)
@@ -107,6 +126,23 @@ public sealed class AdminPanelAuthorizationTests
             new AuthorizationInstrumentation(),
             new InMemoryAuthorizationSecurityEventSink());
         return (adapter, new AuthorizationGuard(adapter));
+    }
+
+    private static string FindRepoRoot()
+    {
+        var dir = new DirectoryInfo(AppContext.BaseDirectory);
+        while (dir is not null)
+        {
+            if (File.Exists(Path.Combine(dir.FullName, "Tooba.sln"))
+                || File.Exists(Path.Combine(dir.FullName, "docs", "architecture", "tmar-current-state.json")))
+            {
+                return dir.FullName;
+            }
+
+            dir = dir.Parent;
+        }
+
+        throw new InvalidOperationException("repo_root_not_found");
     }
 
     private sealed class StubCurrentTenant(TenantContext? current) : ICurrentTenant
