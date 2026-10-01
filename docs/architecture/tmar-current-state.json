@@ -4,7 +4,7 @@
   "frontendFrozen": true,
   "checkoutState": "PAUSED_AT_SAFE_W5_CHECKPOINT",
   "lastAcceptedTask": "TB-TMAR-HOST-SUPPORT-AMC-001-R1",
-  "lastAcceptedCommit": "PLACEHOLDER_STAMP_AFTER_COMMIT",
+  "lastAcceptedCommit": "646a2a445705c76d7b6890e4597ff2999d8bff4e",
   "lastAcceptedCommitKind": "IMPLEMENTATION_COMMIT",
   "lastAcceptedResultEvidenceCommit": "5986dcc7ba8236354fc84bd92738bbeb90839d7c",
   "lastAcceptedResultEvidenceCommitKind": "RESULT_EVIDENCE_DOCS_STAMP_NOT_IMPLEMENTATION",
@@ -5111,7 +5111,7 @@
     "guestActor": "Order.Contracts.Fulfillment.StorefrontGuestActor",
     "durableGuard": "HostSupportAmcGuardTests",
     "evidenceRoot": "docs/evidence/TB-TMAR-HOST-SUPPORT-AMC-001",
-    "note": "PLACEHOLDER_COMMIT_SHA stamped after implementation commit + push.",
+    "note": "Implementation commit 646a2a445705c76d7b6890e4597ff2999d8bff4e; Support AMC R1 AccessControl Contracts seam closed.",
     "r1TaskId": "TB-TMAR-HOST-SUPPORT-AMC-001-R1",
     "r1Status": "CLOSED_HOST_ZERO_R1_ACCESSCONTROL_CONTRACTS_SEAM",
     "accessControlSeam": "IAccessControlDevelopmentSeedPrelude",
@@ -5144,6 +5144,6 @@
     "accessControlSeam": "IAccessControlDevelopmentSeedPrelude",
     "durableGuard": "HostSupportAmcGuardTests",
     "evidenceRoot": "docs/evidence/TB-TMAR-HOST-SUPPORT-AMC-001-R1",
-    "note": "PLACEHOLDER_COMMIT_SHA stamped after implementation commit + push."
+    "note": "Implementation commit 646a2a445705c76d7b6890e4597ff2999d8bff4e; Support AMC R1 AccessControl Contracts seam closed."
   }
 }
