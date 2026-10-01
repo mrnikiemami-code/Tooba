@@ -30,7 +30,7 @@ Latest Accepted TMAR Checkpoint — authoritative (reconciled by TB-TMAR-HOST-SE
 ```text
 Latest-Accepted-Implementation-Wave: TB-TMAR-HOST-SECURITY-AMC-001-W1
 Latest-Accepted-Task: TB-TMAR-HOST-SECURITY-AMC-001-W1
-Implementation-Commit: PLACEHOLDER_W1_SHA
+Implementation-Commit: baa05e6b7fa373cb6d354a80ca2eab37d4472f7b
 Implementation-Commit-Kind: IMPLEMENTATION_COMMIT
 Mode: HOST_SECURITY_SELLER_FAILURE_HYGIENE_COMPLETE
 Seller-Security-Failure-Semantics: SEMANTIC_EXCEPTION_CODE_BASED

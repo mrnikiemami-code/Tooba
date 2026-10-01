@@ -4,7 +4,7 @@
   "frontendFrozen": true,
   "checkoutState": "PAUSED_AT_SAFE_W5_CHECKPOINT",
   "lastAcceptedTask": "TB-TMAR-HOST-SECURITY-AMC-001-W1",
-  "lastAcceptedCommit": "7a0d79b407c618d503acd1ef9866c519b4e5f070",
+  "lastAcceptedCommit": "baa05e6b7fa373cb6d354a80ca2eab37d4472f7b",
   "lastAcceptedCommitKind": "IMPLEMENTATION_COMMIT",
   "lastAcceptedResultEvidenceCommit": "23acf1bfa514f48d4a111a732d5bcaae45f78cbd",
   "lastAcceptedResultEvidenceCommitKind": "RESULT_EVIDENCE_DOCS_STAMP_NOT_IMPLEMENTATION",
@@ -5755,6 +5755,7 @@
     "hostAdminCertification": "HOST_ADMIN_FULLY_CERTIFIED_PRESERVED",
     "automaticNextImplementationTask": "NONE",
     "workflowStop": "USER_REVIEW_HOST_SECURITY_AMC_001_W1",
-    "evidenceRoot": "docs/evidence/TB-TMAR-HOST-SECURITY-AMC-001-W1"
+    "evidenceRoot": "docs/evidence/TB-TMAR-HOST-SECURITY-AMC-001-W1",
+    "implementationCommit": "baa05e6b7fa373cb6d354a80ca2eab37d4472f7b"
   }
 }

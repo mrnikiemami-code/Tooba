@@ -14,6 +14,7 @@ historicalSecurityCertification = NOT_REASSERTED_YET
 HostAdminCertification = HOST_ADMIN_FULLY_CERTIFIED PRESERVED
 currentHostCheckpoint = Security
 lastAcceptedTask = TB-TMAR-HOST-SECURITY-AMC-001-W1
+lastAcceptedCommit = baa05e6b7fa373cb6d354a80ca2eab37d4472f7b
 lastAcceptedCommitKind = IMPLEMENTATION_COMMIT
 automaticNextImplementationTask = NONE
 workflowStop = USER_REVIEW_HOST_SECURITY_AMC_001_W1
