@@ -25,31 +25,31 @@ BRIDGE-WAKE-V1
 Channel: tooba-main
 ```
 
-Latest Accepted TMAR Checkpoint — authoritative (reconciled by TB-TMAR-HOST-SECURITY-AMC-001-W3-CERT)
+Latest Accepted TMAR Checkpoint — authoritative (reconciled by TB-TMAR-HOST-ERRORS-AMC-001)
 
 ```text
 Latest-Accepted-Implementation-Wave: TB-TMAR-HOST-SECURITY-AMC-001-W1
-Latest-Accepted-Task: TB-TMAR-HOST-SECURITY-AMC-001-W3-CERT
+Latest-Accepted-Task: TB-TMAR-HOST-ERRORS-AMC-001
 Implementation-Commit: baa05e6b7fa373cb6d354a80ca2eab37d4472f7b
 Implementation-Commit-Kind: IMPLEMENTATION_COMMIT
-Result-Evidence-Docs-Stamp: 73a80ee28ed9dc054be5adae0f7115e72c115ded
+Result-Evidence-Docs-Stamp: PENDING_ERRORS_ANALYZE_COMMIT
 Result-Evidence-Docs-Stamp-Kind: RESULT_EVIDENCE_DOCS_STAMP_NOT_IMPLEMENTATION
-Mode: HOST_SECURITY_AMC_CERTIFIED
-Seller-Security-Failure-Semantics: SEMANTIC_EXCEPTION_CODE_BASED
-Seller-Security-Hardcoded-Runtime-Text: ZERO
-Host-Security-Production-File-Count: 19
-Seller-Production-File-Count: 14
-Certification-State: HOST_SECURITY_AMC_CERTIFIED
-Boundary-State: KEEP_THIN_PLATFORM_SECURITY_BOUNDARY_CERTIFIED_CURRENT_19
-Historical-18-File-Cert: HISTORICAL_SUPERSEDED_STALE_METADATA
+Mode: HOST_ERRORS_ANALYSIS_ONLY
+Errors-Production-File-Count: 2
+PlatformExceptionMapper: ACTIVE_LEGACY_PARALLEL_PRESENTATION
+ToobaExceptionHandler: KEEP_AS_THIN_GLOBAL_HOST_EXCEPTION_ADAPTER
+Canonical-Presentation-Authority: IExceptionPresentationService
+Path-Namespace: VIOLATION_Tooba.Host_vs_Errors
+Host-Security-State: HOST_SECURITY_AMC_CERTIFIED_PRESERVED
 Whole-Host-Admin-State: HOST_ADMIN_FULLY_CERTIFIED
-Current-Host-Checkpoint: Security
+Current-Host-Checkpoint: Errors
 Next-Host-Folder-Started: false
 Stale-Current-Pointer-State: ZERO
-workflowStop: USER_REVIEW_HOST_SECURITY_AMC_001_W3_CERT
-Next-Task: USER_REVIEW_HOST_SECURITY_AMC_001_W3_CERT
+workflowStop: USER_REVIEW_HOST_ERRORS_AMC_001
+Next-Task: USER_REVIEW_HOST_ERRORS_AMC_001
 Next-Task-Gate: USER_DECISION_REQUIRED_NO_AUTOMATIC_NEXT_IMPLEMENTATION_TASK
 Automatic-Next-Implementation-Task: NONE
+Recommended-Next-Implementation: TB-TMAR-HOST-ERRORS-AMC-001-W1
 ```
 
 
