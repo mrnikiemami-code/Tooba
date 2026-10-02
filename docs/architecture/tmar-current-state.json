@@ -6899,5 +6899,23 @@
         "hostRootFinalCheckpoint": "PRESERVED",
         "implementationCommit": "d08df8a31280a57fec830bca78507fccd994b939",
         "docsStamp": "262d95b21e2edee206ec3ac10eefbc56d718428f"
+    },
+    "storyModuleAmc001W5": {
+        "task": "TB-TMAR-STORY-AMC-001-W5",
+        "parentTask": "TB-TMAR-STORY-AMC-001-W4",
+        "mode": "MIGRATE",
+        "slice": "VALIDATOR_COVERAGE",
+        "state": "STORY_VALIDATOR_COVERAGE_COMPLETE",
+        "endpointReachableRequestCount": 25,
+        "validatorRequired": 15,
+        "noValidatorRequired": 10,
+        "durableGuard": "StoryModuleAmcW5ValidatorGuardTests",
+        "hostStoryZero": "PRESERVED",
+        "archComplete002StructureCertified": "FALSE_DEFERRED",
+        "evidenceRoot": "docs/evidence/TB-TMAR-STORY-AMC-001-W5/",
+        "workflowStop": "USER_REVIEW_STORY_AMC_001_W5",
+        "automaticNextImplementationTask": "NONE",
+        "hostRootFinalCheckpoint": "PRESERVED",
+        "implementationCommit": "PENDING"
     }
 }
