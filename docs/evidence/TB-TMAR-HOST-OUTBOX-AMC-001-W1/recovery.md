@@ -42,4 +42,4 @@ evidenceRoot = docs/evidence/TB-TMAR-HOST-OUTBOX-AMC-001-W1/
 ```
 
 Implementation SHA: `382ef10af3a5eb49f519e49cb399809b19844bbc`.
-Docs stamp SHA: `PENDING_DOCS_STAMP` (RESULT_EVIDENCE_DOCS_STAMP; not implementation).
+Docs stamp SHA: `6df920706124ac2089def61c62f90d8e33c13022` (RESULT_EVIDENCE_DOCS_STAMP; not implementation).

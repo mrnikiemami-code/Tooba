@@ -6,9 +6,9 @@
     "lastAcceptedTask":  "TB-TMAR-HOST-OUTBOX-AMC-001-W1",
     "lastAcceptedCommit":  "382ef10af3a5eb49f519e49cb399809b19844bbc",
     "lastAcceptedCommitKind":  "IMPLEMENTATION_COMMIT",
-    "lastAcceptedResultEvidenceCommit":  "PENDING_DOCS_STAMP",
+    "lastAcceptedResultEvidenceCommit":  "6df920706124ac2089def61c62f90d8e33c13022",
     "lastAcceptedResultEvidenceCommitKind":  "RESULT_EVIDENCE_DOCS_STAMP_NOT_IMPLEMENTATION",
-    "lastAcceptedSoTStamp":  "PENDING_DOCS_STAMP",
+    "lastAcceptedSoTStamp":  "6df920706124ac2089def61c62f90d8e33c13022",
     "lastAcceptedSoTStampKind":  "RESULT_EVIDENCE_DOCS_STAMP",
     "lastAcceptedCommitSemantics":  "lastAcceptedTask is TB-TMAR-HOST-OUTBOX-AMC-001-W1 (IMPLEMENTATION migrate). lastAcceptedCommit is the W1 implementation SHA. Docs stamp is RESULT_EVIDENCE_DOCS_STAMP only and must NEVER be mislabeled as implementation.",
     "lastAcceptedNote":  "Host/Outbox W1 migrate: 7 files / 7 types; EXACT Tooba.Host.Outbox; OCE escape at target/claim/message; fail-fast options validator; per-message scope preserved; CERT pending W2; Observability/Messaging/Health/MT/Errors/Security/Admin CERT preserved.",
@@ -6500,6 +6500,6 @@
                                "automaticNextImplementationTask":  "NONE",
                                "workflowStop":  "USER_REVIEW_HOST_OUTBOX_AMC_001_W1",
                                "evidenceRoot":  "docs/evidence/TB-TMAR-HOST-OUTBOX-AMC-001-W1",
-                               "docsStamp":  "PENDING_DOCS_STAMP"
+                               "docsStamp":  "6df920706124ac2089def61c62f90d8e33c13022"
                            }
 }
