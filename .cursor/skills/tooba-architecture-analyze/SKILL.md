@@ -388,7 +388,7 @@ Do not plan cosmetic splitting that creates meaningless tiny files. Do not use f
 
 Propose exact physical target paths and namespaces.
 
-**Capability-first, shallow-by-default.** Prefer the business capability as the first organizing axis; Commands/Queries are secondary. Do not create one directory per request merely because it is a Command or Query.
+**Capability-first, shallow-by-default.** The business capability is the first organizing axis; Commands/Queries/Validators/Models/Ports are secondary technical axes. Do not create one directory per request merely because it is a Command or Query.
 
 Preferred patterns:
 
@@ -398,7 +398,11 @@ Preferred patterns:
 `Application/<Capability>/Ports/*.cs`
 `Application/<Capability>/Validators/*.cs`
 
-A deeper `Application/<Capability>/<Commands|Queries>/<UseCase>/` folder is allowed only when that use case genuinely owns multiple cohesive production files with distinct responsibilities (for example request + handler + dedicated policy/mapper/validator) or its complexity makes the grouping materially clearer. A leaf folder whose only purpose is to contain one request file is over-foldering and must not be proposed. Shared Application folders are allowed only for genuinely cross-capability concerns.
+For a module with multiple business capabilities, a technical-axis-first tree such as `Application/Commands/<UseCase>/...`, `Application/Queries/<UseCase>/...`, or `Application/Validators/<UseCase>/...` is non-canonical because it hides capability ownership and creates Solution Explorer folder explosion. Group related use cases under the real capability first (for example `Application/Roles/Commands/*.cs`, `Application/Assignments/Queries/*.cs`).
+
+A deeper `Application/<Capability>/<Commands|Queries>/<UseCase>/` folder is allowed only when that use case genuinely owns **multiple cohesive production source files** with distinct responsibilities (for example separate request, handler, policy/mapper and validator files) or its complexity makes the grouping materially clearer. Count source files, not the number of types declared inside one file: a leaf folder containing a single `.cs` file is still single-file over-foldering even if that file declares request + handler together. A one-file leaf folder must not be proposed merely to mirror a type/use-case name. Shared Application folders are allowed only for genuinely cross-capability concerns.
+
+When analyzing an existing tree, explicitly report `Folder-Granularity-State = PROFESSIONAL_SHALLOW | OVER_FOLDERED | TECHNICAL_AXIS_FIRST` and list every offending single-file request folder or technical-axis-first root that must be corrected before structural certification.
 
 `Endpoints/Admin/...`
 `Endpoints/Seller/...`
