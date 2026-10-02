@@ -6,9 +6,9 @@
     "lastAcceptedTask": "TB-TMAR-HOST-PERSISTENCE-AMC-001",
     "lastAcceptedCommit": "382ef10af3a5eb49f519e49cb399809b19844bbc",
     "lastAcceptedCommitKind": "IMPLEMENTATION_COMMIT",
-    "lastAcceptedResultEvidenceCommit": "PENDING_DOCS_STAMP",
+    "lastAcceptedResultEvidenceCommit": "253a225822bbf48a99cc45ed9ae7395394cbe204",
     "lastAcceptedResultEvidenceCommitKind": "RESULT_EVIDENCE_DOCS_STAMP_NOT_IMPLEMENTATION",
-    "lastAcceptedSoTStamp": "PENDING_DOCS_STAMP",
+    "lastAcceptedSoTStamp": "253a225822bbf48a99cc45ed9ae7395394cbe204",
     "lastAcceptedSoTStampKind": "RESULT_EVIDENCE_DOCS_STAMP",
     "lastAcceptedCommitSemantics": "lastAcceptedTask is TB-TMAR-HOST-PERSISTENCE-AMC-001 (ANALYSIS_ONLY docs). lastAcceptedCommit remains Outbox W1 implementation SHA 382ef10a.... Analyze docs stamp is NOT an implementation commit.",
     "lastAcceptedNote": "Host/Persistence ANALYSIS_ONLY: 1 file / 1 type; path↔namespace EXACT; KEEP_AS_GLOBAL_HOST_PERSISTENCE_PLATFORM; PlatformHttpException accepted as canonical fail-closed; recommended DIRECT W2-CERT; Outbox/Observability/Messaging/Health/MT/Errors/Security/Admin CERT preserved.",
@@ -6564,6 +6564,6 @@
         "evidenceRoot": "docs/evidence/TB-TMAR-HOST-PERSISTENCE-AMC-001",
         "durableGuard": "HostPersistenceAmcGuardTests",
         "note": "Docs-only analyze; do not auto-start W2-CERT; production ZERO; impl SHA unchanged.",
-        "docsStamp": "PENDING_DOCS_STAMP"
+        "docsStamp": "253a225822bbf48a99cc45ed9ae7395394cbe204"
     }
 }
