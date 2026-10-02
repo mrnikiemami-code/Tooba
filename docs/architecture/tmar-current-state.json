@@ -7062,6 +7062,6 @@
         "workflowStop": "USER_REVIEW_ACCESSCONTROL_AMC_001_W5_CERT_COMPLETE",
         "automaticNextImplementationTask": "NONE",
         "implementationCommit": "7695f4c93949f8c21c0fb0721384128eecf7b4ee",
-        "docsStamp": "PENDING"
+        "docsStamp": "73043be8cd86e07a5834ca0bf560c7a710255388"
     }
 }
