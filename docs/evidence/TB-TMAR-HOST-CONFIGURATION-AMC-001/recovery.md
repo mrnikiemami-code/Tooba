@@ -1,0 +1,40 @@
+# recovery — TB-TMAR-HOST-CONFIGURATION-AMC-001
+
+```text
+task = TB-TMAR-HOST-CONFIGURATION-AMC-001
+parentTask = TB-TMAR-HOST-PERSISTENCE-AMC-001-W2-CERT
+mode = ANALYSIS_ONLY_NOT_MIGRATED_NOT_CERTIFIED
+currentHostCheckpoint = Configuration
+productionFileCount = 1
+productionTypeCount = 9
+pathNamespaceState = VIOLATION_Tooba.Host_vs_Configuration
+fileCohesionState = MUST_SPLIT_9_TYPES_ONE_FILE
+configurationAuthorityState = HOST_OWNS_BIND_VALIDATE_REGISTRY
+registryState = NORMALIZED_SNAPSHOT_IMMUTABLE_ENOUGH_MUTABILITY_DEBT
+tenantHostNormalizationState = HOSTNORMALIZER_BUILDINGBLOCKS_FAIL_CLOSED
+productionValidationState = PRODUCTION_EDITION_REFS_STORECOMMERCE_PRESENT_TRUSTEDPROXY_PROGRAM_GAP
+connectionSecretSafetyState = ZERO_CONNECTION_STRING_IN_VALIDATION_ERRORS
+storeCommerceBoundaryState = CONTRACTS_ONLY_STORECONTEXT_CONTEXT_BUILD
+offerContractBoundaryState = CONTRACTS_ONLY_SALESCHANNEL_ENUM_COUPLING_ACCEPTED_WITH_DEBT
+legacyConnectionStringState = DEAD_COMPATIBILITY_RESIDUE_ZERO_PRODUCTION_CONSUMERS
+recommendedWaveCount = 2
+recommendedNextTask = TB-TMAR-HOST-CONFIGURATION-AMC-001-W1
+hostPersistenceCertification = HOST_PERSISTENCE_AMC_CERTIFIED_PRESERVED
+hostOutboxCertification = HOST_OUTBOX_AMC_CERTIFIED_PRESERVED
+hostObservabilityCertification = HOST_OBSERVABILITY_AMC_CERTIFIED_PRESERVED
+hostMessagingCertification = HOST_MESSAGING_AMC_CERTIFIED_PRESERVED
+hostHealthCertification = HOST_HEALTH_AMC_CERTIFIED_PRESERVED
+hostMultiTenancyCertification = HOST_MULTITENANCY_AMC_CERTIFIED_PRESERVED
+hostErrorsCertification = HOST_ERRORS_AMC_CERTIFIED_PRESERVED
+hostSecurityCertification = HOST_SECURITY_AMC_CERTIFIED_PRESERVED
+hostAdminCertification = HOST_ADMIN_FULLY_CERTIFIED_PRESERVED
+latestAcceptedImplementationWave = TB-TMAR-HOST-OUTBOX-AMC-001-W1
+automaticNextImplementationTask = NONE
+workflowStop = USER_REVIEW_HOST_CONFIGURATION_AMC_001
+staleCurrentPointerState = ZERO
+nextHostFolderStarted = false
+evidenceRoot = docs/evidence/TB-TMAR-HOST-CONFIGURATION-AMC-001/
+```
+
+Implementation SHA (unchanged): `382ef10af3a5eb49f519e49cb399809b19844bbc`.
+Docs stamp SHA: set after commit.
