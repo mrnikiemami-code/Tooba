@@ -4,6 +4,10 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Hosting;
 using Tooba.AccessControl.Application.Development.Seller;
+using Tooba.AccessControl.Contracts.Errors;
+using Tooba.BuildingBlocks;
+using Tooba.BuildingBlocks.Presentation;
+using Tooba.BuildingBlocks.Results;
 
 namespace Tooba.AccessControl.Endpoints.Seller.Development;
 
@@ -14,12 +18,6 @@ namespace Tooba.AccessControl.Endpoints.Seller.Development;
 /// </summary>
 public static class SellerDevContextEndpoints
 {
-    /// <summary>کد پایدار نبودِ مسیر Development.</summary>
-    public const string UnavailableCode = "seller.dev.unavailable";
-
-    /// <summary>کد پایدار آماده‌نبودن snapshot Development.</summary>
-    public const string NotReadyCode = "seller.dev.not-ready";
-
     /// <summary>
     /// مسیر dev-contexts فروشنده را روی گروه <c>/v1/seller</c> ثبت می‌کند.
     /// </summary>
@@ -33,23 +31,14 @@ public static class SellerDevContextEndpoints
     private static async Task<IResult> GetDevContextsAsync(
         IHostEnvironment environment,
         ISender sender,
+        ApiResponseFactory api,
         CancellationToken cancellationToken)
     {
         if (!environment.IsDevelopment())
         {
-            return Results.Json(
-                new { title = "Not Found", errorCode = UnavailableCode },
-                statusCode: StatusCodes.Status404NotFound);
+            return api.FromFailure(new SemanticError(AccessControlErrorCodes.SellerDevUnavailable));
         }
 
-        var view = await sender.Send(new GetSellerDevContextsQuery(), cancellationToken);
-        if (view is null)
-        {
-            return Results.Json(
-                new { title = "در دسترس نیست", errorCode = NotReadyCode },
-                statusCode: StatusCodes.Status503ServiceUnavailable);
-        }
-
-        return Results.Json(view);
+        return api.From(await sender.Send(new GetSellerDevContextsQuery(), cancellationToken));
     }
 }

@@ -22,4 +22,6 @@
   <data name="access.permission.unknown" xml:space="preserve"><value>Permission is unknown.</value></data>
   <data name="access.authorization.unavailable" xml:space="preserve"><value>Authorization service unavailable.</value></data>
   <data name="access.capability.denied" xml:space="preserve"><value>Capability denied.</value></data>
+  <data name="seller.dev.unavailable" xml:space="preserve"><value>Seller development contexts are unavailable.</value></data>
+  <data name="seller.dev.not-ready" xml:space="preserve"><value>Seller development contexts are not ready.</value></data>
 </root>

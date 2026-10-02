@@ -21,4 +21,6 @@ public static class AccessControlErrorCodes
     public const string PermissionUnknown = "access.permission.unknown";
     public const string AuthorizationUnavailable = "access.authorization.unavailable";
     public const string CapabilityDenied = "access.capability.denied";
+    public const string SellerDevUnavailable = "seller.dev.unavailable";
+    public const string SellerDevNotReady = "seller.dev.not-ready";
 }

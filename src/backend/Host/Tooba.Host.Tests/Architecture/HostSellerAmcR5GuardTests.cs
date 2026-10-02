@@ -100,9 +100,11 @@ public sealed class HostSellerAmcR5GuardTests
         Assert.Contains("MapGet(\"/dev-contexts\"", endpoint, StringComparison.Ordinal);
         Assert.Contains("GetSellerDevContextsQuery", endpoint, StringComparison.Ordinal);
         Assert.Contains("ISender", endpoint, StringComparison.Ordinal);
-        Assert.Contains("\"seller.dev.unavailable\"", endpoint, StringComparison.Ordinal);
-        Assert.Contains("\"seller.dev.not-ready\"", endpoint, StringComparison.Ordinal);
+        Assert.Contains("AccessControlErrorCodes.SellerDevUnavailable", endpoint, StringComparison.Ordinal);
+        Assert.Contains("api.From(", endpoint, StringComparison.Ordinal);
+        Assert.Contains("api.FromFailure(", endpoint, StringComparison.Ordinal);
         Assert.Contains("IsDevelopment()", endpoint, StringComparison.Ordinal);
+        Assert.DoesNotContain("Results.Json", endpoint, StringComparison.Ordinal);
         Assert.DoesNotContain("DbContext", endpoint, StringComparison.Ordinal);
         Assert.DoesNotContain("Tooba.AccessControl.Infrastructure", endpoint, StringComparison.Ordinal);
 
@@ -306,10 +308,12 @@ public sealed class HostSellerAmcR5GuardTests
     public void Dev_contexts_behavior_parity_is_preserved()
     {
         var handler = Read(
-            "src/backend/Modules/AccessControl/Tooba.AccessControl.Application/Development/Seller/GetSellerDevContextsQueryHandler.cs");
+            "src/backend/Modules/AccessControl/Tooba.AccessControl.Application/Development/Seller/GetSellerDevContextsQuery.cs");
         Assert.Contains("\"seller-owner\"", handler, StringComparison.Ordinal);
         Assert.Contains("\"seller-owner-alt\"", handler, StringComparison.Ordinal);
         Assert.Contains("\"scoped-employee\"", handler, StringComparison.Ordinal);
+        Assert.Contains("AccessControlErrorCodes.SellerDevNotReady", handler, StringComparison.Ordinal);
+        Assert.Contains("IRequest<Result<SellerDevContextsView>>", handler, StringComparison.Ordinal);
 
         var models = Read(
             "src/backend/Modules/AccessControl/Tooba.AccessControl.Application/Development/Seller/SellerDevContextModels.cs");

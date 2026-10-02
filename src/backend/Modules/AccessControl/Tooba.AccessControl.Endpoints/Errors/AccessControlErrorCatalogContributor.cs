@@ -28,6 +28,8 @@ public sealed class AccessControlErrorCatalogContributor : IErrorCatalogContribu
         D(AccessControlErrorCodes.EscalationCeiling, ErrorClassification.Forbidden, StatusCodes.Status403Forbidden, "Ceiling escalation denied."),
         D(AccessControlErrorCodes.AuthorizationUnavailable, ErrorClassification.Platform, StatusCodes.Status503ServiceUnavailable, "Authorization service unavailable."),
         D(AccessControlErrorCodes.CapabilityDenied, ErrorClassification.Forbidden, StatusCodes.Status403Forbidden, "Capability denied."),
+        D(AccessControlErrorCodes.SellerDevUnavailable, ErrorClassification.NotFound, StatusCodes.Status404NotFound, "Seller development contexts are unavailable."),
+        D(AccessControlErrorCodes.SellerDevNotReady, ErrorClassification.Platform, StatusCodes.Status503ServiceUnavailable, "Seller development contexts are not ready."),
     ];
 
     private static ErrorDescriptor D(string code, ErrorClassification classification, int status, string fallback) =>
