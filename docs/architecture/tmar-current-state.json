@@ -1,4 +1,4 @@
-﻿{
+{
   "program": "TMAR — Tooba Microservice-Ready Architecture Recovery",
   "executionMode": "BACKEND_ONLY_UNTIL_EXPLICIT_RELEASE",
   "frontendFrozen": true,
@@ -6,9 +6,9 @@
   "lastAcceptedTask": "TB-TMAR-HOST-OUTBOX-AMC-001",
   "lastAcceptedCommit": "f1425fed94cc1a8354d3c9f9a013065d87cbe66c",
   "lastAcceptedCommitKind": "IMPLEMENTATION_COMMIT",
-  "lastAcceptedResultEvidenceCommit": "f2bfdf9403e51271b2d4d2dcf02e61c9836af81c",
+  "lastAcceptedResultEvidenceCommit": "91403c9c7a8f830aaf090e1f43338d4a1d236e54",
   "lastAcceptedResultEvidenceCommitKind": "RESULT_EVIDENCE_DOCS_STAMP_NOT_IMPLEMENTATION",
-  "lastAcceptedSoTStamp": "f2bfdf9403e51271b2d4d2dcf02e61c9836af81c",
+  "lastAcceptedSoTStamp": "91403c9c7a8f830aaf090e1f43338d4a1d236e54",
   "lastAcceptedSoTStampKind": "RESULT_EVIDENCE_DOCS_STAMP",
   "lastAcceptedCommitSemantics": "lastAcceptedTask is TB-TMAR-HOST-OUTBOX-AMC-001 (ANALYSIS_ONLY docs). IMPLEMENTATION commit remains Observability W1 SHA at lastAcceptedCommit (f1425fed94cc1a8354d3c9f9a013065d87cbe66c). Analyze docs stamp is NOT an implementation commit.",
   "lastAcceptedNote": "Host/Outbox ANALYSIS_ONLY: 3 files / 6 types; path↔namespace VIOLATION; MUST_SPLIT cohesion; OCE swallow debt in message/claim catch; options validator absent; KEEP platform dispositions; recommended W1 then CERT; Observability/Messaging/Health/MT/Errors/Security/Admin CERT preserved.",
@@ -6412,6 +6412,6 @@
     "workflowStop": "USER_REVIEW_HOST_OUTBOX_AMC_001",
     "evidenceRoot": "docs/evidence/TB-TMAR-HOST-OUTBOX-AMC-001",
     "note": "Docs-only analyze; does not advance implementation SHA.",
-    "docsStamp": "f2bfdf9403e51271b2d4d2dcf02e61c9836af81c"
+    "docsStamp": "91403c9c7a8f830aaf090e1f43338d4a1d236e54"
   }
 }
