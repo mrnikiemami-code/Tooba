@@ -29,4 +29,4 @@ nextHostFolderStarted = false
 evidenceRoot = docs/evidence/TB-TMAR-HOST-HEALTH-AMC-001/
 ```
 
-Docs stamp SHA filled at commit time.
+Docs stamp SHA: `29f51286b530c893a3953b14710d91763e8895fe` (RESULT_EVIDENCE_DOCS_STAMP; not implementation).
