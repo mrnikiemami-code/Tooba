@@ -25,35 +25,36 @@ BRIDGE-WAKE-V1
 Channel: tooba-main
 ```
 
-Latest Accepted TMAR Checkpoint — authoritative (reconciled by TB-TMAR-HOST-OBSERVABILITY-AMC-001-W2-CERT)
+Latest Accepted TMAR Checkpoint — authoritative (reconciled by TB-TMAR-HOST-OUTBOX-AMC-001)
 
 ```text
 Latest-Accepted-Implementation-Wave: TB-TMAR-HOST-OBSERVABILITY-AMC-001-W1
-Latest-Accepted-Task: TB-TMAR-HOST-OBSERVABILITY-AMC-001-W2-CERT
+Latest-Accepted-Task: TB-TMAR-HOST-OUTBOX-AMC-001
 Implementation-Commit: f1425fed94cc1a8354d3c9f9a013065d87cbe66c
 Implementation-Commit-Kind: IMPLEMENTATION_COMMIT
-Result-Evidence-Docs-Stamp: 42f57e76d863d52e983508434b6f6b185ea5e352
+Result-Evidence-Docs-Stamp: PENDING_DOCS_STAMP
 Result-Evidence-Docs-Stamp-Kind: RESULT_EVIDENCE_DOCS_STAMP_NOT_IMPLEMENTATION
-Mode: HOST_OBSERVABILITY_AMC_001_W2_CERTIFY_ONLY
-Observability-Production-File-Count: 1
-Observability-Production-Type-Count: 1
-Path-Namespace-State: EXACT_Tooba.Host.Observability
-Middleware-Order-State: AFTER_TENANT_AND_SESSION_CERTIFIED
-ClientIp-Logging-State: OMITTED_PRIVACY_SAFE_CERTIFIED
-Certification-State: HOST_OBSERVABILITY_AMC_CERTIFIED
-Boundary-State: HOST_OBSERVABILITY_PLATFORM_BOUNDARY_CERTIFIED
-Production-Code-Change: ZERO
+Mode: HOST_OUTBOX_AMC_001_ANALYSIS_ONLY
+Outbox-Production-File-Count: 3
+Outbox-Production-Type-Count: 6
+Path-Namespace-State: VIOLATION_Tooba.Host_vs_Outbox
+File-Cohesion-State: MULTI_TYPE_FILES_MUST_SPLIT
+Cancellation-Safety-State: DEBT_OCE_SWALLOWED_IN_MESSAGE_CLAIM_CATCH
+Options-Validation-State: VALIDATOR_ABSENT_DEBT
+Recommended-Wave-Count: 2
+Recommended-Next-Task: TB-TMAR-HOST-OUTBOX-AMC-001-W1
+Host-Observability-State: HOST_OBSERVABILITY_AMC_CERTIFIED_PRESERVED
 Host-Messaging-State: HOST_MESSAGING_AMC_CERTIFIED_PRESERVED
 Host-Health-State: HOST_HEALTH_AMC_CERTIFIED_PRESERVED
 MultiTenancy-Certification-State: HOST_MULTITENANCY_AMC_CERTIFIED_PRESERVED
 Errors-Certification-State: HOST_ERRORS_AMC_CERTIFIED_PRESERVED
 Host-Security-State: HOST_SECURITY_AMC_CERTIFIED_PRESERVED
 Whole-Host-Admin-State: HOST_ADMIN_FULLY_CERTIFIED
-Current-Host-Checkpoint: Observability
+Current-Host-Checkpoint: Outbox
 Next-Host-Folder-Started: false
 Stale-Current-Pointer-State: ZERO
-workflowStop: USER_REVIEW_HOST_OBSERVABILITY_AMC_001_W2_CERT
-Next-Task: USER_REVIEW_HOST_OBSERVABILITY_AMC_001_W2_CERT
+workflowStop: USER_REVIEW_HOST_OUTBOX_AMC_001
+Next-Task: USER_REVIEW_HOST_OUTBOX_AMC_001
 Next-Task-Gate: USER_DECISION_REQUIRED_NO_AUTOMATIC_NEXT_IMPLEMENTATION_TASK
 Automatic-Next-Implementation-Task: NONE
 ```

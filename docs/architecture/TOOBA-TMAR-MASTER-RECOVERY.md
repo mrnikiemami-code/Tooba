@@ -12,13 +12,15 @@ Canonical Architect ↔ Cursor handoff (recovery-critical)
 
 Latest Accepted TMAR Checkpoint — authoritative
 
-Reconciled by `TB-TMAR-HOST-OBSERVABILITY-AMC-001-W2-CERT`. CERTIFY_ONLY of Host/Observability: `HOST_OBSERVABILITY_AMC_CERTIFIED` / `HOST_OBSERVABILITY_PLATFORM_BOUNDARY_CERTIFIED`; ClientIp `OMITTED_PRIVACY_SAFE_CERTIFIED`; 1 file / 1 type; EXACT `Tooba.Host.Observability`; production change ZERO. Gate: `USER_DECISION_REQUIRED_NO_AUTOMATIC_NEXT_IMPLEMENTATION_TASK`.
-- Current Host checkpoint = `Observability`; workflowStop / Next-Task = `USER_REVIEW_HOST_OBSERVABILITY_AMC_001_W2_CERT`; automatic next = NONE; stale pointer = ZERO.
-- Implementation SHA remains Observability W1 `f1425fed...`; Messaging / Health / MultiTenancy / Errors / Security / Admin CERT preserved.
+Reconciled by `TB-TMAR-HOST-OUTBOX-AMC-001`. ANALYSIS_ONLY of Host/Outbox: 3 files / 6 types; path↔namespace VIOLATION; MUST_SPLIT cohesion; OCE swallow debt in message/claim catch; options validator absent; KEEP platform dispositions; recommended W1 then CERT. Gate: `USER_DECISION_REQUIRED_NO_AUTOMATIC_NEXT_IMPLEMENTATION_TASK`.
+- Current Host checkpoint = `Outbox`; workflowStop / Next-Task = `USER_REVIEW_HOST_OUTBOX_AMC_001`; automatic next = NONE; stale pointer = ZERO.
+- Implementation SHA remains Observability W1 `f1425fed...`; Observability / Messaging / Health / MultiTenancy / Errors / Security / Admin CERT preserved; production change ZERO.
 
-Reconciled by `TB-TMAR-HOST-OBSERVABILITY-AMC-001-W1` (HISTORICAL for current pointer). MIGRATE of Host/Observability: namespace EXACT `Tooba.Host.Observability`; ClientIp omitted privacy-safe; 1 file / 1 type; order after Tenant+Session preserved; certification `NOT_CERTIFIED_W2_REQUIRED` (superseded by W2-CERT).
+Reconciled by `TB-TMAR-HOST-OBSERVABILITY-AMC-001-W2-CERT` (HISTORICAL for current pointer). CERTIFY_ONLY of Host/Observability: `HOST_OBSERVABILITY_AMC_CERTIFIED` / `HOST_OBSERVABILITY_PLATFORM_BOUNDARY_CERTIFIED`.
 
-Reconciled by `TB-TMAR-HOST-OBSERVABILITY-AMC-001` (HISTORICAL for current pointer). ANALYSIS_ONLY of Host/Observability: 1 file / 1 type; path↔namespace VIOLATION; KEEP_AS_GLOBAL_HOST_OBSERVABILITY_PLATFORM; ClientIp SENSITIVE_DEBT vs trusted-proxy contract; recommended W1 then CERT.
+Reconciled by `TB-TMAR-HOST-OBSERVABILITY-AMC-001-W1` (HISTORICAL for current pointer). MIGRATE of Host/Observability: namespace EXACT `Tooba.Host.Observability`; ClientIp omitted privacy-safe; 1 file / 1 type.
+
+Reconciled by `TB-TMAR-HOST-OBSERVABILITY-AMC-001` (HISTORICAL for current pointer). ANALYSIS_ONLY of Host/Observability.
 
 Reconciled by `TB-TMAR-HOST-MESSAGING-AMC-001-W2-CERT` (HISTORICAL for current pointer). CERTIFY_ONLY of Host/Messaging: `HOST_MESSAGING_AMC_CERTIFIED` / `HOST_MESSAGING_PLATFORM_BOUNDARY_CERTIFIED`.
 
