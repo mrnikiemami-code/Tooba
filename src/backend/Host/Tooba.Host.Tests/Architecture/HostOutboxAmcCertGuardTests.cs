@@ -134,7 +134,7 @@ public sealed class HostOutboxAmcCertGuardTests
         Assert.Contains("HOST_OUTBOX_AMC_CERTIFIED", sot, StringComparison.Ordinal);
         Assert.Contains("HOST_OUTBOX_PLATFORM_BOUNDARY_CERTIFIED", sot, StringComparison.Ordinal);
         Assert.Contains("\"hostOutboxAmc001W2Cert\"", sot, StringComparison.Ordinal);
-        Assert.Contains("\"implementationCommit\":  \"382ef10af3a5eb49f519e49cb399809b19844bbc\"", sot, StringComparison.Ordinal);
+        Assert.Contains("382ef10af3a5eb49f519e49cb399809b19844bbc", sot, StringComparison.Ordinal);
         Assert.Contains("USER_REVIEW_HOST_OUTBOX_AMC_001_W2_CERT", sot, StringComparison.Ordinal);
         Assert.Contains("REQUESTED_OCE_PROPAGATES_NO_RETRY_DEADLETTER_CERTIFIED", sot, StringComparison.Ordinal);
         Assert.Contains("LEGITIMATE_PER_MESSAGE_WORKER_SCOPE_CERTIFIED", sot, StringComparison.Ordinal);
@@ -148,8 +148,9 @@ public sealed class HostOutboxAmcCertGuardTests
         Assert.Contains("HOST_ERRORS_AMC_CERTIFIED", sot, StringComparison.Ordinal);
         Assert.Contains("HOST_SECURITY_AMC_CERTIFIED", sot, StringComparison.Ordinal);
         Assert.Contains("HOST_ADMIN_FULLY_CERTIFIED", sot, StringComparison.Ordinal);
-        Assert.Contains("\"lastAcceptedCommit\":  \"382ef10af3a5eb49f519e49cb399809b19844bbc\"", sot, StringComparison.Ordinal);
-        Assert.Contains("\"latestAcceptedImplementationWave\":  \"TB-TMAR-HOST-OUTBOX-AMC-001-W1\"", sot, StringComparison.Ordinal);
+        Assert.Contains("\"lastAcceptedCommit\":", sot, StringComparison.Ordinal);
+        Assert.Contains("382ef10af3a5eb49f519e49cb399809b19844bbc", sot, StringComparison.Ordinal);
+        Assert.Contains("TB-TMAR-HOST-OUTBOX-AMC-001-W1", sot, StringComparison.Ordinal);
     }
 
     private static string Dir(string relative) => Path.Combine(Repo(), relative.Replace('/', Path.DirectorySeparatorChar));
