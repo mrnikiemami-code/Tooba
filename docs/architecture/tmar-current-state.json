@@ -6,9 +6,9 @@
   "lastAcceptedTask": "TB-TMAR-HOST-ERRORS-AMC-001-W2-CERT",
   "lastAcceptedCommit": "e190e213c491fd530d86c7e5680cb0607b5e98d3",
   "lastAcceptedCommitKind": "IMPLEMENTATION_COMMIT",
-  "lastAcceptedResultEvidenceCommit": "4a379419389f58903d8d1bc5d7e7f33368bfe8e6",
+  "lastAcceptedResultEvidenceCommit": "8d5e6a2dce7b34e2ceeb4166e5d324467bc3a8f3",
   "lastAcceptedResultEvidenceCommitKind": "RESULT_EVIDENCE_DOCS_STAMP_NOT_IMPLEMENTATION",
-  "lastAcceptedSoTStamp": "4a379419389f58903d8d1bc5d7e7f33368bfe8e6",
+  "lastAcceptedSoTStamp": "8d5e6a2dce7b34e2ceeb4166e5d324467bc3a8f3",
   "lastAcceptedSoTStampKind": "RESULT_EVIDENCE_DOCS_STAMP",
   "lastAcceptedCommitSemantics": "lastAcceptedTask is TB-TMAR-HOST-ERRORS-AMC-001-W2-CERT (CERTIFY docs/guards). IMPLEMENTATION commit remains W1 SHA at lastAcceptedCommit (e190e213c491fd530d86c7e5680cb0607b5e98d3). Certification docs stamp in lastAcceptedResultEvidenceCommit/lastAcceptedSoTStamp is NOT an implementation commit.",
   "lastAcceptedNote": "Host/Errors W2-CERT: HOST_ERRORS_AMC_CERTIFIED; one-file thin ToobaExceptionHandler; mapper ABSENT; Foundation platform.* 503/503/404; MultiTenancy NOT_OPENED; Security/Admin CERT preserved; production change ZERO.",
@@ -5842,6 +5842,7 @@
     "workflowStop": "USER_REVIEW_HOST_SECURITY_AMC_001_W3_CERT",
     "evidenceRoot": "docs/evidence/TB-TMAR-HOST-SECURITY-AMC-001-W3-CERT",
     "note": "Certification docs/tests only; does not advance implementation SHA.",
+    "docsStamp": "8d5e6a2dce7b34e2ceeb4166e5d324467bc3a8f3",
     "docsStamp": "73a80ee28ed9dc054be5adae0f7115e72c115ded"
   },
   "hostErrorsAmc001": {
@@ -5923,6 +5924,7 @@
     "automaticNextImplementationTask": "NONE",
     "workflowStop": "USER_REVIEW_HOST_ERRORS_AMC_001_W2_CERT",
     "evidenceRoot": "docs/evidence/TB-TMAR-HOST-ERRORS-AMC-001-W2-CERT",
-    "note": "Certification docs/tests only; does not advance implementation SHA."
+    "note": "Certification docs/tests only; does not advance implementation SHA.",
+    "docsStamp": "8d5e6a2dce7b34e2ceeb4166e5d324467bc3a8f3"
   }
 }
