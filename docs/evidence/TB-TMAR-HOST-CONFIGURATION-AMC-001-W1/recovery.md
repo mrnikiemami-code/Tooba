@@ -1,4 +1,4 @@
-﻿# recovery — TB-TMAR-HOST-CONFIGURATION-AMC-001-W1
+# recovery — TB-TMAR-HOST-CONFIGURATION-AMC-001-W1
 
 ```text
 task = TB-TMAR-HOST-CONFIGURATION-AMC-001-W1
@@ -31,5 +31,5 @@ nextHostFolderStarted = false
 evidenceRoot = docs/evidence/TB-TMAR-HOST-CONFIGURATION-AMC-001-W1/
 ```
 
-Implementation SHA: set after commit.
+Implementation SHA: `32719977bc6408490fe5945d75dedaa5c2f7af4c`.
 Docs stamp SHA: set after docs stamp commit.

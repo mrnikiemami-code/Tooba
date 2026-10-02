@@ -1,4 +1,4 @@
-﻿# Tooba — Recovery Context
+# Tooba — Recovery Context
 
 Canonical repository:
 
@@ -30,7 +30,7 @@ Latest Accepted TMAR Checkpoint — authoritative (reconciled by TB-TMAR-HOST-CO
 ```text
 Latest-Accepted-Implementation-Wave: TB-TMAR-HOST-CONFIGURATION-AMC-001-W1
 Latest-Accepted-Task: TB-TMAR-HOST-CONFIGURATION-AMC-001-W1
-Implementation-Commit: PENDING_IMPLEMENTATION_SHA
+Implementation-Commit: 32719977bc6408490fe5945d75dedaa5c2f7af4c
 Implementation-Commit-Kind: IMPLEMENTATION_COMMIT
 Result-Evidence-Docs-Stamp: PENDING_DOCS_STAMP
 Result-Evidence-Docs-Stamp-Kind: RESULT_EVIDENCE_DOCS_STAMP_NOT_IMPLEMENTATION
