@@ -6945,6 +6945,7 @@
         "evidenceRoot": "docs/evidence/TB-TMAR-STORY-AMC-001-W6-CERT/",
         "workflowStop": "USER_REVIEW_STORY_AMC_001_W6_CERT_COMPLETE",
         "automaticNextImplementationTask": "NONE",
-        "implementationCommit": "f531ea300785eb740f92562309b15701dfd897e3"
+        "implementationCommit": "f531ea300785eb740f92562309b15701dfd897e3",
+        "docsStamp": "0e76e11fb241782309dc84c8a61f89c400a637ac"
     }
 }
