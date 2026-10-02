@@ -4,46 +4,7 @@ using Tooba.BuildingBlocks.Presentation;
 using Tooba.BuildingBlocks.Presentation.Errors;
 using Tooba.StoreContext.Contracts.Current;
 
-namespace Tooba.Host;
-
-/// <summary>
-/// نگهداشت <see cref="CommerceContext"/> روی HttpContext.Items. هدر Tenant منبع حقیقت نیست.
-/// </summary>
-internal sealed class HttpCommerceContextAccessor : ICurrentCommerceContext, ICurrentEdition, ICurrentTenant, ICommerceContextAssigner
-{
-    /// <summary>
-    /// کلید Items برای زمینهٔ تثبیت‌شدهٔ همین درخواست.
-    /// </summary>
-    internal const string ItemKey = "Tooba.CommerceContext";
-
-    private readonly IHttpContextAccessor _httpContextAccessor;
-    private CommerceContext? _assigned;
-
-    /// <summary>
-    /// accessor را به HttpContext درخواست وصل می‌کند. کارگر می‌تواند بدون Host مقدار بگذارد.
-    /// </summary>
-    public HttpCommerceContextAccessor(IHttpContextAccessor httpContextAccessor)
-    {
-        _httpContextAccessor = httpContextAccessor;
-    }
-
-    /// <inheritdoc />
-    public CommerceContext? Current =>
-        _assigned ?? _httpContextAccessor.HttpContext?.Items[ItemKey] as CommerceContext;
-
-    /// <inheritdoc />
-    public void Assign(CommerceContext context)
-    {
-        ArgumentNullException.ThrowIfNull(context);
-        _assigned = context;
-    }
-
-    /// <inheritdoc />
-    EditionContext? ICurrentEdition.Current => Current?.Edition;
-
-    /// <inheritdoc />
-    TenantContext? ICurrentTenant.Current => Current?.Tenant;
-}
+namespace Tooba.Host.MultiTenancy;
 
 /// <summary>
 /// Resolve امن Host → Tenant (Single-Store) یا اتصال marketplace. ناشناخته/غیرفعال = ۴۰۴ بدون نشت وجود.
@@ -86,7 +47,7 @@ internal sealed class TenantResolutionMiddleware
     /// <summary>
     /// زمینه را می‌سازد یا پاسخ استاندارد fail-closed می‌نویسد. جزئیات اتصال در پاسخ نیست.
     /// </summary>
-    public async Task InvokeAsync(HttpContext httpContext)
+    public async Task InvokeAsync(HttpContext httpContext, IStoreCommerceContextAssigner storeCommerceAssigner)
     {
         if (ShouldSkip(httpContext.Request.Path))
         {
@@ -100,7 +61,7 @@ internal sealed class TenantResolutionMiddleware
         {
             var (context, storeCommerce) = Resolve(httpContext, traceId);
             httpContext.Items[HttpCommerceContextAccessor.ItemKey] = context;
-            httpContext.RequestServices.GetRequiredService<IStoreCommerceContextAssigner>().Assign(storeCommerce);
+            storeCommerceAssigner.Assign(storeCommerce);
             Activity.Current?.SetTag("tooba.edition", context.Edition.Edition.ToString());
             Activity.Current?.SetTag("tooba.deployment", context.Edition.DeploymentId);
             if (context.Tenant is { } tenant)

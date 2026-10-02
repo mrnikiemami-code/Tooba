@@ -16,6 +16,7 @@ using Tooba.PlatformProbe.Infrastructure.Events;
 using Tooba.PlatformProbe.Infrastructure.Persistence;
 using Xunit;
 
+using Tooba.Host.MultiTenancy;
 using Tooba.Host.Persistence;
 
 namespace Tooba.Host.Tests;

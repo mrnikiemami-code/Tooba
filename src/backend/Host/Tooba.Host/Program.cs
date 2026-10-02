@@ -15,6 +15,7 @@ using Tooba.BuildingBlocks.Observability.Correlation;
 using Tooba.BuildingBlocks.Presentation;
 using Tooba.StoreContext.Contracts.Current;
 using Tooba.Host;
+using Tooba.Host.MultiTenancy;
 using Tooba.Host.Errors;
 using Tooba.Host.Caching;
 using Tooba.Host.Persistence;
