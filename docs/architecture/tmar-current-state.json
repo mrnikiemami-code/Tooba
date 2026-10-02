@@ -4,7 +4,7 @@
     "frontendFrozen": true,
     "checkoutState": "PAUSED_AT_SAFE_W5_CHECKPOINT",
     "lastAcceptedTask": "TB-TMAR-HOST-ROOT-FINAL-CERT-001",
-    "lastAcceptedCommit": "PENDING_IMPLEMENTATION_SHA",
+    "lastAcceptedCommit": "7a6c353a98a761df9124beb1fce23ed8424230de",
     "lastAcceptedCommitKind": "IMPLEMENTATION_COMMIT",
     "lastAcceptedResultEvidenceCommit": "PENDING_DOCS_STAMP",
     "lastAcceptedResultEvidenceCommitKind": "RESULT_EVIDENCE_DOCS_STAMP_NOT_IMPLEMENTATION",
@@ -6797,6 +6797,7 @@
         "workflowStop": "USER_REVIEW_HOST_ROOT_FINAL_CERT_001",
         "evidenceRoot": "docs/evidence/TB-TMAR-HOST-ROOT-FINAL-CERT-001/",
         "note": "Final Host root closure; do not auto-start next folder/module/frontend/Checkout.",
-        "docsStamp": "PENDING_DOCS_STAMP"
+        "docsStamp": "PENDING_DOCS_STAMP",
+        "implementationCommit": "7a6c353a98a761df9124beb1fce23ed8424230de"
     }
 }
