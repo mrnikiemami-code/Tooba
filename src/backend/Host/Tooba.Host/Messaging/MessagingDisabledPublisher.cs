@@ -1,6 +1,6 @@
 using Tooba.BuildingBlocks;
 
-namespace Tooba.Host;
+namespace Tooba.Host.Messaging;
 
 /// <summary>
 /// ناشر بسته وقتی messaging خاموش است. پیام را دور نمی‌ریزد و به in-process برنمی‌گردد.

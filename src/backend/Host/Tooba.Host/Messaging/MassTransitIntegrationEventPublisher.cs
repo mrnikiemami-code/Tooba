@@ -8,7 +8,7 @@ using Tooba.BuildingBlocks.Observability.Tracing;
 using Tooba.Host.Transport;
 using Tooba.Persistence;
 
-namespace Tooba.Host;
+namespace Tooba.Host.Messaging;
 
 /// <summary>
 /// آداپتور ناشر: Outbox را به MassTransit SQL Transport می‌سپارد. handler کسب‌وکار را صدا نمی‌زند.

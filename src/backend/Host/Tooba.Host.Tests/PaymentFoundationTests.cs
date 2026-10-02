@@ -15,6 +15,7 @@ using Microsoft.Extensions.Options;
 using Testcontainers.PostgreSql;
 using Tooba.BuildingBlocks;
 using Tooba.Host;
+using Tooba.Host.Messaging;
 using Tooba.Host.MultiTenancy;
 using Tooba.Host.Persistence;
 using Tooba.Inventory.Application.Ports;

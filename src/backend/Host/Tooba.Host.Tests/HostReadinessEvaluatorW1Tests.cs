@@ -3,6 +3,7 @@ using MassTransit;
 using Tooba.AccessControl.Contracts.Readiness;
 using Tooba.BuildingBlocks;
 using Tooba.Host.Health;
+using Tooba.Host.Messaging;
 using Xunit;
 
 namespace Tooba.Host.Tests;

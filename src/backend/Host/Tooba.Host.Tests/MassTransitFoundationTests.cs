@@ -6,6 +6,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Tooba.BuildingBlocks;
 using Tooba.Host;
+using Tooba.Host.Messaging;
 using Xunit;
 
 namespace Tooba.Host.Tests;

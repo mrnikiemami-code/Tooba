@@ -4,7 +4,7 @@ using Npgsql;
 using Tooba.BuildingBlocks;
 using Tooba.Host.Transport;
 
-namespace Tooba.Host;
+namespace Tooba.Host.Messaging;
 
 /// <summary>
 /// ترکیب MassTransit 8.5.10 + PostgreSQL SQL Transport پشت مرزهای Tooba. یک bus برای استقرار، نه per-tenant.

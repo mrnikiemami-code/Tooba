@@ -5,7 +5,7 @@ using Tooba.BuildingBlocks.Observability.Correlation;
 using Tooba.BuildingBlocks.Observability.Messaging;
 using Tooba.BuildingBlocks.Observability.Tracing;
 
-namespace Tooba.Host;
+namespace Tooba.Host.Messaging;
 
 /// <summary>
 /// دابل تست صریح: handlerها را همان‌جا صدا می‌زند. پیش‌فرض تولید نیست و جایگزین SQL Transport نمی‌شود.

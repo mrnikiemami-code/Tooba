@@ -1,6 +1,7 @@
 using MassTransit;
 using Tooba.AccessControl.Contracts.Readiness;
 using Tooba.BuildingBlocks;
+using Tooba.Host.Messaging;
 
 namespace Tooba.Host.Health;
 

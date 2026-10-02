@@ -1,6 +1,6 @@
 using MassTransit;
 
-namespace Tooba.Host;
+namespace Tooba.Host.Messaging;
 
 /// <summary>
 /// سیاست retry/redelivery محدود برای consumerهای SQL Transport.
