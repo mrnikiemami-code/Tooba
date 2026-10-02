@@ -1,31 +1,22 @@
-﻿using FluentValidation;
+using FluentValidation;
 using Microsoft.Extensions.DependencyInjection;
-using Tooba.AccessControl.Application.Commands.ArchiveRole;
-using Tooba.AccessControl.Application.Commands.AssignRole;
-using Tooba.AccessControl.Application.Commands.CloneRole;
-using Tooba.AccessControl.Application.Commands.CreateRole;
-using Tooba.AccessControl.Application.Commands.EnsureBootstrap;
-using Tooba.AccessControl.Application.Commands.RemoveAssignment;
-using Tooba.AccessControl.Application.Commands.SetRolePermissions;
-using Tooba.AccessControl.Application.Commands.SetSellerCeiling;
-using Tooba.AccessControl.Application.Commands.UpdateRole;
-using Tooba.AccessControl.Application.Models;
-using Tooba.AccessControl.Application.Ports;
+using Tooba.AccessControl.Application.Access.Queries;
+using Tooba.AccessControl.Application.Assignments.Commands;
+using Tooba.AccessControl.Application.Assignments.Queries;
+using Tooba.AccessControl.Application.Assignments.Validators;
+using Tooba.AccessControl.Application.Bootstrap.Commands;
+using Tooba.AccessControl.Application.Ceiling.Commands;
+using Tooba.AccessControl.Application.Ceiling.Queries;
+using Tooba.AccessControl.Application.Ceiling.Validators;
 using Tooba.AccessControl.Application.Exceptions;
-using Tooba.AccessControl.Application.Queries.GetEffectiveAccess;
-using Tooba.AccessControl.Application.Queries.GetRole;
-using Tooba.AccessControl.Application.Queries.GetRolePermissions;
-using Tooba.AccessControl.Application.Queries.GetSellerCeiling;
-using Tooba.AccessControl.Application.Queries.ListAssignments;
-using Tooba.AccessControl.Application.Queries.ListPermissionCatalog;
-using Tooba.AccessControl.Application.Queries.ListRoles;
-using Tooba.AccessControl.Application.Queries.ListScopeResources;
-using Tooba.AccessControl.Application.Queries.ListSellerPermissionCatalog;
-using Tooba.AccessControl.Application.Queries.SearchAccessUsers;
-using Tooba.AccessControl.Application.Validators.Assignment;
-using Tooba.AccessControl.Application.Validators.Ceiling;
-using Tooba.AccessControl.Application.Validators.Permissions;
-using Tooba.AccessControl.Application.Validators.Role;
+using Tooba.AccessControl.Application.Models;
+using Tooba.AccessControl.Application.Permissions.Commands;
+using Tooba.AccessControl.Application.Permissions.Queries;
+using Tooba.AccessControl.Application.Permissions.Validators;
+using Tooba.AccessControl.Application.Ports;
+using Tooba.AccessControl.Application.Roles.Commands;
+using Tooba.AccessControl.Application.Roles.Queries;
+using Tooba.AccessControl.Application.Roles.Validators;
 using Tooba.AccessControl.Contracts.Enums;
 using Tooba.BuildingBlocks;
 using Xunit;
@@ -209,35 +200,32 @@ public sealed class AccessControlValidatorTests
     }
 
     [Fact]
-    public void Validator_files_sit_under_Validators_folder_with_matching_namespaces()
+    public void Validator_files_sit_under_capability_Validators_folders_with_matching_namespaces()
     {
         var applicationRoot = Path.Combine(
             RepoRoot(), "src", "backend", "Modules", "AccessControl", "Tooba.AccessControl.Application");
         Assert.Empty(Directory.EnumerateFiles(applicationRoot, "*.cs", SearchOption.TopDirectoryOnly));
 
-        var validatorsRoot = Path.Combine(applicationRoot, "Validators");
-        Assert.True(Directory.Exists(validatorsRoot), "Validators folder must exist");
-
         foreach (var (_, validatorType) in RequiredValidators)
         {
             var file = Directory
-                .EnumerateFiles(validatorsRoot, validatorType.Name + ".cs", SearchOption.AllDirectories)
-                .Single();
-            var relative = Path.GetRelativePath(validatorsRoot, file);
-            var folder = Path.GetDirectoryName(relative)!;
-            var expectedNamespace = folder.Length == 0
-                ? "Tooba.AccessControl.Application.Validators"
-                : "Tooba.AccessControl.Application.Validators." + folder;
+                .EnumerateFiles(applicationRoot, validatorType.Name + ".cs", SearchOption.AllDirectories)
+                .Single(path => path.Contains($"{Path.DirectorySeparatorChar}Validators{Path.DirectorySeparatorChar}", StringComparison.Ordinal));
+            var relative = Path.GetRelativePath(applicationRoot, file).Replace('\\', '/');
+            var dir = Path.GetDirectoryName(relative)!.Replace('\\', '/');
+            var expectedNamespace = "Tooba.AccessControl.Application." + dir.Replace('/', '.');
             Assert.Equal(expectedNamespace, validatorType.Namespace);
+            Assert.DoesNotContain("/Commands/", "/" + relative + "/", StringComparison.Ordinal);
+            Assert.DoesNotContain("/Queries/", "/" + relative + "/", StringComparison.Ordinal);
         }
     }
 
     [Fact]
     public void Validators_only_declare_transport_shape_rules()
     {
-        var validatorsRoot = Path.Combine(
+        var applicationRoot = Path.Combine(
             RepoRoot(), "src", "backend", "Modules", "AccessControl",
-            "Tooba.AccessControl.Application", "Validators");
+            "Tooba.AccessControl.Application");
 
         var forbidden = new[]
         {
@@ -245,7 +233,7 @@ public sealed class AccessControlValidatorTests
             "IAccessControlDirectory", "Escalat",
         };
 
-        foreach (var file in Directory.EnumerateFiles(validatorsRoot, "*Validator.cs", SearchOption.AllDirectories))
+        foreach (var file in Directory.EnumerateFiles(applicationRoot, "*Validator.cs", SearchOption.AllDirectories))
         {
             var text = File.ReadAllText(file);
             Assert.DoesNotContain("ValidateAsync", text, StringComparison.Ordinal);

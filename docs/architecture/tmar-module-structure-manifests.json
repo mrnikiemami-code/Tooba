@@ -18,7 +18,7 @@
         {
           "projectName": "Tooba.AccessControl.Application",
           "rootAllowlist": [],
-          "rootAllowlistJustification": "AccessControl.Application intentionally has no root .cs file: Authorization/Commands/Composition/Development/Exceptions/Models/Permissions/Ports/Queries/Validators carry every type; namespace alignment is exact path-derived equality.",
+          "rootAllowlistJustification": "AccessControl.Application intentionally has no root .cs file: capability-first roots (Roles/Assignments/Permissions/Ceiling/Access/Bootstrap/Development) plus shared Authorization/Composition/Exceptions/Models/Ports/Validators carry every type; namespace alignment is exact path-derived equality.",
           "forbiddenRootFiles": [
             "AccessControlContracts.cs",
             "AccessControlDtos.cs",

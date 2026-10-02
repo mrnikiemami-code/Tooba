@@ -1,0 +1,51 @@
+using MediatR;
+using Tooba.BuildingBlocks.Results;
+using Tooba.AccessControl.Application.Composition;
+using Tooba.AccessControl.Contracts.Enums;
+using Tooba.AccessControl.Application.Models;
+using Tooba.AccessControl.Application.Ports;
+using Tooba.AccessControl.Application.Permissions;
+
+namespace Tooba.AccessControl.Application.Permissions.Commands;
+
+/// <summary>
+/// فرمان جایگزینی مجوزهای یک نقش در محدودهٔ مالک مشخص.
+/// </summary>
+/// <param name="RoleId">شناسهٔ نقش.</param>
+/// <param name="OwnerScopeKind">گونهٔ محدودهٔ مالک.</param>
+/// <param name="OwnerScopeId">شناسهٔ مالک در محدودهٔ Seller.</param>
+/// <param name="ActorUserId">شناسهٔ Actor مجاز (از لایهٔ مجوز).</param>
+/// <param name="TenantId">شناسهٔ Tenant جاری در صورت وجود.</param>
+/// <param name="Grants">فهرست اعطاهای مجوز.</param>
+/// <param name="TraceId">شناسهٔ رهگیری درخواست.</param>
+public sealed record SetRolePermissionsCommand(
+    Guid RoleId,
+    AccessOwnerScopeKind OwnerScopeKind,
+    Guid? OwnerScopeId,
+    Guid ActorUserId,
+    string? TenantId,
+    IReadOnlyList<RolePermissionGrant> Grants,
+    string? TraceId) : IRequest<Result>;
+
+/// <summary>Handler فرمان جایگزینی مجوزهای نقش.</summary>
+public sealed class SetRolePermissionsCommandHandler : IRequestHandler<SetRolePermissionsCommand, Result>
+{
+    private readonly IAccessControlDirectory _directory;
+
+    /// <summary>سازنده.</summary>
+    /// <param name="directory">دایرکتوری دسترسی.</param>
+    public SetRolePermissionsCommandHandler(IAccessControlDirectory directory) => _directory = directory;
+
+    /// <inheritdoc />
+    public Task<Result> Handle(SetRolePermissionsCommand request, CancellationToken cancellationToken)
+    {
+        var owner = new AccessOwnerScope(request.OwnerScopeKind, request.OwnerScopeId, request.TenantId);
+        return AccessControlOperation.ExecuteAsync(() => _directory.SetRolePermissionsAsync(
+            request.RoleId,
+            owner,
+            request.Grants,
+            request.ActorUserId,
+            request.TraceId,
+            cancellationToken));
+    }
+}

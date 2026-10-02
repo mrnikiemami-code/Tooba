@@ -7127,5 +7127,25 @@
         "taskArtifact": "docs/ai/tasks/TB-TMAR-SKILL-STRUCTURE-001.task.md",
         "workflowStop": "USER_REVIEW_SKILL_STRUCTURE_001",
         "automaticNextImplementationTask": "NONE"
+    },
+    "accessControlStructureRepair001": {
+        "task": "TB-TMAR-ACCESSCONTROL-STRUCTURE-REPAIR-001",
+        "parentTask": "TB-TMAR-ACCESSCONTROL-AMC-001-W5-CERT",
+        "mode": "STRUCTURE_REPAIR_ONLY",
+        "state": "ACCESSCONTROL_APPLICATION_CAPABILITY_FIRST_APPLIED",
+        "structureState": "READY_FOR_CERTIFY",
+        "folderGranularityState": "PROFESSIONAL_SHALLOW",
+        "technicalAxisFirstState": "ZERO",
+        "singleFileRequestLeafState": "ZERO",
+        "certificationDrift": "ACKNOWLEDGED_AND_PHYSICALLY_REPAIRED",
+        "finalRecertification": "PENDING_SEPARATE_CERTIFY_TASK",
+        "durableGuard": "AccessControlStructureRepair001GuardTests",
+        "hostRootFinalCheckpoint": "PRESERVED",
+        "behaviorChange": "NONE",
+        "schemaChange": "NONE",
+        "evidenceRoot": "docs/evidence/TB-TMAR-ACCESSCONTROL-STRUCTURE-REPAIR-001/",
+        "taskArtifact": "docs/ai/tasks/TB-TMAR-ACCESSCONTROL-STRUCTURE-REPAIR-001.task.md",
+        "workflowStop": "USER_REVIEW_ACCESSCONTROL_STRUCTURE_REPAIR_001",
+        "automaticNextImplementationTask": "NONE"
     }
 }

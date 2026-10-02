@@ -64,12 +64,12 @@ public sealed class AccessControlModuleAmcW5CertGuardTests
         // Validators 6/6 present
         foreach (var relative in new[]
                  {
-                     "src/backend/Modules/AccessControl/Tooba.AccessControl.Application/Validators/Role/CreateRoleCommandValidator.cs",
-                     "src/backend/Modules/AccessControl/Tooba.AccessControl.Application/Validators/Role/UpdateRoleCommandValidator.cs",
-                     "src/backend/Modules/AccessControl/Tooba.AccessControl.Application/Validators/Role/CloneRoleCommandValidator.cs",
-                     "src/backend/Modules/AccessControl/Tooba.AccessControl.Application/Validators/Assignment/AssignRoleCommandValidator.cs",
-                     "src/backend/Modules/AccessControl/Tooba.AccessControl.Application/Validators/Permissions/SetRolePermissionsCommandValidator.cs",
-                     "src/backend/Modules/AccessControl/Tooba.AccessControl.Application/Validators/Ceiling/SetSellerCeilingCommandValidator.cs",
+                     "src/backend/Modules/AccessControl/Tooba.AccessControl.Application/Roles/Validators/CreateRoleCommandValidator.cs",
+                     "src/backend/Modules/AccessControl/Tooba.AccessControl.Application/Roles/Validators/UpdateRoleCommandValidator.cs",
+                     "src/backend/Modules/AccessControl/Tooba.AccessControl.Application/Roles/Validators/CloneRoleCommandValidator.cs",
+                     "src/backend/Modules/AccessControl/Tooba.AccessControl.Application/Assignments/Validators/AssignRoleCommandValidator.cs",
+                     "src/backend/Modules/AccessControl/Tooba.AccessControl.Application/Permissions/Validators/SetRolePermissionsCommandValidator.cs",
+                     "src/backend/Modules/AccessControl/Tooba.AccessControl.Application/Ceiling/Validators/SetSellerCeilingCommandValidator.cs",
                  })
         {
             Assert.True(File.Exists(Path.Combine(root, relative.Replace('/', Path.DirectorySeparatorChar))));

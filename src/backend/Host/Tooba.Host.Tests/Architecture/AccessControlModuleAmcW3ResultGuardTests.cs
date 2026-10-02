@@ -16,17 +16,17 @@ public sealed class AccessControlModuleAmcW3ResultGuardTests
         Assert.Contains("NotFoundIfNull", operation, StringComparison.Ordinal);
 
         var createRole = File.ReadAllText(Path.Combine(
-            root, "src/backend/Modules/AccessControl/Tooba.AccessControl.Application/Commands/CreateRole/CreateRoleCommand.cs"));
+            root, "src/backend/Modules/AccessControl/Tooba.AccessControl.Application/Roles/Commands/CreateRoleCommand.cs"));
         Assert.Contains("IRequest<Result<AccessRoleDto>>", createRole, StringComparison.Ordinal);
         Assert.Contains("AccessControlOperation.ExecuteAsync", createRole, StringComparison.Ordinal);
 
         var archive = File.ReadAllText(Path.Combine(
-            root, "src/backend/Modules/AccessControl/Tooba.AccessControl.Application/Commands/ArchiveRole/ArchiveRoleCommand.cs"));
+            root, "src/backend/Modules/AccessControl/Tooba.AccessControl.Application/Roles/Commands/ArchiveRoleCommand.cs"));
         Assert.Contains("IRequest<Result>", archive, StringComparison.Ordinal);
         Assert.DoesNotContain("IRequest<Unit>", archive, StringComparison.Ordinal);
 
         var getRole = File.ReadAllText(Path.Combine(
-            root, "src/backend/Modules/AccessControl/Tooba.AccessControl.Application/Queries/GetRole/GetRoleQuery.cs"));
+            root, "src/backend/Modules/AccessControl/Tooba.AccessControl.Application/Roles/Queries/GetRoleQuery.cs"));
         Assert.Contains("IRequest<Result<AccessRoleDto>>", getRole, StringComparison.Ordinal);
         Assert.Contains("NotFoundIfNull", getRole, StringComparison.Ordinal);
 
