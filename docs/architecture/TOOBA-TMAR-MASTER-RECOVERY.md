@@ -12,9 +12,11 @@ Canonical Architect ↔ Cursor handoff (recovery-critical)
 
 Latest Accepted TMAR Checkpoint — authoritative
 
-Reconciled by `TB-TMAR-HOST-CONFIGURATION-AMC-001`. ANALYSIS_ONLY of Host/Configuration: 1 file / 9 types; path↔namespace VIOLATION (`Tooba.Host` vs `/Configuration/`); MUST_SPLIT; KEEP platform/control-plane/validator dispositions; Offer.Contracts SalesChannel enum coupling accepted with debt; recommended W1 then CERT; production change ZERO. Gate: `USER_DECISION_REQUIRED_NO_AUTOMATIC_NEXT_IMPLEMENTATION_TASK`.
-- Current Host checkpoint = `Configuration`; workflowStop / Next-Task = `USER_REVIEW_HOST_CONFIGURATION_AMC_001`; automatic next = NONE; stale pointer = ZERO.
-- Implementation SHA remains Outbox W1 `382ef10af3a5eb49f519e49cb399809b19844bbc`; Persistence / Outbox / Observability / Messaging / Health / MultiTenancy / Errors / Security / Admin CERT preserved.
+Reconciled by `TB-TMAR-HOST-CONFIGURATION-AMC-001-W1`. MIGRATE Host/Configuration: exact 9 files / 9 types; EXACT `Tooba.Host.Configuration`; one type per file; legacy `PostgreSqlOptions.ConnectionString` removed; TrustedProxies fail-fast; Program no silent invalid-proxy skip; invalid non-empty PrimaryDomain fails fast; Offer/StoreContext remain Contracts-only; certification pending W2. Gate: `USER_DECISION_REQUIRED_NO_AUTOMATIC_NEXT_IMPLEMENTATION_TASK`.
+- Current Host checkpoint = `Configuration`; workflowStop / Next-Task = `USER_REVIEW_HOST_CONFIGURATION_AMC_001_W1`; automatic next = NONE; stale pointer = ZERO.
+- Latest implementation wave = Configuration W1; Persistence / Outbox / Observability / Messaging / Health / MultiTenancy / Errors / Security / Admin CERT preserved.
+
+Reconciled by `TB-TMAR-HOST-CONFIGURATION-AMC-001` (HISTORICAL for current pointer). ANALYSIS_ONLY of Host/Configuration: 1 file / 9 types; path↔namespace VIOLATION; MUST_SPLIT; KEEP dispositions; recommended W1 then CERT.
 
 Reconciled by `TB-TMAR-HOST-PERSISTENCE-AMC-001-W2-CERT` (HISTORICAL for current pointer). CERTIFY_ONLY of Host/Persistence: `HOST_PERSISTENCE_AMC_CERTIFIED` / `HOST_PERSISTENCE_PLATFORM_BOUNDARY_CERTIFIED`; 1 file / 1 type; EXACT `Tooba.Host.Persistence`.
 

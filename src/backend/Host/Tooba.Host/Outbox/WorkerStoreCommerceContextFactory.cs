@@ -1,5 +1,6 @@
 using Tooba.BuildingBlocks;
 using Tooba.Host;
+using Tooba.Host.Configuration;
 using Tooba.StoreContext.Contracts.Current;
 
 namespace Tooba.Host.Outbox;

@@ -363,13 +363,15 @@ public sealed class HostCartResidualGuardTests
     public void Host_configuration_uses_canonical_store_commerce_default_currency_key()
     {
         var repoRoot = FindRepoRoot();
-        var options = File.ReadAllText(Path.Combine(
-            repoRoot, "src", "backend", "Host", "Tooba.Host", "Configuration", "ToobaPlatformOptions.cs"));
-        Assert.Contains("public string? DefaultCurrency { get; set; }", options, StringComparison.Ordinal);
-        Assert.DoesNotContain("public string? Currency { get; set; }", options, StringComparison.Ordinal);
-        Assert.Contains("StoreCommerce:DefaultCurrency", options, StringComparison.Ordinal);
-        Assert.DoesNotContain("StoreCommerce:Currency", options, StringComparison.Ordinal);
-        Assert.Contains("Normalize(raw?.DefaultCurrency)", options, StringComparison.Ordinal);
+        var storeCommerce = File.ReadAllText(Path.Combine(
+            repoRoot, "src", "backend", "Host", "Tooba.Host", "Configuration", "StoreCommerceOptions.cs"));
+        var validator = File.ReadAllText(Path.Combine(
+            repoRoot, "src", "backend", "Host", "Tooba.Host", "Configuration", "PlatformOptionsValidator.cs"));
+        Assert.Contains("public string? DefaultCurrency { get; set; }", storeCommerce, StringComparison.Ordinal);
+        Assert.DoesNotContain("public string? Currency { get; set; }", storeCommerce, StringComparison.Ordinal);
+        Assert.Contains("StoreCommerce:DefaultCurrency", validator, StringComparison.Ordinal);
+        Assert.DoesNotContain("StoreCommerce:Currency", validator, StringComparison.Ordinal);
+        Assert.Contains("Normalize(raw?.DefaultCurrency)", validator, StringComparison.Ordinal);
 
         var devSettings = File.ReadAllText(Path.Combine(
             repoRoot, "src", "backend", "Host", "Tooba.Host", "appsettings.Development.json"));

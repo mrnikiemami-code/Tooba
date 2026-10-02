@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Tooba.BuildingBlocks;
+using Tooba.Host.Configuration;
 using Tooba.Content.Infrastructure.Development;
 
 namespace Tooba.Host.Composition;

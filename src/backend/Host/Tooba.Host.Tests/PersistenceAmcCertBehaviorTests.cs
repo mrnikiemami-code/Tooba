@@ -1,4 +1,5 @@
 using Tooba.BuildingBlocks;
+using Tooba.Host.Configuration;
 using Tooba.Host.Persistence;
 using Xunit;
 
@@ -59,22 +60,26 @@ public sealed class PersistenceAmcCertBehaviorTests
     }
 
     [Fact]
-    public void Root_ConnectionString_is_ignored_even_when_populated()
+    public void Missing_reference_fail_closed_does_not_leak_secrets_after_legacy_root_removal()
     {
         var options = new ToobaPlatformOptions
         {
             PostgreSQL = new PostgreSqlOptions
             {
-                ConnectionString = "Host=127.0.0.1;Database=legacy_root;Password=legacy-secret",
-                ConnectionReferences = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase),
+                ConnectionReferences = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+                {
+                    ["other"] = "Host=127.0.0.1;Database=other;Password=other-secret",
+                },
             },
         };
         var resolver = new DatabaseConnectionResolver(Microsoft.Extensions.Options.Options.Create(options));
         var ex = Assert.Throws<PlatformHttpException>(() => resolver.Resolve(new ConnectionReference("legacy")));
         Assert.Equal(503, ex.StatusCode);
         Assert.Equal("platform.connection.unconfigured", ex.ErrorCode);
-        Assert.DoesNotContain("legacy_root", ex.Message, StringComparison.Ordinal);
-        Assert.DoesNotContain("legacy-secret", ex.Message, StringComparison.Ordinal);
+        Assert.DoesNotContain("other-secret", ex.Message, StringComparison.Ordinal);
+        Assert.DoesNotContain(
+            typeof(PostgreSqlOptions).GetProperties(),
+            p => p.Name == "ConnectionString");
     }
 
     private static DatabaseConnectionResolver Create(params (string Key, string Value)[] entries)

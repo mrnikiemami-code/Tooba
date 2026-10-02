@@ -1,6 +1,7 @@
 using Npgsql;
 using Tooba.BuildingBlocks;
 using Tooba.Host;
+using Tooba.Host.Configuration;
 
 namespace Tooba.MigrationRunner;
 

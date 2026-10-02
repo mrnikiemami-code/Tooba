@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Tooba.BuildingBlocks;
+using Tooba.Host.Configuration;
 using Tooba.Persistence;
 using Tooba.PlatformProbe.Infrastructure.Persistence;
 using Xunit;

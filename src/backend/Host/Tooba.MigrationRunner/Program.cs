@@ -6,6 +6,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Tooba.BuildingBlocks;
 using Tooba.Host;
+using Tooba.Host.Configuration;
 using Tooba.Host.Persistence;
 
 namespace Tooba.MigrationRunner;

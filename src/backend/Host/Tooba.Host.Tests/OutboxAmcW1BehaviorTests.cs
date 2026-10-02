@@ -3,6 +3,7 @@ using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
 using NodaTime;
 using Tooba.BuildingBlocks;
+using Tooba.Host.Configuration;
 using Tooba.Host.MultiTenancy;
 using Tooba.Host.Outbox;
 using Tooba.Persistence;

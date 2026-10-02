@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using Tooba.BuildingBlocks;
+using Tooba.Host.Configuration;
 using Tooba.BuildingBlocks.Presentation;
 using Tooba.BuildingBlocks.Presentation.Errors;
 using Tooba.StoreContext.Contracts.Current;

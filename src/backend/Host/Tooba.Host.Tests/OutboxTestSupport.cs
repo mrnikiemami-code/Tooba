@@ -4,6 +4,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Tooba.BuildingBlocks;
+using Tooba.Host.Configuration;
 using Tooba.Persistence;
 using Tooba.PlatformProbe.Infrastructure;
 using Tooba.PlatformProbe.Infrastructure.Events;

@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.Configuration;
 using Tooba.BuildingBlocks;
+using Tooba.Host.Configuration;
 using Tooba.Persistence;
 using Tooba.PlatformProbe.Infrastructure;
 using Tooba.PlatformProbe.Infrastructure.Events;

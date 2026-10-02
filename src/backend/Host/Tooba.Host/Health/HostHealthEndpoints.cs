@@ -1,3 +1,4 @@
+using Tooba.Host.Configuration;
 using MassTransit;
 using Microsoft.Extensions.Options;
 using Tooba.AccessControl.Contracts.Readiness;

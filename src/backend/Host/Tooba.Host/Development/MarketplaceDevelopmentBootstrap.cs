@@ -8,6 +8,7 @@ using global::Tooba.Story.Infrastructure.Persistence;
 using global::Tooba.Story.Infrastructure;
 using Microsoft.EntityFrameworkCore;
 using Tooba.BuildingBlocks;
+using Tooba.Host.Configuration;
 using Tooba.Identity.Infrastructure.Persistence;
 using Tooba.Order.Infrastructure.Persistence;
 using Tooba.Party.Infrastructure.Persistence;

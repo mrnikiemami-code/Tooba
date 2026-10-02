@@ -1,4 +1,5 @@
 using Tooba.BuildingBlocks;
+using Tooba.Host.Configuration;
 using Tooba.BuildingBlocks.Presentation.Errors;
 using Tooba.BuildingBlocks.Security;
 

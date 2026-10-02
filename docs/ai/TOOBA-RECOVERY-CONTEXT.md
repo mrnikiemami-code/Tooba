@@ -25,23 +25,26 @@ BRIDGE-WAKE-V1
 Channel: tooba-main
 ```
 
-Latest Accepted TMAR Checkpoint — authoritative (reconciled by TB-TMAR-HOST-CONFIGURATION-AMC-001)
+Latest Accepted TMAR Checkpoint — authoritative (reconciled by TB-TMAR-HOST-CONFIGURATION-AMC-001-W1)
 
 ```text
-Latest-Accepted-Implementation-Wave: TB-TMAR-HOST-OUTBOX-AMC-001-W1
-Latest-Accepted-Task: TB-TMAR-HOST-CONFIGURATION-AMC-001
-Implementation-Commit: 382ef10af3a5eb49f519e49cb399809b19844bbc
+Latest-Accepted-Implementation-Wave: TB-TMAR-HOST-CONFIGURATION-AMC-001-W1
+Latest-Accepted-Task: TB-TMAR-HOST-CONFIGURATION-AMC-001-W1
+Implementation-Commit: PENDING_IMPLEMENTATION_SHA
 Implementation-Commit-Kind: IMPLEMENTATION_COMMIT
-Result-Evidence-Docs-Stamp: 160527a6037627c1a014c515005e7a42fbd43884
+Result-Evidence-Docs-Stamp: PENDING_DOCS_STAMP
 Result-Evidence-Docs-Stamp-Kind: RESULT_EVIDENCE_DOCS_STAMP_NOT_IMPLEMENTATION
-Mode: HOST_CONFIGURATION_AMC_001_ANALYSIS_ONLY
-Configuration-Production-File-Count: 1
+Mode: HOST_CONFIGURATION_AMC_001_W1_STRUCTURE_FAILFAST
+Configuration-Production-File-Count: 9
 Configuration-Production-Type-Count: 9
-Path-Namespace-State: VIOLATION_Tooba.Host_vs_Configuration
-File-Cohesion-State: MUST_SPLIT_9_TYPES_ONE_FILE
-Offer-Contract-Boundary-State: CONTRACTS_ONLY_SALESCHANNEL_ENUM_COUPLING_ACCEPTED_WITH_DEBT
-Recommended-Wave-Count: 2
-Recommended-Next-Task: TB-TMAR-HOST-CONFIGURATION-AMC-001-W1
+Path-Namespace-State: EXACT_Tooba.Host.Configuration
+File-Cohesion-State: ONE_TOP_LEVEL_TYPE_PER_FILE
+TrustedProxies-State: FAIL_FAST_VALIDATED
+Program-TrustedProxy-State: NO_SILENT_SKIP
+PrimaryDomain-State: NONEMPTY_INVALID_FAILS_FAST
+Legacy-Root-ConnectionString-State: REMOVED_ZERO_CONSUMER_RESIDUE
+Offer-Contract-Boundary-State: CONTRACTS_ONLY_ACCEPTED
+Certification-State: NOT_CERTIFIED_W2_REQUIRED
 Host-Persistence-State: HOST_PERSISTENCE_AMC_CERTIFIED_PRESERVED
 Host-Outbox-State: HOST_OUTBOX_AMC_CERTIFIED_PRESERVED
 Host-Observability-State: HOST_OBSERVABILITY_AMC_CERTIFIED_PRESERVED
@@ -54,8 +57,8 @@ Whole-Host-Admin-State: HOST_ADMIN_FULLY_CERTIFIED
 Current-Host-Checkpoint: Configuration
 Next-Host-Folder-Started: false
 Stale-Current-Pointer-State: ZERO
-workflowStop: USER_REVIEW_HOST_CONFIGURATION_AMC_001
-Next-Task: USER_REVIEW_HOST_CONFIGURATION_AMC_001
+workflowStop: USER_REVIEW_HOST_CONFIGURATION_AMC_001_W1
+Next-Task: USER_REVIEW_HOST_CONFIGURATION_AMC_001_W1
 Next-Task-Gate: USER_DECISION_REQUIRED_NO_AUTOMATIC_NEXT_IMPLEMENTATION_TASK
 Automatic-Next-Implementation-Task: NONE
 ```

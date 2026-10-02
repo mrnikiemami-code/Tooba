@@ -15,6 +15,7 @@ using Tooba.BuildingBlocks.Observability.Correlation;
 using Tooba.BuildingBlocks.Presentation;
 using Tooba.StoreContext.Contracts.Current;
 using Tooba.Host;
+using Tooba.Host.Configuration;
 using Tooba.Host.MultiTenancy;
 using Tooba.Host.Health;
 using Tooba.Host.Messaging;
@@ -279,10 +280,7 @@ if (trustedProxies.Length > 0)
         options.KnownProxies.Clear();
         foreach (var proxy in trustedProxies)
         {
-            if (IPAddress.TryParse(proxy, out var address))
-            {
-                options.KnownProxies.Add(address);
-            }
+            options.KnownProxies.Add(IPAddress.Parse(proxy));
         }
     });
 }

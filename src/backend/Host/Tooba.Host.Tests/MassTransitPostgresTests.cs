@@ -11,6 +11,7 @@ using Microsoft.Extensions.Options;
 using Npgsql;
 using Testcontainers.PostgreSql;
 using Tooba.BuildingBlocks;
+using Tooba.Host.Configuration;
 using Tooba.Persistence;
 using Tooba.PlatformProbe.Infrastructure;
 using Tooba.PlatformProbe.Infrastructure.Events;

@@ -9,6 +9,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Hosting;
 using Tooba.BuildingBlocks;
+using Tooba.Host.Configuration;
 using Xunit;
 
 namespace Tooba.Host.Tests;

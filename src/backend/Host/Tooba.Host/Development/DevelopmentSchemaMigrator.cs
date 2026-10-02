@@ -1,4 +1,5 @@
 using Tooba.BuildingBlocks;
+using Tooba.Host.Configuration;
 using Tooba.Persistence;
 using Tooba.Reviews.Infrastructure;
 using Tooba.AddressBook.Infrastructure.Adapters;
