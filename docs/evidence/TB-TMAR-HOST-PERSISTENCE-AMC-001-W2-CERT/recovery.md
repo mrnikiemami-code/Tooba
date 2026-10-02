@@ -1,4 +1,4 @@
-# recovery — TB-TMAR-HOST-PERSISTENCE-AMC-001-W2-CERT
+﻿# recovery — TB-TMAR-HOST-PERSISTENCE-AMC-001-W2-CERT
 
 ```text
 task = TB-TMAR-HOST-PERSISTENCE-AMC-001-W2-CERT
@@ -30,4 +30,4 @@ evidenceRoot = docs/evidence/TB-TMAR-HOST-PERSISTENCE-AMC-001-W2-CERT/
 durableCertGuard = HostPersistenceAmcCertGuardTests
 ```
 
-Docs stamp SHA: set after commit.
+Docs stamp SHA: `d81ec0d6be22ab1c02bf0f774069fe726ae3df8d`.

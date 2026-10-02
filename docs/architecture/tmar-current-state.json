@@ -6,9 +6,9 @@
     "lastAcceptedTask": "TB-TMAR-HOST-PERSISTENCE-AMC-001-W2-CERT",
     "lastAcceptedCommit": "382ef10af3a5eb49f519e49cb399809b19844bbc",
     "lastAcceptedCommitKind": "IMPLEMENTATION_COMMIT",
-    "lastAcceptedResultEvidenceCommit": "PENDING_DOCS_STAMP",
+    "lastAcceptedResultEvidenceCommit": "d81ec0d6be22ab1c02bf0f774069fe726ae3df8d",
     "lastAcceptedResultEvidenceCommitKind": "RESULT_EVIDENCE_DOCS_STAMP_NOT_IMPLEMENTATION",
-    "lastAcceptedSoTStamp": "PENDING_DOCS_STAMP",
+    "lastAcceptedSoTStamp": "d81ec0d6be22ab1c02bf0f774069fe726ae3df8d",
     "lastAcceptedSoTStampKind": "RESULT_EVIDENCE_DOCS_STAMP",
     "lastAcceptedCommitSemantics": "lastAcceptedTask is TB-TMAR-HOST-PERSISTENCE-AMC-001-W2-CERT (CERTIFY_ONLY). lastAcceptedCommit remains Outbox W1 implementation SHA 382ef10a.... Docs stamp is RESULT_EVIDENCE_DOCS_STAMP only and must NEVER be mislabeled as implementation.",
     "lastAcceptedNote": "Host/Persistence W2-CERT: HOST_PERSISTENCE_AMC_CERTIFIED + HOST_PERSISTENCE_PLATFORM_BOUNDARY_CERTIFIED; 1/1 EXACT Tooba.Host.Persistence; PlatformHttpException fail-closed certified; production change ZERO; impl SHA remains Outbox W1 382ef10a...; prior Host certs preserved.",
@@ -6616,6 +6616,6 @@
         "automaticNextImplementationTask": "NONE",
         "workflowStop": "USER_REVIEW_HOST_PERSISTENCE_AMC_001_W2_CERT",
         "evidenceRoot": "docs/evidence/TB-TMAR-HOST-PERSISTENCE-AMC-001-W2-CERT",
-        "docsStamp": "PENDING_DOCS_STAMP"
+        "docsStamp": "d81ec0d6be22ab1c02bf0f774069fe726ae3df8d"
     }
 }

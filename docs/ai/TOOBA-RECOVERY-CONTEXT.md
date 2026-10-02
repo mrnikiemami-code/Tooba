@@ -32,7 +32,7 @@ Latest-Accepted-Implementation-Wave: TB-TMAR-HOST-OUTBOX-AMC-001-W1
 Latest-Accepted-Task: TB-TMAR-HOST-PERSISTENCE-AMC-001-W2-CERT
 Implementation-Commit: 382ef10af3a5eb49f519e49cb399809b19844bbc
 Implementation-Commit-Kind: IMPLEMENTATION_COMMIT
-Result-Evidence-Docs-Stamp: PENDING_DOCS_STAMP
+Result-Evidence-Docs-Stamp: d81ec0d6be22ab1c02bf0f774069fe726ae3df8d
 Result-Evidence-Docs-Stamp-Kind: RESULT_EVIDENCE_DOCS_STAMP_NOT_IMPLEMENTATION
 Mode: HOST_PERSISTENCE_AMC_001_W2_CERTIFY
 Persistence-Production-File-Count: 1
