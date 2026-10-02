@@ -1,4 +1,4 @@
-# recovery — TB-TMAR-HOST-MESSAGING-AMC-001-W1
+﻿# recovery — TB-TMAR-HOST-MESSAGING-AMC-001-W1
 
 ```text
 task = TB-TMAR-HOST-MESSAGING-AMC-001-W1
@@ -36,5 +36,5 @@ nextHostFolderStarted = false
 evidenceRoot = docs/evidence/TB-TMAR-HOST-MESSAGING-AMC-001-W1/
 ```
 
-Implementation SHA: filled after implementation commit.
+Implementation SHA: `f29a881370b9a8813035715ef6973145ce3f1723`.
 Docs stamp SHA: filled after SoT stamp commit (RESULT_EVIDENCE_DOCS_STAMP; not implementation).
