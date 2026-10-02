@@ -1,4 +1,4 @@
-﻿# Tooba — Recovery Context
+# Tooba — Recovery Context
 
 Canonical repository:
 
@@ -32,7 +32,7 @@ Latest-Accepted-Implementation-Wave: TB-TMAR-HOST-OBSERVABILITY-AMC-001-W1
 Latest-Accepted-Task: TB-TMAR-HOST-OBSERVABILITY-AMC-001-W2-CERT
 Implementation-Commit: f1425fed94cc1a8354d3c9f9a013065d87cbe66c
 Implementation-Commit-Kind: IMPLEMENTATION_COMMIT
-Result-Evidence-Docs-Stamp: PENDING_DOCS_STAMP
+Result-Evidence-Docs-Stamp: 42f57e76d863d52e983508434b6f6b185ea5e352
 Result-Evidence-Docs-Stamp-Kind: RESULT_EVIDENCE_DOCS_STAMP_NOT_IMPLEMENTATION
 Mode: HOST_OBSERVABILITY_AMC_001_W2_CERTIFY_ONLY
 Observability-Production-File-Count: 1

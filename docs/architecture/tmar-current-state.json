@@ -1,4 +1,4 @@
-﻿{
+{
   "program": "TMAR — Tooba Microservice-Ready Architecture Recovery",
   "executionMode": "BACKEND_ONLY_UNTIL_EXPLICIT_RELEASE",
   "frontendFrozen": true,
@@ -6,9 +6,9 @@
   "lastAcceptedTask": "TB-TMAR-HOST-OBSERVABILITY-AMC-001-W2-CERT",
   "lastAcceptedCommit": "f1425fed94cc1a8354d3c9f9a013065d87cbe66c",
   "lastAcceptedCommitKind": "IMPLEMENTATION_COMMIT",
-  "lastAcceptedResultEvidenceCommit": "7dab67bf0837864ccd97c529b43e24b9df4eb9b2",
+  "lastAcceptedResultEvidenceCommit": "42f57e76d863d52e983508434b6f6b185ea5e352",
   "lastAcceptedResultEvidenceCommitKind": "RESULT_EVIDENCE_DOCS_STAMP_NOT_IMPLEMENTATION",
-  "lastAcceptedSoTStamp": "7dab67bf0837864ccd97c529b43e24b9df4eb9b2",
+  "lastAcceptedSoTStamp": "42f57e76d863d52e983508434b6f6b185ea5e352",
   "lastAcceptedSoTStampKind": "RESULT_EVIDENCE_DOCS_STAMP",
   "lastAcceptedCommitSemantics": "lastAcceptedTask is TB-TMAR-HOST-OBSERVABILITY-AMC-001-W2-CERT (CERTIFY_ONLY docs/tests). IMPLEMENTATION commit remains Observability W1 SHA at lastAcceptedCommit (f1425fed94cc1a8354d3c9f9a013065d87cbe66c). Cert docs stamp is NOT an implementation commit.",
   "lastAcceptedNote": "Host/Observability W2-CERT: HOST_OBSERVABILITY_AMC_CERTIFIED / HOST_OBSERVABILITY_PLATFORM_BOUNDARY_CERTIFIED; ClientIp OMITTED_PRIVACY_SAFE_CERTIFIED; 1 file / 1 type; EXACT_Tooba.Host.Observability; production change ZERO; Messaging/Health/MT/Errors/Security/Admin CERT preserved.",
@@ -6367,6 +6367,6 @@
     "workflowStop": "USER_REVIEW_HOST_OBSERVABILITY_AMC_001_W2_CERT",
     "evidenceRoot": "docs/evidence/TB-TMAR-HOST-OBSERVABILITY-AMC-001-W2-CERT",
     "note": "Certification docs/tests only; does not advance implementation SHA.",
-    "docsStamp": "7dab67bf0837864ccd97c529b43e24b9df4eb9b2"
+    "docsStamp": "42f57e76d863d52e983508434b6f6b185ea5e352"
   }
 }

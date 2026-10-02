@@ -44,4 +44,4 @@ evidenceRoot = docs/evidence/TB-TMAR-HOST-OBSERVABILITY-AMC-001-W2-CERT/
 ```
 
 Implementation SHA (unchanged): `f1425fed94cc1a8354d3c9f9a013065d87cbe66c`.
-Docs stamp SHA: `PENDING_DOCS_STAMP` (RESULT_EVIDENCE_DOCS_STAMP; not implementation).
+Docs stamp SHA: `42f57e76d863d52e983508434b6f6b185ea5e352` (RESULT_EVIDENCE_DOCS_STAMP; not implementation).
