@@ -7063,5 +7063,50 @@
         "automaticNextImplementationTask": "NONE",
         "implementationCommit": "7695f4c93949f8c21c0fb0721384128eecf7b4ee",
         "docsStamp": "73043be8cd86e07a5834ca0bf560c7a710255388"
+    },
+    "accessControlModuleAmc002": {
+        "task": "TB-TMAR-ACCESSCONTROL-AMC-002",
+        "mode": "ANALYSIS_ONLY",
+        "target": "Tooba.AccessControl.*",
+        "parentBaseline": "accessControlModuleAmc001W5Cert",
+        "foundationState": "COMPLETE_REFERENCE_PATTERN_WITH_RESIDUAL_SELLER_DEV",
+        "residualBlocker": "SELLER_DEV_RESULTS_JSON_AND_FA_TITLE",
+        "recommendedNext": "TB-TMAR-ACCESSCONTROL-AMC-002-W1",
+        "hostRootFinalCheckpoint": "PRESERVED",
+        "evidenceRoot": "docs/evidence/TB-TMAR-ACCESSCONTROL-AMC-002/",
+        "workflowStop": "USER_REVIEW_ACCESSCONTROL_AMC_002_ANALYZE",
+        "automaticNextImplementationTask": "NONE"
+    },
+    "accessControlModuleAmc002W1": {
+        "task": "TB-TMAR-ACCESSCONTROL-AMC-002-W1",
+        "parentTask": "TB-TMAR-ACCESSCONTROL-AMC-002",
+        "mode": "MIGRATE",
+        "slice": "SELLER_DEV_RESULT_PIPELINE",
+        "state": "ACCESSCONTROL_SELLER_DEV_RESULT_APPLIED",
+        "endpointsResultsJson": "ZERO",
+        "hostRootFinalCheckpoint": "PRESERVED",
+        "evidenceRoot": "docs/evidence/TB-TMAR-ACCESSCONTROL-AMC-002-W1/",
+        "workflowStop": "USER_REVIEW_ACCESSCONTROL_AMC_002_W1",
+        "automaticNextImplementationTask": "NONE",
+        "implementationCommit": "f39309dc8a0d51116a7c043c7f3e92411dd0d39d",
+        "docsStamp": "PENDING"
+    },
+    "accessControlModuleAmc002W2Cert": {
+        "task": "TB-TMAR-ACCESSCONTROL-AMC-002-W2-CERT",
+        "parentTask": "TB-TMAR-ACCESSCONTROL-AMC-002-W1",
+        "mode": "CERTIFY",
+        "slice": "ARCH_COMPLETE_002_STRUCTURE",
+        "state": "ACCESSCONTROL_AMC002_STRUCTURE_CERTIFIED",
+        "verdict": "COMPLETE_REFERENCE_PATTERN",
+        "structureCertified": true,
+        "endpointsResultsJson": "ZERO",
+        "foreignAppInfraDomainCoupling": "ZERO",
+        "hostRootFinalCheckpoint": "PRESERVED",
+        "durableGuard": "AccessControlModuleAmc002W2CertGuardTests",
+        "evidenceRoot": "docs/evidence/TB-TMAR-ACCESSCONTROL-AMC-002-W2-CERT/",
+        "workflowStop": "USER_REVIEW_ACCESSCONTROL_AMC_002_W2_CERT_COMPLETE",
+        "automaticNextImplementationTask": "NONE",
+        "implementationCommit": "PENDING",
+        "docsStamp": "PENDING"
     }
 }
