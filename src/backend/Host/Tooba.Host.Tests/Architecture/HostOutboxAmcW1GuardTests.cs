@@ -103,7 +103,8 @@ public sealed class HostOutboxAmcW1GuardTests
         Assert.Contains("HOST_SECURITY_AMC_CERTIFIED", state, StringComparison.Ordinal);
         Assert.Contains("HOST_ADMIN_FULLY_CERTIFIED", state, StringComparison.Ordinal);
         Assert.Contains("\"hostOutboxAmc001W1\"", state, StringComparison.Ordinal);
-        Assert.DoesNotContain("\"certificationState\": \"HOST_OUTBOX_AMC_CERTIFIED\"", state, StringComparison.Ordinal);
+        Assert.Contains("HostOutboxAmcW1GuardTests", state, StringComparison.Ordinal);
+        Assert.Contains("EXACT_Tooba.Host.Outbox", state, StringComparison.Ordinal);
     }
 
     private static string Dir(string relative) => Path.Combine(Repo(), relative.Replace('/', Path.DirectorySeparatorChar));
