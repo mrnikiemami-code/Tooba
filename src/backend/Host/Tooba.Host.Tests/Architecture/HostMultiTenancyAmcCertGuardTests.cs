@@ -168,8 +168,8 @@ public sealed class HostMultiTenancyAmcCertGuardTests
         Assert.Contains("HOST_ERRORS_AMC_CERTIFIED", sot, StringComparison.Ordinal);
         Assert.Contains("HOST_SECURITY_AMC_CERTIFIED", sot, StringComparison.Ordinal);
         Assert.Contains("HOST_ADMIN_FULLY_CERTIFIED", sot, StringComparison.Ordinal);
-        Assert.Contains("\"lastAcceptedCommit\": \"cfbc94d258de837fdc018ddb29db68233cc25783\"", sot, StringComparison.Ordinal);
-        Assert.Contains("\"latestAcceptedImplementationWave\": \"TB-TMAR-HOST-MULTITENANCY-AMC-001-W1\"", sot, StringComparison.Ordinal);
+        // Multitenancy W1 implementation SHA remains recorded in its own SoT block (top-level may advance).
+        Assert.Contains("\"implementationCommit\": \"cfbc94d258de837fdc018ddb29db68233cc25783\"", sot, StringComparison.Ordinal);
         Assert.Contains("USER_REVIEW_HOST_MULTITENANCY_AMC_001_W2_CERT", sot, StringComparison.Ordinal);
     }
 
