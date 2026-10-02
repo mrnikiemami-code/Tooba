@@ -6,9 +6,9 @@
     "lastAcceptedTask": "TB-TMAR-HOST-ROOT-FINAL-CERT-001",
     "lastAcceptedCommit": "7a6c353a98a761df9124beb1fce23ed8424230de",
     "lastAcceptedCommitKind": "IMPLEMENTATION_COMMIT",
-    "lastAcceptedResultEvidenceCommit": "PENDING_DOCS_STAMP",
+    "lastAcceptedResultEvidenceCommit": "33d7713987bf733cb8ea27054d738d4796666faa",
     "lastAcceptedResultEvidenceCommitKind": "RESULT_EVIDENCE_DOCS_STAMP_NOT_IMPLEMENTATION",
-    "lastAcceptedSoTStamp": "PENDING_DOCS_STAMP",
+    "lastAcceptedSoTStamp": "33d7713987bf733cb8ea27054d738d4796666faa",
     "lastAcceptedSoTStampKind": "RESULT_EVIDENCE_DOCS_STAMP",
     "lastAcceptedCommitSemantics": "lastAcceptedTask/Commit are TB-TMAR-HOST-ROOT-FINAL-CERT-001 bounded root hygiene implementation. Configuration W1 SHA preserved in hostConfigurationAmc001W1 / hostConfigurationAmc001W2Cert. Docs stamp is separate.",
     "lastAcceptedNote": "Host ROOT FINAL CERT: HOST_ROOT_FINAL_CERTIFIED / HOST_PROGRAM_COMPOSITION_ROOT_CERTIFIED / HOST_TMAR_EVACUATION_FINAL_CLOSURE_CERTIFIED; Program sole root .cs; bounded hygiene (duplicate Offer tracing using + stale PostgreSQL.ConnectionString keys removed); all Host folder CERTs preserved; frontend frozen; Checkout paused; automatic next NONE.",
@@ -6797,7 +6797,7 @@
         "workflowStop": "USER_REVIEW_HOST_ROOT_FINAL_CERT_001",
         "evidenceRoot": "docs/evidence/TB-TMAR-HOST-ROOT-FINAL-CERT-001/",
         "note": "Final Host root closure; do not auto-start next folder/module/frontend/Checkout.",
-        "docsStamp": "PENDING_DOCS_STAMP",
+        "docsStamp": "33d7713987bf733cb8ea27054d738d4796666faa",
         "implementationCommit": "7a6c353a98a761df9124beb1fce23ed8424230de"
     }
 }
