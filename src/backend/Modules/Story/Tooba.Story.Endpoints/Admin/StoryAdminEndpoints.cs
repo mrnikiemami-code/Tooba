@@ -9,6 +9,7 @@ using Tooba.BuildingBlocks.Results;
 using Tooba.Story.Application.Stories.Commands.Admin;
 using Tooba.Story.Application.Stories.Models;
 using Tooba.Story.Application.Stories.Queries.Admin;
+using Tooba.Story.Endpoints.Errors;
 using Tooba.Story.Endpoints.Models;
 
 namespace Tooba.Story.Endpoints.Admin;

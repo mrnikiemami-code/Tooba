@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Routing;
 using Tooba.BuildingBlocks;
 using Tooba.BuildingBlocks.Presentation;
 using Tooba.Story.Application.Stories.Queries.Storefront;
+using Tooba.Story.Endpoints.Errors;
 
 namespace Tooba.Story.Endpoints.Storefront;
 

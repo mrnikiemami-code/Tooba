@@ -8,6 +8,7 @@ using Tooba.BuildingBlocks.Results;
 using Tooba.Story.Application.Stories.Commands.Seller;
 using Tooba.Story.Application.Stories.Models;
 using Tooba.Story.Application.Stories.Queries.Seller;
+using Tooba.Story.Endpoints.Errors;
 using Tooba.Story.Endpoints.Models;
 
 namespace Tooba.Story.Endpoints.Seller;

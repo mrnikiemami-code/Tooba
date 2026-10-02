@@ -65,7 +65,8 @@
       "module": "Order",
       "structureCertified": true,
       "lockVersion": "ARCH-COMPLETE-002",
-      "projects": [        {
+      "projects": [
+        {
           "projectName": "Tooba.Order.Application",
           "rootAllowlist": [],
           "forbiddenRootFiles": [
@@ -371,6 +372,80 @@
             "AdminPayoutGridQueryEngine.cs"
           ],
           "forbiddenTopLevelFolders": []
+        }
+      ]
+    },
+    {
+      "module": "Story",
+      "structureCertified": true,
+      "lockVersion": "ARCH-COMPLETE-002",
+      "certificationNote": "Certified by TB-TMAR-STORY-AMC-001-W6 under COMPLETE_REFERENCE_PATTERN. Capability-first Stories foldering; Result<T>+ApiResponseFactory; exhaustive 25-request validator matrix; Contracts-only foreign boundary (ModuleContracts+BuildingBlocks platform only); Host Story CLOSED_HOST_ZERO; /Modules/Story/ solution group; microservice-extractable with zero foreign Application/Infrastructure/Domain coupling.",
+      "projects": [
+        {
+          "projectName": "Tooba.Story.Contracts",
+          "rootAllowlist": [],
+          "rootAllowlistJustification": "Contracts owns Errors/StoryErrorCodes.cs only; no root .cs remains.",
+          "forbiddenRootFiles": [
+            "StoryErrorCodes.cs",
+            "StoryContracts.cs"
+          ],
+          "forbiddenTopLevelFolders": []
+        },
+        {
+          "projectName": "Tooba.Story.Domain",
+          "rootAllowlist": [],
+          "rootAllowlistJustification": "Aggregates/Enums/Rules/Tenant carry every type; no root .cs remains.",
+          "forbiddenRootFiles": [
+            "StoryEntities.cs"
+          ],
+          "forbiddenTopLevelFolders": []
+        },
+        {
+          "projectName": "Tooba.Story.Application",
+          "rootAllowlist": [],
+          "rootAllowlistJustification": "Capability-first Stories/{Commands,Queries,Models,Ports,Presentation,Validators,Composition}; StoryFailureMapper lives under Stories/.",
+          "forbiddenRootFiles": [
+            "StoryContracts.cs",
+            "StoryPresentationComposer.cs"
+          ],
+          "forbiddenTopLevelFolders": [
+            "Commands",
+            "Queries",
+            "Models",
+            "Ports"
+          ]
+        },
+        {
+          "projectName": "Tooba.Story.Endpoints",
+          "rootAllowlist": [
+            "StoryEndpointModule.cs"
+          ],
+          "rootAllowlistJustification": "Composition entry only; Admin/Seller/Storefront/Errors/Models/Resources hold capability and presentation files.",
+          "forbiddenRootFiles": [
+            "StoryAdminEndpoints.cs",
+            "StorySellerEndpoints.cs",
+            "StoryStorefrontEndpoints.cs",
+            "StoryHttpErrors.cs",
+            "StoryHttpModels.cs",
+            "StoryErrorCatalogContributor.cs",
+            "StoryErrorResources.cs"
+          ],
+          "forbiddenTopLevelFolders": []
+        },
+        {
+          "projectName": "Tooba.Story.Infrastructure",
+          "rootAllowlist": [
+            "StoryModule.cs"
+          ],
+          "rootAllowlistJustification": "Composition entry StoryModule.cs only; Directory/Development/Grid/Adapters/Persistence hold integrations.",
+          "forbiddenRootFiles": [
+            "StoryDirectory.cs",
+            "StoryDevelopmentSeed.cs",
+            "StoryDbContext.cs"
+          ],
+          "forbiddenTopLevelFolders": [
+            "Migrations"
+          ]
         }
       ]
     },

@@ -9,7 +9,7 @@ using Tooba.Story.Infrastructure.Persistence;
 
 #nullable disable
 
-namespace Tooba.Story.Infrastructure.Migrations
+namespace Tooba.Story.Infrastructure.Persistence.Migrations
 {
     [DbContext(typeof(StoryDbContext))]
     [Migration("20260827080717_AddStoryReviewOwnership")]

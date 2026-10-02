@@ -6918,5 +6918,33 @@
         "hostRootFinalCheckpoint": "PRESERVED",
         "implementationCommit": "67d625a95f19cee8f6c1c3ce31702fbd3bc67fdc",
         "docsStamp": "417ffeec45d35dec10ae9ffb7e6d4a77145a7166"
+    },
+    "storyModuleAmc001W6Cert": {
+        "task": "TB-TMAR-STORY-AMC-001-W6-CERT",
+        "parentTask": "TB-TMAR-STORY-AMC-001-W5",
+        "mode": "CERTIFY",
+        "certificationState": "STORY_STRUCTURE_CERTIFIED",
+        "architectureState": "COMPLETE_REFERENCE_PATTERN",
+        "lockVersion": "ARCH-COMPLETE-002",
+        "structureCertified": true,
+        "pathNamespace": "EXACT",
+        "rootAllowlist": "ENFORCED",
+        "aliasWorkaround": "NONE",
+        "endpointOwnership": "MODULE",
+        "endpointReachableRequestCount": 25,
+        "validatorCoverage": "15_REQUIRED_10_NO_VALIDATOR",
+        "resultPipeline": "Result_T_ApiResponseFactory",
+        "localization": "CANONICAL",
+        "crossModuleBoundary": "LEGAL_CONTRACTS_ONLY",
+        "foreignApplicationInfrastructureDomain": "ZERO",
+        "crossModulePersistenceJoin": "ZERO",
+        "hostStoryZero": "PRESERVED",
+        "hostRootFinalCheckpoint": "PRESERVED_UNAFFECTED",
+        "microserviceExtractable": true,
+        "durableGuard": "StoryModuleAmcW6CertGuardTests",
+        "evidenceRoot": "docs/evidence/TB-TMAR-STORY-AMC-001-W6-CERT/",
+        "workflowStop": "USER_REVIEW_STORY_AMC_001_W6_CERT_COMPLETE",
+        "automaticNextImplementationTask": "NONE",
+        "implementationCommit": "PENDING"
     }
 }

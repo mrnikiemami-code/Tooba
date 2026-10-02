@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
-namespace Tooba.Story.Infrastructure.Migrations
+namespace Tooba.Story.Infrastructure.Persistence.Migrations
 {
     /// <inheritdoc />
     public partial class AddStoryReviewOwnership : Migration

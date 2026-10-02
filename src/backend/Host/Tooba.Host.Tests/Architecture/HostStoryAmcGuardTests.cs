@@ -57,13 +57,14 @@ public sealed class HostStoryAmcGuardTests
         }
 
         var httpErrors = File.ReadAllText(Path.Combine(
-            root, "src/backend/Modules/Story/Tooba.Story.Endpoints/StoryHttpErrors.cs"));
-        Assert.Contains("ApiResponseFactory", httpErrors, StringComparison.Ordinal);
-        Assert.Contains("FromSemanticException", httpErrors, StringComparison.Ordinal);
+            root, "src/backend/Modules/Story/Tooba.Story.Endpoints/Errors/StoryHttpErrors.cs"));
+        Assert.Contains("ResolveTenantId", httpErrors, StringComparison.Ordinal);
+        Assert.DoesNotContain("message.Contains", httpErrors, StringComparison.Ordinal);
 
         var admin = File.ReadAllText(Path.Combine(
             root, "src/backend/Modules/Story/Tooba.Story.Endpoints/Admin/StoryAdminEndpoints.cs"));
         Assert.Contains("ApiResponseFactory", admin, StringComparison.Ordinal);
+        Assert.Contains("api.From(", admin, StringComparison.Ordinal);
         Assert.Contains("string? reviewStatus", admin, StringComparison.Ordinal);
     }
 
