@@ -12,9 +12,11 @@ Canonical Architect ↔ Cursor handoff (recovery-critical)
 
 Latest Accepted TMAR Checkpoint — authoritative
 
-Reconciled by `TB-TMAR-HOST-CONFIGURATION-AMC-001-W1`. MIGRATE Host/Configuration: exact 9 files / 9 types; EXACT `Tooba.Host.Configuration`; one type per file; legacy `PostgreSqlOptions.ConnectionString` removed; TrustedProxies fail-fast; Program no silent invalid-proxy skip; invalid non-empty PrimaryDomain fails fast; Offer/StoreContext remain Contracts-only; certification pending W2. Gate: `USER_DECISION_REQUIRED_NO_AUTOMATIC_NEXT_IMPLEMENTATION_TASK`.
-- Current Host checkpoint = `Configuration`; workflowStop / Next-Task = `USER_REVIEW_HOST_CONFIGURATION_AMC_001_W1`; automatic next = NONE; stale pointer = ZERO.
-- Latest implementation wave = Configuration W1; Persistence / Outbox / Observability / Messaging / Health / MultiTenancy / Errors / Security / Admin CERT preserved.
+Reconciled by `TB-TMAR-HOST-CONFIGURATION-AMC-001-W2-CERT`. CERTIFY_ONLY of Host/Configuration: `HOST_CONFIGURATION_AMC_CERTIFIED` / `HOST_CONFIGURATION_PLATFORM_BOUNDARY_CERTIFIED`; exact 9 files / 9 types; EXACT `Tooba.Host.Configuration`; TrustedProxies + PrimaryDomain fail-fast certified; production change ZERO. Gate: `USER_DECISION_REQUIRED_NO_AUTOMATIC_NEXT_IMPLEMENTATION_TASK`.
+- Current Host checkpoint = `Configuration`; workflowStop / Next-Task = `USER_REVIEW_HOST_CONFIGURATION_AMC_001_W2_CERT`; automatic next = NONE; stale pointer = ZERO.
+- Implementation SHA remains Configuration W1 `32719977bc6408490fe5945d75dedaa5c2f7af4c`; Persistence / Outbox / Observability / Messaging / Health / MultiTenancy / Errors / Security / Admin CERT preserved.
+
+Reconciled by `TB-TMAR-HOST-CONFIGURATION-AMC-001-W1` (HISTORICAL for current pointer). MIGRATE Host/Configuration: exact 9/9; EXACT namespace; fail-fast TrustedProxies/PrimaryDomain; legacy ConnectionString removed.
 
 Reconciled by `TB-TMAR-HOST-CONFIGURATION-AMC-001` (HISTORICAL for current pointer). ANALYSIS_ONLY of Host/Configuration: 1 file / 9 types; path↔namespace VIOLATION; MUST_SPLIT; KEEP dispositions; recommended W1 then CERT.
 
