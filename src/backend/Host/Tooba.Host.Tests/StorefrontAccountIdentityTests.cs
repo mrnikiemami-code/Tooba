@@ -43,11 +43,11 @@ public sealed class StorefrontAccountIdentityTests
     {
         var root = FindRepoRoot();
         var source = File.ReadAllText(Path.Combine(
-            root, "src", "backend", "Modules", "Identity", "Tooba.Identity.Endpoints", "Auth", "IdentityAuthEndpoints.cs"));
+            root, "src", "backend", "Modules", "Identity", "Tooba.Identity.Application", "Auth", "Queries", "GetAuthMeQuery.cs"));
         Assert.Contains("ICustomerProfileDirectory", source, StringComparison.Ordinal);
         Assert.Contains("IIdentityContactLookup", source, StringComparison.Ordinal);
         Assert.DoesNotContain("RecipientName", source, StringComparison.Ordinal);
-        Assert.Contains("StorefrontAccountIdentity.CanonicalName", source, StringComparison.Ordinal);
+        Assert.Contains("CanonicalName", source, StringComparison.Ordinal);
     }
 
     private static string FindRepoRoot()

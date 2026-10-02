@@ -10,7 +10,9 @@
     <PackageReference Include="Microsoft.Extensions.Options" Version="8.0.2" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\..\BuildingBlocks\Tooba.BuildingBlocks\Tooba.BuildingBlocks.csproj" />
     <ProjectReference Include="..\Tooba.Identity.Domain\Tooba.Identity.Domain.csproj" />
     <ProjectReference Include="..\Tooba.Identity.Contracts\Tooba.Identity.Contracts.csproj" />
+    <ProjectReference Include="..\..\CustomerProfile\Tooba.CustomerProfile.Contracts\Tooba.CustomerProfile.Contracts.csproj" />
   </ItemGroup>
 </Project>

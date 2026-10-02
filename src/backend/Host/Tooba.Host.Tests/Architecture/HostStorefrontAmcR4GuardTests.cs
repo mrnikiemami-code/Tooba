@@ -71,11 +71,12 @@ public sealed class HostStorefrontAmcR4GuardTests
         var identity = File.ReadAllText(identityPath);
         Assert.Contains("namespace Tooba.Identity.Endpoints.Auth", identity, StringComparison.Ordinal);
 
-        var boundary = File.ReadAllText(Path.Combine(
-            FindRepoRoot(), "src", "backend", "Modules", "Identity", "Tooba.Identity.Endpoints", "Auth", "IdentityAuthEndpoints.cs"));
-        Assert.DoesNotContain("using Tooba.Host.Authentication;", boundary, StringComparison.Ordinal);
-        Assert.DoesNotContain("using Tooba.Host.Storefront;", boundary, StringComparison.Ordinal);
-        Assert.Contains("StorefrontAccountIdentity.CanonicalName", boundary, StringComparison.Ordinal);
+        var meQuery = File.ReadAllText(Path.Combine(
+            FindRepoRoot(), "src", "backend", "Modules", "Identity", "Tooba.Identity.Application", "Auth", "Queries", "GetAuthMeQuery.cs"));
+        Assert.DoesNotContain("using Tooba.Host.Authentication;", meQuery, StringComparison.Ordinal);
+        Assert.DoesNotContain("using Tooba.Host.Storefront;", meQuery, StringComparison.Ordinal);
+        Assert.Contains("CanonicalName", meQuery, StringComparison.Ordinal);
+        Assert.Contains("ICustomerProfileDirectory", meQuery, StringComparison.Ordinal);
     }
 
     [Fact]

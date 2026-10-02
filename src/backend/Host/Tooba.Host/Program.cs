@@ -182,6 +182,7 @@ builder.Services.AddToobaCqrsFoundation(
     typeof(Tooba.Promotion.Application.Commands.CreateSellerPromotion.CreateSellerPromotionCommand).Assembly,
     typeof(Tooba.Order.Application.Admin.Completeness.Queries.ListAdminOrderNotes.ListAdminOrderNotesQuery).Assembly,
     typeof(Tooba.AccessControl.Application.Bootstrap.Commands.EnsureAccessControlBootstrapCommand).Assembly,
+    typeof(Tooba.Identity.Application.Auth.Commands.RegisterAuthUserCommand).Assembly,
     typeof(Tooba.AddressBook.Application.Ports.IAddressBookDirectory).Assembly,
     typeof(Tooba.Wishlist.Application.Commands.AddWishlistItem.AddWishlistItemCommand).Assembly,
     typeof(Tooba.Story.Application.Stories.Queries.Storefront.GetPublicStoriesQuery).Assembly,
