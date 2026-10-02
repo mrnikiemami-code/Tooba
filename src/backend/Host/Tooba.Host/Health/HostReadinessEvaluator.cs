@@ -2,7 +2,7 @@ using MassTransit;
 using Tooba.AccessControl.Contracts.Readiness;
 using Tooba.BuildingBlocks;
 
-namespace Tooba.Host;
+namespace Tooba.Host.Health;
 
 /// <summary>
 /// ارزیابی readiness بدون باز کردن DbContext یا نشت connection string.
@@ -24,7 +24,7 @@ internal static class HostReadinessEvaluator
         ToobaPlatformOptions platformOptions,
         MessagingHostOptions messagingOptions,
         IAuthorizationReadinessProbe authorizationReadiness,
-        IServiceProvider services,
+        IEnumerable<IBusControl> busControls,
         CancellationToken cancellationToken = default)
     {
         var checks = new Dictionary<string, string>(StringComparer.Ordinal);
@@ -42,7 +42,7 @@ internal static class HostReadinessEvaluator
             if (!platformOptions.PostgreSQL.ConnectionReferences.TryGetValue(reference, out var connection)
                 || string.IsNullOrWhiteSpace(connection))
             {
-                checks["postgresql"] = $"missing-reference:{reference}";
+                checks["postgresql"] = "missing-reference";
                 return new Evaluation(false, checks);
             }
         }
@@ -58,8 +58,7 @@ internal static class HostReadinessEvaluator
 
         if (messagingOptions.Enabled)
         {
-            var bus = services.GetService<IBusControl>();
-            if (bus is null)
+            if (!TryGetSingleBus(busControls, out var bus))
             {
                 checks["messaging"] = "bus-unavailable";
                 return new Evaluation(false, checks);
@@ -73,7 +72,6 @@ internal static class HostReadinessEvaluator
             }
 
             checks["messaging-transport"] = "postgresql-sql";
-            checks["messaging-schema"] = messagingOptions.Schema;
             checks["messaging"] = health.Status.ToString();
         }
         else
@@ -83,6 +81,28 @@ internal static class HostReadinessEvaluator
         }
 
         return new Evaluation(true, checks);
+    }
+
+    /// <summary>
+    /// دقیقاً یک IBusControl می‌پذیرد؛ صفر یا چند ثبت = unavailable.
+    /// </summary>
+    private static bool TryGetSingleBus(IEnumerable<IBusControl> busControls, out IBusControl bus)
+    {
+        using var enumerator = busControls.GetEnumerator();
+        if (!enumerator.MoveNext())
+        {
+            bus = null!;
+            return false;
+        }
+
+        bus = enumerator.Current;
+        if (enumerator.MoveNext())
+        {
+            bus = null!;
+            return false;
+        }
+
+        return true;
     }
 
     /// <summary>

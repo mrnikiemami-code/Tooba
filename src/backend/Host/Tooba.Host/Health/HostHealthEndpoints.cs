@@ -1,7 +1,8 @@
+using MassTransit;
 using Microsoft.Extensions.Options;
 using Tooba.AccessControl.Contracts.Readiness;
 
-namespace Tooba.Host;
+namespace Tooba.Host.Health;
 
 /// <summary>
 /// نقاط پایانی liveness/readiness با سازگاری عقب‌رو برای /health و /ready.
@@ -33,7 +34,7 @@ internal static class HostHealthEndpoints
         IOptions<ToobaPlatformOptions> platformOptions,
         IOptions<MessagingHostOptions> messagingOptions,
         IAuthorizationReadinessProbe authorizationReadiness,
-        IServiceProvider services,
+        IEnumerable<IBusControl> busControls,
         CancellationToken cancellationToken)
     {
         var evaluation = await HostReadinessEvaluator.EvaluateAsync(
@@ -41,7 +42,7 @@ internal static class HostHealthEndpoints
             platformOptions.Value,
             messagingOptions.Value,
             authorizationReadiness,
-            services,
+            busControls,
             cancellationToken);
 
         if (!evaluation.Ready)
