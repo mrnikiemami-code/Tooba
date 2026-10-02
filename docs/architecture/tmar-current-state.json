@@ -6947,5 +6947,31 @@
         "automaticNextImplementationTask": "NONE",
         "implementationCommit": "f531ea300785eb740f92562309b15701dfd897e3",
         "docsStamp": "0e76e11fb241782309dc84c8a61f89c400a637ac"
+    },
+    "accessControlModuleAmc001": {
+        "task": "TB-TMAR-ACCESSCONTROL-AMC-001",
+        "mode": "ANALYSIS_ONLY",
+        "target": "Tooba.AccessControl.*",
+        "foundationState": "FOUNDATION_PARTIAL",
+        "priorHistoricalCert": "SUPERSEDED_FOR_REENFORCEMENT",
+        "priorClaimNote": "accessControlArchComplete002Structure remains historical; current AMC skill finds Result/localization/VS-folder blockers",
+        "blockers": [
+            "VS_FOLDER_AND_ENDPOINTS_MISSING_FROM_SLNX",
+            "AD_HOC_RESULTS_JSON_AND_CODE_CONTAINS",
+            "HARDCODED_FA_EXCEPTION_TEXT",
+            "RESULT_PIPELINE_INCOMPLETE",
+            "ENDPOINTS_DOMAIN_LEAKAGE",
+            "APPLICATION_CONTRACTS_DUMP",
+            "DOMAIN_ROOT_GOD_FILE",
+            "NO_ERROR_CATALOG_RESX"
+        ],
+        "hostAccessControlZero": "PRESERVED",
+        "crossModuleBoundary": "CONTRACTS_ONLY_PRESERVED",
+        "structureCertified": "FALSE_PENDING_REENFORCEMENT",
+        "recommendedNext": "TB-TMAR-ACCESSCONTROL-AMC-001-W1",
+        "workflowStop": "USER_REVIEW_ACCESSCONTROL_AMC_001_ANALYZE",
+        "automaticNextImplementationTask": "NONE",
+        "evidenceRoot": "docs/evidence/TB-TMAR-ACCESSCONTROL-AMC-001/",
+        "hostRootFinalCheckpoint": "PRESERVED"
     }
 }
