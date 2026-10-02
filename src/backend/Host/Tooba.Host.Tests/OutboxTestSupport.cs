@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Tooba.Host.Outbox;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -7,6 +8,7 @@ using Tooba.Persistence;
 using Tooba.PlatformProbe.Infrastructure;
 using Tooba.PlatformProbe.Infrastructure.Events;
 using Tooba.PlatformProbe.Infrastructure.Persistence;
+using Tooba.StoreContext.Contracts.Current;
 
 using Tooba.Host.MultiTenancy;
 using Tooba.Host.Messaging;
@@ -203,6 +205,8 @@ internal static class OutboxTestPlatform
         services.AddSingleton<IOutboxDispatcherStore, NpgsqlOutboxDispatcherStore>();
         services.AddSingleton<IOutboxPollTargetSource, ConfiguredOutboxPollTargetSource>();
         services.AddSingleton<WorkerCommerceContextFactory>();
+        services.AddSingleton<WorkerStoreCommerceContextFactory>();
+        services.AddSingleton<IWorkerStoreCommerceContextFactory>(sp => sp.GetRequiredService<WorkerStoreCommerceContextFactory>());
         services.AddSingleton<IOptions<OutboxHostOptions>>(Options.Create(new OutboxHostOptions
         {
             Enabled = true,
@@ -218,6 +222,7 @@ internal static class OutboxTestPlatform
         services.AddScoped<ICurrentEdition>(sp => sp.GetRequiredService<HttpCommerceContextAccessor>());
         services.AddScoped<ICurrentTenant>(sp => sp.GetRequiredService<HttpCommerceContextAccessor>());
         services.AddScoped<ICommerceContextAssigner>(sp => sp.GetRequiredService<HttpCommerceContextAccessor>());
+        services.AddScoped<IStoreCommerceContextAssigner, NoopStoreCommerceAssigner>();
         services.AddHttpContextAccessor();
         services.AddScoped<IIntegrationEventPublisher, InProcessIntegrationEventPublisher>();
         if (failHandlers)
@@ -231,5 +236,16 @@ internal static class OutboxTestPlatform
         }
 
         return services.BuildServiceProvider();
+    }
+}
+
+/// <summary>
+/// Minimal store-commerce assigner for Host outbox dispatcher unit/integration harnesses.
+/// </summary>
+internal sealed class NoopStoreCommerceAssigner : IStoreCommerceContextAssigner
+{
+    /// <inheritdoc />
+    public void Assign(StoreCommerceContext context)
+    {
     }
 }

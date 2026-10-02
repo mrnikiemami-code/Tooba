@@ -12,9 +12,11 @@ Canonical Architect ↔ Cursor handoff (recovery-critical)
 
 Latest Accepted TMAR Checkpoint — authoritative
 
-Reconciled by `TB-TMAR-HOST-OUTBOX-AMC-001`. ANALYSIS_ONLY of Host/Outbox: 3 files / 6 types; path↔namespace VIOLATION; MUST_SPLIT cohesion; OCE swallow debt in message/claim catch; options validator absent; KEEP platform dispositions; recommended W1 then CERT. Gate: `USER_DECISION_REQUIRED_NO_AUTOMATIC_NEXT_IMPLEMENTATION_TASK`.
-- Current Host checkpoint = `Outbox`; workflowStop / Next-Task = `USER_REVIEW_HOST_OUTBOX_AMC_001`; automatic next = NONE; stale pointer = ZERO.
-- Implementation SHA remains Observability W1 `f1425fed...`; Observability / Messaging / Health / MultiTenancy / Errors / Security / Admin CERT preserved; production change ZERO.
+Reconciled by `TB-TMAR-HOST-OUTBOX-AMC-001-W1`. MIGRATE of Host/Outbox: 7 files / 7 types; EXACT `Tooba.Host.Outbox`; one type per file; requested OCE propagates (no retry/dead-letter); fail-fast Outbox options validator; per-message worker scope preserved; CERT pending W2. Gate: `USER_DECISION_REQUIRED_NO_AUTOMATIC_NEXT_IMPLEMENTATION_TASK`.
+- Current Host checkpoint = `Outbox`; workflowStop / Next-Task = `USER_REVIEW_HOST_OUTBOX_AMC_001_W1`; automatic next = NONE; stale pointer = ZERO.
+- Implementation SHA = Outbox W1 `PENDING_IMPL_SHA`; Observability / Messaging / Health / MultiTenancy / Errors / Security / Admin CERT preserved.
+
+Reconciled by `TB-TMAR-HOST-OUTBOX-AMC-001` (HISTORICAL for current pointer). ANALYSIS_ONLY of Host/Outbox: 3 files / 6 types; path↔namespace VIOLATION; MUST_SPLIT; OCE/options debts.
 
 Reconciled by `TB-TMAR-HOST-OBSERVABILITY-AMC-001-W2-CERT` (HISTORICAL for current pointer). CERTIFY_ONLY of Host/Observability: `HOST_OBSERVABILITY_AMC_CERTIFIED` / `HOST_OBSERVABILITY_PLATFORM_BOUNDARY_CERTIFIED`.
 

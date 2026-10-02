@@ -1,4 +1,4 @@
-﻿using Tooba.Payment.Contracts.Events;
+using Tooba.Payment.Contracts.Events;
 using Tooba.Promotion.Application.Ports;
 using Tooba.Promotion.Infrastructure.Queries;
 using Tooba.Promotion.Infrastructure.Messaging;
@@ -7,7 +7,7 @@ using Tooba.Promotion.Infrastructure.Directories;
 using Tooba.Inventory.Infrastructure.Messaging;
 using Tooba.Inventory.Infrastructure.Adapters;
 using Tooba.Inventory.Infrastructure.Directories;
-﻿using System.Reflection;
+using System.Reflection;
 using System.Text.Json.Nodes;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -15,9 +15,11 @@ using Microsoft.Extensions.Options;
 using Testcontainers.PostgreSql;
 using Tooba.BuildingBlocks;
 using Tooba.Host;
+using Tooba.Host.Outbox;
 using Tooba.Host.Messaging;
 using Tooba.Host.MultiTenancy;
 using Tooba.Host.Persistence;
+using Tooba.StoreContext.Contracts.Current;
 using Tooba.Inventory.Application.Ports;
 using Tooba.Inventory.Application.Checkout;
 using Tooba.Inventory.Application.Orders;
@@ -374,6 +376,8 @@ public sealed class PaymentFoundationTests : IAsyncLifetime
         services.AddSingleton<IOutboxDispatcherStore, NpgsqlOutboxDispatcherStore>();
         services.AddSingleton<IOutboxPollTargetSource, ConfiguredOutboxPollTargetSource>();
         services.AddSingleton<WorkerCommerceContextFactory>();
+        services.AddSingleton<WorkerStoreCommerceContextFactory>();
+        services.AddSingleton<IWorkerStoreCommerceContextFactory>(sp => sp.GetRequiredService<WorkerStoreCommerceContextFactory>());
         services.AddSingleton<IOptions<OutboxHostOptions>>(Options.Create(new OutboxHostOptions
         {
             Enabled = true,
@@ -389,6 +393,7 @@ public sealed class PaymentFoundationTests : IAsyncLifetime
         services.AddScoped<ICurrentEdition>(sp => sp.GetRequiredService<HttpCommerceContextAccessor>());
         services.AddScoped<ICurrentTenant>(sp => sp.GetRequiredService<HttpCommerceContextAccessor>());
         services.AddScoped<ICommerceContextAssigner>(sp => sp.GetRequiredService<HttpCommerceContextAccessor>());
+        services.AddScoped<IStoreCommerceContextAssigner, NoopStoreCommerceAssigner>();
         services.AddHttpContextAccessor();
         services.AddScoped<IIntegrationEventPublisher, InProcessIntegrationEventPublisher>();
         services.AddScoped<IInventoryDirectory, UnusedInventoryDirectory>();

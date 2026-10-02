@@ -6,6 +6,7 @@ using Tooba.BuildingBlocks;
 using Tooba.BuildingBlocks.Observability.Correlation;
 using Tooba.BuildingBlocks.Observability.Logging;
 using Tooba.BuildingBlocks.Observability.Messaging;
+using Tooba.Host.Outbox;
 using Tooba.Persistence;
 
 namespace Tooba.Host.Transport;

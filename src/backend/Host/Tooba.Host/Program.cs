@@ -19,6 +19,7 @@ using Tooba.Host.MultiTenancy;
 using Tooba.Host.Health;
 using Tooba.Host.Messaging;
 using Tooba.Host.Observability;
+using Tooba.Host.Outbox;
 using Tooba.Host.Errors;
 using Tooba.Host.Caching;
 using Tooba.Host.Persistence;
@@ -129,7 +130,10 @@ builder.Services.AddScoped<ICurrentCommerceContext>(sp => sp.GetRequiredService<
 builder.Services.AddScoped<ICurrentEdition>(sp => sp.GetRequiredService<HttpCommerceContextAccessor>());
 builder.Services.AddScoped<ICurrentTenant>(sp => sp.GetRequiredService<HttpCommerceContextAccessor>());
 builder.Services.AddScoped<ICommerceContextAssigner>(sp => sp.GetRequiredService<HttpCommerceContextAccessor>());
-builder.Services.Configure<OutboxHostOptions>(builder.Configuration.GetSection("Tooba:Outbox"));
+builder.Services.AddOptions<OutboxHostOptions>()
+    .Bind(builder.Configuration.GetSection("Tooba:Outbox"))
+    .ValidateOnStart();
+builder.Services.AddSingleton<IValidateOptions<OutboxHostOptions>, OutboxHostOptionsValidator>();
 builder.Services.AddOptions<MessagingHostOptions>()
     .Bind(builder.Configuration.GetSection("Tooba:Messaging"))
     .ValidateOnStart();

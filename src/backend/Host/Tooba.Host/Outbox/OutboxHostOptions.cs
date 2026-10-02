@@ -1,6 +1,6 @@
 using Tooba.BuildingBlocks;
 
-namespace Tooba.Host;
+namespace Tooba.Host.Outbox;
 
 /// <summary>
 /// تنظیمات حلقهٔ dispatcher از بخش <c>Tooba:Outbox</c>. صفر بودن صف شرط /ready نیست.

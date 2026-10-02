@@ -1,4 +1,5 @@
-﻿using System.Collections.Concurrent;
+using Tooba.Host.Outbox;
+using System.Collections.Concurrent;
 using System.Diagnostics;
 using MassTransit;
 using Microsoft.AspNetCore.Http;
@@ -19,6 +20,7 @@ using Xunit;
 using Tooba.Host.MultiTenancy;
 using Tooba.Host.Messaging;
 using Tooba.Host.Persistence;
+using Tooba.StoreContext.Contracts.Current;
 
 namespace Tooba.Host.Tests;
 
@@ -288,6 +290,8 @@ public sealed class MassTransitPostgresTests : IAsyncLifetime
                 services.AddSingleton<IOutboxDispatcherStore, NpgsqlOutboxDispatcherStore>();
                 services.AddSingleton<IOutboxPollTargetSource, ConfiguredOutboxPollTargetSource>();
                 services.AddSingleton<WorkerCommerceContextFactory>();
+                services.AddSingleton<WorkerStoreCommerceContextFactory>();
+                services.AddSingleton<IWorkerStoreCommerceContextFactory>(sp => sp.GetRequiredService<WorkerStoreCommerceContextFactory>());
                 services.AddSingleton<IOptions<OutboxHostOptions>>(Options.Create(new OutboxHostOptions
                 {
                     Enabled = true,
@@ -303,6 +307,7 @@ public sealed class MassTransitPostgresTests : IAsyncLifetime
                 services.AddScoped<ICurrentEdition>(sp => sp.GetRequiredService<HttpCommerceContextAccessor>());
                 services.AddScoped<ICurrentTenant>(sp => sp.GetRequiredService<HttpCommerceContextAccessor>());
                 services.AddScoped<ICommerceContextAssigner>(sp => sp.GetRequiredService<HttpCommerceContextAccessor>());
+                services.AddScoped<IStoreCommerceContextAssigner, NoopStoreCommerceAssigner>();
                 services.AddOptions<MessagingHostOptions>().Configure(o =>
                 {
                     o.Enabled = true;

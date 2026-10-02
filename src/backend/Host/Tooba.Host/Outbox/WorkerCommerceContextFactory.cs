@@ -1,59 +1,8 @@
 using Tooba.BuildingBlocks;
+using Tooba.Host;
 using Tooba.Persistence;
-using Tooba.StoreContext.Contracts.Current;
 
-namespace Tooba.Host;
-
-/// <summary>
-/// فهرست پایگاه‌های poll از control plane پیکربندی. Host درخواست در این فهرست نیست.
-/// </summary>
-internal sealed class ConfiguredOutboxPollTargetSource : IOutboxPollTargetSource
-{
-    private readonly ControlPlaneRegistry _registry;
-
-    /// <summary>
-    /// منبع اهداف را به registry فرآیند وصل می‌کند.
-    /// </summary>
-    public ConfiguredOutboxPollTargetSource(ControlPlaneRegistry registry)
-    {
-        _registry = registry;
-    }
-
-    /// <inheritdoc />
-    public IReadOnlyList<OutboxPollTarget> GetTargets()
-    {
-        if (_registry.Edition == ToobaEdition.Marketplace)
-        {
-            if (_registry.MarketplaceConnectionReference is not { } marketplace)
-            {
-                return [];
-            }
-
-            return
-            [
-                new OutboxPollTarget(
-                    ToobaEdition.Marketplace,
-                    TenantId: null,
-                    marketplace,
-                    _registry.DeploymentId),
-            ];
-        }
-
-        if (_registry.Edition != ToobaEdition.SingleStore)
-        {
-            return [];
-        }
-
-        return _registry.Tenants.Values
-            .Where(tenant => tenant.Status == TenantStatus.Active)
-            .Select(tenant => new OutboxPollTarget(
-                ToobaEdition.SingleStore,
-                tenant.TenantId.Value,
-                tenant.ConnectionReference,
-                _registry.DeploymentId))
-            .ToArray();
-    }
-}
+namespace Tooba.Host.Outbox;
 
 /// <summary>
 /// بازسازی <see cref="CommerceContext"/> برای کارگر از ردیف Outbox و registry. Host هدر خوانده نمی‌شود.
@@ -117,7 +66,7 @@ internal sealed class WorkerCommerceContextFactory : IWorkerCommerceContextFacto
     }
 
     /// <summary>
-    /// زمینهٔ کارگر انقضای سبد را از هدف poll می‌سازد؛ هدر HTTP خوانده نمی‌شود.
+    /// Rebuilds worker commerce context from the poll target; HTTP Host headers are not read.
     /// </summary>
     public CommerceContext FromPollTarget(OutboxPollTarget target, string traceId)
     {
@@ -135,7 +84,7 @@ internal sealed class WorkerCommerceContextFactory : IWorkerCommerceContextFacto
             || !_registry.Tenants.TryGetValue(target.TenantId, out var record)
             || record.Status != TenantStatus.Active)
         {
-            throw new InvalidOperationException("زمینهٔ کارگر انقضای سبد از registry بازسازی نشد.");
+            throw new InvalidOperationException("Worker commerce context could not be reconstructed from registry.");
         }
 
         var resolvedHost = record.PrimaryDomain ?? record.Hosts[0];
@@ -153,41 +102,5 @@ internal sealed class WorkerCommerceContextFactory : IWorkerCommerceContextFacto
             tenant,
             record.ConnectionReference,
             traceId);
-    }
-}
-
-/// <summary>
-/// انتخاب زمینهٔ تجارت مؤثر فروشگاه برای کارگر از registry. این adapter موقت پلتفرم در Foundation
-/// Phase است: فقط StoreCommerce سطح deployment (Marketplace) یا رکورد Tenant فعال (Single-Store) را
-/// انتخاب می‌کند و هیچ پیش‌فرض/نرمال‌سازی Market/Currency/SalesChannel ندارد.
-/// </summary>
-internal sealed class WorkerStoreCommerceContextFactory : IWorkerStoreCommerceContextFactory
-{
-    private readonly ControlPlaneRegistry _registry;
-
-    /// <summary>
-    /// factory را به registry پیکربندی وصل می‌کند.
-    /// </summary>
-    public WorkerStoreCommerceContextFactory(ControlPlaneRegistry registry)
-    {
-        _registry = registry;
-    }
-
-    /// <inheritdoc />
-    public StoreCommerceContext FromTarget(ToobaEdition edition, string? tenantId)
-    {
-        if (edition == ToobaEdition.Marketplace)
-        {
-            return _registry.DeploymentStoreCommerce;
-        }
-
-        if (string.IsNullOrWhiteSpace(tenantId)
-            || !_registry.Tenants.TryGetValue(tenantId, out var record)
-            || record.Status != TenantStatus.Active)
-        {
-            throw new InvalidOperationException("Worker store commerce context could not be reconstructed from registry.");
-        }
-
-        return record.StoreCommerce;
     }
 }

@@ -106,10 +106,10 @@ public sealed class TmarDurableGuardTests
         Assert.Equal("USER_ACCEPTED", rootEl.GetProperty("goldenWaveUserReview").GetString());
         Assert.Equal("TB-TMAR-GOLDEN-WAVE-FINAL-CLOSURE-001", rootEl.GetProperty("goldenWaveClosedBy").GetString());
         Assert.False(string.IsNullOrWhiteSpace(rootEl.GetProperty("goldenWaveClosedCommit").GetString()));
-        Assert.Equal("USER_REVIEW_HOST_OUTBOX_AMC_001", rootEl.GetProperty("nextTask").GetString());
+        Assert.Equal("USER_REVIEW_HOST_OUTBOX_AMC_001_W1", rootEl.GetProperty("nextTask").GetString());
         Assert.Equal("USER_DECISION_REQUIRED_NO_AUTOMATIC_NEXT_IMPLEMENTATION_TASK", rootEl.GetProperty("nextTaskGate").GetString());
         Assert.Equal("USER_DECISION_REQUIRED", rootEl.GetProperty("nextTaskState").GetString());
-        Assert.Equal("USER_REVIEW_HOST_OUTBOX_AMC_001", rootEl.GetProperty("workflowStop").GetString());
+        Assert.Equal("USER_REVIEW_HOST_OUTBOX_AMC_001_W1", rootEl.GetProperty("workflowStop").GetString());
         Assert.Equal("NONE", rootEl.GetProperty("automaticNextImplementationTask").GetString());
         Assert.Equal("PAUSED_AT_SAFE_W5_CHECKPOINT", rootEl.GetProperty("checkoutState").GetString());
         Assert.True(rootEl.GetProperty("frontendFrozen").GetBoolean());
@@ -251,7 +251,7 @@ public sealed class TmarDurableGuardTests
             cartEntry.GetProperty("lastAcceptedTask").GetString(),
             StringComparison.Ordinal);
         Assert.False(string.IsNullOrWhiteSpace(cartEntry.GetProperty("lastAcceptedCommit").GetString()));
-        Assert.Equal("TB-TMAR-HOST-OUTBOX-AMC-001", rootEl.GetProperty("lastAcceptedTask").GetString());
+        Assert.Equal("TB-TMAR-HOST-OUTBOX-AMC-001-W1", rootEl.GetProperty("lastAcceptedTask").GetString());
         Assert.False(string.IsNullOrWhiteSpace(rootEl.GetProperty("lastAcceptedCommit").GetString()));
 
         var paymentHostResidue = rootEl.GetProperty("paymentHostResidueRepair");
@@ -492,16 +492,16 @@ public sealed class TmarDurableGuardTests
         Assert.DoesNotContain("AccessControl", structureUncertified, StringComparer.Ordinal);
 
         var accessControlEvacuation = rootEl.GetProperty("currentHostEvacuation");
-        Assert.Equal("OUTBOX_AMC_001_ANALYSIS_USER_REVIEW_REQUIRED", accessControlEvacuation.GetProperty("activeModuleState").GetString());
+        Assert.Equal("OUTBOX_AMC_001_W1_USER_REVIEW_REQUIRED", accessControlEvacuation.GetProperty("activeModuleState").GetString());
         Assert.Equal("RECONCILED_NOT_HISTORICAL_ADDRESSBOOK",
             accessControlEvacuation.GetProperty("currentHostEvacuationState").GetString());
         Assert.Equal("ZERO", accessControlEvacuation.GetProperty("staleCurrentPointerState").GetString());
         Assert.Equal("NONE", accessControlEvacuation.GetProperty("automaticNextImplementationTask").GetString());
         Assert.Equal("NONE_USER_DECISION_REQUIRED", accessControlEvacuation.GetProperty("nextHostFolder").GetString());
         Assert.False(accessControlEvacuation.GetProperty("nextHostFolderStarted").GetBoolean());
-        Assert.Equal("USER_REVIEW_HOST_OUTBOX_AMC_001",
+        Assert.Equal("USER_REVIEW_HOST_OUTBOX_AMC_001_W1",
             accessControlEvacuation.GetProperty("workflowStop").GetString());
-        Assert.Equal("TB-TMAR-HOST-OUTBOX-AMC-001",
+        Assert.Equal("TB-TMAR-HOST-OUTBOX-AMC-001-W1",
             accessControlEvacuation.GetProperty("currentTask").GetString());
         Assert.Equal("Outbox", accessControlEvacuation.GetProperty("activeModule").GetString());
         Assert.Equal("HISTORICAL_COMPLETED_NOT_CURRENT",
@@ -704,7 +704,7 @@ public sealed class TmarDurableGuardTests
         // 1. Latest accepted task is the accepted Host/Seller R5 final Dev-context closure wave; commit/stamp
         //    semantics are explicit. (Seller R1A/R1B/R2/R3/R4, historical Development and earlier acceptances are
         //    preserved in their history blocks.)
-        Assert.Equal("TB-TMAR-HOST-OUTBOX-AMC-001", rootEl.GetProperty("lastAcceptedTask").GetString());
+        Assert.Equal("TB-TMAR-HOST-OUTBOX-AMC-001-W1", rootEl.GetProperty("lastAcceptedTask").GetString());
         var implementationCommit = rootEl.GetProperty("lastAcceptedCommit").GetString()!;
         var sotStamp = rootEl.GetProperty("lastAcceptedSoTStamp").GetString()!;
         Assert.Equal("IMPLEMENTATION_COMMIT", rootEl.GetProperty("lastAcceptedCommitKind").GetString());
@@ -713,9 +713,10 @@ public sealed class TmarDurableGuardTests
         Assert.Equal(
             "RESULT_EVIDENCE_DOCS_STAMP_NOT_IMPLEMENTATION",
             rootEl.GetProperty("lastAcceptedResultEvidenceCommitKind").GetString());
-        Assert.Equal("f1425fed94cc1a8354d3c9f9a013065d87cbe66c", implementationCommit);
+        Assert.False(string.IsNullOrWhiteSpace(implementationCommit));
+        Assert.False(implementationCommit.StartsWith("PENDING", StringComparison.Ordinal));
         Assert.False(sotStamp.StartsWith("PENDING", StringComparison.Ordinal));
-        Assert.Equal("TB-TMAR-HOST-OBSERVABILITY-AMC-001-W1", rootEl.GetProperty("latestAcceptedImplementationWave").GetString());
+        Assert.Equal("TB-TMAR-HOST-OUTBOX-AMC-001-W1", rootEl.GetProperty("latestAcceptedImplementationWave").GetString());
 
         // 2. Recorded current SHAs exist on main (deterministic git history check).
         foreach (var sha in new[] { implementationCommit, sotStamp })
@@ -727,10 +728,10 @@ public sealed class TmarDurableGuardTests
         }
 
         // 3. Current stop/gate is user review/decision, never an implementation task.
-        Assert.Equal("USER_REVIEW_HOST_OUTBOX_AMC_001", rootEl.GetProperty("nextTask").GetString());
+        Assert.Equal("USER_REVIEW_HOST_OUTBOX_AMC_001_W1", rootEl.GetProperty("nextTask").GetString());
         Assert.Equal("USER_DECISION_REQUIRED_NO_AUTOMATIC_NEXT_IMPLEMENTATION_TASK", rootEl.GetProperty("nextTaskGate").GetString());
         Assert.Equal("USER_DECISION_REQUIRED", rootEl.GetProperty("nextTaskState").GetString());
-        Assert.Equal("USER_REVIEW_HOST_OUTBOX_AMC_001", rootEl.GetProperty("workflowStop").GetString());
+        Assert.Equal("USER_REVIEW_HOST_OUTBOX_AMC_001_W1", rootEl.GetProperty("workflowStop").GetString());
         Assert.Equal("NONE", rootEl.GetProperty("automaticNextImplementationTask").GetString());
 
         // 4. currentHostEvacuation does NOT regress to the historical AddressBook task.
@@ -740,9 +741,9 @@ public sealed class TmarDurableGuardTests
         Assert.Equal("ZERO", evacuation.GetProperty("staleCurrentPointerState").GetString());
         Assert.Equal("NONE", evacuation.GetProperty("automaticNextImplementationTask").GetString());
         Assert.False(evacuation.GetProperty("nextHostFolderStarted").GetBoolean());
-        Assert.Equal("TB-TMAR-HOST-OBSERVABILITY-AMC-001-W1",
+        Assert.Equal("TB-TMAR-HOST-OUTBOX-AMC-001-W1",
             evacuation.GetProperty("latestAcceptedImplementationWave").GetString());
-        Assert.Equal("USER_REVIEW_HOST_OUTBOX_AMC_001",
+        Assert.Equal("USER_REVIEW_HOST_OUTBOX_AMC_001_W1",
             evacuation.GetProperty("workflowStop").GetString());
         Assert.Equal("HISTORICAL_COMPLETED_NOT_CURRENT", evacuation.GetProperty("addressBookLineage").GetProperty("state").GetString());
         Assert.Equal("HISTORICAL_COMPLETED_NOT_CURRENT", evacuation.GetProperty("accessControlHistory").GetProperty("state").GetString());
@@ -899,7 +900,7 @@ public sealed class TmarDurableGuardTests
         Assert.Equal(1, Regex.Matches(stateText, @"""workflowStop"":\s*""USER_REVIEW_HOST_ADMIN_ACCESS_AMC_001_W1""").Count);
         Assert.Equal(1, Regex.Matches(stateText, @"""workflowStop"":\s*""USER_REVIEW_HOST_ADMIN_ACCESS_AMC_001_W2""").Count);
         Assert.Equal(1, Regex.Matches(stateText, @"""workflowStop"":\s*""USER_REVIEW_HOST_ADMIN_ACCESS_AMC_001_W3_CERT""").Count);
-        Assert.Equal(1, Regex.Matches(stateText, @"""nextTask"":\s*""USER_REVIEW_HOST_OUTBOX_AMC_001""").Count);
+        Assert.Equal(1, Regex.Matches(stateText, @"""nextTask"":\s*""USER_REVIEW_HOST_OUTBOX_AMC_001_W1""").Count);
         Assert.Equal(1, Regex.Matches(stateText, @"""workflowStop"":\s*""USER_REVIEW_HOST_ERRORS_AMC_001""").Count);
         Assert.Equal(1, Regex.Matches(stateText, @"""workflowStop"":\s*""USER_REVIEW_HOST_ERRORS_AMC_001_W1""").Count);
         Assert.Equal(1, Regex.Matches(stateText, @"""workflowStop"":\s*""USER_REVIEW_HOST_ERRORS_AMC_001_W2_CERT""").Count);
@@ -916,7 +917,8 @@ public sealed class TmarDurableGuardTests
         Assert.Equal(1, Regex.Matches(stateText, @"""workflowStop"":\s*""USER_REVIEW_HOST_OBSERVABILITY_AMC_001""").Count);
         Assert.Equal(1, Regex.Matches(stateText, @"""workflowStop"":\s*""USER_REVIEW_HOST_OBSERVABILITY_AMC_001_W1""").Count);
         Assert.Equal(1, Regex.Matches(stateText, @"""workflowStop"":\s*""USER_REVIEW_HOST_OBSERVABILITY_AMC_001_W2_CERT""").Count);
-        Assert.Equal(3, Regex.Matches(stateText, @"""workflowStop"":\s*""USER_REVIEW_HOST_OUTBOX_AMC_001""").Count);
+        Assert.Equal(1, Regex.Matches(stateText, @"""workflowStop"":\s*""USER_REVIEW_HOST_OUTBOX_AMC_001""").Count);
+        Assert.Equal(3, Regex.Matches(stateText, @"""workflowStop"":\s*""USER_REVIEW_HOST_OUTBOX_AMC_001_W1""").Count);
         Assert.Equal(1, Regex.Matches(stateText, @"""workflowStop"":\s*""USER_REVIEW_HOST_SECURITY_AMC_001_W3_CERT""").Count);
         Assert.Equal(1, Regex.Matches(stateText, @"""workflowStop"":\s*""USER_REVIEW_HOST_SECURITY_AMC_001_W2""").Count);
         Assert.Contains("\"hostSecurityAmc001W1\"", stateText, StringComparison.Ordinal);
@@ -940,6 +942,7 @@ public sealed class TmarDurableGuardTests
         Assert.Contains("\"hostObservabilityAmc001W1\"", stateText, StringComparison.Ordinal);
         Assert.Contains("\"hostObservabilityAmc001W2Cert\"", stateText, StringComparison.Ordinal);
         Assert.Contains("\"hostOutboxAmc001\"", stateText, StringComparison.Ordinal);
+        Assert.Contains("\"hostOutboxAmc001W1\"", stateText, StringComparison.Ordinal);
         Assert.Contains("HOST_OBSERVABILITY_AMC_CERTIFIED", stateText, StringComparison.Ordinal);
         Assert.Contains("HOST_MESSAGING_AMC_CERTIFIED", stateText, StringComparison.Ordinal);
         Assert.Contains("HOST_HEALTH_AMC_CERTIFIED", stateText, StringComparison.Ordinal);

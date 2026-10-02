@@ -9,7 +9,7 @@ using Tooba.BuildingBlocks.Observability.Tracing;
 using Tooba.Persistence;
 using Tooba.StoreContext.Contracts.Current;
 
-namespace Tooba.Host;
+namespace Tooba.Host.Outbox;
 
 /// <summary>
 /// یک دور poll: Tenantها جدا، شکست یکی دیگری را خراب نمی‌کند، زمینه از پیام است نه Host.
@@ -70,6 +70,10 @@ internal sealed class OutboxDispatcher
             {
                 await DispatchTargetAsync(target, cancellationToken).ConfigureAwait(false);
             }
+            catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+            {
+                throw;
+            }
             catch (Exception ex)
             {
                 TenantFailures.Add(1);
@@ -97,6 +101,10 @@ internal sealed class OutboxDispatcher
                     _options.BatchSize,
                     _options.LockSeconds,
                     cancellationToken).ConfigureAwait(false);
+            }
+            catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+            {
+                throw;
             }
             catch (Exception ex)
             {
@@ -147,6 +155,10 @@ internal sealed class OutboxDispatcher
                     Processed.Add(1);
                     processed++;
                 }
+                catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+                {
+                    throw;
+                }
                 catch (Exception ex)
                 {
                     var sanitized = OutboxErrorSanitizer.Sanitize(ex);
@@ -186,64 +198,5 @@ internal sealed class OutboxDispatcher
         }
 
         return processed;
-    }
-}
-
-/// <summary>
-/// حلقهٔ پس‌زمینهٔ Outbox. آماده بودن فرآیند به خالی بودن صف وابسته نیست.
-/// </summary>
-internal sealed class OutboxDispatcherHostedService : BackgroundService
-{
-    private readonly OutboxDispatcher _dispatcher;
-    private readonly OutboxHostOptions _options;
-    private readonly ILogger<OutboxDispatcherHostedService> _logger;
-
-    /// <summary>
-    /// HostedService را به dispatcher و تنظیمات poll وصل می‌کند.
-    /// </summary>
-    public OutboxDispatcherHostedService(
-        OutboxDispatcher dispatcher,
-        IOptions<OutboxHostOptions> options,
-        ILogger<OutboxDispatcherHostedService> logger)
-    {
-        _dispatcher = dispatcher;
-        _options = options.Value;
-        _logger = logger;
-    }
-
-    /// <inheritdoc />
-    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
-    {
-        if (!_options.Enabled)
-        {
-            _logger.LogInformation("Outbox dispatcher is disabled by configuration.");
-            return;
-        }
-
-        var delay = TimeSpan.FromSeconds(Math.Max(1, _options.PollIntervalSeconds));
-        while (!stoppingToken.IsCancellationRequested)
-        {
-            try
-            {
-                await _dispatcher.DispatchOnceAsync(stoppingToken).ConfigureAwait(false);
-            }
-            catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
-            {
-                break;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogWarning("Outbox dispatcher loop error. ErrorType={ErrorType}", ex.GetType().Name);
-            }
-
-            try
-            {
-                await Task.Delay(delay, stoppingToken).ConfigureAwait(false);
-            }
-            catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
-            {
-                break;
-            }
-        }
     }
 }
