@@ -908,14 +908,14 @@ The Content R4 facts below are HISTORICAL lineage evidence only. They are not th
 - R2 typed-fault/message-classification repair `TB-TMAR-HOST-CONTENT-AMC-001-R2`.
 - R3 original ARCH-COMPLETE-002 structure certification `TB-TMAR-HOST-CONTENT-AMC-001-R3`.
 - R4 semantic Contracts + capability-first shallow realignment and re-certification `TB-TMAR-HOST-CONTENT-AMC-001-R4` at accepted commit `224ec5a3c4741d104a70fd54f4f169024e4d9b74` (governance commit `d093ad25aa6bd998909c583af0096d3a11094115`): Host/Content ZERO preserved; Content ARCH-COMPLETE-002 `structureCertified`; validator matrix 17/17 + 34 NO_VALIDATOR; Content.Contracts Errors-only (no foreign Content.Application consumer); Endpoints→Infrastructure ZERO; Media/Localization Contracts-only; frontend unchanged; DB-gated Content behavior tests skipped without live Postgres remain pre-existing/non-blocking.
-- Historical SoT at that time: `hostContentAmcR4`; historical workflow stop at that time: `USER_REVIEW_HOST_CONTENT_R4_CHECKPOINT` (NON-AUTHORITATIVE; superseded by `USER_REVIEW_AFTER_RECOVERY_SOT_SYNC_001`).
+- Historical SoT at that time: `hostContentAmcR4`; historical workflow stop at that time: `USER_REVIEW_HOST_CONTENT_R4_CHECKPOINT` (NON-AUTHORITATIVE; superseded by later Host recovery checkpoints).
 - Prior Host folders already evacuated/certified in lineage include AccessControl, AddressBook, Customer full-closure, CustomerProfile, Development, Caching (see SoT blocks); do not invent the next Host folder from this document alone.
 
-Do NOT automatically continue by uncertified-module list. Do not start the next Host folder until the active user-review checkpoint is cleared by Architect/user. The current active checkpoint (`USER_REVIEW_AFTER_RECOVERY_SOT_SYNC_001`) has `automaticNextImplementationTask = NONE`, so no Host folder may be started and no historical "next task" line may be resumed.
+Do NOT automatically continue by uncertified-module list. Resume decisions must use only the `Latest Accepted TMAR Checkpoint — authoritative` section at the top of this file plus `tmar-current-state.json`; historical "next task" lines below must never be resumed.
 
 ## TMAR Host Evacuation — Historical Content R4 Checkpoint (NOT current)
 
-HISTORICAL: this Content R4 block is no longer the authoritative Host-evacuation checkpoint. The current authoritative checkpoint is the "Latest Accepted TMAR Checkpoint" at the top of this file plus `tmar-current-state.json` (`currentHostEvacuation.activeModule = NONE`, `workflowStop = USER_REVIEW_AFTER_RECOVERY_SOT_SYNC_001`). A later Host-folder-independent Authorization post-cert cleanup (`TB-TMAR-AUTHORIZATION-POSTCERT-CLEANUP-001`) is now the latest accepted TMAR task, and no Host folder is active.
+HISTORICAL: this Content R4 block is no longer authoritative for resume/current-task decisions. Current authority is only the `Latest Accepted TMAR Checkpoint — authoritative` section at the top of this file plus `tmar-current-state.json`.
 
 Historical Content / Host-evacuation checkpoint record (superseded by the current checkpoint above and by later `hostRootGlobalBoundaries001R*` / `hostAuthorizationAmc` / `authorizationPostcertCleanup001` SoT blocks):
 
@@ -985,7 +985,7 @@ Historical Host folder files (all removed at closure):
 
 ### Next implementation task (HISTORICAL — SUPERSEDED)
 
-The former `TB-TMAR-HOST-ACCESSCONTROL-SCOPE-RESOURCES-001` scope was completed through the accepted `TB-TMAR-HOST-ACCESSCONTROL-SCOPE-RESOURCES-001` line of work ending with AccessControl closure. At that historical time the next task was recorded as `TB-TMAR-HOST-ADDRESSBOOK-INVENTORY-001`; that marker is NON-AUTHORITATIVE and must not be resumed. The current checkpoint is `USER_REVIEW_AFTER_RECOVERY_SOT_SYNC_001` with `automaticNextImplementationTask = NONE`.
+The former `TB-TMAR-HOST-ACCESSCONTROL-SCOPE-RESOURCES-001` scope was completed through the accepted `TB-TMAR-HOST-ACCESSCONTROL-SCOPE-RESOURCES-001` line of work ending with AccessControl closure. At that historical time the next task was recorded as `TB-TMAR-HOST-ADDRESSBOOK-INVENTORY-001`; that marker is NON-AUTHORITATIVE and must not be resumed. Current recovery authority is the `Latest Accepted TMAR Checkpoint — authoritative` section at the top of this file plus `docs/architecture/tmar-current-state.json`.
 
 ### AccessControl honest state (HISTORICAL — SUPERSEDED)
 
@@ -996,5 +996,5 @@ AccessControl is `COMPLETE_REFERENCE_PATTERN` and ARCH-COMPLETE-002 `STRUCTURE_C
 - Mode: `BACKEND_ONLY_UNTIL_EXPLICIT_RELEASE`; frontend `FROZEN`.
 - Checkout: `PAUSED_AT_SAFE_W5_CHECKPOINT`.
 - Structure-certified modules include Order, Cart, StoreContext, Offer, Payment, Settlement, Fulfillment, AccessControl, AddressBook, Content (authoritative list: `tmar-current-state.json` `structureLock.certifiedModules`).
-- Current stop checkpoint (authoritative): `USER_REVIEW_AFTER_RECOVERY_SOT_SYNC_001` / `automaticNextImplementationTask = NONE`; no Host folder is active. All Content R4 / AddressBook / AccessControl Host-folder checkpoints above are HISTORICAL.
+- Current stop/Host checkpoint comes only from the authoritative section at the top and `tmar-current-state.json`.
 
