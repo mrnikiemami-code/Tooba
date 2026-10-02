@@ -4,29 +4,9 @@ using Tooba.Story.Domain;
 
 namespace Tooba.Story.Application;
 
-/// <summary>Maps known Story domain/application InvalidOperation failures to stable SemanticError codes.</summary>
+/// <summary>Story application helpers for transport parsing (no message-text failure classification).</summary>
 public static class StoryFailureMapper
 {
-    /// <summary>Converts an InvalidOperationException into a SemanticException with a stable code.</summary>
-    public static SemanticException ToSemantic(InvalidOperationException exception)
-    {
-        ArgumentNullException.ThrowIfNull(exception);
-        var message = exception.Message ?? string.Empty;
-        if (message.Contains("Tenant", StringComparison.OrdinalIgnoreCase)
-            || message.Contains("resolve", StringComparison.OrdinalIgnoreCase))
-        {
-            return new SemanticException(new SemanticError(StoryErrorCodes.TenantMissing));
-        }
-
-        if (message.Contains("یافت نشد", StringComparison.Ordinal))
-            return new SemanticException(new SemanticError(StoryErrorCodes.Missing));
-
-        if (message.Contains("ناامن", StringComparison.Ordinal))
-            return new SemanticException(new SemanticError(StoryErrorCodes.CtaRejected));
-
-        return new SemanticException(new SemanticError(StoryErrorCodes.MutationRejected));
-    }
-
     /// <summary>Parses transport review-status text into Domain enum without Endpoints touching Domain.</summary>
     public static bool TryParseReviewStatus(string? raw, out StoryReviewStatus? value)
     {

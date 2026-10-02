@@ -149,31 +149,23 @@ public sealed class StoryPresentationComposer
     /// <summary>Tenant جاری را به Guid پایدار نگاشت می‌کند.</summary>
     public static Guid RequireTenantId(ICurrentTenant tenant)
     {
-        try
-        {
-            return StoryTenantIds.FromTenantKey(
-                tenant.Current?.TenantId.Value
-                ?? throw new InvalidOperationException("Tenant resolve نشده است."));
-        }
-        catch (InvalidOperationException)
-        {
+        var key = tenant.Current?.TenantId.Value;
+        if (string.IsNullOrWhiteSpace(key))
             throw new SemanticException(new SemanticError(StoryErrorCodes.TenantMissing));
-        }
-    }
 
-    private static async Task<T> Guard<T>(Func<Task<T>> action)
-    {
         try
         {
-            return await action();
+            return StoryTenantIds.FromTenantKey(key);
         }
         catch (SemanticException)
         {
             throw;
         }
-        catch (InvalidOperationException ex)
-        {
-            throw StoryFailureMapper.ToSemantic(ex);
-        }
+    }
+
+    private static async Task<T> Guard<T>(Func<Task<T>> action)
+    {
+        // Domain/Infra now throw SemanticException with stable codes; no message-text remapping.
+        return await action();
     }
 }

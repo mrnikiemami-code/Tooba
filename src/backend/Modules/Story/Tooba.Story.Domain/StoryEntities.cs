@@ -1,6 +1,7 @@
 using System.Security.Cryptography;
 using System.Text;
 using Tooba.BuildingBlocks;
+using Tooba.Story.Contracts.Errors;
 
 namespace Tooba.Story.Domain;
 
@@ -54,7 +55,7 @@ public static class StoryTenantIds
     public static Guid FromTenantKey(string tenantKey)
     {
         if (string.IsNullOrWhiteSpace(tenantKey))
-            throw new InvalidOperationException("TenantId معتبر نیست.");
+            throw new SemanticException(new SemanticError(StoryErrorCodes.TenantMissing));
 
         if (string.Equals(tenantKey, "store-alpha", StringComparison.Ordinal))
             return StoreAlpha;
@@ -126,22 +127,22 @@ public static class StoryRules
     {
         var normalizedType = string.IsNullOrWhiteSpace(ctaType) ? CtaNone : ctaType.Trim().ToLowerInvariant();
         if (normalizedType.Length > CtaTypeMaxLength || !AllowedCtaTypes.Contains(normalizedType))
-            throw new InvalidOperationException("نوع CTA استوری مجاز نیست.");
+            throw new SemanticException(new SemanticError(StoryErrorCodes.MutationRejected));
 
         if (string.Equals(normalizedType, CtaNone, StringComparison.Ordinal))
             return (CtaNone, null);
 
         if (string.IsNullOrWhiteSpace(ctaTarget))
-            throw new InvalidOperationException("هدف CTA برای این نوع الزامی است.");
+            throw new SemanticException(new SemanticError(StoryErrorCodes.MutationRejected));
 
         var normalizedTarget = ctaTarget.Trim();
         if (normalizedTarget.Length > CtaTargetMaxLength)
-            throw new InvalidOperationException("هدف CTA از سقف مجاز بلندتر است.");
+            throw new SemanticException(new SemanticError(StoryErrorCodes.MutationRejected));
 
         foreach (var scheme in ForbiddenCtaSchemes)
         {
             if (normalizedTarget.StartsWith(scheme, StringComparison.OrdinalIgnoreCase))
-                throw new InvalidOperationException("هدف CTA ناامن است.");
+                throw new SemanticException(new SemanticError(StoryErrorCodes.CtaRejected));
         }
 
         return (normalizedType, normalizedTarget);
@@ -151,7 +152,7 @@ public static class StoryRules
     public static string ValidateMediaType(string mediaType)
     {
         if (string.IsNullOrWhiteSpace(mediaType) || !AllowedMediaTypes.Contains(mediaType.Trim()))
-            throw new InvalidOperationException("نوع رسانهٔ استوری مجاز نیست.");
+            throw new SemanticException(new SemanticError(StoryErrorCodes.MutationRejected));
         return mediaType.Trim().ToLowerInvariant();
     }
 
@@ -302,9 +303,9 @@ public sealed class Story
         string? ctaTarget = null)
     {
         if (sellerPartyId == Guid.Empty)
-            throw new InvalidOperationException("شناسهٔ فروشنده معتبر نیست.");
+            throw new SemanticException(new SemanticError(StoryErrorCodes.MutationRejected));
         if (actorUserId == Guid.Empty)
-            throw new InvalidOperationException("شناسهٔ بازیگر معتبر نیست.");
+            throw new SemanticException(new SemanticError(StoryErrorCodes.MutationRejected));
 
         ValidateTitle(title);
         ValidateLocale(locale);
@@ -375,7 +376,7 @@ public sealed class Story
     {
         EnsurePublicationEligible();
         if (startAt.HasValue && endAt.HasValue && endAt.Value <= startAt.Value)
-            throw new InvalidOperationException("بازهٔ زمانی استوری معتبر نیست.");
+            throw new SemanticException(new SemanticError(StoryErrorCodes.MutationRejected));
 
         StartAt = startAt;
         EndAt = endAt;
@@ -400,13 +401,13 @@ public sealed class Story
     public void SubmitForReview(Guid actorUserId, DateTimeOffset now)
     {
         if (Origin != StoryOrigin.Seller)
-            throw new InvalidOperationException("فقط استوری فروشنده قابل ارسال برای بازبینی است.");
+            throw new SemanticException(new SemanticError(StoryErrorCodes.MutationRejected));
         if (actorUserId == Guid.Empty)
-            throw new InvalidOperationException("شناسهٔ بازیگر معتبر نیست.");
+            throw new SemanticException(new SemanticError(StoryErrorCodes.MutationRejected));
         if (Status != StoryStatus.Draft)
-            throw new InvalidOperationException("فقط پیش‌نویس قابل ارسال برای بازبینی است.");
+            throw new SemanticException(new SemanticError(StoryErrorCodes.MutationRejected));
         if (ReviewStatus is not (StoryReviewStatus.None or StoryReviewStatus.Rejected))
-            throw new InvalidOperationException("وضعیت بازبینی برای ارسال مجاز نیست.");
+            throw new SemanticException(new SemanticError(StoryErrorCodes.MutationRejected));
 
         ReviewStatus = StoryReviewStatus.Submitted;
         SubmittedByActorUserId = actorUserId;
@@ -421,9 +422,9 @@ public sealed class Story
     public void Approve(Guid adminActorUserId, DateTimeOffset now)
     {
         if (adminActorUserId == Guid.Empty)
-            throw new InvalidOperationException("شناسهٔ بازیگر ادمین معتبر نیست.");
+            throw new SemanticException(new SemanticError(StoryErrorCodes.MutationRejected));
         if (Origin != StoryOrigin.Seller)
-            throw new InvalidOperationException("فقط استوری فروشنده نیاز به تأیید دارد.");
+            throw new SemanticException(new SemanticError(StoryErrorCodes.MutationRejected));
 
         if (ReviewStatus == StoryReviewStatus.Approved)
         {
@@ -434,7 +435,7 @@ public sealed class Story
         }
 
         if (ReviewStatus != StoryReviewStatus.Submitted)
-            throw new InvalidOperationException("فقط استوری ارسال‌شده قابل تأیید است.");
+            throw new SemanticException(new SemanticError(StoryErrorCodes.MutationRejected));
 
         ReviewStatus = StoryReviewStatus.Approved;
         ReviewedByActorUserId = adminActorUserId;
@@ -447,11 +448,11 @@ public sealed class Story
     public void Reject(Guid adminActorUserId, string reason, DateTimeOffset now)
     {
         if (adminActorUserId == Guid.Empty)
-            throw new InvalidOperationException("شناسهٔ بازیگر ادمین معتبر نیست.");
+            throw new SemanticException(new SemanticError(StoryErrorCodes.MutationRejected));
         if (Origin != StoryOrigin.Seller)
-            throw new InvalidOperationException("فقط استوری فروشنده قابل رد است.");
+            throw new SemanticException(new SemanticError(StoryErrorCodes.MutationRejected));
         if (ReviewStatus != StoryReviewStatus.Submitted)
-            throw new InvalidOperationException("فقط استوری ارسال‌شده قابل رد است.");
+            throw new SemanticException(new SemanticError(StoryErrorCodes.MutationRejected));
 
         var normalized = ValidateRejectionReason(reason);
         ReviewStatus = StoryReviewStatus.Rejected;
@@ -540,7 +541,7 @@ public sealed class Story
     {
         var index = _items.FindIndex(item => item.StoryItemId == storyItemId);
         if (index < 0)
-            throw new InvalidOperationException("آیتم استوری یافت نشد.");
+            throw new SemanticException(new SemanticError(StoryErrorCodes.Missing));
         _items.RemoveAt(index);
         ReindexItems(now);
         Touch(now);
@@ -550,15 +551,15 @@ public sealed class Story
     public void ReorderItems(IReadOnlyList<Guid> itemIdsInOrder, DateTimeOffset now)
     {
         if (itemIdsInOrder.Count != _items.Count)
-            throw new InvalidOperationException("ترتیب آیتم با تعداد فعلی هم‌خوان نیست.");
+            throw new SemanticException(new SemanticError(StoryErrorCodes.MutationRejected));
         if (itemIdsInOrder.Distinct().Count() != itemIdsInOrder.Count)
-            throw new InvalidOperationException("شناسهٔ آیتم تکراری در ترتیب وجود دارد.");
+            throw new SemanticException(new SemanticError(StoryErrorCodes.MutationRejected));
 
         var lookup = _items.ToDictionary(item => item.StoryItemId);
         for (var index = 0; index < itemIdsInOrder.Count; index++)
         {
             if (!lookup.TryGetValue(itemIdsInOrder[index], out var item))
-                throw new InvalidOperationException("آیتم استوری برای مرتب‌سازی یافت نشد.");
+                throw new SemanticException(new SemanticError(StoryErrorCodes.Missing));
             item.SetDisplayOrder(index, now);
         }
 
@@ -576,22 +577,22 @@ public sealed class Story
     private void EnsurePublicationEligible()
     {
         if (!IsPublicationEligible())
-            throw new InvalidOperationException("استوری فروشنده قبل از تأیید قابل فعال‌سازی یا زمان‌بندی نیست.");
+            throw new SemanticException(new SemanticError(StoryErrorCodes.MutationRejected));
     }
 
     private static string ValidateRejectionReason(string reason)
     {
         if (string.IsNullOrWhiteSpace(reason))
-            throw new InvalidOperationException("دلیل رد الزامی است.");
+            throw new SemanticException(new SemanticError(StoryErrorCodes.MutationRejected));
         var trimmed = reason.Trim();
         if (trimmed.Length > StoryRules.RejectionReasonMaxLength)
-            throw new InvalidOperationException("دلیل رد از سقف مجاز بلندتر است.");
+            throw new SemanticException(new SemanticError(StoryErrorCodes.MutationRejected));
         return trimmed;
     }
 
     private StoryItem RequireItem(Guid storyItemId) =>
         _items.FirstOrDefault(item => item.StoryItemId == storyItemId)
-        ?? throw new InvalidOperationException("آیتم استوری یافت نشد.");
+        ?? throw new SemanticException(new SemanticError(StoryErrorCodes.Missing));
 
     private void ReindexItems(DateTimeOffset now)
     {
@@ -609,25 +610,25 @@ public sealed class Story
     private static void ValidateTitle(string title)
     {
         if (string.IsNullOrWhiteSpace(title) || title.Trim().Length > StoryRules.TitleMaxLength)
-            throw new InvalidOperationException("عنوان استوری معتبر نیست.");
+            throw new SemanticException(new SemanticError(StoryErrorCodes.MutationRejected));
     }
 
     private static void ValidateLocale(string? locale)
     {
         if (locale is not null && (locale.Trim().Length == 0 || locale.Trim().Length > StoryRules.LocaleMaxLength))
-            throw new InvalidOperationException("locale استوری معتبر نیست.");
+            throw new SemanticException(new SemanticError(StoryErrorCodes.MutationRejected));
     }
 
     private static void ValidateMarket(string? market)
     {
         if (market is not null && (market.Trim().Length == 0 || market.Trim().Length > StoryRules.MarketMaxLength))
-            throw new InvalidOperationException("market استوری معتبر نیست.");
+            throw new SemanticException(new SemanticError(StoryErrorCodes.MutationRejected));
     }
 
     private static void ValidateMediaUrl(string? mediaUrl)
     {
         if (mediaUrl is not null && (mediaUrl.Trim().Length == 0 || mediaUrl.Trim().Length > StoryRules.MediaUrlMaxLength))
-            throw new InvalidOperationException("URL رسانهٔ استوری معتبر نیست.");
+            throw new SemanticException(new SemanticError(StoryErrorCodes.MutationRejected));
     }
 
     private static string? NormalizeOptional(string? value, int maxLength)
@@ -635,7 +636,7 @@ public sealed class Story
         if (string.IsNullOrWhiteSpace(value)) return null;
         var trimmed = value.Trim();
         if (trimmed.Length > maxLength)
-            throw new InvalidOperationException("مقدار اختیاری استوری از سقف مجاز بلندتر است.");
+            throw new SemanticException(new SemanticError(StoryErrorCodes.MutationRejected));
         return trimmed;
     }
 }
@@ -740,19 +741,19 @@ public sealed class StoryItem
     private static void ValidateMediaUrl(string? mediaUrl)
     {
         if (mediaUrl is not null && (mediaUrl.Trim().Length == 0 || mediaUrl.Trim().Length > StoryRules.MediaUrlMaxLength))
-            throw new InvalidOperationException("URL رسانهٔ آیتم معتبر نیست.");
+            throw new SemanticException(new SemanticError(StoryErrorCodes.MutationRejected));
     }
 
     private static void ValidateCaption(string? caption)
     {
         if (caption is not null && caption.Trim().Length > StoryRules.CaptionMaxLength)
-            throw new InvalidOperationException("caption آیتم از سقف مجاز بلندتر است.");
+            throw new SemanticException(new SemanticError(StoryErrorCodes.MutationRejected));
     }
 
     private static void ValidateDuration(int? durationMs)
     {
         if (durationMs is < 0)
-            throw new InvalidOperationException("مدت نمایش آیتم معتبر نیست.");
+            throw new SemanticException(new SemanticError(StoryErrorCodes.MutationRejected));
     }
 
     private static string? NormalizeOptional(string? value) =>

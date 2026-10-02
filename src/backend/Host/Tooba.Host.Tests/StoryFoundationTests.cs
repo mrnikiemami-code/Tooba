@@ -139,7 +139,7 @@ public sealed class StoryFoundationTests : IAsyncLifetime
             await directory.GetPublicStoriesAsync(tenantId, "fa", null, now, CancellationToken.None),
             story => story.StoryId == disabled.StoryId);
 
-        await Assert.ThrowsAsync<InvalidOperationException>(() =>
+        await Assert.ThrowsAsync<SemanticException>(() =>
             directory.AdminCreateAsync(
                 tenantId,
                 new CreateStoryCommand(
@@ -231,16 +231,16 @@ public sealed class StoryFoundationTests : IAsyncLifetime
             await directory.GetPublicStoriesAsync(tenantId, "fa", null, now, CancellationToken.None),
             story => story.StoryId == submitted.StoryId);
 
-        await Assert.ThrowsAsync<InvalidOperationException>(() =>
+        await Assert.ThrowsAsync<SemanticException>(() =>
             directory.AdminSetStatusAsync(tenantId, submitted.StoryId, StoryStatus.Active, CancellationToken.None));
 
         var domainStory = await db.Stories.AsNoTracking()
             .FirstAsync(story => story.StoryId == submitted.StoryId, CancellationToken.None);
-        Assert.Throws<InvalidOperationException>(() => domainStory.Activate(now));
+        Assert.Throws<SemanticException>(() => domainStory.Activate(now));
 
-        await Assert.ThrowsAsync<InvalidOperationException>(() =>
+        await Assert.ThrowsAsync<SemanticException>(() =>
             directory.AdminRejectAsync(tenantId, submitted.StoryId, adminActor, "   ", CancellationToken.None));
-        await Assert.ThrowsAsync<InvalidOperationException>(() =>
+        await Assert.ThrowsAsync<SemanticException>(() =>
             directory.AdminRejectAsync(tenantId, submitted.StoryId, adminActor, string.Empty, CancellationToken.None));
 
         var rejected = await directory.AdminRejectAsync(
@@ -286,7 +286,7 @@ public sealed class StoryFoundationTests : IAsyncLifetime
         Assert.DoesNotContain(listA, story => story.StoryId == foreign.StoryId);
         Assert.Contains(listA, story => story.StoryId == activated.StoryId);
         Assert.Null(await directory.SellerGetAsync(tenantId, sellerA, foreign.StoryId, CancellationToken.None));
-        await Assert.ThrowsAsync<InvalidOperationException>(() =>
+        await Assert.ThrowsAsync<SemanticException>(() =>
             directory.SellerSubmitAsync(tenantId, sellerA, foreign.StoryId, actorA, CancellationToken.None));
 
         var auth = CreateAdapter();

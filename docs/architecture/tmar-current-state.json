@@ -10,8 +10,8 @@
     "lastAcceptedResultEvidenceCommitKind": "RESULT_EVIDENCE_DOCS_STAMP_NOT_IMPLEMENTATION",
     "lastAcceptedSoTStamp": "33d7713987bf733cb8ea27054d738d4796666faa",
     "lastAcceptedSoTStampKind": "RESULT_EVIDENCE_DOCS_STAMP",
-    "lastAcceptedCommitSemantics": "lastAcceptedTask/Commit are TB-TMAR-HOST-ROOT-FINAL-CERT-001 bounded root hygiene implementation. Configuration W1 SHA preserved in hostConfigurationAmc001W1 / hostConfigurationAmc001W2Cert. Docs stamp is separate.",
-    "lastAcceptedNote": "Host ROOT FINAL CERT: HOST_ROOT_FINAL_CERTIFIED / HOST_PROGRAM_COMPOSITION_ROOT_CERTIFIED / HOST_TMAR_EVACUATION_FINAL_CLOSURE_CERTIFIED; Program sole root .cs; bounded hygiene (duplicate Offer tracing using + stale PostgreSQL.ConnectionString keys removed); all Host folder CERTs preserved; frontend frozen; Checkout paused; automatic next NONE.",
+    "lastAcceptedCommitSemantics": "lastAcceptedTask/Commit remain TB-TMAR-HOST-ROOT-FINAL-CERT-001 Host root hygiene. Story module semantic W1 is recorded in storyModuleAmc001W1 only.",
+    "lastAcceptedNote": "Host ROOT FINAL CERT preserved. Story module AMC waves recorded under storyModuleAmc001* without displacing Host checkpoint.",
     "latestAcceptedImplementationWave": "TB-TMAR-HOST-ROOT-FINAL-CERT-001",
     "currentHostCheckpoint": "HOST_ROOT_FINAL_CERTIFIED",
     "nextHostFolderStarted": false,
@@ -6817,5 +6817,25 @@
         "automaticNextImplementationTask": "NONE",
         "evidenceRoot": "docs/evidence/TB-TMAR-STORY-AMC-001/",
         "note": "Analyze only; do not auto-start W1 without explicit continue — user authorized full AMC so W1 migrate follows in same session after this stamp."
+    },
+    "storyModuleAmc001W1": {
+        "task": "TB-TMAR-STORY-AMC-001-W1",
+        "parentTask": "TB-TMAR-STORY-AMC-001",
+        "mode": "MIGRATE",
+        "slice": "SEMANTIC_LOCALIZATION_FAILURE_CHANNEL",
+        "messageTextClassification": "ZERO",
+        "hardcodedFaBusinessExceptions": "ZERO",
+        "semanticExceptionCodes": "StoryErrorCodes",
+        "failureMapperToSemantic": "REMOVED",
+        "hostStoryZero": "PRESERVED",
+        "structureCertified": "FALSE_DEFERRED",
+        "schemaChange": "NONE",
+        "frontendState": "UNTOUCHED",
+        "durableGuard": "StoryModuleAmcW1GuardTests",
+        "workflowStop": "USER_REVIEW_STORY_AMC_001_W1",
+        "automaticNextImplementationTask": "NONE",
+        "evidenceRoot": "docs/evidence/TB-TMAR-STORY-AMC-001-W1/",
+        "docsStamp": "PENDING_DOCS_STAMP",
+        "hostCheckpointUnaffected": true
     }
 }

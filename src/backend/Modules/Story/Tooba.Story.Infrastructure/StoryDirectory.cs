@@ -1,4 +1,6 @@
+using Tooba.Story.Contracts.Errors;
 using Microsoft.EntityFrameworkCore;
+using Tooba.BuildingBlocks;
 using Tooba.Story.Application;
 using Tooba.Story.Domain;
 using Tooba.Story.Infrastructure.Persistence;
@@ -157,11 +159,11 @@ public sealed class StoryDirectory : IStoryDirectory
                 story.MarkExpired(now);
                 break;
             case StoryStatus.Draft:
-                throw new InvalidOperationException("بازگشت مستقیم به Draft از این مسیر مجاز نیست.");
+                throw new SemanticException(new SemanticError(StoryErrorCodes.MutationRejected));
             case StoryStatus.Scheduled:
-                throw new InvalidOperationException("وضعیت Scheduled فقط از طریق زمان‌بندی تنظیم می‌شود.");
+                throw new SemanticException(new SemanticError(StoryErrorCodes.MutationRejected));
             default:
-                throw new InvalidOperationException("وضعیت استوری مجاز نیست.");
+                throw new SemanticException(new SemanticError(StoryErrorCodes.MutationRejected));
         }
 
         await SaveStoryAsync(story, cancellationToken);
@@ -189,16 +191,16 @@ public sealed class StoryDirectory : IStoryDirectory
     {
         var stories = await LoadStoriesAsync(tenantId, track: true, cancellationToken);
         if (storyIdsInOrder.Count != stories.Count)
-            throw new InvalidOperationException("ترتیب استوری با تعداد فعلی هم‌خوان نیست.");
+            throw new SemanticException(new SemanticError(StoryErrorCodes.MutationRejected));
         if (storyIdsInOrder.Distinct().Count() != storyIdsInOrder.Count)
-            throw new InvalidOperationException("شناسهٔ استوری تکراری در ترتیب وجود دارد.");
+            throw new SemanticException(new SemanticError(StoryErrorCodes.MutationRejected));
 
         var lookup = stories.ToDictionary(story => story.StoryId);
         var now = DateTimeOffset.UtcNow;
         for (var index = 0; index < storyIdsInOrder.Count; index++)
         {
             if (!lookup.TryGetValue(storyIdsInOrder[index], out var story))
-                throw new InvalidOperationException("استوری برای مرتب‌سازی یافت نشد.");
+                throw new SemanticException(new SemanticError(StoryErrorCodes.Missing));
             story.SetDisplayOrder(index, now);
         }
 
@@ -574,7 +576,7 @@ public sealed class StoryDirectory : IStoryDirectory
         CancellationToken cancellationToken)
     {
         var story = await LoadStoryAsync(tenantId, storyId, track: true, cancellationToken);
-        return story ?? throw new InvalidOperationException("استوری یافت نشد.");
+        return story ?? throw new SemanticException(new SemanticError(StoryErrorCodes.Missing));
     }
 
     private async Task<StoryEntity> RequireSellerStoryAsync(
@@ -584,7 +586,7 @@ public sealed class StoryDirectory : IStoryDirectory
         CancellationToken cancellationToken)
     {
         var story = await LoadSellerStoryAsync(tenantId, sellerPartyId, storyId, track: true, cancellationToken);
-        return story ?? throw new InvalidOperationException("استوری یافت نشد.");
+        return story ?? throw new SemanticException(new SemanticError(StoryErrorCodes.Missing));
     }
 
     private async Task<StoryEntity> RequireSellerEditableAsync(
@@ -595,7 +597,7 @@ public sealed class StoryDirectory : IStoryDirectory
     {
         var story = await RequireSellerStoryAsync(tenantId, sellerPartyId, storyId, cancellationToken);
         if (!story.IsSellerContentEditable())
-            throw new InvalidOperationException("استوری در این وضعیت قابل ویرایش توسط فروشنده نیست.");
+            throw new SemanticException(new SemanticError(StoryErrorCodes.MutationRejected));
         return story;
     }
 
