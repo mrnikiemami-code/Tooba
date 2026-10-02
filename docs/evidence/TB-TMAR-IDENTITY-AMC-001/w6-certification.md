@@ -34,3 +34,8 @@ Identity owns persistence + business + HTTP presentation for auth. Host only com
 - `IdentityModuleAmcW2StructureGuardTests`
 - `IdentityValidatorCoverageGuardTests`
 - `IdentityModuleAmcW5CertGuardTests`
+
+## Implementation SHA
+
+`aafd14e0be51bdf3eae2ec2c6c1a09f92c613992`
+
