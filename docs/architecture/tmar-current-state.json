@@ -6987,6 +6987,6 @@
         "evidenceRoot": "docs/evidence/TB-TMAR-ACCESSCONTROL-AMC-001-W1/",
         "workflowStop": "USER_REVIEW_ACCESSCONTROL_AMC_001_W1",
         "automaticNextImplementationTask": "NONE",
-        "implementationCommit": "PENDING"
+        "implementationCommit": "e8dc8b0b0b57845d8fa93f79708a87c1d20825c8"
     }
 }
