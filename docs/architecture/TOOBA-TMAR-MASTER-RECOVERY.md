@@ -12,9 +12,11 @@ Canonical Architect ↔ Cursor handoff (recovery-critical)
 
 Latest Accepted TMAR Checkpoint — authoritative
 
-Reconciled by `TB-TMAR-HOST-OBSERVABILITY-AMC-001`. ANALYSIS_ONLY of Host/Observability: 1 file / 1 type; path↔namespace VIOLATION; KEEP_AS_GLOBAL_HOST_OBSERVABILITY_PLATFORM; ClientIp SENSITIVE_DEBT vs trusted-proxy contract; recommended W1 then CERT. Gate: `USER_DECISION_REQUIRED_NO_AUTOMATIC_NEXT_IMPLEMENTATION_TASK`.
-- Current Host checkpoint = `Observability`; workflowStop / Next-Task = `USER_REVIEW_HOST_OBSERVABILITY_AMC_001`; automatic next = NONE; stale pointer = ZERO.
-- Implementation SHA remains Messaging W1 `f29a8813...`; `HOST_MESSAGING_AMC_CERTIFIED` / `HOST_HEALTH_AMC_CERTIFIED` / `HOST_MULTITENANCY_AMC_CERTIFIED` / `HOST_ERRORS_AMC_CERTIFIED` / `HOST_SECURITY_AMC_CERTIFIED` / `HOST_ADMIN_FULLY_CERTIFIED` preserved; production change ZERO.
+Reconciled by `TB-TMAR-HOST-OBSERVABILITY-AMC-001-W1`. MIGRATE of Host/Observability: namespace EXACT `Tooba.Host.Observability`; ClientIp omitted privacy-safe; 1 file / 1 type; order after Tenant+Session preserved; certification `NOT_CERTIFIED_W2_REQUIRED`. Gate: `USER_DECISION_REQUIRED_NO_AUTOMATIC_NEXT_IMPLEMENTATION_TASK`.
+- Current Host checkpoint = `Observability`; workflowStop / Next-Task = `USER_REVIEW_HOST_OBSERVABILITY_AMC_001_W1`; automatic next = NONE; stale pointer = ZERO.
+- Implementation SHA = Observability W1 `f1425fed...`; `HOST_MESSAGING_AMC_CERTIFIED` / `HOST_HEALTH_AMC_CERTIFIED` / `HOST_MULTITENANCY_AMC_CERTIFIED` / `HOST_ERRORS_AMC_CERTIFIED` / `HOST_SECURITY_AMC_CERTIFIED` / `HOST_ADMIN_FULLY_CERTIFIED` preserved.
+
+Reconciled by `TB-TMAR-HOST-OBSERVABILITY-AMC-001` (HISTORICAL for current pointer). ANALYSIS_ONLY of Host/Observability: 1 file / 1 type; path↔namespace VIOLATION; KEEP_AS_GLOBAL_HOST_OBSERVABILITY_PLATFORM; ClientIp SENSITIVE_DEBT vs trusted-proxy contract; recommended W1 then CERT.
 
 Reconciled by `TB-TMAR-HOST-MESSAGING-AMC-001-W2-CERT` (HISTORICAL for current pointer). CERTIFY_ONLY of Host/Messaging: `HOST_MESSAGING_AMC_CERTIFIED` / `HOST_MESSAGING_PLATFORM_BOUNDARY_CERTIFIED`.
 
