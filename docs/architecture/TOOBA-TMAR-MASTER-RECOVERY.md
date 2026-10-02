@@ -994,5 +994,5 @@ AccessControl is `COMPLETE_REFERENCE_PATTERN` and ARCH-COMPLETE-002 `STRUCTURE_C
 - Mode: `BACKEND_ONLY_UNTIL_EXPLICIT_RELEASE`; frontend `FROZEN`.
 - Checkout: `PAUSED_AT_SAFE_W5_CHECKPOINT`.
 - Structure-certified modules include Order, Cart, StoreContext, Offer, Payment, Settlement, Fulfillment, AccessControl, AddressBook, Content (authoritative list: `tmar-current-state.json` `structureLock.certifiedModules`).
-- Historical stop marker `USER_REVIEW_AFTER_RECOVERY_SOT_SYNC_001` is NON-AUTHORITATIVE and must not be used for resume. Current stop/Host checkpoint comes only from the authoritative section at the top and `tmar-current-state.json`.
+- Current stop/Host checkpoint comes only from the authoritative section at the top and `tmar-current-state.json`.
 
