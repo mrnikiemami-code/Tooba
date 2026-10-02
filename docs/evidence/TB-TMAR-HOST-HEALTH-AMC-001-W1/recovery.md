@@ -33,5 +33,5 @@ nextHostFolderStarted = false
 evidenceRoot = docs/evidence/TB-TMAR-HOST-HEALTH-AMC-001-W1/
 ```
 
-Implementation SHA: `PENDING_AFTER_IMPL_COMMIT`.
-Docs stamp SHA: `PENDING_AFTER_SOT_STAMP`.
+Implementation SHA: `ba8db8c6bcb22f0ad4c386073d3b612e3d318e00`.
+Docs stamp SHA: updated in follow-up stamp commit (RESULT_EVIDENCE_DOCS_STAMP; not implementation).

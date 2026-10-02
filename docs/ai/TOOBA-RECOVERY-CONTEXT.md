@@ -25,24 +25,29 @@ BRIDGE-WAKE-V1
 Channel: tooba-main
 ```
 
-Latest Accepted TMAR Checkpoint — authoritative (reconciled by TB-TMAR-HOST-HEALTH-AMC-001)
+Latest Accepted TMAR Checkpoint — authoritative (reconciled by TB-TMAR-HOST-HEALTH-AMC-001-W1)
 
 ```text
-Latest-Accepted-Implementation-Wave: TB-TMAR-HOST-MULTITENANCY-AMC-001-W1
-Latest-Accepted-Task: TB-TMAR-HOST-HEALTH-AMC-001
-Implementation-Commit: cfbc94d258de837fdc018ddb29db68233cc25783
+Latest-Accepted-Implementation-Wave: TB-TMAR-HOST-HEALTH-AMC-001-W1
+Latest-Accepted-Task: TB-TMAR-HOST-HEALTH-AMC-001-W1
+Implementation-Commit: ba8db8c6bcb22f0ad4c386073d3b612e3d318e00
 Implementation-Commit-Kind: IMPLEMENTATION_COMMIT
-Result-Evidence-Docs-Stamp: 29f51286b530c893a3953b14710d91763e8895fe
+Result-Evidence-Docs-Stamp: PENDING_AFTER_SOT_COMMIT
 Result-Evidence-Docs-Stamp-Kind: RESULT_EVIDENCE_DOCS_STAMP_NOT_IMPLEMENTATION
-Mode: HOST_HEALTH_AMC_001_ANALYSIS_ONLY
+Mode: HOST_HEALTH_AMC_001_W1_MIGRATE
 Health-Production-File-Count: 2
 Health-Production-Type-Count: 2
 Route-Count: 4
-Path-Namespace-State: VIOLATION_Tooba.Host_vs_Health
-Service-Locator-State: GENUINE_ISERVICEPROVIDER_OPTIONAL_BUS_DEBT
-Disclosure-State: CONFIG_INTERNAL_REFERENCE_AND_SCHEMA_DISCLOSURE_DEBT
-Recommended-Wave-Count: 2
-Recommended-Next-Task: TB-TMAR-HOST-HEALTH-AMC-001-W1
+Path-Namespace-State: EXACT_Tooba.Host.Health
+Service-Locator-State: ZERO
+IServiceProvider-State: ZERO
+Messaging-Bus-DI-State: EXPLICIT_DI_COLLECTION
+ConnectionReference-Disclosure-State: ZERO
+MessagingSchema-Disclosure-State: ZERO
+Raw-ResultsJson-State: INTENTIONAL_OPERATIONAL_EXCEPTION
+Connection-Readiness-Truth-State: CONFIGURED_NOT_CONNECTIVITY
+Tenant-Reference-Policy-State: ALL_CONFIGURED_PRESERVED
+Certification-State: NOT_CERTIFIED_W2_REQUIRED
 MultiTenancy-Certification-State: HOST_MULTITENANCY_AMC_CERTIFIED_PRESERVED
 Errors-Certification-State: HOST_ERRORS_AMC_CERTIFIED_PRESERVED
 Host-Security-State: HOST_SECURITY_AMC_CERTIFIED_PRESERVED
@@ -50,8 +55,8 @@ Whole-Host-Admin-State: HOST_ADMIN_FULLY_CERTIFIED
 Current-Host-Checkpoint: Health
 Next-Host-Folder-Started: false
 Stale-Current-Pointer-State: ZERO
-workflowStop: USER_REVIEW_HOST_HEALTH_AMC_001
-Next-Task: USER_REVIEW_HOST_HEALTH_AMC_001
+workflowStop: USER_REVIEW_HOST_HEALTH_AMC_001_W1
+Next-Task: USER_REVIEW_HOST_HEALTH_AMC_001_W1
 Next-Task-Gate: USER_DECISION_REQUIRED_NO_AUTOMATIC_NEXT_IMPLEMENTATION_TASK
 Automatic-Next-Implementation-Task: NONE
 ```
