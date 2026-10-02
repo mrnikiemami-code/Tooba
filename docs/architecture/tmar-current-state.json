@@ -6856,6 +6856,6 @@
         "automaticNextImplementationTask": "NONE",
         "evidenceRoot": "docs/evidence/TB-TMAR-STORY-AMC-001-W2-CERT/",
         "note": "Bounded semantic/localization cert only; do not treat as full Story STRUCTURE_CERTIFIED.",
-        "docsStamp": "PENDING_DOCS_STAMP"
+        "docsStamp": "f9b3f0bc083f853c9d7f0905b7dec94ef3ef4cf9"
     }
 }
