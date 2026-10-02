@@ -1,4 +1,4 @@
-﻿# recovery — TB-TMAR-HOST-OUTBOX-AMC-001-W2-CERT
+# recovery — TB-TMAR-HOST-OUTBOX-AMC-001-W2-CERT
 
 ```text
 task = TB-TMAR-HOST-OUTBOX-AMC-001-W2-CERT
@@ -25,4 +25,4 @@ nextHostFolderStarted = false
 evidenceRoot = docs/evidence/TB-TMAR-HOST-OUTBOX-AMC-001-W2-CERT/
 ```
 
-Implementation SHA unchanged (W1). Docs stamp: `PENDING_DOCS_STAMP`.
+Implementation SHA unchanged (W1). Docs stamp: `ec7435cb4aeffa8f48f6d1dbe70855a8796c8ef8`.
