@@ -6,9 +6,9 @@
   "lastAcceptedTask": "TB-TMAR-HOST-MULTITENANCY-AMC-001-W2-CERT",
   "lastAcceptedCommit": "cfbc94d258de837fdc018ddb29db68233cc25783",
   "lastAcceptedCommitKind": "IMPLEMENTATION_COMMIT",
-  "lastAcceptedResultEvidenceCommit": "5eb4dc2ff93633995c89e2201bef3ddccb60a14b",
+  "lastAcceptedResultEvidenceCommit": "37de9af8f4617749a519626d509c7a58a711dafc",
   "lastAcceptedResultEvidenceCommitKind": "RESULT_EVIDENCE_DOCS_STAMP_NOT_IMPLEMENTATION",
-  "lastAcceptedSoTStamp": "5eb4dc2ff93633995c89e2201bef3ddccb60a14b",
+  "lastAcceptedSoTStamp": "37de9af8f4617749a519626d509c7a58a711dafc",
   "lastAcceptedSoTStampKind": "RESULT_EVIDENCE_DOCS_STAMP",
   "lastAcceptedCommitSemantics": "lastAcceptedTask is TB-TMAR-HOST-MULTITENANCY-AMC-001-W2-CERT (CERTIFY docs/tests). IMPLEMENTATION commit remains Multitenancy W1 SHA at lastAcceptedCommit (cfbc94d258de837fdc018ddb29db68233cc25783). Cert docs stamp is NOT an implementation commit.",
   "lastAcceptedNote": "Host/MultiTenancy W2-CERT: HOST_MULTITENANCY_AMC_CERTIFIED / HOST_MULTITENANCY_PLATFORM_BOUNDARY_CERTIFIED; 2 files; EXACT namespace; RequestServices ZERO; InvokeAsync assigner; Errors/Security/Admin CERT preserved; production change ZERO.",
@@ -6034,6 +6034,6 @@
     "workflowStop": "USER_REVIEW_HOST_MULTITENANCY_AMC_001_W2_CERT",
     "evidenceRoot": "docs/evidence/TB-TMAR-HOST-MULTITENANCY-AMC-001-W2-CERT",
     "note": "Certification docs/tests only; does not advance implementation SHA.",
-    "docsStamp": "5eb4dc2ff93633995c89e2201bef3ddccb60a14b"
+    "docsStamp": "37de9af8f4617749a519626d509c7a58a711dafc"
   }
 }

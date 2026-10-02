@@ -1,4 +1,4 @@
-﻿# recovery — TB-TMAR-HOST-MULTITENANCY-AMC-001-W2-CERT
+# recovery — TB-TMAR-HOST-MULTITENANCY-AMC-001-W2-CERT
 
 ```text
 task = TB-TMAR-HOST-MULTITENANCY-AMC-001-W2-CERT
@@ -12,4 +12,4 @@ productionRepairRequired = false
 productionCodeChange = ZERO
 ```
 
-Docs stamp filled at commit time.
+Docs stamp SHA: `37de9af8f4617749a519626d509c7a58a711dafc` (RESULT_EVIDENCE_DOCS_STAMP; not implementation).
