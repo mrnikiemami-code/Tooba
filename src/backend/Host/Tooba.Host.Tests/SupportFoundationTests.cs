@@ -1,5 +1,5 @@
 ﻿using Tooba.AccessControl.Application;
-using Tooba.AccessControl.Domain;
+using Tooba.AccessControl.Contracts.Enums;
 using Xunit;
 
 using Tooba.AccessControl.Application.Models;

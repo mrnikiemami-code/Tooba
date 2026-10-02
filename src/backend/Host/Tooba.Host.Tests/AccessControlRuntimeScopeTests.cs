@@ -1,7 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Testcontainers.PostgreSql;
 using Tooba.AccessControl.Application;
-using Tooba.AccessControl.Domain;
+using Tooba.AccessControl.Contracts.Enums;
 using Tooba.AccessControl.Infrastructure;
 using Tooba.AccessControl.Infrastructure.Persistence;
 using Tooba.AccessControl.Infrastructure.Authorization;
@@ -13,6 +13,7 @@ using Tooba.Persistence;
 using Xunit;
 
 using Tooba.AccessControl.Application.Models;
+using Tooba.AccessControl.Application.Exceptions;
 using Tooba.AccessControl.Application.Permissions;
 using Tooba.AccessControl.Infrastructure.Directories;
 using Tooba.AccessControl.Infrastructure.Observability;

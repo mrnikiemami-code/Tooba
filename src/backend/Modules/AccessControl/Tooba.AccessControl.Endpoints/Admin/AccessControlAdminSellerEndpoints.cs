@@ -17,7 +17,7 @@ using Tooba.AccessControl.Application.Queries.GetRolePermissions;
 using Tooba.AccessControl.Application.Queries.GetSellerCeiling;
 using Tooba.AccessControl.Application.Queries.ListAssignments;
 using Tooba.AccessControl.Application.Queries.ListRoles;
-using Tooba.AccessControl.Domain;
+using Tooba.AccessControl.Contracts.Enums;
 using Tooba.BuildingBlocks;
 using Tooba.BuildingBlocks.Presentation;
 using Tooba.BuildingBlocks.Security;

@@ -17,7 +17,7 @@ public sealed class AccessControlModuleAmcW2SemanticGuardTests
             "src/backend/Modules/AccessControl/Tooba.AccessControl.Endpoints/Resources/AccessControlErrors.fa.resx")));
 
         var exception = File.ReadAllText(Path.Combine(root,
-            "src/backend/Modules/AccessControl/Tooba.AccessControl.Application/Models/AccessControlContracts.cs"));
+            "src/backend/Modules/AccessControl/Tooba.AccessControl.Application/Exceptions/AccessControlException.cs"));
         Assert.Contains("AccessControlException(string code)", exception, StringComparison.Ordinal);
         Assert.DoesNotContain("AccessControlException(string code, string message)", exception, StringComparison.Ordinal);
 

@@ -1,4 +1,4 @@
-using FluentValidation;
+﻿using FluentValidation;
 using Microsoft.Extensions.DependencyInjection;
 using Tooba.AccessControl.Application.Commands.ArchiveRole;
 using Tooba.AccessControl.Application.Commands.AssignRole;
@@ -10,6 +10,8 @@ using Tooba.AccessControl.Application.Commands.SetRolePermissions;
 using Tooba.AccessControl.Application.Commands.SetSellerCeiling;
 using Tooba.AccessControl.Application.Commands.UpdateRole;
 using Tooba.AccessControl.Application.Models;
+using Tooba.AccessControl.Application.Ports;
+using Tooba.AccessControl.Application.Exceptions;
 using Tooba.AccessControl.Application.Queries.GetEffectiveAccess;
 using Tooba.AccessControl.Application.Queries.GetRole;
 using Tooba.AccessControl.Application.Queries.GetRolePermissions;
@@ -24,7 +26,7 @@ using Tooba.AccessControl.Application.Validators.Assignment;
 using Tooba.AccessControl.Application.Validators.Ceiling;
 using Tooba.AccessControl.Application.Validators.Permissions;
 using Tooba.AccessControl.Application.Validators.Role;
-using Tooba.AccessControl.Domain;
+using Tooba.AccessControl.Contracts.Enums;
 using Tooba.BuildingBlocks;
 using Xunit;
 

@@ -1,6 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
-using Tooba.AccessControl.Domain;
+using Tooba.AccessControl.Domain.Aggregates;
 using Tooba.Persistence;
 
 using Tooba.AccessControl.Application.Models;

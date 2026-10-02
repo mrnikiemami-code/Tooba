@@ -20,7 +20,7 @@ using Tooba.AccessControl.Application.Queries.ListPermissionCatalog;
 using Tooba.AccessControl.Application.Queries.ListRoles;
 using Tooba.AccessControl.Application.Queries.ListScopeResources;
 using Tooba.AccessControl.Application.Queries.SearchAccessUsers;
-using Tooba.AccessControl.Domain;
+using Tooba.AccessControl.Contracts.Enums;
 using Tooba.BuildingBlocks;
 using Tooba.BuildingBlocks.Presentation;
 using Tooba.BuildingBlocks.Security;

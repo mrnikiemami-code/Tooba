@@ -1,19 +1,8 @@
+﻿using Tooba.AccessControl.Contracts.Enums;
+
 namespace Tooba.AccessControl.Contracts.Access;
 
-/// <summary>
-/// Scope kind of a platform/seller owner as seen by external modules. Mirrors the AccessControl
-/// domain vocabulary without leaking Application/Domain types.
-/// </summary>
-public enum AccessOwnerScopeKind
-{
-    /// <summary>Platform / Admin roles.</summary>
-    Platform = 1,
-
-    /// <summary>A single seller's roles.</summary>
-    Seller = 2,
-}
-
-/// <summary>Owner scope for a directory operation.</summary>
+/// <summary>Owner scope for a directory operation (external modules).</summary>
 public sealed record AccessOwnerScope(AccessOwnerScopeKind Kind, Guid? OwnerScopeId, string? TenantId = null);
 
 /// <summary>One effective permission with its ceiling decision and scope.</summary>

@@ -1,5 +1,8 @@
-using Tooba.AccessControl.Application.Models;
+﻿using Tooba.AccessControl.Application.Models;
+using Tooba.AccessControl.Application.Ports;
 using Tooba.AccessControl.Contracts.Access;
+using AppScope = Tooba.AccessControl.Application.Models.AccessOwnerScope;
+using ContractScope = Tooba.AccessControl.Contracts.Access.AccessOwnerScope;
 
 namespace Tooba.AccessControl.Infrastructure.Adapters;
 
@@ -14,20 +17,17 @@ internal sealed class AccessControlEffectiveAccessReader(IAccessControlDirectory
     /// <inheritdoc />
     public async Task<EffectiveAccess> GetEffectiveAccessAsync(
         Guid userId,
-        Tooba.AccessControl.Contracts.Access.AccessOwnerScope owner,
+        ContractScope owner,
         CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(owner);
 
-        var source = new Tooba.AccessControl.Application.Models.AccessOwnerScope(
-            (Tooba.AccessControl.Domain.AccessOwnerScopeKind)owner.Kind,
-            owner.OwnerScopeId,
-            owner.TenantId);
+        var source = new AppScope(owner.Kind, owner.OwnerScopeId, owner.TenantId);
 
         var effective = await directory.GetEffectiveAccessAsync(userId, source, cancellationToken);
         return new EffectiveAccess(
             effective.UserId,
-            (Tooba.AccessControl.Contracts.Access.AccessOwnerScopeKind)effective.OwnerScopeKind,
+            effective.OwnerScopeKind,
             effective.OwnerScopeId,
             effective.Permissions
                 .Select(x => new EffectivePermission(x.PermissionId, x.DeniedByCeiling))

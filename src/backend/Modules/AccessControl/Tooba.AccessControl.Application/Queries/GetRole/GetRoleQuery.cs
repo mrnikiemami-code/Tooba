@@ -2,8 +2,9 @@
 using Tooba.BuildingBlocks.Results;
 using Tooba.AccessControl.Application.Composition;
 using Tooba.AccessControl.Contracts.Errors;
-using Tooba.AccessControl.Domain;
+using Tooba.AccessControl.Contracts.Enums;
 using Tooba.AccessControl.Application.Models;
+using Tooba.AccessControl.Application.Ports;
 using Tooba.AccessControl.Application.Permissions;
 namespace Tooba.AccessControl.Application.Queries.GetRole;
 

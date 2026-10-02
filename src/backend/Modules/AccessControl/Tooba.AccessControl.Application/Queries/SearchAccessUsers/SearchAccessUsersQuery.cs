@@ -1,11 +1,12 @@
 ﻿using MediatR;
 using Tooba.BuildingBlocks.Results;
 using Tooba.AccessControl.Application.Composition;
-using Tooba.AccessControl.Domain;
+using Tooba.AccessControl.Contracts.Enums;
 using Tooba.Identity.Contracts;
 using Tooba.OperatorProfile.Contracts;
 
 using Tooba.AccessControl.Application.Models;
+using Tooba.AccessControl.Application.Ports;
 using Tooba.AccessControl.Application.Permissions;
 namespace Tooba.AccessControl.Application.Queries.SearchAccessUsers;
 

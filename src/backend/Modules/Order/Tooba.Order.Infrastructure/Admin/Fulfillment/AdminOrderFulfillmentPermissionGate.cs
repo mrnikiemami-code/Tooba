@@ -1,4 +1,5 @@
 ﻿using Tooba.AccessControl.Contracts.Access;
+using Tooba.AccessControl.Contracts.Enums;
 using Tooba.BuildingBlocks;
 
 namespace Tooba.Order.Infrastructure.Admin.Fulfillment;

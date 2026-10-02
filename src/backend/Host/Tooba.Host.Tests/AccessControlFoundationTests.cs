@@ -3,7 +3,7 @@ using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
 using Testcontainers.PostgreSql;
 using Tooba.AccessControl.Application;
-using Tooba.AccessControl.Domain;
+using Tooba.AccessControl.Contracts.Enums;
 using Tooba.AccessControl.Infrastructure;
 using Tooba.AccessControl.Infrastructure.Persistence;
 using Tooba.AccessControl.Infrastructure.Authorization;
@@ -12,6 +12,7 @@ using Tooba.Persistence;
 using Xunit;
 
 using Tooba.AccessControl.Application.Models;
+using Tooba.AccessControl.Application.Exceptions;
 using Tooba.AccessControl.Application.Permissions;
 using Tooba.AccessControl.Infrastructure.Directories;
 using Tooba.AccessControl.Infrastructure.Observability;
@@ -76,7 +77,8 @@ public sealed class AccessControlFoundationTests : IAsyncLifetime
         {
             var hostText = File.ReadAllText(hostFile);
             Assert.DoesNotContain("namespace Tooba.Host.AccessControl", hostText, StringComparison.Ordinal);
-            Assert.DoesNotContain("AccessControlDevelopmentSeed", hostText, StringComparison.Ordinal);
+            // Host may compose IAccessControlDevelopmentSeedPrelude (Contracts); Host-owned seed type remains forbidden.
+            Assert.DoesNotContain("class AccessControlDevelopmentSeed", hostText, StringComparison.Ordinal);
             Assert.DoesNotContain("AccessControlDemoSnapshot", hostText, StringComparison.Ordinal);
         }
 
