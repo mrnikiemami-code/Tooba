@@ -983,7 +983,7 @@ Historical Host folder files (all removed at closure):
 
 ### Next implementation task (HISTORICAL — SUPERSEDED)
 
-The former `TB-TMAR-HOST-ACCESSCONTROL-SCOPE-RESOURCES-001` scope was completed through the accepted `TB-TMAR-HOST-ACCESSCONTROL-SCOPE-RESOURCES-001` line of work ending with AccessControl closure. At that historical time the next task was recorded as `TB-TMAR-HOST-ADDRESSBOOK-INVENTORY-001`; that marker is NON-AUTHORITATIVE and must not be resumed. The current checkpoint is `USER_REVIEW_AFTER_RECOVERY_SOT_SYNC_001` with `automaticNextImplementationTask = NONE`.
+The former `TB-TMAR-HOST-ACCESSCONTROL-SCOPE-RESOURCES-001` scope was completed through the accepted `TB-TMAR-HOST-ACCESSCONTROL-SCOPE-RESOURCES-001` line of work ending with AccessControl closure. At that historical time the next task was recorded as `TB-TMAR-HOST-ADDRESSBOOK-INVENTORY-001`; that marker is NON-AUTHORITATIVE and must not be resumed. Current recovery authority is the `Latest Accepted TMAR Checkpoint — authoritative` section at the top of this file plus `docs/architecture/tmar-current-state.json`.
 
 ### AccessControl honest state (HISTORICAL — SUPERSEDED)
 
@@ -994,5 +994,5 @@ AccessControl is `COMPLETE_REFERENCE_PATTERN` and ARCH-COMPLETE-002 `STRUCTURE_C
 - Mode: `BACKEND_ONLY_UNTIL_EXPLICIT_RELEASE`; frontend `FROZEN`.
 - Checkout: `PAUSED_AT_SAFE_W5_CHECKPOINT`.
 - Structure-certified modules include Order, Cart, StoreContext, Offer, Payment, Settlement, Fulfillment, AccessControl, AddressBook, Content (authoritative list: `tmar-current-state.json` `structureLock.certifiedModules`).
-- Current stop checkpoint (authoritative): `USER_REVIEW_AFTER_RECOVERY_SOT_SYNC_001` / `automaticNextImplementationTask = NONE`; no Host folder is active. All Content R4 / AddressBook / AccessControl Host-folder checkpoints above are HISTORICAL.
+- Historical stop marker `USER_REVIEW_AFTER_RECOVERY_SOT_SYNC_001` is NON-AUTHORITATIVE and must not be used for resume. Current stop/Host checkpoint comes only from the authoritative section at the top and `tmar-current-state.json`.
 
