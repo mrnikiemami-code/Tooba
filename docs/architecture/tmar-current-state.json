@@ -7089,7 +7089,7 @@
         "workflowStop": "USER_REVIEW_ACCESSCONTROL_AMC_002_W1",
         "automaticNextImplementationTask": "NONE",
         "implementationCommit": "f39309dc8a0d51116a7c043c7f3e92411dd0d39d",
-        "docsStamp": "PENDING"
+        "docsStamp": "3d0d37fd7fdd1fc9997fc0e581d256ac92eaa923"
     },
     "accessControlModuleAmc002W2Cert": {
         "task": "TB-TMAR-ACCESSCONTROL-AMC-002-W2-CERT",
