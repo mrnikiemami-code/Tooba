@@ -822,6 +822,23 @@ Report:
 28. Residual debt
 29. Certification readiness
 
+## 27a. Post-Host-Final-Closure Write Guard
+
+Once `HOST_TMAR_EVACUATION_FINAL_CLOSURE_CERTIFIED` / `HOST_ROOT_FINAL_CERTIFIED` exists in canonical SoT, migration must preserve that closure.
+
+For every migration:
+
+- **do not create or move module/business production code into `src/backend/Host/Tooba.Host/**`**;
+- permitted Host edits are limited to genuine composition/platform work such as DI wiring, module endpoint mapping, middleware/options/runtime composition, or maintenance of an already-approved generic Host seam;
+- adding a new Host production folder or new Host production source file requires an explicit architecture decision proving `HOST_COMPOSITION_ROOT` / `GLOBAL_HOST_PLATFORM_BOUNDARY` ownership and corresponding allowlist/guard updates; absent that proof, STOP with `HOST_FINAL_CLOSURE_REGRESSION`;
+- never place module endpoints, policies, CQRS/use-case logic, module-specific workers/orchestration, repositories, DbContexts/DbSets, persistence logic, module-specific composers/projections, or module-specific adapters back into Host;
+- never use Host as a temporary staging area, compatibility location, or convenient dependency sink;
+- do not widen Host baselines/allowlists merely to make a new Host file pass;
+- a migration that reintroduces evacuated module authority into Host is `INCOMPLETE`, not `READY_FOR_CERTIFICATION`.
+
+This guard does not prohibit legitimate composition-root changes in `Program.cs` or existing certified Host platform seams when those changes remain behavior-neutral composition and introduce no business authority.
+
+
 ## 28. Hard Rules
 
 - Never move into an invalid destination structure.
