@@ -25,23 +25,22 @@ BRIDGE-WAKE-V1
 Channel: tooba-main
 ```
 
-Latest Accepted TMAR Checkpoint — authoritative (reconciled by TB-TMAR-HOST-OBSERVABILITY-AMC-001)
+Latest Accepted TMAR Checkpoint — authoritative (reconciled by TB-TMAR-HOST-OBSERVABILITY-AMC-001-W1)
 
 ```text
-Latest-Accepted-Implementation-Wave: TB-TMAR-HOST-MESSAGING-AMC-001-W1
-Latest-Accepted-Task: TB-TMAR-HOST-OBSERVABILITY-AMC-001
-Implementation-Commit: f29a881370b9a8813035715ef6973145ce3f1723
+Latest-Accepted-Implementation-Wave: TB-TMAR-HOST-OBSERVABILITY-AMC-001-W1
+Latest-Accepted-Task: TB-TMAR-HOST-OBSERVABILITY-AMC-001-W1
+Implementation-Commit: f1425fed94cc1a8354d3c9f9a013065d87cbe66c
 Implementation-Commit-Kind: IMPLEMENTATION_COMMIT
-Result-Evidence-Docs-Stamp: 55e73e647f4a2bdf9b7220bed1e5d9350a4e7a06
+Result-Evidence-Docs-Stamp: PENDING_DOCS_STAMP
 Result-Evidence-Docs-Stamp-Kind: RESULT_EVIDENCE_DOCS_STAMP_NOT_IMPLEMENTATION
-Mode: HOST_OBSERVABILITY_AMC_001_ANALYSIS_ONLY
+Mode: HOST_OBSERVABILITY_AMC_001_W1_MIGRATE
 Observability-Production-File-Count: 1
 Observability-Production-Type-Count: 1
-Path-Namespace-State: VIOLATION_Tooba.Host_vs_Observability
-Middleware-Order-State: INTENTIONAL_AFTER_TENANT_AND_SESSION
-ClientIp-Logging-State: SENSITIVE_DEBT_TRUSTED_PROXY_CONTRACT_MISMATCH
-Recommended-Wave-Count: 2
-Recommended-Next-Task: TB-TMAR-HOST-OBSERVABILITY-AMC-001-W1
+Path-Namespace-State: EXACT_Tooba.Host.Observability
+Middleware-Order-State: AFTER_TENANT_AND_SESSION_PRESERVED
+ClientIp-Logging-State: OMITTED_PRIVACY_SAFE
+Certification-State: NOT_CERTIFIED_W2_REQUIRED
 Host-Messaging-State: HOST_MESSAGING_AMC_CERTIFIED_PRESERVED
 Host-Health-State: HOST_HEALTH_AMC_CERTIFIED_PRESERVED
 MultiTenancy-Certification-State: HOST_MULTITENANCY_AMC_CERTIFIED_PRESERVED
@@ -51,8 +50,8 @@ Whole-Host-Admin-State: HOST_ADMIN_FULLY_CERTIFIED
 Current-Host-Checkpoint: Observability
 Next-Host-Folder-Started: false
 Stale-Current-Pointer-State: ZERO
-workflowStop: USER_REVIEW_HOST_OBSERVABILITY_AMC_001
-Next-Task: USER_REVIEW_HOST_OBSERVABILITY_AMC_001
+workflowStop: USER_REVIEW_HOST_OBSERVABILITY_AMC_001_W1
+Next-Task: USER_REVIEW_HOST_OBSERVABILITY_AMC_001_W1
 Next-Task-Gate: USER_DECISION_REQUIRED_NO_AUTOMATIC_NEXT_IMPLEMENTATION_TASK
 Automatic-Next-Implementation-Task: NONE
 ```
