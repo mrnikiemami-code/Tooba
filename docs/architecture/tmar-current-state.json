@@ -7106,7 +7106,7 @@
         "evidenceRoot": "docs/evidence/TB-TMAR-ACCESSCONTROL-AMC-002-W2-CERT/",
         "workflowStop": "USER_REVIEW_ACCESSCONTROL_AMC_002_W2_CERT_COMPLETE",
         "automaticNextImplementationTask": "NONE",
-        "implementationCommit": "PENDING",
+        "implementationCommit": "15099495e4fc717c27bb421829a36e2ed0796a80",
         "docsStamp": "PENDING"
     }
 }
