@@ -527,6 +527,23 @@ Return exactly one:
 - `RECOVERY_CONFLICT`
 - `BLOCKED_BY_UNKNOWN_BEHAVIOR`
 
+## Post-Host-Final-Closure Regression Guard
+
+After the repository records `HOST_TMAR_EVACUATION_FINAL_CLOSURE_CERTIFIED` / `HOST_ROOT_FINAL_CERTIFIED`, treat `src/backend/Host/Tooba.Host/**` as a **closed architecture boundary**, not a general destination for new code.
+
+When analyzing any later task that touches or proposes Host production code:
+
+- classify every proposed/new Host responsibility before accepting the plan;
+- allowed Host additions/changes are limited to proven `HOST_COMPOSITION_ROOT`, `GLOBAL_HOST_PLATFORM_BOUNDARY`, or an already-canonical generic platform/runtime seam;
+- module business logic, module-owned HTTP endpoints, business/application policies, module-specific workers, module-specific orchestration, repositories, DbContexts/DbSets, persistence access, module-specific projections/composers, and module-specific adapters do **not** belong in Host;
+- a new Host production folder or new Host production source file is presumptively a `HOST_FINAL_CLOSURE_REGRESSION` unless an explicit architecture decision proves genuine Host/platform ownership and updates the canonical allowlist/guards;
+- moving a capability back into Host to simplify a migration is a `HOST_FINAL_CLOSURE_REGRESSION`, even if builds/tests pass;
+- ordinary composition-root maintenance (DI registration, module endpoint mapping, middleware wiring, options/platform registration) may remain in `Program.cs` or an already-approved Host platform seam when it owns no business behavior;
+- do not interpret this guard as a freeze on legitimate Host composition changes; it is a guard against re-introducing evacuated business/module authority.
+
+If a regression is found, report the exact file/responsibility and require the real module/platform owner. Do not normalize the regression by widening a Host allowlist or creating a new Host folder.
+
+
 ## Hard Rules
 
 - Do not move code in this skill unless the user explicitly requests migration.
