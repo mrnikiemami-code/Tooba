@@ -4,7 +4,9 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using Tooba.BuildingBlocks;
 using Tooba.BuildingBlocks.Presentation;
+using Tooba.BuildingBlocks.Results;
 using Tooba.Story.Application.Stories.Commands.Seller;
+using Tooba.Story.Application.Stories.Models;
 using Tooba.Story.Application.Stories.Queries.Seller;
 using Tooba.Story.Endpoints.Models;
 
@@ -37,17 +39,12 @@ public static class StorySellerEndpoints
         ApiResponseFactory api,
         CancellationToken cancellationToken)
     {
-        try
-        {
-            var (_, sellerPartyId) = await auth.RequireAuthorizedAsync(http, cancellationToken);
-            var tenantId = StoryHttpErrors.RequireTenantId(tenant);
-            return Results.Json(await sender.Send(
-                new ListSellerStoriesQuery(tenantId, sellerPartyId), cancellationToken));
-        }
-        catch (Exception ex) when (ex is SemanticException or PlatformHttpException)
-        {
-            return StoryHttpErrors.From(ex, api);
-        }
+        var (_, sellerPartyId) = await auth.RequireAuthorizedAsync(http, cancellationToken);
+        var tenantResult = StoryHttpErrors.ResolveTenantId(tenant);
+        if (tenantResult.IsFailure)
+            return api.From(tenantResult);
+        return api.From(await sender.Send(
+            new ListSellerStoriesQuery(tenantResult.Value, sellerPartyId), cancellationToken));
     }
 
     private static async Task<IResult> SellerGetAsync(
@@ -59,17 +56,12 @@ public static class StorySellerEndpoints
         ApiResponseFactory api,
         CancellationToken cancellationToken)
     {
-        try
-        {
-            var (_, sellerPartyId) = await auth.RequireAuthorizedAsync(http, cancellationToken);
-            var tenantId = StoryHttpErrors.RequireTenantId(tenant);
-            var story = await sender.Send(new GetSellerStoryQuery(tenantId, sellerPartyId, id), cancellationToken);
-            return story is null ? Results.NotFound() : Results.Json(story);
-        }
-        catch (Exception ex) when (ex is SemanticException or PlatformHttpException)
-        {
-            return StoryHttpErrors.From(ex, api);
-        }
+        var (_, sellerPartyId) = await auth.RequireAuthorizedAsync(http, cancellationToken);
+        var tenantResult = StoryHttpErrors.ResolveTenantId(tenant);
+        if (tenantResult.IsFailure)
+            return api.From(tenantResult);
+        return api.From(await sender.Send(
+            new GetSellerStoryQuery(tenantResult.Value, sellerPartyId, id), cancellationToken));
     }
 
     private static Task<IResult> SellerCreateAsync(
@@ -79,7 +71,7 @@ public static class StorySellerEndpoints
             (tenantId, actor, sellerPartyId) => sender.Send(
                 new CreateSellerStoryDraftCommand(tenantId, sellerPartyId, actor, StoryBodyMapping.ToCreate(body)),
                 cancellationToken),
-            StatusCodes.Status201Created);
+            createdLocation: result => $"/v1/seller/stories/{result.StoryId}");
 
     private static Task<IResult> SellerUpdateAsync(
         Guid id, UpdateStoryBody body, ISender sender, IStorySellerAuthorizer auth, HttpContext http,
@@ -103,7 +95,7 @@ public static class StorySellerEndpoints
             (tenantId, _, sellerPartyId) => sender.Send(
                 new AddSellerStoryItemCommand(tenantId, sellerPartyId, id, StoryBodyMapping.ToAddItem(body)),
                 cancellationToken),
-            StatusCodes.Status201Created);
+            createdLocation: result => $"/v1/seller/stories/{result.StoryId}");
 
     private static Task<IResult> SellerUpdateItemAsync(
         Guid id, Guid itemId, UpdateStoryItemBody body, ISender sender, IStorySellerAuthorizer auth,
@@ -128,25 +120,22 @@ public static class StorySellerEndpoints
             (tenantId, _, sellerPartyId) => sender.Send(
                 new ReorderSellerStoryItemsCommand(tenantId, sellerPartyId, id, body.ItemIds), cancellationToken));
 
-    private static async Task<IResult> SellerMutationAsync<T>(
+    private static async Task<IResult> SellerMutationAsync(
         IStorySellerAuthorizer auth,
         HttpContext http,
         ICurrentTenant tenant,
         ApiResponseFactory api,
         CancellationToken cancellationToken,
-        Func<Guid, Guid, Guid, Task<T>> action,
-        int successStatusCode = StatusCodes.Status200OK)
+        Func<Guid, Guid, Guid, Task<Result<AdminStorySnapshot>>> action,
+        Func<AdminStorySnapshot, string>? createdLocation = null)
     {
-        try
-        {
-            var (actorUserId, sellerPartyId) = await auth.RequireAuthorizedAsync(http, cancellationToken);
-            var tenantId = StoryHttpErrors.RequireTenantId(tenant);
-            var result = await action(tenantId, actorUserId, sellerPartyId);
-            return Results.Json(result, statusCode: successStatusCode);
-        }
-        catch (Exception ex) when (ex is SemanticException or PlatformHttpException)
-        {
-            return StoryHttpErrors.From(ex, api);
-        }
+        var (actorUserId, sellerPartyId) = await auth.RequireAuthorizedAsync(http, cancellationToken);
+        var tenantResult = StoryHttpErrors.ResolveTenantId(tenant);
+        if (tenantResult.IsFailure)
+            return api.From(tenantResult);
+        var result = await action(tenantResult.Value, actorUserId, sellerPartyId);
+        if (createdLocation is not null && result.IsSuccess)
+            return api.Created(createdLocation(result.Value), result);
+        return api.From(result);
     }
 }

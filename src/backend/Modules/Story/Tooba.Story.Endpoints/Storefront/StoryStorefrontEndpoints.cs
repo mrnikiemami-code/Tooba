@@ -26,15 +26,10 @@ public static class StoryStorefrontEndpoints
         string? market = null,
         CancellationToken cancellationToken = default)
     {
-        try
-        {
-            var tenantId = StoryHttpErrors.RequireTenantId(tenant);
-            return Results.Json(await sender.Send(
-                new GetPublicStoriesQuery(tenantId, locale, market), cancellationToken));
-        }
-        catch (Exception ex) when (ex is SemanticException or PlatformHttpException)
-        {
-            return StoryHttpErrors.From(ex, api);
-        }
+        var tenantResult = StoryHttpErrors.ResolveTenantId(tenant);
+        if (tenantResult.IsFailure)
+            return api.From(tenantResult);
+        return api.From(await sender.Send(
+            new GetPublicStoriesQuery(tenantResult.Value, locale, market), cancellationToken));
     }
 }

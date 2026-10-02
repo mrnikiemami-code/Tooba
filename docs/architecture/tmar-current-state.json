@@ -6879,5 +6879,24 @@
         "evidenceRoot": "docs/evidence/TB-TMAR-STORY-AMC-001-W3/",
         "docsStamp": "e4c67e63a177b24b2c52a1d52735580f6f31fc10",
         "implementationCommit": "25872604fc127f46291f14f7e24fb20c99dfd39a"
+    },
+    "storyModuleAmc001W4": {
+        "task": "TB-TMAR-STORY-AMC-001-W4",
+        "parentTask": "TB-TMAR-STORY-AMC-001-W3",
+        "mode": "MIGRATE",
+        "slice": "RESULT_PIPELINE",
+        "state": "STORY_RESULT_PIPELINE_APPLIED",
+        "handlersReturn": "Result_T",
+        "endpointPresentation": "ApiResponseFactory_From_Created",
+        "storyOperation": "Stories/Composition/StoryOperation.cs",
+        "messageCatchInEndpoints": "ZERO",
+        "hostStoryZero": "PRESERVED",
+        "archComplete002StructureCertified": "FALSE_DEFERRED",
+        "durableGuard": "StoryModuleAmcW4ResultGuardTests",
+        "evidenceRoot": "docs/evidence/TB-TMAR-STORY-AMC-001-W4/",
+        "workflowStop": "USER_REVIEW_STORY_AMC_001_W4",
+        "automaticNextImplementationTask": "NONE",
+        "hostRootFinalCheckpoint": "PRESERVED",
+        "implementationCommit": "PENDING"
     }
 }

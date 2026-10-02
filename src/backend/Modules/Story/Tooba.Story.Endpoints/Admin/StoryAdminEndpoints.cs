@@ -5,7 +5,9 @@ using Microsoft.AspNetCore.Routing;
 using Tooba.BuildingBlocks;
 using Tooba.BuildingBlocks.Grid;
 using Tooba.BuildingBlocks.Presentation;
+using Tooba.BuildingBlocks.Results;
 using Tooba.Story.Application.Stories.Commands.Admin;
+using Tooba.Story.Application.Stories.Models;
 using Tooba.Story.Application.Stories.Queries.Admin;
 using Tooba.Story.Endpoints.Models;
 
@@ -46,17 +48,12 @@ public static class StoryAdminEndpoints
         bool pendingReview = false,
         CancellationToken cancellationToken = default)
     {
-        try
-        {
-            await auth.RequireAuthorizedAsync(http, cancellationToken);
-            var tenantId = StoryHttpErrors.RequireTenantId(tenant);
-            return Results.Json(await sender.Send(
-                new ListAdminStoriesQuery(tenantId, reviewStatus, pendingReview), cancellationToken));
-        }
-        catch (Exception ex) when (ex is SemanticException or PlatformHttpException)
-        {
-            return StoryHttpErrors.From(ex, api);
-        }
+        await auth.RequireAuthorizedAsync(http, cancellationToken);
+        var tenantResult = StoryHttpErrors.ResolveTenantId(tenant);
+        if (tenantResult.IsFailure)
+            return api.From(tenantResult);
+        return api.From(await sender.Send(
+            new ListAdminStoriesQuery(tenantResult.Value, reviewStatus, pendingReview), cancellationToken));
     }
 
     private static async Task<IResult> AdminQueryGridAsync(
@@ -69,17 +66,12 @@ public static class StoryAdminEndpoints
         string? reviewStatus = null,
         CancellationToken cancellationToken = default)
     {
-        try
-        {
-            await auth.RequireAuthorizedAsync(http, cancellationToken);
-            var tenantId = StoryHttpErrors.RequireTenantId(tenant);
-            return Results.Json(await sender.Send(
-                new QueryAdminStoryGridQuery(tenantId, reviewStatus, body), cancellationToken));
-        }
-        catch (Exception ex) when (ex is SemanticException or PlatformHttpException)
-        {
-            return StoryHttpErrors.From(ex, api);
-        }
+        await auth.RequireAuthorizedAsync(http, cancellationToken);
+        var tenantResult = StoryHttpErrors.ResolveTenantId(tenant);
+        if (tenantResult.IsFailure)
+            return api.From(tenantResult);
+        return api.From(await sender.Send(
+            new QueryAdminStoryGridQuery(tenantResult.Value, reviewStatus, body), cancellationToken));
     }
 
     private static async Task<IResult> AdminGetAsync(
@@ -91,17 +83,11 @@ public static class StoryAdminEndpoints
         ApiResponseFactory api,
         CancellationToken cancellationToken)
     {
-        try
-        {
-            await auth.RequireAuthorizedAsync(http, cancellationToken);
-            var tenantId = StoryHttpErrors.RequireTenantId(tenant);
-            var story = await sender.Send(new GetAdminStoryQuery(tenantId, id), cancellationToken);
-            return story is null ? Results.NotFound() : Results.Json(story);
-        }
-        catch (Exception ex) when (ex is SemanticException or PlatformHttpException)
-        {
-            return StoryHttpErrors.From(ex, api);
-        }
+        await auth.RequireAuthorizedAsync(http, cancellationToken);
+        var tenantResult = StoryHttpErrors.ResolveTenantId(tenant);
+        if (tenantResult.IsFailure)
+            return api.From(tenantResult);
+        return api.From(await sender.Send(new GetAdminStoryQuery(tenantResult.Value, id), cancellationToken));
     }
 
     private static Task<IResult> AdminCreateAsync(
@@ -109,7 +95,7 @@ public static class StoryAdminEndpoints
         ICurrentTenant tenant, ApiResponseFactory api, CancellationToken cancellationToken) =>
         AdminMutationAsync(auth, http, tenant, api, cancellationToken,
             tenantId => sender.Send(new CreateAdminStoryCommand(tenantId, StoryBodyMapping.ToCreate(body)), cancellationToken),
-            StatusCodes.Status201Created);
+            createdLocation: result => $"/v1/admin/stories/{result.StoryId}");
 
     private static Task<IResult> AdminUpdateAsync(
         Guid id, UpdateStoryBody body, ISender sender, IStoryAdminAuthorizer auth, HttpContext http,
@@ -161,7 +147,7 @@ public static class StoryAdminEndpoints
         AdminMutationAsync(auth, http, tenant, api, cancellationToken,
             tenantId => sender.Send(
                 new AddAdminStoryItemCommand(tenantId, id, StoryBodyMapping.ToAddItem(body)), cancellationToken),
-            StatusCodes.Status201Created);
+            createdLocation: result => $"/v1/admin/stories/{result.StoryId}");
 
     private static Task<IResult> AdminUpdateItemAsync(
         Guid id, Guid itemId, UpdateStoryItemBody body, ISender sender, IStoryAdminAuthorizer auth,
@@ -189,9 +175,9 @@ public static class StoryAdminEndpoints
         ICurrentTenant tenant,
         ApiResponseFactory api,
         CancellationToken cancellationToken,
-        Func<Guid, Task<T>> action,
-        int successStatusCode = StatusCodes.Status200OK)
-        => AdminMutationAsync(auth, http, tenant, api, cancellationToken, (tenantId, _) => action(tenantId), successStatusCode);
+        Func<Guid, Task<Result<T>>> action,
+        Func<T, string>? createdLocation = null)
+        => AdminMutationAsync(auth, http, tenant, api, cancellationToken, (tenantId, _) => action(tenantId), createdLocation);
 
     private static async Task<IResult> AdminMutationAsync<T>(
         IStoryAdminAuthorizer auth,
@@ -199,19 +185,16 @@ public static class StoryAdminEndpoints
         ICurrentTenant tenant,
         ApiResponseFactory api,
         CancellationToken cancellationToken,
-        Func<Guid, Guid, Task<T>> action,
-        int successStatusCode = StatusCodes.Status200OK)
+        Func<Guid, Guid, Task<Result<T>>> action,
+        Func<T, string>? createdLocation = null)
     {
-        try
-        {
-            var actorUserId = await auth.RequireAuthorizedAsync(http, cancellationToken);
-            var tenantId = StoryHttpErrors.RequireTenantId(tenant);
-            var result = await action(tenantId, actorUserId);
-            return Results.Json(result, statusCode: successStatusCode);
-        }
-        catch (Exception ex) when (ex is SemanticException or PlatformHttpException)
-        {
-            return StoryHttpErrors.From(ex, api);
-        }
+        var actorUserId = await auth.RequireAuthorizedAsync(http, cancellationToken);
+        var tenantResult = StoryHttpErrors.ResolveTenantId(tenant);
+        if (tenantResult.IsFailure)
+            return api.From(tenantResult);
+        var result = await action(tenantResult.Value, actorUserId);
+        if (createdLocation is not null && result.IsSuccess)
+            return api.Created(createdLocation(result.Value), result);
+        return api.From(result);
     }
 }
