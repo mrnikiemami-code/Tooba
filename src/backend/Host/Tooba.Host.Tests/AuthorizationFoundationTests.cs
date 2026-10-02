@@ -103,7 +103,7 @@ public sealed class AuthorizationFoundationTests
             Assert.DoesNotContain("SpiceDB", text, StringComparison.OrdinalIgnoreCase);
         }
 
-        var userSource = File.ReadAllText(Path.Combine(root, "src", "backend", "Modules", "Identity", "Tooba.Identity.Domain", "IdentityDomain.cs"));
+        var userSource = File.ReadAllText(Path.Combine(root, "src", "backend", "Modules", "Identity", "Tooba.Identity.Domain", "Aggregates", "UserAccount.cs"));
         Assert.DoesNotContain("Role", userSource, StringComparison.Ordinal);
         Assert.Contains("class UserAccount", userSource, StringComparison.Ordinal);
     }

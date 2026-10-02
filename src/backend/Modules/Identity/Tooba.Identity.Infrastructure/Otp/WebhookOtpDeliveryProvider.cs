@@ -1,8 +1,10 @@
-﻿using System.Net;
+using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json.Serialization;
 using Microsoft.Extensions.Options;
-using Tooba.Identity.Application;
+using Tooba.Identity.Application.Models;
+using Tooba.Identity.Application.Options;
+using Tooba.Identity.Application.Ports;
 using Tooba.Identity.Contracts;
 
 namespace Tooba.Identity.Infrastructure.Otp;

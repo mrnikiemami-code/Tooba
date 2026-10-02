@@ -1,3 +1,4 @@
+using Tooba.Identity.Contracts.Contacts;
 using System.Xml.Linq;
 using Xunit;
 

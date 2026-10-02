@@ -3,6 +3,8 @@ using Tooba.BuildingBlocks.Results;
 using Tooba.AccessControl.Application.Composition;
 using Tooba.AccessControl.Contracts.Enums;
 using Tooba.Identity.Contracts;
+using Tooba.Identity.Contracts.Actors;
+using Tooba.Identity.Contracts.Contacts;
 using Tooba.OperatorProfile.Contracts;
 
 using Tooba.AccessControl.Application.Models;

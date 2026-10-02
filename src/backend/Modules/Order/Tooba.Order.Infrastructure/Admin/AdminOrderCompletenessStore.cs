@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Tooba.Catalog.Contracts;
 using Tooba.Fulfillment.Contracts.History;
 using Tooba.Identity.Contracts;
+using Tooba.Identity.Contracts.Contacts;
 using Tooba.OperatorProfile.Contracts;
 using Tooba.Order.Application;
 using Tooba.Order.Application.Checkout.Abuse;

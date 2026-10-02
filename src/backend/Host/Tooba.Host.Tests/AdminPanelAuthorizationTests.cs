@@ -1,11 +1,13 @@
-﻿using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Hosting;
 using Tooba.AccessControl.Infrastructure.Authorization;
 using Tooba.BuildingBlocks;
 using Tooba.BuildingBlocks.Presentation.Errors;
 using Tooba.Host.Admin.Access;
-using Tooba.Identity.Application;
+using Tooba.Identity.Application.Models;
+using Tooba.Identity.Application.Options;
+using Tooba.Identity.Application.Ports;
 using Xunit;
 
 namespace Tooba.Host.Tests;

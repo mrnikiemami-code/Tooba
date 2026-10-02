@@ -1,6 +1,9 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
-using Tooba.Identity.Domain;
+using Tooba.Identity.Domain.Aggregates;
+using Tooba.Identity.Domain.Enums;
+using Tooba.Identity.Domain.Events;
+using Tooba.Identity.Domain.Rules;
 using Tooba.Persistence;
 
 namespace Tooba.Identity.Infrastructure.Persistence;

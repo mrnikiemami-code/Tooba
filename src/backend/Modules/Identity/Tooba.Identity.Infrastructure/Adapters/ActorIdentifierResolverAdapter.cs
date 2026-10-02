@@ -1,6 +1,13 @@
-﻿using Tooba.Identity.Application;
+using Tooba.Identity.Application.Models;
+using Tooba.Identity.Application.Options;
+using Tooba.Identity.Application.Ports;
 using Tooba.Identity.Contracts;
-using Tooba.Identity.Domain;
+using Tooba.Identity.Contracts.Contacts;
+using Tooba.Identity.Contracts.Actors;
+using Tooba.Identity.Domain.Aggregates;
+using Tooba.Identity.Domain.Enums;
+using Tooba.Identity.Domain.Events;
+using Tooba.Identity.Domain.Rules;
 
 namespace Tooba.Identity.Infrastructure.Adapters;
 

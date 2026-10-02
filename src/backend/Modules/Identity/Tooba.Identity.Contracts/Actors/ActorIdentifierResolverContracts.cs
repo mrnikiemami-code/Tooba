@@ -1,4 +1,4 @@
-namespace Tooba.Identity.Contracts;
+namespace Tooba.Identity.Contracts.Actors;
 
 /// <summary>
 /// Neutral identifier kinds usable for cross-module actor resolution.

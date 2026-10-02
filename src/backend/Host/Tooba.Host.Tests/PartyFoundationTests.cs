@@ -1,7 +1,10 @@
 using Microsoft.EntityFrameworkCore;
 using Testcontainers.PostgreSql;
 using Tooba.BuildingBlocks;
-using Tooba.Identity.Domain;
+using Tooba.Identity.Domain.Aggregates;
+using Tooba.Identity.Domain.Enums;
+using Tooba.Identity.Domain.Events;
+using Tooba.Identity.Domain.Rules;
 using Tooba.Party.Application;
 using Tooba.Party.Domain;
 using Tooba.Party.Infrastructure;

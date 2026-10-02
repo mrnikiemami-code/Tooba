@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -20,7 +20,9 @@ using Tooba.AddressBook.Contracts.Dtos;
 using Tooba.AddressBook.Contracts.Ports;
 using Tooba.Cart.Application.Ports;
 using Tooba.Fulfillment.Contracts.Shipping;
-using Tooba.Identity.Application;
+using Tooba.Identity.Application.Models;
+using Tooba.Identity.Application.Options;
+using Tooba.Identity.Application.Ports;
 using Tooba.OperatorProfile.Application;
 using Tooba.OperatorProfile.Infrastructure;
 using Tooba.OperatorProfile.Infrastructure.Persistence;

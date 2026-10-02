@@ -1,4 +1,5 @@
 using Tooba.Identity.Contracts;
+using Tooba.Identity.Contracts.Contacts;
 using Tooba.OperatorProfile.Contracts;
 
 namespace Tooba.Order.Application.Admin.Completeness.Models;

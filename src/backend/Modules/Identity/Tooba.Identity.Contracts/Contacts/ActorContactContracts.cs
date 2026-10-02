@@ -1,4 +1,4 @@
-namespace Tooba.Identity.Contracts;
+namespace Tooba.Identity.Contracts.Contacts;
 
 /// <summary>Display-only contact identity of a user. Not a credential and not an auth claim.</summary>
 /// <param name="UserId">Stable user identifier the projection belongs to.</param>

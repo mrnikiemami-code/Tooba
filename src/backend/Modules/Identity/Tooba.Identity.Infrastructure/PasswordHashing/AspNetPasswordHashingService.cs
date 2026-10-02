@@ -1,5 +1,7 @@
 using Microsoft.AspNetCore.Identity;
-using Tooba.Identity.Application;
+using Tooba.Identity.Application.Models;
+using Tooba.Identity.Application.Options;
+using Tooba.Identity.Application.Ports;
 
 namespace Tooba.Identity.Infrastructure.PasswordHashing;
 

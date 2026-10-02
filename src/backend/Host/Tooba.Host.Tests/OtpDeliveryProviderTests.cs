@@ -1,4 +1,6 @@
-using Tooba.Identity.Application;
+using Tooba.Identity.Application.Models;
+using Tooba.Identity.Application.Options;
+using Tooba.Identity.Application.Ports;
 using Tooba.Identity.Contracts;
 using Tooba.Identity.Infrastructure.Otp;
 using Xunit;
