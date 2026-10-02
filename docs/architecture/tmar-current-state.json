@@ -6799,5 +6799,23 @@
         "note": "Final Host root closure; do not auto-start next folder/module/frontend/Checkout.",
         "docsStamp": "33d7713987bf733cb8ea27054d738d4796666faa",
         "implementationCommit": "7a6c353a98a761df9124beb1fce23ed8424230de"
+    },
+    "storyModuleAmc001": {
+        "task": "TB-TMAR-STORY-AMC-001",
+        "mode": "ANALYSIS_ONLY",
+        "target": "Tooba.Story.*",
+        "foundationState": "FOUNDATION_PARTIAL",
+        "hostStoryLineage": "CLOSED_HOST_ZERO_PRESERVED",
+        "messageTextClassification": "PRESENT_ILLEGAL",
+        "hardcodedFaBusinessExceptions": "PRESENT_ILLEGAL",
+        "endpointsDomainReference": "ZERO_PRESERVED",
+        "apiResponseFactory": "PRESENT",
+        "errorCatalogResx": "PRESENT_PARTIAL_CODES",
+        "structureCertified": "FALSE",
+        "recommendedNext": "TB-TMAR-STORY-AMC-001-W1",
+        "workflowStop": "USER_REVIEW_STORY_AMC_001_ANALYZE",
+        "automaticNextImplementationTask": "NONE",
+        "evidenceRoot": "docs/evidence/TB-TMAR-STORY-AMC-001/",
+        "note": "Analyze only; do not auto-start W1 without explicit continue — user authorized full AMC so W1 migrate follows in same session after this stamp."
     }
 }
